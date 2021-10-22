@@ -1,0 +1,24 @@
+MODULE MODI_ICE4_RIMLTC
+INTERFACE
+SUBROUTINE ICE4_RIMLTC(KSIZE, LDSOFT, PCOMPUTE, &
+                       &PEXN, PLVFACT, PLSFACT, &
+                       &PT, &
+                       &PTHT, PRIT, &
+                       &PRIMLTC_MR, PB_TH, PB_RC, PB_RI)
+IMPLICIT NONE
+INTEGER, INTENT(IN) :: KSIZE
+LOGICAL,                  INTENT(IN)    :: LDSOFT
+REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PCOMPUTE
+REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PEXN     ! Exner function
+REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLVFACT  ! L_v/(Pi_ref*C_ph)
+REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLSFACT  ! L_s/(Pi_ref*C_ph)
+REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PT       ! Temperature
+REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PTHT     ! Theta at t
+REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRIT     ! Cloud ice at t
+REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRIMLTC_MR ! Mixing ratio change due to cloud ice melting
+REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PB_TH
+REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PB_RC
+REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PB_RI
+END SUBROUTINE ICE4_RIMLTC
+END INTERFACE
+END MODULE MODI_ICE4_RIMLTC

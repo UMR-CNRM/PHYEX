@@ -1,0 +1,17 @@
+!     ######spl
+      MODULE MODI_CH_SHOW_CHEM
+!!    ######################## 
+!!
+!
+INTERFACE
+!!
+SUBROUTINE CH_SHOW_CHEM(PCONC, HNAMES)
+IMPLICIT NONE
+!REAL, DIMENSION(NEQ), INTENT(IN) :: PCONC ! PCONC: concentration vector
+REAL, DIMENSION(:), INTENT(IN) :: PCONC ! PCONC: concentration vector
+CHARACTER(LEN=32), DIMENSION(:), INTENT(IN) :: HNAMES ! name of each species
+END SUBROUTINE CH_SHOW_CHEM
+!!
+END INTERFACE
+!!
+END MODULE MODI_CH_SHOW_CHEM

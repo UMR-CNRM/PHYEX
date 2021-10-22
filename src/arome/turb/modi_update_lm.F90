@@ -1,0 +1,18 @@
+!     ######spl
+      MODULE MODI_UPDATE_LM
+!     ###################
+INTERFACE
+!
+SUBROUTINE UPDATE_LM(HLBCX,HLBCY,PLM,PLEPS)
+!
+CHARACTER(LEN=4), DIMENSION(2), INTENT(IN) :: HLBCX ! X boundary type
+CHARACTER(LEN=4), DIMENSION(2), INTENT(IN) :: HLBCY ! Y boundary type
+!
+REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PLM   ! mixing length
+REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PLEPS ! dissipative length
+!
+END SUBROUTINE UPDATE_LM
+!
+END INTERFACE
+!
+END MODULE MODI_UPDATE_LM

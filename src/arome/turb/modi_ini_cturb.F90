@@ -1,0 +1,12 @@
+!     ######spl
+        MODULE MODI_INI_CTURB
+!       #####################
+!
+INTERFACE
+!
+SUBROUTINE INI_CTURB
+END SUBROUTINE INI_CTURB
+!
+END INTERFACE
+!
+END MODULE MODI_INI_CTURB

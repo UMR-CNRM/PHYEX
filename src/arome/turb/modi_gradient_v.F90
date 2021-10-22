@@ -1,0 +1,49 @@
+!     ######spl
+      MODULE MODI_GRADIENT_V
+!     ######################
+!
+INTERFACE
+!
+!           
+FUNCTION GY_V_M(KKA,KKU,KL,PA,PDYY,PDZZ,PDZY)      RESULT(PGY_V_M)
+!
+INTEGER,              INTENT(IN)     :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,              INTENT(IN)     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the V point
+REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDYY    ! metric coefficient dyy
+REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZY    ! metric coefficient dzy
+!
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGY_V_M ! result mass point
+!
+END FUNCTION GY_V_M
+!           
+FUNCTION GX_V_UV(KKA,KKU,KL,PA,PDXX,PDZZ,PDZX)      RESULT(PGX_V_UV)
+!
+INTEGER,              INTENT(IN)     :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,              INTENT(IN)     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the V point
+REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
+REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZX    ! metric coefficient dzx
+!
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGX_V_UV ! result UV point
+!
+END FUNCTION GX_V_UV
+!
+!           
+FUNCTION GZ_V_VW(KKA,KKU,KL,PA,PDZZ)      RESULT(PGZ_V_VW)
+!
+INTEGER,              INTENT(IN)     :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,              INTENT(IN)     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the V point
+REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
+!
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGZ_V_VW ! result VW point
+!
+END FUNCTION GZ_V_VW
+!
+!
+END INTERFACE
+!
+END MODULE MODI_GRADIENT_V

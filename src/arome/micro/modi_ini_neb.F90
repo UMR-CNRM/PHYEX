@@ -1,0 +1,12 @@
+!     ######spl
+        MODULE MODI_INI_NEB
+!       #####################
+!
+INTERFACE
+!
+SUBROUTINE INI_NEB
+END SUBROUTINE INI_NEB
+!
+END INTERFACE
+!
+END MODULE MODI_INI_NEB

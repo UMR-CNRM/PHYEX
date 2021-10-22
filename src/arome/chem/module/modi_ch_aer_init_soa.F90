@@ -1,0 +1,14 @@
+!     ######spl
+     MODULE MODI_CH_AER_INIT_SOA
+!!   ########################
+!!
+INTERFACE
+!!
+SUBROUTINE CH_AER_INIT_SOA(KOUT,KVERB)
+IMPLICIT NONE
+INTEGER, INTENT(IN)  :: KOUT, KVERB ! stdout output, verbosity level
+END SUBROUTINE CH_AER_INIT_SOA
+!!
+END INTERFACE
+!!
+END MODULE MODI_CH_AER_INIT_SOA
