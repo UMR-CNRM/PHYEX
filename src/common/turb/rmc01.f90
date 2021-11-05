@@ -1,40 +1,12 @@
-!MNH_LIC Copyright 2002-2020 CNRS, Meteo-France and Universite Paul Sabatier
-!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
-!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
-!MNH_LIC for details. version 1.
-!-----------------------------------------------------------------
-!     ################
-      MODULE MODI_RMC01
-!     ################
-INTERFACE
-      SUBROUTINE RMC01(HTURBLEN,KKA,KKU,KKL,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW, &
-                       PSBL_DEPTH, PLMO, PLK, PLEPS                )
-!
-CHARACTER(LEN=4),         INTENT(IN)    :: HTURBLEN ! type of mixing length
-INTEGER,                  INTENT(IN)    :: KKA           !near ground array index  
-INTEGER,                  INTENT(IN)    :: KKU           !uppest atmosphere array index
-INTEGER,                  INTENT(IN)    :: KKL           !vert. levels type 1=MNH -1=ARO
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PZZ   ! altitude of flux points
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDXX  ! width of grid mesh (X dir)
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDYY  ! width of grid mesh (Y dir)
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDZZ  ! width of vert. layers
-REAL, DIMENSION(:,:),     INTENT(IN)    :: PDIRCOSZW ! Director Cosinus 
-REAL, DIMENSION(:,:),     INTENT(IN)    :: PSBL_DEPTH! SBL depth
-REAL, DIMENSION(:,:),     INTENT(IN)    :: PLMO  ! Monin Obuhkov length
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PLK   ! Mixing length
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PLEPS ! Dissipative length
-
-END SUBROUTINE RMC01
-END INTERFACE
-END MODULE MODI_RMC01
-!
-!     ##############################################################
-      SUBROUTINE RMC01(HTURBLEN,KKA, KKU, KKL, PZZ, PDXX, PDYY, PDZZ, PDIRCOSZW, &
-                       PSBL_DEPTH, PLMO, PLK, PLEPS                )
+!     ######spl
+      SUBROUTINE RMC01(HTURBLEN,KKA,KKU,KKL,PZZ,PDXX,PDYY, &
+      PDZZ,PDIRCOSZW,PSBL_DEPTH,PLMO,PLK,PLEPS)
+      USE PARKIND1, ONLY : JPRB
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ##############################################################
 !
 !!****  *RMC01* -
-!! 
+!!
 !!    PURPOSE
 !!    -------
 !!    This routine modifies the mixing and dissipative length near the SBL.
@@ -57,7 +29,7 @@ END MODULE MODI_RMC01
 !!
 !!    AUTHOR
 !!    ------
-!!	
+!!
 !!      V. Masson  - Meteo-France -
 !!
 !!    MODIFICATIONS
@@ -82,14 +54,14 @@ IMPLICIT NONE
 !              ------------------------
 !
 CHARACTER(LEN=4),         INTENT(IN)    :: HTURBLEN ! type of mixing length
-INTEGER,                   INTENT(IN)   :: KKA      !near ground array index  
+INTEGER,                   INTENT(IN)   :: KKA      !near ground array index
 INTEGER,                   INTENT(IN)   :: KKU      !uppest atmosphere array index
 INTEGER,                   INTENT(IN)   :: KKL      !vert. levels type 1=MNH -1=ARO
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PZZ   ! altitude of flux points
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDXX  ! width of grid mesh (X dir)
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDYY  ! width of grid mesh (Y dir)
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDZZ  ! width of vert. layers
-REAL, DIMENSION(:,:),     INTENT(IN)    :: PDIRCOSZW ! Director Cosinus 
+REAL, DIMENSION(:,:),     INTENT(IN)    :: PDIRCOSZW ! Director Cosinus
 REAL, DIMENSION(:,:),     INTENT(IN)    :: PSBL_DEPTH! SBL depth
 REAL, DIMENSION(:,:),     INTENT(IN)    :: PLMO  ! Monin Obuhkov length
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PLK   ! Mixing length
@@ -100,7 +72,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PLEPS ! Dissipative length
 !
 INTEGER :: IKB,IKE    ! first,last physical level
 INTEGER :: IKT        ! array size in k direction
-INTEGER :: IKTB,IKTE  ! start, end of k loops in physical domain 
+INTEGER :: IKTB,IKTE  ! start, end of k loops in physical domain
 INTEGER :: IIU        ! horizontal x boundary
 INTEGER :: IJU        ! horizontal y boundary
 INTEGER :: JK         ! loop counter
@@ -127,6 +99,8 @@ REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)) :: ZZC  ! alt. where
 !         ---------------
 !
 ! horizontal boundaries
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('RMC01',0,ZHOOK_HANDLE)
 IIU=SIZE(PZZ,1)
 IJU=SIZE(PZZ,2)
 !
@@ -139,7 +113,7 @@ IKT=SIZE(PZZ,3)
 IKTE=IKT-JPVEXT_TURB
 !
 ! altitude of mass points
-ZZZ=MZF(PZZ)
+ZZZ=MZF(KKA,KKU,KKL,PZZ)
 ! replace by height of mass points
 DO JK=1,IKT
   ZZZ(:,:,JK) = ZZZ(:,:,JK) - PZZ(:,:,IKB)
@@ -157,7 +131,7 @@ DO JK=1,IKT
   WHERE (PLMO(:,:)==XUNDEF)
     ZZ_O_LMO(:,:,JK)=0.
   ELSEWHERE
-    ZZ_O_LMO(:,:,JK)=ZZZ(:,:,JK)*PDIRCOSZW(:,:)/PLMO(:,:) 
+    ZZ_O_LMO(:,:,JK)=ZZZ(:,:,JK)*PDIRCOSZW(:,:)/PLMO(:,:)
   END WHERE
 END DO
 ZZ_O_LMO(:,:,:) = MAX(ZZ_O_LMO(:,:,:),-10.)
@@ -257,4 +231,5 @@ PLEPS(:,:,KKA) = PLEPS(:,:,IKB)
 PLEPS(:,:,KKU  ) = PLEPS(:,:,IKE)
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('RMC01',1,ZHOOK_HANDLE)
 END SUBROUTINE RMC01
