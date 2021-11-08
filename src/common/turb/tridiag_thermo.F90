@@ -2,40 +2,11 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-!-----------------------------------------------------------------
-!     ###################
-      MODULE MODI_TRIDIAG_THERMO
-!     ###################
-INTERFACE
-!
+!     ######spl
        SUBROUTINE TRIDIAG_THERMO(KKA,KKU,KKL,PVARM,PF,PDFDDTDZ,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,PVARP             )
-!
-INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
-INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=AR
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PVARM   ! variable at t-1      at mass point
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PF      ! flux in dT/dt=-dF/dz at flux point
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PDFDDTDZ! dF/d(dT/dz)          at flux point
-REAL,                   INTENT(IN) :: PTSTEP  ! Double time step
-REAL,                   INTENT(IN) :: PIMPL   ! implicit weight
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZZ    ! Dz                   at flux point
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PRHODJ  ! (dry rho)*J          at mass point
-!
-REAL, DIMENSION(:,:,:), INTENT(OUT):: PVARP   ! variable at t+1      at mass point
-!
-END SUBROUTINE TRIDIAG_THERMO
-!
-END INTERFACE
-!
-END MODULE MODI_TRIDIAG_THERMO 
-!
-!
-!
-
-!      #################################################
-       SUBROUTINE TRIDIAG_THERMO(KKA,KKU,KKL,PVARM,PF,PDFDDTDZ,PTSTEP,PIMPL,  &
-                                 PDZZ,PRHODJ,PVARP             )
+       USE PARKIND1, ONLY : JPRB
+       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !      #################################################
 !
 !
@@ -187,6 +158,8 @@ INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
 !*      1.  Preliminaries
 !           -------------
 !
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('TRIDIAG_THERMO',0,ZHOOK_HANDLE)
 IKT=SIZE(PVARM,3)          
 IKTB=1+JPVEXT_TURB              
 IKTE=IKT-JPVEXT_TURB
@@ -194,7 +167,7 @@ IKB=KKA+JPVEXT_TURB*KKL
 IKE=KKU-JPVEXT_TURB*KKL
 
 !
-ZMZM_RHODJ  = MZM(PRHODJ)
+ZMZM_RHODJ  = MZM(PRHODJ,KKA,KKU,KKL)
 ZRHODJ_DFDDTDZ_O_DZ2 = ZMZM_RHODJ*PDFDDTDZ/PDZZ**2
 !
 ZA=0.
@@ -294,4 +267,5 @@ PVARP(:,:,KKU)=PVARP(:,:,IKE)
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('TRIDIAG_THERMO',1,ZHOOK_HANDLE)
 END SUBROUTINE TRIDIAG_THERMO

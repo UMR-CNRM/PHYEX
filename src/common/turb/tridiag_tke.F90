@@ -2,47 +2,15 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
-!-----------------------------------------------------------------
-!--------------- special set of characters for RCS information
-!-----------------------------------------------------------------
-! $Source$ $Revision$
-! MASDEV4_7 turb 2006/06/06 09:55:03
-!-----------------------------------------------------------------
-!     ###################
-      MODULE MODI_TRIDIAG
-!     ###################
-INTERFACE
-!
-       SUBROUTINE TRIDIAG(KKA,KKU,KKL,PVARM,PA,PTSTEP,PEXPL,PIMPL, &
-                                  PRHODJ,PSOURCE,PVARP )
-!
-INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
-INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=AR
-REAL, DIMENSION(:,:,:),    INTENT(IN)  :: PVARM       ! variable at t-1  
-REAL, DIMENSION(:,:,:),    INTENT(IN)  :: PA          ! upper diag. elements
-REAL,                      INTENT(IN)  :: PTSTEP      ! Double time step
-REAL,                      INTENT(IN)  :: PEXPL,PIMPL ! weights of the temporal scheme
-REAL, DIMENSION(:,:,:),    INTENT(IN)  :: PRHODJ      ! (dry rho)*J
-REAL, DIMENSION(:,:,:),    INTENT(IN)  :: PSOURCE     ! source term of PVAR    
-!
-REAL, DIMENSION(:,:,:),    INTENT(OUT) :: PVARP       ! variable at t+1        
-!
-END SUBROUTINE TRIDIAG
-!
-END INTERFACE
-!
-END MODULE MODI_TRIDIAG 
+!     ######spl
+       SUBROUTINE TRIDIAG_TKE(KKA,KKU,KKL,PVARM,PA,PTSTEP,PEXPL,PIMPL, &
+                                  PRHODJ,PSOURCE,PDIAG,PVARP )
+       USE PARKIND1, ONLY : JPRB
+       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!      ########################################################
 !
 !
-!
-!      #################################################
-       SUBROUTINE TRIDIAG(KKA,KKU,KKL,PVARM,PA,PTSTEP,PEXPL,PIMPL, &
-                                  PRHODJ,PSOURCE,PVARP )
-!      #################################################
-!
-!
-!!****   *TRIDIAG* - routine to solve a time implicit scheme
+!!****   *TRIDIAG_TKE* - routine to solve a time implicit scheme
 !!
 !!
 !!     PURPOSE
@@ -138,8 +106,6 @@ END MODULE MODI_TRIDIAG
 !!      (Cuxart, Stein)  August 21, 1995  Bug correction for PRHODJ
 !!      (Stein)         November 16, 1995 new version
 !!      (Stein)         February 28, 1995 no inversion in the explicit case
-!!      (Seity)         February 2012 add possibility to run with reversed 
-!!                            vertical levels
 !! ---------------------------------------------------------------------
 !
 !*       0. DECLARATIONS
@@ -151,15 +117,17 @@ IMPLICIT NONE
 !
 !*       0.1 declarations of arguments
 !
-INTEGER,                   INTENT(IN)  :: KKA        !near ground array index  
-INTEGER,                   INTENT(IN)  :: KKU        !uppest atmosphere array index
-INTEGER,                   INTENT(IN)  :: KKL        !vert. levels type 1=MNH -1=ARO
+INTEGER,              INTENT(IN)   :: KKA     !near ground array index  
+INTEGER,              INTENT(IN)   :: KKU     !uppest atmosphere array index
+INTEGER,              INTENT(IN)   :: KKL     !vert. levels type 1=MNH -1=ARO
 REAL, DIMENSION(:,:,:),    INTENT(IN)  :: PVARM       ! variable at t-1  
 REAL, DIMENSION(:,:,:),    INTENT(IN)  :: PA          ! upper diag. elements
 REAL,                      INTENT(IN)  :: PTSTEP      ! Double time step
 REAL,                      INTENT(IN)  :: PEXPL,PIMPL ! weights of the temporal scheme
 REAL, DIMENSION(:,:,:),    INTENT(IN)  :: PRHODJ      ! (dry rho)*J
 REAL, DIMENSION(:,:,:),    INTENT(IN)  :: PSOURCE     ! source term of PVAR    
+REAL, DIMENSION(:,:,:),    INTENT(IN)  :: PDIAG       ! diagonal term linked to
+                                                      ! the implicit dissipation
 !
 REAL, DIMENSION(:,:,:),    INTENT(OUT) :: PVARP       ! variable at t+1        
 !
@@ -169,22 +137,24 @@ REAL, DIMENSION(SIZE(PVARM,1),SIZE(PVARM,2),SIZE(PVARM,3))  :: ZY ,ZGAM
                                          ! RHS of the equation, 3D work array
 REAL, DIMENSION(SIZE(PVARM,1),SIZE(PVARM,2))                :: ZBET
                                          ! 2D work array
-INTEGER                              :: JK            ! loop counter
-INTEGER                              :: IKB,IKE       ! inner vertical limits
-INTEGER                              :: IKT           ! array size in k direction
-INTEGER                              :: IKTB,IKTE     ! start, end of k loops in physical domain 
-
+INTEGER             :: JK            ! loop counter
+INTEGER             :: IKB,IKE       ! inner vertical limits
+INTEGER             :: IKT          ! array size in k direction
+INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
 !
 ! ---------------------------------------------------------------------------
 !                                              
 !*      1.  COMPUTE THE RIGHT HAND SIDE
 !           ---------------------------
 !
-IKTB=1+JPVEXT_TURB
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('TRIDIAG_TKE',0,ZHOOK_HANDLE)
 IKT=SIZE(PVARM,3)
-IKTE=IKT-JPVEXT_TURB 
+IKTB=1+JPVEXT_TURB
+IKTE=IKT-JPVEXT_TURB
 IKB=KKA+JPVEXT_TURB*KKL
 IKE=KKU-JPVEXT_TURB*KKL
+
 !
 !
 ZY(:,:,IKB) = PVARM(:,:,IKB)  + PTSTEP*PSOURCE(:,:,IKB) -   &
@@ -211,16 +181,18 @@ IF ( PIMPL > 1.E-10 ) THEN
   !
   !  going up
   !
-  ZBET(:,:) = 1. - PIMPL * PA(:,:,IKB+KKL) / PRHODJ(:,:,IKB)  ! bet = b(ikb)
+  ZBET(:,:) = 1. + PIMPL * (PDIAG(:,:,IKB)-PA(:,:,IKB+KKL) / PRHODJ(:,:,IKB))
+                                                    ! bet = b(ikb)
   PVARP(:,:,IKB) = ZY(:,:,IKB) / ZBET(:,:)                
   !
   DO JK = IKB+KKL,IKE-KKL,KKL
       ZGAM(:,:,JK) = PIMPL * PA(:,:,JK) / PRHODJ(:,:,JK-KKL) / ZBET(:,:)  
                                                     ! gam(k) = c(k-1) / bet
-    ZBET(:,:)    = 1. - PIMPL * (  PA(:,:,JK) * (1. + ZGAM(:,:,JK))  &
-                                 + PA(:,:,JK+KKL)                      &
-                                ) / PRHODJ(:,:,JK)  
-                                                    ! bet = b(k) - a(k)* gam(k)  
+    ZBET(:,:)    = 1. + PIMPL * ( PDIAG(:,:,JK) -                     &
+                                 (  PA(:,:,JK) * (1. + ZGAM(:,:,JK))  &
+                                  + PA(:,:,JK+KKL)                      &
+                                 ) / PRHODJ(:,:,JK)                   &
+                                )                   ! bet = b(k) - a(k)* gam(k)  
     PVARP(:,:,JK)= ( ZY(:,:,JK) - PIMPL * PA(:,:,JK) / PRHODJ(:,:,JK) &
                     * PVARP(:,:,JK-KKL)                                 &
                    ) / ZBET(:,:)
@@ -229,8 +201,9 @@ IF ( PIMPL > 1.E-10 ) THEN
   ! special treatment for the last level
   ZGAM(:,:,IKE) = PIMPL * PA(:,:,IKE) / PRHODJ(:,:,IKE-KKL) / ZBET(:,:) 
                                                     ! gam(k) = c(k-1) / bet
-  ZBET(:,:)    = 1. - PIMPL * (  PA(:,:,IKE) * (1. + ZGAM(:,:,IKE))  &
-                              ) / PRHODJ(:,:,IKE)  
+  ZBET(:,:)    = 1. + PIMPL * ( PDIAG(:,:,IKE) -                   &
+         (  PA(:,:,IKE) * (1. + ZGAM(:,:,IKE)) ) / PRHODJ(:,:,IKE) &
+                              )  
                                                     ! bet = b(k) - a(k)* gam(k)  
   PVARP(:,:,IKE)= ( ZY(:,:,IKE) - PIMPL * PA(:,:,IKE) / PRHODJ(:,:,IKE) &
                                 * PVARP(:,:,IKE-KKL)                      &
@@ -258,4 +231,5 @@ PVARP(:,:,KKU)=PVARP(:,:,IKE)
 !
 !-------------------------------------------------------------------------------
 !
-END SUBROUTINE TRIDIAG
+IF (LHOOK) CALL DR_HOOK('TRIDIAG_TKE',1,ZHOOK_HANDLE)
+END SUBROUTINE TRIDIAG_TKE
