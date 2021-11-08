@@ -2,36 +2,10 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-!-----------------------------------------------------------------
-!#################
-MODULE MODI_EMOIST
-!#################
-!
-INTERFACE
-!
+!     ######spl
 FUNCTION EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM) RESULT(PEMOIST)
-!
-INTEGER                              :: KRR        ! number of moist var.
-INTEGER                              :: KRRI       ! number of ice var.
-!
-REAL, DIMENSION(:,:,:),  INTENT(IN)  ::   PTHLM    ! Conservative pot. temperature
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::   PRM      ! Mixing ratios, where
-!                                    PRM(:,:,:,1) = conservative mixing ratio
-REAL, DIMENSION(:,:,:),  INTENT(IN)  ::   PLOCPEXNM ! Lv(T)/Cp/Exner at time t-1
-REAL, DIMENSION(:,:,:),  INTENT(IN)  ::   PAMOIST   ! Amoist
-REAL, DIMENSION(:,:,:),  INTENT(IN)  ::   PSRCM     ! Normalized 2dn_order
-                                                    ! moment s'r'c/2Sigma_s2
-!
-REAL,DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)):: PEMOIST ! result
-!
-END FUNCTION EMOIST
-!
-END INTERFACE
-!
-END MODULE MODI_EMOIST
-!
-!   ############################################################################
-FUNCTION EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM) RESULT(PEMOIST)
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !   ############################################################################
 !
 !      PURPOSE
@@ -115,6 +89,10 @@ INTEGER                               :: JRR     ! moist loop counter
 !
 !*       1. COMPUTE EMOIST
 !           --------------
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('EMOIST',0,ZHOOK_HANDLE)
+!
 IF (LOCEAN) THEN
  IF ( KRR == 0 ) THEN                                ! Unsalted
    PEMOIST(:,:,:) = 0.
@@ -182,4 +160,5 @@ ELSE
 END IF
 !---------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('EMOIST',1,ZHOOK_HANDLE)
 END FUNCTION EMOIST
