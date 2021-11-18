@@ -32,6 +32,7 @@
 !!      C. Mari     31/10/00  add NDAYSEC
 !!      V. Masson   01/03/03  add conductivity of ice
 !!      R. El Khatib 04/08/14 add pre-computed quantities
+!!      J.L. Redelsperger 03/2021  add constants for ocean penetrating solar
 !-------------------------------------------------------------------------------
 !
 !*       0.   DECLARATIONS
@@ -53,12 +54,14 @@ REAL,SAVE :: XRADIUS,XOMEGA     ! Earth radius, earth rotation
 REAL,SAVE :: XG                 ! Gravity constant
 !
 REAL,SAVE :: XP00               ! Reference pressure
+REAL,SAVE :: XP00OCEAN          ! Reference pressure for ocean model
+REAL,SAVE :: XRH00OCEAN         ! Reference density for ocean model
 !
 REAL,SAVE :: XSTEFAN,XI0        ! Stefan-Boltzman constant, solar constant
 !
 REAL,SAVE :: XMD,XMV            ! Molar mass of dry air and molar mass of vapor
 REAL,SAVE :: XRD,XRV            ! Gaz constant for dry air, gaz constant for vapor
-REAL,SAVE :: XEPSILO            ! XMV/XMD 
+REAL,SAVE :: XEPSILO            ! XMV/XMD
 REAL,SAVE :: XCPD,XCPV          ! Cpd (dry air), Cpv (vapor)
 REAL,SAVE :: XRHOLW             ! Volumic mass of liquid water
 REAL,SAVE :: XCL,XCI            ! Cl (liquid), Ci (ice)
@@ -73,8 +76,19 @@ REAL,SAVE :: XALPW,XBETAW,XGAMW ! Constants for saturation vapor
 REAL,SAVE :: XALPI,XBETAI,XGAMI ! Constants for saturation vapor
                                 !  pressure  function over solid ice
 REAL,SAVE :: XCONDI             ! thermal conductivity of ice (W m-1 K-1)
-REAL, SAVE        :: XTH00      ! reference value  for the potential
-                                ! temperature
+REAL,SAVE :: XALPHAOC           ! thermal expansion coefficient for ocean (K-1)
+REAL,SAVE :: XBETAOC             ! Haline contraction coeff for ocean (S-1)
+REAL,SAVE :: XTH00              ! reference value  for the potential temperature
+REAL,SAVE :: XTH00OCEAN         ! Ref value for pot temp in ocean model
+REAL,SAVE :: XSA00OCEAN         ! Ref value for SAlinity in ocean model
+REAL,SAVE :: XROC=0.69! 3 coeffs for SW penetration in  Ocean (Hoecker et al)
+REAL,SAVE :: XD1=1.1
+REAL,SAVE :: XD2=23.
+! Values used in SURFEX CMO
+!REAL,SAVE :: XROC=0.58
+!REAL,SAVE :: XD1=0.35
+!REAL,SAVE :: XD2=23.
+
 REAL,SAVE :: XRHOLI             ! Volumic mass of liquid water
 !
 INTEGER, SAVE :: NDAYSEC        ! Number of seconds in a day

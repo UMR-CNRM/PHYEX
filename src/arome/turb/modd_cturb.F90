@@ -58,6 +58,7 @@ REAL,SAVE :: XCDD         ! ct. for the destruction term in the dissipation eq.
 REAL,SAVE :: XCDT         ! ct. for the transport term in the dissipation eq.
 !
 REAL,SAVE :: XTKEMIN      ! mimimum value for the TKE
+REAL,SAVE :: XRM17        ! Rodier et al 2017 constant in shear term for mixing length
 !
 REAL,SAVE :: XLINI        ! initial value for BL mixing length
 REAL,SAVE :: XLINF        ! to prevent division by zero in the BL algorithm

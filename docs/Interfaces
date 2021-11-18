@@ -1,0 +1,22 @@
+The PHYEX parameterizations can be called from different models (eg. Meso-NH, AROME) and from
+a driver (which will be included in this repository).
+Moreover, PHYEX parameterizations call externals subroutines, which are dependencies.
+
+This document aims at listing the interfaces to call the PHYEX parameterizations and the
+interfaces of the external modules called by PHYEX.
+
+PHYEX interfaces:
+- lima_adjust
+- ice_adjust
+- shallow_mf
+- turb
+- lima, lima_warm, lima_cold et lima_mixed
+- rain_ice, rain_ice_old
+- ini_...
+
+Dependencies:
+- budget
+- mode_msg, modd_io
+- modd_precision
+
+
