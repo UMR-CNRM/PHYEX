@@ -144,6 +144,10 @@ XALPSBL = 4.63
 !       Stull 1988                  = 4.75
 !
 !
+!         1.11  Value related to the shear term in mixing length computation
+!
+XRM17 = 0.5  ! Rodier et al 2017
+!
 !
 !         2. Derivated constants
 !            -------------------

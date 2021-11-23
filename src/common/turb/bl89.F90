@@ -136,6 +136,7 @@ IF (CPROGRAM=='AROME ') THEN
     ZZZ    (:,JK)   = PZZ    (:,1,JK)
     ZDZZ   (:,JK)   = PDZZ   (:,1,JK)
     ZTHM   (:,JK)   = PTHLM  (:,1,JK)
+    ZSHEAR (:,JK)   = PSHEAR (:,1,JK)
     ZTKEM  (:,JK)   = PTKEM  (:,1,JK)
     ZG_O_THVREF(:,JK)   = XG/PTHVREF(:,1,JK)
   END DO
@@ -236,7 +237,11 @@ DO JK=IKTB,IKTE
           + sqrt(abs( (XRM17*ZSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK) &
           + ( -ZG_O_THVREF(J1D,JK) * (ZVPT(J1D,JKK) - ZVPT(J1D,JK)) ))**2.0 + &
           2. * ZINTE(J1D) * &
+#ifdef REPRO48
+          ZG_O_THVREF(J1D,JK) * ZDELTVPT(J1D,JKK)/ ZDZZ(J1D,JKK)))) / &
+#else
           (ZG_O_THVREF(J1D,JK) * ZDELTVPT(J1D,JKK)/ ZDZZ(J1D,JKK))))) / &
+#endif
           (ZG_O_THVREF(J1D,JK) * ZDELTVPT(J1D,JKK) / ZDZZ(J1D,JKK))
         ZLWORK(J1D)=ZLWORK(J1D)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
         ZINTE(J1D) = ZINTE(J1D) - ZPOTE
@@ -263,6 +268,7 @@ DO JK=IKTB,IKTE
     IF(ZTESTM > 0.) THEN
       ZTESTM=0.
       DO J1D=1,IIU*IJU
+        ZTEST0=0.5+SIGN(0.5,ZINTE(J1D))
         !--------- SHEAR + STABILITY -----------
         ZPOTE = ZTEST0* &
                 (ZG_O_THVREF(J1D,JK)*(ZHLVPT(J1D,JKK)-ZVPT(J1D,JK)) &
@@ -278,7 +284,11 @@ DO JK=IKTB,IKTE
           (XRM17*ZSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK)   &
             + ( ZG_O_THVREF(J1D,JK) * (ZVPT(J1D,JKK-KKL) - ZVPT(J1D,JK))) )**2    &
             + 2. * ZINTE(J1D) * &
-            ( ZG_O_THVREF(J1D,JK)* ZDELTVPT(J1D,JKK)/ZDZZ(J1D,JKK))))) / &
+#ifdef REPRO48
+             ZG_O_THVREF(J1D,JK)* ZDELTVPT(J1D,JKK)/ZDZZ(J1D,JKK)))) / &
+#else
+            (ZG_O_THVREF(J1D,JK)* ZDELTVPT(J1D,JKK)/ZDZZ(J1D,JKK))))) / &
+#endif
             (ZG_O_THVREF(J1D,JK) * ZDELTVPT(J1D,JKK) / ZDZZ(J1D,JKK))
         ZLWORK(J1D)=ZLWORK(J1D)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
         ZINTE(J1D) = ZINTE(J1D) - ZPOTE
@@ -294,8 +304,13 @@ DO JK=IKTB,IKTE
     ZLWORK1=MAX(ZLMDN(J1D,JK),1.E-10_MNHREAL)
     ZLWORK2=MAX(ZLWORK(J1D),1.E-10_MNHREAL)
     ZPOTE = ZLWORK1 / ZLWORK2
+#ifdef REPRO48
+    ZLWORK2=1.d0 + ZPOTE**(2./3.)
+    ZLM(J1D,JK) = Z2SQRT2*ZLWORK1/(ZLWORK2*SQRT(ZLWORK2))
+#else
     ZLWORK2=1.d0 + ZPOTE**ZBL89EXP
     ZLM(J1D,JK) = ZLWORK1*(2./ZLWORK2)**ZUSRBL89
+#endif
   END DO
 
 ZLM(:,JK)=MAX(ZLM(:,JK),XLINI)

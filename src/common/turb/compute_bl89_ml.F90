@@ -127,9 +127,9 @@ IF (OUPORDN.EQV..TRUE.) THEN
      ! Lenght travelled by parcel to nullify energy
      ZLWORK2(J1D)=        ( - PG_O_THVREF(J1D) *                     &
             (  ZHLVPT(J1D,KK) - ZVPT_DEP(J1D) )                              &
-            - XRM17*PSHEAR(J1D,JKK)*SQRT(ABS(PTKEM_DEP(J1D))) &
+            - XRM17*PSHEAR(J1D,KK)*SQRT(ABS(PTKEM_DEP(J1D))) &
           + SQRT (ABS(                                                       &
-            (XRM17*PSHEAR(J1D,JKK)*SQRT(ABS(PTKEM_DEP(J1D))) +  &
+            (XRM17*PSHEAR(J1D,KK)*SQRT(ABS(PTKEM_DEP(J1D))) +  &
              PG_O_THVREF(J1D) * (ZHLVPT(J1D,KK) - ZVPT_DEP(J1D)) )**2  &
             + 2. * ZINTE(J1D) * PG_O_THVREF(J1D)                        &
                  * ZDELTVPT(J1D,KK) / PDZZ2D(J1D,KK) ))    ) /             &
@@ -194,7 +194,7 @@ IF (OUPORDN.EQV..FALSE.) THEN
         ZTEST =0.5+SIGN(0.5,ZINTE(J1D)-ZPOTE(J1D))
         ZTESTM=ZTESTM+ZTEST0
         ZLWORK1(J1D)=PDZZ2D(J1D,JKK)
-      ZLWORK2(J1D)=        ( + PG_O_THVREF(J1D) *                     &
+        ZLWORK2(J1D)=        ( + PG_O_THVREF(J1D) *                     &
             (  PVPT(J1D,JKK) - PVPT(J1D,KK) )                              &
              -XRM17*PSHEAR(J1D,JKK)*sqrt(abs(PTKEM_DEP(J1D))) &
           + SQRT (ABS(                                                       &

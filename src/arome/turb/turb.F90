@@ -446,6 +446,7 @@ REAL                :: ZALPHA       ! proportionnality constant between Dz/2 and
 !                                   ! BL89 mixing length near the surface
 !
 REAL :: ZTIME1, ZTIME2
+REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3))::  ZSHEAR, ZDUDZ, ZDVDZ
 !
 !*      1.PRELIMINARIES
 !         -------------
@@ -607,7 +608,8 @@ SELECT CASE (HTURBLEN)
 !           ------------------
 
   CASE ('BL89')
-    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKEM,ZLM)
+    ZSHEAR=0.
+    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKEM,ZSHEAR,ZLM)
 !
 !*      3.2 Delta mixing length
 !           -------------------
@@ -1516,7 +1518,8 @@ ELSE
 !*         3.1 BL89 mixing length
 !           ------------------
   CASE ('BL89')
-    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKEM,ZLM_CLOUD)
+    ZSHEAR=0.
+    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKEM,ZSHEAR,ZLM_CLOUD)
 !
 !*         3.2 Delta mixing length
 !           -------------------
