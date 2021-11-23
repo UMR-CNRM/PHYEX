@@ -44,6 +44,7 @@
 !!     Y. Bouteloup (2012)
 !!     R. Honert Janv 2013 ==> corection of some coding bugs
 !!     R. El Khatib 15-Oct-2014 Optimization
+!!     Q.Rodier  01/2019 : support RM17 mixing length
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -51,7 +52,7 @@
 !
 USE MODD_CST
 USE MODD_CMFSHALL
-
+USE MODD_TURB_n, ONLY : CTURBLEN
 USE MODI_TH_R_FROM_THL_RT_1D
 USE MODI_SHUMAN_MF
 
@@ -177,6 +178,7 @@ REAL  :: ZDEPTH_MAX1, ZDEPTH_MAX2 ! control auto-extinction process
 
 REAL  :: ZTMAX,ZRMAX, ZEPS  ! control value
 
+REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZSHEAR,ZDUDZ,ZDVDZ ! vertical wind shear
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('COMPUTE_UPDRAFT_RHCJ10',0,ZHOOK_HANDLE)
 
@@ -322,9 +324,20 @@ ENDDO
 ! compute L_up
 GLMIX=.TRUE.
 ZTKEM_F(:,KKB)=0.
-
-
-CALL COMPUTE_BL89_ML(KKA,KKB,KKE,KKU,KKL,PDZZ,ZTKEM_F(:,KKB),ZG_O_THVREF(:,KKB),ZTHVM_F,KKB,GLMIX,.FALSE.,ZLUP)
+!
+IF(CTURBLEN=='RM17') THEN
+  ZDUDZ = MZF_MF(KKA,KKU,KKL,GZ_M_W_MF(KKA,KKU,KKL,PUM,PDZZ))
+  ZDVDZ = MZF_MF(KKA,KKU,KKL,GZ_M_W_MF(KKA,KKU,KKL,PVM,PDZZ))
+  ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
+  PRINT*, 'phasage bete sans controle'
+  CALL ABORT
+  STOP
+ELSE
+  ZSHEAR = 0. !no shear in bl89 mixing length
+END IF
+!
+CALL COMPUTE_BL89_ML(KKA,KKB,KKE,KKU,KKL,PDZZ,ZTKEM_F(:,KKB),ZG_O_THVREF(:,KKB), &
+                       ZTHVM_F,KKB,GLMIX,.FALSE.,ZSHEAR,ZLUP)
 ZLUP(:)=MAX(ZLUP(:),1.E-10)
 
 DO JI=1,IIJU

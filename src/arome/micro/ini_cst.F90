@@ -94,6 +94,13 @@ XG      = 9.80665
 !*	 4.     REFERENCE PRESSURE
 !	        -------------------
 !
+! Ocean model cst same as in 1D/CMO SURFEX
+! values used in ini_cst to overwrite XP00 and XTH00
+XRH00OCEAN =1024.
+XTH00OCEAN = 286.65
+XSA00OCEAN= 32.6
+XP00OCEAN = 201.E5
+!Atmospheric model
 XP00 = 1.E5
 XTH00 = 300.
 !-------------------------------------------------------------------------------
@@ -133,7 +140,11 @@ XALPW  = LOG(XESTT) + (XBETAW /XTT) + (XGAMW *LOG(XTT))
 XGAMI  = (XCI - XCPV) / XRV
 XBETAI = (XLSTT/XRV) + (XGAMI * XTT)
 XALPI  = LOG(XESTT) + (XBETAI /XTT) + (XGAMI *LOG(XTT))
-!-------------------------------------------------------------------------------
+! Values identical to ones used in CMO1D in SURFEX /could be modified
+! Coefficient of thermal expansion of water (K-1)
+XALPHAOC = 1.9E-4
+! Coeff of Haline contraction coeff (S-1)
+XBETAOC= 7.7475E-4
 !
 !*	 7.     PRECOMPUTED CONSTANTS
 !	        ---------------------
