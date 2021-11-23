@@ -18,5 +18,8 @@ Dependencies:
 - budget
 - mode_msg, modd_io
 - modd_precision
+- modd_cst
+- yomhook, parkind1
+
 
 

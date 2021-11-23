@@ -9,3 +9,8 @@ Dependencies:
   - créer des codes pour le driver
   - liste dans document Interfaces
   - pour AROME placés, en attendant, dans phyex/externals
+
+Clé de compilation REPRO48 ajoutée pour permettre de reproduire le cycle 48, elle:
+- contourne des corrections de bug
+- modifie l'organisation de calculs
+Cette clé devra être supprimée
