@@ -28,16 +28,24 @@ SUBROUTINE ICE4_FAST_RS(KPROMA,KSIZE, LDSOFT, PCOMPUTE, &
 !!    MODIFICATIONS
 !!    -------------
 !!
+!  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
+!  P. Wautelet 29/05/2019: remove PACK/UNPACK intrinsics (to get more performance and better OpenACC support)
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !
 !
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST
-USE MODD_RAIN_ICE_PARAM
-USE MODD_RAIN_ICE_DESCR
-USE MODD_PARAM_ICE, ONLY : LEVLIMIT, CSNOWRIMING
+USE MODD_CST,            ONLY: XALPI, XALPW, XBETAI, XBETAW, XCI, XCL, XCPV, XESTT, XGAMI, XGAMW, &
+                             & XLMTT, XLVTT, XMD, XMV, XRV, XTT, XEPSILO
+USE MODD_PARAM_ICE,      ONLY: LEVLIMIT, CSNOWRIMING
+USE MODD_RAIN_ICE_DESCR, ONLY: XBS, XCEXVT, XCXS, XRTMIN
+USE MODD_RAIN_ICE_PARAM, ONLY: NACCLBDAR, NACCLBDAS, NGAMINC, X0DEPS, X1DEPS, XACCINTP1R, XACCINTP1S, &
+                             & XACCINTP2R, XACCINTP2S, XCRIMSG, XCRIMSS, XEX0DEPS, XEX1DEPS, XEXCRIMSG, &
+                             & XEXCRIMSS, XEXSRIMCG, XEXSRIMCG2, XFRACCSS, XFSACCRG, XFSCVMG, XGAMINC_RIM1, &
+                             & XGAMINC_RIM1, XGAMINC_RIM2, XGAMINC_RIM4, XKER_RACCS, XKER_RACCSS, &
+                             & XKER_SACCRG, XLBRACCS1, XLBRACCS2, XLBRACCS3, XLBSACCR1, XLBSACCR2, XLBSACCR3, &
+                             & XRIMINTP1, XRIMINTP2, XSRIMCG, XSRIMCG2, XSRIMCG3
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -63,12 +71,12 @@ REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRRT     ! Rain water m.r. at t
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRIAGGS  ! r_i aggregation on r_s
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRCRIMSS ! Cloud droplet riming of the aggregates
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRCRIMSG ! Cloud droplet riming of the aggregates
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRSRIMCG ! Cloud droplet riming of the aggregates
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRRACCSS ! Rain accretion onto the aggregates
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRRACCSG ! Rain accretion onto the aggregates
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRSACCRG ! Rain accretion onto the aggregates
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRCRIMSS ! Cloud droplet riming of the aggregates
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRCRIMSG ! Cloud droplet riming of the aggregates
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRSRIMCG ! Cloud droplet riming of the aggregates
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRRACCSS ! Rain accretion onto the aggregates
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRRACCSG ! Rain accretion onto the aggregates
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRSACCRG ! Rain accretion onto the aggregates
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRSMLTG  ! Conversion-Melting of the aggregates
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRCMLTSR ! Cloud droplet collection onto aggregates by positive temperature
 REAL, DIMENSION(KPROMA, 8),   INTENT(INOUT) :: PRS_TEND ! Individual tendencies
@@ -80,28 +88,21 @@ REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RG
 !
 !*       0.2  declaration of local variables
 !
+INTEGER, PARAMETER :: IRCRIMS=1, IRCRIMSS=2, IRSRIMCG=3, IRRACCS=4, IRRACCSS=5, IRSACCRG=6, &
+                    & IFREEZ1=7, IFREEZ2=8
 REAL, DIMENSION(KSIZE) :: ZRIM, ZACC, ZMASK
 LOGICAL, DIMENSION(KSIZE) :: GRIM, GACC
 INTEGER :: IGRIM, IGACC
+INTEGER, DIMENSION(KSIZE) :: I1
 REAL, DIMENSION(KSIZE) :: ZVEC1, ZVEC2, ZVEC3
 INTEGER, DIMENSION(KSIZE) :: IVEC1, IVEC2
 REAL, DIMENSION(KSIZE) :: ZZW, ZZW2, ZZW6, ZFREEZ_RATE
 INTEGER :: JJ, JL
-INTEGER :: IRCRIMS, IRCRIMSS, IRSRIMCG, IRRACCS, IRRACCSS, IRSACCRG, &
-           IFREEZ1, IFREEZ2
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RS', 0, ZHOOK_HANDLE)
 !
-IRCRIMS=1
-IRCRIMSS=2
-IRSRIMCG=3
-IRRACCS=4
-IRRACCSS=5
-IRSACCRG=6
-IFREEZ1=7
-IFREEZ2=8
 !
 !-------------------------------------------------------------------------------
 !
@@ -148,10 +149,18 @@ ENDDO
 !
 !*       5.1    cloud droplet riming of the aggregates
 !
+IGRIM = 0
 DO JL=1, KSIZE
   ZRIM(JL)=MAX(0., -SIGN(1., XRTMIN(2)-PRCT(JL))) * & !WHERE(PRCT(:)>XRTMIN(2))
           &MAX(0., -SIGN(1., XRTMIN(5)-PRST(JL))) * & !WHERE(PRST(:)>XRTMIN(5))
           &PCOMPUTE(JL)
+  IF (ZRIM(JL)>0) THEN
+    IGRIM = IGRIM + 1
+    I1(IGRIM) = JL
+    GRIM(JL) = .TRUE.
+  ELSE
+    GRIM(JL) = .FALSE.
+  ENDIF
 ENDDO
 !
 ! Collection of cloud droplets by snow: this rate is used for riming (T<0) and for conversion/melting (T>0)
@@ -165,30 +174,33 @@ ELSE
   PRS_TEND(:, IRCRIMS)=0.
   PRS_TEND(:, IRCRIMSS)=0.
   PRS_TEND(:, IRSRIMCG)=0.
-  GRIM(:)=ZRIM(:)==1.
-  IGRIM = COUNT(GRIM(:))
   !
   IF(IGRIM>0) THEN
     !
     !        5.1.1  select the PLBDAS
     !
-    ZVEC1(1:IGRIM) = PACK( PLBDAS(:),MASK=GRIM(:) )
+    DO JJ = 1, IGRIM
+      ZVEC1(JJ) = PLBDAS(I1(JJ))
+    END DO
     !
     !        5.1.2  find the next lower indice for the PLBDAS in the geometrical
     !               set of Lbda_s used to tabulate some moments of the incomplete
     !               gamma function
     !
-    ZVEC2(1:IGRIM) = MAX( 1.00001, MIN( FLOAT(NGAMINC)-0.00001,           &
+    ZVEC2(1:IGRIM) = MAX( 1.00001, MIN( REAL(NGAMINC)-0.00001,           &
                           XRIMINTP1 * LOG( ZVEC1(1:IGRIM) ) + XRIMINTP2 ) )
     IVEC2(1:IGRIM) = INT( ZVEC2(1:IGRIM) )
-    ZVEC2(1:IGRIM) = ZVEC2(1:IGRIM) - FLOAT( IVEC2(1:IGRIM) )
+    ZVEC2(1:IGRIM) = ZVEC2(1:IGRIM) - REAL( IVEC2(1:IGRIM) )
     !
     !        5.1.3  perform the linear interpolation of the normalized
     !               "2+XDS"-moment of the incomplete gamma function
     !
     ZVEC1(1:IGRIM) =   XGAMINC_RIM1( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
                      - XGAMINC_RIM1( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
-    ZZW(:) = UNPACK( VECTOR=ZVEC1(1:IGRIM),MASK=GRIM,FIELD=0.0 )
+    ZZW(:) = 0.
+    DO JJ = 1, IGRIM
+      ZZW(I1(JJ)) = ZVEC1(JJ)
+    END DO
     !
     !        5.1.4  riming of the small sized aggregates
     !
@@ -204,11 +216,17 @@ ELSE
     !
     ZVEC1(1:IGRIM) =  XGAMINC_RIM2( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
                     - XGAMINC_RIM2( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
-    ZZW(:) = UNPACK( VECTOR=ZVEC1(1:IGRIM),MASK=GRIM,FIELD=0.0 )
+    ZZW(:) = 0.
+    DO JJ = 1, IGRIM
+      ZZW(I1(JJ)) = ZVEC1(JJ)
+    END DO
 
     ZVEC1(1:IGRIM) =  XGAMINC_RIM4( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
                     - XGAMINC_RIM4( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
-    ZZW2(:) = UNPACK( VECTOR=ZVEC1(1:IGRIM),MASK=GRIM,FIELD=0.0)
+    ZZW2(:) = 0.
+    DO JJ = 1, IGRIM
+      ZZW2(I1(JJ)) = ZVEC1(JJ)
+    END DO
     !
     !        5.1.6  riming-conversion of the large sized aggregates into graupeln
     !
@@ -253,10 +271,18 @@ ENDDO
 !
 !*       5.2    rain accretion onto the aggregates
 !
-DO JL=1, KSIZE
-  ZACC(JL)=MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JL))) * & !WHERE(PRRT(:)>XRTMIN(3))
-          &MAX(0., -SIGN(1., XRTMIN(5)-PRST(JL))) * & !WHERE(PRST(:)>XRTMIN(5))
-          &PCOMPUTE(JL)
+IGACC = 0
+DO JJ = 1, SIZE(GACC)
+  ZACC(JJ)=MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JJ))) * & !WHERE(PRRT(:)>XRTMIN(3))
+          &MAX(0., -SIGN(1., XRTMIN(5)-PRST(JJ))) * & !WHERE(PRST(:)>XRTMIN(5))
+          &PCOMPUTE(JJ)
+  IF (ZACC(JJ)>0) THEN
+    IGACC = IGACC + 1
+    I1(IGACC) = JJ
+    GACC(JJ) = .TRUE.
+  ELSE
+    GACC(JJ) = .FALSE.
+  END IF
 ENDDO
 IF(LDSOFT) THEN
   DO JL=1, KSIZE
@@ -268,29 +294,29 @@ ELSE
   PRS_TEND(:, IRRACCS)=0.
   PRS_TEND(:, IRRACCSS)=0.
   PRS_TEND(:, IRSACCRG)=0.
-  GACC(:)=ZACC(:)==1.
-  IGACC = COUNT(GACC(:))
   IF(IGACC>0)THEN
     !
     !
     !        5.2.1  select the (PLBDAS,PLBDAR) couplet
     !
-    ZVEC1(1:IGACC) = PACK( PLBDAS(:),MASK=GACC(:) )
-    ZVEC2(1:IGACC) = PACK( PLBDAR(:),MASK=GACC(:) )
+    DO JJ = 1, IGACC
+      ZVEC1(JJ) = PLBDAS(I1(JJ))
+      ZVEC2(JJ) = PLBDAR(I1(JJ))
+    ENDDO
     !
     !        5.2.2  find the next lower indice for the PLBDAS and for the PLBDAR
     !               in the geometrical set of (Lbda_s,Lbda_r) couplet use to
     !               tabulate the RACCSS-kernel
     !
-    ZVEC1(1:IGACC) = MAX( 1.00001, MIN( FLOAT(NACCLBDAS)-0.00001,           &
+    ZVEC1(1:IGACC) = MAX( 1.00001, MIN( REAL(NACCLBDAS)-0.00001,           &
                           XACCINTP1S * LOG( ZVEC1(1:IGACC) ) + XACCINTP2S ) )
     IVEC1(1:IGACC) = INT( ZVEC1(1:IGACC) )
-    ZVEC1(1:IGACC) = ZVEC1(1:IGACC) - FLOAT( IVEC1(1:IGACC) )
+    ZVEC1(1:IGACC) = ZVEC1(1:IGACC) - REAL( IVEC1(1:IGACC) )
     !
-    ZVEC2(1:IGACC) = MAX( 1.00001, MIN( FLOAT(NACCLBDAR)-0.00001,           &
+    ZVEC2(1:IGACC) = MAX( 1.00001, MIN( REAL(NACCLBDAR)-0.00001,           &
                           XACCINTP1R * LOG( ZVEC2(1:IGACC) ) + XACCINTP2R ) )
     IVEC2(1:IGACC) = INT( ZVEC2(1:IGACC) )
-    ZVEC2(1:IGACC) = ZVEC2(1:IGACC) - FLOAT( IVEC2(1:IGACC) )
+    ZVEC2(1:IGACC) = ZVEC2(1:IGACC) - REAL( IVEC2(1:IGACC) )
     !
     !        5.2.3  perform the bilinear interpolation of the normalized
     !               RACCSS-kernel
@@ -303,7 +329,10 @@ ELSE
                     - XKER_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                           * (ZVEC1(JJ) - 1.0)
     END DO
-    ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGACC),MASK=GACC,FIELD=0.0 )
+    ZZW(:) = 0.
+    DO JJ = 1, IGACC
+      ZZW(I1(JJ)) = ZVEC3(JJ)
+    END DO
     !
     !        5.2.4  raindrop accretion on the small sized aggregates
     !
@@ -327,7 +356,10 @@ ELSE
                     -  XKER_RACCS(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                            * (ZVEC1(JJ) - 1.0)
     END DO
-    ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGACC),MASK=GACC(:),FIELD=0.0 )
+    ZZW(:) = 0.
+    DO JJ = 1, IGACC
+      ZZW(I1(JJ)) = ZVEC3(JJ)
+    END DO
     WHERE(GACC(1:KSIZE))
       PRS_TEND(1:KSIZE, IRRACCS) = ZZW(1:KSIZE)*ZZW6(1:KSIZE)
     END WHERE
@@ -342,7 +374,10 @@ ELSE
                       - XKER_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
                                                             * (ZVEC2(JJ) - 1.0)
     END DO
-    ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGACC),MASK=GACC,FIELD=0.0 )
+    ZZW(:) = 0.
+    DO JJ = 1, IGACC
+      ZZW(I1(JJ)) = ZVEC3(JJ)
+    END DO
     !
     !        5.2.6  raindrop accretion-conversion of the large sized aggregates
     !               into graupeln
