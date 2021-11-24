@@ -1,3 +1,11 @@
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+MODULE MODE_ICE4_WARM
+IMPLICIT NONE
+CONTAINS
 SUBROUTINE ICE4_WARM(KSIZE, LDSOFT, PCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
                     &PRHODREF, PLVFACT, PT, PPRES, PTHT, &
                     &PLBDAR, PLBDAR_RF, PKA, PDV, PCJ, &
@@ -24,9 +32,11 @@ SUBROUTINE ICE4_WARM(KSIZE, LDSOFT, PCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST
-USE MODD_RAIN_ICE_PARAM
-USE MODD_RAIN_ICE_DESCR
+USE MODD_CST,            ONLY: XALPW, XBETAW, XCL, XCPD, XCPV, XGAMW, XLVTT, XMD, XMV, XRV, XTT, XEPSILO
+USE MODD_RAIN_ICE_DESCR, ONLY: XCEXVT, XRTMIN
+USE MODD_RAIN_ICE_PARAM, ONLY: X0EVAR, X1EVAR, XCRIAUTC, XEX0EVAR, XEX1EVAR, XEXCACCR, XFCACCR, XTIMAUTC
+!
+USE MODE_MSG
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -37,8 +47,8 @@ IMPLICIT NONE
 INTEGER,                      INTENT(IN)    :: KSIZE
 LOGICAL,                      INTENT(IN)    :: LDSOFT
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PCOMPUTE
-CHARACTER*80,                 INTENT(IN)    :: HSUBG_RC_RR_ACCR ! subgrid rc-rr accretion
-CHARACTER*80,                 INTENT(IN)    :: HSUBG_RR_EVAP ! subgrid rr evaporation
+CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_RC_RR_ACCR ! subgrid rc-rr accretion
+CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_RR_EVAP ! subgrid rr evaporation
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRHODREF ! Reference density
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLVFACT
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PT       ! Temperature
@@ -71,7 +81,6 @@ REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RR
 REAL, DIMENSION(KSIZE) :: ZZW2, ZZW3, ZZW4
 REAL, DIMENSION(KSIZE) :: ZUSW ! Undersaturation over water
 REAL, DIMENSION(KSIZE) :: ZTHLT    ! Liquid potential temperature
-REAL            :: ZTIMAUTIC
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 REAL, DIMENSION(KSIZE) :: ZMASK, ZMASK1, ZMASK2
 INTEGER :: JL
@@ -86,7 +95,7 @@ IF (LHOOK) CALL DR_HOOK('ICE4_WARM', 0, ZHOOK_HANDLE)
 !
 DO JL=1, KSIZE
   ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(2)-PHLC_HRC(JL))) * & ! PHLC_HRC(:)>XRTMIN(2)
-           &MAX(0., -SIGN(1., -PHLC_HCF(JL))) * & ! PHLC_HCF(:) .GT. 0.
+           &MAX(0., -SIGN(1., 1.E-20-PHLC_HCF(JL))) * & ! PHLC_HCF(:) .GT. 1.E-20
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -138,10 +147,10 @@ ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
              &PCOMPUTE(JL)
     ZMASK1(JL)=ZMASK(JL) * &
               &MAX(0., -SIGN(1., XRTMIN(2)-PHLC_HRC(JL))) * & ! PHLC_HRC(:)>XRTMIN(2)
-              &MAX(0., -SIGN(1., -PHLC_HCF(JL))) ! PHLC_HCF(:)>0.
+              &MAX(0., -SIGN(1., 1.E-20-PHLC_HCF(JL))) ! PHLC_HCF(:)>1.E-20
     ZMASK2(JL)=ZMASK(JL) * &
               &MAX(0., -SIGN(1., XRTMIN(2)-PHLC_LRC(JL))) * & ! PHLC_LRC(:)>XRTMIN(2)
-              &MAX(0., -SIGN(1., -PHLC_LCF(JL))) ! PHLC_LCF(:)>0.
+              &MAX(0., -SIGN(1., 1.E-20-PHLC_LCF(JL))) ! PHLC_LCF(:)>1.E-20
   ENDDO
   IF(LDSOFT) THEN
     DO JL=1, KSIZE
@@ -165,9 +174,7 @@ ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
     END WHERE
   ENDIF
 ELSE
-  !wrong HSUBG_RC_RR_ACCR case
-  CALL ABORT
-  STOP 'wrong HSUBG_RC_RR_ACCR case'
+  CALL PRINT_MSG(NVERB_FATAL,'GEN','ICE4_WARM','wrong HSUBG_RC_RR_ACCR case')
 ENDIF
 !
 !*       4.4    compute the evaporation of r_r: RREVAV
@@ -252,9 +259,7 @@ ELSEIF (HSUBG_RR_EVAP=='CLFR' .OR. HSUBG_RR_EVAP=='PRFR') THEN
   ENDIF
 
 ELSE
-  !wrong HSUBG_RR_EVAP case
-  CALL ABORT
-  STOP 'wrong HSUBG_RR_EVAP case'
+  CALL PRINT_MSG(NVERB_FATAL,'GEN','ICE4_WARM','wrong HSUBG_RR_EVAP case')
 END IF
 !
 DO JL=1, KSIZE
@@ -270,5 +275,6 @@ DO JL=1, KSIZE
 ENDDO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_WARM', 1, ZHOOK_HANDLE)
-
+!
 END SUBROUTINE ICE4_WARM
+END MODULE MODE_ICE4_WARM
