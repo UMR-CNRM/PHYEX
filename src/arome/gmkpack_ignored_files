@@ -20,3 +20,7 @@ phyex/turb/gz_m_w.F90
 phyex/turb/gz_u_uw.F90
 phyex/turb/gz_v_vw.F90
 phyex/turb/gz_w_m.F90
+phyex/micro/ice4_fast_ri.F90
+phyex/micro/modi_ice4_fast_ri.F90
+phyex/micro/ice4_rsrimcg_old.F90
+phyex/micro/modi_ice4_rsrimcg_old.F90

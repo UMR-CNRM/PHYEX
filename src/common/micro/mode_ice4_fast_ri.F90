@@ -1,3 +1,11 @@
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-------------------------------------------------------------------------------
+MODULE MODE_ICE4_FAST_RI
+IMPLICIT NONE
+CONTAINS
 SUBROUTINE ICE4_FAST_RI(KSIZE, LDSOFT, PCOMPUTE, &
                        &PRHODREF, PLVFACT, PLSFACT, &
                        &PAI, PCJ, PCIT, &
@@ -15,15 +23,15 @@ SUBROUTINE ICE4_FAST_RI(KSIZE, LDSOFT, PCOMPUTE, &
 !!
 !!    MODIFICATIONS
 !!    -------------
+!!     S. Riette, 11/2021: loop instead of array syntax
 !!
 !
 !
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST
-USE MODD_RAIN_ICE_PARAM
-USE MODD_RAIN_ICE_DESCR
+USE MODD_RAIN_ICE_PARAM, ONLY: X0DEPI,X2DEPI
+USE MODD_RAIN_ICE_DESCR, ONLY: XDI,XLBEXI,XLBI,XRTMIN
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -50,10 +58,9 @@ REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RI
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(KSIZE) :: ZZW
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
-REAL, DIMENSION(KSIZE) :: ZMASK
 INTEGER :: JL
+LOGICAL :: LMASK
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RI',0,ZHOOK_HANDLE)
@@ -63,30 +70,24 @@ IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RI',0,ZHOOK_HANDLE)
 !*       7.2    Bergeron-Findeisen effect: RCBERI
 !
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., -PSSI(JL))) * &          ! PSSI(:)>0.
-           &MAX(0., -SIGN(1., XRTMIN(2)-PRCT(JL))) * & ! PRCT(:)>XRTMIN(2)
-           &MAX(0., -SIGN(1., XRTMIN(4)-PRIT(JL))) * & ! PRIT(:)>XRTMIN(4)
-           &MAX(0., -SIGN(1., -PCIT(JL))) * &          ! PCIT(:)>0.
-           &PCOMPUTE(JL)
-ENDDO
-IF(LDSOFT) THEN
-  DO JL=1, KSIZE
-    PRCBERI(JL) = PRCBERI(JL) * ZMASK(JL)
-  ENDDO
-ELSE
-  PRCBERI(:) = 0.
-  WHERE(ZMASK(:)==1.)
-    PRCBERI(:) = MIN(1.E8, XLBI*(PRHODREF(:)*PRIT(:)/PCIT(:))**XLBEXI) ! Lbda_i
-    PRCBERI(:) = ( PSSI(:) / (PRHODREF(:)*PAI(:)) ) * PCIT(:) * &
-                 ( X0DEPI/PRCBERI(:) + X2DEPI*PCJ(:)*PCJ(:)/PRCBERI(:)**(XDI+2.0) )
-  END WHERE
-ENDIF
-DO JL=1, KSIZE
-  PA_RC(JL) = PA_RC(JL) - PRCBERI(JL)
-  PA_RI(JL) = PA_RI(JL) + PRCBERI(JL)
-  PA_TH(JL) = PA_TH(JL) + PRCBERI(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  LMASK = PSSI(JL)>0. .AND. PRCT(JL)>XRTMIN(2) .AND. &
+        & PRIT(JL)>XRTMIN(4) .AND. PCIT(JL)>0. .AND. &
+        & PCOMPUTE(JL)==1
+  IF(LMASK) THEN
+    IF(.NOT. LDSOFT) THEN
+      PRCBERI(JL) = MIN(1.E8, XLBI*(PRHODREF(JL)*PRIT(JL)/PCIT(JL))**XLBEXI) ! Lbda_i
+      PRCBERI(JL) = ( PSSI(JL) / (PRHODREF(JL)*PAI(JL)) ) * PCIT(JL) * &
+                    ( X0DEPI/PRCBERI(JL) + X2DEPI*PCJ(JL)*PCJ(JL)/PRCBERI(JL)**(XDI+2.0) )
+    ENDIF
+    PA_RC(JL) = PA_RC(JL) - PRCBERI(JL)
+    PA_RI(JL) = PA_RI(JL) + PRCBERI(JL)
+    PA_TH(JL) = PA_TH(JL) + PRCBERI(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  ELSE
+    PRCBERI(JL) = 0.
+  ENDIF
 ENDDO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RI', 1, ZHOOK_HANDLE)
 !
 END SUBROUTINE ICE4_FAST_RI
+END MODULE MODE_ICE4_FAST_RI
