@@ -95,7 +95,11 @@ IF (LHOOK) CALL DR_HOOK('ICE4_WARM', 0, ZHOOK_HANDLE)
 !
 DO JL=1, KSIZE
   ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(2)-PHLC_HRC(JL))) * & ! PHLC_HRC(:)>XRTMIN(2)
+#ifdef REPRO48
+           &MAX(0., -SIGN(1., -PHLC_HCF(JL))) * & ! PHLC_HCF(:) .GT. 0.
+#else
            &MAX(0., -SIGN(1., 1.E-20-PHLC_HCF(JL))) * & ! PHLC_HCF(:) .GT. 1.E-20
+#endif
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -147,10 +151,18 @@ ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
              &PCOMPUTE(JL)
     ZMASK1(JL)=ZMASK(JL) * &
               &MAX(0., -SIGN(1., XRTMIN(2)-PHLC_HRC(JL))) * & ! PHLC_HRC(:)>XRTMIN(2)
+#ifdef REPRO48
+              &MAX(0., -SIGN(1., -PHLC_HCF(JL))) ! PHLC_HCF(:)>0.
+#else
               &MAX(0., -SIGN(1., 1.E-20-PHLC_HCF(JL))) ! PHLC_HCF(:)>1.E-20
+#endif
     ZMASK2(JL)=ZMASK(JL) * &
               &MAX(0., -SIGN(1., XRTMIN(2)-PHLC_LRC(JL))) * & ! PHLC_LRC(:)>XRTMIN(2)
+#ifdef REPRO48
+              &MAX(0., -SIGN(1., -PHLC_LCF(JL))) ! PHLC_LCF(:)>0.
+#else
               &MAX(0., -SIGN(1., 1.E-20-PHLC_LCF(JL))) ! PHLC_LCF(:)>1.E-20
+#endif
   ENDDO
   IF(LDSOFT) THEN
     DO JL=1, KSIZE
