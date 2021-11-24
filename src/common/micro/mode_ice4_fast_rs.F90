@@ -1,4 +1,11 @@
-SUBROUTINE ICE4_FAST_RS(KSIZE, LDSOFT, PCOMPUTE, &
+!MNH_LIC Copyright 1994-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+MODULE MODE_ICE4_FAST_RS
+IMPLICIT NONE
+CONTAINS
+SUBROUTINE ICE4_FAST_RS(KPROMA,KSIZE, LDSOFT, PCOMPUTE, &
                        &PRHODREF, PLVFACT, PLSFACT, PPRES, &
                        &PDV, PKA, PCJ, &
                        &PLBDAR, PLBDAS, &
@@ -21,6 +28,7 @@ SUBROUTINE ICE4_FAST_RS(KSIZE, LDSOFT, PCOMPUTE, &
 !!    MODIFICATIONS
 !!    -------------
 !!
+!!     R. El Khatib 24-Aug-2021 Optimizations
 !
 !
 !*      0. DECLARATIONS
@@ -37,7 +45,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-INTEGER,                      INTENT(IN)    :: KSIZE
+INTEGER,                      INTENT(IN)    :: KPROMA,KSIZE
 LOGICAL,                      INTENT(IN)    :: LDSOFT
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PCOMPUTE
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRHODREF ! Reference density
@@ -63,7 +71,7 @@ REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRRACCSG ! Rain accretion onto th
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRSACCRG ! Rain accretion onto the aggregates
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRSMLTG  ! Conversion-Melting of the aggregates
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRCMLTSR ! Cloud droplet collection onto aggregates by positive temperature
-REAL, DIMENSION(KSIZE, 8),    INTENT(INOUT) :: PRS_TEND ! Individual tendencies
+REAL, DIMENSION(KPROMA, 8),   INTENT(INOUT) :: PRS_TEND ! Individual tendencies
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_TH
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RC
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RR
@@ -114,20 +122,20 @@ ELSE
     PRS_TEND(JL, IFREEZ1)=ZMASK(JL) * PRVT(JL)*PPRES(JL)/(XEPSILO+PRVT(JL)) ! Vapor pressure
   ENDDO
   IF(LEVLIMIT) THEN
-    WHERE(ZMASK(:)==1.)
-      PRS_TEND(:, IFREEZ1)=MIN(PRS_TEND(:, IFREEZ1), EXP(XALPI-XBETAI/PT(:)-XGAMI*ALOG(PT(:)))) ! min(ev, es_i(T))
+    WHERE(ZMASK(1:KSIZE)==1.)
+      PRS_TEND(1:KSIZE, IFREEZ1)=MIN(PRS_TEND(1:KSIZE, IFREEZ1), EXP(XALPI-XBETAI/PT(1:KSIZE)-XGAMI*ALOG(PT(1:KSIZE)))) ! min(ev, es_i(T))
     END WHERE
   ENDIF
   PRS_TEND(:, IFREEZ2)=0.
-  WHERE(ZMASK(:)==1.)
-    PRS_TEND(:, IFREEZ1)=PKA(:)*(XTT-PT(:)) +                              &
-             (PDV(:)*(XLVTT+(XCPV-XCL)*(PT(:)-XTT)) &
-                           *(XESTT-PRS_TEND(:, IFREEZ1))/(XRV*PT(:))           )
-    PRS_TEND(:, IFREEZ1)=PRS_TEND(:, IFREEZ1)* ( X0DEPS*       PLBDAS(:)**XEX0DEPS +     &
-                           X1DEPS*PCJ(:)*PLBDAS(:)**XEX1DEPS )/ &
-                          ( PRHODREF(:)*(XLMTT-XCL*(XTT-PT(:))) )
-    PRS_TEND(:, IFREEZ2)=(PRHODREF(:)*(XLMTT+(XCI-XCL)*(XTT-PT(:)))   ) / &
-                          ( PRHODREF(:)*(XLMTT-XCL*(XTT-PT(:))) )
+  WHERE(ZMASK(1:KSIZE)==1.)
+    PRS_TEND(1:KSIZE, IFREEZ1)=PKA(1:KSIZE)*(XTT-PT(1:KSIZE)) +                              &
+             (PDV(1:KSIZE)*(XLVTT+(XCPV-XCL)*(PT(1:KSIZE)-XTT)) &
+                           *(XESTT-PRS_TEND(1:KSIZE, IFREEZ1))/(XRV*PT(1:KSIZE))           )
+    PRS_TEND(1:KSIZE, IFREEZ1)=PRS_TEND(1:KSIZE, IFREEZ1)* ( X0DEPS*       PLBDAS(1:KSIZE)**XEX0DEPS +     &
+                           X1DEPS*PCJ(1:KSIZE)*PLBDAS(1:KSIZE)**XEX1DEPS )/ &
+                          ( PRHODREF(1:KSIZE)*(XLMTT-XCL*(XTT-PT(1:KSIZE))) )
+    PRS_TEND(1:KSIZE, IFREEZ2)=(PRHODREF(1:KSIZE)*(XLMTT+(XCI-XCL)*(XTT-PT(1:KSIZE)))   ) / &
+                          ( PRHODREF(1:KSIZE)*(XLMTT-XCL*(XTT-PT(1:KSIZE))) )
   END WHERE
 ENDIF
 DO JL=1, KSIZE
@@ -184,10 +192,10 @@ ELSE
     !
     !        5.1.4  riming of the small sized aggregates
     !
-    WHERE (GRIM(:))
-      PRS_TEND(:, IRCRIMSS) = XCRIMSS * ZZW(:) * PRCT(:)                & ! RCRIMSS
-                                      *   PLBDAS(:)**XEXCRIMSS &
-                                      * PRHODREF(:)**(-XCEXVT)
+    WHERE (GRIM(1:KSIZE))
+      PRS_TEND(1:KSIZE, IRCRIMSS) = XCRIMSS * ZZW(1:KSIZE) * PRCT(1:KSIZE)                & ! RCRIMSS
+                                      *   PLBDAS(1:KSIZE)**XEXCRIMSS &
+                                      * PRHODREF(1:KSIZE)**(-XCEXVT)
     END WHERE
     !
     !        5.1.5  perform the linear interpolation of the normalized
@@ -205,21 +213,21 @@ ELSE
     !        5.1.6  riming-conversion of the large sized aggregates into graupeln
     !
     !
-    WHERE(GRIM(:))
-      PRS_TEND(:, IRCRIMS)=XCRIMSG * PRCT(:)               & ! RCRIMS
-                                   * PLBDAS(:)**XEXCRIMSG  &
-                                   * PRHODREF(:)**(-XCEXVT)
-      ZZW6(:) = PRS_TEND(:, IRCRIMS) - PRS_TEND(:, IRCRIMSS) ! RCRIMSG
+    WHERE(GRIM(1:KSIZE))
+      PRS_TEND(1:KSIZE, IRCRIMS)=XCRIMSG * PRCT(1:KSIZE)               & ! RCRIMS
+                                   * PLBDAS(1:KSIZE)**XEXCRIMSG  &
+                                   * PRHODREF(1:KSIZE)**(-XCEXVT)
+      ZZW6(1:KSIZE) = PRS_TEND(1:KSIZE, IRCRIMS) - PRS_TEND(1:KSIZE, IRCRIMSS) ! RCRIMSG
     END WHERE
 
     IF(CSNOWRIMING=='M90 ')THEN
       !Murakami 1990
-      WHERE(GRIM(:))
-        PRS_TEND(:, IRSRIMCG)=XSRIMCG * PLBDAS(:)**XEXSRIMCG*(1.0-ZZW(:))
-        PRS_TEND(:, IRSRIMCG)=ZZW6(:)*PRS_TEND(:, IRSRIMCG)/ &
+      WHERE(GRIM(1:KSIZE))
+        PRS_TEND(1:KSIZE, IRSRIMCG)=XSRIMCG * PLBDAS(1:KSIZE)**XEXSRIMCG*(1.0-ZZW(1:KSIZE))
+        PRS_TEND(1:KSIZE, IRSRIMCG)=ZZW6(1:KSIZE)*PRS_TEND(1:KSIZE, IRSRIMCG)/ &
                        MAX(1.E-20, &
-                           XSRIMCG3*XSRIMCG2*PLBDAS(:)**XEXSRIMCG2*(1.-ZZW2(:)) - &
-                           XSRIMCG3*PRS_TEND(:, IRSRIMCG))
+                           XSRIMCG3*XSRIMCG2*PLBDAS(1:KSIZE)**XEXSRIMCG2*(1.-ZZW2(1:KSIZE)) - &
+                           XSRIMCG3*PRS_TEND(1:KSIZE, IRSRIMCG))
       END WHERE
     ELSE
       PRS_TEND(:, IRSRIMCG)=0.
@@ -241,13 +249,6 @@ DO JL=1, KSIZE
   PRSRIMCG(JL) = PRSRIMCG(JL) * MAX(0., -SIGN(1., -PRCRIMSG(JL)))
   PRCRIMSG(JL)=MAX(0., PRCRIMSG(JL))
 
-  PA_RC(JL) = PA_RC(JL) - PRCRIMSS(JL)
-  PA_RS(JL) = PA_RS(JL) + PRCRIMSS(JL)
-  PA_TH(JL) = PA_TH(JL) + PRCRIMSS(JL)*(PLSFACT(JL)-PLVFACT(JL))
-  PA_RC(JL) = PA_RC(JL) - PRCRIMSG(JL)
-  PA_RS(JL) = PA_RS(JL) - PRSRIMCG(JL)
-  PA_RG(JL) = PA_RG(JL) + PRCRIMSG(JL)+PRSRIMCG(JL)
-  PA_TH(JL) = PA_TH(JL) + PRCRIMSG(JL)*(PLSFACT(JL)-PLVFACT(JL))
 ENDDO
 !
 !*       5.2    rain accretion onto the aggregates
@@ -306,13 +307,13 @@ ELSE
     !
     !        5.2.4  raindrop accretion on the small sized aggregates
     !
-    WHERE(GACC(:))
-      ZZW6(:) =                                                        & !! coef of RRACCS
-            XFRACCSS*( PLBDAS(:)**XCXS )*( PRHODREF(:)**(-XCEXVT-1.) ) &
-       *( XLBRACCS1/((PLBDAS(:)**2)               ) +                  &
-          XLBRACCS2/( PLBDAS(:)    * PLBDAR(:)    ) +                  &
-          XLBRACCS3/(               (PLBDAR(:)**2)) )/PLBDAR(:)**4
-      PRS_TEND(:, IRRACCSS) =ZZW(:)*ZZW6(:)
+    WHERE(GACC(1:KSIZE))
+      ZZW6(1:KSIZE) =                                                        & !! coef of RRACCS
+            XFRACCSS*( PLBDAS(1:KSIZE)**XCXS )*( PRHODREF(1:KSIZE)**(-XCEXVT-1.) ) &
+       *( XLBRACCS1/((PLBDAS(1:KSIZE)**2)               ) +                  &
+          XLBRACCS2/( PLBDAS(1:KSIZE)    * PLBDAR(1:KSIZE)    ) +                  &
+          XLBRACCS3/(               (PLBDAR(1:KSIZE)**2)) )/PLBDAR(1:KSIZE)**4
+      PRS_TEND(1:KSIZE, IRRACCSS) =ZZW(1:KSIZE)*ZZW6(1:KSIZE)
     END WHERE
     !
     !        5.2.4b perform the bilinear interpolation of the normalized
@@ -327,8 +328,8 @@ ELSE
                                                            * (ZVEC1(JJ) - 1.0)
     END DO
     ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGACC),MASK=GACC(:),FIELD=0.0 )
-    WHERE(GACC(:))
-      PRS_TEND(:, IRRACCS) = ZZW(:)*ZZW6(:)
+    WHERE(GACC(1:KSIZE))
+      PRS_TEND(1:KSIZE, IRRACCS) = ZZW(1:KSIZE)*ZZW6(1:KSIZE)
     END WHERE
     !        5.2.5  perform the bilinear interpolation of the normalized
     !               SACCRG-kernel
@@ -346,12 +347,12 @@ ELSE
     !        5.2.6  raindrop accretion-conversion of the large sized aggregates
     !               into graupeln
     !
-    WHERE(GACC(:))
-      PRS_TEND(:, IRSACCRG) = XFSACCRG*ZZW(:)*                    & ! RSACCRG
-          ( PLBDAS(:)**(XCXS-XBS) )*( PRHODREF(:)**(-XCEXVT-1.) ) &
-         *( XLBSACCR1/((PLBDAR(:)**2)               ) +           &
-            XLBSACCR2/( PLBDAR(:)    * PLBDAS(:)    ) +           &
-            XLBSACCR3/(               (PLBDAS(:)**2)) )/PLBDAR(:)
+    WHERE(GACC(1:KSIZE))
+      PRS_TEND(1:KSIZE, IRSACCRG) = XFSACCRG*ZZW(1:KSIZE)*                    & ! RSACCRG
+          ( PLBDAS(1:KSIZE)**(XCXS-XBS) )*( PRHODREF(1:KSIZE)**(-XCEXVT-1.) ) &
+         *( XLBSACCR1/((PLBDAR(1:KSIZE)**2)               ) +           &
+            XLBSACCR2/( PLBDAR(1:KSIZE)    * PLBDAS(1:KSIZE)    ) +           &
+            XLBSACCR3/(               (PLBDAS(1:KSIZE)**2)) )/PLBDAR(1:KSIZE)
     END WHERE
   ENDIF
 ENDIF
@@ -370,13 +371,6 @@ DO JL=1, KSIZE
   PRSACCRG(JL) = PRSACCRG(JL) * MAX(0., -SIGN(1., -PRRACCSG(JL)))
   PRRACCSG(JL)=MAX(0., PRRACCSG(JL))
 
-  PA_RR(JL) = PA_RR(JL) - PRRACCSS(JL)
-  PA_RS(JL) = PA_RS(JL) + PRRACCSS(JL)
-  PA_TH(JL) = PA_TH(JL) + PRRACCSS(JL)*(PLSFACT(JL)-PLVFACT(JL))
-  PA_RR(JL) = PA_RR(JL) - PRRACCSG(JL)
-  PA_RS(JL) = PA_RS(JL) - PRSACCRG(JL)
-  PA_RG(JL) = PA_RG(JL) + PRRACCSG(JL)+PRSACCRG(JL)
-  PA_TH(JL) = PA_TH(JL) + PRRACCSG(JL)*(PLSFACT(JL)-PLVFACT(JL))
 ENDDO
 !
 !
@@ -409,24 +403,41 @@ ELSE
                           &)
   ENDDO
   PRCMLTSR(:) = 0.
-  WHERE(ZMASK(:)==1.)
+  WHERE(ZMASK(1:KSIZE)==1.)
     !
     ! compute RSMLT
     !
-    PRSMLTG(:)  = XFSCVMG*MAX( 0.0,( -PRSMLTG(:) *             &
-                         ( X0DEPS*       PLBDAS(:)**XEX0DEPS +     &
-                           X1DEPS*PCJ(:)*PLBDAS(:)**XEX1DEPS ) -   &
-                                   ( PRS_TEND(:, IRCRIMS) + PRS_TEND(:, IRRACCS) ) *       &
-                            ( PRHODREF(:)*XCL*(XTT-PT(:))) ) /    &
-                                           ( PRHODREF(:)*XLMTT ) )
+    PRSMLTG(1:KSIZE)  = XFSCVMG*MAX( 0.0,( -PRSMLTG(1:KSIZE) *             &
+                         ( X0DEPS*       PLBDAS(1:KSIZE)**XEX0DEPS +     &
+                           X1DEPS*PCJ(1:KSIZE)*PLBDAS(1:KSIZE)**XEX1DEPS ) -   &
+                                   ( PRS_TEND(1:KSIZE, IRCRIMS) + PRS_TEND(1:KSIZE, IRRACCS) ) *       &
+                            ( PRHODREF(1:KSIZE)*XCL*(XTT-PT(1:KSIZE))) ) /    &
+                                           ( PRHODREF(1:KSIZE)*XLMTT ) )
     ! When T < XTT, rc is collected by snow (riming) to produce snow and graupel
     ! When T > XTT, if riming was still enabled, rc would produce snow and graupel with snow becomming graupel (conversion/melting) and graupel becomming rain (melting)
     ! To insure consistency when crossing T=XTT, rc collected with T>XTT must be transformed in rain.
     ! rc cannot produce iced species with a positive temperature but is still collected with a good efficiency by snow
-    PRCMLTSR(:) = PRS_TEND(:, IRCRIMS) ! both species are liquid, no heat is exchanged
+    PRCMLTSR(1:KSIZE) = PRS_TEND(1:KSIZE, IRCRIMS) ! both species are liquid, no heat is exchanged
   END WHERE
 ENDIF
+
 DO JL=1, KSIZE
+  PA_RC(JL) = PA_RC(JL) - PRCRIMSS(JL)
+  PA_RS(JL) = PA_RS(JL) + PRCRIMSS(JL)
+  PA_TH(JL) = PA_TH(JL) + PRCRIMSS(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  PA_RC(JL) = PA_RC(JL) - PRCRIMSG(JL)
+  PA_RS(JL) = PA_RS(JL) - PRSRIMCG(JL)
+  PA_RG(JL) = PA_RG(JL) + PRCRIMSG(JL)+PRSRIMCG(JL)
+  PA_TH(JL) = PA_TH(JL) + PRCRIMSG(JL)*(PLSFACT(JL)-PLVFACT(JL))
+
+  PA_RR(JL) = PA_RR(JL) - PRRACCSS(JL)
+  PA_RS(JL) = PA_RS(JL) + PRRACCSS(JL)
+  PA_TH(JL) = PA_TH(JL) + PRRACCSS(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  PA_RR(JL) = PA_RR(JL) - PRRACCSG(JL)
+  PA_RS(JL) = PA_RS(JL) - PRSACCRG(JL)
+  PA_RG(JL) = PA_RG(JL) + PRRACCSG(JL)+PRSACCRG(JL)
+  PA_TH(JL) = PA_TH(JL) + PRRACCSG(JL)*(PLSFACT(JL)-PLVFACT(JL))
+
   ! note that RSCVMG = RSMLT*XFSCVMG but no heat is exchanged (at the rate RSMLT)
   ! because the graupeln produced by this process are still icy!!!
   PA_RS(JL) = PA_RS(JL) - PRSMLTG(JL)
@@ -434,7 +445,7 @@ DO JL=1, KSIZE
   PA_RC(JL) = PA_RC(JL) - PRCMLTSR(JL)
   PA_RR(JL) = PA_RR(JL) + PRCMLTSR(JL)
 ENDDO
-
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RS', 1, ZHOOK_HANDLE)
 !
 END SUBROUTINE ICE4_FAST_RS
+END MODULE MODE_ICE4_FAST_RS

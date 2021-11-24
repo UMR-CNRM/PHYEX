@@ -1,3 +1,10 @@
+!MNH_LIC Copyright 1994-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+MODULE MODE_ICE4_SLOW
+IMPLICIT NONE
+CONTAINS
 SUBROUTINE ICE4_SLOW(KSIZE, LDSOFT, PCOMPUTE, PRHODREF, PT, &
                      &PSSI, PLVFACT, PLSFACT, &
                      &PRVT, PRCT, PRIT, PRST, PRGT, &
@@ -207,3 +214,4 @@ ENDDO
 IF (LHOOK) CALL DR_HOOK('ICE4_SLOW', 1, ZHOOK_HANDLE)
 !
 END SUBROUTINE ICE4_SLOW
+END MODULE MODE_ICE4_SLOW
