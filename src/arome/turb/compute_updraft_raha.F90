@@ -55,7 +55,7 @@ USE MODD_CST
 USE MODD_CMFSHALL
 
 USE MODI_TH_R_FROM_THL_RT_1D
-USE MODI_SHUMAN_MF
+USE MODI_SHUMAN_MF, ONLY: MZM_MF
 
 IMPLICIT NONE
 
@@ -238,11 +238,11 @@ PRSAT_UP(:,:)=PRVM(:,:) ! should be initialised correctly but is (normaly) not u
 ! Initialisation of environment variables at t-dt
 
 ! variables at flux level
-ZTHLM_F(:,:) = MZM_MF(KKA,KKU,KKL,PTHLM(:,:))
-ZRTM_F (:,:) = MZM_MF(KKA,KKU,KKL,PRTM(:,:))
-ZUM_F  (:,:) = MZM_MF(KKA,KKU,KKL,PUM(:,:))
-ZVM_F  (:,:) = MZM_MF(KKA,KKU,KKL,PVM(:,:))
-ZTKEM_F(:,:) = MZM_MF(KKA,KKU,KKL,PTKEM(:,:))
+ZTHLM_F(:,:) = MZM_MF(PTHLM(:,:), KKA, KKU, KKL)
+ZRTM_F (:,:) = MZM_MF(PRTM(:,:), KKA, KKU, KKL)
+ZUM_F  (:,:) = MZM_MF(PUM(:,:), KKA, KKU, KKL)
+ZVM_F  (:,:) = MZM_MF(PVM(:,:), KKA, KKU, KKL)
+ZTKEM_F(:,:) = MZM_MF(PTKEM(:,:), KKA, KKU, KKL)
 
 !DO JSV=1,ISV 
 ! IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
@@ -269,10 +269,10 @@ PRT_UP(:,KKB) = ZRTM_F(:,KKB)+MAX(0.,MIN(ZRMAX,(PSFRV(:)/SQRT(ZTKEM_F(:,KKB)))*X
 ZQT_UP(:) = PRT_UP(:,KKB)/(1.+PRT_UP(:,KKB))
 ZTHS_UP(:,KKB)=PTHL_UP(:,KKB)*(1.+XLAMBDA*ZQT_UP(:))
 
-ZTHM_F (:,:) = MZM_MF(KKA,KKU,KKL,PTHM (:,:))
-ZPRES_F(:,:) = MZM_MF(KKA,KKU,KKL,PPABSM(:,:))
-ZRHO_F (:,:) = MZM_MF(KKA,KKU,KKL,PRHODREF(:,:))
-ZRVM_F (:,:) = MZM_MF(KKA,KKU,KKL,PRVM(:,:))
+ZTHM_F (:,:) = MZM_MF(PTHM (:,:), KKA, KKU, KKL)
+ZPRES_F(:,:) = MZM_MF(PPABSM(:,:), KKA, KKU, KKL)
+ZRHO_F (:,:) = MZM_MF(PRHODREF(:,:), KKA, KKU, KKL)
+ZRVM_F (:,:) = MZM_MF(PRVM(:,:), KKA, KKU, KKL)
 
 ! thetav at mass and flux levels 
 ZTHVM_F(:,:)=ZTHM_F(:,:)*((1.+ZRVORD*ZRVM_F(:,:))/(1.+ZRTM_F(:,:)))

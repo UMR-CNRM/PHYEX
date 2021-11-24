@@ -60,7 +60,7 @@ USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
 USE MODI_GRADIENT_M
-USE MODI_SHUMAN 
+USE MODI_SHUMAN , ONLY : MZF
 USE MODI_EMOIST
 USE MODI_ETHETA
 USE MODI_LES_MEAN_SUBGRID
@@ -125,10 +125,10 @@ DO JSV=1,NSV
   !
   IF (LLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
-    ZFLXZ(:,:,:) =  PPSI_SV(:,:,:,JSV)*GZ_M_W(KKA,KKU,KKL,PSVM(:,:,:,JSV),PDZZ)**2
-    ZFLXZ(:,:,:) = XCHF / ZCSVD * PLM * PLEPS * MZF(KKA,KKU,KKL,ZFLXZ(:,:,:) )
-    CALL LES_MEAN_SUBGRID( -2.*ZCSVD*SQRT(PTKEM)*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_Sv2(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID( MZF(KKA,KKU,KKL,PWM)*ZFLXZ, X_LES_RES_W_SBG_Sv2(:,:,:,JSV) )
+    ZFLXZ(:,:,:) =  PPSI_SV(:,:,:,JSV)*GZ_M_W(PSVM(:,:,:,JSV),PDZZ, KKA, KKU, KKL)**2
+    ZFLXZ(:,:,:) = XCHF / ZCSVD * PLM * PLEPS * MZF(ZFLXZ(:,:,:), KKA, KKU, KKL)
+    CALL LES_MEAN_SUBGRID(-2.*ZCSVD*SQRT(PTKEM)*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_Sv2(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID(MZF(PWM, KKA, KKU, KKL)*ZFLXZ, X_LES_RES_W_SBG_Sv2(:,:,:,JSV) )
   END IF
   !
   ! covariance ThvSv
@@ -137,18 +137,18 @@ DO JSV=1,NSV
     ! approximation: diagnosed explicitely (without implicit term)
     ZA(:,:,:)   =  ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM)
     ZFLXZ(:,:,:)= ( XCSHF * PPHI3 + XCHF * PPSI_SV(:,:,:,JSV) )              &
-                  *  GZ_M_W(KKA,KKU,KKL,PTHLM,PDZZ)                          &
-                  *  GZ_M_W(KKA,KKU,KKL,PSVM(:,:,:,JSV),PDZZ)
-    ZFLXZ(:,:,:)= PLM * PLEPS / (2.*ZCTSVD) * MZF(KKA,KKU,KKL,ZFLXZ)
+                  *  GZ_M_W(PTHLM,PDZZ, KKA, KKU, KKL)                          &
+                  *  GZ_M_W(PSVM(:,:,:,JSV),PDZZ, KKA, KKU, KKL)
+    ZFLXZ(:,:,:)= PLM * PLEPS / (2.*ZCTSVD) * MZF(ZFLXZ, KKA, KKU, KKL)
     CALL LES_MEAN_SUBGRID( ZA*ZFLXZ, X_LES_SUBGRID_SvThv(:,:,:,JSV) ) 
     CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
     !
     IF (KRR>=1) THEN
       ZA(:,:,:)   =  EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM)
       ZFLXZ(:,:,:)= ( XCHF * PPSI3 + XCHF * PPSI_SV(:,:,:,JSV) )             &
-                    *  GZ_M_W(KKA,KKU,KKL,PRM(:,:,:,1),PDZZ)                 &
-                    *  GZ_M_W(KKA,KKU,KKL,PSVM(:,:,:,JSV),PDZZ)
-      ZFLXZ(:,:,:)= PLM * PLEPS / (2.*ZCQSVD) * MZF(KKA,KKU,KKL,ZFLXZ)
+                    *  GZ_M_W(PRM(:,:,:,1),PDZZ, KKA, KKU, KKL)                 &
+                    *  GZ_M_W(PSVM(:,:,:,JSV),PDZZ, KKA, KKU, KKL)
+      ZFLXZ(:,:,:)= PLM * PLEPS / (2.*ZCQSVD) * MZF(ZFLXZ, KKA, KKU, KKL)
       CALL LES_MEAN_SUBGRID( ZA*ZFLXZ, X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
       CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
     END IF

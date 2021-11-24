@@ -5,7 +5,7 @@
 INTERFACE
 !
 !            
-FUNCTION GZ_W_M(KKA,KKU,KL,PA,PDZZ)      RESULT(PGZ_W_M)
+FUNCTION GZ_W_M(PA,PDZZ, KKA, KKU, KL)      RESULT(PGZ_W_M)
 !
 INTEGER,              INTENT(IN)     :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,              INTENT(IN)     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
@@ -16,7 +16,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGZ_W_M ! result mass point
 !
 END FUNCTION GZ_W_M
 !            
-FUNCTION GX_W_UW(KKA,KKU,KL,PA,PDXX,PDZZ,PDZX)      RESULT(PGX_W_UW)
+FUNCTION GX_W_UW(PA,PDXX,PDZZ,PDZX, KKA, KKU, KL)      RESULT(PGX_W_UW)
 !
 INTEGER,              INTENT(IN)     :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,              INTENT(IN)     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
@@ -30,7 +30,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGX_W_UW ! result UW point
 END FUNCTION GX_W_UW
 !
 !            
-FUNCTION GY_W_VW(KKA,KKU,KL,PA,PDXX,PDZZ,PDZX)      RESULT(PGY_W_VW)
+FUNCTION GY_W_VW(PA,PDXX,PDZZ,PDZX, KKA, KKU, KL)      RESULT(PGY_W_VW)
 !
 INTEGER,              INTENT(IN)     :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,              INTENT(IN)     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise

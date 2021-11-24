@@ -377,7 +377,7 @@ END FUNCTION MYM
 !
 !
 !     ###############################
-      FUNCTION MZF(KKA,KKU,KL,PA)  RESULT(PMZF)
+      FUNCTION MZF(PA, KKA, KKU, KL)  RESULT(PMZF)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ###############################
@@ -428,10 +428,9 @@ IMPLICIT NONE
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
 INTEGER,              INTENT(IN)                  :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,              INTENT(IN)                  :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMZF   ! result at mass
                                                             ! localization
 !
@@ -462,7 +461,7 @@ END FUNCTION MZF
 !
 !
 !     ###############################
-      FUNCTION MZM(KKA,KKU,KL,PA)  RESULT(PMZM)
+      FUNCTION MZM(PA, KKA, KKU, KL)  RESULT(PMZM)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ###############################
@@ -513,9 +512,9 @@ IMPLICIT NONE
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
 INTEGER,              INTENT(IN)                  :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,              INTENT(IN)                  :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMZM   ! result at flux localization
 !
 !*       0.2   Declarations of local variables
@@ -901,7 +900,7 @@ END FUNCTION DYM
 !
 !
 !     ###############################
-      FUNCTION DZF(KKA,KKU,KL,PA)  RESULT(PDZF)
+      FUNCTION DZF(PA, KKA, KKU, KL)  RESULT(PDZF)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ###############################
@@ -952,10 +951,9 @@ IMPLICIT NONE
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
 INTEGER,              INTENT(IN)                  :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,              INTENT(IN)                  :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDZF   ! result at mass
                                                             ! localization
 !
@@ -986,7 +984,7 @@ END FUNCTION DZF
 !
 !
 !     ###############################
-      FUNCTION DZM(KKA,KKU,KL,PA)  RESULT(PDZM)
+      FUNCTION DZM(PA, KKA, KKU, KL)  RESULT(PDZM)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ###############################
@@ -1037,10 +1035,9 @@ IMPLICIT NONE
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
 INTEGER,              INTENT(IN)                  :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,              INTENT(IN)                  :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass
-                                                            ! localization
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDZM   ! result at flux
                                                             ! side
 !

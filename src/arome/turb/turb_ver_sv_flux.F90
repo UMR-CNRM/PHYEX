@@ -212,7 +212,7 @@ USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
 USE MODI_GRADIENT_M
-USE MODI_SHUMAN 
+USE MODI_SHUMAN , ONLY : DZM, MZM, MZF
 USE MODI_TRIDIAG 
 USE MODI_TRIDIAG_WIND 
 USE MODI_EMOIST
@@ -316,7 +316,7 @@ ISV=SIZE(PSVM,4)
 IF (LHARAT) THEN
 ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50.*MFMOIST(:,:,:)
 ELSE
-ZKEFF(:,:,:) = MZM(KKA,KKU,KKL, PLM(:,:,:) * SQRT(PTKEM(:,:,:)) )
+ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), KKA, KKU, KKL)
 ENDIF
 
 !
@@ -332,11 +332,11 @@ DO JSV=1,ISV
 ! Preparation of the arguments for TRIDIAG 
 IF (LHARAT) THEN
   ZA(:,:,:)    = -PTSTEP*   &
-                 ZKEFF * MZM(KKA,KKU,KKL,PRHODJ) /   &
+                 ZKEFF * MZM(PRHODJ, KKA, KKU, KKL) /   &
                  PDZZ**2
 ELSE
   ZA(:,:,:)    = -PTSTEP*XCHF*PPSI_SV(:,:,:,JSV) *   &
-                 ZKEFF * MZM(KKA,KKU,KKL,PRHODJ) /   &
+                 ZKEFF * MZM(PRHODJ, KKA, KKU, KKL) /   &
                  PDZZ**2
 ENDIF
 !
@@ -369,8 +369,8 @@ ENDIF
   IF ( (OTURB_FLX .AND. OCLOSE_OUT) .OR. LLES_CALL ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
-    ZFLXZ(:,:,:) = -XCHF * PPSI_SV(:,:,:,JSV) * MZM(KKA,KKU,KKL,PLM*SQRT(PTKEM)) / PDZZ * &
-                  DZM(KKA,KKU,KKL, PIMPL*ZRES(:,:,:) + PEXPL*PSVM(:,:,:,JSV) )
+    ZFLXZ(:,:,:) = -XCHF * PPSI_SV(:,:,:,JSV) * MZM(PLM*SQRT(PTKEM), KKA, KKU, KKL) / PDZZ * &
+                  DZM(PIMPL*ZRES(:,:,:) + PEXPL*PSVM(:,:,:,JSV), KKA, KKU, KKL)
     ! surface flux
     !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
     ! (in presence of slopes)
@@ -403,16 +403,16 @@ ENDIF
   END IF
   !
   ! Storage in the LES configuration
-  !
+  
   IF (LLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
-    CALL LES_MEAN_SUBGRID( MZF(KKA,KKU,KKL,ZFLXZ), X_LES_SUBGRID_WSv(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID( GZ_W_M(KKA,KKU,KKL,PWM,PDZZ)*MZF(KKA,KKU,KKL,ZFLXZ), &
-                           X_LES_RES_ddxa_W_SBG_UaSv(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID( MZF(KKA,KKU,KKL,GZ_M_W(KKA,KKU,KKL,PSVM(:,:,:,JSV),PDZZ)*ZFLXZ), &
-                           X_LES_RES_ddxa_Sv_SBG_UaSv(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID( -ZCSVP*SQRT(PTKEM)/PLM*MZF(KKA,KKU,KKL,ZFLXZ), X_LES_SUBGRID_SvPz(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID( MZF(KKA,KKU,KKL,PWM*ZFLXZ), X_LES_RES_W_SBG_WSv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WSv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID(GZ_W_M(PWM,PDZZ, KKA, KKU, KKL)*MZF(ZFLXZ, KKA, KKU, KKL), &
+                          X_LES_RES_ddxa_W_SBG_UaSv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID(MZF(GZ_M_W(PSVM(:,:,:,JSV),PDZZ, KKA, KKU, KKL)*ZFLXZ, KKA, KKU, KKL), &
+                          X_LES_RES_ddxa_Sv_SBG_UaSv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID(-ZCSVP*SQRT(PTKEM)/PLM*MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_SvPz(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID(MZF(PWM*ZFLXZ, KKA, KKU, KKL), X_LES_RES_W_SBG_WSv(:,:,:,JSV) )
     CALL SECOND_MNH(ZTIME2)
     XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
   END IF

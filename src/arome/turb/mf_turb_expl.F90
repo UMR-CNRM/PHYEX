@@ -48,7 +48,7 @@
 !          ------------
 
 USE MODD_CMFSHALL
-USE MODI_SHUMAN_MF
+USE MODI_SHUMAN_MF, ONLY: MZM_MF
 
 IMPLICIT NONE
 
@@ -123,22 +123,22 @@ PVDT   = 0.
 !          -----------------------------------------------
 !   ( Resulting fluxes are in flux level (w-point) as PEMF and PTHL_UP )
 
-ZRTM_F (:,:) = MZM_MF(KKA,KKU,KKL,PRTM (:,:))
-ZTHLM_F(:,:) = MZM_MF(KKA,KKU,KKL,PTHLM(:,:))
+ZRTM_F (:,:) = MZM_MF(PRTM (:,:), KKA, KKU, KKL)
+ZTHLM_F(:,:) = MZM_MF(PTHLM(:,:), KKA, KKU, KKL)
 ZQTM   (:,:) = ZRTM_F (:,:)/(1.+ZRTM_F (:,:))
 ZQT_UP (:,:) = PRT_UP (:,:)/(1.+PRT_UP (:,:))
 ZTHS_UP(:,:) = PTHL_UP(:,:)*(1.+XLAMBDA*ZQT_UP(:,:))
 ZTHSM  (:,:) = ZTHLM_F(:,:)*(1.+XLAMBDA*ZQTM(:,:))
 
-PFLXZTHLMF(:,:)  = PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(KKA,KKU,KKL,PTHLM(:,:)))  ! ThetaL
-PFLXZRMF(:,:)    = PEMF(:,:)*(PRT_UP (:,:)-MZM_MF(KKA,KKU,KKL,PRTM (:,:)))  ! Rt
-PFLXZTHVMF(:,:)  = PEMF(:,:)*(PTHV_UP(:,:)-MZM_MF(KKA,KKU,KKL,PTHVM(:,:)))  ! ThetaV
+PFLXZTHLMF(:,:)  = PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(PTHLM(:,:), KKA, KKU, KKL))  ! ThetaL
+PFLXZRMF(:,:)    = PEMF(:,:)*(PRT_UP (:,:)-MZM_MF(PRTM (:,:), KKA, KKU, KKL))  ! Rt
+PFLXZTHVMF(:,:)  = PEMF(:,:)*(PTHV_UP(:,:)-MZM_MF(PTHVM(:,:), KKA, KKU, KKL))  ! ThetaV
 
 ZFLXZTHSMF(:,:)  = PEMF(:,:)*(ZTHS_UP(:,:)-ZTHSM(:,:))    ! Theta S flux
 
 IF (OMIXUV) THEN
-  PFLXZUMF(:,:) =  PEMF(:,:)*(PU_UP(:,:)-MZM_MF(KKA,KKU,KKL,PUM(:,:)))  ! U
-  PFLXZVMF(:,:) =  PEMF(:,:)*(PV_UP(:,:)-MZM_MF(KKA,KKU,KKL,PVM(:,:)))  ! V
+  PFLXZUMF(:,:) =  PEMF(:,:)*(PU_UP(:,:)-MZM_MF(PUM(:,:), KKA, KKU, KKL))  ! U
+  PFLXZVMF(:,:) =  PEMF(:,:)*(PV_UP(:,:)-MZM_MF(PVM(:,:), KKA, KKU, KKL))  ! V
 ELSE
   PFLXZUMF(:,:) = 0.
   PFLXZVMF(:,:) = 0.

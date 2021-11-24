@@ -61,7 +61,7 @@ USE MODD_TURB_n, ONLY : CTURBLEN
 
 USE MODI_COMPUTE_ENTR_DETR
 USE MODI_TH_R_FROM_THL_RT_1D
-USE MODI_SHUMAN_MF
+USE MODI_SHUMAN_MF, ONLY: MZM_MF, MZF_MF, GZ_M_W_MF
 
 USE MODI_COMPUTE_BL89_ML
 
@@ -231,15 +231,15 @@ END IF
 
 ! Initialisation of environment variables at t-dt
 ! variables at flux level
-ZTHLM_F(:,:) = MZM_MF(KKA,KKU,KKL,PTHLM(:,:))
-ZRTM_F (:,:) = MZM_MF(KKA,KKU,KKL,PRTM(:,:))
-ZUM_F  (:,:) = MZM_MF(KKA,KKU,KKL,PUM(:,:))
-ZVM_F  (:,:) = MZM_MF(KKA,KKU,KKL,PVM(:,:))
-ZTKEM_F(:,:) = MZM_MF(KKA,KKU,KKL,PTKEM(:,:))
+ZTHLM_F(:,:) = MZM_MF(PTHLM(:,:), KKA, KKU, KKL)
+ZRTM_F (:,:) = MZM_MF(PRTM(:,:), KKA, KKU, KKL)
+ZUM_F  (:,:) = MZM_MF(PUM(:,:), KKA, KKU, KKL)
+ZVM_F  (:,:) = MZM_MF(PVM(:,:), KKA, KKU, KKL)
+ZTKEM_F(:,:) = MZM_MF(PTKEM(:,:), KKA, KKU, KKL)
 
 DO JSV=1,ISV
   IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
-  ZSVM_F(:,:,JSV) = MZM_MF(KKA,KKU,KKL,PSVM(:,:,JSV))
+  ZSVM_F(:,:,JSV) = MZM_MF(PSVM(:,:,JSV), KKA, KKU, KKL)
 END DO
 !                     
 !          Initialisation of updraft characteristics 
@@ -258,10 +258,10 @@ PRT_UP(:,KKB) = ZRTM_F(:,KKB)+MAX(0.,MIN(ZRMAX,(PSFRV(:)/SQRT(ZTKEM_F(:,KKB)))*X
 
 
 IF (OENTR_DETR) THEN
-  ZTHM_F (:,:) = MZM_MF(KKA,KKU,KKL,PTHM (:,:))
-  ZPRES_F(:,:) = MZM_MF(KKA,KKU,KKL,PPABSM(:,:))
-  ZRHO_F (:,:) = MZM_MF(KKA,KKU,KKL,PRHODREF(:,:))
-  ZRVM_F (:,:) = MZM_MF(KKA,KKU,KKL,PRVM(:,:))
+  ZTHM_F (:,:) = MZM_MF(PTHM (:,:), KKA, KKU, KKL)
+  ZPRES_F(:,:) = MZM_MF(PPABSM(:,:), KKA, KKU, KKL)
+  ZRHO_F (:,:) = MZM_MF(PRHODREF(:,:), KKA, KKU, KKL)
+  ZRVM_F (:,:) = MZM_MF(PRVM(:,:), KKA, KKU, KKL)
 
   ! thetav at mass and flux levels
   ZTHVM_F(:,:)=ZTHM_F(:,:)*((1.+ZRVORD*ZRVM_F(:,:))/(1.+ZRTM_F(:,:)))
@@ -296,8 +296,8 @@ IF (OENTR_DETR) THEN
   ZTKEM_F(:,KKB)=0.
   !
   IF(CTURBLEN=='RM17') THEN
-    ZDUDZ = MZF_MF(KKA,KKU,KKL,GZ_M_W_MF(KKA,KKU,KKL,PUM,PDZZ))
-    ZDVDZ = MZF_MF(KKA,KKU,KKL,GZ_M_W_MF(KKA,KKU,KKL,PVM,PDZZ))
+    ZDUDZ = MZF_MF(GZ_M_W_MF(PUM,PDZZ, KKA, KKU, KKL), KKA, KKU, KKL)
+    ZDVDZ = MZF_MF(GZ_M_W_MF(PVM,PDZZ, KKA, KKU, KKL), KKA, KKU, KKL)
     ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
     PRINT*, 'phasage bete sans controle'
     CALL ABORT

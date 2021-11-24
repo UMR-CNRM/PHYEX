@@ -128,7 +128,7 @@ USE MODI_GRADIENT_M
 USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
-USE MODI_SHUMAN 
+USE MODI_SHUMAN , ONLY : DZM, DZF, MZM, MZF
 USE MODI_TRIDIAG 
 USE MODI_TRIDIAG_TKE
 USE MODI_BUDGET
@@ -277,7 +277,7 @@ ZSOURCE(:,:,:) = PRTKES(:,:,:) / PRHODJ(:,:,:) - PTKEM(:,:,:) / PTSTEP &
 ! matrix inverted in TRIDIAG 
 !
 ZA(:,:,:)     = - PTSTEP * XCET * &
-                MZM(KKA,KKU,KKL,ZKEFF) * MZM(KKA,KKU,KKL,PRHODJ) / PDZZ**2
+                MZM(ZKEFF, KKA, KKU, KKL) * MZM(PRHODJ, KKA, KKU, KKL) / PDZZ**2
 !
 ! Compute TKE at time t+deltat: ( stored in ZRES )
 !
@@ -309,21 +309,21 @@ IF ( LLES_CALL .OR.                         &
 ! Compute the cartesian vertical flux of TKE in ZFLX
 !
 
-  ZFLX(:,:,:)   = - XCET * MZM(KKA,KKU,KKL,ZKEFF) *   &
-                  DZM(KKA,KKU,KKL,PIMPL * ZRES + PEXPL * PTKEM ) / PDZZ
+  ZFLX(:,:,:)   = - XCET * MZM(ZKEFF, KKA, KKU, KKL) *   &
+                  DZM(PIMPL * ZRES + PEXPL * PTKEM, KKA, KKU, KKL) / PDZZ
 !
   ZFLX(:,:,IKB) = 0.
   ZFLX(:,:,KKA) = 0.
 !
 ! Compute the whole turbulent TRansport of TKE:
 !
-  ZTR(:,:,:)= ZTR - DZF(KKA,KKU,KKL, MZM(KKA,KKU,KKL,PRHODJ) * ZFLX / PDZZ ) /PRHODJ
+  ZTR(:,:,:)= ZTR - DZF(MZM(PRHODJ, KKA, KKU, KKL) * ZFLX / PDZZ, KKA, KKU, KKL) /PRHODJ
 !
 ! Storage in the LES configuration
 !
   IF (LLES_CALL) THEN
-    CALL LES_MEAN_SUBGRID( MZF(KKA,KKU,KKL,ZFLX), X_LES_SUBGRID_WTke )
-    CALL LES_MEAN_SUBGRID( -ZTR, X_LES_SUBGRID_ddz_WTke )
+    CALL LES_MEAN_SUBGRID(MZF(ZFLX, KKA, KKU, KKL), X_LES_SUBGRID_WTke )
+    CALL LES_MEAN_SUBGRID(-ZTR, X_LES_SUBGRID_ddz_WTke )
   END IF
 !
 END IF

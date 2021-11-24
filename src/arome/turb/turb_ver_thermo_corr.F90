@@ -215,7 +215,7 @@ USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
 USE MODI_GRADIENT_M
-USE MODI_SHUMAN 
+USE MODI_SHUMAN , ONLY : DZM, MZM, MZF
 USE MODI_TRIDIAG 
 USE MODE_FMWRIT
 USE MODI_LES_MEAN_SUBGRID
@@ -379,7 +379,7 @@ ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2*KKL)+2.*PDZZ(:,:,IKB+KKL)) /      &
 !
 !
 IF (LHARAT) THEN
-PLMF=MZF(KKA,KKU,KKL,PLM)
+PLMF=MZF(PLM, KKA, KKU, KKL)
 PLEPSF=PLMF
 !  function MZF produces -999 for level IKU (82 for 80 levels)
 !  so put these to normal value as this level (82) is indeed calculated
@@ -387,7 +387,7 @@ PLMF(:,:,IKU)=0.001
 PLEPSF(:,:,IKU)=0.001
 ZKEFF(:,:,:) = PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50*MFMOIST(:,:,:)
 ELSE
-ZKEFF(:,:,:) = MZM(KKA,KKU,KKL, PLM(:,:,:) * SQRT(PTKEM(:,:,:)) )
+ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), KKA, KKU, KKL)
 ENDIF
 !
 
@@ -419,9 +419,9 @@ END IF
 ! Compute the turbulent variance F and F' at time t-dt.
 !
 IF (LHARAT) THEN
-  ZF      (:,:,:) = PLMF*PLEPSF*MZF(KKA,KKU,KKL,PDTH_DZ**2)
+  ZF      (:,:,:) = PLMF*PLEPSF*MZF(PDTH_DZ**2, KKA, KKU, KKL)
 ELSE
-  ZF      (:,:,:) = XCTV*PLM*PLEPS*MZF(KKA,KKU,KKL,PPHI3*PDTH_DZ**2)
+  ZF      (:,:,:) = XCTV*PLM*PLEPS*MZF(PPHI3*PDTH_DZ**2, KKA, KKU, KKL)
 ENDIF
   ZDFDDTDZ(:,:,:) = 0.     ! this term, because of discretization, is treated separately
   !
@@ -438,9 +438,9 @@ ENDIF
   ! d(w'2th')/dz
   IF (GFWTH) THEN
     ZF       = ZF       + M3_TH2_W2TH(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PDTH_DZ,&
-     & PLM,PLEPS,PTKEM) * MZF(KKA,KKU,KKL,PFWTH)
+     & PLM,PLEPS,PTKEM) * MZF(PFWTH, KKA, KKU, KKL)
     ZDFDDTDZ = ZDFDDTDZ + D_M3_TH2_W2TH_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,&
-     & PLM,PLEPS,PTKEM,GUSERV) * MZF(KKA,KKU,KKL,PFWTH)
+     & PLM,PLEPS,PTKEM,GUSERV) * MZF(PFWTH, KKA, KKU, KKL)
   END IF
   !
   IF (KRR/=0) THEN
@@ -455,9 +455,9 @@ ENDIF
     ! d(w'2r')/dz
     IF (GFWR) THEN
       ZF       = ZF       + M3_TH2_W2R(KKA,KKU,KKL,PD,PLM,PLEPS,PTKEM,PBLL_O_E,&
-       & PEMOIST,PDTH_DZ) * MZF(KKA,KKU,KKL,PFWR)
+       & PEMOIST,PDTH_DZ) * MZF(PFWR, KKA, KKU, KKL)
       ZDFDDTDZ = ZDFDDTDZ + D_M3_TH2_W2R_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,&
-       & PLM,PLEPS,PTKEM,PBLL_O_E,PEMOIST,PDTH_DZ) * MZF(KKA,KKU,KKL,PFWR)
+       & PLM,PLEPS,PTKEM,PBLL_O_E,PEMOIST,PDTH_DZ) * MZF(PFWR, KKA, KKU, KKL)
     END IF
     !
     ! d(w'th'r')/dz
@@ -472,9 +472,9 @@ ENDIF
   !
   ZFLXZ(:,:,:)   = ZF                                                              &
   !     + PIMPL * XCTV*PLM*PLEPS                                                   &
-  !        *MZF(KKA,KKU,KKL,D_PHI3DTDZ2_O_DDTDZ(PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,PDTH_DZ,HTURBDIM,GUSERV)   &
-  !             *DZM(KKA,KKU,KKL,PTHLP - PTHLM) / PDZZ                                        ) &
-        + PIMPL * ZDFDDTDZ * MZF(KKA,KKU,KKL,DZM(KKA,KKU,KKL,PTHLP - PTHLM) / PDZZ )
+  !        *MZF(D_PHI3DTDZ2_O_DDTDZ(PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,PDTH_DZ,HTURBDIM,GUSERV)   &
+  !             *DZM(PTHLP - PTHLM, KKA, KKU, KKL) / PDZZ                                        ) &
+        + PIMPL * ZDFDDTDZ * MZF(DZM(PTHLP - PTHLM, KKA, KKU, KKL) / PDZZ, KKA, KKU, KKL)
   !
   ! special case near the ground ( uncentred gradient )
   IF (LHARAT) THEN
@@ -525,11 +525,11 @@ ENDIF
 !
   IF (LLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
-    CALL LES_MEAN_SUBGRID( ZFLXZ, X_LES_SUBGRID_Thl2 ) 
-    CALL LES_MEAN_SUBGRID( MZF(KKA,KKU,KKL,PWM)*ZFLXZ, X_LES_RES_W_SBG_Thl2 )
-    CALL LES_MEAN_SUBGRID( -2.*XCTD*PSQRT_TKE*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_Thl2 ) 
-    CALL LES_MEAN_SUBGRID( PETHETA*ZFLXZ, X_LES_SUBGRID_ThlThv ) 
-    CALL LES_MEAN_SUBGRID( -XA3*PBETA*PETHETA*ZFLXZ, X_LES_SUBGRID_ThlPz, .TRUE. ) 
+    CALL LES_MEAN_SUBGRID(ZFLXZ, X_LES_SUBGRID_Thl2 ) 
+    CALL LES_MEAN_SUBGRID(MZF(PWM, KKA, KKU, KKL)*ZFLXZ, X_LES_RES_W_SBG_Thl2 )
+    CALL LES_MEAN_SUBGRID(-2.*XCTD*PSQRT_TKE*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_Thl2 ) 
+    CALL LES_MEAN_SUBGRID(PETHETA*ZFLXZ, X_LES_SUBGRID_ThlThv ) 
+    CALL LES_MEAN_SUBGRID(-XA3*PBETA*PETHETA*ZFLXZ, X_LES_SUBGRID_ThlPz, .TRUE. ) 
     CALL SECOND_MNH(ZTIME2)
     XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
   END IF
@@ -541,9 +541,9 @@ ENDIF
 !
     ! Compute the turbulent variance F and F' at time t-dt.
 IF (LHARAT) THEN
-    ZF      (:,:,:) = PLMF*PLEPSF*MZF(KKA,KKU,KKL,PDTH_DZ*PDR_DZ)
+    ZF      (:,:,:) = PLMF*PLEPSF*MZF(PDTH_DZ*PDR_DZ, KKA, KKU, KKL)
 ELSE
-    ZF      (:,:,:) = XCTV*PLM*PLEPS*MZF(KKA,KKU,KKL,0.5*(PPHI3+PPSI3)*PDTH_DZ*PDR_DZ)
+    ZF      (:,:,:) = XCTV*PLM*PLEPS*MZF(0.5*(PPHI3+PPSI3)*PDTH_DZ*PDR_DZ, KKA, KKU, KKL)
 ENDIF
     ZDFDDTDZ(:,:,:) = 0.     ! this term, because of discretization, is treated separately
     ZDFDDRDZ(:,:,:) = 0.     ! this term, because of discretization, is treated separately
@@ -563,11 +563,11 @@ ENDIF
     ! d(w'2th')/dz
     IF (GFWTH) THEN
       ZF       = ZF       + M3_THR_W2TH(KKA,KKU,KKL,PREDR1,PD,PLM,PLEPS,PTKEM,&
-       & PDR_DZ) * MZF(KKA,KKU,KKL,PFWTH)
+       & PDR_DZ) * MZF(PFWTH, KKA, KKU, KKL)
       ZDFDDTDZ = ZDFDDTDZ + D_M3_THR_W2TH_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,&
-       & PD,PLM,PLEPS,PTKEM,PBLL_O_E,PDR_DZ,PETHETA) * MZF(KKA,KKU,KKL,PFWTH)
+       & PD,PLM,PLEPS,PTKEM,PBLL_O_E,PDR_DZ,PETHETA) * MZF(PFWTH, KKA, KKU, KKL)
       ZDFDDRDZ = ZDFDDRDZ + D_M3_THR_W2TH_O_DDRDZ(KKA,KKU,KKL,PREDTH1,PREDR1,&
-       & PD,PLM,PLEPS,PTKEM) * MZF(KKA,KKU,KKL,PFWTH)
+       & PD,PLM,PLEPS,PTKEM) * MZF(PFWTH, KKA, KKU, KKL)
     END IF
     !
     ! d(w'r'2)/dz
@@ -583,11 +583,11 @@ ENDIF
       ! d(w'2r')/dz
     IF (GFWR) THEN
       ZF       = ZF       + M3_THR_W2R(KKA,KKU,KKL,PREDTH1,PD,PLM,PLEPS,PTKEM,&
-      & PDTH_DZ) * MZF(KKA,KKU,KKL,PFWR)
+      & PDTH_DZ) * MZF(PFWR, KKA, KKU, KKL)
       ZDFDDTDZ = ZDFDDTDZ + D_M3_THR_W2R_O_DDTDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,&
-      & PLM,PLEPS,PTKEM) * MZF(KKA,KKU,KKL,PFWR)
+      & PLM,PLEPS,PTKEM) * MZF(PFWR, KKA, KKU, KKL)
       ZDFDDRDZ = ZDFDDRDZ + D_M3_THR_W2R_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,&
-      & PLM,PLEPS,PTKEM,PBLL_O_E,PDTH_DZ,PEMOIST) * MZF(KKA,KKU,KKL,PFWR)
+      & PLM,PLEPS,PTKEM,PBLL_O_E,PDTH_DZ,PEMOIST) * MZF(PFWR, KKA, KKU, KKL)
     END IF
     !
     ! d(w'th'r')/dz
@@ -603,25 +603,25 @@ ENDIF
     IF (LHARAT) THEN
     ZFLXZ(:,:,:)   = ZF                                                     &
         + PIMPL * PLMF*PLEPSF*0.5                                        &
-          * MZF(KKA,KKU,KKL, ( 2.  & 
-                 ) *PDR_DZ  *DZM(KKA,KKU,KKL,PTHLP - PTHLM       ) / PDZZ               &
+          * MZF(( 2.  & 
+                 ) *PDR_DZ  *DZM(PTHLP - PTHLM, KKA, KKU, KKL    ) / PDZZ               &
                 +( 2.                                                    &
-                 ) *PDTH_DZ *DZM(KKA,KKU,KKL,PRP   - PRM(:,:,:,1)) / PDZZ               &
-               )                                                            &
-        + PIMPL * ZDFDDTDZ * MZF(KKA,KKU,KKL,DZM(KKA,KKU,KKL,PTHLP - PTHLM(:,:,:)) / PDZZ )         &
-        + PIMPL * ZDFDDRDZ * MZF(KKA,KKU,KKL,DZM(KKA,KKU,KKL,PRP   - PRM(:,:,:,1)) / PDZZ )
+                 ) *PDTH_DZ *DZM(PRP   - PRM(:,:,:,1), KKA, KKU, KKL) / PDZZ               &
+               , KKA, KKU, KKL)                                                            &
+        + PIMPL * ZDFDDTDZ * MZF(DZM(PTHLP - PTHLM(:,:,:), KKA, KKU, KKL) / PDZZ, KKA, KKU, KKL)         &
+        + PIMPL * ZDFDDRDZ * MZF(DZM(PRP   - PRM(:,:,:,1), KKA, KKU, KKL) / PDZZ, KKA, KKU, KKL)
     ELSE
     ZFLXZ(:,:,:)   = ZF                                                     &
         + PIMPL * XCTV*PLM*PLEPS*0.5                                        &
-          * MZF(KKA,KKU,KKL, ( D_PHI3DTDZ_O_DDTDZ(PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,GUSERV) & ! d(phi3*dthdz)/ddthdz term
+          * MZF(( D_PHI3DTDZ_O_DDTDZ(PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,GUSERV) & ! d(phi3*dthdz)/ddthdz term
                   +D_PSI3DTDZ_O_DDTDZ(PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,GUSERV) & ! d(psi3*dthdz)/ddthdz term
-                 ) *PDR_DZ  *DZM(KKA,KKU,KKL,PTHLP - PTHLM       ) / PDZZ               &
+                 ) *PDR_DZ  *DZM(PTHLP - PTHLM, KKA, KKU, KKL) / PDZZ               &
                 +( D_PHI3DRDZ_O_DDRDZ(PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,GUSERV) & ! d(phi3*drdz )/ddrdz term
                   +D_PSI3DRDZ_O_DDRDZ(PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,GUSERV) & ! d(psi3*drdz )/ddrdz term
-                 ) *PDTH_DZ *DZM(KKA,KKU,KKL,PRP   - PRM(:,:,:,1)) / PDZZ               &
-               )                                                            &
-        + PIMPL * ZDFDDTDZ * MZF(KKA,KKU,KKL,DZM(KKA,KKU,KKL,PTHLP - PTHLM(:,:,:)) / PDZZ )         &
-        + PIMPL * ZDFDDRDZ * MZF(KKA,KKU,KKL,DZM(KKA,KKU,KKL,PRP   - PRM(:,:,:,1)) / PDZZ )
+                 ) *PDTH_DZ *DZM(PRP - PRM(:,:,:,1), KKA, KKU, KKL) / PDZZ               &
+               , KKA, KKU, KKL)                                                            &
+        + PIMPL * ZDFDDTDZ * MZF(DZM(PTHLP - PTHLM(:,:,:), KKA, KKU, KKL) / PDZZ, KKA, KKU, KKL)         &
+        + PIMPL * ZDFDDRDZ * MZF(DZM(PRP   - PRM(:,:,:,1), KKA, KKU, KKL) / PDZZ, KKA, KKU, KKL)
     ENDIF
     !
     ! special case near the ground ( uncentred gradient )
@@ -686,13 +686,13 @@ ENDIF
 !
 IF (LLES_CALL) THEN
       CALL SECOND_MNH(ZTIME1)
-      CALL LES_MEAN_SUBGRID( ZFLXZ, X_LES_SUBGRID_THlRt ) 
-      CALL LES_MEAN_SUBGRID( MZF(KKA,KKU,KKL,PWM)*ZFLXZ, X_LES_RES_W_SBG_ThlRt )
-      CALL LES_MEAN_SUBGRID( -2.*XCTD*PSQRT_TKE*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_ThlRt ) 
-      CALL LES_MEAN_SUBGRID( PETHETA*ZFLXZ, X_LES_SUBGRID_RtThv ) 
-      CALL LES_MEAN_SUBGRID( -XA3*PBETA*PETHETA*ZFLXZ, X_LES_SUBGRID_RtPz, .TRUE. ) 
-      CALL LES_MEAN_SUBGRID( PEMOIST*ZFLXZ, X_LES_SUBGRID_ThlThv , .TRUE. ) 
-      CALL LES_MEAN_SUBGRID( -XA3*PBETA*PEMOIST*ZFLXZ, X_LES_SUBGRID_ThlPz, .TRUE. ) 
+      CALL LES_MEAN_SUBGRID(ZFLXZ, X_LES_SUBGRID_THlRt ) 
+      CALL LES_MEAN_SUBGRID(MZF(PWM, KKA, KKU, KKL)*ZFLXZ, X_LES_RES_W_SBG_ThlRt )
+      CALL LES_MEAN_SUBGRID(-2.*XCTD*PSQRT_TKE*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_ThlRt ) 
+      CALL LES_MEAN_SUBGRID(PETHETA*ZFLXZ, X_LES_SUBGRID_RtThv ) 
+      CALL LES_MEAN_SUBGRID(-XA3*PBETA*PETHETA*ZFLXZ, X_LES_SUBGRID_RtPz, .TRUE. ) 
+      CALL LES_MEAN_SUBGRID(PEMOIST*ZFLXZ, X_LES_SUBGRID_ThlThv , .TRUE. ) 
+      CALL LES_MEAN_SUBGRID(-XA3*PBETA*PEMOIST*ZFLXZ, X_LES_SUBGRID_ThlPz, .TRUE. ) 
       CALL SECOND_MNH(ZTIME2)
       XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 END IF
@@ -703,9 +703,9 @@ END IF
 !
     ! Compute the turbulent variance F and F' at time t-dt.
 IF (LHARAT) THEN
-    ZF      (:,:,:) = PLMF*PLEPSF*MZF(KKA,KKU,KKL,PDR_DZ**2)
+    ZF      (:,:,:) = PLMF*PLEPSF*MZF(PDR_DZ**2, KKA, KKU, KKL)
   ELSE
-    ZF      (:,:,:) = XCTV*PLM*PLEPS*MZF(KKA,KKU,KKL,PPSI3*PDR_DZ**2)
+    ZF      (:,:,:) = XCTV*PLM*PLEPS*MZF(PPSI3*PDR_DZ**2, KKA, KKU, KKL)
 ENDIF
     ZDFDDRDZ(:,:,:) = 0.     ! this term, because of discretization, is treated separately
     !
@@ -722,9 +722,9 @@ ENDIF
     ! d(w'2r')/dz
     IF (GFWR) THEN
       ZF       = ZF       + M3_R2_W2R(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PDR_DZ,&
-      & PLM,PLEPS,PTKEM) * MZF(KKA,KKU,KKL,PFWR)
+      & PLM,PLEPS,PTKEM) * MZF(PFWR, KKA, KKU, KKL)
       ZDFDDRDZ = ZDFDDRDZ + D_M3_R2_W2R_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,&
-      & PD,PLM,PLEPS,PTKEM,GUSERV) * MZF(KKA,KKU,KKL,PFWR)
+      & PD,PLM,PLEPS,PTKEM,GUSERV) * MZF(PFWR, KKA, KKU, KKL)
     END IF
     !
     IF (KRR/=0) THEN
@@ -739,9 +739,9 @@ ENDIF
       ! d(w'2r')/dz
       IF (GFWTH) THEN
         ZF       = ZF       + M3_R2_W2TH(KKA,KKU,KKL,PD,PLM,PLEPS,PTKEM,&
-        & PBLL_O_E,PETHETA,PDR_DZ) * MZF(KKA,KKU,KKL,PFWTH)
+        & PBLL_O_E,PETHETA,PDR_DZ) * MZF(PFWTH, KKA, KKU, KKL)
         ZDFDDRDZ = ZDFDDRDZ + D_M3_R2_W2TH_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,&
-        & PD,PLM,PLEPS,PTKEM,PBLL_O_E,PETHETA,PDR_DZ) * MZF(KKA,KKU,KKL,PFWTH)
+        & PD,PLM,PLEPS,PTKEM,PBLL_O_E,PETHETA,PDR_DZ) * MZF(PFWTH, KKA, KKU, KKL)
       END IF
       !
       ! d(w'th'r')/dz
@@ -757,15 +757,15 @@ ENDIF
   IF (LHARAT) THEN
     ZFLXZ(:,:,:)   = ZF                                                              &
           + PIMPL * PLMF*PLEPSF                                                  &
-            *MZF(KKA,KKU,KKL,2.*PDR_DZ*    &
-                 DZM(KKA,KKU,KKL,PRP - PRM(:,:,:,1)) / PDZZ                                   ) &
-          + PIMPL * ZDFDDRDZ * MZF(KKA,KKU,KKL,DZM(KKA,KKU,KKL,PRP - PRM(:,:,:,1)) / PDZZ )
+            *MZF(2.*PDR_DZ*    &
+                 DZM(PRP - PRM(:,:,:,1), KKA, KKU, KKL) / PDZZ, KKA, KKU, KKL) &
+          + PIMPL * ZDFDDRDZ * MZF(DZM(PRP - PRM(:,:,:,1), KKA, KKU, KKL) / PDZZ, KKA, KKU, KKL)
    ELSE
     ZFLXZ(:,:,:)   = ZF                                                              &
           + PIMPL * XCTV*PLM*PLEPS                                                  &
-            *MZF(KKA,KKU,KKL,D_PSI3DRDZ2_O_DDRDZ(PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,PDR_DZ,HTURBDIM,GUSERV)    &
-                 *DZM(KKA,KKU,KKL,PRP - PRM(:,:,:,1)) / PDZZ                                   ) &
-          + PIMPL * ZDFDDRDZ * MZF(KKA,KKU,KKL,DZM(KKA,KKU,KKL,PRP - PRM(:,:,:,1)) / PDZZ )
+            *MZF(D_PSI3DRDZ2_O_DDRDZ(PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,PDR_DZ,HTURBDIM,GUSERV)    &
+                 *DZM(PRP - PRM(:,:,:,1), KKA, KKU, KKL) / PDZZ, KKA, KKU, KKL) &
+          + PIMPL * ZDFDDRDZ * MZF(DZM(PRP - PRM(:,:,:,1), KKA, KKU, KKL) / PDZZ, KKA, KKU, KKL)
   ENDIF
     !
     ! special case near the ground ( uncentred gradient )
@@ -813,11 +813,11 @@ ENDIF
     !
     IF (LLES_CALL) THEN
       CALL SECOND_MNH(ZTIME1)
-      CALL LES_MEAN_SUBGRID( ZFLXZ, X_LES_SUBGRID_Rt2 ) 
-      CALL LES_MEAN_SUBGRID( MZF(KKA,KKU,KKL,PWM)*ZFLXZ, X_LES_RES_W_SBG_Rt2 )
-      CALL LES_MEAN_SUBGRID( PEMOIST*ZFLXZ, X_LES_SUBGRID_RtThv , .TRUE. ) 
-      CALL LES_MEAN_SUBGRID( -XA3*PBETA*PEMOIST*ZFLXZ, X_LES_SUBGRID_RtPz, .TRUE. )
-      CALL LES_MEAN_SUBGRID( -2.*XCTD*PSQRT_TKE*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_Rt2 ) 
+      CALL LES_MEAN_SUBGRID(ZFLXZ, X_LES_SUBGRID_Rt2 ) 
+      CALL LES_MEAN_SUBGRID(MZF(PWM, KKA, KKU, KKL)*ZFLXZ, X_LES_RES_W_SBG_Rt2 )
+      CALL LES_MEAN_SUBGRID(PEMOIST*ZFLXZ, X_LES_SUBGRID_RtThv , .TRUE. ) 
+      CALL LES_MEAN_SUBGRID(-XA3*PBETA*PEMOIST*ZFLXZ, X_LES_SUBGRID_RtPz, .TRUE. )
+      CALL LES_MEAN_SUBGRID(-2.*XCTD*PSQRT_TKE*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_Rt2 ) 
       CALL SECOND_MNH(ZTIME2)
       XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
     END IF

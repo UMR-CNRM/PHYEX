@@ -45,7 +45,7 @@
 USE MODD_CMFSHALL, ONLY :  XTAUSIGMF
 USE MODD_PARAMETERS, ONLY : JPHEXT, JPVEXT
 !
-USE MODI_SHUMAN_MF
+USE MODI_SHUMAN_MF, ONLY: MZF_MF, MZM_MF, GZ_M_W_MF
 USE MODI_COMPUTE_FUNCTION_THERMO_MF
 !
 USE PARKIND1, ONLY : JPRB
@@ -103,14 +103,14 @@ IF (KRRL > 0)  THEN
 !
 
 !
-    ZFLXZ(:,:) = -2 * XTAUSIGMF * PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(KKA,KKU,KKL,PTHLM(:,:))) * &
-                      GZ_M_W_MF(KKA,KKU,KKL,PTHLM(:,:),PDZZ(:,:))
+    ZFLXZ(:,:) = -2 * XTAUSIGMF * PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(PTHLM(:,:), KKA, KKU, KKL)) * &
+                      GZ_M_W_MF(PTHLM(:,:),PDZZ(:,:), KKA, KKU, KKL)
 !
 !   Avoid negative values
     ZFLXZ(:,:) = MAX(0.,ZFLXZ(:,:))
 
 
-    PSIGMF(:,:) = MZF_MF(KKA,KKU,KKL,ZFLXZ(:,:)) * ZATHETA(:,:)**2
+    PSIGMF(:,:) = MZF_MF(ZFLXZ(:,:), KKA, KKU, KKL) * ZATHETA(:,:)**2
 
 !
 !
@@ -119,14 +119,14 @@ IF (KRRL > 0)  THEN
 !
 !
 !
-    ZFLXZ(:,:) = -2 * XTAUSIGMF * PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(KKA,KKU,KKL,PRTM(:,:))) * &
-                      GZ_M_W_MF(KKA,KKU,KKL,PRTM(:,:),PDZZ(:,:))
+    ZFLXZ(:,:) = -2 * XTAUSIGMF * PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(PRTM(:,:), KKA, KKU, KKL)) * &
+                      GZ_M_W_MF(PRTM(:,:),PDZZ(:,:), KKA, KKU, KKL)
 !
 !   Avoid negative values
     ZFLXZ(:,:) = MAX(0.,ZFLXZ(:,:))
 !
 
-    PSIGMF(:,:) = PSIGMF(:,:) + ZAMOIST(:,:) **2 * MZF_MF(KKA,KKU,KKL,ZFLXZ(:,:))
+    PSIGMF(:,:) = PSIGMF(:,:) + ZAMOIST(:,:) **2 * MZF_MF(ZFLXZ(:,:), KKA, KKU, KKL)
 !
 !        1.3  Vertical part of Sigma_s
 !

@@ -46,7 +46,7 @@ USE MODD_CTURB
 !
 USE MODE_SBL
 !
-USE MODI_SHUMAN
+USE MODI_SHUMAN, ONLY : MZF, MYF, MXF
 !
 IMPLICIT NONE
 !
@@ -113,7 +113,7 @@ IKT=SIZE(PZZ,3)
 IKTE=IKT-JPVEXT_TURB
 !
 ! altitude of mass points
-ZZZ=MZF(KKA,KKU,KKL,PZZ)
+ZZZ=MZF(PZZ, KKA, KKU, KKL)
 ! replace by height of mass points
 DO JK=1,IKT
   ZZZ(:,:,JK) = ZZZ(:,:,JK) - PZZ(:,:,IKB)
