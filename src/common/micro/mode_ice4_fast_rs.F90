@@ -272,7 +272,7 @@ ENDDO
 !*       5.2    rain accretion onto the aggregates
 !
 IGACC = 0
-DO JJ = 1, SIZE(GACC)
+DO JJ = 1, KSIZE
   ZACC(JJ)=MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JJ))) * & !WHERE(PRRT(:)>XRTMIN(3))
           &MAX(0., -SIGN(1., XRTMIN(5)-PRST(JJ))) * & !WHERE(PRST(:)>XRTMIN(5))
           &PCOMPUTE(JJ)

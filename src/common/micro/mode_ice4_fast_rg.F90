@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -28,16 +28,23 @@ SUBROUTINE ICE4_FAST_RG(KPROMA,KSIZE, LDSOFT, PCOMPUTE, KRR, &
 !!    MODIFICATIONS
 !!    -------------
 !!
+!  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
+!  P. Wautelet 29/05/2019: remove PACK/UNPACK intrinsics (to get more performance and better OpenACC support)
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !
 !
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST
-USE MODD_RAIN_ICE_PARAM
-USE MODD_RAIN_ICE_DESCR
-USE MODD_PARAM_ICE, ONLY : LEVLIMIT, LNULLWETG, LWETGPOST, LCRFLIMIT
+USE MODD_CST,            ONLY: XALPI, XALPW, XBETAI, XBETAW, XGAMW, XCI, XCL, XCPV, XESTT, XGAMI, &
+                             & XLMTT, XLVTT, XMD, XMV, XRV, XTT, XEPSILO
+USE MODD_PARAM_ICE,      ONLY: LCRFLIMIT, LEVLIMIT, LNULLWETG, LWETGPOST
+USE MODD_RAIN_ICE_DESCR, ONLY: XBS, XCEXVT, XCXG, XCXS, XDG, XRTMIN
+USE MODD_RAIN_ICE_PARAM, ONLY: NDRYLBDAG, NDRYLBDAR, NDRYLBDAS, X0DEPG, X1DEPG, XCOLEXIG, XCOLEXSG, XCOLIG, &
+                             & XCOLSG, XDRYINTP1G, XDRYINTP1R, XDRYINTP1S, XDRYINTP2G, XDRYINTP2R, XDRYINTP2S, &
+                             & XEX0DEPG, XEX1DEPG, XEXICFRR,  XEXRCFRI, XFCDRYG, XFIDRYG, XFRDRYG, &
+                             & XFSDRYG, XICFRR, XKER_RDRYG, XKER_SDRYG, XLBRDRYG1,  XLBRDRYG2, XLBRDRYG3, &
+                             & XLBSDRYG1, XLBSDRYG2, XLBSDRYG3, XRCFRI
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -73,16 +80,16 @@ REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PWETG    ! 1. where graupel grows
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRICFRRG ! Rain contact freezing
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRRCFRIG ! Rain contact freezing
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRICFRR  ! Rain contact freezing
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRCWETG  ! Graupel wet growth
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRIWETG  ! Graupel wet growth
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRRWETG  ! Graupel wet growth
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRSWETG  ! Graupel wet growth
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRCDRYG  ! Graupel dry growth
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRIDRYG  ! Graupel dry growth
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRRDRYG  ! Graupel dry growth
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRSDRYG  ! Graupel dry growth
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRWETGH  ! Conversion of graupel into hail
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRWETGH_MR ! Conversion of graupel into hail, mr change
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRCWETG  ! Graupel wet growth
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRIWETG  ! Graupel wet growth
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRRWETG  ! Graupel wet growth
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRSWETG  ! Graupel wet growth
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRCDRYG  ! Graupel dry growth
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRIDRYG  ! Graupel dry growth
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRRDRYG  ! Graupel dry growth
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRSDRYG  ! Graupel dry growth
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRWETGH  ! Conversion of graupel into hail
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRWETGH_MR ! Conversion of graupel into hail, mr change
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRGMLTR  ! Melting of the graupel
 REAL, DIMENSION(KPROMA, 8),   INTENT(INOUT) :: PRG_TEND ! Individual tendencies
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_TH
@@ -97,7 +104,10 @@ REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PB_RH
 !
 !*       0.2  declaration of local variables
 !
+INTEGER, PARAMETER :: IRCDRYG=1, IRIDRYG=2, IRIWETG=3, IRSDRYG=4, IRSWETG=5, IRRDRYG=6, &
+                    & IFREEZ1=7, IFREEZ2=8
 LOGICAL, DIMENSION(KSIZE) :: GDRY
+INTEGER, DIMENSION(KSIZE) :: I1
 REAL, DIMENSION(KSIZE) :: ZDRY, ZDRYG, ZMASK
 INTEGER :: IGDRY
 REAL, DIMENSION(KSIZE) :: ZVEC1, ZVEC2, ZVEC3
@@ -106,14 +116,6 @@ REAL, DIMENSION(KSIZE) :: ZZW, &
                                    ZRDRYG_INIT, & !Initial dry growth rate of the graupeln
                                    ZRWETG_INIT !Initial wet growth rate of the graupeln
 INTEGER :: JJ, JL
-INTEGER, PARAMETER :: IRCDRYG=1
-INTEGER, PARAMETER :: IRIDRYG=2
-INTEGER, PARAMETER :: IRIWETG=3
-INTEGER, PARAMETER :: IRSDRYG=4
-INTEGER, PARAMETER :: IRSWETG=5
-INTEGER, PARAMETER :: IRRDRYG=6
-INTEGER, PARAMETER :: IFREEZ1=7
-INTEGER, PARAMETER :: IFREEZ2=8
 
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
@@ -209,10 +211,18 @@ ELSE
 ENDIF
 
 ! Wet and dry collection of rs on graupel (6.2.1)
-DO JL=1, KSIZE
-  ZDRY(JL)=MAX(0., -SIGN(1., XRTMIN(5)-PRST(JL))) * & ! WHERE(PRST(:)>XRTMIN(5))
-          &MAX(0., -SIGN(1., XRTMIN(6)-PRGT(JL))) * & ! WHERE(PRGT(:)>XRTMIN(6))
-          &PCOMPUTE(JL)
+IGDRY = 0
+DO JJ = 1, KSIZE
+  ZDRY(JJ)=MAX(0., -SIGN(1., XRTMIN(5)-PRST(JJ))) * & ! WHERE(PRST(:)>XRTMIN(5))
+          &MAX(0., -SIGN(1., XRTMIN(6)-PRGT(JJ))) * & ! WHERE(PRGT(:)>XRTMIN(6))
+          &PCOMPUTE(JJ)
+  IF (ZDRY(JJ)>0) THEN
+    IGDRY = IGDRY + 1
+    I1(IGDRY) = JJ
+    GDRY(JJ) = .TRUE.
+  ELSE
+    GDRY(JJ) = .FALSE.
+  END IF
 ENDDO
 IF(LDSOFT) THEN
   DO JL=1, KSIZE
@@ -222,28 +232,28 @@ IF(LDSOFT) THEN
 ELSE
   PRG_TEND(:, IRSDRYG)=0.
   PRG_TEND(:, IRSWETG)=0.
-  GDRY(:)=ZDRY(:)==1.
-  IGDRY=COUNT(GDRY(:))
   IF(IGDRY>0)THEN
     !
     !*       6.2.3  select the (PLBDAG,PLBDAS) couplet
     !
-    ZVEC1(1:IGDRY)=PACK(PLBDAG(:), MASK=GDRY(:))
-    ZVEC2(1:IGDRY)=PACK(PLBDAS(:), MASK=GDRY(:))
+    DO JJ = 1, IGDRY
+      ZVEC1(JJ) = PLBDAG(I1(JJ))
+      ZVEC2(JJ) = PLBDAS(I1(JJ))
+    END DO
     !
     !*       6.2.4  find the next lower indice for the PLBDAG and for the PLBDAS
     !               in the geometrical set of (Lbda_g,Lbda_s) couplet use to
     !               tabulate the SDRYG-kernel
     !
-    ZVEC1(1:IGDRY)=MAX(1.00001, MIN(FLOAT(NDRYLBDAG)-0.00001,           &
+    ZVEC1(1:IGDRY)=MAX(1.00001, MIN(REAL(NDRYLBDAG)-0.00001,           &
                           XDRYINTP1G*LOG(ZVEC1(1:IGDRY))+XDRYINTP2G))
     IVEC1(1:IGDRY)=INT(ZVEC1(1:IGDRY) )
-    ZVEC1(1:IGDRY)=ZVEC1(1:IGDRY)-FLOAT(IVEC1(1:IGDRY))
+    ZVEC1(1:IGDRY)=ZVEC1(1:IGDRY)-REAL(IVEC1(1:IGDRY))
     !
-    ZVEC2(1:IGDRY)=MAX(1.00001, MIN( FLOAT(NDRYLBDAS)-0.00001,           &
+    ZVEC2(1:IGDRY)=MAX(1.00001, MIN( REAL(NDRYLBDAS)-0.00001,           &
                           XDRYINTP1S*LOG(ZVEC2(1:IGDRY))+XDRYINTP2S))
     IVEC2(1:IGDRY)=INT(ZVEC2(1:IGDRY))
-    ZVEC2(1:IGDRY)=ZVEC2(1:IGDRY)-FLOAT(IVEC2(1:IGDRY))
+    ZVEC2(1:IGDRY)=ZVEC2(1:IGDRY)-REAL(IVEC2(1:IGDRY))
     !
     !*       6.2.5  perform the bilinear interpolation of the normalized
     !               SDRYG-kernel
@@ -256,7 +266,10 @@ ELSE
                     - XKER_SDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                          *(ZVEC1(JJ) - 1.0)
     END DO
-    ZZW(:)=UNPACK(VECTOR=ZVEC3(1:IGDRY), MASK=GDRY(:), FIELD=0.0)
+    ZZW(:) = 0.
+    DO JJ = 1, IGDRY
+      ZZW(I1(JJ)) = ZVEC3(JJ)
+    END DO
     !
     WHERE(GDRY(1:KSIZE))
       PRG_TEND(1:KSIZE, IRSWETG)=XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
@@ -273,40 +286,48 @@ ENDIF
 !
 !*       6.2.6  accretion of raindrops on the graupeln
 !
-DO JL=1, KSIZE
-  ZDRY(JL)=MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JL))) * & ! WHERE(PRRT(:)>XRTMIN(3))
-          &MAX(0., -SIGN(1., XRTMIN(6)-PRGT(JL))) * & ! WHERE(PRGT(:)>XRTMIN(6))
-          &PCOMPUTE(JL)
+IGDRY = 0
+DO JJ = 1, KSIZE
+  ZDRY(JJ)=MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JJ))) * & ! WHERE(PRRT(:)>XRTMIN(3))
+          &MAX(0., -SIGN(1., XRTMIN(6)-PRGT(JJ))) * & ! WHERE(PRGT(:)>XRTMIN(6))
+          &PCOMPUTE(JJ)
+  IF (ZDRY(JJ)>0) THEN
+    IGDRY = IGDRY + 1
+    I1(IGDRY) = JJ
+    GDRY(JJ) = .TRUE.
+  ELSE
+    GDRY(JJ) = .FALSE.
+  ENDIF
 ENDDO
 IF(LDSOFT) THEN
   DO JL=1, KSIZE
     PRG_TEND(JL, IRRDRYG)=ZDRY(JL) * PRG_TEND(JL, IRRDRYG)
   ENDDO
 ELSE
-  GDRY(:)=ZDRY(:)==1.
   PRG_TEND(:, IRRDRYG)=0.
-  IGDRY=COUNT(GDRY(:))
   !
   IF(IGDRY>0) THEN
     !
     !*       6.2.8  select the (PLBDAG,PLBDAR) couplet
     !
-    ZVEC1(1:IGDRY)=PACK(PLBDAG(:), MASK=GDRY(:))
-    ZVEC2(1:IGDRY)=PACK(PLBDAR(:), MASK=GDRY(:))
+    DO JJ = 1, IGDRY
+      ZVEC1(JJ) = PLBDAG(I1(JJ))
+      ZVEC2(JJ) = PLBDAR(I1(JJ))
+    ENDDO
     !
     !*       6.2.9  find the next lower indice for the PLBDAG and for the PLBDAR
     !               in the geometrical set of (Lbda_g,Lbda_r) couplet use to
     !               tabulate the RDRYG-kernel
     !
-    ZVEC1(1:IGDRY)=MAX(1.00001, MIN( FLOAT(NDRYLBDAG)-0.00001,           &
+    ZVEC1(1:IGDRY)=MAX(1.00001, MIN( REAL(NDRYLBDAG)-0.00001,           &
                           XDRYINTP1G*LOG(ZVEC1(1:IGDRY))+XDRYINTP2G))
     IVEC1(1:IGDRY)=INT(ZVEC1(1:IGDRY))
-    ZVEC1(1:IGDRY)=ZVEC1(1:IGDRY)-FLOAT(IVEC1(1:IGDRY))
+    ZVEC1(1:IGDRY)=ZVEC1(1:IGDRY)-REAL(IVEC1(1:IGDRY))
     !
-    ZVEC2(1:IGDRY)=MAX(1.00001, MIN( FLOAT(NDRYLBDAR)-0.00001,           &
+    ZVEC2(1:IGDRY)=MAX(1.00001, MIN( REAL(NDRYLBDAR)-0.00001,           &
                           XDRYINTP1R*LOG(ZVEC2(1:IGDRY))+XDRYINTP2R))
     IVEC2(1:IGDRY)=INT(ZVEC2(1:IGDRY))
-    ZVEC2(1:IGDRY)=ZVEC2(1:IGDRY)-FLOAT(IVEC2(1:IGDRY))
+    ZVEC2(1:IGDRY)=ZVEC2(1:IGDRY)-REAL(IVEC2(1:IGDRY))
     !
     !*       6.2.10 perform the bilinear interpolation of the normalized
     !               RDRYG-kernel
@@ -319,7 +340,10 @@ ELSE
                     - XKER_RDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                          *(ZVEC1(JJ) - 1.0)
     END DO
-    ZZW(:)=UNPACK(VECTOR=ZVEC3(1:IGDRY), MASK=GDRY, FIELD=0.)
+    ZZW(:) = 0.
+    DO JJ = 1, IGDRY
+      ZZW(I1(JJ)) = ZVEC3(JJ)
+    END DO
     !
     WHERE(GDRY(1:KSIZE))
       PRG_TEND(1:KSIZE, IRRDRYG) = XFRDRYG*ZZW(1:KSIZE)                    & ! RRDRYG
@@ -399,7 +423,11 @@ ENDIF
 DO JL=1, KSIZE
   ZDRYG(JL) = ZMASK(JL) * & !
             & MAX(0., -SIGN(1., PT(JL)-XTT)) * & ! WHERE(PT(:)<XTT)
+#ifdef REPRO48
             & MAX(0., -SIGN(1., -ZRDRYG_INIT(JL))) * & ! WHERE(ZRDRYG_INIT(:)>0.)
+#else
+            & MAX(0., -SIGN(1., 1.E-20-ZRDRYG_INIT(JL))) * & ! WHERE(ZRDRYG_INIT(:)>0.)
+#endif
             & MAX(0., -SIGN(1., MAX(0., ZRDRYG_INIT(JL)-PRG_TEND(JL, IRIDRYG)-PRG_TEND(JL, IRSDRYG)) - &
                                &MAX(0., ZRWETG_INIT(JL)-PRG_TEND(JL, IRIWETG)-PRG_TEND(JL, IRSWETG))))
 ENDDO
