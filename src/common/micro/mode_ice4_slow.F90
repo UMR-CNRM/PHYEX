@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -9,7 +9,7 @@ SUBROUTINE ICE4_SLOW(KSIZE, LDSOFT, PCOMPUTE, PRHODREF, PT, &
                      &PSSI, PLVFACT, PLSFACT, &
                      &PRVT, PRCT, PRIT, PRST, PRGT, &
                      &PLBDAS, PLBDAG, &
-                     &PAI, PCJ, &
+                     &PAI, PCJ, PHLI_HCF, PHLI_HRI,&
                      &PRCHONI, PRVDEPS, PRIAGGS, PRIAUTS, PRVDEPG, &
                      &PA_TH, PA_RV, PA_RC, PA_RI, PA_RS, PA_RG)
 !!
@@ -30,9 +30,11 @@ SUBROUTINE ICE4_SLOW(KSIZE, LDSOFT, PCOMPUTE, PRHODREF, PT, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST
-USE MODD_RAIN_ICE_PARAM
-USE MODD_RAIN_ICE_DESCR
+USE MODD_CST,            ONLY: XTT
+USE MODD_RAIN_ICE_DESCR, ONLY: XCEXVT, XRTMIN
+USE MODD_RAIN_ICE_PARAM, ONLY: X0DEPG, X0DEPS, X1DEPG, X1DEPS, XACRIAUTI, XALPHA3, XBCRIAUTI, XBETA3, &
+                             & XCOLEXIS, XCRIAUTI, XEX0DEPG, XEX0DEPS, XEX1DEPG, XEX1DEPS, XEXIAGGS, &
+                             & XFIAGGS, XHON, XTEXAUTI, XTIMAUTI
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -57,6 +59,8 @@ REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLBDAS   ! Slope parameter of the
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLBDAG   ! Slope parameter of the graupel   distribution
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PAI      ! Thermodynamical function
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PCJ      ! Function to compute the ventilation coefficient
+REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PHLI_HCF !
+REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PHLI_HRI !
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRCHONI  ! Homogeneous nucleation
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRVDEPS  ! Deposition on r_s
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRIAGGS  ! Aggregation on r_s
@@ -71,11 +75,10 @@ REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RG
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(KSIZE) :: ZCRIAUTI
-REAL            :: ZTIMAUTIC
+REAL, DIMENSION(KSIZE) :: ZCRIAUTI, ZMASK
+REAL                   :: ZTIMAUTIC
+INTEGER                :: JL
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
-REAL, DIMENSION(KSIZE) :: ZMASK
-INTEGER :: JL
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SLOW', 0, ZHOOK_HANDLE)
@@ -97,8 +100,13 @@ IF(LDSOFT) THEN
 ELSE
   PRCHONI(:) = 0.
   WHERE(ZMASK(:)==1.)
+#ifdef REPRO48
     PRCHONI(:) = XHON*PRHODREF(:)*PRCT(:)       &
                                  *EXP( XALPHA3*(PT(:)-XTT)-XBETA3 )
+#else
+    PRCHONI(:) = MIN(1000.,XHON*PRHODREF(:)*PRCT(:)       &
+                                 *EXP( XALPHA3*(PT(:)-XTT)-XBETA3 ))
+#endif
   ENDWHERE
 ENDIF
 !
@@ -159,7 +167,8 @@ ENDIF
 !*       3.4.5  compute the autoconversion of r_i for r_s production: RIAUTS
 !
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(4)-PRIT(JL))) * & ! PRIT(:)>XRTMIN(4)
+  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(4)-PHLI_HRI(JL))) * & ! PHLI_HRI(:)>XRTMIN(4)
+           &MAX(0., -SIGN(1., 1.E-20-PHLI_HCF(JL))) * & ! PHLI_HCF(:) .GT. 0.
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -172,7 +181,8 @@ ELSE
   ZCRIAUTI(:)=MIN(XCRIAUTI,10**(XACRIAUTI*(PT(:)-XTT)+XBCRIAUTI))
   WHERE(ZMASK(:)==1.)
     PRIAUTS(:) = XTIMAUTI * EXP( XTEXAUTI*(PT(:)-XTT) ) &
-                          * MAX( PRIT(:)-ZCRIAUTI(:),0.0 )
+                          * MAX( PHLI_HRI(:)/PHLI_HCF(:)-ZCRIAUTI(:),0.0 )
+    PRIAUTS(:) = PHLI_HCF(:)*PRIAUTS(:)
   END WHERE
 ENDIF
 !

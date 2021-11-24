@@ -174,6 +174,7 @@ REAL, DIMENSION(KSIZE) :: ZRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT, &
                         & ZRF, &
                         & ZLBDAR, ZLBDAS, ZLBDAG, ZLBDAH, ZLBDAR_RF, &
                         & ZRGSI, ZRGSI_MR
+REAL, DIMENSION(KSIZE) :: PHLI_HCF
 REAL, DIMENSION(KIT,KJT,KKT) :: ZRRT3D
 INTEGER :: JL
 REAL, DIMENSION(KSIZE) :: ZWETG ! 1. if graupel growths in wet mode, 0. otherwise
@@ -343,11 +344,12 @@ IF(KSIZE>0) THEN
 ENDIF
 !
 !
+PHLI_HCF=1
 CALL ICE4_SLOW(KSIZE, LDSOFT, PCOMPUTE, PRHODREF, ZT, &
               &PSSI, PLVFACT, PLSFACT, &
               &ZRVT, ZRCT, ZRIT, ZRST, ZRGT, &
               &ZLBDAS, ZLBDAG, &
-              &ZAI, ZCJ, &
+              &ZAI, ZCJ, PHLI_HCF, ZRIT, &       !!!!!!!              en attendant phasage plus complet
               &PRCHONI, PRVDEPS, PRIAGGS, PRIAUTS, PRVDEPG, &
               &PA_TH, PA_RV, PA_RC, PA_RI, PA_RS, PA_RG)
 !
