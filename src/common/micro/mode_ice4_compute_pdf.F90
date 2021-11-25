@@ -3,37 +3,9 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-MODULE MODI_ICE4_COMPUTE_PDF
-INTERFACE
-SUBROUTINE ICE4_COMPUTE_PDF(KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
-                            PRHODREF, PRCT, PRIT, PCF, PT, PSIGMA_RC,&
-                            PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
-                            PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, PRF)
+MODULE MODE_ICE4_COMPUTE_PDF
 IMPLICIT NONE
-INTEGER,                INTENT(IN)  :: KSIZE
-CHARACTER(LEN=4),       INTENT(IN)  :: HSUBG_AUCV_RC     ! Kind of Subgrid autoconversion method
-CHARACTER(LEN=80),      INTENT(IN)  :: HSUBG_AUCV_RI     ! Kind of Subgrid autoconversion method
-CHARACTER(LEN=80),      INTENT(IN)  :: HSUBG_PR_PDF   ! pdf for subgrid precipitation
-REAL, DIMENSION(KSIZE), INTENT(IN)  :: PRHODREF   ! Reference density
-REAL, DIMENSION(KSIZE), INTENT(IN)  :: PRCT       ! Cloud water m.r. at t
-REAL, DIMENSION(KSIZE), INTENT(IN)  :: PRIT       ! Ice Crystal m.r. at t
-REAL, DIMENSION(KSIZE), INTENT(IN)  :: PCF        ! Cloud fraction
-REAL, DIMENSION(KSIZE), INTENT(IN)  :: PT         ! Temperature
-REAL, DIMENSION(KSIZE), INTENT(IN)  :: PSIGMA_RC  ! Standard deviation of rc at time t
-REAL, DIMENSION(KSIZE), INTENT(OUT) :: PHLC_HCF   ! HLCLOUDS : fraction of High Cloud Fraction in grid
-REAL, DIMENSION(KSIZE), INTENT(OUT) :: PHLC_LCF   ! HLCLOUDS : fraction of Low  Cloud Fraction in grid
-                                                  !    note that PCF = PHLC_HCF + PHLC_LCF
-REAL, DIMENSION(KSIZE), INTENT(OUT) :: PHLC_HRC   ! HLCLOUDS : LWC that is High LWC in grid
-REAL, DIMENSION(KSIZE), INTENT(OUT) :: PHLC_LRC   ! HLCLOUDS : LWC that is Low  LWC in grid
-                                                  !    note that PRC = PHLC_HRC + PHLC_LRC
-REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLI_HCF   !
-REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLI_LCF
-REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLI_HRI   !
-REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLI_LRI   !
-REAL, DIMENSION(KSIZE), INTENT(OUT) :: PRF        ! Rain fraction
-END SUBROUTINE ICE4_COMPUTE_PDF
-END INTERFACE
-END MODULE MODI_ICE4_COMPUTE_PDF
+CONTAINS
 SUBROUTINE ICE4_COMPUTE_PDF(KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
                             PRHODREF, PRCT, PRIT, PCF, PT, PSIGMA_RC,&
                             PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
@@ -56,8 +28,10 @@ SUBROUTINE ICE4_COMPUTE_PDF(KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
 !          ------------
 !
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 USE MODD_RAIN_ICE_DESCR, ONLY: XRTMIN
-USE MODD_RAIN_ICE_PARAM, ONLY: XCRIAUTC,XBCRIAUTI,XACRIAUTI,XCRIAUTI
+USE MODD_RAIN_ICE_PARAM, ONLY: XCRIAUTC, XBCRIAUTI, XACRIAUTI, XCRIAUTI
 USE MODD_CST, ONLY : XTT
 !
 USE MODE_MSG
@@ -68,7 +42,7 @@ IMPLICIT NONE
 !
 INTEGER,                INTENT(IN)  :: KSIZE
 CHARACTER(LEN=4),       INTENT(IN)  :: HSUBG_AUCV_RC     ! Kind of Subgrid autoconversion method for cloud water
-CHARACTER(LEN=80),      INTENT(IN)  :: HSUBG_AUCV_RI     ! Kind of Subgrid autoconversion method for cloud water
+CHARACTER(LEN=80),      INTENT(IN)  :: HSUBG_AUCV_RI     ! Kind of Subgrid autoconversion method for cloud ice
 CHARACTER(LEN=80),      INTENT(IN)  :: HSUBG_PR_PDF   ! pdf for subgrid precipitation
 REAL, DIMENSION(KSIZE), INTENT(IN)  :: PRHODREF   ! Reference density
 REAL, DIMENSION(KSIZE), INTENT(IN)  :: PRCT       ! Cloud water m.r. at t
@@ -76,11 +50,12 @@ REAL, DIMENSION(KSIZE), INTENT(IN)  :: PRIT       ! Ice Crystal m.r. at t
 REAL, DIMENSION(KSIZE), INTENT(IN)  :: PCF        ! Cloud fraction
 REAL, DIMENSION(KSIZE), INTENT(IN)  :: PT         ! Temperature
 REAL, DIMENSION(KSIZE), INTENT(IN)  :: PSIGMA_RC  ! Standard deviation of rc at time t
-REAL, DIMENSION(KSIZE), INTENT(OUT) :: PHLC_HCF   ! HLCLOUDS : fraction of High Cloud Fraction in grid
-REAL, DIMENSION(KSIZE), INTENT(OUT) :: PHLC_LCF   ! HLCLOUDS : fraction of Low  Cloud Fraction in grid
+!Note for INTENT STATUS: in 'ADJU' case the PHL?_??? variables must be able to "cross" the subroutine untouched
+REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLC_HCF   ! HLCLOUDS : fraction of High Cloud Fraction in grid
+REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLC_LCF   ! HLCLOUDS : fraction of Low  Cloud Fraction in grid
                                                   !    note that PCF = PHLC_HCF + PHLC_LCF
-REAL, DIMENSION(KSIZE), INTENT(OUT) :: PHLC_HRC   ! HLCLOUDS : LWC that is High LWC in grid
-REAL, DIMENSION(KSIZE), INTENT(OUT) :: PHLC_LRC   ! HLCLOUDS : LWC that is Low  LWC in grid
+REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLC_HRC   ! HLCLOUDS : LWC that is High LWC in grid
+REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLC_LRC   ! HLCLOUDS : LWC that is Low  LWC in grid
                                                   !    note that PRC = PHLC_HRC + PHLC_LRC
 REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLI_HCF
 REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PHLI_LCF
@@ -97,10 +72,13 @@ REAL, DIMENSION(KSIZE) :: ZRCRAUTC,      & !RC value to begin rain formation =XC
                           ZHLC_HRCLOCAL, & !HLCLOUDS : LWC that is High LWC local in HCF
                                                     !    note that ZRC/CF = ZHLC_HRCLOCAL+ ZHLC_LRCLOCAL
                                                     !                     = PHLC_HRC/HCF+ PHLC_LRC/LCF
-                          ZSUMRC, ZSUMRI                          
+                          ZSUMRC, ZSUMRI
 REAL :: ZCOEFFRCM
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 0, ZHOOK_HANDLE)!
+
 !Cloud water split between high and low content part is done according to autoconversion option
 ZRCRAUTC(:)=XCRIAUTC/PRHODREF(:) ! Autoconversion rc threshold
 IF(HSUBG_AUCV_RC=='NONE') THEN
@@ -148,7 +126,7 @@ ELSEIF(HSUBG_AUCV_RC=='ADJU') THEN
   ELSEWHERE
     PHLC_LRC(:)=0.
     PHLC_HRC(:)=0.
-  ENDWHERE 
+  ENDWHERE
 ELSEIF(HSUBG_AUCV_RC=='PDF ') THEN
   !Cloud water is split between high and low part according to a PDF
   !    'HLCRECTPDF'    : rectangular PDF form
@@ -321,4 +299,6 @@ ENDIF
 !
 PRF=MAX(PHLC_HCF,PHLI_HCF)
 !
+IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 1, ZHOOK_HANDLE)
 END SUBROUTINE ICE4_COMPUTE_PDF
+END MODULE MODE_ICE4_COMPUTE_PDF

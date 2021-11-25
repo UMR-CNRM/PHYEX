@@ -34,3 +34,5 @@ phyex/micro/modi_ice4_fast_rg.F90
 phyex/micro/modi_ice4_fast_rh.F90
 phyex/micro/modi_ice4_fast_rs.F90
 phyex/micro/modi_ice4_slow.F90
+phyex/micro/ice4_tendencies.F90
+phyex/micro/modi_ice4_tendencies.F90
