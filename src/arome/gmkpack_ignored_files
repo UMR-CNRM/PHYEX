@@ -38,3 +38,7 @@ phyex/micro/ice4_tendencies.F90
 phyex/micro/modi_ice4_tendencies.F90
 phyex/micro/modi_ice4_rainfr_vert.F90
 phyex/micro/ice4_rainfr_vert.F90
+phyex/micro/ice4_rimltc.F90
+phyex/micro/modi_ice4_rimltc.F90
+phyex/micro/ice4_rrhong.F90
+phyex/micro/modi_ice4_rrhong.F90

@@ -1,8 +1,17 @@
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+MODULE MODE_ICE4_RIMLTC
+IMPLICIT NONE
+CONTAINS
+
 SUBROUTINE ICE4_RIMLTC(KSIZE, LDSOFT, PCOMPUTE, &
                        &PEXN, PLVFACT, PLSFACT, &
                        &PT, &
                        &PTHT, PRIT, &
-                       &PRIMLTC_MR, PB_TH, PB_RC, PB_RI)
+                       &PRIMLTC_MR)
 !!
 !!**  PURPOSE
 !!    -------
@@ -20,10 +29,8 @@ SUBROUTINE ICE4_RIMLTC(KSIZE, LDSOFT, PCOMPUTE, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST
-USE MODD_RAIN_ICE_PARAM
-USE MODD_RAIN_ICE_DESCR
-USE MODD_PARAM_ICE, ONLY : LFEEDBACKT
+USE MODD_CST,       ONLY: XTT
+USE MODD_PARAM_ICE, ONLY: LFEEDBACKT
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -40,10 +47,7 @@ REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLSFACT  ! L_s/(Pi_ref*C_ph)
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PT       ! Temperature
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PTHT     ! Theta at t
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRIT     ! Cloud ice at t
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRIMLTC_MR ! Mixing ratio change due to cloud ice melting
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PB_TH
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PB_RC
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PB_RI
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRIMLTC_MR ! Mixing ratio change due to cloud ice melting
 !
 !*       0.2  declaration of local variables
 !
@@ -72,12 +76,8 @@ IF(.NOT. LDSOFT) THEN
     ENDDO
   ENDIF
 ENDIF
-DO JL=1, KSIZE
-  PB_RC(JL) = PB_RC(JL) + PRIMLTC_MR(JL)
-  PB_RI(JL) = PB_RI(JL) - PRIMLTC_MR(JL)
-  PB_TH(JL) = PB_TH(JL) - PRIMLTC_MR(JL)*(PLSFACT(JL)-PLVFACT(JL))
-ENDDO
-!
+
 IF (LHOOK) CALL DR_HOOK('ICE4_RIMLTC', 1, ZHOOK_HANDLE)
 !
 END SUBROUTINE ICE4_RIMLTC
+END MODULE MODE_ICE4_RIMLTC
