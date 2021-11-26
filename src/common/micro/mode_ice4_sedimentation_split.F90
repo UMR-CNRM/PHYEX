@@ -3,58 +3,14 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-MODULE MODI_ICE4_SEDIMENTATION_SPLIT
-INTERFACE
-SUBROUTINE ICE4_SEDIMENTATION_SPLIT(KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKE, KKTB, KKTE, KKT, KKL, &
-                                   &PTSTEP, KRR, OSEDIC, ODEPOSC, PVDEPOSC, PDZZ, &
-                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
-                                   &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                                   &PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, &
-                                   &PSEA, PTOWN,  &
-                                   &PINPRH, PRHT, PRHS, PFPR)
+MODULE MODE_ICE4_SEDIMENTATION_SPLIT
 IMPLICIT NONE
-INTEGER, INTENT(IN) :: KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKE, KKTB, KKTE, KKT
-INTEGER,                      INTENT(IN)              :: KKL     !vert. levels type 1=MNH -1=ARO
-REAL,                         INTENT(IN)              :: PTSTEP  ! Double Time step (single if cold start)
-INTEGER,                      INTENT(IN)              :: KRR     ! Number of moist variable
-LOGICAL,                      INTENT(IN)              :: OSEDIC  ! Switch for droplet sedim.
-LOGICAL,                      INTENT(IN)              :: ODEPOSC ! Switch for droplet depos.
-REAL,                         INTENT(IN)              :: PVDEPOSC! Droplet deposition velocity
-REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PDZZ    ! Layer thikness (m)
-REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PRHODREF! Reference density
-REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PPABST  ! absolute pressure at t
-REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PTHT    ! Theta at time t
-REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PRHODJ  ! Dry density * Jacobian
-REAL, DIMENSION(KIT,KJT,KKT), INTENT(INOUT)           :: PRCS    ! Cloud water m.r. source
-REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PRCT    ! Cloud water m.r. at t
-REAL, DIMENSION(KIT,KJT,KKT), INTENT(INOUT)           :: PRRS    ! Rain water m.r. source
-REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PRRT    ! Rain water m.r. at t
-REAL, DIMENSION(KIT,KJT,KKT), INTENT(INOUT)           :: PRIS    ! Pristine ice m.r. source
-REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PRIT    ! Pristine ice m.r. at t
-REAL, DIMENSION(KIT,KJT,KKT), INTENT(INOUT)           :: PRSS    ! Snow/aggregate m.r. source
-REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PRST    ! Snow/aggregate m.r. at t
-REAL, DIMENSION(KIT,KJT,KKT), INTENT(INOUT)           :: PRGS    ! Graupel m.r. source
-REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PRGT    ! Graupel/hail m.r. at t
-REAL, DIMENSION(:,:),         INTENT(OUT)             :: PINPRC  ! Cloud instant precip
-REAL, DIMENSION(:,:),         INTENT(OUT)             :: PINDEP  ! Cloud instant deposition
-REAL, DIMENSION(KIT,KJT),     INTENT(OUT)             :: PINPRR  ! Rain instant precip
-REAL, DIMENSION(KIT,KJT),     INTENT(OUT)             :: PINPRI  ! Pristine ice instant precip
-REAL, DIMENSION(KIT,KJT),     INTENT(OUT)             :: PINPRS  ! Snow instant precip
-REAL, DIMENSION(KIT,KJT),     INTENT(OUT)             :: PINPRG  ! Graupel instant precip
-REAL, DIMENSION(KIT,KJT), OPTIONAL,INTENT(IN)         :: PSEA    ! Sea Mask
-REAL, DIMENSION(KIT,KJT), OPTIONAL,INTENT(IN)         :: PTOWN   ! Fraction that is town
-REAL, DIMENSION(KIT,KJT),         OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip
-REAL, DIMENSION(KIT,KJT,KKT),     OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
-REAL, DIMENSION(KIT,KJT,KKT),     OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
-REAL, DIMENSION(KIT,KJT,KKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-air precipitation fluxes
-END SUBROUTINE ICE4_SEDIMENTATION_SPLIT
-END INTERFACE
-END MODULE MODI_ICE4_SEDIMENTATION_SPLIT
+CONTAINS
 SUBROUTINE ICE4_SEDIMENTATION_SPLIT(KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKE, KKTB, KKTE, KKT, KKL, &
-                                   &PTSTEP, KRR, OSEDIC, ODEPOSC, PVDEPOSC, PDZZ, &
+                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                                   &PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, &
+                                   &PINPRC, PINPRR, PINPRI, PINPRS, PINPRG, &
                                    &PSEA, PTOWN,  &
                                    &PINPRH, PRHT, PRHS, PFPR)
 !!
@@ -70,16 +26,18 @@ SUBROUTINE ICE4_SEDIMENTATION_SPLIT(KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKE, KKTB
 !!    MODIFICATIONS
 !!    -------------
 !!
-!  P. Wautelet 11/02/2019: dimensions of PINPRC and PINDEP not necessarily KIT,KJT
 !  P. Wautelet 10/04/2019: replace ABORT and STOP calls by Print_msg
 !
 !
 !*      0. DECLARATIONS
 !          ------------
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 USE MODD_CST,            ONLY: XRHOLW
 USE MODD_PARAM_ICE,      ONLY: XSPLIT_MAXCFL
-USE MODD_RAIN_ICE_DESCR, ONLY: XALPHAC,XALPHAC2,XCONC_LAND,XCONC_SEA,XCONC_URBAN,XLBC,XNUC,XNUC2
+USE MODD_RAIN_ICE_DESCR, ONLY: XALPHAC, XALPHAC2, XCONC_LAND, XCONC_SEA, XCONC_URBAN, &
+                             & XLBC, XNUC, XNUC2
 USE MODD_RAIN_ICE_PARAM, ONLY: XFSEDC
 !
 USE MODE_MSG
@@ -95,8 +53,6 @@ INTEGER,                      INTENT(IN)              :: KKL     !vert. levels t
 REAL,                         INTENT(IN)              :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                      INTENT(IN)              :: KRR     ! Number of moist variable
 LOGICAL,                      INTENT(IN)              :: OSEDIC  ! Switch for droplet sedim.
-LOGICAL,                      INTENT(IN)              :: ODEPOSC ! Switch for droplet depos.
-REAL,                         INTENT(IN)              :: PVDEPOSC! Droplet deposition velocity
 REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PDZZ    ! Layer thikness (m)
 REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PRHODREF! Reference density
 REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PPABST  ! absolute pressure at t
@@ -112,14 +68,13 @@ REAL, DIMENSION(KIT,KJT,KKT), INTENT(INOUT)           :: PRSS    ! Snow/aggregat
 REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PRST    ! Snow/aggregate m.r. at t
 REAL, DIMENSION(KIT,KJT,KKT), INTENT(INOUT)           :: PRGS    ! Graupel m.r. source
 REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PRGT    ! Graupel/hail m.r. at t
-REAL, DIMENSION(:,:),         INTENT(OUT)             :: PINPRC  ! Cloud instant precip
-REAL, DIMENSION(:,:),         INTENT(OUT)             :: PINDEP  ! Cloud instant deposition
+REAL, DIMENSION(KIT,KJT),     INTENT(OUT)             :: PINPRC  ! Cloud instant precip
 REAL, DIMENSION(KIT,KJT),     INTENT(OUT)             :: PINPRR  ! Rain instant precip
 REAL, DIMENSION(KIT,KJT),     INTENT(OUT)             :: PINPRI  ! Pristine ice instant precip
 REAL, DIMENSION(KIT,KJT),     INTENT(OUT)             :: PINPRS  ! Snow instant precip
 REAL, DIMENSION(KIT,KJT),     INTENT(OUT)             :: PINPRG  ! Graupel instant precip
-REAL, DIMENSION(KIT,KJT), OPTIONAL,INTENT(IN)         :: PSEA    ! Sea Mask
-REAL, DIMENSION(KIT,KJT), OPTIONAL,INTENT(IN)         :: PTOWN   ! Fraction that is town
+REAL, DIMENSION(KIT,KJT),         OPTIONAL, INTENT(IN)    :: PSEA    ! Sea Mask
+REAL, DIMENSION(KIT,KJT),         OPTIONAL, INTENT(IN)    :: PTOWN   ! Fraction that is town
 REAL, DIMENSION(KIT,KJT),         OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip
 REAL, DIMENSION(KIT,KJT,KKT),     OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
 REAL, DIMENSION(KIT,KJT,KKT),     OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
@@ -128,14 +83,14 @@ REAL, DIMENSION(KIT,KJT,KKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-air
 !*       0.2  declaration of local variables
 !
 !
-INTEGER                                                             :: JI,JJ,JK
+INTEGER                                                             :: JK
 INTEGER                                                             :: IRR !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
-LOGICAL                                                             :: GDEPOSC, GSEDIC !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
+LOGICAL                                                             :: GSEDIC !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
 LOGICAL                                                             :: GPRESENT_PFPR, GPRESENT_PSEA
 REAL                                                                :: ZINVTSTEP
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2))                  :: ZCONC_TMP    ! Weighted concentration
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),KKTB:KKTE)        :: ZW ! work array
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) :: ZCONC3D, & !  droplet condensation
+REAL, DIMENSION(KIT, KJT)                                           :: ZCONC_TMP    ! Weighted concentration
+REAL, DIMENSION(KIT,KJT,KKTB:KKTE)                                  :: ZW ! work array
+REAL, DIMENSION(KIT, KJT, KKT)                                      :: ZCONC3D, & !  droplet condensation
                                                                      & ZRAY,   & ! Cloud Mean radius
                                                                      & ZLBC,   & ! XLBC weighted by sea fraction
                                                                      & ZFSEDC, &
@@ -146,13 +101,13 @@ REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) :: ZCONC3D, 
                                                                      & ZRST, &
                                                                      & ZRGT, &
                                                                      & ZRHT
-!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT', 0, ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------
 !
 !
-GDEPOSC = ODEPOSC
 GSEDIC = OSEDIC
 IRR    = KRR
 !
@@ -184,19 +139,19 @@ IF (GSEDIC) THEN
   ZCONC3D(:,:,:)= XCONC_LAND
   ZCONC_TMP(:,:)= XCONC_LAND
   IF (GPRESENT_PSEA) THEN
-   ZCONC_TMP(:,:)=PSEA(:,:)*XCONC_SEA+(1.-PSEA(:,:))*XCONC_LAND
-   DO JK=KKTB, KKTE
-    ZLBC(:,:,JK)   = PSEA(:,:)*XLBC(2)+(1.-PSEA(:,:))*XLBC(1)
-    ZFSEDC(:,:,JK) = (PSEA(:,:)*XFSEDC(2)+(1.-PSEA(:,:))*XFSEDC(1))
-    ZFSEDC(:,:,JK) = MAX(MIN(XFSEDC(1),XFSEDC(2)),ZFSEDC(:,:,JK))
-    ZCONC3D(:,:,JK)= (1.-PTOWN(:,:))*ZCONC_TMP(:,:)+PTOWN(:,:)*XCONC_URBAN
-    ZRAY(:,:,JK)   = 0.5*((1.-PSEA(:,:))*GAMMA(XNUC+1.0/XALPHAC)/(GAMMA(XNUC)) + &
-            PSEA(:,:)*GAMMA(XNUC2+1.0/XALPHAC2)/(GAMMA(XNUC2)))
-   END DO
+    ZCONC_TMP(:,:)=PSEA(:,:)*XCONC_SEA+(1.-PSEA(:,:))*XCONC_LAND
+    DO JK=KKTB, KKTE
+      ZLBC(:,:,JK)   = PSEA(:,:)*XLBC(2)+(1.-PSEA(:,:))*XLBC(1)
+      ZFSEDC(:,:,JK) = (PSEA(:,:)*XFSEDC(2)+(1.-PSEA(:,:))*XFSEDC(1))
+      ZFSEDC(:,:,JK) = MAX(MIN(XFSEDC(1),XFSEDC(2)),ZFSEDC(:,:,JK))
+      ZCONC3D(:,:,JK)= (1.-PTOWN(:,:))*ZCONC_TMP(:,:)+PTOWN(:,:)*XCONC_URBAN
+      ZRAY(:,:,JK)   = 0.5*((1.-PSEA(:,:))*GAMMA(XNUC+1.0/XALPHAC)/(GAMMA(XNUC)) + &
+                     & PSEA(:,:)*GAMMA(XNUC2+1.0/XALPHAC2)/(GAMMA(XNUC2)))
+    END DO
   ELSE
-        ZCONC3D(:,:,:) = XCONC_LAND
-        ZRAY(:,:,:)  = 0.5*(GAMMA(XNUC+1.0/XALPHAC)/(GAMMA(XNUC)))
-   END IF
+    ZCONC3D(:,:,:) = XCONC_LAND
+    ZRAY(:,:,:)  = 0.5*(GAMMA(XNUC+1.0/XALPHAC)/(GAMMA(XNUC)))
+  END IF
   ZRAY(:,:,:)      = MAX(1.,ZRAY(:,:,:))
   ZLBC(:,:,:)      = MAX(MIN(XLBC(1),XLBC(2)),ZLBC(:,:,:))
 ENDIF
@@ -235,7 +190,7 @@ ZW(:,:,KKTB:KKTE) =1./(PRHODREF(:,:,KKTB:KKTE)* PDZZ(:,:,KKTB:KKTE))
 !*       2.1   for cloud
 !
 IF (GSEDIC) THEN
-    CALL INTERNAL_SEDIM_SPLI(KIB,KIE,KIT,KJB,KJE,KJT, KKB, KKTB, KKTE, KKT, KKL, KRR, &
+    CALL INTERNAL_SEDIM_SPLI(KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKTB, KKTE, KKT, KKL, KRR, &
                           &XSPLIT_MAXCFL, &
                           &PRHODREF, ZW, PDZZ, PPABST, PTHT, PTSTEP, &
                           &2, &
@@ -243,69 +198,54 @@ IF (GSEDIC) THEN
                           &ZRAY, ZLBC, ZFSEDC, ZCONC3D, PFPR=PFPR)
 ENDIF
 !
-!
-!*       2.1bis  DROPLET DEPOSITION AT THE 1ST LEVEL ABOVE GROUND
-!
-IF (GDEPOSC) THEN
-  PINDEP (:,:) = 0.
-  DO JJ=KJB,KJE
-    DO JI=KIB,KIE
-      IF (PRCS(JI,JJ,KKB)>0.) THEN
-        PRCS(JI,JJ,KKB) = PRCS(JI,JJ,KKB) - PVDEPOSC * PRCT(JI,JJ,KKB) / PDZZ(JI,JJ,KKB)
-        PINPRC(JI,JJ) = PINPRC(JI,JJ) + PVDEPOSC * PRCT(JI,JJ,KKB) * PRHODREF(JI,JJ,KKB) /XRHOLW
-        PINDEP(JI,JJ) = PVDEPOSC * PRCT(JI,JJ,KKB) * PRHODREF(JI,JJ,KKB) /XRHOLW
-      END IF
-    END DO
-  END DO
-END IF
-!
 !*       2.2   for rain
 !
-  CALL INTERNAL_SEDIM_SPLI(KIB,KIE,KIT,KJB,KJE,KJT, KKB, KKTB, KKTE, KKT, KKL, KRR, &
+  CALL INTERNAL_SEDIM_SPLI(KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKTB, KKTE, KKT, KKL, KRR, &
                           &XSPLIT_MAXCFL, &
                           &PRHODREF, ZW, PDZZ, PPABST, PTHT, PTSTEP, &
                           &3, &
                           &ZRRT, PRRS, PINPRR, ZPRRS, &
-                          PFPR=PFPR)
+                          &PFPR=PFPR)
 !
 !*       2.3   for pristine ice
 !
-  CALL INTERNAL_SEDIM_SPLI(KIB,KIE,KIT,KJB,KJE,KJT, KKB, KKTB, KKTE, KKT, KKL, KRR, &
+  CALL INTERNAL_SEDIM_SPLI(KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKTB, KKTE, KKT, KKL, KRR, &
                           &XSPLIT_MAXCFL, &
                           &PRHODREF, ZW, PDZZ, PPABST, PTHT, PTSTEP, &
                           &4, &
                           &ZRIT, PRIS, PINPRI, ZPRIS, &
-                          PFPR=PFPR)
+                          &PFPR=PFPR)
 !
 !*       2.4   for aggregates/snow
 !
-  CALL INTERNAL_SEDIM_SPLI(KIB,KIE,KIT,KJB,KJE,KJT, KKB, KKTB, KKTE, KKT, KKL, KRR, &
+  CALL INTERNAL_SEDIM_SPLI(KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKTB, KKTE, KKT, KKL, KRR, &
                         &XSPLIT_MAXCFL, &
                         &PRHODREF, ZW, PDZZ, PPABST, PTHT, PTSTEP, &
                         &5, &
                         &ZRST, PRSS, PINPRS, ZPRSS, &
-                        PFPR=PFPR)
+                        &PFPR=PFPR)
 !
 !*       2.5   for graupeln
 !
-  CALL INTERNAL_SEDIM_SPLI(KIB,KIE,KIT,KJB,KJE,KJT, KKB, KKTB, KKTE, KKT, KKL, KRR, &
+  CALL INTERNAL_SEDIM_SPLI(KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKTB, KKTE, KKT, KKL, KRR, &
                         &XSPLIT_MAXCFL, &
                         &PRHODREF, ZW, PDZZ, PPABST, PTHT, PTSTEP, &
                         &6, &
                         &ZRGT, PRGS, PINPRG, ZPRGS, &
-                        PFPR=PFPR)
+                        &PFPR=PFPR)
 !
 !*       2.6   for hail
 !
 IF (IRR==7) THEN
-    CALL INTERNAL_SEDIM_SPLI(KIB,KIE,KIT,KJB,KJE,KJT, KKB, KKTB, KKTE, KKT, KKL, KRR, &
+    CALL INTERNAL_SEDIM_SPLI(KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKTB, KKTE, KKT, KKL, KRR, &
                           &XSPLIT_MAXCFL, &
                           &PRHODREF, ZW, PDZZ, PPABST, PTHT, PTSTEP, &
                           &7, &
                           &ZRHT, PRHS, PINPRH, ZPRHS, &
-                          PFPR=PFPR)
+                          &PFPR=PFPR)
 ENDIF
 !
+IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT', 1, ZHOOK_HANDLE)
 !
 CONTAINS
 !
@@ -313,23 +253,24 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
 !
-SUBROUTINE INTERNAL_SEDIM_SPLI(KIB,KIE,KIT,KJB,KJE,KJT,KKB,KKTB,KKTE,KKT,KKL,KRR, &
-                              &PMAXCFL,PRHODREF,POORHODZ,PDZZ,PPABST,PTHT,PTSTEP, &
-                              &KSPE,PRXT,PRXS,PINPRX,PPRXS,                       &
-                              &PRAY,PLBC,PFSEDC,PCONC3D,PFPR)
+SUBROUTINE INTERNAL_SEDIM_SPLI(KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKTB, KKTE, KKT, KKL, KRR, &
+                              &PMAXCFL, PRHODREF, POORHODZ, PDZZ, PPABST, PTHT, PTSTEP, &
+                              &KSPE, PRXT, PRXS, PINPRX, PPRXS, &
+                              &PRAY, PLBC, PFSEDC, PCONC3D, PFPR)
 !
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST,            ONLY: XCPD,XP00,XRD
-USE MODD_RAIN_ICE_DESCR, ONLY: XCC,XCEXVT,XDC,XLBEXC,XRTMIN
-USE MODD_RAIN_ICE_PARAM, ONLY: XEXCSEDI,XEXSEDG,XEXSEDH,XEXSEDR,XEXSEDS,XFSEDG,XFSEDH,XFSEDI,XFSEDR,XFSEDS
+USE MODD_CST,            ONLY: XCPD, XP00, XRD
+USE MODD_RAIN_ICE_DESCR, ONLY: XCC, XCEXVT, XDC, XLBEXC, XRTMIN
+USE MODD_RAIN_ICE_PARAM, ONLY: XEXCSEDI, XEXSEDG, XEXSEDH, XEXSEDR, XEXSEDS, XFSEDG, &
+                             & XFSEDH, XFSEDI, XFSEDR, XFSEDS
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-INTEGER, INTENT(IN) :: KIB,KIE,KIT, KJB,KJE,KJT, KKB, KKTB, KKTE, KKT, KKL, KRR
+INTEGER, INTENT(IN) :: KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKTB, KKTE, KKT, KKL, KRR
 REAL,                         INTENT(IN)              :: PMAXCFL ! maximum CFL allowed
 REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PRHODREF ! Reference density
 REAL, DIMENSION(KIT,KJT,KKTB:KKTE), INTENT(IN)        :: POORHODZ ! One Over (Rhodref times delta Z)
@@ -347,10 +288,10 @@ REAL, DIMENSION(KIT,KJT,KKT,KRR), INTENT(INOUT), OPTIONAL :: PFPR    ! upper-air
 !
 !*       0.2  declaration of local variables
 !
-character(len=10) :: yspe ! String for error message
+CHARACTER(LEN=10) :: yspe ! String for error message
 INTEGER                         :: IDX, ISEDIM
 INTEGER                         :: JI, JJ, JK, JL
-INTEGER, DIMENSION(KIT*KJT*KKT) :: I1,I2,I3 ! Used to replace the COUNT
+INTEGER, DIMENSION(KIT*KJT*KKT) :: I1,I2,I3   ! Used to replace the COUNT
 LOGICAL                         :: GPRESENT_PFPR
 REAL                            :: ZINVTSTEP
 REAL                            :: ZZWLBDC, ZRAY, ZZT, ZZWLBDA, ZZCC
@@ -358,8 +299,10 @@ REAL                            :: ZFSED, ZEXSED
 REAL, DIMENSION(KIT, KJT)       :: ZMRCHANGE
 REAL, DIMENSION(KIT, KJT)       :: ZMAX_TSTEP ! Maximum CFL in column
 REAL, DIMENSION(SIZE(XRTMIN))   :: ZRSMIN
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) :: ZREMAINT                   ! Remaining time until the timestep end
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),0:SIZE(PRHODREF,3)+1) :: ZWSED ! Sedimentation fluxes
+REAL, DIMENSION(KIT, KJT)       :: ZREMAINT   ! Remaining time until the timestep end
+REAL, DIMENSION(KIT, KJT, 0:KKT+1) :: ZWSED   ! Sedimentation fluxes
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT', 0, ZHOOK_HANDLE)
 !
 !-------------------------------------------------------------------------------
 IF (KSPE<2 .OR. KSPE>7) CALL PRINT_MSG(NVERB_FATAL,'GEN','INTERNAL_SEDIM_SPLIT','invalid species (KSPE variable)')
@@ -409,14 +352,14 @@ DO WHILE (ANY(ZREMAINT>0.))
       JK=I3(JL)
       IF(PRXT(JI,JJ,JK)>XRTMIN(KSPE)) THEN
         ZZWLBDC = PLBC(JI,JJ,JK) * PCONC3D(JI,JJ,JK) / &
-                  (PRHODREF(JI,JJ,JK) * PRXT(JI,JJ,JK))
+                 &(PRHODREF(JI,JJ,JK) * PRXT(JI,JJ,JK))
         ZZWLBDC = ZZWLBDC**XLBEXC
         ZRAY = PRAY(JI,JJ,JK) / ZZWLBDC
         ZZT = PTHT(JI,JJ,JK) * (PPABST(JI,JJ,JK)/XP00)**(XRD/XCPD)
         ZZWLBDA = 6.6E-8*(101325./PPABST(JI,JJ,JK))*(ZZT/293.15)
         ZZCC = XCC*(1.+1.26*ZZWLBDA/ZRAY)
         ZWSED(JI, JJ, JK) = PRHODREF(JI,JJ,JK)**(-XCEXVT +1 ) *   &
-                  ZZWLBDC**(-XDC)*ZZCC*PFSEDC(JI,JJ,JK) * PRXT(JI,JJ,JK)
+                           &ZZWLBDC**(-XDC)*ZZCC*PFSEDC(JI,JJ,JK) * PRXT(JI,JJ,JK)
       ENDIF
     ENDDO
   ELSEIF(KSPE==4) THEN
@@ -460,7 +403,7 @@ DO WHILE (ANY(ZREMAINT>0.))
       JK=I3(JL)
       IF(PRXT(JI,JJ,JK)>XRTMIN(KSPE)) THEN
         ZWSED(JI, JJ, JK) = ZFSED  * PRXT(JI, JJ, JK)**ZEXSED            &
-                                   * PRHODREF(JI, JJ, JK)**(ZEXSED-XCEXVT)
+                          &        * PRHODREF(JI, JJ, JK)**(ZEXSED-XCEXVT)
       ENDIF
     ENDDO
   ENDIF
@@ -471,7 +414,7 @@ DO WHILE (ANY(ZREMAINT>0.))
     JK=I3(JL)
     IF(PRXT(JI,JJ,JK)>XRTMIN(KSPE) .AND. ZWSED(JI, JJ, JK)>1.E-20) THEN
       ZMAX_TSTEP(JI, JJ) = MIN(ZMAX_TSTEP(JI, JJ), PMAXCFL * PRHODREF(JI, JJ, JK) * &
-                           PRXT(JI, JJ, JK) * PDZZ(JI, JJ, JK) / ZWSED(JI, JJ, JK))
+                         & PRXT(JI, JJ, JK) * PDZZ(JI, JJ, JK) / ZWSED(JI, JJ, JK))
     ENDIF
   ENDDO
   ZREMAINT(:,:) = ZREMAINT(:,:) - ZMAX_TSTEP(:,:)
@@ -489,6 +432,8 @@ DO WHILE (ANY(ZREMAINT>0.))
 !
 END DO
 !
+IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT', 1, ZHOOK_HANDLE)
 END SUBROUTINE INTERNAL_SEDIM_SPLI
 !
 END SUBROUTINE ICE4_SEDIMENTATION_SPLIT
+END MODULE MODE_ICE4_SEDIMENTATION_SPLIT
