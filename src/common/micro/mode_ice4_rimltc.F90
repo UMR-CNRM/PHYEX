@@ -7,7 +7,7 @@ MODULE MODE_ICE4_RIMLTC
 IMPLICIT NONE
 CONTAINS
 
-SUBROUTINE ICE4_RIMLTC(KSIZE, LDSOFT, PCOMPUTE, &
+SUBROUTINE ICE4_RIMLTC(KSIZE, PCOMPUTE, &
                        &PEXN, PLVFACT, PLSFACT, &
                        &PT, &
                        &PTHT, PRIT, &
@@ -39,7 +39,6 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 INTEGER,                      INTENT(IN)    :: KSIZE
-LOGICAL,                      INTENT(IN)    :: LDSOFT
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PCOMPUTE
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PEXN     ! Exner function
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLVFACT  ! L_v/(Pi_ref*C_ph)
@@ -61,20 +60,18 @@ IF (LHOOK) CALL DR_HOOK('ICE4_RIMLTC',0,ZHOOK_HANDLE)
 !*       7.1    cloud ice melting
 !
 PRIMLTC_MR(:)=0.
-IF(.NOT. LDSOFT) THEN
-  DO JL=1, KSIZE
-    ZMASK(JL)=MAX(0., -SIGN(1., -PRIT(JL))) * & ! PRIT(:)>0.
-             &MAX(0., -SIGN(1., XTT-PT(JL))) * & ! PT(:)>XTT
-             &PCOMPUTE(JL)
-    PRIMLTC_MR(JL)=PRIT(JL) * ZMASK(JL)
-  ENDDO
+DO JL=1, KSIZE
+  ZMASK(JL)=MAX(0., -SIGN(1., -PRIT(JL))) * & ! PRIT(:)>0.
+           &MAX(0., -SIGN(1., XTT-PT(JL))) * & ! PT(:)>XTT
+           &PCOMPUTE(JL)
+  PRIMLTC_MR(JL)=PRIT(JL) * ZMASK(JL)
+ENDDO
 
-  IF(LFEEDBACKT) THEN
-    !Limitation due to 0 crossing of temperature
-    DO JL=1, KSIZE
-      PRIMLTC_MR(JL)=MIN(PRIMLTC_MR(JL), MAX(0., (PTHT(JL)-XTT/PEXN(JL)) / (PLSFACT(JL)-PLVFACT(JL))))
-    ENDDO
-  ENDIF
+IF(LFEEDBACKT) THEN
+  !Limitation due to 0 crossing of temperature
+  DO JL=1, KSIZE
+    PRIMLTC_MR(JL)=MIN(PRIMLTC_MR(JL), MAX(0., (PTHT(JL)-XTT/PEXN(JL)) / (PLSFACT(JL)-PLVFACT(JL))))
+  ENDDO
 ENDIF
 
 IF (LHOOK) CALL DR_HOOK('ICE4_RIMLTC', 1, ZHOOK_HANDLE)
