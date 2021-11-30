@@ -269,23 +269,32 @@ use modd_budget,         only: lbu_enable,                                      
                                lbudget_th, lbudget_rv, lbudget_rc, lbudget_rr, lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, &
                                NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, &
                                tbudgets
-USE MODD_CST,            ONLY: XCI,XCL,XCPD,XCPV,XLSTT,XLVTT,XTT
-USE MODD_PARAMETERS,     ONLY: JPVEXT,XUNDEF
-USE MODD_PARAM_ICE,      ONLY: CSUBG_PR_PDF,CSUBG_RC_RR_ACCR,CSUBG_RR_EVAP,LDEPOSC,LFEEDBACKT,LSEDIM_AFTER, &
-                               NMAXITER,XMRSTEP,XTSTEP_TS,XVDEPOSC
+USE MODD_CST,            ONLY: XCI, XCL, XCPD, XCPV, XLSTT, XLVTT, XTT, XRHOLW
+USE MODD_PARAMETERS,     ONLY: JPVEXT, XUNDEF
+USE MODD_PARAM_ICE,      ONLY: CSUBG_PR_PDF, CSUBG_RC_RR_ACCR, CSUBG_RR_EVAP, LDEPOSC, LFEEDBACKT, LSEDIM_AFTER, &
+                             & NMAXITER, XMRSTEP, XTSTEP_TS, XVDEPOSC
 USE MODD_RAIN_ICE_DESCR, ONLY: XRTMIN
 USE MODD_VAR_ll,         ONLY: IP
-
+USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
+      & ITH,     & ! Potential temperature
+      & IRV,     & ! Water vapor
+      & IRC,     & ! Cloud water
+      & IRR,     & ! Rain water
+      & IRI,     & ! Pristine ice
+      & IRS,     & ! Snow/aggregate
+      & IRG,     & ! Graupel
+      & IRH        ! Hail
 use mode_budget,         only: Budget_store_add, Budget_store_init, Budget_store_end
 USE MODE_ll
 USE MODE_MSG
 use mode_tools,          only: Countjv
 
-USE MODI_ICE4_NUCLEATION_WRAPPER
 USE MODI_ICE4_RAINFR_VERT
-USE MODI_ICE4_SEDIMENTATION_STAT
-USE MODI_ICE4_SEDIMENTATION_SPLIT
-USE MODI_ICE4_TENDENCIES
+USE MODE_ICE4_SEDIMENTATION_STAT, ONLY: ICE4_SEDIMENTATION_STAT
+USE MODE_ICE4_SEDIMENTATION_SPLIT, ONLY: ICE4_SEDIMENTATION_SPLIT
+USE MODE_ICE4_SEDIMENTATION_SPLIT_MOMENTUM, ONLY: ICE4_SEDIMENTATION_SPLIT_MOMENTUM
+USE MODE_ICE4_NUCLEATION_WRAPPER, ONLY: ICE4_NUCLEATION_WRAPPER
+USE MODE_ICE4_TENDENCIES, ONLY: ICE4_TENDENCIES
 
 IMPLICIT NONE
 !
@@ -370,7 +379,7 @@ INTEGER :: IMICRO ! Case r_x>0 locations
 INTEGER, DIMENSION(KSIZE) :: I1,I2,I3 ! Used to replace the COUNT
 INTEGER                   :: JL       ! and PACK intrinsics
 !
-!Arrays for nucleation call outisde of LDMICRO points
+!Arrays for nucleation call outisde of ODMICRO points
 REAL,    DIMENSION(KIT, KJT, KKT) :: ZW ! work array
 REAL,    DIMENSION(KIT, KJT, KKT) :: ZT ! Temperature
 REAL, DIMENSION(KIT, KJT, KKT) :: &
@@ -390,7 +399,6 @@ REAL, DIMENSION(KIT, KJT, KKT) :: &
                                 & ZHLI_LCF3D,& ! HLCLOUDS cloud fraction in low ice content part
                                 & ZHLI_HRI3D,& ! HLCLOUDS cloud water content in high ice content
                                 & ZHLI_LRI3D   ! HLCLOUDS cloud water content in high ice content
-
 REAL, DIMENSION(SIZE(PTHT,1),SIZE(PTHT,2)) :: ZINPRI ! Pristine ice instant precip
 !
 !Packed variables
@@ -485,9 +493,22 @@ REAL, DIMENSION(KSIZE) :: Z0RVT,     &   ! Water vapor m.r. at the beginig of th
                         & Z0RIT,     &   ! Pristine ice m.r. at the beginig of the current loop
                         & Z0RST,     &   ! Snow/aggregate m.r. at the beginig of the current loop
                         & Z0RGT,     &   ! Graupel m.r. at the beginig of the current loop
-                        & Z0RHT,     &   ! Hail m.r. at the beginig of the current loop
-                        & ZA_TH, ZA_RV, ZA_RC, ZA_RR, ZA_RI, ZA_RS, ZA_RG, ZA_RH, &
-                        & ZB_TH, ZB_RV, ZB_RC, ZB_RR, ZB_RI, ZB_RS, ZB_RG, ZB_RH
+                        & Z0RHT          ! Hail m.r. at the beginig of the current loop
+
+
+
+
+
+!en attendant phasage on utilise KSIZE à la place de KPROMA
+REAL, DIMENSION(KSIZE,0:7) :: &
+                        & ZVART, & !Packed variables
+                        & ZA, ZB
+
+
+
+
+
+
 !
 !To take into acount external tendencies inside the splitting
 REAL, DIMENSION(KSIZE) :: ZEXT_RV,   &   ! External tendencie for rv
@@ -852,15 +873,27 @@ DO WHILE(ANY(ZTIME(:)<PTSTEP)) ! Loop to *really* compute tendencies
     !***       4.1 Tendecies computation
     !
     ! Tendencies are *really* computed when LSOFT==.FALSE. and only adjusted otherwise
-    CALL ICE4_TENDENCIES(IMICRO, IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, KKT, KKL, &
+
+
+
+!KPROMA=IMICRO: temporary merging step
+ZVART(:, ITH)=ZTHT(:)
+ZVART(:, IRV)=ZRVT(:)
+ZVART(:, IRC)=ZRCT(:)
+ZVART(:, IRR)=ZRRT(:)
+ZVART(:, IRI)=ZRIT(:)
+ZVART(:, IRS)=ZRST(:)
+ZVART(:, IRG)=ZRGT(:)
+IF(KRR==7) ZVART(:, IRH)=ZRHT(:)
+
+    CALL ICE4_TENDENCIES(IMICRO, IMICRO, IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, KKT, KKL, &
                         &KRR, LSOFT, ZCOMPUTE, &
                         &OWARM, CSUBG_RC_RR_ACCR, CSUBG_RR_EVAP, &
                         &HSUBG_AUCV_RC, HSUBG_AUCV_RI, CSUBG_PR_PDF, &
                         &ZEXN, ZRHODREF, ZLVFACT, ZLSFACT, I1, I2, I3, &
                         &ZPRES, ZCF, ZSIGMA_RC,&
                         &ZCIT, &
-                        &ZZT, ZTHT, &
-                        &ZRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT, ZRHT, &
+                        &ZZT, ZVART, &
                         &ZRVHENI_MR, ZRRHONG_MR, ZRIMLTC_MR, ZRSRIMCG_MR, &
                         &ZRCHONI, ZRVDEPS, ZRIAGGS, ZRIAUTS, ZRVDEPG, &
                         &ZRCAUTR, ZRCACCR, ZRREVAV, &
@@ -871,21 +904,29 @@ DO WHILE(ANY(ZTIME(:)<PTSTEP)) ! Loop to *really* compute tendencies
                         &ZRCDRYH, ZRIDRYH, ZRSDRYH, ZRRDRYH, ZRGDRYH, ZRDRYHG, ZRHMLTR, &
                         &ZRCBERI, &
                         &ZRS_TEND, ZRG_TEND, ZRH_TEND, ZSSI, &
-                        &ZA_TH, ZA_RV, ZA_RC, ZA_RR, ZA_RI, ZA_RS, ZA_RG, ZA_RH, &
-                        &ZB_TH, ZB_RV, ZB_RC, ZB_RR, ZB_RI, ZB_RS, ZB_RG, ZB_RH, &
+                        &ZA, ZB, &
                         &ZHLC_HCF, ZHLC_LCF, ZHLC_HRC, ZHLC_LRC, &
                         &ZHLI_HCF, ZHLI_LCF, ZHLI_HRI, ZHLI_LRI, PRAINFR)
+ZTHT(:)=ZVART(:, ITH)
+ZRVT(:)=ZVART(:, IRV)
+ZRCT(:)=ZVART(:, IRC)
+ZRRT(:)=ZVART(:, IRR)
+ZRIT(:)=ZVART(:, IRI)
+ZRST(:)=ZVART(:, IRS)
+ZRGT(:)=ZVART(:, IRG)
+IF(KRR==7) ZRHT(:)=ZVART(:, IRH)
+
     ! External tendencies
     IF(GEXT_TEND) THEN
       DO JL=1, IMICRO
-        ZA_TH(JL) = ZA_TH(JL) + ZEXT_TH(JL)
-        ZA_RV(JL) = ZA_RV(JL) + ZEXT_RV(JL)
-        ZA_RC(JL) = ZA_RC(JL) + ZEXT_RC(JL)
-        ZA_RR(JL) = ZA_RR(JL) + ZEXT_RR(JL)
-        ZA_RI(JL) = ZA_RI(JL) + ZEXT_RI(JL)
-        ZA_RS(JL) = ZA_RS(JL) + ZEXT_RS(JL)
-        ZA_RG(JL) = ZA_RG(JL) + ZEXT_RG(JL)
-        ZA_RH(JL) = ZA_RH(JL) + ZEXT_RH(JL)
+        ZA(JL, ITH) = ZA(JL, ITH) + ZEXT_TH(JL)
+        ZA(JL, IRV) = ZA(JL, IRV) + ZEXT_RV(JL)
+        ZA(JL, IRC) = ZA(JL, IRC) + ZEXT_RC(JL)
+        ZA(JL, IRR) = ZA(JL, IRR) + ZEXT_RR(JL)
+        ZA(JL, IRI) = ZA(JL, IRI) + ZEXT_RI(JL)
+        ZA(JL, IRS) = ZA(JL, IRS) + ZEXT_RS(JL)
+        ZA(JL, IRG) = ZA(JL, IRG) + ZEXT_RG(JL)
+        ZA(JL, IRH) = ZA(JL, IRH) + ZEXT_RH(JL)
       ENDDO
     ENDIF
     !
@@ -900,12 +941,12 @@ DO WHILE(ANY(ZTIME(:)<PTSTEP)) ! Loop to *really* compute tendencies
         !Is ZB_TH enough to change temperature sign?
         ZW1D(JL)=(ZTHT(JL) - XTT/ZEXN(JL)) * (ZTHT(JL) + ZB_TH(JL) - XTT/ZEXN(JL))
         ZMAXTIME(JL)=ZMAXTIME(JL)*MAX(0., SIGN(1., ZW1D(JL)))
-        !Can ZA_TH make temperature change of sign?
-        ZW1D(JL)=MAX(0., -SIGN(1., 1.E-20 - ABS(ZA_TH(JL)))) ! WHERE(ABS(ZA_TH(:))>1.E-20)
+        !Can ZA(:, ITH) make temperature change of sign?
+        ZW1D(JL)=MAX(0., -SIGN(1., 1.E-20 - ABS(ZA(JL, ITH)))) ! WHERE(ABS(ZA(:, ITH))>1.E-20)
         ZTIME_THRESHOLD(JL)=(1. - ZW1D(JL))*(-1.) + &
                             ZW1D(JL) * &
                             (XTT/ZEXN(JL) - ZB_TH(JL) - ZTHT(JL))/ &
-                            SIGN(MAX(ABS(ZA_TH(JL)), 1.E-20), ZA_TH(JL))
+                            SIGN(MAX(ABS(ZA(JL, ITH)), 1.E-20), ZA(JL, ITH))
         ZW1D(JL)=MAX(0., -SIGN(1., 1.E-20 - ZTIME_THRESHOLD(JL))) ! WHERE(ZTIME_THRESHOLD(:)>1.E-20)
         ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
                      ZW1D(JL) * MIN(ZMAXTIME(JL), ZTIME_THRESHOLD(JL))
@@ -915,43 +956,43 @@ DO WHILE(ANY(ZTIME(:)<PTSTEP)) ! Loop to *really* compute tendencies
     !We need to adjust tendencies when a specy disappears
     !When a species is missing, only the external tendencies can be negative (and we must keep track of it)
     DO JL=1, IMICRO
-      ZW1D(JL)=MAX(0., -SIGN(1., ZA_RV(JL)+1.E-20)) * & ! WHERE(ZA_RV(:)<-1.E-20)
+      ZW1D(JL)=MAX(0., -SIGN(1., ZA(JL, IRV)+1.E-20)) * & ! WHERE(ZA(:, IRV)<-1.E-20)
               &MAX(0., -SIGN(1., XRTMIN(1)-ZRVT(JL)))   ! WHERE(ZRVT(:)>XRTMIN(1))
       ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
-                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RV(JL)+ZRVT(JL))/MIN(ZA_RV(JL), -1.E-20))
+                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RV(JL)+ZRVT(JL))/MIN(ZA(JL, IRV), -1.E-20))
 
-      ZW1D(JL)=MAX(0., -SIGN(1., ZA_RC(JL)+1.E-20)) * & ! WHERE(ZA_RC(:)<-1.E-20)
+      ZW1D(JL)=MAX(0., -SIGN(1., ZA(JL, IRC)+1.E-20)) * & ! WHERE(ZA(:, IRC)<-1.E-20)
               &MAX(0., -SIGN(1., XRTMIN(2)-ZRCT(JL)))   ! WHERE(ZRCT(:)>XRTMIN(2))
       ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
-                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RC(JL)+ZRCT(JL))/MIN(ZA_RC(JL), -1.E-20))
+                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RC(JL)+ZRCT(JL))/MIN(ZA(JL, IRC), -1.E-20))
 
-      ZW1D(JL)=MAX(0., -SIGN(1., ZA_RR(JL)+1.E-20)) * & ! WHERE(ZA_RR(:)<-1.E-20)
+      ZW1D(JL)=MAX(0., -SIGN(1., ZA(JL, IRR)+1.E-20)) * & ! WHERE(ZA(:, IRR)<-1.E-20)
               &MAX(0., -SIGN(1., XRTMIN(3)-ZRRT(JL)))   ! WHERE(ZRRT(:)>XRTMIN(3))
       ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
-                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RR(JL)+ZRRT(JL))/MIN(ZA_RR(JL), -1.E-20))
+                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RR(JL)+ZRRT(JL))/MIN(ZA(JL, IRR), -1.E-20))
 
-      ZW1D(JL)=MAX(0., -SIGN(1., ZA_RI(JL)+1.E-20)) * & ! WHERE(ZI_RV(:)<-1.E-20)
+      ZW1D(JL)=MAX(0., -SIGN(1., ZA(JL, IRI)+1.E-20)) * & ! WHERE(ZI_RV(:)<-1.E-20)
               &MAX(0., -SIGN(1., XRTMIN(4)-ZRIT(JL)))   ! WHERE(ZRIT(:)>XRTMIN(4))
       ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
-                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RI(JL)+ZRIT(JL))/MIN(ZA_RI(JL), -1.E-20))
+                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RI(JL)+ZRIT(JL))/MIN(ZARI(JL, IRI), -1.E-20))
 
-      ZW1D(JL)=MAX(0., -SIGN(1., ZA_RS(JL)+1.E-20)) * & ! WHERE(ZA_RS(:)<-1.E-20)
+      ZW1D(JL)=MAX(0., -SIGN(1., ZA(JL, IRS)+1.E-20)) * & ! WHERE(ZA(:, IRS)<-1.E-20)
               &MAX(0., -SIGN(1., XRTMIN(5)-ZRST(JL)))   ! WHERE(ZRST(:)>XRTMIN(5))
       ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
-                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RS(JL)+ZRST(JL))/MIN(ZA_RS(JL), -1.E-20))
+                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RS(JL)+ZRST(JL))/MIN(ZA(JL, IRS), -1.E-20))
 
-      ZW1D(JL)=MAX(0., -SIGN(1., ZA_RG(JL)+1.E-20)) * & ! WHERE(ZA_RG(:)<-1.E-20)
+      ZW1D(JL)=MAX(0., -SIGN(1., ZA(JL, IRG)+1.E-20)) * & ! WHERE(ZA(:, IRG)<-1.E-20)
               &MAX(0., -SIGN(1., XRTMIN(6)-ZRGT(JL)))   ! WHERE(ZRGT(:)>XRTMIN(6))
       ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
-                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RG(JL)+ZRGT(JL))/MIN(ZA_RG(JL), -1.E-20))
+                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RG(JL)+ZRGT(JL))/MIN(ZA(JL, IRG), -1.E-20))
     ENDDO
 
     IF(KRR==7) THEN
       DO JL=1, IMICRO
-        ZW1D(JL)=MAX(0., -SIGN(1., ZA_RH(JL)+1.E-20)) * & ! WHERE(ZA_RH(:)<-1.E-20)
+        ZW1D(JL)=MAX(0., -SIGN(1., ZA(JL, IRH)+1.E-20)) * & ! WHERE(ZA(:, IRH)<-1.E-20)
                 &MAX(0., -SIGN(1., XRTMIN(7)-ZRHT(JL)))   ! WHERE(ZRHT(:)>XRTMIN(7))
         ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
-                    &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RH(JL)+ZRHT(JL))/MIN(ZA_RH(JL), -1.E-20))
+                    &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RH(JL)+ZRHT(JL))/MIN(ZA(JL, IRH), -1.E-20))
       ENDDO
     ENDIF
 

@@ -168,7 +168,7 @@ ENDIF
 !
 DO JL=1, KSIZE
   ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(4)-PHLI_HRI(JL))) * & ! PHLI_HRI(:)>XRTMIN(4)
-           &MAX(0., -SIGN(1., 1.E-20-PHLI_HCF(JL))) * & ! PHLI_HCF(:) .GT. 0.
+           &MAX(0., -SIGN(1., 1.E-20-PHLI_HCF(JL))) * & ! PHLI_HCF(:) .GT. 1.E-20
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
