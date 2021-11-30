@@ -50,3 +50,11 @@ phyex/micro/ice4_sedimentation_stat.F90
 phyex/micro/modi_ice4_sedimentation_split.F90
 phyex/micro/ice4_sedimentation_split.F90
 phyex/micro/modi_ice4_sedimentation_stat.F90
+phyex/micro/modd_blank.F90
+phyex/micro/gamma.F90
+phyex/micro/gamma_inc.F90
+phyex/micro/general_gamma.F90
+phyex/micro/modi_gamma.F90
+phyex/micro/modi_gamma_inc.F90
+phyex/micro/modi_general_gamma.F90
+phyex/micro/moddb_intbudget.F90

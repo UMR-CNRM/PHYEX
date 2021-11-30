@@ -1,4 +1,16 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+!########################
+!
+!--------------------------------------------------------------------------
+!
+!
+!*       1.   FUNCTION GAMMA FOR SCALAR VARIABLE
+! 
+!
+!     ######################################
       FUNCTION GAMMA_X0D(PX)  RESULT(PGAMMA)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
@@ -35,11 +47,9 @@
 !!
 !!    MODIFICATIONS
 !!    -------------
-!!      Original     7/12/95
+!!      Original     7/11/95
 !!      C. Barthe    9/11/09  add a function for 1D arguments
-!!
-!!-------------------------------------------------------------------------------
-
+!
 !*       0. DECLARATIONS
 !           ------------
 !
@@ -105,7 +115,11 @@ END FUNCTION GAMMA_X0D
 !
 !-------------------------------------------------------------------------------
 !
-!     ######spl
+!
+!*       1.   FUNCTION GAMMA FOR 1D ARRAY
+! 
+!
+!     ######################################
       FUNCTION GAMMA_X1D(PX)  RESULT(PGAMMA)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
@@ -153,14 +167,14 @@ IMPLICIT NONE
 !
 !*       0.1 declarations of arguments and result
 !
-REAL,DIMENSION(:), INTENT(IN)           :: PX
-REAL,DIMENSION(SIZE(PX))                :: PGAMMA
+REAL, DIMENSION(:), INTENT(IN)       :: PX
+REAL, DIMENSION(SIZE(PX))            :: PGAMMA
 !
 !*       0.2 declarations of local variables
 !
 INTEGER                              :: JJ ! Loop index
 INTEGER                              :: JI ! Loop index
-REAL                                 :: ZSER,ZSTP,ZTMP,ZX,ZY,ZCOEF(6)
+REAL                                 :: ZSER, ZSTP, ZTMP, ZX, ZY, ZCOEF(6)
 REAL                                 :: ZPI
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
