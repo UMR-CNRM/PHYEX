@@ -1,4 +1,14 @@
-!     ######spl
+!MNH_LIC Copyright 1995-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+!     ###################
+      MODULE MODE_RRCOLSS
+!     ###################
+!
+IMPLICIT NONE
+CONTAINS
       SUBROUTINE RRCOLSS( KND, PALPHAS, PNUS, PALPHAR, PNUR,                 &
                          PESR, PEXMASSR, PFALLS, PEXFALLS, PFALLR, PEXFALLR, &
                          PLBDASMAX, PLBDARMAX, PLBDASMIN, PLBDARMIN,         &
@@ -69,7 +79,8 @@
 !!    -------------
 !!      Original    8/11/95
 !!
-!!
+!  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
+!
 !-------------------------------------------------------------------------------
 !
 !
@@ -171,8 +182,8 @@ ZCST1 = (3.0/XPI)/XRHOLW
 !
 !*       1.1     Compute the growth rate of the slope factors LAMBDA
 !
-ZDLBDAS = EXP( LOG(PLBDASMAX/PLBDASMIN)/FLOAT(SIZE(PRRCOLSS(:,:),1)-1) )
-ZDLBDAR = EXP( LOG(PLBDARMAX/PLBDARMIN)/FLOAT(SIZE(PRRCOLSS(:,:),2)-1) )
+ZDLBDAS = EXP( LOG(PLBDASMAX/PLBDASMIN)/REAL(SIZE(PRRCOLSS(:,:),1)-1) )
+ZDLBDAR = EXP( LOG(PLBDARMAX/PLBDARMIN)/REAL(SIZE(PRRCOLSS(:,:),2)-1) )
 !
 !*       1.2     Scan the slope factors LAMBDAX and LAMBDAZ
 !
@@ -181,7 +192,7 @@ DO JLBDAS = 1,SIZE(PRRCOLSS(:,:),1)
 !
 !*       1.3     Compute the diameter steps
 !
-  ZDDS   = PDINFTY / (FLOAT(KND) * ZLBDAS)
+  ZDDS   = PDINFTY / (REAL(KND) * ZLBDAS)
   DO JLBDAR = 1,SIZE(PRRCOLSS(:,:),2)
     ZLBDAR = PLBDARMIN * ZDLBDAR ** (JLBDAR-1)
 !
@@ -192,16 +203,16 @@ DO JLBDAS = 1,SIZE(PRRCOLSS(:,:),1)
 !
 !*       1.5     Compute the diameter steps
 !
-    ZDDSCALR = PDINFTY / (FLOAT(KND) * ZLBDAR)
+    ZDDSCALR = PDINFTY / (REAL(KND) * ZLBDAR)
 !
 !*       1.6     Scan over the diameters DS and DR
 !
     DO JDS = 1,KND-1
-      ZDS = ZDDS * FLOAT(JDS)
+      ZDS = ZDDS * REAL(JDS)
       ZSCALR = 0.0
       ZCOLLR = 0.0
       DO JDR = 1,KND-1
-        ZDR = ZDDSCALR * FLOAT(JDR)
+        ZDR = ZDDSCALR * REAL(JDR)
 !
 !*       1.7     Compute the normalization factor by integration over the
 !                dimensional spectrum of rain   
@@ -223,13 +234,13 @@ DO JLBDAS = 1,SIZE(PRRCOLSS(:,:),1)
             ! corresponding to a maximal density of the aggregates of XRHOLW
         IF( ZDRMAX >= 0.5*ZDDSCALR ) THEN
           INR = CEILING( ZDRMAX/ZDDSCALR )
-          ZDDCOLLR = ZDRMAX / FLOAT(INR)
+          ZDDCOLLR = ZDRMAX / REAL(INR)
           IF (INR>=KND ) THEN
             INR = KND
             ZDDCOLLR = ZDDSCALR
           END IF
           DO JDR = 1,INR-1
-            ZDR = ZDDCOLLR * FLOAT(JDR)
+            ZDR = ZDDCOLLR * REAL(JDR)
             ZCOLLR = ZCOLLR + (ZDS+ZDR)**2 * ZDR**PEXMASSR                     &
                        * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDR**PEXFALLR) &
                                       * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDR)
@@ -265,3 +276,4 @@ END DO
 !
 IF (LHOOK) CALL DR_HOOK('RRCOLSS',1,ZHOOK_HANDLE)
 END SUBROUTINE RRCOLSS
+END MODULE MODE_RRCOLSS
