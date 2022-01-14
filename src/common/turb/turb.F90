@@ -493,7 +493,7 @@ ZRM(:,:,:,:) = PRM(:,:,:,:)
 !
 !----------------------------------------------------------------------------
 !
-!*      2. COMPUTE CONSERVATIVE VARIABLES AE0___PROC1 et Q0___PROC1ND RELATED QUANTITIES
+!*      2. COMPUTE CONSERVATIVE VARIABLES AND RELATED QUANTITIES
 !          -----------------------------------------------------
 !
 !*      2.1 Cph at t

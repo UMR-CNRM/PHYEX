@@ -432,7 +432,7 @@ CALL TURB (KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, ISPLIT,IMI, &
    & PDRUS_TURB,PDRVS_TURB,                                &
    & PDRTHLS_TURB,PDRRTS_TURB,ZDRSVS_TURB,                 &
   & PFLXZTHVMF,ZWTH,ZWRC,ZWSV,PDP,PTP,PTPMF,PTDIFF,    &
-  & PTDISS,PEDR,YDDDH,YDLDDH,YDMDDH)
+  & PTDISS,YDDDH,YDLDDH,YDMDDH,PEDR=PEDR)
 !
 !
 !------------------------------------------------------------------------------
