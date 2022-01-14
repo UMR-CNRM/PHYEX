@@ -17,8 +17,9 @@
               & PHGRAD, PSIGS,                                        &
               & PDRUS_TURB,PDRVS_TURB,                                &
               & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,                 &
-              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,       &
-              & PTDISS,PEDR,YDDDH,YDLDDH,YDMDDH)
+              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
+              & YDDDH,YDLDDH,YDMDDH,                                  &
+              & PTR,PDISS,PEDR                                        )
 
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
@@ -223,6 +224,7 @@ USE MODD_CST
 USE MODD_CTURB
 USE MODD_CONF
 USE MODD_BUDGET
+USE MODD_IO, ONLY: TFILEDATA
 USE MODD_LES
 USE MODD_NSV
 !
@@ -375,17 +377,17 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTPMF      ! Thermal TKE production
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PDP        ! Dynamic TKE production
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDIFF     ! Diffusion TKE term
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
-
-
-REAL, DIMENSION(:,:,:),   INTENT(OUT) ::  PEDR       ! EDR
-
-TYPE(TYP_DDH), INTENT(INOUT) :: YDDDH
-TYPE(TLDDH),   INTENT(IN)    :: YDLDDH
-TYPE(TMDDH),   INTENT(IN)    :: YDMDDH
+!
+TYPE(TYP_DDH), INTENT(INOUT), TARGET :: YDDDH
+TYPE(TLDDH),   INTENT(IN), TARGET    :: YDLDDH
+TYPE(TMDDH),   INTENT(IN), TARGET    :: YDMDDH
 !
 ! length scale from vdfexcu
 REAL, DIMENSION(:,:,:), INTENT(IN)    :: PLENGTHM, PLENGTHH
-
+!
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PTR   ! Transport production of TKE
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PDISS ! Dissipation of TKE
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  ::  PEDR       ! EDR
 !
 !
 !-------------------------------------------------------------------------------
@@ -445,6 +447,10 @@ REAL                :: ZL0          ! Max. Mixing Length in Blakadar formula
 REAL                :: ZALPHA       ! proportionnality constant between Dz/2 and 
 !                                   ! BL89 mixing length near the surface
 !
+!
+TYPE(TFILEDATA) :: TPFILE ! File type to write fields for MesoNH
+TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH) :: YLBUDGET !NBUDGET_RH is the one with the highest number
+!
 REAL :: ZTIME1, ZTIME2
 REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3))::  ZSHEAR, ZDUDZ, ZDVDZ
 !
@@ -463,6 +469,12 @@ IF (LHARAT .AND. LLES_CALL) THEN
   CALL ABOR1('LHARATU not implemented for option LLES_CALL')
 ENDIF
 
+DO JRR=1, NBUDGET_RH
+  YLBUDGET(JRR)%NBUDGET=JRR
+  YLBUDGET(JRR)%YDDDH=>YDDDH
+  YLBUDGET(JRR)%YDLDDH=>YDLDDH
+  YLBUDGET(JRR)%YDMDDH=>YDMDDH
+ENDDO
 
 IKT=SIZE(PTHLM,3)          
 IKTB=1+JPVEXT_TURB              
@@ -481,7 +493,7 @@ ZRM(:,:,:,:) = PRM(:,:,:,:)
 !
 !----------------------------------------------------------------------------
 !
-!*      2. COMPUTE CONSERVATIVE VARIABLES AND RELATED QUANTITIES
+!*      2. COMPUTE CONSERVATIVE VARIABLES AE0___PROC1 et Q0___PROC1ND RELATED QUANTITIES
 !          -----------------------------------------------------
 !
 !*      2.1 Cph at t
@@ -914,14 +926,14 @@ IF (LBUDGET_RI) CALL BUDGET_DDH (PRRS(:,:,:,4),9,'HTURB_BU_RRI',YDDDH, YDLDDH, Y
 
 IF (.NOT. LHARAT) THEN
 
-
 CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKEM,ZLM,ZLEPS,PDP,ZTRH,       &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,            &
                    & PTSTEP_MET,PIMPL,ZEXPL,                         &
                    & HTURBLEN,HTURBDIM,                              &
-                   & HFMFILE,HLUOUT,OCLOSE_OUT,OTURB_DIAG,           &
-                & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,     &
-                & PTDISS,PEDR,YDDDH, YDLDDH, YDMDDH)
+                   & TPFILE,OTURB_DIAG,           &
+                & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,&
+                & PEDR, YDDDH, YDLDDH, YDMDDH,                       &
+TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET))
 IF (LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     CALL BUDGET_DDH (PRTHLS+ ZLVOCPEXNM * PRRS(:,:,:,2) + ZLSOCPEXNM * PRRS(:,:,:,4),4,'DISSH_BU_RTH',YDDDH, YDLDDH, YDMDDH)

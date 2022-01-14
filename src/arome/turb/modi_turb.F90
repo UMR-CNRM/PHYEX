@@ -22,9 +22,9 @@ INTERFACE
               & PHGRAD,PSIGS,                                         &
               & PDRUS_TURB,PDRVS_TURB,                                &
               & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,                 &
-              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,       &
-              & PTDISS,PEDR,YDDDH,YDLDDH,YDMDDH)
-
+              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
+              & YDDDH,YDLDDH,YDMDDH,                                  &
+              & PTR,PDISS,PEDR                                        ) 
 !
 USE DDH_MIX, ONLY : TYP_DDH
 USE YOMLDDH, ONLY  : TLDDH
@@ -143,17 +143,17 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTP        ! Thermal TKE production
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTPMF      ! Thermal TKE production
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDIFF     ! Diffusion TKE term
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
-
-REAL, DIMENSION(:,:,:),INTENT(OUT)   :: PEDR       ! eddy dissipation rate
-
+!
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PLENGTHM 
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PLENGTHH 
 !
-
 TYPE(TYP_DDH), INTENT(INOUT) :: YDDDH
 TYPE(TLDDH),   INTENT(IN)    :: YDLDDH
 TYPE(TMDDH),   INTENT(IN)    :: YDMDDH
-
+!
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PTR   ! Transport production of TKE
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PDISS ! Dissipation of TKE
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  ::  PEDR       ! EDR
 !
 !-------------------------------------------------------------------------------
 !
