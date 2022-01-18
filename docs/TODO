@@ -21,6 +21,7 @@ Merge pb:
        Pas introduits (pour l'instant?) dans version common.
        Ryad a fait des tests pour regarder impact des allocatable sur CPU => temps * 2
        Code à nettoyer quelque soit l'option retenue
+       Dernier code de Ryad: /home/gmap/mrpm/khatib/public/modset/mods_ice4_nucleation_wrapper.tgz et/ou /home/gmap/mrpm/khatib/public/modset/ice4_nucleation_wrapper.f90
 
 - rain_ice_red: le cas test MesoNH n'est pas bit repro (diffs > 1% sur rapports de melange)
                 sur la modif src/mesonh/rain_ice_red au commit bdd10dd (First rain_ice new/red merge)
@@ -30,6 +31,9 @@ Etape 2: array syntax -> loop
 - regarder si pcompute et llcompute sont toujours tous deux nécessaires dans les mode_ice4* avec le passage en do
 - si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
 - transformer sedimentation_split_momentum comme sedimentation_split
+- une distinction KSIZE/KPROMA est à faire dans la microphysique. Pour une meilleure compréhension du code, il faut partir
+  du principe de déclarer tous les tableaux en KPROMA et de les utiliser que jusqu'à KSIZE
+- essayer l'outil développé par Juan
 
 Pb identifiés à corriger plus tard:
 - deposition devrait être déplacée dans ice4_tendencies
@@ -39,12 +43,19 @@ Pb identifiés à corriger plus tard:
   sont relatifs à la boucle IMICRO et que les calculs faits en debut de routine ne
   concernent qu'une partie des points
        => à corriger
-- avec découpage en KPROMA, le code ne produit plus les memes resultats
 - seules les options oper ont été testées, il manque des test pour sedim_after, nmaxiter, xmrstep, xtstep, autoconv, rainfr
 
 Répertoire arome/ext contient les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
-Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayant été fournies par ailleurs
+Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayadevront avoir été fournies par ailleurs
 
 Budgets/DDH
 - Le code dans budget_DDH devra être transféré dans mode_budget
 - les routines arome specifiques aux budgets sont dans mpa/micro, il faudrait les mettre ailleurs
+
+SPP
+- modd_spp_type est pour l'instant dans mpa/micro/externals mais n'est pas de la microphysique
+
+Gradients/shuman:
+- essayer de mettre des abort dans les routines arome (shuman doit suffire)
+
+compute_frac_ice: prendre la solution retenue à la fin de la discussion entre LAERO et GMAP

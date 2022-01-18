@@ -298,7 +298,8 @@ REAL, DIMENSION(SIZE(PTHM,1)) ::  ZRESOL_NORM, ZRESOL_GRID,& ! normalized grid
                                   ZLUP, ZPLAW
 ! Test if the ascent continue, if LCL or ETL is reached
 LOGICAL                          ::  GLMIX 
-    INTEGER :: JI,JJ,JK         ! loop counter
+INTEGER :: JI,JJ,JK         ! loop counter
+INTEGER, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: IERR
 !------------------------------------------------------------------------
 
 !!! 1. Initialisation
@@ -322,8 +323,7 @@ IF (SIZE(PRM,3).GE.4) THEN
     ZFRAC_ICE(:,:) = PRM(:,:,4) / (PRM(:,:,2)+PRM(:,:,4))
   ENDWHERE
 ENDIF
-CALL COMPUTE_FRAC_ICE(SIZE(ZFRAC_ICE, 1), SIZE(ZFRAC_ICE, 2), &
-                     &HFRAC_ICE,ZFRAC_ICE(:,:),PTHM(:,:)*PEXNM(:,:))
+CALL COMPUTE_FRAC_ICE(HFRAC_ICE,ZFRAC_ICE(:,:),PTHM(:,:)*PEXNM(:,:), IERR(:,:))
 
 ! Conservative variables at t-dt
 CALL THL_RT_FROM_TH_R_MF(KRR,KRRL,KRRI,    &
