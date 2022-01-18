@@ -162,6 +162,7 @@ REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZRSAT_UP ! Rsat in updraft
 LOGICAL :: GENTR_DETR  ! flag to recompute entrainment, detrainment and mass flux
 INTEGER :: IKB         ! near ground physical index
 INTEGER :: IKE         ! uppest atmosphere physical index
+INTEGER, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: IERR
 !------------------------------------------------------------------------
 
 !!! 1. Initialisation
@@ -186,8 +187,7 @@ ZFRAC_ICE(:,:) = 0.
 WHERE(PRM(:,:,2)+PRM(:,:,4) > 1.E-20)
   ZFRAC_ICE(:,:) = PRM(:,:,4) / (PRM(:,:,2)+PRM(:,:,4))
 ENDWHERE
-CALL COMPUTE_FRAC_ICE(SIZE(ZFRAC_ICE, 1), SIZE(ZFRAC_ICE, 2), &
-                      HFRAC_ICE,ZFRAC_ICE(:,:),PTHM(:,:)*PEXNM(:,:))
+CALL COMPUTE_FRAC_ICE(HFRAC_ICE,ZFRAC_ICE(:,:),PTHM(:,:)*PEXNM(:,:), IERR(:,:))
 
 ! Conservative variables at t-dt
 CALL THL_RT_FROM_TH_R_MF(KRR,KRRL,KRRI,    &

@@ -1,13 +1,14 @@
 !     ######spl
       SUBROUTINE  ARO_ADJUST(KKA,KKU,KKL,KLON,KLEV,  KRR,  &
                                   NGFL_EZDIAG, &
-                                  HFRAC_ICE, OSUBG_COND, OSIGMAS, &
-                                  CMICRO, OCND2, &
+                                  HFRAC_ICE, HCONDENS, HLAMBDA3, OSUBG_COND, &
+                                  OSIGMAS, CMICRO, OCND2, HSUBG_MF_PDF, &
                                   PTSTEP, PSIGQSAT, &
-                                  PZZF, PRHODJ, PEXNREF,&
+                                  PZZF, PRHODJ, PEXNREF, PRHODREF,&
                                   PPABSM, PTHT, PRT, PSIGS, &
                                   PMFCONV, PRC_MF, PRI_MF, PCF_MF, &
                                   PTHS, PRS,  PSRCS, PCLDFR,&
+                                  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
                                   PGP2DSPP,PEZDIAG, &
                                   YDDDH,YDLDDH,YDMDDH)
       USE PARKIND1, ONLY : JPRB
@@ -87,11 +88,10 @@ USE MODD_CONF
 USE MODD_CST
 USE MODD_PARAMETERS
 USE MODD_RAIN_ICE_DESCR
-USE MODD_BUDGET
+USE MODD_BUDGET, ONLY: TBUDGETDATA, NBUDGET_RI
 USE MODD_SPP_TYPE
 !
 USE MODI_ICE_ADJUST
-USE MODI_BUDGET
 USE SPP_MOD, ONLY : YSPP_CONFIG,YSPP
 !
 USE DDH_MIX , ONLY : TYP_DDH
@@ -113,12 +113,15 @@ INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: NGFL_EZDIAG  ! Diagnostic array dimension
 CHARACTER*1,              INTENT(IN)   :: HFRAC_ICE
+CHARACTER*80,             INTENT(IN)   :: HCONDENS
+CHARACTER*4,              INTENT(IN)   :: HLAMBDA3 ! formulation for lambda3 coeff
 LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid Cond.
 LOGICAL,                  INTENT(IN)   :: OSIGMAS  ! Switch for Sigma_s:
                                         ! use values computed in CONDENSATION
                                         ! or that from turbulence scheme
 CHARACTER (LEN=4),        INTENT(IN)   :: CMICRO  ! Microphysics scheme
 LOGICAL,                  INTENT(IN)   :: OCND2
+CHARACTER*80,             INTENT(IN)   :: HSUBG_MF_PDF
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 REAL,                     INTENT(IN)   :: PSIGQSAT ! coeff applied to qsat variance contribution
 !
@@ -126,6 +129,7 @@ REAL,                     INTENT(IN)   :: PSIGQSAT ! coeff applied to qsat varia
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PZZF     ! Height (z)
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PRHODJ  !Dry density * Jacobian
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PEXNREF ! Reference Exner function
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PRHODREF
 !
 !
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PPABSM  ! abs. pressure at time t-dt
@@ -144,12 +148,18 @@ REAL, DIMENSION(KLON,1,KLEV),   INTENT(OUT)   :: PSRCS ! Second-order flux
                                                  ! s'rc'/2Sigma_s2 at time t+1
                                                  ! multiplied by Lambda_3
 REAL, DIMENSION(KLON,1,KLEV), INTENT(INOUT)   :: PCLDFR! Cloud fraction
+!
+REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLC_HRC
+REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLC_HCF
+REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLI_HRI
+REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLI_HCF
+!
 REAL, DIMENSION(KLON,YSPP%N2D), TARGET, INTENT(INOUT) :: PGP2DSPP
 REAL, DIMENSION(KLON,KLEV,NGFL_EZDIAG), INTENT(INOUT) :: PEZDIAG
 !
-TYPE(TYP_DDH), INTENT(INOUT) :: YDDDH
-TYPE(TLDDH), INTENT(IN) :: YDLDDH
-TYPE(TMDDH), INTENT(IN) :: YDMDDH
+TYPE(TYP_DDH), INTENT(INOUT), TARGET :: YDDDH
+TYPE(TLDDH), INTENT(IN), TARGET :: YDLDDH
+TYPE(TMDDH), INTENT(IN), TARGET :: YDMDDH
 !
 !*       0.2   Declarations of local variables :
 
@@ -171,6 +181,10 @@ REAL  :: ZRATIO                     ! ZMASSTOT / ZMASSCOR
 REAL  :: ZCOR(KLON)                       ! for the correction of negative rv
 !
 TYPE(TSPP_CONFIG_MPA) :: YSPP_PSIGQSAT,YSPP_ICE_CLD_WGT
+REAL  :: ZMU, ZVAL
+REAL, DIMENSION(KLON,1) :: ZSIGQSAT, ZICE_CLD_WGT
+INTEGER :: JI
+TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RI) :: YLBUDGET !NBUDGET_RI is the one with the highest number
 !
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
@@ -207,6 +221,44 @@ IF ( YSPP_CONFIG%LSPP ) THEN
    !PGP2DSPP,XFRMIN(21),PEZDIAG)
 
 ENDIF 
+
+! Compute perturbations 
+! Perturb PSIGQSAT
+IF (YSPP_PSIGQSAT%LPERT) THEN
+  IF (YSPP_PSIGQSAT%LLNN_MEAN1.OR.YSPP_PSIGQSAT%LLNN_MEAN1_SELF) THEN
+    ZMU = -0.5 * (YSPP_PSIGQSAT%CMPERT * YSPP_PSIGQSAT%SDEV)**2
+  ELSE
+    ZMU = 0.
+  ENDIF
+  DO JI=1,KLON
+    ZVAL = &
+      PSIGQSAT*EXP(ZMU+YSPP_PSIGQSAT%CMPERT*YSPP_PSIGQSAT%PGP2DSPP(JI)) 
+    ZSIGQSAT(JI,1) = MAX(YSPP_PSIGQSAT%CLIP(1),MIN(ZVAL,YSPP_PSIGQSAT%CLIP(2)))
+  ENDDO
+ELSE
+  ZSIGQSAT(:,1) = PSIGQSAT
+ENDIF
+
+! Perturb ICE_CLD_WGT
+IF (YSPP_ICE_CLD_WGT%LPERT) THEN
+  IF (YSPP_ICE_CLD_WGT%LLNN_MEAN1.OR.YSPP_ICE_CLD_WGT%LLNN_MEAN1_SELF) THEN
+    ZMU = -0.5 * (YSPP_ICE_CLD_WGT%CMPERT * YSPP_ICE_CLD_WGT%SDEV)**2
+  ELSE
+    ZMU = 0.
+  ENDIF
+  DO JI=1,KLON
+  ! Awaiting HARMONIE-AROME physics changes
+  !    ZVAL = &
+  !     XFRMIN(21)* EXP(ZMU+YSPP_ICE_CLD_WGT%CMPERT*YSPP_ICE_CLD_WGT%PGP2DSPP(JI)) 
+     ZVAL = &
+      1.5* EXP(ZMU+YSPP_ICE_CLD_WGT%CMPERT*YSPP_ICE_CLD_WGT%PGP2DSPP(JI)) 
+    ZICE_CLD_WGT(JI,1) = &
+    MAX(YSPP_ICE_CLD_WGT%CLIP(1),MIN(ZVAL,YSPP_ICE_CLD_WGT%CLIP(2)))
+  ENDDO
+ELSE
+!  ZICE_CLD_WGT(:) = XFRMIN(21)
+   ZICE_CLD_WGT(:,1) = 1.5
+ENDIF
 
 HBUNAME='DEPI'
 !
@@ -300,12 +352,19 @@ SELECT CASE ( CMICRO )
 !   cloud
     DO JLON=1,KLON
       LL(JLON) = (PRS(JLON,1,JLEV,1) <0.) .AND. (PRS(JLON,1,JLEV,2)> 0.) 
+      IF (LL(JLON)) THEN
+#ifdef REPRO48
+        ZCOR(JLON)=PRS(JLON,1,JLEV,2)
+#else
+        ZCOR(JLON)=MIN(-PRS(JLON,1,JLEV,1),PRS(JLON,1,JLEV,2))
+#endif
+      ENDIF
     ENDDO
     DO JLON=1,KLON
       IF (LL(JLON)) THEN
-        PRS(JLON,1,JLEV,1) = PRS(JLON,1,JLEV,1) + PRS(JLON,1,JLEV,2)
-        PTHS(JLON,1,JLEV)  = PTHS(JLON,1,JLEV)  - PRS(JLON,1,JLEV,2) * ZLV(JLON) / ZCPH(JLON) / PEXNREF(JLON,1,JLEV)
-        PRS(JLON,1,JLEV,2) = 0.
+        PRS(JLON,1,JLEV,1) = PRS(JLON,1,JLEV,1) + ZCOR(JLON)
+        PTHS(JLON,1,JLEV)  = PTHS(JLON,1,JLEV)  - ZCOR(JLON) * ZLV(JLON) / ZCPH(JLON) / PEXNREF(JLON,1,JLEV)
+        PRS(JLON,1,JLEV,2) = PRS(JLON,1,JLEV,2) - ZCOR(JLON)
       ENDIF
     ENDDO
 
@@ -343,6 +402,12 @@ END SELECT
 !IF (LBUDGET_RH) CALL BUDGET (PRS(:,:,:,7) * PRHODJ(:,:,:),12,'NEGA_BU_RRH',YDDDH)
 !IF (LBUDGET_TH) CALL BUDGET (PTHS(:,:,:)  * PRHODJ(:,:,:),4,'NEGA_BU_RTH',YDDDH)
 
+DO JRR=1, NBUDGET_RI
+  YLBUDGET(JRR)%NBUDGET=JRR
+  YLBUDGET(JRR)%YDDDH=>YDDDH
+  YLBUDGET(JRR)%YDLDDH=>YDLDDH
+  YLBUDGET(JRR)%YDMDDH=>YDMDDH
+ENDDO
 
 !
 !-------------------------------------------------------------------------------
@@ -364,11 +429,11 @@ ZZZ(:,:,:) =  PZZF(:,:,:)
 !
 IF (KRR==6) THEN
   CALL ICE_ADJUST ( KKA=KKA,KKU=KKU,KKL=KKL,KRR=KRR,&
-    & HFRAC_ICE=HFRAC_ICE, HBUNAME=HBUNAME, &
+    & HFRAC_ICE=HFRAC_ICE, HCONDENS=HCONDENS, HLAMBDA3=HLAMBDA3, HBUNAME=HBUNAME, &
     & OSUBG_COND=OSUBG_COND, OSIGMAS=OSIGMAS, &
-    & OCND2=OCND2, &
-    & PTSTEP=ZTWOTSTEP,PSIGQSAT=PSIGQSAT, &
-    & PRHODJ=PRHODJ ,PEXNREF=PEXNREF,   &
+    & OCND2=OCND2, HSUBG_MF_PDF=HSUBG_MF_PDF, &
+    & PTSTEP=ZTWOTSTEP,PSIGQSAT=ZSIGQSAT, &
+    & PRHODJ=PRHODJ ,PEXNREF=PEXNREF, PRHODREF=PRHODREF,   &
     & PSIGS=PSIGS, PMFCONV=PMFCONV, PPABST=PPABSM, PZZ=ZZZ,    &
     & PEXN=PEXNREF, PCF_MF=PCF_MF,PRC_MF=PRC_MF,PRI_MF=PRI_MF, &
     & PRV=ZRS(:,:,:,1), PRC=ZRS(:,:,:,2),  &
@@ -378,16 +443,17 @@ IF (KRR==6) THEN
     & PRI=ZRS(:,:,:,4), PRIS=PRS(:,:,:,4), &
     & PRS=ZRS(:,:,:,5), &
     & PRG=ZRS(:,:,:,6), &
-    & YSPP_PSIGQSAT=YSPP_PSIGQSAT, &
-    & YSPP_ICE_CLD_WGT=YSPP_ICE_CLD_WGT, &
-    & YDDDH=YDDDH, YDLDDH=YDLDDH, YDMDDH=YDMDDH)
+    & PHLC_HRC=PHLC_HRC(:,:,:), PHLC_HCF=PHLC_HCF(:,:,:), &
+    & PHLI_HRI=PHLI_HRI(:,:,:), PHLI_HCF=PHLI_HCF(:,:,:), &
+    & PICE_CLD_WGT=ZICE_CLD_WGT(:,:), &
+    & TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET))
 ELSE
   CALL ICE_ADJUST ( KKA=KKA,KKU=KKU,KKL=KKL,KRR=KRR,&
-    & HFRAC_ICE=HFRAC_ICE, HBUNAME=HBUNAME,    &
+    & HFRAC_ICE=HFRAC_ICE, HCONDENS=HCONDENS, HLAMBDA3=HLAMBDA3, HBUNAME=HBUNAME,    &
     & OSUBG_COND=OSUBG_COND, OSIGMAS=OSIGMAS, &
-    & OCND2=OCND2, &
-    & PTSTEP=ZTWOTSTEP,PSIGQSAT=PSIGQSAT, &
-    & PRHODJ=PRHODJ ,PEXNREF=PEXNREF,   &
+    & OCND2=OCND2, HSUBG_MF_PDF=HSUBG_MF_PDF, &
+    & PTSTEP=ZTWOTSTEP,PSIGQSAT=ZSIGQSAT, &
+    & PRHODJ=PRHODJ ,PEXNREF=PEXNREF, PRHODREF=PRHODREF,   &
     & PSIGS=PSIGS, PMFCONV=PMFCONV, PPABST=PPABSM, PZZ=ZZZ,    &
     & PEXN=PEXNREF, PCF_MF=PCF_MF,PRC_MF=PRC_MF,PRI_MF=PRI_MF, &
     & PRV=ZRS(:,:,:,1), PRC=ZRS(:,:,:,2), &
@@ -398,9 +464,10 @@ ELSE
     & PRS=ZRS(:,:,:,5), &
     & PRG=ZRS(:,:,:,6), &
     & PRH=ZRS(:,:,:,7), &
-    & YSPP_PSIGQSAT=YSPP_PSIGQSAT, &
-    & YSPP_ICE_CLD_WGT=YSPP_ICE_CLD_WGT, &
-    & YDDDH=YDDDH, YDLDDH=YDLDDH, YDMDDH=YDMDDH)
+    & PHLC_HRC=PHLC_HRC(:,:,:), PHLC_HCF=PHLC_HCF(:,:,:), & 
+    & PHLI_HRI=PHLI_HRI(:,:,:), PHLI_HCF=PHLI_HCF(:,:,:), &
+    & PICE_CLD_WGT=ZICE_CLD_WGT(:,:), &
+    & TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET))
 ENDIF
 
 CALL CLEAR_SPP_TYPE(YSPP_PSIGQSAT)

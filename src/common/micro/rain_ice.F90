@@ -179,7 +179,7 @@
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 
-USE MODD_BUDGET,         ONLY: TBUDGETDATA, LBU_ENABLE,                                                                                     &
+USE MODD_BUDGET,         ONLY: TBUDGETDATA, LBU_ENABLE,  &
                              & LBUDGET_TH, LBUDGET_RV, LBUDGET_RC, LBUDGET_RR, LBUDGET_RI, LBUDGET_RS, LBUDGET_RG, LBUDGET_RH, &
                              & NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH
 USE MODD_CST,            ONLY: XCI, XCL, XCPD, XCPV, XLSTT, XLVTT, XTT, XRHOLW
@@ -198,7 +198,7 @@ USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & IRH        ! Hail
 
 USE MODE_BUDGET,         ONLY: BUDGET_STORE_ADD, BUDGET_STORE_INIT, BUDGET_STORE_END
-USE MODE_ll
+USE MODE_ll,             ONLY: GET_INDICE_ll
 USE MODE_MSG,            ONLY: PRINT_MSG, NVERB_FATAL
 
 USE MODE_ICE4_RAINFR_VERT, ONLY: ICE4_RAINFR_VERT
@@ -444,14 +444,12 @@ IF(OCND2) THEN
 END IF
 IF(KPROMA /= KSIZE) THEN
   CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'For now, KPROMA must be equal to KSIZE, see code for explanation')
-  ! 2 issues
-  !  * Microphyscs was optimized by introducing chunks of KPROMA size
-  !    Thus, in ice4_tendencies, the 1D array represent only a fraction of the points where microphisical species are present
-  !    We cannot rebuild the entire 3D arrays in the subroutine, so we cannot call ice4_rainfr_vert in it
-  !    A solution would be to suppress optimisation in this case by setting KPROMA=KSIZE in rain_ice
-  !    Another solution would be to compute column by column?
-  !    Another one would be to cut tendencies in 3 parts: before rainfr_vert, rainfr_vert, after rainfr_vert
-  !  * When chuncks are used, result is different
+  ! Microphyscs was optimized by introducing chunks of KPROMA size
+  ! Thus, in ice4_tendencies, the 1D array represent only a fraction of the points where microphisical species are present
+  ! We cannot rebuild the entire 3D arrays in the subroutine, so we cannot call ice4_rainfr_vert in it
+  ! A solution would be to suppress optimisation in this case by setting KPROMA=KSIZE in rain_ice
+  ! Another solution would be to compute column by column?
+  ! Another one would be to cut tendencies in 3 parts: before rainfr_vert, rainfr_vert, after rainfr_vert
 ENDIF
 !
 !*       1.     COMPUTE THE LOOP BOUNDS

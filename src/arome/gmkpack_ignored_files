@@ -91,4 +91,13 @@ phyex/turb/compute_frac_ice3d.F90
 phyex/turb/modi_compute_frac_ice.F90
 phyex/turb/modi_compute_frac_ice1d.F90
 phyex/turb/modi_compute_frac_ice3d.F90
-
+phyex/micro/aro_tiwmx.F90
+phyex/micro/modd_tiwmx.F90
+phyex/micro/modi_aro_tiwmx.F90
+phyex/micro/aro_icecld.F90
+phyex/micro/modi_aro_icecld.F90
+phyex/micro/icecloud.F90
+phyex/micro/modi_icecloud.F90
+phyex/micro/tiwmx_tab.F90
+phyex/micro/modi_tiwmx.F90
+phyex/micro/modd_spp_type.F90

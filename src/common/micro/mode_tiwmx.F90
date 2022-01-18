@@ -1,9 +1,9 @@
 !@no_insert_drhook
 !     ######spl
-      MODULE MODD_TIWMX
+      MODULE MODE_TIWMX
 !     ###############
 !
-!!****  *MODD_TIWMX* - 
+!!****  *MODE_TIWMX* - 
 !!
 !!    PURPOSE
 !!    -------
@@ -110,4 +110,4 @@ CONTAINS
     REAL,INTENT(IN) :: TT 
     REDIN = REDINTAB(NINT(XNDEGR*TT))
   END FUNCTION
-END MODULE MODD_TIWMX
+END MODULE MODE_TIWMX
