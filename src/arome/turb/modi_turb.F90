@@ -24,11 +24,13 @@ INTERFACE
               & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,                 &
               & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
               & YDDDH,YDLDDH,YDMDDH,                                  &
+              & TBUDGETS, KBUDGETS,                                   &
               & PTR,PDISS,PEDR                                        ) 
 !
-USE DDH_MIX, ONLY : TYP_DDH
+USE DDH_MIX, ONLY  : TYP_DDH
 USE YOMLDDH, ONLY  : TLDDH
 USE YOMMDDH, ONLY  : TMDDH
+USE MODD_BUDGET, ONLY : TBUDGETDATA
 !
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
@@ -151,9 +153,12 @@ TYPE(TYP_DDH), INTENT(INOUT) :: YDDDH
 TYPE(TLDDH),   INTENT(IN)    :: YDLDDH
 TYPE(TMDDH),   INTENT(IN)    :: YDMDDH
 !
+TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+INTEGER, INTENT(IN) :: KBUDGETS
+!
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PTR   ! Transport production of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PDISS ! Dissipation of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  ::  PEDR       ! EDR
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR       ! EDR
 !
 !-------------------------------------------------------------------------------
 !

@@ -10,8 +10,8 @@
                     & HTURBLEN,HTURBDIM,                               &
                     & TPFILE,OTURB_DIAG,                               &
                     & PTP,PRTKES,PRTHLS,PCOEF_DISS,PTDIFF,PTDISS,&
-                    & PEDR, YDDDH, YDLDDH, YDMDDH, TBUDGETS, KBUDGETS, &
-                    & PTR,PDISS,PRTKESM                                )
+                    & TBUDGETS, KBUDGETS, &
+                    & PEDR, PTR,PDISS,PRTKESM                          )
 !     ##################################################################
 !
 !
@@ -148,14 +148,9 @@ USE MODI_GRADIENT_M
 USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
-USE MODI_BUDGET_DDH
 USE MODI_LES_MEAN_SUBGRID
 USE MODI_TRIDIAG_TKE
 USE MODI_SHUMAN , ONLY : DZM, DZF, MZM, MZF
-!
-USE DDH_MIX, ONLY  : TYP_DDH
-USE YOMLDDH, ONLY  : TLDDH
-USE YOMMDDH, ONLY  : TMDDH
 !
 !
 IMPLICIT NONE
@@ -193,9 +188,6 @@ REAL, DIMENSION(:,:,:),  INTENT(INOUT)::  PRTHLS       ! Source of Theta_l
 REAL, DIMENSION(:,:,:),  INTENT(IN)   ::  PCOEF_DISS   ! 1/(Cph*Exner)
 REAL, DIMENSION(:,:,:),  INTENT(OUT)  ::  PTDIFF       ! Diffusion TKE term
 REAL, DIMENSION(:,:,:),  INTENT(OUT)  ::  PTDISS       ! Dissipation TKE term
-TYPE(TYP_DDH), INTENT(INOUT) :: YDDDH
-TYPE(TLDDH), INTENT(IN) :: YDLDDH
-TYPE(TMDDH), INTENT(IN) :: YDMDDH
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 REAL, DIMENSION(:,:,:),  INTENT(OUT), OPTIONAL  ::  PTR          ! Transport prod. of TKE
@@ -248,7 +240,10 @@ IKE=KKU-JPVEXT_TURB*KKL
 ! compute the effective diffusion coefficient at the mass point
 ZKEFF(:,:,:) = PLM(:,:,:) * SQRT(PTKEM(:,:,:)) 
 !
-!IF (LBUDGET_TH)  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH),  'DISSH', PRTHLS(:, :, :) )
+#ifdef REPRO48
+#else
+IF (LBUDGET_TH)  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH),  'DISSH', PRTHLS(:, :, :) )
+#endif
 !
 !----------------------------------------------------------------------------
 !
@@ -350,36 +345,35 @@ END IF
 !
 !*       2.4  stores the explicit sources for budget purposes
 !
-!IF (LBUDGET_TKE) THEN
+IF (LBUDGET_TKE) THEN
   ! Dynamical production
-!  CALL BUDGET_STORE_ADD( TBUDGETS(NBUDGET_TKE), 'DP', PDP(:, :, :) * PRHODJ(:, :, :) )
+  CALL BUDGET_STORE_ADD( TBUDGETS(NBUDGET_TKE), 'DP', PDP(:, :, :) * PRHODJ(:, :, :) )
   ! Thermal production
-!  CALL BUDGET_STORE_ADD( TBUDGETS(NBUDGET_TKE), 'TP', PTP(:, :, :) * PRHODJ(:, :, :) )
+  CALL BUDGET_STORE_ADD( TBUDGETS(NBUDGET_TKE), 'TP', PTP(:, :, :) * PRHODJ(:, :, :) )
   ! Dissipation
-!  CALL BUDGET_STORE_ADD( TBUDGETS(NBUDGET_TKE), 'DISS',- XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * &
-!                (PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:)) * PRHODJ(:,:,:))
-!END IF 
+  CALL BUDGET_STORE_ADD( TBUDGETS(NBUDGET_TKE), 'DISS',- XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * &
+                (PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:)) * PRHODJ(:,:,:))
+END IF 
 !
 !*       2.5  computes the final RTKE and stores the whole turbulent transport
 !              with the removal of the advection part for MesoNH
 
+!Store the previous source terms in prtkes before initializing the next one
+!Should be in IF LBUDGET_TKE only. Was removed out for a correct comput. of PTDIFF in case of LBUDGET_TKE=F in AROME
+PRTKES(:,:,:) = PRTKES(:,:,:) + PRHODJ(:,:,:) *                                                           &
+                ( PDP(:,:,:) + PTP(:,:,:)                                                                 &
+                  - XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * ( PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:) ) )
+!
 PTDIFF(:,:,:) =  ZRES(:,:,:) / PTSTEP - PRTKES(:,:,:)/PRHODJ(:,:,:) &
  & - PDP(:,:,:)- PTP(:,:,:) - PTDISS(:,:,:)
 
-IF (LBUDGET_TKE) THEN
-  !Store the previous source terms in prtkes before initializing the next one
-  PRTKES(:,:,:) = PRTKES(:,:,:) + PRHODJ(:,:,:) *                                                           &
-                  ( PDP(:,:,:) + PTP(:,:,:)                                                                 &
-                    - XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * ( PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:) ) )
-
-!  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TKE), 'TR', PRTKES(:, :, :) )
-END IF
-
+IF (LBUDGET_TKE) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TKE), 'TR', PRTKES(:, :, :) )
+!
 PRTKES(:,:,:) = ZRES(:,:,:) * PRHODJ(:,:,:) / PTSTEP -  ZRTKESM(:,:,:)
 !
 ! stores the whole turbulent transport
 !
-!IF (LBUDGET_TKE) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TKE), 'TR', PRTKES(:, :, :) )
+IF (LBUDGET_TKE) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TKE), 'TR', PRTKES(:, :, :) )
 
 !----------------------------------------------------------------------------
 !
@@ -389,8 +383,10 @@ PRTKES(:,:,:) = ZRES(:,:,:) * PRHODJ(:,:,:) / PTSTEP -  ZRTKESM(:,:,:)
 PRTHLS(:,:,:) = PRTHLS(:,:,:) + XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * &
                 (PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:)) * PRHODJ(:,:,:) * PCOEF_DISS(:,:,:)
 
-!IF (LBUDGET_TH) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS(:, :, :) )
-
+#ifdef REPRO48
+#else
+IF (LBUDGET_TH) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS(:, :, :) )
+#endif
 !----------------------------------------------------------------------------
 !
 !*       4.   STORES SOME DIAGNOSTICS

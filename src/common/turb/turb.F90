@@ -19,6 +19,7 @@
               & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,                 &
               & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
               & YDDDH,YDLDDH,YDMDDH,                                  &
+              & TBUDGETS, KBUDGETS,                                   &
               & PTR,PDISS,PEDR                                        )
 
       USE PARKIND1, ONLY : JPRB
@@ -378,16 +379,19 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PDP        ! Dynamic TKE production
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDIFF     ! Diffusion TKE term
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
 !
-TYPE(TYP_DDH), INTENT(INOUT), TARGET :: YDDDH
-TYPE(TLDDH),   INTENT(IN), TARGET    :: YDLDDH
-TYPE(TMDDH),   INTENT(IN), TARGET    :: YDMDDH
+TYPE(TYP_DDH), INTENT(INOUT) :: YDDDH
+TYPE(TLDDH),   INTENT(IN)   :: YDLDDH
+TYPE(TMDDH),   INTENT(IN)   :: YDMDDH
+!
+TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+INTEGER, INTENT(IN) :: KBUDGETS
 !
 ! length scale from vdfexcu
 REAL, DIMENSION(:,:,:), INTENT(IN)    :: PLENGTHM, PLENGTHH
 !
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PTR   ! Transport production of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PDISS ! Dissipation of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  ::  PEDR       ! EDR
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR       ! EDR
 !
 !
 !-------------------------------------------------------------------------------
@@ -449,7 +453,6 @@ REAL                :: ZALPHA       ! proportionnality constant between Dz/2 and
 !
 !
 TYPE(TFILEDATA) :: TPFILE ! File type to write fields for MesoNH
-TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH) :: YLBUDGET !NBUDGET_RH is the one with the highest number
 !
 REAL :: ZTIME1, ZTIME2
 REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3))::  ZSHEAR, ZDUDZ, ZDVDZ
@@ -468,13 +471,6 @@ ENDIF
 IF (LHARAT .AND. LLES_CALL) THEN
   CALL ABOR1('LHARATU not implemented for option LLES_CALL')
 ENDIF
-
-DO JRR=1, NBUDGET_RH
-  YLBUDGET(JRR)%NBUDGET=JRR
-  YLBUDGET(JRR)%YDDDH=>YDDDH
-  YLBUDGET(JRR)%YDLDDH=>YDLDDH
-  YLBUDGET(JRR)%YDMDDH=>YDMDDH
-ENDDO
 
 IKT=SIZE(PTHLM,3)          
 IKTB=1+JPVEXT_TURB              
@@ -931,9 +927,9 @@ CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKEM,ZLM,ZLEPS,PDP,ZTRH,       &
                    & PTSTEP_MET,PIMPL,ZEXPL,                         &
                    & HTURBLEN,HTURBDIM,                              &
                    & TPFILE,OTURB_DIAG,           &
-                & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,&
-                & PEDR, YDDDH, YDLDDH, YDMDDH,                       &
-TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET))
+                   & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,&
+                   & TBUDGETS,KBUDGETS,&
+                   & PEDR=PEDR)
 IF (LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     CALL BUDGET_DDH (PRTHLS+ ZLVOCPEXNM * PRRS(:,:,:,2) + ZLSOCPEXNM * PRRS(:,:,:,4),4,'DISSH_BU_RTH',YDDDH, YDLDDH, YDMDDH)

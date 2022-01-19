@@ -8,13 +8,10 @@ INTERFACE
                     & PTSTEP,PIMPL,PEXPL,                              &
                     & HTURBLEN,HTURBDIM,                               &
                     & TPFILE,OTURB_DIAG,                               &
-                    & PTP,PRTKES,PRTHLS,PCOEF_DISS,PTDIFF,PTDISS,&
-                    & PEDR, YDDDH, YDLDDH, YDMDDH,TBUDGETS, KBUDGETS,  &
-                    & PTR,PDISS,PRTKESM                                )
-!
-USE DDH_MIX, ONLY : TYP_DDH
-USE YOMLDDH, ONLY : TLDDH
-USE YOMMDDH, ONLY : TMDDH
+                    & PTP,PRTKES,PRTHLS,PCOEF_DISS,PTDIFF,PTDISS,      &
+                    & TBUDGETS, KBUDGETS,                              &
+                    & PEDR, PTR,PDISS,PRTKESM                          )
+                    !
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_BUDGET, ONLY : TBUDGETDATA
 !
@@ -47,9 +44,6 @@ REAL, DIMENSION(:,:,:),  INTENT(INOUT)::  PRTHLS       ! Source of Theta_l
 REAL, DIMENSION(:,:,:),  INTENT(IN)   ::  PCOEF_DISS   ! 1/(Cph*Exner)
 REAL, DIMENSION(:,:,:),  INTENT(OUT)  ::  PTDIFF       ! Diffusion TKE term
 REAL, DIMENSION(:,:,:),  INTENT(OUT)  ::  PTDISS       ! Dissipation TKE term
-TYPE(TYP_DDH), INTENT(INOUT) :: YDDDH
-TYPE(TLDDH), INTENT(IN) :: YDLDDH
-TYPE(TMDDH), INTENT(IN) :: YDMDDH
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 REAL, DIMENSION(:,:,:),  INTENT(OUT), OPTIONAL  ::  PTR          ! Transport prod. of TKE
