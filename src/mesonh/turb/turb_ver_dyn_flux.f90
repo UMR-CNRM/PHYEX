@@ -546,7 +546,7 @@ IF (LOCEAN) THEN !ocean model at phys sfc (ocean domain top)
   ZFLXZ(:,:,KKU) = ZFLXZ(:,:,IKE) 
 END IF
 !
-IF ( OTURB_FLX .AND. tpfile%lopened ) THEN
+IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the U wind component vertical flux
   TZFIELD%CMNHNAME   = 'UW_VFLX'
   TZFIELD%CSTDNAME   = ''
@@ -646,7 +646,7 @@ IF (LOCEAN) THEN
             +(PWM(:,:,IKE-KKL:IKE-KKL)-PWM(:,:,IKE:IKE  ))                   &
               /(PDZZ(:,:,IKE-KKL:IKE-KKL)+PDZZ(:,:,IKE:IKE  ))               &
           )                                                                  &
-         * PDZX(:,:,IKE-KKL:IKE-KKL)                                          &
+         * PDZX(:,:,IKE-KKL:IKE-KKL)                                         &
      ) / (0.5*(PDXX(:,:,IKE-KKL:IKE-KKL)+PDXX(:,:,IKE:IKE)))                 &
                           )
 END IF
