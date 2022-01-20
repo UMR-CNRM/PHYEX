@@ -1,9 +1,16 @@
-!     ######spl
-      SUBROUTINE TURB_VER_THERMO_FLUX(KKA,KKU,KKL,KRR,KRRL,KRRI,    &
-                      OCLOSE_OUT,OTURB_FLX,HTURBDIM,HTOM,           &
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+MODULE MODE_TURB_VER_THERMO_FLUX
+IMPLICIT NONE
+CONTAINS
+      
+SUBROUTINE TURB_VER_THERMO_FLUX(KKA,KKU,KKL,KRR,KRRL,KRRI,    &
+                      OTURB_FLX,HTURBDIM,HTOM,                      &
                       PIMPL,PEXPL,                                  &
                       PTSTEP,                                       &
-                      HFMFILE,HLUOUT,                               &
+                      TPFILE,                                       &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PRHODJ,PTHVREF,                               &
                       PSFTHM,PSFRM,PSFTHP,PSFRP,                    &
@@ -14,10 +21,7 @@
                       PRED2R3, PRED2THR3, PBLL_O_E, PETHETA,        &
                       PEMOIST, PREDTH1, PREDR1, PPHI3, PPSI3, PD,   &
                       PFWTH,PFWR,PFTH2,PFR2,PFTHR,MFMOIST,PBL_DEPTH,&
-                      PWTHV,PRTHLS,PRRS,PTHLP,PRP,PTP,PWTH,PWRC)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
-      USE MODD_CTURB, ONLY : LHARAT
+                      PWTHV,PRTHLS,PRRS,PTHLP,PRP,PTP,PWTH,PWRC     )
 !     ###############################################################
 !
 !
@@ -115,10 +119,10 @@
 !!      DXF,DYF,DZF,DZM
 !!                             :  Shuman functions (difference operators)     
 !!                               
-!!      SUBROUTINE TRIDIAG     : to compute the splitted implicit evolution
+!!      SUBROUTINE TRIDIAG     : to compute the split implicit evolution
 !!                               of a variable located at a mass point
 !!
-!!      SUBROUTINE TRIDIAG_WIND: to compute the splitted implicit evolution
+!!      SUBROUTINE TRIDIAG_WIND: to compute the split implicit evolution
 !!                               of a variable located at a wind point
 !!
 !!      FUNCTIONs ETHETA and EMOIST  :  
@@ -206,16 +210,39 @@
 !!                     2012-02 (Y. Seity) add possibility to run with reversed
 !!                                             vertical levels
 !!      Modifications  July 2015 (Wim de Rooy) LHARAT switch
+!!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
+!!                     2021 (D. Ricard) last version of HGRAD turbulence scheme
+!!                                 Leronard terms instead of Reynolds terms
+!!                                 applied to vertical fluxes of r_np and Thl
+!!                                 for implicit version of turbulence scheme
+!!                                 corrections and cleaning
+!!                     June 2020 (B. Vie) Patch preventing negative rc and ri in 2.3 and 3.3
+!! JL Redelsperger  : 03/2021: Ocean and Autocoupling O-A LES Cases
+!!                             Sfc flux shape for LDEEPOC Case
 !!--------------------------------------------------------------------------
 !       
 !*      0. DECLARATIONS
 !          ------------
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
 USE MODD_CST
 USE MODD_CTURB
+USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
+USE MODD_GRID_n,         ONLY: XZS, XXHAT, XYHAT
+USE MODD_IO,             ONLY: TFILEDATA
+USE MODD_METRICS_n,      ONLY: XDXX, XDYY, XDZX, XDZY, XDZZ
 USE MODD_PARAMETERS
+USE MODD_TURB_n,         ONLY: LHGRAD, XCOEFHGRADTHL, XCOEFHGRADRM, XALTHGRAD, XCLDTHOLD
 USE MODD_CONF
 USE MODD_LES
+USE MODD_DIM_n
+USE MODD_DYN_n,          ONLY: LOCEAN
+USE MODD_OCEANH
+USE MODD_REF,            ONLY: LCOUPLES
+USE MODD_TURB_n
+USE MODD_FRC
 !
 USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
@@ -223,13 +250,16 @@ USE MODI_GRADIENT_W
 USE MODI_GRADIENT_M
 USE MODI_SHUMAN , ONLY : DZF, DZM, MZF, MZM
 USE MODI_TRIDIAG 
-USE MODE_FMWRIT
 USE MODI_LES_MEAN_SUBGRID
-USE MODI_PRANDTL
 USE MODI_TRIDIAG_THERMO
 USE MODI_TM06_H
 !
+USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 USE MODE_PRANDTL
+!
+USE MODI_SECOND_MNH
+USE MODE_ll
+USE MODE_GATHER_ll
 !
 IMPLICIT NONE
 !
@@ -243,19 +273,14 @@ INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
-LOGICAL,                INTENT(IN)   ::  OCLOSE_OUT   ! switch for syncronous
-                                                      ! file opening       
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
-CHARACTER*4,            INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
+CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
-CHARACTER*4,            INTENT(IN)   ::  HTOM         ! type of Third Order Moment
+CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
 REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
-CHARACTER(LEN=*),       INTENT(IN)   ::  HFMFILE      ! Name of the output
-                                                      ! FM-file 
-CHARACTER(LEN=*),       INTENT(IN)   ::  HLUOUT       ! Output-listing name for
-                                                      ! model n
+TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDZZ, PDXX, PDYY, PDZX, PDZY
                                                       ! Metric coefficients
@@ -321,7 +346,7 @@ REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRRS       ! cumulated source for rt
 REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PTHLP      ! guess of thl at t+ deltat
 REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PRP        ! guess of r at t+ deltat
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT)::  PTP       ! Dynamic and thermal
+REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PTP       ! Dynamic and thermal
                                                      ! TKE production terms
 !
 REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PWTH       ! heat flux
@@ -359,6 +384,7 @@ LOGICAL :: GFWTH    ! flag to use w'2th'
 LOGICAL :: GFR2     ! flag to use w'r'2
 LOGICAL :: GFWR     ! flag to use w'2r'
 LOGICAL :: GFTHR    ! flag to use w'th'r'
+TYPE(TFIELDDATA) :: TZFIELD
 !----------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARIES
@@ -503,13 +529,19 @@ ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB)
   PWTH(:,:,KKA)=0.5*(ZFLXZ(:,:,KKA)+ZFLXZ(:,:,KKA+KKL))
   PWTH(:,:,IKE)=PWTH(:,:,IKE-KKL)
 
-IF ( OTURB_FLX .AND. OCLOSE_OUT ) THEN
+IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the conservative potential temperature vertical flux
-  YRECFM  ='THW_FLX'
-  YCOMMENT='X_Y_Z_THW_FLX (K*M/S)'
-  IGRID   = 4  
-  ILENCH=LEN(YCOMMENT) 
-  CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZFLXZ,IGRID,ILENCH,YCOMMENT,IRESP)
+  TZFIELD%CMNHNAME   = 'THW_FLX'
+  TZFIELD%CSTDNAME   = ''
+  TZFIELD%CLONGNAME  = 'THW_FLX'
+  TZFIELD%CUNITS     = 'K m s-1'
+  TZFIELD%CDIR       = 'XY'
+  TZFIELD%CCOMMENT   = 'Conservative potential temperature vertical flux'
+  TZFIELD%NGRID      = 4
+  TZFIELD%NTYPE      = TYPEREAL
+  TZFIELD%NDIMS      = 3
+  TZFIELD%LTIMEDEP   = .TRUE.
+  CALL IO_Field_write(TPFILE,TZFIELD,ZFLXZ)
 END IF
 !
 ! Contribution of the conservative temperature flux to the buoyancy flux
@@ -680,13 +712,19 @@ IF (KRR /= 0) THEN
   PWRC(:,:,IKE)=PWRC(:,:,IKE-KKL)
   !
   !
-  IF ( OTURB_FLX .AND. OCLOSE_OUT ) THEN
+  IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
     ! stores the conservative mixing ratio vertical flux
-    YRECFM  ='RCONSW_FLX'
-    YCOMMENT='X_Y_Z_RCONSW_FLX (KG*M/S/KG)'
-    IGRID   = 4  
-    ILENCH=LEN(YCOMMENT) 
-    CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZFLXZ,IGRID,ILENCH,YCOMMENT,IRESP)
+    TZFIELD%CMNHNAME   = 'RCONSW_FLX'
+    TZFIELD%CSTDNAME   = ''
+    TZFIELD%CLONGNAME  = 'RCONSW_FLX'
+    TZFIELD%CUNITS     = 'kg m s-1 kg-1'
+    TZFIELD%CDIR       = 'XY'
+    TZFIELD%CCOMMENT   = 'Conservative mixing ratio vertical flux'
+    TZFIELD%NGRID      = 4
+    TZFIELD%NTYPE      = TYPEREAL
+    TZFIELD%NDIMS      = 3
+    TZFIELD%LTIMEDEP   = .TRUE.
+    CALL IO_Field_write(TPFILE,TZFIELD,ZFLXZ)
   END IF
   !
   ! Contribution of the conservative water flux to the Buoyancy flux
@@ -743,7 +781,7 @@ END IF
 !
 !*       4.1  <w Rc>    
 !
-IF ( ((OTURB_FLX .AND. OCLOSE_OUT) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
+IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
 !  
 ! recover the Conservative potential temperature flux : 
 ! With LHARAT is true tke and length scales at half levels
@@ -764,12 +802,18 @@ IF ( ((OTURB_FLX .AND. OCLOSE_OUT) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
   ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
   !                 
   ! store the liquid water mixing ratio vertical flux
-  IF ( OTURB_FLX .AND. OCLOSE_OUT ) THEN
-    YRECFM  ='RCW_FLX'
-    YCOMMENT='X_Y_Z_RCW_FLX (KG*M/S/KG)'
-    IGRID   = 4  
-    ILENCH=LEN(YCOMMENT) 
-    CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZFLXZ,IGRID,ILENCH,YCOMMENT,IRESP)
+  IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+    TZFIELD%CMNHNAME   = 'RCW_FLX'
+    TZFIELD%CSTDNAME   = ''
+    TZFIELD%CLONGNAME  = 'RCW_FLX'
+    TZFIELD%CUNITS     = 'kg m s-1 kg-1'
+    TZFIELD%CDIR       = 'XY'
+    TZFIELD%CCOMMENT   = 'Liquid water mixing ratio vertical flux'
+    TZFIELD%NGRID      = 4
+    TZFIELD%NTYPE      = TYPEREAL
+    TZFIELD%NDIMS      = 3
+    TZFIELD%LTIMEDEP   = .TRUE.
+    CALL IO_Field_write(TPFILE,TZFIELD,ZFLXZ)
   END IF
   !  
 ! and we store in LES configuration this subgrid flux <w'rc'>
@@ -786,3 +830,4 @@ END IF !end of <w Rc>
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_FLUX',1,ZHOOK_HANDLE)
 END SUBROUTINE TURB_VER_THERMO_FLUX
+END MODULE MODE_TURB_VER_THERMO_FLUX

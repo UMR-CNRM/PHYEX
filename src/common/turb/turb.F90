@@ -230,11 +230,11 @@ USE MODD_LES
 USE MODD_NSV
 !
 USE MODI_BL89
-USE MODI_TURB_VER
+USE MODE_TURB_VER, ONLY : TURB_VER
 !!MODIF AROME
 !USE MODI_ROTATE_WIND
 !USE MODI_TURB_HOR_SPLT 
-USE MODI_TKE_EPS_SOURCES
+USE MODE_TKE_EPS_SOURCES, ONLY: TKE_EPS_SOURCES
 USE MODI_SHUMAN, ONLY : MZF, MXF, MYF
 USE MODI_GRADIENT_M
 USE MODI_BUDGET_DDH
@@ -808,10 +808,9 @@ ZFTHR(:,:,:IKTB) = 0.
 !          -----------------
 !
 CALL TURB_VER(KKA,KKU,KKL,KRR, KRRL, KRRI,               &
-          OCLOSE_OUT,OTURB_FLX,                          &
+          OTURB_FLX,                                     &
           HTURBDIM,HTOM,PIMPL,ZEXPL,                     &
-          PTSTEP_UVW, PTSTEP_MET, PTSTEP_SV,             &
-          HFMFILE,HLUOUT,                                &
+          PTSTEP_MET,TPFILE,                                 &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,        &
           PCOSSLOPE,PSINSLOPE,                           &
           PRHODJ,PTHVREF,                                &

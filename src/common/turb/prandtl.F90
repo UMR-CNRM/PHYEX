@@ -2,81 +2,10 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-!-----------------------------------------------------------------
-!    ###################
-     MODULE MODI_PRANDTL
-!    ###################
-!
-INTERFACE
-!
-      SUBROUTINE PRANDTL(KKA,KKU,KKL,KRR,KRRI,OTURB_DIAG,      &
-                         HTURBDIM,                             &
-                         TPFILE,                               &
-                         PDXX,PDYY,PDZZ,PDZX,PDZY,             &
-                         PTHVREF,PLOCPEXNM,PATHETA,PAMOIST,    &
-                         PLM,PLEPS,PTKEM,PTHLM,PRM,PSVM,PSRCM, &
-                         PREDTH1,PREDR1,                       &
-                         PRED2TH3, PRED2R3, PRED2THR3,         &
-                         PREDS1,PRED2THS3, PRED2RS3,           &
-                         PBLL_O_E,                             &
-                         PETHETA, PEMOIST                      )
-!
-!
-USE MODD_IO, ONLY: TFILEDATA
-!
-INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
-INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
-INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
-INTEGER,                INTENT(IN)   :: KRRI          ! number of ice var.
-!
-LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
-                                 ! diagnostic fields in the syncronous FM-file
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! Kind of turbulence param.
-TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDXX,PDYY,PDZZ,PDZX,PDZY
-                                                  ! metric coefficients
-!
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHVREF  ! Virtual Potential Temp.
-                                                  ! of the reference state
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLOCPEXNM ! Lv(T)/Cp/Exner at t-1 
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PATHETA      ! coefficients between 
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
-!
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM      ! Turbulent Mixing length
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLEPS    ! Dissipative length
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHLM,PTKEM! Conservative Potential 
-                                                  ! Temperature and TKE at t-1
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PRM      ! Mixing ratios at  t-1
-                                                  ! with PRM(:,:,:,1) = cons.
-                                                  ! mixing ratio
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM     ! Scalars at t-1      
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSRCM
-                                  ! s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
-!
-!
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PREDTH1 ! Redelsperger number R_theta
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PREDR1  ! Redelsperger number R_q
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PRED2TH3 ! Redelsperger number R*2_theta
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PRED2R3  ! Redelsperger number R*2_q
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PRED2THR3! Redelsperger number R*2_thq
-REAL, DIMENSION(:,:,:,:), INTENT(OUT)::  PREDS1   ! Redelsperger number R_sv
-REAL, DIMENSION(:,:,:,:), INTENT(OUT)::  PRED2THS3! Redelsperger number R*2_thsv
-REAL, DIMENSION(:,:,:,:), INTENT(OUT)::  PRED2RS3 ! Redelsperger number R*2_qsv
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PBLL_O_E! beta*Lk*Leps/tke
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PETHETA ! coefficient E_theta
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PEMOIST ! coefficient E_moist
-!
-END SUBROUTINE PRANDTL
-!
-END INTERFACE
-!
-END MODULE MODI_PRANDTL
-!
-!
-!
-!     ###########################################################
-      SUBROUTINE PRANDTL(KKA,KKU,KKL,KRR,KRRI,OTURB_DIAG,      &
+MODULE MODE_PRANDTL
+IMPLICIT NONE
+CONTAINS
+      SUBROUTINE PRANDTL(KKA,KKU,KKL,KRR,KRRI,OTURB_DIAG,       &
                          HTURBDIM,                             &
                          TPFILE,                               &
                          PDXX,PDYY,PDZZ,PDZX,PDZY,             &
@@ -194,19 +123,22 @@ END MODULE MODI_PRANDTL
 !*      0. DECLARATIONS
 !          ------------
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
 USE MODD_CST
 USE MODD_CONF
 USE MODD_CTURB
 USE MODD_DYN_n,          ONLY: LOCEAN
-use modd_field,          only: tfielddata, TYPEREAL
+USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 !
 USE MODI_GRADIENT_M
 USE MODI_EMOIST
 USE MODI_ETHETA
-USE MODI_SHUMAN
-USE MODE_IO_FIELD_WRITE, only: IO_Field_write
+USE MODI_SHUMAN, ONLY: MZM
+USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 !
 IMPLICIT NONE
 !
@@ -261,11 +193,17 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PEMOIST ! coefficient E_moist
 !       0.2  declaration of local variables
 !
 REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)) ::  &
-                  ZW1, ZW2
+                  ZW1, ZW2, ZW3
 !                                                 working variables
 !                                                     
 INTEGER :: IKB      ! vertical index value for the first inner mass point
 INTEGER :: IKE      ! vertical index value for the last inner mass point
+INTEGER             :: IRESP        ! Return code of FM routines
+INTEGER             :: ILENG        ! Length of the data field in LFIFM file
+INTEGER             :: IGRID        ! C-grid indicator in LFIFM file
+INTEGER             :: ILENCH       ! Length of comment string in LFIFM file
+CHARACTER (LEN=100) :: YCOMMENT     ! comment string in LFIFM file
+CHARACTER (LEN=16)  :: YRECFM       ! Name of the desired field in LFIFM file
 INTEGER::  ISV                      ! number of scalar variables       
 INTEGER::  JSV                      ! loop index for the scalar variables  
 
@@ -277,35 +215,45 @@ TYPE(TFIELDDATA)  :: TZFIELD
 !*      1.  DEFAULT VALUES,  1D REDELSPERGER NUMBERS 
 !           ----------------------------------------
 !
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('PRANDTL',0,ZHOOK_HANDLE)
+
+IF (LHARAT) THEN
+PREDTH1(:,:,:)=0.
+PREDR1(:,:,:)=0.
+PRED2TH3(:,:,:)=0.
+PRED2R3(:,:,:)=0.
+PRED2THR3(:,:,:)=0.
+PREDS1(:,:,:,:)=0.
+PRED2THS3(:,:,:,:)=0.
+PRED2RS3(:,:,:,:)=0.
+PBLL_O_E(:,:,:)=0.
+ENDIF
+!
 IKB = KKA+JPVEXT_TURB*KKL
 IKE = KKU-JPVEXT_TURB*KKL 
+ILENG=SIZE(PTHLM,1)*SIZE(PTHLM,2)*SIZE(PTHLM,3)
 ISV  =SIZE(PSVM,4)
 !
-PETHETA(:,:,:) = MZM( ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM) )
-PEMOIST(:,:,:) = MZM( EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM) )
+PETHETA(:,:,:) = MZM(ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM), KKA, KKU, KKL)
+PEMOIST(:,:,:) = MZM(EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM), KKA, KKU, KKL)
 PETHETA(:,:,KKA) = 2.*PETHETA(:,:,IKB) - PETHETA(:,:,IKB+KKL)
 PEMOIST(:,:,KKA) = 2.*PEMOIST(:,:,IKB) - PEMOIST(:,:,IKB+KKL)
 !
 !---------------------------------------------------------------------------
+IF (.NOT. LHARAT) THEN
 !
 !          1.3 1D Redelsperger numbers
 !
-IF (LOCEAN) THEN
-  PBLL_O_E(:,:,:) = MZM(XG *XALPHAOC* PLM(:,:,:) * PLEPS(:,:,:) / PTKEM(:,:,:) )  
-  PREDTH1(:,:,:)= XCTV*PBLL_O_E(:,:,:)  * GZ_M_W(KKA,KKU,KKL,PTHLM,PDZZ)
+PBLL_O_E(:,:,:) = MZM(XG / PTHVREF(:,:,:) * PLM(:,:,:) * PLEPS(:,:,:) / PTKEM(:,:,:), KKA, KKU, KKL)
+IF (KRR /= 0) THEN                ! moist case
+  PREDTH1(:,:,:)= XCTV*PBLL_O_E(:,:,:) * PETHETA(:,:,:) * &
+                   & GZ_M_W(PTHLM,PDZZ, KKA, KKU, KKL)
+  PREDR1(:,:,:) = XCTV*PBLL_O_E(:,:,:) * PEMOIST(:,:,:) * &
+                   & GZ_M_W(PRM(:,:,:,1),PDZZ, KKA, KKU, KKL)
+ELSE                              ! dry case
+  PREDTH1(:,:,:)= XCTV*PBLL_O_E(:,:,:)  * GZ_M_W(PTHLM,PDZZ, KKA, KKU, KKL)
   PREDR1(:,:,:) = 0.
-ELSE
-  PBLL_O_E(:,:,:) = MZM(XG / PTHVREF(:,:,:) * PLM(:,:,:) * PLEPS(:,:,:) / PTKEM(:,:,:) )  
-  IF (KRR /= 0) THEN                ! moist case
-    PREDTH1(:,:,:)= XCTV*PBLL_O_E(:,:,:) * PETHETA(:,:,:) * &
-                     & GZ_M_W(KKA,KKU,KKL,PTHLM,PDZZ)
-    PREDR1(:,:,:) = XCTV*PBLL_O_E(:,:,:) * PEMOIST(:,:,:) * &
-                     & GZ_M_W(KKA,KKU,KKL,PRM(:,:,:,1),PDZZ)
-  ELSE                              ! dry case
-    PREDTH1(:,:,:)= XCTV*PBLL_O_E(:,:,:)  * GZ_M_W(KKA,KKU,KKL,PTHLM,PDZZ)
-    PREDR1(:,:,:) = 0.
-  END IF
-!
 END IF
 !
 !       3. Limits on 1D Redelperger numbers
@@ -343,13 +291,11 @@ PREDR1  (:,:,:) = PREDR1  (:,:,:) * ZW1(:,:,:)
 !          ----------------------------------------------------------------
 !
 ZW2=SIGN(1.,PREDTH1(:,:,:))
-PREDTH1(:,:,:)= ZW2(:,:,:) * MAX(XMNH_TINY_12, ZW2(:,:,:)*PREDTH1(:,:,:))
+PREDTH1(:,:,:)= ZW2(:,:,:) * MAX(1.E-30, ZW2(:,:,:)*PREDTH1(:,:,:))
 !
-IF (.NOT.LOCEAN) THEN
-  IF (KRR /= 0) THEN                ! dry case
-    ZW2=SIGN(1.,PREDR1(:,:,:))
-    PREDR1(:,:,:)= ZW2(:,:,:) * MAX(XMNH_TINY_12, ZW2(:,:,:)*PREDR1(:,:,:))
-  END IF
+IF (KRR /= 0) THEN                ! dry case
+  ZW2=SIGN(1.,PREDR1(:,:,:))
+  PREDR1(:,:,:)= ZW2(:,:,:) * MAX(1.E-30, ZW2(:,:,:)*PREDR1(:,:,:))
 END IF
 !
 !
@@ -357,12 +303,12 @@ END IF
 !
 !          For the scalar variables
 DO JSV=1,ISV
-  PREDS1(:,:,:,JSV)=XCTV*PBLL_O_E(:,:,:)*GZ_M_W(KKA,KKU,KKL,PSVM(:,:,:,JSV),PDZZ)
+  PREDS1(:,:,:,JSV)=XCTV*PBLL_O_E(:,:,:)*GZ_M_W(PSVM(:,:,:,JSV),PDZZ, KKA, KKU, KKL)
 END DO
 !
 DO JSV=1,ISV
   ZW2=SIGN(1.,PREDS1(:,:,:,JSV))
-  PREDS1(:,:,:,JSV)= ZW2(:,:,:) * MAX(XMNH_TINY_12, ZW2(:,:,:)*PREDS1(:,:,:,JSV))
+  PREDS1(:,:,:,JSV)= ZW2(:,:,:) * MAX(1.E-30, ZW2(:,:,:)*PREDS1(:,:,:,JSV))
 END DO
 !
 !---------------------------------------------------------------------------
@@ -383,22 +329,22 @@ ELSE IF (L2D) THEN                      ! 3D case in a 2D model
 !
   IF (KRR /= 0) THEN                 ! moist 3D case
     PRED2TH3(:,:,:)= PREDTH1(:,:,:)**2+(XCTV*PBLL_O_E(:,:,:)*PETHETA(:,:,:) )**2 * &
-      MZM( GX_M_M(PTHLM,PDXX,PDZZ,PDZX)**2 )
+      MZM(GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL)**2, KKA, KKU, KKL)
     PRED2TH3(:,:,IKB)=PRED2TH3(:,:,IKB+KKL)
 !
     PRED2R3(:,:,:)= PREDR1(:,:,:)**2 + (XCTV*PBLL_O_E(:,:,:)*PEMOIST(:,:,:))**2 * &
-        MZM( GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX)**2 )
+        MZM(GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, KKA, KKU, KKL)**2, KKA, KKU, KKL)
     PRED2R3(:,:,IKB)=PRED2R3(:,:,IKB+KKL)
 !
     PRED2THR3(:,:,:)= PREDR1(:,:,:) * PREDTH1(:,:,:) +  XCTV**2*PBLL_O_E(:,:,:)**2 *   &
                   PEMOIST(:,:,:) * PETHETA(:,:,:) *                         &
-      MZM( GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX)*     &
-                     GX_M_M(PTHLM,PDXX,PDZZ,PDZX))
+      MZM(GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, KKA, KKU, KKL)*     &
+                     GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL), KKA, KKU, KKL)
     PRED2THR3(:,:,IKB)=PRED2THR3(:,:,IKB+KKL)
 !
   ELSE                 ! dry 3D case in a 2D model
     PRED2TH3(:,:,:) = PREDTH1(:,:,:)**2 +  XCTV**2*PBLL_O_E(:,:,:)**2 *     &
-      MZM( GX_M_M(PTHLM,PDXX,PDZZ,PDZX)**2 )
+      MZM(GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL)**2, KKA, KKU, KKL)
     PRED2TH3(:,:,IKB)=PRED2TH3(:,:,IKB+KKL)
 !
     PRED2R3(:,:,:) = 0.
@@ -411,27 +357,27 @@ ELSE                                 ! 3D case in a 3D model
 !
   IF (KRR /= 0) THEN                 ! moist 3D case
     PRED2TH3(:,:,:)= PREDTH1(:,:,:)**2 +  ( XCTV*PBLL_O_E(:,:,:)*PETHETA(:,:,:) )**2 * &
-      MZM( GX_M_M(PTHLM,PDXX,PDZZ,PDZX)**2 &
-      + GY_M_M(PTHLM,PDYY,PDZZ,PDZY)**2 )
+      MZM(GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL)**2 &
+      + GY_M_M(PTHLM,PDYY,PDZZ,PDZY, KKA, KKU, KKL)**2, KKA, KKU, KKL)
     PRED2TH3(:,:,IKB)=PRED2TH3(:,:,IKB+KKL)
 !
     PRED2R3(:,:,:)= PREDR1(:,:,:)**2 + (XCTV*PBLL_O_E(:,:,:)*PEMOIST(:,:,:))**2 *      &
-        MZM( GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX)**2 + &
-        GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY)**2 )
+        MZM(GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, KKA, KKU, KKL)**2 + &
+        GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY, KKA, KKU, KKL)**2, KKA, KKU, KKL)
     PRED2R3(:,:,IKB)=PRED2R3(:,:,IKB+KKL)
 !
     PRED2THR3(:,:,:)= PREDR1(:,:,:) * PREDTH1(:,:,:) +  XCTV**2*PBLL_O_E(:,:,:)**2 *   &
          PEMOIST(:,:,:) * PETHETA(:,:,:) *                            &
-         MZM( GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX)*   &
-         GX_M_M(PTHLM,PDXX,PDZZ,PDZX)+                           &
-         GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY)*                    &
-         GY_M_M(PTHLM,PDYY,PDZZ,PDZY) )
+         MZM(GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, KKA, KKU, KKL)*   &
+         GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL)+                           &
+         GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY, KKA, KKU, KKL)*                    &
+         GY_M_M(PTHLM,PDYY,PDZZ,PDZY, KKA, KKU, KKL), KKA, KKU, KKL)
     PRED2THR3(:,:,IKB)=PRED2THR3(:,:,IKB+KKL)
 !
   ELSE                 ! dry 3D case in a 3D model
     PRED2TH3(:,:,:) = PREDTH1(:,:,:)**2 +  XCTV**2*PBLL_O_E(:,:,:)**2 *                &
-      MZM( GX_M_M(PTHLM,PDXX,PDZZ,PDZX)**2 &
-      + GY_M_M(PTHLM,PDYY,PDZZ,PDZY)**2 )
+      MZM(GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL)**2 &
+      + GY_M_M(PTHLM,PDYY,PDZZ,PDZY, KKA, KKU, KKL)**2, KKA, KKU, KKL)
     PRED2TH3(:,:,IKB)=PRED2TH3(:,:,IKB+KKL)
 !
     PRED2R3(:,:,:) = 0.
@@ -447,89 +393,70 @@ END IF   ! end of the if structure on the turbulence dimensionnality
 !
 !           5. Prandtl numbers for scalars
 !              ---------------------------
-IF(HTURBDIM=='1DIM') THEN
+DO JSV=1,ISV
+!
+  IF(HTURBDIM=='1DIM') THEN
 !        1D case
-  DO JSV=1,ISV
     PRED2THS3(:,:,:,JSV)  = PREDS1(:,:,:,JSV) * PREDTH1(:,:,:)
     IF (KRR /= 0) THEN
       PRED2RS3(:,:,:,JSV)   = PREDR1(:,:,:) *PREDS1(:,:,:,JSV)
     ELSE
       PRED2RS3(:,:,:,JSV)   = 0.
     END IF
-  ENDDO
 !
-ELSE  IF (L2D) THEN ! 3D case in a 2D model
+  ELSE  IF (L2D) THEN ! 3D case in a 2D model
 !
-  IF (LOCEAN) THEN    
     IF (KRR /= 0) THEN
-      ZW1 = MZM((XG *XALPHAOC * PLM * PLEPS / PTKEM)**2 ) *PETHETA
+      ZW1 = MZM((XG / PTHVREF * PLM * PLEPS / PTKEM)**2, KKA, KKU, KKL) *PETHETA
     ELSE
-      ZW1 = MZM((XG *XALPHAOC * PLM * PLEPS / PTKEM)**2)
-     END IF
-  ELSE
-    DO JSV=1,ISV
-      IF (KRR /= 0) THEN
-        ZW1 = MZM( (XG / PTHVREF * PLM * PLEPS / PTKEM)**2 ) *PETHETA
-      ELSE
-        ZW1 = MZM( (XG / PTHVREF * PLM * PLEPS / PTKEM)**2)
-      END IF
-      PRED2THS3(:,:,:,JSV) = PREDTH1(:,:,:) * PREDS1(:,:,:,JSV)   +        &
-                         ZW1*                                              &
-                         MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)*       &
-                             GX_M_M(PTHLM,PDXX,PDZZ,PDZX)                  &
-                            )
+      ZW1 = MZM((XG / PTHVREF * PLM * PLEPS / PTKEM)**2, KKA, KKU, KKL)
+    END IF
+    PRED2THS3(:,:,:,JSV) = PREDTH1(:,:,:) * PREDS1(:,:,:,JSV)   +        &
+                       ZW1*                                              &
+                       MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX, KKA, KKU, KKL)*       &
+                           GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL),                 &
+                           KKA, KKU, KKL)
 !
-      IF (KRR /= 0) THEN
-        PRED2RS3(:,:,:,JSV) = PREDR1(:,:,:) * PREDS1(:,:,:,JSV)   +        &
-                         ZW1 * PEMOIST *                                   &
-                         MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)*       &
-                             GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX)           &
-                            )
-      ELSE
-        PRED2RS3(:,:,:,JSV) = 0.
-      END IF
-    ENDDO
-  END IF
+    IF (KRR /= 0) THEN
+      PRED2RS3(:,:,:,JSV) = PREDR1(:,:,:) * PREDS1(:,:,:,JSV)   +        &
+                       ZW1 * PEMOIST *                                   &
+                       MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX, KKA, KKU, KKL)*       &
+                           GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, KKA, KKU, KKL),          &
+                           KKA, KKU, KKL)
+    ELSE
+      PRED2RS3(:,:,:,JSV) = 0.
+    END IF
 !
-ELSE ! 3D case in a 3D model
+  ELSE ! 3D case in a 3D model
 !
-  IF (LOCEAN) THEN    
-  IF (KRR /= 0) THEN
-        ZW1 = MZM((XG *XALPHAOC * PLM * PLEPS / PTKEM)**2 ) *PETHETA
-      ELSE
-        ZW1 = MZM((XG *XALPHAOC * PLM * PLEPS / PTKEM)**2)
-      END IF
-  ELSE   
-    DO JSV=1,ISV
-      IF (KRR /= 0) THEN
-        ZW1 = MZM( (XG / PTHVREF * PLM * PLEPS / PTKEM)**2 ) *PETHETA
-      ELSE
-        ZW1 = MZM( (XG / PTHVREF * PLM * PLEPS / PTKEM)**2)
-      END IF
-      PRED2THS3(:,:,:,JSV) = PREDTH1(:,:,:) * PREDS1(:,:,:,JSV)   +        &
-                         ZW1*                                              &
-                         MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)*       &
-                             GX_M_M(PTHLM,PDXX,PDZZ,PDZX)                  &
-                            +GY_M_M(PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)*       &
-                             GY_M_M(PTHLM,PDYY,PDZZ,PDZY)                  &
-                            )
+    IF (KRR /= 0) THEN
+      ZW1 = MZM((XG / PTHVREF * PLM * PLEPS / PTKEM)**2, KKA, KKU, KKL) *PETHETA
+    ELSE
+      ZW1 = MZM((XG / PTHVREF * PLM * PLEPS / PTKEM)**2, KKA, KKU, KKL)
+    END IF
+    PRED2THS3(:,:,:,JSV) = PREDTH1(:,:,:) * PREDS1(:,:,:,JSV)   +        &
+                       ZW1*                                              &
+                       MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX, KKA, KKU, KKL)*       &
+                           GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL)                  &
+                          +GY_M_M(PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY, KKA, KKU, KKL)*       &
+                           GY_M_M(PTHLM,PDYY,PDZZ,PDZY, KKA, KKU, KKL),                 &
+                           KKA, KKU, KKL)
 !
-      IF (KRR /= 0) THEN
-        PRED2RS3(:,:,:,JSV) = PREDR1(:,:,:) * PREDS1(:,:,:,JSV)   +        &
-                         ZW1 * PEMOIST *                                   &
-                         MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)*       &
-                             GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX)           &
-                            +GY_M_M(PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)*       &
-                             GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY)           &
-                            )
-      ELSE
-        PRED2RS3(:,:,:,JSV) = 0.
-      END IF
-    ENDDO
-  END IF
+    IF (KRR /= 0) THEN
+      PRED2RS3(:,:,:,JSV) = PREDR1(:,:,:) * PREDS1(:,:,:,JSV)   +        &
+                       ZW1 * PEMOIST *                                   &
+                       MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX, KKA, KKU, KKL)*       &
+                           GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, KKA, KKU, KKL)           &
+                          +GY_M_M(PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY, KKA, KKU, KKL)*       &
+                           GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY, KKA, KKU, KKL),          &
+                           KKA, KKU, KKL)
+    ELSE
+      PRED2RS3(:,:,:,JSV) = 0.
+    END IF
 !
-END IF ! end of HTURBDIM if-block
+  END IF ! end of HTURBDIM if-block
 !
+END DO
 !
 !---------------------------------------------------------------------------
 !
@@ -606,6 +533,8 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
 END IF
 !
 !---------------------------------------------------------------------------
+ENDIF ! (Done only if LHARAT is FALSE)
 !
 IF (LHOOK) CALL DR_HOOK('PRANDTL',1,ZHOOK_HANDLE)
 END SUBROUTINE PRANDTL
+END MODULE MODE_PRANDTL

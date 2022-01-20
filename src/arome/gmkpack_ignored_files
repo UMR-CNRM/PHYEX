@@ -85,3 +85,11 @@ phyex/micro/ini_budget.F90
 phyex/micro/modd_budget.F90
 phyex/micro/modi_budget.F90
 phyex/micro/modi_ini_budget.F90
+phyex/turb/tke_eps_sources.F90
+phyex/turb/turb_ver.F90
+phyex/turb/prandtl.F90
+phyex/turb/turb_ver_thermo_flux.F90
+phyex/turb/turb_ver_thermo_corr.F90
+phyex/turb/turb_ver_dyn_flux.F90
+phyex/turb/turb_ver_sv_flux.F90
+phyex/turb/turb_ver_sv_corr.F90

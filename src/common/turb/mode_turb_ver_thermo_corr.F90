@@ -1,8 +1,14 @@
-!     ######spl
-      SUBROUTINE TURB_VER_THERMO_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,    &
-                      OCLOSE_OUT,OTURB_FLX,HTURBDIM,HTOM,           &
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+MODULE MODE_TURB_VER_THERMO_CORR
+IMPLICIT NONE
+CONTAINS      
+SUBROUTINE TURB_VER_THERMO_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,    &
+                      OTURB_FLX,HTURBDIM,HTOM,                      &
                       PIMPL,PEXPL,                                  &
-                      HFMFILE,HLUOUT,                               &
+                      TPFILE,                                       &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,           &
                       PRHODJ,PTHVREF,                               &
                       PSFTHM,PSFRM,PSFTHP,PSFRP,                    &
@@ -13,11 +19,7 @@
                       PRED2R3, PRED2THR3, PBLL_O_E, PETHETA,        &
                       PEMOIST, PREDTH1, PREDR1, PPHI3, PPSI3, PD,   &
                       PFWTH,PFWR,PFTH2,PFR2,PFTHR,                  &
-                      PTHLP,PRP,MFMOIST,PSIGS                  )
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
-      USE MODD_CTURB, ONLY : LHARAT
-
+                      PTHLP,PRP,MFMOIST,PSIGS                       )
 !     ###############################################################
 !
 !
@@ -115,10 +117,10 @@
 !!      DXF,DYF,DZF,DZM
 !!                             :  Shuman functions (difference operators)     
 !!                               
-!!      SUBROUTINE TRIDIAG     : to compute the splitted implicit evolution
+!!      SUBROUTINE TRIDIAG     : to compute the split implicit evolution
 !!                               of a variable located at a mass point
 !!
-!!      SUBROUTINE TRIDIAG_WIND: to compute the splitted implicit evolution
+!!      SUBROUTINE TRIDIAG_WIND: to compute the split implicit evolution
 !!                               of a variable located at a wind point
 !!
 !!      FUNCTIONs ETHETA and EMOIST  :  
@@ -147,7 +149,7 @@
 !!
 !!      Module MODD_PARAMETERS
 !!
-!!           JPVEXT     : number of vertical external points
+!!           JPVEXT_TURB     : number of vertical external points
 !!           JPHEXT     : number of horizontal external points
 !!
 !!
@@ -199,14 +201,19 @@
 !!                                              change of YCOMMENT
 !!                     2012-02 (Y. Seity) add possibility to run with reversed 
 !!                                              vertical levels
-!!      Modifications  July 2015 (Wim de Rooy) LHARATU switch
+!!      Modifications  July 2015 (Wim de Rooy) LHARAT switch
+!!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !!--------------------------------------------------------------------------
 !       
 !*      0. DECLARATIONS
 !          ------------
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 USE MODD_CST
 USE MODD_CTURB
+USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
+USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_CONF
 USE MODD_LES
@@ -217,12 +224,13 @@ USE MODI_GRADIENT_W
 USE MODI_GRADIENT_M
 USE MODI_SHUMAN , ONLY : DZM, MZM, MZF
 USE MODI_TRIDIAG 
-USE MODE_FMWRIT
 USE MODI_LES_MEAN_SUBGRID
-USE MODI_PRANDTL
 USE MODI_TRIDIAG_THERMO
 !
+USE MODE_IO_FIELD_WRITE, only: IO_Field_write
 USE MODE_PRANDTL
+!
+USE MODI_SECOND_MNH
 !
 IMPLICIT NONE
 !
@@ -236,18 +244,13 @@ INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
-LOGICAL,                INTENT(IN)   ::  OCLOSE_OUT   ! switch for syncronous
-                                                      ! file opening       
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
-CHARACTER*4,            INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
+CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
-CHARACTER*4,            INTENT(IN)   ::  HTOM         ! type of Third Order Moment
+CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
 REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
-CHARACTER(LEN=*),       INTENT(IN)   ::  HFMFILE      ! Name of the output
-                                                      ! FM-file 
-CHARACTER(LEN=*),       INTENT(IN)   ::  HLUOUT       ! Output-listing name for
-                                                      ! model n
+TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDZZ, PDXX, PDYY, PDZX, PDZY
                                                       ! Metric coefficients
@@ -349,7 +352,7 @@ LOGICAL :: GFWTH    ! flag to use w'2th'
 LOGICAL :: GFR2     ! flag to use w'r'2
 LOGICAL :: GFWR     ! flag to use w'2r'
 LOGICAL :: GFTHR    ! flag to use w'th'r'
-
+TYPE(TFIELDDATA) :: TZFIELD
 !----------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARIES
@@ -513,12 +516,18 @@ ENDIF
   !
   !
   ! stores <THl THl>  
-  IF ( OTURB_FLX .AND. OCLOSE_OUT ) THEN
-    YRECFM  ='THL_VVAR'
-    YCOMMENT='X_Y_Z_THL_VVAR (KELVIN**2)'
-    IGRID   = 1
-    ILENCH=LEN(YCOMMENT)
-    CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZFLXZ,IGRID,ILENCH,YCOMMENT,IRESP)
+  IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+    TZFIELD%CMNHNAME   = 'THL_VVAR'
+    TZFIELD%CSTDNAME   = ''
+    TZFIELD%CLONGNAME  = 'THL_VVAR'
+    TZFIELD%CUNITS     = 'K2'
+    TZFIELD%CDIR       = 'XY'
+    TZFIELD%CCOMMENT   = 'X_Y_Z_THL_VVAR'
+    TZFIELD%NGRID      = 1
+    TZFIELD%NTYPE      = TYPEREAL
+    TZFIELD%NDIMS      = 3
+    TZFIELD%LTIMEDEP   = .TRUE.
+    CALL IO_Field_write(TPFILE,TZFIELD,ZFLXZ)
   END IF
 !
 ! and we store in LES configuration
@@ -674,12 +683,18 @@ ENDIF
                      2. * PATHETA(:,:,:) * PAMOIST(:,:,:) * ZFLXZ(:,:,:)
     END IF
     ! stores <THl Rnp>   
-    IF ( OTURB_FLX .AND. OCLOSE_OUT ) THEN
-      YRECFM  ='THLRCONS_VCOR'
-      YCOMMENT='X_Y_Z_THLRCONS_VCOR (KELVIN*KG/KG)'
-      IGRID   = 1
-      ILENCH=LEN(YCOMMENT)
-      CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZFLXZ,IGRID,ILENCH,YCOMMENT,IRESP)
+    IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+      TZFIELD%CMNHNAME   = 'THLRCONS_VCOR'
+      TZFIELD%CSTDNAME   = ''
+      TZFIELD%CLONGNAME  = 'THLRCONS_VCOR'
+      TZFIELD%CUNITS     = 'K kg kg-1'
+      TZFIELD%CDIR       = 'XY'
+      TZFIELD%CCOMMENT   = 'X_Y_Z_THLRCONS_VCOR'
+      TZFIELD%NGRID      = 1
+      TZFIELD%NTYPE      = TYPEREAL
+      TZFIELD%NDIMS      = 3
+      TZFIELD%LTIMEDEP   = .TRUE.
+      CALL IO_Field_write(TPFILE,TZFIELD,ZFLXZ)
     END IF
 !
 ! and we store in LES configuration
@@ -801,12 +816,18 @@ ENDIF
       PSIGS(:,:,:) = PSIGS(:,:,:) + PAMOIST(:,:,:) **2 * ZFLXZ(:,:,:)
     END IF
     ! stores <Rnp Rnp>    
-    IF ( OTURB_FLX .AND. OCLOSE_OUT ) THEN
-      YRECFM  ='RTOT_VVAR'
-      YCOMMENT='X_Y_Z_RTOT_VVAR (KG/KG **2)'
-      IGRID   = 1
-      ILENCH=LEN(YCOMMENT)
-      CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZFLXZ,IGRID,ILENCH,YCOMMENT,IRESP)
+    IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+      TZFIELD%CMNHNAME   = 'RTOT_VVAR'
+      TZFIELD%CSTDNAME   = ''
+      TZFIELD%CLONGNAME  = 'RTOT_VVAR'
+      TZFIELD%CUNITS     = 'kg2 kg-2'
+      TZFIELD%CDIR       = 'XY'
+      TZFIELD%CCOMMENT   = 'X_Y_Z_RTOT_VVAR'
+      TZFIELD%NGRID      = 1
+      TZFIELD%NTYPE      = TYPEREAL
+      TZFIELD%NDIMS      = 3
+      TZFIELD%LTIMEDEP   = .TRUE.
+      CALL IO_Field_write(TPFILE,TZFIELD,ZFLXZ)
     END IF
     !
     ! and we store in LES configuration
@@ -842,3 +863,4 @@ ENDIF
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_CORR',1,ZHOOK_HANDLE)
 END SUBROUTINE TURB_VER_THERMO_CORR
+END MODULE MODE_TURB_VER_THERMO_CORR
