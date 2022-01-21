@@ -136,4 +136,20 @@ function Upcase(hstring)
   end do
 end function Upcase
 
+LOGICAL FUNCTION LNORTH_ll()
+  LNORTH_ll=.FALSE.
+END FUNCTION LNORTH_ll
+!
+LOGICAL FUNCTION LEAST_ll()
+  LEAST_ll=.FALSE.
+END FUNCTION LEAST_ll
+!
+LOGICAL FUNCTION LWEST_ll()
+  LWEST_ll=.FALSE.
+END FUNCTION LWEST_ll
+!
+LOGICAL FUNCTION LSOUTH_ll()
+  LSOUTH_ll=.FALSE.
+END FUNCTION LSOUTH_ll
+
 end module mode_tools
