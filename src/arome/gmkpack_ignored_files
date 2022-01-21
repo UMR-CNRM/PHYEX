@@ -93,3 +93,10 @@ phyex/turb/turb_ver_thermo_corr.F90
 phyex/turb/turb_ver_dyn_flux.F90
 phyex/turb/turb_ver_sv_flux.F90
 phyex/turb/turb_ver_sv_corr.F90
+phyex/turb/tm06.F90
+phyex/turb/tm06_h.F90
+phyex/turb/tridiag.F90
+phyex/turb/tridiag_wind.F90
+phyex/turb/tridiag_thermo.F90
+phyex/turb/tridiag_tke.F90
+phyex/turb/tridiag_massflux.F90
