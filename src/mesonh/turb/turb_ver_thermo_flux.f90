@@ -482,7 +482,7 @@ REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ::  &
        ZDFDDTDZ, & ! dF/d(dTh/dz)
        ZDFDDRDZ, & ! dF/d(dr/dz)
        Z3RDMOMENT,&  ! 3 order term in flux or variance equation
-       ZF_NEW,    &
+       ZF_LEONARD,&  ! Leonard terms
        ZRWTHL,    &
        ZRWRNP,    &
        ZCLD_THOLD
@@ -495,7 +495,6 @@ INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
 INTEGER             :: JI, JJ ! loop indexes 
 !
-!
 INTEGER                    :: IIB,IJB       ! Lower bounds of the physical
                                             ! sub-domain in x and y directions
 INTEGER                    :: IIE,IJE       ! Upper bounds of the physical
@@ -507,17 +506,14 @@ REAL, DIMENSION(:), ALLOCATABLE   :: ZYHAT_ll    !   Position y in the conformal
                                                  ! plane (array on the complete domain)
 !
 !
-CHARACTER (LEN=100) :: YCOMMENT     ! comment string in LFIFM file
-CHARACTER (LEN=LEN_HREC)  :: YRECFM       ! Name of the desired field in LFIFM file
-!
 REAL :: ZTIME1, ZTIME2
 REAL :: ZDELTAX
-REAL    :: ZXBEG,ZXEND,ZYBEG,ZYEND ! Forcing size for ocean deep convection
+REAL :: ZXBEG,ZXEND,ZYBEG,ZYEND ! Forcing size for ocean deep convection
 REAL, DIMENSION(SIZE(XXHAT),SIZE(XYHAT)) :: ZDIST ! distance
                                    ! from the center of the cooling               
 REAL :: ZFLPROV
 INTEGER           :: JKM          ! vertical index loop
-INTEGER          :: JSW
+INTEGER           :: JSW
 REAL :: ZSWA     ! index for time flux interpolation
 !
 INTEGER :: IIU, IJU
@@ -578,7 +574,7 @@ GUSERV = (KRR/=0)
 !
 ZKEFF(:,:,:) = MZM( PLM(:,:,:) * SQRT(PTKEM(:,:,:)) )
 !
-! define a cloud mask with ri and rc (used after with a threshold) for Leonard terms
+! Define a cloud mask with ri and rc (used after with a threshold) for Leonard terms
 !
 IF(LHGRAD) THEN
   IF ( KRRL >= 1 ) THEN
@@ -621,7 +617,7 @@ ZDFDDTDZ(:,:,:) = -XCSHF*ZKEFF*D_PHI3DTDZ_O_DDTDZ(PPHI3,PREDTH1,PREDR1,PRED2TH3,
 IF (LHGRAD) THEN
  ! Compute the Leonard terms for thl
  ZDELTAX= XXHAT(3) - XXHAT(2)
- ZF_NEW (:,:,:)= XCOEFHGRADTHL*ZDELTAX*ZDELTAX/12.0*(      &
+ ZF_LEONARD (:,:,:)= XCOEFHGRADTHL*ZDELTAX*ZDELTAX/12.0*(      &
                  MXF(GX_W_UW(PWM(:,:,:), XDXX, XDZZ, XDZX))&
                 *MZM(GX_M_M(PTHLM(:,:,:),XDXX,XDZZ,XDZX))  &
               +  MYF(GY_W_VW(PWM(:,:,:), XDYY,XDZZ,XDZY))  &
@@ -719,7 +715,7 @@ IF (LHGRAD) THEN
   ZALT(:,:,JK) = PZZ(:,:,JK)-XZS(:,:)
  END DO
  WHERE ( (ZCLD_THOLD(:,:,:) >= XCLDTHOLD) .AND. ( ZALT(:,:,:) >= XALTHGRAD) )
-  ZRWTHL(:,:,:) = -GZ_W_M(MZM(PRHODJ(:,:,:))*ZF_NEW(:,:,:),XDZZ)
+  ZRWTHL(:,:,:) = -GZ_W_M(MZM(PRHODJ(:,:,:))*ZF_LEONARD(:,:,:),XDZZ)
  END WHERE
 END IF
 !
@@ -734,7 +730,7 @@ ZFLXZ(:,:,:)   = ZF                                                &
 ! replace the flux by the Leonard terms
 IF (LHGRAD) THEN
  WHERE ( (ZCLD_THOLD(:,:,:) >= XCLDTHOLD) .AND. ( ZALT(:,:,:) >= XALTHGRAD) )
-  ZFLXZ(:,:,:) = ZF_NEW(:,:,:)
+  ZFLXZ(:,:,:) = ZF_LEONARD(:,:,:)
  END WHERE
 END IF
 !
@@ -861,7 +857,7 @@ IF (KRR /= 0) THEN
   ! Compute Leonard Terms for Cloud mixing ratio
   IF (LHGRAD) THEN
     ZDELTAX= XXHAT(3) - XXHAT(2)
-    ZF_NEW (:,:,:)= XCOEFHGRADRM*ZDELTAX*ZDELTAX/12.0*(        &
+    ZF_LEONARD (:,:,:)= XCOEFHGRADRM*ZDELTAX*ZDELTAX/12.0*(        &
                 MXF(GX_W_UW(PWM(:,:,:), XDXX, XDZZ, XDZX))       &
                 *MZM(GX_M_M(PRM(:,:,:,1),XDXX,XDZZ,XDZX)) &
                 +MYF(GY_W_VW(PWM(:,:,:), XDYY,XDZZ,XDZY))        &
