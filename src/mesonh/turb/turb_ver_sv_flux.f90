@@ -430,8 +430,6 @@ DO JSV=1,ISV
 !  Compute the equivalent tendency for the JSV scalar variable
   PRSVS(:,:,:,JSV)= PRSVS(:,:,:,JSV)+    &
                     PRHODJ(:,:,:)*(ZRES(:,:,:)-PSVM(:,:,:,JSV))/PTSTEP
-! PRSVS(:,:,:,JSV)= MAX((PRSVS(:,:,:,JSV)+    &
-!                   PRHODJ(:,:,:)*(ZRES(:,:,:)-PSVM(:,:,:,JSV))/PTSTEP),XSVMIN(JSV))
 !
   IF ( (OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL ) THEN
     ! Diagnostic of the cartesian vertical flux

@@ -290,9 +290,6 @@ REAL, DIMENSION(SIZE(PSVM,1),SIZE(PSVM,2),SIZE(PSVM,3))  ::  &
        ZFLXZ,  &   ! vertical flux of the treated variable
        ZSOURCE,  & ! source of evolution for the treated variable
        ZKEFF       ! effectif diffusion coeff = LT * SQRT( TKE )
-INTEGER             :: IRESP        ! Return code of FM routines 
-INTEGER             :: IGRID        ! C-grid indicator in LFIFM file 
-INTEGER             :: ILENCH       ! Length of comment string in LFIFM file
 INTEGER             :: IKB,IKE      ! I index values for the Beginning and End
                                     ! mass points of the domain in the 3 direct.
 INTEGER             :: IKT          ! array size in k direction
@@ -300,8 +297,6 @@ INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
 INTEGER             :: JSV          ! loop counters
 INTEGER             :: JK           ! loop
 INTEGER             :: ISV          ! number of scalar var.
-CHARACTER (LEN=100) :: YCOMMENT     ! comment string in LFIFM file
-CHARACTER (LEN=16)  :: YRECFM       ! Name of the desired field in LFIFM file
 !
 REAL :: ZTIME1, ZTIME2
 
@@ -326,12 +321,17 @@ IKTB =1+JPVEXT_TURB
 ISV=SIZE(PSVM,4)
 !
 IF (LHARAT) THEN
-ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50.*MFMOIST(:,:,:)
+  ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50.*MFMOIST(:,:,:)
 ELSE
-ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), KKA, KKU, KKL)
+  ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), KKA, KKU, KKL)
 ENDIF
-
 !
+IF(LBLOWSNOW) THEN
+! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables           
+   ZCSV= XCHF/XRSNOW
+ELSE
+   ZCSV= XCHF
+ENDIF
 !----------------------------------------------------------------------------
 !
 !*       8.   SOURCES OF PASSIVE SCALAR VARIABLES
@@ -342,15 +342,16 @@ DO JSV=1,ISV
   IF (LNOMIXLG .AND. JSV >= NSV_LGBEG .AND. JSV<= NSV_LGEND) CYCLE
 !
 ! Preparation of the arguments for TRIDIAG 
-IF (LHARAT) THEN
-  ZA(:,:,:)    = -PTSTEP*   &
-                 ZKEFF * MZM(PRHODJ, KKA, KKU, KKL) /   &
-                 PDZZ**2
-ELSE
-  ZA(:,:,:)    = -PTSTEP*XCHF*PPSI_SV(:,:,:,JSV) *   &
-                 ZKEFF * MZM(PRHODJ, KKA, KKU, KKL) /   &
-                 PDZZ**2
-ENDIF
+    IF (LHARAT) THEN
+      ZA(:,:,:)    = -PTSTEP*   &
+                   ZKEFF * MZM(PRHODJ, KKA, KKU, KKL) /   &
+                   PDZZ**2
+    ELSE
+      ZA(:,:,:)    = -PTSTEP*ZCSV*PPSI_SV(:,:,:,JSV) *   &
+                   ZKEFF * MZM(PRHODJ, KKA, KKU, KKL) /   &
+                   PDZZ**2
+    ENDIF
+  ZSOURCE(:,:,:) = 0.
 !
 ! Compute the sources for the JSVth scalar variable
 
@@ -381,7 +382,7 @@ ENDIF
   IF ( (OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
-    ZFLXZ(:,:,:) = -XCHF * PPSI_SV(:,:,:,JSV) * MZM(PLM*SQRT(PTKEM), KKA, KKU, KKL) / PDZZ * &
+    ZFLXZ(:,:,:) = -ZCSV * PPSI_SV(:,:,:,JSV) * MZM(PLM*SQRT(PTKEM), KKA, KKU, KKL) / PDZZ * &
                   DZM(PIMPL*ZRES(:,:,:) + PEXPL*PSVM(:,:,:,JSV), KKA, KKU, KKL)
     ! surface flux
     !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
