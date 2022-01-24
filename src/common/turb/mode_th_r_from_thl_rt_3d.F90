@@ -1,4 +1,10 @@
-!     ######spl
+!MNH_LIC Copyright 2006-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+MODULE MODE_TH_R_FROM_THL_RT_3D
+IMPLICIT NONE
+CONTAINS      
       SUBROUTINE TH_R_FROM_THL_RT_3D(HFRAC_ICE,PFRAC_ICE,PP,             &
                                   PTHL, PRT, PTH, PRV, PRL, PRI, &
                                   PRSATW, PRSATI, PRR, PRS, PRG, PRH       )
@@ -39,7 +45,7 @@
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODI_TH_R_FROM_THL_RT_1D
+USE MODE_TH_R_FROM_THL_RT_1D, ONLY: TH_R_FROM_THL_RT_1D
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -48,7 +54,7 @@ IMPLICIT NONE
 !
 !*      0.1  declarations of arguments
 !
-CHARACTER*1         , INTENT(IN) :: HFRAC_ICE
+CHARACTER(LEN=1),       INTENT(IN) :: HFRAC_ICE
 REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PFRAC_ICE
 REAL, DIMENSION(:,:,:), INTENT(IN) :: PP          ! Pressure
 REAL, DIMENSION(:,:,:), INTENT(IN) :: PTHL    ! thetal to transform into th
@@ -98,3 +104,4 @@ ENDDO
 IF (LHOOK) CALL DR_HOOK('TH_R_FROM_THL_RT_3D',1,ZHOOK_HANDLE)
 
 END SUBROUTINE TH_R_FROM_THL_RT_3D
+END MODULE MODE_TH_R_FROM_THL_RT_3D

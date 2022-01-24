@@ -78,7 +78,7 @@ IMPLICIT NONE
 !
 !*      0.1  declarations of arguments
 !
-CHARACTER(len=1),       INTENT(IN) :: HFRAC_ICE
+CHARACTER(LEN=1),       INTENT(IN) :: HFRAC_ICE
 REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PFRAC_ICE
 REAL, DIMENSION(:,:,:), INTENT(IN) :: PP          ! Pressure
 REAL, DIMENSION(:,:,:), INTENT(IN) :: PTHL    ! thetal to transform into th

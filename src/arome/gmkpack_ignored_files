@@ -105,3 +105,9 @@ phyex/turb/etheta.F90
 phyex/turb/emoist.F90
 phyex/turb/rmc01.F90
 phyex/turb/sbl_depth.F90
+phyex/turb/th_r_from_thl_rt_1d.F90
+phyex/turb/th_r_from_thl_rt_2d.F90
+phyex/turb/th_r_from_thl_rt_3d.F90
+phyex/turb/thl_rt_from_th_r_mf.F90
+phyex/turb/bl_depth_diag_3d.F90
+phyex/turb/bl_depth_diag_1d.F90

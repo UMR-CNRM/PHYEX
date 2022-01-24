@@ -1,4 +1,10 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+MODULE MODE_THL_RT_FROM_TH_R_MF
+IMPLICIT NONE
+CONTAINS
       SUBROUTINE THL_RT_FROM_TH_R_MF( KRR,KRRL,KRRI,                  &
                                       PTH, PR, PEXN, &
                                       PTHL, PRT                      )
@@ -114,3 +120,4 @@ ELSE
 END IF
 IF (LHOOK) CALL DR_HOOK('THL_RT_FRM_TH_R_MF',1,ZHOOK_HANDLE)
 END SUBROUTINE THL_RT_FROM_TH_R_MF
+END MODULE MODE_THL_RT_FROM_TH_R_MF

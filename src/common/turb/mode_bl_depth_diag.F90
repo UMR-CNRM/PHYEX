@@ -1,4 +1,16 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+MODULE MODE_BL_DEPTH_DIAG
+!
+INTERFACE BL_DEPTH_DIAG  
+      MODULE PROCEDURE BL_DEPTH_DIAG_3D
+      MODULE PROCEDURE BL_DEPTH_DIAG_1D
+END INTERFACE
+!
+CONTAINS
+!
 FUNCTION BL_DEPTH_DIAG_3D(KKB,KKE,PSURF,PZS,PFLUX,PZZ,PFTOP_O_FSURF)
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
@@ -91,3 +103,41 @@ BL_DEPTH_DIAG_3D(:,:) = BL_DEPTH_DIAG_3D(:,:) / (1. - PFTOP_O_FSURF)
 !
 IF (LHOOK) CALL DR_HOOK('BL_DEPTH_DIAG_3D',1,ZHOOK_HANDLE)
 END FUNCTION BL_DEPTH_DIAG_3D
+!
+FUNCTION BL_DEPTH_DIAG_1D(KKB,KKE,PSURF,PZS,PFLUX,PZZ,PFTOP_O_FSURF)
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
+IMPLICIT NONE
+!
+INTEGER,                INTENT(IN)           :: KKB          ! bottom point
+INTEGER,                INTENT(IN)           :: KKE          ! top point
+REAL,                   INTENT(IN)           :: PSURF        ! surface flux
+REAL,                   INTENT(IN)           :: PZS          ! orography
+REAL, DIMENSION(:),     INTENT(IN)           :: PFLUX        ! flux
+REAL, DIMENSION(:),     INTENT(IN)           :: PZZ          ! altitude of flux points
+REAL,                   INTENT(IN)           :: PFTOP_O_FSURF! Flux at BL top / Surface flux
+REAL                                         :: BL_DEPTH_DIAG_1D
+!
+REAL, DIMENSION(1,1)             :: ZSURF
+REAL, DIMENSION(1,1)             :: ZZS
+REAL, DIMENSION(1,1,SIZE(PFLUX)) :: ZFLUX
+REAL, DIMENSION(1,1,SIZE(PZZ))   :: ZZZ
+REAL, DIMENSION(1,1)             :: ZBL_DEPTH_DIAG
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('BL_DEPTH_DIAG_1D',0,ZHOOK_HANDLE)
+ZSURF        = PSURF
+ZZS          = PZS
+ZFLUX(1,1,:) = PFLUX(:)
+ZZZ  (1,1,:) = PZZ  (:)
+!
+ZBL_DEPTH_DIAG = BL_DEPTH_DIAG_3D(KKB,KKE,ZSURF,ZZS,ZFLUX,ZZZ,PFTOP_O_FSURF)
+!
+BL_DEPTH_DIAG_1D = ZBL_DEPTH_DIAG(1,1)
+!
+!-------------------------------------------------------------------------------
+!
+IF (LHOOK) CALL DR_HOOK('BL_DEPTH_DIAG_1D',1,ZHOOK_HANDLE)
+END FUNCTION BL_DEPTH_DIAG_1D
+END MODULE MODE_BL_DEPTH_DIAG
