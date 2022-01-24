@@ -100,3 +100,8 @@ phyex/turb/tridiag_wind.F90
 phyex/turb/tridiag_thermo.F90
 phyex/turb/tridiag_tke.F90
 phyex/turb/tridiag_massflux.F90
+phyex/turb/bl89.F90
+phyex/turb/etheta.F90
+phyex/turb/emoist.F90
+phyex/turb/rmc01.F90
+phyex/turb/sbl_depth.F90
