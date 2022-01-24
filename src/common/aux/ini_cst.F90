@@ -2,22 +2,6 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-!-----------------------------------------------------------------
-!     ###################
-      MODULE MODI_INI_CST
-!     ###################
-!
-INTERFACE
-!
-SUBROUTINE INI_CST
-END SUBROUTINE INI_CST 
-!
-END INTERFACE
-!
-END MODULE MODI_INI_CST
-!
-!
-!
 !     ##################
       SUBROUTINE INI_CST 
 !     ##################
@@ -60,7 +44,9 @@ END MODULE MODI_INI_CST
 !!      V. Masson   05/10/98  add XRHOLI
 !!      C. Mari     31/10/00  add NDAYSEC
 !!      V. Masson   01/03/03  add XCONDI
-!!      J. Escobar  28/03/2014 for pb with emissivity/aerosol reset XMNH_TINY=1.0e-80 in real8 case 
+!!      J. Escobar  28/03/2014 for pb with emissivity/aerosol reset XMNH_TINY=1.0e-80 in real8 case
+!!      R. El Khatib 04/08/14 add pre-computed quantities
+!!      P. Marguinaud 04/10/16 Port to single precision
 !!      J.Escobar : 10/2017 : for real*4 , add XMNH_HUGE_12_LOG
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !!      J.Escobar : 5/10/2018 : for real*4 ,higher value for XEPS_DT = 1.5e-4
@@ -71,7 +57,10 @@ END MODULE MODI_INI_CST
 !              ------------
 !
 USE MODD_CST
-use modd_precision, only: MNHREAL
+USE MODD_PRECISION, ONLY: MNHREAL, MNHREAL32, MNHREAL64
+USE MODE_MSG,       ONLY: PRINT_MSG, NVERB_FATAL
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 IMPLICIT NONE
 !  
@@ -80,6 +69,8 @@ IMPLICIT NONE
 !*	 1.     FUNDAMENTAL CONSTANTS
 !	        ---------------------
 !
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('INI_CST',0,ZHOOK_HANDLE)
 XPI         = 2.*ASIN(1.)
 XKARMAN     = 0.4
 XLIGHTSPEED = 299792458.
@@ -114,7 +105,7 @@ XG      = 9.80665
 !
 ! Ocean model cst same as in 1D/CMO SURFEX
 ! values used in ini_cst to overwrite XP00 and XTH00
-XRH00OCEAN =1024. 
+XRH00OCEAN =1024.
 XTH00OCEAN = 286.65
 XSA00OCEAN= 32.6
 XP00OCEAN = 201.E5
@@ -126,8 +117,11 @@ XTH00 = 300.
 !*	 5.     RADIATION CONSTANTS
 !	        -------------------
 !
-!JUAN OVERFLOW XSTEFAN = 2.* XPI**5 * XBOLTZ**4 / (15.* XLIGHTSPEED**2 * XPLANCK**3)
-XSTEFAN = ( 2.* XPI**5 / 15. ) * ( (XBOLTZ / XPLANCK) * XBOLTZ ) * (XBOLTZ/(XLIGHTSPEED*XPLANCK))**2 
+! Original: XSTEFAN = 2.* XPI**5 * XBOLTZ**4 / (15.* XLIGHTSPEED**2 * XPLANCK**3)
+! Juan: XSTEFAN = ( 2.* XPI**5 / 15. ) * ( (XBOLTZ / XPLANCK) * XBOLTZ ) * (XBOLTZ/(XLIGHTSPEED*XPLANCK))**2
+! Philippe Marguinaud: XSTEFAN = REAL (2._8* REAL (XPI, 8)**5 * REAL (XBOLTZ, 8)**4 / (15._8* REAL (XLIGHTSPEED, 8)**2 * REAL (XPLANCK, 8)**3))
+XSTEFAN = REAL (2._MNHREAL64* REAL (XPI, MNHREAL64)**5 * REAL (XBOLTZ, MNHREAL64)**4 / &
+        & (15._MNHREAL64* REAL (XLIGHTSPEED, MNHREAL64)**2 * REAL (XPLANCK, MNHREAL64)**3))
 XI0     = 1370.
 !
 !-------------------------------------------------------------------------------
@@ -161,37 +155,40 @@ XALPI  = LOG(XESTT) + (XBETAI /XTT) + (XGAMI *LOG(XTT))
 ! Values identical to ones used in CMO1D in SURFEX /could be modified
 ! Coefficient of thermal expansion of water (K-1)
 XALPHAOC = 1.9E-4
-! Coeff of Haline contraction coeff (S-1) 
+! Coeff of Haline contraction coeff (S-1)
 XBETAOC= 7.7475E-4
+!
+!*	 7.     PRECOMPUTED CONSTANTS
+!	        ---------------------
+!
+RDSRV = XRD/XRV
+RDSCPD = XRD/XCPD
+RINVXP00 =  1./XP00
 !
 !   Some machine precision value depending of real4/8 use  
 !
-
-
 XMNH_EPSILON = EPSILON (XMNH_EPSILON )
 XMNH_HUGE    = HUGE    (XMNH_HUGE )
 XMNH_HUGE_12_LOG = LOG ( SQRT(XMNH_HUGE)  )
 
-#if (MNH_REAL == 8)
+IF (MNHREAL == MNHREAL64) THEN
 XMNH_TINY      = 1.0e-80_MNHREAL
 XEPS_DT        = 1.0e-5_MNHREAL
 XRES_FLAT_CART = 1.0e-12_MNHREAL
 XRES_OTHER     = 1.0e-9_MNHREAL
 XRES_PREP      = 1.0e-8_MNHREAL
-#elif (MNH_REAL == 4)
+ELSEIF (MNHREAL == MNHREAL32) THEN
 XMNH_TINY      = TINY    (XMNH_TINY    )
 XEPS_DT        = 1.5e-4_MNHREAL
 XRES_FLAT_CART = 1.0e-12_MNHREAL
 XRES_OTHER     = 1.0e-7_MNHREAL
 XRES_PREP      = 1.0e-4_MNHREAL
-#else
-#error "Invalid MNH_REAL"
-#endif
+ELSE
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'INI_CST', 'Invalid MNH_REAL')
+ENDIF
 XMNH_TINY_12 = SQRT    (XMNH_TINY    )
-
-
-
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('INI_CST',1,ZHOOK_HANDLE)
 END SUBROUTINE INI_CST 

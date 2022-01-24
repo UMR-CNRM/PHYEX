@@ -1,4 +1,9 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+!     ###############
       MODULE MODD_CST      
 !     ###############
 !
@@ -32,6 +37,7 @@
 !!      C. Mari     31/10/00  add NDAYSEC
 !!      V. Masson   01/03/03  add conductivity of ice
 !!      R. El Khatib 04/08/14 add pre-computed quantities
+!!      J.Escobar : 10/2017 : for real*4 , add XMNH_HUGE_12_LOG
 !!      J.L. Redelsperger 03/2021  add constants for ocean penetrating solar
 !-------------------------------------------------------------------------------
 !
@@ -96,5 +102,19 @@ INTEGER, SAVE :: NDAYSEC        ! Number of seconds in a day
 REAL,SAVE :: RDSRV              !  XRD/XRV
 REAL,SAVE :: RDSCPD             !  XRD/XCPD
 REAL,SAVE :: RINVXP00           !  1./XP00
+!
+!   Some machine precision value depending of real4/8 use  
+!
+REAL,SAVE     :: XMNH_TINY          ! minimum real on this machine
+REAL,SAVE     :: XMNH_TINY_12       ! sqrt(minimum real on this machine)
+REAL,SAVE     :: XMNH_EPSILON       ! minimum space with 1.0
+REAL,SAVE     :: XMNH_HUGE          ! maximum real on this machine
+REAL,SAVE     :: XMNH_HUGE_12_LOG   ! maximum log(sqrt(real)) on this machine
 
+REAL,SAVE     :: XEPS_DT            ! default value for DT test 
+REAL,SAVE     :: XRES_FLAT_CART     ! default     flat&cart residual tolerance
+REAL,SAVE     :: XRES_OTHER         ! default not flat&cart residual tolerance
+REAL,SAVE     :: XRES_PREP          ! default     prep      residual tolerance
+
+!
 END MODULE MODD_CST
