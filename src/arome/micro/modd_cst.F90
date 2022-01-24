@@ -96,5 +96,6 @@ INTEGER, SAVE :: NDAYSEC        ! Number of seconds in a day
 REAL,SAVE :: RDSRV              !  XRD/XRV
 REAL,SAVE :: RDSCPD             !  XRD/XCPD
 REAL,SAVE :: RINVXP00           !  1./XP00
-
+!
+REAL,SAVE     :: XMNH_EPSILON       ! minimum space with 1.0
 END MODULE MODD_CST

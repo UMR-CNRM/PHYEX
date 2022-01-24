@@ -230,7 +230,7 @@ END MODULE MODI_TURB
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
 !!
-!!       MODD_PARAMETERS : JPVEXT  number of marginal vertical points
+!!       MODD_PARAMETERS : JPVEXT_TURB  number of marginal vertical points
 !!
 !!       MODD_CONF      : CCONF model configuration (start/restart)
 !!                        L1D   switch for 1D model version
@@ -360,7 +360,7 @@ USE MODD_CONF
 USE MODD_CST
 USE MODD_CTURB
 USE MODD_DYN_n, ONLY : LOCEAN
-use modd_field,          only: tfielddata, TYPEREAL
+USE MODD_FIELD, ONLY: TFIELDDATA,TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_LES
 USE MODD_NSV
@@ -377,7 +377,6 @@ USE MODI_ROTATE_WIND
 USE MODI_TURB_HOR_SPLT 
 USE MODI_TKE_EPS_SOURCES
 USE MODI_SHUMAN
-USE MODI_GRADIENT_M
 USE MODI_LES_MEAN_SUBGRID
 USE MODI_RMC01
 USE MODI_GRADIENT_W
@@ -824,8 +823,6 @@ SELECT CASE (HTURBLEN)
 !
 !
 END SELECT
-!
-!
 !
 !*      3.5 Mixing length modification for cloud
 !           -----------------------
@@ -1505,7 +1502,6 @@ ELSE
     END IF
   END IF
 END IF
-
 !
 !  mixing length limited by the distance normal to the surface 
 !  (with the same factor as for BL89)

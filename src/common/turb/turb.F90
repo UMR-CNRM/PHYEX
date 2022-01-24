@@ -231,6 +231,7 @@ USE MODD_DYN_n, ONLY : LOCEAN
 USE MODD_FIELD, ONLY: TFIELDDATA,TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_LES
+USE MODD_TURB_n, ONLY: XCADAP
 USE MODD_NSV
 !
 USE MODE_BL89, ONLY: BL89
@@ -241,6 +242,8 @@ USE MODE_TURB_VER, ONLY : TURB_VER
 USE MODE_TKE_EPS_SOURCES, ONLY: TKE_EPS_SOURCES
 USE MODI_SHUMAN, ONLY : MZF, MXF, MYF
 USE MODI_GRADIENT_M
+USE MODI_GRADIENT_U
+USE MODI_GRADIENT_V
 USE MODI_BUDGET_DDH
 USE MODI_LES_MEAN_SUBGRID
 USE MODE_RMC01, ONLY: RMC01
@@ -325,7 +328,7 @@ REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PRHODREF  ! dry density of the
 REAL, DIMENSION(:,:),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of theta and Rv 
                                             PSFU,PSFV
-! normal surface fluxes of (u,v) parallel to the orography 
+! normal surface fluxes of (u,v) parallel to the orography
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PSFSV
 ! normal surface fluxes of Scalar var. 
 !
@@ -361,7 +364,7 @@ REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRRS
 ! Source terms for all passive scalar variables
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS
 ! Sigma_s at time t+1 : square root of the variance of the deviation to the 
-! saturation 
+! saturation
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    ::  PHGRAD
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PSIGS
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PDRUS_TURB   ! evolution of rhoJ*U   by turbulence only
@@ -408,7 +411,7 @@ REAL, DIMENSION(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)) ::     &
           ZEXN,                       &  ! EXN at t-1
           ZT,                         &  ! T at t-1
           ZLOCPEXNM,                  &  ! Lv/Cp/EXNREF at t-1
-          ZLM,                        &  ! Turbulent mixing length
+          ZLM,ZLMW,                   &  ! Turbulent mixing length (+ work array)
           ZLEPS,                      &  ! Dissipative length
           ZTRH,                       &  ! 
           ZATHETA,ZAMOIST,            &  ! coefficients for s = f (Thetal,Rnp)
@@ -448,8 +451,9 @@ INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
 INTEGER             :: JRR,JK,JSV   ! loop counters
 INTEGER             :: JI,JJ        ! loop counters
 REAL                :: ZL0          ! Max. Mixing Length in Blakadar formula
-REAL                :: ZALPHA       ! proportionnality constant between Dz/2 and 
-!                                   ! BL89 mixing length near the surface
+REAL                :: ZALPHA       ! work coefficient : 
+                                    ! - proportionnality constant between Dz/2 and 
+!                                   !   BL89 mixing length near the surface
 !
 !
 TYPE(TFILEDATA) :: TPFILE ! File type to write fields for MesoNH
@@ -483,8 +487,11 @@ ZEXPL = 1.- PIMPL
 ZRVORD= XRV / XRD
 !
 !
-ZTHLM(:,:,:) = PTHLT(:,:,:)
-ZRM(:,:,:,:) = PRT(:,:,:,:)
+!Copy data into ZTHLM and ZRM only if needed
+IF (HTURBLEN=='BL89' .OR. HTURBLEN=='RM17' .OR. ORMC01) THEN
+  ZTHLM(:,:,:) = PTHLT(:,:,:)
+  ZRM(:,:,:,:) = PRT(:,:,:,:)
+END IF
 !
 !
 !
@@ -636,11 +643,37 @@ SELECT CASE (HTURBLEN)
     ZSHEAR=0.
     CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM)
 !
-!*      3.2 Delta mixing length
+!*      3.2 RM17 mixing length
+!           ------------------
+
+  CASE ('RM17')
+    ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
+    ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
+    ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
+    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM)
+!
+!*      3.3 Grey-zone combined RM17 & Deardorff mixing lengths 
+!           --------------------------------------------------
+
+  CASE ('ADAP')
+    ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
+    ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
+    ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
+    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM)
+
+    CALL DELT(ZLMW,ODZ=.FALSE.)
+    ! The minimum mixing length is chosen between Horizontal grid mesh (not taking into account the vertical grid mesh) and RM17.
+    ! For large horizontal grid meshes, this is equal to RM17
+    ! For LES grid meshes, this is equivalent to Deardorff : the base mixing lentgh is the horizontal grid mesh, 
+    !                      and it is limited by a stability-based length (RM17), as was done in Deardorff length (but taking into account shear as well)
+    ! For grid meshes in the grey zone, then this is the smaller of the two.
+    ZLM = MIN(ZLM,XCADAP*ZLMW)
+!
+!*      3.4 Delta mixing length
 !           -------------------
 !
   CASE ('DELT')
-    CALL DELT(ZLM)
+    CALL DELT(PLEM,ODZ=.TRUE.)
 !
 !*      3.5 Deardorff mixing length
 !           -----------------------
@@ -701,6 +734,8 @@ IF (ORMC01) THEN
   CALL RMC01(HTURBLEN,KKA,KKU,KKL,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,ZLMO,ZLM,ZLEPS)
 END IF
 !
+!RMC01 is only applied on RM17 in ADAP
+IF (HTURBLEN=='ADAP') ZLEPS = MIN(ZLEPS,ZLMW*XCADAP)
 !
 !*      3.8 Mixing length in external points (used if HTURBDIM="3DIM")
 !           ----------------------------------------------------------
@@ -1288,7 +1323,7 @@ IF (LHOOK) CALL DR_HOOK('TURB:COMPUTE_FUNCTION_THERMO',1,ZHOOK_HANDLE)
 END SUBROUTINE COMPUTE_FUNCTION_THERMO
 !
 !     ####################
-      SUBROUTINE DELT(PLM)
+      SUBROUTINE DELT(PLM,ODZ)
 !     ####################
 !!
 !!****  *DELT* routine to compute mixing length for DELT case
@@ -1310,6 +1345,7 @@ END SUBROUTINE COMPUTE_FUNCTION_THERMO
 !*       0.1   Declarations of dummy arguments 
 !
 REAL, DIMENSION(:,:,:), INTENT(OUT)   :: PLM
+LOGICAL,                INTENT(IN)    :: ODZ
 !
 !*       0.2   Declarations of local variables
 !
@@ -1319,16 +1355,29 @@ REAL                :: ZD           ! distance to the surface
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB:DELT',0,ZHOOK_HANDLE)
-DO JK = IKTB,IKTE ! 1D turbulence scheme
-  PLM(:,:,JK) = PZZ(:,:,JK+KKL) - PZZ(:,:,JK)
-END DO
-PLM(:,:,KKU) = PLM(:,:,IKE)
-PLM(:,:,KKA) = PZZ(:,:,IKB) - PZZ(:,:,KKA)
-IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
-  IF ( L2D) THEN
-    PLM(:,:,:) = SQRT( PLM(:,:,:)*MXF(PDXX(:,:,:)) ) 
-  ELSE
-    PLM(:,:,:) = (PLM(:,:,:)*MXF(PDXX(:,:,:))*MYF(PDYY(:,:,:)) ) ** (1./3.)
+IF (ODZ) THEN
+  ! Dz is take into account in the computation
+  DO JK = IKTB,IKTE ! 1D turbulence scheme
+    PLM(:,:,JK) = PZZ(:,:,JK+KKL) - PZZ(:,:,JK)
+  END DO
+  PLM(:,:,KKU) = PLM(:,:,IKE)
+  PLM(:,:,KKA) = PZZ(:,:,IKB) - PZZ(:,:,KKA)
+  IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
+    IF ( L2D) THEN
+      PLM(:,:,:) = SQRT( PLM(:,:,:)*MXF(PDXX(:,:,:)) ) 
+    ELSE
+      PLM(:,:,:) = (PLM(:,:,:)*MXF(PDXX(:,:,:))*MYF(PDYY(:,:,:)) ) ** (1./3.)
+    END IF
+  END IF
+ELSE
+  ! Dz not taken into account in computation to assure invariability with vertical grid mesh
+  PLM=1.E10
+  IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
+    IF ( L2D) THEN
+      PLM(:,:,:) = MXF(PDXX(:,:,:))
+    ELSE
+      PLM(:,:,:) = (MXF(PDXX(:,:,:))*MYF(PDYY(:,:,:)) ) ** (1./2.)
+    END IF
   END IF
 END IF
 !
@@ -1340,15 +1389,26 @@ IF (.NOT. ORMC01) THEN
   !
   DO JJ=1,SIZE(PUT,2)
     DO JI=1,SIZE(PUT,1)
-      DO JK=IKTB,IKTE
-        ZD=ZALPHA*(0.5*(PZZ(JI,JJ,JK)+PZZ(JI,JJ,JK+KKL))&
-        -PZZ(JI,JJ,IKB)) *PDIRCOSZW(JI,JJ)
-        IF ( PLM(JI,JJ,JK)>ZD) THEN
-          PLM(JI,JJ,JK)=ZD
-        ELSE
-          EXIT
-        ENDIF
-      END DO
+      IF (LOCEAN) THEN
+        DO JK=IKTE,IKTB,-1
+          ZD=ZALPHA*(PZZ(JI,JJ,IKTE+1)-PZZ(JI,JJ,JK))
+          IF ( PLM(JI,JJ,JK)>ZD) THEN
+            PLM(JI,JJ,JK)=ZD
+          ELSE
+            EXIT
+          ENDIF
+       END DO
+      ELSE
+        DO JK=IKTB,IKTE
+          ZD=ZALPHA*(0.5*(PZZ(JI,JJ,JK)+PZZ(JI,JJ,JK+KKL))&
+          -PZZ(JI,JJ,IKB)) *PDIRCOSZW(JI,JJ)
+          IF ( PLM(JI,JJ,JK)>ZD) THEN
+            PLM(JI,JJ,JK)=ZD
+          ELSE
+            EXIT
+          ENDIF
+        END DO
+      ENDIF   
     END DO
   END DO
 END IF
@@ -1363,7 +1423,7 @@ END SUBROUTINE DELT
       SUBROUTINE DEAR(PLM)
 !     ####################
 !!
-!!****  *DELT* routine to compute mixing length for DEARdorff case
+!!****  *DEAR* routine to compute mixing length for DEARdorff case
 !
 !!    AUTHOR
 !!    ------
@@ -1388,7 +1448,8 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)   :: PLM
 !*       0.2   Declarations of local variables
 !
 REAL                :: ZD           ! distance to the surface
-REAL, DIMENSION(:,:), ALLOCATABLE  ::   ZWORK2D
+REAL                :: ZVAR         ! Intermediary variable
+REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2)) ::   ZWORK2D
 !
 REAL, DIMENSION(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)) ::     &
             ZDTHLDZ,ZDRTDZ,     &!dtheta_l/dz, drt_dz used for computing the stablity
@@ -1401,9 +1462,8 @@ REAL, DIMENSION(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)) ::     &
 !   initialize the mixing length with the mesh grid
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB:DEAR',0,ZHOOK_HANDLE)
-DO JK = IKTB,IKTE ! 1D turbulence scheme
-  PLM(:,:,JK) = PZZ(:,:,JK+KKL) - PZZ(:,:,JK)
-END DO
+! 1D turbulence scheme
+PLM(:,:,IKTB:IKTE) = PZZ(:,:,IKTB+KKL:IKTE+KKL) - PZZ(:,:,IKTB:IKTE)
 PLM(:,:,KKU) = PLM(:,:,IKE)
 PLM(:,:,KKA) = PZZ(:,:,IKB) - PZZ(:,:,KKA)
 IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
@@ -1415,36 +1475,70 @@ IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
 END IF
 !   compute a mixing length limited by the stability
 !
-ALLOCATE(ZWORK2D(SIZE(PUT,1),SIZE(PUT,2)))
-!
 ZETHETA(:,:,:) = ETHETA(KRR,KRRI,PTHLT,PRT,ZLOCPEXNM,ZATHETA,PSRCT)
 ZEMOIST(:,:,:) = EMOIST(KRR,KRRI,PTHLT,PRT,ZLOCPEXNM,ZAMOIST,PSRCT)
 !
-DO JK = IKTB+1,IKTE-1
-      ZDTHLDZ(:,:,JK)= 0.5*((PTHLT(:,:,JK+KKL)-PTHLT(:,:,JK))/PDZZ(:,:,JK+KKL)+      &
-                         (PTHLT(:,:,JK)-PTHLT(:,:,JK-KKL))/PDZZ(:,:,JK))
-      ZDRTDZ(:,:,JK)= 0.5*((PRT(:,:,JK+KKL,1)-PRT(:,:,JK,1))/PDZZ(:,:,JK+KKL)+      &
-                         (PRT(:,:,JK,1)-PRT(:,:,JK-KKL,1))/PDZZ(:,:,JK))
-       ZWORK2D(:,:)=XG/PTHVREF(:,:,JK)*                                           &
-            (ZETHETA(:,:,JK)*ZDTHLDZ(:,:,JK)+ZEMOIST(:,:,JK)*ZDRTDZ(:,:,JK))
-  !
-  WHERE(ZWORK2D(:,:)>0.)
-    PLM(:,:,JK)=MAX(1.E-10,MIN(PLM(:,:,JK),                &
-                    0.76* SQRT(PTKET(:,:,JK)/ZWORK2D(:,:))))
-  END WHERE
-END DO
+IF (KRR>0) THEN
+  DO JK = IKTB+1,IKTE-1
+    DO JJ=1,SIZE(PUT,2)
+      DO JI=1,SIZE(PUT,1)
+        ZDTHLDZ(JI,JJ,JK)= 0.5*((PTHLT(JI,JJ,JK+KKL)-PTHLT(JI,JJ,JK    ))/PDZZ(JI,JJ,JK+KKL)+ &
+                                (PTHLT(JI,JJ,JK    )-PTHLT(JI,JJ,JK-KKL))/PDZZ(JI,JJ,JK    ))
+        ZDRTDZ(JI,JJ,JK) = 0.5*((PRT(JI,JJ,JK+KKL,1)-PRT(JI,JJ,JK    ,1))/PDZZ(JI,JJ,JK+KKL)+ &
+                                (PRT(JI,JJ,JK    ,1)-PRT(JI,JJ,JK-KKL,1))/PDZZ(JI,JJ,JK    ))
+        IF (LOCEAN) THEN
+          ZVAR=XG*(XALPHAOC*ZDTHLDZ(JI,JJ,JK)-XBETAOC*ZDRTDZ(JI,JJ,JK))
+        ELSE
+          ZVAR=XG/PTHVREF(JI,JJ,JK)*                                                  &
+             (ZETHETA(JI,JJ,JK)*ZDTHLDZ(JI,JJ,JK)+ZEMOIST(JI,JJ,JK)*ZDRTDZ(JI,JJ,JK))
+        END IF
+        !
+        IF (ZVAR>0.) THEN
+          PLM(JI,JJ,JK)=MAX(XMNH_EPSILON,MIN(PLM(JI,JJ,JK), &
+                        0.76* SQRT(PTKET(JI,JJ,JK)/ZVAR)))
+        END IF
+      END DO
+    END DO
+  END DO
+ELSE! For dry atmos or unsalted ocean runs
+  DO JK = IKTB+1,IKTE-1
+    DO JJ=1,SIZE(PUT,2)
+      DO JI=1,SIZE(PUT,1)
+        ZDTHLDZ(JI,JJ,JK)= 0.5*((PTHLT(JI,JJ,JK+KKL)-PTHLT(JI,JJ,JK    ))/PDZZ(JI,JJ,JK+KKL)+ &
+                                (PTHLT(JI,JJ,JK    )-PTHLT(JI,JJ,JK-KKL))/PDZZ(JI,JJ,JK    ))
+        IF (LOCEAN) THEN
+          ZVAR= XG*XALPHAOC*ZDTHLDZ(JI,JJ,JK)
+        ELSE
+          ZVAR= XG/PTHVREF(JI,JJ,JK)*ZETHETA(JI,JJ,JK)*ZDTHLDZ(JI,JJ,JK)
+        END IF
+!
+        IF (ZVAR>0.) THEN
+          PLM(JI,JJ,JK)=MAX(XMNH_EPSILON,MIN(PLM(JI,JJ,JK), &
+                        0.76* SQRT(PTKET(JI,JJ,JK)/ZVAR)))
+        END IF
+      END DO
+    END DO
+  END DO
+END IF
 !  special case near the surface 
 ZDTHLDZ(:,:,IKB)=(PTHLT(:,:,IKB+KKL)-PTHLT(:,:,IKB))/PDZZ(:,:,IKB+KKL)
-ZDRTDZ(:,:,IKB)=(PRT(:,:,IKB+KKL,1)-PRT(:,:,IKB,1))/PDZZ(:,:,IKB+KKL)
+! For dry simulations
+IF (KRR>0) THEN
+  ZDRTDZ(:,:,IKB)=(PRT(:,:,IKB+KKL,1)-PRT(:,:,IKB,1))/PDZZ(:,:,IKB+KKL)
+ELSE
+  ZDRTDZ(:,:,IKB)=0
+ENDIF
 !
-ZWORK2D(:,:)=XG/PTHVREF(:,:,IKB)*                                           &
-            (ZETHETA(:,:,IKB)*ZDTHLDZ(:,:,IKB)+ZEMOIST(:,:,IKB)*ZDRTDZ(:,:,IKB))
+IF (LOCEAN) THEN
+  ZWORK2D(:,:)=XG*(XALPHAOC*ZDTHLDZ(:,:,IKB)-XBETAOC*ZDRTDZ(:,:,IKB))
+ELSE
+  ZWORK2D(:,:)=XG/PTHVREF(:,:,IKB)*                                           &
+              (ZETHETA(:,:,IKB)*ZDTHLDZ(:,:,IKB)+ZEMOIST(:,:,IKB)*ZDRTDZ(:,:,IKB))
+END IF
 WHERE(ZWORK2D(:,:)>0.)
-  PLM(:,:,IKB)=MAX(1.E-10,MIN( PLM(:,:,JK),                 &
+  PLM(:,:,IKB)=MAX(XMNH_EPSILON,MIN( PLM(:,:,IKB),                 &
                     0.76* SQRT(PTKET(:,:,IKB)/ZWORK2D(:,:))))
 END WHERE
-!
-DEALLOCATE(ZWORK2D)
 !
 !  mixing length limited by the distance normal to the surface (with the same factor as for BL89)
 !
@@ -1453,15 +1547,26 @@ IF (.NOT. ORMC01) THEN
   !
   DO JJ=1,SIZE(PUT,2)
     DO JI=1,SIZE(PUT,1)
-      DO JK=IKTB,IKTE
-        ZD=ZALPHA*(0.5*(PZZ(JI,JJ,JK)+PZZ(JI,JJ,JK+KKL))-PZZ(JI,JJ,IKB)) &
-          *PDIRCOSZW(JI,JJ)
-        IF ( PLM(JI,JJ,JK)>ZD) THEN
-          PLM(JI,JJ,JK)=ZD
-        ELSE
-          EXIT
-        ENDIF
-      END DO
+      IF (LOCEAN) THEN
+        DO JK=IKTE,IKTB,-1
+          ZD=ZALPHA*(PZZ(JI,JJ,IKTE+1)-PZZ(JI,JJ,JK))
+          IF ( PLM(JI,JJ,JK)>ZD) THEN
+            PLM(JI,JJ,JK)=ZD
+          ELSE
+            EXIT
+          ENDIF
+        END DO
+      ELSE
+        DO JK=IKTB,IKTE
+          ZD=ZALPHA*(0.5*(PZZ(JI,JJ,JK)+PZZ(JI,JJ,JK+KKL))-PZZ(JI,JJ,IKB)) &
+            *PDIRCOSZW(JI,JJ)
+          IF ( PLM(JI,JJ,JK)>ZD) THEN
+            PLM(JI,JJ,JK)=ZD
+          ELSE
+            EXIT
+          ENDIF
+        END DO
+      ENDIF 
     END DO
   END DO
 END IF
@@ -1570,14 +1675,14 @@ ELSE
 !
 !*         3.1 BL89 mixing length
 !           ------------------
-  CASE ('BL89')
+  CASE ('BL89','RM17','ADAP')
     ZSHEAR=0.
     CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD)
 !
 !*         3.2 Delta mixing length
 !           -------------------
   CASE ('DELT')
-    CALL DELT(ZLM_CLOUD)
+    CALL DELT(ZLM_CLOUD,ODZ=.TRUE.)
 !
 !*         3.3 Deardorff mixing length
 !           -----------------------
