@@ -132,3 +132,6 @@ phyex/turb/compute_function_thermo_mf.F90
 phyex/micro/modd_cst.F90
 phyex/micro/modi_ini_cst.F90
 phyex/micro/ini_cst.F90
+phyex/turb/modd_cmfshall.F90
+phyex/turb/mf_turb_expl.F90
+phyex/turb/modi_mf_turb_expl.F90
