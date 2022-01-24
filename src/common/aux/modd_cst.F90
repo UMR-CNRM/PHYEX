@@ -36,6 +36,7 @@
 !!      V. Masson   05/10/98  add XRHOLI
 !!      C. Mari     31/10/00  add NDAYSEC
 !!      V. Masson   01/03/03  add conductivity of ice
+!!      R. El Khatib 04/08/14 add pre-computed quantities
 !!      J.Escobar : 10/2017 : for real*4 , add XMNH_HUGE_12_LOG
 !!      J.L. Redelsperger 03/2021  add constants for ocean penetrating solar
 !-------------------------------------------------------------------------------
@@ -85,7 +86,7 @@ REAL,SAVE :: XALPHAOC           ! thermal expansion coefficient for ocean (K-1)
 REAL,SAVE :: XBETAOC             ! Haline contraction coeff for ocean (S-1)
 REAL,SAVE :: XTH00              ! reference value  for the potential temperature
 REAL,SAVE :: XTH00OCEAN         ! Ref value for pot temp in ocean model
-REAL,SAVE :: XSA00OCEAN         ! Ref value for SAlinity in ocean model 
+REAL,SAVE :: XSA00OCEAN         ! Ref value for SAlinity in ocean model
 REAL,SAVE :: XROC=0.69! 3 coeffs for SW penetration in  Ocean (Hoecker et al)
 REAL,SAVE :: XD1=1.1
 REAL,SAVE :: XD2=23.
@@ -98,6 +99,9 @@ REAL,SAVE :: XRHOLI             ! Volumic mass of liquid water
 !
 INTEGER, SAVE :: NDAYSEC        ! Number of seconds in a day
 !
+REAL,SAVE :: RDSRV              !  XRD/XRV
+REAL,SAVE :: RDSCPD             !  XRD/XCPD
+REAL,SAVE :: RINVXP00           !  1./XP00
 !
 !   Some machine precision value depending of real4/8 use  
 !
