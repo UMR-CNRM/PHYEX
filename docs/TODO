@@ -41,6 +41,7 @@ Pb identifiés à corriger plus tard:
   concernent qu'une partie des points
        => à corriger
 - seules les options oper ont été testées, il manque des test pour sedim_after, nmaxiter, xmrstep, xtstep, autoconv, rainfr
+- arome/ini_cmfshall devrait s'appeler ini_param_mfshall
 
 Répertoire arome/ext contient les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
 Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayadevront avoir été fournies par ailleurs

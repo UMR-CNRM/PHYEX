@@ -64,7 +64,7 @@
 !                         
 USE MODD_CST
 !
-USE MODD_CMFSHALL
+USE MODD_PARAM_MFSHALL_n
 !
 USE MODI_TH_R_FROM_THL_RT_1D 
 
