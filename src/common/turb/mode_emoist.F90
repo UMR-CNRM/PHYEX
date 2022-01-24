@@ -1,8 +1,10 @@
-!MNH_LIC Copyright 1995-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2022 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-!     ######spl
+MODULE MODE_EMOIST
+IMPLICIT NONE
+CONTAINS
 FUNCTION EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM) RESULT(PEMOIST)
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
@@ -162,3 +164,4 @@ END IF
 !
 IF (LHOOK) CALL DR_HOOK('EMOIST',1,ZHOOK_HANDLE)
 END FUNCTION EMOIST
+END MODULE MODE_EMOIST
