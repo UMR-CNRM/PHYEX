@@ -12,11 +12,11 @@
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
               & PRHODJ,PTHVREF,PRHODREF,                              &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
-              & PPABSM,PUM,PVM,PWM,PTKEM,PSVM,PSRCM,                  &
+              & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
               & PLENGTHM,PLENGTHH,MFMOIST,                            &
               & PBL_DEPTH,PSBL_DEPTH,                                 &
-              & PUT,PVT,PWT,PCEI,PCEI_MIN,PCEI_MAX,PCOEF_AMPL_SAT,    &
-              & PTHLM,PRM,                                            &
+              & PCEI,PCEI_MIN,PCEI_MAX,PCOEF_AMPL_SAT,    &
+              & PTHLT,PRT,                                            &
               & PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,PRTKES,              &
               & PHGRAD, PSIGS,                                        &
               & PDRUS_TURB,PDRVS_TURB,                                &
@@ -24,7 +24,7 @@
               & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
               & YDDDH,YDLDDH,YDMDDH,                                  &
               & TBUDGETS, KBUDGETS,                                   &
-              & PTR,PDISS,PEDR                                        )
+              & PTR,PDISS,PEDR,PLEM                                   )
 !     #################################################################
 !
 !
@@ -227,6 +227,7 @@ USE MODD_CST
 USE MODD_CTURB
 USE MODD_CONF
 USE MODD_BUDGET
+USE MODD_DYN_n, ONLY : LOCEAN
 USE MODD_FIELD, ONLY: TFIELDDATA,TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_LES
@@ -329,16 +330,15 @@ REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PSFSV
 ! normal surface fluxes of Scalar var. 
 !
 !    prognostic variables at t- deltat
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PPABSM      ! Pressure at time t-1
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PUM,PVM,PWM ! wind components
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PTKEM       ! TKE
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM        ! passive scal. var.
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PSRCM       ! Second-order flux
+REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PPABST      ! Pressure at time t
+REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PUT,PVT,PWT ! wind components
+REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PTKET       ! TKE
+REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVT        ! passive scal. var.
+REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PSRCT       ! Second-order flux
                       ! s'rc'/2Sigma_s2 at time t-1 multiplied by Lambda_3
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PUT,PVT,PWT ! Wind  at t
 !    variables for cloud mixing length
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PCEI ! Cloud Entrainment instability
                                                  ! index to emphasize localy 
@@ -348,9 +348,9 @@ REAL, INTENT(IN)      ::  PCEI_MAX ! maximum threshold for the instability index
 REAL, INTENT(IN)      ::  PCOEF_AMPL_SAT ! saturation of the amplification coefficient
 !
 !   thermodynamical variables which are transformed in conservative var.
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PTHLM       ! conservative pot. temp.
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRM         ! water var.  where 
-                             ! PRM(:,:,:,1) is the conservative mixing ratio        
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PTHLT       ! conservative pot. temp.
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRT         ! water var.  where 
+                             ! PRT(:,:,:,1) is the conservative mixing ratio        
 !
 ! sources of momentum, conservative potential temperature, Turb. Kin. Energy, 
 ! TKE dissipation
@@ -396,13 +396,14 @@ REAL, DIMENSION(:,:,:), INTENT(IN)    :: PLENGTHM, PLENGTHH
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PTR   ! Transport production of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PDISS ! Dissipation of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR       ! EDR
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
 !
 !
 !-------------------------------------------------------------------------------
 !
 !       0.2  declaration of local variables
 !
-REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)) ::     &
+REAL, DIMENSION(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)) ::     &
           ZCP,                        &  ! Cp at t-1
           ZEXN,                       &  ! EXN at t-1
           ZT,                         &  ! T at t-1
@@ -416,9 +417,9 @@ REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)) ::     &
           ZMWTH,ZMWR,ZMTH2,ZMR2,ZMTHR,&  ! 3rd order moments
           ZFWTH,ZFWR,ZFTH2,ZFR2,ZFTHR,&  ! opposite of verticale derivate of 3rd order moments
           ZTHLM                          ! initial potential temp.
-REAL, DIMENSION(SIZE(PRM,1),SIZE(PRM,2),SIZE(PRM,3),SIZE(PRM,4)) ::     &
+REAL, DIMENSION(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3),SIZE(PRT,4)) ::     &
           ZRM                            ! initial mixing ratio 
-REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2)) ::  ZTAU11M,ZTAU12M,  &
+REAL, DIMENSION(SIZE(PTHLT,1),SIZE(PTHLT,2)) ::  ZTAU11M,ZTAU12M,  &
                                                  ZTAU22M,ZTAU33M,  &
             ! tangential surface fluxes in the axes following the orography
                                                  ZUSLOPE,ZVSLOPE,  &
@@ -472,7 +473,7 @@ IF (LHARAT .AND. LLES_CALL) THEN
   CALL ABOR1('LHARATU not implemented for option LLES_CALL')
 ENDIF
 
-IKT=SIZE(PTHLM,3)          
+IKT=SIZE(PTHLT,3)          
 IKTB=1+JPVEXT_TURB              
 IKTE=IKT-JPVEXT_TURB
 IKB=KKA+JPVEXT_TURB*KKL
@@ -482,8 +483,8 @@ ZEXPL = 1.- PIMPL
 ZRVORD= XRV / XRD
 !
 !
-ZTHLM(:,:,:) = PTHLM(:,:,:)
-ZRM(:,:,:,:) = PRM(:,:,:,:)
+ZTHLM(:,:,:) = PTHLT(:,:,:)
+ZRM(:,:,:,:) = PRT(:,:,:,:)
 !
 !
 !
@@ -494,20 +495,24 @@ ZRM(:,:,:,:) = PRM(:,:,:,:)
 !
 !*      2.1 Cph at t
 !
-ZCP=XCPD
+ZCP(:,:,:)=XCPD
 !
-IF (KRR > 0) ZCP(:,:,:) = ZCP(:,:,:) + XCPV * PRM(:,:,:,1)
+IF (KRR > 0) ZCP(:,:,:) = ZCP(:,:,:) + XCPV * PRT(:,:,:,1)
 DO JRR = 2,1+KRRL                          ! loop on the liquid components  
-  ZCP(:,:,:)  = ZCP(:,:,:) + XCL * PRM(:,:,:,JRR)
+  ZCP(:,:,:)  = ZCP(:,:,:) + XCL * PRT(:,:,:,JRR)
 END DO
 !
 DO JRR = 2+KRRL,1+KRRL+KRRI                ! loop on the solid components   
-  ZCP(:,:,:)  = ZCP(:,:,:)  + XCI * PRM(:,:,:,JRR)
+  ZCP(:,:,:)  = ZCP(:,:,:)  + XCI * PRT(:,:,:,JRR)
 END DO
 !
 !*      2.2 Exner function at t
 !
-ZEXN(:,:,:) = (PPABSM(:,:,:)/XP00) ** (XRD/XCPD)
+IF (LOCEAN) THEN
+  ZEXN(:,:,:) = 1.
+ELSE
+  ZEXN(:,:,:) = (PPABST(:,:,:)/XP00) ** (XRD/XCPD)
+END IF
 !
 !*      2.3 dissipative heating coeff a t
 !
@@ -522,23 +527,23 @@ IF (KRRL >=1) THEN
 !
 !*      2.4 Temperature at t
 !
-  ZT(:,:,:) =  PTHLM(:,:,:) * ZEXN(:,:,:)
+  ZT(:,:,:) =  PTHLT(:,:,:) * ZEXN(:,:,:)
 !
 !*       2.5 Lv/Cph/Exn
 !
   IF ( KRRI >= 1 ) THEN 
-    ALLOCATE(ZLVOCPEXNM(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)))
-    ALLOCATE(ZLSOCPEXNM(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)))
-    ALLOCATE(ZAMOIST_ICE(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)))
-    ALLOCATE(ZATHETA_ICE(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)))
+    ALLOCATE(ZLVOCPEXNM(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)))
+    ALLOCATE(ZLSOCPEXNM(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)))
+    ALLOCATE(ZAMOIST_ICE(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)))
+    ALLOCATE(ZATHETA_ICE(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)))
 !
     CALL COMPUTE_FUNCTION_THERMO(XALPW,XBETAW,XGAMW,XLVTT,XCL,ZT,ZEXN,ZCP, &
                                  ZLVOCPEXNM,ZAMOIST,ZATHETA)
     CALL COMPUTE_FUNCTION_THERMO(XALPI,XBETAI,XGAMI,XLSTT,XCI,ZT,ZEXN,ZCP, &
                                  ZLSOCPEXNM,ZAMOIST_ICE,ZATHETA_ICE)
 !
-    WHERE(PRM(:,:,:,2)+PRM(:,:,:,4)>0.0)
-      ZFRAC_ICE(:,:,:) = PRM(:,:,:,4) / ( PRM(:,:,:,2)+PRM(:,:,:,4) )
+    WHERE(PRT(:,:,:,2)+PRT(:,:,:,4)>0.0)
+      ZFRAC_ICE(:,:,:) = PRT(:,:,:,4) / ( PRT(:,:,:,2)+PRT(:,:,:,4) )
     END WHERE
 !
     ZLOCPEXNM(:,:,:) = (1.0-ZFRAC_ICE(:,:,:))*ZLVOCPEXNM(:,:,:) &
@@ -589,21 +594,21 @@ END IF              ! loop end on KRRL >= 1
 ! computes conservative variables
 !
 IF ( KRRL >= 1 ) THEN
-  IF ( KRRI >= 1 ) THEN 
-    ! Rnp at t-1
-    PRM(:,:,:,1)  = PRM(:,:,:,1)  + PRM(:,:,:,2)  + PRM(:,:,:,4)
+  IF ( KRRI >= 1 ) THEN
+    ! Rnp at t
+    PRT(:,:,:,1)  = PRT(:,:,:,1)  + PRT(:,:,:,2)  + PRT(:,:,:,4)
     PRRS(:,:,:,1) = PRRS(:,:,:,1) + PRRS(:,:,:,2) + PRRS(:,:,:,4)
-    ! Theta_l at t-1
-    PTHLM(:,:,:)  = PTHLM(:,:,:)  - ZLVOCPEXNM(:,:,:) * PRM(:,:,:,2) &
-                                  - ZLSOCPEXNM(:,:,:) * PRM(:,:,:,4)
+    ! Theta_l at t
+    PTHLT(:,:,:)  = PTHLT(:,:,:)  - ZLVOCPEXNM(:,:,:) * PRT(:,:,:,2) &
+                                  - ZLSOCPEXNM(:,:,:) * PRT(:,:,:,4)
     PRTHLS(:,:,:) = PRTHLS(:,:,:) - ZLVOCPEXNM(:,:,:) * PRRS(:,:,:,2) &
                                   - ZLSOCPEXNM(:,:,:) * PRRS(:,:,:,4)
   ELSE
-    ! Rnp at t-1
-    PRM(:,:,:,1)  = PRM(:,:,:,1)  + PRM(:,:,:,2) 
+    ! Rnp at t
+    PRT(:,:,:,1)  = PRT(:,:,:,1)  + PRT(:,:,:,2) 
     PRRS(:,:,:,1) = PRRS(:,:,:,1) + PRRS(:,:,:,2)
-    ! Theta_l at t-1
-    PTHLM(:,:,:)  = PTHLM(:,:,:)  - ZLOCPEXNM(:,:,:) * PRM(:,:,:,2)
+    ! Theta_l at t
+    PTHLT(:,:,:)  = PTHLT(:,:,:)  - ZLOCPEXNM(:,:,:) * PRT(:,:,:,2)
     PRTHLS(:,:,:) = PRTHLS(:,:,:) - ZLOCPEXNM(:,:,:) * PRRS(:,:,:,2)
   END IF
 END IF
@@ -629,7 +634,7 @@ SELECT CASE (HTURBLEN)
 
   CASE ('BL89')
     ZSHEAR=0.
-    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKEM,ZSHEAR,ZLM)
+    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM)
 !
 !*      3.2 Delta mixing length
 !           -------------------
@@ -637,13 +642,13 @@ SELECT CASE (HTURBLEN)
   CASE ('DELT')
     CALL DELT(ZLM)
 !
-!*      3.3 Deardorff mixing length
+!*      3.5 Deardorff mixing length
 !           -----------------------
 !
   CASE ('DEAR')
     CALL DEAR(ZLM)
 !
-!*      3.4 Blackadar mixing length
+!*      3.6 Blackadar mixing length
 !           -----------------------
 !
   CASE ('BLKR')
@@ -675,26 +680,27 @@ ENDIF  ! end LHARRAT
 !           ------------------
 
 IF (LHARAT) THEN
-ZLEPS=PLENGTHM*(3.75**2.)
+  ZLEPS=PLENGTHM*(3.75**2.)
 ELSE
-ZLEPS=ZLM
+  ZLEPS=ZLM
 ENDIF
 !
 !*      3.7 Correction in the Surface Boundary Layer (Redelsperger 2001)
 !           ----------------------------------------
 !
 ZLMO=XUNDEF
- IF (ORMC01) THEN
-   ZUSTAR=(PSFU**2+PSFV**2)**(0.25)
-    IF (KRR>0) THEN
-     ZLMO=LMO(ZUSTAR,ZTHLM(:,:,IKB),ZRM(:,:,IKB,1),PSFTH,PSFRV)
-    ELSE
-     ZRVM=0.
-     ZSFRV=0.
-     ZLMO=LMO(ZUSTAR,ZTHLM(:,:,IKB),ZRVM,PSFTH,ZSFRV)
-    END IF
+IF (ORMC01) THEN
+  ZUSTAR=(PSFU**2+PSFV**2)**(0.25)
+  IF (KRR>0) THEN
+    ZLMO=LMO(ZUSTAR,ZTHLM(:,:,IKB),ZRM(:,:,IKB,1),PSFTH,PSFRV)
+  ELSE
+    ZRVM=0.
+    ZSFRV=0.
+    ZLMO=LMO(ZUSTAR,ZTHLM(:,:,IKB),ZRVM,PSFTH,ZSFRV)
+  END IF
   CALL RMC01(HTURBLEN,KKA,KKU,KKL,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,ZLMO,ZLM,ZLEPS)
- END IF
+END IF
+!
 !
 !*      3.8 Mixing length in external points (used if HTURBDIM="3DIM")
 !           ----------------------------------------------------------
@@ -715,8 +721,8 @@ IF ( HINST_SFU == 'T' ) THEN
 !
 !
   IF (CPROGRAM=='AROME ') THEN
-    ZUSLOPE=PUM(:,:,KKA)
-    ZVSLOPE=PVM(:,:,KKA)
+    ZUSLOPE=PUT(:,:,KKA)
+    ZVSLOPE=PVT(:,:,KKA)
   ELSE
 !    CALL ROTATE_WIND(PUT,PVT,PWT,                       &
 !                     PDIRCOSXW, PDIRCOSYW, PDIRCOSZW,   &
@@ -737,7 +743,7 @@ IF ( HINST_SFU == 'T' ) THEN
 !*      4.3 rotate the wind at time t-delta t
 !
   IF (CPROGRAM/='AROME ') THEN
-!    CALL ROTATE_WIND(PUM,PVM,PWM,                       &
+!    CALL ROTATE_WIND(PUT,PVT,PWT,                       &
 !                     PDIRCOSXW, PDIRCOSYW, PDIRCOSZW,   &
 !                     PCOSSLOPE,PSINSLOPE,               &
 !                     PDXX,PDYY,PDZZ,                    &
@@ -751,11 +757,11 @@ ELSE
 !*      4.4 rotate the wind at time t-delta t
 !
   IF (CPROGRAM=='AROME ') THEN
-    ZUSLOPE=PUM(:,:,KKA)
-    ZVSLOPE=PVM(:,:,KKA)
+    ZUSLOPE=PUT(:,:,KKA)
+    ZVSLOPE=PVT(:,:,KKA)
   ELSE
 !
-!    CALL ROTATE_WIND(PUM,PVM,PWM,                       &
+!    CALL ROTATE_WIND(PUT,PVT,PWT,                       &
 !                     PDIRCOSXW, PDIRCOSYW, PDIRCOSZW,   &
 !                     PCOSSLOPE,PSINSLOPE,               &
 !                     PDXX,PDYY,PDZZ,                    &
@@ -775,8 +781,8 @@ END IF
 !
 ZTAU11M(:,:) =2./3.*(  (1.+ (PZZ (:,:,IKB+KKL)-PZZ (:,:,IKB))  &
                            /(PDZZ(:,:,IKB+KKL)+PDZZ(:,:,IKB))  &
-                       )   *PTKEM(:,:,IKB)                   &
-                     -0.5  *PTKEM(:,:,IKB+KKL)                 &
+                       )   *PTKET(:,:,IKB)                   &
+                     -0.5  *PTKET(:,:,IKB+KKL)                 &
                     )
 ZTAU12M(:,:) =0.0
 ZTAU22M(:,:) =ZTAU11M(:,:)
@@ -792,24 +798,35 @@ ZMTH2 = 0.     ! w'th'2
 ZMR2  = 0.     ! w'r'2
 ZMTHR = 0.     ! w'th'r'
 
-IF (HTOM=='TM06') CALL TM06(KKA,KKU,KKL,PTHVREF,PBL_DEPTH,PZZ,PSFTH,ZMWTH,ZMTH2)
+IF (HTOM=='TM06') THEN
+  CALL TM06(KKA,KKU,KKL,PTHVREF,PBL_DEPTH,PZZ,PSFTH,ZMWTH,ZMTH2)
 !
-ZFWTH = -GZ_M_W(ZMWTH,PDZZ, KKA, KKU, KKL)    ! -d(w'2th' )/dz
-ZFWR  = -GZ_M_W(ZMWR, PDZZ, KKA, KKU, KKL)    ! -d(w'2r'  )/dz
-ZFTH2 = -GZ_W_M(ZMTH2,PDZZ, KKA, KKU, KKL)    ! -d(w'th'2 )/dz
-ZFR2  = -GZ_W_M(ZMR2, PDZZ, KKA, KKU, KKL)    ! -d(w'r'2  )/dz
-ZFTHR = -GZ_W_M(ZMTHR,PDZZ, KKA, KKU, KKL)    ! -d(w'th'r')/dz
+  ZFWTH = -GZ_M_W(ZMWTH,PDZZ, KKA,KKU,KKL)    ! -d(w'2th' )/dz
+  !ZFWR  = -GZ_M_W(ZMWR, PDZZ,KKA,KKU,KKL)    ! -d(w'2r'  )/dz
+  ZFTH2 = -GZ_W_M(ZMTH2,PDZZ,KKA,KKU,KKL)    ! -d(w'th'2 )/dz
+  !ZFR2  = -GZ_W_M(ZMR2, PDZZ,KKA,KKU,KKL)    ! -d(w'r'2  )/dz
+  !ZFTHR = -GZ_W_M(ZMTHR,PDZZ,KKA,KKU,KKL)    ! -d(w'th'r')/dz
 !
-ZFWTH(:,:,IKTE:) = 0.
-ZFWTH(:,:,:IKTB) = 0.
-ZFWR (:,:,IKTE:) = 0.
-ZFWR (:,:,:IKTB) = 0.
-ZFTH2(:,:,IKTE:) = 0.
-ZFTH2(:,:,:IKTB) = 0.
-ZFR2 (:,:,IKTE:) = 0.
-ZFR2 (:,:,:IKTB) = 0.
-ZFTHR(:,:,IKTE:) = 0.
-ZFTHR(:,:,:IKTB) = 0.
+  ZFWTH(:,:,IKTE:) = 0.
+  ZFWTH(:,:,:IKTB) = 0.
+  !ZFWR (:,:,IKTE:) = 0.
+  !ZFWR (:,:,:IKTB) = 0.
+  ZFWR  = 0.
+  ZFTH2(:,:,IKTE:) = 0.
+  ZFTH2(:,:,:IKTB) = 0.
+  !ZFR2 (:,:,IKTE:) = 0.
+  !ZFR2 (:,:,:IKTB) = 0.
+  ZFR2  = 0.
+  !ZFTHR(:,:,IKTE:) = 0.
+  !ZFTHR(:,:,:IKTB) = 0.
+  ZFTHR = 0.
+ELSE
+  ZFWTH = 0.
+  ZFWR  = 0.
+  ZFTH2 = 0.
+  ZFR2  = 0.
+  ZFTHR = 0.
+ENDIF
 !
 !----------------------------------------------------------------------------
 !
@@ -825,9 +842,9 @@ CALL TURB_VER(KKA,KKU,KKL,KRR, KRRL, KRRI,               &
           PRHODJ,PTHVREF,                                &
           PSFTH,PSFRV,PSFSV,PSFTH,PSFRV,PSFSV,           &
           ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU33M,               &
-          PUM,PVM,PWM,ZUSLOPE,ZVSLOPE,PTHLM,PRM,PSVM,    &
-          PTKEM,ZLM,PLENGTHM,PLENGTHH,ZLEPS,MFMOIST,     &
-          ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCM,ZFRAC_ICE,     &
+          PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,PSVT,    &
+          PTKET,ZLM,PLENGTHM,PLENGTHH,ZLEPS,MFMOIST,     &
+          ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,     &
           ZFWTH,ZFWR,ZFTH2,ZFR2,ZFTHR,PBL_DEPTH,         &
           PSBL_DEPTH,ZLMO,                               &
           PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,              &
@@ -876,9 +893,9 @@ IF (HTURBDIM=='3DIM') THEN
 !          PRHODJ,PTHVREF,                                      &
 !          PSFTH,PSFRV,PSFSV,                                   &
 !          ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU22M,ZTAU33M,             &
-!          PUM,PVM,PWM,ZUSLOPE,ZVSLOPE,PTHLM,PRM,PSVM,          &
-!          PTKEM,ZLM,ZLEPS,                                     &
-!          ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCM,ZFRAC_ICE,           &
+!          PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,PSVT,          &
+!          PTKET,ZLM,ZLEPS,                                     &
+!          ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,           &
 !          ZDP,ZTP,PSIGS,                                       &
 !          PHGRAD,                                              &
 !          ZTRH,                                                &
@@ -930,7 +947,7 @@ IF (LBUDGET_RI) CALL BUDGET_DDH (PRRS(:,:,:,4),9,'HTURB_BU_RRI',YDDDH, YDLDDH, Y
 
 IF (.NOT. LHARAT) THEN
 
-CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKEM,ZLM,ZLEPS,PDP,ZTRH,       &
+CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,       &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,            &
                    & PTSTEP_MET,PIMPL,ZEXPL,                         &
                    & HTURBLEN,HTURBDIM,                              &
@@ -985,7 +1002,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_Field_write(TPFILE,TZFIELD,PTHLM)
+    CALL IO_Field_write(TPFILE,TZFIELD,PTHLT)
 !
 ! stores the conservative mixing ratio
 !
@@ -999,7 +1016,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_Field_write(TPFILE,TZFIELD,PRM(:,:,:,1))
+    CALL IO_Field_write(TPFILE,TZFIELD,PRT(:,:,:,1))
    END IF
 END IF
 !
@@ -1016,23 +1033,23 @@ PDRSVS_TURB  = PRSVS - PDRSVS_TURB
 !
 IF ( KRRL >= 1 ) THEN
   IF ( KRRI >= 1 ) THEN
-    PRM(:,:,:,1)  = PRM(:,:,:,1)  - PRM(:,:,:,2)  - PRM(:,:,:,4)
+    PRT(:,:,:,1)  = PRT(:,:,:,1)  - PRT(:,:,:,2)  - PRT(:,:,:,4)
     PRRS(:,:,:,1) = PRRS(:,:,:,1) - PRRS(:,:,:,2) - PRRS(:,:,:,4)
-    PTHLM(:,:,:)  = PTHLM(:,:,:)  + ZLVOCPEXNM(:,:,:) * PRM(:,:,:,2) &
-                                  + ZLSOCPEXNM(:,:,:) * PRM(:,:,:,4)
+    PTHLT(:,:,:)  = PTHLT(:,:,:)  + ZLVOCPEXNM(:,:,:) * PRT(:,:,:,2) &
+                                  + ZLSOCPEXNM(:,:,:) * PRT(:,:,:,4)
     PRTHLS(:,:,:) = PRTHLS(:,:,:) + ZLVOCPEXNM(:,:,:) * PRRS(:,:,:,2) &
                                   + ZLSOCPEXNM(:,:,:) * PRRS(:,:,:,4)
 !
     DEALLOCATE(ZLVOCPEXNM)
     DEALLOCATE(ZLSOCPEXNM)
   ELSE
-    PRM(:,:,:,1)  = PRM(:,:,:,1)  - PRM(:,:,:,2) 
+    PRT(:,:,:,1)  = PRT(:,:,:,1)  - PRT(:,:,:,2) 
     PRRS(:,:,:,1) = PRRS(:,:,:,1) - PRRS(:,:,:,2)
-    PTHLM(:,:,:)  = PTHLM(:,:,:)  + ZLOCPEXNM(:,:,:) * PRM(:,:,:,2)
+    PTHLT(:,:,:)  = PTHLT(:,:,:)  + ZLOCPEXNM(:,:,:) * PRT(:,:,:,2)
     PRTHLS(:,:,:) = PRTHLS(:,:,:) + ZLOCPEXNM(:,:,:) * PRRS(:,:,:,2)
   END IF
 END IF
-!
+
 !----------------------------------------------------------------------------
 !
 !*      9. LES averaged surface fluxes
@@ -1067,16 +1084,16 @@ IF (LLES_CALL) THEN
 !          ------------------------------------------------
 !
   IF (HTURBDIM=="1DIM") THEN
-    CALL LES_MEAN_SUBGRID(2./3.*PTKEM,X_LES_SUBGRID_U2)
-    CALL LES_MEAN_SUBGRID(2./3.*PTKEM,X_LES_SUBGRID_V2)
-    CALL LES_MEAN_SUBGRID(2./3.*PTKEM,X_LES_SUBGRID_W2)
-    CALL LES_MEAN_SUBGRID(2./3.*PTKEM*MZF(GZ_M_W(PTHLM,PDZZ, KKA, KKU, KKL),&
+    CALL LES_MEAN_SUBGRID(2./3.*PTKET,X_LES_SUBGRID_U2)
+    CALL LES_MEAN_SUBGRID(2./3.*PTKET,X_LES_SUBGRID_V2)
+    CALL LES_MEAN_SUBGRID(2./3.*PTKET,X_LES_SUBGRID_W2)
+    CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(PTHLT,PDZZ, KKA, KKU, KKL),&
                           KKA, KKU, KKL),X_LES_RES_ddz_Thl_SBG_W2)
     IF (KRR>=1) &
-    CALL LES_MEAN_SUBGRID(2./3.*PTKEM*MZF(GZ_M_W(PRM(:,:,:,1),PDZZ, KKA, KKU, KKL),&
+    CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(PRT(:,:,:,1),PDZZ, KKA, KKU, KKL),&
                          &KKA, KKU, KKL),X_LES_RES_ddz_Rt_SBG_W2)
     DO JSV=1,NSV
-      CALL LES_MEAN_SUBGRID(2./3.*PTKEM*MZF(GZ_M_W(PSVM(:,:,:,JSV),PDZZ, KKA, KKU, KKL), &
+      CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(PSVT(:,:,:,JSV),PDZZ, KKA, KKU, KKL), &
                            &KKA, KKU, KKL), X_LES_RES_ddz_Sv_SBG_W2(:,:,:,JSV))
     END DO
   END IF
@@ -1091,13 +1108,14 @@ IF (LLES_CALL) THEN
 !
 !* presso-correlations for subgrid Tke are equal to zero.
 !
-  ZLM = 0.
-  CALL LES_MEAN_SUBGRID(ZLM,X_LES_SUBGRID_WP)
+  ZLEPS = 0. !ZLEPS is used as a work array (not used anymore)
+  CALL LES_MEAN_SUBGRID(ZLEPS,X_LES_SUBGRID_WP)
 !
   CALL SECOND_MNH(ZTIME2)
   XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !
+IF(PRESENT(PLEM)) PLEM = ZLM
 !----------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('TURB',1,ZHOOK_HANDLE)
@@ -1209,7 +1227,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments 
 !
-REAL                                  :: PALP,PBETA,PGAM,PLTT,PC
+REAL,                   INTENT(IN)    :: PALP,PBETA,PGAM,PLTT,PC
 REAL, DIMENSION(:,:,:), INTENT(IN)    :: PT,PEXN,PCP
 !
 REAL, DIMENSION(:,:,:), INTENT(OUT)   :: PLOCPEXN
@@ -1237,7 +1255,7 @@ REAL, DIMENSION(SIZE(PEXN,1),SIZE(PEXN,2),SIZE(PEXN,3)) :: ZDRVSATDT
 !
 !*      1.3 saturation  mixing ratio at t
 !
-  ZRVSAT(:,:,:) =  ZRVSAT(:,:,:) * ZEPS / ( PPABSM(:,:,:) - ZRVSAT(:,:,:) )
+  ZRVSAT(:,:,:) =  ZRVSAT(:,:,:) * ZEPS / ( PPABST(:,:,:) - ZRVSAT(:,:,:) )
 !
 !*      1.4 compute the saturation mixing ratio derivative (rvs')
 !
@@ -1251,7 +1269,7 @@ REAL, DIMENSION(SIZE(PEXN,1),SIZE(PEXN,2),SIZE(PEXN,3)) :: ZDRVSATDT
 !*      1.6 compute Atheta
 !
   PATHETA(:,:,:)= PAMOIST(:,:,:) * PEXN(:,:,:) *                             &
-        ( ( ZRVSAT(:,:,:) - PRM(:,:,:,1) ) * PLOCPEXN(:,:,:) /               &
+        ( ( ZRVSAT(:,:,:) - PRT(:,:,:,1) ) * PLOCPEXN(:,:,:) /               &
           ( 1. + ZDRVSATDT(:,:,:) * PLOCPEXN(:,:,:) )        *               &
           (                                                                  &
            ZRVSAT(:,:,:) * (1. + ZRVSAT(:,:,:)/ZEPS)                         &
@@ -1320,8 +1338,8 @@ END IF
 IF (.NOT. ORMC01) THEN
   ZALPHA=0.5**(-1.5)
   !
-  DO JJ=1,SIZE(PUM,2)
-    DO JI=1,SIZE(PUM,1)
+  DO JJ=1,SIZE(PUT,2)
+    DO JI=1,SIZE(PUT,1)
       DO JK=IKTB,IKTE
         ZD=ZALPHA*(0.5*(PZZ(JI,JJ,JK)+PZZ(JI,JJ,JK+KKL))&
         -PZZ(JI,JJ,IKB)) *PDIRCOSZW(JI,JJ)
@@ -1372,7 +1390,7 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)   :: PLM
 REAL                :: ZD           ! distance to the surface
 REAL, DIMENSION(:,:), ALLOCATABLE  ::   ZWORK2D
 !
-REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)) ::     &
+REAL, DIMENSION(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)) ::     &
             ZDTHLDZ,ZDRTDZ,     &!dtheta_l/dz, drt_dz used for computing the stablity
 !                                ! criterion 
             ZETHETA,ZEMOIST             !coef ETHETA and EMOIST
@@ -1397,33 +1415,33 @@ IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
 END IF
 !   compute a mixing length limited by the stability
 !
-ALLOCATE(ZWORK2D(SIZE(PUM,1),SIZE(PUM,2)))
+ALLOCATE(ZWORK2D(SIZE(PUT,1),SIZE(PUT,2)))
 !
-ZETHETA(:,:,:) = ETHETA(KRR,KRRI,PTHLM,PRM,ZLOCPEXNM,ZATHETA,PSRCM)
-ZEMOIST(:,:,:) = EMOIST(KRR,KRRI,PTHLM,PRM,ZLOCPEXNM,ZAMOIST,PSRCM)
+ZETHETA(:,:,:) = ETHETA(KRR,KRRI,PTHLT,PRT,ZLOCPEXNM,ZATHETA,PSRCT)
+ZEMOIST(:,:,:) = EMOIST(KRR,KRRI,PTHLT,PRT,ZLOCPEXNM,ZAMOIST,PSRCT)
 !
 DO JK = IKTB+1,IKTE-1
-      ZDTHLDZ(:,:,JK)= 0.5*((PTHLM(:,:,JK+KKL)-PTHLM(:,:,JK))/PDZZ(:,:,JK+KKL)+      &
-                         (PTHLM(:,:,JK)-PTHLM(:,:,JK-KKL))/PDZZ(:,:,JK))
-      ZDRTDZ(:,:,JK)= 0.5*((PRM(:,:,JK+KKL,1)-PRM(:,:,JK,1))/PDZZ(:,:,JK+KKL)+      &
-                         (PRM(:,:,JK,1)-PRM(:,:,JK-KKL,1))/PDZZ(:,:,JK))
+      ZDTHLDZ(:,:,JK)= 0.5*((PTHLT(:,:,JK+KKL)-PTHLT(:,:,JK))/PDZZ(:,:,JK+KKL)+      &
+                         (PTHLT(:,:,JK)-PTHLT(:,:,JK-KKL))/PDZZ(:,:,JK))
+      ZDRTDZ(:,:,JK)= 0.5*((PRT(:,:,JK+KKL,1)-PRT(:,:,JK,1))/PDZZ(:,:,JK+KKL)+      &
+                         (PRT(:,:,JK,1)-PRT(:,:,JK-KKL,1))/PDZZ(:,:,JK))
        ZWORK2D(:,:)=XG/PTHVREF(:,:,JK)*                                           &
             (ZETHETA(:,:,JK)*ZDTHLDZ(:,:,JK)+ZEMOIST(:,:,JK)*ZDRTDZ(:,:,JK))
   !
   WHERE(ZWORK2D(:,:)>0.)
     PLM(:,:,JK)=MAX(1.E-10,MIN(PLM(:,:,JK),                &
-                    0.76* SQRT(PTKEM(:,:,JK)/ZWORK2D(:,:))))
+                    0.76* SQRT(PTKET(:,:,JK)/ZWORK2D(:,:))))
   END WHERE
 END DO
 !  special case near the surface 
-ZDTHLDZ(:,:,IKB)=(PTHLM(:,:,IKB+KKL)-PTHLM(:,:,IKB))/PDZZ(:,:,IKB+KKL)
-ZDRTDZ(:,:,IKB)=(PRM(:,:,IKB+KKL,1)-PRM(:,:,IKB,1))/PDZZ(:,:,IKB+KKL)
+ZDTHLDZ(:,:,IKB)=(PTHLT(:,:,IKB+KKL)-PTHLT(:,:,IKB))/PDZZ(:,:,IKB+KKL)
+ZDRTDZ(:,:,IKB)=(PRT(:,:,IKB+KKL,1)-PRT(:,:,IKB,1))/PDZZ(:,:,IKB+KKL)
 !
 ZWORK2D(:,:)=XG/PTHVREF(:,:,IKB)*                                           &
             (ZETHETA(:,:,IKB)*ZDTHLDZ(:,:,IKB)+ZEMOIST(:,:,IKB)*ZDRTDZ(:,:,IKB))
 WHERE(ZWORK2D(:,:)>0.)
   PLM(:,:,IKB)=MAX(1.E-10,MIN( PLM(:,:,JK),                 &
-                    0.76* SQRT(PTKEM(:,:,IKB)/ZWORK2D(:,:))))
+                    0.76* SQRT(PTKET(:,:,IKB)/ZWORK2D(:,:))))
 END WHERE
 !
 DEALLOCATE(ZWORK2D)
@@ -1433,8 +1451,8 @@ DEALLOCATE(ZWORK2D)
 IF (.NOT. ORMC01) THEN
   ZALPHA=0.5**(-1.5)
   !
-  DO JJ=1,SIZE(PUM,2)
-    DO JI=1,SIZE(PUM,1)
+  DO JJ=1,SIZE(PUT,2)
+    DO JI=1,SIZE(PUT,1)
       DO JK=IKTB,IKTE
         ZD=ZALPHA*(0.5*(PZZ(JI,JJ,JK)+PZZ(JI,JJ,JK+KKL))-PZZ(JI,JJ,IKB)) &
           *PDIRCOSZW(JI,JJ)
@@ -1509,10 +1527,10 @@ IMPLICIT NONE
 REAL :: ZPENTE            ! Slope of the amplification straight line
 REAL :: ZCOEF_AMPL_CEI_NUL! Ordonnate at the origin of the
                           ! amplification straight line
-REAL, DIMENSION(SIZE(PUM,1),SIZE(PUM,2),SIZE(PUM,3)) :: ZCOEF_AMPL
+REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3)) :: ZCOEF_AMPL
                           ! Amplification coefficient of the mixing length
                           ! when the instability criterium is verified 
-REAL, DIMENSION(SIZE(PUM,1),SIZE(PUM,2),SIZE(PUM,3)) :: ZLM_CLOUD
+REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3)) :: ZLM_CLOUD
                           ! Turbulent mixing length in the clouds
 !
 !-------------------------------------------------------------------------------
@@ -1554,7 +1572,7 @@ ELSE
 !           ------------------
   CASE ('BL89')
     ZSHEAR=0.
-    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKEM,ZSHEAR,ZLM_CLOUD)
+    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD)
 !
 !*         3.2 Delta mixing length
 !           -------------------
