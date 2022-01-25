@@ -145,4 +145,7 @@ phyex/turb/modi_compute_mf_cloud.F90
 phyex/turb/modi_compute_mf_cloud_bigaus.F90
 phyex/turb/modi_compute_mf_cloud_direct.F90
 phyex/turb/modi_compute_mf_cloud_stat.F90
-
+phyex/turb/compute_bl89_ml.F90
+phyex/turb/modi_compute_bl89_ml.F90
+phyex/turb/compute_entr_detr.F90
+phyex/turb/modi_compute_entr_detr.F90
