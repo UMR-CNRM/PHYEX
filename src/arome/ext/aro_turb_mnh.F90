@@ -199,8 +199,6 @@ CHARACTER(LEN=4),DIMENSION(2)  :: HLBCX, HLBCY  ! X- and Y-direc LBC
 
 INTEGER       :: ISPLIT        ! number of time-splitting
 
-LOGICAL       ::  OCLOSE_OUT   ! Conditional closure of
-                                                   ! the OUTPUT FM-file
 LOGICAL       ::  OTURB_FLX    ! switch to write the
                                ! turbulent fluxes in the syncronous FM-file
 LOGICAL       ::  OTURB_DIAG   ! switch to write some
@@ -212,11 +210,6 @@ CHARACTER(LEN=4)   ::  HTURBDIM     ! dimensionality of the
 CHARACTER(LEN=4)   ::  HTURBLEN     ! kind of mixing length
 
 REAL          ::  ZIMPL        ! degree of implicitness
-
-CHARACTER(LEN=4)   ::  HFMFILE      ! Name of the output
-                                    ! FM-file
-CHARACTER(LEN=4)   ::  HLUOUT       ! Output-listing name for
-                                    ! model n
 !
 REAL, DIMENSION(KLON,1,KLEV+2)   :: ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY
                                         ! metric coefficients
@@ -273,9 +266,6 @@ HLBCY(:)='CYCL'
 ISPLIT=1
 
 ! pour ecriture et diagnostic dans mesoNH, � priori les switches toujours � .F.
-OCLOSE_OUT=.FALSE.
-HFMFILE=' '
-HLUOUT= ' '
 OTURB_FLX=.FALSE.
 OTURB_DIAG=.FALSE.
 
@@ -422,11 +412,11 @@ ENDDO
 
 CL=HINST_SFU
 CALL TURB (KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, ISPLIT,IMI, &
-   & OCLOSE_OUT,OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
+   & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
    & HTURBDIM,HTURBLEN,'NONE','NONE', CL,           &
    & HMF_UPDRAFT,ZIMPL,                                    &
-   & 2*PTSTEP, 2*PTSTEP, 2*PTSTEP,                         &
-   & HFMFILE,HLUOUT,ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &
+   & 2*PTSTEP,                                               &
+   & ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &
    & ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE,    &
    & PRHODJ,PTHVREF,PRHODREF,                              &
    & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &

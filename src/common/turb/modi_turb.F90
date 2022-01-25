@@ -6,10 +6,10 @@ INTERFACE
 !
       SUBROUTINE TURB(KKA, KKU, KKL, KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,   &
               & KSPLIT,KMODEL_CL, &
-              & OCLOSE_OUT,OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
+              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HINST_SFU,         &
-              & HMF_UPDRAFT,PIMPL,PTSTEP_UVW, PTSTEP_MET,PTSTEP_SV,   &
-              & HFMFILE,HLUOUT,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,          &
+              & HMF_UPDRAFT,PIMPL,PTSTEP,                             &
+              & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,          &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
               & PRHODJ,PTHVREF,PRHODREF,                              &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
@@ -25,12 +25,13 @@ INTERFACE
               & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
               & YDDDH,YDLDDH,YDMDDH,                                  &
               & TBUDGETS, KBUDGETS,                                   &
-              & PTR,PDISS,PEDR,PLEM                                   ) 
+              & PTR,PDISS,PEDR,PLEM,TPFILE                            ) 
 !
 USE DDH_MIX, ONLY  : TYP_DDH
 USE YOMLDDH, ONLY  : TLDDH
 USE YOMMDDH, ONLY  : TMDDH
 USE MODD_BUDGET, ONLY : TBUDGETDATA
+USE MODD_IO, ONLY : TFILEDATA
 !
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
@@ -43,8 +44,6 @@ CHARACTER(LEN=*),DIMENSION(:),INTENT(IN):: HLBCX, HLBCY  ! X- and Y-direc LBC
 CHARACTER(LEN=4),INTENT(IN)          :: HMF_UPDRAFT   ! Type of mass flux
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time-splitting
 INTEGER,                INTENT(IN)   :: KMODEL_CL     ! model number for cloud mixing length
-LOGICAL,                INTENT(IN)   ::  OCLOSE_OUT   ! switch for syncronous
-                                                      ! file opening
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
@@ -52,21 +51,15 @@ LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
 LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid 
                                  ! CONDensation
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
-CHARACTER*4           , INTENT(IN)      ::  HTURBDIM  ! dimensionality of the 
+CHARACTER(LEN=4)       , INTENT(IN)   ::  HTURBDIM  ! dimensionality of the 
                                  ! turbulence scheme
-CHARACTER*4           , INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
-CHARACTER*4           , INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
-CHARACTER*4           , INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
-CHARACTER*1           , INTENT(IN)   ::  HINST_SFU    ! temporal location of the
+CHARACTER(LEN=4)      , INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
+CHARACTER(LEN=4)      , INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
+CHARACTER(LEN=4)      , INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
+CHARACTER(LEN=1)      , INTENT(IN)   ::  HINST_SFU    ! temporal location of the
                                                       ! surface friction flux
 REAL,                   INTENT(IN)   ::  PIMPL        ! degree of implicitness
-REAL,                   INTENT(IN)   ::  PTSTEP_UVW   ! Dynamical timestep 
-REAL,                   INTENT(IN)   ::  PTSTEP_MET   ! Timestep for meteorological variables                        
-REAL,                   INTENT(IN)   ::  PTSTEP_SV    ! Timestep for tracer variables
-CHARACTER(LEN=*),       INTENT(IN)   ::  HFMFILE      ! Name of the output
-                                                      ! FM-file
-CHARACTER(LEN=*),       INTENT(IN)   ::  HLUOUT       ! Output-listing name for
-                                                      ! model n
+REAL,                   INTENT(IN)   ::  PTSTEP       ! Timestep
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   :: PDXX,PDYY,PDZZ,PDZX,PDZY
                                         ! metric coefficients
@@ -158,6 +151,7 @@ REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PTR   ! Transport production o
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PDISS ! Dissipation of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
+TYPE(TFILEDATA),        INTENT(IN),  OPTIONAL  :: TPFILE! Output file for MesoNH
 !
 !-------------------------------------------------------------------------------
 !

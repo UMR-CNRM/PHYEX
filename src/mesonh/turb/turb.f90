@@ -421,11 +421,11 @@ LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
 LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid 
                                  ! CONDensation
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
+CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
-CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
+CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
+CHARACTER(LEN=4),       INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
+CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
 REAL,                   INTENT(IN)   ::  PIMPL        ! degree of implicitness
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 

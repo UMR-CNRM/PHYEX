@@ -5,10 +5,10 @@
 !-----------------------------------------------------------------
       SUBROUTINE TURB(KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,      &
               & KSPLIT,KMODEL_CL,                                     &
-              & OCLOSE_OUT,OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
+              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HINST_SFU,         &
-              & HMF_UPDRAFT,PIMPL,PTSTEP_UVW, PTSTEP_MET,PTSTEP_SV,   &
-              & HFMFILE,HLUOUT,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,          &
+              & HMF_UPDRAFT,PIMPL,   &
+              & PTSTEP,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
               & PRHODJ,PTHVREF,PRHODREF,                              &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
@@ -24,7 +24,7 @@
               & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
               & YDDDH,YDLDDH,YDMDDH,                                  &
               & TBUDGETS, KBUDGETS,                                   &
-              & PTR,PDISS,PEDR,PLEM                                   )
+              & PTR,PDISS,PEDR,PLEM,TPFILE                            )
 !     #################################################################
 !
 !
@@ -253,7 +253,6 @@ USE MODI_UPDATE_LM
 !
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 USE MODE_SBL
-USE MODE_FMWRIT
 !
 USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
@@ -279,8 +278,6 @@ INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 CHARACTER(LEN=*),DIMENSION(:),INTENT(IN):: HLBCX, HLBCY  ! X- and Y-direc LBC
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time-splitting
 INTEGER,                INTENT(IN)   :: KMODEL_CL     ! model number for cloud mixing length
-LOGICAL,                INTENT(IN)   ::  OCLOSE_OUT   ! switch for syncronous
-                                                      ! file opening
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
@@ -288,21 +285,15 @@ LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
 LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid 
                                  ! CONDensation
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
-CHARACTER(LEN=4),       INTENT(IN)      ::  HTURBDIM  ! dimensionality of the 
-                                 ! turbulence scheme
+CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
+                                                      ! turbulence scheme
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
 CHARACTER(LEN=1),       INTENT(IN)   ::  HINST_SFU    ! temporal location of the
                                                       ! surface friction flux
 REAL,                   INTENT(IN)   ::  PIMPL        ! degree of implicitness
-REAL,                   INTENT(IN)   ::  PTSTEP_UVW   ! Dynamical timestep 
-REAL,                   INTENT(IN)   ::  PTSTEP_MET   ! Timestep for meteorological variables                        
-REAL,                   INTENT(IN)   ::  PTSTEP_SV    ! Timestep for tracer variables
-CHARACTER(LEN=*),       INTENT(IN)   ::  HFMFILE      ! Name of the output
-                                                      ! FM-file
-CHARACTER(LEN=*),       INTENT(IN)   ::  HLUOUT       ! Output-listing name for
-                                                      ! model n
+REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
 !
 CHARACTER(LEN=4),       INTENT(IN)   ::  HMF_UPDRAFT  ! Type of Mass Flux Scheme
 
@@ -398,8 +389,9 @@ REAL, DIMENSION(:,:,:), INTENT(IN)    :: PLENGTHM, PLENGTHH
 !
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PTR   ! Transport production of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PDISS ! Dissipation of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR       ! EDR
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
+TYPE(TFILEDATA),        INTENT(IN),  OPTIONAL  :: TPFILE! Output file for MesoNH
 !
 !
 !-------------------------------------------------------------------------------
@@ -455,12 +447,10 @@ REAL                :: ZALPHA       ! work coefficient :
                                     ! - proportionnality constant between Dz/2 and 
 !                                   !   BL89 mixing length near the surface
 !
-!
-TYPE(TFILEDATA) :: TPFILE ! File type to write fields for MesoNH
-!
 REAL :: ZTIME1, ZTIME2
 REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3))::  ZSHEAR, ZDUDZ, ZDVDZ
 TYPE(TFIELDDATA) :: TZFIELD
+TYPE(TFILEDATA)  :: TZFILE ! File type to write fields for MesoNH
 !
 !*      1.PRELIMINARIES
 !         -------------
@@ -470,6 +460,9 @@ TYPE(TFIELDDATA) :: TZFIELD
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB',0,ZHOOK_HANDLE)
+!
+IF(PRESENT(TPFILE)) TZFILE = TPFILE
+!
 IF (LHARAT .AND. HTURBDIM /= '1DIM') THEN
   CALL ABOR1('LHARATU only implemented for option HTURBDIM=1DIM!')
 ENDIF
@@ -568,7 +561,7 @@ IF (KRRL >=1) THEN
   END IF
 !
 !
-  IF ( TPFILE%LOPENED .AND. OTURB_DIAG ) THEN
+  IF ( TZFILE%LOPENED .AND. OTURB_DIAG ) THEN
     TZFIELD%CMNHNAME   = 'ATHETA'
     TZFIELD%CSTDNAME   = ''
     TZFIELD%CLONGNAME  = 'ATHETA'
@@ -579,7 +572,7 @@ IF (KRRL >=1) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_Field_write(TPFILE,TZFIELD,ZATHETA)
+    CALL IO_FIELD_WRITE(TZFILE,TZFIELD,ZATHETA)
 ! 
     TZFIELD%CMNHNAME   = 'AMOIST'
     TZFIELD%CSTDNAME   = ''
@@ -591,7 +584,7 @@ IF (KRRL >=1) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_Field_write(TPFILE,TZFIELD,ZAMOIST)
+    CALL IO_FIELD_WRITE(TZFILE,TZFIELD,ZAMOIST)
   END IF
 !
 ELSE
@@ -871,7 +864,7 @@ ENDIF
 CALL TURB_VER(KKA,KKU,KKL,KRR, KRRL, KRRI,               &
           OTURB_FLX,                                     &
           HTURBDIM,HTOM,PIMPL,ZEXPL,                     &
-          PTSTEP_MET,TPFILE,                                 &
+          PTSTEP,TZFILE,                                 &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,        &
           PCOSSLOPE,PSINSLOPE,                           &
           PRHODJ,PTHVREF,                                &
@@ -915,13 +908,9 @@ END IF
 IF (LBUDGET_RC) CALL BUDGET_DDH (PRRS(:,:,:,2),7,'VTURB_BU_RRC',YDDDH, YDLDDH, YDMDDH)
 IF (LBUDGET_RI) CALL BUDGET_DDH (PRRS(:,:,:,4),9,'VTURB_BU_RRI',YDDDH, YDLDDH, YDMDDH)
 !
-!
-IF (HTURBDIM=='3DIM') THEN
-!!!!MODIF AROME
-!  CALL TURB_HOR_SPLT(KSPLIT, KRR, KRRL, KRRI, PTSTEP_UVW,      &
-!          PTSTEP_MET, PTSTEP_SV, HLBCX,HLBCY,                  &
-!          OCLOSE_OUT,OTURB_FLX,OSUBG_COND,                     &
-!          HFMFILE,HLUOUT,                                      &
+!    CALL TURB_HOR_SPLT(KSPLIT, KRR, KRRL, KRRI, PTSTEP,        &
+!          HLBCX,HLBCY,OTURB_FLX,OSUBG_COND,                    &
+!          TZFILE,                                              &
 !          PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                        &
 !          PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                       &
 !          PCOSSLOPE,PSINSLOPE,                                 &
@@ -929,14 +918,11 @@ IF (HTURBDIM=='3DIM') THEN
 !          PSFTH,PSFRV,PSFSV,                                   &
 !          ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU22M,ZTAU33M,             &
 !          PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,PSVT,          &
-!          PTKET,ZLM,ZLEPS,                                     &
+!          PTKET,PLEM,ZLEPS,                                    &
 !          ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,           &
-!          ZDP,ZTP,PSIGS,                                       &
-!          PHGRAD,                                              &
+!          PDYP,PTHP,PSIGS,                                     &
 !          ZTRH,                                                &
 !          PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS                     )
-END IF
-!
 !
 IF (LBUDGET_U) CALL BUDGET_DDH (PRUS,1,'HTURB_BU_RU',YDDDH, YDLDDH, YDMDDH)
 IF (LBUDGET_V) CALL BUDGET_DDH (PRVS,2,'HTURB_BU_RV',YDDDH, YDLDDH, YDMDDH)
@@ -984,9 +970,9 @@ IF (.NOT. LHARAT) THEN
 
 CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,       &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,            &
-                   & PTSTEP_MET,PIMPL,ZEXPL,                         &
+                   & PTSTEP,PIMPL,ZEXPL,                         &
                    & HTURBLEN,HTURBDIM,                              &
-                   & TPFILE,OTURB_DIAG,           &
+                   & TZFILE,OTURB_DIAG,           &
                    & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,&
                    & TBUDGETS,KBUDGETS,&
                    & PEDR=PEDR)
@@ -1007,7 +993,7 @@ ENDIF
 !*      7. STORES SOME INFORMATIONS RELATED TO THE TURBULENCE SCHEME
 !          ---------------------------------------------------------
 !
-IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
+IF ( OTURB_DIAG .AND. TZFILE%LOPENED ) THEN
 ! 
 ! stores the mixing length
 ! 
@@ -1021,7 +1007,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%NTYPE      = TYPEREAL
   TZFIELD%NDIMS      = 3
   TZFIELD%LTIMEDEP   = .TRUE.
-  CALL IO_Field_write(TPFILE,TZFIELD,ZLM)
+  CALL IO_FIELD_WRITE(TZFILE,TZFIELD,ZLM)
 !
   IF (KRR /= 0) THEN
 !
@@ -1037,7 +1023,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_Field_write(TPFILE,TZFIELD,PTHLT)
+    CALL IO_FIELD_WRITE(TZFILE,TZFIELD,PTHLT)
 !
 ! stores the conservative mixing ratio
 !
@@ -1051,7 +1037,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_Field_write(TPFILE,TZFIELD,PRT(:,:,:,1))
+    CALL IO_FIELD_WRITE(TZFILE,TZFIELD,PRT(:,:,:,1))
    END IF
 END IF
 !
@@ -1696,7 +1682,7 @@ ENDIF
 !              -----------------------------------------------
 !
 ! Impression before modification of the mixing length
-IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
+IF ( OTURB_DIAG .AND. TZFILE%LOPENED ) THEN
   TZFIELD%CMNHNAME   = 'LM_CLEAR_SKY'
   TZFIELD%CSTDNAME   = ''
   TZFIELD%CLONGNAME  = 'LM_CLEAR_SKY'
@@ -1707,7 +1693,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%NTYPE      = TYPEREAL
   TZFIELD%NDIMS      = 3
   TZFIELD%LTIMEDEP   = .TRUE.
-  CALL IO_Field_write(TPFILE,TZFIELD,ZLM)
+  CALL IO_FIELD_WRITE(TZFILE,TZFIELD,ZLM)
 ENDIF
 !
 ! Amplification of the mixing length when the criteria are verified
@@ -1722,7 +1708,7 @@ WHERE (PCEI(:,:,:) == -1.) ZLM(:,:,:) = ZLM_CLOUD(:,:,:)
 !*       5.    IMPRESSION
 !              ----------
 !
-IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
+IF ( OTURB_DIAG .AND. TZFILE%LOPENED ) THEN
   TZFIELD%CMNHNAME   = 'COEF_AMPL'
   TZFIELD%CSTDNAME   = ''
   TZFIELD%CLONGNAME  = 'COEF_AMPL'
@@ -1733,7 +1719,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%NTYPE      = TYPEREAL
   TZFIELD%NDIMS      = 3
   TZFIELD%LTIMEDEP   = .TRUE.
-  CALL IO_Field_write(TPFILE,TZFIELD,ZCOEF_AMPL)
+  CALL IO_FIELD_WRITE(TZFILE,TZFIELD,ZCOEF_AMPL)
   !
   TZFIELD%CMNHNAME   = 'LM_CLOUD'
   TZFIELD%CSTDNAME   = ''
@@ -1744,7 +1730,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%NGRID      = 1
   TZFIELD%NTYPE      = TYPEREAL
   TZFIELD%NDIMS      = 3
-  CALL IO_Field_write(TPFILE,TZFIELD,ZLM_CLOUD)
+  CALL IO_FIELD_WRITE(TZFILE,TZFIELD,ZLM_CLOUD)
   !
 ENDIF
 !
