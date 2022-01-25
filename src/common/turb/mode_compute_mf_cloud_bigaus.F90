@@ -4,43 +4,11 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ######spl
-     MODULE MODI_COMPUTE_MF_CLOUD_BIGAUS
+     MODULE MODE_COMPUTE_MF_CLOUD_BIGAUS
 !    ###################################
 !
-INTERFACE
-!     #################################################################
-      SUBROUTINE COMPUTE_MF_CLOUD_BIGAUS(KKA, KKB, KKE, KKU, KKL,&
-                                  PEMF, PDEPTH,&
-                                  PRT_UP, PTHV_UP, PFRAC_ICE_UP, PRSAT_UP,&
-                                  PRTM, PTHM, PTHVM,&
-                                  PDZZ, PZZ, PRHODREF,&
-                                  PRC_MF, PRI_MF, PCF_MF)
-!     #################################################################
-!!
-!
-!*               1.1  Declaration of Arguments
-!
-INTEGER,                INTENT(IN)   :: KKA          ! near ground array index
-INTEGER,                INTENT(IN)   :: KKB          ! near ground physical index
-INTEGER,                INTENT(IN)   :: KKE          ! uppest atmosphere physical index
-INTEGER,                INTENT(IN)   :: KKU          ! uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL                     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PEMF                    ! updraft characteritics
-REAL, DIMENSION(:),     INTENT(IN)   :: PDEPTH                  ! Deepness of cloud
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PTHV_UP, PRSAT_UP, PRT_UP ! updraft characteritics
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PFRAC_ICE_UP            ! liquid/ice fraction in updraft
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PTHM, PRTM, PTHVM       ! env. var. at t-dt
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PDZZ, PZZ
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PRHODREF
-REAL, DIMENSION(:,:),   INTENT(OUT)  :: PRC_MF, PRI_MF          ! cloud content
-REAL, DIMENSION(:,:),   INTENT(OUT)  :: PCF_MF                  ! and cloud fraction for MF scheme
-
-END SUBROUTINE COMPUTE_MF_CLOUD_BIGAUS
-
-END INTERFACE
-!
-END MODULE MODI_COMPUTE_MF_CLOUD_BIGAUS
-!     ######spl
+IMPLICIT NONE
+CONTAINS
       SUBROUTINE COMPUTE_MF_CLOUD_BIGAUS(KKA, KKB, KKE, KKU, KKL,&
                                   PEMF, PDEPTH,&
                                   PRT_UP, PTHV_UP, PFRAC_ICE_UP, PRSAT_UP,&
@@ -92,11 +60,13 @@ END MODULE MODI_COMPUTE_MF_CLOUD_BIGAUS
 USE MODD_PARAM_MFSHALL_n, ONLY : XALPHA_MF, XSIGMA_MF
 USE MODD_CST, ONLY  : XPI, XG
 !
-USE MODI_SHUMAN_MF
+USE MODI_SHUMAN_MF, ONLY: MZF_MF, GZ_M_W_MF
 USE MODI_GAMMA_INC
 !
 USE MODE_THERMO
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 IMPLICIT NONE
 !
@@ -131,7 +101,9 @@ REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZEMF_M, ZTHV_UP_M, &   !
                                             & ZFRAC_ICE_UP_M         !
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZCOND ! condensate
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZA, ZGAM ! used for integration
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
 
+IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_BIGAUS',0,ZHOOK_HANDLE)
 
 !Computation is done on mass points
 !----------------------------------------------------------------------------
@@ -141,15 +113,15 @@ REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZA, ZGAM ! used for integration
 !
 !
 !Vertical gradient of RT, result on mass points
-ZW1(:,:)=GZ_M_W_MF(KKA,KKU,KKL, PRTM(:,:), PDZZ(:,:))
-ZGRAD_Z_RT(:,:)=MZF_MF(KKA,KKU,KKL, ZW1(:,:))
+ZW1(:,:)=GZ_M_W_MF(PRTM(:,:), PDZZ(:,:), KKA, KKU, KKL)
+ZGRAD_Z_RT(:,:)=MZF_MF(ZW1(:,:), KKA, KKU, KKL)
 
 !Interpolation on mass points
-ZTHV_UP_M(:,:) = MZF_MF(KKA,KKU,KKL, PTHV_UP(:,:))
-ZRSAT_UP_M(:,:)= MZF_MF(KKA,KKU,KKL, PRSAT_UP(:,:))
-ZRT_UP_M(:,:)  = MZF_MF(KKA,KKU,KKL, PRT_UP(:,:))
-ZEMF_M(:,:)    = MZF_MF(KKA,KKU,KKL, PEMF(:,:))
-ZFRAC_ICE_UP_M(:,:) = MZF_MF(KKA,KKU,KKL, PFRAC_ICE_UP(:,:))
+ZTHV_UP_M(:,:) = MZF_MF(PTHV_UP(:,:), KKA, KKU, KKL)
+ZRSAT_UP_M(:,:)= MZF_MF(PRSAT_UP(:,:), KKA, KKU, KKL)
+ZRT_UP_M(:,:)  = MZF_MF(PRT_UP(:,:), KKA, KKU, KKL)
+ZEMF_M(:,:)    = MZF_MF(PEMF(:,:), KKA, KKU, KKL)
+ZFRAC_ICE_UP_M(:,:) = MZF_MF(PFRAC_ICE_UP(:,:), KKA, KKU, KKL)
 
 !computation of omega star up
 ZOMEGA_UP_M(:)=0.
@@ -205,5 +177,7 @@ ZCOND(:,:)=MAX(ZCOND(:,:), 0.) !due to approximation of ZGAM value, ZCOND could 
 PRC_MF(:,:)=(1.-ZFRAC_ICE_UP_M(:,:)) * ZCOND(:,:)
 PRI_MF(:,:)=(   ZFRAC_ICE_UP_M(:,:)) * ZCOND(:,:)
 
+IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_BIGAUS',1,ZHOOK_HANDLE)
 
 END SUBROUTINE COMPUTE_MF_CLOUD_BIGAUS
+END MODULE MODE_COMPUTE_MF_CLOUD_BIGAUS
