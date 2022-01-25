@@ -241,11 +241,6 @@ IKE=KKU-JPVEXT_TURB*KKL
 ! compute the effective diffusion coefficient at the mass point
 ZKEFF(:,:,:) = PLM(:,:,:) * SQRT(PTKEM(:,:,:)) 
 !
-#ifdef REPRO48
-#else
-IF (LBUDGET_TH)  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH),  'DISSH', PRTHLS(:, :, :) )
-#endif
-!
 !----------------------------------------------------------------------------
 !
 !*       2.   TKE EQUATION  
@@ -383,11 +378,6 @@ IF (LBUDGET_TKE) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TKE), 'TR', PRTKES(:, :
 !
 PRTHLS(:,:,:) = PRTHLS(:,:,:) + XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * &
                 (PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:)) * PRHODJ(:,:,:) * PCOEF_DISS(:,:,:)
-
-#ifdef REPRO48
-#else
-IF (LBUDGET_TH) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS(:, :, :) )
-#endif
 !----------------------------------------------------------------------------
 !
 !*       4.   STORES SOME DIAGNOSTICS

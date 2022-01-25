@@ -351,11 +351,11 @@ END MODULE MODI_TURB
 !*      0. DECLARATIONS
 !          ------------
 !
-use modd_budget,      only: lbudget_u,  lbudget_v,  lbudget_w,  lbudget_th, lbudget_rv, lbudget_rc,  &
-                            lbudget_rr, lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, lbudget_sv,  &
+USE MODD_BUDGET, ONLY: LBUDGET_U,  LBUDGET_V,  LBUDGET_W,  LBUDGET_TH, LBUDGET_RV, LBUDGET_RC,  &
+                            LBUDGET_RR, LBUDGET_RI, LBUDGET_RS, LBUDGET_RG, LBUDGET_RH, LBUDGET_SV,  &
                             NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC,  &
                             NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1, &
-                            tbudgets
+                            TBUDGETS
 USE MODD_CONF
 USE MODD_CST
 USE MODD_CTURB
@@ -384,10 +384,10 @@ USE MODI_TM06
 USE MODI_UPDATE_LM
 USE MODI_GET_HALO
 !
-use mode_budget,         only: Budget_store_init, Budget_store_end
+USE MODE_BUDGET,         ONLY: BUDGET_STORE_INIT, BUDGET_STORE_END
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 USE MODE_SBL
-use mode_sources_neg_correct, only: Sources_neg_correct
+USE MODE_SOURES_NEG_CORRECT, ONLY: SOURCES_NEG_CORRECT
 !
 USE MODI_EMOIST
 USE MODI_ETHETA
