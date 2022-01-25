@@ -106,6 +106,8 @@ phyex/turb/compute_function_thermo_mf.F90
 phyex/turb/modd_cmfshall.F90
 phyex/turb/mf_turb_expl.F90
 phyex/turb/modi_mf_turb_expl.F90
+phyex/turb/mf_turb.F90
+phyex/turb/modi_mf_turb.F90
 phyex/turb/compute_mf_cloud.F90
 phyex/turb/compute_mf_cloud_bigaus.F90
 phyex/turb/compute_mf_cloud_direct.F90

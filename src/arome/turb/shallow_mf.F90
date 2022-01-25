@@ -67,8 +67,8 @@ USE MODI_THL_RT_FROM_TH_R_MF
 USE MODI_COMPUTE_UPDRAFT
 USE MODI_COMPUTE_UPDRAFT_RHCJ10
 USE MODI_COMPUTE_UPDRAFT_RAHA
-USE MODI_MF_TURB
-USE MODI_MF_TURB_EXPL
+USE MODE_MF_TURB, ONLY: MF_TURB
+USE MODE_MF_TURB_EXPL, ONLY: MF_TURB_EXPL
 USE MODE_COMPUTE_MF_CLOUD, ONLY: COMPUTE_MF_CLOUD
 USE MODE_COMPUTE_FRAC_ICE, ONLY : COMPUTE_FRAC_ICE
 !
@@ -265,9 +265,9 @@ CALL COMPUTE_MF_CLOUD(KKA,IKB,IKE,KKU,KKL,KRR,KRRL,KRRI,&
 ZEMF_O_RHODREF=PEMF/PRHODREF
 
 IF ( PIMPL_MF > 1.E-10 ) THEN  
-CALL MF_TURB(KKA, IKB, IKE, KKU, KKL, OMIXUV,                         &
+       CALL MF_TURB(KKA, IKB, IKE, KKU, KKL, OMIXUV,                     &
              ONOMIXLG,KSV_LGBEG,KSV_LGEND,                            &
-             PIMPL_MF, PTSTEP, PTSTEP_MET, PTSTEP_SV,                 &
+             PIMPL_MF, PTSTEP,                                        &
              PDZZ,                                                    &
              PRHODJ,                                                  &
              ZTHLM,ZTHVM,ZRTM,PUM,PVM,PSVM,                           &
@@ -276,7 +276,7 @@ CALL MF_TURB(KKA, IKB, IKE, KKU, KKL, OMIXUV,                         &
              PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,         &
              ZFLXZSVMF                                                )
 ELSE
-  CALL MF_TURB_EXPL(KKA, IKB, IKE, KKU, KKL, OMIXUV,                     &
+      CALL MF_TURB_EXPL(KKA, IKB, IKE, KKU, KKL, OMIXUV,                 &
            PRHODJ,                                                       &
            ZTHLM,ZTHVM,ZRTM,PUM,PVM,                                     &
            PDTHLDT_MF,PDRTDT_MF,PDUDT_MF,PDVDT_MF,                       &
