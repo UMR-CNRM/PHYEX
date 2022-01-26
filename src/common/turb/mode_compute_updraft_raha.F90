@@ -1,4 +1,14 @@
+!MNH_LIC Copyright 2012-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
 !     ######spl
+     MODULE MODE_COMPUTE_UPDRAFT_RAHA
+!    ###########################
+!
+IMPLICIT NONE
+CONTAINS
       SUBROUTINE COMPUTE_UPDRAFT_RAHA(KKA,KKB,KKE,KKU,KKL,HFRAC_ICE, &
                                  OENTR_DETR,OMIXUV,                  &
                                  ONOMIXLG,KSV_LGBEG,KSV_LGEND,       &
@@ -14,8 +24,6 @@
                                  PBUO_INTEG,KKLCL,KKETL,KKCTL,       &
                                  PDEPTH     )
 
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     #################################################################
 !!
 !!****  *COMPUTE_UPDRAF_RAHA* - calculates caracteristics of the updraft 
@@ -44,7 +52,7 @@
 !!     AUTHOR
 !!     ------
 !!     Y. Bouteloup (2012)
-!!     R. Honert Janv 2013 ==> corection of some coding bugs
+!!     R. Honnert Janv 2013 ==> corection of some coding bugs
 !!     Y. Bouteloup Janv 2014 ==> Allow the use of loops in the both direction
 !! --------------------------------------------------------------------------
 !
@@ -56,6 +64,9 @@ USE MODD_PARAM_MFSHALL_n
 
 USE MODE_TH_R_FROM_THL_RT_1D, ONLY: TH_R_FROM_THL_RT_1D
 USE MODI_SHUMAN_MF, ONLY: MZM_MF
+!
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 
 IMPLICIT NONE
 
@@ -68,7 +79,7 @@ INTEGER,                INTENT(IN)   :: KKB          ! near ground physical inde
 INTEGER,                INTENT(IN)   :: KKE          ! uppest atmosphere physical index
 INTEGER,                INTENT(IN)   :: KKU          ! uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL          ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-CHARACTER*1,            INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
+CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                INTENT(IN) :: OENTR_DETR! flag to recompute entrainment, detrainment and mass flux
 LOGICAL,                INTENT(IN) :: OMIXUV    ! True if mixing of momentum
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
@@ -584,3 +595,4 @@ ENDWHERE
 IF (LHOOK) CALL DR_HOOK('COMPUTE_UPDRAF_RAHA',1,ZHOOK_HANDLE)
 
 END SUBROUTINE COMPUTE_UPDRAFT_RAHA
+END MODULE MODE_COMPUTE_UPDRAFT_RAHA

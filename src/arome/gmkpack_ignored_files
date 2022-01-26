@@ -149,3 +149,9 @@ phyex/turb/compute_bl89_ml.F90
 phyex/turb/modi_compute_bl89_ml.F90
 phyex/turb/compute_entr_detr.F90
 phyex/turb/modi_compute_entr_detr.F90
+phyex/turb/compute_updraft_raha.F90
+phyex/turb/modi_compute_updraft_raha.F90
+phyex/turb/modi_compute_updraft_rhcj10.F90
+phyex/turb/compute_updraft_rhcj10.F90
+phyex/turb/modi_compute_updraft.F90
+phyex/turb/compute_updraft.F90
