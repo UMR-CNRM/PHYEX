@@ -1,4 +1,14 @@
+!MNH_LIC Copyright 2004-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
 !     ######spl
+     MODULE MODE_COMPUTE_UPDRAFT
+!    ###########################
+!
+IMPLICIT NONE
+CONTAINS
       SUBROUTINE COMPUTE_UPDRAFT(KKA,KKB,KKE,KKU,KKL,HFRAC_ICE,   &
                                  OENTR_DETR,OMIXUV,               &
                                  ONOMIXLG,KSV_LGBEG,KSV_LGEND,    &
@@ -12,10 +22,8 @@
                                  PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,  &
                                  PEMF,PDETR,PENTR,                &
                                  PBUO_INTEG,KKLCL,KKETL,KKCTL,    &
-                                 PDEPTH     )
+                                 PDEPTH, PDX, PDY     )
 
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     #################################################################
 !!
 !!****  *COMPUTE_UPDRAFT* - calculates caracteristics of the updraft 
@@ -49,14 +57,17 @@
 !!     S. Riette Jan 2012: support for both order of vertical levels
 !!     V.Masson, C.Lac : 02/2011 : SV_UP initialized by a non-zero value
 !!     S. Riette Apr 2013: improvement of continuity at the condensation level
+!!     R.Honnert Oct 2016 : Add ZSURF and Update with AROME
 !!     Q.Rodier  01/2019 : support RM17 mixing length
+!!     R.Honnert 01/2019 : add LGZ (reduction of the mass-flux surface closure with the resolution)
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST
-USE MODD_PARAM_MFSHALL_n
+USE MODD_CST, ONLY: XG, XRV, XRD
+USE MODD_PARAM_MFSHALL_n, ONLY: LGZ, XALP_PERT, XCMF, XPRES_UV, XFRAC_UP_MAX, &
+                                XABUO, XBENTR, XENTR_DRY, XBDETR, XGZ
 USE MODD_TURB_n, ONLY : CTURBLEN
 
 USE MODE_COMPUTE_ENTR_DETR, ONLY: COMPUTE_ENTR_DETR
@@ -64,7 +75,8 @@ USE MODI_TH_R_FROM_THL_RT_1D
 USE MODI_SHUMAN_MF, ONLY: MZM_MF, MZF_MF, GZ_M_W_MF
 
 USE MODE_COMPUTE_BL89_ML, ONLY: COMPUTE_BL89_ML
-
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 
 IMPLICIT NONE
 
@@ -77,7 +89,7 @@ INTEGER,                INTENT(IN)   :: KKB          ! near ground physical inde
 INTEGER,                INTENT(IN)   :: KKE          ! uppest atmosphere physical index
 INTEGER,                INTENT(IN)   :: KKU          ! uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL          ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-CHARACTER*1,            INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
+CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                INTENT(IN) :: OENTR_DETR! flag to recompute entrainment, detrainment and mass flux
 LOGICAL,                INTENT(IN) :: OMIXUV    ! True if mixing of momentum
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
@@ -117,6 +129,7 @@ REAL, DIMENSION(:,:),   INTENT(INOUT)::  PEMF,PDETR,PENTR ! Mass_flux,
 REAL, DIMENSION(:,:),   INTENT(INOUT) :: PBUO_INTEG       ! Integrated Buoyancy 
 INTEGER, DIMENSION(:),  INTENT(INOUT) :: KKLCL,KKETL,KKCTL! LCL, ETL, CTL
 REAL, DIMENSION(:),     INTENT(OUT)   :: PDEPTH           ! Deepness of cloud
+REAL,                   INTENT(IN)    :: PDX, PDY
 !                       1.2  Declaration of local variables
 !
 !
@@ -163,7 +176,7 @@ LOGICAL                          ::  GLMIX
 LOGICAL, DIMENSION(SIZE(PTHM,1))              :: GWORK1
 LOGICAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: GWORK2
 
-INTEGER  :: ITEST
+INTEGER  :: ITEST, JLOOP
 
 REAL, DIMENSION(SIZE(PTHM,1)) :: ZRC_UP, ZRI_UP, ZRV_UP,&
                                  ZRSATW, ZRSATI,&
@@ -172,8 +185,11 @@ REAL, DIMENSION(SIZE(PTHM,1)) :: ZRC_UP, ZRI_UP, ZRV_UP,&
 REAL  :: ZDEPTH_MAX1, ZDEPTH_MAX2 ! control auto-extinction process
 
 REAL  :: ZTMAX,ZRMAX  ! control value
+
+REAL, DIMENSION(SIZE(PTHM,1)) :: ZSURF
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZSHEAR,ZDUDZ,ZDVDZ ! vertical wind shear
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
+!
 IF (LHOOK) CALL DR_HOOK('COMPUTE_UPDRAFT',0,ZHOOK_HANDLE)
 
 ! Thresholds for the  perturbation of
@@ -299,13 +315,10 @@ IF (OENTR_DETR) THEN
     ZDUDZ = MZF_MF(GZ_M_W_MF(PUM,PDZZ, KKA, KKU, KKL), KKA, KKU, KKL)
     ZDVDZ = MZF_MF(GZ_M_W_MF(PVM,PDZZ, KKA, KKU, KKL), KKA, KKU, KKL)
     ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
-    PRINT*, 'phasage bete sans controle'
-    CALL ABORT
-    STOP
   ELSE
     ZSHEAR = 0. !no shear in bl89 mixing length
   END IF
- !
+  !
   CALL COMPUTE_BL89_ML(KKA,KKB,KKE,KKU,KKL,PDZZ,ZTKEM_F(:,KKB),ZG_O_THVREF(:,KKB),ZTHVM,KKB,GLMIX,.TRUE.,ZSHEAR,ZLUP)
   ZLUP(:)=MAX(ZLUP(:),1.E-10)
 
@@ -314,8 +327,14 @@ IF (OENTR_DETR) THEN
                 (0.61*ZTHM_F(:,KKB))*PSFRV(:)
 
   ! Mass flux at KKB level (updraft triggered if PSFTH>0.)
+  IF (LGZ) THEN
+    ZSURF(:)=TANH(XGZ*SQRT(PDX*PDY)/ZLUP)
+  ELSE
+    ZSURF(:)=1.
+  END IF
   WHERE (ZWTHVSURF(:)>0.)
-    PEMF(:,KKB) = XCMF * ZRHO_F(:,KKB) * ((ZG_O_THVREF(:,KKB))*ZWTHVSURF*ZLUP)**(1./3.)
+    PEMF(:,KKB) = XCMF * ZSURF(:) * ZRHO_F(:,KKB) *  &
+            ((ZG_O_THVREF(:,KKB))*ZWTHVSURF*ZLUP)**(1./3.)
     PFRAC_UP(:,KKB)=MIN(PEMF(:,KKB)/(SQRT(ZW_UP2(:,KKB))*ZRHO_F(:,KKB)),XFRAC_UP_MAX)
     ZW_UP2(:,KKB)=(PEMF(:,KKB)/(PFRAC_UP(:,KKB)*ZRHO_F(:,KKB)))**2
     GTEST(:)=.TRUE.
@@ -401,16 +420,18 @@ DO JK=KKB,KKE-KKL,KKL
 
 
 ! If the updraft did not stop, compute cons updraft characteritics at jk+KKL
-  WHERE(GTEST)     
-    ZMIX2(:) = (PZZ(:,JK+KKL)-PZZ(:,JK))*PENTR(:,JK) !&
-    ZMIX3_CLD(:) = (PZZ(:,JK+KKL)-PZZ(:,JK))*(1.-ZPART_DRY(:))*ZDETR_CLD(:,JK) !&                   
-    ZMIX2_CLD(:) = (PZZ(:,JK+KKL)-PZZ(:,JK))*(1.-ZPART_DRY(:))*ZENTR_CLD(:,JK)
-                
-    PTHL_UP(:,JK+KKL)=(PTHL_UP(:,JK)*(1.-0.5*ZMIX2(:)) + PTHLM(:,JK)*ZMIX2(:)) &
-                          /(1.+0.5*ZMIX2(:))   
-    PRT_UP(:,JK+KKL) =(PRT_UP (:,JK)*(1.-0.5*ZMIX2(:)) + PRTM(:,JK)*ZMIX2(:))  &
-                          /(1.+0.5*ZMIX2(:))
-  ENDWHERE
+  DO JLOOP=1,SIZE(GTEST)
+    IF(GTEST(JLOOP)) THEN
+      ZMIX2(JLOOP) = (PZZ(JLOOP,JK+KKL)-PZZ(JLOOP,JK))*PENTR(JLOOP,JK) !&
+      ZMIX3_CLD(JLOOP) = (PZZ(JLOOP,JK+KKL)-PZZ(JLOOP,JK))*(1.-ZPART_DRY(JLOOP))*ZDETR_CLD(JLOOP,JK) !&                   
+      ZMIX2_CLD(JLOOP) = (PZZ(JLOOP,JK+KKL)-PZZ(JLOOP,JK))*(1.-ZPART_DRY(JLOOP))*ZENTR_CLD(JLOOP,JK)
+                  
+      PTHL_UP(JLOOP,JK+KKL)=(PTHL_UP(JLOOP,JK)*(1.-0.5*ZMIX2(JLOOP)) + PTHLM(JLOOP,JK)*ZMIX2(JLOOP)) &
+                            /(1.+0.5*ZMIX2(JLOOP))   
+      PRT_UP(JLOOP,JK+KKL) =(PRT_UP (JLOOP,JK)*(1.-0.5*ZMIX2(JLOOP)) + PRTM(JLOOP,JK)*ZMIX2(JLOOP))  &
+                            /(1.+0.5*ZMIX2(JLOOP))
+    ENDIF
+  ENDDO
   
 
   IF(OMIXUV) THEN
@@ -551,3 +572,4 @@ ENDIF
 
 IF (LHOOK) CALL DR_HOOK('COMPUTE_UPDRAFT',1,ZHOOK_HANDLE)
 END SUBROUTINE COMPUTE_UPDRAFT
+END MODULE MODE_COMPUTE_UPDRAFT

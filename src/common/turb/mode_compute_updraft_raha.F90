@@ -4,86 +4,11 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ######spl
-     MODULE MODI_COMPUTE_UPDRAFT_RAHA
+     MODULE MODE_COMPUTE_UPDRAFT_RAHA
 !    ###########################
 !
-INTERFACE
-!
-!     #################################################################
-      SUBROUTINE COMPUTE_UPDRAFT_RAHA(KKA,KKB,KKE,KKU,KKL,HFRAC_ICE, &
-                                 OENTR_DETR,OMIXUV,                  &
-                                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,       &
-                                 PZZ,PDZZ,                           &
-                                 PSFTH,PSFRV,                        &
-                                 PPABSM,PRHODREF,PUM,PVM, PTKEM,     &
-                                 PEXNM,PTHM,PRVM,PTHLM,PRTM,         &
-                                 PSVM,PTHL_UP,PRT_UP,                &
-                                 PRV_UP,PRC_UP,PRI_UP,PTHV_UP,       &
-                                 PW_UP,PU_UP, PV_UP, PSV_UP,         &
-                                 PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,     &
-                                 PEMF,PDETR,PENTR,                   &
-                                 PBUO_INTEG,KKLCL,KKETL,KKCTL,       &
-                                 PDEPTH     )
-!     #################################################################
-!
-!*                    1.1  Declaration of Arguments
-!
-!
-INTEGER,                INTENT(IN)   :: KKA          ! near ground array index
-INTEGER,                INTENT(IN)   :: KKB          ! near ground physical index
-INTEGER,                INTENT(IN)   :: KKE          ! uppest atmosphere physical index
-INTEGER,                INTENT(IN)   :: KKU          ! uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL          ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-CHARACTER(len=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
-LOGICAL,                INTENT(IN) :: OENTR_DETR! flag to recompute entrainment, detrainment and mass flux
-LOGICAL,                INTENT(IN) :: OMIXUV    ! True if mixing of momentum
-LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
-INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
-INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
-REAL, DIMENSION(:,:), INTENT(IN)   :: PZZ       !  Height at the flux point
-REAL, DIMENSION(:,:), INTENT(IN)   :: PDZZ      !  Metrics coefficient
- 
-REAL, DIMENSION(:),   INTENT(IN)   ::  PSFTH,PSFRV
-! normal surface fluxes of theta,rv,(u,v) parallel to the orography
-!
-REAL, DIMENSION(:,:),   INTENT(IN) ::  PPABSM     ! Pressure at t-dt
-REAL, DIMENSION(:,:),   INTENT(IN) ::  PRHODREF   ! dry density of the
-                                                  ! reference state
-REAL, DIMENSION(:,:),   INTENT(IN) ::  PUM        ! u mean wind
-REAL, DIMENSION(:,:),   INTENT(IN) ::  PVM        ! v mean wind
-REAL, DIMENSION(:,:),   INTENT(IN) ::  PTKEM      ! TKE at t-dt
-
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PEXNM       ! Exner function at t-dt
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTHM           ! liquid pot. temp. at t-dt
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PRVM           ! vapor mixing ratio at t-dt
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTHLM,PRTM     ! cons. var. at t-dt
-
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSVM           ! scalar var. at t-dt
-
-REAL, DIMENSION(:,:),   INTENT(OUT)  ::  PTHL_UP,PRT_UP   ! updraft properties
-REAL, DIMENSION(:,:),   INTENT(OUT)  ::  PU_UP, PV_UP     ! updraft wind components
-REAL, DIMENSION(:,:),   INTENT(INOUT)::  PRV_UP,PRC_UP    ! updraft rv, rc
-REAL, DIMENSION(:,:),   INTENT(INOUT)::  PRI_UP,PTHV_UP   ! updraft ri, THv
-REAL, DIMENSION(:,:),   INTENT(INOUT)::  PW_UP,PFRAC_UP   ! updraft w, fraction
-REAL, DIMENSION(:,:),   INTENT(INOUT)::  PFRAC_ICE_UP     ! liquid/solid fraction in updraft
-REAL, DIMENSION(:,:),   INTENT(INOUT)::  PRSAT_UP         ! Rsat
-
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PSV_UP           ! updraft scalar var. 
-                                         
-REAL, DIMENSION(:,:),   INTENT(INOUT)::  PEMF,PDETR,PENTR ! Mass_flux,
-                                                          ! detrainment,entrainment
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PBUO_INTEG       ! Integrated Buoyancy 
-INTEGER, DIMENSION(:),  INTENT(INOUT)::  KKLCL,KKETL,KKCTL! LCL, ETL, CTL                                     
-REAL, DIMENSION(:),     INTENT(OUT)   :: PDEPTH           ! Deepness of cloud
-
-
-END SUBROUTINE COMPUTE_UPDRAFT_RAHA
-
-END INTERFACE
-!
-END MODULE MODI_COMPUTE_UPDRAFT_RAHA
-!
-!     ######spl
+IMPLICIT NONE
+CONTAINS
       SUBROUTINE COMPUTE_UPDRAFT_RAHA(KKA,KKB,KKE,KKU,KKL,HFRAC_ICE, &
                                  OENTR_DETR,OMIXUV,                  &
                                  ONOMIXLG,KSV_LGBEG,KSV_LGEND,       &
@@ -138,7 +63,10 @@ USE MODD_CST
 USE MODD_PARAM_MFSHALL_n
 
 USE MODI_TH_R_FROM_THL_RT_1D
-USE MODI_SHUMAN_MF
+USE MODI_SHUMAN_MF, ONLY: MZM_MF
+!
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 
 IMPLICIT NONE
 
@@ -151,7 +79,7 @@ INTEGER,                INTENT(IN)   :: KKB          ! near ground physical inde
 INTEGER,                INTENT(IN)   :: KKE          ! uppest atmosphere physical index
 INTEGER,                INTENT(IN)   :: KKU          ! uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL          ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-CHARACTER(len=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
+CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                INTENT(IN) :: OENTR_DETR! flag to recompute entrainment, detrainment and mass flux
 LOGICAL,                INTENT(IN) :: OMIXUV    ! True if mixing of momentum
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
@@ -261,6 +189,8 @@ REAL  :: ZDEPTH_MAX1, ZDEPTH_MAX2 ! control auto-extinction process
 
 REAL  :: ZTMAX,ZRMAX, ZEPS  ! control value
 
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('COMPUTE_UPDRAF_RAHA',0,ZHOOK_HANDLE)
 
 ! Thresholds for the  perturbation of
 ! theta_l and r_t at the first level of the updraft
@@ -319,11 +249,11 @@ PRSAT_UP(:,:)=PRVM(:,:) ! should be initialised correctly but is (normaly) not u
 ! Initialisation of environment variables at t-dt
 
 ! variables at flux level
-ZTHLM_F(:,:) = MZM_MF(KKA,KKU,KKL,PTHLM(:,:))
-ZRTM_F (:,:) = MZM_MF(KKA,KKU,KKL,PRTM(:,:))
-ZUM_F  (:,:) = MZM_MF(KKA,KKU,KKL,PUM(:,:))
-ZVM_F  (:,:) = MZM_MF(KKA,KKU,KKL,PVM(:,:))
-ZTKEM_F(:,:) = MZM_MF(KKA,KKU,KKL,PTKEM(:,:))
+ZTHLM_F(:,:) = MZM_MF(PTHLM(:,:), KKA, KKU, KKL)
+ZRTM_F (:,:) = MZM_MF(PRTM(:,:), KKA, KKU, KKL)
+ZUM_F  (:,:) = MZM_MF(PUM(:,:), KKA, KKU, KKL)
+ZVM_F  (:,:) = MZM_MF(PVM(:,:), KKA, KKU, KKL)
+ZTKEM_F(:,:) = MZM_MF(PTKEM(:,:), KKA, KKU, KKL)
 
 !DO JSV=1,ISV 
 ! IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
@@ -350,10 +280,10 @@ PRT_UP(:,KKB) = ZRTM_F(:,KKB)+MAX(0.,MIN(ZRMAX,(PSFRV(:)/SQRT(ZTKEM_F(:,KKB)))*X
 ZQT_UP(:) = PRT_UP(:,KKB)/(1.+PRT_UP(:,KKB))
 ZTHS_UP(:,KKB)=PTHL_UP(:,KKB)*(1.+XLAMBDA_MF*ZQT_UP(:))
 
-ZTHM_F (:,:) = MZM_MF(KKA,KKU,KKL,PTHM (:,:))
-ZPRES_F(:,:) = MZM_MF(KKA,KKU,KKL,PPABSM(:,:))
-ZRHO_F (:,:) = MZM_MF(KKA,KKU,KKL,PRHODREF(:,:))
-ZRVM_F (:,:) = MZM_MF(KKA,KKU,KKL,PRVM(:,:))
+ZTHM_F (:,:) = MZM_MF(PTHM (:,:), KKA, KKU, KKL)
+ZPRES_F(:,:) = MZM_MF(PPABSM(:,:), KKA, KKU, KKL)
+ZRHO_F (:,:) = MZM_MF(PRHODREF(:,:), KKA, KKU, KKL)
+ZRVM_F (:,:) = MZM_MF(PRVM(:,:), KKA, KKU, KKL)
 
 ! thetav at mass and flux levels 
 ZTHVM_F(:,:)=ZTHM_F(:,:)*((1.+ZRVORD*ZRVM_F(:,:))/(1.+ZRTM_F(:,:)))
@@ -662,5 +592,7 @@ WHERE (GWORK2)
    PFRAC_UP(:,:) = PFRAC_UP(:,:) * ZCOEF(:,:)
 ENDWHERE
 
+IF (LHOOK) CALL DR_HOOK('COMPUTE_UPDRAF_RAHA',1,ZHOOK_HANDLE)
 
 END SUBROUTINE COMPUTE_UPDRAFT_RAHA
+END MODULE MODE_COMPUTE_UPDRAFT_RAHA

@@ -180,8 +180,6 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
   ZFRAC_ICE(:)=PFRAC_ICE(:) ! to not modify fraction of ice
  
   ZPRE(:)=PPRE_MINUS_HALF(:)
-  ZMIXTHL(:)=0.1
-  ZMIXRT(:)=0.1
 
 !                1.4 Estimation of PPART_DRY
   DO JLOOP=1,SIZE(OTEST)
@@ -350,6 +348,9 @@ DO JLOOP=1,SIZE(OTEST)
     ZMIXRT(JLOOP)  = ZKIC_INIT * &
                (PRTM(JLOOP,KK)-ZDZ*(PRTM(JLOOP,KK)-PRTM(JLOOP,JI))/PDZZ(JLOOP,KK)) + &
                (1. - ZKIC_INIT)*PRT_UP(JLOOP)
+  ELSE
+    ZMIXTHL(JLOOP) = 300.
+    ZMIXRT(JLOOP) = 0.1
   ENDIF
 ENDDO
   CALL TH_R_FROM_THL_RT_1D(HFRAC_ICE,ZFRAC_ICE,&
