@@ -3,39 +3,11 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
 !     ######spl
-     MODULE MODI_COMPUTE_FUNCTION_THERMO_MF
+     MODULE MODE_COMPUTE_FUNCTION_THERMO_MF
 !    ######################################
 !
-INTERFACE
-      
-!     #################################################################
-      SUBROUTINE COMPUTE_FUNCTION_THERMO_MF( KRR,KRRL,KRRI,                  &
-                                       PTH, PR, PEXN, PFRAC_ICE, PPABS,      &
-                                       PT, PAMOIST,PATHETA                   )
-!     #################################################################
-
-!*               1.1  Declaration of Arguments
-!
-
-INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
-INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
-INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
-
-REAL, DIMENSION(:,:), INTENT(IN)   :: PTH      ! theta
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PR       ! water species
-REAL, DIMENSION(:,:)  , INTENT(IN) :: PPABS,PEXN    ! pressure, Exner funct.
-REAL, DIMENSION(:,:)  , INTENT(IN) :: PFRAC_ICE     ! ice fraction
-
-REAL, DIMENSION(:,:), INTENT(OUT)   :: PT      ! temperature
-
-REAL, DIMENSION(:,:), INTENT(OUT)  ::  PAMOIST,PATHETA
-!
-END SUBROUTINE COMPUTE_FUNCTION_THERMO_MF
-
-END INTERFACE
-!
-END MODULE MODI_COMPUTE_FUNCTION_THERMO_MF
-!     ######spl
+IMPLICIT NONE
+CONTAINS
       SUBROUTINE COMPUTE_FUNCTION_THERMO_MF( KRR,KRRL,KRRI,                  &
                                        PTH, PR, PEXN, PFRAC_ICE, PPABS,      &
                                        PT,PAMOIST,PATHETA                    )
@@ -79,6 +51,8 @@ END MODULE MODI_COMPUTE_FUNCTION_THERMO_MF
 !          ------------
 !
 USE MODD_CST
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 IMPLICIT NONE
 !
@@ -114,9 +88,11 @@ REAL, DIMENSION(SIZE(PTH,1),SIZE(PTH,2)) ::     &
           ZLVOCP,ZLSOCP
 
 INTEGER             :: JRR
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('COMPUTE_FUNCTION_THERMO_MF',0,ZHOOK_HANDLE)
 !
   ZEPS = XMV / XMD
 
@@ -235,4 +211,7 @@ ELSE
   PAMOIST(:,:) = 0.
   PATHETA(:,:) = 0.
 ENDIF
+IF (LHOOK) CALL DR_HOOK('COMPUTE_FUNCTION_THERMO_MF',1,ZHOOK_HANDLE)
 END SUBROUTINE COMPUTE_FUNCTION_THERMO_MF
+!
+END MODULE MODE_COMPUTE_FUNCTION_THERMO_MF

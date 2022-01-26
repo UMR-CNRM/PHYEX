@@ -1,13 +1,18 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+!    ######################
+     MODULE MODE_MF_TURB_EXPL
+!    ######################
+IMPLICIT NONE
+CONTAINS
       SUBROUTINE MF_TURB_EXPL(KKA,KKB,KKE,KKU,KKL,OMIXUV,             &
                 PRHODJ,                                               &
                 PTHLM,PTHVM,PRTM,PUM,PVM,                             &
                 PTHLDT,PRTDT,PUDT,PVDT,                               &
                 PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,              &
                 PFLXZTHLMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF)
-
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 
 !     #################################################################
 !
@@ -47,7 +52,9 @@
 !*      0. DECLARATIONS
 !          ------------
 
-USE MODD_CMFSHALL
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE MODD_PARAM_MFSHALL_n, ONLY: XLAMBDA_MF
 USE MODI_SHUMAN_MF, ONLY: MZM_MF
 
 IMPLICIT NONE
@@ -95,13 +102,13 @@ REAL, DIMENSION(SIZE(PFLXZTHLMF,1),SIZE(PFLXZTHLMF,2)) :: ZQT_UP,ZQTM,ZTHSDT,ZQT
 REAL, DIMENSION(SIZE(PFLXZTHLMF,1),SIZE(PFLXZTHLMF,2)) :: ZTHLM_F,ZRTM_F
 
 INTEGER                              :: JK            ! loop counter
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
 
 !----------------------------------------------------------------------------
 !
 !*      1.PRELIMINARIES
 !         -------------
 
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MF_TURB_EXPL',0,ZHOOK_HANDLE)
 
 PFLXZRMF   = 0.
@@ -127,8 +134,8 @@ ZRTM_F (:,:) = MZM_MF(PRTM (:,:), KKA, KKU, KKL)
 ZTHLM_F(:,:) = MZM_MF(PTHLM(:,:), KKA, KKU, KKL)
 ZQTM   (:,:) = ZRTM_F (:,:)/(1.+ZRTM_F (:,:))
 ZQT_UP (:,:) = PRT_UP (:,:)/(1.+PRT_UP (:,:))
-ZTHS_UP(:,:) = PTHL_UP(:,:)*(1.+XLAMBDA*ZQT_UP(:,:))
-ZTHSM  (:,:) = ZTHLM_F(:,:)*(1.+XLAMBDA*ZQTM(:,:))
+ZTHS_UP(:,:) = PTHL_UP(:,:)*(1.+XLAMBDA_MF*ZQT_UP(:,:))
+ZTHSM  (:,:) = ZTHLM_F(:,:)*(1.+XLAMBDA_MF*ZQTM(:,:))
 
 PFLXZTHLMF(:,:)  = PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(PTHLM(:,:), KKA, KKU, KKL))  ! ThetaL
 PFLXZRMF(:,:)    = PEMF(:,:)*(PRT_UP (:,:)-MZM_MF(PRTM (:,:), KKA, KKU, KKL))  ! Rt
@@ -156,7 +163,7 @@ DO JK=KKB,KKE-KKL,KKL
   PRTDT (:,JK) = (PFLXZRMF  (:,JK  ) - PFLXZRMF  (:,JK+KKL)) / PRHODJ(:,JK)
   ZQTDT (:,JK) = PRTDT (:,JK)/(1.+ ZRTM_F (:,JK)*ZRTM_F (:,JK))
   ZTHSDT(:,JK) = (ZFLXZTHSMF(:,JK  ) - ZFLXZTHSMF(:,JK+KKL)) / PRHODJ(:,JK)
-  PTHLDT(:,JK) = ZTHSDT(:,JK)/(1.+XLAMBDA*ZQTM(:,JK)) - ZTHLM_F(:,JK)*XLAMBDA*ZQTDT(:,JK)
+  PTHLDT(:,JK) = ZTHSDT(:,JK)/(1.+XLAMBDA_MF*ZQTM(:,JK)) - ZTHLM_F(:,JK)*XLAMBDA_MF*ZQTDT(:,JK)
 END DO
 
 IF (OMIXUV) THEN
@@ -169,3 +176,4 @@ ENDIF
 
 IF (LHOOK) CALL DR_HOOK('MF_TURB_EXPL',1,ZHOOK_HANDLE)
 END SUBROUTINE MF_TURB_EXPL
+END MODULE MODE_MF_TURB_EXPL

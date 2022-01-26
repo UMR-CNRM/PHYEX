@@ -3,83 +3,11 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
 !    ######################
-     MODULE MODI_MF_TURB
+     MODULE MODE_MF_TURB
 !    ######################
 !
-INTERFACE
-!     #################################################################
-      SUBROUTINE MF_TURB(KKA,KKB,KKE,KKU,KKL,OMIXUV,                  &
-                ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
-                PIMPL, PTSTEP,                                        &
-                PDZZ,                                                 &
-                PRHODJ,                                               &
-                PTHLM,PTHVM,PRTM,PUM,PVM,PSVM,                        &
-                PTHLDT,PRTDT,PUDT,PVDT,PSVDT,                         &
-                PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,PSV_UP,       &
-                PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,      &
-                PFLXZSVMF                                             )
-
-!     #################################################################
-!
-!               
-!*               1.1  Declaration of Arguments
-!
-!
-INTEGER,                INTENT(IN)   :: KKA          ! near ground array index
-INTEGER,                INTENT(IN)   :: KKB          ! near ground physical index
-INTEGER,                INTENT(IN)   :: KKE          ! uppest atmosphere physical index
-INTEGER,                INTENT(IN)   :: KKU          ! uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL          ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-
-LOGICAL,                INTENT(IN)   :: OMIXUV      ! True if mixing of momentum
-LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
-INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
-INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
-REAL,                   INTENT(IN)   :: PIMPL       ! degree of implicitness
-REAL,                 INTENT(IN)     ::  PTSTEP   ! Dynamical timestep 
-!
-REAL, DIMENSION(:,:), INTENT(IN)   :: PDZZ        ! metric coefficients
-
-REAL, DIMENSION(:,:), INTENT(IN)   ::  PRHODJ    ! dry density * Grid size
-
-!   Conservative var. at t-dt
-REAL, DIMENSION(:,:), INTENT(IN) ::  PTHLM       ! conservative pot. temp.
-REAL, DIMENSION(:,:), INTENT(IN) ::  PRTM         ! water var.  where 
-!  Virtual potential temperature at t-dt
-REAL, DIMENSION(:,:), INTENT(IN) ::  PTHVM 
-!  Momentum at t-dt
-REAL, DIMENSION(:,:), INTENT(IN) ::  PUM
-REAL, DIMENSION(:,:), INTENT(IN) ::  PVM
-!  scalar variables at t-dt
-REAL, DIMENSION(:,:,:), INTENT(IN) ::  PSVM
-!
-! Tendencies of conservative variables
-REAL, DIMENSION(:,:),   INTENT(OUT) ::  PTHLDT
-
-REAL, DIMENSION(:,:),   INTENT(OUT) ::  PRTDT 
-! Tendencies of momentum
-REAL, DIMENSION(:,:),   INTENT(OUT) ::  PUDT
-REAL, DIMENSION(:,:),   INTENT(OUT) ::  PVDT
-! Tendencies of scalar variables
-REAL, DIMENSION(:,:,:), INTENT(OUT) ::  PSVDT
-
-
-! Updraft characteritics
-REAL, DIMENSION(:,:), INTENT(IN)   ::  PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP
-REAL, DIMENSION(:,:,:), INTENT(IN) ::  PSV_UP
-! Fluxes
-REAL, DIMENSION(:,:), INTENT(OUT)  ::  PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF
-
-REAL, DIMENSION(:,:,:), INTENT(OUT)::  PFLXZSVMF
-
-END SUBROUTINE MF_TURB
-
-END INTERFACE
-!
-END MODULE MODI_MF_TURB
-
-                
-!     #################################################################
+IMPLICIT NONE
+CONTAINS
       SUBROUTINE MF_TURB(KKA,KKB,KKE,KKU,KKL,OMIXUV,                  &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
                 PIMPL, PTSTEP,                                        &
@@ -134,10 +62,11 @@ END MODULE MODI_MF_TURB
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_PARAM_MFSHALL_n
-!
-USE MODI_SHUMAN_MF
+USE MODI_SHUMAN_MF, ONLY: MZM_MF
 USE MODI_TRIDIAG_MASSFLUX
+!
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 IMPLICIT NONE
 !
@@ -199,15 +128,15 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)::  PFLXZSVMF
 !
 
 REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2)) :: ZVARS
-
-!
 INTEGER :: ISV,JSV          !number of scalar variables and Loop counter
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !----------------------------------------------------------------------------
 !
 !*      1.PRELIMINARIES
 !         -------------
 !
+IF (LHOOK) CALL DR_HOOK('MF_TURB',0,ZHOOK_HANDLE)
 !
 ! number of scalar var
 ISV=SIZE(PSVM,3)
@@ -226,15 +155,15 @@ PSVDT = 0.
 !   ( Resulting fluxes are in flux level (w-point) as PEMF and PTHL_UP )
 !
 
-PFLXZTHMF(:,:) = PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(KKA,KKU,KKL,PTHLM(:,:)))
+PFLXZTHMF(:,:) = PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(PTHLM(:,:), KKA, KKU, KKL))
 
-PFLXZRMF(:,:) =  PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(KKA,KKU,KKL,PRTM(:,:)))
+PFLXZRMF(:,:) =  PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(PRTM(:,:), KKA, KKU, KKL))
 
-PFLXZTHVMF(:,:) = PEMF(:,:)*(PTHV_UP(:,:)-MZM_MF(KKA,KKU,KKL,PTHVM(:,:)))
+PFLXZTHVMF(:,:) = PEMF(:,:)*(PTHV_UP(:,:)-MZM_MF(PTHVM(:,:), KKA, KKU, KKL))
 
 IF (OMIXUV) THEN
-  PFLXZUMF(:,:) =  PEMF(:,:)*(PU_UP(:,:)-MZM_MF(KKA,KKU,KKL,PUM(:,:)))
-  PFLXZVMF(:,:) =  PEMF(:,:)*(PV_UP(:,:)-MZM_MF(KKA,KKU,KKL,PVM(:,:)))
+  PFLXZUMF(:,:) =  PEMF(:,:)*(PU_UP(:,:)-MZM_MF(PUM(:,:), KKA, KKU, KKL))
+  PFLXZVMF(:,:) =  PEMF(:,:)*(PV_UP(:,:)-MZM_MF(PVM(:,:), KKA, KKU, KKL))
 ELSE
   PFLXZUMF(:,:) = 0.
   PFLXZVMF(:,:) = 0.
@@ -256,7 +185,7 @@ ENDIF
 CALL TRIDIAG_MASSFLUX(KKA,KKB,KKE,KKU,KKL,PTHLM,PFLXZTHMF,-PEMF,PTSTEP,PIMPL,  &
                       PDZZ,PRHODJ,ZVARS )
 ! compute new flux
-PFLXZTHMF(:,:) = PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(KKA,KKU,KKL,ZVARS(:,:)))
+PFLXZTHMF(:,:) = PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(ZVARS(:,:), KKA, KKU, KKL))
 
 !!! compute THL tendency
 !
@@ -268,7 +197,7 @@ PTHLDT(:,:)= (ZVARS(:,:)-PTHLM(:,:))/PTSTEP
 CALL TRIDIAG_MASSFLUX(KKA,KKB,KKE,KKU,KKL,PRTM(:,:),PFLXZRMF,-PEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
 ! compute new flux
-PFLXZRMF(:,:) =  PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(KKA,KKU,KKL,ZVARS(:,:)))
+PFLXZRMF(:,:) =  PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(ZVARS(:,:), KKA, KKU, KKL))
 
 !!! compute RT tendency
 PRTDT(:,:) = (ZVARS(:,:)-PRTM(:,:))/PTSTEP
@@ -283,7 +212,7 @@ IF (OMIXUV) THEN
   CALL TRIDIAG_MASSFLUX(KKA,KKB,KKE,KKU,KKL,PUM,PFLXZUMF,-PEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
   ! compute new flux
-  PFLXZUMF(:,:) = PEMF(:,:)*(PU_UP(:,:)-MZM_MF(KKA,KKU,KKL,ZVARS(:,:)))
+  PFLXZUMF(:,:) = PEMF(:,:)*(PU_UP(:,:)-MZM_MF(ZVARS(:,:), KKA, KKU, KKL))
 
   ! compute U tendency
   PUDT(:,:)= (ZVARS(:,:)-PUM(:,:))/PTSTEP
@@ -297,7 +226,7 @@ IF (OMIXUV) THEN
   CALL TRIDIAG_MASSFLUX(KKA,KKB,KKE,KKU,KKL,PVM,PFLXZVMF,-PEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
   ! compute new flux
-  PFLXZVMF(:,:) = PEMF(:,:)*(PV_UP(:,:)-MZM_MF(KKA,KKU,KKL,ZVARS(:,:)))
+  PFLXZVMF(:,:) = PEMF(:,:)*(PV_UP(:,:)-MZM_MF(ZVARS(:,:), KKA, KKU, KKL))
 
   ! compute V tendency
   PVDT(:,:)= (ZVARS(:,:)-PVM(:,:))/PTSTEP
@@ -313,7 +242,7 @@ DO JSV=1,ISV
   !*     compute mean flux of scalar variables at time t-dt
   !   ( Resulting fluxes are in flux level (w-point) as PEMF and PTHL_UP )
 
-  PFLXZSVMF(:,:,JSV) = PEMF(:,:)*(PSV_UP(:,:,JSV)-MZM_MF(KKA,KKU,KKL,PSVM(:,:,JSV)))
+  PFLXZSVMF(:,:,JSV) = PEMF(:,:)*(PSV_UP(:,:,JSV)-MZM_MF(PSVM(:,:,JSV), KKA, KKU, KKL))
   
   !
   ! 3.5 Compute the tendency for scalar variables
@@ -322,11 +251,13 @@ DO JSV=1,ISV
   CALL TRIDIAG_MASSFLUX(KKA,KKB,KKE,KKU,KKL,PSVM(:,:,JSV),PFLXZSVMF(:,:,JSV),&
                         -PEMF,PTSTEP,PIMPL,PDZZ,PRHODJ,ZVARS )
   ! compute new flux
-  PFLXZSVMF(:,:,JSV) = PEMF(:,:)*(PSV_UP(:,:,JSV)-MZM_MF(KKA,KKU,KKL,ZVARS))
+  PFLXZSVMF(:,:,JSV) = PEMF(:,:)*(PSV_UP(:,:,JSV)-MZM_MF(ZVARS, KKA, KKU, KKL))
 
   ! compute Sv tendency
   PSVDT(:,:,JSV)= (ZVARS(:,:)-PSVM(:,:,JSV))/PTSTEP
 
 ENDDO
 !
+IF (LHOOK) CALL DR_HOOK('MF_TURB',1,ZHOOK_HANDLE)
 END SUBROUTINE MF_TURB    
+END MODULE MODE_MF_TURB

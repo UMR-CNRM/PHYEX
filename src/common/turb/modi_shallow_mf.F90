@@ -7,7 +7,7 @@ INTERFACE
       SUBROUTINE SHALLOW_MF(KKA,KKU,KKL,KRR,KRRL,KRRI,                &
                 HMF_UPDRAFT, HMF_CLOUD, HFRAC_ICE, OMIXUV,            &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
-                PIMPL_MF, PTSTEP, PTSTEP_MET, PTSTEP_SV,              &
+                PIMPL_MF, PTSTEP,                                     &
                 PDZZ, PZZ,                                            &
                 PRHODJ, PRHODREF,                                     &
                 PPABSM, PEXNM,                                        &
@@ -20,7 +20,7 @@ INTERFACE
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
                 PU_UP, PV_UP, PTHV_UP, PW_UP,                         &
                 PFRAC_UP,PEMF,PDETR,PENTR,                            &
-                KKLCL,KKETL,KKCTL                                     )
+                KKLCL,KKETL,KKCTL,PDX,PDY                             )
 !     #################################################################
 !!
 !               
@@ -43,9 +43,7 @@ LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangia
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
 INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
 REAL,                   INTENT(IN)   :: PIMPL_MF     ! degre of implicitness
-REAL,              INTENT(IN)     ::  PTSTEP   ! Dynamical timestep 
-REAL,              INTENT(IN)     ::  PTSTEP_MET! Timestep for meteorological variables                        
-REAL,              INTENT(IN)     ::  PTSTEP_SV! Timestep for tracer variables
+REAL,                   INTENT(IN)   :: PTSTEP    ! Dynamical timestep 
 
 REAL, DIMENSION(:,:),   INTENT(IN) ::  PZZ         ! Height of flux point
 REAL, DIMENSION(:,:),   INTENT(IN) ::  PDZZ        ! Metric coefficients
@@ -89,6 +87,7 @@ REAL, DIMENSION(:,:), INTENT(INOUT) ::  PEMF      ! updraft mass flux
 REAL, DIMENSION(:,:), INTENT(OUT) ::  PDETR     ! updraft detrainment
 REAL, DIMENSION(:,:), INTENT(OUT) ::  PENTR     ! updraft entrainment
 INTEGER,DIMENSION(:), INTENT(OUT) :: KKLCL,KKETL,KKCTL ! level of LCL,ETL and CTL
+REAL,                 INTENT(IN)  :: PDX, PDY
 
 
 END SUBROUTINE SHALLOW_MF
