@@ -8,7 +8,7 @@ INTERFACE
               & KSPLIT,KMODEL_CL, &
               & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HINST_SFU,         &
-              & HMF_UPDRAFT,PIMPL,PTSTEP,                             &
+              & HMF_UPDRAFT,PIMPL,PTSTEP,TPFILE,                      &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,          &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
               & PRHODJ,PTHVREF,PRHODREF,                              &
@@ -25,7 +25,7 @@ INTERFACE
               & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
               & YDDDH,YDLDDH,YDMDDH,                                  &
               & TBUDGETS, KBUDGETS,                                   &
-              & PTR,PDISS,PEDR,PLEM,TPFILE                            ) 
+              & PTR,PDISS,PEDR,PLEM                                   ) 
 !
 USE DDH_MIX, ONLY  : TYP_DDH
 USE YOMLDDH, ONLY  : TLDDH
@@ -60,6 +60,7 @@ CHARACTER(LEN=1)      , INTENT(IN)   ::  HINST_SFU    ! temporal location of the
                                                       ! surface friction flux
 REAL,                   INTENT(IN)   ::  PIMPL        ! degree of implicitness
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Timestep
+TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file for MesoNH
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   :: PDXX,PDYY,PDZZ,PDZX,PDZY
                                         ! metric coefficients
@@ -151,7 +152,6 @@ REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PTR   ! Transport production o
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PDISS ! Dissipation of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
-TYPE(TFILEDATA),        INTENT(IN),  OPTIONAL  :: TPFILE! Output file for MesoNH
 !
 !-------------------------------------------------------------------------------
 !

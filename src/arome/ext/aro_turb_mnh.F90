@@ -71,6 +71,7 @@
 USE MODD_CONF
 USE MODD_CST
 USE MODD_PARAMETERS
+USE MODD_IO, ONLY: TFILEDATA
 USE MODD_BUDGET, ONLY: NBUDGET_RI, TBUDGETDATA
 !
 USE MODI_TURB
@@ -175,7 +176,8 @@ TYPE(TLDDH),   INTENT(IN), TARGET      :: YDLDDH
 TYPE(TMDDH),   INTENT(IN), TARGET      :: YDMDDH
 !
 !
- TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RI) :: YLBUDGET !NBUDGET_RI is the one with the highest number needed for turb
+TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RI) :: YLBUDGET !NBUDGET_RI is the one with the highest number needed for turb
+TYPE(TFILEDATA) :: ZTFILE !I/O for MesoNH
 !*       0.2   Declarations of local variables :
 !
 INTEGER :: JRR,JSV       ! Loop index for the moist and scalar variables
@@ -257,6 +259,9 @@ IKE=KKU-JPVEXT_TURB*KKL
 !             ---------------------------------
 ! Numero du modele si grid nestind, toujours egal a 1
 IMI=1
+
+! Fichier I/O pour MesoNH (non-utilise dans AROME)
+ZTFILE%LOPENED=.FALSE.
 
 ! Type de condition � la limite. En 1D, sans importance. A etudier en 3D.
 HLBCX(:)='CYCL'
@@ -415,7 +420,7 @@ CALL TURB (KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, ISPLIT,IMI, &
    & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
    & HTURBDIM,HTURBLEN,'NONE','NONE', CL,           &
    & HMF_UPDRAFT,ZIMPL,                                    &
-   & 2*PTSTEP,                                               &
+   & 2*PTSTEP,ZTFILE,                                      &
    & ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &
    & ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE,    &
    & PRHODJ,PTHVREF,PRHODREF,                              &
