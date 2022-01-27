@@ -264,11 +264,11 @@ IF (.NOT. LHARAT) THEN
 PBLL_O_E(:,:,:) = MZM(XG / PTHVREF(:,:,:) * PLM(:,:,:) * PLEPS(:,:,:) / PTKEM(:,:,:), KKA, KKU, KKL)
 IF (KRR /= 0) THEN                ! moist case
   PREDTH1(:,:,:)= XCTV*PBLL_O_E(:,:,:) * PETHETA(:,:,:) * &
-                   & GZ_M_W(PTHLM,PDZZ, KKA, KKU, KKL)
+                   & GZ_M_W(KKA, KKU, KKL,PTHLM,PDZZ)
   PREDR1(:,:,:) = XCTV*PBLL_O_E(:,:,:) * PEMOIST(:,:,:) * &
-                   & GZ_M_W(PRM(:,:,:,1),PDZZ, KKA, KKU, KKL)
+                   & GZ_M_W(KKA, KKU, KKL,PRM(:,:,:,1),PDZZ)
 ELSE                              ! dry case
-  PREDTH1(:,:,:)= XCTV*PBLL_O_E(:,:,:)  * GZ_M_W(PTHLM,PDZZ, KKA, KKU, KKL)
+  PREDTH1(:,:,:)= XCTV*PBLL_O_E(:,:,:)  * GZ_M_W(KKA, KKU, KKL,PTHLM,PDZZ)
   PREDR1(:,:,:) = 0.
 END IF
 !
@@ -319,7 +319,7 @@ END IF
 !
 !          For the scalar variables
 DO JSV=1,ISV
-  PREDS1(:,:,:,JSV)=XCTV*PBLL_O_E(:,:,:)*GZ_M_W(PSVM(:,:,:,JSV),PDZZ, KKA, KKU, KKL)
+  PREDS1(:,:,:,JSV)=XCTV*PBLL_O_E(:,:,:)*GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)
 END DO
 !
 DO JSV=1,ISV

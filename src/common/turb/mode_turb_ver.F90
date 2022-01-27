@@ -444,9 +444,9 @@ ZSQRT_TKE = SQRT(PTKEM)
 !
 ! gradients of mean quantities at previous time-step
 !
-ZDTH_DZ = GZ_M_W(PTHLM(:,:,:),PDZZ, KKA, KKU, KKL)
+ZDTH_DZ = GZ_M_W(KKA, KKU, KKL,PTHLM(:,:,:),PDZZ)
 ZDR_DZ  = 0.
-IF (KRR>0) ZDR_DZ  = GZ_M_W(PRM(:,:,:,1),PDZZ, KKA, KKU, KKL)
+IF (KRR>0) ZDR_DZ  = GZ_M_W(KKA, KKU, KKL,PRM(:,:,:,1),PDZZ)
 !
 !
 ! Denominator factor in 3rd order terms
