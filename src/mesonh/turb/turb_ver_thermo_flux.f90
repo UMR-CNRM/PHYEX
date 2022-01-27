@@ -23,7 +23,7 @@ INTERFACE
                       PBETA, PSQRT_TKE, PDTH_DZ, PDR_DZ, PRED2TH3,  &
                       PRED2R3, PRED2THR3, PBLL_O_E, PETHETA,        &
                       PEMOIST, PREDTH1, PREDR1, PPHI3, PPSI3, PD,   &
-                      PFWTH,PFWR,PFTH2,PFR2,PFTHR,MFMOIST,PBL_DEPTH,&
+                      PFWTH,PFWR,PFTH2,PFR2,PFTHR,PBL_DEPTH,        &
                       PWTHV,PRTHLS,PRRS,PTHLP,PRP,PTP,PWTH,PWRC     )
 !
 USE MODD_IO, ONLY: TFILEDATA
@@ -322,7 +322,6 @@ END MODULE MODI_TURB_VER_THERMO_FLUX
 !!                                              change of YCOMMENT
 !!                     2012-02 (Y. Seity) add possibility to run with reversed
 !!                                             vertical levels
-!!      Modifications  July 2015 (Wim de Rooy) LHARAT switch
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !!                     2021 (D. Ricard) last version of HGRAD turbulence scheme
 !!                                 Leronard terms instead of Reynolds terms
@@ -337,12 +336,9 @@ END MODULE MODI_TURB_VER_THERMO_FLUX
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
-!
 USE MODD_CST
 USE MODD_CTURB
-USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
+use modd_field,          only: tfielddata, TYPEREAL
 USE MODD_GRID_n,         ONLY: XZS, XXHAT, XYHAT
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_METRICS_n,      ONLY: XDXX, XDYY, XDZX, XDZY, XDZZ
@@ -371,7 +367,7 @@ USE MODI_PRANDTL
 USE MODI_TRIDIAG_THERMO
 USE MODI_TM06_H
 !
-USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
+USE MODE_IO_FIELD_WRITE, only: IO_Field_write
 USE MODE_PRANDTL
 !
 USE MODI_SECOND_MNH
@@ -406,7 +402,6 @@ REAL, DIMENSION(:,:),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PZZ          ! altitudes
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  MFMOIST      ! moist mass flux dual scheme
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
                                                       ! Potential Temperature 
 !
@@ -425,8 +420,6 @@ REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PRM          ! Mixing ratios
 REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM         ! Mixing ratios 
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTKEM        ! TKE at time t
-!
-! In case LHARAT=TRUE, PLM already includes all stability corrections
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM          ! Turb. mixing length   
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLEPS        ! dissipative length   
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
@@ -482,7 +475,7 @@ REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ::  &
        ZDFDDTDZ, & ! dF/d(dTh/dz)
        ZDFDDRDZ, & ! dF/d(dr/dz)
        Z3RDMOMENT,&  ! 3 order term in flux or variance equation
-       ZF_LEONARD,&  ! Leonard terms
+       ZF_NEW,    &
        ZRWTHL,    &
        ZRWRNP,    &
        ZCLD_THOLD
@@ -495,6 +488,7 @@ INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
 INTEGER             :: JI, JJ ! loop indexes 
 !
+!
 INTEGER                    :: IIB,IJB       ! Lower bounds of the physical
                                             ! sub-domain in x and y directions
 INTEGER                    :: IIE,IJE       ! Upper bounds of the physical
@@ -506,14 +500,17 @@ REAL, DIMENSION(:), ALLOCATABLE   :: ZYHAT_ll    !   Position y in the conformal
                                                  ! plane (array on the complete domain)
 !
 !
+CHARACTER (LEN=100) :: YCOMMENT     ! comment string in LFIFM file
+CHARACTER (LEN=LEN_HREC)  :: YRECFM       ! Name of the desired field in LFIFM file
+!
 REAL :: ZTIME1, ZTIME2
 REAL :: ZDELTAX
-REAL :: ZXBEG,ZXEND,ZYBEG,ZYEND ! Forcing size for ocean deep convection
+REAL    :: ZXBEG,ZXEND,ZYBEG,ZYEND ! Forcing size for ocean deep convection
 REAL, DIMENSION(SIZE(XXHAT),SIZE(XYHAT)) :: ZDIST ! distance
                                    ! from the center of the cooling               
 REAL :: ZFLPROV
 INTEGER           :: JKM          ! vertical index loop
-INTEGER           :: JSW
+INTEGER          :: JSW
 REAL :: ZSWA     ! index for time flux interpolation
 !
 INTEGER :: IIU, IJU
@@ -574,7 +571,7 @@ GUSERV = (KRR/=0)
 !
 ZKEFF(:,:,:) = MZM( PLM(:,:,:) * SQRT(PTKEM(:,:,:)) )
 !
-! Define a cloud mask with ri and rc (used after with a threshold) for Leonard terms
+! define a cloud mask with ri and rc (used after with a threshold) for Leonard terms
 !
 IF(LHGRAD) THEN
   IF ( KRRL >= 1 ) THEN
@@ -617,7 +614,7 @@ ZDFDDTDZ(:,:,:) = -XCSHF*ZKEFF*D_PHI3DTDZ_O_DDTDZ(PPHI3,PREDTH1,PREDR1,PRED2TH3,
 IF (LHGRAD) THEN
  ! Compute the Leonard terms for thl
  ZDELTAX= XXHAT(3) - XXHAT(2)
- ZF_LEONARD (:,:,:)= XCOEFHGRADTHL*ZDELTAX*ZDELTAX/12.0*(      &
+ ZF_NEW (:,:,:)= XCOEFHGRADTHL*ZDELTAX*ZDELTAX/12.0*(      &
                  MXF(GX_W_UW(PWM(:,:,:), XDXX, XDZZ, XDZX))&
                 *MZM(GX_M_M(PTHLM(:,:,:),XDXX,XDZZ,XDZX))  &
               +  MYF(GY_W_VW(PWM(:,:,:), XDYY,XDZZ,XDZY))  &
@@ -715,7 +712,7 @@ IF (LHGRAD) THEN
   ZALT(:,:,JK) = PZZ(:,:,JK)-XZS(:,:)
  END DO
  WHERE ( (ZCLD_THOLD(:,:,:) >= XCLDTHOLD) .AND. ( ZALT(:,:,:) >= XALTHGRAD) )
-  ZRWTHL(:,:,:) = -GZ_W_M(MZM(PRHODJ(:,:,:))*ZF_LEONARD(:,:,:),XDZZ)
+  ZRWTHL(:,:,:) = -GZ_W_M(MZM(PRHODJ(:,:,:))*ZF_NEW(:,:,:),XDZZ)
  END WHERE
 END IF
 !
@@ -730,7 +727,7 @@ ZFLXZ(:,:,:)   = ZF                                                &
 ! replace the flux by the Leonard terms
 IF (LHGRAD) THEN
  WHERE ( (ZCLD_THOLD(:,:,:) >= XCLDTHOLD) .AND. ( ZALT(:,:,:) >= XALTHGRAD) )
-  ZFLXZ(:,:,:) = ZF_LEONARD(:,:,:)
+  ZFLXZ(:,:,:) = ZF_NEW(:,:,:)
  END WHERE
 END IF
 !
@@ -754,7 +751,7 @@ ELSE
   PWTH(:,:,KKA)=0.5*(ZFLXZ(:,:,KKA)+ZFLXZ(:,:,KKA+KKL))
 END IF
 !
-IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+IF ( OTURB_FLX .AND. tpfile%lopened ) THEN
   ! stores the conservative potential temperature vertical flux
   TZFIELD%CMNHNAME   = 'THW_FLX'
   TZFIELD%CSTDNAME   = ''
@@ -857,7 +854,7 @@ IF (KRR /= 0) THEN
   ! Compute Leonard Terms for Cloud mixing ratio
   IF (LHGRAD) THEN
     ZDELTAX= XXHAT(3) - XXHAT(2)
-    ZF_LEONARD (:,:,:)= XCOEFHGRADRM*ZDELTAX*ZDELTAX/12.0*(        &
+    ZF_NEW (:,:,:)= XCOEFHGRADRM*ZDELTAX*ZDELTAX/12.0*(        &
                 MXF(GX_W_UW(PWM(:,:,:), XDXX, XDZZ, XDZX))       &
                 *MZM(GX_M_M(PRM(:,:,:,1),XDXX,XDZZ,XDZX)) &
                 +MYF(GY_W_VW(PWM(:,:,:), XDYY,XDZZ,XDZY))        &
@@ -990,7 +987,7 @@ IF (KRR /= 0) THEN
   PWRC(:,:,IKE)=PWRC(:,:,IKE-KKL)
   !
   !
-  IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+  IF ( OTURB_FLX .AND. tpfile%lopened ) THEN
     ! stores the conservative mixing ratio vertical flux
     TZFIELD%CMNHNAME   = 'RCONSW_FLX'
     TZFIELD%CSTDNAME   = ''
@@ -1066,7 +1063,7 @@ END IF
 !
 !*       4.1  <w Rc>    
 !
-IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
+IF ( ((OTURB_FLX .AND. tpfile%lopened) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
   !  
   ! recover the Conservative potential temperature flux : 
   ZA(:,:,:)   = DZM(PIMPL * PTHLP + PEXPL * PTHLM) / PDZZ *       &
@@ -1080,7 +1077,7 @@ IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
   ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
   !                 
   ! store the liquid water mixing ratio vertical flux
-  IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+  IF ( OTURB_FLX .AND. tpfile%lopened ) THEN
     TZFIELD%CMNHNAME   = 'RCW_FLX'
     TZFIELD%CSTDNAME   = ''
     TZFIELD%CLONGNAME  = 'RCW_FLX'
@@ -1109,5 +1106,4 @@ IF (LOCEAN.AND.LDEEPOC) THEN
 END IF
 !
 !----------------------------------------------------------------------------
-IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_FLUX',1,ZHOOK_HANDLE)
 END SUBROUTINE TURB_VER_THERMO_FLUX

@@ -97,9 +97,6 @@ END MODULE MODI_TURB_VER_SV_CORR
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
-!
 USE MODD_CST
 USE MODD_CTURB
 USE MODD_PARAMETERS
@@ -113,7 +110,7 @@ USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
 USE MODI_GRADIENT_M
-USE MODI_SHUMAN , ONLY : MZF
+USE MODI_SHUMAN 
 USE MODI_EMOIST
 USE MODI_ETHETA
 USE MODI_LES_MEAN_SUBGRID
@@ -171,8 +168,6 @@ REAL :: ZCTSVD = 2.4  ! constant for temperature - scalar covariance dissipation
 REAL :: ZCQSVD = 2.4  ! constant for humidity - scalar covariance dissipation
 !----------------------------------------------------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
-IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_CORR',0,ZHOOK_HANDLE)
 CALL SECOND_MNH(ZTIME1)
 !
 IF(LBLOWSNOW) THEN
@@ -225,5 +220,4 @@ CALL SECOND_MNH(ZTIME2)
 XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 !----------------------------------------------------------------------------
 !
-IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_CORR',1,ZHOOK_HANDLE)
 END SUBROUTINE TURB_VER_SV_CORR

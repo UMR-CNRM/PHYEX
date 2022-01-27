@@ -230,7 +230,7 @@ END MODULE MODI_TURB
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
 !!
-!!       MODD_PARAMETERS : JPVEXT_TURB  number of marginal vertical points
+!!       MODD_PARAMETERS : JPVEXT  number of marginal vertical points
 !!
 !!       MODD_CONF      : CCONF model configuration (start/restart)
 !!                        L1D   switch for 1D model version
@@ -335,9 +335,6 @@ END MODULE MODI_TURB
 !!                                          vertical levels
 !!                     10/2012 (J. Colin) Correct bug in DearDoff for dry simulations
 !!                     10/2012 J.Escobar Bypass PGI bug , redefine some allocatable array inplace of automatic
-!!                     2014-11 Y. Seity,  add output terms for TKE DDHs budgets
-!!                     July 2015 (Wim de Rooy)  modifications to run with RACMO
-!!                                              turbulence (LHARAT=TRUE)
 !!                     04/2016  (C.Lac) correction of negativity for KHKO
 !  P. Wautelet 05/2016-04/2018: new data structures and calls for I/O
 !  Q. Rodier      01/2018: introduction of RM17
@@ -354,16 +351,16 @@ END MODULE MODI_TURB
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_BUDGET, ONLY: LBUDGET_U,  LBUDGET_V,  LBUDGET_W,  LBUDGET_TH, LBUDGET_RV, LBUDGET_RC,  &
-                            LBUDGET_RR, LBUDGET_RI, LBUDGET_RS, LBUDGET_RG, LBUDGET_RH, LBUDGET_SV,  &
+use modd_budget,      only: lbudget_u,  lbudget_v,  lbudget_w,  lbudget_th, lbudget_rv, lbudget_rc,  &
+                            lbudget_rr, lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, lbudget_sv,  &
                             NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC,  &
                             NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1, &
-                            TBUDGETS
+                            tbudgets
 USE MODD_CONF
 USE MODD_CST
 USE MODD_CTURB
 USE MODD_DYN_n, ONLY : LOCEAN
-USE MODD_FIELD, ONLY: TFIELDDATA,TYPEREAL
+use modd_field,          only: tfielddata, TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_LES
 USE MODD_NSV
@@ -380,6 +377,7 @@ USE MODI_ROTATE_WIND
 USE MODI_TURB_HOR_SPLT 
 USE MODI_TKE_EPS_SOURCES
 USE MODI_SHUMAN
+USE MODI_GRADIENT_M
 USE MODI_LES_MEAN_SUBGRID
 USE MODI_RMC01
 USE MODI_GRADIENT_W
@@ -387,10 +385,10 @@ USE MODI_TM06
 USE MODI_UPDATE_LM
 USE MODI_GET_HALO
 !
-USE MODE_BUDGET,         ONLY: BUDGET_STORE_INIT, BUDGET_STORE_END
-USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
+use mode_budget,         only: Budget_store_init, Budget_store_end
+USE MODE_IO_FIELD_WRITE, only: IO_Field_write
 USE MODE_SBL
-USE MODE_SOURES_NEG_CORRECT, ONLY: SOURCES_NEG_CORRECT
+use mode_sources_neg_correct, only: Sources_neg_correct
 !
 USE MODI_EMOIST
 USE MODI_ETHETA
@@ -424,11 +422,11 @@ LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
 LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid 
                                  ! CONDensation
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
-CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
+CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
-CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
-CHARACTER(LEN=4),       INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
-CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
+CHARACTER(len=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
+CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
+CHARACTER(len=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
 REAL,                   INTENT(IN)   ::  PIMPL        ! degree of implicitness
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
@@ -557,6 +555,7 @@ REAL                :: ZALPHA       ! work coefficient :
 !                                   !   BL89 mixing length near the surface
 !
 REAL :: ZTIME1, ZTIME2
+REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3)):: ZTT,ZEXNE,ZLV,ZLS,ZCPH,ZCOR
 REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3))::  ZSHEAR, ZDUDZ, ZDVDZ
 TYPE(TFIELDDATA) :: TZFIELD
 !
@@ -699,7 +698,7 @@ IF (KRRL >=1) THEN
   END IF
 !
 !
-  IF ( TPFILE%LOPENED .AND. OTURB_DIAG ) THEN
+  IF ( tpfile%lopened .AND. OTURB_DIAG ) THEN
     TZFIELD%CMNHNAME   = 'ATHETA'
     TZFIELD%CSTDNAME   = ''
     TZFIELD%CLONGNAME  = 'ATHETA'
@@ -710,7 +709,7 @@ IF (KRRL >=1) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZATHETA)
+    CALL IO_Field_write(TPFILE,TZFIELD,ZATHETA)
 ! 
     TZFIELD%CMNHNAME   = 'AMOIST'
     TZFIELD%CSTDNAME   = ''
@@ -722,7 +721,7 @@ IF (KRRL >=1) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZAMOIST)
+    CALL IO_Field_write(TPFILE,TZFIELD,ZAMOIST)
   END IF
 !
 ELSE
@@ -825,6 +824,8 @@ SELECT CASE (HTURBLEN)
 !
 !
 END SELECT
+!
+!
 !
 !*      3.5 Mixing length modification for cloud
 !           -----------------------
@@ -1147,7 +1148,7 @@ CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKET,PLEM,ZLEPS,PDYP,ZTRH,     &
 !*      7. STORES SOME INFORMATIONS RELATED TO THE TURBULENCE SCHEME
 !          ---------------------------------------------------------
 !
-IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
+IF ( OTURB_DIAG .AND. tpfile%lopened ) THEN
 ! 
 ! stores the mixing length
 ! 
@@ -1286,6 +1287,9 @@ IF (LLES_CALL) THEN
   CALL SECOND_MNH(ZTIME2)
   XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 END IF
+
+!
+
 !
 !----------------------------------------------------------------------------
 !
@@ -1504,6 +1508,7 @@ ELSE
     END IF
   END IF
 END IF
+
 !
 !  mixing length limited by the distance normal to the surface 
 !  (with the same factor as for BL89)
@@ -1814,7 +1819,7 @@ ENDIF
 !              -----------------------------------------------
 !
 ! Impression before modification of the mixing length
-IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
+IF ( OTURB_DIAG .AND. tpfile%lopened ) THEN
   TZFIELD%CMNHNAME   = 'LM_CLEAR_SKY'
   TZFIELD%CSTDNAME   = ''
   TZFIELD%CLONGNAME  = 'LM_CLEAR_SKY'
@@ -1840,7 +1845,7 @@ WHERE (PCEI(:,:,:) == -1.) PLEM(:,:,:) = ZLM_CLOUD(:,:,:)
 !*       5.    IMPRESSION
 !              ----------
 !
-IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
+IF ( OTURB_DIAG .AND. tpfile%lopened ) THEN
   TZFIELD%CMNHNAME   = 'COEF_AMPL'
   TZFIELD%CSTDNAME   = ''
   TZFIELD%CLONGNAME  = 'COEF_AMPL'

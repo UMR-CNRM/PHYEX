@@ -60,21 +60,7 @@ INTEGER, PARAMETER :: JPDUMMY  = 20   ! Size of dummy array
 !
 INTEGER, PARAMETER :: JPOUTMAX = 192 ! Maximum allowed number of OUTput files
 !
-INTEGER, PARAMETER :: NBUNAMELGTMAX  = 32  ! Maximum length of a budget name
-INTEGER, PARAMETER :: NCOMMENTLGTMAX = 100 ! Maximum length of a comment
-INTEGER, PARAMETER :: NMNHNAMELGTMAX = 32  ! Maximum length of a MNH variable name
-INTEGER, PARAMETER :: NSTDNAMELGTMAX = 64  ! Maximum length of the standard name of a variable (CF convention)
-!
-INTEGER, PARAMETER :: NDIRNAMELGTMAX = 512 ! Maximum length of a directory name
-INTEGER, PARAMETER :: NFILENAMELGTMAX = 32 ! Maximum length of a file name (must be at least NFILENAMELGTMAXLFI)
-INTEGER, PARAMETER :: NFILENAMELGTMAXLFI = 28 ! Maximum length of a file name in LFI file (this is necessary
-                                              ! to keep backward compatibility), MUST BE 28
-!
-INTEGER, PARAMETER :: NLFIMAXCOMMENTLENGTH = 100 ! Length of comments in LFI files
-!
 INTEGER, PARAMETER :: JPLIMACCNMAX = 10 ! Maximum allowed number of CCN modes in LIMA
 INTEGER, PARAMETER :: JPLIMAIFNMAX = 10 ! Maximum allowed number of IFN modes in LIMA
-!
-INTEGER, PARAMETER :: NGRIDUNKNOWN = -1 ! Unknown Arakawa grid number
 !
 END MODULE MODD_PARAMETERS
