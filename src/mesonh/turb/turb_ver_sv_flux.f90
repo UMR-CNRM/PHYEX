@@ -18,7 +18,7 @@ INTERFACE
                       PRHODJ,PWM,                                   &
                       PSFSVM,PSFSVP,                                &
                       PSVM,                                         &
-                      PTKEM,PLM,PPSI_SV,                            &
+                      PTKEM,PLM,MFMOIST,PPSI_SV,                    &
                       PRSVS,PWSV                                    )
 !
 USE MODD_IO, ONLY: TFILEDATA
@@ -259,6 +259,7 @@ END MODULE MODI_TURB_VER_SV_FLUX
 !!                                              change of YCOMMENT
 !!                     Feb 2012(Y. Seity) add possibility to run with reversed 
 !!                                              vertical levels
+!!      Modifications: July 2015 (Wim de Rooy) LHARAT switch
 !!                     Feb 2017(M. Leriche) add initialisation of ZSOURCE
 !!                                   to avoid unknwon values outside physical domain
 !!                                   and avoid negative values in sv tendencies
@@ -268,22 +269,25 @@ END MODULE MODI_TURB_VER_SV_FLUX
 !*      0. DECLARATIONS
 !          ------------
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
 USE MODD_CST
 USE MODD_CTURB
-use modd_field,          only: tfielddata, TYPEREAL
+USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_LES
 USE MODD_CONF
 USE MODD_NSV,            ONLY: XSVMIN, NSV_LGBEG, NSV_LGEND
 USE MODD_BLOWSNOW
-USE MODE_IO_FIELD_WRITE, only: IO_Field_write
+USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 !
 USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
 USE MODI_GRADIENT_M
-USE MODI_SHUMAN 
+USE MODI_SHUMAN , ONLY : DZM, MZM, MZF
 USE MODI_TRIDIAG 
 USE MODI_TRIDIAG_WIND 
 USE MODI_EMOIST
@@ -314,6 +318,8 @@ REAL, DIMENSION(:,:),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the
                                                       ! normal to the ground surface
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  MFMOIST       ! moist mf dual scheme
+
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSFSVM       ! t - deltat 
 !
@@ -365,6 +371,9 @@ TYPE(TFIELDDATA)  :: TZFIELD
 !*       1.   PRELIMINARIES
 !             -------------
 !
+
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_FLUX',0,ZHOOK_HANDLE)
 IKB=KKA+JPVEXT_TURB*KKL
 IKE=KKU-JPVEXT_TURB*KKL
 IKT=SIZE(PSVM,3)
@@ -421,10 +430,8 @@ DO JSV=1,ISV
 !  Compute the equivalent tendency for the JSV scalar variable
   PRSVS(:,:,:,JSV)= PRSVS(:,:,:,JSV)+    &
                     PRHODJ(:,:,:)*(ZRES(:,:,:)-PSVM(:,:,:,JSV))/PTSTEP
-! PRSVS(:,:,:,JSV)= MAX((PRSVS(:,:,:,JSV)+    &
-!                   PRHODJ(:,:,:)*(ZRES(:,:,:)-PSVM(:,:,:,JSV))/PTSTEP),XSVMIN(JSV))
 !
-  IF ( (OTURB_FLX .AND. tpfile%lopened) .OR. LLES_CALL ) THEN
+  IF ( (OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
     ZFLXZ(:,:,:) = -ZCSV * PPSI_SV(:,:,:,JSV) * MZM(PLM*SQRT(PTKEM)) / PDZZ * &
@@ -451,7 +458,7 @@ DO JSV=1,ISV
     PWSV(:,:,IKE,JSV)=PWSV(:,:,IKE-KKL,JSV)
  END IF
   !
-  IF (OTURB_FLX .AND. tpfile%lopened) THEN
+  IF (OTURB_FLX .AND. TPFILE%LOPENED) THEN
     ! stores the JSVth vertical flux
     WRITE(TZFIELD%CMNHNAME,'("WSV_FLX_",I3.3)') JSV
     TZFIELD%CSTDNAME   = ''
@@ -487,4 +494,5 @@ END DO   ! end of scalar loop
 !
 !----------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_FLUX',1,ZHOOK_HANDLE)
 END SUBROUTINE TURB_VER_SV_FLUX

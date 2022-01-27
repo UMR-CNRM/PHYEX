@@ -38,5 +38,6 @@ IMPLICIT NONE
 !  set to constant value 300k for AROME
 REAL,SAVE, DIMENSION(2) :: XTHVREFZ=300.     ! Thetav(z) for reference
                                              ! state without orography
+LOGICAL, SAVE   ::LCOUPLES ! AUTOCOUPLED ATMS-OCEAN LES VERSION
 !
 END MODULE MODD_REF
