@@ -7,11 +7,11 @@ INTERFACE
       SUBROUTINE TURB(KKA, KKU, KKL, KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,   &
               & KSPLIT,KMODEL_CL, &
               & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
-              & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HINST_SFU,         &
-              & HMF_UPDRAFT,PIMPL,PTSTEP,TPFILE,                      &
+              & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,   &
+              & PIMPL,PTSTEP,TPFILE,                      &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,          &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
-              & PRHODJ,PTHVREF,PRHODREF,                              &
+              & PRHODJ,PTHVREF,                              &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
               & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
               & PLENGTHM,PLENGTHH,MFMOIST,                            &
@@ -19,17 +19,13 @@ INTERFACE
               & PCEI,PCEI_MIN,PCEI_MAX,PCOEF_AMPL_SAT,    &
               & PTHLT,PRT,                                            &
               & PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,PRTKES,              &
-              & PHGRAD,PSIGS,                                         &
+              & PSIGS,                                         &
               & PDRUS_TURB,PDRVS_TURB,                                &
               & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,                 &
               & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
-              & YDDDH,YDLDDH,YDMDDH,                                  &
               & TBUDGETS, KBUDGETS,                                   &
               & PTR,PDISS,PEDR,PLEM                                   ) 
 !
-USE DDH_MIX, ONLY  : TYP_DDH
-USE YOMLDDH, ONLY  : TLDDH
-USE YOMMDDH, ONLY  : TMDDH
 USE MODD_BUDGET, ONLY : TBUDGETDATA
 USE MODD_IO, ONLY : TFILEDATA
 !
@@ -41,7 +37,6 @@ INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 CHARACTER(LEN=*),DIMENSION(:),INTENT(IN):: HLBCX, HLBCY  ! X- and Y-direc LBC
-CHARACTER(LEN=4),INTENT(IN)          :: HMF_UPDRAFT   ! Type of mass flux
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time-splitting
 INTEGER,                INTENT(IN)   :: KMODEL_CL     ! model number for cloud mixing length
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
@@ -56,9 +51,8 @@ CHARACTER(LEN=4)       , INTENT(IN)   ::  HTURBDIM  ! dimensionality of the
 CHARACTER(LEN=4)      , INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
 CHARACTER(LEN=4)      , INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
 CHARACTER(LEN=4)      , INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
-CHARACTER(LEN=1)      , INTENT(IN)   ::  HINST_SFU    ! temporal location of the
-                                                      ! surface friction flux
 REAL,                   INTENT(IN)   ::  PIMPL        ! degree of implicitness
+!CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Timestep
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file for MesoNH
 !
@@ -77,8 +71,6 @@ REAL, DIMENSION(:,:,:), INTENT(IN)      ::  MFMOIST   ! Moist mass flux DUal sch
 
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
-REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PRHODREF  ! dry density of the 
-                                        ! reference state
 !
 REAL, DIMENSION(:,:),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of theta and Rv 
@@ -119,7 +111,6 @@ REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRRS
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS
 ! Sigma_s at time t+1 : square root of the variance of the deviation to the 
 ! saturation 
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    ::  PHGRAD
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PSIGS
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PDRUS_TURB   ! evolution of rhoJ*U   by turbulence only
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PDRVS_TURB   ! evolution of rhoJ*V   by turbulence only
@@ -140,10 +131,6 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PLENGTHM 
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PLENGTHH 
-!
-TYPE(TYP_DDH), INTENT(INOUT) :: YDDDH
-TYPE(TLDDH),   INTENT(IN)    :: YDLDDH
-TYPE(TMDDH),   INTENT(IN)    :: YDMDDH
 !
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS

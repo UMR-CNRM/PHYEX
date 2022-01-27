@@ -6,11 +6,10 @@
       SUBROUTINE TURB(KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,      &
               & KSPLIT,KMODEL_CL,                                     &
               & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
-              & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HINST_SFU,         &
-              & HMF_UPDRAFT,PIMPL,   &
-              & PTSTEP,TPFILE, PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
+              & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,PIMPL,      &
+              & PTSTEP,TPFILE,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
-              & PRHODJ,PTHVREF,PRHODREF,                              &
+              & PRHODJ,PTHVREF,                              &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
               & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
               & PLENGTHM,PLENGTHH,MFMOIST,                            &
@@ -18,11 +17,10 @@
               & PCEI,PCEI_MIN,PCEI_MAX,PCOEF_AMPL_SAT,    &
               & PTHLT,PRT,                                            &
               & PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,PRTKES,              &
-              & PHGRAD, PSIGS,                                        &
+              & PSIGS,                                        &
               & PDRUS_TURB,PDRVS_TURB,                                &
               & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,                 &
               & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
-              & YDDDH,YDLDDH,YDMDDH,                                  &
               & TBUDGETS, KBUDGETS,                                   &
               & PTR,PDISS,PEDR,PLEM                            )
 !     #################################################################
@@ -260,7 +258,6 @@ USE MODI_SHUMAN, ONLY : MZF, MXF, MYF
 USE MODI_GRADIENT_M
 USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
-USE MODI_BUDGET_DDH
 USE MODI_LES_MEAN_SUBGRID
 USE MODE_RMC01, ONLY: RMC01
 USE MODI_GRADIENT_W
@@ -274,10 +271,6 @@ USE MODE_SOURCES_NEG_CORRECT, ONLY: SOURCES_NEG_CORRECT
 !
 USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
-!
-USE DDH_MIX, ONLY  : TYP_DDH
-USE YOMLDDH, ONLY  : TLDDH
-USE YOMMDDH, ONLY  : TMDDH
 !
 IMPLICIT NONE
 !
@@ -308,12 +301,9 @@ CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
-CHARACTER(LEN=1),       INTENT(IN)   ::  HINST_SFU    ! temporal location of the
-                                                      ! surface friction flux
 REAL,                   INTENT(IN)   ::  PIMPL        ! degree of implicitness
+!CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
-!
-CHARACTER(LEN=4),       INTENT(IN)   ::  HMF_UPDRAFT  ! Type of Mass Flux Scheme
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   :: PDXX,PDYY,PDZZ,PDZX,PDZY
@@ -331,8 +321,6 @@ REAL, DIMENSION(:,:,:), INTENT(IN)      ::  MFMOIST ! moist mass flux dual schem
 
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
-REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PRHODREF  ! dry density of the 
-                                        ! reference state
 !
 REAL, DIMENSION(:,:),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of theta and Rv 
@@ -374,7 +362,6 @@ REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRRS
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS
 ! Sigma_s at time t+1 : square root of the variance of the deviation to the 
 ! saturation
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    ::  PHGRAD
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PSIGS
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PDRUS_TURB   ! evolution of rhoJ*U   by turbulence only
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PDRVS_TURB   ! evolution of rhoJ*V   by turbulence only
@@ -394,10 +381,6 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTPMF      ! Thermal TKE production
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PDP        ! Dynamic TKE production
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDIFF     ! Diffusion TKE term
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
-!
-TYPE(TYP_DDH), INTENT(INOUT) :: YDDDH
-TYPE(TLDDH),   INTENT(IN)   :: YDLDDH
-TYPE(TMDDH),   INTENT(IN)   :: YDMDDH
 !
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
@@ -1149,6 +1132,8 @@ IF ( KRRL >= 1 ) THEN
   END IF
 END IF
 
+! Remove non-physical negative values (unnecessary in a perfect world) + corresponding budgets
+!CALL SOURCES_NEG_CORRECT(HCLOUD, 'NETUR',KRR,PTSTEP,PPABST,PTHLT,PRT,PRTHLS,PRRS,PRSVS)
 !----------------------------------------------------------------------------
 !
 !*      9. LES averaged surface fluxes
@@ -1184,8 +1169,8 @@ IF (LLES_CALL) THEN
 !
   IF (HTURBDIM=="1DIM") THEN
     CALL LES_MEAN_SUBGRID(2./3.*PTKET,X_LES_SUBGRID_U2)
-    CALL LES_MEAN_SUBGRID(2./3.*PTKET,X_LES_SUBGRID_V2)
-    CALL LES_MEAN_SUBGRID(2./3.*PTKET,X_LES_SUBGRID_W2)
+    X_LES_SUBGRID_V2 = X_LES_SUBGRID_U2
+    X_LES_SUBGRID_W2 = X_LES_SUBGRID_U2
     CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(KKA,KKU,KKL,PTHLT,PDZZ),&
                           KKA, KKU, KKL),X_LES_RES_ddz_Thl_SBG_W2)
     IF (KRR>=1) &
