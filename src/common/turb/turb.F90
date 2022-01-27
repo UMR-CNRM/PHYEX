@@ -211,11 +211,24 @@
 !!                     06/2011 (J.escobar ) Bypass Bug with ifort11/12 on  HLBCX,HLBC
 !!                     2012-02 Y. Seity,  add possibility to run with reversed
 !!                                          vertical levels
+!!                     10/2012 (J. Colin) Correct bug in DearDoff for dry simulations
+!!                     10/2012 J.Escobar Bypass PGI bug , redefine some allocatable array inplace of automatic
 !!                     2014-11 Y. Seity,  add output terms for TKE DDHs budgets
 !!                     July 2015 (Wim de Rooy)  modifications to run with RACMO
 !!                                              turbulence (LHARAT=TRUE)
-!! --------------------------------------------------------------------------
-!       
+!!                     04/2016  (C.Lac) correction of negativity for KHKO
+!  P. Wautelet 05/2016-04/2018: new data structures and calls for I/O
+!  Q. Rodier      01/2018: introduction of RM17
+!  P. Wautelet 20/05/2019: add name argument to ADDnFIELD_ll + new ADD4DFIELD_ll subroutine
+!  P. Wautelet    02/2020: use the new data structures and subroutines for budgets
+!  B. Vie         03/2020: LIMA negativity checks after turbulence, advection and microphysics budgets
+!  P. Wautelet 11/06/2020: bugfix: correct PRSVS array indices
+!  P. Wautelet + Benoit Vié 06/2020: improve removal of negative scalar variables + adapt the corresponding budgets
+!  P. Wautelet 30/06/2020: move removal of negative scalar variables to Sources_neg_correct
+!  R. Honnert/V. Masson 02/2021: new mixing length in the grey zone
+!  J.L. Redelsperger 03/2021: add Ocean LES case
+! --------------------------------------------------------------------------
+!
 !*      0. DECLARATIONS
 !          ------------
 !
@@ -240,8 +253,7 @@ USE MODD_NSV
 !
 USE MODE_BL89, ONLY: BL89
 USE MODE_TURB_VER, ONLY : TURB_VER
-!!MODIF AROME
-!USE MODI_ROTATE_WIND
+USE MODE_ROTATE_WIND, ONLY: ROTATE_WIND
 USE MODE_TURB_HOR_SPLT, ONLY: TURB_HOR_SPLT
 USE MODE_TKE_EPS_SOURCES, ONLY: TKE_EPS_SOURCES
 USE MODI_SHUMAN, ONLY : MZF, MXF, MYF
@@ -253,7 +265,7 @@ USE MODI_LES_MEAN_SUBGRID
 USE MODE_RMC01, ONLY: RMC01
 USE MODI_GRADIENT_W
 USE MODE_TM06, ONLY: TM06
-USE MODI_UPDATE_LM
+USE MODE_UPDATE_LM, ONLY: UPDATE_LM
 !
 USE MODE_BUDGET,         ONLY: BUDGET_STORE_INIT, BUDGET_STORE_END
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
@@ -736,8 +748,7 @@ IF (HTURBLEN=='ADAP') ZLEPS = MIN(ZLEPS,ZLMW*XCADAP)
 !           ----------------------------------------------------------
 !
 IF (HTURBDIM=="3DIM") THEN
-!****FOR AROME****
-!  CALL UPDATE_LM(HLBCX,HLBCY,ZLM,ZLEPS)
+  CALL UPDATE_LM(HLBCX,HLBCY,ZLM,ZLEPS)
 END IF
 !----------------------------------------------------------------------------
 !
@@ -747,65 +758,30 @@ END IF
 !
 !*      4.1 rotate the wind at time t
 !
-IF ( HINST_SFU == 'T' ) THEN
 !
 !
-  IF (CPROGRAM=='AROME ') THEN
-    ZUSLOPE=PUT(:,:,KKA)
-    ZVSLOPE=PVT(:,:,KKA)
-  ELSE
-!    CALL ROTATE_WIND(PUT,PVT,PWT,                       &
-!                     PDIRCOSXW, PDIRCOSYW, PDIRCOSZW,   &
-!                     PCOSSLOPE,PSINSLOPE,               &
-!                     PDXX,PDYY,PDZZ,                    &
-!                     ZUSLOPE,ZVSLOPE                    )
+IF (CPROGRAM/='AROME ') THEN
+  CALL ROTATE_WIND(PUT,PVT,PWT,                       &
+                     PDIRCOSXW, PDIRCOSYW, PDIRCOSZW,   &
+                     PCOSSLOPE,PSINSLOPE,               &
+                     PDXX,PDYY,PDZZ,                    &
+                     ZUSLOPE,ZVSLOPE                    )
 !
-!    CALL UPDATE_ROTATE_WIND(ZUSLOPE,ZVSLOPE)
-  END IF
+  CALL UPDATE_ROTATE_WIND(ZUSLOPE,ZVSLOPE)
+ELSE
+  ZUSLOPE=PUT(:,:,KKA)
+  ZVSLOPE=PVT(:,:,KKA)
+END IF
 !
 !
 !*      4.2 compute the proportionality coefficient between wind and stress
 !
-  ZCDUEFF(:,:) =-SQRT ( (PSFU(:,:)**2 + PSFV(:,:)**2) /               &
-                        (1.E-60 + ZUSLOPE(:,:)**2 + ZVSLOPE(:,:)**2 )   &
-                      )
-!
-!*      4.3 rotate the wind at time t-delta t
-!
-  IF (CPROGRAM/='AROME ') THEN
-!    CALL ROTATE_WIND(PUT,PVT,PWT,                       &
-!                     PDIRCOSXW, PDIRCOSYW, PDIRCOSZW,   &
-!                     PCOSSLOPE,PSINSLOPE,               &
-!                     PDXX,PDYY,PDZZ,                    &
-!                     ZUSLOPE,ZVSLOPE                    )
-!
-!    CALL UPDATE_ROTATE_WIND(ZUSLOPE,ZVSLOPE)
-  END IF
-!
-ELSE
-!
-!*      4.4 rotate the wind at time t-delta t
-!
-  IF (CPROGRAM=='AROME ') THEN
-    ZUSLOPE=PUT(:,:,KKA)
-    ZVSLOPE=PVT(:,:,KKA)
-  ELSE
-!
-!    CALL ROTATE_WIND(PUT,PVT,PWT,                       &
-!                     PDIRCOSXW, PDIRCOSYW, PDIRCOSZW,   &
-!                     PCOSSLOPE,PSINSLOPE,               &
-!                     PDXX,PDYY,PDZZ,                    &
-!                     ZUSLOPE,ZVSLOPE                    )
-!
-!    CALL UPDATE_ROTATE_WIND(ZUSLOPE,ZVSLOPE)
-  END IF
-!
-!*      4.5 compute the proportionality coefficient between wind and stress
-!
-  ZCDUEFF(:,:) =-SQRT ( (PSFU(:,:)**2 + PSFV(:,:)**2) /               &
-                        (1.E-60 + ZUSLOPE(:,:)**2 + ZVSLOPE(:,:)**2 )   &
-                      )
-END IF
+ZCDUEFF(:,:) =-SQRT ( (PSFU(:,:)**2 + PSFV(:,:)**2) /               &
+#ifdef REPRO48
+                    (1.E-60 + ZUSLOPE(:,:)**2 + ZVSLOPE(:,:)**2 ) )
+#else
+                    (XMNH_TINY + ZUSLOPE(:,:)**2 + ZVSLOPE(:,:)**2 ) )
+#endif                      
 !
 !*       4.6 compute the surface tangential fluxes
 !
@@ -948,8 +924,10 @@ IF( LBUDGET_SV )  THEN
   END DO
 END IF
 !
-#ifdef REPRO48 !Les budgets des termes horizontaux de la turb sont présents dans AROME
-#else          ! alors que ces termes ne sont pas calculés
+!Les budgets des termes horizontaux de la turb sont présents dans AROME
+! alors que ces termes ne sont pas calculés
+#ifdef REPRO48 
+#else          
 IF( HTURBDIM == '3DIM' ) THEN
 #endif
   IF( LBUDGET_U  ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_U ), 'HTURB', PRUS  (:, :, :) )
@@ -985,7 +963,8 @@ IF( HTURBDIM == '3DIM' ) THEN
       CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:, :, :, JSV) )
     END DO
   END IF
-#ifdef REPRO48 !à supprimer une fois le précédent ifdef REPRO48 validé
+!à supprimer une fois le précédent ifdef REPRO48 validé
+#ifdef REPRO48
 #else
     CALL TURB_HOR_SPLT(KSPLIT, KRR, KRRL, KRRI, PTSTEP,        &
           HLBCX,HLBCY,OTURB_FLX,OSUBG_COND,                    &
@@ -1285,9 +1264,7 @@ IF (LHOOK) CALL DR_HOOK('TURB:UPDATE_ROTATE_WIND',0,ZHOOK_HANDLE)
 !
 NULLIFY(TZFIELDS_ll)
 !
-IIU=SIZE(PUSLOPE,1)
-IJU=SIZE(PUSLOPE,2)
-CALL GET_INDICE_ll (IIB,IJB,IIE,IJE,IIU,IJU)
+CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
 !
 !         2 Update halo if necessary
 !
