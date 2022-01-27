@@ -45,3 +45,6 @@ Ce répertoire devra être vidé à la fin du phasage, les modifications nécess
 Budgets/DDH
 - Le code dans budget_DDH devra être transféré dans mode_budget
 - les routines arome specifiques aux budgets sont dans mpa/micro, il faudrait les mettre ailleurs
+
+Nettoyage apl_arome non fait (pb a la compilation) ==> 4 arguments dans aro_turb_mnh supprimés (non utilisés)
+turb.F90 : il reste un CALL à SOURCES_NEG_CORRECT à ajouter. Besoin de récupérer CCLOUD dans apl_arome : comment ?

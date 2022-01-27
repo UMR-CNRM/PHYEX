@@ -272,6 +272,9 @@ USE MODE_SOURCES_NEG_CORRECT, ONLY: SOURCES_NEG_CORRECT
 USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
 !
+USE MODD_IBM_PARAM_n,    ONLY: LIBM, XIBM_LS, XIBM_XMUT
+USE MODI_IBM_MIXINGLENGTH
+!
 IMPLICIT NONE
 !
 !
@@ -733,6 +736,13 @@ IF (HTURBLEN=='ADAP') ZLEPS = MIN(ZLEPS,ZLMW*XCADAP)
 IF (HTURBDIM=="3DIM") THEN
   CALL UPDATE_LM(HLBCX,HLBCY,ZLM,ZLEPS)
 END IF
+!
+!*      3.9 Mixing length correction if immersed walls 
+!           ------------------------------------------
+!
+IF (LIBM) THEN
+   CALL IBM_MIXINGLENGTH(PLEM,ZLEPS,XIBM_XMUT,XIBM_LS(:,:,:,1),PTKET)
+ENDIF
 !----------------------------------------------------------------------------
 !
 !*      4. GO INTO THE AXES FOLLOWING THE SURFACE
