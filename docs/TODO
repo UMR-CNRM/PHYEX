@@ -54,7 +54,10 @@ Ce répertoire devra être vidé à la fin du phasage, les modifications nécess
 
 Budgets/DDH
 - Le code dans budget_DDH devra être transféré dans mode_budget
-- les routines arome specifiques aux budgets sont dans mpa/micro, il faudrait les mettre ailleurs
+- les routines arome specifiques aux budgets sont dans mpa/micro, il faudrait les mettre dans aux
+- nettoyage necessaire des routines budgets:
+   - etape 1: adaptation GPU en passant la structure => permettra d'identifier avec certitude les variables utiles
+   - etape 2: suppr des codes qui ne sont pas appelés, ménage modd_budget, ini_budget... Je pense que seul aro_ini_budget est utile
 
 SPP
 - modd_spp_type est pour l'instant dans mpa/micro/externals mais n'est pas de la microphysique

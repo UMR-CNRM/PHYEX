@@ -40,39 +40,40 @@
 !
 IMPLICIT NONE
 !
-REAL,DIMENSION(2),SAVE :: XFSEDC                 ! Constants for sedimentation fluxes of C
-REAL,SAVE :: XFSEDR,XEXSEDR,                   & ! Constants for sedimentation
+TYPE RAIN_ICE_PARAM_t
+REAL,DIMENSION(2)      :: XFSEDC                 ! Constants for sedimentation fluxes of C
+REAL      :: XFSEDR,XEXSEDR,                   & ! Constants for sedimentation
              XFSEDI,XEXCSEDI,XEXRSEDI,         & ! fluxes of R, I, S and G
              XFSEDS,XEXSEDS,                   &
              XFSEDG,XEXSEDG
 !
-REAL,SAVE :: XNU10,XALPHA1,XBETA1,             & ! Constants for heterogeneous
+REAL      :: XNU10,XALPHA1,XBETA1,             & ! Constants for heterogeneous
              XNU20,XALPHA2,XBETA2,             & ! ice nucleation : HEN
              XMNU0                               ! mass of nucleated ice crystal
 !
-REAL,SAVE :: XALPHA3,XBETA3,                   & ! Constants for homogeneous
+REAL      :: XALPHA3,XBETA3,                   & ! Constants for homogeneous
              XHON                                ! ice nucleation : HON
 !
-REAL,SAVE :: XSCFAC,                           & ! Constants for raindrop
+REAL      :: XSCFAC,                           & ! Constants for raindrop
              X0EVAR,X1EVAR,XEX0EVAR,XEX1EVAR,  & ! evaporation: EVA and for
              X0DEPI,X2DEPI,                    & ! deposition : DEP on I,
              X0DEPS,X1DEPS,XEX0DEPS,XEX1DEPS,  & !                  on S and
              X0DEPG,X1DEPG,XEX0DEPG,XEX1DEPG     !                  on G
 !
-REAL,SAVE :: XTIMAUTI,XTEXAUTI,XCRIAUTI,       & ! Constants for pristine ice
+REAL      :: XTIMAUTI,XTEXAUTI,XCRIAUTI,       & ! Constants for pristine ice
              XT0CRIAUTI,XACRIAUTI,XBCRIAUTI      ! autoconversion : AUT
 !
-REAL,SAVE :: XCOLIS,XCOLEXIS,                  & ! Constants for snow
+REAL      :: XCOLIS,XCOLEXIS,                  & ! Constants for snow
              XFIAGGS,                          & ! aggregation : AGG
              XEXIAGGS
 !
-REAL,SAVE :: XTIMAUTC,                         & ! Constants for cloud droplet
+REAL      :: XTIMAUTC,                         & ! Constants for cloud droplet
              XCRIAUTC                            ! autoconversion : AUT
 !
-REAL,SAVE :: XFCACCR,                          & ! Constants for cloud droplet
+REAL      :: XFCACCR,                          & ! Constants for cloud droplet
              XEXCACCR                            ! accretion on raindrops : ACC
 !
-REAL,SAVE :: XDCSLIM,XCOLCS,                   & ! Constants for the riming of
+REAL      :: XDCSLIM,XCOLCS,                   & ! Constants for the riming of
              XEXCRIMSS,XCRIMSS,                & ! the aggregates : RIM
              XEXCRIMSG,XCRIMSG,                & !
              XEXSRIMCG,XSRIMCG,                & !
@@ -82,13 +83,13 @@ REAL,SAVE :: XDCSLIM,XCOLCS,                   & ! Constants for the riming of
              XGAMINC_BOUND_MAX,                & ! Max val. of Lbda_s for RIM
              XRIMINTP1,XRIMINTP2                 ! Csts for lin. interpol. of
                                                  ! the tab. incomplete Gamma law
-INTEGER,SAVE :: NGAMINC                          ! Number of tab. Lbda_s
-REAL, DIMENSION(:), SAVE, ALLOCATABLE          &
+INTEGER      :: NGAMINC                          ! Number of tab. Lbda_s
+REAL, DIMENSION(:), ALLOCATABLE          &
                        :: XGAMINC_RIM1,        & ! Tab. incomplete Gamma funct.
                           XGAMINC_RIM2,        & ! for XDS+2 and for XBS
                           XGAMINC_RIM4           ! and for 2+XDS+XBS-XBG
 !
-REAL,SAVE :: XFRACCSS,                         & ! Constants for the accretion
+REAL      :: XFRACCSS,                         & ! Constants for the accretion
              XLBRACCS1,XLBRACCS2,XLBRACCS3,    & ! raindrops onto the aggregates
              XFSACCRG,                         & ! ACC (processes RACCSS and
              XLBSACCR1,XLBSACCR2,XLBSACCR3,    & !                SACCRG)
@@ -100,22 +101,22 @@ REAL,SAVE :: XFRACCSS,                         & ! Constants for the accretion
              XACCINTP1R,XACCINTP2R               !   Lbda_s and Lbda_r in the
                                                  ! XKER_RACCSS and XKER_SACCRG
                                                  !            tables
-INTEGER,SAVE :: NACCLBDAS,                     & ! Number of Lbda_s values and
+INTEGER      :: NACCLBDAS,                     & ! Number of Lbda_s values and
                 NACCLBDAR                        !   of Lbda_r values in the
                                                  ! XKER_RACCSS and XKER_SACCRG
                                                  !            tables
-REAL,DIMENSION(:,:), SAVE, ALLOCATABLE         &
+REAL,DIMENSION(:,:), ALLOCATABLE         &
                          :: XKER_RACCSS,       & ! Normalized kernel for RACCSS
                             XKER_RACCS,        & ! Normalized kernel for RACCS
                             XKER_SACCRG          ! Normalized kernel for SACCRG
-REAL,SAVE :: XFSCVMG                             ! Melting-conversion factor of
+REAL      :: XFSCVMG                             ! Melting-conversion factor of
                                                  ! the aggregates
 !
-REAL,SAVE :: XCOLIR,                           & ! Constants for rain contact
+REAL      :: XCOLIR,                           & ! Constants for rain contact
              XEXRCFRI,XRCFRI,                  & ! freezing : CFR
              XEXICFRR,XICFRR                     !
 !
-REAL,SAVE :: XFCDRYG,                          & ! Constants for the dry growth
+REAL      :: XFCDRYG,                          & ! Constants for the dry growth
              XCOLIG,XCOLEXIG,XFIDRYG,          & ! of the graupeln : DRY
              XFIDRYG2, XEXFIDRYG,              &
              XCOLSG,XCOLEXSG,XFSDRYG,          & !   processes RCDRYG
@@ -132,27 +133,27 @@ REAL,SAVE :: XFCDRYG,                          & ! Constants for the dry growth
              XDRYINTP1S,XDRYINTP2S,            & ! Lbda_r, Lbda_s and Lbda_g in
              XDRYINTP1G,XDRYINTP2G               ! the XKER_SDRYG and XKER_RDRYG
                                                  !            tables
-INTEGER,SAVE :: NDRYLBDAR,                     & ! Number of Lbda_r,
+INTEGER      :: NDRYLBDAR,                     & ! Number of Lbda_r,
                 NDRYLBDAS,                     & !        of Lbda_s and
                 NDRYLBDAG                        !        of Lbda_g values in
                                                  ! the XKER_SDRYG and XKER_RDRYG
                                                  !            tables
-REAL,DIMENSION(:,:), SAVE, ALLOCATABLE         &
+REAL,DIMENSION(:,:), ALLOCATABLE         &
                          :: XKER_SDRYG,        & ! Normalized kernel for SDRYG
                             XKER_RDRYG           ! Normalized kernel for RDRYG
 !
 ! addition of Hail category
 !
-REAL,SAVE :: XFSEDH,XEXSEDH                      ! Constants for sedimentation
+REAL      :: XFSEDH,XEXSEDH                      ! Constants for sedimentation
 !
 !
-REAL,SAVE :: X0DEPH,X1DEPH,XEX0DEPH,XEX1DEPH     ! Constants for deposition
+REAL      :: X0DEPH,X1DEPH,XEX0DEPH,XEX1DEPH     ! Constants for deposition
 !
-REAL,SAVE :: XCOLIH, XCOLEXIH,                 & ! Constants for the dry growth
+REAL      :: XCOLIH, XCOLEXIH,                 & ! Constants for the dry growth
            & XCOLSH, XCOLEXSH,                 & ! of the hail
            & XCOLGH, XCOLEXGH                    !
 !
-REAL,SAVE :: XFWETH,XFSWETH,                   & ! Constants for the wet growth
+REAL      :: XFWETH,XFSWETH,                   & ! Constants for the wet growth
              XLBSWETH1,XLBSWETH2,XLBSWETH3,    & ! of the hailstones : WET
              XFGWETH,                          & !   processes RSWETH
              XLBGWETH1,XLBGWETH2,XLBGWETH3,    & !             RGWETH
@@ -171,15 +172,248 @@ REAL,SAVE :: XFWETH,XFSWETH,                   & ! Constants for the wet growth
              XWETINTP1R,XWETINTP2R,            & ! and Lbda_h in
              XWETINTP1H,XWETINTP2H               ! the XKER_SWETH, XKER_GWETH
                                                  ! and XKER_RWETH tables
-INTEGER,SAVE :: NWETLBDAS,                     & ! Number of Lbda_s,
+INTEGER      :: NWETLBDAS,                     & ! Number of Lbda_s,
                 NWETLBDAG,                     & !        of Lbda_g,
                 NWETLBDAR,                     & !        of Lbda_r and
                 NWETLBDAH                        !        of Lbda_h values in
                                                  ! the XKER_SWETH, XKER_GWETH
                                                  ! and XKER_RWETH tables
-REAL,DIMENSION(:,:), SAVE, ALLOCATABLE         &
+REAL,DIMENSION(:,:), ALLOCATABLE         &
                          :: XKER_SWETH,        & ! Normalized kernel for SWETH
                             XKER_GWETH,        & ! Normalized kernel for GWETH
                             XKER_RWETH           ! Normalized kernel for RWETH
+END TYPE RAIN_ICE_PARAM_t
 !
+TYPE(RAIN_ICE_PARAM_t), SAVE, TARGET :: RAIN_ICE_PARAM
+!
+REAL,DIMENSION(:),POINTER :: XFSEDC => NULL()
+
+REAL,POINTER :: XFSEDR => RAIN_ICE_PARAM%XFSEDR, &
+                XEXSEDR => RAIN_ICE_PARAM%XEXSEDR, &
+                XFSEDI => RAIN_ICE_PARAM%XFSEDI, &
+                XEXCSEDI => RAIN_ICE_PARAM%XEXCSEDI, &
+                XEXRSEDI => RAIN_ICE_PARAM%XEXRSEDI, &
+                XFSEDS => RAIN_ICE_PARAM%XFSEDS, &
+                XEXSEDS => RAIN_ICE_PARAM%XEXSEDS, &
+                XFSEDG => RAIN_ICE_PARAM%XFSEDG, &
+                XEXSEDG => RAIN_ICE_PARAM%XEXSEDG, &
+                XNU10 => RAIN_ICE_PARAM%XNU10, &
+                XALPHA1 => RAIN_ICE_PARAM%XALPHA1, &
+                XBETA1 => RAIN_ICE_PARAM%XBETA1, &
+                XNU20 => RAIN_ICE_PARAM%XNU20, &
+                XALPHA2 => RAIN_ICE_PARAM%XALPHA2, &
+                XBETA2 => RAIN_ICE_PARAM%XBETA2, &
+                XMNU0 => RAIN_ICE_PARAM%XMNU0, &
+                XALPHA3 => RAIN_ICE_PARAM%XALPHA3, &
+                XBETA3 => RAIN_ICE_PARAM%XBETA3, &
+                XHON => RAIN_ICE_PARAM%XHON, &
+                XSCFAC => RAIN_ICE_PARAM%XSCFAC, &
+                X0EVAR => RAIN_ICE_PARAM%X0EVAR, &
+                X1EVAR => RAIN_ICE_PARAM%X1EVAR, &
+                XEX0EVAR => RAIN_ICE_PARAM%XEX0EVAR, &
+                XEX1EVAR => RAIN_ICE_PARAM%XEX1EVAR, &
+                X0DEPI => RAIN_ICE_PARAM%X0DEPI, &
+                X2DEPI => RAIN_ICE_PARAM%X2DEPI, &
+                X0DEPS => RAIN_ICE_PARAM%X0DEPS, &
+                X1DEPS => RAIN_ICE_PARAM%X1DEPS, &
+                XEX0DEPS => RAIN_ICE_PARAM%XEX0DEPS, &
+                XEX1DEPS => RAIN_ICE_PARAM%XEX1DEPS, &
+                X0DEPG => RAIN_ICE_PARAM%X0DEPG, &
+                X1DEPG => RAIN_ICE_PARAM%X1DEPG, &
+                XEX0DEPG => RAIN_ICE_PARAM%XEX0DEPG, &
+                XEX1DEPG => RAIN_ICE_PARAM%XEX1DEPG, &
+                XTIMAUTI => RAIN_ICE_PARAM%XTIMAUTI, &
+                XTEXAUTI => RAIN_ICE_PARAM%XTEXAUTI, &
+                XCRIAUTI => RAIN_ICE_PARAM%XCRIAUTI, &
+                XT0CRIAUTI => RAIN_ICE_PARAM%XT0CRIAUTI, &
+                XACRIAUTI => RAIN_ICE_PARAM%XACRIAUTI, &
+                XBCRIAUTI => RAIN_ICE_PARAM%XBCRIAUTI, &
+                XCOLIS => RAIN_ICE_PARAM%XCOLIS, &
+                XCOLEXIS => RAIN_ICE_PARAM%XCOLEXIS, &
+                XFIAGGS => RAIN_ICE_PARAM%XFIAGGS, &
+                XEXIAGGS => RAIN_ICE_PARAM%XEXIAGGS, &
+                XTIMAUTC => RAIN_ICE_PARAM%XTIMAUTC, &
+                XCRIAUTC => RAIN_ICE_PARAM%XCRIAUTC, &
+                XFCACCR => RAIN_ICE_PARAM%XFCACCR, &
+                XEXCACCR => RAIN_ICE_PARAM%XEXCACCR, &
+                XDCSLIM => RAIN_ICE_PARAM%XDCSLIM, &
+                XCOLCS => RAIN_ICE_PARAM%XCOLCS, &
+                XEXCRIMSS => RAIN_ICE_PARAM%XEXCRIMSS, &
+                XCRIMSS => RAIN_ICE_PARAM%XCRIMSS, &
+                XEXCRIMSG => RAIN_ICE_PARAM%XEXCRIMSG, &
+                XCRIMSG => RAIN_ICE_PARAM%XCRIMSG, &
+                XEXSRIMCG => RAIN_ICE_PARAM%XEXSRIMCG, &
+                XSRIMCG => RAIN_ICE_PARAM%XSRIMCG, &
+                XEXSRIMCG2 => RAIN_ICE_PARAM%XEXSRIMCG2, &
+                XSRIMCG2 => RAIN_ICE_PARAM%XSRIMCG2, &
+                XSRIMCG3 => RAIN_ICE_PARAM%XSRIMCG3, &
+                XGAMINC_BOUND_MIN => RAIN_ICE_PARAM%XGAMINC_BOUND_MIN, &
+                XGAMINC_BOUND_MAX => RAIN_ICE_PARAM%XGAMINC_BOUND_MAX, &
+                XRIMINTP1 => RAIN_ICE_PARAM%XRIMINTP1, &
+                XRIMINTP2 => RAIN_ICE_PARAM%XRIMINTP2, &
+                XFRACCSS => RAIN_ICE_PARAM%XFRACCSS, &
+                XLBRACCS1 => RAIN_ICE_PARAM%XLBRACCS1, &
+                XLBRACCS2 => RAIN_ICE_PARAM%XLBRACCS2, &
+                XLBRACCS3 => RAIN_ICE_PARAM%XLBRACCS3, &
+                XFSACCRG => RAIN_ICE_PARAM%XFSACCRG, &
+                XLBSACCR1 => RAIN_ICE_PARAM%XLBSACCR1, &
+                XLBSACCR2 => RAIN_ICE_PARAM%XLBSACCR2, &
+                XLBSACCR3 => RAIN_ICE_PARAM%XLBSACCR3, &
+                XACCLBDAS_MIN => RAIN_ICE_PARAM%XACCLBDAS_MIN, &
+                XACCLBDAS_MAX => RAIN_ICE_PARAM%XACCLBDAS_MAX, &
+                XACCLBDAR_MIN => RAIN_ICE_PARAM%XACCLBDAR_MIN, &
+                XACCLBDAR_MAX => RAIN_ICE_PARAM%XACCLBDAR_MAX, &
+                XACCINTP1S => RAIN_ICE_PARAM%XACCINTP1S, &
+                XACCINTP2S => RAIN_ICE_PARAM%XACCINTP2S, &
+                XACCINTP1R => RAIN_ICE_PARAM%XACCINTP1R, &
+                XACCINTP2R => RAIN_ICE_PARAM%XACCINTP2R, &
+                XFSCVMG => RAIN_ICE_PARAM%XFSCVMG, &
+                XCOLIR => RAIN_ICE_PARAM%XCOLIR, &
+                XEXRCFRI => RAIN_ICE_PARAM%XEXRCFRI, &
+                XRCFRI => RAIN_ICE_PARAM%XRCFRI, &
+                XEXICFRR => RAIN_ICE_PARAM%XEXICFRR, &
+                XICFRR => RAIN_ICE_PARAM%XICFRR, &
+                XFCDRYG => RAIN_ICE_PARAM%XFCDRYG, &
+                XCOLIG => RAIN_ICE_PARAM%XCOLIG, &
+                XCOLEXIG => RAIN_ICE_PARAM%XCOLEXIG, &
+                XFIDRYG => RAIN_ICE_PARAM%XFIDRYG, &
+                XFIDRYG2 => RAIN_ICE_PARAM%XFIDRYG2, &
+                XEXFIDRYG => RAIN_ICE_PARAM%XEXFIDRYG, &
+                XCOLSG => RAIN_ICE_PARAM%XCOLSG, &
+                XCOLEXSG => RAIN_ICE_PARAM%XCOLEXSG, &
+                XFSDRYG => RAIN_ICE_PARAM%XFSDRYG, &
+                XLBSDRYG1 => RAIN_ICE_PARAM%XLBSDRYG1, &
+                XLBSDRYG2 => RAIN_ICE_PARAM%XLBSDRYG2, &
+                XLBSDRYG3 => RAIN_ICE_PARAM%XLBSDRYG3, &
+                XFRDRYG => RAIN_ICE_PARAM%XFRDRYG, &
+                XLBRDRYG1 => RAIN_ICE_PARAM%XLBRDRYG1, &
+                XLBRDRYG2 => RAIN_ICE_PARAM%XLBRDRYG2, &
+                XLBRDRYG3 => RAIN_ICE_PARAM%XLBRDRYG3, &
+                XDRYLBDAR_MIN => RAIN_ICE_PARAM%XDRYLBDAR_MIN, &
+                XDRYLBDAR_MAX => RAIN_ICE_PARAM%XDRYLBDAR_MAX, &
+                XDRYLBDAS_MIN => RAIN_ICE_PARAM%XDRYLBDAS_MIN, &
+                XDRYLBDAS_MAX => RAIN_ICE_PARAM%XDRYLBDAS_MAX, &
+                XDRYLBDAG_MIN => RAIN_ICE_PARAM%XDRYLBDAG_MIN, &
+                XDRYLBDAG_MAX => RAIN_ICE_PARAM%XDRYLBDAG_MAX, &
+                XDRYINTP1R => RAIN_ICE_PARAM%XDRYINTP1R, &
+                XDRYINTP2R => RAIN_ICE_PARAM%XDRYINTP2R, &
+                XDRYINTP1S => RAIN_ICE_PARAM%XDRYINTP1S, &
+                XDRYINTP2S => RAIN_ICE_PARAM%XDRYINTP2S, &
+                XDRYINTP1G => RAIN_ICE_PARAM%XDRYINTP1G, &
+                XDRYINTP2G => RAIN_ICE_PARAM%XDRYINTP2G, &
+                XFSEDH => RAIN_ICE_PARAM%XFSEDH, &
+                XEXSEDH => RAIN_ICE_PARAM%XEXSEDH, &
+                X0DEPH => RAIN_ICE_PARAM%X0DEPH, &
+                X1DEPH => RAIN_ICE_PARAM%X1DEPH, &
+                XEX0DEPH => RAIN_ICE_PARAM%XEX0DEPH, &
+                XEX1DEPH => RAIN_ICE_PARAM%XEX1DEPH, &
+                XCOLIH => RAIN_ICE_PARAM%XCOLIH, &
+                XCOLEXIH => RAIN_ICE_PARAM%XCOLEXIH, &
+                XCOLSH => RAIN_ICE_PARAM%XCOLSH, &
+                XCOLEXSH => RAIN_ICE_PARAM%XCOLEXSH, &
+                XCOLGH => RAIN_ICE_PARAM%XCOLGH, &
+                XCOLEXGH => RAIN_ICE_PARAM%XCOLEXGH, &
+                XFWETH => RAIN_ICE_PARAM%XFWETH, &
+                XFSWETH => RAIN_ICE_PARAM%XFSWETH, &
+                XLBSWETH1 => RAIN_ICE_PARAM%XLBSWETH1, &
+                XLBSWETH2 => RAIN_ICE_PARAM%XLBSWETH2, &
+                XLBSWETH3 => RAIN_ICE_PARAM%XLBSWETH3, &
+                XFGWETH => RAIN_ICE_PARAM%XFGWETH, &
+                XLBGWETH1 => RAIN_ICE_PARAM%XLBGWETH1, &
+                XLBGWETH2 => RAIN_ICE_PARAM%XLBGWETH2, &
+                XLBGWETH3 => RAIN_ICE_PARAM%XLBGWETH3, &
+                XFRWETH => RAIN_ICE_PARAM%XFRWETH, &
+                XLBRWETH1 => RAIN_ICE_PARAM%XLBRWETH1, &
+                XLBRWETH2 => RAIN_ICE_PARAM%XLBRWETH2, &
+                XLBRWETH3 => RAIN_ICE_PARAM%XLBRWETH3, &
+                XWETLBDAS_MIN => RAIN_ICE_PARAM%XWETLBDAS_MIN, &
+                XWETLBDAS_MAX => RAIN_ICE_PARAM%XWETLBDAS_MAX, &
+                XWETLBDAG_MIN => RAIN_ICE_PARAM%XWETLBDAG_MIN, &
+                XWETLBDAG_MAX => RAIN_ICE_PARAM%XWETLBDAG_MAX, &
+                XWETLBDAR_MIN => RAIN_ICE_PARAM%XWETLBDAR_MIN, &
+                XWETLBDAR_MAX => RAIN_ICE_PARAM%XWETLBDAR_MAX, &
+                XWETLBDAH_MIN => RAIN_ICE_PARAM%XWETLBDAH_MIN, &
+                XWETLBDAH_MAX => RAIN_ICE_PARAM%XWETLBDAH_MAX, &
+                XWETINTP1S => RAIN_ICE_PARAM%XWETINTP1S, &
+                XWETINTP2S => RAIN_ICE_PARAM%XWETINTP2S, &
+                XWETINTP1G => RAIN_ICE_PARAM%XWETINTP1G, &
+                XWETINTP2G => RAIN_ICE_PARAM%XWETINTP2G, &
+                XWETINTP1R => RAIN_ICE_PARAM%XWETINTP1R, &
+                XWETINTP2R => RAIN_ICE_PARAM%XWETINTP2R, &
+                XWETINTP1H => RAIN_ICE_PARAM%XWETINTP1H, &
+                XWETINTP2H => RAIN_ICE_PARAM%XWETINTP2H
+
+INTEGER, POINTER :: NGAMINC => RAIN_ICE_PARAM%NGAMINC, &
+                    NACCLBDAS => RAIN_ICE_PARAM%NACCLBDAS, &
+                    NACCLBDAR => RAIN_ICE_PARAM%NACCLBDAR, &
+                    NDRYLBDAR => RAIN_ICE_PARAM%NDRYLBDAR, &
+                    NDRYLBDAS => RAIN_ICE_PARAM%NDRYLBDAS, &
+                    NDRYLBDAG => RAIN_ICE_PARAM%NDRYLBDAG, &
+                    NWETLBDAS => RAIN_ICE_PARAM%NWETLBDAS, &
+                    NWETLBDAG => RAIN_ICE_PARAM%NWETLBDAG, &
+                    NWETLBDAR => RAIN_ICE_PARAM%NWETLBDAR, &
+                    NWETLBDAH => RAIN_ICE_PARAM%NWETLBDAH
+
+REAL, DIMENSION(:), POINTER :: XGAMINC_RIM1 => NULL(), &
+                               XGAMINC_RIM2 => NULL(), &
+                               XGAMINC_RIM4 => NULL()
+
+REAL,DIMENSION(:,:), POINTER :: XKER_RACCSS => NULL(), &
+                                XKER_RACCS => NULL(), &
+                                XKER_SACCRG => NULL(), &
+                                XKER_SDRYG => NULL(), &
+                                XKER_RDRYG => NULL(), &
+                                XKER_SWETH => NULL(), &
+                                XKER_GWETH => NULL(), &
+                                XKER_RWETH => NULL()
+CONTAINS
+SUBROUTINE RAIN_ICE_INIT()
+  IMPLICIT NONE
+  XFSEDC => RAIN_ICE_PARAM%XFSEDC
+END SUBROUTINE RAIN_ICE_INIT
+SUBROUTINE RAIN_ICE_ALLOCATE(HNAME, KDIM1, KDIM2)
+  IMPLICIT NONE
+  CHARACTER(LEN=*), INTENT(IN) :: HNAME
+  INTEGER, INTENT(IN)           :: KDIM1
+  INTEGER, OPTIONAL, INTENT(IN) :: KDIM2
+
+  SELECT CASE(TRIM(HNAME))
+    !1D arrays
+    CASE('XGAMINC_RIM1')
+      ALLOCATE(RAIN_ICE_PARAM%XGAMINC_RIM1(KDIM1))
+      XGAMINC_RIM1 => RAIN_ICE_PARAM%XGAMINC_RIM1
+    CASE('XGAMINC_RIM2')
+      ALLOCATE(RAIN_ICE_PARAM%XGAMINC_RIM2(KDIM1))
+      XGAMINC_RIM2 => RAIN_ICE_PARAM%XGAMINC_RIM2
+    CASE('XGAMINC_RIM4')
+      ALLOCATE(RAIN_ICE_PARAM%XGAMINC_RIM4(KDIM1))
+      XGAMINC_RIM4 => RAIN_ICE_PARAM%XGAMINC_RIM4
+    !
+    !2D arrays
+    CASE('XKER_RACCSS')
+      ALLOCATE(RAIN_ICE_PARAM%XKER_RACCSS(KDIM1, KDIM2))
+      XKER_RACCSS=> RAIN_ICE_PARAM%XKER_RACCSS
+    CASE('XKER_RACCS')
+      ALLOCATE(RAIN_ICE_PARAM%XKER_RACCS(KDIM1, KDIM2))
+      XKER_RACCS=> RAIN_ICE_PARAM%XKER_RACCS
+    CASE('XKER_SACCRG')
+      ALLOCATE(RAIN_ICE_PARAM%XKER_SACCRG(KDIM1, KDIM2))
+      XKER_SACCRG=> RAIN_ICE_PARAM%XKER_SACCRG
+    CASE('XKER_SDRYG')
+      ALLOCATE(RAIN_ICE_PARAM%XKER_SDRYG(KDIM1, KDIM2))
+      XKER_SDRYG=> RAIN_ICE_PARAM%XKER_SDRYG
+    CASE('XKER_RDRYG')
+      ALLOCATE(RAIN_ICE_PARAM%XKER_RDRYG(KDIM1, KDIM2))
+      XKER_RDRYG=> RAIN_ICE_PARAM%XKER_RDRYG
+    CASE('XKER_SWETH')
+      ALLOCATE(RAIN_ICE_PARAM%XKER_SWETH(KDIM1, KDIM2))
+      XKER_SWETH=> RAIN_ICE_PARAM%XKER_SWETH
+    CASE('XKER_GWETH')
+      ALLOCATE(RAIN_ICE_PARAM%XKER_GWETH(KDIM1, KDIM2))
+      XKER_GWETH=> RAIN_ICE_PARAM%XKER_GWETH
+    CASE('XKER_RWETH')
+      ALLOCATE(RAIN_ICE_PARAM%XKER_RWETH(KDIM1, KDIM2))
+      XKER_RWETH=> RAIN_ICE_PARAM%XKER_RWETH
+  END SELECT
+END SUBROUTINE RAIN_ICE_ALLOCATE
 END MODULE MODD_RAIN_ICE_PARAM

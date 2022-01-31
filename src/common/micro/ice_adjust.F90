@@ -4,10 +4,11 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ##########################################################################
-      SUBROUTINE ICE_ADJUST (KKA, KKU, KKL, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3,&
+      SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEB, BUCONF, KRR,                   &
+                             HFRAC_ICE, HCONDENS, HLAMBDA3,&
                              HBUNAME, OSUBG_COND, OSIGMAS, OCND2, HSUBG_MF_PDF,&
                              PTSTEP, PSIGQSAT,                                 &
-                             PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV,        &
+                             PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
                              PPABST, PZZ,                                      &
                              PEXN, PCF_MF, PRC_MF, PRI_MF,                     &
                              PRV, PRC, PRVS, PRCS, PTH, PTHS, PSRCS, PCLDFR,   &
@@ -107,15 +108,13 @@
 !
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
-USE MODD_BUDGET,     ONLY: TBUDGETDATA, LBU_ENABLE,  &
-                         & LBUDGET_TH, LBUDGET_RV, LBUDGET_RC, LBUDGET_RI,  &
-                         & NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RI
-USE MODD_CST,        ONLY: XLVTT, XLSTT, XCPV, XCL, XCI, XTT, XCPD, XCPV
-USE MODD_PARAMETERS, ONLY: JPVEXT
-USE MODD_RAIN_ICE_PARAM, ONLY : XCRIAUTC, XCRIAUTI, XACRIAUTI, XBCRIAUTI
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+USE MODD_CST,        ONLY: CST_t
+USE MODD_NEB,        ONLY: NEB_t
+USE MODD_BUDGET,     ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RI
+USE MODD_RAIN_ICE_PARAM, ONLY : RAIN_ICE_PARAM_t
 !
 USE MODE_BUDGET,         ONLY: BUDGET_STORE_INIT, BUDGET_STORE_END
-USE MODE_ll,             ONLY: GET_INDICE_ll
 !
 USE MODI_CONDENSATION
 !
@@ -125,9 +124,11 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 !
-INTEGER,                  INTENT(IN)    :: KKA  !near ground array index  
-INTEGER,                  INTENT(IN)    :: KKU  !uppest atmosphere array index
-INTEGER,                  INTENT(IN)    :: KKL  !vert. levels type 1=MNH -1=ARO
+TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
+TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
+TYPE(NEB_t),              INTENT(IN)    :: NEB
+TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KRR      ! Number of moist variables
 CHARACTER(LEN=1),         INTENT(IN)    :: HFRAC_ICE
 CHARACTER(LEN=80),        INTENT(IN)    :: HCONDENS
@@ -144,50 +145,55 @@ LOGICAL                                 :: OCND2    ! logical switch to sparate 
 CHARACTER(LEN=80),        INTENT(IN)    :: HSUBG_MF_PDF
 REAL,                     INTENT(IN)   :: PTSTEP    ! Double Time step
                                                     ! (single if cold start)
-REAL, DIMENSION(:,:),     INTENT(IN)   :: PSIGQSAT  ! coeff applied to qsat variance contribution
+REAL, DIMENSION(D%NIT,D%NJT),                INTENT(IN)    :: PSIGQSAT  ! coeff applied to qsat variance contribution
 !
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(IN)   ::  PRHODJ  ! Dry density * Jacobian
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(IN)   ::  PEXNREF ! Reference Exner function
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(IN)   ::  PRHODREF
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PRHODJ  ! Dry density * Jacobian
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PEXNREF ! Reference Exner function
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PRHODREF
 !
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(IN)   ::  PSIGS   ! Sigma_s at time t
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(IN)   ::  PMFCONV ! convective mass flux
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(IN)   ::  PPABST  ! Absolute Pressure at t        
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(IN)   ::  PZZ     ! height of model layer
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(IN)   ::  PEXN    ! Exner function
+REAL, DIMENSION(MERGE(D%NIT,0,OSUBG_COND),&
+                MERGE(D%NJT,0,OSUBG_COND),&
+                MERGE(D%NKT,0,OSUBG_COND)),           INTENT(IN)    ::  PSIGS   ! Sigma_s at time t
+LOGICAL,                                                       INTENT(IN)    ::  LMFCONV ! =SIZE(PMFCONV)!=0
+REAL, DIMENSION(MERGE(D%NIT,0,LMFCONV),&
+                MERGE(D%NJT,0,LMFCONV),&
+                MERGE(D%NKT,0,LMFCONV)),              INTENT(IN)   ::  PMFCONV ! convective mass flux
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PPABST  ! Absolute Pressure at t        
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PZZ     ! height of model layer
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PEXN    ! Exner function
 !
-REAL, DIMENSION(:,:,:), CONTIGUOUS,     INTENT(IN)    :: PCF_MF! Convective Mass Flux Cloud fraction 
-REAL, DIMENSION(:,:,:), CONTIGUOUS,     INTENT(IN)    :: PRC_MF! Convective Mass Flux liquid mixing ratio
-REAL, DIMENSION(:,:,:), CONTIGUOUS,     INTENT(IN)    :: PRI_MF! Convective Mass Flux ice mixing ratio
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PCF_MF! Convective Mass Flux Cloud fraction 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRC_MF! Convective Mass Flux liquid mixing ratio
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRI_MF! Convective Mass Flux ice mixing ratio
 !
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(IN)   ::  PRV     ! Water vapor m.r. to adjust
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(IN)   ::  PRC     ! Cloud water m.r. to adjust
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(INOUT) :: PRVS    ! Water vapor m.r. source
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(IN)    :: PTH     ! Theta to adjust
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(INOUT) :: PTHS    ! Theta source
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(OUT)   :: PSRCS   ! Second-order flux
-                                                   ! s'rc'/2Sigma_s2 at time t+1
-                                                   ! multiplied by Lambda_3
-REAL, DIMENSION(:,:,:), CONTIGUOUS,   INTENT(OUT)   :: PCLDFR  ! Cloud fraction          
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PRV     ! Water vapor m.r. to adjust
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PRC     ! Cloud water m.r. to adjust
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT) :: PRVS    ! Water vapor m.r. source
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PTH     ! Theta to adjust
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT) :: PTHS    ! Theta source
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PSRCS   ! Second-order flux
+                                                                                        ! s'rc'/2Sigma_s2 at time t+1
+                                                                                        ! multiplied by Lambda_3
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PCLDFR  ! Cloud fraction          
 !
-REAL, DIMENSION(:,:,:), CONTIGUOUS,  INTENT(INOUT)::  PRIS ! Cloud ice  m.r. at t+1
-REAL, DIMENSION(:,:,:), CONTIGUOUS,  INTENT(IN)   ::  PRR  ! Rain water m.r. to adjust
-REAL, DIMENSION(:,:,:), CONTIGUOUS,  INTENT(IN)   ::  PRI  ! Cloud ice  m.r. to adjust
-REAL, DIMENSION(:,:,:), CONTIGUOUS,  INTENT(IN)   ::  PRS  ! Aggregate  m.r. to adjust
-REAL, DIMENSION(:,:,:), CONTIGUOUS,  INTENT(IN)   ::  PRG  ! Graupel    m.r. to adjust
-REAL, DIMENSION(:,:,:), CONTIGUOUS, OPTIONAL, INTENT(IN)   ::  PRH  ! Hail       m.r. to adjust
-REAL, DIMENSION(:,:,:), CONTIGUOUS, OPTIONAL, INTENT(OUT)  ::  POUT_RV ! Adjusted value
-REAL, DIMENSION(:,:,:), CONTIGUOUS, OPTIONAL, INTENT(OUT)  ::  POUT_RC ! Adjusted value
-REAL, DIMENSION(:,:,:), CONTIGUOUS, OPTIONAL, INTENT(OUT)  ::  POUT_RI ! Adjusted value
-REAL, DIMENSION(:,:,:), CONTIGUOUS, OPTIONAL, INTENT(OUT)  ::  POUT_TH ! Adjusted value
-REAL, DIMENSION(:,:,:), CONTIGUOUS, OPTIONAL, INTENT(OUT)  ::  PHLC_HRC
-REAL, DIMENSION(:,:,:), CONTIGUOUS, OPTIONAL, INTENT(OUT)  ::  PHLC_HCF
-REAL, DIMENSION(:,:,:), CONTIGUOUS, OPTIONAL, INTENT(OUT)  ::  PHLI_HRI
-REAL, DIMENSION(:,:,:), CONTIGUOUS, OPTIONAL, INTENT(OUT)  ::  PHLI_HCF
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
-INTEGER, INTENT(IN) :: KBUDGETS
-REAL, DIMENSION(:,:), CONTIGUOUS,   OPTIONAL, INTENT(IN)   :: PICE_CLD_WGT
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT)::  PRIS ! Cloud ice  m.r. at t+1
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRR  ! Rain water m.r. to adjust
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRI  ! Cloud ice  m.r. to adjust
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRS  ! Aggregate  m.r. to adjust
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRG  ! Graupel    m.r. to adjust
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PRH  ! Hail       m.r. to adjust
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_RV ! Adjusted value
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_RC ! Adjusted value
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_RI ! Adjusted value
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_TH ! Adjusted value
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLC_HRC
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLC_HCF
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLI_HRI
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLI_HCF
+TYPE(TBUDGETDATA), DIMENSION(KBUDGETS),                        INTENT(INOUT) :: TBUDGETS
+INTEGER,                                                       INTENT(IN)    :: KBUDGETS
+REAL, DIMENSION(D%NIT,D%NJT),                OPTIONAL, INTENT(IN)   :: PICE_CLD_WGT
 !
 !*       0.2   Declarations of local variables :
 !
@@ -202,16 +208,11 @@ REAL, DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3)) &
 REAL :: ZCRIAUT, & ! Autoconversion thresholds
         ZHCF, ZHR
 !
-INTEGER             :: IIU,IJU,IKU! dimensions of dummy arrays
-INTEGER             :: IIB,IJB    ! Horz index values of the first inner mass points
-INTEGER             :: IIE,IJE    ! Horz index values of the last inner mass points
-INTEGER             :: IKB        ! K index value of the first inner mass point
-INTEGER             :: IKE        ! K index value of the last inner mass point
 INTEGER             :: JITER,ITERMAX ! iterative loop for first order adjustment
 INTEGER             :: JI, JJ, JK
 !
-REAL, DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3)) :: ZSIGS, ZSRCS
-REAL, DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2)) :: ZSIGQSAT
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZSIGS, ZSRCS
+REAL, DIMENSION(D%NIT,D%NJT) :: ZSIGQSAT
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
@@ -221,19 +222,12 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 IF (LHOOK) CALL DR_HOOK('ICE_ADJUST',0,ZHOOK_HANDLE)
 !
-IIU = SIZE(PEXNREF,1)
-IJU = SIZE(PEXNREF,2)
-IKU = SIZE(PEXNREF,3)
-CALL GET_INDICE_ll(IIB,IJB,IIE,IJE,IIU,IJU)
-IKB=KKA+JPVEXT*KKL
-IKE=KKU-JPVEXT*KKL
-!
 ITERMAX=1
 !
-IF(LBUDGET_TH) CALL BUDGET_STORE_INIT(TBUDGETS(NBUDGET_TH), TRIM(HBUNAME), PTHS(:, :, :)*PRHODJ(:, :, :))
-IF(LBUDGET_RV) CALL BUDGET_STORE_INIT(TBUDGETS(NBUDGET_RV), TRIM(HBUNAME), PRVS(:, :, :)*PRHODJ(:, :, :))
-IF(LBUDGET_RC) CALL BUDGET_STORE_INIT(TBUDGETS(NBUDGET_RC), TRIM(HBUNAME), PRCS(:, :, :)*PRHODJ(:, :, :))
-IF(LBUDGET_RI) CALL BUDGET_STORE_INIT(TBUDGETS(NBUDGET_RI), TRIM(HBUNAME), PRIS(:, :, :)*PRHODJ(:, :, :))
+IF(BUCONF%LBUDGET_TH) CALL BUDGET_STORE_INIT(TBUDGETS(NBUDGET_TH), TRIM(HBUNAME), PTHS(:, :, :)*PRHODJ(:, :, :))
+IF(BUCONF%LBUDGET_RV) CALL BUDGET_STORE_INIT(TBUDGETS(NBUDGET_RV), TRIM(HBUNAME), PRVS(:, :, :)*PRHODJ(:, :, :))
+IF(BUCONF%LBUDGET_RC) CALL BUDGET_STORE_INIT(TBUDGETS(NBUDGET_RC), TRIM(HBUNAME), PRCS(:, :, :)*PRHODJ(:, :, :))
+IF(BUCONF%LBUDGET_RI) CALL BUDGET_STORE_INIT(TBUDGETS(NBUDGET_RI), TRIM(HBUNAME), PRIS(:, :, :)*PRHODJ(:, :, :))
 !-------------------------------------------------------------------------------
 !
 !*       2.     COMPUTE QUANTITIES WITH THE GUESS OF THE FUTURE INSTANT
@@ -247,12 +241,12 @@ DO JITER =1,ITERMAX
   !*       2.3    compute the latent heat of vaporization Lv(T*) at t+1
   !                   and the latent heat of sublimation  Ls(T*) at t+1
   !
-  DO JK=1,IKU
-    DO JJ=1,IJU
-      DO JI=1,IIU
+  DO JK=D%NKTB,D%NKTE
+    DO JJ=D%NJB,D%NJE
+      DO JI=D%NIB,D%NIE
         IF (JITER==1) ZT(JI,JJ,JK) = PTH(JI,JJ,JK) * PEXN(JI,JJ,JK)
-        ZLV(JI,JJ,JK) = XLVTT + ( XCPV - XCL ) * ( ZT(JI,JJ,JK) -XTT )
-        ZLS(JI,JJ,JK) = XLSTT + ( XCPV - XCI ) * ( ZT(JI,JJ,JK) -XTT )
+        ZLV(JI,JJ,JK) = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZT(JI,JJ,JK) -CST%XTT )
+        ZLS(JI,JJ,JK) = CST%XLSTT + ( CST%XCPV - CST%XCI ) * ( ZT(JI,JJ,JK) -CST%XTT )
       ENDDO
     ENDDO
   ENDDO
@@ -272,9 +266,9 @@ ENDDO         ! end of the iterative loop
 !               -------------------------------------------------
 !
 !
-DO JK=1,IKU
-  DO JJ=1,IJU
-    DO JI=1,IIU
+DO JK=D%NKTB,D%NKTE
+  DO JJ=D%NJB,D%NJE
+    DO JI=D%NIB,D%NIE
       !
       !*       5.0    compute the variation of mixing ratio
       !
@@ -309,7 +303,7 @@ DO JK=1,IKU
     !*       5.2    compute the cloud fraction PCLDFR
     !
     IF ( .NOT. OSUBG_COND ) THEN
-      DO JI=1,IIU
+      DO JI=D%NIB,D%NIE
         IF (PRCS(JI,JJ,JK) + PRIS(JI,JJ,JK) > 1.E-12 / PTSTEP) THEN
           PCLDFR(JI,JJ,JK)  = 1.
         ELSE
@@ -320,7 +314,7 @@ DO JK=1,IKU
         END IF
       ENDDO
     ELSE !OSUBG_COND case
-      DO JI=1,IIU
+      DO JI=D%NIB,D%NIE
         !We limit PRC_MF+PRI_MF to PRVS*PTSTEP to avoid negative humidity
         ZW1=PRC_MF(JI,JJ,JK)/PTSTEP
         ZW2=PRI_MF(JI,JJ,JK)/PTSTEP
@@ -336,7 +330,7 @@ DO JK=1,IKU
                       (ZW1 * ZLV(JI,JJ,JK) + ZW2 * ZLS(JI,JJ,JK)) / ZCPH(JI,JJ,JK) / PEXNREF(JI,JJ,JK)
         !
         IF(PRESENT(PHLC_HRC) .AND. PRESENT(PHLC_HCF)) THEN
-          ZCRIAUT=XCRIAUTC/PRHODREF(JI,JJ,JK)
+          ZCRIAUT=ICEP%XCRIAUTC/PRHODREF(JI,JJ,JK)
           IF(HSUBG_MF_PDF=='NONE')THEN
             IF(ZW1*PTSTEP>PCF_MF(JI,JJ,JK) * ZCRIAUT) THEN
               PHLC_HRC(JI,JJ,JK)=PHLC_HRC(JI,JJ,JK)+ZW1*PTSTEP
@@ -364,7 +358,7 @@ DO JK=1,IKU
           ENDIF
         ENDIF
         IF(PRESENT(PHLI_HRI) .AND. PRESENT(PHLI_HCF)) THEN
-          ZCRIAUT=MIN(XCRIAUTI,10**(XACRIAUTI*(ZT(JI,JJ,JK)-XTT)+XBCRIAUTI))
+          ZCRIAUT=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(ZT(JI,JJ,JK)-CST%XTT)+ICEP%XBCRIAUTI))
           IF(HSUBG_MF_PDF=='NONE')THEN
             IF(ZW2*PTSTEP>PCF_MF(JI,JJ,JK) * ZCRIAUT) THEN
               PHLI_HRI(JI,JJ,JK)=PHLI_HRI(JI,JJ,JK)+ZW2*PTSTEP
@@ -392,7 +386,7 @@ DO JK=1,IKU
       !
       IF(PRESENT(POUT_RV) .OR. PRESENT(POUT_RC) .OR. &
         &PRESENT(POUT_RI) .OR. PRESENT(POUT_TH)) THEN
-        DO JI=1,IIU
+        DO JI=D%NIB,D%NIE
           ZW1=PRC_MF(JI,JJ,JK)
           ZW2=PRI_MF(JI,JJ,JK)
           IF(ZW1+ZW2>ZRV(JI,JJ,JK)) THEN
@@ -419,10 +413,10 @@ IF(PRESENT(POUT_TH)) POUT_TH=ZT / PEXN(:,:,:)
 !*       6.  STORE THE BUDGET TERMS
 !            ----------------------
 !
-IF(LBUDGET_TH) CALL BUDGET_STORE_END(TBUDGETS(NBUDGET_TH), TRIM(HBUNAME), PTHS(:, :, :)*PRHODJ(:, :, :))
-IF(LBUDGET_RV) CALL BUDGET_STORE_END(TBUDGETS(NBUDGET_RV), TRIM(HBUNAME), PRVS(:, :, :)*PRHODJ(:, :, :))
-IF(LBUDGET_RC) CALL BUDGET_STORE_END(TBUDGETS(NBUDGET_RC), TRIM(HBUNAME), PRCS(:, :, :)*PRHODJ(:, :, :))
-IF(LBUDGET_RI) CALL BUDGET_STORE_END(TBUDGETS(NBUDGET_RI), TRIM(HBUNAME), PRIS(:, :, :)*PRHODJ(:, :, :))
+IF(BUCONF%LBUDGET_TH) CALL BUDGET_STORE_END(TBUDGETS(NBUDGET_TH), TRIM(HBUNAME), PTHS(:, :, :)*PRHODJ(:, :, :))
+IF(BUCONF%LBUDGET_RV) CALL BUDGET_STORE_END(TBUDGETS(NBUDGET_RV), TRIM(HBUNAME), PRVS(:, :, :)*PRHODJ(:, :, :))
+IF(BUCONF%LBUDGET_RC) CALL BUDGET_STORE_END(TBUDGETS(NBUDGET_RC), TRIM(HBUNAME), PRCS(:, :, :)*PRHODJ(:, :, :))
+IF(BUCONF%LBUDGET_RI) CALL BUDGET_STORE_END(TBUDGETS(NBUDGET_RI), TRIM(HBUNAME), PRIS(:, :, :)*PRHODJ(:, :, :))
 !------------------------------------------------------------------------------
 !
 !
@@ -431,35 +425,40 @@ IF (LHOOK) CALL DR_HOOK('ICE_ADJUST',1,ZHOOK_HANDLE)
 CONTAINS
 SUBROUTINE ITERATION(PRV_IN,PRC_IN,PRI_IN,PRV_OUT,PRC_OUT,PRI_OUT)
 
-REAL, DIMENSION(:,:,:), CONTIGUOUS, INTENT(IN) :: PRV_IN ! Water vapor m.r. to adjust in input
-REAL, DIMENSION(:,:,:), CONTIGUOUS, INTENT(IN) :: PRC_IN ! Cloud water m.r. to adjust in input
-REAL, DIMENSION(:,:,:), CONTIGUOUS, INTENT(IN) :: PRI_IN ! Cloud ice   m.r. to adjust in input
-REAL, DIMENSION(:,:,:), CONTIGUOUS, INTENT(OUT) :: PRV_OUT ! Water vapor m.r. to adjust in output
-REAL, DIMENSION(:,:,:), CONTIGUOUS, INTENT(OUT) :: PRC_OUT ! Cloud water m.r. to adjust in output
-REAL, DIMENSION(:,:,:), CONTIGUOUS, INTENT(OUT) :: PRI_OUT ! Cloud ice   m.r. to adjust in output
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRV_IN ! Water vapor m.r. to adjust in input
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRC_IN ! Cloud water m.r. to adjust in input
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRI_IN ! Cloud ice   m.r. to adjust in input
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PRV_OUT ! Water vapor m.r. to adjust in output
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PRC_OUT ! Cloud water m.r. to adjust in output
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PRI_OUT ! Cloud ice   m.r. to adjust in output
 !
 !*       2.4    compute the specific heat for moist air (Cph) at t+1
-
-SELECT CASE(KRR)
-  CASE(7)
-    ZCPH(:,:,:) = XCPD + XCPV * PRV_IN(:,:,:)                             &
-                       + XCL  * (PRC_IN(:,:,:) + PRR(:,:,:))             &
-                       + XCI  * (PRI_IN(:,:,:) + PRS(:,:,:) + PRG(:,:,:) + PRH(:,:,:))
-  CASE(6)
-    ZCPH(:,:,:) = XCPD + XCPV * PRV_IN(:,:,:)                             &
-                       + XCL  * (PRC_IN(:,:,:) + PRR(:,:,:))             &
-                       + XCI  * (PRI_IN(:,:,:) + PRS(:,:,:) + PRG(:,:,:))
-  CASE(5)
-    ZCPH(:,:,:) = XCPD + XCPV * PRV_IN(:,:,:)                             &
-                       + XCL  * (PRC_IN(:,:,:) + PRR(:,:,:))             &
-                       + XCI  * (PRI_IN(:,:,:) + PRS(:,:,:))
-  CASE(3)
-    ZCPH(:,:,:) = XCPD + XCPV * PRV_IN(:,:,:)               &
-                       + XCL  * (PRC_IN(:,:,:) + PRR(:,:,:))
-  CASE(2)
-    ZCPH(:,:,:) = XCPD + XCPV * PRV_IN(:,:,:) &
-                       + XCL  * PRC_IN(:,:,:)
-END SELECT
+DO JK=D%NKTB,D%NKTE
+  DO JJ=D%NJB,D%NJE
+    DO JI=D%NIB,D%NIE
+      SELECT CASE(KRR)
+        CASE(7)
+          ZCPH(JI,JJ,JK) = CST%XCPD + CST%XCPV * PRV_IN(JI,JJ,JK)                             &
+                                    + CST%XCL  * (PRC_IN(JI,JJ,JK) + PRR(JI,JJ,JK))             &
+                                    + CST%XCI  * (PRI_IN(JI,JJ,JK) + PRS(JI,JJ,JK) + PRG(JI,JJ,JK) + PRH(JI,JJ,JK))
+        CASE(6)
+          ZCPH(JI,JJ,JK) = CST%XCPD + CST%XCPV * PRV_IN(JI,JJ,JK)                             &
+                                    + CST%XCL  * (PRC_IN(JI,JJ,JK) + PRR(JI,JJ,JK))             &
+                                    + CST%XCI  * (PRI_IN(JI,JJ,JK) + PRS(JI,JJ,JK) + PRG(JI,JJ,JK))
+        CASE(5)
+          ZCPH(JI,JJ,JK) = CST%XCPD + CST%XCPV * PRV_IN(JI,JJ,JK)                             &
+                                    + CST%XCL  * (PRC_IN(JI,JJ,JK) + PRR(JI,JJ,JK))             &
+                                    + CST%XCI  * (PRI_IN(JI,JJ,JK) + PRS(JI,JJ,JK))
+        CASE(3)
+          ZCPH(JI,JJ,JK) = CST%XCPD + CST%XCPV * PRV_IN(JI,JJ,JK)               &
+                                    + CST%XCL  * (PRC_IN(JI,JJ,JK) + PRR(JI,JJ,JK))
+        CASE(2)
+          ZCPH(JI,JJ,JK) = CST%XCPD + CST%XCPV * PRV_IN(JI,JJ,JK) &
+                                    + CST%XCL  * PRC_IN(JI,JJ,JK)
+      END SELECT
+    ENDDO
+  ENDDO
+ENDDO
 !
 IF ( OSUBG_COND ) THEN
   !
@@ -468,10 +467,10 @@ IF ( OSUBG_COND ) THEN
   !
   !   PSRC= s'rci'/Sigma_s^2
   !   ZT is INOUT
-  CALL CONDENSATION(IIU, IJU, IKU, IIB, IIE, IJB, IJE, IKB, IKE, KKL,    &
+  CALL CONDENSATION(D, CST, ICEP, NEB, &
        HFRAC_ICE, HCONDENS, HLAMBDA3,                                    &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
-       PRS, PRG, PSIGS, PMFCONV, PCLDFR, &
+       PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, &
        PSRCS, .TRUE., OSIGMAS,                                           &
        OCND2, PSIGQSAT,                                                  &
        PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                                      &
@@ -487,10 +486,10 @@ ELSE
   ZSIGQSAT(:,:)=0.
   !We use ZSRCS because in Méso-NH, PSRCS can be a zero-length array in this case
   !ZT is INOUT
-  CALL CONDENSATION(IIU, IJU, IKU, IIB, IIE, IJB, IJE, IKB, IKE, KKL,    &
+  CALL CONDENSATION(D, CST, ICEP, NEB, &
        HFRAC_ICE, HCONDENS, HLAMBDA3,                                    &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
-       PRS, PRG, ZSIGS, PMFCONV, PCLDFR, &
+       PRS, PRG, ZSIGS, LMFCONV, PMFCONV, PCLDFR, &
        ZSRCS, .TRUE., OSIGMAS=.TRUE.,                                    &
        OCND2=OCND2, PSIGQSAT=ZSIGQSAT,                                   &
        PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                                      &

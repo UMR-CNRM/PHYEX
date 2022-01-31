@@ -66,10 +66,29 @@ TYPE TBUDGETDATA
   TYPE(TYP_DDH), POINTER :: YDDDH=>NULL()
   TYPE(TLDDH), POINTER :: YDLDDH=>NULL()
   TYPE(TMDDH), POINTER :: YDMDDH=>NULL()
-ENDTYPE
+ENDTYPE TBUDGETDATA
+!
+TYPE TBUDGETCONF_t
+  LOGICAL :: LBU_ENABLE=.FALSE.
+  LOGICAL :: LBUDGET_U=.FALSE.  ! flag to compute budget of RhoJu  and/or LES budgets with u
+  LOGICAL :: LBUDGET_V=.FALSE.  ! flag to compute budget of RhoJv  and/or LES budgets with u
+  LOGICAL :: LBUDGET_W=.FALSE.  ! flag to compute budget of RhoJw  and/or LES budgets with u
+  LOGICAL :: LBUDGET_TH=.FALSE. ! flag to compute budget of RhoJTh and/or LES budgets with th
+  LOGICAL :: LBUDGET_TKE=.FALSE.! flag to compute budget of RhoJTke and/or LES budgets with Tke
+  LOGICAL :: LBUDGET_RV=.FALSE. ! flag to compute budget of RhoJrv and/or LES budgets with rv
+  LOGICAL :: LBUDGET_RC=.FALSE. ! flag to compute budget of RhoJrc and/or LES budgets with rc
+  LOGICAL :: LBUDGET_RR=.FALSE. ! flag to compute budget of RhoJrr and/or LES budgets with rr
+  LOGICAL :: LBUDGET_RI=.FALSE. ! flag to compute budget of RhoJri and/or LES budgets with ri
+  LOGICAL :: LBUDGET_RS=.FALSE. ! flag to compute budget of RhoJrs and/or LES budgets with rs
+  LOGICAL :: LBUDGET_RG=.FALSE. ! flag to compute budget of RhoJrg and/or LES budgets with rg
+  LOGICAL :: LBUDGET_RH=.FALSE. ! flag to compute budget of RhoJrh and/or LES budgets with rh
+  LOGICAL :: LBUDGET_SV=.FALSE. ! flag to compute budget of RhoJsv and/or LES budgets with sv
+END TYPE TBUDGETCONF_t
+!
+TYPE(TBUDGETCONF_t), TARGET :: TBUCONF
 !
 !                       General variables
-LOGICAL :: LBU_ENABLE=.FALSE.
+LOGICAL, POINTER :: LBU_ENABLE=>TBUCONF%LBU_ENABLE
 !
 INTEGER, DIMENSION(JPBUMAX,JPBUPROMAX)  &  ! number of processes to be
                              :: NBUINC=0           ! avoided for every budget
@@ -658,18 +677,18 @@ INTEGER :: NNEUTQG=0
 REAL :: XTIME_BU=0.          ! budget time in this time-step
 REAL :: XTIME_BU_PROCESS=0.  ! budget time per process for this time-step
 !
-LOGICAL :: LBUDGET_U=.FALSE.  ! flag to compute budget of RhoJu  and/or LES budgets with u
-LOGICAL :: LBUDGET_V=.FALSE.  ! flag to compute budget of RhoJv  and/or LES budgets with u
-LOGICAL :: LBUDGET_W=.FALSE.  ! flag to compute budget of RhoJw  and/or LES budgets with u
-LOGICAL :: LBUDGET_TH=.FALSE. ! flag to compute budget of RhoJTh and/or LES budgets with th
-LOGICAL :: LBUDGET_TKE=.FALSE.! flag to compute budget of RhoJTke and/or LES budgets with Tke
-LOGICAL :: LBUDGET_RV=.FALSE. ! flag to compute budget of RhoJrv and/or LES budgets with rv
-LOGICAL :: LBUDGET_RC=.FALSE. ! flag to compute budget of RhoJrc and/or LES budgets with rc
-LOGICAL :: LBUDGET_RR=.FALSE. ! flag to compute budget of RhoJrr and/or LES budgets with rr
-LOGICAL :: LBUDGET_RI=.FALSE. ! flag to compute budget of RhoJri and/or LES budgets with ri
-LOGICAL :: LBUDGET_RS=.FALSE. ! flag to compute budget of RhoJrs and/or LES budgets with rs
-LOGICAL :: LBUDGET_RG=.FALSE. ! flag to compute budget of RhoJrg and/or LES budgets with rg
-LOGICAL :: LBUDGET_RH=.FALSE. ! flag to compute budget of RhoJrh and/or LES budgets with rh
-LOGICAL :: LBUDGET_SV=.FALSE. ! flag to compute budget of RhoJsv and/or LES budgets with sv
+LOGICAL, POINTER :: LBUDGET_U=>TBUCONF%LBUDGET_U     ! flag to compute budget of RhoJu  and/or LES budgets with u
+LOGICAL, POINTER :: LBUDGET_V=>TBUCONF%LBUDGET_V     ! flag to compute budget of RhoJv  and/or LES budgets with u
+LOGICAL, POINTER :: LBUDGET_W=>TBUCONF%LBUDGET_W     ! flag to compute budget of RhoJw  and/or LES budgets with u
+LOGICAL, POINTER :: LBUDGET_TH=>TBUCONF%LBUDGET_TH   ! flag to compute budget of RhoJTh and/or LES budgets with th
+LOGICAL, POINTER :: LBUDGET_TKE=>TBUCONF%LBUDGET_TKE ! flag to compute budget of RhoJTke and/or LES budgets with Tke
+LOGICAL, POINTER :: LBUDGET_RV=>TBUCONF%LBUDGET_RV   ! flag to compute budget of RhoJrv and/or LES budgets with rv
+LOGICAL, POINTER :: LBUDGET_RC=>TBUCONF%LBUDGET_RC   ! flag to compute budget of RhoJrc and/or LES budgets with rc
+LOGICAL, POINTER :: LBUDGET_RR=>TBUCONF%LBUDGET_RR   ! flag to compute budget of RhoJrr and/or LES budgets with rr
+LOGICAL, POINTER :: LBUDGET_RI=>TBUCONF%LBUDGET_RI   ! flag to compute budget of RhoJri and/or LES budgets with ri
+LOGICAL, POINTER :: LBUDGET_RS=>TBUCONF%LBUDGET_RS   ! flag to compute budget of RhoJrs and/or LES budgets with rs
+LOGICAL, POINTER :: LBUDGET_RG=>TBUCONF%LBUDGET_RG   ! flag to compute budget of RhoJrg and/or LES budgets with rg
+LOGICAL, POINTER :: LBUDGET_RH=>TBUCONF%LBUDGET_RH   ! flag to compute budget of RhoJrh and/or LES budgets with rh
+LOGICAL, POINTER :: LBUDGET_SV=>TBUCONF%LBUDGET_SV   ! flag to compute budget of RhoJsv and/or LES budgets with sv
 !
 END MODULE MODD_BUDGET

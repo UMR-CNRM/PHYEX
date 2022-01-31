@@ -2,7 +2,7 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-      ELEMENTAL SUBROUTINE COMPUTE_FRAC_ICE(HFRAC_ICE,PFRAC_ICE,PT,KERR)
+      ELEMENTAL SUBROUTINE COMPUTE_FRAC_ICE(HFRAC_ICE,NEB,PFRAC_ICE,PT,KERR)
 
 ! ******* TO BE INCLUDED IN THE *CONTAINS* OF A SUBROUTINE, IN ORDER TO EASE AUTOMATIC INLINING ******
 ! => Don't use drHook !!!
@@ -21,12 +21,13 @@
 !!      R. El Khatib     12-Aug-2021 written as a include file
 !
 !! --------------------------------------------------------------------------
-USE MODD_NEB, ONLY : XTMINMIX, XTMAXMIX
+USE MODD_NEB, ONLY : NEB_t
 USE MODD_CST, ONLY : XTT
 !
 IMPLICIT NONE
 !
 CHARACTER(LEN=1), INTENT(IN)    :: HFRAC_ICE       ! scheme to use
+TYPE(NEB_t),      INTENT(IN)    :: NEB
 REAL,             INTENT(IN)    :: PT              ! temperature
 REAL,             INTENT(INOUT) :: PFRAC_ICE       ! Ice fraction (1 for ice only, 0 for liquid only)
 INTEGER,          INTENT(OUT)   :: KERR            ! Error code in return
@@ -38,7 +39,7 @@ INTEGER,          INTENT(OUT)   :: KERR            ! Error code in return
 KERR=0
 SELECT CASE(HFRAC_ICE)
   CASE ('T') !using Temperature
-    PFRAC_ICE = MAX( 0., MIN(1., (( XTMAXMIX - PT ) / ( XTMAXMIX - XTMINMIX )) ) ) ! freezing interval
+    PFRAC_ICE = MAX( 0., MIN(1., (( NEB%XTMAXMIX - PT ) / ( NEB%XTMAXMIX - NEB%XTMINMIX )) ) ) ! freezing interval
   CASE ('O') !using Temperature with old formulae
     PFRAC_ICE = MAX( 0., MIN(1., (( XTT - PT ) / 40.) ) ) ! freezing interval
   CASE ('N') !No ice
