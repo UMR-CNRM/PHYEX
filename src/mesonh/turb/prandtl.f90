@@ -185,6 +185,7 @@ END MODULE MODI_PRANDTL
 !!                                              change of YCOMMENT
 !!                     2012-02 Y. Seity,  add possibility to run with reversed 
 !!                                               vertical levels
+!!      Modifications: July 2015    (Wim de Rooy) LHARAT (Racmo turbulence) switch
 !!                     2017-09 J.Escobar, use epsilon XMNH_TINY_12 for R*4 
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !! JL Redelsperger 03/2021 : adding Ocean case for temperature only 
@@ -221,7 +222,7 @@ INTEGER,                INTENT(IN)   :: KRRI          ! number of ice var.
 !
 LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
                                  ! diagnostic fields in the syncronous FM-file
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! Kind of turbulence param.
+CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! Kind of turbulence param.
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDXX,PDYY,PDZZ,PDZX,PDZY
                                                   ! metric coefficients
@@ -535,7 +536,7 @@ END IF ! end of HTURBDIM if-block
 !*          6. SAVES THE REDELSPERGER NUMBERS
 !              ------------------------------
 !
-IF ( OTURB_DIAG .AND. tpfile%lopened ) THEN
+IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   !
   ! stores the RED_TH1
   TZFIELD%CMNHNAME   = 'RED_TH1'
@@ -606,4 +607,5 @@ END IF
 !
 !---------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('PRANDTL',1,ZHOOK_HANDLE)
 END SUBROUTINE PRANDTL
