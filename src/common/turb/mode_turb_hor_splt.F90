@@ -6,7 +6,7 @@ MODULE MODE_TURB_HOR_SPLT
 IMPLICIT NONE
 CONTAINS
            SUBROUTINE TURB_HOR_SPLT(KSPLIT, KRR, KRRL, KRRI, PTSTEP,      &
-                      HLBCX,HLBCY,OTURB_FLX,OSUBG_COND,              &
+                      HLBCX,HLBCY,OTURB_FLX,OSUBG_COND,OOCEAN,       &
                       TPFILE,                                        &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
                       PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &
@@ -183,6 +183,7 @@ CHARACTER (LEN=*), DIMENSION(:), INTENT(IN)       ::  HLBCX,HLBCY
 LOGICAL,                  INTENT(IN)    ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                 INTENT(IN)  ::   OSUBG_COND ! Switch for sub-grid 
+LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 !                                                    condensation
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
@@ -356,7 +357,7 @@ IF (KSPLIT>1 .AND. CPROGRAM=='MESONH') THEN
 !
 ! compute the turbulent tendencies for the small time step
     CALL TURB_HOR(JSPLT, KRR, KRRL, KRRI, PTSTEP,                 &
-                   OTURB_FLX,OSUBG_COND,                          &
+                   OTURB_FLX,OSUBG_COND,OOCEAN,                   &
                    TPFILE,                                        &
                    PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
                    PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &
@@ -497,7 +498,7 @@ IF (KSPLIT>1 .AND. CPROGRAM=='MESONH') THEN
 ELSE
 !
   CALL TURB_HOR(1, KRR, KRRL, KRRI,  PTSTEP,                   &
-                OTURB_FLX,OSUBG_COND,                          &
+                OTURB_FLX,OSUBG_COND,OOCEAN,                   &
                 TPFILE,                                        &
                 PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
                 PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &

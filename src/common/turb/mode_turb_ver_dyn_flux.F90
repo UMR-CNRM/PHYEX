@@ -6,7 +6,7 @@ MODULE MODE_TURB_VER_DYN_FLUX
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE TURB_VER_DYN_FLUX(KKA,KKU,KKL,                     &
-                      OTURB_FLX,KRR,                                &
+                      OTURB_FLX,KRR, OOCEAN,                        &
                       HTURBDIM,PIMPL,PEXPL,                         &
                       PTSTEP,                                       &
                       TPFILE,                                       &
@@ -209,7 +209,6 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 USE MODD_CONF
 USE MODD_CST
 USE MODD_CTURB
-USE MODD_DYN_n,          ONLY: LOCEAN
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_LES
@@ -244,6 +243,7 @@ INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array i
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
+LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
@@ -401,7 +401,7 @@ ZCOEFS(:,:,1:1)=MXM(ZCOEFS(:,:,1:1) / PDZZ(:,:,IKB:IKB) )
 !
 !
 ! ZSOURCE= FLUX /DZ
-IF (LOCEAN) THEN  ! OCEAN MODEL ONLY
+IF (OOCEAN) THEN  ! OCEAN MODEL ONLY
   ! Sfx flux assumed to be in SI & at vorticity point
   IF (LCOUPLES) THEN  
     ZSOURCE(:,:,IKE:IKE) = XSSUFL_C(:,:,1:1)/PDZZ(:,:,IKE:IKE) &
@@ -467,7 +467,7 @@ ZFLXZ(:,:,IKB:IKB)   =   MXM(PDZZ(:,:,IKB:IKB))  *                &
 !
 ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
 
-IF (LOCEAN) THEN !ocean model at phys sfc (ocean domain top)
+IF (OOCEAN) THEN !ocean model at phys sfc (ocean domain top)
   ZFLXZ(:,:,IKE:IKE)   =   MXM(PDZZ(:,:,IKE:IKE))  *                &
                            ZSOURCE(:,:,IKE:IKE)                     &
                            / 0.5 / ( 1. + MXM(PRHODJ(:,:,KKU:KKU)) / MXM(PRHODJ(:,:,IKE:IKE)) )
@@ -504,7 +504,7 @@ PDP(:,:,IKB:IKB) = - MXF (                                                      
                          / MXM(PDZZ(:,:,IKB+KKL:IKB+KKL))                   &
                          )
 !
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
   ! evaluate the dynamic production at w(IKE-KKL) in PDP(IKE)
   PDP(:,:,IKE:IKE) = - MXF (                                                      &
     ZFLXZ(:,:,IKE-KKL:IKE-KKL) * (PUM(:,:,IKE:IKE)-PUM(:,:,IKE-KKL:IKE-KKL))  &
@@ -531,7 +531,7 @@ IF(HTURBDIM=='3DIM') THEN
   ! Compute the source for the W wind component
                 ! used to compute the W source at the ground
   ZFLXZ(:,:,KKA) = 2 * ZFLXZ(:,:,IKB) - ZFLXZ(:,:,IKB+KKL) ! extrapolation 
- IF (LOCEAN) THEN
+ IF (OOCEAN) THEN
    ZFLXZ(:,:,KKU) = 2 * ZFLXZ(:,:,IKE) - ZFLXZ(:,:,IKE-KKL) ! extrapolation 
  END IF     
      
@@ -564,7 +564,7 @@ IF(HTURBDIM=='3DIM') THEN
      ) / (0.5*(PDXX(:,:,IKB+KKL:IKB+KKL)+PDXX(:,:,IKB:IKB)))                 &
                           )
   !
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
   ! evaluate the dynamic production at w(IKE-KKL) in PDP(IKE)
   ZA(:,:,IKE:IKE) = - MXF (                                                  &
    ZFLXZ(:,:,IKE-KKL:IKE-KKL) *                                              &
@@ -632,7 +632,7 @@ ZCOEFS(:,:,1)=  ZCOEFFLXU(:,:,1) * PSINSLOPE(:,:) * PDIRCOSZW(:,:)  &
 ! average this flux to be located at the V,W vorticity point
 ZCOEFS(:,:,1:1)=MYM(ZCOEFS(:,:,1:1) / PDZZ(:,:,IKB:IKB) )
 !
-IF (LOCEAN) THEN ! Ocean case
+IF (OOCEAN) THEN ! Ocean case
   IF (LCOUPLES) THEN
     ZSOURCE(:,:,IKE:IKE) =  XSSVFL_C(:,:,1:1)/PDZZ(:,:,IKE:IKE) &
         *0.5 * ( 1. + MYM(PRHODJ(:,:,KKU:KKU)) / MYM(PRHODJ(:,:,IKE:IKE)) ) 
@@ -695,7 +695,7 @@ ZFLXZ(:,:,IKB:IKB)   =   MYM(PDZZ(:,:,IKB:IKB))  *                       &
 !
 ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB)
 !
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
   ZFLXZ(:,:,IKE:IKE)   =   MYM(PDZZ(:,:,IKE:IKE))  *                &
       ZSOURCE(:,:,IKE:IKE)                                          &
       / 0.5 / ( 1. + MYM(PRHODJ(:,:,KKU:KKU)) / MYM(PRHODJ(:,:,IKE:IKE)) )
@@ -733,7 +733,7 @@ ZFLXZ(:,:,IKB+KKL:IKB+KKL) * (PVM(:,:,IKB+KKL:IKB+KKL)-PVM(:,:,IKB:IKB))  &
                        / MYM(PDZZ(:,:,IKB+KKL:IKB+KKL))               &
                        )
 !
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
   ! evaluate the dynamic production at w(IKE-KKL) in PDP(IKE)
   ZA(:,:,IKE:IKE) = - MYF (                                                  &
    ZFLXZ(:,:,IKE-KKL:IKE-KKL) * (PVM(:,:,IKE:IKE)-PVM(:,:,IKE-KKL:IKE-KKL))  &
@@ -760,7 +760,7 @@ END IF
 IF(HTURBDIM=='3DIM') THEN
   ! Compute the source for the W wind component
   ZFLXZ(:,:,KKA) = 2 * ZFLXZ(:,:,IKB) - ZFLXZ(:,:,IKB+KKL) ! extrapolation 
-  IF (LOCEAN) THEN
+  IF (OOCEAN) THEN
     ZFLXZ(:,:,KKU) = 2 * ZFLXZ(:,:,IKE) - ZFLXZ(:,:,IKE-KKL) ! extrapolation 
   END IF
   !
@@ -793,7 +793,7 @@ IF(HTURBDIM=='3DIM') THEN
        ) / (0.5*(PDYY(:,:,IKB+KKL:IKB+KKL)+PDYY(:,:,IKB:IKB)))             &
                             )
   !
-    IF (LOCEAN) THEN
+    IF (OOCEAN) THEN
      ZA(:,:,IKE:IKE) = - MYF (                                              &
       ZFLXZ(:,:,IKE-KKL:IKE-KKL) *                                          &
         ( DYM( PWM(:,:,IKE-KKL:IKE-KKL) )                                   &

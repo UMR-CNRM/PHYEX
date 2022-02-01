@@ -7,7 +7,7 @@ IMPLICIT NONE
 CONTAINS
       
 SUBROUTINE TURB_VER_THERMO_FLUX(KKA,KKU,KKL,KRR,KRRL,KRRI,    &
-                      OTURB_FLX,HTURBDIM,HTOM,                      &
+                      OTURB_FLX,HTURBDIM,HTOM,OOCEAN,               &
                       PIMPL,PEXPL,                                  &
                       PTSTEP,                                       &
                       TPFILE,                                       &
@@ -239,7 +239,6 @@ USE MODD_TURB_n,         ONLY: LHGRAD, XCOEFHGRADTHL, XCOEFHGRADRM, XALTHGRAD, X
 USE MODD_CONF
 USE MODD_LES
 USE MODD_DIM_n
-USE MODD_DYN_n,          ONLY: LOCEAN
 USE MODD_OCEANH
 USE MODD_REF,            ONLY: LCOUPLES
 USE MODD_TURB_n
@@ -276,6 +275,7 @@ INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water v
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
+LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
 CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
@@ -424,7 +424,7 @@ IJU=SIZE(PTHLM,2)
 !
 !! Compute Shape of sfc flux for Oceanic Deep Conv Case
 ! 
-IF (LOCEAN .AND. LDEEPOC) THEN
+IF (OOCEAN .AND. LDEEPOC) THEN
   !*       COMPUTES THE PHYSICAL SUBDOMAIN BOUNDS
   ALLOCATE(ZXHAT_ll(NIMAX_ll+2*JPHEXT),ZYHAT_ll(NJMAX_ll+2*JPHEXT))
   !compute ZXHAT_ll = position in the (0:Lx) domain 1 (Lx=Size of domain1 )
@@ -569,7 +569,7 @@ IF (GFTHR) THEN
 END IF
 ! compute interface flux
 IF (LCOUPLES) THEN   ! Autocoupling O-A LES
-  IF (LOCEAN) THEN    ! ocean model in coupled case 
+  IF (OOCEAN) THEN    ! ocean model in coupled case 
     ZF(:,:,IKE) =  (XSSTFL_C(:,:,1)+XSSRFL_C(:,:,1)) &
                   *0.5* ( 1. + PRHODJ(:,:,KKU)/PRHODJ(:,:,IKE) )
   ELSE                ! atmosph model in coupled case
@@ -592,7 +592,7 @@ ELSE  ! No coupling O and A cases
                        * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
   END IF
 !
-  IF (LOCEAN) THEN
+  IF (OOCEAN) THEN
     ZF(:,:,IKE) = XSSTFL(:,:) *0.5*(1. + PRHODJ(:,:,KKU) / PRHODJ(:,:,IKE))
   ELSE !end ocean case (in nocoupled case)
     ! atmos top
@@ -637,7 +637,7 @@ IF (LHGRAD) THEN
 END IF
 !
 ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
   ZFLXZ(:,:,KKU) = ZFLXZ(:,:,IKE)
 END IF
 !  
@@ -647,7 +647,7 @@ END DO
 !
 PWTH(:,:,IKB)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+KKL)) 
 !
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
   PWTH(:,:,IKE)=0.5*(ZFLXZ(:,:,IKE)+ZFLXZ(:,:,IKE+KKL))
   PWTH(:,:,KKA)=0. 
   PWTH(:,:,KKU)=ZFLXZ(:,:,KKU)
@@ -672,7 +672,7 @@ IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
 END IF
 !
 ! Contribution of the conservative temperature flux to the buoyancy flux
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
   PTP(:,:,:)= XG*XALPHAOC * MZF(ZFLXZ,KKA, KKU, KKL )
 ELSE
   IF (KRR /= 0) THEN
@@ -689,7 +689,7 @@ END IF
 PWTHV = MZM(PETHETA, KKA, KKU, KKL) * ZFLXZ
 PWTHV(:,:,IKB) = PETHETA(:,:,IKB) * ZFLXZ(:,:,IKB)
 !
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
   ! temperature contribution to Buy flux     
   PWTHV(:,:,IKE) = PETHETA(:,:,IKE) * ZFLXZ(:,:,IKE)
 END IF
@@ -821,7 +821,7 @@ IF (KRR /= 0) THEN
   !
   ! compute interface flux
   IF (LCOUPLES) THEN   ! coupling NH O-A
-    IF (LOCEAN) THEN    ! ocean model in coupled case
+    IF (OOCEAN) THEN    ! ocean model in coupled case
       ! evap effect on salinity to be added later !!!
       ZF(:,:,IKE) =  0.
     ELSE                ! atmosph model in coupled case
@@ -846,7 +846,7 @@ IF (KRR /= 0) THEN
                          * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
     END IF
     !
-    IF (LOCEAN) THEN
+    IF (OOCEAN) THEN
       ! General ocean case
       ! salinity/evap effect to be added later !!!!!
       ZF(:,:,IKE) = 0.
@@ -918,7 +918,7 @@ IF (KRR /= 0) THEN
   END IF
   !
   ! Contribution of the conservative water flux to the Buoyancy flux
-  IF (LOCEAN) THEN
+  IF (OOCEAN) THEN
      ZA(:,:,:)=  -XG*XBETAOC  * MZF(ZFLXZ, KKA, KKU, KKL )
   ELSE
     ZA(:,:,:)   =  PBETA * MZF( MZM(PEMOIST, KKA, KKU, KKL) * ZFLXZ,KKA,KKU,KKL )
@@ -931,7 +931,7 @@ IF (KRR /= 0) THEN
   ! 
   PWTHV          = PWTHV          + MZM(PEMOIST, KKA, KKU, KKL) * ZFLXZ
   PWTHV(:,:,IKB) = PWTHV(:,:,IKB) + PEMOIST(:,:,IKB) * ZFLXZ(:,:,IKB)
-  IF (LOCEAN) THEN
+  IF (OOCEAN) THEN
     PWTHV(:,:,IKE) = PWTHV(:,:,IKE) + PEMOIST(:,:,IKE)* ZFLXZ(:,:,IKE)
   END IF   
 !
@@ -1025,7 +1025,7 @@ IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
   END IF
 !
 END IF !end of <w Rc>
-IF (LOCEAN .AND. LDEEPOC) THEN
+IF (OOCEAN .AND. LDEEPOC) THEN
   DEALLOCATE(ZXHAT_ll,ZYHAT_ll)
 END IF
 !

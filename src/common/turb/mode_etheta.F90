@@ -5,7 +5,7 @@
 MODULE MODE_ETHETA
 IMPLICIT NONE
 CONTAINS
-FUNCTION ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM) RESULT(PETHETA)
+FUNCTION ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN) RESULT(PETHETA)
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !   ############################################################################
@@ -57,7 +57,6 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !*       0. DECLARATIONS
 !           ------------
 USE MODD_CST
-USE MODD_DYN_n, ONLY : LOCEAN
 !
 IMPLICIT NONE
 !
@@ -66,6 +65,7 @@ IMPLICIT NONE
 !
 INTEGER                              :: KRR          ! number of moist var.
 INTEGER                              :: KRRI         ! number of ice var.
+LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 !
 REAL, DIMENSION(:,:,:),  INTENT(IN)  ::   PTHLM     ! Conservative pot. temperature
 REAL, DIMENSION(:,:,:,:), INTENT(IN) ::   PRM       ! Mixing ratios, where
@@ -97,7 +97,7 @@ INTEGER                               :: JRR     ! moist loop counter
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('ETHETA',0,ZHOOK_HANDLE)
-IF (LOCEAN) THEN                                    ! ocean case
+IF (OOCEAN) THEN                                    ! ocean case
    PETHETA(:,:,:) =  1.
 ELSE   
  IF ( KRR == 0) THEN                                ! dry case

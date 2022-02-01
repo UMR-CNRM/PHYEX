@@ -22,7 +22,7 @@ IMPLICIT NONE
 CONTAINS
 !----------------------------------------------------------------------------
       SUBROUTINE PRANDTL(KKA,KKU,KKL,KRR,KRRI,OTURB_DIAG,       &
-                         HTURBDIM,                             &
+                         HTURBDIM,OOCEAN,                      &
                          TPFILE,                               &
                          PDXX,PDYY,PDZZ,PDZX,PDZY,             &
                          PTHVREF,PLOCPEXNM,PATHETA,PAMOIST,    &
@@ -145,7 +145,6 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 USE MODD_CST
 USE MODD_CONF
 USE MODD_CTURB
-USE MODD_DYN_n,          ONLY: LOCEAN
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
@@ -170,6 +169,7 @@ INTEGER,                INTENT(IN)   :: KRRI          ! number of ice var.
 !
 LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
                                  ! diagnostic fields in the syncronous FM-file
+LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! Kind of turbulence param.
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDXX,PDYY,PDZZ,PDZX,PDZY
@@ -251,8 +251,8 @@ IKE = KKU-JPVEXT_TURB*KKL
 ILENG=SIZE(PTHLM,1)*SIZE(PTHLM,2)*SIZE(PTHLM,3)
 ISV  =SIZE(PSVM,4)
 !
-PETHETA(:,:,:) = MZM(ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM), KKA, KKU, KKL)
-PEMOIST(:,:,:) = MZM(EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM), KKA, KKU, KKL)
+PETHETA(:,:,:) = MZM(ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN), KKA, KKU, KKL)
+PEMOIST(:,:,:) = MZM(EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN), KKA, KKU, KKL)
 PETHETA(:,:,KKA) = 2.*PETHETA(:,:,IKB) - PETHETA(:,:,IKB+KKL)
 PEMOIST(:,:,KKA) = 2.*PEMOIST(:,:,IKB) - PEMOIST(:,:,IKB+KKL)
 !

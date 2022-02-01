@@ -248,7 +248,7 @@ ZTKEM_F(:,:) = MZM_MF(PTKEM(:,:), KKA, KKU, KKL)
 ! This updraft is not yet ready to use scalar variables
 !DO JSV=1,ISV
 !  IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
-! *** SR merge AROME/Méso-nh: following two lines come from the AROME version
+! *** SR merge AROME/Meso-nh: following two lines come from the AROME version
 !   ZSVM_F(:,KKB:IKU,JSV) = 0.5*(PSVM(:,KKB:IKU,JSV)+PSVM(:,1:IKU-1,JSV))
 !   ZSVM_F(:,1,JSV)       = ZSVM_F(:,KKB,JSV) 
 ! *** the following single line comes from the Meso-NH version
@@ -301,7 +301,7 @@ PRC_UP(:,KKB)=0.
 PRI_UP(:,KKB)=0.
 CALL TH_R_FROM_THL_RT_1D(HFRAC_ICE,PFRAC_ICE_UP(:,KKB),ZPRES_F(:,KKB), &
              PTHL_UP(:,KKB),PRT_UP(:,KKB),ZTH_UP(:,KKB), &
-             PRV_UP(:,KKB),PRC_UP(:,KKB),PRI_UP(:,KKB),ZRSATW(:),ZRSATI(:))
+             PRV_UP(:,KKB),PRC_UP(:,KKB),PRI_UP(:,KKB),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.)
 
 DO JI=1,IIJU
   ! compute updraft thevav and buoyancy term at KKB level             
@@ -407,7 +407,7 @@ DO JK=KKB,KKE-KKL,KKL
     ZRV_UP(:)   =PRV_UP(:,JK)
     CALL TH_R_FROM_THL_RT_1D(HFRAC_ICE,PFRAC_ICE_UP(:,JK),&
                PPABSM(:,JK),PTHL_UP(:,JK),PRT_UP(:,JK),&
-               ZTH_UP(:,JK),ZRV_UP,ZRC_UP,ZRI_UP,ZRSATW(:),ZRSATI(:))            
+               ZTH_UP(:,JK),ZRV_UP,ZRC_UP,ZRI_UP,ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.)            
     
   DO JI=1,IIJU
     IF (GTEST(JI)) THEN
@@ -502,7 +502,7 @@ DO JK=KKB,KKE-KKL,KKL
   ZRV_UP(:)=PRV_UP(:,JK)
   CALL TH_R_FROM_THL_RT_1D(HFRAC_ICE,PFRAC_ICE_UP(:,JK+KKL),ZPRES_F(:,JK+KKL), &
           PTHL_UP(:,JK+KKL),PRT_UP(:,JK+KKL),ZTH_UP(:,JK+KKL),              &
-          ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:))
+          ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.)
 
   DO JI=1,IIJU
     IF(GTEST(JI)) THEN

@@ -7,7 +7,7 @@ IMPLICIT NONE
 CONTAINS      
       SUBROUTINE TH_R_FROM_THL_RT_3D(HFRAC_ICE,PFRAC_ICE,PP,             &
                                   PTHL, PRT, PTH, PRV, PRL, PRI, &
-                                  PRSATW, PRSATI, PRR, PRS, PRG, PRH       )
+                                  PRSATW, PRSATI, PRR, PRS, PRG, PRH,OOCEAN)
 !     #################################################################
 !
 !
@@ -66,6 +66,7 @@ REAL, DIMENSION(:,:,:), INTENT(INOUT):: PRL    ! vapor mixing ratio
 REAL, DIMENSION(:,:,:), INTENT(INOUT):: PRI    ! vapor mixing ratio
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PRSATW ! estimated mixing ration at saturation over water
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PRSATI ! estimated mixing ration at saturation over ice
+LOGICAL,                INTENT(IN)   :: OOCEAN ! switch OCEAN version
 !
 !-------------------------------------------------------------------------------
 !
@@ -97,7 +98,7 @@ DO JK=1, SIZE(PTHL,3)
                                   PTHL(:,JJ,JK), PRT(:,JJ,JK), PTH(:,JJ,JK),       &
                                   PRV(:,JJ,JK), PRL(:,JJ,JK), PRI(:,JJ,JK),        &
                                   PRSATW(:,JJ,JK), PRSATI(:,JJ,JK),                &
-                                  ZRR(:,JJ,JK), ZRS(:,JJ,JK), ZRG(:,JJ,JK), ZRH(:,JJ,JK))
+                                  ZRR(:,JJ,JK), ZRS(:,JJ,JK), ZRG(:,JJ,JK), ZRH(:,JJ,JK),OOCEAN)
   ENDDO
 ENDDO
 

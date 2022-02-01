@@ -283,7 +283,7 @@ ENDDO
   CALL TH_R_FROM_THL_RT_1D(HFRAC_ICE,ZFRAC_ICE,&
                PPRE_PLUS_HALF,PTHL_UP,PRT_UP,&
                ZTHMIX,ZRVMIX,ZRCMIX,ZRIMIX,&
-               ZRSATW, ZRSATI)
+               ZRSATW, ZRSATI,OOCEAN=.FALSE.)
   ZTHV_UP_F2(:) = ZTHMIX(:)*(1.+ZRVORD*ZRVMIX(:))/(1.+PRT_UP(:))
 
   ! Integral buoyancy for cloudy part
@@ -356,7 +356,7 @@ ENDDO
   CALL TH_R_FROM_THL_RT_1D(HFRAC_ICE,ZFRAC_ICE,&
                ZPRE,ZMIXTHL,ZMIXRT,&
                ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
-               ZRSATW, ZRSATI)
+               ZRSATW, ZRSATI,OOCEAN=.FALSE.)
   ZTHVMIX(:) = ZTHMIX(:)*(1.+ZRVORD*ZRVMIX(:))/(1.+ZMIXRT(:))
 
   !  Compute cons then non cons. var. of mixture at the flux level KK+KKL  with initial ZKIC
@@ -365,7 +365,7 @@ ENDDO
   CALL TH_R_FROM_THL_RT_1D(HFRAC_ICE,ZFRAC_ICE,&
                PPRE_PLUS_HALF,ZMIXTHL,ZMIXRT,&
                ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
-               ZRSATW, ZRSATI)
+               ZRSATW, ZRSATI,OOCEAN=.FALSE.)
   ZTHVMIX_F2(:) = ZTHMIX(:)*(1.+ZRVORD*ZRVMIX(:))/(1.+ZMIXRT(:))
 
   !Computation of mean ZKIC over the cloudy part

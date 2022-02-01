@@ -1,6 +1,5 @@
-LOCEAN:
-  La clé LOCEAN est dans un module spécifique à Méso-NH (MODD_DYNn).
-  Une solution serait de créer un module propre à PHYEX qui contiendrait des clés de contrôle de haut niveau
+Module de clés namelists PHYEX
+Une solution serait de créer un module propre à PHYEX qui contiendrait des clés de contrôle de haut niveau
   pour la physique (y en a-t-il d'autres?). Ce module serait initialisé dans Méso-NH à partir de la clé
   actuelle qui est sans doute utilisée ailleurs dans le code de Méso-NH
 

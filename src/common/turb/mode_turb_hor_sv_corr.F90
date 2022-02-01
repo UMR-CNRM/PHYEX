@@ -5,7 +5,7 @@
 MODULE MODE_TURB_HOR_SV_CORR
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_SV_CORR(KRR,KRRL,KRRI,                     &
+      SUBROUTINE TURB_HOR_SV_CORR(KRR,KRRL,KRRI,OOCEAN,              &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
                       PLM,PLEPS,PTKEM,PTHVREF,                       &
                       PTHLM,PRM,                                     &
@@ -76,6 +76,7 @@ IMPLICIT NONE
 INTEGER,                  INTENT(IN)    ::  KRR          ! number of moist var.
 INTEGER,                  INTENT(IN)    ::  KRRL         ! number of liquid var.
 INTEGER,                  INTENT(IN)    ::  KRRI         ! number of ice var.
+LOGICAL,                  INTENT(IN)    ::  OOCEAN       ! switch for Ocean model version
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                          ! Metric coefficients
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PLM          ! mixing length
@@ -144,7 +145,7 @@ DO JSV=1,NSV
   ! covariance SvThv
   !
   IF (LLES_CALL) THEN
-    ZA(:,:,:)   =  ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM)
+    ZA(:,:,:)   =  ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN)
     IF (.NOT. L2D) THEN
       ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                          &
           *  (  GX_M_M(PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
@@ -159,7 +160,7 @@ DO JSV=1,NSV
     CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLX, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE. )
     !
     IF (KRR>=1) THEN
-      ZA(:,:,:)   =  EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM)
+      ZA(:,:,:)   =  EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN)
       IF (.NOT. L2D) THEN
         ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                                 &
             *  (  GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX) * GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
