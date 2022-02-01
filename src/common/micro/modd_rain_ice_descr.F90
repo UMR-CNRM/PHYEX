@@ -53,29 +53,128 @@
 !             ------------
 !
 IMPLICIT NONE
-REAL,SAVE :: XCEXVT               ! air density fall speed correction
+TYPE RAIN_ICE_DESCR_t
+REAL :: XCEXVT               ! air density fall speed correction
 !
-REAL,SAVE :: XAC,XBC,XCC,XDC                          ! Cloud droplet  charact.
-REAL,SAVE :: XAR,XBR,XCR,XDR,XCCR     ,XF0R,XF1R,XC1R ! Raindrop       charact.
-REAL,SAVE :: XAI,XBI,XC_I,XDI          ,XF0I,XF2I,XC1I ! Cloud ice      charact.
-REAL,SAVE :: XAS,XBS,XCS,XDS,XCCS,XCXS,XF0S,XF1S,XC1S ! Snow/agg.      charact.
-REAL,SAVE :: XAG,XBG,XCG,XDG,XCCG,XCXG,XF0G,XF1G,XC1G ! Graupel        charact.
-REAL,SAVE :: XAH,XBH,XCH,XDH,XCCH,XCXH,XF0H,XF1H,XC1H ! Hail           charact.
+REAL :: XAC,XBC,XCC,XDC                          ! Cloud droplet  charact.
+REAL :: XAR,XBR,XCR,XDR,XCCR     ,XF0R,XF1R,XC1R ! Raindrop       charact.
+REAL :: XAI,XBI,XC_I,XDI          ,XF0I,XF2I,XC1I ! Cloud ice      charact.
+REAL :: XAS,XBS,XCS,XDS,XCCS,XCXS,XF0S,XF1S,XC1S ! Snow/agg.      charact.
+REAL :: XAG,XBG,XCG,XDG,XCCG,XCXG,XF0G,XF1G,XC1G ! Graupel        charact.
+REAL :: XAH,XBH,XCH,XDH,XCCH,XCXH,XF0H,XF1H,XC1H ! Hail           charact.
 !
-REAL,SAVE :: XALPHAC,XNUC,XALPHAC2,XNUC2, XLBEXC      ! Cloud droplet  distribution parameters
-REAL,DIMENSION(2), SAVE :: XLBC ! Cloud droplet distribution parameters
-REAL,SAVE :: XALPHAR,XNUR,XLBEXR,XLBR ! Raindrop       distribution parameters
-REAL,SAVE :: XALPHAI,XNUI,XLBEXI,XLBI ! Cloud ice      distribution parameters
-REAL,SAVE :: XALPHAS,XNUS,XLBEXS,XLBS ! Snow/agg.      distribution parameters
-REAL,SAVE :: XALPHAG,XNUG,XLBEXG,XLBG ! Graupel        distribution parameters
-REAL,SAVE :: XALPHAH,XNUH,XLBEXH,XLBH ! Hail           distribution parameters
+REAL :: XALPHAC,XNUC,XALPHAC2,XNUC2, XLBEXC      ! Cloud droplet  distribution parameters
+REAL,DIMENSION(2) :: XLBC ! Cloud droplet distribution parameters
+REAL :: XALPHAR,XNUR,XLBEXR,XLBR ! Raindrop       distribution parameters
+REAL :: XALPHAI,XNUI,XLBEXI,XLBI ! Cloud ice      distribution parameters
+REAL :: XALPHAS,XNUS,XLBEXS,XLBS ! Snow/agg.      distribution parameters
+REAL :: XALPHAG,XNUG,XLBEXG,XLBG ! Graupel        distribution parameters
+REAL :: XALPHAH,XNUH,XLBEXH,XLBH ! Hail           distribution parameters
 !
-REAL,SAVE :: XLBDAR_MAX,XLBDAS_MAX,XLBDAG_MAX ! Max values allowed for the shape
+REAL :: XLBDAR_MAX,XLBDAS_MAX,XLBDAG_MAX ! Max values allowed for the shape
                                               ! parameters (rain,snow,graupeln)
 !
-REAL,DIMENSION(:),SAVE,ALLOCATABLE :: XRTMIN ! Min values allowed for the mixing ratios
-REAL,SAVE :: XCONC_SEA   ! Diagnostic concentration of droplets over sea
-REAL,SAVE :: XCONC_LAND  !  Diagnostic concentration of droplets over land
-REAL,SAVE :: XCONC_URBAN ! Diagnostic concentration of droplets over urban area
+REAL,DIMENSION(:),ALLOCATABLE :: XRTMIN ! Min values allowed for the mixing ratios
+REAL :: XCONC_SEA   ! Diagnostic concentration of droplets over sea
+REAL :: XCONC_LAND  !  Diagnostic concentration of droplets over land
+REAL :: XCONC_URBAN ! Diagnostic concentration of droplets over urban area
+END TYPE RAIN_ICE_DESCR_t
+!
+TYPE(RAIN_ICE_DESCR_t), SAVE, TARGET :: RAIN_ICE_DESCR
+!
+REAL,DIMENSION(:),POINTER :: XLBC=>NULL(), XRTMIN=>NULL()
+REAL, POINTER :: XCEXVT => RAIN_ICE_DESCR%XCEXVT ,&
+                 XAC => RAIN_ICE_DESCR%XAC ,&
+                 XBC => RAIN_ICE_DESCR%XBC ,&
+                 XCC => RAIN_ICE_DESCR%XCC ,&
+                 XDC => RAIN_ICE_DESCR%XDC ,&
+                 XAR => RAIN_ICE_DESCR%XAR ,&
+                 XBR => RAIN_ICE_DESCR%XBR ,&
+                 XCR => RAIN_ICE_DESCR%XCR ,&
+                 XDR => RAIN_ICE_DESCR%XDR ,&
+                 XCCR => RAIN_ICE_DESCR%XCCR ,&
+                 XF0R => RAIN_ICE_DESCR%XF0R ,&
+                 XF1R => RAIN_ICE_DESCR%XF1R ,&
+                 XC1R => RAIN_ICE_DESCR%XC1R ,&
+                 XAI => RAIN_ICE_DESCR%XAI ,&
+                 XBI => RAIN_ICE_DESCR%XBI ,&
+                 XC_I => RAIN_ICE_DESCR%XC_I ,&
+                 XDI => RAIN_ICE_DESCR%XDI ,&
+                 XF0I => RAIN_ICE_DESCR%XF0I ,&
+                 XF2I => RAIN_ICE_DESCR%XF2I ,&
+                 XC1I => RAIN_ICE_DESCR%XC1I ,&
+                 XAS => RAIN_ICE_DESCR%XAS ,&
+                 XBS => RAIN_ICE_DESCR%XBS ,&
+                 XCS => RAIN_ICE_DESCR%XCS ,&
+                 XDS => RAIN_ICE_DESCR%XDS ,&
+                 XCCS => RAIN_ICE_DESCR%XCCS ,&
+                 XCXS => RAIN_ICE_DESCR%XCXS ,&
+                 XF0S => RAIN_ICE_DESCR%XF0S ,&
+                 XF1S => RAIN_ICE_DESCR%XF1S ,&
+                 XC1S => RAIN_ICE_DESCR%XC1S ,&
+                 XAG => RAIN_ICE_DESCR%XAG ,&
+                 XBG => RAIN_ICE_DESCR%XBG ,&
+                 XCG => RAIN_ICE_DESCR%XCG ,&
+                 XDG => RAIN_ICE_DESCR%XDG ,&
+                 XCCG => RAIN_ICE_DESCR%XCCG ,&
+                 XCXG => RAIN_ICE_DESCR%XCXG ,&
+                 XF0G => RAIN_ICE_DESCR%XF0G ,&
+                 XF1G => RAIN_ICE_DESCR%XF1G ,&
+                 XC1G => RAIN_ICE_DESCR%XC1G ,&
+                 XAH => RAIN_ICE_DESCR%XAH ,&
+                 XBH => RAIN_ICE_DESCR%XBH ,&
+                 XCH => RAIN_ICE_DESCR%XCH ,&
+                 XDH => RAIN_ICE_DESCR%XDH ,&
+                 XCCH => RAIN_ICE_DESCR%XCCH ,&
+                 XCXH => RAIN_ICE_DESCR%XCXH ,&
+                 XF0H => RAIN_ICE_DESCR%XF0H ,&
+                 XF1H => RAIN_ICE_DESCR%XF1H ,&
+                 XC1H => RAIN_ICE_DESCR%XC1H ,&
+                 XALPHAC => RAIN_ICE_DESCR%XALPHAC ,&
+                 XNUC => RAIN_ICE_DESCR%XNUC ,&
+                 XALPHAC2 => RAIN_ICE_DESCR%XALPHAC2 ,&
+                 XNUC2 => RAIN_ICE_DESCR%XNUC2 ,&
+                 XLBEXC => RAIN_ICE_DESCR%XLBEXC ,&
+                 XALPHAR => RAIN_ICE_DESCR%XALPHAR ,&
+                 XNUR => RAIN_ICE_DESCR%XNUR ,&
+                 XLBEXR => RAIN_ICE_DESCR%XLBEXR ,&
+                 XLBR => RAIN_ICE_DESCR%XLBR ,&
+                 XALPHAI => RAIN_ICE_DESCR%XALPHAI ,&
+                 XNUI => RAIN_ICE_DESCR%XNUI ,&
+                 XLBEXI => RAIN_ICE_DESCR%XLBEXI ,&
+                 XLBI => RAIN_ICE_DESCR%XLBI ,&
+                 XALPHAS => RAIN_ICE_DESCR%XALPHAS ,&
+                 XNUS => RAIN_ICE_DESCR%XNUS ,&
+                 XLBEXS => RAIN_ICE_DESCR%XLBEXS ,&
+                 XLBS => RAIN_ICE_DESCR%XLBS ,&
+                 XALPHAG => RAIN_ICE_DESCR%XALPHAG ,&
+                 XNUG => RAIN_ICE_DESCR%XNUG ,&
+                 XLBEXG => RAIN_ICE_DESCR%XLBEXG ,&
+                 XLBG => RAIN_ICE_DESCR%XLBG ,&
+                 XALPHAH => RAIN_ICE_DESCR%XALPHAH ,&
+                 XNUH => RAIN_ICE_DESCR%XNUH ,&
+                 XLBEXH => RAIN_ICE_DESCR%XLBEXH ,&
+                 XLBH => RAIN_ICE_DESCR%XLBH ,&
+                 XLBDAR_MAX => RAIN_ICE_DESCR%XLBDAR_MAX ,&
+                 XLBDAS_MAX => RAIN_ICE_DESCR%XLBDAS_MAX ,&
+                 XLBDAG_MAX => RAIN_ICE_DESCR%XLBDAG_MAX ,&
+                 XCONC_SEA => RAIN_ICE_DESCR%XCONC_SEA ,&
+                 XCONC_LAND => RAIN_ICE_DESCR%XCONC_LAND ,&
+                 XCONC_URBAN => RAIN_ICE_DESCR%XCONC_URBAN
+!
+CONTAINS
+SUBROUTINE RAIN_ICE_DESCR_ALLOCATE(KRR)
+  IMPLICIT NONE
+  INTEGER, INTENT(IN) :: KRR
+  ALLOCATE(RAIN_ICE_DESCR%XRTMIN(KRR))
+  XRTMIN=>RAIN_ICE_DESCR%XRTMIN
+  XLBC=>RAIN_ICE_DESCR%XLBC
+END SUBROUTINE RAIN_ICE_DESCR_ALLOCATE
+!
+SUBROUTINE RAIN_ICE_DESCR_DEALLOCATE()
+  IMPLICIT NONE
+  XRTMIN=>NULL()
+  DEALLOCATE(RAIN_ICE_DESCR%XRTMIN)
+END SUBROUTINE RAIN_ICE_DESCR_DEALLOCATE
 !
 END MODULE MODD_RAIN_ICE_DESCR

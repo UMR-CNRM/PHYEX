@@ -63,65 +63,71 @@ REAL, DIMENSION(KSIZE)  :: ZZW,      & ! Work array
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_NUCLEATION', 0, ZHOOK_HANDLE)!
 !
-GNEGT(:)=PT(:)<XTT .AND. PRVT(:)>XRTMIN(1) .AND. ODCOMPUTE(:)
-
-ZUSW(:)=0.
-ZZW(:)=0.
-WHERE(GNEGT(:))
-  ZZW(:)=ALOG(PT(:))
-  ZUSW(:)=EXP(XALPW - XBETAW/PT(:) - XGAMW*ZZW(:))          ! es_w
-  ZZW(:)=EXP(XALPI - XBETAI/PT(:) - XGAMI*ZZW(:))           ! es_i
-END WHERE
-
-ZSSI(:)=0.
-WHERE(GNEGT(:))
-  ZZW(:)=MIN(PPABST(:)/2., ZZW(:))             ! safety limitation
-  ZSSI(:)=PRVT(:)*(PPABST(:)-ZZW(:)) / (XEPSILO*ZZW(:)) - 1.0
-                                               ! Supersaturation over ice
-  ZUSW(:)=MIN(PPABST(:)/2., ZUSW(:))            ! safety limitation
-  ZUSW(:)=(ZUSW(:)/ZZW(:))*((PPABST(:)-ZZW(:))/(PPABST(:)-ZUSW(:))) - 1.0
-                             ! Supersaturation of saturated water vapor over ice
-  !
-  !*       3.1     compute the heterogeneous nucleation source RVHENI
-  !
-  !*       3.1.1   compute the cloud ice concentration
-  !
-  ZSSI(:)=MIN(ZSSI(:), ZUSW(:)) ! limitation of SSi according to SSw=0
-END WHERE
-
-ZZW(:)=0.
-WHERE(GNEGT(:) .AND. PT(:)<XTT-5.0 .AND. ZSSI(:)>0.0 )
-  ZZW(:)=XNU20*EXP(XALPHA2*ZSSI(:)-XBETA2)
-ELSEWHERE(GNEGT(:) .AND. PT(:)<=XTT-2.0 .AND. PT(:)>=XTT-5.0 .AND. ZSSI(:)>0.0)
-  ZZW(:)=MAX(XNU20*EXP(-XBETA2 ), &
-             XNU10*EXP(-XBETA1*(PT(:)-XTT))*(ZSSI(:)/ZUSW(:))**XALPHA1)
-END WHERE
-WHERE(GNEGT(:))
-  ZZW(:)=ZZW(:)-PCIT(:)
-  ZZW(:)=MIN(ZZW(:), 50.E3) ! limitation provisoire a 50 l^-1
-END WHERE
-
-PRVHENI_MR(:)=0.
-WHERE(GNEGT(:))
-  !
-  !*       3.1.2   update the r_i and r_v mixing ratios
-  !
-  PRVHENI_MR(:)=MAX(ZZW(:), 0.0)*XMNU0/PRHODREF(:)
-  PRVHENI_MR(:)=MIN(PRVT(:), PRVHENI_MR(:))
-END WHERE
-!Limitation due to 0 crossing of temperature
-IF(LFEEDBACKT) THEN
-  ZW(:)=0.
-  WHERE(GNEGT(:))
-    ZW(:)=MIN(PRVHENI_MR(:), &
-              MAX(0., (XTT/PEXN(:)-PTHT(:))/PLSFACT(:))) / &
-              MAX(PRVHENI_MR(:), 1.E-20)
-  END WHERE
-  PRVHENI_MR(:)=PRVHENI_MR(:)*ZW(:)
-  ZZW(:)=ZZW(:)*ZW(:)
-ENDIF
-PCIT(:)=MAX(ZZW(:)+PCIT(:), PCIT(:))
-!
+CALL ICE4_NUCLEATION_ELEM(ODCOMPUTE, &
+                             PTHT, PPABST, PRHODREF, PEXN, PLSFACT, PT, &
+                             PRVT, &
+                             PCIT, PRVHENI_MR)
+         !!!GNEGT(:)=PT(:)<XTT .AND. PRVT(:)>XRTMIN(1) .AND. ODCOMPUTE(:)
+         !!!
+         !!!ZUSW(:)=0.
+         !!!ZZW(:)=0.
+         !!!WHERE(GNEGT(:))
+         !!!  ZZW(:)=ALOG(PT(:))
+         !!!  ZUSW(:)=EXP(XALPW - XBETAW/PT(:) - XGAMW*ZZW(:))          ! es_w
+         !!!  ZZW(:)=EXP(XALPI - XBETAI/PT(:) - XGAMI*ZZW(:))           ! es_i
+         !!!END WHERE
+         !!!
+         !!!ZSSI(:)=0.
+         !!!WHERE(GNEGT(:))
+         !!!  ZZW(:)=MIN(PPABST(:)/2., ZZW(:))             ! safety limitation
+         !!!  ZSSI(:)=PRVT(:)*(PPABST(:)-ZZW(:)) / (XEPSILO*ZZW(:)) - 1.0
+         !!!                                               ! Supersaturation over ice
+         !!!  ZUSW(:)=MIN(PPABST(:)/2., ZUSW(:))            ! safety limitation
+         !!!  ZUSW(:)=(ZUSW(:)/ZZW(:))*((PPABST(:)-ZZW(:))/(PPABST(:)-ZUSW(:))) - 1.0
+         !!!                             ! Supersaturation of saturated water vapor over ice
+         !!!  !
+         !!!  !*       3.1     compute the heterogeneous nucleation source RVHENI
+         !!!  !
+         !!!  !*       3.1.1   compute the cloud ice concentration
+         !!!  !
+         !!!  ZSSI(:)=MIN(ZSSI(:), ZUSW(:)) ! limitation of SSi according to SSw=0
+         !!!END WHERE
+         !!!
+         !!!ZZW(:)=0.
+         !!!WHERE(GNEGT(:) .AND. PT(:)<XTT-5.0 .AND. ZSSI(:)>0.0 )
+         !!!  ZZW(:)=XNU20*EXP(XALPHA2*ZSSI(:)-XBETA2)
+         !!!ELSEWHERE(GNEGT(:) .AND. PT(:)<=XTT-2.0 .AND. PT(:)>=XTT-5.0 .AND. ZSSI(:)>0.0)
+         !!!  ZZW(:)=MAX(XNU20*EXP(-XBETA2 ), &
+         !!!             XNU10*EXP(-XBETA1*(PT(:)-XTT))*(ZSSI(:)/ZUSW(:))**XALPHA1)
+         !!!END WHERE
+         !!!WHERE(GNEGT(:))
+         !!!  ZZW(:)=ZZW(:)-PCIT(:)
+         !!!  ZZW(:)=MIN(ZZW(:), 50.E3) ! limitation provisoire a 50 l^-1
+         !!!END WHERE
+         !!!
+         !!!PRVHENI_MR(:)=0.
+         !!!WHERE(GNEGT(:))
+         !!!  !
+         !!!  !*       3.1.2   update the r_i and r_v mixing ratios
+         !!!  !
+         !!!  PRVHENI_MR(:)=MAX(ZZW(:), 0.0)*XMNU0/PRHODREF(:)
+         !!!  PRVHENI_MR(:)=MIN(PRVT(:), PRVHENI_MR(:))
+         !!!END WHERE
+         !!!!Limitation due to 0 crossing of temperature
+         !!!IF(LFEEDBACKT) THEN
+         !!!  ZW(:)=0.
+         !!!  WHERE(GNEGT(:))
+         !!!    ZW(:)=MIN(PRVHENI_MR(:), &
+         !!!              MAX(0., (XTT/PEXN(:)-PTHT(:))/PLSFACT(:))) / &
+         !!!              MAX(PRVHENI_MR(:), 1.E-20)
+         !!!  END WHERE
+         !!!  PRVHENI_MR(:)=PRVHENI_MR(:)*ZW(:)
+         !!!  ZZW(:)=ZZW(:)*ZW(:)
+         !!!ENDIF
+         !!!PCIT(:)=MAX(ZZW(:)+PCIT(:), PCIT(:))
+         !!!!
 IF (LHOOK) CALL DR_HOOK('ICE4_NUCLEATION', 1, ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "ice4_nucleation_elem.func.h"
 END SUBROUTINE ICE4_NUCLEATION
 END MODULE MODE_ICE4_NUCLEATION

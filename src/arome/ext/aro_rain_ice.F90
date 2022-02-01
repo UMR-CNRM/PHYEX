@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE  ARO_RAIN_ICE(KPROMA,KKA,KKU,KKL,KLON,KLEV,  KRR, KTCOUNT, KSPLITR,&
+      SUBROUTINE  ARO_RAIN_ICE(KPROMA,KKA,KKU,KKL,KLON,KLEV, KFDIA, KRR, KTCOUNT, KSPLITR,&
                                   KEZDIAG, &
                                   OSUBG_COND, CSUBG_AUCV_RC, CSUBG_AUCV_RI,OSEDIC, CSEDIM, CMICRO, &
                                   PTSTEP, PDZZ, PRHODJ, PRHODREF, PEXNREF,&
@@ -86,14 +86,16 @@
 !              ------------
 !
 USE MODD_CONF
-USE MODD_CST
-USE MODD_PARAMETERS
-USE MODD_RAIN_ICE_DESCR
+USE MODD_CST, ONLY: CST
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM
+USE MODD_PARAM_ICE,      ONLY: PARAM_ICE
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_SPP_TYPE
 !
-USE MODD_BUDGET, ONLY: LBUDGET_RV, LBUDGET_RC, LBUDGET_RR, LBUDGET_RI, LBUDGET_RS, &
-                     & LBUDGET_RG, LBUDGET_RH, LBUDGET_TH, TBUDGETDATA, NBUDGET_RH
+USE MODD_BUDGET, ONLY: TBUDGETDATA, NBUDGET_RH, TBUCONF
 USE MODI_BUDGET_DDH
+USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 !
 USE MODI_RAIN_ICE
 !
@@ -118,6 +120,7 @@ INTEGER,                  INTENT(IN)   :: KKU  !uppest atmosphere array index
 INTEGER,                  INTENT(IN)   :: KKL  !vert. levels type 1=MNH -1=ARO
 INTEGER,                  INTENT(IN)   :: KLON     !NPROMA under CPG
 INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels
+INTEGER,                  INTENT(IN)   :: KFDIA
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
 INTEGER,                  INTENT(IN)   :: KSPLITR  ! Number of small time step
@@ -202,6 +205,7 @@ TYPE(TSPP_CONFIG_MPA) :: YSPP_ICENU,YSPP_KGN_ACON,YSPP_KGN_SBGR
 LOGICAL, DIMENSION(KLON, 1, KLEV) :: LLMICRO !mask to limit computation
 
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH) :: YLBUDGET !NBUDGET_RH is the one with the highest number
+TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !
 INTEGER :: IPROMA, ISIZE, IGPBLKS ! cache-blocking management
 !
@@ -214,6 +218,10 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !               ------------------------
 !
 IF (LHOOK) CALL DR_HOOK('ARO_RAIN_ICE',0,ZHOOK_HANDLE)
+
+!Dimensions
+CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, 0, KFDIA)
+
 ZINPRC=0.
 PINPRH=0.
 
@@ -260,19 +268,19 @@ IF ( KRR == 7 ) THEN
     CALL ABOR1('ARO_RAIN_ICE : KRR==7 NOT COMPATIBLE WITH CMICRO /= ICE4 OR OLD4')
   ENDIF
   LLMICRO(:,:,:)=                          &
-                PRT(:,:,:,2)>XRTMIN(2) .OR. &
-                PRT(:,:,:,3)>XRTMIN(3) .OR. &
-                PRT(:,:,:,4)>XRTMIN(4) .OR. &
-                PRT(:,:,:,5)>XRTMIN(5) .OR. &
-                PRT(:,:,:,6)>XRTMIN(6) .OR. &
-                PRT(:,:,:,7)>XRTMIN(7)
+                PRT(:,:,:,2)>RAIN_ICE_DESCR%XRTMIN(2) .OR. &
+                PRT(:,:,:,3)>RAIN_ICE_DESCR%XRTMIN(3) .OR. &
+                PRT(:,:,:,4)>RAIN_ICE_DESCR%XRTMIN(4) .OR. &
+                PRT(:,:,:,5)>RAIN_ICE_DESCR%XRTMIN(5) .OR. &
+                PRT(:,:,:,6)>RAIN_ICE_DESCR%XRTMIN(6) .OR. &
+                PRT(:,:,:,7)>RAIN_ICE_DESCR%XRTMIN(7)
 ELSE IF( KRR == 6 ) THEN
   LLMICRO(:,:,:)=                          &
-                PRT(:,:,:,2)>XRTMIN(2) .OR. &
-                PRT(:,:,:,3)>XRTMIN(3) .OR. &
-                PRT(:,:,:,4)>XRTMIN(4) .OR. &
-                PRT(:,:,:,5)>XRTMIN(5) .OR. &
-                PRT(:,:,:,6)>XRTMIN(6)
+                PRT(:,:,:,2)>RAIN_ICE_DESCR%XRTMIN(2) .OR. &
+                PRT(:,:,:,3)>RAIN_ICE_DESCR%XRTMIN(3) .OR. &
+                PRT(:,:,:,4)>RAIN_ICE_DESCR%XRTMIN(4) .OR. &
+                PRT(:,:,:,5)>RAIN_ICE_DESCR%XRTMIN(5) .OR. &
+                PRT(:,:,:,6)>RAIN_ICE_DESCR%XRTMIN(6)
 END IF
 
 
@@ -289,9 +297,9 @@ END IF
 !                    computing time
 !
 ZT(:,:,:)= PTHT(:,:,:)*PEXNREF(:,:,:)
-ZLV(:,:,:)=XLVTT +(XCPV-XCL) *(ZT(:,:,:)-XTT)
-ZLS(:,:,:)=XLSTT +(XCPV-XCI) *(ZT(:,:,:)-XTT)
-ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
+ZLV(:,:,:)=CST%XLVTT +(CST%XCPV-CST%XCL) *(ZT(:,:,:)-CST%XTT)
+ZLS(:,:,:)=CST%XLSTT +(CST%XCPV-CST%XCI) *(ZT(:,:,:)-CST%XTT)
+ZCPH(:,:,:)=CST%XCPD +CST%XCPV*2.*PTSTEP*PRS(:,:,:,1)
 !
 !
 !*       3.     REMOVE NEGATIVE VALUES
@@ -377,14 +385,14 @@ END SELECT
 !
 !*       3.3  STORE THE BUDGET TERMS
 !            ----------------------
-IF (LBUDGET_RV) CALL BUDGET_DDH (PRS(:,:,:,1) * PRHODJ(:,:,:), 6,'NEGA_BU_RRV',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_RC) CALL BUDGET_DDH (PRS(:,:,:,2) * PRHODJ(:,:,:), 7,'NEGA_BU_RRC',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_RR) CALL BUDGET_DDH (PRS(:,:,:,3) * PRHODJ(:,:,:), 8,'NEGA_BU_RRR',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_RI) CALL BUDGET_DDH (PRS(:,:,:,4) * PRHODJ(:,:,:) ,9,'NEGA_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_RS) CALL BUDGET_DDH (PRS(:,:,:,5) * PRHODJ(:,:,:),10,'NEGA_BU_RRS',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_RG) CALL BUDGET_DDH (PRS(:,:,:,6) * PRHODJ(:,:,:),11,'NEGA_BU_RRG',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_RH .AND. KRR==7) CALL BUDGET_DDH (PRS(:,:,:,7) * PRHODJ(:,:,:),12,'NEGA_BU_RRH',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_TH) CALL BUDGET_DDH (PTHS(:,:,:)  * PRHODJ(:,:,:), 4,'NEGA_BU_RTH',YDDDH, YDLDDH, YDMDDH)
+IF (TBUCONF%LBUDGET_RV) CALL BUDGET_DDH (PRS(:,:,:,1) * PRHODJ(:,:,:), 6,'NEGA_BU_RRV',YDDDH, YDLDDH, YDMDDH)
+IF (TBUCONF%LBUDGET_RC) CALL BUDGET_DDH (PRS(:,:,:,2) * PRHODJ(:,:,:), 7,'NEGA_BU_RRC',YDDDH, YDLDDH, YDMDDH)
+IF (TBUCONF%LBUDGET_RR) CALL BUDGET_DDH (PRS(:,:,:,3) * PRHODJ(:,:,:), 8,'NEGA_BU_RRR',YDDDH, YDLDDH, YDMDDH)
+IF (TBUCONF%LBUDGET_RI) CALL BUDGET_DDH (PRS(:,:,:,4) * PRHODJ(:,:,:) ,9,'NEGA_BU_RRI',YDDDH, YDLDDH, YDMDDH)
+IF (TBUCONF%LBUDGET_RS) CALL BUDGET_DDH (PRS(:,:,:,5) * PRHODJ(:,:,:),10,'NEGA_BU_RRS',YDDDH, YDLDDH, YDMDDH)
+IF (TBUCONF%LBUDGET_RG) CALL BUDGET_DDH (PRS(:,:,:,6) * PRHODJ(:,:,:),11,'NEGA_BU_RRG',YDDDH, YDLDDH, YDMDDH)
+IF (TBUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_DDH (PRS(:,:,:,7) * PRHODJ(:,:,:),12,'NEGA_BU_RRH',YDDDH, YDLDDH, YDMDDH)
+IF (TBUCONF%LBUDGET_TH) CALL BUDGET_DDH (PTHS(:,:,:)  * PRHODJ(:,:,:), 4,'NEGA_BU_RTH',YDDDH, YDLDDH, YDMDDH)
 
 DO JRR=1, NBUDGET_RH
   YLBUDGET(JRR)%NBUDGET=JRR
@@ -415,10 +423,12 @@ ELSE
   IPROMA=ISIZE ! no cache-blocking
 ENDIF
 IF (CMICRO=='ICE4') THEN
-    CALL RAIN_ICE(  IPROMA, KLON, 1, KLEV, ISIZE, &
+    CALL RAIN_ICE(  YLDIMPHYEX, CST, PARAM_ICE, RAIN_ICE_PARAM, &
+                 &  RAIN_ICE_DESCR, TBUCONF, &
+                 &  IPROMA, ISIZE, &
                  &  OSEDIC=OSEDIC, OCND2=OCND2, HSEDIM=CSEDIM, &
                  &  HSUBG_AUCV_RC=CSUBG_AUCV_RC, HSUBG_AUCV_RI=CSUBG_AUCV_RI,&
-                 &  OWARM=OWARM,KKA=KKA,KKU=KKU,KKL=KKL, &
+                 &  OWARM=OWARM, &
                  &  PTSTEP=2*PTSTEP, &
                  &  KRR=KRR, LDMICRO=LLMICRO, PEXN=PEXNREF,            &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF, PEXNREF=PEXNREF,&
@@ -438,10 +448,12 @@ IF (CMICRO=='ICE4') THEN
                  &  PRHS=PRS(:,:,:,7), PINPRH=PINPRH, PFPR=PFPR, &
                  &  TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET))
 ELSEIF (CMICRO=='ICE3') THEN
-    CALL RAIN_ICE(  IPROMA, KLON, 1, KLEV, ISIZE, &
+    CALL RAIN_ICE(  YLDIMPHYEX, CST, PARAM_ICE, RAIN_ICE_PARAM, &
+                 &  RAIN_ICE_DESCR, TBUCONF, &
+                 &  IPROMA, ISIZE, &
                  &  OSEDIC=OSEDIC, OCND2=OCND2, HSEDIM=CSEDIM, &
                  &  HSUBG_AUCV_RC=CSUBG_AUCV_RC, HSUBG_AUCV_RI=CSUBG_AUCV_RI,&
-                 &  OWARM=OWARM,KKA=KKA,KKU=KKU,KKL=KKL, &
+                 &  OWARM=OWARM, &
                  &  PTSTEP=2*PTSTEP, &
                  &  KRR=KRR, LDMICRO=LLMICRO, PEXN=PEXNREF,            &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF,PEXNREF=PEXNREF,&

@@ -74,13 +74,14 @@
 !!                  24/03/01 Update XCRIAUTI for cirrus cases
 !!      J.-P. Pinty 24/11/01 Update ICE3/ICE4 options
 !!      S. Riette 2016-11: new ICE3/ICE4 options
-!!
+!!      P. Wautelet 22/01/2019 bug correction: incorrect write
+!  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
+!
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODE_FM
 USE MODD_CST
 USE MODD_LUNIT
 USE MODD_PARAMETERS
@@ -202,12 +203,26 @@ IF (CSEDIM == 'SPLI' .AND. HCLOUD(1:3)=='OLD') THEN
  END DO SPLIT
 END IF
 !
-IF (ALLOCATED(XRTMIN)) THEN       ! In case of nesting microphysics constants of
+IF (ASSOCIATED(XRTMIN)) THEN       ! In case of nesting microphysics constants of
                                   ! MODD_RAIN_ICE_PARAM are computed only once,
                                   ! but if INI_RAIN_ICE has been called already
                                   ! one must change the XRTMIN size.
-  DEALLOCATE(XRTMIN)
+  CALL RAIN_ICE_DESCR_DEALLOCATE()
 END IF
+!
+IF (HCLOUD == 'ICE4' .OR. HCLOUD == 'OLD4') THEN
+  CALL RAIN_ICE_DESCR_ALLOCATE(7)
+ELSE IF (HCLOUD == 'ICE3' .OR. HCLOUD == 'OLD3') THEN
+  CALL RAIN_ICE_DESCR_ALLOCATE(6)
+END IF
+!
+XRTMIN(1) = 1.0E-20
+XRTMIN(2) = 1.0E-20
+XRTMIN(3) = 1.0E-20
+XRTMIN(4) = 1.0E-20
+XRTMIN(5) = 1.0E-15
+XRTMIN(6) = 1.0E-15
+IF (HCLOUD == 'ICE4' .OR. HCLOUD == 'OLD4') XRTMIN(7) = 1.0E-15
 !
 !-------------------------------------------------------------------------------
 !
@@ -394,20 +409,6 @@ XLBDAG_MAX = 100000.0
 ZCONC_MAX  = 1.E6 ! Maximal concentration for falling particules set to 1 per cc
 XLBDAS_MAX = ( ZCONC_MAX/XCCS )**(1./XCXS)
 !
-IF (HCLOUD == 'ICE4' .OR. HCLOUD == 'OLD4') THEN
-  ALLOCATE( XRTMIN(7) )
-ELSE IF (HCLOUD == 'ICE3' .OR. HCLOUD == 'OLD3') THEN
-  ALLOCATE( XRTMIN(6) )
-END IF
-!
-XRTMIN(1) = 1.0E-20
-XRTMIN(2) = 1.0E-20
-XRTMIN(3) = 1.0E-20
-XRTMIN(4) = 1.0E-20
-XRTMIN(5) = 1.0E-15
-XRTMIN(6) = 1.0E-15
-IF (HCLOUD == 'ICE4' .OR. HCLOUD == 'OLD4') XRTMIN(7) = 1.0E-15
-!
 XCONC_SEA=1E8 ! 100/cm3
 XCONC_LAND=3E8 ! 300/cm3
 XCONC_URBAN=5E8 ! 500/cm3
@@ -431,7 +432,7 @@ ZRHO00 = 101325.*(1.+ZRV)/(XRD+ZRV*XRV)/293.15
 !
 !*       4.2    Constants for sedimentation
 !
-IF(.NOT.ASSOCIATED(XFSEDC)) CALL RAIN_ICE_INIT()
+IF(.NOT.ASSOCIATED(XFSEDC)) CALL RAIN_ICE_PARAM_INIT()
 XFSEDC(1)  = GAMMA(XNUC+(XDC+3.)/XALPHAC)/GAMMA(XNUC+3./XALPHAC)*     &
             (ZRHO00)**XCEXVT
 XFSEDC(2)  = GAMMA(XNUC2+(XDC+3.)/XALPHAC2)/GAMMA(XNUC2+3./XALPHAC2)*     &
@@ -570,8 +571,7 @@ IF (GFLAG) THEN
   WRITE(UNIT=KLUOUT,FMT='(" Crit. ice cont. XCRIAUTI=",E13.6)') XCRIAUTI
   WRITE(UNIT=KLUOUT,FMT='(" A Coef. for cirrus law XACRIAUTI=",E13.6)')XACRIAUTI
   WRITE(UNIT=KLUOUT,FMT='(" B Coef. for cirrus law XBCRIAUTI=",E13.6)')XBCRIAUTI
-  WRITE(UNIT=KLUOUT, &
-   & FMT='(" Temp degC at which cirrus law starts to be used=",E13.6)') XT0CRIAUTI
+  WRITE(UNIT=KLUOUT,FMT='(" Temp degC at which cirrus law starts to be used=",E13.6)') XT0CRIAUTI
 END IF
 !
 !
@@ -653,9 +653,9 @@ XGAMINC_BOUND_MIN = 1.0E-1 ! Minimal value of (Lbda * D_cs^lim)**alpha
 XGAMINC_BOUND_MAX = 1.0E7  ! Maximal value of (Lbda * D_cs^lim)**alpha
 ZRATE = EXP(LOG(XGAMINC_BOUND_MAX/XGAMINC_BOUND_MIN)/REAL(NGAMINC-1))
 !
-IF( .NOT.ASSOCIATED(XGAMINC_RIM1) ) CALL RAIN_ICE_ALLOCATE('XGAMINC_RIM1', NGAMINC)
-IF( .NOT.ASSOCIATED(XGAMINC_RIM2) ) CALL RAIN_ICE_ALLOCATE('XGAMINC_RIM2', NGAMINC)
-IF( .NOT.ASSOCIATED(XGAMINC_RIM4) ) CALL RAIN_ICE_ALLOCATE('XGAMINC_RIM4', NGAMINC)
+IF( .NOT.ASSOCIATED(XGAMINC_RIM1) ) CALL RAIN_ICE_PARAM_ALLOCATE('XGAMINC_RIM1', NGAMINC)
+IF( .NOT.ASSOCIATED(XGAMINC_RIM2) ) CALL RAIN_ICE_PARAM_ALLOCATE('XGAMINC_RIM2', NGAMINC)
+IF( .NOT.ASSOCIATED(XGAMINC_RIM4) ) CALL RAIN_ICE_PARAM_ALLOCATE('XGAMINC_RIM4', NGAMINC)
 !
 DO J1=1,NGAMINC
   ZBOUND = XGAMINC_BOUND_MIN*ZRATE**(J1-1)
@@ -705,9 +705,9 @@ IND      = 50    ! Interval number, collection efficiency and infinite diameter
 ZESR     = 1.0   ! factor used to integrate the dimensional distributions when
 ZFDINFTY = 20.0  ! computing the kernels XKER_RACCSS, XKER_RACCS and XKER_SACCRG
 !
-IF( .NOT.ASSOCIATED(XKER_RACCSS) ) CALL RAIN_ICE_ALLOCATE('XKER_RACCSS', NACCLBDAS,NACCLBDAR)
-IF( .NOT.ASSOCIATED(XKER_RACCS ) ) CALL RAIN_ICE_ALLOCATE('XKER_RACCS', NACCLBDAS,NACCLBDAR)
-IF( .NOT.ASSOCIATED(XKER_SACCRG) ) CALL RAIN_ICE_ALLOCATE('XKER_SACCRG', NACCLBDAR,NACCLBDAS)
+IF( .NOT.ASSOCIATED(XKER_RACCSS) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RACCSS', NACCLBDAS,NACCLBDAR)
+IF( .NOT.ASSOCIATED(XKER_RACCS ) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RACCS', NACCLBDAS,NACCLBDAR)
+IF( .NOT.ASSOCIATED(XKER_SACCRG) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_SACCRG', NACCLBDAR,NACCLBDAS)
 !
 CALL READ_XKER_RACCS (KACCLBDAS,KACCLBDAR,KND,                                &
                       PALPHAS,PNUS,PALPHAR,PNUR,PESR,PBS,PBR,PCS,PDS,PCR,PDR, &
@@ -915,7 +915,7 @@ IND      = 50    ! Interval number, collection efficiency and infinite diameter
 ZEGS     = 1.0   ! factor used to integrate the dimensional distributions when
 ZFDINFTY = 20.0  ! computing the kernels XKER_SDRYG
 !
-IF( .NOT.ASSOCIATED(XKER_SDRYG) ) CALL RAIN_ICE_ALLOCATE('XKER_SDRYG', NDRYLBDAG,NDRYLBDAS)
+IF( .NOT.ASSOCIATED(XKER_SDRYG) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_SDRYG', NDRYLBDAG,NDRYLBDAS)
 !
 CALL READ_XKER_SDRYG (KDRYLBDAG,KDRYLBDAS,KND,                              &
                    PALPHAG,PNUG,PALPHAS,PNUS,PEGS,PBS,PCG,PDG,PCS,PDS,      &
@@ -981,7 +981,7 @@ IND      = 50    ! Number of interval used to integrate the dimensional
 ZEGR     = 1.0   ! distributions when computing the kernel XKER_RDRYG
 ZFDINFTY = 20.0
 !
-IF( .NOT.ASSOCIATED(XKER_RDRYG) ) CALL RAIN_ICE_ALLOCATE('XKER_RDRYG', NDRYLBDAG,NDRYLBDAR)
+IF( .NOT.ASSOCIATED(XKER_RDRYG) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RDRYG', NDRYLBDAG,NDRYLBDAR)
 !
 CALL READ_XKER_RDRYG (KDRYLBDAG,KDRYLBDAR,KND,                              &
                    PALPHAG,PNUG,PALPHAR,PNUR,PEGR,PBR,PCG,PDG,PCR,PDR,      &
@@ -1119,7 +1119,7 @@ IND      = 50    ! Interval number, collection efficiency and infinite diameter
 ZEHS     = 1.0   ! factor used to integrate the dimensional distributions when
 ZFDINFTY = 20.0  ! computing the kernels XKER_SWETH
 !
-IF( .NOT.ASSOCIATED(XKER_SWETH) ) CALL RAIN_ICE_ALLOCATE('XKER_SWETH', NWETLBDAH,NWETLBDAS)
+IF( .NOT.ASSOCIATED(XKER_SWETH) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_SWETH', NWETLBDAH,NWETLBDAS)
 !
 CALL READ_XKER_SWETH (KWETLBDAH,KWETLBDAS,KND,                              &
                    PALPHAH,PNUH,PALPHAS,PNUS,PEHS,PBS,PCH,PDH,PCS,PDS,      &
@@ -1185,7 +1185,7 @@ IND      = 50    ! Number of interval used to integrate the dimensional
 ZEHG     = 1.0   ! distributions when computing the kernel XKER_GWETH
 ZFDINFTY = 20.0
 !
-IF( .NOT.ASSOCIATED(XKER_GWETH) ) CALL RAIN_ICE_ALLOCATE('XKER_GWETH', NWETLBDAH,NWETLBDAG)
+IF( .NOT.ASSOCIATED(XKER_GWETH) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_GWETH', NWETLBDAH,NWETLBDAG)
 !
 CALL READ_XKER_GWETH (KWETLBDAH,KWETLBDAG,KND,                              &
                    PALPHAH,PNUH,PALPHAG,PNUG,PEHG,PBG,PCH,PDH,PCG,PDG,      &
@@ -1251,7 +1251,7 @@ IND      = 50    ! Number of interval used to integrate the dimensional
 ZEHR     = 1.0   ! distributions when computing the kernel XKER_RWETH
 ZFDINFTY = 20.0
 !
-IF( .NOT.ASSOCIATED(XKER_RWETH) ) CALL RAIN_ICE_ALLOCATE('XKER_RWETH', NWETLBDAH,NWETLBDAR)
+IF( .NOT.ASSOCIATED(XKER_RWETH) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RWETH', NWETLBDAH,NWETLBDAR)
 !
 CALL READ_XKER_RWETH (KWETLBDAH,KWETLBDAR,KND,                              &
                    PALPHAH,PNUH,PALPHAR,PNUR,PEHR,PBR,PCH,PDH,PCR,PDR,      &
