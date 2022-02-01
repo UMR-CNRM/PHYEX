@@ -6,7 +6,7 @@ INTERFACE
 !
       SUBROUTINE TURB(KKA, KKU, KKL, KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,   &
               & KSPLIT,KMODEL_CL,                                     &
-              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,               &
+              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,        &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,            &
               & PIMPL,PTSTEP,TPFILE,                                  &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
@@ -46,6 +46,7 @@ LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
 LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid 
                                  ! CONDensation
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
+LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 CHARACTER(LEN=4)       , INTENT(IN)   ::  HTURBDIM  ! dimensionality of the 
                                  ! turbulence scheme
 CHARACTER(LEN=4)      , INTENT(IN)   ::  HTURBLEN     ! kind of mixing length

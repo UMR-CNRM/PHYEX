@@ -7,7 +7,7 @@ MODULE MODE_TURB_HOR_THERMO_CORR
 IMPLICIT NONE
 CONTAINS
       SUBROUTINE TURB_HOR_THERMO_CORR(KRR, KRRL, KRRI,               &
-                      OTURB_FLX,OSUBG_COND,                          &
+                      OTURB_FLX,OSUBG_COND,OOCEAN,                   &
                       TPFILE,                                        &
                       PINV_PDXX,PINV_PDYY,                           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
@@ -93,6 +93,7 @@ INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 LOGICAL,                  INTENT(IN)    ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                 INTENT(IN)  ::   OSUBG_COND ! Switch for sub-grid
+LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 !                                                    condensation
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
@@ -226,7 +227,7 @@ IF ( ( KRRL > 0 .AND. OSUBG_COND) .OR. ( OTURB_FLX .AND. TPFILE%LOPENED ) &
     CALL LES_MEAN_SUBGRID( ZFLX, X_LES_SUBGRID_Thl2, .TRUE. ) 
     CALL LES_MEAN_SUBGRID( MZF(PWM)*ZFLX, X_LES_RES_W_SBG_Thl2, .TRUE. )
     CALL LES_MEAN_SUBGRID( -2.*XCTD*SQRT(PTKEM)*ZFLX/PLEPS ,X_LES_SUBGRID_DISS_Thl2, .TRUE. )
-    ZA(:,:,:)   =  ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM)
+    ZA(:,:,:)   =  ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN)
     CALL LES_MEAN_SUBGRID( ZA*ZFLX, X_LES_SUBGRID_ThlThv, .TRUE. ) 
     CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLX, X_LES_SUBGRID_ThlPz, .TRUE. )
     CALL SECOND_MNH(ZTIME2)
@@ -316,7 +317,7 @@ IF ( ( KRRL > 0 .AND. OSUBG_COND) .OR. ( OTURB_FLX .AND. TPFILE%LOPENED ) &
       CALL LES_MEAN_SUBGRID( -XCTD*SQRT(PTKEM)*ZFLX/PLEPS ,X_LES_SUBGRID_DISS_ThlRt, .TRUE. )
       CALL LES_MEAN_SUBGRID( ZA*ZFLX, X_LES_SUBGRID_RtThv, .TRUE. ) 
       CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLX, X_LES_SUBGRID_RtPz,.TRUE.)
-      ZA(:,:,:)   =  EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM)
+      ZA(:,:,:)   =  EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN)
       CALL LES_MEAN_SUBGRID( ZA*ZFLX, X_LES_SUBGRID_ThlThv, .TRUE. ) 
       CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLX, X_LES_SUBGRID_ThlPz,.TRUE.)
       CALL SECOND_MNH(ZTIME2)

@@ -6,7 +6,7 @@ MODULE MODE_TURB_VER
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE TURB_VER(KKA,KKU,KKL,KRR,KRRL,KRRI,                &
-                      OTURB_FLX,                                    &
+                      OTURB_FLX, OOCEAN,                            &
                       HTURBDIM,HTOM,PIMPL,PEXPL,                    &
                       PTSTEP, TPFILE,                               &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
@@ -211,7 +211,6 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 USE MODD_CST
 USE MODD_CTURB
-USE MODD_DYN_n,          ONLY: LOCEAN
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
@@ -251,6 +250,7 @@ INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water v
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
+LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
 CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
@@ -419,7 +419,7 @@ IKE=KKU-JPVEXT_TURB*KKL
 !
 !
 CALL PRANDTL(KKA,KKU,KKL,KRR,KRRI,OTURB_FLX,       &
-             HTURBDIM,                             &
+             HTURBDIM, OOCEAN,                     &
              TPFILE,                               &
              PDXX,PDYY,PDZZ,PDZX,PDZY,             &
              PTHVREF,PLOCPEXNM,PATHETA,PAMOIST,    &
@@ -432,7 +432,7 @@ CALL PRANDTL(KKA,KKU,KKL,KRR,KRRI,OTURB_FLX,       &
 !
 ! Buoyancy coefficient
 !
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
   ZBETA = XG*XALPHAOC
 ELSE
   ZBETA = XG/PTHVREF
@@ -502,7 +502,7 @@ ELSE
 ENDIF
 !
   CALL  TURB_VER_THERMO_FLUX(KKA,KKU,KKL,KRR,KRRL,KRRI,               &
-                        OTURB_FLX,HTURBDIM,HTOM,                      &
+                        OTURB_FLX,HTURBDIM,HTOM,OOCEAN,               &
                         PIMPL,PEXPL,PTSTEP,                           &
                         TPFILE,                                       &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
@@ -519,7 +519,7 @@ ENDIF
                         PRTHLS,PRRS,ZTHLP,ZRP,PTP,PWTH,PWRC )
 !
   CALL  TURB_VER_THERMO_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,               &
-                        OTURB_FLX,HTURBDIM,HTOM,                      &
+                        OTURB_FLX,HTURBDIM,HTOM,OOCEAN,               &
                         PIMPL,PEXPL,                                  &
                         TPFILE,                                       &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,           &
@@ -551,7 +551,7 @@ ENDIF
 IF (LHARAT) ZLM=PLENGTHM
 !
 CALL  TURB_VER_DYN_FLUX(KKA,KKU,KKL,                                &
-                      OTURB_FLX,KRR,                                &
+                      OTURB_FLX,KRR, OOCEAN,                        &
                       HTURBDIM,PIMPL,PEXPL,PTSTEP,                  &
                       TPFILE,                                       &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
@@ -585,7 +585,7 @@ CALL  TURB_VER_SV_FLUX(KKA,KKU,KKL,                                 &
 !
 !
 IF (SIZE(PSVM,4)>0 .AND. LLES_CALL)                                 &
-CALL  TURB_VER_SV_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,                   &
+CALL  TURB_VER_SV_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,OOCEAN,            &
                       PDZZ,                                         &
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,ZPHI3,ZPSI3,  &

@@ -5,7 +5,7 @@
 !-----------------------------------------------------------------
       SUBROUTINE TURB(KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,      &
               & KSPLIT,KMODEL_CL,                                     &
-              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,               &
+              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,        &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,PIMPL,      &
               & PTSTEP,TPFILE,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
@@ -242,7 +242,6 @@ USE MODD_BUDGET, ONLY: LBUDGET_U,  LBUDGET_V,  LBUDGET_W,  LBUDGET_TH, LBUDGET_R
                             NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC,  &
                             NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1, &
                             TBUDGETDATA
-USE MODD_DYN_n, ONLY : LOCEAN
 USE MODD_FIELD, ONLY: TFIELDDATA,TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_LES
@@ -299,6 +298,7 @@ LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
 LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid 
                                  ! CONDensation
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
+LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
@@ -506,7 +506,7 @@ END DO
 !
 !*      2.2 Exner function at t
 !
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
   ZEXN(:,:,:) = 1.
 ELSE
   ZEXN(:,:,:) = (PPABST(:,:,:)/XP00) ** (XRD/XCPD)
@@ -634,7 +634,7 @@ SELECT CASE (HTURBLEN)
 
   CASE ('BL89')
     ZSHEAR=0.
-    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM)
+    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN)
 !
 !*      3.2 RM17 mixing length
 !           ------------------
@@ -643,7 +643,7 @@ SELECT CASE (HTURBLEN)
     ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
     ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
     ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
-    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM)
+    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN)
 !
 !*      3.3 Grey-zone combined RM17 & Deardorff mixing lengths 
 !           --------------------------------------------------
@@ -652,7 +652,7 @@ SELECT CASE (HTURBLEN)
     ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
     ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
     ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
-    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM)
+    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN)
 
     CALL DELT(ZLMW,ODZ=.FALSE.)
     ! The minimum mixing length is chosen between Horizontal grid mesh (not taking into account the vertical grid mesh) and RM17.
@@ -867,7 +867,7 @@ IF( LBUDGET_SV ) THEN
 END IF
 
 CALL TURB_VER(KKA,KKU,KKL,KRR, KRRL, KRRI,               &
-          OTURB_FLX,                                     &
+          OTURB_FLX, OOCEAN,                             &
           HTURBDIM,HTOM,PIMPL,ZEXPL,                     &
           PTSTEP,TPFILE,                                 &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,        &
@@ -960,7 +960,7 @@ IF( HTURBDIM == '3DIM' ) THEN
 #ifdef REPRO48
 #else
     CALL TURB_HOR_SPLT(KSPLIT, KRR, KRRL, KRRI, PTSTEP,        &
-          HLBCX,HLBCY,OTURB_FLX,OSUBG_COND,                    &
+          HLBCX,HLBCY,OTURB_FLX,OSUBG_COND,OOCEAN,             &
           TPFILE,                                              &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                        &
           PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                       &
@@ -1455,7 +1455,7 @@ IF (.NOT. ORMC01) THEN
   !
   DO JJ=1,SIZE(PUT,2)
     DO JI=1,SIZE(PUT,1)
-      IF (LOCEAN) THEN
+      IF (OOCEAN) THEN
         DO JK=IKTE,IKTB,-1
           ZD=ZALPHA*(PZZ(JI,JJ,IKTE+1)-PZZ(JI,JJ,JK))
           IF ( PLM(JI,JJ,JK)>ZD) THEN
@@ -1541,8 +1541,8 @@ IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
 END IF
 !   compute a mixing length limited by the stability
 !
-ZETHETA(:,:,:) = ETHETA(KRR,KRRI,PTHLT,PRT,ZLOCPEXNM,ZATHETA,PSRCT)
-ZEMOIST(:,:,:) = EMOIST(KRR,KRRI,PTHLT,PRT,ZLOCPEXNM,ZAMOIST,PSRCT)
+ZETHETA(:,:,:) = ETHETA(KRR,KRRI,PTHLT,PRT,ZLOCPEXNM,ZATHETA,PSRCT,OOCEAN)
+ZEMOIST(:,:,:) = EMOIST(KRR,KRRI,PTHLT,PRT,ZLOCPEXNM,ZAMOIST,PSRCT,OOCEAN)
 !
 IF (KRR>0) THEN
   DO JK = IKTB+1,IKTE-1
@@ -1552,7 +1552,7 @@ IF (KRR>0) THEN
                                 (PTHLT(JI,JJ,JK    )-PTHLT(JI,JJ,JK-KKL))/PDZZ(JI,JJ,JK    ))
         ZDRTDZ(JI,JJ,JK) = 0.5*((PRT(JI,JJ,JK+KKL,1)-PRT(JI,JJ,JK    ,1))/PDZZ(JI,JJ,JK+KKL)+ &
                                 (PRT(JI,JJ,JK    ,1)-PRT(JI,JJ,JK-KKL,1))/PDZZ(JI,JJ,JK    ))
-        IF (LOCEAN) THEN
+        IF (OOCEAN) THEN
           ZVAR=XG*(XALPHAOC*ZDTHLDZ(JI,JJ,JK)-XBETAOC*ZDRTDZ(JI,JJ,JK))
         ELSE
           ZVAR=XG/PTHVREF(JI,JJ,JK)*                                                  &
@@ -1572,7 +1572,7 @@ ELSE! For dry atmos or unsalted ocean runs
       DO JI=1,SIZE(PUT,1)
         ZDTHLDZ(JI,JJ,JK)= 0.5*((PTHLT(JI,JJ,JK+KKL)-PTHLT(JI,JJ,JK    ))/PDZZ(JI,JJ,JK+KKL)+ &
                                 (PTHLT(JI,JJ,JK    )-PTHLT(JI,JJ,JK-KKL))/PDZZ(JI,JJ,JK    ))
-        IF (LOCEAN) THEN
+        IF (OOCEAN) THEN
           ZVAR= XG*XALPHAOC*ZDTHLDZ(JI,JJ,JK)
         ELSE
           ZVAR= XG/PTHVREF(JI,JJ,JK)*ZETHETA(JI,JJ,JK)*ZDTHLDZ(JI,JJ,JK)
@@ -1595,7 +1595,7 @@ ELSE
   ZDRTDZ(:,:,IKB)=0
 ENDIF
 !
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
   ZWORK2D(:,:)=XG*(XALPHAOC*ZDTHLDZ(:,:,IKB)-XBETAOC*ZDRTDZ(:,:,IKB))
 ELSE
   ZWORK2D(:,:)=XG/PTHVREF(:,:,IKB)*                                           &
@@ -1613,7 +1613,7 @@ IF (.NOT. ORMC01) THEN
   !
   DO JJ=1,SIZE(PUT,2)
     DO JI=1,SIZE(PUT,1)
-      IF (LOCEAN) THEN
+      IF (OOCEAN) THEN
         DO JK=IKTE,IKTB,-1
           ZD=ZALPHA*(PZZ(JI,JJ,IKTE+1)-PZZ(JI,JJ,JK))
           IF ( PLM(JI,JJ,JK)>ZD) THEN
@@ -1743,7 +1743,7 @@ ELSE
 !           ------------------
   CASE ('BL89','RM17','ADAP')
     ZSHEAR=0.
-    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD)
+    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD,OOCEAN)
 !
 !*         3.2 Delta mixing length
 !           -------------------

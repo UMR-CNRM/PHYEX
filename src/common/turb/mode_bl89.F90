@@ -6,7 +6,7 @@ MODULE MODE_BL89
 IMPLICIT NONE
 CONTAINS
 !     ######spl
-      SUBROUTINE BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,PTHLM,KRR,PRM,PTKEM,PSHEAR,PLM)
+      SUBROUTINE BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,PTHLM,KRR,PRM,PTKEM,PSHEAR,PLM,OOCEAN)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     #########################################################
@@ -59,7 +59,6 @@ CONTAINS
 USE MODD_CONF,      ONLY: CPROGRAM
 USE MODD_CST
 USE MODD_CTURB
-USE MODD_DYN_n,     ONLY: LOCEAN
 USE MODD_PARAMETERS
 USE MODD_PRECISION, ONLY: MNHREAL
 !
@@ -81,6 +80,7 @@ REAL, DIMENSION(:,:,:,:), INTENT(IN)  :: PRM       ! water var.
 REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PTKEM     ! TKE
 REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PSHEAR
 REAL, DIMENSION(:,:,:),   INTENT(OUT) :: PLM       ! Mixing length
+LOGICAL,                  INTENT(IN)  ::  OOCEAN       ! switch for Ocean model version
 !   thermodynamical variables PTHLM=Theta at the begining
 !
 !*       0.2   Declaration of local variables
@@ -160,7 +160,7 @@ ELSE
     ZSHEAR   (:,JK)   = RESHAPE(PSHEAR  (:,:,JK),(/ IIU*IJU /) )    
     ZTKEM  (:,JK)   = RESHAPE(PTKEM  (:,:,JK),(/ IIU*IJU /) )
     ZG_O_THVREF(:,JK)   = RESHAPE(XG/PTHVREF(:,:,JK),(/ IIU*IJU /) )
-    IF (LOCEAN) ZG_O_THVREF(:,JK)   = XG * XALPHAOC
+    IF (OOCEAN) ZG_O_THVREF(:,JK)   = XG * XALPHAOC
     DO JRR=1,KRR
       ZRM  (:,JK,JRR) = RESHAPE(PRM    (:,:,JK,JRR),(/ IIU*IJU /) )
     END DO

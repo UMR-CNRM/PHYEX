@@ -7,7 +7,7 @@ IMPLICIT NONE
 CONTAINS
       SUBROUTINE TH_R_FROM_THL_RT_2D(HFRAC_ICE,PFRAC_ICE,PP,             &
                                   PTHL, PRT, PTH, PRV, PRL, PRI,         &
-                                  PRSATW, PRSATI, PRR, PRS, PRG, PRH     )
+                                  PRSATW, PRSATI, PRR, PRS, PRG, PRH,OOCEAN)
 !     #################################################################
 !
 !
@@ -67,6 +67,7 @@ REAL, DIMENSION(:,:), INTENT(INOUT):: PRL  ! cloud mixing ratio
 REAL, DIMENSION(:,:), INTENT(INOUT):: PRI  ! ice   mixing ratio
 REAL, DIMENSION(:,:), INTENT(OUT)  :: PRSATW ! estimated mixing ration at saturation over water
 REAL, DIMENSION(:,:), INTENT(OUT)  :: PRSATI ! estimated mixing ration at saturation over ice
+LOGICAL,                INTENT(IN)   :: OOCEAN ! switch OCEAN version
 
 !
 !-------------------------------------------------------------------------------
@@ -101,7 +102,7 @@ DO JK=1, SIZE(PTHL,2)
                                 PTHL(:,JK), PRT(:,JK), PTH(:,JK),       &
                                 PRV(:,JK), PRL(:,JK), PRI(:,JK),        &
                                 PRSATW(:,JK), PRSATI(:,JK),                &
-                                ZRR(:,JK), ZRS(:,JK), ZRG(:,JK), ZRH(:,JK))
+                                ZRR(:,JK), ZRS(:,JK), ZRG(:,JK), ZRH(:,JK),OOCEAN)
 ENDDO
 
 IF (LHOOK) CALL DR_HOOK('TH_R_FROM_THL_RT_2D',1,ZHOOK_HANDLE)

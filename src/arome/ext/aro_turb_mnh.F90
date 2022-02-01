@@ -207,6 +207,7 @@ LOGICAL       ::  OTURB_FLX    ! switch to write the
 LOGICAL       ::  OTURB_DIAG   ! switch to write some
                                ! diagnostic fields in the syncronous FM-file
 LOGICAL       ::  ORMC01       ! switch for RMC01 lengths in SBL
+LOGICAL       ::  OOCEAN       ! switch for OCEAN version of turbulence scheme
 
 CHARACTER(LEN=4)   ::  HTURBDIM     ! dimensionality of the
                                ! turbulence scheme
@@ -283,6 +284,8 @@ HTURBLEN='BL89'
 
 ZIMPL=1.
 
+!Version Ocean du schema de turbulence
+OOCEAN=.FALSE.
 
 ! tableau a recalculer a chaque pas de temps
 ! attention, ZDZZ est l'altitude entre deux niveaux (et pas l'�paisseur de la couche)
@@ -417,8 +420,8 @@ DO JRR=1, NBUDGET_RI
 ENDDO
 
 CALL TURB (KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, ISPLIT,IMI, &
-   & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
-   & HTURBDIM,HTURBLEN,'NONE','NONE',HCLOUD,   &
+   & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,    &
+   & HTURBDIM,HTURBLEN,'NONE','NONE',HCLOUD,           &
    & ZIMPL,                                    &
    & 2*PTSTEP,ZTFILE,                                      &
    & ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &

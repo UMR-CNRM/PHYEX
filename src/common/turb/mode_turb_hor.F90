@@ -6,7 +6,7 @@ MODULE MODE_TURB_HOR
 IMPLICIT NONE
 CONTAINS
              SUBROUTINE TURB_HOR(KSPLT, KRR, KRRL, KRRI, PTSTEP,            &
-                      OTURB_FLX,OSUBG_COND,                          &
+                      OTURB_FLX,OSUBG_COND,OOCEAN,                   &
                       TPFILE,                                        &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
                       PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &
@@ -166,6 +166,7 @@ LOGICAL,                  INTENT(IN)    ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                 INTENT(IN)  ::   OSUBG_COND ! Switch for sub-grid 
 !                                                    condensation
+LOGICAL,                  INTENT(IN) ::  OOCEAN ! switch for ocean version
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
@@ -265,7 +266,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !
       IF (KSPLT==1)                                                  &
       CALL      TURB_HOR_THERMO_CORR(KRR, KRRL, KRRI,                &
-                      OTURB_FLX,OSUBG_COND,                          &
+                      OTURB_FLX,OSUBG_COND,OOCEAN,                   &
                       TPFILE,                                        &
                       PINV_PDXX,PINV_PDYY,                           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
@@ -355,7 +356,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
                       PRSVS                                          )
 !
       IF (KSPLT==1 .AND. LLES_CALL)                                  &
-      CALL      TURB_HOR_SV_CORR(KRR,KRRL,KRRI,                      &
+      CALL      TURB_HOR_SV_CORR(KRR,KRRL,KRRI,OOCEAN,               &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
                       PLM,PLEPS,PTKEM,PTHVREF,                       &
                       PTHLM,PRM,                                     &

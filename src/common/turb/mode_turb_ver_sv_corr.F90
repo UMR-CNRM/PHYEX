@@ -5,7 +5,7 @@
 MODULE MODE_TURB_VER_SV_CORR
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER_SV_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,        &
+SUBROUTINE TURB_VER_SV_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,OOCEAN,       &
                       PDZZ,                                         &
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PPHI3,PPSI3,  &
@@ -83,6 +83,7 @@ IMPLICIT NONE
 !
 INTEGER,                 INTENT(IN)  :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,                 INTENT(IN)  :: KKL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   ::  KRRL         ! number of liquid var.
 INTEGER,                INTENT(IN)   ::  KRRI         ! number of ice var.
@@ -155,7 +156,7 @@ DO JSV=1,NSV
   !
   IF (LLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
-    ZA(:,:,:)   =  ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM)
+    ZA(:,:,:)   =  ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN)
     ZFLXZ(:,:,:)= ( XCSHF * PPHI3 + ZCSV * PPSI_SV(:,:,:,JSV) )              &
                   *  GZ_M_W(KKA, KKU, KKL,PTHLM,PDZZ)                          &
                   *  GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)
@@ -164,7 +165,7 @@ DO JSV=1,NSV
     CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
     !
     IF (KRR>=1) THEN
-      ZA(:,:,:)   =  EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM)
+      ZA(:,:,:)   =  EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN)
       ZFLXZ(:,:,:)= ( ZCSV * PPSI3 + ZCSV * PPSI_SV(:,:,:,JSV) )             &
                     *  GZ_M_W(KKA, KKU, KKL,PRM(:,:,:,1),PDZZ)                 &
                     *  GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)

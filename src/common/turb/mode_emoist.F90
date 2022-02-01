@@ -5,7 +5,7 @@
 MODULE MODE_EMOIST
 IMPLICIT NONE
 CONTAINS
-FUNCTION EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM) RESULT(PEMOIST)
+FUNCTION EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN) RESULT(PEMOIST)
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !   ############################################################################
@@ -58,7 +58,6 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !*       0. DECLARATIONS
 !           ------------
 USE MODD_CST
-USE MODD_DYN_n, ONLY : LOCEAN
 !
 IMPLICIT NONE
 !
@@ -67,6 +66,7 @@ IMPLICIT NONE
 !
 INTEGER                              :: KRR        ! number of moist var.
 INTEGER                              :: KRRI       ! number of ice var.
+LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 !
 REAL, DIMENSION(:,:,:),  INTENT(IN)  ::   PTHLM    ! Conservative pot. temperature
 REAL, DIMENSION(:,:,:,:), INTENT(IN) ::   PRM      ! Mixing ratios, where
@@ -95,7 +95,7 @@ INTEGER                               :: JRR     ! moist loop counter
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('EMOIST',0,ZHOOK_HANDLE)
 !
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
  IF ( KRR == 0 ) THEN                                ! Unsalted
    PEMOIST(:,:,:) = 0.
  ELSE

@@ -7,7 +7,7 @@ IMPLICIT NONE
 CONTAINS
       SUBROUTINE TH_R_FROM_THL_RT_1D(HFRAC_ICE,PFRAC_ICE,PP,             &
                                   PTHL, PRT, PTH, PRV, PRL, PRI,         &
-                                  PRSATW, PRSATI, PRR, PRS, PRG, PRH     )
+                                  PRSATW, PRSATI, PRR, PRS, PRG, PRH,OOCEAN)
 !     #################################################################
 !
 !
@@ -51,7 +51,6 @@ CONTAINS
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 USE MODD_CST !, ONLY: XP00, XRD, XCPD, XCPV, XCL, XCI, XLVTT, XTT, XLSTT
-USE MODD_DYN_n, ONLY : LOCEAN
 USE MODE_THERMO
 !
 IMPLICIT NONE
@@ -60,6 +59,7 @@ IMPLICIT NONE
 !*      0.1  declarations of arguments
 !
 CHARACTER(LEN=1),   INTENT(IN) :: HFRAC_ICE
+LOGICAL,            INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 REAL, DIMENSION(:), INTENT(INOUT) :: PFRAC_ICE
 REAL, DIMENSION(:), INTENT(IN) :: PP          ! Pressure
 REAL, DIMENSION(:), INTENT(IN) :: PTHL    ! thetal to transform into th
@@ -126,7 +126,7 @@ ENDDO
 !         ---------
 
 DO II=1,JITER
-  IF (LOCEAN) THEN
+  IF (OOCEAN) THEN
     ZT=PTH                  
   ELSE
     ZT(:)=PTH(:)*ZEXN(:)
