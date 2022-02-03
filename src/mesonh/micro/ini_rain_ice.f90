@@ -128,6 +128,9 @@ USE MODE_READ_XKER_SWETH, ONLY: READ_XKER_SWETH
 USE MODE_READ_XKER_GWETH, ONLY: READ_XKER_GWETH
 USE MODE_READ_XKER_RWETH, ONLY: READ_XKER_RWETH
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
@@ -191,8 +194,11 @@ REAL     :: PDRYLBDAG_MAX,PDRYLBDAS_MAX,PDRYLBDAG_MIN,PDRYLBDAS_MIN
 REAL     :: PDRYLBDAR_MAX,PDRYLBDAR_MIN
 REAL     :: PWETLBDAS_MAX,PWETLBDAG_MAX,PWETLBDAS_MIN,PWETLBDAG_MIN
 REAL     :: PWETLBDAR_MAX,PWETLBDAH_MAX,PWETLBDAR_MIN,PWETLBDAH_MIN
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',0,ZHOOK_HANDLE)
 !
 !*       0.     FUNCTION STATEMENTS
 !               -------------------
@@ -212,7 +218,7 @@ IF (CSEDIM == 'SPLI' .AND. .NOT. LRED ) THEN
   ZVTRMAX = 40.
  ELSE IF (HCLOUD == 'ICE3') THEN
   ZVTRMAX = 10.
- END IF 
+ END IF
 END IF
 !
 !*       1.2    Compute the number of small time step integration
@@ -591,7 +597,8 @@ IF (GFLAG) THEN
   WRITE(UNIT=KLUOUT,FMT='(" Crit. ice cont. XCRIAUTI=",E13.6)') XCRIAUTI
   WRITE(UNIT=KLUOUT,FMT='(" A Coef. for cirrus law XACRIAUTI=",E13.6)')XACRIAUTI
   WRITE(UNIT=KLUOUT,FMT='(" B Coef. for cirrus law XBCRIAUTI=",E13.6)')XBCRIAUTI
-  WRITE(UNIT=KLUOUT,FMT='(" Temp degC at which cirrus law starts to be used=",E13.6)') XT0CRIAUTI
+  WRITE(UNIT=KLUOUT, &
+   & FMT='(" Temp degC at which cirrus law starts to be used=",E13.6)') XT0CRIAUTI
 END IF
 !
 !
@@ -1377,6 +1384,7 @@ IF (GFLAG) THEN
   WRITE(UNIT=KLUOUT,FMT='("            distribution:AL=",E13.6,"NU=",E13.6)') &
                                                       XALPHAH,XNUH
 END IF
+IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',1,ZHOOK_HANDLE)
 CONTAINS
 !
 !------------------------------------------------------------------------------

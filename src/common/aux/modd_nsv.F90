@@ -26,6 +26,7 @@
 !!       M. Leriche    08/07/10 add ice phase chemistry
 !!       C.Lac         07/11    add conditional sampling
 !!       Pialat/Tulet  15/02/12 add ForeFire
+!!       B.Vie              /14 LIMA
 !!      Modification    01/2016  (JP Pinty) Add LIMA
 !!       V. Vionnet     07/17   add blowing snow
 !  P. Wautelet 10/03/2021: add CSVNAMES and CSVNAMES_A to store the name of all the scalar variables
@@ -143,6 +144,8 @@ INTEGER,DIMENSION(JPMODELMAX)::NSV_FFBEG_A = 0 ! with indices in the range :
 INTEGER,DIMENSION(JPMODELMAX)::NSV_FFEND_A = 0 ! NSV_FFBEG_A...NSV_FFEND_A
 #endif
 !
+INTEGER,DIMENSION(JPMODELMAX)::NSV_CO2_A = 0    ! index for CO2
+!
 INTEGER,DIMENSION(JPMODELMAX)::NSV_SNW_A = 0    ! number of blowing snow scalar
 INTEGER,DIMENSION(JPMODELMAX)::NSV_SNWBEG_A = 0 ! with indices in the range :
 INTEGER,DIMENSION(JPMODELMAX)::NSV_SNWEND_A = 0 ! NSV_SNWBEG_A...NSV_SNWEND_A
@@ -245,6 +248,8 @@ INTEGER :: NSV_FF    = 0 ! number of ForeFire scalar variables
 INTEGER :: NSV_FFBEG = 0 ! with indices in the range :
 INTEGER :: NSV_FFEND = 0 ! NSV_FFBEG...NSV_FFEND
 #endif
+!
+INTEGER :: NSV_CO2     = 0 ! index for CO2
 !
 INTEGER :: NSV_SNW     = 0 ! number of blowing snow scalar variables
 INTEGER :: NSV_SNWBEG  = 0 ! with indices in the range :

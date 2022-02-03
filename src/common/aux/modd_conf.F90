@@ -12,30 +12,30 @@
 !!    PURPOSE
 !!    -------
 !       The purpose of this declarative module is to specify  the variables
-!     which concern the configuration of all models. For exemple, 
-!     the type of geometry (Cartesian or conformal projection plane). 
+!     which concern the configuration of all models. For exemple,
+!     the type of geometry (Cartesian or conformal projection plane).
 !
 !!
 !!**  IMPLICIT ARGUMENTS
 !!    ------------------
-!!      None 
+!!      None
 !!
 !!    REFERENCE
 !!    ---------
 !!      Book2 of documentation of Meso-NH (module MODD_CONF)
 !!      Technical Specifications Report of the Meso-NH (chapters 2 and 3)
-!!       
+!!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq   *Meteo France*
+!!      V. Ducrocq   *Meteo France*
 !!
 !!    MODIFICATIONS
 !!    -------------
-!!      Original    05/05/94    
-!!      J. Stein                      09/01/95   add the 1D switch    
-!!      J. Stein and P. Jabouille     30/04/96   add the storage type         
+!!      Original    05/05/94
+!!      J. Stein                      09/01/95   add the 1D switch
+!!      J. Stein and P. Jabouille     30/04/96   add the storage type
 !!      J.-P. Pinty                   13/02/96   add LFORCING switch
-!!      J. Stein                      25/07/97   add the equation system switch    
+!!      J. Stein                      25/07/97   add the equation system switch
 !!      P. Jabouille                  07/05/98   add LPACK
 !!      V. Masson                     18/03/98   add the VERSION switch
 !!      V. Masson                     15/03/99   add PROGRAM swith
@@ -56,15 +56,19 @@
 IMPLICIT NONE
 !
 CHARACTER (LEN=5),SAVE :: CCONF  ! Configuration of models
-                                 !  'START' for start configuration 
-                                 !  'RESTART' for restart configuration 
+                                 !  'START' for start configuration (variables
+                                 ! at time t and t-dt are the same in the
+                                 ! initial file)
+                                 !  'RESTART' for restart configuration
+                                 ! (variables  at time t and t-dt are different)
+                                 !  'POST' for post-treatment configuration
 LOGICAL,SAVE      :: LTHINSHELL  ! Logical for thinshell approximation
                                  ! .TRUE.  = thinshell approximation
                                  ! .FALSE. = no thinshell approximation
 LOGICAL,SAVE      :: LCARTESIAN  ! Logical for cartesian geometry :
-                                 !  .TRUE.  = cartesian geometry 
+                                 !  .TRUE.  = cartesian geometry
                                  !  .FALSE. = conformal projection
-LOGICAL,SAVE      :: L2D = .FALSE. ! Logical for 2D model version
+LOGICAL,SAVE      :: L2D=.FALSE. ! Logical for 2D model version
                                  ! .TRUE.  = 2D model version
                                  ! .FALSE. = 3D model version
 LOGICAL,SAVE      :: L1D         ! Logical for 1D model version
@@ -72,12 +76,12 @@ LOGICAL,SAVE      :: L1D         ! Logical for 1D model version
                                  ! .FALSE. = 2D or 3D model version
 LOGICAL,SAVE      :: LFLAT       ! Logical for zero ororography
                                  ! .TRUE.  = no orography (zs=0.)
-                                 ! .FALSE. = orography  
+                                 ! .FALSE. = orography
 INTEGER,SAVE      :: NMODEL      ! Number of nested models
 INTEGER,SAVE      :: NVERB       ! Level of informations on output-listing
                                  !  0 for minimum of prints
                                  ! 5 for intermediate level of prints
-                                 ! 10 for maximum of prints 
+                                 ! 10 for maximum of prints
 CHARACTER (LEN=5),SAVE :: CEXP   !  Experiment name
 CHARACTER (LEN=5),SAVE :: CSEG   ! name of segment
 LOGICAL,SAVE :: LFORCING         ! Logical for forcing sources
@@ -106,8 +110,6 @@ CHARACTER(LEN=6),SAVE :: CPROGRAM ! CPROGRAM is the program currently running:
 !                                 ! 'MESONH','SPAWN ','DIAG  ','SPEC  '
 !
 INTEGER,SAVE      :: NHALO        ! Size of the halo for parallel distribution
-!
-!INTEGER,SAVE      :: JPHEXT = 1     ! Horizontal External points number
 !
 CHARACTER (LEN=10),SAVE :: CSPLIT ! kind of domain splitting for parallel distribution
                                   !  "BSPLITTING","XSPLITTING","YSPLITTING"
