@@ -54,7 +54,9 @@ Ce répertoire devra être vidé à la fin du phasage, les modifications nécess
 
 Budgets/DDH
 - Le code dans budget_DDH devra être transféré dans mode_budget
-- les routines arome specifiques aux budgets sont dans mpa/micro, il faudrait les mettre ailleurs
+- Le module modd_dyn n'est utilisé que pour les budgets, voir s'il peut être supprimé
+- Le code des budgets devrait être revu: pas en phase avec celui de Méso-NH et phasage a priori
+  inutile car très peu de code semble réellement utile pour AROME
 
 SPP
 - modd_spp_type est pour l'instant dans mpa/micro/externals mais n'est pas de la microphysique
@@ -65,3 +67,9 @@ Gradients/shuman:
 Nettoyage apl_arome non fait (pb a la compilation) ==> 4 arguments dans aro_turb_mnh supprimés (non utilisés)
 
 turb.F90 : il reste un CALL à SOURCES_NEG_CORRECT à ajouter. Besoin de récupérer CCLOUD dans apl_arome : comment ?
+
+Regarder s'il ne serait pas possible/souhaitable de supprimer modd_lunit de PHYEX. On pourrait se contentner de recevoir le numero d'unité logique
+
+Faire quelque chose de mesonh/micro/modd_blankn.f90: le déplacer dans common ou le supprimer
+
+Nettoyage des répertoires aux nécessaire

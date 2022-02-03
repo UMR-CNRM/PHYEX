@@ -1,4 +1,9 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+!     ######################
       MODULE MODD_PARAMETERS
 !     ######################
 !
@@ -32,6 +37,12 @@
 !!      Modification 22/01/01 (D.Gazen) change JPSVMAX from 100 to 200
 !!                                         and JPBUMAX from 120 to 250
 !!      Modification 17/05/04 (P.Jabouille) add JPOUTMAX
+!!      J.Escobar : 15/09/2015 : WENO5 & JPHEXT <> 1
+!!      B.VIE 2016 LIMA
+! P. Wautelet: 05/2016-04/2018: new data structures and calls for I/O
+! Q. Rodier   29/03/2019: increase maximum number of outputs to 999
+! P. Wautelet 17/01/2020: add NBUNAMELGTMAX and NCOMMENTLGTMAX parameters
+! P. Wautelet 13/03/2020: remove JPBUMAX and JPBUPROMAX
 !-------------------------------------------------------------------------------
 !
 !*       0.   DECLARATIONS
@@ -39,26 +50,33 @@
 !
 IMPLICIT NONE
 !
-INTEGER, PARAMETER :: JPHEXT = 0      ! Horizontal External points number
-INTEGER, PARAMETER :: JPVEXT = 0      ! Vertical External points number
+!JUAN CYCLK
+!INTEGER, PARAMETER :: JPHEXT = 3     ! Horizontal External points number
+INTEGER,SAVE      :: JPHEXT = 1     ! Horizontal External points number
+!
+!JUAN CYCLK
+INTEGER, PARAMETER :: JPVEXT = 1      ! Vertical External points number
 INTEGER, PARAMETER :: JPVEXT_TURB = 1      ! Vertical External points number
 INTEGER, PARAMETER :: JPMODELMAX = 8  ! Maximum allowed number of nested models
 INTEGER, PARAMETER :: JPCPLFILEMAX = 24 ! Maximum allowed number of CouPLing FILEs
-INTEGER, PARAMETER :: JPBUMAX= 250     ! Maximum of allowed budgets 
-INTEGER, PARAMETER :: JPBUPROMAX = 60 ! Maximum of allowed processes for all
-                                      ! budgets
 INTEGER, PARAMETER :: JPRIMMAX = 6    ! Maximum number of points for the
                        ! horizontal relaxation for the outermost verticals
 INTEGER, PARAMETER :: JPSVMAX  = 200  ! Maximum number of scalar variables
+INTEGER, PARAMETER :: JPSVNAMELGTMAX = 10 ! Maximum length of a scalar variable name (do not set to less than 10)
 !
 !
-REAL,    PARAMETER :: XUNDEF = 1.E+20   ! default value for undefined or unused
-!                                     ! field.
-INTEGER, PARAMETER :: NUNDEF = 1E+9    ! default value for undefined or unused
-!                                     ! field.
+REAL,    PARAMETER :: XUNDEF = 999.     ! default value for undefined or unused
+!                                       ! field.
+REAL,    PARAMETER :: XNEGUNDEF = -999. ! default value for undefined or unused
+!                                       ! field (negative value guaranteed)
+INTEGER, PARAMETER :: NUNDEF = 999      ! default value for undefined or unused
+!                                       ! field.
+INTEGER, PARAMETER :: NNEGUNDEF = -999  ! default value for undefined or unused
+!                                       ! field (negative value guaranteed)
 INTEGER, PARAMETER :: JPDUMMY  = 20   ! Size of dummy array
 !
-INTEGER, PARAMETER :: JPOUTMAX = 192 ! Maximum allowed number of OUTput files
+INTEGER, PARAMETER :: JPOUTMAX = 999    ! Maximum allowed number of OUTput files
+INTEGER, PARAMETER :: JPOUTVARMAX = 192 ! Maximum allowed number of variables in an output file
 !
 INTEGER, PARAMETER :: NBUNAMELGTMAX  = 32  ! Maximum length of a budget name
 INTEGER, PARAMETER :: NCOMMENTLGTMAX = 100 ! Maximum length of a comment

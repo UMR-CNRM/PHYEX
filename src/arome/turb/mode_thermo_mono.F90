@@ -295,8 +295,6 @@ END FUNCTION SM_FOES_1D
 !
 USE MODD_CST
 !
-USE MODE_FM
-!
 IMPLICIT NONE
 !
 !*       0.1   Declarations of arguments and results
@@ -443,8 +441,6 @@ END FUNCTION SM_PMR_HU_3D
 !              ------------
 !
 USE MODD_CST
-!
-USE MODE_FM
 !
 IMPLICIT NONE
 !
