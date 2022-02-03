@@ -1,7 +1,10 @@
+!MNH_LIC Copyright 1994-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
 !     #######################
       MODULE MODE_THERMO
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     #######################
 !
 !!****  *MODE_THERMO_MONO* -  module for routines SM_FOES,SM_PMR_HU
@@ -29,13 +32,23 @@
 !!    MODIFICATIONS
 !!    -------------
 !!      Original    28/08/94
+!!  J.Escobar : 5/10/2018 : add FLUSH , for better logging in case of PB
+!  P. Wautelet 10/04/2019: replace ABORT and STOP calls by Print_msg
 !--------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
 !
 !-------------------------------------------------------------------------------
-!
+USE MODE_MSG
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+IMPLICIT NONE
+
+PRIVATE
+
+PUBLIC :: DQSAT, DQSATI, QSAT, QSATI, SM_FOES, SM_PMR_HU
+
 INTERFACE SM_FOES
   MODULE PROCEDURE SM_FOES_0D
   MODULE PROCEDURE SM_FOES_1D
@@ -288,6 +301,8 @@ END FUNCTION SM_FOES_1D
 !!      Modification   16/03/95    remove the EPSILON function
 !!      Modification   15/09/97    (V. Masson) add solid and liquid water phases
 !!                                 in thetav computation
+!!      Modification    22/01/2019 (P. Wautelet) use standard FLUSH statement
+!!                                 instead of non standard intrinsics!!
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -347,7 +362,7 @@ IF (LHOOK) CALL DR_HOOK('MODE_THERMO:SM_PMR_HU_3D',0,ZHOOK_HANDLE)
 ITERMAX = 10
 IF (PRESENT(KITERMAX)) ITERMAX=KITERMAX
 ZRDSRV = XRD /XRV
-ZEPS = 1.E-5
+ZEPS = XEPS_DT
 !
 ZRSLW(:,:,:)=0.
 DO JRR=2,SIZE(PR,4)
@@ -379,8 +394,8 @@ IF ( ANY(ZDT > ZEPS) ) THEN
   WRITE(ILUOUT,*) 'MR AT THIS MAXIMUM : ', PMR(IMAXLOC(1),IMAXLOC(2),IMAXLOC(3))
   WRITE(ILUOUT,*) 'T AT THIS MAXIMUM : ', ZT(IMAXLOC(1),IMAXLOC(2),IMAXLOC(3))
   WRITE(ILUOUT,*) 'JOB ABORTED '
-  CALL ABORT
-  STOP
+  FLUSH(unit=ILUOUT)
+  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'SM_PMR_HU_3D', 'failed to converge' )
 END IF
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:SM_PMR_HU_3D',1,ZHOOK_HANDLE)
@@ -522,8 +537,7 @@ IF (ANY(ZDT>ZEPS)) THEN
   WRITE(ILUOUT,*) 'MR AT THIS MAXIMUM : ', PMR(IMAXLOC)
   WRITE(ILUOUT,*) 'T AT THIS MAXIMUM : ', ZT(IMAXLOC)
   WRITE(ILUOUT,*) 'JOB ABORTED '
-  CALL ABORT
-  STOP
+  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'SM_PMR_HU_1D', 'failed to converge' )
 END IF
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:SM_PMR_HU_1D',1,ZHOOK_HANDLE)

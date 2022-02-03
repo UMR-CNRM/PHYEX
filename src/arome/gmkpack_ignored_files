@@ -164,3 +164,6 @@ phyex/micro/modd_nsv.F90
 phyex/micro/modd_refaro.F90
 phyex/micro/mode_fmbidon.F90
 phyex/micro/mode_fmwritbidon.F90
+phyex/turb/modd_dynn.F90
+phyex/turb/mode_thermo_mono.F90
+phyex/turb/modn_turb.F90

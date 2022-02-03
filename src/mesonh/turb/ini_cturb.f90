@@ -73,7 +73,14 @@ END MODULE MODI_INI_CTURB
 USE MODD_CST
 USE MODD_CTURB
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
 IMPLICIT NONE
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+!
+IF (LHOOK) CALL DR_HOOK('INI_CTURB',0,ZHOOK_HANDLE)
 !
 !  ---------------------------------------------------------------------------
 !
@@ -85,7 +92,6 @@ IMPLICIT NONE
 !XCED is now replaced by XCEDIS
 !XCED  = 0.70
 !XCED  = 0.84
-!
 !       Redelsperger-Sommeria (1981) = 0.70
 !       Schmidt-Schumann      (1989) = 0.845
 !       Cheng-Canuto-Howard   (2002) = 0.845
@@ -251,4 +257,5 @@ XSBL_O_BL     = 0.05 ! SBL height / BL height ratio
 XFTOP_O_FSURF = 0.05 ! Fraction of surface (heat or momentum) flux used to define top of BL
 !
 !
+IF (LHOOK) CALL DR_HOOK('INI_CTURB',1,ZHOOK_HANDLE)
 END SUBROUTINE INI_CTURB
