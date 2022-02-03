@@ -61,8 +61,10 @@ SPP
 Nettoyage apl_arome non fait (pb a la compilation) ==> 4 arguments dans aro_turb_mnh supprimés (non utilisés)
 turb.F90 : il reste un CALL à SOURCES_NEG_CORRECT à ajouter. Besoin de récupérer CCLOUD dans apl_arome : comment ?
 
-Regarder s'il ne serait pas possible/souhaitable de supprimer modd_lunit de PHYEX. On pourrait se contentner de recevoir le numero d'unité logique
+Regarder s'il ne serait pas possible/souhaitable de supprimer modd_lunit de PHYEX. On pourrait se contenter de recevoir le numero d'unité logique
 
 Faire quelque chose de mesonh/micro/modd_blankn.f90: le déplacer dans common ou le supprimer
 
 Nettoyage des répertoires aux nécessaire
+
+Initialiser dans AROME la variable ldiag_in_run de MODD_DIAG_IN_RUN pour pouvoir phaser le modd
