@@ -27,8 +27,6 @@ Merge pb:
 - shallow_mf (appels dans aro_shallow et arp_shallow):
        Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
        Dans AROME/ARP: où trouver la taille de maille?
-       Pour l'instant 2 versions à cause de l'interface à compute_uprfat_rhcj10
-- compute_updraft_rhcj10: en attente retour de Rachel et/ou Yves pour faire le merge
 
 Etape 2: array syntax -> loop
 - en profiter pour supprimer args PA/PB des routines appelées depuis ice4_tendencies, comme pour nucleation
