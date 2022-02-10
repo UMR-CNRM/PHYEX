@@ -1,3 +1,10 @@
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+MODULE MODE_ICE4_FAST_RH
+IMPLICIT NONE
+CONTAINS
 SUBROUTINE ICE4_FAST_RH(KPROMA,KSIZE, LDSOFT, PCOMPUTE, PWETG, &
                        &PRHODREF, PLVFACT, PLSFACT, PPRES, &
                        &PDV, PKA, PCJ, &
@@ -19,16 +26,25 @@ SUBROUTINE ICE4_FAST_RH(KPROMA,KSIZE, LDSOFT, PCOMPUTE, PWETG, &
 !!    MODIFICATIONS
 !!    -------------
 !!
+!  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
+!  P. Wautelet 29/05/2019: remove PACK/UNPACK intrinsics (to get more performance and better OpenACC support)
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !
 !
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST
-USE MODD_RAIN_ICE_PARAM
-USE MODD_RAIN_ICE_DESCR
-USE MODD_PARAM_ICE, ONLY : LEVLIMIT, LNULLWETH, LWETHPOST, LCONVHG
+USE MODD_CST,            ONLY: XALPI, XALPW, XBETAI, XBETAW, XGAMW, XCI, XCL, XCPV, XESTT, XGAMI, XLMTT, &
+                             & XLVTT, XMD, XMV, XRV, XTT, XEPSILO
+USE MODD_PARAM_ICE,      ONLY: LCONVHG, LEVLIMIT, LNULLWETH, LWETHPOST
+USE MODD_RAIN_ICE_DESCR, ONLY: XBG, XBS, XCEXVT, XCXG, XCXH, XCXS, XDH, XRTMIN
+USE MODD_RAIN_ICE_PARAM, ONLY: NWETLBDAG, NWETLBDAH, NWETLBDAR, NWETLBDAS, X0DEPH, X1DEPH, XCOLEXGH, XCOLEXIH, &
+                             & XCOLGH, XCOLIH, XCOLEXSH, XCOLSH, XEX0DEPH, XEX1DEPH, XFGWETH, XFRWETH, &
+                             & XFSWETH, XFWETH, XKER_GWETH, XKER_RWETH, XKER_SWETH, XLBGWETH1, XLBGWETH2, &
+                             & XLBGWETH3, XLBRWETH1, XLBRWETH2, XLBRWETH3, XLBSWETH1, XLBSWETH2, XLBSWETH3, &
+                             & XWETINTP1G, XWETINTP1H, XWETINTP1R, XWETINTP1S, XWETINTP2G, XWETINTP2H, &
+                             & XWETINTP2R, XWETINTP2S
+!
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -59,17 +75,17 @@ REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRIT     ! Pristine ice m.r. at t
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRGT     ! Graupel m.r. at t
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRHT     ! Hail m.r. at t
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRCWETH  ! Dry growth of hailstone
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRIWETH  ! Dry growth of hailstone
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRSWETH  ! Dry growth of hailstone
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRGWETH  ! Dry growth of hailstone
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRRWETH  ! Dry growth of hailstone
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRCDRYH  ! Wet growth of hailstone
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRIDRYH  ! Wet growth of hailstone
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRSDRYH  ! Wet growth of hailstone
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRRDRYH  ! Wet growth of hailstone
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRGDRYH  ! Wet growth of hailstone
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRDRYHG  ! Conversion of hailstone into graupel
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRCWETH  ! Dry growth of hailstone
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRIWETH  ! Dry growth of hailstone
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRSWETH  ! Dry growth of hailstone
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRGWETH  ! Dry growth of hailstone
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRRWETH  ! Dry growth of hailstone
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRCDRYH  ! Wet growth of hailstone
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRIDRYH  ! Wet growth of hailstone
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRSDRYH  ! Wet growth of hailstone
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRRDRYH  ! Wet growth of hailstone
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRGDRYH  ! Wet growth of hailstone
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRDRYHG  ! Conversion of hailstone into graupel
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRHMLTR  ! Melting of the hailstones
 REAL, DIMENSION(KPROMA, 10),  INTENT(INOUT) :: PRH_TEND ! Individual tendencies
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_TH
@@ -82,33 +98,22 @@ REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RH
 !
 !*       0.2  declaration of local variables
 !
+INTEGER, PARAMETER :: IRCWETH=1, IRRWETH=2, IRIDRYH=3, IRIWETH=4, IRSDRYH=5, IRSWETH=6, IRGDRYH=7, IRGWETH=8, &
+                    & IFREEZ1=9, IFREEZ2=10
 LOGICAL, DIMENSION(KSIZE) :: GWET
 REAL, DIMENSION(KSIZE) :: ZHAIL, ZWET, ZMASK, ZWETH, ZDRYH
 INTEGER :: IHAIL, IGWET
+INTEGER, DIMENSION(KSIZE) :: I1
 REAL, DIMENSION(KSIZE) :: ZVEC1, ZVEC2, ZVEC3
 INTEGER, DIMENSION(KSIZE) :: IVEC1, IVEC2
 REAL, DIMENSION(KSIZE) :: ZZW, &
                                    ZRDRYH_INIT, ZRWETH_INIT, &
                                    ZRDRYHG
 INTEGER :: JJ, JL
-INTEGER :: IRCWETH, IRRWETH, IRIDRYH, IRIWETH, IRSDRYH, IRSWETH, IRGDRYH, IRGWETH, &
-         & IFREEZ1, IFREEZ2
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RH',0,ZHOOK_HANDLE)
-!
-IRCWETH=1
-IRRWETH=2
-IRIDRYH=3
-IRIWETH=4
-IRSDRYH=5
-IRSWETH=6
-IRGDRYH=7
-IRGWETH=8
-IFREEZ1=9
-IFREEZ2=10
-!
 !
 !
 !*       7.2    compute the Wet and Dry growth of hail
@@ -152,10 +157,18 @@ ENDIF
 !
 !*       7.2.1  accretion of aggregates on the hailstones
 !
-DO JL=1, KSIZE
-  ZWET(JL) = MAX(0., -SIGN(1., XRTMIN(7)-PRHT(JL))) * & ! WHERE(PRHT(:)>XRTMIN(7))
-            &MAX(0., -SIGN(1., XRTMIN(5)-PRST(JL))) * & ! WHERE(PRST(:)>XRTMIN(5))
-            &PCOMPUTE(JL)
+IGWET = 0
+DO JJ = 1, KSIZE
+  ZWET(JJ) = MAX(0., -SIGN(1., XRTMIN(7)-PRHT(JJ))) * & ! WHERE(PRHT(:)>XRTMIN(7))
+            &MAX(0., -SIGN(1., XRTMIN(5)-PRST(JJ))) * & ! WHERE(PRST(:)>XRTMIN(5))
+            &PCOMPUTE(JJ)
+  IF (ZWET(JJ)>0) THEN
+    IGWET = IGWET + 1
+    I1(IGWET) = JJ
+    GWET(JJ) = .TRUE.
+  ELSE
+    GWET(JJ) = .FALSE.
+  ENDIF
 ENDDO
 IF(LDSOFT) THEN
   DO JL=1, KSIZE
@@ -165,28 +178,28 @@ IF(LDSOFT) THEN
 ELSE
   PRH_TEND(:, IRSWETH)=0.
   PRH_TEND(:, IRSDRYH)=0.
-  GWET(:)=ZWET(:)==1.
-  IGWET=COUNT(GWET(:))
   IF(IGWET>0)THEN
     !
     !*       7.2.3  select the (PLBDAH,PLBDAS) couplet
     !
-    ZVEC1(1:IGWET) = PACK( PLBDAH(:),MASK=GWET(:) )
-    ZVEC2(1:IGWET) = PACK( PLBDAS(:),MASK=GWET(:) )
+    DO JJ = 1, IGWET
+      ZVEC1(JJ) = PLBDAH(I1(JJ))
+      ZVEC2(JJ) = PLBDAS(I1(JJ))
+    ENDDO
     !
     !*       7.2.4  find the next lower indice for the PLBDAG and for the PLBDAS
     !               in the geometrical set of (Lbda_h,Lbda_s) couplet use to
     !               tabulate the SWETH-kernel
     !
-    ZVEC1(1:IGWET) = MAX( 1.00001, MIN( FLOAT(NWETLBDAH)-0.00001,           &
+    ZVEC1(1:IGWET) = MAX( 1.00001, MIN( REAL(NWETLBDAH)-0.00001,           &
                           XWETINTP1H * LOG( ZVEC1(1:IGWET) ) + XWETINTP2H ) )
     IVEC1(1:IGWET) = INT( ZVEC1(1:IGWET) )
-    ZVEC1(1:IGWET) = ZVEC1(1:IGWET) - FLOAT( IVEC1(1:IGWET) )
+    ZVEC1(1:IGWET) = ZVEC1(1:IGWET) - REAL( IVEC1(1:IGWET) )
     !
-    ZVEC2(1:IGWET) = MAX( 1.00001, MIN( FLOAT(NWETLBDAS)-0.00001,           &
+    ZVEC2(1:IGWET) = MAX( 1.00001, MIN( REAL(NWETLBDAS)-0.00001,           &
                           XWETINTP1S * LOG( ZVEC2(1:IGWET) ) + XWETINTP2S ) )
     IVEC2(1:IGWET) = INT( ZVEC2(1:IGWET) )
-    ZVEC2(1:IGWET) = ZVEC2(1:IGWET) - FLOAT( IVEC2(1:IGWET) )
+    ZVEC2(1:IGWET) = ZVEC2(1:IGWET) - REAL( IVEC2(1:IGWET) )
     !
     !*       7.2.5  perform the bilinear interpolation of the normalized
     !               SWETH-kernel
@@ -199,7 +212,10 @@ ELSE
                   - XKER_SWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                          * (ZVEC1(JJ) - 1.0)
     END DO
-    ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGWET),MASK=GWET,FIELD=0.0 )
+    ZZW(:) = 0.
+    DO JJ = 1, IGWET
+      ZZW(I1(JJ)) = ZVEC3(JJ)
+    END DO
     !
     WHERE(GWET(1:KSIZE))
       PRH_TEND(1:KSIZE, IRSWETH)=XFSWETH*ZZW(1:KSIZE)                       & ! RSWETH
@@ -215,10 +231,18 @@ ENDIF
 !
 !*       7.2.6  accretion of graupeln on the hailstones
 !
-DO JL=1, KSIZE
-  ZWET(JL)=MAX(0., -SIGN(1., XRTMIN(7)-PRHT(JL))) * & ! WHERE(PRHT(:)>XRTMIN(7))
-          &MAX(0., -SIGN(1., XRTMIN(6)-PRGT(JL))) * & ! WHERE(PRGT(:)>XRTMIN(6))
-          &PCOMPUTE(JL)
+IGWET = 0
+DO JJ = 1, KSIZE
+  ZWET(JJ)=MAX(0., -SIGN(1., XRTMIN(7)-PRHT(JJ))) * & ! WHERE(PRHT(:)>XRTMIN(7))
+          &MAX(0., -SIGN(1., XRTMIN(6)-PRGT(JJ))) * & ! WHERE(PRGT(:)>XRTMIN(6))
+          &PCOMPUTE(JJ)
+  IF (ZWET(JJ)>0) THEN
+    IGWET = IGWET + 1
+    I1(IGWET) = JJ
+    GWET(JJ) = .TRUE.
+  ELSE
+    GWET(JJ) = .FALSE.
+  END IF
 ENDDO
 IF(LDSOFT) THEN
   DO JL=1, KSIZE
@@ -228,28 +252,28 @@ IF(LDSOFT) THEN
 ELSE
   PRH_TEND(:, IRGWETH)=0.
   PRH_TEND(:, IRGDRYH)=0.
-  GWET(:)=ZWET(:)==1.
-  IGWET=COUNT(GWET(:))
   IF(IGWET>0)THEN
     !
     !*       7.2.8  select the (PLBDAH,PLBDAG) couplet
     !
-    ZVEC1(1:IGWET) = PACK( PLBDAH(:),MASK=GWET(:) )
-    ZVEC2(1:IGWET) = PACK( PLBDAG(:),MASK=GWET(:) )
+    DO JJ = 1, IGWET
+      ZVEC1(JJ) = PLBDAH(I1(JJ))
+      ZVEC2(JJ) = PLBDAG(I1(JJ))
+    END DO
     !
     !*       7.2.9  find the next lower indice for the PLBDAH and for the PLBDAG
     !               in the geometrical set of (Lbda_h,Lbda_g) couplet use to
     !               tabulate the GWETH-kernel
     !
-    ZVEC1(1:IGWET) = MAX( 1.00001, MIN( FLOAT(NWETLBDAG)-0.00001,           &
+    ZVEC1(1:IGWET) = MAX( 1.00001, MIN( REAL(NWETLBDAG)-0.00001,           &
                           XWETINTP1H * LOG( ZVEC1(1:IGWET) ) + XWETINTP2H ) )
     IVEC1(1:IGWET) = INT( ZVEC1(1:IGWET) )
-    ZVEC1(1:IGWET) = ZVEC1(1:IGWET) - FLOAT( IVEC1(1:IGWET) )
+    ZVEC1(1:IGWET) = ZVEC1(1:IGWET) - REAL( IVEC1(1:IGWET) )
     !
-    ZVEC2(1:IGWET) = MAX( 1.00001, MIN( FLOAT(NWETLBDAG)-0.00001,           &
+    ZVEC2(1:IGWET) = MAX( 1.00001, MIN( REAL(NWETLBDAG)-0.00001,           &
                           XWETINTP1G * LOG( ZVEC2(1:IGWET) ) + XWETINTP2G ) )
     IVEC2(1:IGWET) = INT( ZVEC2(1:IGWET) )
-    ZVEC2(1:IGWET) = ZVEC2(1:IGWET) - FLOAT( IVEC2(1:IGWET) )
+    ZVEC2(1:IGWET) = ZVEC2(1:IGWET) - REAL( IVEC2(1:IGWET) )
     !
     !*       7.2.10 perform the bilinear interpolation of the normalized
     !               GWETH-kernel
@@ -262,7 +286,10 @@ ELSE
                    - XKER_GWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                         * (ZVEC1(JJ) - 1.0)
     END DO
-    ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGWET),MASK=GWET,FIELD=0.0 )
+    ZZW(:) = 0.
+    DO JJ = 1, IGWET
+      ZZW(I1(JJ)) = ZVEC3(JJ)
+    END DO
     !
     WHERE(GWET(1:KSIZE))
       PRH_TEND(1:KSIZE, IRGWETH)=XFGWETH*ZZW(1:KSIZE)                       & ! RGWETH
@@ -282,10 +309,18 @@ ENDIF
 !
 !*       7.2.11  accretion of raindrops on the hailstones
 !
-DO JL=1, KSIZE
-  ZWET(JL)=MAX(0., -SIGN(1., XRTMIN(7)-PRHT(JL))) * & ! WHERE(PRHT(:)>XRTMIN(7))
-          &MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JL))) * & ! WHERE(PRRT(:)>XRTMIN(3))
-          &PCOMPUTE(JL)
+IGWET = 0
+DO JJ = 1, KSIZE
+  ZWET(JJ)=MAX(0., -SIGN(1., XRTMIN(7)-PRHT(JJ))) * & ! WHERE(PRHT(:)>XRTMIN(7))
+          &MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JJ))) * & ! WHERE(PRRT(:)>XRTMIN(3))
+          &PCOMPUTE(JJ)
+  IF (ZWET(JJ)>0) THEN
+    IGWET = IGWET + 1
+    I1(IGWET) = JJ
+    GWET(JJ) = .TRUE.
+  ELSE
+    GWET(JJ) = .FALSE.
+  ENDIF
 ENDDO
 IF(LDSOFT) THEN
   DO JL=1, KSIZE
@@ -293,28 +328,28 @@ IF(LDSOFT) THEN
   ENDDO
 ELSE
   PRH_TEND(:, IRRWETH)=0.
-  GWET(:)=ZWET(:)==1.
-  IGWET=COUNT(GWET(:))
   IF(IGWET>0)THEN
     !
     !*       7.2.12  select the (PLBDAH,PLBDAR) couplet
     !
-    ZVEC1(1:IGWET)=PACK(PLBDAH(:), MASK=GWET(:))
-    ZVEC2(1:IGWET)=PACK(PLBDAR(:), MASK=GWET(:))
+    DO JJ = 1, IGWET
+      ZVEC1(JJ) = PLBDAH(I1(JJ))
+      ZVEC2(JJ) = PLBDAR(I1(JJ))
+    ENDDO
     !
     !*       7.2.13 find the next lower indice for the PLBDAH and for the PLBDAR
     !               in the geometrical set of (Lbda_h,Lbda_r) couplet use to
     !               tabulate the RWETH-kernel
     !
-    ZVEC1(1:IGWET)=MAX(1.00001, MIN( FLOAT(NWETLBDAH)-0.00001,           &
+    ZVEC1(1:IGWET)=MAX(1.00001, MIN( REAL(NWETLBDAH)-0.00001,           &
                           XWETINTP1H*LOG(ZVEC1(1:IGWET))+XWETINTP2H))
     IVEC1(1:IGWET)=INT(ZVEC1(1:IGWET))
-    ZVEC1(1:IGWET)=ZVEC1(1:IGWET)-FLOAT(IVEC1(1:IGWET))
+    ZVEC1(1:IGWET)=ZVEC1(1:IGWET)-REAL(IVEC1(1:IGWET))
     !
-    ZVEC2(1:IGWET)=MAX(1.00001, MIN( FLOAT(NWETLBDAR)-0.00001,           &
+    ZVEC2(1:IGWET)=MAX(1.00001, MIN( REAL(NWETLBDAR)-0.00001,           &
                           XWETINTP1R*LOG(ZVEC2(1:IGWET))+XWETINTP2R))
     IVEC2(1:IGWET)=INT(ZVEC2(1:IGWET))
-    ZVEC2(1:IGWET)=ZVEC2(1:IGWET)-FLOAT(IVEC2(1:IGWET))
+    ZVEC2(1:IGWET)=ZVEC2(1:IGWET)-REAL(IVEC2(1:IGWET))
     !
     !*       7.2.14 perform the bilinear interpolation of the normalized
     !               RWETH-kernel
@@ -327,7 +362,10 @@ ELSE
                     - XKER_RWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                          *(ZVEC1(JJ) - 1.0)
     END DO
-    ZZW(:)=UNPACK(VECTOR=ZVEC3(1:IGWET), MASK=GWET, FIELD=0.)
+    ZZW(:) = 0.
+    DO JJ = 1, IGWET
+      ZZW(I1(JJ)) = ZVEC3(JJ)
+    END DO
     !
     WHERE(GWET(1:KSIZE))
       PRH_TEND(1:KSIZE, IRRWETH) = XFRWETH*ZZW(1:KSIZE)                    & ! RRWETH
@@ -410,7 +448,7 @@ ENDIF
 DO JL=1, KSIZE
   ZDRYH(JL) = ZHAIL(JL) * &
             & MAX(0., -SIGN(1., PT(JL)-XTT)) * & ! WHERE(PT(:)<XTT)
-            & MAX(0., -SIGN(1., -ZRDRYH_INIT(JL))) * & !WHERE(ZRDRYH_INIT(:)>0.)
+            & MAX(0., -SIGN(1., 1.E-20-ZRDRYH_INIT(JL))) * & !WHERE(ZRDRYH_INIT(:)>0.)
             & MAX(0., -SIGN(1., MAX(0., ZRDRYH_INIT(JL)-PRH_TEND(JL, IRIDRYH)-PRH_TEND(JL, IRSDRYH)) - &
                                &MAX(0., ZRWETH_INIT(JL)-PRH_TEND(JL, IRIWETH)-PRH_TEND(JL, IRSWETH))))
 ENDDO
@@ -501,3 +539,4 @@ ENDDO
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RH', 1, ZHOOK_HANDLE)
 !
 END SUBROUTINE ICE4_FAST_RH
+END MODULE MODE_ICE4_FAST_RH
