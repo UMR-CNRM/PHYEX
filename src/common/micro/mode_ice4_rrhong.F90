@@ -1,8 +1,16 @@
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+MODULE MODE_ICE4_RRHONG
+IMPLICIT NONE
+CONTAINS
 SUBROUTINE ICE4_RRHONG(KSIZE, LDSOFT, PCOMPUTE, &
                        &PEXN, PLVFACT, PLSFACT, &
                        &PT,   PRRT, &
                        &PTHT, &
-                       &PRRHONG_MR, PB_TH, PB_RR, PB_RG)
+                       &PRRHONG_MR)
 !!
 !!**  PURPOSE
 !!    -------
@@ -20,10 +28,9 @@ SUBROUTINE ICE4_RRHONG(KSIZE, LDSOFT, PCOMPUTE, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST
-USE MODD_RAIN_ICE_PARAM
-USE MODD_RAIN_ICE_DESCR
-USE MODD_PARAM_ICE, ONLY : LFEEDBACKT
+USE MODD_CST,            ONLY: XTT
+USE MODD_RAIN_ICE_DESCR, ONLY: XRTMIN
+USE MODD_PARAM_ICE,      ONLY: LFEEDBACKT
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -40,10 +47,7 @@ REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLSFACT  ! L_s/(Pi_ref*C_ph)
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PT       ! Temperature
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRRT     ! Rain water m.r. at t
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PTHT     ! Theta at t
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRRHONG_MR ! Mixing ratio change due to spontaneous freezing
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PB_TH
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PB_RR
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PB_RG
+REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRRHONG_MR ! Mixing ratio change due to spontaneous freezing
 !
 !*       0.2  declaration of local variables
 !
@@ -71,12 +75,8 @@ IF(.NOT. LDSOFT) THEN
     ENDDO
   ENDIF
 ENDIF
-DO JL=1, KSIZE
-  PB_RG(JL) = PB_RG(JL) + PRRHONG_MR(JL)
-  PB_RR(JL) = PB_RR(JL) - PRRHONG_MR(JL)
-  PB_TH(JL) = PB_TH(JL) + PRRHONG_MR(JL)*(PLSFACT(JL)-PLVFACT(JL))
-ENDDO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_RRHONG', 1, ZHOOK_HANDLE)
 !
 END SUBROUTINE ICE4_RRHONG
+END MODULE MODE_ICE4_RRHONG
