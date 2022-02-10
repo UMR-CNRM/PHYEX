@@ -10,7 +10,7 @@ SUBROUTINE ICE4_RSRIMCG_OLD(KSIZE, LDSOFT, LDCOMPUTE, &
                            &PRHODREF, &
                            &PLBDAS, &
                            &PT, PRCT, PRST, &
-                           &PRSRIMCG_MR, PB_RS, PB_RG)
+                           &PRSRIMCG_MR)
 !!
 !!**  PURPOSE
 !!    -------
@@ -50,8 +50,6 @@ REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PT       ! Temperature
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
 REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRSRIMCG_MR ! Mr change due to cloud droplet riming of the aggregates
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PB_RS
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PB_RG
 !
 !*       0.2  declaration of local variables
 !
@@ -122,8 +120,6 @@ IF(.NOT. LDSOFT) THEN
     END WHERE
   END IF
 ENDIF
-PB_RS(:) = PB_RS(:) - PRSRIMCG_MR(:)
-PB_RG(:) = PB_RG(:) + PRSRIMCG_MR(:)
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_RSRIMCG_OLD', 1, ZHOOK_HANDLE)
 !

@@ -329,7 +329,7 @@ DO JK=D%NKTB,D%NKTE
           ZFRAC(JI) = PRI_IN(JI,JJ,JK) / (PRC_IN(JI,JJ,JK)+PRI_IN(JI,JJ,JK))
         ENDIF
       END DO
-      CALL COMPUTE_FRAC_ICE(HFRAC_ICE, NEB, ZFRAC(:), PT(:,JJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
+      CALL COMPUTE_FRAC_ICE(HFRAC_ICE, NEB, ZFRAC(D%NIB:D%NIE), PT(D%NIB:D%NIE,JJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
     ENDIF
     DO JI=D%NIB,D%NIE
       ZQSL(JI)   = CST%XRD / CST%XRV * ZPV(JI) / ( PPABS(JI,JJ,JK) - ZPV(JI) )
