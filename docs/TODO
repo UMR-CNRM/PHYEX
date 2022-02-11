@@ -14,3 +14,15 @@ Clé de compilation REPRO48 ajoutée pour permettre de reproduire le cycle 48, e
 - contourne des corrections de bug
 - modifie l'organisation de calculs
 Cette clé devra être supprimée
+
+Merge pb:
+- ice4_nucleation_wrapper:
+       Tableaux allocatable introduits par Philippe dans meso-nh.
+       Pas introduits (pour l'instant?) dans version common.
+       Ryad doit faire des tests pour regarder impact des allaocatble sur CPU.
+           si test OK, on passe en alloacatble
+           si test KO, arbitrage entre Philippe et Riad
+
+Etape 2: array syntax -> loop
+- en profiter pour supprimer args PA/PB des routines appelées depuis ice4_tendencies, comme pour nucleation
+- si possible, modifier ice4_sedimentation_split* dans le même esprit que stat

@@ -42,3 +42,7 @@ phyex/micro/ice4_rimltc.F90
 phyex/micro/modi_ice4_rimltc.F90
 phyex/micro/ice4_rrhong.F90
 phyex/micro/modi_ice4_rrhong.F90
+phyex/micro/ice4_nucleation.F90
+phyex/micro/modi_ice4_nucleation.F90
+phyex/micro/ice4_nucleation_wrapper.F90
+phyex/micro/modi_ice4_nucleation_wrapper.F90

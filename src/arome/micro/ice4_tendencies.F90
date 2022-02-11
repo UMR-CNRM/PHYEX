@@ -1,3 +1,18 @@
+!
+!
+!
+!
+!
+!
+!!! NOTE: quand l'array syntax sera remplacée par des boucles, en profiter
+!!!       pour supprimer les arguments PA et PB des différentes routines
+!!!       pour calquer le fonctionnement de nucleation, rimltc et rrhong
+!
+!
+!
+!
+!
+!
 SUBROUTINE ICE4_TENDENCIES(KSIZE, KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKE, KKT, KKL, &
                           &KRR, LDSOFT, PCOMPUTE, &
                           &OWARM, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, HSUBG_AUCV_RC, HSUBG_PR_PDF, &
@@ -223,6 +238,9 @@ ELSE
                        ZTHT, PPRES, PRHODREF, PEXN, PLSFACT, ZT, &
                        ZRVT, &
                        PCIT, PRVHENI_MR, PB_TH, PB_RV, PB_RI)
+  PB_RI(:)=PB_RI(:) + PRVHENI_MR(:)
+  PB_RV(:)=PB_RV(:) - PRVHENI_MR(:)
+  PB_TH(:)=PB_TH(:) + PRVHENI_MR(:)*PLSFACT(:)
   DO JL=1, KSIZE
     ZRIT(JL)=ZRIT(JL) + PRVHENI_MR(JL)
     ZRVT(JL)=ZRVT(JL) - PRVHENI_MR(JL)
@@ -232,7 +250,7 @@ ELSE
   !
   !*       3.3     compute the spontaneous freezing source: RRHONG
   !
-  CALL ICE4_RRHONG(KSIZE, LDSOFT, PCOMPUTE, &
+  CALL ICE4_RRHONG(KSIZE, PCOMPUTE, &
                   &PEXN, PLVFACT, PLSFACT, &
                   &ZT,   ZRRT, &
                   &ZTHT, &
@@ -251,7 +269,7 @@ ELSE
   !
   !*       7.1    cloud ice melting
   !
-  CALL ICE4_RIMLTC(KSIZE, LDSOFT, PCOMPUTE, &
+  CALL ICE4_RIMLTC(KSIZE, PCOMPUTE, &
                   &PEXN, PLVFACT, PLSFACT, &
                   &ZT, &
                   &ZTHT, ZRIT, &
