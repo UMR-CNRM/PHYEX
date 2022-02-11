@@ -22,7 +22,16 @@ Merge pb:
        Ryad doit faire des tests pour regarder impact des allaocatble sur CPU.
            si test OK, on passe en alloacatble
            si test KO, arbitrage entre Philippe et Riad
+- ice4_sedimentation_*:
+       Philippe a déclaré PINPRC et PINDEP en (:,:) à la place de (KIT,KJT)
+       En commentaire (version split), il met "dimensions of PINPRC and PINDEP not necessarily KIT,KJT"
+       Comprendre pourquoi, comment ça peut marcher dans la sédimentation
+       Code dans common en (KIT,KJT)
+           repasser code en (:,:) si besoin, ou passer en arg les dimensions effectives
+           ou modifier MNH pour toujours avoir KIT,KJT
+           une partie du code est maintentant dans rain_ice (déposition)
 
 Etape 2: array syntax -> loop
 - en profiter pour supprimer args PA/PB des routines appelées depuis ice4_tendencies, comme pour nucleation
 - si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
+- transformer sedimentation_split_momentum comme sedimentation_split

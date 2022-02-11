@@ -1,11 +1,19 @@
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+MODULE MODE_ICE4_SEDIMENTATION_STAT
+IMPLICIT NONE
+CONTAINS
 SUBROUTINE ICE4_SEDIMENTATION_STAT(KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKE, KKTB, KKTE, KKT, KKL, &
-                                  &PTSTEP, KRR, OSEDIC, &
-                                  &PDZZ, &
+                                  &PTSTEP, KRR, OSEDIC, PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
                                   &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, &
                                   &PRSS, PRST, PRGS, PRGT,&
                                   &PINPRC, PINPRR, PINPRI, PINPRS, PINPRG, &
-                                  &PSEA, PTOWN, PINPRH, PRHT, PRHS, PFPR)
+                                  &PSEA, PTOWN, &
+                                  &PINPRH, PRHT, PRHS, PFPR)
 
 !!
 !!**  PURPOSE
@@ -19,8 +27,11 @@ SUBROUTINE ICE4_SEDIMENTATION_STAT(KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKE, KKTB,
 !!    MODIFICATIONS
 !!    -------------
 !!
+!  P. Wautelet 10/04/2019: replace ABORT and STOP calls by Print_msg
+!  P. Wautelet 28/05/2019: move COUNTJV function to tools.f90
 !!      Ryad El Khatib 09-Oct-2019 Substantial re-write for optimization
 !!       (outerunrolling, vectorization, memory cache saving, unrolling)
+!  P. Wautelet 21/01/2021: initialize untouched part of PFPR
 !
 !
 !*      0. DECLARATIONS
@@ -62,8 +73,8 @@ REAL, DIMENSION(KIT,KJT),     INTENT(OUT)             :: PINPRR  ! Rain instant 
 REAL, DIMENSION(KIT,KJT),     INTENT(OUT)             :: PINPRI  ! Pristine ice instant precip
 REAL, DIMENSION(KIT,KJT),     INTENT(OUT)             :: PINPRS  ! Snow instant precip
 REAL, DIMENSION(KIT,KJT),     INTENT(OUT)             :: PINPRG  ! Graupel instant precip
-REAL, DIMENSION(KIT,KJT),         OPTIONAL, INTENT(IN)    :: PSEA    ! Sea Mask
-REAL, DIMENSION(KIT,KJT),         OPTIONAL, INTENT(IN)    :: PTOWN   ! Fraction that is town
+REAL, DIMENSION(KIT,KJT),     OPTIONAL, INTENT(IN)    :: PSEA    ! Sea Mask
+REAL, DIMENSION(KIT,KJT),     OPTIONAL, INTENT(IN)    :: PTOWN   ! Fraction that is town
 REAL, DIMENSION(KIT,KJT),         OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip
 REAL, DIMENSION(KIT,KJT,KKT),     OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
 REAL, DIMENSION(KIT,KJT,KKT),     OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
@@ -81,8 +92,6 @@ REAL, DIMENSION(KIT,KJT,0:1,2:KRR) :: ZSED   ! sedimentation flux array for each
 REAL :: FWSED1, FWSED2, PWSEDW, PWSEDWSUP, PINVTSTEP, PTSTEP1, PDZZ1, PRHODREF1, PRXT1
 
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
-REAL(KIND=JPRB) :: ZHOOK_HANDLE_PRXS
-REAL(KIND=JPRB) :: ZHOOK_HANDLE_PINPRX
 !
 #ifndef REK
 ! 5 multiplications + 1 division => cost = 7X
@@ -96,6 +105,12 @@ FWSED2(PWSEDW,PTSTEP1,PDZZ1,PWSEDWSUP)=MAX(0.,1.-PDZZ1/(PTSTEP1*PWSEDW))*PWSEDWS
 
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT',0,ZHOOK_HANDLE)
+IF ( PRESENT( PFPR ) ) THEN
+ !Set to 0. to avoid undefined values (in files)
+ PFPR(:, :, : KKTB - 1, :) = 0.
+ PFPR(:, :, KKTE + 1 :, :) = 0.
+END IF
+
 !-------------------------------------------------------------------------------
 !
 !*       1.    compute the fluxes
@@ -178,7 +193,6 @@ DO JK = KKE , KKB, -1*KKL
     ENDDO
   ENDIF
 
-  !IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:UPDATE_PRXS',0,ZHOOK_HANDLE_PRXS)
     DO JJ = KJB, KJE
       DO JI = KIB, KIE
         PRCS(JI,JJ,JK) = PRCS(JI,JJ,JK)+ZTSORHODZ(JI,JJ)*(ZSED(JI,JJ,IKPLUS,2)-ZSED(JI,JJ,IK,2))*ZINVTSTEP
@@ -191,10 +205,8 @@ DO JK = KKE , KKB, -1*KKL
         ENDIF
       ENDDO
     ENDDO
-  !IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:UPDATE_PRXS',1,ZHOOK_HANDLE_PRXS)
 
   IF (JK==KKB) THEN
-    !IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:CP_INSTANT_PRECIP',0,ZHOOK_HANDLE_PINPRX)
     DO JJ = KJB, KJE
       DO JI = KIB, KIE
         PINPRC(JI,JJ) = ZSED(JI,JJ,IK,2)/XRHOLW
@@ -207,7 +219,6 @@ DO JK = KKE , KKB, -1*KKL
         ENDIF
       ENDDO
     ENDDO
-    !IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:CP_INSTANT_PRECIP',1,ZHOOK_HANDLE_PINPRX)
   ENDIF
 
   ! shift mechanism : current level now takes the place of previous one
@@ -387,3 +398,4 @@ CONTAINS
 
   END SUBROUTINE SHIFT
 END SUBROUTINE ICE4_SEDIMENTATION_STAT
+END MODULE MODE_ICE4_SEDIMENTATION_STAT

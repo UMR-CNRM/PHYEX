@@ -164,8 +164,9 @@ USE MODD_BUDGET
 USE MODD_LES
 USE MODI_BUDGET
 USE MODI_ICE4_RAINFR_VERT
-USE MODI_ICE4_SEDIMENTATION_STAT
-USE MODI_ICE4_SEDIMENTATION_SPLIT
+USE MODE_ICE4_SEDIMENTATION_STAT, ONLY: ICE4_SEDIMENTATION_STAT
+USE MODE_ICE4_SEDIMENTATION_SPLIT, ONLY: ICE4_SEDIMENTATION_SPLIT
+USE MODE_ICE4_SEDIMENTATION_SPLIT_MOMENTUM, ONLY: ICE4_SEDIMENTATION_SPLIT_MOMENTUM
 USE MODE_ICE4_NUCLEATION_WRAPPER, ONLY: ICE4_NUCLEATION_WRAPPER
 USE MODI_ICE4_TENDENCIES
 USE DDH_MIX, ONLY : TYP_DDH
@@ -458,7 +459,6 @@ IF(.NOT. LSEDIM_AFTER) THEN
   !*       2.1     sedimentation
   !
   IF(HSEDIM=='STAT') THEN
-    !SR: It *seems* that we must have two separate calls for ifort
     IF(KRR==7) THEN
       CALL ICE4_SEDIMENTATION_STAT(IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, IKTB, IKTE, KKT, KKL, &
                                   &PTSTEP, KRR, OSEDIC, &
@@ -483,11 +483,9 @@ IF(.NOT. LSEDIM_AFTER) THEN
     PINPRS(:,:) = PINPRS(:,:) + ZINPRI(:,:)
     !No negativity correction here as we apply sedimentation on PR.S*PTSTEP variables
   ELSEIF(HSEDIM=='SPLI') THEN
-    !SR: It *seems* that we must have two separate calls for ifort
     IF(KRR==7) THEN
       CALL ICE4_SEDIMENTATION_SPLIT(IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, IKTB, IKTE, KKT, KKL, &
-                                   &PTSTEP, KRR, OSEDIC, &
-                                   &PDZZ, &
+                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                    &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
@@ -495,8 +493,7 @@ IF(.NOT. LSEDIM_AFTER) THEN
                                    &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
     ELSE
       CALL ICE4_SEDIMENTATION_SPLIT(IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, IKTB, IKTE, KKT, KKL, &
-                                   &PTSTEP, KRR, OSEDIC, &
-                                   &PDZZ, &
+                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                    &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
@@ -524,6 +521,27 @@ IF(.NOT. LSEDIM_AFTER) THEN
     CALL ABORT
     STOP
   END IF
+
+
+
+
+
+
+!!!!! ajouter momentum
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   !
   !*       2.2     budget storage
   !
@@ -1558,6 +1576,40 @@ ENDIF
 IF (LDEPOSC) THEN !cloud water deposition on vegetation
   PRCS(:,:,IKB) = PRCS(:,:,IKB) - XVDEPOSC * PRCT(:,:,IKB) / PDZZ(:,:,IKB)
   PINPRC(:,:) = PINPRC(:,:) + XVDEPOSC * PRCT(:,:,IKB) * PRHODREF(:,:,IKB)/XRHOLW
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  !PINDEP(:,:) = XVDEPOSC * PRCT(:,:,KKB) * PRHODREF(:,:,KKB) /XRHOLW
+
+
+
+
+
+
+
+
+
+
+
+
+
 
  IF (LBUDGET_RC) CALL BUDGET (PRCS(:,:,:)*PRHODJ(:,:,:),7,'DEPO_BU_RRC',YDDDH, YDLDDH, YDMDDH)
 ENDIF
