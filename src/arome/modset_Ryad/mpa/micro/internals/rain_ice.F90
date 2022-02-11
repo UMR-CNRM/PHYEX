@@ -1,7 +1,12 @@
+!MNH_LIC Copyright 1995-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
 !     ######spl
       SUBROUTINE RAIN_ICE ( KPROMA, KIT, KJT, KKT, KSIZE,                            &
                             OSEDIC, OCND2, HSEDIM, HSUBG_AUCV_RC, OWARM,KKA,KKU,KKL,&
-                            PTSTEP, KRR, LDMICRO, PEXN,                           &
+                            PTSTEP, KRR, ODMICRO, PEXN,                           &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                             PTHT, PRVT, PRCT, PRRT, PRIT, PRST,                   &
                             PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,       &
@@ -63,7 +68,6 @@
 !!                          'CART' for cartesian box configuration
 !!                          'MASK' for budget zone defined by a mask
 !!                          'NONE'  ' for no budget
-!!         NBUPROCCTR   : process counter used for each budget variable
 !!         LBU_RTH      : logical for budget of RTH (potential temperature)
 !!                        .TRUE. = budget of RTH
 !!                        .FALSE. = no budget of RTH
@@ -156,11 +160,12 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS
-USE MODD_CST
-USE MODD_RAIN_ICE_DESCR
+USE MODD_CST,            ONLY: XCI, XCL, XCPD, XCPV, XLSTT, XLVTT, XTT, XRHOLW
+USE MODD_PARAMETERS,     ONLY: JPVEXT, XUNDEF
+USE MODD_PARAM_ICE,      ONLY: CSUBG_PR_PDF, CSUBG_RC_RR_ACCR, CSUBG_RR_EVAP, LDEPOSC, LFEEDBACKT, LSEDIM_AFTER, &
+                             & NMAXITER, XMRSTEP, XTSTEP_TS, XVDEPOSC
+USE MODD_RAIN_ICE_DESCR, ONLY: XRTMIN
 USE MODD_RAIN_ICE_PARAM
-USE MODD_PARAM_ICE
 USE MODD_BUDGET
 USE MODD_LES
 USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
@@ -174,10 +179,11 @@ USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & IRH        ! Hail
 USE MODI_BUDGET
 USE MODI_ICE4_RAINFR_VERT
-USE MODI_ICE4_SEDIMENTATION_STAT
-USE MODI_ICE4_SEDIMENTATION_SPLIT
-USE MODI_ICE4_NUCLEATION_WRAPPER
-USE MODI_ICE4_TENDENCIES
+USE MODE_ICE4_SEDIMENTATION_STAT, ONLY: ICE4_SEDIMENTATION_STAT
+USE MODE_ICE4_SEDIMENTATION_SPLIT, ONLY: ICE4_SEDIMENTATION_SPLIT
+USE MODE_ICE4_SEDIMENTATION_SPLIT_MOMENTUM, ONLY: ICE4_SEDIMENTATION_SPLIT_MOMENTUM
+USE MODE_ICE4_NUCLEATION_WRAPPER, ONLY: ICE4_NUCLEATION_WRAPPER
+USE MODE_ICE4_TENDENCIES, ONLY: ICE4_TENDENCIES
 USE DDH_MIX, ONLY : TYP_DDH
 USE YOMLDDH, ONLY  : TLDDH
 USE YOMMDDH, ONLY  : TMDDH
@@ -203,7 +209,7 @@ INTEGER,                  INTENT(IN)    :: KKU   !uppest atmosphere array index
 INTEGER,                  INTENT(IN)    :: KKL   !vert. levels type 1=MNH -1=ARO
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
-LOGICAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)   :: LDMICRO ! mask to limit computation
+LOGICAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)   :: ODMICRO ! mask to limit computation
 !
 REAL, DIMENSION(KIT,KJT,KKT),   INTENT(IN)    :: PEXN    ! Exner function
 REAL, DIMENSION(KIT,KJT,KKT),   INTENT(IN)    :: PDZZ    ! Layer thikness (m)
@@ -265,7 +271,7 @@ INTEGER :: IKE, IKTE     !
 INTEGER :: JI, JJ, JK
 INTEGER :: ISTI, ISTJ, ISTK
 !
-!Arrays for nucleation call outisde of LDMICRO points
+!Arrays for nucleation call outisde of ODMICRO points
 REAL,    DIMENSION(KIT, KJT, KKT) :: ZW ! work array
 REAL,    DIMENSION(KIT, KJT, KKT) :: ZT ! Temperature
 REAL, DIMENSION(KIT, KJT, KKT) :: &
@@ -288,10 +294,14 @@ REAL, DIMENSION(KIT, KJT, KKT) :: &
                                 & ZHLC_HCF3D,& ! HLCLOUDS cloud fraction in high water content part
                                 & ZHLC_LCF3D,& ! HLCLOUDS cloud fraction in low water content part
                                 & ZHLC_HRC3D,& ! HLCLOUDS cloud water content in high water content
-                                & ZHLC_LRC3D   ! HLCLOUDS cloud water content in low water content
+                                & ZHLC_LRC3D,& ! HLCLOUDS cloud water content in low water content
+                                & ZHLI_HCF3D,& ! HLCLOUDS cloud fraction in high ice content part
+                                & ZHLI_LCF3D,& ! HLCLOUDS cloud fraction in low ice content part
+                                & ZHLI_HRI3D,& ! HLCLOUDS cloud water content in high ice content
+                                & ZHLI_LRI3D   ! HLCLOUDS cloud water content in high ice content
 REAL, DIMENSION(SIZE(PTHT,1),SIZE(PTHT,2)) :: ZINPRI ! Pristine ice instant precip
 !
-LOGICAL :: LEXT_TEND
+LOGICAL :: GEXT_TEND
 LOGICAL :: LSOFT ! Must we really compute tendencies or only adjust them to new T variables
 INTEGER :: INB_ITER_MAX ! Maximum number of iterations (with real tendencies computation)
 REAL :: ZW1D
@@ -352,6 +362,10 @@ REAL,    DIMENSION(KPROMA) :: &
                         & ZHLC_HRC, & ! HLCLOUDS : LWC that is High LWC in grid
                         & ZHLC_LRC, & ! HLCLOUDS : LWC that is Low  LWC in grid
                                       !    note that ZRC = ZHLC_HRC + ZHLC_LRC
+                        & ZHLI_HCF, &
+                        & ZHLI_LCF, &
+                        & ZHLI_HRI, &
+                        & ZHLI_LRI
                         & ZRAINFR     ! rain fraction
 !
 !Output packed tendencies (for budgets only)
@@ -430,7 +444,7 @@ IKTB=1+JPVEXT
 IKTE=KKT-JPVEXT
 !
 ZINV_TSTEP=1./PTSTEP
-LEXT_TEND=.TRUE.
+GEXT_TEND=.TRUE.
 !
 ! LSFACT and LVFACT without exner
 DO JK = 1, KKT
@@ -641,7 +655,7 @@ ENDIF
 !  optimization by looking for locations where
 !  the microphysical fields are larger than a minimal value only !!!
 !
-IF (KSIZE /= COUNT(LDMICRO)) CALL ABOR1('RAIN_ICE : KSIZE /= COUNT(LDMICRO)')
+IF (KSIZE /= COUNT(ODMICRO)) CALL ABOR1('RAIN_ICE : KSIZE /= COUNT(ODMICRO)')
 
 IF (KSIZE > 0) THEN
 
@@ -676,9 +690,9 @@ IF (KSIZE > 0) THEN
     ! Setup packing parameters
     OUTER_LOOP: DO JK = ISTK, KKT
       DO JJ = ISTJ, KJT
-        IF (ANY(LDMICRO(:,JJ,JK))) THEN
+        IF (ANY(ODMICRO(:,JJ,JK))) THEN
           DO JI = ISTI, KIT
-            IF (LDMICRO(JI,JJ,JK)) THEN
+            IF (ODMICRO(JI,JJ,JK)) THEN
               IC=IC+1
               ! Initialization of variables in packed format :
               ZVART(IC,ITH)=PTHT(JI,JJ,JK)
@@ -691,7 +705,7 @@ IF (KSIZE > 0) THEN
               IF (KRR==7) THEN
                 ZVART(IC,IRH)=PRHT(JI,JJ,JK)
               ENDIF
-              IF (LEXT_TEND) THEN
+              IF (GEXT_TEND) THEN
                 ZEXTPK(IC,ITH)=PTHS(JI,JJ,JK)
                 ZEXTPK(IC,IRV)=PRVS(JI,JJ,JK)
                 ZEXTPK(IC,IRC)=PRCS(JI,JJ,JK)
@@ -751,7 +765,7 @@ IF (KSIZE > 0) THEN
       ISTJ=1
     ENDDO OUTER_LOOP
 
-    IF (LEXT_TEND) THEN
+    IF (GEXT_TEND) THEN
       DO JL = 1,IMICRO
         ZEXTPK(JL,ITH)=ZEXTPK(JL,ITH)-ZVART(JL,ITH)*ZINV_TSTEP
         ZEXTPK(JL,IRV)=ZEXTPK(JL,IRV)-ZVART(JL,IRV)*ZINV_TSTEP
@@ -818,29 +832,31 @@ IF (KSIZE > 0) THEN
         !***       4.1 Tendencies computation
         !
         ! Tendencies are *really* computed when LSOFT==.FALSE. and only adjusted otherwise
-        CALL ICE4_TENDENCIES(KPROMA,IMICRO, IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, KKT, KKL, &
-                            &KRR, LSOFT, ZCOMPUTE, &
-                            &OWARM, CSUBG_RC_RR_ACCR, CSUBG_RR_EVAP, HSUBG_AUCV_RC, CSUBG_PR_PDF, &
-                            &ZEXN, ZRHODREF, ZLVFACT, ZLSFACT, I1, I2, I3, &
-                            &ZPRES, ZCF, ZSIGMA_RC, &
-                            &ZCIT, &
-                            &ZZT, ZVART, &
-                            &PRRT, &
-                            &ZRVHENI_MR, ZRRHONG_MR, ZRIMLTC_MR, ZRSRIMCG_MR, &
-                            &ZRCHONI, ZRVDEPS, ZRIAGGS, ZRIAUTS, ZRVDEPG, &
-                            &ZRCAUTR, ZRCACCR, ZRREVAV, &
-                            &ZRCRIMSS, ZRCRIMSG, ZRSRIMCG, ZRRACCSS, ZRRACCSG, ZRSACCRG, ZRSMLTG, ZRCMLTSR, &
-                            &ZRICFRRG, ZRRCFRIG, ZRICFRR, ZRCWETG, ZRIWETG, ZRRWETG, ZRSWETG, &
-                            &ZRCDRYG, ZRIDRYG, ZRRDRYG, ZRSDRYG, ZRWETGH, ZRWETGH_MR, ZRGMLTR, &
-                            &ZRCWETH, ZRIWETH, ZRSWETH, ZRGWETH, ZRRWETH, &
-                            &ZRCDRYH, ZRIDRYH, ZRSDRYH, ZRRDRYH, ZRGDRYH, ZRDRYHG, ZRHMLTR, &
-                            &ZRCBERI, &
-                            &ZRS_TEND, ZRG_TEND, ZRH_TEND, ZSSI, &
-                            &ZA,ZB, &
-                            &ZHLC_HCF, ZHLC_LCF, ZHLC_HRC, ZHLC_LRC)
+    CALL ICE4_TENDENCIES(KPROMA,IMICRO, IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, KKT, KKL, &
+                        &KRR, LSOFT, ZCOMPUTE, &
+                        &OWARM, CSUBG_RC_RR_ACCR, CSUBG_RR_EVAP, &
+                        &HSUBG_AUCV_RC, HSUBG_AUCV_RI, CSUBG_PR_PDF, &
+                        &ZEXN, ZRHODREF, ZLVFACT, ZLSFACT, I1, I2, I3, &
+                        &ZPRES, ZCF, ZSIGMA_RC, &
+                        &ZCIT, &
+                        &ZZT, ZVART, &
+                        &PRRT, &
+                        &ZRVHENI_MR, ZRRHONG_MR, ZRIMLTC_MR, ZRSRIMCG_MR, &
+                        &ZRCHONI, ZRVDEPS, ZRIAGGS, ZRIAUTS, ZRVDEPG, &
+                        &ZRCAUTR, ZRCACCR, ZRREVAV, &
+                        &ZRCRIMSS, ZRCRIMSG, ZRSRIMCG, ZRRACCSS, ZRRACCSG, ZRSACCRG, ZRSMLTG, ZRCMLTSR, &
+                        &ZRICFRRG, ZRRCFRIG, ZRICFRR, ZRCWETG, ZRIWETG, ZRRWETG, ZRSWETG, &
+                        &ZRCDRYG, ZRIDRYG, ZRRDRYG, ZRSDRYG, ZRWETGH, ZRWETGH_MR, ZRGMLTR, &
+                        &ZRCWETH, ZRIWETH, ZRSWETH, ZRGWETH, ZRRWETH, &
+                        &ZRCDRYH, ZRIDRYH, ZRSDRYH, ZRRDRYH, ZRGDRYH, ZRDRYHG, ZRHMLTR, &
+                        &ZRCBERI, &
+                        &ZRS_TEND, ZRG_TEND, ZRH_TEND, ZSSI, &
+                        &ZA, ZB, &
+                        &ZHLC_HCF, ZHLC_LCF, ZHLC_HRC, ZHLC_LRC, &
+                        &ZHLI_HCF, ZHLI_LCF, ZHLI_HRI, ZHLI_LRI, PRAINFR)
 
         ! External tendencies
-        IF(LEXT_TEND) THEN
+        IF(GEXT_TEND) THEN
           DO JV=0,KRR
             DO JL=1, IMICRO
               ZA(JL,JV) = ZA(JL,JV) + ZEXTPK(JL,JV)
@@ -1007,7 +1023,7 @@ IF (KSIZE > 0) THEN
       ENDDO
     ENDDO
 
-    IF(LEXT_TEND) THEN
+    IF(GEXT_TEND) THEN
       !Z..T variables contain the external tendency, we substract it
       DO JV=0,KRR
         DO JL=1, IMICRO
@@ -1056,7 +1072,7 @@ ENDIF ! KSIZE > 0
 
 !IF (LHOOK) CALL DR_HOOK('RAIN_ICE:POST_MICRO', 0, ZHOOK_HANDLE3)
 
-!*       6.     COMPUTES THE SLOW COLD PROCESS SOURCES OUTSIDE OF LDMICRO POINTS
+!*       6.     COMPUTES THE SLOW COLD PROCESS SOURCES OUTSIDE OF ODMICRO POINTS
 !               ----------------------------------------------------------------
 !
 DO JK = 1, KKT
@@ -1075,7 +1091,7 @@ DO JK = 1, KKT
   ENDDO
 ENDDO
 !
-CALL ICE4_NUCLEATION_WRAPPER(KIT, KJT, KKT, .NOT. LDMICRO, &
+CALL ICE4_NUCLEATION_WRAPPER(KIT, KJT, KKT, .NOT. ODMICRO, &
                              PTHT, PPABST, PRHODREF, PEXN, ZZ_LSFACT/PEXN, ZT, &
                              PRVT, &
                              PCIT, ZZ_RVHENI_MR)
@@ -1116,7 +1132,7 @@ CALL CORRECT_NEGATIVITIES(KIT, KJT, KKT, KRR, ZWR(:,:,:,IRV), ZWR(:,:,:,IRC), ZW
 !
 IF(LBU_ENABLE) THEN
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RVHENI(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RVHENI(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRIS(:,:,:) = PRIS(:,:,:) + ZW(:,:,:)
   PRVS(:,:,:) = PRVS(:,:,:) - ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*ZZ_LSFACT(:,:,:)
@@ -1125,7 +1141,7 @@ IF(LBU_ENABLE) THEN
   IF (LBUDGET_RI) CALL BUDGET(PRIS(:,:,:)*PRHODJ(:,:,:), 9, 'HENU_BU_RRI',YDDDH, YDLDDH, YDMDDH)
 
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RCHONI(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RCHONI(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRIS(:,:,:) = PRIS(:,:,:) + ZW(:,:,:)
   PRCS(:,:,:) = PRCS(:,:,:) - ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
@@ -1134,7 +1150,7 @@ IF(LBU_ENABLE) THEN
   IF (LBUDGET_RI) CALL BUDGET(PRIS(:,:,:)*PRHODJ(:,:,:), 9, 'HON_BU_RRI',YDDDH, YDLDDH, YDMDDH)
 
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RRHONG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RRHONG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   PRRS(:,:,:) = PRRS(:,:,:) - ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
@@ -1143,7 +1159,7 @@ IF(LBU_ENABLE) THEN
   IF (LBUDGET_RG) CALL BUDGET(PRGS(:,:,:)*PRHODJ(:,:,:), 11,'SFR_BU_RRG',YDDDH, YDLDDH, YDMDDH)
 
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RVDEPS(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RVDEPS(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRSS(:,:,:) = PRSS(:,:,:) + ZW(:,:,:)
   PRVS(:,:,:) = PRVS(:,:,:) - ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*ZZ_LSFACT(:,:,:)
@@ -1152,21 +1168,21 @@ IF(LBU_ENABLE) THEN
   IF (LBUDGET_RS) CALL BUDGET(PRSS(:,:,:)*PRHODJ(:,:,:), 10,'DEPS_BU_RRS',YDDDH, YDLDDH, YDMDDH)
 
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RIAGGS(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RIAGGS(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRSS(:,:,:) = PRSS(:,:,:) + ZW(:,:,:)
   PRIS(:,:,:) = PRIS(:,:,:) - ZW(:,:,:)
   IF (LBUDGET_RI) CALL BUDGET(PRIS(:,:,:)*PRHODJ(:,:,:), 9, 'AGGS_BU_RRI',YDDDH, YDLDDH, YDMDDH)
   IF (LBUDGET_RS) CALL BUDGET(PRSS(:,:,:)*PRHODJ(:,:,:), 10,'AGGS_BU_RRS',YDDDH, YDLDDH, YDMDDH)
 
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RIAUTS(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RIAUTS(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRSS(:,:,:) = PRSS(:,:,:) + ZW(:,:,:)
   PRIS(:,:,:) = PRIS(:,:,:) - ZW(:,:,:)
   IF (LBUDGET_RI) CALL BUDGET(PRIS(:,:,:)*PRHODJ(:,:,:), 9, 'AUTS_BU_RRI',YDDDH, YDLDDH, YDMDDH)
   IF (LBUDGET_RS) CALL BUDGET(PRSS(:,:,:)*PRHODJ(:,:,:), 10,'AUTS_BU_RRS',YDDDH, YDLDDH, YDMDDH)
 
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RVDEPG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RVDEPG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   PRVS(:,:,:) = PRVS(:,:,:) - ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*ZZ_LSFACT(:,:,:)
@@ -1176,21 +1192,21 @@ IF(LBU_ENABLE) THEN
 
   IF(OWARM) THEN
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RCAUTR(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RCAUTR(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRCS(:,:,:) = PRCS(:,:,:) - ZW(:,:,:)
     PRRS(:,:,:) = PRRS(:,:,:) + ZW(:,:,:)
     IF (LBUDGET_RC) CALL BUDGET(PRCS(:,:,:)*PRHODJ(:,:,:), 7, 'AUTO_BU_RRC',YDDDH, YDLDDH, YDMDDH)
     IF (LBUDGET_RR) CALL BUDGET(PRRS(:,:,:)*PRHODJ(:,:,:), 8, 'AUTO_BU_RRR',YDDDH, YDLDDH, YDMDDH)
 
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RCACCR(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RCACCR(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRCS(:,:,:) = PRCS(:,:,:) - ZW(:,:,:)
     PRRS(:,:,:) = PRRS(:,:,:) + ZW(:,:,:)
     IF (LBUDGET_RC) CALL BUDGET(PRCS(:,:,:)*PRHODJ(:,:,:), 7, 'ACCR_BU_RRC',YDDDH, YDLDDH, YDMDDH)
     IF (LBUDGET_RR) CALL BUDGET(PRRS(:,:,:)*PRHODJ(:,:,:), 8, 'ACCR_BU_RRR',YDDDH, YDLDDH, YDMDDH)
 
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RREVAV(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RREVAV(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRRS(:,:,:) = PRRS(:,:,:) - ZW(:,:,:)
     PRVS(:,:,:) = PRVS(:,:,:) + ZW(:,:,:)
     PTHS(:,:,:) = PTHS(:,:,:) - ZW(:,:,:)*ZZ_LVFACT(:,:,:)
@@ -1200,17 +1216,17 @@ IF(LBU_ENABLE) THEN
   ENDIF
 
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RCRIMSS(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RCRIMSS(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRCS(:,:,:) = PRCS(:,:,:) - ZW(:,:,:)
   PRSS(:,:,:) = PRSS(:,:,:) + ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RCRIMSG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RCRIMSG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRCS(:,:,:) = PRCS(:,:,:) - ZW(:,:,:)
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RSRIMCG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RSRIMCG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   PRSS(:,:,:) = PRSS(:,:,:) - ZW(:,:,:)
   IF (LBUDGET_TH) CALL BUDGET(PTHS(:,:,:)*PRHODJ(:,:,:), 4, 'RIM_BU_RTH',YDDDH, YDLDDH, YDMDDH)
@@ -1219,17 +1235,17 @@ IF(LBU_ENABLE) THEN
   IF (LBUDGET_RG) CALL BUDGET(PRGS(:,:,:)*PRHODJ(:,:,:), 11,'RIM_BU_RRG',YDDDH, YDLDDH, YDMDDH)
 
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RRACCSS(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RRACCSS(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRRS(:,:,:) = PRRS(:,:,:) - ZW(:,:,:)
   PRSS(:,:,:) = PRSS(:,:,:) + ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RRACCSG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RRACCSG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRRS(:,:,:) = PRRS(:,:,:) - ZW(:,:,:)
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RSACCRG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RSACCRG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRSS(:,:,:) = PRSS(:,:,:) - ZW(:,:,:)
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   IF (LBUDGET_TH) CALL BUDGET(PTHS(:,:,:)*PRHODJ(:,:,:), 4, 'ACC_BU_RTH',YDDDH, YDLDDH, YDMDDH)
@@ -1238,11 +1254,11 @@ IF(LBU_ENABLE) THEN
   IF (LBUDGET_RG) CALL BUDGET(PRGS(:,:,:)*PRHODJ(:,:,:), 11,'ACC_BU_RRG',YDDDH, YDLDDH, YDMDDH)
 
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RSMLTG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RSMLTG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRSS(:,:,:) = PRSS(:,:,:) - ZW(:,:,:)
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RCMLTSR, MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RCMLTSR, MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRCS(:,:,:) = PRCS(:,:,:) - ZW(:,:,:)
   PRRS(:,:,:) = PRRS(:,:,:) + ZW(:,:,:)
   IF (LBUDGET_RS) CALL BUDGET(PRSS(:,:,:)*PRHODJ(:,:,:), 10,'CMEL_BU_RRS',YDDDH, YDLDDH, YDMDDH)
@@ -1251,16 +1267,16 @@ IF(LBU_ENABLE) THEN
   IF (LBUDGET_RR) CALL BUDGET(PRRS(:,:,:)*PRHODJ(:,:,:), 8, 'CMEL_BU_RRR',YDDDH, YDLDDH, YDMDDH)
 
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RICFRRG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RICFRRG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRIS(:,:,:) = PRIS(:,:,:) - ZW(:,:,:)
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RRCFRIG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RRCFRIG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRRS(:,:,:) = PRRS(:,:,:) - ZW(:,:,:)
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RICFRR(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RICFRR(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRIS(:,:,:) = PRIS(:,:,:) - ZW(:,:,:)
   PRRS(:,:,:) = PRRS(:,:,:) + ZW(:,:,:)
   IF (LBUDGET_TH) CALL BUDGET(PTHS(:,:,:)*PRHODJ(:,:,:), 4, 'CFRZ_BU_RTH',YDDDH, YDLDDH, YDMDDH)
@@ -1269,21 +1285,21 @@ IF(LBU_ENABLE) THEN
   IF (LBUDGET_RG) CALL BUDGET(PRGS(:,:,:)*PRHODJ(:,:,:), 11,'CFRZ_BU_RRG',YDDDH, YDLDDH, YDMDDH)
 
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RCWETG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RCWETG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRCS(:,:,:) = PRCS(:,:,:) - ZW(:,:,:)
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RRWETG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RRWETG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRRS(:,:,:) = PRRS(:,:,:) - ZW(:,:,:)
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RIWETG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RIWETG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRIS(:,:,:) = PRIS(:,:,:) - ZW(:,:,:)
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RSWETG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RSWETG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRSS(:,:,:) = PRSS(:,:,:) - ZW(:,:,:)
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   IF (LBUDGET_TH) CALL BUDGET(PTHS(:,:,:)*PRHODJ(:,:,:), 4, 'WETG_BU_RTH',YDDDH, YDLDDH, YDMDDH)
@@ -1295,7 +1311,7 @@ IF(LBU_ENABLE) THEN
 
   IF(KRR==7) THEN
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RWETGH(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RWETGH(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRGS(:,:,:) = PRGS(:,:,:) - ZW(:,:,:)
     PRHS(:,:,:) = PRHS(:,:,:) + ZW(:,:,:)
     IF (LBUDGET_RG) CALL BUDGET(PRGS(:,:,:)*PRHODJ(:,:,:), 11,'GHCV_BU_RRG',YDDDH, YDLDDH, YDMDDH)
@@ -1303,21 +1319,21 @@ IF(LBU_ENABLE) THEN
   END IF
 
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RCDRYG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RCDRYG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRCS(:,:,:) = PRCS(:,:,:) - ZW(:,:,:)
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RRDRYG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RRDRYG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRRS(:,:,:) = PRRS(:,:,:) - ZW(:,:,:)
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RIDRYG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RIDRYG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRIS(:,:,:) = PRIS(:,:,:) - ZW(:,:,:)
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RSDRYG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RSDRYG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRSS(:,:,:) = PRSS(:,:,:) - ZW(:,:,:)
   PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
   IF (LBUDGET_TH) CALL BUDGET(PTHS(:,:,:)*PRHODJ(:,:,:), 4, 'DRYG_BU_RTH',YDDDH, YDLDDH, YDMDDH)
@@ -1328,7 +1344,7 @@ IF(LBU_ENABLE) THEN
   IF (LBUDGET_RG) CALL BUDGET(PRGS(:,:,:)*PRHODJ(:,:,:), 11,'DRYG_BU_RRG',YDDDH, YDLDDH, YDMDDH)
 
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RGMLTR(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RGMLTR(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRRS(:,:,:) = PRRS(:,:,:) + ZW(:,:,:)
   PRGS(:,:,:) = PRGS(:,:,:) - ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) - ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
@@ -1338,25 +1354,25 @@ IF(LBU_ENABLE) THEN
 
   IF(KRR==7) THEN
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RCWETH(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RCWETH(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRCS(:,:,:) = PRCS(:,:,:) - ZW(:,:,:)
     PRHS(:,:,:) = PRHS(:,:,:) + ZW(:,:,:)
     PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RRWETH(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RRWETH(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRRS(:,:,:) = PRRS(:,:,:) - ZW(:,:,:)
     PRHS(:,:,:) = PRHS(:,:,:) + ZW(:,:,:)
     PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RIWETH(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RIWETH(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRIS(:,:,:) = PRIS(:,:,:) - ZW(:,:,:)
     PRHS(:,:,:) = PRHS(:,:,:) + ZW(:,:,:)
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RSWETH(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RSWETH(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRSS(:,:,:) = PRSS(:,:,:) - ZW(:,:,:)
     PRHS(:,:,:) = PRHS(:,:,:) + ZW(:,:,:)
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RGWETH(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RGWETH(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRGS(:,:,:) = PRGS(:,:,:) - ZW(:,:,:)
     PRHS(:,:,:) = PRHS(:,:,:) + ZW(:,:,:)
     IF (LBUDGET_TH) CALL BUDGET(PTHS(:,:,:)*PRHODJ(:,:,:), 4, 'WETH_BU_RTH',YDDDH, YDLDDH, YDMDDH)
@@ -1367,36 +1383,36 @@ IF(LBU_ENABLE) THEN
     IF (LBUDGET_RH) CALL BUDGET(PRHS(:,:,:)*PRHODJ(:,:,:), 12,'WETH_BU_RRH',YDDDH, YDLDDH, YDMDDH)
 
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RGWETH(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RGWETH(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRGS(:,:,:) = PRGS(:,:,:) - ZW(:,:,:)
     PRHS(:,:,:) = PRHS(:,:,:) + ZW(:,:,:)
     IF (LBUDGET_RG) CALL BUDGET(PRGS(:,:,:)*PRHODJ(:,:,:), 11,'HGCV_BU_RRG',YDDDH, YDLDDH, YDMDDH)
     IF (LBUDGET_RH) CALL BUDGET(PRHS(:,:,:)*PRHODJ(:,:,:), 12,'HGCV_BU_RRH',YDDDH, YDLDDH, YDMDDH)
 
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RCDRYH(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RCDRYH(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRCS(:,:,:) = PRCS(:,:,:) - ZW(:,:,:)
     PRHS(:,:,:) = PRHS(:,:,:) + ZW(:,:,:)
     PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RRDRYH(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RRDRYH(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRRS(:,:,:) = PRRS(:,:,:) - ZW(:,:,:)
     PRHS(:,:,:) = PRHS(:,:,:) + ZW(:,:,:)
     PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RIDRYH(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RIDRYH(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRIS(:,:,:) = PRIS(:,:,:) - ZW(:,:,:)
     PRHS(:,:,:) = PRHS(:,:,:) + ZW(:,:,:)
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RSDRYH(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RSDRYH(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRSS(:,:,:) = PRSS(:,:,:) - ZW(:,:,:)
     PRHS(:,:,:) = PRHS(:,:,:) + ZW(:,:,:)
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RGDRYH(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RGDRYH(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRGS(:,:,:) = PRGS(:,:,:) - ZW(:,:,:)
     PRHS(:,:,:) = PRHS(:,:,:) + ZW(:,:,:)
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RDRYHG(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RDRYHG(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRHS(:,:,:) = PRHS(:,:,:) - ZW(:,:,:)
     PRGS(:,:,:) = PRGS(:,:,:) + ZW(:,:,:)
     IF (LBUDGET_TH) CALL BUDGET(PTHS(:,:,:)*PRHODJ(:,:,:), 4, 'DRYH_BU_RTH',YDDDH, YDLDDH, YDMDDH)
@@ -1408,7 +1424,7 @@ IF(LBU_ENABLE) THEN
     IF (LBUDGET_RH) CALL BUDGET(PRHS(:,:,:)*PRHODJ(:,:,:), 12,'DRYH_BU_RRH',YDDDH, YDLDDH, YDMDDH)
 
     ZW(:,:,:) = 0.
-    ZW(:,:,:)=UNPACK(ZTOT_RHMLTR(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+    ZW(:,:,:)=UNPACK(ZTOT_RHMLTR(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
     PRRS(:,:,:) = PRRS(:,:,:) + ZW(:,:,:)
     PRHS(:,:,:) = PRHS(:,:,:) - ZW(:,:,:)
     PTHS(:,:,:) = PTHS(:,:,:) - ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
@@ -1418,7 +1434,7 @@ IF(LBU_ENABLE) THEN
   ENDIF
 
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RIMLTC(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RIMLTC(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRIS(:,:,:) = PRIS(:,:,:) - ZW(:,:,:)
   PRCS(:,:,:) = PRCS(:,:,:) + ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) - ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
@@ -1427,7 +1443,7 @@ IF(LBU_ENABLE) THEN
   IF (LBUDGET_RI) CALL BUDGET(PRIS(:,:,:)*PRHODJ(:,:,:), 9, 'IMLT_BU_RRI',YDDDH, YDLDDH, YDMDDH)
 
   ZW(:,:,:) = 0.
-  ZW(:,:,:)=UNPACK(ZTOT_RCBERI(:), MASK=LDMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
+  ZW(:,:,:)=UNPACK(ZTOT_RCBERI(:), MASK=ODMICRO(:,:,:), FIELD=ZW(:,:,:))*ZINV_TSTEP
   PRCS(:,:,:) = PRCS(:,:,:) - ZW(:,:,:)
   PRIS(:,:,:) = PRIS(:,:,:) + ZW(:,:,:)
   PTHS(:,:,:) = PTHS(:,:,:) + ZW(:,:,:)*(ZZ_LSFACT(:,:,:)-ZZ_LVFACT(:,:,:))
@@ -1548,10 +1564,10 @@ IF(LSEDIM_AFTER) THEN
     !   It is initialized with the m.r. at T and is modified by two tendencies:
     !   sedimentation tendency and an external tendency which represents all other
     !   processes (mainly advection and microphysical processes). If both tendencies
-    !   are negative, sedimentation can remove a species at a given sub-timestep. From
+    !   are negative, sedimentation can remove a specie at a given sub-timestep. From
     !   this point sedimentation stops for the remaining sub-timesteps but the other tendency
     !   will be still active and will lead to negative values.
-    !   We could prevent the algorithm to not consume too much a species, instead we apply
+    !   We could prevent the algorithm to not consume too much a specie, instead we apply
     !   a correction here.
     CALL CORRECT_NEGATIVITIES(KIT, KJT, KKT, KRR, PRVS, PRCS, PRRS, &
                              &PRIS, PRSS, PRGS, &

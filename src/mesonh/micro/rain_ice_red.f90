@@ -269,23 +269,33 @@ use modd_budget,         only: lbu_enable,                                      
                                lbudget_th, lbudget_rv, lbudget_rc, lbudget_rr, lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, &
                                NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, &
                                tbudgets
-USE MODD_CST,            ONLY: XCI,XCL,XCPD,XCPV,XLSTT,XLVTT,XTT
-USE MODD_PARAMETERS,     ONLY: JPVEXT,XUNDEF
-USE MODD_PARAM_ICE,      ONLY: CSUBG_PR_PDF,CSUBG_RC_RR_ACCR,CSUBG_RR_EVAP,LDEPOSC,LFEEDBACKT,LSEDIM_AFTER, &
-                               NMAXITER,XMRSTEP,XTSTEP_TS,XVDEPOSC
+USE MODD_CST,            ONLY: XCI, XCL, XCPD, XCPV, XLSTT, XLVTT, XTT, XRHOLW
+USE MODD_PARAMETERS,     ONLY: JPVEXT, XUNDEF
+USE MODD_PARAM_ICE,      ONLY: CSUBG_PR_PDF, CSUBG_RC_RR_ACCR, CSUBG_RR_EVAP, LDEPOSC, LFEEDBACKT, LSEDIM_AFTER, &
+                             & NMAXITER, XMRSTEP, XTSTEP_TS, XVDEPOSC
 USE MODD_RAIN_ICE_DESCR, ONLY: XRTMIN
 USE MODD_VAR_ll,         ONLY: IP
-
+USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
+      & ITH,     & ! Potential temperature
+      & IRV,     & ! Water vapor
+      & IRC,     & ! Cloud water
+      & IRR,     & ! Rain water
+      & IRI,     & ! Pristine ice
+      & IRS,     & ! Snow/aggregate
+      & IRG,     & ! Graupel
+      & IRH        ! Hail
 use mode_budget,         only: Budget_store_add, Budget_store_init, Budget_store_end
 USE MODE_ll
 USE MODE_MSG
 use mode_tools,          only: Countjv
 
-USE MODE_ICE4_NUCLEATION_WRAPPER
 USE MODE_ICE4_RAINFR_VERT
 USE MODE_ICE4_SEDIMENTATION_STAT, ONLY: ICE4_SEDIMENTATION_STAT
 USE MODE_ICE4_SEDIMENTATION_SPLIT, ONLY: ICE4_SEDIMENTATION_SPLIT
 USE MODE_ICE4_SEDIMENTATION_SPLIT_MOMENTUM, ONLY: ICE4_SEDIMENTATION_SPLIT_MOMENTUM
+USE MODE_ICE4_NUCLEATION_WRAPPER, ONLY: ICE4_NUCLEATION_WRAPPER
+USE MODE_ICE4_TENDENCIES, ONLY: ICE4_TENDENCIES
+
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
@@ -369,7 +379,7 @@ INTEGER :: IMICRO ! Case r_x>0 locations
 INTEGER, DIMENSION(KSIZE) :: I1,I2,I3 ! Used to replace the COUNT
 INTEGER                   :: JL       ! and PACK intrinsics
 !
-!Arrays for nucleation call outisde of LDMICRO points
+!Arrays for nucleation call outisde of ODMICRO points
 REAL,    DIMENSION(KIT, KJT, KKT) :: ZW ! work array
 REAL,    DIMENSION(KIT, KJT, KKT) :: ZT ! Temperature
 REAL, DIMENSION(KIT, KJT, KKT) :: &
@@ -389,7 +399,6 @@ REAL, DIMENSION(KIT, KJT, KKT) :: &
                                 & ZHLI_LCF3D,& ! HLCLOUDS cloud fraction in low ice content part
                                 & ZHLI_HRI3D,& ! HLCLOUDS cloud water content in high ice content
                                 & ZHLI_LRI3D   ! HLCLOUDS cloud water content in high ice content
-
 REAL, DIMENSION(SIZE(PTHT,1),SIZE(PTHT,2)) :: ZINPRI ! Pristine ice instant precip
 !
 !Packed variables
@@ -484,9 +493,22 @@ REAL, DIMENSION(KSIZE) :: Z0RVT,     &   ! Water vapor m.r. at the beginig of th
                         & Z0RIT,     &   ! Pristine ice m.r. at the beginig of the current loop
                         & Z0RST,     &   ! Snow/aggregate m.r. at the beginig of the current loop
                         & Z0RGT,     &   ! Graupel m.r. at the beginig of the current loop
-                        & Z0RHT,     &   ! Hail m.r. at the beginig of the current loop
-                        & ZA_TH, ZA_RV, ZA_RC, ZA_RR, ZA_RI, ZA_RS, ZA_RG, ZA_RH, &
-                        & ZB_TH, ZB_RV, ZB_RC, ZB_RR, ZB_RI, ZB_RS, ZB_RG, ZB_RH
+                        & Z0RHT          ! Hail m.r. at the beginig of the current loop
+
+
+
+
+
+!en attendant phasage on utilise KSIZE à la place de KPROMA
+REAL, DIMENSION(KSIZE,0:7) :: &
+                        & ZVART, & !Packed variables
+                        & ZA, ZB
+
+
+
+
+
+
 !
 !To take into acount external tendencies inside the splitting
 REAL, DIMENSION(KSIZE) :: ZEXT_RV,   &   ! External tendencie for rv
@@ -629,7 +651,7 @@ IF(.NOT. LSEDIM_AFTER) THEN
                                    &PTSTEP, KRR, OSEDIC, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                                   &PINPRC,  PINPRR, ZINPRI, PINPRS, PINPRG, &
+                                   &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
                                    &PSEA=PSEA, PTOWN=PTOWN, &
                                    &PFPR=PFPR)
     ENDIF
@@ -849,15 +871,27 @@ DO WHILE(ANY(ZTIME(:)<PTSTEP)) ! Loop to *really* compute tendencies
     !***       4.1 Tendecies computation
     !
     ! Tendencies are *really* computed when LSOFT==.FALSE. and only adjusted otherwise
-    CALL ICE4_TENDENCIES(IMICRO, IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, KKT, KKL, &
+
+
+
+!KPROMA=IMICRO: temporary merging step
+ZVART(:, ITH)=ZTHT(:)
+ZVART(:, IRV)=ZRVT(:)
+ZVART(:, IRC)=ZRCT(:)
+ZVART(:, IRR)=ZRRT(:)
+ZVART(:, IRI)=ZRIT(:)
+ZVART(:, IRS)=ZRST(:)
+ZVART(:, IRG)=ZRGT(:)
+IF(KRR==7) ZVART(:, IRH)=ZRHT(:)
+
+    CALL ICE4_TENDENCIES(IMICRO, IMICRO, IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, KKT, KKL, &
                         &KRR, LSOFT, ZCOMPUTE, &
                         &OWARM, CSUBG_RC_RR_ACCR, CSUBG_RR_EVAP, &
                         &HSUBG_AUCV_RC, HSUBG_AUCV_RI, CSUBG_PR_PDF, &
                         &ZEXN, ZRHODREF, ZLVFACT, ZLSFACT, I1, I2, I3, &
-                        &ZPRES, ZCF, ZSIGMA_RC,&
+                        &ZPRES, ZCF, ZSIGMA_RC, &
                         &ZCIT, &
-                        &ZZT, ZTHT, &
-                        &ZRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT, ZRHT, &
+                        &ZZT, ZVART, &
                         &ZRVHENI_MR, ZRRHONG_MR, ZRIMLTC_MR, ZRSRIMCG_MR, &
                         &ZRCHONI, ZRVDEPS, ZRIAGGS, ZRIAUTS, ZRVDEPG, &
                         &ZRCAUTR, ZRCACCR, ZRREVAV, &
@@ -868,21 +902,28 @@ DO WHILE(ANY(ZTIME(:)<PTSTEP)) ! Loop to *really* compute tendencies
                         &ZRCDRYH, ZRIDRYH, ZRSDRYH, ZRRDRYH, ZRGDRYH, ZRDRYHG, ZRHMLTR, &
                         &ZRCBERI, &
                         &ZRS_TEND, ZRG_TEND, ZRH_TEND, ZSSI, &
-                        &ZA_TH, ZA_RV, ZA_RC, ZA_RR, ZA_RI, ZA_RS, ZA_RG, ZA_RH, &
-                        &ZB_TH, ZB_RV, ZB_RC, ZB_RR, ZB_RI, ZB_RS, ZB_RG, ZB_RH, &
+                        &ZA, ZB, &
                         &ZHLC_HCF, ZHLC_LCF, ZHLC_HRC, ZHLC_LRC, &
                         &ZHLI_HCF, ZHLI_LCF, ZHLI_HRI, ZHLI_LRI, PRAINFR)
+ZTHT(:)=ZVART(:, ITH)
+ZRVT(:)=ZVART(:, IRV)
+ZRCT(:)=ZVART(:, IRC)
+ZRRT(:)=ZVART(:, IRR)
+ZRIT(:)=ZVART(:, IRI)
+ZRST(:)=ZVART(:, IRS)
+ZRGT(:)=ZVART(:, IRG)
+IF(KRR==7) ZRHT(:)=ZVART(:, IRH)
     ! External tendencies
     IF(GEXT_TEND) THEN
       DO JL=1, IMICRO
-        ZA_TH(JL) = ZA_TH(JL) + ZEXT_TH(JL)
-        ZA_RV(JL) = ZA_RV(JL) + ZEXT_RV(JL)
-        ZA_RC(JL) = ZA_RC(JL) + ZEXT_RC(JL)
-        ZA_RR(JL) = ZA_RR(JL) + ZEXT_RR(JL)
-        ZA_RI(JL) = ZA_RI(JL) + ZEXT_RI(JL)
-        ZA_RS(JL) = ZA_RS(JL) + ZEXT_RS(JL)
-        ZA_RG(JL) = ZA_RG(JL) + ZEXT_RG(JL)
-        ZA_RH(JL) = ZA_RH(JL) + ZEXT_RH(JL)
+        ZA(JL, ITH) = ZA(JL, ITH) + ZEXT_TH(JL)
+        ZA(JL, IRV) = ZA(JL, IRV) + ZEXT_RV(JL)
+        ZA(JL, IRC) = ZA(JL, IRC) + ZEXT_RC(JL)
+        ZA(JL, IRR) = ZA(JL, IRR) + ZEXT_RR(JL)
+        ZA(JL, IRI) = ZA(JL, IRI) + ZEXT_RI(JL)
+        ZA(JL, IRS) = ZA(JL, IRS) + ZEXT_RS(JL)
+        ZA(JL, IRG) = ZA(JL, IRG) + ZEXT_RG(JL)
+        ZA(JL, IRH) = ZA(JL, IRH) + ZEXT_RH(JL)
       ENDDO
     ENDIF
     !
@@ -894,15 +935,15 @@ DO WHILE(ANY(ZTIME(:)<PTSTEP)) ! Loop to *really* compute tendencies
     !We need to adjust tendencies when temperature reaches 0
     IF(LFEEDBACKT) THEN
       DO JL=1, IMICRO
-        !Is ZB_TH enough to change temperature sign?
-        ZW1D(JL)=(ZTHT(JL) - XTT/ZEXN(JL)) * (ZTHT(JL) + ZB_TH(JL) - XTT/ZEXN(JL))
+        !Is ZB(:, ITH) enough to change temperature sign?
+        ZW1D(JL)=(ZTHT(JL) - XTT/ZEXN(JL)) * (ZTHT(JL) + ZB(JL, ITH) - XTT/ZEXN(JL))
         ZMAXTIME(JL)=ZMAXTIME(JL)*MAX(0., SIGN(1., ZW1D(JL)))
-        !Can ZA_TH make temperature change of sign?
-        ZW1D(JL)=MAX(0., -SIGN(1., 1.E-20 - ABS(ZA_TH(JL)))) ! WHERE(ABS(ZA_TH(:))>1.E-20)
+        !Can ZA(:, ITH) make temperature change of sign?
+        ZW1D(JL)=MAX(0., -SIGN(1., 1.E-20 - ABS(ZA(JL, ITH)))) ! WHERE(ABS(ZA(:, ITH))>1.E-20)
         ZTIME_THRESHOLD(JL)=(1. - ZW1D(JL))*(-1.) + &
                             ZW1D(JL) * &
-                            (XTT/ZEXN(JL) - ZB_TH(JL) - ZTHT(JL))/ &
-                            SIGN(MAX(ABS(ZA_TH(JL)), 1.E-20), ZA_TH(JL))
+                            (XTT/ZEXN(JL) - ZB(JL, ITH) - ZTHT(JL))/ &
+                            SIGN(MAX(ABS(ZA(JL, ITH)), 1.E-20), ZA(JL, ITH))
         ZW1D(JL)=MAX(0., -SIGN(1., 1.E-20 - ZTIME_THRESHOLD(JL))) ! WHERE(ZTIME_THRESHOLD(:)>1.E-20)
         ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
                      ZW1D(JL) * MIN(ZMAXTIME(JL), ZTIME_THRESHOLD(JL))
@@ -912,43 +953,43 @@ DO WHILE(ANY(ZTIME(:)<PTSTEP)) ! Loop to *really* compute tendencies
     !We need to adjust tendencies when a specy disappears
     !When a species is missing, only the external tendencies can be negative (and we must keep track of it)
     DO JL=1, IMICRO
-      ZW1D(JL)=MAX(0., -SIGN(1., ZA_RV(JL)+1.E-20)) * & ! WHERE(ZA_RV(:)<-1.E-20)
+      ZW1D(JL)=MAX(0., -SIGN(1., ZA(JL, IRV)+1.E-20)) * & ! WHERE(ZA(:, IRV)<-1.E-20)
               &MAX(0., -SIGN(1., XRTMIN(1)-ZRVT(JL)))   ! WHERE(ZRVT(:)>XRTMIN(1))
       ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
-                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RV(JL)+ZRVT(JL))/MIN(ZA_RV(JL), -1.E-20))
+                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB(JL, IRV)+ZRVT(JL))/MIN(ZA(JL, IRV), -1.E-20))
 
-      ZW1D(JL)=MAX(0., -SIGN(1., ZA_RC(JL)+1.E-20)) * & ! WHERE(ZA_RC(:)<-1.E-20)
+      ZW1D(JL)=MAX(0., -SIGN(1., ZA(JL, IRC)+1.E-20)) * & ! WHERE(ZA(:, IRC)<-1.E-20)
               &MAX(0., -SIGN(1., XRTMIN(2)-ZRCT(JL)))   ! WHERE(ZRCT(:)>XRTMIN(2))
       ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
-                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RC(JL)+ZRCT(JL))/MIN(ZA_RC(JL), -1.E-20))
+                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB(JL, IRC)+ZRCT(JL))/MIN(ZA(JL, IRC), -1.E-20))
 
-      ZW1D(JL)=MAX(0., -SIGN(1., ZA_RR(JL)+1.E-20)) * & ! WHERE(ZA_RR(:)<-1.E-20)
+      ZW1D(JL)=MAX(0., -SIGN(1., ZA(JL, IRR)+1.E-20)) * & ! WHERE(ZA(:, IRR)<-1.E-20)
               &MAX(0., -SIGN(1., XRTMIN(3)-ZRRT(JL)))   ! WHERE(ZRRT(:)>XRTMIN(3))
       ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
-                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RR(JL)+ZRRT(JL))/MIN(ZA_RR(JL), -1.E-20))
+                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB(JL, IRR)+ZRRT(JL))/MIN(ZA(JL, IRR), -1.E-20))
 
-      ZW1D(JL)=MAX(0., -SIGN(1., ZA_RI(JL)+1.E-20)) * & ! WHERE(ZI_RV(:)<-1.E-20)
+      ZW1D(JL)=MAX(0., -SIGN(1., ZA(JL, IRI)+1.E-20)) * & ! WHERE(ZA(:, IRI)<-1.E-20)
               &MAX(0., -SIGN(1., XRTMIN(4)-ZRIT(JL)))   ! WHERE(ZRIT(:)>XRTMIN(4))
       ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
-                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RI(JL)+ZRIT(JL))/MIN(ZA_RI(JL), -1.E-20))
+                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB(JL, IRI)+ZRIT(JL))/MIN(ZA(JL, IRI), -1.E-20))
 
-      ZW1D(JL)=MAX(0., -SIGN(1., ZA_RS(JL)+1.E-20)) * & ! WHERE(ZA_RS(:)<-1.E-20)
+      ZW1D(JL)=MAX(0., -SIGN(1., ZA(JL, IRS)+1.E-20)) * & ! WHERE(ZA(:, IRS)<-1.E-20)
               &MAX(0., -SIGN(1., XRTMIN(5)-ZRST(JL)))   ! WHERE(ZRST(:)>XRTMIN(5))
       ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
-                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RS(JL)+ZRST(JL))/MIN(ZA_RS(JL), -1.E-20))
+                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB(JL, IRS)+ZRST(JL))/MIN(ZA(JL, IRS), -1.E-20))
 
-      ZW1D(JL)=MAX(0., -SIGN(1., ZA_RG(JL)+1.E-20)) * & ! WHERE(ZA_RG(:)<-1.E-20)
+      ZW1D(JL)=MAX(0., -SIGN(1., ZA(JL, IRG)+1.E-20)) * & ! WHERE(ZA(:, IRG)<-1.E-20)
               &MAX(0., -SIGN(1., XRTMIN(6)-ZRGT(JL)))   ! WHERE(ZRGT(:)>XRTMIN(6))
       ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
-                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RG(JL)+ZRGT(JL))/MIN(ZA_RG(JL), -1.E-20))
+                  &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB(JL, IRG)+ZRGT(JL))/MIN(ZA(JL, IRG), -1.E-20))
     ENDDO
 
     IF(KRR==7) THEN
       DO JL=1, IMICRO
-        ZW1D(JL)=MAX(0., -SIGN(1., ZA_RH(JL)+1.E-20)) * & ! WHERE(ZA_RH(:)<-1.E-20)
+        ZW1D(JL)=MAX(0., -SIGN(1., ZA(JL, IRH)+1.E-20)) * & ! WHERE(ZA(:, IRH)<-1.E-20)
                 &MAX(0., -SIGN(1., XRTMIN(7)-ZRHT(JL)))   ! WHERE(ZRHT(:)>XRTMIN(7))
         ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
-                    &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB_RH(JL)+ZRHT(JL))/MIN(ZA_RH(JL), -1.E-20))
+                    &ZW1D(JL) * MIN(ZMAXTIME(JL), -(ZB(JL, IRH)+ZRHT(JL))/MIN(ZA(JL, IRH), -1.E-20))
       ENDDO
     ENDIF
 
@@ -972,79 +1013,79 @@ DO WHILE(ANY(ZTIME(:)<PTSTEP)) ! Loop to *really* compute tendencies
     IF(XMRSTEP/=0.) THEN
       DO JL=1, IMICRO
         ZW1D(JL)=MAX(0., -SIGN(1., IITER(JL)-INB_ITER_MAX+0.)) * & ! WHERE(IITER(:)<INB_ITER_MAX)
-                &MAX(0., -SIGN(1., 1.E-20-ABS(ZA_RV(JL)))) ! WHERE(ABS(ZA_RV(:))>1.E-20)
+                &MAX(0., -SIGN(1., 1.E-20-ABS(ZA(JL, IRV)))) ! WHERE(ABS(ZA(:, IRV))>1.E-20)
         ZTIME_THRESHOLD(JL)=(1.-ZW1D(JL))*(-1.) + &
-                           &ZW1D(JL)*(SIGN(1., ZA_RV(JL))*XMRSTEP+Z0RVT(JL)-ZRVT(JL)-ZB_RV(JL))/ &
-                           &SIGN(MAX(ABS(ZA_RV(JL)), 1.E-20), ZA_RV(JL))
+                           &ZW1D(JL)*(SIGN(1., ZA(JL, IRV))*XMRSTEP+Z0RVT(JL)-ZRVT(JL)-ZB(JL, IRV))/ &
+                           &SIGN(MAX(ABS(ZA(JL, IRV)), 1.E-20), ZA(JL, IRV))
         ZW1D(JL)=MAX(0., SIGN(1., ZTIME_THRESHOLD(JL))) * & !WHERE(ZTIME_THRESHOLD(:)>=0.)
                 &MAX(0., -SIGN(1., ZTIME_THRESHOLD(JL)-ZMAXTIME(JL))) * & !WHERE(ZTIME_THRESHOLD(:)<ZMAXTIME(:))
                 &MIN(1., MAX(0., -SIGN(1., XRTMIN(6)-ZRVT(JL))) + & !WHERE(ZRVT(:)>XRTMIN(6)) .OR.
-                        &MAX(0., -SIGN(1., -ZA_RV(JL))))            !WHERE(ZA_RV(:)>0.)
+                        &MAX(0., -SIGN(1., -ZA(JL, IRV))))            !WHERE(ZA(:, IRV)>0.)
         ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
                     &ZW1D(JL)*MIN(ZMAXTIME(JL), ZTIME_THRESHOLD(JL))
         ZCOMPUTE(JL)=ZCOMPUTE(JL) * (1. - ZW1D(JL))
 
         ZW1D(JL)=MAX(0., -SIGN(1., IITER(JL)-INB_ITER_MAX+0.)) * & ! WHERE(IITER(:)<INB_ITER_MAX)
-                &MAX(0., -SIGN(1., 1.E-20-ABS(ZA_RC(JL)))) ! WHERE(ABS(ZA_RC(:))>1.E-20)
+                &MAX(0., -SIGN(1., 1.E-20-ABS(ZA(JL, IRC)))) ! WHERE(ABS(ZA(:, IRC))>1.E-20)
         ZTIME_THRESHOLD(JL)=(1.-ZW1D(JL))*(-1.) + &
-                           &ZW1D(JL)*(SIGN(1., ZA_RC(JL))*XMRSTEP+Z0RCT(JL)-ZRCT(JL)-ZB_RC(JL))/ &
-                           &SIGN(MAX(ABS(ZA_RC(JL)), 1.E-20), ZA_RC(JL))
+                           &ZW1D(JL)*(SIGN(1., ZA(JL, IRC))*XMRSTEP+Z0RCT(JL)-ZRCT(JL)-ZB(JL, IRC))/ &
+                           &SIGN(MAX(ABS(ZA(JL, IRC)), 1.E-20), ZA(JL, IRC))
         ZW1D(JL)=MAX(0., SIGN(1., ZTIME_THRESHOLD(JL))) * & !WHERE(ZTIME_THRESHOLD(:)>=0.)
                 &MAX(0., -SIGN(1., ZTIME_THRESHOLD(JL)-ZMAXTIME(JL))) * & !WHERE(ZTIME_THRESHOLD(:)<ZMAXTIME(:))
                 &MIN(1., MAX(0., -SIGN(1., XRTMIN(6)-ZRCT(JL))) + & !WHERE(ZRCT(:)>XRTMIN(6)) .OR.
-                        &MAX(0., -SIGN(1., -ZA_RC(JL))))            !WHERE(ZA_RC(:)>0.)
+                        &MAX(0., -SIGN(1., -ZA(JL, IRC))))            !WHERE(ZA(:, IRC)>0.)
         ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
                     &ZW1D(JL)*MIN(ZMAXTIME(JL), ZTIME_THRESHOLD(JL))
         ZCOMPUTE(JL)=ZCOMPUTE(JL) * (1. - ZW1D(JL))
 
         ZW1D(JL)=MAX(0., -SIGN(1., IITER(JL)-INB_ITER_MAX+0.)) * & ! WHERE(IITER(:)<INB_ITER_MAX)
-                &MAX(0., -SIGN(1., 1.E-20-ABS(ZA_RR(JL)))) ! WHERE(ABS(ZA_RR(:))>1.E-20)
+                &MAX(0., -SIGN(1., 1.E-20-ABS(ZA(JL, IRR)))) ! WHERE(ABS(ZA(:, IRR))>1.E-20)
         ZTIME_THRESHOLD(JL)=(1.-ZW1D(JL))*(-1.) + &
-                           &ZW1D(JL)*(SIGN(1., ZA_RR(JL))*XMRSTEP+Z0RRT(JL)-ZRRT(JL)-ZB_RR(JL))/ &
-                           &SIGN(MAX(ABS(ZA_RR(JL)), 1.E-20), ZA_RR(JL))
+                           &ZW1D(JL)*(SIGN(1., ZA(JL, IRR))*XMRSTEP+Z0RRT(JL)-ZRRT(JL)-ZB(JL, IRR))/ &
+                           &SIGN(MAX(ABS(ZA(JL, IRR)), 1.E-20), ZA(JL, IRR))
         ZW1D(JL)=MAX(0., SIGN(1., ZTIME_THRESHOLD(JL))) * & !WHERE(ZTIME_THRESHOLD(:)>=0.)
                 &MAX(0., -SIGN(1., ZTIME_THRESHOLD(JL)-ZMAXTIME(JL))) * & !WHERE(ZTIME_THRESHOLD(:)<ZMAXTIME(:))
                 &MIN(1., MAX(0., -SIGN(1., XRTMIN(6)-ZRRT(JL))) + & !WHERE(ZRRT(:)>XRTMIN(6)) .OR.
-                        &MAX(0., -SIGN(1., -ZA_RR(JL))))            !WHERE(ZA_RR(:)>0.)
+                        &MAX(0., -SIGN(1., -ZA(JL, IRR))))            !WHERE(ZA(:, IRR)>0.)
         ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
                     &ZW1D(JL)*MIN(ZMAXTIME(JL), ZTIME_THRESHOLD(JL))
         ZCOMPUTE(JL)=ZCOMPUTE(JL) * (1. - ZW1D(JL))
 
         ZW1D(JL)=MAX(0., -SIGN(1., IITER(JL)-INB_ITER_MAX+0.)) * & ! WHERE(IITER(:)<INB_ITER_MAX)
-                &MAX(0., -SIGN(1., 1.E-20-ABS(ZA_RI(JL)))) ! WHERE(ABS(ZA_RI(:))>1.E-20)
+                &MAX(0., -SIGN(1., 1.E-20-ABS(ZA(JL, IRI)))) ! WHERE(ABS(ZA(:, IRI))>1.E-20)
         ZTIME_THRESHOLD(JL)=(1.-ZW1D(JL))*(-1.) + &
-                           &ZW1D(JL)*(SIGN(1., ZA_RI(JL))*XMRSTEP+Z0RIT(JL)-ZRIT(JL)-ZB_RI(JL))/ &
-                           &SIGN(MAX(ABS(ZA_RI(JL)), 1.E-20), ZA_RI(JL))
+                           &ZW1D(JL)*(SIGN(1., ZA(JL, IRI))*XMRSTEP+Z0RIT(JL)-ZRIT(JL)-ZB(JL, IRI))/ &
+                           &SIGN(MAX(ABS(ZA(JL, IRI)), 1.E-20), ZA(JL, IRI))
         ZW1D(JL)=MAX(0., SIGN(1., ZTIME_THRESHOLD(JL))) * & !WHERE(ZTIME_THRESHOLD(:)>=0.)
                 &MAX(0., -SIGN(1., ZTIME_THRESHOLD(JL)-ZMAXTIME(JL))) * & !WHERE(ZTIME_THRESHOLD(:)<ZMAXTIME(:))
                 &MIN(1., MAX(0., -SIGN(1., XRTMIN(6)-ZRIT(JL))) + & !WHERE(ZRIT(:)>XRTMIN(6)) .OR.
-                        &MAX(0., -SIGN(1., -ZA_RI(JL))))            !WHERE(ZA_RI(:)>0.)
+                        &MAX(0., -SIGN(1., -ZA(JL, IRI))))            !WHERE(ZA(:, IRI)>0.)
         ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
                     &ZW1D(JL)*MIN(ZMAXTIME(JL), ZTIME_THRESHOLD(JL))
         ZCOMPUTE(JL)=ZCOMPUTE(JL) * (1. - ZW1D(JL))
 
         ZW1D(JL)=MAX(0., -SIGN(1., IITER(JL)-INB_ITER_MAX+0.)) * & ! WHERE(IITER(:)<INB_ITER_MAX)
-                &MAX(0., -SIGN(1., 1.E-20-ABS(ZA_RS(JL)))) ! WHERE(ABS(ZA_RS(:))>1.E-20)
+                &MAX(0., -SIGN(1., 1.E-20-ABS(ZA(JL, IRS)))) ! WHERE(ABS(ZA(:, IRS))>1.E-20)
         ZTIME_THRESHOLD(JL)=(1.-ZW1D(JL))*(-1.) + &
-                           &ZW1D(JL)*(SIGN(1., ZA_RS(JL))*XMRSTEP+Z0RST(JL)-ZRST(JL)-ZB_RS(JL))/ &
-                           &SIGN(MAX(ABS(ZA_RS(JL)), 1.E-20), ZA_RS(JL))
+                           &ZW1D(JL)*(SIGN(1., ZA(JL, IRS))*XMRSTEP+Z0RST(JL)-ZRST(JL)-ZB(JL, IRS))/ &
+                           &SIGN(MAX(ABS(ZA(JL, IRS)), 1.E-20), ZA(JL, IRS))
         ZW1D(JL)=MAX(0., SIGN(1., ZTIME_THRESHOLD(JL))) * & !WHERE(ZTIME_THRESHOLD(:)>=0.)
                 &MAX(0., -SIGN(1., ZTIME_THRESHOLD(JL)-ZMAXTIME(JL))) * & !WHERE(ZTIME_THRESHOLD(:)<ZMAXTIME(:))
                 &MIN(1., MAX(0., -SIGN(1., XRTMIN(6)-ZRST(JL))) + & !WHERE(ZRST(:)>XRTMIN(6)) .OR.
-                        &MAX(0., -SIGN(1., -ZA_RS(JL))))            !WHERE(ZA_RS(:)>0.)
+                        &MAX(0., -SIGN(1., -ZA(JL, IRS))))            !WHERE(ZA(:, IRS)>0.)
         ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
                     &ZW1D(JL)*MIN(ZMAXTIME(JL), ZTIME_THRESHOLD(JL))
         ZCOMPUTE(JL)=ZCOMPUTE(JL) * (1. - ZW1D(JL))
 
         ZW1D(JL)=MAX(0., -SIGN(1., IITER(JL)-INB_ITER_MAX+0.)) * & ! WHERE(IITER(:)<INB_ITER_MAX)
-                &MAX(0., -SIGN(1., 1.E-20-ABS(ZA_RG(JL)))) ! WHERE(ABS(ZA_RG(:))>1.E-20)
+                &MAX(0., -SIGN(1., 1.E-20-ABS(ZA(JL, IRG)))) ! WHERE(ABS(ZA(:, IRG))>1.E-20)
         ZTIME_THRESHOLD(JL)=(1.-ZW1D(JL))*(-1.) + &
-                           &ZW1D(JL)*(SIGN(1., ZA_RG(JL))*XMRSTEP+Z0RGT(JL)-ZRGT(JL)-ZB_RG(JL))/ &
-                           &SIGN(MAX(ABS(ZA_RG(JL)), 1.E-20), ZA_RG(JL))
+                           &ZW1D(JL)*(SIGN(1., ZA(JL, IRG))*XMRSTEP+Z0RGT(JL)-ZRGT(JL)-ZB(JL, IRG))/ &
+                           &SIGN(MAX(ABS(ZA(JL, IRG)), 1.E-20), ZA(JL, IRG))
         ZW1D(JL)=MAX(0., SIGN(1., ZTIME_THRESHOLD(JL))) * & !WHERE(ZTIME_THRESHOLD(:)>=0.)
                 &MAX(0., -SIGN(1., ZTIME_THRESHOLD(JL)-ZMAXTIME(JL))) * & !WHERE(ZTIME_THRESHOLD(:)<ZMAXTIME(:))
                 &MIN(1., MAX(0., -SIGN(1., XRTMIN(6)-ZRGT(JL))) + & !WHERE(ZRGT(:)>XRTMIN(6)) .OR.
-                        &MAX(0., -SIGN(1., -ZA_RG(JL))))            !WHERE(ZA_RG(:)>0.)
+                        &MAX(0., -SIGN(1., -ZA(JL, IRG))))            !WHERE(ZA(:, IRG)>0.)
         ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
                     &ZW1D(JL)*MIN(ZMAXTIME(JL), ZTIME_THRESHOLD(JL))
         ZCOMPUTE(JL)=ZCOMPUTE(JL) * (1. - ZW1D(JL))
@@ -1053,14 +1094,14 @@ DO WHILE(ANY(ZTIME(:)<PTSTEP)) ! Loop to *really* compute tendencies
       IF(KRR==7) THEN
         DO JL=1, IMICRO
           ZW1D(JL)=MAX(0., -SIGN(1., IITER(JL)-INB_ITER_MAX+0.)) * & ! WHERE(IITER(:)<INB_ITER_MAX)
-                  &MAX(0., -SIGN(1., 1.E-20-ABS(ZA_RH(JL)))) ! WHERE(ABS(ZA_RH(:))>1.E-20)
+                  &MAX(0., -SIGN(1., 1.E-20-ABS(ZA(JL, IRH)))) ! WHERE(ABS(ZA(:, IRH))>1.E-20)
           ZTIME_THRESHOLD(JL)=(1.-ZW1D(JL))*(-1.) + &
-                             &ZW1D(JL)*(SIGN(1., ZA_RH(JL))*XMRSTEP+Z0RHT(JL)-ZRHT(JL)-ZB_RH(JL))/ &
-                             &SIGN(MAX(ABS(ZA_RH(JL)), 1.E-20), ZA_RH(JL))
+                             &ZW1D(JL)*(SIGN(1., ZA(JL, IRH))*XMRSTEP+Z0RHT(JL)-ZRHT(JL)-ZB(JL, IRH))/ &
+                             &SIGN(MAX(ABS(ZA(JL, IRH)), 1.E-20), ZA(JL, IRH))
           ZW1D(JL)=MAX(0., SIGN(1., ZTIME_THRESHOLD(JL))) * & !WHERE(ZTIME_THRESHOLD(:)>=0.)
                   &MAX(0., -SIGN(1., ZTIME_THRESHOLD(JL)-ZMAXTIME(JL))) * & !WHERE(ZTIME_THRESHOLD(:)<ZMAXTIME(:))
                   &MIN(1., MAX(0., -SIGN(1., XRTMIN(6)-ZRHT(JL))) + & !WHERE(ZRHT(:)>XRTMIN(6)) .OR.
-                          &MAX(0., -SIGN(1., -ZA_RH(JL))))            !WHERE(ZA_RH(:)>0.)
+                          &MAX(0., -SIGN(1., -ZA(JL, IRH))))            !WHERE(ZA(:, IRH)>0.)
           ZMAXTIME(JL)=(1.-ZW1D(JL)) * ZMAXTIME(JL) + &
                       &ZW1D(JL)*MIN(ZMAXTIME(JL), ZTIME_THRESHOLD(JL))
           ZCOMPUTE(JL)=ZCOMPUTE(JL) * (1. - ZW1D(JL))
@@ -1068,8 +1109,13 @@ DO WHILE(ANY(ZTIME(:)<PTSTEP)) ! Loop to *really* compute tendencies
       ENDIF
 
       DO JL=1, IMICRO
-        ZW1D(JL)=MAX(ABS(ZB_RV(JL)), ABS(ZB_RC(JL)), ABS(ZB_RR(JL)), ABS(ZB_RI(JL)), &
-                    &ABS(ZB_RS(JL)), ABS(ZB_RG(JL)), ABS(ZB_RH(JL)))
+        IF(KRR==7) THEN
+          ZW1D(JL)=MAX(ABS(ZB(JL, IRV)), ABS(ZB(JL, IRC)), ABS(ZB(JL, IRR)), ABS(ZB(JL, IRI)), &
+                      &ABS(ZB(JL, IRS)), ABS(ZB(JL, IRG)), ABS(ZB(JL, IRH)))
+        ELSE
+          ZW1D(JL)=MAX(ABS(ZB(JL, IRV)), ABS(ZB(JL, IRC)), ABS(ZB(JL, IRR)), ABS(ZB(JL, IRI)), &
+                      &ABS(ZB(JL, IRS)), ABS(ZB(JL, IRG)))
+        ENDIF
         ZW1D(JL)=MAX(0., -SIGN(1., IITER(JL)-INB_ITER_MAX+0.)) * & !WHERE(IITER(:)<INB_ITER_MAX)
                 &MAX(0., -SIGN(1., XMRSTEP-ZW1D(JL))) !WHERE(ZW1D(:)>XMRSTEP)
         ZMAXTIME(JL)=(1.-ZW1D(JL))*ZMAXTIME(JL)
@@ -1080,16 +1126,16 @@ DO WHILE(ANY(ZTIME(:)<PTSTEP)) ! Loop to *really* compute tendencies
     !***       4.3 New values of variables for next iteration
     !
     DO JL=1, IMICRO
-      ZTHT(JL)=ZTHT(JL)+ZA_TH(JL)*ZMAXTIME(JL)+ZB_TH(JL)
-      ZRVT(JL)=ZRVT(JL)+ZA_RV(JL)*ZMAXTIME(JL)+ZB_RV(JL)
-      ZRCT(JL)=ZRCT(JL)+ZA_RC(JL)*ZMAXTIME(JL)+ZB_RC(JL)
-      ZRRT(JL)=ZRRT(JL)+ZA_RR(JL)*ZMAXTIME(JL)+ZB_RR(JL)
-      ZRIT(JL)=ZRIT(JL)+ZA_RI(JL)*ZMAXTIME(JL)+ZB_RI(JL)
-      ZRST(JL)=ZRST(JL)+ZA_RS(JL)*ZMAXTIME(JL)+ZB_RS(JL)
-      ZRGT(JL)=ZRGT(JL)+ZA_RG(JL)*ZMAXTIME(JL)+ZB_RG(JL)
+      ZTHT(JL)=ZTHT(JL)+ZA(JL, ITH)*ZMAXTIME(JL)+ZB(JL, ITH)
+      ZRVT(JL)=ZRVT(JL)+ZA(JL, IRV)*ZMAXTIME(JL)+ZB(JL, IRV)
+      ZRCT(JL)=ZRCT(JL)+ZA(JL, IRC)*ZMAXTIME(JL)+ZB(JL, IRC)
+      ZRRT(JL)=ZRRT(JL)+ZA(JL, IRR)*ZMAXTIME(JL)+ZB(JL, IRR)
+      ZRIT(JL)=ZRIT(JL)+ZA(JL, IRI)*ZMAXTIME(JL)+ZB(JL, IRI)
+      ZRST(JL)=ZRST(JL)+ZA(JL, IRS)*ZMAXTIME(JL)+ZB(JL, IRS)
+      ZRGT(JL)=ZRGT(JL)+ZA(JL, IRG)*ZMAXTIME(JL)+ZB(JL, IRG)
       ZCIT(JL)=ZCIT(JL) * MAX(0., -SIGN(1., -ZRIT(JL))) ! WHERE(ZRIT(:)==0.) ZCIT(:) = 0.
     ENDDO
-    IF(KRR==7) ZRHT(:)=ZRHT(:)+ZA_RH(:)*ZMAXTIME(:)+ZB_RH(:)
+    IF(KRR==7) ZRHT(:)=ZRHT(:)+ZA(:, IRH)*ZMAXTIME(:)+ZB(:, IRH)
     !
     !***       4.4 Mixing ratio change due to each process
     !
@@ -1679,20 +1725,22 @@ IF(LSEDIM_AFTER) THEN
     !SR: It *seems* that we must have two separate calls for ifort
     IF(KRR==7) THEN
       CALL ICE4_SEDIMENTATION_STAT(IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, IKTB, IKTE, KKT, KKL, &
-                                  &PTSTEP, KRR, OSEDIC, PDZZ, &
+                                  &PTSTEP, KRR, OSEDIC, &
+                                  &PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
                                   &PRCS, PRCS*PTSTEP, PRRS, PRRS*PTSTEP, PRIS, PRIS*PTSTEP,&
                                   &PRSS, PRSS*PTSTEP, PRGS, PRGS*PTSTEP,&
-                                  &PINPRC,  PINPRR, ZINPRI, PINPRS, PINPRG, &
+                                  &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
                                   &PSEA=PSEA, PTOWN=PTOWN, &
                                   &PINPRH=PINPRH, PRHT=PRHS*PTSTEP, PRHS=PRHS, PFPR=PFPR)
     ELSE
       CALL ICE4_SEDIMENTATION_STAT(IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, IKTB, IKTE, KKT, KKL, &
-                                  &PTSTEP, KRR, OSEDIC, PDZZ,&
+                                  &PTSTEP, KRR, OSEDIC, &
+                                  &PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
                                   &PRCS, PRCS*PTSTEP, PRRS, PRRS*PTSTEP, PRIS, PRIS*PTSTEP,&
                                   &PRSS, PRSS*PTSTEP, PRGS, PRGS*PTSTEP,&
-                                  &PINPRC,  PINPRR, ZINPRI, PINPRS, PINPRG, &
+                                  &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
                                   &PSEA=PSEA, PTOWN=PTOWN, &
                                   &PFPR=PFPR)
     ENDIF
@@ -1702,18 +1750,20 @@ IF(LSEDIM_AFTER) THEN
     !SR: It *seems* that we must have two separate calls for ifort
     IF(KRR==7) THEN
       CALL ICE4_SEDIMENTATION_SPLIT(IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, IKTB, IKTE, KKT, KKL, &
-                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
+                                   &PTSTEP, KRR, OSEDIC, &
+                                   &PDZZ, &
                                    &PRHODREF, PPABST, PTHT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                                   &PINPRC,  PINPRR, ZINPRI, PINPRS, PINPRG, &
+                                   &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
                                    &PSEA=PSEA, PTOWN=PTOWN, &
                                    &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
     ELSE
       CALL ICE4_SEDIMENTATION_SPLIT(IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, IKTB, IKTE, KKT, KKL, &
-                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
+                                   &PTSTEP, KRR, OSEDIC, &
+                                   &PDZZ, &
                                    &PRHODREF, PPABST, PTHT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                                   &PINPRC,  PINPRR, ZINPRI, PINPRS, PINPRG, &
+                                   &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
                                    &PSEA=PSEA, PTOWN=PTOWN, &
                                    &PFPR=PFPR)
     ENDIF
