@@ -281,7 +281,7 @@ USE MODE_ll
 USE MODE_MSG
 use mode_tools,          only: Countjv
 
-USE MODI_ICE4_NUCLEATION_WRAPPER
+USE MODE_ICE4_NUCLEATION_WRAPPER
 USE MODE_ICE4_RAINFR_VERT
 USE MODI_ICE4_SEDIMENTATION_STAT
 USE MODI_ICE4_SEDIMENTATION_SPLIT
@@ -1199,7 +1199,7 @@ ENDIF
 !               ----------------------------------------------------------------
 !
 CALL ICE4_NUCLEATION_WRAPPER(KIT, KJT, KKT, .NOT. ODMICRO, &
-                             PTHT, PPABST, PRHODREF, PEXN, ZZ_LSFACT/PEXN, ZT, &
+                             PTHT, PPABST, PRHODREF, PEXN, ZZ_LSFACT, ZT, &
                              PRVT, &
                              PCIT, ZZ_RVHENI_MR)
 DO JK = 1, KKT

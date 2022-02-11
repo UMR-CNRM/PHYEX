@@ -189,7 +189,7 @@ USE MODE_ICE4_FAST_RG
 USE MODE_ICE4_FAST_RH
 USE MODE_ICE4_FAST_RI
 USE MODE_ICE4_FAST_RS
-USE MODI_ICE4_NUCLEATION
+USE MODE_ICE4_NUCLEATION
 USE MODE_ICE4_RAINFR_VERT
 USE MODE_ICE4_RIMLTC
 USE MODE_ICE4_RRHONG
@@ -358,10 +358,13 @@ ELSE
   !
   !*       2.     COMPUTES THE SLOW COLD PROCESS SOURCES
   !               --------------------------------------
-  CALL ICE4_NUCLEATION(KSIZE, ODSOFT, PCOMPUTE==1., &
+  CALL ICE4_NUCLEATION(KSIZE, PCOMPUTE==1., &
                        ZTHT, PPRES, PRHODREF, PEXN, PLSFACT, ZT, &
                        ZRVT, &
-                       PCIT, PRVHENI_MR,PB_TH, PB_RV, PB_RI)
+                       PCIT, PRVHENI_MR)
+  PB_RI(:)=PB_RI(:) + PRVHENI_MR(:)
+  PB_RV(:)=PB_RV(:) - PRVHENI_MR(:)
+  PB_TH(:)=PB_TH(:) + PRVHENI_MR(:)*PLSFACT(:)
   DO JL=1, KSIZE
     ZRIT(JL)=ZRIT(JL) + PRVHENI_MR(JL)
     ZRVT(JL)=ZRVT(JL) - PRVHENI_MR(JL)
@@ -371,7 +374,7 @@ ELSE
   !
   !*       3.3     compute the spontaneous freezing source: RRHONG
   !
-  CALL ICE4_RRHONG(KSIZE, ODSOFT, PCOMPUTE, &
+  CALL ICE4_RRHONG(KSIZE, PCOMPUTE, &
                   &PEXN, PLVFACT, PLSFACT, &
                   &ZT,   ZRRT, &
                   &ZTHT, &
@@ -390,7 +393,7 @@ ELSE
   !
   !*       7.1    cloud ice melting
   !
-  CALL ICE4_RIMLTC(KSIZE, ODSOFT, PCOMPUTE, &
+  CALL ICE4_RIMLTC(KSIZE, PCOMPUTE, &
                   &PEXN, PLVFACT, PLSFACT, &
                   &ZT, &
                   &ZTHT, ZRIT, &
