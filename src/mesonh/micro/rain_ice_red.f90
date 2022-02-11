@@ -283,10 +283,9 @@ use mode_tools,          only: Countjv
 
 USE MODE_ICE4_NUCLEATION_WRAPPER
 USE MODE_ICE4_RAINFR_VERT
-USE MODI_ICE4_SEDIMENTATION_STAT
-USE MODI_ICE4_SEDIMENTATION_SPLIT
-USE MODI_ICE4_TENDENCIES
-
+USE MODE_ICE4_SEDIMENTATION_STAT, ONLY: ICE4_SEDIMENTATION_STAT
+USE MODE_ICE4_SEDIMENTATION_SPLIT, ONLY: ICE4_SEDIMENTATION_SPLIT
+USE MODE_ICE4_SEDIMENTATION_SPLIT_MOMENTUM, ONLY: ICE4_SEDIMENTATION_SPLIT_MOMENTUM
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
@@ -595,44 +594,42 @@ IF(.NOT. LSEDIM_AFTER) THEN
     call Budget_store_init( tbudgets(NBUDGET_RC), 'DEPO', prcs(:, :, :) * prhodj(:, :, :) )
 
   IF(HSEDIM=='STAT') THEN
-    !SR: It *seems* that we must have two separate calls for ifort
     IF(KRR==7) THEN
       CALL ICE4_SEDIMENTATION_STAT(IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, IKTB, IKTE, KKT, KKL, &
-                                  &PTSTEP, KRR, OSEDIC, LDEPOSC, XVDEPOSC, PDZZ, &
+                                  &PTSTEP, KRR, OSEDIC, PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
                                   &PRCS, PRCS*PTSTEP, PRRS, PRRS*PTSTEP, PRIS, PRIS*PTSTEP,&
                                   &PRSS, PRSS*PTSTEP, PRGS, PRGS*PTSTEP,&
-                                  &PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, &
+                                  &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
                                   &PSEA=PSEA, PTOWN=PTOWN, &
                                   &PINPRH=PINPRH, PRHT=PRHS*PTSTEP, PRHS=PRHS, PFPR=PFPR)
     ELSE
       CALL ICE4_SEDIMENTATION_STAT(IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, IKTB, IKTE, KKT, KKL, &
-                                  &PTSTEP, KRR, OSEDIC, LDEPOSC, XVDEPOSC, PDZZ, &
+                                  &PTSTEP, KRR, OSEDIC, PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
                                   &PRCS, PRCS*PTSTEP, PRRS, PRRS*PTSTEP, PRIS, PRIS*PTSTEP,&
                                   &PRSS, PRSS*PTSTEP, PRGS, PRGS*PTSTEP,&
-                                  &PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, &
+                                  &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
                                   &PSEA=PSEA, PTOWN=PTOWN, &
                                   &PFPR=PFPR)
     ENDIF
     PINPRS(:,:) = PINPRS(:,:) + ZINPRI(:,:)
     !No negativity correction here as we apply sedimentation on PR.S*PTSTEP variables
   ELSEIF(HSEDIM=='SPLI') THEN
-    !SR: It *seems* that we must have two separate calls for ifort
     IF(KRR==7) THEN
       CALL ICE4_SEDIMENTATION_SPLIT(IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, IKTB, IKTE, KKT, KKL, &
-                                   &PTSTEP, KRR, OSEDIC, LDEPOSC, XVDEPOSC, PDZZ, &
+                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                                   &PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, &
+                                   &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
                                    &PSEA=PSEA, PTOWN=PTOWN, &
                                    &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
     ELSE
       CALL ICE4_SEDIMENTATION_SPLIT(IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, IKTB, IKTE, KKT, KKL, &
-                                   &PTSTEP, KRR, OSEDIC, LDEPOSC, XVDEPOSC, PDZZ, &
+                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                                   &PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, &
+                                   &PINPRC,  PINPRR, ZINPRI, PINPRS, PINPRG, &
                                    &PSEA=PSEA, PTOWN=PTOWN, &
                                    &PFPR=PFPR)
     ENDIF
@@ -1682,20 +1679,20 @@ IF(LSEDIM_AFTER) THEN
     !SR: It *seems* that we must have two separate calls for ifort
     IF(KRR==7) THEN
       CALL ICE4_SEDIMENTATION_STAT(IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, IKTB, IKTE, KKT, KKL, &
-                                  &PTSTEP, KRR, OSEDIC, LDEPOSC, XVDEPOSC, PDZZ, &
+                                  &PTSTEP, KRR, OSEDIC, PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
                                   &PRCS, PRCS*PTSTEP, PRRS, PRRS*PTSTEP, PRIS, PRIS*PTSTEP,&
                                   &PRSS, PRSS*PTSTEP, PRGS, PRGS*PTSTEP,&
-                                  &PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, &
+                                  &PINPRC,  PINPRR, ZINPRI, PINPRS, PINPRG, &
                                   &PSEA=PSEA, PTOWN=PTOWN, &
                                   &PINPRH=PINPRH, PRHT=PRHS*PTSTEP, PRHS=PRHS, PFPR=PFPR)
     ELSE
       CALL ICE4_SEDIMENTATION_STAT(IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, IKTB, IKTE, KKT, KKL, &
-                                  &PTSTEP, KRR, OSEDIC, LDEPOSC, XVDEPOSC, PDZZ,&
+                                  &PTSTEP, KRR, OSEDIC, PDZZ,&
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
                                   &PRCS, PRCS*PTSTEP, PRRS, PRRS*PTSTEP, PRIS, PRIS*PTSTEP,&
                                   &PRSS, PRSS*PTSTEP, PRGS, PRGS*PTSTEP,&
-                                  &PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, &
+                                  &PINPRC,  PINPRR, ZINPRI, PINPRS, PINPRG, &
                                   &PSEA=PSEA, PTOWN=PTOWN, &
                                   &PFPR=PFPR)
     ENDIF
@@ -1705,18 +1702,18 @@ IF(LSEDIM_AFTER) THEN
     !SR: It *seems* that we must have two separate calls for ifort
     IF(KRR==7) THEN
       CALL ICE4_SEDIMENTATION_SPLIT(IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, IKTB, IKTE, KKT, KKL, &
-                                   &PTSTEP, KRR, OSEDIC, LDEPOSC, XVDEPOSC, PDZZ, &
+                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                                   &PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, &
+                                   &PINPRC,  PINPRR, ZINPRI, PINPRS, PINPRG, &
                                    &PSEA=PSEA, PTOWN=PTOWN, &
                                    &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
     ELSE
       CALL ICE4_SEDIMENTATION_SPLIT(IIB, IIE, KIT, IJB, IJE, KJT, IKB, IKE, IKTB, IKTE, KKT, KKL, &
-                                   &PTSTEP, KRR, OSEDIC, LDEPOSC, XVDEPOSC, PDZZ, &
+                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                                   &PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, &
+                                   &PINPRC,  PINPRR, ZINPRI, PINPRS, PINPRG, &
                                    &PSEA=PSEA, PTOWN=PTOWN, &
                                    &PFPR=PFPR)
     ENDIF
