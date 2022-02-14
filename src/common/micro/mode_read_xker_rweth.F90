@@ -1,4 +1,12 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2018 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+!     #####s#####################
+      MODULE MODE_READ_XKER_RWETH
+!     ###########################
+IMPLICIT NONE
+CONTAINS
       SUBROUTINE READ_XKER_RWETH (KWETLBDAH,KWETLBDAR,KND,                   &
                     PALPHAH,PNUH,PALPHAR,PNUR,PEHR,PBR,PCH,PDH,PCR,PDR,      &
                     PWETLBDAH_MAX,PWETLBDAR_MAX,PWETLBDAH_MIN,PWETLBDAR_MIN, &
@@ -1698,3 +1706,4 @@ END IF
 !
 IF (LHOOK) CALL DR_HOOK('READ_XKER_RWETH',1,ZHOOK_HANDLE)
 END SUBROUTINE READ_XKER_RWETH
+END MODULE MODE_READ_XKER_RWETH

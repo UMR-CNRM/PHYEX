@@ -1,4 +1,18 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+!--------------- special set of characters for RCS information
+!-----------------------------------------------------------------
+! $Source$ $Revision$
+! MASDEV4_7 init 2006/05/18 13:07:25
+!-----------------------------------------------------------------
+!     ###########################
+      MODULE MODE_READ_XKER_RDRYG
+!     ###########################
+IMPLICIT NONE
+CONTAINS
       SUBROUTINE READ_XKER_RDRYG (KDRYLBDAG,KDRYLBDAR,KND,                   &
                     PALPHAG,PNUG,PALPHAR,PNUR,PEGR,PBR,PCG,PDG,PCR,PDR,      &
                     PDRYLBDAG_MAX,PDRYLBDAR_MAX,PDRYLBDAG_MIN,PDRYLBDAR_MIN, &
@@ -1698,3 +1712,4 @@ END IF
 !
 IF (LHOOK) CALL DR_HOOK('READ_XKER_RDRYG',1,ZHOOK_HANDLE)
 END SUBROUTINE READ_XKER_RDRYG
+END MODULE MODE_READ_XKER_RDRYG
