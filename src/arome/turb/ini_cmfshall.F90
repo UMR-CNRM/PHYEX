@@ -12,7 +12,7 @@
 !!      PURPOSE
 !!      -------
 !         The purpose of this routine is to initialize the mass flux  
-!       scheme constants that are stored in module MODD_CMFSHALL
+!       scheme constants that are stored in module MODD_PARAM_MFSHALL_n
 !
 !!      METHOD
 !!      ------
@@ -36,12 +36,13 @@
 !!      MODIFICATIONS
 !!      -------------
 !!        S. Riette april 2011 : XALPHA and XSIGMA added
+!!        S. Riette Jan 2022: Merge with Méso-NH: MODD_MCFSHALL -> MODD_PARAM_MFSHALL_n
 !! --------------------------------------------------------------------------
 !
 !*        0. DECLARATIONS
 !            ------------
 !
-USE MODD_CMFSHALL
+USE MODD_PARAM_MFSHALL_n
 !
 IMPLICIT NONE
 
@@ -76,6 +77,9 @@ REAL,   INTENT(IN)   :: PLAMBDA
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('INI_CMFSHALL',0,ZHOOK_HANDLE)
+
+CALL PARAM_MFSHALL_GOTO_MODEL(1, 1)
+
 XALP_PERT   = PALP_PERT  ! coefficient for the perturbation of
                          ! theta_l and r_t at the first level of 
                          ! the updraft
@@ -111,7 +115,7 @@ XR = PR            ! Aspect ratio of updraft
 
 !  Thermodynamic parameter
 
-XLAMBDA = PLAMBDA         ! Lambda to compute ThetaS1 from ThetaL
+XLAMBDA_MF = PLAMBDA         ! Lambda to compute ThetaS1 from ThetaL
 
 IF (LHOOK) CALL DR_HOOK('INI_CMFSHALL',1,ZHOOK_HANDLE)
 END SUBROUTINE INI_CMFSHALL

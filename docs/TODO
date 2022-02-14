@@ -1,6 +1,5 @@
-LOCEAN:
-  La clé LOCEAN est dans un module spécifique à Méso-NH (MODD_DYNn).
-  Une solution serait de créer un module propre à PHYEX qui contiendrait des clés de contrôle de haut niveau
+Module de clés namelists PHYEX
+Une solution serait de créer un module propre à PHYEX qui contiendrait des clés de contrôle de haut niveau
   pour la physique (y en a-t-il d'autres?). Ce module serait initialisé dans Méso-NH à partir de la clé
   actuelle qui est sans doute utilisée ailleurs dans le code de Méso-NH
 
@@ -21,12 +20,19 @@ Merge pb:
        Pas introduits (pour l'instant?) dans version common.
        Ryad a fait des tests pour regarder impact des allocatable sur CPU => temps * 2
        Code à nettoyer quelque soit l'option retenue
+       Dernier code de Ryad: /home/gmap/mrpm/khatib/public/modset/mods_ice4_nucleation_wrapper.tgz et/ou /home/gmap/mrpm/khatib/public/modset/ice4_nucleation_wrapper.f90
+- shallow_mf (appels dans aro_shallow et arp_shallow):
+       Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
+       Dans AROME/ARP: où trouver la taille de maille?
 
 Etape 2: array syntax -> loop
 - en profiter pour supprimer args PA/PB des routines appelées depuis ice4_tendencies, comme pour nucleation
 - regarder si pcompute et llcompute sont toujours tous deux nécessaires dans les mode_ice4* avec le passage en do
 - si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
 - transformer sedimentation_split_momentum comme sedimentation_split
+- une distinction KSIZE/KPROMA est à faire dans la microphysique. Pour une meilleure compréhension du code, il faut partir
+  du principe de déclarer tous les tableaux en KPROMA et de les utiliser que jusqu'à KSIZE
+- essayer l'outil développé par Juan
 
 Pb identifiés à corriger plus tard:
 - deposition devrait être déplacée dans ice4_tendencies
@@ -36,12 +42,29 @@ Pb identifiés à corriger plus tard:
   sont relatifs à la boucle IMICRO et que les calculs faits en debut de routine ne
   concernent qu'une partie des points
        => à corriger
-- avec découpage en KPROMA, le code ne produit plus les memes resultats
 - seules les options oper ont été testées, il manque des test pour sedim_after, nmaxiter, xmrstep, xtstep, autoconv, rainfr
+- arome/ini_cmfshall devrait s'appeler ini_param_mfshall
+- th_r_from_thl_rt appelée partout, il faudrait limiter à OTEST
 
 Répertoire arome/ext contient les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
-Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayant été fournies par ailleurs
+Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayadevront avoir été fournies par ailleurs
 
 Budgets/DDH
 - Le code dans budget_DDH devra être transféré dans mode_budget
-- les routines arome specifiques aux budgets sont dans mpa/micro, il faudrait les mettre ailleurs
+- Le module modd_dyn n'est utilisé que pour les budgets, voir s'il peut être supprimé
+- Le code des budgets devrait être revu: pas en phase avec celui de Méso-NH et phasage a priori
+  inutile car très peu de code semble réellement utile pour AROME
+
+SPP
+- modd_spp_type est pour l'instant dans mpa/micro/externals mais n'est pas de la microphysique
+
+Nettoyage apl_arome non fait (pb a la compilation) ==> 4 arguments dans aro_turb_mnh supprimés (non utilisés)
+turb.F90 : il reste un CALL à SOURCES_NEG_CORRECT à ajouter. Besoin de récupérer CCLOUD dans apl_arome : comment ?
+
+Regarder s'il ne serait pas possible/souhaitable de supprimer modd_lunit de PHYEX. On pourrait se contenter de recevoir le numero d'unité logique
+
+Faire quelque chose de mesonh/micro/modd_blankn.f90: le déplacer dans common ou le supprimer
+
+Nettoyage des répertoires aux nécessaire
+
+Initialiser dans AROME la variable ldiag_in_run de MODD_DIAG_IN_RUN pour pouvoir phaser le modd

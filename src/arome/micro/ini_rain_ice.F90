@@ -1,7 +1,10 @@
+!MNH_LIC Copyright 1995-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
 !     ######spl
       SUBROUTINE INI_RAIN_ICE ( KLUOUT, PTSTEP, PDZMIN, KSPLITR, HCLOUD )
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ###########################################################
 !
 !!****  *INI_RAIN_ICE * - initialize the constants necessary for the warm and
@@ -24,7 +27,7 @@
 !!    sedimentation is fulfilled for a Raindrop maximal fall velocity equal
 !!    VTRMAX. The parameters defining the collection kernels are read and are
 !!    checked against the new ones. If any change occurs, these kernels are
-!!    recomputed and their numerical values are written in the output listiing.
+!!    recomputed and their numerical values are written in the output listing.
 !!
 !!    EXTERNAL
 !!    --------
@@ -74,13 +77,14 @@
 !!                  24/03/01 Update XCRIAUTI for cirrus cases
 !!      J.-P. Pinty 24/11/01 Update ICE3/ICE4 options
 !!      S. Riette 2016-11: new ICE3/ICE4 options
-!!
+!!      P. Wautelet 22/01/2019 bug correction: incorrect write
+!  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
+!
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODE_FM
 USE MODD_CST
 USE MODD_LUNIT
 USE MODD_PARAMETERS
@@ -100,6 +104,9 @@ USE MODE_READ_XKER_RDRYG, ONLY: READ_XKER_RDRYG
 USE MODE_READ_XKER_SWETH, ONLY: READ_XKER_SWETH
 USE MODE_READ_XKER_GWETH, ONLY: READ_XKER_GWETH
 USE MODE_READ_XKER_RWETH, ONLY: READ_XKER_RWETH
+!
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 IMPLICIT NONE
 !
@@ -164,8 +171,11 @@ REAL     :: PDRYLBDAG_MAX,PDRYLBDAS_MAX,PDRYLBDAG_MIN,PDRYLBDAS_MIN
 REAL     :: PDRYLBDAR_MAX,PDRYLBDAR_MIN
 REAL     :: PWETLBDAS_MAX,PWETLBDAG_MAX,PWETLBDAS_MIN,PWETLBDAG_MIN
 REAL     :: PWETLBDAR_MAX,PWETLBDAH_MAX,PWETLBDAR_MIN,PWETLBDAH_MIN
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',0,ZHOOK_HANDLE)
 !
 !*       0.     FUNCTION STATEMENTS
 !               -------------------
@@ -180,8 +190,6 @@ REAL     :: PWETLBDAR_MAX,PWETLBDAH_MAX,PWETLBDAR_MIN,PWETLBDAH_MIN
 !
 !*       1.1    Set the hailstones maximum fall velocity
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
-IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',0,ZHOOK_HANDLE)
 IF (CSEDIM == 'SPLI') THEN
  IF (HCLOUD == 'OLD4') THEN
   ZVTRMAX = 40.
@@ -195,7 +203,7 @@ END IF
 KSPLITR = 1
 IF (CSEDIM == 'SPLI' .AND. HCLOUD(1:3)=='OLD') THEN
  SPLIT : DO
-  ZT = PTSTEP / FLOAT(KSPLITR)
+  ZT = PTSTEP / REAL(KSPLITR)
   IF ( ZT * ZVTRMAX / PDZMIN .LT. 1.) EXIT SPLIT
   KSPLITR = KSPLITR + 1
  END DO SPLIT
@@ -649,7 +657,7 @@ END IF
 NGAMINC = 80
 XGAMINC_BOUND_MIN = 1.0E-1 ! Minimal value of (Lbda * D_cs^lim)**alpha
 XGAMINC_BOUND_MAX = 1.0E7  ! Maximal value of (Lbda * D_cs^lim)**alpha
-ZRATE = EXP(LOG(XGAMINC_BOUND_MAX/XGAMINC_BOUND_MIN)/FLOAT(NGAMINC-1))
+ZRATE = EXP(LOG(XGAMINC_BOUND_MAX/XGAMINC_BOUND_MIN)/REAL(NGAMINC-1))
 !
 IF( .NOT.ALLOCATED(XGAMINC_RIM1) ) ALLOCATE( XGAMINC_RIM1(NGAMINC) )
 IF( .NOT.ALLOCATED(XGAMINC_RIM2) ) ALLOCATE( XGAMINC_RIM2(NGAMINC) )
@@ -687,13 +695,13 @@ XLBSACCR3   =                          MOMG(XALPHAS,XNUS,XBS+2.)
 NACCLBDAS = 40
 XACCLBDAS_MIN = 5.0E1 ! Minimal value of Lbda_s to tabulate XKER_RACCS
 XACCLBDAS_MAX = 5.0E5 ! Maximal value of Lbda_s to tabulate XKER_RACCS
-ZRATE = LOG(XACCLBDAS_MAX/XACCLBDAS_MIN)/FLOAT(NACCLBDAS-1)
+ZRATE = LOG(XACCLBDAS_MAX/XACCLBDAS_MIN)/REAL(NACCLBDAS-1)
 XACCINTP1S = 1.0 / ZRATE
 XACCINTP2S = 1.0 - LOG( XACCLBDAS_MIN ) / ZRATE
 NACCLBDAR = 40
 XACCLBDAR_MIN = 1.0E3 ! Minimal value of Lbda_r to tabulate XKER_RACCS
 XACCLBDAR_MAX = 1.0E7 ! Maximal value of Lbda_r to tabulate XKER_RACCS
-ZRATE = LOG(XACCLBDAR_MAX/XACCLBDAR_MIN)/FLOAT(NACCLBDAR-1)
+ZRATE = LOG(XACCLBDAR_MAX/XACCLBDAR_MIN)/REAL(NACCLBDAR-1)
 XACCINTP1R = 1.0 / ZRATE
 XACCINTP2R = 1.0 - LOG( XACCLBDAR_MIN ) / ZRATE
 !
@@ -891,19 +899,19 @@ XLBRDRYG3   =                          MOMG(XALPHAR,XNUR,5.)
 NDRYLBDAR = 40
 XDRYLBDAR_MIN = 1.0E3 ! Minimal value of Lbda_r to tabulate XKER_RDRYG
 XDRYLBDAR_MAX = 1.0E7 ! Maximal value of Lbda_r to tabulate XKER_RDRYG
-ZRATE = LOG(XDRYLBDAR_MAX/XDRYLBDAR_MIN)/FLOAT(NDRYLBDAR-1)
+ZRATE = LOG(XDRYLBDAR_MAX/XDRYLBDAR_MIN)/REAL(NDRYLBDAR-1)
 XDRYINTP1R = 1.0 / ZRATE
 XDRYINTP2R = 1.0 - LOG( XDRYLBDAR_MIN ) / ZRATE
 NDRYLBDAS = 80
 XDRYLBDAS_MIN = 2.5E1 ! Minimal value of Lbda_s to tabulate XKER_SDRYG
 XDRYLBDAS_MAX = 2.5E9 ! Maximal value of Lbda_s to tabulate XKER_SDRYG
-ZRATE = LOG(XDRYLBDAS_MAX/XDRYLBDAS_MIN)/FLOAT(NDRYLBDAS-1)
+ZRATE = LOG(XDRYLBDAS_MAX/XDRYLBDAS_MIN)/REAL(NDRYLBDAS-1)
 XDRYINTP1S = 1.0 / ZRATE
 XDRYINTP2S = 1.0 - LOG( XDRYLBDAS_MIN ) / ZRATE
 NDRYLBDAG = 40
 XDRYLBDAG_MIN = 1.0E3 ! Min value of Lbda_g to tabulate XKER_SDRYG,XKER_RDRYG
 XDRYLBDAG_MAX = 1.0E7 ! Max value of Lbda_g to tabulate XKER_SDRYG,XKER_RDRYG
-ZRATE = LOG(XDRYLBDAG_MAX/XDRYLBDAG_MIN)/FLOAT(NDRYLBDAG-1)
+ZRATE = LOG(XDRYLBDAG_MAX/XDRYLBDAG_MIN)/REAL(NDRYLBDAG-1)
 XDRYINTP1G = 1.0 / ZRATE
 XDRYINTP2G = 1.0 - LOG( XDRYLBDAG_MIN ) / ZRATE
 !
@@ -1089,25 +1097,25 @@ XLBRWETH3   =                          MOMG(XALPHAR,XNUR,XBR+2.)
 NWETLBDAS = 80
 XWETLBDAS_MIN = 2.5E1 ! Minimal value of Lbda_s to tabulate XKER_SWETH
 XWETLBDAS_MAX = 2.5E9 ! Maximal value of Lbda_s to tabulate XKER_SWETH
-ZRATE = LOG(XWETLBDAS_MAX/XWETLBDAS_MIN)/FLOAT(NWETLBDAS-1)
+ZRATE = LOG(XWETLBDAS_MAX/XWETLBDAS_MIN)/REAL(NWETLBDAS-1)
 XWETINTP1S = 1.0 / ZRATE
 XWETINTP2S = 1.0 - LOG( XWETLBDAS_MIN ) / ZRATE
 NWETLBDAG = 40
 XWETLBDAG_MIN = 1.0E3 ! Min value of Lbda_g to tabulate XKER_GWETH
 XWETLBDAG_MAX = 1.0E7 ! Max value of Lbda_g to tabulate XKER_GWETH
-ZRATE = LOG(XWETLBDAG_MAX/XWETLBDAG_MIN)/FLOAT(NWETLBDAG-1)
+ZRATE = LOG(XWETLBDAG_MAX/XWETLBDAG_MIN)/REAL(NWETLBDAG-1)
 XWETINTP1G = 1.0 / ZRATE
 XWETINTP2G = 1.0 - LOG( XWETLBDAG_MIN ) / ZRATE
 NWETLBDAR = 40
 XWETLBDAR_MIN = 1.0E3 ! Minimal value of Lbda_r to tabulate XKER_RWETH
 XWETLBDAR_MAX = 1.0E7 ! Maximal value of Lbda_r to tabulate XKER_RWETH
-ZRATE = LOG(XWETLBDAR_MAX/XWETLBDAR_MIN)/FLOAT(NWETLBDAR-1)
+ZRATE = LOG(XWETLBDAR_MAX/XWETLBDAR_MIN)/REAL(NWETLBDAR-1)
 XWETINTP1R = 1.0 / ZRATE
 XWETINTP2R = 1.0 - LOG( XWETLBDAR_MIN ) / ZRATE
 NWETLBDAH = 40
 XWETLBDAH_MIN = 1.0E3 ! Min value of Lbda_h to tabulate XKER_SWETH,XKER_GWETH,XKER_RWETH
 XWETLBDAH_MAX = 1.0E7 ! Max value of Lbda_h to tabulate XKER_SWETH,XKER_GWETH,XKER_RWETH
-ZRATE = LOG(XWETLBDAH_MAX/XWETLBDAH_MIN)/FLOAT(NWETLBDAH-1)
+ZRATE = LOG(XWETLBDAH_MAX/XWETLBDAH_MIN)/REAL(NWETLBDAH-1)
 XWETINTP1H = 1.0 / ZRATE
 XWETINTP2H = 1.0 - LOG( XWETLBDAH_MIN ) / ZRATE
 !

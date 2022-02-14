@@ -179,7 +179,7 @@
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 
-USE MODD_BUDGET,         ONLY: TBUDGETDATA, LBU_ENABLE,                                                                                     &
+USE MODD_BUDGET,         ONLY: TBUDGETDATA, LBU_ENABLE,  &
                              & LBUDGET_TH, LBUDGET_RV, LBUDGET_RC, LBUDGET_RR, LBUDGET_RI, LBUDGET_RS, LBUDGET_RG, LBUDGET_RH, &
                              & NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH
 USE MODD_CST,            ONLY: XCI, XCL, XCPD, XCPV, XLSTT, XLVTT, XTT, XRHOLW
@@ -198,7 +198,7 @@ USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & IRH        ! Hail
 
 USE MODE_BUDGET,         ONLY: BUDGET_STORE_ADD, BUDGET_STORE_INIT, BUDGET_STORE_END
-USE MODE_ll
+USE MODE_ll,             ONLY: GET_INDICE_ll
 USE MODE_MSG,            ONLY: PRINT_MSG, NVERB_FATAL
 
 USE MODE_ICE4_RAINFR_VERT, ONLY: ICE4_RAINFR_VERT
@@ -411,6 +411,7 @@ REAL, DIMENSION(KPROMA) :: ZRVHENI_MR, & ! heterogeneous nucleation mixing ratio
 !
 !For mixing-ratio-splitting
 LOGICAL :: LLCPZ0RT
+REAL :: ZTIME_THRESHOLD1D(KPROMA) ! Time to reach threshold
 REAL, DIMENSION(KPROMA, KRR) :: Z0RT ! Mixing-ratios at the beginig of the current loop
 !
 REAL, DIMENSION(KPROMA,0:7) :: &
@@ -443,14 +444,12 @@ IF(OCND2) THEN
 END IF
 IF(KPROMA /= KSIZE) THEN
   CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'For now, KPROMA must be equal to KSIZE, see code for explanation')
-  ! 2 issues
-  !  * Microphyscs was optimized by introducing chunks of KPROMA size
-  !    Thus, in ice4_tendencies, the 1D array represent only a fraction of the points where microphisical species are present
-  !    We cannot rebuild the entire 3D arrays in the subroutine, so we cannot call ice4_rainfr_vert in it
-  !    A solution would be to suppress optimisation in this case by setting KPROMA=KSIZE in rain_ice
-  !    Another solution would be to compute column by column?
-  !    Another one would be to cut tendencies in 3 parts: before rainfr_vert, rainfr_vert, after rainfr_vert
-  !  * When chuncks are used, result is different
+  ! Microphyscs was optimized by introducing chunks of KPROMA size
+  ! Thus, in ice4_tendencies, the 1D array represent only a fraction of the points where microphisical species are present
+  ! We cannot rebuild the entire 3D arrays in the subroutine, so we cannot call ice4_rainfr_vert in it
+  ! A solution would be to suppress optimisation in this case by setting KPROMA=KSIZE in rain_ice
+  ! Another solution would be to compute column by column?
+  ! Another one would be to cut tendencies in 3 parts: before rainfr_vert, rainfr_vert, after rainfr_vert
 ENDIF
 !
 !*       1.     COMPUTE THE LOOP BOUNDS
@@ -974,12 +973,14 @@ IF (KSIZE > 0) THEN
               IF (LLCPZ0RT) Z0RT(1:IMICRO, JV)=ZVART(1:IMICRO, JV)
               DO JL=1, IMICRO
                 IF (IITER(JL)<INB_ITER_MAX .AND. ABS(ZA(JL,JV))>1.E-20) THEN
-                  ZTIME_THRESHOLD=(SIGN(1., ZA(JL, JV))*XMRSTEP+Z0RT(JL, JV)-ZVART(JL, JV)-ZB(JL, JV))/ZA(JL, JV)
+                  ZTIME_THRESHOLD1D(JL)=(SIGN(1., ZA(JL, JV))*XMRSTEP+Z0RT(JL, JV)-ZVART(JL, JV)-ZB(JL, JV))/ZA(JL, JV)
                 ELSE
-                  ZTIME_THRESHOLD=-1.
+                  ZTIME_THRESHOLD1D(JL)=-1.
                 ENDIF
-                IF (ZTIME_THRESHOLD>=0 .AND. ZTIME_THRESHOLD<ZMAXTIME(JL) .AND. (ZVART(JL, JV)>XRTMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
-                  ZMAXTIME(JL)=MIN(ZMAXTIME(JL), ZTIME_THRESHOLD)
+              ENDDO
+              DO JL=1, IMICRO
+                IF (ZTIME_THRESHOLD1D(JL)>=0 .AND. ZTIME_THRESHOLD1D(JL)<ZMAXTIME(JL) .AND. (ZVART(JL, JV)>XRTMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
+                  ZMAXTIME(JL)=MIN(ZMAXTIME(JL), ZTIME_THRESHOLD1D(JL))
                   ZCOMPUTE(JL)=0.
                 ENDIF
               ENDDO
