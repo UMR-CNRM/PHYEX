@@ -112,7 +112,7 @@ USE MODD_PARAM_LIMA_COLD, ONLY : XLBI, XLBEXI, XLBS, XLBEXS, XBI, XCXS, XCCS, &
 USE MODI_LIMA_FUNCTIONS,  ONLY : COUNTJV
 USE MODD_BUDGET
 USE MODD_NSV, ONLY : NSV_LIMA_NI
-USE MODI_BUDGET
+USE MODI_BUDGET_DDH
 
 USE DDH_MIX, ONLY  : TYP_DDH
 USE YOMLDDH, ONLY  : TLDDH
@@ -379,13 +379,13 @@ IF( IMICRO >= 1 ) THEN
 !
 ! Budget storage
       IF (NBUMOD==KMI .AND. LBU_ENABLE) THEN
-        IF (LBUDGET_RI) CALL BUDGET (                                          &
+        IF (LBUDGET_RI) CALL BUDGET_DDH (                                          &
                    UNPACK(ZRIS(:),MASK=GMICRO(:,:,:),FIELD=PRIS)*PRHODJ(:,:,:),&
                                                                 9,'CNVI_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-        IF (LBUDGET_RS) CALL BUDGET (                                          &
+        IF (LBUDGET_RS) CALL BUDGET_DDH (                                          &
                    UNPACK(ZRSS(:),MASK=GMICRO(:,:,:),FIELD=PRSS)*PRHODJ(:,:,:),&
                                                                10,'CNVI_BU_RRS',YDDDH, YDLDDH, YDMDDH)
-        IF (LBUDGET_SV) CALL BUDGET (                                          &
+        IF (LBUDGET_SV) CALL BUDGET_DDH (                                          &
                    UNPACK(ZCIS(:),MASK=GMICRO(:,:,:),FIELD=PCIS)*PRHODJ(:,:,:), &
                                                    12+NSV_LIMA_NI,'CNVI_BU_RSV',YDDDH, YDLDDH, YDMDDH)
         END IF
@@ -410,13 +410,13 @@ IF( IMICRO >= 1 ) THEN
 !
 ! Budget storage
       IF (NBUMOD==KMI .AND. LBU_ENABLE) THEN
-        IF (LBUDGET_TH) CALL BUDGET (                                                 &
+        IF (LBUDGET_TH) CALL BUDGET_DDH (                                                 &
                    UNPACK(ZTHS(:),MASK=GMICRO(:,:,:),FIELD=PTHS)*PRHODJ(:,:,:),&
                                                                 4,'DEPS_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-        IF (LBUDGET_RV) CALL BUDGET (                                                 &
+        IF (LBUDGET_RV) CALL BUDGET_DDH (                                                 &
                    UNPACK(ZRVS(:),MASK=GMICRO(:,:,:),FIELD=PRVS)*PRHODJ(:,:,:),&
                                                                 6,'DEPS_BU_RRV',YDDDH, YDLDDH, YDMDDH)
-        IF (LBUDGET_RS) CALL BUDGET (                                                 &
+        IF (LBUDGET_RS) CALL BUDGET_DDH (                                                 &
                    UNPACK(ZRSS(:),MASK=GMICRO(:,:,:),FIELD=PRSS)*PRHODJ(:,:,:),&
                                                                10,'DEPS_BU_RRS',YDDDH, YDLDDH, YDMDDH)
       END IF
@@ -446,13 +446,13 @@ IF( IMICRO >= 1 ) THEN
 !
 ! Budget storage
       IF (NBUMOD==KMI .AND. LBU_ENABLE) THEN
-        IF (LBUDGET_RI) CALL BUDGET (                                          &
+        IF (LBUDGET_RI) CALL BUDGET_DDH (                                          &
                    UNPACK(ZRIS(:),MASK=GMICRO(:,:,:),FIELD=PRIS)*PRHODJ(:,:,:),&
                                                                 9,'CNVS_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-        IF (LBUDGET_RS) CALL BUDGET (                                          &
+        IF (LBUDGET_RS) CALL BUDGET_DDH (                                          &
                    UNPACK(ZRSS(:),MASK=GMICRO(:,:,:),FIELD=PRSS)*PRHODJ(:,:,:),&
                                                                10,'CNVS_BU_RRS',YDDDH, YDLDDH, YDMDDH)
-        IF (LBUDGET_SV) CALL BUDGET (                                           &
+        IF (LBUDGET_SV) CALL BUDGET_DDH (                                           &
                    UNPACK(ZCIS(:),MASK=GMICRO(:,:,:),FIELD=PCIS)*PRHODJ(:,:,:), &
                                                    12+NSV_LIMA_NI,'CNVS_BU_RSV',YDDDH, YDLDDH, YDMDDH)
       END IF
@@ -478,13 +478,13 @@ IF( IMICRO >= 1 ) THEN
 !
 ! Budget storage
       IF (NBUMOD==KMI .AND. LBU_ENABLE) THEN
-        IF (LBUDGET_RI) CALL BUDGET (                                               &
+        IF (LBUDGET_RI) CALL BUDGET_DDH (                                               &
                        UNPACK(ZRIS(:),MASK=GMICRO(:,:,:),FIELD=PRIS)*PRHODJ(:,:,:), &
                                                                 9,'AGGS_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-        IF (LBUDGET_RS) CALL BUDGET (                                               &
+        IF (LBUDGET_RS) CALL BUDGET_DDH (                                               &
                        UNPACK(ZRSS(:),MASK=GMICRO(:,:,:),FIELD=PRSS)*PRHODJ(:,:,:), &
                                                                10,'AGGS_BU_RRS',YDDDH, YDLDDH, YDMDDH)
-        IF (LBUDGET_SV) CALL BUDGET (                                               &
+        IF (LBUDGET_SV) CALL BUDGET_DDH (                                               &
                        UNPACK(ZCIS(:),MASK=GMICRO(:,:,:),FIELD=PCIS)*PRHODJ(:,:,:), &
                                                    12+NSV_LIMA_NI,'AGGS_BU_RSV',YDDDH, YDLDDH, YDMDDH)
       END IF
@@ -548,30 +548,30 @@ ELSE
   IF (NBUMOD==KMI .AND. LBU_ENABLE) THEN
     IF (LBUDGET_TH) THEN
       ZW(:,:,:) = PTHS(:,:,:)*PRHODJ(:,:,:)
-      CALL BUDGET (ZW,4,'DEPS_BU_RTH',YDDDH, YDLDDH, YDMDDH)
+      CALL BUDGET_DDH (ZW,4,'DEPS_BU_RTH',YDDDH, YDLDDH, YDMDDH)
     ENDIF
     IF (LBUDGET_RV) THEN
       ZW(:,:,:) = PRVS(:,:,:)*PRHODJ(:,:,:)
-      CALL BUDGET (ZW,6,'DEPS_BU_RRV',YDDDH, YDLDDH, YDMDDH)
+      CALL BUDGET_DDH (ZW,6,'DEPS_BU_RRV',YDDDH, YDLDDH, YDMDDH)
     ENDIF
     IF (LBUDGET_RI) THEN
       ZW(:,:,:) = PRIS(:,:,:)*PRHODJ(:,:,:)
-      CALL BUDGET (ZW,9,'CNVI_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-      CALL BUDGET (ZW,9,'CNVS_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-      CALL BUDGET (ZW,9,'AGGS_BU_RRI',YDDDH, YDLDDH, YDMDDH)
+      CALL BUDGET_DDH (ZW,9,'CNVI_BU_RRI',YDDDH, YDLDDH, YDMDDH)
+      CALL BUDGET_DDH (ZW,9,'CNVS_BU_RRI',YDDDH, YDLDDH, YDMDDH)
+      CALL BUDGET_DDH (ZW,9,'AGGS_BU_RRI',YDDDH, YDLDDH, YDMDDH)
     ENDIF
     IF (LBUDGET_RS) THEN
       ZW(:,:,:) = PRSS(:,:,:)*PRHODJ(:,:,:)
-      CALL BUDGET (ZW,10,'CNVI_BU_RRS',YDDDH, YDLDDH, YDMDDH)
-      CALL BUDGET (ZW,10,'DEPS_BU_RRS',YDDDH, YDLDDH, YDMDDH)
-      CALL BUDGET (ZW,10,'CNVS_BU_RRS',YDDDH, YDLDDH, YDMDDH)
-      CALL BUDGET (ZW,10,'AGGS_BU_RRS',YDDDH, YDLDDH, YDMDDH)
+      CALL BUDGET_DDH (ZW,10,'CNVI_BU_RRS',YDDDH, YDLDDH, YDMDDH)
+      CALL BUDGET_DDH (ZW,10,'DEPS_BU_RRS',YDDDH, YDLDDH, YDMDDH)
+      CALL BUDGET_DDH (ZW,10,'CNVS_BU_RRS',YDDDH, YDLDDH, YDMDDH)
+      CALL BUDGET_DDH (ZW,10,'AGGS_BU_RRS',YDDDH, YDLDDH, YDMDDH)
     ENDIF
     IF (LBUDGET_SV) THEN
       ZW(:,:,:) = PCIS(:,:,:)*PRHODJ(:,:,:)
-      CALL BUDGET (ZW,12+NSV_LIMA_NI,'CNVI_BU_RSV',YDDDH, YDLDDH, YDMDDH)
-      CALL BUDGET (ZW,12+NSV_LIMA_NI,'CNVS_BU_RSV',YDDDH, YDLDDH, YDMDDH)
-      CALL BUDGET (ZW,12+NSV_LIMA_NI,'AGGS_BU_RSV',YDDDH, YDLDDH, YDMDDH)
+      CALL BUDGET_DDH (ZW,12+NSV_LIMA_NI,'CNVI_BU_RSV',YDDDH, YDLDDH, YDMDDH)
+      CALL BUDGET_DDH (ZW,12+NSV_LIMA_NI,'CNVS_BU_RSV',YDDDH, YDLDDH, YDMDDH)
+      CALL BUDGET_DDH (ZW,12+NSV_LIMA_NI,'AGGS_BU_RSV',YDDDH, YDLDDH, YDMDDH)
     ENDIF
   ENDIF
 !

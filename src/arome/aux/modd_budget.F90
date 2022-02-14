@@ -38,10 +38,35 @@
 !*       0.   DECLARATIONS
 !             ------------
 USE MODD_PARAMETERS, ONLY :JPBUMAX, JPBUPROMAX
+USE DDH_MIX, ONLY : TYP_DDH
+USE YOMLDDH, ONLY  : TLDDH
+USE YOMMDDH, ONLY  : TMDDH
 !
 IMPLICIT NONE
 
 SAVE
+!
+INTEGER, PARAMETER:: NBUDGET_RHO = 0  ! Reference number for budget of RhoJ
+INTEGER, PARAMETER:: NBUDGET_U   = 1  ! Reference number for budget of RhoJu  and/or LES budgets with u
+INTEGER, PARAMETER:: NBUDGET_V   = 2  ! Reference number for budget of RhoJv  and/or LES budgets with u
+INTEGER, PARAMETER:: NBUDGET_W   = 3  ! Reference number for budget of RhoJw  and/or LES budgets with u
+INTEGER, PARAMETER:: NBUDGET_TH  = 4  ! Reference number for budget of RhoJTh and/or LES budgets with th
+INTEGER, PARAMETER:: NBUDGET_TKE = 5  ! Reference number for budget of RhoJTke and/or LES budgets with Tke
+INTEGER, PARAMETER:: NBUDGET_RV  = 6  ! Reference number for budget of RhoJrv and/or LES budgets with rv
+INTEGER, PARAMETER:: NBUDGET_RC  = 7  ! Reference number for budget of RhoJrc and/or LES budgets with rc
+INTEGER, PARAMETER:: NBUDGET_RR  = 8  ! Reference number for budget of RhoJrr and/or LES budgets with rr
+INTEGER, PARAMETER:: NBUDGET_RI  = 9  ! Reference number for budget of RhoJri and/or LES budgets with ri
+INTEGER, PARAMETER:: NBUDGET_RS  = 10 ! Reference number for budget of RhoJrs and/or LES budgets with rs
+INTEGER, PARAMETER:: NBUDGET_RG  = 11 ! Reference number for budget of RhoJrg and/or LES budgets with rg
+INTEGER, PARAMETER:: NBUDGET_RH  = 12 ! Reference number for budget of RhoJrh and/or LES budgets with rh
+INTEGER, PARAMETER:: NBUDGET_SV1 = 13 ! Reference number for 1st budget of RhoJsv and/or LES budgets with sv
+!
+TYPE TBUDGETDATA
+  INTEGER :: NBUDGET
+  TYPE(TYP_DDH), POINTER :: YDDDH=>NULL()
+  TYPE(TLDDH), POINTER :: YDLDDH=>NULL()
+  TYPE(TMDDH), POINTER :: YDMDDH=>NULL()
+ENDTYPE
 !
 !                       General variables
 LOGICAL :: LBU_ENABLE=.FALSE.
