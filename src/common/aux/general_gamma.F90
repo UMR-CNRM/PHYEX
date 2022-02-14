@@ -2,42 +2,20 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
-!-----------------------------------------------------------------
-!--------------- special set of characters for RCS information
-!-----------------------------------------------------------------
-! $Source$ $Revision$
-! MASDEV4_7 operators 2006/05/18 13:07:25
-!-----------------------------------------------------------------
-!########################
-MODULE MODI_GENERAL_GAMMA
-!########################
-!
-INTERFACE
-!
-FUNCTION GENERAL_GAMMA(PALPHA,PNU,PLBDA,PX)  RESULT(PGENERAL_GAMMA)
-REAL, INTENT(IN)                                  :: PALPHA
-REAL, INTENT(IN)                                  :: PNU
-REAL, INTENT(IN)                                  :: PLBDA
-REAL, INTENT(IN)                                  :: PX
-REAL                                              :: PGENERAL_GAMMA
-END FUNCTION GENERAL_GAMMA
-!
-END INTERFACE
-!
-END MODULE MODI_GENERAL_GAMMA
-!     ###################################################################
       FUNCTION GENERAL_GAMMA(PALPHA,PNU,PLBDA,PX)  RESULT(PGENERAL_GAMMA)
+      USE PARKIND1, ONLY : JPRB
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ###################################################################
-!     
 !
-!!****  *GENERAL_GAMMA * -  Generalized gamma  function  
-!!                   
+!
+!!****  *GENERAL_GAMMA * -  Generalized gamma  function
+!!
 !!
 !!    PURPOSE
 !!    -------
 !       The purpose of this function is to compute the Generalized gamma
 !    function of its argument.
-!    
+!
 !
 !!**  METHOD
 !!    ------
@@ -57,7 +35,7 @@ END MODULE MODI_GENERAL_GAMMA
 !!
 !!    AUTHOR
 !!    ------
-!!  	Jean-Pierre Pinty *LA/OMP*
+!!      Jean-Pierre Pinty *LA/OMP*
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -82,10 +60,13 @@ REAL                                 :: PGENERAL_GAMMA
 !
 REAL                                 :: ZARG,ZPOWER
 !
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('GENERAL_GAMMA',0,ZHOOK_HANDLE)
 ZARG   = PLBDA*PX
 ZPOWER = PALPHA*PNU - 1.0
 !
 PGENERAL_GAMMA = (PALPHA/GAMMA(PNU))*(ZARG**ZPOWER)*PLBDA*EXP(-(ZARG**PALPHA))
+IF (LHOOK) CALL DR_HOOK('GENERAL_GAMMA',1,ZHOOK_HANDLE)
 RETURN
 !
 END FUNCTION GENERAL_GAMMA
