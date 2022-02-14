@@ -58,3 +58,15 @@ phyex/micro/modi_gamma.F90
 phyex/micro/modi_gamma_inc.F90
 phyex/micro/modi_general_gamma.F90
 phyex/micro/moddb_intbudget.F90
+arome/micro/read_xker_gweth.F90
+arome/micro/read_xker_raccs.F90
+arome/micro/read_xker_rdryg.F90
+arome/micro/read_xker_rweth.F90
+arome/micro/read_xker_sdryg.F90
+arome/micro/read_xker_sweth.F90
+arome/micro/modi_read_xker_gweth.F90
+arome/micro/modi_read_xker_raccs.F90
+arome/micro/modi_read_xker_rdryg.F90
+arome/micro/modi_read_xker_rweth.F90
+arome/micro/modi_read_xker_sdryg.F90
+arome/micro/modi_read_xker_sweth.F90
