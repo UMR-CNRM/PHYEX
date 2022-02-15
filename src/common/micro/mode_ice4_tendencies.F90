@@ -6,22 +6,6 @@
 MODULE MODE_ICE4_TENDENCIES
 IMPLICIT NONE
 CONTAINS
-!
-!
-!
-!
-!
-!
-!!! NOTE: *quand l'array syntax sera remplacée par des boucles, en profiter
-!!!        pour supprimer les arguments PA et PB des différentes routines
-!!!        pour generaliser le fonctionnement de nucleation, rimltc et rrhong
-!!!       *avec loop, pcompute *et* llcompute utiles tous les deux?
-!
-!
-!
-!
-!
-!
 SUBROUTINE ICE4_TENDENCIES(KPROMA, KSIZE, KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKE, KKT, KKL, &
                           &KRR, ODSOFT, PCOMPUTE, &
                           &OWARM, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
@@ -64,6 +48,7 @@ SUBROUTINE ICE4_TENDENCIES(KPROMA, KSIZE, KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKE
 !          ------------
 !
 USE MODD_BUDGET,    ONLY : LBU_ENABLE
+USE MODE_MSG,            ONLY: PRINT_MSG, NVERB_FATAL
 USE MODD_CST,            ONLY: XALPI, XBETAI, XCI, XCPV, XEPSILO, XGAMI, XLSTT, XMD, XMV, XP00, XRV, XTT
 USE MODD_PARAM_ICE,      ONLY: CSNOWRIMING
 USE MODD_RAIN_ICE_DESCR, ONLY: XLBDAS_MAX, XLBEXG, XLBEXH, XLBEXR, XLBEXS, XLBG, XLBH, XLBR, XLBS, XRTMIN
@@ -175,14 +160,14 @@ REAL, DIMENSION(KPROMA, 10),   INTENT(INOUT) :: PRH_TEND
 REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PSSI
 REAL, DIMENSION(KPROMA,0:KRR), INTENT(OUT)   :: PA
 REAL, DIMENSION(KPROMA,0:KRR), INTENT(OUT)   :: PB
-REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PHLC_HCF
-REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PHLC_LCF
-REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PHLC_HRC
-REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PHLC_LRC
-REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PHLI_HCF
-REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PHLI_LCF
-REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PHLI_HRI
-REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PHLI_LRI
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLC_HCF
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLC_LCF
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLC_HRC
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLC_LRC
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLI_HCF
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLI_LCF
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLI_HRI
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLI_LRI
 REAL, DIMENSION(KIT,KJT,KKT), INTENT(OUT)   :: PRAINFR   ! Rain fraction
 !
 !*       0.2  declaration of local variables
@@ -319,6 +304,16 @@ CALL ICE4_COMPUTE_PDF(KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF,&
                       PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, ZRAINFR)
 LLRFR=HSUBG_RC_RR_ACCR=='PRFR' .OR. HSUBG_RR_EVAP=='PRFR'
 IF (LLRFR) THEN
+  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODE_ICE4_TENDENCIES', &
+          'LLRFR case broken by optimisation, see comments in mode_ice4_tendencies to knwon why (and how to reapir)....')
+  !Microphyscs was optimized by introducing chunks of KPROMA size
+  !Thus, in ice4_tendencies, the 1D array represent only a fraction of the points where microphisical species are present
+  !We cannot rebuild the entire 3D arrays here, so we cannot call ice4_rainfr_vert here
+  !A solution would be to suppress optimisation in this case by setting KPROMA=KSIZE in rain_ice
+  !Another solution would be to compute column by column?
+  !Another one would be to cut tendencies in 3 parts: before rainfr_vert, rainfr_vert, after rainfr_vert
+
+
   !Diagnostic of precipitation fraction
   PRAINFR(:,:,:) = 0.
   ZRRT3D (:,:,:) = 0.

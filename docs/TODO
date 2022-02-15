@@ -19,19 +19,32 @@ Merge pb:
 - ice4_nucleation_wrapper:
        Tableaux allocatable introduits par Philippe dans meso-nh.
        Pas introduits (pour l'instant?) dans version common.
-       Ryad doit faire des tests pour regarder impact des allaocatble sur CPU.
-           si test OK, on passe en alloacatble
-           si test KO, arbitrage entre Philippe et Riad
-- ice4_sedimentation_*:
-       Philippe a déclaré PINPRC et PINDEP en (:,:) à la place de (KIT,KJT)
-       En commentaire (version split), il met "dimensions of PINPRC and PINDEP not necessarily KIT,KJT"
-       Comprendre pourquoi, comment ça peut marcher dans la sédimentation
-       Code dans common en (KIT,KJT)
-           repasser code en (:,:) si besoin, ou passer en arg les dimensions effectives
-           ou modifier MNH pour toujours avoir KIT,KJT
-           une partie du code est maintentant dans rain_ice (déposition)
+       Ryad a fait des tests pour regarder impact des allocatable sur CPU => temps * 2
+       Code à nettoyer quelque soit l'option retenue
+
+- rain_ice_red: le cas test MesoNH n'est pas bit repro (diffs > 1% sur rapports de melange)
+                sur la modif src/mesonh/rain_ice_red au commit bdd10dd (First rain_ice new/red merge)
 
 Etape 2: array syntax -> loop
 - en profiter pour supprimer args PA/PB des routines appelées depuis ice4_tendencies, comme pour nucleation
+- regarder si pcompute et llcompute sont toujours tous deux nécessaires dans les mode_ice4* avec le passage en do
 - si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
 - transformer sedimentation_split_momentum comme sedimentation_split
+
+Pb identifiés à corriger plus tard:
+- deposition devrait être déplacée dans ice4_tendencies
+- non reproduction en changeant le nombre de procs
+- avec les optimisations de Ryad, les tableaux 3D de precip passés à ice4_tendencies
+  lorsque HSUBG_RC_RR_ACCR=='PRFR' ne sont  pas utilisables puisque les K1, K2 et K3
+  sont relatifs à la boucle IMICRO et que les calculs faits en debut de routine ne
+  concernent qu'une partie des points
+       => à corriger
+- avec découpage en KPROMA, le code ne produit plus les memes resultats
+- seules les options oper ont été testées, il manque des test pour sedim_after, nmaxiter, xmrstep, xtstep, autoconv, rainfr
+
+Répertoire arome/ext contient les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
+Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayant été fournies par ailleurs
+
+Budgets/DDH
+- Le code dans budget_DDH devra être transféré dans mode_budget
+- les routines arome specifiques aux budgets sont dans mpa/micro, il faudrait les mettre ailleurs

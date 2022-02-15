@@ -1,9 +1,9 @@
 !     ######spl
       SUBROUTINE  ARO_RAIN_ICE(KPROMA,KKA,KKU,KKL,KLON,KLEV,  KRR, KTCOUNT, KSPLITR,&
                                   KEZDIAG, &
-                                  OSUBG_COND, CSUBG_AUCV_RC,OSEDIC, CSEDIM, CMICRO, &
+                                  OSUBG_COND, CSUBG_AUCV_RC, CSUBG_AUCV_RI,OSEDIC, CSEDIM, CMICRO, &
                                   PTSTEP, PDZZ, PRHODJ, PRHODREF, PEXNREF,&
-                                  PPABSM, PTHT, PRT, PSIGS,PCLDFR, &
+                                  PPABSM, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PTHT, PRT, PSIGS,PCLDFR, &
                                   PTHS, PRS, PEVAP,  &
                                   PCIT, OWARM, PSEA, PTOWN,   &
                                   OCND2,LGRSN, &
@@ -91,8 +91,9 @@ USE MODD_PARAMETERS
 USE MODD_RAIN_ICE_DESCR
 USE MODD_SPP_TYPE
 !
-USE MODD_BUDGET
-USE MODI_BUDGET
+USE MODD_BUDGET, ONLY: LBUDGET_RV, LBUDGET_RC, LBUDGET_RR, LBUDGET_RI, LBUDGET_RS, &
+                     & LBUDGET_RG, LBUDGET_RH, LBUDGET_TH, TBUDGETDATA, NBUDGET_RH
+USE MODI_BUDGET_DDH
 !
 USE MODI_RAIN_ICE
 !
@@ -125,6 +126,8 @@ INTEGER,                  INTENT(IN)   :: KEZDIAG  ! Size of diagnostics array
 LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid Cond.
 CHARACTER (LEN=4),        INTENT(IN)   :: CSUBG_AUCV_RC
                                         ! type of subgrid rc->rr autoconvertion scheme
+CHARACTER (LEN=80),       INTENT(IN)   :: CSUBG_AUCV_RI
+                                        ! type of subgrid ri->rs autoconvertion scheme
 LOGICAL,                  INTENT(IN)   :: OSEDIC ! Switch for cloud sedim.
 CHARACTER (LEN=4),        INTENT(IN)   :: CSEDIM  ! Sedimentation scheme
                                                   ! (STAT or EULE)
@@ -139,6 +142,10 @@ REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PEXNREF ! Reference Exner functi
 !
 !
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PPABSM  ! abs. pressure at time t-dt
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PHLC_HRC
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PHLC_HCF
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PHLI_HRI
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PHLI_HCF
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PTHT    ! Theta at time t
 REAL, DIMENSION(KLON,1,KLEV,KRR), INTENT(INOUT):: PRT   ! Moist variables at time t
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PSIGS   ! Sigma_s at time t
@@ -168,9 +175,9 @@ REAL, DIMENSION(KLON,1,KLEV,KRR), INTENT(INOUT) :: PFPR ! upper-air precip
 REAL, DIMENSION(KLON,YSPP%N2D), TARGET, INTENT(INOUT) :: PGP2DSPP
 REAL, DIMENSION(KLON,KLEV,KEZDIAG), INTENT(INOUT) :: PEZDIAG
 !
-TYPE(TYP_DDH), INTENT(INOUT) :: YDDDH
-TYPE(TLDDH), INTENT(IN) :: YDLDDH
-TYPE(TMDDH), INTENT(IN) :: YDMDDH
+TYPE(TYP_DDH), INTENT(INOUT), TARGET :: YDDDH
+TYPE(TLDDH), INTENT(IN), TARGET :: YDLDDH
+TYPE(TMDDH), INTENT(IN), TARGET :: YDMDDH
 !
 !
 !*       0.2   Declarations of local variables :
@@ -180,6 +187,8 @@ INTEGER :: JRR           ! Loop index for the moist and scalar variables
 !
 REAL, DIMENSION(KLON,1,KLEV):: ZT,ZLV,ZLS,ZCPH
 REAL, DIMENSION(KLON,1,KLEV):: ZCOR
+REAL, DIMENSION(KLON,1):: ZINDEP     ! surf cloud deposition (already contained in sedimentation)
+REAL, DIMENSION(KLON,1,KLEV):: ZRAINFR
 REAL, DIMENSION(KLON,1):: ZINPRC    ! surf cloud sedimentation
                                     ! for the correction of negative rv
 REAL  :: ZMASSTOT                   ! total mass  for one water category
@@ -191,6 +200,8 @@ REAL  :: ZRATIO                     ! ZMASSTOT / ZMASSCOR
 TYPE(TSPP_CONFIG_MPA) :: YSPP_ICENU,YSPP_KGN_ACON,YSPP_KGN_SBGR
 
 LOGICAL, DIMENSION(KLON, 1, KLEV) :: LLMICRO !mask to limit computation
+
+TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH) :: YLBUDGET !NBUDGET_RH is the one with the highest number
 !
 INTEGER :: IPROMA, ISIZE, IGPBLKS ! cache-blocking management
 !
@@ -366,15 +377,21 @@ END SELECT
 !
 !*       3.3  STORE THE BUDGET TERMS
 !            ----------------------
-IF (LBUDGET_RV) CALL BUDGET (PRS(:,:,:,1) * PRHODJ(:,:,:), 6,'NEGA_BU_RRV',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_RC) CALL BUDGET (PRS(:,:,:,2) * PRHODJ(:,:,:), 7,'NEGA_BU_RRC',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_RR) CALL BUDGET (PRS(:,:,:,3) * PRHODJ(:,:,:), 8,'NEGA_BU_RRR',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_RI) CALL BUDGET (PRS(:,:,:,4) * PRHODJ(:,:,:) ,9,'NEGA_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_RS) CALL BUDGET (PRS(:,:,:,5) * PRHODJ(:,:,:),10,'NEGA_BU_RRS',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_RG) CALL BUDGET (PRS(:,:,:,6) * PRHODJ(:,:,:),11,'NEGA_BU_RRG',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_RH) CALL BUDGET (PRS(:,:,:,7) * PRHODJ(:,:,:),12,'NEGA_BU_RRH',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_TH) CALL BUDGET (PTHS(:,:,:)  * PRHODJ(:,:,:), 4,'NEGA_BU_RTH',YDDDH, YDLDDH, YDMDDH)
+IF (LBUDGET_RV) CALL BUDGET_DDH (PRS(:,:,:,1) * PRHODJ(:,:,:), 6,'NEGA_BU_RRV',YDDDH, YDLDDH, YDMDDH)
+IF (LBUDGET_RC) CALL BUDGET_DDH (PRS(:,:,:,2) * PRHODJ(:,:,:), 7,'NEGA_BU_RRC',YDDDH, YDLDDH, YDMDDH)
+IF (LBUDGET_RR) CALL BUDGET_DDH (PRS(:,:,:,3) * PRHODJ(:,:,:), 8,'NEGA_BU_RRR',YDDDH, YDLDDH, YDMDDH)
+IF (LBUDGET_RI) CALL BUDGET_DDH (PRS(:,:,:,4) * PRHODJ(:,:,:) ,9,'NEGA_BU_RRI',YDDDH, YDLDDH, YDMDDH)
+IF (LBUDGET_RS) CALL BUDGET_DDH (PRS(:,:,:,5) * PRHODJ(:,:,:),10,'NEGA_BU_RRS',YDDDH, YDLDDH, YDMDDH)
+IF (LBUDGET_RG) CALL BUDGET_DDH (PRS(:,:,:,6) * PRHODJ(:,:,:),11,'NEGA_BU_RRG',YDDDH, YDLDDH, YDMDDH)
+IF (LBUDGET_RH .AND. KRR==7) CALL BUDGET_DDH (PRS(:,:,:,7) * PRHODJ(:,:,:),12,'NEGA_BU_RRH',YDDDH, YDLDDH, YDMDDH)
+IF (LBUDGET_TH) CALL BUDGET_DDH (PTHS(:,:,:)  * PRHODJ(:,:,:), 4,'NEGA_BU_RTH',YDDDH, YDLDDH, YDMDDH)
 
+DO JRR=1, NBUDGET_RH
+  YLBUDGET(JRR)%NBUDGET=JRR
+  YLBUDGET(JRR)%YDDDH=>YDDDH
+  YLBUDGET(JRR)%YDLDDH=>YDLDDH
+  YLBUDGET(JRR)%YDMDDH=>YDMDDH
+ENDDO
 !
 !
 !-------------------------------------------------------------------------------
@@ -399,12 +416,15 @@ ELSE
 ENDIF
 IF (CMICRO=='ICE4') THEN
     CALL RAIN_ICE(  IPROMA, KLON, 1, KLEV, ISIZE, &
-                 &  OSEDIC=OSEDIC, OCND2=OCND2, HSEDIM=CSEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC,&
+                 &  OSEDIC=OSEDIC, OCND2=OCND2, HSEDIM=CSEDIM, &
+                 &  HSUBG_AUCV_RC=CSUBG_AUCV_RC, HSUBG_AUCV_RI=CSUBG_AUCV_RI,&
                  &  OWARM=OWARM,KKA=KKA,KKU=KKU,KKL=KKL, &
                  &  PTSTEP=2*PTSTEP, &
                  &  KRR=KRR, LDMICRO=LLMICRO, PEXN=PEXNREF,            &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF, PEXNREF=PEXNREF,&
                  &  PPABST=PPABSM, PCIT=PCIT, PCLDFR=PCLDFR,  &
+                 &  PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, &
+                 &  PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF, &
                  &  PTHT=PTHT,PRVT= PRT(:,:,:,1),PRCT= PRT(:,:,:,2), &
                  &  PRRT=PRT(:,:,:,3), &
                  &  PRIT=PRT(:,:,:,4), PRST=PRT(:,:,:,5), &
@@ -413,18 +433,21 @@ IF (CMICRO=='ICE4') THEN
                  &  PRRS=PRS(:,:,:,3),&
                  &  PRIS=PRS(:,:,:,4),PRSS= PRS(:,:,:,5),PRGS= PRS(:,:,:,6),&
                  &  PINPRC=ZINPRC,PINPRR=PINPRR,PEVAP3D=PEVAP,&
-                 &  PINPRS=PINPRS, PINPRG=PINPRG, &
+                 &  PINPRS=PINPRS, PINPRG=PINPRG, PINDEP=ZINDEP, PRAINFR=ZRAINFR, &
                  &  PSIGS=PSIGS, PSEA=PSEA, PTOWN=PTOWN, PRHT=PRT(:,:,:,7),&
                  &  PRHS=PRS(:,:,:,7), PINPRH=PINPRH, PFPR=PFPR, &
-                 &  YDDDH=YDDDH, YDLDDH=YDLDDH, YDMDDH=YDMDDH)
+                 &  TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET))
 ELSEIF (CMICRO=='ICE3') THEN
     CALL RAIN_ICE(  IPROMA, KLON, 1, KLEV, ISIZE, &
-                 &  OSEDIC=OSEDIC, OCND2=OCND2, HSEDIM=CSEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC, &
+                 &  OSEDIC=OSEDIC, OCND2=OCND2, HSEDIM=CSEDIM, &
+                 &  HSUBG_AUCV_RC=CSUBG_AUCV_RC, HSUBG_AUCV_RI=CSUBG_AUCV_RI,&
                  &  OWARM=OWARM,KKA=KKA,KKU=KKU,KKL=KKL, &
                  &  PTSTEP=2*PTSTEP, &
                  &  KRR=KRR, LDMICRO=LLMICRO, PEXN=PEXNREF,            &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF,PEXNREF=PEXNREF,&
                  &  PPABST=PPABSM, PCIT=PCIT, PCLDFR=PCLDFR,  &
+                 &  PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, &
+                 &  PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF, &
                  &  PTHT=PTHT,PRVT=PRT(:,:,:,1),PRCT=PRT(:,:,:,2), &
                  &  PRRT=PRT(:,:,:,3), &
                  &  PRIT=PRT(:,:,:,4), PRST=PRT(:,:,:,5), &
@@ -433,9 +456,9 @@ ELSEIF (CMICRO=='ICE3') THEN
                  &  PRRS=PRS(:,:,:,3),&
                  &  PRIS=PRS(:,:,:,4),PRSS= PRS(:,:,:,5),PRGS= PRS(:,:,:,6),&
                  &  PINPRC=ZINPRC,PINPRR=PINPRR,PEVAP3D=PEVAP,&
-                 &  PINPRS=PINPRS, PINPRG=PINPRG, &
+                 &  PINPRS=PINPRS, PINPRG=PINPRG, PINDEP=ZINDEP, PRAINFR=ZRAINFR, &
                  &  PSIGS=PSIGS, PSEA=PSEA, PTOWN=PTOWN, PFPR=PFPR, &
-                 &  YDDDH=YDDDH, YDLDDH=YDLDDH, YDMDDH=YDMDDH)
+                 &  TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET))
 ELSEIF (CMICRO=='OLD4') THEN
     CALL RAIN_ICE_OLD( OSEDIC=OSEDIC, OCND2=OCND2, LGRSN=LGRSN, HSEDIM=CSEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC,&
                  &  OWARM=OWARM,KKA=KKA,KKU=KKU,KKL=KKL,KSPLITR=KSPLITR, &

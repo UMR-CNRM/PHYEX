@@ -131,7 +131,7 @@ USE MODI_GRADIENT_W
 USE MODI_SHUMAN , ONLY : DZM, DZF, MZM, MZF
 USE MODI_TRIDIAG 
 USE MODI_TRIDIAG_TKE
-USE MODI_BUDGET
+USE MODI_BUDGET_DDH
 USE MODE_FMWRIT
 USE MODI_LES_MEAN_SUBGRID
 !
@@ -335,18 +335,18 @@ IF (LBUDGET_TKE) THEN
 ! add the dynamical production
 !
   PRTKES(:,:,:) = PRTKES(:,:,:) + PDP(:,:,:) * PRHODJ(:,:,:)
-  CALL BUDGET (PRTKES(:,:,:),5,'DP_BU_RTKE',YDDDH, YDLDDH, YDMDDH)
+  CALL BUDGET_DDH (PRTKES(:,:,:),5,'DP_BU_RTKE',YDDDH, YDLDDH, YDMDDH)
 !
 ! add the thermal production
 !
   PRTKES(:,:,:) = PRTKES(:,:,:) + PTP(:,:,:) * PRHODJ(:,:,:)
-  CALL BUDGET (PRTKES(:,:,:),5,'TP_BU_RTKE',YDDDH, YDLDDH, YDMDDH)
+  CALL BUDGET_DDH (PRTKES(:,:,:),5,'TP_BU_RTKE',YDDDH, YDLDDH, YDMDDH)
 !
 ! add the dissipation
 !
 PRTKES(:,:,:) = PRTKES(:,:,:) - XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * &
                 (PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:)) * PRHODJ(:,:,:)
-CALL BUDGET (PRTKES(:,:,:),5,'DISS_BU_RTKE',YDDDH, YDLDDH, YDMDDH)
+CALL BUDGET_DDH (PRTKES(:,:,:),5,'DISS_BU_RTKE',YDDDH, YDLDDH, YDMDDH)
 END IF 
 !
 !*       2.5  computes the final RTKE and stores the whole turbulent transport
@@ -359,7 +359,7 @@ PRTKES(:,:,:) = ZRES(:,:,:) * PRHODJ(:,:,:) / PTSTEP
 !
 ! stores the whole turbulent transport
 !
-IF (LBUDGET_TKE) CALL BUDGET (PRTKES(:,:,:),5,'TR_BU_RTKE',YDDDH, YDLDDH, YDMDDH)
+IF (LBUDGET_TKE) CALL BUDGET_DDH (PRTKES(:,:,:),5,'TR_BU_RTKE',YDDDH, YDLDDH, YDMDDH)
 !
 !
 !----------------------------------------------------------------------------

@@ -149,6 +149,10 @@ CHARACTER(LEN=80) :: CSUBG_RR_EVAP ! type of evaporation scheme
                                    ! 'PRFR, 'CLFR' or 'NONE'
 CHARACTER(LEN=80) :: CSUBG_PR_PDF  ! PDF chosen for precipitation production
                                    ! (NONE, SIGM, HLCRECTPD, HLCTRIANGPDF, HLCQUADRAPDF or HLCISOTRIPDF)
+CHARACTER(LEN=80) :: CSUBG_AUCV_RI ! type of ri->rs autoconversion scheme
+                                   ! 'NONE', 'CLFR' or 'ADJU'
+CHARACTER(LEN=80) :: CSUBG_MF_PDF  ! PDF to use on MF cloud to retrieve low and high cloud parts
+                                   ! 'NONE' or 'TRIANGLE'
 
 !* for autoconversion qi,qc
 REAL(KIND=JPRB) :: RCRIAUTI ! ice autoconversion threshold
@@ -190,6 +194,9 @@ REAL(KIND=JPRB) :: GQVTOP ! qv value at the top of the atmopshere.
 LOGICAL :: LQVTOP ! to activate modification of qv in input to radiation.
 
 INTEGER(KIND=JPIM) :: NPROMICRO ! special cache-blocking factor for microphysics
+
+CHARACTER(LEN=80) :: CCONDENS !condensation formulation. 'GAUS' or 'CB02'
+CHARACTER(LEN=4) :: CLAMBDA3 !formulation for the lambda3 coeff used with s'r'. 'CB' or 'NONE'
 
 END TYPE TPARAR
 

@@ -117,7 +117,7 @@ USE MODD_PARAM_LIMA_WARM
 !
 USE MODD_NSV, ONLY : NSV_LIMA_NC, NSV_LIMA_NR
 USE MODD_BUDGET
-USE MODI_BUDGET
+USE MODI_BUDGET_DDH
 !
 USE MODI_LIMA_FUNCTIONS, ONLY : COUNTJV
 !
@@ -280,7 +280,7 @@ IF( IMICRO >= 1 ) THEN
 !
 !
   ZW(:,:,:) = PCCS(:,:,:)
-  IF (LBUDGET_SV) CALL BUDGET (                                 &
+  IF (LBUDGET_SV) CALL BUDGET_DDH (                                 &
                    UNPACK(ZCCS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:))&
                    &*PRHODJ(:,:,:),12+NSV_LIMA_NC,'SELF_BU_RSV',YDDDH, YDLDDH, YDMDDH) 
 !
@@ -316,21 +316,21 @@ IF (LRAIN_LIMA) THEN
 !
 !
    ZW(:,:,:) = PRCS(:,:,:)
-   IF (LBUDGET_RC) CALL BUDGET (                                  &
+   IF (LBUDGET_RC) CALL BUDGET_DDH (                                  &
                UNPACK(ZRCS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:)) &
                             *PRHODJ(:,:,:),7 ,'AUTO_BU_RRC',YDDDH, YDLDDH, YDMDDH)
 
    ZW(:,:,:) = PRRS(:,:,:)
-   IF (LBUDGET_RR) CALL BUDGET (                                  &
+   IF (LBUDGET_RR) CALL BUDGET_DDH (                                  &
                UNPACK(ZRRS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:)) &
                             *PRHODJ(:,:,:),8 ,'AUTO_BU_RRR',YDDDH, YDLDDH, YDMDDH)
    ZW(:,:,:) = PCRS(:,:,:)
    IF (LBUDGET_SV) THEN
       ZW(:,:,:) = PCRS(:,:,:)
-      CALL BUDGET (UNPACK(ZCRS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:)) &
+      CALL BUDGET_DDH (UNPACK(ZCRS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:)) &
                *PRHODJ(:,:,:),12+NSV_LIMA_NR,'AUTO_BU_RSV',YDDDH, YDLDDH, YDMDDH)
       ZW(:,:,:) = PCCS(:,:,:)
-      CALL BUDGET (UNPACK(ZCCS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:)) &
+      CALL BUDGET_DDH (UNPACK(ZCCS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:)) &
                *PRHODJ(:,:,:),12+NSV_LIMA_NC,'AUTO_BU_RSV',YDDDH, YDLDDH, YDMDDH)
    END IF
 !
@@ -382,15 +382,15 @@ IF (LRAIN_LIMA) THEN
 !
 !
    ZW(:,:,:) = PRCS(:,:,:)
-   IF (LBUDGET_RC) CALL BUDGET (                                  &
+   IF (LBUDGET_RC) CALL BUDGET_DDH (                                  &
                UNPACK(ZRCS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:)) &
                               *PRHODJ(:,:,:),7 ,'ACCR_BU_RRC',YDDDH, YDLDDH, YDMDDH)
    ZW(:,:,:) = PRRS(:,:,:)
-   IF (LBUDGET_RR) CALL BUDGET (                                  &
+   IF (LBUDGET_RR) CALL BUDGET_DDH (                                  &
                UNPACK(ZRRS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:)) &
                               *PRHODJ(:,:,:),8 ,'ACCR_BU_RRR',YDDDH, YDLDDH, YDMDDH)
    ZW(:,:,:) = PCCS(:,:,:)
-   IF (LBUDGET_SV) CALL BUDGET (                                  &
+   IF (LBUDGET_SV) CALL BUDGET_DDH (                                  &
                UNPACK(ZCCS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:)) &
                   *PRHODJ(:,:,:),12+NSV_LIMA_NC,'ACCR_BU_RSV',YDDDH, YDLDDH, YDMDDH)
 !
@@ -440,7 +440,7 @@ IF (LRAIN_LIMA) THEN
 !
 !
    ZW(:,:,:) = PCRS(:,:,:)
-   IF (LBUDGET_SV) CALL BUDGET (                                  &
+   IF (LBUDGET_SV) CALL BUDGET_DDH (                                  &
                UNPACK(ZCRS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:)) &
                   *PRHODJ(:,:,:),12+NSV_LIMA_NR,'SCBU_BU_RSV',YDDDH, YDLDDH, YDMDDH)
 !
@@ -493,18 +493,18 @@ ELSE
 !        ------------------------
 !
 !
-   IF (LBUDGET_SV) CALL BUDGET (PCCS(:,:,:)*PRHODJ(:,:,:),12+NSV_LIMA_NC,'SELF_BU_RSV',YDDDH, YDLDDH, YDMDDH)
+   IF (LBUDGET_SV) CALL BUDGET_DDH (PCCS(:,:,:)*PRHODJ(:,:,:),12+NSV_LIMA_NC,'SELF_BU_RSV',YDDDH, YDLDDH, YDMDDH)
 !
-   IF (LBUDGET_RC) CALL BUDGET (PRCS(:,:,:)*PRHODJ(:,:,:),7 ,'AUTO_BU_RRC',YDDDH, YDLDDH, YDMDDH)
-   IF (LBUDGET_RR) CALL BUDGET (PRRS(:,:,:)*PRHODJ(:,:,:),8 ,'AUTO_BU_RRR',YDDDH, YDLDDH, YDMDDH)
-   IF (LBUDGET_SV) CALL BUDGET (PCRS(:,:,:)*PRHODJ(:,:,:),12+NSV_LIMA_NR,'AUTO_BU_RSV',YDDDH, YDLDDH, YDMDDH)
-   IF (LBUDGET_SV) CALL BUDGET (PCCS(:,:,:)*PRHODJ(:,:,:),12+NSV_LIMA_NC,'AUTO_BU_RSV',YDDDH, YDLDDH, YDMDDH)
+   IF (LBUDGET_RC) CALL BUDGET_DDH (PRCS(:,:,:)*PRHODJ(:,:,:),7 ,'AUTO_BU_RRC',YDDDH, YDLDDH, YDMDDH)
+   IF (LBUDGET_RR) CALL BUDGET_DDH (PRRS(:,:,:)*PRHODJ(:,:,:),8 ,'AUTO_BU_RRR',YDDDH, YDLDDH, YDMDDH)
+   IF (LBUDGET_SV) CALL BUDGET_DDH (PCRS(:,:,:)*PRHODJ(:,:,:),12+NSV_LIMA_NR,'AUTO_BU_RSV',YDDDH, YDLDDH, YDMDDH)
+   IF (LBUDGET_SV) CALL BUDGET_DDH (PCCS(:,:,:)*PRHODJ(:,:,:),12+NSV_LIMA_NC,'AUTO_BU_RSV',YDDDH, YDLDDH, YDMDDH)
 !
-   IF (LBUDGET_RC) CALL BUDGET (PRCS(:,:,:)*PRHODJ(:,:,:),7 ,'ACCR_BU_RRC',YDDDH, YDLDDH, YDMDDH)
-   IF (LBUDGET_RR) CALL BUDGET (PRRS(:,:,:)*PRHODJ(:,:,:),8 ,'ACCR_BU_RRR',YDDDH, YDLDDH, YDMDDH)
-   IF (LBUDGET_SV) CALL BUDGET (PCCS(:,:,:)*PRHODJ(:,:,:),12+NSV_LIMA_NC,'ACCR_BU_RSV',YDDDH, YDLDDH, YDMDDH)
+   IF (LBUDGET_RC) CALL BUDGET_DDH (PRCS(:,:,:)*PRHODJ(:,:,:),7 ,'ACCR_BU_RRC',YDDDH, YDLDDH, YDMDDH)
+   IF (LBUDGET_RR) CALL BUDGET_DDH (PRRS(:,:,:)*PRHODJ(:,:,:),8 ,'ACCR_BU_RRR',YDDDH, YDLDDH, YDMDDH)
+   IF (LBUDGET_SV) CALL BUDGET_DDH (PCCS(:,:,:)*PRHODJ(:,:,:),12+NSV_LIMA_NC,'ACCR_BU_RSV',YDDDH, YDLDDH, YDMDDH)
 !
-   IF (LBUDGET_SV) CALL BUDGET (PCRS(:,:,:)*PRHODJ(:,:,:),12+NSV_LIMA_NR,'SCBU_BU_RSV',YDDDH, YDLDDH, YDMDDH)
+   IF (LBUDGET_SV) CALL BUDGET_DDH (PCRS(:,:,:)*PRHODJ(:,:,:),12+NSV_LIMA_NR,'SCBU_BU_RSV',YDDDH, YDLDDH, YDMDDH)
 
 END IF ! IMICRO
 !
