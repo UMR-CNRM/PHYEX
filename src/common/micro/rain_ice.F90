@@ -411,6 +411,7 @@ REAL, DIMENSION(KPROMA) :: ZRVHENI_MR, & ! heterogeneous nucleation mixing ratio
 !
 !For mixing-ratio-splitting
 LOGICAL :: LLCPZ0RT
+REAL :: ZTIME_THRESHOLD1D(KPROMA) ! Time to reach threshold
 REAL, DIMENSION(KPROMA, KRR) :: Z0RT ! Mixing-ratios at the beginig of the current loop
 !
 REAL, DIMENSION(KPROMA,0:7) :: &
@@ -974,12 +975,14 @@ IF (KSIZE > 0) THEN
               IF (LLCPZ0RT) Z0RT(1:IMICRO, JV)=ZVART(1:IMICRO, JV)
               DO JL=1, IMICRO
                 IF (IITER(JL)<INB_ITER_MAX .AND. ABS(ZA(JL,JV))>1.E-20) THEN
-                  ZTIME_THRESHOLD=(SIGN(1., ZA(JL, JV))*XMRSTEP+Z0RT(JL, JV)-ZVART(JL, JV)-ZB(JL, JV))/ZA(JL, JV)
+                  ZTIME_THRESHOLD1D(JL)=(SIGN(1., ZA(JL, JV))*XMRSTEP+Z0RT(JL, JV)-ZVART(JL, JV)-ZB(JL, JV))/ZA(JL, JV)
                 ELSE
-                  ZTIME_THRESHOLD=-1.
+                  ZTIME_THRESHOLD1D(JL)=-1.
                 ENDIF
-                IF (ZTIME_THRESHOLD>=0 .AND. ZTIME_THRESHOLD<ZMAXTIME(JL) .AND. (ZVART(JL, JV)>XRTMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
-                  ZMAXTIME(JL)=MIN(ZMAXTIME(JL), ZTIME_THRESHOLD)
+              ENDDO
+              DO JL=1, IMICRO
+                IF (ZTIME_THRESHOLD1D(JL)>=0 .AND. ZTIME_THRESHOLD1D(JL)<ZMAXTIME(JL) .AND. (ZVART(JL, JV)>XRTMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
+                  ZMAXTIME(JL)=MIN(ZMAXTIME(JL), ZTIME_THRESHOLD1D(JL))
                   ZCOMPUTE(JL)=0.
                 ENDIF
               ENDDO

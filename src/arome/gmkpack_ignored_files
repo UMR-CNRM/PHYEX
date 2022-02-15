@@ -85,3 +85,10 @@ phyex/micro/ini_budget.F90
 phyex/micro/modd_budget.F90
 phyex/micro/modi_budget.F90
 phyex/micro/modi_ini_budget.F90
+phyex/turb/compute_frac_ice1d.F90
+phyex/turb/compute_frac_ice2d.F90
+phyex/turb/compute_frac_ice3d.F90
+phyex/turb/modi_compute_frac_ice.F90
+phyex/turb/modi_compute_frac_ice1d.F90
+phyex/turb/modi_compute_frac_ice3d.F90
+
