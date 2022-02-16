@@ -172,6 +172,9 @@ REAL     :: PDRYLBDAR_MAX, PDRYLBDAR_MIN
 REAL     :: PWETLBDAS_MAX, PWETLBDAG_MAX, PWETLBDAS_MIN, PWETLBDAG_MIN
 REAL     :: PWETLBDAH_MAX, PWETLBDAH_MIN
 !
+IF(.NOT.ASSOCIATED(XCEXVT)) CALL RAIN_ICE_DESCR_ASSOCIATE()                                                          |  --------------------------------------------------------------------------------------------------------------------
+IF(.NOT.ASSOCIATED(XFSEDC)) CALL RAIN_ICE_PARAM_ASSOCIATE()
+!
 !-------------------------------------------------------------------------------
 !
 !*       0.     FUNCTION STATEMENTS
@@ -205,12 +208,26 @@ IF (CSEDIM == 'SPLI') THEN
   END DO SPLIT
 END IF
 !
-IF (ALLOCATED(XRTMIN)) THEN       ! In case of nesting microphysics constants of
+IF (ASSOCIATED(XRTMIN)) THEN       ! In case of nesting microphysics constants of
                                   ! MODD_RAIN_ICE_PARAM are computed only once,
                                   ! but if INI_RAIN_ICE has been called already
                                   ! one must change the XRTMIN size.
-  DEALLOCATE(XRTMIN)
+  CALL RAIN_ICE_DESCR_DEALLOCATE()
 END IF
+!
+IF (HCLOUD == 'ICE4') THEN
+  CALL RAIN_ICE_DESCR_ALLOCATE(7)
+ELSE IF (HCLOUD == 'ICE3') THEN
+  CALL RAIN_ICE_DESCR_ALLOCATE(6)
+END IF
+!
+XRTMIN(1) = 1.0E-20
+XRTMIN(2) = 1.0E-20
+XRTMIN(3) = 1.0E-20
+XRTMIN(4) = 1.0E-20
+XRTMIN(5) = 1.0E-15
+XRTMIN(6) = 1.0E-15
+IF (HCLOUD == 'ICE4') XRTMIN(7) = 1.0E-15
 !
 !-------------------------------------------------------------------------------
 !
@@ -382,20 +399,6 @@ XLBDAG_MAX = 100000.0
 !
 ZCONC_MAX  = 1.E6 ! Maximal concentration for falling particules set to 1 per cc
 XLBDAS_MAX = (ZCONC_MAX / XCCS)**(1./XCXS)
-!
-IF (HCLOUD == 'ICE4') THEN
-  ALLOCATE( XRTMIN(7) )
-ELSE IF (HCLOUD == 'ICE3') THEN
-  ALLOCATE( XRTMIN(6) )
-END IF
-!
-XRTMIN(1) = 1.0E-20
-XRTMIN(2) = 1.0E-20
-XRTMIN(3) = 1.0E-20
-XRTMIN(4) = 1.0E-20
-XRTMIN(5) = 1.0E-15
-XRTMIN(6) = 1.0E-15
-IF (HCLOUD == 'ICE4') XRTMIN(7) = 1.0E-15
 !
 XCONC_SEA = 1.E8 ! 100/cm3
 XCONC_LAND = 3.E8 ! 300/cm3

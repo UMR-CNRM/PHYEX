@@ -13,6 +13,7 @@ Dependencies:
 Clé de compilation REPRO48 ajoutée pour permettre de reproduire le cycle 48, elle:
 - contourne des corrections de bug
 - modifie l'organisation de calculs
+- reproduit les résultats obtenus avant l'introduction de la fraction précipitante froide dans l'ajustement
 Cette clé devra être supprimée
 
 Merge pb:
@@ -39,7 +40,6 @@ Etape 2: array syntax -> loop
 
 Pb identifiés à corriger plus tard:
 - deposition devrait être déplacée dans ice4_tendencies
-- non reproduction en changeant le nombre de procs
 - avec les optimisations de Ryad, les tableaux 3D de precip passés à ice4_tendencies
   lorsque HSUBG_RC_RR_ACCR=='PRFR' ne sont  pas utilisables puisque les K1, K2 et K3
   sont relatifs à la boucle IMICRO et que les calculs faits en debut de routine ne

@@ -315,15 +315,6 @@ CALL ICE4_COMPUTE_PDF(KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF,&
                       PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, ZRAINFR)
 LLRFR=HSUBG_RC_RR_ACCR=='PRFR' .OR. HSUBG_RR_EVAP=='PRFR'
 IF (LLRFR) THEN
-  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODE_ICE4_TENDENCIES', 'LLRFR case broken by optimisation, see comments in mode_ice4_tendencies to knwon why (and how to reapir)....')
-  !Microphyscs was optimized by introducing chunks of KPROMA size
-  !Thus, in ice4_tendencies, the 1D array represent only a fraction of the points where microphisical species are present
-  !We cannot rebuild the entire 3D arrays here, so we cannot call ice4_rainfr_vert here
-  !A solution would be to suppress optimisation in this case by setting KPROMA=KSIZE in rain_ice
-  !Another solution would be to compute column by column?
-  !Another one would be to cut tendencies in 3 parts: before rainfr_vert, rainfr_vert, after rainfr_vert
-
-
   !Diagnostic of precipitation fraction
   PRAINFR(:,:,:) = 0.
   ZRRT3D (:,:,:) = 0.
@@ -333,8 +324,10 @@ IF (LLRFR) THEN
   DO JL=1,KSIZE
     PRAINFR(K1(JL), K2(JL), K3(JL)) = ZRAINFR(JL)
     ZRRT3D (K1(JL), K2(JL), K3(JL)) = ZVART(JL,IRR)
+#ifndef REPRO48
     ZRST3D (K1(JL), K2(JL), K3(JL)) = ZVART(JL,IRS)
     ZRGT3D (K1(JL), K2(JL), K3(JL)) = ZVART(JL,IRG)
+#endif
   END DO
   IF (KRR==7) THEN
     DO JL=1,KSIZE    

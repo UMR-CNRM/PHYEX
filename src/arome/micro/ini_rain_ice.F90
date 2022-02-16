@@ -170,6 +170,9 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',0,ZHOOK_HANDLE)
 !
+IF(.NOT.ASSOCIATED(XCEXVT)) CALL RAIN_ICE_DESCR_ASSOCIATE()
+IF(.NOT.ASSOCIATED(XFSEDC)) CALL RAIN_ICE_PARAM_ASSOCIATE()
+!
 !
 !*       0.     FUNCTION STATEMENTS
 !               -------------------
@@ -432,7 +435,6 @@ ZRHO00 = 101325.*(1.+ZRV)/(XRD+ZRV*XRV)/293.15
 !
 !*       4.2    Constants for sedimentation
 !
-IF(.NOT.ASSOCIATED(XFSEDC)) CALL RAIN_ICE_PARAM_INIT()
 XFSEDC(1)  = GAMMA(XNUC+(XDC+3.)/XALPHAC)/GAMMA(XNUC+3./XALPHAC)*     &
             (ZRHO00)**XCEXVT
 XFSEDC(2)  = GAMMA(XNUC2+(XDC+3.)/XALPHAC2)/GAMMA(XNUC2+3./XALPHAC2)*     &

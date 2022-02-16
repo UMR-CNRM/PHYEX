@@ -64,13 +64,14 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 IMPLICIT NONE
 !  
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
+IF (LHOOK) CALL DR_HOOK('INI_CST',0,ZHOOK_HANDLE)
+CALL CST_ASSOCIATE()
 !
 !*	 1.     FUNDAMENTAL CONSTANTS
 !	        ---------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
-IF (LHOOK) CALL DR_HOOK('INI_CST',0,ZHOOK_HANDLE)
 XPI         = 2.*ASIN(1.)
 XKARMAN     = 0.4
 XLIGHTSPEED = 299792458.
