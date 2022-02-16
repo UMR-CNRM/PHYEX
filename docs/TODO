@@ -9,9 +9,19 @@ Dependencies:
   - liste dans document Interfaces
   - pour AROME placés, en attendant, dans phyex/externals
 
+Ecrire doc sur marche à suivre pour intégrer un nouveau développement:
+- dev dans MNH à faire en array-syntax
+- dev dans AROME à faire en boucles do
+- intégration dans PHYEX: en array-syntax avec directives mnh_expand
+- les 3 tests suivants doivent donner les mêmes résultats (au bit près) dans chacun des deux modèles:
+  - compilation directe sans activer mnh_expand
+  - compilation en activant mnh_expand
+  - exécution en changeant le nombre de processeurs
+
 Clé de compilation REPRO48 ajoutée pour permettre de reproduire le cycle 48, elle:
 - contourne des corrections de bug
 - modifie l'organisation de calculs
+- reproduit les résultats obtenus avant l'introduction de la fraction précipitante froide dans l'ajustement
 Cette clé devra être supprimée
 
 Merge pb:
@@ -36,18 +46,26 @@ Etape 2: array syntax -> loop
 
 Pb identifiés à corriger plus tard:
 - deposition devrait être déplacée dans ice4_tendencies
-- non reproduction en changeant le nombre de procs
 - avec les optimisations de Ryad, les tableaux 3D de precip passés à ice4_tendencies
   lorsque HSUBG_RC_RR_ACCR=='PRFR' ne sont  pas utilisables puisque les K1, K2 et K3
   sont relatifs à la boucle IMICRO et que les calculs faits en debut de routine ne
   concernent qu'une partie des points
        => à corriger
-- seules les options oper ont été testées, il manque des test pour sedim_after, nmaxiter, xmrstep, xtstep, autoconv, rainfr
+- seules quelques options sont testées avec les cas test (par exemple, il faudrait tester RMC01 mais
+  l'option n'est pas remontée en namelist)
+- les options CMF_CLOUD='STAT' et LOSIGAMS=.FALSE. semblent cassées en 48 original
 - arome/ini_cmfshall devrait s'appeler ini_param_mfshall
 - th_r_from_thl_rt appelée partout, il faudrait limiter à OTEST
+- la recompilation complète d'AROME n'est pas testée
+- il faudrait inclure un cas test plus conséquent en taille au moins sur belenos
+- doute sur le codage de MODD_PRECISION
+- appel à abort à travers print_msg non testé
+- lignes vides ajoutées après les macros mnh_expand
+- indentation inorrecte dans les blocs mnh_expand
+- sedimentation momentum non branchée
 
 Répertoire arome/ext contient les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
-Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayadevront avoir été fournies par ailleurs
+Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires devront avoir été fournies par ailleurs
 
 Budgets/DDH
 - Le code dans budget_DDH devra être transféré dans mode_budget
@@ -62,8 +80,6 @@ Nettoyage apl_arome non fait (pb a la compilation) ==> 4 arguments dans aro_turb
 turb.F90 : il reste un CALL à SOURCES_NEG_CORRECT à ajouter. Besoin de récupérer CCLOUD dans apl_arome : comment ?
 
 Regarder s'il ne serait pas possible/souhaitable de supprimer modd_lunit de PHYEX. On pourrait se contenter de recevoir le numero d'unité logique
-
-Faire quelque chose de mesonh/micro/modd_blankn.f90: le déplacer dans common ou le supprimer
 
 Nettoyage des répertoires aux nécessaire
 
