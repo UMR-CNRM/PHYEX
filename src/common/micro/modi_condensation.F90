@@ -12,7 +12,6 @@ INTERFACE
           PLV, PLS, PCPH, &
           PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PICE_CLD_WGT)
 !
-USE MODD_SPP_TYPE
 !
 INTEGER,                      INTENT(IN)    :: KIU    ! horizontal dimension in x
 INTEGER,                      INTENT(IN)    :: KJU    ! horizontal dimension in y

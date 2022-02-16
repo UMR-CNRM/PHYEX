@@ -269,11 +269,12 @@ REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) &
                             ZLV,  &      ! guess of the Lv at t+1
                             ZLS,  &      ! guess of the Ls at t+1
                             ZMASK,&
-                            ZRV, ZRV2,  &
-                            ZRC, ZRC2,  &
-                            ZRI,  &
+                            ZRV, ZRV2,ZRV_IN,  &
+                            ZRC, ZRC2,ZRC_IN,  &
+                            ZRI, ZRI_IN, &
                             ZSIGS, &
                             ZW_MF
+REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2)) :: ZSIGQSAT2D
 LOGICAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) &
                          :: GMICRO ! Test where to compute cond/dep proc.
 INTEGER                  :: IMICRO
@@ -500,15 +501,20 @@ DO JITER =1,ITERMAX
      !
       ZRV=PRVS*PTSTEP
       ZRC=PRCS*PTSTEP
+      ZRV_IN=ZRV
+      ZRC_IN=ZRC
+      ZRI_IN=0.
       ZRV2=PRVT
       ZRC2=PRCT
       ZRI=0.
       ZSIGS=PSIGS
+      ZSIGQSAT2D(:,:)=PSIGQSAT
       CALL CONDENSATION(IIU, IJU, IKU, IIB, IIE, IJB, IJE, IKB, IKE, 1, 'S',   &
            HCONDENS, HLAMBDA3, &
-           PPABST, PZZ, PRHODREF, ZT, ZRV, ZRC, ZRI, PRSS*PTSTEP, PRGS*PTSTEP, &
-           ZSIGS, PMFCONV, PCLDFR, PSRCS, .FALSE., OSIGMAS, &
-           PSIGQSAT, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
+           PPABST, PZZ, PRHODREF, ZT, ZRV_IN, ZRV, ZRC_IN, ZRC, ZRI_IN, ZRI,&
+           PRSS*PTSTEP, PRGS*PTSTEP, &
+           ZSIGS, PMFCONV, PCLDFR, PSRCS, .FALSE., OSIGMAS, .FALSE., &
+           ZSIGQSAT2D, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
       PCLDFR(:,:,:) = MIN(PCLDFR(:,:,:) + PCF_MF(:,:,:) , 1.)
       ZRV(:,:,:) = ZRV(:,:,:) - MAX(MIN(PRC_MF(:,:,:), ZRV(:,:,:)),0.)
       ZRC(:,:,:) = ZRC(:,:,:) + MAX(MIN(PRC_MF(:,:,:), ZRV(:,:,:)),0.)

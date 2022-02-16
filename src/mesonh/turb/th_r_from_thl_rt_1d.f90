@@ -104,6 +104,7 @@ REAL, DIMENSION(SIZE(PTHL,1)) :: ZRVSAT,ZCPH,ZRLTEMP,ZCPH2
 REAL, DIMENSION(SIZE(PTHL,1)) :: ZT,ZLVOCPEXN,ZLSOCPEXN
 REAL, DIMENSION(SIZE(PTHL,1)) :: ZDRSATODT,ZDRSATODTW,ZDRSATODTI
 REAL, DIMENSION(SIZE(PTHL,1)) :: ZFOESW, ZFOESI
+INTEGER, DIMENSION(SIZE(PTHL,1)) :: IERR
 !----------------------------------------------------------------------------
 !
 !*      1 Initialisation
@@ -147,8 +148,7 @@ DO II=1,JITER
   WHERE(PRL(:)+PRI(:) > 1.E-20)
     PFRAC_ICE(:) = PRI(:) / (PRL(:)+PRI(:))
   ENDWHERE
-  CALL COMPUTE_FRAC_ICE(SIZE(PFRAC_ICE,1),HFRAC_ICE,PFRAC_ICE(:),ZT(:))
-
+  CALL COMPUTE_FRAC_ICE(HFRAC_ICE,PFRAC_ICE(:),ZT(:), IERR(:))
   !Computation of Rvsat and dRsat/dT
   !In this version QSAT, QSATI, DQSAT and DQASATI functions are not used
   !due to performance issue

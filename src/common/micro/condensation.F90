@@ -173,7 +173,7 @@ REAL, DIMENSION(KIU,KJU,KKU) :: TCLD
 REAL :: ZDZ(KIB:KIE), ZARDUM(KIE-KIB+1),ZCLDUM(KIE-KIB+1)
 ! end OCND2
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
-INTEGER, DIMENSION(KIU) :: IERR
+INTEGER, DIMENSION(KIB:KIE) :: IERR
 !
 !*       0.3  Definition of constants :
 !
@@ -207,6 +207,12 @@ PCLDFR(:,:,:) = 0. ! Initialize values
 PSIGRC(:,:,:) = 0. ! Initialize values
 ZPRIFACT = 1.      ! Initialize value
 ZCLDUM=-1.         ! Initialize value
+! Init of the HALO (should be on HALO points only)
+#ifdef REPRO55
+PRC_OUT = PRC_IN
+PRV_OUT = PRV_IN
+PRI_OUT = PRI_IN
+#endif
 IF(OCND2)ZPRIFACT = 0.
 !
 !
@@ -325,7 +331,7 @@ DO JK=IKTB,IKTE
           ZFRAC(JI) = PRI_IN(JI,JJ,JK) / (PRC_IN(JI,JJ,JK)+PRI_IN(JI,JJ,JK))
         ENDIF
       END DO
-      CALL COMPUTE_FRAC_ICE(HFRAC_ICE, ZFRAC(:), PT(:,JJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
+      CALL COMPUTE_FRAC_ICE(HFRAC_ICE, ZFRAC(:), PT(KIB:KIE,JJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
     ENDIF
     DO JI=KIB,KIE
       ZQSL(JI)   = XRD / XRV * ZPV(JI) / ( PPABS(JI,JJ,JK) - ZPV(JI) )

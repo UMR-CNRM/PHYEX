@@ -10,10 +10,10 @@ Dependencies:
   - liste dans document Interfaces
   - pour AROME placés, en attendant, dans phyex/externals
 
-Clé de compilation REPRO48 ajoutée pour permettre de reproduire le cycle 48, elle:
-- contourne des corrections de bug
-- modifie l'organisation de calculs
-Cette clé devra être supprimée
+Clé de compilation REPRO48 + REPRO55 ajoutées pour permettre de reproduire le cycle 48 MNH-5.5.0, elles:
+- contournent des corrections de bug
+- modifient l'organisation de calculs
+Ces clés devront être supprimées
 
 Merge pb:
 - ice4_nucleation_wrapper:
@@ -45,7 +45,7 @@ Pb identifiés à corriger plus tard:
        => à corriger
 - seules les options oper ont été testées, il manque des test pour sedim_after, nmaxiter, xmrstep, xtstep, autoconv, rainfr
 
-Répertoire arome/ext contient les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
+Répertoire arome/ext et mesonh/ext contient les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
 Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayadevront avoir été fournies par ailleurs
 
 Budgets/DDH
