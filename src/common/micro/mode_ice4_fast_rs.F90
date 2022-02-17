@@ -5,7 +5,7 @@
 MODULE MODE_ICE4_FAST_RS
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_FAST_RS(KPROMA,KSIZE, LDSOFT, PCOMPUTE, &
+SUBROUTINE ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA,KSIZE, LDSOFT, PCOMPUTE, &
                        &PRHODREF, PLVFACT, PLSFACT, PPRES, &
                        &PDV, PKA, PCJ, &
                        &PLBDAR, PLBDAS, &
@@ -36,16 +36,10 @@ SUBROUTINE ICE4_FAST_RS(KPROMA,KSIZE, LDSOFT, PCOMPUTE, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST,            ONLY: XALPI, XALPW, XBETAI, XBETAW, XCI, XCL, XCPV, XESTT, XGAMI, XGAMW, &
-                             & XLMTT, XLVTT, XMD, XMV, XRV, XTT, XEPSILO
-USE MODD_PARAM_ICE,      ONLY: LEVLIMIT, CSNOWRIMING
-USE MODD_RAIN_ICE_DESCR, ONLY: XBS, XCEXVT, XCXS, XRTMIN
-USE MODD_RAIN_ICE_PARAM, ONLY: NACCLBDAR, NACCLBDAS, NGAMINC, X0DEPS, X1DEPS, XACCINTP1R, XACCINTP1S, &
-                             & XACCINTP2R, XACCINTP2S, XCRIMSG, XCRIMSS, XEX0DEPS, XEX1DEPS, XEXCRIMSG, &
-                             & XEXCRIMSS, XEXSRIMCG, XEXSRIMCG2, XFRACCSS, XFSACCRG, XFSCVMG, XGAMINC_RIM1, &
-                             & XGAMINC_RIM1, XGAMINC_RIM2, XGAMINC_RIM4, XKER_RACCS, XKER_RACCSS, &
-                             & XKER_SACCRG, XLBRACCS1, XLBRACCS2, XLBRACCS3, XLBSACCR1, XLBSACCR2, XLBSACCR3, &
-                             & XRIMINTP1, XRIMINTP2, XSRIMCG, XSRIMCG2, XSRIMCG3
+USE MODD_CST,            ONLY: CST_t
+USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -53,6 +47,10 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
+TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
+TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 INTEGER,                      INTENT(IN)    :: KPROMA,KSIZE
 LOGICAL,                      INTENT(IN)    :: LDSOFT
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PCOMPUTE
@@ -110,7 +108,7 @@ IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RS', 0, ZHOOK_HANDLE)
 !*       5.0    maximum freezing rate
 !
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(5)-PRST(JL))) * & ! WHERE(PRST(:)>XRTMIN(5))
+  ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(5)-PRST(JL))) * & ! WHERE(PRST(:)>XRTMIN(5))
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -120,23 +118,23 @@ IF(LDSOFT) THEN
   ENDDO
 ELSE
   DO JL=1, KSIZE
-    PRS_TEND(JL, IFREEZ1)=ZMASK(JL) * PRVT(JL)*PPRES(JL)/(XEPSILO+PRVT(JL)) ! Vapor pressure
+    PRS_TEND(JL, IFREEZ1)=ZMASK(JL) * PRVT(JL)*PPRES(JL)/(CST%XEPSILO+PRVT(JL)) ! Vapor pressure
   ENDDO
-  IF(LEVLIMIT) THEN
+  IF(PARAMI%LEVLIMIT) THEN
     WHERE(ZMASK(1:KSIZE)==1.)
-      PRS_TEND(1:KSIZE, IFREEZ1)=MIN(PRS_TEND(1:KSIZE, IFREEZ1), EXP(XALPI-XBETAI/PT(1:KSIZE)-XGAMI*ALOG(PT(1:KSIZE)))) ! min(ev, es_i(T))
+      PRS_TEND(1:KSIZE, IFREEZ1)=MIN(PRS_TEND(1:KSIZE, IFREEZ1), EXP(CST%XALPI-CST%XBETAI/PT(1:KSIZE)-CST%XGAMI*ALOG(PT(1:KSIZE)))) ! min(ev, es_i(T))
     END WHERE
   ENDIF
   PRS_TEND(:, IFREEZ2)=0.
   WHERE(ZMASK(1:KSIZE)==1.)
-    PRS_TEND(1:KSIZE, IFREEZ1)=PKA(1:KSIZE)*(XTT-PT(1:KSIZE)) +                              &
-             (PDV(1:KSIZE)*(XLVTT+(XCPV-XCL)*(PT(1:KSIZE)-XTT)) &
-                           *(XESTT-PRS_TEND(1:KSIZE, IFREEZ1))/(XRV*PT(1:KSIZE))           )
-    PRS_TEND(1:KSIZE, IFREEZ1)=PRS_TEND(1:KSIZE, IFREEZ1)* ( X0DEPS*       PLBDAS(1:KSIZE)**XEX0DEPS +     &
-                           X1DEPS*PCJ(1:KSIZE)*PLBDAS(1:KSIZE)**XEX1DEPS )/ &
-                          ( PRHODREF(1:KSIZE)*(XLMTT-XCL*(XTT-PT(1:KSIZE))) )
-    PRS_TEND(1:KSIZE, IFREEZ2)=(PRHODREF(1:KSIZE)*(XLMTT+(XCI-XCL)*(XTT-PT(1:KSIZE)))   ) / &
-                          ( PRHODREF(1:KSIZE)*(XLMTT-XCL*(XTT-PT(1:KSIZE))) )
+    PRS_TEND(1:KSIZE, IFREEZ1)=PKA(1:KSIZE)*(CST%XTT-PT(1:KSIZE)) +                              &
+             (PDV(1:KSIZE)*(CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(1:KSIZE)-CST%XTT)) &
+                           *(CST%XESTT-PRS_TEND(1:KSIZE, IFREEZ1))/(CST%XRV*PT(1:KSIZE))           )
+    PRS_TEND(1:KSIZE, IFREEZ1)=PRS_TEND(1:KSIZE, IFREEZ1)* ( ICEP%X0DEPS*       PLBDAS(1:KSIZE)**ICEP%XEX0DEPS +     &
+                           ICEP%X1DEPS*PCJ(1:KSIZE)*PLBDAS(1:KSIZE)**ICEP%XEX1DEPS )/ &
+                          ( PRHODREF(1:KSIZE)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(1:KSIZE))) )
+    PRS_TEND(1:KSIZE, IFREEZ2)=(PRHODREF(1:KSIZE)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-PT(1:KSIZE)))   ) / &
+                          ( PRHODREF(1:KSIZE)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(1:KSIZE))) )
   END WHERE
 ENDIF
 DO JL=1, KSIZE
@@ -151,8 +149,8 @@ ENDDO
 !
 IGRIM = 0
 DO JL=1, KSIZE
-  ZRIM(JL)=MAX(0., -SIGN(1., XRTMIN(2)-PRCT(JL))) * & !WHERE(PRCT(:)>XRTMIN(2))
-          &MAX(0., -SIGN(1., XRTMIN(5)-PRST(JL))) * & !WHERE(PRST(:)>XRTMIN(5))
+  ZRIM(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(2)-PRCT(JL))) * & !WHERE(PRCT(:)>XRTMIN(2))
+          &MAX(0., -SIGN(1., ICED%XRTMIN(5)-PRST(JL))) * & !WHERE(PRST(:)>XRTMIN(5))
           &PCOMPUTE(JL)
   IF (ZRIM(JL)>0) THEN
     IGRIM = IGRIM + 1
@@ -187,16 +185,16 @@ ELSE
     !               set of Lbda_s used to tabulate some moments of the incomplete
     !               gamma function
     !
-    ZVEC2(1:IGRIM) = MAX( 1.00001, MIN( REAL(NGAMINC)-0.00001,           &
-                          XRIMINTP1 * LOG( ZVEC1(1:IGRIM) ) + XRIMINTP2 ) )
+    ZVEC2(1:IGRIM) = MAX( 1.00001, MIN( REAL(ICEP%NGAMINC)-0.00001,           &
+                          ICEP%XRIMINTP1 * LOG( ZVEC1(1:IGRIM) ) + ICEP%XRIMINTP2 ) )
     IVEC2(1:IGRIM) = INT( ZVEC2(1:IGRIM) )
     ZVEC2(1:IGRIM) = ZVEC2(1:IGRIM) - REAL( IVEC2(1:IGRIM) )
     !
     !        5.1.3  perform the linear interpolation of the normalized
     !               "2+XDS"-moment of the incomplete gamma function
     !
-    ZVEC1(1:IGRIM) =   XGAMINC_RIM1( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
-                     - XGAMINC_RIM1( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
+    ZVEC1(1:IGRIM) =   ICEP%XGAMINC_RIM1( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
+                     - ICEP%XGAMINC_RIM1( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
     ZZW(:) = 0.
     DO JJ = 1, IGRIM
       ZZW(I1(JJ)) = ZVEC1(JJ)
@@ -205,24 +203,24 @@ ELSE
     !        5.1.4  riming of the small sized aggregates
     !
     WHERE (GRIM(1:KSIZE))
-      PRS_TEND(1:KSIZE, IRCRIMSS) = XCRIMSS * ZZW(1:KSIZE) * PRCT(1:KSIZE)                & ! RCRIMSS
-                                      *   PLBDAS(1:KSIZE)**XEXCRIMSS &
-                                      * PRHODREF(1:KSIZE)**(-XCEXVT)
+      PRS_TEND(1:KSIZE, IRCRIMSS) = ICEP%XCRIMSS * ZZW(1:KSIZE) * PRCT(1:KSIZE)                & ! RCRIMSS
+                                      *   PLBDAS(1:KSIZE)**ICEP%XEXCRIMSS &
+                                      * PRHODREF(1:KSIZE)**(-ICED%XCEXVT)
     END WHERE
     !
     !        5.1.5  perform the linear interpolation of the normalized
     !               "XBS"-moment of the incomplete gamma function (XGAMINC_RIM2) and
     !               "XBG"-moment of the incomplete gamma function (XGAMINC_RIM4)
     !
-    ZVEC1(1:IGRIM) =  XGAMINC_RIM2( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
-                    - XGAMINC_RIM2( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
+    ZVEC1(1:IGRIM) =  ICEP%XGAMINC_RIM2( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
+                    - ICEP%XGAMINC_RIM2( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
     ZZW(:) = 0.
     DO JJ = 1, IGRIM
       ZZW(I1(JJ)) = ZVEC1(JJ)
     END DO
 
-    ZVEC1(1:IGRIM) =  XGAMINC_RIM4( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
-                    - XGAMINC_RIM4( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
+    ZVEC1(1:IGRIM) =  ICEP%XGAMINC_RIM4( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
+                    - ICEP%XGAMINC_RIM4( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
     ZZW2(:) = 0.
     DO JJ = 1, IGRIM
       ZZW2(I1(JJ)) = ZVEC1(JJ)
@@ -232,20 +230,20 @@ ELSE
     !
     !
     WHERE(GRIM(1:KSIZE))
-      PRS_TEND(1:KSIZE, IRCRIMS)=XCRIMSG * PRCT(1:KSIZE)               & ! RCRIMS
-                                   * PLBDAS(1:KSIZE)**XEXCRIMSG  &
-                                   * PRHODREF(1:KSIZE)**(-XCEXVT)
+      PRS_TEND(1:KSIZE, IRCRIMS)=ICEP%XCRIMSG * PRCT(1:KSIZE)               & ! RCRIMS
+                                   * PLBDAS(1:KSIZE)**ICEP%XEXCRIMSG  &
+                                   * PRHODREF(1:KSIZE)**(-ICED%XCEXVT)
       ZZW6(1:KSIZE) = PRS_TEND(1:KSIZE, IRCRIMS) - PRS_TEND(1:KSIZE, IRCRIMSS) ! RCRIMSG
     END WHERE
 
-    IF(CSNOWRIMING=='M90 ')THEN
+    IF(PARAMI%CSNOWRIMING=='M90 ')THEN
       !Murakami 1990
       WHERE(GRIM(1:KSIZE))
-        PRS_TEND(1:KSIZE, IRSRIMCG)=XSRIMCG * PLBDAS(1:KSIZE)**XEXSRIMCG*(1.0-ZZW(1:KSIZE))
+        PRS_TEND(1:KSIZE, IRSRIMCG)=ICEP%XSRIMCG * PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG*(1.0-ZZW(1:KSIZE))
         PRS_TEND(1:KSIZE, IRSRIMCG)=ZZW6(1:KSIZE)*PRS_TEND(1:KSIZE, IRSRIMCG)/ &
                        MAX(1.E-20, &
-                           XSRIMCG3*XSRIMCG2*PLBDAS(1:KSIZE)**XEXSRIMCG2*(1.-ZZW2(1:KSIZE)) - &
-                           XSRIMCG3*PRS_TEND(1:KSIZE, IRSRIMCG))
+                           ICEP%XSRIMCG3*ICEP%XSRIMCG2*PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG2*(1.-ZZW2(1:KSIZE)) - &
+                           ICEP%XSRIMCG3*PRS_TEND(1:KSIZE, IRSRIMCG))
       END WHERE
     ELSE
       PRS_TEND(:, IRSRIMCG)=0.
@@ -256,7 +254,7 @@ ENDIF
 DO JL=1, KSIZE
   ! More restrictive RIM mask to be used for riming by negative temperature only
   ZRIM(JL)=ZRIM(JL) * &
-          &MAX(0., -SIGN(1., PT(JL)-XTT)) ! WHERE(PT(:)<XTT)
+          &MAX(0., -SIGN(1., PT(JL)-CST%XTT)) ! WHERE(PT(:)<XTT)
   PRCRIMSS(JL)=ZRIM(JL)*MIN(ZFREEZ_RATE(JL), PRS_TEND(JL, IRCRIMSS))
   ZFREEZ_RATE(JL)=MAX(0., ZFREEZ_RATE(JL)-PRCRIMSS(JL))
   ZZW(JL) = MIN(1., ZFREEZ_RATE(JL) / MAX(1.E-20, PRS_TEND(JL, IRCRIMS) - PRCRIMSS(JL))) ! proportion we are able to freeze
@@ -273,8 +271,8 @@ ENDDO
 !
 IGACC = 0
 DO JJ = 1, KSIZE
-  ZACC(JJ)=MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JJ))) * & !WHERE(PRRT(:)>XRTMIN(3))
-          &MAX(0., -SIGN(1., XRTMIN(5)-PRST(JJ))) * & !WHERE(PRST(:)>XRTMIN(5))
+  ZACC(JJ)=MAX(0., -SIGN(1., ICED%XRTMIN(3)-PRRT(JJ))) * & !WHERE(PRRT(:)>XRTMIN(3))
+          &MAX(0., -SIGN(1., ICED%XRTMIN(5)-PRST(JJ))) * & !WHERE(PRST(:)>XRTMIN(5))
           &PCOMPUTE(JJ)
   IF (ZACC(JJ)>0) THEN
     IGACC = IGACC + 1
@@ -308,13 +306,13 @@ ELSE
     !               in the geometrical set of (Lbda_s,Lbda_r) couplet use to
     !               tabulate the RACCSS-kernel
     !
-    ZVEC1(1:IGACC) = MAX( 1.00001, MIN( REAL(NACCLBDAS)-0.00001,           &
-                          XACCINTP1S * LOG( ZVEC1(1:IGACC) ) + XACCINTP2S ) )
+    ZVEC1(1:IGACC) = MAX( 1.00001, MIN( REAL(ICEP%NACCLBDAS)-0.00001,           &
+                          ICEP%XACCINTP1S * LOG( ZVEC1(1:IGACC) ) + ICEP%XACCINTP2S ) )
     IVEC1(1:IGACC) = INT( ZVEC1(1:IGACC) )
     ZVEC1(1:IGACC) = ZVEC1(1:IGACC) - REAL( IVEC1(1:IGACC) )
     !
-    ZVEC2(1:IGACC) = MAX( 1.00001, MIN( REAL(NACCLBDAR)-0.00001,           &
-                          XACCINTP1R * LOG( ZVEC2(1:IGACC) ) + XACCINTP2R ) )
+    ZVEC2(1:IGACC) = MAX( 1.00001, MIN( REAL(ICEP%NACCLBDAR)-0.00001,           &
+                          ICEP%XACCINTP1R * LOG( ZVEC2(1:IGACC) ) + ICEP%XACCINTP2R ) )
     IVEC2(1:IGACC) = INT( ZVEC2(1:IGACC) )
     ZVEC2(1:IGACC) = ZVEC2(1:IGACC) - REAL( IVEC2(1:IGACC) )
     !
@@ -322,11 +320,11 @@ ELSE
     !               RACCSS-kernel
     !
     DO JJ = 1, IGACC
-      ZVEC3(JJ) =  (  XKER_RACCSS(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - XKER_RACCSS(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+      ZVEC3(JJ) =  (  ICEP%XKER_RACCSS(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    - ICEP%XKER_RACCSS(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                           * ZVEC1(JJ) &
-                 - (  XKER_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - XKER_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+                 - (  ICEP%XKER_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    - ICEP%XKER_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                           * (ZVEC1(JJ) - 1.0)
     END DO
     ZZW(:) = 0.
@@ -338,10 +336,10 @@ ELSE
     !
     WHERE(GACC(1:KSIZE))
       ZZW6(1:KSIZE) =                                                        & !! coef of RRACCS
-            XFRACCSS*( PLBDAS(1:KSIZE)**XCXS )*( PRHODREF(1:KSIZE)**(-XCEXVT-1.) ) &
-       *( XLBRACCS1/((PLBDAS(1:KSIZE)**2)               ) +                  &
-          XLBRACCS2/( PLBDAS(1:KSIZE)    * PLBDAR(1:KSIZE)    ) +                  &
-          XLBRACCS3/(               (PLBDAR(1:KSIZE)**2)) )/PLBDAR(1:KSIZE)**4
+            ICEP%XFRACCSS*( PLBDAS(1:KSIZE)**ICED%XCXS )*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) ) &
+       *( ICEP%XLBRACCS1/((PLBDAS(1:KSIZE)**2)               ) +                  &
+          ICEP%XLBRACCS2/( PLBDAS(1:KSIZE)    * PLBDAR(1:KSIZE)    ) +                  &
+          ICEP%XLBRACCS3/(               (PLBDAR(1:KSIZE)**2)) )/PLBDAR(1:KSIZE)**4
       PRS_TEND(1:KSIZE, IRRACCSS) =ZZW(1:KSIZE)*ZZW6(1:KSIZE)
     END WHERE
     !
@@ -349,11 +347,11 @@ ELSE
     !               RACCS-kernel
     !
     DO JJ = 1, IGACC
-      ZVEC3(JJ) =  (   XKER_RACCS(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    -  XKER_RACCS(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+      ZVEC3(JJ) =  (   ICEP%XKER_RACCS(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    -  ICEP%XKER_RACCS(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                                    * ZVEC1(JJ) &
-                 - (   XKER_RACCS(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    -  XKER_RACCS(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+                 - (   ICEP%XKER_RACCS(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    -  ICEP%XKER_RACCS(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                            * (ZVEC1(JJ) - 1.0)
     END DO
     ZZW(:) = 0.
@@ -367,11 +365,11 @@ ELSE
     !               SACCRG-kernel
     !
     DO JJ = 1, IGACC
-        ZVEC3(JJ) =  (  XKER_SACCRG(IVEC2(JJ)+1,IVEC1(JJ)+1)* ZVEC1(JJ)          &
-                      - XKER_SACCRG(IVEC2(JJ)+1,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
+        ZVEC3(JJ) =  (  ICEP%XKER_SACCRG(IVEC2(JJ)+1,IVEC1(JJ)+1)* ZVEC1(JJ)          &
+                      - ICEP%XKER_SACCRG(IVEC2(JJ)+1,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
                                                             * ZVEC2(JJ) &
-                   - (  XKER_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)+1)* ZVEC1(JJ)          &
-                      - XKER_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
+                   - (  ICEP%XKER_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)+1)* ZVEC1(JJ)          &
+                      - ICEP%XKER_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
                                                             * (ZVEC2(JJ) - 1.0)
     END DO
     ZZW(:) = 0.
@@ -383,11 +381,11 @@ ELSE
     !               into graupeln
     !
     WHERE(GACC(1:KSIZE))
-      PRS_TEND(1:KSIZE, IRSACCRG) = XFSACCRG*ZZW(1:KSIZE)*                    & ! RSACCRG
-          ( PLBDAS(1:KSIZE)**(XCXS-XBS) )*( PRHODREF(1:KSIZE)**(-XCEXVT-1.) ) &
-         *( XLBSACCR1/((PLBDAR(1:KSIZE)**2)               ) +           &
-            XLBSACCR2/( PLBDAR(1:KSIZE)    * PLBDAS(1:KSIZE)    ) +           &
-            XLBSACCR3/(               (PLBDAS(1:KSIZE)**2)) )/PLBDAR(1:KSIZE)
+      PRS_TEND(1:KSIZE, IRSACCRG) = ICEP%XFSACCRG*ZZW(1:KSIZE)*                    & ! RSACCRG
+          ( PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS) )*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) ) &
+         *( ICEP%XLBSACCR1/((PLBDAR(1:KSIZE)**2)               ) +           &
+            ICEP%XLBSACCR2/( PLBDAR(1:KSIZE)    * PLBDAS(1:KSIZE)    ) +           &
+            ICEP%XLBSACCR3/(               (PLBDAS(1:KSIZE)**2)) )/PLBDAR(1:KSIZE)
     END WHERE
   ENDIF
 ENDIF
@@ -395,7 +393,7 @@ ENDIF
 DO JL=1, KSIZE
   ! More restrictive ACC mask to be used for accretion by negative temperature only
   ZACC(JL) = ZACC(JL) * &
-           &MAX(0., -SIGN(1., PT(JL)-XTT)) ! WHERE(PT(:)<XTT)
+           &MAX(0., -SIGN(1., PT(JL)-CST%XTT)) ! WHERE(PT(:)<XTT)
   PRRACCSS(JL)=ZACC(JL)*MIN(ZFREEZ_RATE(JL), PRS_TEND(JL, IRRACCSS))
   ZFREEZ_RATE(JL)=MAX(0., ZFREEZ_RATE(JL)-PRRACCSS(JL))
   ZZW(JL) = MIN(1., ZFREEZ_RATE(JL) / MAX(1.E-20, PRS_TEND(JL, IRRACCS)-PRRACCSS(JL))) ! proportion we are able to freeze
@@ -412,8 +410,8 @@ ENDDO
 !*       5.3    Conversion-Melting of the aggregates
 !
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(5)-PRST(JL))) * & ! WHERE(PRST(:)>XRTMIN(5))
-           &MAX(0., -SIGN(1., XTT-PT(JL))) * & ! WHERE(PT(:)>XTT)
+  ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(5)-PRST(JL))) * & ! WHERE(PRST(:)>XRTMIN(5))
+           &MAX(0., -SIGN(1., CST%XTT-PT(JL))) * & ! WHERE(PT(:)>XTT)
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -423,18 +421,18 @@ IF(LDSOFT) THEN
   ENDDO
 ELSE
   DO JL=1, KSIZE
-    PRSMLTG(JL)=ZMASK(JL)*PRVT(JL)*PPRES(JL)/(XEPSILO+PRVT(JL)) ! Vapor pressure
+    PRSMLTG(JL)=ZMASK(JL)*PRVT(JL)*PPRES(JL)/(CST%XEPSILO+PRVT(JL)) ! Vapor pressure
   ENDDO
-  IF(LEVLIMIT) THEN
+  IF(PARAMI%LEVLIMIT) THEN
     WHERE(ZMASK(:)==1.)
-      PRSMLTG(:)=MIN(PRSMLTG(:), EXP(XALPW-XBETAW/PT(:)-XGAMW*ALOG(PT(:)))) ! min(ev, es_w(T))
+      PRSMLTG(:)=MIN(PRSMLTG(:), EXP(CST%XALPW-CST%XBETAW/PT(:)-CST%XGAMW*ALOG(PT(:)))) ! min(ev, es_w(T))
     END WHERE
   ENDIF
   DO JL=1, KSIZE
     PRSMLTG(JL)=ZMASK(JL)*( &
-                            & PKA(JL)*(XTT-PT(JL)) +                                 &
-                            & ( PDV(JL)*(XLVTT + ( XCPV - XCL ) * ( PT(JL) - XTT )) &
-                            & *(XESTT-PRSMLTG(JL))/(XRV*PT(JL))             ) &
+                            & PKA(JL)*(CST%XTT-PT(JL)) +                                 &
+                            & ( PDV(JL)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( PT(JL) - CST%XTT )) &
+                            & *(CST%XESTT-PRSMLTG(JL))/(CST%XRV*PT(JL))             ) &
                           &)
   ENDDO
   PRCMLTSR(:) = 0.
@@ -442,12 +440,12 @@ ELSE
     !
     ! compute RSMLT
     !
-    PRSMLTG(1:KSIZE)  = XFSCVMG*MAX( 0.0,( -PRSMLTG(1:KSIZE) *             &
-                         ( X0DEPS*       PLBDAS(1:KSIZE)**XEX0DEPS +     &
-                           X1DEPS*PCJ(1:KSIZE)*PLBDAS(1:KSIZE)**XEX1DEPS ) -   &
+    PRSMLTG(1:KSIZE)  = ICEP%XFSCVMG*MAX( 0.0,( -PRSMLTG(1:KSIZE) *             &
+                         ( ICEP%X0DEPS*       PLBDAS(1:KSIZE)**ICEP%XEX0DEPS +     &
+                           ICEP%X1DEPS*PCJ(1:KSIZE)*PLBDAS(1:KSIZE)**ICEP%XEX1DEPS ) -   &
                                    ( PRS_TEND(1:KSIZE, IRCRIMS) + PRS_TEND(1:KSIZE, IRRACCS) ) *       &
-                            ( PRHODREF(1:KSIZE)*XCL*(XTT-PT(1:KSIZE))) ) /    &
-                                           ( PRHODREF(1:KSIZE)*XLMTT ) )
+                            ( PRHODREF(1:KSIZE)*CST%XCL*(CST%XTT-PT(1:KSIZE))) ) /    &
+                                           ( PRHODREF(1:KSIZE)*CST%XLMTT ) )
     ! When T < XTT, rc is collected by snow (riming) to produce snow and graupel
     ! When T > XTT, if riming was still enabled, rc would produce snow and graupel with snow becomming graupel (conversion/melting) and graupel becomming rain (melting)
     ! To insure consistency when crossing T=XTT, rc collected with T>XTT must be transformed in rain.

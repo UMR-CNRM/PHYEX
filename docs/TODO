@@ -17,12 +17,6 @@ Clé de compilation REPRO48 ajoutée pour permettre de reproduire le cycle 48, e
 Cette clé devra être supprimée
 
 Merge pb:
-- ice4_nucleation_wrapper:
-       Tableaux allocatable introduits par Philippe dans meso-nh.
-       Pas introduits (pour l'instant?) dans version common.
-       Ryad a fait des tests pour regarder impact des allocatable sur CPU => temps * 2
-       Code à nettoyer quelque soit l'option retenue
-       Dernier code de Ryad: /home/gmap/mrpm/khatib/public/modset/mods_ice4_nucleation_wrapper.tgz et/ou /home/gmap/mrpm/khatib/public/modset/ice4_nucleation_wrapper.f90
 - shallow_mf (appels dans aro_shallow et arp_shallow):
        Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
        Dans AROME/ARP: où trouver la taille de maille?
@@ -36,7 +30,6 @@ Etape 2: array syntax -> loop
 - transformer sedimentation_split_momentum comme sedimentation_split
 - une distinction KSIZE/KPROMA est à faire dans la microphysique. Pour une meilleure compréhension du code, il faut partir
   du principe de déclarer tous les tableaux en KPROMA et de les utiliser que jusqu'à KSIZE
-- essayer l'outil développé par Juan
 
 Pb identifiés à corriger plus tard:
 - deposition devrait être déplacée dans ice4_tendencies

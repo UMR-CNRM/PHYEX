@@ -6,7 +6,7 @@
 MODULE MODE_ICE4_WARM
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_WARM(KSIZE, LDSOFT, PCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
+SUBROUTINE ICE4_WARM(CST, ICEP, ICED, KSIZE, LDSOFT, PCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
                     &PRHODREF, PLVFACT, PT, PPRES, PTHT, &
                     &PLBDAR, PLBDAR_RF, PKA, PDV, PCJ, &
                     &PHLC_LCF, PHLC_HCF, PHLC_LRC, PHLC_HRC, &
@@ -32,9 +32,9 @@ SUBROUTINE ICE4_WARM(KSIZE, LDSOFT, PCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST,            ONLY: XALPW, XBETAW, XCL, XCPD, XCPV, XGAMW, XLVTT, XMD, XMV, XRV, XTT, XEPSILO
-USE MODD_RAIN_ICE_DESCR, ONLY: XCEXVT, XRTMIN
-USE MODD_RAIN_ICE_PARAM, ONLY: X0EVAR, X1EVAR, XCRIAUTC, XEX0EVAR, XEX1EVAR, XEXCACCR, XFCACCR, XTIMAUTC
+USE MODD_CST,            ONLY: CST_t
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 !
 USE MODE_MSG
 USE PARKIND1, ONLY : JPRB
@@ -44,6 +44,9 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
+TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 INTEGER,                      INTENT(IN)    :: KSIZE
 LOGICAL,                      INTENT(IN)    :: LDSOFT
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PCOMPUTE
@@ -94,7 +97,7 @@ IF (LHOOK) CALL DR_HOOK('ICE4_WARM', 0, ZHOOK_HANDLE)
 !*       4.2    compute the autoconversion of r_c for r_r production: RCAUTR
 !
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(2)-PHLC_HRC(JL))) * & ! PHLC_HRC(:)>XRTMIN(2)
+  ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(2)-PHLC_HRC(JL))) * & ! PHLC_HRC(:)>XRTMIN(2)
 #ifdef REPRO48
            &MAX(0., -SIGN(1., -PHLC_HCF(JL))) * & ! PHLC_HCF(:) .GT. 0.
 #else
@@ -109,7 +112,7 @@ IF(LDSOFT) THEN
 ELSE
   PRCAUTR(:) = 0.
   WHERE(ZMASK(:)==1.)
-    PRCAUTR(:) = XTIMAUTC*MAX(PHLC_HRC(:)/PHLC_HCF(:) - XCRIAUTC/PRHODREF(:), 0.0)
+    PRCAUTR(:) = ICEP%XTIMAUTC*MAX(PHLC_HRC(:)/PHLC_HCF(:) - ICEP%XCRIAUTC/PRHODREF(:), 0.0)
     PRCAUTR(:) = PHLC_HCF(:)*PRCAUTR(:)
   END WHERE
 ENDIF
@@ -120,8 +123,8 @@ ENDIF
 IF (HSUBG_RC_RR_ACCR=='NONE') THEN
   !CLoud water and rain are diluted over the grid box
   DO JL=1, KSIZE
-    ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(2)-PRCT(JL))) * & ! PRCT(:)>XRTMIN(2)
-             &MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JL))) * & ! PRRT(:)>XRTMIN(3)
+    ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(2)-PRCT(JL))) * & ! PRCT(:)>XRTMIN(2)
+             &MAX(0., -SIGN(1., ICED%XRTMIN(3)-PRRT(JL))) * & ! PRRT(:)>XRTMIN(3)
              &PCOMPUTE(JL)
   ENDDO
   IF(LDSOFT) THEN
@@ -131,9 +134,9 @@ IF (HSUBG_RC_RR_ACCR=='NONE') THEN
   ELSE
     PRCACCR(:) = 0.
     WHERE(ZMASK(:)==1.)
-      PRCACCR(:) = XFCACCR * PRCT(:)                &
-                 * PLBDAR(:)**XEXCACCR    &
-                 * PRHODREF(:)**(-XCEXVT)
+      PRCACCR(:) = ICEP%XFCACCR * PRCT(:)                &
+                 * PLBDAR(:)**ICEP%XEXCACCR    &
+                 * PRHODREF(:)**(-ICED%XCEXVT)
     END WHERE
   ENDIF
 
@@ -146,18 +149,18 @@ ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
   ! if PRF>PCF (rain is falling in cloud and in clear sky): PCF-PHLC_HCF
   ! => min(PCF, PRF)-PHLC_HCF
   DO JL=1, KSIZE
-    ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(2)-PRCT(JL))) * & ! PRCT(:)>XRTMIN(2)
-             &MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JL))) * & ! PRRT(:)>XRTMIN(3)
+    ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(2)-PRCT(JL))) * & ! PRCT(:)>XRTMIN(2)
+             &MAX(0., -SIGN(1., ICED%XRTMIN(3)-PRRT(JL))) * & ! PRRT(:)>XRTMIN(3)
              &PCOMPUTE(JL)
     ZMASK1(JL)=ZMASK(JL) * &
-              &MAX(0., -SIGN(1., XRTMIN(2)-PHLC_HRC(JL))) * & ! PHLC_HRC(:)>XRTMIN(2)
+              &MAX(0., -SIGN(1., ICED%XRTMIN(2)-PHLC_HRC(JL))) * & ! PHLC_HRC(:)>XRTMIN(2)
 #ifdef REPRO48
               &MAX(0., -SIGN(1., -PHLC_HCF(JL))) ! PHLC_HCF(:)>0.
 #else
               &MAX(0., -SIGN(1., 1.E-20-PHLC_HCF(JL))) ! PHLC_HCF(:)>1.E-20
 #endif
     ZMASK2(JL)=ZMASK(JL) * &
-              &MAX(0., -SIGN(1., XRTMIN(2)-PHLC_LRC(JL))) * & ! PHLC_LRC(:)>XRTMIN(2)
+              &MAX(0., -SIGN(1., ICED%XRTMIN(2)-PHLC_LRC(JL))) * & ! PHLC_LRC(:)>XRTMIN(2)
 #ifdef REPRO48
               &MAX(0., -SIGN(1., -PHLC_LCF(JL))) ! PHLC_LCF(:)>0.
 #else
@@ -172,16 +175,16 @@ ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
     PRCACCR(:)=0.
     WHERE(ZMASK1(:)==1.)
       !Accretion due to rain falling in high cloud content
-      PRCACCR(:) = XFCACCR * ( PHLC_HRC(:)/PHLC_HCF(:) )     &
-             * PLBDAR_RF(:)**XEXCACCR &
-             * PRHODREF(:)**(-XCEXVT) &
+      PRCACCR(:) = ICEP%XFCACCR * ( PHLC_HRC(:)/PHLC_HCF(:) )     &
+             * PLBDAR_RF(:)**ICEP%XEXCACCR &
+             * PRHODREF(:)**(-ICED%XCEXVT) &
              * PHLC_HCF
     END WHERE
     WHERE(ZMASK2(:)==1.)
       !We add acrretion due to rain falling in low cloud content
-      PRCACCR(:) = PRCACCR(:) + XFCACCR * ( PHLC_LRC(:)/PHLC_LCF(:) )     &
-                      * PLBDAR_RF(:)**XEXCACCR &
-                      * PRHODREF(:)**(-XCEXVT) &
+      PRCACCR(:) = PRCACCR(:) + ICEP%XFCACCR * ( PHLC_LRC(:)/PHLC_LCF(:) )     &
+                      * PLBDAR_RF(:)**ICEP%XEXCACCR &
+                      * PRHODREF(:)**(-ICED%XCEXVT) &
                       * (MIN(PCF(:), PRF(:))-PHLC_HCF(:))
     END WHERE
   ENDIF
@@ -193,8 +196,8 @@ ENDIF
 !
 IF (HSUBG_RR_EVAP=='NONE') THEN
   DO JL=1, KSIZE
-    ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JL))) * & ! PRRT(:)>XRTMIN(3)
-             &MAX(0., SIGN(1., XRTMIN(2)-PRCT(JL))) * & ! PRCT(:)<=XRTMIN(2)
+    ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(3)-PRRT(JL))) * & ! PRRT(:)>XRTMIN(3)
+             &MAX(0., SIGN(1., ICED%XRTMIN(2)-PRCT(JL))) * & ! PRCT(:)<=XRTMIN(2)
              &PCOMPUTE(JL)
   ENDDO
   IF(LDSOFT) THEN
@@ -205,13 +208,13 @@ IF (HSUBG_RR_EVAP=='NONE') THEN
     PRREVAV(:) = 0.
     !Evaporation only when there's no cloud (RC must be 0)
     WHERE(ZMASK(:)==1.)
-      PRREVAV(:)  = EXP( XALPW - XBETAW/PT(:) - XGAMW*ALOG(PT(:) ) ) ! es_w
-      ZUSW(:) = 1.0 - PRVT(:)*( PPRES(:)-PRREVAV(:) ) / ( XEPSILO * PRREVAV(:) )
+      PRREVAV(:)  = EXP( CST%XALPW - CST%XBETAW/PT(:) - CST%XGAMW*ALOG(PT(:) ) ) ! es_w
+      ZUSW(:) = 1.0 - PRVT(:)*( PPRES(:)-PRREVAV(:) ) / ( CST%XEPSILO * PRREVAV(:) )
                                                     ! Undersaturation over water
-      PRREVAV(:) = ( XLVTT+(XCPV-XCL)*(PT(:)-XTT) )**2 / ( PKA(:)*XRV*PT(:)**2 ) &
-           + ( XRV*PT(:) ) / ( PDV(:)*PRREVAV(:) )
+      PRREVAV(:) = ( CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(:)-CST%XTT) )**2 / ( PKA(:)*CST%XRV*PT(:)**2 ) &
+           + ( CST%XRV*PT(:) ) / ( PDV(:)*PRREVAV(:) )
       PRREVAV(:) = ( MAX( 0.0,ZUSW(:) )/(PRHODREF(:)*PRREVAV(:)) ) *      &
-        ( X0EVAR*PLBDAR(:)**XEX0EVAR+X1EVAR*PCJ(:)*PLBDAR(:)**XEX1EVAR )
+        ( ICEP%X0EVAR*PLBDAR(:)**ICEP%XEX0EVAR+ICEP%X1EVAR*PCJ(:)*PLBDAR(:)**ICEP%XEX1EVAR )
     END WHERE
   ENDIF
 
@@ -234,7 +237,7 @@ ELSEIF (HSUBG_RR_EVAP=='CLFR' .OR. HSUBG_RR_EVAP=='PRFR') THEN
   !et plusieurs versions (comme actuellement, en ciel clair, en ciel nuageux) de PKA, PDV, PCJ dans rain_ice
   !On utiliserait la bonne version suivant l'option NONE, CLFR... dans l'évaporation et ailleurs
   DO JL=1, KSIZE
-    ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JL))) * & ! PRRT(:)>XRTMIN(3)
+    ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(3)-PRRT(JL))) * & ! PRRT(:)>XRTMIN(3)
              &MAX(0., -SIGN(1., PCF(JL)-ZZW4(JL))) * & ! ZZW4(:) > PCF(:)
              &PCOMPUTE(JL)
   ENDDO
@@ -249,22 +252,22 @@ ELSEIF (HSUBG_RR_EVAP=='CLFR' .OR. HSUBG_RR_EVAP=='PRFR') THEN
       ! Bechtold et al. 1993
       !
       ! T_l
-      ZTHLT(:) = PTHT(:) - XLVTT*PTHT(:)/XCPD/PT(:)*PRCT(:)
+      ZTHLT(:) = PTHT(:) - CST%XLVTT*PTHT(:)/CST%XCPD/PT(:)*PRCT(:)
       !
       ! T^u = T_l = theta_l * (T/theta)
       ZZW2(:) =  ZTHLT(:) * PT(:) / PTHT(:)
       !
       ! es_w with new T^u
-      PRREVAV(:)  = EXP( XALPW - XBETAW/ZZW2(:) - XGAMW*ALOG(ZZW2(:) ) )
+      PRREVAV(:)  = EXP( CST%XALPW - CST%XBETAW/ZZW2(:) - CST%XGAMW*ALOG(ZZW2(:) ) )
       !
       ! S, Undersaturation over water (with new theta^u)
-      ZUSW(:) = 1.0 - PRVT(:)*( PPRES(:)-PRREVAV(:) ) / ( XEPSILO * PRREVAV(:) )
+      ZUSW(:) = 1.0 - PRVT(:)*( PPRES(:)-PRREVAV(:) ) / ( CST%XEPSILO * PRREVAV(:) )
       !
-      PRREVAV(:) = ( XLVTT+(XCPV-XCL)*(ZZW2(:)-XTT) )**2 / ( PKA(:)*XRV*ZZW2(:)**2 ) &
-             + ( XRV*ZZW2(:) ) / ( PDV(:)*PRREVAV(:) )
+      PRREVAV(:) = ( CST%XLVTT+(CST%XCPV-CST%XCL)*(ZZW2(:)-CST%XTT) )**2 / ( PKA(:)*CST%XRV*ZZW2(:)**2 ) &
+             + ( CST%XRV*ZZW2(:) ) / ( PDV(:)*PRREVAV(:) )
       !
       PRREVAV(:) = MAX( 0.0,ZUSW(:) )/(PRHODREF(:)*PRREVAV(:))  *      &
-             ( X0EVAR*ZZW3(:)**XEX0EVAR+X1EVAR*PCJ(:)*ZZW3(:)**XEX1EVAR )
+             ( ICEP%X0EVAR*ZZW3(:)**ICEP%XEX0EVAR+ICEP%X1EVAR*PCJ(:)*ZZW3(:)**ICEP%XEX1EVAR )
       !
       PRREVAV(:) = PRREVAV(:)*(ZZW4(:)-PCF(:))
     END WHERE

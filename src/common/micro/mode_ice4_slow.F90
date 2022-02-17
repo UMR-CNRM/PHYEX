@@ -5,7 +5,7 @@
 MODULE MODE_ICE4_SLOW
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_SLOW(KSIZE, LDSOFT, PCOMPUTE, PRHODREF, PT, &
+SUBROUTINE ICE4_SLOW(CST, ICEP, ICED, KSIZE, LDSOFT, PCOMPUTE, PRHODREF, PT, &
                      &PSSI, PLVFACT, PLSFACT, &
                      &PRVT, PRCT, PRIT, PRST, PRGT, &
                      &PLBDAS, PLBDAG, &
@@ -30,11 +30,9 @@ SUBROUTINE ICE4_SLOW(KSIZE, LDSOFT, PCOMPUTE, PRHODREF, PT, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST,            ONLY: XTT
-USE MODD_RAIN_ICE_DESCR, ONLY: XCEXVT, XRTMIN
-USE MODD_RAIN_ICE_PARAM, ONLY: X0DEPG, X0DEPS, X1DEPG, X1DEPS, XACRIAUTI, XALPHA3, XBCRIAUTI, XBETA3, &
-                             & XCOLEXIS, XCRIAUTI, XEX0DEPG, XEX0DEPS, XEX1DEPG, XEX1DEPS, XEXIAGGS, &
-                             & XFIAGGS, XHON, XTEXAUTI, XTIMAUTI
+USE MODD_CST,            ONLY: CST_t
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -42,6 +40,9 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(CST_t),                  INTENT(IN)    :: CST
+TYPE(RAIN_ICE_PARAM_t),       INTENT(IN)    :: ICEP
+TYPE(RAIN_ICE_DESCR_t),       INTENT(IN)    :: ICED
 INTEGER,                      INTENT(IN)    :: KSIZE
 LOGICAL,                      INTENT(IN)    :: LDSOFT
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PCOMPUTE
@@ -89,8 +90,8 @@ IF (LHOOK) CALL DR_HOOK('ICE4_SLOW', 0, ZHOOK_HANDLE)
 !*       3.2     compute the homogeneous nucleation source: RCHONI
 !
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., PT(JL)-(XTT-35.0))) * & ! PT(:)<XTT-35.0
-           &MAX(0., -SIGN(1., XRTMIN(2)-PRCT(JL))) * & ! PRCT(:)>XRTMIN(2)
+  ZMASK(JL)=MAX(0., -SIGN(1., PT(JL)-(CST%XTT-35.0))) * & ! PT(:)<XTT-35.0
+           &MAX(0., -SIGN(1., ICED%XRTMIN(2)-PRCT(JL))) * & ! PRCT(:)>XRTMIN(2)
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -101,11 +102,11 @@ ELSE
   PRCHONI(:) = 0.
   WHERE(ZMASK(:)==1.)
 #ifdef REPRO48
-    PRCHONI(:) = XHON*PRHODREF(:)*PRCT(:)       &
-                                 *EXP( XALPHA3*(PT(:)-XTT)-XBETA3 )
+    PRCHONI(:) = ICEP%XHON*PRHODREF(:)*PRCT(:)       &
+                                 *EXP( ICEP%XALPHA3*(PT(:)-CST%XTT)-ICEP%XBETA3 )
 #else
-    PRCHONI(:) = MIN(1000.,XHON*PRHODREF(:)*PRCT(:)       &
-                                 *EXP( XALPHA3*(PT(:)-XTT)-XBETA3 ))
+    PRCHONI(:) = MIN(1000.,ICEP%XHON*PRHODREF(:)*PRCT(:)       &
+                                 *EXP( ICEP%XALPHA3*(PT(:)-CST%XTT)-ICEP%XBETA3 ))
 #endif
   ENDWHERE
 ENDIF
@@ -116,7 +117,7 @@ ENDIF
 !*       3.4.2  compute the riming-conversion of r_c for r_i production: RCAUTI
 !
 !  ZZW(:) = 0.0
-!  ZTIMAUTIC = SQRT( XTIMAUTI*XTIMAUTC )
+!  ZTIMAUTIC = SQRT( ICEP%XTIMAUTI*ICEP%XTIMAUTC )
 !  WHERE ( (PRCT(:)>0.0) .AND. (PRIT(:)>0.0) .AND. (PRCS(:)>0.0) )
 !    ZZW(:) = MIN( PRCS(:),ZTIMAUTIC * MAX( SQRT( PRIT(:)*PRCT(:) ),0.0 ) )
 !    PRIS(:) = PRIS(:) + ZZW(:)
@@ -127,8 +128,8 @@ ENDIF
 !*       3.4.3  compute the deposition on r_s: RVDEPS
 !
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(1)-PRVT(JL))) * & !PRVT(:)>XRTMIN(1)
-           &MAX(0., -SIGN(1., XRTMIN(5)-PRST(JL))) * & !PRST(:)>XRTMIN(5)
+  ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(1)-PRVT(JL))) * & !PRVT(:)>XRTMIN(1)
+           &MAX(0., -SIGN(1., ICED%XRTMIN(5)-PRST(JL))) * & !PRST(:)>XRTMIN(5)
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -139,15 +140,15 @@ ELSE
   PRVDEPS(:) = 0.
   WHERE(ZMASK(:)==1.)
     PRVDEPS(:) = ( PSSI(:)/(PRHODREF(:)*PAI(:)) ) *                               &
-                 ( X0DEPS*PLBDAS(:)**XEX0DEPS + X1DEPS*PCJ(:)*PLBDAS(:)**XEX1DEPS )
+                 ( ICEP%X0DEPS*PLBDAS(:)**ICEP%XEX0DEPS + ICEP%X1DEPS*PCJ(:)*PLBDAS(:)**ICEP%XEX1DEPS )
   END WHERE
 ENDIF
 !
 !*       3.4.4  compute the aggregation on r_s: RIAGGS
 !
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(4)-PRIT(JL))) * & ! PRIT(:)>XRTMIN(4)
-           &MAX(0., -SIGN(1., XRTMIN(5)-PRST(JL))) * & ! PRST(:)>XRTMIN(5)
+  ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(4)-PRIT(JL))) * & ! PRIT(:)>XRTMIN(4)
+           &MAX(0., -SIGN(1., ICED%XRTMIN(5)-PRST(JL))) * & ! PRST(:)>XRTMIN(5)
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -157,17 +158,17 @@ IF(LDSOFT) THEN
 ELSE
   PRIAGGS(:) = 0.
   WHERE(ZMASK(:)==1)
-    PRIAGGS(:) = XFIAGGS * EXP( XCOLEXIS*(PT(:)-XTT) ) &
+    PRIAGGS(:) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(:)-CST%XTT) ) &
                          * PRIT(:)                      &
-                         * PLBDAS(:)**XEXIAGGS          &
-                         * PRHODREF(:)**(-XCEXVT)
+                         * PLBDAS(:)**ICEP%XEXIAGGS          &
+                         * PRHODREF(:)**(-ICED%XCEXVT)
   END WHERE
 ENDIF
 !
 !*       3.4.5  compute the autoconversion of r_i for r_s production: RIAUTS
 !
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(4)-PHLI_HRI(JL))) * & ! PHLI_HRI(:)>XRTMIN(4)
+  ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(4)-PHLI_HRI(JL))) * & ! PHLI_HRI(:)>XRTMIN(4)
            &MAX(0., -SIGN(1., 1.E-20-PHLI_HCF(JL))) * & ! PHLI_HCF(:) .GT. 1.E-20
            &PCOMPUTE(JL)
 ENDDO
@@ -177,10 +178,10 @@ IF(LDSOFT) THEN
   ENDDO
 ELSE
   PRIAUTS(:) = 0.
-  !ZCRIAUTI(:)=MIN(XCRIAUTI,10**(0.06*(PT(:)-XTT)-3.5))
-  ZCRIAUTI(:)=MIN(XCRIAUTI,10**(XACRIAUTI*(PT(:)-XTT)+XBCRIAUTI))
+  !ZCRIAUTI(:)=MIN(ICEP%XCRIAUTI,10**(0.06*(PT(:)-CST%XTT)-3.5))
+  ZCRIAUTI(:)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(:)-CST%XTT)+ICEP%XBCRIAUTI))
   WHERE(ZMASK(:)==1.)
-    PRIAUTS(:) = XTIMAUTI * EXP( XTEXAUTI*(PT(:)-XTT) ) &
+    PRIAUTS(:) = ICEP%XTIMAUTI * EXP( ICEP%XTEXAUTI*(PT(:)-CST%XTT) ) &
                           * MAX( PHLI_HRI(:)/PHLI_HCF(:)-ZCRIAUTI(:),0.0 )
     PRIAUTS(:) = PHLI_HCF(:)*PRIAUTS(:)
   END WHERE
@@ -190,8 +191,8 @@ ENDIF
 !
 !
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(1)-PRVT(JL))) * & ! PRVT(:)>XRTMIN(1)
-           &MAX(0., -SIGN(1., XRTMIN(6)-PRGT(JL))) * & ! PRGT(:)>XRTMIN(6)
+  ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(1)-PRVT(JL))) * & ! PRVT(:)>XRTMIN(1)
+           &MAX(0., -SIGN(1., ICED%XRTMIN(6)-PRGT(JL))) * & ! PRGT(:)>XRTMIN(6)
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -202,7 +203,7 @@ ELSE
   PRVDEPG(:) = 0.
   WHERE(ZMASK(:)==1.)
     PRVDEPG(:) = ( PSSI(:)/(PRHODREF(:)*PAI(:)) ) *                               &
-                 ( X0DEPG*PLBDAG(:)**XEX0DEPG + X1DEPG*PCJ(:)*PLBDAG(:)**XEX1DEPG )
+                 ( ICEP%X0DEPG*PLBDAG(:)**ICEP%XEX0DEPG + ICEP%X1DEPG*PCJ(:)*PLBDAG(:)**ICEP%XEX1DEPG )
   END WHERE
 ENDIF
 DO JL=1, KSIZE

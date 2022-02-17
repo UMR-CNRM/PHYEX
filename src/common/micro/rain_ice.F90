@@ -863,7 +863,7 @@ IF (KSIZE > 0) THEN
         !***       4.1 Tendencies computation
         !
         ! Tendencies are *really* computed when LSOFT==.FALSE. and only adjusted otherwise
-    CALL ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, &
+    CALL ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &KPROMA, IMICRO, &
                         &KRR, LSOFT, ZCOMPUTE, &
                         &OWARM, PARAMI%CSUBG_RC_RR_ACCR, PARAMI%CSUBG_RR_EVAP, &
@@ -1103,7 +1103,7 @@ DO JK=D%NKTB,D%NKTE
       IF (.NOT. ODMICRO(JI, JJ, JK)) THEN
         ZW0D=ZZ_LSFACT(JI, JJ, JK)/PEXN(JI, JJ, JK)
       ENDIF
-      CALL ICE4_NUCLEATION_ELEM(.NOT. ODMICRO(JI, JJ, JK), &
+      CALL ICE4_NUCLEATION_ELEM(CST, PARAMI, ICEP, ICED, .NOT. ODMICRO(JI, JJ, JK), &
                                 PTHT(JI, JJ, JK), PPABST(JI, JJ, JK), PRHODREF(JI, JJ, JK), &
                                 PEXN(JI, JJ, JK), ZW0D, ZT(JI, JJ, JK), &
                                 PRVT(JI, JJ, JK), &

@@ -6,7 +6,7 @@
 MODULE MODE_ICE4_RSRIMCG_OLD
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_RSRIMCG_OLD(KSIZE, LDSOFT, LDCOMPUTE, &
+SUBROUTINE ICE4_RSRIMCG_OLD(CST, ICEP, ICED, KSIZE, LDSOFT, LDCOMPUTE, &
                            &PRHODREF, &
                            &PLBDAS, &
                            &PT, PRCT, PRST, &
@@ -30,10 +30,9 @@ SUBROUTINE ICE4_RSRIMCG_OLD(KSIZE, LDSOFT, LDCOMPUTE, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST,            ONLY: XTT
-USE MODD_PARAM_ICE,      ONLY: CSNOWRIMING
-USE MODD_RAIN_ICE_DESCR, ONLY: XRTMIN
-USE MODD_RAIN_ICE_PARAM, ONLY: NGAMINC, XEXSRIMCG, XGAMINC_RIM2, XRIMINTP1, XRIMINTP2, XSRIMCG
+USE MODD_CST,            ONLY: CST_t
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -41,6 +40,9 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
+TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 INTEGER, INTENT(IN) :: KSIZE
 LOGICAL,                      INTENT(IN)    :: LDSOFT
 LOGICAL, DIMENSION(KSIZE),    INTENT(IN)    :: LDCOMPUTE
@@ -74,7 +76,7 @@ IF(.NOT. LDSOFT) THEN
   IGRIM = 0
   GRIM(:) = .FALSE.
   DO JL = 1, SIZE(GRIM)
-    IF(PRCT(JL)>XRTMIN(2) .AND. PRST(JL)>XRTMIN(5) .AND. LDCOMPUTE(JL) .AND. PT(JL)<XTT) THEN
+    IF(PRCT(JL)>ICED%XRTMIN(2) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL) .AND. PT(JL)<CST%XTT) THEN
       IGRIM = IGRIM + 1
       IVEC1(IGRIM) = JL
       GRIM(JL) = .TRUE.
@@ -93,8 +95,8 @@ IF(.NOT. LDSOFT) THEN
     !               set of Lbda_s used to tabulate some moments of the incomplete
     !               gamma function
     !
-    ZVEC2(1:IGRIM) = MAX( 1.00001, MIN(REAL(NGAMINC)-0.00001,           &
-                          XRIMINTP1 * LOG( ZVEC1(1:IGRIM) ) + XRIMINTP2 ) )
+    ZVEC2(1:IGRIM) = MAX( 1.00001, MIN(REAL(ICEP%NGAMINC)-0.00001,           &
+                          ICEP%XRIMINTP1 * LOG( ZVEC1(1:IGRIM) ) + ICEP%XRIMINTP2 ) )
     IVEC2(1:IGRIM) = INT( ZVEC2(1:IGRIM) )
     ZVEC2(1:IGRIM) = ZVEC2(1:IGRIM) - REAL( IVEC2(1:IGRIM) )
 
@@ -102,8 +104,8 @@ IF(.NOT. LDSOFT) THEN
     !        5.1.5  perform the linear interpolation of the normalized
     !               "XBS"-moment of the incomplete gamma function (XGAMINC_RIM2)
     !
-    ZVEC1(1:IGRIM) =  XGAMINC_RIM2( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
-                    - XGAMINC_RIM2( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
+    ZVEC1(1:IGRIM) =  ICEP%XGAMINC_RIM2( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
+                    - ICEP%XGAMINC_RIM2( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
     ZZW(:) = 0.
     DO JL = 1, IGRIM
       ZZW(IVEC1(JL)) = ZVEC1(JL)
@@ -114,7 +116,7 @@ IF(.NOT. LDSOFT) THEN
     !
     !
     WHERE(GRIM(:))
-      PRSRIMCG_MR(:) = XSRIMCG * PLBDAS(:)**XEXSRIMCG   & ! RSRIMCG
+      PRSRIMCG_MR(:) = ICEP%XSRIMCG * PLBDAS(:)**ICEP%XEXSRIMCG   & ! RSRIMCG
                                * (1.0 - ZZW(:) )/PRHODREF(:)
       PRSRIMCG_MR(:)=MIN(PRST(:), PRSRIMCG_MR(:))
     END WHERE

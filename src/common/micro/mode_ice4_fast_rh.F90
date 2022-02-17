@@ -5,7 +5,7 @@
 MODULE MODE_ICE4_FAST_RH
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_FAST_RH(KPROMA,KSIZE, LDSOFT, PCOMPUTE, PWETG, &
+SUBROUTINE ICE4_FAST_RH(CST, PARAMI, ICEP, ICED, KPROMA,KSIZE, LDSOFT, PCOMPUTE, PWETG, &
                        &PRHODREF, PLVFACT, PLSFACT, PPRES, &
                        &PDV, PKA, PCJ, &
                        &PLBDAS, PLBDAG, PLBDAR, PLBDAH, &
@@ -34,16 +34,10 @@ SUBROUTINE ICE4_FAST_RH(KPROMA,KSIZE, LDSOFT, PCOMPUTE, PWETG, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST,            ONLY: XALPI, XALPW, XBETAI, XBETAW, XGAMW, XCI, XCL, XCPV, XESTT, XGAMI, XLMTT, &
-                             & XLVTT, XMD, XMV, XRV, XTT, XEPSILO
-USE MODD_PARAM_ICE,      ONLY: LCONVHG, LEVLIMIT, LNULLWETH, LWETHPOST
-USE MODD_RAIN_ICE_DESCR, ONLY: XBG, XBS, XCEXVT, XCXG, XCXH, XCXS, XDH, XRTMIN
-USE MODD_RAIN_ICE_PARAM, ONLY: NWETLBDAG, NWETLBDAH, NWETLBDAR, NWETLBDAS, X0DEPH, X1DEPH, XCOLEXGH, XCOLEXIH, &
-                             & XCOLGH, XCOLIH, XCOLEXSH, XCOLSH, XEX0DEPH, XEX1DEPH, XFGWETH, XFRWETH, &
-                             & XFSWETH, XFWETH, XKER_GWETH, XKER_RWETH, XKER_SWETH, XLBGWETH1, XLBGWETH2, &
-                             & XLBGWETH3, XLBRWETH1, XLBRWETH2, XLBRWETH3, XLBSWETH1, XLBSWETH2, XLBSWETH3, &
-                             & XWETINTP1G, XWETINTP1H, XWETINTP1R, XWETINTP1S, XWETINTP2G, XWETINTP2H, &
-                             & XWETINTP2R, XWETINTP2S
+USE MODD_CST,            ONLY: CST_t
+USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 !
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
@@ -52,6 +46,10 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(CST_t),                  INTENT(IN)    :: CST
+TYPE(PARAM_ICE_t),            INTENT(IN)    :: PARAMI
+TYPE(RAIN_ICE_PARAM_t),       INTENT(IN)    :: ICEP
+TYPE(RAIN_ICE_DESCR_t),       INTENT(IN)    :: ICED
 INTEGER,                      INTENT(IN)    :: KPROMA,KSIZE
 LOGICAL,                      INTENT(IN)    :: LDSOFT
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PCOMPUTE
@@ -119,8 +117,8 @@ IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RH',0,ZHOOK_HANDLE)
 !*       7.2    compute the Wet and Dry growth of hail
 !
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(7)-PRHT(JL))) * & ! WHERE(PRHT(:)>XRTMIN(7))
-           &MAX(0., -SIGN(1., XRTMIN(2)-PRCT(JL))) * & ! WHERE(PRCT(:)>XRTMIN(2))
+  ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(7)-PRHT(JL))) * & ! WHERE(PRHT(:)>XRTMIN(7))
+           &MAX(0., -SIGN(1., ICED%XRTMIN(2)-PRCT(JL))) * & ! WHERE(PRCT(:)>XRTMIN(2))
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -130,13 +128,13 @@ IF(LDSOFT) THEN
 ELSE
   PRH_TEND(:, IRCWETH)=0.
   WHERE(ZMASK(1:KSIZE)==1.)
-    ZZW(1:KSIZE) = PLBDAH(1:KSIZE)**(XCXH-XDH-2.0) * PRHODREF(1:KSIZE)**(-XCEXVT)
-    PRH_TEND(1:KSIZE, IRCWETH)=XFWETH * PRCT(1:KSIZE) * ZZW(1:KSIZE)    ! RCWETH
+    ZZW(1:KSIZE) = PLBDAH(1:KSIZE)**(ICED%XCXH-ICED%XDH-2.0) * PRHODREF(1:KSIZE)**(-ICED%XCEXVT)
+    PRH_TEND(1:KSIZE, IRCWETH)=ICEP%XFWETH * PRCT(1:KSIZE) * ZZW(1:KSIZE)    ! RCWETH
   END WHERE
 ENDIF
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(7)-PRHT(JL))) * & ! WHERE(PRHT(:)>XRTMIN(7))
-           &MAX(0., -SIGN(1., XRTMIN(4)-PRIT(JL))) * & ! WHERE(PRIT(:)>XRTMIN(4))
+  ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(7)-PRHT(JL))) * & ! WHERE(PRHT(:)>XRTMIN(7))
+           &MAX(0., -SIGN(1., ICED%XRTMIN(4)-PRIT(JL))) * & ! WHERE(PRIT(:)>XRTMIN(4))
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -148,9 +146,9 @@ ELSE
   PRH_TEND(:, IRIWETH)=0.
   PRH_TEND(:, IRIDRYH)=0.
   WHERE(ZMASK(1:KSIZE)==1.)
-    ZZW(1:KSIZE) = PLBDAH(1:KSIZE)**(XCXH-XDH-2.0) * PRHODREF(1:KSIZE)**(-XCEXVT)
-    PRH_TEND(1:KSIZE, IRIWETH)=XFWETH * PRIT(1:KSIZE) * ZZW(1:KSIZE)   ! RIWETH
-    PRH_TEND(1:KSIZE, IRIDRYH)=PRH_TEND(1:KSIZE, IRIWETH)*(XCOLIH*EXP(XCOLEXIH*(PT(1:KSIZE)-XTT)))   ! RIDRYH
+    ZZW(1:KSIZE) = PLBDAH(1:KSIZE)**(ICED%XCXH-ICED%XDH-2.0) * PRHODREF(1:KSIZE)**(-ICED%XCEXVT)
+    PRH_TEND(1:KSIZE, IRIWETH)=ICEP%XFWETH * PRIT(1:KSIZE) * ZZW(1:KSIZE)   ! RIWETH
+    PRH_TEND(1:KSIZE, IRIDRYH)=PRH_TEND(1:KSIZE, IRIWETH)*(ICEP%XCOLIH*EXP(ICEP%XCOLEXIH*(PT(1:KSIZE)-CST%XTT)))   ! RIDRYH
   END WHERE
 ENDIF
 
@@ -159,8 +157,8 @@ ENDIF
 !
 IGWET = 0
 DO JJ = 1, KSIZE
-  ZWET(JJ) = MAX(0., -SIGN(1., XRTMIN(7)-PRHT(JJ))) * & ! WHERE(PRHT(:)>XRTMIN(7))
-            &MAX(0., -SIGN(1., XRTMIN(5)-PRST(JJ))) * & ! WHERE(PRST(:)>XRTMIN(5))
+  ZWET(JJ) = MAX(0., -SIGN(1., ICED%XRTMIN(7)-PRHT(JJ))) * & ! WHERE(PRHT(:)>XRTMIN(7))
+            &MAX(0., -SIGN(1., ICED%XRTMIN(5)-PRST(JJ))) * & ! WHERE(PRST(:)>XRTMIN(5))
             &PCOMPUTE(JJ)
   IF (ZWET(JJ)>0) THEN
     IGWET = IGWET + 1
@@ -191,13 +189,13 @@ ELSE
     !               in the geometrical set of (Lbda_h,Lbda_s) couplet use to
     !               tabulate the SWETH-kernel
     !
-    ZVEC1(1:IGWET) = MAX( 1.00001, MIN( REAL(NWETLBDAH)-0.00001,           &
-                          XWETINTP1H * LOG( ZVEC1(1:IGWET) ) + XWETINTP2H ) )
+    ZVEC1(1:IGWET) = MAX( 1.00001, MIN( REAL(ICEP%NWETLBDAH)-0.00001,           &
+                          ICEP%XWETINTP1H * LOG( ZVEC1(1:IGWET) ) + ICEP%XWETINTP2H ) )
     IVEC1(1:IGWET) = INT( ZVEC1(1:IGWET) )
     ZVEC1(1:IGWET) = ZVEC1(1:IGWET) - REAL( IVEC1(1:IGWET) )
     !
-    ZVEC2(1:IGWET) = MAX( 1.00001, MIN( REAL(NWETLBDAS)-0.00001,           &
-                          XWETINTP1S * LOG( ZVEC2(1:IGWET) ) + XWETINTP2S ) )
+    ZVEC2(1:IGWET) = MAX( 1.00001, MIN( REAL(ICEP%NWETLBDAS)-0.00001,           &
+                          ICEP%XWETINTP1S * LOG( ZVEC2(1:IGWET) ) + ICEP%XWETINTP2S ) )
     IVEC2(1:IGWET) = INT( ZVEC2(1:IGWET) )
     ZVEC2(1:IGWET) = ZVEC2(1:IGWET) - REAL( IVEC2(1:IGWET) )
     !
@@ -205,11 +203,11 @@ ELSE
     !               SWETH-kernel
     !
     DO JJ = 1,IGWET
-      ZVEC3(JJ) = (  XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                   - XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+      ZVEC3(JJ) = (  ICEP%XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                   - ICEP%XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                                  * ZVEC1(JJ) &
-                  - ( XKER_SWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                  - XKER_SWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+                  - ( ICEP%XKER_SWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                  - ICEP%XKER_SWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                          * (ZVEC1(JJ) - 1.0)
     END DO
     ZZW(:) = 0.
@@ -218,13 +216,13 @@ ELSE
     END DO
     !
     WHERE(GWET(1:KSIZE))
-      PRH_TEND(1:KSIZE, IRSWETH)=XFSWETH*ZZW(1:KSIZE)                       & ! RSWETH
-                    *( PLBDAS(1:KSIZE)**(XCXS-XBS) )*( PLBDAH(1:KSIZE)**XCXH )  &
-                       *( PRHODREF(1:KSIZE)**(-XCEXVT-1.) )               &
-                       *( XLBSWETH1/( PLBDAH(1:KSIZE)**2              ) + &
-                          XLBSWETH2/( PLBDAH(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
-                          XLBSWETH3/(               PLBDAS(1:KSIZE)**2) )
-      PRH_TEND(1:KSIZE, IRSDRYH)=PRH_TEND(1:KSIZE, IRSWETH)*(XCOLSH*EXP(XCOLEXSH*(PT(1:KSIZE)-XTT)))
+      PRH_TEND(1:KSIZE, IRSWETH)=ICEP%XFSWETH*ZZW(1:KSIZE)                       & ! RSWETH
+                    *( PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS) )*( PLBDAH(1:KSIZE)**ICED%XCXH )  &
+                       *( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) )               &
+                       *( ICEP%XLBSWETH1/( PLBDAH(1:KSIZE)**2              ) + &
+                          ICEP%XLBSWETH2/( PLBDAH(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
+                          ICEP%XLBSWETH3/(               PLBDAS(1:KSIZE)**2) )
+      PRH_TEND(1:KSIZE, IRSDRYH)=PRH_TEND(1:KSIZE, IRSWETH)*(ICEP%XCOLSH*EXP(ICEP%XCOLEXSH*(PT(1:KSIZE)-CST%XTT)))
     END WHERE
   ENDIF
 ENDIF
@@ -233,8 +231,8 @@ ENDIF
 !
 IGWET = 0
 DO JJ = 1, KSIZE
-  ZWET(JJ)=MAX(0., -SIGN(1., XRTMIN(7)-PRHT(JJ))) * & ! WHERE(PRHT(:)>XRTMIN(7))
-          &MAX(0., -SIGN(1., XRTMIN(6)-PRGT(JJ))) * & ! WHERE(PRGT(:)>XRTMIN(6))
+  ZWET(JJ)=MAX(0., -SIGN(1., ICED%XRTMIN(7)-PRHT(JJ))) * & ! WHERE(PRHT(:)>XRTMIN(7))
+          &MAX(0., -SIGN(1., ICED%XRTMIN(6)-PRGT(JJ))) * & ! WHERE(PRGT(:)>XRTMIN(6))
           &PCOMPUTE(JJ)
   IF (ZWET(JJ)>0) THEN
     IGWET = IGWET + 1
@@ -265,13 +263,13 @@ ELSE
     !               in the geometrical set of (Lbda_h,Lbda_g) couplet use to
     !               tabulate the GWETH-kernel
     !
-    ZVEC1(1:IGWET) = MAX( 1.00001, MIN( REAL(NWETLBDAG)-0.00001,           &
-                          XWETINTP1H * LOG( ZVEC1(1:IGWET) ) + XWETINTP2H ) )
+    ZVEC1(1:IGWET) = MAX( 1.00001, MIN( REAL(ICEP%NWETLBDAG)-0.00001,           &
+                          ICEP%XWETINTP1H * LOG( ZVEC1(1:IGWET) ) + ICEP%XWETINTP2H ) )
     IVEC1(1:IGWET) = INT( ZVEC1(1:IGWET) )
     ZVEC1(1:IGWET) = ZVEC1(1:IGWET) - REAL( IVEC1(1:IGWET) )
     !
-    ZVEC2(1:IGWET) = MAX( 1.00001, MIN( REAL(NWETLBDAG)-0.00001,           &
-                          XWETINTP1G * LOG( ZVEC2(1:IGWET) ) + XWETINTP2G ) )
+    ZVEC2(1:IGWET) = MAX( 1.00001, MIN( REAL(ICEP%NWETLBDAG)-0.00001,           &
+                          ICEP%XWETINTP1G * LOG( ZVEC2(1:IGWET) ) + ICEP%XWETINTP2G ) )
     IVEC2(1:IGWET) = INT( ZVEC2(1:IGWET) )
     ZVEC2(1:IGWET) = ZVEC2(1:IGWET) - REAL( IVEC2(1:IGWET) )
     !
@@ -279,11 +277,11 @@ ELSE
     !               GWETH-kernel
     !
     DO JJ = 1,IGWET
-      ZVEC3(JJ) = (  XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                   - XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+      ZVEC3(JJ) = (  ICEP%XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                   - ICEP%XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                                  * ZVEC1(JJ) &
-                - (  XKER_GWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                   - XKER_GWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+                - (  ICEP%XKER_GWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                   - ICEP%XKER_GWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                         * (ZVEC1(JJ) - 1.0)
     END DO
     ZZW(:) = 0.
@@ -292,17 +290,17 @@ ELSE
     END DO
     !
     WHERE(GWET(1:KSIZE))
-      PRH_TEND(1:KSIZE, IRGWETH)=XFGWETH*ZZW(1:KSIZE)                       & ! RGWETH
-                    *( PLBDAG(1:KSIZE)**(XCXG-XBG) )*( PLBDAH(1:KSIZE)**XCXH )  &
-                       *( PRHODREF(1:KSIZE)**(-XCEXVT-1.) )               &
-                       *( XLBGWETH1/( PLBDAH(1:KSIZE)**2              ) + &
-                          XLBGWETH2/( PLBDAH(1:KSIZE)   * PLBDAG(1:KSIZE)   ) + &
-                          XLBGWETH3/(               PLBDAG(1:KSIZE)**2) )
+      PRH_TEND(1:KSIZE, IRGWETH)=ICEP%XFGWETH*ZZW(1:KSIZE)                       & ! RGWETH
+                    *( PLBDAG(1:KSIZE)**(ICED%XCXG-ICED%XBG) )*( PLBDAH(1:KSIZE)**ICED%XCXH )  &
+                       *( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) )               &
+                       *( ICEP%XLBGWETH1/( PLBDAH(1:KSIZE)**2              ) + &
+                          ICEP%XLBGWETH2/( PLBDAH(1:KSIZE)   * PLBDAG(1:KSIZE)   ) + &
+                          ICEP%XLBGWETH3/(               PLBDAG(1:KSIZE)**2) )
       PRH_TEND(1:KSIZE, IRGDRYH)=PRH_TEND(1:KSIZE, IRGWETH)
     END WHERE
     !When graupel grows in wet mode, graupel is wet (!) and collection efficiency must remain the same
     WHERE(GWET(1:KSIZE) .AND. .NOT. PWETG(1:KSIZE)==1.)
-      PRH_TEND(1:KSIZE, IRGDRYH)=PRH_TEND(1:KSIZE, IRGDRYH)*(XCOLGH*EXP(XCOLEXGH*(PT(1:KSIZE)-XTT)))
+      PRH_TEND(1:KSIZE, IRGDRYH)=PRH_TEND(1:KSIZE, IRGDRYH)*(ICEP%XCOLGH*EXP(ICEP%XCOLEXGH*(PT(1:KSIZE)-CST%XTT)))
     END WHERE
   END IF
 ENDIF
@@ -311,8 +309,8 @@ ENDIF
 !
 IGWET = 0
 DO JJ = 1, KSIZE
-  ZWET(JJ)=MAX(0., -SIGN(1., XRTMIN(7)-PRHT(JJ))) * & ! WHERE(PRHT(:)>XRTMIN(7))
-          &MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JJ))) * & ! WHERE(PRRT(:)>XRTMIN(3))
+  ZWET(JJ)=MAX(0., -SIGN(1., ICED%XRTMIN(7)-PRHT(JJ))) * & ! WHERE(PRHT(:)>XRTMIN(7))
+          &MAX(0., -SIGN(1., ICED%XRTMIN(3)-PRRT(JJ))) * & ! WHERE(PRRT(:)>XRTMIN(3))
           &PCOMPUTE(JJ)
   IF (ZWET(JJ)>0) THEN
     IGWET = IGWET + 1
@@ -341,13 +339,13 @@ ELSE
     !               in the geometrical set of (Lbda_h,Lbda_r) couplet use to
     !               tabulate the RWETH-kernel
     !
-    ZVEC1(1:IGWET)=MAX(1.00001, MIN( REAL(NWETLBDAH)-0.00001,           &
-                          XWETINTP1H*LOG(ZVEC1(1:IGWET))+XWETINTP2H))
+    ZVEC1(1:IGWET)=MAX(1.00001, MIN( REAL(ICEP%NWETLBDAH)-0.00001,           &
+                          ICEP%XWETINTP1H*LOG(ZVEC1(1:IGWET))+ICEP%XWETINTP2H))
     IVEC1(1:IGWET)=INT(ZVEC1(1:IGWET))
     ZVEC1(1:IGWET)=ZVEC1(1:IGWET)-REAL(IVEC1(1:IGWET))
     !
-    ZVEC2(1:IGWET)=MAX(1.00001, MIN( REAL(NWETLBDAR)-0.00001,           &
-                          XWETINTP1R*LOG(ZVEC2(1:IGWET))+XWETINTP2R))
+    ZVEC2(1:IGWET)=MAX(1.00001, MIN( REAL(ICEP%NWETLBDAR)-0.00001,           &
+                          ICEP%XWETINTP1R*LOG(ZVEC2(1:IGWET))+ICEP%XWETINTP2R))
     IVEC2(1:IGWET)=INT(ZVEC2(1:IGWET))
     ZVEC2(1:IGWET)=ZVEC2(1:IGWET)-REAL(IVEC2(1:IGWET))
     !
@@ -355,11 +353,11 @@ ELSE
     !               RWETH-kernel
     !
     DO JJ=1, IGWET
-      ZVEC3(JJ)= (  XKER_RWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - XKER_RWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+      ZVEC3(JJ)= (  ICEP%XKER_RWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    - ICEP%XKER_RWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                                   * ZVEC1(JJ) &
-                 - (  XKER_RWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - XKER_RWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+                 - (  ICEP%XKER_RWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    - ICEP%XKER_RWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                          *(ZVEC1(JJ) - 1.0)
     END DO
     ZZW(:) = 0.
@@ -368,12 +366,12 @@ ELSE
     END DO
     !
     WHERE(GWET(1:KSIZE))
-      PRH_TEND(1:KSIZE, IRRWETH) = XFRWETH*ZZW(1:KSIZE)                    & ! RRWETH
-                        *( PLBDAR(1:KSIZE)**(-4) )*( PLBDAH(1:KSIZE)**XCXH ) &
-                               *( PRHODREF(1:KSIZE)**(-XCEXVT-1.) )   &
-                    *( XLBRWETH1/( PLBDAH(1:KSIZE)**2              ) + &
-                       XLBRWETH2/( PLBDAH(1:KSIZE)   * PLBDAR(1:KSIZE)   ) + &
-                       XLBRWETH3/(               PLBDAR(1:KSIZE)**2) )
+      PRH_TEND(1:KSIZE, IRRWETH) = ICEP%XFRWETH*ZZW(1:KSIZE)                    & ! RRWETH
+                        *( PLBDAR(1:KSIZE)**(-4) )*( PLBDAH(1:KSIZE)**ICED%XCXH ) &
+                               *( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) )   &
+                    *( ICEP%XLBRWETH1/( PLBDAH(1:KSIZE)**2              ) + &
+                       ICEP%XLBRWETH2/( PLBDAH(1:KSIZE)   * PLBDAR(1:KSIZE)   ) + &
+                       ICEP%XLBRWETH3/(               PLBDAR(1:KSIZE)**2) )
     END WHERE
   ENDIF
 ENDIF
@@ -386,7 +384,7 @@ ENDDO
 !*       7.3    compute the Wet growth of hail
 !
 DO JL=1, KSIZE
-  ZHAIL(JL)=MAX(0., -SIGN(1., XRTMIN(7)-PRHT(JL))) * & ! WHERE(PRHT(:)>XRTMIN(7))
+  ZHAIL(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(7)-PRHT(JL))) * & ! WHERE(PRHT(:)>XRTMIN(7))
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -396,23 +394,23 @@ IF(LDSOFT) THEN
   ENDDO
 ELSE
   DO JL=1, KSIZE
-    PRH_TEND(JL, IFREEZ1)=PRVT(JL)*PPRES(JL)/(XEPSILO+PRVT(JL)) ! Vapor pressure
+    PRH_TEND(JL, IFREEZ1)=PRVT(JL)*PPRES(JL)/(CST%XEPSILO+PRVT(JL)) ! Vapor pressure
   ENDDO
-  IF(LEVLIMIT) THEN
+  IF(PARAMI%LEVLIMIT) THEN
     WHERE(ZHAIL(1:KSIZE)==1.)
-      PRH_TEND(1:KSIZE, IFREEZ1)=MIN(PRH_TEND(1:KSIZE, IFREEZ1), EXP(XALPI-XBETAI/PT(1:KSIZE)-XGAMI*ALOG(PT(1:KSIZE)))) ! min(ev, es_i(T))
+      PRH_TEND(1:KSIZE, IFREEZ1)=MIN(PRH_TEND(1:KSIZE, IFREEZ1), EXP(CST%XALPI-CST%XBETAI/PT(1:KSIZE)-CST%XGAMI*ALOG(PT(1:KSIZE)))) ! min(ev, es_i(T))
     END WHERE
   ENDIF
   PRH_TEND(:, IFREEZ2)=0.
   WHERE(ZHAIL(1:KSIZE)==1.)
-    PRH_TEND(1:KSIZE, IFREEZ1)=PKA(1:KSIZE)*(XTT-PT(1:KSIZE)) +                              &
-             (PDV(1:KSIZE)*(XLVTT+(XCPV-XCL)*(PT(1:KSIZE)-XTT)) &
-                           *(XESTT-PRH_TEND(1:KSIZE, IFREEZ1))/(XRV*PT(1:KSIZE))           )
-    PRH_TEND(1:KSIZE, IFREEZ1)=PRH_TEND(1:KSIZE, IFREEZ1)* ( X0DEPH*       PLBDAH(1:KSIZE)**XEX0DEPH +     &
-                           X1DEPH*PCJ(1:KSIZE)*PLBDAH(1:KSIZE)**XEX1DEPH )/ &
-                          ( PRHODREF(1:KSIZE)*(XLMTT-XCL*(XTT-PT(1:KSIZE))) )
-    PRH_TEND(1:KSIZE, IFREEZ2)=(PRHODREF(1:KSIZE)*(XLMTT+(XCI-XCL)*(XTT-PT(1:KSIZE)))   ) / &
-                          ( PRHODREF(1:KSIZE)*(XLMTT-XCL*(XTT-PT(1:KSIZE))) )
+    PRH_TEND(1:KSIZE, IFREEZ1)=PKA(1:KSIZE)*(CST%XTT-PT(1:KSIZE)) +                              &
+             (PDV(1:KSIZE)*(CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(1:KSIZE)-CST%XTT)) &
+                           *(CST%XESTT-PRH_TEND(1:KSIZE, IFREEZ1))/(CST%XRV*PT(1:KSIZE))           )
+    PRH_TEND(1:KSIZE, IFREEZ1)=PRH_TEND(1:KSIZE, IFREEZ1)* ( ICEP%X0DEPH*       PLBDAH(1:KSIZE)**ICEP%XEX0DEPH +     &
+                           ICEP%X1DEPH*PCJ(1:KSIZE)*PLBDAH(1:KSIZE)**ICEP%XEX1DEPH )/ &
+                          ( PRHODREF(1:KSIZE)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(1:KSIZE))) )
+    PRH_TEND(1:KSIZE, IFREEZ2)=(PRHODREF(1:KSIZE)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-PT(1:KSIZE)))   ) / &
+                          ( PRHODREF(1:KSIZE)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(1:KSIZE))) )
   END WHERE
 ENDIF
 DO JL=1, KSIZE
@@ -431,7 +429,7 @@ DO JL=1, KSIZE
             & MAX(0., SIGN(1., MAX(0., ZRDRYH_INIT(JL)-PRH_TEND(JL, IRIDRYH)-PRH_TEND(JL, IRSDRYH)-PRH_TEND(JL, IRGDRYH)) - &
                               &MAX(0., ZRWETH_INIT(JL)-PRH_TEND(JL, IRIWETH)-PRH_TEND(JL, IRSWETH)-PRH_TEND(JL, IRGWETH))))
 ENDDO
-IF(LNULLWETH) THEN
+IF(PARAMI%LNULLWETH) THEN
   DO JL=1, KSIZE
     ZWETH(JL) = ZWETH(JL) * MAX(0., -SIGN(1., -ZRDRYH_INIT(JL))) ! WHERE(ZRDRYH_INIT(:)>0.)
   ENDDO
@@ -440,21 +438,21 @@ ELSE
     ZWETH(JL) = ZWETH(JL) * MAX(0., -SIGN(1., -ZRWETH_INIT(JL))) ! WHERE(ZRWETH_INIT(:)>0.)
   ENDDO
 ENDIF
-IF(.NOT. LWETHPOST) THEN
+IF(.NOT. PARAMI%LWETHPOST) THEN
   DO JL=1, KSIZE
-    ZWETH(JL) = ZWETH(JL) * MAX(0., -SIGN(1., PT(JL)-XTT)) ! WHERE(PT(:)<XTT)
+    ZWETH(JL) = ZWETH(JL) * MAX(0., -SIGN(1., PT(JL)-CST%XTT)) ! WHERE(PT(:)<XTT)
   ENDDO
 ENDIF
 DO JL=1, KSIZE
   ZDRYH(JL) = ZHAIL(JL) * &
-            & MAX(0., -SIGN(1., PT(JL)-XTT)) * & ! WHERE(PT(:)<XTT)
+            & MAX(0., -SIGN(1., PT(JL)-CST%XTT)) * & ! WHERE(PT(:)<XTT)
             & MAX(0., -SIGN(1., 1.E-20-ZRDRYH_INIT(JL))) * & !WHERE(ZRDRYH_INIT(:)>0.)
             & MAX(0., -SIGN(1., MAX(0., ZRDRYH_INIT(JL)-PRH_TEND(JL, IRIDRYH)-PRH_TEND(JL, IRSDRYH)) - &
                                &MAX(0., ZRWETH_INIT(JL)-PRH_TEND(JL, IRIWETH)-PRH_TEND(JL, IRSWETH))))
 ENDDO
 !
 ZRDRYHG(:)=0.
-IF(LCONVHG)THEN
+IF(PARAMI%LCONVHG)THEN
   WHERE(ZDRYH(:)==1.)
     ZRDRYHG(:)=ZRDRYH_INIT(:)*ZRWETH_INIT(:)/(ZRDRYH_INIT(:)+ZRWETH_INIT(:))
   END WHERE
@@ -496,8 +494,8 @@ ENDDO
 !*       7.5    Melting of the hailstones
 !
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(7)-PRHT(JL))) * & ! WHERE(PRHT(:)>XRTMIN(7))
-           &MAX(0., -SIGN(1., XTT-PT(JL))) * & ! WHERE(PT(:)>XTT)
+  ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(7)-PRHT(JL))) * & ! WHERE(PRHT(:)>XRTMIN(7))
+           &MAX(0., -SIGN(1., CST%XTT-PT(JL))) * & ! WHERE(PT(:)>XTT)
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -506,28 +504,28 @@ IF(LDSOFT) THEN
   ENDDO
 ELSE
   DO JL=1, KSIZE
-    PRHMLTR(JL) = ZMASK(JL)* PRVT(JL)*PPRES(JL)/(XEPSILO+PRVT(JL)) ! Vapor pressure
+    PRHMLTR(JL) = ZMASK(JL)* PRVT(JL)*PPRES(JL)/(CST%XEPSILO+PRVT(JL)) ! Vapor pressure
   ENDDO
-  IF(LEVLIMIT) THEN
+  IF(PARAMI%LEVLIMIT) THEN
     WHERE(ZMASK(:)==1.)
-      PRHMLTR(:)=MIN(PRHMLTR(:), EXP(XALPW-XBETAW/PT(:)-XGAMW*ALOG(PT(:)))) ! min(ev, es_w(T))
+      PRHMLTR(:)=MIN(PRHMLTR(:), EXP(CST%XALPW-CST%XBETAW/PT(:)-CST%XGAMW*ALOG(PT(:)))) ! min(ev, es_w(T))
     END WHERE
   ENDIF
   DO JL=1, KSIZE
-    PRHMLTR(JL) = ZMASK(JL)* (PKA(JL)*(XTT-PT(JL)) +                              &
-           ( PDV(JL)*(XLVTT + ( XCPV - XCL ) * ( PT(JL) - XTT )) &
-                           *(XESTT-PRHMLTR(JL))/(XRV*PT(JL))         ))
+    PRHMLTR(JL) = ZMASK(JL)* (PKA(JL)*(CST%XTT-PT(JL)) +                              &
+           ( PDV(JL)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( PT(JL) - CST%XTT )) &
+                           *(CST%XESTT-PRHMLTR(JL))/(CST%XRV*PT(JL))         ))
   ENDDO
   WHERE(ZMASK(1:KSIZE)==1.)
     !
     ! compute RHMLTR
     !
     PRHMLTR(1:KSIZE)  = MAX( 0.0,( -PRHMLTR(1:KSIZE) *                     &
-                           ( X0DEPH*       PLBDAH(1:KSIZE)**XEX0DEPH +     &
-                             X1DEPH*PCJ(1:KSIZE)*PLBDAH(1:KSIZE)**XEX1DEPH ) -   &
+                           ( ICEP%X0DEPH*       PLBDAH(1:KSIZE)**ICEP%XEX0DEPH +     &
+                             ICEP%X1DEPH*PCJ(1:KSIZE)*PLBDAH(1:KSIZE)**ICEP%XEX1DEPH ) -   &
                          ( PRH_TEND(1:KSIZE, IRCWETH)+PRH_TEND(1:KSIZE, IRRWETH) )*        &
-                               ( PRHODREF(1:KSIZE)*XCL*(XTT-PT(1:KSIZE))) ) /    &
-                                             ( PRHODREF(1:KSIZE)*XLMTT ) )
+                               ( PRHODREF(1:KSIZE)*CST%XCL*(CST%XTT-PT(1:KSIZE))) ) /    &
+                                             ( PRHODREF(1:KSIZE)*CST%XLMTT ) )
   END WHERE
 END IF
 DO JL=1, KSIZE

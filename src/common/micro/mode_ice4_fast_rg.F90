@@ -5,7 +5,7 @@
 MODULE MODE_ICE4_FAST_RG
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_FAST_RG(KPROMA,KSIZE, LDSOFT, PCOMPUTE, KRR, &
+SUBROUTINE ICE4_FAST_RG(CST, PARAMI, ICEP, ICED, KPROMA,KSIZE, LDSOFT, PCOMPUTE, KRR, &
                        &PRHODREF, PLVFACT, PLSFACT, PPRES, &
                        &PDV, PKA, PCJ, PCIT, &
                        &PLBDAR, PLBDAS, PLBDAG, &
@@ -36,15 +36,10 @@ SUBROUTINE ICE4_FAST_RG(KPROMA,KSIZE, LDSOFT, PCOMPUTE, KRR, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST,            ONLY: XALPI, XALPW, XBETAI, XBETAW, XGAMW, XCI, XCL, XCPV, XESTT, XGAMI, &
-                             & XLMTT, XLVTT, XMD, XMV, XRV, XTT, XEPSILO
-USE MODD_PARAM_ICE,      ONLY: LCRFLIMIT, LEVLIMIT, LNULLWETG, LWETGPOST
-USE MODD_RAIN_ICE_DESCR, ONLY: XBS, XCEXVT, XCXG, XCXS, XDG, XRTMIN
-USE MODD_RAIN_ICE_PARAM, ONLY: NDRYLBDAG, NDRYLBDAR, NDRYLBDAS, X0DEPG, X1DEPG, XCOLEXIG, XCOLEXSG, XCOLIG, &
-                             & XCOLSG, XDRYINTP1G, XDRYINTP1R, XDRYINTP1S, XDRYINTP2G, XDRYINTP2R, XDRYINTP2S, &
-                             & XEX0DEPG, XEX1DEPG, XEXICFRR,  XEXRCFRI, XFCDRYG, XFIDRYG, XFRDRYG, &
-                             & XFSDRYG, XICFRR, XKER_RDRYG, XKER_SDRYG, XLBRDRYG1,  XLBRDRYG2, XLBRDRYG3, &
-                             & XLBSDRYG1, XLBSDRYG2, XLBSDRYG3, XRCFRI
+USE MODD_CST,            ONLY: CST_t
+USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -52,6 +47,10 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
+TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
+TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 INTEGER,                      INTENT(IN)    :: KPROMA,KSIZE
 LOGICAL,                      INTENT(IN)    :: LDSOFT
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PCOMPUTE
@@ -127,8 +126,8 @@ IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RG', 0, ZHOOK_HANDLE)
 !*       6.1    rain contact freezing
 !
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(4)-PRIT(JL))) * & ! WHERE(PRIT(:)>XRTMIN(4))
-           &MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JL))) * & ! WHERE(PRRT(:)>XRTMIN(3))
+  ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(4)-PRIT(JL))) * & ! WHERE(PRIT(:)>XRTMIN(4))
+           &MAX(0., -SIGN(1., ICED%XRTMIN(3)-PRRT(JL))) * & ! WHERE(PRRT(:)>XRTMIN(3))
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -141,21 +140,21 @@ ELSE
   PRICFRRG(:)=0.
   PRRCFRIG(:)=0.
   WHERE(ZMASK(:)==1.)
-    PRICFRRG(:) = XICFRR*PRIT(:)                & ! RICFRRG
-                                 *PLBDAR(:)**XEXICFRR    &
-                                 *PRHODREF(:)**(-XCEXVT)
-    PRRCFRIG(:) = XRCFRI*PCIT(:)                & ! RRCFRIG
-                                 * PLBDAR(:)**XEXRCFRI    &
-                                 * PRHODREF(:)**(-XCEXVT-1.)
+    PRICFRRG(:) = ICEP%XICFRR*PRIT(:)                & ! RICFRRG
+                                 *PLBDAR(:)**ICEP%XEXICFRR    &
+                                 *PRHODREF(:)**(-ICED%XCEXVT)
+    PRRCFRIG(:) = ICEP%XRCFRI*PCIT(:)                & ! RRCFRIG
+                                 * PLBDAR(:)**ICEP%XEXRCFRI    &
+                                 * PRHODREF(:)**(-ICED%XCEXVT-1.)
   END WHERE
 
-  IF(LCRFLIMIT) THEN
+  IF(PARAMI%LCRFLIMIT) THEN
     DO JL=1, KSIZE
       !Comparison between heat to be released (to freeze rain) and heat sink (rain and ice temperature change)
       !ZZW is the proportion of process that can take place
       ZZW(JL)=(1.-ZMASK(JL)) + & ! 1. outside of mask
-              ZMASK(JL) * MAX(0., MIN(1., (PRICFRRG(JL)*XCI+PRRCFRIG(JL)*XCL)*(XTT-PT(JL)) / &
-                                          MAX(1.E-20, XLVTT*PRRCFRIG(JL))))
+              ZMASK(JL) * MAX(0., MIN(1., (PRICFRRG(JL)*CST%XCI+PRRCFRIG(JL)*CST%XCL)*(CST%XTT-PT(JL)) / &
+                                          MAX(1.E-20, CST%XLVTT*PRRCFRIG(JL))))
     ENDDO
   ELSE
     ZZW(:)=1.
@@ -172,8 +171,8 @@ ENDIF
 !
 ! Wet and dry collection of rc and ri on graupel
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(6)-PRGT(JL))) * & ! WHERE(PRGT(:)>XRTMIN(6))
-           &MAX(0., -SIGN(1., XRTMIN(2)-PRCT(JL))) * & ! WHERE(PRCT(:)>XRTMIN(2))
+  ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(6)-PRGT(JL))) * & ! WHERE(PRGT(:)>XRTMIN(6))
+           &MAX(0., -SIGN(1., ICED%XRTMIN(2)-PRCT(JL))) * & ! WHERE(PRCT(:)>XRTMIN(2))
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -183,16 +182,16 @@ IF(LDSOFT) THEN
 ELSE
   ZZW(:)=0.
   WHERE(ZMASK(:)==1.)
-    ZZW(:)=PLBDAG(:)**(XCXG-XDG-2.) * PRHODREF(:)**(-XCEXVT)
+    ZZW(:)=PLBDAG(:)**(ICED%XCXG-ICED%XDG-2.) * PRHODREF(:)**(-ICED%XCEXVT)
   END WHERE
   DO JL=1, KSIZE
-    PRG_TEND(JL, IRCDRYG)=ZMASK(JL)*XFCDRYG * PRCT(JL) * ZZW(JL)
+    PRG_TEND(JL, IRCDRYG)=ZMASK(JL)*ICEP%XFCDRYG * PRCT(JL) * ZZW(JL)
   ENDDO
 ENDIF
 
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(6)-PRGT(JL))) * & ! WHERE(PRGT(:)>XRTMIN(6))
-           &MAX(0., -SIGN(1., XRTMIN(4)-PRIT(JL))) * & ! WHERE(PRIT(:)>XRTMIN(4))
+  ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(6)-PRGT(JL))) * & ! WHERE(PRGT(:)>XRTMIN(6))
+           &MAX(0., -SIGN(1., ICED%XRTMIN(4)-PRIT(JL))) * & ! WHERE(PRIT(:)>XRTMIN(4))
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -204,17 +203,17 @@ ELSE
   PRG_TEND(:, IRIDRYG)=0.
   PRG_TEND(:, IRIWETG)=0.
   WHERE(ZMASK(1:KSIZE)==1.)
-    ZZW(1:KSIZE)=PLBDAG(1:KSIZE)**(XCXG-XDG-2.) * PRHODREF(1:KSIZE)**(-XCEXVT)
-    PRG_TEND(1:KSIZE, IRIDRYG)=XFIDRYG*EXP(XCOLEXIG*(PT(1:KSIZE)-XTT))*PRIT(1:KSIZE)*ZZW(1:KSIZE)
-    PRG_TEND(1:KSIZE, IRIWETG)=PRG_TEND(1:KSIZE, IRIDRYG) / (XCOLIG*EXP(XCOLEXIG*(PT(1:KSIZE)-XTT)))
+    ZZW(1:KSIZE)=PLBDAG(1:KSIZE)**(ICED%XCXG-ICED%XDG-2.) * PRHODREF(1:KSIZE)**(-ICED%XCEXVT)
+    PRG_TEND(1:KSIZE, IRIDRYG)=ICEP%XFIDRYG*EXP(ICEP%XCOLEXIG*(PT(1:KSIZE)-CST%XTT))*PRIT(1:KSIZE)*ZZW(1:KSIZE)
+    PRG_TEND(1:KSIZE, IRIWETG)=PRG_TEND(1:KSIZE, IRIDRYG) / (ICEP%XCOLIG*EXP(ICEP%XCOLEXIG*(PT(1:KSIZE)-CST%XTT)))
   END WHERE
 ENDIF
 
 ! Wet and dry collection of rs on graupel (6.2.1)
 IGDRY = 0
 DO JJ = 1, KSIZE
-  ZDRY(JJ)=MAX(0., -SIGN(1., XRTMIN(5)-PRST(JJ))) * & ! WHERE(PRST(:)>XRTMIN(5))
-          &MAX(0., -SIGN(1., XRTMIN(6)-PRGT(JJ))) * & ! WHERE(PRGT(:)>XRTMIN(6))
+  ZDRY(JJ)=MAX(0., -SIGN(1., ICED%XRTMIN(5)-PRST(JJ))) * & ! WHERE(PRST(:)>XRTMIN(5))
+          &MAX(0., -SIGN(1., ICED%XRTMIN(6)-PRGT(JJ))) * & ! WHERE(PRGT(:)>XRTMIN(6))
           &PCOMPUTE(JJ)
   IF (ZDRY(JJ)>0) THEN
     IGDRY = IGDRY + 1
@@ -245,13 +244,13 @@ ELSE
     !               in the geometrical set of (Lbda_g,Lbda_s) couplet use to
     !               tabulate the SDRYG-kernel
     !
-    ZVEC1(1:IGDRY)=MAX(1.00001, MIN(REAL(NDRYLBDAG)-0.00001,           &
-                          XDRYINTP1G*LOG(ZVEC1(1:IGDRY))+XDRYINTP2G))
+    ZVEC1(1:IGDRY)=MAX(1.00001, MIN(REAL(ICEP%NDRYLBDAG)-0.00001,           &
+                          ICEP%XDRYINTP1G*LOG(ZVEC1(1:IGDRY))+ICEP%XDRYINTP2G))
     IVEC1(1:IGDRY)=INT(ZVEC1(1:IGDRY) )
     ZVEC1(1:IGDRY)=ZVEC1(1:IGDRY)-REAL(IVEC1(1:IGDRY))
     !
-    ZVEC2(1:IGDRY)=MAX(1.00001, MIN( REAL(NDRYLBDAS)-0.00001,           &
-                          XDRYINTP1S*LOG(ZVEC2(1:IGDRY))+XDRYINTP2S))
+    ZVEC2(1:IGDRY)=MAX(1.00001, MIN( REAL(ICEP%NDRYLBDAS)-0.00001,           &
+                          ICEP%XDRYINTP1S*LOG(ZVEC2(1:IGDRY))+ICEP%XDRYINTP2S))
     IVEC2(1:IGDRY)=INT(ZVEC2(1:IGDRY))
     ZVEC2(1:IGDRY)=ZVEC2(1:IGDRY)-REAL(IVEC2(1:IGDRY))
     !
@@ -259,11 +258,11 @@ ELSE
     !               SDRYG-kernel
     !
     DO JJ=1, IGDRY
-      ZVEC3(JJ) =  (  XKER_SDRYG(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - XKER_SDRYG(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+      ZVEC3(JJ) =  (  ICEP%XKER_SDRYG(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    - ICEP%XKER_SDRYG(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                          * ZVEC1(JJ) &
-                 - (  XKER_SDRYG(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - XKER_SDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+                 - (  ICEP%XKER_SDRYG(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    - ICEP%XKER_SDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                          *(ZVEC1(JJ) - 1.0)
     END DO
     ZZW(:) = 0.
@@ -272,14 +271,14 @@ ELSE
     END DO
     !
     WHERE(GDRY(1:KSIZE))
-      PRG_TEND(1:KSIZE, IRSWETG)=XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
-                                    / XCOLSG &
-                  *(PLBDAS(1:KSIZE)**(XCXS-XBS))*( PLBDAG(1:KSIZE)**XCXG )    &
-                  *(PRHODREF(1:KSIZE)**(-XCEXVT-1.))                    &
-                       *( XLBSDRYG1/( PLBDAG(1:KSIZE)**2              ) + &
-                          XLBSDRYG2/( PLBDAG(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
-                          XLBSDRYG3/(               PLBDAS(1:KSIZE)**2))
-      PRG_TEND(1:KSIZE, IRSDRYG)=PRG_TEND(1:KSIZE, IRSWETG)*XCOLSG*EXP(XCOLEXSG*(PT(1:KSIZE)-XTT))
+      PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
+                                    / ICEP%XCOLSG &
+                  *(PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
+                  *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.))                    &
+                       *( ICEP%XLBSDRYG1/( PLBDAG(1:KSIZE)**2              ) + &
+                          ICEP%XLBSDRYG2/( PLBDAG(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
+                          ICEP%XLBSDRYG3/(               PLBDAS(1:KSIZE)**2))
+      PRG_TEND(1:KSIZE, IRSDRYG)=PRG_TEND(1:KSIZE, IRSWETG)*ICEP%XCOLSG*EXP(ICEP%XCOLEXSG*(PT(1:KSIZE)-CST%XTT))
     END WHERE
   ENDIF
 ENDIF
@@ -288,8 +287,8 @@ ENDIF
 !
 IGDRY = 0
 DO JJ = 1, KSIZE
-  ZDRY(JJ)=MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JJ))) * & ! WHERE(PRRT(:)>XRTMIN(3))
-          &MAX(0., -SIGN(1., XRTMIN(6)-PRGT(JJ))) * & ! WHERE(PRGT(:)>XRTMIN(6))
+  ZDRY(JJ)=MAX(0., -SIGN(1., ICED%XRTMIN(3)-PRRT(JJ))) * & ! WHERE(PRRT(:)>XRTMIN(3))
+          &MAX(0., -SIGN(1., ICED%XRTMIN(6)-PRGT(JJ))) * & ! WHERE(PRGT(:)>XRTMIN(6))
           &PCOMPUTE(JJ)
   IF (ZDRY(JJ)>0) THEN
     IGDRY = IGDRY + 1
@@ -319,13 +318,13 @@ ELSE
     !               in the geometrical set of (Lbda_g,Lbda_r) couplet use to
     !               tabulate the RDRYG-kernel
     !
-    ZVEC1(1:IGDRY)=MAX(1.00001, MIN( REAL(NDRYLBDAG)-0.00001,           &
-                          XDRYINTP1G*LOG(ZVEC1(1:IGDRY))+XDRYINTP2G))
+    ZVEC1(1:IGDRY)=MAX(1.00001, MIN( REAL(ICEP%NDRYLBDAG)-0.00001,           &
+                          ICEP%XDRYINTP1G*LOG(ZVEC1(1:IGDRY))+ICEP%XDRYINTP2G))
     IVEC1(1:IGDRY)=INT(ZVEC1(1:IGDRY))
     ZVEC1(1:IGDRY)=ZVEC1(1:IGDRY)-REAL(IVEC1(1:IGDRY))
     !
-    ZVEC2(1:IGDRY)=MAX(1.00001, MIN( REAL(NDRYLBDAR)-0.00001,           &
-                          XDRYINTP1R*LOG(ZVEC2(1:IGDRY))+XDRYINTP2R))
+    ZVEC2(1:IGDRY)=MAX(1.00001, MIN( REAL(ICEP%NDRYLBDAR)-0.00001,           &
+                          ICEP%XDRYINTP1R*LOG(ZVEC2(1:IGDRY))+ICEP%XDRYINTP2R))
     IVEC2(1:IGDRY)=INT(ZVEC2(1:IGDRY))
     ZVEC2(1:IGDRY)=ZVEC2(1:IGDRY)-REAL(IVEC2(1:IGDRY))
     !
@@ -333,11 +332,11 @@ ELSE
     !               RDRYG-kernel
     !
     DO JJ=1, IGDRY
-      ZVEC3(JJ)= (  XKER_RDRYG(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - XKER_RDRYG(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+      ZVEC3(JJ)= (  ICEP%XKER_RDRYG(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    - ICEP%XKER_RDRYG(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                                   * ZVEC1(JJ) &
-                 - (  XKER_RDRYG(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - XKER_RDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+                 - (  ICEP%XKER_RDRYG(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    - ICEP%XKER_RDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                          *(ZVEC1(JJ) - 1.0)
     END DO
     ZZW(:) = 0.
@@ -346,12 +345,12 @@ ELSE
     END DO
     !
     WHERE(GDRY(1:KSIZE))
-      PRG_TEND(1:KSIZE, IRRDRYG) = XFRDRYG*ZZW(1:KSIZE)                    & ! RRDRYG
-                        *( PLBDAR(1:KSIZE)**(-4) )*( PLBDAG(1:KSIZE)**XCXG ) &
-                               *( PRHODREF(1:KSIZE)**(-XCEXVT-1.) )   &
-                    *( XLBRDRYG1/( PLBDAG(1:KSIZE)**2              ) + &
-                       XLBRDRYG2/( PLBDAG(1:KSIZE)   * PLBDAR(1:KSIZE)   ) + &
-                       XLBRDRYG3/(               PLBDAR(1:KSIZE)**2) )
+      PRG_TEND(1:KSIZE, IRRDRYG) = ICEP%XFRDRYG*ZZW(1:KSIZE)                    & ! RRDRYG
+                        *( PLBDAR(1:KSIZE)**(-4) )*( PLBDAG(1:KSIZE)**ICED%XCXG ) &
+                               *( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) )   &
+                    *( ICEP%XLBRDRYG1/( PLBDAG(1:KSIZE)**2              ) + &
+                       ICEP%XLBRDRYG2/( PLBDAG(1:KSIZE)   * PLBDAR(1:KSIZE)   ) + &
+                       ICEP%XLBRDRYG3/(               PLBDAR(1:KSIZE)**2) )
     END WHERE
   ENDIF
 ENDIF
@@ -363,7 +362,7 @@ ENDDO
 
 !Freezing rate
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(6)-PRGT(JL))) * & ! WHERE(PRGT(:)>XRTMIN(6))
+  ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(6)-PRGT(JL))) * & ! WHERE(PRGT(:)>XRTMIN(6))
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -373,23 +372,23 @@ IF(LDSOFT) THEN
   ENDDO
 ELSE
   DO JL=1, KSIZE
-    PRG_TEND(JL, IFREEZ1)=ZMASK(JL) * PRVT(JL)*PPRES(JL)/(XEPSILO+PRVT(JL)) ! Vapor pressure
+    PRG_TEND(JL, IFREEZ1)=ZMASK(JL) * PRVT(JL)*PPRES(JL)/(CST%XEPSILO+PRVT(JL)) ! Vapor pressure
   ENDDO
-  IF(LEVLIMIT) THEN
+  IF(PARAMI%LEVLIMIT) THEN
     WHERE(ZMASK(1:KSIZE)==1.)
-      PRG_TEND(1:KSIZE, IFREEZ1)=MIN(PRG_TEND(1:KSIZE, IFREEZ1), EXP(XALPI-XBETAI/PT(1:KSIZE)-XGAMI*ALOG(PT(1:KSIZE)))) ! min(ev, es_i(T))
+      PRG_TEND(1:KSIZE, IFREEZ1)=MIN(PRG_TEND(1:KSIZE, IFREEZ1), EXP(CST%XALPI-CST%XBETAI/PT(1:KSIZE)-CST%XGAMI*ALOG(PT(1:KSIZE)))) ! min(ev, es_i(T))
     END WHERE
   ENDIF
   PRG_TEND(:, IFREEZ2)=0.
   WHERE(ZMASK(1:KSIZE)==1.)
-    PRG_TEND(1:KSIZE, IFREEZ1)=PKA(1:KSIZE)*(XTT-PT(1:KSIZE)) +                              &
-             (PDV(1:KSIZE)*(XLVTT+(XCPV-XCL)*(PT(1:KSIZE)-XTT)) &
-                           *(XESTT-PRG_TEND(1:KSIZE, IFREEZ1))/(XRV*PT(1:KSIZE))           )
-    PRG_TEND(1:KSIZE, IFREEZ1)=PRG_TEND(1:KSIZE, IFREEZ1)* ( X0DEPG*       PLBDAG(1:KSIZE)**XEX0DEPG +     &
-                           X1DEPG*PCJ(1:KSIZE)*PLBDAG(1:KSIZE)**XEX1DEPG )/ &
-                          ( PRHODREF(1:KSIZE)*(XLMTT-XCL*(XTT-PT(1:KSIZE))) )
-    PRG_TEND(1:KSIZE, IFREEZ2)=(PRHODREF(1:KSIZE)*(XLMTT+(XCI-XCL)*(XTT-PT(1:KSIZE)))   ) / &
-                          ( PRHODREF(1:KSIZE)*(XLMTT-XCL*(XTT-PT(1:KSIZE))) )
+    PRG_TEND(1:KSIZE, IFREEZ1)=PKA(1:KSIZE)*(CST%XTT-PT(1:KSIZE)) +                              &
+             (PDV(1:KSIZE)*(CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(1:KSIZE)-CST%XTT)) &
+                           *(CST%XESTT-PRG_TEND(1:KSIZE, IFREEZ1))/(CST%XRV*PT(1:KSIZE))           )
+    PRG_TEND(1:KSIZE, IFREEZ1)=PRG_TEND(1:KSIZE, IFREEZ1)* ( ICEP%X0DEPG*       PLBDAG(1:KSIZE)**ICEP%XEX0DEPG +     &
+                           ICEP%X1DEPG*PCJ(1:KSIZE)*PLBDAG(1:KSIZE)**ICEP%XEX1DEPG )/ &
+                          ( PRHODREF(1:KSIZE)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(1:KSIZE))) )
+    PRG_TEND(1:KSIZE, IFREEZ2)=(PRHODREF(1:KSIZE)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-PT(1:KSIZE)))   ) / &
+                          ( PRHODREF(1:KSIZE)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(1:KSIZE))) )
   END WHERE
 ENDIF
 DO JL=1, KSIZE
@@ -406,7 +405,7 @@ DO JL=1, KSIZE
             & MAX(0., SIGN(1., MAX(0., ZRDRYG_INIT(JL)-PRG_TEND(JL, IRIDRYG)-PRG_TEND(JL, IRSDRYG)) - &
                               &MAX(0., ZRWETG_INIT(JL)-PRG_TEND(JL, IRIWETG)-PRG_TEND(JL, IRSWETG))))
 ENDDO
-IF(LNULLWETG) THEN
+IF(PARAMI%LNULLWETG) THEN
   DO JL=1, KSIZE
     PWETG(JL) = PWETG(JL) * MAX(0., -SIGN(1., -ZRDRYG_INIT(JL)))
   ENDDO
@@ -415,14 +414,14 @@ ELSE
     PWETG(JL) = PWETG(JL) * MAX(0., -SIGN(1., -ZRWETG_INIT(JL)))
   ENDDO
 ENDIF
-IF(.NOT. LWETGPOST) THEN
+IF(.NOT. PARAMI%LWETGPOST) THEN
   DO JL=1, KSIZE
-    PWETG(JL) = PWETG(JL) * MAX(0., -SIGN(1., PT(JL)-XTT))
+    PWETG(JL) = PWETG(JL) * MAX(0., -SIGN(1., PT(JL)-CST%XTT))
   ENDDO
 ENDIF
 DO JL=1, KSIZE
   ZDRYG(JL) = ZMASK(JL) * & !
-            & MAX(0., -SIGN(1., PT(JL)-XTT)) * & ! WHERE(PT(:)<XTT)
+            & MAX(0., -SIGN(1., PT(JL)-CST%XTT)) * & ! WHERE(PT(:)<XTT)
 #ifdef REPRO48
             & MAX(0., -SIGN(1., -ZRDRYG_INIT(JL))) * & ! WHERE(ZRDRYG_INIT(:)>0.)
 #else
@@ -463,8 +462,8 @@ ENDDO
 !*       6.5    Melting of the graupeln
 !
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(6)-PRGT(JL))) * & ! WHERE(PRGT(:)>XRTMIN(6))
-           &MAX(0., -SIGN(1., XTT-PT(JL))) * & ! WHERE(PT(:)>XTT)
+  ZMASK(JL)=MAX(0., -SIGN(1., ICED%XRTMIN(6)-PRGT(JL))) * & ! WHERE(PRGT(:)>XRTMIN(6))
+           &MAX(0., -SIGN(1., CST%XTT-PT(JL))) * & ! WHERE(PT(:)>XTT)
            &PCOMPUTE(JL)
 ENDDO
 IF(LDSOFT) THEN
@@ -473,28 +472,28 @@ IF(LDSOFT) THEN
   ENDDO
 ELSE
   DO JL=1, KSIZE
-    PRGMLTR(JL)=ZMASK(JL) * PRVT(JL)*PPRES(JL)/(XEPSILO+PRVT(JL)) ! Vapor pressure
+    PRGMLTR(JL)=ZMASK(JL) * PRVT(JL)*PPRES(JL)/(CST%XEPSILO+PRVT(JL)) ! Vapor pressure
   ENDDO
-  IF(LEVLIMIT) THEN
+  IF(PARAMI%LEVLIMIT) THEN
     WHERE(ZMASK(:)==1.)
-      PRGMLTR(:)=MIN(PRGMLTR(:), EXP(XALPW-XBETAW/PT(:)-XGAMW*ALOG(PT(:)))) ! min(ev, es_w(T))
+      PRGMLTR(:)=MIN(PRGMLTR(:), EXP(CST%XALPW-CST%XBETAW/PT(:)-CST%XGAMW*ALOG(PT(:)))) ! min(ev, es_w(T))
     END WHERE
   ENDIF
   DO JL=1, KSIZE
-    PRGMLTR(JL)=ZMASK(JL) * (PKA(JL)*(XTT-PT(JL)) +                                 &
-               ( PDV(JL)*(XLVTT + ( XCPV - XCL ) * ( PT(JL) - XTT )) &
-                           *(XESTT-PRGMLTR(JL))/(XRV*PT(JL))             ))
+    PRGMLTR(JL)=ZMASK(JL) * (PKA(JL)*(CST%XTT-PT(JL)) +                                 &
+               ( PDV(JL)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( PT(JL) - CST%XTT )) &
+                           *(CST%XESTT-PRGMLTR(JL))/(CST%XRV*PT(JL))             ))
   ENDDO
   WHERE(ZMASK(1:KSIZE)==1.)
     !
     ! compute RGMLTR
     !
     PRGMLTR(1:KSIZE)  = MAX( 0.0,( -PRGMLTR(1:KSIZE) *                     &
-                           ( X0DEPG*       PLBDAG(1:KSIZE)**XEX0DEPG +     &
-                             X1DEPG*PCJ(1:KSIZE)*PLBDAG(1:KSIZE)**XEX1DEPG ) -   &
+                           ( ICEP%X0DEPG*       PLBDAG(1:KSIZE)**ICEP%XEX0DEPG +     &
+                             ICEP%X1DEPG*PCJ(1:KSIZE)*PLBDAG(1:KSIZE)**ICEP%XEX1DEPG ) -   &
                          ( PRG_TEND(1:KSIZE, IRCDRYG)+PRG_TEND(1:KSIZE, IRRDRYG) ) *       &
-                               ( PRHODREF(1:KSIZE)*XCL*(XTT-PT(1:KSIZE))) ) /    &
-                                             ( PRHODREF(1:KSIZE)*XLMTT ) )
+                               ( PRHODREF(1:KSIZE)*CST%XCL*(CST%XTT-PT(1:KSIZE))) ) /    &
+                                             ( PRHODREF(1:KSIZE)*CST%XLMTT ) )
   END WHERE
 ENDIF
 

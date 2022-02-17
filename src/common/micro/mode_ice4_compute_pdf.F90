@@ -6,7 +6,7 @@
 MODULE MODE_ICE4_COMPUTE_PDF
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_COMPUTE_PDF(KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
+SUBROUTINE ICE4_COMPUTE_PDF(CST, ICEP, ICED, KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
                             PRHODREF, PRCT, PRIT, PCF, PT, PSIGMA_RC,&
                             PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
                             PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, PRF)
@@ -28,11 +28,11 @@ SUBROUTINE ICE4_COMPUTE_PDF(KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
 !          ------------
 !
 !
+USE MODD_CST,            ONLY: CST_t
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
-USE MODD_RAIN_ICE_DESCR, ONLY: XRTMIN
-USE MODD_RAIN_ICE_PARAM, ONLY: XCRIAUTC, XBCRIAUTI, XACRIAUTI, XCRIAUTI
-USE MODD_CST, ONLY : XTT
 !
 USE MODE_MSG
 !
@@ -40,6 +40,9 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
+TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 INTEGER,                INTENT(IN)  :: KSIZE
 CHARACTER(LEN=4),       INTENT(IN)  :: HSUBG_AUCV_RC     ! Kind of Subgrid autoconversion method for cloud water
 CHARACTER(LEN=80),      INTENT(IN)  :: HSUBG_AUCV_RI     ! Kind of Subgrid autoconversion method for cloud ice
@@ -81,7 +84,7 @@ INTEGER :: JI
 IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 0, ZHOOK_HANDLE)!
 
 !Cloud water split between high and low content part is done according to autoconversion option
-ZRCRAUTC(:)=XCRIAUTC/PRHODREF(:) ! Autoconversion rc threshold
+ZRCRAUTC(:)=ICEP%XCRIAUTC/PRHODREF(:) ! Autoconversion rc threshold
 IF(HSUBG_AUCV_RC=='NONE') THEN
   !Cloud water is entirely in low or high part
  !$mnh_expand_where(JI=1:KSIZE)
@@ -90,7 +93,7 @@ IF(HSUBG_AUCV_RC=='NONE') THEN
     PHLC_LCF(:)=0.
     PHLC_HRC(:)=PRCT(:)
     PHLC_LRC(:)=0.
-  ELSEWHERE(PRCT(:)>XRTMIN(2))
+  ELSEWHERE(PRCT(:)>ICED%XRTMIN(2))
     PHLC_HCF(:)=0.
     PHLC_LCF(:)=1.
     PHLC_HRC(:)=0.
@@ -111,7 +114,7 @@ ELSEIF(HSUBG_AUCV_RC=='CLFR') THEN
     PHLC_LCF(:)=0.
     PHLC_HRC(:)=PRCT(:)
     PHLC_LRC(:)=0.
-  ELSEWHERE(PCF(:)>0. .AND. PRCT(:)>XRTMIN(2))
+  ELSEWHERE(PCF(:)>0. .AND. PRCT(:)>ICED%XRTMIN(2))
     PHLC_HCF(:)=0.
     PHLC_LCF(:)=PCF(:)
     PHLC_HRC(:)=0.0
@@ -158,7 +161,7 @@ ELSEIF(HSUBG_AUCV_RC=='PDF ') THEN
                   &(PRCT(:)+PSIGMA_RC(:)+ZRCRAUTC(:))/ &
                   &(4.*PSIGMA_RC(:))
       PHLC_LRC(:)=MAX(0., PRCT(:)-PHLC_HRC(:))
-    ELSEWHERE(PRCT(:)>XRTMIN(2) .AND. PCF(:)>0.)
+    ELSEWHERE(PRCT(:)>ICED%XRTMIN(2) .AND. PCF(:)>0.)
       PHLC_HCF(:)=0.
       PHLC_LCF(:)=PCF(:)
       PHLC_HRC(:)=0.
@@ -258,7 +261,7 @@ ENDIF
 !
 !Ice water split between high and low content part is done according to autoconversion option
 !$mnh_expand_where(JI=1:KSIZE)
-  ZCRIAUTI(:)=MIN(XCRIAUTI,10**(XACRIAUTI*(PT(:)-XTT)+XBCRIAUTI)) ! Autoconversion ri threshold
+  ZCRIAUTI(:)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(:)-CST%XTT)+ICEP%XBCRIAUTI)) ! Autoconversion ri threshold
 !$mnh_end_expand_where(JI=1:KSIZE)
 IF(HSUBG_AUCV_RI=='NONE') THEN
  !$mnh_expand_where(JI=1:KSIZE)
@@ -277,7 +280,7 @@ IF(HSUBG_AUCV_RI=='NONE') THEN
     PHLI_LCF(:)=0.
     PHLI_HRI(:)=PRIT(:)
     PHLI_LRI(:)=0.
-  ELSEWHERE(PRIT(:)>XRTMIN(4))
+  ELSEWHERE(PRIT(:)>ICED%XRTMIN(4))
     PHLI_HCF(:)=0.
     PHLI_LCF(:)=1.
     PHLI_HRI(:)=0.
@@ -298,7 +301,7 @@ ELSEIF(HSUBG_AUCV_RI=='CLFR') THEN
     PHLI_LCF(:)=0.
     PHLI_HRI(:)=PRIT(:)
     PHLI_LRI(:)=0.
-  ELSEWHERE(PCF(:)>0. .AND. PRIT(:)>XRTMIN(4))
+  ELSEWHERE(PCF(:)>0. .AND. PRIT(:)>ICED%XRTMIN(4))
     PHLI_HCF(:)=0.
     PHLI_LCF(:)=PCF(:)
     PHLI_HRI(:)=0.0

@@ -6,7 +6,7 @@
 MODULE MODE_ICE4_TENDENCIES
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, &
+SUBROUTINE ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, KPROMA, KSIZE, &
                           &KRR, ODSOFT, PCOMPUTE, &
                           &OWARM, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
                           &HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
@@ -47,7 +47,7 @@ SUBROUTINE ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_BUDGET,    ONLY : LBU_ENABLE
+USE MODD_BUDGET,         ONLY: TBUDGETCONF_t
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODE_MSG,            ONLY: PRINT_MSG, NVERB_FATAL
 USE MODD_CST,            ONLY: CST_t
@@ -89,6 +89,7 @@ TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
+TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                      INTENT(IN)    :: KPROMA, KSIZE
 INTEGER,                      INTENT(IN)    :: KRR
 LOGICAL,                      INTENT(IN)    :: ODSOFT
@@ -214,7 +215,7 @@ ELSE
   !               --------------------------------------
 !DIR$ VECTOR ALWAYS
   DO CONCURRENT (JL=1:KSIZE)
-    CALL ICE4_NUCLEATION_ELEM(LLCOMPUTE(JL), &
+    CALL ICE4_NUCLEATION_ELEM(CST, PARAMI, ICEP, ICED, LLCOMPUTE(JL), &
                      ZVART(JL,ITH), PPRES(JL), PRHODREF(JL), PEXN(JL), PLSFACT(JL), ZT(JL), &
                      ZVART(JL,IRV), &
                      PCIT(JL), PRVHENI_MR(JL))
@@ -228,7 +229,7 @@ ELSE
   !
   !*       3.3     compute the spontaneous freezing source: RRHONG
   !
-  CALL ICE4_RRHONG(KSIZE, PCOMPUTE, &
+  CALL ICE4_RRHONG(CST, PARAMI, ICED, KSIZE, PCOMPUTE, &
                   &PEXN, PLVFACT, PLSFACT, &
                   &ZT, ZVART(:,IRR), &
                   &ZVART(:,ITH), &
@@ -242,7 +243,7 @@ ELSE
   !
   !*       7.1    cloud ice melting
   !
-  CALL ICE4_RIMLTC(KSIZE, PCOMPUTE, &
+  CALL ICE4_RIMLTC(CST, PARAMI, KSIZE, PCOMPUTE, &
                   &PEXN, PLVFACT, PLSFACT, &
                   &ZT, &
                   &ZVART(:,ITH), ZVART(:,IRI), &
@@ -261,7 +262,7 @@ ELSE
     WHERE(ZVART(1:KSIZE,IRS)>0.)
       ZLBDAS(1:KSIZE)  = MIN(ICED%XLBDAS_MAX, ICED%XLBS*(PRHODREF(1:KSIZE)*MAX(ZVART(1:KSIZE,IRS), ICED%XRTMIN(5)))**ICED%XLBEXS)
     END WHERE
-    CALL ICE4_RSRIMCG_OLD(KSIZE, ODSOFT, LLCOMPUTE, &
+    CALL ICE4_RSRIMCG_OLD(CST, ICEP, ICED, KSIZE, ODSOFT, LLCOMPUTE, &
                          &PRHODREF, &
                          &ZLBDAS, &
                          &ZT, ZVART(:,IRC), ZVART(:,IRS), &
@@ -309,7 +310,7 @@ ELSE
 ENDIF ! ODSOFT
 !
 !Cloud water split between high and low content part is done here
-CALL ICE4_COMPUTE_PDF(KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF,&
+CALL ICE4_COMPUTE_PDF(CST, ICEP, ICED, KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF,&
                       PRHODREF, ZVART(:,IRC), ZVART(:,IRI), PCF, ZT, PSIGMA_RC, &
                       PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
                       PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, ZRAINFR)
@@ -383,7 +384,7 @@ DO JL=1, KSIZE
 ENDDO
 !
 !
-CALL ICE4_SLOW(KSIZE, ODSOFT, PCOMPUTE, PRHODREF, ZT, &
+CALL ICE4_SLOW(CST, ICEP, ICED, KSIZE, ODSOFT, PCOMPUTE, PRHODREF, ZT, &
               &PSSI, PLVFACT, PLSFACT, &
               &ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRI), ZVART(:,IRS), ZVART(:,IRG), &
               &ZLBDAS, ZLBDAG, &
@@ -400,7 +401,7 @@ CALL ICE4_SLOW(KSIZE, ODSOFT, PCOMPUTE, PRHODREF, ZT, &
 !
 IF(OWARM) THEN    !  Check if the formation of the raindrops by the slow
                   !  warm processes is allowed
-  CALL ICE4_WARM(KSIZE, ODSOFT, PCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
+  CALL ICE4_WARM(CST, ICEP, ICED, KSIZE, ODSOFT, PCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
                 &PRHODREF, PLVFACT, ZT, PPRES, ZVART(:,ITH),&
                 &ZLBDAR, ZLBDAR_RF, ZKA, ZDV, ZCJ, &
                 &PHLC_LCF, PHLC_HCF, PHLC_LRC, PHLC_HRC, &
@@ -420,7 +421,7 @@ END IF
 !*       4.     COMPUTES THE FAST COLD PROCESS SOURCES FOR r_s
 !               ----------------------------------------------
 !
-CALL ICE4_FAST_RS(KPROMA, KSIZE, ODSOFT, PCOMPUTE, &
+CALL ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, PCOMPUTE, &
                  &PRHODREF, PLVFACT, PLSFACT, PPRES, &
                  &ZDV, ZKA, ZCJ, &
                  &ZLBDAR, ZLBDAS, &
@@ -443,7 +444,7 @@ DO JL=1, KSIZE
            & PRSACCRG(JL) + PRCRIMSG(JL) + PRSRIMCG(JL)
   ZRGSI_MR(JL) = PRRHONG_MR(JL) + PRSRIMCG_MR(JL)
 ENDDO
-CALL ICE4_FAST_RG(KPROMA, KSIZE, ODSOFT, PCOMPUTE, KRR, &
+CALL ICE4_FAST_RG(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, PCOMPUTE, KRR, &
                  &PRHODREF, PLVFACT, PLSFACT, PPRES, &
                  &ZDV, ZKA, ZCJ, PCIT, &
                  &ZLBDAR, ZLBDAS, ZLBDAG, &
@@ -462,7 +463,7 @@ CALL ICE4_FAST_RG(KPROMA, KSIZE, ODSOFT, PCOMPUTE, KRR, &
 !               ----------------------------------------------
 !
 IF (KRR==7) THEN
-  CALL ICE4_FAST_RH(KPROMA, KSIZE, ODSOFT, PCOMPUTE, ZWETG, &
+  CALL ICE4_FAST_RH(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, PCOMPUTE, ZWETG, &
                    &PRHODREF, PLVFACT, PLSFACT, PPRES, &
                    &ZDV, ZKA, ZCJ, &
                    &ZLBDAS, ZLBDAG, ZLBDAR, ZLBDAH, &
@@ -471,7 +472,7 @@ IF (KRR==7) THEN
                    &PRCDRYH, PRIDRYH, PRSDRYH, PRRDRYH, PRGDRYH, PRDRYHG, PRHMLTR, &
                    &PRH_TEND, &
                    &PA(:,ITH), PA(:,IRC), PA(:,IRR), PA(:,IRI), PA(:,IRS), PA(:,IRG), PA(:,IRH))
-ELSEIF (LBU_ENABLE) THEN
+ELSEIF (BUCONF%LBU_ENABLE) THEN
   PRCWETH(:)=0.
   PRIWETH(:)=0.
   PRSWETH(:)=0.
@@ -492,7 +493,7 @@ END IF
 !*       7.     COMPUTES SPECIFIC SOURCES OF THE WARM AND COLD CLOUDY SPECIES
 !               -------------------------------------------------------------
 !
-CALL ICE4_FAST_RI(KSIZE, ODSOFT, PCOMPUTE, &
+CALL ICE4_FAST_RI(ICEP, ICED, KSIZE, ODSOFT, PCOMPUTE, &
                  &PRHODREF, PLVFACT, PLSFACT, &
                  &ZAI, ZCJ, PCIT, &
                  &PSSI, &
