@@ -14,8 +14,7 @@ SUBROUTINE ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA,KSIZE, LDSOFT, PCOMPUTE,
                        &PRCRIMSS, PRCRIMSG, PRSRIMCG, &
                        &PRRACCSS, PRRACCSG, PRSACCRG, PRSMLTG, &
                        &PRCMLTSR, &
-                       &PRS_TEND, &
-                       &PA_TH, PA_RC, PA_RR, PA_RS, PA_RG)
+                       &PRS_TEND)
 !!
 !!**  PURPOSE
 !!    -------
@@ -78,11 +77,6 @@ REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRSACCRG ! Rain accretion onto th
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRSMLTG  ! Conversion-Melting of the aggregates
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRCMLTSR ! Cloud droplet collection onto aggregates by positive temperature
 REAL, DIMENSION(KPROMA, 8),   INTENT(INOUT) :: PRS_TEND ! Individual tendencies
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_TH
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RC
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RR
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RS
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RG
 !
 !*       0.2  declaration of local variables
 !
@@ -454,30 +448,6 @@ ELSE
   END WHERE
 ENDIF
 
-DO JL=1, KSIZE
-  PA_RC(JL) = PA_RC(JL) - PRCRIMSS(JL)
-  PA_RS(JL) = PA_RS(JL) + PRCRIMSS(JL)
-  PA_TH(JL) = PA_TH(JL) + PRCRIMSS(JL)*(PLSFACT(JL)-PLVFACT(JL))
-  PA_RC(JL) = PA_RC(JL) - PRCRIMSG(JL)
-  PA_RS(JL) = PA_RS(JL) - PRSRIMCG(JL)
-  PA_RG(JL) = PA_RG(JL) + PRCRIMSG(JL)+PRSRIMCG(JL)
-  PA_TH(JL) = PA_TH(JL) + PRCRIMSG(JL)*(PLSFACT(JL)-PLVFACT(JL))
-
-  PA_RR(JL) = PA_RR(JL) - PRRACCSS(JL)
-  PA_RS(JL) = PA_RS(JL) + PRRACCSS(JL)
-  PA_TH(JL) = PA_TH(JL) + PRRACCSS(JL)*(PLSFACT(JL)-PLVFACT(JL))
-  PA_RR(JL) = PA_RR(JL) - PRRACCSG(JL)
-  PA_RS(JL) = PA_RS(JL) - PRSACCRG(JL)
-  PA_RG(JL) = PA_RG(JL) + PRRACCSG(JL)+PRSACCRG(JL)
-  PA_TH(JL) = PA_TH(JL) + PRRACCSG(JL)*(PLSFACT(JL)-PLVFACT(JL))
-
-  ! note that RSCVMG = RSMLT*XFSCVMG but no heat is exchanged (at the rate RSMLT)
-  ! because the graupeln produced by this process are still icy!!!
-  PA_RS(JL) = PA_RS(JL) - PRSMLTG(JL)
-  PA_RG(JL) = PA_RG(JL) + PRSMLTG(JL)
-  PA_RC(JL) = PA_RC(JL) - PRCMLTSR(JL)
-  PA_RR(JL) = PA_RR(JL) + PRCMLTSR(JL)
-ENDDO
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RS', 1, ZHOOK_HANDLE)
 !
 END SUBROUTINE ICE4_FAST_RS

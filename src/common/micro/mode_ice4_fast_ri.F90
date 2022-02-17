@@ -11,7 +11,7 @@ SUBROUTINE ICE4_FAST_RI(ICEP, ICED, KSIZE, LDSOFT, PCOMPUTE, &
                        &PAI, PCJ, PCIT, &
                        &PSSI, &
                        &PRCT, PRIT, &
-                       &PRCBERI, PA_TH, PA_RC, PA_RI)
+                       &PRCBERI)
 !!
 !!**  PURPOSE
 !!    -------
@@ -54,9 +54,6 @@ REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PSSI     ! Supersaturation over i
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRIT     ! Pristine ice m.r. at t
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRCBERI  ! Bergeron-Findeisen effect
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_TH
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RC
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RI
 !
 !*       0.2  declaration of local variables
 !
@@ -85,9 +82,6 @@ DO JL=1, KSIZE
       PRCBERI(JL) = ( PSSI(JL) / (PRHODREF(JL)*PAI(JL)) ) * PCIT(JL) * &
                     ( ICEP%X0DEPI/PRCBERI(JL) + ICEP%X2DEPI*PCJ(JL)*PCJ(JL)/PRCBERI(JL)**(ICED%XDI+2.0) )
     ENDIF
-    PA_RC(JL) = PA_RC(JL) - PRCBERI(JL)
-    PA_RI(JL) = PA_RI(JL) + PRCBERI(JL)
-    PA_TH(JL) = PA_TH(JL) + PRCBERI(JL)*(PLSFACT(JL)-PLVFACT(JL))
   ELSE
     PRCBERI(JL) = 0.
   ENDIF

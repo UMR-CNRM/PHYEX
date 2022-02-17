@@ -12,8 +12,7 @@ SUBROUTINE ICE4_WARM(CST, ICEP, ICED, KSIZE, LDSOFT, PCOMPUTE, HSUBG_RC_RR_ACCR,
                     &PHLC_LCF, PHLC_HCF, PHLC_LRC, PHLC_HRC, &
                     &PCF, PRF, &
                     &PRVT, PRCT, PRRT, &
-                    &PRCAUTR, PRCACCR, PRREVAV, &
-                    &PA_TH, PA_RV, PA_RC, PA_RR)
+                    &PRCAUTR, PRCACCR, PRREVAV)
 !!
 !!**  PURPOSE
 !!    -------
@@ -74,10 +73,6 @@ REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRRT     ! Rain water m.r. at t
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRCAUTR   ! Autoconversion of r_c for r_r production
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRCACCR  ! Accretion of r_c for r_r production
 REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PRREVAV  ! Evaporation of r_r
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_TH
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RV
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RC
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PA_RR
 !
 !*       0.2  declaration of local variables
 !
@@ -276,18 +271,6 @@ ELSEIF (HSUBG_RR_EVAP=='CLFR' .OR. HSUBG_RR_EVAP=='PRFR') THEN
 ELSE
   CALL PRINT_MSG(NVERB_FATAL,'GEN','ICE4_WARM','wrong HSUBG_RR_EVAP case')
 END IF
-!
-DO JL=1, KSIZE
-  PA_RC(JL) = PA_RC(JL) - PRCAUTR(JL)
-  PA_RR(JL) = PA_RR(JL) + PRCAUTR(JL)
-
-  PA_RC(JL) = PA_RC(JL) - PRCACCR(JL)
-  PA_RR(JL) = PA_RR(JL) + PRCACCR(JL)
-
-  PA_RR(JL) = PA_RR(JL) - PRREVAV(JL)
-  PA_RV(JL) = PA_RV(JL) + PRREVAV(JL)
-  PA_TH(JL) = PA_TH(JL) - PRREVAV(JL)*PLVFACT(JL)
-ENDDO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_WARM', 1, ZHOOK_HANDLE)
 !

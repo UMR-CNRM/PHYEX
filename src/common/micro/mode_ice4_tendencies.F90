@@ -389,8 +389,7 @@ CALL ICE4_SLOW(CST, ICEP, ICED, KSIZE, ODSOFT, PCOMPUTE, PRHODREF, ZT, &
               &ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRI), ZVART(:,IRS), ZVART(:,IRG), &
               &ZLBDAS, ZLBDAG, &
               &ZAI, ZCJ, PHLI_HCF, PHLI_HRI, &
-              &PRCHONI, PRVDEPS, PRIAGGS, PRIAUTS, PRVDEPG, &
-              &PA(:, ITH), PA(:, IRV), PA(:, IRC), PA(:, IRI), PA(:, IRS), PA(:, IRG))
+              &PRCHONI, PRVDEPS, PRIAGGS, PRIAUTS, PRVDEPG)
 !
 !-------------------------------------------------------------------------------
 !
@@ -407,8 +406,7 @@ IF(OWARM) THEN    !  Check if the formation of the raindrops by the slow
                 &PHLC_LCF, PHLC_HCF, PHLC_LRC, PHLC_HRC, &
                 &PCF, ZRAINFR, &
                 &ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRR), &
-                &PRCAUTR, PRCACCR, PRREVAV, &
-                &PA(:,ITH), PA(:,IRV), PA(:,IRC), PA(:,IRR))
+                &PRCAUTR, PRCACCR, PRREVAV)
 ELSE
   PRCAUTR(:)=0.
   PRCACCR(:)=0.
@@ -430,8 +428,7 @@ CALL ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, PCOMPUTE, &
                  &PRCRIMSS, PRCRIMSG, PRSRIMCG, &
                  &PRRACCSS, PRRACCSG, PRSACCRG, PRSMLTG, &
                  &PRCMLTSR, &
-                 &PRS_TEND, &
-                 &PA(:,ITH), PA(:,IRC), PA(:,IRR), PA(:,IRS), PA(:,IRG))
+                 &PRS_TEND)
 !
 !-------------------------------------------------------------------------------
 !
@@ -453,8 +450,7 @@ CALL ICE4_FAST_RG(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, PCOMPUTE, KRR,
                  &ZWETG, &
                  &PRICFRRG, PRRCFRIG, PRICFRR, PRCWETG, PRIWETG, PRRWETG, PRSWETG, &
                  &PRCDRYG, PRIDRYG, PRRDRYG, PRSDRYG, PRWETGH, PRWETGH_MR, PRGMLTR, &
-                 &PRG_TEND, &
-                 &PA(:,ITH), PA(:,IRC), PA(:,IRR), PA(:,IRI), PA(:,IRS), PA(:,IRG), PA(:,IRH), PB(:,IRG), PB(:,IRH))
+                 &PRG_TEND)
 !
 !-------------------------------------------------------------------------------
 !
@@ -470,8 +466,7 @@ IF (KRR==7) THEN
                    &ZT,  ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRR), ZVART(:,IRI), ZVART(:,IRS), ZVART(:,IRG), ZVART(:,IRH), &
                    &PRCWETH, PRIWETH, PRSWETH, PRGWETH, PRRWETH, &
                    &PRCDRYH, PRIDRYH, PRSDRYH, PRRDRYH, PRGDRYH, PRDRYHG, PRHMLTR, &
-                   &PRH_TEND, &
-                   &PA(:,ITH), PA(:,IRC), PA(:,IRR), PA(:,IRI), PA(:,IRS), PA(:,IRG), PA(:,IRH))
+                   &PRH_TEND)
 ELSEIF (BUCONF%LBU_ENABLE) THEN
   PRCWETH(:)=0.
   PRIWETH(:)=0.
@@ -498,7 +493,119 @@ CALL ICE4_FAST_RI(ICEP, ICED, KSIZE, ODSOFT, PCOMPUTE, &
                  &ZAI, ZCJ, PCIT, &
                  &PSSI, &
                  &ZVART(:,IRC), ZVART(:,IRI), &
-                 &PRCBERI, PA(:,ITH), PA(:,IRC), PA(:,IRI))
+                 &PRCBERI)
+!
+!-------------------------------------------------------------------------------
+!
+!
+!*       8.     COMPUTES TOTAL TENDENCIES
+!               -------------------------
+!
+DO JL=1, KSIZE
+  PA(JL, ITH) = PA(JL, ITH) + PRVDEPG(JL)*PLSFACT(JL)
+  PA(JL, ITH) = PA(JL, ITH) + PRCHONI(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) + PRVDEPS(JL)*PLSFACT(JL)
+  PA(JL, ITH) = PA(JL, ITH) - PRREVAV(JL)*PLVFACT(JL)
+  PA(JL, ITH) = PA(JL, ITH) + PRCRIMSS(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) + PRCRIMSG(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) + PRRACCSS(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) + PRRACCSG(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) + (PRRCFRIG(JL) - PRICFRR(JL))*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) + (PRCWETG(JL) + PRRWETG(JL))*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) + (PRCDRYG(JL)+PRRDRYG(JL))*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) - PRGMLTR(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  IF (KRR==7) THEN
+    PA(JL, ITH) = PA(JL, ITH) + (PRRWETH(JL)+PRCWETH(JL))*(PLSFACT(JL)-PLVFACT(JL))
+    PA(JL, ITH) = PA(JL, ITH) + (PRCDRYH(JL)+PRRDRYH(JL))*(PLSFACT(JL)-PLVFACT(JL))
+    PA(JL, ITH) = PA(JL, ITH) - PRHMLTR(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  ENDIF
+  PA(JL, ITH) = PA(JL, ITH) + PRCBERI(JL)*(PLSFACT(JL)-PLVFACT(JL))
+
+  PA(JL, IRV) = PA(JL, IRV) - PRVDEPG(JL)
+  PA(JL, IRV) = PA(JL, IRV) - PRVDEPS(JL)
+  PA(JL, IRV) = PA(JL, IRV) + PRREVAV(JL)
+
+  PA(JL, IRC) = PA(JL, IRC) - PRCHONI(JL)
+  PA(JL, IRC) = PA(JL, IRC) - PRCAUTR(JL)
+  PA(JL, IRC) = PA(JL, IRC) - PRCACCR(JL)
+  PA(JL, IRC) = PA(JL, IRC) - PRCRIMSS(JL)
+  PA(JL, IRC) = PA(JL, IRC) - PRCRIMSG(JL)
+  PA(JL, IRC) = PA(JL, IRC) - PRCMLTSR(JL)
+  PA(JL, IRC) = PA(JL, IRC) - PRCWETG(JL)
+  PA(JL, IRC) = PA(JL, IRC) - PRCDRYG(JL)
+  IF (KRR==7) THEN
+    PA(JL, IRC) = PA(JL, IRC) - PRCWETH(JL)
+    PA(JL, IRC) = PA(JL, IRC) - PRCDRYH(JL)
+  ENDIF
+  PA(JL, IRC) = PA(JL, IRC) - PRCBERI(JL)
+
+  PA(JL, IRR) = PA(JL, IRR) + PRCAUTR(JL)
+  PA(JL, IRR) = PA(JL, IRR) + PRCACCR(JL)
+  PA(JL, IRR) = PA(JL, IRR) - PRREVAV(JL)
+  PA(JL, IRR) = PA(JL, IRR) - PRRACCSS(JL)
+  PA(JL, IRR) = PA(JL, IRR) - PRRACCSG(JL)
+  PA(JL, IRR) = PA(JL, IRR) + PRCMLTSR(JL)
+  PA(JL, IRR) = PA(JL, IRR) - PRRCFRIG(JL) + PRICFRR(JL)
+  PA(JL, IRR) = PA(JL, IRR) - PRRWETG(JL)
+  PA(JL, IRR) = PA(JL, IRR) - PRRDRYG(JL)
+  PA(JL, IRR) = PA(JL, IRR) + PRGMLTR(JL)
+  IF(KRR==7) THEN
+    PA(JL, IRR) = PA(JL, IRR) - PRRWETH(JL)
+    PA(JL, IRR) = PA(JL, IRR) - PRRDRYH(JL)
+    PA(JL, IRR) = PA(JL, IRR) + PRHMLTR(JL)
+  ENDIF
+
+  PA(JL, IRI) = PA(JL, IRI) + PRCHONI(JL)
+  PA(JL, IRI) = PA(JL, IRI) - PRIAGGS(JL)
+  PA(JL, IRI) = PA(JL, IRI) - PRIAUTS(JL)
+  PA(JL, IRI) = PA(JL, IRI) - PRICFRRG(JL) - PRICFRR(JL)
+  PA(JL, IRI) = PA(JL, IRI) - PRIWETG(JL)
+  PA(JL, IRI) = PA(JL, IRI) - PRIDRYG(JL)
+  IF (KRR==7) THEN
+    PA(JL, IRI) = PA(JL, IRI) - PRIWETH(JL)
+    PA(JL, IRI) = PA(JL, IRI) - PRIDRYH(JL)
+  ENDIF
+  PA(JL, IRI) = PA(JL, IRI) + PRCBERI(JL)
+
+  PA(JL, IRS) = PA(JL, IRS) + PRVDEPS(JL)
+  PA(JL, IRS) = PA(JL, IRS) + PRIAGGS(JL)
+  PA(JL, IRS) = PA(JL, IRS) + PRIAUTS(JL)
+  PA(JL, IRS) = PA(JL, IRS) + PRCRIMSS(JL)
+  PA(JL, IRS) = PA(JL, IRS) - PRSRIMCG(JL)
+  PA(JL, IRS) = PA(JL, IRS) + PRRACCSS(JL)
+  PA(JL, IRS) = PA(JL, IRS) - PRSACCRG(JL)
+  PA(JL, IRS) = PA(JL, IRS) - PRSMLTG(JL)
+  PA(JL, IRS) = PA(JL, IRS) - PRSWETG(JL)
+  PA(JL, IRS) = PA(JL, IRS) - PRSDRYG(JL)
+  IF (KRR==7) THEN
+    PA(JL, IRS) = PA(JL, IRS) - PRSWETH(JL)
+    PA(JL, IRS) = PA(JL, IRS) - PRSDRYH(JL)
+  ENDIF
+
+  PA(JL, IRG) = PA(JL, IRG) + PRVDEPG(JL)
+  PA(JL, IRG) = PA(JL, IRG) + PRCRIMSG(JL)+PRSRIMCG(JL)
+  PA(JL, IRG) = PA(JL, IRG) + PRRACCSG(JL)+PRSACCRG(JL)
+  PA(JL, IRG) = PA(JL, IRG) + PRSMLTG(JL)
+  PA(JL, IRG) = PA(JL, IRG) + PRICFRRG(JL) + PRRCFRIG(JL)
+  PA(JL, IRG) = PA(JL, IRG) + PRCWETG(JL) + PRIWETG(JL) + PRSWETG(JL) + PRRWETG(JL)
+  PA(JL, IRG) = PA(JL, IRG) - PRWETGH(JL)
+  PB(JL, IRG) = PB(JL, IRG) - PRWETGH_MR(JL)
+  PA(JL, IRG) = PA(JL, IRG) + PRCDRYG(JL) + PRIDRYG(JL) + PRSDRYG(JL) + PRRDRYG(JL)
+  PA(JL, IRG) = PA(JL, IRG) - PRGMLTR(JL)
+  IF (KRR==7) THEN
+    PA(JL, IRG) = PA(JL, IRG) - PRGWETH(JL)
+    PA(JL, IRG) = PA(JL, IRG) - PRGDRYH(JL) + PRDRYHG(JL)
+  ENDIF
+
+  IF (KRR==7) THEN
+    PA(JL, IRH) = PA(JL, IRH) + PRWETGH(JL)
+    PB(JL, IRH) = PB(JL, IRH) + PRWETGH_MR(JL)
+    PA(JL, IRH) = PA(JL, IRH) + PRCWETH(JL)+PRIWETH(JL)+PRSWETH(JL)+PRGWETH(JL)+PRRWETH(JL)
+    PA(JL, IRH) = PA(JL, IRH) + PRCDRYH(JL)+PRIDRYH(JL)+PRSDRYH(JL)+&
+                           &PRRDRYH(JL)+PRGDRYH(JL) - PRDRYHG(JL)
+    PA(JL, IRH) = PA(JL, IRH) - PRHMLTR(JL)
+  ENDIF
+ENDDO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_TENDENCIES', 1, ZHOOK_HANDLE)
 !
