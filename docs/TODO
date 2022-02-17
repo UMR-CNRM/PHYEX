@@ -24,7 +24,6 @@ Merge pb:
 - compute_updraft_rhcj10: en attente retour de Rachel et/ou Yves pour faire le merge
 
 Etape 2: array syntax -> loop
-- en profiter pour supprimer args PA/PB des routines appelées depuis ice4_tendencies, comme pour nucleation
 - regarder si pcompute et llcompute sont toujours tous deux nécessaires dans les mode_ice4* avec le passage en do
 - si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
 - transformer sedimentation_split_momentum comme sedimentation_split

@@ -6,7 +6,7 @@
 MODULE MODE_ICE4_RSRIMCG_OLD
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_RSRIMCG_OLD(CST, ICEP, ICED, KSIZE, LDSOFT, LDCOMPUTE, &
+SUBROUTINE ICE4_RSRIMCG_OLD(CST, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, &
                            &PRHODREF, &
                            &PLBDAS, &
                            &PT, PRCT, PRST, &
@@ -43,23 +43,23 @@ IMPLICIT NONE
 TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
-INTEGER, INTENT(IN) :: KSIZE
-LOGICAL,                      INTENT(IN)    :: LDSOFT
-LOGICAL, DIMENSION(KSIZE),    INTENT(IN)    :: LDCOMPUTE
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRHODREF ! Reference density
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLBDAS   ! Slope parameter of the aggregate distribution
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PT       ! Temperature
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
-REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRSRIMCG_MR ! Mr change due to cloud droplet riming of the aggregates
+INTEGER, INTENT(IN) :: KPROMA, KSIZE
+LOGICAL,                       INTENT(IN)    :: LDSOFT
+LOGICAL, DIMENSION(KPROMA),    INTENT(IN)    :: LDCOMPUTE
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRHODREF ! Reference density
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLBDAS   ! Slope parameter of the aggregate distribution
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PT       ! Temperature
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRSRIMCG_MR ! Mr change due to cloud droplet riming of the aggregates
 !
 !*       0.2  declaration of local variables
 !
-LOGICAL, DIMENSION(KSIZE) :: GRIM
+LOGICAL, DIMENSION(KPROMA) :: GRIM
 INTEGER :: IGRIM
-REAL, DIMENSION(KSIZE) :: ZVEC1, ZVEC2
-INTEGER, DIMENSION(KSIZE) :: IVEC1, IVEC2
-REAL, DIMENSION(KSIZE) :: ZZW
+REAL, DIMENSION(KPROMA) :: ZVEC1, ZVEC2
+INTEGER, DIMENSION(KPROMA) :: IVEC1, IVEC2
+REAL, DIMENSION(KPROMA) :: ZZW
 INTEGER :: JL
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
@@ -74,12 +74,13 @@ PRSRIMCG_MR(:)=0.
 !
 IF(.NOT. LDSOFT) THEN
   IGRIM = 0
-  GRIM(:) = .FALSE.
-  DO JL = 1, SIZE(GRIM)
+  DO JL = 1, KSIZE
     IF(PRCT(JL)>ICED%XRTMIN(2) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL) .AND. PT(JL)<CST%XTT) THEN
       IGRIM = IGRIM + 1
       IVEC1(IGRIM) = JL
       GRIM(JL) = .TRUE.
+    ELSE
+      GRIM(JL) = .FALSE.
     ENDIF
   ENDDO
   !
@@ -115,11 +116,13 @@ IF(.NOT. LDSOFT) THEN
     !        5.1.6  riming-conversion of the large sized aggregates into graupeln
     !
     !
-    WHERE(GRIM(:))
-      PRSRIMCG_MR(:) = ICEP%XSRIMCG * PLBDAS(:)**ICEP%XEXSRIMCG   & ! RSRIMCG
-                               * (1.0 - ZZW(:) )/PRHODREF(:)
-      PRSRIMCG_MR(:)=MIN(PRST(:), PRSRIMCG_MR(:))
+    !$mnh_expand_where(JL=1:KSIZE)
+    WHERE(GRIM(1:KSIZE))
+      PRSRIMCG_MR(1:KSIZE) = ICEP%XSRIMCG * PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG   & ! RSRIMCG
+                               * (1.0 - ZZW(1:KSIZE) )/PRHODREF(1:KSIZE)
+      PRSRIMCG_MR(1:KSIZE)=MIN(PRST(1:KSIZE), PRSRIMCG_MR(1:KSIZE))
     END WHERE
+    !$mnh_end_expand_where(JL=1:KSIZE)
   END IF
 ENDIF
 !

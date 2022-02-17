@@ -229,7 +229,7 @@ ELSE
   !
   !*       3.3     compute the spontaneous freezing source: RRHONG
   !
-  CALL ICE4_RRHONG(CST, PARAMI, ICED, KSIZE, PCOMPUTE, &
+  CALL ICE4_RRHONG(CST, PARAMI, ICED, KPROMA, KSIZE, LLCOMPUTE, &
                   &PEXN, PLVFACT, PLSFACT, &
                   &ZT, ZVART(:,IRR), &
                   &ZVART(:,ITH), &
@@ -243,7 +243,7 @@ ELSE
   !
   !*       7.1    cloud ice melting
   !
-  CALL ICE4_RIMLTC(CST, PARAMI, KSIZE, PCOMPUTE, &
+  CALL ICE4_RIMLTC(CST, PARAMI, KPROMA, KSIZE, LLCOMPUTE, &
                   &PEXN, PLVFACT, PLSFACT, &
                   &ZT, &
                   &ZVART(:,ITH), ZVART(:,IRI), &
@@ -262,7 +262,7 @@ ELSE
     WHERE(ZVART(1:KSIZE,IRS)>0.)
       ZLBDAS(1:KSIZE)  = MIN(ICED%XLBDAS_MAX, ICED%XLBS*(PRHODREF(1:KSIZE)*MAX(ZVART(1:KSIZE,IRS), ICED%XRTMIN(5)))**ICED%XLBEXS)
     END WHERE
-    CALL ICE4_RSRIMCG_OLD(CST, ICEP, ICED, KSIZE, ODSOFT, LLCOMPUTE, &
+    CALL ICE4_RSRIMCG_OLD(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LLCOMPUTE, &
                          &PRHODREF, &
                          &ZLBDAS, &
                          &ZT, ZVART(:,IRC), ZVART(:,IRS), &
