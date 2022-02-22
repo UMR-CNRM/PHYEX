@@ -1,4 +1,8 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
       SUBROUTINE TURB(KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,      &
               & KSPLIT,KMODEL_CL,                                     &
               & OCLOSE_OUT,OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
@@ -21,10 +25,6 @@
               & YDDDH,YDLDDH,YDMDDH,                                  &
               & TBUDGETS, KBUDGETS,                                   &
               & PTR,PDISS,PEDR                                        )
-
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
-      USE MODD_CTURB, ONLY : LHARAT
 !     #################################################################
 !
 !
@@ -127,7 +127,6 @@
 !!      Module MODD_BUDGET:
 !!         NBUMOD  
 !!         CBUTYPE 
-!!         NBUPROCCTR 
 !!         LBU_RU     
 !!         LBU_RV     
 !!         LBU_RW     
@@ -220,11 +219,15 @@
 !*      0. DECLARATIONS
 !          ------------
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
 USE MODD_PARAMETERS
 USE MODD_CST
 USE MODD_CTURB
 USE MODD_CONF
 USE MODD_BUDGET
+USE MODD_FIELD, ONLY: TFIELDDATA,TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_LES
 USE MODD_NSV
@@ -241,9 +244,10 @@ USE MODI_BUDGET_DDH
 USE MODI_LES_MEAN_SUBGRID
 USE MODI_RMC01
 USE MODI_GRADIENT_W
-USE MODI_TM06
+USE MODE_TM06, ONLY: TM06
 USE MODI_UPDATE_LM
 !
+USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 USE MODE_SBL
 USE MODE_FMWRIT
 !
@@ -442,11 +446,6 @@ INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
 INTEGER             :: JRR,JK,JSV   ! loop counters
 INTEGER             :: JI,JJ        ! loop counters
-INTEGER             :: IRESP        ! Return code of FM routines
-INTEGER             :: IGRID        ! C-grid indicator in LFIFM file
-INTEGER             :: ILENCH       ! Length of comment string in LFIFM file
-CHARACTER (LEN=100) :: YCOMMENT     ! comment string in LFIFM file
-CHARACTER (LEN=16)  :: YRECFM       ! Name of the desired field in LFIFM file
 REAL                :: ZL0          ! Max. Mixing Length in Blakadar formula
 REAL                :: ZALPHA       ! proportionnality constant between Dz/2 and 
 !                                   ! BL89 mixing length near the surface
@@ -456,6 +455,7 @@ TYPE(TFILEDATA) :: TPFILE ! File type to write fields for MesoNH
 !
 REAL :: ZTIME1, ZTIME2
 REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3))::  ZSHEAR, ZDUDZ, ZDVDZ
+TYPE(TFIELDDATA) :: TZFIELD
 !
 !*      1.PRELIMINARIES
 !         -------------
@@ -556,18 +556,30 @@ IF (KRRL >=1) THEN
   END IF
 !
 !
-  IF (OCLOSE_OUT .AND. OTURB_DIAG) THEN
-    YRECFM  ='ATHETA'
-    YCOMMENT='X_Y_Z_ATHETA (M)'
-    IGRID   = 1
-    ILENCH=LEN(YCOMMENT)
-    CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZATHETA,IGRID,ILENCH,YCOMMENT,IRESP)
+  IF ( TPFILE%LOPENED .AND. OTURB_DIAG ) THEN
+    TZFIELD%CMNHNAME   = 'ATHETA'
+    TZFIELD%CSTDNAME   = ''
+    TZFIELD%CLONGNAME  = 'ATHETA'
+    TZFIELD%CUNITS     = 'm'
+    TZFIELD%CDIR       = 'XY'
+    TZFIELD%CCOMMENT   = 'X_Y_Z_ATHETA'
+    TZFIELD%NGRID      = 1
+    TZFIELD%NTYPE      = TYPEREAL
+    TZFIELD%NDIMS      = 3
+    TZFIELD%LTIMEDEP   = .TRUE.
+    CALL IO_Field_write(TPFILE,TZFIELD,ZATHETA)
 ! 
-    YRECFM  ='AMOIST'
-    YCOMMENT='X_Y_Z_AMOIST (M)'
-    IGRID   = 1
-    ILENCH=LEN(YCOMMENT)
-    CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZAMOIST,IGRID,ILENCH,YCOMMENT,IRESP)
+    TZFIELD%CMNHNAME   = 'AMOIST'
+    TZFIELD%CSTDNAME   = ''
+    TZFIELD%CLONGNAME  = 'AMOIST'
+    TZFIELD%CUNITS     = 'm'
+    TZFIELD%CDIR       = 'XY'
+    TZFIELD%CCOMMENT   = 'X_Y_Z_AMOIST'
+    TZFIELD%NGRID      = 1
+    TZFIELD%NTYPE      = TYPEREAL
+    TZFIELD%NDIMS      = 3
+    TZFIELD%LTIMEDEP   = .TRUE.
+    CALL IO_Field_write(TPFILE,TZFIELD,ZAMOIST)
   END IF
 !
 ELSE
@@ -655,11 +667,8 @@ END SELECT
 !
 !*      3.5 Mixing length modification for cloud
 !           -----------------------
-IF (KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE' ) CALL CLOUD_MODIF_LM
-ENDIF  ! 
-
-!
-!
+IF (KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE') CALL CLOUD_MODIF_LM
+ENDIF  ! end LHARRAT
 
 !
 !*      3.6 Dissipative length
@@ -946,35 +955,51 @@ ENDIF
 !*      7. STORES SOME INFORMATIONS RELATED TO THE TURBULENCE SCHEME
 !          ---------------------------------------------------------
 !
-IF ( OTURB_DIAG .AND. OCLOSE_OUT ) THEN
-  YCOMMENT=' '
+IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
 ! 
 ! stores the mixing length
 ! 
-  YRECFM  ='LM'
-  YCOMMENT='X_Y_Z_LM (M)'
-  IGRID   = 1
-  ILENCH=LEN(YCOMMENT)
-  CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZLM,IGRID,ILENCH,YCOMMENT,IRESP)
+  TZFIELD%CMNHNAME   = 'LM'
+  TZFIELD%CSTDNAME   = ''
+  TZFIELD%CLONGNAME  = 'LM'
+  TZFIELD%CUNITS     = 'm'
+  TZFIELD%CDIR       = 'XY'
+  TZFIELD%CCOMMENT   = 'Mixing length'
+  TZFIELD%NGRID      = 1
+  TZFIELD%NTYPE      = TYPEREAL
+  TZFIELD%NDIMS      = 3
+  TZFIELD%LTIMEDEP   = .TRUE.
+  CALL IO_Field_write(TPFILE,TZFIELD,ZLM)
 !
   IF (KRR /= 0) THEN
 !
 ! stores the conservative potential temperature
 !
-    YRECFM  ='THLM'
-    YCOMMENT='X_Y_Z_THLM (KELVIN)'
-    IGRID   = 1
-    ILENCH=LEN(YCOMMENT)
-    CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',PTHLM,IGRID,ILENCH,YCOMMENT,IRESP)
+    TZFIELD%CMNHNAME   = 'THLM'
+    TZFIELD%CSTDNAME   = ''
+    TZFIELD%CLONGNAME  = 'THLM'
+    TZFIELD%CUNITS     = 'K'
+    TZFIELD%CDIR       = 'XY'
+    TZFIELD%CCOMMENT   = 'Conservative potential temperature'
+    TZFIELD%NGRID      = 1
+    TZFIELD%NTYPE      = TYPEREAL
+    TZFIELD%NDIMS      = 3
+    TZFIELD%LTIMEDEP   = .TRUE.
+    CALL IO_Field_write(TPFILE,TZFIELD,PTHLM)
 !
 ! stores the conservative mixing ratio
 !
-    YRECFM  ='RNPM'
-    YCOMMENT='X_Y_Z_RNPM (KG/KG)'
-    IGRID   = 1
-    ILENCH=LEN(YCOMMENT)
-    CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',PRM(:,:,:,1),IGRID,ILENCH,       &
-                                                               YCOMMENT,IRESP)
+    TZFIELD%CMNHNAME   = 'RNPM'
+    TZFIELD%CSTDNAME   = ''
+    TZFIELD%CLONGNAME  = 'RNPM'
+    TZFIELD%CUNITS     = 'kg kg-1'
+    TZFIELD%CDIR       = 'XY'
+    TZFIELD%CCOMMENT   = 'Conservative mixing ratio'
+    TZFIELD%NGRID      = 1
+    TZFIELD%NTYPE      = TYPEREAL
+    TZFIELD%NDIMS      = 3
+    TZFIELD%LTIMEDEP   = .TRUE.
+    CALL IO_Field_write(TPFILE,TZFIELD,PRM(:,:,:,1))
    END IF
 END IF
 !
@@ -1093,13 +1118,14 @@ CONTAINS
 !!    MODIFICATIONS
 !!    -------------
 !!      Original   24/06/99
+!!      J.Escobar 21/03/2013: for HALOK comment all NHALO=1 test
 !!
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
-!USE MODE_ll
-!USE MODD_ARGSLIST_ll, ONLY : LIST_ll
+USE MODE_ll
+USE MODD_ARGSLIST_ll, ONLY : LIST_ll
 USE MODD_CONF
 !
 IMPLICIT NONE
@@ -1111,45 +1137,47 @@ REAL, DIMENSION(:,:), INTENT(INOUT) :: PUSLOPE,PVSLOPE
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER             :: IIB,IIE,IJB,IJE ! index values for the physical subdomain
-!TYPE(LIST_ll), POINTER :: TZFIELDS_ll  ! list of fields to exchange
-!INTEGER                :: IINFO_ll     ! return code of parallel routine
+INTEGER             :: IIB,IIE,IJB,IJE,IIU,IJU ! index values for the physical subdomain
+TYPE(LIST_ll), POINTER :: TZFIELDS_ll  ! list of fields to exchange
+INTEGER                :: IINFO_ll     ! return code of parallel routine
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB:UPDATE_ROTATE_WIND',0,ZHOOK_HANDLE)
 !
 !*        1  PROLOGUE
 !
-!NULLIFY(TZFIELDS_ll)
+NULLIFY(TZFIELDS_ll)
 !
-!CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
+IIU=SIZE(PUSLOPE,1)
+IJU=SIZE(PUSLOPE,2)
+CALL GET_INDICE_ll (IIB,IJB,IIE,IJE,IIU,IJU)
 !
 !         2 Update halo if necessary
 !
-!IF (NHALO == 1) THEN
-!  CALL ADD2DFIELD_ll(TZFIELDS_ll,PUSLOPE)
-!  CALL ADD2DFIELD_ll(TZFIELDS_ll,PVSLOPE)
-!  CALL UPDATE_HALO_ll(TZFIELDS_ll,IINFO_ll)
-!  CALL CLEANLIST_ll(TZFIELDS_ll)
-!ENDIF
+!!$IF (NHALO == 1) THEN
+  CALL ADD2DFIELD_ll( TZFIELDS_ll, PUSLOPE, 'UPDATE_ROTATE_WIND::PUSLOPE' )
+  CALL ADD2DFIELD_ll( TZFIELDS_ll, PVSLOPE, 'UPDATE_ROTATE_WIND::PVSLOPE' )
+  CALL UPDATE_HALO_ll(TZFIELDS_ll,IINFO_ll)
+  CALL CLEANLIST_ll(TZFIELDS_ll)
+!!$ENDIF
 !
 !        3 Boundary conditions for non cyclic case
 !
-!IF ( HLBCX(1) /= "CYCL" .AND. LWEST_ll()) THEN
-!  PUSLOPE(IIB-1,:)=PUSLOPE(IIB,:)
-!  PVSLOPE(IIB-1,:)=PVSLOPE(IIB,:)
-!END IF
-!IF ( HLBCX(2) /= "CYCL" .AND. LEAST_ll()) THEN
-!  PUSLOPE(IIE+1,:)=PUSLOPE(IIE,:)
-!  PVSLOPE(IIE+1,:)=PVSLOPE(IIE,:)
-!END IF
-!IF ( HLBCY(1) /= "CYCL" .AND. LSOUTH_ll()) THEN
-!  PUSLOPE(:,IJB-1)=PUSLOPE(:,IJB)
-!  PVSLOPE(:,IJB-1)=PVSLOPE(:,IJB)
-!END IF
-!IF(  HLBCY(2) /= "CYCL" .AND. LNORTH_ll()) THEN
-!  PUSLOPE(:,IJE+1)=PUSLOPE(:,IJE)
-!  PVSLOPE(:,IJE+1)=PVSLOPE(:,IJE)
-!END IF
+IF ( HLBCX(1) /= "CYCL" .AND. LWEST_ll()) THEN
+  PUSLOPE(IIB-1,:)=PUSLOPE(IIB,:)
+  PVSLOPE(IIB-1,:)=PVSLOPE(IIB,:)
+END IF
+IF ( HLBCX(2) /= "CYCL" .AND. LEAST_ll()) THEN
+  PUSLOPE(IIE+1,:)=PUSLOPE(IIE,:)
+  PVSLOPE(IIE+1,:)=PVSLOPE(IIE,:)
+END IF
+IF ( HLBCY(1) /= "CYCL" .AND. LSOUTH_ll()) THEN
+  PUSLOPE(:,IJB-1)=PUSLOPE(:,IJB)
+  PVSLOPE(:,IJB-1)=PVSLOPE(:,IJB)
+END IF
+IF(  HLBCY(2) /= "CYCL" .AND. LNORTH_ll()) THEN
+  PUSLOPE(:,IJE+1)=PUSLOPE(:,IJE)
+  PVSLOPE(:,IJE+1)=PVSLOPE(:,IJE)
+END IF
 !
 IF (LHOOK) CALL DR_HOOK('TURB:UPDATE_ROTATE_WIND',1,ZHOOK_HANDLE)
 !
@@ -1545,12 +1573,18 @@ ENDIF
 !              -----------------------------------------------
 !
 ! Impression before modification of the mixing length
-IF ( OTURB_DIAG .AND. OCLOSE_OUT ) THEN
-  YRECFM  ='LM_CLEAR_SKY'
-  YCOMMENT='X_Y_Z_LM CLEAR SKY (M)'
-  IGRID   = 1
-  ILENCH  = LEN(YCOMMENT)
-  CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZLM,IGRID,ILENCH,YCOMMENT,IRESP)
+IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
+  TZFIELD%CMNHNAME   = 'LM_CLEAR_SKY'
+  TZFIELD%CSTDNAME   = ''
+  TZFIELD%CLONGNAME  = 'LM_CLEAR_SKY'
+  TZFIELD%CUNITS     = 'm'
+  TZFIELD%CDIR       = 'XY'
+  TZFIELD%CCOMMENT   = 'X_Y_Z_LM CLEAR SKY'
+  TZFIELD%NGRID      = 1
+  TZFIELD%NTYPE      = TYPEREAL
+  TZFIELD%NDIMS      = 3
+  TZFIELD%LTIMEDEP   = .TRUE.
+  CALL IO_Field_write(TPFILE,TZFIELD,ZLM)
 ENDIF
 !
 ! Amplification of the mixing length when the criteria are verified
@@ -1565,18 +1599,29 @@ WHERE (PCEI(:,:,:) == -1.) ZLM(:,:,:) = ZLM_CLOUD(:,:,:)
 !*       5.    IMPRESSION
 !              ----------
 !
-IF ( OTURB_DIAG .AND. OCLOSE_OUT ) THEN
-  YRECFM  ='COEF_AMPL'
-  YCOMMENT='X_Y_Z_COEF AMPL (-)'
-  IGRID   = 1
-  ILENCH  = LEN(YCOMMENT)
-  CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZCOEF_AMPL,IGRID,ILENCH,YCOMMENT,IRESP)
+IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
+  TZFIELD%CMNHNAME   = 'COEF_AMPL'
+  TZFIELD%CSTDNAME   = ''
+  TZFIELD%CLONGNAME  = 'COEF_AMPL'
+  TZFIELD%CUNITS     = '1'
+  TZFIELD%CDIR       = 'XY'
+  TZFIELD%CCOMMENT   = 'X_Y_Z_COEF AMPL'
+  TZFIELD%NGRID      = 1
+  TZFIELD%NTYPE      = TYPEREAL
+  TZFIELD%NDIMS      = 3
+  TZFIELD%LTIMEDEP   = .TRUE.
+  CALL IO_Field_write(TPFILE,TZFIELD,ZCOEF_AMPL)
   !
-  YRECFM  ='LM_CLOUD'
-  YCOMMENT='X_Y_Z_LM CLOUD (M)'
-  IGRID   = 1
-  ILENCH  = LEN(YCOMMENT)
-  CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZLM_CLOUD,IGRID,ILENCH,YCOMMENT,IRESP)
+  TZFIELD%CMNHNAME   = 'LM_CLOUD'
+  TZFIELD%CSTDNAME   = ''
+  TZFIELD%CLONGNAME  = 'LM_CLOUD'
+  TZFIELD%CUNITS     = 'm'
+  TZFIELD%CDIR       = 'XY'
+  TZFIELD%CCOMMENT   = 'X_Y_Z_LM CLOUD'
+  TZFIELD%NGRID      = 1
+  TZFIELD%NTYPE      = TYPEREAL
+  TZFIELD%NDIMS      = 3
+  CALL IO_Field_write(TPFILE,TZFIELD,ZLM_CLOUD)
   !
 ENDIF
 !

@@ -2,8 +2,10 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1
-!     ######spl
-      SUBROUTINE TM06_H(KKB,KKTB,KKTE,PTSTEP,PZZ,PFLXZ,PBL_DEPTH)
+MODULE MODE_TM06_H
+IMPLICIT NONE
+CONTAINS
+SUBROUTINE TM06_H(KKB,KKTB,KKTE,PTSTEP,PZZ,PFLXZ,PBL_DEPTH)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     #################################################################
@@ -96,3 +98,4 @@ WHERE(PBL_DEPTH(:,:)/=XUNDEF) PBL_DEPTH(:,:)=MIN(PBL_DEPTH(:,:),ZBL_DEPTH(:,:)+Z
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TM06_H',1,ZHOOK_HANDLE)
 END SUBROUTINE TM06_H
+END MODULE MODE_TM06_H

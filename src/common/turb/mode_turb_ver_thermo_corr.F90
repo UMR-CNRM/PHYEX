@@ -117,12 +117,6 @@ SUBROUTINE TURB_VER_THERMO_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,    &
 !!      DXF,DYF,DZF,DZM
 !!                             :  Shuman functions (difference operators)     
 !!                               
-!!      SUBROUTINE TRIDIAG     : to compute the split implicit evolution
-!!                               of a variable located at a mass point
-!!
-!!      SUBROUTINE TRIDIAG_WIND: to compute the split implicit evolution
-!!                               of a variable located at a wind point
-!!
 !!      FUNCTIONs ETHETA and EMOIST  :  
 !!            allows to compute:
 !!            - the coefficients for the turbulent correlation between
@@ -223,9 +217,7 @@ USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
 USE MODI_GRADIENT_M
 USE MODI_SHUMAN , ONLY : DZM, MZM, MZF
-USE MODI_TRIDIAG 
 USE MODI_LES_MEAN_SUBGRID
-USE MODI_TRIDIAG_THERMO
 !
 USE MODE_IO_FIELD_WRITE, only: IO_Field_write
 USE MODE_PRANDTL

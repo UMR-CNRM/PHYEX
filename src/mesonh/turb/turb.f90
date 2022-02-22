@@ -395,7 +395,7 @@ USE MODI_UPDATE_LM
 USE MODI_GET_HALO
 !
 use mode_budget,         only: Budget_store_init, Budget_store_end
-USE MODE_IO_FIELD_WRITE, only: IO_Field_write
+USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 USE MODE_SBL
 use mode_sources_neg_correct, only: Sources_neg_correct
 !
@@ -713,7 +713,7 @@ IF (KRRL >=1) THEN
   END IF
 !
 !
-  IF ( tpfile%lopened .AND. OTURB_DIAG ) THEN
+  IF ( TPFILE%LOPENED .AND. OTURB_DIAG ) THEN
     TZFIELD%CMNHNAME   = 'ATHETA'
     TZFIELD%CSTDNAME   = ''
     TZFIELD%CLONGNAME  = 'ATHETA'
@@ -1163,7 +1163,7 @@ CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKET,PLEM,ZLEPS,PDYP,ZTRH,     &
 !*      7. STORES SOME INFORMATIONS RELATED TO THE TURBULENCE SCHEME
 !          ---------------------------------------------------------
 !
-IF ( OTURB_DIAG .AND. tpfile%lopened ) THEN
+IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
 ! 
 ! stores the mixing length
 ! 
@@ -1302,9 +1302,6 @@ IF (LLES_CALL) THEN
   CALL SECOND_MNH(ZTIME2)
   XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 END IF
-
-!
-
 !
 !----------------------------------------------------------------------------
 !
@@ -1834,7 +1831,7 @@ ENDIF
 !              -----------------------------------------------
 !
 ! Impression before modification of the mixing length
-IF ( OTURB_DIAG .AND. tpfile%lopened ) THEN
+IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%CMNHNAME   = 'LM_CLEAR_SKY'
   TZFIELD%CSTDNAME   = ''
   TZFIELD%CLONGNAME  = 'LM_CLEAR_SKY'
@@ -1860,7 +1857,7 @@ WHERE (PCEI(:,:,:) == -1.) PLEM(:,:,:) = ZLM_CLOUD(:,:,:)
 !*       5.    IMPRESSION
 !              ----------
 !
-IF ( OTURB_DIAG .AND. tpfile%lopened ) THEN
+IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%CMNHNAME   = 'COEF_AMPL'
   TZFIELD%CSTDNAME   = ''
   TZFIELD%CLONGNAME  = 'COEF_AMPL'
