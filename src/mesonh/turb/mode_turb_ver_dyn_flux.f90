@@ -331,6 +331,7 @@ INTEGER             :: IIU,IJU      ! size of array in x,y,z directions
 !
 REAL :: ZTIME1, ZTIME2, ZCMFS
 TYPE(TFIELDDATA) :: TZFIELD
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !----------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARIES
@@ -338,7 +339,6 @@ TYPE(TFIELDDATA) :: TZFIELD
 ZA=XUNDEF
 PDP=XUNDEF
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER_DYN_FLUX',0,ZHOOK_HANDLE)
 !
 IIU=SIZE(PUM,1)

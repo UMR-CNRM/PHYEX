@@ -1,10 +1,11 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2022 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-!-----------------------------------------------------------------
-!     ######spl
-      SUBROUTINE TURB_VER(KKA,KKU,KKL,KRR,KRRL,KRRI,                &
+MODULE MODE_TURB_VER
+IMPLICIT NONE
+CONTAINS
+SUBROUTINE TURB_VER(KKA,KKU,KKL,KRR,KRRL,KRRI,                &
                       OTURB_FLX,                                    &
                       HTURBDIM,HTOM,PIMPL,PEXPL,                    &
                       PTSTEP, TPFILE,                               &
@@ -15,114 +16,6 @@
                       PCDUEFF,PTAU11M,PTAU12M,PTAU33M,              &
                       PUM,PVM,PWM,PUSLOPEM,PVSLOPEM,PTHLM,PRM,PSVM, &
                       PTKEM,PLM,PLENGTHM,PLENGTHH,PLEPS,MFMOIST,    &
-                      PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PFRAC_ICE,    &
-                      PFWTH,PFWR,PFTH2,PFR2,PFTHR,PBL_DEPTH,        &
-                      PSBL_DEPTH,PLMO,                              &
-                      PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,             &
-                      PDP,PTP,PSIGS,PWTH,PWRC,PWSV                  )
-
-!
-USE MODD_IO, ONLY: TFILEDATA
-!
-INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
-INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
-INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
-LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
-                                                      ! turbulence scheme
-CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
-REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
-REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
-TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
-!
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
-                                                      ! Metric coefficients
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the
-                                                      ! normal to the ground surface
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PZZ          ! altitudes at flux points
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCOSSLOPE    ! cosinus of the angle 
-                                      ! between i and the slope vector
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSINSLOPE    ! sinus of the angle 
-                                      ! between i and the slope vector
-!
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
-                                                      ! Potential Temperature 
-!
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at time
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSFSVM       ! t - deltat 
-!
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSFTHP,PSFRP ! surface fluxes at time
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSFSVP       ! t + deltat 
-!
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCDUEFF     ! Cd * || u || at time t
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked 
-       ! to the maximum slope direction and the surface normal and the binormal 
-       ! at time t - dt
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
-!
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PUM,PVM,PWM,PTHLM 
-  ! Wind and potential temperature at t-Delta t
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PRM          ! Mixing ratios 
-                                                      ! at t-Delta t
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM         ! scalar var. at t-Delta t
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PUSLOPEM     ! wind component along the 
-                                     ! maximum slope direction
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
-                                     ! direction normal to the maximum slope one
-!
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTKEM        ! TKE at time t
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM          ! Turb. mixing length   
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLEPS        ! dissipative length   
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exner at time t-1
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PATHETA      ! coefficients between 
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSRCM        ! normalized 
-                  ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFRAC_ICE    ! ri fraction of rc+ri
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFWTH        ! d(w'2th' )/dz
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFWR         ! d(w'2r'  )/dz
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFTH2        ! d(w'th'2 )/dz
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFR2         ! d(w'r'2  )/dz
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFTHR        ! d(w'th'r')/dz
-REAL, DIMENSION(:,:),   INTENT(INOUT)::  PBL_DEPTH    ! BL depth
-REAL, DIMENSION(:,:),   INTENT(INOUT)::  PSBL_DEPTH   ! SBL depth
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PLMO         ! Monin-Obukhov length
-!
-REAL, DIMENSION(:,:,:), INTENT(INOUT)   ::  PRUS, PRVS, PRWS, PRTHLS
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS,PRRS
-                            ! cumulated sources for the prognostic variables
-!
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PDP,PTP   ! Dynamic and thermal
-                                                   ! TKE production terms
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PSIGS     ! Vert. part of Sigma_s at t
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWTH       ! heat flux
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWRC       ! cloud water flux
-REAL, DIMENSION(:,:,:,:),INTENT(OUT) :: PWSV       ! scalar flux
-
-!
-!
-END SUBROUTINE TURB_VER
-!
-END INTERFACE
-!
-END MODULE MODI_TURB_VER
-!
-!
-!     ###############################################################
-      SUBROUTINE TURB_VER(KKA,KKU,KKL,KRR, KRRL, KRRI,              &
-                      OTURB_FLX,                                    &
-                      HTURBDIM,HTOM,PIMPL,PEXPL,                    &
-                      PTSTEP, TPFILE,                               &
-                      PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
-                      PCOSSLOPE,PSINSLOPE,                          &
-                      PRHODJ,PTHVREF,                               &
-                      PSFTHM,PSFRM,PSFSVM,PSFTHP,PSFRP,PSFSVP,      &
-                      PCDUEFF,PTAU11M,PTAU12M,PTAU33M,              &
-                      PUM,PVM,PWM,PUSLOPEM,PVSLOPEM,PTHLM,PRM,PSVM, &
-                      PTKEM,PLM,PLEPS,                              &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PFRAC_ICE,    &
                       PFWTH,PFWR,PFTH2,PFR2,PFTHR,PBL_DEPTH,        &
                       PSBL_DEPTH,PLMO,                              &
@@ -325,17 +218,17 @@ USE MODD_PARAMETERS
 USE MODD_LES
 USE MODD_NSV,            ONLY: NSV
 !
-USE MODI_PRANDTL
+!USE MODE_PRANDTL, ONLY: PRANDTL
 USE MODI_EMOIST
 USE MODI_ETHETA
 USE MODI_GRADIENT_M
 USE MODI_GRADIENT_W
 USE MODI_TURB
-USE MODI_TURB_VER_THERMO_FLUX
-USE MODI_TURB_VER_THERMO_CORR
-USE MODI_TURB_VER_DYN_FLUX
-USE MODI_TURB_VER_SV_FLUX
-USE MODI_TURB_VER_SV_CORR
+USE MODE_TURB_VER_THERMO_FLUX, ONLY: TURB_VER_THERMO_FLUX
+USE MODE_TURB_VER_THERMO_CORR, ONLY: TURB_VER_THERMO_CORR
+USE MODE_TURB_VER_DYN_FLUX, ONLY: TURB_VER_DYN_FLUX
+USE MODE_TURB_VER_SV_FLUX, ONLY: TURB_VER_SV_FLUX
+USE MODE_TURB_VER_SV_CORR, ONLY: TURB_VER_SV_CORR
 USE MODI_LES_MEAN_SUBGRID
 USE MODI_SBL_DEPTH
 USE MODI_SECOND_MNH
@@ -551,9 +444,9 @@ ZSQRT_TKE = SQRT(PTKEM)
 !
 ! gradients of mean quantities at previous time-step
 !
-ZDTH_DZ = GZ_M_W(PTHLM(:,:,:),PDZZ, KKA, KKU, KKL)
+ZDTH_DZ = GZ_M_W(KKA, KKU, KKL,PTHLM(:,:,:),PDZZ)
 ZDR_DZ  = 0.
-IF (KRR>0) ZDR_DZ  = GZ_M_W(PRM(:,:,:,1),PDZZ, KKA, KKU, KKL)
+IF (KRR>0) ZDR_DZ  = GZ_M_W(KKA, KKU, KKL,PRM(:,:,:,1),PDZZ)
 !
 !
 ! Denominator factor in 3rd order terms
@@ -766,4 +659,5 @@ END IF
 !
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TURB_VER',1,ZHOOK_HANDLE)
-END SUBROUTINE TURB_VER                                                                                               
+END SUBROUTINE TURB_VER
+END MODULE MODE_TURB_VER 

@@ -130,6 +130,13 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_CORR',0,ZHOOK_HANDLE)
 CALL SECOND_MNH(ZTIME1)
 !
+IF(LBLOWSNOW) THEN
+! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables          
+   ZCSV= XCHF/XRSNOW
+ELSE
+   ZCSV= XCHF
+ENDIF
+!
 DO JSV=1,NSV
   !
   IF (LNOMIXLG .AND. JSV >= NSV_LGBEG .AND. JSV<= NSV_LGEND) CYCLE
@@ -139,7 +146,7 @@ DO JSV=1,NSV
   IF (LLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
     ZFLXZ(:,:,:) =  PPSI_SV(:,:,:,JSV)*GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)**2
-    ZFLXZ(:,:,:) = XCHF / ZCSVD * PLM * PLEPS * MZF(ZFLXZ(:,:,:), KKA, KKU, KKL)
+    ZFLXZ(:,:,:) = ZCSV / ZCSVD * PLM * PLEPS * MZF(ZFLXZ(:,:,:), KKA, KKU, KKL)
     CALL LES_MEAN_SUBGRID(-2.*ZCSVD*SQRT(PTKEM)*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_Sv2(:,:,:,JSV) )
     CALL LES_MEAN_SUBGRID(MZF(PWM, KKA, KKU, KKL)*ZFLXZ, X_LES_RES_W_SBG_Sv2(:,:,:,JSV) )
   END IF
@@ -149,7 +156,7 @@ DO JSV=1,NSV
   IF (LLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
     ZA(:,:,:)   =  ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM)
-    ZFLXZ(:,:,:)= ( XCSHF * PPHI3 + XCHF * PPSI_SV(:,:,:,JSV) )              &
+    ZFLXZ(:,:,:)= ( XCSHF * PPHI3 + ZCSV * PPSI_SV(:,:,:,JSV) )              &
                   *  GZ_M_W(KKA, KKU, KKL,PTHLM,PDZZ)                          &
                   *  GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)
     ZFLXZ(:,:,:)= PLM * PLEPS / (2.*ZCTSVD) * MZF(ZFLXZ, KKA, KKU, KKL)
@@ -158,7 +165,7 @@ DO JSV=1,NSV
     !
     IF (KRR>=1) THEN
       ZA(:,:,:)   =  EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM)
-      ZFLXZ(:,:,:)= ( XCHF * PPSI3 + XCHF * PPSI_SV(:,:,:,JSV) )             &
+      ZFLXZ(:,:,:)= ( ZCSV * PPSI3 + ZCSV * PPSI_SV(:,:,:,JSV) )             &
                     *  GZ_M_W(KKA, KKU, KKL,PRM(:,:,:,1),PDZZ)                 &
                     *  GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)
       ZFLXZ(:,:,:)= PLM * PLEPS / (2.*ZCQSVD) * MZF(ZFLXZ, KKA, KKU, KKL)
