@@ -228,6 +228,7 @@ USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 USE MODD_CST
+USE MODD_CONF, ONLY: CPROGRAM
 USE MODD_CTURB
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_GRID_n,         ONLY: XZS, XXHAT, XYHAT
@@ -248,7 +249,7 @@ USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
 USE MODI_GRADIENT_M
-USE MODI_SHUMAN , ONLY : DZF, DZM, MZF, MZM
+USE MODI_SHUMAN , ONLY : DZF, DZM, MZF, MZM, MYF, MXF
 USE MODI_TRIDIAG 
 USE MODI_LES_MEAN_SUBGRID
 USE MODI_TRIDIAG_THERMO
@@ -364,19 +365,43 @@ REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ::  &
        ZF,       & ! Flux in dTh/dt =-dF/dz (evaluated at t-1)(or rt instead of Th)
        ZDFDDTDZ, & ! dF/d(dTh/dz)
        ZDFDDRDZ, & ! dF/d(dr/dz)
-       Z3RDMOMENT  ! 3 order term in flux or variance equation
-INTEGER             :: IRESP        ! Return code of FM routines 
-INTEGER             :: IGRID        ! C-grid indicator in LFIFM file 
-INTEGER             :: ILENCH       ! Length of comment string in LFIFM file
+       Z3RDMOMENT,&  ! 3 order term in flux or variance equation
+       ZF_LEONARD,&  ! Leonard terms
+       ZRWTHL,    &
+       ZRWRNP,    &
+       ZCLD_THOLD
+!
+REAL,DIMENSION(SIZE(XZS,1),SIZE(XZS,2),KKU)  :: ZALT
+!
 INTEGER             :: IKB,IKE      ! I index values for the Beginning and End
                                     ! mass points of the domain in the 3 direct.
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
-CHARACTER (LEN=100) :: YCOMMENT     ! comment string in LFIFM file
-CHARACTER (LEN=16)  :: YRECFM       ! Name of the desired field in LFIFM file
+INTEGER             :: JI, JJ ! loop indexes 
+!
+INTEGER                    :: IIB,IJB       ! Lower bounds of the physical
+                                            ! sub-domain in x and y directions
+INTEGER                    :: IIE,IJE       ! Upper bounds of the physical
+                                            ! sub-domain in x and y directions
+!
+REAL, DIMENSION(:), ALLOCATABLE   :: ZXHAT_ll    !  Position x in the conformal
+                                                 ! plane (array on the complete domain)
+REAL, DIMENSION(:), ALLOCATABLE   :: ZYHAT_ll    !   Position y in the conformal
+                                                 ! plane (array on the complete domain)
+!
 !
 REAL :: ZTIME1, ZTIME2
+REAL :: ZDELTAX
+REAL :: ZXBEG,ZXEND,ZYBEG,ZYEND ! Forcing size for ocean deep convection
+REAL, DIMENSION(SIZE(XXHAT),SIZE(XYHAT)) :: ZDIST ! distance
+                                   ! from the center of the cooling               
+REAL :: ZFLPROV
+INTEGER           :: JKM          ! vertical index loop
+INTEGER           :: JSW
+REAL :: ZSWA     ! index for time flux interpolation
 !
+INTEGER :: IIU, IJU
+INTEGER :: IRESP
 INTEGER :: JK
 LOGICAL :: GUSERV   ! flag to use water
 LOGICAL :: GFTH2    ! flag to use w'th'2
@@ -392,6 +417,38 @@ TYPE(TFIELDDATA) :: TZFIELD
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_FLUX',0,ZHOOK_HANDLE)
+!
+! Size for a given proc & a given model      
+IIU=SIZE(PTHLM,1) 
+IJU=SIZE(PTHLM,2)
+!
+!! Compute Shape of sfc flux for Oceanic Deep Conv Case
+! 
+IF (LOCEAN .AND. LDEEPOC) THEN
+  !*       COMPUTES THE PHYSICAL SUBDOMAIN BOUNDS
+  ALLOCATE(ZXHAT_ll(NIMAX_ll+2*JPHEXT),ZYHAT_ll(NJMAX_ll+2*JPHEXT))
+  !compute ZXHAT_ll = position in the (0:Lx) domain 1 (Lx=Size of domain1 )
+  !compute XXHAT_ll = position in the (L0_subproc,Lx_subproc) domain for the current subproc
+  !                                     L0_subproc as referenced in the full domain 1
+  CALL GATHERALL_FIELD_ll('XX',XXHAT,ZXHAT_ll,IRESP)
+  CALL GATHERALL_FIELD_ll('YY',XYHAT,ZYHAT_ll,IRESP)
+  CALL GET_DIM_EXT_ll('B',IIU,IJU)
+  CALL GET_INDICE_ll(IIB,IJB,IIE,IJE,IIU,IJU)
+  DO JJ = IJB,IJE
+    DO JI = IIB,IIE
+      ZDIST(JI,JJ) = SQRT(                         &
+      (( (XXHAT(JI)+XXHAT(JI+1))*0.5 - XCENTX_OC ) / XRADX_OC)**2 + &
+      (( (XYHAT(JJ)+XYHAT(JJ+1))*0.5 - XCENTY_OC ) / XRADY_OC)**2   &
+                                )
+    END DO
+  END DO
+  DO JJ=IJB,IJE
+    DO JI=IIB,IIE
+      IF ( ZDIST(JI,JJ) > 1.) XSSTFL(JI,JJ)=0.
+    END DO
+  END DO
+END IF !END DEEP OCEAN CONV CASE
+!
 IKT  =SIZE(PTHLM,3)  
 IKTE =IKT-JPVEXT_TURB  
 IKTB =1+JPVEXT_TURB               
@@ -405,11 +462,22 @@ GUSERV = (KRR/=0)
 !
 IF (LHARAT) THEN
 ! LHARAT so TKE and length scales at half levels!
-ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) +50.*MFMOIST(:,:,:)
+  ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) +50.*MFMOIST(:,:,:)
 ELSE
-ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), KKA, KKU, KKL)
+  ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), KKA, KKU, KKL)
 ENDIF
 !
+! Define a cloud mask with ri and rc (used after with a threshold) for Leonard terms
+!
+IF(LHGRAD) THEN
+  IF ( KRRL >= 1 ) THEN
+    IF ( KRRI >= 1 ) THEN
+      ZCLD_THOLD(:,:,:) = PRM(:,:,:,2) + PRM(:,:,:,4)
+    ELSE
+      ZCLD_THOLD(:,:,:) = PRM(:,:,:,2)
+    END IF
+  END IF
+END IF
 !
 ! Flags for 3rd order quantities
 !
@@ -437,12 +505,22 @@ END IF
 ! Compute the turbulent flux F and F' at time t-dt.
 !
 IF (LHARAT) THEN
-ZF      (:,:,:) = -ZKEFF*DZM(PTHLM, KKA, KKU, KKL)/PDZZ
-ZDFDDTDZ(:,:,:) = -ZKEFF
+  ZF      (:,:,:) = -ZKEFF*DZM(PTHLM, KKA, KKU, KKL)/PDZZ
+  ZDFDDTDZ(:,:,:) = -ZKEFF
 ELSE
-ZF      (:,:,:) = -XCSHF*PPHI3*ZKEFF*DZM(PTHLM, KKA, KKU, KKL)/PDZZ
-ZDFDDTDZ(:,:,:) = -XCSHF*ZKEFF*D_PHI3DTDZ_O_DDTDZ(PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,GUSERV)
-ENDIF
+  ZF      (:,:,:) = -XCSHF*PPHI3*ZKEFF*DZM(PTHLM, KKA, KKU, KKL)/PDZZ
+  ZDFDDTDZ(:,:,:) = -XCSHF*ZKEFF*D_PHI3DTDZ_O_DDTDZ(PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,GUSERV)
+END IF
+!
+IF (LHGRAD) THEN
+ ! Compute the Leonard terms for thl
+ ZDELTAX= XXHAT(3) - XXHAT(2)
+ ZF_LEONARD (:,:,:)= XCOEFHGRADTHL*ZDELTAX*ZDELTAX/12.0*(      &
+                 MXF(GX_W_UW(PWM(:,:,:), XDXX,XDZZ,XDZX,KKA,KKU,KKL))&
+                *MZM(GX_M_M(PTHLM(:,:,:),XDXX,XDZZ,XDZX,KKA, KKU, KKL), KKA, KKU, KKL)  &
+              +  MYF(GY_W_VW(PWM(:,:,:), XDYY,XDZZ,XDZY,KKA,KKU,KKL))  &
+                *MZM(GY_M_M(PTHLM(:,:,:),XDYY,XDZZ,XDZY,KKA, KKU, KKL), KKA, KKU, KKL) )
+END IF
 !
 ! Effect of 3rd order terms in temperature flux (at flux point)
 !
@@ -466,7 +544,7 @@ END IF
 !
 ! d(w'2r')/dz
 IF (GFWR) THEN
-  ZF       = ZF       + M3_WTH_W2R(KKA,KKU,KKL,PREDTH1,PREDR1,PD,ZKEFF,&
+  ZF       = ZF       + M3_WTH_W2R(KKA,KKU,KKL,PD,ZKEFF,&
     & PTKEM,PBLL_O_E,PEMOIST,PDTH_DZ) * PFWR
   ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_W2R_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,&
     & PD,ZKEFF,PTKEM,PBLL_O_E,PEMOIST) * PFWR
@@ -474,7 +552,7 @@ END IF
 !
 ! d(w'r'2)/dz
 IF (GFR2) THEN
-  ZF       = ZF       + M3_WTH_WR2(KKA,KKU,KKL,PREDTH1,PREDR1,PD,ZKEFF,PTKEM,&
+  ZF       = ZF       + M3_WTH_WR2(KKA,KKU,KKL,PD,ZKEFF,PTKEM,&
     & PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PEMOIST,PDTH_DZ) * MZM(PFR2, KKA, KKU, KKL)
   ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_WR2_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,&
     & ZKEFF,PTKEM,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PEMOIST) * MZM(PFR2, KKA, KKU, KKL)
@@ -489,46 +567,95 @@ IF (GFTHR) THEN
   ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_WTHR_O_DDTDZ(Z3RDMOMENT,PREDTH1,&
     & PREDR1,PD,PBLL_O_E,PETHETA) * MZM(PFTHR, KKA, KKU, KKL)
 END IF
+! compute interface flux
+IF (LCOUPLES) THEN   ! Autocoupling O-A LES
+  IF (LOCEAN) THEN    ! ocean model in coupled case 
+    ZF(:,:,IKE) =  (XSSTFL_C(:,:,1)+XSSRFL_C(:,:,1)) &
+                  *0.5* ( 1. + PRHODJ(:,:,KKU)/PRHODJ(:,:,IKE) )
+  ELSE                ! atmosph model in coupled case
+    ZF(:,:,IKB) =  XSSTFL_C(:,:,1) &
+                  *0.5* ( 1. + PRHODJ(:,:,KKA)/PRHODJ(:,:,IKB) )
+  ENDIF 
 !
-!* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
-! (in presence of slopes)
-!* in 1DIM case, the part of energy released in horizontal flux
-! is taken into account in the vertical part
+ELSE  ! No coupling O and A cases
+  ! atmosp bottom
+  !*In 3D, a part of the flux goes vertically,
+  ! and another goes horizontally (in presence of slopes)
+  !*In 1D, part of energy released in horizontal flux is taken into account in the vertical part
+  IF (HTURBDIM=='3DIM') THEN
+    ZF(:,:,IKB) = ( PIMPL*PSFTHP(:,:) + PEXPL*PSFTHM(:,:) )   &
+                       * PDIRCOSZW(:,:)                       &
+                       * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
+  ELSE
+    ZF(:,:,IKB) = ( PIMPL*PSFTHP(:,:) + PEXPL*PSFTHM(:,:) )   &
+                       / PDIRCOSZW(:,:)                       &
+                       * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
+  END IF
 !
-IF (HTURBDIM=='3DIM') THEN
-  ZF(:,:,IKB) = ( PIMPL*PSFTHP(:,:) + PEXPL*PSFTHM(:,:) )   &
-                     * PDIRCOSZW(:,:)                       &
-                     * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
-ELSE
-  ZF(:,:,IKB) = ( PIMPL*PSFTHP(:,:) + PEXPL*PSFTHM(:,:) )   &
-                     / PDIRCOSZW(:,:)                       &
-                     * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
-END IF
+  IF (LOCEAN) THEN
+    ZF(:,:,IKE) = XSSTFL(:,:) *0.5*(1. + PRHODJ(:,:,KKU) / PRHODJ(:,:,IKE))
+  ELSE !end ocean case (in nocoupled case)
+    ! atmos top
+#ifdef REPRO48
+#else
+      ZF(:,:,IKE)=0.
+#endif
+  END IF
+END IF !end no coupled cases
 !
-! Compute the splitted conservative potential temperature at t+deltat
+! Compute the split conservative potential temperature at t+deltat
 CALL TRIDIAG_THERMO(KKA,KKU,KKL,PTHLM,ZF,ZDFDDTDZ,PTSTEP,PIMPL,PDZZ,&
                     PRHODJ,PTHLP)
 !
 ! Compute the equivalent tendency for the conservative potential temperature
-PRTHLS(:,:,:)= PRTHLS(:,:,:)  +    &
-               PRHODJ(:,:,:)*(PTHLP(:,:,:)-PTHLM(:,:,:))/PTSTEP
+!
+ZRWTHL(:,:,:)= PRHODJ(:,:,:)*(PTHLP(:,:,:)-PTHLM(:,:,:))/PTSTEP
+! replace the flux by the Leonard terms above ZALT and ZCLD_THOLD
+IF (LHGRAD) THEN
+ DO JK=1,KKU
+  ZALT(:,:,JK) = PZZ(:,:,JK)-XZS(:,:)
+ END DO
+ WHERE ( (ZCLD_THOLD(:,:,:) >= XCLDTHOLD) .AND. ( ZALT(:,:,:) >= XALTHGRAD) )
+  ZRWTHL(:,:,:) = -GZ_W_M(MZM(PRHODJ(:,:,:), KKA, KKU, KKL)*ZF_LEONARD(:,:,:),XDZZ,&
+                   KKA, KKU, KKL)
+ END WHERE
+END IF
+!
+PRTHLS(:,:,:)= PRTHLS(:,:,:)  + ZRWTHL(:,:,:)
 !
 !*       2.2  Partial Thermal Production
 !
 !  Conservative potential temperature flux : 
 !
 ZFLXZ(:,:,:)   = ZF                                                &
-               + PIMPL * ZDFDDTDZ * DZM(PTHLP - PTHLM, KKA, KKU, KKL) / PDZZ 
+               + PIMPL * ZDFDDTDZ * DZM(PTHLP - PTHLM, KKA, KKU, KKL) / PDZZ
+! replace the flux by the Leonard terms
+IF (LHGRAD) THEN
+ WHERE ( (ZCLD_THOLD(:,:,:) >= XCLDTHOLD) .AND. ( ZALT(:,:,:) >= XALTHGRAD) )
+  ZFLXZ(:,:,:) = ZF_LEONARD(:,:,:)
+ END WHERE
+END IF
 !
 ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
+IF (LOCEAN) THEN
+  ZFLXZ(:,:,KKU) = ZFLXZ(:,:,IKE)
+END IF
 !  
-  DO JK=IKTB+1,IKTE-1
-   PWTH(:,:,JK)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+KKL))
-  END DO
-  PWTH(:,:,IKB)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+KKL))
+DO JK=IKTB+1,IKTE-1
+  PWTH(:,:,JK)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+KKL))
+END DO
+!
+PWTH(:,:,IKB)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+KKL)) 
+!
+IF (LOCEAN) THEN
+  PWTH(:,:,IKE)=0.5*(ZFLXZ(:,:,IKE)+ZFLXZ(:,:,IKE+KKL))
+  PWTH(:,:,KKA)=0. 
+  PWTH(:,:,KKU)=ZFLXZ(:,:,KKU)
+ELSE
   PWTH(:,:,KKA)=0.5*(ZFLXZ(:,:,KKA)+ZFLXZ(:,:,KKA+KKL))
   PWTH(:,:,IKE)=PWTH(:,:,IKE-KKL)
-
+END IF
+!
 IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the conservative potential temperature vertical flux
   TZFIELD%CMNHNAME   = 'THW_FLX'
@@ -545,34 +672,44 @@ IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
 END IF
 !
 ! Contribution of the conservative temperature flux to the buoyancy flux
-IF (KRR /= 0) THEN
-  PTP(:,:,:)  =  PBETA * MZF(MZM(PETHETA, KKA, KKU, KKL) * ZFLXZ, KKA, KKU, KKL)
-  PTP(:,:,IKB)=  PBETA(:,:,IKB) * PETHETA(:,:,IKB) *   &
-                 0.5 * ( ZFLXZ (:,:,IKB) + ZFLXZ (:,:,IKB+KKL) )  
+IF (LOCEAN) THEN
+  PTP(:,:,:)= XG*XALPHAOC * MZF(ZFLXZ,KKA, KKU, KKL )
 ELSE
-  PTP(:,:,:)=  PBETA * MZF(ZFLXZ, KKA, KKU, KKL)
-END IF
+  IF (KRR /= 0) THEN
+    PTP(:,:,:)  =  PBETA * MZF( MZM(PETHETA,KKA, KKU, KKL) * ZFLXZ,KKA, KKU, KKL )
+    PTP(:,:,IKB)=  PBETA(:,:,IKB) * PETHETA(:,:,IKB) *   &
+                   0.5 * ( ZFLXZ (:,:,IKB) + ZFLXZ (:,:,IKB+KKL) )
+  ELSE
+    PTP(:,:,:)=  PBETA * MZF( ZFLXZ,KKA, KKU, KKL )
+  END IF
+END IF 
 !
 ! Buoyancy flux at flux points
 ! 
 PWTHV = MZM(PETHETA, KKA, KKU, KKL) * ZFLXZ
 PWTHV(:,:,IKB) = PETHETA(:,:,IKB) * ZFLXZ(:,:,IKB)
 !
+IF (LOCEAN) THEN
+  ! temperature contribution to Buy flux     
+  PWTHV(:,:,IKE) = PETHETA(:,:,IKE) * ZFLXZ(:,:,IKE)
+END IF
 !*       2.3  Partial vertical divergence of the < Rc w > flux
 ! Correction for qc and qi negative in AROME 
-!IF ( KRRL >= 1 ) THEN
-!  IF ( KRRI >= 1 ) THEN
-!    PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
-!                    DZF(MZM(PRHODJ*PATHETA*2.*PSRCM, KKA, KKU, KKL)*ZFLXZ/PDZZ, KKA, KKU, KKL)       &
-!                    *(1.0-PFRAC_ICE(:,:,:))
-!    PRRS(:,:,:,4) = PRRS(:,:,:,4) -                                        &
-!                    DZF(MZM(PRHODJ*PATHETA*2.*PSRCM, KKA, KKU, KKL)*ZFLXZ/PDZZ, KKA, KKU, KKL)       &
-!                    *PFRAC_ICE(:,:,:)
-!  ELSE
-!    PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
-!                    DZF(MZM(PRHODJ*PATHETA*2.*PSRCM, KKA, KKU, KKL)*ZFLXZ/PDZZ, KKA, KKU, KKL) 
-!  END IF
-!END IF
+IF(CPROGRAM/='AROME  ') THEN
+ IF ( KRRL >= 1 ) THEN
+   IF ( KRRI >= 1 ) THEN
+     PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
+                     PRHODJ*PATHETA*2.*PSRCM*DZF(ZFLXZ/PDZZ, KKA, KKU, KKL) &
+                     *(1.0-PFRAC_ICE(:,:,:))
+     PRRS(:,:,:,4) = PRRS(:,:,:,4) -                                        &
+                     PRHODJ*PATHETA*2.*PSRCM*DZF(ZFLXZ/PDZZ, KKA, KKU, KKL) &
+                     *PFRAC_ICE(:,:,:)
+   ELSE
+     PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
+                     PRHODJ*PATHETA*2.*PSRCM*DZF(ZFLXZ/PDZZ, KKA, KKU, KKL)
+   END IF
+ END IF
+END IF
 !
 !*       2.4  Storage in LES configuration
 ! 
@@ -626,6 +763,16 @@ IF (KRR /= 0) THEN
   ZDFDDRDZ(:,:,:) = -XCSHF*ZKEFF*D_PSI3DRDZ_O_DDRDZ(PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,GUSERV)
  ENDIF
   !
+  ! Compute Leonard Terms for Cloud mixing ratio
+  IF (LHGRAD) THEN
+    ZDELTAX= XXHAT(3) - XXHAT(2)
+    ZF_LEONARD (:,:,:)= XCOEFHGRADRM*ZDELTAX*ZDELTAX/12.0*(        &
+                MXF(GX_W_UW(PWM(:,:,:),  XDXX,XDZZ,XDZX,KKA,KKU,KKL))       &
+                *MZM(GX_M_M(PRM(:,:,:,1),XDXX,XDZZ,XDZX,KKA,KKU,KKL),KKA,KKU,KKL) &
+                +MYF(GY_W_VW(PWM(:,:,:), XDYY,XDZZ,XDZY,KKA,KKU,KKL))        &
+                *MZM(GY_M_M(PRM(:,:,:,1),XDYY,XDZZ,XDZY,KKA,KKU,KKL),KKA,KKU,KKL) )
+   END IF
+  !
   ! Effect of 3rd order terms in temperature flux (at flux point)
   !
   ! d(w'2r')/dz
@@ -648,7 +795,7 @@ IF (KRR /= 0) THEN
   !
   ! d(w'2th')/dz
   IF (GFWTH) THEN
-    ZF       = ZF       + M3_WR_W2TH(KKA,KKU,KKL,PREDR1,PREDTH1,PD,ZKEFF,&
+    ZF       = ZF       + M3_WR_W2TH(KKA,KKU,KKL,PD,ZKEFF,&
      & PTKEM,PBLL_O_E,PETHETA,PDR_DZ) * PFWTH
     ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_W2TH_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,& 
      & PD,ZKEFF,PTKEM,PBLL_O_E,PETHETA) * PFWTH
@@ -656,7 +803,7 @@ IF (KRR /= 0) THEN
   !
   ! d(w'th'2)/dz
   IF (GFTH2) THEN
-    ZF       = ZF       + M3_WR_WTH2(KKA,KKU,KKL,PREDR1,PREDTH1,PD,ZKEFF,PTKEM,&
+    ZF       = ZF       + M3_WR_WTH2(KKA,KKU,KKL,PD,ZKEFF,PTKEM,&
     & PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA,PDR_DZ) * MZM(PFTH2, KKA, KKU, KKL)
     ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_WTH2_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,&
      &ZKEFF,PTKEM,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA) * MZM(PFTH2, KKA, KKU, KKL)
@@ -672,28 +819,64 @@ IF (KRR /= 0) THEN
      & PREDTH1,PD,PBLL_O_E,PEMOIST) * MZM(PFTHR, KKA, KKU, KKL)
   END IF
   !
-  !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
-  ! (in presence of slopes)
-  !* in 1DIM case, the part of energy released in horizontal flux
-  ! is taken into account in the vertical part
+  ! compute interface flux
+  IF (LCOUPLES) THEN   ! coupling NH O-A
+    IF (LOCEAN) THEN    ! ocean model in coupled case
+      ! evap effect on salinity to be added later !!!
+      ZF(:,:,IKE) =  0.
+    ELSE                ! atmosph model in coupled case
+      ZF(:,:,IKB) =  0.
+      ! AJOUTER FLUX EVAP SUR MODELE ATMOS
+    ENDIF
   !
-  IF (HTURBDIM=='3DIM') THEN
-    ZF(:,:,IKB) = ( PIMPL*PSFRP(:,:) + PEXPL*PSFRM(:,:) )       &
-                         * PDIRCOSZW(:,:)                       &
-                       * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
-  ELSE
-    ZF(:,:,IKB) = ( PIMPL*PSFRP(:,:) + PEXPL*PSFRM(:,:) )     &
-                       / PDIRCOSZW(:,:)                       &
-                       * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
-  END IF
-  !
-  ! Compute the splitted conservative potential temperature at t+deltat
+  ELSE  ! No coupling NH OA case
+    ! atmosp bottom
+    !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
+    ! (in presence of slopes)
+    !* in 1DIM case, the part of energy released in horizontal flux
+    ! is taken into account in the vertical part
+    !
+    IF (HTURBDIM=='3DIM') THEN
+      ZF(:,:,IKB) = ( PIMPL*PSFRP(:,:) + PEXPL*PSFRM(:,:) )       &
+                           * PDIRCOSZW(:,:)                       &
+                         * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
+    ELSE
+      ZF(:,:,IKB) = ( PIMPL*PSFRP(:,:) + PEXPL*PSFRM(:,:) )     &
+                         / PDIRCOSZW(:,:)                       &
+                         * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
+    END IF
+    !
+    IF (LOCEAN) THEN
+      ! General ocean case
+      ! salinity/evap effect to be added later !!!!!
+      ZF(:,:,IKE) = 0.
+    ELSE !end ocean case (in nocoupled case)
+      ! atmos top
+#ifdef REPRO48
+#else
+      ZF(:,:,IKE)=0.
+#endif
+    END IF
+  END IF!end no coupled cases
+  ! Compute the split conservative potential temperature at t+deltat
   CALL TRIDIAG_THERMO(KKA,KKU,KKL,PRM(:,:,:,1),ZF,ZDFDDRDZ,PTSTEP,PIMPL,&
                       PDZZ,PRHODJ,PRP)
   !
   ! Compute the equivalent tendency for the conservative mixing ratio
-  PRRS(:,:,:,1) = PRRS(:,:,:,1) + PRHODJ(:,:,:) *     &
-                  (PRP(:,:,:)-PRM(:,:,:,1))/PTSTEP
+  !
+  ZRWRNP (:,:,:) = PRHODJ(:,:,:)*(PRP(:,:,:)-PRM(:,:,:,1))/PTSTEP
+  !
+  ! replace the flux by the Leonard terms above ZALT and ZCLD_THOLD
+  IF (LHGRAD) THEN
+   DO JK=1,KKU
+    ZALT(:,:,JK) = PZZ(:,:,JK)-XZS(:,:)
+   END DO
+   WHERE ( (ZCLD_THOLD(:,:,:) >= XCLDTHOLD ) .AND. ( ZALT(:,:,:) >= XALTHGRAD ) )
+    ZRWRNP (:,:,:) =  -GZ_W_M(MZM(PRHODJ(:,:,:),KKA,KKU,KKL)*ZF_LEONARD(:,:,:),XDZZ,KKA,KKU,KKL)
+   END WHERE
+  END IF
+  !
+  PRRS(:,:,:,1) = PRRS(:,:,:,1) + ZRWRNP (:,:,:)
   !
   !*       3.2  Complete thermal production
   !
@@ -701,6 +884,13 @@ IF (KRR /= 0) THEN
   !
   ZFLXZ(:,:,:)   = ZF                                                &
                  + PIMPL * ZDFDDRDZ * DZM(PRP - PRM(:,:,:,1), KKA, KKU, KKL) / PDZZ 
+  !
+  ! replace the flux by the Leonard terms above ZALT and ZCLD_THOLD
+  IF (LHGRAD) THEN
+   WHERE ( (ZCLD_THOLD(:,:,:) >= XCLDTHOLD ) .AND. ( ZALT(:,:,:) >= XALTHGRAD ) )
+    ZFLXZ(:,:,:) = ZF_LEONARD(:,:,:)
+   END WHERE
+  END IF
   !
   ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
   !
@@ -728,31 +918,40 @@ IF (KRR /= 0) THEN
   END IF
   !
   ! Contribution of the conservative water flux to the Buoyancy flux
-  ZA(:,:,:)   =  PBETA * MZF(MZM(PEMOIST, KKA, KKU, KKL) * ZFLXZ, KKA, KKU, KKL)
-  ZA(:,:,IKB) =  PBETA(:,:,IKB) * PEMOIST(:,:,IKB) *   &
-                 0.5 * ( ZFLXZ (:,:,IKB) + ZFLXZ (:,:,IKB+KKL) )
-  PTP(:,:,:) = PTP(:,:,:) + ZA(:,:,:)
+  IF (LOCEAN) THEN
+     ZA(:,:,:)=  -XG*XBETAOC  * MZF(ZFLXZ, KKA, KKU, KKL )
+  ELSE
+    ZA(:,:,:)   =  PBETA * MZF( MZM(PEMOIST, KKA, KKU, KKL) * ZFLXZ,KKA,KKU,KKL )
+    ZA(:,:,IKB) =  PBETA(:,:,IKB) * PEMOIST(:,:,IKB) *   &
+                   0.5 * ( ZFLXZ (:,:,IKB) + ZFLXZ (:,:,IKB+KKL) )
+    PTP(:,:,:) = PTP(:,:,:) + ZA(:,:,:)
+  END IF
   !
   ! Buoyancy flux at flux points
   ! 
   PWTHV          = PWTHV          + MZM(PEMOIST, KKA, KKU, KKL) * ZFLXZ
   PWTHV(:,:,IKB) = PWTHV(:,:,IKB) + PEMOIST(:,:,IKB) * ZFLXZ(:,:,IKB)
+  IF (LOCEAN) THEN
+    PWTHV(:,:,IKE) = PWTHV(:,:,IKE) + PEMOIST(:,:,IKE)* ZFLXZ(:,:,IKE)
+  END IF   
 !
 !*       3.3  Complete vertical divergence of the < Rc w > flux
 ! Correction of qc and qi negative for AROME
-!  IF ( KRRL >= 1 ) THEN
-!    IF ( KRRI >= 1 ) THEN
-!      PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
-!                      DZF(MZM(PRHODJ*PAMOIST*2.*PSRCM, KKA, KKU, KKL)*ZFLXZ/PDZZ, KKA, KKU, KKL)       &
-!                      *(1.0-PFRAC_ICE(:,:,:))
-!      PRRS(:,:,:,4) = PRRS(:,:,:,4) -                                        &
-!                      DZF(MZM(PRHODJ*PAMOIST*2.*PSRCM, KKA, KKU, KKL)*ZFLXZ/PDZZ, KKA, KKU, KKL)       &
-!                      *PFRAC_ICE(:,:,:)
-!    ELSE
-!      PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
-!                      DZF(MZM(PRHODJ*PAMOIST*2.*PSRCM, KKA, KKU, KKL)*ZFLXZ/PDZZ, KKA, KKU, KKL) 
-!    END IF
-!  END IF
+IF(CPROGRAM/='AROME  ') THEN
+   IF ( KRRL >= 1 ) THEN
+     IF ( KRRI >= 1 ) THEN
+       PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
+                       PRHODJ*PAMOIST*2.*PSRCM*DZF(ZFLXZ/PDZZ,KKA,KKU,KKL )       &
+                       *(1.0-PFRAC_ICE(:,:,:))
+       PRRS(:,:,:,4) = PRRS(:,:,:,4) -                                        &
+                       PRHODJ*PAMOIST*2.*PSRCM*DZF(ZFLXZ/PDZZ,KKA,KKU,KKL )       &
+                       *PFRAC_ICE(:,:,:)
+     ELSE
+       PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
+                       PRHODJ*PAMOIST*2.*PSRCM*DZF(ZFLXZ/PDZZ,KKA,KKU,KKL )
+     END IF
+   END IF
+END IF
 !
 !*       3.4  Storage in LES configuration
 ! 
@@ -826,6 +1025,9 @@ IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
   END IF
 !
 END IF !end of <w Rc>
+IF (LOCEAN .AND. LDEEPOC) THEN
+  DEALLOCATE(ZXHAT_ll,ZYHAT_ll)
+END IF
 !
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_FLUX',1,ZHOOK_HANDLE)
