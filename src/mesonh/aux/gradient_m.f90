@@ -10,35 +10,41 @@
 INTERFACE
 !
 !
-FUNCTION GX_M_M(PA,PDXX,PDZZ,PDZX)      RESULT(PGX_M_M)
+FUNCTION GX_M_M(PA,PDXX,PDZZ,PDZX,KKA,KKU,KL)      RESULT(PGX_M_M)
 !
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the mass point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZX    ! metric coefficient dzx
+INTEGER, INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes (AROME)
+INTEGER, INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (AROME)
 !
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGX_M_M ! result mass point
 !
 END FUNCTION GX_M_M
 !
 !
-FUNCTION GY_M_M(PA,PDYY,PDZZ,PDZY)      RESULT(PGY_M_M)
+FUNCTION GY_M_M(PA,PDYY,PDZZ,PDZY,KKA,KKU,KL)      RESULT(PGY_M_M)
 !
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the mass point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDYY    ! metric coefficient dyy
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZY    ! metric coefficient dzy
 !
+INTEGER, INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes (AROME)
+INTEGER, INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (AROME)
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGY_M_M ! result mass point
 !
 END FUNCTION GY_M_M
 !
 !
-FUNCTION GZ_M_M(PA,PDZZ)      RESULT(PGZ_M_M)
+FUNCTION GZ_M_M(PA,PDZZ,KKA,KKU,KL)      RESULT(PGZ_M_M)
 !
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the mass point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 !
+INTEGER, INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes (AROME)
+INTEGER, INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (AROME)
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGZ_M_M ! result mass point
 !
 END FUNCTION GZ_M_M
@@ -76,7 +82,7 @@ REAL, DIMENSION(SIZE(PY,1),SIZE(PY,2),SIZE(PY,3)) :: PGY_M_V  ! result at flux
                                                               ! side
 END FUNCTION GY_M_V
 !
-      FUNCTION GZ_M_W(KKA,KKU,KL,PY,PDZZ) RESULT(PGZ_M_W)
+      FUNCTION GZ_M_W(KKA, KKU, KL,PY,PDZZ) RESULT(PGZ_M_W)
 !  
 IMPLICIT NONE
 !
@@ -99,7 +105,7 @@ END MODULE MODI_GRADIENT_M
 !
 !
 !     #######################################################
-      FUNCTION GX_M_M(PA,PDXX,PDZZ,PDZX)      RESULT(PGX_M_M)
+      FUNCTION GX_M_M(PA,PDXX,PDZZ,PDZX,KKA,KKU,KL)      RESULT(PGX_M_M)
 !     #######################################################
 !
 !!****  *GX_M_M* - Cartesian Gradient operator: 
@@ -170,6 +176,8 @@ REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZX    ! metric coefficient dzx
 !
+INTEGER, INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes (AROME)
+INTEGER, INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (AROME)
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGX_M_M ! result mass point
 !
 !
@@ -196,7 +204,7 @@ END FUNCTION GX_M_M
 !
 !
 !     #######################################################
-      FUNCTION GY_M_M(PA,PDYY,PDZZ,PDZY)      RESULT(PGY_M_M)
+      FUNCTION GY_M_M(PA,PDYY,PDZZ,PDZY,KKA,KKU,KL)      RESULT(PGY_M_M)
 !     #######################################################
 !
 !!****  *GY_M_M* - Cartesian Gradient operator: 
@@ -265,6 +273,8 @@ REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDYY    ! metric coefficient dyy
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZY    ! metric coefficient dzy
 !
+INTEGER, INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes (AROME)
+INTEGER, INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (AROME)
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGY_M_M ! result mass point
 !
 !

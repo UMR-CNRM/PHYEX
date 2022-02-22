@@ -852,8 +852,12 @@ ENDIF
     ! Extrapolate PSIGS at the ground and at the top
     PSIGS(:,:,KKA) = PSIGS(:,:,IKB)
     PSIGS(:,:,KKU) = PSIGS(:,:,IKE)
-    PSIGS(:,:,:) =   MAX (PSIGS(:,:,:) , 0.)
+#ifdef REPRO48
+    PSIGS(:,:,:) =  MAX (PSIGS(:,:,:) , 0.)
     PSIGS(:,:,:) =  SQRT(PSIGS(:,:,:))
+#else
+    PSIGS(:,:,:) =  SQRT( MAX (PSIGS(:,:,:) , 1.E-12) )
+#endif
   END IF
 
 !

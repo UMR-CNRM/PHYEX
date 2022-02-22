@@ -10,8 +10,9 @@
 INTERFACE
 !
 !     
-FUNCTION GX_U_M(PA,PDXX,PDZZ,PDZX)      RESULT(PGX_U_M)
-!
+FUNCTION GX_U_M(PA,PDXX,PDZZ,PDZX, KKA, KKU, KL)      RESULT(PGX_U_M)
+INTEGER,              INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,              INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the U point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
@@ -22,8 +23,10 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGX_U_M ! result mass point
 END FUNCTION GX_U_M
 !
 !     
-FUNCTION GY_U_UV(PA,PDYY,PDZZ,PDZY)      RESULT(PGY_U_UV)
+FUNCTION GY_U_UV(PA,PDYY,PDZZ,PDZY, KKA, KKU, KL)      RESULT(PGY_U_UV)
 !
+INTEGER,              INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,              INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the U point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDYY    ! metric coefficient dyy
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
@@ -34,8 +37,10 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGY_U_UV ! result UV point
 END FUNCTION GY_U_UV
 !
 !     
-FUNCTION GZ_U_UW(PA,PDZZ)      RESULT(PGZ_U_UW)
+FUNCTION GZ_U_UW(PA,PDZZ, KKA, KKU, KL)      RESULT(PGZ_U_UW)
 !
+INTEGER,              INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,              INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the U point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 !
@@ -51,7 +56,7 @@ END MODULE MODI_GRADIENT_U
 !
 !
 !     #######################################################
-      FUNCTION GX_U_M(PA,PDXX,PDZZ,PDZX)      RESULT(PGX_U_M)
+      FUNCTION GX_U_M(PA,PDXX,PDZZ,PDZX, KKA, KKU, KL)      RESULT(PGX_U_M)
 !     #######################################################
 !
 !!****  *GX_U_M* - Cartesian Gradient operator: 
@@ -116,6 +121,8 @@ IMPLICIT NONE
 !
 !*       0.1   declarations of arguments and result
 !
+INTEGER,                 INTENT(IN),OPTIONAL   :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,                 INTENT(IN),OPTIONAL   :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the U point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
@@ -147,7 +154,7 @@ END FUNCTION GX_U_M
 !
 ! 
 !     #########################################################
-      FUNCTION GY_U_UV(PA,PDYY,PDZZ,PDZY)      RESULT(PGY_U_UV)
+      FUNCTION GY_U_UV(PA,PDYY,PDZZ,PDZY, KKA, KKU, KL)      RESULT(PGY_U_UV)
 !     #########################################################
 !
 !!****  *GY_U_UV* - Cartesian Gradient operator: 
@@ -213,6 +220,8 @@ IMPLICIT NONE
 !
 !*       0.1   declarations of arguments and result
 !
+INTEGER,                 INTENT(IN),OPTIONAL   :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,                 INTENT(IN),OPTIONAL   :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the U point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDYY    ! metric coefficient dyy
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
@@ -243,7 +252,7 @@ END FUNCTION GY_U_UV
 !
 !
 !     #######################################################
-      FUNCTION GZ_U_UW(PA,PDZZ)      RESULT(PGZ_U_UW)
+      FUNCTION GZ_U_UW(PA,PDZZ, KKA, KKU, KL)      RESULT(PGZ_U_UW)
 !     #######################################################
 !
 !!****  *GZ_U_UW - Cartesian Gradient operator: 
@@ -301,6 +310,8 @@ IMPLICIT NONE
 !
 !*       0.1   declarations of arguments and result
 !
+INTEGER,              INTENT(IN),OPTIONAL      :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,              INTENT(IN),OPTIONAL      :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the U point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 !

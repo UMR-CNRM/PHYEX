@@ -453,6 +453,8 @@ REAL :: ZSWA,TINTSW     ! index for SW interpolation and int time betwenn forcin
 REAL, DIMENSION(:), ALLOCATABLE :: ZIZOCE(:) ! Solar flux penetrating in ocean
 REAL, DIMENSION(:), ALLOCATABLE :: ZPROSOL1(:),ZPROSOL2(:) ! Funtions for penetrating solar flux
 !
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLENGTHM, ZLENGTHH, ZMFMOIST !LHARAT turb option from AROME
+!
 !-----------------------------------------------------------------------------
 
 NULLIFY(TZFIELDS_ll)
@@ -1488,11 +1490,14 @@ END IF
               XDIRCOSXW, XDIRCOSYW, XDIRCOSZW, XCOSSLOPE, XSINSLOPE,                 &
               XRHODJ, XTHVREF,                                                       &
               ZSFTH, ZSFRV, ZSFSV, ZSFU, ZSFV,                                       &
-              XPABST, XUT, XVT, XWT, XTKET, XSVT, XSRCT, XBL_DEPTH, XSBL_DEPTH,      &
+              XPABST, XUT, XVT, XWT, XTKET, XSVT, XSRCT,                             &
+              ZLENGTHM, ZLENGTHH, ZMFMOIST,                                          &
+              XBL_DEPTH, XSBL_DEPTH,                                                 &
               XCEI, XCEI_MIN, XCEI_MAX, XCOEF_AMPL_SAT,                              &
               XTHT, XRT,                                                             &
               XRUS, XRVS, XRWS, XRTHS, XRRS, XRSVS, XRTKES, XRTKEMS, XSIGS, XWTHVMF, &
-              XTHW_FLUX, XRCW_FLUX, XSVW_FLUX,XDYP, XTHP, XTR, XDISS, XLEM           )
+              XTHW_FLUX, XRCW_FLUX, XSVW_FLUX,XDYP, XTHP, XTR, XDISS, XLEM,          &
+              TBUDGETS, KBUDGETS=SIZE(TBUDGETS)      )
 !
 IF (LRMC01) THEN
   CALL ADD2DFIELD_ll( TZFIELDS_ll, XSBL_DEPTH, 'PHYS_PARAM_n::XSBL_DEPTH' )

@@ -477,6 +477,8 @@ REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2)):: ZINPRI
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZICEFR
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZPRCFR
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZTM
+REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2)) :: ZSIGQSAT2D
+ZSIGQSAT2D(:,:) = PSIGQSAT
 !
 !------------------------------------------------------------------------------
 !
@@ -741,8 +743,8 @@ SELECT CASE ( HCLOUD )
     ZZZ = MZF( PZZ )
     IF(LRED .AND. LADJ_BEFORE) THEN
       CALL ICE_ADJUST (1, IKU, 1, KRR, CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,   &
-                      'ADJU', OSUBG_COND, OSIGMAS, CSUBG_MF_PDF,               &
-                      PTSTEP, PSIGQSAT,                                        &
+                      'ADJU', OSUBG_COND, OSIGMAS, .FALSE., CSUBG_MF_PDF,      &
+                      PTSTEP, ZSIGQSAT2D,                                      &
                       PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABST, ZZZ,  &
                       ZEXN, PCF_MF, PRC_MF, PRI_MF,                            &
                       PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,        &
@@ -752,6 +754,7 @@ SELECT CASE ( HCLOUD )
                       PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),              &
                       PRS=PRS(:,:,:,5)*PTSTEP,                                 &
                       PRG=PRS(:,:,:,6)*PTSTEP,                                 &
+                      TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),               &
                       PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                    &
                       PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                     )
     ENDIF
@@ -781,7 +784,7 @@ SELECT CASE ( HCLOUD )
                     PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),            &
                     PINPRC,PINPRR, PEVAP3D,                    &
                     PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,              &
-                    TBUDGETS,SIZE(TBUDGETS),                    &
+                    TBUDGETS,SIZE(TBUDGETS),           &
                     PSEA,PTOWN, PFPR=ZFPR                                )
     ELSE 
           CALL RAIN_ICE_RED (COUNT(LLMICRO), SIZE(PTHT, 1), SIZE(PTHT, 2), &
@@ -798,7 +801,7 @@ SELECT CASE ( HCLOUD )
                     PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),            &
                     PINPRC,PINPRR,  PEVAP3D,                    &
                     PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,              &
-                    TBUDGETS,SIZE(TBUDGETS),                    &
+                    TBUDGETS,SIZE(TBUDGETS),           &
                     PSEA,PTOWN, PFPR=ZFPR                                )
     END IF
 !
@@ -807,8 +810,8 @@ SELECT CASE ( HCLOUD )
 !
     IF (.NOT. LRED .OR. (LRED .AND. LADJ_AFTER) ) THEN
       CALL ICE_ADJUST (1, IKU, 1, KRR, CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,   &
-                       'DEPI', OSUBG_COND, OSIGMAS, CSUBG_MF_PDF,              &
-                       PTSTEP, PSIGQSAT,                                       &
+                       'DEPI', OSUBG_COND, OSIGMAS, .FALSE.,CSUBG_MF_PDF,      &
+                       PTSTEP, ZSIGQSAT2D,                                     &
                        PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABST, ZZZ, &
                        ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
                        PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
@@ -818,6 +821,7 @@ SELECT CASE ( HCLOUD )
                        PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),             &
                        PRS=PRS(:,:,:,5)*PTSTEP,                                &
                        PRG=PRS(:,:,:,6)*PTSTEP,                                &
+                       TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),              &
                        PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                   &
                        PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                    )
     END IF
@@ -841,8 +845,8 @@ SELECT CASE ( HCLOUD )
     ZZZ = MZF( PZZ )
     IF(LRED .AND. LADJ_BEFORE) THEN
       CALL ICE_ADJUST (1, IKU, 1, KRR, CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,   &
-                       'ADJU', OSUBG_COND, OSIGMAS, CSUBG_MF_PDF,              &
-                       PTSTEP, PSIGQSAT,                                       &
+                       'ADJU', OSUBG_COND, OSIGMAS, .FALSE., CSUBG_MF_PDF,     &
+                       PTSTEP, ZSIGQSAT2D,                                     &
                        PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABST, ZZZ, &
                        ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
                        PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
@@ -852,6 +856,7 @@ SELECT CASE ( HCLOUD )
                        PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),             &
                        PRS=PRS(:,:,:,5)*PTSTEP,                                &
                        PRG=PRS(:,:,:,6)*PTSTEP,                                &
+                       TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),              &
                        PRH=PRS(:,:,:,7)*PTSTEP,                                &
                        PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                   &
                        PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                    )
@@ -912,8 +917,8 @@ SELECT CASE ( HCLOUD )
 !
     IF (.NOT. LRED .OR. (LRED .AND. LADJ_AFTER) ) THEN
      CALL ICE_ADJUST (1, IKU, 1, KRR, CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,  &
-                     'DEPI', OSUBG_COND, OSIGMAS, CSUBG_MF_PDF,              &
-                     PTSTEP, PSIGQSAT,                                       &
+                     'DEPI', OSUBG_COND, OSIGMAS, .FALSE., CSUBG_MF_PDF,     &
+                     PTSTEP, ZSIGQSAT2D,                                     &
                      PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABST, ZZZ, &
                      ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
                      PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
@@ -923,6 +928,7 @@ SELECT CASE ( HCLOUD )
                      PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),             &
                      PRS=PRS(:,:,:,5)*PTSTEP,                                &
                      PRG=PRS(:,:,:,6)*PTSTEP,                                &
+                     TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),              &
                      PRH=PRS(:,:,:,7)*PTSTEP,                                &
                      PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                   &
                      PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                    )

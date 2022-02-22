@@ -138,7 +138,7 @@ DO JSV=1,NSV
   !
   IF (LLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
-    ZFLXZ(:,:,:) =  PPSI_SV(:,:,:,JSV)*GZ_M_W(PSVM(:,:,:,JSV),PDZZ, KKA, KKU, KKL)**2
+    ZFLXZ(:,:,:) =  PPSI_SV(:,:,:,JSV)*GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)**2
     ZFLXZ(:,:,:) = XCHF / ZCSVD * PLM * PLEPS * MZF(ZFLXZ(:,:,:), KKA, KKU, KKL)
     CALL LES_MEAN_SUBGRID(-2.*ZCSVD*SQRT(PTKEM)*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_Sv2(:,:,:,JSV) )
     CALL LES_MEAN_SUBGRID(MZF(PWM, KKA, KKU, KKL)*ZFLXZ, X_LES_RES_W_SBG_Sv2(:,:,:,JSV) )
@@ -150,8 +150,8 @@ DO JSV=1,NSV
     ! approximation: diagnosed explicitely (without implicit term)
     ZA(:,:,:)   =  ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM)
     ZFLXZ(:,:,:)= ( XCSHF * PPHI3 + XCHF * PPSI_SV(:,:,:,JSV) )              &
-                  *  GZ_M_W(PTHLM,PDZZ, KKA, KKU, KKL)                          &
-                  *  GZ_M_W(PSVM(:,:,:,JSV),PDZZ, KKA, KKU, KKL)
+                  *  GZ_M_W(KKA, KKU, KKL,PTHLM,PDZZ)                          &
+                  *  GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)
     ZFLXZ(:,:,:)= PLM * PLEPS / (2.*ZCTSVD) * MZF(ZFLXZ, KKA, KKU, KKL)
     CALL LES_MEAN_SUBGRID( ZA*ZFLXZ, X_LES_SUBGRID_SvThv(:,:,:,JSV) ) 
     CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
@@ -159,8 +159,8 @@ DO JSV=1,NSV
     IF (KRR>=1) THEN
       ZA(:,:,:)   =  EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM)
       ZFLXZ(:,:,:)= ( XCHF * PPSI3 + XCHF * PPSI_SV(:,:,:,JSV) )             &
-                    *  GZ_M_W(PRM(:,:,:,1),PDZZ, KKA, KKU, KKL)                 &
-                    *  GZ_M_W(PSVM(:,:,:,JSV),PDZZ, KKA, KKU, KKL)
+                    *  GZ_M_W(KKA, KKU, KKL,PRM(:,:,:,1),PDZZ)                 &
+                    *  GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)
       ZFLXZ(:,:,:)= PLM * PLEPS / (2.*ZCQSVD) * MZF(ZFLXZ, KKA, KKU, KKL)
       CALL LES_MEAN_SUBGRID( ZA*ZFLXZ, X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
       CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)

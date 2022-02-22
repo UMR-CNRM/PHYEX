@@ -466,7 +466,7 @@ END IF
 !
 ! d(w'2r')/dz
 IF (GFWR) THEN
-  ZF       = ZF       + M3_WTH_W2R(KKA,KKU,KKL,PREDTH1,PREDR1,PD,ZKEFF,&
+  ZF       = ZF       + M3_WTH_W2R(KKA,KKU,KKL,PD,ZKEFF,&
     & PTKEM,PBLL_O_E,PEMOIST,PDTH_DZ) * PFWR
   ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_W2R_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,&
     & PD,ZKEFF,PTKEM,PBLL_O_E,PEMOIST) * PFWR
@@ -474,7 +474,7 @@ END IF
 !
 ! d(w'r'2)/dz
 IF (GFR2) THEN
-  ZF       = ZF       + M3_WTH_WR2(KKA,KKU,KKL,PREDTH1,PREDR1,PD,ZKEFF,PTKEM,&
+  ZF       = ZF       + M3_WTH_WR2(KKA,KKU,KKL,PD,ZKEFF,PTKEM,&
     & PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PEMOIST,PDTH_DZ) * MZM(PFR2, KKA, KKU, KKL)
   ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_WR2_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,&
     & ZKEFF,PTKEM,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PEMOIST) * MZM(PFR2, KKA, KKU, KKL)
@@ -505,6 +505,9 @@ ELSE
                      * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
 END IF
 !
+#ifdef REPRO55
+ZF(:,:,IKE)=0.
+#endif
 ! Compute the splitted conservative potential temperature at t+deltat
 CALL TRIDIAG_THERMO(KKA,KKU,KKL,PTHLM,ZF,ZDFDDTDZ,PTSTEP,PIMPL,PDZZ,&
                     PRHODJ,PTHLP)
@@ -559,20 +562,22 @@ PWTHV = MZM(PETHETA, KKA, KKU, KKL) * ZFLXZ
 PWTHV(:,:,IKB) = PETHETA(:,:,IKB) * ZFLXZ(:,:,IKB)
 !
 !*       2.3  Partial vertical divergence of the < Rc w > flux
-! Correction for qc and qi negative in AROME 
-!IF ( KRRL >= 1 ) THEN
-!  IF ( KRRI >= 1 ) THEN
-!    PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
-!                    DZF(MZM(PRHODJ*PATHETA*2.*PSRCM, KKA, KKU, KKL)*ZFLXZ/PDZZ, KKA, KKU, KKL)       &
-!                    *(1.0-PFRAC_ICE(:,:,:))
-!    PRRS(:,:,:,4) = PRRS(:,:,:,4) -                                        &
-!                    DZF(MZM(PRHODJ*PATHETA*2.*PSRCM, KKA, KKU, KKL)*ZFLXZ/PDZZ, KKA, KKU, KKL)       &
-!                    *PFRAC_ICE(:,:,:)
-!  ELSE
-!    PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
-!                    DZF(MZM(PRHODJ*PATHETA*2.*PSRCM, KKA, KKU, KKL)*ZFLXZ/PDZZ, KKA, KKU, KKL) 
-!  END IF
-!END IF
+!
+#ifdef REPRO55
+IF ( KRRL >= 1 ) THEN
+  IF ( KRRI >= 1 ) THEN
+    PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
+                    PRHODJ*PATHETA*2.*PSRCM*DZF(ZFLXZ/PDZZ, KKA, KKU, KKL)       &
+                    *(1.0-PFRAC_ICE(:,:,:))
+    PRRS(:,:,:,4) = PRRS(:,:,:,4) -                                        &
+                    PRHODJ*PATHETA*2.*PSRCM*DZF(ZFLXZ/PDZZ, KKA, KKU, KKL)       &
+                    *PFRAC_ICE(:,:,:)
+  ELSE
+    PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
+                    PRHODJ*PATHETA*2.*PSRCM*DZF(ZFLXZ/PDZZ, KKA, KKU, KKL)
+  END IF
+END IF
+#endif
 !
 !*       2.4  Storage in LES configuration
 ! 
@@ -648,7 +653,7 @@ IF (KRR /= 0) THEN
   !
   ! d(w'2th')/dz
   IF (GFWTH) THEN
-    ZF       = ZF       + M3_WR_W2TH(KKA,KKU,KKL,PREDR1,PREDTH1,PD,ZKEFF,&
+    ZF       = ZF       + M3_WR_W2TH(KKA,KKU,KKL,PD,ZKEFF,&
      & PTKEM,PBLL_O_E,PETHETA,PDR_DZ) * PFWTH
     ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_W2TH_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,& 
      & PD,ZKEFF,PTKEM,PBLL_O_E,PETHETA) * PFWTH
@@ -656,7 +661,7 @@ IF (KRR /= 0) THEN
   !
   ! d(w'th'2)/dz
   IF (GFTH2) THEN
-    ZF       = ZF       + M3_WR_WTH2(KKA,KKU,KKL,PREDR1,PREDTH1,PD,ZKEFF,PTKEM,&
+    ZF       = ZF       + M3_WR_WTH2(KKA,KKU,KKL,PD,ZKEFF,PTKEM,&
     & PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA,PDR_DZ) * MZM(PFTH2, KKA, KKU, KKL)
     ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_WTH2_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,&
      &ZKEFF,PTKEM,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA) * MZM(PFTH2, KKA, KKU, KKL)
@@ -687,6 +692,9 @@ IF (KRR /= 0) THEN
                        * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
   END IF
   !
+#ifdef REPRO55
+  ZF(:,:,IKE)=0.
+#endif
   ! Compute the splitted conservative potential temperature at t+deltat
   CALL TRIDIAG_THERMO(KKA,KKU,KKL,PRM(:,:,:,1),ZF,ZDFDDRDZ,PTSTEP,PIMPL,&
                       PDZZ,PRHODJ,PRP)
@@ -739,20 +747,22 @@ IF (KRR /= 0) THEN
   PWTHV(:,:,IKB) = PWTHV(:,:,IKB) + PEMOIST(:,:,IKB) * ZFLXZ(:,:,IKB)
 !
 !*       3.3  Complete vertical divergence of the < Rc w > flux
-! Correction of qc and qi negative for AROME
-!  IF ( KRRL >= 1 ) THEN
-!    IF ( KRRI >= 1 ) THEN
-!      PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
-!                      DZF(MZM(PRHODJ*PAMOIST*2.*PSRCM, KKA, KKU, KKL)*ZFLXZ/PDZZ, KKA, KKU, KKL)       &
-!                      *(1.0-PFRAC_ICE(:,:,:))
-!      PRRS(:,:,:,4) = PRRS(:,:,:,4) -                                        &
-!                      DZF(MZM(PRHODJ*PAMOIST*2.*PSRCM, KKA, KKU, KKL)*ZFLXZ/PDZZ, KKA, KKU, KKL)       &
-!                      *PFRAC_ICE(:,:,:)
-!    ELSE
-!      PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
-!                      DZF(MZM(PRHODJ*PAMOIST*2.*PSRCM, KKA, KKU, KKL)*ZFLXZ/PDZZ, KKA, KKU, KKL) 
-!    END IF
-!  END IF
+!
+#ifdef REPRO55
+  IF ( KRRL >= 1 ) THEN
+    IF ( KRRI >= 1 ) THEN
+      PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
+                      PRHODJ*PAMOIST*2.*PSRCM*DZF(ZFLXZ/PDZZ, KKA, KKU, KKL )       &
+                      *(1.0-PFRAC_ICE(:,:,:))
+      PRRS(:,:,:,4) = PRRS(:,:,:,4) -                                        &
+                      PRHODJ*PAMOIST*2.*PSRCM*DZF(ZFLXZ/PDZZ, KKA, KKU, KKL )       &
+                      *PFRAC_ICE(:,:,:)
+    ELSE
+      PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
+                      PRHODJ*PAMOIST*2.*PSRCM*DZF(ZFLXZ/PDZZ, KKA, KKU, KKL )
+    END IF
+  END IF
+#endif
 !
 !*       3.4  Storage in LES configuration
 ! 

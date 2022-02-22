@@ -9,23 +9,26 @@
 !
 INTERFACE
 !
-      SUBROUTINE TURB(KKA, KKU, KKL, KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,   &
-                KSPLIT,KMODEL_CL,                                     &
-                OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,               &
-                HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,PIMPL,      &
-                PTSTEP,TPFILE,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
-                PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
-                PRHODJ,PTHVREF,                                       &
-                PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
-                PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
-                PBL_DEPTH, PSBL_DEPTH,                                &
-                PCEI,PCEI_MIN,PCEI_MAX,PCOEF_AMPL_SAT,                &
-                PTHLT,PRT,                                            &
-                PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,PRTKES,PRTKEMS,PSIGS,&
-                PFLXZTHVMF,PWTH,PWRC,PWSV,PDYP,PTHP,PTR,PDISS,PLEM    )
+      SUBROUTINE TURB(KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,      &
+              & KSPLIT,KMODEL_CL,                                     &
+              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,               &
+              & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,PIMPL,      &
+              & PTSTEP,TPFILE,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
+              & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
+              & PRHODJ,PTHVREF,                                       &
+              & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
+              & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
+              & PLENGTHM,PLENGTHH,MFMOIST,                            &
+              & PBL_DEPTH, PSBL_DEPTH,                                &
+              & PCEI,PCEI_MIN,PCEI_MAX,PCOEF_AMPL_SAT,                &
+              & PTHLT,PRT,                                            &
+              & PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,PRTKES,PRTKEMS,PSIGS,&
+              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDYP,PTHP,PTDIFF,PTDISS,PLEM,&
+              & TBUDGETS, KBUDGETS                                   )
 
 !
 USE MODD_IO, ONLY: TFILEDATA
+USE MODD_BUDGET, ONLY: TBUDGETDATA
 !
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
@@ -66,6 +69,7 @@ REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle
 REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle
                                  ! between i and the slope vector
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PRHODJ    ! dry density * Grid size
+REAL, DIMENSION(:,:,:), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
 !
@@ -119,10 +123,13 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWRC       ! cloud water flux
 REAL, DIMENSION(:,:,:,:),INTENT(OUT) :: PWSV       ! scalar flux
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PDYP  ! Dynamical production of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTHP  ! Thermal production of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTR   ! Transport production of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PDISS ! Dissipation of TKE
+REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDIFF   ! Transport production of TKE
+REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDISS ! Dissipation of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PLEM  ! Mixing length
-
+TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+INTEGER, INTENT(IN) :: KBUDGETS
+! length scale from vdfexcu
+REAL, DIMENSION(:,:,:), INTENT(IN)    :: PLENGTHM, PLENGTHH
 !
 !-------------------------------------------------------------------------------
 !
@@ -142,11 +149,13 @@ END MODULE MODI_TURB
                 PRHODJ,PTHVREF,                                       &
                 PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
                 PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
+                PLENGTHM,PLENGTHH,MFMOIST,                            &
                 PBL_DEPTH, PSBL_DEPTH,                                &
                 PCEI,PCEI_MIN,PCEI_MAX,PCOEF_AMPL_SAT,                &
                 PTHLT,PRT,                                            &
                 PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,PRTKES,PRTKEMS,PSIGS,&
-                PFLXZTHVMF,PWTH,PWRC,PWSV,PDYP,PTHP,PTR,PDISS,PLEM    )
+                PFLXZTHVMF,PWTH,PWRC,PWSV,PDYP,PTHP,PTDIFF,PTDISS,PLEM,&
+                TBUDGETS, KBUDGETS                                    )
 !     #################################################################
 !
 !
@@ -355,7 +364,7 @@ use modd_budget,      only: lbudget_u,  lbudget_v,  lbudget_w,  lbudget_th, lbud
                             lbudget_rr, lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, lbudget_sv,  &
                             NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC,  &
                             NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1, &
-                            tbudgets
+                            TBUDGETDATA
 USE MODD_CONF
 USE MODD_CST
 USE MODD_CTURB
@@ -372,10 +381,10 @@ USE MODI_GRADIENT_M
 USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_BL89
-USE MODI_TURB_VER
+USE MODE_TURB_VER, ONLY : TURB_VER
 USE MODI_ROTATE_WIND
 USE MODI_TURB_HOR_SPLT 
-USE MODI_TKE_EPS_SOURCES
+USE MODE_TKE_EPS_SOURCES, ONLY: TKE_EPS_SOURCES
 USE MODI_SHUMAN
 USE MODI_GRADIENT_M
 USE MODI_LES_MEAN_SUBGRID
@@ -443,6 +452,7 @@ REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle
 REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle
                                  ! between i and the slope vector
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PRHODJ    ! dry density * Grid size
+REAL, DIMENSION(:,:,:), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
 !
@@ -496,10 +506,15 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWRC       ! cloud water flux
 REAL, DIMENSION(:,:,:,:),INTENT(OUT) :: PWSV       ! scalar flux
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PDYP  ! Dynamical production of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTHP  ! Thermal production of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTR   ! Transport production of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PDISS ! Dissipation of TKE
+REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDIFF   ! Transport production of TKE
+REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDISS ! Dissipation of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PLEM  ! Mixing length
 !
+TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+INTEGER, INTENT(IN) :: KBUDGETS
+!
+! length scale from vdfexcu
+REAL, DIMENSION(:,:,:), INTENT(IN)    :: PLENGTHM, PLENGTHH
 !
 !-------------------------------------------------------------------------------
 !
@@ -987,7 +1002,6 @@ if ( lbudget_sv ) then
     call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + jsv), 'VTURB', prsvs(:, :, :, jsv) )
   end do
 end if
-
 CALL TURB_VER(KKA,KKU,KKL,KRR, KRRL, KRRI,               &
           OTURB_FLX,                                     &
           HTURBDIM,HTOM,PIMPL,ZEXPL,                     &
@@ -998,7 +1012,7 @@ CALL TURB_VER(KKA,KKU,KKL,KRR, KRRL, KRRI,               &
           PSFTH,PSFRV,PSFSV,PSFTH,PSFRV,PSFSV,           &
           ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU33M,               &
           PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,PSVT,    &
-          PTKET,PLEM,ZLEPS,                              &
+          PTKET,PLEM,PLENGTHM,PLENGTHH,ZLEPS,MFMOIST,    &
           ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,     &
           ZFWTH,ZFWR,ZFTH2,ZFR2,ZFTHR,PBL_DEPTH,         &
           PSBL_DEPTH,ZLMO,                               &
@@ -1141,7 +1155,8 @@ CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKET,PLEM,ZLEPS,PDYP,ZTRH,     &
                      PTSTEP,PIMPL,ZEXPL,                             &
                      HTURBLEN,HTURBDIM,                              &
                      TPFILE,OTURB_DIAG,                              &
-                     PTHP,PRTKES,PRTKEMS,PRTHLS,ZCOEF_DISS,PTR,PDISS )
+                     PTHP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,&
+                     TBUDGETS,KBUDGETS,PRTKESM=PRTKEMS)
 
 !----------------------------------------------------------------------------
 !

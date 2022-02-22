@@ -87,5 +87,6 @@ REAL,SAVE :: XCTP         ! Constant for temperature and vapor pressure-correlat
 REAL,SAVE :: XPHI_LIM     ! Threshold value for Phi3 and Psi3
 REAL,SAVE :: XSBL_O_BL    ! SBL height / BL height ratio
 REAL,SAVE :: XFTOP_O_FSURF! Fraction of surface (heat or momentum) flux used to define top of BL
+LOGICAL,SAVE :: LHARAT    ! SWITCH HARATU
 !
 END MODULE MODD_CTURB
