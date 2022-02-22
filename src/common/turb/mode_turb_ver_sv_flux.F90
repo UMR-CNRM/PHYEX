@@ -1,9 +1,15 @@
-!     ######spl
-      SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
-                      OCLOSE_OUT,OTURB_FLX,HTURBDIM,                &
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+MODULE MODE_TURB_VER_SV_FLUX
+IMPLICIT NONE
+CONTAINS
+SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
+                      OTURB_FLX,HTURBDIM,                           &
                       PIMPL,PEXPL,                                  &
                       PTSTEP,                                       &
-                      HFMFILE,HLUOUT,                               &
+                      TPFILE,                                       &
                       PDZZ,PDIRCOSZW,                               &
                       PRHODJ,PWM,                                   &
                       PSFSVM,PSFSVP,                                &
@@ -11,10 +17,6 @@
                       PTKEM,PLM,MFMOIST,PPSI_SV,                    &
                       PRSVS,PWSV                                    )
 !
-
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
-      USE MODD_CTURB, ONLY : LHARAT
 !
 !
 !!****  *TURB_VER_SV_FLUX* -compute the source terms due to the vertical turbulent
@@ -111,10 +113,10 @@
 !!      DXF,DYF,DZF,DZM
 !!                             :  Shuman functions (difference operators)     
 !!                               
-!!      SUBROUTINE TRIDIAG     : to compute the splitted implicit evolution
+!!      SUBROUTINE TRIDIAG     : to compute the split implicit evolution
 !!                               of a variable located at a mass point
 !!
-!!      SUBROUTINE TRIDIAG_WIND: to compute the splitted implicit evolution
+!!      SUBROUTINE TRIDIAG_WIND: to compute the split implicit evolution
 !!                               of a variable located at a wind point
 !!
 !!      FUNCTIONs ETHETA and EMOIST  :  
@@ -195,18 +197,29 @@
 !!                                              change of YCOMMENT
 !!                     Feb 2012(Y. Seity) add possibility to run with reversed 
 !!                                              vertical levels
-!!      Modifications: July 2015 (Wim de Rooy) LHARATU switch
+!!      Modifications: July 2015 (Wim de Rooy) LHARAT switch
+!!                     Feb 2017(M. Leriche) add initialisation of ZSOURCE
+!!                                   to avoid unknwon values outside physical domain
+!!                                   and avoid negative values in sv tendencies
+!!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !!--------------------------------------------------------------------------
 !       
 !*      0. DECLARATIONS
 !          ------------
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
 USE MODD_CST
 USE MODD_CTURB
+USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
+USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_LES
 USE MODD_CONF
-USE MODD_NSV, ONLY : NSV_LGBEG,NSV_LGEND
+USE MODD_NSV,            ONLY: XSVMIN, NSV_LGBEG, NSV_LGEND
+USE MODD_BLOWSNOW
+USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 !
 USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
@@ -217,8 +230,9 @@ USE MODI_TRIDIAG
 USE MODI_TRIDIAG_WIND 
 USE MODI_EMOIST
 USE MODI_ETHETA
-USE MODE_FMWRIT
 USE MODI_LES_MEAN_SUBGRID
+!
+USE MODI_SECOND_MNH
 !
 IMPLICIT NONE
 !
@@ -228,18 +242,13 @@ IMPLICIT NONE
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
-LOGICAL,                INTENT(IN)   ::  OCLOSE_OUT   ! switch for syncronous
-                                                      ! file opening       
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
-CHARACTER*4,            INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
+CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
 REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
-CHARACTER(LEN=*),       INTENT(IN)   ::  HFMFILE      ! Name of the output
-                                                      ! FM-file 
-CHARACTER(LEN=*),       INTENT(IN)   ::  HLUOUT       ! Output-listing name for
-                                                      ! model n
+TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDZZ
                                                       ! Metric coefficients
@@ -297,6 +306,9 @@ CHARACTER (LEN=16)  :: YRECFM       ! Name of the desired field in LFIFM file
 REAL :: ZTIME1, ZTIME2
 
 REAL :: ZCSVP = 4.0  ! constant for scalar flux presso-correlation (RS81)
+REAL :: ZCSV          !constant for the scalar flux
+!
+TYPE(TFIELDDATA)  :: TZFIELD
 !----------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARIES
@@ -359,14 +371,14 @@ ENDIF
   ZSOURCE(:,:,IKTB+1:IKTE-1) = 0.
   ZSOURCE(:,:,IKE) = 0.
 !
-! Obtention of the splitted JSV scalar variable at t+ deltat  
+! Obtention of the split JSV scalar variable at t+ deltat  
   CALL TRIDIAG(KKA,KKU,KKL,PSVM(:,:,:,JSV),ZA,PTSTEP,PEXPL,PIMPL,PRHODJ,ZSOURCE,ZRES)
 !
 !  Compute the equivalent tendency for the JSV scalar variable
   PRSVS(:,:,:,JSV)= PRSVS(:,:,:,JSV)+    &
                     PRHODJ(:,:,:)*(ZRES(:,:,:)-PSVM(:,:,:,JSV))/PTSTEP
 !
-  IF ( (OTURB_FLX .AND. OCLOSE_OUT) .OR. LLES_CALL ) THEN
+  IF ( (OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
     ZFLXZ(:,:,:) = -XCHF * PPSI_SV(:,:,:,JSV) * MZM(PLM*SQRT(PTKEM), KKA, KKU, KKL) / PDZZ * &
@@ -393,17 +405,25 @@ ENDIF
     PWSV(:,:,IKE,JSV)=PWSV(:,:,IKE-KKL,JSV)
  END IF
   !
-  IF (OTURB_FLX .AND. OCLOSE_OUT) THEN
+  IF (OTURB_FLX .AND. TPFILE%LOPENED) THEN
     ! stores the JSVth vertical flux
-    WRITE(YRECFM,'("WSV_FLX_",I3.3)') JSV 
-    YCOMMENT='X_Y_Z_'//YRECFM//' (SVUNIT*M/S)'
-    IGRID   = 4  
-    ILENCH=LEN(YCOMMENT)
-    CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZFLXZ,IGRID,ILENCH,YCOMMENT,IRESP)
+    WRITE(TZFIELD%CMNHNAME,'("WSV_FLX_",I3.3)') JSV
+    TZFIELD%CSTDNAME   = ''
+    TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)
+    !PW: TODO: use the correct units of the JSV variable (and multiply it by m s-1)
+    TZFIELD%CUNITS     = 'SVUNIT m s-1'
+    TZFIELD%CDIR       = 'XY'
+    TZFIELD%CCOMMENT   = 'X_Y_Z_'//TRIM(TZFIELD%CMNHNAME)
+    TZFIELD%NGRID      = 4
+    TZFIELD%NTYPE      = TYPEREAL
+    TZFIELD%NDIMS      = 3
+    TZFIELD%LTIMEDEP   = .TRUE.
+    !
+    CALL IO_Field_write(TPFILE,TZFIELD,ZFLXZ)
   END IF
   !
   ! Storage in the LES configuration
-  
+  !
   IF (LLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
     CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WSv(:,:,:,JSV) )
@@ -423,3 +443,4 @@ END DO   ! end of scalar loop
 !
 IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_FLUX',1,ZHOOK_HANDLE)
 END SUBROUTINE TURB_VER_SV_FLUX
+END MODULE MODE_TURB_VER_SV_FLUX

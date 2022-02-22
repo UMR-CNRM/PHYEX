@@ -101,3 +101,11 @@ phyex/micro/modi_icecloud.F90
 phyex/micro/tiwmx_tab.F90
 phyex/micro/modi_tiwmx.F90
 phyex/micro/modd_spp_type.F90
+phyex/turb/tke_eps_sources.F90
+phyex/turb/turb_ver.F90
+phyex/turb/prandtl.F90
+phyex/turb/turb_ver_thermo_flux.F90
+phyex/turb/turb_ver_thermo_corr.F90
+phyex/turb/turb_ver_dyn_flux.F90
+phyex/turb/turb_ver_sv_flux.F90
+phyex/turb/turb_ver_sv_corr.F90

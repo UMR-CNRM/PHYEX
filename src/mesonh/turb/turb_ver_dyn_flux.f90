@@ -19,7 +19,7 @@ INTERFACE
                       PRHODJ,                                       &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU33M,              &
                       PTHLM,PRM,PSVM,PUM,PVM,PWM,PUSLOPEM,PVSLOPEM, &
-                      PTKEM,PLM,PWU,PWV,                            &
+                      PTKEM,PLM,MFMOIST,PWU,PWV,                    &
                       PRUS,PRVS,PRWS,                               &
                       PDP,PTP                                       )
 !
@@ -277,6 +277,7 @@ END MODULE MODI_TURB_VER_DYN_FLUX
 !!                     October 2009 (G. Tanguy) add ILENCH=LEN(YCOMMENT) after
 !!                                              change of YCOMMENT
 !!      2012-02 Y. Seity,  add possibility to run with reversed vertical levels
+!!      Modifications  July 2015 (Wim de Rooy) LHARATU switch
 !!      J.Escobar : 15/09/2015 : WENO5 & JPHEXT <> 1 
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !!      Q. Rodier      17/01/2019 : cleaning : remove cyclic conditions on DP and ZA
@@ -286,11 +287,14 @@ END MODULE MODI_TURB_VER_DYN_FLUX
 !*      0. DECLARATIONS
 !          ------------
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
 USE MODD_CONF
 USE MODD_CST
 USE MODD_CTURB
 USE MODD_DYN_n,          ONLY: LOCEAN
-use modd_field,          only: tfielddata, TYPEREAL
+USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_LES
 USE MODD_NSV
@@ -305,7 +309,8 @@ USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
 USE MODI_GRADIENT_M
 USE MODI_SECOND_MNH
-USE MODI_SHUMAN
+USE MODI_SHUMAN , ONLY: MZM, MZF, MXM, MXF, MYM, MYF,&
+                      & DZM, DXF, DXM, DYF, DYM
 USE MODI_TRIDIAG 
 USE MODI_TRIDIAG_WIND 
 USE MODI_LES_MEAN_SUBGRID
@@ -342,6 +347,8 @@ REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSINSLOPE    ! sinus of the angle
                                       ! between i and the slope vector
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  MFMOIST      ! moist mass flux dual scheme
+
 !
 REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCDUEFF     ! Cd * || u || at time t
 REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked 
@@ -767,7 +774,7 @@ IF (LOCEAN) THEN
   ZFLXZ(:,:,KKU) = ZFLXZ(:,:,IKE) 
 END IF
 !
-IF ( OTURB_FLX .AND. tpfile%lopened ) THEN
+IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the V wind component vertical flux
   TZFIELD%CMNHNAME   = 'VW_VFLX'
   TZFIELD%CSTDNAME   = ''
@@ -900,7 +907,7 @@ END IF
 !*       7.   DIAGNOSTIC COMPUTATION OF THE 1D <W W> VARIANCE
 !             -----------------------------------------------
 !
-IF ( OTURB_FLX .AND. tpfile%lopened .AND. HTURBDIM == '1DIM') THEN
+IF ( OTURB_FLX .AND. TPFILE%LOPENED .AND. HTURBDIM == '1DIM') THEN
   ZFLXZ(:,:,:)= (2./3.) * PTKEM(:,:,:)                     &
      -XCMFS*PLM(:,:,:)*SQRT(PTKEM(:,:,:))*GZ_W_M(PWM,PDZZ)
   ! to be tested &
@@ -921,4 +928,5 @@ END IF
 !
 !----------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('TURB_VER_DYN_FLUX',1,ZHOOK_HANDLE)
 END SUBROUTINE TURB_VER_DYN_FLUX

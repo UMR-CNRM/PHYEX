@@ -1,9 +1,15 @@
-!     ######spl
-      SUBROUTINE TURB_VER_DYN_FLUX(KKA,KKU,KKL,                     &
-                      OCLOSE_OUT,OTURB_FLX,KRR,                     &
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+MODULE MODE_TURB_VER_DYN_FLUX
+IMPLICIT NONE
+CONTAINS
+SUBROUTINE TURB_VER_DYN_FLUX(KKA,KKU,KKL,                     &
+                      OTURB_FLX,KRR,                                &
                       HTURBDIM,PIMPL,PEXPL,                         &
                       PTSTEP,                                       &
-                      HFMFILE,HLUOUT,                               &
+                      TPFILE,                                       &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
                       PRHODJ,                                       &
@@ -12,10 +18,6 @@
                       PTKEM,PLM,MFMOIST,PWU,PWV,                    &
                       PRUS,PRVS,PRWS,                               &
                       PDP,PTP                                       )
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
-      USE MODD_CTURB, ONLY : LHARAT
-
 !     ###############################################################
 !
 !
@@ -113,10 +115,10 @@
 !!      DXF,DYF,DZF,DZM
 !!                             :  Shuman functions (difference operators)     
 !!                               
-!!      SUBROUTINE TRIDIAG     : to compute the splitted implicit evolution
+!!      SUBROUTINE TRIDIAG     : to compute the split implicit evolution
 !!                               of a variable located at a mass point
 !!
-!!      SUBROUTINE TRIDIAG_WIND: to compute the splitted implicit evolution
+!!      SUBROUTINE TRIDIAG_WIND: to compute the split implicit evolution
 !!                               of a variable located at a wind point
 !!
 !!      FUNCTIONs ETHETA and EMOIST  :  
@@ -195,30 +197,45 @@
 !!                                              change of YCOMMENT
 !!      2012-02 Y. Seity,  add possibility to run with reversed vertical levels
 !!      Modifications  July 2015 (Wim de Rooy) LHARATU switch
-
+!!      J.Escobar : 15/09/2015 : WENO5 & JPHEXT <> 1 
+!!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
+!!      Q. Rodier      17/01/2019 : cleaning : remove cyclic conditions on DP and ZA
+!! JL Redelsperger 03/2021 : Add Ocean  & O-A Autocoupling LES Cases
 !!--------------------------------------------------------------------------
 !       
 !*      0. DECLARATIONS
 !          ------------
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
 USE MODD_CONF
 USE MODD_CST
 USE MODD_CTURB
-USE MODD_PARAMETERS
+USE MODD_DYN_n,          ONLY: LOCEAN
+USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
+USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_LES
 USE MODD_NSV
+USE MODD_OCEANH
+USE MODD_PARAMETERS
+USE MODD_REF, ONLY : LCOUPLES
+USE MODD_TURB_n
 !
 !
 USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
 USE MODI_GRADIENT_M
+USE MODI_SECOND_MNH
 USE MODI_SHUMAN , ONLY: MZM, MZF, MXM, MXF, MYM, MYF,&
                       & DZM, DXF, DXM, DYF, DYM
 USE MODI_TRIDIAG 
 USE MODI_TRIDIAG_WIND 
-USE MODE_FMWRIT
 USE MODI_LES_MEAN_SUBGRID
+!
+USE MODE_IO_FIELD_WRITE, only: IO_Field_write
+USE MODE_ll
 !
 IMPLICIT NONE
 !
@@ -229,19 +246,14 @@ IMPLICIT NONE
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
-LOGICAL,                INTENT(IN)   ::  OCLOSE_OUT   ! switch for syncronous
-                                                      ! file opening       
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
-CHARACTER*4,            INTENT(IN)   ::  HTURBDIM     ! dimensionality of the 
+CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
 REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
-CHARACTER(LEN=*),       INTENT(IN)   ::  HFMFILE      ! Name of the output
-                                                      ! FM-file 
-CHARACTER(LEN=*),       INTENT(IN)   ::  HLUOUT       ! Output-listing name for
-                                                      ! model n
+TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                       ! Metric coefficients
@@ -281,8 +293,8 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PWV          ! momentum flux v'w'
 REAL, DIMENSION(:,:,:), INTENT(INOUT)   ::  PRUS, PRVS, PRWS
                             ! cumulated sources for the prognostic variables
 !
-REAL, DIMENSION(:,:,:), INTENT(INOUT)::  PDP,PTP   ! Dynamic and thermal
-                                                   ! TKE production terms
+REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PDP          ! Dynamic TKE production term
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTP          ! Thermal TKE production term
 !
 !
 !
@@ -323,6 +335,7 @@ REAL, DIMENSION(SIZE(PDZZ,1),SIZE(PDZZ,2),1) :: ZCOEFFLXU, &
 INTEGER             :: IIU,IJU      ! size of array in x,y,z directions
 !
 REAL :: ZTIME1, ZTIME2, ZCMFS
+TYPE(TFIELDDATA) :: TZFIELD
 !----------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARIES
@@ -444,13 +457,19 @@ ZFLXZ(:,:,IKB:IKB)   =   MXM(PDZZ(:,:,IKB:IKB))  *                &
 ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
 
 !
-IF ( OTURB_FLX .AND. OCLOSE_OUT ) THEN
+IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the U wind component vertical flux
-  YRECFM  ='UW_VFLX'
-  YCOMMENT='X_Y_Z_UW_VFLX (M**2/S**2)'
-  IGRID   = 4  
-  ILENCH=LEN(YCOMMENT) 
-  CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZFLXZ,IGRID,ILENCH,YCOMMENT,IRESP)
+  TZFIELD%CMNHNAME   = 'UW_VFLX'
+  TZFIELD%CSTDNAME   = ''
+  TZFIELD%CLONGNAME  = 'UW_VFLX'
+  TZFIELD%CUNITS     = 'm2 s-2'
+  TZFIELD%CDIR       = 'XY'
+  TZFIELD%CCOMMENT   = 'U wind component vertical flux'
+  TZFIELD%NGRID      = 4
+  TZFIELD%NTYPE      = TYPEREAL
+  TZFIELD%NDIMS      = 3
+  TZFIELD%LTIMEDEP   = .TRUE.
+  CALL IO_Field_write(TPFILE,TZFIELD,ZFLXZ)
 END IF
 !
 ! first part of total momentum flux
@@ -613,13 +632,19 @@ ZFLXZ(:,:,IKB:IKB)   =   MYM(PDZZ(:,:,IKB:IKB))  *                       &
 !
 ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB)
 !
-IF ( OTURB_FLX .AND. OCLOSE_OUT ) THEN
+IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the V wind component vertical flux
-  YRECFM  ='VW_VFLX'
-  YCOMMENT='X_Y_Z_VW_VFLX (M**2/S**2)'
-  IGRID   = 4
-  ILENCH=LEN(YCOMMENT)  
-  CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZFLXZ,IGRID,ILENCH,YCOMMENT,IRESP)
+  TZFIELD%CMNHNAME   = 'VW_VFLX'
+  TZFIELD%CSTDNAME   = ''
+  TZFIELD%CLONGNAME  = 'VW_VFLX'
+  TZFIELD%CUNITS     = 'm2 s-2'
+  TZFIELD%CDIR       = 'XY'
+  TZFIELD%CCOMMENT   = 'V wind component vertical flux'
+  TZFIELD%NGRID      = 4
+  TZFIELD%NTYPE      = TYPEREAL
+  TZFIELD%NDIMS      = 3
+  TZFIELD%LTIMEDEP   = .TRUE.
+  CALL IO_Field_write(TPFILE,TZFIELD,ZFLXZ)
 END IF
 !
 ! second part of total momentum flux
@@ -727,20 +752,27 @@ END IF
 !*       7.   DIAGNOSTIC COMPUTATION OF THE 1D <W W> VARIANCE
 !             -----------------------------------------------
 !
-IF ( OTURB_FLX .AND. OCLOSE_OUT .AND. HTURBDIM == '1DIM') THEN
+IF ( OTURB_FLX .AND. TPFILE%LOPENED .AND. HTURBDIM == '1DIM') THEN
   ZFLXZ(:,:,:)= (2./3.) * PTKEM(:,:,:)                     &
      -ZCMFS*PLM(:,:,:)*SQRT(PTKEM(:,:,:))*GZ_W_M(PWM,PDZZ, KKA, KKU, KKL)
   ! to be tested &
   !   +XCMFB*(4./3.)*PLM(:,:,:)/SQRT(PTKEM(:,:,:))*PTP(:,:,:) 
   ! stores the W variance
-  YRECFM  ='W_VVAR'
-  YCOMMENT='X_Y_Z_W_VVAR (M**2/S**2)'
-  IGRID   = 1  
-  ILENCH=LEN(YCOMMENT) 
-  CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZFLXZ,IGRID,ILENCH,YCOMMENT,IRESP)
+  TZFIELD%CMNHNAME   = 'W_VVAR'
+  TZFIELD%CSTDNAME   = ''
+  TZFIELD%CLONGNAME  = 'W_VVAR'
+  TZFIELD%CUNITS     = 'm2 s-2'
+  TZFIELD%CDIR       = 'XY'
+  TZFIELD%CCOMMENT   = 'X_Y_Z_W_VVAR'
+  TZFIELD%NGRID      = 1
+  TZFIELD%NTYPE      = TYPEREAL
+  TZFIELD%NDIMS      = 3
+  TZFIELD%LTIMEDEP   = .TRUE.
+  CALL IO_Field_write(TPFILE,TZFIELD,ZFLXZ)
 END IF
 !
 !----------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('TURB_VER_DYN_FLUX',1,ZHOOK_HANDLE)
 END SUBROUTINE TURB_VER_DYN_FLUX
+END MODULE MODE_TURB_VER_DYN_FLUX

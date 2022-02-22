@@ -23,7 +23,7 @@ INTERFACE
                       PBETA, PSQRT_TKE, PDTH_DZ, PDR_DZ, PRED2TH3,  &
                       PRED2R3, PRED2THR3, PBLL_O_E, PETHETA,        &
                       PEMOIST, PREDTH1, PREDR1, PPHI3, PPSI3, PD,   &
-                      PFWTH,PFWR,PFTH2,PFR2,PFTHR,PBL_DEPTH,        &
+                      PFWTH,PFWR,PFTH2,PFR2,PFTHR,MFMOIST,PBL_DEPTH,&
                       PWTHV,PRTHLS,PRRS,PTHLP,PRP,PTP,PWTH,PWRC     )
 !
 USE MODD_IO, ONLY: TFILEDATA
@@ -322,6 +322,7 @@ END MODULE MODI_TURB_VER_THERMO_FLUX
 !!                                              change of YCOMMENT
 !!                     2012-02 (Y. Seity) add possibility to run with reversed
 !!                                             vertical levels
+!!      Modifications  July 2015 (Wim de Rooy) LHARAT switch
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !!                     2021 (D. Ricard) last version of HGRAD turbulence scheme
 !!                                 Leronard terms instead of Reynolds terms
@@ -336,9 +337,12 @@ END MODULE MODI_TURB_VER_THERMO_FLUX
 !*      0. DECLARATIONS
 !          ------------
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
 USE MODD_CST
 USE MODD_CTURB
-use modd_field,          only: tfielddata, TYPEREAL
+USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_GRID_n,         ONLY: XZS, XXHAT, XYHAT
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_METRICS_n,      ONLY: XDXX, XDYY, XDZX, XDZY, XDZZ
@@ -367,7 +371,7 @@ USE MODI_PRANDTL
 USE MODI_TRIDIAG_THERMO
 USE MODI_TM06_H
 !
-USE MODE_IO_FIELD_WRITE, only: IO_Field_write
+USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 USE MODE_PRANDTL
 !
 USE MODI_SECOND_MNH
@@ -402,6 +406,7 @@ REAL, DIMENSION(:,:),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PZZ          ! altitudes
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  MFMOIST      ! moist mass flux dual scheme
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
                                                       ! Potential Temperature 
 !
@@ -420,6 +425,8 @@ REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PRM          ! Mixing ratios
 REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM         ! Mixing ratios 
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTKEM        ! TKE at time t
+!
+! In case LHARAT=TRUE, PLM already includes all stability corrections
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM          ! Turb. mixing length   
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLEPS        ! dissipative length   
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
@@ -751,7 +758,7 @@ ELSE
   PWTH(:,:,KKA)=0.5*(ZFLXZ(:,:,KKA)+ZFLXZ(:,:,KKA+KKL))
 END IF
 !
-IF ( OTURB_FLX .AND. tpfile%lopened ) THEN
+IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the conservative potential temperature vertical flux
   TZFIELD%CMNHNAME   = 'THW_FLX'
   TZFIELD%CSTDNAME   = ''
@@ -987,7 +994,7 @@ IF (KRR /= 0) THEN
   PWRC(:,:,IKE)=PWRC(:,:,IKE-KKL)
   !
   !
-  IF ( OTURB_FLX .AND. tpfile%lopened ) THEN
+  IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
     ! stores the conservative mixing ratio vertical flux
     TZFIELD%CMNHNAME   = 'RCONSW_FLX'
     TZFIELD%CSTDNAME   = ''
@@ -1063,7 +1070,7 @@ END IF
 !
 !*       4.1  <w Rc>    
 !
-IF ( ((OTURB_FLX .AND. tpfile%lopened) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
+IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
   !  
   ! recover the Conservative potential temperature flux : 
   ZA(:,:,:)   = DZM(PIMPL * PTHLP + PEXPL * PTHLM) / PDZZ *       &
@@ -1077,7 +1084,7 @@ IF ( ((OTURB_FLX .AND. tpfile%lopened) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
   ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
   !                 
   ! store the liquid water mixing ratio vertical flux
-  IF ( OTURB_FLX .AND. tpfile%lopened ) THEN
+  IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
     TZFIELD%CMNHNAME   = 'RCW_FLX'
     TZFIELD%CSTDNAME   = ''
     TZFIELD%CLONGNAME  = 'RCW_FLX'
@@ -1106,4 +1113,5 @@ IF (LOCEAN.AND.LDEEPOC) THEN
 END IF
 !
 !----------------------------------------------------------------------------
+IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_FLUX',1,ZHOOK_HANDLE)
 END SUBROUTINE TURB_VER_THERMO_FLUX

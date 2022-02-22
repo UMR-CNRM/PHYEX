@@ -1,12 +1,16 @@
-!     ######spl
-      SUBROUTINE TURB_VER_SV_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,        &
+!MNH_LIC Copyright 2002-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+MODULE MODE_TURB_VER_SV_CORR
+IMPLICIT NONE
+CONTAINS
+SUBROUTINE TURB_VER_SV_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,        &
                       PDZZ,                                         &
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PPHI3,PPSI3,  &
                       PWM,PSVM,                                     &
                       PTKEM,PLM,PLEPS,PPSI_SV                       )
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ###############################################################
 !
 !
@@ -48,12 +52,16 @@
 !*      0. DECLARATIONS
 !          ------------
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
 USE MODD_CST
 USE MODD_CTURB
 USE MODD_PARAMETERS
 USE MODD_LES
 USE MODD_CONF
 USE MODD_NSV, ONLY : NSV,NSV_LGBEG,NSV_LGEND
+USE MODD_BLOWSNOW
 !
 !
 USE MODI_GRADIENT_U
@@ -64,6 +72,8 @@ USE MODI_SHUMAN , ONLY : MZF
 USE MODI_EMOIST
 USE MODI_ETHETA
 USE MODI_LES_MEAN_SUBGRID
+!
+USE MODI_SECOND_MNH
 !
 IMPLICIT NONE
 !
@@ -104,6 +114,9 @@ REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.for scalars
 !
 REAL, DIMENSION(SIZE(PSVM,1),SIZE(PSVM,2),SIZE(PSVM,3))  ::  &
        ZA, ZFLXZ
+!
+REAL :: ZCSV          !constant for the scalar flux
+!
 INTEGER             :: JSV          ! loop counters
 !
 REAL :: ZTIME1, ZTIME2
@@ -162,3 +175,4 @@ XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 !
 IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_CORR',1,ZHOOK_HANDLE)
 END SUBROUTINE TURB_VER_SV_CORR
+END MODULE MODE_TURB_VER_SV_CORR

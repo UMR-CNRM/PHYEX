@@ -71,7 +71,7 @@
 USE MODD_CONF
 USE MODD_CST
 USE MODD_PARAMETERS
-
+USE MODD_BUDGET, ONLY: NBUDGET_RI, TBUDGETDATA
 !
 USE MODI_TURB
 !
@@ -170,11 +170,12 @@ LOGICAL , INTENT(IN)                            ::  OSUBG_COND   ! switch
 REAL, DIMENSION(KLON,1,KLEV+2),  INTENT(OUT)   :: PDP, PTP, PTPMF, PTDIFF, PTDISS
 !                                                !for TKE DDH budgets
 !
-TYPE(TYP_DDH), INTENT(INOUT)   :: YDDDH
-TYPE(TLDDH),   INTENT(IN)      :: YDLDDH
-TYPE(TMDDH),   INTENT(IN)      :: YDMDDH
+TYPE(TYP_DDH), INTENT(INOUT), TARGET   :: YDDDH
+TYPE(TLDDH),   INTENT(IN), TARGET      :: YDLDDH
+TYPE(TMDDH),   INTENT(IN), TARGET      :: YDMDDH
 !
 !
+ TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RI) :: YLBUDGET !NBUDGET_RI is the one with the highest number needed for turb
 !*       0.2   Declarations of local variables :
 !
 INTEGER :: JRR,JSV       ! Loop index for the moist and scalar variables
@@ -412,6 +413,13 @@ ZCEI_MIN=0.0
 ZCEI=0.0
 ZCOEF_AMPL_SAT=0.0
 
+DO JRR=1, NBUDGET_RI
+  YLBUDGET(JRR)%NBUDGET=JRR
+  YLBUDGET(JRR)%YDDDH=>YDDDH
+  YLBUDGET(JRR)%YDLDDH=>YDLDDH
+  YLBUDGET(JRR)%YDMDDH=>YDMDDH
+ENDDO
+
 CL=HINST_SFU
 CALL TURB (KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, ISPLIT,IMI, &
    & OCLOSE_OUT,OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
@@ -431,8 +439,10 @@ CALL TURB (KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, ISPLIT,IMI, &
    & ZHGRAD,PSIGS,                                         &
    & PDRUS_TURB,PDRVS_TURB,                                &
    & PDRTHLS_TURB,PDRRTS_TURB,ZDRSVS_TURB,                 &
-  & PFLXZTHVMF,ZWTH,ZWRC,ZWSV,PDP,PTP,PTPMF,PTDIFF,    &
-  & PTDISS,PEDR,YDDDH,YDLDDH,YDMDDH)
+   & PFLXZTHVMF,ZWTH,ZWRC,ZWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
+   & YDDDH,YDLDDH,YDMDDH,                                  &
+   & YLBUDGET, KBUDGETS=SIZE(YLBUDGET),                    &
+   & PEDR=PEDR)
 !
 !
 !------------------------------------------------------------------------------

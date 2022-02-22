@@ -1,9 +1,14 @@
-!     ######spl
-      SUBROUTINE TURB_VER(KKA,KKU,KKL,KRR,KRRL,KRRI,                &
-                      OCLOSE_OUT,OTURB_FLX,                         &
-                      HTURBDIM,HTOM,PIMPL,PEXPL,                    & 
-                      PTSTEP_UVW,PTSTEP_MET, PTSTEP_SV,             &
-                      HFMFILE,HLUOUT,                               &
+!MNH_LIC Copyright 1994-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+MODULE MODE_TURB_VER
+IMPLICIT NONE
+CONTAINS
+SUBROUTINE TURB_VER(KKA,KKU,KKL,KRR,KRRL,KRRI,                &
+                      OTURB_FLX,                                    &
+                      HTURBDIM,HTOM,PIMPL,PEXPL,                    &
+                      PTSTEP, TPFILE,                               &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
                       PRHODJ,PTHVREF,                               &
@@ -15,10 +20,7 @@
                       PFWTH,PFWR,PFTH2,PFR2,PFTHR,PBL_DEPTH,        &
                       PSBL_DEPTH,PLMO,                              &
                       PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,             &
-                      PDP,PTP,PSIGS,PWTH,PWRC,PWSV)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
-      USE MODD_CTURB, ONLY : LHARAT
+                      PDP,PTP,PSIGS,PWTH,PWRC,PWSV                  )
 !     ###############################################################
 !
 !
@@ -109,17 +111,11 @@
 !!                               field to be derivated
 !!                               _(M,UW,...) represent the localization of the 
 !!                               field	derivated
-!!                               
 !!
-!!      MXM,MXF,MYM,MYF,MZM,MZF
-!!                             :  Shuman functions (mean operators)     
-!!      DXF,DYF,DZF,DZM
-!!                             :  Shuman functions (difference operators)     
-!!                               
-!!      SUBROUTINE TRIDIAG     : to compute the splitted implicit evolution
+!!      SUBROUTINE TRIDIAG     : to compute the split implicit evolution
 !!                               of a variable located at a mass point
 !!
-!!      SUBROUTINE TRIDIAG_WIND: to compute the splitted implicit evolution
+!!      SUBROUTINE TRIDIAG_WIND: to compute the split implicit evolution
 !!                               of a variable located at a wind point
 !!
 !!      FUNCTIONs ETHETA and EMOIST  :  
@@ -200,34 +196,46 @@
 !!                              advection schemes
 !!                     Feb. 2012  (Y. Seity) add possibility to run with
 !!                                 reversed vertical levels
+!!                     10/2012 (J.Escobar) Bypass PGI bug , redefine some allocatable array inplace of automatic
+!!                     08/2014 (J.Escobar) Bypass PGI memory leak bug , replace IF statement with IF THEN ENDIF
 !!      Modifications: July,    2015  (Wim de Rooy) switch for HARATU (Racmo turbulence scheme)
+!!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
+!! JL Redelsperger 03/2021 : add Ocean LES case
 !!--------------------------------------------------------------------------
 !       
 !*      0. DECLARATIONS
 !          ------------
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
 USE MODD_CST
 USE MODD_CTURB
+USE MODD_DYN_n,          ONLY: LOCEAN
+USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
+USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_LES
-USE MODD_NSV, ONLY : NSV
+USE MODD_NSV,            ONLY: NSV
 !
-USE MODI_PRANDTL
+!USE MODE_PRANDTL, ONLY: PRANDTL
 USE MODI_EMOIST
 USE MODI_ETHETA
 USE MODI_GRADIENT_M
 USE MODI_GRADIENT_W
 USE MODI_TURB
-USE MODI_TURB_VER_THERMO_FLUX
-USE MODI_TURB_VER_THERMO_CORR
-USE MODI_TURB_VER_DYN_FLUX
-USE MODI_TURB_VER_SV_FLUX
-USE MODI_TURB_VER_SV_CORR
+USE MODE_TURB_VER_THERMO_FLUX, ONLY: TURB_VER_THERMO_FLUX
+USE MODE_TURB_VER_THERMO_CORR, ONLY: TURB_VER_THERMO_CORR
+USE MODE_TURB_VER_DYN_FLUX, ONLY: TURB_VER_DYN_FLUX
+USE MODE_TURB_VER_SV_FLUX, ONLY: TURB_VER_SV_FLUX
+USE MODE_TURB_VER_SV_CORR, ONLY: TURB_VER_SV_CORR
 USE MODI_LES_MEAN_SUBGRID
 USE MODI_SBL_DEPTH
+USE MODI_SECOND_MNH
 !
-USE MODE_FMWRIT
+USE MODE_IO_FIELD_WRITE, only: IO_Field_write
 USE MODE_PRANDTL
+!
 !
 IMPLICIT NONE
 !
@@ -241,21 +249,14 @@ INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
-LOGICAL,                INTENT(IN)   ::  OCLOSE_OUT   ! switch for syncronous
-                                                      ! file opening       
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
-CHARACTER*4,            INTENT(IN)   ::  HTURBDIM     ! dimensionality of the 
+CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
-CHARACTER*4,            INTENT(IN)   ::  HTOM         ! type of Third Order Moment
+CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
 REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
-REAL,                   INTENT(IN)   ::  PTSTEP_UVW   ! Dynamical timestep 
-REAL,                   INTENT(IN)   ::  PTSTEP_MET   ! Timestep for meteorological variables                        
-REAL,                   INTENT(IN)   ::  PTSTEP_SV    ! Timestep for tracer variables
-CHARACTER(LEN=*),       INTENT(IN)   ::  HFMFILE      ! Name of the output
-                                                      ! FM-file 
-CHARACTER(LEN=*),       INTENT(IN)   ::  HLUOUT       ! Output-listing name for
-                                                      ! model n
+REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
+TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                       ! Metric coefficients
@@ -298,7 +299,6 @@ REAL, DIMENSION(:,:),   INTENT(IN)   ::  PVSLOPEM     ! wind component along the
                                      ! direction normal to the maximum slope one
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTKEM        ! TKE at time t
-!
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM          ! Turb. mixing length   
 ! PLENGTHM PLENGTHH used in case of LHARATU
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLENGTHM     ! Turb. mixing length momentum
@@ -336,7 +336,9 @@ REAL, DIMENSION(:,:,:,:),INTENT(OUT) :: PWSV       ! scalar flux
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ::  &
+!JUAN BUG PGI
+!!$REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ::  &
+REAL, ALLOCATABLE, DIMENSION(:,:,:)  ::  &
        ZBETA,    & ! buoyancy coefficient
        ZSQRT_TKE,& ! sqrt(e)
        ZDTH_DZ,  & ! d(th)/dz
@@ -357,17 +359,14 @@ REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ::  &
        ZWV,      & ! (v'w')
        ZTHLP,    & ! guess of potential temperature due to vert. turbulent flux
        ZRP         ! guess of total water due to vert. turbulent flux
-REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),NSV)  ::  &
+
+!!$REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),NSV)  ::  &
+REAL, ALLOCATABLE, DIMENSION(:,:,:,:)  ::  &
        ZPSI_SV,  & ! Prandtl number for scalars
-       ZREDS1,   & ! 1D Redeslperger number R_sv
-       ZRED2THS, & ! 3D Redeslperger number R*2_thsv
-       ZRED2RS     ! 3D Redeslperger number R*2_rsv
+       ZREDS1,   & ! 1D Redelsperger number R_sv
+       ZRED2THS, & ! 3D Redelsperger number R*2_thsv
+       ZRED2RS     ! 3D Redelsperger number R*2_rsv
 REAL, DIMENSION(SIZE(PLM,1),SIZE(PLM,2),SIZE(PLM,3))  ::  ZLM
-INTEGER             :: IRESP        ! Return code of FM routines 
-INTEGER             :: IGRID        ! C-grid indicator in LFIFM file 
-INTEGER             :: ILENCH       ! Length of comment string in LFIFM file
-CHARACTER (LEN=100) :: YCOMMENT     ! comment string in LFIFM file
-CHARACTER (LEN=16)  :: YRECFM       ! Name of the desired field in LFIFM file
 !
 LOGICAL :: GUSERV    ! flag to use water vapor
 INTEGER :: IKB,IKE   ! index value for the Beginning
@@ -375,27 +374,53 @@ INTEGER :: IKB,IKE   ! index value for the Beginning
 INTEGER :: JSV       ! loop counter on scalar variables
 REAL    :: ZTIME1
 REAL    :: ZTIME2
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+TYPE(TFIELDDATA) :: TZFIELD
+!----------------------------------------------------------------------------
+ALLOCATE (      ZBETA(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))    ,&
+       ZSQRT_TKE(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)),& 
+       ZDTH_DZ(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ,&
+       ZDR_DZ(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))   ,&
+       ZRED2TH3(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)) ,& 
+       ZRED2R3(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ,&
+       ZRED2THR3(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)),&
+       ZBLL_O_E(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)) ,&
+       ZETHETA(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ,&
+       ZEMOIST(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ,&
+       ZREDTH1(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ,&
+       ZREDR1(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))   ,&
+       ZPHI3(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))    ,&
+       ZPSI3(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))    ,&
+       ZD(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))       ,&
+       ZWTHV(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))    ,&
+       ZWU(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))      ,&
+       ZWV(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))      ,&
+       ZTHLP(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))    ,&
+       ZRP(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))     )   
+
+ALLOCATE ( &
+ ZPSI_SV(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),NSV),  &
+ ZREDS1(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),NSV),   &
+ ZRED2THS(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),NSV), &
+ ZRED2RS(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),NSV)   )
+
 !----------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARIES
 !             -------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER',0,ZHOOK_HANDLE)
-PTP (:,:,:) = 0.
-PDP (:,:,:) = 0.
 !
 IKB=KKA+JPVEXT_TURB*KKL
 IKE=KKU-JPVEXT_TURB*KKL
-
 !
 !
 ! 3D Redelsperger numbers
 !
 !
-CALL PRANDTL(KKA,KKU,KKL,KRR,KRRI,OCLOSE_OUT,OTURB_FLX,        &
+CALL PRANDTL(KKA,KKU,KKL,KRR,KRRI,OTURB_FLX,       &
              HTURBDIM,                             &
-             HFMFILE,HLUOUT,                       &
+             TPFILE,                               &
              PDXX,PDYY,PDZZ,PDZX,PDZY,             &
              PTHVREF,PLOCPEXNM,PATHETA,PAMOIST,    &
              PLM,PLEPS,PTKEM,PTHLM,PRM,PSVM,PSRCM, &
@@ -404,9 +429,14 @@ CALL PRANDTL(KKA,KKU,KKL,KRR,KRRI,OCLOSE_OUT,OTURB_FLX,        &
              ZREDS1,ZRED2THS, ZRED2RS,             &
              ZBLL_O_E,                             &
              ZETHETA, ZEMOIST                      )
+!
 ! Buoyancy coefficient
 !
-ZBETA = XG/PTHVREF
+IF (LOCEAN) THEN
+  ZBETA = XG*XALPHAOC
+ELSE
+  ZBETA = XG/PTHVREF
+END IF
 !
 ! Square root of Tke
 !
@@ -422,9 +452,9 @@ IF (KRR>0) ZDR_DZ  = GZ_M_W(PRM(:,:,:,1),PDZZ, KKA, KKU, KKL)
 ! Denominator factor in 3rd order terms
 !
 IF (.NOT. LHARAT) THEN
-ZD(:,:,:) = (1.+ZREDTH1+ZREDR1) * (1.+0.5*(ZREDTH1+ZREDR1))
+  ZD(:,:,:) = (1.+ZREDTH1+ZREDR1) * (1.+0.5*(ZREDTH1+ZREDR1))
 ELSE
-ZD(:,:,:) = 1.
+  ZD(:,:,:) = 1.
 ENDIF
 !
 ! Phi3 and Psi3 Prandtl numbers
@@ -450,8 +480,6 @@ IF (LLES_CALL) THEN
   CALL SECOND_MNH(ZTIME2)
   XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 END IF
-
-!ENDIF
 !----------------------------------------------------------------------------
 !
 !
@@ -468,16 +496,15 @@ END IF
 !
 
 IF (LHARAT) THEN
-ZLM=PLENGTHH
+  ZLM=PLENGTHH
 ELSE
-ZLM=PLM
+  ZLM=PLM
 ENDIF
 !
   CALL  TURB_VER_THERMO_FLUX(KKA,KKU,KKL,KRR,KRRL,KRRI,               &
-                        OCLOSE_OUT,OTURB_FLX,HTURBDIM,HTOM,           &
-                        PIMPL,PEXPL,                                  &
-                        PTSTEP_MET,                                   &
-                        HFMFILE,HLUOUT,                               &
+                        OTURB_FLX,HTURBDIM,HTOM,                      &
+                        PIMPL,PEXPL,PTSTEP,                           &
+                        TPFILE,                                       &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                         PRHODJ,PTHVREF,                               &
                         PSFTHM,PSFRM,PSFTHP,PSFRP,                    &
@@ -491,14 +518,10 @@ ENDIF
                         MFMOIST,PBL_DEPTH,ZWTHV,                      &
                         PRTHLS,PRRS,ZTHLP,ZRP,PTP,PWTH,PWRC )
 !
-!
-!
-!  Use Lh (=Lq) from vdfexcuhl as input for turb_ver_thermo_corr
-
   CALL  TURB_VER_THERMO_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,               &
-                        OCLOSE_OUT,OTURB_FLX,HTURBDIM,HTOM,           &
+                        OTURB_FLX,HTURBDIM,HTOM,                      &
                         PIMPL,PEXPL,                                  &
-                        HFMFILE,HLUOUT,                               &
+                        TPFILE,                                       &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,           &
                         PRHODJ,PTHVREF,                               &
                         PSFTHM,PSFRM,PSFTHP,PSFRP,                    &
@@ -525,15 +548,12 @@ ENDIF
 !             -----------------------------------------------
 !
 !
-IF (LHARAT) THEN
-ZLM=PLENGTHM
-ENDIF
-
+IF (LHARAT) ZLM=PLENGTHM
+!
 CALL  TURB_VER_DYN_FLUX(KKA,KKU,KKL,                                &
-                      OCLOSE_OUT,OTURB_FLX,KRR,                     &
-                      HTURBDIM,PIMPL,PEXPL,                         &
-                      PTSTEP_UVW,                                   &
-                      HFMFILE,HLUOUT,                               &
+                      OTURB_FLX,KRR,                                &
+                      HTURBDIM,PIMPL,PEXPL,PTSTEP,                  &
+                      TPFILE,                                       &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
                       PRHODJ,                                       &
@@ -541,7 +561,7 @@ CALL  TURB_VER_DYN_FLUX(KKA,KKU,KKL,                                &
                       PTHLM,PRM,PSVM,PUM,PVM,PWM,PUSLOPEM,PVSLOPEM, &
                       PTKEM,ZLM,MFMOIST,ZWU,ZWV,                    &
                       PRUS,PRVS,PRWS,                               &
-                      PDP,PTP                               )
+                      PDP,PTP                                       )
 !
 !----------------------------------------------------------------------------
 !
@@ -549,16 +569,13 @@ CALL  TURB_VER_DYN_FLUX(KKA,KKU,KKL,                                &
 !*       8.   SOURCES OF PASSIVE SCALAR VARIABLES
 !             -----------------------------------
 !
-IF (LHARAT) THEN
-ZLM=PLENGTHH
-ENDIF
-
+IF (LHARAT) ZLM=PLENGTHH
+!
 IF (SIZE(PSVM,4)>0)                                                 &
 CALL  TURB_VER_SV_FLUX(KKA,KKU,KKL,                                 &
-                      OCLOSE_OUT,OTURB_FLX,HTURBDIM,                &
-                      PIMPL,PEXPL,                                  &
-                      PTSTEP_SV,                                    &
-                      HFMFILE,HLUOUT,                               &
+                      OTURB_FLX,HTURBDIM,                           &
+                      PIMPL,PEXPL,PTSTEP,                           &
+                      TPFILE,                                       &
                       PDZZ,PDIRCOSZW,                               &
                       PRHODJ,PWM,                                   &
                       PSFSVM,PSFSVP,                                &
@@ -568,7 +585,7 @@ CALL  TURB_VER_SV_FLUX(KKA,KKU,KKL,                                 &
 !
 !
 IF (SIZE(PSVM,4)>0 .AND. LLES_CALL)                                 &
-CALL  TURB_VER_SV_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,                               &
+CALL  TURB_VER_SV_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,                   &
                       PDZZ,                                         &
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,ZPHI3,ZPSI3,  &
@@ -590,40 +607,57 @@ IF (SIZE(PSBL_DEPTH)>0) CALL SBL_DEPTH(IKB,IKE,PZZ,ZWU,ZWV,ZWTHV,PLMO,PSBL_DEPTH
 !             ------
 !
 !
-IF ( OTURB_FLX .AND. OCLOSE_OUT .AND. .NOT. LHARAT) THEN
+IF ( OTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. LHARAT) THEN
 !
 ! stores the Turbulent Prandtl number
 ! 
-  YRECFM  ='PHI3'
-  YCOMMENT='X_Y_Z_PHI3 (0)'
-  IGRID   = 4
-  ILENCH=LEN(YCOMMENT)
-  CALL  FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZPHI3,IGRID,ILENCH,YCOMMENT,IRESP)
+  TZFIELD%CMNHNAME   = 'PHI3'
+  TZFIELD%CSTDNAME   = ''
+  TZFIELD%CLONGNAME  = 'PHI3'
+  TZFIELD%CUNITS     = '1'
+  TZFIELD%CDIR       = 'XY'
+  TZFIELD%CCOMMENT   = 'Turbulent Prandtl number'
+  TZFIELD%NGRID      = 4
+  TZFIELD%NTYPE      = TYPEREAL
+  TZFIELD%NDIMS      = 3
+  TZFIELD%LTIMEDEP   = .TRUE.
+  CALL IO_Field_write(TPFILE,TZFIELD,ZPHI3)
 !
 ! stores the Turbulent Schmidt number
 ! 
-  YRECFM  ='PSI3'
-  YCOMMENT='X_Y_Z_PSI3 (0)'
-  IGRID   = 4
-  ILENCH=LEN(YCOMMENT)
-!
-  CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZPSI3,IGRID,ILENCH,YCOMMENT,IRESP)
+  TZFIELD%CMNHNAME   = 'PSI3'
+  TZFIELD%CSTDNAME   = ''
+  TZFIELD%CLONGNAME  = 'PSI3'
+  TZFIELD%CUNITS     = '1'
+  TZFIELD%CDIR       = 'XY'
+  TZFIELD%CCOMMENT   = 'Turbulent Schmidt number'
+  TZFIELD%NGRID      = 4
+  TZFIELD%NTYPE      = TYPEREAL
+  TZFIELD%NDIMS      = 3
+  TZFIELD%LTIMEDEP   = .TRUE.
+  CALL IO_Field_write(TPFILE,TZFIELD,ZPSI3)
 !
 !
 ! stores the Turbulent Schmidt number for the scalar variables
 ! 
+  TZFIELD%CSTDNAME   = ''
+  TZFIELD%CUNITS     = '1'
+  TZFIELD%CDIR       = 'XY'
+  TZFIELD%NGRID      = 4
+  TZFIELD%NTYPE      = TYPEREAL
+  TZFIELD%NDIMS      = 3
+  TZFIELD%LTIMEDEP   = .TRUE.
   DO JSV=1,NSV
-    WRITE(YRECFM, '("PSI_SV_",I3.3)') JSV
-    YCOMMENT='X_Y_Z_'//YRECFM//' (0)'
-    IGRID   = 4
-    ILENCH=LEN(YCOMMENT)
-    CALL FMWRIT(HFMFILE,YRECFM,HLUOUT,'XY',ZPSI_SV(:,:,:,JSV),   &
-                IGRID,ILENCH,YCOMMENT,IRESP)
+    WRITE(TZFIELD%CMNHNAME, '("PSI_SV_",I3.3)') JSV
+    TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)
+    TZFIELD%CCOMMENT   = 'X_Y_Z_'//TRIM(TZFIELD%CMNHNAME)
+    CALL IO_Field_write(TPFILE,TZFIELD,ZPSI_SV(:,:,:,JSV))
   END DO
-
+!
 END IF
 !
 !
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TURB_VER',1,ZHOOK_HANDLE)
-END SUBROUTINE TURB_VER                                                                                               
+END SUBROUTINE TURB_VER
+END MODULE MODE_TURB_VER 

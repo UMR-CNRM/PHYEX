@@ -17,8 +17,10 @@
               & PHGRAD, PSIGS,                                        &
               & PDRUS_TURB,PDRVS_TURB,                                &
               & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,                 &
-              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,       &
-              & PTDISS,PEDR,YDDDH,YDLDDH,YDMDDH)
+              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
+              & YDDDH,YDLDDH,YDMDDH,                                  &
+              & TBUDGETS, KBUDGETS,                                   &
+              & PTR,PDISS,PEDR                                        )
 
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
@@ -223,15 +225,16 @@ USE MODD_CST
 USE MODD_CTURB
 USE MODD_CONF
 USE MODD_BUDGET
+USE MODD_IO, ONLY: TFILEDATA
 USE MODD_LES
 USE MODD_NSV
 !
 USE MODI_BL89
-USE MODI_TURB_VER
+USE MODE_TURB_VER, ONLY : TURB_VER
 !!MODIF AROME
 !USE MODI_ROTATE_WIND
 !USE MODI_TURB_HOR_SPLT 
-USE MODI_TKE_EPS_SOURCES
+USE MODE_TKE_EPS_SOURCES, ONLY: TKE_EPS_SOURCES
 USE MODI_SHUMAN, ONLY : MZF, MXF, MYF
 USE MODI_GRADIENT_M
 USE MODI_BUDGET_DDH
@@ -375,17 +378,20 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTPMF      ! Thermal TKE production
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PDP        ! Dynamic TKE production
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDIFF     ! Diffusion TKE term
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
-
-
-REAL, DIMENSION(:,:,:),   INTENT(OUT) ::  PEDR       ! EDR
-
+!
 TYPE(TYP_DDH), INTENT(INOUT) :: YDDDH
-TYPE(TLDDH),   INTENT(IN)    :: YDLDDH
-TYPE(TMDDH),   INTENT(IN)    :: YDMDDH
+TYPE(TLDDH),   INTENT(IN)   :: YDLDDH
+TYPE(TMDDH),   INTENT(IN)   :: YDMDDH
+!
+TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+INTEGER, INTENT(IN) :: KBUDGETS
 !
 ! length scale from vdfexcu
 REAL, DIMENSION(:,:,:), INTENT(IN)    :: PLENGTHM, PLENGTHH
-
+!
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PTR   ! Transport production of TKE
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PDISS ! Dissipation of TKE
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR       ! EDR
 !
 !
 !-------------------------------------------------------------------------------
@@ -445,6 +451,9 @@ REAL                :: ZL0          ! Max. Mixing Length in Blakadar formula
 REAL                :: ZALPHA       ! proportionnality constant between Dz/2 and 
 !                                   ! BL89 mixing length near the surface
 !
+!
+TYPE(TFILEDATA) :: TPFILE ! File type to write fields for MesoNH
+!
 REAL :: ZTIME1, ZTIME2
 REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3))::  ZSHEAR, ZDUDZ, ZDVDZ
 !
@@ -462,7 +471,6 @@ ENDIF
 IF (LHARAT .AND. LLES_CALL) THEN
   CALL ABOR1('LHARATU not implemented for option LLES_CALL')
 ENDIF
-
 
 IKT=SIZE(PTHLM,3)          
 IKTB=1+JPVEXT_TURB              
@@ -800,10 +808,9 @@ ZFTHR(:,:,:IKTB) = 0.
 !          -----------------
 !
 CALL TURB_VER(KKA,KKU,KKL,KRR, KRRL, KRRI,               &
-          OCLOSE_OUT,OTURB_FLX,                          &
+          OTURB_FLX,                                     &
           HTURBDIM,HTOM,PIMPL,ZEXPL,                     &
-          PTSTEP_UVW, PTSTEP_MET, PTSTEP_SV,             &
-          HFMFILE,HLUOUT,                                &
+          PTSTEP_MET,TPFILE,                                 &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,        &
           PCOSSLOPE,PSINSLOPE,                           &
           PRHODJ,PTHVREF,                                &
@@ -914,14 +921,14 @@ IF (LBUDGET_RI) CALL BUDGET_DDH (PRRS(:,:,:,4),9,'HTURB_BU_RRI',YDDDH, YDLDDH, Y
 
 IF (.NOT. LHARAT) THEN
 
-
 CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKEM,ZLM,ZLEPS,PDP,ZTRH,       &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,            &
                    & PTSTEP_MET,PIMPL,ZEXPL,                         &
                    & HTURBLEN,HTURBDIM,                              &
-                   & HFMFILE,HLUOUT,OCLOSE_OUT,OTURB_DIAG,           &
-                & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,     &
-                & PTDISS,PEDR,YDDDH, YDLDDH, YDMDDH)
+                   & TPFILE,OTURB_DIAG,           &
+                   & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,&
+                   & TBUDGETS,KBUDGETS,&
+                   & PEDR=PEDR)
 IF (LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     CALL BUDGET_DDH (PRTHLS+ ZLVOCPEXNM * PRRS(:,:,:,2) + ZLSOCPEXNM * PRRS(:,:,:,4),4,'DISSH_BU_RTH',YDDDH, YDLDDH, YDMDDH)
