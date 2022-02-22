@@ -360,6 +360,9 @@ END MODULE MODI_TURB
 !*      0. DECLARATIONS
 !          ------------
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
 use modd_budget,      only: lbudget_u,  lbudget_v,  lbudget_w,  lbudget_th, lbudget_rv, lbudget_rc,  &
                             lbudget_rr, lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, lbudget_sv,  &
                             NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC,  &
@@ -369,7 +372,7 @@ USE MODD_CONF
 USE MODD_CST
 USE MODD_CTURB
 USE MODD_DYN_n, ONLY : LOCEAN
-use modd_field,          only: tfielddata, TYPEREAL
+USE MODD_FIELD, ONLY: TFIELDDATA,TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_LES
 USE MODD_NSV
@@ -390,7 +393,7 @@ USE MODI_GRADIENT_M
 USE MODI_LES_MEAN_SUBGRID
 USE MODI_RMC01
 USE MODI_GRADIENT_W
-USE MODI_TM06
+USE MODE_TM06, ONLY: TM06
 USE MODI_UPDATE_LM
 USE MODI_GET_HALO
 !
@@ -1341,15 +1344,19 @@ REAL, DIMENSION(:,:), INTENT(INOUT) :: PUSLOPE,PVSLOPE
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER             :: IIB,IIE,IJB,IJE ! index values for the physical subdomain
+INTEGER             :: IIB,IIE,IJB,IJE,IIU,IJU ! index values for the physical subdomain
 TYPE(LIST_ll), POINTER :: TZFIELDS_ll  ! list of fields to exchange
 INTEGER                :: IINFO_ll     ! return code of parallel routine
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('TURB:UPDATE_ROTATE_WIND',0,ZHOOK_HANDLE)
 !
 !*        1  PROLOGUE
 !
 NULLIFY(TZFIELDS_ll)
 !
-CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
+IIU=SIZE(PUSLOPE,1)
+IJU=SIZE(PUSLOPE,2)
+CALL GET_INDICE_ll (IIB,IJB,IIE,IJE,IIU,IJU)
 !
 !         2 Update halo if necessary
 !
@@ -1378,6 +1385,8 @@ IF(  HLBCY(2) /= "CYCL" .AND. LNORTH_ll()) THEN
   PUSLOPE(:,IJE+1)=PUSLOPE(:,IJE)
   PVSLOPE(:,IJE+1)=PVSLOPE(:,IJE)
 END IF
+!
+IF (LHOOK) CALL DR_HOOK('TURB:UPDATE_ROTATE_WIND',1,ZHOOK_HANDLE)
 !
 END SUBROUTINE UPDATE_ROTATE_WIND
 !
@@ -1421,6 +1430,8 @@ REAL, DIMENSION(SIZE(PEXN,1),SIZE(PEXN,2),SIZE(PEXN,3)) :: ZDRVSATDT
 !
 !-------------------------------------------------------------------------------
 !
+  REAL(KIND=JPRB) :: ZHOOK_HANDLE
+  IF (LHOOK) CALL DR_HOOK('TURB:COMPUTE_FUNCTION_THERMO',0,ZHOOK_HANDLE)
   ZEPS = XMV / XMD
 !
 !*       1.1 Lv/Cph at  t
@@ -1462,6 +1473,7 @@ REAL, DIMENSION(SIZE(PEXN,1),SIZE(PEXN,2),SIZE(PEXN,3)) :: ZDRVSATDT
 !
   PLOCPEXN(:,:,:) = PLOCPEXN(:,:,:) / PEXN(:,:,:)
 !
+IF (LHOOK) CALL DR_HOOK('TURB:COMPUTE_FUNCTION_THERMO',1,ZHOOK_HANDLE)
 END SUBROUTINE COMPUTE_FUNCTION_THERMO
 !
 !     ####################

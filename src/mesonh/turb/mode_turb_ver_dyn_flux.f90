@@ -115,9 +115,6 @@ SUBROUTINE TURB_VER_DYN_FLUX(KKA,KKU,KKL,                     &
 !!      DXF,DYF,DZF,DZM
 !!                             :  Shuman functions (difference operators)     
 !!                               
-!!      SUBROUTINE TRIDIAG     : to compute the split implicit evolution
-!!                               of a variable located at a mass point
-!!
 !!      SUBROUTINE TRIDIAG_WIND: to compute the split implicit evolution
 !!                               of a variable located at a wind point
 !!
@@ -230,8 +227,7 @@ USE MODI_GRADIENT_M
 USE MODI_SECOND_MNH
 USE MODI_SHUMAN , ONLY: MZM, MZF, MXM, MXF, MYM, MYF,&
                       & DZM, DXF, DXM, DYF, DYM
-USE MODI_TRIDIAG 
-USE MODI_TRIDIAG_WIND 
+USE MODE_TRIDIAG_WIND, ONLY: TRIDIAG_WIND
 USE MODI_LES_MEAN_SUBGRID
 !
 USE MODE_IO_FIELD_WRITE, only: IO_Field_write
@@ -331,15 +327,15 @@ INTEGER             :: IIU,IJU      ! size of array in x,y,z directions
 !
 REAL :: ZTIME1, ZTIME2, ZCMFS
 TYPE(TFIELDDATA) :: TZFIELD
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !----------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARIES
 !             -------------
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('TURB_VER_DYN_FLUX',0,ZHOOK_HANDLE)
+!
 ZA=XUNDEF
 PDP=XUNDEF
-!
-IF (LHOOK) CALL DR_HOOK('TURB_VER_DYN_FLUX',0,ZHOOK_HANDLE)
 !
 IIU=SIZE(PUM,1)
 IJU=SIZE(PUM,2)
@@ -351,8 +347,6 @@ IKE=KKU-JPVEXT_TURB*KKL
 IKT=SIZE(PUM,3)          
 IKTB=1+JPVEXT_TURB              
 IKTE=IKT-JPVEXT_TURB
-
-
 !
 ZSOURCE = 0.
 ZFLXZ   = 0.
