@@ -71,6 +71,7 @@
 USE MODD_CONF
 USE MODD_CST
 USE MODD_PARAMETERS
+USE MODD_IO, ONLY: TFILEDATA
 USE MODD_BUDGET, ONLY: NBUDGET_RI, TBUDGETDATA
 !
 USE MODI_TURB
@@ -175,7 +176,8 @@ TYPE(TLDDH),   INTENT(IN), TARGET      :: YDLDDH
 TYPE(TMDDH),   INTENT(IN), TARGET      :: YDMDDH
 !
 !
- TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RI) :: YLBUDGET !NBUDGET_RI is the one with the highest number needed for turb
+TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RI) :: YLBUDGET !NBUDGET_RI is the one with the highest number needed for turb
+TYPE(TFILEDATA) :: ZTFILE !I/O for MesoNH
 !*       0.2   Declarations of local variables :
 !
 INTEGER :: JRR,JSV       ! Loop index for the moist and scalar variables
@@ -199,8 +201,6 @@ CHARACTER(LEN=4),DIMENSION(2)  :: HLBCX, HLBCY  ! X- and Y-direc LBC
 
 INTEGER       :: ISPLIT        ! number of time-splitting
 
-LOGICAL       ::  OCLOSE_OUT   ! Conditional closure of
-                                                   ! the OUTPUT FM-file
 LOGICAL       ::  OTURB_FLX    ! switch to write the
                                ! turbulent fluxes in the syncronous FM-file
 LOGICAL       ::  OTURB_DIAG   ! switch to write some
@@ -212,11 +212,6 @@ CHARACTER(LEN=4)   ::  HTURBDIM     ! dimensionality of the
 CHARACTER(LEN=4)   ::  HTURBLEN     ! kind of mixing length
 
 REAL          ::  ZIMPL        ! degree of implicitness
-
-CHARACTER(LEN=4)   ::  HFMFILE      ! Name of the output
-                                    ! FM-file
-CHARACTER(LEN=4)   ::  HLUOUT       ! Output-listing name for
-                                    ! model n
 !
 REAL, DIMENSION(KLON,1,KLEV+2)   :: ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY
                                         ! metric coefficients
@@ -265,6 +260,9 @@ IKE=KKU-JPVEXT_TURB*KKL
 ! Numero du modele si grid nestind, toujours egal a 1
 IMI=1
 
+! Fichier I/O pour MesoNH (non-utilise dans AROME)
+ZTFILE%LOPENED=.FALSE.
+
 ! Type de condition � la limite. En 1D, sans importance. A etudier en 3D.
 HLBCX(:)='CYCL'
 HLBCY(:)='CYCL'
@@ -273,9 +271,6 @@ HLBCY(:)='CYCL'
 ISPLIT=1
 
 ! pour ecriture et diagnostic dans mesoNH, � priori les switches toujours � .F.
-OCLOSE_OUT=.FALSE.
-HFMFILE=' '
-HLUOUT= ' '
 OTURB_FLX=.FALSE.
 OTURB_DIAG=.FALSE.
 
@@ -422,18 +417,18 @@ ENDDO
 
 CL=HINST_SFU
 CALL TURB (KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, ISPLIT,IMI, &
-   & OCLOSE_OUT,OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
+   & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
    & HTURBDIM,HTURBLEN,'NONE','NONE', CL,           &
    & HMF_UPDRAFT,ZIMPL,                                    &
-   & 2*PTSTEP, 2*PTSTEP, 2*PTSTEP,                         &
-   & HFMFILE,HLUOUT,ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &
+   & 2*PTSTEP,ZTFILE,                                      &
+   & ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &
    & ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE,    &
    & PRHODJ,PTHVREF,PRHODREF,                              &
    & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
    & PPABSM,PUM,PVM,PWM,PTKEM,ZSVM,PSRCM,                  &
    & PLENGTHM,PLENGTHH,MFMOIST,                            &
    & ZBL_DEPTH,ZSBL_DEPTH,                                 &
-   & PUM,PVM,PWM,ZCEI,ZCEI_MIN,ZCEI_MAX,ZCOEF_AMPL_SAT,    &
+   & ZCEI,ZCEI_MIN,ZCEI_MAX,ZCOEF_AMPL_SAT,    &
    & PTHM,ZRM, &
    & PRUS,PRVS,PRWS,PRTHS,ZRRS,ZRSVS,PRTKES_OUT,         &
    & ZHGRAD,PSIGS,                                         &

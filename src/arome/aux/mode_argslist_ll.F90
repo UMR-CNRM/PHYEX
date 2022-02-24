@@ -5,8 +5,8 @@ CONTAINS
 !
   SUBROUTINE CLEANLIST_ll(TPLIST)
 IMPLICIT NONE
-
     TYPE(LIST_ll),  POINTER :: TPLIST ! List of fields
+    CALL ABORT
   END SUBROUTINE CLEANLIST_ll
 !
   SUBROUTINE ADD3DFIELD_ll(TPLIST, PFIELD, HNAME)
@@ -17,5 +17,6 @@ IMPLICIT NONE
   !                                              of fields
     character(len=*), intent(in) :: HNAME ! Name of the field to be added
   !
-  END SUBROUTINE ADD3DFIELD_ll
+   CALL ABORT  
+END SUBROUTINE ADD3DFIELD_ll
 END MODULE MODE_ARGSLIST_ll

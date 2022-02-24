@@ -6,18 +6,18 @@ INTERFACE
 !
       SUBROUTINE TURB(KKA, KKU, KKL, KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,   &
               & KSPLIT,KMODEL_CL, &
-              & OCLOSE_OUT,OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
+              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HINST_SFU,         &
-              & HMF_UPDRAFT,PIMPL,PTSTEP_UVW, PTSTEP_MET,PTSTEP_SV,   &
-              & HFMFILE,HLUOUT,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,          &
+              & HMF_UPDRAFT,PIMPL,PTSTEP,TPFILE,                      &
+              & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,          &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
               & PRHODJ,PTHVREF,PRHODREF,                              &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
-              & PPABSM,PUM,PVM,PWM,PTKEM,PSVM,PSRCM,                  &
+              & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
               & PLENGTHM,PLENGTHH,MFMOIST,                            &
               & PBL_DEPTH, PSBL_DEPTH,                                &
-              & PUT,PVT,PWT,PCEI,PCEI_MIN,PCEI_MAX,PCOEF_AMPL_SAT,    &
-              & PTHLM,PRM,                                            &
+              & PCEI,PCEI_MIN,PCEI_MAX,PCOEF_AMPL_SAT,    &
+              & PTHLT,PRT,                                            &
               & PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,PRTKES,              &
               & PHGRAD,PSIGS,                                         &
               & PDRUS_TURB,PDRVS_TURB,                                &
@@ -25,12 +25,13 @@ INTERFACE
               & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
               & YDDDH,YDLDDH,YDMDDH,                                  &
               & TBUDGETS, KBUDGETS,                                   &
-              & PTR,PDISS,PEDR                                        ) 
+              & PTR,PDISS,PEDR,PLEM                                   ) 
 !
 USE DDH_MIX, ONLY  : TYP_DDH
 USE YOMLDDH, ONLY  : TLDDH
 USE YOMMDDH, ONLY  : TMDDH
 USE MODD_BUDGET, ONLY : TBUDGETDATA
+USE MODD_IO, ONLY : TFILEDATA
 !
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
@@ -43,8 +44,6 @@ CHARACTER(LEN=*),DIMENSION(:),INTENT(IN):: HLBCX, HLBCY  ! X- and Y-direc LBC
 CHARACTER(LEN=4),INTENT(IN)          :: HMF_UPDRAFT   ! Type of mass flux
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time-splitting
 INTEGER,                INTENT(IN)   :: KMODEL_CL     ! model number for cloud mixing length
-LOGICAL,                INTENT(IN)   ::  OCLOSE_OUT   ! switch for syncronous
-                                                      ! file opening
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
@@ -52,21 +51,16 @@ LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
 LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid 
                                  ! CONDensation
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
-CHARACTER*4           , INTENT(IN)      ::  HTURBDIM  ! dimensionality of the 
+CHARACTER(LEN=4)       , INTENT(IN)   ::  HTURBDIM  ! dimensionality of the 
                                  ! turbulence scheme
-CHARACTER*4           , INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
-CHARACTER*4           , INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
-CHARACTER*4           , INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
-CHARACTER*1           , INTENT(IN)   ::  HINST_SFU    ! temporal location of the
+CHARACTER(LEN=4)      , INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
+CHARACTER(LEN=4)      , INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
+CHARACTER(LEN=4)      , INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
+CHARACTER(LEN=1)      , INTENT(IN)   ::  HINST_SFU    ! temporal location of the
                                                       ! surface friction flux
 REAL,                   INTENT(IN)   ::  PIMPL        ! degree of implicitness
-REAL,                   INTENT(IN)   ::  PTSTEP_UVW   ! Dynamical timestep 
-REAL,                   INTENT(IN)   ::  PTSTEP_MET   ! Timestep for meteorological variables                        
-REAL,                   INTENT(IN)   ::  PTSTEP_SV    ! Timestep for tracer variables
-CHARACTER(LEN=*),       INTENT(IN)   ::  HFMFILE      ! Name of the output
-                                                      ! FM-file
-CHARACTER(LEN=*),       INTENT(IN)   ::  HLUOUT       ! Output-listing name for
-                                                      ! model n
+REAL,                   INTENT(IN)   ::  PTSTEP       ! Timestep
+TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file for MesoNH
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   :: PDXX,PDYY,PDZZ,PDZX,PDZY
                                         ! metric coefficients
@@ -94,16 +88,14 @@ REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PSFSV
 ! normal surface fluxes of Scalar var. 
 !
 !    prognostic variables at t- deltat
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PPABSM      ! Pressure at time t-1
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PUM,PVM,PWM ! wind components
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PTKEM       ! TKE
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM        ! passive scal. var.
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PSRCM       ! Second-order flux
+REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PPABST      ! Pressure at time t
+REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PUT,PVT,PWT ! wind components
+REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PTKET       ! TKE
+REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVT        ! passive scal. var.
+REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PSRCT       ! Second-order flux
                       ! s'rc'/2Sigma_s2 at time t-1 multiplied by Lambda_3
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PBL_DEPTH  ! BL depth for TOMS
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
-!
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PUT,PVT,PWT ! Wind  at t
 !
 !    variables for cloud mixing length
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PCEI ! Cloud Entrainment instability
@@ -113,8 +105,8 @@ REAL, INTENT(IN)      ::  PCEI_MIN ! minimum threshold for the instability index
 REAL, INTENT(IN)      ::  PCEI_MAX ! maximum threshold for the instability index CEI
 REAL, INTENT(IN)      ::  PCOEF_AMPL_SAT ! saturation of the amplification coefficient
 !   thermodynamical variables which are transformed in conservative var.
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PTHLM       ! conservative pot. temp.
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRM         ! water var.  where 
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PTHLT       ! conservative pot. temp.
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRT         ! water var.  where 
                              ! PRM(:,:,:,1) is the conservative mixing ratio        
 !
 ! sources of momentum, conservative potential temperature, Turb. Kin. Energy, 
@@ -158,7 +150,8 @@ INTEGER, INTENT(IN) :: KBUDGETS
 !
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PTR   ! Transport production of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PDISS ! Dissipation of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR       ! EDR
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
 !
 !-------------------------------------------------------------------------------
 !

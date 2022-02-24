@@ -239,7 +239,7 @@ END MODULE MODI_TURB
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
 !!
-!!       MODD_PARAMETERS : JPVEXT  number of marginal vertical points
+!!       MODD_PARAMETERS : JPVEXT_TURB  number of marginal vertical points
 !!
 !!       MODD_CONF      : CCONF model configuration (start/restart)
 !!                        L1D   switch for 1D model version
@@ -362,12 +362,11 @@ END MODULE MODI_TURB
 !
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
-!
-use modd_budget,      only: lbudget_u,  lbudget_v,  lbudget_w,  lbudget_th, lbudget_rv, lbudget_rc,  &
-                            lbudget_rr, lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, lbudget_sv,  &
+USE MODD_BUDGET, ONLY: LBUDGET_U,  LBUDGET_V,  LBUDGET_W,  LBUDGET_TH, LBUDGET_RV, LBUDGET_RC,  &
+                            LBUDGET_RR, LBUDGET_RI, LBUDGET_RS, LBUDGET_RG, LBUDGET_RH, LBUDGET_SV,  &
                             NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC,  &
                             NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1, &
-                            TBUDGETDATA
+                            TBUDGETS
 USE MODD_CONF
 USE MODD_CST
 USE MODD_CTURB
@@ -389,7 +388,6 @@ USE MODI_ROTATE_WIND
 USE MODI_TURB_HOR_SPLT 
 USE MODE_TKE_EPS_SOURCES, ONLY: TKE_EPS_SOURCES
 USE MODI_SHUMAN
-USE MODI_GRADIENT_M
 USE MODI_LES_MEAN_SUBGRID
 USE MODI_RMC01
 USE MODI_GRADIENT_W
@@ -397,10 +395,10 @@ USE MODE_TM06, ONLY: TM06
 USE MODI_UPDATE_LM
 USE MODI_GET_HALO
 !
-use mode_budget,         only: Budget_store_init, Budget_store_end
+USE MODE_BUDGET,         ONLY: BUDGET_STORE_INIT, BUDGET_STORE_END
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 USE MODE_SBL
-use mode_sources_neg_correct, only: Sources_neg_correct
+USE MODE_SOURES_NEG_CORRECT, ONLY: SOURCES_NEG_CORRECT
 !
 USE MODI_EMOIST
 USE MODI_ETHETA
@@ -434,11 +432,11 @@ LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
 LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid 
                                  ! CONDensation
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
+CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
-CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
+CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
+CHARACTER(LEN=4),       INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
+CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
 REAL,                   INTENT(IN)   ::  PIMPL        ! degree of implicitness
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
@@ -842,8 +840,6 @@ SELECT CASE (HTURBLEN)
 !
 !
 END SELECT
-!
-!
 !
 !*      3.5 Mixing length modification for cloud
 !           -----------------------
@@ -1532,7 +1528,6 @@ ELSE
     END IF
   END IF
 END IF
-
 !
 !  mixing length limited by the distance normal to the surface 
 !  (with the same factor as for BL89)

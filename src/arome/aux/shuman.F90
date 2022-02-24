@@ -88,6 +88,7 @@ PMXF=PA
 !END DO
 !
 !PMXF(IIU,:,:)    = PMXF(2*JPHEXT,:,:)
+CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
 !
 !-------------------------------------------------------------------------------
 !
@@ -182,6 +183,8 @@ PMXM=PA
 !
 !PMXM(1,:,:)    = PMXM(IIU-2*JPHEXT+1,:,:)
 !
+CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
+
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('MXM',1,ZHOOK_HANDLE)
@@ -370,6 +373,7 @@ PMYM=PA
 !
 !PMYM(:,1,:)    = PMYM(:,IJU-2*JPHEXT+1,:)
 !
+CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('MYM',1,ZHOOK_HANDLE)
@@ -622,6 +626,7 @@ DO JI=1,IIU-1
 END DO
 !
 !PDXF(IIU,:,:)    = PDXF(2*JPHEXT,:,:)
+CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
 !
 !-------------------------------------------------------------------------------
 !
@@ -713,6 +718,7 @@ END DO
 !
 PDXM(1,:,:)    =  PDXM(IIU-2*JPHEXT+1,:,:)
 !
+CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('DXM',1,ZHOOK_HANDLE)
@@ -803,6 +809,8 @@ END DO
 !
 !PDYF(:,IJU,:)    = PDYF(:,2*JPHEXT,:)
 !
+CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
+
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('DYF',1,ZHOOK_HANDLE)
@@ -892,6 +900,7 @@ DO JJ=2,IJU
 END DO
 !
 PDYM(:,1,:)    =  PDYM(:,IJU-2*JPHEXT+1,:)
+CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
 !
 !-------------------------------------------------------------------------------
 !

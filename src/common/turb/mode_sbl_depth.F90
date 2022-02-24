@@ -1,3 +1,10 @@
+!MNH_LIC Copyright 1994-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+MODULE MODE_SBL_DEPTH
+IMPLICIT NONE
+CONTAINS
 !     ######spl
       SUBROUTINE SBL_DEPTH(KKB,KKE,PZZ,PFLXU,PFLXV,PWTHV,PLMO,PSBL_DEPTH)
       USE PARKIND1, ONLY : JPRB
@@ -41,7 +48,7 @@
 USE MODD_PARAMETERS, ONLY : XUNDEF
 USE MODD_CTURB,      ONLY : XFTOP_O_FSURF, XSBL_O_BL
 !
-USE MODI_BL_DEPTH_DIAG
+USE MODE_BL_DEPTH_DIAG
 !
 IMPLICIT NONE
 !
@@ -119,3 +126,4 @@ WHERE (PLMO(:,:)==XUNDEF) PSBL_DEPTH = ZSBL_DYN
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('SBL_DEPTH',1,ZHOOK_HANDLE)
 END SUBROUTINE SBL_DEPTH
+END MODULE MODE_SBL_DEPTH
