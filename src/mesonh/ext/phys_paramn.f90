@@ -1496,8 +1496,8 @@ END IF
               XCEI, XCEI_MIN, XCEI_MAX, XCOEF_AMPL_SAT,                              &
               XTHT, XRT,                                                             &
               XRUS, XRVS, XRWS, XRTHS, XRRS, XRSVS, XRTKES, XRTKEMS, XSIGS, XWTHVMF, &
-              XTHW_FLUX, XRCW_FLUX, XSVW_FLUX,XDYP, XTHP, XTR, XDISS, XLEM,          &
-              TBUDGETS, KBUDGETS=SIZE(TBUDGETS)      )
+              XTHW_FLUX, XRCW_FLUX, XSVW_FLUX,XDYP, XTHP, XTR, XDISS,          &
+              TBUDGETS, KBUDGETS=SIZE(TBUDGETS),PLEM=XLEM      )
 !
 IF (LRMC01) THEN
   CALL ADD2DFIELD_ll( TZFIELDS_ll, XSBL_DEPTH, 'PHYS_PARAM_n::XSBL_DEPTH' )

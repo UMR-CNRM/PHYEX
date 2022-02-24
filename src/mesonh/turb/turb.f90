@@ -4,11 +4,6 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !    ################ 
-     MODULE MODI_TURB  
-!    ################ 
-!
-INTERFACE
-!
       SUBROUTINE TURB(KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,      &
               & KSPLIT,KMODEL_CL,                                     &
               & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,               &
@@ -23,139 +18,9 @@ INTERFACE
               & PCEI,PCEI_MIN,PCEI_MAX,PCOEF_AMPL_SAT,                &
               & PTHLT,PRT,                                            &
               & PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,PRTKES,PRTKEMS,PSIGS,&
-              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDYP,PTHP,PTDIFF,PTDISS,PLEM,&
-              & TBUDGETS, KBUDGETS                                   )
-
-!
-USE MODD_IO, ONLY: TFILEDATA
-USE MODD_BUDGET, ONLY: TBUDGETDATA
-!
-INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
-INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=AR
-INTEGER,                INTENT(IN)   :: KMI           ! model index number  
-INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
-INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
-INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
-CHARACTER(LEN=*),DIMENSION(:),INTENT(IN):: HLBCX, HLBCY  ! X- and Y-direc LBC
-INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time-splitting
-INTEGER,                INTENT(IN)   :: KMODEL_CL     ! model number for cloud mixing length
-LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
-LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
-                                 ! diagnostic fields in the syncronous FM-file
-LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid 
-                                 ! CONDensation
-LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
-                                                      ! turbulence scheme
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
-CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
-                                                      ! surface friction flux
-REAL,                   INTENT(IN)   ::  PIMPL        ! degree of implicitness
-CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
-REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
-TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
-!
-REAL, DIMENSION(:,:,:), INTENT(IN)   :: PDXX,PDYY,PDZZ,PDZX,PDZY
-                                        ! metric coefficients
-REAL, DIMENSION(:,:,:), INTENT(IN)   :: PZZ       !  physical distance 
-! between 2 succesive grid points along the K direction
-REAL, DIMENSION(:,:),   INTENT(IN)      ::  PDIRCOSXW, PDIRCOSYW, PDIRCOSZW
-! Director Cosinus along x, y and z directions at surface w-point
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle
-                                 ! between i and the slope vector
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle
-                                 ! between i and the slope vector
-REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PRHODJ    ! dry density * Grid size
-REAL, DIMENSION(:,:,:), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
-REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
-                                        ! Temperature of the reference state
-!
-REAL, DIMENSION(:,:),   INTENT(IN)      ::  PSFTH,PSFRV,   &
-! normal surface fluxes of theta and Rv 
-                                            PSFU,PSFV
-! normal surface fluxes of (u,v) parallel to the orography 
-REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PSFSV
-! normal surface fluxes of Scalar var. 
-!
-!    prognostic variables at t- deltat
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PPABST      ! Pressure at time t
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PUT,PVT,PWT ! wind components
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PTKET       ! TKE
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVT        ! passive scal. var.
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PSRCT       ! Second-order flux
-                      ! s'rc'/2Sigma_s2 at time t-1 multiplied by Lambda_3
-REAL, DIMENSION(:,:),     INTENT(INOUT) :: PBL_DEPTH  ! BL depth for TOMS
-REAL, DIMENSION(:,:),     INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
-!
-!
-!    variables for cloud mixing length
-REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PCEI ! Cloud Entrainment instability
-                                                 ! index to emphasize localy 
-                                                 ! turbulent fluxes
-REAL, INTENT(IN)      ::  PCEI_MIN ! minimum threshold for the instability index CEI
-REAL, INTENT(IN)      ::  PCEI_MAX ! maximum threshold for the instability index CEI
-REAL, INTENT(IN)      ::  PCOEF_AMPL_SAT ! saturation of the amplification coefficient
-!   thermodynamical variables which are transformed in conservative var.
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PTHLT       ! conservative pot. temp.
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRT         ! water var.  where 
-                             ! PRT(:,:,:,1) is the conservative mixing ratio        
-!
-! sources of momentum, conservative potential temperature, Turb. Kin. Energy, 
-! TKE dissipation
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRUS,PRVS,PRWS,PRTHLS,PRTKES
-! Source terms for all water kinds, PRRS(:,:,:,1) is used for the conservative
-! mixing ratio
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PRTKEMS
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRRS 
-! Source terms for all passive scalar variables
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS
-! Sigma_s at time t+1 : square root of the variance of the deviation to the 
-! saturation 
-REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PSIGS
-REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PFLXZTHVMF 
-!                                           MF contribution for vert. turb. transport
-!                                           used in the buoy. prod. of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWTH       ! heat flux
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWRC       ! cloud water flux
-REAL, DIMENSION(:,:,:,:),INTENT(OUT) :: PWSV       ! scalar flux
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PDYP  ! Dynamical production of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTHP  ! Thermal production of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDIFF   ! Transport production of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDISS ! Dissipation of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PLEM  ! Mixing length
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
-INTEGER, INTENT(IN) :: KBUDGETS
-! length scale from vdfexcu
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PLENGTHM, PLENGTHH
-!
-!-------------------------------------------------------------------------------
-!
-END SUBROUTINE TURB
-!
-END INTERFACE
-!
-END MODULE MODI_TURB
-!
-!     #################################################################
-      SUBROUTINE TURB(KKA, KKU, KKL, KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,   &
-                KSPLIT,KMODEL_CL,                                     &
-                OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,               &
-                HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,PIMPL,      &
-                PTSTEP,TPFILE,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
-                PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
-                PRHODJ,PTHVREF,                                       &
-                PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
-                PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
-                PLENGTHM,PLENGTHH,MFMOIST,                            &
-                PBL_DEPTH, PSBL_DEPTH,                                &
-                PCEI,PCEI_MIN,PCEI_MAX,PCOEF_AMPL_SAT,                &
-                PTHLT,PRT,                                            &
-                PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,PRTKES,PRTKEMS,PSIGS,&
-                PFLXZTHVMF,PWTH,PWRC,PWSV,PDYP,PTHP,PTDIFF,PTDISS,PLEM,&
-                TBUDGETS, KBUDGETS                                    )
+              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDYP,PTHP,PTDIFF,PTDISS,&
+              & TBUDGETS, KBUDGETS                                   ,&
+              & PTR,PDISS,PEDR,PLEM                            )
 !     #################################################################
 !
 !
@@ -366,7 +231,7 @@ USE MODD_BUDGET, ONLY: LBUDGET_U,  LBUDGET_V,  LBUDGET_W,  LBUDGET_TH, LBUDGET_R
                             LBUDGET_RR, LBUDGET_RI, LBUDGET_RS, LBUDGET_RG, LBUDGET_RH, LBUDGET_SV,  &
                             NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC,  &
                             NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1, &
-                            TBUDGETS
+                            TBUDGETDATA
 USE MODD_CONF
 USE MODD_CST
 USE MODD_CTURB
@@ -379,17 +244,17 @@ USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
 USE MODD_PARAM_LIMA
 USE MODD_TURB_n, ONLY: XCADAP
 !
+USE MODE_BL89, ONLY: BL89
 USE MODI_GRADIENT_M
 USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
-USE MODI_BL89
 USE MODE_TURB_VER, ONLY : TURB_VER
 USE MODI_ROTATE_WIND
 USE MODI_TURB_HOR_SPLT 
 USE MODE_TKE_EPS_SOURCES, ONLY: TKE_EPS_SOURCES
 USE MODI_SHUMAN
 USE MODI_LES_MEAN_SUBGRID
-USE MODI_RMC01
+USE MODE_RMC01, ONLY: RMC01
 USE MODI_GRADIENT_W
 USE MODE_TM06, ONLY: TM06
 USE MODI_UPDATE_LM
@@ -398,10 +263,10 @@ USE MODI_GET_HALO
 USE MODE_BUDGET,         ONLY: BUDGET_STORE_INIT, BUDGET_STORE_END
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 USE MODE_SBL
-USE MODE_SOURES_NEG_CORRECT, ONLY: SOURCES_NEG_CORRECT
+USE MODE_SOURCES_NEG_CORRECT, ONLY: SOURCES_NEG_CORRECT
 !
-USE MODI_EMOIST
-USE MODI_ETHETA
+USE MODE_EMOIST, ONLY: EMOIST
+USE MODE_ETHETA, ONLY: ETHETA
 !
 USE MODI_SECOND_MNH
 !
@@ -509,7 +374,6 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PDYP  ! Dynamical production of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTHP  ! Thermal production of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDIFF   ! Transport production of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDISS ! Dissipation of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PLEM  ! Mixing length
 !
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
@@ -517,16 +381,22 @@ INTEGER, INTENT(IN) :: KBUDGETS
 ! length scale from vdfexcu
 REAL, DIMENSION(:,:,:), INTENT(IN)    :: PLENGTHM, PLENGTHH
 !
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PTR   ! Transport production of TKE
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PDISS ! Dissipation of TKE
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
+!
+!
 !-------------------------------------------------------------------------------
 !
 !       0.2  declaration of local variables
 !
-REAL, ALLOCATABLE, DIMENSION(:,:,:) ::&
+REAL, DIMENSION(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)) ::     &
           ZCP,                        &  ! Cp at t-1
           ZEXN,                       &  ! EXN at t-1
           ZT,                         &  ! T at t-1
           ZLOCPEXNM,                  &  ! Lv/Cp/EXNREF at t-1
-          ZLMW,                       &  ! Turbulent mixing length (work array)
+          ZLM,ZLMW,                   &  ! Turbulent mixing length (+ work array)
           ZLEPS,                      &  ! Dissipative length
           ZTRH,                       &  ! Dynamic and Thermal Production of TKE
           ZATHETA,ZAMOIST,            &  ! coefficients for s = f (Thetal,Rnp)
@@ -535,9 +405,9 @@ REAL, ALLOCATABLE, DIMENSION(:,:,:) ::&
           ZMWTH,ZMWR,ZMTH2,ZMR2,ZMTHR,&  ! 3rd order moments
           ZFWTH,ZFWR,ZFTH2,ZFR2,ZFTHR,&  ! opposite of verticale derivate of 3rd order moments
           ZTHLM, ZTR, ZDISS              ! initial potential temp.
-REAL, ALLOCATABLE, DIMENSION(:,:,:,:) ::     &
+REAL, DIMENSION(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3),SIZE(PRT,4)) ::     &
           ZRM                            ! initial mixing ratio 
-REAL, ALLOCATABLE, DIMENSION(:,:) ::  ZTAU11M,ZTAU12M,  &
+REAL, DIMENSION(SIZE(PTHLT,1),SIZE(PTHLT,2)) ::  ZTAU11M,ZTAU12M,  &
                                                  ZTAU22M,ZTAU33M,  &
             ! tangential surface fluxes in the axes following the orography
                                                  ZUSLOPE,ZVSLOPE,  &
@@ -571,51 +441,8 @@ REAL                :: ZALPHA       ! work coefficient :
 !                                   !   BL89 mixing length near the surface
 !
 REAL :: ZTIME1, ZTIME2
-REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3)):: ZTT,ZEXNE,ZLV,ZLS,ZCPH,ZCOR
 REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3))::  ZSHEAR, ZDUDZ, ZDVDZ
 TYPE(TFIELDDATA) :: TZFIELD
-!
-!------------------------------------------------------------------------------------------
-ALLOCATE (                                                        &
-          ZCP(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),         &  
-          ZEXN(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),        &  
-          ZT(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),          &  
-          ZLOCPEXNM(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),   & 
-          ZLMW(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),        & 
-          ZLEPS(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),       &  
-          ZTRH(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),        &  
-          ZATHETA(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),     &
-          ZAMOIST(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),     & 
-          ZCOEF_DISS(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),  &  
-          ZFRAC_ICE(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),   &  
-          ZMWTH(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),       &
-          ZMWR(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),        &
-          ZMTH2(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),       &
-          ZMR2(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),        &
-          ZMTHR(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),       &  
-          ZFWTH(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),       &
-          ZFWR(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),        &
-          ZFTH2(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),       &
-          ZFR2(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),        &
-          ZFTHR(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)),       &  
-          ZTHLM(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3))        )                        
-
-ALLOCATE ( ZRM(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3),SIZE(PRT,4))   )
-
-ALLOCATE ( &
-           ZTAU11M(SIZE(PTHLT,1),SIZE(PTHLT,2)),  &
-           ZTAU12M(SIZE(PTHLT,1),SIZE(PTHLT,2)),  &
-           ZTAU22M(SIZE(PTHLT,1),SIZE(PTHLT,2)),  &
-           ZTAU33M(SIZE(PTHLT,1),SIZE(PTHLT,2)),  &
-           ZUSLOPE(SIZE(PTHLT,1),SIZE(PTHLT,2)),  &
-           ZVSLOPE(SIZE(PTHLT,1),SIZE(PTHLT,2)),  &
-           ZCDUEFF(SIZE(PTHLT,1),SIZE(PTHLT,2)),  &
-           ZUSTAR(SIZE(PTHLT,1),SIZE(PTHLT,2)),   &
-           ZLMO(SIZE(PTHLT,1),SIZE(PTHLT,2)),     &
-           ZRVM(SIZE(PTHLT,1),SIZE(PTHLT,2)),     &
-           ZSFRV(SIZE(PTHLT,1),SIZE(PTHLT,2))     )
-
-!------------------------------------------------------------------------------------------
 !
 !*      1.PRELIMINARIES
 !         -------------
@@ -623,6 +450,16 @@ ALLOCATE ( &
 !*      1.1 Set the internal domains, ZEXPL 
 !
 !
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('TURB',0,ZHOOK_HANDLE)
+!
+IF (LHARAT .AND. HTURBDIM /= '1DIM') THEN
+  CALL ABOR1('LHARATU only implemented for option HTURBDIM=1DIM!')
+ENDIF
+IF (LHARAT .AND. LLES_CALL) THEN
+  CALL ABOR1('LHARATU not implemented for option LLES_CALL')
+ENDIF
+
 IKT=SIZE(PTHLT,3)          
 IKTB=1+JPVEXT_TURB              
 IKTE=IKT-JPVEXT_TURB
@@ -725,7 +562,7 @@ IF (KRRL >=1) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_Field_write(TPFILE,TZFIELD,ZATHETA)
+    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZATHETA)
 ! 
     TZFIELD%CMNHNAME   = 'AMOIST'
     TZFIELD%CSTDNAME   = ''
@@ -737,7 +574,7 @@ IF (KRRL >=1) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_Field_write(TPFILE,TZFIELD,ZAMOIST)
+    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZAMOIST)
   END IF
 !
 ELSE
@@ -772,6 +609,8 @@ END IF
 !          -----------------------------------------
 !
 !
+IF (.NOT. LHARAT) THEN
+
 SELECT CASE (HTURBLEN)
 !
 !*      3.1 BL89 mixing length
@@ -779,7 +618,7 @@ SELECT CASE (HTURBLEN)
 
   CASE ('BL89')
     ZSHEAR=0.
-    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,PLEM)
+    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM)
 !
 !*      3.2 RM17 mixing length
 !           ------------------
@@ -788,7 +627,7 @@ SELECT CASE (HTURBLEN)
     ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ)))
     ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ)))
     ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
-    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,PLEM)
+    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM)
 !
 !*      3.3 Grey-zone combined RM17 & Deardorff mixing lengths 
 !           --------------------------------------------------
@@ -797,7 +636,7 @@ SELECT CASE (HTURBLEN)
     ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ)))
     ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ)))
     ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
-    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,PLEM)
+    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM)
 
     CALL DELT(ZLMW,ODZ=.FALSE.)
     ! The minimum mixing length is chosen between Horizontal grid mesh (not taking into account the vertical grid mesh) and RM17.
@@ -805,37 +644,37 @@ SELECT CASE (HTURBLEN)
     ! For LES grid meshes, this is equivalent to Deardorff : the base mixing lentgh is the horizontal grid mesh, 
     !                      and it is limited by a stability-based length (RM17), as was done in Deardorff length (but taking into account shear as well)
     ! For grid meshes in the grey zone, then this is the smaller of the two.
-    PLEM = MIN(PLEM,XCADAP*ZLMW)
+    ZLM = MIN(ZLM,XCADAP*ZLMW)
 !
 !*      3.4 Delta mixing length
 !           -------------------
 !
   CASE ('DELT')
-    CALL DELT(PLEM,ODZ=.TRUE.)
+    CALL DELT(ZLM,ODZ=.TRUE.)
 !
 !*      3.5 Deardorff mixing length
 !           -----------------------
 !
   CASE ('DEAR')
-    CALL DEAR(PLEM)
+    CALL DEAR(ZLM)
 !
 !*      3.6 Blackadar mixing length
 !           -----------------------
 !
   CASE ('BLKR')
    ZL0 = 100.
-   PLEM(:,:,:) = ZL0
+   ZLM(:,:,:) = ZL0
 
    ZALPHA=0.5**(-1.5)
    !
    DO JK=IKTB,IKTE
-     PLEM(:,:,JK) = ( 0.5*(PZZ(:,:,JK)+PZZ(:,:,JK+KKL)) - &
+     ZLM(:,:,JK) = ( 0.5*(PZZ(:,:,JK)+PZZ(:,:,JK+KKL)) - &
      & PZZ(:,:,KKA+JPVEXT_TURB*KKL) ) * PDIRCOSZW(:,:)
-     PLEM(:,:,JK) = ZALPHA  * PLEM(:,:,JK) * ZL0 / ( ZL0 + ZALPHA*PLEM(:,:,JK) )
+     ZLM(:,:,JK) = ZALPHA  * ZLM(:,:,JK) * ZL0 / ( ZL0 + ZALPHA*ZLM(:,:,JK) )
    END DO
 !
-   PLEM(:,:,IKTB-1) = PLEM(:,:,IKTB)
-   PLEM(:,:,IKTE+1) = PLEM(:,:,IKTE)
+   ZLM(:,:,IKTB-1) = ZLM(:,:,IKTB)
+   ZLM(:,:,IKTE+1) = ZLM(:,:,IKTE)
 !
 !
 !
@@ -844,12 +683,17 @@ END SELECT
 !*      3.5 Mixing length modification for cloud
 !           -----------------------
 IF (KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE') CALL CLOUD_MODIF_LM
+ENDIF  ! end LHARRAT
 
 !
 !*      3.6 Dissipative length
 !           ------------------
-!
-ZLEPS(:,:,:)=PLEM(:,:,:)
+
+IF (LHARAT) THEN
+  ZLEPS=PLENGTHM*(3.75**2.)
+ELSE
+  ZLEPS=ZLM
+ENDIF
 !
 !*      3.7 Correction in the Surface Boundary Layer (Redelsperger 2001)
 !           ----------------------------------------
@@ -864,7 +708,7 @@ IF (ORMC01) THEN
     ZSFRV=0.
     ZLMO=LMO(ZUSTAR,ZTHLM(:,:,IKB),ZRVM,PSFTH,ZSFRV)
   END IF
-  CALL RMC01(HTURBLEN,KKA,KKU,KKL,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,ZLMO,PLEM,ZLEPS)
+  CALL RMC01(HTURBLEN,KKA,KKU,KKL,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,ZLMO,ZLM,ZLEPS)
 END IF
 !
 !RMC01 is only applied on RM17 in ADAP
@@ -874,14 +718,14 @@ IF (HTURBLEN=='ADAP') ZLEPS = MIN(ZLEPS,ZLMW*XCADAP)
 !           ----------------------------------------------------------
 !
 IF (HTURBDIM=="3DIM") THEN
-  CALL UPDATE_LM(HLBCX,HLBCY,PLEM,ZLEPS)
+  CALL UPDATE_LM(HLBCX,HLBCY,ZLM,ZLEPS)
 END IF
 !
 !*      3.9 Mixing length correction if immersed walls 
 !           ------------------------------------------
 !
 IF (LIBM) THEN
-   CALL IBM_MIXINGLENGTH(PLEM,ZLEPS,XIBM_XMUT,XIBM_LS(:,:,:,1),PTKET)
+   CALL IBM_MIXINGLENGTH(ZLM,ZLEPS,XIBM_XMUT,XIBM_LS(:,:,:,1),PTKET)
 ENDIF
 !----------------------------------------------------------------------------
 !
@@ -968,39 +812,40 @@ ENDIF
 !*      5. TURBULENT SOURCES
 !          -----------------
 !
-if ( lbudget_u )  call Budget_store_init( tbudgets(NBUDGET_U ), 'VTURB', prus  (:, :, :)    )
-if ( lbudget_v )  call Budget_store_init( tbudgets(NBUDGET_V ), 'VTURB', prvs  (:, :, :)    )
-if ( lbudget_w )  call Budget_store_init( tbudgets(NBUDGET_W ), 'VTURB', prws  (:, :, :)    )
+IF( LBUDGET_U )  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_U ), 'VTURB', PRUS(:, :, :)    )
+IF( LBUDGET_V )  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_V ), 'VTURB', PRVS(:, :, :)    )
+IF( LBUDGET_W )  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_W ), 'VTURB', PRWS(:, :, :)    )
 
-if ( lbudget_th ) then
-  if ( krri >= 1 .and. krrl >= 1 ) then
-    call Budget_store_init( tbudgets(NBUDGET_TH), 'VTURB', prthls(:, :, :) + zlvocpexnm(:, :, :) * prrs(:, :, :, 2) &
-                                                                          + zlsocpexnm(:, :, :) * prrs(:, :, :, 4) )
-  else if ( krrl >= 1 ) then
-    call Budget_store_init( tbudgets(NBUDGET_TH), 'VTURB', prthls(:, :, :) + zlocpexnm(:, :, :) * prrs(:, :, :, 2) )
-  else
-    call Budget_store_init( tbudgets(NBUDGET_TH), 'VTURB', prthls(:, :, :) )
-  end if
-end if
+IF( LBUDGET_TH ) THEN
+  IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
+    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:, :, :) + ZLVOCPEXNM(:, :, :) * PRRS(:, :, :, 2) &
+                                                                          + ZLSOCPEXNM(:, :, :) * PRRS(:, :, :, 4) )
+  ELSE IF( KRRL >= 1 ) THEN
+    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:, :, :) + ZLOCPEXNM(:, :, :) * PRRS(:, :, :, 2) )
+  ELSE
+    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:, :, :) )
+  END IF
+END IF
 
-if ( lbudget_rv ) then
-  if ( krri >= 1 .and. krrl >= 1 ) then
-    call Budget_store_init( tbudgets(NBUDGET_RV), 'VTURB', prrs(:, :, :, 1) - prrs(:, :, :, 2) - prrs(:, :, :, 4) )
-  else if ( krrl >= 1 ) then
-    call Budget_store_init( tbudgets(NBUDGET_RV), 'VTURB', prrs(:, :, :, 1) - prrs(:, :, :, 2) )
-  else
-    call Budget_store_init( tbudgets(NBUDGET_RV), 'VTURB', prrs(:, :, :, 1) )
-  end if
-end if
+IF( LBUDGET_RV ) THEN
+  IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
+    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) - PRRS(:, :, :, 4) )
+  ELSE IF( KRRL >= 1 ) THEN
+    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) )
+  ELSE
+    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:, :, :, 1) )
+  END IF
+END IF
 
-if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'VTURB', prrs  (:, :, :, 2) )
-if ( lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'VTURB', prrs  (:, :, :, 4) )
+IF( LBUDGET_RC ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RC), 'VTURB', PRRS  (:, :, :, 2) )
+IF( LBUDGET_RI ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RI), 'VTURB', PRRS  (:, :, :, 4) )
 
-if ( lbudget_sv ) then
-  do jsv = 1, nsv
-    call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + jsv), 'VTURB', prsvs(:, :, :, jsv) )
-  end do
-end if
+IF( LBUDGET_SV ) THEN
+  DO JSV = 1, NSV
+    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'VTURB', PRSVS(:, :, :, JSV) )
+  END DO
+END IF
+
 CALL TURB_VER(KKA,KKU,KKL,KRR, KRRL, KRRI,               &
           OTURB_FLX,                                     &
           HTURBDIM,HTOM,PIMPL,ZEXPL,                     &
@@ -1011,81 +856,84 @@ CALL TURB_VER(KKA,KKU,KKL,KRR, KRRL, KRRI,               &
           PSFTH,PSFRV,PSFSV,PSFTH,PSFRV,PSFSV,           &
           ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU33M,               &
           PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,PSVT,    &
-          PTKET,PLEM,PLENGTHM,PLENGTHH,ZLEPS,MFMOIST,    &
+          PTKET,ZLM,PLENGTHM,PLENGTHH,ZLEPS,MFMOIST,     &
           ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,     &
           ZFWTH,ZFWR,ZFTH2,ZFR2,ZFTHR,PBL_DEPTH,         &
           PSBL_DEPTH,ZLMO,                               &
           PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,              &
           PDYP,PTHP,PSIGS,PWTH,PWRC,PWSV                 )
 
-if ( lbudget_u ) call Budget_store_end( tbudgets(NBUDGET_U), 'VTURB', prus(:, :, :) )
-if ( lbudget_v ) call Budget_store_end( tbudgets(NBUDGET_V), 'VTURB', prvs(:, :, :) )
-if ( lbudget_w ) call Budget_store_end( tbudgets(NBUDGET_W), 'VTURB', prws(:, :, :) )
+IF( LBUDGET_U ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_U), 'VTURB', PRUS(:, :, :) )
+IF( LBUDGET_V ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_V), 'VTURB', PRVS(:, :, :) )
+IF( LBUDGET_W ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_W), 'VTURB', PRWS(:, :, :) )
 
-if ( lbudget_th ) then
-  if ( krri >= 1 .and. krrl >= 1 ) then
-    call Budget_store_end( tbudgets(NBUDGET_TH), 'VTURB', prthls(:, :, :) + zlvocpexnm(:, :, :) * prrs(:, :, :, 2) &
-                                                                          + zlsocpexnm(:, :, :) * prrs(:, :, :, 4) )
-  else if ( krrl >= 1 ) then
-    call Budget_store_end( tbudgets(NBUDGET_TH), 'VTURB', prthls(:, :, :) + zlocpexnm(:, :, :) * prrs(:, :, :, 2) )
-  else
-    call Budget_store_end( tbudgets(NBUDGET_TH), 'VTURB', prthls(:, :, :) )
-  end if
-end if
+IF( LBUDGET_TH ) THEN
+  IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
+    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:, :, :) + ZLVOCPEXNM(:, :, :) * PRRS(:, :, :, 2) &
+                                                                          + ZLSOCPEXNM(:, :, :) * PRRS(:, :, :, 4) )
+  ELSE IF( KRRL >= 1 ) THEN
+    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:, :, :) + ZLOCPEXNM(:, :, :) * PRRS(:, :, :, 2) )
+  ELSE
+    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:, :, :) )
+  END IF
+END IF
 
-if ( lbudget_rv ) then
-  if ( krri >= 1 .and. krrl >= 1 ) then
-    call Budget_store_end( tbudgets(NBUDGET_RV), 'VTURB', prrs(:, :, :, 1) - prrs(:, :, :, 2) - prrs(:, :, :, 4) )
-  else if ( krrl >= 1 ) then
-    call Budget_store_end( tbudgets(NBUDGET_RV), 'VTURB', prrs(:, :, :, 1) - prrs(:, :, :, 2) )
-  else
-    call Budget_store_end( tbudgets(NBUDGET_RV), 'VTURB', prrs(:, :, :, 1) )
-  end if
-end if
+IF( LBUDGET_RV ) THEN
+  IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
+    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) - PRRS(:, :, :, 4) )
+  ELSE IF( KRRL >= 1 ) THEN
+    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) )
+  ELSE
+    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:, :, :, 1) )
+  END IF
+END IF
 
-if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'VTURB', prrs(:, :, :, 2) )
-if ( lbudget_ri ) call Budget_store_end( tbudgets(NBUDGET_RI), 'VTURB', prrs(:, :, :, 4) )
+IF( LBUDGET_RC ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RC), 'VTURB', PRRS(:, :, :, 2) )
+IF( LBUDGET_RI ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RI), 'VTURB', PRRS(:, :, :, 4) )
 
-if ( lbudget_sv )  then
-  do jsv = 1, nsv
-    call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + jsv), 'VTURB', prsvs(:, :, :, jsv) )
-  end do
-end if
+IF( LBUDGET_SV )  THEN
+  DO JSV = 1, NSV
+    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'VTURB', PRSVS(:, :, :, JSV) )
+  END DO
+END IF
 !
-if ( hturbdim == '3DIM' ) then
-  if ( lbudget_u  ) call Budget_store_init( tbudgets(NBUDGET_U ), 'HTURB', prus  (:, :, :) )
-  if ( lbudget_v  ) call Budget_store_init( tbudgets(NBUDGET_V ), 'HTURB', prvs  (:, :, :) )
-  if ( lbudget_w  ) call Budget_store_init( tbudgets(NBUDGET_W ), 'HTURB', prws  (:, :, :) )
+#ifdef REPRO48
+#else
+IF( HTURBDIM == '3DIM' ) THEN
+#endif
+  IF( LBUDGET_U  ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_U ), 'HTURB', PRUS  (:, :, :) )
+  IF( LBUDGET_V  ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_V ), 'HTURB', PRVS  (:, :, :) )
+  IF( LBUDGET_W  ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_W ), 'HTURB', PRWS  (:, :, :) )
 
-  if (lbudget_th)  then
-    if ( krri >= 1 .and. krrl >= 1 ) then
-      call Budget_store_init( tbudgets(NBUDGET_TH), 'HTURB', prthls(:, :, :) + zlvocpexnm(:, :, :) * prrs(:, :, :, 2) &
-                                                                             + zlsocpexnm(:, :, :) * prrs(:, :, :, 4) )
-    else if ( krrl >= 1 ) then
-      call Budget_store_init( tbudgets(NBUDGET_TH), 'HTURB', prthls(:, :, :) + zlocpexnm(:, :, :) * prrs(:, :, :, 2) )
-    else
-      call Budget_store_init( tbudgets(NBUDGET_TH), 'HTURB', prthls(:, :, :) )
-    end if
-  end if
+  IF(LBUDGET_TH)  THEN
+    IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:, :, :) + ZLVOCPEXNM(:, :, :) * PRRS(:, :, :, 2) &
+                                                                             + ZLSOCPEXNM(:, :, :) * PRRS(:, :, :, 4) )
+    ELSE IF( KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:, :, :) + ZLOCPEXNM(:, :, :) * PRRS(:, :, :, 2) )
+    ELSE
+      CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:, :, :) )
+    END IF
+  END IF
 
-  if ( lbudget_rv ) then
-    if ( krri >= 1 .and. krrl >= 1 ) then
-      call Budget_store_init( tbudgets(NBUDGET_RV), 'HTURB', prrs(:, :, :, 1) - prrs(:, :, :, 2) - prrs(:, :, :, 4) )
-    else if ( krrl >= 1 ) then
-      call Budget_store_init( tbudgets(NBUDGET_RV), 'HTURB', prrs(:, :, :, 1) - prrs(:, :, :, 2) )
-    else
-      call Budget_store_init( tbudgets(NBUDGET_RV), 'HTURB', prrs(:, :, :, 1) )
-    end if
-  end if
+  IF( LBUDGET_RV ) THEN
+    IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) - PRRS(:, :, :, 4) )
+    ELSE IF( KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) )
+    ELSE
+      CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:, :, :, 1) )
+    END IF
+  END IF
 
-  if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'HTURB', prrs(:, :, :, 2) )
-  if ( lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'HTURB', prrs(:, :, :, 4) )
+  IF( LBUDGET_RC ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RC), 'HTURB', PRRS(:, :, :, 2) )
+  IF( LBUDGET_RI ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RI), 'HTURB', PRRS(:, :, :, 4) )
 
-  if ( lbudget_sv )  then
-    do jsv = 1, nsv
-      call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + jsv), 'HTURB', prsvs(:, :, :, jsv) )
-    end do
-  end if
+  IF( LBUDGET_SV )  THEN
+    DO JSV = 1, NSV
+      CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:, :, :, JSV) )
+    END DO
+  END IF
 
     CALL TURB_HOR_SPLT(KSPLIT, KRR, KRRL, KRRI, PTSTEP,        &
           HLBCX,HLBCY,OTURB_FLX,OSUBG_COND,                    &
@@ -1097,46 +945,49 @@ if ( hturbdim == '3DIM' ) then
           PSFTH,PSFRV,PSFSV,                                   &
           ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU22M,ZTAU33M,             &
           PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,PSVT,          &
-          PTKET,PLEM,ZLEPS,                                    &
+          PTKET,ZLM,ZLEPS,                                    &
           ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,           &
           PDYP,PTHP,PSIGS,                                     &
           ZTRH,                                                &
           PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS                     )
 
-  if ( lbudget_u ) call Budget_store_end( tbudgets(NBUDGET_U), 'HTURB', prus(:, :, :) )
-  if ( lbudget_v ) call Budget_store_end( tbudgets(NBUDGET_V), 'HTURB', prvs(:, :, :) )
-  if ( lbudget_w ) call Budget_store_end( tbudgets(NBUDGET_W), 'HTURB', prws(:, :, :) )
+  IF( LBUDGET_U ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_U), 'HTURB', PRUS(:, :, :) )
+  IF( LBUDGET_V ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_V), 'HTURB', PRVS(:, :, :) )
+  IF( LBUDGET_W ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_W), 'HTURB', PRWS(:, :, :) )
 
-  if ( lbudget_th ) then
-    if ( krri >= 1 .and. krrl >= 1 ) then
-      call Budget_store_end( tbudgets(NBUDGET_TH), 'HTURB', prthls(:, :, :) + zlvocpexnm(:, :, :) * prrs(:, :, :, 2) &
-                                                                            + zlsocpexnm(:, :, :) * prrs(:, :, :, 4) )
-    else if ( krrl >= 1 ) then
-      call Budget_store_end( tbudgets(NBUDGET_TH), 'HTURB', prthls(:, :, :) + zlocpexnm(:, :, :) * prrs(:, :, :, 2) )
-    else
-      call Budget_store_end( tbudgets(NBUDGET_TH), 'HTURB', prthls(:, :, :) )
-    end if
-  end if
+  IF( LBUDGET_TH ) THEN
+    IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:, :, :) + ZLVOCPEXNM(:, :, :) * PRRS(:, :, :, 2) &
+                                                                            + ZLSOCPEXNM(:, :, :) * PRRS(:, :, :, 4) )
+    ELSE IF( KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:, :, :) + ZLOCPEXNM(:, :, :) * PRRS(:, :, :, 2) )
+    ELSE
+      CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:, :, :) )
+    END IF
+  END IF
 
-  if ( lbudget_rv ) then
-    if ( krri >= 1 .and. krrl >= 1 ) then
-      call Budget_store_end( tbudgets(NBUDGET_RV), 'HTURB', prrs(:, :, :, 1) - prrs(:, :, :, 2) - prrs(:, :, :, 4) )
-    else if ( krrl >= 1 ) then
-      call Budget_store_end( tbudgets(NBUDGET_RV), 'HTURB', prrs(:, :, :, 1) - prrs(:, :, :, 2) )
-    else
-      call Budget_store_end( tbudgets(NBUDGET_RV), 'HTURB', prrs(:, :, :, 1) )
-    end if
-  end if
+  IF( LBUDGET_RV ) THEN
+    IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) - PRRS(:, :, :, 4) )
+    ELSE IF( KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) )
+    ELSE
+      CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:, :, :, 1) )
+    END IF
+  END IF
 
-  if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'HTURB', prrs(:, :, :, 2) )
-  if ( lbudget_ri ) call Budget_store_end( tbudgets(NBUDGET_RI), 'HTURB', prrs(:, :, :, 4) )
+  IF( LBUDGET_RC ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RC), 'HTURB', PRRS(:, :, :, 2) )
+  IF( LBUDGET_RI ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RI), 'HTURB', PRRS(:, :, :, 4) )
 
-  if ( lbudget_sv )  then
-    do jsv = 1, nsv
-      call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + jsv), 'HTURB', prsvs(:, :, :, jsv) )
-    end do
-  end if
-end if
+  IF( LBUDGET_SV )  THEN
+    DO JSV = 1, NSV
+      CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:, :, :, JSV) )
+    END DO
+  END IF
+#ifdef REPRO48
+#else
+END IF
+#endif
 !----------------------------------------------------------------------------
 !
 !*      6. EVOLUTION OF THE TKE AND ITS DISSIPATION 
@@ -1149,7 +1000,19 @@ end if
 
 !  6.2 TKE evolution equation
 
-CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKET,PLEM,ZLEPS,PDYP,ZTRH,     &
+IF (.NOT. LHARAT) THEN
+!
+IF (LBUDGET_TH)  THEN
+  IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
+    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS+ ZLVOCPEXNM * PRRS(:,:,:,2) &
+                                                          & + ZLSOCPEXNM * PRRS(:,:,:,4) )
+  ELSE IF ( KRRL >= 1 ) THEN
+    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS+ ZLOCPEXNM * PRRS(:,:,:,2) )
+  ELSE
+    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS(:, :, :) )
+  END IF
+END IF
+CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKET,ZLM,ZLEPS,PDYP,ZTRH,     &
                      PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,            &
                      PTSTEP,PIMPL,ZEXPL,                             &
                      HTURBLEN,HTURBDIM,                              &
@@ -1157,6 +1020,19 @@ CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKET,PLEM,ZLEPS,PDYP,ZTRH,     &
                      PTHP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,&
                      TBUDGETS,KBUDGETS,PRTKESM=PRTKEMS)
 
+IF (LBUDGET_TH)  THEN
+  IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
+    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS+ ZLVOCPEXNM * PRRS(:,:,:,2) &
+                                                          & + ZLSOCPEXNM * PRRS(:,:,:,4) )
+  ELSE IF ( KRRL >= 1 ) THEN
+    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS+ ZLOCPEXNM * PRRS(:,:,:,2) )
+  ELSE
+    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS(:, :, :) )
+  END IF
+END IF
+!
+ENDIF
+!
 !----------------------------------------------------------------------------
 !
 !*      7. STORES SOME INFORMATIONS RELATED TO THE TURBULENCE SCHEME
@@ -1176,7 +1052,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%NTYPE      = TYPEREAL
   TZFIELD%NDIMS      = 3
   TZFIELD%LTIMEDEP   = .TRUE.
-  CALL IO_Field_write(TPFILE,TZFIELD,PLEM)
+  CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZLM)
 !
   IF (KRR /= 0) THEN
 !
@@ -1192,7 +1068,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_Field_write(TPFILE,TZFIELD,PTHLT)
+    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,PTHLT)
 !
 ! stores the conservative mixing ratio
 !
@@ -1206,7 +1082,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_Field_write(TPFILE,TZFIELD,PRT(:,:,:,1))
+    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,PRT(:,:,:,1))
    END IF
 END IF
 !
@@ -1290,7 +1166,7 @@ IF (LLES_CALL) THEN
 !*     12. LES mixing end dissipative lengths, presso-correlations
 !          -------------------------------------------------------
 !
-  CALL LES_MEAN_SUBGRID(PLEM,X_LES_SUBGRID_LMix)
+  CALL LES_MEAN_SUBGRID(ZLM,X_LES_SUBGRID_LMix)
   CALL LES_MEAN_SUBGRID(ZLEPS,X_LES_SUBGRID_LDiss)
 !
 !* presso-correlations for subgrid Tke are equal to zero.
@@ -1302,8 +1178,10 @@ IF (LLES_CALL) THEN
   XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !
+IF(PRESENT(PLEM)) PLEM = ZLM
 !----------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('TURB',1,ZHOOK_HANDLE)
 CONTAINS
 !
 !
@@ -1503,6 +1381,8 @@ REAL                :: ZD           ! distance to the surface
 !
 !-------------------------------------------------------------------------------
 !
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('TURB:DELT',0,ZHOOK_HANDLE)
 IF (ODZ) THEN
   ! Dz is take into account in the computation
   DO JK = IKTB,IKTE ! 1D turbulence scheme
@@ -1564,6 +1444,7 @@ END IF
 PLM(:,:,KKA) = PLM(:,:,IKB  )
 PLM(:,:,KKU  ) = PLM(:,:,IKE)
 !
+IF (LHOOK) CALL DR_HOOK('TURB:DELT',1,ZHOOK_HANDLE)
 END SUBROUTINE DELT
 !
 !     ####################
@@ -1607,6 +1488,8 @@ REAL, DIMENSION(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)) ::     &
 !-------------------------------------------------------------------------------
 !
 !   initialize the mixing length with the mesh grid
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('TURB:DEAR',0,ZHOOK_HANDLE)
 ! 1D turbulence scheme
 PLM(:,:,IKTB:IKTE) = PZZ(:,:,IKTB+KKL:IKTE+KKL) - PZZ(:,:,IKTB:IKTE)
 PLM(:,:,KKU) = PLM(:,:,IKE)
@@ -1720,6 +1603,7 @@ PLM(:,:,KKA) = PLM(:,:,IKB  )
 PLM(:,:,IKE  ) = PLM(:,:,IKE-KKL)
 PLM(:,:,KKU  ) = PLM(:,:,KKU-KKL)
 !
+IF (LHOOK) CALL DR_HOOK('TURB:DEAR',1,ZHOOK_HANDLE)
 END SUBROUTINE DEAR
 !
 !     #########################
@@ -1787,6 +1671,8 @@ REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3)) :: ZLM_CLOUD
 !*       1.    INITIALISATION
 !              --------------
 !
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('TURB:CLOUD_MODIF_LM',0,ZHOOK_HANDLE)
 ZPENTE = ( PCOEF_AMPL_SAT - 1. ) / ( PCEI_MAX - PCEI_MIN ) 
 ZCOEF_AMPL_CEI_NUL = 1. - ZPENTE * PCEI_MIN
 !
@@ -1811,7 +1697,7 @@ WHERE ( PCEI(:,:,:) <  PCEI_MAX .AND.                                        &
 !              ------------------------------------------
 !
 IF (HTURBLEN_CL == HTURBLEN) THEN
-  ZLM_CLOUD(:,:,:) = PLEM(:,:,:)
+  ZLM_CLOUD(:,:,:) = ZLM(:,:,:)
 ELSE
   SELECT CASE (HTURBLEN_CL)
 !
@@ -1849,16 +1735,16 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%NTYPE      = TYPEREAL
   TZFIELD%NDIMS      = 3
   TZFIELD%LTIMEDEP   = .TRUE.
-  CALL IO_Field_write(TPFILE,TZFIELD,PLEM)
+  CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZLM)
 ENDIF
 !
 ! Amplification of the mixing length when the criteria are verified
 !
-WHERE (ZCOEF_AMPL(:,:,:) /= 1.) PLEM(:,:,:) = ZCOEF_AMPL(:,:,:)*ZLM_CLOUD(:,:,:)
+WHERE (ZCOEF_AMPL(:,:,:) /= 1.) ZLM(:,:,:) = ZCOEF_AMPL(:,:,:)*ZLM_CLOUD(:,:,:)
 !
 ! Cloud mixing length in the clouds at the points which do not verified the CEI
 !
-WHERE (PCEI(:,:,:) == -1.) PLEM(:,:,:) = ZLM_CLOUD(:,:,:)
+WHERE (PCEI(:,:,:) == -1.) ZLM(:,:,:) = ZLM_CLOUD(:,:,:)
 !
 !
 !*       5.    IMPRESSION
@@ -1875,7 +1761,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%NTYPE      = TYPEREAL
   TZFIELD%NDIMS      = 3
   TZFIELD%LTIMEDEP   = .TRUE.
-  CALL IO_Field_write(TPFILE,TZFIELD,ZCOEF_AMPL)
+  CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZCOEF_AMPL)
   !
   TZFIELD%CMNHNAME   = 'LM_CLOUD'
   TZFIELD%CSTDNAME   = ''
@@ -1886,10 +1772,11 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%NGRID      = 1
   TZFIELD%NTYPE      = TYPEREAL
   TZFIELD%NDIMS      = 3
-  CALL IO_Field_write(TPFILE,TZFIELD,ZLM_CLOUD)
+  CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZLM_CLOUD)
   !
 ENDIF
 !
+IF (LHOOK) CALL DR_HOOK('TURB:CLOUD_MODIF_LM',1,ZHOOK_HANDLE)
 END SUBROUTINE CLOUD_MODIF_LM
 !
 END SUBROUTINE TURB    
