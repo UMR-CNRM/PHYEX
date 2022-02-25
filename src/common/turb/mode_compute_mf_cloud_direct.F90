@@ -90,10 +90,14 @@ PRI_MF(:,:)=0.
 PCF_MF(:,:)=0.
 
 DO JI=1,SIZE(PCF_MF,1)
+#ifdef REPRO48
   JK0=KKLCL(JI)-KKL ! first mass level with cloud
   JK0=MAX(JK0, MIN(KKB,KKE)) !protection if KKL=1
   JK0=MIN(JK0, MAX(KKB,KKE)) !protection if KKL=-1
   DO JK=JK0,KKE-KKL,KKL
+#else
+  DO JK=KKLCL(JI),KKE-KKL,KKL
+#endif
     PCF_MF(JI,JK ) = MAX( 0., MIN(1.,XKCF_MF *0.5* (       &
                 &    PFRAC_UP(JI,JK) +  PFRAC_UP(JI,JK+KKL) ) ))
     PRC_MF(JI,JK)  = 0.5* XKCF_MF * ( PFRAC_UP(JI,JK)*PRC_UP(JI,JK)  &
