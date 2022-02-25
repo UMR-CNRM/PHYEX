@@ -349,7 +349,11 @@ DO JLOOP=1,SIZE(OTEST)
                (PRTM(JLOOP,KK)-ZDZ*(PRTM(JLOOP,KK)-PRTM(JLOOP,JI))/PDZZ(JLOOP,KK)) + &
                (1. - ZKIC_INIT)*PRT_UP(JLOOP)
   ELSE
+#ifdef REPRO55
+    ZMIXTHL(JLOOP) = 0.1
+#else
     ZMIXTHL(JLOOP) = 300.
+#endif
     ZMIXRT(JLOOP) = 0.1
   ENDIF
 ENDDO
