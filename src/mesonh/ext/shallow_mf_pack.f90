@@ -13,7 +13,7 @@ INTERFACE
                 HMF_UPDRAFT, HMF_CLOUD, OMIXUV,                       &
                 OMF_FLX,TPFILE,PTIME_LES,                             &
                 PIMPL_MF, PTSTEP,                                     &
-                PDZZ, PZZ,                                            &
+                PDZZ, PZZ, PDX,PDY,                                   &
                 PRHODJ, PRHODREF,                                     &
                 PPABSM, PEXN,                                         &
                 PSFTH,PSFRV,                                          &
@@ -64,8 +64,8 @@ REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRRS
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS            ! Scalar sources 
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
-
-
+!
+REAL, INTENT(IN) :: PDX,PDY ! Size of mesh in X/Y directions
 END SUBROUTINE SHALLOW_MF_PACK
 
 END INTERFACE
@@ -77,7 +77,7 @@ END MODULE MODI_SHALLOW_MF_PACK
                 HMF_UPDRAFT, HMF_CLOUD, OMIXUV,                       &
                 OMF_FLX,TPFILE,PTIME_LES,                             &
                 PIMPL_MF, PTSTEP,                                     &
-                PDZZ, PZZ,                                            &
+                PDZZ, PZZ, PDX,PDY,                                   &
                 PRHODJ, PRHODREF,                                     &
                 PPABSM, PEXN,                                         &
                 PSFTH,PSFRV,                                          &
@@ -186,6 +186,7 @@ REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS            ! Scalar sources
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
 !
+REAL, INTENT(IN) :: PDX,PDY ! Size of mesh in X/Y directions
 !                     0.2  Declaration of local variables
 !
 REAL, DIMENSION(SIZE(PTHM,1)*SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZZZ         ! Height of flux point
@@ -330,16 +331,15 @@ CALL SHALLOW_MF(1,IKU,1,KRR,KRRL,KRRI,                              &
                 ZRHODJ,ZRHODREF,                                      &
                 ZPABSM, ZEXN,                                         &
                 ZSFTH,ZSFRV,                                          &
-                ZTHM,ZRM,ZUM,ZVM,ZWM,ZTKEM,ZSVM,                      &
+                ZTHM,ZRM,ZUM,ZVM,ZTKEM,ZSVM,                          &
                 ZDUDT_MF,ZDVDT_MF,                                    &
                 ZDTHLDT_MF,ZDRTDT_MF,ZDSVDT_MF,                       &
                 ZSIGMF,ZRC_MF,ZRI_MF,ZCF_MF,ZFLXZTHVMF,               &
                 ZFLXZTHMF,ZFLXZRMF,ZFLXZUMF,ZFLXZVMF,                 &
                 ZTHL_UP,ZRT_UP,ZRV_UP,ZRC_UP,ZRI_UP,                  &
                 ZU_UP, ZV_UP, ZTHV_UP, ZW_UP,                         &
-                ZTHL_DO,ZTHV_DO,ZRT_DO,ZU_DO, ZV_DO,                  &
                 ZFRAC_UP,ZEMF,ZDETR,ZENTR,                            &
-                IKLCL,IKETL,IKCTL                                     )
+                IKLCL,IKETL,IKCTL,PDX,PDY                             )
 
 !!! 4. Unpack output variables
 

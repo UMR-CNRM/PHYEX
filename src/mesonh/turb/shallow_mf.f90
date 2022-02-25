@@ -17,16 +17,15 @@ INTERFACE
                 PRHODJ, PRHODREF,                                     &
                 PPABSM, PEXNM,                                        &
                 PSFTH,PSFRV,                                          &
-                PTHM,PRM,PUM,PVM,PWM,PTKEM,PSVM,                      &
+                PTHM,PRM,PUM,PVM,PTKEM,PSVM,                      &
                 PDUDT_MF,PDVDT_MF,                                    &
                 PDTHLDT_MF,PDRTDT_MF,PDSVDT_MF,                       &
                 PSIGMF,PRC_MF,PRI_MF,PCF_MF,PFLXZTHVMF,               &
                 PFLXZTHMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,                 &
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
                 PU_UP, PV_UP, PTHV_UP, PW_UP,                         &
-                PTHL_DO,PTHV_DO,PRT_DO,PU_DO, PV_DO,                  &
                 PFRAC_UP,PEMF,PDETR,PENTR,                            &
-                KKLCL,KKETL,KKCTL                                     )
+                KKLCL,KKETL,KKCTL,PDX,PDY                             )
 !     #################################################################
 !!
 !               
@@ -62,7 +61,7 @@ REAL, DIMENSION(:,:),   INTENT(IN) ::  PEXNM       ! Exner function at t-dt
 REAL, DIMENSION(:),     INTENT(IN) ::  PSFTH,PSFRV ! normal surface fluxes of theta and Rv 
 REAL, DIMENSION(:,:),   INTENT(IN) ::  PTHM        ! Theta at t-dt
 REAL, DIMENSION(:,:,:), INTENT(IN) ::  PRM         ! water var. at t-dt
-REAL, DIMENSION(:,:),   INTENT(IN) ::  PUM,PVM,PWM ! wind components at t-dt
+REAL, DIMENSION(:,:),   INTENT(IN) ::  PUM,PVM ! wind components at t-dt
 REAL, DIMENSION(:,:),   INTENT(IN) ::  PTKEM       ! tke at t-dt
 
 REAL, DIMENSION(:,:,:), INTENT(IN) ::  PSVM        ! scalar variable a t-dt
@@ -85,12 +84,6 @@ REAL, DIMENSION(:,:), INTENT(INOUT) ::  PRV_UP    ! Vapor updraft characteristic
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PU_UP     ! U wind updraft characteristics
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PV_UP     ! V wind updraft characteristics
 
-REAL, DIMENSION(:,:), INTENT(INOUT) ::  PTHL_DO   ! Thl environment characteristics
-REAL, DIMENSION(:,:), INTENT(INOUT) ::  PTHV_DO    ! Thv environment characteristics
-REAL, DIMENSION(:,:), INTENT(INOUT) ::  PRT_DO    ! Rt  environment characteristics
-REAL, DIMENSION(:,:), INTENT(INOUT) ::  PU_DO     ! U wind environment characteristics
-REAL, DIMENSION(:,:), INTENT(INOUT) ::  PV_DO     ! V wind environment characteristics
-
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PRC_UP    ! cloud content updraft characteristics
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PRI_UP    ! ice content   updraft characteristics
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PTHV_UP   ! Thv   updraft characteristics
@@ -101,7 +94,7 @@ REAL, DIMENSION(:,:), INTENT(OUT) ::  PDETR     ! updraft detrainment
 REAL, DIMENSION(:,:), INTENT(OUT) ::  PENTR     ! updraft entrainment
 INTEGER,DIMENSION(:), INTENT(OUT) :: KKLCL,KKETL,KKCTL ! level of LCL,ETL and CTL
 
-
+REAL,                 INTENT(IN)  :: PDX, PDY
 END SUBROUTINE SHALLOW_MF
 
 END INTERFACE
@@ -116,16 +109,15 @@ END MODULE MODI_SHALLOW_MF
                 PRHODJ, PRHODREF,                                     &
                 PPABSM, PEXNM,                                        &
                 PSFTH,PSFRV,                                          &
-                PTHM,PRM,PUM,PVM,PWM,PTKEM,PSVM,                      &
+                PTHM,PRM,PUM,PVM,PTKEM,PSVM,                          &
                 PDUDT_MF,PDVDT_MF,                                    &
                 PDTHLDT_MF,PDRTDT_MF,PDSVDT_MF,                       &
                 PSIGMF,PRC_MF,PRI_MF,PCF_MF,PFLXZTHVMF,               &
                 PFLXZTHMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,                 &
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
                 PU_UP, PV_UP, PTHV_UP, PW_UP,                         &
-                PTHL_DO,PTHV_DO,PRT_DO,PU_DO, PV_DO,                  &
                 PFRAC_UP,PEMF,PDETR,PENTR,                            &
-                KKLCL,KKETL,KKCTL                                     )
+                KKLCL,KKETL,KKCTL,PDX,PDY                             )
 
 !     #################################################################
 !!
@@ -180,9 +172,9 @@ USE MODD_PARAMETERS, ONLY: JPVEXT
 USE MODD_PARAM_MFSHALL_n
 USE MODD_TURB_n, ONLY: CTURBLEN
 
-USE MODI_THL_RT_FROM_TH_R_MF
-USE MODI_COMPUTE_UPDRAFT
-USE MODI_COMPUTE_UPDRAFT_RHCJ10
+USE MODE_THL_RT_FROM_TH_R_MF
+USE MODE_COMPUTE_UPDRAFT
+USE MODE_COMPUTE_UPDRAFT_RHCJ10
 USE MODE_COMPUTE_UPDRAFT_RAHA, ONLY: COMPUTE_UPDRAFT_RAHA
 USE MODE_MF_TURB, ONLY: MF_TURB
 USE MODE_MF_TURB_EXPL, ONLY: MF_TURB_EXPL
@@ -190,7 +182,7 @@ USE MODI_MF_TURB_GREYZONE
 USE MODE_COMPUTE_MF_CLOUD, ONLY: COMPUTE_MF_CLOUD
 USE MODI_SHUMAN_MF
 !
-USE MODI_COMPUTE_BL89_ML
+USE MODE_COMPUTE_BL89_ML
 USE MODD_GRID_n, ONLY : XDXHAT, XDYHAT
 USE MODD_REF_n, ONLY : XTHVREF
 USE MODE_MSG
@@ -230,7 +222,7 @@ REAL, DIMENSION(:,:),   INTENT(IN) ::  PEXNM       ! Exner function at t-dt
 REAL, DIMENSION(:),   INTENT(IN)   ::  PSFTH,PSFRV ! normal surface fluxes of theta and Rv 
 REAL, DIMENSION(:,:), INTENT(IN)   ::  PTHM        ! Theta at t-dt
 REAL, DIMENSION(:,:,:), INTENT(IN) ::  PRM         ! water var. at t-dt
-REAL, DIMENSION(:,:),   INTENT(IN) ::  PUM,PVM,PWM ! wind components at t-dt
+REAL, DIMENSION(:,:),   INTENT(IN) ::  PUM,PVM     ! wind components at t-dt
 REAL, DIMENSION(:,:),   INTENT(IN) ::  PTKEM       ! tke at t-dt
 
 REAL, DIMENSION(:,:,:), INTENT(IN) ::  PSVM        ! scalar variable a t-dt
@@ -252,13 +244,6 @@ REAL, DIMENSION(:,:), INTENT(INOUT) ::  PRT_UP    ! Rt  updraft characteristics
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PRV_UP    ! Vapor updraft characteristics
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PU_UP     ! U wind updraft characteristics
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PV_UP     ! V wind updraft characteristics
-
-REAL, DIMENSION(:,:), INTENT(INOUT) ::  PTHL_DO   ! Thl environment characteristics
-REAL, DIMENSION(:,:), INTENT(INOUT) ::  PTHV_DO    ! Thv environment characteristics
-REAL, DIMENSION(:,:), INTENT(INOUT) ::  PRT_DO    ! Rt  environment characteristics
-REAL, DIMENSION(:,:), INTENT(INOUT) ::  PU_DO     ! U wind environment characteristics
-REAL, DIMENSION(:,:), INTENT(INOUT) ::  PV_DO     ! V wind environment characteristics
-
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PRC_UP    ! cloud content updraft characteristics
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PRI_UP    ! ice content   updraft characteristics
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PTHV_UP   ! Thv   updraft characteristics
@@ -268,6 +253,7 @@ REAL, DIMENSION(:,:), INTENT(INOUT) ::  PEMF      ! updraft mass flux
 REAL, DIMENSION(:,:), INTENT(OUT) ::  PDETR     ! updraft detrainment
 REAL, DIMENSION(:,:), INTENT(OUT) ::  PENTR     ! updraft entrainment
 INTEGER,DIMENSION(:), INTENT(OUT) :: KKLCL,KKETL,KKCTL ! level of LCL,ETL and CTL
+REAL,                 INTENT(IN)  :: PDX, PDY
 !
 !                     0.2  Declaration of local variables
 !
@@ -347,8 +333,9 @@ IF (HMF_UPDRAFT == 'EDKF') THEN
                        PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,      &
                        PTHV_UP, PW_UP, PU_UP, PV_UP, ZSV_UP,     &
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PEMF,PDETR,&
-                       PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH )
-ELSEIF (HMF_UPDRAFT == 'RHCJ') THEN                       
+                       PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH,&
+                       PDX,PDY)
+ELSEIF (HMF_UPDRAFT == 'RHCJ') THEN
   GENTR_DETR = .TRUE.
   CALL COMPUTE_UPDRAFT_RHCJ10(KKA,IKB,IKE,KKU,KKL,HFRAC_ICE,GENTR_DETR,OMIXUV,&
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &

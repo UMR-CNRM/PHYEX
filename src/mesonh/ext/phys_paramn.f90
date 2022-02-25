@@ -1540,7 +1540,7 @@ IF (CSCONV == 'EDKF') THEN
      CALL SHALLOW_MF_PACK(NRR,NRRL,NRRI, CMF_UPDRAFT, CMF_CLOUD, LMIXUV,  &
                    LMF_FLX,TPFILE,ZTIME_LES_MF,                           &
                    XIMPL_MF, XTSTEP,                                      &
-                   XDZZ, XZZ,                                             &
+                   XDZZ, XZZ,XDXHAT(1),XDYHAT(1),                         &
                    XRHODJ, XRHODREF, XPABST, ZEXN, ZSFTH, ZSFRV,          &
                    XTHT,XRT,XUT,XVT,XWT,XTKET,XSVT,                       &
                    XRTHS,XRRS,XRUS,XRVS,XRSVS,                            &
