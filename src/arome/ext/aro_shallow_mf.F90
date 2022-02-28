@@ -222,7 +222,7 @@ ZIMPL=1.
   CALL SHALLOW_MF(KKA=IKA,KKU=IKU,KKL=KKL,KRR=KRR,KRRL=KRRL,KRRI=KRRI,                    &
      &HMF_UPDRAFT=HMF_UPDRAFT, HMF_CLOUD=HMF_CLOUD,HFRAC_ICE=HFRAC_ICE,OMIXUV=OMIXUV,     &
      &ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,                          &
-     &PIMPL_MF=ZIMPL, PTSTEP=PTSTEP, PTSTEP_MET=PTSTEP, PTSTEP_SV=PTSTEP,                 &
+     &PIMPL_MF=ZIMPL, PTSTEP=PTSTEP,                                                      &
      &PDZZ=PDZZF,PZZ=PZZ,                                                                  &
      &PRHODJ=PRHODJ,PRHODREF=PRHODREF,                                                    &
      &PPABSM=PPABSM,PEXNM=PEXNM,                                                          &
@@ -235,7 +235,7 @@ ZIMPL=1.
      &PTHL_UP=PTHL_UP,PRT_UP=PRT_UP,PRV_UP=PRV_UP,PRC_UP=PRC_UP,PRI_UP=PRI_UP,            &
      &PU_UP=PU_UP, PV_UP=PV_UP, PTHV_UP=PTHV_UP, PW_UP=PW_UP,                             &
      &PFRAC_UP=PFRAC_UP,PEMF=PEMF,PDETR=ZDETR,PENTR=ZENTR,                                &
-     &KKLCL=IKLCL,KKETL=IKETL,KKCTL=IKCTL                                                 )
+     &KKLCL=IKLCL,KKETL=IKETL,KKCTL=IKCTL,PDX=0.,PDY=0.                                   )
 !
 !
 !------------------------------------------------------------------------------

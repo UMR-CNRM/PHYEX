@@ -1,8 +1,13 @@
-!     ######spl
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+!     ################################################################
       SUBROUTINE SHALLOW_MF(KKA,KKU,KKL,KRR,KRRL,KRRI,                &
                 HMF_UPDRAFT, HMF_CLOUD, HFRAC_ICE, OMIXUV,            &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
-                PIMPL_MF, PTSTEP, PTSTEP_MET, PTSTEP_SV,              &
+                PIMPL_MF, PTSTEP,                                     &
                 PDZZ, PZZ,                                            &
                 PRHODJ, PRHODREF,                                     &
                 PPABSM, PEXNM,                                        &
@@ -15,10 +20,8 @@
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
                 PU_UP, PV_UP, PTHV_UP, PW_UP,                         &
                 PFRAC_UP,PEMF,PDETR,PENTR,                            &
-                KKLCL,KKETL,KKCTL                                     )
+                KKLCL,KKETL,KKCTL,PDX,PDY                             )
 
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     #################################################################
 !!
 !!****  *SHALLOW_MF* - 
@@ -53,7 +56,16 @@
 !!      S. Riette 18 May 2010 interface changed due to ice correction
 !!      S.Riette DUAL case
 !!      S. Riette Jan 2012: support for both order of vertical levels
+!!      R.Honnert 07/2012 : elemnts of Rio according to Bouteloup
+!!      R.Honnert 07/2012 : MF gray zone 
+!!      R.Honnert 10/2016 : SURF=gray zone initilisation + EDKF  
+!!      R.Honnert 10/2016 : Update with Arome
 !!      S. Riette Nov 2016: HFRAC_ICE support
+!!      Philippe Wautelet 28/05/2018: corrected truncated integer division (2/3 -> 2./3.)
+!!      Q.Rodier  01/2019 : support RM17 mixing length
+!!      R.Honnert 1/2019  : remove SURF 
+!  P. Wautelet 10/04/2019: replace ABORT and STOP calls by Print_msg
+!  R. Honnert     04/2021: remove HRIO and BOUT schemes
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -70,6 +82,9 @@ USE MODE_COMPUTE_UPDRAFT_RAHA, ONLY: COMPUTE_UPDRAFT_RAHA
 USE MODE_MF_TURB, ONLY: MF_TURB
 USE MODE_MF_TURB_EXPL, ONLY: MF_TURB_EXPL
 USE MODE_COMPUTE_MF_CLOUD, ONLY: COMPUTE_MF_CLOUD
+USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 IMPLICIT NONE
 
@@ -83,19 +98,17 @@ INTEGER,                INTENT(IN)   :: KKL          ! +1 if grid goes from grou
 INTEGER,                INTENT(IN)   :: KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL         ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI         ! number of ice water var.
-CHARACTER (LEN=4),      INTENT(IN)   :: HMF_UPDRAFT  ! Type of Mass Flux Scheme
+CHARACTER(LEN=4),       INTENT(IN)   :: HMF_UPDRAFT  ! Type of Mass Flux Scheme
                                      ! 'NONE' if no parameterization 
-CHARACTER (LEN=4),      INTENT(IN)   :: HMF_CLOUD    ! Type of statistical cloud
+CHARACTER(LEN=4),       INTENT(IN)   :: HMF_CLOUD    ! Type of statistical cloud
                                                      ! scheme
-CHARACTER*1,            INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
+CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                INTENT(IN)   :: OMIXUV    ! True if mixing of momentum
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
 INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
 REAL,                   INTENT(IN)   :: PIMPL_MF     ! degre of implicitness
-REAL,              INTENT(IN)     ::  PTSTEP   ! Dynamical timestep 
-REAL,              INTENT(IN)     ::  PTSTEP_MET! Timestep for meteorological variables                        
-REAL,              INTENT(IN)     ::  PTSTEP_SV! Timestep for tracer variables
+REAL,                   INTENT(IN)   :: PTSTEP    ! Dynamical timestep 
 
 REAL, DIMENSION(:,:),   INTENT(IN) ::  PZZ         ! Height of flux point
 REAL, DIMENSION(:,:),   INTENT(IN) ::  PDZZ        ! Metric coefficients
@@ -127,7 +140,7 @@ REAL, DIMENSION(:,:), INTENT(OUT)     ::  PFLXZUMF
 REAL, DIMENSION(:,:), INTENT(OUT)     ::  PFLXZVMF
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PTHL_UP   ! Thl updraft characteristics
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PRT_UP    ! Rt  updraft characteristics
-REAL, DIMENSION(:,:), INTENT(OUT) ::  PRV_UP    ! Vapor updraft characteristics
+REAL, DIMENSION(:,:), INTENT(INOUT) ::  PRV_UP    ! Vapor updraft characteristics
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PU_UP     ! U wind updraft characteristics
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PV_UP     ! V wind updraft characteristics
 REAL, DIMENSION(:,:), INTENT(INOUT) ::  PRC_UP    ! cloud content updraft characteristics
@@ -139,6 +152,7 @@ REAL, DIMENSION(:,:), INTENT(INOUT) ::  PEMF      ! updraft mass flux
 REAL, DIMENSION(:,:), INTENT(OUT) ::  PDETR     ! updraft detrainment
 REAL, DIMENSION(:,:), INTENT(OUT) ::  PENTR     ! updraft entrainment
 INTEGER,DIMENSION(:), INTENT(OUT) :: KKLCL,KKETL,KKCTL ! level of LCL,ETL and CTL
+REAL,                 INTENT(IN)  :: PDX, PDY
 !
 !                     0.2  Declaration of local variables
 !
@@ -147,7 +161,6 @@ REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) ::     &
           ZRTM,                                   & !
           ZTHVM,                                  & !
           ZEMF_O_RHODREF,                         & ! entrainment/detrainment
-          ZTHVDT,ZTHDT,ZRVDT,                     & ! tendencies
           ZBUO_INTEG                                ! integrated buoyancy
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZFRAC_ICE
 
@@ -162,15 +175,11 @@ LOGICAL :: GENTR_DETR  ! flag to recompute entrainment, detrainment and mass flu
 INTEGER :: IKB         ! near ground physical index
 INTEGER :: IKE         ! uppest atmosphere physical index
 INTEGER, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: IERR
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !------------------------------------------------------------------------
 
 !!! 1. Initialisation
-
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
-
-REAL :: PDX=0., PDY=0.
-
-
 IF (LHOOK) CALL DR_HOOK('SHALLOW_MF',0,ZHOOK_HANDLE)
 
 ! vertical boundaries
@@ -178,7 +187,7 @@ IKB=KKA+KKL*JPVEXT
 IKE=KKU-KKL*JPVEXT
 
 ! updraft governing variables
-IF (HMF_UPDRAFT == 'EDKF') THEN
+IF (HMF_UPDRAFT == 'EDKF'  .OR. HMF_UPDRAFT == 'RHCJ') THEN
   PENTR      = 1.E20
   PDETR      = 1.E20
   PEMF       = 1.E20
@@ -187,9 +196,11 @@ ENDIF
 
 ! Thermodynamics functions
 ZFRAC_ICE(:,:) = 0.
-WHERE(PRM(:,:,2)+PRM(:,:,4) > 1.E-20)
-  ZFRAC_ICE(:,:) = PRM(:,:,4) / (PRM(:,:,2)+PRM(:,:,4))
-ENDWHERE
+IF (SIZE(PRM,3).GE.4) THEN
+  WHERE(PRM(:,:,2)+PRM(:,:,4) > 1.E-20)
+    ZFRAC_ICE(:,:) = PRM(:,:,4) / (PRM(:,:,2)+PRM(:,:,4))
+  ENDWHERE
+ENDIF
 CALL COMPUTE_FRAC_ICE(HFRAC_ICE,ZFRAC_ICE(:,:),PTHM(:,:)*PEXNM(:,:), IERR(:,:))
 
 ! Conservative variables at t-dt
@@ -218,7 +229,8 @@ IF (HMF_UPDRAFT == 'EDKF') THEN
                        PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH,&
                        PDX,PDY)
 ELSEIF (HMF_UPDRAFT == 'RHCJ') THEN
-   CALL COMPUTE_UPDRAFT_RHCJ10(KKA,IKB,IKE,KKU,KKL,HFRAC_ICE,GENTR_DETR,OMIXUV,&
+  GENTR_DETR = .TRUE.
+  CALL COMPUTE_UPDRAFT_RHCJ10(KKA,IKB,IKE,KKU,KKL,HFRAC_ICE,GENTR_DETR,OMIXUV,&
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
                        PSFTH,PSFRV,PPABSM,PRHODREF,              &
@@ -229,23 +241,24 @@ ELSEIF (HMF_UPDRAFT == 'RHCJ') THEN
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PEMF,PDETR,&
                        PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH )
 ELSEIF (HMF_UPDRAFT == 'RAHA') THEN
-   CALL COMPUTE_UPDRAFT_RAHA(KKA,IKB,IKE,KKU,KKL,HFRAC_ICE,GENTR_DETR,OMIXUV,&
+   CALL COMPUTE_UPDRAFT_RAHA(KKA,IKB,IKE,KKU,KKL,HFRAC_ICE,      &
+                       GENTR_DETR,OMIXUV,                        &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
-                       PSFTH,PSFRV,PPABSM,PRHODREF,              &
-                       PUM,PVM,PTKEM,                            &
-                       PEXNM,PTHM,PRM(:,:,1),ZTHLM,ZRTM,PSVM,    &
-                       PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,      &
-                       PTHV_UP, PW_UP, PU_UP, PV_UP, ZSV_UP,     &
-                       PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PEMF,PDETR,&
-                       PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH )
+                       PSFTH,PSFRV,                              &
+                       PPABSM,PRHODREF,PUM,PVM,PTKEM,            &
+                       PEXNM,PTHM,PRM(:,:,1),ZTHLM,ZRTM,         &
+                       PSVM,PTHL_UP,PRT_UP,                      &
+                       PRV_UP,PRC_UP,PRI_UP, PTHV_UP,            &
+                       PW_UP, PU_UP, PV_UP, ZSV_UP,              &
+                       PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,           &
+                       PEMF,PDETR,PENTR,                         &
+                       ZBUO_INTEG,KKLCL,KKETL,KKCTL,             &
+                       ZDEPTH )
 ELSEIF (HMF_UPDRAFT == 'DUAL') THEN
   !Updraft characteristics are already computed and received by interface
 ELSE
-  WRITE(*,*) ' STOP'                                                     
-  WRITE(*,*) ' NO UPDRAFT MODEL FOR EDKF : CMF_UPDRAFT =',HMF_UPDRAFT 
-  CALL ABORT
-  STOP
+  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'SHALLOW_MF', 'no updraft model for EDKF: CMF_UPDRAFT='//TRIM(HMF_UPDRAFT) )
 ENDIF
 
 !!! 5. Compute diagnostic convective cloud fraction and content
@@ -269,7 +282,7 @@ CALL COMPUTE_MF_CLOUD(KKA,IKB,IKE,KKU,KKL,KRR,KRRL,KRRI,&
 ZEMF_O_RHODREF=PEMF/PRHODREF
 
 IF ( PIMPL_MF > 1.E-10 ) THEN  
-       CALL MF_TURB(KKA, IKB, IKE, KKU, KKL, OMIXUV,                     &
+  CALL MF_TURB(KKA, IKB, IKE, KKU, KKL, OMIXUV,                     &
              ONOMIXLG,KSV_LGBEG,KSV_LGEND,                            &
              PIMPL_MF, PTSTEP,                                        &
              PDZZ,                                                    &
@@ -280,12 +293,12 @@ IF ( PIMPL_MF > 1.E-10 ) THEN
              PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,         &
              ZFLXZSVMF                                                )
 ELSE
-      CALL MF_TURB_EXPL(KKA, IKB, IKE, KKU, KKL, OMIXUV,                 &
-           PRHODJ,                                                       &
-           ZTHLM,ZTHVM,ZRTM,PUM,PVM,                                     &
-           PDTHLDT_MF,PDRTDT_MF,PDUDT_MF,PDVDT_MF,                       &
-           ZEMF_O_RHODREF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,            &
-           PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF)
+  CALL MF_TURB_EXPL(KKA, IKB, IKE, KKU, KKL, OMIXUV,                 &
+         PRHODJ,                                                       &
+         ZTHLM,ZTHVM,ZRTM,PUM,PVM,                                     &
+         PDTHLDT_MF,PDRTDT_MF,PDUDT_MF,PDVDT_MF,                       &
+         ZEMF_O_RHODREF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,            &
+         PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF)
 ENDIF
 
 ! security in the case HMF_UPDRAFT = 'DUAL'

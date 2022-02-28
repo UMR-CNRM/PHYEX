@@ -22,12 +22,14 @@ Merge pb:
        Ryad a fait des tests pour regarder impact des allocatable sur CPU => temps * 2
        Code à nettoyer quelque soit l'option retenue
        Dernier code de Ryad: /home/gmap/mrpm/khatib/public/modset/mods_ice4_nucleation_wrapper.tgz et/ou /home/gmap/mrpm/khatib/public/modset/ice4_nucleation_wrapper.f90
-- shallow_mf:
-       Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
-       Dans AROME: où trouver la taille de maille?
 
 - rain_ice_red: le cas test MesoNH n'est pas bit repro (diffs > 1% sur rapports de melange)
                 sur la modif src/mesonh/rain_ice_red au commit bdd10dd (First rain_ice new/red merge)
+- shallow_mf (appels dans aro_shallow et arp_shallow):
+       Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
+       Dans AROME/ARP: où trouver la taille de maille?
+       Pour l'instant 2 versions à cause de l'interface à compute_uprfat_rhcj10
+- compute_updraft_rhcj10: en attente retour de Rachel et/ou Yves pour faire le merge
 
 Etape 2: array syntax -> loop
 - en profiter pour supprimer args PA/PB des routines appelées depuis ice4_tendencies, comme pour nucleation
