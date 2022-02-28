@@ -2,7 +2,7 @@
       SUBROUTINE  ARO_TURB_MNH( KKA,KKU,KKL,KLON,KLEV,KRR,KRRL,KRRI,KSV, &
                 KTCOUNT, KGRADIENTS, LDHARATU, PTSTEP,                  &
                 PZZ, PZZF, PZZTOP,                                    &
-                PRHODJ, PTHVREF,PRHODREF,HINST_SFU,HMF_UPDRAFT,       &
+                PRHODJ, PTHVREF,PRHODREF,HINST_SFU,HMF_UPDRAFT,HCLOUD,&
                 PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
                 PPABSM,PUM,PVM,PWM,PTKEM,PEPSM,PSVM,PSRCM,            &
                 PTHM,PRM,                                &
@@ -101,6 +101,7 @@ INTEGER,                  INTENT(IN)   :: KGRADIENTS  ! Number of stored horizon
 LOGICAL,                  INTENT(IN)   :: LDHARATU ! HARATU scheme active
 
 CHARACTER (LEN=4), INTENT(IN)     :: HMF_UPDRAFT   ! Type of mass flux scheme
+CHARACTER (LEN=4), INTENT(IN)     ::  HCLOUD       ! Type of microphysical scheme
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 !
 !
@@ -417,7 +418,7 @@ ENDDO
 
 CALL TURB (KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, ISPLIT,IMI, &
    & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
-   & HTURBDIM,HTURBLEN,'NONE','NONE',           &
+   & HTURBDIM,HTURBLEN,'NONE','NONE',HCLOUD,   &
    & ZIMPL,                                    &
    & 2*PTSTEP,ZTFILE,                                      &
    & ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &
