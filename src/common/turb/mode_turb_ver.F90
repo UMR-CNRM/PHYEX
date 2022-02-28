@@ -519,7 +519,7 @@ ENDIF
                         PRTHLS,PRRS,ZTHLP,ZRP,PTP,PWTH,PWRC )
 !
   CALL  TURB_VER_THERMO_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,               &
-                        OTURB_FLX,HTURBDIM,HTOM,OOCEAN,               &
+                        OTURB_FLX,HTURBDIM,HTOM,                      &
                         PIMPL,PEXPL,                                  &
                         TPFILE,                                       &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,           &

@@ -6,7 +6,7 @@ MODULE MODE_TURB_VER_THERMO_CORR
 IMPLICIT NONE
 CONTAINS      
 SUBROUTINE TURB_VER_THERMO_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,    &
-                      OTURB_FLX,HTURBDIM,HTOM,OOCEAN,               &
+                      OTURB_FLX,HTURBDIM,HTOM,                      &
                       PIMPL,PEXPL,                                  &
                       TPFILE,                                       &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,           &
@@ -238,7 +238,6 @@ INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water v
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
-LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
 CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
@@ -845,8 +844,12 @@ ENDIF
     ! Extrapolate PSIGS at the ground and at the top
     PSIGS(:,:,KKA) = PSIGS(:,:,IKB)
     PSIGS(:,:,KKU) = PSIGS(:,:,IKE)
-    PSIGS(:,:,:) =   MAX (PSIGS(:,:,:) , 0.)
+#ifdef REPRO48
+    PSIGS(:,:,:) =  MAX (PSIGS(:,:,:) , 0.)
     PSIGS(:,:,:) =  SQRT(PSIGS(:,:,:))
+#else
+    PSIGS(:,:,:) =  SQRT( MAX (PSIGS(:,:,:) , 1.E-12) )
+#endif
   END IF
 
 !
