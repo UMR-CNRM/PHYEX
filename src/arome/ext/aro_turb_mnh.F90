@@ -431,11 +431,10 @@ CALL TURB (KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, ISPLIT,IMI, &
    & PTHM,ZRM, &
    & PRUS,PRVS,PRWS,PRTHS,ZRRS,ZRSVS,PRTKES_OUT,         &
    & PSIGS,                                         &
-   & PDRUS_TURB,PDRVS_TURB,                                &
-   & PDRTHLS_TURB,PDRRTS_TURB,ZDRSVS_TURB,                 &
-   & PFLXZTHVMF,ZWTH,ZWRC,ZWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
-   & YLBUDGET, KBUDGETS=SIZE(YLBUDGET),                    &
-   & PEDR=PEDR)
+   & PFLXZTHVMF,ZWTH,ZWRC,ZWSV,PDP,PTP,PTDIFF,PTDISS,&
+   & YLBUDGET, KBUDGETS=SIZE(YLBUDGET),PEDR=PEDR,PTPMF=PTPMF,&
+   & PDRUS_TURB=PDRUS_TURB,PDRVS_TURB=PDRVS_TURB,          &
+   & PDRTHLS_TURB=PDRTHLS_TURB,PDRRTS_TURB=PDRRTS_TURB,PDRSVS_TURB=ZDRSVS_TURB)
 !
 !
 !------------------------------------------------------------------------------

@@ -10,9 +10,9 @@ CONTAINS
                     & PTSTEP,PIMPL,PEXPL,                              &
                     & HTURBLEN,HTURBDIM,                               &
                     & TPFILE,OTURB_DIAG,                               &
-                    & PTP,PRTKES,PRTHLS,PCOEF_DISS,PTDIFF,PTDISS,&
+                    & PTP,PRTKES,PRTHLS,PCOEF_DISS,PTDIFF,PTDISS,PRTKEMS,&
                     & TBUDGETS, KBUDGETS, &
-                    & PEDR, PTR,PDISS,PRTKESM                          )
+                    & PEDR, PTR,PDISS                                  )
 !     ##################################################################
 !
 !
@@ -189,12 +189,12 @@ REAL, DIMENSION(:,:,:),  INTENT(INOUT)::  PRTHLS       ! Source of Theta_l
 REAL, DIMENSION(:,:,:),  INTENT(IN)   ::  PCOEF_DISS   ! 1/(Cph*Exner)
 REAL, DIMENSION(:,:,:),  INTENT(OUT)  ::  PTDIFF       ! Diffusion TKE term
 REAL, DIMENSION(:,:,:),  INTENT(OUT)  ::  PTDISS       ! Dissipation TKE term
+REAL, DIMENSION(:,:,:),  INTENT(IN)  ::  PRTKEMS      ! Advection source
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 REAL, DIMENSION(:,:,:),  INTENT(OUT), OPTIONAL  ::  PTR          ! Transport prod. of TKE
 REAL, DIMENSION(:,:,:),  INTENT(OUT), OPTIONAL  ::  PDISS        ! Dissipation of TKE
 REAL, DIMENSION(:,:,:),  INTENT(OUT), OPTIONAL  ::  PEDR         ! EDR 
-REAL, DIMENSION(:,:,:),  INTENT(IN),  OPTIONAL  ::  PRTKESM      ! Advection source 
 !
 !
 !
@@ -210,7 +210,7 @@ REAL, DIMENSION(SIZE(PTKEM,1),SIZE(PTKEM,2),SIZE(PTKEM,3))::         &
        ZFLX,     & ! horizontal or vertical flux of the treated variable
        ZSOURCE,  & ! source of evolution for the treated variable
        ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
-       ZTR,ZRTKESM ! Transport term and Advective TKE source 
+       ZTR         ! Transport term
 LOGICAL,DIMENSION(SIZE(PTKEM,1),SIZE(PTKEM,2),SIZE(PTKEM,3)) :: GTKENEG
                    ! 3D mask .T. if TKE < XTKEMIN
 INTEGER             :: IIB,IIE,IJB,IJE,IKB,IKE
@@ -261,13 +261,6 @@ END IF
 !
 !*       2.2  Explicit TKE sources except horizontal turbulent transport 
 !
-! Advection source (=0 in AROME)
-IF(PRESENT(PRTKESM)) THEN
-  ZRTKESM=PRTKESM
-ELSE
-  ZRTKESM=0.
-END IF
-!
 ! extrapolate the dynamic production with a 1/Z law from its value at the 
 ! W(IKB+1) value stored in PDP(IKB) to the mass localization tke(IKB)
 PDP(:,:,IKB) = PDP(:,:,IKB) * (1. + PDZZ(:,:,IKB+KKL)/PDZZ(:,:,IKB))
@@ -275,7 +268,7 @@ PDP(:,:,IKB) = PDP(:,:,IKB) * (1. + PDZZ(:,:,IKB+KKL)/PDZZ(:,:,IKB))
 ! Compute the source terms for TKE: ( ADVECtion + NUMerical DIFFusion + ..)
 ! + (Dynamical Production) + (Thermal Production) - (dissipation) 
 ZFLX(:,:,:) = XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:)
-ZSOURCE(:,:,:) = ( PRTKES(:,:,:) +  ZRTKESM(:,:,:) ) / PRHODJ(:,:,:) &
+ZSOURCE(:,:,:) = ( PRTKES(:,:,:) +  PRTKEMS(:,:,:) ) / PRHODJ(:,:,:) &
    - PTKEM(:,:,:) / PTSTEP &
    + PDP(:,:,:) + PTP(:,:,:) + ZTR(:,:,:) - PEXPL * ZFLX(:,:,:) * PTKEM(:,:,:)
 !
@@ -365,7 +358,7 @@ PTDIFF(:,:,:) =  ZRES(:,:,:) / PTSTEP - PRTKES(:,:,:)/PRHODJ(:,:,:) &
 
 IF (LBUDGET_TKE) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TKE), 'TR', PRTKES(:, :, :) )
 !
-PRTKES(:,:,:) = ZRES(:,:,:) * PRHODJ(:,:,:) / PTSTEP -  ZRTKESM(:,:,:)
+PRTKES(:,:,:) = ZRES(:,:,:) * PRHODJ(:,:,:) / PTSTEP -  PRTKEMS(:,:,:)
 !
 ! stores the whole turbulent transport
 !

@@ -5,26 +5,26 @@
 INTERFACE
 !
       SUBROUTINE TURB(KKA, KKU, KKL, KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,   &
-              & KSPLIT,KMODEL_CL, &
-              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
-              & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,   &
-              & PIMPL,PTSTEP,TPFILE,                      &
-              & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,          &
+              & KSPLIT,KMODEL_CL,                                     &
+              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,               &
+              & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,            &
+              & PIMPL,PTSTEP,TPFILE,                                  &
+              & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
-              & PRHODJ,PTHVREF,                              &
+              & PRHODJ,PTHVREF,                                       &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
               & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
               & PLENGTHM,PLENGTHH,MFMOIST,                            &
               & PBL_DEPTH, PSBL_DEPTH,                                &
-              & PCEI,PCEI_MIN,PCEI_MAX,PCOEF_AMPL_SAT,    &
+              & PCEI,PCEI_MIN,PCEI_MAX,PCOEF_AMPL_SAT,                &
               & PTHLT,PRT,                                            &
               & PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,PRTKES,              &
-              & PSIGS,                                         &
-              & PDRUS_TURB,PDRVS_TURB,                                &
-              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,                 &
-              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
+              & PSIGS,                                                &
+              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTDIFF,PTDISS,      &
               & TBUDGETS, KBUDGETS,                                   &
-              & PTR,PDISS,PEDR,PLEM                                   ) 
+              & PEDR,PLEM,PRTKEMS,PTPMF,                              &
+              & PDRUS_TURB,PDRVS_TURB,                                &
+              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB                  ) 
 !
 USE MODD_BUDGET, ONLY : TBUDGETDATA
 USE MODD_IO, ONLY : TFILEDATA
@@ -52,7 +52,7 @@ CHARACTER(LEN=4)      , INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
 CHARACTER(LEN=4)      , INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
 CHARACTER(LEN=4)      , INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
 REAL,                   INTENT(IN)   ::  PIMPL        ! degree of implicitness
-!CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
+CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Timestep
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file for MesoNH
 !
@@ -106,17 +106,18 @@ REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRT         ! water var.  where
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRUS,PRVS,PRWS,PRTHLS,PRTKES
 ! Source terms for all water kinds, PRRS(:,:,:,1) is used for the conservative
 ! mixing ratio
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRRS 
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRRS
+REAL, DIMENSION(:,:,:),   INTENT(IN),OPTIONAL    ::  PRTKEMS
 ! Source terms for all passive scalar variables
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS
 ! Sigma_s at time t+1 : square root of the variance of the deviation to the 
 ! saturation 
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PSIGS
-REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PDRUS_TURB   ! evolution of rhoJ*U   by turbulence only
-REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PDRVS_TURB   ! evolution of rhoJ*V   by turbulence only
-REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PDRTHLS_TURB ! evolution of rhoJ*thl by turbulence only
-REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PDRRTS_TURB  ! evolution of rhoJ*rt  by turbulence only
-REAL, DIMENSION(:,:,:,:), INTENT(OUT)   ::  PDRSVS_TURB  ! evolution of rhoJ*Sv  by turbulence only
+REAL, DIMENSION(:,:,:), INTENT(OUT),OPTIONAL     ::  PDRUS_TURB   ! evolution of rhoJ*U   by turbulence only
+REAL, DIMENSION(:,:,:), INTENT(OUT),OPTIONAL     ::  PDRVS_TURB   ! evolution of rhoJ*V   by turbulence only
+REAL, DIMENSION(:,:,:), INTENT(OUT),OPTIONAL     ::  PDRTHLS_TURB ! evolution of rhoJ*thl by turbulence only
+REAL, DIMENSION(:,:,:), INTENT(OUT),OPTIONAL     ::  PDRRTS_TURB  ! evolution of rhoJ*rt  by turbulence only
+REAL, DIMENSION(:,:,:,:), INTENT(OUT),OPTIONAL   ::  PDRSVS_TURB  ! evolution of rhoJ*Sv  by turbulence only
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PFLXZTHVMF 
 !                                           MF contribution for vert. turb. transport
 !                                           used in the buoy. prod. of TKE
@@ -125,7 +126,7 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWRC       ! cloud water flux
 REAL, DIMENSION(:,:,:,:),INTENT(OUT) :: PWSV       ! scalar flux
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PDP        ! Dynamic TKE production
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTP        ! Thermal TKE production
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTPMF      ! Thermal TKE production
+REAL, DIMENSION(:,:,:), INTENT(OUT),OPTIONAL  :: PTPMF      ! Thermal TKE production
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDIFF     ! Diffusion TKE term
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
 !
@@ -135,8 +136,6 @@ REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PLENGTHH
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 !
-REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PTR   ! Transport production of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PDISS ! Dissipation of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
 !

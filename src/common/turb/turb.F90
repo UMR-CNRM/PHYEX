@@ -5,24 +5,24 @@
 !-----------------------------------------------------------------
       SUBROUTINE TURB(KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,      &
               & KSPLIT,KMODEL_CL,                                     &
-              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
-              & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,PIMPL,      &
+              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,               &
+              & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,PIMPL,      &
               & PTSTEP,TPFILE,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
-              & PRHODJ,PTHVREF,                              &
+              & PRHODJ,PTHVREF,                                       &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
               & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
               & PLENGTHM,PLENGTHH,MFMOIST,                            &
               & PBL_DEPTH,PSBL_DEPTH,                                 &
-              & PCEI,PCEI_MIN,PCEI_MAX,PCOEF_AMPL_SAT,    &
+              & PCEI,PCEI_MIN,PCEI_MAX,PCOEF_AMPL_SAT,                &
               & PTHLT,PRT,                                            &
               & PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,PRTKES,              &
-              & PSIGS,                                        &
-              & PDRUS_TURB,PDRVS_TURB,                                &
-              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,                 &
-              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
+              & PSIGS,                                                &
+              & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTDIFF,PTDISS,      &
               & TBUDGETS, KBUDGETS,                                   &
-              & PTR,PDISS,PEDR,PLEM                            )
+              & PEDR,PLEM,PRTKEMS,PTPMF,                              &
+              & PDRUS_TURB,PDRVS_TURB,                                &
+              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB                  )              
 !     #################################################################
 !
 !
@@ -305,7 +305,7 @@ CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
 REAL,                   INTENT(IN)   ::  PIMPL        ! degree of implicitness
-!CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
+CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
@@ -321,7 +321,6 @@ REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle
                                  ! between i and the slope vector
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PRHODJ    ! dry density * Grid size
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
-
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
 !
@@ -360,17 +359,18 @@ REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRT         ! water var.  where
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRUS,PRVS,PRWS,PRTHLS,PRTKES
 ! Source terms for all water kinds, PRRS(:,:,:,1) is used for the conservative
 ! mixing ratio
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRRS 
+REAL, DIMENSION(:,:,:),   INTENT(IN),OPTIONAL    ::  PRTKEMS
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRRS
 ! Source terms for all passive scalar variables
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS
 ! Sigma_s at time t+1 : square root of the variance of the deviation to the 
 ! saturation
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PSIGS
-REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PDRUS_TURB   ! evolution of rhoJ*U   by turbulence only
-REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PDRVS_TURB   ! evolution of rhoJ*V   by turbulence only
-REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PDRTHLS_TURB ! evolution of rhoJ*thl by turbulence only
-REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PDRRTS_TURB  ! evolution of rhoJ*rt  by turbulence only
-REAL, DIMENSION(:,:,:,:), INTENT(OUT)   ::  PDRSVS_TURB  ! evolution of rhoJ*Sv  by turbulence only
+REAL, DIMENSION(:,:,:), INTENT(OUT),OPTIONAL     ::  PDRUS_TURB   ! evolution of rhoJ*U   by turbulence only
+REAL, DIMENSION(:,:,:), INTENT(OUT),OPTIONAL     ::  PDRVS_TURB   ! evolution of rhoJ*V   by turbulence only
+REAL, DIMENSION(:,:,:), INTENT(OUT),OPTIONAL     ::  PDRTHLS_TURB ! evolution of rhoJ*thl by turbulence only
+REAL, DIMENSION(:,:,:), INTENT(OUT),OPTIONAL     ::  PDRRTS_TURB  ! evolution of rhoJ*rt  by turbulence only
+REAL, DIMENSION(:,:,:,:), INTENT(OUT),OPTIONAL   ::  PDRSVS_TURB  ! evolution of rhoJ*Sv  by turbulence only
 REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PFLXZTHVMF 
 !                                           MF contribution for vert. turb. transport
 !                                           used in the buoy. prod. of TKE
@@ -379,7 +379,7 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWRC       ! cloud water flux
 REAL, DIMENSION(:,:,:,:),INTENT(OUT) :: PWSV       ! scalar flux
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTP        ! Thermal TKE production
                                                    ! MassFlux + turb
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTPMF      ! Thermal TKE production
+REAL, DIMENSION(:,:,:), INTENT(OUT),OPTIONAL  :: PTPMF      ! Thermal TKE production
                                                    ! MassFlux Only
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PDP        ! Dynamic TKE production
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDIFF     ! Diffusion TKE term
@@ -391,8 +391,6 @@ INTEGER, INTENT(IN) :: KBUDGETS
 ! length scale from vdfexcu
 REAL, DIMENSION(:,:,:), INTENT(IN)    :: PLENGTHM, PLENGTHH
 !
-REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PTR   ! Transport production of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PDISS ! Dissipation of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
 !
@@ -414,7 +412,7 @@ REAL, DIMENSION(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)) ::     &
           ZFRAC_ICE,                  &  ! ri fraction of rc+ri
           ZMWTH,ZMWR,ZMTH2,ZMR2,ZMTHR,&  ! 3rd order moments
           ZFWTH,ZFWR,ZFTH2,ZFR2,ZFTHR,&  ! opposite of verticale derivate of 3rd order moments
-          ZTHLM                          ! initial potential temp.
+          ZTHLM,ZRTKEMS                  ! initial potential temp; TKE advective source
 REAL, DIMENSION(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3),SIZE(PRT,4)) ::     &
           ZRM                            ! initial mixing ratio 
 REAL, DIMENSION(SIZE(PTHLT,1),SIZE(PTHLT,2)) ::  ZTAU11M,ZTAU12M,  &
@@ -613,12 +611,14 @@ IF ( KRRL >= 1 ) THEN
   END IF
 END IF
 !
-!* stores value of conservative variables & wind before turbulence tendency
-PDRUS_TURB = PRUS
-PDRVS_TURB = PRVS
-PDRTHLS_TURB = PRTHLS
-PDRRTS_TURB  = PRRS(:,:,:,1)
-PDRSVS_TURB  = PRSVS
+!* stores value of conservative variables & wind before turbulence tendency (AROME diag)
+IF(PRESENT(PDRUS_TURB)) THEN
+  PDRUS_TURB = PRUS
+  PDRVS_TURB = PRVS
+  PDRTHLS_TURB = PRTHLS
+  PDRRTS_TURB  = PRRS(:,:,:,1)
+  PDRSVS_TURB  = PRSVS
+END IF
 !----------------------------------------------------------------------------
 !
 !*      3. MIXING LENGTH : SELECTION AND COMPUTATION
@@ -666,7 +666,7 @@ SELECT CASE (HTURBLEN)
 !           -------------------
 !
   CASE ('DELT')
-    CALL DELT(PLEM,ODZ=.TRUE.)
+    CALL DELT(ZLM,ODZ=.TRUE.)
 !
 !*      3.5 Deardorff mixing length
 !           -----------------------
@@ -741,7 +741,7 @@ END IF
 !           ------------------------------------------
 !
 IF (LIBM) THEN
-   CALL IBM_MIXINGLENGTH(PLEM,ZLEPS,XIBM_XMUT,XIBM_LS(:,:,:,1),PTKET)
+   CALL IBM_MIXINGLENGTH(ZLM,ZLEPS,XIBM_XMUT,XIBM_LS(:,:,:,1),PTKET)
 ENDIF
 !----------------------------------------------------------------------------
 !
@@ -969,9 +969,9 @@ IF( HTURBDIM == '3DIM' ) THEN
           PSFTH,PSFRV,PSFSV,                                   &
           ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU22M,ZTAU33M,             &
           PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,PSVT,          &
-          PTKET,PLEM,ZLEPS,                                    &
+          PTKET,ZLM,ZLEPS,                                    &
           ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,           &
-          PDYP,PTHP,PSIGS,                                     &
+          PDP,PTP,PSIGS,                                       &
           ZTRH,                                                &
           PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS                     )
 #endif
@@ -1020,8 +1020,8 @@ END IF
 !  6.1 Contribution of mass-flux in the TKE buoyancy production if 
 !      cloud computation is not statistical 
 
-       PTP = PTP + XG / PTHVREF * MZF(PFLXZTHVMF,KKA, KKU, KKL)
-       PTPMF=XG / PTHVREF * MZF(PFLXZTHVMF, KKA, KKU, KKL)
+PTP = PTP + XG / PTHVREF * MZF(PFLXZTHVMF,KKA, KKU, KKL)
+IF(PRESENT(PTPMF))  PTPMF=XG / PTHVREF * MZF(PFLXZTHVMF, KKA, KKU, KKL)
 
 !  6.2 TKE evolution equation
 
@@ -1037,15 +1037,20 @@ IF (LBUDGET_TH)  THEN
     CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS(:, :, :) )
   END IF
 END IF
-
+!
+IF(PRESENT(PRTKEMS)) THEN
+  ZRTKEMS=PRTKEMS
+ELSE
+  ZRTKEMS=0.
+END IF
+!
 CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,       &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,            &
                    & PTSTEP,PIMPL,ZEXPL,                         &
                    & HTURBLEN,HTURBDIM,                              &
                    & TPFILE,OTURB_DIAG,           &
-                   & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,&
-                   & TBUDGETS,KBUDGETS,&
-                   & PEDR=PEDR)
+                   & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,ZRTKEMS,&
+                   & TBUDGETS,KBUDGETS, PEDR=PEDR)
 IF (LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS+ ZLVOCPEXNM * PRRS(:,:,:,2) &
@@ -1112,12 +1117,14 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
    END IF
 END IF
 !
-!* stores value of conservative variables & wind before turbulence tendency
-PDRUS_TURB = PRUS - PDRUS_TURB
-PDRVS_TURB = PRVS - PDRVS_TURB
-PDRTHLS_TURB = PRTHLS - PDRTHLS_TURB
-PDRRTS_TURB  = PRRS(:,:,:,1) - PDRRTS_TURB 
-PDRSVS_TURB  = PRSVS - PDRSVS_TURB
+!* stores value of conservative variables & wind before turbulence tendency (AROME only)
+IF(PRESENT(PDRUS_TURB)) THEN
+  PDRUS_TURB = PRUS - PDRUS_TURB
+  PDRVS_TURB = PRVS - PDRVS_TURB
+  PDRTHLS_TURB = PRTHLS - PDRTHLS_TURB
+  PDRRTS_TURB  = PRRS(:,:,:,1) - PDRRTS_TURB 
+  PDRSVS_TURB  = PRSVS - PDRSVS_TURB
+END IF
 !----------------------------------------------------------------------------
 !
 !*      8. RETRIEVE NON-CONSERVATIVE VARIABLES
@@ -1143,7 +1150,7 @@ IF ( KRRL >= 1 ) THEN
 END IF
 
 ! Remove non-physical negative values (unnecessary in a perfect world) + corresponding budgets
-!CALL SOURCES_NEG_CORRECT(HCLOUD, 'NETUR',KRR,PTSTEP,PPABST,PTHLT,PRT,PRTHLS,PRRS,PRSVS)
+CALL SOURCES_NEG_CORRECT(HCLOUD, 'NETUR',KRR,PTSTEP,PPABST,PTHLT,PRT,PRTHLS,PRRS,PRSVS)
 !----------------------------------------------------------------------------
 !
 !*      9. LES averaged surface fluxes
@@ -1259,7 +1266,9 @@ IF (LHOOK) CALL DR_HOOK('TURB:UPDATE_ROTATE_WIND',0,ZHOOK_HANDLE)
 !
 NULLIFY(TZFIELDS_ll)
 !
-CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
+IIU=SIZE(PUSLOPE,1)
+IJU=SIZE(PUSLOPE,2)
+CALL GET_INDICE_ll (IIB,IJB,IIE,IJE,IIU,IJU)
 !
 !         2 Update halo if necessary
 !
