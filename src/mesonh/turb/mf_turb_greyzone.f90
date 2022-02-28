@@ -264,7 +264,7 @@ CALL TRIDIAG_MASSFLUX(KKA,KKB,KKE,KKU,KKL,PTHLM,PFLXZTHMF,-PEMF,PTSTEP,PIMPL,  &
 ! Est ce que ZVARS est au point de masse pour qu'il doivent être remis au point
 ! de flux ?
 !!!!!!!!!!!!!!!!!!!!!!!!!!
-PFLXZTHMF(:,:) = PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(KKA,KKU,KKL,ZVARS(:,:)))
+PFLXZTHMF(:,:) = PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(ZVARS(:,:),KKA,KKU,KKL))
 
 !!! compute THL tendency
 !
@@ -276,7 +276,7 @@ PTHLDT(:,:)= (ZVARS(:,:)-PTHLM(:,:))/PTSTEP
 CALL TRIDIAG_MASSFLUX(KKA,KKB,KKE,KKU,KKL,PRTM(:,:),PFLXZRMF,-PEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
 ! compute new flux
-PFLXZRMF(:,:) =  PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(KKA,KKU,KKL,ZVARS(:,:)))
+PFLXZRMF(:,:) =  PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(ZVARS(:,:),KKA,KKU,KKL))
 
 !!! compute RT tendency
 PRTDT(:,:) = (ZVARS(:,:)-PRTM(:,:))/PTSTEP
@@ -291,7 +291,7 @@ IF (OMIXUV) THEN
   CALL TRIDIAG_MASSFLUX(KKA,KKB,KKE,KKU,KKL,PUM,PFLXZUMF,-PEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
   ! compute new flux
-  PFLXZUMF(:,:) = PEMF(:,:)*(PU_UP(:,:)-MZM_MF(KKA,KKU,KKL,ZVARS(:,:)))
+  PFLXZUMF(:,:) = PEMF(:,:)*(PU_UP(:,:)-MZM_MF(ZVARS(:,:),KKA,KKU,KKL))
 
   ! compute U tendency
   PUDT(:,:)= (ZVARS(:,:)-PUM(:,:))/PTSTEP
@@ -305,7 +305,7 @@ IF (OMIXUV) THEN
   CALL TRIDIAG_MASSFLUX(KKA,KKB,KKE,KKU,KKL,PVM,PFLXZVMF,-PEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
   ! compute new flux
-  PFLXZVMF(:,:) = PEMF(:,:)*(PV_UP(:,:)-MZM_MF(KKA,KKU,KKL,ZVARS(:,:)))
+  PFLXZVMF(:,:) = PEMF(:,:)*(PV_UP(:,:)-MZM_MF(ZVARS(:,:),KKA,KKU,KKL))
 
   ! compute V tendency
   PVDT(:,:)= (ZVARS(:,:)-PVM(:,:))/PTSTEP
@@ -321,7 +321,7 @@ DO JSV=1,ISV
   !*     compute mean flux of scalar variables at time t-dt
   !   ( Resulting fluxes are in flux level (w-point) as PEMF and PTHL_UP )
 
-  PFLXZSVMF(:,:,JSV) = PEMF(:,:)*(PSV_UP(:,:,JSV)-MZM_MF(KKA,KKU,KKL,PSVM(:,:,JSV)))
+  PFLXZSVMF(:,:,JSV) = PEMF(:,:)*(PSV_UP(:,:,JSV)-MZM_MF(PSVM(:,:,JSV),KKA,KKU,KKL))
   
   !
   ! 3.5 Compute the tendency for scalar variables
@@ -330,7 +330,7 @@ DO JSV=1,ISV
   CALL TRIDIAG_MASSFLUX(KKA,KKB,KKE,KKU,KKL,PSVM(:,:,JSV),PFLXZSVMF(:,:,JSV),&
                         -PEMF,PTSTEP,PIMPL,PDZZ,PRHODJ,ZVARS )
   ! compute new flux
-  PFLXZSVMF(:,:,JSV) = PEMF(:,:)*(PSV_UP(:,:,JSV)-MZM_MF(KKA,KKU,KKL,ZVARS))
+  PFLXZSVMF(:,:,JSV) = PEMF(:,:)*(PSV_UP(:,:,JSV)-MZM_MF(ZVARS,KKA,KKU,KKL))
 
   ! compute Sv tendency
   PSVDT(:,:,JSV)= (ZVARS(:,:)-PSVM(:,:,JSV))/PTSTEP
