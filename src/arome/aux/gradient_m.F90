@@ -70,8 +70,8 @@ REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the mass point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZX    ! metric coefficient dzx
-INTEGER,                 INTENT(IN)  :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,                 INTENT(IN)  :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+INTEGER,                 INTENT(IN),OPTIONAL  :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,                 INTENT(IN),OPTIONAL  :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 
 !
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGX_M_M ! result mass point
@@ -101,7 +101,7 @@ END IF
 IF (LHOOK) CALL DR_HOOK('GX_M_M',1,ZHOOK_HANDLE)
 END FUNCTION GX_M_M
 !     ######spl
-      FUNCTION GX_M_U(PY,PDXX,PDZZ,PDZX, KKA, KKU, KL) RESULT(PGX_M_U)
+      FUNCTION GX_M_U(KKA, KKU, KL,PY,PDXX,PDZZ,PDZX) RESULT(PGX_M_U)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ##################################################
@@ -329,8 +329,8 @@ REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the mass point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDYY    ! metric coefficient dyy
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZY    ! metric coefficient dzy
-INTEGER,                 INTENT(IN)  :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,                 INTENT(IN)  :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+INTEGER,                 INTENT(IN),OPTIONAL  :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,                 INTENT(IN),OPTIONAL  :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 !
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGY_M_M ! result mass point
 !
@@ -359,7 +359,7 @@ ENDIF
 IF (LHOOK) CALL DR_HOOK('GY_M_M',1,ZHOOK_HANDLE)
 END FUNCTION GY_M_M
 !     ######spl
-      FUNCTION GY_M_V(PY,PDYY,PDZZ,PDZY, KKA, KKU, KL) RESULT(PGY_M_V)
+      FUNCTION GY_M_V(KKA,KKU,KL,PY,PDYY,PDZZ,PDZY) RESULT(PGY_M_V)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ##################################################
@@ -551,8 +551,8 @@ IMPLICIT NONE
 !
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the mass point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
-INTEGER,              INTENT(IN)     :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+INTEGER,              INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,              INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 !
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGZ_M_M ! result mass point
 !
@@ -575,7 +575,7 @@ PGZ_M_M(:,:,:)= MZF(DZM(PA(:,:,:), KKA, KKU, KL)/PDZZ(:,:,:), KKA, KKU, KL)
 IF (LHOOK) CALL DR_HOOK('GZ_M_M',1,ZHOOK_HANDLE)
 END FUNCTION GZ_M_M
 !     ######spl
-      FUNCTION GZ_M_W(PY,PDZZ, KKA, KKU, KL) RESULT(PGZ_M_W)
+      FUNCTION GZ_M_W(KKA, KKU, KL,PY,PDZZ) RESULT(PGZ_M_W)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     #########################################

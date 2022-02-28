@@ -242,7 +242,7 @@ USE MODE_BL89, ONLY: BL89
 USE MODE_TURB_VER, ONLY : TURB_VER
 !!MODIF AROME
 !USE MODI_ROTATE_WIND
-!USE MODI_TURB_HOR_SPLT 
+!USE MODE_TURB_HOR_SPLT, ONLY: TURB_HOR_SPLT
 USE MODE_TKE_EPS_SOURCES, ONLY: TKE_EPS_SOURCES
 USE MODI_SHUMAN, ONLY : MZF, MXF, MYF
 USE MODI_GRADIENT_M
@@ -831,11 +831,11 @@ ZMTHR = 0.     ! w'th'r'
 IF (HTOM=='TM06') THEN
   CALL TM06(KKA,KKU,KKL,PTHVREF,PBL_DEPTH,PZZ,PSFTH,ZMWTH,ZMTH2)
 !
-  ZFWTH = -GZ_M_W(ZMWTH,PDZZ, KKA,KKU,KKL)    ! -d(w'2th' )/dz
-  !ZFWR  = -GZ_M_W(ZMWR, PDZZ,KKA,KKU,KKL)    ! -d(w'2r'  )/dz
-  ZFTH2 = -GZ_W_M(ZMTH2,PDZZ,KKA,KKU,KKL)    ! -d(w'th'2 )/dz
-  !ZFR2  = -GZ_W_M(ZMR2, PDZZ,KKA,KKU,KKL)    ! -d(w'r'2  )/dz
-  !ZFTHR = -GZ_W_M(ZMTHR,PDZZ,KKA,KKU,KKL)    ! -d(w'th'r')/dz
+  ZFWTH = -GZ_M_W(KKA,KKU,KKL,ZMWTH,PDZZ)    ! -d(w'2th' )/dz
+  !ZFWR  = -GZ_M_W(KKA,KKU,KKL,ZMWR, PDZZ)    ! -d(w'2r'  )/dz
+  ZFTH2 = -GZ_W_M(ZMTH2,PDZZ)    ! -d(w'th'2 )/dz
+  !ZFR2  = -GZ_W_M(ZMR2, PDZZ)    ! -d(w'r'2  )/dz
+  !ZFTHR = -GZ_W_M(ZMTHR,PDZZ)    ! -d(w'th'r')/dz
 !
   ZFWTH(:,:,IKTE:) = 0.
   ZFWTH(:,:,:IKTB) = 0.
@@ -948,8 +948,8 @@ IF( LBUDGET_SV )  THEN
   END DO
 END IF
 !
-#ifdef REPRO48
-#else
+#ifdef REPRO48 !Les budgets des termes horizontaux de la turb sont présents dans AROME
+#else          ! alors que ces termes ne sont pas calculés
 IF( HTURBDIM == '3DIM' ) THEN
 #endif
   IF( LBUDGET_U  ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_U ), 'HTURB', PRUS  (:, :, :) )
@@ -985,7 +985,8 @@ IF( HTURBDIM == '3DIM' ) THEN
       CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:, :, :, JSV) )
     END DO
   END IF
-
+!#ifdef REPRO48 !à supprimer une fois le précédent ifdef REPRO48 validé
+!#else
 !    CALL TURB_HOR_SPLT(KSPLIT, KRR, KRRL, KRRI, PTSTEP,        &
 !          HLBCX,HLBCY,OTURB_FLX,OSUBG_COND,                    &
 !          TPFILE,                                              &
@@ -1001,7 +1002,7 @@ IF( HTURBDIM == '3DIM' ) THEN
 !          PDYP,PTHP,PSIGS,                                     &
 !          ZTRH,                                                &
 !          PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS                     )
-
+!#endif
   IF( LBUDGET_U ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_U), 'HTURB', PRUS(:, :, :) )
   IF( LBUDGET_V ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_V), 'HTURB', PRVS(:, :, :) )
   IF( LBUDGET_W ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_W), 'HTURB', PRWS(:, :, :) )
@@ -1206,13 +1207,13 @@ IF (LLES_CALL) THEN
     CALL LES_MEAN_SUBGRID(2./3.*PTKET,X_LES_SUBGRID_U2)
     CALL LES_MEAN_SUBGRID(2./3.*PTKET,X_LES_SUBGRID_V2)
     CALL LES_MEAN_SUBGRID(2./3.*PTKET,X_LES_SUBGRID_W2)
-    CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(PTHLT,PDZZ, KKA, KKU, KKL),&
+    CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(KKA,KKU,KKL,PTHLT,PDZZ),&
                           KKA, KKU, KKL),X_LES_RES_ddz_Thl_SBG_W2)
     IF (KRR>=1) &
-    CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(PRT(:,:,:,1),PDZZ, KKA, KKU, KKL),&
+    CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(KKA,KKU,KKL,PRT(:,:,:,1),PDZZ),&
                          &KKA, KKU, KKL),X_LES_RES_ddz_Rt_SBG_W2)
     DO JSV=1,NSV
-      CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(PSVT(:,:,:,JSV),PDZZ, KKA, KKU, KKL), &
+      CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(KKA,KKU,KKL,PSVT(:,:,:,JSV),PDZZ), &
                            &KKA, KKU, KKL), X_LES_RES_ddz_Sv_SBG_W2(:,:,:,JSV))
     END DO
   END IF
