@@ -205,7 +205,6 @@ USE MODE_ICE4_RAINFR_VERT, ONLY: ICE4_RAINFR_VERT
 USE MODE_ICE4_SEDIMENTATION_STAT, ONLY: ICE4_SEDIMENTATION_STAT
 USE MODE_ICE4_SEDIMENTATION_SPLIT, ONLY: ICE4_SEDIMENTATION_SPLIT
 USE MODE_ICE4_SEDIMENTATION_SPLIT_MOMENTUM, ONLY: ICE4_SEDIMENTATION_SPLIT_MOMENTUM
-USE MODE_ICE4_NUCLEATION_WRAPPER, ONLY: ICE4_NUCLEATION_WRAPPER
 USE MODE_ICE4_TENDENCIES, ONLY: ICE4_TENDENCIES
 !
 IMPLICIT NONE
@@ -318,7 +317,7 @@ REAL, DIMENSION(SIZE(PTHT,1),SIZE(PTHT,2)) :: ZINPRI ! Pristine ice instant prec
 LOGICAL :: GEXT_TEND
 LOGICAL :: LSOFT ! Must we really compute tendencies or only adjust them to new T variables
 INTEGER :: INB_ITER_MAX ! Maximum number of iterations (with real tendencies computation)
-REAL :: ZW1D
+REAL :: ZW0D
 REAL :: ZTSTEP ! length of sub-timestep in case of time splitting
 REAL :: ZINV_TSTEP ! Inverse ov PTSTEP
 REAL :: ZTIME_THRESHOLD ! Time to reach threshold
@@ -1111,10 +1110,21 @@ PCIT(:,:,:)=ZCITOUT(:,:,:)
 !*       6.     COMPUTES THE SLOW COLD PROCESS SOURCES OUTSIDE OF ODMICRO POINTS
 !               ----------------------------------------------------------------
 !
-CALL ICE4_NUCLEATION_WRAPPER(KIT, KJT, KKT, .NOT. ODMICRO, &
-                             PTHT, PPABST, PRHODREF, PEXN, ZZ_LSFACT, ZT, &
-                             PRVT, &
-                             PCIT, ZZ_RVHENI_MR)
+DO JK=1, KKT
+  DO JJ=1, KJT
+!DIR$ VECTOR ALWAYS
+    DO CONCURRENT (JI=1:KIT)
+      IF (.NOT. ODMICRO(JI, JJ, JK)) THEN
+        ZW0D=ZZ_LSFACT(JI, JJ, JK)/PEXN(JI, JJ, JK)
+      ENDIF
+      CALL ICE4_NUCLEATION_ELEM(.NOT. ODMICRO(JI, JJ, JK), &
+                                PTHT(JI, JJ, JK), PPABST(JI, JJ, JK), PRHODREF(JI, JJ, JK), &
+                                PEXN(JI, JJ, JK), ZW0D, ZT(JI, JJ, JK), &
+                                PRVT(JI, JJ, JK), &
+                                PCIT(JI, JJ, JK), ZZ_RVHENI_MR(JI, JJ, JK))
+    ENDDO
+  ENDDO
+ENDDO
 !
 !-------------------------------------------------------------------------------
 !
@@ -1766,6 +1776,7 @@ CONTAINS
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE:CORRECT_NEGATIVITIES', 1, ZHOOK_HANDLE)
   !
   END SUBROUTINE CORRECT_NEGATIVITIES
-
+!
+INCLUDE "ice4_nucleation_elem.func.h"
 !
 END SUBROUTINE RAIN_ICE
