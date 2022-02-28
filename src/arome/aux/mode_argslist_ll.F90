@@ -9,6 +9,17 @@ IMPLICIT NONE
     CALL ABORT
   END SUBROUTINE CLEANLIST_ll
 !
+  SUBROUTINE ADD2DFIELD_ll(TPLIST, PFIELD, HNAME)
+IMPLICIT NONE
+          
+    TYPE(LIST_ll), POINTER         :: TPLIST   ! list of fields
+    REAL, DIMENSION(:,:), TARGET :: PFIELD   ! field to be added to the list
+  !                                              of fields
+    character(len=*), intent(in) :: HNAME ! Name of the field to be added
+  !
+   CALL ABORT  
+END SUBROUTINE ADD2DFIELD_ll
+!
   SUBROUTINE ADD3DFIELD_ll(TPLIST, PFIELD, HNAME)
 IMPLICIT NONE
           

@@ -415,15 +415,14 @@ DO JRR=1, NBUDGET_RI
   YLBUDGET(JRR)%YDMDDH=>YDMDDH
 ENDDO
 
-CL=HINST_SFU
 CALL TURB (KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, ISPLIT,IMI, &
    & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
-   & HTURBDIM,HTURBLEN,'NONE','NONE', CL,           &
-   & HMF_UPDRAFT,ZIMPL,                                    &
+   & HTURBDIM,HTURBLEN,'NONE','NONE',           &
+   & ZIMPL,                                    &
    & 2*PTSTEP,ZTFILE,                                      &
    & ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &
    & ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE,    &
-   & PRHODJ,PTHVREF,PRHODREF,                              &
+   & PRHODJ,PTHVREF,                              &
    & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
    & PPABSM,PUM,PVM,PWM,PTKEM,ZSVM,PSRCM,                  &
    & PLENGTHM,PLENGTHH,MFMOIST,                            &
@@ -431,11 +430,10 @@ CALL TURB (KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, ISPLIT,IMI, &
    & ZCEI,ZCEI_MIN,ZCEI_MAX,ZCOEF_AMPL_SAT,    &
    & PTHM,ZRM, &
    & PRUS,PRVS,PRWS,PRTHS,ZRRS,ZRSVS,PRTKES_OUT,         &
-   & ZHGRAD,PSIGS,                                         &
+   & PSIGS,                                         &
    & PDRUS_TURB,PDRVS_TURB,                                &
    & PDRTHLS_TURB,PDRRTS_TURB,ZDRSVS_TURB,                 &
    & PFLXZTHVMF,ZWTH,ZWRC,ZWSV,PDP,PTP,PTPMF,PTDIFF,PTDISS,&
-   & YDDDH,YDLDDH,YDMDDH,                                  &
    & YLBUDGET, KBUDGETS=SIZE(YLBUDGET),                    &
    & PEDR=PEDR)
 !

@@ -209,6 +209,9 @@
 !!                                          vertical levels
 !!                     10/2012 (J. Colin) Correct bug in DearDoff for dry simulations
 !!                     10/2012 J.Escobar Bypass PGI bug , redefine some allocatable array inplace of automatic
+!!                     2014-11 Y. Seity,  add output terms for TKE DDHs budgets
+!!                     July 2015 (Wim de Rooy)  modifications to run with RACMO
+!!                                              turbulence (LHARAT=TRUE)
 !!                     04/2016  (C.Lac) correction of negativity for KHKO
 !  P. Wautelet 05/2016-04/2018: new data structures and calls for I/O
 !  Q. Rodier      01/2018: introduction of RM17
