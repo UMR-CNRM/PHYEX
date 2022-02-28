@@ -2,7 +2,7 @@
       SUBROUTINE  ARO_TURB_MNH( KKA,KKU,KKL,KLON,KLEV,KRR,KRRL,KRRI,KSV, &
                 KTCOUNT, KGRADIENTS, LDHARATU, PTSTEP,                  &
                 PZZ, PZZF, PZZTOP,                                    &
-                PRHODJ, PTHVREF,PRHODREF,HINST_SFU,HMF_UPDRAFT,HCLOUD,&
+                PRHODJ, PTHVREF,PRHODREF,HINST_SFU,HMF_UPDRAFT,       &
                 PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
                 PPABSM,PUM,PVM,PWM,PTKEM,PEPSM,PSVM,PSRCM,            &
                 PTHM,PRM,                                &
@@ -101,7 +101,7 @@ INTEGER,                  INTENT(IN)   :: KGRADIENTS  ! Number of stored horizon
 LOGICAL,                  INTENT(IN)   :: LDHARATU ! HARATU scheme active
 
 CHARACTER (LEN=4), INTENT(IN)     :: HMF_UPDRAFT   ! Type of mass flux scheme
-CHARACTER (LEN=4), INTENT(IN)     ::  HCLOUD       ! Type of microphysical scheme
+CHARACTER (LEN=4)     ::  HCLOUD       ! Type of microphysical scheme
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 !
 !
@@ -281,7 +281,7 @@ ORMC01=.FALSE.
 
 HTURBDIM='1DIM'
 HTURBLEN='BL89'
-
+HCLOUD='ICE3'
 ZIMPL=1.
 
 !Version Ocean du schema de turbulence
