@@ -88,7 +88,6 @@ PMXF=PA
 !END DO
 !
 !PMXF(IIU,:,:)    = PMXF(2*JPHEXT,:,:)
-CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
 !
 !-------------------------------------------------------------------------------
 !
@@ -183,8 +182,6 @@ PMXM=PA
 !
 !PMXM(1,:,:)    = PMXM(IIU-2*JPHEXT+1,:,:)
 !
-CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
-
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('MXM',1,ZHOOK_HANDLE)
@@ -278,7 +275,6 @@ PMYF=PA
 !  PMYF(:,JJ,:) = 0.5*( PA(:,JJ,:)+PA(:,JJ+1,:) )
 !END DO
 !
-!PMYF(:,IJU,:)    = PMYF(:,2*JPHEXT,:)
 !
 !-------------------------------------------------------------------------------
 !
@@ -373,7 +369,6 @@ PMYM=PA
 !
 !PMYM(:,1,:)    = PMYM(:,IJU-2*JPHEXT+1,:)
 !
-CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('MYM',1,ZHOOK_HANDLE)
@@ -433,8 +428,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
-INTEGER,              INTENT(IN)                  :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)                  :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+INTEGER,              INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,              INTENT(IN),OPTIONAL         :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMZF   ! result at mass
                                                             ! localization
 !
@@ -517,8 +512,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
-INTEGER,              INTENT(IN)                  :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)                  :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+INTEGER,              INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,              INTENT(IN),OPTIONAL         :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMZM   ! result at flux localization
 !
 !*       0.2   Declarations of local variables
@@ -626,7 +621,6 @@ DO JI=1,IIU-1
 END DO
 !
 !PDXF(IIU,:,:)    = PDXF(2*JPHEXT,:,:)
-CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
 !
 !-------------------------------------------------------------------------------
 !
@@ -961,8 +955,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
-INTEGER,              INTENT(IN)                  :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)                  :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+INTEGER,              INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,              INTENT(IN),OPTIONAL        :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDZF   ! result at mass
                                                             ! localization
 !
@@ -1045,8 +1039,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
-INTEGER,              INTENT(IN)                  :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)                  :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+INTEGER,              INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes
+INTEGER,              INTENT(IN),OPTIONAL         :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDZM   ! result at flux
                                                             ! side
 !

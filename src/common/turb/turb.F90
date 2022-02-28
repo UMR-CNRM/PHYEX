@@ -242,7 +242,7 @@ USE MODE_BL89, ONLY: BL89
 USE MODE_TURB_VER, ONLY : TURB_VER
 !!MODIF AROME
 !USE MODI_ROTATE_WIND
-!USE MODE_TURB_HOR_SPLT, ONLY: TURB_HOR_SPLT
+USE MODE_TURB_HOR_SPLT, ONLY: TURB_HOR_SPLT
 USE MODE_TKE_EPS_SOURCES, ONLY: TKE_EPS_SOURCES
 USE MODI_SHUMAN, ONLY : MZF, MXF, MYF
 USE MODI_GRADIENT_M
@@ -985,24 +985,24 @@ IF( HTURBDIM == '3DIM' ) THEN
       CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:, :, :, JSV) )
     END DO
   END IF
-!#ifdef REPRO48 !à supprimer une fois le précédent ifdef REPRO48 validé
-!#else
-!    CALL TURB_HOR_SPLT(KSPLIT, KRR, KRRL, KRRI, PTSTEP,        &
-!          HLBCX,HLBCY,OTURB_FLX,OSUBG_COND,                    &
-!          TPFILE,                                              &
-!          PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                        &
-!          PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                       &
-!          PCOSSLOPE,PSINSLOPE,                                 &
-!          PRHODJ,PTHVREF,                                      &
-!          PSFTH,PSFRV,PSFSV,                                   &
-!          ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU22M,ZTAU33M,             &
-!          PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,PSVT,          &
-!          PTKET,PLEM,ZLEPS,                                    &
-!          ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,           &
-!          PDYP,PTHP,PSIGS,                                     &
-!          ZTRH,                                                &
-!          PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS                     )
-!#endif
+#ifdef REPRO48 !à supprimer une fois le précédent ifdef REPRO48 validé
+#else
+    CALL TURB_HOR_SPLT(KSPLIT, KRR, KRRL, KRRI, PTSTEP,        &
+          HLBCX,HLBCY,OTURB_FLX,OSUBG_COND,                    &
+          TPFILE,                                              &
+          PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                        &
+          PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                       &
+          PCOSSLOPE,PSINSLOPE,                                 &
+          PRHODJ,PTHVREF,                                      &
+          PSFTH,PSFRV,PSFSV,                                   &
+          ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU22M,ZTAU33M,             &
+          PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,PSVT,          &
+          PTKET,PLEM,ZLEPS,                                    &
+          ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,           &
+          PDYP,PTHP,PSIGS,                                     &
+          ZTRH,                                                &
+          PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS                     )
+#endif
   IF( LBUDGET_U ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_U), 'HTURB', PRUS(:, :, :) )
   IF( LBUDGET_V ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_V), 'HTURB', PRVS(:, :, :) )
   IF( LBUDGET_W ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_W), 'HTURB', PRWS(:, :, :) )
