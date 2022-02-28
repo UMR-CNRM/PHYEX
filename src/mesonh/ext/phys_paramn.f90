@@ -1483,7 +1483,7 @@ ELSE
 END IF
 !
    CALL TURB( 1, IKU, 1, IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,        &
-              LTURB_FLX, LTURB_DIAG, LSUBG_COND, LRMC01,                             &
+              LTURB_FLX, LTURB_DIAG, LSUBG_COND, LRMC01, LOCEAN,                     &
               CTURBDIM, CTURBLEN, CTOM, CTURBLEN_CLOUD, CCLOUD,XIMPL,                &
               XTSTEP, TPFILE,                                                        &
               XDXX, XDYY, XDZZ, XDZX, XDZY, XZZ,                                     &
@@ -1495,9 +1495,9 @@ END IF
               XBL_DEPTH, XSBL_DEPTH,                                                 &
               XCEI, XCEI_MIN, XCEI_MAX, XCOEF_AMPL_SAT,                              &
               XTHT, XRT,                                                             &
-              XRUS, XRVS, XRWS, XRTHS, XRRS, XRSVS, XRTKES, XRTKEMS, XSIGS, XWTHVMF, &
+              XRUS, XRVS, XRWS, XRTHS, XRRS, XRSVS, XRTKES, XSIGS, XWTHVMF, &
               XTHW_FLUX, XRCW_FLUX, XSVW_FLUX,XDYP, XTHP, XTR, XDISS,          &
-              TBUDGETS, KBUDGETS=SIZE(TBUDGETS),PLEM=XLEM      )
+              TBUDGETS, KBUDGETS=SIZE(TBUDGETS),PLEM=XLEM,PRTKEMS=XRTKEMS      )
 !
 IF (LRMC01) THEN
   CALL ADD2DFIELD_ll( TZFIELDS_ll, XSBL_DEPTH, 'PHYS_PARAM_n::XSBL_DEPTH' )

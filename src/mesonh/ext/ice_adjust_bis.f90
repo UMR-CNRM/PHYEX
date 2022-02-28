@@ -130,7 +130,7 @@ CALL THLRT_FROM_THRVRCRI( IRR, PTH, PR, ZLVOCPEXN, ZLSOCPEXN,&
 CALL TH_R_FROM_THL_RT_3D(YFRAC_ICE,ZFRAC_ICE(:,:,:),PP(:,:,:), &
                          ZTHL(:,:,:), ZRW(:,:,:), PTH(:,:,:),  &
                          ZRV(:,:,:), ZRC(:,:,:), ZRI(:,:,:),   &
-                         ZRSATW(:,:,:), ZRSATI(:,:,:)          )
+                         ZRSATW(:,:,:), ZRSATI(:,:,:),OOCEAN=.FALSE.)
 CALL ADD3DFIELD_ll( TZFIELDS_ll, PTH, 'ICE_ADJUST_BIS::PTH')
 IF (IRR>=1) THEN
   CALL ADD3DFIELD_ll( TZFIELDS_ll, ZRV, 'ICE_ADJUST_BIS::ZRV' )

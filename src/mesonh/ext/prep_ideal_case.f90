@@ -1683,7 +1683,7 @@ ELSE
   ZLSOCPEXN = (XLSTT + (XCPV-XCI) * (ZT-XTT))/(ZCPH*ZEXN)
   ZTHL=XTHT-ZLVOCPEXN*XRT(:,:,:,2)-ZLSOCPEXN*XRT(:,:,:,4)
   CALL TH_R_FROM_THL_RT_3D('T',ZFRAC_ICE,XPABST,ZTHL,ZRT,XTHT,XRT(:,:,:,1), &
-                            XRT(:,:,:,2),XRT(:,:,:,4),ZRSATW, ZRSATI)
+                            XRT(:,:,:,2),XRT(:,:,:,4),ZRSATW, ZRSATI,OOCEAN=.FALSE.)
 END IF
   DEALLOCATE(ZEXN)         
   DEALLOCATE(ZT)       
