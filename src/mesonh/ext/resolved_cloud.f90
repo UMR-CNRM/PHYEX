@@ -205,9 +205,9 @@ END MODULE MODI_RESOLVED_CLOUD
 !!         JPHEXT       : Horizontal external points number
 !!         JPVEXT       : Vertical external points number
 !!      Module MODD_CST
-!!          XP00               ! Reference pressure
-!!          XRD                ! Gaz  constant for dry air
-!!          XCPD               ! Cpd (dry air)
+!!          CST%XP00               ! Reference pressure
+!!          CST%XRD                ! Gaz  constant for dry air
+!!          CST%XCPD               ! Cpd (dry air)
 !!
 !!    REFERENCE
 !!    ---------
@@ -285,12 +285,14 @@ END MODULE MODI_RESOLVED_CLOUD
 !
 !*       0.    DECLARATIONS
 !              ------------
-USE MODD_BUDGET,         ONLY: TBUDGETS
+USE MODD_BUDGET,         ONLY: TBUDGETS, TBUCONF
 USE MODD_CH_AEROSOL,     ONLY: LORILAM
 USE MODD_DUST,           ONLY: LDUST
-use modd_cst,            only: xcpd, xrd, xp00, xrholw
+USE MODD_CST,            ONLY: CST
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_DUST ,          ONLY: LDUST
 USE MODD_IO,             ONLY: TFILEDATA
+USE MODD_NEB,            ONLY: NEB
 USE MODD_NSV,            ONLY: NSV_C1R3END, NSV_C2R2BEG, NSV_C2R2END,                            &
                                NSV_LIMA_BEG, NSV_LIMA_END, NSV_LIMA_CCN_FREE, NSV_LIMA_IFN_FREE, &
                                NSV_LIMA_NC, NSV_LIMA_NI, NSV_LIMA_NR
@@ -299,10 +301,12 @@ USE MODD_PARAMETERS,     ONLY: JPHEXT, JPVEXT
 USE MODD_PARAM_ICE,      ONLY: CSEDIM, LADJ_BEFORE, LADJ_AFTER, CFRAC_ICE_ADJUST, LRED
 USE MODD_PARAM_LIMA,     ONLY: LADJ, LCOLD, LPTSPLIT, LSPRO, NMOD_CCN, NMOD_IFN, NMOD_IMM
 USE MODD_RAIN_ICE_DESCR, ONLY: XRTMIN
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM
 USE MODD_SALT,           ONLY: LSALT
 USE MODD_TURB_n,         ONLY: CSUBG_AUCV_RI, CCONDENS, CLAMBDA3, CSUBG_MF_PDF
 !
 USE MODE_ll
+USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 use mode_sources_neg_correct, only: Sources_neg_correct
 !
 USE MODI_C2R2_ADJUST
@@ -472,12 +476,15 @@ REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3), KRR) :: ZFPR
 !
 INTEGER                               :: JMOD, JMOD_IFN
 LOGICAL                               :: GWEST,GEAST,GNORTH,GSOUTH
+LOGICAL                               :: LMFCONV ! =SIZE(PMFCONV)!=0
 ! BVIE work array waiting for PINPRI
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2)):: ZINPRI
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZICEFR
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZPRCFR
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZTM
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2)) :: ZSIGQSAT2D
+TYPE(DIMPHYEX_t) :: YLDIMPHYEX
+!
 ZSIGQSAT2D(:,:) = PSIGQSAT
 !
 !------------------------------------------------------------------------------
@@ -490,10 +497,14 @@ IKB=1+JPVEXT
 IKE=SIZE(PZZ,3) - JPVEXT
 IKU=SIZE(PZZ,3)
 !
+CALL FILL_DIMPHYEX(YLDIMPHYEX, SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3))
+!
 GWEST  = LWEST_ll()
 GEAST  = LEAST_ll()
 GSOUTH = LSOUTH_ll()
 GNORTH = LNORTH_ll()
+!
+LMFCONV=(SIZE(PMFCONV)/=0)
 !
 IF (HCLOUD == 'C2R2' .OR. HCLOUD == 'KHKO') THEN
   ISVBEG = NSV_C2R2BEG
@@ -732,7 +743,7 @@ SELECT CASE ( HCLOUD )
 !               -----------------------------------------------------
 !
     allocate( zexn( size( pzz, 1 ), size( pzz, 2 ), size( pzz, 3 ) ) )
-    ZEXN(:,:,:)= (PPABST(:,:,:)/XP00)**(XRD/XCPD)
+    ZEXN(:,:,:)= (PPABST(:,:,:)/CST%XP00)**(CST%XRD/CST%XCPD)
 !
 !*       9.1    Compute the explicit microphysical sources
 !
@@ -742,10 +753,11 @@ SELECT CASE ( HCLOUD )
     ENDDO
     ZZZ = MZF( PZZ )
     IF(LRED .AND. LADJ_BEFORE) THEN
-      CALL ICE_ADJUST (1, IKU, 1, KRR, CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,   &
+      CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAM,NEB, TBUCONF, KRR, &
+                      CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,   &
                       'ADJU', OSUBG_COND, OSIGMAS, .FALSE., CSUBG_MF_PDF,      &
                       PTSTEP, ZSIGQSAT2D,                                      &
-                      PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABST, ZZZ,  &
+                      PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV,PMFCONV, PPABST, ZZZ,  &
                       ZEXN, PCF_MF, PRC_MF, PRI_MF,                            &
                       PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,        &
                       PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                    &
@@ -809,10 +821,11 @@ SELECT CASE ( HCLOUD )
 !
 !
     IF (.NOT. LRED .OR. (LRED .AND. LADJ_AFTER) ) THEN
-      CALL ICE_ADJUST (1, IKU, 1, KRR, CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,   &
+      CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAM,NEB, TBUCONF, KRR,       &
+                       CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,   &
                        'DEPI', OSUBG_COND, OSIGMAS, .FALSE.,CSUBG_MF_PDF,      &
                        PTSTEP, ZSIGQSAT2D,                                     &
-                       PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABST, ZZZ, &
+                       PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,PPABST, ZZZ, &
                        ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
                        PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
                        PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                   &
@@ -834,7 +847,7 @@ SELECT CASE ( HCLOUD )
 !               -----------------------------------------------------
 !
     allocate( zexn( size( pzz, 1 ), size( pzz, 2 ), size( pzz, 3 ) ) )
-    ZEXN(:,:,:)= (PPABST(:,:,:)/XP00)**(XRD/XCPD)
+    ZEXN(:,:,:)= (PPABST(:,:,:)/CST%XP00)**(CST%XRD/CST%XCPD)
 !
 !*       10.1   Compute the explicit microphysical sources
 !
@@ -844,10 +857,11 @@ SELECT CASE ( HCLOUD )
     ENDDO
     ZZZ = MZF( PZZ )
     IF(LRED .AND. LADJ_BEFORE) THEN
-      CALL ICE_ADJUST (1, IKU, 1, KRR, CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,   &
+      CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAM,NEB, TBUCONF,KRR,        &
+                       CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,   &
                        'ADJU', OSUBG_COND, OSIGMAS, .FALSE., CSUBG_MF_PDF,     &
                        PTSTEP, ZSIGQSAT2D,                                     &
-                       PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABST, ZZZ, &
+                       PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV,PMFCONV, PPABST, ZZZ, &
                        ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
                        PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
                        PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                   &
@@ -916,10 +930,11 @@ SELECT CASE ( HCLOUD )
 !*       10.2   Perform the saturation adjustment over cloud ice and cloud water
 !
     IF (.NOT. LRED .OR. (LRED .AND. LADJ_AFTER) ) THEN
-     CALL ICE_ADJUST (1, IKU, 1, KRR, CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,  &
+     CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAM,NEB, TBUCONF, KRR,      &
+                     CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,  &
                      'DEPI', OSUBG_COND, OSIGMAS, .FALSE., CSUBG_MF_PDF,     &
                      PTSTEP, ZSIGQSAT2D,                                     &
-                     PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABST, ZZZ, &
+                     PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,PPABST, ZZZ, &
                      ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
                      PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
                      PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                   &
@@ -1014,11 +1029,11 @@ SELECT CASE ( HCLOUD )
 END SELECT
 !
 IF(HCLOUD=='ICE3' .OR. HCLOUD=='ICE4' ) THEN
-  PINPRC3D=ZFPR(:,:,:,2) / XRHOLW
-  PINPRR3D=ZFPR(:,:,:,3) / XRHOLW
-  PINPRS3D=ZFPR(:,:,:,5) / XRHOLW
-  PINPRG3D=ZFPR(:,:,:,6) / XRHOLW
-  IF(KRR==7) PINPRH3D=ZFPR(:,:,:,7) / XRHOLW
+  PINPRC3D=ZFPR(:,:,:,2) / CST%XRHOLW
+  PINPRR3D=ZFPR(:,:,:,3) / CST%XRHOLW
+  PINPRS3D=ZFPR(:,:,:,5) / CST%XRHOLW
+  PINPRG3D=ZFPR(:,:,:,6) / CST%XRHOLW
+  IF(KRR==7) PINPRH3D=ZFPR(:,:,:,7) / CST%XRHOLW
   WHERE (PRT(:,:,:,2) > 1.E-04 )
     PSPEEDC=ZFPR(:,:,:,2) / (PRT(:,:,:,2) * PRHODREF(:,:,:))
   ENDWHERE

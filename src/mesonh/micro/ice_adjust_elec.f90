@@ -377,11 +377,11 @@ DO JITER = 1, ITERMAX
     ZSIGQSAT2D(:,:)=PSIGQSAT
     ZW4 = 1. ! PRODREF is not used if HL variables are not present
 !
-    CALL CONDENSATION( IIU, IJU, IKU, IIB, IIE, IJB, IJE, IKB, IKE,1, 'T', 'CB02', 'CB',   &
-       PPABST, PZZ, ZW4, ZT, ZW3_IN, ZW3, ZW1_IN, ZW1, ZW2_IN, ZW2, &
-       PRSS*PTSTEP, PRGS*PTSTEP, &
-       PSIGS, PMFCONV, PCLDFR, PSRCS, .TRUE., &
-       OSIGMAS, .FALSE., ZSIGQSAT2D, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
+!    CALL CONDENSATION( IIU, IJU, IKU, IIB, IIE, IJB, IJE, IKB, IKE,1, 'T', 'CB02', 'CB',   &
+!       PPABST, PZZ, ZW4, ZT, ZW3_IN, ZW3, ZW1_IN, ZW1, ZW2_IN, ZW2, &
+!       PRSS*PTSTEP, PRGS*PTSTEP, &
+!       PSIGS, PMFCONV, PCLDFR, PSRCS, .TRUE., &
+!       OSIGMAS, .FALSE., ZSIGQSAT2D, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
 !
 !*       3.2    compute the variation of mixing ratio
 !
