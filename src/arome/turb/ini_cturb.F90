@@ -1,7 +1,5 @@
 !     ######spl
         SUBROUTINE INI_CTURB
-        USE PARKIND1, ONLY : JPRB
-        USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !       ####################
 !
 !!****     *INI_CTURB*  - routine to initialize the turbulence scheme 
@@ -40,6 +38,8 @@
 !!        P.Jabouille       20/10/99   XCET=0.4
 !!        V.Masson          13/11/02   XALPSBL and XASBL
 !!                             05/06   Remove KEPS
+!!        Q.Rodier             01/19   
+!!                                     Remove XASBL (not used)
 !! --------------------------------------------------------------------------
 !
 !*        0. DECLARATIONS
@@ -48,7 +48,14 @@
 USE MODD_CST
 USE MODD_CTURB
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
 IMPLICIT NONE
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+!
+IF (LHOOK) CALL DR_HOOK('INI_CTURB',0,ZHOOK_HANDLE)
 !
 !  ---------------------------------------------------------------------------
 !
@@ -57,8 +64,6 @@ IMPLICIT NONE
 !
 !         1.1 Constant for dissipation of Tke
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
-IF (LHOOK) CALL DR_HOOK('INI_CTURB',0,ZHOOK_HANDLE)
 !
 LHARAT=.FALSE.
 !
@@ -67,6 +72,7 @@ XCED  = 0.85
 !       Redelsperger-Sommeria (1981) = 0.70
 !       Schmidt-Schumann      (1989) = 0.845
 !       Cheng-Canuto-Howard   (2002) = 0.845
+!       Rodier, Masson, Couvreux, Paci (2017) = 0.34
 !
 !
 !         1.2 Constant for wind pressure-correlations
@@ -190,14 +196,6 @@ XCPR2= XCHT1
 XCPR3= XCPR2        ! used only for the Schmidt number for scalar variables
 XCPR4= XCPR2
 XCPR5= XCPR2
-!
-!         2.4 Value related to the TKE universal function within SBL
-!
-!
-XASBL   = 0.5*( XALPSBL**(3./2.)*XKARMAN*XCED + XKARMAN/SQRT(XALPSBL)/XCMFS )
-!       Redelsperger et al 2001
-!
-!
 !
 !         3. MINIMUM VALUES 
 !            --------------

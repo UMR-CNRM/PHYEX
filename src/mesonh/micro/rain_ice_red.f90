@@ -25,9 +25,10 @@ INTERFACE
                             PTHT, PRVT, PRCT, PRRT, PRIT, PRST,                   &
                             PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,       &
                             PINPRC,PINPRR, PEVAP3D,                               &
-                            PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS, PSEA, PTOWN,  &
-                            PRHT, PRHS, PINPRH, PFPR,                             &
-                            TBUDGETS, KBUDGETS)
+                            PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,               &
+                            TBUDGETS, KBUDGETS,                                   &
+                            PSEA, PTOWN,                                          &
+                            PRHT, PRHS, PINPRH, PFPR                              )
 !
 !
 USE MODD_BUDGET, ONLY: TBUDGETDATA
@@ -100,7 +101,7 @@ REAL, DIMENSION(KIT,KJT), OPTIONAL, INTENT(OUT)      :: PINPRH! Hail instant pre
 REAL, DIMENSION(KIT,KJT,KKT,KRR), OPTIONAL, INTENT(OUT)  :: PFPR ! upper-air precipitation fluxes
 !
 TYPE(TBUDGETDATA), OPTIONAL, DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
-INTEGER, INTENT(IN) : KBUDGETS
+INTEGER, INTENT(IN) :: KBUDGETS
 !
 END SUBROUTINE RAIN_ICE_RED
 END INTERFACE
@@ -115,9 +116,10 @@ END MODULE MODI_RAIN_ICE_RED
                             PTHT, PRVT, PRCT, PRRT, PRIT, PRST,                   &
                             PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,       &
                             PINPRC, PINPRR, PEVAP3D,                              &
-                            PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS, PSEA, PTOWN,  &
-                            PRHT, PRHS, PINPRH, PFPR,                             &
-                            TBUDGETS, KBUDGETS)
+                            PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,               &
+                            TBUDGETS, KBUDGETS,                                   &
+                            PSEA, PTOWN,                                          &
+                            PRHT, PRHS, PINPRH, PFPR                              )
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -281,7 +283,7 @@ END MODULE MODI_RAIN_ICE_RED
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 
-USE MODD_BUDGET,         ONLY: TBUDGETDATA, LBU_ENABLE,                                                                                     &
+USE MODD_BUDGET,         ONLY: TBUDGETDATA, LBU_ENABLE,                                                                        &
                              & LBUDGET_TH, LBUDGET_RV, LBUDGET_RC, LBUDGET_RR, LBUDGET_RI, LBUDGET_RS, LBUDGET_RG, LBUDGET_RH, &
                              & NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH
 USE MODD_CST,            ONLY: XCI, XCL, XCPD, XCPV, XLSTT, XLVTT, XTT, XRHOLW
@@ -307,7 +309,6 @@ USE MODE_ICE4_RAINFR_VERT, ONLY: ICE4_RAINFR_VERT
 USE MODE_ICE4_SEDIMENTATION_STAT, ONLY: ICE4_SEDIMENTATION_STAT
 USE MODE_ICE4_SEDIMENTATION_SPLIT, ONLY: ICE4_SEDIMENTATION_SPLIT
 USE MODE_ICE4_SEDIMENTATION_SPLIT_MOMENTUM, ONLY: ICE4_SEDIMENTATION_SPLIT_MOMENTUM
-USE MODE_ICE4_NUCLEATION_WRAPPER, ONLY: ICE4_NUCLEATION_WRAPPER
 USE MODE_ICE4_TENDENCIES, ONLY: ICE4_TENDENCIES
 !
 IMPLICIT NONE

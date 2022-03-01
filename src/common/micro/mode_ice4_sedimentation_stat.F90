@@ -107,8 +107,8 @@ FWSED2(PWSEDW,PTSTEP1,PDZZ1,PWSEDWSUP)=MAX(0.,1.-PDZZ1/(PTSTEP1*PWSEDW))*PWSEDWS
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT',0,ZHOOK_HANDLE)
 IF ( PRESENT( PFPR ) ) THEN
  !Set to 0. to avoid undefined values (in files)
- PFPR(:, :, : KKTB - 1, :) = 0.
- PFPR(:, :, KKTE + 1 :, :) = 0.
+ PFPR(:, :, : KKTB, :) = 0.
+ PFPR(:, :, KKTE :, :) = 0.
 END IF
 
 !-------------------------------------------------------------------------------

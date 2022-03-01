@@ -1,7 +1,10 @@
+!MNH_LIC Copyright 1995-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
 !     ######spl
       SUBROUTINE INI_RAIN_ICE ( KLUOUT, PTSTEP, PDZMIN, KSPLITR, HCLOUD )
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ###########################################################
 !
 !!****  *INI_RAIN_ICE * - initialize the constants necessary for the warm and
@@ -24,7 +27,7 @@
 !!    sedimentation is fulfilled for a Raindrop maximal fall velocity equal
 !!    VTRMAX. The parameters defining the collection kernels are read and are
 !!    checked against the new ones. If any change occurs, these kernels are
-!!    recomputed and their numerical values are written in the output listiing.
+!!    recomputed and their numerical values are written in the output listing.
 !!
 !!    EXTERNAL
 !!    --------
@@ -74,13 +77,14 @@
 !!                  24/03/01 Update XCRIAUTI for cirrus cases
 !!      J.-P. Pinty 24/11/01 Update ICE3/ICE4 options
 !!      S. Riette 2016-11: new ICE3/ICE4 options
-!!
+!!      P. Wautelet 22/01/2019 bug correction: incorrect write
+!  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
+!
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODE_FM
 USE MODD_CST
 USE MODD_LUNIT
 USE MODD_PARAMETERS
@@ -100,6 +104,9 @@ USE MODE_READ_XKER_RDRYG, ONLY: READ_XKER_RDRYG
 USE MODE_READ_XKER_SWETH, ONLY: READ_XKER_SWETH
 USE MODE_READ_XKER_GWETH, ONLY: READ_XKER_GWETH
 USE MODE_READ_XKER_RWETH, ONLY: READ_XKER_RWETH
+!
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 IMPLICIT NONE
 !
@@ -169,6 +176,7 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',0,ZHOOK_HANDLE)
 !
+IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',0,ZHOOK_HANDLE)
 !
 !*       0.     FUNCTION STATEMENTS
 !               -------------------

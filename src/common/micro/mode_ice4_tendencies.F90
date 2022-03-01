@@ -64,7 +64,6 @@ USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & IRG,     & ! Graupel
       & IRH        ! Hail
 !
-USE MODE_ICE4_NUCLEATION, ONLY: ICE4_NUCLEATION
 USE MODE_ICE4_RRHONG, ONLY: ICE4_RRHONG
 USE MODE_ICE4_RIMLTC, ONLY: ICE4_RIMLTC
 USE MODE_ICE4_RSRIMCG_OLD, ONLY: ICE4_RSRIMCG_OLD
@@ -207,10 +206,13 @@ ELSE
   !
   !*       2.     COMPUTES THE SLOW COLD PROCESS SOURCES
   !               --------------------------------------
-  CALL ICE4_NUCLEATION(KSIZE, LLCOMPUTE, &
-                       ZVART(:,ITH), PPRES, PRHODREF, PEXN, PLSFACT, ZT, &
-                       ZVART(:,IRV), &
-                       PCIT, PRVHENI_MR)
+!DIR$ VECTOR ALWAYS
+  DO CONCURRENT (JL=1:KSIZE)
+    CALL ICE4_NUCLEATION_ELEM(LLCOMPUTE(JL), &
+                     ZVART(JL,ITH), PPRES(JL), PRHODREF(JL), PEXN(JL), PLSFACT(JL), ZT(JL), &
+                     ZVART(JL,IRV), &
+                     PCIT(JL), PRVHENI_MR(JL))
+  ENDDO
   DO JL=1, KSIZE
     ZVART(JL,ITH)=ZVART(JL,ITH) + PRVHENI_MR(JL)*PLSFACT(JL)
     ZT(JL) = ZVART(JL,ITH) * PEXN(JL)
@@ -304,15 +306,6 @@ CALL ICE4_COMPUTE_PDF(KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF,&
                       PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, ZRAINFR)
 LLRFR=HSUBG_RC_RR_ACCR=='PRFR' .OR. HSUBG_RR_EVAP=='PRFR'
 IF (LLRFR) THEN
-  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODE_ICE4_TENDENCIES', 'LLRFR case broken by optimisation, see comments in mode_ice4_tendencies to knwon why (and how to reapir)....')
-  !Microphyscs was optimized by introducing chunks of KPROMA size
-  !Thus, in ice4_tendencies, the 1D array represent only a fraction of the points where microphisical species are present
-  !We cannot rebuild the entire 3D arrays here, so we cannot call ice4_rainfr_vert here
-  !A solution would be to suppress optimisation in this case by setting KPROMA=KSIZE in rain_ice
-  !Another solution would be to compute column by column?
-  !Another one would be to cut tendencies in 3 parts: before rainfr_vert, rainfr_vert, after rainfr_vert
-
-
   !Diagnostic of precipitation fraction
   PRAINFR(:,:,:) = 0.
   ZRRT3D (:,:,:) = 0.
@@ -322,8 +315,10 @@ IF (LLRFR) THEN
   DO JL=1,KSIZE
     PRAINFR(K1(JL), K2(JL), K3(JL)) = ZRAINFR(JL)
     ZRRT3D (K1(JL), K2(JL), K3(JL)) = ZVART(JL,IRR)
+#ifndef REPRO48
     ZRST3D (K1(JL), K2(JL), K3(JL)) = ZVART(JL,IRS)
     ZRGT3D (K1(JL), K2(JL), K3(JL)) = ZVART(JL,IRG)
+#endif
   END DO
   IF (KRR==7) THEN
     DO JL=1,KSIZE    
@@ -497,5 +492,7 @@ CALL ICE4_FAST_RI(KSIZE, ODSOFT, PCOMPUTE, &
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_TENDENCIES', 1, ZHOOK_HANDLE)
 !
+CONTAINS
+INCLUDE "ice4_nucleation_elem.func.h"
 END SUBROUTINE ICE4_TENDENCIES
 END MODULE MODE_ICE4_TENDENCIES

@@ -83,8 +83,6 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODE_FM
-!
 USE MODD_PARAMETERS
 USE MODD_BUDGET
 USE MODD_DYN

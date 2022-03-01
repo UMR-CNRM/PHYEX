@@ -12,10 +12,9 @@
                              PPABST, PZZ,                                      &
                              PEXN, PCF_MF, PRC_MF, PRI_MF,                     &
                              PRV, PRC, PRVS, PRCS, PTH, PTHS, PSRCS, PCLDFR,   &
-                             PRR, PRI, PRIS, PRS, PRG, PRH,                    &
+                             PRR, PRI, PRIS, PRS, PRG, TBUDGETS, KBUDGETS, PRH,&
                              POUT_RV, POUT_RC, POUT_RI, POUT_TH,               &
                              PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,           &
-                             TBUDGETS, KBUDGETS,                               &
                              PICE_CLD_WGT)
 !     #########################################################################
 !

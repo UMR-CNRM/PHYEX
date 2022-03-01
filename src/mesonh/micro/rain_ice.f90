@@ -245,7 +245,7 @@ use MODE_RAIN_ICE_WARM,                only: RAIN_ICE_WARM
 use mode_tools,                        only: Countjv
 use mode_tools_ll,                     only: GET_INDICE_ll
 
-USE MODI_ICE4_RAINFR_VERT
+USE MODE_ICE4_RAINFR_VERT
 
 IMPLICIT NONE
 !

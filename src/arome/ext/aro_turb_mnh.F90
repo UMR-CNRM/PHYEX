@@ -71,7 +71,8 @@
 USE MODD_CONF
 USE MODD_CST
 USE MODD_PARAMETERS
-
+USE MODD_IO, ONLY: TFILEDATA
+USE MODD_BUDGET, ONLY: NBUDGET_RI, TBUDGETDATA
 !
 USE MODI_TURB
 !
@@ -100,6 +101,7 @@ INTEGER,                  INTENT(IN)   :: KGRADIENTS  ! Number of stored horizon
 LOGICAL,                  INTENT(IN)   :: LDHARATU ! HARATU scheme active
 
 CHARACTER (LEN=4), INTENT(IN)     :: HMF_UPDRAFT   ! Type of mass flux scheme
+CHARACTER (LEN=4)     ::  HCLOUD       ! Type of microphysical scheme
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 !
 !
@@ -170,11 +172,13 @@ LOGICAL , INTENT(IN)                            ::  OSUBG_COND   ! switch
 REAL, DIMENSION(KLON,1,KLEV+2),  INTENT(OUT)   :: PDP, PTP, PTPMF, PTDIFF, PTDISS
 !                                                !for TKE DDH budgets
 !
-TYPE(TYP_DDH), INTENT(INOUT)   :: YDDDH
-TYPE(TLDDH),   INTENT(IN)      :: YDLDDH
-TYPE(TMDDH),   INTENT(IN)      :: YDMDDH
+TYPE(TYP_DDH), INTENT(INOUT), TARGET   :: YDDDH
+TYPE(TLDDH),   INTENT(IN), TARGET      :: YDLDDH
+TYPE(TMDDH),   INTENT(IN), TARGET      :: YDMDDH
 !
 !
+TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RI) :: YLBUDGET !NBUDGET_RI is the one with the highest number needed for turb
+TYPE(TFILEDATA) :: ZTFILE !I/O for MesoNH
 !*       0.2   Declarations of local variables :
 !
 INTEGER :: JRR,JSV       ! Loop index for the moist and scalar variables
@@ -198,24 +202,18 @@ CHARACTER(LEN=4),DIMENSION(2)  :: HLBCX, HLBCY  ! X- and Y-direc LBC
 
 INTEGER       :: ISPLIT        ! number of time-splitting
 
-LOGICAL       ::  OCLOSE_OUT   ! Conditional closure of
-                                                   ! the OUTPUT FM-file
 LOGICAL       ::  OTURB_FLX    ! switch to write the
                                ! turbulent fluxes in the syncronous FM-file
 LOGICAL       ::  OTURB_DIAG   ! switch to write some
                                ! diagnostic fields in the syncronous FM-file
 LOGICAL       ::  ORMC01       ! switch for RMC01 lengths in SBL
+LOGICAL       ::  OOCEAN       ! switch for OCEAN version of turbulence scheme
 
 CHARACTER(LEN=4)   ::  HTURBDIM     ! dimensionality of the
                                ! turbulence scheme
 CHARACTER(LEN=4)   ::  HTURBLEN     ! kind of mixing length
 
 REAL          ::  ZIMPL        ! degree of implicitness
-
-CHARACTER(LEN=4)   ::  HFMFILE      ! Name of the output
-                                    ! FM-file
-CHARACTER(LEN=4)   ::  HLUOUT       ! Output-listing name for
-                                    ! model n
 !
 REAL, DIMENSION(KLON,1,KLEV+2)   :: ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY
                                         ! metric coefficients
@@ -264,6 +262,9 @@ IKE=KKU-JPVEXT_TURB*KKL
 ! Numero du modele si grid nestind, toujours egal a 1
 IMI=1
 
+! Fichier I/O pour MesoNH (non-utilise dans AROME)
+ZTFILE%LOPENED=.FALSE.
+
 ! Type de condition � la limite. En 1D, sans importance. A etudier en 3D.
 HLBCX(:)='CYCL'
 HLBCY(:)='CYCL'
@@ -272,9 +273,6 @@ HLBCY(:)='CYCL'
 ISPLIT=1
 
 ! pour ecriture et diagnostic dans mesoNH, � priori les switches toujours � .F.
-OCLOSE_OUT=.FALSE.
-HFMFILE=' '
-HLUOUT= ' '
 OTURB_FLX=.FALSE.
 OTURB_DIAG=.FALSE.
 
@@ -283,9 +281,11 @@ ORMC01=.FALSE.
 
 HTURBDIM='1DIM'
 HTURBLEN='BL89'
-
+HCLOUD='ICE3'
 ZIMPL=1.
 
+!Version Ocean du schema de turbulence
+OOCEAN=.FALSE.
 
 ! tableau a recalculer a chaque pas de temps
 ! attention, ZDZZ est l'altitude entre deux niveaux (et pas l'�paisseur de la couche)
@@ -412,27 +412,33 @@ ZCEI_MIN=0.0
 ZCEI=0.0
 ZCOEF_AMPL_SAT=0.0
 
-CL=HINST_SFU
+DO JRR=1, NBUDGET_RI
+  YLBUDGET(JRR)%NBUDGET=JRR
+  YLBUDGET(JRR)%YDDDH=>YDDDH
+  YLBUDGET(JRR)%YDLDDH=>YDLDDH
+  YLBUDGET(JRR)%YDMDDH=>YDMDDH
+ENDDO
+
 CALL TURB (KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, ISPLIT,IMI, &
-   & OCLOSE_OUT,OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,    &
-   & HTURBDIM,HTURBLEN,'NONE','NONE', CL,           &
-   & HMF_UPDRAFT,ZIMPL,                                    &
-   & 2*PTSTEP, 2*PTSTEP, 2*PTSTEP,                         &
-   & HFMFILE,HLUOUT,ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &
+   & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,    &
+   & HTURBDIM,HTURBLEN,'NONE','NONE',HCLOUD,           &
+   & ZIMPL,                                    &
+   & 2*PTSTEP,ZTFILE,                                      &
+   & ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &
    & ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE,    &
-   & PRHODJ,PTHVREF,PRHODREF,                              &
+   & PRHODJ,PTHVREF,                              &
    & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
    & PPABSM,PUM,PVM,PWM,PTKEM,ZSVM,PSRCM,                  &
    & PLENGTHM,PLENGTHH,MFMOIST,                            &
    & ZBL_DEPTH,ZSBL_DEPTH,                                 &
-   & PUM,PVM,PWM,ZCEI,ZCEI_MIN,ZCEI_MAX,ZCOEF_AMPL_SAT,    &
+   & ZCEI,ZCEI_MIN,ZCEI_MAX,ZCOEF_AMPL_SAT,    &
    & PTHM,ZRM, &
    & PRUS,PRVS,PRWS,PRTHS,ZRRS,ZRSVS,PRTKES_OUT,         &
-   & ZHGRAD,PSIGS,                                         &
-   & PDRUS_TURB,PDRVS_TURB,                                &
-   & PDRTHLS_TURB,PDRRTS_TURB,ZDRSVS_TURB,                 &
-  & PFLXZTHVMF,ZWTH,ZWRC,ZWSV,PDP,PTP,PTPMF,PTDIFF,    &
-  & PTDISS,PEDR,YDDDH,YDLDDH,YDMDDH)
+   & PSIGS,                                         &
+   & PFLXZTHVMF,ZWTH,ZWRC,ZWSV,PDP,PTP,PTDIFF,PTDISS,&
+   & YLBUDGET, KBUDGETS=SIZE(YLBUDGET),PEDR=PEDR,PTPMF=PTPMF,&
+   & PDRUS_TURB=PDRUS_TURB,PDRVS_TURB=PDRVS_TURB,          &
+   & PDRTHLS_TURB=PDRTHLS_TURB,PDRRTS_TURB=PDRRTS_TURB,PDRSVS_TURB=ZDRSVS_TURB)
 !
 !
 !------------------------------------------------------------------------------

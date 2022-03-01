@@ -1,6 +1,5 @@
-LOCEAN:
-  La clé LOCEAN est dans un module spécifique à Méso-NH (MODD_DYNn).
-  Une solution serait de créer un module propre à PHYEX qui contiendrait des clés de contrôle de haut niveau
+Module de clés namelists PHYEX
+Une solution serait de créer un module propre à PHYEX qui contiendrait des clés de contrôle de haut niveau
   pour la physique (y en a-t-il d'autres?). Ce module serait initialisé dans Méso-NH à partir de la clé
   actuelle qui est sans doute utilisée ailleurs dans le code de Méso-NH
 
@@ -10,10 +9,19 @@ Dependencies:
   - liste dans document Interfaces
   - pour AROME placés, en attendant, dans phyex/externals
 
-Clé de compilation REPRO48 ajoutée pour permettre de reproduire le cycle 48, elle:
-- contourne des corrections de bug
-- modifie l'organisation de calculs
-Cette clé devra être supprimée
+Clé de compilation REPRO48 + REPRO55 ajoutées pour permettre de reproduire le cycle 48 MNH-5.5.0, elles:
+- contournent des corrections de bug
+- modifient l'organisation de calculs
+Ces clés devront être supprimées
+
+Ecrire doc sur marche à suivre pour intégrer un nouveau développement:
+- dev dans MNH à faire en array-syntax
+- dev dans AROME à faire en boucles do
+- intégration dans PHYEX: en array-syntax avec directives mnh_expand
+- les 3 tests suivants doivent donner les mêmes résultats (au bit près) dans chacun des deux modèles:
+  - compilation directe sans activer mnh_expand
+  - compilation en activant mnh_expand
+  - exécution en changeant le nombre de processeurs
 
 Merge pb:
 - ice4_nucleation_wrapper:
@@ -22,11 +30,12 @@ Merge pb:
        Ryad a fait des tests pour regarder impact des allocatable sur CPU => temps * 2
        Code à nettoyer quelque soit l'option retenue
        Dernier code de Ryad: /home/gmap/mrpm/khatib/public/modset/mods_ice4_nucleation_wrapper.tgz et/ou /home/gmap/mrpm/khatib/public/modset/ice4_nucleation_wrapper.f90
+
+- rain_ice_red: le cas test MesoNH n'est pas bit repro (diffs > 1% sur rapports de melange)
+                sur la modif src/mesonh/rain_ice_red au commit bdd10dd (First rain_ice new/red merge)
 - shallow_mf (appels dans aro_shallow et arp_shallow):
        Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
        Dans AROME/ARP: où trouver la taille de maille?
-       Pour l'instant 2 versions à cause de l'interface à compute_uprfat_rhcj10
-- compute_updraft_rhcj10: en attente retour de Rachel et/ou Yves pour faire le merge
 
 Etape 2: array syntax -> loop
 - en profiter pour supprimer args PA/PB des routines appelées depuis ice4_tendencies, comme pour nucleation
@@ -39,17 +48,25 @@ Etape 2: array syntax -> loop
 
 Pb identifiés à corriger plus tard:
 - deposition devrait être déplacée dans ice4_tendencies
-- non reproduction en changeant le nombre de procs
 - avec les optimisations de Ryad, les tableaux 3D de precip passés à ice4_tendencies
   lorsque HSUBG_RC_RR_ACCR=='PRFR' ne sont  pas utilisables puisque les K1, K2 et K3
   sont relatifs à la boucle IMICRO et que les calculs faits en debut de routine ne
   concernent qu'une partie des points
        => à corriger
-- seules les options oper ont été testées, il manque des test pour sedim_after, nmaxiter, xmrstep, xtstep, autoconv, rainfr
+- seules quelques options sont testées avec les cas test (par exemple, il faudrait tester RMC01 mais
+  l'option n'est pas remontée en namelist)
+- les options CMF_CLOUD='STAT' et LOSIGAMS=.FALSE. semblent cassées en 48 original
 - arome/ini_cmfshall devrait s'appeler ini_param_mfshall
 - th_r_from_thl_rt appelée partout, il faudrait limiter à OTEST
+- la recompilation complète d'AROME n'est pas testée
+- il faudrait inclure un cas test plus conséquent en taille au moins sur belenos
+- doute sur le codage de MODD_PRECISION
+- appel à abort à travers print_msg non testé
+- lignes vides ajoutées après les macros mnh_expand
+- indentation inorrecte dans les blocs mnh_expand
+- sedimentation momentum non branchée
 
-Répertoire arome/ext contient les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
+Répertoire arome/ext et mesonh/ext contient les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
 Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayadevront avoir été fournies par ailleurs
 
 Budgets/DDH
@@ -58,9 +75,19 @@ Budgets/DDH
 - nettoyage necessaire des routines budgets:
    - etape 1: adaptation GPU en passant la structure => permettra d'identifier avec certitude les variables utiles
    - etape 2: suppr des codes qui ne sont pas appelés, ménage modd_budget, ini_budget... Je pense que seul aro_ini_budget est utile
+- Le module modd_dyn n'est utilisé que pour les budgets, voir s'il peut être supprimé
+- Le code des budgets devrait être revu: pas en phase avec celui de Méso-NH et phasage a priori
+  inutile car très peu de code semble réellement utile pour AROME
 
 SPP
 - modd_spp_type est pour l'instant dans mpa/micro/externals mais n'est pas de la microphysique
 
-Gradients/shuman:
-- essayer de mettre des abort dans les routines arome (shuman doit suffire)
+Nettoyage apl_arome non fait (pb a la compilation) ==> 4 arguments dans aro_turb_mnh supprimés (non utilisés)
+
+turb.F90 : il reste un CALL à SOURCES_NEG_CORRECT à ajouter. Besoin de récupérer CCLOUD dans apl_arome : comment ?
+
+Regarder s'il ne serait pas possible/souhaitable de supprimer modd_lunit de PHYEX. On pourrait se contenter de recevoir le numero d'unité logique
+
+Nettoyage des répertoires aux nécessaire
+
+Initialiser dans AROME la variable ldiag_in_run de MODD_DIAG_IN_RUN pour pouvoir phaser le modd

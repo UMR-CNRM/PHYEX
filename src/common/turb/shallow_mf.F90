@@ -76,7 +76,7 @@ USE MODD_PARAMETERS, ONLY: JPVEXT
 USE MODD_NEB, ONLY: NEB
 USE MODD_PARAM_MFSHALL_n
 
-USE MODI_THL_RT_FROM_TH_R_MF
+USE MODE_THL_RT_FROM_TH_R_MF, ONLY: THL_RT_FROM_TH_R_MF
 USE MODE_COMPUTE_UPDRAFT, ONLY: COMPUTE_UPDRAFT
 USE MODE_COMPUTE_UPDRAFT_RHCJ10, ONLY: COMPUTE_UPDRAFT_RHCJ10
 USE MODE_COMPUTE_UPDRAFT_RAHA, ONLY: COMPUTE_UPDRAFT_RAHA
@@ -236,7 +236,7 @@ ELSEIF (HMF_UPDRAFT == 'RHCJ') THEN
                        PZZ,PDZZ,                                 &
                        PSFTH,PSFRV,PPABSM,PRHODREF,              &
                        PUM,PVM,PTKEM,                            &
-                       PEXNM,PTHM,PRM(:,:,1),ZTHLM,ZRTM,PSVM,    &
+                       PTHM,PRM(:,:,1),ZTHLM,ZRTM,PSVM,          &
                        PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,      &
                        PTHV_UP, PW_UP, PU_UP, PV_UP, ZSV_UP,     &
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PEMF,PDETR,&
