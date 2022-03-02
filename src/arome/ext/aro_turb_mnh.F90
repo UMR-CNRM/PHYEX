@@ -2,7 +2,7 @@
       SUBROUTINE  ARO_TURB_MNH( KKA,KKU,KKL,KLON,KLEV,KRR,KRRL,KRRI,KSV, &
                 KTCOUNT, KGRADIENTS, LDHARATU, PTSTEP,                  &
                 PZZ, PZZF, PZZTOP,                                    &
-                PRHODJ, PTHVREF,PRHODREF,HINST_SFU,HMF_UPDRAFT,       &
+                PRHODJ, PTHVREF,PRHODREF,HINST_SFU,HMF_UPDRAFT,&
                 PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
                 PPABSM,PUM,PVM,PWM,PTKEM,PEPSM,PSVM,PSRCM,            &
                 PTHM,PRM,                                &
@@ -69,10 +69,11 @@
 !              ------------
 !
 USE MODD_CONF
-USE MODD_CST
+USE MODD_CST, ONLY:CST
+USE MODD_CTURB, ONLY:CSTURB
 USE MODD_PARAMETERS
 USE MODD_IO, ONLY: TFILEDATA
-USE MODD_BUDGET, ONLY: NBUDGET_RI, TBUDGETDATA
+USE MODD_BUDGET, ONLY: NBUDGET_RI, TBUDGETDATA, TBUCONF
 !
 USE MODI_TURB
 !
@@ -101,7 +102,6 @@ INTEGER,                  INTENT(IN)   :: KGRADIENTS  ! Number of stored horizon
 LOGICAL,                  INTENT(IN)   :: LDHARATU ! HARATU scheme active
 
 CHARACTER (LEN=4), INTENT(IN)     :: HMF_UPDRAFT   ! Type of mass flux scheme
-CHARACTER (LEN=4)     ::  HCLOUD       ! Type of microphysical scheme
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 !
 !
@@ -199,6 +199,7 @@ INTEGER ::II
 INTEGER       :: IMI           ! model index number
 
 CHARACTER(LEN=4),DIMENSION(2)  :: HLBCX, HLBCY  ! X- and Y-direc LBC
+CHARACTER (LEN=4) ::  HCLOUD        ! Type of microphysical scheme
 
 INTEGER       :: ISPLIT        ! number of time-splitting
 
@@ -212,6 +213,12 @@ LOGICAL       ::  OOCEAN       ! switch for OCEAN version of turbulence scheme
 CHARACTER(LEN=4)   ::  HTURBDIM     ! dimensionality of the
                                ! turbulence scheme
 CHARACTER(LEN=4)   ::  HTURBLEN     ! kind of mixing length
+CHARACTER(LEN=6)   ::  HPROGRAM     ! Program (AROME or MESONH prog)
+LOGICAL   :: OFLAT        ! Logical for zero ororography
+LOGICAL   :: ONOMIXLG          ! to use turbulence for lagrangian variables (modd_conf)
+LOGICAL   :: O2D               ! Logical for 2D model version (modd_conf)
+INTEGER   :: KSV_LGBEG, KSV_LGEND ! number of scalar variables
+
 
 REAL          ::  ZIMPL        ! degree of implicitness
 !
@@ -281,11 +288,23 @@ ORMC01=.FALSE.
 
 HTURBDIM='1DIM'
 HTURBLEN='BL89'
-HCLOUD='ICE3'
+
 ZIMPL=1.
 
 !Version Ocean du schema de turbulence
 OOCEAN=.FALSE.
+
+HPROGRAM='AROME '
+
+! no orography for mesonh
+OFLAT=.FALSE.
+! 2D version of turbulence
+O2D=.FALSE.
+! Lagragian diag for mesonh
+ONOMIXLG=.FALSE.
+KSV_LGBEG=0
+KSV_LGEND=0
+
 
 ! tableau a recalculer a chaque pas de temps
 ! attention, ZDZZ est l'altitude entre deux niveaux (et pas l'�paisseur de la couche)
@@ -419,9 +438,12 @@ DO JRR=1, NBUDGET_RI
   YLBUDGET(JRR)%YDMDDH=>YDMDDH
 ENDDO
 
-CALL TURB (KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, ISPLIT,IMI, &
-   & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,    &
-   & HTURBDIM,HTURBLEN,'NONE','NONE',HCLOUD,           &
+HCLOUD="ICE3"
+CALL TURB (CST,CSTURB,TBUCONF,KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY,&
+   & ISPLIT,IMI, KSV, KSV_LGBEG, KSV_LGEND, &
+   & HPROGRAM, O2D, ONOMIXLG, OFLAT, & 
+   & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,LDHARATU    &
+   & HTURBDIM,HTURBLEN,'NONE','NONE','LIMA',           &
    & ZIMPL,                                    &
    & 2*PTSTEP,ZTFILE,                                      &
    & ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &

@@ -4,9 +4,10 @@
 !
 INTERFACE
 !
-      SUBROUTINE TURB(KKA, KKU, KKL, KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,   &
-              & KSPLIT,KMODEL_CL,                                     &
-              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,        &
+      SUBROUTINE TURB(CST,CSTURB,BUCONF,KKA, KKU, KKL, KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,   &
+              & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,             &
+              & HPROGRAM, O2D, ONOMIXLG, OFLAT,                       &
+              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,OHARAT, &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,            &
               & PIMPL,PTSTEP,TPFILE,                                  &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
@@ -26,9 +27,14 @@ INTERFACE
               & PDRUS_TURB,PDRVS_TURB,                                &
               & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB                  ) 
 !
-USE MODD_BUDGET, ONLY : TBUDGETDATA
+USE MODD_BUDGET, ONLY : TBUDGETDATA,TBUDGETCONF_t
 USE MODD_IO, ONLY : TFILEDATA
+USE MODD_CST, ONLY: CST_t
+USE MODD_CTURB, ONLY: CSTURB_t
 !
+TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(CSTURB_t),          INTENT(IN)   :: CSTURB
+TYPE(TBUDGETCONF_t),    INTENT(IN)    :: BUCONF
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=AR
@@ -36,6 +42,7 @@ INTEGER,                INTENT(IN)   :: KMI           ! model index number
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
+INTEGER,                INTENT(IN)   :: KSV, KSV_LGBEG, KSV_LGEND ! number of scalar variables
 CHARACTER(LEN=*),DIMENSION(:),INTENT(IN):: HLBCX, HLBCY  ! X- and Y-direc LBC
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time-splitting
 INTEGER,                INTENT(IN)   :: KMODEL_CL     ! model number for cloud mixing length
@@ -47,6 +54,8 @@ LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid
                                  ! CONDensation
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
+LOGICAL,                INTENT(IN)   ::  OHARAT
+LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 CHARACTER(LEN=4)       , INTENT(IN)   ::  HTURBDIM  ! dimensionality of the 
                                  ! turbulence scheme
 CHARACTER(LEN=4)      , INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
@@ -136,6 +145,10 @@ REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PLENGTHH
 !
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
+!
+CHARACTER(LEN=6), INTENT(IN) :: HPROGRAM ! CPROGRAM is the program currently running (modd_conf)
+LOGICAL, INTENT(IN) :: ONOMIXLG          ! to use turbulence for lagrangian variables (modd_conf)
+LOGICAL, INTENT(IN) :: O2D               ! Logical for 2D model version (modd_conf)
 !
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length

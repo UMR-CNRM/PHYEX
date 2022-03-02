@@ -5,7 +5,8 @@
 MODULE MODE_TKE_EPS_SOURCES
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKEM,PLM,PLEPS,PDP,  &
+      SUBROUTINE TKE_EPS_SOURCES(CST,CSTURB,BUCONF,HPROGRAM, &
+                    & KKA,KKU,KKL,KMI,PTKEM,PLM,PLEPS,PDP,  &
                     & PTRH,PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,        &
                     & PTSTEP,PIMPL,PEXPL,                              &
                     & HTURBLEN,HTURBDIM,                               &
@@ -58,10 +59,10 @@ CONTAINS
 !!      Module MODD_CTURB: contains the set of constants for
 !!                        the turbulence scheme
 !!
-!!           XCET,XCED  : transport and dissipation cts. for the TKE
+!!           CSTURB%XCET,CSTURB%XCED  : transport and dissipation cts. for the TKE
 !!           XCDP,XCDD,XCDT: constants from the parameterization of
 !!                        the K-epsilon equation
-!!           XTKEMIN,XEPSMIN : minimum values for the TKE and its
+!!           CSTURB%XTKEMIN,XEPSMIN : minimum values for the TKE and its
 !!                        dissipation
 !!
 !!      Module MODD_PARAMETERS: 
@@ -130,10 +131,9 @@ USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 USE MODD_ARGSLIST_ll,    ONLY: LIST_ll
-USE MODD_BUDGET, ONLY: LBUDGET_TKE, LBUDGET_TH, NBUDGET_TKE, NBUDGET_TH, TBUDGETDATA
-USE MODD_CONF
-USE MODD_CST
-USE MODD_CTURB
+USE MODD_BUDGET, ONLY: TBUDGETCONF_t, NBUDGET_TKE, NBUDGET_TH, TBUDGETDATA
+USE MODD_CST, ONLY: CST_t
+USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_DIAG_IN_RUN, ONLY : LDIAG_IN_RUN, XCURRENT_TKE_DISS
 USE MODD_FIELD, ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
@@ -160,6 +160,9 @@ IMPLICIT NONE
 !*       0.1  declarations of arguments
 !
 !
+TYPE(CST_t),             INTENT(IN)    :: CST
+TYPE(CSTURB_t),          INTENT(IN)    :: CSTURB
+TYPE(TBUDGETCONF_t),     INTENT(IN)    :: BUCONF
 INTEGER,                 INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                 INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                 INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
@@ -177,6 +180,7 @@ REAL,                    INTENT(IN)   ::  PEXPL, PIMPL ! Coef. temporal. disc.
 CHARACTER(LEN=4),        INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                        ! turbulence scheme
 CHARACTER(LEN=4),        INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
+CHARACTER(LEN=6),        INTENT(IN)   ::  HPROGRAM     ! CPROGRAM is the program currently running (modd_conf)
 TYPE(TFILEDATA),         INTENT(IN)   ::  TPFILE       ! Output file
 LOGICAL,                 INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
                                   ! diagnostic fields in the syncronous FM-file
@@ -212,7 +216,7 @@ REAL, DIMENSION(SIZE(PTKEM,1),SIZE(PTKEM,2),SIZE(PTKEM,3))::         &
        ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
        ZTR         ! Transport term
 LOGICAL,DIMENSION(SIZE(PTKEM,1),SIZE(PTKEM,2),SIZE(PTKEM,3)) :: GTKENEG
-                   ! 3D mask .T. if TKE < XTKEMIN
+                   ! 3D mask .T. if TKE < CSTURB%XTKEMIN
 INTEGER             :: IIB,IIE,IJB,IJE,IKB,IKE
                                     ! Index values for the Beginning and End
                                     ! mass points of the domain 
@@ -267,7 +271,7 @@ PDP(:,:,IKB) = PDP(:,:,IKB) * (1. + PDZZ(:,:,IKB+KKL)/PDZZ(:,:,IKB))
 !
 ! Compute the source terms for TKE: ( ADVECtion + NUMerical DIFFusion + ..)
 ! + (Dynamical Production) + (Thermal Production) - (dissipation) 
-ZFLX(:,:,:) = XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:)
+ZFLX(:,:,:) = CSTURB%XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:)
 ZSOURCE(:,:,:) = ( PRTKES(:,:,:) +  PRTKEMS(:,:,:) ) / PRHODJ(:,:,:) &
    - PTKEM(:,:,:) / PTSTEP &
    + PDP(:,:,:) + PTP(:,:,:) + ZTR(:,:,:) - PEXPL * ZFLX(:,:,:) * PTKEM(:,:,:)
@@ -278,7 +282,7 @@ ZSOURCE(:,:,:) = ( PRTKES(:,:,:) +  PRTKEMS(:,:,:) ) / PRHODJ(:,:,:) &
 ! Compute the vector giving the elements just under the diagonal for the 
 ! matrix inverted in TRIDIAG 
 !
-ZA(:,:,:)     = - PTSTEP * XCET * &
+ZA(:,:,:)     = - PTSTEP * CSTURB%XCET * &
                 MZM(ZKEFF, KKA, KKU, KKL) * MZM(PRHODJ, KKA, KKU, KKL) / PDZZ**2
 !
 ! Compute TKE at time t+deltat: ( stored in ZRES )
@@ -299,10 +303,10 @@ ENDIF
 !
 ! TKE must be greater than its minimum value
 ! CL : Now done at the end of the time step in ADVECTION_METSV for MesoNH
-IF(CPROGRAM/='MESONH') THEN
- GTKENEG =  ZRES <= XTKEMIN 
+IF(HPROGRAM/='MESONH') THEN
+ GTKENEG =  ZRES <= CSTURB%XTKEMIN 
  WHERE ( GTKENEG ) 
-   ZRES = XTKEMIN
+   ZRES = CSTURB%XTKEMIN
  END WHERE
 END IF
 PTDISS(:,:,:) = - ZFLX(:,:,:)*(PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:))
@@ -313,7 +317,7 @@ IF ( LLES_CALL .OR.                         &
 ! Compute the cartesian vertical flux of TKE in ZFLX
 !
 
-  ZFLX(:,:,:)   = - XCET * MZM(ZKEFF, KKA, KKU, KKL) *   &
+  ZFLX(:,:,:)   = - CSTURB%XCET * MZM(ZKEFF, KKA, KKU, KKL) *   &
                   DZM(PIMPL * ZRES + PEXPL * PTKEM, KKA, KKU, KKL) / PDZZ
 !
   ZFLX(:,:,IKB) = 0.
@@ -334,13 +338,13 @@ END IF
 !
 !*       2.4  stores the explicit sources for budget purposes
 !
-IF (LBUDGET_TKE) THEN
+IF (BUCONF%LBUDGET_TKE) THEN
   ! Dynamical production
   CALL BUDGET_STORE_ADD( TBUDGETS(NBUDGET_TKE), 'DP', PDP(:, :, :) * PRHODJ(:, :, :) )
   ! Thermal production
   CALL BUDGET_STORE_ADD( TBUDGETS(NBUDGET_TKE), 'TP', PTP(:, :, :) * PRHODJ(:, :, :) )
   ! Dissipation
-  CALL BUDGET_STORE_ADD( TBUDGETS(NBUDGET_TKE), 'DISS',- XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * &
+  CALL BUDGET_STORE_ADD( TBUDGETS(NBUDGET_TKE), 'DISS',- CSTURB%XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * &
                 (PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:)) * PRHODJ(:,:,:))
 END IF 
 !
@@ -351,34 +355,34 @@ END IF
 !Should be in IF LBUDGET_TKE only. Was removed out for a correct comput. of PTDIFF in case of LBUDGET_TKE=F in AROME
 PRTKES(:,:,:) = PRTKES(:,:,:) + PRHODJ(:,:,:) *                                                           &
                 ( PDP(:,:,:) + PTP(:,:,:)                                                                 &
-                  - XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * ( PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:) ) )
+                  - CSTURB%XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * ( PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:) ) )
 !
 PTDIFF(:,:,:) =  ZRES(:,:,:) / PTSTEP - PRTKES(:,:,:)/PRHODJ(:,:,:) &
  & - PDP(:,:,:)- PTP(:,:,:) - PTDISS(:,:,:)
 
-IF (LBUDGET_TKE) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TKE), 'TR', PRTKES(:, :, :) )
+IF (BUCONF%LBUDGET_TKE) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TKE), 'TR', PRTKES(:, :, :) )
 !
 PRTKES(:,:,:) = ZRES(:,:,:) * PRHODJ(:,:,:) / PTSTEP -  PRTKEMS(:,:,:)
 !
 ! stores the whole turbulent transport
 !
-IF (LBUDGET_TKE) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TKE), 'TR', PRTKES(:, :, :) )
+IF (BUCONF%LBUDGET_TKE) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TKE), 'TR', PRTKES(:, :, :) )
 
 !----------------------------------------------------------------------------
 !
 !*       3.   COMPUTE THE DISSIPATIVE HEATING
 !             -------------------------------
 !
-PRTHLS(:,:,:) = PRTHLS(:,:,:) + XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * &
+PRTHLS(:,:,:) = PRTHLS(:,:,:) + CSTURB%XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * &
                 (PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:)) * PRHODJ(:,:,:) * PCOEF_DISS(:,:,:)
 !----------------------------------------------------------------------------
 !
 !*       4.   STORES SOME DIAGNOSTICS
 !             -----------------------
 !
-IF(PRESENT(PDISS)) PDISS(:,:,:) =  -XCED * (PTKEM(:,:,:)**1.5) / PLEPS(:,:,:)
+IF(PRESENT(PDISS)) PDISS(:,:,:) =  -CSTURB%XCED * (PTKEM(:,:,:)**1.5) / PLEPS(:,:,:)
 IF(PRESENT(PTR)) PTR=ZTR
-IF(PRESENT(PEDR)) PEDR = XCED * (PTKEM(:,:,:)**1.5) / PLEPS(:,:,:)
+IF(PRESENT(PEDR)) PEDR = CSTURB%XCED * (PTKEM(:,:,:)**1.5) / PLEPS(:,:,:)
 !
 IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
 !

@@ -5,8 +5,8 @@
 MODULE MODE_TURB_VER_DYN_FLUX
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER_DYN_FLUX(KKA,KKU,KKL,                     &
-                      OTURB_FLX,KRR, OOCEAN,                        &
+SUBROUTINE TURB_VER_DYN_FLUX(CST,CSTURB,KKA,KKU,KKL,KSV,O2D,OFLAT,  &
+                      OTURB_FLX,KRR, OOCEAN,OHARAT,                 &
                       HTURBDIM,PIMPL,PEXPL,                         &
                       PTSTEP,                                       &
                       TPFILE,                                       &
@@ -132,15 +132,15 @@ SUBROUTINE TURB_VER_DYN_FLUX(KKA,KKU,KKL,                     &
 !!    ------------------
 !!      Module MODD_CST : contains physical constants
 !!
-!!           XG         : gravity constant
+!!           CST%XG         : gravity constant
 !!
 !!      Module MODD_CTURB: contains the set of constants for
 !!                        the turbulence scheme
 !!
-!!           XCMFS,XCMFB : cts for the momentum flux
-!!           XCSHF       : ct for the sensible heat flux
-!!           XCHF        : ct for the moisture flux
-!!           XCTV,XCHV   : cts for the T and moisture variances
+!!           CSTURB%XCMFS,XCMFB : cts for the momentum flux
+!!           CSTURB%XCSHF       : ct for the sensible heat flux
+!!           CSTURB%XCHF        : ct for the moisture flux
+!!           CSTURB%XCTV,CSTURB%XCHV   : cts for the T and moisture variances
 !!
 !!      Module MODD_PARAMETERS
 !!
@@ -193,7 +193,7 @@ SUBROUTINE TURB_VER_DYN_FLUX(KKA,KKU,KKL,                     &
 !!                     October 2009 (G. Tanguy) add ILENCH=LEN(YCOMMENT) after
 !!                                              change of YCOMMENT
 !!      2012-02 Y. Seity,  add possibility to run with reversed vertical levels
-!!      Modifications  July 2015 (Wim de Rooy) LHARATU switch
+!!      Modifications  July 2015 (Wim de Rooy) OHARATU switch
 !!      J.Escobar : 15/09/2015 : WENO5 & JPHEXT <> 1 
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !!      Q. Rodier      17/01/2019 : cleaning : remove cyclic conditions on DP and ZA
@@ -206,13 +206,11 @@ SUBROUTINE TURB_VER_DYN_FLUX(KKA,KKU,KKL,                     &
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
-USE MODD_CONF
-USE MODD_CST
-USE MODD_CTURB
+USE MODD_CST, ONLY: CST_t
+USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_LES
-USE MODD_NSV
 USE MODD_OCEANH
 USE MODD_PARAMETERS
 USE MODD_REF, ONLY : LCOUPLES
@@ -238,12 +236,18 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(CST_t),                  INTENT(IN)    :: CST
+TYPE(CSTURB_t),                  INTENT(IN)    :: CSTURB
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
+INTEGER,                INTENT(IN)   :: KSV           ! number of scalar variables
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
+LOGICAL,                INTENT(IN)   ::  OHARAT
+LOGICAL,                INTENT(IN)   ::  O2D          ! Logical for 2D model version (modd_conf)
+LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
@@ -350,16 +354,16 @@ IKTE=IKT-JPVEXT_TURB
 !
 ZSOURCE = 0.
 ZFLXZ   = 0.
-ZCMFS = XCMFS
-IF (LHARAT) ZCMFS=1.
+ZCMFS = CSTURB%XCMFS
+IF (OHARAT) ZCMFS=1.
 !
 ZDIRSINZW(:,:) = SQRT(1.-PDIRCOSZW(:,:)**2)
 !  compute the coefficients for the uncentred gradient computation near the 
 !  ground
 !
-! With LHARATU length scale and TKE are at half levels so remove MZM
+! With OHARATU length scale and TKE are at half levels so remove MZM
 !
-IF (LHARAT) THEN
+IF (OHARAT) THEN
   ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50*MFMOIST(:,:,:)
 ELSE 
   ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), KKA, KKU, KKL)
@@ -536,7 +540,7 @@ IF(HTURBDIM=='3DIM') THEN
  END IF     
      
   !
-  IF (.NOT. LFLAT) THEN
+  IF (.NOT. OFLAT) THEN
     PRWS(:,:,:)= PRWS                                      &
                 -DXF( MZM(MXM(PRHODJ) /PDXX, KKA, KKU, KKL)  * ZFLXZ )  &
                 +DZM(PRHODJ / MZF(PDZZ, KKA, KKU, KKL) *                &
@@ -593,7 +597,7 @@ END IF
       CALL LES_MEAN_SUBGRID(MXF(GX_U_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, KKA, KKU, KKL)&
       *MZF(ZFLXZ, KKA, KKU, KKL)),X_LES_RES_ddxa_Rt_SBG_UaW )
     END IF
-    DO JSV=1,NSV
+    DO JSV=1,KSV
       CALL LES_MEAN_SUBGRID( MXF(GX_U_M(PSVM(:,:,:,JSV),PDXX,PDZZ,&
       PDZX, KKA, KKU, KKL)*MZF(ZFLXZ, KKA, KKU, KKL)),X_LES_RES_ddxa_Sv_SBG_UaW(:,:,:,JSV) )
     END DO
@@ -764,8 +768,8 @@ IF(HTURBDIM=='3DIM') THEN
     ZFLXZ(:,:,KKU) = 2 * ZFLXZ(:,:,IKE) - ZFLXZ(:,:,IKE-KKL) ! extrapolation 
   END IF
   !
-  IF (.NOT. L2D) THEN 
-    IF (.NOT. LFLAT) THEN
+  IF (.NOT. O2D) THEN 
+    IF (.NOT. OFLAT) THEN
       PRWS(:,:,:)= PRWS(:,:,:)                               &
                   -DYF( MZM(MYM(PRHODJ) /PDYY, KKA, KKU, KKL) * ZFLXZ )   &
                   +DZM(PRHODJ / MZF(PDZZ, KKA, KKU, KKL) *                &
@@ -777,7 +781,7 @@ IF(HTURBDIM=='3DIM') THEN
   END IF
   ! 
   ! Complete the Dynamical production with the W wind component 
-  IF (.NOT. L2D) THEN
+  IF (.NOT. O2D) THEN
     ZA(:,:,:) = - MZF(MYF(ZFLXZ * GY_W_VW(PWM,PDYY,PDZZ,PDZY, KKA, KKU, KKL)), KKA, KKU, KKL)
   !
   ! evaluate the dynamic production at w(IKB+KKL) in PDP(IKB)

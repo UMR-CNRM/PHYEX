@@ -5,8 +5,9 @@
 MODULE MODE_TURB_VER_SV_FLUX
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
-                      OTURB_FLX,HTURBDIM,                           &
+SUBROUTINE TURB_VER_SV_FLUX(CST,CSTURB,KKA,KKU,KKL,ONOMIXLG,        &
+                      KSV_LGBEG,KSV_LGEND,                          &
+                      OTURB_FLX,HTURBDIM,OHARAT,                    &
                       PIMPL,PEXPL,                                  &
                       PTSTEP,                                       &
                       TPFILE,                                       &
@@ -133,15 +134,15 @@ SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
 !!    ------------------
 !!      Module MODD_CST : contains physical constants
 !!
-!!           XG         : gravity constant
+!!           CST%XG         : gravity constant
 !!
 !!      Module MODD_CTURB: contains the set of constants for
 !!                        the turbulence scheme
 !!
-!!           XCMFS,XCMFB : cts for the momentum flux
-!!           XCSHF       : ct for the sensible heat flux
-!!           XCHF        : ct for the moisture flux
-!!           XCTV,XCHV   : cts for the T and moisture variances
+!!           CSTURB%XCMFS,XCMFB : cts for the momentum flux
+!!           CSTURB%XCSHF       : ct for the sensible heat flux
+!!           CSTURB%XCHF        : ct for the moisture flux
+!!           CSTURB%XCTV,CSTURB%XCHV   : cts for the T and moisture variances
 !!
 !!      Module MODD_PARAMETERS
 !!
@@ -197,7 +198,7 @@ SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
 !!                                              change of YCOMMENT
 !!                     Feb 2012(Y. Seity) add possibility to run with reversed 
 !!                                              vertical levels
-!!      Modifications: July 2015 (Wim de Rooy) LHARAT switch
+!!      Modifications: July 2015 (Wim de Rooy) OHARAT switch
 !!                     Feb 2017(M. Leriche) add initialisation of ZSOURCE
 !!                                   to avoid unknwon values outside physical domain
 !!                                   and avoid negative values in sv tendencies
@@ -210,14 +211,12 @@ SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
-USE MODD_CST
-USE MODD_CTURB
+USE MODD_CST, ONLY: CST_t
+USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_LES
-USE MODD_CONF
-USE MODD_NSV,            ONLY: XSVMIN, NSV_LGBEG, NSV_LGEND
 USE MODD_BLOWSNOW
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 !
@@ -238,13 +237,18 @@ IMPLICIT NONE
 !*      0.1  declarations of arguments
 !
 !
+TYPE(CST_t),                  INTENT(IN)    :: CST
+TYPE(CSTURB_t),                  INTENT(IN)    :: CSTURB
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
+INTEGER,                INTENT(IN)   :: KSV_LGBEG, KSV_LGEND ! number of scalar variables
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
+LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for lagrangian variables (modd_conf)
 CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
+LOGICAL,                INTENT(IN)   ::  OHARAT
 REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
@@ -319,7 +323,7 @@ IKTB =1+JPVEXT_TURB
 !
 ISV=SIZE(PSVM,4)
 !
-IF (LHARAT) THEN
+IF (OHARAT) THEN
   ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50.*MFMOIST(:,:,:)
 ELSE
   ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), KKA, KKU, KKL)
@@ -327,9 +331,9 @@ ENDIF
 !
 IF(LBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables           
-   ZCSV= XCHF/XRSNOW
+   ZCSV= CSTURB%XCHF/XRSNOW
 ELSE
-   ZCSV= XCHF
+   ZCSV= CSTURB%XCHF
 ENDIF
 !----------------------------------------------------------------------------
 !
@@ -338,10 +342,10 @@ ENDIF
 !
 DO JSV=1,ISV
 !
-  IF (LNOMIXLG .AND. JSV >= NSV_LGBEG .AND. JSV<= NSV_LGEND) CYCLE
+  IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
 !
 ! Preparation of the arguments for TRIDIAG 
-    IF (LHARAT) THEN
+    IF (OHARAT) THEN
       ZA(:,:,:)    = -PTSTEP*   &
                    ZKEFF * MZM(PRHODJ, KKA, KKU, KKL) /   &
                    PDZZ**2

@@ -242,11 +242,10 @@ END MODULE MODI_PHYS_PARAM_n
 !*       0.     DECLARATIONS
 !               ------------
 !
-USE MODD_ADV_n,            ONLY : XRTKEMS
+USE MODD_ADV_n,       ONLY : XRTKEMS
 USE MODD_ARGSLIST_ll, ONLY : LIST_ll
-use modd_budget,            only: lbudget_th, lbudget_rv, lbudget_rc, lbudget_ri, lbudget_sv,  &
-                                  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RI, NBUDGET_SV1, &
-                                  tbudgets, xtime_bu_process
+USE MODD_BUDGET,      ONLY: NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RI, NBUDGET_SV1, &
+                            TBUDGETS, xtime_bu_process, TBUCONF
 USE MODD_CH_AEROSOL
 USE MODD_CH_MNHC_n, ONLY : LUSECHEM,         &! indicates if chemistry is used
                            LCH_CONV_SCAV,    &
@@ -255,7 +254,8 @@ USE MODD_CLOUD_MF_n
 USE MODD_CONDSAMP
 USE MODD_CONF
 USE MODD_CONF_n
-USE MODD_CST
+USE MODD_CST, ONLY : CST
+USE MODD_CTURB, ONLY : CSTURB
 USE MODD_CURVCOR_n
 USE MODD_DEEP_CONVECTION_n
 USE MODD_DEF_EDDY_FLUX_n           ! Ajout PP
@@ -283,7 +283,10 @@ USE MODD_LUNIT_n
 USE MODD_METRICS_n
 USE MODD_MNH_SURFEX_n
 USE MODD_NESTING, ONLY : XWAY,NDAD, NDXRATIO_ALL, NDYRATIO_ALL
-USE MODD_NSV
+USE MODD_NSV, ONLY : NSV, NSV_LGBEG, NSV_LGEND, &
+                     NSV_SLTBEG,NSV_SLTEND,NSV_SLT,&
+                     NSV_AERBEG,NSV_AEREND, &
+                     NSV_DSTBEG,NSV_DSTEND, NSV_DST
 USE MODD_OCEANH
 USE MODD_OUT_n
 USE MODD_PARAM_C2R2,       ONLY : LSEDC
@@ -453,7 +456,7 @@ REAL :: ZSWA,TINTSW     ! index for SW interpolation and int time betwenn forcin
 REAL, DIMENSION(:), ALLOCATABLE :: ZIZOCE(:) ! Solar flux penetrating in ocean
 REAL, DIMENSION(:), ALLOCATABLE :: ZPROSOL1(:),ZPROSOL2(:) ! Funtions for penetrating solar flux
 !
-REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLENGTHM, ZLENGTHH, ZMFMOIST !LHARAT turb option from AROME
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLENGTHM, ZLENGTHH, ZMFMOIST !OHARAT turb option from AROME
 !
 !-----------------------------------------------------------------------------
 
@@ -698,7 +701,7 @@ CALL SUNPOS_n   ( XZENITH, ZCOSZEN, ZSINZEN, ZAZIMSOL )
 !
       XFLALWD   (:,:)   = 300.
       DO JSWB=1,NSWB_MNH
-        XDIRFLASWD(:,:,JSWB) = XI0 * MAX(COS(XZENITH(:,:)),0.)/REAL(NSWB_MNH)
+        XDIRFLASWD(:,:,JSWB) = CST%XI0 * MAX(COS(XZENITH(:,:)),0.)/REAL(NSWB_MNH)
         XSCAFLASWD(:,:,JSWB) = 0.
       END DO
       XDTHRAD(:,:,:) = 0.
@@ -708,7 +711,7 @@ CALL SUNPOS_n   ( XZENITH, ZCOSZEN, ZSINZEN, ZAZIMSOL )
 !               ------------------------------
 !
     CASE('FIXE')
-      ZTIME = MOD(TDTCUR%xtime +XLON0*240., XDAY)
+      ZTIME = MOD(TDTCUR%xtime +XLON0*240., CST%XDAY)
       IHOUR = INT( ZTIME/3600. )
       IF (IHOUR < 0) IHOUR=IHOUR + 24
       ZDT = ZTIME/3600. - REAL(IHOUR)
@@ -811,9 +814,9 @@ END IF
 !               ------------------------------
 !
 IF (CRAD /='NONE') THEN
-  if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'RAD', xrths(:, :, :) )
+  if ( TBUCONF%LBUDGET_th ) call Budget_store_init( TBUDGETS(NBUDGET_TH), 'RAD', xrths(:, :, :) )
   XRTHS(:,:,:) = XRTHS(:,:,:) + XRHODJ(:,:,:)*XDTHRAD(:,:,:)
-  if ( lbudget_th ) call Budget_store_end ( tbudgets(NBUDGET_TH), 'RAD', xrths(:, :, :) )
+  if ( TBUCONF%LBUDGET_th ) call Budget_store_end ( TBUDGETS(NBUDGET_TH), 'RAD', xrths(:, :, :) )
 END IF
 !
 !
@@ -837,21 +840,21 @@ IF (LOCEAN .AND. (.NOT.LCOUPLES)) THEN
   XSSVFL  = (XSSVFL_T(JSW+1)*(1.-ZSWA)+XSSVFL_T(JSW+2)*ZSWA)
 !
   ZIZOCE(IKU)   = XSSOLA_T(JSW+1)*(1.-ZSWA)+XSSOLA_T(JSW+2)*ZSWA
-  ZPROSOL1(IKU) = XROC*ZIZOCE(IKU)
-  ZPROSOL2(IKU) = (1.-XROC)*ZIZOCE(IKU)
+  ZPROSOL1(IKU) = CST%XROC*ZIZOCE(IKU)
+  ZPROSOL2(IKU) = (1.-CST%XROC)*ZIZOCE(IKU)
   IF(NVERB >= 5 ) THEN   
     WRITE(ILUOUT,*)'ZSWA JSW TDTCUR XTSTEP FT FU FV SolarR(IKU)', NINFRT, ZSWA,JSW,&
        TDTCUR%xtime, XTSTEP, XSSTFL(2,2), XSSUFL(2,2),XSSVFL(2,2),ZIZOCE(IKU)
   END IF
-  if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'OCEAN', xrths(:, :, :) ) 
+  if ( TBUCONF%LBUDGET_th ) call Budget_store_init( TBUDGETS(NBUDGET_TH), 'OCEAN', xrths(:, :, :) ) 
   DO JKM=IKU-1,2,-1
-    ZPROSOL1(JKM) = ZPROSOL1(JKM+1)* exp(-XDZZ(2,2,JKM)/XD1)
-    ZPROSOL2(JKM) = ZPROSOL2(JKM+1)* exp(-XDZZ(2,2,JKM)/XD2)
+    ZPROSOL1(JKM) = ZPROSOL1(JKM+1)* exp(-XDZZ(2,2,JKM)/CST%XD1)
+    ZPROSOL2(JKM) = ZPROSOL2(JKM+1)* exp(-XDZZ(2,2,JKM)/CST%XD2)
     ZIZOCE(JKM)   = (ZPROSOL1(JKM+1)-ZPROSOL1(JKM) + ZPROSOL2(JKM+1)-ZPROSOL2(JKM))/XDZZ(2,2,JKM)
     ! Adding to temperature tendency, the solar radiation penetrating in ocean
     XRTHS(:,:,JKM) = XRTHS(:,:,JKM) + XRHODJ(:,:,JKM)*ZIZOCE(JKM)
   END DO
-  if ( lbudget_th ) call Budget_store_end ( tbudgets(NBUDGET_TH), 'OCEAN', xrths(:, :, :) )
+  if ( TBUCONF%LBUDGET_th ) call Budget_store_end ( TBUDGETS(NBUDGET_TH), 'OCEAN', xrths(:, :, :) )
   DEALLOCATE( ZIZOCE) 
   DEALLOCATE (ZPROSOL1)
   DEALLOCATE (ZPROSOL2)
@@ -879,13 +882,13 @@ CALL SECOND_MNH2(ZTIME1)
 !
 IF( CDCONV == 'KAFR' .OR. CSCONV == 'KAFR' ) THEN
 
-  if (  lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'DCONV', xrths(:, :, :)    )
-  if (  lbudget_rv ) call Budget_store_init( tbudgets(NBUDGET_RV), 'DCONV', xrrs (:, :, :, 1) )
-  if (  lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'DCONV', xrrs (:, :, :, 2) )
-  if (  lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'DCONV', xrrs (:, :, :, 4) )
-  if (  lbudget_sv .and. lchtrans ) then
+  if (  TBUCONF%LBUDGET_th ) call Budget_store_init( TBUDGETS(NBUDGET_TH), 'DCONV', xrths(:, :, :)    )
+  if (  TBUCONF%LBUDGET_rv ) call Budget_store_init( TBUDGETS(NBUDGET_RV), 'DCONV', xrrs (:, :, :, 1) )
+  if (  TBUCONF%LBUDGET_rc ) call Budget_store_init( TBUDGETS(NBUDGET_RC), 'DCONV', xrrs (:, :, :, 2) )
+  if (  TBUCONF%LBUDGET_ri ) call Budget_store_init( TBUDGETS(NBUDGET_RI), 'DCONV', xrrs (:, :, :, 4) )
+  if (  TBUCONF%LBUDGET_sv .and. lchtrans ) then
     do jsv = 1, size( xrsvs, 4 )
-      call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + jsv), 'DCONV', xrsvs (:, :, :, jsv) )
+      call Budget_store_init( TBUDGETS(NBUDGET_SV1 - 1 + jsv), 'DCONV', xrsvs (:, :, :, jsv) )
     end do
   end if
 !
@@ -1107,7 +1110,7 @@ END IF
 !     and cloud ice is melted
 !
       XRTHS(:,:,:) = XRTHS(:,:,:) - XRHODJ(:,:,:) *                      &
-         ( XP00/XPABST(:,:,:) )**(XRD/XCPD) * XLMTT / XCPD * XDRICONV(:,:,:)
+         ( XP00/XPABST(:,:,:) )**(XRD/XCPD) * CST%XLMTT / XCPD * XDRICONV(:,:,:)
 !
   ELSE IF ( (.NOT. LUSERC) .AND. (.NOT. LUSERI) ) THEN
 !
@@ -1119,17 +1122,17 @@ END IF
 !     and all cloud condensate is evaporated
 !
       XRTHS(:,:,:) = XRTHS(:,:,:) - XRHODJ(:,:,:) / XCPD * (              &
-                     XLVTT * XDRCCONV(:,:,:) + XLSTT * XDRICONV(:,:,:) ) *&
+                     CST%XLVTT * XDRCCONV(:,:,:) + CST%XLSTT * XDRICONV(:,:,:) ) *&
                     ( XP00 / XPABST(:,:,:) ) ** ( XRD / XCPD )
   END IF
 
-  if (  lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'DCONV', xrths(:, :, :)    )
-  if (  lbudget_rv ) call Budget_store_end( tbudgets(NBUDGET_RV), 'DCONV', xrrs (:, :, :, 1) )
-  if (  lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'DCONV', xrrs (:, :, :, 2) )
-  if (  lbudget_ri ) call Budget_store_end( tbudgets(NBUDGET_RI), 'DCONV', xrrs (:, :, :, 4) )
-  if (  lbudget_sv .and. lchtrans ) then
+  if (  TBUCONF%LBUDGET_th ) call Budget_store_end( TBUDGETS(NBUDGET_TH), 'DCONV', xrths(:, :, :)    )
+  if (  TBUCONF%LBUDGET_rv ) call Budget_store_end( TBUDGETS(NBUDGET_RV), 'DCONV', xrrs (:, :, :, 1) )
+  if (  TBUCONF%LBUDGET_rc ) call Budget_store_end( TBUDGETS(NBUDGET_RC), 'DCONV', xrrs (:, :, :, 2) )
+  if (  TBUCONF%LBUDGET_ri ) call Budget_store_end( TBUDGETS(NBUDGET_RI), 'DCONV', xrrs (:, :, :, 4) )
+  if (  TBUCONF%LBUDGET_sv .and. lchtrans ) then
     do jsv = 1, size( xrsvs, 4 )
-      call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + jsv), 'DCONV', xrsvs (:, :, :, jsv) )
+      call Budget_store_end( TBUDGETS(NBUDGET_SV1 - 1 + jsv), 'DCONV', xrsvs (:, :, :, jsv) )
     end do
   end if
 END IF
@@ -1482,8 +1485,10 @@ ELSE
  ALLOCATE(XSVW_FLUX(SIZE(XSVT,1),SIZE(XSVT,2),SIZE(XSVT,3),SIZE(XSVT,4)))
 END IF
 !
-   CALL TURB( 1, IKU, 1, IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,        &
-              LTURB_FLX, LTURB_DIAG, LSUBG_COND, LRMC01, LOCEAN,                     &
+   CALL TURB( CST,CSTURB, TBUCONF,&
+              1, IKU, 1, IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,        &
+              NSV, NSV_LGBEG, NSV_LGEND,CPROGRAM, L2D, LNOMIXLG,LFLAT,               &
+              LTURB_FLX, LTURB_DIAG, LSUBG_COND, LRMC01, LOCEAN, .FALSE.,            &
               CTURBDIM, CTURBLEN, CTOM, CTURBLEN_CLOUD, CCLOUD,XIMPL,                &
               XTSTEP, TPFILE,                                                        &
               XDXX, XDYY, XDZZ, XDZX, XDZY, XZZ,                                     &

@@ -5,8 +5,8 @@
 MODULE MODE_TURB_VER_SV_CORR
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER_SV_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,OOCEAN,       &
-                      PDZZ,                                         &
+SUBROUTINE TURB_VER_SV_CORR(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,OOCEAN,&
+                      PDZZ,KSV,KSV_LGBEG,KSV_LGEND,ONOMIXLG,        &
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PPHI3,PPSI3,  &
                       PWM,PSVM,                                     &
@@ -55,12 +55,10 @@ SUBROUTINE TURB_VER_SV_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,OOCEAN,       &
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
-USE MODD_CST
-USE MODD_CTURB
+USE MODD_CST, ONLY: CST_t
+USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_PARAMETERS
 USE MODD_LES
-USE MODD_CONF
-USE MODD_NSV, ONLY : NSV,NSV_LGBEG,NSV_LGEND
 USE MODD_BLOWSNOW
 !
 !
@@ -81,9 +79,13 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(CST_t),                  INTENT(IN)    :: CST
+TYPE(CSTURB_t),                  INTENT(IN)    :: CSTURB
 INTEGER,                 INTENT(IN)  :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,                 INTENT(IN)  :: KKL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+INTEGER,                INTENT(IN)   :: KSV, KSV_LGBEG, KSV_LGEND ! number of scalar variables
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
+LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for lagrangian variables (modd_conf)
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   ::  KRRL         ! number of liquid var.
 INTEGER,                INTENT(IN)   ::  KRRI         ! number of ice var.
@@ -133,14 +135,14 @@ CALL SECOND_MNH(ZTIME1)
 !
 IF(LBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables          
-   ZCSV= XCHF/XRSNOW
+   ZCSV= CSTURB%XCHF/XRSNOW
 ELSE
-   ZCSV= XCHF
+   ZCSV= CSTURB%XCHF
 ENDIF
 !
-DO JSV=1,NSV
+DO JSV=1,KSV
   !
-  IF (LNOMIXLG .AND. JSV >= NSV_LGBEG .AND. JSV<= NSV_LGEND) CYCLE
+  IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
   !
   ! variance Sv2
   !
@@ -157,12 +159,12 @@ DO JSV=1,NSV
   IF (LLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
     ZA(:,:,:)   =  ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN)
-    ZFLXZ(:,:,:)= ( XCSHF * PPHI3 + ZCSV * PPSI_SV(:,:,:,JSV) )              &
+    ZFLXZ(:,:,:)= ( CSTURB%XCSHF * PPHI3 + ZCSV * PPSI_SV(:,:,:,JSV) )              &
                   *  GZ_M_W(KKA, KKU, KKL,PTHLM,PDZZ)                          &
                   *  GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)
     ZFLXZ(:,:,:)= PLM * PLEPS / (2.*ZCTSVD) * MZF(ZFLXZ, KKA, KKU, KKL)
     CALL LES_MEAN_SUBGRID( ZA*ZFLXZ, X_LES_SUBGRID_SvThv(:,:,:,JSV) ) 
-    CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
+    CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
     !
     IF (KRR>=1) THEN
       ZA(:,:,:)   =  EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN)
@@ -171,7 +173,7 @@ DO JSV=1,NSV
                     *  GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)
       ZFLXZ(:,:,:)= PLM * PLEPS / (2.*ZCQSVD) * MZF(ZFLXZ, KKA, KKU, KKL)
       CALL LES_MEAN_SUBGRID( ZA*ZFLXZ, X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
-      CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
+      CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
     END IF
   END IF
   !

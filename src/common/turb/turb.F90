@@ -3,9 +3,10 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-      SUBROUTINE TURB(KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,      &
-              & KSPLIT,KMODEL_CL,                                     &
-              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,        &
+      SUBROUTINE TURB(CST,CSTURB,BUCONF,KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,      &
+              & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,             &
+              & HPROGRAM, O2D, ONOMIXLG,OFLAT,                        &
+              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,OHARAT, &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,PIMPL,      &
               & PTSTEP,TPFILE,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
@@ -113,14 +114,14 @@
 !!                        L2D   switch for 2D model version
 !!
 !!       MODD_CST  : contains physical constants
-!!                    XG   gravity constant
-!!                    XRD  Gas constant for dry air
-!!                    XRV  Gas constant for vapor
+!!                    CST%XG   gravity constant
+!!                    CST%XRD  Gas constant for dry air
+!!                    CST%XRV  Gas constant for vapor
 !!
 !!       MODD_CTURB : contains turbulence scheme constants
 !!                    XCMFS,XCED       to compute the dissipation mixing length
 !!                    XTKEMIN  minimum values for the TKE 
-!!                    XLINI,XLINF      to compute Bougeault-Lacarrere mixing 
+!!                    CST%XLINI,CST%XLINF      to compute Bougeault-Lacarrere mixing 
 !!                                     length
 !!      Module MODD_BUDGET:
 !!         NBUMOD  
@@ -213,7 +214,7 @@
 !!                     10/2012 J.Escobar Bypass PGI bug , redefine some allocatable array inplace of automatic
 !!                     2014-11 Y. Seity,  add output terms for TKE DDHs budgets
 !!                     July 2015 (Wim de Rooy)  modifications to run with RACMO
-!!                                              turbulence (LHARAT=TRUE)
+!!                                              turbulence (OHARAT=TRUE)
 !!                     04/2016  (C.Lac) correction of negativity for KHKO
 !  P. Wautelet 05/2016-04/2018: new data structures and calls for I/O
 !  Q. Rodier      01/2018: introduction of RM17
@@ -233,46 +234,41 @@
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
-USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
-USE MODD_CST
-USE MODD_CTURB
-USE MODD_CONF
-USE MODD_BUDGET, ONLY: LBUDGET_U,  LBUDGET_V,  LBUDGET_W,  LBUDGET_TH, LBUDGET_RV, LBUDGET_RC,  &
-                            LBUDGET_RR, LBUDGET_RI, LBUDGET_RS, LBUDGET_RG, LBUDGET_RH, LBUDGET_SV,  &
-                            NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC,  &
+USE MODD_PARAMETERS, ONLY: JPVEXT_TURB, XUNDEF
+USE MODD_CST, ONLY: CST_t
+USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_BUDGET, ONLY:      NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC,  &
                             NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1, &
-                            TBUDGETDATA
+                            TBUDGETDATA, TBUDGETCONF_t
 USE MODD_FIELD, ONLY: TFIELDDATA,TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
-USE MODD_LES
 USE MODD_TURB_n, ONLY: XCADAP
-USE MODD_NSV
+!
+USE MODD_LES
+USE MODD_IBM_PARAM_n,    ONLY: LIBM, XIBM_LS, XIBM_XMUT
 !
 USE MODE_BL89, ONLY: BL89
 USE MODE_TURB_VER, ONLY : TURB_VER
 USE MODE_ROTATE_WIND, ONLY: ROTATE_WIND
 USE MODE_TURB_HOR_SPLT, ONLY: TURB_HOR_SPLT
 USE MODE_TKE_EPS_SOURCES, ONLY: TKE_EPS_SOURCES
-USE MODI_SHUMAN, ONLY : MZF, MXF, MYF
-USE MODI_GRADIENT_M
-USE MODI_GRADIENT_U
-USE MODI_GRADIENT_V
-USE MODI_LES_MEAN_SUBGRID
 USE MODE_RMC01, ONLY: RMC01
-USE MODI_GRADIENT_W
 USE MODE_TM06, ONLY: TM06
 USE MODE_UPDATE_LM, ONLY: UPDATE_LM
-!
 USE MODE_BUDGET,         ONLY: BUDGET_STORE_INIT, BUDGET_STORE_END
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 USE MODE_SBL
 USE MODE_SOURCES_NEG_CORRECT, ONLY: SOURCES_NEG_CORRECT
-!
 USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
 !
-USE MODD_IBM_PARAM_n,    ONLY: LIBM, XIBM_LS, XIBM_XMUT
+USE MODI_GRADIENT_W
+USE MODI_GRADIENT_M
+USE MODI_GRADIENT_U
+USE MODI_GRADIENT_V
 USE MODI_IBM_MIXINGLENGTH
+USE MODI_LES_MEAN_SUBGRID
+USE MODI_SHUMAN, ONLY : MZF, MXF, MYF
 !
 IMPLICIT NONE
 !
@@ -281,6 +277,9 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(CST_t),            INTENT(IN)    :: CST
+TYPE(CSTURB_t),         INTENT(IN)    :: CSTURB
+TYPE(TBUDGETCONF_t),    INTENT(IN)    :: BUCONF
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
@@ -288,6 +287,7 @@ INTEGER,                INTENT(IN)   :: KMI           ! model index number
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
+INTEGER,                INTENT(IN)   :: KSV, KSV_LGBEG, KSV_LGEND ! number of scalar variables
 CHARACTER(LEN=*),DIMENSION(:),INTENT(IN):: HLBCX, HLBCY  ! X- and Y-direc LBC
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time-splitting
 INTEGER,                INTENT(IN)   :: KMODEL_CL     ! model number for cloud mixing length
@@ -299,6 +299,8 @@ LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid
                                  ! CONDensation
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
+LOGICAL,                INTENT(IN)   ::  OHARAT       ! 
+LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
@@ -388,6 +390,10 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 !
+CHARACTER(LEN=6), INTENT(IN) :: HPROGRAM ! CPROGRAM is the program currently running (modd_conf)
+LOGICAL, INTENT(IN) :: ONOMIXLG          ! to use turbulence for lagrangian variables (modd_conf)
+LOGICAL, INTENT(IN) :: O2D               ! Logical for 2D model version (modd_conf)
+!
 ! length scale from vdfexcu
 REAL, DIMENSION(:,:,:), INTENT(IN)    :: PLENGTHM, PLENGTHH
 !
@@ -461,11 +467,11 @@ TYPE(TFIELDDATA) :: TZFIELD
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB',0,ZHOOK_HANDLE)
 !
-IF (LHARAT .AND. HTURBDIM /= '1DIM') THEN
-  CALL ABOR1('LHARATU only implemented for option HTURBDIM=1DIM!')
+IF (OHARAT .AND. HTURBDIM /= '1DIM') THEN
+  CALL ABOR1('OHARATU only implemented for option HTURBDIM=1DIM!')
 ENDIF
-IF (LHARAT .AND. LLES_CALL) THEN
-  CALL ABOR1('LHARATU not implemented for option LLES_CALL')
+IF (OHARAT .AND. LLES_CALL) THEN
+  CALL ABOR1('OHARATU not implemented for option LLES_CALL')
 ENDIF
 
 IKT=SIZE(PTHLT,3)          
@@ -475,7 +481,7 @@ IKB=KKA+JPVEXT_TURB*KKL
 IKE=KKU-JPVEXT_TURB*KKL
 !
 ZEXPL = 1.- PIMPL
-ZRVORD= XRV / XRD
+ZRVORD= CST%XRV / CST%XRD
 !
 !
 !Copy data into ZTHLM and ZRM only if needed
@@ -493,15 +499,15 @@ END IF
 !
 !*      2.1 Cph at t
 !
-ZCP(:,:,:)=XCPD
+ZCP(:,:,:)=CST%XCPD
 !
-IF (KRR > 0) ZCP(:,:,:) = ZCP(:,:,:) + XCPV * PRT(:,:,:,1)
+IF (KRR > 0) ZCP(:,:,:) = ZCP(:,:,:) + CST%XCPV * PRT(:,:,:,1)
 DO JRR = 2,1+KRRL                          ! loop on the liquid components  
-  ZCP(:,:,:)  = ZCP(:,:,:) + XCL * PRT(:,:,:,JRR)
+  ZCP(:,:,:)  = ZCP(:,:,:) + CST%XCL * PRT(:,:,:,JRR)
 END DO
 !
 DO JRR = 2+KRRL,1+KRRL+KRRI                ! loop on the solid components   
-  ZCP(:,:,:)  = ZCP(:,:,:)  + XCI * PRT(:,:,:,JRR)
+  ZCP(:,:,:)  = ZCP(:,:,:)  + CST%XCI * PRT(:,:,:,JRR)
 END DO
 !
 !*      2.2 Exner function at t
@@ -509,7 +515,7 @@ END DO
 IF (OOCEAN) THEN
   ZEXN(:,:,:) = 1.
 ELSE
-  ZEXN(:,:,:) = (PPABST(:,:,:)/XP00) ** (XRD/XCPD)
+  ZEXN(:,:,:) = (PPABST(:,:,:)/CST%XP00) ** (CST%XRD/CST%XCPD)
 END IF
 !
 !*      2.3 dissipative heating coeff a t
@@ -535,9 +541,9 @@ IF (KRRL >=1) THEN
     ALLOCATE(ZAMOIST_ICE(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)))
     ALLOCATE(ZATHETA_ICE(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)))
 !
-    CALL COMPUTE_FUNCTION_THERMO(XALPW,XBETAW,XGAMW,XLVTT,XCL,ZT,ZEXN,ZCP, &
+    CALL COMPUTE_FUNCTION_THERMO(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
                                  ZLVOCPEXNM,ZAMOIST,ZATHETA)
-    CALL COMPUTE_FUNCTION_THERMO(XALPI,XBETAI,XGAMI,XLSTT,XCI,ZT,ZEXN,ZCP, &
+    CALL COMPUTE_FUNCTION_THERMO(CST%XALPI,CST%XBETAI,CST%XGAMI,CST%XLSTT,CST%XCI,ZT,ZEXN,ZCP, &
                                  ZLSOCPEXNM,ZAMOIST_ICE,ZATHETA_ICE)
 !
     WHERE(PRT(:,:,:,2)+PRT(:,:,:,4)>0.0)
@@ -554,7 +560,7 @@ IF (KRRL >=1) THEN
     DEALLOCATE(ZAMOIST_ICE)
     DEALLOCATE(ZATHETA_ICE)
   ELSE
-    CALL COMPUTE_FUNCTION_THERMO(XALPW,XBETAW,XGAMW,XLVTT,XCL,ZT,ZEXN,ZCP, &
+    CALL COMPUTE_FUNCTION_THERMO(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
                                  ZLOCPEXNM,ZAMOIST,ZATHETA)
   END IF
 !
@@ -625,7 +631,7 @@ END IF
 !          -----------------------------------------
 !
 !
-IF (.NOT. LHARAT) THEN
+IF (.NOT. OHARAT) THEN
 
 SELECT CASE (HTURBLEN)
 !
@@ -634,7 +640,7 @@ SELECT CASE (HTURBLEN)
 
   CASE ('BL89')
     ZSHEAR=0.
-    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN)
+    CALL BL89(CST,CSTURB,KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 !
 !*      3.2 RM17 mixing length
 !           ------------------
@@ -643,7 +649,7 @@ SELECT CASE (HTURBLEN)
     ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
     ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
     ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
-    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN)
+    CALL BL89(CST,CSTURB,KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 !
 !*      3.3 Grey-zone combined RM17 & Deardorff mixing lengths 
 !           --------------------------------------------------
@@ -652,7 +658,7 @@ SELECT CASE (HTURBLEN)
     ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
     ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
     ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
-    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN)
+    CALL BL89(CST,CSTURB,KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 
     CALL DELT(ZLMW,ODZ=.FALSE.)
     ! The minimum mixing length is chosen between Horizontal grid mesh (not taking into account the vertical grid mesh) and RM17.
@@ -705,7 +711,7 @@ ENDIF  ! end LHARRAT
 !*      3.6 Dissipative length
 !           ------------------
 
-IF (LHARAT) THEN
+IF (OHARAT) THEN
   ZLEPS=PLENGTHM*(3.75**2.)
 ELSE
   ZLEPS=ZLM
@@ -753,7 +759,7 @@ ENDIF
 !
 !
 !
-IF (CPROGRAM/='AROME ') THEN
+IF (HPROGRAM/='AROME ') THEN
   CALL ROTATE_WIND(PUT,PVT,PWT,                       &
                      PDIRCOSXW, PDIRCOSYW, PDIRCOSZW,   &
                      PCOSSLOPE,PSINSLOPE,               &
@@ -773,7 +779,7 @@ ZCDUEFF(:,:) =-SQRT ( (PSFU(:,:)**2 + PSFV(:,:)**2) /               &
 #ifdef REPRO48
                     (1.E-60 + ZUSLOPE(:,:)**2 + ZVSLOPE(:,:)**2 ) )
 #else
-                    (XMNH_TINY + ZUSLOPE(:,:)**2 + ZVSLOPE(:,:)**2 ) )
+                    (CST%XMNH_TINY + ZUSLOPE(:,:)**2 + ZVSLOPE(:,:)**2 ) )
 #endif                      
 !
 !*       4.6 compute the surface tangential fluxes
@@ -832,11 +838,11 @@ ENDIF
 !*      5. TURBULENT SOURCES
 !          -----------------
 !
-IF( LBUDGET_U )  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_U ), 'VTURB', PRUS(:, :, :)    )
-IF( LBUDGET_V )  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_V ), 'VTURB', PRVS(:, :, :)    )
-IF( LBUDGET_W )  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_W ), 'VTURB', PRWS(:, :, :)    )
+IF( BUCONF%LBUDGET_U )  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_U ), 'VTURB', PRUS(:, :, :)    )
+IF( BUCONF%LBUDGET_V )  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_V ), 'VTURB', PRVS(:, :, :)    )
+IF( BUCONF%LBUDGET_W )  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_W ), 'VTURB', PRWS(:, :, :)    )
 
-IF( LBUDGET_TH ) THEN
+IF( BUCONF%LBUDGET_TH ) THEN
   IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:, :, :) + ZLVOCPEXNM(:, :, :) * PRRS(:, :, :, 2) &
                                                                           + ZLSOCPEXNM(:, :, :) * PRRS(:, :, :, 4) )
@@ -847,7 +853,7 @@ IF( LBUDGET_TH ) THEN
   END IF
 END IF
 
-IF( LBUDGET_RV ) THEN
+IF( BUCONF%LBUDGET_RV ) THEN
   IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) - PRRS(:, :, :, 4) )
   ELSE IF( KRRL >= 1 ) THEN
@@ -857,18 +863,20 @@ IF( LBUDGET_RV ) THEN
   END IF
 END IF
 
-IF( LBUDGET_RC ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RC), 'VTURB', PRRS  (:, :, :, 2) )
-IF( LBUDGET_RI ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RI), 'VTURB', PRRS  (:, :, :, 4) )
+IF( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RC), 'VTURB', PRRS  (:, :, :, 2) )
+IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RI), 'VTURB', PRRS  (:, :, :, 4) )
 
-IF( LBUDGET_SV ) THEN
-  DO JSV = 1, NSV
+IF( BUCONF%LBUDGET_SV ) THEN
+  DO JSV = 1, KSV
     CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'VTURB', PRSVS(:, :, :, JSV) )
   END DO
 END IF
 
-CALL TURB_VER(KKA,KKU,KKL,KRR, KRRL, KRRI,               &
-          OTURB_FLX, OOCEAN,                             &
+CALL TURB_VER(CST,CSTURB,KKA,KKU,KKL,KRR, KRRL, KRRI,    &
+          OTURB_FLX, OOCEAN, OHARAT,                     &
+          KSV,KSV_LGBEG,KSV_LGEND,                       &
           HTURBDIM,HTOM,PIMPL,ZEXPL,                     &
+          HPROGRAM, O2D, ONOMIXLG, OFLAT,                &
           PTSTEP,TPFILE,                                 &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,        &
           PCOSSLOPE,PSINSLOPE,                           &
@@ -883,11 +891,11 @@ CALL TURB_VER(KKA,KKU,KKL,KRR, KRRL, KRRI,               &
           PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,              &
           PDP,PTP,PSIGS,PWTH,PWRC,PWSV                   )
 
-IF( LBUDGET_U ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_U), 'VTURB', PRUS(:, :, :) )
-IF( LBUDGET_V ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_V), 'VTURB', PRVS(:, :, :) )
-IF( LBUDGET_W ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_W), 'VTURB', PRWS(:, :, :) )
+IF( BUCONF%LBUDGET_U ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_U), 'VTURB', PRUS(:, :, :) )
+IF( BUCONF%LBUDGET_V ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_V), 'VTURB', PRVS(:, :, :) )
+IF( BUCONF%LBUDGET_W ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_W), 'VTURB', PRWS(:, :, :) )
 
-IF( LBUDGET_TH ) THEN
+IF( BUCONF%LBUDGET_TH ) THEN
   IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:, :, :) + ZLVOCPEXNM(:, :, :) * PRRS(:, :, :, 2) &
                                                                           + ZLSOCPEXNM(:, :, :) * PRRS(:, :, :, 4) )
@@ -898,7 +906,7 @@ IF( LBUDGET_TH ) THEN
   END IF
 END IF
 
-IF( LBUDGET_RV ) THEN
+IF( BUCONF%LBUDGET_RV ) THEN
   IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) - PRRS(:, :, :, 4) )
   ELSE IF( KRRL >= 1 ) THEN
@@ -908,11 +916,11 @@ IF( LBUDGET_RV ) THEN
   END IF
 END IF
 
-IF( LBUDGET_RC ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RC), 'VTURB', PRRS(:, :, :, 2) )
-IF( LBUDGET_RI ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RI), 'VTURB', PRRS(:, :, :, 4) )
+IF( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RC), 'VTURB', PRRS(:, :, :, 2) )
+IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RI), 'VTURB', PRRS(:, :, :, 4) )
 
-IF( LBUDGET_SV )  THEN
-  DO JSV = 1, NSV
+IF( BUCONF%LBUDGET_SV )  THEN
+  DO JSV = 1, KSV
     CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'VTURB', PRSVS(:, :, :, JSV) )
   END DO
 END IF
@@ -923,11 +931,11 @@ END IF
 #else          
 IF( HTURBDIM == '3DIM' ) THEN
 #endif
-  IF( LBUDGET_U  ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_U ), 'HTURB', PRUS  (:, :, :) )
-  IF( LBUDGET_V  ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_V ), 'HTURB', PRVS  (:, :, :) )
-  IF( LBUDGET_W  ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_W ), 'HTURB', PRWS  (:, :, :) )
+  IF( BUCONF%LBUDGET_U  ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_U ), 'HTURB', PRUS  (:, :, :) )
+  IF( BUCONF%LBUDGET_V  ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_V ), 'HTURB', PRVS  (:, :, :) )
+  IF( BUCONF%LBUDGET_W  ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_W ), 'HTURB', PRWS  (:, :, :) )
 
-  IF(LBUDGET_TH)  THEN
+  IF(BUCONF%LBUDGET_TH)  THEN
     IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
       CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:, :, :) + ZLVOCPEXNM(:, :, :) * PRRS(:, :, :, 2) &
                                                                              + ZLSOCPEXNM(:, :, :) * PRRS(:, :, :, 4) )
@@ -938,7 +946,7 @@ IF( HTURBDIM == '3DIM' ) THEN
     END IF
   END IF
 
-  IF( LBUDGET_RV ) THEN
+  IF( BUCONF%LBUDGET_RV ) THEN
     IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
       CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) - PRRS(:, :, :, 4) )
     ELSE IF( KRRL >= 1 ) THEN
@@ -948,11 +956,11 @@ IF( HTURBDIM == '3DIM' ) THEN
     END IF
   END IF
 
-  IF( LBUDGET_RC ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RC), 'HTURB', PRRS(:, :, :, 2) )
-  IF( LBUDGET_RI ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RI), 'HTURB', PRRS(:, :, :, 4) )
+  IF( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RC), 'HTURB', PRRS(:, :, :, 2) )
+  IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RI), 'HTURB', PRRS(:, :, :, 4) )
 
-  IF( LBUDGET_SV )  THEN
-    DO JSV = 1, NSV
+  IF( BUCONF%LBUDGET_SV )  THEN
+    DO JSV = 1, KSV
       CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:, :, :, JSV) )
     END DO
   END IF
@@ -975,11 +983,11 @@ IF( HTURBDIM == '3DIM' ) THEN
           ZTRH,                                                &
           PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS                     )
 #endif
-  IF( LBUDGET_U ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_U), 'HTURB', PRUS(:, :, :) )
-  IF( LBUDGET_V ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_V), 'HTURB', PRVS(:, :, :) )
-  IF( LBUDGET_W ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_W), 'HTURB', PRWS(:, :, :) )
+  IF( BUCONF%LBUDGET_U ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_U), 'HTURB', PRUS(:, :, :) )
+  IF( BUCONF%LBUDGET_V ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_V), 'HTURB', PRVS(:, :, :) )
+  IF( BUCONF%LBUDGET_W ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_W), 'HTURB', PRWS(:, :, :) )
 
-  IF( LBUDGET_TH ) THEN
+  IF( BUCONF%LBUDGET_TH ) THEN
     IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
       CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:, :, :) + ZLVOCPEXNM(:, :, :) * PRRS(:, :, :, 2) &
                                                                             + ZLSOCPEXNM(:, :, :) * PRRS(:, :, :, 4) )
@@ -990,7 +998,7 @@ IF( HTURBDIM == '3DIM' ) THEN
     END IF
   END IF
 
-  IF( LBUDGET_RV ) THEN
+  IF( BUCONF%LBUDGET_RV ) THEN
     IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
       CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) - PRRS(:, :, :, 4) )
     ELSE IF( KRRL >= 1 ) THEN
@@ -1000,11 +1008,11 @@ IF( HTURBDIM == '3DIM' ) THEN
     END IF
   END IF
 
-  IF( LBUDGET_RC ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RC), 'HTURB', PRRS(:, :, :, 2) )
-  IF( LBUDGET_RI ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RI), 'HTURB', PRRS(:, :, :, 4) )
+  IF( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RC), 'HTURB', PRRS(:, :, :, 2) )
+  IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RI), 'HTURB', PRRS(:, :, :, 4) )
 
-  IF( LBUDGET_SV )  THEN
-    DO JSV = 1, NSV
+  IF( BUCONF%LBUDGET_SV )  THEN
+    DO JSV = 1, KSV
       CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:, :, :, JSV) )
     END DO
   END IF
@@ -1020,14 +1028,14 @@ END IF
 !  6.1 Contribution of mass-flux in the TKE buoyancy production if 
 !      cloud computation is not statistical 
 
-PTP = PTP + XG / PTHVREF * MZF(PFLXZTHVMF,KKA, KKU, KKL)
-IF(PRESENT(PTPMF))  PTPMF=XG / PTHVREF * MZF(PFLXZTHVMF, KKA, KKU, KKL)
+PTP = PTP + CST%XG / PTHVREF * MZF(PFLXZTHVMF,KKA, KKU, KKL)
+IF(PRESENT(PTPMF))  PTPMF=CST%XG / PTHVREF * MZF(PFLXZTHVMF, KKA, KKU, KKL)
 
 !  6.2 TKE evolution equation
 
-IF (.NOT. LHARAT) THEN
+IF (.NOT. OHARAT) THEN
 !
-IF (LBUDGET_TH)  THEN
+IF (BUCONF%LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS+ ZLVOCPEXNM * PRRS(:,:,:,2) &
                                                           & + ZLSOCPEXNM * PRRS(:,:,:,4) )
@@ -1044,14 +1052,15 @@ ELSE
   ZRTKEMS=0.
 END IF
 !
-CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,       &
+CALL TKE_EPS_SOURCES(CST,CSTURB,BUCONF,HPROGRAM,&
+                   &KKA,KKU,KKL,KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,       &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,            &
                    & PTSTEP,PIMPL,ZEXPL,                         &
                    & HTURBLEN,HTURBDIM,                              &
                    & TPFILE,OTURB_DIAG,           &
                    & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,ZRTKEMS,&
                    & TBUDGETS,KBUDGETS, PEDR=PEDR)
-IF (LBUDGET_TH)  THEN
+IF (BUCONF%LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS+ ZLVOCPEXNM * PRRS(:,:,:,2) &
                                                           & + ZLSOCPEXNM * PRRS(:,:,:,4) )
@@ -1160,7 +1169,7 @@ IF (LLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
   CALL LES_MEAN_SUBGRID(PSFTH,X_LES_Q0)
   CALL LES_MEAN_SUBGRID(PSFRV,X_LES_E0)
-  DO JSV=1,NSV
+  DO JSV=1,KSV
     CALL LES_MEAN_SUBGRID(PSFSV(:,:,JSV),X_LES_SV0(:,JSV))
   END DO
   CALL LES_MEAN_SUBGRID(PSFU,X_LES_UW0)
@@ -1193,7 +1202,7 @@ IF (LLES_CALL) THEN
     IF (KRR>=1) &
     CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(KKA,KKU,KKL,PRT(:,:,:,1),PDZZ),&
                          &KKA, KKU, KKL),X_LES_RES_ddz_Rt_SBG_W2)
-    DO JSV=1,NSV
+    DO JSV=1,KSV
       CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(KKA,KKU,KKL,PSVT(:,:,:,JSV),PDZZ), &
                            &KKA, KKU, KKL), X_LES_RES_ddz_Sv_SBG_W2(:,:,:,JSV))
     END DO
@@ -1245,7 +1254,6 @@ CONTAINS
 !              ------------
 USE MODE_ll
 USE MODD_ARGSLIST_ll, ONLY : LIST_ll
-USE MODD_CONF
 !
 IMPLICIT NONE
 !
@@ -1322,7 +1330,7 @@ END SUBROUTINE UPDATE_ROTATE_WIND
 !
 !*       0.    DECLARATIONS
 !              ------------
-USE MODD_CST
+USE MODD_CST, ONLY: CST_t
 !
 IMPLICIT NONE
 !
@@ -1344,11 +1352,11 @@ REAL, DIMENSION(SIZE(PEXN,1),SIZE(PEXN,2),SIZE(PEXN,3)) :: ZDRVSATDT
 !
   REAL(KIND=JPRB) :: ZHOOK_HANDLE
   IF (LHOOK) CALL DR_HOOK('TURB:COMPUTE_FUNCTION_THERMO',0,ZHOOK_HANDLE)
-  ZEPS = XMV / XMD
+  ZEPS = CST%XMV / CST%XMD
 !
 !*       1.1 Lv/Cph at  t
 !
-  PLOCPEXN(:,:,:) = ( PLTT + (XCPV-PC) *  (PT(:,:,:)-XTT) ) / PCP(:,:,:)
+  PLOCPEXN(:,:,:) = ( PLTT + (CST%XCPV-PC) *  (PT(:,:,:)-CST%XTT) ) / PCP(:,:,:)
 !
 !*      1.2 Saturation vapor pressure at t
 !
@@ -1429,7 +1437,7 @@ IF (ODZ) THEN
   PLM(:,:,KKU) = PLM(:,:,IKE)
   PLM(:,:,KKA) = PZZ(:,:,IKB) - PZZ(:,:,KKA)
   IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
-    IF ( L2D) THEN
+    IF ( O2D) THEN
       PLM(:,:,:) = SQRT( PLM(:,:,:)*MXF(PDXX(:,:,:)) ) 
     ELSE
       PLM(:,:,:) = (PLM(:,:,:)*MXF(PDXX(:,:,:))*MYF(PDYY(:,:,:)) ) ** (1./3.)
@@ -1439,7 +1447,7 @@ ELSE
   ! Dz not taken into account in computation to assure invariability with vertical grid mesh
   PLM=1.E10
   IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
-    IF ( L2D) THEN
+    IF ( O2D) THEN
       PLM(:,:,:) = MXF(PDXX(:,:,:))
     ELSE
       PLM(:,:,:) = (MXF(PDXX(:,:,:))*MYF(PDYY(:,:,:)) ) ** (1./2.)
@@ -1533,7 +1541,7 @@ PLM(:,:,IKTB:IKTE) = PZZ(:,:,IKTB+KKL:IKTE+KKL) - PZZ(:,:,IKTB:IKTE)
 PLM(:,:,KKU) = PLM(:,:,IKE)
 PLM(:,:,KKA) = PZZ(:,:,IKB) - PZZ(:,:,KKA)
 IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
-  IF ( L2D) THEN
+  IF ( O2D) THEN
     PLM(:,:,:) = SQRT( PLM(:,:,:)*MXF(PDXX(:,:,:)) )
   ELSE
     PLM(:,:,:) = (PLM(:,:,:)*MXF(PDXX(:,:,:))*MYF(PDYY(:,:,:)) ) ** (1./3.)
@@ -1553,14 +1561,14 @@ IF (KRR>0) THEN
         ZDRTDZ(JI,JJ,JK) = 0.5*((PRT(JI,JJ,JK+KKL,1)-PRT(JI,JJ,JK    ,1))/PDZZ(JI,JJ,JK+KKL)+ &
                                 (PRT(JI,JJ,JK    ,1)-PRT(JI,JJ,JK-KKL,1))/PDZZ(JI,JJ,JK    ))
         IF (OOCEAN) THEN
-          ZVAR=XG*(XALPHAOC*ZDTHLDZ(JI,JJ,JK)-XBETAOC*ZDRTDZ(JI,JJ,JK))
+          ZVAR=CST%XG*(CST%XALPHAOC*ZDTHLDZ(JI,JJ,JK)-CST%XBETAOC*ZDRTDZ(JI,JJ,JK))
         ELSE
-          ZVAR=XG/PTHVREF(JI,JJ,JK)*                                                  &
+          ZVAR=CST%XG/PTHVREF(JI,JJ,JK)*                                                  &
              (ZETHETA(JI,JJ,JK)*ZDTHLDZ(JI,JJ,JK)+ZEMOIST(JI,JJ,JK)*ZDRTDZ(JI,JJ,JK))
         END IF
         !
         IF (ZVAR>0.) THEN
-          PLM(JI,JJ,JK)=MAX(XMNH_EPSILON,MIN(PLM(JI,JJ,JK), &
+          PLM(JI,JJ,JK)=MAX(CST%XMNH_EPSILON,MIN(PLM(JI,JJ,JK), &
                         0.76* SQRT(PTKET(JI,JJ,JK)/ZVAR)))
         END IF
       END DO
@@ -1573,13 +1581,13 @@ ELSE! For dry atmos or unsalted ocean runs
         ZDTHLDZ(JI,JJ,JK)= 0.5*((PTHLT(JI,JJ,JK+KKL)-PTHLT(JI,JJ,JK    ))/PDZZ(JI,JJ,JK+KKL)+ &
                                 (PTHLT(JI,JJ,JK    )-PTHLT(JI,JJ,JK-KKL))/PDZZ(JI,JJ,JK    ))
         IF (OOCEAN) THEN
-          ZVAR= XG*XALPHAOC*ZDTHLDZ(JI,JJ,JK)
+          ZVAR= CST%XG*CST%XALPHAOC*ZDTHLDZ(JI,JJ,JK)
         ELSE
-          ZVAR= XG/PTHVREF(JI,JJ,JK)*ZETHETA(JI,JJ,JK)*ZDTHLDZ(JI,JJ,JK)
+          ZVAR= CST%XG/PTHVREF(JI,JJ,JK)*ZETHETA(JI,JJ,JK)*ZDTHLDZ(JI,JJ,JK)
         END IF
 !
         IF (ZVAR>0.) THEN
-          PLM(JI,JJ,JK)=MAX(XMNH_EPSILON,MIN(PLM(JI,JJ,JK), &
+          PLM(JI,JJ,JK)=MAX(CST%XMNH_EPSILON,MIN(PLM(JI,JJ,JK), &
                         0.76* SQRT(PTKET(JI,JJ,JK)/ZVAR)))
         END IF
       END DO
@@ -1596,13 +1604,13 @@ ELSE
 ENDIF
 !
 IF (OOCEAN) THEN
-  ZWORK2D(:,:)=XG*(XALPHAOC*ZDTHLDZ(:,:,IKB)-XBETAOC*ZDRTDZ(:,:,IKB))
+  ZWORK2D(:,:)=CST%XG*(CST%XALPHAOC*ZDTHLDZ(:,:,IKB)-CST%XBETAOC*ZDRTDZ(:,:,IKB))
 ELSE
-  ZWORK2D(:,:)=XG/PTHVREF(:,:,IKB)*                                           &
+  ZWORK2D(:,:)=CST%XG/PTHVREF(:,:,IKB)*                                           &
               (ZETHETA(:,:,IKB)*ZDTHLDZ(:,:,IKB)+ZEMOIST(:,:,IKB)*ZDRTDZ(:,:,IKB))
 END IF
 WHERE(ZWORK2D(:,:)>0.)
-  PLM(:,:,IKB)=MAX(XMNH_EPSILON,MIN( PLM(:,:,IKB),                 &
+  PLM(:,:,IKB)=MAX(CST%XMNH_EPSILON,MIN( PLM(:,:,IKB),                 &
                     0.76* SQRT(PTKET(:,:,IKB)/ZWORK2D(:,:))))
 END WHERE
 !
@@ -1743,7 +1751,7 @@ ELSE
 !           ------------------
   CASE ('BL89','RM17','ADAP')
     ZSHEAR=0.
-    CALL BL89(KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD,OOCEAN)
+    CALL BL89(CST,CSTURB,KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD,OOCEAN,HPROGRAM)
 !
 !*         3.2 Delta mixing length
 !           -------------------

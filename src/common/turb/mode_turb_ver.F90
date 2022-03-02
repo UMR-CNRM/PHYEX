@@ -5,9 +5,11 @@
 MODULE MODE_TURB_VER
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER(KKA,KKU,KKL,KRR,KRRL,KRRI,                &
-                      OTURB_FLX, OOCEAN,                            &
+SUBROUTINE TURB_VER(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,           &
+                      OTURB_FLX, OOCEAN, OHARAT,                    &
+                      KSV,KSV_LGBEG,KSV_LGEND,                      &
                       HTURBDIM,HTOM,PIMPL,PEXPL,                    &
+                      HPROGRAM, O2D, ONOMIXLG, OFLAT,               &
                       PTSTEP, TPFILE,                               &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
@@ -132,15 +134,15 @@ SUBROUTINE TURB_VER(KKA,KKU,KKL,KRR,KRRL,KRRI,                &
 !!    ------------------
 !!      Module MODD_CST : contains physical constants
 !!
-!!           XG         : gravity constant
+!!           CST%XG         : gravity constant
 !!
 !!      Module MODD_CTURB: contains the set of constants for
 !!                        the turbulence scheme
 !!
-!!           XCMFS,XCMFB : cts for the momentum flux
-!!           XCSHF       : ct for the sensible heat flux
-!!           XCHF        : ct for the moisture flux
-!!           XCTV,XCHV   : cts for the T and moisture variances
+!!           CSTURB%XCMFS,XCMFB : cts for the momentum flux
+!!           CSTURB%XCSHF       : ct for the sensible heat flux
+!!           CSTURB%XCHF        : ct for the moisture flux
+!!           CSTURB%XCTV,CSTURB%XCHV   : cts for the T and moisture variances
 !!
 !!      Module MODD_PARAMETERS
 !!
@@ -209,15 +211,13 @@ SUBROUTINE TURB_VER(KKA,KKU,KKL,KRR,KRRL,KRRI,                &
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
-USE MODD_CST
-USE MODD_CTURB
+USE MODD_CST, ONLY: CST_t
+USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_LES
-USE MODD_NSV,            ONLY: NSV
 !
-!USE MODE_PRANDTL, ONLY: PRANDTL
 USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
 USE MODI_GRADIENT_M
@@ -242,15 +242,19 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(CST_t),                  INTENT(IN)    :: CST
+TYPE(CSTURB_t),                  INTENT(IN)    :: CSTURB
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
+INTEGER,                INTENT(IN)   :: KSV, KSV_LGBEG, KSV_LGEND ! number of scalar variables
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
+LOGICAL,                INTENT(IN)   ::  OHARAT       ! 
 CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
 CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
@@ -269,7 +273,7 @@ REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSINSLOPE    ! sinus of the angle
                                       ! between i and the slope vector
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
-! MFMOIST used in case of LHARATU
+! MFMOIST used in case of OHARATU
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  MFMOIST       ! moist mass flux dual scheme
 
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
@@ -300,7 +304,7 @@ REAL, DIMENSION(:,:),   INTENT(IN)   ::  PVSLOPEM     ! wind component along the
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTKEM        ! TKE at time t
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM          ! Turb. mixing length   
-! PLENGTHM PLENGTHH used in case of LHARATU
+! PLENGTHM PLENGTHH used in case of OHARATU
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLENGTHM     ! Turb. mixing length momentum
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLENGTHH     ! Turb. mixing length heat/moisture 
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLEPS        ! dissipative length
@@ -329,10 +333,11 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PSIGS     ! Vert. part of Sigma_s at t
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWTH      ! heat flux
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWRC      ! cloud water flux
 REAL, DIMENSION(:,:,:,:),INTENT(OUT) :: PWSV       ! scalar flux
-
 !
-!
-!
+CHARACTER(LEN=6), INTENT(IN) :: HPROGRAM ! CPROGRAM is the program currently running (modd_conf)
+LOGICAL, INTENT(IN) :: ONOMIXLG          ! to use turbulence for lagrangian variables (modd_conf)
+LOGICAL, INTENT(IN) :: O2D               ! Logical for 2D model version (modd_conf)
+LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 !
 !*       0.2  declaration of local variables
 !
@@ -360,7 +365,7 @@ REAL, ALLOCATABLE, DIMENSION(:,:,:)  ::  &
        ZTHLP,    & ! guess of potential temperature due to vert. turbulent flux
        ZRP         ! guess of total water due to vert. turbulent flux
 
-!!$REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),NSV)  ::  &
+!!$REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),KSV)  ::  &
 REAL, ALLOCATABLE, DIMENSION(:,:,:,:)  ::  &
        ZPSI_SV,  & ! Prandtl number for scalars
        ZREDS1,   & ! 1D Redelsperger number R_sv
@@ -399,10 +404,10 @@ ALLOCATE (      ZBETA(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))    ,&
        ZRP(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))     )   
 
 ALLOCATE ( &
- ZPSI_SV(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),NSV),  &
- ZREDS1(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),NSV),   &
- ZRED2THS(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),NSV), &
- ZRED2RS(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),NSV)   )
+ ZPSI_SV(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),KSV),  &
+ ZREDS1(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),KSV),   &
+ ZRED2THS(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),KSV), &
+ ZRED2RS(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),KSV)   )
 
 !----------------------------------------------------------------------------
 !
@@ -418,8 +423,8 @@ IKE=KKU-JPVEXT_TURB*KKL
 ! 3D Redelsperger numbers
 !
 !
-CALL PRANDTL(KKA,KKU,KKL,KRR,KRRI,OTURB_FLX,       &
-             HTURBDIM, OOCEAN,                     &
+CALL PRANDTL(CST,CSTURB,KKA,KKU,KKL,KRR,KRRI,OTURB_FLX, &
+             HTURBDIM, OOCEAN,OHARAT,O2D,          &
              TPFILE,                               &
              PDXX,PDYY,PDZZ,PDZX,PDZY,             &
              PTHVREF,PLOCPEXNM,PATHETA,PAMOIST,    &
@@ -433,9 +438,9 @@ CALL PRANDTL(KKA,KKU,KKL,KRR,KRRI,OTURB_FLX,       &
 ! Buoyancy coefficient
 !
 IF (OOCEAN) THEN
-  ZBETA = XG*XALPHAOC
+  ZBETA = CST%XG*CST%XALPHAOC
 ELSE
-  ZBETA = XG/PTHVREF
+  ZBETA = CST%XG/PTHVREF
 END IF
 !
 ! Square root of Tke
@@ -451,7 +456,7 @@ IF (KRR>0) ZDR_DZ  = GZ_M_W(KKA, KKU, KKL,PRM(:,:,:,1),PDZZ)
 !
 ! Denominator factor in 3rd order terms
 !
-IF (.NOT. LHARAT) THEN
+IF (.NOT. OHARAT) THEN
   ZD(:,:,:) = (1.+ZREDTH1+ZREDR1) * (1.+0.5*(ZREDTH1+ZREDR1))
 ELSE
   ZD(:,:,:) = 1.
@@ -461,13 +466,13 @@ ENDIF
 !
 GUSERV = KRR/=0
 !
-ZPHI3 = PHI3(ZREDTH1,ZREDR1,ZRED2TH3,ZRED2R3,ZRED2THR3,HTURBDIM,GUSERV)
+ZPHI3 = PHI3(CSTURB,ZREDTH1,ZREDR1,ZRED2TH3,ZRED2R3,ZRED2THR3,HTURBDIM,GUSERV)
 IF(KRR/=0) &
-ZPSI3 = PSI3(ZREDR1,ZREDTH1,ZRED2R3,ZRED2TH3,ZRED2THR3,HTURBDIM,GUSERV)
+ZPSI3 = PSI3(CSTURB,ZREDR1,ZREDTH1,ZRED2R3,ZRED2TH3,ZRED2THR3,HTURBDIM,GUSERV)
 !
 ! Prandtl numbers for scalars
 !
-ZPSI_SV = PSI_SV(ZREDTH1,ZREDR1,ZREDS1,ZRED2THS,ZRED2RS,ZPHI3,ZPSI3)
+ZPSI_SV = PSI_SV(CSTURB,ZREDTH1,ZREDR1,ZREDS1,ZRED2THS,ZRED2RS,ZPHI3,ZPSI3)
 !
 ! LES diagnostics
 !
@@ -495,15 +500,15 @@ END IF
 !             ----------------------------------------------------------------
 !
 
-IF (LHARAT) THEN
+IF (OHARAT) THEN
   ZLM=PLENGTHH
 ELSE
   ZLM=PLM
 ENDIF
 !
-  CALL  TURB_VER_THERMO_FLUX(KKA,KKU,KKL,KRR,KRRL,KRRI,               &
-                        OTURB_FLX,HTURBDIM,HTOM,OOCEAN,               &
-                        PIMPL,PEXPL,PTSTEP,                           &
+  CALL  TURB_VER_THERMO_FLUX(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,    &
+                        OTURB_FLX,HTURBDIM,HTOM,OOCEAN,OHARAT,        &
+                        PIMPL,PEXPL,PTSTEP,HPROGRAM,                  &
                         TPFILE,                                       &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                         PRHODJ,PTHVREF,                               &
@@ -518,8 +523,8 @@ ENDIF
                         MFMOIST,PBL_DEPTH,ZWTHV,                      &
                         PRTHLS,PRRS,ZTHLP,ZRP,PTP,PWTH,PWRC )
 !
-  CALL  TURB_VER_THERMO_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,               &
-                        OTURB_FLX,HTURBDIM,HTOM,                      &
+  CALL  TURB_VER_THERMO_CORR(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,    &
+                        OTURB_FLX,HTURBDIM,HTOM, OHARAT,              &
                         PIMPL,PEXPL,                                  &
                         TPFILE,                                       &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,           &
@@ -548,10 +553,10 @@ ENDIF
 !             -----------------------------------------------
 !
 !
-IF (LHARAT) ZLM=PLENGTHM
+IF (OHARAT) ZLM=PLENGTHM
 !
-CALL  TURB_VER_DYN_FLUX(KKA,KKU,KKL,                                &
-                      OTURB_FLX,KRR, OOCEAN,                        &
+CALL  TURB_VER_DYN_FLUX(CST,CSTURB,KKA,KKU,KKL,KSV,O2D,OFLAT,       &
+                      OTURB_FLX,KRR, OOCEAN, OHARAT,                &
                       HTURBDIM,PIMPL,PEXPL,PTSTEP,                  &
                       TPFILE,                                       &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
@@ -569,11 +574,12 @@ CALL  TURB_VER_DYN_FLUX(KKA,KKU,KKL,                                &
 !*       8.   SOURCES OF PASSIVE SCALAR VARIABLES
 !             -----------------------------------
 !
-IF (LHARAT) ZLM=PLENGTHH
+IF (OHARAT) ZLM=PLENGTHH
 !
 IF (SIZE(PSVM,4)>0)                                                 &
-CALL  TURB_VER_SV_FLUX(KKA,KKU,KKL,                                 &
-                      OTURB_FLX,HTURBDIM,                           &
+CALL  TURB_VER_SV_FLUX(CST,CSTURB,KKA,KKU,KKL,ONOMIXLG,             &
+                      KSV_LGBEG,KSV_LGEND,                          &
+                      OTURB_FLX,HTURBDIM,OHARAT,                    &
                       PIMPL,PEXPL,PTSTEP,                           &
                       TPFILE,                                       &
                       PDZZ,PDIRCOSZW,                               &
@@ -585,8 +591,8 @@ CALL  TURB_VER_SV_FLUX(KKA,KKU,KKL,                                 &
 !
 !
 IF (SIZE(PSVM,4)>0 .AND. LLES_CALL)                                 &
-CALL  TURB_VER_SV_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,OOCEAN,            &
-                      PDZZ,                                         &
+CALL  TURB_VER_SV_CORR(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,OOCEAN, &
+                      PDZZ,KSV,KSV_LGBEG,KSV_LGEND,ONOMIXLG,        &
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,ZPHI3,ZPSI3,  &
                       PWM,PSVM,                                     &
@@ -607,7 +613,7 @@ IF (SIZE(PSBL_DEPTH)>0) CALL SBL_DEPTH(IKB,IKE,PZZ,ZWU,ZWV,ZWTHV,PLMO,PSBL_DEPTH
 !             ------
 !
 !
-IF ( OTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. LHARAT) THEN
+IF ( OTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. OHARAT) THEN
 !
 ! stores the Turbulent Prandtl number
 ! 
@@ -647,7 +653,7 @@ IF ( OTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. LHARAT) THEN
   TZFIELD%NTYPE      = TYPEREAL
   TZFIELD%NDIMS      = 3
   TZFIELD%LTIMEDEP   = .TRUE.
-  DO JSV=1,NSV
+  DO JSV=1,KSV
     WRITE(TZFIELD%CMNHNAME, '("PSI_SV_",I3.3)') JSV
     TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)
     TZFIELD%CCOMMENT   = 'X_Y_Z_'//TRIM(TZFIELD%CMNHNAME)
