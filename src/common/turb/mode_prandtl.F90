@@ -702,7 +702,11 @@ IKE = SIZE(PREDTH1,3)-JPVEXT_TURB
 IF (HTURBDIM=='3DIM') THEN
         !* 3DIM case
   IF (OUSERV) THEN
+#ifdef REPRO48
+    WHERE (PPHI3(:,:,:)/=CSTURB%XPHI_LIM)
+#else
     WHERE (PPHI3(:,:,:)<=CSTURB%XPHI_LIM)
+#endif
     D_PHI3DTDZ_O_DDTDZ(:,:,:) = PPHI3(:,:,:)                       &
           * (1. - PREDTH1(:,:,:) * (3./2.+PREDTH1+PREDR1)          &
                /((1.+PREDTH1+PREDR1)*(1.+1./2.*(PREDTH1+PREDR1)))) &
@@ -716,7 +720,11 @@ IF (HTURBDIM=='3DIM') THEN
 
 !
   ELSE
+#ifdef REPRO48
+    WHERE (PPHI3(:,:,:)/=CSTURB%XPHI_LIM)
+#else
     WHERE (PPHI3(:,:,:)<=CSTURB%XPHI_LIM)
+#endif
     D_PHI3DTDZ_O_DDTDZ(:,:,:) = PPHI3(:,:,:)             &
           * (1. - PREDTH1(:,:,:) * (3./2.+PREDTH1)      &
                /((1.+PREDTH1)*(1.+1./2.*PREDTH1)))        &
@@ -729,12 +737,6 @@ IF (HTURBDIM=='3DIM') THEN
   END IF
 ELSE
         !* 1DIM case
-!  WHERE (PPHI3(:,:,:)<=CSTURB%XPHI_LIM)
-!    D_PHI3DTDZ_O_DDTDZ(:,:,:) = PPHI3(:,:,:)                           &
-!        * (1. - PREDTH1(:,:,:)*PPHI3(:,:,:))
-!  ELSEWHERE
-!    D_PHI3DTDZ_O_DDTDZ(:,:,:) = PPHI3(:,:,:)
-!  ENDWHERE
 DO JJ=1,SIZE(PPHI3,2)
   DO JL=1,SIZE(PPHI3,1)
     DO JK=1,SIZE(PPHI3,3)
@@ -749,8 +751,11 @@ DO JJ=1,SIZE(PPHI3,2)
 ENDDO
 END IF
 !
+#ifdef REPRO48
+#else
 !* smoothing
-CALL SMOOTH_TURB_FUNCT(CSTURB,PPHI3,PPHI3,D_PHI3DTDZ_O_DDTDZ)
+CALL SMOOTH_TURB_FUNCT(CSTURB%PPHI3,PPHI3,D_PHI3DTDZ_O_DDTDZ)
+#endif
 !
 D_PHI3DTDZ_O_DDTDZ(:,:,IKB-1)=D_PHI3DTDZ_O_DDTDZ(:,:,IKB)
 D_PHI3DTDZ_O_DDTDZ(:,:,IKE+1)=D_PHI3DTDZ_O_DDTDZ(:,:,IKE)
@@ -779,7 +784,11 @@ IKE = SIZE(PREDTH1,3)-JPVEXT_TURB
 IF (HTURBDIM=='3DIM') THEN
         !* 3DIM case
   IF (OUSERV) THEN
+#ifdef REPRO48
+    WHERE (PPHI3(:,:,:)/=CSTURB%XPHI_LIM)
+#else
     WHERE (PPHI3(:,:,:)<=CSTURB%XPHI_LIM)
+#endif
       D_PHI3DRDZ_O_DDRDZ(:,:,:) =          &
                 PPHI3(:,:,:) * (1.-PREDR1(:,:,:)*(3./2.+PREDTH1+PREDR1) &
                   / ((1.+PREDTH1+PREDR1)*(1.+1./2.*(PREDTH1+PREDR1))))  &
@@ -795,7 +804,11 @@ IF (HTURBDIM=='3DIM') THEN
   END IF
 ELSE
         !* 1DIM case
-  WHERE (PPHI3(:,:,:)<=CSTURB%XPHI_LIM)
+#ifdef REPRO48
+    WHERE (PPHI3(:,:,:)/=CSTURB%XPHI_LIM)
+#else
+    WHERE (PPHI3(:,:,:)<=CSTURB%XPHI_LIM)
+#endif
     D_PHI3DRDZ_O_DDRDZ(:,:,:) = PPHI3(:,:,:)                           &
           * (1. - PREDR1(:,:,:)*PPHI3(:,:,:))
   ELSEWHERE
@@ -803,8 +816,11 @@ ELSE
   END WHERE
 END IF
 !
+#ifdef REPRO48
+#else
 !* smoothing
 CALL SMOOTH_TURB_FUNCT(CSTURB,PPHI3,PPHI3,D_PHI3DRDZ_O_DDRDZ)
+#endif
 !
 D_PHI3DRDZ_O_DDRDZ(:,:,IKB-1)=D_PHI3DRDZ_O_DDRDZ(:,:,IKB)
 D_PHI3DRDZ_O_DDRDZ(:,:,IKE+1)=D_PHI3DRDZ_O_DDRDZ(:,:,IKE)
@@ -836,35 +852,13 @@ IF (HTURBDIM=='3DIM') THEN
    D_PHI3DTDZ2_O_DDTDZ(:,:,:) = PDTDZ * (PPHI3 +  &
            D_PHI3DTDZ_O_DDTDZ(CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,OUSERV) )
 
-!        !* 3DIM case
-!  IF (OUSERV) THEN
-!    WHERE (PPHI3(:,:,:)<=CSTURB%XPHI_LIM)
-!    D_PHI3DTDZ2_O_DDTDZ(:,:,:) = PPHI3(:,:,:)                      &
-!          * PDTDZ(:,:,:)*(2.-PREDTH1(:,:,:)*(3./2.+PREDTH1+PREDR1) &
-!               /((1.+PREDTH1+PREDR1)*(1.+1./2.*(PREDTH1+PREDR1)))) &
-!          + (1.+PREDR1)*(PRED2THR3+PRED2TH3)                       &
-!               / (PREDTH1*(1.+PREDTH1+PREDR1)*(1.+1./2.*(PREDTH1+PREDR1))) &
-!          - (1./2.*PREDTH1+PREDR1 * (1.+PREDTH1+PREDR1))           &
-!               / ((1.+PREDTH1+PREDR1)*(1.+1./2.*(PREDTH1+PREDR1)))
-!    ELSEWHERE
-!      D_PHI3DTDZ2_O_DDTDZ(:,:,:) = PPHI3(:,:,:) * 2. * PDTDZ(:,:,:)
-!    ENDWHERE
-!
-!!
-!  ELSE
-!    WHERE (PPHI3(:,:,:)<=CSTURB%XPHI_LIM)
-!    D_PHI3DTDZ2_O_DDTDZ(:,:,:) = PPHI3(:,:,:)                  &
-!          * PDTDZ(:,:,:)*(2.-PREDTH1(:,:,:)*(3./2.+PREDTH1)   &
-!               /((1.+PREDTH1)*(1.+1./2.*PREDTH1)))             &
-!          + PRED2TH3 / (PREDTH1*(1.+PREDTH1)*(1.+1./2.*PREDTH1)) &
-!          - 1./2.*PREDTH1 / ((1.+PREDTH1)*(1.+1./2.*PREDTH1))
-!    ELSEWHERE
-!      D_PHI3DTDZ2_O_DDTDZ(:,:,:) = PPHI3(:,:,:) * 2. * PDTDZ(:,:,:)
-!    ENDWHERE
-!  END IF
 ELSE
         !* 1DIM case
+#ifdef REPRO48
+    WHERE (PPHI3(:,:,:)/=CSTURB%XPHI_LIM)
+#else
     WHERE (PPHI3(:,:,:)<=CSTURB%XPHI_LIM)
+#endif
       D_PHI3DTDZ2_O_DDTDZ(:,:,:) = PPHI3(:,:,:)*PDTDZ(:,:,:)             &
           * (2. - PREDTH1(:,:,:)*PPHI3(:,:,:))
     ELSEWHERE
@@ -872,8 +866,11 @@ ELSE
     END WHERE
 END IF
 !
+#ifdef REPRO48
+#else
 !* smoothing
 CALL SMOOTH_TURB_FUNCT(CSTURB,PPHI3,PPHI3*2.*PDTDZ,D_PHI3DTDZ2_O_DDTDZ)
+#endif
 !
 !
 D_PHI3DTDZ2_O_DDTDZ(:,:,IKB-1)=D_PHI3DTDZ2_O_DDTDZ(:,:,IKB)
