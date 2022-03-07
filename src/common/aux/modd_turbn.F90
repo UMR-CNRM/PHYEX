@@ -71,6 +71,7 @@ IMPLICIT NONE
   LOGICAL            :: LSIGMAS   ! Switch for using Sigma_s from turbulence scheme
   LOGICAL            :: LSIG_CONV ! Switch for computing Sigma_s due to convection
 !
+  LOGICAL            :: LHARAT
   LOGICAL            :: LRMC01    ! Switch for computing separate mixing
 !                                    ! and dissipative length in the SBL
 !                                    ! according to Redelsperger, Mahe &
