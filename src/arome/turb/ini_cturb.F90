@@ -65,8 +65,6 @@ IF (LHOOK) CALL DR_HOOK('INI_CTURB',0,ZHOOK_HANDLE)
 !         1.1 Constant for dissipation of Tke
 !
 !
-LHARAT=.FALSE.
-!
 !XCED  = 0.70
 XCED  = 0.85
 !       Redelsperger-Sommeria (1981) = 0.70
