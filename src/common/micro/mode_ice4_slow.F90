@@ -69,7 +69,7 @@ REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRVDEPG  ! Deposition on r_g
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(KPROMA) :: ZCRIAUTI, ZMASK
+REAL, DIMENSION(KPROMA) :: ZCRIAUTI
 REAL                    :: ZTIMAUTIC
 INTEGER                 :: JL
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
