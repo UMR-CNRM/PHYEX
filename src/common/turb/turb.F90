@@ -4,8 +4,8 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
       SUBROUTINE TURB(CST,CSTURB,BUCONF,KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,      &
-              & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,             &
-              & HPROGRAM, O2D, ONOMIXLG,OFLAT,                        &
+              & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
+              & O2D,ONOMIXLG,OFLAT,OLES_CALL,OCOUPLES,OBLOWSNOW,      &
               & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,OHARAT, &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,PIMPL,      &
               & PTSTEP,TPFILE,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
@@ -299,8 +299,11 @@ LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid
                                  ! CONDensation
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
-LOGICAL,                INTENT(IN)   ::  OHARAT       ! 
+LOGICAL,                INTENT(IN)   ::  OHARAT       ! switch for LHARATU from AROME
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
+LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
+LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
+LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
@@ -470,7 +473,7 @@ IF (LHOOK) CALL DR_HOOK('TURB',0,ZHOOK_HANDLE)
 IF (OHARAT .AND. HTURBDIM /= '1DIM') THEN
   CALL ABOR1('OHARATU only implemented for option HTURBDIM=1DIM!')
 ENDIF
-IF (OHARAT .AND. LLES_CALL) THEN
+IF (OHARAT .AND. OLES_CALL) THEN
   CALL ABOR1('OHARATU not implemented for option LLES_CALL')
 ENDIF
 
@@ -877,6 +880,7 @@ CALL TURB_VER(CST,CSTURB,KKA,KKU,KKL,KRR, KRRL, KRRI,    &
           KSV,KSV_LGBEG,KSV_LGEND,                       &
           HTURBDIM,HTOM,PIMPL,ZEXPL,                     &
           HPROGRAM, O2D, ONOMIXLG, OFLAT,                &
+          OLES_CALL,OCOUPLES,OBLOWSNOW,                  &
           PTSTEP,TPFILE,                                 &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,        &
           PCOSSLOPE,PSINSLOPE,                           &
@@ -1057,7 +1061,7 @@ CALL TKE_EPS_SOURCES(CST,CSTURB,BUCONF,HPROGRAM,&
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,            &
                    & PTSTEP,PIMPL,ZEXPL,                         &
                    & HTURBLEN,HTURBDIM,                              &
-                   & TPFILE,OTURB_DIAG,           &
+                   & TPFILE,OTURB_DIAG,OLES_CALL,           &
                    & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,ZRTKEMS,&
                    & TBUDGETS,KBUDGETS, PEDR=PEDR)
 IF (BUCONF%LBUDGET_TH)  THEN
@@ -1165,7 +1169,7 @@ CALL SOURCES_NEG_CORRECT(HCLOUD, 'NETUR',KRR,PTSTEP,PPABST,PTHLT,PRT,PRTHLS,PRRS
 !*      9. LES averaged surface fluxes
 !          ---------------------------
 !
-IF (LLES_CALL) THEN
+IF (OLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
   CALL LES_MEAN_SUBGRID(PSFTH,X_LES_Q0)
   CALL LES_MEAN_SUBGRID(PSFRV,X_LES_E0)

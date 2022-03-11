@@ -71,6 +71,7 @@
 USE MODD_CONF
 USE MODD_CST, ONLY:CST
 USE MODD_CTURB, ONLY:CSTURB
+USE MODD_LES, ONLY:LLES_CALL
 USE MODD_PARAMETERS
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_BUDGET, ONLY: NBUDGET_RI, TBUDGETDATA, TBUCONF
@@ -209,7 +210,8 @@ LOGICAL       ::  OTURB_DIAG   ! switch to write some
                                ! diagnostic fields in the syncronous FM-file
 LOGICAL       ::  ORMC01       ! switch for RMC01 lengths in SBL
 LOGICAL       ::  OOCEAN       ! switch for OCEAN version of turbulence scheme
-
+LOGICAL       ::  OCOUPLES     ! switch for ocean-atm LES coupling
+LOGICAL       ::  OBLOWSNOW    ! switch for prognostic blow snow scheme
 CHARACTER(LEN=4)   ::  HTURBDIM     ! dimensionality of the
                                ! turbulence scheme
 CHARACTER(LEN=4)   ::  HTURBLEN     ! kind of mixing length
@@ -304,7 +306,10 @@ O2D=.FALSE.
 ONOMIXLG=.FALSE.
 KSV_LGBEG=0
 KSV_LGEND=0
-
+! blowsnow scheme with mesonh
+OBLOWSNOW=.FALSE.
+! ocean-atmo LES interactive coupling
+OCOUPLES=.FALSE.
 
 ! tableau a recalculer a chaque pas de temps
 ! attention, ZDZZ est l'altitude entre deux niveaux (et pas l'�paisseur de la couche)
@@ -441,7 +446,7 @@ ENDDO
 HCLOUD="ICE3"
 CALL TURB (CST,CSTURB,TBUCONF,KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY,&
    & ISPLIT,IMI, KSV, KSV_LGBEG, KSV_LGEND, &
-   & HPROGRAM, O2D, ONOMIXLG, OFLAT, & 
+   & HPROGRAM, O2D, ONOMIXLG, OFLAT, LLES_CALL,OCOUPLES,OBLOWSNOW,& 
    & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,LDHARATU,    &
    & HTURBDIM,HTURBLEN,'NONE','NONE','LIMA',           &
    & ZIMPL,                                    &

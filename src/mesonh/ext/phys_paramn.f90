@@ -244,6 +244,7 @@ END MODULE MODI_PHYS_PARAM_n
 !
 USE MODD_ADV_n,       ONLY : XRTKEMS
 USE MODD_ARGSLIST_ll, ONLY : LIST_ll
+USE MODD_BLOWSNOW,    ONLY : LBLOWSNOW
 USE MODD_BUDGET,      ONLY: NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RI, NBUDGET_SV1, &
                             TBUDGETS, xtime_bu_process, TBUCONF
 USE MODD_CH_AEROSOL
@@ -1488,6 +1489,7 @@ END IF
    CALL TURB( CST,CSTURB, TBUCONF,&
               1, IKU, 1, IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,        &
               NSV, NSV_LGBEG, NSV_LGEND,CPROGRAM, L2D, LNOMIXLG,LFLAT,               &
+              LLES_CALL, LCOUPLES, LBLOWSNOW,                                        &
               LTURB_FLX, LTURB_DIAG, LSUBG_COND, LRMC01, LOCEAN, .FALSE.,            &
               CTURBDIM, CTURBLEN, CTOM, CTURBLEN_CLOUD, CCLOUD,XIMPL,                &
               XTSTEP, TPFILE,                                                        &

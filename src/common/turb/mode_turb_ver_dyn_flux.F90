@@ -6,7 +6,7 @@ MODULE MODE_TURB_VER_DYN_FLUX
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE TURB_VER_DYN_FLUX(CST,CSTURB,KKA,KKU,KKL,KSV,O2D,OFLAT,  &
-                      OTURB_FLX,KRR, OOCEAN,OHARAT,                 &
+                      OTURB_FLX,KRR, OOCEAN,OHARAT,OCOUPLES,OLES_CALL,&
                       HTURBDIM,PIMPL,PEXPL,                         &
                       PTSTEP,                                       &
                       TPFILE,                                       &
@@ -213,7 +213,6 @@ USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_LES
 USE MODD_OCEANH
 USE MODD_PARAMETERS
-USE MODD_REF, ONLY : LCOUPLES
 USE MODD_TURB_n
 !
 !
@@ -248,6 +247,8 @@ LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model v
 LOGICAL,                INTENT(IN)   ::  OHARAT
 LOGICAL,                INTENT(IN)   ::  O2D          ! Logical for 2D model version (modd_conf)
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
+LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
+LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
@@ -407,7 +408,7 @@ ZCOEFS(:,:,1:1)=MXM(ZCOEFS(:,:,1:1) / PDZZ(:,:,IKB:IKB) )
 ! ZSOURCE= FLUX /DZ
 IF (OOCEAN) THEN  ! OCEAN MODEL ONLY
   ! Sfx flux assumed to be in SI & at vorticity point
-  IF (LCOUPLES) THEN  
+  IF (OCOUPLES) THEN  
     ZSOURCE(:,:,IKE:IKE) = XSSUFL_C(:,:,1:1)/PDZZ(:,:,IKE:IKE) &
          *0.5 * ( 1. + MXM(PRHODJ(:,:,KKU:KKU)) / MXM(PRHODJ(:,:,IKE:IKE))) 
   ELSE
@@ -420,7 +421,7 @@ IF (OOCEAN) THEN  ! OCEAN MODEL ONLY
    ZSOURCE(:,:,IKTB+1:IKTE-1) = 0
 !
 ELSE             !ATMOS MODEL ONLY
-  IF (LCOUPLES) THEN 
+  IF (OCOUPLES) THEN 
    ZSOURCE(:,:,IKB:IKB) = XSSUFL_C(:,:,1:1)/PDZZ(:,:,IKB:IKB) &
       * 0.5 * ( 1. + MXM(PRHODJ(:,:,KKA:KKA)) / MXM(PRHODJ(:,:,IKB:IKB)) )
   ELSE               
@@ -518,7 +519,7 @@ END IF
 !
 ! Storage in the LES configuration
 ! 
-IF (LLES_CALL) THEN
+IF (OLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
   CALL LES_MEAN_SUBGRID(MZF(MXF(ZFLXZ), KKA, KKU, KKL), X_LES_SUBGRID_WU ) 
   CALL LES_MEAN_SUBGRID(MZF(MXF(GZ_U_UW(PUM,PDZZ, KKA, KKU, KKL) &
@@ -587,7 +588,7 @@ END IF
   !
   ! Storage in the LES configuration
   ! 
-  IF (LLES_CALL) THEN
+  IF (OLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
     CALL LES_MEAN_SUBGRID(MZF(MXF(GX_W_UW(PWM,PDXX,&
       PDZZ,PDZX, KKA, KKU, KKL)*ZFLXZ), KKA, KKU, KKL), X_LES_RES_ddxa_W_SBG_UaW )
@@ -637,7 +638,7 @@ ZCOEFS(:,:,1)=  ZCOEFFLXU(:,:,1) * PSINSLOPE(:,:) * PDIRCOSZW(:,:)  &
 ZCOEFS(:,:,1:1)=MYM(ZCOEFS(:,:,1:1) / PDZZ(:,:,IKB:IKB) )
 !
 IF (OOCEAN) THEN ! Ocean case
-  IF (LCOUPLES) THEN
+  IF (OCOUPLES) THEN
     ZSOURCE(:,:,IKE:IKE) =  XSSVFL_C(:,:,1:1)/PDZZ(:,:,IKE:IKE) &
         *0.5 * ( 1. + MYM(PRHODJ(:,:,KKU:KKU)) / MYM(PRHODJ(:,:,IKE:IKE)) ) 
   ELSE 
@@ -648,7 +649,7 @@ IF (OOCEAN) THEN ! Ocean case
   !No flux at the ocean domain bottom
   ZSOURCE(:,:,IKB) = 0.
 ELSE ! Atmos case
-  IF (.NOT.LCOUPLES) THEN !  only atmosp without coupling
+  IF (.NOT.OCOUPLES) THEN !  only atmosp without coupling
   ! compute the explicit tangential flux at the W point
     ZSOURCE(:,:,IKB)       =                                                  &
       PTAU11M(:,:) * PSINSLOPE(:,:) * PDIRCOSZW(:,:) * ZDIRSINZW(:,:)         &
@@ -749,7 +750,7 @@ PDP(:,:,:)=PDP(:,:,:)+ZA(:,:,:)
 !
 ! Storage in the LES configuration
 !
-IF (LLES_CALL) THEN
+IF (OLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
   CALL LES_MEAN_SUBGRID(MZF(MYF(ZFLXZ), KKA, KKU, KKL), X_LES_SUBGRID_WV ) 
   CALL LES_MEAN_SUBGRID(MZF(MYF(GZ_V_VW(PVM,PDZZ, KKA, KKU, KKL)*&
@@ -817,7 +818,7 @@ IF(HTURBDIM=='3DIM') THEN
   !
   ! Storage in the LES configuration
   !
-  IF (LLES_CALL) THEN
+  IF (OLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
     CALL LES_MEAN_SUBGRID(MZF(MYF(GY_W_VW(PWM,PDYY,&
                          &PDZZ,PDZY, KKA, KKU, KKL)*ZFLXZ), KKA, KKU, KKL), &

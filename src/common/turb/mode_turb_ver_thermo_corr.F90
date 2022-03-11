@@ -6,9 +6,9 @@ MODULE MODE_TURB_VER_THERMO_CORR
 IMPLICIT NONE
 CONTAINS      
 SUBROUTINE TURB_VER_THERMO_CORR(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,    &
-                      OTURB_FLX,HTURBDIM,HTOM,OHARAT,                &
-                      PIMPL,PEXPL,                                  &
-                      TPFILE,                                       &
+                      OTURB_FLX,HTURBDIM,HTOM,OHARAT,               &
+                      OCOUPLES,OLES_CALL,                           &
+                      PIMPL,PEXPL,TPFILE,                           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,           &
                       PRHODJ,PTHVREF,                               &
                       PSFTHM,PSFRM,PSFTHP,PSFRP,                    &
@@ -244,6 +244,8 @@ CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
 CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
 LOGICAL,                INTENT(IN)   ::  OHARAT
+LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
+LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
@@ -527,7 +529,7 @@ ENDIF
 !
 ! and we store in LES configuration
 !
-  IF (LLES_CALL) THEN
+  IF (OLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
     CALL LES_MEAN_SUBGRID(ZFLXZ, X_LES_SUBGRID_Thl2 ) 
     CALL LES_MEAN_SUBGRID(MZF(PWM, KKA, KKU, KKL)*ZFLXZ, X_LES_RES_W_SBG_Thl2 )
@@ -694,7 +696,7 @@ ENDIF
 !
 ! and we store in LES configuration
 !
-IF (LLES_CALL) THEN
+IF (OLES_CALL) THEN
       CALL SECOND_MNH(ZTIME1)
       CALL LES_MEAN_SUBGRID(ZFLXZ, X_LES_SUBGRID_THlRt ) 
       CALL LES_MEAN_SUBGRID(MZF(PWM, KKA, KKU, KKL)*ZFLXZ, X_LES_RES_W_SBG_ThlRt )
@@ -827,7 +829,7 @@ ENDIF
     !
     ! and we store in LES configuration
     !
-    IF (LLES_CALL) THEN
+    IF (OLES_CALL) THEN
       CALL SECOND_MNH(ZTIME1)
       CALL LES_MEAN_SUBGRID(ZFLXZ, X_LES_SUBGRID_Rt2 ) 
       CALL LES_MEAN_SUBGRID(MZF(PWM, KKA, KKU, KKL)*ZFLXZ, X_LES_RES_W_SBG_Rt2 )

@@ -7,6 +7,7 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE TURB_VER_SV_CORR(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,OOCEAN,&
                       PDZZ,KSV,KSV_LGBEG,KSV_LGEND,ONOMIXLG,        &
+                      OBLOWSNOW,OLES_CALL,                          &
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PPHI3,PPSI3,  &
                       PWM,PSVM,                                     &
@@ -59,7 +60,7 @@ USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_PARAMETERS
 USE MODD_LES
-USE MODD_BLOWSNOW
+USE MODD_BLOWSNOW, ONLY: XRSNOW
 !
 !
 USE MODI_GRADIENT_U
@@ -86,6 +87,8 @@ INTEGER,                 INTENT(IN)  :: KKL     ! +1 if grid goes from ground to
 INTEGER,                INTENT(IN)   :: KSV, KSV_LGBEG, KSV_LGEND ! number of scalar variables
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for lagrangian variables (modd_conf)
+LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
+LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   ::  KRRL         ! number of liquid var.
 INTEGER,                INTENT(IN)   ::  KRRI         ! number of ice var.
@@ -133,7 +136,7 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_CORR',0,ZHOOK_HANDLE)
 CALL SECOND_MNH(ZTIME1)
 !
-IF(LBLOWSNOW) THEN
+IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables          
    ZCSV= CSTURB%XCHF/XRSNOW
 ELSE
@@ -146,7 +149,7 @@ DO JSV=1,KSV
   !
   ! variance Sv2
   !
-  IF (LLES_CALL) THEN
+  IF (OLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
     ZFLXZ(:,:,:) =  PPSI_SV(:,:,:,JSV)*GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)**2
     ZFLXZ(:,:,:) = ZCSV / ZCSVD * PLM * PLEPS * MZF(ZFLXZ(:,:,:), KKA, KKU, KKL)
@@ -156,7 +159,7 @@ DO JSV=1,KSV
   !
   ! covariance ThvSv
   !
-  IF (LLES_CALL) THEN
+  IF (OLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
     ZA(:,:,:)   =  ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN)
     ZFLXZ(:,:,:)= ( CSTURB%XCSHF * PPHI3 + ZCSV * PPSI_SV(:,:,:,JSV) )              &
@@ -180,7 +183,7 @@ DO JSV=1,KSV
 END DO   ! end of scalar loop 
 !
 CALL SECOND_MNH(ZTIME2)
-XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+IF(OLES_CALL) XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 !----------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_CORR',1,ZHOOK_HANDLE)

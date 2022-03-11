@@ -10,7 +10,7 @@ CONTAINS
                     & PTRH,PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,        &
                     & PTSTEP,PIMPL,PEXPL,                              &
                     & HTURBLEN,HTURBDIM,                               &
-                    & TPFILE,OTURB_DIAG,                               &
+                    & TPFILE,OTURB_DIAG,OLES_CALL,                     &
                     & PTP,PRTKES,PRTHLS,PCOEF_DISS,PTDIFF,PTDISS,PRTKEMS,&
                     & TBUDGETS, KBUDGETS, &
                     & PEDR, PTR,PDISS                                  )
@@ -182,6 +182,7 @@ CHARACTER(LEN=4),        INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
 CHARACTER(LEN=4),        INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
 CHARACTER(LEN=6),        INTENT(IN)   ::  HPROGRAM     ! CPROGRAM is the program currently running (modd_conf)
 TYPE(TFILEDATA),         INTENT(IN)   ::  TPFILE       ! Output file
+LOGICAL,                 INTENT(IN)   ::  OLES_CALL    !
 LOGICAL,                 INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
                                   ! diagnostic fields in the syncronous FM-file
 REAL, DIMENSION(:,:,:),  INTENT(INOUT)::  PDP          ! Dyn. prod. of TKE
@@ -311,7 +312,7 @@ IF(HPROGRAM/='MESONH') THEN
 END IF
 PTDISS(:,:,:) = - ZFLX(:,:,:)*(PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:))
 !
-IF ( LLES_CALL .OR.                         &
+IF ( OLES_CALL .OR.                         &
      (OTURB_DIAG .AND. TPFILE%LOPENED)  ) THEN
 !
 ! Compute the cartesian vertical flux of TKE in ZFLX
@@ -329,7 +330,7 @@ IF ( LLES_CALL .OR.                         &
 !
 ! Storage in the LES configuration
 !
-  IF (LLES_CALL) THEN
+  IF (OLES_CALL) THEN
     CALL LES_MEAN_SUBGRID(MZF(ZFLX, KKA, KKU, KKL), X_LES_SUBGRID_WTke )
     CALL LES_MEAN_SUBGRID(-ZTR, X_LES_SUBGRID_ddz_WTke )
   END IF
@@ -446,7 +447,7 @@ END IF
 ! Storage in the LES configuration of the Dynamic Production of TKE and
 ! the dissipation of TKE 
 ! 
-IF (LLES_CALL ) THEN
+IF (OLES_CALL ) THEN
   CALL LES_MEAN_SUBGRID( PDISS, X_LES_SUBGRID_DISS_Tke )
 END IF
 !

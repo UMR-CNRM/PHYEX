@@ -8,6 +8,7 @@ CONTAINS
       
 SUBROUTINE TURB_VER_THERMO_FLUX(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,    &
                       OTURB_FLX,HTURBDIM,HTOM,OOCEAN,OHARAT,        &
+                      OCOUPLES,OLES_CALL,                           &
                       PIMPL,PEXPL,PTSTEP,HPROGRAM,                  &
                       TPFILE,                                       &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
@@ -237,7 +238,6 @@ USE MODD_TURB_n,         ONLY: LHGRAD, XCOEFHGRADTHL, XCOEFHGRADRM, XALTHGRAD, X
 USE MODD_LES
 USE MODD_DIM_n
 USE MODD_OCEANH
-USE MODD_REF,            ONLY: LCOUPLES
 USE MODD_TURB_n
 USE MODD_FRC
 !
@@ -283,6 +283,8 @@ CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Mome
 REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
+LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
+LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDZZ, PDXX, PDYY, PDZX, PDZY
                                                       ! Metric coefficients
@@ -569,7 +571,7 @@ IF (GFTHR) THEN
     & PREDR1,PD,PBLL_O_E,PETHETA) * MZM(PFTHR, KKA, KKU, KKL)
 END IF
 ! compute interface flux
-IF (LCOUPLES) THEN   ! Autocoupling O-A LES
+IF (OCOUPLES) THEN   ! Autocoupling O-A LES
   IF (OOCEAN) THEN    ! ocean model in coupled case 
     ZF(:,:,IKE) =  (XSSTFL_C(:,:,1)+XSSRFL_C(:,:,1)) &
                   *0.5* ( 1. + PRHODJ(:,:,KKU)/PRHODJ(:,:,IKE) )
@@ -714,7 +716,7 @@ END IF
 !
 !*       2.4  Storage in LES configuration
 ! 
-IF (LLES_CALL) THEN
+IF (OLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
   CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WThl ) 
   CALL LES_MEAN_SUBGRID(MZF(PWM*ZFLXZ, KKA, KKU, KKL), X_LES_RES_W_SBG_WThl )
@@ -821,7 +823,7 @@ IF (KRR /= 0) THEN
   END IF
   !
   ! compute interface flux
-  IF (LCOUPLES) THEN   ! coupling NH O-A
+  IF (OCOUPLES) THEN   ! coupling NH O-A
     IF (OOCEAN) THEN    ! ocean model in coupled case
       ! evap effect on salinity to be added later !!!
       ZF(:,:,IKE) =  0.
@@ -956,7 +958,7 @@ END IF
 !
 !*       3.4  Storage in LES configuration
 ! 
-  IF (LLES_CALL) THEN
+  IF (OLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
     CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WRt ) 
     CALL LES_MEAN_SUBGRID(MZF(PWM*ZFLXZ, KKA, KKU, KKL), X_LES_RES_W_SBG_WRt )
@@ -981,7 +983,7 @@ END IF
 !
 !*       4.1  <w Rc>    
 !
-IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
+IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL) .AND. (KRRL > 0) ) THEN
 !  
 ! recover the Conservative potential temperature flux : 
 ! With OHARAT is true tke and length scales at half levels
@@ -1018,7 +1020,7 @@ IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
   !  
 ! and we store in LES configuration this subgrid flux <w'rc'>
 !
-  IF (LLES_CALL) THEN
+  IF (OLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
     CALL LES_MEAN_SUBGRID( MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WRc ) 
     CALL SECOND_MNH(ZTIME2)

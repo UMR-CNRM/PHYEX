@@ -7,7 +7,7 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE TURB_VER_SV_FLUX(CST,CSTURB,KKA,KKU,KKL,ONOMIXLG,        &
                       KSV_LGBEG,KSV_LGEND,                          &
-                      OTURB_FLX,HTURBDIM,OHARAT,                    &
+                      OTURB_FLX,HTURBDIM,OHARAT,OBLOWSNOW,OLES_CALL,&
                       PIMPL,PEXPL,                                  &
                       PTSTEP,                                       &
                       TPFILE,                                       &
@@ -217,7 +217,7 @@ USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_LES
-USE MODD_BLOWSNOW
+USE MODD_BLOWSNOW, ONLY: XRSNOW
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 !
 USE MODI_GRADIENT_U
@@ -249,6 +249,8 @@ LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for la
 CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
 LOGICAL,                INTENT(IN)   ::  OHARAT
+LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
+LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
@@ -329,7 +331,7 @@ ELSE
   ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), KKA, KKU, KKL)
 ENDIF
 !
-IF(LBLOWSNOW) THEN
+IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables           
    ZCSV= CSTURB%XCHF/XRSNOW
 ELSE
@@ -382,7 +384,7 @@ DO JSV=1,ISV
   PRSVS(:,:,:,JSV)= PRSVS(:,:,:,JSV)+    &
                     PRHODJ(:,:,:)*(ZRES(:,:,:)-PSVM(:,:,:,JSV))/PTSTEP
 !
-  IF ( (OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL ) THEN
+  IF ( (OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
     ZFLXZ(:,:,:) = -ZCSV * PPSI_SV(:,:,:,JSV) * MZM(PLM*SQRT(PTKEM), KKA, KKU, KKL) / PDZZ * &
@@ -428,7 +430,7 @@ DO JSV=1,ISV
   !
   ! Storage in the LES configuration
   !
-  IF (LLES_CALL) THEN
+  IF (OLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
     CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WSv(:,:,:,JSV) )
     CALL LES_MEAN_SUBGRID(GZ_W_M(PWM,PDZZ, KKA, KKU, KKL)*MZF(ZFLXZ, KKA, KKU, KKL), &

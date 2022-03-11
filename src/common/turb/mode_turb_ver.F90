@@ -10,6 +10,7 @@ SUBROUTINE TURB_VER(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,           &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
                       HTURBDIM,HTOM,PIMPL,PEXPL,                    &
                       HPROGRAM, O2D, ONOMIXLG, OFLAT,               &
+                      OLES_CALL,OCOUPLES,OBLOWSNOW,                 &                      
                       PTSTEP, TPFILE,                               &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
@@ -147,7 +148,6 @@ SUBROUTINE TURB_VER(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,           &
 !!      Module MODD_PARAMETERS
 !!
 !!           JPVEXT_TURB     : number of vertical external points
-!!           JPHEXT     : number of horizontal external points
 !!
 !!
 !!    REFERENCE
@@ -255,9 +255,16 @@ LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  OHARAT       ! 
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
+LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
+LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
+LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
+LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
+CHARACTER(LEN=6),       INTENT(IN)   ::  HPROGRAM     ! HPROGRAM is the program currently running
+LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for lagrangian variables
+LOGICAL,                INTENT(IN)   ::  O2D          ! Logical for 2D model version
+CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
-CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
+CHARACTER(LEN=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
 REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
@@ -334,10 +341,6 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWTH      ! heat flux
 REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWRC      ! cloud water flux
 REAL, DIMENSION(:,:,:,:),INTENT(OUT) :: PWSV       ! scalar flux
 !
-CHARACTER(LEN=6), INTENT(IN) :: HPROGRAM ! CPROGRAM is the program currently running (modd_conf)
-LOGICAL, INTENT(IN) :: ONOMIXLG          ! to use turbulence for lagrangian variables (modd_conf)
-LOGICAL, INTENT(IN) :: O2D               ! Logical for 2D model version (modd_conf)
-LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 !
 !*       0.2  declaration of local variables
 !
@@ -476,7 +479,7 @@ ZPSI_SV = PSI_SV(CSTURB,ZREDTH1,ZREDR1,ZREDS1,ZRED2THS,ZRED2RS,ZPHI3,ZPSI3)
 !
 ! LES diagnostics
 !
-IF (LLES_CALL) THEN
+IF (OLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
   CALL LES_MEAN_SUBGRID(ZPHI3,X_LES_SUBGRID_PHI3)
   IF(KRR/=0) THEN
@@ -508,8 +511,8 @@ ENDIF
 !
   CALL  TURB_VER_THERMO_FLUX(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,    &
                         OTURB_FLX,HTURBDIM,HTOM,OOCEAN,OHARAT,        &
-                        PIMPL,PEXPL,PTSTEP,HPROGRAM,                  &
-                        TPFILE,                                       &
+                        OCOUPLES,OLES_CALL,                           &
+                        PIMPL,PEXPL,PTSTEP,HPROGRAM,TPFILE,           &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                         PRHODJ,PTHVREF,                               &
                         PSFTHM,PSFRM,PSFTHP,PSFRP,                    &
@@ -525,8 +528,8 @@ ENDIF
 !
   CALL  TURB_VER_THERMO_CORR(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,    &
                         OTURB_FLX,HTURBDIM,HTOM, OHARAT,              &
-                        PIMPL,PEXPL,                                  &
-                        TPFILE,                                       &
+                        OCOUPLES,OLES_CALL,                           &                        
+                        PIMPL,PEXPL,TPFILE,                           &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,           &
                         PRHODJ,PTHVREF,                               &
                         PSFTHM,PSFRM,PSFTHP,PSFRP,                    &
@@ -556,9 +559,8 @@ ENDIF
 IF (OHARAT) ZLM=PLENGTHM
 !
 CALL  TURB_VER_DYN_FLUX(CST,CSTURB,KKA,KKU,KKL,KSV,O2D,OFLAT,       &
-                      OTURB_FLX,KRR, OOCEAN, OHARAT,                &
-                      HTURBDIM,PIMPL,PEXPL,PTSTEP,                  &
-                      TPFILE,                                       &
+                      OTURB_FLX,KRR,OOCEAN,OHARAT,OCOUPLES,OLES_CALL,&
+                      HTURBDIM,PIMPL,PEXPL,PTSTEP,TPFILE,           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
                       PRHODJ,                                       &
@@ -579,7 +581,7 @@ IF (OHARAT) ZLM=PLENGTHH
 IF (SIZE(PSVM,4)>0)                                                 &
 CALL  TURB_VER_SV_FLUX(CST,CSTURB,KKA,KKU,KKL,ONOMIXLG,             &
                       KSV_LGBEG,KSV_LGEND,                          &
-                      OTURB_FLX,HTURBDIM,OHARAT,                    &
+                      OTURB_FLX,HTURBDIM,OHARAT,OBLOWSNOW,OLES_CALL,&
                       PIMPL,PEXPL,PTSTEP,                           &
                       TPFILE,                                       &
                       PDZZ,PDIRCOSZW,                               &
@@ -590,9 +592,10 @@ CALL  TURB_VER_SV_FLUX(CST,CSTURB,KKA,KKU,KKL,ONOMIXLG,             &
                       PRSVS,PWSV                                    )
 !
 !
-IF (SIZE(PSVM,4)>0 .AND. LLES_CALL)                                 &
+IF (SIZE(PSVM,4)>0 .AND. OLES_CALL)                                 &
 CALL  TURB_VER_SV_CORR(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,OOCEAN, &
                       PDZZ,KSV,KSV_LGBEG,KSV_LGEND,ONOMIXLG,        &
+                      OBLOWSNOW,OLES_CALL,                          &
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,ZPHI3,ZPSI3,  &
                       PWM,PSVM,                                     &
