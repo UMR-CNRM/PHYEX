@@ -1423,16 +1423,21 @@ IF(BUCONF%LBU_ENABLE) THEN
     IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RR), 'WETH', -ZW2(:, :, :)                 *PRHODJ(:, :, :))
     IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RI), 'WETH', -ZW3(:, :, :)                 *PRHODJ(:, :, :))
     IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RS), 'WETH', -ZW4(:, :, :)                 *PRHODJ(:, :, :))
+#ifdef REPRO48
+#else
     IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RG), 'WETH', -ZW5(:, :, :)                 *PRHODJ(:, :, :))
+#endif
     IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RH), 'WETH', (ZW1(:, :, :)+ZW2(:, :, :)+ZW3(:, :, :)+ &
                                                                         &ZW4(:, :, :)+ZW5(:, :, : ))  *PRHODJ(:, :, :))
 
+#if defined(REPRO48) || defined(REPRO55)
     ZW(:,:,:) = 0.
     DO JL=1, KSIZE
       ZW(I1TOT(JL), I2TOT(JL), I3TOT(JL)) = ZTOT_RGWETH(JL) * ZINV_TSTEP
     END DO
-    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RG), 'HGCV', -ZW(:, :, :)*PRHODJ(:, :, :))
+    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RG), 'HGCV', (-ZW5(:, :, :)-ZW(:, :, :))*PRHODJ(:, :, :))
     IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RH), 'HGCV',  ZW(:, :, :)*PRHODJ(:, :, :))
+#endif
 
     ZW1(:,:,:) = 0.
     DO JL=1, KSIZE
@@ -1455,9 +1460,12 @@ IF(BUCONF%LBU_ENABLE) THEN
       ZW5(I1TOT(JL), I2TOT(JL), I3TOT(JL)) = ZTOT_RGDRYH(JL) * ZINV_TSTEP
     END DO
     ZW6(:,:,:) = 0.
+#if defined(REPRO48) || defined(REPRO55)
+    !ZW6 must be removed when REPRO48 will be suppressed
     DO JL=1, KSIZE
       ZW6(I1TOT(JL), I2TOT(JL), I3TOT(JL)) = ZTOT_RDRYHG(JL) * ZINV_TSTEP
     END DO
+#endif
     IF (BUCONF%LBUDGET_TH) &
       CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_TH), 'DRYH', (ZW1(:, :, :)+ZW2(:, :, :))*ZZ_DIFF(:, :, :)*PRHODJ(:, :, :))
     IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RC), 'DRYH', -ZW1(:, :, :)                 *PRHODJ(:, :, :))
@@ -1468,6 +1476,17 @@ IF(BUCONF%LBU_ENABLE) THEN
     IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RH), 'DRYH', (ZW1(:, :, :)+ZW2(:, :, :)+ZW3(:, :, :)+   &
                                                                         &ZW4(:, :, :)+ZW5(:, :, : )-ZW6(:, :, :)) &
                                                                         &                             *PRHODJ(:, :, :))
+
+#if defined(REPRO48) || defined(REPRO55)
+#else
+    !When REPRO48 will be suppressed, ZW6 must be removed
+    ZW(:,:,:) = 0.
+    DO JL=1, KSIZE
+      ZW(I1TOT(JL), I2TOT(JL), I3TOT(JL)) = ZTOT_RDRYHG(JL) * ZINV_TSTEP
+    END DO
+    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RG), 'HGCV', -ZW(:, :, :)*PRHODJ(:, :, :))
+    IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RH), 'HGCV',  ZW(:, :, :)*PRHODJ(:, :, :))
+#endif
 
     ZW(:,:,:) = 0.
     DO JL=1, KSIZE
