@@ -448,7 +448,11 @@ ENDIF
 DO JL=1, KSIZE
   ZDRYH(JL) = ZHAIL(JL) * &
             & MAX(0., -SIGN(1., PT(JL)-XTT)) * & ! WHERE(PT(:)<XTT)
+#ifdef REPRO48
+            & MAX(0., -SIGN(1., -ZRDRYH_INIT(JL))) * & !WHERE(ZRDRYH_INIT(:)>0.)
+#else
             & MAX(0., -SIGN(1., 1.E-20-ZRDRYH_INIT(JL))) * & !WHERE(ZRDRYH_INIT(:)>0.)
+#endif
             & MAX(0., -SIGN(1., MAX(0., ZRDRYH_INIT(JL)-PRH_TEND(JL, IRIDRYH)-PRH_TEND(JL, IRSDRYH)) - &
                                &MAX(0., ZRWETH_INIT(JL)-PRH_TEND(JL, IRIWETH)-PRH_TEND(JL, IRSWETH))))
 ENDDO
