@@ -488,7 +488,7 @@ END IF
 !*       7.     COMPUTES SPECIFIC SOURCES OF THE WARM AND COLD CLOUDY SPECIES
 !               -------------------------------------------------------------
 !
-CALL ICE4_FAST_RI(ICEP, ICED, KSIZE, ODSOFT, PCOMPUTE, &
+CALL ICE4_FAST_RI(ICEP, ICED, KPROMA, KSIZE, ODSOFT, LLCOMPUTE, &
                  &PRHODREF, PLVFACT, PLSFACT, &
                  &ZAI, ZCJ, PCIT, &
                  &PSSI, &
