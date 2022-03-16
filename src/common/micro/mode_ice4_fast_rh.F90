@@ -5,7 +5,7 @@
 MODULE MODE_ICE4_FAST_RH
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_FAST_RH(CST, PARAMI, ICEP, ICED, KPROMA,KSIZE, LDSOFT, PCOMPUTE, PWETG, &
+SUBROUTINE ICE4_FAST_RH(CST, PARAMI, ICEP, ICED, KPROMA,KSIZE, LDSOFT, PCOMPUTE, LDWETG, &
                        &PRHODREF, PLVFACT, PLSFACT, PPRES, &
                        &PDV, PKA, PCJ, &
                        &PLBDAS, PLBDAG, PLBDAR, PLBDAH, &
@@ -52,7 +52,7 @@ TYPE(RAIN_ICE_DESCR_t),       INTENT(IN)    :: ICED
 INTEGER,                      INTENT(IN)    :: KPROMA,KSIZE
 LOGICAL,                      INTENT(IN)    :: LDSOFT
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PCOMPUTE
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PWETG    ! 1. where graupel grows in wet mode, 0. elsewhere
+LOGICAL, DIMENSION(KSIZE),    INTENT(IN)    :: LDWETG    ! .TRUE. where graupel grows in wet mode
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRHODREF ! Reference density
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLVFACT
 REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLSFACT
@@ -291,7 +291,7 @@ ELSE
       PRH_TEND(1:KSIZE, IRGDRYH)=PRH_TEND(1:KSIZE, IRGWETH)
     END WHERE
     !When graupel grows in wet mode, graupel is wet (!) and collection efficiency must remain the same
-    WHERE(GWET(1:KSIZE) .AND. .NOT. PWETG(1:KSIZE)==1.)
+    WHERE(GWET(1:KSIZE) .AND. .NOT. LDWETG(1:KSIZE))
       PRH_TEND(1:KSIZE, IRGDRYH)=PRH_TEND(1:KSIZE, IRGDRYH)*(ICEP%XCOLGH*EXP(ICEP%XCOLEXGH*(PT(1:KSIZE)-CST%XTT)))
     END WHERE
   END IF

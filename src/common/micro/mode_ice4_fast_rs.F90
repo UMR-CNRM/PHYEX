@@ -179,7 +179,7 @@ IF(.NOT. LDSOFT) THEN
     !
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE (GRIM(1:KSIZE))
-      PRS_TEND(1:KSIZE, IRCRIMSS) = ICEP%XCRIMSS * ZZW(1:KSIZE) * PRCT(1:KSIZE)                & ! RCRIMSS
+      PRS_TEND(1:KSIZE, IRCRIMSS) = ICEP%XCRIMSS * ZZW(1:KSIZE) * PRCT(1:KSIZE) & ! RCRIMSS
                                       *   PLBDAS(1:KSIZE)**ICEP%XEXCRIMSS &
                                       * PRHODREF(1:KSIZE)**(-ICED%XCEXVT)
     END WHERE
