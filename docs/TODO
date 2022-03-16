@@ -11,35 +11,35 @@ Dependencies:
   - pour AROME placés, en attendant, dans phyex/externals
 
 Clé de compilation REPRO48 ajoutée pour permettre de reproduire le cycle 48, elle:
-- contourne des corrections de bug
-- modifie l'organisation de calculs
-- reproduit les résultats obtenus avant l'introduction de la fraction précipitante froide dans l'ajustement
-Cette clé devra être supprimée
+  - contourne des corrections de bug
+  - modifie l'organisation de calculs
+  - reproduit les résultats obtenus avant l'introduction de la fraction précipitante froide dans l'ajustement
+Clé de compilation REPRO55 joue le même rôle mais pour reproduire MNH-5.5
+Utilisation des clés:
+  - REPRO48 seule: la version de code qui sera retenue à la fin est celle de Méso-NH 5.5
+  - REPRO55 seule: la version de code qui sera retenue à la fin est celle du cycle 48 d'AROME
+  - defined(REPRO48) || defined(REPRO55): la version de code qui sera retenue à la fin est nouvelle
+Ces deux clés devront être supprimées
 
 Merge pb:
-- shallow_mf (appels dans aro_shallow et arp_shallow):
-       Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
-       Dans AROME/ARP: où trouver la taille de maille?
-       Pour l'instant 2 versions à cause de l'interface à compute_uprfat_rhcj10
-- compute_updraft_rhcj10: en attente retour de Rachel et/ou Yves pour faire le merge
-
-Etape 2: array syntax -> loop
-- regarder si pcompute et llcompute sont toujours tous deux nécessaires dans les mode_ice4* avec le passage en do
-- si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
-- transformer sedimentation_split_momentum comme sedimentation_split
-- une distinction KSIZE/KPROMA est à faire dans la microphysique. Pour une meilleure compréhension du code, il faut partir
-  du principe de déclarer tous les tableaux en KPROMA et de les utiliser que jusqu'à KSIZE
+  - shallow_mf (appels dans aro_shallow et arp_shallow):
+         Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
+         Dans AROME/ARP: où trouver la taille de maille?
+         Pour l'instant 2 versions à cause de l'interface à compute_uprfat_rhcj10
+  - compute_updraft_rhcj10: en attente retour de Rachel et/ou Yves pour faire le merge
 
 Pb identifiés à corriger plus tard:
-- deposition devrait être déplacée dans ice4_tendencies
-- avec les optimisations de Ryad, les tableaux 3D de precip passés à ice4_tendencies
-  lorsque HSUBG_RC_RR_ACCR=='PRFR' ne sont  pas utilisables puisque les K1, K2 et K3
-  sont relatifs à la boucle IMICRO et que les calculs faits en debut de routine ne
-  concernent qu'une partie des points
-       => à corriger
-- seules les options oper ont été testées, il manque des test pour sedim_after, nmaxiter, xmrstep, xtstep, autoconv, rainfr
-- arome/ini_cmfshall devrait s'appeler ini_param_mfshall
-- th_r_from_thl_rt appelée partout, il faudrait limiter à OTEST
+  - deposition devrait être déplacée dans ice4_tendencies
+  - avec les optimisations de Ryad, les tableaux 3D de precip passés à ice4_tendencies
+    lorsque HSUBG_RC_RR_ACCR=='PRFR' ne sont  pas utilisables puisque les K1, K2 et K3
+    sont relatifs à la boucle IMICRO et que les calculs faits en debut de routine ne
+    concernent qu'une partie des points
+         => à corriger
+  - seules les options oper ont été testées, il manque des test pour sedim_after, nmaxiter, xmrstep, xtstep, autoconv, rainfr
+  - arome/ini_cmfshall devrait s'appeler ini_param_mfshall
+  - th_r_from_thl_rt appelée partout, il faudrait limiter à OTEST
+  - modifier ice4_sedimentation_split* dans le même esprit que stat
+  - transformer sedimentation_split_momentum comme sedimentation_split et le brancher
 
 Répertoire arome/ext contient les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
 Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayadevront avoir été fournies par ailleurs

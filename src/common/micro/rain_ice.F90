@@ -351,7 +351,6 @@ REAL, DIMENSION(KPROMA) :: ZTIME ! Current integration time (starts with 0 and e
 REAL, DIMENSION(KPROMA) :: &
                         & ZMAXTIME, & ! Time on which we can apply the current tendencies
                         & ZTIME_LASTCALL, &     ! Integration time when last tendecies call has been done
-                        & ZCOMPUTE, & ! 1. for points where we must compute tendencies, 0. elsewhere
                         & ZSSI,     &
                         & ZCIT,     & ! Pristine ice conc. at t
                         & ZRHODREF, & ! RHO Dry REFerence
@@ -372,6 +371,7 @@ REAL, DIMENSION(KPROMA) :: &
                         & ZHLI_LCF, &
                         & ZHLI_HRI, &
                         & ZHLI_LRI
+LOGICAL, DIMENSION(KPROMA) :: LLCOMPUTE ! .TRUE. or points where we must compute tendencies,
 !
 !Output packed tendencies (for budgets only)
 REAL, DIMENSION(KPROMA) :: ZRVHENI_MR, & ! heterogeneous nucleation mixing ratio change
@@ -838,17 +838,17 @@ IF (KSIZE > 0) THEN
       ENDIF
       DO JL=1, IMICRO
         IF (ZTIME(JL) < PTSTEP) THEN
-          ZCOMPUTE(JL)=1. ! Computation (1.) only for points for which integration time has not reached the timestep
+          LLCOMPUTE(JL)=.TRUE. ! Computation (.TRUE.) only for points for which integration time has not reached the timestep
           IITER(JL)=IITER(JL)+1
         ELSE
-          ZCOMPUTE(JL)=0.
+          LLCOMPUTE(JL)=.FALSE.
         ENDIF
       ENDDO
       LL_ANY_ITER=ANY(IITER(1:IMICRO) < INB_ITER_MAX)
       LLCPZ0RT=.TRUE.
       LSOFT=.FALSE. ! We *really* compute the tendencies
 
-      DO WHILE(ANY(ZCOMPUTE(1:IMICRO)==1.)) ! Loop to adjust tendencies when we cross the 0°C or when a species disappears
+      DO WHILE(ANY(LLCOMPUTE(1:IMICRO))) ! Loop to adjust tendencies when we cross the 0°C or when a species disappears
 !$OMP SIMD
         DO JL=1, IMICRO
           ZSUM2(JL)=SUM(ZVART(JL,IRI:KRR))
@@ -865,7 +865,7 @@ IF (KSIZE > 0) THEN
         ! Tendencies are *really* computed when LSOFT==.FALSE. and only adjusted otherwise
     CALL ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &KPROMA, IMICRO, &
-                        &KRR, LSOFT, ZCOMPUTE, &
+                        &KRR, LSOFT, LLCOMPUTE, &
                         &OWARM, PARAMI%CSUBG_RC_RR_ACCR, PARAMI%CSUBG_RR_EVAP, &
                         &HSUBG_AUCV_RC, HSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF, &
                         &ZEXN, ZRHODREF, ZLVFACT, ZLSFACT, I1, I2, I3, &
@@ -899,7 +899,11 @@ IF (KSIZE > 0) THEN
         !
         ! If we can, we shall use these tendencies until the end of the timestep
         DO JL=1, IMICRO
-          ZMAXTIME(JL)=ZCOMPUTE(JL) * (PTSTEP-ZTIME(JL)) ! Remaining time until the end of the timestep
+          IF(LLCOMPUTE(JL)) THEN
+            ZMAXTIME(JL)=(PTSTEP-ZTIME(JL)) ! Remaining time until the end of the timestep
+          ELSE
+            ZMAXTIME(JL)=0.
+          ENDIF
         ENDDO
 
         !We need to adjust tendencies when temperature reaches 0
@@ -933,7 +937,7 @@ IF (KSIZE > 0) THEN
         !We stop when the end of the timestep is reached
         DO JL=1, IMICRO
           IF (ZTIME(JL)+ZMAXTIME(JL) >= PTSTEP) THEN
-            ZCOMPUTE(JL)=0.
+            LLCOMPUTE(JL)=.FALSE.
           ENDIF
         ENDDO
         !We must recompute tendencies when the end of the sub-timestep is reached
@@ -941,7 +945,7 @@ IF (KSIZE > 0) THEN
           DO JL=1, IMICRO
             IF ((IITER(JL) < INB_ITER_MAX) .AND. (ZTIME(JL)+ZMAXTIME(JL) > ZTIME_LASTCALL(JL)+ZTSTEP)) THEN
               ZMAXTIME(JL)=ZTIME_LASTCALL(JL)-ZTIME(JL)+ZTSTEP
-              ZCOMPUTE(JL)=0.
+              LLCOMPUTE(JL)=.FALSE.
             ENDIF
           ENDDO
         ENDIF
@@ -966,7 +970,7 @@ IF (KSIZE > 0) THEN
               DO JL=1, IMICRO
                 IF (ZTIME_THRESHOLD1D(JL)>=0 .AND. ZTIME_THRESHOLD1D(JL)<ZMAXTIME(JL) .AND. (ZVART(JL, JV)>ICED%XRTMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
                   ZMAXTIME(JL)=MIN(ZMAXTIME(JL), ZTIME_THRESHOLD1D(JL))
-                  ZCOMPUTE(JL)=0.
+                  LLCOMPUTE(JL)=.FALSE.
                 ENDIF
               ENDDO
             ENDDO
@@ -978,7 +982,7 @@ IF (KSIZE > 0) THEN
             DO JL=1, IMICRO
               IF (IITER(JL)<INB_ITER_MAX .AND. ZMAXB(JL)>PARAMI%XMRSTEP) THEN
                 ZMAXTIME(JL)=0.
-                ZCOMPUTE(JL)=0.
+                LLCOMPUTE(JL)=.FALSE.
               ENDIF
             ENDDO
           ENDIF ! LL_ANY_ITER

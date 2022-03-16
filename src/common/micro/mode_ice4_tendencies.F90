@@ -7,7 +7,7 @@ MODULE MODE_ICE4_TENDENCIES
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, KPROMA, KSIZE, &
-                          &KRR, ODSOFT, PCOMPUTE, &
+                          &KRR, ODSOFT, LDCOMPUTE, &
                           &OWARM, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
                           &HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
                           &PEXN, PRHODREF, PLVFACT, PLSFACT, K1, K2, K3, &
@@ -93,7 +93,7 @@ TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                      INTENT(IN)    :: KPROMA, KSIZE
 INTEGER,                      INTENT(IN)    :: KRR
 LOGICAL,                      INTENT(IN)    :: ODSOFT
-REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PCOMPUTE
+LOGICAL, DIMENSION(KPROMA),   INTENT(IN)    :: LDCOMPUTE
 LOGICAL,                      INTENT(IN)    :: OWARM
 CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_RC_RR_ACCR
 CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_RR_EVAP
@@ -188,13 +188,11 @@ INTEGER :: JL, JV
 LOGICAL, DIMENSION(KPROMA) :: LLWETG ! .TRUE. if graupel growths in wet mode
 REAL :: ZZW
 LOGICAL :: LLRFR
-LOGICAL, DIMENSION(KPROMA) :: LLCOMPUTE
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 
 IF (LHOOK) CALL DR_HOOK('ICE4_TENDENCIES', 0, ZHOOK_HANDLE)
 
-LLCOMPUTE(1:KSIZE)=PCOMPUTE(1:KSIZE)==1.
 
 !
 ZT(:)=PT(:)
@@ -215,7 +213,7 @@ ELSE
   !               --------------------------------------
 !DIR$ VECTOR ALWAYS
   DO CONCURRENT (JL=1:KSIZE)
-    CALL ICE4_NUCLEATION_ELEM(CST, PARAMI, ICEP, ICED, LLCOMPUTE(JL), &
+    CALL ICE4_NUCLEATION_ELEM(CST, PARAMI, ICEP, ICED, LDCOMPUTE(JL), &
                      ZVART(JL,ITH), PPRES(JL), PRHODREF(JL), PEXN(JL), PLSFACT(JL), ZT(JL), &
                      ZVART(JL,IRV), &
                      PCIT(JL), PRVHENI_MR(JL))
@@ -229,7 +227,7 @@ ELSE
   !
   !*       3.3     compute the spontaneous freezing source: RRHONG
   !
-  CALL ICE4_RRHONG(CST, PARAMI, ICED, KPROMA, KSIZE, LLCOMPUTE, &
+  CALL ICE4_RRHONG(CST, PARAMI, ICED, KPROMA, KSIZE, LDCOMPUTE, &
                   &PEXN, PLVFACT, PLSFACT, &
                   &ZT, ZVART(:,IRR), &
                   &ZVART(:,ITH), &
@@ -243,7 +241,7 @@ ELSE
   !
   !*       7.1    cloud ice melting
   !
-  CALL ICE4_RIMLTC(CST, PARAMI, KPROMA, KSIZE, LLCOMPUTE, &
+  CALL ICE4_RIMLTC(CST, PARAMI, KPROMA, KSIZE, LDCOMPUTE, &
                   &PEXN, PLVFACT, PLSFACT, &
                   &ZT, &
                   &ZVART(:,ITH), ZVART(:,IRI), &
@@ -258,11 +256,14 @@ ELSE
   !        5.1.6  riming-conversion of the large sized aggregates into graupel (old parametrisation)
   !
   IF(PARAMI%CSNOWRIMING=='OLD ') THEN
-    ZLBDAS(1:KSIZE)=0.
+    !$mnh_expand_where(JL=1:KSIZE)
     WHERE(ZVART(1:KSIZE,IRS)>0.)
       ZLBDAS(1:KSIZE)  = MIN(ICED%XLBDAS_MAX, ICED%XLBS*(PRHODREF(1:KSIZE)*MAX(ZVART(1:KSIZE,IRS), ICED%XRTMIN(5)))**ICED%XLBEXS)
+    ELSEWHERE
+      ZLBDAS(1:KSIZE)=0.
     END WHERE
-    CALL ICE4_RSRIMCG_OLD(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LLCOMPUTE, &
+    !$mnh_end_expand_where(JL=1:KSIZE)
+    CALL ICE4_RSRIMCG_OLD(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, &
                          &PRHODREF, &
                          &ZLBDAS, &
                          &ZT, ZVART(:,IRC), ZVART(:,IRS), &
@@ -384,7 +385,7 @@ DO JL=1, KSIZE
 ENDDO
 !
 !
-CALL ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LLCOMPUTE, PRHODREF, ZT, &
+CALL ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, PRHODREF, ZT, &
               &PSSI, PLVFACT, PLSFACT, &
               &ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRI), ZVART(:,IRS), ZVART(:,IRG), &
               &ZLBDAS, ZLBDAG, &
@@ -400,7 +401,7 @@ CALL ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LLCOMPUTE, PRHODREF, ZT, 
 !
 IF(OWARM) THEN    !  Check if the formation of the raindrops by the slow
                   !  warm processes is allowed
-  CALL ICE4_WARM(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LLCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
+  CALL ICE4_WARM(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
                 &PRHODREF, PLVFACT, ZT, PPRES, ZVART(:,ITH),&
                 &ZLBDAR, ZLBDAR_RF, ZKA, ZDV, ZCJ, &
                 &PHLC_LCF, PHLC_HCF, PHLC_LRC, PHLC_HRC, &
@@ -419,7 +420,7 @@ END IF
 !*       4.     COMPUTES THE FAST COLD PROCESS SOURCES FOR r_s
 !               ----------------------------------------------
 !
-CALL ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LLCOMPUTE, &
+CALL ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, &
                  &PRHODREF, PLVFACT, PLSFACT, PPRES, &
                  &ZDV, ZKA, ZCJ, &
                  &ZLBDAR, ZLBDAS, &
@@ -441,7 +442,7 @@ DO JL=1, KSIZE
            & PRSACCRG(JL) + PRCRIMSG(JL) + PRSRIMCG(JL)
   ZRGSI_MR(JL) = PRRHONG_MR(JL) + PRSRIMCG_MR(JL)
 ENDDO
-CALL ICE4_FAST_RG(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LLCOMPUTE, KRR, &
+CALL ICE4_FAST_RG(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, KRR, &
                  &PRHODREF, PLVFACT, PLSFACT, PPRES, &
                  &ZDV, ZKA, ZCJ, PCIT, &
                  &ZLBDAR, ZLBDAS, ZLBDAG, &
@@ -459,7 +460,7 @@ CALL ICE4_FAST_RG(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LLCOMPUTE, KRR
 !               ----------------------------------------------
 !
 IF (KRR==7) THEN
-  CALL ICE4_FAST_RH(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LLCOMPUTE, LLWETG, &
+  CALL ICE4_FAST_RH(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, LLWETG, &
                    &PRHODREF, PLVFACT, PLSFACT, PPRES, &
                    &ZDV, ZKA, ZCJ, &
                    &ZLBDAS, ZLBDAG, ZLBDAR, ZLBDAH, &
@@ -488,7 +489,7 @@ END IF
 !*       7.     COMPUTES SPECIFIC SOURCES OF THE WARM AND COLD CLOUDY SPECIES
 !               -------------------------------------------------------------
 !
-CALL ICE4_FAST_RI(ICEP, ICED, KPROMA, KSIZE, ODSOFT, LLCOMPUTE, &
+CALL ICE4_FAST_RI(ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, &
                  &PRHODREF, PLVFACT, PLSFACT, &
                  &ZAI, ZCJ, PCIT, &
                  &PSSI, &
