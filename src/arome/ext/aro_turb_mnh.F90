@@ -1,6 +1,6 @@
 !     ######spl
       SUBROUTINE  ARO_TURB_MNH( KKA,KKU,KKL,KLON,KLEV,KRR,KRRL,KRRI,KSV, &
-                KTCOUNT, KGRADIENTS, LDHARATU, PTSTEP,                  &
+                KTCOUNT, KGRADIENTS, LDHARATU, CMICRO, PTSTEP,                  &
                 PZZ, PZZF, PZZTOP,                                    &
                 PRHODJ, PTHVREF,PRHODREF,HINST_SFU,HMF_UPDRAFT,       &
                 PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
@@ -99,9 +99,8 @@ INTEGER,                  INTENT(IN)   :: KSV     ! Number of passive scalar
 INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
 INTEGER,                  INTENT(IN)   :: KGRADIENTS  ! Number of stored horizontal gradients
 LOGICAL,                  INTENT(IN)   :: LDHARATU ! HARATU scheme active
-
+CHARACTER (LEN=4),        INTENT(IN)   :: CMICRO  ! Microphysics scheme
 CHARACTER (LEN=4), INTENT(IN)     :: HMF_UPDRAFT   ! Type of mass flux scheme
-CHARACTER (LEN=4)     ::  HCLOUD       ! Type of microphysical scheme
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 !
 !
@@ -281,7 +280,6 @@ ORMC01=.FALSE.
 
 HTURBDIM='1DIM'
 HTURBLEN='BL89'
-HCLOUD='ICE3'
 ZIMPL=1.
 
 !Version Ocean du schema de turbulence
@@ -421,7 +419,7 @@ ENDDO
 
 CALL TURB (KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, ISPLIT,IMI, &
    & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,    &
-   & HTURBDIM,HTURBLEN,'NONE','NONE',HCLOUD,           &
+   & HTURBDIM,HTURBLEN,'NONE','NONE',CMICRO,           &
    & ZIMPL,                                    &
    & 2*PTSTEP,ZTFILE,                                      &
    & ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &
