@@ -1,7 +1,7 @@
 Module de clés namelists PHYEX
 Une solution serait de créer un module propre à PHYEX qui contiendrait des clés de contrôle de haut niveau
-  pour la physique (y en a-t-il d'autres?). Ce module serait initialisé dans Méso-NH à partir de la clé
-  actuelle qui est sans doute utilisée ailleurs dans le code de Méso-NH
+  pour la physique. Ce module serait initialisé dans Méso-NH à partir de clés actuellement en dehors
+  de la physique.
 
 Dependencies:
   - définir les interfaces propres
@@ -10,8 +10,13 @@ Dependencies:
   - pour AROME placés, en attendant, dans phyex/externals
 
 Clé de compilation REPRO48 + REPRO55 ajoutées pour permettre de reproduire le cycle 48 MNH-5.5.0, elles:
-- contournent des corrections de bug
-- modifient l'organisation de calculs
+  - contournent des corrections de bug
+  - modifient l'organisation de calculs
+  - REPRO48 reproduit les résultats obtenus avant l'introduction de la fraction précipitante froide dans l'ajustement
+Utilisation des clés:
+    - REPRO48 seule: la version de code qui sera retenue à la fin est celle de Méso-NH 5.5
+    - REPRO55 seule: la version de code qui sera retenue à la fin est celle du cycle 48 d'AROME
+    - defined(REPRO48) || defined(REPRO55): la version de code qui sera retenue à la fin est nouvelle
 Ces clés devront être supprimées
 
 Ecrire doc sur marche à suivre pour intégrer un nouveau développement:
@@ -24,35 +29,19 @@ Ecrire doc sur marche à suivre pour intégrer un nouveau développement:
   - exécution en changeant le nombre de processeurs
 
 Merge pb:
-- ice4_nucleation_wrapper:
-       Tableaux allocatable introduits par Philippe dans meso-nh.
-       Pas introduits (pour l'instant?) dans version common.
-       Ryad a fait des tests pour regarder impact des allocatable sur CPU => temps * 2
-       Code à nettoyer quelque soit l'option retenue
-       Dernier code de Ryad: /home/gmap/mrpm/khatib/public/modset/mods_ice4_nucleation_wrapper.tgz et/ou /home/gmap/mrpm/khatib/public/modset/ice4_nucleation_wrapper.f90
-
 - rain_ice_red: le cas test MesoNH n'est pas bit repro (diffs > 1% sur rapports de melange)
                 sur la modif src/mesonh/rain_ice_red au commit bdd10dd (First rain_ice new/red merge)
 - shallow_mf (appels dans aro_shallow et arp_shallow):
        Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
        Dans AROME/ARP: où trouver la taille de maille?
 
-Etape 2: array syntax -> loop
-- en profiter pour supprimer args PA/PB des routines appelées depuis ice4_tendencies, comme pour nucleation
-- regarder si pcompute et llcompute sont toujours tous deux nécessaires dans les mode_ice4* avec le passage en do
-- si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
-- transformer sedimentation_split_momentum comme sedimentation_split
-- une distinction KSIZE/KPROMA est à faire dans la microphysique. Pour une meilleure compréhension du code, il faut partir
-  du principe de déclarer tous les tableaux en KPROMA et de les utiliser que jusqu'à KSIZE
-- essayer l'outil développé par Juan
-
 Pb identifiés à corriger plus tard:
-- deposition devrait être déplacée dans ice4_tendencies
-- avec les optimisations de Ryad, les tableaux 3D de precip passés à ice4_tendencies
-  lorsque HSUBG_RC_RR_ACCR=='PRFR' ne sont  pas utilisables puisque les K1, K2 et K3
-  sont relatifs à la boucle IMICRO et que les calculs faits en debut de routine ne
-  concernent qu'une partie des points
-       => à corriger
+  - deposition devrait être déplacée dans ice4_tendencies
+  - avec les optimisations de Ryad, les tableaux 3D de precip passés à ice4_tendencies
+    lorsque HSUBG_RC_RR_ACCR=='PRFR' ne sont  pas utilisables puisque les K1, K2 et K3
+    sont relatifs à la boucle IMICRO et que les calculs faits en debut de routine ne
+    concernent qu'une partie des points
+         => à corriger
 - seules quelques options sont testées avec les cas test (par exemple, il faudrait tester RMC01 mais
   l'option n'est pas remontée en namelist)
 - les options CMF_CLOUD='STAT' et LOSIGAMS=.FALSE. semblent cassées en 48 original
@@ -64,17 +53,15 @@ Pb identifiés à corriger plus tard:
 - appel à abort à travers print_msg non testé
 - lignes vides ajoutées après les macros mnh_expand
 - indentation inorrecte dans les blocs mnh_expand
-- sedimentation momentum non branchée
+- sedimentation momentum non branchée (et à trasformer comme sedim_stat)
+- si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
 
-Répertoire arome/ext et mesonh/ext contient les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
+Répertoire arome/ext et mesonh/ext contiennent les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
 Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayadevront avoir été fournies par ailleurs
 
 Budgets/DDH
 - Le code dans budget_DDH devra être transféré dans mode_budget
 - les routines arome specifiques aux budgets sont dans mpa/micro, il faudrait les mettre dans aux
-- nettoyage necessaire des routines budgets:
-   - etape 1: adaptation GPU en passant la structure => permettra d'identifier avec certitude les variables utiles
-   - etape 2: suppr des codes qui ne sont pas appelés, ménage modd_budget, ini_budget... Je pense que seul aro_ini_budget est utile
 - Le module modd_dyn n'est utilisé que pour les budgets, voir s'il peut être supprimé
 - Le code des budgets devrait être revu: pas en phase avec celui de Méso-NH et phasage a priori
   inutile car très peu de code semble réellement utile pour AROME
@@ -84,7 +71,7 @@ SPP
 
 Nettoyage apl_arome non fait (pb a la compilation) ==> 4 arguments dans aro_turb_mnh supprimés (non utilisés)
 
-turb.F90 : il reste un CALL à SOURCES_NEG_CORRECT à ajouter. Besoin de récupérer CCLOUD dans apl_arome : comment ?
+turb.F90 : il reste un CALL à SOURCES_NEG_CORRECT à ajouter.
 
 Regarder s'il ne serait pas possible/souhaitable de supprimer modd_lunit de PHYEX. On pourrait se contenter de recevoir le numero d'unité logique
 
