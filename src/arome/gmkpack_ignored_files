@@ -129,7 +129,6 @@ phyex/turb/modi_compute_updraft_rhcj10.F90
 phyex/turb/compute_updraft_rhcj10.F90
 phyex/turb/modi_compute_updraft.F90
 phyex/turb/compute_updraft.F90
->>>>>>> 9df244f
 phyex/turb/tke_eps_sources.F90
 phyex/turb/turb_ver.F90
 phyex/turb/prandtl.F90

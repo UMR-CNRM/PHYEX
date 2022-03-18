@@ -6,11 +6,11 @@
 MODULE MODE_ICE4_RSRIMCG_OLD
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_RSRIMCG_OLD(KSIZE, LDSOFT, LDCOMPUTE, &
+SUBROUTINE ICE4_RSRIMCG_OLD(CST, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, &
                            &PRHODREF, &
                            &PLBDAS, &
                            &PT, PRCT, PRST, &
-                           &PRSRIMCG_MR, PB_RS, PB_RG)
+                           &PRSRIMCG_MR)
 !!
 !!**  PURPOSE
 !!    -------
@@ -30,10 +30,9 @@ SUBROUTINE ICE4_RSRIMCG_OLD(KSIZE, LDSOFT, LDCOMPUTE, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST,            ONLY: XTT
-USE MODD_PARAM_ICE,      ONLY: CSNOWRIMING
-USE MODD_RAIN_ICE_DESCR, ONLY: XRTMIN
-USE MODD_RAIN_ICE_PARAM, ONLY: NGAMINC, XEXSRIMCG, XGAMINC_RIM2, XRIMINTP1, XRIMINTP2, XSRIMCG
+USE MODD_CST,            ONLY: CST_t
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -41,25 +40,26 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-INTEGER, INTENT(IN) :: KSIZE
-LOGICAL,                      INTENT(IN)    :: LDSOFT
-LOGICAL, DIMENSION(KSIZE),    INTENT(IN)    :: LDCOMPUTE
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRHODREF ! Reference density
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLBDAS   ! Slope parameter of the aggregate distribution
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PT       ! Temperature
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
-REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRSRIMCG_MR ! Mr change due to cloud droplet riming of the aggregates
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PB_RS
-REAL, DIMENSION(KSIZE),       INTENT(INOUT) :: PB_RG
+TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
+TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
+INTEGER, INTENT(IN) :: KPROMA, KSIZE
+LOGICAL,                       INTENT(IN)    :: LDSOFT
+LOGICAL, DIMENSION(KPROMA),    INTENT(IN)    :: LDCOMPUTE
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRHODREF ! Reference density
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLBDAS   ! Slope parameter of the aggregate distribution
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PT       ! Temperature
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRSRIMCG_MR ! Mr change due to cloud droplet riming of the aggregates
 !
 !*       0.2  declaration of local variables
 !
-LOGICAL, DIMENSION(KSIZE) :: GRIM
+LOGICAL, DIMENSION(KPROMA) :: GRIM
 INTEGER :: IGRIM
-REAL, DIMENSION(KSIZE) :: ZVEC1, ZVEC2
-INTEGER, DIMENSION(KSIZE) :: IVEC1, IVEC2
-REAL, DIMENSION(KSIZE) :: ZZW
+REAL, DIMENSION(KPROMA) :: ZVEC1, ZVEC2
+INTEGER, DIMENSION(KPROMA) :: IVEC1, IVEC2
+REAL, DIMENSION(KPROMA) :: ZZW
 INTEGER :: JL
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
@@ -74,12 +74,13 @@ PRSRIMCG_MR(:)=0.
 !
 IF(.NOT. LDSOFT) THEN
   IGRIM = 0
-  GRIM(:) = .FALSE.
-  DO JL = 1, SIZE(GRIM)
-    IF(PRCT(JL)>XRTMIN(2) .AND. PRST(JL)>XRTMIN(5) .AND. LDCOMPUTE(JL) .AND. PT(JL)<XTT) THEN
+  DO JL = 1, KSIZE
+    IF(PRCT(JL)>ICED%XRTMIN(2) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL) .AND. PT(JL)<CST%XTT) THEN
       IGRIM = IGRIM + 1
       IVEC1(IGRIM) = JL
       GRIM(JL) = .TRUE.
+    ELSE
+      GRIM(JL) = .FALSE.
     ENDIF
   ENDDO
   !
@@ -95,8 +96,8 @@ IF(.NOT. LDSOFT) THEN
     !               set of Lbda_s used to tabulate some moments of the incomplete
     !               gamma function
     !
-    ZVEC2(1:IGRIM) = MAX( 1.00001, MIN(REAL(NGAMINC)-0.00001,           &
-                          XRIMINTP1 * LOG( ZVEC1(1:IGRIM) ) + XRIMINTP2 ) )
+    ZVEC2(1:IGRIM) = MAX( 1.00001, MIN(REAL(ICEP%NGAMINC)-0.00001,           &
+                          ICEP%XRIMINTP1 * LOG( ZVEC1(1:IGRIM) ) + ICEP%XRIMINTP2 ) )
     IVEC2(1:IGRIM) = INT( ZVEC2(1:IGRIM) )
     ZVEC2(1:IGRIM) = ZVEC2(1:IGRIM) - REAL( IVEC2(1:IGRIM) )
 
@@ -104,8 +105,8 @@ IF(.NOT. LDSOFT) THEN
     !        5.1.5  perform the linear interpolation of the normalized
     !               "XBS"-moment of the incomplete gamma function (XGAMINC_RIM2)
     !
-    ZVEC1(1:IGRIM) =  XGAMINC_RIM2( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
-                    - XGAMINC_RIM2( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
+    ZVEC1(1:IGRIM) =  ICEP%XGAMINC_RIM2( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
+                    - ICEP%XGAMINC_RIM2( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
     ZZW(:) = 0.
     DO JL = 1, IGRIM
       ZZW(IVEC1(JL)) = ZVEC1(JL)
@@ -115,15 +116,15 @@ IF(.NOT. LDSOFT) THEN
     !        5.1.6  riming-conversion of the large sized aggregates into graupeln
     !
     !
-    WHERE(GRIM(:))
-      PRSRIMCG_MR(:) = XSRIMCG * PLBDAS(:)**XEXSRIMCG   & ! RSRIMCG
-                               * (1.0 - ZZW(:) )/PRHODREF(:)
-      PRSRIMCG_MR(:)=MIN(PRST(:), PRSRIMCG_MR(:))
+    !$mnh_expand_where(JL=1:KSIZE)
+    WHERE(GRIM(1:KSIZE))
+      PRSRIMCG_MR(1:KSIZE) = ICEP%XSRIMCG * PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG   & ! RSRIMCG
+                               * (1.0 - ZZW(1:KSIZE) )/PRHODREF(1:KSIZE)
+      PRSRIMCG_MR(1:KSIZE)=MIN(PRST(1:KSIZE), PRSRIMCG_MR(1:KSIZE))
     END WHERE
+    !$mnh_end_expand_where(JL=1:KSIZE)
   END IF
 ENDIF
-PB_RS(:) = PB_RS(:) - PRSRIMCG_MR(:)
-PB_RG(:) = PB_RG(:) + PRSRIMCG_MR(:)
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_RSRIMCG_OLD', 1, ZHOOK_HANDLE)
 !

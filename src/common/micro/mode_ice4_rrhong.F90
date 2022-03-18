@@ -6,7 +6,7 @@
 MODULE MODE_ICE4_RRHONG
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_RRHONG(KSIZE, PCOMPUTE, &
+SUBROUTINE ICE4_RRHONG(CST, PARAMI, ICED, KPROMA, KSIZE, LDCOMPUTE, &
                        &PEXN, PLVFACT, PLSFACT, &
                        &PT,   PRRT, &
                        &PTHT, &
@@ -28,9 +28,9 @@ SUBROUTINE ICE4_RRHONG(KSIZE, PCOMPUTE, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST,            ONLY: XTT
-USE MODD_RAIN_ICE_DESCR, ONLY: XRTMIN
-USE MODD_PARAM_ICE,      ONLY: LFEEDBACKT
+USE MODD_CST,            ONLY: CST_t
+USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -38,19 +38,21 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-INTEGER, INTENT(IN) :: KSIZE
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PCOMPUTE
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PEXN     ! Exner function
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLVFACT  ! L_v/(Pi_ref*C_ph)
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLSFACT  ! L_s/(Pi_ref*C_ph)
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PT       ! Temperature
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRRT     ! Rain water m.r. at t
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PTHT     ! Theta at t
-REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRRHONG_MR ! Mixing ratio change due to spontaneous freezing
+TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
+TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
+INTEGER, INTENT(IN) :: KPROMA, KSIZE
+LOGICAL, DIMENSION(KPROMA),    INTENT(IN)    :: LDCOMPUTE
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PEXN     ! Exner function
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLVFACT  ! L_v/(Pi_ref*C_ph)
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLSFACT  ! L_s/(Pi_ref*C_ph)
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PT       ! Temperature
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRRT     ! Rain water m.r. at t
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PTHT     ! Theta at t
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRRHONG_MR ! Mixing ratio change due to spontaneous freezing
 !
 !*       0.2  declaration of local variables
 !
-REAL, DIMENSION(KSIZE) :: ZMASK
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 INTEGER :: JL
 !
@@ -59,19 +61,17 @@ IF (LHOOK) CALL DR_HOOK('ICE4_RRHONG',0,ZHOOK_HANDLE)
 !
 !*       3.3     compute the spontaneous freezing source: RRHONG
 !
-PRRHONG_MR(:) = 0.
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., PT(JL)-(XTT-35.0))) * & ! PT(:)<XTT-35.0
-           &MAX(0., -SIGN(1., XRTMIN(3)-PRRT(JL))) * & ! PRRT(:)>XRTMIN(3)
-           &PCOMPUTE(JL)
-  PRRHONG_MR(JL)=PRRT(JL) * ZMASK(JL)
+  IF(PT(JL)<CST%XTT-35.0 .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)) THEN
+    PRRHONG_MR(JL)=PRRT(JL)
+    IF(PARAMI%LFEEDBACKT) THEN
+      !Limitation due to -35 crossing of temperature
+      PRRHONG_MR(JL)=MIN(PRRHONG_MR(JL), MAX(0., ((CST%XTT-35.)/PEXN(JL)-PTHT(JL))/(PLSFACT(JL)-PLVFACT(JL))))
+    ENDIF
+  ELSE
+    PRRHONG_MR(JL)=0.
+  ENDIF
 ENDDO
-IF(LFEEDBACKT) THEN
-  !Limitation due to -35 crossing of temperature
-  DO JL=1, KSIZE
-    PRRHONG_MR(JL)=MIN(PRRHONG_MR(JL), MAX(0., ((XTT-35.)/PEXN(JL)-PTHT(JL))/(PLSFACT(JL)-PLVFACT(JL))))
-  ENDDO
-ENDIF
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_RRHONG', 1, ZHOOK_HANDLE)
 !

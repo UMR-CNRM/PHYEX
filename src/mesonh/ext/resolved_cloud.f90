@@ -761,7 +761,8 @@ SELECT CASE ( HCLOUD )
                       ZEXN, PCF_MF, PRC_MF, PRI_MF,                            &
                       PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,        &
                       PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                    &
-                      PTH=PTHS*PTSTEP, PTHS=PTHS, PSRCS=PSRCS, PCLDFR=PCLDFR,  &
+                      PTH=PTHS*PTSTEP, PTHS=PTHS,                              &
+                      OCOMPUTE_SRC=SIZE(PSRCS, 3)/=0, PSRCS=PSRCS, PCLDFR=PCLDFR,    &
                       PRR=PRS(:,:,:,3)*PTSTEP,                                 &
                       PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),              &
                       PRS=PRS(:,:,:,5)*PTSTEP,                                 &
@@ -829,7 +830,8 @@ SELECT CASE ( HCLOUD )
                        ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
                        PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
                        PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                   &
-                       PTH=PTHS*PTSTEP, PTHS=PTHS, PSRCS=PSRCS, PCLDFR=PCLDFR, &
+                       PTH=PTHS*PTSTEP, PTHS=PTHS,                             &
+                       OCOMPUTE_SRC=SIZE(PSRCS, 3)/=0, PSRCS=PSRCS, PCLDFR=PCLDFR, &
                        PRR=PRS(:,:,:,3)*PTSTEP,                                &
                        PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),             &
                        PRS=PRS(:,:,:,5)*PTSTEP,                                &
@@ -865,7 +867,8 @@ SELECT CASE ( HCLOUD )
                        ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
                        PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
                        PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                   &
-                       PTH=PTHS*PTSTEP, PTHS=PTHS, PSRCS=PSRCS, PCLDFR=PCLDFR, &
+                       PTH=PTHS*PTSTEP, PTHS=PTHS,                             &
+                       OCOMPUTE_SRC=SIZE(PSRCS, 3)/=0, PSRCS=PSRCS, PCLDFR=PCLDFR, &
                        PRR=PRS(:,:,:,3)*PTSTEP,                                &
                        PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),             &
                        PRS=PRS(:,:,:,5)*PTSTEP,                                &
@@ -938,7 +941,8 @@ SELECT CASE ( HCLOUD )
                      ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
                      PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
                      PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                   &
-                     PTH=PTHS*PTSTEP, PTHS=PTHS, PSRCS=PSRCS, PCLDFR=PCLDFR, &
+                     PTH=PTHS*PTSTEP, PTHS=PTHS,                             &
+                     OCOMPUTE_SRC=SIZE(PSRCS, 3)/=0, PSRCS=PSRCS, PCLDFR=PCLDFR, &
                      PRR=PRS(:,:,:,3)*PTSTEP,                                &
                      PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),             &
                      PRS=PRS(:,:,:,5)*PTSTEP,                                &

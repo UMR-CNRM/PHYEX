@@ -7,7 +7,7 @@ MODULE MODE_ICE4_RIMLTC
 IMPLICIT NONE
 CONTAINS
 
-SUBROUTINE ICE4_RIMLTC(KSIZE, PCOMPUTE, &
+SUBROUTINE ICE4_RIMLTC(CST, PARAMI, KPROMA, KSIZE, LDCOMPUTE, &
                        &PEXN, PLVFACT, PLSFACT, &
                        &PT, &
                        &PTHT, PRIT, &
@@ -29,8 +29,8 @@ SUBROUTINE ICE4_RIMLTC(KSIZE, PCOMPUTE, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST,       ONLY: XTT
-USE MODD_PARAM_ICE, ONLY: LFEEDBACKT
+USE MODD_CST,       ONLY: CST_t
+USE MODD_PARAM_ICE, ONLY: PARAM_ICE_t
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -38,20 +38,21 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-INTEGER,                      INTENT(IN)    :: KSIZE
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PCOMPUTE
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PEXN     ! Exner function
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLVFACT  ! L_v/(Pi_ref*C_ph)
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PLSFACT  ! L_s/(Pi_ref*C_ph)
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PT       ! Temperature
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PTHT     ! Theta at t
-REAL, DIMENSION(KSIZE),       INTENT(IN)    :: PRIT     ! Cloud ice at t
-REAL, DIMENSION(KSIZE),       INTENT(OUT)   :: PRIMLTC_MR ! Mixing ratio change due to cloud ice melting
+TYPE(CST_t),                  INTENT(IN)    :: CST
+TYPE(PARAM_ICE_t),            INTENT(IN)    :: PARAMI
+INTEGER,                      INTENT(IN)    :: KPROMA, KSIZE
+LOGICAL, DIMENSION(KPROMA),    INTENT(IN)    :: LDCOMPUTE
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PEXN     ! Exner function
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLVFACT  ! L_v/(Pi_ref*C_ph)
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLSFACT  ! L_s/(Pi_ref*C_ph)
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PT       ! Temperature
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PTHT     ! Theta at t
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRIT     ! Cloud ice at t
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRIMLTC_MR ! Mixing ratio change due to cloud ice melting
 !
 !*       0.2  declaration of local variables
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
-REAL, DIMENSION(KSIZE) :: ZMASK
 INTEGER :: JL
 !
 !-------------------------------------------------------------------------------
@@ -59,20 +60,17 @@ IF (LHOOK) CALL DR_HOOK('ICE4_RIMLTC',0,ZHOOK_HANDLE)
 !
 !*       7.1    cloud ice melting
 !
-PRIMLTC_MR(:)=0.
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., -PRIT(JL))) * & ! PRIT(:)>0.
-           &MAX(0., -SIGN(1., XTT-PT(JL))) * & ! PT(:)>XTT
-           &PCOMPUTE(JL)
-  PRIMLTC_MR(JL)=PRIT(JL) * ZMASK(JL)
+  IF(PRIT(JL)>0. .AND. PT(JL)>CST%XTT .AND. LDCOMPUTE(JL)) THEN
+    PRIMLTC_MR(JL)=PRIT(JL)
+    IF(PARAMI%LFEEDBACKT) THEN
+      !Limitation due to 0 crossing of temperature
+      PRIMLTC_MR(JL)=MIN(PRIMLTC_MR(JL), MAX(0., (PTHT(JL)-CST%XTT/PEXN(JL)) / (PLSFACT(JL)-PLVFACT(JL))))
+    ENDIF
+  ELSE
+    PRIMLTC_MR(JL)=0.
+  ENDIF
 ENDDO
-
-IF(LFEEDBACKT) THEN
-  !Limitation due to 0 crossing of temperature
-  DO JL=1, KSIZE
-    PRIMLTC_MR(JL)=MIN(PRIMLTC_MR(JL), MAX(0., (PTHT(JL)-XTT/PEXN(JL)) / (PLSFACT(JL)-PLVFACT(JL))))
-  ENDDO
-ENDIF
 
 IF (LHOOK) CALL DR_HOOK('ICE4_RIMLTC', 1, ZHOOK_HANDLE)
 !

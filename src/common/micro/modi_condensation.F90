@@ -5,12 +5,12 @@
 INTERFACE
 !
        SUBROUTINE CONDENSATION(D, CST, ICEP, NEB, &
-          HFRAC_ICE, HCONDENS, HLAMBDA3, &
-          PPABS, PZZ, PRHODREF, PT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
-          PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, PSIGRC, OUSERI,&
-          OSIGMAS, OCND2, PSIGQSAT, &
-          PLV, PLS, PCPH, &
-          PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PICE_CLD_WGT)
+                              &HFRAC_ICE, HCONDENS, HLAMBDA3, &
+                              &PPABS, PZZ, PRHODREF, PT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
+                              &PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, PSIGRC, OUSERI,&
+                              &OSIGMAS, OCND2, PSIGQSAT, &
+                              &PLV, PLS, PCPH, &
+                              &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PICE_CLD_WGT)
 !
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_CST,        ONLY: CST_t

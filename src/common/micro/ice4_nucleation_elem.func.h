@@ -2,7 +2,7 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-ELEMENTAL SUBROUTINE ICE4_NUCLEATION_ELEM(ODCOMPUTE, &
+ELEMENTAL SUBROUTINE ICE4_NUCLEATION_ELEM(CST, PARAMI, ICEP, ICED, ODCOMPUTE, &
                            PTHT, PPABST, PRHODREF, PEXN, PLSFACT, PT, &
                            PRVT, &
                            PCIT, PRVHENI_MR)
@@ -29,15 +29,19 @@ ELEMENTAL SUBROUTINE ICE4_NUCLEATION_ELEM(ODCOMPUTE, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST,            ONLY: XALPI, XALPW, XBETAI, XBETAW, XGAMI, XGAMW, XMD, XMV, XTT, XEPSILO
-USE MODD_PARAM_ICE,      ONLY: LFEEDBACKT
-USE MODD_RAIN_ICE_PARAM, ONLY: XALPHA1, XALPHA2, XBETA1, XBETA2, XMNU0, XNU10, XNU20
-USE MODD_RAIN_ICE_DESCR, ONLY: XRTMIN
+USE MODD_CST,            ONLY: CST_t
+USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
+TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
+TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 LOGICAL, INTENT(IN)    :: ODCOMPUTE
 REAL,    INTENT(IN)    :: PTHT    ! Theta at t
 REAL,    INTENT(IN)    :: PPABST  ! absolute pressure at t
@@ -58,16 +62,16 @@ REAL  :: ZZW,      & ! Work scalar
          ZSSI        ! Supersaturation over ice
 !-------------------------------------------------------------------------------
 !
-GNEGT=PT<XTT .AND. PRVT>XRTMIN(1) .AND. ODCOMPUTE
+GNEGT=PT<CST%XTT .AND. PRVT>ICED%XRTMIN(1) .AND. ODCOMPUTE
 
 PRVHENI_MR=0.
 IF(GNEGT) THEN
   ZZW=ALOG(PT)
-  ZUSW=EXP(XALPW - XBETAW/PT - XGAMW*ZZW)          ! es_w
-  ZZW=EXP(XALPI - XBETAI/PT - XGAMI*ZZW)           ! es_i
+  ZUSW=EXP(CST%XALPW - CST%XBETAW/PT - CST%XGAMW*ZZW)          ! es_w
+  ZZW=EXP(CST%XALPI - CST%XBETAI/PT - CST%XGAMI*ZZW)           ! es_i
 
   ZZW=MIN(PPABST/2., ZZW)             ! safety limitation
-  ZSSI=PRVT*(PPABST-ZZW) / (XEPSILO*ZZW) - 1.0 ! Supersaturation over ice
+  ZSSI=PRVT*(PPABST-ZZW) / (CST%XEPSILO*ZZW) - 1.0 ! Supersaturation over ice
   ZUSW=MIN(PPABST/2., ZUSW)            ! safety limitation
   ZUSW=(ZUSW/ZZW)*((PPABST-ZZW)/(PPABST-ZUSW)) - 1.0
                              ! Supersaturation of saturated water vapor over ice
@@ -78,11 +82,11 @@ IF(GNEGT) THEN
   !
   ZSSI=MIN(ZSSI, ZUSW) ! limitation of SSi according to SSw=0
 
-  IF(PT<XTT-5. .AND. ZSSI>0.) THEN
-    ZZW=XNU20*EXP(XALPHA2*ZSSI-XBETA2)
-  ELSEIF(PT<=XTT-2. .AND. PT>=XTT-5. .AND. ZSSI>0.) THEN
-    ZZW=MAX(XNU20*EXP(-XBETA2 ), &
-            XNU10*EXP(-XBETA1*(PT-XTT))*(ZSSI/ZUSW)**XALPHA1)
+  IF(PT<CST%XTT-5. .AND. ZSSI>0.) THEN
+    ZZW=ICEP%XNU20*EXP(ICEP%XALPHA2*ZSSI-ICEP%XBETA2)
+  ELSEIF(PT<=CST%XTT-2. .AND. PT>=CST%XTT-5. .AND. ZSSI>0.) THEN
+    ZZW=MAX(ICEP%XNU20*EXP(-ICEP%XBETA2 ), &
+            ICEP%XNU10*EXP(-ICEP%XBETA1*(PT-CST%XTT))*(ZSSI/ZUSW)**ICEP%XALPHA1)
   ELSE
     ZZW=0.
   ENDIF
@@ -92,13 +96,13 @@ IF(GNEGT) THEN
   !
   !*       3.1.2   update the r_i and r_v mixing ratios
   !
-  PRVHENI_MR=MAX(ZZW, 0.0)*XMNU0/PRHODREF
+  PRVHENI_MR=MAX(ZZW, 0.0)*ICEP%XMNU0/PRHODREF
   PRVHENI_MR=MIN(PRVT, PRVHENI_MR)
   !
   !Limitation due to 0 crossing of temperature
   !
-  IF(LFEEDBACKT) THEN
-    ZW=MIN(PRVHENI_MR, MAX(0., (XTT/PEXN-PTHT)/PLSFACT)) / &
+  IF(PARAMI%LFEEDBACKT) THEN
+    ZW=MIN(PRVHENI_MR, MAX(0., (CST%XTT/PEXN-PTHT)/PLSFACT)) / &
        MAX(PRVHENI_MR, 1.E-20)
     PRVHENI_MR=PRVHENI_MR*ZW
     ZZW=ZZW*ZW
