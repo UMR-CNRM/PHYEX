@@ -5,13 +5,13 @@
 !-----------------------------------------------------------------
 !     ######spl
     SUBROUTINE CONDENSATION(D, CST, ICEP, NEB, &
-       HFRAC_ICE, HCONDENS, HLAMBDA3,                                                  &
-       PPABS, PZZ, PRHODREF, PT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT,    &
-       PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, PSIGRC, OUSERI,                               &
-       OSIGMAS, OCND2, PSIGQSAT,                                                       &
-       PLV, PLS, PCPH,                                                                 &
-       PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                                         &
-       PICE_CLD_WGT)
+                           &HFRAC_ICE, HCONDENS, HLAMBDA3,                                                  &
+                           &PPABS, PZZ, PRHODREF, PT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT,    &
+                           &PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, PSIGRC, OUSERI,                      &
+                           &OSIGMAS, OCND2, PSIGQSAT,                                                       &
+                           &PLV, PLS, PCPH,                                                                 &
+                           &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                                         &
+                           &PICE_CLD_WGT)
 !   ################################################################################
 !
 !!
@@ -153,25 +153,24 @@ REAL,    DIMENSION(D%NIT,D%NJT)  :: ZTMIN           ! minimum Temp. related to I
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZLV, ZLS, ZCPD
 REAL :: ZGCOND, ZAUTC, ZAUTI, ZGAUV, ZGAUC, ZGAUI, ZGAUTC, ZGAUTI, ZCRIAUTI   ! Used for Gaussian PDF integration
 REAL :: ZLVS                                      ! thermodynamics
-REAL, DIMENSION(D%NIB:D%NIE) :: ZPV, ZPIV, ZQSL, ZQSI ! thermodynamics
+REAL, DIMENSION(D%NIT) :: ZPV, ZPIV, ZQSL, ZQSI ! thermodynamics
 REAL :: ZLL, DZZ, ZZZ                           ! used for length scales 
 REAL :: ZAH, ZDRW, ZDTL, ZSIG_CONV                     ! related to computation of Sig_s
-REAL, DIMENSION(D%NIB:D%NIE) :: ZA, ZB, ZSBAR, ZSIGMA, ZQ1 ! related to computation of Sig_s
-REAL, DIMENSION(D%NIB:D%NIE) :: ZCOND
-REAL, DIMENSION(D%NIB:D%NIE) :: ZFRAC           ! Ice fraction
+REAL, DIMENSION(D%NIT) :: ZA, ZB, ZSBAR, ZSIGMA, ZQ1 ! related to computation of Sig_s
+REAL, DIMENSION(D%NIT) :: ZCOND
+REAL, DIMENSION(D%NIT) :: ZFRAC           ! Ice fraction
 INTEGER  :: INQ1
 REAL :: ZINC
 ! related to OCND2 noise check :
 REAL :: ZRSP,  ZRSW, ZRFRAC, ZRSDIF, ZRCOLD
 ! related to OCND2  ice cloud calulation :
-REAL, DIMENSION(D%NIB:D%NIE) :: ESATW_T
+REAL, DIMENSION(D%NIT) :: ESATW_T
 REAL :: ZDUM1,ZDUM2,ZDUM3,ZDUM4,ZPRIFACT
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: TCLD
-REAL :: ZDZ(D%NIB:D%NIE), &
-        ZARDUM(D%NIE-D%NIB+1), ZCLDUM(D%NIE-D%NIB+1)
+REAL, DIMENSION(D%NIT) :: ZDZ, ZARDUM, ZCLDUM
 ! end OCND2
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
-INTEGER, DIMENSION(D%NIT) :: IERR
+INTEGER :: IERR
 !
 !
 !*       0.3  Definition of constants :
@@ -300,8 +299,9 @@ DO JK=D%NKTB,D%NKTE
   JKM=MAX(MIN(JK-D%NKL,D%NKTE),D%NKTB)
   DO JJ=D%NJB,D%NJE
     IF (OCND2) THEN
-       ZDZ(D%NIB:D%NIE) = PZZ(D%NIB:D%NIE,JJ,JKP) - &
-                                            PZZ(D%NIB:D%NIE,JJ,JKP-D%NKL)
+       DO JI = D%NIB, D%NIE
+         ZDZ(JI) = PZZ(JI,JJ,JKP) - PZZ(JI,JJ,JKP-D%NKL)
+       ENDDO
        CALL ICECLOUD(D%NIE-D%NIB+1,PPABS(D%NIB,JJ,JK),PZZ(D%NIB,JJ,JK),ZDZ(D%NIB), &
             & PT(D%NIB,JJ,JK),PRV_IN(D%NIB,JJ,JK),1.,-1., &
             & ZCLDUM,1.,TCLD(D%NIB,JJ,JK), &
@@ -329,7 +329,9 @@ DO JK=D%NKTB,D%NKTE
           ZFRAC(JI) = PRI_IN(JI,JJ,JK) / (PRC_IN(JI,JJ,JK)+PRI_IN(JI,JJ,JK))
         ENDIF
       END DO
-      CALL COMPUTE_FRAC_ICE(HFRAC_ICE, NEB, ZFRAC(D%NIB:D%NIE), PT(D%NIB:D%NIE,JJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
+      DO JI=D%NIB,D%NIE
+        CALL COMPUTE_FRAC_ICE(HFRAC_ICE, NEB, ZFRAC(JI), PT(JI,JJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
+      ENDDO
     ENDIF
     DO JI=D%NIB,D%NIE
       ZQSL(JI)   = CST%XRD / CST%XRV * ZPV(JI) / ( PPABS(JI,JJ,JK) - ZPV(JI) )
@@ -366,7 +368,7 @@ DO JK=D%NKTB,D%NKTE
         ZLL = ZL(JI,JJ,JK)
         ! standard deviation due to convection
         ZSIG_CONV =0.
-        IF( SIZE(PMFCONV) /= 0) ZSIG_CONV = ZCSIG_CONV * PMFCONV(JI,JJ,JK) / ZA(JI)
+        IF(LMFCONV) ZSIG_CONV = ZCSIG_CONV * PMFCONV(JI,JJ,JK) / ZA(JI)
         ! zsigma should be of order 4.e-4 in lowest 5 km of atmosphere
         ZSIGMA(JI) =  SQRT( MAX( 1.E-25, ZCSIGMA * ZCSIGMA * ZLL*ZLL/(DZZ*DZZ)*(&
              ZA(JI)*ZA(JI)*ZDRW*ZDRW - 2.*ZA(JI)*ZB(JI)*ZDRW*ZDTL + ZB(JI)*ZB(JI)*ZDTL*ZDTL) + &

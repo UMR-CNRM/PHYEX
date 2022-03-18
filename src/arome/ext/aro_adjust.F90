@@ -443,7 +443,7 @@ IF (KRR==6) THEN
     & PEXN=PEXNREF, PCF_MF=PCF_MF,PRC_MF=PRC_MF,PRI_MF=PRI_MF, &
     & PRV=ZRS(:,:,:,1), PRC=ZRS(:,:,:,2),  &
     & PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2), &
-    & PTH=ZRS(:,:,:,0), PTHS=PTHS,PSRCS=PSRCS, PCLDFR=PCLDFR, &
+    & PTH=ZRS(:,:,:,0), PTHS=PTHS,OCOMPUTE_SRC=.TRUE.,PSRCS=PSRCS, PCLDFR=PCLDFR, &
     & PRR=ZRS(:,:,:,3), &
     & PRI=ZRS(:,:,:,4), PRIS=PRS(:,:,:,4), &
     & PRS=ZRS(:,:,:,5), &
@@ -463,7 +463,7 @@ ELSE
     & PEXN=PEXNREF, PCF_MF=PCF_MF,PRC_MF=PRC_MF,PRI_MF=PRI_MF, &
     & PRV=ZRS(:,:,:,1), PRC=ZRS(:,:,:,2), &
     & PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2), &
-    & PTH=ZRS(:,:,:,0), PTHS=PTHS,PSRCS=PSRCS, PCLDFR=PCLDFR, &
+    & PTH=ZRS(:,:,:,0), PTHS=PTHS,OCOMPUTE_SRC=.TRUE.,PSRCS=PSRCS, PCLDFR=PCLDFR, &
     & PRR=ZRS(:,:,:,3), &
     & PRI=ZRS(:,:,:,4), PRIS=PRS(:,:,:,4), &
     & PRS=ZRS(:,:,:,5), &

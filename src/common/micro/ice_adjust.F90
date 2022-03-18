@@ -5,18 +5,19 @@
 !-----------------------------------------------------------------
 !     ##########################################################################
       SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEB, BUCONF, KRR,                   &
-                             HFRAC_ICE, HCONDENS, HLAMBDA3,&
-                             HBUNAME, OSUBG_COND, OSIGMAS, OCND2, HSUBG_MF_PDF,&
-                             PTSTEP, PSIGQSAT,                                 &
-                             PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
-                             PPABST, PZZ,                                      &
-                             PEXN, PCF_MF, PRC_MF, PRI_MF,                     &
-                             PRV, PRC, PRVS, PRCS, PTH, PTHS, PSRCS, PCLDFR,   &
-                             PRR, PRI, PRIS, PRS, PRG, PRH,                    &
-                             POUT_RV, POUT_RC, POUT_RI, POUT_TH,               &
-                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,           &
-                             TBUDGETS, KBUDGETS,                               &
-                             PICE_CLD_WGT)
+                            &HFRAC_ICE, HCONDENS, HLAMBDA3,&
+                            &HBUNAME, OSUBG_COND, OSIGMAS, OCND2, HSUBG_MF_PDF,&
+                            &PTSTEP, PSIGQSAT,                                 &
+                            &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
+                            &PPABST, PZZ,                                      &
+                            &PEXN, PCF_MF, PRC_MF, PRI_MF,                     &
+                            &PRV, PRC, PRVS, PRCS, PTH, PTHS,                  &
+                            &OCOMPUTE_SRC, PSRCS, PCLDFR,   &
+                            &PRR, PRI, PRIS, PRS, PRG, PRH,                    &
+                            &POUT_RV, POUT_RC, POUT_RI, POUT_TH,               &
+                            &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,           &
+                            &TBUDGETS, KBUDGETS,                               &
+                            &PICE_CLD_WGT)
 !     #########################################################################
 !
 !!****  *ICE_ADJUST* -  compute the ajustment of water vapor in mixed-phase 
@@ -136,10 +137,10 @@ CHARACTER(LEN=4),         INTENT(IN)    :: HLAMBDA3 ! formulation for lambda3 co
 CHARACTER(LEN=4),         INTENT(IN)    :: HBUNAME  ! Name of the budget
 LOGICAL,                  INTENT(IN)    :: OSUBG_COND ! Switch for Subgrid 
                                                     ! Condensation
-LOGICAL                                 :: OSIGMAS  ! Switch for Sigma_s: 
+LOGICAL,                  INTENT(IN)    :: OSIGMAS  ! Switch for Sigma_s: 
                                                     ! use values computed in CONDENSATION
                                                     ! or that from turbulence scheme
-LOGICAL                                 :: OCND2    ! logical switch to sparate liquid 
+LOGICAL,                  INTENT(IN)    :: OCND2    ! logical switch to sparate liquid 
                                                     ! and ice
                                                     ! more rigid (DEFALT value : .FALSE.)
 CHARACTER(LEN=80),        INTENT(IN)    :: HSUBG_MF_PDF
@@ -172,9 +173,12 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT) :: PRVS    ! Water vapor m.r. 
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PTH     ! Theta to adjust
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT) :: PTHS    ! Theta source
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PSRCS   ! Second-order flux
-                                                                                        ! s'rc'/2Sigma_s2 at time t+1
-                                                                                        ! multiplied by Lambda_3
+LOGICAL,                            INTENT(IN)    :: OCOMPUTE_SRC
+REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
+                MERGE(D%NJT,0,OCOMPUTE_SRC),&
+                MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(OUT)   :: PSRCS   ! Second-order flux
+                                                                       ! s'rc'/2Sigma_s2 at time t+1
+                                                                       ! multiplied by Lambda_3
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PCLDFR  ! Cloud fraction          
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT)::  PRIS ! Cloud ice  m.r. at t+1
@@ -199,7 +203,7 @@ REAL, DIMENSION(D%NIT,D%NJT),                OPTIONAL, INTENT(IN)   :: PICE_CLD_
 !
 !
 REAL  :: ZW1,ZW2    ! intermediate fields
-REAL, DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3)) &
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) &
                          :: ZT,   &  ! adjusted temperature
                    ZRV, ZRC, ZRI, &  ! adjusted state
                             ZCPH, &  ! guess of the CPh for the mixing
@@ -309,7 +313,7 @@ DO JK=D%NKTB,D%NKTE
         ELSE
           PCLDFR(JI,JJ,JK)  = 0.
         ENDIF
-        IF ( SIZE(PSRCS,3) /= 0 ) THEN
+        IF (OCOMPUTE_SRC) THEN
           PSRCS(JI,JJ,JK) = PCLDFR(JI,JJ,JK)
         END IF
       ENDDO
