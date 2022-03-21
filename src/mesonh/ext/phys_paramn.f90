@@ -1490,7 +1490,7 @@ END IF
               1, IKU, 1, IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,        &
               NSV, NSV_LGBEG, NSV_LGEND,CPROGRAM, L2D, LNOMIXLG,LFLAT,               &
               LLES_CALL, LCOUPLES, LBLOWSNOW,                                        &
-              LTURB_FLX, LTURB_DIAG, LSUBG_COND, LRMC01, LOCEAN, .FALSE.,            &
+              LTURB_FLX, LTURB_DIAG, LSUBG_COND, LRMC01, LOCEAN, LDEEPOC, .FALSE.,   &
               CTURBDIM, CTURBLEN, CTOM, CTURBLEN_CLOUD, CCLOUD,XIMPL,                &
               XTSTEP, TPFILE,                                                        &
               XDXX, XDYY, XDZZ, XDZX, XDZY, XZZ,                                     &

@@ -209,7 +209,7 @@ LOGICAL       ::  OTURB_FLX    ! switch to write the
 LOGICAL       ::  OTURB_DIAG   ! switch to write some
                                ! diagnostic fields in the syncronous FM-file
 LOGICAL       ::  ORMC01       ! switch for RMC01 lengths in SBL
-LOGICAL       ::  OOCEAN       ! switch for OCEAN version of turbulence scheme
+LOGICAL       ::  OOCEAN,ODEEPOC! switch for OCEAN version of turbulence scheme
 LOGICAL       ::  OCOUPLES     ! switch for ocean-atm LES coupling
 LOGICAL       ::  OBLOWSNOW    ! switch for prognostic blow snow scheme
 CHARACTER(LEN=4)   ::  HTURBDIM     ! dimensionality of the
@@ -295,6 +295,7 @@ ZIMPL=1.
 
 !Version Ocean du schema de turbulence
 OOCEAN=.FALSE.
+ODEEPOC=.FALSE.
 
 HPROGRAM='AROME '
 
@@ -447,7 +448,7 @@ HCLOUD="ICE3"
 CALL TURB (CST,CSTURB,TBUCONF,KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY,&
    & ISPLIT,IMI, KSV, KSV_LGBEG, KSV_LGEND, &
    & HPROGRAM, O2D, ONOMIXLG, OFLAT, LLES_CALL,OCOUPLES,OBLOWSNOW,& 
-   & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,LDHARATU,    &
+   & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,ODEEPOC,LDHARATU,    &
    & HTURBDIM,HTURBLEN,'NONE','NONE','LIMA',           &
    & ZIMPL,                                    &
    & 2*PTSTEP,ZTFILE,                                      &

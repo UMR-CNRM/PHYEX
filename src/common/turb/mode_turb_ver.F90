@@ -6,7 +6,7 @@ MODULE MODE_TURB_VER
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE TURB_VER(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,           &
-                      OTURB_FLX, OOCEAN, OHARAT,                    &
+                      OTURB_FLX, OOCEAN, ODEEPOC, OHARAT,           &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
                       HTURBDIM,HTOM,PIMPL,PEXPL,                    &
                       HPROGRAM, O2D, ONOMIXLG, OFLAT,               &
@@ -215,7 +215,7 @@ USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
-USE MODD_PARAMETERS
+USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
 USE MODD_LES
 !
 USE MODE_EMOIST, ONLY: EMOIST
@@ -254,6 +254,7 @@ INTEGER,                INTENT(IN)   :: KSV, KSV_LGBEG, KSV_LGEND ! number of sc
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
+LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
 LOGICAL,                INTENT(IN)   ::  OHARAT       ! 
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
@@ -510,7 +511,7 @@ ELSE
 ENDIF
 !
   CALL  TURB_VER_THERMO_FLUX(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,    &
-                        OTURB_FLX,HTURBDIM,HTOM,OOCEAN,OHARAT,        &
+                        OTURB_FLX,HTURBDIM,HTOM,OOCEAN,ODEEPOC,OHARAT,&
                         OCOUPLES,OLES_CALL,                           &
                         PIMPL,PEXPL,PTSTEP,HPROGRAM,TPFILE,           &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &

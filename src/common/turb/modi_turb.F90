@@ -8,7 +8,8 @@ INTERFACE
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,             &
               & HPROGRAM, O2D, ONOMIXLG, OFLAT,                       &
               & OLES_CALL,OCOUPLES,OBLOWSNOW,                         &
-              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,OHARAT, &
+              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,                      &
+              & ORMC01,OOCEAN,ODEEPOC,OHARAT,                         &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,            &
               & PIMPL,PTSTEP,TPFILE,                                  &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
@@ -55,6 +56,7 @@ LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid
                                  ! CONDensation
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
+LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
 LOGICAL,                INTENT(IN)   ::  OHARAT
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step

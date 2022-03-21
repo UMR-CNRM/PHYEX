@@ -6,7 +6,8 @@
       SUBROUTINE TURB(CST,CSTURB,BUCONF,KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,      &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
               & O2D,ONOMIXLG,OFLAT,OLES_CALL,OCOUPLES,OBLOWSNOW,      &
-              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,OHARAT, &
+              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,                      &
+              & ORMC01,OOCEAN,ODEEPOC,OHARAT,                         &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,PIMPL,      &
               & PTSTEP,TPFILE,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
@@ -299,6 +300,7 @@ LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid
                                  ! CONDensation
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
+LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
 LOGICAL,                INTENT(IN)   ::  OHARAT       ! switch for LHARATU from AROME
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
@@ -876,7 +878,7 @@ IF( BUCONF%LBUDGET_SV ) THEN
 END IF
 
 CALL TURB_VER(CST,CSTURB,KKA,KKU,KKL,KRR, KRRL, KRRI,    &
-          OTURB_FLX, OOCEAN, OHARAT,                     &
+          OTURB_FLX, OOCEAN, ODEEPOC, OHARAT,            &
           KSV,KSV_LGBEG,KSV_LGEND,                       &
           HTURBDIM,HTOM,PIMPL,ZEXPL,                     &
           HPROGRAM, O2D, ONOMIXLG, OFLAT,                &

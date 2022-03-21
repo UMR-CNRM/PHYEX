@@ -7,7 +7,7 @@ IMPLICIT NONE
 CONTAINS
       
 SUBROUTINE TURB_VER_THERMO_FLUX(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,    &
-                      OTURB_FLX,HTURBDIM,HTOM,OOCEAN,OHARAT,        &
+                      OTURB_FLX,HTURBDIM,HTOM,OOCEAN,ODEEPOC,OHARAT,&
                       OCOUPLES,OLES_CALL,                           &
                       PIMPL,PEXPL,PTSTEP,HPROGRAM,                  &
                       TPFILE,                                       &
@@ -233,13 +233,13 @@ USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_GRID_n,         ONLY: XZS, XXHAT, XYHAT
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_METRICS_n,      ONLY: XDXX, XDYY, XDZX, XDZY, XDZZ
-USE MODD_PARAMETERS
+USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
 USE MODD_TURB_n,         ONLY: LHGRAD, XCOEFHGRADTHL, XCOEFHGRADRM, XALTHGRAD, XCLDTHOLD
 USE MODD_LES
-USE MODD_DIM_n
-USE MODD_OCEANH
+USE MODD_DIM_n, ONLY: NIMAX_ll, NJMAX_ll
+USE MODD_OCEANH, ONLY: XSSTFL
 USE MODD_TURB_n
-USE MODD_FRC
+USE MODD_FRC, ONLY: XCENTX_OC, XCENTY_OC, XRADX_OC,XRADY_OC
 !
 USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
@@ -275,6 +275,7 @@ INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
+LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
 LOGICAL,                INTENT(IN)   ::  OHARAT
 CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
@@ -427,7 +428,7 @@ IJU=SIZE(PTHLM,2)
 !
 !! Compute Shape of sfc flux for Oceanic Deep Conv Case
 ! 
-IF (OOCEAN .AND. LDEEPOC) THEN
+IF (OOCEAN .AND. ODEEPOC) THEN
   !*       COMPUTES THE PHYSICAL SUBDOMAIN BOUNDS
   ALLOCATE(ZXHAT_ll(NIMAX_ll+2*JPHEXT),ZYHAT_ll(NJMAX_ll+2*JPHEXT))
   !compute ZXHAT_ll = position in the (0:Lx) domain 1 (Lx=Size of domain1 )
@@ -1028,7 +1029,7 @@ IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL) .AND. (KRRL > 0) ) THEN
   END IF
 !
 END IF !end of <w Rc>
-IF (OOCEAN .AND. LDEEPOC) THEN
+IF (OOCEAN .AND. ODEEPOC) THEN
   DEALLOCATE(ZXHAT_ll,ZYHAT_ll)
 END IF
 !
