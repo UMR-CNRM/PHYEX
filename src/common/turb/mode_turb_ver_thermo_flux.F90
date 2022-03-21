@@ -6,7 +6,8 @@ MODULE MODE_TURB_VER_THERMO_FLUX
 IMPLICIT NONE
 CONTAINS
       
-SUBROUTINE TURB_VER_THERMO_FLUX(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,    &
+SUBROUTINE TURB_VER_THERMO_FLUX(CST,CSTURB,TURBN,                   &
+                      KKA,KKU,KKL,KRR,KRRL,KRRI,                    &
                       OTURB_FLX,HTURBDIM,HTOM,OOCEAN,ODEEPOC,OHARAT,&
                       OCOUPLES,OLES_CALL,                           &
                       PIMPL,PEXPL,PTSTEP,HPROGRAM,                  &
@@ -234,11 +235,11 @@ USE MODD_GRID_n,         ONLY: XZS, XXHAT, XYHAT
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_METRICS_n,      ONLY: XDXX, XDYY, XDZX, XDZY, XDZZ
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
-USE MODD_TURB_n,         ONLY: LHGRAD, XCOEFHGRADTHL, XCOEFHGRADRM, XALTHGRAD, XCLDTHOLD
+USE MODD_TURB_n,         ONLY: TURB_t
 USE MODD_LES
 USE MODD_DIM_n, ONLY: NIMAX_ll, NJMAX_ll
 USE MODD_OCEANH, ONLY: XSSTFL
-USE MODD_TURB_n
+USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_FRC, ONLY: XCENTX_OC, XCENTY_OC, XRADX_OC,XRADY_OC
 !
 USE MODI_GRADIENT_U
@@ -264,8 +265,9 @@ IMPLICIT NONE
 !
 !
 !
-TYPE(CST_t),                  INTENT(IN)    :: CST
-TYPE(CSTURB_t),                INTENT(IN)    :: CSTURB
+TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
+TYPE(TURB_t),           INTENT(IN)   :: TURBN
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
@@ -473,7 +475,7 @@ ENDIF
 !
 ! Define a cloud mask with ri and rc (used after with a threshold) for Leonard terms
 !
-IF(LHGRAD) THEN
+IF(TURBN%LHGRAD) THEN
   IF ( KRRL >= 1 ) THEN
     IF ( KRRI >= 1 ) THEN
       ZCLD_THOLD(:,:,:) = PRM(:,:,:,2) + PRM(:,:,:,4)
@@ -516,10 +518,10 @@ ELSE
   ZDFDDTDZ(:,:,:) = -CSTURB%XCSHF*ZKEFF*D_PHI3DTDZ_O_DDTDZ(CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,GUSERV)
 END IF
 !
-IF (LHGRAD) THEN
+IF (TURBN%LHGRAD) THEN
  ! Compute the Leonard terms for thl
  ZDELTAX= XXHAT(3) - XXHAT(2)
- ZF_LEONARD (:,:,:)= XCOEFHGRADTHL*ZDELTAX*ZDELTAX/12.0*(      &
+ ZF_LEONARD (:,:,:)= TURBN%XCOEFHGRADTHL*ZDELTAX*ZDELTAX/12.0*(      &
                  MXF(GX_W_UW(PWM(:,:,:), XDXX,XDZZ,XDZX,KKA,KKU,KKL))&
                 *MZM(GX_M_M(PTHLM(:,:,:),XDXX,XDZZ,XDZX,KKA, KKU, KKL), KKA, KKU, KKL)  &
               +  MYF(GY_W_VW(PWM(:,:,:), XDYY,XDZZ,XDZY,KKA,KKU,KKL))  &
@@ -574,10 +576,10 @@ END IF
 ! compute interface flux
 IF (OCOUPLES) THEN   ! Autocoupling O-A LES
   IF (OOCEAN) THEN    ! ocean model in coupled case 
-    ZF(:,:,IKE) =  (XSSTFL_C(:,:,1)+XSSRFL_C(:,:,1)) &
+    ZF(:,:,IKE) =  (TURBN%XSSTFL_C(:,:,1)+TURBN%XSSRFL_C(:,:,1)) &
                   *0.5* ( 1. + PRHODJ(:,:,KKU)/PRHODJ(:,:,IKE) )
   ELSE                ! atmosph model in coupled case
-    ZF(:,:,IKB) =  XSSTFL_C(:,:,1) &
+    ZF(:,:,IKB) =  TURBN%XSSTFL_C(:,:,1) &
                   *0.5* ( 1. + PRHODJ(:,:,KKA)/PRHODJ(:,:,IKB) )
   ENDIF 
 !
@@ -615,11 +617,11 @@ CALL TRIDIAG_THERMO(KKA,KKU,KKL,PTHLM,ZF,ZDFDDTDZ,PTSTEP,PIMPL,PDZZ,&
 !
 ZRWTHL(:,:,:)= PRHODJ(:,:,:)*(PTHLP(:,:,:)-PTHLM(:,:,:))/PTSTEP
 ! replace the flux by the Leonard terms above ZALT and ZCLD_THOLD
-IF (LHGRAD) THEN
+IF (TURBN%LHGRAD) THEN
  DO JK=1,KKU
   ZALT(:,:,JK) = PZZ(:,:,JK)-XZS(:,:)
  END DO
- WHERE ( (ZCLD_THOLD(:,:,:) >= XCLDTHOLD) .AND. ( ZALT(:,:,:) >= XALTHGRAD) )
+ WHERE ( (ZCLD_THOLD(:,:,:) >= TURBN%XCLDTHOLD) .AND. ( ZALT(:,:,:) >= TURBN%XALTHGRAD) )
   ZRWTHL(:,:,:) = -GZ_W_M(MZM(PRHODJ(:,:,:), KKA, KKU, KKL)*ZF_LEONARD(:,:,:),XDZZ,&
                    KKA, KKU, KKL)
  END WHERE
@@ -634,8 +636,8 @@ PRTHLS(:,:,:)= PRTHLS(:,:,:)  + ZRWTHL(:,:,:)
 ZFLXZ(:,:,:)   = ZF                                                &
                + PIMPL * ZDFDDTDZ * DZM(PTHLP - PTHLM, KKA, KKU, KKL) / PDZZ
 ! replace the flux by the Leonard terms
-IF (LHGRAD) THEN
- WHERE ( (ZCLD_THOLD(:,:,:) >= XCLDTHOLD) .AND. ( ZALT(:,:,:) >= XALTHGRAD) )
+IF (TURBN%LHGRAD) THEN
+ WHERE ( (ZCLD_THOLD(:,:,:) >= TURBN%XCLDTHOLD) .AND. ( ZALT(:,:,:) >= TURBN%XALTHGRAD) )
   ZFLXZ(:,:,:) = ZF_LEONARD(:,:,:)
  END WHERE
 END IF
@@ -768,9 +770,9 @@ IF (KRR /= 0) THEN
  ENDIF
   !
   ! Compute Leonard Terms for Cloud mixing ratio
-  IF (LHGRAD) THEN
+  IF (TURBN%LHGRAD) THEN
     ZDELTAX= XXHAT(3) - XXHAT(2)
-    ZF_LEONARD (:,:,:)= XCOEFHGRADRM*ZDELTAX*ZDELTAX/12.0*(        &
+    ZF_LEONARD (:,:,:)= TURBN%XCOEFHGRADRM*ZDELTAX*ZDELTAX/12.0*(        &
                 MXF(GX_W_UW(PWM(:,:,:),  XDXX,XDZZ,XDZX,KKA,KKU,KKL))       &
                 *MZM(GX_M_M(PRM(:,:,:,1),XDXX,XDZZ,XDZX,KKA,KKU,KKL),KKA,KKU,KKL) &
                 +MYF(GY_W_VW(PWM(:,:,:), XDYY,XDZZ,XDZY,KKA,KKU,KKL))        &
@@ -871,11 +873,11 @@ IF (KRR /= 0) THEN
   ZRWRNP (:,:,:) = PRHODJ(:,:,:)*(PRP(:,:,:)-PRM(:,:,:,1))/PTSTEP
   !
   ! replace the flux by the Leonard terms above ZALT and ZCLD_THOLD
-  IF (LHGRAD) THEN
+  IF (TURBN%LHGRAD) THEN
    DO JK=1,KKU
     ZALT(:,:,JK) = PZZ(:,:,JK)-XZS(:,:)
    END DO
-   WHERE ( (ZCLD_THOLD(:,:,:) >= XCLDTHOLD ) .AND. ( ZALT(:,:,:) >= XALTHGRAD ) )
+   WHERE ( (ZCLD_THOLD(:,:,:) >= TURBN%XCLDTHOLD ) .AND. ( ZALT(:,:,:) >= TURBN%XALTHGRAD ) )
     ZRWRNP (:,:,:) =  -GZ_W_M(MZM(PRHODJ(:,:,:),KKA,KKU,KKL)*ZF_LEONARD(:,:,:),XDZZ,KKA,KKU,KKL)
    END WHERE
   END IF
@@ -890,8 +892,8 @@ IF (KRR /= 0) THEN
                  + PIMPL * ZDFDDRDZ * DZM(PRP - PRM(:,:,:,1), KKA, KKU, KKL) / PDZZ 
   !
   ! replace the flux by the Leonard terms above ZALT and ZCLD_THOLD
-  IF (LHGRAD) THEN
-   WHERE ( (ZCLD_THOLD(:,:,:) >= XCLDTHOLD ) .AND. ( ZALT(:,:,:) >= XALTHGRAD ) )
+  IF (TURBN%LHGRAD) THEN
+   WHERE ( (ZCLD_THOLD(:,:,:) >= TURBN%XCLDTHOLD ) .AND. ( ZALT(:,:,:) >= TURBN%XALTHGRAD ) )
     ZFLXZ(:,:,:) = ZF_LEONARD(:,:,:)
    END WHERE
   END IF

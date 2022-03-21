@@ -5,7 +5,7 @@
 MODULE MODE_TURB_VER
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,           &
+SUBROUTINE TURB_VER(CST,CSTURB,TURBN,KKA,KKU,KKL,KRR,KRRL,KRRI,     &
                       OTURB_FLX, OOCEAN, ODEEPOC, OHARAT,           &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
                       HTURBDIM,HTOM,PIMPL,PEXPL,                    &
@@ -217,6 +217,7 @@ USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
 USE MODD_LES
+USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
@@ -242,8 +243,9 @@ IMPLICIT NONE
 !
 !
 !
-TYPE(CST_t),                  INTENT(IN)    :: CST
-TYPE(CSTURB_t),                  INTENT(IN)    :: CSTURB
+TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
+TYPE(TURB_t),           INTENT(IN)   :: TURBN
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
@@ -510,7 +512,7 @@ ELSE
   ZLM=PLM
 ENDIF
 !
-  CALL  TURB_VER_THERMO_FLUX(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,    &
+  CALL  TURB_VER_THERMO_FLUX(CST,CSTURB,TURBN,KKA,KKU,KKL,KRR,KRRL,KRRI,&
                         OTURB_FLX,HTURBDIM,HTOM,OOCEAN,ODEEPOC,OHARAT,&
                         OCOUPLES,OLES_CALL,                           &
                         PIMPL,PEXPL,PTSTEP,HPROGRAM,TPFILE,           &
@@ -559,7 +561,7 @@ ENDIF
 !
 IF (OHARAT) ZLM=PLENGTHM
 !
-CALL  TURB_VER_DYN_FLUX(CST,CSTURB,KKA,KKU,KKL,KSV,O2D,OFLAT,       &
+CALL  TURB_VER_DYN_FLUX(CST,CSTURB,TURBN,KKA,KKU,KKL,KSV,O2D,OFLAT,  &
                       OTURB_FLX,KRR,OOCEAN,OHARAT,OCOUPLES,OLES_CALL,&
                       HTURBDIM,PIMPL,PEXPL,PTSTEP,TPFILE,           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &

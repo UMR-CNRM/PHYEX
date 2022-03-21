@@ -5,7 +5,7 @@
 MODULE MODE_TURB_VER_DYN_FLUX
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER_DYN_FLUX(CST,CSTURB,KKA,KKU,KKL,KSV,O2D,OFLAT,  &
+SUBROUTINE TURB_VER_DYN_FLUX(CST,CSTURB,TURBN,KKA,KKU,KKL,KSV,O2D,OFLAT,&
                       OTURB_FLX,KRR, OOCEAN,OHARAT,OCOUPLES,OLES_CALL,&
                       HTURBDIM,PIMPL,PEXPL,                         &
                       PTSTEP,                                       &
@@ -213,7 +213,7 @@ USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_LES
 USE MODD_OCEANH, ONLY: XSSUFL, XSSUFL_T,XSSVFL
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB,XUNDEF
-USE MODD_TURB_n
+USE MODD_TURB_n, ONLY: TURB_t
 !
 !
 USE MODI_GRADIENT_U
@@ -235,8 +235,9 @@ IMPLICIT NONE
 !
 !
 !
-TYPE(CST_t),                  INTENT(IN)    :: CST
-TYPE(CSTURB_t),                  INTENT(IN)    :: CSTURB
+TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
+TYPE(TURB_t),           INTENT(IN)   :: TURBN
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
@@ -409,7 +410,7 @@ ZCOEFS(:,:,1:1)=MXM(ZCOEFS(:,:,1:1) / PDZZ(:,:,IKB:IKB) )
 IF (OOCEAN) THEN  ! OCEAN MODEL ONLY
   ! Sfx flux assumed to be in SI & at vorticity point
   IF (OCOUPLES) THEN  
-    ZSOURCE(:,:,IKE:IKE) = XSSUFL_C(:,:,1:1)/PDZZ(:,:,IKE:IKE) &
+    ZSOURCE(:,:,IKE:IKE) = TURBN%XSSUFL_C(:,:,1:1)/PDZZ(:,:,IKE:IKE) &
          *0.5 * ( 1. + MXM(PRHODJ(:,:,KKU:KKU)) / MXM(PRHODJ(:,:,IKE:IKE))) 
   ELSE
     ZSOURCE(:,:,IKE)     = XSSUFL(:,:)
@@ -422,7 +423,7 @@ IF (OOCEAN) THEN  ! OCEAN MODEL ONLY
 !
 ELSE             !ATMOS MODEL ONLY
   IF (OCOUPLES) THEN 
-   ZSOURCE(:,:,IKB:IKB) = XSSUFL_C(:,:,1:1)/PDZZ(:,:,IKB:IKB) &
+   ZSOURCE(:,:,IKB:IKB) = TURBN%XSSUFL_C(:,:,1:1)/PDZZ(:,:,IKB:IKB) &
       * 0.5 * ( 1. + MXM(PRHODJ(:,:,KKA:KKA)) / MXM(PRHODJ(:,:,IKB:IKB)) )
   ELSE               
     ! compute the explicit tangential flux at the W point
@@ -639,7 +640,7 @@ ZCOEFS(:,:,1:1)=MYM(ZCOEFS(:,:,1:1) / PDZZ(:,:,IKB:IKB) )
 !
 IF (OOCEAN) THEN ! Ocean case
   IF (OCOUPLES) THEN
-    ZSOURCE(:,:,IKE:IKE) =  XSSVFL_C(:,:,1:1)/PDZZ(:,:,IKE:IKE) &
+    ZSOURCE(:,:,IKE:IKE) =  TURBN%XSSVFL_C(:,:,1:1)/PDZZ(:,:,IKE:IKE) &
         *0.5 * ( 1. + MYM(PRHODJ(:,:,KKU:KKU)) / MYM(PRHODJ(:,:,IKE:IKE)) ) 
   ELSE 
     ZSOURCE(:,:,IKE) = XSSVFL(:,:)
@@ -668,7 +669,7 @@ ELSE ! Atmos case
 !
   ELSE   !atmosphere when coupling
     ! input flux assumed to be in SI and at vorticity point
-    ZSOURCE(:,:,IKB:IKB) =     -XSSVFL_C(:,:,1:1)/(1.*PDZZ(:,:,IKB:IKB)) &
+    ZSOURCE(:,:,IKB:IKB) =     -TURBN%XSSVFL_C(:,:,1:1)/(1.*PDZZ(:,:,IKB:IKB)) &
       * 0.5 * ( 1. + MYM(PRHODJ(:,:,KKA:KKA)) / MYM(PRHODJ(:,:,IKB:IKB)) )
   ENDIF
   !No flux at the atmosphere top

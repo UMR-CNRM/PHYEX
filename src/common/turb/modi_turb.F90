@@ -4,7 +4,8 @@
 !
 INTERFACE
 !
-      SUBROUTINE TURB(CST,CSTURB,BUCONF,KKA, KKU, KKL, KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,   &
+      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,              &
+              & KKA, KKU, KKL, KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,         &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,             &
               & HPROGRAM, O2D, ONOMIXLG, OFLAT,                       &
               & OLES_CALL,OCOUPLES,OBLOWSNOW,                         &
@@ -33,10 +34,12 @@ USE MODD_BUDGET, ONLY : TBUDGETDATA,TBUDGETCONF_t
 USE MODD_IO, ONLY : TFILEDATA
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_TURB_n, ONLY: TURB_t
 !
 TYPE(CST_t),            INTENT(IN)   :: CST
-TYPE(CSTURB_t),          INTENT(IN)   :: CSTURB
-TYPE(TBUDGETCONF_t),    INTENT(IN)    :: BUCONF
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
+TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF
+TYPE(TURB_t),           INTENT(IN)   :: TURBN
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=AR

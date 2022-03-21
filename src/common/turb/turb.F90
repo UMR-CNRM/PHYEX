@@ -3,7 +3,8 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-      SUBROUTINE TURB(CST,CSTURB,BUCONF,KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,      &
+      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,              &
+              & KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,            &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
               & O2D,ONOMIXLG,OFLAT,OLES_CALL,OCOUPLES,OBLOWSNOW,      &
               & OTURB_FLX,OTURB_DIAG,OSUBG_COND,                      &
@@ -243,10 +244,10 @@ USE MODD_BUDGET, ONLY:      NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUD
                             TBUDGETDATA, TBUDGETCONF_t
 USE MODD_FIELD, ONLY: TFIELDDATA,TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
-USE MODD_TURB_n, ONLY: XCADAP
 !
 USE MODD_LES
 USE MODD_IBM_PARAM_n,    ONLY: LIBM, XIBM_LS, XIBM_XMUT
+USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODE_BL89, ONLY: BL89
 USE MODE_TURB_VER, ONLY : TURB_VER
@@ -278,9 +279,10 @@ IMPLICIT NONE
 !
 !
 !
-TYPE(CST_t),            INTENT(IN)    :: CST
-TYPE(CSTURB_t),         INTENT(IN)    :: CSTURB
-TYPE(TBUDGETCONF_t),    INTENT(IN)    :: BUCONF
+TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
+TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF
+TYPE(TURB_t),           INTENT(IN)   :: TURBN
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
@@ -671,7 +673,7 @@ SELECT CASE (HTURBLEN)
     ! For LES grid meshes, this is equivalent to Deardorff : the base mixing lentgh is the horizontal grid mesh, 
     !                      and it is limited by a stability-based length (RM17), as was done in Deardorff length (but taking into account shear as well)
     ! For grid meshes in the grey zone, then this is the smaller of the two.
-    ZLM = MIN(ZLM,XCADAP*ZLMW)
+    ZLM = MIN(ZLM,TURBN%XCADAP*ZLMW)
 !
 !*      3.4 Delta mixing length
 !           -------------------
@@ -739,7 +741,7 @@ IF (ORMC01) THEN
 END IF
 !
 !RMC01 is only applied on RM17 in ADAP
-IF (HTURBLEN=='ADAP') ZLEPS = MIN(ZLEPS,ZLMW*XCADAP)
+IF (HTURBLEN=='ADAP') ZLEPS = MIN(ZLEPS,ZLMW*TURBN%XCADAP)
 !
 !*      3.8 Mixing length in external points (used if HTURBDIM="3DIM")
 !           ----------------------------------------------------------
@@ -877,7 +879,7 @@ IF( BUCONF%LBUDGET_SV ) THEN
   END DO
 END IF
 
-CALL TURB_VER(CST,CSTURB,KKA,KKU,KKL,KRR, KRRL, KRRI,    &
+CALL TURB_VER(CST,CSTURB,TURBN,KKA,KKU,KKL,KRR, KRRL, KRRI,&
           OTURB_FLX, OOCEAN, ODEEPOC, OHARAT,            &
           KSV,KSV_LGBEG,KSV_LGEND,                       &
           HTURBDIM,HTOM,PIMPL,ZEXPL,                     &
