@@ -3,11 +3,11 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,              &
+      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,D,              &
               & KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,            &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
               & O2D,ONOMIXLG,OFLAT,OLES_CALL,OCOUPLES,OBLOWSNOW,      &
-              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,                      &
+              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,OCOMPUTE_SRC,         &
               & ORMC01,OOCEAN,ODEEPOC,OHARAT,                         &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,PIMPL,      &
               & PTSTEP,TPFILE,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
@@ -247,6 +247,7 @@ USE MODD_IO, ONLY: TFILEDATA
 !
 USE MODD_LES
 USE MODD_IBM_PARAM_n,    ONLY: LIBM, XIBM_LS, XIBM_XMUT
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODE_BL89, ONLY: BL89
@@ -279,6 +280,7 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(DIMPHYEX_t),       INTENT(IN)    :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF
@@ -291,15 +293,15 @@ INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 INTEGER,                INTENT(IN)   :: KSV, KSV_LGBEG, KSV_LGEND ! number of scalar variables
-CHARACTER(LEN=*),DIMENSION(:),INTENT(IN):: HLBCX, HLBCY  ! X- and Y-direc LBC
+CHARACTER(LEN=*),DIMENSION(2),INTENT(IN):: HLBCX, HLBCY  ! X- and Y-direc LBC
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time-splitting
 INTEGER,                INTENT(IN)   :: KMODEL_CL     ! model number for cloud mixing length
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
                                  ! diagnostic fields in the syncronous FM-file
-LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid 
-                                 ! CONDensation
+LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid CONDensation
+LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
@@ -318,40 +320,45 @@ CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical sc
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   :: PDXX,PDYY,PDZZ,PDZX,PDZY
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   :: PDXX,PDYY,PDZZ,PDZX,PDZY
                                         ! metric coefficients
-REAL, DIMENSION(:,:,:), INTENT(IN)   :: PZZ       !  physical distance 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   :: PZZ       !  physical distance 
 ! between 2 succesive grid points along the K direction
-REAL, DIMENSION(:,:),   INTENT(IN)      ::  PDIRCOSXW, PDIRCOSYW, PDIRCOSZW
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)      ::  PDIRCOSXW, PDIRCOSYW, PDIRCOSZW
 ! Director Cosinus along x, y and z directions at surface w-point
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle
                                  ! between i and the slope vector
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle
                                  ! between i and the slope vector
-REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PRHODJ    ! dry density * Grid size
-REAL, DIMENSION(:,:,:), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
-REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)      ::  PRHODJ    ! dry density * Grid size
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
 !
-REAL, DIMENSION(:,:),   INTENT(IN)      ::  PSFTH,PSFRV,   &
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of theta and Rv 
                                             PSFU,PSFV
 ! normal surface fluxes of (u,v) parallel to the orography
-REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PSFSV
+REAL, DIMENSION(D%NIT,D%NJT,KSV), INTENT(IN)      ::  PSFSV
 ! normal surface fluxes of Scalar var. 
 !
 !    prognostic variables at t- deltat
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PPABST      ! Pressure at time t
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PUT,PVT,PWT ! wind components
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PTKET       ! TKE
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVT        ! passive scal. var.
-REAL, DIMENSION(:,:,:),   INTENT(IN) ::  PSRCT       ! Second-order flux
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) ::  PPABST      ! Pressure at time t
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) ::  PUT,PVT,PWT ! wind components
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) ::  PTKET       ! TKE
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) ::  PSVT        ! passive scal. var.
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) ::  PSRCT       ! Second-order flux
                       ! s'rc'/2Sigma_s2 at time t-1 multiplied by Lambda_3
-REAL, DIMENSION(:,:),     INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
-REAL, DIMENSION(:,:),     INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
+REAL, DIMENSION(MERGE(D%NIT,0,HTOM=='TMO6'),&
+                MERGE(D%NJT,0,HTOM=='TMO6')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
+REAL, DIMENSION(MERGE(D%NIT,0,ORMC01),&
+                MERGE(D%NJT,0,ORMC01)),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
 !
 !    variables for cloud mixing length
-REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PCEI ! Cloud Entrainment instability
+REAL, DIMENSION(MERGE(D%NIT,0,KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE'),&
+                MERGE(D%NJT,0,KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE'),&
+                MERGE(D%NKT,0,KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE')),INTENT(IN)      ::  PCEI 
+                                                 ! Cloud Entrainment instability
                                                  ! index to emphasize localy 
                                                  ! turbulent fluxes
 REAL, INTENT(IN)      ::  PCEI_MIN ! minimum threshold for the instability index CEI
@@ -359,40 +366,42 @@ REAL, INTENT(IN)      ::  PCEI_MAX ! maximum threshold for the instability index
 REAL, INTENT(IN)      ::  PCOEF_AMPL_SAT ! saturation of the amplification coefficient
 !
 !   thermodynamical variables which are transformed in conservative var.
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PTHLT       ! conservative pot. temp.
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRT         ! water var.  where 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PTHLT       ! conservative pot. temp.
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) ::  PRT         ! water var.  where 
                              ! PRT(:,:,:,1) is the conservative mixing ratio        
 !
 ! sources of momentum, conservative potential temperature, Turb. Kin. Energy, 
 ! TKE dissipation
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRUS,PRVS,PRWS,PRTHLS,PRTKES
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRUS,PRVS,PRWS,PRTHLS,PRTKES
 ! Source terms for all water kinds, PRRS(:,:,:,1) is used for the conservative
 ! mixing ratio
-REAL, DIMENSION(:,:,:),   INTENT(IN),OPTIONAL    ::  PRTKEMS
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRRS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN),OPTIONAL    ::  PRTKEMS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS
 ! Source terms for all passive scalar variables
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS
 ! Sigma_s at time t+1 : square root of the variance of the deviation to the 
 ! saturation
-REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PSIGS
-REAL, DIMENSION(:,:,:), INTENT(OUT),OPTIONAL     ::  PDRUS_TURB   ! evolution of rhoJ*U   by turbulence only
-REAL, DIMENSION(:,:,:), INTENT(OUT),OPTIONAL     ::  PDRVS_TURB   ! evolution of rhoJ*V   by turbulence only
-REAL, DIMENSION(:,:,:), INTENT(OUT),OPTIONAL     ::  PDRTHLS_TURB ! evolution of rhoJ*thl by turbulence only
-REAL, DIMENSION(:,:,:), INTENT(OUT),OPTIONAL     ::  PDRRTS_TURB  ! evolution of rhoJ*rt  by turbulence only
-REAL, DIMENSION(:,:,:,:), INTENT(OUT),OPTIONAL   ::  PDRSVS_TURB  ! evolution of rhoJ*Sv  by turbulence only
-REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PFLXZTHVMF 
+REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
+                MERGE(D%NJT,0,OCOMPUTE_SRC),&
+                MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(OUT)     ::  PSIGS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRUS_TURB   ! evolution of rhoJ*U   by turbulence only
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRVS_TURB   ! evolution of rhoJ*V   by turbulence only
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRTHLS_TURB ! evolution of rhoJ*thl by turbulence only
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRRTS_TURB  ! evolution of rhoJ*rt  by turbulence only
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(OUT),OPTIONAL ::  PDRSVS_TURB  ! evolution of rhoJ*Sv  by turbulence only
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)      ::  PFLXZTHVMF 
 !                                           MF contribution for vert. turb. transport
 !                                           used in the buoy. prod. of TKE
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWTH       ! heat flux
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWRC       ! cloud water flux
-REAL, DIMENSION(:,:,:,:),INTENT(OUT) :: PWSV       ! scalar flux
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTP        ! Thermal TKE production
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PWTH       ! heat flux
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PWRC       ! cloud water flux
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV),INTENT(OUT) :: PWSV       ! scalar flux
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PTP        ! Thermal TKE production
                                                    ! MassFlux + turb
-REAL, DIMENSION(:,:,:), INTENT(OUT),OPTIONAL  :: PTPMF      ! Thermal TKE production
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT),OPTIONAL  :: PTPMF      ! Thermal TKE production
                                                    ! MassFlux Only
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PDP        ! Dynamic TKE production
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDIFF     ! Diffusion TKE term
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PDP        ! Dynamic TKE production
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PTDIFF     ! Diffusion TKE term
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
 !
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
@@ -402,17 +411,17 @@ LOGICAL, INTENT(IN) :: ONOMIXLG          ! to use turbulence for lagrangian vari
 LOGICAL, INTENT(IN) :: O2D               ! Logical for 2D model version (modd_conf)
 !
 ! length scale from vdfexcu
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PLENGTHM, PLENGTHH
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PLENGTHM, PLENGTHH
 !
-REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
-REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
 !
 !
 !-------------------------------------------------------------------------------
 !
 !       0.2  declaration of local variables
 !
-REAL, DIMENSION(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)) ::     &
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::     &
           ZCP,                        &  ! Cp at t-1
           ZEXN,                       &  ! EXN at t-1
           ZT,                         &  ! T at t-1
@@ -425,10 +434,10 @@ REAL, DIMENSION(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)) ::     &
           ZFRAC_ICE,                  &  ! ri fraction of rc+ri
           ZMWTH,ZMWR,ZMTH2,ZMR2,ZMTHR,&  ! 3rd order moments
           ZFWTH,ZFWR,ZFTH2,ZFR2,ZFTHR,&  ! opposite of verticale derivate of 3rd order moments
-          ZTHLM,ZRTKEMS                  ! initial potential temp; TKE advective source
-REAL, DIMENSION(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3),SIZE(PRT,4)) ::     &
-          ZRM                            ! initial mixing ratio 
-REAL, DIMENSION(SIZE(PTHLT,1),SIZE(PTHLT,2)) ::  ZTAU11M,ZTAU12M,  &
+          ZTHLM,ZRTKEMS,              &  ! initial potential temp; TKE advective source
+          ZSHEAR, ZDUDZ, ZDVDZ           ! horizontal-wind vertical gradient
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR) :: ZRM ! initial mixing ratio 
+REAL, DIMENSION(D%NIT,D%NJT) ::  ZTAU11M,ZTAU12M,  &
                                                  ZTAU22M,ZTAU33M,  &
             ! tangential surface fluxes in the axes following the orography
                                                  ZUSLOPE,ZVSLOPE,  &
@@ -462,7 +471,6 @@ REAL                :: ZALPHA       ! work coefficient :
 !                                   !   BL89 mixing length near the surface
 !
 REAL :: ZTIME1, ZTIME2
-REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3))::  ZSHEAR, ZDUDZ, ZDVDZ
 TYPE(TFIELDDATA) :: TZFIELD
 !
 !*      1.PRELIMINARIES
@@ -647,7 +655,7 @@ SELECT CASE (HTURBLEN)
 
   CASE ('BL89')
     ZSHEAR=0.
-    CALL BL89(CST,CSTURB,KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
+    CALL BL89(D,CST,CSTURB,KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 !
 !*      3.2 RM17 mixing length
 !           ------------------
@@ -656,7 +664,7 @@ SELECT CASE (HTURBLEN)
     ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
     ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
     ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
-    CALL BL89(CST,CSTURB,KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
+    CALL BL89(D,CST,CSTURB,KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 !
 !*      3.3 Grey-zone combined RM17 & Deardorff mixing lengths 
 !           --------------------------------------------------
@@ -665,7 +673,7 @@ SELECT CASE (HTURBLEN)
     ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
     ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,KKA,KKU,KKL),KKA,KKU,KKL))
     ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
-    CALL BL89(CST,CSTURB,KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
+    CALL BL89(D,CST,CSTURB,KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 
     CALL DELT(ZLMW,ODZ=.FALSE.)
     ! The minimum mixing length is chosen between Horizontal grid mesh (not taking into account the vertical grid mesh) and RM17.
@@ -1345,16 +1353,16 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments 
 !
 REAL,                   INTENT(IN)    :: PALP,PBETA,PGAM,PLTT,PC
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PT,PEXN,PCP
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PT,PEXN,PCP
 !
-REAL, DIMENSION(:,:,:), INTENT(OUT)   :: PLOCPEXN
-REAL, DIMENSION(:,:,:), INTENT(OUT)   :: PAMOIST,PATHETA
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PLOCPEXN
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
 ! 
 !*       0.2   Declarations of local variables
 !
 REAL                :: ZEPS         ! XMV / XMD
-REAL, DIMENSION(SIZE(PEXN,1),SIZE(PEXN,2),SIZE(PEXN,3)) :: ZRVSAT
-REAL, DIMENSION(SIZE(PEXN,1),SIZE(PEXN,2),SIZE(PEXN,3)) :: ZDRVSATDT
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZRVSAT
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZDRVSATDT
 !
 !-------------------------------------------------------------------------------
 !
@@ -1426,7 +1434,7 @@ END SUBROUTINE COMPUTE_FUNCTION_THERMO
 !
 !*       0.1   Declarations of dummy arguments 
 !
-REAL, DIMENSION(:,:,:), INTENT(OUT)   :: PLM
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PLM
 LOGICAL,                INTENT(IN)    :: ODZ
 !
 !*       0.2   Declarations of local variables
@@ -1525,7 +1533,7 @@ END SUBROUTINE DELT
 !
 !*       0.1   Declarations of dummy arguments 
 !
-REAL, DIMENSION(:,:,:), INTENT(OUT)   :: PLM
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PLM
 !
 !*       0.2   Declarations of local variables
 !
@@ -1533,7 +1541,7 @@ REAL                :: ZD           ! distance to the surface
 REAL                :: ZVAR         ! Intermediary variable
 REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2)) ::   ZWORK2D
 !
-REAL, DIMENSION(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)) ::     &
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::     &
             ZDTHLDZ,ZDRTDZ,     &!dtheta_l/dz, drt_dz used for computing the stablity
 !                                ! criterion 
             ZETHETA,ZEMOIST             !coef ETHETA and EMOIST
@@ -1714,10 +1722,10 @@ IMPLICIT NONE
 REAL :: ZPENTE            ! Slope of the amplification straight line
 REAL :: ZCOEF_AMPL_CEI_NUL! Ordonnate at the origin of the
                           ! amplification straight line
-REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3)) :: ZCOEF_AMPL
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZCOEF_AMPL
                           ! Amplification coefficient of the mixing length
                           ! when the instability criterium is verified 
-REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2),SIZE(PUT,3)) :: ZLM_CLOUD
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZLM_CLOUD
                           ! Turbulent mixing length in the clouds
 !
 !-------------------------------------------------------------------------------
@@ -1759,7 +1767,7 @@ ELSE
 !           ------------------
   CASE ('BL89','RM17','ADAP')
     ZSHEAR=0.
-    CALL BL89(CST,CSTURB,KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD,OOCEAN,HPROGRAM)
+    CALL BL89(D,CST,CSTURB,KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD,OOCEAN,HPROGRAM)
 !
 !*         3.2 Delta mixing length
 !           -------------------

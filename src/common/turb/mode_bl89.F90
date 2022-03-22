@@ -6,7 +6,7 @@ MODULE MODE_BL89
 IMPLICIT NONE
 CONTAINS
 !     ######spl
-      SUBROUTINE BL89(CST,CSTURB,KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,PTHLM,KRR,PRM,PTKEM,PSHEAR,PLM,OOCEAN,HPROGRAM)
+      SUBROUTINE BL89(D,CST,CSTURB,KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,PTHLM,KRR,PRM,PTKEM,PSHEAR,PLM,OOCEAN,HPROGRAM)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     #########################################################
@@ -58,6 +58,7 @@ CONTAINS
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
 USE MODD_PRECISION, ONLY: MNHREAL
 !
@@ -67,20 +68,21 @@ IMPLICIT NONE
 !*       0.1   Declaration of arguments
 !              ------------------------
 !
-TYPE(CST_t),                  INTENT(IN)    :: CST
-TYPE(CSTURB_t),                  INTENT(IN)    :: CSTURB
+TYPE(DIMPHYEX_t),         INTENT(IN)  :: D
+TYPE(CST_t),              INTENT(IN)  :: CST
+TYPE(CSTURB_t),           INTENT(IN)  :: CSTURB
 INTEGER,                  INTENT(IN)  :: KKA      !near ground array index
 INTEGER,                  INTENT(IN)  :: KKU      !uppest atmosphere array index
 INTEGER,                  INTENT(IN)  :: KKL      !vert. levels type 1=MNH -1=ARO
-REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PZZ
-REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PDZZ
-REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PTHVREF
-REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PTHLM       ! conservative pot. temp.
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)  :: PZZ
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)  :: PDZZ
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)  :: PTHVREF
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)  :: PTHLM       ! conservative pot. temp.
 INTEGER,                  INTENT(IN)  :: KRR
-REAL, DIMENSION(:,:,:,:), INTENT(IN)  :: PRM       ! water var.
-REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PTKEM     ! TKE
-REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PSHEAR
-REAL, DIMENSION(:,:,:),   INTENT(OUT) :: PLM       ! Mixing length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN)  :: PRM       ! water var.
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)  :: PTKEM     ! TKE
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)  :: PSHEAR
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(OUT) :: PLM       ! Mixing length
 LOGICAL,                  INTENT(IN)  ::  OOCEAN       ! switch for Ocean model version
 CHARACTER(LEN=6),         INTENT(IN)  ::  HPROGRAM     ! CPROGRAM is the program currently running (modd_conf)
 !   thermodynamical variables PTHLM=Theta at the begining
@@ -89,27 +91,26 @@ CHARACTER(LEN=6),         INTENT(IN)  ::  HPROGRAM     ! CPROGRAM is the program
 !              ------------------------------
 !
 INTEGER :: IKB,IKE
-INTEGER :: IKT          ! array size in k direction
 INTEGER :: IKTB,IKTE    ! start, end of k loops in physical domain
 
-REAL, DIMENSION(SIZE(PTKEM,1)*SIZE(PTKEM,2),SIZE(PTKEM,3)) :: ZVPT  ! Virtual Potential Temp at half levels
-REAL, DIMENSION(SIZE(PTKEM,1)*SIZE(PTKEM,2),SIZE(PTKEM,3)) :: ZDELTVPT
+REAL, DIMENSION(D%NIT*D%NJT,D%NKT) :: ZVPT  ! Virtual Potential Temp at half levels
+REAL, DIMENSION(D%NIT*D%NJT,D%NKT) :: ZDELTVPT
             ! Increment of Virtual Potential Temp between two following levels
-REAL, DIMENSION(SIZE(PTKEM,1)*SIZE(PTKEM,2),SIZE(PTKEM,3)) :: ZHLVPT
+REAL, DIMENSION(D%NIT*D%NJT,D%NKT) :: ZHLVPT
             ! Virtual Potential Temp at half levels
-REAL, DIMENSION(SIZE(PTKEM,1)*SIZE(PTKEM,2)) ::  ZLWORK,ZINTE
+REAL, DIMENSION(D%NIT*D%NJT) ::  ZLWORK,ZINTE
 !           ! downwards then upwards vertical displacement,
 !           ! residual internal energy,
 !           ! residual potential energy
-REAL, DIMENSION(SIZE(PTKEM,1)*SIZE(PTKEM,2),SIZE(PTKEM,3)) :: ZZZ,ZDZZ,       &
+REAL, DIMENSION(D%NIT*D%NJT,D%NKT)                         :: ZZZ,ZDZZ,       &
                                                               ZG_O_THVREF,    &
                                                               ZTHM,ZTKEM,ZLM, &
                                                               ZLMDN,ZSHEAR,   &
                                                               ZSQRT_TKE
 !           ! input and output arrays packed according one horizontal coord.
-REAL, DIMENSION(SIZE(PRM,1)*SIZE(PRM,2),SIZE(PRM,3),SIZE(PRM,4)) :: ZRM
+REAL, DIMENSION(D%NIT*D%NJT,D%NKT,KRR) :: ZRM
 !           ! input array packed according one horizontal coord.
-REAL, DIMENSION(SIZE(PRM,1)*SIZE(PRM,2),SIZE(PRM,3)) :: ZSUM ! to replace SUM function
+REAL, DIMENSION(D%NIT*D%NJT,D%NKT) :: ZSUM ! to replace SUM function
 !
 INTEGER :: IIU,IJU
 INTEGER :: J1D        ! horizontal loop counter
@@ -124,15 +125,7 @@ REAL    :: Z2SQRT2,ZUSRBL89,ZBL89EXP
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('BL89',0,ZHOOK_HANDLE)
 Z2SQRT2=2.*SQRT(2.)
-IIU=SIZE(PTKEM,1)
-IJU=SIZE(PTKEM,2)
 !
-IKB=KKA+JPVEXT_TURB*KKL
-IKE=KKU-JPVEXT_TURB*KKL
-!
-IKTB = JPVEXT_TURB + 1
-IKT = SIZE(PTKEM,3)
-IKTE = IKT-JPVEXT_TURB
 ZRVORD = CST%XRV / CST%XRD
 !
 !-------------------------------------------------------------------------------
@@ -141,7 +134,7 @@ ZRVORD = CST%XRV / CST%XRD
 !              ---------------------------------------
 !
 IF (HPROGRAM=='AROME ') THEN
-  DO JK=1,IKT
+  DO JK=1,D%NKT
     ZZZ    (:,JK)   = PZZ    (:,1,JK)
     ZDZZ   (:,JK)   = PDZZ   (:,1,JK)
     ZTHM   (:,JK)   = PTHLM  (:,1,JK)
@@ -149,22 +142,22 @@ IF (HPROGRAM=='AROME ') THEN
     ZTKEM  (:,JK)   = PTKEM  (:,1,JK)
     ZG_O_THVREF(:,JK)   = CST%XG/PTHVREF(:,1,JK)
   END DO
-  DO JK=1,IKT
+  DO JK=1,D%NKT
     DO JRR=1,KRR
       ZRM  (:,JK,JRR) = PRM    (:,1,JK,JRR)
     END DO
   END DO
 ELSE
-  DO JK=1,IKT
-    ZZZ    (:,JK)   = RESHAPE(PZZ    (:,:,JK),(/ IIU*IJU /) )
-    ZDZZ   (:,JK)   = RESHAPE(PDZZ   (:,:,JK),(/ IIU*IJU /) )
-    ZTHM   (:,JK)   = RESHAPE(PTHLM  (:,:,JK),(/ IIU*IJU /) )
-    ZSHEAR   (:,JK)   = RESHAPE(PSHEAR  (:,:,JK),(/ IIU*IJU /) )    
-    ZTKEM  (:,JK)   = RESHAPE(PTKEM  (:,:,JK),(/ IIU*IJU /) )
-    ZG_O_THVREF(:,JK)   = RESHAPE(CST%XG/PTHVREF(:,:,JK),(/ IIU*IJU /) )
+  DO JK=1,D%NKT
+    ZZZ    (:,JK)   = RESHAPE(PZZ    (:,:,JK),(/ D%NIT*D%NJT /) )
+    ZDZZ   (:,JK)   = RESHAPE(PDZZ   (:,:,JK),(/ D%NIT*D%NJT /) )
+    ZTHM   (:,JK)   = RESHAPE(PTHLM  (:,:,JK),(/ D%NIT*D%NJT /) )
+    ZSHEAR   (:,JK)   = RESHAPE(PSHEAR  (:,:,JK),(/ D%NIT*D%NJT /) )    
+    ZTKEM  (:,JK)   = RESHAPE(PTKEM  (:,:,JK),(/ D%NIT*D%NJT /) )
+    ZG_O_THVREF(:,JK)   = RESHAPE(CST%XG/PTHVREF(:,:,JK),(/ D%NIT*D%NJT /) )
     IF (OOCEAN) ZG_O_THVREF(:,JK)   = CST%XG * CST%XALPHAOC
     DO JRR=1,KRR
-      ZRM  (:,JK,JRR) = RESHAPE(PRM    (:,:,JK,JRR),(/ IIU*IJU /) )
+      ZRM  (:,JK,JRR) = RESHAPE(PRM    (:,:,JK,JRR),(/ D%NIT*D%NJT /) )
     END DO
   END DO
 END IF
@@ -201,22 +194,22 @@ END IF
 !but algorithm must remain the same.
 !!!!!!!!!!!!
 
-ZDELTVPT(:,IKTB:IKTE)=ZVPT(:,IKTB:IKTE)-ZVPT(:,IKTB-KKL:IKTE-KKL)
-ZDELTVPT(:,KKU)=ZVPT(:,KKU)-ZVPT(:,KKU-KKL)
-ZDELTVPT(:,KKA)=0.
+ZDELTVPT(:,D%NKTB:D%NKTE)=ZVPT(:,D%NKTB:D%NKTE)-ZVPT(:,D%NKTB-D%NKL:D%NKTE-D%NKL)
+ZDELTVPT(:,D%NKU)=ZVPT(:,D%NKU)-ZVPT(:,D%NKU-D%NKL)
+ZDELTVPT(:,D%NKA)=0.
 WHERE (ABS(ZDELTVPT(:,:))<CSTURB%XLINF)
   ZDELTVPT(:,:)=CSTURB%XLINF
 END WHERE
 !
-ZHLVPT(:,IKTB:IKTE)= 0.5 * ( ZVPT(:,IKTB:IKTE)+ZVPT(:,IKTB-KKL:IKTE-KKL) )
-ZHLVPT(:,KKU)= 0.5 * ( ZVPT(:,KKU)+ZVPT(:,KKU-KKL) )
-ZHLVPT(:,KKA)    =         ZVPT(:,KKA)
+ZHLVPT(:,D%NKTB:D%NKTE)= 0.5 * ( ZVPT(:,D%NKTB:D%NKTE)+ZVPT(:,D%NKTB-D%NKL:D%NKTE-D%NKL) )
+ZHLVPT(:,D%NKU)= 0.5 * ( ZVPT(:,D%NKU)+ZVPT(:,D%NKU-D%NKL) )
+ZHLVPT(:,D%NKA)    =         ZVPT(:,D%NKA)
 !-------------------------------------------------------------------------------
 !
 !*       3.  loop on model levels
 !            --------------------
 !
-DO JK=IKTB,IKTE
+DO JK=D%NKTB,D%NKTE
 !
 !-------------------------------------------------------------------------------
 !
@@ -225,10 +218,10 @@ DO JK=IKTB,IKTE
   ZINTE(:)=ZTKEM(:,JK)
   ZLWORK=0.
   ZTESTM=1.
-  DO JKK=JK,IKB,-KKL
+  DO JKK=JK,D%NKB,-D%NKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0.
-      DO J1D=1,IIU*IJU
+      DO J1D=1,D%NIT*D%NJT
         ZTEST0=0.5+SIGN(0.5,ZINTE(J1D))
         !--------- SHEAR + STABILITY -----------
         ZPOTE = ZTEST0* &
@@ -262,7 +255,7 @@ DO JK=IKTB,IKTE
 !*       5.  intermediate storage of the final mixing length
 !            -----------------------------------------------
 !
-  ZLMDN(:,JK)=MIN(ZLWORK(:),0.5*(ZZZ(:,JK)+ZZZ(:,JK+KKL))-ZZZ(:,IKB))
+  ZLMDN(:,JK)=MIN(ZLWORK(:),0.5*(ZZZ(:,JK)+ZZZ(:,JK+D%NKL))-ZZZ(:,D%NKB))
 !
 !-------------------------------------------------------------------------------
 !
@@ -273,10 +266,10 @@ DO JK=IKTB,IKTE
   ZLWORK=0.
   ZTESTM=1.
 !
-  DO JKK=JK+KKL,IKE,KKL
+  DO JKK=JK+D%NKL,D%NKT,D%NKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0.
-      DO J1D=1,IIU*IJU
+      DO J1D=1,D%NIT*D%NJT
         ZTEST0=0.5+SIGN(0.5,ZINTE(J1D))
         !--------- SHEAR + STABILITY -----------
         ZPOTE = ZTEST0* &
@@ -287,11 +280,11 @@ DO JK=IKTB,IKTE
         ZTESTM=ZTESTM+ZTEST0
         ZLWORK1=ZDZZ(J1D,JKK)
         !--------- SHEAR + STABILITY ----------- 
-        ZLWORK2= ( - ZG_O_THVREF(J1D,JK) *(ZVPT(J1D,JKK-KKL) - ZVPT(J1D,JK) )  &
+        ZLWORK2= ( - ZG_O_THVREF(J1D,JK) *(ZVPT(J1D,JKK-D%NKL) - ZVPT(J1D,JK) )  &
                    - CSTURB%XRM17*ZSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK)  &
           + SQRT (ABS(                                                       &
           (CSTURB%XRM17*ZSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK)   &
-            + ( ZG_O_THVREF(J1D,JK) * (ZVPT(J1D,JKK-KKL) - ZVPT(J1D,JK))) )**2    &
+            + ( ZG_O_THVREF(J1D,JK) * (ZVPT(J1D,JKK-D%NKL) - ZVPT(J1D,JK))) )**2    &
             + 2. * ZINTE(J1D) * &
 #ifdef REPRO48
              ZG_O_THVREF(J1D,JK)* ZDELTVPT(J1D,JKK)/ZDZZ(J1D,JKK)))) / &
@@ -309,7 +302,7 @@ DO JK=IKTB,IKTE
 !
 !*       7.  final mixing length
 !
-  DO J1D=1,IIU*IJU
+  DO J1D=1,D%NIT*D%NJT
     ZLWORK1=MAX(ZLMDN(J1D,JK),1.E-10_MNHREAL)
     ZLWORK2=MAX(ZLWORK(J1D),1.E-10_MNHREAL)
     ZPOTE = ZLWORK1 / ZLWORK2
@@ -335,9 +328,9 @@ END DO
 !*       9.  boundaries
 !            ----------
 !
-ZLM(:,KKA)=ZLM(:,IKB)
-ZLM(:,IKE)=ZLM(:,IKE-KKL)
-ZLM(:,KKU)=ZLM(:,IKE-KKL)
+ZLM(:,D%NKA)=ZLM(:,D%NKB)
+ZLM(:,D%NKE)=ZLM(:,D%NKE-D%NKL)
+ZLM(:,D%NKU)=ZLM(:,D%NKE-D%NKL)
 !
 !-------------------------------------------------------------------------------
 !
@@ -345,12 +338,12 @@ ZLM(:,KKU)=ZLM(:,IKE-KKL)
 !            ------------------------------------------
 !
 IF (HPROGRAM=='AROME ') THEN
-  DO JK=1,IKT
+  DO JK=1,D%NKT
     PLM  (:,1,JK)   = ZLM  (:,JK)
   END DO
 ELSE
-  DO JK=1,IKT
-    PLM  (:,:,JK)   = RESHAPE(ZLM  (:,JK), (/ IIU,IJU /) )
+  DO JK=1,D%NKT
+    PLM  (:,:,JK)   = RESHAPE(ZLM  (:,JK), (/ D%NIT,D%NJT /) )
   END DO
 END IF
 

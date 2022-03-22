@@ -300,6 +300,7 @@ USE MODD_PARAM_n
 USE MODD_PARAM_RAD_n
 USE MODD_PASPOL
 USE MODD_PASPOL_n
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_PRECIP_n
 use modd_precision,        only: MNHTIME
 USE MODD_RADIATIONS_n
@@ -325,6 +326,7 @@ USE MODE_ll
 USE MODE_MNH_TIMING
 USE MODE_MODELN_HANDLER
 USE MODE_MPPDB
+USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 USE MODE_SALT_PSD
 
 USE MODI_AEROZON          ! Ajout PP
@@ -459,6 +461,8 @@ REAL, DIMENSION(:), ALLOCATABLE :: ZPROSOL1(:),ZPROSOL2(:) ! Funtions for penetr
 !
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLENGTHM, ZLENGTHH, ZMFMOIST !OHARAT turb option from AROME
 !
+TYPE(DIMPHYEX_t) :: YLDIMPHYEX
+LOGICAL :: GCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables 
 !-----------------------------------------------------------------------------
 
 NULLIFY(TZFIELDS_ll)
@@ -469,7 +473,11 @@ CALL GET_DIM_EXT_ll ('B',IIU,IJU)
 IKU=SIZE(XTHT,3)
 IKB = 1 + JPVEXT
 IKE = IKU - JPVEXT
+!
 CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
+CALL FILL_DIMPHYEX(YLDIMPHYEX, SIZE(XTHT,1), SIZE(XTHT,2), SIZE(XTHT,3))
+print*,"IIB,IJB,IIE,IJE = ",IIB,IJB,IIE,IJE
+print*,"YLDIMPHYEX = ",YLDIMPHYEX%NIB,YLDIMPHYEX%NJB,YLDIMPHYEX%NIE,YLDIMPHYEX%NJE
 !
 ZTIME1 = 0.0_MNHTIME
 ZTIME2 = 0.0_MNHTIME
@@ -1486,11 +1494,14 @@ ELSE
  ALLOCATE(XSVW_FLUX(SIZE(XSVT,1),SIZE(XSVT,2),SIZE(XSVT,3),SIZE(XSVT,4)))
 END IF
 !
-   CALL TURB( CST,CSTURB, TBUCONF, TURBN,&
-              1, IKU, 1, IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,        &
+GCOMPUTE_SRC=SIZE(XSIGS, 3)/=0
+!
+   CALL TURB( CST,CSTURB, TBUCONF, TURBN,YLDIMPHYEX,&
+              1, IKU, 1, IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,       &
               NSV, NSV_LGBEG, NSV_LGEND,CPROGRAM, L2D, LNOMIXLG,LFLAT,               &
               LLES_CALL, LCOUPLES, LBLOWSNOW,                                        &
-              LTURB_FLX, LTURB_DIAG, LSUBG_COND, LRMC01, LOCEAN, LDEEPOC, .FALSE.,   &
+              LTURB_FLX, LTURB_DIAG, LSUBG_COND, GCOMPUTE_SRC,                       &
+              LRMC01, LOCEAN, LDEEPOC, .FALSE.,                                      &
               CTURBDIM, CTURBLEN, CTOM, CTURBLEN_CLOUD, CCLOUD,XIMPL,                &
               XTSTEP, TPFILE,                                                        &
               XDXX, XDYY, XDZZ, XDZX, XDZY, XZZ,                                     &
