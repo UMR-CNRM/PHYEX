@@ -5,12 +5,12 @@
 MODULE MODE_TURB_VER
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER(CST,CSTURB,TURBN,KKA,KKU,KKL,KRR,KRRL,KRRI,     &
-                      OTURB_FLX, OOCEAN, ODEEPOC, OHARAT,           &
+SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,KKA,KKU,KKL,KRR,KRRL,KRRI,   &
+                      OTURB_FLX,OOCEAN,ODEEPOC,OHARAT,OCOMPUTE_SRC, &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
                       HTURBDIM,HTOM,PIMPL,PEXPL,                    &
                       HPROGRAM, O2D, ONOMIXLG, OFLAT,               &
-                      OLES_CALL,OCOUPLES,OBLOWSNOW,                 &                      
+                      OLES_CALL,OCOUPLES,OBLOWSNOW, ORMC01,         &                      
                       PTSTEP, TPFILE,                               &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
@@ -213,6 +213,7 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
@@ -236,13 +237,13 @@ USE MODI_SECOND_MNH
 USE MODE_IO_FIELD_WRITE, only: IO_Field_write
 USE MODE_PRANDTL
 !
-!
 IMPLICIT NONE
 !
 !*      0.1  declarations of arguments
 !
 !
 !
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
@@ -258,10 +259,12 @@ LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
 LOGICAL,                INTENT(IN)   ::  OHARAT       ! 
+LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
+LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
 CHARACTER(LEN=6),       INTENT(IN)   ::  HPROGRAM     ! HPROGRAM is the program currently running
 LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for lagrangian variables
 LOGICAL,                INTENT(IN)   ::  O2D          ! Logical for 2D model version
@@ -272,84 +275,91 @@ REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                       ! Metric coefficients
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the
                                                       ! normal to the ground surface
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PZZ          ! altitudes at flux points
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCOSSLOPE    ! cosinus of the angle 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PZZ          ! altitudes at flux points
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PCOSSLOPE    ! cosinus of the angle 
                                       ! between i and the slope vector
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSINSLOPE    ! sinus of the angle 
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PSINSLOPE    ! sinus of the angle 
                                       ! between i and the slope vector
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
 ! MFMOIST used in case of OHARATU
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  MFMOIST       ! moist mass flux dual scheme
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  MFMOIST       ! moist mass flux dual scheme
 
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
                                                       ! Potential Temperature 
 !
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at time
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSFSVM       ! t - deltat 
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at time
+REAL, DIMENSION(D%NIT,D%NJT,KSV), INTENT(IN)   ::  PSFSVM       ! t - deltat 
 !
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSFTHP,PSFRP ! surface fluxes at time
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSFSVP       ! t + deltat 
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PSFTHP,PSFRP ! surface fluxes at time
+REAL, DIMENSION(D%NIT,D%NJT,KSV), INTENT(IN)   ::  PSFSVP       ! t + deltat 
 !
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCDUEFF     ! Cd * || u || at time t
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked 
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PCDUEFF     ! Cd * || u || at time t
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked 
        ! to the maximum slope direction and the surface normal and the binormal 
        ! at time t - dt
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PUM,PVM,PWM,PTHLM 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PUM,PVM,PWM,PTHLM 
   ! Wind and potential temperature at t-Delta t
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PRM          ! Mixing ratios 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN) ::  PRM          ! Mixing ratios 
                                                       ! at t-Delta t
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM         ! scalar var. at t-Delta t
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PUSLOPEM     ! wind component along the 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) ::  PSVM         ! scalar var. at t-Delta t
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PUSLOPEM     ! wind component along the 
                                      ! maximum slope direction
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
                                      ! direction normal to the maximum slope one
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTKEM        ! TKE at time t
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM          ! Turb. mixing length   
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length   
 ! PLENGTHM PLENGTHH used in case of OHARATU
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLENGTHM     ! Turb. mixing length momentum
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLENGTHH     ! Turb. mixing length heat/moisture 
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLEPS        ! dissipative length
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PATHETA      ! coefficients between 
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSRCM        ! normalized 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLENGTHM     ! Turb. mixing length momentum
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLENGTHH     ! Turb. mixing length heat/moisture 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLEPS        ! dissipative length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PATHETA      ! coefficients between 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
+REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
+                MERGE(D%NJT,0,OCOMPUTE_SRC),&
+                MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(IN)   ::  PSRCM        ! normalized 
                   ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFRAC_ICE    ! ri fraction of rc+ri
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFWTH        ! d(w'2th' )/dz
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFWR         ! d(w'2r'  )/dz
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFTH2        ! d(w'th'2 )/dz
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFR2         ! d(w'r'2  )/dz
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFTHR        ! d(w'th'r')/dz
-REAL, DIMENSION(:,:),   INTENT(INOUT)::  PBL_DEPTH    ! BL depth
-REAL, DIMENSION(:,:),   INTENT(INOUT)::  PSBL_DEPTH   ! SBL depth
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PLMO         ! Monin-Obukhov length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFRAC_ICE    ! ri fraction of rc+ri
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFWTH        ! d(w'2th' )/dz
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFWR         ! d(w'2r'  )/dz
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFTH2        ! d(w'th'2 )/dz
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFR2         ! d(w'r'2  )/dz
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFTHR        ! d(w'th'r')/dz
+REAL, DIMENSION(MERGE(D%NIT,0,HTOM=='TMO6'),&
+                MERGE(D%NJT,0,HTOM=='TMO6')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
+REAL, DIMENSION(MERGE(D%NIT,0,ORMC01),&
+                MERGE(D%NJT,0,ORMC01)),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PLMO         ! Monin-Obukhov length
 !
-REAL, DIMENSION(:,:,:), INTENT(INOUT)   ::  PRUS, PRVS, PRWS, PRTHLS
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS,PRRS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT)   ::  PRUS, PRVS, PRWS, PRTHLS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS
                             ! cumulated sources for the prognostic variables
 !
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PDP,PTP   ! Dynamic and thermal
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PDP,PTP   ! Dynamic and thermal
                                                    ! TKE production terms
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PSIGS     ! Vert. part of Sigma_s at t
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWTH      ! heat flux
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWRC      ! cloud water flux
-REAL, DIMENSION(:,:,:,:),INTENT(OUT) :: PWSV       ! scalar flux
+REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
+                MERGE(D%NJT,0,OCOMPUTE_SRC),&
+                MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(OUT)     ::  PSIGS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PWTH      ! heat flux
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PWRC      ! cloud water flux
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV),INTENT(OUT) :: PWSV       ! scalar flux
 !
 !
 !*       0.2  declaration of local variables
 !
 !JUAN BUG PGI
 !!$REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ::  &
-REAL, ALLOCATABLE, DIMENSION(:,:,:)  ::  &
+REAL,  DIMENSION(D%NIT,D%NJT,D%NKT)  ::  &
        ZBETA,    & ! buoyancy coefficient
        ZSQRT_TKE,& ! sqrt(e)
        ZDTH_DZ,  & ! d(th)/dz
@@ -372,12 +382,12 @@ REAL, ALLOCATABLE, DIMENSION(:,:,:)  ::  &
        ZRP         ! guess of total water due to vert. turbulent flux
 
 !!$REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),KSV)  ::  &
-REAL, ALLOCATABLE, DIMENSION(:,:,:,:)  ::  &
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV)  ::  &
        ZPSI_SV,  & ! Prandtl number for scalars
        ZREDS1,   & ! 1D Redelsperger number R_sv
        ZRED2THS, & ! 3D Redelsperger number R*2_thsv
        ZRED2RS     ! 3D Redelsperger number R*2_rsv
-REAL, DIMENSION(SIZE(PLM,1),SIZE(PLM,2),SIZE(PLM,3))  ::  ZLM
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  ::  ZLM
 !
 LOGICAL :: GUSERV    ! flag to use water vapor
 INTEGER :: IKB,IKE   ! index value for the Beginning
@@ -388,33 +398,6 @@ REAL    :: ZTIME2
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 TYPE(TFIELDDATA) :: TZFIELD
 !----------------------------------------------------------------------------
-ALLOCATE (      ZBETA(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))    ,&
-       ZSQRT_TKE(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)),& 
-       ZDTH_DZ(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ,&
-       ZDR_DZ(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))   ,&
-       ZRED2TH3(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)) ,& 
-       ZRED2R3(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ,&
-       ZRED2THR3(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)),&
-       ZBLL_O_E(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)) ,&
-       ZETHETA(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ,&
-       ZEMOIST(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ,&
-       ZREDTH1(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ,&
-       ZREDR1(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))   ,&
-       ZPHI3(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))    ,&
-       ZPSI3(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))    ,&
-       ZD(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))       ,&
-       ZWTHV(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))    ,&
-       ZWU(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))      ,&
-       ZWV(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))      ,&
-       ZTHLP(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))    ,&
-       ZRP(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))     )   
-
-ALLOCATE ( &
- ZPSI_SV(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),KSV),  &
- ZREDS1(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),KSV),   &
- ZRED2THS(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),KSV), &
- ZRED2RS(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),KSV)   )
-
 !----------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARIES
@@ -422,15 +405,15 @@ ALLOCATE ( &
 !
 IF (LHOOK) CALL DR_HOOK('TURB_VER',0,ZHOOK_HANDLE)
 !
-IKB=KKA+JPVEXT_TURB*KKL
-IKE=KKU-JPVEXT_TURB*KKL
+IKB=D%NKB
+IKE=D%NKE
 !
 !
 ! 3D Redelsperger numbers
 !
 !
-CALL PRANDTL(CST,CSTURB,KKA,KKU,KKL,KRR,KRRI,OTURB_FLX, &
-             HTURBDIM, OOCEAN,OHARAT,O2D,          &
+CALL PRANDTL(D,CST,CSTURB,KKA,KKU,KKL,KRR,KSV,KRRI,OTURB_FLX, &
+             HTURBDIM,OOCEAN,OHARAT,O2D,OCOMPUTE_SRC,&
              TPFILE,                               &
              PDXX,PDYY,PDZZ,PDZX,PDZY,             &
              PTHVREF,PLOCPEXNM,PATHETA,PAMOIST,    &
@@ -472,13 +455,13 @@ ENDIF
 !
 GUSERV = KRR/=0
 !
-ZPHI3 = PHI3(CSTURB,ZREDTH1,ZREDR1,ZRED2TH3,ZRED2R3,ZRED2THR3,HTURBDIM,GUSERV)
+ZPHI3 = PHI3(D,CSTURB,ZREDTH1,ZREDR1,ZRED2TH3,ZRED2R3,ZRED2THR3,HTURBDIM,GUSERV)
 IF(KRR/=0) &
-ZPSI3 = PSI3(CSTURB,ZREDR1,ZREDTH1,ZRED2R3,ZRED2TH3,ZRED2THR3,HTURBDIM,GUSERV)
+ZPSI3 = PSI3(D,CSTURB,ZREDR1,ZREDTH1,ZRED2R3,ZRED2TH3,ZRED2THR3,HTURBDIM,GUSERV)
 !
 ! Prandtl numbers for scalars
 !
-ZPSI_SV = PSI_SV(CSTURB,ZREDTH1,ZREDR1,ZREDS1,ZRED2THS,ZRED2RS,ZPHI3,ZPSI3)
+ZPSI_SV = PSI_SV(D,CSTURB,KSV,ZREDTH1,ZREDR1,ZREDS1,ZRED2THS,ZRED2RS,ZPHI3,ZPSI3)
 !
 ! LES diagnostics
 !
@@ -512,15 +495,16 @@ ELSE
   ZLM=PLM
 ENDIF
 !
-  CALL  TURB_VER_THERMO_FLUX(CST,CSTURB,TURBN,KKA,KKU,KKL,KRR,KRRL,KRRI,&
+  CALL  TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                      &
+                        KKA,KKU,KKL,KRR,KRRL,KRRI,KSV,                &
                         OTURB_FLX,HTURBDIM,HTOM,OOCEAN,ODEEPOC,OHARAT,&
-                        OCOUPLES,OLES_CALL,                           &
+                        OCOUPLES,OLES_CALL,OCOMPUTE_SRC,              &
                         PIMPL,PEXPL,PTSTEP,HPROGRAM,TPFILE,           &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                         PRHODJ,PTHVREF,                               &
                         PSFTHM,PSFRM,PSFTHP,PSFRP,                    &
                         PWM,PTHLM,PRM,PSVM,                           &
-                        PTKEM,ZLM,PLEPS,                         &
+                        PTKEM,ZLM,PLEPS,                              &
                         PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PFRAC_ICE,    &
                         ZBETA, ZSQRT_TKE, ZDTH_DZ, ZDR_DZ, ZRED2TH3,  &
                         ZRED2R3, ZRED2THR3, ZBLL_O_E, ZETHETA,        &
@@ -529,8 +513,9 @@ ENDIF
                         MFMOIST,PBL_DEPTH,ZWTHV,                      &
                         PRTHLS,PRRS,ZTHLP,ZRP,PTP,PWTH,PWRC )
 !
-  CALL  TURB_VER_THERMO_CORR(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,    &
-                        OTURB_FLX,HTURBDIM,HTOM, OHARAT,              &
+  CALL  TURB_VER_THERMO_CORR(D,CST,CSTURB,                            &
+                        KKA,KKU,KKL,KRR,KRRL,KRRI,KSV,                &
+                        OTURB_FLX,HTURBDIM,HTOM, OHARAT,OCOMPUTE_SRC, &
                         OCOUPLES,OLES_CALL,                           &                        
                         PIMPL,PEXPL,TPFILE,                           &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,           &
@@ -538,7 +523,7 @@ ENDIF
                         PSFTHM,PSFRM,PSFTHP,PSFRP,                    &
                         PWM,PTHLM,PRM,PSVM,                           &
                         PTKEM,ZLM,PLEPS,                              &
-                        PLOCPEXNM,PATHETA,PAMOIST,PSRCM,              &
+                        PLOCPEXNM,PATHETA,PAMOIST,                    &
                         ZBETA, ZSQRT_TKE, ZDTH_DZ, ZDR_DZ, ZRED2TH3,  &
                         ZRED2R3, ZRED2THR3, ZBLL_O_E, ZETHETA,        &
                         ZEMOIST, ZREDTH1, ZREDR1, ZPHI3, ZPSI3, ZD,   &
@@ -561,7 +546,7 @@ ENDIF
 !
 IF (OHARAT) ZLM=PLENGTHM
 !
-CALL  TURB_VER_DYN_FLUX(CST,CSTURB,TURBN,KKA,KKU,KKL,KSV,O2D,OFLAT,  &
+CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KKA,KKU,KKL,KSV,O2D,OFLAT,  &
                       OTURB_FLX,KRR,OOCEAN,OHARAT,OCOUPLES,OLES_CALL,&
                       HTURBDIM,PIMPL,PEXPL,PTSTEP,TPFILE,           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
@@ -582,8 +567,8 @@ CALL  TURB_VER_DYN_FLUX(CST,CSTURB,TURBN,KKA,KKU,KKL,KSV,O2D,OFLAT,  &
 IF (OHARAT) ZLM=PLENGTHH
 !
 IF (SIZE(PSVM,4)>0)                                                 &
-CALL  TURB_VER_SV_FLUX(CST,CSTURB,KKA,KKU,KKL,ONOMIXLG,             &
-                      KSV_LGBEG,KSV_LGEND,                          &
+CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,KKA,KKU,KKL,ONOMIXLG,           &
+                      KSV,KSV_LGBEG,KSV_LGEND,                      &
                       OTURB_FLX,HTURBDIM,OHARAT,OBLOWSNOW,OLES_CALL,&
                       PIMPL,PEXPL,PTSTEP,                           &
                       TPFILE,                                       &
@@ -596,9 +581,9 @@ CALL  TURB_VER_SV_FLUX(CST,CSTURB,KKA,KKU,KKL,ONOMIXLG,             &
 !
 !
 IF (SIZE(PSVM,4)>0 .AND. OLES_CALL)                                 &
-CALL  TURB_VER_SV_CORR(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,OOCEAN, &
+CALL  TURB_VER_SV_CORR(D,CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,OOCEAN,&
                       PDZZ,KSV,KSV_LGBEG,KSV_LGEND,ONOMIXLG,        &
-                      OBLOWSNOW,OLES_CALL,                          &
+                      OBLOWSNOW,OLES_CALL,OCOMPUTE_SRC,             &
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,ZPHI3,ZPSI3,  &
                       PWM,PSVM,                                     &
@@ -610,7 +595,7 @@ CALL  TURB_VER_SV_CORR(CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,OOCEAN, &
 !*       9.   DIAGNOSTIC OF Surface Boundary Layer Depth
 !             ------------------------------------------
 !
-IF (SIZE(PSBL_DEPTH)>0) CALL SBL_DEPTH(IKB,IKE,PZZ,ZWU,ZWV,ZWTHV,PLMO,PSBL_DEPTH)
+IF (ORMC01) CALL SBL_DEPTH(IKB,IKE,PZZ,ZWU,ZWV,ZWTHV,PLMO,PSBL_DEPTH)
 !
 !----------------------------------------------------------------------------
 !

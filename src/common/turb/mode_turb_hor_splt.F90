@@ -5,8 +5,9 @@
 MODULE MODE_TURB_HOR_SPLT
 IMPLICIT NONE
 CONTAINS
-           SUBROUTINE TURB_HOR_SPLT(KSPLIT, KRR, KRRL, KRRI, PTSTEP,      &
-                      HLBCX,HLBCY,OTURB_FLX,OSUBG_COND,OOCEAN,       &
+           SUBROUTINE TURB_HOR_SPLT(D,CST,CSTURB,                    &
+                      KSPLIT, KRR, KRRL, KRRI, PTSTEP,HLBCX,HLBCY,   &
+                      OTURB_FLX,OSUBG_COND,OOCEAN,OCOMPUTE_SRC,      &
                       TPFILE,                                        &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
                       PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &
@@ -156,8 +157,9 @@ CONTAINS
 !          ------------
 !
 USE MODD_CONF
-USE MODD_CST
-USE MODD_CTURB
+USE MODD_CST, ONLY: CST_t
+USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_DIMPHYEX, ONLY : DIMPHYEX_t
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_PARAMETERS
 !
@@ -174,6 +176,9 @@ IMPLICIT NONE
 !*       0.1  declaration of arguments
 !
 !
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time splitting
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
@@ -182,9 +187,10 @@ REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep
 CHARACTER (LEN=*), DIMENSION(:), INTENT(IN)       ::  HLBCX,HLBCY
 LOGICAL,                  INTENT(IN)    ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
-LOGICAL,                 INTENT(IN)  ::   OSUBG_COND ! Switch for sub-grid 
+LOGICAL,                 INTENT(IN)  ::   OSUBG_COND ! Switch for sub-grid condensation
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
-!                                                    condensation
+LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
+
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
@@ -356,8 +362,8 @@ IF (KSPLIT>1 .AND. CPROGRAM=='MESONH') THEN
   DO JSPLT=1,KSPLIT
 !
 ! compute the turbulent tendencies for the small time step
-    CALL TURB_HOR(JSPLT, KRR, KRRL, KRRI, PTSTEP,                 &
-                   OTURB_FLX,OSUBG_COND,OOCEAN,                   &
+    CALL TURB_HOR(D,CST,CSTURB,JSPLT, KRR, KRRL, KRRI, PTSTEP,    &
+                   OTURB_FLX,OSUBG_COND,OOCEAN,OCOMPUTE_SRC,      &
                    TPFILE,                                        &
                    PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
                    PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &
@@ -497,8 +503,8 @@ IF (KSPLIT>1 .AND. CPROGRAM=='MESONH') THEN
 !
 ELSE
 !
-  CALL TURB_HOR(1, KRR, KRRL, KRRI,  PTSTEP,                   &
-                OTURB_FLX,OSUBG_COND,OOCEAN,                   &
+  CALL TURB_HOR(D,CST,CSTURB,1, KRR, KRRL, KRRI,  PTSTEP,      &
+                OTURB_FLX,OSUBG_COND,OOCEAN,OCOMPUTE_SRC,      &
                 TPFILE,                                        &
                 PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
                 PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &

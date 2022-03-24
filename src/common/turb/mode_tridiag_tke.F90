@@ -5,7 +5,7 @@
 MODULE MODE_TRIDIAG_TKE
 IMPLICIT NONE
 CONTAINS       
-SUBROUTINE TRIDIAG_TKE(KKA,KKU,KKL,PVARM,PA,PTSTEP,PEXPL,PIMPL, &
+SUBROUTINE TRIDIAG_TKE(D,KKA,KKU,KKL,PVARM,PA,PTSTEP,PEXPL,PIMPL, &
                                   PRHODJ,PSOURCE,PDIAG,PVARP )
        USE PARKIND1, ONLY : JPRB
        USE YOMHOOK , ONLY : LHOOK, DR_HOOK
@@ -113,31 +113,33 @@ SUBROUTINE TRIDIAG_TKE(KKA,KKU,KKL,PVARM,PA,PTSTEP,PEXPL,PIMPL, &
 !*       0. DECLARATIONS
 !
 USE MODD_PARAMETERS
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 !
 IMPLICIT NONE
 !
 !
 !*       0.1 declarations of arguments
 !
+TYPE(DIMPHYEX_t),     INTENT(IN)   :: D
 INTEGER,              INTENT(IN)   :: KKA     !near ground array index  
 INTEGER,              INTENT(IN)   :: KKU     !uppest atmosphere array index
 INTEGER,              INTENT(IN)   :: KKL     !vert. levels type 1=MNH -1=ARO
-REAL, DIMENSION(:,:,:),    INTENT(IN)  :: PVARM       ! variable at t-1  
-REAL, DIMENSION(:,:,:),    INTENT(IN)  :: PA          ! upper diag. elements
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),    INTENT(IN)  :: PVARM       ! variable at t-1  
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),    INTENT(IN)  :: PA          ! upper diag. elements
 REAL,                      INTENT(IN)  :: PTSTEP      ! Double time step
 REAL,                      INTENT(IN)  :: PEXPL,PIMPL ! weights of the temporal scheme
-REAL, DIMENSION(:,:,:),    INTENT(IN)  :: PRHODJ      ! (dry rho)*J
-REAL, DIMENSION(:,:,:),    INTENT(IN)  :: PSOURCE     ! source term of PVAR    
-REAL, DIMENSION(:,:,:),    INTENT(IN)  :: PDIAG       ! diagonal term linked to
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),    INTENT(IN)  :: PRHODJ      ! (dry rho)*J
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),    INTENT(IN)  :: PSOURCE     ! source term of PVAR    
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),    INTENT(IN)  :: PDIAG       ! diagonal term linked to
                                                       ! the implicit dissipation
 !
-REAL, DIMENSION(:,:,:),    INTENT(OUT) :: PVARP       ! variable at t+1        
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),    INTENT(OUT) :: PVARP       ! variable at t+1        
 !
 !*       0.2 declarations of local variables
 !
-REAL, DIMENSION(SIZE(PVARM,1),SIZE(PVARM,2),SIZE(PVARM,3))  :: ZY ,ZGAM 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZY ,ZGAM 
                                          ! RHS of the equation, 3D work array
-REAL, DIMENSION(SIZE(PVARM,1),SIZE(PVARM,2))                :: ZBET
+REAL, DIMENSION(D%NIT,D%NJT)        :: ZBET
                                          ! 2D work array
 INTEGER             :: JK            ! loop counter
 INTEGER             :: IKB,IKE       ! inner vertical limits
@@ -151,13 +153,12 @@ INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TRIDIAG_TKE',0,ZHOOK_HANDLE)
-IKT=SIZE(PVARM,3)
-IKTB=1+JPVEXT_TURB
-IKTE=IKT-JPVEXT_TURB
-IKB=KKA+JPVEXT_TURB*KKL
-IKE=KKU-JPVEXT_TURB*KKL
-
 !
+IKT=D%NKT
+IKTB=D%NKTB
+IKTE=D%NKTE
+IKB=D%NKB
+IKE=D%NKE
 !
 ZY(:,:,IKB) = PVARM(:,:,IKB)  + PTSTEP*PSOURCE(:,:,IKB) -   &
   PEXPL / PRHODJ(:,:,IKB) * PA(:,:,IKB+KKL) * (PVARM(:,:,IKB+KKL) - PVARM(:,:,IKB))

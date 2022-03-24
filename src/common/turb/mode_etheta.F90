@@ -5,7 +5,7 @@
 MODULE MODE_ETHETA
 IMPLICIT NONE
 CONTAINS
-FUNCTION ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN) RESULT(PETHETA)
+FUNCTION ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC) RESULT(PETHETA)
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !   ############################################################################
@@ -56,33 +56,39 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 !*       0. DECLARATIONS
 !           ------------
-USE MODD_CST
+USE MODD_CST, ONLY : CST_t
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 !
 IMPLICIT NONE
 !
 !*       0.1 declarations of arguments and result
 !
 !
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+TYPE(CST_t),            INTENT(IN)   :: CST
 INTEGER                              :: KRR          ! number of moist var.
 INTEGER                              :: KRRI         ! number of ice var.
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 !
-REAL, DIMENSION(:,:,:),  INTENT(IN)  ::   PTHLM     ! Conservative pot. temperature
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::   PRM       ! Mixing ratios, where
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  ::   PTHLM     ! Conservative pot. temperature
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN) ::   PRM       ! Mixing ratios, where
 !                                      PRM(:,:,:,1) = conservative mixing ratio
-REAL, DIMENSION(:,:,:),  INTENT(IN)  ::   PLOCPEXNM ! Lv(T)/Cp/Exner at time t-1
-REAL, DIMENSION(:,:,:),  INTENT(IN)  ::   PATHETA   ! Atheta
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  ::   PLOCPEXNM ! Lv(T)/Cp/Exner at time t-1
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  ::   PATHETA   ! Atheta
 !                                                    
-REAL, DIMENSION(:,:,:),  INTENT(IN)  ::   PSRCM     ! Normalized 2dn_order
+LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and
+REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
+                MERGE(D%NJT,0,OCOMPUTE_SRC),&
+                MERGE(D%NKT,0,OCOMPUTE_SRC)),   INTENT(IN)  ::   PSRCM     ! Normalized 2dn_order
                                                     ! moment s'r'c/2Sigma_s2
 !
-REAL,DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)):: PETHETA ! result
+REAL,DIMENSION(D%NIT,D%NJT,D%NKT) :: PETHETA ! result
 !
 !
 !
 !*       0.2 declarations of local variables
 !
-REAL,DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)) ::       &
+REAL,DIMENSION(D%NIT,D%NJT,D%NKT) ::       &
                                         ZA, ZRW
 !                ZA = coeft A, ZRW = total mixing ratio rw
 REAL                                  :: ZDELTA  ! = Rv/Rd - 1
@@ -103,10 +109,10 @@ ELSE
  IF ( KRR == 0) THEN                                ! dry case
   PETHETA(:,:,:) = 1.
  ELSE IF ( KRR == 1 ) THEN                           ! only vapor
-  ZDELTA = (XRV/XRD) - 1.
+  ZDELTA = (CST%XRV/CST%XRD) - 1.
   PETHETA(:,:,:) = 1. + ZDELTA*PRM(:,:,:,1)
  ELSE                                                ! liquid water & ice present
-  ZDELTA = (XRV/XRD) - 1.
+  ZDELTA = (CST%XRV/CST%XRD) - 1.
   ZRW(:,:,:) = PRM(:,:,:,1)
 !
   IF ( KRRI>0 ) THEN  ! rc and ri case

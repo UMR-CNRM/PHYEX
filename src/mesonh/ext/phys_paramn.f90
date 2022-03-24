@@ -459,7 +459,8 @@ REAL :: ZSWA,TINTSW     ! index for SW interpolation and int time betwenn forcin
 REAL, DIMENSION(:), ALLOCATABLE :: ZIZOCE(:) ! Solar flux penetrating in ocean
 REAL, DIMENSION(:), ALLOCATABLE :: ZPROSOL1(:),ZPROSOL2(:) ! Funtions for penetrating solar flux
 !
-REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLENGTHM, ZLENGTHH, ZMFMOIST !OHARAT turb option from AROME
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLENGTHM, ZLENGTHH, ZMFMOIST !OHARAT turb option from AROME (not allocated in MNH)
+                                                                    ! to be moved as optional args for turb
 !
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 LOGICAL :: GCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables 
@@ -476,8 +477,6 @@ IKE = IKU - JPVEXT
 !
 CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
 CALL FILL_DIMPHYEX(YLDIMPHYEX, SIZE(XTHT,1), SIZE(XTHT,2), SIZE(XTHT,3))
-print*,"IIB,IJB,IIE,IJE = ",IIB,IJB,IIE,IJE
-print*,"YLDIMPHYEX = ",YLDIMPHYEX%NIB,YLDIMPHYEX%NJB,YLDIMPHYEX%NIE,YLDIMPHYEX%NJE
 !
 ZTIME1 = 0.0_MNHTIME
 ZTIME2 = 0.0_MNHTIME
@@ -1495,6 +1494,7 @@ ELSE
 END IF
 !
 GCOMPUTE_SRC=SIZE(XSIGS, 3)/=0
+!
 !
    CALL TURB( CST,CSTURB, TBUCONF, TURBN,YLDIMPHYEX,&
               1, IKU, 1, IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,       &

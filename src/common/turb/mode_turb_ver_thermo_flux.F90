@@ -6,10 +6,10 @@ MODULE MODE_TURB_VER_THERMO_FLUX
 IMPLICIT NONE
 CONTAINS
       
-SUBROUTINE TURB_VER_THERMO_FLUX(CST,CSTURB,TURBN,                   &
-                      KKA,KKU,KKL,KRR,KRRL,KRRI,                    &
+SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                 &
+                      KKA,KKU,KKL,KRR,KRRL,KRRI,KSV,                &
                       OTURB_FLX,HTURBDIM,HTOM,OOCEAN,ODEEPOC,OHARAT,&
-                      OCOUPLES,OLES_CALL,                           &
+                      OCOUPLES,OLES_CALL, OCOMPUTE_SRC,             &
                       PIMPL,PEXPL,PTSTEP,HPROGRAM,                  &
                       TPFILE,                                       &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
@@ -230,6 +230,7 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_GRID_n,         ONLY: XZS, XXHAT, XYHAT
 USE MODD_IO,             ONLY: TFILEDATA
@@ -247,7 +248,6 @@ USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
 USE MODI_GRADIENT_M
 USE MODI_SHUMAN , ONLY : DZF, DZM, MZF, MZM, MYF, MXF
-USE MODE_TRIDIAG, ONLY: TRIDIAG
 USE MODI_LES_MEAN_SUBGRID
 USE MODE_TRIDIAG_THERMO, ONLY: TRIDIAG_THERMO
 USE MODE_TM06_H, ONLY: TM06_H
@@ -265,6 +265,7 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
@@ -272,6 +273,7 @@ INTEGER,                INTENT(IN)   :: KKA           !near ground array index
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
+INTEGER,                INTENT(IN)   :: KSV           ! number of scalar var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
@@ -279,91 +281,95 @@ LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
 LOGICAL,                INTENT(IN)   ::  OHARAT
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
+LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and
+CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
 CHARACTER(LEN=6), INTENT(IN) :: HPROGRAM ! CPROGRAM is the program currently running (modd_conf)
-CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
+CHARACTER(LEN=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
 REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDZZ, PDXX, PDYY, PDZX, PDZY
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PDZZ, PDXX, PDYY, PDZX, PDZY
                                                       ! Metric coefficients
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the
                                                       ! normal to the ground surface
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PZZ          ! altitudes
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PZZ          ! altitudes
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  MFMOIST      ! moist mass flux dual scheme
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  MFMOIST      ! moist mass flux dual scheme
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
                                                       ! Potential Temperature 
 !
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at time
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at time
 !                                                     ! t - deltat 
 !
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSFTHP,PSFRP ! surface fluxes at time
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PSFTHP,PSFRP ! surface fluxes at time
 !                                                     ! t + deltat 
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PWM 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PWM 
 ! Vertical wind
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHLM 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTHLM 
 ! potential temperature at t-Delta t
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PRM          ! Mixing ratios 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN) ::  PRM          ! Mixing ratios 
                                                       ! at t-Delta t
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM         ! Mixing ratios 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) ::  PSVM         ! Mixing ratios 
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTKEM        ! TKE at time t
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
 !
 ! In case OHARAT=TRUE, PLM already includes all stability corrections
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM          ! Turb. mixing length   
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLEPS        ! dissipative length   
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PATHETA      ! coefficients between 
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSRCM        ! normalized 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length   
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLEPS        ! dissipative length   
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PATHETA      ! coefficients between 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
+REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
+                MERGE(D%NJT,0,OCOMPUTE_SRC),&
+                MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(IN)   ::  PSRCM        ! normalized 
 ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFRAC_ICE    ! ri fraction of rc+ri
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PBETA        ! buoyancy coefficient
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSQRT_TKE    ! sqrt(e)
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDTH_DZ      ! d(th)/dz
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDR_DZ       ! d(rt)/dz
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PRED2TH3     ! 3D Redeslperger number R*2_th
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PRED2R3      ! 3D Redeslperger number R*2_r
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PRED2THR3    ! 3D Redeslperger number R*2_thr
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PBLL_O_E     ! beta * Lk * Leps / tke
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PETHETA      ! Coefficient for theta in theta_v computation
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PEMOIST      ! Coefficient for r in theta_v computation
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PREDTH1      ! 1D Redelsperger number for Th
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PREDR1       ! 1D Redelsperger number for r
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PPHI3        ! Prandtl number for temperature
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PPSI3        ! Prandtl number for vapor
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PD           ! Denominator in Prandtl numbers
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFWTH        ! d(w'2th' )/dz (at flux point)
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFWR         ! d(w'2r'  )/dz (at flux point)
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFTH2        ! d(w'th'2 )/dz (at mass point)
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFR2         ! d(w'r'2  )/dz (at mass point)
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFTHR        ! d(w'th'r')/dz (at mass point)
-REAL, DIMENSION(:,:),   INTENT(INOUT)::  PBL_DEPTH    ! BL depth
-REAL, DIMENSION(:,:,:), INTENT(OUT)  :: PWTHV         ! buoyancy flux
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFRAC_ICE    ! ri fraction of rc+ri
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PBETA        ! buoyancy coefficient
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PSQRT_TKE    ! sqrt(e)
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PDTH_DZ      ! d(th)/dz
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PDR_DZ       ! d(rt)/dz
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRED2TH3     ! 3D Redeslperger number R*2_th
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRED2R3      ! 3D Redeslperger number R*2_r
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRED2THR3    ! 3D Redeslperger number R*2_thr
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PBLL_O_E     ! beta * Lk * Leps / tke
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PETHETA      ! Coefficient for theta in theta_v computation
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PEMOIST      ! Coefficient for r in theta_v computation
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PREDTH1      ! 1D Redelsperger number for Th
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PREDR1       ! 1D Redelsperger number for r
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PPHI3        ! Prandtl number for temperature
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PPSI3        ! Prandtl number for vapor
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PD           ! Denominator in Prandtl numbers
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFWTH        ! d(w'2th' )/dz (at flux point)
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFWR         ! d(w'2r'  )/dz (at flux point)
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFTH2        ! d(w'th'2 )/dz (at mass point)
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFR2         ! d(w'r'2  )/dz (at mass point)
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFTHR        ! d(w'th'r')/dz (at mass point)
+REAL, DIMENSION(MERGE(D%NIT,0,HTOM=='TMO6'),&
+                MERGE(D%NJT,0,HTOM=='TMO6')),   INTENT(INOUT)::  PBL_DEPTH    ! BL depth
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PWTHV         ! buoyancy flux
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRTHLS     ! cumulated source for theta
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRRS       ! cumulated source for rt
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PTHLP      ! guess of thl at t+ deltat
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PRP        ! guess of r at t+ deltat
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) :: PRTHLS     ! cumulated source for theta
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) :: PRRS       ! cumulated source for rt
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(OUT)   :: PTHLP      ! guess of thl at t+ deltat
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(OUT)   :: PRP        ! guess of r at t+ deltat
 !
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PTP       ! Dynamic and thermal
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(OUT)   :: PTP       ! Dynamic and thermal
                                                      ! TKE production terms
 !
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PWTH       ! heat flux
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PWRC       ! cloud water flux
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(OUT)   :: PWTH       ! heat flux
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(OUT)   :: PWRC       ! cloud water flux
 !
 !
 !*       0.2  declaration of local variables
 !
 !
-REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ::  &
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  ::  &
        ZA,       & ! work variable for wrc or LES computation
        ZFLXZ,    & ! vertical flux of the treated variable
        ZSOURCE,  & ! source of evolution for the treated variable
@@ -375,9 +381,7 @@ REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ::  &
        ZF_LEONARD,&  ! Leonard terms
        ZRWTHL,    &
        ZRWRNP,    &
-       ZCLD_THOLD
-!
-REAL,DIMENSION(SIZE(XZS,1),SIZE(XZS,2),KKU)  :: ZALT
+       ZCLD_THOLD, ZALT
 !
 INTEGER             :: IKB,IKE      ! I index values for the Beginning and End
                                     ! mass points of the domain in the 3 direct.
@@ -399,7 +403,7 @@ REAL, DIMENSION(:), ALLOCATABLE   :: ZYHAT_ll    !   Position y in the conformal
 REAL :: ZTIME1, ZTIME2
 REAL :: ZDELTAX
 REAL :: ZXBEG,ZXEND,ZYBEG,ZYEND ! Forcing size for ocean deep convection
-REAL, DIMENSION(SIZE(XXHAT),SIZE(XYHAT)) :: ZDIST ! distance
+REAL, DIMENSION(D%NIT,D%NJT) :: ZDIST ! distance
                                    ! from the center of the cooling               
 REAL :: ZFLPROV
 INTEGER           :: JKM          ! vertical index loop
@@ -455,11 +459,11 @@ IF (OOCEAN .AND. ODEEPOC) THEN
   END DO
 END IF !END DEEP OCEAN CONV CASE
 !
-IKT  =SIZE(PTHLM,3)  
-IKTE =IKT-JPVEXT_TURB  
-IKTB =1+JPVEXT_TURB               
-IKB=KKA+JPVEXT_TURB*KKL
-IKE=KKU-JPVEXT_TURB*KKL
+IKT=D%NKT  
+IKTB=D%NKTB          
+IKTE=D%NKTE
+IKB=D%NKB
+IKE=D%NKE
 !
 GUSERV = (KRR/=0)
 !
@@ -470,7 +474,7 @@ IF (OHARAT) THEN
 ! OHARAT so TKE and length scales at half levels!
   ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) +50.*MFMOIST(:,:,:)
 ELSE
-  ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), KKA, KKU, KKL)
+  ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), D%NKA, KKU, KKL)
 ENDIF
 !
 ! Define a cloud mask with ri and rc (used after with a threshold) for Leonard terms
@@ -511,67 +515,67 @@ END IF
 ! Compute the turbulent flux F and F' at time t-dt.
 !
 IF (OHARAT) THEN
-  ZF      (:,:,:) = -ZKEFF*DZM(PTHLM, KKA, KKU, KKL)/PDZZ
+  ZF      (:,:,:) = -ZKEFF*DZM(PTHLM, D%NKA, KKU, KKL)/PDZZ
   ZDFDDTDZ(:,:,:) = -ZKEFF
 ELSE
-  ZF      (:,:,:) = -CSTURB%XCSHF*PPHI3*ZKEFF*DZM(PTHLM, KKA, KKU, KKL)/PDZZ
-  ZDFDDTDZ(:,:,:) = -CSTURB%XCSHF*ZKEFF*D_PHI3DTDZ_O_DDTDZ(CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,GUSERV)
+  ZF      (:,:,:) = -CSTURB%XCSHF*PPHI3*ZKEFF*DZM(PTHLM, D%NKA, KKU, KKL)/PDZZ
+  ZDFDDTDZ(:,:,:) = -CSTURB%XCSHF*ZKEFF*D_PHI3DTDZ_O_DDTDZ(D,CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,GUSERV)
 END IF
 !
 IF (TURBN%LHGRAD) THEN
  ! Compute the Leonard terms for thl
  ZDELTAX= XXHAT(3) - XXHAT(2)
  ZF_LEONARD (:,:,:)= TURBN%XCOEFHGRADTHL*ZDELTAX*ZDELTAX/12.0*(      &
-                 MXF(GX_W_UW(PWM(:,:,:), XDXX,XDZZ,XDZX,KKA,KKU,KKL))&
-                *MZM(GX_M_M(PTHLM(:,:,:),XDXX,XDZZ,XDZX,KKA, KKU, KKL), KKA, KKU, KKL)  &
-              +  MYF(GY_W_VW(PWM(:,:,:), XDYY,XDZZ,XDZY,KKA,KKU,KKL))  &
-                *MZM(GY_M_M(PTHLM(:,:,:),XDYY,XDZZ,XDZY,KKA, KKU, KKL), KKA, KKU, KKL) )
+                 MXF(GX_W_UW(PWM(:,:,:), XDXX,XDZZ,XDZX,D%NKA,KKU,KKL))&
+                *MZM(GX_M_M(PTHLM(:,:,:),XDXX,XDZZ,XDZX,D%NKA, KKU, KKL), D%NKA, KKU, KKL)  &
+              +  MYF(GY_W_VW(PWM(:,:,:), XDYY,XDZZ,XDZY,D%NKA,KKU,KKL))  &
+                *MZM(GY_M_M(PTHLM(:,:,:),XDYY,XDZZ,XDZY,D%NKA, KKU, KKL), D%NKA, KKU, KKL) )
 END IF
 !
 ! Effect of 3rd order terms in temperature flux (at flux point)
 !
 ! d(w'2th')/dz
 IF (GFWTH) THEN
-  Z3RDMOMENT= M3_WTH_W2TH(CSTURB,KKA,KKU,KKL,PREDTH1,PREDR1,PD,ZKEFF,PTKEM)
+  Z3RDMOMENT= M3_WTH_W2TH(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,PD,ZKEFF,PTKEM)
 !
   ZF       = ZF       + Z3RDMOMENT * PFWTH
-  ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_W2TH_O_DDTDZ(CSTURB,KKA,KKU,KKL,PREDTH1,PREDR1,&
+  ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_W2TH_O_DDTDZ(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,&
    & PD,PBLL_O_E,PETHETA,ZKEFF,PTKEM) * PFWTH
 END IF
 !
 ! d(w'th'2)/dz
 IF (GFTH2) THEN
-  Z3RDMOMENT= M3_WTH_WTH2(CSTURB,PREDTH1,PREDR1,PD,PBLL_O_E,PETHETA)
+  Z3RDMOMENT= M3_WTH_WTH2(D,CSTURB,PREDTH1,PREDR1,PD,PBLL_O_E,PETHETA)
 !
-  ZF       = ZF       + Z3RDMOMENT * MZM(PFTH2, KKA, KKU, KKL)
-  ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_WTH2_O_DDTDZ(CSTURB,Z3RDMOMENT,PREDTH1,PREDR1,&
-    & PD,PBLL_O_E,PETHETA) * MZM(PFTH2, KKA, KKU, KKL)
+  ZF       = ZF       + Z3RDMOMENT * MZM(PFTH2, D%NKA, KKU, KKL)
+  ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_WTH2_O_DDTDZ(D,CSTURB,Z3RDMOMENT,PREDTH1,PREDR1,&
+    & PD,PBLL_O_E,PETHETA) * MZM(PFTH2, D%NKA, KKU, KKL)
 END IF
 !
 ! d(w'2r')/dz
 IF (GFWR) THEN
-  ZF       = ZF       + M3_WTH_W2R(CSTURB,KKA,KKU,KKL,PD,ZKEFF,&
+  ZF       = ZF       + M3_WTH_W2R(D,CSTURB,D%NKA,KKU,KKL,PD,ZKEFF,&
     & PTKEM,PBLL_O_E,PEMOIST,PDTH_DZ) * PFWR
-  ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_W2R_O_DDTDZ(CSTURB,KKA,KKU,KKL,PREDTH1,PREDR1,&
+  ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_W2R_O_DDTDZ(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,&
     & PD,ZKEFF,PTKEM,PBLL_O_E,PEMOIST) * PFWR
 END IF
 !
 ! d(w'r'2)/dz
 IF (GFR2) THEN
-  ZF       = ZF       + M3_WTH_WR2(CSTURB,KKA,KKU,KKL,PD,ZKEFF,PTKEM,&
-    & PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PEMOIST,PDTH_DZ) * MZM(PFR2, KKA, KKU, KKL)
-  ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_WR2_O_DDTDZ(CSTURB,KKA,KKU,KKL,PREDTH1,PREDR1,PD,&
-    & ZKEFF,PTKEM,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PEMOIST) * MZM(PFR2, KKA, KKU, KKL)
+  ZF       = ZF       + M3_WTH_WR2(D,CSTURB,D%NKA,KKU,KKL,PD,ZKEFF,PTKEM,&
+    & PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PEMOIST,PDTH_DZ) * MZM(PFR2, D%NKA, KKU, KKL)
+  ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_WR2_O_DDTDZ(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,PD,&
+    & ZKEFF,PTKEM,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PEMOIST) * MZM(PFR2, D%NKA, KKU, KKL)
 END IF
 !
 ! d(w'th'r')/dz
 IF (GFTHR) THEN
-  Z3RDMOMENT= M3_WTH_WTHR(CSTURB,KKA,KKU,KKL,PREDR1,PD,ZKEFF,PTKEM,PSQRT_TKE,PBETA,&
+  Z3RDMOMENT= M3_WTH_WTHR(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PD,ZKEFF,PTKEM,PSQRT_TKE,PBETA,&
     & PLEPS,PEMOIST)
 !
-  ZF       = ZF       + Z3RDMOMENT * MZM(PFTHR, KKA, KKU, KKL)
-  ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_WTHR_O_DDTDZ(CSTURB,Z3RDMOMENT,PREDTH1,&
-    & PREDR1,PD,PBLL_O_E,PETHETA) * MZM(PFTHR, KKA, KKU, KKL)
+  ZF       = ZF       + Z3RDMOMENT * MZM(PFTHR, D%NKA, KKU, KKL)
+  ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_WTHR_O_DDTDZ(D,CSTURB,Z3RDMOMENT,PREDTH1,&
+    & PREDR1,PD,PBLL_O_E,PETHETA) * MZM(PFTHR, D%NKA, KKU, KKL)
 END IF
 ! compute interface flux
 IF (OCOUPLES) THEN   ! Autocoupling O-A LES
@@ -580,7 +584,7 @@ IF (OCOUPLES) THEN   ! Autocoupling O-A LES
                   *0.5* ( 1. + PRHODJ(:,:,KKU)/PRHODJ(:,:,IKE) )
   ELSE                ! atmosph model in coupled case
     ZF(:,:,IKB) =  TURBN%XSSTFL_C(:,:,1) &
-                  *0.5* ( 1. + PRHODJ(:,:,KKA)/PRHODJ(:,:,IKB) )
+                  *0.5* ( 1. + PRHODJ(:,:,D%NKA)/PRHODJ(:,:,IKB) )
   ENDIF 
 !
 ELSE  ! No coupling O and A cases
@@ -591,11 +595,11 @@ ELSE  ! No coupling O and A cases
   IF (HTURBDIM=='3DIM') THEN
     ZF(:,:,IKB) = ( PIMPL*PSFTHP(:,:) + PEXPL*PSFTHM(:,:) )   &
                        * PDIRCOSZW(:,:)                       &
-                       * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
+                       * 0.5 * (1. + PRHODJ(:,:,D%NKA) / PRHODJ(:,:,IKB))
   ELSE
     ZF(:,:,IKB) = ( PIMPL*PSFTHP(:,:) + PEXPL*PSFTHM(:,:) )   &
                        / PDIRCOSZW(:,:)                       &
-                       * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
+                       * 0.5 * (1. + PRHODJ(:,:,D%NKA) / PRHODJ(:,:,IKB))
   END IF
 !
   IF (OOCEAN) THEN
@@ -610,7 +614,7 @@ ELSE  ! No coupling O and A cases
 END IF !end no coupled cases
 !
 ! Compute the split conservative potential temperature at t+deltat
-CALL TRIDIAG_THERMO(KKA,KKU,KKL,PTHLM,ZF,ZDFDDTDZ,PTSTEP,PIMPL,PDZZ,&
+CALL TRIDIAG_THERMO(D,D%NKA,KKU,KKL,PTHLM,ZF,ZDFDDTDZ,PTSTEP,PIMPL,PDZZ,&
                     PRHODJ,PTHLP)
 !
 ! Compute the equivalent tendency for the conservative potential temperature
@@ -622,8 +626,8 @@ IF (TURBN%LHGRAD) THEN
   ZALT(:,:,JK) = PZZ(:,:,JK)-XZS(:,:)
  END DO
  WHERE ( (ZCLD_THOLD(:,:,:) >= TURBN%XCLDTHOLD) .AND. ( ZALT(:,:,:) >= TURBN%XALTHGRAD) )
-  ZRWTHL(:,:,:) = -GZ_W_M(MZM(PRHODJ(:,:,:), KKA, KKU, KKL)*ZF_LEONARD(:,:,:),XDZZ,&
-                   KKA, KKU, KKL)
+  ZRWTHL(:,:,:) = -GZ_W_M(MZM(PRHODJ(:,:,:), D%NKA, KKU, KKL)*ZF_LEONARD(:,:,:),XDZZ,&
+                   D%NKA, KKU, KKL)
  END WHERE
 END IF
 !
@@ -634,7 +638,7 @@ PRTHLS(:,:,:)= PRTHLS(:,:,:)  + ZRWTHL(:,:,:)
 !  Conservative potential temperature flux : 
 !
 ZFLXZ(:,:,:)   = ZF                                                &
-               + PIMPL * ZDFDDTDZ * DZM(PTHLP - PTHLM, KKA, KKU, KKL) / PDZZ
+               + PIMPL * ZDFDDTDZ * DZM(PTHLP - PTHLM, D%NKA, KKU, KKL) / PDZZ
 ! replace the flux by the Leonard terms
 IF (TURBN%LHGRAD) THEN
  WHERE ( (ZCLD_THOLD(:,:,:) >= TURBN%XCLDTHOLD) .AND. ( ZALT(:,:,:) >= TURBN%XALTHGRAD) )
@@ -642,7 +646,7 @@ IF (TURBN%LHGRAD) THEN
  END WHERE
 END IF
 !
-ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
+ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB) 
 IF (OOCEAN) THEN
   ZFLXZ(:,:,KKU) = ZFLXZ(:,:,IKE)
 END IF
@@ -655,10 +659,10 @@ PWTH(:,:,IKB)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+KKL))
 !
 IF (OOCEAN) THEN
   PWTH(:,:,IKE)=0.5*(ZFLXZ(:,:,IKE)+ZFLXZ(:,:,IKE+KKL))
-  PWTH(:,:,KKA)=0. 
+  PWTH(:,:,D%NKA)=0. 
   PWTH(:,:,KKU)=ZFLXZ(:,:,KKU)
 ELSE
-  PWTH(:,:,KKA)=0.5*(ZFLXZ(:,:,KKA)+ZFLXZ(:,:,KKA+KKL))
+  PWTH(:,:,D%NKA)=0.5*(ZFLXZ(:,:,D%NKA)+ZFLXZ(:,:,D%NKA+KKL))
   PWTH(:,:,IKE)=PWTH(:,:,IKE-KKL)
 END IF
 !
@@ -679,20 +683,20 @@ END IF
 !
 ! Contribution of the conservative temperature flux to the buoyancy flux
 IF (OOCEAN) THEN
-  PTP(:,:,:)= CST%XG*CST%XALPHAOC * MZF(ZFLXZ,KKA, KKU, KKL )
+  PTP(:,:,:)= CST%XG*CST%XALPHAOC * MZF(ZFLXZ,D%NKA, KKU, KKL )
 ELSE
   IF (KRR /= 0) THEN
-    PTP(:,:,:)  =  PBETA * MZF( MZM(PETHETA,KKA, KKU, KKL) * ZFLXZ,KKA, KKU, KKL )
+    PTP(:,:,:)  =  PBETA * MZF( MZM(PETHETA,D%NKA, KKU, KKL) * ZFLXZ,D%NKA, KKU, KKL )
     PTP(:,:,IKB)=  PBETA(:,:,IKB) * PETHETA(:,:,IKB) *   &
                    0.5 * ( ZFLXZ (:,:,IKB) + ZFLXZ (:,:,IKB+KKL) )
   ELSE
-    PTP(:,:,:)=  PBETA * MZF( ZFLXZ,KKA, KKU, KKL )
+    PTP(:,:,:)=  PBETA * MZF( ZFLXZ,D%NKA, KKU, KKL )
   END IF
 END IF 
 !
 ! Buoyancy flux at flux points
 ! 
-PWTHV = MZM(PETHETA, KKA, KKU, KKL) * ZFLXZ
+PWTHV = MZM(PETHETA, D%NKA, KKU, KKL) * ZFLXZ
 PWTHV(:,:,IKB) = PETHETA(:,:,IKB) * ZFLXZ(:,:,IKB)
 !
 IF (OOCEAN) THEN
@@ -705,14 +709,14 @@ IF(HPROGRAM/='AROME  ') THEN
  IF ( KRRL >= 1 ) THEN
    IF ( KRRI >= 1 ) THEN
      PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
-                     PRHODJ*PATHETA*2.*PSRCM*DZF(ZFLXZ/PDZZ, KKA, KKU, KKL) &
+                     PRHODJ*PATHETA*2.*PSRCM*DZF(ZFLXZ/PDZZ, D%NKA, KKU, KKL) &
                      *(1.0-PFRAC_ICE(:,:,:))
      PRRS(:,:,:,4) = PRRS(:,:,:,4) -                                        &
-                     PRHODJ*PATHETA*2.*PSRCM*DZF(ZFLXZ/PDZZ, KKA, KKU, KKL) &
+                     PRHODJ*PATHETA*2.*PSRCM*DZF(ZFLXZ/PDZZ, D%NKA, KKU, KKL) &
                      *PFRAC_ICE(:,:,:)
    ELSE
      PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
-                     PRHODJ*PATHETA*2.*PSRCM*DZF(ZFLXZ/PDZZ, KKA, KKU, KKL)
+                     PRHODJ*PATHETA*2.*PSRCM*DZF(ZFLXZ/PDZZ, D%NKA, KKU, KKL)
    END IF
  END IF
 END IF
@@ -721,22 +725,22 @@ END IF
 ! 
 IF (OLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WThl ) 
-  CALL LES_MEAN_SUBGRID(MZF(PWM*ZFLXZ, KKA, KKU, KKL), X_LES_RES_W_SBG_WThl )
-  CALL LES_MEAN_SUBGRID(GZ_W_M(PWM,PDZZ, KKA, KKU, KKL)*MZF(ZFLXZ, KKA, KKU, KKL),&
+  CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, D%NKA, KKU, KKL), X_LES_SUBGRID_WThl ) 
+  CALL LES_MEAN_SUBGRID(MZF(PWM*ZFLXZ, D%NKA, KKU, KKL), X_LES_RES_W_SBG_WThl )
+  CALL LES_MEAN_SUBGRID(GZ_W_M(PWM,PDZZ, D%NKA, KKU, KKL)*MZF(ZFLXZ, D%NKA, KKU, KKL),&
       & X_LES_RES_ddxa_W_SBG_UaThl )
-  CALL LES_MEAN_SUBGRID(MZF(PDTH_DZ*ZFLXZ, KKA, KKU, KKL), X_LES_RES_ddxa_Thl_SBG_UaThl )
-  CALL LES_MEAN_SUBGRID(-CSTURB%XCTP*PSQRT_TKE/PLM*MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_ThlPz ) 
-  CALL LES_MEAN_SUBGRID(MZF(MZM(PETHETA, KKA, KKU, KKL)*ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WThv ) 
+  CALL LES_MEAN_SUBGRID(MZF(PDTH_DZ*ZFLXZ, D%NKA, KKU, KKL), X_LES_RES_ddxa_Thl_SBG_UaThl )
+  CALL LES_MEAN_SUBGRID(-CSTURB%XCTP*PSQRT_TKE/PLM*MZF(ZFLXZ, D%NKA, KKU, KKL), X_LES_SUBGRID_ThlPz ) 
+  CALL LES_MEAN_SUBGRID(MZF(MZM(PETHETA, D%NKA, KKU, KKL)*ZFLXZ, D%NKA, KKU, KKL), X_LES_SUBGRID_WThv ) 
   IF (KRR>=1) THEN
-    CALL LES_MEAN_SUBGRID(MZF(PDR_DZ*ZFLXZ, KKA, KKU, KKL), X_LES_RES_ddxa_Rt_SBG_UaThl )
+    CALL LES_MEAN_SUBGRID(MZF(PDR_DZ*ZFLXZ, D%NKA, KKU, KKL), X_LES_RES_ddxa_Rt_SBG_UaThl )
   END IF
   !* diagnostic of mixing coefficient for heat
-  ZA = DZM(PTHLP, KKA, KKU, KKL)
+  ZA = DZM(PTHLP, D%NKA, KKU, KKL)
   WHERE (ZA==0.) ZA=1.E-6
   ZA = - ZFLXZ / ZA * PDZZ
   ZA(:,:,IKB) = CSTURB%XCSHF*PPHI3(:,:,IKB)*ZKEFF(:,:,IKB)
-  ZA = MZF(ZA, KKA, KKU, KKL)
+  ZA = MZF(ZA, D%NKA, KKU, KKL)
   ZA = MIN(MAX(ZA,-1000.),1000.)
   CALL LES_MEAN_SUBGRID( ZA, X_LES_SUBGRID_Kh   ) 
   !
@@ -762,67 +766,67 @@ IF (KRR /= 0) THEN
   ! Compute the turbulent flux F and F' at time t-dt.
   !
  IF (OHARAT) THEN
-  ZF      (:,:,:) = -ZKEFF*DZM(PRM(:,:,:,1), KKA, KKU, KKL)/PDZZ
+  ZF      (:,:,:) = -ZKEFF*DZM(PRM(:,:,:,1), D%NKA, KKU, KKL)/PDZZ
   ZDFDDRDZ(:,:,:) = -ZKEFF
  ELSE
-  ZF      (:,:,:) = -CSTURB%XCSHF*PPSI3*ZKEFF*DZM(PRM(:,:,:,1), KKA, KKU, KKL)/PDZZ
-  ZDFDDRDZ(:,:,:) = -CSTURB%XCSHF*ZKEFF*D_PSI3DRDZ_O_DDRDZ(CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,GUSERV)
+  ZF      (:,:,:) = -CSTURB%XCSHF*PPSI3*ZKEFF*DZM(PRM(:,:,:,1), D%NKA, KKU, KKL)/PDZZ
+  ZDFDDRDZ(:,:,:) = -CSTURB%XCSHF*ZKEFF*D_PSI3DRDZ_O_DDRDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,GUSERV)
  ENDIF
   !
   ! Compute Leonard Terms for Cloud mixing ratio
   IF (TURBN%LHGRAD) THEN
     ZDELTAX= XXHAT(3) - XXHAT(2)
     ZF_LEONARD (:,:,:)= TURBN%XCOEFHGRADRM*ZDELTAX*ZDELTAX/12.0*(        &
-                MXF(GX_W_UW(PWM(:,:,:),  XDXX,XDZZ,XDZX,KKA,KKU,KKL))       &
-                *MZM(GX_M_M(PRM(:,:,:,1),XDXX,XDZZ,XDZX,KKA,KKU,KKL),KKA,KKU,KKL) &
-                +MYF(GY_W_VW(PWM(:,:,:), XDYY,XDZZ,XDZY,KKA,KKU,KKL))        &
-                *MZM(GY_M_M(PRM(:,:,:,1),XDYY,XDZZ,XDZY,KKA,KKU,KKL),KKA,KKU,KKL) )
+                MXF(GX_W_UW(PWM(:,:,:),  XDXX,XDZZ,XDZX,D%NKA,KKU,KKL))       &
+                *MZM(GX_M_M(PRM(:,:,:,1),XDXX,XDZZ,XDZX,D%NKA,KKU,KKL),D%NKA,KKU,KKL) &
+                +MYF(GY_W_VW(PWM(:,:,:), XDYY,XDZZ,XDZY,D%NKA,KKU,KKL))        &
+                *MZM(GY_M_M(PRM(:,:,:,1),XDYY,XDZZ,XDZY,D%NKA,KKU,KKL),D%NKA,KKU,KKL) )
    END IF
   !
   ! Effect of 3rd order terms in temperature flux (at flux point)
   !
   ! d(w'2r')/dz
   IF (GFWR) THEN
-    Z3RDMOMENT= M3_WR_W2R(CSTURB,KKA,KKU,KKL,PREDR1,PREDTH1,PD,ZKEFF,PTKEM)
+    Z3RDMOMENT= M3_WR_W2R(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PREDTH1,PD,ZKEFF,PTKEM)
   !
     ZF       = ZF       + Z3RDMOMENT * PFWR
-    ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_W2R_O_DDRDZ(CSTURB,KKA,KKU,KKL,PREDR1,PREDTH1,PD,&
+    ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_W2R_O_DDRDZ(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PREDTH1,PD,&
      & PBLL_O_E,PEMOIST,ZKEFF,PTKEM) * PFWR
   END IF
   !
   ! d(w'r'2)/dz
   IF (GFR2) THEN
-    Z3RDMOMENT= M3_WR_WR2(CSTURB,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST)
+    Z3RDMOMENT= M3_WR_WR2(D,CSTURB,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST)
   !
-    ZF       = ZF       + Z3RDMOMENT * MZM(PFR2, KKA, KKU, KKL)
-    ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_WR2_O_DDRDZ(CSTURB,Z3RDMOMENT,PREDR1,&
-     & PREDTH1,PD,PBLL_O_E,PEMOIST) * MZM(PFR2, KKA, KKU, KKL)
+    ZF       = ZF       + Z3RDMOMENT * MZM(PFR2, D%NKA, KKU, KKL)
+    ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_WR2_O_DDRDZ(D,CSTURB,Z3RDMOMENT,PREDR1,&
+     & PREDTH1,PD,PBLL_O_E,PEMOIST) * MZM(PFR2, D%NKA, KKU, KKL)
   END IF
   !
   ! d(w'2th')/dz
   IF (GFWTH) THEN
-    ZF       = ZF       + M3_WR_W2TH(CSTURB,KKA,KKU,KKL,PD,ZKEFF,&
+    ZF       = ZF       + M3_WR_W2TH(D,CSTURB,D%NKA,KKU,KKL,PD,ZKEFF,&
      & PTKEM,PBLL_O_E,PETHETA,PDR_DZ) * PFWTH
-    ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_W2TH_O_DDRDZ(CSTURB,KKA,KKU,KKL,PREDR1,PREDTH1,& 
+    ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_W2TH_O_DDRDZ(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PREDTH1,& 
      & PD,ZKEFF,PTKEM,PBLL_O_E,PETHETA) * PFWTH
   END IF
   !
   ! d(w'th'2)/dz
   IF (GFTH2) THEN
-    ZF       = ZF       + M3_WR_WTH2(CSTURB,KKA,KKU,KKL,PD,ZKEFF,PTKEM,&
-    & PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA,PDR_DZ) * MZM(PFTH2, KKA, KKU, KKL)
-    ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_WTH2_O_DDRDZ(CSTURB,KKA,KKU,KKL,PREDR1,PREDTH1,PD,&
-     &ZKEFF,PTKEM,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA) * MZM(PFTH2, KKA, KKU, KKL)
+    ZF       = ZF       + M3_WR_WTH2(D,CSTURB,D%NKA,KKU,KKL,PD,ZKEFF,PTKEM,&
+    & PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA,PDR_DZ) * MZM(PFTH2, D%NKA, KKU, KKL)
+    ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_WTH2_O_DDRDZ(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PREDTH1,PD,&
+     &ZKEFF,PTKEM,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA) * MZM(PFTH2, D%NKA, KKU, KKL)
   END IF
   !
   ! d(w'th'r')/dz
   IF (GFTHR) THEN
-    Z3RDMOMENT= M3_WR_WTHR(CSTURB,KKA,KKU,KKL,PREDTH1,PD,ZKEFF,PTKEM,PSQRT_TKE,PBETA,&
+    Z3RDMOMENT= M3_WR_WTHR(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PD,ZKEFF,PTKEM,PSQRT_TKE,PBETA,&
      & PLEPS,PETHETA)
   !
-    ZF       = ZF       + Z3RDMOMENT * MZM(PFTHR, KKA, KKU, KKL)
-    ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_WTHR_O_DDRDZ(CSTURB,KKA,KKU,KKL,Z3RDMOMENT,PREDR1, &
-     & PREDTH1,PD,PBLL_O_E,PEMOIST) * MZM(PFTHR, KKA, KKU, KKL)
+    ZF       = ZF       + Z3RDMOMENT * MZM(PFTHR, D%NKA, KKU, KKL)
+    ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_WTHR_O_DDRDZ(D,CSTURB,D%NKA,KKU,KKL,Z3RDMOMENT,PREDR1, &
+     & PREDTH1,PD,PBLL_O_E,PEMOIST) * MZM(PFTHR, D%NKA, KKU, KKL)
   END IF
   !
   ! compute interface flux
@@ -845,11 +849,11 @@ IF (KRR /= 0) THEN
     IF (HTURBDIM=='3DIM') THEN
       ZF(:,:,IKB) = ( PIMPL*PSFRP(:,:) + PEXPL*PSFRM(:,:) )       &
                            * PDIRCOSZW(:,:)                       &
-                         * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
+                         * 0.5 * (1. + PRHODJ(:,:,D%NKA) / PRHODJ(:,:,IKB))
     ELSE
       ZF(:,:,IKB) = ( PIMPL*PSFRP(:,:) + PEXPL*PSFRM(:,:) )     &
                          / PDIRCOSZW(:,:)                       &
-                         * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
+                         * 0.5 * (1. + PRHODJ(:,:,D%NKA) / PRHODJ(:,:,IKB))
     END IF
     !
     IF (OOCEAN) THEN
@@ -865,7 +869,7 @@ IF (KRR /= 0) THEN
     END IF
   END IF!end no coupled cases
   ! Compute the split conservative potential temperature at t+deltat
-  CALL TRIDIAG_THERMO(KKA,KKU,KKL,PRM(:,:,:,1),ZF,ZDFDDRDZ,PTSTEP,PIMPL,&
+  CALL TRIDIAG_THERMO(D,D%NKA,KKU,KKL,PRM(:,:,:,1),ZF,ZDFDDRDZ,PTSTEP,PIMPL,&
                       PDZZ,PRHODJ,PRP)
   !
   ! Compute the equivalent tendency for the conservative mixing ratio
@@ -878,7 +882,7 @@ IF (KRR /= 0) THEN
     ZALT(:,:,JK) = PZZ(:,:,JK)-XZS(:,:)
    END DO
    WHERE ( (ZCLD_THOLD(:,:,:) >= TURBN%XCLDTHOLD ) .AND. ( ZALT(:,:,:) >= TURBN%XALTHGRAD ) )
-    ZRWRNP (:,:,:) =  -GZ_W_M(MZM(PRHODJ(:,:,:),KKA,KKU,KKL)*ZF_LEONARD(:,:,:),XDZZ,KKA,KKU,KKL)
+    ZRWRNP (:,:,:) =  -GZ_W_M(MZM(PRHODJ(:,:,:),D%NKA,KKU,KKL)*ZF_LEONARD(:,:,:),XDZZ,D%NKA,KKU,KKL)
    END WHERE
   END IF
   !
@@ -889,7 +893,7 @@ IF (KRR /= 0) THEN
   ! cons. mixing ratio flux :
   !
   ZFLXZ(:,:,:)   = ZF                                                &
-                 + PIMPL * ZDFDDRDZ * DZM(PRP - PRM(:,:,:,1), KKA, KKU, KKL) / PDZZ 
+                 + PIMPL * ZDFDDRDZ * DZM(PRP - PRM(:,:,:,1), D%NKA, KKU, KKL) / PDZZ 
   !
   ! replace the flux by the Leonard terms above ZALT and ZCLD_THOLD
   IF (TURBN%LHGRAD) THEN
@@ -898,13 +902,13 @@ IF (KRR /= 0) THEN
    END WHERE
   END IF
   !
-  ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
+  ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB) 
   !
   DO JK=IKTB+1,IKTE-1
    PWRC(:,:,JK)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+KKL))
   END DO
   PWRC(:,:,IKB)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+KKL))
-  PWRC(:,:,KKA)=0.5*(ZFLXZ(:,:,KKA)+ZFLXZ(:,:,KKA+KKL))
+  PWRC(:,:,D%NKA)=0.5*(ZFLXZ(:,:,D%NKA)+ZFLXZ(:,:,D%NKA+KKL))
   PWRC(:,:,IKE)=PWRC(:,:,IKE-KKL)
   !
   !
@@ -925,9 +929,9 @@ IF (KRR /= 0) THEN
   !
   ! Contribution of the conservative water flux to the Buoyancy flux
   IF (OOCEAN) THEN
-     ZA(:,:,:)=  -CST%XG*CST%XBETAOC  * MZF(ZFLXZ, KKA, KKU, KKL )
+     ZA(:,:,:)=  -CST%XG*CST%XBETAOC  * MZF(ZFLXZ, D%NKA, KKU, KKL )
   ELSE
-    ZA(:,:,:)   =  PBETA * MZF( MZM(PEMOIST, KKA, KKU, KKL) * ZFLXZ,KKA,KKU,KKL )
+    ZA(:,:,:)   =  PBETA * MZF( MZM(PEMOIST, D%NKA, KKU, KKL) * ZFLXZ,D%NKA,KKU,KKL )
     ZA(:,:,IKB) =  PBETA(:,:,IKB) * PEMOIST(:,:,IKB) *   &
                    0.5 * ( ZFLXZ (:,:,IKB) + ZFLXZ (:,:,IKB+KKL) )
     PTP(:,:,:) = PTP(:,:,:) + ZA(:,:,:)
@@ -935,7 +939,7 @@ IF (KRR /= 0) THEN
   !
   ! Buoyancy flux at flux points
   ! 
-  PWTHV          = PWTHV          + MZM(PEMOIST, KKA, KKU, KKL) * ZFLXZ
+  PWTHV          = PWTHV          + MZM(PEMOIST, D%NKA, KKU, KKL) * ZFLXZ
   PWTHV(:,:,IKB) = PWTHV(:,:,IKB) + PEMOIST(:,:,IKB) * ZFLXZ(:,:,IKB)
   IF (OOCEAN) THEN
     PWTHV(:,:,IKE) = PWTHV(:,:,IKE) + PEMOIST(:,:,IKE)* ZFLXZ(:,:,IKE)
@@ -947,14 +951,14 @@ IF(HPROGRAM/='AROME  ') THEN
    IF ( KRRL >= 1 ) THEN
      IF ( KRRI >= 1 ) THEN
        PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
-                       PRHODJ*PAMOIST*2.*PSRCM*DZF(ZFLXZ/PDZZ,KKA,KKU,KKL )       &
+                       PRHODJ*PAMOIST*2.*PSRCM*DZF(ZFLXZ/PDZZ,D%NKA,KKU,KKL )       &
                        *(1.0-PFRAC_ICE(:,:,:))
        PRRS(:,:,:,4) = PRRS(:,:,:,4) -                                        &
-                       PRHODJ*PAMOIST*2.*PSRCM*DZF(ZFLXZ/PDZZ,KKA,KKU,KKL )       &
+                       PRHODJ*PAMOIST*2.*PSRCM*DZF(ZFLXZ/PDZZ,D%NKA,KKU,KKL )       &
                        *PFRAC_ICE(:,:,:)
      ELSE
        PRRS(:,:,:,2) = PRRS(:,:,:,2) -                                        &
-                       PRHODJ*PAMOIST*2.*PSRCM*DZF(ZFLXZ/PDZZ,KKA,KKU,KKL )
+                       PRHODJ*PAMOIST*2.*PSRCM*DZF(ZFLXZ/PDZZ,D%NKA,KKU,KKL )
      END IF
    END IF
 END IF
@@ -963,14 +967,14 @@ END IF
 ! 
   IF (OLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
-    CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WRt ) 
-    CALL LES_MEAN_SUBGRID(MZF(PWM*ZFLXZ, KKA, KKU, KKL), X_LES_RES_W_SBG_WRt )
-    CALL LES_MEAN_SUBGRID(GZ_W_M(PWM,PDZZ, KKA, KKU, KKL)*MZF(ZFLXZ, KKA, KKU, KKL),&
+    CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, D%NKA, KKU, KKL), X_LES_SUBGRID_WRt ) 
+    CALL LES_MEAN_SUBGRID(MZF(PWM*ZFLXZ, D%NKA, KKU, KKL), X_LES_RES_W_SBG_WRt )
+    CALL LES_MEAN_SUBGRID(GZ_W_M(PWM,PDZZ, D%NKA, KKU, KKL)*MZF(ZFLXZ, D%NKA, KKU, KKL),&
     & X_LES_RES_ddxa_W_SBG_UaRt )
-    CALL LES_MEAN_SUBGRID(MZF(PDTH_DZ*ZFLXZ, KKA, KKU, KKL), X_LES_RES_ddxa_Thl_SBG_UaRt )
-    CALL LES_MEAN_SUBGRID(MZF(PDR_DZ*ZFLXZ, KKA, KKU, KKL), X_LES_RES_ddxa_Rt_SBG_UaRt )
-    CALL LES_MEAN_SUBGRID(MZF(MZM(PEMOIST, KKA, KKU, KKL)*ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WThv , .TRUE. ) 
-    CALL LES_MEAN_SUBGRID(-CSTURB%XCTP*PSQRT_TKE/PLM*MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_RtPz ) 
+    CALL LES_MEAN_SUBGRID(MZF(PDTH_DZ*ZFLXZ, D%NKA, KKU, KKL), X_LES_RES_ddxa_Thl_SBG_UaRt )
+    CALL LES_MEAN_SUBGRID(MZF(PDR_DZ*ZFLXZ, D%NKA, KKU, KKL), X_LES_RES_ddxa_Rt_SBG_UaRt )
+    CALL LES_MEAN_SUBGRID(MZF(MZM(PEMOIST, D%NKA, KKU, KKL)*ZFLXZ, D%NKA, KKU, KKL), X_LES_SUBGRID_WThv , .TRUE. ) 
+    CALL LES_MEAN_SUBGRID(-CSTURB%XCTP*PSQRT_TKE/PLM*MZF(ZFLXZ, D%NKA, KKU, KKL), X_LES_SUBGRID_RtPz ) 
     CALL SECOND_MNH(ZTIME2)
     XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
   END IF
@@ -992,19 +996,19 @@ IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL) .AND. (KRRL > 0) ) THEN
 ! With OHARAT is true tke and length scales at half levels
 ! yet modify to use length scale and tke at half levels from vdfexcuhl
  IF (OHARAT) THEN
-  ZA(:,:,:)   = DZM(PIMPL * PTHLP + PEXPL * PTHLM, KKA, KKU, KKL) / PDZZ *       &
+  ZA(:,:,:)   = DZM(PIMPL * PTHLP + PEXPL * PTHLM, D%NKA, KKU, KKL) / PDZZ *       &
                   (-PLM*PSQRT_TKE) 
  ELSE
-  ZA(:,:,:)   = DZM(PIMPL * PTHLP + PEXPL * PTHLM, KKA, KKU, KKL) / PDZZ *       &
-                  (-PPHI3*MZM(PLM*PSQRT_TKE, KKA, KKU, KKL)) * CSTURB%XCSHF 
+  ZA(:,:,:)   = DZM(PIMPL * PTHLP + PEXPL * PTHLM, D%NKA, KKU, KKL) / PDZZ *       &
+                  (-PPHI3*MZM(PLM*PSQRT_TKE, D%NKA, KKU, KKL)) * CSTURB%XCSHF 
  ENDIF
   ZA(:,:,IKB) = ( PIMPL*PSFTHP(:,:) + PEXPL*PSFTHM(:,:) ) &
                * PDIRCOSZW(:,:)
   !  
   ! compute <w Rc>
-  ZFLXZ(:,:,:) = MZM(PAMOIST * 2.* PSRCM, KKA, KKU, KKL) * ZFLXZ(:,:,:) + &
-                 MZM(PATHETA * 2.* PSRCM, KKA, KKU, KKL) * ZA(:,:,:)
-  ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
+  ZFLXZ(:,:,:) = MZM(PAMOIST * 2.* PSRCM, D%NKA, KKU, KKL) * ZFLXZ(:,:,:) + &
+                 MZM(PATHETA * 2.* PSRCM, D%NKA, KKU, KKL) * ZA(:,:,:)
+  ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB) 
   !                 
   ! store the liquid water mixing ratio vertical flux
   IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
@@ -1025,7 +1029,7 @@ IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL) .AND. (KRRL > 0) ) THEN
 !
   IF (OLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
-    CALL LES_MEAN_SUBGRID( MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WRc ) 
+    CALL LES_MEAN_SUBGRID( MZF(ZFLXZ, D%NKA, KKU, KKL), X_LES_SUBGRID_WRc ) 
     CALL SECOND_MNH(ZTIME2)
     XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
   END IF

@@ -5,10 +5,8 @@
 MODULE MODE_TRIDIAG_THERMO
 IMPLICIT NONE
 CONTAINS       
-SUBROUTINE TRIDIAG_THERMO(KKA,KKU,KKL,PVARM,PF,PDFDDTDZ,PTSTEP,PIMPL,  &
+SUBROUTINE TRIDIAG_THERMO(D,KKA,KKU,KKL,PVARM,PF,PDFDDTDZ,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,PVARP             )
-       USE PARKIND1, ONLY : JPRB
-       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !      #################################################
 !
 !
@@ -118,6 +116,9 @@ SUBROUTINE TRIDIAG_THERMO(KKA,KKU,KKL,PVARM,PF,PDFDDTDZ,PTSTEP,PIMPL,  &
 !
 !*       0. DECLARATIONS
 !
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE MODD_DIMPHYEX, ONLY : DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY : JPVEXT_TURB
 !
 USE MODI_SHUMAN, ONLY : MZM
@@ -127,28 +128,29 @@ IMPLICIT NONE
 !
 !*       0.1 declarations of arguments
 !
+TYPE(DIMPHYEX_t),     INTENT(IN)   :: D
 INTEGER,              INTENT(IN)   :: KKA     !near ground array index  
 INTEGER,              INTENT(IN)   :: KKU     !uppest atmosphere array index
 INTEGER,              INTENT(IN)   :: KKL     !vert. levels type 1=MNH -1=ARO
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PVARM   ! variable at t-1      at mass point
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PF      ! flux in dT/dt=-dF/dz at flux point
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PDFDDTDZ! dF/d(dT/dz)          at flux point
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PVARM   ! variable at t-1      at mass point
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PF      ! flux in dT/dt=-dF/dz at flux point
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDFDDTDZ! dF/d(dT/dz)          at flux point
 REAL,                   INTENT(IN) :: PTSTEP  ! Double time step
 REAL,                   INTENT(IN) :: PIMPL   ! implicit weight
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZZ    ! Dz                   at flux point
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PRHODJ  ! (dry rho)*J          at mass point
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDZZ    ! Dz                   at flux point
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRHODJ  ! (dry rho)*J          at mass point
 !
-REAL, DIMENSION(:,:,:), INTENT(OUT):: PVARP   ! variable at t+1      at mass point
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT):: PVARP   ! variable at t+1      at mass point
 !
 !
 !*       0.2 declarations of local variables
 !
-REAL, DIMENSION(SIZE(PVARM,1),SIZE(PVARM,2),SIZE(PVARM,3))  :: ZRHODJ_DFDDTDZ_O_DZ2
-REAL, DIMENSION(SIZE(PVARM,1),SIZE(PVARM,2),SIZE(PVARM,3))  :: ZMZM_RHODJ
-REAL, DIMENSION(SIZE(PVARM,1),SIZE(PVARM,2),SIZE(PVARM,3))  :: ZA, ZB, ZC
-REAL, DIMENSION(SIZE(PVARM,1),SIZE(PVARM,2),SIZE(PVARM,3))  :: ZY ,ZGAM 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZRHODJ_DFDDTDZ_O_DZ2
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZMZM_RHODJ
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZA, ZB, ZC
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZY ,ZGAM 
                                          ! RHS of the equation, 3D work array
-REAL, DIMENSION(SIZE(PVARM,1),SIZE(PVARM,2))                :: ZBET
+REAL, DIMENSION(D%NIT,D%NJT)                :: ZBET
                                          ! 2D work array
 INTEGER             :: JK            ! loop counter
 INTEGER             :: IKB,IKE       ! inner vertical limits
@@ -162,11 +164,11 @@ INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TRIDIAG_THERMO',0,ZHOOK_HANDLE)
-IKT=SIZE(PVARM,3)          
-IKTB=1+JPVEXT_TURB              
-IKTE=IKT-JPVEXT_TURB
-IKB=KKA+JPVEXT_TURB*KKL
-IKE=KKU-JPVEXT_TURB*KKL
+IKT=D%NKT  
+IKTB=D%NKTB          
+IKTE=D%NKTE
+IKB=D%NKB
+IKE=D%NKE
 
 !
 ZMZM_RHODJ  = MZM(PRHODJ,KKA,KKU,KKL)
