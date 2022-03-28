@@ -394,9 +394,11 @@ INTEGER                    :: IIB,IJB       ! Lower bounds of the physical
 INTEGER                    :: IIE,IJE       ! Upper bounds of the physical
                                             ! sub-domain in x and y directions
 !
-REAL, DIMENSION(NIMAX_ll+2*JPHEXT)  :: ZXHAT_ll  !  Position x in the conformal
+! TODO TO BE REMOVED OUTSIDE OF TURB ? : SHOULD BE NI/JMAX_ll+2*JPHEXT
+! WARNING WRONG DIMENSION, NIMAX_ll not initialized with AROME
+REAL, DIMENSION(1)  :: ZXHAT_ll  !  Position x in the conformal
                                                  ! plane (array on the complete domain)
-REAL, DIMENSION(NJMAX_ll+2*JPHEXT)  :: ZYHAT_ll  !   Position y in the conformal
+REAL, DIMENSION(1)  :: ZYHAT_ll  !   Position y in the conformal
                                                  ! plane (array on the complete domain)
 !
 !
