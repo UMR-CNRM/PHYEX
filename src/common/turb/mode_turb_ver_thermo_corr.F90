@@ -320,7 +320,7 @@ REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
 !*       0.2  declaration of local variables
 !
 !
-REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ::  &
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  ::  &
        ZA,       & ! work variable for wrc
        ZFLXZ,    & ! vertical flux of the treated variable
        ZSOURCE,  & ! source of evolution for the treated variable
@@ -339,11 +339,12 @@ INTEGER             :: ILENCH       ! Length of comment string in LFIFM file
 INTEGER             :: IKB,IKE      ! I index values for the Beginning and End
 INTEGER             :: IKU  ! array sizes
 
-                                    ! mass points of the domain in the 3 direct.
-INTEGER             :: I1,I2        ! For ZCOEFF allocation
-REAL, DIMENSION(:,:,:),ALLOCATABLE  :: ZCOEFF
+REAL, DIMENSION(D%NIT,D%NJT,MIN(D%NKA+JPVEXT_TURB*KKL,D%NKA+JPVEXT_TURB*KKL+2*KKL):&
+                            MAX(D%NKA+JPVEXT_TURB*KKL,D%NKA+JPVEXT_TURB*KKL+2*KKL))&
+                    :: ZCOEFF
                                     ! coefficients for the uncentred gradient 
-                                    ! computation near the ground
+                                    ! computation near the ground, defined in
+                                    ! mass points of the domain in the 3 direct.
 !
 REAL :: ZTIME1, ZTIME2
 !
@@ -361,13 +362,9 @@ TYPE(TFIELDDATA) :: TZFIELD
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_CORR',0,ZHOOK_HANDLE)
-
+!
 IKB=D%NKB
 IKE=D%NKE
-I1=MIN(D%NKA+JPVEXT_TURB*KKL,D%NKA+JPVEXT_TURB*KKL+2*KKL)
-I2=MAX(D%NKA+JPVEXT_TURB*KKL,D%NKA+JPVEXT_TURB*KKL+2*KKL)
-
-ALLOCATE(ZCOEFF(SIZE(PDZZ,1),SIZE(PDZZ,2),I1:I2))
 !
 GUSERV = (KRR/=0)
 !
@@ -863,7 +860,6 @@ ENDIF
 !
 !        4.6  Deallocate
 !
-  DEALLOCATE(ZCOEFF)
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_CORR',1,ZHOOK_HANDLE)
 END SUBROUTINE TURB_VER_THERMO_CORR

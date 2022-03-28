@@ -437,7 +437,10 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::     &
           ZMWTH,ZMWR,ZMTH2,ZMR2,ZMTHR,&  ! 3rd order moments
           ZFWTH,ZFWR,ZFTH2,ZFR2,ZFTHR,&  ! opposite of verticale derivate of 3rd order moments
           ZTHLM,ZRTKEMS,              &  ! initial potential temp; TKE advective source
-          ZSHEAR, ZDUDZ, ZDVDZ           ! horizontal-wind vertical gradient
+          ZSHEAR, ZDUDZ, ZDVDZ,       &  ! horizontal-wind vertical gradient
+          ZLVOCPEXNM,ZLSOCPEXNM,      &  ! Lv/Cp/EXNREF and Ls/Cp/EXNREF at t-1
+          ZATHETA_ICE,ZAMOIST_ICE        ! coefficients for s = f (Thetal,Rnp)
+
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR) :: ZRM ! initial mixing ratio 
 REAL, DIMENSION(D%NIT,D%NJT) ::  ZTAU11M,ZTAU12M,  &
                                                  ZTAU22M,ZTAU33M,  &
@@ -454,9 +457,6 @@ REAL, DIMENSION(D%NIT,D%NJT) ::  ZTAU11M,ZTAU12M,  &
 !
             ! Virtual Potential Temp. used
             ! in the Deardorff mixing length computation
-REAL, DIMENSION(:,:,:), ALLOCATABLE  :: &  
-          ZLVOCPEXNM,ZLSOCPEXNM,      &  ! Lv/Cp/EXNREF and Ls/Cp/EXNREF at t-1
-          ZATHETA_ICE,ZAMOIST_ICE        ! coefficients for s = f (Thetal,Rnp)
 !
 REAL                :: ZEXPL        ! 1-PIMPL deg of expl.
 REAL                :: ZRVORD       ! RV/RD
@@ -553,11 +553,6 @@ IF (KRRL >=1) THEN
 !*       2.5 Lv/Cph/Exn
 !
   IF ( KRRI >= 1 ) THEN 
-    ALLOCATE(ZLVOCPEXNM(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)))
-    ALLOCATE(ZLSOCPEXNM(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)))
-    ALLOCATE(ZAMOIST_ICE(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)))
-    ALLOCATE(ZATHETA_ICE(SIZE(PTHLT,1),SIZE(PTHLT,2),SIZE(PTHLT,3)))
-!
     CALL COMPUTE_FUNCTION_THERMO(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
                                  ZLVOCPEXNM,ZAMOIST,ZATHETA)
     CALL COMPUTE_FUNCTION_THERMO(CST%XALPI,CST%XBETAI,CST%XGAMI,CST%XLSTT,CST%XCI,ZT,ZEXN,ZCP, &
@@ -573,9 +568,6 @@ IF (KRRL >=1) THEN
                          +ZFRAC_ICE(:,:,:) *ZAMOIST_ICE(:,:,:)
     ZATHETA(:,:,:) = (1.0-ZFRAC_ICE(:,:,:))*ZATHETA(:,:,:) &
                          +ZFRAC_ICE(:,:,:) *ZATHETA_ICE(:,:,:)
-
-    DEALLOCATE(ZAMOIST_ICE)
-    DEALLOCATE(ZATHETA_ICE)
   ELSE
     CALL COMPUTE_FUNCTION_THERMO(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
                                  ZLOCPEXNM,ZAMOIST,ZATHETA)
@@ -1167,8 +1159,6 @@ IF ( KRRL >= 1 ) THEN
     PRTHLS(:,:,:) = PRTHLS(:,:,:) + ZLVOCPEXNM(:,:,:) * PRRS(:,:,:,2) &
                                   + ZLSOCPEXNM(:,:,:) * PRRS(:,:,:,4)
 !
-    DEALLOCATE(ZLVOCPEXNM)
-    DEALLOCATE(ZLSOCPEXNM)
   ELSE
     PRT(:,:,:,1)  = PRT(:,:,:,1)  - PRT(:,:,:,2) 
     PRRS(:,:,:,1) = PRRS(:,:,:,1) - PRRS(:,:,:,2)

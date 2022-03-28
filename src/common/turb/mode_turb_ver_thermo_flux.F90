@@ -235,7 +235,7 @@ USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_GRID_n,         ONLY: XZS, XXHAT, XYHAT
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_METRICS_n,      ONLY: XDXX, XDYY, XDZX, XDZY, XDZZ
-USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
+USE MODD_PARAMETERS, ONLY: JPVEXT_TURB, JPHEXT
 USE MODD_TURB_n,         ONLY: TURB_t
 USE MODD_LES
 USE MODD_DIM_n, ONLY: NIMAX_ll, NJMAX_ll
@@ -394,9 +394,9 @@ INTEGER                    :: IIB,IJB       ! Lower bounds of the physical
 INTEGER                    :: IIE,IJE       ! Upper bounds of the physical
                                             ! sub-domain in x and y directions
 !
-REAL, DIMENSION(:), ALLOCATABLE   :: ZXHAT_ll    !  Position x in the conformal
+REAL, DIMENSION(NIMAX_ll+2*JPHEXT)  :: ZXHAT_ll  !  Position x in the conformal
                                                  ! plane (array on the complete domain)
-REAL, DIMENSION(:), ALLOCATABLE   :: ZYHAT_ll    !   Position y in the conformal
+REAL, DIMENSION(NJMAX_ll+2*JPHEXT)  :: ZYHAT_ll  !   Position y in the conformal
                                                  ! plane (array on the complete domain)
 !
 !
@@ -429,14 +429,13 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_FLUX',0,ZHOOK_HANDLE)
 !
 ! Size for a given proc & a given model      
-IIU=SIZE(PTHLM,1) 
-IJU=SIZE(PTHLM,2)
+IIU=D%NIT
+IJU=D%NJT
 !
 !! Compute Shape of sfc flux for Oceanic Deep Conv Case
 ! 
 IF (OOCEAN .AND. ODEEPOC) THEN
   !*       COMPUTES THE PHYSICAL SUBDOMAIN BOUNDS
-  ALLOCATE(ZXHAT_ll(NIMAX_ll+2*JPHEXT),ZYHAT_ll(NJMAX_ll+2*JPHEXT))
   !compute ZXHAT_ll = position in the (0:Lx) domain 1 (Lx=Size of domain1 )
   !compute XXHAT_ll = position in the (L0_subproc,Lx_subproc) domain for the current subproc
   !                                     L0_subproc as referenced in the full domain 1
@@ -1035,9 +1034,6 @@ IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL) .AND. (KRRL > 0) ) THEN
   END IF
 !
 END IF !end of <w Rc>
-IF (OOCEAN .AND. ODEEPOC) THEN
-  DEALLOCATE(ZXHAT_ll,ZYHAT_ll)
-END IF
 !
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_FLUX',1,ZHOOK_HANDLE)
