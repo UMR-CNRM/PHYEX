@@ -5,7 +5,7 @@
 MODULE MODE_TURB_VER
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,KKA,KKU,KKL,KRR,KRRL,KRRI,   &
+SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,KRR,KRRL,KRRI,   &
                       OTURB_FLX,OOCEAN,ODEEPOC,OHARAT,OCOMPUTE_SRC, &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
                       HTURBDIM,HTOM,PIMPL,PEXPL,                    &
@@ -247,9 +247,6 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
-INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
-INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
@@ -412,7 +409,7 @@ IKE=D%NKE
 ! 3D Redelsperger numbers
 !
 !
-CALL PRANDTL(D,CST,CSTURB,KKA,KKU,KKL,KRR,KSV,KRRI,OTURB_FLX, &
+CALL PRANDTL(D,CST,CSTURB,D%NKA,D%NKU,D%NKL,KRR,KSV,KRRI,OTURB_FLX, &
              HTURBDIM,OOCEAN,OHARAT,O2D,OCOMPUTE_SRC,&
              TPFILE,                               &
              PDXX,PDYY,PDZZ,PDZX,PDZY,             &
@@ -438,9 +435,9 @@ ZSQRT_TKE = SQRT(PTKEM)
 !
 ! gradients of mean quantities at previous time-step
 !
-ZDTH_DZ = GZ_M_W(KKA, KKU, KKL,PTHLM(:,:,:),PDZZ)
+ZDTH_DZ = GZ_M_W(D%NKA, D%NKU, D%NKL,PTHLM(:,:,:),PDZZ)
 ZDR_DZ  = 0.
-IF (KRR>0) ZDR_DZ  = GZ_M_W(KKA, KKU, KKL,PRM(:,:,:,1),PDZZ)
+IF (KRR>0) ZDR_DZ  = GZ_M_W(D%NKA, D%NKU, D%NKL,PRM(:,:,:,1),PDZZ)
 !
 !
 ! Denominator factor in 3rd order terms
@@ -496,7 +493,7 @@ ELSE
 ENDIF
 !
   CALL  TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                      &
-                        KKA,KKU,KKL,KRR,KRRL,KRRI,KSV,                &
+                        KRR,KRRL,KRRI,KSV,                            &
                         OTURB_FLX,HTURBDIM,HTOM,OOCEAN,ODEEPOC,OHARAT,&
                         OCOUPLES,OLES_CALL,OCOMPUTE_SRC,              &
                         PIMPL,PEXPL,PTSTEP,HPROGRAM,TPFILE,           &
@@ -514,7 +511,7 @@ ENDIF
                         PRTHLS,PRRS,ZTHLP,ZRP,PTP,PWTH,PWRC )
 !
   CALL  TURB_VER_THERMO_CORR(D,CST,CSTURB,                            &
-                        KKA,KKU,KKL,KRR,KRRL,KRRI,KSV,                &
+                        KRR,KRRL,KRRI,KSV,                            &
                         OTURB_FLX,HTURBDIM,HTOM, OHARAT,OCOMPUTE_SRC, &
                         OCOUPLES,OLES_CALL,                           &                        
                         PIMPL,PEXPL,TPFILE,                           &
@@ -546,7 +543,7 @@ ENDIF
 !
 IF (OHARAT) ZLM=PLENGTHM
 !
-CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KKA,KKU,KKL,KSV,O2D,OFLAT,  &
+CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KSV,O2D,OFLAT,           &
                       OTURB_FLX,KRR,OOCEAN,OHARAT,OCOUPLES,OLES_CALL,&
                       HTURBDIM,PIMPL,PEXPL,PTSTEP,TPFILE,           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
@@ -567,7 +564,7 @@ CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KKA,KKU,KKL,KSV,O2D,OFLAT,  &
 IF (OHARAT) ZLM=PLENGTHH
 !
 IF (SIZE(PSVM,4)>0)                                                 &
-CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,KKA,KKU,KKL,ONOMIXLG,           &
+CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,ONOMIXLG,                       &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
                       OTURB_FLX,HTURBDIM,OHARAT,OBLOWSNOW,OLES_CALL,&
                       PIMPL,PEXPL,PTSTEP,                           &
@@ -581,7 +578,7 @@ CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,KKA,KKU,KKL,ONOMIXLG,           &
 !
 !
 IF (SIZE(PSVM,4)>0 .AND. OLES_CALL)                                 &
-CALL  TURB_VER_SV_CORR(D,CST,CSTURB,KKA,KKU,KKL,KRR,KRRL,KRRI,OOCEAN,&
+CALL  TURB_VER_SV_CORR(D,CST,CSTURB,KRR,KRRL,KRRI,OOCEAN,           &
                       PDZZ,KSV,KSV_LGBEG,KSV_LGEND,ONOMIXLG,        &
                       OBLOWSNOW,OLES_CALL,OCOMPUTE_SRC,             &
                       PTHLM,PRM,PTHVREF,                            &

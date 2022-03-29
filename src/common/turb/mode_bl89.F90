@@ -6,7 +6,7 @@ MODULE MODE_BL89
 IMPLICIT NONE
 CONTAINS
 !     ######spl
-      SUBROUTINE BL89(D,CST,CSTURB,KKA,KKU,KKL,PZZ,PDZZ,PTHVREF,PTHLM,KRR,PRM,PTKEM,PSHEAR,PLM,OOCEAN,HPROGRAM)
+      SUBROUTINE BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,PTHLM,KRR,PRM,PTKEM,PSHEAR,PLM,OOCEAN,HPROGRAM)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     #########################################################
@@ -71,9 +71,6 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),         INTENT(IN)  :: D
 TYPE(CST_t),              INTENT(IN)  :: CST
 TYPE(CSTURB_t),           INTENT(IN)  :: CSTURB
-INTEGER,                  INTENT(IN)  :: KKA      !near ground array index
-INTEGER,                  INTENT(IN)  :: KKU      !uppest atmosphere array index
-INTEGER,                  INTENT(IN)  :: KKL      !vert. levels type 1=MNH -1=ARO
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)  :: PZZ
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)  :: PDZZ
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)  :: PTHVREF

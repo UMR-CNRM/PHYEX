@@ -162,8 +162,8 @@ IMPLICIT NONE
 !*      0.1  declarations of arguments
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
-TYPE(CST_t),                  INTENT(IN)    :: CST
-TYPE(CSTURB_t),                  INTENT(IN)    :: CSTURB
+TYPE(CST_t),            INTENT(IN)    :: CST
+TYPE(CSTURB_t),         INTENT(IN)    :: CSTURB
 INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
@@ -224,7 +224,6 @@ REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)) ::  &
 !                                                     
 INTEGER :: IKB      ! vertical index value for the first inner mass point
 INTEGER :: IKE      ! vertical index value for the last inner mass point
-INTEGER::  ISV                      ! number of scalar variables       
 INTEGER::  JSV                      ! loop index for the scalar variables  
 
 INTEGER :: JLOOP
@@ -252,7 +251,6 @@ ENDIF
 !
 IKB = D%NKB
 IKE = D%NKE 
-ISV  =SIZE(PSVM,4)
 !
 PETHETA(:,:,:) = MZM(ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC), KKA, KKU, KKL)
 PEMOIST(:,:,:) = MZM(EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN), KKA, KKU, KKL)
@@ -321,11 +319,11 @@ END IF
 !---------------------------------------------------------------------------
 !
 !          For the scalar variables
-DO JSV=1,ISV
+DO JSV=1,KSV
   PREDS1(:,:,:,JSV)=CSTURB%XCTV*PBLL_O_E(:,:,:)*GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)
 END DO
 !
-DO JSV=1,ISV
+DO JSV=1,KSV
   ZW2=SIGN(1.,PREDS1(:,:,:,JSV))
   PREDS1(:,:,:,JSV)= ZW2(:,:,:) * MAX(1.E-30, ZW2(:,:,:)*PREDS1(:,:,:,JSV))
 END DO
@@ -412,7 +410,7 @@ END IF   ! end of the if structure on the turbulence dimensionnality
 !
 !           5. Prandtl numbers for scalars
 !              ---------------------------
-DO JSV=1,ISV
+DO JSV=1,KSV
 !
   IF(HTURBDIM=='1DIM') THEN
 !        1D case

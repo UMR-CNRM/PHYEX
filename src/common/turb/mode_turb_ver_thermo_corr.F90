@@ -6,7 +6,7 @@ MODULE MODE_TURB_VER_THERMO_CORR
 IMPLICIT NONE
 CONTAINS      
 SUBROUTINE TURB_VER_THERMO_CORR(D,CST,CSTURB,                       &
-                      KKA,KKU,KKL,KRR,KRRL,KRRI,KSV,                &
+                      KRR,KRRL,KRRI,KSV,                            &
                       OTURB_FLX,HTURBDIM,HTOM,OHARAT,OCOMPUTE_SRC,  &
                       OCOUPLES,OLES_CALL,                           &
                       PIMPL,PEXPL,TPFILE,                           &
@@ -235,9 +235,6 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
-INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
-INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KSV           ! number of scalar var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
@@ -339,8 +336,8 @@ INTEGER             :: ILENCH       ! Length of comment string in LFIFM file
 INTEGER             :: IKB,IKE      ! I index values for the Beginning and End
 INTEGER             :: IKU  ! array sizes
 
-REAL, DIMENSION(D%NIT,D%NJT,MIN(D%NKA+JPVEXT_TURB*KKL,D%NKA+JPVEXT_TURB*KKL+2*KKL):&
-                            MAX(D%NKA+JPVEXT_TURB*KKL,D%NKA+JPVEXT_TURB*KKL+2*KKL))&
+REAL, DIMENSION(D%NIT,D%NJT,MIN(D%NKA+JPVEXT_TURB*D%NKL,D%NKA+JPVEXT_TURB*D%NKL+2*D%NKL):&
+                            MAX(D%NKA+JPVEXT_TURB*D%NKL,D%NKA+JPVEXT_TURB*D%NKL+2*D%NKL))&
                     :: ZCOEFF
                                     ! coefficients for the uncentred gradient 
                                     ! computation near the ground, defined in
@@ -370,16 +367,16 @@ GUSERV = (KRR/=0)
 !
 !  compute the coefficients for the uncentred gradient computation near the 
 !  ground
-ZCOEFF(:,:,IKB+2*KKL)= - PDZZ(:,:,IKB+KKL) /      &
-       ( (PDZZ(:,:,IKB+2*KKL)+PDZZ(:,:,IKB+KKL)) * PDZZ(:,:,IKB+2*KKL) )
-ZCOEFF(:,:,IKB+KKL)=   (PDZZ(:,:,IKB+2*KKL)+PDZZ(:,:,IKB+KKL)) /      &
-       ( PDZZ(:,:,IKB+KKL) * PDZZ(:,:,IKB+2*KKL) )
-ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2*KKL)+2.*PDZZ(:,:,IKB+KKL)) /      &
-       ( (PDZZ(:,:,IKB+2*KKL)+PDZZ(:,:,IKB+KKL)) * PDZZ(:,:,IKB+KKL) )
+ZCOEFF(:,:,IKB+2*D%NKL)= - PDZZ(:,:,IKB+D%NKL) /      &
+       ( (PDZZ(:,:,IKB+2*D%NKL)+PDZZ(:,:,IKB+D%NKL)) * PDZZ(:,:,IKB+2*D%NKL) )
+ZCOEFF(:,:,IKB+D%NKL)=   (PDZZ(:,:,IKB+2*D%NKL)+PDZZ(:,:,IKB+D%NKL)) /      &
+       ( PDZZ(:,:,IKB+D%NKL) * PDZZ(:,:,IKB+2*D%NKL) )
+ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2*D%NKL)+2.*PDZZ(:,:,IKB+D%NKL)) /      &
+       ( (PDZZ(:,:,IKB+2*D%NKL)+PDZZ(:,:,IKB+D%NKL)) * PDZZ(:,:,IKB+D%NKL) )
 !
 !
 IF (OHARAT) THEN
-PLMF=MZF(PLM, D%NKA, KKU, KKL)
+PLMF=MZF(PLM, D%NKA, D%NKU, D%NKL)
 PLEPSF=PLMF
 !  function MZF produces -999 for level IKU (82 for 80 levels)
 !  so put these to normal value as this level (82) is indeed calculated
@@ -387,7 +384,7 @@ PLMF(:,:,D%NKT)=0.001
 PLEPSF(:,:,D%NKT)=0.001
 ZKEFF(:,:,:) = PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50*MFMOIST(:,:,:)
 ELSE
-ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), D%NKA, KKU, KKL)
+ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), D%NKA, D%NKU, D%NKL)
 ENDIF
 !
 
@@ -419,9 +416,9 @@ END IF
 ! Compute the turbulent variance F and F' at time t-dt.
 !
 IF (OHARAT) THEN
-  ZF      (:,:,:) = PLMF*PLEPSF*MZF(PDTH_DZ**2, D%NKA, KKU, KKL)
+  ZF      (:,:,:) = PLMF*PLEPSF*MZF(PDTH_DZ**2, D%NKA, D%NKU, D%NKL)
 ELSE
-  ZF      (:,:,:) = CSTURB%XCTV*PLM*PLEPS*MZF(PPHI3*PDTH_DZ**2, D%NKA, KKU, KKL)
+  ZF      (:,:,:) = CSTURB%XCTV*PLM*PLEPS*MZF(PPHI3*PDTH_DZ**2, D%NKA, D%NKU, D%NKL)
 ENDIF
   ZDFDDTDZ(:,:,:) = 0.     ! this term, because of discretization, is treated separately
   !
@@ -429,42 +426,42 @@ ENDIF
   !
   ! d(w'th'2)/dz
   IF (GFTH2) THEN
-    ZF       = ZF       + M3_TH2_WTH2(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,PD,PLEPS,&
+    ZF       = ZF       + M3_TH2_WTH2(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PREDR1,PD,PLEPS,&
      & PSQRT_TKE) * PFTH2
-    ZDFDDTDZ = ZDFDDTDZ + D_M3_TH2_WTH2_O_DDTDZ(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,&
+    ZDFDDTDZ = ZDFDDTDZ + D_M3_TH2_WTH2_O_DDTDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PREDR1,&
      & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA) * PFTH2
   END IF
   !
   ! d(w'2th')/dz
   IF (GFWTH) THEN
-    ZF       = ZF       + M3_TH2_W2TH(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,PD,PDTH_DZ,&
-     & PLM,PLEPS,PTKEM) * MZF(PFWTH, D%NKA, KKU, KKL)
-    ZDFDDTDZ = ZDFDDTDZ + D_M3_TH2_W2TH_O_DDTDZ(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,PD,&
-     & PLM,PLEPS,PTKEM,GUSERV) * MZF(PFWTH, D%NKA, KKU, KKL)
+    ZF       = ZF       + M3_TH2_W2TH(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PREDR1,PD,PDTH_DZ,&
+     & PLM,PLEPS,PTKEM) * MZF(PFWTH, D%NKA, D%NKU, D%NKL)
+    ZDFDDTDZ = ZDFDDTDZ + D_M3_TH2_W2TH_O_DDTDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PREDR1,PD,&
+     & PLM,PLEPS,PTKEM,GUSERV) * MZF(PFWTH, D%NKA, D%NKU, D%NKL)
   END IF
   !
   IF (KRR/=0) THEN
     ! d(w'r'2)/dz
     IF (GFR2) THEN
-      ZF       = ZF       + M3_TH2_WR2(D,CSTURB,D%NKA,KKU,KKL,PD,PLEPS,PSQRT_TKE,PBLL_O_E,&
+      ZF       = ZF       + M3_TH2_WR2(D,CSTURB,D%NKA,D%NKU,D%NKL,PD,PLEPS,PSQRT_TKE,PBLL_O_E,&
        & PEMOIST,PDTH_DZ) * PFR2
-      ZDFDDTDZ = ZDFDDTDZ + D_M3_TH2_WR2_O_DDTDZ(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,PD,&
+      ZDFDDTDZ = ZDFDDTDZ + D_M3_TH2_WR2_O_DDTDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PREDR1,PD,&
        & PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTH_DZ) * PFR2
     END IF
     !
     ! d(w'2r')/dz
     IF (GFWR) THEN
-      ZF       = ZF       + M3_TH2_W2R(D,CSTURB,D%NKA,KKU,KKL,PD,PLM,PLEPS,PTKEM,PBLL_O_E,&
-       & PEMOIST,PDTH_DZ) * MZF(PFWR, D%NKA, KKU, KKL)
-      ZDFDDTDZ = ZDFDDTDZ + D_M3_TH2_W2R_O_DDTDZ(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,PD,&
-       & PLM,PLEPS,PTKEM,PBLL_O_E,PEMOIST,PDTH_DZ) * MZF(PFWR, D%NKA, KKU, KKL)
+      ZF       = ZF       + M3_TH2_W2R(D,CSTURB,D%NKA,D%NKU,D%NKL,PD,PLM,PLEPS,PTKEM,PBLL_O_E,&
+       & PEMOIST,PDTH_DZ) * MZF(PFWR, D%NKA, D%NKU, D%NKL)
+      ZDFDDTDZ = ZDFDDTDZ + D_M3_TH2_W2R_O_DDTDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PREDR1,PD,&
+       & PLM,PLEPS,PTKEM,PBLL_O_E,PEMOIST,PDTH_DZ) * MZF(PFWR, D%NKA, D%NKU, D%NKL)
     END IF
     !
     ! d(w'th'r')/dz
     IF (GFTHR) THEN
-      ZF       = ZF       + M3_TH2_WTHR(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PD,PLEPS,PSQRT_TKE,&
+      ZF       = ZF       + M3_TH2_WTHR(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDR1,PD,PLEPS,PSQRT_TKE,&
        & PBLL_O_E,PEMOIST,PDTH_DZ) * PFTHR
-      ZDFDDTDZ = ZDFDDTDZ + D_M3_TH2_WTHR_O_DDTDZ(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,&
+      ZDFDDTDZ = ZDFDDTDZ + D_M3_TH2_WTHR_O_DDTDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PREDR1,&
        & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTH_DZ) * PFTHR
     END IF
 
@@ -473,32 +470,32 @@ ENDIF
   ZFLXZ(:,:,:)   = ZF                                                              &
   !     + PIMPL * CSTURB%XCTV*PLM*PLEPS                                                   &
   !        *MZF(D_PHI3DTDZ2_O_DDTDZ(PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,PDTH_DZ,HTURBDIM,GUSERV)   &
-  !             *DZM(PTHLP - PTHLM, D%NKA, KKU, KKL) / PDZZ                                        ) &
-        + PIMPL * ZDFDDTDZ * MZF(DZM(PTHLP - PTHLM, D%NKA, KKU, KKL) / PDZZ, D%NKA, KKU, KKL)
+  !             *DZM(PTHLP - PTHLM, D%NKA, D%NKU, D%NKL) / PDZZ                                        ) &
+        + PIMPL * ZDFDDTDZ * MZF(DZM(PTHLP - PTHLM, D%NKA, D%NKU, D%NKL) / PDZZ, D%NKA, D%NKU, D%NKL)
   !
   ! special case near the ground ( uncentred gradient )
   IF (OHARAT) THEN
   ZFLXZ(:,:,IKB) =  PLMF(:,:,IKB)   &
      * PLEPSF(:,:,IKB)                                         &
   *( PEXPL *                                                  &
-     ( ZCOEFF(:,:,IKB+2*KKL)*PTHLM(:,:,IKB+2*KKL)             &
-      +ZCOEFF(:,:,IKB+KKL  )*PTHLM(:,:,IKB+KKL  )             & 
+     ( ZCOEFF(:,:,IKB+2*D%NKL)*PTHLM(:,:,IKB+2*D%NKL)             &
+      +ZCOEFF(:,:,IKB+D%NKL  )*PTHLM(:,:,IKB+D%NKL  )             & 
       +ZCOEFF(:,:,IKB      )*PTHLM(:,:,IKB  )   )**2          &
     +PIMPL *                                                  &
-     ( ZCOEFF(:,:,IKB+2*KKL)*PTHLP(:,:,IKB+2*KKL)             &
-      +ZCOEFF(:,:,IKB+KKL  )*PTHLP(:,:,IKB+KKL  )             &
+     ( ZCOEFF(:,:,IKB+2*D%NKL)*PTHLP(:,:,IKB+2*D%NKL)             &
+      +ZCOEFF(:,:,IKB+D%NKL  )*PTHLP(:,:,IKB+D%NKL  )             &
       +ZCOEFF(:,:,IKB      )*PTHLP(:,:,IKB  )   )**2          &
    ) 
    ELSE
-  ZFLXZ(:,:,IKB) = CSTURB%XCTV * PPHI3(:,:,IKB+KKL) * PLM(:,:,IKB)   &
+  ZFLXZ(:,:,IKB) = CSTURB%XCTV * PPHI3(:,:,IKB+D%NKL) * PLM(:,:,IKB)   &
      * PLEPS(:,:,IKB)                                         &
   *( PEXPL *                                                  &
-     ( ZCOEFF(:,:,IKB+2*KKL)*PTHLM(:,:,IKB+2*KKL)             &
-      +ZCOEFF(:,:,IKB+KKL  )*PTHLM(:,:,IKB+KKL  )             & 
+     ( ZCOEFF(:,:,IKB+2*D%NKL)*PTHLM(:,:,IKB+2*D%NKL)             &
+      +ZCOEFF(:,:,IKB+D%NKL  )*PTHLM(:,:,IKB+D%NKL  )             & 
       +ZCOEFF(:,:,IKB      )*PTHLM(:,:,IKB  )   )**2          &
     +PIMPL *                                                  &
-     ( ZCOEFF(:,:,IKB+2*KKL)*PTHLP(:,:,IKB+2*KKL)             &
-      +ZCOEFF(:,:,IKB+KKL  )*PTHLP(:,:,IKB+KKL  )             &
+     ( ZCOEFF(:,:,IKB+2*D%NKL)*PTHLP(:,:,IKB+2*D%NKL)             &
+      +ZCOEFF(:,:,IKB+D%NKL  )*PTHLP(:,:,IKB+D%NKL  )             &
       +ZCOEFF(:,:,IKB      )*PTHLP(:,:,IKB  )   )**2          &
    ) 
    ENDIF
@@ -532,7 +529,7 @@ ENDIF
   IF (OLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
     CALL LES_MEAN_SUBGRID(ZFLXZ, X_LES_SUBGRID_Thl2 ) 
-    CALL LES_MEAN_SUBGRID(MZF(PWM, D%NKA, KKU, KKL)*ZFLXZ, X_LES_RES_W_SBG_Thl2 )
+    CALL LES_MEAN_SUBGRID(MZF(PWM, D%NKA, D%NKU, D%NKL)*ZFLXZ, X_LES_RES_W_SBG_Thl2 )
     CALL LES_MEAN_SUBGRID(-2.*CSTURB%XCTD*PSQRT_TKE*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_Thl2 ) 
     CALL LES_MEAN_SUBGRID(PETHETA*ZFLXZ, X_LES_SUBGRID_ThlThv ) 
     CALL LES_MEAN_SUBGRID(-CSTURB%XA3*PBETA*PETHETA*ZFLXZ, X_LES_SUBGRID_ThlPz, .TRUE. ) 
@@ -547,9 +544,9 @@ ENDIF
 !
     ! Compute the turbulent variance F and F' at time t-dt.
 IF (OHARAT) THEN
-    ZF      (:,:,:) = PLMF*PLEPSF*MZF(PDTH_DZ*PDR_DZ, D%NKA, KKU, KKL)
+    ZF      (:,:,:) = PLMF*PLEPSF*MZF(PDTH_DZ*PDR_DZ, D%NKA, D%NKU, D%NKL)
 ELSE
-    ZF      (:,:,:) = CSTURB%XCTV*PLM*PLEPS*MZF(0.5*(PPHI3+PPSI3)*PDTH_DZ*PDR_DZ, D%NKA, KKU, KKL)
+    ZF      (:,:,:) = CSTURB%XCTV*PLM*PLEPS*MZF(0.5*(PPHI3+PPSI3)*PDTH_DZ*PDR_DZ, D%NKA, D%NKU, D%NKL)
 ENDIF
     ZDFDDTDZ(:,:,:) = 0.     ! this term, because of discretization, is treated separately
     ZDFDDRDZ(:,:,:) = 0.     ! this term, because of discretization, is treated separately
@@ -558,51 +555,51 @@ ENDIF
     !
     ! d(w'th'2)/dz
     IF (GFTH2) THEN
-      ZF       = ZF       + M3_THR_WTH2(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PD,PLEPS,PSQRT_TKE,&
+      ZF       = ZF       + M3_THR_WTH2(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDR1,PD,PLEPS,PSQRT_TKE,&
        & PBLL_O_E,PETHETA,PDR_DZ) * PFTH2
-      ZDFDDTDZ = ZDFDDTDZ + D_M3_THR_WTH2_O_DDTDZ(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,&
+      ZDFDDTDZ = ZDFDDTDZ + D_M3_THR_WTH2_O_DDTDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PREDR1,&
        & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDR_DZ) * PFTH2
-      ZDFDDRDZ = ZDFDDRDZ + D_M3_THR_WTH2_O_DDRDZ(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,&
+      ZDFDDRDZ = ZDFDDRDZ + D_M3_THR_WTH2_O_DDRDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PREDR1,&
        & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA) * PFTH2
     END IF
     !
     ! d(w'2th')/dz
     IF (GFWTH) THEN
-      ZF       = ZF       + M3_THR_W2TH(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PD,PLM,PLEPS,PTKEM,&
-       & PDR_DZ) * MZF(PFWTH, D%NKA, KKU, KKL)
-      ZDFDDTDZ = ZDFDDTDZ + D_M3_THR_W2TH_O_DDTDZ(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,&
-       & PD,PLM,PLEPS,PTKEM,PBLL_O_E,PDR_DZ,PETHETA) * MZF(PFWTH, D%NKA, KKU, KKL)
-      ZDFDDRDZ = ZDFDDRDZ + D_M3_THR_W2TH_O_DDRDZ(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,&
-       & PD,PLM,PLEPS,PTKEM) * MZF(PFWTH, D%NKA, KKU, KKL)
+      ZF       = ZF       + M3_THR_W2TH(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDR1,PD,PLM,PLEPS,PTKEM,&
+       & PDR_DZ) * MZF(PFWTH, D%NKA, D%NKU, D%NKL)
+      ZDFDDTDZ = ZDFDDTDZ + D_M3_THR_W2TH_O_DDTDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PREDR1,&
+       & PD,PLM,PLEPS,PTKEM,PBLL_O_E,PDR_DZ,PETHETA) * MZF(PFWTH, D%NKA, D%NKU, D%NKL)
+      ZDFDDRDZ = ZDFDDRDZ + D_M3_THR_W2TH_O_DDRDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PREDR1,&
+       & PD,PLM,PLEPS,PTKEM) * MZF(PFWTH, D%NKA, D%NKU, D%NKL)
     END IF
     !
     ! d(w'r'2)/dz
     IF (GFR2) THEN
-      ZF       = ZF       + M3_THR_WR2(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PD,PLEPS,PSQRT_TKE,&
+      ZF       = ZF       + M3_THR_WR2(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PD,PLEPS,PSQRT_TKE,&
        & PBLL_O_E,PEMOIST,PDTH_DZ) * PFR2
-      ZDFDDTDZ = ZDFDDTDZ + D_M3_THR_WR2_O_DDTDZ(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PREDTH1,PD,&
+      ZDFDDTDZ = ZDFDDTDZ + D_M3_THR_WR2_O_DDTDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDR1,PREDTH1,PD,&
        & PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST) * PFR2
-      ZDFDDRDZ = ZDFDDRDZ + D_M3_THR_WR2_O_DDRDZ(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PREDTH1,PD,&
+      ZDFDDRDZ = ZDFDDRDZ + D_M3_THR_WR2_O_DDRDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDR1,PREDTH1,PD,&
        & PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTH_DZ) * PFR2
     END IF
     !
       ! d(w'2r')/dz
     IF (GFWR) THEN
-      ZF       = ZF       + M3_THR_W2R(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PD,PLM,PLEPS,PTKEM,&
-      & PDTH_DZ) * MZF(PFWR, D%NKA, KKU, KKL)
-      ZDFDDTDZ = ZDFDDTDZ + D_M3_THR_W2R_O_DDTDZ(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PREDTH1,PD,&
-      & PLM,PLEPS,PTKEM) * MZF(PFWR, D%NKA, KKU, KKL)
-      ZDFDDRDZ = ZDFDDRDZ + D_M3_THR_W2R_O_DDRDZ(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PREDTH1,PD,&
-      & PLM,PLEPS,PTKEM,PBLL_O_E,PDTH_DZ,PEMOIST) * MZF(PFWR, D%NKA, KKU, KKL)
+      ZF       = ZF       + M3_THR_W2R(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PD,PLM,PLEPS,PTKEM,&
+      & PDTH_DZ) * MZF(PFWR, D%NKA, D%NKU, D%NKL)
+      ZDFDDTDZ = ZDFDDTDZ + D_M3_THR_W2R_O_DDTDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDR1,PREDTH1,PD,&
+      & PLM,PLEPS,PTKEM) * MZF(PFWR, D%NKA, D%NKU, D%NKL)
+      ZDFDDRDZ = ZDFDDRDZ + D_M3_THR_W2R_O_DDRDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDR1,PREDTH1,PD,&
+      & PLM,PLEPS,PTKEM,PBLL_O_E,PDTH_DZ,PEMOIST) * MZF(PFWR, D%NKA, D%NKU, D%NKL)
     END IF
     !
     ! d(w'th'r')/dz
     IF (GFTHR) THEN
-      ZF       = ZF       + M3_THR_WTHR(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,PD,PLEPS,&
+      ZF       = ZF       + M3_THR_WTHR(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PREDR1,PD,PLEPS,&
       & PSQRT_TKE) * PFTHR
-      ZDFDDTDZ = ZDFDDTDZ + D_M3_THR_WTHR_O_DDTDZ(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PREDR1,&
+      ZDFDDTDZ = ZDFDDTDZ + D_M3_THR_WTHR_O_DDTDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PREDR1,&
       & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA) * PFTHR
-      ZDFDDRDZ = ZDFDDRDZ + D_M3_THR_WTHR_O_DDRDZ(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PREDTH1,&
+      ZDFDDRDZ = ZDFDDRDZ + D_M3_THR_WTHR_O_DDRDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDR1,PREDTH1,&
       & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST) * PFTHR
     END IF
     !
@@ -610,24 +607,24 @@ ENDIF
     ZFLXZ(:,:,:)   = ZF                                                     &
         + PIMPL * PLMF*PLEPSF*0.5                                        &
           * MZF(( 2.  & 
-                 ) *PDR_DZ  *DZM(PTHLP - PTHLM, D%NKA, KKU, KKL    ) / PDZZ               &
+                 ) *PDR_DZ  *DZM(PTHLP - PTHLM, D%NKA, D%NKU, D%NKL    ) / PDZZ               &
                 +( 2.                                                    &
-                 ) *PDTH_DZ *DZM(PRP   - PRM(:,:,:,1), D%NKA, KKU, KKL) / PDZZ               &
-               , D%NKA, KKU, KKL)                                                            &
-        + PIMPL * ZDFDDTDZ * MZF(DZM(PTHLP - PTHLM(:,:,:), D%NKA, KKU, KKL) / PDZZ, D%NKA, KKU, KKL)         &
-        + PIMPL * ZDFDDRDZ * MZF(DZM(PRP   - PRM(:,:,:,1), D%NKA, KKU, KKL) / PDZZ, D%NKA, KKU, KKL)
+                 ) *PDTH_DZ *DZM(PRP   - PRM(:,:,:,1), D%NKA, D%NKU, D%NKL) / PDZZ               &
+               , D%NKA, D%NKU, D%NKL)                                                            &
+        + PIMPL * ZDFDDTDZ * MZF(DZM(PTHLP - PTHLM(:,:,:), D%NKA, D%NKU, D%NKL) / PDZZ, D%NKA, D%NKU, D%NKL)         &
+        + PIMPL * ZDFDDRDZ * MZF(DZM(PRP   - PRM(:,:,:,1), D%NKA, D%NKU, D%NKL) / PDZZ, D%NKA, D%NKU, D%NKL)
     ELSE
     ZFLXZ(:,:,:)   = ZF                                                     &
         + PIMPL * CSTURB%XCTV*PLM*PLEPS*0.5                                        &
           * MZF(( D_PHI3DTDZ_O_DDTDZ(D,CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,GUSERV) & ! d(phi3*dthdz)/ddthdz term
                   +D_PSI3DTDZ_O_DDTDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,GUSERV) & ! d(psi3*dthdz)/ddthdz term
-                 ) *PDR_DZ  *DZM(PTHLP - PTHLM, D%NKA, KKU, KKL) / PDZZ               &
+                 ) *PDR_DZ  *DZM(PTHLP - PTHLM, D%NKA, D%NKU, D%NKL) / PDZZ               &
                 +( D_PHI3DRDZ_O_DDRDZ(D,CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,GUSERV) & ! d(phi3*drdz )/ddrdz term
                   +D_PSI3DRDZ_O_DDRDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,GUSERV) & ! d(psi3*drdz )/ddrdz term
-                 ) *PDTH_DZ *DZM(PRP - PRM(:,:,:,1), D%NKA, KKU, KKL) / PDZZ               &
-               , D%NKA, KKU, KKL)                                                            &
-        + PIMPL * ZDFDDTDZ * MZF(DZM(PTHLP - PTHLM(:,:,:), D%NKA, KKU, KKL) / PDZZ, D%NKA, KKU, KKL)         &
-        + PIMPL * ZDFDDRDZ * MZF(DZM(PRP   - PRM(:,:,:,1), D%NKA, KKU, KKL) / PDZZ, D%NKA, KKU, KKL)
+                 ) *PDTH_DZ *DZM(PRP - PRM(:,:,:,1), D%NKA, D%NKU, D%NKL) / PDZZ               &
+               , D%NKA, D%NKU, D%NKL)                                                            &
+        + PIMPL * ZDFDDTDZ * MZF(DZM(PTHLP - PTHLM(:,:,:), D%NKA, D%NKU, D%NKL) / PDZZ, D%NKA, D%NKU, D%NKL)         &
+        + PIMPL * ZDFDDRDZ * MZF(DZM(PRP   - PRM(:,:,:,1), D%NKA, D%NKU, D%NKL) / PDZZ, D%NKA, D%NKU, D%NKL)
     ENDIF
     !
     ! special case near the ground ( uncentred gradient )
@@ -635,36 +632,36 @@ ENDIF
     ZFLXZ(:,:,IKB) =                                            & 
     (1. )   &
     *( PEXPL *                                                  &
-       ( ZCOEFF(:,:,IKB+2*KKL)*PTHLM(:,:,IKB+2*KKL)             &
-        +ZCOEFF(:,:,IKB+KKL  )*PTHLM(:,:,IKB+KKL  )             & 
+       ( ZCOEFF(:,:,IKB+2*D%NKL)*PTHLM(:,:,IKB+2*D%NKL)             &
+        +ZCOEFF(:,:,IKB+D%NKL  )*PTHLM(:,:,IKB+D%NKL  )             & 
         +ZCOEFF(:,:,IKB      )*PTHLM(:,:,IKB      ))            &
-      *( ZCOEFF(:,:,IKB+2*KKL)*PRM(:,:,IKB+2*KKL,1)             &
-        +ZCOEFF(:,:,IKB+KKL  )*PRM(:,:,IKB+KKL,1  )             & 
+      *( ZCOEFF(:,:,IKB+2*D%NKL)*PRM(:,:,IKB+2*D%NKL,1)             &
+        +ZCOEFF(:,:,IKB+D%NKL  )*PRM(:,:,IKB+D%NKL,1  )             & 
         +ZCOEFF(:,:,IKB      )*PRM(:,:,IKB  ,1    ))            &
       +PIMPL *                                                  &
-       ( ZCOEFF(:,:,IKB+2*KKL)*PTHLP(:,:,IKB+2*KKL)             &
-        +ZCOEFF(:,:,IKB+KKL  )*PTHLP(:,:,IKB+KKL  )             &
+       ( ZCOEFF(:,:,IKB+2*D%NKL)*PTHLP(:,:,IKB+2*D%NKL)             &
+        +ZCOEFF(:,:,IKB+D%NKL  )*PTHLP(:,:,IKB+D%NKL  )             &
         +ZCOEFF(:,:,IKB      )*PTHLP(:,:,IKB      ))            &
-      *( ZCOEFF(:,:,IKB+2*KKL)*PRP(:,:,IKB+2*KKL  )             &
-        +ZCOEFF(:,:,IKB+KKL  )*PRP(:,:,IKB+KKL    )             & 
+      *( ZCOEFF(:,:,IKB+2*D%NKL)*PRP(:,:,IKB+2*D%NKL  )             &
+        +ZCOEFF(:,:,IKB+D%NKL  )*PRP(:,:,IKB+D%NKL    )             & 
         +ZCOEFF(:,:,IKB      )*PRP(:,:,IKB        ))            &
      ) 
     ELSE 
     ZFLXZ(:,:,IKB) =                                            & 
-    (CSTURB%XCHT1 * PPHI3(:,:,IKB+KKL) + CSTURB%XCHT2 * PPSI3(:,:,IKB+KKL))   &
+    (CSTURB%XCHT1 * PPHI3(:,:,IKB+D%NKL) + CSTURB%XCHT2 * PPSI3(:,:,IKB+D%NKL))   &
     *( PEXPL *                                                  &
-       ( ZCOEFF(:,:,IKB+2*KKL)*PTHLM(:,:,IKB+2*KKL)             &
-        +ZCOEFF(:,:,IKB+KKL  )*PTHLM(:,:,IKB+KKL  )             & 
+       ( ZCOEFF(:,:,IKB+2*D%NKL)*PTHLM(:,:,IKB+2*D%NKL)             &
+        +ZCOEFF(:,:,IKB+D%NKL  )*PTHLM(:,:,IKB+D%NKL  )             & 
         +ZCOEFF(:,:,IKB      )*PTHLM(:,:,IKB      ))            &
-      *( ZCOEFF(:,:,IKB+2*KKL)*PRM(:,:,IKB+2*KKL,1)             &
-        +ZCOEFF(:,:,IKB+KKL  )*PRM(:,:,IKB+KKL,1  )             & 
+      *( ZCOEFF(:,:,IKB+2*D%NKL)*PRM(:,:,IKB+2*D%NKL,1)             &
+        +ZCOEFF(:,:,IKB+D%NKL  )*PRM(:,:,IKB+D%NKL,1  )             & 
         +ZCOEFF(:,:,IKB      )*PRM(:,:,IKB  ,1    ))            &
       +PIMPL *                                                  &
-       ( ZCOEFF(:,:,IKB+2*KKL)*PTHLP(:,:,IKB+2*KKL)             &
-        +ZCOEFF(:,:,IKB+KKL  )*PTHLP(:,:,IKB+KKL  )             &
+       ( ZCOEFF(:,:,IKB+2*D%NKL)*PTHLP(:,:,IKB+2*D%NKL)             &
+        +ZCOEFF(:,:,IKB+D%NKL  )*PTHLP(:,:,IKB+D%NKL  )             &
         +ZCOEFF(:,:,IKB      )*PTHLP(:,:,IKB      ))            &
-      *( ZCOEFF(:,:,IKB+2*KKL)*PRP(:,:,IKB+2*KKL  )             &
-        +ZCOEFF(:,:,IKB+KKL  )*PRP(:,:,IKB+KKL    )             & 
+      *( ZCOEFF(:,:,IKB+2*D%NKL)*PRP(:,:,IKB+2*D%NKL  )             &
+        +ZCOEFF(:,:,IKB+D%NKL  )*PRP(:,:,IKB+D%NKL    )             & 
         +ZCOEFF(:,:,IKB      )*PRP(:,:,IKB        ))            &
      ) 
     ENDIF
@@ -699,7 +696,7 @@ ENDIF
 IF (OLES_CALL) THEN
       CALL SECOND_MNH(ZTIME1)
       CALL LES_MEAN_SUBGRID(ZFLXZ, X_LES_SUBGRID_THlRt ) 
-      CALL LES_MEAN_SUBGRID(MZF(PWM, D%NKA, KKU, KKL)*ZFLXZ, X_LES_RES_W_SBG_ThlRt )
+      CALL LES_MEAN_SUBGRID(MZF(PWM, D%NKA, D%NKU, D%NKL)*ZFLXZ, X_LES_RES_W_SBG_ThlRt )
       CALL LES_MEAN_SUBGRID(-2.*CSTURB%XCTD*PSQRT_TKE*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_ThlRt ) 
       CALL LES_MEAN_SUBGRID(PETHETA*ZFLXZ, X_LES_SUBGRID_RtThv ) 
       CALL LES_MEAN_SUBGRID(-CSTURB%XA3*PBETA*PETHETA*ZFLXZ, X_LES_SUBGRID_RtPz, .TRUE. ) 
@@ -715,9 +712,9 @@ END IF
 !
     ! Compute the turbulent variance F and F' at time t-dt.
 IF (OHARAT) THEN
-    ZF      (:,:,:) = PLMF*PLEPSF*MZF(PDR_DZ**2, D%NKA, KKU, KKL)
+    ZF      (:,:,:) = PLMF*PLEPSF*MZF(PDR_DZ**2, D%NKA, D%NKU, D%NKL)
   ELSE
-    ZF      (:,:,:) = CSTURB%XCTV*PLM*PLEPS*MZF(PPSI3*PDR_DZ**2, D%NKA, KKU, KKL)
+    ZF      (:,:,:) = CSTURB%XCTV*PLM*PLEPS*MZF(PPSI3*PDR_DZ**2, D%NKA, D%NKU, D%NKL)
 ENDIF
     ZDFDDRDZ(:,:,:) = 0.     ! this term, because of discretization, is treated separately
     !
@@ -725,42 +722,42 @@ ENDIF
     !
     ! d(w'r'2)/dz
     IF (GFR2) THEN
-      ZF       = ZF       + M3_R2_WR2(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PREDTH1,PD,PLEPS,&
+      ZF       = ZF       + M3_R2_WR2(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDR1,PREDTH1,PD,PLEPS,&
       & PSQRT_TKE) * PFR2
-      ZDFDDRDZ = ZDFDDRDZ + D_M3_R2_WR2_O_DDRDZ(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PREDTH1,&
+      ZDFDDRDZ = ZDFDDRDZ + D_M3_R2_WR2_O_DDRDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDR1,PREDTH1,&
       & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST) * PFR2
     END IF
     !
     ! d(w'2r')/dz
     IF (GFWR) THEN
-      ZF       = ZF       + M3_R2_W2R(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PREDTH1,PD,PDR_DZ,&
-      & PLM,PLEPS,PTKEM) * MZF(PFWR, D%NKA, KKU, KKL)
-      ZDFDDRDZ = ZDFDDRDZ + D_M3_R2_W2R_O_DDRDZ(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PREDTH1,&
-      & PD,PLM,PLEPS,PTKEM,GUSERV) * MZF(PFWR, D%NKA, KKU, KKL)
+      ZF       = ZF       + M3_R2_W2R(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDR1,PREDTH1,PD,PDR_DZ,&
+      & PLM,PLEPS,PTKEM) * MZF(PFWR, D%NKA, D%NKU, D%NKL)
+      ZDFDDRDZ = ZDFDDRDZ + D_M3_R2_W2R_O_DDRDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDR1,PREDTH1,&
+      & PD,PLM,PLEPS,PTKEM,GUSERV) * MZF(PFWR, D%NKA, D%NKU, D%NKL)
     END IF
     !
     IF (KRR/=0) THEN
       ! d(w'r'2)/dz
       IF (GFTH2) THEN
-        ZF       = ZF       + M3_R2_WTH2(D,CSTURB,D%NKA,KKU,KKL,PD,PLEPS,PSQRT_TKE,&
+        ZF       = ZF       + M3_R2_WTH2(D,CSTURB,D%NKA,D%NKU,D%NKL,PD,PLEPS,PSQRT_TKE,&
         & PBLL_O_E,PETHETA,PDR_DZ) * PFTH2
-        ZDFDDRDZ = ZDFDDRDZ + D_M3_R2_WTH2_O_DDRDZ(D,CSTURB,D%NKA,KKU,KKL,PREDR1,&
+        ZDFDDRDZ = ZDFDDRDZ + D_M3_R2_WTH2_O_DDRDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDR1,&
         & PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDR_DZ) * PFTH2
       END IF
       !
       ! d(w'2r')/dz
       IF (GFWTH) THEN
-        ZF       = ZF       + M3_R2_W2TH(D,CSTURB,D%NKA,KKU,KKL,PD,PLM,PLEPS,PTKEM,&
-        & PBLL_O_E,PETHETA,PDR_DZ) * MZF(PFWTH, D%NKA, KKU, KKL)
-        ZDFDDRDZ = ZDFDDRDZ + D_M3_R2_W2TH_O_DDRDZ(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PREDTH1,&
-        & PD,PLM,PLEPS,PTKEM,PBLL_O_E,PETHETA,PDR_DZ) * MZF(PFWTH, D%NKA, KKU, KKL)
+        ZF       = ZF       + M3_R2_W2TH(D,CSTURB,D%NKA,D%NKU,D%NKL,PD,PLM,PLEPS,PTKEM,&
+        & PBLL_O_E,PETHETA,PDR_DZ) * MZF(PFWTH, D%NKA, D%NKU, D%NKL)
+        ZDFDDRDZ = ZDFDDRDZ + D_M3_R2_W2TH_O_DDRDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDR1,PREDTH1,&
+        & PD,PLM,PLEPS,PTKEM,PBLL_O_E,PETHETA,PDR_DZ) * MZF(PFWTH, D%NKA, D%NKU, D%NKL)
       END IF
       !
       ! d(w'th'r')/dz
       IF (GFTHR) THEN
-        ZF       = ZF       + M3_R2_WTHR(D,CSTURB,D%NKA,KKU,KKL,PREDTH1,PD,PLEPS,&
+        ZF       = ZF       + M3_R2_WTHR(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDTH1,PD,PLEPS,&
         & PSQRT_TKE,PBLL_O_E,PETHETA,PDR_DZ) * PFTHR
-        ZDFDDRDZ = ZDFDDRDZ + D_M3_R2_WTHR_O_DDRDZ(D,CSTURB,D%NKA,KKU,KKL,PREDR1,PREDTH1,&
+        ZDFDDRDZ = ZDFDDRDZ + D_M3_R2_WTHR_O_DDRDZ(D,CSTURB,D%NKA,D%NKU,D%NKL,PREDR1,PREDTH1,&
         & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDR_DZ) * PFTHR
       END IF
   
@@ -770,14 +767,14 @@ ENDIF
     ZFLXZ(:,:,:)   = ZF                                                              &
           + PIMPL * PLMF*PLEPSF                                                  &
             *MZF(2.*PDR_DZ*    &
-                 DZM(PRP - PRM(:,:,:,1), D%NKA, KKU, KKL) / PDZZ, D%NKA, KKU, KKL) &
-          + PIMPL * ZDFDDRDZ * MZF(DZM(PRP - PRM(:,:,:,1), D%NKA, KKU, KKL) / PDZZ, D%NKA, KKU, KKL)
+                 DZM(PRP - PRM(:,:,:,1), D%NKA, D%NKU, D%NKL) / PDZZ, D%NKA, D%NKU, D%NKL) &
+          + PIMPL * ZDFDDRDZ * MZF(DZM(PRP - PRM(:,:,:,1), D%NKA, D%NKU, D%NKL) / PDZZ, D%NKA, D%NKU, D%NKL)
    ELSE
     ZFLXZ(:,:,:)   = ZF                                                              &
           + PIMPL * CSTURB%XCTV*PLM*PLEPS                                                  &
             *MZF(D_PSI3DRDZ2_O_DDRDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,PDR_DZ,HTURBDIM,GUSERV)    &
-                 *DZM(PRP - PRM(:,:,:,1), D%NKA, KKU, KKL) / PDZZ, D%NKA, KKU, KKL) &
-          + PIMPL * ZDFDDRDZ * MZF(DZM(PRP - PRM(:,:,:,1), D%NKA, KKU, KKL) / PDZZ, D%NKA, KKU, KKL)
+                 *DZM(PRP - PRM(:,:,:,1), D%NKA, D%NKU, D%NKL) / PDZZ, D%NKA, D%NKU, D%NKL) &
+          + PIMPL * ZDFDDRDZ * MZF(DZM(PRP - PRM(:,:,:,1), D%NKA, D%NKU, D%NKL) / PDZZ, D%NKA, D%NKU, D%NKL)
   ENDIF
     !
     ! special case near the ground ( uncentred gradient )
@@ -785,24 +782,24 @@ ENDIF
     ZFLXZ(:,:,IKB) =  PLMF(:,:,IKB)   &
         * PLEPSF(:,:,IKB)                                        &
     *( PEXPL *                                                  &
-       ( ZCOEFF(:,:,IKB+2*KKL)*PRM(:,:,IKB+2*KKL,1)             &
-        +ZCOEFF(:,:,IKB+KKL  )*PRM(:,:,IKB+KKL,1  )             & 
+       ( ZCOEFF(:,:,IKB+2*D%NKL)*PRM(:,:,IKB+2*D%NKL,1)             &
+        +ZCOEFF(:,:,IKB+D%NKL  )*PRM(:,:,IKB+D%NKL,1  )             & 
         +ZCOEFF(:,:,IKB      )*PRM(:,:,IKB  ,1    ))**2         &
       +PIMPL *                                                  &
-       ( ZCOEFF(:,:,IKB+2*KKL)*PRP(:,:,IKB+2*KKL)               &
-        +ZCOEFF(:,:,IKB+KKL  )*PRP(:,:,IKB+KKL  )               &
+       ( ZCOEFF(:,:,IKB+2*D%NKL)*PRP(:,:,IKB+2*D%NKL)               &
+        +ZCOEFF(:,:,IKB+D%NKL  )*PRP(:,:,IKB+D%NKL  )               &
         +ZCOEFF(:,:,IKB      )*PRP(:,:,IKB      ))**2           &
      ) 
    ELSE
-    ZFLXZ(:,:,IKB) = CSTURB%XCHV * PPSI3(:,:,IKB+KKL) * PLM(:,:,IKB)   &
+    ZFLXZ(:,:,IKB) = CSTURB%XCHV * PPSI3(:,:,IKB+D%NKL) * PLM(:,:,IKB)   &
         * PLEPS(:,:,IKB)                                        &
     *( PEXPL *                                                  &
-       ( ZCOEFF(:,:,IKB+2*KKL)*PRM(:,:,IKB+2*KKL,1)             &
-        +ZCOEFF(:,:,IKB+KKL  )*PRM(:,:,IKB+KKL,1  )             & 
+       ( ZCOEFF(:,:,IKB+2*D%NKL)*PRM(:,:,IKB+2*D%NKL,1)             &
+        +ZCOEFF(:,:,IKB+D%NKL  )*PRM(:,:,IKB+D%NKL,1  )             & 
         +ZCOEFF(:,:,IKB      )*PRM(:,:,IKB  ,1    ))**2         &
       +PIMPL *                                                  &
-       ( ZCOEFF(:,:,IKB+2*KKL)*PRP(:,:,IKB+2*KKL)               &
-        +ZCOEFF(:,:,IKB+KKL  )*PRP(:,:,IKB+KKL  )               &
+       ( ZCOEFF(:,:,IKB+2*D%NKL)*PRP(:,:,IKB+2*D%NKL)               &
+        +ZCOEFF(:,:,IKB+D%NKL  )*PRP(:,:,IKB+D%NKL  )               &
         +ZCOEFF(:,:,IKB      )*PRP(:,:,IKB      ))**2           &
      ) 
   ENDIF
@@ -832,7 +829,7 @@ ENDIF
     IF (OLES_CALL) THEN
       CALL SECOND_MNH(ZTIME1)
       CALL LES_MEAN_SUBGRID(ZFLXZ, X_LES_SUBGRID_Rt2 ) 
-      CALL LES_MEAN_SUBGRID(MZF(PWM, D%NKA, KKU, KKL)*ZFLXZ, X_LES_RES_W_SBG_Rt2 )
+      CALL LES_MEAN_SUBGRID(MZF(PWM, D%NKA, D%NKU, D%NKL)*ZFLXZ, X_LES_RES_W_SBG_Rt2 )
       CALL LES_MEAN_SUBGRID(PEMOIST*ZFLXZ, X_LES_SUBGRID_RtThv , .TRUE. ) 
       CALL LES_MEAN_SUBGRID(-CSTURB%XA3*PBETA*PEMOIST*ZFLXZ, X_LES_SUBGRID_RtPz, .TRUE. )
       CALL LES_MEAN_SUBGRID(-2.*CSTURB%XCTD*PSQRT_TKE*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_Rt2 ) 
@@ -848,7 +845,7 @@ ENDIF
   IF ( KRRL > 0 ) THEN
     ! Extrapolate PSIGS at the ground and at the top
     PSIGS(:,:,D%NKA) = PSIGS(:,:,IKB)
-    PSIGS(:,:,KKU) = PSIGS(:,:,IKE)
+    PSIGS(:,:,D%NKU) = PSIGS(:,:,IKE)
 #ifdef REPRO48
     PSIGS(:,:,:) =  MAX (PSIGS(:,:,:) , 0.)
     PSIGS(:,:,:) =  SQRT(PSIGS(:,:,:))

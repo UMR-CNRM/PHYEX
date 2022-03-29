@@ -6,7 +6,7 @@ MODULE MODE_TKE_EPS_SOURCES
 IMPLICIT NONE
 CONTAINS
       SUBROUTINE TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,HPROGRAM,         &
-                    & KKA,KKU,KKL,KMI,PTKEM,PLM,PLEPS,PDP,             &
+                    & KMI,PTKEM,PLM,PLEPS,PDP,                         &
                     & PTRH,PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,        &
                     & PTSTEP,PIMPL,PEXPL,                              &
                     & HTURBLEN,HTURBDIM,                               &
@@ -165,10 +165,6 @@ TYPE(DIMPHYEX_t),        INTENT(IN)   :: D
 TYPE(CST_t),             INTENT(IN)   :: CST
 TYPE(CSTURB_t),          INTENT(IN)   :: CSTURB
 TYPE(TBUDGETCONF_t),     INTENT(IN)   :: BUCONF
-INTEGER,                 INTENT(IN)   :: KKA           !near ground array index  
-INTEGER,                 INTENT(IN)   :: KKU           !uppest atmosphere array index
-INTEGER,                 INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
-
 INTEGER,                 INTENT(IN)   ::  KMI          ! model index number  
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)   ::  PTKEM        ! TKE at t-deltat
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)   ::  PLM          ! mixing length         
@@ -234,7 +230,6 @@ NULLIFY(TZFIELDDISS_ll)
 !*       1.   PRELIMINARY COMPUTATIONS
 !             ------------------------
 !
-
 IF (LHOOK) CALL DR_HOOK('TKE_EPS_SOURCES',0,ZHOOK_HANDLE)
 !
 IKB=D%NKB
@@ -259,12 +254,11 @@ ELSE
 END IF
 !
 !
-!
 !*       2.2  Explicit TKE sources except horizontal turbulent transport 
 !
 ! extrapolate the dynamic production with a 1/Z law from its value at the 
 ! W(IKB+1) value stored in PDP(IKB) to the mass localization tke(IKB)
-PDP(:,:,IKB) = PDP(:,:,IKB) * (1. + PDZZ(:,:,IKB+KKL)/PDZZ(:,:,IKB))
+PDP(:,:,IKB) = PDP(:,:,IKB) * (1. + PDZZ(:,:,IKB+D%NKL)/PDZZ(:,:,IKB))
 !
 ! Compute the source terms for TKE: ( ADVECtion + NUMerical DIFFusion + ..)
 ! + (Dynamical Production) + (Thermal Production) - (dissipation) 
@@ -280,11 +274,11 @@ ZSOURCE(:,:,:) = ( PRTKES(:,:,:) +  PRTKEMS(:,:,:) ) / PRHODJ(:,:,:) &
 ! matrix inverted in TRIDIAG 
 !
 ZA(:,:,:)     = - PTSTEP * CSTURB%XCET * &
-                MZM(ZKEFF, D%NKA, KKU, KKL) * MZM(PRHODJ, D%NKA, KKU, KKL) / PDZZ**2
+                MZM(ZKEFF, D%NKA, D%NKU, D%NKL) * MZM(PRHODJ, D%NKA, D%NKU, D%NKL) / PDZZ**2
 !
 ! Compute TKE at time t+deltat: ( stored in ZRES )
 !
-CALL TRIDIAG_TKE(D,D%NKA,KKU,KKL,PTKEM,ZA,PTSTEP,PEXPL,PIMPL,PRHODJ,&
+CALL TRIDIAG_TKE(D,D%NKA,D%NKU,D%NKL,PTKEM,ZA,PTSTEP,PEXPL,PIMPL,PRHODJ,&
             & ZSOURCE,PTSTEP*ZFLX,ZRES)
 CALL GET_HALO(ZRES)
 !
@@ -313,21 +307,20 @@ IF ( OLES_CALL .OR.                         &
 !
 ! Compute the cartesian vertical flux of TKE in ZFLX
 !
-
-  ZFLX(:,:,:)   = - CSTURB%XCET * MZM(ZKEFF, D%NKA, KKU, KKL) *   &
-                  DZM(PIMPL * ZRES + PEXPL * PTKEM, D%NKA, KKU, KKL) / PDZZ
+  ZFLX(:,:,:)   = - CSTURB%XCET * MZM(ZKEFF, D%NKA, D%NKU, D%NKL) *   &
+                  DZM(PIMPL * ZRES + PEXPL * PTKEM, D%NKA, D%NKU, D%NKL) / PDZZ
 !
   ZFLX(:,:,IKB) = 0.
   ZFLX(:,:,D%NKA) = 0.
 !
 ! Compute the whole turbulent TRansport of TKE:
 !
-  ZTR(:,:,:)= ZTR - DZF(MZM(PRHODJ, D%NKA, KKU, KKL) * ZFLX / PDZZ, D%NKA, KKU, KKL) /PRHODJ
+  ZTR(:,:,:)= ZTR - DZF(MZM(PRHODJ, D%NKA, D%NKU, D%NKL) * ZFLX / PDZZ, D%NKA, D%NKU, D%NKL) /PRHODJ
 !
 ! Storage in the LES configuration
 !
   IF (OLES_CALL) THEN
-    CALL LES_MEAN_SUBGRID(MZF(ZFLX, D%NKA, KKU, KKL), X_LES_SUBGRID_WTke )
+    CALL LES_MEAN_SUBGRID(MZF(ZFLX, D%NKA, D%NKU, D%NKL), X_LES_SUBGRID_WTke )
     CALL LES_MEAN_SUBGRID(-ZTR, X_LES_SUBGRID_ddz_WTke )
   END IF
 !
@@ -364,7 +357,7 @@ PRTKES(:,:,:) = ZRES(:,:,:) * PRHODJ(:,:,:) / PTSTEP -  PRTKEMS(:,:,:)
 ! stores the whole turbulent transport
 !
 IF (BUCONF%LBUDGET_TKE) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TKE), 'TR', PRTKES(:, :, :) )
-
+!
 !----------------------------------------------------------------------------
 !
 !*       3.   COMPUTE THE DISSIPATIVE HEATING
@@ -446,9 +439,6 @@ END IF
 IF (OLES_CALL ) THEN
   CALL LES_MEAN_SUBGRID( PDISS, X_LES_SUBGRID_DISS_Tke )
 END IF
-!
-!----------------------------------------------------------------------------
-! 
 !
 !----------------------------------------------------------------------------
 !

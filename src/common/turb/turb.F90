@@ -500,14 +500,11 @@ IKE=D%NKE
 ZEXPL = 1.- PIMPL
 ZRVORD= CST%XRV / CST%XRD
 !
-!
 !Copy data into ZTHLM and ZRM only if needed
 IF (HTURBLEN=='BL89' .OR. HTURBLEN=='RM17' .OR. ORMC01) THEN
   ZTHLM(:,:,:) = PTHLT(:,:,:)
   ZRM(:,:,:,:) = PRT(:,:,:,:)
 END IF
-!
-!
 !
 !----------------------------------------------------------------------------
 !
@@ -649,7 +646,7 @@ SELECT CASE (HTURBLEN)
 
   CASE ('BL89')
     ZSHEAR=0.
-    CALL BL89(D,CST,CSTURB,D%NKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
+    CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 !
 !*      3.2 RM17 mixing length
 !           ------------------
@@ -658,7 +655,7 @@ SELECT CASE (HTURBLEN)
     ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,D%NKA,KKU,KKL),D%NKA,KKU,KKL))
     ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,D%NKA,KKU,KKL),D%NKA,KKU,KKL))
     ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
-    CALL BL89(D,CST,CSTURB,D%NKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
+    CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 !
 !*      3.3 Grey-zone combined RM17 & Deardorff mixing lengths 
 !           --------------------------------------------------
@@ -667,7 +664,7 @@ SELECT CASE (HTURBLEN)
     ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,D%NKA,KKU,KKL),D%NKA,KKU,KKL))
     ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,D%NKA,KKU,KKL),D%NKA,KKU,KKL))
     ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
-    CALL BL89(D,CST,CSTURB,D%NKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
+    CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 
     CALL DELT(ZLMW,ODZ=.FALSE.)
     ! The minimum mixing length is chosen between Horizontal grid mesh (not taking into account the vertical grid mesh) and RM17.
@@ -881,7 +878,7 @@ IF( BUCONF%LBUDGET_SV ) THEN
   END DO
 END IF
 
-CALL TURB_VER(D, CST,CSTURB,TURBN,D%NKA,KKU,KKL,KRR, KRRL, KRRI,&
+CALL TURB_VER(D, CST,CSTURB,TURBN,KRR, KRRL, KRRI,       &
           OTURB_FLX, OOCEAN, ODEEPOC, OHARAT,OCOMPUTE_SRC,&
           KSV,KSV_LGBEG,KSV_LGEND,                       &
           HTURBDIM,HTOM,PIMPL,ZEXPL,                     &
@@ -1064,7 +1061,7 @@ ELSE
 END IF
 !
 CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,HPROGRAM,&
-                   &D%NKA,KKU,KKL,KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,       &
+                   & KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,       &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,            &
                    & PTSTEP,PIMPL,ZEXPL,                         &
                    & HTURBLEN,HTURBDIM,                              &
@@ -1760,7 +1757,7 @@ ELSE
 !           ------------------
   CASE ('BL89','RM17','ADAP')
     ZSHEAR=0.
-    CALL BL89(D,CST,CSTURB,D%NKA,KKU,KKL,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD,OOCEAN,HPROGRAM)
+    CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD,OOCEAN,HPROGRAM)
 !
 !*         3.2 Delta mixing length
 !           -------------------

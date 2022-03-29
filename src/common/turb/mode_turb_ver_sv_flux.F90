@@ -5,7 +5,7 @@
 MODULE MODE_TURB_VER_SV_FLUX
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,KKA,KKU,KKL,ONOMIXLG,      &
+SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,ONOMIXLG,                  &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
                       OTURB_FLX,HTURBDIM,OHARAT,OBLOWSNOW,OLES_CALL,&
                       PIMPL,PEXPL,                                  &
@@ -241,9 +241,6 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
-INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
-INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
 INTEGER,                INTENT(IN)   :: KSV, &
                                         KSV_LGBEG, KSV_LGEND ! number of scalar variables
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
@@ -282,9 +279,6 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS
                             ! cumulated sources for the prognostic variables
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(OUT)  :: PWSV        ! scalar flux
 !
-!
-!
-!
 !*       0.2  declaration of local variables
 !
 !
@@ -304,7 +298,6 @@ INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
 INTEGER             :: JSV          ! loop counters
 INTEGER             :: JK           ! loop
-INTEGER             :: ISV          ! number of scalar var.
 !
 REAL :: ZTIME1, ZTIME2
 
@@ -326,12 +319,10 @@ IKTE=D%NKTE
 IKB=D%NKB
 IKE=D%NKE             
 !
-ISV=SIZE(PSVM,4)
-!
 IF (OHARAT) THEN
   ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50.*MFMOIST(:,:,:)
 ELSE
-  ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), D%NKA, KKU, KKL)
+  ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), D%NKA, D%NKU, D%NKL)
 ENDIF
 !
 IF(OBLOWSNOW) THEN
@@ -345,18 +336,18 @@ ENDIF
 !*       8.   SOURCES OF PASSIVE SCALAR VARIABLES
 !             -----------------------------------
 !
-DO JSV=1,ISV
+DO JSV=1,KSV
 !
   IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
 !
 ! Preparation of the arguments for TRIDIAG 
     IF (OHARAT) THEN
       ZA(:,:,:)    = -PTSTEP*   &
-                   ZKEFF * MZM(PRHODJ, D%NKA, KKU, KKL) /   &
+                   ZKEFF * MZM(PRHODJ, D%NKA, D%NKU, D%NKL) /   &
                    PDZZ**2
     ELSE
       ZA(:,:,:)    = -PTSTEP*ZCSV*PPSI_SV(:,:,:,JSV) *   &
-                   ZKEFF * MZM(PRHODJ, D%NKA, KKU, KKL) /   &
+                   ZKEFF * MZM(PRHODJ, D%NKA, D%NKU, D%NKL) /   &
                    PDZZ**2
     ENDIF
   ZSOURCE(:,:,:) = 0.
@@ -381,7 +372,7 @@ DO JSV=1,ISV
   ZSOURCE(:,:,IKE) = 0.
 !
 ! Obtention of the split JSV scalar variable at t+ deltat  
-  CALL TRIDIAG(D,D%NKA,KKU,KKL,PSVM(:,:,:,JSV),ZA,PTSTEP,PEXPL,PIMPL,PRHODJ,ZSOURCE,ZRES)
+  CALL TRIDIAG(D,D%NKA,D%NKU,D%NKL,PSVM(:,:,:,JSV),ZA,PTSTEP,PEXPL,PIMPL,PRHODJ,ZSOURCE,ZRES)
 !
 !  Compute the equivalent tendency for the JSV scalar variable
   PRSVS(:,:,:,JSV)= PRSVS(:,:,:,JSV)+    &
@@ -390,8 +381,8 @@ DO JSV=1,ISV
   IF ( (OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
-    ZFLXZ(:,:,:) = -ZCSV * PPSI_SV(:,:,:,JSV) * MZM(PLM*SQRT(PTKEM), D%NKA, KKU, KKL) / PDZZ * &
-                  DZM(PIMPL*ZRES(:,:,:) + PEXPL*PSVM(:,:,:,JSV), D%NKA, KKU, KKL)
+    ZFLXZ(:,:,:) = -ZCSV * PPSI_SV(:,:,:,JSV) * MZM(PLM*SQRT(PTKEM), D%NKA, D%NKU, D%NKL) / PDZZ * &
+                  DZM(PIMPL*ZRES(:,:,:) + PEXPL*PSVM(:,:,:,JSV), D%NKA, D%NKU, D%NKL)
     ! surface flux
     !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
     ! (in presence of slopes)
@@ -408,10 +399,10 @@ DO JSV=1,ISV
     ! the IKB flux gives the ground value
     ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB)
     DO JK=IKTB+1,IKTE-1
-      PWSV(:,:,JK,JSV)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+KKL))
+      PWSV(:,:,JK,JSV)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+D%NKL))
     END DO
-    PWSV(:,:,IKB,JSV)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+KKL))
-    PWSV(:,:,IKE,JSV)=PWSV(:,:,IKE-KKL,JSV)
+    PWSV(:,:,IKB,JSV)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+D%NKL))
+    PWSV(:,:,IKE,JSV)=PWSV(:,:,IKE-D%NKL,JSV)
  END IF
   !
   IF (OTURB_FLX .AND. TPFILE%LOPENED) THEN
@@ -435,13 +426,13 @@ DO JSV=1,ISV
   !
   IF (OLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
-    CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, D%NKA, KKU, KKL), X_LES_SUBGRID_WSv(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID(GZ_W_M(PWM,PDZZ, D%NKA, KKU, KKL)*MZF(ZFLXZ, D%NKA, KKU, KKL), &
+    CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, D%NKA, D%NKU, D%NKL), X_LES_SUBGRID_WSv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID(GZ_W_M(PWM,PDZZ, D%NKA, D%NKU, D%NKL)*MZF(ZFLXZ, D%NKA, D%NKU, D%NKL), &
                           X_LES_RES_ddxa_W_SBG_UaSv(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID(MZF(GZ_M_W(D%NKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)*ZFLXZ, D%NKA, KKU, KKL), &
+    CALL LES_MEAN_SUBGRID(MZF(GZ_M_W(D%NKA, D%NKU, D%NKL,PSVM(:,:,:,JSV),PDZZ)*ZFLXZ, D%NKA, D%NKU, D%NKL), &
                           X_LES_RES_ddxa_Sv_SBG_UaSv(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID(-ZCSVP*SQRT(PTKEM)/PLM*MZF(ZFLXZ, D%NKA, KKU, KKL), X_LES_SUBGRID_SvPz(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID(MZF(PWM*ZFLXZ, D%NKA, KKU, KKL), X_LES_RES_W_SBG_WSv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID(-ZCSVP*SQRT(PTKEM)/PLM*MZF(ZFLXZ, D%NKA, D%NKU, D%NKL), X_LES_SUBGRID_SvPz(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID(MZF(PWM*ZFLXZ, D%NKA, D%NKU, D%NKL), X_LES_RES_W_SBG_WSv(:,:,:,JSV) )
     CALL SECOND_MNH(ZTIME2)
     XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
   END IF

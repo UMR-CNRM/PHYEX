@@ -5,7 +5,7 @@
 MODULE MODE_TURB_VER_DYN_FLUX
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KKA,KKU,KKL,KSV,O2D,OFLAT,&
+SUBROUTINE TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KSV,O2D,OFLAT,&
                       OTURB_FLX,KRR, OOCEAN,OHARAT,OCOUPLES,OLES_CALL,&
                       HTURBDIM,PIMPL,PEXPL,                         &
                       PTSTEP,                                       &
@@ -240,9 +240,6 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
-INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
-INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
 INTEGER,                INTENT(IN)   :: KSV           ! number of scalar variables
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
@@ -362,7 +359,7 @@ ZDIRSINZW(:,:) = SQRT(1.-PDIRCOSZW(:,:)**2)
 IF (OHARAT) THEN
   ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50*MFMOIST(:,:,:)
 ELSE 
-  ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), D%NKA, KKU, KKL)
+  ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), D%NKA, D%NKU, D%NKL)
 ENDIF
 
 !
@@ -380,7 +377,7 @@ ZVSLOPEM(:,:,1)=PVSLOPEM(:,:)
 ! Preparation of the arguments for TRIDIAG_WIND 
 !
 ZA(:,:,:)    = -PTSTEP * ZCMFS *                              &
-              MXM( ZKEFF ) * MXM(MZM(PRHODJ, D%NKA, KKU, KKL)) / &
+              MXM( ZKEFF ) * MXM(MZM(PRHODJ, D%NKA, D%NKU, D%NKL)) / &
               MXM( PDZZ )**2
 !
 !
@@ -405,11 +402,11 @@ IF (OOCEAN) THEN  ! OCEAN MODEL ONLY
   ! Sfx flux assumed to be in SI & at vorticity point
   IF (OCOUPLES) THEN  
     ZSOURCE(:,:,IKE:IKE) = TURBN%XSSUFL_C(:,:,1:1)/PDZZ(:,:,IKE:IKE) &
-         *0.5 * ( 1. + MXM(PRHODJ(:,:,KKU:KKU)) / MXM(PRHODJ(:,:,IKE:IKE))) 
+         *0.5 * ( 1. + MXM(PRHODJ(:,:,D%NKU:D%NKU)) / MXM(PRHODJ(:,:,IKE:IKE))) 
   ELSE
     ZSOURCE(:,:,IKE)     = XSSUFL(:,:)
     ZSOURCE(:,:,IKE:IKE) = ZSOURCE (:,:,IKE:IKE) /PDZZ(:,:,IKE:IKE) &
-        *0.5 * ( 1. + MXM(PRHODJ(:,:,KKU:KKU)) / MXM(PRHODJ(:,:,IKE:IKE)) )
+        *0.5 * ( 1. + MXM(PRHODJ(:,:,D%NKU:D%NKU)) / MXM(PRHODJ(:,:,IKE:IKE)) )
   ENDIF
   !No flux at the ocean domain bottom
    ZSOURCE(:,:,IKB)           = 0.
@@ -444,7 +441,7 @@ ENDIF !end ocean or atmosphere cases
 !
 ! Obtention of the split U at t+ deltat 
 !
-CALL TRIDIAG_WIND(D%NKA,KKU,KKL,PUM,ZA,ZCOEFS(:,:,1),PTSTEP,PEXPL,PIMPL,   &
+CALL TRIDIAG_WIND(D%NKA,D%NKU,D%NKL,PUM,ZA,ZCOEFS(:,:,1),PTSTEP,PEXPL,PIMPL,   &
                   MXM(PRHODJ),ZSOURCE,ZRES)
 ! 
 !  Compute the equivalent tendency for the U wind component
@@ -457,7 +454,7 @@ PRUS(:,:,:)=PRUS(:,:,:)+MXM(PRHODJ(:,:,:))*(ZRES(:,:,:)-PUM(:,:,:))/PTSTEP
 ! vertical flux of the U wind component
 !
 ZFLXZ(:,:,:)     = -ZCMFS * MXM(ZKEFF) * &
-                  DZM(PIMPL*ZRES + PEXPL*PUM, D%NKA, KKU, KKL) / MXM(PDZZ)
+                  DZM(PIMPL*ZRES + PEXPL*PUM, D%NKA, D%NKU, D%NKL) / MXM(PDZZ)
 !
 ! surface flux 
 ZFLXZ(:,:,IKB:IKB)   =   MXM(PDZZ(:,:,IKB:IKB))  *                &
@@ -470,8 +467,8 @@ ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB)
 IF (OOCEAN) THEN !ocean model at phys sfc (ocean domain top)
   ZFLXZ(:,:,IKE:IKE)   =   MXM(PDZZ(:,:,IKE:IKE))  *                &
                            ZSOURCE(:,:,IKE:IKE)                     &
-                           / 0.5 / ( 1. + MXM(PRHODJ(:,:,KKU:KKU)) / MXM(PRHODJ(:,:,IKE:IKE)) )
-  ZFLXZ(:,:,KKU) = ZFLXZ(:,:,IKE) 
+                           / 0.5 / ( 1. + MXM(PRHODJ(:,:,D%NKU:D%NKU)) / MXM(PRHODJ(:,:,IKE:IKE)) )
+  ZFLXZ(:,:,D%NKU) = ZFLXZ(:,:,IKE) 
 END IF
 !
 IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
@@ -496,19 +493,19 @@ PWU(:,:,:) = ZFLXZ(:,:,:)
 ! Contribution to the dynamic production of TKE
 ! compute the dynamic production at the mass point
 !
-PDP(:,:,:) = - MZF(MXF(ZFLXZ * GZ_U_UW(PUM,PDZZ, D%NKA, KKU, KKL)), D%NKA, KKU, KKL)
+PDP(:,:,:) = - MZF(MXF(ZFLXZ * GZ_U_UW(PUM,PDZZ, D%NKA, D%NKU, D%NKL)), D%NKA, D%NKU, D%NKL)
 !
-! evaluate the dynamic production at w(IKB+KKL) in PDP(IKB)
+! evaluate the dynamic production at w(IKB+D%NKL) in PDP(IKB)
 PDP(:,:,IKB:IKB) = - MXF (                                                      &
-  ZFLXZ(:,:,IKB+KKL:IKB+KKL) * (PUM(:,:,IKB+KKL:IKB+KKL)-PUM(:,:,IKB:IKB))  &
-                         / MXM(PDZZ(:,:,IKB+KKL:IKB+KKL))                   &
+  ZFLXZ(:,:,IKB+D%NKL:IKB+D%NKL) * (PUM(:,:,IKB+D%NKL:IKB+D%NKL)-PUM(:,:,IKB:IKB))  &
+                         / MXM(PDZZ(:,:,IKB+D%NKL:IKB+D%NKL))                   &
                          )
 !
 IF (OOCEAN) THEN
-  ! evaluate the dynamic production at w(IKE-KKL) in PDP(IKE)
+  ! evaluate the dynamic production at w(IKE-D%NKL) in PDP(IKE)
   PDP(:,:,IKE:IKE) = - MXF (                                                      &
-    ZFLXZ(:,:,IKE-KKL:IKE-KKL) * (PUM(:,:,IKE:IKE)-PUM(:,:,IKE-KKL:IKE-KKL))  &
-                           / MXM(PDZZ(:,:,IKE-KKL:IKE-KKL))                   &
+    ZFLXZ(:,:,IKE-D%NKL:IKE-D%NKL) * (PUM(:,:,IKE:IKE)-PUM(:,:,IKE-D%NKL:IKE-D%NKL))  &
+                           / MXM(PDZZ(:,:,IKE-D%NKL:IKE-D%NKL))                   &
                            ) 
 END IF
 !
@@ -516,9 +513,9 @@ END IF
 ! 
 IF (OLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID(MZF(MXF(ZFLXZ), D%NKA, KKU, KKL), X_LES_SUBGRID_WU ) 
-  CALL LES_MEAN_SUBGRID(MZF(MXF(GZ_U_UW(PUM,PDZZ, D%NKA, KKU, KKL) &
-                       & *ZFLXZ), D%NKA, KKU, KKL), X_LES_RES_ddxa_U_SBG_UaU )
+  CALL LES_MEAN_SUBGRID(MZF(MXF(ZFLXZ), D%NKA, D%NKU, D%NKL), X_LES_SUBGRID_WU ) 
+  CALL LES_MEAN_SUBGRID(MZF(MXF(GZ_U_UW(PUM,PDZZ, D%NKA, D%NKU, D%NKL) &
+                       & *ZFLXZ), D%NKA, D%NKU, D%NKL), X_LES_RES_ddxa_U_SBG_UaU )
   CALL LES_MEAN_SUBGRID( ZCMFS * ZKEFF, X_LES_SUBGRID_Km )
   CALL SECOND_MNH(ZTIME2)
   XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
@@ -530,52 +527,52 @@ END IF
 IF(HTURBDIM=='3DIM') THEN
   ! Compute the source for the W wind component
                 ! used to compute the W source at the ground
-  ZFLXZ(:,:,D%NKA) = 2 * ZFLXZ(:,:,IKB) - ZFLXZ(:,:,IKB+KKL) ! extrapolation 
+  ZFLXZ(:,:,D%NKA) = 2 * ZFLXZ(:,:,IKB) - ZFLXZ(:,:,IKB+D%NKL) ! extrapolation 
  IF (OOCEAN) THEN
-   ZFLXZ(:,:,KKU) = 2 * ZFLXZ(:,:,IKE) - ZFLXZ(:,:,IKE-KKL) ! extrapolation 
+   ZFLXZ(:,:,D%NKU) = 2 * ZFLXZ(:,:,IKE) - ZFLXZ(:,:,IKE-D%NKL) ! extrapolation 
  END IF     
      
   !
   IF (.NOT. OFLAT) THEN
     PRWS(:,:,:)= PRWS                                      &
-                -DXF( MZM(MXM(PRHODJ) /PDXX, D%NKA, KKU, KKL)  * ZFLXZ )  &
-                +DZM(PRHODJ / MZF(PDZZ, D%NKA, KKU, KKL) *                &
-                      MXF(MZF(ZFLXZ*PDZX, D%NKA, KKU, KKL) / PDXX ),      &
-                     D%NKA, KKU, KKL)
+                -DXF( MZM(MXM(PRHODJ) /PDXX, D%NKA, D%NKU, D%NKL)  * ZFLXZ )  &
+                +DZM(PRHODJ / MZF(PDZZ, D%NKA, D%NKU, D%NKL) *                &
+                      MXF(MZF(ZFLXZ*PDZX, D%NKA, D%NKU, D%NKL) / PDXX ),      &
+                     D%NKA, D%NKU, D%NKL)
   ELSE
-    PRWS(:,:,:)= PRWS -DXF(MZM(MXM(PRHODJ) /PDXX, D%NKA, KKU, KKL)  * ZFLXZ )
+    PRWS(:,:,:)= PRWS -DXF(MZM(MXM(PRHODJ) /PDXX, D%NKA, D%NKU, D%NKL)  * ZFLXZ )
   END IF
   !
   ! Complete the Dynamical production with the W wind component 
   !
-  ZA(:,:,:)=-MZF(MXF(ZFLXZ * GX_W_UW(PWM,PDXX,PDZZ,PDZX, D%NKA, KKU, KKL)), D%NKA, KKU, KKL)
+  ZA(:,:,:)=-MZF(MXF(ZFLXZ * GX_W_UW(PWM,PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL)), D%NKA, D%NKU, D%NKL)
   !
   !
-  ! evaluate the dynamic production at w(IKB+KKL) in PDP(IKB)
+  ! evaluate the dynamic production at w(IKB+D%NKL) in PDP(IKB)
   ZA(:,:,IKB:IKB) = - MXF (                                                  &
-   ZFLXZ(:,:,IKB+KKL:IKB+KKL) *                                              &
-     ( DXM( PWM(:,:,IKB+KKL:IKB+KKL) )                                       &
-      -MXM(  (PWM(:,:,IKB+2*KKL:IKB+2*KKL   )-PWM(:,:,IKB+KKL:IKB+KKL))      &
-              /(PDZZ(:,:,IKB+2*KKL:IKB+2*KKL)+PDZZ(:,:,IKB+KKL:IKB+KKL))     &
-            +(PWM(:,:,IKB+KKL:IKB+KKL)-PWM(:,:,IKB:IKB  ))                   &
-              /(PDZZ(:,:,IKB+KKL:IKB+KKL)+PDZZ(:,:,IKB:IKB  ))               &
+   ZFLXZ(:,:,IKB+D%NKL:IKB+D%NKL) *                                              &
+     ( DXM( PWM(:,:,IKB+D%NKL:IKB+D%NKL) )                                       &
+      -MXM(  (PWM(:,:,IKB+2*D%NKL:IKB+2*D%NKL   )-PWM(:,:,IKB+D%NKL:IKB+D%NKL))      &
+              /(PDZZ(:,:,IKB+2*D%NKL:IKB+2*D%NKL)+PDZZ(:,:,IKB+D%NKL:IKB+D%NKL))     &
+            +(PWM(:,:,IKB+D%NKL:IKB+D%NKL)-PWM(:,:,IKB:IKB  ))                   &
+              /(PDZZ(:,:,IKB+D%NKL:IKB+D%NKL)+PDZZ(:,:,IKB:IKB  ))               &
           )                                                                  &
-        * PDZX(:,:,IKB+KKL:IKB+KKL)                                          &
-     ) / (0.5*(PDXX(:,:,IKB+KKL:IKB+KKL)+PDXX(:,:,IKB:IKB)))                 &
+        * PDZX(:,:,IKB+D%NKL:IKB+D%NKL)                                          &
+     ) / (0.5*(PDXX(:,:,IKB+D%NKL:IKB+D%NKL)+PDXX(:,:,IKB:IKB)))                 &
                           )
   !
 IF (OOCEAN) THEN
-  ! evaluate the dynamic production at w(IKE-KKL) in PDP(IKE)
+  ! evaluate the dynamic production at w(IKE-D%NKL) in PDP(IKE)
   ZA(:,:,IKE:IKE) = - MXF (                                                  &
-   ZFLXZ(:,:,IKE-KKL:IKE-KKL) *                                              &
-     ( DXM( PWM(:,:,IKE-KKL:IKE-KKL) )                                       &
-      -MXM(  (PWM(:,:,IKE-2*KKL:IKE-2*KKL   )-PWM(:,:,IKE-KKL:IKE-KKL))      &
-              /(PDZZ(:,:,IKE-2*KKL:IKE-2*KKL)+PDZZ(:,:,IKE-KKL:IKE-KKL))     &
-            +(PWM(:,:,IKE-KKL:IKE-KKL)-PWM(:,:,IKE:IKE  ))                   &
-              /(PDZZ(:,:,IKE-KKL:IKE-KKL)+PDZZ(:,:,IKE:IKE  ))               &
+   ZFLXZ(:,:,IKE-D%NKL:IKE-D%NKL) *                                              &
+     ( DXM( PWM(:,:,IKE-D%NKL:IKE-D%NKL) )                                       &
+      -MXM(  (PWM(:,:,IKE-2*D%NKL:IKE-2*D%NKL   )-PWM(:,:,IKE-D%NKL:IKE-D%NKL))      &
+              /(PDZZ(:,:,IKE-2*D%NKL:IKE-2*D%NKL)+PDZZ(:,:,IKE-D%NKL:IKE-D%NKL))     &
+            +(PWM(:,:,IKE-D%NKL:IKE-D%NKL)-PWM(:,:,IKE:IKE  ))                   &
+              /(PDZZ(:,:,IKE-D%NKL:IKE-D%NKL)+PDZZ(:,:,IKE:IKE  ))               &
           )                                                                  &
-         * PDZX(:,:,IKE-KKL:IKE-KKL)                                         &
-     ) / (0.5*(PDXX(:,:,IKE-KKL:IKE-KKL)+PDXX(:,:,IKE:IKE)))                 &
+         * PDZX(:,:,IKE-D%NKL:IKE-D%NKL)                                         &
+     ) / (0.5*(PDXX(:,:,IKE-D%NKL:IKE-D%NKL)+PDXX(:,:,IKE:IKE)))                 &
                           )
 END IF
   !
@@ -586,16 +583,16 @@ END IF
   IF (OLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
     CALL LES_MEAN_SUBGRID(MZF(MXF(GX_W_UW(PWM,PDXX,&
-      PDZZ,PDZX, D%NKA, KKU, KKL)*ZFLXZ), D%NKA, KKU, KKL), X_LES_RES_ddxa_W_SBG_UaW )
-    CALL LES_MEAN_SUBGRID(MXF(GX_M_U(D%NKA, KKU, KKL,PTHLM,PDXX,PDZZ,PDZX)&
-      * MZF(ZFLXZ, D%NKA, KKU, KKL)), X_LES_RES_ddxa_Thl_SBG_UaW )
+      PDZZ,PDZX, D%NKA, D%NKU, D%NKL)*ZFLXZ), D%NKA, D%NKU, D%NKL), X_LES_RES_ddxa_W_SBG_UaW )
+    CALL LES_MEAN_SUBGRID(MXF(GX_M_U(D%NKA, D%NKU, D%NKL,PTHLM,PDXX,PDZZ,PDZX)&
+      * MZF(ZFLXZ, D%NKA, D%NKU, D%NKL)), X_LES_RES_ddxa_Thl_SBG_UaW )
     IF (KRR>=1) THEN
-      CALL LES_MEAN_SUBGRID(MXF(GX_U_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, D%NKA, KKU, KKL)&
-      *MZF(ZFLXZ, D%NKA, KKU, KKL)),X_LES_RES_ddxa_Rt_SBG_UaW )
+      CALL LES_MEAN_SUBGRID(MXF(GX_U_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL)&
+      *MZF(ZFLXZ, D%NKA, D%NKU, D%NKL)),X_LES_RES_ddxa_Rt_SBG_UaW )
     END IF
     DO JSV=1,KSV
       CALL LES_MEAN_SUBGRID( MXF(GX_U_M(PSVM(:,:,:,JSV),PDXX,PDZZ,&
-      PDZX, D%NKA, KKU, KKL)*MZF(ZFLXZ, D%NKA, KKU, KKL)),X_LES_RES_ddxa_Sv_SBG_UaW(:,:,:,JSV) )
+      PDZX, D%NKA, D%NKU, D%NKL)*MZF(ZFLXZ, D%NKA, D%NKU, D%NKL)),X_LES_RES_ddxa_Sv_SBG_UaW(:,:,:,JSV) )
     END DO
     CALL SECOND_MNH(ZTIME2)
     XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
@@ -613,7 +610,7 @@ END IF
 ! Preparation of the arguments for TRIDIAG_WIND
 !!
 ZA(:,:,:)    = - PTSTEP * ZCMFS *                              &
-              MYM( ZKEFF ) * MYM(MZM(PRHODJ, D%NKA, KKU, KKL)) / &
+              MYM( ZKEFF ) * MYM(MZM(PRHODJ, D%NKA, D%NKU, D%NKL)) / &
               MYM( PDZZ )**2
 !
 !
@@ -635,11 +632,11 @@ ZCOEFS(:,:,1:1)=MYM(ZCOEFS(:,:,1:1) / PDZZ(:,:,IKB:IKB) )
 IF (OOCEAN) THEN ! Ocean case
   IF (OCOUPLES) THEN
     ZSOURCE(:,:,IKE:IKE) =  TURBN%XSSVFL_C(:,:,1:1)/PDZZ(:,:,IKE:IKE) &
-        *0.5 * ( 1. + MYM(PRHODJ(:,:,KKU:KKU)) / MYM(PRHODJ(:,:,IKE:IKE)) ) 
+        *0.5 * ( 1. + MYM(PRHODJ(:,:,D%NKU:D%NKU)) / MYM(PRHODJ(:,:,IKE:IKE)) ) 
   ELSE 
     ZSOURCE(:,:,IKE) = XSSVFL(:,:)
     ZSOURCE(:,:,IKE:IKE) = ZSOURCE(:,:,IKE:IKE)/PDZZ(:,:,IKE:IKE) &
-        *0.5 * ( 1. + MYM(PRHODJ(:,:,KKU:KKU)) / MYM(PRHODJ(:,:,IKE:IKE)) )
+        *0.5 * ( 1. + MYM(PRHODJ(:,:,D%NKU:D%NKU)) / MYM(PRHODJ(:,:,IKE:IKE)) )
   END IF
   !No flux at the ocean domain bottom
   ZSOURCE(:,:,IKB) = 0.
@@ -672,7 +669,7 @@ ENDIF ! End of Ocean or Atmospher Cases
 ZSOURCE(:,:,IKTB+1:IKTE-1) = 0.
 ! 
 !  Obtention of the split V at t+ deltat 
-CALL TRIDIAG_WIND(D%NKA,KKU,KKL,PVM,ZA,ZCOEFS(:,:,1),PTSTEP,PEXPL,PIMPL,  &
+CALL TRIDIAG_WIND(D%NKA,D%NKU,D%NKL,PVM,ZA,ZCOEFS(:,:,1),PTSTEP,PEXPL,PIMPL,  &
                   MYM(PRHODJ),ZSOURCE,ZRES)
 !
 ! Compute the equivalent tendency for the V wind component
@@ -685,7 +682,7 @@ PRVS(:,:,:)=PRVS(:,:,:)+MYM(PRHODJ(:,:,:))*(ZRES(:,:,:)-PVM(:,:,:))/PTSTEP
 !  vertical flux of the V wind component
 !
 ZFLXZ(:,:,:)   = -ZCMFS * MYM(ZKEFF) * &
-                DZM(PIMPL*ZRES + PEXPL*PVM, D%NKA, KKU, KKL) / MYM(PDZZ)
+                DZM(PIMPL*ZRES + PEXPL*PVM, D%NKA, D%NKU, D%NKL) / MYM(PDZZ)
 !
 ZFLXZ(:,:,IKB:IKB)   =   MYM(PDZZ(:,:,IKB:IKB))  *                       &
   ( ZSOURCE(:,:,IKB:IKB)                                                 &
@@ -698,8 +695,8 @@ ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB)
 IF (OOCEAN) THEN
   ZFLXZ(:,:,IKE:IKE)   =   MYM(PDZZ(:,:,IKE:IKE))  *                &
       ZSOURCE(:,:,IKE:IKE)                                          &
-      / 0.5 / ( 1. + MYM(PRHODJ(:,:,KKU:KKU)) / MYM(PRHODJ(:,:,IKE:IKE)) )
-  ZFLXZ(:,:,KKU) = ZFLXZ(:,:,IKE) 
+      / 0.5 / ( 1. + MYM(PRHODJ(:,:,D%NKU:D%NKU)) / MYM(PRHODJ(:,:,IKE:IKE)) )
+  ZFLXZ(:,:,D%NKU) = ZFLXZ(:,:,IKE) 
 END IF
 !
 IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
@@ -724,20 +721,20 @@ PWV(:,:,:) = ZFLXZ(:,:,:)
 !  Contribution to the dynamic production of TKE
 ! compute the dynamic production contribution at the mass point
 !
-ZA(:,:,:) = - MZF(MYF(ZFLXZ * GZ_V_VW(PVM,PDZZ, D%NKA, KKU, KKL)), D%NKA, KKU, KKL)
+ZA(:,:,:) = - MZF(MYF(ZFLXZ * GZ_V_VW(PVM,PDZZ, D%NKA, D%NKU, D%NKL)), D%NKA, D%NKU, D%NKL)
 !
-! evaluate the dynamic production at w(IKB+KKL) in PDP(IKB)
+! evaluate the dynamic production at w(IKB+D%NKL) in PDP(IKB)
 ZA(:,:,IKB:IKB)  =                                                 &
                  - MYF (                                          &
-ZFLXZ(:,:,IKB+KKL:IKB+KKL) * (PVM(:,:,IKB+KKL:IKB+KKL)-PVM(:,:,IKB:IKB))  &
-                       / MYM(PDZZ(:,:,IKB+KKL:IKB+KKL))               &
+ZFLXZ(:,:,IKB+D%NKL:IKB+D%NKL) * (PVM(:,:,IKB+D%NKL:IKB+D%NKL)-PVM(:,:,IKB:IKB))  &
+                       / MYM(PDZZ(:,:,IKB+D%NKL:IKB+D%NKL))               &
                        )
 !
 IF (OOCEAN) THEN
-  ! evaluate the dynamic production at w(IKE-KKL) in PDP(IKE)
+  ! evaluate the dynamic production at w(IKE-D%NKL) in PDP(IKE)
   ZA(:,:,IKE:IKE) = - MYF (                                                  &
-   ZFLXZ(:,:,IKE-KKL:IKE-KKL) * (PVM(:,:,IKE:IKE)-PVM(:,:,IKE-KKL:IKE-KKL))  &
-                          / MYM(PDZZ(:,:,IKE-KKL:IKE-KKL))                   &
+   ZFLXZ(:,:,IKE-D%NKL:IKE-D%NKL) * (PVM(:,:,IKE:IKE)-PVM(:,:,IKE-D%NKL:IKE-D%NKL))  &
+                          / MYM(PDZZ(:,:,IKE-D%NKL:IKE-D%NKL))                   &
                           )
 END IF
 !
@@ -747,9 +744,9 @@ PDP(:,:,:)=PDP(:,:,:)+ZA(:,:,:)
 !
 IF (OLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID(MZF(MYF(ZFLXZ), D%NKA, KKU, KKL), X_LES_SUBGRID_WV ) 
-  CALL LES_MEAN_SUBGRID(MZF(MYF(GZ_V_VW(PVM,PDZZ, D%NKA, KKU, KKL)*&
-                    & ZFLXZ), D%NKA, KKU, KKL), X_LES_RES_ddxa_V_SBG_UaV )
+  CALL LES_MEAN_SUBGRID(MZF(MYF(ZFLXZ), D%NKA, D%NKU, D%NKL), X_LES_SUBGRID_WV ) 
+  CALL LES_MEAN_SUBGRID(MZF(MYF(GZ_V_VW(PVM,PDZZ, D%NKA, D%NKU, D%NKL)*&
+                    & ZFLXZ), D%NKA, D%NKU, D%NKL), X_LES_RES_ddxa_V_SBG_UaV )
   CALL SECOND_MNH(ZTIME2)
   XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 END IF
@@ -759,51 +756,51 @@ END IF
 !
 IF(HTURBDIM=='3DIM') THEN
   ! Compute the source for the W wind component
-  ZFLXZ(:,:,D%NKA) = 2 * ZFLXZ(:,:,IKB) - ZFLXZ(:,:,IKB+KKL) ! extrapolation 
+  ZFLXZ(:,:,D%NKA) = 2 * ZFLXZ(:,:,IKB) - ZFLXZ(:,:,IKB+D%NKL) ! extrapolation 
   IF (OOCEAN) THEN
-    ZFLXZ(:,:,KKU) = 2 * ZFLXZ(:,:,IKE) - ZFLXZ(:,:,IKE-KKL) ! extrapolation 
+    ZFLXZ(:,:,D%NKU) = 2 * ZFLXZ(:,:,IKE) - ZFLXZ(:,:,IKE-D%NKL) ! extrapolation 
   END IF
   !
   IF (.NOT. O2D) THEN 
     IF (.NOT. OFLAT) THEN
       PRWS(:,:,:)= PRWS(:,:,:)                               &
-                  -DYF( MZM(MYM(PRHODJ) /PDYY, D%NKA, KKU, KKL) * ZFLXZ )   &
-                  +DZM(PRHODJ / MZF(PDZZ, D%NKA, KKU, KKL) *                &
-                        MYF(MZF(ZFLXZ*PDZY, D%NKA, KKU, KKL) / PDYY ),      &
-                       D%NKA, KKU, KKL)
+                  -DYF( MZM(MYM(PRHODJ) /PDYY, D%NKA, D%NKU, D%NKL) * ZFLXZ )   &
+                  +DZM(PRHODJ / MZF(PDZZ, D%NKA, D%NKU, D%NKL) *                &
+                        MYF(MZF(ZFLXZ*PDZY, D%NKA, D%NKU, D%NKL) / PDYY ),      &
+                       D%NKA, D%NKU, D%NKL)
     ELSE
-      PRWS(:,:,:)= PRWS(:,:,:) -DYF(MZM(MYM(PRHODJ) /PDYY, D%NKA, KKU, KKL) * ZFLXZ )
+      PRWS(:,:,:)= PRWS(:,:,:) -DYF(MZM(MYM(PRHODJ) /PDYY, D%NKA, D%NKU, D%NKL) * ZFLXZ )
     END IF
   END IF
   ! 
   ! Complete the Dynamical production with the W wind component 
   IF (.NOT. O2D) THEN
-    ZA(:,:,:) = - MZF(MYF(ZFLXZ * GY_W_VW(PWM,PDYY,PDZZ,PDZY, D%NKA, KKU, KKL)), D%NKA, KKU, KKL)
+    ZA(:,:,:) = - MZF(MYF(ZFLXZ * GY_W_VW(PWM,PDYY,PDZZ,PDZY, D%NKA, D%NKU, D%NKL)), D%NKA, D%NKU, D%NKL)
   !
-  ! evaluate the dynamic production at w(IKB+KKL) in PDP(IKB)
+  ! evaluate the dynamic production at w(IKB+D%NKL) in PDP(IKB)
     ZA(:,:,IKB:IKB) = - MYF (                                              &
-     ZFLXZ(:,:,IKB+KKL:IKB+KKL) *                                          &
-       ( DYM( PWM(:,:,IKB+KKL:IKB+KKL) )                                   &
-        -MYM(  (PWM(:,:,IKB+2*KKL:IKB+2*KKL)-PWM(:,:,IKB+KKL:IKB+KKL))     &
-                /(PDZZ(:,:,IKB+2*KKL:IKB+2*KKL)+PDZZ(:,:,IKB+KKL:IKB+KKL)) &
-              +(PWM(:,:,IKB+KKL:IKB+KKL)-PWM(:,:,IKB:IKB  ))               &
-                /(PDZZ(:,:,IKB+KKL:IKB+KKL)+PDZZ(:,:,IKB:IKB  ))           &
+     ZFLXZ(:,:,IKB+D%NKL:IKB+D%NKL) *                                          &
+       ( DYM( PWM(:,:,IKB+D%NKL:IKB+D%NKL) )                                   &
+        -MYM(  (PWM(:,:,IKB+2*D%NKL:IKB+2*D%NKL)-PWM(:,:,IKB+D%NKL:IKB+D%NKL))     &
+                /(PDZZ(:,:,IKB+2*D%NKL:IKB+2*D%NKL)+PDZZ(:,:,IKB+D%NKL:IKB+D%NKL)) &
+              +(PWM(:,:,IKB+D%NKL:IKB+D%NKL)-PWM(:,:,IKB:IKB  ))               &
+                /(PDZZ(:,:,IKB+D%NKL:IKB+D%NKL)+PDZZ(:,:,IKB:IKB  ))           &
             )                                                              &
-          * PDZY(:,:,IKB+KKL:IKB+KKL)                                      &
-       ) / (0.5*(PDYY(:,:,IKB+KKL:IKB+KKL)+PDYY(:,:,IKB:IKB)))             &
+          * PDZY(:,:,IKB+D%NKL:IKB+D%NKL)                                      &
+       ) / (0.5*(PDYY(:,:,IKB+D%NKL:IKB+D%NKL)+PDYY(:,:,IKB:IKB)))             &
                             )
   !
     IF (OOCEAN) THEN
      ZA(:,:,IKE:IKE) = - MYF (                                              &
-      ZFLXZ(:,:,IKE-KKL:IKE-KKL) *                                          &
-        ( DYM( PWM(:,:,IKE-KKL:IKE-KKL) )                                   &
-         -MYM(  (PWM(:,:,IKE-2*KKL:IKE-2*KKL)-PWM(:,:,IKE-KKL:IKE-KKL))     &
-                 /(PDZZ(:,:,IKE-2*KKL:IKE-2*KKL)+PDZZ(:,:,IKE-KKL:IKE-KKL)) &
-               +(PWM(:,:,IKE-KKL:IKE-KKL)-PWM(:,:,IKE:IKE  ))               &
-                 /(PDZZ(:,:,IKE-KKL:IKE-KKL)+PDZZ(:,:,IKE:IKE  ))           &
+      ZFLXZ(:,:,IKE-D%NKL:IKE-D%NKL) *                                          &
+        ( DYM( PWM(:,:,IKE-D%NKL:IKE-D%NKL) )                                   &
+         -MYM(  (PWM(:,:,IKE-2*D%NKL:IKE-2*D%NKL)-PWM(:,:,IKE-D%NKL:IKE-D%NKL))     &
+                 /(PDZZ(:,:,IKE-2*D%NKL:IKE-2*D%NKL)+PDZZ(:,:,IKE-D%NKL:IKE-D%NKL)) &
+               +(PWM(:,:,IKE-D%NKL:IKE-D%NKL)-PWM(:,:,IKE:IKE  ))               &
+                 /(PDZZ(:,:,IKE-D%NKL:IKE-D%NKL)+PDZZ(:,:,IKE:IKE  ))           &
              )                                                              &
-           * PDZY(:,:,IKE-KKL:IKE-KKL)                                      &
-        ) / (0.5*(PDYY(:,:,IKE-KKL:IKE-KKL)+PDYY(:,:,IKE:IKE)))             &
+           * PDZY(:,:,IKE-D%NKL:IKE-D%NKL)                                      &
+        ) / (0.5*(PDYY(:,:,IKE-D%NKL:IKE-D%NKL)+PDYY(:,:,IKE:IKE)))             &
                             )
     END IF
 !    
@@ -816,14 +813,14 @@ IF(HTURBDIM=='3DIM') THEN
   IF (OLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
     CALL LES_MEAN_SUBGRID(MZF(MYF(GY_W_VW(PWM,PDYY,&
-                         &PDZZ,PDZY, D%NKA, KKU, KKL)*ZFLXZ), D%NKA, KKU, KKL), &
+                         &PDZZ,PDZY, D%NKA, D%NKU, D%NKL)*ZFLXZ), D%NKA, D%NKU, D%NKL), &
                          &X_LES_RES_ddxa_W_SBG_UaW , .TRUE. )
-    CALL LES_MEAN_SUBGRID(MYF(GY_M_V(D%NKA, KKU, KKL,PTHLM,PDYY,PDZZ,PDZY)*&
-                         &MZF(ZFLXZ, D%NKA, KKU, KKL)), &
+    CALL LES_MEAN_SUBGRID(MYF(GY_M_V(D%NKA, D%NKU, D%NKL,PTHLM,PDYY,PDZZ,PDZY)*&
+                         &MZF(ZFLXZ, D%NKA, D%NKU, D%NKL)), &
                          &X_LES_RES_ddxa_Thl_SBG_UaW , .TRUE. )
     IF (KRR>=1) THEN
       CALL LES_MEAN_SUBGRID(MYF(GY_V_M(PRM(:,:,:,1),PDYY,PDZZ,&
-                           &PDZY, D%NKA, KKU, KKL)*MZF(ZFLXZ, D%NKA, KKU, KKL)),&
+                           &PDZY, D%NKA, D%NKU, D%NKL)*MZF(ZFLXZ, D%NKA, D%NKU, D%NKL)),&
                            &X_LES_RES_ddxa_Rt_SBG_UaW , .TRUE. )
     END IF
     CALL SECOND_MNH(ZTIME2)
@@ -840,7 +837,7 @@ END IF
 !
 IF ( OTURB_FLX .AND. TPFILE%LOPENED .AND. HTURBDIM == '1DIM') THEN
   ZFLXZ(:,:,:)= (2./3.) * PTKEM(:,:,:)                     &
-     -ZCMFS*PLM(:,:,:)*SQRT(PTKEM(:,:,:))*GZ_W_M(PWM,PDZZ, D%NKA, KKU, KKL)
+     -ZCMFS*PLM(:,:,:)*SQRT(PTKEM(:,:,:))*GZ_W_M(PWM,PDZZ, D%NKA, D%NKU, D%NKL)
   ! to be tested &
   !   +XCMFB*(4./3.)*PLM(:,:,:)/SQRT(PTKEM(:,:,:))*PTP(:,:,:) 
   ! stores the W variance
