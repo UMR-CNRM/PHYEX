@@ -121,12 +121,12 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.S
 !*       0.2  declaration of local variables
 !
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  ::  &
-       ZA, ZFLXZ
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZA, ZFLXZ, &
+              ZWORK1,ZWORK2,ZWORK3! working var. for shuman operators (array syntax)
 !
 REAL :: ZCSV          !constant for the scalar flux
 !
-INTEGER             :: JSV          ! loop counters
+INTEGER             :: JI,JJ,JK,JSV          ! loop counters
 !
 REAL :: ZTIME1, ZTIME2
 !
@@ -154,8 +154,12 @@ DO JSV=1,KSV
   !
   IF (OLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
-    ZFLXZ(:,:,:) =  PPSI_SV(:,:,:,JSV)*GZ_M_W(D%NKA, D%NKU, D%NKL,PSVM(:,:,:,JSV),PDZZ)**2
-    ZFLXZ(:,:,:) = ZCSV / ZCSVD * PLM * PLEPS * MZF(ZFLXZ(:,:,:), D%NKA, D%NKU, D%NKL)
+    ZWORK1 = GZ_M_W(D%NKA, D%NKU, D%NKL,PSVM(:,:,:,JSV),PDZZ)
+    ZWORK2 = MZF(ZFLXZ(:,:,:), D%NKA, D%NKU, D%NKL)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    ZFLXZ(:,:,:) =  PPSI_SV(:,:,:,JSV)*ZWORK1(:,:,:)**2
+    ZFLXZ(:,:,:) = ZCSV / ZCSVD * PLM(:,:,:) * PLEPS(:,:,:) * ZWORK2(:,:,:)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     CALL LES_MEAN_SUBGRID(-2.*ZCSVD*SQRT(PTKEM)*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_Sv2(:,:,:,JSV) )
     CALL LES_MEAN_SUBGRID(MZF(PWM, D%NKA, D%NKU, D%NKL)*ZFLXZ, X_LES_RES_W_SBG_Sv2(:,:,:,JSV) )
   END IF
@@ -165,19 +169,35 @@ DO JSV=1,KSV
   IF (OLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
     ZA(:,:,:)   =  ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC)
-    ZFLXZ(:,:,:)= ( CSTURB%XCSHF * PPHI3 + ZCSV * PPSI_SV(:,:,:,JSV) )              &
-                  *  GZ_M_W(D%NKA, D%NKU, D%NKL,PTHLM,PDZZ)                          &
-                  *  GZ_M_W(D%NKA, D%NKU, D%NKL,PSVM(:,:,:,JSV),PDZZ)
-    ZFLXZ(:,:,:)= PLM * PLEPS / (2.*ZCTSVD) * MZF(ZFLXZ, D%NKA, D%NKU, D%NKL)
+    !
+    ZWORK1 = GZ_M_W(D%NKA, D%NKU, D%NKL,PTHLM,PDZZ)
+    ZWORK2 = GZ_M_W(D%NKA, D%NKU, D%NKL,PSVM(:,:,:,JSV),PDZZ)
+    !
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    ZFLXZ(:,:,:)= ( CSTURB%XCSHF * PPHI3(:,:,:) + ZCSV * PPSI_SV(:,:,:,JSV) ) &
+                  *  ZWORK1(:,:,:) *  ZWORK2(:,:,:)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    !
+    ZWORK3 = MZF(ZFLXZ, D%NKA, D%NKU, D%NKL)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    ZFLXZ(:,:,:)= PLM(:,:,:) * PLEPS(:,:,:) / (2.*ZCTSVD) * ZWORK3(:,:,:)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    !
     CALL LES_MEAN_SUBGRID( ZA*ZFLXZ, X_LES_SUBGRID_SvThv(:,:,:,JSV) ) 
     CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
     !
     IF (KRR>=1) THEN
       ZA(:,:,:)   =  EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN)
-      ZFLXZ(:,:,:)= ( ZCSV * PPSI3 + ZCSV * PPSI_SV(:,:,:,JSV) )             &
-                    *  GZ_M_W(D%NKA, D%NKU, D%NKL,PRM(:,:,:,1),PDZZ)                 &
-                    *  GZ_M_W(D%NKA, D%NKU, D%NKL,PSVM(:,:,:,JSV),PDZZ)
-      ZFLXZ(:,:,:)= PLM * PLEPS / (2.*ZCQSVD) * MZF(ZFLXZ, D%NKA, D%NKU, D%NKL)
+      !
+      ZWORK1 = GZ_M_W(D%NKA, D%NKU, D%NKL,PRM(:,:,:,1),PDZZ)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+      ZFLXZ(:,:,:)= ( ZCSV * PPSI3(:,:,:) + ZCSV * PPSI_SV(:,:,:,JSV) )  &
+                    *  ZWORK1(:,:,:) *  ZWORK2(:,:,:)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+      ZWORK3 = MZF(ZFLXZ, D%NKA, D%NKU, D%NKL)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+      ZFLXZ(:,:,:)= PLM(:,:,:) * PLEPS(:,:,:) / (2.*ZCQSVD) * ZWORK3(:,:,:)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       CALL LES_MEAN_SUBGRID( ZA*ZFLXZ, X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
       CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
     END IF
