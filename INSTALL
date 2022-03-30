@@ -1,0 +1,10 @@
+Some installations are needed:
+
+1) REFERENCE PACK
+   The check_commit.sh script, by default, build a pack on top of a precompiled pack.
+   This precompiled pack must be build beforehand. Instructions can be found in
+   ** INSTALL_pack **
+
+2) MNH_EXPAND
+   This tool is composed of two parts: the filepp software, and the MNH_Expand_Array package.
+   Installation is described in ** INSTALL_mnh_expand **
