@@ -5,16 +5,16 @@ This document describes how to build reference packs on sxphynh and belenos.
 The following instructions focuse on the 'phyex' pack in which the physics
 have been put in a new gmkpack project, named phyex.
 
-An other pack ('main') have been produced as a super-reference without code
-move. Only a recompilation have been done.
+Another pack ('main') have been produced as a super-reference without code
+move. Only a recompilation has been done.
 
 This document ends with instruction on how to use these packs. This step
 is now automatically performed with the prep_code.sh script.
 
-On belenos, it is not possible to use the wget used on sxphynh. The file
-must be put on a reachable place. On sxphynh:
-cd /cnrm/phynh/data1/riette/DATA/202005_externalisation_physique/pack/
-wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/48t1_main.01.tgz
+In these instructions, the git package have been installed in:
+sxphynh:/cnrm/phynh/data1/riette/DATA/202005_externalisation_physique
+belenos:/scratch/work/riette/202005_externalisation_physique
+Pathes must be adapted.
 
 #######################################################################
 Creation on sxphynh, to be done only once and to be shared among users:
@@ -65,7 +65,7 @@ gmkpack -a -r 48t1 -b phyex -n $version -l MIMPIIFC1805 -o 2y -p masterodb -h /s
 
 #populate main pack with source code
 cd /scratch/work/riette/202005_externalisation_physique/pack/48t1_phyex.${version}.MIMPIIFC1805.2y/src/local/
-scp sxphynh.cnrm.meteo.fr:/cnrm/phynh/data1/riette/DATA/202005_externalisation_physique/pack/48t1_main.01.tgz .
+ssh sxphynh.cnrm.meteo.fr "wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/48t1_main.01.tgz -O -" > 48t1_main.01.tg
 tar xf 48t1_main.01.tgz
 rm -f 48t1_main.01.tgz
 for rep in turb micro conv; do

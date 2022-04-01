@@ -39,7 +39,9 @@ function usage {
   echo "To use mnh_expand... it must be installed (alongside the filepp tool)"
 }
 
-full_command="${BASH_SOURCE[0]} $@"
+full_command="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd ) $@"
+separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
+              #- seprator must be in sync with prep_code.sh separator
 
 directory=""
 checkout_point=""
@@ -73,7 +75,7 @@ fi
 
 ###### BRANCH OR NOT BRANCH
 if [ -n "${checkout_point-}" -a -n "${model-}" -a $push == 1 ]; then
-  branch=${model}@${checkout_point}
+  branch=${model}${separator}${checkout_point}
 fi
 
 ###### WORKING DIRECTORY

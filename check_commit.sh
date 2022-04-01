@@ -17,19 +17,21 @@ set -e
 specialPack="ori split recompil"
 availTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5"
 defaultTest="small_3D"
+separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
+              #- seprator must be in sync with prep_code.sh separator
 
-if [ $(hostname | cut -c 1-7) == 'belenos' ]; then
+PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+dirpack=$PHYEXTOOLSDIR/pack
+dirconf=$PHYEXTOOLSDIR/conf_tests
+if [ $(hostname | cut -c 1-7) == 'belenos' -o $(hostname | cut -c 1-7) == 'taranis' ]; then
   HPC=1
-  dirpack=/scratch/work/riette/202005_externalisation_physique/pack
-  dirconf=/scratch/work/riette/202005_externalisation_physique/conf_tests
   gmkpack_l=MIMPIIFC1805
   gmkpack_o=2y
   defaultMainPackVersion=01
   defaultRef=split
 else
   HPC=0
-  dirpack=/cnrm/phynh/data1/riette/DATA/202005_externalisation_physique/pack
-  dirconf=/cnrm/phynh/data1/riette/DATA/202005_externalisation_physique/conf_tests
   gmkpack_l=MPIGFORTRAN920DBL
   gmkpack_o=xfftw
   defaultMainPackVersion=01
@@ -99,6 +101,7 @@ while [ -n "$1" ]; do
 done
 
 HOMEPACK=${HOMEPACK:=$HOME/pack}
+
 function exescript () {
   #usage: exescript <output file> <script> [arg [arg ...]]
   output=$1
@@ -139,7 +142,7 @@ fi
 fromdir=''
 if echo $commit | grep '/' > /dev/null; then
   fromdir=$commit
-  packBranch=$(echo $commit | sed 's/\//@/g' | sed 's/:/@/g')
+  packBranch=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
   name="PHYEX/48t1_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
   [ $suppress -eq 1 -a -d $HOMEPACK/$name ] && rm -rf $HOMEPACK/$name
 elif echo $specialPack | grep -w $commit > /dev/null; then
@@ -154,7 +157,7 @@ if [ ! -z "${reference-}" ]; then
   reffromdir=''
   if echo $reference | grep '/' > /dev/null; then
     reffromdir=$reference
-    name="PHYEX/48t1_$(echo $reference | sed 's/\//@/g' | sed 's/:/@/g').01.${gmkpack_l}.${gmkpack_o}"
+    name="PHYEX/48t1_$(echo $reference | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g').01.${gmkpack_l}.${gmkpack_o}"
   elif echo $specialPack | grep -w $reference > /dev/null; then
     refname="PHYEX/$reference"
   else
@@ -190,7 +193,11 @@ if [ $compilation -eq 1 ]; then
     gmkpack -a -r 48t1 -b ${packBranch} -n 01 -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb -h $HOMEPACK/PHYEX
     #Populate (we keep everything from the official source code except internals and module subdirectories of mpa)
     cd $HOMEPACK/$name/src/local/
-    scp sxphynh.cnrm.meteo.fr:/cnrm/phynh/data1/riette/DATA/202005_externalisation_physique/pack/48t1_main.01.tgz .
+    if [ $HPC -eq 1 ]; then
+      ssh sxphynh.cnrm.meteo.fr "wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/48t1_main.01.tgz -O -" > 48t1_main.01.tgz
+    else
+      wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/48t1_main.01.tgz
+    fi
     tar xf 48t1_main.01.tgz
     rm -f 48t1_main.01.tgz
     for rep in turb micro conv; do
@@ -211,7 +218,7 @@ if [ $compilation -eq 1 ]; then
     subs="" #There is nothing to exclude from compilation because (normally) only needed files are copied into the pack
   fi
 
-  MNH_EXPAND_DIR=$(dirname "${BASH_SOURCE[0]}")/mnh_expand
+  MNH_EXPAND_DIR=$PHYEXTOOLSDIR/mnh_expand
   export PATH=$MNH_EXPAND_DIR/filepp:$MNH_EXPAND_DIR/MNH_Expand_Array:$PATH
 
   cd $HOMEPACK/$name/src/local/phyex
@@ -221,10 +228,10 @@ if [ $compilation -eq 1 ]; then
     expand_options=""
   fi
   subs="$subs -s turb -s micro -s aux -s ext -s conv -s externals" #externals is the old name for aux/ext
-  prep_code=$(dirname "${BASH_SOURCE[0]}")/prep_code.sh
+  prep_code=$PHYEXTOOLSDIR/prep_code.sh
   if [ "$fromdir" == '' ]; then
     echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
-    if [[ $commit == arome@* ]]; then
+    if [[ $commit == arome${separator}* ]]; then
       $prep_code -c $commit PHYEX #This commit is ready for inclusion
     else
       $prep_code -c $commit $expand_options $subs -m arome PHYEX
@@ -366,7 +373,7 @@ if [ $check -eq 1 ]; then
             [ ! -d /d0/images/$USER ] && mkdir /d0/images/$USER
             ddh_images="$ddh_images /d0/images/$USER/ddh_diff_${tag}.png"
           fi
-          cmd="$(dirname "${BASH_SOURCE[0]}")/comp_DDH.py"
+          cmd="$PHYEXTOOLSDIR/comp_DDH.py"
           if [ ! -x $cmd ]; then
             echo "Command not found: \"$cmd\""
             exit 10
@@ -375,7 +382,7 @@ if [ $check -eq 1 ]; then
           output='stdout'
         elif [ $(basename $file) == NODE.001_01 ]; then
           #Output listing
-          cmd="$(dirname "${BASH_SOURCE[0]}")/diffNODE.001_01"
+          cmd="$PHYEXTOOLSDIR/diffNODE.001_01"
           if [ ! -x $cmd ]; then
             echo "Command not found: \"$cmd\""
             exit 11
