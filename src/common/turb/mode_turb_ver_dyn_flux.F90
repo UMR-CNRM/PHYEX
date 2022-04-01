@@ -316,16 +316,19 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  ::  &
                    ! considered in ZSOURCE  
        ZFLXZ,  &   ! vertical flux of the treated variable
        ZSOURCE,  & ! source of evolution for the treated variable
-       ZKEFF       ! effectif diffusion coeff = LT * SQRT( TKE )
+       ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
+       ZWORK1,ZWORK2,&
+       ZWORK3,ZWORK4! working var. for shuman operators (array syntax)
+!
 INTEGER             :: IKB,IKE      !
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
-INTEGER             :: JSV          ! scalar loop counter
+INTEGER             :: JSV,JI,JJ,JK          ! scalar loop counter
 REAL, DIMENSION(D%NIT,D%NJT,1)   :: ZCOEFFLXU, &
                                     ZCOEFFLXV, ZUSLOPEM, ZVSLOPEM
                                     ! coefficients for the surface flux
                                     ! evaluation and copy of PUSLOPEM and
-                                    ! PVSLOPEM in local 3D arrays 
+                                    ! PVSLOPEM in local 3D arrays
 !
 REAL :: ZTIME1, ZTIME2, ZCMFS
 TYPE(TFIELDDATA) :: TZFIELD
@@ -350,18 +353,21 @@ ZFLXZ   = 0.
 ZCMFS = CSTURB%XCMFS
 IF (OHARAT) ZCMFS=1.
 !
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ZDIRSINZW(:,:) = SQRT(1.-PDIRCOSZW(:,:)**2)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !  compute the coefficients for the uncentred gradient computation near the 
 !  ground
 !
 ! With OHARATU length scale and TKE are at half levels so remove MZM
 !
 IF (OHARAT) THEN
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50*MFMOIST(:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ELSE 
   ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), D%NKA, D%NKU, D%NKL)
 ENDIF
-
 !
 ZUSLOPEM(:,:,1)=PUSLOPEM(:,:)
 ZVSLOPEM(:,:,1)=PVSLOPEM(:,:)
@@ -376,15 +382,19 @@ ZVSLOPEM(:,:,1)=PVSLOPEM(:,:)
 !
 ! Preparation of the arguments for TRIDIAG_WIND 
 !
-ZA(:,:,:)    = -PTSTEP * ZCMFS *                              &
-              MXM( ZKEFF ) * MXM(MZM(PRHODJ, D%NKA, D%NKU, D%NKL)) / &
-              MXM( PDZZ )**2
+ZWORK1 = MXM( ZKEFF )
+ZWORK2 = MXM( PDZZ )
+ZWORK3 = MXM(MZM(PRHODJ, D%NKA, D%NKU, D%NKL))
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+ZA(:,:,:) = -PTSTEP * ZCMFS * ZWORK1(:,:,:)* ZWORK3(:,:,:) / ZWORK2(:,:,:)**2
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 !
 ! Compute the source of U wind component 
 !
 ! compute the coefficient between the vertical flux and the 2 components of the 
 ! wind following the slope
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ZCOEFFLXU(:,:,1) = PCDUEFF(:,:) * (PDIRCOSZW(:,:)**2 - ZDIRSINZW(:,:)**2) &
                                    * PCOSSLOPE(:,:)
 ZCOEFFLXV(:,:,1) = PCDUEFF(:,:) * PDIRCOSZW(:,:) * PSINSLOPE(:,:)
@@ -394,45 +404,60 @@ ZCOEFS(:,:,1)=  ZCOEFFLXU(:,:,1) * PCOSSLOPE(:,:) * PDIRCOSZW(:,:)  &
                  +ZCOEFFLXV(:,:,1) * PSINSLOPE(:,:)
 !
 ! average this flux to be located at the U,W vorticity point
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ZCOEFS(:,:,1:1)=MXM(ZCOEFS(:,:,1:1) / PDZZ(:,:,IKB:IKB) )
 !
 !
 ! ZSOURCE= FLUX /DZ
 IF (OOCEAN) THEN  ! OCEAN MODEL ONLY
   ! Sfx flux assumed to be in SI & at vorticity point
-  IF (OCOUPLES) THEN  
-    ZSOURCE(:,:,IKE:IKE) = TURBN%XSSUFL_C(:,:,1:1)/PDZZ(:,:,IKE:IKE) &
-         *0.5 * ( 1. + MXM(PRHODJ(:,:,D%NKU:D%NKU)) / MXM(PRHODJ(:,:,IKE:IKE))) 
+  ZWORK1(:,:,D%NKU:D%NKU) = MXM(PRHODJ(:,:,D%NKU:D%NKU))
+  ZWORK2(:,:,IKE:IKE) = MXM(PRHODJ(:,:,IKE:IKE))
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+  IF (OCOUPLES) THEN
+    ZSOURCE(:,:,IKE) = TURBN%XSSUFL_C(:,:,1)/PDZZ(:,:,IKE) &
+         *0.5 * ( 1. + ZWORK1(:,:,D%NKU) / ZWORK2(:,:,IKE)) 
   ELSE
     ZSOURCE(:,:,IKE)     = XSSUFL(:,:)
-    ZSOURCE(:,:,IKE:IKE) = ZSOURCE (:,:,IKE:IKE) /PDZZ(:,:,IKE:IKE) &
-        *0.5 * ( 1. + MXM(PRHODJ(:,:,D%NKU:D%NKU)) / MXM(PRHODJ(:,:,IKE:IKE)) )
+    ZSOURCE(:,:,IKE) = ZSOURCE(:,:,IKE) /PDZZ(:,:,IKE) &
+        *0.5 * ( 1. + ZWORK1(:,:,D%NKU) / ZWORK2(:,:,IKE) )
   ENDIF
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   !No flux at the ocean domain bottom
-   ZSOURCE(:,:,IKB)           = 0.
-   ZSOURCE(:,:,IKTB+1:IKTE-1) = 0
+  ZSOURCE(:,:,IKB)           = 0.
+  ZSOURCE(:,:,IKTB+1:IKTE-1) = 0
 !
 ELSE             !ATMOS MODEL ONLY
-  IF (OCOUPLES) THEN 
-   ZSOURCE(:,:,IKB:IKB) = TURBN%XSSUFL_C(:,:,1:1)/PDZZ(:,:,IKB:IKB) &
-      * 0.5 * ( 1. + MXM(PRHODJ(:,:,D%NKA:D%NKA)) / MXM(PRHODJ(:,:,IKB:IKB)) )
-  ELSE               
+  ZWORK1(:,:,D%NKA:D%NKA) = MXM(PRHODJ(:,:,D%NKA:D%NKA))
+  ZWORK2(:,:,IKB:IKB) = MXM(PRHODJ(:,:,IKB:IKB))
+  IF (OCOUPLES) THEN
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+   ZSOURCE(:,:,IKB) = TURBN%XSSUFL_C(:,:,1)/PDZZ(:,:,IKB) &
+      * 0.5 * ( 1. + ZWORK1(:,:,D%NKA) / ZWORK2(:,:,IKB) )
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+  ELSE
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)               
     ! compute the explicit tangential flux at the W point
     ZSOURCE(:,:,IKB)     =                                              &
      PTAU11M(:,:) * PCOSSLOPE(:,:) * PDIRCOSZW(:,:) * ZDIRSINZW(:,:) &
      -PTAU12M(:,:) * PSINSLOPE(:,:) * ZDIRSINZW(:,:)                  &
      -PTAU33M(:,:) * PCOSSLOPE(:,:) * ZDIRSINZW(:,:) * PDIRCOSZW(:,:)  
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
     ! add the vertical part or the surface flux at the U,W vorticity point
 !
-    ZSOURCE(:,:,IKB:IKB) =                                  &
-    (   MXM( ZSOURCE(:,:,IKB:IKB)   / PDZZ(:,:,IKB:IKB) ) &
-    +  MXM( ZCOEFFLXU(:,:,1:1) / PDZZ(:,:,IKB:IKB)       &
+    ZWORK3(:,:,IKB:IKB)  = MXM( ZSOURCE(:,:,IKB:IKB)   / PDZZ(:,:,IKB:IKB) )
+    ZWORK4(:,:,IKB:IKB) = MXM( ZCOEFFLXU(:,:,1:1) / PDZZ(:,:,IKB:IKB)       &
            *ZUSLOPEM(:,:,1:1)                           &
           -ZCOEFFLXV(:,:,1:1) / PDZZ(:,:,IKB:IKB)       &
-           *ZVSLOPEM(:,:,1:1)                      )    &
-    -  ZCOEFS(:,:,1:1) * PUM(:,:,IKB:IKB) * PIMPL        &
-    ) * 0.5 * ( 1. + MXM(PRHODJ(:,:,D%NKA:D%NKA)) / MXM(PRHODJ(:,:,IKB:IKB)) )
+           *ZVSLOPEM(:,:,1:1)                      )
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+    ZSOURCE(:,:,IKB) =                                  &
+    (   ZWORK3(:,:,IKB) &
+    +  ZWORK4(:,:,IKB)   &
+    -  ZCOEFS(:,:,1) * PUM(:,:,IKB) * PIMPL        &
+    ) * 0.5 * ( 1. + ZWORK1(:,:,D%NKA) / ZWORK2(:,:,IKB) )
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ENDIF 
 !
   ZSOURCE(:,:,IKTB+1:IKTE-1) = 0.
@@ -446,29 +471,45 @@ CALL TRIDIAG_WIND(D%NKA,D%NKU,D%NKL,PUM,ZA,ZCOEFS(:,:,1),PTSTEP,PEXPL,PIMPL,   &
 ! 
 !  Compute the equivalent tendency for the U wind component
 !
-PRUS(:,:,:)=PRUS(:,:,:)+MXM(PRHODJ(:,:,:))*(ZRES(:,:,:)-PUM(:,:,:))/PTSTEP
+ZWORK1 = MXM(PRHODJ)
+ZWORK2 = MXM(ZKEFF)
+ZWORK3 = DZM(PIMPL*ZRES + PEXPL*PUM, D%NKA, D%NKU, D%NKL)
+ZWORK4 = MXM(PDZZ)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+PRUS(:,:,:)=PRUS(:,:,:)+ZWORK1(:,:,:)*(ZRES(:,:,:)-PUM(:,:,:))/PTSTEP
 !
 !
 !*       5.2  Partial Dynamic Production
 !
 ! vertical flux of the U wind component
 !
-ZFLXZ(:,:,:)     = -ZCMFS * MXM(ZKEFF) * &
-                  DZM(PIMPL*ZRES + PEXPL*PUM, D%NKA, D%NKU, D%NKL) / MXM(PDZZ)
+ZFLXZ(:,:,:)     = -ZCMFS * ZWORK2(:,:,:) * ZWORK3(:,:,:) / ZWORK4(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
-! surface flux 
-ZFLXZ(:,:,IKB:IKB)   =   MXM(PDZZ(:,:,IKB:IKB))  *                &
-  ( ZSOURCE(:,:,IKB:IKB)                                          &
-   +ZCOEFS(:,:,1:1) * ZRES(:,:,IKB:IKB) * PIMPL                   &                
-  ) / 0.5 / ( 1. + MXM(PRHODJ(:,:,D%NKA:D%NKA)) / MXM(PRHODJ(:,:,IKB:IKB)) )
+! surface flux
+ZWORK1(:,:,IKB:IKB) = MXM(PDZZ(:,:,IKB:IKB))
+ZWORK2(:,:,D%NKA:D%NKA) = MXM(PRHODJ(:,:,D%NKA:D%NKA)) 
+ZWORK3(:,:,IKB:IKB) = MXM(PRHODJ(:,:,IKB:IKB))
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+ZFLXZ(:,:,IKB)   =   ZWORK1(:,:,IKB)  *                &
+  ( ZSOURCE(:,:,IKB)                                          &
+   +ZCOEFS(:,:,1) * ZRES(:,:,IKB) * PIMPL                   &                
+  ) / 0.5 / ( 1. + ZWORK2(:,:,D%NKA)/ ZWORK3(:,:,IKB) )
 !
 ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB) 
-
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+!
 IF (OOCEAN) THEN !ocean model at phys sfc (ocean domain top)
-  ZFLXZ(:,:,IKE:IKE)   =   MXM(PDZZ(:,:,IKE:IKE))  *                &
-                           ZSOURCE(:,:,IKE:IKE)                     &
-                           / 0.5 / ( 1. + MXM(PRHODJ(:,:,D%NKU:D%NKU)) / MXM(PRHODJ(:,:,IKE:IKE)) )
-  ZFLXZ(:,:,D%NKU) = ZFLXZ(:,:,IKE) 
+  ZWORK1(:,:,IKE:IKE) = MXM(PDZZ(:,:,IKE:IKE))
+  ZWORK2(:,:,D%NKU:D%NKU) = MXM(PRHODJ(:,:,D%NKU:D%NKU)) 
+  ZWORK3(:,:,IKE:IKE) = MXM(PRHODJ(:,:,IKE:IKE))
+!
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+  ZFLXZ(:,:,IKE)   =  ZWORK1(:,:,IKE) *                &
+                           ZSOURCE(:,:,IKE)                     &
+                           / 0.5 / ( 1. + ZWORK2(:,:,D%NKU)/ ZWORK3(:,:,IKE) )
+  ZFLXZ(:,:,D%NKU) = ZFLXZ(:,:,IKE)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 END IF
 !
 IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
@@ -527,20 +568,29 @@ END IF
 IF(HTURBDIM=='3DIM') THEN
   ! Compute the source for the W wind component
                 ! used to compute the W source at the ground
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ZFLXZ(:,:,D%NKA) = 2 * ZFLXZ(:,:,IKB) - ZFLXZ(:,:,IKB+D%NKL) ! extrapolation 
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
  IF (OOCEAN) THEN
-   ZFLXZ(:,:,D%NKU) = 2 * ZFLXZ(:,:,IKE) - ZFLXZ(:,:,IKE-D%NKL) ! extrapolation 
+   !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+   ZFLXZ(:,:,D%NKU) = 2 * ZFLXZ(:,:,IKE) - ZFLXZ(:,:,IKE-D%NKL) ! extrapolation
+   !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
  END IF     
      
   !
   IF (.NOT. OFLAT) THEN
-    PRWS(:,:,:)= PRWS                                      &
-                -DXF( MZM(MXM(PRHODJ) /PDXX, D%NKA, D%NKU, D%NKL)  * ZFLXZ )  &
-                +DZM(PRHODJ / MZF(PDZZ, D%NKA, D%NKU, D%NKL) *                &
+    ZWORK1 = DXF( MZM(MXM(PRHODJ) /PDXX, D%NKA, D%NKU, D%NKL)  * ZFLXZ )
+    ZWORK2 = DZM(PRHODJ / MZF(PDZZ, D%NKA, D%NKU, D%NKL) *                &
                       MXF(MZF(ZFLXZ*PDZX, D%NKA, D%NKU, D%NKL) / PDXX ),      &
                      D%NKA, D%NKU, D%NKL)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    PRWS(:,:,:)= PRWS(:,:,:) - ZWORK1(:,:,:) + ZWORK2(:,:,:)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ELSE
-    PRWS(:,:,:)= PRWS -DXF(MZM(MXM(PRHODJ) /PDXX, D%NKA, D%NKU, D%NKL)  * ZFLXZ )
+    ZWORK1 = DXF(MZM(MXM(PRHODJ) /PDXX, D%NKA, D%NKU, D%NKL)  * ZFLXZ )
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    PRWS(:,:,:)= PRWS(:,:,:) - ZWORK1(:,:,:)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   END IF
   !
   ! Complete the Dynamical production with the W wind component 
@@ -576,7 +626,9 @@ IF (OOCEAN) THEN
                           )
 END IF
   !
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   PDP(:,:,:)=PDP(:,:,:)+ZA(:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   !
   ! Storage in the LES configuration
   ! 
@@ -609,15 +661,20 @@ END IF
 !
 ! Preparation of the arguments for TRIDIAG_WIND
 !!
-ZA(:,:,:)    = - PTSTEP * ZCMFS *                              &
-              MYM( ZKEFF ) * MYM(MZM(PRHODJ, D%NKA, D%NKU, D%NKL)) / &
-              MYM( PDZZ )**2
+ZWORK1 = MYM( ZKEFF )
+ZWORK2 = MYM(MZM(PRHODJ, D%NKA, D%NKU, D%NKL))
+ZWORK3 = MYM( PDZZ )
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+ZA(:,:,:)    = - PTSTEP * ZCMFS * ZWORK1(:,:,:) * ZWORK2(:,:,:) / &
+               ZWORK3(:,:,:)**2
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 !
 !
 ! Compute the source of V wind component
 ! compute the coefficient between the vertical flux and the 2 components of the 
 ! wind following the slope
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ZCOEFFLXU(:,:,1) = PCDUEFF(:,:) * (PDIRCOSZW(:,:)**2 - ZDIRSINZW(:,:)**2) &
                                    * PSINSLOPE(:,:)
 ZCOEFFLXV(:,:,1) = PCDUEFF(:,:) * PDIRCOSZW(:,:) * PCOSSLOPE(:,:)
@@ -625,22 +682,37 @@ ZCOEFFLXV(:,:,1) = PCDUEFF(:,:) * PDIRCOSZW(:,:) * PCOSSLOPE(:,:)
 ! prepare the implicit scheme coefficients for the surface flux
 ZCOEFS(:,:,1)=  ZCOEFFLXU(:,:,1) * PSINSLOPE(:,:) * PDIRCOSZW(:,:)  &
                +ZCOEFFLXV(:,:,1) * PCOSSLOPE(:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
 ! average this flux to be located at the V,W vorticity point
 ZCOEFS(:,:,1:1)=MYM(ZCOEFS(:,:,1:1) / PDZZ(:,:,IKB:IKB) )
 !
 IF (OOCEAN) THEN ! Ocean case
+  ZWORK1(:,:,D%NKU:D%NKU) = MXM(PRHODJ(:,:,D%NKU:D%NKU))
+  ZWORK2(:,:,IKE:IKE) = MXM(PRHODJ(:,:,IKE:IKE))
   IF (OCOUPLES) THEN
-    ZSOURCE(:,:,IKE:IKE) =  TURBN%XSSVFL_C(:,:,1:1)/PDZZ(:,:,IKE:IKE) &
-        *0.5 * ( 1. + MYM(PRHODJ(:,:,D%NKU:D%NKU)) / MYM(PRHODJ(:,:,IKE:IKE)) ) 
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+    ZSOURCE(:,:,IKE) =  TURBN%XSSVFL_C(:,:,1)/PDZZ(:,:,IKE) &
+        *0.5 * ( 1. + ZWORK1(:,:,D%NKU) / ZWORK2(:,:,IKE))
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ELSE 
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     ZSOURCE(:,:,IKE) = XSSVFL(:,:)
-    ZSOURCE(:,:,IKE:IKE) = ZSOURCE(:,:,IKE:IKE)/PDZZ(:,:,IKE:IKE) &
-        *0.5 * ( 1. + MYM(PRHODJ(:,:,D%NKU:D%NKU)) / MYM(PRHODJ(:,:,IKE:IKE)) )
+    ZSOURCE(:,:,IKE) = ZSOURCE(:,:,IKE)/PDZZ(:,:,IKE) &
+        *0.5 * ( 1. + ZWORK1(:,:,D%NKU) / ZWORK2(:,:,IKE))
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   END IF
   !No flux at the ocean domain bottom
   ZSOURCE(:,:,IKB) = 0.
 ELSE ! Atmos case
+  ZWORK1(:,:,D%NKA:D%NKA) = MYM(PRHODJ(:,:,D%NKA:D%NKA))
+  ZWORK2(:,:,IKB:IKB) = MYM(PRHODJ(:,:,IKB:IKB))
+  ZWORK3(:,:,IKB:IKB) = MYM( ZCOEFFLXU(:,:,1:1) / PDZZ(:,:,IKB:IKB)           &
+            *ZUSLOPEM(:,:,1:1)                                &
+            +ZCOEFFLXV(:,:,1:1) / PDZZ(:,:,IKB:IKB)           &
+            *ZVSLOPEM(:,:,1:1)                      ) 
+  ZWORK4(:,:,IKB:IKB) = MYM( ZSOURCE(:,:,IKB:IKB)   / PDZZ(:,:,IKB:IKB) )
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   IF (.NOT.OCOUPLES) THEN !  only atmosp without coupling
   ! compute the explicit tangential flux at the W point
     ZSOURCE(:,:,IKB)       =                                                  &
@@ -649,20 +721,18 @@ ELSE ! Atmos case
      -PTAU33M(:,:) * PSINSLOPE(:,:) * ZDIRSINZW(:,:) * PDIRCOSZW(:,:) 
 !
   ! add the vertical part or the surface flux at the V,W vorticity point
-  ZSOURCE(:,:,IKB:IKB) =                                      &
-    (   MYM( ZSOURCE(:,:,IKB:IKB)   / PDZZ(:,:,IKB:IKB) )     &
-     +  MYM( ZCOEFFLXU(:,:,1:1) / PDZZ(:,:,IKB:IKB)           &
-            *ZUSLOPEM(:,:,1:1)                                &
-            +ZCOEFFLXV(:,:,1:1) / PDZZ(:,:,IKB:IKB)           &
-            *ZVSLOPEM(:,:,1:1)                      )         &
-     - ZCOEFS(:,:,1:1) * PVM(:,:,IKB:IKB) * PIMPL             &
-    ) * 0.5 * ( 1. + MYM(PRHODJ(:,:,D%NKA:D%NKA)) / MYM(PRHODJ(:,:,IKB:IKB)) )
+  ZSOURCE(:,:,IKB) =                                      &
+    (   ZWORK4(:,:,IKB)     &
+     +  ZWORK3(:,:,IKB)        &
+     - ZCOEFS(:,:,1) * PVM(:,:,IKB) * PIMPL             &
+    ) * 0.5 * ( 1. + ZWORK1(:,:,D%NKA) / ZWORK2(:,:,IKB) )
 !
   ELSE   !atmosphere when coupling
     ! input flux assumed to be in SI and at vorticity point
-    ZSOURCE(:,:,IKB:IKB) =     -TURBN%XSSVFL_C(:,:,1:1)/(1.*PDZZ(:,:,IKB:IKB)) &
-      * 0.5 * ( 1. + MYM(PRHODJ(:,:,D%NKA:D%NKA)) / MYM(PRHODJ(:,:,IKB:IKB)) )
+    ZSOURCE(:,:,IKB) =     -TURBN%XSSVFL_C(:,:,1)/(1.*PDZZ(:,:,IKB)) &
+      * 0.5 * ( 1. + ZWORK1(:,:,D%NKA) / ZWORK2(:,:,IKB)  )
   ENDIF
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   !No flux at the atmosphere top
   ZSOURCE(:,:,IKE) = 0.
 ENDIF ! End of Ocean or Atmospher Cases
@@ -674,29 +744,38 @@ CALL TRIDIAG_WIND(D%NKA,D%NKU,D%NKL,PVM,ZA,ZCOEFS(:,:,1),PTSTEP,PEXPL,PIMPL,  &
 !
 ! Compute the equivalent tendency for the V wind component
 !
-PRVS(:,:,:)=PRVS(:,:,:)+MYM(PRHODJ(:,:,:))*(ZRES(:,:,:)-PVM(:,:,:))/PTSTEP
+ZWORK1 = MYM(PRHODJ(:,:,:))
+ZWORK2 = MYM(ZKEFF)
+ZWORK3 = DZM(PIMPL*ZRES + PEXPL*PVM, D%NKA, D%NKU, D%NKL)
+ZWORK4 = MYM(PDZZ)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+PRVS(:,:,:)=PRVS(:,:,:)+ZWORK1(:,:,:)*(ZRES(:,:,:)-PVM(:,:,:))/PTSTEP
 !
 !
 !*       6.2  Complete 1D dynamic Production
 !
 !  vertical flux of the V wind component
 !
-ZFLXZ(:,:,:)   = -ZCMFS * MYM(ZKEFF) * &
-                DZM(PIMPL*ZRES + PEXPL*PVM, D%NKA, D%NKU, D%NKL) / MYM(PDZZ)
+ZFLXZ(:,:,:)   = -ZCMFS * ZWORK2(:,:,:) * ZWORK3(:,:,:) / ZWORK4(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
-ZFLXZ(:,:,IKB:IKB)   =   MYM(PDZZ(:,:,IKB:IKB))  *                       &
-  ( ZSOURCE(:,:,IKB:IKB)                                                 &
-   +ZCOEFS(:,:,1:1) * ZRES(:,:,IKB:IKB) * PIMPL                      &      
-  ) / 0.5 / ( 1. + MYM(PRHODJ(:,:,D%NKA:D%NKA)) / MYM(PRHODJ(:,:,IKB:IKB)) )
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+ZFLXZ(:,:,IKB)   =   ZWORK4(:,:,IKB)  *                       &
+  ( ZSOURCE(:,:,IKB)                                                 &
+   +ZCOEFS(:,:,1) * ZRES(:,:,IKB) * PIMPL                      &      
+  ) / 0.5 / ( 1. + ZWORK1(:,:,D%NKA) / ZWORK1(:,:,IKB) )
 !  
 !
 ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
 IF (OOCEAN) THEN
-  ZFLXZ(:,:,IKE:IKE)   =   MYM(PDZZ(:,:,IKE:IKE))  *                &
-      ZSOURCE(:,:,IKE:IKE)                                          &
-      / 0.5 / ( 1. + MYM(PRHODJ(:,:,D%NKU:D%NKU)) / MYM(PRHODJ(:,:,IKE:IKE)) )
-  ZFLXZ(:,:,D%NKU) = ZFLXZ(:,:,IKE) 
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+  ZFLXZ(:,:,IKE)   =   ZWORK4(:,:,IKE)  *                &
+      ZSOURCE(:,:,IKE)                                          &
+      / 0.5 / ( 1. + ZWORK1(:,:,D%NKU) / ZWORK1(:,:,IKE) )
+  ZFLXZ(:,:,D%NKU) = ZFLXZ(:,:,IKE)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 END IF
 !
 IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
@@ -738,7 +817,9 @@ IF (OOCEAN) THEN
                           )
 END IF
 !
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 PDP(:,:,:)=PDP(:,:,:)+ZA(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 ! Storage in the LES configuration
 !
@@ -756,20 +837,28 @@ END IF
 !
 IF(HTURBDIM=='3DIM') THEN
   ! Compute the source for the W wind component
-  ZFLXZ(:,:,D%NKA) = 2 * ZFLXZ(:,:,IKB) - ZFLXZ(:,:,IKB+D%NKL) ! extrapolation 
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+  ZFLXZ(:,:,D%NKA) = 2 * ZFLXZ(:,:,IKB) - ZFLXZ(:,:,IKB+D%NKL) ! extrapolation
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   IF (OOCEAN) THEN
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     ZFLXZ(:,:,D%NKU) = 2 * ZFLXZ(:,:,IKE) - ZFLXZ(:,:,IKE-D%NKL) ! extrapolation 
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   END IF
   !
-  IF (.NOT. O2D) THEN 
+  IF (.NOT. O2D) THEN
+    ZWORK1 = DYF( MZM(MYM(PRHODJ) /PDYY, D%NKA, D%NKU, D%NKL) * ZFLXZ ) 
     IF (.NOT. OFLAT) THEN
-      PRWS(:,:,:)= PRWS(:,:,:)                               &
-                  -DYF( MZM(MYM(PRHODJ) /PDYY, D%NKA, D%NKU, D%NKL) * ZFLXZ )   &
-                  +DZM(PRHODJ / MZF(PDZZ, D%NKA, D%NKU, D%NKL) *                &
+      ZWORK2 = DZM(PRHODJ / MZF(PDZZ, D%NKA, D%NKU, D%NKL) *                &
                         MYF(MZF(ZFLXZ*PDZY, D%NKA, D%NKU, D%NKL) / PDYY ),      &
                        D%NKA, D%NKU, D%NKL)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+      PRWS(:,:,:)= PRWS(:,:,:) - ZWORK1(:,:,:) + ZWORK2(:,:,:)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ELSE
-      PRWS(:,:,:)= PRWS(:,:,:) -DYF(MZM(MYM(PRHODJ) /PDYY, D%NKA, D%NKU, D%NKL) * ZFLXZ )
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+      PRWS(:,:,:)= PRWS(:,:,:) - ZWORK1(:,:,:)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     END IF
   END IF
   ! 
@@ -804,7 +893,9 @@ IF(HTURBDIM=='3DIM') THEN
                             )
     END IF
 !    
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     PDP(:,:,:)=PDP(:,:,:)+ZA(:,:,:)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   !
   END IF
   !
@@ -836,8 +927,11 @@ END IF
 !             -----------------------------------------------
 !
 IF ( OTURB_FLX .AND. TPFILE%LOPENED .AND. HTURBDIM == '1DIM') THEN
+  ZWORK1 = GZ_W_M(PWM,PDZZ, D%NKA, D%NKU, D%NKL)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZFLXZ(:,:,:)= (2./3.) * PTKEM(:,:,:)                     &
-     -ZCMFS*PLM(:,:,:)*SQRT(PTKEM(:,:,:))*GZ_W_M(PWM,PDZZ, D%NKA, D%NKU, D%NKL)
+     -ZCMFS*PLM(:,:,:)*SQRT(PTKEM(:,:,:))*ZWORK1(:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ! to be tested &
   !   +XCMFB*(4./3.)*PLM(:,:,:)/SQRT(PTKEM(:,:,:))*PTP(:,:,:) 
   ! stores the W variance
