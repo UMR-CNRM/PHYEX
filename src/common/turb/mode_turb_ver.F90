@@ -389,7 +389,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  ::  ZLM
 LOGICAL :: GUSERV    ! flag to use water vapor
 INTEGER :: IKB,IKE   ! index value for the Beginning
                      ! and the End of the physical domain for the mass points
-INTEGER :: JSV       ! loop counter on scalar variables
+INTEGER :: JSV,JI,JJ,JK ! loop counter
 REAL    :: ZTIME1
 REAL    :: ZTIME2
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
@@ -424,14 +424,20 @@ CALL PRANDTL(D,CST,CSTURB,D%NKA,D%NKU,D%NKL,KRR,KSV,KRRI,OTURB_FLX, &
 ! Buoyancy coefficient
 !
 IF (OOCEAN) THEN
-  ZBETA = CST%XG*CST%XALPHAOC
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  ZBETA(:,:,:) = CST%XG*CST%XALPHAOC
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ELSE
-  ZBETA = CST%XG/PTHVREF
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  ZBETA(:,:,:) = CST%XG/PTHVREF(:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 END IF
 !
 ! Square root of Tke
 !
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ZSQRT_TKE = SQRT(PTKEM)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 ! gradients of mean quantities at previous time-step
 !
@@ -442,11 +448,13 @@ IF (KRR>0) ZDR_DZ  = GZ_M_W(D%NKA, D%NKU, D%NKL,PRM(:,:,:,1),PDZZ)
 !
 ! Denominator factor in 3rd order terms
 !
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 IF (.NOT. OHARAT) THEN
-  ZD(:,:,:) = (1.+ZREDTH1+ZREDR1) * (1.+0.5*(ZREDTH1+ZREDR1))
+  ZD(:,:,:) = (1.+ZREDTH1(:,:,:)+ZREDR1(:,:,:)) * (1.+0.5*(ZREDTH1(:,:,:)+ZREDR1(:,:,:)))
 ELSE
   ZD(:,:,:) = 1.
 ENDIF
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 ! Phi3 and Psi3 Prandtl numbers
 !
