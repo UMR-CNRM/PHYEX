@@ -149,7 +149,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZY ,ZGAM
                                          ! RHS of the equation, 3D work array
 REAL, DIMENSION(D%NIT,D%NJT)                :: ZBET
                                          ! 2D work array
-INTEGER             :: JK            ! loop counter
+INTEGER             :: JI,JJ,JK            ! loop counter
 INTEGER             :: IKB,IKE       ! inner vertical limits
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
@@ -169,7 +169,9 @@ IKE=D%NKE
 
 !
 ZMZM_RHODJ  = MZM(PRHODJ,D%NKA,D%NKU,D%NKL)
-ZRHODJ_DFDDTDZ_O_DZ2 = ZMZM_RHODJ*PDFDDTDZ/PDZZ**2
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+ZRHODJ_DFDDTDZ_O_DZ2(:,:,:) = ZMZM_RHODJ(:,:,:)*PDFDDTDZ(:,:,:)/PDZZ(:,:,:)**2
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 ZA=0.
 ZB=0.
@@ -180,25 +182,33 @@ ZY=0.
 !*      2.  COMPUTE THE RIGHT HAND SIDE
 !           ---------------------------
 !
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ZY(:,:,IKB) = PRHODJ(:,:,IKB)*PVARM(:,:,IKB)/PTSTEP                  &
     - ZMZM_RHODJ(:,:,IKB+D%NKL) * PF(:,:,IKB+D%NKL)/PDZZ(:,:,IKB+D%NKL)    &
     + ZMZM_RHODJ(:,:,IKB  ) * PF(:,:,IKB  )/PDZZ(:,:,IKB  )          &
     + ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKB+D%NKL) * PIMPL * PVARM(:,:,IKB+D%NKL) &
     - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKB+D%NKL) * PIMPL * PVARM(:,:,IKB  )
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
-  ZY(:,:,IKTB+1:IKTE-1) = PRHODJ(:,:,IKTB+1:IKTE-1)*PVARM(:,:,IKTB+1:IKTE-1)/PTSTEP                 &
-    - ZMZM_RHODJ(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL) * PF(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL)/PDZZ(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL)     &
-    + ZMZM_RHODJ(:,:,IKTB+1:IKTE-1  ) * PF(:,:,IKTB+1:IKTE-1  )/PDZZ(:,:,IKTB+1:IKTE-1  )           &
-    + ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL) * PIMPL * PVARM(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL) &
-    - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL) * PIMPL * PVARM(:,:,IKTB+1:IKTE-1  )   &
-    - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1:IKTE-1    ) * PIMPL * PVARM(:,:,IKTB+1:IKTE-1  )   &
-    + ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1:IKTE-1    ) * PIMPL * PVARM(:,:,IKTB+1-D%NKL:IKTE-1-D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+DO JK=IKTB+1,IKTE-1
+  ZY(:,:,JK) = PRHODJ(:,:,JK)*PVARM(:,:,JK)/PTSTEP                 &
+    - ZMZM_RHODJ(:,:,JK+D%NKL) * PF(:,:,JK+D%NKL)/PDZZ(:,:,JK+D%NKL)     &
+    + ZMZM_RHODJ(:,:,JK  ) * PF(:,:,JK  )/PDZZ(:,:,JK  )           &
+    + ZRHODJ_DFDDTDZ_O_DZ2(:,:,JK+D%NKL) * PIMPL * PVARM(:,:,JK+D%NKL) &
+    - ZRHODJ_DFDDTDZ_O_DZ2(:,:,JK+D%NKL) * PIMPL * PVARM(:,:,JK  )   &
+    - ZRHODJ_DFDDTDZ_O_DZ2(:,:,JK    ) * PIMPL * PVARM(:,:,JK  )   &
+    + ZRHODJ_DFDDTDZ_O_DZ2(:,:,JK    ) * PIMPL * PVARM(:,:,JK-D%NKL)
+END DO
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ! 
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ZY(:,:,IKE) = PRHODJ(:,:,IKE)*PVARM(:,:,IKE)/PTSTEP               &
     - ZMZM_RHODJ(:,:,IKE+D%NKL) * PF(:,:,IKE+D%NKL)/PDZZ(:,:,IKE+D%NKL) &
     + ZMZM_RHODJ(:,:,IKE  ) * PF(:,:,IKE  )/PDZZ(:,:,IKE  )       &
     - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKE ) * PIMPL * PVARM(:,:,IKE  )   &
     + ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKE ) * PIMPL * PVARM(:,:,IKE-D%NKL)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
 !
 !*       3.  INVERSION OF THE TRIDIAGONAL SYSTEM
@@ -209,15 +219,18 @@ IF ( PIMPL > 1.E-10 ) THEN
 !*       3.1 arrays A, B, C
 !            --------------
 !
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ZB(:,:,IKB) =   PRHODJ(:,:,IKB)/PTSTEP                   &
                 - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKB+D%NKL) * PIMPL
   ZC(:,:,IKB) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKB+D%NKL) * PIMPL
 !
-  ZA(:,:,IKTB+1:IKTE-1) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1:IKTE-1) * PIMPL
-  ZB(:,:,IKTB+1:IKTE-1) =   PRHODJ(:,:,IKTB+1:IKTE-1)/PTSTEP                        &
-                          - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL) * PIMPL &
-                          - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1:IKTE-1) * PIMPL
-  ZC(:,:,IKTB+1:IKTE-1) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL) * PIMPL
+  DO JK=IKTB+1,IKTE-1
+    ZA(:,:,JK) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,JK) * PIMPL
+    ZB(:,:,JK) =   PRHODJ(:,:,JK)/PTSTEP                        &
+                            - ZRHODJ_DFDDTDZ_O_DZ2(:,:,JK+D%NKL) * PIMPL &
+                            - ZRHODJ_DFDDTDZ_O_DZ2(:,:,JK) * PIMPL
+    ZC(:,:,JK) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,JK+D%NKL) * PIMPL
+  END DO
 !
   ZA(:,:,IKE) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKE  ) * PIMPL
   ZB(:,:,IKE) =   PRHODJ(:,:,IKE)/PTSTEP                   &
@@ -253,9 +266,14 @@ IF ( PIMPL > 1.E-10 ) THEN
     PVARP(:,:,JK) = PVARP(:,:,JK) - ZGAM(:,:,JK+D%NKL) * PVARP(:,:,JK+D%NKL)
   END DO
 !
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ELSE
 ! 
-  PVARP(:,:,IKTB:IKTE) = ZY(:,:,IKTB:IKTE) * PTSTEP / PRHODJ(:,:,IKTB:IKTE)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+  DO JK=IKTB,IKTE
+    PVARP(:,:,JK) = ZY(:,:,JK) * PTSTEP / PRHODJ(:,:,JK)
+  END DO
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
 END IF 
 !
@@ -263,8 +281,10 @@ END IF
 !*       4.  FILL THE UPPER AND LOWER EXTERNAL VALUES
 !            ----------------------------------------
 !
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 PVARP(:,:,D%NKA)=PVARP(:,:,IKB)
 PVARP(:,:,D%NKU)=PVARP(:,:,IKE)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
 !-------------------------------------------------------------------------------
 !

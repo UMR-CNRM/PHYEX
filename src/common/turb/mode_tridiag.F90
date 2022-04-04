@@ -138,7 +138,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZY ,ZGAM
                                          ! RHS of the equation, 3D work array
 REAL, DIMENSION(D%NIT,D%NJT)         :: ZBET
                                          ! 2D work array
-INTEGER                              :: JK            ! loop counter
+INTEGER                              :: JI,JJ,JK            ! loop counter
 INTEGER                              :: IKB,IKE       ! inner vertical limits
 INTEGER                              :: IKT           ! array size in k direction
 INTEGER                              :: IKTB,IKTE     ! start, end of k loops in physical domain 
@@ -152,26 +152,32 @@ INTEGER                              :: IKTB,IKTE     ! start, end of k loops in
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TRIDIAG',0,ZHOOK_HANDLE)
 !
-IKT=D%NKT  
-IKTB=D%NKTB          
+IKT=D%NKT
+IKTB=D%NKTB
 IKTE=D%NKTE
 IKB=D%NKB
-IKE=D%NKE  
+IKE=D%NKE
 !
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ZY(:,:,IKB) = PVARM(:,:,IKB)  + PTSTEP*PSOURCE(:,:,IKB) -   &
   PEXPL / PRHODJ(:,:,IKB) * PA(:,:,IKB+D%NKL) * (PVARM(:,:,IKB+D%NKL) - PVARM(:,:,IKB))
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
 DO JK=IKTB+1,IKTE-1
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ZY(:,:,JK)= PVARM(:,:,JK)  + PTSTEP*PSOURCE(:,:,JK) -               &
       PEXPL / PRHODJ(:,:,JK) *                                           &
                              ( PVARM(:,:,JK-D%NKL)*PA(:,:,JK)                &
                               -PVARM(:,:,JK)*(PA(:,:,JK)+PA(:,:,JK+D%NKL))   &
                               +PVARM(:,:,JK+D%NKL)*PA(:,:,JK+D%NKL)              &
                              ) 
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 END DO
 ! 
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ZY(:,:,IKE)= PVARM(:,:,IKE) + PTSTEP*PSOURCE(:,:,IKE) +               &
   PEXPL / PRHODJ(:,:,IKE) * PA(:,:,IKE) * (PVARM(:,:,IKE)-PVARM(:,:,IKE-D%NKL))
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
 !
 !*       2.  INVERSION OF THE TRIDIAGONAL SYSTEM
@@ -182,11 +188,14 @@ IF ( PIMPL > 1.E-10 ) THEN
   !
   !  going up
   !
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ZBET(:,:) = 1. - PIMPL * PA(:,:,IKB+D%NKL) / PRHODJ(:,:,IKB)  ! bet = b(ikb)
-  PVARP(:,:,IKB) = ZY(:,:,IKB) / ZBET(:,:)                
+  PVARP(:,:,IKB) = ZY(:,:,IKB) / ZBET(:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)               
   !
   DO JK = IKB+D%NKL,IKE-D%NKL,D%NKL
-      ZGAM(:,:,JK) = PIMPL * PA(:,:,JK) / PRHODJ(:,:,JK-D%NKL) / ZBET(:,:)  
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+    ZGAM(:,:,JK) = PIMPL * PA(:,:,JK) / PRHODJ(:,:,JK-D%NKL) / ZBET(:,:)  
                                                     ! gam(k) = c(k-1) / bet
     ZBET(:,:)    = 1. - PIMPL * (  PA(:,:,JK) * (1. + ZGAM(:,:,JK))  &
                                  + PA(:,:,JK+D%NKL)                      &
@@ -196,7 +205,9 @@ IF ( PIMPL > 1.E-10 ) THEN
                     * PVARP(:,:,JK-D%NKL)                                 &
                    ) / ZBET(:,:)
                                         ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
-  END DO 
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+  END DO
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ! special treatment for the last level
   ZGAM(:,:,IKE) = PIMPL * PA(:,:,IKE) / PRHODJ(:,:,IKE-D%NKL) / ZBET(:,:) 
                                                     ! gam(k) = c(k-1) / bet
@@ -210,13 +221,20 @@ IF ( PIMPL > 1.E-10 ) THEN
   !
   !  going down
   !
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   DO JK = IKE-D%NKL,IKB,-1*D%NKL
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     PVARP(:,:,JK) = PVARP(:,:,JK) - ZGAM(:,:,JK+D%NKL) * PVARP(:,:,JK+D%NKL) 
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   END DO
 !
 ELSE
 ! 
-  PVARP(:,:,IKTB:IKTE) = ZY(:,:,IKTB:IKTE)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+  DO JK=IKTB,IKTE
+    PVARP(:,:,JK) = ZY(:,:,JK)
+  END DO
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
 END IF 
 !
@@ -224,8 +242,10 @@ END IF
 !*       3.  FILL THE UPPER AND LOWER EXTERNAL VALUES
 !            ----------------------------------------
 !
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 PVARP(:,:,D%NKA)=PVARP(:,:,IKB)
 PVARP(:,:,D%NKU)=PVARP(:,:,IKE)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
 !-------------------------------------------------------------------------------
 !
