@@ -380,7 +380,7 @@ DO JSV=1,KSV
   ZSOURCE(:,:,IKE) = 0.
 !
 ! Obtention of the split JSV scalar variable at t+ deltat  
-  CALL TRIDIAG(D,D%NKA,D%NKU,D%NKL,PSVM(:,:,:,JSV),ZA,PTSTEP,PEXPL,PIMPL,PRHODJ,ZSOURCE,ZRES)
+  CALL TRIDIAG(D,PSVM(:,:,:,JSV),ZA,PTSTEP,PEXPL,PIMPL,PRHODJ,ZSOURCE,ZRES)
 !
 !  Compute the equivalent tendency for the JSV scalar variable
   !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)

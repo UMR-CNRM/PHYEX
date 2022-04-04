@@ -5,7 +5,7 @@
 MODULE MODE_TRIDIAG_THERMO
 IMPLICIT NONE
 CONTAINS       
-SUBROUTINE TRIDIAG_THERMO(D,KKA,KKU,KKL,PVARM,PF,PDFDDTDZ,PTSTEP,PIMPL,  &
+SUBROUTINE TRIDIAG_THERMO(D,PVARM,PF,PDFDDTDZ,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,PVARP             )
 !      #################################################
 !
@@ -129,9 +129,6 @@ IMPLICIT NONE
 !*       0.1 declarations of arguments
 !
 TYPE(DIMPHYEX_t),     INTENT(IN)   :: D
-INTEGER,              INTENT(IN)   :: KKA     !near ground array index  
-INTEGER,              INTENT(IN)   :: KKU     !uppest atmosphere array index
-INTEGER,              INTENT(IN)   :: KKL     !vert. levels type 1=MNH -1=ARO
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PVARM   ! variable at t-1      at mass point
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PF      ! flux in dT/dt=-dF/dz at flux point
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDFDDTDZ! dF/d(dT/dz)          at flux point
@@ -171,7 +168,7 @@ IKB=D%NKB
 IKE=D%NKE
 
 !
-ZMZM_RHODJ  = MZM(PRHODJ,KKA,KKU,KKL)
+ZMZM_RHODJ  = MZM(PRHODJ,D%NKA,D%NKU,D%NKL)
 ZRHODJ_DFDDTDZ_O_DZ2 = ZMZM_RHODJ*PDFDDTDZ/PDZZ**2
 !
 ZA=0.
@@ -184,24 +181,24 @@ ZY=0.
 !           ---------------------------
 !
 ZY(:,:,IKB) = PRHODJ(:,:,IKB)*PVARM(:,:,IKB)/PTSTEP                  &
-    - ZMZM_RHODJ(:,:,IKB+KKL) * PF(:,:,IKB+KKL)/PDZZ(:,:,IKB+KKL)    &
+    - ZMZM_RHODJ(:,:,IKB+D%NKL) * PF(:,:,IKB+D%NKL)/PDZZ(:,:,IKB+D%NKL)    &
     + ZMZM_RHODJ(:,:,IKB  ) * PF(:,:,IKB  )/PDZZ(:,:,IKB  )          &
-    + ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKB+KKL) * PIMPL * PVARM(:,:,IKB+KKL) &
-    - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKB+KKL) * PIMPL * PVARM(:,:,IKB  )
+    + ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKB+D%NKL) * PIMPL * PVARM(:,:,IKB+D%NKL) &
+    - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKB+D%NKL) * PIMPL * PVARM(:,:,IKB  )
 !
   ZY(:,:,IKTB+1:IKTE-1) = PRHODJ(:,:,IKTB+1:IKTE-1)*PVARM(:,:,IKTB+1:IKTE-1)/PTSTEP                 &
-    - ZMZM_RHODJ(:,:,IKTB+1+KKL:IKTE-1+KKL) * PF(:,:,IKTB+1+KKL:IKTE-1+KKL)/PDZZ(:,:,IKTB+1+KKL:IKTE-1+KKL)     &
+    - ZMZM_RHODJ(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL) * PF(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL)/PDZZ(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL)     &
     + ZMZM_RHODJ(:,:,IKTB+1:IKTE-1  ) * PF(:,:,IKTB+1:IKTE-1  )/PDZZ(:,:,IKTB+1:IKTE-1  )           &
-    + ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1+KKL:IKTE-1+KKL) * PIMPL * PVARM(:,:,IKTB+1+KKL:IKTE-1+KKL) &
-    - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1+KKL:IKTE-1+KKL) * PIMPL * PVARM(:,:,IKTB+1:IKTE-1  )   &
+    + ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL) * PIMPL * PVARM(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL) &
+    - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL) * PIMPL * PVARM(:,:,IKTB+1:IKTE-1  )   &
     - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1:IKTE-1    ) * PIMPL * PVARM(:,:,IKTB+1:IKTE-1  )   &
-    + ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1:IKTE-1    ) * PIMPL * PVARM(:,:,IKTB+1-KKL:IKTE-1-KKL)
+    + ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1:IKTE-1    ) * PIMPL * PVARM(:,:,IKTB+1-D%NKL:IKTE-1-D%NKL)
 ! 
 ZY(:,:,IKE) = PRHODJ(:,:,IKE)*PVARM(:,:,IKE)/PTSTEP               &
-    - ZMZM_RHODJ(:,:,IKE+KKL) * PF(:,:,IKE+KKL)/PDZZ(:,:,IKE+KKL) &
+    - ZMZM_RHODJ(:,:,IKE+D%NKL) * PF(:,:,IKE+D%NKL)/PDZZ(:,:,IKE+D%NKL) &
     + ZMZM_RHODJ(:,:,IKE  ) * PF(:,:,IKE  )/PDZZ(:,:,IKE  )       &
     - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKE ) * PIMPL * PVARM(:,:,IKE  )   &
-    + ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKE ) * PIMPL * PVARM(:,:,IKE-KKL)
+    + ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKE ) * PIMPL * PVARM(:,:,IKE-D%NKL)
 !
 !
 !*       3.  INVERSION OF THE TRIDIAGONAL SYSTEM
@@ -213,14 +210,14 @@ IF ( PIMPL > 1.E-10 ) THEN
 !            --------------
 !
   ZB(:,:,IKB) =   PRHODJ(:,:,IKB)/PTSTEP                   &
-                - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKB+KKL) * PIMPL
-  ZC(:,:,IKB) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKB+KKL) * PIMPL
+                - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKB+D%NKL) * PIMPL
+  ZC(:,:,IKB) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKB+D%NKL) * PIMPL
 !
   ZA(:,:,IKTB+1:IKTE-1) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1:IKTE-1) * PIMPL
   ZB(:,:,IKTB+1:IKTE-1) =   PRHODJ(:,:,IKTB+1:IKTE-1)/PTSTEP                        &
-                          - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1+KKL:IKTE-1+KKL) * PIMPL &
+                          - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL) * PIMPL &
                           - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1:IKTE-1) * PIMPL
-  ZC(:,:,IKTB+1:IKTE-1) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1+KKL:IKTE-1+KKL) * PIMPL
+  ZC(:,:,IKTB+1:IKTE-1) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKTB+1+D%NKL:IKTE-1+D%NKL) * PIMPL
 !
   ZA(:,:,IKE) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKE  ) * PIMPL
   ZB(:,:,IKE) =   PRHODJ(:,:,IKE)/PTSTEP                   &
@@ -233,27 +230,27 @@ IF ( PIMPL > 1.E-10 ) THEN
   PVARP(:,:,IKB) = ZY(:,:,IKB) / ZBET(:,:)
 
   !
-  DO JK = IKB+KKL,IKE-KKL,KKL
-    ZGAM(:,:,JK) = ZC(:,:,JK-KKL) / ZBET(:,:)  
+  DO JK = IKB+D%NKL,IKE-D%NKL,D%NKL
+    ZGAM(:,:,JK) = ZC(:,:,JK-D%NKL) / ZBET(:,:)  
                                                     ! gam(k) = c(k-1) / bet
     ZBET(:,:)    = ZB(:,:,JK) - ZA(:,:,JK) * ZGAM(:,:,JK)
                                                     ! bet = b(k) - a(k)* gam(k)  
-    PVARP(:,:,JK)= ( ZY(:,:,JK) - ZA(:,:,JK) * PVARP(:,:,JK-KKL) ) / ZBET(:,:)
+    PVARP(:,:,JK)= ( ZY(:,:,JK) - ZA(:,:,JK) * PVARP(:,:,JK-D%NKL) ) / ZBET(:,:)
                                         ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
   END DO 
   ! special treatment for the last level
-  ZGAM(:,:,IKE) = ZC(:,:,IKE-KKL) / ZBET(:,:) 
+  ZGAM(:,:,IKE) = ZC(:,:,IKE-D%NKL) / ZBET(:,:) 
                                                     ! gam(k) = c(k-1) / bet
   ZBET(:,:)     = ZB(:,:,IKE) - ZA(:,:,IKE) * ZGAM(:,:,IKE)
                                                     ! bet = b(k) - a(k)* gam(k)  
-  PVARP(:,:,IKE)= ( ZY(:,:,IKE) - ZA(:,:,IKE) * PVARP(:,:,IKE-KKL) ) / ZBET(:,:)
+  PVARP(:,:,IKE)= ( ZY(:,:,IKE) - ZA(:,:,IKE) * PVARP(:,:,IKE-D%NKL) ) / ZBET(:,:)
                                        ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
 !
 !*       3.3 going down
 !            ----------
 !
-  DO JK = IKE-KKL,IKB,-1*KKL
-    PVARP(:,:,JK) = PVARP(:,:,JK) - ZGAM(:,:,JK+KKL) * PVARP(:,:,JK+KKL)
+  DO JK = IKE-D%NKL,IKB,-1*D%NKL
+    PVARP(:,:,JK) = PVARP(:,:,JK) - ZGAM(:,:,JK+D%NKL) * PVARP(:,:,JK+D%NKL)
   END DO
 !
 ELSE
@@ -266,8 +263,8 @@ END IF
 !*       4.  FILL THE UPPER AND LOWER EXTERNAL VALUES
 !            ----------------------------------------
 !
-PVARP(:,:,KKA)=PVARP(:,:,IKB)
-PVARP(:,:,KKU)=PVARP(:,:,IKE)
+PVARP(:,:,D%NKA)=PVARP(:,:,IKB)
+PVARP(:,:,D%NKU)=PVARP(:,:,IKE)
 !
 !-------------------------------------------------------------------------------
 !

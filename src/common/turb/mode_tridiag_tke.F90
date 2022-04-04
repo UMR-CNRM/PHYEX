@@ -5,7 +5,7 @@
 MODULE MODE_TRIDIAG_TKE
 IMPLICIT NONE
 CONTAINS       
-SUBROUTINE TRIDIAG_TKE(D,KKA,KKU,KKL,PVARM,PA,PTSTEP,PEXPL,PIMPL, &
+SUBROUTINE TRIDIAG_TKE(D,PVARM,PA,PTSTEP,PEXPL,PIMPL, &
                                   PRHODJ,PSOURCE,PDIAG,PVARP )
        USE PARKIND1, ONLY : JPRB
        USE YOMHOOK , ONLY : LHOOK, DR_HOOK
@@ -121,9 +121,6 @@ IMPLICIT NONE
 !*       0.1 declarations of arguments
 !
 TYPE(DIMPHYEX_t),     INTENT(IN)   :: D
-INTEGER,              INTENT(IN)   :: KKA     !near ground array index  
-INTEGER,              INTENT(IN)   :: KKU     !uppest atmosphere array index
-INTEGER,              INTENT(IN)   :: KKL     !vert. levels type 1=MNH -1=ARO
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),    INTENT(IN)  :: PVARM       ! variable at t-1  
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),    INTENT(IN)  :: PA          ! upper diag. elements
 REAL,                      INTENT(IN)  :: PTSTEP      ! Double time step
@@ -161,19 +158,19 @@ IKB=D%NKB
 IKE=D%NKE
 !
 ZY(:,:,IKB) = PVARM(:,:,IKB)  + PTSTEP*PSOURCE(:,:,IKB) -   &
-  PEXPL / PRHODJ(:,:,IKB) * PA(:,:,IKB+KKL) * (PVARM(:,:,IKB+KKL) - PVARM(:,:,IKB))
+  PEXPL / PRHODJ(:,:,IKB) * PA(:,:,IKB+D%NKL) * (PVARM(:,:,IKB+D%NKL) - PVARM(:,:,IKB))
 !
 DO JK=IKTB+1,IKTE-1
   ZY(:,:,JK)= PVARM(:,:,JK)  + PTSTEP*PSOURCE(:,:,JK) -               &
       PEXPL / PRHODJ(:,:,JK) *                                           &
-                             ( PVARM(:,:,JK-KKL)*PA(:,:,JK)                &
-                              -PVARM(:,:,JK)*(PA(:,:,JK)+PA(:,:,JK+KKL))   &
-                              +PVARM(:,:,JK+KKL)*PA(:,:,JK+KKL)              &
+                             ( PVARM(:,:,JK-D%NKL)*PA(:,:,JK)                &
+                              -PVARM(:,:,JK)*(PA(:,:,JK)+PA(:,:,JK+D%NKL))   &
+                              +PVARM(:,:,JK+D%NKL)*PA(:,:,JK+D%NKL)              &
                              ) 
 END DO
 ! 
 ZY(:,:,IKE)= PVARM(:,:,IKE) + PTSTEP*PSOURCE(:,:,IKE) +               &
-  PEXPL / PRHODJ(:,:,IKE) * PA(:,:,IKE) * (PVARM(:,:,IKE)-PVARM(:,:,IKE-KKL))
+  PEXPL / PRHODJ(:,:,IKE) * PA(:,:,IKE) * (PVARM(:,:,IKE)-PVARM(:,:,IKE-D%NKL))
 !
 !
 !*       2.  INVERSION OF THE TRIDIAGONAL SYSTEM
@@ -184,39 +181,39 @@ IF ( PIMPL > 1.E-10 ) THEN
   !
   !  going up
   !
-  ZBET(:,:) = 1. + PIMPL * (PDIAG(:,:,IKB)-PA(:,:,IKB+KKL) / PRHODJ(:,:,IKB))
+  ZBET(:,:) = 1. + PIMPL * (PDIAG(:,:,IKB)-PA(:,:,IKB+D%NKL) / PRHODJ(:,:,IKB))
                                                     ! bet = b(ikb)
   PVARP(:,:,IKB) = ZY(:,:,IKB) / ZBET(:,:)                
   !
-  DO JK = IKB+KKL,IKE-KKL,KKL
-      ZGAM(:,:,JK) = PIMPL * PA(:,:,JK) / PRHODJ(:,:,JK-KKL) / ZBET(:,:)  
+  DO JK = IKB+D%NKL,IKE-D%NKL,D%NKL
+      ZGAM(:,:,JK) = PIMPL * PA(:,:,JK) / PRHODJ(:,:,JK-D%NKL) / ZBET(:,:)  
                                                     ! gam(k) = c(k-1) / bet
     ZBET(:,:)    = 1. + PIMPL * ( PDIAG(:,:,JK) -                     &
                                  (  PA(:,:,JK) * (1. + ZGAM(:,:,JK))  &
-                                  + PA(:,:,JK+KKL)                      &
+                                  + PA(:,:,JK+D%NKL)                      &
                                  ) / PRHODJ(:,:,JK)                   &
                                 )                   ! bet = b(k) - a(k)* gam(k)  
     PVARP(:,:,JK)= ( ZY(:,:,JK) - PIMPL * PA(:,:,JK) / PRHODJ(:,:,JK) &
-                    * PVARP(:,:,JK-KKL)                                 &
+                    * PVARP(:,:,JK-D%NKL)                                 &
                    ) / ZBET(:,:)
                                         ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
   END DO 
   ! special treatment for the last level
-  ZGAM(:,:,IKE) = PIMPL * PA(:,:,IKE) / PRHODJ(:,:,IKE-KKL) / ZBET(:,:) 
+  ZGAM(:,:,IKE) = PIMPL * PA(:,:,IKE) / PRHODJ(:,:,IKE-D%NKL) / ZBET(:,:) 
                                                     ! gam(k) = c(k-1) / bet
   ZBET(:,:)    = 1. + PIMPL * ( PDIAG(:,:,IKE) -                   &
          (  PA(:,:,IKE) * (1. + ZGAM(:,:,IKE)) ) / PRHODJ(:,:,IKE) &
                               )  
                                                     ! bet = b(k) - a(k)* gam(k)  
   PVARP(:,:,IKE)= ( ZY(:,:,IKE) - PIMPL * PA(:,:,IKE) / PRHODJ(:,:,IKE) &
-                                * PVARP(:,:,IKE-KKL)                      &
+                                * PVARP(:,:,IKE-D%NKL)                      &
                  ) / ZBET(:,:)
                                        ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
   !
   !  going down
   !
-  DO JK = IKE-KKL,IKB,-1*KKL
-    PVARP(:,:,JK) = PVARP(:,:,JK) - ZGAM(:,:,JK+KKL) * PVARP(:,:,JK+KKL) 
+  DO JK = IKE-D%NKL,IKB,-1*D%NKL
+    PVARP(:,:,JK) = PVARP(:,:,JK) - ZGAM(:,:,JK+D%NKL) * PVARP(:,:,JK+D%NKL) 
   END DO
 !
 ELSE
@@ -229,8 +226,8 @@ END IF
 !*       3.  FILL THE UPPER AND LOWER EXTERNAL VALUES
 !            ----------------------------------------
 !
-PVARP(:,:,KKA)=PVARP(:,:,IKB)
-PVARP(:,:,KKU)=PVARP(:,:,IKE)
+PVARP(:,:,D%NKA)=PVARP(:,:,IKB)
+PVARP(:,:,D%NKU)=PVARP(:,:,IKE)
 !
 !-------------------------------------------------------------------------------
 !

@@ -653,7 +653,7 @@ ELSE  ! No coupling O and A cases
 END IF !end no coupled cases
 !
 ! Compute the split conservative potential temperature at t+deltat
-CALL TRIDIAG_THERMO(D,D%NKA,D%NKU,D%NKL,PTHLM,ZF,ZDFDDTDZ,PTSTEP,PIMPL,PDZZ,&
+CALL TRIDIAG_THERMO(D,PTHLM,ZF,ZDFDDTDZ,PTSTEP,PIMPL,PDZZ,&
                     PRHODJ,PTHLP)
 !
 ! Compute the equivalent tendency for the conservative potential temperature
@@ -997,7 +997,7 @@ IF (KRR /= 0) THEN
     END IF
   END IF!end no coupled cases
   ! Compute the split conservative potential temperature at t+deltat
-  CALL TRIDIAG_THERMO(D,D%NKA,D%NKU,D%NKL,PRM(:,:,:,1),ZF,ZDFDDRDZ,PTSTEP,PIMPL,&
+  CALL TRIDIAG_THERMO(D,PRM(:,:,:,1),ZF,ZDFDDRDZ,PTSTEP,PIMPL,&
                       PDZZ,PRHODJ,PRP)
   !
   ! Compute the equivalent tendency for the conservative mixing ratio
