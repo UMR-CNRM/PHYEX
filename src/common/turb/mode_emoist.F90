@@ -89,6 +89,7 @@ REAL,DIMENSION(D%NIT,D%NJT,D%NKT) ::       &
 !                ZA = coeft A, ZRW = total mixing ratio rw 
 REAL                                  :: ZDELTA  ! = Rv/Rd - 1
 INTEGER                               :: JRR     ! moist loop counter
+INTEGER                               :: JI,JJ,JK ! loop counter
 !
 !---------------------------------------------------------------------------
 !
@@ -112,12 +113,15 @@ ELSE
    PEMOIST(:,:,:) = 0.
  ELSE IF ( KRR == 1 ) THEN                           ! only vapor
   ZDELTA = (CST%XRV/CST%XRD) - 1.
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   PEMOIST(:,:,:) = ZDELTA*PTHLM(:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
  ELSE                                                ! liquid water & ice present
   ZDELTA = (CST%XRV/CST%XRD) - 1.
   ZRW(:,:,:) = PRM(:,:,:,1)
 !
-  IF ( KRRI>0) THEN  ! rc and ri case  
+  IF ( KRRI>0) THEN  ! rc and ri case
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ZRW(:,:,:) = ZRW(:,:,:) + PRM(:,:,:,3)
     DO JRR=5,KRR
       ZRW(:,:,:) = ZRW(:,:,:) + PRM(:,:,:,JRR)
@@ -140,7 +144,9 @@ ELSE
                                                     PRM(:,:,:,2)+PRM(:,:,:,4)))&
                             / (1. + ZRW(:,:,:))                                &
          ) * PAMOIST(:,:,:) * 2. * PSRCM(:,:,:)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ELSE
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     DO JRR=3,KRR
       ZRW(:,:,:) = ZRW(:,:,:) + PRM(:,:,:,JRR)
     ENDDO
@@ -160,6 +166,7 @@ ELSE
                -(1.+ZDELTA) * (PTHLM(:,:,:) + PLOCPEXNM(:,:,:)*PRM(:,:,:,2))   &
                             / (1. + ZRW(:,:,:))                                &
          ) * PAMOIST(:,:,:) * 2. * PSRCM(:,:,:)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   END IF
  END IF
 !
