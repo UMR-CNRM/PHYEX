@@ -711,28 +711,33 @@ ELSE ! Atmos case
             *ZUSLOPEM(:,:,1:1)                                &
             +ZCOEFFLXV(:,:,1:1) / PDZZ(:,:,IKB:IKB)           &
             *ZVSLOPEM(:,:,1:1)                      ) 
-  ZWORK4(:,:,IKB:IKB) = MYM( ZSOURCE(:,:,IKB:IKB)   / PDZZ(:,:,IKB:IKB) )
-  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+!
   IF (.NOT.OCOUPLES) THEN !  only atmosp without coupling
   ! compute the explicit tangential flux at the W point
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     ZSOURCE(:,:,IKB)       =                                                  &
       PTAU11M(:,:) * PSINSLOPE(:,:) * PDIRCOSZW(:,:) * ZDIRSINZW(:,:)         &
      +PTAU12M(:,:) * PCOSSLOPE(:,:) * ZDIRSINZW(:,:)                          &
      -PTAU33M(:,:) * PSINSLOPE(:,:) * ZDIRSINZW(:,:) * PDIRCOSZW(:,:) 
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+    ZWORK4(:,:,IKB:IKB) = MYM( ZSOURCE(:,:,IKB:IKB)   / PDZZ(:,:,IKB:IKB) )
 !
   ! add the vertical part or the surface flux at the V,W vorticity point
-  ZSOURCE(:,:,IKB) =                                      &
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+    ZSOURCE(:,:,IKB) =                                      &
     (   ZWORK4(:,:,IKB)     &
      +  ZWORK3(:,:,IKB)        &
      - ZCOEFS(:,:,1) * PVM(:,:,IKB) * PIMPL             &
     ) * 0.5 * ( 1. + ZWORK1(:,:,D%NKA) / ZWORK2(:,:,IKB) )
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
   ELSE   !atmosphere when coupling
     ! input flux assumed to be in SI and at vorticity point
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     ZSOURCE(:,:,IKB) =     -TURBN%XSSVFL_C(:,:,1)/(1.*PDZZ(:,:,IKB)) &
       * 0.5 * ( 1. + ZWORK1(:,:,D%NKA) / ZWORK2(:,:,IKB)  )
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ENDIF
-  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   !No flux at the atmosphere top
   ZSOURCE(:,:,IKE) = 0.
 ENDIF ! End of Ocean or Atmospher Cases
