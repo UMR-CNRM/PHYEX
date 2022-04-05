@@ -439,7 +439,8 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::     &
           ZTHLM,ZRTKEMS,              &  ! initial potential temp; TKE advective source
           ZSHEAR, ZDUDZ, ZDVDZ,       &  ! horizontal-wind vertical gradient
           ZLVOCPEXNM,ZLSOCPEXNM,      &  ! Lv/Cp/EXNREF and Ls/Cp/EXNREF at t-1
-          ZATHETA_ICE,ZAMOIST_ICE        ! coefficients for s = f (Thetal,Rnp)
+          ZATHETA_ICE,ZAMOIST_ICE,    &  ! coefficients for s = f (Thetal,Rnp)
+          ZWORK1                         ! working array syntax
 
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR) :: ZRM ! initial mixing ratio 
 REAL, DIMENSION(D%NIT,D%NJT) ::  ZTAU11M,ZTAU12M,  &
@@ -513,6 +514,7 @@ END IF
 !
 !*      2.1 Cph at t
 !
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ZCP(:,:,:)=CST%XCPD
 !
 IF (KRR > 0) ZCP(:,:,:) = ZCP(:,:,:) + CST%XCPV * PRT(:,:,:,1)
@@ -523,18 +525,25 @@ END DO
 DO JRR = 2+KRRL,1+KRRL+KRRI                ! loop on the solid components   
   ZCP(:,:,:)  = ZCP(:,:,:)  + CST%XCI * PRT(:,:,:,JRR)
 END DO
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 !*      2.2 Exner function at t
 !
 IF (OOCEAN) THEN
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZEXN(:,:,:) = 1.
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ELSE
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZEXN(:,:,:) = (PPABST(:,:,:)/CST%XP00) ** (CST%XRD/CST%XCPD)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 END IF
 !
 !*      2.3 dissipative heating coeff a t
 !
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ZCOEF_DISS(:,:,:) = 1/(ZCP(:,:,:) * ZEXN(:,:,:)) 
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 !
 ZFRAC_ICE(:,:,:) = 0.0
@@ -545,7 +554,9 @@ IF (KRRL >=1) THEN
 !
 !*      2.4 Temperature at t
 !
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZT(:,:,:) =  PTHLT(:,:,:) * ZEXN(:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 !*       2.5 Lv/Cph/Exn
 !
@@ -555,16 +566,20 @@ IF (KRRL >=1) THEN
     CALL COMPUTE_FUNCTION_THERMO(CST%XALPI,CST%XBETAI,CST%XGAMI,CST%XLSTT,CST%XCI,ZT,ZEXN,ZCP, &
                                  ZLSOCPEXNM,ZAMOIST_ICE,ZATHETA_ICE)
 !
+    !$mnh_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     WHERE(PRT(:,:,:,2)+PRT(:,:,:,4)>0.0)
       ZFRAC_ICE(:,:,:) = PRT(:,:,:,4) / ( PRT(:,:,:,2)+PRT(:,:,:,4) )
     END WHERE
+    !$mnh_end_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ZLOCPEXNM(:,:,:) = (1.0-ZFRAC_ICE(:,:,:))*ZLVOCPEXNM(:,:,:) &
                            +ZFRAC_ICE(:,:,:) *ZLSOCPEXNM(:,:,:)
     ZAMOIST(:,:,:) = (1.0-ZFRAC_ICE(:,:,:))*ZAMOIST(:,:,:) &
                          +ZFRAC_ICE(:,:,:) *ZAMOIST_ICE(:,:,:)
     ZATHETA(:,:,:) = (1.0-ZFRAC_ICE(:,:,:))*ZATHETA(:,:,:) &
                          +ZFRAC_ICE(:,:,:) *ZATHETA_ICE(:,:,:)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ELSE
     CALL COMPUTE_FUNCTION_THERMO(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
                                  ZLOCPEXNM,ZAMOIST,ZATHETA)
@@ -598,13 +613,14 @@ IF (KRRL >=1) THEN
   END IF
 !
 ELSE
-  ZLOCPEXNM=0.
+  ZLOCPEXNM(:,:,:)=0.
 END IF              ! loop end on KRRL >= 1
 !
 ! computes conservative variables
 !
 IF ( KRRL >= 1 ) THEN
   IF ( KRRI >= 1 ) THEN
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ! Rnp at t
     PRT(:,:,:,1)  = PRT(:,:,:,1)  + PRT(:,:,:,2)  + PRT(:,:,:,4)
     PRRS(:,:,:,1) = PRRS(:,:,:,1) + PRRS(:,:,:,2) + PRRS(:,:,:,4)
@@ -613,13 +629,16 @@ IF ( KRRL >= 1 ) THEN
                                   - ZLSOCPEXNM(:,:,:) * PRT(:,:,:,4)
     PRTHLS(:,:,:) = PRTHLS(:,:,:) - ZLVOCPEXNM(:,:,:) * PRRS(:,:,:,2) &
                                   - ZLSOCPEXNM(:,:,:) * PRRS(:,:,:,4)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ELSE
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ! Rnp at t
     PRT(:,:,:,1)  = PRT(:,:,:,1)  + PRT(:,:,:,2) 
     PRRS(:,:,:,1) = PRRS(:,:,:,1) + PRRS(:,:,:,2)
     ! Theta_l at t
     PTHLT(:,:,:)  = PTHLT(:,:,:)  - ZLOCPEXNM(:,:,:) * PRT(:,:,:,2)
     PRTHLS(:,:,:) = PRTHLS(:,:,:) - ZLOCPEXNM(:,:,:) * PRRS(:,:,:,2)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   END IF
 END IF
 !
@@ -645,7 +664,7 @@ SELECT CASE (HTURBLEN)
 !           ------------------
 
   CASE ('BL89')
-    ZSHEAR=0.
+    ZSHEAR(:,:,:)=0.
     CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 !
 !*      3.2 RM17 mixing length
@@ -654,7 +673,9 @@ SELECT CASE (HTURBLEN)
   CASE ('RM17')
     ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,D%NKA,KKU,KKL),D%NKA,KKU,KKL))
     ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,D%NKA,KKU,KKL),D%NKA,KKU,KKL))
-    ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    ZSHEAR(:,:,:) = SQRT(ZDUDZ(:,:,:)*ZDUDZ(:,:,:) + ZDVDZ(:,:,:)*ZDVDZ(:,:,:))
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 !
 !*      3.3 Grey-zone combined RM17 & Deardorff mixing lengths 
@@ -663,7 +684,9 @@ SELECT CASE (HTURBLEN)
   CASE ('ADAP')
     ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,D%NKA,KKU,KKL),D%NKA,KKU,KKL))
     ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,D%NKA,KKU,KKL),D%NKA,KKU,KKL))
-    ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    ZSHEAR(:,:,:) = SQRT(ZDUDZ(:,:,:)*ZDUDZ(:,:,:) + ZDVDZ(:,:,:)*ZDVDZ(:,:,:))
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 
     CALL DELT(ZLMW,ODZ=.FALSE.)
@@ -672,7 +695,10 @@ SELECT CASE (HTURBLEN)
     ! For LES grid meshes, this is equivalent to Deardorff : the base mixing lentgh is the horizontal grid mesh, 
     !                      and it is limited by a stability-based length (RM17), as was done in Deardorff length (but taking into account shear as well)
     ! For grid meshes in the grey zone, then this is the smaller of the two.
-    ZLM = MIN(ZLM,TURBN%XCADAP*ZLMW)
+    !
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    ZLM(:,:,:) = MIN(ZLM(:,:,:),TURBN%XCADAP*ZLMW(:,:,:))
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 !*      3.4 Delta mixing length
 !           -------------------
@@ -695,11 +721,13 @@ SELECT CASE (HTURBLEN)
 
    ZALPHA=0.5**(-1.5)
    !
+   !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
    DO JK=IKTB,IKTE
      ZLM(:,:,JK) = ( 0.5*(PZZ(:,:,JK)+PZZ(:,:,JK+KKL)) - &
      & PZZ(:,:,D%NKA+JPVEXT_TURB*KKL) ) * PDIRCOSZW(:,:)
      ZLM(:,:,JK) = ZALPHA  * ZLM(:,:,JK) * ZL0 / ( ZL0 + ZALPHA*ZLM(:,:,JK) )
    END DO
+   !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
    ZLM(:,:,IKTB-1) = ZLM(:,:,IKTB)
    ZLM(:,:,IKTE+1) = ZLM(:,:,IKTE)
@@ -718,29 +746,39 @@ ENDIF  ! end LHARRAT
 !           ------------------
 
 IF (OHARAT) THEN
-  ZLEPS=PLENGTHM*(3.75**2.)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  ZLEPS(:,:,:)=PLENGTHM(:,:,:)*(3.75**2.)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ELSE
-  ZLEPS=ZLM
+  ZLEPS(:,:,:)=ZLM(:,:,:)
 ENDIF
 !
 !*      3.7 Correction in the Surface Boundary Layer (Redelsperger 2001)
 !           ----------------------------------------
 !
-ZLMO=XUNDEF
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+ZLMO(:,:)=XUNDEF
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 IF (ORMC01) THEN
-  ZUSTAR=(PSFU**2+PSFV**2)**(0.25)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+  ZUSTAR(:,:)=(PSFU(:,:)**2+PSFV(:,:)**2)**(0.25)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   IF (KRR>0) THEN
     ZLMO=LMO(ZUSTAR,ZTHLM(:,:,IKB),ZRM(:,:,IKB,1),PSFTH,PSFRV)
   ELSE
-    ZRVM=0.
-    ZSFRV=0.
+    ZRVM(:,:)=0.
+    ZSFRV(:,:)=0.
     ZLMO=LMO(ZUSTAR,ZTHLM(:,:,IKB),ZRVM,PSFTH,ZSFRV)
   END IF
   CALL RMC01(HTURBLEN,D%NKA,KKU,KKL,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,ZLMO,ZLM,ZLEPS)
 END IF
 !
 !RMC01 is only applied on RM17 in ADAP
-IF (HTURBLEN=='ADAP') ZLEPS = MIN(ZLEPS,ZLMW*TURBN%XCADAP)
+IF (HTURBLEN=='ADAP') THEN
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  ZLEPS(:,:,:) = MIN(ZLEPS(:,:,:),ZLMW(:,:,:)*TURBN%XCADAP)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+END IF
 !
 !*      3.8 Mixing length in external points (used if HTURBDIM="3DIM")
 !           ----------------------------------------------------------
@@ -781,6 +819,7 @@ END IF
 !
 !*      4.2 compute the proportionality coefficient between wind and stress
 !
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ZCDUEFF(:,:) =-SQRT ( (PSFU(:,:)**2 + PSFV(:,:)**2) /               &
 #ifdef REPRO48
                     (1.E-60 + ZUSLOPE(:,:)**2 + ZVSLOPE(:,:)**2 ) )
@@ -790,11 +829,12 @@ ZCDUEFF(:,:) =-SQRT ( (PSFU(:,:)**2 + PSFV(:,:)**2) /               &
 !
 !*       4.6 compute the surface tangential fluxes
 !
-ZTAU11M(:,:) =2./3.*(  (1.+ (PZZ (:,:,IKB+KKL)-PZZ (:,:,IKB))  &
+ZTAU11M(:,:) =2./3.*(  (1.+ (PZZ(:,:,IKB+KKL)-PZZ(:,:,IKB))  &
                            /(PDZZ(:,:,IKB+KKL)+PDZZ(:,:,IKB))  &
                        )   *PTKET(:,:,IKB)                   &
                      -0.5  *PTKET(:,:,IKB+KKL)                 &
                     )
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ZTAU12M(:,:) =0.0
 ZTAU22M(:,:) =ZTAU11M(:,:)
 ZTAU33M(:,:) =ZTAU11M(:,:)
@@ -803,11 +843,11 @@ ZTAU33M(:,:) =ZTAU11M(:,:)
 !            ------------------------------------------------------------------
 !
 !
-ZMWTH = 0.     ! w'2th'
-ZMWR  = 0.     ! w'2r'
-ZMTH2 = 0.     ! w'th'2
-ZMR2  = 0.     ! w'r'2
-ZMTHR = 0.     ! w'th'r'
+ZMWTH(:,:,:) = 0.     ! w'2th'
+ZMWR(:,:,:)  = 0.     ! w'2r'
+ZMTH2(:,:,:) = 0.     ! w'th'2
+ZMR2(:,:,:)  = 0.     ! w'r'2
+ZMTHR(:,:,:) = 0.     ! w'th'r'
 
 IF (HTOM=='TM06') THEN
   CALL TM06(D%NKA,KKU,KKL,PTHVREF,PBL_DEPTH,PZZ,PSFTH,ZMWTH,ZMTH2)
@@ -822,21 +862,21 @@ IF (HTOM=='TM06') THEN
   ZFWTH(:,:,:IKTB) = 0.
   !ZFWR (:,:,IKTE:) = 0.
   !ZFWR (:,:,:IKTB) = 0.
-  ZFWR  = 0.
+  ZFWR(:,:,:)  = 0.
   ZFTH2(:,:,IKTE:) = 0.
   ZFTH2(:,:,:IKTB) = 0.
   !ZFR2 (:,:,IKTE:) = 0.
   !ZFR2 (:,:,:IKTB) = 0.
-  ZFR2  = 0.
+  ZFR2(:,:,:)  = 0.
   !ZFTHR(:,:,IKTE:) = 0.
   !ZFTHR(:,:,:IKTB) = 0.
-  ZFTHR = 0.
+  ZFTHR(:,:,:) = 0.
 ELSE
-  ZFWTH = 0.
-  ZFWR  = 0.
-  ZFTH2 = 0.
-  ZFR2  = 0.
-  ZFTHR = 0.
+  ZFWTH(:,:,:) = 0.
+  ZFWR(:,:,:)  = 0.
+  ZFTH2(:,:,:) = 0.
+  ZFR2(:,:,:)  = 0.
+  ZFTHR(:,:,:) = 0.
 ENDIF
 !
 !----------------------------------------------------------------------------
@@ -1035,10 +1075,17 @@ END IF
 !
 !  6.1 Contribution of mass-flux in the TKE buoyancy production if 
 !      cloud computation is not statistical 
+ZWORK1 = MZF(PFLXZTHVMF,D%NKA, KKU, KKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+PTP(:,:,:) = PTP(:,:,:) + CST%XG / PTHVREF(:,:,:) * ZWORK1(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 
-PTP = PTP + CST%XG / PTHVREF * MZF(PFLXZTHVMF,D%NKA, KKU, KKL)
-IF(PRESENT(PTPMF))  PTPMF=CST%XG / PTHVREF * MZF(PFLXZTHVMF, D%NKA, KKU, KKL)
-
+IF(PRESENT(PTPMF))  THEN
+  ZWORK1 = MZF(PFLXZTHVMF, D%NKA, KKU, KKL)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  PTPMF(:,:,:)=CST%XG / PTHVREF(:,:,:) * ZWORK1(:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+END IF
 !  6.2 TKE evolution equation
 
 IF (.NOT. OHARAT) THEN
@@ -1055,9 +1102,9 @@ IF (BUCONF%LBUDGET_TH)  THEN
 END IF
 !
 IF(PRESENT(PRTKEMS)) THEN
-  ZRTKEMS=PRTKEMS
+  ZRTKEMS(:,:,:)=PRTKEMS(:,:,:)
 ELSE
-  ZRTKEMS=0.
+  ZRTKEMS(:,:,:)=0.
 END IF
 !
 CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,HPROGRAM,&
@@ -1136,11 +1183,15 @@ END IF
 !
 !* stores value of conservative variables & wind before turbulence tendency (AROME only)
 IF(PRESENT(PDRUS_TURB)) THEN
-  PDRUS_TURB = PRUS - PDRUS_TURB
-  PDRVS_TURB = PRVS - PDRVS_TURB
-  PDRTHLS_TURB = PRTHLS - PDRTHLS_TURB
-  PDRRTS_TURB  = PRRS(:,:,:,1) - PDRRTS_TURB 
-  PDRSVS_TURB  = PRSVS - PDRSVS_TURB
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  PDRUS_TURB(:,:,:)   = PRUS(:,:,:) - PDRUS_TURB(:,:,:)
+  PDRVS_TURB(:,:,:)   = PRVS(:,:,:) - PDRVS_TURB(:,:,:)
+  PDRTHLS_TURB(:,:,:) = PRTHLS(:,:,:) - PDRTHLS_TURB(:,:,:)
+  PDRRTS_TURB(:,:,:)  = PRRS(:,:,:,1) - PDRRTS_TURB(:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT,JSV=1:KSV)  
+  PDRSVS_TURB(:,:,:,:)  = PRSVS(:,:,:,:) - PDRSVS_TURB(:,:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT,JSV=1:KSV)
 END IF
 !----------------------------------------------------------------------------
 !
@@ -1149,18 +1200,22 @@ END IF
 !
 IF ( KRRL >= 1 ) THEN
   IF ( KRRI >= 1 ) THEN
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     PRT(:,:,:,1)  = PRT(:,:,:,1)  - PRT(:,:,:,2)  - PRT(:,:,:,4)
     PRRS(:,:,:,1) = PRRS(:,:,:,1) - PRRS(:,:,:,2) - PRRS(:,:,:,4)
     PTHLT(:,:,:)  = PTHLT(:,:,:)  + ZLVOCPEXNM(:,:,:) * PRT(:,:,:,2) &
                                   + ZLSOCPEXNM(:,:,:) * PRT(:,:,:,4)
     PRTHLS(:,:,:) = PRTHLS(:,:,:) + ZLVOCPEXNM(:,:,:) * PRRS(:,:,:,2) &
                                   + ZLSOCPEXNM(:,:,:) * PRRS(:,:,:,4)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
   ELSE
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     PRT(:,:,:,1)  = PRT(:,:,:,1)  - PRT(:,:,:,2) 
     PRRS(:,:,:,1) = PRRS(:,:,:,1) - PRRS(:,:,:,2)
     PTHLT(:,:,:)  = PTHLT(:,:,:)  + ZLOCPEXNM(:,:,:) * PRT(:,:,:,2)
     PRTHLS(:,:,:) = PRTHLS(:,:,:) + ZLOCPEXNM(:,:,:) * PRRS(:,:,:,2)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   END IF
 END IF
 
@@ -1201,8 +1256,8 @@ IF (OLES_CALL) THEN
 !
   IF (HTURBDIM=="1DIM") THEN
     CALL LES_MEAN_SUBGRID(2./3.*PTKET,X_LES_SUBGRID_U2)
-    X_LES_SUBGRID_V2 = X_LES_SUBGRID_U2
-    X_LES_SUBGRID_W2 = X_LES_SUBGRID_U2
+    X_LES_SUBGRID_V2(:,:,:) = X_LES_SUBGRID_U2(:,:,:)
+    X_LES_SUBGRID_W2(:,:,:) = X_LES_SUBGRID_U2(:,:,:)
     CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(D%NKA,KKU,KKL,PTHLT,PDZZ),&
                           D%NKA, KKU, KKL),X_LES_RES_ddz_Thl_SBG_W2)
     IF (KRR>=1) &
@@ -1224,14 +1279,14 @@ IF (OLES_CALL) THEN
 !
 !* presso-correlations for subgrid Tke are equal to zero.
 !
-  ZLEPS = 0. !ZLEPS is used as a work array (not used anymore)
+  ZLEPS(:,:,:) = 0. !ZLEPS is used as a work array (not used anymore)
   CALL LES_MEAN_SUBGRID(ZLEPS,X_LES_SUBGRID_WP)
 !
   CALL SECOND_MNH(ZTIME2)
   XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !
-IF(PRESENT(PLEM)) PLEM = ZLM
+IF(PRESENT(PLEM)) PLEM(:,:,:) = ZLM(:,:,:)
 !----------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('TURB',1,ZHOOK_HANDLE)
@@ -1353,6 +1408,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
 REAL                :: ZEPS         ! XMV / XMD
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZRVSAT
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZDRVSATDT
+INTEGER :: JI,JJ,JK
 !
 !-------------------------------------------------------------------------------
 !
@@ -1362,6 +1418,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZDRVSATDT
 !
 !*       1.1 Lv/Cph at  t
 !
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   PLOCPEXN(:,:,:) = ( PLTT + (CST%XCPV-PC) *  (PT(:,:,:)-CST%XTT) ) / PCP(:,:,:)
 !
 !*      1.2 Saturation vapor pressure at t
@@ -1398,6 +1455,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZDRVSATDT
 !*      1.7 Lv/Cph/Exner at t-1
 !
   PLOCPEXN(:,:,:) = PLOCPEXN(:,:,:) / PEXN(:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 IF (LHOOK) CALL DR_HOOK('TURB:COMPUTE_FUNCTION_THERMO',1,ZHOOK_HANDLE)
 END SUBROUTINE COMPUTE_FUNCTION_THERMO
