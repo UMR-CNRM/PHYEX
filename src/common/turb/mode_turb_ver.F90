@@ -409,7 +409,7 @@ IKE=D%NKE
 ! 3D Redelsperger numbers
 !
 !
-CALL PRANDTL(D,CST,CSTURB,D%NKA,D%NKU,D%NKL,KRR,KSV,KRRI,OTURB_FLX, &
+CALL PRANDTL(D,CST,CSTURB,KRR,KSV,KRRI,OTURB_FLX,  &
              HTURBDIM,OOCEAN,OHARAT,O2D,OCOMPUTE_SRC,&
              TPFILE,                               &
              PDXX,PDYY,PDZZ,PDZX,PDZY,             &
