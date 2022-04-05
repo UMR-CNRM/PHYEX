@@ -5,8 +5,9 @@
 MODULE MODE_TURB_HOR  
 IMPLICIT NONE
 CONTAINS
-             SUBROUTINE TURB_HOR(KSPLT, KRR, KRRL, KRRI, PTSTEP,            &
-                      OTURB_FLX,OSUBG_COND,OOCEAN,                   &
+             SUBROUTINE TURB_HOR(D,CST,CSTURB,                       &
+                      KSPLT, KRR, KRRL, KRRI, PTSTEP,                &
+                      OTURB_FLX,OSUBG_COND,OOCEAN,OCOMPUTE_SRC,      &
                       TPFILE,                                        &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
                       PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &
@@ -136,8 +137,9 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST
-USE MODD_CTURB
+USE MODD_CST, ONLY : CST_t
+USE MODD_CTURB, ONLY : CSTURB_t
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_LES
@@ -157,6 +159,9 @@ IMPLICIT NONE
 !*       0.1  declaration of arguments
 !
 !
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 INTEGER,                INTENT(IN)   :: KSPLT         ! current split index
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
@@ -167,6 +172,7 @@ LOGICAL,                  INTENT(IN)    ::  OTURB_FLX    ! switch to write the
 LOGICAL,                 INTENT(IN)  ::   OSUBG_COND ! Switch for sub-grid 
 !                                                    condensation
 LOGICAL,                  INTENT(IN) ::  OOCEAN ! switch for ocean version
+LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
@@ -265,8 +271,8 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !*       8.   TURBULENT CORRELATIONS : <THl THl>, <THl Rnp>, <Rnp Rnp>, Sigma_s
 !
       IF (KSPLT==1)                                                  &
-      CALL      TURB_HOR_THERMO_CORR(KRR, KRRL, KRRI,                &
-                      OTURB_FLX,OSUBG_COND,OOCEAN,                   &
+      CALL      TURB_HOR_THERMO_CORR(D,CST,KRR, KRRL, KRRI,          &
+                      OTURB_FLX,OSUBG_COND,OOCEAN,OCOMPUTE_SRC,      &
                       TPFILE,                                        &
                       PINV_PDXX,PINV_PDYY,                           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
@@ -356,7 +362,8 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
                       PRSVS                                          )
 !
       IF (KSPLT==1 .AND. LLES_CALL)                                  &
-      CALL      TURB_HOR_SV_CORR(KRR,KRRL,KRRI,OOCEAN,               &
+      CALL      TURB_HOR_SV_CORR(D,CST,CSTURB,                       &
+                      KRR,KRRL,KRRI,OOCEAN,OCOMPUTE_SRC,             &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
                       PLM,PLEPS,PTKEM,PTHVREF,                       &
                       PTHLM,PRM,                                     &

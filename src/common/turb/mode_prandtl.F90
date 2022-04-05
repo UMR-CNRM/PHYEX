@@ -13,7 +13,8 @@
 !                                   used for implicitation of exchange coefficients
 !               05/2020   V. Masson and C. Lac : bug in D_PHI3DTDZ2_O_DDTDZ
 !
-USE MODD_CTURB,      ONLY : XCTV, XCSHF, XCTD, XPHI_LIM, XCPR3, XCPR4, XCPR5
+USE MODD_CTURB,      ONLY : CSTURB_t
+USE MODD_DIMPHYEX,   ONLY : DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY : JPVEXT_TURB
 !
 USE MODI_SHUMAN, ONLY: MZM, MZF
@@ -21,8 +22,8 @@ IMPLICIT NONE
 !----------------------------------------------------------------------------
 CONTAINS
 !----------------------------------------------------------------------------
-      SUBROUTINE PRANDTL(KKA,KKU,KKL,KRR,KRRI,OTURB_DIAG,       &
-                         HTURBDIM,OOCEAN,                      &
+      SUBROUTINE PRANDTL(D,CST,CSTURB,KRR,KSV,KRRI,OTURB_DIAG,&
+                         HTURBDIM,OOCEAN,OHARAT,O2D,OCOMPUTE_SRC,&
                          TPFILE,                               &
                          PDXX,PDYY,PDZZ,PDZX,PDZY,             &
                          PTHVREF,PLOCPEXNM,PATHETA,PAMOIST,    &
@@ -81,11 +82,11 @@ CONTAINS
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
 !!      Module MODD_CST : contains physical constants
-!!           XG         : gravity constant
+!!           CST%XG         : gravity constant
 !!
 !!      Module MODD_CTURB: contains the set of constants for
 !!                        the turbulence scheme
-!!       XCTV,XCPR2    : constants for the turbulent prandtl numbers
+!!       CSTURB%XCTV,XCPR2    : constants for the turbulent prandtl numbers
 !!       XTKEMIN        : minimum value allowed for the TKE
 !!
 !!      Module MODD_PARAMETERS 
@@ -130,7 +131,7 @@ CONTAINS
 !!                                              change of YCOMMENT
 !!                     2012-02 Y. Seity,  add possibility to run with reversed 
 !!                                               vertical levels
-!!      Modifications: July 2015    (Wim de Rooy) LHARAT (Racmo turbulence) switch
+!!      Modifications: July 2015    (Wim de Rooy) OHARAT (Racmo turbulence) switch
 !!                     2017-09 J.Escobar, use epsilon XMNH_TINY_12 for R*4 
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !! JL Redelsperger 03/2021 : adding Ocean case for temperature only 
@@ -142,16 +143,16 @@ CONTAINS
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
-USE MODD_CST
-USE MODD_CONF
-USE MODD_CTURB
+USE MODD_CST, ONLY : CST_t
+USE MODD_CTURB, ONLY : CSTURB_t
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
-USE MODD_PARAMETERS
+USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
 !
 USE MODI_GRADIENT_M
-USE MODE_EMOIST, ONLY: EMOIST
-USE MODE_ETHETA, ONLY: ETHETA
+USE MODE_EMOIST, ONLY : EMOIST
+USE MODE_ETHETA, ONLY : ETHETA
 USE MODI_SHUMAN, ONLY: MZM
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 !
@@ -160,9 +161,10 @@ IMPLICIT NONE
 !
 !*      0.1  declarations of arguments
 !
-INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
-INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
+INTEGER,                INTENT(IN)   :: KSV           ! number of scalar variables
 
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice var.
@@ -170,58 +172,58 @@ INTEGER,                INTENT(IN)   :: KRRI          ! number of ice var.
 LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
                                  ! diagnostic fields in the syncronous FM-file
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
+LOGICAL,                INTENT(IN)   ::  OHARAT
+LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and
+LOGICAL, INTENT(IN) :: O2D               ! Logical for 2D model version (modd_conf)
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! Kind of turbulence param.
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDXX,PDYY,PDZZ,PDZX,PDZY
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PDXX,PDYY,PDZZ,PDZX,PDZY
                                                   ! metric coefficients
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHVREF  ! Virtual Potential Temp.
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTHVREF  ! Virtual Potential Temp.
                                                   ! of the reference state
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLOCPEXNM ! Lv(T)/Cp/Exner at t-1 
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PATHETA      ! coefficients between 
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM ! Lv(T)/Cp/Exner at t-1 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PATHETA      ! coefficients between 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM      ! Turbulent Mixing length
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLEPS    ! Dissipative length
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHLM,PTKEM! Conservative Potential 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLM      ! Turbulent Mixing length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLEPS    ! Dissipative length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTHLM,PTKEM! Conservative Potential 
                                                   ! Temperature and TKE at t-1
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PRM      ! Mixing ratios at  t-1
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN) ::  PRM      ! Mixing ratios at  t-1
                                                   ! with PRM(:,:,:,1) = cons.
                                                   ! mixing ratio
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM     ! Scalars at t-1      
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSRCM
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) ::  PSVM     ! Scalars at t-1      
+REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
+                MERGE(D%NJT,0,OCOMPUTE_SRC),&
+                MERGE(D%NKT,0,OCOMPUTE_SRC)),  INTENT(IN)   ::  PSRCM
                                   ! s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 !
 !
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PREDTH1 ! Redelsperger number R_theta
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PREDR1  ! Redelsperger number R_q
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PRED2TH3 ! Redelsperger number R*2_theta
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PRED2R3  ! Redelsperger number R*2_q
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PRED2THR3! Redelsperger number R*2_thq
-REAL, DIMENSION(:,:,:,:), INTENT(OUT)::  PREDS1   ! Redelsperger number R_s
-REAL, DIMENSION(:,:,:,:), INTENT(OUT)::  PRED2THS3! Redelsperger number R*2_thsv
-REAL, DIMENSION(:,:,:,:), INTENT(OUT)::  PRED2RS3 ! Redelsperger number R*2_qsv
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PBLL_O_E! beta*Lk*Leps/tke
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PETHETA ! coefficient E_theta
-REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PEMOIST ! coefficient E_moist
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PREDTH1 ! Redelsperger number R_theta
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PREDR1  ! Redelsperger number R_q
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PRED2TH3 ! Redelsperger number R*2_theta
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PRED2R3  ! Redelsperger number R*2_q
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PRED2THR3! Redelsperger number R*2_thq
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(OUT)::  PREDS1   ! Redelsperger number R_s
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(OUT)::  PRED2THS3! Redelsperger number R*2_thsv
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(OUT)::  PRED2RS3 ! Redelsperger number R*2_qsv
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PBLL_O_E! beta*Lk*Leps/tke
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PETHETA ! coefficient E_theta
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PEMOIST ! coefficient E_moist
 !
 !
 !       0.2  declaration of local variables
 !
-REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3)) ::  &
-                  ZW1, ZW2, ZW3
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::  &
+                  ZW1, ZW2, ZW3, &
 !                                                 working variables
+                  ZWORK1,ZWORK2,ZWORK3 
+!                                                 working variables for explicit array
 !                                                     
 INTEGER :: IKB      ! vertical index value for the first inner mass point
 INTEGER :: IKE      ! vertical index value for the last inner mass point
-INTEGER             :: IRESP        ! Return code of FM routines
-INTEGER             :: ILENG        ! Length of the data field in LFIFM file
-INTEGER             :: IGRID        ! C-grid indicator in LFIFM file
-INTEGER             :: ILENCH       ! Length of comment string in LFIFM file
-CHARACTER (LEN=100) :: YCOMMENT     ! comment string in LFIFM file
-CHARACTER (LEN=16)  :: YRECFM       ! Name of the desired field in LFIFM file
-INTEGER::  ISV                      ! number of scalar variables       
-INTEGER::  JSV                      ! loop index for the scalar variables  
+INTEGER::  JSV,JI,JJ,JK ! loop index
 
 INTEGER :: JLOOP
 REAL    :: ZMINVAL
@@ -234,7 +236,7 @@ TYPE(TFIELDDATA)  :: TZFIELD
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('PRANDTL',0,ZHOOK_HANDLE)
 
-IF (LHARAT) THEN
+IF (OHARAT) THEN
 PREDTH1(:,:,:)=0.
 PREDR1(:,:,:)=0.
 PRED2TH3(:,:,:)=0.
@@ -246,86 +248,117 @@ PRED2RS3(:,:,:,:)=0.
 PBLL_O_E(:,:,:)=0.
 ENDIF
 !
-IKB = KKA+JPVEXT_TURB*KKL
-IKE = KKU-JPVEXT_TURB*KKL 
-ILENG=SIZE(PTHLM,1)*SIZE(PTHLM,2)*SIZE(PTHLM,3)
-ISV  =SIZE(PSVM,4)
+IKB = D%NKB
+IKE = D%NKE 
 !
-PETHETA(:,:,:) = MZM(ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN), KKA, KKU, KKL)
-PEMOIST(:,:,:) = MZM(EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN), KKA, KKU, KKL)
-PETHETA(:,:,KKA) = 2.*PETHETA(:,:,IKB) - PETHETA(:,:,IKB+KKL)
-PEMOIST(:,:,KKA) = 2.*PEMOIST(:,:,IKB) - PEMOIST(:,:,IKB+KKL)
+PETHETA(:,:,:) = MZM(ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC), D%NKA, D%NKU, D%NKL)
+PEMOIST(:,:,:) = MZM(EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN), D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+PETHETA(:,:,D%NKA) = 2.*PETHETA(:,:,IKB) - PETHETA(:,:,IKB+D%NKL)
+PEMOIST(:,:,D%NKA) = 2.*PEMOIST(:,:,IKB) - PEMOIST(:,:,IKB+D%NKL)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
 !---------------------------------------------------------------------------
-IF (.NOT. LHARAT) THEN
+IF (.NOT. OHARAT) THEN
 !
 !          1.3 1D Redelsperger numbers
 !
-PBLL_O_E(:,:,:) = MZM(XG / PTHVREF(:,:,:) * PLM(:,:,:) * PLEPS(:,:,:) / PTKEM(:,:,:), KKA, KKU, KKL)
+PBLL_O_E(:,:,:) = MZM(CST%XG / PTHVREF(:,:,:) * PLM(:,:,:) * PLEPS(:,:,:) / PTKEM(:,:,:), D%NKA, D%NKU, D%NKL)
+ZWORK1 =  GZ_M_W(D%NKA, D%NKU, D%NKL,PTHLM,PDZZ)
 IF (KRR /= 0) THEN                ! moist case
-  PREDTH1(:,:,:)= XCTV*PBLL_O_E(:,:,:) * PETHETA(:,:,:) * &
-                   & GZ_M_W(KKA, KKU, KKL,PTHLM,PDZZ)
-  PREDR1(:,:,:) = XCTV*PBLL_O_E(:,:,:) * PEMOIST(:,:,:) * &
-                   & GZ_M_W(KKA, KKU, KKL,PRM(:,:,:,1),PDZZ)
+  ZWORK2 =  GZ_M_W(D%NKA, D%NKU, D%NKL,PRM(:,:,:,1),PDZZ)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  PREDTH1(:,:,:)= CSTURB%XCTV*PBLL_O_E(:,:,:) * PETHETA(:,:,:) * ZWORK1(:,:,:)
+  PREDR1(:,:,:) = CSTURB%XCTV*PBLL_O_E(:,:,:) * PEMOIST(:,:,:) * ZWORK2(:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ELSE                              ! dry case
-  PREDTH1(:,:,:)= XCTV*PBLL_O_E(:,:,:)  * GZ_M_W(KKA, KKU, KKL,PTHLM,PDZZ)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  PREDTH1(:,:,:)= CSTURB%XCTV*PBLL_O_E(:,:,:)  * ZWORK1(:,:,:)
   PREDR1(:,:,:) = 0.
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 END IF
 !
 !       3. Limits on 1D Redelperger numbers
 !          --------------------------------
 !
-ZMINVAL = (1.-1./XPHI_LIM)
+ZMINVAL = (1.-1./CSTURB%XPHI_LIM)
 !
-ZW1 = 1.
-ZW2 = 1.
-!
-WHERE (PREDTH1+PREDR1<-ZMINVAL)
-  ZW1 = (-ZMINVAL) / (PREDTH1+PREDR1)
-END WHERE
-!
-WHERE (PREDTH1<-ZMINVAL)
-  ZW2 = (-ZMINVAL) / (PREDTH1)
-END WHERE
-ZW2 = MIN(ZW1,ZW2)
-!
-ZW1 = 1.
-WHERE (PREDR1<-ZMINVAL)
-  ZW1 = (-ZMINVAL) / (PREDR1)
-END WHERE
-ZW1 = MIN(ZW2,ZW1)
-!
-!
-!       3. Modification of Mixing length and dissipative length
-!          ----------------------------------------------------
-!
-PBLL_O_E(:,:,:) = PBLL_O_E(:,:,:) * ZW1(:,:,:)
-PREDTH1 (:,:,:) = PREDTH1 (:,:,:) * ZW1(:,:,:)
-PREDR1  (:,:,:) = PREDR1  (:,:,:) * ZW1(:,:,:)
-!
-!       4. Threshold for very small (in absolute value) Redelperger numbers
-!          ----------------------------------------------------------------
-!
-ZW2=SIGN(1.,PREDTH1(:,:,:))
-PREDTH1(:,:,:)= ZW2(:,:,:) * MAX(1.E-30, ZW2(:,:,:)*PREDTH1(:,:,:))
-!
-IF (KRR /= 0) THEN                ! dry case
-  ZW2=SIGN(1.,PREDR1(:,:,:))
-  PREDR1(:,:,:)= ZW2(:,:,:) * MAX(1.E-30, ZW2(:,:,:)*PREDR1(:,:,:))
-END IF
+DO JK=1,D%NKT 
+ DO JJ=1,D%NJT 
+  DO JI=1,D%NIT 
+   ZW1(JI,JJ,JK) = 1.
+   ZW2(JI,JJ,JK) = 1.
+   !
+   IF (PREDTH1(JI,JJ,JK)+PREDR1(JI,JJ,JK)<-ZMINVAL)THEN
+    ZW1(JI,JJ,JK) = (-ZMINVAL) / (PREDTH1(JI,JJ,JK)+PREDR1(JI,JJ,JK))
+   ENDIF
+   !
+   IF (PREDTH1(JI,JJ,JK)<-ZMINVAL)THEN
+    ZW2(JI,JJ,JK) = (-ZMINVAL) / (PREDTH1(JI,JJ,JK))
+   ENDIF
+   ZW2(JI,JJ,JK) = MIN(ZW1(JI,JJ,JK),ZW2(JI,JJ,JK))
+   !
+   ZW1(JI,JJ,JK) = 1.
+   IF (PREDR1(JI,JJ,JK)<-ZMINVAL)THEN
+    ZW1(JI,JJ,JK) = (-ZMINVAL) / (PREDR1(JI,JJ,JK))
+   ENDIF
+   ZW1(JI,JJ,JK) = MIN(ZW2(JI,JJ,JK),ZW1(JI,JJ,JK))
+   !
+   !
+   !       3. Modification of Mixing length and dissipative length
+   !          ----------------------------------------------------
+   !
+   PBLL_O_E(JI,JJ,JK) = PBLL_O_E(JI,JJ,JK) * ZW1(JI,JJ,JK)
+   PREDTH1(JI,JJ,JK)  = PREDTH1(JI,JJ,JK)  * ZW1(JI,JJ,JK)
+   PREDR1(JI,JJ,JK)   = PREDR1(JI,JJ,JK)   * ZW1(JI,JJ,JK)
+   !
+   !       4. Threshold for very small (in absolute value) Redelperger numbers
+   !          ----------------------------------------------------------------
+   !
+   IF(PREDTH1(JI,JJ,JK) < 0.) THEN
+    ZW2(JI,JJ,JK)=-1.
+   ELSE
+    ZW2(JI,JJ,JK)=1.
+   END IF
+   PREDTH1(JI,JJ,JK)= ZW2(JI,JJ,JK) * MAX(1.E-30, ZW2(JI,JJ,JK)*PREDTH1(JI,JJ,JK))
+   !
+   IF (KRR /= 0) THEN                ! moist case
+    IF(PREDR1(JI,JJ,JK) < 0.) THEN
+     ZW2(JI,JJ,JK)=-1.
+    ELSE
+     ZW2(JI,JJ,JK)=1.
+    END IF
+    PREDR1(JI,JJ,JK)= ZW2(JI,JJ,JK) * MAX(1.E-30, ZW2(JI,JJ,JK)*PREDR1(JI,JJ,JK))
+   END IF
+  ENDDO
+ ENDDO
+ENDDO
 !
 !
 !---------------------------------------------------------------------------
 !
 !          For the scalar variables
-DO JSV=1,ISV
-  PREDS1(:,:,:,JSV)=XCTV*PBLL_O_E(:,:,:)*GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)
+DO JSV=1,KSV
+  ZWORK1 = GZ_M_W(D%NKA, D%NKU, D%NKL,PSVM(:,:,:,JSV),PDZZ)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  PREDS1(:,:,:,JSV)=CSTURB%XCTV*PBLL_O_E(:,:,:)*ZWORK1(:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 END DO
 !
-DO JSV=1,ISV
-  ZW2=SIGN(1.,PREDS1(:,:,:,JSV))
-  PREDS1(:,:,:,JSV)= ZW2(:,:,:) * MAX(1.E-30, ZW2(:,:,:)*PREDS1(:,:,:,JSV))
-END DO
+DO JSV=1,KSV
+ DO JK=1,D%NKT 
+  DO JJ=1,D%NJT 
+   DO JI=1,D%NIT 
+    IF(PREDS1(JI,JJ,JK,JSV) < 0.) THEN
+     ZW2(JI,JJ,JK)=-1.
+    ELSE
+     ZW2(JI,JJ,JK)=1.
+    END IF
+    PREDS1(JI,JJ,JK,JSV)= ZW2(JI,JJ,JK) * MAX(1.E-30, ZW2(JI,JJ,JK)*PREDS1(JI,JJ,JK,JSV))
+   ENDDO
+  ENDDO
+ ENDDO
+ENDDO
 !
 !---------------------------------------------------------------------------
 !
@@ -335,33 +368,44 @@ END DO
 IF(HTURBDIM=='1DIM') THEN        ! 1D case
 !
 !
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   PRED2TH3(:,:,:)  = PREDTH1(:,:,:)**2
 !
   PRED2R3(:,:,:)   = PREDR1(:,:,:) **2
 !
   PRED2THR3(:,:,:) = PREDTH1(:,:,:) * PREDR1(:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
-ELSE IF (L2D) THEN                      ! 3D case in a 2D model
+ELSE IF (O2D) THEN                      ! 3D case in a 2D model
 !
+    ZWORK1 = MZM(GX_M_M(PTHLM,PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL)**2, D%NKA, D%NKU, D%NKL)
   IF (KRR /= 0) THEN                 ! moist 3D case
-    PRED2TH3(:,:,:)= PREDTH1(:,:,:)**2+(XCTV*PBLL_O_E(:,:,:)*PETHETA(:,:,:) )**2 * &
-      MZM(GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL)**2, KKA, KKU, KKL)
-    PRED2TH3(:,:,IKB)=PRED2TH3(:,:,IKB+KKL)
+    ZWORK2 = MZM(GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL)**2, D%NKA, D%NKU, D%NKL)
+    ZWORK3 = MZM(GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL)*     &
+                 GX_M_M(PTHLM,PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL), D%NKA, D%NKU, D%NKL)
 !
-    PRED2R3(:,:,:)= PREDR1(:,:,:)**2 + (XCTV*PBLL_O_E(:,:,:)*PEMOIST(:,:,:))**2 * &
-        MZM(GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, KKA, KKU, KKL)**2, KKA, KKU, KKL)
-    PRED2R3(:,:,IKB)=PRED2R3(:,:,IKB+KKL)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    PRED2TH3(:,:,:)= PREDTH1(:,:,:)**2+(CSTURB%XCTV*PBLL_O_E(:,:,:)*PETHETA(:,:,:) )**2 * &
+                     ZWORK1(:,:,:)
 !
-    PRED2THR3(:,:,:)= PREDR1(:,:,:) * PREDTH1(:,:,:) +  XCTV**2*PBLL_O_E(:,:,:)**2 *   &
-                  PEMOIST(:,:,:) * PETHETA(:,:,:) *                         &
-      MZM(GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, KKA, KKU, KKL)*     &
-                     GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL), KKA, KKU, KKL)
-    PRED2THR3(:,:,IKB)=PRED2THR3(:,:,IKB+KKL)
+    PRED2R3(:,:,:)= PREDR1(:,:,:)**2 + (CSTURB%XCTV*PBLL_O_E(:,:,:)*PEMOIST(:,:,:))**2 * &
+                    ZWORK2(:,:,:)
+!
+    PRED2THR3(:,:,:)= PREDR1(:,:,:) * PREDTH1(:,:,:) +  CSTURB%XCTV**2*PBLL_O_E(:,:,:)**2 *   &
+                      PEMOIST(:,:,:) * PETHETA(:,:,:) *                         &
+                      ZWORK3(:,:,:)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+!
+    PRED2TH3(:,:,IKB)=PRED2TH3(:,:,IKB+D%NKL)
+    PRED2R3(:,:,IKB)=PRED2R3(:,:,IKB+D%NKL) 
+    PRED2THR3(:,:,IKB)=PRED2THR3(:,:,IKB+D%NKL)
 !
   ELSE                 ! dry 3D case in a 2D model
-    PRED2TH3(:,:,:) = PREDTH1(:,:,:)**2 +  XCTV**2*PBLL_O_E(:,:,:)**2 *     &
-      MZM(GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL)**2, KKA, KKU, KKL)
-    PRED2TH3(:,:,IKB)=PRED2TH3(:,:,IKB+KKL)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    PRED2TH3(:,:,:) = PREDTH1(:,:,:)**2 +  CSTURB%XCTV**2*PBLL_O_E(:,:,:)**2 *     &
+                      ZWORK1(:,:,:)      
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    PRED2TH3(:,:,IKB)=PRED2TH3(:,:,IKB+D%NKL)
 !
     PRED2R3(:,:,:) = 0.
 !
@@ -371,30 +415,40 @@ ELSE IF (L2D) THEN                      ! 3D case in a 2D model
 !
 ELSE                                 ! 3D case in a 3D model
 !
+  ZWORK1 = MZM(GX_M_M(PTHLM,PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL)**2 &
+      + GY_M_M(PTHLM,PDYY,PDZZ,PDZY, D%NKA, D%NKU, D%NKL)**2, D%NKA, D%NKU, D%NKL)
+
   IF (KRR /= 0) THEN                 ! moist 3D case
-    PRED2TH3(:,:,:)= PREDTH1(:,:,:)**2 +  ( XCTV*PBLL_O_E(:,:,:)*PETHETA(:,:,:) )**2 * &
-      MZM(GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL)**2 &
-      + GY_M_M(PTHLM,PDYY,PDZZ,PDZY, KKA, KKU, KKL)**2, KKA, KKU, KKL)
-    PRED2TH3(:,:,IKB)=PRED2TH3(:,:,IKB+KKL)
+    ZWORK2 = MZM(GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL)**2 + &
+        GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY, D%NKA, D%NKU, D%NKL)**2, D%NKA, D%NKU, D%NKL)
+    ZWORK3 = MZM(GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL)*   &
+         GX_M_M(PTHLM,PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL)+                           &
+         GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY, D%NKA, D%NKU, D%NKL)*                    &
+         GY_M_M(PTHLM,PDYY,PDZZ,PDZY, D%NKA, D%NKU, D%NKL), D%NKA, D%NKU, D%NKL)
+
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    PRED2TH3(:,:,:)= PREDTH1(:,:,:)**2 +  ( CSTURB%XCTV*PBLL_O_E(:,:,:)*PETHETA(:,:,:) )**2 * &
+                     ZWORK1(:,:,:)      
 !
-    PRED2R3(:,:,:)= PREDR1(:,:,:)**2 + (XCTV*PBLL_O_E(:,:,:)*PEMOIST(:,:,:))**2 *      &
-        MZM(GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, KKA, KKU, KKL)**2 + &
-        GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY, KKA, KKU, KKL)**2, KKA, KKU, KKL)
-    PRED2R3(:,:,IKB)=PRED2R3(:,:,IKB+KKL)
+    PRED2R3(:,:,:)= PREDR1(:,:,:)**2 + (CSTURB%XCTV*PBLL_O_E(:,:,:)*PEMOIST(:,:,:))**2 *      &
+                    ZWORK2(:,:,:)
 !
-    PRED2THR3(:,:,:)= PREDR1(:,:,:) * PREDTH1(:,:,:) +  XCTV**2*PBLL_O_E(:,:,:)**2 *   &
-         PEMOIST(:,:,:) * PETHETA(:,:,:) *                            &
-         MZM(GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, KKA, KKU, KKL)*   &
-         GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL)+                           &
-         GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY, KKA, KKU, KKL)*                    &
-         GY_M_M(PTHLM,PDYY,PDZZ,PDZY, KKA, KKU, KKL), KKA, KKU, KKL)
-    PRED2THR3(:,:,IKB)=PRED2THR3(:,:,IKB+KKL)
+    PRED2THR3(:,:,:)= PREDR1(:,:,:) * PREDTH1(:,:,:) +  CSTURB%XCTV**2*PBLL_O_E(:,:,:)**2 *   &
+         PEMOIST(:,:,:) * PETHETA(:,:,:) * ZWORK3(:,:,:)
+
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+!
+    PRED2TH3(:,:,IKB)=PRED2TH3(:,:,IKB+D%NKL)
+    PRED2R3(:,:,IKB)=PRED2R3(:,:,IKB+D%NKL)
+    PRED2THR3(:,:,IKB)=PRED2THR3(:,:,IKB+D%NKL)
 !
   ELSE                 ! dry 3D case in a 3D model
-    PRED2TH3(:,:,:) = PREDTH1(:,:,:)**2 +  XCTV**2*PBLL_O_E(:,:,:)**2 *                &
-      MZM(GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL)**2 &
-      + GY_M_M(PTHLM,PDYY,PDZZ,PDZY, KKA, KKU, KKL)**2, KKA, KKU, KKL)
-    PRED2TH3(:,:,IKB)=PRED2TH3(:,:,IKB+KKL)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    PRED2TH3(:,:,:) = PREDTH1(:,:,:)**2 +  CSTURB%XCTV**2*PBLL_O_E(:,:,:)**2 *                &
+                      ZWORK1(:,:,:)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+! 
+    PRED2TH3(:,:,IKB)=PRED2TH3(:,:,IKB+D%NKL)
 !
     PRED2R3(:,:,:) = 0.
 !
@@ -409,66 +463,76 @@ END IF   ! end of the if structure on the turbulence dimensionnality
 !
 !           5. Prandtl numbers for scalars
 !              ---------------------------
-DO JSV=1,ISV
+DO JSV=1,KSV
 !
   IF(HTURBDIM=='1DIM') THEN
 !        1D case
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     PRED2THS3(:,:,:,JSV)  = PREDS1(:,:,:,JSV) * PREDTH1(:,:,:)
     IF (KRR /= 0) THEN
       PRED2RS3(:,:,:,JSV)   = PREDR1(:,:,:) *PREDS1(:,:,:,JSV)
     ELSE
       PRED2RS3(:,:,:,JSV)   = 0.
     END IF
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
-  ELSE  IF (L2D) THEN ! 3D case in a 2D model
+  ELSE  IF (O2D) THEN ! 3D case in a 2D model
 !
+    ZW1 = MZM((CST%XG / PTHVREF * PLM * PLEPS / PTKEM)**2, D%NKA, D%NKU, D%NKL)
+    ZWORK2 = MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL)*       &
+                           GX_M_M(PTHLM,PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL),                 &
+                           D%NKA, D%NKU, D%NKL)
+    ZWORK3 =  MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL)*       &
+                           GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL),          &
+                           D%NKA, D%NKU, D%NKL)
+!
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
     IF (KRR /= 0) THEN
-      ZW1 = MZM((XG / PTHVREF * PLM * PLEPS / PTKEM)**2, KKA, KKU, KKL) *PETHETA
+      ZWORK1 = ZW1(:,:,:)*PETHETA(:,:,:)
     ELSE
-      ZW1 = MZM((XG / PTHVREF * PLM * PLEPS / PTKEM)**2, KKA, KKU, KKL)
+      ZWORK1 = ZW1(:,:,:)
     END IF
     PRED2THS3(:,:,:,JSV) = PREDTH1(:,:,:) * PREDS1(:,:,:,JSV)   +        &
-                       ZW1*                                              &
-                       MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX, KKA, KKU, KKL)*       &
-                           GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL),                 &
-                           KKA, KKU, KKL)
-!
+                       ZWORK1(:,:,:) * ZWORK2(:,:,:)
+                       !
     IF (KRR /= 0) THEN
       PRED2RS3(:,:,:,JSV) = PREDR1(:,:,:) * PREDS1(:,:,:,JSV)   +        &
-                       ZW1 * PEMOIST *                                   &
-                       MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX, KKA, KKU, KKL)*       &
-                           GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, KKA, KKU, KKL),          &
-                           KKA, KKU, KKL)
+                       ZW1(:,:,:) * PEMOIST(:,:,:) * ZWORK3(:,:,:)
     ELSE
       PRED2RS3(:,:,:,JSV) = 0.
     END IF
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
   ELSE ! 3D case in a 3D model
 !
+    ZW1 = MZM((CST%XG / PTHVREF * PLM * PLEPS / PTKEM)**2, D%NKA, D%NKU, D%NKL)
+    ZWORK2 =  MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL)*       &
+                           GX_M_M(PTHLM,PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL)                  &
+                          +GY_M_M(PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY, D%NKA, D%NKU, D%NKL)*       &
+                           GY_M_M(PTHLM,PDYY,PDZZ,PDZY, D%NKA, D%NKU, D%NKL),                 &
+                           D%NKA, D%NKU, D%NKL)
+    ZWORK3 =  MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL)*       &
+                           GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, D%NKA, D%NKU, D%NKL)           &
+                          +GY_M_M(PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY, D%NKA, D%NKU, D%NKL)*       &
+                           GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY, D%NKA, D%NKU, D%NKL),          &
+                           D%NKA, D%NKU, D%NKL)
+
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
     IF (KRR /= 0) THEN
-      ZW1 = MZM((XG / PTHVREF * PLM * PLEPS / PTKEM)**2, KKA, KKU, KKL) *PETHETA
+      ZWORK1 = ZW1(:,:,:)*PETHETA(:,:,:)
     ELSE
-      ZW1 = MZM((XG / PTHVREF * PLM * PLEPS / PTKEM)**2, KKA, KKU, KKL)
+      ZWORK1 = ZW1(:,:,:)
     END IF
     PRED2THS3(:,:,:,JSV) = PREDTH1(:,:,:) * PREDS1(:,:,:,JSV)   +        &
-                       ZW1*                                              &
-                       MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX, KKA, KKU, KKL)*       &
-                           GX_M_M(PTHLM,PDXX,PDZZ,PDZX, KKA, KKU, KKL)                  &
-                          +GY_M_M(PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY, KKA, KKU, KKL)*       &
-                           GY_M_M(PTHLM,PDYY,PDZZ,PDZY, KKA, KKU, KKL),                 &
-                           KKA, KKU, KKL)
-!
+                       ZWORK1(:,:,:)*ZWORK2(:,:,:)
+                      !
     IF (KRR /= 0) THEN
       PRED2RS3(:,:,:,JSV) = PREDR1(:,:,:) * PREDS1(:,:,:,JSV)   +        &
-                       ZW1 * PEMOIST *                                   &
-                       MZM(GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX, KKA, KKU, KKL)*       &
-                           GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX, KKA, KKU, KKL)           &
-                          +GY_M_M(PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY, KKA, KKU, KKL)*       &
-                           GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY, KKA, KKU, KKL),          &
-                           KKA, KKU, KKL)
+                       ZW1(:,:,:) * PEMOIST(:,:,:) * ZWORK3(:,:,:)
     ELSE
       PRED2RS3(:,:,:,JSV) = 0.
     END IF
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 !
   END IF ! end of HTURBDIM if-block
 !
@@ -549,19 +613,22 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
 END IF
 !
 !---------------------------------------------------------------------------
-ENDIF ! (Done only if LHARAT is FALSE)
+ENDIF ! (Done only if OHARAT is FALSE)
 !
 IF (LHOOK) CALL DR_HOOK('PRANDTL',1,ZHOOK_HANDLE)
 END SUBROUTINE PRANDTL
 !
-SUBROUTINE SMOOTH_TURB_FUNCT(PPHI3,PF_LIM,PF)
+SUBROUTINE SMOOTH_TURB_FUNCT(D,CSTURB,PPHI3,PF_LIM,PF)
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PPHI3   ! Phi3
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PF_LIM  ! Value of F when Phi3 is
+TYPE(CSTURB_t),                  INTENT(IN)    :: CSTURB
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PPHI3   ! Phi3
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PF_LIM  ! Value of F when Phi3 is
 !                                                ! larger than Phi_lim
-REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PF      ! function F to smooth
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT) :: PF      ! function F to smooth
 !
-REAL, DIMENSION(SIZE(PF,1),SIZE(PF,2),SIZE(PF,3)) :: ZCOEF
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZCOEF
+INTEGER :: JI,JJ,JK
 !
 !* adds a artificial correction to smooth the function near the discontinuity
 !  point at Phi3 = Phi_lim
@@ -569,25 +636,29 @@ REAL, DIMENSION(SIZE(PF,1),SIZE(PF,2),SIZE(PF,3)) :: ZCOEF
 !   Note that in the Boundary layer, phi is usually between 0.8 and 1
 !
 !
-ZCOEF = MAX(MIN((  10.*(1.-PPHI3/XPHI_LIM)) ,1.), 0.) 
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
+ZCOEF(:,:,:) = MAX(MIN((  10.*(1.-PPHI3(:,:,:)/CSTURB%XPHI_LIM)) ,1.), 0.) 
 !
-PF(:,:,:) =     ZCOEF(:,:,:)   * PF    &
-          + (1.-ZCOEF(:,:,:))  * PF_LIM
+PF(:,:,:) =     ZCOEF(:,:,:)   * PF(:,:,:)    &
+          + (1.-ZCOEF(:,:,:))  * PF_LIM(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 !
 END SUBROUTINE SMOOTH_TURB_FUNCT
 !----------------------------------------------------------------------------
-FUNCTION PHI3(PREDTH1,PREDR1,PRED2TH3,PRED2R3,PRED2THR3,HTURBDIM,OUSERV)
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2TH3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2R3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2THR3
-  CHARACTER(len=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
+FUNCTION PHI3(D,CSTURB,PREDTH1,PREDR1,PRED2TH3,PRED2R3,PRED2THR3,HTURBDIM,OUSERV)
+  TYPE(CSTURB_t),                  INTENT(IN)    :: CSTURB
+  TYPE(DIMPHYEX_t),                   INTENT(IN)   :: D
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2TH3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2R3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2THR3
+  CHARACTER(LEN=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
   LOGICAL,                INTENT(IN) :: OUSERV    ! flag to use vapor
-  REAL, DIMENSION(SIZE(PREDTH1,1),SIZE(PREDTH1,2),SIZE(PREDTH1,3)) :: PHI3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: PHI3
 !
-  REAL, DIMENSION(SIZE(PREDTH1,1),SIZE(PREDTH1,2),SIZE(PREDTH1,3)) :: ZW1, ZW2
-  INTEGER :: IKB, IKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZW1, ZW2
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:PHI3',0,ZHOOK_HANDLE)
@@ -596,6 +667,7 @@ IKE = SIZE(PREDTH1,3)-JPVEXT_TURB
 !
 IF (HTURBDIM=='3DIM') THEN
         !* 3DIM case
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
   IF (OUSERV) THEN
     ZW1(:,:,:) = 1. + 1.5* (PREDTH1(:,:,:)+PREDR1(:,:,:)) +      &
                    ( 0.5 * (PREDTH1(:,:,:)**2+PREDR1(:,:,:)**2)  &
@@ -618,17 +690,22 @@ IF (HTURBDIM=='3DIM') THEN
     PHI3(:,:,:)= 1. -                                       &
             (PRED2TH3(:,:,:) / PREDTH1(:,:,:) + ZW2(:,:,:)) / ZW1(:,:,:)
   END IF
-  WHERE( PHI3 <= 0. .OR. PHI3 > XPHI_LIM )
-    PHI3 = XPHI_LIM
-  END WHERE
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 
+  !$mnh_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
+  WHERE( PHI3(:,:,:) <= 0. .OR. PHI3(:,:,:) > CSTURB%XPHI_LIM )
+    PHI3(:,:,:) = CSTURB%XPHI_LIM
+  END WHERE
+  !$mnh_end_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 ELSE
         !* 1DIM case
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
   IF (OUSERV) THEN
     PHI3(:,:,:)= 1./(1.+PREDTH1(:,:,:)+PREDR1(:,:,:))
   ELSE
     PHI3(:,:,:)= 1./(1.+PREDTH1(:,:,:))
   END IF
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 END IF
 !
 PHI3(:,:,IKB-1)=PHI3(:,:,IKB)
@@ -637,18 +714,21 @@ PHI3(:,:,IKE+1)=PHI3(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:PHI3',1,ZHOOK_HANDLE)
 END FUNCTION PHI3
 !----------------------------------------------------------------------------
-FUNCTION PSI_SV(PREDTH1,PREDR1,PREDS1,PRED2THS,PRED2RS,PPHI3,PPSI3)
-  REAL, DIMENSION(:,:,:),   INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:),   INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:,:), INTENT(IN) :: PREDS1
-  REAL, DIMENSION(:,:,:,:), INTENT(IN) :: PRED2THS
-  REAL, DIMENSION(:,:,:,:), INTENT(IN) :: PRED2RS
-  REAL, DIMENSION(:,:,:),   INTENT(IN) :: PPHI3
-  REAL, DIMENSION(:,:,:),   INTENT(IN) :: PPSI3
-  REAL, DIMENSION(SIZE(PRED2THS,1),SIZE(PRED2THS,2),SIZE(PRED2THS,3),SIZE(PRED2THS,4)) :: PSI_SV
+FUNCTION PSI_SV(D,CSTURB,KSV,PREDTH1,PREDR1,PREDS1,PRED2THS,PRED2RS,PPHI3,PPSI3)
+  TYPE(CSTURB_t),                  INTENT(IN)      :: CSTURB
+  TYPE(DIMPHYEX_t),                INTENT(IN)      :: D
+  INTEGER,                         INTENT(IN)      :: KSV
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) :: PREDS1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) :: PRED2THS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) :: PRED2RS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) :: PPHI3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) :: PPSI3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV) :: PSI_SV
 !
   INTEGER :: IKB, IKE
-  INTEGER :: JSV
+  INTEGER :: JSV,JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:PSI_SV',0,ZHOOK_HANDLE)
@@ -656,17 +736,24 @@ IKB = 1+JPVEXT_TURB
 IKE = SIZE(PREDTH1,3)-JPVEXT_TURB
 !
 DO JSV=1,SIZE(PSI_SV,4)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
   PSI_SV(:,:,:,JSV) = ( 1.                                             &
-    - (XCPR3+XCPR5) * (PRED2THS(:,:,:,JSV)/PREDS1(:,:,:,JSV)-PREDTH1) &
-    - (XCPR4+XCPR5) * (PRED2RS (:,:,:,JSV)/PREDS1(:,:,:,JSV)-PREDR1 ) &
-    - XCPR3 * PREDTH1 * PPHI3 - XCPR4 * PREDR1 * PPSI3                 &
-                ) / (  1. + XCPR5 * ( PREDTH1 + PREDR1 ) )           
+    - (CSTURB%XCPR3+CSTURB%XCPR5) * (PRED2THS(:,:,:,JSV)/PREDS1(:,:,:,JSV)-PREDTH1(:,:,:)) &
+    - (CSTURB%XCPR4+CSTURB%XCPR5) * (PRED2RS(:,:,:,JSV)/PREDS1(:,:,:,JSV)-PREDR1(:,:,:)) &
+    - CSTURB%XCPR3 * PREDTH1(:,:,:) * PPHI3(:,:,:) - CSTURB%XCPR4 * PREDR1(:,:,:) * PPSI3(:,:,:)                 &
+                ) / (  1. + CSTURB%XCPR5 * ( PREDTH1(:,:,:) + PREDR1(:,:,:) ) )           
   
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 !        control of the PSI_SV positivity
-  WHERE ( (PSI_SV(:,:,:,JSV) <=0.).AND. (PREDTH1+PREDR1) <= 0. )
-    PSI_SV(:,:,:,JSV)=XPHI_LIM
+  !$mnh_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
+  WHERE ( (PSI_SV(:,:,:,JSV) <=0.).AND. (PREDTH1(:,:,:)+PREDR1(:,:,:)) <= 0. )
+    PSI_SV(:,:,:,JSV)=CSTURB%XPHI_LIM
   END WHERE
-  PSI_SV(:,:,:,JSV) = MAX( 1.E-4, MIN(XPHI_LIM,PSI_SV(:,:,:,JSV)) )
+  !$mnh_end_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
+
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
+  PSI_SV(:,:,:,JSV) = MAX( 1.E-4, MIN(CSTURB%XPHI_LIM,PSI_SV(:,:,:,JSV)) )
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 !
   PSI_SV(:,:,IKB-1,JSV)=PSI_SV(:,:,IKB,JSV)
   PSI_SV(:,:,IKE+1,JSV)=PSI_SV(:,:,IKE,JSV)
@@ -675,16 +762,18 @@ END DO
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:PSI_SV',1,ZHOOK_HANDLE)
 END FUNCTION PSI_SV
 !----------------------------------------------------------------------------
-FUNCTION D_PHI3DTDZ_O_DDTDZ(PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,OUSERV)
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PPHI3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2TH3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2THR3
-  CHARACTER(len=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
+FUNCTION D_PHI3DTDZ_O_DDTDZ(D,CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,OUSERV)
+  TYPE(CSTURB_t),                  INTENT(IN)    :: CSTURB
+  TYPE(DIMPHYEX_t),                   INTENT(IN)   :: D
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PPHI3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2TH3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2THR3
+  CHARACTER(LEN=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
   LOGICAL,                INTENT(IN) :: OUSERV    ! flag to use vapor
-  REAL, DIMENSION(SIZE(PREDTH1,1),SIZE(PREDTH1,2),SIZE(PREDTH1,3)) :: D_PHI3DTDZ_O_DDTDZ
-  INTEGER :: IKB, IKE,JL,JK,JJ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_PHI3DTDZ_O_DDTDZ
+  INTEGER :: IKB, IKE,JL,JK,JJ,JI
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_PHI3DTDZ_O_DDTDZ',0,ZHOOK_HANDLE)
@@ -694,37 +783,42 @@ IKE = SIZE(PREDTH1,3)-JPVEXT_TURB
 IF (HTURBDIM=='3DIM') THEN
         !* 3DIM case
   IF (OUSERV) THEN
+   !$mnh_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 #ifdef REPRO48
-    WHERE (PPHI3(:,:,:)/=XPHI_LIM)
+    WHERE (PPHI3(:,:,:)/=CSTURB%XPHI_LIM)
 #else
-    WHERE (PPHI3(:,:,:)<=XPHI_LIM)
+    WHERE (PPHI3(:,:,:)<=CSTURB%XPHI_LIM)
 #endif
-    D_PHI3DTDZ_O_DDTDZ(:,:,:) = PPHI3(:,:,:)                       &
-          * (1. - PREDTH1(:,:,:) * (3./2.+PREDTH1+PREDR1)          &
-               /((1.+PREDTH1+PREDR1)*(1.+1./2.*(PREDTH1+PREDR1)))) &
-          + (1.+PREDR1)*(PRED2THR3+PRED2TH3)                       &
-               / (PREDTH1*(1.+PREDTH1+PREDR1)*(1.+1./2.*(PREDTH1+PREDR1))) &
-          - (1./2.*PREDTH1+PREDR1 * (1.+PREDTH1+PREDR1))           &
-               / ((1.+PREDTH1+PREDR1)*(1.+1./2.*(PREDTH1+PREDR1)))
+      D_PHI3DTDZ_O_DDTDZ(:,:,:) = PPHI3(:,:,:)                       &
+          * (1. - PREDTH1(:,:,:) * (3./2.+PREDTH1(:,:,:)+PREDR1(:,:,:))          &
+               /((1.+PREDTH1(:,:,:)+PREDR1(:,:,:))*(1.+1./2.*(PREDTH1(:,:,:)+PREDR1(:,:,:))))) &
+          + (1.+PREDR1(:,:,:))*(PRED2THR3(:,:,:)+PRED2TH3(:,:,:))                       &
+               / (PREDTH1(:,:,:)*(1.+PREDTH1(:,:,:)+PREDR1(:,:,:))* &
+                 (1.+1./2.*(PREDTH1(:,:,:)+PREDR1(:,:,:)))) &
+          - (1./2.*PREDTH1(:,:,:)+PREDR1(:,:,:) * (1.+PREDTH1(:,:,:)+PREDR1(:,:,:)))           &
+               / ((1.+PREDTH1(:,:,:)+PREDR1(:,:,:))*(1.+1./2.*(PREDTH1(:,:,:)+PREDR1(:,:,:))))
     ELSEWHERE
       D_PHI3DTDZ_O_DDTDZ(:,:,:) = PPHI3(:,:,:)
     ENDWHERE
+   !$mnh_end_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 
 !
   ELSE
+   !$mnh_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 #ifdef REPRO48
-    WHERE (PPHI3(:,:,:)/=XPHI_LIM)
+    WHERE (PPHI3(:,:,:)/=CSTURB%XPHI_LIM)
 #else
-    WHERE (PPHI3(:,:,:)<=XPHI_LIM)
+    WHERE (PPHI3(:,:,:)<=CSTURB%XPHI_LIM)
 #endif
     D_PHI3DTDZ_O_DDTDZ(:,:,:) = PPHI3(:,:,:)             &
-          * (1. - PREDTH1(:,:,:) * (3./2.+PREDTH1)      &
-               /((1.+PREDTH1)*(1.+1./2.*PREDTH1)))        &
-          + PRED2TH3 / (PREDTH1*(1.+PREDTH1)*(1.+1./2.*PREDTH1)) &
-          - 1./2.*PREDTH1 / ((1.+PREDTH1)*(1.+1./2.*PREDTH1))
+          * (1. - PREDTH1(:,:,:) * (3./2.+PREDTH1(:,:,:))      &
+               /((1.+PREDTH1(:,:,:))*(1.+1./2.*PREDTH1(:,:,:))))        &
+          + PRED2TH3(:,:,:) / (PREDTH1(:,:,:)*(1.+PREDTH1(:,:,:))*(1.+1./2.*PREDTH1(:,:,:))) &
+          - 1./2.*PREDTH1(:,:,:) / ((1.+PREDTH1(:,:,:))*(1.+1./2.*PREDTH1(:,:,:)))
     ELSEWHERE
       D_PHI3DTDZ_O_DDTDZ(:,:,:) = PPHI3(:,:,:)
     ENDWHERE
+   !$mnh_end_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 !
   END IF
 ELSE
@@ -732,7 +826,7 @@ ELSE
 DO JJ=1,SIZE(PPHI3,2)
   DO JL=1,SIZE(PPHI3,1)
     DO JK=1,SIZE(PPHI3,3)
-      IF ( ABS(PPHI3(JL,JJ,JK)-XPHI_LIM) < 1.E-12 ) THEN
+      IF ( ABS(PPHI3(JL,JJ,JK)-CSTURB%XPHI_LIM) < 1.E-12 ) THEN
          D_PHI3DTDZ_O_DDTDZ(JL,JJ,JK)=PPHI3(JL,JJ,JK)*&
 &       (1. - PREDTH1(JL,JJ,JK)*PPHI3(JL,JJ,JK))
       ELSE
@@ -746,7 +840,7 @@ END IF
 #ifdef REPRO48
 #else
 !* smoothing
-CALL SMOOTH_TURB_FUNCT(PPHI3,PPHI3,D_PHI3DTDZ_O_DDTDZ)
+CALL SMOOTH_TURB_FUNCT(D,CSTURB,PPHI3,PPHI3,D_PHI3DTDZ_O_DDTDZ)
 #endif
 !
 D_PHI3DTDZ_O_DDTDZ(:,:,IKB-1)=D_PHI3DTDZ_O_DDTDZ(:,:,IKB)
@@ -755,16 +849,18 @@ D_PHI3DTDZ_O_DDTDZ(:,:,IKE+1)=D_PHI3DTDZ_O_DDTDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_PHI3DTDZ_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_PHI3DTDZ_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION D_PHI3DRDZ_O_DDRDZ(PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,OUSERV)
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PPHI3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2TH3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2THR3
-  CHARACTER(len=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
+FUNCTION D_PHI3DRDZ_O_DDRDZ(D,CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,OUSERV)
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PPHI3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2TH3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2THR3
+  CHARACTER(LEN=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
   LOGICAL,                INTENT(IN) :: OUSERV    ! flag to use vapor
-   REAL, DIMENSION(SIZE(PREDTH1,1),SIZE(PREDTH1,2),SIZE(PREDTH1,3)) :: D_PHI3DRDZ_O_DDRDZ
-  INTEGER :: IKB, IKE
+   REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_PHI3DRDZ_O_DDRDZ
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_PHI3DRDZ_O_DDRDZ',0,ZHOOK_HANDLE)
@@ -775,42 +871,46 @@ IKE = SIZE(PREDTH1,3)-JPVEXT_TURB
 IF (HTURBDIM=='3DIM') THEN
         !* 3DIM case
   IF (OUSERV) THEN
+   !$mnh_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 #ifdef REPRO48
-    WHERE (PPHI3(:,:,:)/=XPHI_LIM)
+    WHERE (PPHI3(:,:,:)/=CSTURB%XPHI_LIM)
 #else
-    WHERE (PPHI3(:,:,:)<=XPHI_LIM)
+    WHERE (PPHI3(:,:,:)<=CSTURB%XPHI_LIM)
 #endif
       D_PHI3DRDZ_O_DDRDZ(:,:,:) =          &
-                PPHI3(:,:,:) * (1.-PREDR1(:,:,:)*(3./2.+PREDTH1+PREDR1) &
-                  / ((1.+PREDTH1+PREDR1)*(1.+1./2.*(PREDTH1+PREDR1))))  &
-              - PREDR1(:,:,:) * (PRED2THR3+PRED2TH3) / (PREDTH1         &
-                  * (1.+PREDTH1+PREDR1)*(1.+1./2.*(PREDTH1+PREDR1)))    &
-              + PREDR1(:,:,:) * (1./2.+PREDTH1+PREDR1)                  &
-                  / ((1.+PREDTH1+PREDR1)*(1.+1./2.*(PREDTH1+PREDR1)))
+                PPHI3(:,:,:) * (1.-PREDR1(:,:,:)*(3./2.+PREDTH1(:,:,:)+PREDR1(:,:,:)) &
+                  / ((1.+PREDTH1(:,:,:)+PREDR1(:,:,:))*(1.+1./2.*(PREDTH1(:,:,:)+PREDR1(:,:,:)))))  &
+              - PREDR1(:,:,:) * (PRED2THR3(:,:,:)+PRED2TH3(:,:,:)) / (PREDTH1(:,:,:)         &
+                  * (1.+PREDTH1(:,:,:)+PREDR1(:,:,:))*(1.+1./2.*(PREDTH1(:,:,:)+PREDR1(:,:,:))))    &
+              + PREDR1(:,:,:) * (1./2.+PREDTH1(:,:,:)+PREDR1(:,:,:))                  &
+                  / ((1.+PREDTH1(:,:,:)+PREDR1(:,:,:))*(1.+1./2.*(PREDTH1(:,:,:)+PREDR1(:,:,:))))
     ELSEWHERE
       D_PHI3DRDZ_O_DDRDZ(:,:,:) = PPHI3(:,:,:)
     END WHERE
+   !$mnh_end_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
   ELSE
     D_PHI3DRDZ_O_DDRDZ(:,:,:) = PPHI3(:,:,:)
   END IF
 ELSE
         !* 1DIM case
+    !$mnh_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 #ifdef REPRO48
-    WHERE (PPHI3(:,:,:)/=XPHI_LIM)
+    WHERE (PPHI3(:,:,:)/=CSTURB%XPHI_LIM)
 #else
-    WHERE (PPHI3(:,:,:)<=XPHI_LIM)
+    WHERE (PPHI3(:,:,:)<=CSTURB%XPHI_LIM)
 #endif
     D_PHI3DRDZ_O_DDRDZ(:,:,:) = PPHI3(:,:,:)                           &
           * (1. - PREDR1(:,:,:)*PPHI3(:,:,:))
   ELSEWHERE
     D_PHI3DRDZ_O_DDRDZ(:,:,:) = PPHI3(:,:,:)
   END WHERE
+  !$mnh_end_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 END IF
 !
 #ifdef REPRO48
 #else
 !* smoothing
-CALL SMOOTH_TURB_FUNCT(PPHI3,PPHI3,D_PHI3DRDZ_O_DDRDZ)
+CALL SMOOTH_TURB_FUNCT(D,CSTURB,PPHI3,PPHI3,D_PHI3DRDZ_O_DDRDZ)
 #endif
 !
 D_PHI3DRDZ_O_DDRDZ(:,:,IKB-1)=D_PHI3DRDZ_O_DDRDZ(:,:,IKB)
@@ -819,17 +919,20 @@ D_PHI3DRDZ_O_DDRDZ(:,:,IKE+1)=D_PHI3DRDZ_O_DDRDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_PHI3DRDZ_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_PHI3DRDZ_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION D_PHI3DTDZ2_O_DDTDZ(PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,PDTDZ,HTURBDIM,OUSERV)
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PPHI3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2TH3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2THR3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDTDZ
-  CHARACTER(len=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
+FUNCTION D_PHI3DTDZ2_O_DDTDZ(D,CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,PDTDZ,HTURBDIM,OUSERV)
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PPHI3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2TH3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2THR3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDTDZ
+  CHARACTER(LEN=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
   LOGICAL,                INTENT(IN) :: OUSERV    ! flag to use vapor
-  REAL, DIMENSION(SIZE(PREDTH1,1),SIZE(PREDTH1,2),SIZE(PREDTH1,3)) :: D_PHI3DTDZ2_O_DDTDZ
-  INTEGER :: IKB, IKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_PHI3DTDZ2_O_DDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_PHI3DTDZ2_O_DDTDZ',0,ZHOOK_HANDLE)
@@ -839,27 +942,30 @@ IKE = SIZE(PREDTH1,3)-JPVEXT_TURB
 !
 IF (HTURBDIM=='3DIM') THEN
    ! by derivation of (phi3 dtdz) * dtdz according to dtdz we obtain:
-   D_PHI3DTDZ2_O_DDTDZ(:,:,:) = PDTDZ * (PPHI3 +  &
-           D_PHI3DTDZ_O_DDTDZ(PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,OUSERV) )
-
+   ZWORK1 = D_PHI3DTDZ_O_DDTDZ(D,CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,OUSERV) 
+   !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+   D_PHI3DTDZ2_O_DDTDZ(:,:,:) = PDTDZ(:,:,:) * (PPHI3(:,:,:) +  ZWORK1(:,:,:))
+   !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ELSE
         !* 1DIM case
+    !$mnh_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 #ifdef REPRO48
-    WHERE (PPHI3(:,:,:)/=XPHI_LIM)
+    WHERE (PPHI3(:,:,:)/=CSTURB%XPHI_LIM)
 #else
-    WHERE (PPHI3(:,:,:)<=XPHI_LIM)
+    WHERE (PPHI3(:,:,:)<=CSTURB%XPHI_LIM)
 #endif
       D_PHI3DTDZ2_O_DDTDZ(:,:,:) = PPHI3(:,:,:)*PDTDZ(:,:,:)             &
           * (2. - PREDTH1(:,:,:)*PPHI3(:,:,:))
     ELSEWHERE
       D_PHI3DTDZ2_O_DDTDZ(:,:,:) = PPHI3(:,:,:) * 2. * PDTDZ(:,:,:)
     END WHERE
+    !$mnh_end_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
 END IF
 !
 #ifdef REPRO48
 #else
 !* smoothing
-CALL SMOOTH_TURB_FUNCT(PPHI3,PPHI3*2.*PDTDZ,D_PHI3DTDZ2_O_DDTDZ)
+CALL SMOOTH_TURB_FUNCT(D,CSTURB,PPHI3,PPHI3*2.*PDTDZ,D_PHI3DTDZ2_O_DDTDZ)
 #endif
 !
 !
@@ -869,46 +975,54 @@ D_PHI3DTDZ2_O_DDTDZ(:,:,IKE+1)=D_PHI3DTDZ2_O_DDTDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_PHI3DTDZ2_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_PHI3DTDZ2_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_WTH_WTH2(PREDTH1,PREDR1,PD,PBLL_O_E,PETHETA)
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_WTH_WTH2
-  INTEGER :: IKB, IKE
+FUNCTION M3_WTH_WTH2(D,CSTURB,PREDTH1,PREDR1,PD,PBLL_O_E,PETHETA)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_WTH_WTH2
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WTH_WTH2',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-M3_WTH_WTH2(:,:,:) = XCSHF*PBLL_O_E*PETHETA*0.5/XCTD        &
-                   * (1.+0.5*PREDTH1+PREDR1) / PD
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+M3_WTH_WTH2(:,:,:) = CSTURB%XCSHF*PBLL_O_E(:,:,:)*PETHETA(:,:,:)*0.5/CSTURB%XCTD        &
+                   * (1.+0.5*PREDTH1(:,:,:)+PREDR1(:,:,:)) / PD(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 M3_WTH_WTH2(:,:,IKB-1)=M3_WTH_WTH2(:,:,IKB)
 M3_WTH_WTH2(:,:,IKE+1)=M3_WTH_WTH2(:,:,IKE)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WTH_WTH2',1,ZHOOK_HANDLE)
 END FUNCTION M3_WTH_WTH2
 !----------------------------------------------------------------------------
-FUNCTION D_M3_WTH_WTH2_O_DDTDZ(PM3_WTH_WTH2,PREDTH1,PREDR1,PD,PBLL_O_E,PETHETA)
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PM3_WTH_WTH2
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_WTH_WTH2_O_DDTDZ
-  INTEGER :: IKB, IKE
+FUNCTION D_M3_WTH_WTH2_O_DDTDZ(D,CSTURB,PM3_WTH_WTH2,PREDTH1,PREDR1,PD,PBLL_O_E,PETHETA)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PM3_WTH_WTH2
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_WTH_WTH2_O_DDTDZ
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WTH_WTH2_O_DDTDZ',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-D_M3_WTH_WTH2_O_DDTDZ(:,:,:) = (  0.5*XCSHF*PBLL_O_E*PETHETA*0.5/XCTD/PD &
-                                - PM3_WTH_WTH2/PD*(1.5+PREDTH1+PREDR1)  )&
-                             * PBLL_O_E * PETHETA * XCTV
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+D_M3_WTH_WTH2_O_DDTDZ(:,:,:) = (  0.5*CSTURB%XCSHF*PBLL_O_E(:,:,:)*PETHETA(:,:,:)*0.5/CSTURB%XCTD/PD(:,:,:) &
+                                - PM3_WTH_WTH2(:,:,:)/PD(:,:,:)*(1.5+PREDTH1(:,:,:)+PREDR1(:,:,:))  )&
+                             * PBLL_O_E(:,:,:) * PETHETA(:,:,:) * CSTURB%XCTV
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 D_M3_WTH_WTH2_O_DDTDZ(:,:,IKB-1)=D_M3_WTH_WTH2_O_DDTDZ(:,:,IKB)
 D_M3_WTH_WTH2_O_DDTDZ(:,:,IKE+1)=D_M3_WTH_WTH2_O_DDTDZ(:,:,IKE)
@@ -916,25 +1030,27 @@ D_M3_WTH_WTH2_O_DDTDZ(:,:,IKE+1)=D_M3_WTH_WTH2_O_DDTDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WTH_WTH2_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_WTH_WTH2_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_WTH_W2TH(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PKEFF,PTKE)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PKEFF
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_WTH_W2TH
-  INTEGER :: IKB, IKE
+FUNCTION M3_WTH_W2TH(D,CSTURB,PREDTH1,PREDR1,PD,PKEFF,PTKE)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PKEFF
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_WTH_W2TH
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WTH_W2TH',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
-
-M3_WTH_W2TH(:,:,:) = XCSHF*PKEFF*1.5/MZM(PTKE, KKA, KKU, KKL)              &
-  * (1. - 0.5*PREDR1*(1.+PREDR1)/PD ) / (1.+PREDTH1)
+ZWORK1 = MZM(PTKE, D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+M3_WTH_W2TH(:,:,:) = CSTURB%XCSHF*PKEFF(:,:,:)*1.5/ZWORK1(:,:,:)              &
+  * (1. - 0.5*PREDR1(:,:,:)*(1.+PREDR1(:,:,:))/PD(:,:,:) ) / (1.+PREDTH1(:,:,:))
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 M3_WTH_W2TH(:,:,IKB-1)=M3_WTH_W2TH(:,:,IKB)
 M3_WTH_W2TH(:,:,IKE+1)=M3_WTH_W2TH(:,:,IKE)
@@ -942,28 +1058,33 @@ M3_WTH_W2TH(:,:,IKE+1)=M3_WTH_W2TH(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WTH_W2TH',1,ZHOOK_HANDLE)
 END FUNCTION M3_WTH_W2TH
 !----------------------------------------------------------------------------
-FUNCTION D_M3_WTH_W2TH_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PBLL_O_E,PETHETA,PKEFF,PTKE)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PKEFF
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_WTH_W2TH_O_DDTDZ
-  INTEGER :: IKB, IKE
+FUNCTION D_M3_WTH_W2TH_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,PBLL_O_E,PETHETA,PKEFF,PTKE)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PKEFF
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_WTH_W2TH_O_DDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WTH_W2TH_O_DDTDZ',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
+ZWORK1 = MZM(PTKE, D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 D_M3_WTH_W2TH_O_DDTDZ(:,:,:) = &
- - XCSHF*PKEFF*1.5/MZM(PTKE, KKA, KKU, KKL)/(1.+PREDTH1)**2*XCTV*PBLL_O_E*PETHETA  &
- * (1. - 0.5*PREDR1*(1.+PREDR1)/PD*( 1.+(1.+PREDTH1)*(1.5+PREDR1+PREDTH1)/PD) )
+ - CSTURB%XCSHF*PKEFF(:,:,:)*1.5/ZWORK1(:,:,:)/(1.+PREDTH1(:,:,:))**2 &
+ * CSTURB%XCTV*PBLL_O_E(:,:,:)*PETHETA(:,:,:)  &
+ * (1. - 0.5*PREDR1(:,:,:)*(1.+PREDR1(:,:,:))/PD(:,:,:)* &
+   ( 1.+(1.+PREDTH1(:,:,:))*(1.5+PREDR1(:,:,:)+PREDTH1(:,:,:))/PD(:,:,:)) )
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 D_M3_WTH_W2TH_O_DDTDZ(:,:,IKB-1)=D_M3_WTH_W2TH_O_DDTDZ(:,:,IKB)
 D_M3_WTH_W2TH_O_DDTDZ(:,:,IKE+1)=D_M3_WTH_W2TH_O_DDTDZ(:,:,IKE)
@@ -971,25 +1092,29 @@ D_M3_WTH_W2TH_O_DDTDZ(:,:,IKE+1)=D_M3_WTH_W2TH_O_DDTDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WTH_W2TH_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_WTH_W2TH_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_WTH_W2R(KKA,KKU,KKL,PD,PKEFF,PTKE,PBLL_O_E,PEMOIST,PDTDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PKEFF
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDTDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_WTH_W2R
-  INTEGER :: IKB, IKE
+FUNCTION M3_WTH_W2R(D,CSTURB,PD,PKEFF,PTKE,PBLL_O_E,PEMOIST,PDTDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PKEFF
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_WTH_W2R
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WTH_W2R',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-M3_WTH_W2R(:,:,:) = - XCSHF*PKEFF*0.75*XCTV*PBLL_O_E/MZM(PTKE, KKA, KKU, KKL)*PEMOIST*PDTDZ/PD
+ZWORK1 = MZM(PTKE, D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+M3_WTH_W2R(:,:,:) = - CSTURB%XCSHF*PKEFF(:,:,:)*0.75*CSTURB%XCTV*PBLL_O_E(:,:,:) &
+                    /ZWORK1(:,:,:)*PEMOIST(:,:,:)*PDTDZ(:,:,:)/PD(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 M3_WTH_W2R(:,:,IKB-1)=M3_WTH_W2R(:,:,IKB)
 M3_WTH_W2R(:,:,IKE+1)=M3_WTH_W2R(:,:,IKE)
@@ -997,27 +1122,31 @@ M3_WTH_W2R(:,:,IKE+1)=M3_WTH_W2R(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WTH_W2R',1,ZHOOK_HANDLE)
 END FUNCTION M3_WTH_W2R
 !----------------------------------------------------------------------------
-FUNCTION D_M3_WTH_W2R_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PKEFF,PTKE,PBLL_O_E,PEMOIST)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PKEFF
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_WTH_W2R_O_DDTDZ
-  INTEGER :: IKB, IKE
+FUNCTION D_M3_WTH_W2R_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,PKEFF,PTKE,PBLL_O_E,PEMOIST)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PKEFF
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_WTH_W2R_O_DDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WTH_W2R_O_DDTDZ',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-D_M3_WTH_W2R_O_DDTDZ(:,:,:) = - XCSHF*PKEFF*0.75*XCTV*PBLL_O_E/MZM(PTKE, KKA, KKU, KKL)*PEMOIST/PD &
-                                     * (1. -  PREDTH1*(1.5+PREDTH1+PREDR1)/PD)
+ZWORK1 = MZM(PTKE, D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+D_M3_WTH_W2R_O_DDTDZ(:,:,:) = - CSTURB%XCSHF*PKEFF(:,:,:)*0.75*CSTURB%XCTV*PBLL_O_E(:,:,:) &
+                               /ZWORK1(:,:,:)*PEMOIST(:,:,:)/PD(:,:,:) &
+                                     * (1. -  PREDTH1(:,:,:)*(1.5+PREDTH1(:,:,:)+PREDR1(:,:,:))/PD(:,:,:))
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 D_M3_WTH_W2R_O_DDTDZ(:,:,IKB-1)=D_M3_WTH_W2R_O_DDTDZ(:,:,IKB)
 D_M3_WTH_W2R_O_DDTDZ(:,:,IKE+1)=D_M3_WTH_W2R_O_DDTDZ(:,:,IKE)
@@ -1025,29 +1154,32 @@ D_M3_WTH_W2R_O_DDTDZ(:,:,IKE+1)=D_M3_WTH_W2R_O_DDTDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WTH_W2R_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_WTH_W2R_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_WTH_WR2(KKA,KKU,KKL,PD,PKEFF,PTKE,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PEMOIST,PDTDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PKEFF
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDTDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_WTH_WR2
-  INTEGER :: IKB, IKE
+FUNCTION M3_WTH_WR2(D,CSTURB,PD,PKEFF,PTKE,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PEMOIST,PDTDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PKEFF
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_WTH_WR2
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WTH_WR2',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-M3_WTH_WR2(:,:,:) = - XCSHF*PKEFF*0.25*PBLL_O_E*XCTV*PEMOIST**2       &
-                           *MZM(PBETA*PLEPS/(PSQRT_TKE*PTKE), KKA, KKU, KKL)/XCTD*PDTDZ/PD
+ZWORK1 = MZM(PBETA*PLEPS/(PSQRT_TKE*PTKE), D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+M3_WTH_WR2(:,:,:) = - CSTURB%XCSHF*PKEFF(:,:,:)*0.25*PBLL_O_E(:,:,:)*CSTURB%XCTV*PEMOIST(:,:,:)**2       &
+                           *ZWORK1(:,:,:)/CSTURB%XCTD*PDTDZ(:,:,:)/PD(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 M3_WTH_WR2(:,:,IKB-1)=M3_WTH_WR2(:,:,IKB)
 M3_WTH_WR2(:,:,IKE+1)=M3_WTH_WR2(:,:,IKE)
@@ -1055,31 +1187,34 @@ M3_WTH_WR2(:,:,IKE+1)=M3_WTH_WR2(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WTH_WR2',1,ZHOOK_HANDLE)
 END FUNCTION M3_WTH_WR2
 !----------------------------------------------------------------------------
-FUNCTION D_M3_WTH_WR2_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PKEFF,PTKE,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PEMOIST)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PKEFF
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_WTH_WR2_O_DDTDZ
-  INTEGER :: IKB, IKE
+FUNCTION D_M3_WTH_WR2_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,PKEFF,PTKE,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PEMOIST)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PKEFF
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_WTH_WR2_O_DDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WTH_WR2_O_DDTDZ',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-D_M3_WTH_WR2_O_DDTDZ(:,:,:) = - XCSHF*PKEFF*0.25*PBLL_O_E*XCTV*PEMOIST**2 &
-                           *MZM(PBETA*PLEPS/(PSQRT_TKE*PTKE), KKA, KKU, KKL)/XCTD/PD     &
-                           * (1. -  PREDTH1*(1.5+PREDTH1+PREDR1)/PD)
+ZWORK1 = MZM(PBETA*PLEPS/(PSQRT_TKE*PTKE), D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+D_M3_WTH_WR2_O_DDTDZ(:,:,:) = - CSTURB%XCSHF*PKEFF(:,:,:)*0.25*PBLL_O_E(:,:,:)*CSTURB%XCTV*PEMOIST(:,:,:)**2 &
+                           *ZWORK1(:,:,:)/CSTURB%XCTD/PD(:,:,:)     &
+                           * (1. -  PREDTH1(:,:,:)*(1.5+PREDTH1(:,:,:)+PREDR1(:,:,:))/PD(:,:,:))
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 D_M3_WTH_WR2_O_DDTDZ(:,:,IKB-1)=D_M3_WTH_WR2_O_DDTDZ(:,:,IKB)
 D_M3_WTH_WR2_O_DDTDZ(:,:,IKE+1)=D_M3_WTH_WR2_O_DDTDZ(:,:,IKE)
@@ -1087,30 +1222,31 @@ D_M3_WTH_WR2_O_DDTDZ(:,:,IKE+1)=D_M3_WTH_WR2_O_DDTDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WTH_WR2_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_WTH_WR2_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_WTH_WTHR(KKA,KKU,KKL,PREDR1,PD,PKEFF,PTKE,PSQRT_TKE,PBETA,PLEPS,PEMOIST)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PKEFF
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(SIZE(PREDR1,1),SIZE(PREDR1,2),SIZE(PREDR1,3)) :: M3_WTH_WTHR
-  INTEGER :: IKB, IKE
+FUNCTION M3_WTH_WTHR(D,CSTURB,PREDR1,PD,PKEFF,PTKE,PSQRT_TKE,PBETA,PLEPS,PEMOIST)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PKEFF
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_WTH_WTHR
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WTH_WTHR',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-!M3_WTH_WTHR(:,:,:) = XCSHF*PKEFF*PEMOIST/MZM(PBETA*PTKE*PSQRT_TKE, KKA, KKU, KKL) &
-!                         *0.5*PLEPS/XCTD*(1+PREDR1)/PD
-M3_WTH_WTHR(:,:,:) = XCSHF*PKEFF*PEMOIST*MZM(PBETA/PTKE*PSQRT_TKE, KKA, KKU, KKL) &
-                         *0.5*PLEPS/XCTD*(1+PREDR1)/PD
+ZWORK1 = MZM(PBETA/PTKE*PSQRT_TKE, D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+M3_WTH_WTHR(:,:,:) = CSTURB%XCSHF*PKEFF(:,:,:)*PEMOIST(:,:,:)*ZWORK1(:,:,:) &
+                         *0.5*PLEPS(:,:,:)/CSTURB%XCTD*(1+PREDR1(:,:,:))/PD(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 M3_WTH_WTHR(:,:,IKB-1)=M3_WTH_WTHR(:,:,IKB)
 M3_WTH_WTHR(:,:,IKE+1)=M3_WTH_WTHR(:,:,IKE)
@@ -1118,22 +1254,27 @@ M3_WTH_WTHR(:,:,IKE+1)=M3_WTH_WTHR(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WTH_WTHR',1,ZHOOK_HANDLE)
 END FUNCTION M3_WTH_WTHR
 !----------------------------------------------------------------------------
-FUNCTION D_M3_WTH_WTHR_O_DDTDZ(PM3_WTH_WTHR,PREDTH1,PREDR1,PD,PBLL_O_E,PETHETA)
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PM3_WTH_WTHR
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_WTH_WTHR_O_DDTDZ
-  INTEGER :: IKB, IKE
+FUNCTION D_M3_WTH_WTHR_O_DDTDZ(D,CSTURB,PM3_WTH_WTHR,PREDTH1,PREDR1,PD,PBLL_O_E,PETHETA)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PM3_WTH_WTHR
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_WTH_WTHR_O_DDTDZ
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WTH_WTHR_O_DDTDZ',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-D_M3_WTH_WTHR_O_DDTDZ(:,:,:) = - PM3_WTH_WTHR * (1.5+PREDTH1+PREDR1)/PD*XCTV*PBLL_O_E*PETHETA
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+D_M3_WTH_WTHR_O_DDTDZ(:,:,:) = - PM3_WTH_WTHR(:,:,:) * (1.5+PREDTH1(:,:,:)+PREDR1(:,:,:))&
+                               /PD(:,:,:)*CSTURB%XCTV*PBLL_O_E(:,:,:)*PETHETA(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 D_M3_WTH_WTHR_O_DDTDZ(:,:,IKB-1)=D_M3_WTH_WTHR_O_DDTDZ(:,:,IKB)
 D_M3_WTH_WTHR_O_DDTDZ(:,:,IKE+1)=D_M3_WTH_WTHR_O_DDTDZ(:,:,IKE)
@@ -1141,27 +1282,30 @@ D_M3_WTH_WTHR_O_DDTDZ(:,:,IKE+1)=D_M3_WTH_WTHR_O_DDTDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WTH_WTHR_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_WTH_WTHR_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_TH2_W2TH(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PDTDZ,PLM,PLEPS,PTKE)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDTDZ
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLM
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_TH2_W2TH
-  INTEGER :: IKB, IKE
+FUNCTION M3_TH2_W2TH(D,CSTURB,PREDTH1,PREDR1,PD,PDTDZ,PLM,PLEPS,PTKE)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_TH2_W2TH
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_TH2_W2TH',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-M3_TH2_W2TH(:,:,:) = - MZF((1.-0.5*PREDR1*(1.+PREDR1)/PD)/(1.+PREDTH1)*PDTDZ, KKA, KKU, KKL) &
-                       * 1.5*PLM*PLEPS/PTKE*XCTV
+ZWORK1 = MZF((1.-0.5*PREDR1*(1.+PREDR1)/PD)/(1.+PREDTH1)*PDTDZ, D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+M3_TH2_W2TH(:,:,:) = - ZWORK1(:,:,:) &
+                       * 1.5*PLM(:,:,:)*PLEPS(:,:,:)/PTKE(:,:,:)*CSTURB%XCTV
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 M3_TH2_W2TH(:,:,IKB-1)=M3_TH2_W2TH(:,:,IKB)
 M3_TH2_W2TH(:,:,IKE+1)=M3_TH2_W2TH(:,:,IKE)
@@ -1169,19 +1313,19 @@ M3_TH2_W2TH(:,:,IKE+1)=M3_TH2_W2TH(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_TH2_W2TH',1,ZHOOK_HANDLE)
 END FUNCTION M3_TH2_W2TH
 !----------------------------------------------------------------------------
-FUNCTION D_M3_TH2_W2TH_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PLM,PLEPS,PTKE,OUSERV)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLM
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
+FUNCTION D_M3_TH2_W2TH_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,PLM,PLEPS,PTKE,OUSERV)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
   LOGICAL,                INTENT(IN) :: OUSERV
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_TH2_W2TH_O_DDTDZ
-  INTEGER :: IKB, IKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_TH2_W2TH_O_DDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_TH2_W2TH_O_DDTDZ',0,ZHOOK_HANDLE)
@@ -1189,15 +1333,23 @@ IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
 IF (OUSERV) THEN
-!  D_M3_TH2_W2TH_O_DDTDZ(:,:,:) = - 1.5*PLM*PLEPS/PTKE*XCTV * MZF(                    &
+!  D_M3_TH2_W2TH_O_DDTDZ(:,:,:) = - 1.5*PLM*PLEPS/PTKE*CSTURB%XCTV * MZF(                    &
 !          (1.-0.5*PREDR1*(1.+PREDR1)/PD)*(1.-(1.5+PREDTH1+PREDR1)*(1.+PREDTH1)/PD )  &
-!        / (1.+PREDTH1)**2, KKA, KKU, KKL)
-  D_M3_TH2_W2TH_O_DDTDZ(:,:,:) = - 1.5*PLM*PLEPS/PTKE*XCTV * MZF( &
-          (1.-0.5*PREDR1*(1.+PREDR1)/PD)*(1.-(1.5+PREDTH1+PREDR1)*   &
-             PREDTH1*(1.+PREDTH1)/PD ) / (1.+PREDTH1)**2, KKA, KKU, KKL)
+!        / (1.+PREDTH1)**2, D%NKA, D%NKU, D%NKL)
 
+  ZWORK1 = MZF((1.-0.5*PREDR1*(1.+PREDR1)/PD)*(1.-(1.5+PREDTH1+PREDR1)*   &
+             PREDTH1*(1.+PREDTH1)/PD ) / (1.+PREDTH1)**2, D%NKA, D%NKU, D%NKL)
+
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  D_M3_TH2_W2TH_O_DDTDZ(:,:,:) = - 1.5*PLM(:,:,:)*PLEPS(:,:,:)/PTKE(:,:,:)*CSTURB%XCTV * &
+                                 ZWORK1(:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ELSE
-  D_M3_TH2_W2TH_O_DDTDZ(:,:,:) = - 1.5*PLM*PLEPS/PTKE*XCTV * MZF(1./(1.+PREDTH1)**2, KKA, KKU, KKL)
+  ZWORK1 = MZF(1./(1.+PREDTH1)**2, D%NKA, D%NKU, D%NKL)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  D_M3_TH2_W2TH_O_DDTDZ(:,:,:) = - 1.5*PLM(:,:,:)*PLEPS(:,:,:)/PTKE(:,:,:)*CSTURB%XCTV &
+                                 * ZWORK1(:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 END IF
 !
 D_M3_TH2_W2TH_O_DDTDZ(:,:,IKB-1)=D_M3_TH2_W2TH_O_DDTDZ(:,:,IKB)
@@ -1206,25 +1358,28 @@ D_M3_TH2_W2TH_O_DDTDZ(:,:,IKE+1)=D_M3_TH2_W2TH_O_DDTDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_TH2_W2TH_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_TH2_W2TH_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_TH2_WTH2(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_TH2_WTH2
-  INTEGER :: IKB, IKE
+FUNCTION M3_TH2_WTH2(D,CSTURB,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_TH2_WTH2
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_TH2_WTH2',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-M3_TH2_WTH2(:,:,:) = PLEPS*0.5/XCTD/PSQRT_TKE          &
-  * MZF((1.+0.5*PREDTH1+1.5*PREDR1+0.5*PREDR1**2)/PD, KKA, KKU, KKL)
+ZWORK1 = MZF((1.+0.5*PREDTH1+1.5*PREDR1+0.5*PREDR1**2)/PD, D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+M3_TH2_WTH2(:,:,:) = PLEPS(:,:,:)*0.5/CSTURB%XCTD/PSQRT_TKE(:,:,:)          &
+                     * ZWORK1(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 M3_TH2_WTH2(:,:,IKB-1)=M3_TH2_WTH2(:,:,IKB)
 M3_TH2_WTH2(:,:,IKE+1)=M3_TH2_WTH2(:,:,IKE)
@@ -1232,29 +1387,33 @@ M3_TH2_WTH2(:,:,IKE+1)=M3_TH2_WTH2(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_TH2_WTH2',1,ZHOOK_HANDLE)
 END FUNCTION M3_TH2_WTH2
 !----------------------------------------------------------------------------
-FUNCTION D_M3_TH2_WTH2_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_TH2_WTH2_O_DDTDZ
-  INTEGER :: IKB, IKE
+FUNCTION D_M3_TH2_WTH2_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_TH2_WTH2_O_DDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_TH2_WTH2_O_DDTDZ',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-D_M3_TH2_WTH2_O_DDTDZ(:,:,:) = PLEPS*0.5/XCTD/PSQRT_TKE*XCTV                        &
- * MZF(PBLL_O_E*PETHETA* (0.5/PD                                                   &
+ZWORK1 = MZF(PBLL_O_E*PETHETA* (0.5/PD                                                   &
              - (1.5+PREDTH1+PREDR1)*(1.+0.5*PREDTH1+1.5*PREDR1+0.5*PREDR1**2)/PD**2 &
-                           ), KKA, KKU, KKL)
+                           ), D%NKA, D%NKU, D%NKL)
+ 
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+D_M3_TH2_WTH2_O_DDTDZ(:,:,:) = PLEPS(:,:,:)*0.5/CSTURB%XCTD/PSQRT_TKE(:,:,:)*CSTURB%XCTV &
+                               * ZWORK1(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 D_M3_TH2_WTH2_O_DDTDZ(:,:,IKB-1)=D_M3_TH2_WTH2_O_DDTDZ(:,:,IKB)
 D_M3_TH2_WTH2_O_DDTDZ(:,:,IKE+1)=D_M3_TH2_WTH2_O_DDTDZ(:,:,IKE)
@@ -1262,26 +1421,30 @@ D_M3_TH2_WTH2_O_DDTDZ(:,:,IKE+1)=D_M3_TH2_WTH2_O_DDTDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_TH2_WTH2_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_TH2_WTH2_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_TH2_W2R(KKA,KKU,KKL,PD,PLM,PLEPS,PTKE,PBLL_O_E,PEMOIST,PDTDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLM
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDTDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_TH2_W2R
-  INTEGER :: IKB, IKE
+FUNCTION M3_TH2_W2R(D,CSTURB,PD,PLM,PLEPS,PTKE,PBLL_O_E,PEMOIST,PDTDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_TH2_W2R
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_TH2_W2R',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-M3_TH2_W2R(:,:,:) = 0.75*XCTV**2*MZF(PBLL_O_E*PEMOIST/PD*PDTDZ**2, KKA, KKU, KKL)*PLM*PLEPS/PTKE
+ZWORK1 = MZF(PBLL_O_E*PEMOIST/PD*PDTDZ**2, D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+M3_TH2_W2R(:,:,:) = 0.75*CSTURB%XCTV**2*ZWORK1(:,:,:) &
+                    *PLM(:,:,:)*PLEPS(:,:,:)/PTKE(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 M3_TH2_W2R(:,:,IKB-1)=M3_TH2_W2R(:,:,IKB)
 M3_TH2_W2R(:,:,IKE+1)=M3_TH2_W2R(:,:,IKE)
@@ -1289,29 +1452,32 @@ M3_TH2_W2R(:,:,IKE+1)=M3_TH2_W2R(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_TH2_W2R',1,ZHOOK_HANDLE)
 END FUNCTION M3_TH2_W2R
 !----------------------------------------------------------------------------
-FUNCTION D_M3_TH2_W2R_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PLM,PLEPS,PTKE,PBLL_O_E,PEMOIST,PDTDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLM
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDTDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_TH2_W2R_O_DDTDZ
-  INTEGER :: IKB, IKE
+FUNCTION D_M3_TH2_W2R_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,PLM,PLEPS,PTKE,PBLL_O_E,PEMOIST,PDTDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_TH2_W2R_O_DDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_TH2_W2R_O_DDTDZ',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-D_M3_TH2_W2R_O_DDTDZ(:,:,:) = 0.75*XCTV**2*PLM*PLEPS/PTKE &
- * MZF(PBLL_O_E*PEMOIST/PD*PDTDZ*(2.-PREDTH1*(1.5+PREDTH1+PREDR1)/PD), KKA, KKU, KKL)
+ZWORK1 =  MZF(PBLL_O_E*PEMOIST/PD*PDTDZ*(2.-PREDTH1*(1.5+PREDTH1+PREDR1)/PD), D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+D_M3_TH2_W2R_O_DDTDZ(:,:,:) = 0.75*CSTURB%XCTV**2*PLM(:,:,:)*PLEPS(:,:,:)/PTKE(:,:,:) &
+                              * ZWORK1(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 D_M3_TH2_W2R_O_DDTDZ(:,:,IKB-1)=D_M3_TH2_W2R_O_DDTDZ(:,:,IKB)
 D_M3_TH2_W2R_O_DDTDZ(:,:,IKE+1)=D_M3_TH2_W2R_O_DDTDZ(:,:,IKE)
@@ -1319,25 +1485,29 @@ D_M3_TH2_W2R_O_DDTDZ(:,:,IKE+1)=D_M3_TH2_W2R_O_DDTDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_TH2_W2R_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_TH2_W2R_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_TH2_WR2(KKA,KKU,KKL,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDTDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_TH2_WR2
-  INTEGER :: IKB, IKE
+FUNCTION M3_TH2_WR2(D,CSTURB,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_TH2_WR2
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_TH2_WR2',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-M3_TH2_WR2(:,:,:) = 0.25*XCTV**2*MZF((PBLL_O_E*PEMOIST*PDTDZ)**2/PD, KKA, KKU, KKL)*PLEPS/PSQRT_TKE/XCTD
+ZWORK1 = MZF((PBLL_O_E*PEMOIST*PDTDZ)**2/PD, D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+M3_TH2_WR2(:,:,:) = 0.25*CSTURB%XCTV**2*ZWORK1(:,:,:)&
+                    *PLEPS(:,:,:)/PSQRT_TKE(:,:,:)/CSTURB%XCTD
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 M3_TH2_WR2(:,:,IKB-1)=M3_TH2_WR2(:,:,IKB)
 M3_TH2_WR2(:,:,IKE+1)=M3_TH2_WR2(:,:,IKE)
@@ -1345,28 +1515,31 @@ M3_TH2_WR2(:,:,IKE+1)=M3_TH2_WR2(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_TH2_WR2',1,ZHOOK_HANDLE)
 END FUNCTION M3_TH2_WR2
 !----------------------------------------------------------------------------
-FUNCTION D_M3_TH2_WR2_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDTDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_TH2_WR2_O_DDTDZ
-  INTEGER :: IKB, IKE
+FUNCTION D_M3_TH2_WR2_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_TH2_WR2_O_DDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_TH2_WR2_O_DDTDZ',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-D_M3_TH2_WR2_O_DDTDZ(:,:,:) = 0.25*XCTV**2*PLEPS/PSQRT_TKE/XCTD &
-  *  MZF((PBLL_O_E*PEMOIST)**2*PDTDZ/PD*(2.-PREDTH1*(1.5+PREDTH1+PREDR1)/PD), KKA, KKU, KKL)
+ZWORK1 = MZF((PBLL_O_E*PEMOIST)**2*PDTDZ/PD*(2.-PREDTH1*(1.5+PREDTH1+PREDR1)/PD), D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+D_M3_TH2_WR2_O_DDTDZ(:,:,:) = 0.25*CSTURB%XCTV**2*PLEPS(:,:,:)/PSQRT_TKE(:,:,:)/CSTURB%XCTD &
+                              *  ZWORK1(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 D_M3_TH2_WR2_O_DDTDZ(:,:,IKB-1)=D_M3_TH2_WR2_O_DDTDZ(:,:,IKB)
 D_M3_TH2_WR2_O_DDTDZ(:,:,IKE+1)=D_M3_TH2_WR2_O_DDTDZ(:,:,IKE)
@@ -1374,27 +1547,30 @@ D_M3_TH2_WR2_O_DDTDZ(:,:,IKE+1)=D_M3_TH2_WR2_O_DDTDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_TH2_WR2_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_TH2_WR2_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_TH2_WTHR(KKA,KKU,KKL,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDTDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_TH2_WTHR
-  INTEGER :: IKB, IKE
+FUNCTION M3_TH2_WTHR(D,CSTURB,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_TH2_WTHR
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_TH2_WTHR',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-M3_TH2_WTHR(:,:,:) = - 0.5*XCTV*PLEPS/PSQRT_TKE/XCTD &
- * MZF(PBLL_O_E*PEMOIST*PDTDZ*(1.+PREDR1)/PD, KKA, KKU, KKL)
+ZWORK1 = MZF(PBLL_O_E*PEMOIST*PDTDZ*(1.+PREDR1)/PD, D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+M3_TH2_WTHR(:,:,:) = - 0.5*CSTURB%XCTV*PLEPS(:,:,:)/PSQRT_TKE(:,:,:)/CSTURB%XCTD &
+                       *ZWORK1(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 M3_TH2_WTHR(:,:,IKB-1)=M3_TH2_WTHR(:,:,IKB)
 M3_TH2_WTHR(:,:,IKE+1)=M3_TH2_WTHR(:,:,IKE)
@@ -1402,28 +1578,31 @@ M3_TH2_WTHR(:,:,IKE+1)=M3_TH2_WTHR(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_TH2_WTHR',1,ZHOOK_HANDLE)
 END FUNCTION M3_TH2_WTHR
 !----------------------------------------------------------------------------
-FUNCTION D_M3_TH2_WTHR_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDTDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_TH2_WTHR_O_DDTDZ
-  INTEGER :: IKB, IKE
+FUNCTION D_M3_TH2_WTHR_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_TH2_WTHR_O_DDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_TH2_WTHR_O_DDTDZ',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-D_M3_TH2_WTHR_O_DDTDZ(:,:,:) = - 0.5*XCTV*PLEPS/PSQRT_TKE/XCTD &
- * MZF(PBLL_O_E*PEMOIST*(1.+PREDR1)/PD * (1. -PREDTH1*(1.5+PREDTH1+PREDR1)/PD), KKA, KKU, KKL)
+ZWORK1 = MZF(PBLL_O_E*PEMOIST*(1.+PREDR1)/PD * (1. -PREDTH1*(1.5+PREDTH1+PREDR1)/PD), D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+D_M3_TH2_WTHR_O_DDTDZ(:,:,:) = - 0.5*CSTURB%XCTV*PLEPS(:,:,:)/PSQRT_TKE(:,:,:)/CSTURB%XCTD &
+                               * ZWORK1(:,:,:) 
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 D_M3_TH2_WTHR_O_DDTDZ(:,:,IKB-1)=D_M3_TH2_WTHR_O_DDTDZ(:,:,IKB)
 D_M3_TH2_WTHR_O_DDTDZ(:,:,IKE+1)=D_M3_TH2_WTHR_O_DDTDZ(:,:,IKE)
@@ -1431,25 +1610,28 @@ D_M3_TH2_WTHR_O_DDTDZ(:,:,IKE+1)=D_M3_TH2_WTHR_O_DDTDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_TH2_WTHR_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_TH2_WTHR_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_THR_WTHR(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_THR_WTHR
-  INTEGER :: IKB, IKE
+FUNCTION M3_THR_WTHR(D,CSTURB,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_THR_WTHR
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_THR_WTHR',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-M3_THR_WTHR(:,:,:) = 0.5*PLEPS/PSQRT_TKE/XCTD &
- * MZF((1.+PREDTH1)*(1.+PREDR1)/PD, KKA, KKU, KKL)
+ZWORK1 =  MZF((1.+PREDTH1)*(1.+PREDR1)/PD, D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+M3_THR_WTHR(:,:,:) = 0.5*PLEPS(:,:,:)/PSQRT_TKE(:,:,:)/CSTURB%XCTD &
+                     * ZWORK1(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 M3_THR_WTHR(:,:,IKB-1)=M3_THR_WTHR(:,:,IKB)
 M3_THR_WTHR(:,:,IKE+1)=M3_THR_WTHR(:,:,IKE)
@@ -1457,27 +1639,30 @@ M3_THR_WTHR(:,:,IKE+1)=M3_THR_WTHR(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_THR_WTHR',1,ZHOOK_HANDLE)
 END FUNCTION M3_THR_WTHR
 !----------------------------------------------------------------------------
-FUNCTION D_M3_THR_WTHR_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_THR_WTHR_O_DDTDZ
-  INTEGER :: IKB, IKE
+FUNCTION D_M3_THR_WTHR_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_THR_WTHR_O_DDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_WTHR_O_DDTDZ',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-D_M3_THR_WTHR_O_DDTDZ(:,:,:) = 0.5*PLEPS/PSQRT_TKE/XCTD * XCTV &
- * MZF(PETHETA*PBLL_O_E/PD*(1.+PREDR1)*(1.-(1.+PREDTH1)*(1.5+PREDTH1+PREDR1)/PD), KKA, KKU, KKL)
+ZWORK1 = MZF(PETHETA*PBLL_O_E/PD*(1.+PREDR1)*(1.-(1.+PREDTH1)*(1.5+PREDTH1+PREDR1)/PD), D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+D_M3_THR_WTHR_O_DDTDZ(:,:,:) = 0.5*PLEPS(:,:,:)/PSQRT_TKE(:,:,:)/CSTURB%XCTD * CSTURB%XCTV &
+                               * ZWORK1(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 D_M3_THR_WTHR_O_DDTDZ(:,:,IKB-1)=D_M3_THR_WTHR_O_DDTDZ(:,:,IKB)
 D_M3_THR_WTHR_O_DDTDZ(:,:,IKE+1)=D_M3_THR_WTHR_O_DDTDZ(:,:,IKE)
@@ -1485,27 +1670,30 @@ D_M3_THR_WTHR_O_DDTDZ(:,:,IKE+1)=D_M3_THR_WTHR_O_DDTDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_WTHR_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_THR_WTHR_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_THR_WTH2(KKA,KKU,KKL,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDRDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_THR_WTH2
-  INTEGER :: IKB, IKE
+FUNCTION M3_THR_WTH2(D,CSTURB,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_THR_WTH2
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_THR_WTH2',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-M3_THR_WTH2(:,:,:) = - 0.25*PLEPS/PSQRT_TKE/XCTD*XCTV &
- * MZF((1.+PREDR1)*PBLL_O_E*PETHETA*PDRDZ/PD, KKA, KKU, KKL)
+ZWORK1 = MZF((1.+PREDR1)*PBLL_O_E*PETHETA*PDRDZ/PD, D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+M3_THR_WTH2(:,:,:) = - 0.25*PLEPS(:,:,:)/PSQRT_TKE(:,:,:)/CSTURB%XCTD*CSTURB%XCTV &
+                     * ZWORK1(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 M3_THR_WTH2(:,:,IKB-1)=M3_THR_WTH2(:,:,IKB)
 M3_THR_WTH2(:,:,IKE+1)=M3_THR_WTH2(:,:,IKE)
@@ -1513,28 +1701,31 @@ M3_THR_WTH2(:,:,IKE+1)=M3_THR_WTH2(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_THR_WTH2',1,ZHOOK_HANDLE)
 END FUNCTION M3_THR_WTH2
 !----------------------------------------------------------------------------
-FUNCTION D_M3_THR_WTH2_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDRDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_THR_WTH2_O_DDTDZ
-  INTEGER :: IKB, IKE
+FUNCTION D_M3_THR_WTH2_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_THR_WTH2_O_DDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_WTH2_O_DDTDZ',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-D_M3_THR_WTH2_O_DDTDZ(:,:,:) = - 0.25*PLEPS/PSQRT_TKE/XCTD*XCTV**2 &
- * MZF(-(1.+PREDR1)*(PBLL_O_E*PETHETA/PD)**2*PDRDZ*(1.5+PREDTH1+PREDR1), KKA, KKU, KKL)
+ZWORK1 = MZF(-(1.+PREDR1)*(PBLL_O_E*PETHETA/PD)**2*PDRDZ*(1.5+PREDTH1+PREDR1), D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+D_M3_THR_WTH2_O_DDTDZ(:,:,:) = - 0.25*PLEPS(:,:,:)/PSQRT_TKE(:,:,:)/CSTURB%XCTD*CSTURB%XCTV**2 &
+                               * ZWORK1(:,:,:) 
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 D_M3_THR_WTH2_O_DDTDZ(:,:,IKB-1)=D_M3_THR_WTH2_O_DDTDZ(:,:,IKB)
 D_M3_THR_WTH2_O_DDTDZ(:,:,IKE+1)=D_M3_THR_WTH2_O_DDTDZ(:,:,IKE)
@@ -1542,29 +1733,32 @@ D_M3_THR_WTH2_O_DDTDZ(:,:,IKE+1)=D_M3_THR_WTH2_O_DDTDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_WTH2_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_THR_WTH2_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION D_M3_THR_WTH2_O_DDRDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_THR_WTH2_O_DDRDZ
-  INTEGER :: IKB, IKE
+FUNCTION D_M3_THR_WTH2_O_DDRDZ(D,CSTURB,PREDTH1,PREDR1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_THR_WTH2_O_DDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_WTH2_O_DDRDZ',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-D_M3_THR_WTH2_O_DDRDZ(:,:,:) = - 0.25*PLEPS/PSQRT_TKE/XCTD*XCTV          &
- * MZF(PBLL_O_E*PETHETA/PD                                              &
+ZWORK1 = MZF(PBLL_O_E*PETHETA/PD                                              &
        *(-(1.+PREDR1)*PREDR1/PD*(1.5+PREDTH1+PREDR1)+(1.+2.*PREDR1)),     &
-       KKA, KKU, KKL)
+       D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+D_M3_THR_WTH2_O_DDRDZ(:,:,:) = - 0.25*PLEPS(:,:,:)/PSQRT_TKE(:,:,:)/CSTURB%XCTD*CSTURB%XCTV          &
+                               * ZWORK1(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 D_M3_THR_WTH2_O_DDRDZ(:,:,IKB-1)=D_M3_THR_WTH2_O_DDRDZ(:,:,IKB)
 D_M3_THR_WTH2_O_DDRDZ(:,:,IKE+1)=D_M3_THR_WTH2_O_DDRDZ(:,:,IKE)
@@ -1572,26 +1766,29 @@ D_M3_THR_WTH2_O_DDRDZ(:,:,IKE+1)=D_M3_THR_WTH2_O_DDRDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_WTH2_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_THR_WTH2_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_THR_W2TH(KKA,KKU,KKL,PREDR1,PD,PLM,PLEPS,PTKE,PDRDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLM
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDRDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_THR_W2TH
-  INTEGER :: IKB, IKE
+FUNCTION M3_THR_W2TH(D,CSTURB,PREDR1,PD,PLM,PLEPS,PTKE,PDRDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_THR_W2TH
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_THR_W2TH',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-M3_THR_W2TH(:,:,:) = - 0.75*PLM*PLEPS/PTKE * XCTV      &
- * MZF((1.+PREDR1)*PDRDZ/PD, KKA, KKU, KKL)
+ZWORK1 = MZF((1.+PREDR1)*PDRDZ/PD, D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+M3_THR_W2TH(:,:,:) = - 0.75*PLM(:,:,:)*PLEPS(:,:,:)/PTKE(:,:,:) * CSTURB%XCTV      &
+                     * ZWORK1(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 M3_THR_W2TH(:,:,IKB-1)=M3_THR_W2TH(:,:,IKB)
 M3_THR_W2TH(:,:,IKE+1)=M3_THR_W2TH(:,:,IKE)
@@ -1599,30 +1796,32 @@ M3_THR_W2TH(:,:,IKE+1)=M3_THR_W2TH(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_THR_W2TH',1,ZHOOK_HANDLE)
 END FUNCTION M3_THR_W2TH
 !----------------------------------------------------------------------------
-FUNCTION D_M3_THR_W2TH_O_DDTDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PLM,PLEPS,PTKE,PBLL_O_E,PDRDZ,PETHETA)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLM
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDRDZ
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_THR_W2TH_O_DDTDZ
-  INTEGER :: IKB, IKE
+FUNCTION D_M3_THR_W2TH_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,PLM,PLEPS,PTKE,PBLL_O_E,PDRDZ,PETHETA)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_THR_W2TH_O_DDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_W2TH_O_DDTDZ',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-D_M3_THR_W2TH_O_DDTDZ(:,:,:) = - 0.75*PLM*PLEPS/PTKE * XCTV**2    &
- * MZF(-PETHETA*PBLL_O_E*(1.+PREDR1)*PDRDZ*(1.5+PREDTH1+PREDR1)/PD**2, KKA, KKU, KKL)
-
+ZWORK1 =  MZF(-PETHETA*PBLL_O_E*(1.+PREDR1)*PDRDZ*(1.5+PREDTH1+PREDR1)/PD**2, D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+D_M3_THR_W2TH_O_DDTDZ(:,:,:) = - 0.75*PLM(:,:,:)*PLEPS(:,:,:)/PTKE(:,:,:) * CSTURB%XCTV**2    &
+                               * ZWORK1(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 D_M3_THR_W2TH_O_DDTDZ(:,:,IKB-1)=D_M3_THR_W2TH_O_DDTDZ(:,:,IKB)
 D_M3_THR_W2TH_O_DDTDZ(:,:,IKE+1)=D_M3_THR_W2TH_O_DDTDZ(:,:,IKE)
@@ -1630,29 +1829,31 @@ D_M3_THR_W2TH_O_DDTDZ(:,:,IKE+1)=D_M3_THR_W2TH_O_DDTDZ(:,:,IKE)
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_W2TH_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_THR_W2TH_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION D_M3_THR_W2TH_O_DDRDZ(KKA,KKU,KKL,PREDTH1,PREDR1,PD,PLM,PLEPS,PTKE)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLM
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_THR_W2TH_O_DDRDZ
-  INTEGER :: IKB, IKE
+FUNCTION D_M3_THR_W2TH_O_DDRDZ(D,CSTURB,PREDTH1,PREDR1,PD,PLM,PLEPS,PTKE)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_THR_W2TH_O_DDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1 ! working array
+  INTEGER :: IKB, IKE, JI,JJ,JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_W2TH_O_DDRDZ',0,ZHOOK_HANDLE)
 IKB = 1+JPVEXT_TURB
 IKE = SIZE(PD,3)-JPVEXT_TURB
 
-D_M3_THR_W2TH_O_DDRDZ(:,:,:) = - 0.75*PLM*PLEPS/PTKE * XCTV     &
- * MZF(-(1.+PREDR1)*PREDR1*(1.5+PREDTH1+PREDR1)/PD**2          &
+ZWORK1 =  MZF(-(1.+PREDR1)*PREDR1*(1.5+PREDTH1+PREDR1)/PD**2          &
         +(1.+2.*PREDR1)/PD,                                    &
-       KKA, KKU, KKL)
-
+       D%NKA, D%NKU, D%NKL)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+D_M3_THR_W2TH_O_DDRDZ(:,:,:) = - 0.75*PLM(:,:,:)*PLEPS(:,:,:)/PTKE(:,:,:) * CSTURB%XCTV     &
+                               * ZWORK1(:,:,:)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 D_M3_THR_W2TH_O_DDRDZ(:,:,IKB-1)=D_M3_THR_W2TH_O_DDRDZ(:,:,IKB)
 D_M3_THR_W2TH_O_DDRDZ(:,:,IKE+1)=D_M3_THR_W2TH_O_DDRDZ(:,:,IKE)
@@ -1663,611 +1864,599 @@ END FUNCTION D_M3_THR_W2TH_O_DDRDZ
 !----------------------------------------------------------------------------
 !----------------------------------------------------------------------------
 !
-FUNCTION PSI3(PREDR1,PREDTH1,PRED2R3,PRED2TH3,PRED2THR3,HTURBDIM,OUSERV)
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2TH3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2R3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2THR3
-  CHARACTER(len=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
+FUNCTION PSI3(D,CSTURB,PREDR1,PREDTH1,PRED2R3,PRED2TH3,PRED2THR3,HTURBDIM,OUSERV)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2TH3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2R3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2THR3
+  CHARACTER(LEN=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
   LOGICAL,                INTENT(IN) :: OUSERV    ! flag to use vapor
-  REAL, DIMENSION(SIZE(PREDTH1,1),SIZE(PREDTH1,2),SIZE(PREDTH1,3)) :: PSI3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: PSI3
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:PSI3',0,ZHOOK_HANDLE)
-PSI3 = PHI3(PREDR1,PREDTH1,PRED2R3,PRED2TH3,PRED2THR3,HTURBDIM,OUSERV)
+PSI3 = PHI3(D,CSTURB,PREDR1,PREDTH1,PRED2R3,PRED2TH3,PRED2THR3,HTURBDIM,OUSERV)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:PSI3',1,ZHOOK_HANDLE)
 END FUNCTION PSI3
 !----------------------------------------------------------------------------
-FUNCTION D_PSI3DRDZ_O_DDRDZ(PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,OUSERV)
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PPSI3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2R3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2THR3
-  CHARACTER(len=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
+FUNCTION D_PSI3DRDZ_O_DDRDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,OUSERV)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PPSI3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2R3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2THR3
+  CHARACTER(LEN=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
   LOGICAL,                INTENT(IN) :: OUSERV    ! flag to use vapor
-  REAL, DIMENSION(SIZE(PREDTH1,1),SIZE(PREDTH1,2),SIZE(PREDTH1,3)) :: D_PSI3DRDZ_O_DDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_PSI3DRDZ_O_DDRDZ
 
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_PSI3DRDZ_O_DDRDZ',0,ZHOOK_HANDLE)
-D_PSI3DRDZ_O_DDRDZ = D_PHI3DTDZ_O_DDTDZ(PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,OUSERV)
+D_PSI3DRDZ_O_DDRDZ = D_PHI3DTDZ_O_DDTDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,OUSERV)
 !
 !C'est ok?!
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_PSI3DRDZ_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_PSI3DRDZ_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION D_PSI3DTDZ_O_DDTDZ(PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,OUSERV)
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PPSI3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2R3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2THR3
-  CHARACTER(len=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
+FUNCTION D_PSI3DTDZ_O_DDTDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,OUSERV)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PPSI3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2R3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2THR3
+  CHARACTER(LEN=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
   LOGICAL,                INTENT(IN) :: OUSERV    ! flag to use vapor
-  REAL, DIMENSION(SIZE(PREDTH1,1),SIZE(PREDTH1,2),SIZE(PREDTH1,3)) :: D_PSI3DTDZ_O_DDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_PSI3DTDZ_O_DDTDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_PSI3DTDZ_O_DDTDZ',0,ZHOOK_HANDLE)
-D_PSI3DTDZ_O_DDTDZ = D_PHI3DRDZ_O_DDRDZ(PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,OUSERV)
+D_PSI3DTDZ_O_DDTDZ = D_PHI3DRDZ_O_DDRDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,OUSERV)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_PSI3DTDZ_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_PSI3DTDZ_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION D_PSI3DRDZ2_O_DDRDZ(PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,PDRDZ,HTURBDIM,OUSERV)
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PPSI3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2R3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PRED2THR3
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDRDZ
-  CHARACTER(len=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
+FUNCTION D_PSI3DRDZ2_O_DDRDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,PDRDZ,HTURBDIM,OUSERV)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PPSI3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2R3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PRED2THR3
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDRDZ
+  CHARACTER(LEN=4),       INTENT(IN) :: HTURBDIM  ! 1DIM or 3DIM turb. scheme
   LOGICAL,                INTENT(IN) :: OUSERV    ! flag to use vapor
-  REAL, DIMENSION(SIZE(PREDTH1,1),SIZE(PREDTH1,2),SIZE(PREDTH1,3)) :: D_PSI3DRDZ2_O_DDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_PSI3DRDZ2_O_DDRDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_PSI3DRDZ2_O_DDRDZ',0,ZHOOK_HANDLE)
-D_PSI3DRDZ2_O_DDRDZ = D_PHI3DTDZ2_O_DDTDZ(PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,PDRDZ,HTURBDIM,OUSERV)
+D_PSI3DRDZ2_O_DDRDZ = D_PHI3DTDZ2_O_DDTDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,PDRDZ,HTURBDIM,OUSERV)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_PSI3DRDZ2_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_PSI3DRDZ2_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_WR_WR2(PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST)
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_WR_WR2
+FUNCTION M3_WR_WR2(D,CSTURB,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_WR_WR2
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WR_WR2',0,ZHOOK_HANDLE)
-M3_WR_WR2 = M3_WTH_WTH2(PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST)
+M3_WR_WR2 = M3_WTH_WTH2(D,CSTURB,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WR_WR2',1,ZHOOK_HANDLE)
 END FUNCTION M3_WR_WR2
 !----------------------------------------------------------------------------
-FUNCTION D_M3_WR_WR2_O_DDRDZ(PM3_WR_WR2,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST)
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PM3_WR_WR2
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_WR_WR2_O_DDRDZ
+FUNCTION D_M3_WR_WR2_O_DDRDZ(D,CSTURB,PM3_WR_WR2,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PM3_WR_WR2
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_WR_WR2_O_DDRDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WR_WR2_O_DDRDZ',0,ZHOOK_HANDLE)
-D_M3_WR_WR2_O_DDRDZ = D_M3_WTH_WTH2_O_DDTDZ(PM3_WR_WR2,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST)
+D_M3_WR_WR2_O_DDRDZ = D_M3_WTH_WTH2_O_DDTDZ(D,CSTURB,PM3_WR_WR2,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WR_WR2_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_WR_WR2_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_WR_W2R(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PKEFF,PTKE)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PKEFF
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_WR_W2R
+FUNCTION M3_WR_W2R(D,CSTURB,PREDR1,PREDTH1,PD,PKEFF,PTKE)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PKEFF
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_WR_W2R
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WR_W2R',0,ZHOOK_HANDLE)
-M3_WR_W2R = M3_WTH_W2TH(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PKEFF,PTKE)
+M3_WR_W2R = M3_WTH_W2TH(D,CSTURB,PREDR1,PREDTH1,PD,PKEFF,PTKE)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WR_W2R',1,ZHOOK_HANDLE)
 END FUNCTION M3_WR_W2R
 !----------------------------------------------------------------------------
-FUNCTION D_M3_WR_W2R_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST,PKEFF,PTKE)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PKEFF
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_WR_W2R_O_DDRDZ
+FUNCTION D_M3_WR_W2R_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST,PKEFF,PTKE)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PKEFF
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_WR_W2R_O_DDRDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WR_W2R_O_DDRDZ',0,ZHOOK_HANDLE)
-D_M3_WR_W2R_O_DDRDZ = D_M3_WTH_W2TH_O_DDTDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST,PKEFF,PTKE)
+D_M3_WR_W2R_O_DDRDZ = D_M3_WTH_W2TH_O_DDTDZ(D,CSTURB,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST,PKEFF,PTKE)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WR_W2R_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_WR_W2R_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_WR_W2TH(KKA,KKU,KKL,PD,PKEFF,PTKE,PBLL_O_E,PETHETA,PDRDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PKEFF
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDRDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_WR_W2TH
+FUNCTION M3_WR_W2TH(D,CSTURB,PD,PKEFF,PTKE,PBLL_O_E,PETHETA,PDRDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PKEFF
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_WR_W2TH
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WR_W2TH',0,ZHOOK_HANDLE)
-M3_WR_W2TH = M3_WTH_W2R(KKA,KKU,KKL,PD,PKEFF,PTKE,PBLL_O_E,PETHETA,PDRDZ)
+M3_WR_W2TH = M3_WTH_W2R(D,CSTURB,PD,PKEFF,PTKE,PBLL_O_E,PETHETA,PDRDZ)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WR_W2TH',1,ZHOOK_HANDLE)
 END FUNCTION M3_WR_W2TH
 !----------------------------------------------------------------------------
-FUNCTION D_M3_WR_W2TH_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PKEFF,PTKE,PBLL_O_E,PETHETA)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PKEFF
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_WR_W2TH_O_DDRDZ
+FUNCTION D_M3_WR_W2TH_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,PKEFF,PTKE,PBLL_O_E,PETHETA)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PKEFF
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_WR_W2TH_O_DDRDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WR_W2TH_O_DDRDZ',0,ZHOOK_HANDLE)
-D_M3_WR_W2TH_O_DDRDZ = D_M3_WTH_W2R_O_DDTDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PKEFF,PTKE,PBLL_O_E,PETHETA)
+D_M3_WR_W2TH_O_DDRDZ = D_M3_WTH_W2R_O_DDTDZ(D,CSTURB,PREDR1,PREDTH1,PD,PKEFF,PTKE,PBLL_O_E,PETHETA)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WR_W2TH_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_WR_W2TH_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_WR_WTH2(KKA,KKU,KKL,PD,PKEFF,PTKE,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA,PDRDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PKEFF
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDRDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_WR_WTH2
+FUNCTION M3_WR_WTH2(D,CSTURB,PD,PKEFF,PTKE,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA,PDRDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PKEFF
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_WR_WTH2
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WR_WTH2',0,ZHOOK_HANDLE)
-M3_WR_WTH2 = M3_WTH_WR2(KKA,KKU,KKL,PD,PKEFF,PTKE,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA,PDRDZ)
+M3_WR_WTH2 = M3_WTH_WR2(D,CSTURB,PD,PKEFF,PTKE,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA,PDRDZ)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WR_WTH2',1,ZHOOK_HANDLE)
 END FUNCTION M3_WR_WTH2
 !----------------------------------------------------------------------------
-FUNCTION D_M3_WR_WTH2_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PKEFF,PTKE,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PKEFF
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_WR_WTH2_O_DDRDZ
+FUNCTION D_M3_WR_WTH2_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,PKEFF,PTKE,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PKEFF
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_WR_WTH2_O_DDRDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WR_WTH2_O_DDRDZ',0,ZHOOK_HANDLE)
-D_M3_WR_WTH2_O_DDRDZ = D_M3_WTH_WR2_O_DDTDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PKEFF,PTKE,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA)
+D_M3_WR_WTH2_O_DDRDZ=D_M3_WTH_WR2_O_DDTDZ(D,CSTURB,PREDR1,PREDTH1,PD,PKEFF,PTKE,PSQRT_TKE,PBLL_O_E,PBETA,PLEPS,PETHETA)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WR_WTH2_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_WR_WTH2_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_WR_WTHR(KKA,KKU,KKL,PREDTH1,PD,PKEFF,PTKE,PSQRT_TKE,PBETA,PLEPS,PETHETA)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PKEFF
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_WR_WTHR
+FUNCTION M3_WR_WTHR(D,CSTURB,PREDTH1,PD,PKEFF,PTKE,PSQRT_TKE,PBETA,PLEPS,PETHETA)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PKEFF
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_WR_WTHR
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WR_WTHR',0,ZHOOK_HANDLE)
-M3_WR_WTHR = M3_WTH_WTHR(KKA,KKU,KKL,PREDTH1,PD,PKEFF,PTKE,PSQRT_TKE,PBETA,PLEPS,PETHETA)
+M3_WR_WTHR = M3_WTH_WTHR(D,CSTURB,PREDTH1,PD,PKEFF,PTKE,PSQRT_TKE,PBETA,PLEPS,PETHETA)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_WR_WTHR',1,ZHOOK_HANDLE)
 END FUNCTION M3_WR_WTHR
 !----------------------------------------------------------------------------
-FUNCTION D_M3_WR_WTHR_O_DDRDZ(KKA,KKU,KKL,PM3_WR_WTHR,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PM3_WR_WTHR
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_WR_WTHR_O_DDRDZ
+FUNCTION D_M3_WR_WTHR_O_DDRDZ(D,CSTURB,PM3_WR_WTHR,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PM3_WR_WTHR
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_WR_WTHR_O_DDRDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WR_WTHR_O_DDRDZ',0,ZHOOK_HANDLE)
-D_M3_WR_WTHR_O_DDRDZ = D_M3_WTH_WTHR_O_DDTDZ(PM3_WR_WTHR,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST)
+D_M3_WR_WTHR_O_DDRDZ = D_M3_WTH_WTHR_O_DDTDZ(D,CSTURB,PM3_WR_WTHR,PREDR1,PREDTH1,PD,PBLL_O_E,PEMOIST)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_WR_WTHR_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_WR_WTHR_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_R2_W2R(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PDRDZ,PLM,PLEPS,PTKE)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDRDZ
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLM
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_R2_W2R
+FUNCTION M3_R2_W2R(D,CSTURB,PREDR1,PREDTH1,PD,PDRDZ,PLM,PLEPS,PTKE)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_R2_W2R
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_R2_W2R',0,ZHOOK_HANDLE)
-M3_R2_W2R = M3_TH2_W2TH(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PDRDZ,PLM,PLEPS,PTKE)
+M3_R2_W2R = M3_TH2_W2TH(D,CSTURB,PREDR1,PREDTH1,PD,PDRDZ,PLM,PLEPS,PTKE)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_R2_W2R',1,ZHOOK_HANDLE)
 END FUNCTION M3_R2_W2R
 !----------------------------------------------------------------------------
-FUNCTION D_M3_R2_W2R_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE,OUSERV)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLM
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
+FUNCTION D_M3_R2_W2R_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE,OUSERV)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
   LOGICAL,                INTENT(IN) :: OUSERV
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_R2_W2R_O_DDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_R2_W2R_O_DDRDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_R2_W2R_O_DDRDZ',0,ZHOOK_HANDLE)
-D_M3_R2_W2R_O_DDRDZ = D_M3_TH2_W2TH_O_DDTDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE,OUSERV)
+D_M3_R2_W2R_O_DDRDZ = D_M3_TH2_W2TH_O_DDTDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE,OUSERV)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_R2_W2R_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_R2_W2R_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_R2_WR2(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_R2_WR2
+FUNCTION M3_R2_WR2(D,CSTURB,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_R2_WR2
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_R2_WR2',0,ZHOOK_HANDLE)
-M3_R2_WR2 = M3_TH2_WTH2(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE)
+M3_R2_WR2 = M3_TH2_WTH2(D,CSTURB,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_R2_WR2',1,ZHOOK_HANDLE)
 END FUNCTION M3_R2_WR2
 !----------------------------------------------------------------------------
-FUNCTION D_M3_R2_WR2_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_R2_WR2_O_DDRDZ
+FUNCTION D_M3_R2_WR2_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_R2_WR2_O_DDRDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_R2_WR2_O_DDRDZ',0,ZHOOK_HANDLE)
-D_M3_R2_WR2_O_DDRDZ = D_M3_TH2_WTH2_O_DDTDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST)
+D_M3_R2_WR2_O_DDRDZ = D_M3_TH2_WTH2_O_DDTDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_R2_WR2_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_R2_WR2_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_R2_W2TH(KKA,KKU,KKL,PD,PLM,PLEPS,PTKE,PBLL_O_E,PETHETA,PDRDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLM
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDRDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_R2_W2TH
+FUNCTION M3_R2_W2TH(D,CSTURB,PD,PLM,PLEPS,PTKE,PBLL_O_E,PETHETA,PDRDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_R2_W2TH
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_R2_W2TH',0,ZHOOK_HANDLE)
-M3_R2_W2TH = M3_TH2_W2R(KKA,KKU,KKL,PD,PLM,PLEPS,PTKE,PBLL_O_E,PETHETA,PDRDZ)
+M3_R2_W2TH = M3_TH2_W2R(D,CSTURB,PD,PLM,PLEPS,PTKE,PBLL_O_E,PETHETA,PDRDZ)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_R2_W2TH',1,ZHOOK_HANDLE)
 END FUNCTION M3_R2_W2TH
 !----------------------------------------------------------------------------
-FUNCTION D_M3_R2_W2TH_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE,PBLL_O_E,PETHETA,PDRDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLM
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDRDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_R2_W2TH_O_DDRDZ
+FUNCTION D_M3_R2_W2TH_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE,PBLL_O_E,PETHETA,PDRDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_R2_W2TH_O_DDRDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_R2_W2TH_O_DDRDZ',0,ZHOOK_HANDLE)
-D_M3_R2_W2TH_O_DDRDZ = D_M3_TH2_W2R_O_DDTDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE,PBLL_O_E,PETHETA,PDRDZ)
+D_M3_R2_W2TH_O_DDRDZ = D_M3_TH2_W2R_O_DDTDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE,PBLL_O_E,PETHETA,PDRDZ)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_R2_W2TH_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_R2_W2TH_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_R2_WTH2(KKA,KKU,KKL,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDRDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_R2_WTH2
+FUNCTION M3_R2_WTH2(D,CSTURB,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_R2_WTH2
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_R2_WTH2',0,ZHOOK_HANDLE)
-M3_R2_WTH2 = M3_TH2_WR2(KKA,KKU,KKL,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
+M3_R2_WTH2 = M3_TH2_WR2(D,CSTURB,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_R2_WTH2',1,ZHOOK_HANDLE)
 END FUNCTION M3_R2_WTH2
 !----------------------------------------------------------------------------
-FUNCTION D_M3_R2_WTH2_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDRDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_R2_WTH2_O_DDRDZ
+FUNCTION D_M3_R2_WTH2_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_R2_WTH2_O_DDRDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_R2_WTH2_O_DDRDZ',0,ZHOOK_HANDLE)
-D_M3_R2_WTH2_O_DDRDZ = D_M3_TH2_WR2_O_DDTDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
+D_M3_R2_WTH2_O_DDRDZ = D_M3_TH2_WR2_O_DDTDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_R2_WTH2_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_R2_WTH2_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_R2_WTHR(KKA,KKU,KKL,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDRDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_R2_WTHR
+FUNCTION M3_R2_WTHR(D,CSTURB,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_R2_WTHR
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_R2_WTHR',0,ZHOOK_HANDLE)
-M3_R2_WTHR = M3_TH2_WTHR(KKA,KKU,KKL,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
+M3_R2_WTHR = M3_TH2_WTHR(D,CSTURB,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_R2_WTHR',1,ZHOOK_HANDLE)
 END FUNCTION M3_R2_WTHR
 !----------------------------------------------------------------------------
-FUNCTION D_M3_R2_WTHR_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PETHETA
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDRDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_R2_WTHR_O_DDRDZ
+FUNCTION D_M3_R2_WTHR_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PETHETA
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDRDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_R2_WTHR_O_DDRDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_R2_WTHR_O_DDRDZ',0,ZHOOK_HANDLE)
-D_M3_R2_WTHR_O_DDRDZ = D_M3_TH2_WTHR_O_DDTDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
+D_M3_R2_WTHR_O_DDRDZ = D_M3_TH2_WTHR_O_DDTDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDRDZ)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_R2_WTHR_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_R2_WTHR_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION D_M3_THR_WTHR_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_THR_WTHR_O_DDRDZ
+FUNCTION D_M3_THR_WTHR_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_THR_WTHR_O_DDRDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_WTHR_O_DDRDZ',0,ZHOOK_HANDLE)
-D_M3_THR_WTHR_O_DDRDZ = D_M3_THR_WTHR_O_DDTDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST)
+D_M3_THR_WTHR_O_DDRDZ = D_M3_THR_WTHR_O_DDTDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_WTHR_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_THR_WTHR_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_THR_WR2(KKA,KKU,KKL,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDTDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_THR_WR2
+FUNCTION M3_THR_WR2(D,CSTURB,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_THR_WR2
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_THR_WR2',0,ZHOOK_HANDLE)
-M3_THR_WR2 = M3_THR_WTH2(KKA,KKU,KKL,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
+M3_THR_WR2 = M3_THR_WTH2(D,CSTURB,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_THR_WR2',1,ZHOOK_HANDLE)
 END FUNCTION M3_THR_WR2
 !----------------------------------------------------------------------------
-FUNCTION D_M3_THR_WR2_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDTDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_THR_WR2_O_DDRDZ
+FUNCTION D_M3_THR_WR2_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_THR_WR2_O_DDRDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_WR2_O_DDRDZ',0,ZHOOK_HANDLE)
-D_M3_THR_WR2_O_DDRDZ = D_M3_THR_WTH2_O_DDTDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
+D_M3_THR_WR2_O_DDRDZ = D_M3_THR_WTH2_O_DDTDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTDZ)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_WR2_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_THR_WR2_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION D_M3_THR_WR2_O_DDTDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PSQRT_TKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_THR_WR2_O_DDTDZ
+FUNCTION D_M3_THR_WR2_O_DDTDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PSQRT_TKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_THR_WR2_O_DDTDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_WR2_O_DDTDZ',0,ZHOOK_HANDLE)
-D_M3_THR_WR2_O_DDTDZ = D_M3_THR_WTH2_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST)
+D_M3_THR_WR2_O_DDTDZ = D_M3_THR_WTH2_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_WR2_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_THR_WR2_O_DDTDZ
 !----------------------------------------------------------------------------
-FUNCTION M3_THR_W2R(KKA,KKU,KKL,PREDTH1,PD,PLM,PLEPS,PTKE,PDTDZ)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLM
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDTDZ
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: M3_THR_W2R
+FUNCTION M3_THR_W2R(D,CSTURB,PREDTH1,PD,PLM,PLEPS,PTKE,PDTDZ)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: M3_THR_W2R
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_THR_W2R',0,ZHOOK_HANDLE)
-M3_THR_W2R = M3_THR_W2TH(KKA,KKU,KKL,PREDTH1,PD,PLM,PLEPS,PTKE,PDTDZ)
+M3_THR_W2R = M3_THR_W2TH(D,CSTURB,PREDTH1,PD,PLM,PLEPS,PTKE,PDTDZ)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:M3_THR_W2R',1,ZHOOK_HANDLE)
 END FUNCTION M3_THR_W2R
 !----------------------------------------------------------------------------
-FUNCTION D_M3_THR_W2R_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE,PBLL_O_E,PDTDZ,PEMOIST)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLM
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PBLL_O_E
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PDTDZ
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PEMOIST
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_THR_W2R_O_DDRDZ
+FUNCTION D_M3_THR_W2R_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE,PBLL_O_E,PDTDZ,PEMOIST)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PBLL_O_E
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PDTDZ
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PEMOIST
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_THR_W2R_O_DDRDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_W2R_O_DDRDZ',0,ZHOOK_HANDLE)
-D_M3_THR_W2R_O_DDRDZ = D_M3_THR_W2TH_O_DDTDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE,PBLL_O_E,PDTDZ,PEMOIST)
+D_M3_THR_W2R_O_DDRDZ = D_M3_THR_W2TH_O_DDTDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE,PBLL_O_E,PDTDZ,PEMOIST)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_W2R_O_DDRDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_THR_W2R_O_DDRDZ
 !----------------------------------------------------------------------------
-FUNCTION D_M3_THR_W2R_O_DDTDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE)
-  INTEGER,                INTENT(IN) :: KKA 
-  INTEGER,                INTENT(IN) :: KKU  
-  INTEGER,                INTENT(IN) :: KKL
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDR1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PREDTH1
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PD
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLM
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PLEPS
-  REAL, DIMENSION(:,:,:), INTENT(IN) :: PTKE
-  REAL, DIMENSION(SIZE(PD,1),SIZE(PD,2),SIZE(PD,3)) :: D_M3_THR_W2R_O_DDTDZ
+FUNCTION D_M3_THR_W2R_O_DDTDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE)
+  TYPE(DIMPHYEX_t),                   INTENT(IN) :: D
+  TYPE(CSTURB_t),                     INTENT(IN) :: CSTURB
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDR1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PREDTH1
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PD
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLM
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PLEPS
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PTKE
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: D_M3_THR_W2R_O_DDTDZ
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_W2R_O_DDTDZ',0,ZHOOK_HANDLE)
-D_M3_THR_W2R_O_DDTDZ = D_M3_THR_W2TH_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE)
+D_M3_THR_W2R_O_DDTDZ = D_M3_THR_W2TH_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,PLM,PLEPS,PTKE)
 !
 IF (LHOOK) CALL DR_HOOK('MODE_PRANDTL:D_M3_THR_W2R_O_DDTDZ',1,ZHOOK_HANDLE)
 END FUNCTION D_M3_THR_W2R_O_DDTDZ
 !----------------------------------------------------------------------------
 !
 END MODULE MODE_PRANDTL
+

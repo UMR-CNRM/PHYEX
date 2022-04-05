@@ -2,7 +2,7 @@
       SUBROUTINE  ARO_TURB_MNH( KKA,KKU,KKL,KLON,KLEV,KRR,KRRL,KRRI,KSV, &
                 KTCOUNT, KGRADIENTS, LDHARATU, CMICRO, PTSTEP,                  &
                 PZZ, PZZF, PZZTOP,                                    &
-                PRHODJ, PTHVREF,PRHODREF,HINST_SFU,HMF_UPDRAFT,       &
+                PRHODJ, PTHVREF,PRHODREF,HINST_SFU,HMF_UPDRAFT,&
                 PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
                 PPABSM,PUM,PVM,PWM,PTKEM,PEPSM,PSVM,PSRCM,            &
                 PTHM,PRM,                                &
@@ -69,12 +69,18 @@
 !              ------------
 !
 USE MODD_CONF
-USE MODD_CST
+USE MODD_CST, ONLY:CST
+USE MODD_CTURB, ONLY:CSTURB
+USE MODD_LES, ONLY:LLES_CALL
 USE MODD_PARAMETERS
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_IO, ONLY: TFILEDATA
-USE MODD_BUDGET, ONLY: NBUDGET_RI, TBUDGETDATA
+USE MODD_BUDGET, ONLY: NBUDGET_RI, TBUDGETDATA, TBUCONF
+USE MODD_TURB_n, ONLY: TURBN
 !
 USE MODI_TURB
+!
+USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 !
 USE DDH_MIX, ONLY  : TYP_DDH
 USE YOMLDDH, ONLY  : TLDDH
@@ -206,11 +212,19 @@ LOGICAL       ::  OTURB_FLX    ! switch to write the
 LOGICAL       ::  OTURB_DIAG   ! switch to write some
                                ! diagnostic fields in the syncronous FM-file
 LOGICAL       ::  ORMC01       ! switch for RMC01 lengths in SBL
-LOGICAL       ::  OOCEAN       ! switch for OCEAN version of turbulence scheme
-
+LOGICAL       ::  OOCEAN,ODEEPOC! switch for OCEAN version of turbulence scheme
+LOGICAL       ::  OCOUPLES     ! switch for ocean-atm LES coupling
+LOGICAL       ::  OBLOWSNOW    ! switch for prognostic blow snow scheme
+LOGICAL       ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables 
 CHARACTER(LEN=4)   ::  HTURBDIM     ! dimensionality of the
                                ! turbulence scheme
 CHARACTER(LEN=4)   ::  HTURBLEN     ! kind of mixing length
+CHARACTER(LEN=6)   ::  HPROGRAM     ! Program (AROME or MESONH prog)
+LOGICAL   :: OFLAT        ! Logical for zero ororography
+LOGICAL   :: ONOMIXLG          ! to use turbulence for lagrangian variables (modd_conf)
+LOGICAL   :: O2D               ! Logical for 2D model version (modd_conf)
+INTEGER   :: KSV_LGBEG, KSV_LGEND ! number of scalar variables
+
 
 REAL          ::  ZIMPL        ! degree of implicitness
 !
@@ -234,6 +248,9 @@ REAL,DIMENSION(KLON,1,KLEV+2,KGRADIENTS) :: ZHGRAD    ! Horizontal Gradients
 REAL, DIMENSION(KLON,1), TARGET     ::  ZERO, ZONE
 !
 CHARACTER(LEN=4)   ::  CL
+!
+TYPE(DIMPHYEX_t) :: YLDIMPHYEX
+!
 !------------------------------------------------------------------------------
 !
 !*       1.     PRELIMINARY COMPUTATIONS
@@ -250,7 +267,8 @@ IKT=SIZE(PZZ,3)+2*JPVEXT_TURB
 IKTE=IKT - JPVEXT_TURB
 IKB=KKA+JPVEXT_TURB*KKL
 IKE=KKU-JPVEXT_TURB*KKL
-
+CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV+2, JPVEXT_TURB, KLON)
+!
 !
 !
 !------------------------------------------------------------------------------
@@ -284,6 +302,22 @@ ZIMPL=1.
 
 !Version Ocean du schema de turbulence
 OOCEAN=.FALSE.
+ODEEPOC=.FALSE.
+
+HPROGRAM='AROME '
+
+! no orography for mesonh
+OFLAT=.FALSE.
+! 2D version of turbulence
+O2D=.FALSE.
+! Lagragian diag for mesonh
+ONOMIXLG=.FALSE.
+KSV_LGBEG=0
+KSV_LGEND=0
+! blowsnow scheme with mesonh
+OBLOWSNOW=.FALSE.
+! ocean-atmo LES interactive coupling
+OCOUPLES=.FALSE.
 
 ! tableau a recalculer a chaque pas de temps
 ! attention, ZDZZ est l'altitude entre deux niveaux (et pas l'�paisseur de la couche)
@@ -416,9 +450,13 @@ DO JRR=1, NBUDGET_RI
   YLBUDGET(JRR)%YDLDDH=>YDLDDH
   YLBUDGET(JRR)%YDMDDH=>YDMDDH
 ENDDO
-
-CALL TURB (KLEV+2,1,KKL,IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, ISPLIT,IMI, &
-   & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,    &
+OCOMPUTE_SRC=SIZE(PSIGS, 3)/=0
+CALL TURB (CST,CSTURB,TBUCONF,TURBN, YLDIMPHYEX,&
+   & IMI, KRR, KRRL, KRRI, HLBCX, HLBCY,&
+   & ISPLIT,IMI, KSV, KSV_LGBEG, KSV_LGEND, &
+   & HPROGRAM, O2D, ONOMIXLG, OFLAT, LLES_CALL,OCOUPLES,OBLOWSNOW,& 
+   & OTURB_FLX,OTURB_DIAG,OSUBG_COND,OCOMPUTE_SRC, &
+   & ORMC01,OOCEAN,ODEEPOC,LDHARATU,    &
    & HTURBDIM,HTURBLEN,'NONE','NONE',CMICRO,           &
    & ZIMPL,                                    &
    & 2*PTSTEP,ZTFILE,                                      &

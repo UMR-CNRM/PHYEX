@@ -6,8 +6,8 @@
 MODULE MODE_TURB_HOR_THERMO_CORR
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_THERMO_CORR(KRR, KRRL, KRRI,               &
-                      OTURB_FLX,OSUBG_COND,OOCEAN,                   &
+      SUBROUTINE TURB_HOR_THERMO_CORR(D,CST,KRR, KRRL, KRRI,         &
+                      OTURB_FLX,OSUBG_COND,OOCEAN,OCOMPUTE_SRC,      &
                       TPFILE,                                        &
                       PINV_PDXX,PINV_PDYY,                           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
@@ -58,10 +58,11 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST
+USE MODD_CST, ONLY : CST_t
 USE MODD_CONF
 USE MODD_CTURB
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_LES
@@ -87,14 +88,16 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+TYPE(CST_t),            INTENT(IN)   :: CST
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 LOGICAL,                  INTENT(IN)    ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
-LOGICAL,                 INTENT(IN)  ::   OSUBG_COND ! Switch for sub-grid
+LOGICAL,                 INTENT(IN)  ::   OSUBG_COND ! Switch for sub-grid condensation
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
-!                                                    condensation
+LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PINV_PDXX   ! 1./PDXX
@@ -227,9 +230,9 @@ IF ( ( KRRL > 0 .AND. OSUBG_COND) .OR. ( OTURB_FLX .AND. TPFILE%LOPENED ) &
     CALL LES_MEAN_SUBGRID( ZFLX, X_LES_SUBGRID_Thl2, .TRUE. ) 
     CALL LES_MEAN_SUBGRID( MZF(PWM)*ZFLX, X_LES_RES_W_SBG_Thl2, .TRUE. )
     CALL LES_MEAN_SUBGRID( -2.*XCTD*SQRT(PTKEM)*ZFLX/PLEPS ,X_LES_SUBGRID_DISS_Thl2, .TRUE. )
-    ZA(:,:,:)   =  ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN)
+    ZA(:,:,:)   =  ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC)
     CALL LES_MEAN_SUBGRID( ZA*ZFLX, X_LES_SUBGRID_ThlThv, .TRUE. ) 
-    CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLX, X_LES_SUBGRID_ThlPz, .TRUE. )
+    CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLX, X_LES_SUBGRID_ThlPz, .TRUE. )
     CALL SECOND_MNH(ZTIME2)
     XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
   END IF
@@ -316,10 +319,10 @@ IF ( ( KRRL > 0 .AND. OSUBG_COND) .OR. ( OTURB_FLX .AND. TPFILE%LOPENED ) &
       CALL LES_MEAN_SUBGRID( MZF(PWM)*ZFLX, X_LES_RES_W_SBG_ThlRt, .TRUE. )
       CALL LES_MEAN_SUBGRID( -XCTD*SQRT(PTKEM)*ZFLX/PLEPS ,X_LES_SUBGRID_DISS_ThlRt, .TRUE. )
       CALL LES_MEAN_SUBGRID( ZA*ZFLX, X_LES_SUBGRID_RtThv, .TRUE. ) 
-      CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLX, X_LES_SUBGRID_RtPz,.TRUE.)
-      ZA(:,:,:)   =  EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN)
+      CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLX, X_LES_SUBGRID_RtPz,.TRUE.)
+      ZA(:,:,:)   =  EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN)
       CALL LES_MEAN_SUBGRID( ZA*ZFLX, X_LES_SUBGRID_ThlThv, .TRUE. ) 
-      CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLX, X_LES_SUBGRID_ThlPz,.TRUE.)
+      CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLX, X_LES_SUBGRID_ThlPz,.TRUE.)
       CALL SECOND_MNH(ZTIME2)
       XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
     END IF
@@ -383,7 +386,7 @@ IF ( ( KRRL > 0 .AND. OSUBG_COND) .OR. ( OTURB_FLX .AND. TPFILE%LOPENED ) &
       CALL LES_MEAN_SUBGRID( ZFLX, X_LES_SUBGRID_Rt2, .TRUE. ) 
       CALL LES_MEAN_SUBGRID( MZF(PWM)*ZFLX, X_LES_RES_W_SBG_Rt2, .TRUE. )
       CALL LES_MEAN_SUBGRID( ZA*ZFLX, X_LES_SUBGRID_RtThv, .TRUE. ) 
-      CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLX, X_LES_SUBGRID_RtPz,.TRUE.)
+      CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLX, X_LES_SUBGRID_RtPz,.TRUE.)
       CALL LES_MEAN_SUBGRID( -2.*XCTD*SQRT(PTKEM)*ZFLX/PLEPS, X_LES_SUBGRID_DISS_Rt2, .TRUE. )
       CALL SECOND_MNH(ZTIME2)
       XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1

@@ -5,8 +5,9 @@
 MODULE MODE_TURB_VER_SV_CORR
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER_SV_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,OOCEAN,       &
-                      PDZZ,                                         &
+SUBROUTINE TURB_VER_SV_CORR(D,CST,CSTURB,KRR,KRRL,KRRI,OOCEAN,&
+                      PDZZ,KSV,KSV_LGBEG,KSV_LGEND,ONOMIXLG,        &
+                      OBLOWSNOW,OLES_CALL,OCOMPUTE_SRC,             &
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PPHI3,PPSI3,  &
                       PWM,PSVM,                                     &
@@ -55,13 +56,12 @@ SUBROUTINE TURB_VER_SV_CORR(KKA,KKU,KKL,KRR,KRRL,KRRI,OOCEAN,       &
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
-USE MODD_CST
-USE MODD_CTURB
-USE MODD_PARAMETERS
+USE MODD_CST, ONLY: CST_t
+USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
 USE MODD_LES
-USE MODD_CONF
-USE MODD_NSV, ONLY : NSV,NSV_LGBEG,NSV_LGEND
-USE MODD_BLOWSNOW
+USE MODD_BLOWSNOW, ONLY: XRSNOW
 !
 !
 USE MODI_GRADIENT_U
@@ -81,30 +81,38 @@ IMPLICIT NONE
 !
 !
 !
-INTEGER,                 INTENT(IN)  :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,                 INTENT(IN)  :: KKL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+TYPE(DIMPHYEX_t),       INTENT(IN)   ::  D
+TYPE(CST_t),            INTENT(IN)   ::  CST
+TYPE(CSTURB_t),         INTENT(IN)   ::  CSTURB
+INTEGER,                INTENT(IN)   ::  KSV, KSV_LGBEG, KSV_LGEND ! number of scalar variables
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
+LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for lagrangian variables (modd_conf)
+LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
+LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
+LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   ::  KRRL         ! number of liquid var.
 INTEGER,                INTENT(IN)   ::  KRRI         ! number of ice var.
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDZZ
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PDZZ
                                                       ! Metric coefficients
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHLM        ! potential temperature at t-Delta t
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PRM          ! Mixing ratios at t-Delta t
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHVREF      ! reference Thv
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PATHETA      ! coefficients between 
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSRCM        ! normalized 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTHLM        ! potential temperature at t-Delta t
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN) ::  PRM          ! Mixing ratios at t-Delta t
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! reference Thv
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PATHETA      ! coefficients between 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
+REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
+                MERGE(D%NJT,0,OCOMPUTE_SRC),&
+                MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(IN)   ::  PSRCM        ! normalized 
                   ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PPHI3        ! Inv.Turb.Sch.for temperature
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PPSI3        ! Inv.Turb.Sch.for humidity
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PWM          ! w at time t
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM         ! scalar var. at t-Delta t
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTKEM        ! TKE at time t
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM          ! Turb. mixing length   
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLEPS        ! dissipative length   
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.for scalars
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PPHI3        ! Inv.Turb.Sch.for temperature
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PPSI3        ! Inv.Turb.Sch.for humidity
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PWM          ! w at time t
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) ::  PSVM         ! scalar var. at t-Delta t
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length   
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLEPS        ! dissipative length   
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.for scalars
                             ! cumulated sources for the prognostic variables
 !
 !
@@ -113,12 +121,12 @@ REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.for scalars
 !*       0.2  declaration of local variables
 !
 !
-REAL, DIMENSION(SIZE(PSVM,1),SIZE(PSVM,2),SIZE(PSVM,3))  ::  &
-       ZA, ZFLXZ
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZA, ZFLXZ, &
+              ZWORK1,ZWORK2,ZWORK3! working var. for shuman operators (array syntax)
 !
 REAL :: ZCSV          !constant for the scalar flux
 !
-INTEGER             :: JSV          ! loop counters
+INTEGER             :: JI,JJ,JK,JSV          ! loop counters
 !
 REAL :: ZTIME1, ZTIME2
 !
@@ -131,54 +139,74 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_CORR',0,ZHOOK_HANDLE)
 CALL SECOND_MNH(ZTIME1)
 !
-IF(LBLOWSNOW) THEN
+IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables          
-   ZCSV= XCHF/XRSNOW
+   ZCSV= CSTURB%XCHF/XRSNOW
 ELSE
-   ZCSV= XCHF
+   ZCSV= CSTURB%XCHF
 ENDIF
 !
-DO JSV=1,NSV
+DO JSV=1,KSV
   !
-  IF (LNOMIXLG .AND. JSV >= NSV_LGBEG .AND. JSV<= NSV_LGEND) CYCLE
+  IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
   !
   ! variance Sv2
   !
-  IF (LLES_CALL) THEN
+  IF (OLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
-    ZFLXZ(:,:,:) =  PPSI_SV(:,:,:,JSV)*GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)**2
-    ZFLXZ(:,:,:) = ZCSV / ZCSVD * PLM * PLEPS * MZF(ZFLXZ(:,:,:), KKA, KKU, KKL)
+    ZWORK1 = GZ_M_W(D%NKA, D%NKU, D%NKL,PSVM(:,:,:,JSV),PDZZ)
+    ZWORK2 = MZF(ZFLXZ(:,:,:), D%NKA, D%NKU, D%NKL)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    ZFLXZ(:,:,:) =  PPSI_SV(:,:,:,JSV)*ZWORK1(:,:,:)**2
+    ZFLXZ(:,:,:) = ZCSV / ZCSVD * PLM(:,:,:) * PLEPS(:,:,:) * ZWORK2(:,:,:)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     CALL LES_MEAN_SUBGRID(-2.*ZCSVD*SQRT(PTKEM)*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_Sv2(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID(MZF(PWM, KKA, KKU, KKL)*ZFLXZ, X_LES_RES_W_SBG_Sv2(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID(MZF(PWM, D%NKA, D%NKU, D%NKL)*ZFLXZ, X_LES_RES_W_SBG_Sv2(:,:,:,JSV) )
   END IF
   !
   ! covariance ThvSv
   !
-  IF (LLES_CALL) THEN
+  IF (OLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
-    ZA(:,:,:)   =  ETHETA(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN)
-    ZFLXZ(:,:,:)= ( XCSHF * PPHI3 + ZCSV * PPSI_SV(:,:,:,JSV) )              &
-                  *  GZ_M_W(KKA, KKU, KKL,PTHLM,PDZZ)                          &
-                  *  GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)
-    ZFLXZ(:,:,:)= PLM * PLEPS / (2.*ZCTSVD) * MZF(ZFLXZ, KKA, KKU, KKL)
+    ZA(:,:,:)   =  ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC)
+    !
+    ZWORK1 = GZ_M_W(D%NKA, D%NKU, D%NKL,PTHLM,PDZZ)
+    ZWORK2 = GZ_M_W(D%NKA, D%NKU, D%NKL,PSVM(:,:,:,JSV),PDZZ)
+    !
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    ZFLXZ(:,:,:)= ( CSTURB%XCSHF * PPHI3(:,:,:) + ZCSV * PPSI_SV(:,:,:,JSV) ) &
+                  *  ZWORK1(:,:,:) *  ZWORK2(:,:,:)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    !
+    ZWORK3 = MZF(ZFLXZ, D%NKA, D%NKU, D%NKL)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    ZFLXZ(:,:,:)= PLM(:,:,:) * PLEPS(:,:,:) / (2.*ZCTSVD) * ZWORK3(:,:,:)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    !
     CALL LES_MEAN_SUBGRID( ZA*ZFLXZ, X_LES_SUBGRID_SvThv(:,:,:,JSV) ) 
-    CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
+    CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
     !
     IF (KRR>=1) THEN
-      ZA(:,:,:)   =  EMOIST(KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN)
-      ZFLXZ(:,:,:)= ( ZCSV * PPSI3 + ZCSV * PPSI_SV(:,:,:,JSV) )             &
-                    *  GZ_M_W(KKA, KKU, KKL,PRM(:,:,:,1),PDZZ)                 &
-                    *  GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)
-      ZFLXZ(:,:,:)= PLM * PLEPS / (2.*ZCQSVD) * MZF(ZFLXZ, KKA, KKU, KKL)
+      ZA(:,:,:)   =  EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN)
+      !
+      ZWORK1 = GZ_M_W(D%NKA, D%NKU, D%NKL,PRM(:,:,:,1),PDZZ)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+      ZFLXZ(:,:,:)= ( ZCSV * PPSI3(:,:,:) + ZCSV * PPSI_SV(:,:,:,JSV) )  &
+                    *  ZWORK1(:,:,:) *  ZWORK2(:,:,:)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+      ZWORK3 = MZF(ZFLXZ, D%NKA, D%NKU, D%NKL)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+      ZFLXZ(:,:,:)= PLM(:,:,:) * PLEPS(:,:,:) / (2.*ZCQSVD) * ZWORK3(:,:,:)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       CALL LES_MEAN_SUBGRID( ZA*ZFLXZ, X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
-      CALL LES_MEAN_SUBGRID( -XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
+      CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
     END IF
   END IF
   !
 END DO   ! end of scalar loop 
 !
 CALL SECOND_MNH(ZTIME2)
-XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+IF(OLES_CALL) XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 !----------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_CORR',1,ZHOOK_HANDLE)

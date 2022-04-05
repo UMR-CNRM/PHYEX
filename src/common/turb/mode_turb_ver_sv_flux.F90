@@ -5,8 +5,9 @@
 MODULE MODE_TURB_VER_SV_FLUX
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
-                      OTURB_FLX,HTURBDIM,                           &
+SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,ONOMIXLG,                  &
+                      KSV,KSV_LGBEG,KSV_LGEND,                      &
+                      OTURB_FLX,HTURBDIM,OHARAT,OBLOWSNOW,OLES_CALL,&
                       PIMPL,PEXPL,                                  &
                       PTSTEP,                                       &
                       TPFILE,                                       &
@@ -133,15 +134,15 @@ SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
 !!    ------------------
 !!      Module MODD_CST : contains physical constants
 !!
-!!           XG         : gravity constant
+!!           CST%XG         : gravity constant
 !!
 !!      Module MODD_CTURB: contains the set of constants for
 !!                        the turbulence scheme
 !!
-!!           XCMFS,XCMFB : cts for the momentum flux
-!!           XCSHF       : ct for the sensible heat flux
-!!           XCHF        : ct for the moisture flux
-!!           XCTV,XCHV   : cts for the T and moisture variances
+!!           CSTURB%XCMFS,XCMFB : cts for the momentum flux
+!!           CSTURB%XCSHF       : ct for the sensible heat flux
+!!           CSTURB%XCHF        : ct for the moisture flux
+!!           CSTURB%XCTV,CSTURB%XCHV   : cts for the T and moisture variances
 !!
 !!      Module MODD_PARAMETERS
 !!
@@ -197,7 +198,7 @@ SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
 !!                                              change of YCOMMENT
 !!                     Feb 2012(Y. Seity) add possibility to run with reversed 
 !!                                              vertical levels
-!!      Modifications: July 2015 (Wim de Rooy) LHARAT switch
+!!      Modifications: July 2015 (Wim de Rooy) OHARAT switch
 !!                     Feb 2017(M. Leriche) add initialisation of ZSOURCE
 !!                                   to avoid unknwon values outside physical domain
 !!                                   and avoid negative values in sv tendencies
@@ -210,15 +211,14 @@ SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
-USE MODD_CST
-USE MODD_CTURB
+USE MODD_CST, ONLY: CST_t
+USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
-USE MODD_PARAMETERS
+USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
 USE MODD_LES
-USE MODD_CONF
-USE MODD_NSV,            ONLY: XSVMIN, NSV_LGBEG, NSV_LGEND
-USE MODD_BLOWSNOW
+USE MODD_BLOWSNOW, ONLY: XRSNOW
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 !
 USE MODI_GRADIENT_U
@@ -238,48 +238,51 @@ IMPLICIT NONE
 !*      0.1  declarations of arguments
 !
 !
-INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
-INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
+INTEGER,                INTENT(IN)   :: KSV, &
+                                        KSV_LGBEG, KSV_LGEND ! number of scalar variables
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
                                  ! turbulent fluxes in the syncronous FM-file
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
+LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for lagrangian variables (modd_conf)
+CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
+LOGICAL,                INTENT(IN)   ::  OHARAT
+LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
+LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDZZ
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PDZZ
                                                       ! Metric coefficients
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the
                                                       ! normal to the ground surface
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  MFMOIST       ! moist mf dual scheme
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  MFMOIST       ! moist mf dual scheme
 
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSFSVM       ! t - deltat 
+REAL, DIMENSION(D%NIT,D%NJT,KSV), INTENT(IN)   ::  PSFSVM       ! t - deltat 
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSFSVP       ! t + deltat 
+REAL, DIMENSION(D%NIT,D%NJT,KSV), INTENT(IN)   ::  PSFSVP       ! t + deltat 
 !
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM         ! scalar var. at t-Delta t
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) ::  PSVM         ! scalar var. at t-Delta t
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PWM          ! vertical wind
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTKEM        ! TKE at time t
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM          ! Turb. mixing length   
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.for scalars
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PWM          ! vertical wind
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length   
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.for scalars
 !
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS
                             ! cumulated sources for the prognostic variables
-REAL, DIMENSION(:,:,:,:), INTENT(OUT)  :: PWSV        ! scalar flux
-!
-!
-!
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(OUT)  :: PWSV        ! scalar flux
 !
 !*       0.2  declaration of local variables
 !
 !
-REAL, DIMENSION(SIZE(PSVM,1),SIZE(PSVM,2),SIZE(PSVM,3))  ::  &
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  ::  &
        ZA, &       ! under diagonal elements of the tri-diagonal matrix involved
                    ! in the temporal implicit scheme (also used to store coefficient
                    ! J in Section 5)
@@ -288,14 +291,14 @@ REAL, DIMENSION(SIZE(PSVM,1),SIZE(PSVM,2),SIZE(PSVM,3))  ::  &
                    ! considered in ZSOURCE  
        ZFLXZ,  &   ! vertical flux of the treated variable
        ZSOURCE,  & ! source of evolution for the treated variable
-       ZKEFF       ! effectif diffusion coeff = LT * SQRT( TKE )
+       ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
+       ZWORK1,ZWORK2! working var. for shuman operators (array syntax)
 INTEGER             :: IKB,IKE      ! I index values for the Beginning and End
                                     ! mass points of the domain in the 3 direct.
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
 INTEGER             :: JSV          ! loop counters
-INTEGER             :: JK           ! loop
-INTEGER             :: ISV          ! number of scalar var.
+INTEGER             :: JI,JJ,JK           ! loop
 !
 REAL :: ZTIME1, ZTIME2
 
@@ -308,47 +311,49 @@ TYPE(TFIELDDATA)  :: TZFIELD
 !*       1.   PRELIMINARIES
 !             -------------
 !
-
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_FLUX',0,ZHOOK_HANDLE)
-IKB=KKA+JPVEXT_TURB*KKL
-IKE=KKU-JPVEXT_TURB*KKL
-IKT=SIZE(PSVM,3)
-IKTE =IKT-JPVEXT_TURB  
-IKTB =1+JPVEXT_TURB               
 !
-ISV=SIZE(PSVM,4)
+IKT=D%NKT  
+IKTB=D%NKTB          
+IKTE=D%NKTE
+IKB=D%NKB
+IKE=D%NKE             
 !
-IF (LHARAT) THEN
+IF (OHARAT) THEN
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50.*MFMOIST(:,:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ELSE
-  ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), KKA, KKU, KKL)
+  ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), D%NKA, D%NKU, D%NKL)
 ENDIF
 !
-IF(LBLOWSNOW) THEN
+IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables           
-   ZCSV= XCHF/XRSNOW
+   ZCSV=CSTURB%XCHF/XRSNOW
 ELSE
-   ZCSV= XCHF
+   ZCSV=CSTURB%XCHF
 ENDIF
 !----------------------------------------------------------------------------
 !
 !*       8.   SOURCES OF PASSIVE SCALAR VARIABLES
 !             -----------------------------------
 !
-DO JSV=1,ISV
+ZWORK1=MZM(PRHODJ, D%NKA, D%NKU, D%NKL)
+DO JSV=1,KSV
 !
-  IF (LNOMIXLG .AND. JSV >= NSV_LGBEG .AND. JSV<= NSV_LGEND) CYCLE
+  IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
 !
 ! Preparation of the arguments for TRIDIAG 
-    IF (LHARAT) THEN
-      ZA(:,:,:)    = -PTSTEP*   &
-                   ZKEFF * MZM(PRHODJ, KKA, KKU, KKL) /   &
-                   PDZZ**2
+    IF (OHARAT) THEN
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)  
+      ZA(:,:,:) = -PTSTEP * ZKEFF(:,:,:) * ZWORK1(:,:,:) / PDZZ(:,:,:)**2
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ELSE
-      ZA(:,:,:)    = -PTSTEP*ZCSV*PPSI_SV(:,:,:,JSV) *   &
-                   ZKEFF * MZM(PRHODJ, KKA, KKU, KKL) /   &
-                   PDZZ**2
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+      ZA(:,:,:) = -PTSTEP*ZCSV*PPSI_SV(:,:,:,JSV) *   &
+                   ZKEFF(:,:,:) * ZWORK1(:,:,:) / PDZZ(:,:,:)**2
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ENDIF
   ZSOURCE(:,:,:) = 0.
 !
@@ -359,50 +364,66 @@ DO JSV=1,ISV
 !* in 1DIM case, the part of energy released in horizontal flux
 ! is taken into account in the vertical part
   IF (HTURBDIM=='3DIM') THEN
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     ZSOURCE(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV)) / &
                        PDZZ(:,:,IKB) * PDIRCOSZW(:,:)                    &
-                     * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))   
+                     * 0.5 * (1. + PRHODJ(:,:,D%NKA) / PRHODJ(:,:,IKB))
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ELSE
-
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     ZSOURCE(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV)) / &
                        PDZZ(:,:,IKB) / PDIRCOSZW(:,:)                    &
-                     * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
+                     * 0.5 * (1. + PRHODJ(:,:,D%NKA) / PRHODJ(:,:,IKB))
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   END IF
   ZSOURCE(:,:,IKTB+1:IKTE-1) = 0.
   ZSOURCE(:,:,IKE) = 0.
 !
 ! Obtention of the split JSV scalar variable at t+ deltat  
-  CALL TRIDIAG(KKA,KKU,KKL,PSVM(:,:,:,JSV),ZA,PTSTEP,PEXPL,PIMPL,PRHODJ,ZSOURCE,ZRES)
+  CALL TRIDIAG(D,PSVM(:,:,:,JSV),ZA,PTSTEP,PEXPL,PIMPL,PRHODJ,ZSOURCE,ZRES)
 !
 !  Compute the equivalent tendency for the JSV scalar variable
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   PRSVS(:,:,:,JSV)= PRSVS(:,:,:,JSV)+    &
                     PRHODJ(:,:,:)*(ZRES(:,:,:)-PSVM(:,:,:,JSV))/PTSTEP
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
-  IF ( (OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL ) THEN
+  IF ( (OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
-    ZFLXZ(:,:,:) = -ZCSV * PPSI_SV(:,:,:,JSV) * MZM(PLM*SQRT(PTKEM), KKA, KKU, KKL) / PDZZ * &
-                  DZM(PIMPL*ZRES(:,:,:) + PEXPL*PSVM(:,:,:,JSV), KKA, KKU, KKL)
+    ZWORK1 = MZM(PLM*SQRT(PTKEM), D%NKA, D%NKU, D%NKL) 
+    ZWORK2 = DZM(PIMPL*ZRES(:,:,:) + PEXPL*PSVM(:,:,:,JSV), D%NKA, D%NKU, D%NKL)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    ZFLXZ(:,:,:) = -ZCSV * PPSI_SV(:,:,:,JSV) * ZWORK1(:,:,:) / PDZZ(:,:,:) * &
+                  ZWORK2(:,:,:)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ! surface flux
     !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
     ! (in presence of slopes)
     !* in 1DIM case, the part of energy released in horizontal flux
     ! is taken into account in the vertical part
     IF (HTURBDIM=='3DIM') THEN
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
       ZFLXZ(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV))  &
                        * PDIRCOSZW(:,:)  
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     ELSE
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
       ZFLXZ(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV))  &
                        / PDIRCOSZW(:,:)
+     !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     END IF
     ! extrapolates the flux under the ground so that the vertical average with
     ! the IKB flux gives the ground value
-    ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB)
+    !
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+    ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB)
     DO JK=IKTB+1,IKTE-1
-      PWSV(:,:,JK,JSV)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+KKL))
+      PWSV(:,:,JK,JSV)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+D%NKL))
     END DO
-    PWSV(:,:,IKB,JSV)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+KKL))
-    PWSV(:,:,IKE,JSV)=PWSV(:,:,IKE-KKL,JSV)
+    PWSV(:,:,IKB,JSV)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+D%NKL))
+    PWSV(:,:,IKE,JSV)=PWSV(:,:,IKE-D%NKL,JSV)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
  END IF
   !
   IF (OTURB_FLX .AND. TPFILE%LOPENED) THEN
@@ -424,15 +445,15 @@ DO JSV=1,ISV
   !
   ! Storage in the LES configuration
   !
-  IF (LLES_CALL) THEN
+  IF (OLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
-    CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WSv(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID(GZ_W_M(PWM,PDZZ, KKA, KKU, KKL)*MZF(ZFLXZ, KKA, KKU, KKL), &
+    CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, D%NKA, D%NKU, D%NKL), X_LES_SUBGRID_WSv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID(GZ_W_M(PWM,PDZZ, D%NKA, D%NKU, D%NKL)*MZF(ZFLXZ, D%NKA, D%NKU, D%NKL), &
                           X_LES_RES_ddxa_W_SBG_UaSv(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID(MZF(GZ_M_W(KKA, KKU, KKL,PSVM(:,:,:,JSV),PDZZ)*ZFLXZ, KKA, KKU, KKL), &
+    CALL LES_MEAN_SUBGRID(MZF(GZ_M_W(D%NKA, D%NKU, D%NKL,PSVM(:,:,:,JSV),PDZZ)*ZFLXZ, D%NKA, D%NKU, D%NKL), &
                           X_LES_RES_ddxa_Sv_SBG_UaSv(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID(-ZCSVP*SQRT(PTKEM)/PLM*MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_SvPz(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID(MZF(PWM*ZFLXZ, KKA, KKU, KKL), X_LES_RES_W_SBG_WSv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID(-ZCSVP*SQRT(PTKEM)/PLM*MZF(ZFLXZ, D%NKA, D%NKU, D%NKL), X_LES_SUBGRID_SvPz(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID(MZF(PWM*ZFLXZ, D%NKA, D%NKU, D%NKL), X_LES_RES_W_SBG_WSv(:,:,:,JSV) )
     CALL SECOND_MNH(ZTIME2)
     XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
   END IF
