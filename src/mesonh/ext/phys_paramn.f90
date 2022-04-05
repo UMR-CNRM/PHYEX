@@ -1497,7 +1497,7 @@ GCOMPUTE_SRC=SIZE(XSIGS, 3)/=0
 !
 !
    CALL TURB( CST,CSTURB, TBUCONF, TURBN,YLDIMPHYEX,&
-              1, IKU, 1, IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,       &
+              IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,       &
               NSV, NSV_LGBEG, NSV_LGEND,CPROGRAM, L2D, LNOMIXLG,LFLAT,               &
               LLES_CALL, LCOUPLES, LBLOWSNOW,                                        &
               LTURB_FLX, LTURB_DIAG, LSUBG_COND, GCOMPUTE_SRC,                       &

@@ -4,7 +4,7 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
       SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,D,              &
-              & KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,            &
+              & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,            &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
               & O2D,ONOMIXLG,OFLAT,OLES_CALL,OCOUPLES,OBLOWSNOW,      &
               & OTURB_FLX,OTURB_DIAG,OSUBG_COND,OCOMPUTE_SRC,         &
@@ -285,9 +285,6 @@ TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
-INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
-INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
 INTEGER,                INTENT(IN)   :: KMI           ! model index number  
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
@@ -671,8 +668,8 @@ SELECT CASE (HTURBLEN)
 !           ------------------
 
   CASE ('RM17')
-    ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,D%NKA,KKU,KKL),D%NKA,KKU,KKL))
-    ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,D%NKA,KKU,KKL),D%NKA,KKU,KKL))
+    ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,D%NKA,D%NKU,D%NKL),D%NKA,D%NKU,D%NKL))
+    ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,D%NKA,D%NKU,D%NKL),D%NKA,D%NKU,D%NKL))
     !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ZSHEAR(:,:,:) = SQRT(ZDUDZ(:,:,:)*ZDUDZ(:,:,:) + ZDVDZ(:,:,:)*ZDVDZ(:,:,:))
     !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
@@ -682,8 +679,8 @@ SELECT CASE (HTURBLEN)
 !           --------------------------------------------------
 
   CASE ('ADAP')
-    ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,D%NKA,KKU,KKL),D%NKA,KKU,KKL))
-    ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,D%NKA,KKU,KKL),D%NKA,KKU,KKL))
+    ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,D%NKA,D%NKU,D%NKL),D%NKA,D%NKU,D%NKL))
+    ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,D%NKA,D%NKU,D%NKL),D%NKA,D%NKU,D%NKL))
     !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ZSHEAR(:,:,:) = SQRT(ZDUDZ(:,:,:)*ZDUDZ(:,:,:) + ZDVDZ(:,:,:)*ZDVDZ(:,:,:))
     !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
@@ -723,8 +720,8 @@ SELECT CASE (HTURBLEN)
    !
    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
    DO JK=IKTB,IKTE
-     ZLM(:,:,JK) = ( 0.5*(PZZ(:,:,JK)+PZZ(:,:,JK+KKL)) - &
-     & PZZ(:,:,D%NKA+JPVEXT_TURB*KKL) ) * PDIRCOSZW(:,:)
+     ZLM(:,:,JK) = ( 0.5*(PZZ(:,:,JK)+PZZ(:,:,JK+D%NKL)) - &
+     & PZZ(:,:,D%NKA+JPVEXT_TURB*D%NKL) ) * PDIRCOSZW(:,:)
      ZLM(:,:,JK) = ZALPHA  * ZLM(:,:,JK) * ZL0 / ( ZL0 + ZALPHA*ZLM(:,:,JK) )
    END DO
    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
@@ -770,7 +767,7 @@ IF (ORMC01) THEN
     ZSFRV(:,:)=0.
     ZLMO=LMO(ZUSTAR,ZTHLM(:,:,IKB),ZRVM,PSFTH,ZSFRV)
   END IF
-  CALL RMC01(HTURBLEN,D%NKA,KKU,KKL,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,ZLMO,ZLM,ZLEPS)
+  CALL RMC01(HTURBLEN,D%NKA,D%NKU,D%NKL,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,ZLMO,ZLM,ZLEPS)
 END IF
 !
 !RMC01 is only applied on RM17 in ADAP
@@ -829,10 +826,10 @@ ZCDUEFF(:,:) =-SQRT ( (PSFU(:,:)**2 + PSFV(:,:)**2) /               &
 !
 !*       4.6 compute the surface tangential fluxes
 !
-ZTAU11M(:,:) =2./3.*(  (1.+ (PZZ(:,:,IKB+KKL)-PZZ(:,:,IKB))  &
-                           /(PDZZ(:,:,IKB+KKL)+PDZZ(:,:,IKB))  &
+ZTAU11M(:,:) =2./3.*(  (1.+ (PZZ(:,:,IKB+D%NKL)-PZZ(:,:,IKB))  &
+                           /(PDZZ(:,:,IKB+D%NKL)+PDZZ(:,:,IKB))  &
                        )   *PTKET(:,:,IKB)                   &
-                     -0.5  *PTKET(:,:,IKB+KKL)                 &
+                     -0.5  *PTKET(:,:,IKB+D%NKL)                 &
                     )
 !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ZTAU12M(:,:) =0.0
@@ -850,10 +847,10 @@ ZMR2(:,:,:)  = 0.     ! w'r'2
 ZMTHR(:,:,:) = 0.     ! w'th'r'
 
 IF (HTOM=='TM06') THEN
-  CALL TM06(D%NKA,KKU,KKL,PTHVREF,PBL_DEPTH,PZZ,PSFTH,ZMWTH,ZMTH2)
+  CALL TM06(D%NKA,D%NKU,D%NKL,PTHVREF,PBL_DEPTH,PZZ,PSFTH,ZMWTH,ZMTH2)
 !
-  ZFWTH = -GZ_M_W(D%NKA,KKU,KKL,ZMWTH,PDZZ)    ! -d(w'2th' )/dz
-  !ZFWR  = -GZ_M_W(D%NKA,KKU,KKL,ZMWR, PDZZ)    ! -d(w'2r'  )/dz
+  ZFWTH = -GZ_M_W(D%NKA,D%NKU,D%NKL,ZMWTH,PDZZ)    ! -d(w'2th' )/dz
+  !ZFWR  = -GZ_M_W(D%NKA,D%NKU,D%NKL,ZMWR, PDZZ)    ! -d(w'2r'  )/dz
   ZFTH2 = -GZ_W_M(ZMTH2,PDZZ)    ! -d(w'th'2 )/dz
   !ZFR2  = -GZ_W_M(ZMR2, PDZZ)    ! -d(w'r'2  )/dz
   !ZFTHR = -GZ_W_M(ZMTHR,PDZZ)    ! -d(w'th'r')/dz
@@ -1075,13 +1072,13 @@ END IF
 !
 !  6.1 Contribution of mass-flux in the TKE buoyancy production if 
 !      cloud computation is not statistical 
-ZWORK1 = MZF(PFLXZTHVMF,D%NKA, KKU, KKL)
+ZWORK1 = MZF(PFLXZTHVMF,D%NKA, D%NKU, D%NKL)
 !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 PTP(:,:,:) = PTP(:,:,:) + CST%XG / PTHVREF(:,:,:) * ZWORK1(:,:,:)
 !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 
 IF(PRESENT(PTPMF))  THEN
-  ZWORK1 = MZF(PFLXZTHVMF, D%NKA, KKU, KKL)
+  ZWORK1 = MZF(PFLXZTHVMF, D%NKA, D%NKU, D%NKL)
   !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   PTPMF(:,:,:)=CST%XG / PTHVREF(:,:,:) * ZWORK1(:,:,:)
   !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
@@ -1258,14 +1255,14 @@ IF (OLES_CALL) THEN
     CALL LES_MEAN_SUBGRID(2./3.*PTKET,X_LES_SUBGRID_U2)
     X_LES_SUBGRID_V2(:,:,:) = X_LES_SUBGRID_U2(:,:,:)
     X_LES_SUBGRID_W2(:,:,:) = X_LES_SUBGRID_U2(:,:,:)
-    CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(D%NKA,KKU,KKL,PTHLT,PDZZ),&
-                          D%NKA, KKU, KKL),X_LES_RES_ddz_Thl_SBG_W2)
+    CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(D%NKA,D%NKU,D%NKL,PTHLT,PDZZ),&
+                          D%NKA, D%NKU, D%NKL),X_LES_RES_ddz_Thl_SBG_W2)
     IF (KRR>=1) &
-    CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(D%NKA,KKU,KKL,PRT(:,:,:,1),PDZZ),&
-                         &D%NKA, KKU, KKL),X_LES_RES_ddz_Rt_SBG_W2)
+    CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(D%NKA,D%NKU,D%NKL,PRT(:,:,:,1),PDZZ),&
+                         &D%NKA, D%NKU, D%NKL),X_LES_RES_ddz_Rt_SBG_W2)
     DO JSV=1,KSV
-      CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(D%NKA,KKU,KKL,PSVT(:,:,:,JSV),PDZZ), &
-                           &D%NKA, KKU, KKL), X_LES_RES_ddz_Sv_SBG_W2(:,:,:,JSV))
+      CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(D%NKA,D%NKU,D%NKL,PSVT(:,:,:,JSV),PDZZ), &
+                           &D%NKA, D%NKU, D%NKL), X_LES_RES_ddz_Sv_SBG_W2(:,:,:,JSV))
     END DO
   END IF
 
@@ -1496,9 +1493,9 @@ IF (LHOOK) CALL DR_HOOK('TURB:DELT',0,ZHOOK_HANDLE)
 IF (ODZ) THEN
   ! Dz is take into account in the computation
   DO JK = IKTB,IKTE ! 1D turbulence scheme
-    PLM(:,:,JK) = PZZ(:,:,JK+KKL) - PZZ(:,:,JK)
+    PLM(:,:,JK) = PZZ(:,:,JK+D%NKL) - PZZ(:,:,JK)
   END DO
-  PLM(:,:,KKU) = PLM(:,:,IKE)
+  PLM(:,:,D%NKU) = PLM(:,:,IKE)
   PLM(:,:,D%NKA) = PZZ(:,:,IKB) - PZZ(:,:,D%NKA)
   IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
     IF ( O2D) THEN
@@ -1538,7 +1535,7 @@ IF (.NOT. ORMC01) THEN
        END DO
       ELSE
         DO JK=IKTB,IKTE
-          ZD=ZALPHA*(0.5*(PZZ(JI,JJ,JK)+PZZ(JI,JJ,JK+KKL))&
+          ZD=ZALPHA*(0.5*(PZZ(JI,JJ,JK)+PZZ(JI,JJ,JK+D%NKL))&
           -PZZ(JI,JJ,IKB)) *PDIRCOSZW(JI,JJ)
           IF ( PLM(JI,JJ,JK)>ZD) THEN
             PLM(JI,JJ,JK)=ZD
@@ -1552,7 +1549,7 @@ IF (.NOT. ORMC01) THEN
 END IF
 !
 PLM(:,:,D%NKA) = PLM(:,:,IKB  )
-PLM(:,:,KKU  ) = PLM(:,:,IKE)
+PLM(:,:,D%NKU  ) = PLM(:,:,IKE)
 !
 IF (LHOOK) CALL DR_HOOK('TURB:DELT',1,ZHOOK_HANDLE)
 END SUBROUTINE DELT
@@ -1601,8 +1598,8 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::     &
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB:DEAR',0,ZHOOK_HANDLE)
 ! 1D turbulence scheme
-PLM(:,:,IKTB:IKTE) = PZZ(:,:,IKTB+KKL:IKTE+KKL) - PZZ(:,:,IKTB:IKTE)
-PLM(:,:,KKU) = PLM(:,:,IKE)
+PLM(:,:,IKTB:IKTE) = PZZ(:,:,IKTB+D%NKL:IKTE+D%NKL) - PZZ(:,:,IKTB:IKTE)
+PLM(:,:,D%NKU) = PLM(:,:,IKE)
 PLM(:,:,D%NKA) = PZZ(:,:,IKB) - PZZ(:,:,D%NKA)
 IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
   IF ( O2D) THEN
@@ -1620,10 +1617,10 @@ IF (KRR>0) THEN
   DO JK = IKTB+1,IKTE-1
     DO JJ=1,SIZE(PUT,2)
       DO JI=1,SIZE(PUT,1)
-        ZDTHLDZ(JI,JJ,JK)= 0.5*((PTHLT(JI,JJ,JK+KKL)-PTHLT(JI,JJ,JK    ))/PDZZ(JI,JJ,JK+KKL)+ &
-                                (PTHLT(JI,JJ,JK    )-PTHLT(JI,JJ,JK-KKL))/PDZZ(JI,JJ,JK    ))
-        ZDRTDZ(JI,JJ,JK) = 0.5*((PRT(JI,JJ,JK+KKL,1)-PRT(JI,JJ,JK    ,1))/PDZZ(JI,JJ,JK+KKL)+ &
-                                (PRT(JI,JJ,JK    ,1)-PRT(JI,JJ,JK-KKL,1))/PDZZ(JI,JJ,JK    ))
+        ZDTHLDZ(JI,JJ,JK)= 0.5*((PTHLT(JI,JJ,JK+D%NKL)-PTHLT(JI,JJ,JK    ))/PDZZ(JI,JJ,JK+D%NKL)+ &
+                                (PTHLT(JI,JJ,JK    )-PTHLT(JI,JJ,JK-D%NKL))/PDZZ(JI,JJ,JK    ))
+        ZDRTDZ(JI,JJ,JK) = 0.5*((PRT(JI,JJ,JK+D%NKL,1)-PRT(JI,JJ,JK    ,1))/PDZZ(JI,JJ,JK+D%NKL)+ &
+                                (PRT(JI,JJ,JK    ,1)-PRT(JI,JJ,JK-D%NKL,1))/PDZZ(JI,JJ,JK    ))
         IF (OOCEAN) THEN
           ZVAR=CST%XG*(CST%XALPHAOC*ZDTHLDZ(JI,JJ,JK)-CST%XBETAOC*ZDRTDZ(JI,JJ,JK))
         ELSE
@@ -1642,8 +1639,8 @@ ELSE! For dry atmos or unsalted ocean runs
   DO JK = IKTB+1,IKTE-1
     DO JJ=1,SIZE(PUT,2)
       DO JI=1,SIZE(PUT,1)
-        ZDTHLDZ(JI,JJ,JK)= 0.5*((PTHLT(JI,JJ,JK+KKL)-PTHLT(JI,JJ,JK    ))/PDZZ(JI,JJ,JK+KKL)+ &
-                                (PTHLT(JI,JJ,JK    )-PTHLT(JI,JJ,JK-KKL))/PDZZ(JI,JJ,JK    ))
+        ZDTHLDZ(JI,JJ,JK)= 0.5*((PTHLT(JI,JJ,JK+D%NKL)-PTHLT(JI,JJ,JK    ))/PDZZ(JI,JJ,JK+D%NKL)+ &
+                                (PTHLT(JI,JJ,JK    )-PTHLT(JI,JJ,JK-D%NKL))/PDZZ(JI,JJ,JK    ))
         IF (OOCEAN) THEN
           ZVAR= CST%XG*CST%XALPHAOC*ZDTHLDZ(JI,JJ,JK)
         ELSE
@@ -1659,10 +1656,10 @@ ELSE! For dry atmos or unsalted ocean runs
   END DO
 END IF
 !  special case near the surface 
-ZDTHLDZ(:,:,IKB)=(PTHLT(:,:,IKB+KKL)-PTHLT(:,:,IKB))/PDZZ(:,:,IKB+KKL)
+ZDTHLDZ(:,:,IKB)=(PTHLT(:,:,IKB+D%NKL)-PTHLT(:,:,IKB))/PDZZ(:,:,IKB+D%NKL)
 ! For dry simulations
 IF (KRR>0) THEN
-  ZDRTDZ(:,:,IKB)=(PRT(:,:,IKB+KKL,1)-PRT(:,:,IKB,1))/PDZZ(:,:,IKB+KKL)
+  ZDRTDZ(:,:,IKB)=(PRT(:,:,IKB+D%NKL,1)-PRT(:,:,IKB,1))/PDZZ(:,:,IKB+D%NKL)
 ELSE
   ZDRTDZ(:,:,IKB)=0
 ENDIF
@@ -1696,7 +1693,7 @@ IF (.NOT. ORMC01) THEN
         END DO
       ELSE
         DO JK=IKTB,IKTE
-          ZD=ZALPHA*(0.5*(PZZ(JI,JJ,JK)+PZZ(JI,JJ,JK+KKL))-PZZ(JI,JJ,IKB)) &
+          ZD=ZALPHA*(0.5*(PZZ(JI,JJ,JK)+PZZ(JI,JJ,JK+D%NKL))-PZZ(JI,JJ,IKB)) &
             *PDIRCOSZW(JI,JJ)
           IF ( PLM(JI,JJ,JK)>ZD) THEN
             PLM(JI,JJ,JK)=ZD
@@ -1710,8 +1707,8 @@ IF (.NOT. ORMC01) THEN
 END IF
 !
 PLM(:,:,D%NKA) = PLM(:,:,IKB  )
-PLM(:,:,IKE  ) = PLM(:,:,IKE-KKL)
-PLM(:,:,KKU  ) = PLM(:,:,KKU-KKL)
+PLM(:,:,IKE  ) = PLM(:,:,IKE-D%NKL)
+PLM(:,:,D%NKU  ) = PLM(:,:,D%NKU-D%NKL)
 !
 IF (LHOOK) CALL DR_HOOK('TURB:DEAR',1,ZHOOK_HANDLE)
 END SUBROUTINE DEAR
