@@ -7,7 +7,7 @@ INTERFACE
        SUBROUTINE CONDENSATION( KIU, KJU, KKU, KIB, KIE, KJB, KJE, KKB, KKE, KKL,&
           HFRAC_ICE, HCONDENS, HLAMBDA3, &
           PPABS, PZZ, PRHODREF, PT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
-          PRS, PRG, PSIGS, PMFCONV, PCLDFR, PSIGRC, OUSERI,&
+          PRR, PRS, PRG, PSIGS, PMFCONV, PCLDFR, PSIGRC, OUSERI,&
           OSIGMAS, OCND2, PSIGQSAT, &
           PLV, PLS, PCPH, &
           PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PICE_CLD_WGT)
@@ -45,6 +45,7 @@ REAL, DIMENSION(KIU,KJU,KKU), INTENT(IN)    :: PRC_IN ! grid scale r_c mixing ra
 REAL, DIMENSION(KIU,KJU,KKU), INTENT(OUT)   :: PRC_OUT! grid scale r_c mixing ratio (kg/kg) in output
 REAL, DIMENSION(KIU,KJU,KKU), INTENT(IN)    :: PRI_IN ! grid scale r_i (kg/kg) in input
 REAL, DIMENSION(KIU,KJU,KKU), INTENT(OUT)   :: PRI_OUT! grid scale r_i (kg/kg) in output
+REAL, DIMENSION(KIU,KJU,KKU), INTENT(IN)    :: PRR    ! grid scale mixing ration of rain (kg/kg)
 REAL, DIMENSION(KIU,KJU,KKU), INTENT(IN)    :: PRS    ! grid scale mixing ration of snow (kg/kg)
 REAL, DIMENSION(KIU,KJU,KKU), INTENT(IN)    :: PRG    ! grid scale mixing ration of graupel (kg/kg)
 REAL, DIMENSION(KIU,KJU,KKU), INTENT(IN)    :: PSIGS  ! Sigma_s from turbulence scheme

@@ -7,7 +7,7 @@
     SUBROUTINE CONDENSATION( KIU, KJU, KKU, KIB, KIE, KJB, KJE, KKB, KKE, KKL,         &
        HFRAC_ICE, HCONDENS, HLAMBDA3,                                                  &
        PPABS, PZZ, PRHODREF, PT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT,    &
-       PRS, PRG, PSIGS, PMFCONV, PCLDFR, PSIGRC, OUSERI,                               &
+       PRR, PRS, PRG, PSIGS, PMFCONV, PCLDFR, PSIGRC, OUSERI,                          &
        OSIGMAS, OCND2, PSIGQSAT,                                                       &
        PLV, PLS, PCPH,                                                                 &
        PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                                         &
@@ -127,6 +127,7 @@ LOGICAL, INTENT(IN)                         :: OCND2  ! logical switch to sparat
                                                       ! more rigid (DEFALT value : .FALSE.)
 REAL, DIMENSION(KIU,KJU),     INTENT(IN)    :: PSIGQSAT ! use an extra "qsat" variance contribution (OSIGMAS case)
                                                         ! multiplied by PSIGQSAT
+REAL, DIMENSION(KIU,KJU,KKU), INTENT(IN)    :: PRR    ! grid scale mixing ration of rain (kg/kg)
 REAL, DIMENSION(KIU,KJU,KKU), INTENT(IN)    :: PRS    ! grid scale mixing ration of snow (kg/kg)
 REAL, DIMENSION(KIU,KJU,KKU), INTENT(IN)    :: PRG    ! grid scale mixing ration of graupel (kg/kg)
 REAL, DIMENSION(KIU,KJU,KKU), INTENT(IN)    :: PSIGS  ! Sigma_s from turbulence scheme
@@ -155,24 +156,24 @@ REAL,    DIMENSION(KIU,KJU)  :: ZTMIN           ! minimum Temp. related to ITPL
 REAL, DIMENSION(KIU,KJU,KKU) :: ZLV, ZLS, ZCPD
 REAL :: ZGCOND, ZAUTC, ZAUTI, ZGAUV, ZGAUC, ZGAUI, ZGAUTC, ZGAUTI, ZCRIAUTI   ! Used for Gaussian PDF integration
 REAL :: ZLVS                                      ! thermodynamics
-REAL, DIMENSION(KIB:KIE) :: ZPV, ZPIV, ZQSL, ZQSI ! thermodynamics
+REAL, DIMENSION(KIU) :: ZPV, ZPIV, ZQSL, ZQSI ! thermodynamics
 REAL :: ZLL, DZZ, ZZZ                           ! used for length scales 
 REAL :: ZAH, ZDRW, ZDTL, ZSIG_CONV                     ! related to computation of Sig_s
-REAL, DIMENSION(KIB:KIE) :: ZA, ZB, ZSBAR, ZSIGMA, ZQ1 ! related to computation of Sig_s
-REAL, DIMENSION(KIB:KIE) :: ZCOND
-REAL, DIMENSION(KIB:KIE) :: ZFRAC           ! Ice fraction
+REAL, DIMENSION(KIU) :: ZA, ZB, ZSBAR, ZSIGMA, ZQ1 ! related to computation of Sig_s
+REAL, DIMENSION(KIU) :: ZCOND
+REAL, DIMENSION(KIU) :: ZFRAC           ! Ice fraction
 INTEGER  :: INQ1
 REAL :: ZINC
 ! related to OCND2 noise check :
 REAL :: ZRSP,  ZRSW, ZRFRAC, ZRSDIF, ZRCOLD
 ! related to OCND2  ice cloud calulation :
-REAL, DIMENSION(KIB:KIE) :: ESATW_T
+REAL, DIMENSION(KIU) :: ESATW_T
 REAL :: ZDUM1,ZDUM2,ZDUM3,ZDUM4,ZPRIFACT
 REAL, DIMENSION(KIU,KJU,KKU) :: TCLD
-REAL :: ZDZ(KIB:KIE), ZARDUM(KIE-KIB+1),ZCLDUM(KIE-KIB+1)
+REAL :: ZDZ(KIU), ZARDUM(KIU),ZCLDUM(KIU)
 ! end OCND2
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
-INTEGER, DIMENSION(KIB:KIE) :: IERR
+INTEGER, DIMENSION(KIU) :: IERR
 !
 !*       0.3  Definition of constants :
 !
@@ -248,6 +249,9 @@ ELSE
     DO JJ=KJB,KJE
       DO JI=KIB,KIE
         ZCPD(JI,JJ,JK) = XCPD + XCPV*PRV_IN(JI,JJ,JK) + XCL*PRC_IN(JI,JJ,JK) + XCI*PRI_IN(JI,JJ,JK) + &
+#ifndef REPRO48
+                                XCL*PRR(JI,JJ,JK) +
+#endif
                                 XCI*(PRS(JI,JJ,JK) + PRG(JI,JJ,JK) )
       ENDDO
     ENDDO
@@ -265,7 +269,14 @@ IF ( .NOT. OSIGMAS ) THEN
     END DO
   END DO
   ! Determine tropopause/inversion  height from minimum temperature
+#ifdef REPRO48
   ITPL(:,:)  = KIB+1
+  !I (Sébastien Riette) don't understand why tropopause level is set
+  !with the index of the second physical point on the horizontal (i.e. 2+JPHEXT)!!!
+  !I assume it is a bug...
+#else
+  ITPL(:,:)  = KKB+KKL
+#endif
   ZTMIN(:,:) = 400.
   DO JK = IKTB+1,IKTE-1
     DO JJ=KJB,KJE

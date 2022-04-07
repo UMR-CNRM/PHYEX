@@ -470,7 +470,7 @@ IF ( OSUBG_COND ) THEN
   CALL CONDENSATION(IIU, IJU, IKU, IIB, IIE, IJB, IJE, IKB, IKE, KKL,    &
        HFRAC_ICE, HCONDENS, HLAMBDA3,                                    &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
-       PRS, PRG, PSIGS, PMFCONV, PCLDFR, &
+       PRR, PRS, PRG, PSIGS, PMFCONV, PCLDFR, &
        PSRCS, .TRUE., OSIGMAS,                                           &
        OCND2, PSIGQSAT,                                                  &
        PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                                      &
@@ -489,7 +489,7 @@ ELSE
   CALL CONDENSATION(IIU, IJU, IKU, IIB, IIE, IJB, IJE, IKB, IKE, KKL,    &
        HFRAC_ICE, HCONDENS, HLAMBDA3,                                    &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
-       PRS, PRG, ZSIGS, PMFCONV, PCLDFR, &
+       PRR, PRS, PRG, ZSIGS, PMFCONV, PCLDFR, &
        ZSRCS, .TRUE., OSIGMAS=.TRUE.,                                    &
        OCND2=OCND2, PSIGQSAT=ZSIGQSAT,                                   &
        PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                                      &
