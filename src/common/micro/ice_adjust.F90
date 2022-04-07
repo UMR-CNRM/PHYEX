@@ -474,7 +474,7 @@ IF ( OSUBG_COND ) THEN
   CALL CONDENSATION(D, CST, ICEP, NEB, &
        HFRAC_ICE, HCONDENS, HLAMBDA3,                                    &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
-       PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, &
+       PRR, PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, &
        PSRCS, .TRUE., OSIGMAS,                                           &
        OCND2, PSIGQSAT,                                                  &
        PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                                      &
@@ -493,7 +493,7 @@ ELSE
   CALL CONDENSATION(D, CST, ICEP, NEB, &
        HFRAC_ICE, HCONDENS, HLAMBDA3,                                    &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
-       PRS, PRG, ZSIGS, LMFCONV, PMFCONV, PCLDFR, &
+       PRR, PRS, PRG, ZSIGS, LMFCONV, PMFCONV, PCLDFR, &
        ZSRCS, .TRUE., OSIGMAS=.TRUE.,                                    &
        OCND2=OCND2, PSIGQSAT=ZSIGQSAT,                                   &
        PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                                      &

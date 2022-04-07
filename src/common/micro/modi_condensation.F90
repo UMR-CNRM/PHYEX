@@ -7,7 +7,7 @@ INTERFACE
        SUBROUTINE CONDENSATION(D, CST, ICEP, NEB, &
                               &HFRAC_ICE, HCONDENS, HLAMBDA3, &
                               &PPABS, PZZ, PRHODREF, PT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
-                              &PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, PSIGRC, OUSERI,&
+                              &PRR, PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, PSIGRC, OUSERI,&
                               &OSIGMAS, OCND2, PSIGQSAT, &
                               &PLV, PLS, PCPH, &
                               &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PICE_CLD_WGT)
@@ -43,6 +43,7 @@ LOGICAL, INTENT(IN)                         :: OCND2  ! logical switch to sparat
                                                       ! more rigid (DEFALT value : .FALSE.)
 REAL, DIMENSION(D%NIT,D%NJT),     INTENT(IN)    :: PSIGQSAT ! use an extra "qsat" variance contribution (OSIGMAS case)
                                                         ! multiplied by PSIGQSAT
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRR    ! grid scale mixing ration of rain (kg/kg)
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRS    ! grid scale mixing ration of snow (kg/kg)
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRG    ! grid scale mixing ration of graupel (kg/kg)
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PSIGS  ! Sigma_s from turbulence scheme
