@@ -30,6 +30,7 @@ if [ $(hostname | cut -c 1-7) == 'belenos' -o $(hostname | cut -c 1-7) == 'taran
   gmkpack_o=2y
   defaultMainPackVersion=01
   defaultRef=split
+  availTests="${availTests},big_3D"
 else
   HPC=0
   gmkpack_l=MPIGFORTRAN920DBL
@@ -157,7 +158,7 @@ if [ ! -z "${reference-}" ]; then
   reffromdir=''
   if echo $reference | grep '/' > /dev/null; then
     reffromdir=$reference
-    name="PHYEX/48t1_$(echo $reference | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g').01.${gmkpack_l}.${gmkpack_o}"
+    refname="PHYEX/48t1_$(echo $reference | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g').01.${gmkpack_l}.${gmkpack_o}"
   elif echo $specialPack | grep -w $reference > /dev/null; then
     refname="PHYEX/$reference"
   else
@@ -210,7 +211,7 @@ if [ $compilation -eq 1 ]; then
     fi
     #Special modification of the compilation configuration file and script
     sed -i 's/-ftree-vectorize//' $HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
-    sed -i "/GMK_FCFLAGS_PHYEX/s/$/ -DREPRO48/" $HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
+    sed -i "/MACROS_FRT/s/$/ -DREPRO48/" $HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
     #sed -i "s/PHYEX\/48t1_$$.01.${gmkpack_l}.${gmkpack_o}/$(echo $name | sed 's/\//\\\//')/" $HOMEPACK/$name/ics_masterodb #this line could be used if pack was renamed before compilation but it does not work on belenos
 
     resetpack -f #Is it really useful?
@@ -257,6 +258,7 @@ if [ $compilation -eq 1 ]; then
     [ -f $EXT/namparar.nam.h ] && mv $EXT/namparar.nam.h ../arpifs/namelist
     [ -f $EXT/suparar.F90 ] && mv $EXT/suparar.F90 ../arpifs/phys_dmn/
     [ -f $EXT/apl_arome.F90 ] && mv $EXT/apl_arome.F90 ../arpifs/phys_dmn/
+    [ -f $EXT/suphmpa.F90 ] && mv $EXT/suphmpa.F90 ../arpifs/phys_dmn/
     #Special mpa case
     [ -f $EXT/modd_spp_type.F90 ] && mv $EXT/modd_spp_type.F90 ../mpa/micro/externals/
     if [ $EXT == "PHYEX/externals" ]; then
@@ -323,7 +325,7 @@ if [ $run -ge 1 ]; then
     cd $HOMEPACK/$name
     mkdir -p conf_tests/$t
     cd conf_tests/$t
-    MYLIB=$name exescript Output_run $dirconf/$t/aro48t1.sh
+    MYLIB=$name TESTDIR=$dirconf/$t exescript Output_run $dirconf/$t/aro48t1.sh
   done
 fi
 
@@ -355,7 +357,7 @@ if [ $check -eq 1 ]; then
       if [ ! -f "$file2" ]; then
         mess2="Result ($file2) for commit $reference does not exist, please run the simulation"
         t=1
-        if [ "$mess" == "" ]; then
+        if [ "$mess" = "" ]; then
           mess=$mess2
         else
           mess="$mess and $mess2"

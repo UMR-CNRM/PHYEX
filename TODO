@@ -1,0 +1,4 @@
+Supprimer répertoire Tools en modifiant le script diffNODE.001_01
+Déplacer les scripts dans un répertoire
+Activer le cas ARMCU
+Rendre le cas big_3D utilisable sur taranis

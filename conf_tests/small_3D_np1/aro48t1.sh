@@ -6,6 +6,7 @@
 #SBATCH -p normal256
 
 #The MYLIB varibale must contain the gmkpack pack name
+#The TESTDIR variable must contain the test directory
 #Results will be stored in the local directory
 
 #Other environment varaibles that can be set:
@@ -15,13 +16,8 @@ date
 
 OUTPUTDIR=${OUTPUTDIR:-$PWD}
 case=riette2
-#rekchemin=/home/khatib
-#rekchemin=/home/riette/AROME/export
-if [ $(hostname | cut -c 1-7) == 'belenos' ]; then
-  rekchemin=/scratch/work/riette/202005_externalisation_physique/conf_tests/small_3D
-else
-  rekchemin=/cnrm/phynh/data1/riette/DATA/202005_externalisation_physique/conf_tests/small_3D
-fi
+#rekchemin="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )" #Resources for the run must be in the same directory as this script
+rekchemin=$TESTDIR
 
 NPROC=1
 NSTRIN=$NPROC

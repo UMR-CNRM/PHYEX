@@ -318,9 +318,9 @@ NSTROUT=${NPROC}
 NSTRIN=${NPROC}
 
 NPRGPEW=16
-NPRGPNS=((NPROC/NPRGPEW))
+#NPRGPNS=((NPROC/NPRGPEW))
 NPRTRV=16
-NPRTRW=((NPROC/NPRTRV))
+#NPRTRW=((NPROC/NPRTRV))
 
 set +x
 
@@ -520,21 +520,25 @@ echo
 if [ $(echo $LOCAL_MPI_WRAPPER | grep -c mpiauto) -ne 0 ] ; then
   set -x
   time $LOCAL_MPI_WRAPPER -np $MPI_TASKS -nnp $MPITASKS_PER_NODE -- ./$EXECUTABLE </dev/null \
+  errorcode=$?
   2>&1 | grep -v "FA[DC]GR[AM]: Field .* is not declared in \`faFieldName.def'"
   set +x
 elif [ "$LOCAL_MPI_WRAPPER" = "srun" ] ; then
   set -x
   time $LOCAL_MPI_WRAPPER ./$EXECUTABLE </dev/null \
+  errorcode=$?
   2>&1 | grep -v "FA[DC]GR[AM]: Field .* is not declared in \`faFieldName.def'"
   set +x
 elif [ "$LOCAL_MPI_WRAPPER" ] ; then
   set -x
   time $LOCAL_MPI_WRAPPER -np $MPI_TASKS ./$EXECUTABLE </dev/null \
+  errorcode=$?
   2>&1 | grep -v "FA[DC]GR[AM]: Field .* is not declared in \`faFieldName.def'"
   set +x
 else
   set -x
   time ./$EXECUTABLE \
+  errorcode=$?
   2>&1 | grep -v "FA[DC]GR[AM]: Field .* is not declared in \`faFieldName.def'"
   set +x
 fi
@@ -561,7 +565,13 @@ ls -l $OUTDIR
 set +x
 
 set -x
-cp $EXPLIST $OUTPUTDIR/
+#errorcode returned by executable is not reliable (always different from 0)
+if grep " NSTEP =  1728 CNT0" NODE.001_01 > /dev/null; then
+  cp $EXPLIST $OUTPUTDIR/
+else
+  mkdir $OUTPUTDIR/error
+  cp $EXPLIST $OUTPUTDIR/error/
+fi
 if [ -f $REFLIST ] && [ -f $EXPLIST ] ; then $TOOLSDIR/diffNODE.001_01 $EXPLIST $REFLIST ; fi
 set +x
 #      ****************

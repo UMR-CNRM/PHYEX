@@ -47,7 +47,7 @@ sed -i 's/IF (LBUDGET_RH)/IF (LBUDGET_RH .AND. KRR==7)/' mpa/micro/externals/aro
 #Compilation
 cd /cnrm/phynh/data1/riette/DATA/202005_externalisation_physique/pack/48t1_phyex.${version}.MPIGFORTRAN920DBL.xfftw
 grep MPA .gmkfile/MPIGFORTRAN920DBL.GMAP | sed 's/MPA/PHYEX/g' >> .gmkfile/MPIGFORTRAN920DBL.GMAP # <-------------------- to be modified by Ryad
-édition pour ajouter -DREPRO48 pour supprimer les corrections de bugs et assurer la reproduction avec le cy48
+édition pour ajouter -DREPRO48 à la variable MACROS_FRT supprimer les corrections de bugs et assurer la reproduction avec le cy48
 édition pour retirer (ubuntu) -ftree-vectorize
 sed -i 's/GMK_THREADS=1/GMK_THREADS=10/' ics_masterodb
 cleanpack -f
@@ -79,7 +79,7 @@ sed -i 's/IF (LBUDGET_RH)/IF (LBUDGET_RH .AND. KRR==7)/' mpa/micro/externals/aro
 #Compilation
 cd /scratch/work/riette/202005_externalisation_physique/pack/48t1_phyex.${version}.MIMPIIFC1805.2y/
 grep MPA .gmkfile/MIMPIIFC1805.EPONA | sed 's/MPA/PHYEX/g' >> .gmkfile/MIMPIIFC1805.EPONA # <-------------------- to be modified by Ryad
-édition pour ajouter -DREPRO48 pour supprimer les corrections de bugs et assurer la reproduction avec le cy48
+édition pour ajouter -DREPRO48 à la variable MACROS_FRT supprimer les corrections de bugs et assurer la reproduction avec le cy48
 sed -i 's/GMK_THREADS=1/GMK_THREADS=10/' ics_masterodb
 cleanpack -f
 resetpack -f
