@@ -57,6 +57,8 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 IF (LHOOK) CALL DR_HOOK('INI_CTURB',0,ZHOOK_HANDLE)
 !
+CALL CTURB_ASSOCIATE()
+!
 !  ---------------------------------------------------------------------------
 !
 !         1. SETTING THE NUMERICAL VALUES
