@@ -167,9 +167,15 @@ ENDIF
 !*       3.4.5  compute the autoconversion of r_i for r_s production: RIAUTS
 !
 DO JL=1, KSIZE
-  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(4)-PHLI_HRI(JL))) * & ! PHLI_HRI(:)>XRTMIN(4)
-           &MAX(0., -SIGN(1., 1.E-20-PHLI_HCF(JL))) * & ! PHLI_HCF(:) .GT. 1.E-20
+#ifdef REPRO48
+  !This was wrong because, with this formulation and in the LDSOFT case, PRIAUTS
+  !was not set to 0 when ri is inferior to the autoconversion threshold
+  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(4)-PRIT(JL))) * & ! PRIT(:)>XRTMIN(4)
            &PCOMPUTE(JL)
+#else
+  ZMASK(JL)=MAX(0., -SIGN(1., XRTMIN(4)-PHLI_HRI(JL))) * & ! PHLI_HRI(:)>XRTMIN(4)
+           &PCOMPUTE(JL)
+#endif
 ENDDO
 IF(LDSOFT) THEN
   DO JL=1, KSIZE
@@ -181,8 +187,7 @@ ELSE
   ZCRIAUTI(:)=MIN(XCRIAUTI,10**(XACRIAUTI*(PT(:)-XTT)+XBCRIAUTI))
   WHERE(ZMASK(:)==1.)
     PRIAUTS(:) = XTIMAUTI * EXP( XTEXAUTI*(PT(:)-XTT) ) &
-                          * MAX( PHLI_HRI(:)/PHLI_HCF(:)-ZCRIAUTI(:),0.0 )
-    PRIAUTS(:) = PHLI_HCF(:)*PRIAUTS(:)
+                          * MAX(PHLI_HRI(:)-ZCRIAUTI(:)*PHLI_HCF(:), 0.)
   END WHERE
 ENDIF
 !

@@ -248,17 +248,6 @@ ENDIF
 !Ice water split between high and low content part is done according to autoconversion option
 ZCRIAUTI(:)=MIN(XCRIAUTI,10**(XACRIAUTI*(PT(:)-XTT)+XBCRIAUTI)) ! Autoconversion ri threshold
 IF(HSUBG_AUCV_RI=='NONE') THEN
-
-
-!La raison de la non reproduction n'est pas comprise avec certitude
-!Il faudra vérifier que le code fait toujours ce qui est attendu
-!une fois tous les éléments assemblés
-#ifdef REPRO48
-  PHLI_HCF(:)=1.
-  PHLI_LCF(:)=0.
-  PHLI_HRI(:)=PRIT(:)
-  PHLI_LRI(:)=0.
-#else
   !Cloud water is entirely in low or high part
   WHERE(PRIT(:)>ZCRIAUTI(:))
     PHLI_HCF(:)=1.
@@ -276,7 +265,6 @@ IF(HSUBG_AUCV_RI=='NONE') THEN
     PHLI_HRI(:)=0.
     PHLI_LRI(:)=0.
   END WHERE
-#endif
 ELSEIF(HSUBG_AUCV_RI=='CLFR') THEN
   !Cloud water is only in the cloudy part and entirely in low or high part
   WHERE(PCF(:)>0. .AND. PRIT(:)>ZCRIAUTI(:)*PCF(:))
