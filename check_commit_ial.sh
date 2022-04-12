@@ -43,7 +43,7 @@ mainPackVersion=${mainPackVersion:-${defaultMainPackVersion}}
 extraCompilationCheck=1
 
 function usage {
-  echo "Usage: $0 [-h] [-c] [-r ] [-C reference] [-t test] commit reference"
+  echo "Usage: $0 [-h] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t test] commit reference"
   echo "commit          commit hash (or a directory, or among $specialPack) to test"
   echo "reference       commit hash (or a directory, or among $specialPack) REF to use as a reference"
   echo "-s              suppress compilation pack"
@@ -90,7 +90,7 @@ while [ -n "$1" ]; do
      *) if [ -z "${commit-}" ]; then
           commit=$1
         else
-          if [ -z "${reference-}" ]; then		
+          if [ -z "${reference-}" ]; then
             reference=$1
           else
             echo "Only two commit hash allowed on command line"
