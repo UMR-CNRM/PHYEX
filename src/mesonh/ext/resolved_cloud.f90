@@ -298,9 +298,10 @@ USE MODD_NSV,            ONLY: NSV_C1R3END, NSV_C2R2BEG, NSV_C2R2END,           
                                NSV_LIMA_NC, NSV_LIMA_NI, NSV_LIMA_NR
 USE MODD_PARAM_C2R2,     ONLY: LSUPSAT
 USE MODD_PARAMETERS,     ONLY: JPHEXT, JPVEXT
-USE MODD_PARAM_ICE,      ONLY: CSEDIM, LADJ_BEFORE, LADJ_AFTER, CFRAC_ICE_ADJUST, LRED
+USE MODD_PARAM_ICE,      ONLY: CSEDIM, LADJ_BEFORE, LADJ_AFTER, CFRAC_ICE_ADJUST, LRED, &
+                               PARAM_ICE
 USE MODD_PARAM_LIMA,     ONLY: LADJ, LCOLD, LPTSPLIT, LSPRO, NMOD_CCN, NMOD_IFN, NMOD_IMM
-USE MODD_RAIN_ICE_DESCR, ONLY: XRTMIN
+USE MODD_RAIN_ICE_DESCR, ONLY: XRTMIN, RAIN_ICE_DESCR
 USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM
 USE MODD_SALT,           ONLY: LSALT
 USE MODD_TURB_n,         ONLY: CSUBG_AUCV_RI, CCONDENS, CLAMBDA3, CSUBG_MF_PDF
@@ -783,10 +784,10 @@ SELECT CASE ( HCLOUD )
                    PRS(:,:,:,4)>ZRSMIN(4) .OR. &
                    PRS(:,:,:,5)>ZRSMIN(5) .OR. &
                    PRS(:,:,:,6)>ZRSMIN(6)
-      CALL RAIN_ICE_RED (COUNT(LLMICRO), SIZE(PTHT, 1), SIZE(PTHT, 2), &
-                    SIZE(PTHT, 3), COUNT(LLMICRO), &
+      CALL RAIN_ICE_RED (YLDIMPHYEX,CST, PARAM_ICE, RAIN_ICE_PARAM, RAIN_ICE_DESCR,TBUCONF,&
+                    COUNT(LLMICRO), COUNT(LLMICRO), &
                     OSEDIC, .FALSE.,CSEDIM, HSUBG_AUCV, CSUBG_AUCV_RI,&
-                    OWARM,1,IKU,1,                                       &
+                    OWARM,                                               &
                     PTSTEP, KRR, LLMICRO, ZEXN,                          &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT,PCLDFR,&
                     PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,              &
@@ -800,23 +801,9 @@ SELECT CASE ( HCLOUD )
                     TBUDGETS,SIZE(TBUDGETS),           &
                     PSEA,PTOWN, PFPR=ZFPR                                )
     ELSE 
-          CALL RAIN_ICE_RED (COUNT(LLMICRO), SIZE(PTHT, 1), SIZE(PTHT, 2), &
-                    SIZE(PTHT, 3), COUNT(LLMICRO), &
-                    OSEDIC, .FALSE.,CSEDIM, HSUBG_AUCV, CSUBG_AUCV_RI,&
-                    OWARM,1,IKU,1,                                       &
-                    PTSTEP, KRR, LLMICRO, ZEXN,                          &
-                    ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT,PCLDFR,&
-                    PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,              &
-                    PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                    &
-                    PRT(:,:,:,3), PRT(:,:,:,4),                          &
-                    PRT(:,:,:,5), PRT(:,:,:,6),                          &
-                    PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),      &
-                    PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),            &
-                    PINPRC,PINPRR,  PEVAP3D,                    &
-                    PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,              &
-                    TBUDGETS,SIZE(TBUDGETS),           &
-                    PSEA,PTOWN, PFPR=ZFPR                                )
+!    CALL RAIN_ICE_OLD
     END IF
+
 !
 !*       9.2    Perform the saturation adjustment over cloud ice and cloud water
 !
@@ -892,9 +879,10 @@ SELECT CASE ( HCLOUD )
                    PRS(:,:,:,5)>ZRSMIN(5) .OR. &
                    PRS(:,:,:,6)>ZRSMIN(6) .OR. &
                    PRS(:,:,:,7)>ZRSMIN(7)
-     CALL RAIN_ICE_RED (COUNT(LLMICRO), SIZE(PTHT, 1), SIZE(PTHT, 2), SIZE(PTHT, 3),&
-                    COUNT(LLMICRO), OSEDIC, .FALSE., CSEDIM, HSUBG_AUCV, CSUBG_AUCV_RI,&
-                    OWARM, 1, IKU, 1,             &
+     CALL RAIN_ICE_RED (YLDIMPHYEX,CST, PARAM_ICE, RAIN_ICE_PARAM, RAIN_ICE_DESCR,TBUCONF,&
+                    COUNT(LLMICRO), COUNT(LLMICRO), &
+                    OSEDIC, .FALSE., CSEDIM, HSUBG_AUCV, CSUBG_AUCV_RI,&
+                    OWARM,                                                &
                     PTSTEP, KRR, LLMICRO, ZEXN,             &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                     PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
@@ -908,24 +896,8 @@ SELECT CASE ( HCLOUD )
                     TBUDGETS,SIZE(TBUDGETS),                     &            
                     PSEA, PTOWN,                                          &
                     PRT(:,:,:,7), PRS(:,:,:,7), PINPRH, PFPR=ZFPR         )
- 
     ELSE
-     CALL RAIN_ICE_RED (COUNT(LLMICRO), SIZE(PTHT, 1), SIZE(PTHT, 2), SIZE(PTHT, 3),&
-                    COUNT(LLMICRO), OSEDIC, .FALSE., CSEDIM, HSUBG_AUCV, CSUBG_AUCV_RI,&
-                    OWARM, 1, IKU, 1,             &
-                    PTSTEP, KRR, LLMICRO, ZEXN,             &
-                    ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
-                    PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
-                    PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                     &
-                    PRT(:,:,:,3), PRT(:,:,:,4),                           &
-                    PRT(:,:,:,5), PRT(:,:,:,6),                           &
-                    PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),       &
-                    PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),             &
-                    PINPRC, PINPRR, PEVAP3D,                    &
-                    PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,               &
-                    TBUDGETS,SIZE(TBUDGETS),                     &            
-                    PSEA, PTOWN,                                          &
-                    PRT(:,:,:,7), PRS(:,:,:,7), PINPRH, PFPR=ZFPR         )
+    !CALL RAIN_ICE_OLD
     END IF
 
 

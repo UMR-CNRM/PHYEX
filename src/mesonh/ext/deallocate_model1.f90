@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1997-2021 CNRS, Meteo-France and Universite Paul Sabatier
+MNH_LIC Copyright 1997-2021 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -531,15 +531,9 @@ END IF
 !
 !*     14.     Modules RAIN_ICE_DESCR and MODD_RAIN_ICE_PARAM
 !
-IF (  ALLOCATED(XRTMIN) .AND. KCALL == 4 ) THEN
-  DEALLOCATE( XRTMIN )
-  DEALLOCATE( XGAMINC_RIM1 )
-  DEALLOCATE( XGAMINC_RIM2 )
-  DEALLOCATE( XKER_RACCSS )
-  DEALLOCATE( XKER_RACCS )
-  DEALLOCATE( XKER_SACCRG )
-  DEALLOCATE( XKER_SDRYG )
-  DEALLOCATE( XKER_RDRYG )
+IF (  ASSOCIATED(XRTMIN) .AND. KCALL == 4 ) THEN
+  CALL RAIN_ICE_DESCR_DEALLOCATE()
+  CALL RAIN_ICE_PARAM_DEALLOCATE()
 END IF
 !
 !*     15.     Module PASPOLn           
