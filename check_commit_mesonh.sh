@@ -186,14 +186,19 @@ if [ $run -ge 1 ]; then
 fi
   
 if [ $check -eq 1 ]; then
+  allt=0
   echo "### Check commit $commit against commit $reference"
   echo "Compare with python..."
   # Compare variable of both Synchronous and Diachronic files with printing difference
+  set +e
   if [ "$reference" == "" ]; then
-    python3 $PHYEXTOOLSDIR/compare.py $commit ref
+    $PHYEXTOOLSDIR/compare.py $commit ref
   else
-    python3 $PHYEXTOOLSDIR/compare.py $commit $reference
+    $PHYEXTOOLSDIR/compare.py $commit $reference
   fi
+  t=$?
+  set -e
+  allt=$(($allt+$t))
   
   #Check bit-repro after date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
   file1=$REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_$commit/16JAN.1.12B18.001.nc 
@@ -203,9 +208,17 @@ if [ $check -eq 1 ]; then
     file2=$REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_$reference/16JAN.1.12B18.001.nc
   fi
   echo "Compare with ncdump..."
-  ncdump $file1 > dump_$commit
-  ncdump $file2 > dump_$reference
-  cmp -n 62000 dump_$commit dump_$reference
-  rm -f dump_$commit dump_$reference
-  echo "...comparison done"
+  set +e
+  diff <(ncdump $file1 | head -c 62889) <(ncdump $file2 | head -c 62889)
+  t=$?
+  set -e
+  allt=$(($allt+$t))
+  #rm -f dump_$commit dump_$reference
+
+  if [ $allt -eq 0 ]; then
+    status="OK"
+  else
+    status="Files are different"
+  fi
+  echo "...comparison done: $status"
 fi
