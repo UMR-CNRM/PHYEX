@@ -1,17 +1,9 @@
 #!/usr/bin/env python3
 
 import xarray as xr
-import os
 
-REFDIR = os.environ['REFDIR']
-
-def compareFiles(file1, file2):
+def compareFiles(path_user, path_ref):
   status = 0
-  path_user = REFDIR + 'MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_' + file1
-  if file2 == "ref":
-    path_ref = REFDIR + 'MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2'
-  else:
-    path_ref = REFDIR + 'MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_' + file2
   
   filen = '16JAN.1.12B18.001.nc'
   da = xr.open_dataset(path_user + '/' + filen)
@@ -51,7 +43,7 @@ if __name__ == "__main__":
    parser = argparse.ArgumentParser(description='Compare toutes les variables si trouvées dans les deux fichiers')
    value = argparse.ArgumentParser()
    parser.add_argument('file1', metavar='file1', type=str, help="file1 user ")
-   parser.add_argument('file2', metavar='file2', type=str, help="file2 reference; ref for MNH-V5-5-0 reference")
+   parser.add_argument('file2', metavar='file2', type=str, help="file2 reference")
    args = parser.parse_args()
    sys.exit(compareFiles(args.file1, args.file2))
 

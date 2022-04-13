@@ -71,13 +71,38 @@ fi
 #  exit 3
 #fi
 
-fromdir=$commit
 if echo $commit | grep '/' > /dev/null; then
   name=MNH-V5-5-0-$(echo $commit | sed 's/\//_/g')
   [ $suppress -eq 1 -a -d $MNHPACK/$name ] && rm -rf $MNHPACK/$name
 else
   name=MNH-V5-5-0-$commit
   [ $suppress -eq 1 -a -d $MNHPACK/$name ] && rm -rf $MNHPACK/$name
+fi
+
+#Two possibilities are supported for the simulations
+# - they can be done in the the pack we are currently checking
+# - they can be done in the reference pack
+#They are done in the current pack except if the reference pack
+#already contains a tested simulation
+run_in_ref=$(ls -d $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_* | tail -1 |wc -l)
+if [ $run_in_ref -eq 1 ]; then
+  path_user_beg=$REFDIR/MNH-V5-5-0
+  path_user_end=_$commit
+  path_ref_beg=$REFDIR/MNH-V5-5-0
+  if [ "$reference" == "" ]; then
+    path_ref_end=
+  else
+    path_ref_end=_$reference
+  fi
+else
+  path_user_beg=$MNHPACK/$name
+  path_user_end=
+  path_ref_end=
+  if [ "$reference" == "" ]; then
+    path_ref_beg=$REFDIR/MNH-V5-5-0
+  else
+    path_ref_beg=$MNHPACK/MNH-V5-5-0-$reference
+  fi
 fi
 
 if [ $compilation -eq 1 ]; then
@@ -174,9 +199,22 @@ if [ $run -ge 1 ]; then
     exit 6
   fi
 
-  cd $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/
-  [ ! -d 008_run2_$commit ] && cp -R 008_run2 008_run2_$commit
-  cd $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_$commit
+  if [ $run_in_ref -eq 1 ]; then
+    cd $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/
+    [ ! -d 008_run2_$commit ] && cp -R 008_run2 008_run2_$commit
+    cd $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_$commit
+  else
+    cd $MNHPACK/$name/MY_RUN/KTEST/007_16janvier/
+    for rep in ???_*; do
+      if [ $rep != 008_run2 ]; then
+        rm -rf $rep
+        ln -s $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/$rep .
+      fi
+    done
+    [ -d 008_run2 ] && rm -rf 008_run2
+    cp -R $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2 .
+    cd 008_run2
+  fi
 
   set +e #file ends with a test that can return false
   [ $compilation -eq 0 ] && . $MNHPACK/$name/conf/profile_mesonh-LXgfortran-R8I4-MNH-V5-5-0-MPIAUTO-DEBUG
@@ -188,32 +226,35 @@ fi
 if [ $check -eq 1 ]; then
   allt=0
   echo "### Check commit $commit against commit $reference"
+  path_user=$path_user_beg/MY_RUN/KTEST/007_16janvier/008_run2$path_user_end
+  path_ref=$path_ref_beg/MY_RUN/KTEST/007_16janvier/008_run2$path_ref_end
+
+  if [ ! -d $path_user ]; then
+    echo "$path_user is missing, please run the simulation"
+    exit 7
+  fi
+  if [ ! -d $path_ref ]; then
+    echo "$path_ref is missing, please run the reference simulation"
+    exit 8
+  fi
+
   echo "Compare with python..."
   # Compare variable of both Synchronous and Diachronic files with printing difference
   set +e
-  if [ "$reference" == "" ]; then
-    $PHYEXTOOLSDIR/compare.py $commit ref
-  else
-    $PHYEXTOOLSDIR/compare.py $commit $reference
-  fi
+  $PHYEXTOOLSDIR/compare.py $path_user $path_ref
   t=$?
   set -e
   allt=$(($allt+$t))
   
-  #Check bit-repro after date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
-  file1=$REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_$commit/16JAN.1.12B18.001.nc 
-  if [ "$reference" == "" ]; then
-    file2="$REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2/16JAN.1.12B18.001.nc"
-  else
-    file2=$REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_$reference/16JAN.1.12B18.001.nc
-  fi
+  #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
+  file1=$path_user/16JAN.1.12B18.001.nc 
+  file2=$path_ref/16JAN.1.12B18.001.nc
   echo "Compare with ncdump..."
   set +e
   diff <(ncdump $file1 | head -c 62889) <(ncdump $file2 | head -c 62889)
   t=$?
   set -e
   allt=$(($allt+$t))
-  #rm -f dump_$commit dump_$reference
 
   if [ $allt -eq 0 ]; then
     status="OK"
