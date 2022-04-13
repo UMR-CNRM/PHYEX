@@ -16,4 +16,7 @@ Instructions can be found in INSTALL file.
 
 Help on check_commit_ial.sh, check_commit_mesonh.sh and prep_code.sh can be printed with the '-h' option.
 
-For check_commit_mesonh.sh, it is mandatory to source the env.sh file
+For check_commit_mesonh.sh the following environment variables can be set:
+* MNHPACK: directory in which MNH pack will be created (default is $HOME/MesoNH/PHYEX)
+* REFDIR: directory in which reference pack can be found (default is the pack directory near the check_commit_mesonh.sh file)
+* TARGZDIR: directory in which the tar.gz file can be found (default is the pack directory near the check_commit_mesonh.sh file)

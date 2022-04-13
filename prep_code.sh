@@ -111,6 +111,14 @@ else
   from='git'
 fi
 
+###### RENAME .F90 into .f90
+if [ $renameFf -eq 1 ]; then
+  find . -type f  -name \*.F90 -print0 | \
+    while IFS= read -r -d '' file; do
+      mv -- "$file" "${file%.F90}.f90"
+    done
+fi
+
 ###### MERGE
 if [ -n "${model-}" ]; then
   if [ ! -d src/$model ]; then
@@ -129,8 +137,8 @@ if [ -n "${model-}" ]; then
   for sub in $subs; do
     [ $verbose -gt 1 ] && echo "Merging $sub directory/file"
     if [ -e $sub ]; then
-      echo "$sub must not exist in the repository, this is a limitation of the script"
-       exit 7
+      echo "$sub must not exist in the repository root, this is a limitation of the script"
+      exit 7
     fi
     [ -e src/common/$sub ] && mv src/common/$sub .
     [ -e src/$model/$sub ] && cp -rlf src/$model/$sub . && rm -rf src/$model/$sub
@@ -177,14 +185,6 @@ if [ -n "${mnh_expand_options-}" ]; then
       done
     fi
   done
-fi
-
-###### RENAME .F90 into .f90
-if [ $renameFf -eq 1 ]; then
-  find . -type f  -name \*.F90 -print0 | \
-    while IFS= read -r -d '' file; do
-      mv -- "$file" "${file%.F90}.f90"
-    done
 fi
 
 ###### PUSH

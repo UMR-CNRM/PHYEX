@@ -218,11 +218,11 @@ if [ $compilation -eq 1 ]; then
     reftree='local'
     subs="" #There is nothing to exclude from compilation because (normally) only needed files are copied into the pack
   fi
+  cd $HOMEPACK/$name/src/local/phyex
 
   MNH_EXPAND_DIR=$PHYEXTOOLSDIR/mnh_expand
   export PATH=$MNH_EXPAND_DIR/filepp:$MNH_EXPAND_DIR/MNH_Expand_Array:$PATH
 
-  cd $HOMEPACK/$name/src/local/phyex
   if [ $useexpand == 1 ]; then
     expand_options="-D MNH_EXPAND -D MNH_EXPAND_LOOP"
   else
