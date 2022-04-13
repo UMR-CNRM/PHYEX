@@ -45,6 +45,7 @@
 !!      Original    11/2010
 !!      S. Riette shallow_mf now outputs ice cloud
 !!      S. Riette Jan 2012: support for both order of vertical levels
+!!      S. Riette April 2022: call abort, waiting for an update from an arpege developper...
 !!
 !-------------------------------------------------------------------------------
 !
@@ -55,7 +56,14 @@ USE YOMCST   , ONLY : RG, RATM, RKAPPA, RD, RCPD, RCPV
 
 !USE MODD_PARAMETERS
 !
+USE MODD_CST, ONLY: CST
+USE MODD_NEB, ONLY: NEB
+USE MODD_TURB_n, ONLY: TURBN
+USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALLN
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+!
 USE MODI_SHALLOW_MF
+USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 USE MODD_CST
 USE YOMCT3
 !
@@ -181,6 +189,8 @@ REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZTKE
 REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZU
 REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZV
 REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZZZF
+TYPE(DIMPHYEX_t) :: YLDIMPHYEX
+#include "abor1.intfb.h"
 
 !------------------------------------------------------------------------------
 
@@ -190,6 +200,14 @@ REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZZZF
 
 !  Controle :
 
+!shallow_mf code is now ready to deal with KIDIA/KFDIA
+!Array copies can be suppressed (no need to limit the horizontal domain nor to add the two extra levels)
+!CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, 0, KFDIA)
+
+!For now, copies are done
+CALL FILL_DIMPHYEX(YLDIMPHYEX, KFDIA, 1, KLEV, 1, KFDIA)
+
+CALL ABOR1('ARP_SHALLOW_MF: code must be checked before being activated again')
 
 ! Avec inversion des boucles
 IKA=1        ! <== Bottom index of array
@@ -372,7 +390,8 @@ ZDRTDT_MF(:,:)  = 0.
 !
 !         ---------------------------------
 
-  CALL SHALLOW_MF(KKA=IKA,KKU=IKU,KKL=IKL,KRR=IKR,KRRL=IKRL,KRRI=IKRI,   &
+  CALL SHALLOW_MF(YLDIMPHYEX, CST, NEB, PARAM_MFSHALLN, TURBN,           &
+       KRR=IKR,KRRL=IKRL,KRRI=IKRI, KSV=1,                             &
        HMF_UPDRAFT=HMF_UPDRAFT, HMF_CLOUD=HMF_CLOUD,HFRAC_ICE='N',OMIXUV=LLOMIXUV,     &
        ONOMIXLG=LLONOMIXLG,KSV_LGBEG=ISV_LGBEG,KSV_LGEND=ISV_LGEND,      &
       PIMPL_MF=PIMPL, PTSTEP=ZDT,                                        &
