@@ -773,17 +773,18 @@ SELECT CASE ( HCLOUD )
                       PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                     )
     ENDIF
     IF (LRED) THEN
-      LLMICRO(:,:,:)=PRT(:,:,:,2)>XRTMIN(2) .OR. &
-                   PRT(:,:,:,3)>XRTMIN(3) .OR. &
-                   PRT(:,:,:,4)>XRTMIN(4) .OR. &
-                   PRT(:,:,:,5)>XRTMIN(5) .OR. &
-                   PRT(:,:,:,6)>XRTMIN(6)
-      LLMICRO(:,:,:)=LLMICRO(:,:,:) .OR. &
-                   PRS(:,:,:,2)>ZRSMIN(2) .OR. &
-                   PRS(:,:,:,3)>ZRSMIN(3) .OR. &
-                   PRS(:,:,:,4)>ZRSMIN(4) .OR. &
-                   PRS(:,:,:,5)>ZRSMIN(5) .OR. &
-                   PRS(:,:,:,6)>ZRSMIN(6)
+      LLMICRO(:,:,:) = .FALSE.
+      LLMICRO(IIB:IIE,IJB:IJE,IKB:IKE)=PRT(IIB:IIE,IJB:IJE,IKB:IKE,2)>XRTMIN(2) .OR. &
+                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,3)>XRTMIN(3) .OR. &
+                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,4)>XRTMIN(4) .OR. &
+                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,5)>XRTMIN(5) .OR. &
+                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,6)>XRTMIN(6)
+      LLMICRO(IIB:IIE,IJB:IJE,IKB:IKE)=LLMICRO(IIB:IIE,IJB:IJE,IKB:IKE) .OR. &
+                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,2)>ZRSMIN(2) .OR. &
+                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,3)>ZRSMIN(3) .OR. &
+                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,4)>ZRSMIN(4) .OR. &
+                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,5)>ZRSMIN(5) .OR. &
+                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,6)>ZRSMIN(6)
       CALL RAIN_ICE_RED (YLDIMPHYEX,CST, PARAM_ICE, RAIN_ICE_PARAM, RAIN_ICE_DESCR,TBUCONF,&
                     COUNT(LLMICRO), COUNT(LLMICRO), &
                     OSEDIC, .FALSE.,CSEDIM, HSUBG_AUCV, CSUBG_AUCV_RI,&
@@ -866,19 +867,20 @@ SELECT CASE ( HCLOUD )
                        PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                    )
     ENDIF
     IF  (LRED) THEN
-      LLMICRO(:,:,:)=PRT(:,:,:,2)>XRTMIN(2) .OR. &
-                   PRT(:,:,:,3)>XRTMIN(3) .OR. &
-                   PRT(:,:,:,4)>XRTMIN(4) .OR. &
-                   PRT(:,:,:,5)>XRTMIN(5) .OR. &
-                   PRT(:,:,:,6)>XRTMIN(6) .OR. &
-                   PRT(:,:,:,7)>XRTMIN(7)
-      LLMICRO(:,:,:)=LLMICRO(:,:,:) .OR. &
-                   PRS(:,:,:,2)>ZRSMIN(2) .OR. &
-                   PRS(:,:,:,3)>ZRSMIN(3) .OR. &
-                   PRS(:,:,:,4)>ZRSMIN(4) .OR. &
-                   PRS(:,:,:,5)>ZRSMIN(5) .OR. &
-                   PRS(:,:,:,6)>ZRSMIN(6) .OR. &
-                   PRS(:,:,:,7)>ZRSMIN(7)
+      LLMICRO(:,:,:) = .FALSE.
+      LLMICRO(IIB:IIE,IJB:IJE,IKB:IKE)=PRT(IIB:IIE,IJB:IJE,IKB:IKE,2)>XRTMIN(2) .OR. &
+                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,3)>XRTMIN(3) .OR. &
+                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,4)>XRTMIN(4) .OR. &
+                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,5)>XRTMIN(5) .OR. &
+                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,6)>XRTMIN(6) .OR. &
+                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,7)>XRTMIN(7)
+      LLMICRO(IIB:IIE,IJB:IJE,IKB:IKE)=LLMICRO(IIB:IIE,IJB:IJE,IKB:IKE) .OR. &
+                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,2)>ZRSMIN(2) .OR. &
+                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,3)>ZRSMIN(3) .OR. &
+                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,4)>ZRSMIN(4) .OR. &
+                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,5)>ZRSMIN(5) .OR. &
+                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,6)>ZRSMIN(6) .OR. &
+                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,7)>ZRSMIN(7)
      CALL RAIN_ICE_RED (YLDIMPHYEX,CST, PARAM_ICE, RAIN_ICE_PARAM, RAIN_ICE_DESCR,TBUCONF,&
                     COUNT(LLMICRO), COUNT(LLMICRO), &
                     OSEDIC, .FALSE., CSEDIM, HSUBG_AUCV, CSUBG_AUCV_RI,&
