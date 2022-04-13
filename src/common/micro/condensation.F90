@@ -246,7 +246,7 @@ ELSE
       DO JI=D%NIB,D%NIE
         ZCPD(JI,JJ,JK) = CST%XCPD + CST%XCPV*PRV_IN(JI,JJ,JK) + CST%XCL*PRC_IN(JI,JJ,JK) + CST%XCI*PRI_IN(JI,JJ,JK) + &
 #ifndef REPRO48
-                                    CST%XCL*PRR(JI,JJ,JK) +
+                                    CST%XCL*PRR(JI,JJ,JK) +  &
 #endif
                                     CST%XCI*(PRS(JI,JJ,JK) + PRG(JI,JJ,JK) )
       ENDDO

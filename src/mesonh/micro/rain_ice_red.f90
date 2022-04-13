@@ -118,7 +118,7 @@ END MODULE MODI_RAIN_ICE_RED
       SUBROUTINE RAIN_ICE_RED (D, CST, PARAMI, ICEP, ICED, BUCONF,                &
                             KPROMA, KSIZE,                                        &
                             OSEDIC, OCND2, HSEDIM, HSUBG_AUCV_RC, HSUBG_AUCV_RI,  &
-                            OWARM, KKA, KKU, KKL,                                 &
+                            OWARM,                                                &
                             PTSTEP, KRR, ODMICRO, PEXN,                           &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                             PHLC_HRC, PHLC_HCF, PHLI_HRI,  PHLI_HCF,              &
@@ -463,7 +463,6 @@ REAL, DIMENSION(KPROMA) :: ZTIME ! Current integration time (starts with 0 and e
 REAL, DIMENSION(KPROMA) :: &
                         & ZMAXTIME, & ! Time on which we can apply the current tendencies
                         & ZTIME_LASTCALL, &     ! Integration time when last tendecies call has been done
-                        & ZCOMPUTE, & ! 1. for points where we must compute tendencies, 0. elsewhere
                         & ZSSI,     &
                         & ZCIT,     & ! Pristine ice conc. at t
                         & ZRHODREF, & ! RHO Dry REFerence
@@ -484,6 +483,7 @@ REAL, DIMENSION(KPROMA) :: &
                         & ZHLI_LCF, &
                         & ZHLI_HRI, &
                         & ZHLI_LRI
+LOGICAL, DIMENSION(KPROMA) :: LLCOMPUTE ! .TRUE. or points where we must compute tendencies,
 !
 !Output packed tendencies (for budgets only)
 REAL, DIMENSION(KPROMA) :: ZRVHENI_MR, & ! heterogeneous nucleation mixing ratio change
@@ -594,7 +594,6 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
   IF (BUCONF%LBUDGET_RS)              CALL BUDGET_STORE_INIT(TBUDGETS(NBUDGET_RS), 'SEDI', PRSS(:, :, :) * PRHODJ(:, :, :))
   IF (BUCONF%LBUDGET_RG)              CALL BUDGET_STORE_INIT(TBUDGETS(NBUDGET_RG), 'SEDI', PRGS(:, :, :) * PRHODJ(:, :, :))
   IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_INIT(TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:, :, :) * PRHODJ(:, :, :))
-
   IF(HSEDIM=='STAT') THEN
     IF(KRR==7) THEN
       DO JK = D%NKTB,D%NKTE
@@ -681,7 +680,6 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
 
 
 
-
 !!!!! ajouter momentum
 
 
@@ -708,7 +706,6 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
   IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_END(TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:, :, :) * PRHODJ(:, :, :))
 ENDIF
 !
-
 DO JK = D%NKTB,D%NKTE
   !Backup of T variables
   ZWR(:,:,JK,IRV)=PRVT(:,:,JK)
@@ -950,17 +947,17 @@ IF (KSIZE > 0) THEN
       ENDIF
       DO JL=1, IMICRO
         IF (ZTIME(JL) < PTSTEP) THEN
-          ZCOMPUTE(JL)=1. ! Computation (1.) only for points for which integration time has not reached the timestep
+          LLCOMPUTE(JL)=.TRUE. ! Computation (.TRUE.) only for points for which integration time has not reached the timestep
           IITER(JL)=IITER(JL)+1
         ELSE
-          ZCOMPUTE(JL)=0.
+          LLCOMPUTE(JL)=.FALSE.
         ENDIF
       ENDDO
       LL_ANY_ITER=ANY(IITER(1:IMICRO) < INB_ITER_MAX)
       LLCPZ0RT=.TRUE.
       LSOFT=.FALSE. ! We *really* compute the tendencies
 
-      DO WHILE(ANY(ZCOMPUTE(1:IMICRO)==1.)) ! Loop to adjust tendencies when we cross the 0°C or when a species disappears
+      DO WHILE(ANY(LLCOMPUTE(1:IMICRO))) ! Loop to adjust tendencies when we cross the 0°C or when a species disappears
 !$OMP SIMD
         DO JL=1, IMICRO
           ZSUM2(JL)=SUM(ZVART(JL,IRI:KRR))
@@ -975,9 +972,9 @@ IF (KSIZE > 0) THEN
         !***       4.1 Tendencies computation
         !
         ! Tendencies are *really* computed when LSOFT==.FALSE. and only adjusted otherwise
-    CALL ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, &
+    CALL ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &KPROMA, IMICRO, &
-                        &KRR, LSOFT, ZCOMPUTE, &
+                        &KRR, LSOFT, LLCOMPUTE, &
                         &OWARM, PARAMI%CSUBG_RC_RR_ACCR, PARAMI%CSUBG_RR_EVAP, &
                         &HSUBG_AUCV_RC, HSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF, &
                         &ZEXN, ZRHODREF, ZLVFACT, ZLSFACT, I1, I2, I3, &
@@ -1011,7 +1008,11 @@ IF (KSIZE > 0) THEN
         !
         ! If we can, we shall use these tendencies until the end of the timestep
         DO JL=1, IMICRO
-          ZMAXTIME(JL)=ZCOMPUTE(JL) * (PTSTEP-ZTIME(JL)) ! Remaining time until the end of the timestep
+          IF(LLCOMPUTE(JL)) THEN
+            ZMAXTIME(JL)=(PTSTEP-ZTIME(JL)) ! Remaining time until the end of the timestep
+          ELSE
+            ZMAXTIME(JL)=0.
+          ENDIF
         ENDDO
 
         !We need to adjust tendencies when temperature reaches 0
@@ -1045,7 +1046,7 @@ IF (KSIZE > 0) THEN
         !We stop when the end of the timestep is reached
         DO JL=1, IMICRO
           IF (ZTIME(JL)+ZMAXTIME(JL) >= PTSTEP) THEN
-            ZCOMPUTE(JL)=0.
+            LLCOMPUTE(JL)=.FALSE.
           ENDIF
         ENDDO
         !We must recompute tendencies when the end of the sub-timestep is reached
@@ -1053,7 +1054,7 @@ IF (KSIZE > 0) THEN
           DO JL=1, IMICRO
             IF ((IITER(JL) < INB_ITER_MAX) .AND. (ZTIME(JL)+ZMAXTIME(JL) > ZTIME_LASTCALL(JL)+ZTSTEP)) THEN
               ZMAXTIME(JL)=ZTIME_LASTCALL(JL)-ZTIME(JL)+ZTSTEP
-              ZCOMPUTE(JL)=0.
+              LLCOMPUTE(JL)=.FALSE.
             ENDIF
           ENDDO
         ENDIF
@@ -1070,15 +1071,17 @@ IF (KSIZE > 0) THEN
               IF (LLCPZ0RT) Z0RT(1:IMICRO, JV)=ZVART(1:IMICRO, JV)
               DO JL=1, IMICRO
                 IF (IITER(JL)<INB_ITER_MAX .AND. ABS(ZA(JL,JV))>1.E-20) THEN
-                  ZTIME_THRESHOLD1D(JL)=(SIGN(1., ZA(JL, JV))*PARAMI%XMRSTEP+Z0RT(JL, JV)-ZVART(JL, JV)-ZB(JL, JV))/ZA(JL, JV)
+                  ZTIME_THRESHOLD1D(JL)=(SIGN(1., ZA(JL, JV))*PARAMI%XMRSTEP+&
+                                         Z0RT(JL, JV)-ZVART(JL, JV)-ZB(JL, JV))/ZA(JL, JV)
                 ELSE
                   ZTIME_THRESHOLD1D(JL)=-1.
                 ENDIF
               ENDDO
               DO JL=1, IMICRO
-                IF (ZTIME_THRESHOLD1D(JL)>=0 .AND. ZTIME_THRESHOLD1D(JL)<ZMAXTIME(JL) .AND. (ZVART(JL, JV)>ICED%XRTMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
+                IF (ZTIME_THRESHOLD1D(JL)>=0 .AND. ZTIME_THRESHOLD1D(JL)<ZMAXTIME(JL) .AND. &
+                   (ZVART(JL, JV)>ICED%XRTMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
                   ZMAXTIME(JL)=MIN(ZMAXTIME(JL), ZTIME_THRESHOLD1D(JL))
-                  ZCOMPUTE(JL)=0.
+                  LLCOMPUTE(JL)=.FALSE.
                 ENDIF
               ENDDO
             ENDDO
@@ -1090,7 +1093,7 @@ IF (KSIZE > 0) THEN
             DO JL=1, IMICRO
               IF (IITER(JL)<INB_ITER_MAX .AND. ZMAXB(JL)>PARAMI%XMRSTEP) THEN
                 ZMAXTIME(JL)=0.
-                ZCOMPUTE(JL)=0.
+                LLCOMPUTE(JL)=.FALSE.
               ENDIF
             ENDDO
           ENDIF ! LL_ANY_ITER
@@ -1208,6 +1211,7 @@ PCIT(:,:,:)=ZCITOUT(:,:,:)
 !*       6.     COMPUTES THE SLOW COLD PROCESS SOURCES OUTSIDE OF ODMICRO POINTS
 !               ----------------------------------------------------------------
 !
+
 DO JK=D%NKTB,D%NKTE
   DO JJ=D%NJB,D%NJE
 !DIR$ VECTOR ALWAYS
@@ -1215,7 +1219,7 @@ DO JK=D%NKTB,D%NKTE
       IF (.NOT. ODMICRO(JI, JJ, JK)) THEN
         ZW0D=ZZ_LSFACT(JI, JJ, JK)/PEXN(JI, JJ, JK)
       ENDIF
-      CALL ICE4_NUCLEATION_ELEM(.NOT. ODMICRO(JI, JJ, JK), &
+      CALL ICE4_NUCLEATION_ELEM(CST, PARAMI, ICEP, ICED, .NOT. ODMICRO(JI, JJ, JK), &
                                 PTHT(JI, JJ, JK), PPABST(JI, JJ, JK), PRHODREF(JI, JJ, JK), &
                                 PEXN(JI, JJ, JK), ZW0D, ZT(JI, JJ, JK), &
                                 PRVT(JI, JJ, JK), &
@@ -1535,16 +1539,21 @@ IF(BUCONF%LBU_ENABLE) THEN
     IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RR), 'WETH', -ZW2(:, :, :)                 *PRHODJ(:, :, :))
     IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RI), 'WETH', -ZW3(:, :, :)                 *PRHODJ(:, :, :))
     IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RS), 'WETH', -ZW4(:, :, :)                 *PRHODJ(:, :, :))
+#ifdef REPRO48
+#else
     IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RG), 'WETH', -ZW5(:, :, :)                 *PRHODJ(:, :, :))
+#endif
     IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RH), 'WETH', (ZW1(:, :, :)+ZW2(:, :, :)+ZW3(:, :, :)+ &
                                                                         &ZW4(:, :, :)+ZW5(:, :, : ))  *PRHODJ(:, :, :))
 
+#if defined(REPRO48) || defined(REPRO55)
     ZW(:,:,:) = 0.
     DO JL=1, KSIZE
       ZW(I1TOT(JL), I2TOT(JL), I3TOT(JL)) = ZTOT_RGWETH(JL) * ZINV_TSTEP
     END DO
-    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RG), 'HGCV', -ZW(:, :, :)*PRHODJ(:, :, :))
+    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RG), 'HGCV', (-ZW5(:, :, :)-ZW(:, :, :))*PRHODJ(:, :, :))
     IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RH), 'HGCV',  ZW(:, :, :)*PRHODJ(:, :, :))
+#endif
 
     ZW1(:,:,:) = 0.
     DO JL=1, KSIZE
@@ -1567,9 +1576,12 @@ IF(BUCONF%LBU_ENABLE) THEN
       ZW5(I1TOT(JL), I2TOT(JL), I3TOT(JL)) = ZTOT_RGDRYH(JL) * ZINV_TSTEP
     END DO
     ZW6(:,:,:) = 0.
+#if defined(REPRO48) || defined(REPRO55)
+    !ZW6 must be removed when REPRO48 will be suppressed
     DO JL=1, KSIZE
       ZW6(I1TOT(JL), I2TOT(JL), I3TOT(JL)) = ZTOT_RDRYHG(JL) * ZINV_TSTEP
     END DO
+#endif
     IF (BUCONF%LBUDGET_TH) &
       CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_TH), 'DRYH', (ZW1(:, :, :)+ZW2(:, :, :))*ZZ_DIFF(:, :, :)*PRHODJ(:, :, :))
     IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RC), 'DRYH', -ZW1(:, :, :)                 *PRHODJ(:, :, :))
@@ -1580,6 +1592,17 @@ IF(BUCONF%LBU_ENABLE) THEN
     IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RH), 'DRYH', (ZW1(:, :, :)+ZW2(:, :, :)+ZW3(:, :, :)+   &
                                                                         &ZW4(:, :, :)+ZW5(:, :, : )-ZW6(:, :, :)) &
                                                                         &                             *PRHODJ(:, :, :))
+
+#if defined(REPRO48) || defined(REPRO55)
+#else
+    !When REPRO48 will be suppressed, ZW6 must be removed
+    ZW(:,:,:) = 0.
+    DO JL=1, KSIZE
+      ZW(I1TOT(JL), I2TOT(JL), I3TOT(JL)) = ZTOT_RDRYHG(JL) * ZINV_TSTEP
+    END DO
+    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RG), 'HGCV', -ZW(:, :, :)*PRHODJ(:, :, :))
+    IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RH), 'HGCV',  ZW(:, :, :)*PRHODJ(:, :, :))
+#endif
 
     ZW(:,:,:) = 0.
     DO JL=1, KSIZE
