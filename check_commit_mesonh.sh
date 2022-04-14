@@ -184,7 +184,7 @@ if [ $compilation -eq 1 ]; then
   if [ -d PHYEX/ext ]; then
     mv -f PHYEX/ext/* MNH/
     rmdir PHYEX/ext
-  ]
+  fi
 
   cd $MNHPACK/$name/src/PHYEX/turb
   # Delete files of MNH-V5-5-0/src/MNH and MNH/src/LIB/SURCOUCHE/src with same name
