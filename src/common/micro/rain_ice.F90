@@ -180,7 +180,7 @@
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 
-USE MODD_BUDGET,         ONLY: TBUDGETDATA, LBU_ENABLE,  &
+USE MODD_BUDGET,         ONLY: TBUDGETDATA, LBU_ENABLE,                                                                        &
                              & LBUDGET_TH, LBUDGET_RV, LBUDGET_RC, LBUDGET_RR, LBUDGET_RI, LBUDGET_RS, LBUDGET_RG, LBUDGET_RH, &
                              & NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH
 USE MODD_CST,            ONLY: XCI, XCL, XCPD, XCPV, XLSTT, XLVTT, XTT, XRHOLW
@@ -268,7 +268,7 @@ REAL, DIMENSION(KIT,KJT), INTENT(OUT)       :: PINPRR! Rain instant precip
 REAL, DIMENSION(KIT,KJT,KKT), INTENT(OUT)     :: PEVAP3D! Rain evap profile
 REAL, DIMENSION(KIT,KJT), INTENT(OUT)       :: PINPRS! Snow instant precip
 REAL, DIMENSION(KIT,KJT), INTENT(OUT)       :: PINPRG! Graupel instant precip
-REAL, DIMENSION(KIT,KJT),     INTENT(OUT)       :: PINDEP  ! Cloud instant deposition
+REAL, DIMENSION(MERGE(KIT, 0, LDEPOSC), MERGE(KJT, 0, LDEPOSC)),     INTENT(OUT)       :: PINDEP  ! Cloud instant deposition
 REAL, DIMENSION(KIT,KJT,KKT),   INTENT(OUT) :: PRAINFR !Precipitation fraction
 REAL, DIMENSION(KIT,KJT,KKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
@@ -975,13 +975,15 @@ IF (KSIZE > 0) THEN
               IF (LLCPZ0RT) Z0RT(1:IMICRO, JV)=ZVART(1:IMICRO, JV)
               DO JL=1, IMICRO
                 IF (IITER(JL)<INB_ITER_MAX .AND. ABS(ZA(JL,JV))>1.E-20) THEN
-                  ZTIME_THRESHOLD1D(JL)=(SIGN(1., ZA(JL, JV))*XMRSTEP+Z0RT(JL, JV)-ZVART(JL, JV)-ZB(JL, JV))/ZA(JL, JV)
+                  ZTIME_THRESHOLD1D(JL)=(SIGN(1., ZA(JL, JV))*XMRSTEP+ &
+                                        &Z0RT(JL, JV)-ZVART(JL, JV)-ZB(JL, JV))/ZA(JL, JV)
                 ELSE
                   ZTIME_THRESHOLD1D(JL)=-1.
                 ENDIF
               ENDDO
               DO JL=1, IMICRO
-                IF (ZTIME_THRESHOLD1D(JL)>=0 .AND. ZTIME_THRESHOLD1D(JL)<ZMAXTIME(JL) .AND. (ZVART(JL, JV)>XRTMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
+                IF (ZTIME_THRESHOLD1D(JL)>=0 .AND. ZTIME_THRESHOLD1D(JL)<ZMAXTIME(JL) .AND. &
+                   &(ZVART(JL, JV)>XRTMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
                   ZMAXTIME(JL)=MIN(ZMAXTIME(JL), ZTIME_THRESHOLD1D(JL))
                   ZCOMPUTE(JL)=0.
                 ENDIF
@@ -1440,7 +1442,14 @@ IF(LBU_ENABLE) THEN
     DO JL=1, KSIZE
       ZW(I1TOT(JL), I2TOT(JL), I3TOT(JL)) = ZTOT_RGWETH(JL) * ZINV_TSTEP
     END DO
+#endif
+#ifdef REPRO48
     IF (LBUDGET_RG) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RG), 'HGCV', (-ZW5(:, :, :)-ZW(:, :, :))*PRHODJ(:, :, :))
+#endif
+#ifdef REPRO55
+    IF (LBUDGET_RG) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RG), 'HGCV', -ZW(:, :, :)*PRHODJ(:, :, :))
+#endif
+#if defined(REPRO48) || defined(REPRO55)
     IF (LBUDGET_RH) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RH), 'HGCV',  ZW(:, :, :)*PRHODJ(:, :, :))
 #endif
 
@@ -1466,7 +1475,7 @@ IF(LBU_ENABLE) THEN
     END DO
     ZW6(:,:,:) = 0.
 #if defined(REPRO48) || defined(REPRO55)
-    !ZW6 must be removed when REPRO48 will be suppressed
+    !ZW6 must be removed when REPRO* will be suppressed
     DO JL=1, KSIZE
       ZW6(I1TOT(JL), I2TOT(JL), I3TOT(JL)) = ZTOT_RDRYHG(JL) * ZINV_TSTEP
     END DO
