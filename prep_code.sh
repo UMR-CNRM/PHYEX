@@ -13,6 +13,8 @@ set -e
 repository_https=https://github.com/QuentinRodier/PHYEX.git
 repository_ssh=git@github.com:QuentinRodier/PHYEX.git
 
+PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 ###### COMMAND LINE ARGUMENTS
 function usage {
   echo "Usage: $0 [-h] [-c CHECKOUT_POINT] [-m MODEL] [-D OPTION [-D OPTION [...]]]] \\"
@@ -157,8 +159,10 @@ if [ -n "${mnh_expand_options-}" ]; then
   function apply_mnh_expand () {
     if grep mnh_expand $1 > /dev/null 2>&1 ; then
       [ $verbose -gt 1 ] && echo "Applying mnh_expand on $1"
-      mnh_expand -DMNH_EXPAND_NOCPP $mnh_expand_options $1 > tempo_mnh_expand
-      mv tempo_mnh_expand $1
+      $PHYEXTOOLSDIR/correct_indent.py $1 "detect"
+      mnh_expand -DMNH_EXPAND_NOCPP $mnh_expand_options $1_EXPAND > tempo_mnh_expand
+      $PHYEXTOOLSDIR/correct_indent.py tempo_mnh_expand "indent"
+      mv tempo_mnh_expand_CORRECT_INDENT $1
     fi
   }
   if [ -n "${model-}" ]; then
