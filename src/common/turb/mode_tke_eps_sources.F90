@@ -311,8 +311,8 @@ ENDIF
 ! TKE must be greater than its minimum value
 ! CL : Now done at the end of the time step in ADVECTION_METSV for MesoNH
 IF(HPROGRAM/='MESONH') THEN
- GTKENEG =  ZRES <= CSTURB%XTKEMIN
  !$mnh_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+ GTKENEG(:,:,:) =  ZRES(:,:,:) <= CSTURB%XTKEMIN
  WHERE ( GTKENEG(:,:,:) ) 
    ZRES(:,:,:) = CSTURB%XTKEMIN
  END WHERE

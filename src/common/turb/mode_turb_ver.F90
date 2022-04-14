@@ -436,7 +436,7 @@ END IF
 ! Square root of Tke
 !
 !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-ZSQRT_TKE = SQRT(PTKEM)
+ZSQRT_TKE(:,:,:) = SQRT(PTKEM(:,:,:))
 !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 ! gradients of mean quantities at previous time-step
@@ -448,13 +448,13 @@ IF (KRR>0) ZDR_DZ  = GZ_M_W(D%NKA, D%NKU, D%NKL,PRM(:,:,:,1),PDZZ)
 !
 ! Denominator factor in 3rd order terms
 !
-!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 IF (.NOT. OHARAT) THEN
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZD(:,:,:) = (1.+ZREDTH1(:,:,:)+ZREDR1(:,:,:)) * (1.+0.5*(ZREDTH1(:,:,:)+ZREDR1(:,:,:)))
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ELSE
   ZD(:,:,:) = 1.
 ENDIF
-!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 ! Phi3 and Psi3 Prandtl numbers
 !

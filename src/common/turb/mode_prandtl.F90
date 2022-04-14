@@ -488,9 +488,9 @@ DO JSV=1,KSV
 !
     !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
     IF (KRR /= 0) THEN
-      ZWORK1 = ZW1(:,:,:)*PETHETA(:,:,:)
+      ZWORK1(:,:,:) = ZW1(:,:,:)*PETHETA(:,:,:)
     ELSE
-      ZWORK1 = ZW1(:,:,:)
+      ZWORK1(:,:,:) = ZW1(:,:,:)
     END IF
     PRED2THS3(:,:,:,JSV) = PREDTH1(:,:,:) * PREDS1(:,:,:,JSV)   +        &
                        ZWORK1(:,:,:) * ZWORK2(:,:,:)
@@ -519,9 +519,9 @@ DO JSV=1,KSV
 
     !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)    
     IF (KRR /= 0) THEN
-      ZWORK1 = ZW1(:,:,:)*PETHETA(:,:,:)
+      ZWORK1(:,:,:) = ZW1(:,:,:)*PETHETA(:,:,:)
     ELSE
-      ZWORK1 = ZW1(:,:,:)
+      ZWORK1(:,:,:) = ZW1(:,:,:)
     END IF
     PRED2THS3(:,:,:,JSV) = PREDTH1(:,:,:) * PREDS1(:,:,:,JSV)   +        &
                        ZWORK1(:,:,:)*ZWORK2(:,:,:)

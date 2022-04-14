@@ -472,7 +472,7 @@ ENDIF
       !
       !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       ZF(:,:,:) = ZF(:,:,:) + ZWORK1(:,:,:) * PFR2(:,:,:)
-      ZDFDDTDZ = ZDFDDTDZ + ZWORK2(:,:,:) * PFR2(:,:,:)
+      ZDFDDTDZ(:,:,:) = ZDFDDTDZ(:,:,:) + ZWORK2(:,:,:) * PFR2(:,:,:)
       !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     END IF
     !

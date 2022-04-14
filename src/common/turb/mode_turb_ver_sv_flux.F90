@@ -418,9 +418,13 @@ DO JSV=1,KSV
     !
     !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     DO JK=IKTB+1,IKTE-1
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
       PWSV(:,:,JK,JSV)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+D%NKL))
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     END DO
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     PWSV(:,:,IKB,JSV)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+D%NKL))
     PWSV(:,:,IKE,JSV)=PWSV(:,:,IKE-D%NKL,JSV)
     !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
