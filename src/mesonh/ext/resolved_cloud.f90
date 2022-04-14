@@ -318,7 +318,7 @@ USE MODI_LIMA_MIXED
 USE MODI_LIMA_NOTADJUST
 USE MODI_LIMA_WARM
 USE MODI_RAIN_C2R2_KHKO
-USE MODI_RAIN_ICE_RED
+USE MODI_RAIN_ICE
 USE MODI_SHUMAN
 USE MODI_SLOW_TERMS
 !
@@ -770,7 +770,7 @@ SELECT CASE ( HCLOUD )
                    PRS(:,:,:,4)>ZRSMIN(4) .OR. &
                    PRS(:,:,:,5)>ZRSMIN(5) .OR. &
                    PRS(:,:,:,6)>ZRSMIN(6)
-      CALL RAIN_ICE_RED (COUNT(LLMICRO), SIZE(PTHT, 1), SIZE(PTHT, 2), &
+      CALL RAIN_ICE (COUNT(LLMICRO), SIZE(PTHT, 1), SIZE(PTHT, 2), &
                     SIZE(PTHT, 3), COUNT(LLMICRO), &
                     OSEDIC, .FALSE.,CSEDIM, HSUBG_AUCV, CSUBG_AUCV_RI,&
                     OWARM,1,IKU,1,                                       &
@@ -787,22 +787,7 @@ SELECT CASE ( HCLOUD )
                     TBUDGETS,SIZE(TBUDGETS),           &
                     PSEA,PTOWN, PFPR=ZFPR                                )
     ELSE 
-          CALL RAIN_ICE_RED (COUNT(LLMICRO), SIZE(PTHT, 1), SIZE(PTHT, 2), &
-                    SIZE(PTHT, 3), COUNT(LLMICRO), &
-                    OSEDIC, .FALSE.,CSEDIM, HSUBG_AUCV, CSUBG_AUCV_RI,&
-                    OWARM,1,IKU,1,                                       &
-                    PTSTEP, KRR, LLMICRO, ZEXN,                          &
-                    ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT,PCLDFR,&
-                    PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,              &
-                    PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                    &
-                    PRT(:,:,:,3), PRT(:,:,:,4),                          &
-                    PRT(:,:,:,5), PRT(:,:,:,6),                          &
-                    PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),      &
-                    PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),            &
-                    PINPRC,PINPRR,  PEVAP3D,                    &
-                    PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,              &
-                    TBUDGETS,SIZE(TBUDGETS),           &
-                    PSEA,PTOWN, PFPR=ZFPR                                )
+          !CALL RAIN_ICE_OLD
     END IF
 !
 !*       9.2    Perform the saturation adjustment over cloud ice and cloud water
@@ -875,7 +860,7 @@ SELECT CASE ( HCLOUD )
                    PRS(:,:,:,5)>ZRSMIN(5) .OR. &
                    PRS(:,:,:,6)>ZRSMIN(6) .OR. &
                    PRS(:,:,:,7)>ZRSMIN(7)
-     CALL RAIN_ICE_RED (COUNT(LLMICRO), SIZE(PTHT, 1), SIZE(PTHT, 2), SIZE(PTHT, 3),&
+     CALL RAIN_ICE (COUNT(LLMICRO), SIZE(PTHT, 1), SIZE(PTHT, 2), SIZE(PTHT, 3),&
                     COUNT(LLMICRO), OSEDIC, .FALSE., CSEDIM, HSUBG_AUCV, CSUBG_AUCV_RI,&
                     OWARM, 1, IKU, 1,             &
                     PTSTEP, KRR, LLMICRO, ZEXN,             &
@@ -893,22 +878,7 @@ SELECT CASE ( HCLOUD )
                     PRT(:,:,:,7), PRS(:,:,:,7), PINPRH, PFPR=ZFPR         )
  
     ELSE
-     CALL RAIN_ICE_RED (COUNT(LLMICRO), SIZE(PTHT, 1), SIZE(PTHT, 2), SIZE(PTHT, 3),&
-                    COUNT(LLMICRO), OSEDIC, .FALSE., CSEDIM, HSUBG_AUCV, CSUBG_AUCV_RI,&
-                    OWARM, 1, IKU, 1,             &
-                    PTSTEP, KRR, LLMICRO, ZEXN,             &
-                    ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
-                    PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
-                    PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                     &
-                    PRT(:,:,:,3), PRT(:,:,:,4),                           &
-                    PRT(:,:,:,5), PRT(:,:,:,6),                           &
-                    PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),       &
-                    PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),             &
-                    PINPRC, PINPRR, PEVAP3D,                    &
-                    PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,               &
-                    TBUDGETS,SIZE(TBUDGETS),                     &            
-                    PSEA, PTOWN,                                          &
-                    PRT(:,:,:,7), PRS(:,:,:,7), PINPRH, PFPR=ZFPR         )
+     !CALL RAIN_ICE_OLD
     END IF
 
 

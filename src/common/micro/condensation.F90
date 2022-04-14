@@ -249,8 +249,9 @@ ELSE
     DO JJ=KJB,KJE
       DO JI=KIB,KIE
         ZCPD(JI,JJ,JK) = XCPD + XCPV*PRV_IN(JI,JJ,JK) + XCL*PRC_IN(JI,JJ,JK) + XCI*PRI_IN(JI,JJ,JK) + &
-#ifndef REPRO48
-                                XCL*PRR(JI,JJ,JK) +
+#if defined(REPRO48) || defined(REPRO55)
+#else
+                                XCL*PRR(JI,JJ,JK) + &
 #endif
                                 XCI*(PRS(JI,JJ,JK) + PRG(JI,JJ,JK) )
       ENDDO
@@ -316,8 +317,8 @@ DO JK=IKTB,IKTE
        ZDZ(KIB:KIE) = PZZ(KIB:KIE,JJ,JKP) - PZZ(KIB:KIE,JJ,JKP-KKL)
        CALL ICECLOUD(KIE-KIB+1,PPABS(KIB,JJ,JK),PZZ(KIB,JJ,JK),ZDZ(KIB), &
             & PT(KIB,JJ,JK),PRV_IN(KIB,JJ,JK),1.,-1., &
-            & ZCLDUM,1.,TCLD(KIB,JJ,JK), &
-            & ZARDUM,ZARDUM,ZARDUM,ZARDUM)
+            & ZCLDUM(KIB:KIE),1.,TCLD(KIB,JJ,JK), &
+            & ZARDUM(KIB:KIE),ZARDUM(KIB:KIE),ZARDUM(KIB:KIE),ZARDUM(KIB:KIE))
        ! latent heats
        ! saturated water vapor mixing ratio over liquid water and ice
        DO JI=KIB,KIE
@@ -341,7 +342,7 @@ DO JK=IKTB,IKTE
           ZFRAC(JI) = PRI_IN(JI,JJ,JK) / (PRC_IN(JI,JJ,JK)+PRI_IN(JI,JJ,JK))
         ENDIF
       END DO
-      CALL COMPUTE_FRAC_ICE(HFRAC_ICE, ZFRAC(:), PT(KIB:KIE,JJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
+      CALL COMPUTE_FRAC_ICE(HFRAC_ICE, ZFRAC(KIB:KIE), PT(KIB:KIE,JJ,JK), IERR(KIB:KIE)) !error code IERR cannot be checked here to not break vectorization
     ENDIF
     DO JI=KIB,KIE
       ZQSL(JI)   = XRD / XRV * ZPV(JI) / ( PPABS(JI,JJ,JK) - ZPV(JI) )

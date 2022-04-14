@@ -3,18 +3,19 @@
 !      ####################
 !
 INTERFACE
-      SUBROUTINE RAIN_ICE ( KPROMA, KIT, KJT, KKT, KSIZE,                                 &
-                            OSEDIC,OCND2, HSEDIM, HSUBG_AUCV_RC, HSUBG_AUCV_RI,   &
-                            OWARM, KKA, KKU, KKL,   &
-                            PTSTEP, KRR, LDMICRO, PEXN,             &
+      SUBROUTINE RAIN_ICE ( KPROMA, KIT, KJT, KKT, KSIZE,                         &
+                            OSEDIC, OCND2, HSEDIM, HSUBG_AUCV_RC, HSUBG_AUCV_RI,  &
+                            OWARM, KKA, KKU, KKL,                                 &
+                            PTSTEP, KRR, ODMICRO, PEXN,                           &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
                             PTHT, PRVT, PRCT, PRRT, PRIT, PRST,                   &
                             PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,       &
-                            PINPRC, PINPRR, PEVAP3D,                    &
-                            PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS, PSEA, PTOWN,            &
-                            PRHT, PRHS, PINPRH, PFPR, &
-                            TBUDGETS, KBUDGETS)
+                            PINPRC, PINPRR, PEVAP3D,                              &
+                            PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,               &
+                            TBUDGETS, KBUDGETS,                                   &
+                            PSEA, PTOWN,                                          &
+                            PRHT, PRHS, PINPRH, PFPR                              )
 !
 USE MODD_BUDGET, ONLY : TBUDGETDATA
 USE MODD_PARAM_ICE,      ONLY: LDEPOSC
@@ -33,13 +34,12 @@ LOGICAL,                  INTENT(IN)    :: OWARM   ! .TRUE. allows raindrops to
                                                    !   form by warm processes
                                                    !      (Kessler scheme)
 !
-INTEGER,                  INTENT(IN)    :: KKA   !near ground array index  
+INTEGER,                  INTENT(IN)    :: KKA   !near ground array index
 INTEGER,                  INTENT(IN)    :: KKU   !uppest atmosphere array index
 INTEGER,                  INTENT(IN)    :: KKL   !vert. levels type 1=MNH -1=ARO
-REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step
-                                                   ! (single if cold start)
+REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
-LOGICAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)   :: LDMICRO ! mask to limit computation
+LOGICAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)   :: ODMICRO ! mask to limit computation
 !
 REAL, DIMENSION(KIT,KJT,KKT),   INTENT(IN)    :: PEXN    ! Exner function
 REAL, DIMENSION(KIT,KJT,KKT),   INTENT(IN)    :: PDZZ    ! Layer thikness (m)
@@ -63,8 +63,6 @@ REAL, DIMENSION(KIT,KJT,KKT),   INTENT(IN)    :: PRIT    ! Pristine ice m.r. at 
 REAL, DIMENSION(KIT,KJT,KKT),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t
 REAL, DIMENSION(KIT,KJT,KKT),   INTENT(IN)    :: PRGT    ! Graupel/hail m.r. at t
 !
-REAL, DIMENSION(KIT,KJT,KKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
-!
 REAL, DIMENSION(KIT,KJT,KKT),   INTENT(INOUT) :: PTHS    ! Theta source
 REAL, DIMENSION(KIT,KJT,KKT),   INTENT(INOUT) :: PRVS    ! Water vapor m.r. source
 REAL, DIMENSION(KIT,KJT,KKT),   INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
@@ -72,7 +70,6 @@ REAL, DIMENSION(KIT,KJT,KKT),   INTENT(INOUT) :: PRRS    ! Rain water m.r. sourc
 REAL, DIMENSION(KIT,KJT,KKT),   INTENT(INOUT) :: PRIS    ! Pristine ice m.r. source
 REAL, DIMENSION(KIT,KJT,KKT),   INTENT(INOUT) :: PRSS    ! Snow/aggregate m.r. source
 REAL, DIMENSION(KIT,KJT,KKT),   INTENT(INOUT) :: PRGS    ! Graupel m.r. source
-
 !
 REAL, DIMENSION(KIT,KJT), INTENT(OUT)       :: PINPRC! Cloud instant precip
 REAL, DIMENSION(KIT,KJT), INTENT(OUT)       :: PINPRR! Rain instant precip
@@ -81,6 +78,9 @@ REAL, DIMENSION(KIT,KJT), INTENT(OUT)       :: PINPRS! Snow instant precip
 REAL, DIMENSION(KIT,KJT), INTENT(OUT)       :: PINPRG! Graupel instant precip
 REAL, DIMENSION(MERGE(KIT, 0, LDEPOSC), MERGE(KJT, 0, LDEPOSC)),     INTENT(OUT)       :: PINDEP  ! Cloud instant deposition
 REAL, DIMENSION(KIT,KJT,KKT),   INTENT(OUT) :: PRAINFR !Precipitation fraction
+REAL, DIMENSION(KIT,KJT,KKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
+TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+INTEGER, INTENT(IN) :: KBUDGETS
 REAL, DIMENSION(KIT,KJT), OPTIONAL, INTENT(IN)        :: PSEA ! Sea Mask
 REAL, DIMENSION(KIT,KJT), OPTIONAL, INTENT(IN)        :: PTOWN! Fraction that is town
 REAL, DIMENSION(KIT,KJT,KKT), OPTIONAL,  INTENT(IN)    :: PRHT    ! Hail m.r. at t
@@ -88,8 +88,7 @@ REAL, DIMENSION(KIT,KJT,KKT), OPTIONAL,  INTENT(INOUT) :: PRHS    ! Hail m.r. so
 REAL, DIMENSION(KIT,KJT), OPTIONAL, INTENT(OUT)      :: PINPRH! Hail instant precip
 REAL, DIMENSION(KIT,KJT,KKT,KRR), OPTIONAL, INTENT(OUT)  :: PFPR ! upper-air precipitation fluxes
 !
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
-INTEGER, INTENT(IN) :: KBUDGETS
+
 !
 END SUBROUTINE RAIN_ICE
 END INTERFACE

@@ -13,27 +13,28 @@ Clé de compilation REPRO48 + REPRO55 ajoutées pour permettre de reproduire le 
   - contournent des corrections de bug
   - modifient l'organisation de calculs
   - REPRO48 reproduit les résultats obtenus avant l'introduction de la fraction précipitante froide dans l'ajustement
-Utilisation des clés:                                                                                             |                                                                                                                         
-    - REPRO48 seule: la version de code qui sera retenue à la fin est celle de Méso-NH 5.5                          |  Ecrire doc sur marche à suivre pour intégrer un nouveau développement:                                                 
-    - REPRO55 seule: la version de code qui sera retenue à la fin est celle du cycle 48 d'AROME                     |  - dev dans MNH à faire en array-syntax                                                                                 
+Utilisation des clés:
+    - REPRO48 seule: la version de code qui sera retenue à la fin est celle de Méso-NH 5.5
+    - REPRO55 seule: la version de code qui sera retenue à la fin est celle du cycle 48 d'AROME
     - defined(REPRO48) || defined(REPRO55): la version de code qui sera retenue à la fin est nouvelle
 Ces clés devront être supprimées
 
 Ecrire doc sur marche à suivre pour intégrer un nouveau développement:
-- dev dans MNH à faire en array-syntax
-- dev dans AROME à faire en boucles do
-- intégration dans PHYEX: en array-syntax avec directives mnh_expand
-- les 3 tests suivants doivent donner les mêmes résultats (au bit près) dans chacun des deux modèles:
-  - compilation directe sans activer mnh_expand
-  - compilation en activant mnh_expand
-  - exécution en changeant le nombre de processeurs
+  - dev dans MNH à faire en array-syntax
+  - dev dans AROME à faire en boucles do
+  - intégration dans PHYEX: en array-syntax avec directives mnh_expand
+  - les 3 tests suivants doivent donner les mêmes résultats (au bit près) dans chacun des deux modèles:
+    - compilation directe sans activer mnh_expand
+    - compilation en activant mnh_expand
+    - exécution en changeant le nombre de processeurs
 
 Merge pb:
-- rain_ice_red: le cas test MesoNH n'est pas bit repro (diffs > 1% sur rapports de melange)
-                sur la modif src/mesonh/rain_ice_red au commit bdd10dd (First rain_ice new/red merge)
-- shallow_mf (appels dans aro_shallow et arp_shallow):
-       Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
-       Dans AROME/ARP: où trouver la taille de maille?
+  - rain_ice_old a rebrancher dans Meso-NH
+  - rain_ice_red: le cas test MesoNH n'est pas bit repro (diffs > 1% sur rapports de melange)
+                  sur la modif src/mesonh/rain_ice_red au commit bdd10dd (First rain_ice new/red merge)
+  - shallow_mf (appels dans aro_shallow et arp_shallow):
+         Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
+         Dans AROME/ARP: où trouver la taille de maille?
 
 Pb identifiés à corriger plus tard:
   - deposition devrait être déplacée dans ice4_tendencies
