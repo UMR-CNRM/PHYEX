@@ -205,9 +205,10 @@ if [ $compilation -eq 1 ]; then
   mv remove_non_mode.sh ../.
   cd ../
   ./remove_non_mode.sh
-  # nettoyage, routine non appellee : 
+  # nettoyage, routines non appellees : 
   rm -f MNH/mf_turb_greyzone.f90
   rm -f MNH/compute_frac_ice.f90
+  rm -f MNH/rain_ice_red.f90
 
   #Configure and compilation
   ./configure
