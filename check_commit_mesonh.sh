@@ -8,19 +8,27 @@ set -e
 # Repertoire où MNH-V5-5-0_PHYEX.tar.gz modifie pour accueillir PHYEX se trouve
 #TARGZDIR=$HOME
 
-MNHPACK=${MNHPACK:=$HOME/MesoNH/PHYEX}
-PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+availTests="007_16janvier/008_run2"
+defaultTest="007_16janvier/008_run2"
+separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
+              #- seprator must be in sync with prep_code.sh separator
 
+PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 function usage {
-  echo "Usage: $0 [-h] [-c] [-r] [-C] commit reference"
-  echo "commit          commit hash"
-  echo "reference       commit hash or nothing for ref"
+  echo "Usage: $0 [-h] [-c] [-r] [-C] [-s] [--expand] commit reference"
+  echo "commit          commit hash (or a directory)"
+  echo "reference       commit hash or a directory or nothing for ref"
   echo "-s              suppress compilation pack"
   echo "-c              performs compilation"
-  echo "-r              runs the tests, if option appears twice, run is also executed on only 2 procs (instead of 4 procs)"
+  echo "-r              runs the tests"
   echo "-C              checks the result against the reference"
+  echo "--expand        use mnh_expand (code will use do loops)"
   echo ""
   echo "If nothing is asked (compilation, running, check) everything is done"
+  echo
+  echo "The directory (for commit only, not ref) can take the form server:directory"
+  echo
+  echo "If using a directory (for commit or reference) it must contain at least one '/'"
 }
 
 compilation=0
@@ -28,7 +36,9 @@ run=0
 check=0
 commit=""
 reference=""
+tests=""
 suppress=0
+useexpand=0
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -37,6 +47,7 @@ while [ -n "$1" ]; do
     '-c') compilation=1;;
     '-r') run=$(($run+1));;
     '-C') check=1;;
+    '--expand') useexpand=1;;
     #-b) param="$2"; shift ;;
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
@@ -53,6 +64,17 @@ while [ -n "$1" ]; do
   shift
 done
 
+[ "$reference" == 'REF' ] && reference="" #Compatibility with check_commit_arome.sh
+
+MNHPACK=${MNHPACK:=$HOME/MesoNH/PHYEX}
+REFDIR=${REFDIR:=$PHYEXTOOLSDIR/pack/}
+TARGZDIR=${TARGZDIR:=$PHYEXTOOLSDIR/pack/}
+if [ -z "${tests-}" ]; then
+  tests=$defaultTest
+elif [ $tests == 'ALL' ]; then
+  tests=$availTests
+fi
+
 if [ $compilation -eq 0 -a \
      $run -eq 0 -a \
      $check -eq 0 ]; then
@@ -66,42 +88,53 @@ if [ -z "${commit-}" ]; then
   exit 2
 fi
 
-#if [ $check -eq 1 -a -z "${reference-}" ]; then
-#  echo "To perform a comparison two commit hashes are mandatory on the command line"
-#  exit 3
-#fi
-
-if echo $commit | grep '/' > /dev/null; then
-  name=MNH-V5-5-0-$(echo $commit | sed 's/\//_/g')
-  [ $suppress -eq 1 -a -d $MNHPACK/$name ] && rm -rf $MNHPACK/$name
-else
-  name=MNH-V5-5-0-$commit
-  [ $suppress -eq 1 -a -d $MNHPACK/$name ] && rm -rf $MNHPACK/$name
-fi
-
 #Two possibilities are supported for the simulations
 # - they can be done in the the pack we are currently checking
 # - they can be done in the reference pack
 #They are done in the current pack except if the reference pack
 #already contains a tested simulation
-run_in_ref=$(ls -d $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_* | tail -1 |wc -l)
+run_in_ref=$(ls -d $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_* 2> /dev/null | tail -1 |wc -l)
+
+#Name and directory for compiling and executing user pack
+fromdir=''
+if echo $commit | grep '/' > /dev/null; then
+  fromdir=$commit
+  tag=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
+else
+  tag=$commit
+fi
+name=MNH-V5-5-0-$tag
+[ $suppress -eq 1 -a -d $MNHPACK/$name ] && rm -rf $MNHPACK/$name
 if [ $run_in_ref -eq 1 ]; then
-  path_user_beg=$REFDIR/MNH-V5-5-0
-  path_user_end=_$commit
+  path_user_beg=$REFDIR/MNH-V5-5-0 #pack directory containing the simulation
+  path_user_end=_$tag #to be appended to the 'run' simulation directory
+else
+  path_user_beg=$MNHPACK/$name #pack directory containing the simulation
+  path_user_end= #to be appended to the 'run' simulation directory
+fi
+
+#Name and directory for the reference
+reffromdir=''
+if echo $reference | grep '/' > /dev/null; then
+  reffromdir=$reference
+  reftag=$(echo $reference | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
+else
+  reftag=$reference
+fi
+refname=MNH-V5-5-0-$reftag
+if [ $run_in_ref -eq 1 ]; then
   path_ref_beg=$REFDIR/MNH-V5-5-0
   if [ "$reference" == "" ]; then
     path_ref_end=
   else
-    path_ref_end=_$reference
+    path_ref_end=_$reftag
   fi
 else
-  path_user_beg=$MNHPACK/$name
-  path_user_end=
   path_ref_end=
   if [ "$reference" == "" ]; then
     path_ref_beg=$REFDIR/MNH-V5-5-0
   else
-    path_ref_beg=$MNHPACK/MNH-V5-5-0-$reference
+    path_ref_beg=$MNHPACK/MNH-V5-5-0-$reftag
   fi
 fi
 
@@ -116,48 +149,44 @@ if [ $compilation -eq 1 ]; then
   # Prepare the pack
   cd $MNHPACK
   cp $TARGZDIR/MNH-V5-5-0_PHYEX.tar.gz .
-  tar xvfz MNH-V5-5-0_PHYEX.tar.gz 
+  tar xfz MNH-V5-5-0_PHYEX.tar.gz 
   rm MNH-V5-5-0_PHYEX.tar.gz
   mv MNH-V5-5-0 $name
   cd $name/src
+  rm -rf PHYEX
 
-  cd $MNHPACK
-  echo "Clone repository, and checkout commit $commit"
-  git clone https://github.com/QuentinRodier/PHYEX.git
-  cd PHYEX
-  git checkout $commit
-  
-  cd src/common/turb
-  # Rename all *.F90 to *.f90
-  for rep in turb micro aux; do
-    cd ../$rep  
-    for f in *.F90; do 
-      mv -- "$f" "${f%.F90}.f90"
-    done
-  done
-  cd ../../../
+  MNH_EXPAND_DIR=$PHYEXTOOLSDIR/mnh_expand
+  export PATH=$MNH_EXPAND_DIR/filepp:$MNH_EXPAND_DIR/MNH_Expand_Array:$PATH
 
-  for rep in turb micro conv ext aux; do
-    [ ! -d ../$rep ] && mkdir ../$rep
-    [ -d src/common/$rep ] && mv -f src/common/$rep/* ../$rep/
-    [ -d src/mesonh/$rep ] && mv -f src/mesonh/$rep/* ../$rep/
-    touch ../$rep/*
-  done
-  cd ..
-  # Move PHYEX files inside MNH/src/PHYEX
-  for rep in turb micro conv aux; do
-    mv $rep/* $name/src/PHYEX/$rep/.
-    rmdir $rep
-  done
+  if [ $useexpand == 1 ]; then
+    expand_options="-D MNH_EXPAND -D MNH_EXPAND_LOOP"
+  else
+    expand_options=""
+  fi
+  subs="-s turb -s micro -s aux -s ext -s conv"
+  prep_code=$PHYEXTOOLSDIR/prep_code.sh
+  if [ "$fromdir" == '' ]; then
+    echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
+    if [[ $commit == mesonh${separator}* ]]; then
+      $prep_code --renameFf -c $commit PHYEX #This commit is ready for inclusion
+    else
+      $prep_code --renameFf -c $commit $expand_options $subs -m mesonh PHYEX
+    fi
+  else
+    echo "Copy $fromdir"
+    scp -q -r $fromdir PHYEX
+    $prep_code --renameFf $expand_options $subs -m mesonh PHYEX
+  fi
+  rm -rf PHYEX/.git
+  find PHYEX -type f -exec touch {} \; #to be sure a recompilation occurs
 
   # Move manually ext/ files in src/MNH
-  mv -f ext/* $name/src/MNH/. 
+  if [ -d PHYEX/ext ]; then
+    mv -f PHYEX/ext/* MNH/
+    rmdir PHYEX/ext
+  fi
 
-  # Clean folder
-  rmdir ext
-  rm -Rf PHYEX
-
-  cd $name/src/PHYEX/turb
+  cd $MNHPACK/$name/src/PHYEX/turb
   # Delete files of MNH-V5-5-0/src/MNH and MNH/src/LIB/SURCOUCHE/src with same name
   for rep in turb micro conv aux ; do
     cd ../$rep
@@ -178,83 +207,95 @@ if [ $compilation -eq 1 ]; then
   mv remove_non_mode.sh ../.
   cd ../
   ./remove_non_mode.sh
-  # nettoyage, routine non appellee : 
+  # nettoyage, routines non appellees : 
   rm -f MNH/mf_turb_greyzone.f90
   rm -f MNH/compute_frac_ice.f90
+  rm -f MNH/rain_ice_red.f90
 
   #Configure and compilation
   ./configure
   set +e #file ends with a test that can return false
-  . ../conf/profile_mesonh-LXgfortran-R8I4-MNH-V5-5-0-MPIAUTO-DEBUG
+  . ../conf/profile_mesonh-*
   set -e
-  make -j 8
-  make installmaster
+  make -j 8 | tee ../Output_compilation
+  make installmaster | tee -a ../Output_compilation
 fi
 
 if [ $run -ge 1 ]; then
   echo "### Running of commit $commit"
-  echo $commit
+
   if [ ! -f $MNHPACK/$name/exe/MESONH* ]; then
     echo "Pack does not exist ($MNHPACK/$name) or compilation has failed, please check"
     exit 6
   fi
 
-  if [ $run_in_ref -eq 1 ]; then
-    cd $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/
-    [ ! -d 008_run2_$commit ] && cp -R 008_run2 008_run2_$commit
-    cd $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_$commit
-  else
-    cd $MNHPACK/$name/MY_RUN/KTEST/007_16janvier/
-    for rep in ???_*; do
-      if [ $rep != 008_run2 ]; then
-        rm -rf $rep
-        ln -s $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/$rep .
-      fi
-    done
-    [ -d 008_run2 ] && rm -rf 008_run2
-    cp -R $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2 .
-    cd 008_run2
-  fi
-
-  set +e #file ends with a test that can return false
-  [ $compilation -eq 0 ] && . $MNHPACK/$name/conf/profile_mesonh-LXgfortran-R8I4-MNH-V5-5-0-MPIAUTO-DEBUG
-  set -e
-  ./clean_mesonh_xyz
-  ./run_mesonh_xyz
+  for t in $(echo $tests | sed 's/,/ /g'); do
+    case=$(echo $t | cut -d / -f 1)
+    exedir=$(echo $t | cut -d / -f 2)
+    if [ $run_in_ref -eq 1 ]; then
+      cd $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/
+      [ ! -d ${exedir}_$commit ] && cp -R ${exedir} ${exedir}_$commit
+      cd $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/${exedir}_$commit
+    else
+      cd $MNHPACK/$name/MY_RUN/KTEST/$case/
+      for rep in ???_*; do
+        if [ $rep != ${exedir} ]; then
+          rm -rf $rep
+          ln -s $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/$rep .
+        fi
+      done
+      [ -d ${exedir} ] && rm -rf ${exedir}
+      cp -R $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/${exedir} .
+      cd ${exedir}
+    fi
+  
+    set +e #file ends with a test that can return false
+    [ $compilation -eq 0 ] && . $MNHPACK/$name/conf/profile_mesonh-*
+    set -e
+    ./clean_mesonh_xyz
+    ./run_mesonh_xyz | tee Output_run
+  done
 fi
-  
+
 if [ $check -eq 1 ]; then
-  allt=0
   echo "### Check commit $commit against commit $reference"
-  path_user=$path_user_beg/MY_RUN/KTEST/007_16janvier/008_run2$path_user_end
-  path_ref=$path_ref_beg/MY_RUN/KTEST/007_16janvier/008_run2$path_ref_end
 
-  if [ ! -d $path_user ]; then
-    echo "$path_user is missing, please run the simulation"
-    exit 7
-  fi
-  if [ ! -d $path_ref ]; then
-    echo "$path_ref is missing, please run the reference simulation"
-    exit 8
-  fi
+  allt=0
+  for t in $(echo $tests | sed 's/,/ /g'); do
+    case=$(echo $t | cut -d / -f 1)
+    exedir=$(echo $t | cut -d / -f 2)
 
-  echo "Compare with python..."
-  # Compare variable of both Synchronous and Diachronic files with printing difference
-  set +e
-  $PHYEXTOOLSDIR/compare.py $path_user $path_ref
-  t=$?
-  set -e
-  allt=$(($allt+$t))
-  
-  #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
-  file1=$path_user/16JAN.1.12B18.001.nc 
-  file2=$path_ref/16JAN.1.12B18.001.nc
-  echo "Compare with ncdump..."
-  set +e
-  diff <(ncdump $file1 | head -c 62889) <(ncdump $file2 | head -c 62889)
-  t=$?
-  set -e
-  allt=$(($allt+$t))
+    path_user=$path_user_beg/MY_RUN/KTEST/007_16janvier/008_run2$path_user_end
+    path_ref=$path_ref_beg/MY_RUN/KTEST/007_16janvier/008_run2$path_ref_end
+    if [ ! -d $path_user ]; then
+      echo "$path_user is missing, please run the simulation"
+      exit 7
+    fi
+    if [ ! -d $path_ref ]; then
+      echo "$path_ref is missing, please run the reference simulation"
+      exit 8
+    fi
+
+    if [ $case == 007_16janvier ]; then
+      echo "Compare with python..."
+      # Compare variable of both Synchronous and Diachronic files with printing difference
+      set +e
+      $PHYEXTOOLSDIR/compare.py $path_user $path_ref
+      t=$?
+      set -e
+      allt=$(($allt+$t))
+      
+      #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
+      file1=$path_user/16JAN.1.12B18.001.nc 
+      file2=$path_ref/16JAN.1.12B18.001.nc
+      echo "Compare with ncdump..."
+      set +e
+      diff <(ncdump $file1 | head -c 62889) <(ncdump $file2 | head -c 62889)
+      t=$?
+      set -e
+      allt=$(($allt+$t))
+    fi
+  done
 
   if [ $allt -eq 0 ]; then
     status="OK"

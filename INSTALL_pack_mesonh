@@ -1,23 +1,23 @@
 
 1) Compilation de la master
-Il faut installer dans le répertoire pack une version de mesonh officielle (exemple pour sxphynh):
+Il faut installer dans le répertoire pack une version de mesonh officielle:
 cd <git repository>/pack
-cp ~rodierq/MNH-V5-5-0.tar.gz .
+scp sxphynh.cnrm.meteo.fr:/home/rodierq/MNH-V5-5-0.tar.gz .
 tar xvfz MNH-V5-5-0.tar.gz
 cd MNH-V5-5-0/src
 ./configure
-. ../conf/profile_mesonh-LXgfortran-R8I4-MNH-V5-5-0-MPIAUTO-DEBUG
+. ../conf/profile_mesonh-*
 make -j 8
 make installmaster
 
 2) Lancer les étapes de pré-processing au moins une fois en master sur le KTEST :
 cd ../MY_RUN/KTEST/007_16janvier
 # J'ai modifié la namelists du cas pour activer plus d'option, récupérer le nouveau dossier de run :
-rm -Rf 008_run2; cp -R ~rodierq/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2 .
+rm -Rf 008_run2; scp -r sxphynh.cnrm.meteo.fr:/home/rodierq/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2 .
 make clean
 make #l'étape 10 ne se déroule sans erreur que si un display (X11) est disponible
-     #les étapes suivantes peuvent être alors lancées par "make E011_ncl E012_spectre"
+     #après l'erreur, les étapes suivantes peuvent être lancées par "make E011_ncl E012_spectre"
 
 3) Récupérer le pack modifie pour accueillir PHYEX (essentiellement le makefile modifié et le répertoire PHYEX créé)
 cd <git repository>/pack
-cp ~rodierq/MNH-V5-5-0_PHYEX.tar.gz .
+scp sxphynh.cnrm.meteo.fr:/home/rodierq/MNH-V5-5-0_PHYEX.tar.gz .

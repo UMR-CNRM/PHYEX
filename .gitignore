@@ -1,0 +1,10 @@
+# Ignore the content of pack directory but not the directory itself
+/pack/**
+!/pack/.gitkeep
+
+# Ignore the content of mnh_expand directory but not the directory itself
+/mnh_expand/**
+!/mnh_expand/.gitkeep
+
+# Ignore vim swapp files
+.*.swp
