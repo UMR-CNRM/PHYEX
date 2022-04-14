@@ -14,9 +14,10 @@
                             PTHT, PRVT, PRCT, PRRT, PRIT, PRST,                   &
                             PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,       &
                             PINPRC, PINPRR, PEVAP3D,                              &
-                            PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS, PSEA, PTOWN,  &
-                            PRHT, PRHS, PINPRH, PFPR,                             &
-                            TBUDGETS, KBUDGETS)
+                            PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,               &
+                            TBUDGETS, KBUDGETS,                                   &
+                            PSEA, PTOWN,                                          &
+                            PRHT, PRHS, PINPRH, PFPR                              )
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -240,7 +241,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    :: PEXNREF ! Reference Exner
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    :: PPABST  ! absolute pressure at t
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    :: PCLDFR  ! Convective Mass Flux Cloud fraction
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    :: PCLDFR  ! Cloud fraction
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    :: PHLC_HRC
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    :: PHLC_HCF
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    :: PHLI_HRI
@@ -266,9 +267,12 @@ REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT)       :: PINPRR! Rain instant precip
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)     :: PEVAP3D! Rain evap profile
 REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT)       :: PINPRS! Snow instant precip
 REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT)       :: PINPRG! Graupel instant precip
-REAL, DIMENSION(D%NIT,D%NJT),     INTENT(OUT)       :: PINDEP  ! Cloud instant deposition
+REAL, DIMENSION(MERGE(D%NIT, 0, PARAMI%LDEPOSC), &
+               &MERGE(D%NJT, 0, PARAMI%LDEPOSC)), INTENT(OUT) :: PINDEP  ! Cloud instant deposition
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(OUT) :: PRAINFR !Precipitation fraction
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
+TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+INTEGER, INTENT(IN) :: KBUDGETS
 REAL, DIMENSION(D%NIT,D%NJT), OPTIONAL, INTENT(IN)        :: PSEA ! Sea Mask
 REAL, DIMENSION(D%NIT,D%NJT), OPTIONAL, INTENT(IN)        :: PTOWN! Fraction that is town
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL,  INTENT(IN)    :: PRHT    ! Hail m.r. at t
@@ -276,8 +280,6 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL,  INTENT(INOUT) :: PRHS    ! Hail m
 REAL, DIMENSION(D%NIT,D%NJT), OPTIONAL, INTENT(OUT)      :: PINPRH! Hail instant precip
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)  :: PFPR ! upper-air precipitation fluxes
 !
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
-INTEGER, INTENT(IN) :: KBUDGETS
 !
 !*       0.2   Declarations of local variables :
 !
@@ -962,13 +964,15 @@ IF (KSIZE > 0) THEN
               IF (LLCPZ0RT) Z0RT(1:IMICRO, JV)=ZVART(1:IMICRO, JV)
               DO JL=1, IMICRO
                 IF (IITER(JL)<INB_ITER_MAX .AND. ABS(ZA(JL,JV))>1.E-20) THEN
-                  ZTIME_THRESHOLD1D(JL)=(SIGN(1., ZA(JL, JV))*PARAMI%XMRSTEP+Z0RT(JL, JV)-ZVART(JL, JV)-ZB(JL, JV))/ZA(JL, JV)
+                  ZTIME_THRESHOLD1D(JL)=(SIGN(1., ZA(JL, JV))*PARAMI%XMRSTEP+ &
+                                        &Z0RT(JL, JV)-ZVART(JL, JV)-ZB(JL, JV))/ZA(JL, JV)
                 ELSE
                   ZTIME_THRESHOLD1D(JL)=-1.
                 ENDIF
               ENDDO
               DO JL=1, IMICRO
-                IF (ZTIME_THRESHOLD1D(JL)>=0 .AND. ZTIME_THRESHOLD1D(JL)<ZMAXTIME(JL) .AND. (ZVART(JL, JV)>ICED%XRTMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
+                IF (ZTIME_THRESHOLD1D(JL)>=0 .AND. ZTIME_THRESHOLD1D(JL)<ZMAXTIME(JL) .AND. &
+                   &(ZVART(JL, JV)>ICED%XRTMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
                   ZMAXTIME(JL)=MIN(ZMAXTIME(JL), ZTIME_THRESHOLD1D(JL))
                   LLCOMPUTE(JL)=.FALSE.
                 ENDIF
@@ -1439,7 +1443,14 @@ IF(BUCONF%LBU_ENABLE) THEN
     DO JL=1, KSIZE
       ZW(I1TOT(JL), I2TOT(JL), I3TOT(JL)) = ZTOT_RGWETH(JL) * ZINV_TSTEP
     END DO
+#endif 
+#ifdef REPRO48
     IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RG), 'HGCV', (-ZW5(:, :, :)-ZW(:, :, :))*PRHODJ(:, :, :))
+#endif
+#ifdef REPRO55
+    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RG), 'HGCV', -ZW(:, :, :)*PRHODJ(:, :, :))
+#endif
+#if defined(REPRO48) || defined(REPRO55)
     IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD(TBUDGETS(NBUDGET_RH), 'HGCV',  ZW(:, :, :)*PRHODJ(:, :, :))
 #endif
 
@@ -1465,7 +1476,7 @@ IF(BUCONF%LBU_ENABLE) THEN
     END DO
     ZW6(:,:,:) = 0.
 #if defined(REPRO48) || defined(REPRO55)
-    !ZW6 must be removed when REPRO48 will be suppressed
+    !ZW6 must be removed when REPRO* will be suppressed
     DO JL=1, KSIZE
       ZW6(I1TOT(JL), I2TOT(JL), I3TOT(JL)) = ZTOT_RDRYHG(JL) * ZINV_TSTEP
     END DO

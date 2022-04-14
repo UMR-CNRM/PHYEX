@@ -20,20 +20,24 @@ Utilisation des clés:
 Ces clés devront être supprimées
 
 Ecrire doc sur marche à suivre pour intégrer un nouveau développement:
-- dev dans MNH à faire en array-syntax
-- dev dans AROME à faire en boucles do
-- intégration dans PHYEX: en array-syntax avec directives mnh_expand
-- les 3 tests suivants doivent donner les mêmes résultats (au bit près) dans chacun des deux modèles:
-  - compilation directe sans activer mnh_expand
-  - compilation en activant mnh_expand
-  - exécution en changeant le nombre de processeurs
+  - dev dans MNH à faire en array-syntax
+  - dev dans AROME à faire en boucles do
+  - intégration dans PHYEX: en array-syntax avec directives mnh_expand
+  - les 3 tests suivants doivent donner les mêmes résultats (au bit près) dans chacun des deux modèles:
+    - compilation directe sans activer mnh_expand
+    - compilation en activant mnh_expand
+    - exécution en changeant le nombre de processeurs
 
 Merge pb:
-- rain_ice_red: le cas test MesoNH n'est pas bit repro (diffs > 1% sur rapports de melange)
-                sur la modif src/mesonh/rain_ice_red au commit bdd10dd (First rain_ice new/red merge)
-- shallow_mf (appels dans aro_shallow et arp_shallow):
-       Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
-       Dans AROME/ARP: où trouver la taille de maille?
+  - rain_ice_old a rebrancher dans Meso-NH
+  - appels à condensation temporairement supprimés de src/mesonh/micro/radtr_satel.f90,
+        src/mesonh/micro/ice_adjust_elec.f90 et src/mesonh/micro/lima_adjust_split.f90
+  - rain_ice_red: le cas test MesoNH n'est pas bit repro (diffs > 1% sur rapports de melange)
+                  sur la modif src/mesonh/rain_ice_red au commit bdd10dd (First rain_ice new/red merge)
+  - shallow_mf (appels dans aro_shallow et arp_shallow):
+         Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
+         Dans AROME/ARP: où trouver la taille de maille?
+  - arp_shallow_mf non phasé
 
 Pb identifiés à corriger plus tard:
   - deposition devrait être déplacée dans ice4_tendencies
@@ -52,6 +56,8 @@ Pb identifiés à corriger plus tard:
   - indentation inorrecte dans les blocs mnh_expand
   - sedimentation momentum non branchée (et à trasformer comme sedim_stat)
   - si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
+  - il faudrait nettoyer les interfaces pour supprimer les clés passées directement
+    alors qu'elles sont également disponibles dans les structures (ex: HMF_UPDRAFT)
 
 Répertoire arome/ext et mesonh/ext contiennent les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
 Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayadevront avoir été fournies par ailleurs

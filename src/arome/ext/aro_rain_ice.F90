@@ -430,7 +430,7 @@ IF (CMICRO=='ICE4') THEN
                  &  HSUBG_AUCV_RC=CSUBG_AUCV_RC, HSUBG_AUCV_RI=CSUBG_AUCV_RI,&
                  &  OWARM=OWARM, &
                  &  PTSTEP=2*PTSTEP, &
-                 &  KRR=KRR, LDMICRO=LLMICRO, PEXN=PEXNREF,            &
+                 &  KRR=KRR, ODMICRO=LLMICRO, PEXN=PEXNREF,            &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF, PEXNREF=PEXNREF,&
                  &  PPABST=PPABSM, PCIT=PCIT, PCLDFR=PCLDFR,  &
                  &  PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, &
@@ -444,9 +444,10 @@ IF (CMICRO=='ICE4') THEN
                  &  PRIS=PRS(:,:,:,4),PRSS= PRS(:,:,:,5),PRGS= PRS(:,:,:,6),&
                  &  PINPRC=ZINPRC,PINPRR=PINPRR,PEVAP3D=PEVAP,&
                  &  PINPRS=PINPRS, PINPRG=PINPRG, PINDEP=ZINDEP, PRAINFR=ZRAINFR, &
-                 &  PSIGS=PSIGS, PSEA=PSEA, PTOWN=PTOWN, PRHT=PRT(:,:,:,7),&
-                 &  PRHS=PRS(:,:,:,7), PINPRH=PINPRH, PFPR=PFPR, &
-                 &  TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET))
+                 &  PSIGS=PSIGS, &
+                 &  TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
+                 &  PSEA=PSEA, PTOWN=PTOWN, &
+                 &  PRHT=PRT(:,:,:,7), PRHS=PRS(:,:,:,7), PINPRH=PINPRH, PFPR=PFPR)
 ELSEIF (CMICRO=='ICE3') THEN
     CALL RAIN_ICE(  YLDIMPHYEX, CST, PARAM_ICE, RAIN_ICE_PARAM, &
                  &  RAIN_ICE_DESCR, TBUCONF, &
@@ -455,7 +456,7 @@ ELSEIF (CMICRO=='ICE3') THEN
                  &  HSUBG_AUCV_RC=CSUBG_AUCV_RC, HSUBG_AUCV_RI=CSUBG_AUCV_RI,&
                  &  OWARM=OWARM, &
                  &  PTSTEP=2*PTSTEP, &
-                 &  KRR=KRR, LDMICRO=LLMICRO, PEXN=PEXNREF,            &
+                 &  KRR=KRR, ODMICRO=LLMICRO, PEXN=PEXNREF,            &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF,PEXNREF=PEXNREF,&
                  &  PPABST=PPABSM, PCIT=PCIT, PCLDFR=PCLDFR,  &
                  &  PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, &
@@ -469,8 +470,9 @@ ELSEIF (CMICRO=='ICE3') THEN
                  &  PRIS=PRS(:,:,:,4),PRSS= PRS(:,:,:,5),PRGS= PRS(:,:,:,6),&
                  &  PINPRC=ZINPRC,PINPRR=PINPRR,PEVAP3D=PEVAP,&
                  &  PINPRS=PINPRS, PINPRG=PINPRG, PINDEP=ZINDEP, PRAINFR=ZRAINFR, &
-                 &  PSIGS=PSIGS, PSEA=PSEA, PTOWN=PTOWN, PFPR=PFPR, &
-                 &  TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET))
+                 &  PSIGS=PSIGS, &
+                 &  TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
+                 &  PSEA=PSEA, PTOWN=PTOWN, PFPR=PFPR)
 ELSEIF (CMICRO=='OLD4') THEN
     CALL RAIN_ICE_OLD( OSEDIC=OSEDIC, OCND2=OCND2, LGRSN=LGRSN, HSEDIM=CSEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC,&
                  &  OWARM=OWARM,KKA=KKA,KKU=KKU,KKL=KKL,KSPLITR=KSPLITR, &

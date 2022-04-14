@@ -245,7 +245,8 @@ ELSE
     DO JJ=D%NJB,D%NJE
       DO JI=D%NIB,D%NIE
         ZCPD(JI,JJ,JK) = CST%XCPD + CST%XCPV*PRV_IN(JI,JJ,JK) + CST%XCL*PRC_IN(JI,JJ,JK) + CST%XCI*PRI_IN(JI,JJ,JK) + &
-#ifndef REPRO48
+#if defined(REPRO48) || defined(REPRO55)
+#else
                                     CST%XCL*PRR(JI,JJ,JK) +  &
 #endif
                                     CST%XCI*(PRS(JI,JJ,JK) + PRG(JI,JJ,JK) )
@@ -314,8 +315,8 @@ DO JK=D%NKTB,D%NKTE
        ENDDO
        CALL ICECLOUD(D%NIE-D%NIB+1,PPABS(D%NIB,JJ,JK),PZZ(D%NIB,JJ,JK),ZDZ(D%NIB), &
             & PT(D%NIB,JJ,JK),PRV_IN(D%NIB,JJ,JK),1.,-1., &
-            & ZCLDUM,1.,TCLD(D%NIB,JJ,JK), &
-            & ZARDUM,ZARDUM,ZARDUM,ZARDUM)
+            & ZCLDUM(D%NIB:D%NIE),1.,TCLD(D%NIB,JJ,JK), &
+            & ZARDUM(D%NIB:D%NIE),ZARDUM(D%NIB:D%NIE),ZARDUM(D%NIB:D%NIE),ZARDUM(D%NIB:D%NIE))
        ! latent heats
        ! saturated water vapor mixing ratio over liquid water and ice
        DO JI=D%NIB,D%NIE
