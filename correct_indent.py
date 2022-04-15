@@ -109,7 +109,6 @@ def correct_indent(f):
                 textwrite = check_indent(ncurrline, indent_score, i)
             # #ifdef handling = pass to next lines with no indent
             elif "#if" in i7:  # ifdef or ifndef
-                print(i)
                 textwrite = i
                 passNextLine['Pass'], passNextLine['Reason'] = (True, "#ifdef")
             elif "#else" in i7:
