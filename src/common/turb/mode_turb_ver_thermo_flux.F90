@@ -757,11 +757,11 @@ ELSE
     ZWORK1 = MZF( MZM(PETHETA,D%NKA, D%NKU, D%NKL) * ZFLXZ,D%NKA, D%NKU, D%NKL )
     !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     PTP(:,:,:)  =  PBETA(:,:,:) * ZWORK1(:,:,:)
-    !$mnh_end_expand_array(JI=0:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     PTP(:,:,IKB)=  PBETA(:,:,IKB) * PETHETA(:,:,IKB) *   &
                    0.5 * ( ZFLXZ(:,:,IKB) + ZFLXZ(:,:,IKB+D%NKL) )
-    !$mnh_end_expand_array(JI=0:D%NIT,JJ=1:D%NJT)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ELSE
     ZWORK1 = MZF( ZFLXZ,D%NKA, D%NKU, D%NKL )
     !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
