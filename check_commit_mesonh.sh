@@ -289,11 +289,17 @@ if [ $check -eq 1 ]; then
       file1=$path_user/16JAN.1.12B18.001.nc 
       file2=$path_ref/16JAN.1.12B18.001.nc
       echo "Compare with ncdump..."
-      set +e
-      diff <(ncdump $file1 | head -c 62889) <(ncdump $file2 | head -c 62889)
-      t=$?
-      set -e
-      allt=$(($allt+$t))
+      if [ -f $file1 -a -f $file2 ]; then
+        set +e
+        diff <(ncdump $file1 | head -c 62889) <(ncdump $file2 | head -c 62889)
+        t=$?
+        set -e
+        allt=$(($allt+$t))
+      else
+        [ ! -f $file1 ] && echo "  $file1 is missing"
+        [ ! -f $file2 ] && echo "  $file2 is missing"
+        allt=$(($allt+1))
+      fi
     fi
   done
 
