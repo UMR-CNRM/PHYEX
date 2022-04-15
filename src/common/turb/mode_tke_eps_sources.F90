@@ -239,9 +239,9 @@ IF (LHOOK) CALL DR_HOOK('TKE_EPS_SOURCES',0,ZHOOK_HANDLE)
 IKB=D%NKB
 !
 ! compute the effective diffusion coefficient at the mass point
-!$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ZKEFF(:,:,:) = PLM(:,:,:) * SQRT(PTKEM(:,:,:))
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 !----------------------------------------------------------------------------
 !
@@ -265,9 +265,9 @@ END IF
 ! extrapolate the dynamic production with a 1/Z law from its value at the 
 ! W(IKB+1) value stored in PDP(IKB) to the mass localization tke(IKB)
 !
-!$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 PDP(:,:,IKB) = PDP(:,:,IKB) * (1. + PDZZ(:,:,IKB+D%NKL)/PDZZ(:,:,IKB))
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
 ! Compute the source terms for TKE: ( ADVECtion + NUMerical DIFFusion + ..)
 ! + (Dynamical Production) + (Thermal Production) - (dissipation) 
@@ -275,7 +275,7 @@ PDP(:,:,IKB) = PDP(:,:,IKB) * (1. + PDZZ(:,:,IKB+D%NKL)/PDZZ(:,:,IKB))
 ZMWORK1 = MZM(ZKEFF, D%NKA, D%NKU, D%NKL) 
 ZMWORK2 = MZM(PRHODJ, D%NKA, D%NKU, D%NKL)
 !
-!$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ZFLX(:,:,:) = CSTURB%XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:)
 ZSOURCE(:,:,:) = ( PRTKES(:,:,:) +  PRTKEMS(:,:,:) ) / PRHODJ(:,:,:) &
    - PTKEM(:,:,:) / PTSTEP &
@@ -288,7 +288,7 @@ ZSOURCE(:,:,:) = ( PRTKES(:,:,:) +  PRTKEMS(:,:,:) ) / PRHODJ(:,:,:) &
 ! matrix inverted in TRIDIAG 
 !
 ZA(:,:,:)     = - PTSTEP * CSTURB%XCET * ZMWORK1(:,:,:) * ZMWORK2(:,:,:) / PDZZ(:,:,:)**2
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 ! Compute TKE at time t+deltat: ( stored in ZRES )
 !
@@ -298,10 +298,10 @@ CALL GET_HALO(ZRES)
 !* diagnose the dissipation
 !
 IF (LDIAG_IN_RUN) THEN
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   XCURRENT_TKE_DISS(:,:,:) = ZFLX(:,:,:) * PTKEM(:,:,:) &
                                   *(PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:))
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
   CALL ADD3DFIELD_ll( TZFIELDDISS_ll, XCURRENT_TKE_DISS, 'TKE_EPS_SOURCES::XCURRENT_TKE_DISS' )
   CALL UPDATE_HALO_ll(TZFIELDDISS_ll,IINFO_ll)
@@ -311,17 +311,17 @@ ENDIF
 ! TKE must be greater than its minimum value
 ! CL : Now done at the end of the time step in ADVECTION_METSV for MesoNH
 IF(HPROGRAM/='MESONH') THEN
- !$mnh_expand_where(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+ !$mnh_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
  GTKENEG(:,:,:) =  ZRES(:,:,:) <= CSTURB%XTKEMIN
  WHERE ( GTKENEG(:,:,:) ) 
    ZRES(:,:,:) = CSTURB%XTKEMIN
  END WHERE
- !$mnh_end_expand_where(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+ !$mnh_end_expand_where(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 END IF
 !
-!$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 PTDISS(:,:,:) = - ZFLX(:,:,:)*(PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:))
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 IF ( OLES_CALL .OR.                         &
      (OTURB_DIAG .AND. TPFILE%LOPENED)  ) THEN
@@ -330,9 +330,9 @@ IF ( OLES_CALL .OR.                         &
 !
   ZMWORK1 = MZM(ZKEFF, D%NKA, D%NKU, D%NKL)
   ZDWORK1 = DZM(PIMPL * ZRES + PEXPL * PTKEM, D%NKA, D%NKU, D%NKL)
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZFLX(:,:,:)  = - CSTURB%XCET * ZMWORK1(:,:,:) * ZDWORK1(:,:,:) / PDZZ(:,:,:)
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
   ZFLX(:,:,IKB) = 0.
   ZFLX(:,:,D%NKA) = 0.
@@ -340,9 +340,9 @@ IF ( OLES_CALL .OR.                         &
 ! Compute the whole turbulent TRansport of TKE:
 !
   ZDWORK1 = DZF(MZM(PRHODJ, D%NKA, D%NKU, D%NKL) * ZFLX / PDZZ, D%NKA, D%NKU, D%NKL)
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZTR(:,:,:)= ZTR(:,:,:) - ZDWORK1(:,:,:) /PRHODJ(:,:,:)
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 ! Storage in the LES configuration
 !
@@ -370,20 +370,20 @@ END IF
 
 !Store the previous source terms in prtkes before initializing the next one
 !Should be in IF LBUDGET_TKE only. Was removed out for a correct comput. of PTDIFF in case of LBUDGET_TKE=F in AROME
-!$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 PRTKES(:,:,:) = PRTKES(:,:,:) + PRHODJ(:,:,:) *                                                           &
                 ( PDP(:,:,:) + PTP(:,:,:)                                                                 &
                   - CSTURB%XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * ( PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:) ) )
 !
 PTDIFF(:,:,:) =  ZRES(:,:,:) / PTSTEP - PRTKES(:,:,:)/PRHODJ(:,:,:) &
  & - PDP(:,:,:)- PTP(:,:,:) - PTDISS(:,:,:)
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 IF (BUCONF%LBUDGET_TKE) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TKE), 'TR', PRTKES(:, :, :) )
 !
-!$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 PRTKES(:,:,:) = ZRES(:,:,:) * PRHODJ(:,:,:) / PTSTEP -  PRTKEMS(:,:,:)
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
 ! stores the whole turbulent transport
 !
@@ -394,10 +394,10 @@ IF (BUCONF%LBUDGET_TKE) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TKE), 'TR', PRTK
 !*       3.   COMPUTE THE DISSIPATIVE HEATING
 !             -------------------------------
 !
-!$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 PRTHLS(:,:,:) = PRTHLS(:,:,:) + CSTURB%XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * &
                 (PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:)) * PRHODJ(:,:,:) * PCOEF_DISS(:,:,:)
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !----------------------------------------------------------------------------
 !
 !*       4.   STORES SOME DIAGNOSTICS
@@ -405,15 +405,15 @@ PRTHLS(:,:,:) = PRTHLS(:,:,:) + CSTURB%XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) 
 !
 IF(PRESENT(PTR)) PTR=ZTR
 IF(PRESENT(PDISS)) THEN
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   PDISS(:,:,:) =  -CSTURB%XCED * (PTKEM(:,:,:)**1.5) / PLEPS(:,:,:)
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 END IF
 !
 IF(PRESENT(PEDR)) THEN
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   PEDR(:,:,:) = CSTURB%XCED * (PTKEM(:,:,:)**1.5) / PLEPS(:,:,:)
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 END IF
 !
 IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN

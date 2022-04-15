@@ -367,14 +367,14 @@ GUSERV = (KRR/=0)
 !
 !  compute the coefficients for the uncentred gradient computation near the 
 !  ground
-!$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ZCOEFF(:,:,IKB+2*D%NKL)= - PDZZ(:,:,IKB+D%NKL) /      &
        ( (PDZZ(:,:,IKB+2*D%NKL)+PDZZ(:,:,IKB+D%NKL)) * PDZZ(:,:,IKB+2*D%NKL) )
 ZCOEFF(:,:,IKB+D%NKL)=   (PDZZ(:,:,IKB+2*D%NKL)+PDZZ(:,:,IKB+D%NKL)) /      &
        ( PDZZ(:,:,IKB+D%NKL) * PDZZ(:,:,IKB+2*D%NKL) )
 ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2*D%NKL)+2.*PDZZ(:,:,IKB+D%NKL)) /      &
        ( (PDZZ(:,:,IKB+2*D%NKL)+PDZZ(:,:,IKB+D%NKL)) * PDZZ(:,:,IKB+D%NKL) )
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
 !
 IF (OHARAT) THEN
@@ -382,13 +382,13 @@ PLMF=MZF(PLM, D%NKA, D%NKU, D%NKL)
 PLEPSF=PLMF
 !  function MZF produces -999 for level IKU (82 for 80 levels)
 !  so put these to normal value as this level (82) is indeed calculated
-!$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 PLMF(:,:,D%NKT)=0.001
 PLEPSF(:,:,D%NKT)=0.001
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
-!$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ZKEFF(:,:,:) = PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50*MFMOIST(:,:,:)
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ELSE
 ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), D%NKA, D%NKU, D%NKL)
 ENDIF
@@ -423,14 +423,14 @@ END IF
 !
 IF (OHARAT) THEN
   ZWORK1 = MZF(PDTH_DZ**2, D%NKA, D%NKU, D%NKL)
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZF(:,:,:) = PLMF(:,:,:)*PLEPSF(:,:,:)*ZWORK1(:,:,:)
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ELSE
   ZWORK1 = MZF(PPHI3*PDTH_DZ**2, D%NKA, D%NKU, D%NKL)
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZF(:,:,:) = CSTURB%XCTV*PLM(:,:,:)*PLEPS(:,:,:)*ZWORK1(:,:,:)
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ENDIF
   ZDFDDTDZ(:,:,:) = 0.     ! this term, because of discretization, is treated separately
   !
@@ -442,10 +442,10 @@ ENDIF
     ZWORK2 = D_M3_TH2_WTH2_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,&
      & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA)
     !
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ZF(:,:,:)       = ZF(:,:,:) + ZWORK1(:,:,:) * PFTH2(:,:,:)
     ZDFDDTDZ(:,:,:) = ZDFDDTDZ(:,:,:) + ZWORK2(:,:,:) * PFTH2(:,:,:)
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   END IF
   !
   ! d(w'2th')/dz
@@ -456,10 +456,10 @@ ENDIF
     ZWORK3 = D_M3_TH2_W2TH_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,&
      & PLM,PLEPS,PTKEM,GUSERV)
     !
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ZF(:,:,:)  = ZF(:,:,:) + ZWORK1(:,:,:) * ZWORK2(:,:,:)
     ZDFDDTDZ(:,:,:) = ZDFDDTDZ(:,:,:) + ZWORK3(:,:,:) * ZWORK2(:,:,:)
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   END IF
   !
   IF (KRR/=0) THEN
@@ -470,10 +470,10 @@ ENDIF
       ZWORK2 = D_M3_TH2_WR2_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,&
        & PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTH_DZ)
       !
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       ZF(:,:,:) = ZF(:,:,:) + ZWORK1(:,:,:) * PFR2(:,:,:)
       ZDFDDTDZ(:,:,:) = ZDFDDTDZ(:,:,:) + ZWORK2(:,:,:) * PFR2(:,:,:)
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     END IF
     !
     ! d(w'2r')/dz
@@ -484,10 +484,10 @@ ENDIF
       ZWORK3 = D_M3_TH2_W2R_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,&
        & PLM,PLEPS,PTKEM,PBLL_O_E,PEMOIST,PDTH_DZ)
       !
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       ZF(:,:,:) = ZF(:,:,:) + ZWORK1(:,:,:) * ZWORK2(:,:,:)
       ZDFDDTDZ(:,:,:) = ZDFDDTDZ(:,:,:) + ZWORK3(:,:,:) * ZWORK1(:,:,:)
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     END IF
     !
     ! d(w'th'r')/dz
@@ -497,22 +497,22 @@ ENDIF
       ZWORK2 = D_M3_TH2_WTHR_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,&
        & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTH_DZ)
       !
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       ZF(:,:,:) = ZF(:,:,:) + ZWORK1(:,:,:) * PFTHR(:,:,:)
       ZDFDDTDZ(:,:,:) = ZDFDDTDZ(:,:,:) + ZWORK2(:,:,:) * PFTHR(:,:,:)
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     END IF
 
   END IF
   !
   ZWORK1 = MZF(DZM(PTHLP - PTHLM, D%NKA, D%NKU, D%NKL) / PDZZ, D%NKA, D%NKU, D%NKL)
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZFLXZ(:,:,:)   = ZF(:,:,:) + PIMPL * ZDFDDTDZ(:,:,:) * ZWORK1(:,:,:)
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   !
   ! special case near the ground ( uncentred gradient )
   IF (OHARAT) THEN
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     ZFLXZ(:,:,IKB) =  PLMF(:,:,IKB)   &
      * PLEPSF(:,:,IKB)                                         &
      *( PEXPL *                                                  &
@@ -524,9 +524,9 @@ ENDIF
       +ZCOEFF(:,:,IKB+D%NKL  )*PTHLP(:,:,IKB+D%NKL  )             &
       +ZCOEFF(:,:,IKB      )*PTHLP(:,:,IKB  )   )**2          &
     ) 
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
    ELSE
-     !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+     !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
      ZFLXZ(:,:,IKB) = CSTURB%XCTV * PPHI3(:,:,IKB+D%NKL) * PLM(:,:,IKB)   &
      * PLEPS(:,:,IKB)                                         &
      *( PEXPL *                                                  &
@@ -538,21 +538,21 @@ ENDIF
       +ZCOEFF(:,:,IKB+D%NKL  )*PTHLP(:,:,IKB+D%NKL  )             &
       +ZCOEFF(:,:,IKB      )*PTHLP(:,:,IKB  )   )**2          &
      )
-     !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE) 
+     !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT) 
    ENDIF
   !
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE) 
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT) 
   ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB)
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE) 
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT) 
   !
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZFLXZ(:,:,:) = MAX(0., ZFLXZ(:,:,:))
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   !
   IF (KRRL > 0)  THEN
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     PSIGS(:,:,:) = ZFLXZ(:,:,:) * PATHETA(:,:,:)**2
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   END IF
   !
   !
@@ -592,14 +592,14 @@ ENDIF
     ! Compute the turbulent variance F and F' at time t-dt.
   IF (OHARAT) THEN
     ZWORK1 = MZF(PDTH_DZ*PDR_DZ, D%NKA, D%NKU, D%NKL)
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ZF(:,:,:) = PLMF(:,:,:)*PLEPSF(:,:,:)*ZWORK1(:,:,:)
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ELSE
     ZWORK1 = MZF(0.5*(PPHI3+PPSI3)*PDTH_DZ*PDR_DZ, D%NKA, D%NKU, D%NKL)
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ZF(:,:,:) = CSTURB%XCTV*PLM(:,:,:)*PLEPS(:,:,:)*ZWORK1(:,:,:)
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ENDIF
     ZDFDDTDZ(:,:,:) = 0.     ! this term, because of discretization, is treated separately
     ZDFDDRDZ(:,:,:) = 0.     ! this term, because of discretization, is treated separately
@@ -615,11 +615,11 @@ ENDIF
       ZWORK3 = D_M3_THR_WTH2_O_DDRDZ(D,CSTURB,PREDTH1,PREDR1,&
        & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA)
       !
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       ZF(:,:,:) = ZF(:,:,:) + ZWORK1(:,:,:) * PFTH2(:,:,:)
       ZDFDDTDZ(:,:,:) = ZDFDDTDZ(:,:,:) + ZWORK2(:,:,:) * PFTH2(:,:,:)
       ZDFDDRDZ(:,:,:) = ZDFDDRDZ(:,:,:) + ZWORK3(:,:,:) * PFTH2(:,:,:)
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     END IF
     !
     ! d(w'2th')/dz
@@ -632,11 +632,11 @@ ENDIF
       ZWORK4 = D_M3_THR_W2TH_O_DDRDZ(D,CSTURB,PREDTH1,PREDR1,&
        & PD,PLM,PLEPS,PTKEM)
       !
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       ZF(:,:,:) = ZF(:,:,:) + ZWORK2(:,:,:) * ZWORK1(:,:,:)
       ZDFDDTDZ(:,:,:) = ZDFDDTDZ(:,:,:) + ZWORK3(:,:,:) * ZWORK1(:,:,:)
       ZDFDDRDZ(:,:,:) = ZDFDDRDZ(:,:,:) + ZWORK4(:,:,:) * ZWORK1(:,:,:)
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     END IF
     !
     ! d(w'r'2)/dz
@@ -648,11 +648,11 @@ ENDIF
       ZWORK3 = D_M3_THR_WR2_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,&
        & PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTH_DZ)
       !
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       ZF(:,:,:) = ZF(:,:,:) + ZWORK1(:,:,:) * PFR2(:,:,:)
       ZDFDDTDZ(:,:,:) = ZDFDDTDZ(:,:,:) + ZWORK2(:,:,:) * PFR2(:,:,:)
       ZDFDDRDZ(:,:,:) = ZDFDDRDZ(:,:,:) + ZWORK3(:,:,:) * PFR2(:,:,:)
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     END IF
     !
       ! d(w'2r')/dz
@@ -665,11 +665,11 @@ ENDIF
       ZWORK4 = D_M3_THR_W2R_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,&
       & PLM,PLEPS,PTKEM,PBLL_O_E,PDTH_DZ,PEMOIST)
       !
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       ZF(:,:,:) = ZF(:,:,:) + ZWORK2(:,:,:) * ZWORK1(:,:,:)
       ZDFDDTDZ(:,:,:) = ZDFDDTDZ(:,:,:) + ZWORK3(:,:,:) * ZWORK1(:,:,:)
       ZDFDDRDZ(:,:,:) = ZDFDDRDZ(:,:,:) + ZWORK4(:,:,:) * ZWORK1(:,:,:)
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     END IF
     !
     ! d(w'th'r')/dz
@@ -681,11 +681,11 @@ ENDIF
       ZWORK3 = D_M3_THR_WTHR_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,&
       & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST)
       !
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       ZF(:,:,:) = ZF(:,:,:) + ZWORK1(:,:,:) * PFTHR(:,:,:)
       ZDFDDTDZ(:,:,:) = ZDFDDTDZ(:,:,:) + ZWORK2(:,:,:) * PFTHR(:,:,:)
       ZDFDDRDZ(:,:,:) = ZDFDDRDZ(:,:,:) + ZWORK3(:,:,:) * PFTHR(:,:,:)
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     END IF
     !
     ZWORK1 = MZF(DZM(PTHLP - PTHLM(:,:,:), D%NKA, D%NKU, D%NKL) / PDZZ, D%NKA, D%NKU, D%NKL)
@@ -697,13 +697,13 @@ ENDIF
                  ) *PDTH_DZ *DZM(PRP   - PRM(:,:,:,1), D%NKA, D%NKU, D%NKL) / PDZZ               &
                , D%NKA, D%NKU, D%NKL)
       !
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       ZFLXZ(:,:,:)   = ZF(:,:,:)                                           &
         + PIMPL * PLMF(:,:,:)*PLEPSF(:,:,:)*0.5                          &
           * ZWORK3(:,:,:)                                                &
         + PIMPL * ZDFDDTDZ(:,:,:) * ZWORK1(:,:,:)         &
         + PIMPL * ZDFDDRDZ(:,:,:) * ZWORK2(:,:,:)
-       !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+       !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ELSE
       ZWORK3 = MZF(( D_PHI3DTDZ_O_DDTDZ(D,CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,GUSERV) & ! d(phi3*dthdz)/ddthdz term
                   +D_PSI3DTDZ_O_DDTDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,GUSERV) & ! d(psi3*dthdz)/ddthdz term
@@ -713,17 +713,17 @@ ENDIF
                  ) *PDTH_DZ *DZM(PRP - PRM(:,:,:,1), D%NKA, D%NKU, D%NKL) / PDZZ               &
                , D%NKA, D%NKU, D%NKL)
       !
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       ZFLXZ(:,:,:)   = ZF(:,:,:)                                                     &
         + PIMPL * CSTURB%XCTV*PLM(:,:,:)*PLEPS(:,:,:)*0.5                                        &
           * ZWORK3(:,:,:)                                                           &
         + PIMPL * ZDFDDTDZ(:,:,:) * ZWORK1(:,:,:)         &
         + PIMPL * ZDFDDRDZ(:,:,:) * ZWORK2(:,:,:)
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ENDIF
     !
     ! special case near the ground ( uncentred gradient )
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     IF (OHARAT) THEN
     ZFLXZ(:,:,IKB) =                                            & 
     (1. )   &
@@ -763,16 +763,16 @@ ENDIF
     ENDIF
     !    
     ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB)
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     !
       IF ( KRRL > 0 ) THEN
 !
 !   
 !  NB PATHETA is -b in Chaboureau Bechtold 2002 which explains the + sign here
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       PSIGS(:,:,:) = PSIGS(:,:,:) +     &
                      2. * PATHETA(:,:,:) * PAMOIST(:,:,:) * ZFLXZ(:,:,:)
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     END IF
     ! stores <THl Rnp>   
     IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
@@ -811,14 +811,14 @@ END IF
     ! Compute the turbulent variance F and F' at time t-dt.
 IF (OHARAT) THEN
   ZWORK1 = MZF(PDR_DZ**2, D%NKA, D%NKU, D%NKL)
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZF(:,:,:) = PLMF(:,:,:)*PLEPSF(:,:,:)*ZWORK1(:,:,:)
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ELSE
   ZWORK1 = MZF(PPSI3*PDR_DZ**2, D%NKA, D%NKU, D%NKL)
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZF(:,:,:) = CSTURB%XCTV*PLM(:,:,:)*PLEPS(:,:,:)*ZWORK1(:,:,:)
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ENDIF
     ZDFDDRDZ(:,:,:) = 0.     ! this term, because of discretization, is treated separately
     !
@@ -831,10 +831,10 @@ ENDIF
       ZWORK2 = D_M3_R2_WR2_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,&
       & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST)
       !
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       ZF(:,:,:) = ZF(:,:,:) + ZWORK1(:,:,:) * PFR2(:,:,:)
       ZDFDDRDZ(:,:,:) = ZDFDDRDZ(:,:,:) + ZWORK2(:,:,:) * PFR2(:,:,:)
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     END IF
     !
     ! d(w'2r')/dz
@@ -845,10 +845,10 @@ ENDIF
       ZWORK3 = D_M3_R2_W2R_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,&
       & PD,PLM,PLEPS,PTKEM,GUSERV)
       !
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       ZF(:,:,:) = ZF(:,:,:) + ZWORK2(:,:,:) * ZWORK1(:,:,:)
       ZDFDDRDZ(:,:,:) = ZDFDDRDZ(:,:,:) + ZWORK3(:,:,:) * ZWORK1(:,:,:)
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     END IF
     !
     IF (KRR/=0) THEN
@@ -859,10 +859,10 @@ ENDIF
         ZWORK2 = D_M3_R2_WTH2_O_DDRDZ(D,CSTURB,PREDR1,&
           & PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDR_DZ)
         !
-        !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+        !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
         ZF(:,:,:) = ZF(:,:,:) + ZWORK1(:,:,:) * PFTH2(:,:,:) 
         ZDFDDRDZ(:,:,:) = ZDFDDRDZ(:,:,:) + ZWORK2(:,:,:) * PFTH2(:,:,:)
-        !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+        !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       END IF
       !
       ! d(w'2r')/dz
@@ -873,10 +873,10 @@ ENDIF
         ZWORK3 = D_M3_R2_W2TH_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,&
           & PD,PLM,PLEPS,PTKEM,PBLL_O_E,PETHETA,PDR_DZ)
         !
-        !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+        !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
         ZF(:,:,:) = ZF(:,:,:) + ZWORK2(:,:,:) * ZWORK1(:,:,:)
         ZDFDDRDZ(:,:,:) = ZDFDDRDZ(:,:,:) + ZWORK3(:,:,:) * ZWORK1(:,:,:)
-        !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+        !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       END IF
       !
       ! d(w'th'r')/dz
@@ -886,10 +886,10 @@ ENDIF
         ZWORK2 = D_M3_R2_WTHR_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,&
           & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDR_DZ)
         !
-        !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+        !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
         ZF(:,:,:) = ZF(:,:,:) + ZWORK1(:,:,:) * PFTHR(:,:,:) 
         ZDFDDRDZ(:,:,:) = ZDFDDRDZ(:,:,:) + ZWORK2(:,:,:) * PFTHR(:,:,:)
-        !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+        !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       END IF
   
     END IF
@@ -899,27 +899,27 @@ ENDIF
                  DZM(PRP - PRM(:,:,:,1), D%NKA, D%NKU, D%NKL) / PDZZ, D%NKA, D%NKU, D%NKL)
     ZWORK2 = MZF(DZM(PRP - PRM(:,:,:,1), D%NKA, D%NKU, D%NKL) / PDZZ, D%NKA, D%NKU, D%NKL)
     !
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ZFLXZ(:,:,:)   = ZF(:,:,:)                                                             &
           + PIMPL * PLMF(:,:,:) *PLEPSF(:,:,:)                                                   &
             * ZWORK1(:,:,:) &
           + PIMPL * ZDFDDRDZ(:,:,:) * ZWORK2(:,:,:)
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
    ELSE
     ZWORK1 = MZF(D_PSI3DRDZ2_O_DDRDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,PDR_DZ,HTURBDIM,GUSERV)    &
                  *DZM(PRP - PRM(:,:,:,1), D%NKA, D%NKU, D%NKL) / PDZZ, D%NKA, D%NKU, D%NKL)
     ZWORK2 = MZF(DZM(PRP - PRM(:,:,:,1), D%NKA, D%NKU, D%NKL) / PDZZ, D%NKA, D%NKU, D%NKL)
     !
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ZFLXZ(:,:,:)   = ZF(:,:,:)                                                             &
           + PIMPL * CSTURB%XCTV*PLM(:,:,:) *PLEPS(:,:,:)                                                 &
             * ZWORK1(:,:,:) &
           + PIMPL * ZDFDDRDZ(:,:,:) * ZWORK2(:,:,:)
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ENDIF
     !
     ! special case near the ground ( uncentred gradient )
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   IF (OHARAT) THEN
     ZFLXZ(:,:,IKB) =  PLMF(:,:,IKB)   &
         * PLEPSF(:,:,IKB)                                        &
@@ -947,12 +947,12 @@ ENDIF
   ENDIF
     !
     ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB)
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     !
     IF ( KRRL > 0 ) THEN
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       PSIGS(:,:,:) = PSIGS(:,:,:) + PAMOIST(:,:,:) **2 * ZFLXZ(:,:,:)
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     END IF
     ! stores <Rnp Rnp>    
     IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
@@ -989,18 +989,18 @@ ENDIF
 !
   IF ( KRRL > 0 ) THEN
     ! Extrapolate PSIGS at the ground and at the top
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     PSIGS(:,:,D%NKA) = PSIGS(:,:,IKB)
     PSIGS(:,:,D%NKU) = PSIGS(:,:,IKE)
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 #ifdef REPRO48
     PSIGS(:,:,:) =  MAX (PSIGS(:,:,:) , 0.)
     PSIGS(:,:,:) =  SQRT(PSIGS(:,:,:))
 #else
     PSIGS(:,:,:) =  SQRT( MAX (PSIGS(:,:,:) , 1.E-12) )
 #endif
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   END IF
 
 !

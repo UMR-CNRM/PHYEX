@@ -321,9 +321,9 @@ IKB=D%NKB
 IKE=D%NKE             
 !
 IF (OHARAT) THEN
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50.*MFMOIST(:,:,:)
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 ELSE
   ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), D%NKA, D%NKU, D%NKL)
 ENDIF
@@ -346,14 +346,14 @@ DO JSV=1,KSV
 !
 ! Preparation of the arguments for TRIDIAG 
     IF (OHARAT) THEN
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)  
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)  
       ZA(:,:,:) = -PTSTEP * ZKEFF(:,:,:) * ZWORK1(:,:,:) / PDZZ(:,:,:)**2
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ELSE
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
       ZA(:,:,:) = -PTSTEP*ZCSV*PPSI_SV(:,:,:,JSV) *   &
                    ZKEFF(:,:,:) * ZWORK1(:,:,:) / PDZZ(:,:,:)**2
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ENDIF
   ZSOURCE(:,:,:) = 0.
 !
@@ -364,17 +364,17 @@ DO JSV=1,KSV
 !* in 1DIM case, the part of energy released in horizontal flux
 ! is taken into account in the vertical part
   IF (HTURBDIM=='3DIM') THEN
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     ZSOURCE(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV)) / &
                        PDZZ(:,:,IKB) * PDIRCOSZW(:,:)                    &
                      * 0.5 * (1. + PRHODJ(:,:,D%NKA) / PRHODJ(:,:,IKB))
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ELSE
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     ZSOURCE(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV)) / &
                        PDZZ(:,:,IKB) / PDIRCOSZW(:,:)                    &
                      * 0.5 * (1. + PRHODJ(:,:,D%NKA) / PRHODJ(:,:,IKB))
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   END IF
   ZSOURCE(:,:,IKTB+1:IKTE-1) = 0.
   ZSOURCE(:,:,IKE) = 0.
@@ -383,51 +383,51 @@ DO JSV=1,KSV
   CALL TRIDIAG(D,PSVM(:,:,:,JSV),ZA,PTSTEP,PEXPL,PIMPL,PRHODJ,ZSOURCE,ZRES)
 !
 !  Compute the equivalent tendency for the JSV scalar variable
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
   PRSVS(:,:,:,JSV)= PRSVS(:,:,:,JSV)+    &
                     PRHODJ(:,:,:)*(ZRES(:,:,:)-PSVM(:,:,:,JSV))/PTSTEP
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !
   IF ( (OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
     ZWORK1 = MZM(PLM*SQRT(PTKEM), D%NKA, D%NKU, D%NKL) 
     ZWORK2 = DZM(PIMPL*ZRES(:,:,:) + PEXPL*PSVM(:,:,:,JSV), D%NKA, D%NKU, D%NKL)
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ZFLXZ(:,:,:) = -ZCSV * PPSI_SV(:,:,:,JSV) * ZWORK1(:,:,:) / PDZZ(:,:,:) * &
                   ZWORK2(:,:,:)
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE,JK=1:D%NKT)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     ! surface flux
     !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
     ! (in presence of slopes)
     !* in 1DIM case, the part of energy released in horizontal flux
     ! is taken into account in the vertical part
     IF (HTURBDIM=='3DIM') THEN
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
       ZFLXZ(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV))  &
                        * PDIRCOSZW(:,:)  
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     ELSE
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
       ZFLXZ(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV))  &
                        / PDIRCOSZW(:,:)
-     !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+     !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     END IF
     ! extrapolates the flux under the ground so that the vertical average with
     ! the IKB flux gives the ground value
     !
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB)
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     DO JK=IKTB+1,IKTE-1
-      !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
       PWSV(:,:,JK,JSV)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+D%NKL))
-      !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     END DO
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     PWSV(:,:,IKB,JSV)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+D%NKL))
     PWSV(:,:,IKE,JSV)=PWSV(:,:,IKE-D%NKL,JSV)
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JJ=D%NJB:D%NJE)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
  END IF
   !
   IF (OTURB_FLX .AND. TPFILE%LOPENED) THEN
