@@ -29,7 +29,8 @@ def compareFiles(path_user, path_ref):
         ecart_moy=float(da2[var].mean())-float(da[var].mean())
         ecart_max=float(da2[var].max())-float(da[var].max())
       if (ecart_min !=0 or ecart_moy !=0 or ecart_max !=0):
-        print(var,ecart_min,ecart_moy,ecart_max)
+        status += 1
+        print(var, ecart_min, ecart_moy, ecart_max)
     except:
       pass
   
