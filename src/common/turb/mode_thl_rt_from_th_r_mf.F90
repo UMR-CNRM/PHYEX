@@ -5,7 +5,7 @@
 MODULE MODE_THL_RT_FROM_TH_R_MF
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE THL_RT_FROM_TH_R_MF( KRR,KRRL,KRRI,                  &
+      SUBROUTINE THL_RT_FROM_TH_R_MF( D, CST, KRR, KRRL, KRRI,       &
                                       PTH, PR, PEXN, &
                                       PTHL, PRT                      )
 !     #################################################################
@@ -47,7 +47,8 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+USE MODD_CST, ONLY : CST_t
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -56,16 +57,18 @@ IMPLICIT NONE
 !
 !*      0.1  declarations of arguments
 !
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+TYPE(CST_t),            INTENT(IN)   :: CST
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 
-REAL, DIMENSION(:,:), INTENT(IN)   :: PTH      ! theta
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PR       ! water species
-REAL, DIMENSION(:,:), INTENT(IN)   :: PEXN    ! exner function
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)   :: PTH      ! theta
+REAL, DIMENSION(D%NIT,D%NKT,KRR), INTENT(IN) :: PR       ! water species
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)   :: PEXN    ! exner function
 
-REAL, DIMENSION(:,:), INTENT(OUT)  :: PTHL     ! th_l
-REAL, DIMENSION(:,:), INTENT(OUT)  :: PRT      ! total non precip. water
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)  :: PTHL     ! th_l
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)  :: PRT      ! total non precip. water
 !
 !-------------------------------------------------------------------------------
 !
@@ -73,8 +76,8 @@ REAL, DIMENSION(:,:), INTENT(OUT)  :: PRT      ! total non precip. water
 !
 
 !----------------------------------------------------------------------------
-REAL, DIMENSION(SIZE(PTH,1),SIZE(PTH,2)) :: ZCP, ZT
-REAL, DIMENSION(SIZE(PTH,1),SIZE(PTH,2)) :: ZLVOCPEXN, ZLSOCPEXN
+REAL, DIMENSION(D%NIT,D%NKT) :: ZCP, ZT
+REAL, DIMENSION(D%NIT,D%NKT) :: ZLVOCPEXN, ZLSOCPEXN
 INTEGER :: JRR
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !----------------------------------------------------------------------------
@@ -85,20 +88,20 @@ IF (LHOOK) CALL DR_HOOK('THL_RT_FRM_TH_R_MF',0,ZHOOK_HANDLE)
 ZT(:,:) = PTH(:,:) * PEXN(:,:)
 
 !Cp
-ZCP=XCPD
-IF (KRR > 0) ZCP(:,:) = ZCP(:,:) + XCPV * PR(:,:,1)
+ZCP=CST%XCPD
+IF (KRR > 0) ZCP(:,:) = ZCP(:,:) + CST%XCPV * PR(:,:,1)
 DO JRR = 2,1+KRRL  ! loop on the liquid components
-  ZCP(:,:)  = ZCP(:,:) + XCL * PR(:,:,JRR)
+  ZCP(:,:)  = ZCP(:,:) + CST%XCL * PR(:,:,JRR)
 END DO
 DO JRR = 2+KRRL,1+KRRL+KRRI ! loop on the solid components
-  ZCP(:,:)  = ZCP(:,:)  + XCI * PR(:,:,JRR)
+  ZCP(:,:)  = ZCP(:,:)  + CST%XCI * PR(:,:,JRR)
 END DO
 
 IF ( KRRL >= 1 ) THEN
   IF ( KRRI >= 1 ) THEN
     !ZLVOCPEXN and ZLSOCPEXN
-    ZLVOCPEXN(:,:)=(XLVTT + (XCPV-XCL) *  (ZT(:,:)-XTT) ) / ZCP(:,:) / PEXN(:,:)
-    ZLSOCPEXN(:,:)=(XLSTT + (XCPV-XCI) *  (ZT(:,:)-XTT) ) / ZCP(:,:) / PEXN(:,:)
+    ZLVOCPEXN(:,:)=(CST%XLVTT + (CST%XCPV-CST%XCL) *  (ZT(:,:)-CST%XTT) ) / ZCP(:,:) / PEXN(:,:)
+    ZLSOCPEXN(:,:)=(CST%XLSTT + (CST%XCPV-CST%XCI) *  (ZT(:,:)-CST%XTT) ) / ZCP(:,:) / PEXN(:,:)
     ! Rnp 
     PRT(:,:)  = PR(:,:,1)  + PR(:,:,2)  + PR(:,:,4)
     ! Theta_l 
@@ -106,7 +109,7 @@ IF ( KRRL >= 1 ) THEN
                            - ZLSOCPEXN(:,:) * PR(:,:,4)
   ELSE
     !ZLVOCPEXN
-    ZLVOCPEXN(:,:)=(XLVTT + (XCPV-XCL) *  (ZT(:,:)-XTT) ) / ZCP(:,:) / PEXN(:,:)
+    ZLVOCPEXN(:,:)=(CST%XLVTT + (CST%XCPV-CST%XCL) *  (ZT(:,:)-CST%XTT) ) / ZCP(:,:) / PEXN(:,:)
     ! Rnp
     PRT(:,:)  = PR(:,:,1)  + PR(:,:,2) 
     ! Theta_l

@@ -267,11 +267,11 @@ INTEGER :: IIU, IJU, IKU, IKB, IKE, IRR, ISV
 INTEGER :: JK,JRR,JSV                          ! Loop counters
 
 TYPE(TFIELDDATA) :: TZFIELD
-TYPE(DIMPHYEX_t) :: YLDIMPHYEX
+TYPE(DIMPHYEX_t) :: YLDIMPHYEXPACK
 !------------------------------------------------------------------------
 
 !!! 1. Initialisation
-CALL FILL_DIMPHYEX(YLDIMPHYEX, SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3))
+CALL FILL_DIMPHYEX(YLDIMPHYEXPACK, SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3), OHPACK=.TRUE.)
 
 ! Internal Domain
 IIU=SIZE(PTHM,1)
@@ -332,7 +332,7 @@ ZSFRV(:)=RESHAPE(PSFRV(:,:),(/ IIU*IJU /) )
 
 !!! 3. Call of the physical parameterization of massflux vertical transport
 
-CALL SHALLOW_MF(YLDIMPHYEX, CST, NEB, PARAM_MFSHALLN, TURBN,          &
+CALL SHALLOW_MF(YLDIMPHYEXPACK, CST, NEB, PARAM_MFSHALLN, TURBN,      &
                 KRR,KRRL,KRRI,ISV,                                    &
                 HMF_UPDRAFT, HMF_CLOUD, CFRAC_ICE_SHALLOW_MF, OMIXUV,                  &
                 LNOMIXLG,NSV_LGBEG,NSV_LGEND,                         &
