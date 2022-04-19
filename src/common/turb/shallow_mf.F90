@@ -217,7 +217,8 @@ ZTHVM(:,:) = PTHM(:,:)*((1.+CST%XRV / CST%XRD *PRM(:,:,1))/(1.+ZRTM(:,:)))
 !
 IF (HMF_UPDRAFT == 'EDKF') THEN
   GENTR_DETR = .TRUE.
-  CALL COMPUTE_UPDRAFT(D%NKA,D%NKB,D%NKE,D%NKU,D%NKL,HFRAC_ICE,GENTR_DETR,OMIXUV,&
+  CALL COMPUTE_UPDRAFT(D, CST, NEB, PARAMMF, TURB,               &
+                       KSV, HFRAC_ICE, GENTR_DETR, OMIXUV,       &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
                        PSFTH,PSFRV,PPABSM,PRHODREF,              &
