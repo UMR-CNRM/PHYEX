@@ -296,7 +296,7 @@ IF (OENTR_DETR) THEN
   ! (all or nothing ajustement)
   PRC_UP(:,D%NKB)=0.
   PRI_UP(:,D%NKB)=0.
-  CALL TH_R_FROM_THL_RT_1D(HFRAC_ICE,PFRAC_ICE_UP(:,D%NKB),ZPRES_F(:,D%NKB), &
+  CALL TH_R_FROM_THL_RT_1D(CST, NEB, D%NIT, HFRAC_ICE,PFRAC_ICE_UP(:,D%NKB),ZPRES_F(:,D%NKB), &
              PTHL_UP(:,D%NKB),PRT_UP(:,D%NKB),ZTH_UP(:,D%NKB), &
              PRV_UP(:,D%NKB),PRC_UP(:,D%NKB),PRI_UP(:,D%NKB),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.)
 
@@ -391,7 +391,7 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
       ZRC_MIX(:,JK) = ZRC_MIX(:,JK-D%NKL) ! guess of Rc of mixture
       ZRI_MIX(:,JK) = ZRI_MIX(:,JK-D%NKL) ! guess of Ri of mixture
     ENDIF
-    CALL COMPUTE_ENTR_DETR(JK,D%NKB,D%NKE,D%NKL,GTEST,GTESTLCL,HFRAC_ICE,PFRAC_ICE_UP(:,JK),&
+    CALL COMPUTE_ENTR_DETR(D, CST, NEB, PARAMMF, JK,D%NKB,D%NKE,D%NKL,GTEST,GTESTLCL,HFRAC_ICE,PFRAC_ICE_UP(:,JK),&
                            PRHODREF(:,JK),ZPRES_F(:,JK),ZPRES_F(:,JK+D%NKL),&
                            PZZ(:,:),PDZZ(:,:),ZTHVM(:,:),  &
                            PTHLM(:,:),PRTM(:,:),ZW_UP2(:,:),ZTH_UP(:,JK),   &
@@ -488,7 +488,7 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
 ! Compute non cons. var. at level JK+KKL
   ZRC_UP(:)=PRC_UP(:,JK) ! guess = level just below
   ZRI_UP(:)=PRI_UP(:,JK) ! guess = level just below
-  CALL TH_R_FROM_THL_RT_1D(HFRAC_ICE,PFRAC_ICE_UP(:,JK+D%NKL),ZPRES_F(:,JK+D%NKL), &
+  CALL TH_R_FROM_THL_RT_1D(CST, NEB, D%NIT, HFRAC_ICE,PFRAC_ICE_UP(:,JK+D%NKL),ZPRES_F(:,JK+D%NKL), &
           PTHL_UP(:,JK+D%NKL),PRT_UP(:,JK+D%NKL),ZTH_UP(:,JK+D%NKL),              &
           ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:), OOCEAN=.FALSE.)
   WHERE(GTEST)

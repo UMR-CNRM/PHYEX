@@ -49,6 +49,8 @@ CONTAINS
 USE MODE_TH_R_FROM_THL_RT_3D, ONLY: TH_R_FROM_THL_RT_3D
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE MODD_CST, ONLY: CST
+USE MODD_NEB, ONLY: NEB
 
 IMPLICIT NONE
 !
@@ -98,7 +100,7 @@ IF(PRESENT(PRH)) ZRH(:,:)=PRH(:,:)
 !       2 Call of 1d version
 !         ------------------
 DO JK=1, SIZE(PTHL,2)
-  CALL TH_R_FROM_THL_RT_1D(HFRAC_ICE,PFRAC_ICE(:,JK),PP(:,JK),             &
+  CALL TH_R_FROM_THL_RT_1D(CST, NEB, SIZE(PTHL,2), HFRAC_ICE,PFRAC_ICE(:,JK),PP(:,JK),             &
                                 PTHL(:,JK), PRT(:,JK), PTH(:,JK),       &
                                 PRV(:,JK), PRL(:,JK), PRI(:,JK),        &
                                 PRSATW(:,JK), PRSATI(:,JK),                &

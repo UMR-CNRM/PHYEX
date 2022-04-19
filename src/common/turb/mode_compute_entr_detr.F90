@@ -9,7 +9,8 @@
 IMPLICIT NONE
 CONTAINS
 !     ######spl
-          SUBROUTINE COMPUTE_ENTR_DETR(KK,KKB,KKE,KKL,OTEST,OTESTLCL,&
+          SUBROUTINE COMPUTE_ENTR_DETR(D, CST, NEB, PARAMMF,&
+                            KK,KKB,KKE,KKL,OTEST,OTESTLCL,&
                             HFRAC_ICE,PFRAC_ICE,PRHODREF,&
                             PPRE_MINUS_HALF,&
                             PPRE_PLUS_HALF,PZZ,PDZZ,&
@@ -72,10 +73,11 @@ CONTAINS
 !
 !*      0. DECLARATIONS
 !          ------------
-!                         
-USE MODD_CST
 !
-USE MODD_PARAM_MFSHALL_n
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+USE MODD_CST,             ONLY: CST_t
+USE MODD_NEB,             ONLY: NEB_t
+USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
 USE MODE_TH_R_FROM_THL_RT_1D, ONLY: TH_R_FROM_THL_RT_1D 
 !
@@ -88,6 +90,11 @@ IMPLICIT NONE
 !                         
 !*                    1.1  Declaration of Arguments
 !
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(NEB_t),            INTENT(IN)   :: NEB
+TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 !
 INTEGER,                INTENT(IN)   :: KK
 INTEGER,                INTENT(IN)   :: KKB          ! near ground physical index
@@ -173,9 +180,9 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !                ------------------
   IF (LHOOK) CALL DR_HOOK('COMPUTE_ENTR_DETR',0,ZHOOK_HANDLE)
   
-  ZRVORD   = XRV / XRD   !=1.607
-  ZG_O_THVREF(:)=XG/PTHVM(:,KK)
-  ZCOEFFMF_CLOUD=XENTR_MF * XG / XCRAD_MF
+  ZRVORD   = CST%XRV / CST%XRD   !=1.607
+  ZG_O_THVREF(:)=CST%XG/PTHVM(:,KK)
+  ZCOEFFMF_CLOUD=PARAMMF%XENTR_MF * CST%XG / PARAMMF%XCRAD_MF
   
   ZFRAC_ICE(:)=PFRAC_ICE(:) ! to not modify fraction of ice
  
@@ -190,15 +197,15 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
       ZPRE(JLOOP)=PPRE_MINUS_HALF(JLOOP)
     ELSE IF (OTEST(JLOOP) .AND. .NOT. OTESTLCL(JLOOP)) THEN
       !Temperature at flux level KK
-      ZT=PTH_UP(JLOOP)*(PPRE_MINUS_HALF(JLOOP)/XP00) ** (XRD/XCPD)
+      ZT=PTH_UP(JLOOP)*(PPRE_MINUS_HALF(JLOOP)/CST%XP00) ** (CST%XRD/CST%XCPD)
       !Saturating vapor pressure at flux level KK
-      ZFOESW = MIN(EXP( XALPW - XBETAW/ZT - XGAMW*LOG(ZT)  ), 0.99*PPRE_MINUS_HALF(JLOOP))
-      ZFOESI = MIN(EXP( XALPI - XBETAI/ZT - XGAMI*LOG(ZT)  ), 0.99*PPRE_MINUS_HALF(JLOOP))
+      ZFOESW = MIN(EXP( CST%XALPW - CST%XBETAW/ZT - CST%XGAMW*LOG(ZT)  ), 0.99*PPRE_MINUS_HALF(JLOOP))
+      ZFOESI = MIN(EXP( CST%XALPI - CST%XBETAI/ZT - CST%XGAMI*LOG(ZT)  ), 0.99*PPRE_MINUS_HALF(JLOOP))
       !Computation of d.Rsat / dP (partial derivations with respect to P and T
       !and use of T=Theta*(P/P0)**(R/Cp) to transform dT into dP with theta_up
       !constant at the vertical)
-      ZDRSATODP=(XBETAW/ZT-XGAMW)*(1-ZFRAC_ICE(JLOOP))+(XBETAI/ZT-XGAMI)*ZFRAC_ICE(JLOOP)
-      ZDRSATODP=((XRD/XCPD)*ZDRSATODP-1.)*PRSAT_UP(JLOOP)/ &
+      ZDRSATODP=(CST%XBETAW/ZT-CST%XGAMW)*(1-ZFRAC_ICE(JLOOP))+(CST%XBETAI/ZT-CST%XGAMI)*ZFRAC_ICE(JLOOP)
+      ZDRSATODP=((CST%XRD/CST%XCPD)*ZDRSATODP-1.)*PRSAT_UP(JLOOP)/ &
                   &(PPRE_MINUS_HALF(JLOOP)-(ZFOESW*(1-ZFRAC_ICE(JLOOP)) + ZFOESI*ZFRAC_ICE(JLOOP)))
       !Use of d.Rsat / dP and pressure at flux level KK to find pressure (ZPRE)
       !where Rsat is equal to PRT_UP
@@ -246,22 +253,22 @@ DO JLOOP=1,SIZE(OTEST)
 
     !Entr//Detr. computation
     IF (PBUO_INTEG_DRY(JLOOP)>=0.) THEN
-      PENTR(JLOOP) = 0.5/(XABUO-XBENTR*XENTR_DRY)*&
-                 LOG(1.+ (2.*(XABUO-XBENTR*XENTR_DRY)/PW_UP2(JLOOP,KK))* &
+      PENTR(JLOOP) = 0.5/(PARAMMF%XABUO-PARAMMF%XBENTR*PARAMMF%XENTR_DRY)*&
+                 LOG(1.+ (2.*(PARAMMF%XABUO-PARAMMF%XBENTR*PARAMMF%XENTR_DRY)/PW_UP2(JLOOP,KK))* &
                  PBUO_INTEG_DRY(JLOOP))
       PDETR(JLOOP) = 0.
     ELSE
       PENTR(JLOOP) = 0.
-      PDETR(JLOOP) = 0.5/(XABUO)*&
-                 LOG(1.+ (2.*(XABUO)/PW_UP2(JLOOP,KK))* &
+      PDETR(JLOOP) = 0.5/(PARAMMF%XABUO)*&
+                 LOG(1.+ (2.*(PARAMMF%XABUO)/PW_UP2(JLOOP,KK))* &
                  (-PBUO_INTEG_DRY(JLOOP)))
     ENDIF
-    PENTR(JLOOP) = XENTR_DRY*PENTR(JLOOP)/(PZZ(JLOOP,KK+KKL)-PZZ(JLOOP,KK))    
-    PDETR(JLOOP) = XDETR_DRY*PDETR(JLOOP)/(PZZ(JLOOP,KK+KKL)-PZZ(JLOOP,KK))
+    PENTR(JLOOP) = PARAMMF%XENTR_DRY*PENTR(JLOOP)/(PZZ(JLOOP,KK+KKL)-PZZ(JLOOP,KK))    
+    PDETR(JLOOP) = PARAMMF%XDETR_DRY*PDETR(JLOOP)/(PZZ(JLOOP,KK+KKL)-PZZ(JLOOP,KK))
     !Minimum value of detrainment
     ZWK=PLUP(JLOOP)-0.5*(PZZ(JLOOP,KK)+PZZ(JLOOP,KK+KKL))
     ZWK=SIGN(MAX(1., ABS(ZWK)), ZWK) ! ZWK must not be zero
-    PDETR(JLOOP) = MAX(PPART_DRY(JLOOP)*XDETR_LUP/ZWK, PDETR(JLOOP))
+    PDETR(JLOOP) = MAX(PPART_DRY(JLOOP)*PARAMMF%XDETR_LUP/ZWK, PDETR(JLOOP))
   ELSE
     !No dry part, condensation reached (OTESTLCL)
     PBUO_INTEG_DRY(JLOOP) = 0.
@@ -280,7 +287,7 @@ ENDDO
   !but we are dealing with updraft and not mixture
   ZRCMIX(:)=PRC_UP(:)
   ZRIMIX(:)=PRI_UP(:)
-  CALL TH_R_FROM_THL_RT_1D(HFRAC_ICE,ZFRAC_ICE,&
+  CALL TH_R_FROM_THL_RT_1D(CST,NEB,D%NIT,HFRAC_ICE,ZFRAC_ICE,&
                PPRE_PLUS_HALF,PTHL_UP,PRT_UP,&
                ZTHMIX,ZRVMIX,ZRCMIX,ZRIMIX,&
                ZRSATW, ZRSATI,OOCEAN=.FALSE.)
@@ -357,7 +364,7 @@ DO JLOOP=1,SIZE(OTEST)
     ZMIXRT(JLOOP) = 0.1
   ENDIF
 ENDDO
-  CALL TH_R_FROM_THL_RT_1D(HFRAC_ICE,ZFRAC_ICE,&
+  CALL TH_R_FROM_THL_RT_1D(CST,NEB,D%NIT,HFRAC_ICE,ZFRAC_ICE,&
                ZPRE,ZMIXTHL,ZMIXRT,&
                ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
                ZRSATW, ZRSATI,OOCEAN=.FALSE.)
@@ -366,7 +373,7 @@ ENDDO
   !  Compute cons then non cons. var. of mixture at the flux level KK+KKL  with initial ZKIC
   ZMIXTHL(:) = ZKIC_INIT * 0.5*(PTHLM(:,KK)+PTHLM(:,KK+KKL))+(1. - ZKIC_INIT)*PTHL_UP(:)
   ZMIXRT(:)  = ZKIC_INIT * 0.5*(PRTM(:,KK)+PRTM(:,KK+KKL))+(1. - ZKIC_INIT)*PRT_UP(:)
-  CALL TH_R_FROM_THL_RT_1D(HFRAC_ICE,ZFRAC_ICE,&
+  CALL TH_R_FROM_THL_RT_1D(CST,NEB,D%NIT,HFRAC_ICE,ZFRAC_ICE,&
                PPRE_PLUS_HALF,ZMIXTHL,ZMIXRT,&
                ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
                ZRSATW, ZRSATI,OOCEAN=.FALSE.)
