@@ -708,11 +708,13 @@ IF (OOCEAN) THEN
   !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 END IF
 !
-!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 DO JK=IKTB+1,IKTE-1
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   PWTH(:,:,JK)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+D%NKL))
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 END DO
 !
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 PWTH(:,:,IKB)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+D%NKL)) 
 !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)    
 !
@@ -755,11 +757,11 @@ ELSE
     ZWORK1 = MZF( MZM(PETHETA,D%NKA, D%NKU, D%NKL) * ZFLXZ,D%NKA, D%NKU, D%NKL )
     !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     PTP(:,:,:)  =  PBETA(:,:,:) * ZWORK1(:,:,:)
-    !$mnh_end_expand_array(JI=0:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
     !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     PTP(:,:,IKB)=  PBETA(:,:,IKB) * PETHETA(:,:,IKB) *   &
                    0.5 * ( ZFLXZ(:,:,IKB) + ZFLXZ(:,:,IKB+D%NKL) )
-    !$mnh_end_expand_array(JI=0:D%NIT,JJ=1:D%NJT)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ELSE
     ZWORK1 = MZF( ZFLXZ,D%NKA, D%NKU, D%NKL )
     !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
@@ -772,7 +774,7 @@ END IF
 !
 ZWORK1 = MZM(PETHETA, D%NKA, D%NKU, D%NKL)
 !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-PWTHV = ZWORK1(:,:,:) * ZFLXZ
+PWTHV(:,:,:) = ZWORK1(:,:,:) * ZFLXZ(:,:,:)
 !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 PWTHV(:,:,IKB) = PETHETA(:,:,IKB) * ZFLXZ(:,:,IKB)
@@ -780,9 +782,9 @@ PWTHV(:,:,IKB) = PETHETA(:,:,IKB) * ZFLXZ(:,:,IKB)
 !
 IF (OOCEAN) THEN
   ! temperature contribution to Buy flux
-!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT) 
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT) 
   PWTHV(:,:,IKE) = PETHETA(:,:,IKE) * ZFLXZ(:,:,IKE)
-!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 END IF
 !*       2.3  Partial vertical divergence of the < Rc w > flux
 ! Correction for qc and qi negative in AROME 
@@ -1044,10 +1046,14 @@ IF (KRR /= 0) THEN
   !
   !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB) 
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   !
   DO JK=IKTB+1,IKTE-1
-   PWRC(:,:,JK)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+D%NKL))
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+    PWRC(:,:,JK)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+D%NKL))
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   END DO
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   PWRC(:,:,IKB)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+D%NKL))
   PWRC(:,:,D%NKA)=0.5*(ZFLXZ(:,:,D%NKA)+ZFLXZ(:,:,D%NKA+D%NKL))
   PWRC(:,:,IKE)=PWRC(:,:,IKE-D%NKL)

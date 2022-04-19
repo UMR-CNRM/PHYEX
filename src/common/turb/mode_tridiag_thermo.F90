@@ -223,15 +223,19 @@ IF ( PIMPL > 1.E-10 ) THEN
   ZB(:,:,IKB) =   PRHODJ(:,:,IKB)/PTSTEP                   &
                 - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKB+D%NKL) * PIMPL
   ZC(:,:,IKB) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKB+D%NKL) * PIMPL
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
   DO JK=IKTB+1,IKTE-1
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     ZA(:,:,JK) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,JK) * PIMPL
     ZB(:,:,JK) =   PRHODJ(:,:,JK)/PTSTEP                        &
                             - ZRHODJ_DFDDTDZ_O_DZ2(:,:,JK+D%NKL) * PIMPL &
                             - ZRHODJ_DFDDTDZ_O_DZ2(:,:,JK) * PIMPL
     ZC(:,:,JK) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,JK+D%NKL) * PIMPL
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   END DO
 !
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ZA(:,:,IKE) =   ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKE  ) * PIMPL
   ZB(:,:,IKE) =   PRHODJ(:,:,IKE)/PTSTEP                   &
                 - ZRHODJ_DFDDTDZ_O_DZ2(:,:,IKE  ) * PIMPL
@@ -241,39 +245,45 @@ IF ( PIMPL > 1.E-10 ) THEN
 !
   ZBET(:,:) = ZB(:,:,IKB)  ! bet = b(ikb)
   PVARP(:,:,IKB) = ZY(:,:,IKB) / ZBET(:,:)
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 
   !
   DO JK = IKB+D%NKL,IKE-D%NKL,D%NKL
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     ZGAM(:,:,JK) = ZC(:,:,JK-D%NKL) / ZBET(:,:)  
                                                     ! gam(k) = c(k-1) / bet
     ZBET(:,:)    = ZB(:,:,JK) - ZA(:,:,JK) * ZGAM(:,:,JK)
                                                     ! bet = b(k) - a(k)* gam(k)  
     PVARP(:,:,JK)= ( ZY(:,:,JK) - ZA(:,:,JK) * PVARP(:,:,JK-D%NKL) ) / ZBET(:,:)
                                         ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   END DO 
   ! special treatment for the last level
+  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ZGAM(:,:,IKE) = ZC(:,:,IKE-D%NKL) / ZBET(:,:) 
                                                     ! gam(k) = c(k-1) / bet
   ZBET(:,:)     = ZB(:,:,IKE) - ZA(:,:,IKE) * ZGAM(:,:,IKE)
                                                     ! bet = b(k) - a(k)* gam(k)  
   PVARP(:,:,IKE)= ( ZY(:,:,IKE) - ZA(:,:,IKE) * PVARP(:,:,IKE-D%NKL) ) / ZBET(:,:)
                                        ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
+  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
 !*       3.3 going down
 !            ----------
 !
   DO JK = IKE-D%NKL,IKB,-1*D%NKL
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     PVARP(:,:,JK) = PVARP(:,:,JK) - ZGAM(:,:,JK+D%NKL) * PVARP(:,:,JK+D%NKL)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   END DO
 !
-  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ELSE
 ! 
-  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   DO JK=IKTB,IKTE
+    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
     PVARP(:,:,JK) = ZY(:,:,JK) * PTSTEP / PRHODJ(:,:,JK)
+    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   END DO
-  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
 END IF 
 !
