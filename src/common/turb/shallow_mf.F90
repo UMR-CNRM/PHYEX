@@ -4,7 +4,7 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ################################################################
-      SUBROUTINE SHALLOW_MF(D, CST, NEB, PARAMMF, TURB,               &
+      SUBROUTINE SHALLOW_MF(D, CST, NEB, PARAMMF, TURB, CSTURB,       &
                 KRR, KRRL, KRRI, KSV,                                 &
                 HMF_UPDRAFT, HMF_CLOUD, HFRAC_ICE, OMIXUV,            &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
@@ -77,6 +77,7 @@ USE MODD_CST,             ONLY: CST_t
 USE MODD_NEB,             ONLY: NEB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_n,          ONLY: TURB_t
+USE MODD_CTURB,           ONLY: CSTURB_t
 !
 USE MODE_THL_RT_FROM_TH_R_MF, ONLY: THL_RT_FROM_TH_R_MF
 USE MODE_COMPUTE_UPDRAFT, ONLY: COMPUTE_UPDRAFT
@@ -100,6 +101,7 @@ TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(NEB_t),            INTENT(IN)   :: NEB
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 TYPE(TURB_t),           INTENT(IN)   :: TURB
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 INTEGER,                INTENT(IN)   :: KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL         ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI         ! number of ice water var.
@@ -217,7 +219,7 @@ ZTHVM(:,:) = PTHM(:,:)*((1.+CST%XRV / CST%XRD *PRM(:,:,1))/(1.+ZRTM(:,:)))
 !
 IF (HMF_UPDRAFT == 'EDKF') THEN
   GENTR_DETR = .TRUE.
-  CALL COMPUTE_UPDRAFT(D, CST, NEB, PARAMMF, TURB,               &
+  CALL COMPUTE_UPDRAFT(D, CST, NEB, PARAMMF, TURB, CSTURB,       &
                        KSV, HFRAC_ICE, GENTR_DETR, OMIXUV,       &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
@@ -231,7 +233,7 @@ IF (HMF_UPDRAFT == 'EDKF') THEN
                        PDX,PDY)
 ELSEIF (HMF_UPDRAFT == 'RHCJ') THEN
   GENTR_DETR = .TRUE.
-  CALL COMPUTE_UPDRAFT_RHCJ10(D, CST, NEB, PARAMMF, TURB,        &
+  CALL COMPUTE_UPDRAFT_RHCJ10(D, CST, NEB, PARAMMF, TURB, CSTURB,&
                        KSV, HFRAC_ICE, GENTR_DETR, OMIXUV,       &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &

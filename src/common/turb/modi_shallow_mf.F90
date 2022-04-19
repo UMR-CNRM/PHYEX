@@ -4,7 +4,7 @@
 !
 INTERFACE
 !     #################################################################
-      SUBROUTINE SHALLOW_MF(D, CST, NEB, PARAMMF, TURB,               &
+      SUBROUTINE SHALLOW_MF(D, CST, NEB, PARAMMF, TURB, CSTURB,       &
                 KRR, KRRL, KRRI, KSV,                                 &
                 HMF_UPDRAFT, HMF_CLOUD, HFRAC_ICE, OMIXUV,            &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
@@ -29,6 +29,7 @@ USE MODD_CST,             ONLY: CST_t
 USE MODD_NEB,             ONLY: NEB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_n,          ONLY: TURB_t
+USE MODD_CTURB,           ONLY: CSTURB_t
 !               
 !*               1.1  Declaration of Arguments
 !                
@@ -38,6 +39,7 @@ TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(NEB_t),            INTENT(IN)   :: NEB
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 TYPE(TURB_t),           INTENT(IN)   :: TURB
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 INTEGER,                INTENT(IN)   :: KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL         ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI         ! number of ice water var.

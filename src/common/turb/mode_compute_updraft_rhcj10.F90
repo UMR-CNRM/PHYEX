@@ -10,7 +10,7 @@
 IMPLICIT NONE
 CONTAINS
 !
-SUBROUTINE COMPUTE_UPDRAFT_RHCJ10(D, CST, NEB, PARAMMF, TURB,     &
+SUBROUTINE COMPUTE_UPDRAFT_RHCJ10(D, CST, NEB, PARAMMF, TURB, CSTURB, &
                                  KSV, HFRAC_ICE,                  &
                                  OENTR_DETR,OMIXUV,               &
                                  ONOMIXLG,KSV_LGBEG,KSV_LGEND,    &
@@ -66,6 +66,7 @@ USE MODD_CST,             ONLY: CST_t
 USE MODD_NEB,             ONLY: NEB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_n,          ONLY: TURB_t
+USE MODD_CTURB,           ONLY: CSTURB_t
 !
 USE MODE_TH_R_FROM_THL_RT_1D, ONLY: TH_R_FROM_THL_RT_1D
 USE MODI_SHUMAN_MF, ONLY: MZF_MF, MZM_MF, GZ_M_W_MF
@@ -85,6 +86,7 @@ TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(NEB_t),            INTENT(IN)   :: NEB
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 TYPE(TURB_t),           INTENT(IN)   :: TURB
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 INTEGER,                INTENT(IN)   :: KSV
 CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                INTENT(IN) :: OENTR_DETR! flag to recompute entrainment, detrainment and mass flux
@@ -341,7 +343,7 @@ ELSE
   ZSHEAR = 0. !no shear in bl89 mixing length
 END IF
 !
-CALL COMPUTE_BL89_ML(D%NKA,D%NKB,D%NKE,D%NKU,D%NKL,PDZZ,ZTKEM_F(:,D%NKB),ZG_O_THVREF(:,D%NKB), &
+CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ,ZTKEM_F(:,D%NKB),ZG_O_THVREF(:,D%NKB), &
                        ZTHVM_F,D%NKB,GLMIX,.TRUE.,ZSHEAR,ZLUP)
 ZLUP(:)=MAX(ZLUP(:),1.E-10)
 
