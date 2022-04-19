@@ -9,7 +9,7 @@
 !
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE COMPUTE_MF_CLOUD_BIGAUS(KKA, KKB, KKE, KKU, KKL,&
+      SUBROUTINE COMPUTE_MF_CLOUD_BIGAUS(D, CST, PARAMMF,&
                                   PEMF, PDEPTH,&
                                   PRT_UP, PTHV_UP, PFRAC_ICE_UP, PRSAT_UP,&
                                   PRTM, PTHM, PTHVM,&
@@ -57,8 +57,9 @@ CONTAINS
 !
 !*      0. DECLARATIONS
 !          ------------
-USE MODD_PARAM_MFSHALL_n, ONLY : XALPHA_MF, XSIGMA_MF
-USE MODD_CST, ONLY  : XPI, XG
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+USE MODD_CST,             ONLY: CST_t
+USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
 USE MODI_SHUMAN_MF, ONLY: MZF_MF, GZ_M_W_MF
 USE MODI_GAMMA_INC
@@ -72,35 +73,33 @@ IMPLICIT NONE
 !
 !*                    0.1  Declaration of Arguments
 !
-INTEGER,                INTENT(IN)   :: KKA          ! near ground array index
-INTEGER,                INTENT(IN)   :: KKB          ! near ground physical index
-INTEGER,                INTENT(IN)   :: KKE          ! uppest atmosphere physical index
-INTEGER,                INTENT(IN)   :: KKU          ! uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL                     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PEMF                    ! updraft characteritics
-REAL, DIMENSION(:),     INTENT(IN)   :: PDEPTH                  ! Deepness of cloud
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PTHV_UP, PRSAT_UP, PRT_UP ! updraft characteritics
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PFRAC_ICE_UP            ! liquid/ice fraction in updraft
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PTHM, PRTM, PTHVM       ! env. var. at t-dt
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PDZZ, PZZ
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PRHODREF
-REAL, DIMENSION(:,:),   INTENT(OUT)  :: PRC_MF, PRI_MF          ! cloud content
-REAL, DIMENSION(:,:),   INTENT(OUT)  :: PCF_MF                  ! and cloud fraction for MF scheme
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PEMF                    ! updraft characteritics
+REAL, DIMENSION(D%NIT),     INTENT(IN)   :: PDEPTH                  ! Deepness of cloud
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PTHV_UP, PRSAT_UP, PRT_UP ! updraft characteritics
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PFRAC_ICE_UP            ! liquid/ice fraction in updraft
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PTHM, PRTM, PTHVM       ! env. var. at t-dt
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PDZZ, PZZ
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PRHODREF
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)  :: PRC_MF, PRI_MF          ! cloud content
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)  :: PCF_MF                  ! and cloud fraction for MF scheme
 !
 !*                    0.1  Declaration of local variables
 !
 !
-REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZGRAD_Z_RT, &            !
+REAL, DIMENSION(D%NIT,D%NKT) :: ZGRAD_Z_RT, &            !
                                             & ZALPHA_UP_M, &           ! Variables used to compute variance
                                             & ZSIGMF                   ! and sqrt(variance)
-REAL, DIMENSION(SIZE(PTHM,1))              :: ZOMEGA_UP_M              !
-REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZW1 ! working array
+REAL, DIMENSION(D%NIT)              :: ZOMEGA_UP_M              !
+REAL, DIMENSION(D%NIT,D%NKT) :: ZW1 ! working array
 INTEGER                                    :: JK  ! vertical loop control
-REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZEMF_M, ZTHV_UP_M, &   !
+REAL, DIMENSION(D%NIT,D%NKT) :: ZEMF_M, ZTHV_UP_M, &   !
                                             & ZRSAT_UP_M, ZRT_UP_M,& ! Interpolation on mass points
                                             & ZFRAC_ICE_UP_M         !
-REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZCOND ! condensate
-REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZA, ZGAM ! used for integration
+REAL, DIMENSION(D%NIT,D%NKT) :: ZCOND ! condensate
+REAL, DIMENSION(D%NIT,D%NKT) :: ZA, ZGAM ! used for integration
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_BIGAUS',0,ZHOOK_HANDLE)
@@ -113,19 +112,19 @@ IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_BIGAUS',0,ZHOOK_HANDLE)
 !
 !
 !Vertical gradient of RT, result on mass points
-ZW1(:,:)=GZ_M_W_MF(PRTM(:,:), PDZZ(:,:), KKA, KKU, KKL)
-ZGRAD_Z_RT(:,:)=MZF_MF(ZW1(:,:), KKA, KKU, KKL)
+ZW1(:,:)=GZ_M_W_MF(PRTM(:,:), PDZZ(:,:), D%NKA, D%NKU, D%NKL)
+ZGRAD_Z_RT(:,:)=MZF_MF(ZW1(:,:), D%NKA, D%NKU, D%NKL)
 
 !Interpolation on mass points
-ZTHV_UP_M(:,:) = MZF_MF(PTHV_UP(:,:), KKA, KKU, KKL)
-ZRSAT_UP_M(:,:)= MZF_MF(PRSAT_UP(:,:), KKA, KKU, KKL)
-ZRT_UP_M(:,:)  = MZF_MF(PRT_UP(:,:), KKA, KKU, KKL)
-ZEMF_M(:,:)    = MZF_MF(PEMF(:,:), KKA, KKU, KKL)
-ZFRAC_ICE_UP_M(:,:) = MZF_MF(PFRAC_ICE_UP(:,:), KKA, KKU, KKL)
+ZTHV_UP_M(:,:) = MZF_MF(PTHV_UP(:,:), D%NKA, D%NKU, D%NKL)
+ZRSAT_UP_M(:,:)= MZF_MF(PRSAT_UP(:,:), D%NKA, D%NKU, D%NKL)
+ZRT_UP_M(:,:)  = MZF_MF(PRT_UP(:,:), D%NKA, D%NKU, D%NKL)
+ZEMF_M(:,:)    = MZF_MF(PEMF(:,:), D%NKA, D%NKU, D%NKL)
+ZFRAC_ICE_UP_M(:,:) = MZF_MF(PFRAC_ICE_UP(:,:), D%NKA, D%NKU, D%NKL)
 
 !computation of omega star up
 ZOMEGA_UP_M(:)=0.
-DO JK=KKB,KKE,KKL
+DO JK=D%NKB,D%NKE,D%NKL
   !Vertical integration over the entire column but only buoyant points are used
   !ZOMEGA_UP_M(:)=ZOMEGA_UP_M(:) + &
   !                ZEMF_M(:,JK) * &
@@ -137,24 +136,24 @@ DO JK=KKB,KKE,KKL
   ZOMEGA_UP_M(:)=ZOMEGA_UP_M(:) + &
                  ZEMF_M(:,JK) * &
                  (ZTHV_UP_M(:,JK)-PTHVM(:,JK)) * &
-                 (PZZ(:,JK+KKL)-PZZ(:,JK)) / &
+                 (PZZ(:,JK+D%NKL)-PZZ(:,JK)) / &
                  (PTHM(:,JK) * PRHODREF(:,JK))
 ENDDO
 ZOMEGA_UP_M(:)=MAX(ZOMEGA_UP_M(:), 1.E-20)
-ZOMEGA_UP_M(:)=(XG*ZOMEGA_UP_M(:))**(1./3.)
+ZOMEGA_UP_M(:)=(CST%XG*ZOMEGA_UP_M(:))**(1./3.)
 
 !computation of alpha up
-DO JK=KKA,KKU,KKL
-  ZALPHA_UP_M(:,JK)=ZEMF_M(:,JK)/(XALPHA_MF*PRHODREF(:,JK)*ZOMEGA_UP_M(:))
+DO JK=D%NKA,D%NKU,D%NKL
+  ZALPHA_UP_M(:,JK)=ZEMF_M(:,JK)/(PARAMMF%XALPHA_MF*PRHODREF(:,JK)*ZOMEGA_UP_M(:))
 ENDDO
 ZALPHA_UP_M(:,:)=MAX(0., MIN(ZALPHA_UP_M(:,:), 1.))
 
 !computation of sigma of the distribution
-DO JK=KKA,KKU,KKL
+DO JK=D%NKA,D%NKU,D%NKL
   ZSIGMF(:,JK)=ZEMF_M(:,JK) * &
                (ZRT_UP_M(:,JK) - PRTM(:,JK)) * &
                PDEPTH(:) * ZGRAD_Z_RT(:,JK) / &
-               (XSIGMA_MF * ZOMEGA_UP_M(:) * PRHODREF(:,JK))
+               (PARAMMF%XSIGMA_MF * ZOMEGA_UP_M(:) * PRHODREF(:,JK))
 ENDDO
 ZSIGMF(:,:)=SQRT(MAX(ABS(ZSIGMF(:,:)), 1.E-40))
 !
@@ -166,13 +165,13 @@ ZSIGMF(:,:)=SQRT(MAX(ABS(ZSIGMF(:,:)), 1.E-40))
 ZA(:,:)=(ZRSAT_UP_M(:,:)-ZRT_UP_M(:,:))/(sqrt(2.)*ZSIGMF(:,:))
 
 !Approximation of erf function
-ZGAM(:,:)=1-SIGN(1., ZA(:,:))*SQRT(1-EXP(-4*ZA(:,:)**2/XPI))
+ZGAM(:,:)=1-SIGN(1., ZA(:,:))*SQRT(1-EXP(-4*ZA(:,:)**2/CST%XPI))
 
 !computation of cloud fraction
 PCF_MF(:,:)=MAX( 0., MIN(1.,0.5*ZGAM(:,:) * ZALPHA_UP_M(:,:)))
 
 !computation of condensate, then PRC and PRI
-ZCOND(:,:)=(EXP(-ZA(:,:)**2)-ZA(:,:)*SQRT(XPI)*ZGAM(:,:))*ZSIGMF(:,:)/SQRT(2.*XPI) * ZALPHA_UP_M(:,:)
+ZCOND(:,:)=(EXP(-ZA(:,:)**2)-ZA(:,:)*SQRT(CST%XPI)*ZGAM(:,:))*ZSIGMF(:,:)/SQRT(2.*CST%XPI) * ZALPHA_UP_M(:,:)
 ZCOND(:,:)=MAX(ZCOND(:,:), 0.) !due to approximation of ZGAM value, ZCOND could be slightly negative
 PRC_MF(:,:)=(1.-ZFRAC_ICE_UP_M(:,:)) * ZCOND(:,:)
 PRI_MF(:,:)=(   ZFRAC_ICE_UP_M(:,:)) * ZCOND(:,:)

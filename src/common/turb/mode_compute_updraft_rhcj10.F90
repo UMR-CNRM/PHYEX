@@ -94,65 +94,65 @@ LOGICAL,                INTENT(IN) :: OMIXUV    ! True if mixing of momentum
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
 INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN)   :: PZZ       !  Height at the flux point
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN)   :: PDZZ      !  Metrics coefficient
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)   :: PZZ       !  Height at the flux point
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)   :: PDZZ      !  Metrics coefficient
  
 REAL, DIMENSION(D%NIT),   INTENT(IN)   ::  PSFTH,PSFRV
 ! normal surface fluxes of theta,rv,(u,v) parallel to the orography
 
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN) ::  PPABSM     ! Pressure at t-dt
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN) ::  PRHODREF   ! dry density of the
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PPABSM     ! Pressure at t-dt
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PRHODREF   ! dry density of the
                                                   ! reference state
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN) ::  PUM        ! u mean wind
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN) ::  PVM        ! v mean wind
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN) ::  PTKEM      ! TKE at t-dt
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PUM        ! u mean wind
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PVM        ! v mean wind
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PTKEM      ! TKE at t-dt
 !
 !REAL, DIMENSION(:,:),   INTENT(IN)   ::  PEXNM       ! Exner function at t-dt
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTHM           ! pot. temp. at t-dt
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PRVM           ! vapor mixing ratio at t-dt
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTHLM,PRTM     ! cons. var. at t-dt
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   ::  PTHM           ! pot. temp. at t-dt
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   ::  PRVM           ! vapor mixing ratio at t-dt
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   ::  PTHLM,PRTM     ! cons. var. at t-dt
 
-REAL, DIMENSION(D%NIT,D%NJT,KSV), INTENT(IN)   ::  PSVM           ! scalar var. at t-dt
+REAL, DIMENSION(D%NIT,D%NKT,KSV), INTENT(IN)   ::  PSVM           ! scalar var. at t-dt
 
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(OUT)  ::  PTHL_UP,PRT_UP   ! updraft properties
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(OUT)  ::  PU_UP, PV_UP     ! updraft wind components
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(INOUT)::  PRV_UP,PRC_UP    ! updraft rv, rc
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(INOUT)::  PRI_UP           ! updraft ri
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(INOUT)::  PTHV_UP          ! updraft THv
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(INOUT)::  PW_UP,PFRAC_UP   ! updraft w, fraction
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(INOUT)::  PFRAC_ICE_UP     ! liquid/solid fraction in updraft
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(INOUT)::  PRSAT_UP         ! Rsat
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)  ::  PTHL_UP,PRT_UP   ! updraft properties
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)  ::  PU_UP, PV_UP     ! updraft wind components
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT)::  PRV_UP,PRC_UP    ! updraft rv, rc
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT)::  PRI_UP           ! updraft ri
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT)::  PTHV_UP          ! updraft THv
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT)::  PW_UP,PFRAC_UP   ! updraft w, fraction
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT)::  PFRAC_ICE_UP     ! liquid/solid fraction in updraft
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT)::  PRSAT_UP         ! Rsat
 
-REAL, DIMENSION(D%NIT,D%NJT,KSV), INTENT(OUT)  ::  PSV_UP           ! updraft scalar var. 
+REAL, DIMENSION(D%NIT,D%NKT,KSV), INTENT(OUT)  ::  PSV_UP           ! updraft scalar var. 
                                          
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(INOUT)::  PEMF,PDETR,PENTR ! Mass_flux,
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT)::  PEMF,PDETR,PENTR ! Mass_flux,
                                                           ! detrainment,entrainment
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(INOUT) :: PBUO_INTEG       ! Integrated Buoyancy 
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PBUO_INTEG       ! Integrated Buoyancy 
 INTEGER, DIMENSION(D%NIT),  INTENT(INOUT)::  KKLCL,KKETL,KKCTL! LCL, ETL, CTL                                     
 REAL, DIMENSION(D%NIT),     INTENT(OUT)   :: PDEPTH           ! Deepness of cloud
 !                       1.2  Declaration of local variables
 !
 ! Mean environment variables at t-dt at flux point
-REAL, DIMENSION(D%NIT,D%NJT) ::    ZTHM_F,ZRVM_F    ! Theta,rv of
+REAL, DIMENSION(D%NIT,D%NKT) ::    ZTHM_F,ZRVM_F    ! Theta,rv of
                                                                   ! updraft environnement
-REAL, DIMENSION(D%NIT,D%NJT) :: ZRTM_F, ZTHLM_F, ZTKEM_F      ! rt, thetal,TKE,pressure,
-REAL, DIMENSION(D%NIT,D%NJT) :: ZUM_F,ZVM_F,ZRHO_F            ! density,momentum
-REAL, DIMENSION(D%NIT,D%NJT) :: ZPRES_F,ZTHVM_F               ! interpolated at the flux point
-REAL, DIMENSION(D%NIT,D%NJT) :: ZG_O_THVREF                   ! g*ThetaV ref
-REAL, DIMENSION(D%NIT,D%NJT) :: ZW_UP2                        ! w**2  of the updraft
+REAL, DIMENSION(D%NIT,D%NKT) :: ZRTM_F, ZTHLM_F, ZTKEM_F      ! rt, thetal,TKE,pressure,
+REAL, DIMENSION(D%NIT,D%NKT) :: ZUM_F,ZVM_F,ZRHO_F            ! density,momentum
+REAL, DIMENSION(D%NIT,D%NKT) :: ZPRES_F,ZTHVM_F               ! interpolated at the flux point
+REAL, DIMENSION(D%NIT,D%NKT) :: ZG_O_THVREF                   ! g*ThetaV ref
+REAL, DIMENSION(D%NIT,D%NKT) :: ZW_UP2                        ! w**2  of the updraft
 
-REAL, DIMENSION(D%NIT,D%NJT,KSV) :: ZSVM_F ! scalar variables 
+REAL, DIMENSION(D%NIT,D%NKT,KSV) :: ZSVM_F ! scalar variables 
                         
 
                         
-REAL, DIMENSION(D%NIT,D%NJT) :: ZTH_UP                        ! updraft THETA 
+REAL, DIMENSION(D%NIT,D%NKT) :: ZTH_UP                        ! updraft THETA 
 !REAL, DIMENSION(SIZE(PTHM,1))              :: ZT_UP                         ! updraft T
 !REAL, DIMENSION(SIZE(PTHM,1))              :: ZLVOCPEXN                     ! updraft L
 !REAL, DIMENSION(SIZE(PTHM,1))              :: ZCP                           ! updraft cp
-REAL, DIMENSION(D%NIT,D%NJT) :: ZBUO                          ! Buoyancy 
+REAL, DIMENSION(D%NIT,D%NKT) :: ZBUO                          ! Buoyancy 
 !REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZTHS_UP,ZTHSM
 
-REAL, DIMENSION(D%NIT,D%NJT) ::  ZCOEF  ! diminution coefficient for too high clouds 
+REAL, DIMENSION(D%NIT,D%NKT) ::  ZCOEF  ! diminution coefficient for too high clouds 
                         
 REAL                                       ::  ZWTHVSURF  ! Surface w'thetav'
 
@@ -170,13 +170,13 @@ LOGICAL, DIMENSION(D%NIT) ::  GTEST,GTESTLCL
 LOGICAL                          ::  GLMIX 
                                ! To choose upward or downward mixing length
 LOGICAL, DIMENSION(D%NIT)              :: GWORK1
-LOGICAL, DIMENSION(D%NIT,D%NJT) :: GWORK2
+LOGICAL, DIMENSION(D%NIT,D%NKT) :: GWORK2
 
 INTEGER  :: ITEST
 
 REAL, DIMENSION(D%NIT) :: ZRC_UP, ZRI_UP, ZRV_UP, ZRSATW, ZRSATI
 
-REAL,    DIMENSION(D%NIT,D%NJT) :: ZZDZ
+REAL,    DIMENSION(D%NIT,D%NKT) :: ZZDZ
 
 REAL, DIMENSION(D%NIT)              ::  ZTEST,ZDZ,ZWUP_MEAN    ! 
 REAL, DIMENSION(D%NIT)              ::  ZCOE,ZWCOE,ZBUCOE
@@ -189,7 +189,7 @@ REAL  :: ZDEPTH_MAX1, ZDEPTH_MAX2 ! control auto-extinction process
 
 REAL  :: ZTMAX,ZRMAX, ZEPS  ! control value
 
-REAL, DIMENSION(D%NIT,D%NJT) :: ZSHEAR,ZDUDZ,ZDVDZ ! vertical wind shear
+REAL, DIMENSION(D%NIT,D%NKT) :: ZSHEAR,ZDUDZ,ZDVDZ ! vertical wind shear
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('COMPUTE_UPDRAFT_RHCJ10',0,ZHOOK_HANDLE)
 

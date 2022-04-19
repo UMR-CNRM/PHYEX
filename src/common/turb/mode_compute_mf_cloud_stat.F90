@@ -9,7 +9,7 @@
 IMPLICIT NONE
 CONTAINS
 !     ######spl
-      SUBROUTINE COMPUTE_MF_CLOUD_STAT(KKA, KKB, KKE, KKU, KKL, KRR, KRRL, KRRI,&
+      SUBROUTINE COMPUTE_MF_CLOUD_STAT(D, CST, PARAMMF, KRR, KRRL, KRRI,&
                             &PFRAC_ICE,&
                             &PTHLM, PRTM, PPABSM, PRM,&
                             &PDZZ, PTHM, PEXNM, &
@@ -52,8 +52,9 @@ CONTAINS
 !
 !*      0. DECLARATIONS
 !          ------------
-USE MODD_PARAM_MFSHALL_n, ONLY :  XTAUSIGMF
-USE MODD_PARAMETERS, ONLY : JPHEXT, JPVEXT
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+USE MODD_CST,             ONLY: CST_t
+USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
 USE MODI_SHUMAN_MF, ONLY: MZF_MF, MZM_MF, GZ_M_W_MF
 USE MODE_COMPUTE_FUNCTION_THERMO_MF, ONLY: COMPUTE_FUNCTION_THERMO_MF
@@ -65,31 +66,29 @@ IMPLICIT NONE
 !
 !*                    0.1  Declaration of Arguments
 !
-INTEGER,                INTENT(IN)   :: KKA          ! near ground array index
-INTEGER,                INTENT(IN)   :: KKB          ! near ground physical index
-INTEGER,                INTENT(IN)   :: KKE          ! uppest atmosphere physical index
-INTEGER,                INTENT(IN)   :: KKU          ! uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL                     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 INTEGER,                INTENT(IN)   :: KRR                     ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL                    ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI                    ! number of ice water var.
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PFRAC_ICE               ! liquid/ice fraction
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PTHLM, PRTM             ! cons. var. at t-dt
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PPABSM                  ! Pressure at time t-1
-REAL, DIMENSION(:,:,:), INTENT(IN)   :: PRM                     ! water var. at t-dt
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PDZZ
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PTHM                    ! environement
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PEXNM
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PEMF                    ! updraft characteritics
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PTHL_UP, PRT_UP         ! rc,w,Mass Flux,Thetal,rt
-REAL, DIMENSION(:,:),   INTENT(OUT)  :: PSIGMF                  ! SQRT(variance) for statistical cloud scheme
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PFRAC_ICE               ! liquid/ice fraction
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PTHLM, PRTM             ! cons. var. at t-dt
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PPABSM                  ! Pressure at time t-1
+REAL, DIMENSION(D%NIT,D%NKT,KRR), INTENT(IN)   :: PRM                     ! water var. at t-dt
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PDZZ
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PTHM                    ! environement
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PEXNM
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PEMF                    ! updraft characteritics
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PTHL_UP, PRT_UP         ! rc,w,Mass Flux,Thetal,rt
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)  :: PSIGMF                  ! SQRT(variance) for statistical cloud scheme
 !
 !*                    0.1  Declaration of local variables
 !
 !
-REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2)) :: ZFLXZ
-REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2)) :: ZT
-REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2)) :: ZAMOIST, ZATHETA
+REAL, DIMENSION(D%NIT,D%NKT) :: ZFLXZ
+REAL, DIMENSION(D%NIT,D%NKT) :: ZT
+REAL, DIMENSION(D%NIT,D%NKT) :: ZAMOIST, ZATHETA
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !*                    0.2 initialisation
@@ -103,7 +102,7 @@ IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_STAT',0,ZHOOK_HANDLE)
 !          ------------------------------------------------
 !
 ! Thermodynamics functions
-CALL COMPUTE_FUNCTION_THERMO_MF( KRR,KRRL,KRRI,                   &
+CALL COMPUTE_FUNCTION_THERMO_MF( D, CST, KRR,KRRL,KRRI,                   &
                                  PTHM,PRM,PEXNM,PFRAC_ICE,PPABSM, &
                                  ZT,ZAMOIST,ZATHETA               )
 !
@@ -113,14 +112,14 @@ IF (KRRL > 0)  THEN
 !
 
 !
-    ZFLXZ(:,:) = -2 * XTAUSIGMF * PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(PTHLM(:,:), KKA, KKU, KKL)) * &
-                      GZ_M_W_MF(PTHLM(:,:),PDZZ(:,:), KKA, KKU, KKL)
+    ZFLXZ(:,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(PTHLM(:,:), D%NKA, D%NKU, D%NKL)) * &
+                      GZ_M_W_MF(PTHLM(:,:),PDZZ(:,:), D%NKA, D%NKU, D%NKL)
 !
 !   Avoid negative values
     ZFLXZ(:,:) = MAX(0.,ZFLXZ(:,:))
 
 
-    PSIGMF(:,:) = MZF_MF(ZFLXZ(:,:), KKA, KKU, KKL) * ZATHETA(:,:)**2
+    PSIGMF(:,:) = MZF_MF(ZFLXZ(:,:), D%NKA, D%NKU, D%NKL) * ZATHETA(:,:)**2
 
 !
 !
@@ -129,14 +128,14 @@ IF (KRRL > 0)  THEN
 !
 !
 !
-    ZFLXZ(:,:) = -2 * XTAUSIGMF * PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(PRTM(:,:), KKA, KKU, KKL)) * &
-                      GZ_M_W_MF(PRTM(:,:),PDZZ(:,:), KKA, KKU, KKL)
+    ZFLXZ(:,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(PRTM(:,:), D%NKA, D%NKU, D%NKL)) * &
+                      GZ_M_W_MF(PRTM(:,:),PDZZ(:,:), D%NKA, D%NKU, D%NKL)
 !
 !   Avoid negative values
     ZFLXZ(:,:) = MAX(0.,ZFLXZ(:,:))
 !
 
-    PSIGMF(:,:) = PSIGMF(:,:) + ZAMOIST(:,:) **2 * MZF_MF(ZFLXZ(:,:), KKA, KKU, KKL)
+    PSIGMF(:,:) = PSIGMF(:,:) + ZAMOIST(:,:) **2 * MZF_MF(ZFLXZ(:,:), D%NKA, D%NKU, D%NKL)
 !
 !        1.3  Vertical part of Sigma_s
 !

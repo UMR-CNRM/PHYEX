@@ -8,7 +8,7 @@
 !
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE COMPUTE_MF_CLOUD_DIRECT(KKB, KKE, KKL, &
+      SUBROUTINE COMPUTE_MF_CLOUD_DIRECT(D, PARAMMF, &
                                         &KKLCL, PFRAC_UP, PRC_UP, PRI_UP,&
                                         &PRC_MF, PRI_MF, PCF_MF)
 !     #################################################################
@@ -53,7 +53,8 @@ CONTAINS
 !
 !*      0. DECLARATIONS
 !          ------------
-USE MODD_PARAM_MFSHALL_n, ONLY : XKCF_MF
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+USE MODD_PARAM_MFSHALL_n, ONLY : PARAM_MFSHALL_t
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -61,14 +62,13 @@ IMPLICIT NONE
 !
 !*                    0.1  Declaration of Arguments
 !
-INTEGER,                INTENT(IN)   :: KKB            ! near ground physical index
-INTEGER,                INTENT(IN)   :: KKE            ! uppest atmosphere physical index
-INTEGER,                INTENT(IN)   :: KKL            ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-INTEGER, DIMENSION(:),  INTENT(IN)   :: KKLCL          ! index of updraft condensation level
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PFRAC_UP       ! Updraft Fraction
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PRC_UP,PRI_UP  ! updraft characteritics
-REAL, DIMENSION(:,:),   INTENT(OUT)  :: PRC_MF, PRI_MF ! cloud content
-REAL, DIMENSION(:,:),   INTENT(OUT)  :: PCF_MF         ! and cloud fraction for MF scheme
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
+INTEGER, DIMENSION(D%NIT),  INTENT(IN)   :: KKLCL          ! index of updraft condensation level
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PFRAC_UP       ! Updraft Fraction
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PRC_UP,PRI_UP  ! updraft characteritics
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)  :: PRC_MF, PRI_MF ! cloud content
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)  :: PCF_MF         ! and cloud fraction for MF scheme
 !
 !*                    0.1  Declaration of local variables
 !
@@ -89,21 +89,21 @@ PRC_MF(:,:)=0.
 PRI_MF(:,:)=0.
 PCF_MF(:,:)=0.
 
-DO JI=1,SIZE(PCF_MF,1)
+DO JI=1,D%NIT
 #ifdef REPRO48
-  JK0=KKLCL(JI)-KKL ! first mass level with cloud
-  JK0=MAX(JK0, MIN(KKB,KKE)) !protection if KKL=1
-  JK0=MIN(JK0, MAX(KKB,KKE)) !protection if KKL=-1
-  DO JK=JK0,KKE-KKL,KKL
+  JK0=KKLCL(JI)-D%NKL ! first mass level with cloud
+  JK0=MAX(JK0, MIN(D%NKB,D%NKE)) !protection if KKL=1
+  JK0=MIN(JK0, MAX(D%NKB,D%NKE)) !protection if KKL=-1
+  DO JK=JK0,D%NKE-D%NKL,D%NKL
 #else
-  DO JK=KKLCL(JI),KKE-KKL,KKL
+  DO JK=KKLCL(JI),D%NKE-D%NKL,D%NKL
 #endif
-    PCF_MF(JI,JK ) = MAX( 0., MIN(1.,XKCF_MF *0.5* (       &
-                &    PFRAC_UP(JI,JK) +  PFRAC_UP(JI,JK+KKL) ) ))
-    PRC_MF(JI,JK)  = 0.5* XKCF_MF * ( PFRAC_UP(JI,JK)*PRC_UP(JI,JK)  &
-                         + PFRAC_UP(JI,JK+KKL)*PRC_UP(JI,JK+KKL) )
-    PRI_MF(JI,JK)  = 0.5* XKCF_MF * ( PFRAC_UP(JI,JK)*PRI_UP(JI,JK)  &
-                         + PFRAC_UP(JI,JK+KKL)*PRI_UP(JI,JK+KKL) )
+    PCF_MF(JI,JK ) = MAX( 0., MIN(1.,PARAMMF%XKCF_MF *0.5* (       &
+                &    PFRAC_UP(JI,JK) +  PFRAC_UP(JI,JK+D%NKL) ) ))
+    PRC_MF(JI,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JI,JK)*PRC_UP(JI,JK)  &
+                         + PFRAC_UP(JI,JK+D%NKL)*PRC_UP(JI,JK+D%NKL) )
+    PRI_MF(JI,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JI,JK)*PRI_UP(JI,JK)  &
+                         + PFRAC_UP(JI,JK+D%NKL)*PRI_UP(JI,JK+D%NKL) )
   END DO
 END DO
 

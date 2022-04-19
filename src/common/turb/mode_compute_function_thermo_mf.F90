@@ -8,7 +8,7 @@
 !
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE COMPUTE_FUNCTION_THERMO_MF( KRR,KRRL,KRRI,                  &
+      SUBROUTINE COMPUTE_FUNCTION_THERMO_MF(D, CST, KRR,KRRL,KRRI,                  &
                                        PTH, PR, PEXN, PFRAC_ICE, PPABS,      &
                                        PT,PAMOIST,PATHETA                    )
 !     #################################################################
@@ -50,7 +50,8 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+USE MODD_CST,             ONLY: CST_t
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -59,25 +60,27 @@ IMPLICIT NONE
 !
 !*      0.1  declarations of arguments
 !
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+TYPE(CST_t),            INTENT(IN)   :: CST
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 
-REAL, DIMENSION(:,:), INTENT(IN)   :: PTH      ! theta
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PR       ! water species
-REAL, DIMENSION(:,:)  , INTENT(IN) :: PPABS,PEXN    ! pressure, Exner funct.
-REAL, DIMENSION(:,:)  , INTENT(IN) :: PFRAC_ICE     ! ice fraction
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)   :: PTH      ! theta
+REAL, DIMENSION(D%NIT,D%NKT,KRR), INTENT(IN) :: PR       ! water species
+REAL, DIMENSION(D%NIT,D%NKT)  , INTENT(IN) :: PPABS,PEXN    ! pressure, Exner funct.
+REAL, DIMENSION(D%NIT,D%NKT)  , INTENT(IN) :: PFRAC_ICE     ! ice fraction
 
-REAL, DIMENSION(:,:), INTENT(OUT)   :: PT      ! temperature
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)   :: PT      ! temperature
 
-REAL, DIMENSION(:,:), INTENT(OUT)  ::  PAMOIST,PATHETA
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)  ::  PAMOIST,PATHETA
 !
 !-------------------------------------------------------------------------------
 ! 
 !*       0.2   Declarations of local variables
 !
 REAL                :: ZEPS         ! XMV / XMD
-REAL, DIMENSION(SIZE(PTH,1),SIZE(PTH,2)) ::     &
+REAL, DIMENSION(D%NIT,D%NKT) ::       &
           ZCP,                        &  ! Cp 
           ZE,                         &  ! Saturation mixing ratio
           ZDEDT,                      &  ! Saturation mixing ratio derivative
@@ -94,21 +97,21 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 IF (LHOOK) CALL DR_HOOK('COMPUTE_FUNCTION_THERMO_MF',0,ZHOOK_HANDLE)
 !
-  ZEPS = XMV / XMD
+  ZEPS = CST%XMV / CST%XMD
 
 !
 !*       Cph
 !
-ZCP=XCPD
+ZCP=CST%XCPD
 
-IF (KRR > 0) ZCP(:,:) = ZCP(:,:) + XCPV * PR(:,:,1)
+IF (KRR > 0) ZCP(:,:) = ZCP(:,:) + CST%XCPV * PR(:,:,1)
 
 DO JRR = 2,1+KRRL  ! loop on the liquid components  
-   ZCP(:,:)  = ZCP(:,:) + XCL * PR(:,:,JRR)
+   ZCP(:,:)  = ZCP(:,:) + CST%XCL * PR(:,:,JRR)
 END DO
 
 DO JRR = 2+KRRL,1+KRRL+KRRI ! loop on the solid components   
-  ZCP(:,:)  = ZCP(:,:)  + XCI * PR(:,:,JRR)
+  ZCP(:,:)  = ZCP(:,:)  + CST%XCI * PR(:,:,JRR)
 END DO
 
 !*      Temperature
@@ -122,11 +125,11 @@ IF ( KRRL >= 1 ) THEN
 !
 !*       Lv/Cph 
 !
-  ZLVOCP(:,:) = (XLVTT + (XCPV-XCL) *  (PT(:,:)-XTT) ) / ZCP(:,:)
+  ZLVOCP(:,:) = (CST%XLVTT + (CST%XCPV-CST%XCL) *  (PT(:,:)-CST%XTT) ) / ZCP(:,:)
 !
 !*      Saturation vapor pressure with respect to water
 !
-  ZE(:,:) =  EXP( XALPW - XBETAW/PT(:,:) - XGAMW*ALOG( PT(:,:) ) )
+  ZE(:,:) =  EXP( CST%XALPW - CST%XBETAW/PT(:,:) - CST%XGAMW*ALOG( PT(:,:) ) )
 !
 !*      Saturation  mixing ratio with respect to water
 !
@@ -134,7 +137,7 @@ IF ( KRRL >= 1 ) THEN
 !
 !*      Compute the saturation mixing ratio derivative (rvs')
 !
-  ZDEDT(:,:) = ( XBETAW / PT(:,:)  - XGAMW ) / PT(:,:)   &
+  ZDEDT(:,:) = ( CST%XBETAW / PT(:,:)  - CST%XGAMW ) / PT(:,:)   &
                  * ZE(:,:) * ( 1. + ZE(:,:) / ZEPS )
 !
 !*      Compute Amoist
@@ -148,9 +151,9 @@ IF ( KRRL >= 1 ) THEN
           ( 1. + ZDEDT(:,:) * ZLVOCP(:,:) )           *              &
           (                                                             &
            ZE(:,:) * (1. + ZE(:,:)/ZEPS)                                &
-                        * ( -2.*XBETAW/PT(:,:) + XGAMW ) / PT(:,:)**2   &
+                        * ( -2.*CST%XBETAW/PT(:,:) + CST%XGAMW ) / PT(:,:)**2   &
           +ZDEDT(:,:) * (1. + 2. * ZE(:,:)/ZEPS)                        &
-                        * ( XBETAW/PT(:,:) - XGAMW ) / PT(:,:)          &
+                        * ( CST%XBETAW/PT(:,:) - CST%XGAMW ) / PT(:,:)          &
           )                                                             &
          - ZDEDT(:,:)                                                   &
         )
@@ -163,11 +166,11 @@ IF ( KRRL >= 1 ) THEN
 !
 !*       Ls/Cph 
 !
-    ZLSOCP(:,:) = (XLSTT + (XCPV-XCI) *  (PT(:,:)-XTT) ) / ZCP(:,:)
+    ZLSOCP(:,:) = (CST%XLSTT + (CST%XCPV-CST%XCI) *  (PT(:,:)-CST%XTT) ) / ZCP(:,:)
 !
 !*      Saturation vapor pressure with respect to ice
 !
-    ZE(:,:) =  EXP( XALPI - XBETAI/PT(:,:) - XGAMI*ALOG( PT(:,:) ) )
+    ZE(:,:) =  EXP( CST%XALPI - CST%XBETAI/PT(:,:) - CST%XGAMI*ALOG( PT(:,:) ) )
 !
 !*      Saturation  mixing ratio with respect to ice
 !
@@ -175,7 +178,7 @@ IF ( KRRL >= 1 ) THEN
 !
 !*      Compute the saturation mixing ratio derivative (rvs')
 !
-    ZDEDT(:,:) = ( XBETAI / PT(:,:)  - XGAMI ) / PT(:,:)   &
+    ZDEDT(:,:) = ( CST%XBETAI / PT(:,:)  - CST%XGAMI ) / PT(:,:)   &
                    * ZE(:,:) * ( 1. + ZE(:,:) / ZEPS )
 !
 !*      Compute Amoist
@@ -189,9 +192,9 @@ IF ( KRRL >= 1 ) THEN
           ( 1. + ZDEDT(:,:) * ZLSOCP(:,:) )           *              &
           (                                                             &
            ZE(:,:) * (1. + ZE(:,:)/ZEPS)                                &
-                        * ( -2.*XBETAI/PT(:,:) + XGAMI ) / PT(:,:)**2   &
+                        * ( -2.*CST%XBETAI/PT(:,:) + CST%XGAMI ) / PT(:,:)**2   &
           +ZDEDT(:,:) * (1. + 2. * ZE(:,:)/ZEPS)                        &
-                        * ( XBETAI/PT(:,:) - XGAMI ) / PT(:,:)          &
+                        * ( CST%XBETAI/PT(:,:) - CST%XGAMI ) / PT(:,:)          &
           )                                                             &
          - ZDEDT(:,:)                                                   &
         )
