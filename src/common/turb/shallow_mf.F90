@@ -231,7 +231,8 @@ IF (HMF_UPDRAFT == 'EDKF') THEN
                        PDX,PDY)
 ELSEIF (HMF_UPDRAFT == 'RHCJ') THEN
   GENTR_DETR = .TRUE.
-  CALL COMPUTE_UPDRAFT_RHCJ10(D%NKA,D%NKB,D%NKE,D%NKU,D%NKL,HFRAC_ICE,GENTR_DETR,OMIXUV,&
+  CALL COMPUTE_UPDRAFT_RHCJ10(D, CST, NEB, PARAMMF, TURB,        &
+                       KSV, HFRAC_ICE, GENTR_DETR, OMIXUV,       &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
                        PSFTH,PSFRV,PPABSM,PRHODREF,              &
@@ -242,8 +243,8 @@ ELSEIF (HMF_UPDRAFT == 'RHCJ') THEN
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PEMF,PDETR,&
                        PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH )
 ELSEIF (HMF_UPDRAFT == 'RAHA') THEN
-   CALL COMPUTE_UPDRAFT_RAHA(D%NKA,D%NKB,D%NKE,D%NKU,D%NKL,HFRAC_ICE,      &
-                       GENTR_DETR,OMIXUV,                        &
+   CALL COMPUTE_UPDRAFT_RAHA(D, CST, NEB, PARAMMF,               &
+                       KSV, HFRAC_ICE, GENTR_DETR, OMIXUV,       &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
                        PSFTH,PSFRV,                              &

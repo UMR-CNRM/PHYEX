@@ -169,7 +169,6 @@ REAL, DIMENSION(D%NIT) :: ZMIX1,ZMIX2,ZMIX3_CLD,ZMIX2_CLD
 
 REAL, DIMENSION(D%NIT) :: ZLUP         ! Upward Mixing length from the ground
 
-INTEGER  :: ISV                ! Number of scalar variables                               
 INTEGER  :: JK,JI,JSV          ! loop counters
 
 LOGICAL, DIMENSION(D%NIT) ::  GTEST,GTESTLCL,GTESTETL
@@ -211,8 +210,6 @@ ZDEPTH_MAX1=3000. ! clouds with depth inferior to this value are keeped untouche
 ZDEPTH_MAX2=4000. ! clouds with depth superior to this value are suppressed
 
 !                 Local variables, internal domain
-!number of scalar variables
-ISV=SIZE(PSVM,3)
 
 IF (OENTR_DETR) THEN
   ! Initialisation of intersesting Level :LCL,ETL,CTL
@@ -256,7 +253,7 @@ ZUM_F  (:,:) = MZM_MF(PUM(:,:), D%NKA, D%NKU, D%NKL)
 ZVM_F  (:,:) = MZM_MF(PVM(:,:), D%NKA, D%NKU, D%NKL)
 ZTKEM_F(:,:) = MZM_MF(PTKEM(:,:), D%NKA, D%NKU, D%NKL)
 
-DO JSV=1,ISV
+DO JSV=1,KSV
   IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
   ZSVM_F(:,:,JSV) = MZM_MF(PSVM(:,:,JSV), D%NKA, D%NKU, D%NKL)
 END DO
@@ -429,7 +426,7 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
 
 
 ! If the updraft did not stop, compute cons updraft characteritics at jk+KKL
-  DO JLOOP=1,SIZE(GTEST)
+  DO JLOOP=1,D%NIT
     IF(GTEST(JLOOP)) THEN
       ZMIX2(JLOOP) = (PZZ(JLOOP,JK+D%NKL)-PZZ(JLOOP,JK))*PENTR(JLOOP,JK) !&
       ZMIX3_CLD(JLOOP) = (PZZ(JLOOP,JK+D%NKL)-PZZ(JLOOP,JK))*(1.-ZPART_DRY(JLOOP))*ZDETR_CLD(JLOOP,JK) !&                   
@@ -475,7 +472,7 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
 
     ENDIF
   ENDIF
-  DO JSV=1,ISV 
+  DO JSV=1,KSV 
      IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
       WHERE(GTEST) 
            PSV_UP(:,JK+D%NKL,JSV) = (PSV_UP (:,JK,JSV)*(1-0.5*ZMIX2(:)) + &
@@ -569,13 +566,13 @@ IF(OENTR_DETR) THEN
 ! This way, all MF fluxes are diminished by this amount.
 ! Diagnosed cloud fraction is also multiplied by the same coefficient.
 !
-  DO JI=1,SIZE(PTHM,1) 
+  DO JI=1,D%NIT
      PDEPTH(JI) = MAX(0., PZZ(JI,KKCTL(JI)) -  PZZ(JI,KKLCL(JI)) )
   END DO
 
   GWORK1(:)= (GTESTLCL(:) .AND. (PDEPTH(:) > ZDEPTH_MAX1) )
   GWORK2(:,:) = SPREAD( GWORK1(:), DIM=2, NCOPIES=MAX(D%NKU,D%NKA) )
-  ZCOEF(:,:) = SPREAD( (1.-(PDEPTH(:)-ZDEPTH_MAX1)/(ZDEPTH_MAX2-ZDEPTH_MAX1)), DIM=2, NCOPIES=SIZE(ZCOEF,2))
+  ZCOEF(:,:) = SPREAD( (1.-(PDEPTH(:)-ZDEPTH_MAX1)/(ZDEPTH_MAX2-ZDEPTH_MAX1)), DIM=2, NCOPIES=D%NKT)
   ZCOEF=MIN(MAX(ZCOEF,0.),1.)
   WHERE (GWORK2) 
     PEMF(:,:)     = PEMF(:,:)     * ZCOEF(:,:)
