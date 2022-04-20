@@ -286,7 +286,7 @@ CALL COMPUTE_MF_CLOUD(D, CST, PARAMMF, KRR, KRRL, KRRI, &
 ZEMF_O_RHODREF=PEMF/PRHODREF
 
 IF ( PIMPL_MF > 1.E-10 ) THEN  
-  CALL MF_TURB(D%NKA,D%NKB,D%NKE,D%NKU,D%NKL, OMIXUV,                     &
+  CALL MF_TURB(D, KSV, OMIXUV,                     &
              ONOMIXLG,KSV_LGBEG,KSV_LGEND,                            &
              PIMPL_MF, PTSTEP,                                        &
              PDZZ,                                                    &
@@ -297,7 +297,7 @@ IF ( PIMPL_MF > 1.E-10 ) THEN
              PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,         &
              ZFLXZSVMF                                                )
 ELSE
-  CALL MF_TURB_EXPL(D%NKA,D%NKB,D%NKE,D%NKU,D%NKL, OMIXUV,                 &
+  CALL MF_TURB_EXPL(D, PARAMMF, OMIXUV,                 &
          PRHODJ,                                                       &
          ZTHLM,ZTHVM,ZRTM,PUM,PVM,                                     &
          PDTHLDT_MF,PDRTDT_MF,PDUDT_MF,PDVDT_MF,                       &
