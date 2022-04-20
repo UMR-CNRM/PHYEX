@@ -43,6 +43,40 @@ for rep in turb micro conv; do
 done
 tar xf /cnrm/algo/khatib/drhook.c_for_ubuntu.tar
 sed -i 's/IF (LBUDGET_RH)/IF (LBUDGET_RH .AND. KRR==7)/' mpa/micro/externals/aro_rain_ice.F90
+Édition de apl_arome.F90 pour modifier:
+  IF (LMFSHAL .AND. (CMF_CLOUD=='DIRE'.OR.CMF_CLOUD=='BIGA')) THEN
+    IOFF_MFSHAL=IOFF_MFSHAL+3
+    ...
+  ENDIF
+en:
+  IF (LMFSHAL .AND. (CMF_CLOUD=='DIRE'.OR.CMF_CLOUD=='BIGA')) THEN
+    IOFF_MFSHAL=IOFF_MFSHAL+3
+    ...
+  ELSE
+    DO JLEV = 1, KLEV
+      ZRC_MF_(KIDIA:KFDIA,JLEV)=0._JPRB
+      ZRI_MF_(KIDIA:KFDIA,JLEV)=0._JPRB
+      ZCF_MF_(KIDIA:KFDIA,JLEV)=0._JPRB
+    ENDDO
+  ENDIF
+Édition de apl_arome.F90 pour modifier:
+  IF ( LKFBCONV.AND.LOSUBG_COND.AND..NOT.LOSIGMAS) THEN
+      DO JLEV = 1, KLEV
+        ZMFM_(KIDIA:KFDIA,JLEV)=PSIGM(KIDIA:KFDIA,JLEV)
+      ENDDO
+    ENDIF
+en:
+  IF (LOSUBG_COND.AND..NOT.LOSIGMAS) THEN
+    IF (LKFBCONV) THEN
+      DO JLEV = 1, KLEV
+        ZMFM_(KIDIA:KFDIA,JLEV)=PSIGM(KIDIA:KFDIA,JLEV)
+      ENDDO
+    ELSE
+      DO JLEV = 1, KLEV
+        ZMFM_(KIDIA:KFDIA,JLEV)=0._JPRB
+      ENDDO
+    ENDIF
+  ENDIF
 
 #Compilation
 cd /cnrm/phynh/data1/riette/DATA/202005_externalisation_physique/pack/48t1_phyex.${version}.MPIGFORTRAN920DBL.xfftw
@@ -75,6 +109,40 @@ for rep in turb micro conv; do
   rmdir mpa/$rep/internals mpa/$rep/module
 done
 sed -i 's/IF (LBUDGET_RH)/IF (LBUDGET_RH .AND. KRR==7)/' mpa/micro/externals/aro_rain_ice.F90
+Édition de apl_arome.F90 pour modifier:
+  IF (LMFSHAL .AND. (CMF_CLOUD=='DIRE'.OR.CMF_CLOUD=='BIGA')) THEN
+    IOFF_MFSHAL=IOFF_MFSHAL+3
+    ...
+  ENDIF
+en:
+  IF (LMFSHAL .AND. (CMF_CLOUD=='DIRE'.OR.CMF_CLOUD=='BIGA')) THEN
+    IOFF_MFSHAL=IOFF_MFSHAL+3
+    ...
+  ELSE
+    DO JLEV = 1, KLEV
+      ZRC_MF_(KIDIA:KFDIA,JLEV)=0._JPRB
+      ZRI_MF_(KIDIA:KFDIA,JLEV)=0._JPRB
+      ZCF_MF_(KIDIA:KFDIA,JLEV)=0._JPRB
+    ENDDO
+  ENDIF
+Édition de apl_arome.F90 pour modifier:
+  IF ( LKFBCONV.AND.LOSUBG_COND.AND..NOT.LOSIGMAS) THEN
+      DO JLEV = 1, KLEV
+        ZMFM_(KIDIA:KFDIA,JLEV)=PSIGM(KIDIA:KFDIA,JLEV)
+      ENDDO
+    ENDIF
+en:
+  IF (LOSUBG_COND.AND..NOT.LOSIGMAS) THEN
+    IF (LKFBCONV) THEN
+      DO JLEV = 1, KLEV
+        ZMFM_(KIDIA:KFDIA,JLEV)=PSIGM(KIDIA:KFDIA,JLEV)
+      ENDDO
+    ELSE
+      DO JLEV = 1, KLEV
+        ZMFM_(KIDIA:KFDIA,JLEV)=0._JPRB
+      ENDDO
+    ENDIF
+  ENDIF
 
 #Compilation
 cd /scratch/work/riette/202005_externalisation_physique/pack/48t1_phyex.${version}.MIMPIIFC1805.2y/
