@@ -1410,10 +1410,16 @@ IF (LMICRO.OR.LTURB.OR.LLMSE.OR.LKFBCONV) THEN
   ENDIF
   !initialise convective mas flux for subgrid condensation coming 
   !from previous time step convection scheme
-  IF ( LKFBCONV.AND.LOSUBG_COND.AND..NOT.LOSIGMAS) THEN
-    DO JLEV = 1, KLEV 
-      ZMFM_(KIDIA:KFDIA,JLEV)=PSIGM(KIDIA:KFDIA,JLEV) 
-    ENDDO
+  IF (LOSUBG_COND.AND..NOT.LOSIGMAS) THEN
+    IF (LKFBCONV) THEN
+      DO JLEV = 1, KLEV 
+        ZMFM_(KIDIA:KFDIA,JLEV)=PSIGM(KIDIA:KFDIA,JLEV) 
+      ENDDO
+    ELSE
+      DO JLEV = 1, KLEV
+        ZMFM_(KIDIA:KFDIA,JLEV)=0._JPRB
+      ENDDO
+    ENDIF
   ENDIF
 !!! initialisation des variables d etat MNH �t
 
@@ -1593,6 +1599,12 @@ IF (LMICRO) THEN
       ENDDO
     ENDIF
     PEZDIAG(KIDIA:KFDIA,1:KLEV,1:3)=0._JPRB
+  ELSE
+    DO JLEV = 1, KLEV 
+      ZRC_MF_(KIDIA:KFDIA,JLEV)=0._JPRB
+      ZRI_MF_(KIDIA:KFDIA,JLEV)=0._JPRB
+      ZCF_MF_(KIDIA:KFDIA,JLEV)=0._JPRB
+    ENDDO
   ENDIF
 
   IF (MOD(KSTEP+1,NPRINTFR)==0) THEN
