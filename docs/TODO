@@ -48,7 +48,6 @@ Pb identifiés à corriger plus tard:
          => à corriger
   - seules quelques options sont testées avec les cas test (par exemple, il faudrait tester RMC01 mais
     l'option n'est pas remontée en namelist)
-  - les options CMF_CLOUD='STAT' et LOSIGAMS=.FALSE. semblent cassées en 48 original
   - arome/ini_cmfshall devrait s'appeler ini_param_mfshall
   - th_r_from_thl_rt appelée partout, il faudrait limiter à OTEST
   - doute sur le codage de MODD_PRECISION
