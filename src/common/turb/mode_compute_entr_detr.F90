@@ -99,40 +99,40 @@ INTEGER,                INTENT(IN)   :: KK
 INTEGER,                INTENT(IN)   :: KKB          ! near ground physical index
 INTEGER,                INTENT(IN)   :: KKE          ! uppest atmosphere physical index
 INTEGER,                INTENT(IN)   :: KKL          ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-LOGICAL,DIMENSION(:),   INTENT(IN)   :: OTEST ! test to see if updraft is running
-LOGICAL,DIMENSION(:),   INTENT(IN)   :: OTESTLCL !test of condensation 
+LOGICAL,DIMENSION(D%NIT),   INTENT(IN)   :: OTEST ! test to see if updraft is running
+LOGICAL,DIMENSION(D%NIT),   INTENT(IN)   :: OTESTLCL !test of condensation 
 CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE ! frac_ice can be compute using
                                               ! Temperature (T) or prescribed
                                               ! (Y)
-REAL, DIMENSION(:), INTENT(IN)      :: PFRAC_ICE ! fraction of ice
+REAL, DIMENSION(D%NIT), INTENT(IN)  :: PFRAC_ICE ! fraction of ice
 !
 !    prognostic variables at t- deltat
 !
-REAL, DIMENSION(:),     INTENT(IN) ::  PRHODREF  !rhodref
-REAL, DIMENSION(:),     INTENT(IN) ::  PPRE_MINUS_HALF ! Pressure at flux level KK
-REAL, DIMENSION(:),     INTENT(IN) ::  PPRE_PLUS_HALF ! Pressure at flux level KK+KKL
-REAL, DIMENSION(:,:),   INTENT(IN) ::  PZZ       !  Height at the flux point
-REAL, DIMENSION(:,:),   INTENT(IN) ::  PDZZ       !  metrics coefficient
-REAL, DIMENSION(:,:),   INTENT(IN) ::  PTHVM      ! ThetaV environment 
+REAL, DIMENSION(D%NIT),     INTENT(IN) ::  PRHODREF  !rhodref
+REAL, DIMENSION(D%NIT),     INTENT(IN) ::  PPRE_MINUS_HALF ! Pressure at flux level KK
+REAL, DIMENSION(D%NIT),     INTENT(IN) ::  PPRE_PLUS_HALF ! Pressure at flux level KK+KKL
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PZZ       !  Height at the flux point
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PDZZ       !  metrics coefficient
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PTHVM      ! ThetaV environment 
 
 !
 !   thermodynamical variables which are transformed in conservative var.
 !
-REAL, DIMENSION(:,:), INTENT(IN)     ::  PTHLM     ! Thetal
-REAL, DIMENSION(:,:), INTENT(IN)     ::  PRTM      ! total mixing ratio 
-REAL, DIMENSION(:,:), INTENT(IN)     ::  PW_UP2    ! Vertical velocity^2
-REAL, DIMENSION(:),   INTENT(IN)     ::  PTH_UP,PTHL_UP,PRT_UP  ! updraft properties
-REAL, DIMENSION(:),   INTENT(IN)     ::  PLUP      ! LUP compute from the ground
-REAL, DIMENSION(:),   INTENT(IN)     ::  PRC_UP,PRI_UP   ! Updraft cloud content
-REAL, DIMENSION(:),   INTENT(IN)     ::  PTHV_UP ! Thetav of updraft
-REAL, DIMENSION(:),   INTENT(IN)     ::  PRSAT_UP ! Mixing ratio at saturation in updraft
-REAL, DIMENSION(:),   INTENT(INOUT)  ::  PRC_MIX, PRI_MIX      ! Mixture cloud content
-REAL, DIMENSION(:),   INTENT(OUT)    ::  PENTR     ! Mass flux entrainment of the updraft
-REAL, DIMENSION(:),   INTENT(OUT)    ::  PDETR     ! Mass flux detrainment of the updraft
-REAL, DIMENSION(:),   INTENT(OUT)    ::  PENTR_CLD ! Mass flux entrainment of the updraft in cloudy part
-REAL, DIMENSION(:),   INTENT(OUT)    ::  PDETR_CLD ! Mass flux detrainment of the updraft in cloudy part
-REAL, DIMENSION(:),   INTENT(OUT)    ::  PBUO_INTEG_DRY, PBUO_INTEG_CLD! Integral Buoyancy
-REAL, DIMENSION(:),   INTENT(OUT)    ::  PPART_DRY ! ratio of dry part at the transition level
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) ::  PTHLM     ! Thetal
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) ::  PRTM      ! total mixing ratio 
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) ::  PW_UP2    ! Vertical velocity^2
+REAL, DIMENSION(D%NIT),   INTENT(IN)     ::  PTH_UP,PTHL_UP,PRT_UP  ! updraft properties
+REAL, DIMENSION(D%NIT),   INTENT(IN)     ::  PLUP      ! LUP compute from the ground
+REAL, DIMENSION(D%NIT),   INTENT(IN)     ::  PRC_UP,PRI_UP   ! Updraft cloud content
+REAL, DIMENSION(D%NIT),   INTENT(IN)     ::  PTHV_UP ! Thetav of updraft
+REAL, DIMENSION(D%NIT),   INTENT(IN)     ::  PRSAT_UP ! Mixing ratio at saturation in updraft
+REAL, DIMENSION(D%NIT),   INTENT(INOUT)  ::  PRC_MIX, PRI_MIX      ! Mixture cloud content
+REAL, DIMENSION(D%NIT),   INTENT(OUT)    ::  PENTR     ! Mass flux entrainment of the updraft
+REAL, DIMENSION(D%NIT),   INTENT(OUT)    ::  PDETR     ! Mass flux detrainment of the updraft
+REAL, DIMENSION(D%NIT),   INTENT(OUT)    ::  PENTR_CLD ! Mass flux entrainment of the updraft in cloudy part
+REAL, DIMENSION(D%NIT),   INTENT(OUT)    ::  PDETR_CLD ! Mass flux detrainment of the updraft in cloudy part
+REAL, DIMENSION(D%NIT),   INTENT(OUT)    ::  PBUO_INTEG_DRY, PBUO_INTEG_CLD! Integral Buoyancy
+REAL, DIMENSION(D%NIT),   INTENT(OUT)    ::  PPART_DRY ! ratio of dry part at the transition level
 !
 !
 !                       1.2  Declaration of local variables
@@ -140,37 +140,37 @@ REAL, DIMENSION(:),   INTENT(OUT)    ::  PPART_DRY ! ratio of dry part at the tr
 !
 
 ! Variables for cloudy part
-REAL, DIMENSION(SIZE(PTHLM,1)) :: ZKIC, ZKIC_F2  ! fraction of env. mass in the muxtures
-REAL, DIMENSION(SIZE(PTHLM,1)) :: ZEPSI,ZDELTA   ! factor entrainment detrainment
-REAL                           :: ZEPSI_CLOUD    ! factor entrainment detrainment
-REAL                           :: ZCOEFFMF_CLOUD ! factor for compputing entr. detr.
-REAL, DIMENSION(SIZE(PTHLM,1)) :: ZMIXTHL,ZMIXRT ! Thetal and rt in the mixtures
-REAL, DIMENSION(SIZE(PTHLM,1)) :: ZTHMIX         ! Theta and Thetav  of mixtures
-REAL, DIMENSION(SIZE(PTHLM,1)) :: ZRVMIX,ZRCMIX,ZRIMIX ! mixing ratios in mixtures
-REAL, DIMENSION(SIZE(PTHLM,1)) :: ZTHVMIX, ZTHVMIX_F2 ! Theta and Thetav  of mixtures
-REAL, DIMENSION(SIZE(PTHLM,1)) :: ZTHV_UP_F2     ! thv_up at flux point kk+kkl
-REAL, DIMENSION(SIZE(PTHLM,1)) :: ZRSATW, ZRSATI ! working arrays (mixing ratio at saturation)
-REAL, DIMENSION(SIZE(PTHLM,1)) :: ZTHV           ! theta V of environment at the bottom of cloudy part  
-REAL                           :: ZKIC_INIT      !Initial value of ZKIC
-REAL                           :: ZCOTHVU              ! Variation of Thvup between bottom and top of cloudy part
+REAL, DIMENSION(D%NIT) :: ZKIC, ZKIC_F2  ! fraction of env. mass in the muxtures
+REAL, DIMENSION(D%NIT) :: ZEPSI,ZDELTA   ! factor entrainment detrainment
+REAL                   :: ZEPSI_CLOUD    ! factor entrainment detrainment
+REAL                   :: ZCOEFFMF_CLOUD ! factor for compputing entr. detr.
+REAL, DIMENSION(D%NIT) :: ZMIXTHL,ZMIXRT ! Thetal and rt in the mixtures
+REAL, DIMENSION(D%NIT) :: ZTHMIX         ! Theta and Thetav  of mixtures
+REAL, DIMENSION(D%NIT) :: ZRVMIX,ZRCMIX,ZRIMIX ! mixing ratios in mixtures
+REAL, DIMENSION(D%NIT) :: ZTHVMIX, ZTHVMIX_F2 ! Theta and Thetav  of mixtures
+REAL, DIMENSION(D%NIT) :: ZTHV_UP_F2     ! thv_up at flux point kk+kkl
+REAL, DIMENSION(D%NIT) :: ZRSATW, ZRSATI ! working arrays (mixing ratio at saturation)
+REAL, DIMENSION(D%NIT) :: ZTHV           ! theta V of environment at the bottom of cloudy part  
+REAL                   :: ZKIC_INIT      !Initial value of ZKIC
+REAL                   :: ZCOTHVU              ! Variation of Thvup between bottom and top of cloudy part
 
 ! Variables for dry part
-REAL                           :: ZFOESW, ZFOESI       ! saturating vapor pressure
-REAL                           :: ZDRSATODP            ! d.Rsat/dP
-REAL                           :: ZT                   ! Temperature
-REAL                           :: ZWK                  ! Work array
+REAL                   :: ZFOESW, ZFOESI       ! saturating vapor pressure
+REAL                   :: ZDRSATODP            ! d.Rsat/dP
+REAL                   :: ZT                   ! Temperature
+REAL                   :: ZWK                  ! Work array
 
 ! Variables for dry and cloudy parts
-REAL, DIMENSION(SIZE(PTHLM,1)) :: ZCOEFF_MINUS_HALF,&  ! Variation of Thv between mass points kk-kkl and kk
+REAL, DIMENSION(D%NIT) :: ZCOEFF_MINUS_HALF,&  ! Variation of Thv between mass points kk-kkl and kk
                                   ZCOEFF_PLUS_HALF     ! Variation of Thv between mass points kk and kk+kkl
-REAL, DIMENSION(SIZE(PTHLM,1)) :: ZPRE                 ! pressure at the bottom of the cloudy part
-REAL, DIMENSION(SIZE(PTHVM,1)) :: ZG_O_THVREF
-REAL, DIMENSION(SIZE(PTHLM,1)) :: ZFRAC_ICE            ! fraction of ice
-REAL                           :: ZRVORD               ! RV/RD
-REAL, DIMENSION(SIZE(PTHLM,1)) :: ZDZ_STOP,&           ! Exact Height of the LCL above flux level KK
-                                  ZTHV_MINUS_HALF,&    ! Thv at flux point(kk)  
-                                  ZTHV_PLUS_HALF       ! Thv at flux point(kk+kkl)
-REAL                           :: ZDZ                  ! Delta Z used in computations
+REAL, DIMENSION(D%NIT) :: ZPRE                 ! pressure at the bottom of the cloudy part
+REAL, DIMENSION(D%NIT) :: ZG_O_THVREF
+REAL, DIMENSION(D%NIT) :: ZFRAC_ICE            ! fraction of ice
+REAL                   :: ZRVORD               ! RV/RD
+REAL, DIMENSION(D%NIT) :: ZDZ_STOP,&           ! Exact Height of the LCL above flux level KK
+                          ZTHV_MINUS_HALF,&    ! Thv at flux point(kk)  
+                          ZTHV_PLUS_HALF       ! Thv at flux point(kk+kkl)
+REAL                   :: ZDZ                  ! Delta Z used in computations
 INTEGER :: JI, JLOOP
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !----------------------------------------------------------------------------------
