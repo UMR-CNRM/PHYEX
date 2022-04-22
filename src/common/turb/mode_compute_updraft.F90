@@ -192,6 +192,9 @@ REAL  :: ZTMAX,ZRMAX  ! control value
 
 REAL, DIMENSION(D%NIT) :: ZSURF
 REAL, DIMENSION(D%NIT,D%NKT) :: ZSHEAR,ZDUDZ,ZDVDZ ! vertical wind shear
+!
+REAL, DIMENSION(D%NIT,D%NKT) :: ZWK
+!
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 IF (LHOOK) CALL DR_HOOK('COMPUTE_UPDRAFT',0,ZHOOK_HANDLE)
@@ -249,15 +252,15 @@ END IF
 
 ! Initialisation of environment variables at t-dt
 ! variables at flux level
-ZTHLM_F(:,:) = MZM_MF(PTHLM(:,:), D%NKA, D%NKU, D%NKL)
-ZRTM_F (:,:) = MZM_MF(PRTM(:,:), D%NKA, D%NKU, D%NKL)
-ZUM_F  (:,:) = MZM_MF(PUM(:,:), D%NKA, D%NKU, D%NKL)
-ZVM_F  (:,:) = MZM_MF(PVM(:,:), D%NKA, D%NKU, D%NKL)
-ZTKEM_F(:,:) = MZM_MF(PTKEM(:,:), D%NKA, D%NKU, D%NKL)
+CALL MZM_MF(D, PTHLM(:,:), ZTHLM_F(:,:))
+CALL MZM_MF(D, PRTM(:,:), ZRTM_F (:,:))
+CALL MZM_MF(D, PUM(:,:), ZUM_F  (:,:))
+CALL MZM_MF(D, PVM(:,:), ZVM_F  (:,:))
+CALL MZM_MF(D, PTKEM(:,:), ZTKEM_F(:,:))
 
 DO JSV=1,KSV
   IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
-  ZSVM_F(:,:,JSV) = MZM_MF(PSVM(:,:,JSV), D%NKA, D%NKU, D%NKL)
+ CALL MZM_MF(D, PSVM(:,:,JSV), ZSVM_F(:,:,JSV))
 END DO
 !                     
 !          Initialisation of updraft characteristics 
@@ -276,10 +279,10 @@ PRT_UP(:,D%NKB) = ZRTM_F(:,D%NKB)+MAX(0.,MIN(ZRMAX,(PSFRV(:)/SQRT(ZTKEM_F(:,D%NK
 
 
 IF (OENTR_DETR) THEN
-  ZTHM_F (:,:) = MZM_MF(PTHM (:,:), D%NKA, D%NKU, D%NKL)
-  ZPRES_F(:,:) = MZM_MF(PPABSM(:,:), D%NKA, D%NKU, D%NKL)
-  ZRHO_F (:,:) = MZM_MF(PRHODREF(:,:), D%NKA, D%NKU, D%NKL)
-  ZRVM_F (:,:) = MZM_MF(PRVM(:,:), D%NKA, D%NKU, D%NKL)
+  CALL MZM_MF(D, PTHM (:,:), ZTHM_F (:,:))
+  CALL MZM_MF(D, PPABSM(:,:), ZPRES_F(:,:))
+  CALL MZM_MF(D, PRHODREF(:,:), ZRHO_F (:,:))
+  CALL MZM_MF(D, PRVM(:,:), ZRVM_F (:,:))
 
   ! thetav at mass and flux levels
   ZTHVM_F(:,:)=ZTHM_F(:,:)*((1.+ZRVORD*ZRVM_F(:,:))/(1.+ZRTM_F(:,:)))
@@ -314,8 +317,10 @@ IF (OENTR_DETR) THEN
   ZTKEM_F(:,D%NKB)=0.
   !
   IF(TURB%CTURBLEN=='RM17') THEN
-    ZDUDZ = MZF_MF(GZ_M_W_MF(PUM,PDZZ, D%NKA, D%NKU, D%NKL), D%NKA, D%NKU, D%NKL)
-    ZDVDZ = MZF_MF(GZ_M_W_MF(PVM,PDZZ, D%NKA, D%NKU, D%NKL), D%NKA, D%NKU, D%NKL)
+    CALL GZ_M_W_MF(D, PUM, PDZZ, ZWK)
+    CALL MZF_MF(D, ZWK, ZDUDZ)
+    CALL GZ_M_W_MF(D, PVM, PDZZ, ZWK)
+    CALL MZF_MF(D, ZWK, ZDVDZ)
     ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
   ELSE
     ZSHEAR = 0. !no shear in bl89 mixing length

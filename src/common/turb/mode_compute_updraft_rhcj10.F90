@@ -190,6 +190,9 @@ REAL  :: ZDEPTH_MAX1, ZDEPTH_MAX2 ! control auto-extinction process
 REAL  :: ZTMAX,ZRMAX, ZEPS  ! control value
 
 REAL, DIMENSION(D%NIT,D%NKT) :: ZSHEAR,ZDUDZ,ZDVDZ ! vertical wind shear
+!
+REAL, DIMENSION(D%NIT,D%NKT) :: ZWK
+!
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('COMPUTE_UPDRAFT_RHCJ10',0,ZHOOK_HANDLE)
 
@@ -244,11 +247,11 @@ PRSAT_UP(:,:)=PRVM(:,:) ! should be initialised correctly but is (normaly) not u
 ! Initialisation of environment variables at t-dt
 
 ! variables at flux level
-ZTHLM_F(:,:) = MZM_MF(PTHLM(:,:), D%NKA, D%NKU, D%NKL)
-ZRTM_F (:,:) = MZM_MF(PRTM(:,:), D%NKA, D%NKU, D%NKL)
-ZUM_F  (:,:) = MZM_MF(PUM(:,:), D%NKA, D%NKU, D%NKL)
-ZVM_F  (:,:) = MZM_MF(PVM(:,:), D%NKA, D%NKU, D%NKL)
-ZTKEM_F(:,:) = MZM_MF(PTKEM(:,:), D%NKA, D%NKU, D%NKL)
+CALL MZM_MF(D, PTHLM(:,:), ZTHLM_F(:,:))
+CALL MZM_MF(D, PRTM(:,:), ZRTM_F(:,:))
+CALL MZM_MF(D, PUM(:,:), ZUM_F(:,:))
+CALL MZM_MF(D, PVM(:,:), ZVM_F(:,:))
+CALL MZM_MF(D, PTKEM(:,:), ZTKEM_F(:,:))
 
 ! This updraft is not yet ready to use scalar variables
 !DO JSV=1,ISV
@@ -283,10 +286,10 @@ DO JI=1,D%NIT
   !ZTHS_UP(JI,KKB)=PTHL_UP(JI,KKB)*(1.+XLAMBDA_MF*ZQT_UP(JI))
 ENDDO
 
-ZTHM_F (:,:) = MZM_MF(PTHM (:,:), D%NKA, D%NKU, D%NKL)
-ZPRES_F(:,:) = MZM_MF(PPABSM(:,:), D%NKA, D%NKU, D%NKL)
-ZRHO_F (:,:) = MZM_MF(PRHODREF(:,:), D%NKA, D%NKU, D%NKL)
-ZRVM_F (:,:) = MZM_MF(PRVM(:,:), D%NKA, D%NKU, D%NKL)
+CALL MZM_MF(D, PTHM (:,:), ZTHM_F(:,:))
+CALL MZM_MF(D, PPABSM(:,:), ZPRES_F(:,:))
+CALL MZM_MF(D, PRHODREF(:,:), ZRHO_F(:,:))
+CALL MZM_MF(D, PRVM(:,:), ZRVM_F(:,:))
 
 ! thetav at mass and flux levels 
 DO JK=1,D%NKT
@@ -336,8 +339,10 @@ GLMIX=.TRUE.
 ZTKEM_F(:,D%NKB)=0.
 !
 IF(TURB%CTURBLEN=='RM17') THEN
-  ZDUDZ = MZF_MF(GZ_M_W_MF(PUM,PDZZ, D%NKA, D%NKU, D%NKL), D%NKA, D%NKU, D%NKL)
-  ZDVDZ = MZF_MF(GZ_M_W_MF(PVM,PDZZ, D%NKA, D%NKU, D%NKL), D%NKA, D%NKU, D%NKL)
+  CALL GZ_M_W_MF(D, PUM, PDZZ, ZWK)
+  CALL MZF_MF(D, ZWK, ZDUDZ)
+  CALL GZ_M_W_MF(D, PVM, PDZZ, ZWK)
+  CALL MZF_MF(D, ZWK, ZDVDZ)
   ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
 ELSE
   ZSHEAR = 0. !no shear in bl89 mixing length

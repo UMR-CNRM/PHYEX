@@ -241,11 +241,11 @@ PRSAT_UP(:,:)=PRVM(:,:) ! should be initialised correctly but is (normaly) not u
 ! Initialisation of environment variables at t-dt
 
 ! variables at flux level
-ZTHLM_F(:,:) = MZM_MF(PTHLM(:,:), D%NKA, D%NKU, D%NKL)
-ZRTM_F (:,:) = MZM_MF(PRTM(:,:), D%NKA, D%NKU, D%NKL)
-ZUM_F  (:,:) = MZM_MF(PUM(:,:), D%NKA, D%NKU, D%NKL)
-ZVM_F  (:,:) = MZM_MF(PVM(:,:), D%NKA, D%NKU, D%NKL)
-ZTKEM_F(:,:) = MZM_MF(PTKEM(:,:), D%NKA, D%NKU, D%NKL)
+CALL MZM_MF(D, PTHLM(:,:), ZTHLM_F(:,:))
+CALL MZM_MF(D, PRTM(:,:), ZRTM_F(:,:))
+CALL MZM_MF(D, PUM(:,:), ZUM_F(:,:))
+CALL MZM_MF(D, PVM(:,:), ZVM_F(:,:))
+CALL MZM_MF(D, PTKEM(:,:), ZTKEM_F(:,:))
 
 !DO JSV=1,ISV 
 ! IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
@@ -272,10 +272,10 @@ PRT_UP(:,D%NKB) = ZRTM_F(:,D%NKB)+MAX(0.,MIN(ZRMAX,(PSFRV(:)/SQRT(ZTKEM_F(:,D%NK
 ZQT_UP(:) = PRT_UP(:,D%NKB)/(1.+PRT_UP(:,D%NKB))
 ZTHS_UP(:,D%NKB)=PTHL_UP(:,D%NKB)*(1.+PARAMMF%XLAMBDA_MF*ZQT_UP(:))
 
-ZTHM_F (:,:) = MZM_MF(PTHM (:,:), D%NKA, D%NKU, D%NKL)
-ZPRES_F(:,:) = MZM_MF(PPABSM(:,:), D%NKA, D%NKU, D%NKL)
-ZRHO_F (:,:) = MZM_MF(PRHODREF(:,:), D%NKA, D%NKU, D%NKL)
-ZRVM_F (:,:) = MZM_MF(PRVM(:,:), D%NKA, D%NKU, D%NKL)
+CALL MZM_MF(D, PTHM (:,:), ZTHM_F(:,:))
+CALL MZM_MF(D, PPABSM(:,:), ZPRES_F(:,:))
+CALL MZM_MF(D, PRHODREF(:,:), ZRHO_F(:,:))
+CALL MZM_MF(D, PRVM(:,:), ZRVM_F(:,:))
 
 ! thetav at mass and flux levels 
 ZTHVM_F(:,:)=ZTHM_F(:,:)*((1.+ZRVORD*ZRVM_F(:,:))/(1.+ZRTM_F(:,:)))

@@ -8,51 +8,56 @@
 !
 INTERFACE
 !
-FUNCTION DZF_MF(PA, KKA, KKU, KKL)  RESULT(PDZF)
-REAL, DIMENSION(:,:), INTENT(IN)       :: PA     ! variable at flux side
-INTEGER,              INTENT(IN)       :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)       :: KKL    ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PDZF   ! result at mass
+SUBROUTINE DZF_MF(D, PA, PDZF)
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+IMPLICIT NONE
+TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass
                                                  ! localization
-END FUNCTION DZF_MF
+END SUBROUTINE DZF_MF
 !
-FUNCTION DZM_MF(PA, KKA, KKU, KKL)  RESULT(PDZM)
-REAL, DIMENSION(:,:), INTENT(IN)       :: PA     ! variable at mass localization
-INTEGER,              INTENT(IN)       :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)       :: KKL    ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PDZM   ! result at flux
+SUBROUTINE DZM_MF(D, PA, PDZM)
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+IMPLICIT NONE
+TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
                                                  ! side
-END FUNCTION DZM_MF
+END SUBROUTINE DZM_MF
 !
-FUNCTION MZF_MF(PA, KKA, KKU, KKL)  RESULT(PMZF)
-REAL, DIMENSION(:,:), INTENT(IN)       :: PA     ! variable at flux side
-INTEGER,              INTENT(IN)       :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)       :: KKL    ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMZF   ! result at mass
+SUBROUTINE MZF_MF(D, PA, PMZF)
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+IMPLICIT NONE
+TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PMZF   ! result at mass
                                                  ! localization
-END FUNCTION MZF_MF
+END SUBROUTINE MZF_MF
 !
-FUNCTION MZM_MF(PA, KKA, KKU, KKL)  RESULT(PMZM)
-REAL, DIMENSION(:,:), INTENT(IN)       :: PA     ! variable at mass localization
-INTEGER,              INTENT(IN)       :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)       :: KKL    ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMZM   ! result at flux localization
-END FUNCTION MZM_MF
+SUBROUTINE MZM_MF(D, PA, PMZM)
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+IMPLICIT NONE
+TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PMZM   ! result at flux localization
+END SUBROUTINE MZM_MF
 !
-FUNCTION GZ_M_W_MF(PY,PDZZ, KKA, KKU, KKL) RESULT(PGZ_M_W)
-REAL, DIMENSION(:,:), INTENT(IN)  :: PDZZ ! Metric coefficient d*zz
-REAL, DIMENSION(:,:), INTENT(IN)  :: PY   ! variable at mass localization
-INTEGER,              INTENT(IN)       :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)  :: KKL  ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(SIZE(PY,1),SIZE(PY,2)) :: PGZ_M_W  ! result at flux side
-END FUNCTION GZ_M_W_MF
+SUBROUTINE GZ_M_W_MF(D, PY, PDZZ, PGZ_M_W)
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+IMPLICIT NONE
+TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PDZZ ! Metric coefficient d*zz
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PY   ! variable at mass localization
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PGZ_M_W  ! result at flux side
+END SUBROUTINE GZ_M_W_MF
 !
 END INTERFACE
 !
 END MODULE MODI_SHUMAN_MF
 !
 !     ###############################
-      FUNCTION MZF_MF(PA, KKA, KKU, KKL)  RESULT(PMZF)
+      SUBROUTINE MZF_MF(D, PA, PMZF)
 !     ###############################
 !
 !!****  *MZF* -  SHUMAN_MF operator : mean operator in z direction for a
@@ -98,15 +103,15 @@ END MODULE MODI_SHUMAN_MF
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 IMPLICIT NONE
 !
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
-REAL, DIMENSION(:,:), INTENT(IN)       :: PA     ! variable at flux side
-INTEGER,              INTENT(IN)       :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)       :: KKL    ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMZF   ! result at mass
+TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PMZF   ! result at mass
                                                  ! localization
 !
 !*       0.2   Declarations of local variables
@@ -120,17 +125,17 @@ INTEGER :: JK             ! Loop index in z direction
 !*       1.    DEFINITION OF MZF
 !              ------------------
 !
-DO JK=2,SIZE(PA,2)-1
-  PMZF(:,JK) = 0.5*( PA(:,JK)+PA(:,JK+KKL) )
+DO JK=2,D%NKT-1
+  PMZF(:,JK) = 0.5*( PA(:,JK)+PA(:,JK+D%NKL) )
 END DO
-PMZF(:,KKA) = 0.5*( PA(:,KKA)+PA(:,KKA+KKL) )
-PMZF(:,KKU) = PA(:,KKU)
+PMZF(:,D%NKA) = 0.5*( PA(:,D%NKA)+PA(:,D%NKA+D%NKL) )
+PMZF(:,D%NKU) = PA(:,D%NKU)
 !
 !-------------------------------------------------------------------------------
 !
-END FUNCTION MZF_MF
+END SUBROUTINE MZF_MF
 !     ###############################
-      FUNCTION MZM_MF(PA, KKA, KKU, KKL)  RESULT(PMZM)
+      SUBROUTINE MZM_MF(D, PA, PMZM)
 !     ###############################
 !
 !!****  *MZM* -  SHUMAN_MF operator : mean operator in z direction for a
@@ -176,15 +181,15 @@ END FUNCTION MZF_MF
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 IMPLICIT NONE
 !
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
-REAL, DIMENSION(:,:), INTENT(IN)       :: PA     ! variable at mass localization
-INTEGER,              INTENT(IN)       :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)       :: KKL    ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PMZM   ! result at flux localization
+TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PMZM   ! result at flux localization
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
@@ -197,17 +202,17 @@ INTEGER :: JK             ! Loop index in z direction
 !*       1.    DEFINITION OF MZM
 !              ------------------
 !
-DO JK=2,SIZE(PA,2)-1
-  PMZM(:,JK) = 0.5*( PA(:,JK)+PA(:,JK-KKL) )
+DO JK=2,D%NKT-1
+  PMZM(:,JK) = 0.5*( PA(:,JK)+PA(:,JK-D%NKL) )
 END DO
-PMZM(:,KKA) = PA(:,KKA)
-PMZM(:,KKU) = 0.5*( PA(:,KKU)+PA(:,KKU-KKL) )
+PMZM(:,D%NKA) = PA(:,D%NKA)
+PMZM(:,D%NKU) = 0.5*( PA(:,D%NKU)+PA(:,D%NKU-D%NKL) )
 !
 !-------------------------------------------------------------------------------
 !
-END FUNCTION MZM_MF
+END SUBROUTINE MZM_MF
 !     ###############################
-      FUNCTION DZF_MF(PA, KKA, KKU, KKL)  RESULT(PDZF)
+      SUBROUTINE DZF_MF(D, PA, PDZF)
 !     ###############################
 !
 !!****  *DZF* -  SHUMAN_MF operator : finite difference operator in z direction
@@ -253,15 +258,15 @@ END FUNCTION MZM_MF
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 IMPLICIT NONE
 !
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
-REAL, DIMENSION(:,:), INTENT(IN)       :: PA     ! variable at flux side
-INTEGER,              INTENT(IN)       :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)       :: KKL    ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PDZF   ! result at mass
+TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass
                                                  ! localization
 !
 !*       0.2   Declarations of local variables
@@ -274,17 +279,17 @@ INTEGER :: JK           ! Loop index in z direction
 !*       1.    DEFINITION OF DZF
 !              ------------------
 !
-DO JK=2,SIZE(PA,2)-1
-  PDZF(:,JK) = PA(:,JK+KKL) - PA(:,JK)
+DO JK=2,D%NKT-1
+  PDZF(:,JK) = PA(:,JK+D%NKL) - PA(:,JK)
 END DO
-PDZF(:,KKA) = PA(:,KKA+KKL) - PA(:,KKA)
-PDZF(:,KKU) = 0.
+PDZF(:,D%NKA) = PA(:,D%NKA+D%NKL) - PA(:,D%NKA)
+PDZF(:,D%NKU) = 0.
 !
 !-------------------------------------------------------------------------------
 !
-END FUNCTION DZF_MF
+END SUBROUTINE DZF_MF
 !     ###############################
-      FUNCTION DZM_MF(PA, KKA, KKU, KKL)  RESULT(PDZM)
+      SUBROUTINE DZM_MF(D, PA, PDZM)
 !     ###############################
 !
 !!****  *DZM* -  SHUMAN_MF operator : finite difference operator in z direction
@@ -330,15 +335,15 @@ END FUNCTION DZF_MF
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 IMPLICIT NONE
 !
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
-REAL, DIMENSION(:,:), INTENT(IN)       :: PA     ! variable at mass localization
-INTEGER,              INTENT(IN)       :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)       :: KKL    ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2)) :: PDZM   ! result at flux
+TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
                                                  ! side
 !
 !*       0.2   Declarations of local variables
@@ -351,18 +356,18 @@ INTEGER :: JK            ! Loop index in z direction
 !*       1.    DEFINITION OF DZM
 !              ------------------
 !
-DO JK=2,SIZE(PA,2)-1
-  PDZM(:,JK) = PA(:,JK) - PA(:,JK-KKL)
+DO JK=2,D%NKT-1
+  PDZM(:,JK) = PA(:,JK) - PA(:,JK-D%NKL)
 END DO
-PDZM(:,KKA) = 0.
-PDZM(:,KKU) = PA(:,KKU) - PA(:,KKU-KKL)
+PDZM(:,D%NKA) = 0.
+PDZM(:,D%NKU) = PA(:,D%NKU) - PA(:,D%NKU-D%NKL)
 !
 !-------------------------------------------------------------------------------
 !
-END FUNCTION DZM_MF
+END SUBROUTINE DZM_MF
 
 !     ###############################
-      FUNCTION GZ_M_W_MF(PY,PDZZ, KKA, KKU, KKL) RESULT(PGZ_M_W)
+      SUBROUTINE GZ_M_W_MF(D, PY, PDZZ, PGZ_M_W)
 !     ###############################
 !
 !!****  *GZ_M_W * - Compute the gradient along z direction for a
@@ -408,16 +413,16 @@ END FUNCTION DZM_MF
 !
 !-------------------------------------------------------------------------------
 !
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 IMPLICIT NONE
 !
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
-REAL, DIMENSION(:,:), INTENT(IN)  :: PDZZ ! Metric coefficient d*zz
-REAL, DIMENSION(:,:), INTENT(IN)  :: PY   ! variable at mass localization
-INTEGER,              INTENT(IN)  :: KKA, KKU ! near ground and uppest atmosphere array indexes
-INTEGER,              INTENT(IN)  :: KKL  ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(SIZE(PY,1),SIZE(PY,2)) :: PGZ_M_W  ! result at flux side
+TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PDZZ ! Metric coefficient d*zz
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PY   ! variable at mass localization
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PGZ_M_W  ! result at flux side
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
@@ -428,12 +433,12 @@ INTEGER  JK
 !*       1.    COMPUTE THE GRADIENT ALONG Z
 !              -----------------------------
 !
-DO JK=2,SIZE(PY,2)-1
-  PGZ_M_W(:,JK) = (PY(:,JK) - PY(:,JK-KKL)) / PDZZ(:,JK)
+DO JK=2,D%NKT-1
+  PGZ_M_W(:,JK) = (PY(:,JK) - PY(:,JK-D%NKL)) / PDZZ(:,JK)
 END DO
-PGZ_M_W(:,KKA) = 0.
-PGZ_M_W(:,KKU) = (PY(:,KKU) - PY(:,KKU-KKL)) / PDZZ(:,KKU)
+PGZ_M_W(:,D%NKA) = 0.
+PGZ_M_W(:,D%NKU) = (PY(:,D%NKU) - PY(:,D%NKU-D%NKL)) / PDZZ(:,D%NKU)
 !
 !-------------------------------------------------------------------------------
 !
-END FUNCTION GZ_M_W_MF
+END SUBROUTINE GZ_M_W_MF

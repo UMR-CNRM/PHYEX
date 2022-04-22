@@ -87,13 +87,13 @@ REAL    :: ZTEST,ZTEST0,ZTESTM  !test for vectorization
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('COMPUTE_BL89_ML',0,ZHOOK_HANDLE)
 !
-ZDELTVPT(:,:)=DZM_MF(PVPT(:,:), D%NKA, D%NKU, D%NKL)
+CALL DZM_MF(D, PVPT(:,:), ZDELTVPT(:,:))
 ZDELTVPT(:,D%NKA)=0.
 WHERE (ABS(ZDELTVPT(:,:))<CSTURB%XLINF)
   ZDELTVPT(:,:)=CSTURB%XLINF
 END WHERE
 !
-ZHLVPT(:,:)=MZM_MF(PVPT(:,:), D%NKA, D%NKU, D%NKL)
+CALL MZM_MF(D, PVPT(:,:), ZHLVPT(:,:))
 !
 !We consider that gradient between mass levels KKB and KKB+KKL is the same as
 !the gradient between flux level KKB and mass level KKB

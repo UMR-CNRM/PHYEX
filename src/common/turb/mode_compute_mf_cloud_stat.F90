@@ -89,6 +89,7 @@ REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)  :: PSIGMF                  ! SQRT(v
 REAL, DIMENSION(D%NIT,D%NKT) :: ZFLXZ
 REAL, DIMENSION(D%NIT,D%NKT) :: ZT
 REAL, DIMENSION(D%NIT,D%NKT) :: ZAMOIST, ZATHETA
+REAL, DIMENSION(D%NIT,D%NKT) :: ZWK
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !*                    0.2 initialisation
@@ -112,14 +113,16 @@ IF (KRRL > 0)  THEN
 !
 
 !
-    ZFLXZ(:,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(PTHLM(:,:), D%NKA, D%NKU, D%NKL)) * &
-                      GZ_M_W_MF(PTHLM(:,:),PDZZ(:,:), D%NKA, D%NKU, D%NKL)
+    CALL MZM_MF(D, PTHLM(:,:), ZFLXZ(:,:))
+    CALL GZ_M_W_MF(D, PTHLM(:,:), PDZZ(:,:), ZWK(:,:))
+    ZFLXZ(:,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(:,:)*(PTHL_UP(:,:)-ZFLXZ(:,:)) * ZWK(:,:)
 !
 !   Avoid negative values
     ZFLXZ(:,:) = MAX(0.,ZFLXZ(:,:))
 
 
-    PSIGMF(:,:) = MZF_MF(ZFLXZ(:,:), D%NKA, D%NKU, D%NKL) * ZATHETA(:,:)**2
+    CALL MZF_MF(D, ZFLXZ(:,:), PSIGMF(:,:))
+    PSIGMF(:,:) = PSIGMF(:,:) * ZATHETA(:,:)**2
 
 !
 !
@@ -128,14 +131,16 @@ IF (KRRL > 0)  THEN
 !
 !
 !
-    ZFLXZ(:,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(PRTM(:,:), D%NKA, D%NKU, D%NKL)) * &
-                      GZ_M_W_MF(PRTM(:,:),PDZZ(:,:), D%NKA, D%NKU, D%NKL)
+    CALL MZM_MF(D, PRTM(:,:), ZFLXZ(:,:))
+    CALL GZ_M_W_MF(D, PRTM(:,:), PDZZ(:,:), ZWK(:,:))
+    ZFLXZ(:,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(:,:)*(PRT_UP(:,:)-ZFLXZ(:,:)) * ZWK(:,:)
 !
 !   Avoid negative values
     ZFLXZ(:,:) = MAX(0.,ZFLXZ(:,:))
 !
 
-    PSIGMF(:,:) = PSIGMF(:,:) + ZAMOIST(:,:) **2 * MZF_MF(ZFLXZ(:,:), D%NKA, D%NKU, D%NKL)
+    CALL MZF_MF(D, ZFLXZ(:,:), ZWK(:,:))
+    PSIGMF(:,:) = PSIGMF(:,:) + ZAMOIST(:,:) **2 * ZWK(:,:)
 !
 !        1.3  Vertical part of Sigma_s
 !

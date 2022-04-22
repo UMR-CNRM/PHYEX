@@ -62,9 +62,6 @@ USE MODD_CST,             ONLY: CST_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
 USE MODI_SHUMAN_MF, ONLY: MZF_MF, GZ_M_W_MF
-!USE MODI_GAMMA_INC
-!
-!USE MODE_THERMO
 !
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
@@ -112,15 +109,15 @@ IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_BIGAUS',0,ZHOOK_HANDLE)
 !
 !
 !Vertical gradient of RT, result on mass points
-ZW1(:,:)=GZ_M_W_MF(PRTM(:,:), PDZZ(:,:), D%NKA, D%NKU, D%NKL)
-ZGRAD_Z_RT(:,:)=MZF_MF(ZW1(:,:), D%NKA, D%NKU, D%NKL)
+CALL GZ_M_W_MF(D, PRTM(:,:), PDZZ(:,:), ZW1(:,:))
+CALL MZF_MF(D, ZW1(:,:), ZGRAD_Z_RT(:,:))
 
 !Interpolation on mass points
-ZTHV_UP_M(:,:) = MZF_MF(PTHV_UP(:,:), D%NKA, D%NKU, D%NKL)
-ZRSAT_UP_M(:,:)= MZF_MF(PRSAT_UP(:,:), D%NKA, D%NKU, D%NKL)
-ZRT_UP_M(:,:)  = MZF_MF(PRT_UP(:,:), D%NKA, D%NKU, D%NKL)
-ZEMF_M(:,:)    = MZF_MF(PEMF(:,:), D%NKA, D%NKU, D%NKL)
-ZFRAC_ICE_UP_M(:,:) = MZF_MF(PFRAC_ICE_UP(:,:), D%NKA, D%NKU, D%NKL)
+CALL MZF_MF(D, PTHV_UP(:,:), ZTHV_UP_M(:,:))
+CALL MZF_MF(D, PRSAT_UP(:,:), ZRSAT_UP_M(:,:))
+CALL MZF_MF(D, PRT_UP(:,:), ZRT_UP_M(:,:))
+CALL MZF_MF(D, PEMF(:,:), ZEMF_M(:,:))
+CALL MZF_MF(D, PFRAC_ICE_UP(:,:), ZFRAC_ICE_UP_M(:,:))
 
 !computation of omega star up
 ZOMEGA_UP_M(:)=0.

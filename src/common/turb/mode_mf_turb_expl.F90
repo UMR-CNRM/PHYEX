@@ -128,22 +128,27 @@ PVDT   = 0.
 !          -----------------------------------------------
 !   ( Resulting fluxes are in flux level (w-point) as PEMF and PTHL_UP )
 
-ZRTM_F (:,:) = MZM_MF(PRTM (:,:), D%NKA, D%NKU, D%NKL)
-ZTHLM_F(:,:) = MZM_MF(PTHLM(:,:), D%NKA, D%NKU, D%NKL)
+CALL MZM_MF(D, PRTM (:,:), ZRTM_F(:,:))
+CALL MZM_MF(D, PTHLM(:,:), ZTHLM_F(:,:))
 ZQTM   (:,:) = ZRTM_F (:,:)/(1.+ZRTM_F (:,:))
 ZQT_UP (:,:) = PRT_UP (:,:)/(1.+PRT_UP (:,:))
 ZTHS_UP(:,:) = PTHL_UP(:,:)*(1.+PARAMMF%XLAMBDA_MF*ZQT_UP(:,:))
 ZTHSM  (:,:) = ZTHLM_F(:,:)*(1.+PARAMMF%XLAMBDA_MF*ZQTM(:,:))
 
-PFLXZTHLMF(:,:)  = PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(PTHLM(:,:), D%NKA, D%NKU, D%NKL))  ! ThetaL
-PFLXZRMF(:,:)    = PEMF(:,:)*(PRT_UP (:,:)-MZM_MF(PRTM (:,:), D%NKA, D%NKU, D%NKL))  ! Rt
-PFLXZTHVMF(:,:)  = PEMF(:,:)*(PTHV_UP(:,:)-MZM_MF(PTHVM(:,:), D%NKA, D%NKU, D%NKL))  ! ThetaV
+CALL MZM_MF(D, PTHLM(:,:), PFLXZTHLMF(:,:))
+PFLXZTHLMF(:,:)  = PEMF(:,:)*(PTHL_UP(:,:)-PFLXZTHLMF(:,:))  ! ThetaL
+CALL MZM_MF(D, PRTM (:,:), PFLXZRMF(:,:))
+PFLXZRMF(:,:)    = PEMF(:,:)*(PRT_UP (:,:)-PFLXZRMF(:,:))  ! Rt
+CALL MZM_MF(D, PTHVM(:,:), PFLXZTHVMF(:,:))
+PFLXZTHVMF(:,:)  = PEMF(:,:)*(PTHV_UP(:,:)-PFLXZTHVMF(:,:))  ! ThetaV
 
 ZFLXZTHSMF(:,:)  = PEMF(:,:)*(ZTHS_UP(:,:)-ZTHSM(:,:))    ! Theta S flux
 
 IF (OMIXUV) THEN
-  PFLXZUMF(:,:) =  PEMF(:,:)*(PU_UP(:,:)-MZM_MF(PUM(:,:), D%NKA, D%NKU, D%NKL))  ! U
-  PFLXZVMF(:,:) =  PEMF(:,:)*(PV_UP(:,:)-MZM_MF(PVM(:,:), D%NKA, D%NKU, D%NKL))  ! V
+  CALL MZM_MF(D, PUM(:,:), PFLXZUMF(:,:))
+  PFLXZUMF(:,:) =  PEMF(:,:)*(PU_UP(:,:)-PFLXZUMF(:,:))  ! U
+  CALL MZM_MF(D, PVM(:,:), PFLXZVMF(:,:))
+  PFLXZVMF(:,:) =  PEMF(:,:)*(PV_UP(:,:)-PFLXZVMF(:,:))  ! V
 ELSE
   PFLXZUMF(:,:) = 0.
   PFLXZVMF(:,:) = 0.
