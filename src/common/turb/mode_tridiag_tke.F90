@@ -142,6 +142,7 @@ INTEGER             :: JI,JJ,JK     ! loop counter
 INTEGER             :: IKB,IKE      ! inner vertical limits
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
+INTEGER             :: IIE,IIB,IJE,IJB
 !
 ! ---------------------------------------------------------------------------
 !                                              
@@ -156,27 +157,31 @@ IKTB=D%NKTB
 IKTE=D%NKTE
 IKB=D%NKB
 IKE=D%NKE
+IIE=D%NIEC
+IIB=D%NIBC
+IJE=D%NJEC
+IJB=D%NJBC
 !
-!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-ZY(:,:,IKB) = PVARM(:,:,IKB)  + PTSTEP*PSOURCE(:,:,IKB) -   &
-  PEXPL / PRHODJ(:,:,IKB) * PA(:,:,IKB+D%NKL) * (PVARM(:,:,IKB+D%NKL) - PVARM(:,:,IKB))
-!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+ZY(IIB:IIE,IJB:IJE,IKB) = PVARM(IIB:IIE,IJB:IJE,IKB)  + PTSTEP*PSOURCE(IIB:IIE,IJB:IJE,IKB) -   &
+  PEXPL / PRHODJ(IIB:IIE,IJB:IJE,IKB) * PA(IIB:IIE,IJB:IJE,IKB+D%NKL) * (PVARM(IIB:IIE,IJB:IJE,IKB+D%NKL) - PVARM(IIB:IIE,IJB:IJE,IKB))
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 !
 DO JK=IKTB+1,IKTE-1
-  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-  ZY(:,:,JK)= PVARM(:,:,JK)  + PTSTEP*PSOURCE(:,:,JK) -               &
-      PEXPL / PRHODJ(:,:,JK) *                                           &
-                             ( PVARM(:,:,JK-D%NKL)*PA(:,:,JK)                &
-                              -PVARM(:,:,JK)*(PA(:,:,JK)+PA(:,:,JK+D%NKL))   &
-                              +PVARM(:,:,JK+D%NKL)*PA(:,:,JK+D%NKL)              &
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  ZY(IIB:IIE,IJB:IJE,JK)= PVARM(IIB:IIE,IJB:IJE,JK)  + PTSTEP*PSOURCE(IIB:IIE,IJB:IJE,JK) -               &
+      PEXPL / PRHODJ(IIB:IIE,IJB:IJE,JK) *                                           &
+                             ( PVARM(IIB:IIE,IJB:IJE,JK-D%NKL)*PA(IIB:IIE,IJB:IJE,JK)                &
+                              -PVARM(IIB:IIE,IJB:IJE,JK)*(PA(IIB:IIE,IJB:IJE,JK)+PA(IIB:IIE,IJB:IJE,JK+D%NKL))   &
+                              +PVARM(IIB:IIE,IJB:IJE,JK+D%NKL)*PA(IIB:IIE,IJB:IJE,JK+D%NKL)              &
                              ) 
-  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 END DO
 ! 
-!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-ZY(:,:,IKE)= PVARM(:,:,IKE) + PTSTEP*PSOURCE(:,:,IKE) +               &
-  PEXPL / PRHODJ(:,:,IKE) * PA(:,:,IKE) * (PVARM(:,:,IKE)-PVARM(:,:,IKE-D%NKL))
-!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+ZY(IIB:IIE,IJB:IJE,IKE)= PVARM(IIB:IIE,IJB:IJE,IKE) + PTSTEP*PSOURCE(IIB:IIE,IJB:IJE,IKE) +               &
+  PEXPL / PRHODJ(IIB:IIE,IJB:IJE,IKE) * PA(IIB:IIE,IJB:IJE,IKE) * (PVARM(IIB:IIE,IJB:IJE,IKE)-PVARM(IIB:IIE,IJB:IJE,IKE-D%NKL))
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 !
 !
 !*       2.  INVERSION OF THE TRIDIAGONAL SYSTEM
@@ -187,55 +192,55 @@ IF ( PIMPL > 1.E-10 ) THEN
   !
   !  going up
   !
-  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-  ZBET(:,:) = 1. + PIMPL * (PDIAG(:,:,IKB)-PA(:,:,IKB+D%NKL) / PRHODJ(:,:,IKB))
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  ZBET(IIB:IIE,IJB:IJE) = 1. + PIMPL * (PDIAG(IIB:IIE,IJB:IJE,IKB)-PA(IIB:IIE,IJB:IJE,IKB+D%NKL) / PRHODJ(IIB:IIE,IJB:IJE,IKB))
                                                     ! bet = b(ikb)
-  PVARP(:,:,IKB) = ZY(:,:,IKB) / ZBET(:,:)                
-  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)               
+  PVARP(IIB:IIE,IJB:IJE,IKB) = ZY(IIB:IIE,IJB:IJE,IKB) / ZBET(IIB:IIE,IJB:IJE)                
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)               
   !
   DO JK = IKB+D%NKL,IKE-D%NKL,D%NKL
-    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-    ZGAM(:,:,JK) = PIMPL * PA(:,:,JK) / PRHODJ(:,:,JK-D%NKL) / ZBET(:,:)  
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+    ZGAM(IIB:IIE,IJB:IJE,JK) = PIMPL * PA(IIB:IIE,IJB:IJE,JK) / PRHODJ(IIB:IIE,IJB:IJE,JK-D%NKL) / ZBET(IIB:IIE,IJB:IJE)  
                                                     ! gam(k) = c(k-1) / bet
-    ZBET(:,:)    = 1. + PIMPL * ( PDIAG(:,:,JK) -                     &
-                                 (  PA(:,:,JK) * (1. + ZGAM(:,:,JK))  &
-                                  + PA(:,:,JK+D%NKL)                      &
-                                 ) / PRHODJ(:,:,JK)                   &
+    ZBET(IIB:IIE,IJB:IJE)    = 1. + PIMPL * ( PDIAG(IIB:IIE,IJB:IJE,JK) -                     &
+                                 (  PA(IIB:IIE,IJB:IJE,JK) * (1. + ZGAM(IIB:IIE,IJB:IJE,JK))  &
+                                  + PA(IIB:IIE,IJB:IJE,JK+D%NKL)                      &
+                                 ) / PRHODJ(IIB:IIE,IJB:IJE,JK)                   &
                                 )                   ! bet = b(k) - a(k)* gam(k)  
-    PVARP(:,:,JK)= ( ZY(:,:,JK) - PIMPL * PA(:,:,JK) / PRHODJ(:,:,JK) &
-                    * PVARP(:,:,JK-D%NKL)                                 &
-                   ) / ZBET(:,:)
+    PVARP(IIB:IIE,IJB:IJE,JK)= ( ZY(IIB:IIE,IJB:IJE,JK) - PIMPL * PA(IIB:IIE,IJB:IJE,JK) / PRHODJ(IIB:IIE,IJB:IJE,JK) &
+                    * PVARP(IIB:IIE,IJB:IJE,JK-D%NKL)                                 &
+                   ) / ZBET(IIB:IIE,IJB:IJE)
                                         ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
-    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   END DO
-  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   ! special treatment for the last level
-  ZGAM(:,:,IKE) = PIMPL * PA(:,:,IKE) / PRHODJ(:,:,IKE-D%NKL) / ZBET(:,:) 
+  ZGAM(IIB:IIE,IJB:IJE,IKE) = PIMPL * PA(IIB:IIE,IJB:IJE,IKE) / PRHODJ(IIB:IIE,IJB:IJE,IKE-D%NKL) / ZBET(IIB:IIE,IJB:IJE) 
                                                     ! gam(k) = c(k-1) / bet
-  ZBET(:,:)    = 1. + PIMPL * ( PDIAG(:,:,IKE) -                   &
-         (  PA(:,:,IKE) * (1. + ZGAM(:,:,IKE)) ) / PRHODJ(:,:,IKE) &
+  ZBET(IIB:IIE,IJB:IJE)    = 1. + PIMPL * ( PDIAG(IIB:IIE,IJB:IJE,IKE) -                   &
+         (  PA(IIB:IIE,IJB:IJE,IKE) * (1. + ZGAM(IIB:IIE,IJB:IJE,IKE)) ) / PRHODJ(IIB:IIE,IJB:IJE,IKE) &
                               )  
                                                     ! bet = b(k) - a(k)* gam(k)  
-  PVARP(:,:,IKE)= ( ZY(:,:,IKE) - PIMPL * PA(:,:,IKE) / PRHODJ(:,:,IKE) &
-                                * PVARP(:,:,IKE-D%NKL)                      &
-                 ) / ZBET(:,:)
+  PVARP(IIB:IIE,IJB:IJE,IKE)= ( ZY(IIB:IIE,IJB:IJE,IKE) - PIMPL * PA(IIB:IIE,IJB:IJE,IKE) / PRHODJ(IIB:IIE,IJB:IJE,IKE) &
+                                * PVARP(IIB:IIE,IJB:IJE,IKE-D%NKL)                      &
+                 ) / ZBET(IIB:IIE,IJB:IJE)
                                        ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
   !
   !  going down
   !
-  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   DO JK = IKE-D%NKL,IKB,-1*D%NKL
-  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-    PVARP(:,:,JK) = PVARP(:,:,JK) - ZGAM(:,:,JK+D%NKL) * PVARP(:,:,JK+D%NKL) 
-  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+    PVARP(IIB:IIE,IJB:IJE,JK) = PVARP(IIB:IIE,IJB:IJE,JK) - ZGAM(IIB:IIE,IJB:IJE,JK+D%NKL) * PVARP(IIB:IIE,IJB:IJE,JK+D%NKL) 
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   END DO
 !
 ELSE
 ! 
   DO JK=IKTB,IKTE
-    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-    PVARP(:,:,JK) = ZY(:,:,JK)
-    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+    PVARP(IIB:IIE,IJB:IJE,JK) = ZY(IIB:IIE,IJB:IJE,JK)
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   END DO
 !
 END IF 
@@ -244,10 +249,10 @@ END IF
 !*       3.  FILL THE UPPER AND LOWER EXTERNAL VALUES
 !            ----------------------------------------
 !
-!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-PVARP(:,:,D%NKA)=PVARP(:,:,IKB)
-PVARP(:,:,D%NKU)=PVARP(:,:,IKE)
-!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+PVARP(IIB:IIE,IJB:IJE,D%NKA)=PVARP(IIB:IIE,IJB:IJE,IKB)
+PVARP(IIB:IIE,IJB:IJE,D%NKU)=PVARP(IIB:IIE,IJB:IJE,IKE)
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 !
 !-------------------------------------------------------------------------------
 !

@@ -66,6 +66,11 @@ TYPE DIMPHYEX_t
   !* physical levels only from top of atm to ground: DO JK=NKE, NKB, -KKL
   !* all (including non physical) following the array ordering: DO JK=1, NKT
   !* physical levels only following the array ordering: DO JK=NKTB, NKTE
+  INTEGER :: NIBC  ! Computational indices used in DO LOOP
+  INTEGER :: NJBC  ! = NIB/NJC/NIE/NJE in all schemes
+  INTEGER :: NIEC  ! except in turbulence where external HALO points must be
+  INTEGER :: NJEC  ! included so NIBC=NJBC=1 and NIEC/NJEC=NIT/NJT
+!
 END TYPE DIMPHYEX_t
 !
 END MODULE MODD_DIMPHYEX

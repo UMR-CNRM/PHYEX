@@ -459,7 +459,7 @@ REAL, DIMENSION(D%NIT,D%NJT) ::  ZTAU11M,ZTAU12M,  &
 REAL                :: ZEXPL        ! 1-PIMPL deg of expl.
 REAL                :: ZRVORD       ! RV/RD
 !
-INTEGER             :: IKB,IKE      ! index value for the
+INTEGER             :: IIE,IIB,IJE,IJB,IKB,IKE      ! index value for the
 ! Beginning and the End of the physical domain for the mass points
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
@@ -494,6 +494,11 @@ IKTB=D%NKTB
 IKTE=D%NKTE
 IKB=D%NKB
 IKE=D%NKE
+IIE=D%NIEC
+IIB=D%NIBC
+IJE=D%NJEC
+IJB=D%NJBC
+!print*,"MINMAX PRTKES = ",MINVAL(PRTKES),MAXVAL(PRTKES)
 !
 ZEXPL = 1.- PIMPL
 ZRVORD= CST%XRV / CST%XRD
@@ -1074,13 +1079,13 @@ END IF
 !      cloud computation is not statistical 
 ZWORK1 = MZF(PFLXZTHVMF,D%NKA, D%NKU, D%NKL)
 !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-PTP(:,:,:) = PTP(:,:,:) + CST%XG / PTHVREF(:,:,:) * ZWORK1(:,:,:)
+PTP(IIB:IIE,IJB:IJE,IKB:IKE) = PTP(IIB:IIE,IJB:IJE,IKB:IKE) + CST%XG / PTHVREF(IIB:IIE,IJB:IJE,IKB:IKE) * ZWORK1(IIB:IIE,IJB:IJE,IKB:IKE)
 !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 
 IF(PRESENT(PTPMF))  THEN
   ZWORK1 = MZF(PFLXZTHVMF, D%NKA, D%NKU, D%NKL)
   !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-  PTPMF(:,:,:)=CST%XG / PTHVREF(:,:,:) * ZWORK1(:,:,:)
+  PTPMF(IIB:IIE,IJB:IJE,IKB:IKE)=CST%XG / PTHVREF(IIB:IIE,IJB:IJE,IKB:IKE) * ZWORK1(IIB:IIE,IJB:IJE,IKB:IKE)
   !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
 END IF
 !  6.2 TKE evolution equation
@@ -1283,7 +1288,7 @@ IF (OLES_CALL) THEN
   XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !
-IF(PRESENT(PLEM)) PLEM(:,:,:) = ZLM(:,:,:)
+IF(PRESENT(PLEM)) PLEM(IIB:IIE,IJB:IJE,IKB:IKE) = ZLM(IIB:IIE,IJB:IJE,IKB:IKE)
 !----------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('TURB',1,ZHOOK_HANDLE)
