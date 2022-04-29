@@ -225,6 +225,7 @@ USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
 USE MODI_GRADIENT_M
+USE SHUMAN_PHY , ONLY : DZM_PHY, MZM_PHY, MZF_PHY
 USE MODI_SHUMAN , ONLY : DZM, MZM, MZF
 USE MODE_TRIDIAG, ONLY: TRIDIAG
 USE MODE_EMOIST, ONLY: EMOIST
@@ -292,10 +293,10 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  ::  &
        ZFLXZ,  &   ! vertical flux of the treated variable
        ZSOURCE,  & ! source of evolution for the treated variable
        ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
-       ZWORK1,ZWORK2! working var. for shuman operators (array syntax)
-INTEGER             :: IKB,IKE      ! I index values for the Beginning and End
-                                    ! mass points of the domain in the 3 direct.
+       ZWORK1,ZWORK2,&
+       ZWORK3,ZWORK4! working var. for shuman operators (array syntax)
 INTEGER             :: IKT          ! array size in k direction
+INTEGER             :: IIE,IIB,IJE,IJB,IKB,IKE      ! index value for the mass points of the domain 
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
 INTEGER             :: JSV          ! loop counters
 INTEGER             :: JI,JJ,JK           ! loop
@@ -318,14 +319,21 @@ IKT=D%NKT
 IKTB=D%NKTB          
 IKTE=D%NKTE
 IKB=D%NKB
-IKE=D%NKE             
+IKE=D%NKE
+IIE=D%NIE
+IIB=D%NIB
+IJE=D%NJE
+IJB=D%NJB            
 !
 IF (OHARAT) THEN
-  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-  ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50.*MFMOIST(:,:,:)
-  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  ZKEFF(IIB:IIE,IJB:IJE,IKB:IKE) =  PLM(IIB:IIE,IJB:IJE,IKB:IKE) * SQRT(PTKEM(IIB:IIE,IJB:IJE,IKB:IKE)) + 50.*MFMOIST(IIB:IIE,IJB:IJE,IKB:IKE)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 ELSE
-  ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), D%NKA, D%NKU, D%NKL)
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT) = PLM(IIB:IIE,IJB:IJE,1:D%NKT)*SQRT(PTKEM(IIB:IIE,IJB:IJE,1:D%NKT))
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  CALL MZM_PHY(D,ZWORK1,ZKEFF)
 ENDIF
 !
 IF(OBLOWSNOW) THEN
@@ -339,23 +347,23 @@ ENDIF
 !*       8.   SOURCES OF PASSIVE SCALAR VARIABLES
 !             -----------------------------------
 !
-ZWORK1=MZM(PRHODJ, D%NKA, D%NKU, D%NKL)
+CALL MZM_PHY(D,PRHODJ,ZWORK1)
 DO JSV=1,KSV
 !
   IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
 !
 ! Preparation of the arguments for TRIDIAG 
     IF (OHARAT) THEN
-      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)  
-      ZA(:,:,:) = -PTSTEP * ZKEFF(:,:,:) * ZWORK1(:,:,:) / PDZZ(:,:,:)**2
-      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)  
+      ZA(IIB:IIE,IJB:IJE,IKB:IKE) = -PTSTEP * ZKEFF(IIB:IIE,IJB:IJE,IKB:IKE) * ZWORK1(IIB:IIE,IJB:IJE,IKB:IKE) / PDZZ(IIB:IIE,IJB:IJE,IKB:IKE)**2
+      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
     ELSE
-      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-      ZA(:,:,:) = -PTSTEP*ZCSV*PPSI_SV(:,:,:,JSV) *   &
-                   ZKEFF(:,:,:) * ZWORK1(:,:,:) / PDZZ(:,:,:)**2
-      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+      ZA(IIB:IIE,IJB:IJE,IKB:IKE) = -PTSTEP*ZCSV*PPSI_SV(IIB:IIE,IJB:IJE,IKB:IKE,JSV) *   &
+                   ZKEFF(IIB:IIE,IJB:IJE,IKB:IKE) * ZWORK1(IIB:IIE,IJB:IJE,IKB:IKE) / PDZZ(IIB:IIE,IJB:IJE,IKB:IKE)**2
+      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
     ENDIF
-  ZSOURCE(:,:,:) = 0.
+  ZSOURCE(IIB:IIE,IJB:IJE,IKB:IKE) = 0.
 !
 ! Compute the sources for the JSVth scalar variable
 
@@ -364,70 +372,74 @@ DO JSV=1,KSV
 !* in 1DIM case, the part of energy released in horizontal flux
 ! is taken into account in the vertical part
   IF (HTURBDIM=='3DIM') THEN
-    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-    ZSOURCE(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV)) / &
-                       PDZZ(:,:,IKB) * PDIRCOSZW(:,:)                    &
-                     * 0.5 * (1. + PRHODJ(:,:,D%NKA) / PRHODJ(:,:,IKB))
-    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+    ZSOURCE(IIB:IIE,IJB:IJE,IKB) = (PIMPL*PSFSVP(IIB:IIE,IJB:IJE,JSV) + PEXPL*PSFSVM(IIB:IIE,IJB:IJE,JSV)) / &
+                       PDZZ(IIB:IIE,IJB:IJE,IKB) * PDIRCOSZW(IIB:IIE,IJB:IJE)                    &
+                     * 0.5 * (1. + PRHODJ(IIB:IIE,IJB:IJE,D%NKA) / PRHODJ(IIB:IIE,IJB:IJE,IKB))
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   ELSE
-    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-    ZSOURCE(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV)) / &
-                       PDZZ(:,:,IKB) / PDIRCOSZW(:,:)                    &
-                     * 0.5 * (1. + PRHODJ(:,:,D%NKA) / PRHODJ(:,:,IKB))
-    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+    ZSOURCE(IIB:IIE,IJB:IJE,IKB) = (PIMPL*PSFSVP(IIB:IIE,IJB:IJE,JSV) + PEXPL*PSFSVM(IIB:IIE,IJB:IJE,JSV)) / &
+                       PDZZ(IIB:IIE,IJB:IJE,IKB) / PDIRCOSZW(IIB:IIE,IJB:IJE)                    &
+                     * 0.5 * (1. + PRHODJ(IIB:IIE,IJB:IJE,D%NKA) / PRHODJ(IIB:IIE,IJB:IJE,IKB))
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   END IF
-  ZSOURCE(:,:,IKTB+1:IKTE-1) = 0.
-  ZSOURCE(:,:,IKE) = 0.
+  ZSOURCE(IIB:IIE,IJB:IJE,IKTB+1:IKTE-1) = 0.
+  ZSOURCE(IIB:IIE,IJB:IJE,IKE) = 0.
 !
 ! Obtention of the split JSV scalar variable at t+ deltat  
   CALL TRIDIAG(D,PSVM(:,:,:,JSV),ZA,PTSTEP,PEXPL,PIMPL,PRHODJ,ZSOURCE,ZRES)
 !
 !  Compute the equivalent tendency for the JSV scalar variable
-  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-  PRSVS(:,:,:,JSV)= PRSVS(:,:,:,JSV)+    &
-                    PRHODJ(:,:,:)*(ZRES(:,:,:)-PSVM(:,:,:,JSV))/PTSTEP
-  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  PRSVS(IIB:IIE,IJB:IJE,IKB:IKE,JSV)= PRSVS(IIB:IIE,IJB:IJE,IKB:IKE,JSV)+    &
+                    PRHODJ(IIB:IIE,IJB:IJE,IKB:IKE)*(ZRES(IIB:IIE,IJB:IJE,IKB:IKE)-PSVM(IIB:IIE,IJB:IJE,IKB:IKE,JSV))/PTSTEP
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
   IF ( (OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
-    ZWORK1 = MZM(PLM*SQRT(PTKEM), D%NKA, D%NKU, D%NKL) 
-    ZWORK2 = DZM(PIMPL*ZRES(:,:,:) + PEXPL*PSVM(:,:,:,JSV), D%NKA, D%NKU, D%NKL)
-    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-    ZFLXZ(:,:,:) = -ZCSV * PPSI_SV(:,:,:,JSV) * ZWORK1(:,:,:) / PDZZ(:,:,:) * &
-                  ZWORK2(:,:,:)
-    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT) = PLM(IIB:IIE,IJB:IJE,1:D%NKT)*SQRT(PTKEM(IIB:IIE,IJB:IJE,1:D%NKT))
+    ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT) = PIMPL*ZRES(IIB:IIE,IJB:IJE,1:D%NKT) + PEXPL*PSVM(IIB:IIE,IJB:IJE,1:D%NKT,JSV)
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    CALL MZM_PHY(D,ZWORK1,ZWORK3)
+    CALL DZM_PHY(D,ZWORK2,ZWORK4)
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    ZFLXZ(IIB:IIE,IJB:IJE,IKB:IKE) = -ZCSV * PPSI_SV(IIB:IIE,IJB:IJE,IKB:IKE,JSV) * ZWORK3(IIB:IIE,IJB:IJE,IKB:IKE) / PDZZ(IIB:IIE,IJB:IJE,IKB:IKE) * &
+                  ZWORK4(IIB:IIE,IJB:IJE,IKB:IKE)
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
     ! surface flux
     !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
     ! (in presence of slopes)
     !* in 1DIM case, the part of energy released in horizontal flux
     ! is taken into account in the vertical part
     IF (HTURBDIM=='3DIM') THEN
-      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-      ZFLXZ(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV))  &
-                       * PDIRCOSZW(:,:)  
-      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+      ZFLXZ(IIB:IIE,IJB:IJE,IKB) = (PIMPL*PSFSVP(IIB:IIE,IJB:IJE,JSV) + PEXPL*PSFSVM(IIB:IIE,IJB:IJE,JSV))  &
+                       * PDIRCOSZW(IIB:IIE,IJB:IJE)  
+      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
     ELSE
-      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-      ZFLXZ(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV))  &
-                       / PDIRCOSZW(:,:)
-     !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+      ZFLXZ(IIB:IIE,IJB:IJE,IKB) = (PIMPL*PSFSVP(IIB:IIE,IJB:IJE,JSV) + PEXPL*PSFSVM(IIB:IIE,IJB:IJE,JSV))  &
+                       / PDIRCOSZW(IIB:IIE,IJB:IJE)
+     !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
     END IF
     ! extrapolates the flux under the ground so that the vertical average with
     ! the IKB flux gives the ground value
     !
-    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-    ZFLXZ(:,:,D%NKA) = ZFLXZ(:,:,IKB)
-    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+    ZFLXZ(IIB:IIE,IJB:IJE,D%NKA) = ZFLXZ(IIB:IIE,IJB:IJE,IKB)
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
     DO JK=IKTB+1,IKTE-1
-      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-      PWSV(:,:,JK,JSV)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+D%NKL))
-      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+      PWSV(IIB:IIE,IJB:IJE,JK,JSV)=0.5*(ZFLXZ(IIB:IIE,IJB:IJE,JK)+ZFLXZ(IIB:IIE,IJB:IJE,JK+D%NKL))
+      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
     END DO
-    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-    PWSV(:,:,IKB,JSV)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+D%NKL))
-    PWSV(:,:,IKE,JSV)=PWSV(:,:,IKE-D%NKL,JSV)
-    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+    PWSV(IIB:IIE,IJB:IJE,IKB,JSV)=0.5*(ZFLXZ(IIB:IIE,IJB:IJE,IKB)+ZFLXZ(IIB:IIE,IJB:IJE,IKB+D%NKL))
+    PWSV(IIB:IIE,IJB:IJE,IKE,JSV)=PWSV(IIB:IIE,IJB:IJE,IKE-D%NKL,JSV)
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
  END IF
   !
   IF (OTURB_FLX .AND. TPFILE%LOPENED) THEN
