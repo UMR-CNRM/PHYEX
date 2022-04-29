@@ -615,5 +615,85 @@ PMZF(:,:,D%NKA) = 0.5*( PA(:,:,D%NKA)+PA(:,:,D%NKA+D%NKL) )
 !
 IF (LHOOK) CALL DR_HOOK('MZF',1,ZHOOK_HANDLE)
 END SUBROUTINE MZF_PHY
-
+!     ###############################
+      SUBROUTINE DZF_PHY(D,PA,PDZF)
+      USE PARKIND1, ONLY : JPRB
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!     ###############################
+!
+!!****  *DZF* -  Shuman operator : finite difference operator in z direction
+!!                                  for a variable at a flux side
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a finite difference
+!     along the z direction (K index) for a field PA localized at a z-flux
+!     point (w point). The result is localized at a mass point.
+!
+!!**  METHOD
+!!    ------
+!!        The result PDZF(:,:,k) is defined by (PA(:,:,k+1)-PA(:,:,k))
+!!        At k=size(PA,3), PDZF(:,:,k) is defined by -999.
+!!
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      NONE
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!      V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    05/07/94
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(:,:,:), INTENT(IN)  :: PA     ! variable at flux localization
+REAL, DIMENSION(:,:,:), INTENT(OUT) :: PDZF   ! result at mass localization 
+!
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+INTEGER :: JK           ! Loop index in z direction
+INTEGER :: IKT          ! upper bound in z direction of PA
+!
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF DZF
+!              ------------------
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('DZF',0,ZHOOK_HANDLE)
+IKT = SIZE(PA,3)
+DO JK=2,IKT-1
+  PDZF(:,:,JK)          = PA(:,:,JK+D%NKL) -  PA(:,:,JK)
+END DO
+PDZF(:,:,D%NKA)    = PA(:,:,D%NKA+D%NKL) -  PA(:,:,D%NKA)
+PDZF(:,:,D%NKU)    = -999.
+!
+!-------------------------------------------------------------------------------
+!
+IF (LHOOK) CALL DR_HOOK('DZF',1,ZHOOK_HANDLE)
+END SUBROUTINE DZF_PHY
 END MODULE SHUMAN_PHY

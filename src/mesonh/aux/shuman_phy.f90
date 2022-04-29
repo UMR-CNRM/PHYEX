@@ -693,4 +693,97 @@ END DO
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE MYF_PHY
+!     ###############################
+      SUBROUTINE DZF_PHY(D,PA,PDZF)
+!     ###############################
+!
+!!****  *DZF* -  Shuman operator : finite difference operator in z direction
+!!                                  for a variable at a flux side
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a finite difference 
+!     along the z direction (K index) for a field PA localized at a z-flux
+!     point (w point). The result is localized at a mass point.
+!
+!!**  METHOD
+!!    ------ 
+!!        The result PDZF(:,:,k) is defined by (PA(:,:,k+1)-PA(:,:,k))
+!!        At k=size(PA,3), PDZF(:,:,k) is defined by -999.
+!!    
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      NONE
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)  
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!	V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    05/07/94 
+!!                   optimisation                 20/08/00 J. Escobar
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux localization
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass localization 
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+INTEGER :: JK           ! Loop index in z direction
+INTEGER :: IKU          ! upper bound in z direction of PA 
+!
+!           
+INTEGER :: IIU,IJU
+INTEGER :: JIJ
+INTEGER :: JIJK,JIJKOR,JIJKEND
+!         
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF DZF
+!              ------------------
+!
+IIU = SIZE(PA,1)
+IJU = SIZE(PA,2)
+IKU = SIZE(PA,3)
+!
+JIJKOR  = 1 + IIU*IJU
+JIJKEND = IIU*IJU*IKU
+!
+!CDIR NODEP
+!OCL NOVREC
+DO JIJK=JIJKOR , JIJKEND
+   PDZF(JIJK-IIU*IJU,1,1)     = PA(JIJK,1,1)-PA(JIJK-IIU*IJU,1,1)
+END DO
+!
+!CDIR NODEP
+!OCL NOVREC
+DO JIJ=1,IIU*IJU
+   PDZF(JIJ,1,IKU)    = -999.
+END DO
+!
+!-------------------------------------------------------------------------------
+!
+END SUBROUTINE DZF_PHY
 END MODULE SHUMAN_PHY
