@@ -150,7 +150,7 @@ ELSE
   !   ZC is computed from line 3 to line 5
   !   Amoist* 2 * SRC is computed at line 6
   !
-    PEMOIST(IIB:IIE,IJB:IJE,1:D%NKT) = ZDELTA * (PTHLM(IIB:IIE,IJB:IJE,1:D%NKT) + PLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT)*(               &
+    PEMOIST(IIB:IIE,IJB:IJE,1:D%NKT) = ZDELTA * (PTHLM(IIB:IIE,IJB:IJE,1:D%NKT) + PLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT)*(           &
                                                     PRM(IIB:IIE,IJB:IJE,1:D%NKT,2)+PRM(IIB:IIE,IJB:IJE,1:D%NKT,4)))&
                             / (1. + ZRW(IIB:IIE,IJB:IJE,1:D%NKT))                                &
         +( PLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) * ZA(IIB:IIE,IJB:IJE,1:D%NKT)                                        &
@@ -176,11 +176,11 @@ ELSE
   !   ZC is computed from line 3 to line 5
   !   Amoist* 2 * SRC is computed at line 6
   !
-    PEMOIST(IIB:IIE,IJB:IJE,1:D%NKT) = ZDELTA * (PTHLM(IIB:IIE,IJB:IJE,1:D%NKT) + PLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT)*PRM(IIB:IIE,IJB:IJE,1:D%NKT,2))   &
-                            / (1. + ZRW(IIB:IIE,IJB:IJE,1:D%NKT))                                &
+    PEMOIST(IIB:IIE,IJB:IJE,1:D%NKT) = ZDELTA * (PTHLM(IIB:IIE,IJB:IJE,1:D%NKT) + PLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT)* &
+                                       PRM(IIB:IIE,IJB:IJE,1:D%NKT,2)) / (1. + ZRW(IIB:IIE,IJB:IJE,1:D%NKT))          &
         +( PLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) * ZA(IIB:IIE,IJB:IJE,1:D%NKT)                                        &
-               -(1.+ZDELTA) * (PTHLM(IIB:IIE,IJB:IJE,1:D%NKT) + PLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT)*PRM(IIB:IIE,IJB:IJE,1:D%NKT,2))   &
-                            / (1. + ZRW(IIB:IIE,IJB:IJE,1:D%NKT))                                &
+               -(1.+ZDELTA) * (PTHLM(IIB:IIE,IJB:IJE,1:D%NKT) + PLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT)* &
+               PRM(IIB:IIE,IJB:IJE,1:D%NKT,2)) / (1. + ZRW(IIB:IIE,IJB:IJE,1:D%NKT))                                &
          ) * PAMOIST(IIB:IIE,IJB:IJE,1:D%NKT) * 2. * PSRCM(IIB:IIE,IJB:IJE,1:D%NKT)
     !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
   END IF

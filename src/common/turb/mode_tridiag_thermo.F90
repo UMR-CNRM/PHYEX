@@ -175,7 +175,8 @@ IJB=D%NJBC
 !
 CALL MZM_PHY(D,PRHODJ,ZMZM_RHODJ)
 !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-ZRHODJ_DFDDTDZ_O_DZ2(IIB:IIE,IJB:IJE,1:D%NKT) = ZMZM_RHODJ(IIB:IIE,IJB:IJE,1:D%NKT)*PDFDDTDZ(IIB:IIE,IJB:IJE,1:D%NKT)/PDZZ(IIB:IIE,IJB:IJE,1:D%NKT)**2
+ZRHODJ_DFDDTDZ_O_DZ2(IIB:IIE,IJB:IJE,1:D%NKT) = ZMZM_RHODJ(IIB:IIE,IJB:IJE,1:D%NKT)*PDFDDTDZ(IIB:IIE,IJB:IJE,1:D%NKT) &
+                                                /PDZZ(IIB:IIE,IJB:IJE,1:D%NKT)**2
 !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
 ZA=0.
@@ -259,7 +260,8 @@ IF ( PIMPL > 1.E-10 ) THEN
                                                     ! gam(k) = c(k-1) / bet
     ZBET(IIB:IIE,IJB:IJE)    = ZB(IIB:IIE,IJB:IJE,JK) - ZA(IIB:IIE,IJB:IJE,JK) * ZGAM(IIB:IIE,IJB:IJE,JK)
                                                     ! bet = b(k) - a(k)* gam(k)  
-    PVARP(IIB:IIE,IJB:IJE,JK)= ( ZY(IIB:IIE,IJB:IJE,JK) - ZA(IIB:IIE,IJB:IJE,JK) * PVARP(IIB:IIE,IJB:IJE,JK-D%NKL) ) / ZBET(IIB:IIE,IJB:IJE)
+    PVARP(IIB:IIE,IJB:IJE,JK)= ( ZY(IIB:IIE,IJB:IJE,JK) - ZA(IIB:IIE,IJB:IJE,JK) * PVARP(IIB:IIE,IJB:IJE,JK-D%NKL) ) &
+                               / ZBET(IIB:IIE,IJB:IJE)
                                         ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
     !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   END DO 
@@ -269,7 +271,8 @@ IF ( PIMPL > 1.E-10 ) THEN
                                                     ! gam(k) = c(k-1) / bet
   ZBET(IIB:IIE,IJB:IJE)     = ZB(IIB:IIE,IJB:IJE,IKE) - ZA(IIB:IIE,IJB:IJE,IKE) * ZGAM(IIB:IIE,IJB:IJE,IKE)
                                                     ! bet = b(k) - a(k)* gam(k)  
-  PVARP(IIB:IIE,IJB:IJE,IKE)= ( ZY(IIB:IIE,IJB:IJE,IKE) - ZA(IIB:IIE,IJB:IJE,IKE) * PVARP(IIB:IIE,IJB:IJE,IKE-D%NKL) ) / ZBET(IIB:IIE,IJB:IJE)
+  PVARP(IIB:IIE,IJB:IJE,IKE)= ( ZY(IIB:IIE,IJB:IJE,IKE) - ZA(IIB:IIE,IJB:IJE,IKE) * PVARP(IIB:IIE,IJB:IJE,IKE-D%NKL) ) &
+                              / ZBET(IIB:IIE,IJB:IJE)
                                        ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 !

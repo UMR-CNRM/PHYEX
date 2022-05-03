@@ -174,9 +174,9 @@ ELSE
   !   - Atheta * 2. * SRC is computed at line 6 
   !
     PETHETA(IIB:IIE,IJB:IJE,1:D%NKT) = ZA(IIB:IIE,IJB:IJE,1:D%NKT)                                                 &
-        +( PLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) * ZA(IIB:IIE,IJB:IJE,1:D%NKT)                                        &
-               -(1.+ZDELTA) * (PTHLM(IIB:IIE,IJB:IJE,1:D%NKT) + PLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT)*PRM(IIB:IIE,IJB:IJE,1:D%NKT,2))   &
-                            / (1. + ZRW(IIB:IIE,IJB:IJE,1:D%NKT))                                &
+        +( PLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) * ZA(IIB:IIE,IJB:IJE,1:D%NKT) -(1.+ZDELTA) * (PTHLM(IIB:IIE,IJB:IJE,1:D%NKT) &
+        + PLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT)*PRM(IIB:IIE,IJB:IJE,1:D%NKT,2))   &
+         / (1. + ZRW(IIB:IIE,IJB:IJE,1:D%NKT))                                 &
          ) * PATHETA(IIB:IIE,IJB:IJE,1:D%NKT) * 2. * PSRCM(IIB:IIE,IJB:IJE,1:D%NKT)
     !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
   END IF
