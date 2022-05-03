@@ -129,7 +129,7 @@ ELSE
   ZDELTA = (CST%XRV/CST%XRD) - 1.
   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
   ZRW(IIB:IIE,IJB:IJE,1:D%NKT) = PRM(IIB:IIE,IJB:IJE,1:D%NKT,1)
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
   IF ( KRRI>0 ) THEN  ! rc and ri case
     !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)

@@ -110,7 +110,7 @@ IF (OOCEAN) THEN
  IF ( KRR == 0 ) THEN                                ! Unsalted
   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
    PEMOIST(IIB:IIE,IJB:IJE,1:D%NKT) = 0.
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)v
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
  ELSE
    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
    PEMOIST(IIB:IIE,IJB:IJE,1:D%NKT) = 1.                              ! Salted case
