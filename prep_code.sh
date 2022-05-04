@@ -172,6 +172,7 @@ if [ -n "${mnh_expand_options-}" ]; then
       rm -f $1_EXPAND
       $PHYEXTOOLSDIR/correct_indent.py tempo_mnh_expand "indent"
       mv tempo_mnh_expand_CORRECT_INDENT $1
+      rm -f tempo_mnh_expand
     fi
   }
   if [ -n "${model-}" ]; then
