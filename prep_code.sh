@@ -169,8 +169,10 @@ if [ -n "${mnh_expand_options-}" ]; then
       [ $verbose -gt 1 ] && echo "Applying mnh_expand on $1"
       $PHYEXTOOLSDIR/correct_indent.py $1 "detect"
       mnh_expand -DMNH_EXPAND_NOCPP $mnh_expand_options $1_EXPAND > tempo_mnh_expand
+      rm -f $1_EXPAND
       $PHYEXTOOLSDIR/correct_indent.py tempo_mnh_expand "indent"
       mv tempo_mnh_expand_CORRECT_INDENT $1
+      rm -f tempo_mnh_expand
     fi
   }
   if [ -n "${model-}" ]; then
