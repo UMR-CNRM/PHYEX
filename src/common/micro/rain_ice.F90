@@ -206,6 +206,7 @@ USE MODE_ICE4_SEDIMENTATION_STAT, ONLY: ICE4_SEDIMENTATION_STAT
 USE MODE_ICE4_SEDIMENTATION_SPLIT, ONLY: ICE4_SEDIMENTATION_SPLIT
 USE MODE_ICE4_SEDIMENTATION_SPLIT_MOMENTUM, ONLY: ICE4_SEDIMENTATION_SPLIT_MOMENTUM
 USE MODE_ICE4_TENDENCIES, ONLY: ICE4_TENDENCIES
+USE MODE_ICE4_NUCLEATION, ONLY: ICE4_NUCLEATION
 !
 IMPLICIT NONE
 !
@@ -426,7 +427,9 @@ REAL :: ZDEVIDE, ZX, ZRICE
 !
 INTEGER :: IC, JMICRO
 LOGICAL :: LLSIGMA_RC, LL_ANY_ITER, LL_AUCV_ADJU
-
+!
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZW3D
+LOGICAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: LLW3D
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 0, ZHOOK_HANDLE)
@@ -1106,19 +1109,21 @@ PCIT(:,:,:)=ZCITOUT(:,:,:)
 !
 DO JK=D%NKTB,D%NKTE
   DO JJ=D%NJB,D%NJE
-!DIR$ VECTOR ALWAYS
-    DO CONCURRENT (JI=D%NIB:D%NIE)
+    DO JI=D%NIB,D%NIE
       IF (.NOT. ODMICRO(JI, JJ, JK)) THEN
-        ZW0D=ZZ_LSFACT(JI, JJ, JK)/PEXN(JI, JJ, JK)
+        LLW3D(JI, JJ, JK)=.TRUE.
+        ZW3D(JI, JJ, JK)=ZZ_LSFACT(JI, JJ, JK)/PEXN(JI, JJ, JK)
+      ELSE
+        LLW3D(JI, JJ, JK)=.FALSE.
       ENDIF
-      CALL ICE4_NUCLEATION_ELEM(CST, PARAMI, ICEP, ICED, .NOT. ODMICRO(JI, JJ, JK), &
-                                PTHT(JI, JJ, JK), PPABST(JI, JJ, JK), PRHODREF(JI, JJ, JK), &
-                                PEXN(JI, JJ, JK), ZW0D, ZT(JI, JJ, JK), &
-                                PRVT(JI, JJ, JK), &
-                                PCIT(JI, JJ, JK), ZZ_RVHENI_MR(JI, JJ, JK))
     ENDDO
   ENDDO
 ENDDO
+CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, D%NIT*D%NJT*D%NKT, LLW3D(:,:,:), &
+                     PTHT(:, :, :), PPABST(:, :, :), PRHODREF(:, :, :), &                                       
+                     PEXN(:, :, :), ZW3D(:, :, :), ZT(:, :, :), &                                                           
+                     PRVT(:, :, :), &                                                                                 
+                     PCIT(:, :, :), ZZ_RVHENI_MR(:, :, :))
 !
 !-------------------------------------------------------------------------------
 !
@@ -1810,7 +1815,5 @@ CONTAINS
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE:CORRECT_NEGATIVITIES', 1, ZHOOK_HANDLE)
   !
   END SUBROUTINE CORRECT_NEGATIVITIES
-!
-INCLUDE "ice4_nucleation_elem.func.h"
 !
 END SUBROUTINE RAIN_ICE
