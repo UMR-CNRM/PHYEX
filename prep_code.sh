@@ -41,7 +41,7 @@ function usage {
   echo "To use mnh_expand... it must be installed (alongside the filepp tool)"
 }
 
-full_command="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd ) $@"
+full_command="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}") $@"
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- seprator must be in sync with prep_code.sh separator
 
