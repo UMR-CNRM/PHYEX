@@ -1107,6 +1107,7 @@ PCIT(:,:,:)=ZCITOUT(:,:,:)
 !*       6.     COMPUTES THE SLOW COLD PROCESS SOURCES OUTSIDE OF ODMICRO POINTS
 !               ----------------------------------------------------------------
 !
+LLW3D(:,:,:)=.FALSE.
 DO JK=D%NKTB,D%NKTE
   DO JJ=D%NJB,D%NJE
     DO JI=D%NIB,D%NIE
