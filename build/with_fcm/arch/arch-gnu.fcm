@@ -1,0 +1,16 @@
+%COMPILER            gfortran
+%LINK                gfortran
+%FPP                 gfortran -E
+%AR                  ar
+%MAKE                gmake
+%FPP_FLAGS           -P
+%FPP_DEF             
+%BASE_FFLAGS         -c -fPIC -fdefault-real-8 -fdefault-double-8 -ffree-line-length-none
+%PROD_FFLAGS         -O3
+%DEV_FFLAGS          -O1
+%DEBUG_FFLAGS        -check bounds 
+%MPI_FFLAGS
+%OMP_FFLAGS          
+%BASE_LD             -fPIC  -fdefault-real-8 -fdefault-double-8
+%MPI_LD
+%OMP_LD              

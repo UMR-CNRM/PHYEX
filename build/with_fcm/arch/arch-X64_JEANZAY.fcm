@@ -1,0 +1,16 @@
+%COMPILER            mpiifort
+%LINK                mpiifort
+%FPP                 mpiifort -E
+%AR                  ar
+%MAKE                gmake
+%FPP_FLAGS           -P
+%FPP_DEF             KEY_NONE CPP_NETCDF4
+%BASE_FFLAGS         -fPIC -i4 -r8 -auto -align all -fp-model strict
+%PROD_FFLAGS         -g -traceback -O3 -xHost -qopt-zmm-usage=high
+%DEV_FFLAGS          -g -O1 -traceback
+%DEBUG_FFLAGS        -g -traceback -check bounds 
+%MPI_FFLAGS
+%OMP_FFLAGS          -qopenmp -qopenmp-threadprivate=compat
+%BASE_LD             -fPIC -i4 -r8 -auto 
+%MPI_LD
+%OMP_LD              -qopenmp -qopenmp-threadprivate=compat
