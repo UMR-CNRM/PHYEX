@@ -146,7 +146,17 @@ if [ -n "${model-}" ]; then
     [ -e src/$model/$sub ] && cp -rlf src/$model/$sub . && rm -rf src/$model/$sub
   done
 
-  #cleaning
+  #Supression of unwanted files
+  if [ -f src/$model/filesToSuppress.txt ]; then
+    #Some files can be present in the common directory but are not wanted for a model export
+    #because these files are already existing elsewhere in the model source code
+    while read -r line; do
+      filename=$(echo $line | sed -e 's/^[[:space:]]*//' | sed -e 's/[[:space:]]*$//') #trim
+      [ -f "$filename" ] && rm -f "$filename"
+    done < src/$model/filesToSuppress.txt
+  fi
+
+  #Cleaning
   [ $verbose -gt 0 ] && echo "Cleaning unrelevant files"
   #multiple checks to prevent error
   if [ $from == 'git' -a ! $(git config --get remote.origin.url) == "$repository" ]; then

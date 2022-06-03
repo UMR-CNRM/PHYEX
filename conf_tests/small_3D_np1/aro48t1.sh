@@ -6,7 +6,7 @@
 #SBATCH -N 1
 #SBATCH -p normal256
 
-#The MYLIB varibale must contain the gmkpack pack name
+#The MYLIB variable must contain the gmkpack pack name
 #The TESTDIR variable must contain the test directory
 #Results will be stored in the local directory
 

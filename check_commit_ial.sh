@@ -14,7 +14,7 @@ set -e
 #small_3D_alt4: small_3D_alt1 + CSNOWRIMING='OLD'
 #small_3D_alt5: CCLOUD='ICE4'
 #small_3D_alt6: CMF_UPDRAFT='RAHA', CMF_CLOUD='BIGA'
-#small_3D_alt7: CMF_UPDRAFT='RHCJ', CMF_CLOUD='STAT', LOSIGMAS=.FALSE. #Needs 2 corrections in original cycle 48
+#small_3D_alt7: CMF_CLOUD='STAT', LOSIGMAS=.FALSE. #Needs 2 corrections in original cycle 48
 #small_3D_alt8: CMF_UPDRAFT='RHCJ'
 
 #The small_3D_alt8 is not included in the list of available tests because it needs to be compared against a special commit.
