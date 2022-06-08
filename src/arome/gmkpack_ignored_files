@@ -129,7 +129,6 @@ phyex/turb/modi_compute_updraft_rhcj10.F90
 phyex/turb/compute_updraft_rhcj10.F90
 phyex/turb/modi_compute_updraft.F90
 phyex/turb/compute_updraft.F90
->>>>>>> 9df244f
 phyex/turb/tke_eps_sources.F90
 phyex/turb/turb_ver.F90
 phyex/turb/prandtl.F90
@@ -196,3 +195,6 @@ phyex/micro/mode_fmwritbidon.F90
 phyex/turb/modd_dynn.F90
 phyex/turb/mode_thermo_mono.F90
 phyex/turb/modn_turb.F90
+mse/dummy/second_mnh.F90
+mse/dummy/les_mean_subgrid_surf.F90
+mse/dummy/les_mean_subgrid_3d.F90

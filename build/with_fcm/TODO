@@ -1,7 +1,0 @@
-#Fichier configuration
-comment avoir un .so comme cible
-
-#Script make_fcm
-revoir les options disponibles --full? --jobs N? --ignore-lock?: sont-elles les mêmes avec le passage à la dernière version de fcm (make)?
-faire un ticket fcm à propos du pb de compilation fiat (toto.F90 avec toto.c)
-utiliser les configurations spécifiques aux architectures dans le fichier de config fcm

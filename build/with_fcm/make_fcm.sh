@@ -23,8 +23,8 @@ $0 [options]
 --arch ARCH  	        build using arch files $ARCH_PATH/arch-ARCH.* [gnu]
 
 Unrecognized options are passed to the fcm build command. Useful options include :
---full                  clean build tree before building
---jobs N                parallel build, similar to make -j N
+--new                   clean build tree before building
+--jobs=N                parallel build, similar to make -j N
 --ignore-lock           ignore lock indicating another build is ongoing, useful after an interrupted build
 
 For details on FCM, see 
@@ -79,26 +79,34 @@ cat <<EOF > compilation.sh
 
 . arch.env
 
-COMPIL_FFLAGS="%PROD_FFLAGS"
-COMPIL_FFLAGS="\$COMPIL_FFLAGS %OMP_FFLAGS"
+level=PROD #PROD DEV or DEBUG
 
-LD_FLAGS="%BASE_LD"
-LD_FLAGS="\$LD_FLAGS %OMP_LD"
+#fcm variables begin with a dollar sign
 
-#DEPS_LIB="\$NETCDF_LIBDIR \$NETCDF_LIB \$HDF5_LIBDIR \$HDF5_LIB"
+COMPIL_FFLAGS="\\\$\${level}_FFLAGS"
+COMPIL_FFLAGS="\$COMPIL_FFLAGS \\\$OMP_FFLAGS"
 
-FCM_ARGS=$FCM_ARGS
+COMPIL_CFLAGS="\\\$\${level}_CFLAGS"
 
-echo "%COMPIL_FFLAGS \$COMPIL_FFLAGS" > config.fcm
-echo "%LD_FLAGS \$LD_FLAGS" >> config.fcm
-echo "%CPP_KEY \$CPP_KEY" >> config.fcm
-echo "%LIB">> config.fcm
+LD_FLAGS="\\\$BASE_LD"
+LD_FLAGS="\$LD_FLAGS \$OMP_LD"
+
+LIBS="rt dl"
+
+ENTRYPOINTS="rain_ice.o shallow_mf.o turb.o ice_adjust.o ini_neb.o"
+
+FCM_ARGS="$FCM_ARGS"
+
+echo "\\\$COMPIL_FFLAGS = \$COMPIL_FFLAGS" > config.fcm
+echo "\\\$COMPIL_CFLAGS = \$COMPIL_CFLAGS" >> config.fcm
+echo "\\\$LD_FLAGS = \$LD_FLAGS" >> config.fcm
+echo "\\\$ENTRYPOINTS = \$ENTRYPOINTS" >> config.fcm
+echo "\\\$LIBS = \$LIBS" >> config.fcm
 
 export PATH=$PWD/../fcm/bin/:\$PATH
 
-echo "This script has generated config.fcm which is included by bld.cfg, the FCM configuration file."
-echo "Running : fcm build \$FCM_ARGS"
-echo "Be patient while FCM first pre-processes all .F90 source files which may take about 30s."
+echo "This script has generated config.fcm which is included by fcm-make.cfg, the FCM configuration file."
+echo "Running : fcm make \$FCM_ARGS"
 
 fcm make \$FCM_ARGS
 EOF
@@ -135,8 +143,17 @@ mkdir src
 cd src
 ln -s ../../../../src/common .
 ln -s ../../fiat/src fiat
+cat <<EOF > dummyprog.F90
+PROGRAM DUMMYPROG
+  PRINT*, "CREATED TO FORCE FCM TO LINK SOMETHING"
+END PROGRAM DUMMYPROG
+EOF
 cd ..
 build_compilation_script
 
 # Run the compilation
 ./compilation.sh
+ln -s build/bin/libphyex.so .
+
+# Check if python can open the resulting shared lib
+python3 -c "from ctypes import cdll; cdll.LoadLibrary('./libphyex.so')"

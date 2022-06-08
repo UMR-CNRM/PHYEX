@@ -1,3 +1,8 @@
+!MNH_LIC Copyright 1995-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
 !     ######spl
       MODULE MODD_PARAM_ICE
 !     #####################
@@ -27,6 +32,7 @@
 !!    -------------
 !!      Original      14/12/95
 !!      Jan 2015 S. Riette: new ICE3/ICE4 parameters
+!!      01/10/16 (C.Lac)  Add droplet deposition for fog
 !!
 !-------------------------------------------------------------------------------
 !
@@ -37,7 +43,9 @@ IMPLICIT NONE
 !
 LOGICAL, SAVE :: LWARM       ! When .TRUE. activates the formation of rain by
                              ! the warm microphysical processes
-LOGICAL, SAVE :: LSEDIC                 ! TRUE to enable the droplet sedimentation
+LOGICAL, SAVE :: LSEDIC      ! TRUE to enable the droplet sedimentation
+LOGICAL, SAVE :: LDEPOSC     ! TRUE to enable cloud droplet deposition 
+REAL,    SAVE :: XVDEPOSC    ! Droplet deposition velocity        
 !
 CHARACTER(LEN=4), SAVE :: CPRISTINE_ICE ! Pristine ice type PLAT, COLU or BURO
 CHARACTER(LEN=4), SAVE :: CSEDIM        ! Sedimentation calculation mode      
@@ -57,19 +65,16 @@ LOGICAL, SAVE :: LCRFLIMIT !True to limit rain contact freezing to possible heat
 !
 REAL, SAVE :: XTSTEP_TS ! Approximative time step for time-splitting (0 for no time-splitting)
 !
-CHARACTER*80, SAVE :: CSUBG_RC_RR_ACCR ! subgrid rc-rr accretion
-CHARACTER*80, SAVE :: CSUBG_RR_EVAP ! subgrid rr evaporation
-CHARACTER*80, SAVE :: CSUBG_PR_PDF ! pdf for subgrid precipitation
+CHARACTER(len=80), SAVE :: CSUBG_RC_RR_ACCR ! subgrid rc-rr accretion
+CHARACTER(len=80), SAVE :: CSUBG_RR_EVAP ! subgrid rr evaporation
+CHARACTER(len=80), SAVE :: CSUBG_PR_PDF ! pdf for subgrid precipitation
 !
 LOGICAL, SAVE :: LADJ_BEFORE ! must we perform an adjustment before rain_ice call
 LOGICAL, SAVE :: LADJ_AFTER ! must we perform an adjustment after rain_ice call
-CHARACTER*1, SAVE :: CFRAC_ICE_ADJUST ! ice fraction for adjustments
-CHARACTER*1, SAVE :: CFRAC_ICE_SHALLOW_MF ! ice fraction for shallow_mf
+CHARACTER(len=1), SAVE :: CFRAC_ICE_ADJUST ! ice fraction for adjustments
+CHARACTER(len=1), SAVE :: CFRAC_ICE_SHALLOW_MF ! ice fraction for shallow_mf
 LOGICAL, SAVE :: LSEDIM_AFTER ! sedimentation done before (.FALSE.) or after (.TRUE.) microphysics
 !
-LOGICAL, SAVE :: LDEPOSC ! switch on water deposition on vegetation
-REAL, SAVE    :: XVDEPOSC ! water deposition speed
-
 REAL, SAVE :: XSPLIT_MAXCFL ! Maximum CFL number allowed for SPLIT scheme
 !
 !-------------------------------------------------------------------------------

@@ -163,7 +163,7 @@ END MODULE MODI_GRADIENT_M
 !*       0.    DECLARATIONS
 !
 !
-USE MODI_SHUMAN
+USE MODI_SHUMAN, ONLY: DXF, MZF, DZM, MXF, MXM
 USE MODD_CONF, ONLY:LFLAT
 !
 IMPLICIT NONE
@@ -419,17 +419,17 @@ END FUNCTION GZ_M_M
 !!      a variable at a mass localization
 !!      FUNCTION MXM: compute an average in the x direction for a variable  
 !!      at a mass localization
-!!      FUNCTION MZF: compute an average in the z direction for a variable 
+!!      FUNCTION MZF: compute an average in the z direction for a variable
 !!      at a flux side
 !!
 !!    IMPLICIT ARGUMENTS
-!!    ------------------ 
+!!    ------------------
 !!      MODD_CONF : LFLAT
 !!
 !!    REFERENCE
 !!    ---------
 !!      Book2 of documentation (function GX_M_U)
-!!      
+!!
 !!
 !!    AUTHOR
 !!    ------
@@ -437,7 +437,7 @@ END FUNCTION GZ_M_M
 !!
 !!    MODIFICATIONS
 !!    -------------
-!!      Original           05/07/94 
+!!      Original           05/07/94
 !!      Modification       16/03/95  change the order of the arguments
 !!                         19/07/00  add the LFLAT switch  + inlining(J. Stein)
 !!                         20/08/00  optimization (J. Escobar)
@@ -458,7 +458,7 @@ IMPLICIT NONE
 INTEGER,                INTENT(IN)  :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,                INTENT(IN)  :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDXX                   ! d*xx
-REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDZX                   ! d*zx 
+REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDZX                   ! d*zx
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PDZZ                   ! d*zz
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PY       ! variable at mass
@@ -469,7 +469,7 @@ INTEGER  IIU,IKU,JI,JK
 !
 INTEGER :: JJK,IJU
 INTEGER :: JIJK,JIJKOR,JIJKEND
-INTEGER :: JI_1JK, JIJK_1, JI_1JK_1, JIJKP1, JI_1JKP1 
+INTEGER :: JI_1JK, JIJK_1, JI_1JK_1, JIJKP1, JI_1JKP1
 !
 !
 !-------------------------------------------------------------------------------
@@ -480,7 +480,7 @@ INTEGER :: JI_1JK, JIJK_1, JI_1JK_1, JIJKP1, JI_1JKP1
 IIU=SIZE(PY,1)
 IJU=SIZE(PY,2)
 IKU=SIZE(PY,3)
-IF (.NOT. LFLAT) THEN 
+IF (.NOT. LFLAT) THEN
 ! PGX_M_U = (   DXM(PY)  -  MZF (   MXM(  DZM(PY) /PDZZ  ) * PDZX   )   )/PDXX
 !!  DO JK=1+JPVEXT_TURB,IKU-JPVEXT_TURB
 !!    DO JI=1+JPHEXT,IIU
@@ -520,7 +520,7 @@ IF (.NOT. LFLAT) THEN
 
 !
   DO JI=1+JPHEXT,IIU
-    PGX_M_U(JI,:,KKU)=  ( PY(JI,:,KKU)-PY(JI-1,:,KKU)  )  / PDXX(JI,:,KKU) 
+    PGX_M_U(JI,:,KKU)=  ( PY(JI,:,KKU)-PY(JI-1,:,KKU)  )  / PDXX(JI,:,KKU)
     PGX_M_U(JI,:,KKA)=   PGX_M_U(JI,:,KKU) ! -999.
   END DO
 ELSE
