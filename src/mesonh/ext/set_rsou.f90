@@ -283,7 +283,6 @@ USE MODI_PRESS_HEIGHT
 USE MODI_SET_MASS
 USE MODI_SHUMAN
 USE MODI_THETAVPU_THETAVPM
-USE MODE_TH_R_FROM_THL_RT_1D
 USE MODI_VERT_COORD
 !
 USE NETCDF          ! for reading the NR files 
@@ -375,6 +374,7 @@ REAL, DIMENSION(:), ALLOCATABLE :: ZFRAC_ICE ! ice fraction
 REAL, DIMENSION(:), ALLOCATABLE :: ZRSATW, ZRSATI             
 REAL                            :: ZDZSDH,ZDZ1SDH,ZDZ2SDH ! interpolation
                                                           ! working arrays
+REAL, DIMENSION(:,:), ALLOCATABLE :: ZBUF
 !
 INTEGER         :: JK,JKLEV,JKU,JKM,JKT,JJ,JI,JO,JLOOP  ! Loop indexes
 INTEGER         :: IKU                ! Upper bound in z direction
@@ -1574,6 +1574,7 @@ ALLOCATE(ZFRAC_ICE(IKU))
 ALLOCATE(ZRSATW(IKU))
 ALLOCATE(ZRSATI(IKU))
 ALLOCATE(ZMRT(IKU))
+ALLOCATE(ZBUF(IKU,16))
 ZMRT=ZMRM+ZMRCM+ZMRIM
 ZTHVM=ZTHLM
 !
@@ -1593,8 +1594,9 @@ ELSE
   DO JLOOP=1,20 ! loop for pression 
     CALL COMPUTE_EXNER_FROM_GROUND(ZTHVM,ZZMASS_PROFILE(:),ZEXNSURF,ZEXNFLUX,ZEXNMASS)
     ZPRESS(:)=XP00*(ZEXNMASS(:))**(XCPD/XRD)
-    CALL TH_R_FROM_THL_RT_1D(CST,NEB,SIZE(ZPRESS,1),'T',ZFRAC_ICE,ZPRESS,ZTHLM,ZMRT,ZTHM,ZMRM,ZMRCM,ZMRIM, &
-                              ZRSATW, ZRSATI,OOCEAN=.FALSE.)
+    CALL TH_R_FROM_THL_RT(CST,NEB,SIZE(ZPRESS,1),'T',ZFRAC_ICE,ZPRESS,ZTHLM,ZMRT,ZTHM,ZMRM,ZMRCM,ZMRIM, &
+                          ZRSATW, ZRSATI,OOCEAN=.FALSE.,&
+                          PBUF=ZBUF)
      ZTHVM(:)=ZTHM(:)*(1.+XRV/XRD*ZMRM(:))/(1.+(ZMRM(:)+ZMRIM(:)+ZMRCM(:)))
   ENDDO
 ENDIF
@@ -1606,6 +1608,7 @@ DEALLOCATE(ZFRAC_ICE)
 DEALLOCATE(ZRSATW)
 DEALLOCATE(ZRSATI)       
 DEALLOCATE(ZMRT)
+DEALLOCATE(ZBUF)
 !-------------------------------------------------------------------------------
 !
 !* 4.     COMPUTE FIELDS ON THE MODEL GRID (WITH OROGRAPHY)
@@ -1630,5 +1633,8 @@ CONTAINS
       CALL PRINT_MSG( NVERB_ERROR, 'IO', 'SET_RSOU', 'error at ' // Trim( yloc) // ': ' // NF90_STRERROR( ISTATUS ) )
     END IF
   END SUBROUTINE check
-!
+  !
+  INCLUDE "th_r_from_thl_rt.func.h"
+  INCLUDE "compute_frac_ice.func.h"
+  !
 END SUBROUTINE SET_RSOU

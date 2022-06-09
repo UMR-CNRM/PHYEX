@@ -79,8 +79,6 @@ USE MODD_CST,             ONLY: CST_t
 USE MODD_NEB,             ONLY: NEB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
-USE MODE_TH_R_FROM_THL_RT_1D, ONLY: TH_R_FROM_THL_RT_1D 
-!
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 
@@ -172,6 +170,7 @@ REAL, DIMENSION(D%NIT) :: ZDZ_STOP,&           ! Exact Height of the LCL above f
                           ZTHV_PLUS_HALF       ! Thv at flux point(kk+kkl)
 REAL                   :: ZDZ                  ! Delta Z used in computations
 INTEGER :: JI, JLOOP
+REAL, DIMENSION(D%NIT, 16) :: ZBUF
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !----------------------------------------------------------------------------------
                         
@@ -286,10 +285,11 @@ ENDDO
   !but we are dealing with updraft and not mixture
   ZRCMIX(:)=PRC_UP(:)
   ZRIMIX(:)=PRI_UP(:)
-  CALL TH_R_FROM_THL_RT_1D(CST,NEB,D%NIT,HFRAC_ICE,ZFRAC_ICE,&
+  CALL TH_R_FROM_THL_RT(CST,NEB,D%NIT,HFRAC_ICE,ZFRAC_ICE,&
                PPRE_PLUS_HALF,PTHL_UP,PRT_UP,&
                ZTHMIX,ZRVMIX,ZRCMIX,ZRIMIX,&
-               ZRSATW, ZRSATI,OOCEAN=.FALSE.)
+               ZRSATW, ZRSATI,OOCEAN=.FALSE.,&
+               PBUF=ZBUF)
   ZTHV_UP_F2(:) = ZTHMIX(:)*(1.+ZRVORD*ZRVMIX(:))/(1.+PRT_UP(:))
 
   ! Integral buoyancy for cloudy part
@@ -363,19 +363,21 @@ DO JLOOP=1,SIZE(OTEST)
     ZMIXRT(JLOOP) = 0.1
   ENDIF
 ENDDO
-  CALL TH_R_FROM_THL_RT_1D(CST,NEB,D%NIT,HFRAC_ICE,ZFRAC_ICE,&
+  CALL TH_R_FROM_THL_RT(CST,NEB,D%NIT,HFRAC_ICE,ZFRAC_ICE,&
                ZPRE,ZMIXTHL,ZMIXRT,&
                ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
-               ZRSATW, ZRSATI,OOCEAN=.FALSE.)
+               ZRSATW, ZRSATI,OOCEAN=.FALSE.,&
+               PBUF=ZBUF)
   ZTHVMIX(:) = ZTHMIX(:)*(1.+ZRVORD*ZRVMIX(:))/(1.+ZMIXRT(:))
 
   !  Compute cons then non cons. var. of mixture at the flux level KK+KKL  with initial ZKIC
   ZMIXTHL(:) = ZKIC_INIT * 0.5*(PTHLM(:,KK)+PTHLM(:,KK+KKL))+(1. - ZKIC_INIT)*PTHL_UP(:)
   ZMIXRT(:)  = ZKIC_INIT * 0.5*(PRTM(:,KK)+PRTM(:,KK+KKL))+(1. - ZKIC_INIT)*PRT_UP(:)
-  CALL TH_R_FROM_THL_RT_1D(CST,NEB,D%NIT,HFRAC_ICE,ZFRAC_ICE,&
+  CALL TH_R_FROM_THL_RT(CST,NEB,D%NIT,HFRAC_ICE,ZFRAC_ICE,&
                PPRE_PLUS_HALF,ZMIXTHL,ZMIXRT,&
                ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
-               ZRSATW, ZRSATI,OOCEAN=.FALSE.)
+               ZRSATW, ZRSATI,OOCEAN=.FALSE.,&
+               PBUF=ZBUF)
   ZTHVMIX_F2(:) = ZTHMIX(:)*(1.+ZRVORD*ZRVMIX(:))/(1.+ZMIXRT(:))
 
   !Computation of mean ZKIC over the cloudy part
@@ -445,5 +447,8 @@ DO JLOOP=1,SIZE(OTEST)
 ENDDO
 
 IF (LHOOK) CALL DR_HOOK('COMPUTE_ENTR_DETR',1,ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "th_r_from_thl_rt.func.h"
+INCLUDE "compute_frac_ice.func.h"
 END SUBROUTINE COMPUTE_ENTR_DETR
 END MODULE MODE_COMPUTE_ENTR_DETR

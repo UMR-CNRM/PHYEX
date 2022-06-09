@@ -121,7 +121,7 @@ CALL MZF_MF(D, PFRAC_ICE_UP(:,:), ZFRAC_ICE_UP_M(:,:))
 
 !computation of omega star up
 ZOMEGA_UP_M(:)=0.
-DO JK=D%NKB,D%NKE,D%NKL
+DO JK=D%NKB,D%NKE-D%NKL,D%NKL
   !Vertical integration over the entire column but only buoyant points are used
   !ZOMEGA_UP_M(:)=ZOMEGA_UP_M(:) + &
   !                ZEMF_M(:,JK) * &

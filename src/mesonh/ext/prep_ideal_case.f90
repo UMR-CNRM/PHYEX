@@ -416,7 +416,6 @@ USE MODD_SUB_MODEL_n
 USE MODE_MNH_TIMING
 USE MODN_CONFZ
 !JUAN
-USE MODE_TH_R_FROM_THL_RT_3D
 !
 USE MODI_VERSION
 USE MODI_INIT_PGD_SURF_ATM
@@ -431,6 +430,7 @@ USE MODI_SET_RELFRC
 !
 USE MODI_INI_CST
 USE MODI_INI_NEB
+USE MODD_NEB, ONLY: NEB
 USE MODI_WRITE_HGRID
 USE MODD_MPIF
 USE MODD_VAR_ll
@@ -556,6 +556,7 @@ REAL, DIMENSION(:),   ALLOCATABLE :: ZXHAT_ll, ZYHAT_ll
 REAL, DIMENSION(:,:,:), ALLOCATABLE ::ZTHL,ZT,ZRT,ZFRAC_ICE,&
                                       ZEXN,ZLVOCPEXN,ZLSOCPEXN,ZCPH, &
                                       ZRSATW, ZRSATI
+REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: ZBUF
                                  ! variables for adjustement
 REAL                :: ZDIST
 !
@@ -1667,6 +1668,7 @@ IF (CIDEAL == 'RSOU') THEN
   ALLOCATE(ZFRAC_ICE(NIU,NJU,NKU))
   ALLOCATE(ZRSATW(NIU,NJU,NKU))
   ALLOCATE(ZRSATI(NIU,NJU,NKU))             
+  ALLOCATE(ZBUF(NIU,NJU,NKU,16))
   ZRT=XRT(:,:,:,1)+XRT(:,:,:,2)+XRT(:,:,:,4)
 IF (LOCEAN) THEN
   ZEXN(:,:,:)= 1.
@@ -1682,8 +1684,9 @@ ELSE
   ZLVOCPEXN = (XLVTT + (XCPV-XCL) * (ZT-XTT))/(ZCPH*ZEXN)
   ZLSOCPEXN = (XLSTT + (XCPV-XCI) * (ZT-XTT))/(ZCPH*ZEXN)
   ZTHL=XTHT-ZLVOCPEXN*XRT(:,:,:,2)-ZLSOCPEXN*XRT(:,:,:,4)
-  CALL TH_R_FROM_THL_RT_3D('T',ZFRAC_ICE,XPABST,ZTHL,ZRT,XTHT,XRT(:,:,:,1), &
-                            XRT(:,:,:,2),XRT(:,:,:,4),ZRSATW, ZRSATI,OOCEAN=.FALSE.)
+  CALL TH_R_FROM_THL_RT(CST, NEB, SIZE(ZFRAC_ICE), 'T',ZFRAC_ICE,XPABST,ZTHL,ZRT,XTHT,XRT(:,:,:,1), &
+                        XRT(:,:,:,2),XRT(:,:,:,4),ZRSATW, ZRSATI,OOCEAN=.FALSE.,&
+                        PBUF=ZBUF)
 END IF
   DEALLOCATE(ZEXN)         
   DEALLOCATE(ZT)       
@@ -1692,6 +1695,7 @@ END IF
   DEALLOCATE(ZLSOCPEXN)
   DEALLOCATE(ZTHL) 
   DEALLOCATE(ZRT)
+  DEALLOCATE(ZBUF)
 ! Coherence test
   IF ((.NOT. LUSERI) ) THEN
     IF (MAXVAL(XRT(:,:,:,4))/= 0) THEN
@@ -1930,4 +1934,8 @@ WRITE(NLUOUT,FMT=*) '****************************************************'
 !
 CALL FINALIZE_MNH()
 !
+!
+CONTAINS
+INCLUDE "th_r_from_thl_rt.func.h"
+INCLUDE "compute_frac_ice.func.h"
 END PROGRAM PREP_IDEAL_CASE
