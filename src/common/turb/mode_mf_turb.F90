@@ -128,6 +128,7 @@ REAL, DIMENSION(D%NIT,D%NKT,KSV), INTENT(OUT)::  PFLXZSVMF
 
 REAL, DIMENSION(D%NIT,D%NKT) :: ZVARS
 INTEGER :: JSV          !number of scalar variables and Loop counter
+INTEGER :: JI, JK
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !----------------------------------------------------------------------------
@@ -151,19 +152,22 @@ PSVDT = 0.
 !
 
 CALL MZM_MF(D, PTHLM(:,:), PFLXZTHMF(:,:))
-PFLXZTHMF(:,:) = PEMF(:,:)*(PTHL_UP(:,:)-PFLXZTHMF(:,:))
-
 CALL MZM_MF(D, PRTM(:,:), PFLXZRMF(:,:))
-PFLXZRMF(:,:) =  PEMF(:,:)*(PRT_UP(:,:)-PFLXZRMF(:,:))
-
 CALL MZM_MF(D, PTHVM(:,:), PFLXZTHVMF(:,:))
+
+!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+PFLXZTHMF(:,:) = PEMF(:,:)*(PTHL_UP(:,:)-PFLXZTHMF(:,:))
+PFLXZRMF(:,:) =  PEMF(:,:)*(PRT_UP(:,:)-PFLXZRMF(:,:))
 PFLXZTHVMF(:,:) = PEMF(:,:)*(PTHV_UP(:,:)-PFLXZTHVMF(:,:))
+!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 IF (OMIXUV) THEN
   CALL MZM_MF(D, PUM(:,:), PFLXZUMF(:,:))
-  PFLXZUMF(:,:) =  PEMF(:,:)*(PU_UP(:,:)-PFLXZUMF(:,:))
   CALL MZM_MF(D, PVM(:,:), PFLXZVMF(:,:))
+  !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+  PFLXZUMF(:,:) =  PEMF(:,:)*(PU_UP(:,:)-PFLXZUMF(:,:))
   PFLXZVMF(:,:) =  PEMF(:,:)*(PV_UP(:,:)-PFLXZVMF(:,:))
+  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 ELSE
   PFLXZUMF(:,:) = 0.
   PFLXZVMF(:,:) = 0.
@@ -184,25 +188,24 @@ ENDIF
 !
 CALL TRIDIAG_MASSFLUX(D,PTHLM,PFLXZTHMF,-PEMF,PTSTEP,PIMPL,  &
                       PDZZ,PRHODJ,ZVARS )
-! compute new flux
+! compute new flux and THL tendency
 CALL MZM_MF(D, ZVARS(:,:), PFLXZTHMF(:,:))
+!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 PFLXZTHMF(:,:) = PEMF(:,:)*(PTHL_UP(:,:)-PFLXZTHMF(:,:))
-
-!!! compute THL tendency
-!
 PTHLDT(:,:)= (ZVARS(:,:)-PTHLM(:,:))/PTSTEP
+!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 !
 ! 3.2 Compute the tendency for the conservative mixing ratio
 !
 CALL TRIDIAG_MASSFLUX(D,PRTM(:,:),PFLXZRMF,-PEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
-! compute new flux
+! compute new flux and RT tendency
 CALL MZM_MF(D, ZVARS(:,:), PFLXZRMF(:,:))
+!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 PFLXZRMF(:,:) =  PEMF(:,:)*(PRT_UP(:,:)-PFLXZRMF(:,:))
-
-!!! compute RT tendency
 PRTDT(:,:) = (ZVARS(:,:)-PRTM(:,:))/PTSTEP
+!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 !
 
 IF (OMIXUV) THEN
@@ -213,13 +216,12 @@ IF (OMIXUV) THEN
 
   CALL TRIDIAG_MASSFLUX(D,PUM,PFLXZUMF,-PEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
-  ! compute new flux
+  ! compute new flux and U tendency
   CALL MZM_MF(D, ZVARS(:,:), PFLXZUMF(:,:))
+  !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
   PFLXZUMF(:,:) = PEMF(:,:)*(PU_UP(:,:)-PFLXZUMF(:,:))
-
-  ! compute U tendency
   PUDT(:,:)= (ZVARS(:,:)-PUM(:,:))/PTSTEP
-
+  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
   !
   !
   ! 3.4 Compute the tendency for the (non conservative but treated as it for the time beiing)
@@ -228,12 +230,12 @@ IF (OMIXUV) THEN
   !
   CALL TRIDIAG_MASSFLUX(D,PVM,PFLXZVMF,-PEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
-  ! compute new flux
+  ! compute new flux and V tendency
   CALL MZM_MF(D, ZVARS(:,:), PFLXZVMF(:,:))
+  !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
   PFLXZVMF(:,:) = PEMF(:,:)*(PV_UP(:,:)-PFLXZVMF(:,:))
-
-  ! compute V tendency
   PVDT(:,:)= (ZVARS(:,:)-PVM(:,:))/PTSTEP
+  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 ELSE
   PUDT(:,:)=0.
   PVDT(:,:)=0.
@@ -247,20 +249,21 @@ DO JSV=1,KSV
   !   ( Resulting fluxes are in flux level (w-point) as PEMF and PTHL_UP )
 
   CALL MZM_MF(D, PSVM(:,:,JSV), PFLXZSVMF(:,:,JSV))
+  !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
   PFLXZSVMF(:,:,JSV) = PEMF(:,:)*(PSV_UP(:,:,JSV)-PFLXZSVMF(:,:,JSV))
-  
+  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
   !
   ! 3.5 Compute the tendency for scalar variables
   !     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
   !
   CALL TRIDIAG_MASSFLUX(D,PSVM(:,:,JSV),PFLXZSVMF(:,:,JSV),&
                         -PEMF,PTSTEP,PIMPL,PDZZ,PRHODJ,ZVARS )
-  ! compute new flux
+  ! compute new flux and Sv tendency
   CALL MZM_MF(D, ZVARS, PFLXZSVMF(:,:,JSV))
+  !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
   PFLXZSVMF(:,:,JSV) = PEMF(:,:)*(PSV_UP(:,:,JSV)-PFLXZSVMF(:,:,JSV))
-
-  ! compute Sv tendency
   PSVDT(:,:,JSV)= (ZVARS(:,:)-PSVM(:,:,JSV))/PTSTEP
+  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 ENDDO
 !

@@ -99,7 +99,7 @@ REAL, DIMENSION(D%NIT,D%NKT) :: ZFLXZTHSMF,ZTHS_UP,ZTHSM  ! Theta S flux
 REAL, DIMENSION(D%NIT,D%NKT) :: ZQT_UP,ZQTM,ZTHSDT,ZQTDT
 REAL, DIMENSION(D%NIT,D%NKT) :: ZTHLM_F,ZRTM_F
 
-INTEGER                              :: JK            ! loop counter
+INTEGER                              :: JK, JI            ! loop counter
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 
 !----------------------------------------------------------------------------
@@ -130,25 +130,31 @@ PVDT   = 0.
 
 CALL MZM_MF(D, PRTM (:,:), ZRTM_F(:,:))
 CALL MZM_MF(D, PTHLM(:,:), ZTHLM_F(:,:))
-ZQTM   (:,:) = ZRTM_F (:,:)/(1.+ZRTM_F (:,:))
-ZQT_UP (:,:) = PRT_UP (:,:)/(1.+PRT_UP (:,:))
-ZTHS_UP(:,:) = PTHL_UP(:,:)*(1.+PARAMMF%XLAMBDA_MF*ZQT_UP(:,:))
-ZTHSM  (:,:) = ZTHLM_F(:,:)*(1.+PARAMMF%XLAMBDA_MF*ZQTM(:,:))
+!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+ZQTM(:,:)   = ZRTM_F(:,:)/(1.+ZRTM_F(:,:))
+ZQT_UP(:,:) = PRT_UP(:,:)/(1.+PRT_UP(:,:))
+ZTHS_UP(:,:)= PTHL_UP(:,:)*(1.+PARAMMF%XLAMBDA_MF*ZQT_UP(:,:))
+ZTHSM(:,:)  = ZTHLM_F(:,:)*(1.+PARAMMF%XLAMBDA_MF*ZQTM(:,:))
+!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 CALL MZM_MF(D, PTHLM(:,:), PFLXZTHLMF(:,:))
-PFLXZTHLMF(:,:)  = PEMF(:,:)*(PTHL_UP(:,:)-PFLXZTHLMF(:,:))  ! ThetaL
-CALL MZM_MF(D, PRTM (:,:), PFLXZRMF(:,:))
-PFLXZRMF(:,:)    = PEMF(:,:)*(PRT_UP (:,:)-PFLXZRMF(:,:))  ! Rt
+CALL MZM_MF(D, PRTM(:,:), PFLXZRMF(:,:))
 CALL MZM_MF(D, PTHVM(:,:), PFLXZTHVMF(:,:))
+!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+PFLXZTHLMF(:,:)  = PEMF(:,:)*(PTHL_UP(:,:)-PFLXZTHLMF(:,:))  ! ThetaL
+PFLXZRMF(:,:)    = PEMF(:,:)*(PRT_UP(:,:)-PFLXZRMF(:,:))  ! Rt
 PFLXZTHVMF(:,:)  = PEMF(:,:)*(PTHV_UP(:,:)-PFLXZTHVMF(:,:))  ! ThetaV
 
 ZFLXZTHSMF(:,:)  = PEMF(:,:)*(ZTHS_UP(:,:)-ZTHSM(:,:))    ! Theta S flux
+!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 IF (OMIXUV) THEN
   CALL MZM_MF(D, PUM(:,:), PFLXZUMF(:,:))
-  PFLXZUMF(:,:) =  PEMF(:,:)*(PU_UP(:,:)-PFLXZUMF(:,:))  ! U
   CALL MZM_MF(D, PVM(:,:), PFLXZVMF(:,:))
+  !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+  PFLXZUMF(:,:) =  PEMF(:,:)*(PU_UP(:,:)-PFLXZUMF(:,:))  ! U
   PFLXZVMF(:,:) =  PEMF(:,:)*(PV_UP(:,:)-PFLXZVMF(:,:))  ! V
+  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 ELSE
   PFLXZUMF(:,:) = 0.
   PFLXZVMF(:,:) = 0.
@@ -162,17 +168,21 @@ ENDIF
 !          --------------------------------------------
 
 DO JK=D%NKB,D%NKE-D%NKL,D%NKL
-!  PTHLDT(:,JK) = (PFLXZTHLMF(:,JK  ) - PFLXZTHLMF(:,JK+D%NKL)) / PRHODJ(:,JK)
-  PRTDT (:,JK) = (PFLXZRMF  (:,JK  ) - PFLXZRMF  (:,JK+D%NKL)) / PRHODJ(:,JK)
-  ZQTDT (:,JK) = PRTDT (:,JK)/(1.+ ZRTM_F (:,JK)*ZRTM_F (:,JK))
-  ZTHSDT(:,JK) = (ZFLXZTHSMF(:,JK  ) - ZFLXZTHSMF(:,JK+D%NKL)) / PRHODJ(:,JK)
-  PTHLDT(:,JK) = ZTHSDT(:,JK)/(1.+PARAMMF%XLAMBDA_MF*ZQTM(:,JK)) - ZTHLM_F(:,JK)*PARAMMF%XLAMBDA_MF*ZQTDT(:,JK)
+  DO JI=D%NIB,D%NIE
+    !PTHLDT(JI,JK) = (PFLXZTHLMF(JI,JK  ) - PFLXZTHLMF(JI,JK+D%NKL)) / PRHODJ(JI,JK)
+    PRTDT(JI,JK) = (PFLXZRMF(JI,JK) - PFLXZRMF(JI,JK+D%NKL)) / PRHODJ(JI,JK)
+    ZQTDT(JI,JK) = PRTDT(JI,JK)/(1.+ ZRTM_F(JI,JK)*ZRTM_F(JI,JK))
+    ZTHSDT(JI,JK)= (ZFLXZTHSMF(JI,JK) - ZFLXZTHSMF(JI,JK+D%NKL)) / PRHODJ(JI,JK)
+    PTHLDT(JI,JK) = ZTHSDT(JI,JK)/(1.+PARAMMF%XLAMBDA_MF*ZQTM(JI,JK)) - ZTHLM_F(JI,JK)*PARAMMF%XLAMBDA_MF*ZQTDT(JI,JK)
+  ENDDO
 END DO
 
 IF (OMIXUV) THEN
   DO JK=D%NKB,D%NKE-D%NKL,D%NKL
-    PUDT(:,JK) = (PFLXZUMF(:,JK  ) - PFLXZUMF(:,JK+D%NKL)) / PRHODJ(:,JK)
-    PVDT(:,JK) = (PFLXZVMF(:,JK  ) - PFLXZVMF(:,JK+D%NKL)) / PRHODJ(:,JK)
+    DO JI=D%NIB,D%NIE
+      PUDT(JI,JK) = (PFLXZUMF(JI,JK) - PFLXZUMF(JI,JK+D%NKL)) / PRHODJ(JI,JK)
+      PVDT(JI,JK) = (PFLXZVMF(JI,JK) - PFLXZVMF(JI,JK+D%NKL)) / PRHODJ(JI,JK)
+    ENDDO
   END DO
 ENDIF  
 
