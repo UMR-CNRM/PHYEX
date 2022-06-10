@@ -211,6 +211,9 @@ if [ $compilation -eq 1 ]; then
   rm -f MNH/mf_turb_greyzone.f90
   rm -f MNH/compute_frac_ice.f90
   rm -f MNH/rain_ice_red.f90
+  # Supress some files if they are not used anymore
+  ! grep -i MODI_COMPUTE_ENTR_DETR $(ls MNH/*compute_updraft* PHYEX/turb/*compute_updraft* 2>/dev/null) && rm -f MNH/compute_entr_detr.f90
+  ! grep -i MODI_TH_R_FROM_THL_RT_ $(ls MNH/compute_entr_detr.f90 MNH/compute_entr_detr.f90 PHYEX/turb/mode_compute_updraft*.f90 MNH/ice_adjust_bis.f90 MNH/prep_ideal_case.f90 MNH/set_rsou.f90 2>/dev/null)  > /dev/null && rm -f MNH/th_r_from_thl_rt_1d.f90 MNH/th_r_from_thl_rt_2d.f90 MNH/th_r_from_thl_rt_3d.f90
 
   #Configure and compilation
   ./configure
