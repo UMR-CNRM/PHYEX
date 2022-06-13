@@ -71,15 +71,15 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),         INTENT(IN)  :: D
 TYPE(CST_t),              INTENT(IN)  :: CST
 TYPE(CSTURB_t),           INTENT(IN)  :: CSTURB
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN),TARGET  :: PZZ
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN),TARGET  :: PDZZ
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN),TARGET  :: PTHVREF
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN),TARGET  :: PTHLM       ! conservative pot. temp.
+REAL, DIMENSION(D%NIT*D%NJT,D%NKT),   INTENT(IN),TARGET  :: PZZ
+REAL, DIMENSION(D%NIT*D%NJT,D%NKT),   INTENT(IN),TARGET  :: PDZZ
+REAL, DIMENSION(D%NIT*D%NJT,D%NKT),   INTENT(IN),TARGET  :: PTHVREF
+REAL, DIMENSION(D%NIT*D%NJT,D%NKT),   INTENT(IN),TARGET  :: PTHLM       ! conservative pot. temp.
 INTEGER,                  INTENT(IN)  :: KRR
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN),TARGET :: PRM       ! water var.
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN),TARGET  :: PTKEM     ! TKE
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN),TARGET  :: PSHEAR
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(OUT),TARGET :: PLM       ! Mixing length
+REAL, DIMENSION(D%NIT*D%NJT,D%NKT,KRR), INTENT(IN),TARGET :: PRM       ! water var.
+REAL, DIMENSION(D%NIT*D%NJT,D%NKT),   INTENT(IN),TARGET  :: PTKEM     ! TKE
+REAL, DIMENSION(D%NIT*D%NJT,D%NKT),   INTENT(IN),TARGET  :: PSHEAR
+REAL, DIMENSION(D%NIT*D%NJT,D%NKT),   INTENT(OUT),TARGET :: PLM       ! Mixing length
 LOGICAL,                  INTENT(IN)  ::  OOCEAN       ! switch for Ocean model version
 CHARACTER(LEN=6),         INTENT(IN)  ::  HPROGRAM     ! CPROGRAM is the program currently running (modd_conf)
 !   thermodynamical variables PTHLM=Theta at the begining
@@ -99,16 +99,12 @@ REAL, DIMENSION(D%NIT*D%NJT) ::  ZLWORK,ZINTE
 !           ! downwards then upwards vertical displacement,
 !           ! residual internal energy,
 !           ! residual potential energy
-REAL, POINTER, DIMENSION(:,:) :: ZZZ,ZDZZ,       &
-                                 ZTHM,ZTKEM,ZLM, &
-                                 ZSHEAR,ZTHVREF
 !           ! input and output arrays packed according one horizontal coord.
-REAL, POINTER, DIMENSION(:,:,:)  :: ZRM
 !           ! input array packed according one horizontal coord.
 REAL, DIMENSION(D%NIT*D%NJT,D%NKT) :: ZSUM ! to replace SUM function
 REAL, DIMENSION(D%NIT*D%NJT,D%NKT) :: ZG_O_THVREF
 REAL, DIMENSION(D%NIT*D%NJT,D%NKT) :: ZSQRT_TKE
-REAL, DIMENSION(D%NIT*D%NJT,D%NKT) :: ZLMDN
+REAL, DIMENSION(D%NIT*D%NJT,D%NKT) :: PLMDN
 !
 INTEGER :: IIU,IJU,IPROMA
 INTEGER :: J1D        ! horizontal loop counter
@@ -134,14 +130,6 @@ IPROMA = D%NIT*D%NJT
 !
 ! Pointer remapping instead of RESHAPE (contiguous memory)
 ! 2D array => 3D array
-ZZZ(1:IPROMA,1:D%NKT) => PZZ
-ZDZZ(1:IPROMA,1:D%NKT) => PDZZ
-ZTHM(1:IPROMA,1:D%NKT) => PTHLM
-ZSHEAR(1:IPROMA,1:D%NKT) => PSHEAR
-ZTKEM(1:IPROMA,1:D%NKT) => PTKEM
-ZTHVREF(1:IPROMA,1:D%NKT) => PTHVREF
-ZRM(1:IPROMA,1:D%NKT,1:KRR) =>PRM
-ZLM(1:IPROMA,1:D%NKT) =>PLM
 !
 IF (OOCEAN) THEN
   DO JK=1,D%NKT
@@ -152,13 +140,13 @@ IF (OOCEAN) THEN
 ELSE !Atmosphere case
   DO JK=1,D%NKT
     DO J1D=1,IPROMA
-      ZG_O_THVREF(J1D,JK) = CST%XG / ZTHVREF(J1D,JK)
+      ZG_O_THVREF(J1D,JK) = CST%XG / PTHVREF(J1D,JK)
     END DO
   END DO
 END IF
 !
 !$mnh_expand_array(J1D=1:IPROMA,JK=1:D%NKT)
-ZSQRT_TKE(:,:) = SQRT(ZTKEM(:,:))
+ZSQRT_TKE(:,:) = SQRT(PTKEM(:,:))
 !$mnh_end_expand_array(J1D=1:IPROMA,JK=1:D%NKT)
 !
 !ZBL89EXP is defined here because (and not in ini_cturb) because CSTURB%XCED is defined in read_exseg (depending on BL89/RM17)
@@ -173,15 +161,15 @@ IF(KRR /= 0) THEN
   ZSUM(:,:) = 0.
   DO JRR=1,KRR
     !$mnh_expand_array(J1D=1:IPROMA,JK=1:D%NKT)
-    ZSUM(:,:) = ZSUM(:,:)+ZRM(:,:,JRR)
+    ZSUM(:,:) = ZSUM(:,:)+PRM(:,:,JRR)
     !$mnh_end_expand_array(J1D=1:IPROMA,JK=1:D%NKT)
   ENDDO
   !$mnh_expand_array(J1D=1:IPROMA,JK=1:D%NKT)
-  ZVPT(:,:)=ZTHM(:,:) * ( 1. + ZRVORD*ZRM(:,:,1) )  &
+  ZVPT(:,:)=PTHLM(:,:) * ( 1. + ZRVORD*PRM(:,:,1) )  &
                            / ( 1. + ZSUM(:,:) )
   !$mnh_end_expand_array(J1D=1:IPROMA,JK=1:D%NKT)
 ELSE
-  ZVPT(:,:)=ZTHM(:,:)
+  ZVPT(:,:)=PTHLM(:,:)
 END IF
 !
 !!!!!!!!!!!!
@@ -228,7 +216,7 @@ DO JK=D%NKTB,D%NKTE
 !
 !*       4.  mixing length for a downwards displacement
 !            ------------------------------------------
-  ZINTE(:)=ZTKEM(:,JK)
+  ZINTE(:)=PTKEM(:,JK)
   ZLWORK=0.
   ZTESTM=1.
   DO JKK=JK,D%NKB,-D%NKL
@@ -239,25 +227,25 @@ DO JK=D%NKTB,D%NKTE
         !--------- SHEAR + STABILITY -----------
         ZPOTE = ZTEST0* &
                 (-ZG_O_THVREF(J1D,JK)*(ZHLVPT(J1D,JKK)-ZVPT(J1D,JK)) &
-                + CSTURB%XRM17*ZSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK) &
-                )*ZDZZ(J1D,JKK)
+                + CSTURB%XRM17*PSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK) &
+                )*PDZZ(J1D,JKK)
 
         ZTEST =0.5+SIGN(0.5,ZINTE(J1D)-ZPOTE)
         ZTESTM=ZTESTM+ZTEST0
-        ZLWORK1=ZDZZ(J1D,JKK)
+        ZLWORK1=PDZZ(J1D,JKK)
 
         !--------- SHEAR + STABILITY ----------- 
         ZLWORK2 = (ZG_O_THVREF(J1D,JK) *(ZVPT(J1D,JKK) - ZVPT(J1D,JK))  & 
-          -CSTURB%XRM17*ZSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK) &
-          + sqrt(abs( (CSTURB%XRM17*ZSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK) &
+          -CSTURB%XRM17*PSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK) &
+          + sqrt(abs( (CSTURB%XRM17*PSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK) &
           + ( -ZG_O_THVREF(J1D,JK) * (ZVPT(J1D,JKK) - ZVPT(J1D,JK)) ))**2.0 + &
           2. * ZINTE(J1D) * &
 #ifdef REPRO48
-          ZG_O_THVREF(J1D,JK) * ZDELTVPT(J1D,JKK)/ ZDZZ(J1D,JKK)))) / &
+          ZG_O_THVREF(J1D,JK) * ZDELTVPT(J1D,JKK)/ PDZZ(J1D,JKK)))) / &
 #else
-          (ZG_O_THVREF(J1D,JK) * ZDELTVPT(J1D,JKK)/ ZDZZ(J1D,JKK))))) / &
+          (ZG_O_THVREF(J1D,JK) * ZDELTVPT(J1D,JKK)/ PDZZ(J1D,JKK))))) / &
 #endif
-          (ZG_O_THVREF(J1D,JK) * ZDELTVPT(J1D,JKK) / ZDZZ(J1D,JKK))
+          (ZG_O_THVREF(J1D,JK) * ZDELTVPT(J1D,JKK) / PDZZ(J1D,JKK))
         ZLWORK(J1D)=ZLWORK(J1D)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
         ZINTE(J1D) = ZINTE(J1D) - ZPOTE
       END DO
@@ -269,7 +257,7 @@ DO JK=D%NKTB,D%NKTE
 !            -----------------------------------------------
 !
   DO J1D=1,IPROMA
-    ZLMDN(J1D,JK)=MIN(ZLWORK(J1D),0.5*(ZZZ(J1D,JK)+ZZZ(J1D,JK+D%NKL))-ZZZ(J1D,D%NKB))
+    PLMDN(J1D,JK)=MIN(ZLWORK(J1D),0.5*(PZZ(J1D,JK)+PZZ(J1D,JK+D%NKL))-PZZ(J1D,D%NKB))
   END DO
 !
 !-------------------------------------------------------------------------------
@@ -277,7 +265,7 @@ DO JK=D%NKTB,D%NKTE
 !*       6.  mixing length for an upwards displacement
 !            -----------------------------------------
 !
-  ZINTE(:)=ZTKEM(:,JK)
+  ZINTE(:)=PTKEM(:,JK)
   ZLWORK(:)=0.
   ZTESTM=1.
 !
@@ -289,24 +277,24 @@ DO JK=D%NKTB,D%NKTE
         !--------- SHEAR + STABILITY -----------
         ZPOTE = ZTEST0* &
                 (ZG_O_THVREF(J1D,JK)*(ZHLVPT(J1D,JKK)-ZVPT(J1D,JK)) &
-                +CSTURB%XRM17*ZSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK) &
-                )*ZDZZ(J1D,JKK)
+                +CSTURB%XRM17*PSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK) &
+                )*PDZZ(J1D,JKK)
         ZTEST =0.5+SIGN(0.5,ZINTE(J1D)-ZPOTE)
         ZTESTM=ZTESTM+ZTEST0
-        ZLWORK1=ZDZZ(J1D,JKK)
+        ZLWORK1=PDZZ(J1D,JKK)
         !--------- SHEAR + STABILITY ----------- 
         ZLWORK2= ( - ZG_O_THVREF(J1D,JK) *(ZVPT(J1D,JKK-D%NKL) - ZVPT(J1D,JK) )  &
-                   - CSTURB%XRM17*ZSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK)  &
+                   - CSTURB%XRM17*PSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK)  &
           + SQRT (ABS(                                                       &
-          (CSTURB%XRM17*ZSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK)   &
+          (CSTURB%XRM17*PSHEAR(J1D,JKK)*ZSQRT_TKE(J1D,JK)   &
             + ( ZG_O_THVREF(J1D,JK) * (ZVPT(J1D,JKK-D%NKL) - ZVPT(J1D,JK))) )**2    &
             + 2. * ZINTE(J1D) * &
 #ifdef REPRO48
-             ZG_O_THVREF(J1D,JK)* ZDELTVPT(J1D,JKK)/ZDZZ(J1D,JKK)))) / &
+             ZG_O_THVREF(J1D,JK)* ZDELTVPT(J1D,JKK)/PDZZ(J1D,JKK)))) / &
 #else
-            (ZG_O_THVREF(J1D,JK)* ZDELTVPT(J1D,JKK)/ZDZZ(J1D,JKK))))) / &
+            (ZG_O_THVREF(J1D,JK)* ZDELTVPT(J1D,JKK)/PDZZ(J1D,JKK))))) / &
 #endif
-            (ZG_O_THVREF(J1D,JK) * ZDELTVPT(J1D,JKK) / ZDZZ(J1D,JKK))
+            (ZG_O_THVREF(J1D,JK) * ZDELTVPT(J1D,JKK) / PDZZ(J1D,JKK))
         ZLWORK(J1D)=ZLWORK(J1D)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
         ZINTE(J1D) = ZINTE(J1D) - ZPOTE
       END DO
@@ -318,17 +306,17 @@ DO JK=D%NKTB,D%NKTE
 !*       7.  final mixing length
 !
   DO J1D=1,IPROMA
-    ZLWORK1=MAX(ZLMDN(J1D,JK),1.E-10_MNHREAL)
+    ZLWORK1=MAX(PLMDN(J1D,JK),1.E-10_MNHREAL)
     ZLWORK2=MAX(ZLWORK(J1D),1.E-10_MNHREAL)
     ZPOTE = ZLWORK1 / ZLWORK2
 #ifdef REPRO48
     ZLWORK2=1.d0 + ZPOTE**(2./3.)
-    ZLM(J1D,JK) = Z2SQRT2*ZLWORK1/(ZLWORK2*SQRT(ZLWORK2))
+    PLM(J1D,JK) = Z2SQRT2*ZLWORK1/(ZLWORK2*SQRT(ZLWORK2))
 #else
     ZLWORK2=1.d0 + ZPOTE**ZBL89EXP
-    ZLM(J1D,JK) = ZLWORK1*(2./ZLWORK2)**ZUSRBL89
+    PLM(J1D,JK) = ZLWORK1*(2./ZLWORK2)**ZUSRBL89
 #endif
-    ZLM(J1D,JK)=MAX(ZLM(J1D,JK),CSTURB%XLINI)
+    PLM(J1D,JK)=MAX(PLM(J1D,JK),CSTURB%XLINI)
   END DO
 
 
@@ -343,16 +331,16 @@ END DO
 !*       9.  boundaries
 !            ----------
 !
-ZLM(:,D%NKA)=ZLM(:,D%NKB)
-ZLM(:,D%NKE)=ZLM(:,D%NKE-D%NKL)
-ZLM(:,D%NKU)=ZLM(:,D%NKE-D%NKL)
+PLM(:,D%NKA)=PLM(:,D%NKB)
+PLM(:,D%NKE)=PLM(:,D%NKE-D%NKL)
+PLM(:,D%NKU)=PLM(:,D%NKE-D%NKL)
 !
 !-------------------------------------------------------------------------------
 !
 !*      10.  retrieve output array in model coordinates
 !            ------------------------------------------
 ! Not needed anymore because of the use of Pointer remapping (see 1.)
-! PLM (3D array) is the target of ZLM (2D array) in a contiguous way
+! PLM (3D array) is the target of PLM (2D array) in a contiguous way
 !
 IF (LHOOK) CALL DR_HOOK('BL89',1,ZHOOK_HANDLE)
 END SUBROUTINE BL89
