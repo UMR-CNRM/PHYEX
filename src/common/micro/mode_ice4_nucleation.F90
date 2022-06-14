@@ -105,14 +105,16 @@ END WHERE
 !$mnh_end_expand_where(JI=1:KSIZE)
 
 ZZW(:)=0.
-!$mnh_expand_where(JI=1:KSIZE)
-WHERE(GNEGT(:) .AND. PT(:)<CST%XTT-5.0 .AND. ZSSI(:)>0.0 )
-  ZZW(:)=ICEP%XNU20*EXP(ICEP%XALPHA2*ZSSI(:)-ICEP%XBETA2)
-ELSEWHERE(GNEGT(:) .AND. PT(:)<=CST%XTT-2.0 .AND. PT(:)>=CST%XTT-5.0 .AND. ZSSI(:)>0.0)
-  ZZW(:)=MAX(ICEP%XNU20*EXP(-ICEP%XBETA2 ), &
-             ICEP%XNU10*EXP(-ICEP%XBETA1*(PT(:)-CST%XTT))*(ZSSI(:)/ZUSW(:))**ICEP%XALPHA1)
-END WHERE
-!$mnh_end_expand_where(JI=1:KSIZE)
+DO JI=1,KSIZE
+  IF(GNEGT(JI)) THEN
+    IF(PT(JI)<CST%XTT-5.0 .AND. ZSSI(JI)>0.0) THEN
+      ZZW(JI)=ICEP%XNU20*EXP(ICEP%XALPHA2*ZSSI(JI)-ICEP%XBETA2)
+    ELSEIF(PT(JI)<=CST%XTT-2.0 .AND. PT(JI)>=CST%XTT-5.0 .AND. ZSSI(JI)>0.0) THEN
+      ZZW(JI)=MAX(ICEP%XNU20*EXP(-ICEP%XBETA2 ), &                                                                                       
+                  ICEP%XNU10*EXP(-ICEP%XBETA1*(PT(JI)-CST%XTT))*(ZSSI(JI)/ZUSW(JI))**ICEP%XALPHA1)
+    ENDIF
+  ENDIF
+ENDDO
 !$mnh_expand_where(JI=1:KSIZE)
 WHERE(GNEGT(:))
   ZZW(:)=ZZW(:)-PCIT(:)
@@ -144,7 +146,9 @@ IF(PARAMI%LFEEDBACKT) THEN
   !$mnh_end_expand_where(JI=1:KSIZE)
 ENDIF
 !$mnh_expand_where(JI=1:KSIZE)
-PCIT(:)=MAX(ZZW(:)+PCIT(:), PCIT(:))
+WHERE(GNEGT(:))
+  PCIT(:)=MAX(ZZW(:)+PCIT(:), PCIT(:))
+END WHERE
 !$mnh_end_expand_where(JI=1:KSIZE)
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_NUCLEATION', 1, ZHOOK_HANDLE)
