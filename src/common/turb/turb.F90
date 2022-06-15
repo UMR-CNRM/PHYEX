@@ -244,6 +244,7 @@ USE MODD_BUDGET, ONLY:      NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUD
                             TBUDGETDATA, TBUDGETCONF_t
 USE MODD_FIELD, ONLY: TFIELDDATA,TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
+USE MODD_ARGSLIST_ll, ONLY : LIST_ll
 !
 USE MODD_LES
 USE MODD_IBM_PARAM_n,    ONLY: LIBM, XIBM_LS, XIBM_XMUT
@@ -260,6 +261,8 @@ USE MODE_TM06, ONLY: TM06
 USE MODE_UPDATE_LM, ONLY: UPDATE_LM
 USE MODE_BUDGET,         ONLY: BUDGET_STORE_INIT, BUDGET_STORE_END
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
+USE MODE_ll, ONLY: ADD2DFIELD_ll, UPDATE_HALO_ll, CLEANLIST_ll, &
+                   LWEST_ll, LEAST_ll, LSOUTH_ll, LNORTH_ll
 USE MODE_SBL
 USE MODE_SOURCES_NEG_CORRECT, ONLY: SOURCES_NEG_CORRECT
 USE MODE_EMOIST, ONLY: EMOIST
@@ -438,8 +441,15 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::     &
           ZSHEAR, ZDUDZ, ZDVDZ,       &  ! horizontal-wind vertical gradient
           ZLVOCPEXNM,ZLSOCPEXNM,      &  ! Lv/Cp/EXNREF and Ls/Cp/EXNREF at t-1
           ZATHETA_ICE,ZAMOIST_ICE,    &  ! coefficients for s = f (Thetal,Rnp)
-          ZWORK1                         ! working array syntax
-
+          ZRVSAT, ZDRVSATDT,          &  ! local array for routine compute_function_thermo
+          ZWORK1,                     &  ! working array syntax
+          ZETHETA,ZEMOIST,            &  ! coef ETHETA and EMOIST (for DEAR routine)
+          ZDTHLDZ,ZDRTDZ,             &  ! dtheta_l/dz, drt_dz used for computing the stablity criterion
+          ZCOEF_AMPL,                 &  ! Amplification coefficient of the mixing length
+                                         ! when the instability criterium is verified (routine CLOUD_MODIF_LM)
+          ZLM_CLOUD                      ! Turbulent mixing length in the clouds (routine CLOUD_MODIF_LM)
+!
+!
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR) :: ZRM ! initial mixing ratio 
 REAL, DIMENSION(D%NIT,D%NJT) ::  ZTAU11M,ZTAU12M,  &
                                                  ZTAU22M,ZTAU33M,  &
@@ -451,7 +461,7 @@ REAL, DIMENSION(D%NIT,D%NJT) ::  ZTAU11M,ZTAU12M,  &
             ! - Cd*||u|| where ||u|| is the module of the wind tangential to 
             ! orography (ZUSLOPE,ZVSLOPE) at the surface.
                                                  ZUSTAR, ZLMO,     &
-                                                 ZRVM, ZSFRV
+                                                 ZRVM, ZSFRV,ZWORK2D
             ! friction velocity, Monin Obuhkov length, work arrays for vapor
 !
             ! Virtual Potential Temp. used
@@ -459,8 +469,15 @@ REAL, DIMENSION(D%NIT,D%NJT) ::  ZTAU11M,ZTAU12M,  &
 !
 REAL                :: ZEXPL        ! 1-PIMPL deg of expl.
 REAL                :: ZRVORD       ! RV/RD
+REAL                :: ZEPS         ! XMV / XMD
+REAL                :: ZD           ! distance to the surface (for routine DELT)
+REAL                :: ZVAR         ! Intermediary variable (for routine DEAR)
+REAL                :: ZPENTE       ! Slope of the amplification straight line (for routine CLOUD_MODIF_LM)
+REAL                :: ZCOEF_AMPL_CEI_NUL! Ordonnate at the origin of the
+                                         ! amplification straight line (for routine CLOUD_MODIF_LM)
 !
 INTEGER             :: IIE,IIB,IJE,IJB,IKB,IKE      ! index value for the
+INTEGER             :: IINFO_ll     ! return code of parallel routine
 ! Beginning and the End of the physical domain for the mass points
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
@@ -473,6 +490,7 @@ REAL                :: ZALPHA       ! work coefficient :
 !
 REAL :: ZTIME1, ZTIME2
 TYPE(TFIELDDATA) :: TZFIELD
+TYPE(LIST_ll), POINTER :: TZFIELDS_ll  ! list of fields to exchange (for UPDATE_ROTATE_WIND)
 !
 !*      1.PRELIMINARIES
 !         -------------
@@ -1333,8 +1351,6 @@ CONTAINS
 !
 !*       0.    DECLARATIONS
 !              ------------
-USE MODE_ll
-USE MODD_ARGSLIST_ll, ONLY : LIST_ll
 !
 IMPLICIT NONE
 !
@@ -1343,21 +1359,12 @@ IMPLICIT NONE
 REAL, DIMENSION(:,:), INTENT(INOUT) :: PUSLOPE,PVSLOPE
 ! tangential surface fluxes in the axes following the orography
 !
-!*       0.2   Declarations of local variables :
-!
-INTEGER             :: IIB,IIE,IJB,IJE,IIU,IJU ! index values for the physical subdomain
-TYPE(LIST_ll), POINTER :: TZFIELDS_ll  ! list of fields to exchange
-INTEGER                :: IINFO_ll     ! return code of parallel routine
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB:UPDATE_ROTATE_WIND',0,ZHOOK_HANDLE)
 !
 !*        1  PROLOGUE
 !
 NULLIFY(TZFIELDS_ll)
-!
-IIU=SIZE(PUSLOPE,1)
-IJU=SIZE(PUSLOPE,2)
-CALL GET_INDICE_ll (IIB,IJB,IIE,IJE,IIU,IJU)
 !
 !         2 Update halo if necessary
 !
@@ -1371,20 +1378,20 @@ CALL GET_INDICE_ll (IIB,IJB,IIE,IJE,IIU,IJU)
 !        3 Boundary conditions for non cyclic case
 !
 IF ( HLBCX(1) /= "CYCL" .AND. LWEST_ll()) THEN
-  PUSLOPE(IIB-1,:)=PUSLOPE(IIB,:)
-  PVSLOPE(IIB-1,:)=PVSLOPE(IIB,:)
+  PUSLOPE(D%NIB-1,:)=PUSLOPE(D%NIB,:)
+  PVSLOPE(D%NIB-1,:)=PVSLOPE(D%NIB,:)
 END IF
 IF ( HLBCX(2) /= "CYCL" .AND. LEAST_ll()) THEN
-  PUSLOPE(IIE+1,:)=PUSLOPE(IIE,:)
-  PVSLOPE(IIE+1,:)=PVSLOPE(IIE,:)
+  PUSLOPE(D%NIE+1,:)=PUSLOPE(D%NIE,:)
+  PVSLOPE(D%NIE+1,:)=PVSLOPE(D%NIE,:)
 END IF
 IF ( HLBCY(1) /= "CYCL" .AND. LSOUTH_ll()) THEN
-  PUSLOPE(:,IJB-1)=PUSLOPE(:,IJB)
-  PVSLOPE(:,IJB-1)=PVSLOPE(:,IJB)
+  PUSLOPE(:,D%NJB-1)=PUSLOPE(:,D%NJB)
+  PVSLOPE(:,D%NJB-1)=PVSLOPE(:,D%NJB)
 END IF
 IF(  HLBCY(2) /= "CYCL" .AND. LNORTH_ll()) THEN
-  PUSLOPE(:,IJE+1)=PUSLOPE(:,IJE)
-  PVSLOPE(:,IJE+1)=PVSLOPE(:,IJE)
+  PUSLOPE(:,D%NJE+1)=PUSLOPE(:,D%NJE)
+  PVSLOPE(:,D%NJE+1)=PVSLOPE(:,D%NJE)
 END IF
 !
 IF (LHOOK) CALL DR_HOOK('TURB:UPDATE_ROTATE_WIND',1,ZHOOK_HANDLE)
@@ -1411,7 +1418,6 @@ END SUBROUTINE UPDATE_ROTATE_WIND
 !
 !*       0.    DECLARATIONS
 !              ------------
-USE MODD_CST, ONLY: CST_t
 !
 IMPLICIT NONE
 !
@@ -1422,13 +1428,6 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PT,PEXN,PCP
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PLOCPEXN
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
-! 
-!*       0.2   Declarations of local variables
-!
-REAL                :: ZEPS         ! XMV / XMD
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZRVSAT
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZDRVSATDT
-INTEGER :: JI,JJ,JK
 !
 !-------------------------------------------------------------------------------
 !
@@ -1506,11 +1505,6 @@ END SUBROUTINE COMPUTE_FUNCTION_THERMO
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PLM
 LOGICAL,                INTENT(IN)    :: ODZ
-!
-!*       0.2   Declarations of local variables
-!
-REAL                :: ZD           ! distance to the surface
-!
 !-------------------------------------------------------------------------------
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
@@ -1604,18 +1598,6 @@ END SUBROUTINE DELT
 !*       0.1   Declarations of dummy arguments 
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PLM
-!
-!*       0.2   Declarations of local variables
-!
-REAL                :: ZD           ! distance to the surface
-REAL                :: ZVAR         ! Intermediary variable
-REAL, DIMENSION(SIZE(PUT,1),SIZE(PUT,2)) ::   ZWORK2D
-!
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::     &
-            ZDTHLDZ,ZDRTDZ,     &!dtheta_l/dz, drt_dz used for computing the stablity
-!                                ! criterion 
-            ZETHETA,ZEMOIST             !coef ETHETA and EMOIST
-!----------------------------------------------------------------------------
 !
 !-------------------------------------------------------------------------------
 !
@@ -1788,15 +1770,6 @@ END SUBROUTINE DEAR
 !              ------------
 !
 IMPLICIT NONE
-!
-REAL :: ZPENTE            ! Slope of the amplification straight line
-REAL :: ZCOEF_AMPL_CEI_NUL! Ordonnate at the origin of the
-                          ! amplification straight line
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZCOEF_AMPL
-                          ! Amplification coefficient of the mixing length
-                          ! when the instability criterium is verified 
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZLM_CLOUD
-                          ! Turbulent mixing length in the clouds
 !
 !-------------------------------------------------------------------------------
 !
