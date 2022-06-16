@@ -224,6 +224,7 @@ USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
 USE MODI_GRADIENT_M
 USE MODI_GRADIENT_W
+USE MODE_GRADIENT_M_PHY, ONLY : GZ_M_W_PHY
 USE MODI_TURB
 USE MODE_TURB_VER_THERMO_FLUX, ONLY: TURB_VER_THERMO_FLUX
 USE MODE_TURB_VER_THERMO_CORR, ONLY: TURB_VER_THERMO_CORR
@@ -387,8 +388,8 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV)  ::  &
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  ::  ZLM
 !
 LOGICAL :: GUSERV    ! flag to use water vapor
-INTEGER :: IKB,IKE   ! index value for the Beginning
-                     ! and the End of the physical domain for the mass points
+INTEGER :: IKB,IKE,IIB,IIE,IJB,IJE   ! index value for the Beginning
+                                     ! and the End of the physical domain for the mass points
 INTEGER :: JSV,JI,JJ,JK ! loop counter
 REAL    :: ZTIME1
 REAL    :: ZTIME2
@@ -402,8 +403,12 @@ TYPE(TFIELDDATA) :: TZFIELD
 !
 IF (LHOOK) CALL DR_HOOK('TURB_VER',0,ZHOOK_HANDLE)
 !
-IKB=D%NKB
-IKE=D%NKE
+IKB=D%NKTB
+IKE=D%NKTE
+IIE=D%NIEC
+IIB=D%NIBC
+IJE=D%NJEC
+IJB=D%NJBC
 !
 !
 ! 3D Redelsperger numbers
@@ -424,36 +429,38 @@ CALL PRANDTL(D,CST,CSTURB,KRR,KSV,KRRI,OTURB_FLX,  &
 ! Buoyancy coefficient
 !
 IF (OOCEAN) THEN
-  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-  ZBETA(:,:,:) = CST%XG*CST%XALPHAOC
-  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  ZBETA(IIB:IIE,IJB:IJE,1:D%NKT) = CST%XG*CST%XALPHAOC
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 ELSE
-  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-  ZBETA(:,:,:) = CST%XG/PTHVREF(:,:,:)
-  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  ZBETA(IIB:IIE,IJB:IJE,1:D%NKT) = CST%XG/PTHVREF(IIB:IIE,IJB:IJE,1:D%NKT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 END IF
 !
 ! Square root of Tke
 !
-!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-ZSQRT_TKE(:,:,:) = SQRT(PTKEM(:,:,:))
-!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+ZSQRT_TKE(IIB:IIE,IJB:IJE,1:D%NKT) = SQRT(PTKEM(IIB:IIE,IJB:IJE,1:D%NKT))
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
 ! gradients of mean quantities at previous time-step
 !
-ZDTH_DZ = GZ_M_W(D%NKA, D%NKU, D%NKL,PTHLM(:,:,:),PDZZ)
-ZDR_DZ  = 0.
-IF (KRR>0) ZDR_DZ  = GZ_M_W(D%NKA, D%NKU, D%NKL,PRM(:,:,:,1),PDZZ)
+CALL GZ_M_W_PHY(D,PTHLM,PDZZ,ZDTH_DZ)
+ZDR_DZ(:,:,:)  = 0.
+IF (KRR>0) CALL GZ_M_W_PHY(D,PRM(:,:,:,1),PDZZ,ZDR_DZ)
 !
 !
 ! Denominator factor in 3rd order terms
 !
 IF (.NOT. OHARAT) THEN
-  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-  ZD(:,:,:) = (1.+ZREDTH1(:,:,:)+ZREDR1(:,:,:)) * (1.+0.5*(ZREDTH1(:,:,:)+ZREDR1(:,:,:)))
-  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  ZD(IIB:IIE,IJB:IJE,1:D%NKT) = (1.+ZREDTH1(IIB:IIE,IJB:IJE,1:D%NKT)+ZREDR1(IIB:IIE,IJB:IJE,1:D%NKT)) * (1.+0.5*(ZREDTH1(IIB:IIE,IJB:IJE,1:D%NKT)+ZREDR1(IIB:IIE,IJB:IJE,1:D%NKT)))
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 ELSE
-  ZD(:,:,:) = 1.
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  ZD(IIB:IIE,IJB:IJE,1:D%NKT) = 1.
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 ENDIF
 !
 ! Phi3 and Psi3 Prandtl numbers
@@ -571,7 +578,7 @@ CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KSV,O2D,OFLAT,           &
 !
 IF (OHARAT) ZLM=PLENGTHH
 !
-IF (SIZE(PSVM,4)>0)                                                 &
+IF (KSV>0)                                                          &
 CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,ONOMIXLG,                       &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
                       OTURB_FLX,HTURBDIM,OHARAT,OBLOWSNOW,OLES_CALL,&
@@ -585,7 +592,7 @@ CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,ONOMIXLG,                       &
                       PRSVS,PWSV                                    )
 !
 !
-IF (SIZE(PSVM,4)>0 .AND. OLES_CALL)                                 &
+IF (KSV>0 .AND. OLES_CALL)                                          &
 CALL  TURB_VER_SV_CORR(D,CST,CSTURB,KRR,KRRL,KRRI,OOCEAN,           &
                       PDZZ,KSV,KSV_LGBEG,KSV_LGEND,ONOMIXLG,        &
                       OBLOWSNOW,OLES_CALL,OCOMPUTE_SRC,             &
