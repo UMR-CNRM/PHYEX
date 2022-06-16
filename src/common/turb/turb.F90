@@ -352,8 +352,8 @@ REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
                 MERGE(D%NJT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)),   INTENT(IN) ::  PSRCT       ! Second-order flux
                       ! s'rc'/2Sigma_s2 at time t-1 multiplied by Lambda_3
-REAL, DIMENSION(MERGE(D%NIT,0,HTOM=='TMO6'),&
-                MERGE(D%NJT,0,HTOM=='TMO6')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
+REAL, DIMENSION(MERGE(D%NIT,0,HTOM=='TM06'),&
+                MERGE(D%NJT,0,HTOM=='TM06')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
 REAL, DIMENSION(MERGE(D%NIT,0,ORMC01),&
                 MERGE(D%NJT,0,ORMC01)),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
 !

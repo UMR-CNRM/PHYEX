@@ -103,8 +103,8 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) ::  PTKET       ! TKE
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) ::  PSVT        ! passive scal. var.
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) ::  PSRCT       ! Second-order flux
                       ! s'rc'/2Sigma_s2 at time t-1 multiplied by Lambda_3
-REAL, DIMENSION(MERGE(D%NIT,0,HTOM=='TMO6'),&
-                MERGE(D%NJT,0,HTOM=='TMO6')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
+REAL, DIMENSION(MERGE(D%NIT,0,HTOM=='TM06'),&
+                MERGE(D%NJT,0,HTOM=='TM06')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
 REAL, DIMENSION(MERGE(D%NIT,0,ORMC01),&
                 MERGE(D%NJT,0,ORMC01)),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
 !

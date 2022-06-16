@@ -347,8 +347,8 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFWR         ! d(w'2r'  )/d
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFTH2        ! d(w'th'2 )/dz (at mass point)
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFR2         ! d(w'r'2  )/dz (at mass point)
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFTHR        ! d(w'th'r')/dz (at mass point)
-REAL, DIMENSION(MERGE(D%NIT,0,HTOM=='TMO6'),&
-                MERGE(D%NJT,0,HTOM=='TMO6')),   INTENT(INOUT)::  PBL_DEPTH    ! BL depth
+REAL, DIMENSION(MERGE(D%NIT,0,HTOM=='TM06'),&
+                MERGE(D%NJT,0,HTOM=='TM06')),   INTENT(INOUT)::  PBL_DEPTH    ! BL depth
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PWTHV         ! buoyancy flux
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) :: PRTHLS     ! cumulated source for theta
