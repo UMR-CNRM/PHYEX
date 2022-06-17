@@ -8,23 +8,27 @@ set -e
 # Repertoire où MNH-V5-5-0_PHYEX.tar.gz modifie pour accueillir PHYEX se trouve
 #TARGZDIR=$HOME
 
-availTests="007_16janvier/008_run2"
+availTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, COLD_BUBBLE/002_mesonh"
 defaultTest="007_16janvier/008_run2"
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- seprator must be in sync with prep_code.sh separator
 
 PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 function usage {
-  echo "Usage: $0 [-h] [-c] [-r] [-C] [-s] [--expand] commit reference"
+  echo "Usage: $0 [-h] [-c] [-r] [-C] [-s] [--expand]  [-t test] commit reference"
   echo "commit          commit hash (or a directory)"
   echo "reference       commit hash or a directory or nothing for ref"
   echo "-s              suppress compilation pack"
   echo "-c              performs compilation"
   echo "-r              runs the tests"
   echo "-C              checks the result against the reference"
+  echo "-t              comma separated list of tests to execute"
+  echo "                or ALL to execute all tests"
   echo "--expand        use mnh_expand (code will use do loops)"
   echo ""
   echo "If nothing is asked (compilation, running, check) everything is done"
+  echo 
+  echo "If no test is aked for, the default on ($defaultTest) is executed"
   echo
   echo "The directory (for commit only, not ref) can take the form server:directory"
   echo
@@ -47,6 +51,7 @@ while [ -n "$1" ]; do
     '-c') compilation=1;;
     '-r') run=$(($run+1));;
     '-C') check=1;;
+    '-t') tests="$2"; shift;;
     '--expand') useexpand=1;;
     #-b) param="$2"; shift ;;
     #--) shift; break ;;
@@ -267,9 +272,19 @@ if [ $check -eq 1 ]; then
   for t in $(echo $tests | sed 's/,/ /g'); do
     case=$(echo $t | cut -d / -f 1)
     exedir=$(echo $t | cut -d / -f 2)
+    if [ $t == 007_16janvier/008_run2 ]; then
+      path_user=$path_user_beg/MY_RUN/KTEST/007_16janvier/008_run2$path_user_end
+      path_ref=$path_ref_beg/MY_RUN/KTEST/007_16janvier/008_run2$path_ref_end
+    elif  [ $t == 007_16janvier/008_run2_turb3D ]; then
+      path_user=$path_user_beg/MY_RUN/KTEST/007_16janvier/008_run2_turb3D$path_user_end
+      path_ref=$path_ref_beg/MY_RUN/KTEST/007_16janvier/008_run2_turb3D$path_ref_end
+    elif   [ $t == COLD_BUBBLE/002_mesonh ]; then
+      path_user=$path_user_beg/MY_RUN/KTEST/COLD_BUBBLE/002_mesonh$path_user_end
+      path_ref=$path_ref_beg/MY_RUN/KTEST/COLD_BUBBLE/002_mesonh$path_ref_end
+    else
+      echo "cas $t non reconnu"
+    fi
 
-    path_user=$path_user_beg/MY_RUN/KTEST/007_16janvier/008_run2$path_user_end
-    path_ref=$path_ref_beg/MY_RUN/KTEST/007_16janvier/008_run2$path_ref_end
     if [ ! -d $path_user ]; then
       echo "$path_user is missing, please run the simulation"
       exit 7
@@ -282,19 +297,47 @@ if [ $check -eq 1 ]; then
     if [ $case == 007_16janvier ]; then
       echo "Compare with python..."
       # Compare variable of both Synchronous and Diachronic files with printing difference
+      file1=$path_user/16JAN.1.12B18.001.nc 
+      file2=$path_ref/16JAN.1.12B18.001.nc
+      file3=$path_user/16JAN.1.12B18.000.nc 
+      file4=$path_ref/16JAN.1.12B18.000.nc
       set +e
-      $PHYEXTOOLSDIR/compare.py $path_user $path_ref
+      $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2 --f3 $file3 --f4 $file4
       t=$?
       set -e
       allt=$(($allt+$t))
       
       #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
-      file1=$path_user/16JAN.1.12B18.001.nc 
-      file2=$path_ref/16JAN.1.12B18.001.nc
       echo "Compare with ncdump..."
       if [ -f $file1 -a -f $file2 ]; then
         set +e
         diff <(ncdump $file1 | head -c 62889) <(ncdump $file2 | head -c 62889)
+        t=$?
+        set -e
+        allt=$(($allt+$t))
+      else
+        [ ! -f $file1 ] && echo "  $file1 is missing"
+        [ ! -f $file2 ] && echo "  $file2 is missing"
+        allt=$(($allt+1))
+      fi
+    fi
+
+    if [ $case == COLD_BUBBLE ]; then
+      echo "Compare with python..."
+      # Compare variable of both Synchronous files with printing difference
+      file1=$path_user/BUBBL.1.CEN4T.001.nc
+      file2=$path_ref/BUBBL.1.CEN4T.001.nc
+      set +e
+      $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2
+      t=$?
+      set -e
+      allt=$(($allt+$t))
+      
+      #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
+      echo "Compare with ncdump..."
+      if [ -f $file1 -a -f $file2 ]; then
+        set +e
+        diff <(ncdump $file1 | head -c 27350) <(ncdump $file2 | head -c 27350)
         t=$?
         set -e
         allt=$(($allt+$t))
