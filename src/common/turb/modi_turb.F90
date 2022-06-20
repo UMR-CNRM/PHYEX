@@ -24,7 +24,7 @@ INTERFACE
               & TBUDGETS, KBUDGETS,                                   &
               & PEDR,PLEM,PRTKEMS,PTPMF,                              &
               & PDRUS_TURB,PDRVS_TURB,                                &
-              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB                  ) 
+              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS        ) 
 !
 USE MODD_BUDGET, ONLY : TBUDGETDATA
 USE MODD_IO, ONLY : TFILEDATA
@@ -137,8 +137,10 @@ REAL, DIMENSION(:,:,:), INTENT(IN)      ::  PLENGTHH
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 !
-REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
-REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL :: PEDR  ! EDR
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL :: PLEM  ! Mixing length
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL ::  PTR  ! Transport prod. of TKE
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL ::  PDISS ! Dissipation of TKE
 !
 !-------------------------------------------------------------------------------
 !

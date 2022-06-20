@@ -22,7 +22,7 @@
               & TBUDGETS, KBUDGETS,                                   &
               & PEDR,PLEM,PRTKEMS,PTPMF,                              &
               & PDRUS_TURB,PDRVS_TURB,                                &
-              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB                  )              
+              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS        ) 
 !     #################################################################
 !
 !
@@ -393,6 +393,8 @@ REAL, DIMENSION(:,:,:), INTENT(IN)    :: PLENGTHM, PLENGTHH
 !
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL ::  PTR   ! Transport prod. of TKE
+REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL ::  PDISS ! Dissipation of TKE
 !
 !
 !-------------------------------------------------------------------------------
@@ -1044,13 +1046,13 @@ ELSE
   ZRTKEMS=0.
 END IF
 !
-CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,       &
-                   & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,            &
-                   & PTSTEP,PIMPL,ZEXPL,                         &
-                   & HTURBLEN,HTURBDIM,                              &
-                   & TPFILE,OTURB_DIAG,           &
+CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,          &
+                   & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,               &
+                   & PTSTEP,PIMPL,ZEXPL,                                &
+                   & HTURBLEN,HTURBDIM,                                 &
+                   & TPFILE,OTURB_DIAG,                                 &
                    & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,ZRTKEMS,&
-                   & TBUDGETS,KBUDGETS, PEDR=PEDR)
+                   & TBUDGETS,KBUDGETS, PEDR=PEDR, PTR=PTR,PDISS=PDISS)
 IF (LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS+ ZLVOCPEXNM * PRRS(:,:,:,2) &
