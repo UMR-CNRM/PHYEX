@@ -91,7 +91,7 @@ REAL, DIMENSION(D%NIT,D%NKT) :: ZGRAD_Z_RT, &            !
                                             & ZSIGMF                   ! and sqrt(variance)
 REAL, DIMENSION(D%NIT)              :: ZOMEGA_UP_M              !
 REAL, DIMENSION(D%NIT,D%NKT) :: ZW1 ! working array
-INTEGER                                    :: JK  ! vertical loop control
+INTEGER                                    :: JI, JK  ! loop control
 REAL, DIMENSION(D%NIT,D%NKT) :: ZEMF_M, ZTHV_UP_M, &   !
                                             & ZRSAT_UP_M, ZRT_UP_M,& ! Interpolation on mass points
                                             & ZFRAC_ICE_UP_M         !
@@ -122,6 +122,7 @@ CALL MZF_MF(D, PFRAC_ICE_UP(:,:), ZFRAC_ICE_UP_M(:,:))
 !computation of omega star up
 ZOMEGA_UP_M(:)=0.
 DO JK=D%NKB,D%NKE-D%NKL,D%NKL
+  !$mnh_expand_array(JI=D%NIB:D%NIE)
   !Vertical integration over the entire column but only buoyant points are used
   !ZOMEGA_UP_M(:)=ZOMEGA_UP_M(:) + &
   !                ZEMF_M(:,JK) * &
@@ -135,28 +136,38 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
                  (ZTHV_UP_M(:,JK)-PTHVM(:,JK)) * &
                  (PZZ(:,JK+D%NKL)-PZZ(:,JK)) / &
                  (PTHM(:,JK) * PRHODREF(:,JK))
+  !$mnh_end_expand_array(JI=D%NIB:D%NIE)
 ENDDO
+!$mnh_expand_array(JI=D%NIB:D%NIE)
 ZOMEGA_UP_M(:)=MAX(ZOMEGA_UP_M(:), 1.E-20)
 ZOMEGA_UP_M(:)=(CST%XG*ZOMEGA_UP_M(:))**(1./3.)
+!$mnh_end_expand_array(JI=D%NIB:D%NIE)
 
 !computation of alpha up
 DO JK=D%NKA,D%NKU,D%NKL
+  !$mnh_expand_array(JI=D%NIB:D%NIE)
   ZALPHA_UP_M(:,JK)=ZEMF_M(:,JK)/(PARAMMF%XALPHA_MF*PRHODREF(:,JK)*ZOMEGA_UP_M(:))
+  ZALPHA_UP_M(:,JK)=MAX(0., MIN(ZALPHA_UP_M(:,JK), 1.))
+  !$mnh_end_expand_array(JI=D%NIB:D%NIE)
 ENDDO
-ZALPHA_UP_M(:,:)=MAX(0., MIN(ZALPHA_UP_M(:,:), 1.))
 
 !computation of sigma of the distribution
 DO JK=D%NKA,D%NKU,D%NKL
+  !$mnh_expand_array(JI=D%NIB:D%NIE)
   ZSIGMF(:,JK)=ZEMF_M(:,JK) * &
                (ZRT_UP_M(:,JK) - PRTM(:,JK)) * &
                PDEPTH(:) * ZGRAD_Z_RT(:,JK) / &
                (PARAMMF%XSIGMA_MF * ZOMEGA_UP_M(:) * PRHODREF(:,JK))
+  !$mnh_end_expand_array(JI=D%NIB:D%NIE)
 ENDDO
+!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 ZSIGMF(:,:)=SQRT(MAX(ABS(ZSIGMF(:,:)), 1.E-40))
+!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 !
 !*      2. PDF integration
 !          ------------------------------------------------
 !
+!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 !The mean of the distribution is ZRT_UP
 !Computation of ZA and ZGAM (=efrc(ZA)) coefficient
 ZA(:,:)=(ZRSAT_UP_M(:,:)-ZRT_UP_M(:,:))/(sqrt(2.)*ZSIGMF(:,:))
@@ -172,7 +183,8 @@ ZCOND(:,:)=(EXP(-ZA(:,:)**2)-ZA(:,:)*SQRT(CST%XPI)*ZGAM(:,:))*ZSIGMF(:,:)/SQRT(2
 ZCOND(:,:)=MAX(ZCOND(:,:), 0.) !due to approximation of ZGAM value, ZCOND could be slightly negative
 PRC_MF(:,:)=(1.-ZFRAC_ICE_UP_M(:,:)) * ZCOND(:,:)
 PRI_MF(:,:)=(   ZFRAC_ICE_UP_M(:,:)) * ZCOND(:,:)
-
+!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+!
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_BIGAUS',1,ZHOOK_HANDLE)
 
 END SUBROUTINE COMPUTE_MF_CLOUD_BIGAUS

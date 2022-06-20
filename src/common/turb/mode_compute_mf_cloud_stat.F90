@@ -90,6 +90,7 @@ REAL, DIMENSION(D%NIT,D%NKT) :: ZFLXZ
 REAL, DIMENSION(D%NIT,D%NKT) :: ZT
 REAL, DIMENSION(D%NIT,D%NKT) :: ZAMOIST, ZATHETA
 REAL, DIMENSION(D%NIT,D%NKT) :: ZWK
+INTEGER :: JI, JK
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !*                    0.2 initialisation
@@ -115,14 +116,17 @@ IF (KRRL > 0)  THEN
 !
     CALL MZM_MF(D, PTHLM(:,:), ZFLXZ(:,:))
     CALL GZ_M_W_MF(D, PTHLM(:,:), PDZZ(:,:), ZWK(:,:))
+    !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
     ZFLXZ(:,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(:,:)*(PTHL_UP(:,:)-ZFLXZ(:,:)) * ZWK(:,:)
-!
-!   Avoid negative values
+    !
+    !   Avoid negative values
     ZFLXZ(:,:) = MAX(0.,ZFLXZ(:,:))
-
+    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
     CALL MZF_MF(D, ZFLXZ(:,:), PSIGMF(:,:))
+    !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
     PSIGMF(:,:) = PSIGMF(:,:) * ZATHETA(:,:)**2
+    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 !
 !
@@ -133,18 +137,23 @@ IF (KRRL > 0)  THEN
 !
     CALL MZM_MF(D, PRTM(:,:), ZFLXZ(:,:))
     CALL GZ_M_W_MF(D, PRTM(:,:), PDZZ(:,:), ZWK(:,:))
+    !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
     ZFLXZ(:,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(:,:)*(PRT_UP(:,:)-ZFLXZ(:,:)) * ZWK(:,:)
-!
-!   Avoid negative values
+    !
+    !   Avoid negative values
     ZFLXZ(:,:) = MAX(0.,ZFLXZ(:,:))
-!
+    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
     CALL MZF_MF(D, ZFLXZ(:,:), ZWK(:,:))
+    !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
     PSIGMF(:,:) = PSIGMF(:,:) + ZAMOIST(:,:) **2 * ZWK(:,:)
+    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 !
 !        1.3  Vertical part of Sigma_s
 !
-  PSIGMF(:,:) =  SQRT( MAX (PSIGMF(:,:) , 0.) )
+    !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+    PSIGMF(:,:) =  SQRT( MAX (PSIGMF(:,:) , 0.) )
+    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 ELSE
   PSIGMF(:,:) = 0.
 END IF

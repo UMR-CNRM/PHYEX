@@ -89,7 +89,7 @@ PRC_MF(:,:)=0.
 PRI_MF(:,:)=0.
 PCF_MF(:,:)=0.
 
-DO JI=1,D%NIT
+DO JI=D%NIB,D%NIE
 #ifdef REPRO48
   JK0=KKLCL(JI)-D%NKL ! first mass level with cloud
   JK0=MAX(JK0, MIN(D%NKB,D%NKE)) !protection if KKL=1
