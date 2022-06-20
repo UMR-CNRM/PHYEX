@@ -754,13 +754,13 @@ SELECT CASE (HTURBLEN)
 
    ZALPHA=0.5**(-1.5)
    !
-   !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
    DO JK=IKTB,IKTE
+     !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
      ZLM(:,:,JK) = ( 0.5*(PZZ(:,:,JK)+PZZ(:,:,JK+D%NKL)) - &
      & PZZ(:,:,D%NKA+JPVEXT_TURB*D%NKL) ) * PDIRCOSZW(:,:)
      ZLM(:,:,JK) = ZALPHA  * ZLM(:,:,JK) * ZL0 / ( ZL0 + ZALPHA*ZLM(:,:,JK) )
+     !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
    END DO
-   !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 !
    ZLM(:,:,IKTB-1) = ZLM(:,:,IKTB)
    ZLM(:,:,IKTE+1) = ZLM(:,:,IKTE)

@@ -235,11 +235,11 @@ IF ( PIMPL > 1.E-10 ) THEN
 !
 ELSE
 ! 
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   DO JK=IKTB,IKTE
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
     PVARP(IIB:IIE,IJB:IJE,JK) = ZY(IIB:IIE,IJB:IJE,JK)
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   END DO
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 !
 END IF 
 !
