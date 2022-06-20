@@ -32,8 +32,6 @@ Merge pb:
   - rain_ice_old a rebrancher dans Meso-NH
   - appels à condensation temporairement supprimés de src/mesonh/micro/radtr_satel.f90,
         src/mesonh/micro/ice_adjust_elec.f90 et src/mesonh/micro/lima_adjust_split.f90
-  - rain_ice_red: le cas test MesoNH n'est pas bit repro (diffs > 1% sur rapports de melange)
-                  sur la modif src/mesonh/rain_ice_red au commit bdd10dd (First rain_ice new/red merge)
   - shallow_mf (appels dans aro_shallow et arp_shallow):
          Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
          Dans AROME/ARP: où trouver la taille de maille?
@@ -80,3 +78,13 @@ Regarder s'il ne serait pas possible/souhaitable de supprimer modd_lunit de PHYE
 Nettoyage des répertoires aux nécessaire
 
 Initialiser dans AROME la variable ldiag_in_run de MODD_DIAG_IN_RUN pour pouvoir phaser le modd
+
+Faire une branche GPU qui contient les codes utilisés pour générer les fichiers pour Philippe.
+
+Ajouter un répertoire pour héberger un pseudo-modèle qui contiendrait les cas tests de Philippe.
+
+La taille du buffer utilisé pour th_r_from_thl_rt doit être mise en module et utilisée pour déclarer le module dans les routines appelantes et dans th_r_from_thl_rt
+
+rain_ice:
+  - séparer l'avance temporelle du découpage en sous-blocs en créant une couche driver supplémentaire. Cette couche pourrait avoir différentes implémentations (filtre LLMICRO seul, filtre LLMICRO + découpage en sous-blocs, filtre LLMICRO + découpage en sous-blocs en respectant les colonnes, en passant tous les points)
+  - mettre le code des interpolations linéaires et bi-linéaires dans des routines avec deux implémentations: avec et sans packing

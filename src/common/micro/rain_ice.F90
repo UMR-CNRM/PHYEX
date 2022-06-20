@@ -621,7 +621,11 @@ DO JK = D%NKTB,D%NKTE
     PEVAP3D(:,:,JK)=0.
   ENDIF
   PRAINFR(:,:,JK)=0.
-  ZCITOUT(:,:,JK)=0.
+#ifdef REPRO55
+  ZCITOUT(:,:,JK)=PCIT(:,:,JK)
+#else
+  ZCITOUT(:,:,JK)=0. !We want 0 outside of IMICRO points
+#endif
 ENDDO
 
 IF(BUCONF%LBU_ENABLE) THEN
@@ -1003,7 +1007,11 @@ IF (KSIZE > 0) THEN
           ENDDO
         ENDDO
         DO JL=1, IMICRO
-          IF (ZVART(JL,IRI)==0.) ZCIT(JL) = 0.
+#ifdef REPRO55
+          ZCIT(JL)=ZCIT(JL) * MAX(0., -SIGN(1., -ZVART(JL,IRI)))
+#else
+          IF (ZVART(JL,IRI)<=0.) ZCIT(JL) = 0.
+#endif
           ZTIME(JL)=ZTIME(JL)+ZMAXTIME(JL)
         ENDDO
 

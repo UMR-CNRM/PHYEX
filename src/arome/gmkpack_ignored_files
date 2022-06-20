@@ -195,3 +195,6 @@ phyex/micro/mode_fmwritbidon.F90
 phyex/turb/modd_dynn.F90
 phyex/turb/mode_thermo_mono.F90
 phyex/turb/modn_turb.F90
+mse/dummy/second_mnh.F90
+mse/dummy/les_mean_subgrid_surf.F90
+mse/dummy/les_mean_subgrid_3d.F90
