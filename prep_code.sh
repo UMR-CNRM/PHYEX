@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+#set -x
 
 #This script can:
 # - extract a tag or a commit from the PHYEX repository
