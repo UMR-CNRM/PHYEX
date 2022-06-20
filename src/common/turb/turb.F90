@@ -25,7 +25,7 @@
               & TBUDGETS, KBUDGETS,                                   &
               & PEDR,PLEM,PRTKEMS,PTPMF,                              &
               & PDRUS_TURB,PDRVS_TURB,                                &
-              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB                  )              
+              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS        )              
 !     #################################################################
 !
 !
@@ -418,6 +418,8 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PLENGTHM, PLENGTHH
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PTR          ! Transport prod. of TKE
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PDISS        ! Dissipation of TKE
 !
 !
 !-------------------------------------------------------------------------------
@@ -517,7 +519,6 @@ IIE=D%NIEC
 IIB=D%NIBC
 IJE=D%NJEC
 IJB=D%NJBC
-!print*,"MINMAX PRTKES = ",MINVAL(PRTKES),MAXVAL(PRTKES)
 !
 ZEXPL = 1.- PIMPL
 ZRVORD= CST%XRV / CST%XRD
@@ -880,7 +881,7 @@ ZMWR(:,:,:)  = 0.     ! w'2r'
 ZMTH2(:,:,:) = 0.     ! w'th'2
 ZMR2(:,:,:)  = 0.     ! w'r'2
 ZMTHR(:,:,:) = 0.     ! w'th'r'
-
+!
 IF (HTOM=='TM06') THEN
   CALL TM06(D%NKA,D%NKU,D%NKL,PTHVREF,PBL_DEPTH,PZZ,PSFTH,ZMWTH,ZMTH2)
 !
@@ -1146,7 +1147,7 @@ CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,HPROGRAM,&
                    & HTURBLEN,HTURBDIM,                              &
                    & TPFILE,OTURB_DIAG,OLES_CALL,           &
                    & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,ZRTKEMS,&
-                   & TBUDGETS,KBUDGETS, PEDR=PEDR)
+                   & TBUDGETS,KBUDGETS, PEDR=PEDR, PTR=PTR,PDISS=PDISS)
 IF (BUCONF%LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS+ ZLVOCPEXNM * PRRS(:,:,:,2) &

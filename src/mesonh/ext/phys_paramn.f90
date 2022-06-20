@@ -461,6 +461,7 @@ REAL, DIMENSION(:), ALLOCATABLE :: ZPROSOL1(:),ZPROSOL2(:) ! Funtions for penetr
 !
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLENGTHM, ZLENGTHH, ZMFMOIST !OHARAT turb option from AROME (not allocated in MNH)
                                                                     ! to be moved as optional args for turb
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZTDIFF, ZTDISS
 !
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 LOGICAL :: GCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables 
@@ -1495,6 +1496,9 @@ END IF
 !
 GCOMPUTE_SRC=SIZE(XSIGS, 3)/=0
 !
+ALLOCATE(ZTDIFF(IIU,IJU,IKU))
+ALLOCATE(ZTDISS(IIU,IJU,IKU))
+
 !
    CALL TURB( CST,CSTURB, TBUCONF, TURBN,YLDIMPHYEX,&
               IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,       &
@@ -1513,9 +1517,13 @@ GCOMPUTE_SRC=SIZE(XSIGS, 3)/=0
               XBL_DEPTH, XSBL_DEPTH,                                                 &
               XCEI, XCEI_MIN, XCEI_MAX, XCOEF_AMPL_SAT,                              &
               XTHT, XRT,                                                             &
-              XRUS, XRVS, XRWS, XRTHS, XRRS, XRSVS, XRTKES, XSIGS, XWTHVMF, &
-              XTHW_FLUX, XRCW_FLUX, XSVW_FLUX,XDYP, XTHP, XTR, XDISS,          &
-              TBUDGETS, KBUDGETS=SIZE(TBUDGETS),PLEM=XLEM,PRTKEMS=XRTKEMS      )
+              XRUS, XRVS, XRWS, XRTHS, XRRS, XRSVS, XRTKES, XSIGS, XWTHVMF,          &
+              XTHW_FLUX, XRCW_FLUX, XSVW_FLUX,XDYP, XTHP, ZTDIFF, ZTDISS,            &
+              TBUDGETS, KBUDGETS=SIZE(TBUDGETS),PLEM=XLEM,PRTKEMS=XRTKEMS,           &
+              PTR=XTR, PDISS=XDISS                                                   )
+!
+DEALLOCATE(ZTDIFF)
+DEALLOCATE(ZTDISS)
 !
 IF (LRMC01) THEN
   CALL ADD2DFIELD_ll( TZFIELDS_ll, XSBL_DEPTH, 'PHYS_PARAM_n::XSBL_DEPTH' )
