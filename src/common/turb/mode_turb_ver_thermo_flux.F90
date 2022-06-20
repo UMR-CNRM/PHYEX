@@ -774,11 +774,11 @@ ELSE
     !ZWORK1 = MZF( MZM(PETHETA,D%NKA, D%NKU, D%NKL) * ZFLXZ,D%NKA, D%NKU, D%NKL )
     !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
     PTP(IIB:IIE,IJB:IJE,1:D%NKT)  =  PBETA(IIB:IIE,IJB:IJE,1:D%NKT) * ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)
-    !$mnh_end_expand_array(JI=0:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
     !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
     PTP(IIB:IIE,IJB:IJE,IKB)=  PBETA(IIB:IIE,IJB:IJE,IKB) * PETHETA(IIB:IIE,IJB:IJE,IKB) *   &
                    0.5 * ( ZFLXZ(IIB:IIE,IJB:IJE,IKB) + ZFLXZ(IIB:IIE,IJB:IJE,IKB+D%NKL) )
-    !$mnh_end_expand_array(JI=0:D%NIT,JJ=1:D%NJT)
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   ELSE
     CALL MZF_PHY(D,ZFLXZ,ZWORK1)
     !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)

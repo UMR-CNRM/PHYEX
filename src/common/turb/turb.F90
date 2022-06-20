@@ -789,9 +789,9 @@ ENDIF
 !*      3.7 Correction in the Surface Boundary Layer (Redelsperger 2001)
 !           ----------------------------------------
 !
-!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 ZLMO(:,:)=XUNDEF
-!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
 IF (ORMC01) THEN
   !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   ZUSTAR(:,:)=(PSFU(:,:)**2+PSFV(:,:)**2)**(0.25)
