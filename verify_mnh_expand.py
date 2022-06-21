@@ -87,6 +87,9 @@ def verify_mnh_expand(path):
                 if line[:3].upper() == b'DO ':
                     logging.warning('A DO loop is inside a mnh_expand bloc, is order correct?. ' +
                                     'Line {line} of file {filename}'.format(line=iline + 1, filename=path))
+                elif line[:5].upper() == b'CALL ':
+                    logging.warning('A CALL statement is inside a mnh_expand bloc, is it correct? ' +
+                                    'Line {line} of file {filename}'.format(line=iline + 1, filename=path))
                 elif b'=' in line and all([c in lhschar for c in line.split(b'=')[0]]):
                     lhs = line.split(b'=')[0]
                     if not b'(' in lhs:
