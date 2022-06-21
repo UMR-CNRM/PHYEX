@@ -41,6 +41,9 @@ def verify_mnh_expand(path):
                 open_directive = line[13:].split(b'(')[0]
                 open_args = line[13:].split(b'(')[1].split(b')')[0].replace(b' ', b'')
                 dim = len(line.split(b'(')[1].split(b','))
+                if line[-1:] != b')':
+                    logging.error('Open directive must end with a closing bracket. ' +
+                                  'Line {line} of file {filename}'.format(line=iline + 1, filename=path))
             elif line[:17] == b'!$mnh_end_expand_':
                 #End of a mnh_expand bloc
                 logging.debug('Closing directive found. Line {line} of file {filename}'.format(line=iline + 1, filename=path))
@@ -61,6 +64,9 @@ def verify_mnh_expand(path):
                                       'Line {line} of file {filename}'.format(endargs=end_args.decode('UTF-8'),
                                                                               openargs=open_args.decode('UTF-8'),
                                                                               line=iline + 1, filename=path))
+                    if line[-1:] != b')':
+                        logging.error('Closing directive must end with a closing bracket. ' +
+                                      'Line {line} of file {filename}'.format(line=iline + 1, filename=path))
             elif inside:
                 #We do not want to implement a full fortran parser, we are only interested in the left hand side of
                 #affectation instructions. If left hand side is correct (an array element) the right hand side
@@ -76,6 +82,9 @@ def verify_mnh_expand(path):
                         line = line[1:].strip()
                     if line.upper()[:5] in (b'THEN ', b'THEN!'): line = line[5:]
                 elif line[:6].upper() in(b'WHERE ', b'WHERE('):
+                    if open_directive != b'where':
+                        logging.error('There is a WHERE statement in a mnh_expand array bloc. '
+                                      'Line {line} of file {filename}'.format(line=iline + 1, filename=path))
                     line = line[line.index(b'(') + 1:]
                     nb = 1
                     while nb >= 1 and(len(line)>0):
