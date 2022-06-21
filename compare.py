@@ -23,12 +23,12 @@ def compareBACKUPFiles(file_user, file_ref):
         ecart_moy=float(da2[var][0,JPHEXT:nj-1-JPHEXT,JPHEXT:ni-1-JPHEXT].mean())-float(da[var][0,JPHEXT:nj-1-JPHEXT,JPHEXT:ni-1-JPHEXT].mean())
         ecart_max=float(da2[var][0,JPHEXT:nj-1-JPHEXT,JPHEXT:ni-1-JPHEXT].max())-float(da[var][0,JPHEXT:nj-1-JPHEXT,JPHEXT:ni-1-JPHEXT].max())
       elif  da[var].ndim == 3 and da['L2D'] == 1: #Variables time, level, nj or ni (2D simulation)
-        if da['ni'] > da['nj']:
-          nij=da['ni']
+        if len(da['ni']) > len(da['nj']):
+          nij=len(da['ni'])
         else:
-          nij=da['nj']
+          nij=len(da['nj'])
         ecart_min=float(da2[var][0,JPVEXT:nk-1-JPVEXT,JPHEXT:nij-1-JPHEXT].min())-float(da[var][0,JPVEXT:nk-1-JPVEXT,JPHEXT:nij-1-JPHEXT].min())
-        ecart_moy=float(da2[var][0,JPVEXT:nk-1-JPVEXT,JPHEXT:nij-1-JPHEXT].mean())-float(da[var][0,JVHEXT:nk-1-JPVEXT,JPHEXT:nij-1-JPHEXT].mean())
+        ecart_moy=float(da2[var][0,JPVEXT:nk-1-JPVEXT,JPHEXT:nij-1-JPHEXT].mean())-float(da[var][0,JPVEXT:nk-1-JPVEXT,JPHEXT:nij-1-JPHEXT].mean())
         ecart_max=float(da2[var][0,JPVEXT:nk-1-JPVEXT,JPHEXT:nij-1-JPHEXT].max())-float(da[var][0,JPVEXT:nk-1-JPVEXT,JPHEXT:nij-1-JPHEXT].max())
       else:
         ecart_min=float(da2[var].min())-float(da[var].min())
@@ -37,7 +37,6 @@ def compareBACKUPFiles(file_user, file_ref):
       if (ecart_min !=0 or ecart_moy !=0 or ecart_max !=0):
         status += 1
         print(var, ecart_min, ecart_moy, ecart_max)
-      nvar_tested+=1
     except:
       pass
   return status
