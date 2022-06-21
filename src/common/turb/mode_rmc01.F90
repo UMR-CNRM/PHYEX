@@ -5,8 +5,7 @@
 MODULE MODE_RMC01
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE RMC01(HTURBLEN,KKA,KKU,KKL,PZZ,PDXX,PDYY, &
-      PDZZ,PDIRCOSZW,PSBL_DEPTH,PLMO,PLK,PLEPS)
+SUBROUTINE RMC01(D,CST,CSTURB,HTURBLEN,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,PLMO,PLK,PLEPS)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ##############################################################
@@ -46,59 +45,60 @@ SUBROUTINE RMC01(HTURBLEN,KKA,KKU,KKL,PZZ,PDXX,PDYY, &
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS, ONLY: JPVEXT_TURB, XUNDEF
-USE MODD_CST
-USE MODD_CTURB
+USE MODD_PARAMETERS, ONLY: XUNDEF
+USE MODD_CST, ONLY : CST_t
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+USE MODD_CTURB, ONLY: CSTURB_t
 !
-USE MODE_SBL
+USE MODE_SBL_PHY, ONLY: BUSINGER_PHIM, BUSINGER_PHIE
 !
-USE MODI_SHUMAN, ONLY : MZF, MYF, MXF
+USE SHUMAN_PHY, ONLY: MZF_PHY, MYF_PHY, MXF_PHY
 !
 IMPLICIT NONE
 !
 !*       0.1   Declaration of arguments
 !              ------------------------
 !
-CHARACTER(LEN=4),         INTENT(IN)    :: HTURBLEN ! type of mixing length
-INTEGER,                   INTENT(IN)   :: KKA      !near ground array index
-INTEGER,                   INTENT(IN)   :: KKU      !uppest atmosphere array index
-INTEGER,                   INTENT(IN)   :: KKL      !vert. levels type 1=MNH -1=ARO
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PZZ   ! altitude of flux points
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDXX  ! width of grid mesh (X dir)
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDYY  ! width of grid mesh (Y dir)
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDZZ  ! width of vert. layers
-REAL, DIMENSION(:,:),     INTENT(IN)    :: PDIRCOSZW ! Director Cosinus
-REAL, DIMENSION(:,:),     INTENT(IN)    :: PSBL_DEPTH! SBL depth
-REAL, DIMENSION(:,:),     INTENT(IN)    :: PLMO  ! Monin Obuhkov length
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PLK   ! Mixing length
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PLEPS ! Dissipative length
+TYPE(DIMPHYEX_t),         INTENT(IN)   :: D
+TYPE(CST_t),              INTENT(IN)   :: CST
+TYPE(CSTURB_t),           INTENT(IN)   :: CSTURB
+CHARACTER(LEN=4),         INTENT(IN)   :: HTURBLEN ! type of mixing length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    :: PZZ   ! altitude of flux points
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    :: PDXX  ! width of grid mesh (X dir)
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    :: PDYY  ! width of grid mesh (Y dir)
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    :: PDZZ  ! width of vert. layers
+REAL, DIMENSION(D%NIT,D%NJT),     INTENT(IN)    :: PDIRCOSZW ! Director Cosinus
+REAL, DIMENSION(D%NIT,D%NJT),     INTENT(IN)    :: PSBL_DEPTH! SBL depth
+REAL, DIMENSION(D%NIT,D%NJT),     INTENT(IN)    :: PLMO  ! Monin Obuhkov length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) :: PLK   ! Mixing length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) :: PLEPS ! Dissipative length
 !
 !*       0.2   Declaration of local variables
 !              ------------------------------
 !
 INTEGER :: IKB,IKE    ! first,last physical level
-INTEGER :: IKT        ! array size in k direction
 INTEGER :: IKTB,IKTE  ! start, end of k loops in physical domain
 INTEGER :: IIU        ! horizontal x boundary
 INTEGER :: IJU        ! horizontal y boundary
-INTEGER :: JK         ! loop counter
+INTEGER :: JK,JI,JJ   ! loop counter
+INTEGER :: IIE,IIB,IJE,IJB
 !
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)) :: ZZZ  ! height of mass
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZZZ  ! height of mass
                                                              ! points above ground
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)) :: ZZ_O_LMO ! height / LMO
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)) :: ZGAM ! factor controling
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZZ_O_LMO ! height / LMO
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZGAM ! factor controling
                                                              ! transition betw.
                                                              ! SBL and free BL
 
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)) :: ZPHIM! MO function
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZPHIM! MO function
                                                              ! for stress
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)) :: ZPHIE! MO function
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZPHIE! MO function
                                                              ! for TKE
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)) :: ZDH  ! hor. grid mesh
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZDH  ! hor. grid mesh
                                                              ! size
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)) :: ZL   ! SBL length
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)) :: ZZC  ! alt. where
-                                                             ! turb. is isotr.
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZL   ! SBL length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZZC  ! alt. where turb. is isotr.
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1, ZWORK2
 !-------------------------------------------------------------------------------
 !
 !*     1. Initializations
@@ -107,25 +107,33 @@ REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)) :: ZZC  ! alt. where
 ! horizontal boundaries
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('RMC01',0,ZHOOK_HANDLE)
-IIU=SIZE(PZZ,1)
-IJU=SIZE(PZZ,2)
-!
-! vertical boundaries
-IKB=KKA+JPVEXT_TURB*KKL
-IKE=KKU-JPVEXT_TURB*KKL
-
-IKTB=1+JPVEXT_TURB
-IKT=SIZE(PZZ,3)
-IKTE=IKT-JPVEXT_TURB
+IIU=D%NIT
+IJU=D%NJT
+IKTB=D%NKTB          
+IKTE=D%NKTE
+IKB=D%NKB
+IKE=D%NKE
+IIE=D%NIEC
+IIB=D%NIBC
+IJE=D%NJEC
+IJB=D%NJBC
 !
 ! altitude of mass points
-ZZZ=MZF(PZZ, KKA, KKU, KKL)
+CALL MZF_PHY(D,PZZ,ZZZ)
 ! replace by height of mass points
-DO JK=1,IKT
-  ZZZ(:,:,JK) = ZZZ(:,:,JK) - PZZ(:,:,IKB)
+DO JK=1,D%NKT
+  DO JJ=IJB,IJE 
+ DO JI=IIB,IIE 
+  ZZZ(JI,JJ,JK) = ZZZ(JI,JJ,JK) - PZZ(JI,JJ,IKB)
+   ENDDO
+ENDDO
 END DO
 ! fill upper level with physical value
-ZZZ(:,:,KKU) = 2.*ZZZ(:,:,KKU-KKL) - ZZZ(:,:,KKU-2*KKL)
+DO JJ=IJB,IJE 
+ DO JI=IIB,IIE 
+ZZZ(JI,JJ,D%NKU) = 2.*ZZZ(JI,JJ,D%NKU-D%NKL) - ZZZ(JI,JJ,D%NKU-2*D%NKL)
+ ENDDO
+ENDDO
 !
 !-------------------------------------------------------------------------------
 !
@@ -133,22 +141,32 @@ ZZZ(:,:,KKU) = 2.*ZZZ(:,:,KKU-KKL) - ZZZ(:,:,KKU-2*KKL)
 !         -------------
 !
 ! z/LMO
-DO JK=1,IKT
-  WHERE (PLMO(:,:)==XUNDEF)
-    ZZ_O_LMO(:,:,JK)=0.
-  ELSEWHERE
-    ZZ_O_LMO(:,:,JK)=ZZZ(:,:,JK)*PDIRCOSZW(:,:)/PLMO(:,:)
-  END WHERE
+DO JK=1,D%NKT
+  DO JJ=IJB,IJE 
+ DO JI=IIB,IIE 
+  IF (PLMO(JI,JJ)==XUNDEF)THEN
+    ZZ_O_LMO(JI,JJ,JK)=0.
+  ELSE
+    ZZ_O_LMO(JI,JJ,JK)=ZZZ(JI,JJ,JK)*PDIRCOSZW(JI,JJ)/PLMO(JI,JJ)
+  ENDIF
+   ENDDO
+ENDDO
 END DO
-ZZ_O_LMO(:,:,:) = MAX(ZZ_O_LMO(:,:,:),-10.)
-ZZ_O_LMO(:,:,:) = MIN(ZZ_O_LMO(:,:,:), 10.)
+DO JK=1,D%NKT 
+ DO JJ=IJB,IJE 
+  DO JI=IIB,IIE 
+ZZ_O_LMO(JI,JJ,JK) = MAX(ZZ_O_LMO(JI,JJ,JK),-10.)
+ZZ_O_LMO(JI,JJ,JK) = MIN(ZZ_O_LMO(JI,JJ,JK), 10.)
+  ENDDO
+ ENDDO
+ENDDO
 !
 !
 ! MO function for stress
-ZPHIM(:,:,:) = BUSINGER_PHIM(ZZ_O_LMO)
+CALL BUSINGER_PHIM(D,ZZ_O_LMO,ZPHIM)
 !
 ! MO function for TKE
-ZPHIE(:,:,:) = BUSINGER_PHIE(ZZ_O_LMO)
+CALL BUSINGER_PHIE(D,CSTURB,ZZ_O_LMO,ZPHIE)
 !
 !-------------------------------------------------------------------------------
 SELECT CASE (HTURBLEN)
@@ -163,25 +181,59 @@ SELECT CASE (HTURBLEN)
 !  same law as in the neutral case (i.e. with Phim = 1).
 !
   CASE ('DELT','DEAR')
-    ZDH = SQRT(MXF(PDXX)*MYF(PDYY))
-    ZDH(IIU,:,:) = ZDH(IIU-1,:,:)
-    ZDH(:,IJU,:) = ZDH(:,IJU-1,:)
-    DO JK=1,IKT
-      ZZC(:,:,JK) = 2.*MIN(ZPHIM(:,:,JK),1.)/XKARMAN    &
-                     * MAX( PDZZ(:,:,JK)*PDIRCOSZW(:,:) , ZDH(:,:,JK)/PDIRCOSZW(:,:)/3. )
+    CALL MXF_PHY(D,PDXX,ZWORK1)
+    CALL MYF_PHY(D,PDYY,ZWORK2)
+    DO JK=1,D%NKT 
+ DO JJ=IJB,IJE 
+  DO JI=IIB,IIE 
+    ZDH(JI,JJ,JK) = SQRT(ZWORK1(JI,JJ,JK)*ZWORK2(JI,JJ,JK))
+      ENDDO
+ ENDDO
+ENDDO
+    ZDH(IIU,IJB:IJE,1:D%NKT) = ZDH(IIU-1,IJB:IJE,1:D%NKT)
+    ZDH(IIB:IIE,IJU,1:D%NKT) = ZDH(IIB:IIE,IJU-1,1:D%NKT)
+    DO JK=1,D%NKT
+      DO JJ=IJB,IJE 
+ DO JI=IIB,IIE 
+      ZZC(JI,JJ,JK) = 2.*MIN(ZPHIM(JI,JJ,JK),1.)/CST%XKARMAN    &
+                     * MAX( PDZZ(JI,JJ,JK)*PDIRCOSZW(JI,JJ) , & 
+                     ZDH(JI,JJ,JK)/PDIRCOSZW(JI,JJ)/3. )
+       ENDDO
+ENDDO
     END DO
 !
 !*     4. factor controling the transition between SBL and free isotropic turb. (3D case)
 !         --------------------------------------------------------------------
 !
-    ZGAM(:,:,KKA) = 0.
+    ZGAM(IIB:IIE,IJB:IJE,D%NKA) = 0.
     DO JK=IKTB,IKTE
-      ZGAM(:,:,JK) = 1.  - EXP( -3.*(ZZZ(:,:,JK)-ZZZ(:,:,IKB))/(ZZC(:,:,JK)) )
-      WHERE (ZGAM(:,:,JK-KKL)>ZGAM(:,:,JK) .OR. ZGAM(:,:,JK-KKL)>0.99 ) ZGAM(:,:,JK) = 1.
+      DO JJ=IJB,IJE 
+ DO JI=IIB,IIE 
+      ZGAM(JI,JJ,JK) = 1.  - EXP( -3.*(ZZZ(JI,JJ,JK)-ZZZ(JI,JJ,IKB))/(ZZC(JI,JJ,JK)) )
+       ENDDO
+ENDDO
+      DO JJ=IJB,IJE 
+ DO JI=IIB,IIE 
+      IF (ZGAM(JI,JJ,JK-D%NKL)>ZGAM(JI,JJ,JK) .OR. ZGAM(JI,JJ,JK-D%NKL)>0.99 ) THEN
+        ZGAM(JI,JJ,JK) = 1.
+      ENDIF
+      ENDDO
+ENDDO
     END DO
-    ZGAM(:,:,KKU) = 1.  - EXP( -3.*(ZZZ(:,:,KKU)-ZZZ(:,:,IKB))/(ZZC(:,:,KKU)) )
-    WHERE (ZGAM(:,:,KKU-KKL)>ZGAM(:,:,KKU) .OR. ZGAM(:,:,KKU-KKL)>0.99 ) ZGAM(:,:,KKU) = 1.
-!
+    DO JJ=IJB,IJE 
+ DO JI=IIB,IIE 
+    ZGAM(JI,JJ,D%NKU) = 1.  - EXP( -3.*(ZZZ(JI,JJ,D%NKU)-ZZZ(JI,JJ,IKB))& 
+                                   /(ZZC(JI,JJ,D%NKU)) )
+     ENDDO
+ENDDO
+    DO JJ=IJB,IJE 
+ DO JI=IIB,IIE 
+    IF (ZGAM(JI,JJ,D%NKU-D%NKL)>ZGAM(JI,JJ,D%NKU) .OR. ZGAM(JI,JJ,D%NKU-D%NKL)>0.99 ) THEN
+      ZGAM(JI,JJ,D%NKU) = 1.
+    ENDIF
+     ENDDO
+ENDDO
+!   
 !
 !-------------------------------------------------------------------------------
 !
@@ -190,16 +242,38 @@ SELECT CASE (HTURBLEN)
 !
   CASE DEFAULT
 !* SBL depth is used
-    ZGAM(:,:,:) = 1.
-    ZGAM(:,:,KKA) = 0.
+    ZGAM(IIB:IIE,IJB:IJE,1:D%NKT) = 1.
+    ZGAM(IIB:IIE,IJB:IJE,D%NKA) = 0.
     DO JK=IKTB,IKTE
-      WHERE(PSBL_DEPTH>0.) &
-      ZGAM(:,:,JK) = TANH( (ZZZ(:,:,JK)-ZZZ(:,:,IKB))/PSBL_DEPTH(:,:) )
-      WHERE (ZGAM(:,:,JK-KKL)>0.99 ) ZGAM(:,:,JK) = 1.
+      DO JJ=IJB,IJE 
+ DO JI=IIB,IIE 
+      IF(PSBL_DEPTH(JI,JJ)>0.)THEN
+        ZGAM(JI,JJ,JK) = TANH( (ZZZ(JI,JJ,JK)-ZZZ(JI,JJ,IKB))/PSBL_DEPTH(JI,JJ) )
+      ENDIF
+       ENDDO
+ENDDO
+      DO JJ=IJB,IJE 
+ DO JI=IIB,IIE 
+      IF (ZGAM(JI,JJ,JK-D%NKL)>0.99 ) THEN
+        ZGAM(JI,JJ,JK) = 1.
+      ENDIF
+       ENDDO
+ENDDO
     END DO
-    WHERE(PSBL_DEPTH>0.) &
-      ZGAM(:,:,KKU) = TANH( (ZZZ(:,:,KKU)-ZZZ(:,:,IKB))/PSBL_DEPTH(:,:) )
-    WHERE (ZGAM(:,:,KKU-KKL)>0.99 ) ZGAM(:,:,JK) = 1.
+    DO JJ=IJB,IJE 
+ DO JI=IIB,IIE 
+    IF(PSBL_DEPTH(JI,JJ)>0.)THEN
+      ZGAM(JI,JJ,D%NKU) = TANH( (ZZZ(JI,JJ,D%NKU)-ZZZ(JI,JJ,IKB))/PSBL_DEPTH(JI,JJ) )
+    ENDIF
+    ENDDO
+ENDDO
+   DO JJ=IJB,IJE 
+ DO JI=IIB,IIE 
+    IF (ZGAM(JI,JJ,D%NKU-D%NKL)>0.99 ) THEN
+      ZGAM(JI,JJ,JK) = 1.
+    ENDIF
+     ENDDO
+ENDDO
 !
 !-------------------------------------------------------------------------------
 END SELECT
@@ -208,33 +282,63 @@ END SELECT
 !*     6. Modification of the mixing length
 !         ---------------------------------
 !
-DO JK=1,IKT
-  ZL(:,:,JK) =  XKARMAN/SQRT(XALPSBL)/XCMFS                                      &
-              * ZZZ(:,:,JK)*PDIRCOSZW(:,:)/(ZPHIM(:,:,JK)**2*SQRT(ZPHIE(:,:,JK)))
+DO JK=1,D%NKT
+DO JJ=IJB,IJE 
+ DO JI=IIB,IIE 
+  ZL(JI,JJ,JK) =  CST%XKARMAN/SQRT(CSTURB%XALPSBL)/CSTURB%XCMFS                                      &
+              * ZZZ(JI,JJ,JK)*PDIRCOSZW(JI,JJ)/(ZPHIM(JI,JJ,JK)**2*SQRT(ZPHIE(JI,JJ,JK)))
+ ENDDO
+ENDDO
 END DO
 !
-PLK(:,:,:)=(1.-ZGAM)*ZL+ZGAM*PLK
+DO JK=1,D%NKT 
+ DO JJ=IJB,IJE 
+  DO JI=IIB,IIE 
+PLK(JI,JJ,JK)=(1.-ZGAM(JI,JJ,JK))*ZL(JI,JJ,JK) &
+                             +ZGAM(JI,JJ,JK)*PLK(JI,JJ,JK)
+  ENDDO
+ ENDDO
+ENDDO
 !
-PLK(:,:,KKA) = PLK(:,:,IKB)
-PLK(:,:,KKU) = PLK(:,:,IKE)
+PLK(IIB:IIE,IJB:IJE,D%NKA) = PLK(IIB:IIE,IJB:IJE,IKB)
+PLK(IIB:IIE,IJB:IJE,D%NKU) = PLK(IIB:IIE,IJB:IJE,IKE)
 !-------------------------------------------------------------------------------
 !
 !*     7. Modification of the dissipative length
 !         --------------------------------------
 !
-ZL = ZL * (XALPSBL**(3./2.)*XKARMAN*XCED) &
-        / (XKARMAN/SQRT(XALPSBL)/XCMFS)
+DO JK=1,D%NKT 
+ DO JJ=IJB,IJE 
+  DO JI=IIB,IIE 
+ZL(JI,JJ,JK) = ZL(JI,JJ,JK) * (CSTURB%XALPSBL**(3./2.)*CST%XKARMAN*CSTURB%XCED) &
+        / (CST%XKARMAN/SQRT(CSTURB%XALPSBL)/CSTURB%XCMFS)
+  ENDDO
+ ENDDO
+ENDDO
 !
-WHERE (ZZ_O_LMO<0.)
-  ZL = ZL/(1.-1.9*ZZ_O_LMO)
-ELSEWHERE
-  ZL = ZL/(1.-0.3*SQRT(ZZ_O_LMO))
-ENDWHERE
+DO JK=1,D%NKT 
+ DO JJ=IJB,IJE 
+  DO JI=IIB,IIE 
+IF (ZZ_O_LMO(JI,JJ,JK)<0.)THEN
+  ZL(JI,JJ,JK) = ZL(JI,JJ,JK)/(1.-1.9*ZZ_O_LMO(JI,JJ,JK))
+ELSE
+  ZL(JI,JJ,JK) = ZL(JI,JJ,JK)/(1.-0.3*SQRT(ZZ_O_LMO(JI,JJ,JK)))
+ENDIF
+  ENDDO
+ ENDDO
+ENDDO
 !
-PLEPS(:,:,:)=(1.-ZGAM)*ZL+ZGAM*PLEPS
+DO JK=1,D%NKT 
+ DO JJ=IJB,IJE 
+  DO JI=IIB,IIE 
+PLEPS(JI,JJ,JK)=(1.-ZGAM(JI,JJ,JK))*ZL(JI,JJ,JK) &
+                               +ZGAM(JI,JJ,JK)*PLEPS(JI,JJ,JK)
+  ENDDO
+ ENDDO
+ENDDO
 !
-PLEPS(:,:,KKA) = PLEPS(:,:,IKB)
-PLEPS(:,:,KKU  ) = PLEPS(:,:,IKE)
+PLEPS(IIB:IIE,IJB:IJE,D%NKA) = PLEPS(IIB:IIE,IJB:IJE,IKB)
+PLEPS(IIB:IIE,IJB:IJE,D%NKU) = PLEPS(IIB:IIE,IJB:IJE,IKE)
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('RMC01',1,ZHOOK_HANDLE)
