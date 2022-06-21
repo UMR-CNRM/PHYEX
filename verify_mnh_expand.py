@@ -18,7 +18,7 @@ def verify_mnh_expand(path):
         the instruction will no be checked
       - one-line version of IF or WHERE statement are really on one line (no continuation line)
     """
-    lhschar = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890(:)%, \t'
+    lhschar = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_(:)%, \t'
 
     if os.path.isdir(path):
         logging.info("Enters directory: " + path)
