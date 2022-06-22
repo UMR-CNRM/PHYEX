@@ -15,8 +15,11 @@ def verify_mnh_expand(path):
 
     Limitation:
       - if the '=' sign is not on same line than the left hand side of the affectation instruction,
-        the instruction will no be checked
-      - one-line version of IF or WHERE statement are really on one line (no continuation line)
+        the instruction will no be checked. And an error can be thrown for the folowing line.
+      - one-line version of IF or WHERE statement must be really on one line (no continuation line)
+      - conditional part of IF and WHERE statements should be written on a signle line to be parsed
+        correctly.
+      - brackets in comments or in strings can mislead the script
     """
     lhschar = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_(:)%, \t'
 
@@ -72,25 +75,46 @@ def verify_mnh_expand(path):
                 #affectation instructions. If left hand side is correct (an array element) the right hand side
                 #will be necessarily correct (otherwise a compilation error will be thrown).
 
-                #Suppresion of condition in 'IF' and 'WHERE' one-line instructions
-                if line[:3].upper() in(b'IF ', b'IF('):
-                    line = line[line.index(b'(') + 1:]
-                    nb = 1
-                    while nb >= 1 and(len(line) > 0):
-                        if line[:1] == b'(': nb += 1
-                        elif line[:1] == b')': nb -= 1
-                        line = line[1:].strip()
-                    if line.upper()[:5] in (b'THEN ', b'THEN!'): line = line[5:]
-                elif line[:6].upper() in(b'WHERE ', b'WHERE('):
+                #Suppresion of conditional statement in 'IF' and 'WHERE' one-line instructions
+                #For simplicity, all conditional statements are suppressed
+                if any([line.startswith(s) for s in (b'IF ', b'IF(',
+                                                     b'ELSEIF ', b'ELSEIF(', b'ELSE IF ', b'ELSE IF(')]):
+                    try:
+                        line = line[line.index(b'(') + 1:]
+                        nb = 1
+                        while nb >= 1 and(len(line) > 0):
+                            if line[:1] == b'(': nb += 1
+                            elif line[:1] == b')': nb -= 1
+                            line = line[1:].strip()
+                        if nb >= 1 and len(line) == 0:
+                            logging.warning('Parsing error during treatment of an IF statement. ' +
+                                            'The closing bracket should be on the same line as the IF keyword. ' +
+                                            'Line {line} of file {filename}'.format(line=iline + 1, filename=path))
+                        if line.upper()[:5] in (b'THEN ', b'THEN!'): line = line[5:]
+                    except ValueError:
+                        logging.error('Parsing error during treatment of an IF statement. ' +
+                                      'The opening bracket must be on the same line as the IF keyword. ' +
+                                      'Line {line} of file {filename}'.format(line=iline + 1, filename=path))
+                elif any([line.startswith(s) for s in (b'WHERE ', b'WHERE(',
+                                                     b'ELSEWHERE ', b'ELSEWHERE(', b'ELSE WHERE ', b'ELSE WHERE(')]):
                     if open_directive != b'where':
                         logging.error('There is a WHERE statement in a mnh_expand array bloc. '
                                       'Line {line} of file {filename}'.format(line=iline + 1, filename=path))
-                    line = line[line.index(b'(') + 1:]
-                    nb = 1
-                    while nb >= 1 and(len(line)>0):
-                        if line[:1] == b'(': nb += 1
-                        elif line[:1] == b')': nb -= 1
-                        line = line[1:].strip()
+                    try:
+                        line = line[line.index(b'(') + 1:]
+                        nb = 1
+                        while nb >= 1 and(len(line)>0):
+                            if line[:1] == b'(': nb += 1
+                            elif line[:1] == b')': nb -= 1
+                            line = line[1:].strip()
+                        if nb >= 1 and len(line) == 0:
+                            logging.warning('Parsing error during treatment of a WHERE statement. ' +
+                                            'The closing bracket should be on the same line as the WHERE keyword. ' +
+                                            'Line {line} of file {filename}'.format(line=iline + 1, filename=path))
+                    except ValueError:
+                        logging.error('Parsing error during treatment of a WHERE statement. ' +
+                                      'The opening bracket must be on the same line as the WHERE keyword. ' +
+                                      'Line {line} of file {filename}'.format(line=iline + 1, filename=path))
 
                 #Check if it is the left hand side of an affectation
                 if line[:3].upper() == b'DO ':
