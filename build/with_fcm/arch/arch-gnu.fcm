@@ -12,7 +12,7 @@ $DEBUG_CFLAGS  =     -check bounds
 $OMP_FFLAGS    =
 
 # Preprocessor
-$FPP_FLAGS     =     LINUX
+$FPP_FLAGS     =     LINUX REPRO48
 $CPP_FLAGS     =     LINUX
 
 # Linker
