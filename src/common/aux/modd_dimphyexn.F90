@@ -70,6 +70,7 @@ TYPE DIMPHYEX_t
   INTEGER :: NJBC  ! = NIB/NJC/NIE/NJE in all schemes
   INTEGER :: NIEC  ! except in turbulence where external HALO points must be
   INTEGER :: NJEC  ! included so NIBC=NJBC=1 and NIEC/NJEC=NIT/NJT
+  INTEGER :: NIJT  ! NIT*NJT for horizontal packing
 !
 END TYPE DIMPHYEX_t
 !
