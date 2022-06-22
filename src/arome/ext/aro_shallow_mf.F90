@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE  ARO_SHALLOW_MF(KKL, KLON,KLEV, KRR, KRRL, KRRI,KSV,     &
+      SUBROUTINE  ARO_SHALLOW_MF(KKL, KLON, KLEV, KFDIA, KRR, KRRL, KRRI,KSV,     &
                 HMF_UPDRAFT, HMF_CLOUD, HFRAC_ICE, OMIXUV,            &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
                 KTCOUNT, PTSTEP,                                      &
@@ -63,9 +63,16 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS, ONLY: JPVEXT, JPHEXT
+USE MODD_PARAMETERS, ONLY: JPVEXT
+USE MODD_CST, ONLY: CST
+USE MODD_NEB, ONLY: NEB
+USE MODD_TURB_n, ONLY: TURBN
+USE MODD_CTURB, ONLY: CSTURB
+USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALLN
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODI_SHALLOW_MF
+USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 !
 IMPLICIT NONE
 !
@@ -77,6 +84,7 @@ INTEGER,                  INTENT(IN)   :: KKL      ! +1 if grid goes from ground
                                                    ! atmosphere top, -1 otherwise
 INTEGER,                  INTENT(IN)   :: KLON     !NPROMA under CPG
 INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels
+INTEGER,                  INTENT(IN)   :: KFDIA
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KRRL     ! Number of liquide water variables
 INTEGER,                  INTENT(IN)   :: KRRI     ! Number of ice variables
@@ -138,23 +146,12 @@ REAL, DIMENSION(KLON,KLEV), INTENT(INOUT) ::  PEMF      ! updraft mass flux
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER :: JRR           ! Loop index for the moist
-INTEGER :: IIB           ! Define the physical domain
-INTEGER :: IIE           !
-INTEGER :: IJB           !
-INTEGER :: IJE           !
-INTEGER :: IKB           !
-INTEGER :: IKE           !
-INTEGER :: IKA, IKU
-INTEGER :: JI, JJ, JL, JK !
-INTEGER ::II
 INTEGER, DIMENSION(size(PRHODJ,1)) :: IKLCL,IKETL,IKCTL
 REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZFLXZTHMF,ZFLXZRMF,ZFLXZUMF,ZFLXZVMF
 REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZDETR,ZENTR
-!
-!
-
+TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 REAL          ::  ZIMPL        ! degree of implicitness
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !
 !
@@ -163,23 +160,10 @@ REAL          ::  ZIMPL        ! degree of implicitness
 !*       1.     PRELIMINARY COMPUTATIONS
 !               ------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('ARO_SHALLOW_MF',0,ZHOOK_HANDLE)
 
-
-IIB=1+JPHEXT
-IIE=SIZE(PZZ,1) - JPHEXT
-IJB=1+JPHEXT
-IJE=1 - JPHEXT
-IF(KKL==1)THEN
-  IKA=1
-  IKU=SIZE(PZZ,2)
-ELSE
-  IKA=SIZE(PZZ,2)
-  IKU=1
-ENDIF
-IKB=IKA+KKL*JPVEXT
-IKE=IKU-KKL*JPVEXT
+!Dimensions
+CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, JPVEXT, KFDIA)
 !
 !
 !------------------------------------------------------------------------------
@@ -219,11 +203,12 @@ ZIMPL=1.
 !
 !         ---------------------------------
 !
-  CALL SHALLOW_MF(KKA=IKA,KKU=IKU,KKL=KKL,KRR=KRR,KRRL=KRRL,KRRI=KRRI,                    &
+  CALL SHALLOW_MF(YLDIMPHYEX, CST, NEB, PARAM_MFSHALLN, TURBN, CSTURB,                    &
+     &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                             &
      &HMF_UPDRAFT=HMF_UPDRAFT, HMF_CLOUD=HMF_CLOUD,HFRAC_ICE=HFRAC_ICE,OMIXUV=OMIXUV,     &
      &ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,                          &
      &PIMPL_MF=ZIMPL, PTSTEP=PTSTEP,                                                      &
-     &PDZZ=PDZZF,PZZ=PZZ,                                                                  &
+     &PDZZ=PDZZF,PZZ=PZZ,                                                                 &
      &PRHODJ=PRHODJ,PRHODREF=PRHODREF,                                                    &
      &PPABSM=PPABSM,PEXNM=PEXNM,                                                          &
      &PSFTH=PSFTH,PSFRV=PSFRV,                                                            &

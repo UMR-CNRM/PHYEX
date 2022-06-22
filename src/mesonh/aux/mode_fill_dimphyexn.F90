@@ -6,7 +6,7 @@
 MODULE MODE_FILL_DIMPHYEX
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE FILL_DIMPHYEX(YDDIMPHYEX, KIT, KJT, KKT, LTURB)
+SUBROUTINE FILL_DIMPHYEX(YDDIMPHYEX, KIT, KJT, KKT, LTURB, OHPACK)
 !     #########################
 !
 !!
@@ -48,19 +48,38 @@ TYPE(DIMPHYEX_t), INTENT(OUT) :: YDDIMPHYEX ! Structure to fill in
 INTEGER, INTENT(IN) :: KIT, KJT, KKT ! Array dimensions
 LOGICAL, INTENT(IN), OPTIONAL :: LTURB ! Flag to replace array dimensions I/JB and I/JE to the full array size
                                        ! needed if computation in HALO points (e.g. in turbulence)
+LOGICAL, OPTIONAL, INTENT(IN) :: OHPACK ! True to pack both horizontal dimension into a single one
 LOGICAL :: YTURB
 !
 !*       0.2  declaration of local variables
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
+LOGICAL :: LHPACK
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('FILL_DIMPHYEX', 0, ZHOOK_HANDLE)
 !
-YDDIMPHYEX%NIT=KIT
-YDDIMPHYEX%NJT=KJT
-CALL GET_INDICE_ll(YDDIMPHYEX%NIB, YDDIMPHYEX%NJB,&
-                  &YDDIMPHYEX%NIE, YDDIMPHYEX%NJE)
+IF(PRESENT(OHPACK)) THEN
+  LHPACK=OHPACK
+ELSE
+  LHPACK=.FALSE.
+ENDIF
+IF(LHPACK) THEN
+  !Both horizontal dimensions are packed into a single one
+  !Computations are done on the entire array
+  YDDIMPHYEX%NIT=KIT*KJT
+  YDDIMPHYEX%NJT=1
+  YDDIMPHYEX%NIB=1
+  YDDIMPHYEX%NJB=1
+  YDDIMPHYEX%NIE=KIT*KJT
+  YDDIMPHYEX%NJE=1
+ELSE
+  !Computations are done only on the physical domain
+  YDDIMPHYEX%NIT=KIT
+  YDDIMPHYEX%NJT=KJT
+  CALL GET_INDICE_ll(YDDIMPHYEX%NIB, YDDIMPHYEX%NJB,&
+                    &YDDIMPHYEX%NIE, YDDIMPHYEX%NJE)
+ENDIF
 !
 YDDIMPHYEX%NKL=1
 YDDIMPHYEX%NKT=KKT
