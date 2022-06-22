@@ -197,7 +197,7 @@ if [ -n "${mnh_expand_options-}" ]; then
   for rep in $reps; do
     if [ -d $rep ]; then
       #find $rep -type f | while read file; do
-      find $rep -type f -not -name '.*.swp' | while read file; do
+      find $rep -type f -not -name '.*.swp'  -not -name '.*.swo' | while read file; do
         apply_mnh_expand "$file"
       done
     fi
