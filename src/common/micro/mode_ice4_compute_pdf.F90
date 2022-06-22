@@ -152,8 +152,7 @@ ELSEIF(HSUBG_AUCV_RC=='PDF ') THEN
       PHLC_LCF(:)=0.
       PHLC_HRC(:)=PRCT(:)
       PHLC_LRC(:)=0.
-    ELSEWHERE(PRCT(:)> (ZRCRAUTC(:)-PSIGMA_RC(:)) .AND. &
-            & PRCT(:)<=(ZRCRAUTC(:)+PSIGMA_RC(:))       )
+    ELSEWHERE(PRCT(:)> (ZRCRAUTC(:)-PSIGMA_RC(:)) .AND. PRCT(:)<=(ZRCRAUTC(:)+PSIGMA_RC(:))       )
       PHLC_HCF(:)=(PRCT(:)+PSIGMA_RC(:)-ZRCRAUTC(:))/ &
                   &(2.*PSIGMA_RC(:))
       PHLC_LCF(:)=MAX(0., PCF(:)-PHLC_HCF(:))

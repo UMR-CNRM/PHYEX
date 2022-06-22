@@ -349,7 +349,7 @@ IF (OENTR_DETR) THEN
   CALL TH_R_FROM_THL_RT(CST, NEB, D%NIT, HFRAC_ICE,PFRAC_ICE_UP(:,D%NKB),ZPRES_F(:,D%NKB), &
              PTHL_UP(:,D%NKB),PRT_UP(:,D%NKB),ZTH_UP(:,D%NKB), &
              PRV_UP(:,D%NKB),PRC_UP(:,D%NKB),PRI_UP(:,D%NKB),ZRSATW(:),ZRSATI(:), OOCEAN=.FALSE., &
-             PBUF=ZBUF(:,:))
+             PBUF=ZBUF(:,:), KB=D%NIB, KE=D%NIE)
 
   !$mnh_expand_array(JI=D%NIB:D%NIE)
   ! compute updraft thevav and buoyancy term at KKB level
@@ -570,7 +570,7 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
     CALL TH_R_FROM_THL_RT(CST, NEB, D%NIT, HFRAC_ICE,PFRAC_ICE_UP(:,JK+D%NKL),ZPRES_F(:,JK+D%NKL), &
             PTHL_UP(:,JK+D%NKL),PRT_UP(:,JK+D%NKL),ZTH_UP(:,JK+D%NKL),              &
             ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:), OOCEAN=.FALSE., &
-            PBUF=ZBUF(:,:))
+            PBUF=ZBUF(:,:), KB=D%NIB, KE=D%NIE)
     !$mnh_expand_where(JI=D%NIB:D%NIE)
     WHERE(GTEST(D%NIB:D%NIE))
       PRC_UP(D%NIB:D%NIE,JK+D%NKL)=ZRC_UP(D%NIB:D%NIE)
@@ -935,7 +935,7 @@ CALL TH_R_FROM_THL_RT(CST,NEB,D%NIT,HFRAC_ICE,ZFRAC_ICE,&
              PPRE_PLUS_HALF,PTHL_UP,PRT_UP,&
              ZTHMIX,ZRVMIX,ZRCMIX,ZRIMIX,&
              ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
-             PBUF=ZBUF)
+             PBUF=ZBUF, KB=D%NIB, KE=D%NIE)
 !$mnh_expand_array(JI=D%NIB:D%NIE)
 ZTHV_UP_F2(D%NIB:D%NIE) = ZTHMIX(D%NIB:D%NIE)*(1.+ZRVORD*ZRVMIX(D%NIB:D%NIE))/(1.+PRT_UP(D%NIB:D%NIE))
 !$mnh_end_expand_array(JI=D%NIB:D%NIE)
@@ -1015,7 +1015,7 @@ CALL TH_R_FROM_THL_RT(CST,NEB,D%NIT,HFRAC_ICE,ZFRAC_ICE,&
              ZPRE,ZMIXTHL,ZMIXRT,&
              ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
              ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
-             PBUF=ZBUF)
+             PBUF=ZBUF, KB=D%NIB, KE=D%NIE)
 !$mnh_expand_array(JI=D%NIB:D%NIE)
 ZTHVMIX(D%NIB:D%NIE) = ZTHMIX(D%NIB:D%NIE)*(1.+ZRVORD*ZRVMIX(D%NIB:D%NIE))/(1.+ZMIXRT(D%NIB:D%NIE))
 
@@ -1027,7 +1027,7 @@ CALL TH_R_FROM_THL_RT(CST,NEB,D%NIT,HFRAC_ICE,ZFRAC_ICE,&
              PPRE_PLUS_HALF,ZMIXTHL,ZMIXRT,&
              ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
              ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
-             PBUF=ZBUF)
+             PBUF=ZBUF, KB=D%NIB, KE=D%NIE)
 !$mnh_expand_array(JI=D%NIB:D%NIE)
 ZTHVMIX_F2(D%NIB:D%NIE) = ZTHMIX(D%NIB:D%NIE)*(1.+ZRVORD*ZRVMIX(D%NIB:D%NIE))/(1.+ZMIXRT(D%NIB:D%NIE))
 !$mnh_end_expand_array(JI=D%NIB:D%NIE)

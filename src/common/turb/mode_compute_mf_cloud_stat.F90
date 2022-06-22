@@ -117,15 +117,16 @@ IF (KRRL > 0)  THEN
     CALL MZM_MF(D, PTHLM(:,:), ZFLXZ(:,:))
     CALL GZ_M_W_MF(D, PTHLM(:,:), PDZZ(:,:), ZWK(:,:))
     !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-    ZFLXZ(:,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(:,:)*(PTHL_UP(:,:)-ZFLXZ(:,:)) * ZWK(:,:)
+    ZFLXZ(D%NIB:D%NIE,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(D%NIB:D%NIE,:)* &
+                         & (PTHL_UP(D%NIB:D%NIE,:)-ZFLXZ(D%NIB:D%NIE,:)) * ZWK(D%NIB:D%NIE,:)
     !
     !   Avoid negative values
-    ZFLXZ(:,:) = MAX(0.,ZFLXZ(:,:))
+    ZFLXZ(D%NIB:D%NIE,:) = MAX(0.,ZFLXZ(D%NIB:D%NIE,:))
     !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
     CALL MZF_MF(D, ZFLXZ(:,:), PSIGMF(:,:))
     !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-    PSIGMF(:,:) = PSIGMF(:,:) * ZATHETA(:,:)**2
+    PSIGMF(D%NIB:D%NIE,:) = PSIGMF(D%NIB:D%NIE,:) * ZATHETA(D%NIB:D%NIE,:)**2
     !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 !
@@ -138,21 +139,22 @@ IF (KRRL > 0)  THEN
     CALL MZM_MF(D, PRTM(:,:), ZFLXZ(:,:))
     CALL GZ_M_W_MF(D, PRTM(:,:), PDZZ(:,:), ZWK(:,:))
     !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-    ZFLXZ(:,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(:,:)*(PRT_UP(:,:)-ZFLXZ(:,:)) * ZWK(:,:)
+    ZFLXZ(D%NIB:D%NIE,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(D%NIB:D%NIE,:)* &
+                         & (PRT_UP(D%NIB:D%NIE,:)-ZFLXZ(D%NIB:D%NIE,:)) * ZWK(D%NIB:D%NIE,:)
     !
     !   Avoid negative values
-    ZFLXZ(:,:) = MAX(0.,ZFLXZ(:,:))
+    ZFLXZ(D%NIB:D%NIE,:) = MAX(0.,ZFLXZ(D%NIB:D%NIE,:))
     !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
     CALL MZF_MF(D, ZFLXZ(:,:), ZWK(:,:))
     !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-    PSIGMF(:,:) = PSIGMF(:,:) + ZAMOIST(:,:) **2 * ZWK(:,:)
+    PSIGMF(D%NIB:D%NIE,:) = PSIGMF(D%NIB:D%NIE,:) + ZAMOIST(D%NIB:D%NIE,:) **2 * ZWK(D%NIB:D%NIE,:)
     !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 !
 !        1.3  Vertical part of Sigma_s
 !
     !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-    PSIGMF(:,:) =  SQRT( MAX (PSIGMF(:,:) , 0.) )
+    PSIGMF(D%NIB:D%NIE,:) =  SQRT( MAX (PSIGMF(D%NIB:D%NIE,:) , 0.) )
     !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 ELSE
   PSIGMF(:,:) = 0.

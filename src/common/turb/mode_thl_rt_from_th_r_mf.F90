@@ -78,48 +78,63 @@ REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)  :: PRT      ! total non precip. water
 !----------------------------------------------------------------------------
 REAL, DIMENSION(D%NIT,D%NKT) :: ZCP, ZT
 REAL, DIMENSION(D%NIT,D%NKT) :: ZLVOCPEXN, ZLSOCPEXN
-INTEGER :: JRR
+INTEGER :: JRR, JI, JK
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !----------------------------------------------------------------------------
 !
 !
 IF (LHOOK) CALL DR_HOOK('THL_RT_FRM_TH_R_MF',0,ZHOOK_HANDLE)
+!$mnh_expand_array(JI=D%NIB:D%NIE,JK=1:D%NKT)
 !temperature
-ZT(:,:) = PTH(:,:) * PEXN(:,:)
+ZT(D%NIB:D%NIE,:) = PTH(D%NIB:D%NIE,:) * PEXN(D%NIB:D%NIE,:)
 
 !Cp
-ZCP=CST%XCPD
-IF (KRR > 0) ZCP(:,:) = ZCP(:,:) + CST%XCPV * PR(:,:,1)
+ZCP(D%NIB:D%NIE,:)=CST%XCPD
+IF (KRR > 0) ZCP(D%NIB:D%NIE,:) = ZCP(D%NIB:D%NIE,:) + CST%XCPV * PR(D%NIB:D%NIE,:,1)
+!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=1:D%NKT)
 DO JRR = 2,1+KRRL  ! loop on the liquid components
-  ZCP(:,:)  = ZCP(:,:) + CST%XCL * PR(:,:,JRR)
+  !$mnh_expand_array(JI=D%NIB:D%NIE,JK=1:D%NKT)
+  ZCP(D%NIB:D%NIE,:)  = ZCP(D%NIB:D%NIE,:) + CST%XCL * PR(D%NIB:D%NIE,:,JRR)
+  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=1:D%NKT)
 END DO
 DO JRR = 2+KRRL,1+KRRL+KRRI ! loop on the solid components
-  ZCP(:,:)  = ZCP(:,:)  + CST%XCI * PR(:,:,JRR)
+  !$mnh_expand_array(JI=D%NIB:D%NIE,JK=1:D%NKT)
+  ZCP(D%NIB:D%NIE,:)  = ZCP(D%NIB:D%NIE,:)  + CST%XCI * PR(D%NIB:D%NIE,:,JRR)
+  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=1:D%NKT)
 END DO
 
 IF ( KRRL >= 1 ) THEN
   IF ( KRRI >= 1 ) THEN
+    !$mnh_expand_array(JI=D%NIB:D%NIE,JK=1:D%NKT)
     !ZLVOCPEXN and ZLSOCPEXN
-    ZLVOCPEXN(:,:)=(CST%XLVTT + (CST%XCPV-CST%XCL) *  (ZT(:,:)-CST%XTT) ) / ZCP(:,:) / PEXN(:,:)
-    ZLSOCPEXN(:,:)=(CST%XLSTT + (CST%XCPV-CST%XCI) *  (ZT(:,:)-CST%XTT) ) / ZCP(:,:) / PEXN(:,:)
+    ZLVOCPEXN(D%NIB:D%NIE,:)=(CST%XLVTT + (CST%XCPV-CST%XCL) *  (ZT(D%NIB:D%NIE,:)-CST%XTT) ) & 
+                            &/ ZCP(D%NIB:D%NIE,:) / PEXN(D%NIB:D%NIE,:)
+    ZLSOCPEXN(D%NIB:D%NIE,:)=(CST%XLSTT + (CST%XCPV-CST%XCI) *  (ZT(D%NIB:D%NIE,:)-CST%XTT) ) &
+                            &/ ZCP(D%NIB:D%NIE,:) / PEXN(D%NIB:D%NIE,:)
     ! Rnp 
-    PRT(:,:)  = PR(:,:,1)  + PR(:,:,2)  + PR(:,:,4)
+    PRT(D%NIB:D%NIE,:)  = PR(D%NIB:D%NIE,:,1)  + PR(D%NIB:D%NIE,:,2)  + PR(D%NIB:D%NIE,:,4)
     ! Theta_l 
-    PTHL(:,:)  = PTH(:,:)  - ZLVOCPEXN(:,:) * PR(:,:,2) &
-                           - ZLSOCPEXN(:,:) * PR(:,:,4)
+    PTHL(D%NIB:D%NIE,:)  = PTH(D%NIB:D%NIE,:)  - ZLVOCPEXN(D%NIB:D%NIE,:) * PR(D%NIB:D%NIE,:,2) &
+                           - ZLSOCPEXN(D%NIB:D%NIE,:) * PR(D%NIB:D%NIE,:,4)
+    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=1:D%NKT)
   ELSE
+    !$mnh_expand_array(JI=D%NIB:D%NIE,JK=1:D%NKT)
     !ZLVOCPEXN
-    ZLVOCPEXN(:,:)=(CST%XLVTT + (CST%XCPV-CST%XCL) *  (ZT(:,:)-CST%XTT) ) / ZCP(:,:) / PEXN(:,:)
+    ZLVOCPEXN(D%NIB:D%NIE,:)=(CST%XLVTT + (CST%XCPV-CST%XCL) *  (ZT(D%NIB:D%NIE,:)-CST%XTT) ) &
+                            &/ ZCP(D%NIB:D%NIE,:) / PEXN(D%NIB:D%NIE,:)
     ! Rnp
-    PRT(:,:)  = PR(:,:,1)  + PR(:,:,2) 
+    PRT(D%NIB:D%NIE,:)  = PR(D%NIB:D%NIE,:,1)  + PR(D%NIB:D%NIE,:,2) 
     ! Theta_l
-    PTHL(:,:) = PTH(:,:)  - ZLVOCPEXN(:,:) * PR(:,:,2)
+    PTHL(D%NIB:D%NIE,:) = PTH(D%NIB:D%NIE,:)  - ZLVOCPEXN(D%NIB:D%NIE,:) * PR(D%NIB:D%NIE,:,2)
+    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=1:D%NKT)
   END IF
 ELSE
+  !$mnh_expand_array(JI=D%NIB:D%NIE,JK=1:D%NKT)
   ! Rnp = rv
-  PRT(:,:)  = PR(:,:,1)
+  PRT(D%NIB:D%NIE,:)  = PR(D%NIB:D%NIE,:,1)
   ! Theta_l = Theta
-  PTHL(:,:) = PTH(:,:)
+  PTHL(D%NIB:D%NIE,:) = PTH(D%NIB:D%NIE,:)
+  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=1:D%NKT)
 END IF
 IF (LHOOK) CALL DR_HOOK('THL_RT_FRM_TH_R_MF',1,ZHOOK_HANDLE)
 END SUBROUTINE THL_RT_FROM_TH_R_MF

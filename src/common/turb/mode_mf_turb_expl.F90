@@ -131,29 +131,29 @@ PVDT   = 0.
 CALL MZM_MF(D, PRTM (:,:), ZRTM_F(:,:))
 CALL MZM_MF(D, PTHLM(:,:), ZTHLM_F(:,:))
 !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-ZQTM(:,:)   = ZRTM_F(:,:)/(1.+ZRTM_F(:,:))
-ZQT_UP(:,:) = PRT_UP(:,:)/(1.+PRT_UP(:,:))
-ZTHS_UP(:,:)= PTHL_UP(:,:)*(1.+PARAMMF%XLAMBDA_MF*ZQT_UP(:,:))
-ZTHSM(:,:)  = ZTHLM_F(:,:)*(1.+PARAMMF%XLAMBDA_MF*ZQTM(:,:))
+ZQTM(D%NIB:D%NIE,:)   = ZRTM_F(D%NIB:D%NIE,:)/(1.+ZRTM_F(D%NIB:D%NIE,:))
+ZQT_UP(D%NIB:D%NIE,:) = PRT_UP(D%NIB:D%NIE,:)/(1.+PRT_UP(D%NIB:D%NIE,:))
+ZTHS_UP(D%NIB:D%NIE,:)= PTHL_UP(D%NIB:D%NIE,:)*(1.+PARAMMF%XLAMBDA_MF*ZQT_UP(D%NIB:D%NIE,:))
+ZTHSM(D%NIB:D%NIE,:)  = ZTHLM_F(D%NIB:D%NIE,:)*(1.+PARAMMF%XLAMBDA_MF*ZQTM(D%NIB:D%NIE,:))
 !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 CALL MZM_MF(D, PTHLM(:,:), PFLXZTHLMF(:,:))
 CALL MZM_MF(D, PRTM(:,:), PFLXZRMF(:,:))
 CALL MZM_MF(D, PTHVM(:,:), PFLXZTHVMF(:,:))
 !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-PFLXZTHLMF(:,:)  = PEMF(:,:)*(PTHL_UP(:,:)-PFLXZTHLMF(:,:))  ! ThetaL
-PFLXZRMF(:,:)    = PEMF(:,:)*(PRT_UP(:,:)-PFLXZRMF(:,:))  ! Rt
-PFLXZTHVMF(:,:)  = PEMF(:,:)*(PTHV_UP(:,:)-PFLXZTHVMF(:,:))  ! ThetaV
+PFLXZTHLMF(D%NIB:D%NIE,:)  = PEMF(D%NIB:D%NIE,:)*(PTHL_UP(D%NIB:D%NIE,:)-PFLXZTHLMF(D%NIB:D%NIE,:))  ! ThetaL
+PFLXZRMF(D%NIB:D%NIE,:)    = PEMF(D%NIB:D%NIE,:)*(PRT_UP(D%NIB:D%NIE,:)-PFLXZRMF(D%NIB:D%NIE,:))  ! Rt
+PFLXZTHVMF(D%NIB:D%NIE,:)  = PEMF(D%NIB:D%NIE,:)*(PTHV_UP(D%NIB:D%NIE,:)-PFLXZTHVMF(D%NIB:D%NIE,:))  ! ThetaV
 
-ZFLXZTHSMF(:,:)  = PEMF(:,:)*(ZTHS_UP(:,:)-ZTHSM(:,:))    ! Theta S flux
+ZFLXZTHSMF(D%NIB:D%NIE,:)  = PEMF(D%NIB:D%NIE,:)*(ZTHS_UP(D%NIB:D%NIE,:)-ZTHSM(D%NIB:D%NIE,:))    ! Theta S flux
 !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 IF (OMIXUV) THEN
   CALL MZM_MF(D, PUM(:,:), PFLXZUMF(:,:))
   CALL MZM_MF(D, PVM(:,:), PFLXZVMF(:,:))
   !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-  PFLXZUMF(:,:) =  PEMF(:,:)*(PU_UP(:,:)-PFLXZUMF(:,:))  ! U
-  PFLXZVMF(:,:) =  PEMF(:,:)*(PV_UP(:,:)-PFLXZVMF(:,:))  ! V
+  PFLXZUMF(D%NIB:D%NIE,:) =  PEMF(D%NIB:D%NIE,:)*(PU_UP(D%NIB:D%NIE,:)-PFLXZUMF(D%NIB:D%NIE,:))  ! U
+  PFLXZVMF(D%NIB:D%NIE,:) =  PEMF(D%NIB:D%NIE,:)*(PV_UP(D%NIB:D%NIE,:)-PFLXZVMF(D%NIB:D%NIE,:))  ! V
   !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 ELSE
   PFLXZUMF(:,:) = 0.

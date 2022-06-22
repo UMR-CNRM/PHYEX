@@ -23,6 +23,7 @@ Ecrire doc sur marche à suivre pour intégrer un nouveau développement:
   - dev dans MNH à faire en array-syntax
   - dev dans AROME à faire en boucles do
   - intégration dans PHYEX: en array-syntax avec directives mnh_expand
+  - vérifier les directives mnh_expand à l'aide du script verify_mnh_expand.py
   - les 3 tests suivants doivent donner les mêmes résultats (au bit près) dans chacun des deux modèles:
     - compilation directe sans activer mnh_expand
     - compilation en activant mnh_expand
@@ -52,7 +53,6 @@ Pb identifiés à corriger plus tard:
   - th_r_from_thl_rt appelée partout, il faudrait limiter à OTEST
   - doute sur le codage de MODD_PRECISION
   - appel à abort à travers print_msg non testé
-  - indentation inorrecte dans les blocs mnh_expand
   - sedimentation momentum non branchée (et à trasformer comme sedim_stat)
   - si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
   - il faudrait nettoyer les interfaces pour supprimer les clés passées directement
@@ -80,3 +80,5 @@ Regarder s'il ne serait pas possible/souhaitable de supprimer modd_lunit de PHYE
 Nettoyage des répertoires aux nécessaire
 
 Initialiser dans AROME la variable ldiag_in_run de MODD_DIAG_IN_RUN pour pouvoir phaser le modd
+
+Dans shallow_mf (et toutes les routines appelées en-dessous) il faut remplacer l'utilisation des D%NIB, D%NIE, D%NIT par ce qui sera utilisé dans la turbulence

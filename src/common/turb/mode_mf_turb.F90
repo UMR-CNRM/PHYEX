@@ -156,17 +156,17 @@ CALL MZM_MF(D, PRTM(:,:), PFLXZRMF(:,:))
 CALL MZM_MF(D, PTHVM(:,:), PFLXZTHVMF(:,:))
 
 !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-PFLXZTHMF(:,:) = PEMF(:,:)*(PTHL_UP(:,:)-PFLXZTHMF(:,:))
-PFLXZRMF(:,:) =  PEMF(:,:)*(PRT_UP(:,:)-PFLXZRMF(:,:))
-PFLXZTHVMF(:,:) = PEMF(:,:)*(PTHV_UP(:,:)-PFLXZTHVMF(:,:))
+PFLXZTHMF(D%NIB:D%NIE,:) = PEMF(D%NIB:D%NIE,:)*(PTHL_UP(D%NIB:D%NIE,:)-PFLXZTHMF(D%NIB:D%NIE,:))
+PFLXZRMF(D%NIB:D%NIE,:) =  PEMF(D%NIB:D%NIE,:)*(PRT_UP(D%NIB:D%NIE,:)-PFLXZRMF(D%NIB:D%NIE,:))
+PFLXZTHVMF(D%NIB:D%NIE,:) = PEMF(D%NIB:D%NIE,:)*(PTHV_UP(D%NIB:D%NIE,:)-PFLXZTHVMF(D%NIB:D%NIE,:))
 !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 IF (OMIXUV) THEN
   CALL MZM_MF(D, PUM(:,:), PFLXZUMF(:,:))
   CALL MZM_MF(D, PVM(:,:), PFLXZVMF(:,:))
   !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-  PFLXZUMF(:,:) =  PEMF(:,:)*(PU_UP(:,:)-PFLXZUMF(:,:))
-  PFLXZVMF(:,:) =  PEMF(:,:)*(PV_UP(:,:)-PFLXZVMF(:,:))
+  PFLXZUMF(D%NIB:D%NIE,:) =  PEMF(D%NIB:D%NIE,:)*(PU_UP(D%NIB:D%NIE,:)-PFLXZUMF(D%NIB:D%NIE,:))
+  PFLXZVMF(D%NIB:D%NIE,:) =  PEMF(D%NIB:D%NIE,:)*(PV_UP(D%NIB:D%NIE,:)-PFLXZVMF(D%NIB:D%NIE,:))
   !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 ELSE
   PFLXZUMF(:,:) = 0.
@@ -191,8 +191,8 @@ CALL TRIDIAG_MASSFLUX(D,PTHLM,PFLXZTHMF,-PEMF,PTSTEP,PIMPL,  &
 ! compute new flux and THL tendency
 CALL MZM_MF(D, ZVARS(:,:), PFLXZTHMF(:,:))
 !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-PFLXZTHMF(:,:) = PEMF(:,:)*(PTHL_UP(:,:)-PFLXZTHMF(:,:))
-PTHLDT(:,:)= (ZVARS(:,:)-PTHLM(:,:))/PTSTEP
+PFLXZTHMF(D%NIB:D%NIE,:) = PEMF(D%NIB:D%NIE,:)*(PTHL_UP(D%NIB:D%NIE,:)-PFLXZTHMF(D%NIB:D%NIE,:))
+PTHLDT(D%NIB:D%NIE,:)= (ZVARS(D%NIB:D%NIE,:)-PTHLM(D%NIB:D%NIE,:))/PTSTEP
 !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 !
@@ -203,8 +203,8 @@ CALL TRIDIAG_MASSFLUX(D,PRTM(:,:),PFLXZRMF,-PEMF,PTSTEP,PIMPL,  &
 ! compute new flux and RT tendency
 CALL MZM_MF(D, ZVARS(:,:), PFLXZRMF(:,:))
 !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-PFLXZRMF(:,:) =  PEMF(:,:)*(PRT_UP(:,:)-PFLXZRMF(:,:))
-PRTDT(:,:) = (ZVARS(:,:)-PRTM(:,:))/PTSTEP
+PFLXZRMF(D%NIB:D%NIE,:) =  PEMF(D%NIB:D%NIE,:)*(PRT_UP(D%NIB:D%NIE,:)-PFLXZRMF(D%NIB:D%NIE,:))
+PRTDT(D%NIB:D%NIE,:) = (ZVARS(D%NIB:D%NIE,:)-PRTM(D%NIB:D%NIE,:))/PTSTEP
 !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 !
 
@@ -219,8 +219,8 @@ IF (OMIXUV) THEN
   ! compute new flux and U tendency
   CALL MZM_MF(D, ZVARS(:,:), PFLXZUMF(:,:))
   !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-  PFLXZUMF(:,:) = PEMF(:,:)*(PU_UP(:,:)-PFLXZUMF(:,:))
-  PUDT(:,:)= (ZVARS(:,:)-PUM(:,:))/PTSTEP
+  PFLXZUMF(D%NIB:D%NIE,:) = PEMF(D%NIB:D%NIE,:)*(PU_UP(D%NIB:D%NIE,:)-PFLXZUMF(D%NIB:D%NIE,:))
+  PUDT(D%NIB:D%NIE,:)= (ZVARS(D%NIB:D%NIE,:)-PUM(D%NIB:D%NIE,:))/PTSTEP
   !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
   !
   !
@@ -233,8 +233,8 @@ IF (OMIXUV) THEN
   ! compute new flux and V tendency
   CALL MZM_MF(D, ZVARS(:,:), PFLXZVMF(:,:))
   !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-  PFLXZVMF(:,:) = PEMF(:,:)*(PV_UP(:,:)-PFLXZVMF(:,:))
-  PVDT(:,:)= (ZVARS(:,:)-PVM(:,:))/PTSTEP
+  PFLXZVMF(D%NIB:D%NIE,:) = PEMF(D%NIB:D%NIE,:)*(PV_UP(D%NIB:D%NIE,:)-PFLXZVMF(D%NIB:D%NIE,:))
+  PVDT(D%NIB:D%NIE,:)= (ZVARS(D%NIB:D%NIE,:)-PVM(D%NIB:D%NIE,:))/PTSTEP
   !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 ELSE
   PUDT(:,:)=0.
@@ -250,7 +250,7 @@ DO JSV=1,KSV
 
   CALL MZM_MF(D, PSVM(:,:,JSV), PFLXZSVMF(:,:,JSV))
   !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-  PFLXZSVMF(:,:,JSV) = PEMF(:,:)*(PSV_UP(:,:,JSV)-PFLXZSVMF(:,:,JSV))
+  PFLXZSVMF(D%NIB:D%NIE,:,JSV) = PEMF(D%NIB:D%NIE,:)*(PSV_UP(D%NIB:D%NIE,:,JSV)-PFLXZSVMF(D%NIB:D%NIE,:,JSV))
   !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
   !
   ! 3.5 Compute the tendency for scalar variables
@@ -261,8 +261,8 @@ DO JSV=1,KSV
   ! compute new flux and Sv tendency
   CALL MZM_MF(D, ZVARS, PFLXZSVMF(:,:,JSV))
   !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-  PFLXZSVMF(:,:,JSV) = PEMF(:,:)*(PSV_UP(:,:,JSV)-PFLXZSVMF(:,:,JSV))
-  PSVDT(:,:,JSV)= (ZVARS(:,:)-PSVM(:,:,JSV))/PTSTEP
+  PFLXZSVMF(D%NIB:D%NIE,:,JSV) = PEMF(D%NIB:D%NIE,:)*(PSV_UP(D%NIB:D%NIE,:,JSV)-PFLXZSVMF(D%NIB:D%NIE,:,JSV))
+  PSVDT(D%NIB:D%NIE,:,JSV)= (ZVARS(D%NIB:D%NIE,:)-PSVM(D%NIB:D%NIE,:,JSV))/PTSTEP
   !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 ENDDO

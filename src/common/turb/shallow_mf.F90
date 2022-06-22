@@ -171,6 +171,7 @@ REAL, DIMENSION(D%NIT,D%NKT) ::     &
           ZEMF_O_RHODREF,                         & ! entrainment/detrainment
           ZBUO_INTEG                                ! integrated buoyancy
 REAL, DIMENSION(D%NIT,D%NKT) :: ZFRAC_ICE
+REAL, DIMENSION(D%NIT,D%NKT) :: ZWK
 
 REAL, DIMENSION(D%NIT,D%NKT,KSV) ::  &
                                           ZSV_UP,&  ! updraft scalar var.
@@ -201,12 +202,15 @@ ENDIF
 ZFRAC_ICE(:,:) = 0.
 IF (KRR.GE.4) THEN
   !$mnh_expand_where(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-  WHERE(PRM(:,:,2)+PRM(:,:,4) > 1.E-20)
-    ZFRAC_ICE(:,:) = PRM(:,:,4) / (PRM(:,:,2)+PRM(:,:,4))
+  WHERE(PRM(D%NIB:D%NIE,:,2)+PRM(D%NIB:D%NIE,:,4) > 1.E-20)
+    ZFRAC_ICE(D%NIB:D%NIE,:) = PRM(D%NIB:D%NIE,:,4) / (PRM(D%NIB:D%NIE,:,2)+PRM(D%NIB:D%NIE,:,4))
   ENDWHERE
   !$mnh_end_expand_where(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 ENDIF
-CALL COMPUTE_FRAC_ICE(HFRAC_ICE,NEB,ZFRAC_ICE(:,:),PTHM(:,:)*PEXNM(:,:), IERR(:,:))
+!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+ZWK(D%NIB:D%NIE,:)=PTHM(D%NIB:D%NIE,:)*PEXNM(D%NIB:D%NIE,:)
+!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+CALL COMPUTE_FRAC_ICE(HFRAC_ICE,NEB,ZFRAC_ICE(:,:),ZWK(:,:), IERR(:,:))
 
 ! Conservative variables at t-dt
 CALL THL_RT_FROM_TH_R_MF(D, CST, KRR,KRRL,KRRI,    &
@@ -215,7 +219,7 @@ CALL THL_RT_FROM_TH_R_MF(D, CST, KRR,KRRL,KRRI,    &
 
 ! Virtual potential temperature at t-dt
 !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-ZTHVM(:,:) = PTHM(:,:)*((1.+CST%XRV / CST%XRD *PRM(:,:,1))/(1.+ZRTM(:,:))) 
+ZTHVM(D%NIB:D%NIE,:) = PTHM(D%NIB:D%NIE,:)*((1.+CST%XRV / CST%XRD *PRM(D%NIB:D%NIE,:,1))/(1.+ZRTM(D%NIB:D%NIE,:))) 
 !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 ! 
 !!! 2. Compute updraft
@@ -288,7 +292,7 @@ CALL COMPUTE_MF_CLOUD(D, CST, PARAMMF, KRR, KRRL, KRRI, &
 !!!    ------------------------------------------------------------------------
 !
 !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-ZEMF_O_RHODREF(:,:)=PEMF(:,:)/PRHODREF(:,:)
+ZEMF_O_RHODREF(D%NIB:D%NIE,:)=PEMF(D%NIB:D%NIE,:)/PRHODREF(D%NIB:D%NIE,:)
 !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 IF ( PIMPL_MF > 1.E-10 ) THEN  
