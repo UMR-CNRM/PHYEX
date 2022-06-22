@@ -122,18 +122,14 @@ IJB=D%NJBC
 CALL MZF_PHY(D,PZZ,ZZZ)
 ! replace by height of mass points
 DO JK=1,D%NKT
-  DO JJ=IJB,IJE 
- DO JI=IIB,IIE 
-  ZZZ(JI,JJ,JK) = ZZZ(JI,JJ,JK) - PZZ(JI,JJ,IKB)
-   ENDDO
-ENDDO
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  ZZZ(IIB:IIE,IJB:IJE,JK) = ZZZ(IIB:IIE,IJB:IJE,JK) - PZZ(IIB:IIE,IJB:IJE,IKB)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 END DO
 ! fill upper level with physical value
-DO JJ=IJB,IJE 
- DO JI=IIB,IIE 
-ZZZ(JI,JJ,D%NKU) = 2.*ZZZ(JI,JJ,D%NKU-D%NKL) - ZZZ(JI,JJ,D%NKU-2*D%NKL)
- ENDDO
-ENDDO
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+ZZZ(IIB:IIE,IJB:IJE,D%NKU) = 2.*ZZZ(IIB:IIE,IJB:IJE,D%NKU-D%NKL) - ZZZ(IIB:IIE,IJB:IJE,D%NKU-2*D%NKL)
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 !
 !-------------------------------------------------------------------------------
 !
@@ -142,24 +138,18 @@ ENDDO
 !
 ! z/LMO
 DO JK=1,D%NKT
-  DO JJ=IJB,IJE 
- DO JI=IIB,IIE 
-  IF (PLMO(JI,JJ)==XUNDEF)THEN
-    ZZ_O_LMO(JI,JJ,JK)=0.
-  ELSE
-    ZZ_O_LMO(JI,JJ,JK)=ZZZ(JI,JJ,JK)*PDIRCOSZW(JI,JJ)/PLMO(JI,JJ)
-  ENDIF
-   ENDDO
-ENDDO
+  !$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
+  WHERE (PLMO(IIB:IIE,IJB:IJE)==XUNDEF)
+    ZZ_O_LMO(IIB:IIE,IJB:IJE,JK)=0.
+  ELSEWHERE
+    ZZ_O_LMO(IIB:IIE,IJB:IJE,JK)=ZZZ(IIB:IIE,IJB:IJE,JK)*PDIRCOSZW(IIB:IIE,IJB:IJE)/PLMO(IIB:IIE,IJB:IJE)
+  END WHERE
+  !$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
 END DO
-DO JK=1,D%NKT 
- DO JJ=IJB,IJE 
-  DO JI=IIB,IIE 
-ZZ_O_LMO(JI,JJ,JK) = MAX(ZZ_O_LMO(JI,JJ,JK),-10.)
-ZZ_O_LMO(JI,JJ,JK) = MIN(ZZ_O_LMO(JI,JJ,JK), 10.)
-  ENDDO
- ENDDO
-ENDDO
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+ZZ_O_LMO(IIB:IIE,IJB:IJE,1:D%NKT) = MAX(ZZ_O_LMO(IIB:IIE,IJB:IJE,1:D%NKT),-10.)
+ZZ_O_LMO(IIB:IIE,IJB:IJE,1:D%NKT) = MIN(ZZ_O_LMO(IIB:IIE,IJB:IJE,1:D%NKT), 10.)
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
 !
 ! MO function for stress
@@ -183,23 +173,17 @@ SELECT CASE (HTURBLEN)
   CASE ('DELT','DEAR')
     CALL MXF_PHY(D,PDXX,ZWORK1)
     CALL MYF_PHY(D,PDYY,ZWORK2)
-    DO JK=1,D%NKT 
- DO JJ=IJB,IJE 
-  DO JI=IIB,IIE 
-    ZDH(JI,JJ,JK) = SQRT(ZWORK1(JI,JJ,JK)*ZWORK2(JI,JJ,JK))
-      ENDDO
- ENDDO
-ENDDO
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    ZDH(IIB:IIE,IJB:IJE,1:D%NKT) = SQRT(ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT)*ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT))
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
     ZDH(IIU,IJB:IJE,1:D%NKT) = ZDH(IIU-1,IJB:IJE,1:D%NKT)
     ZDH(IIB:IIE,IJU,1:D%NKT) = ZDH(IIB:IIE,IJU-1,1:D%NKT)
     DO JK=1,D%NKT
-      DO JJ=IJB,IJE 
- DO JI=IIB,IIE 
-      ZZC(JI,JJ,JK) = 2.*MIN(ZPHIM(JI,JJ,JK),1.)/CST%XKARMAN    &
-                     * MAX( PDZZ(JI,JJ,JK)*PDIRCOSZW(JI,JJ) , & 
-                     ZDH(JI,JJ,JK)/PDIRCOSZW(JI,JJ)/3. )
-       ENDDO
-ENDDO
+      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+      ZZC(IIB:IIE,IJB:IJE,JK) = 2.*MIN(ZPHIM(IIB:IIE,IJB:IJE,JK),1.)/CST%XKARMAN    &
+                     * MAX( PDZZ(IIB:IIE,IJB:IJE,JK)*PDIRCOSZW(IIB:IIE,IJB:IJE) , & 
+                     ZDH(IIB:IIE,IJB:IJE,JK)/PDIRCOSZW(IIB:IIE,IJB:IJE)/3. )
+      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
     END DO
 !
 !*     4. factor controling the transition between SBL and free isotropic turb. (3D case)
@@ -207,32 +191,24 @@ ENDDO
 !
     ZGAM(IIB:IIE,IJB:IJE,D%NKA) = 0.
     DO JK=IKTB,IKTE
-      DO JJ=IJB,IJE 
- DO JI=IIB,IIE 
-      ZGAM(JI,JJ,JK) = 1.  - EXP( -3.*(ZZZ(JI,JJ,JK)-ZZZ(JI,JJ,IKB))/(ZZC(JI,JJ,JK)) )
-       ENDDO
-ENDDO
-      DO JJ=IJB,IJE 
- DO JI=IIB,IIE 
-      IF (ZGAM(JI,JJ,JK-D%NKL)>ZGAM(JI,JJ,JK) .OR. ZGAM(JI,JJ,JK-D%NKL)>0.99 ) THEN
-        ZGAM(JI,JJ,JK) = 1.
-      ENDIF
-      ENDDO
-ENDDO
+      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+      ZGAM(IIB:IIE,IJB:IJE,JK) = 1.  - EXP( -3.*(ZZZ(IIB:IIE,IJB:IJE,JK)-ZZZ(IIB:IIE,IJB:IJE,IKB))/(ZZC(IIB:IIE,IJB:IJE,JK)) )
+      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+      !$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
+      WHERE (ZGAM(IIB:IIE,IJB:IJE,JK-D%NKL)>ZGAM(IIB:IIE,IJB:IJE,JK) .OR. ZGAM(IIB:IIE,IJB:IJE,JK-D%NKL)>0.99 ) 
+        ZGAM(IIB:IIE,IJB:IJE,JK) = 1.
+      END WHERE
+     !$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
     END DO
-    DO JJ=IJB,IJE 
- DO JI=IIB,IIE 
-    ZGAM(JI,JJ,D%NKU) = 1.  - EXP( -3.*(ZZZ(JI,JJ,D%NKU)-ZZZ(JI,JJ,IKB))& 
-                                   /(ZZC(JI,JJ,D%NKU)) )
-     ENDDO
-ENDDO
-    DO JJ=IJB,IJE 
- DO JI=IIB,IIE 
-    IF (ZGAM(JI,JJ,D%NKU-D%NKL)>ZGAM(JI,JJ,D%NKU) .OR. ZGAM(JI,JJ,D%NKU-D%NKL)>0.99 ) THEN
-      ZGAM(JI,JJ,D%NKU) = 1.
-    ENDIF
-     ENDDO
-ENDDO
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+    ZGAM(IIB:IIE,IJB:IJE,D%NKU) = 1.  - EXP( -3.*(ZZZ(IIB:IIE,IJB:IJE,D%NKU)-ZZZ(IIB:IIE,IJB:IJE,IKB))& 
+                                   /(ZZC(IIB:IIE,IJB:IJE,D%NKU)) )
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+    !$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
+    WHERE (ZGAM(IIB:IIE,IJB:IJE,D%NKU-D%NKL)>ZGAM(IIB:IIE,IJB:IJE,D%NKU) .OR. ZGAM(IIB:IIE,IJB:IJE,D%NKU-D%NKL)>0.99 ) 
+      ZGAM(IIB:IIE,IJB:IJE,D%NKU) = 1.
+    END WHERE
+    !$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
 !   
 !
 !-------------------------------------------------------------------------------
@@ -245,35 +221,27 @@ ENDDO
     ZGAM(IIB:IIE,IJB:IJE,1:D%NKT) = 1.
     ZGAM(IIB:IIE,IJB:IJE,D%NKA) = 0.
     DO JK=IKTB,IKTE
-      DO JJ=IJB,IJE 
- DO JI=IIB,IIE 
-      IF(PSBL_DEPTH(JI,JJ)>0.)THEN
-        ZGAM(JI,JJ,JK) = TANH( (ZZZ(JI,JJ,JK)-ZZZ(JI,JJ,IKB))/PSBL_DEPTH(JI,JJ) )
-      ENDIF
-       ENDDO
-ENDDO
-      DO JJ=IJB,IJE 
- DO JI=IIB,IIE 
-      IF (ZGAM(JI,JJ,JK-D%NKL)>0.99 ) THEN
-        ZGAM(JI,JJ,JK) = 1.
-      ENDIF
-       ENDDO
-ENDDO
+      !$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
+      WHERE(PSBL_DEPTH(IIB:IIE,IJB:IJE)>0.)
+        ZGAM(IIB:IIE,IJB:IJE,JK) = TANH( (ZZZ(IIB:IIE,IJB:IJE,JK)-ZZZ(IIB:IIE,IJB:IJE,IKB))/PSBL_DEPTH(IIB:IIE,IJB:IJE) )
+      END WHERE
+      !$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
+      !$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
+      WHERE (ZGAM(IIB:IIE,IJB:IJE,JK-D%NKL)>0.99 ) 
+        ZGAM(IIB:IIE,IJB:IJE,JK) = 1.
+      END WHERE
+      !$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
     END DO
-    DO JJ=IJB,IJE 
- DO JI=IIB,IIE 
-    IF(PSBL_DEPTH(JI,JJ)>0.)THEN
-      ZGAM(JI,JJ,D%NKU) = TANH( (ZZZ(JI,JJ,D%NKU)-ZZZ(JI,JJ,IKB))/PSBL_DEPTH(JI,JJ) )
-    ENDIF
-    ENDDO
-ENDDO
-   DO JJ=IJB,IJE 
- DO JI=IIB,IIE 
-    IF (ZGAM(JI,JJ,D%NKU-D%NKL)>0.99 ) THEN
-      ZGAM(JI,JJ,JK) = 1.
-    ENDIF
-     ENDDO
-ENDDO
+    !$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
+    WHERE(PSBL_DEPTH(IIB:IIE,IJB:IJE)>0.)
+      ZGAM(IIB:IIE,IJB:IJE,D%NKU) = TANH( (ZZZ(IIB:IIE,IJB:IJE,D%NKU)-ZZZ(IIB:IIE,IJB:IJE,IKB))/PSBL_DEPTH(IIB:IIE,IJB:IJE) )
+    END WHERE
+   !$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
+   !$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
+    WHERE (ZGAM(IIB:IIE,IJB:IJE,D%NKU-D%NKL)>0.99 ) 
+      ZGAM(IIB:IIE,IJB:IJE,JK) = 1.
+    END WHERE
+    !$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
 !
 !-------------------------------------------------------------------------------
 END SELECT
@@ -283,22 +251,16 @@ END SELECT
 !         ---------------------------------
 !
 DO JK=1,D%NKT
-DO JJ=IJB,IJE 
- DO JI=IIB,IIE 
-  ZL(JI,JJ,JK) =  CST%XKARMAN/SQRT(CSTURB%XALPSBL)/CSTURB%XCMFS                                      &
-              * ZZZ(JI,JJ,JK)*PDIRCOSZW(JI,JJ)/(ZPHIM(JI,JJ,JK)**2*SQRT(ZPHIE(JI,JJ,JK)))
- ENDDO
-ENDDO
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  ZL(IIB:IIE,IJB:IJE,JK) =  CST%XKARMAN/SQRT(CSTURB%XALPSBL)/CSTURB%XCMFS                                      &
+              * ZZZ(IIB:IIE,IJB:IJE,JK)*PDIRCOSZW(IIB:IIE,IJB:IJE)/(ZPHIM(IIB:IIE,IJB:IJE,JK)**2*SQRT(ZPHIE(IIB:IIE,IJB:IJE,JK)))
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 END DO
 !
-DO JK=1,D%NKT 
- DO JJ=IJB,IJE 
-  DO JI=IIB,IIE 
-PLK(JI,JJ,JK)=(1.-ZGAM(JI,JJ,JK))*ZL(JI,JJ,JK) &
-                             +ZGAM(JI,JJ,JK)*PLK(JI,JJ,JK)
-  ENDDO
- ENDDO
-ENDDO
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+PLK(IIB:IIE,IJB:IJE,1:D%NKT)=(1.-ZGAM(IIB:IIE,IJB:IJE,1:D%NKT))*ZL(IIB:IIE,IJB:IJE,1:D%NKT) &
+                             +ZGAM(IIB:IIE,IJB:IJE,1:D%NKT)*PLK(IIB:IIE,IJB:IJE,1:D%NKT)
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
 PLK(IIB:IIE,IJB:IJE,D%NKA) = PLK(IIB:IIE,IJB:IJE,IKB)
 PLK(IIB:IIE,IJB:IJE,D%NKU) = PLK(IIB:IIE,IJB:IJE,IKE)
@@ -307,35 +269,23 @@ PLK(IIB:IIE,IJB:IJE,D%NKU) = PLK(IIB:IIE,IJB:IJE,IKE)
 !*     7. Modification of the dissipative length
 !         --------------------------------------
 !
-DO JK=1,D%NKT 
- DO JJ=IJB,IJE 
-  DO JI=IIB,IIE 
-ZL(JI,JJ,JK) = ZL(JI,JJ,JK) * (CSTURB%XALPSBL**(3./2.)*CST%XKARMAN*CSTURB%XCED) &
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+ZL(IIB:IIE,IJB:IJE,1:D%NKT) = ZL(IIB:IIE,IJB:IJE,1:D%NKT) * (CSTURB%XALPSBL**(3./2.)*CST%XKARMAN*CSTURB%XCED) &
         / (CST%XKARMAN/SQRT(CSTURB%XALPSBL)/CSTURB%XCMFS)
-  ENDDO
- ENDDO
-ENDDO
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
-DO JK=1,D%NKT 
- DO JJ=IJB,IJE 
-  DO JI=IIB,IIE 
-IF (ZZ_O_LMO(JI,JJ,JK)<0.)THEN
-  ZL(JI,JJ,JK) = ZL(JI,JJ,JK)/(1.-1.9*ZZ_O_LMO(JI,JJ,JK))
-ELSE
-  ZL(JI,JJ,JK) = ZL(JI,JJ,JK)/(1.-0.3*SQRT(ZZ_O_LMO(JI,JJ,JK)))
-ENDIF
-  ENDDO
- ENDDO
-ENDDO
+!$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+WHERE (ZZ_O_LMO(IIB:IIE,IJB:IJE,1:D%NKT)<0.)
+  ZL(IIB:IIE,IJB:IJE,1:D%NKT) = ZL(IIB:IIE,IJB:IJE,1:D%NKT)/(1.-1.9*ZZ_O_LMO(IIB:IIE,IJB:IJE,1:D%NKT))
+ELSEWHERE
+  ZL(IIB:IIE,IJB:IJE,1:D%NKT) = ZL(IIB:IIE,IJB:IJE,1:D%NKT)/(1.-0.3*SQRT(ZZ_O_LMO(IIB:IIE,IJB:IJE,1:D%NKT)))
+END WHERE
+!$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
-DO JK=1,D%NKT 
- DO JJ=IJB,IJE 
-  DO JI=IIB,IIE 
-PLEPS(JI,JJ,JK)=(1.-ZGAM(JI,JJ,JK))*ZL(JI,JJ,JK) &
-                               +ZGAM(JI,JJ,JK)*PLEPS(JI,JJ,JK)
-  ENDDO
- ENDDO
-ENDDO
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+PLEPS(IIB:IIE,IJB:IJE,1:D%NKT)=(1.-ZGAM(IIB:IIE,IJB:IJE,1:D%NKT))*ZL(IIB:IIE,IJB:IJE,1:D%NKT) &
+                               +ZGAM(IIB:IIE,IJB:IJE,1:D%NKT)*PLEPS(IIB:IIE,IJB:IJE,1:D%NKT)
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
 PLEPS(IIB:IIE,IJB:IJE,D%NKA) = PLEPS(IIB:IIE,IJB:IJE,IKB)
 PLEPS(IIB:IIE,IJB:IJE,D%NKU) = PLEPS(IIB:IIE,IJB:IJE,IKE)
