@@ -242,7 +242,9 @@ ZBUO      =0.
 !no ice cloud coded yet
 PRI_UP(:,:)=0.
 PFRAC_ICE_UP(:,:)=0.
+!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 PRSAT_UP(:,:)=PRVM(:,:) ! should be initialised correctly but is (normaly) not used
+!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 ! Initialisation of environment variables at t-dt
 
@@ -264,10 +266,12 @@ CALL MZM_MF(D, PTKEM(:,:), ZTKEM_F(:,:))
 !END DO
 
 !          Initialisation of updraft characteristics 
+!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 PTHL_UP(:,:)=ZTHLM_F(:,:)
 PRT_UP(:,:)=ZRTM_F(:,:)
 PU_UP(:,:)=ZUM_F(:,:)
 PV_UP(:,:)=ZVM_F(:,:)
+!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 PSV_UP(:,:,:)=0.
 ! This updraft is not yet ready to use scalar variables
 !IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) then
@@ -277,7 +281,7 @@ PSV_UP(:,:,:)=0.
 ! Computation or initialisation of updraft characteristics at the KKB level
 ! thetal_up,rt_up,thetaV_up, w,Buoyancy term and mass flux (PEMF)
 
-DO JI=1,D%NIT
+DO JI=D%NIB,D%NIE
   !PTHL_UP(JI,KKB)= ZTHLM_F(JI,KKB)+MAX(0.,MIN(ZTMAX,(PSFTH(JI)/SQRT(ZTKEM_F(JI,KKB)))*XALP_PERT))
   !PRT_UP(JI,KKB) = ZRTM_F(JI,KKB)+MAX(0.,MIN(ZRMAX,(PSFRV(JI)/SQRT(ZTKEM_F(JI,KKB)))*XALP_PERT)) 
   PTHL_UP(JI,D%NKB)= ZTHLM_F(JI,D%NKB)
@@ -292,30 +296,36 @@ CALL MZM_MF(D, PRHODREF(:,:), ZRHO_F(:,:))
 CALL MZM_MF(D, PRVM(:,:), ZRVM_F(:,:))
 
 ! thetav at mass and flux levels 
-DO JK=1,D%NKT
-  DO JI=1,D%NIT
+DO JK=D%NKTB,D%NKTE
+  DO JI=d%NIB,D%NIE
     ZTHVM_F(JI,JK)=ZTHM_F(JI,JK)*((1.+ZRVORD*ZRVM_F(JI,JK))/(1.+ZRTM_F(JI,JK)))
   ENDDO
 ENDDO
 
+!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 PTHV_UP(:,:)= ZTHVM_F(:,:)
-PRV_UP (:,:)= ZRVM_F (:,:)
+PRV_UP(:,:)= ZRVM_F(:,:)
+!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 ZW_UP2(:,:)=ZEPS
+!$mnh_expand_array(JI=D%NIB:D%NIE)
 !ZW_UP2(:,KKB) = MAX(0.0001,(3./6.)*ZTKEM_F(:,KKB))
 ZW_UP2(:,D%NKB) = MAX(0.0001,(2./3.)*ZTKEM_F(:,D%NKB))
+!$mnh_end_expand_array(JI=D%NIB:D%NIE)
 
 ! Computation of non conservative variable for the KKB level of the updraft
 ! (all or nothing ajustement)
 
+!$mnh_expand_array(JI=D%NIB:D%NIE)
 PRC_UP(:,D%NKB)=0.
 PRI_UP(:,D%NKB)=0.
+!$mnh_end_expand_array(JI=D%NIB:D%NIE)
 CALL TH_R_FROM_THL_RT(CST,NEB,D%NIT,HFRAC_ICE,PFRAC_ICE_UP(:,D%NKB),ZPRES_F(:,D%NKB), &
              PTHL_UP(:,D%NKB),PRT_UP(:,D%NKB),ZTH_UP(:,D%NKB), &
              PRV_UP(:,D%NKB),PRC_UP(:,D%NKB),PRI_UP(:,D%NKB),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
              PBUF=ZBUF)
 
-DO JI=1,D%NIT
+DO JI=D%NIB,D%NIE
   ! compute updraft thevav and buoyancy term at KKB level             
   PTHV_UP(JI,D%NKB) = ZTH_UP(JI,D%NKB)*((1+ZRVORD*PRV_UP(JI,D%NKB))/(1+PRT_UP(JI,D%NKB))) 
   ! compute mean rsat in updraft
@@ -325,35 +335,43 @@ ENDDO
 !Tout est commente pour tester dans un premier temps la separation en deux de la 
 !  boucle verticale, une pour w et une pour PEMF                                                            
 
-ZG_O_THVREF=CST%XG/ZTHVM_F
+!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+ZG_O_THVREF(:,:)=CST%XG/ZTHVM_F(:,:)
+!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 
 ! Calcul de la fermeture de Julien Pergaut comme limite max de PHY
 
 DO JK=D%NKB,D%NKE-D%NKL,D%NKL   !  Vertical loop
-  DO JI=1,D%NIT
+  DO JI=D%NIB,D%NIE
     ZZDZ(JI,JK)   = MAX(ZEPS,PZZ(JI,JK+D%NKL)-PZZ(JI,JK))  ! <== Delta Z between two flux level
   ENDDO
 ENDDO
 
 ! compute L_up
 GLMIX=.TRUE.
+!$mnh_expand_array(JI=D%NIB:D%NIE)
 ZTKEM_F(:,D%NKB)=0.
+!$mnh_end_expand_array(JI=D%NIB:D%NIE)
 !
 IF(TURB%CTURBLEN=='RM17') THEN
   CALL GZ_M_W_MF(D, PUM, PDZZ, ZWK)
   CALL MZF_MF(D, ZWK, ZDUDZ)
   CALL GZ_M_W_MF(D, PVM, PDZZ, ZWK)
   CALL MZF_MF(D, ZWK, ZDVDZ)
-  ZSHEAR = SQRT(ZDUDZ*ZDUDZ + ZDVDZ*ZDVDZ)
+  !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+  ZSHEAR(:,:) = SQRT(ZDUDZ(:,:)**2 + ZDVDZ(:,:)**2)
+  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 ELSE
-  ZSHEAR = 0. !no shear in bl89 mixing length
+  ZSHEAR(:,:) = 0. !no shear in bl89 mixing length
 END IF
 !
 CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ,ZTKEM_F(:,D%NKB),ZG_O_THVREF(:,D%NKB), &
                        ZTHVM_F,D%NKB,GLMIX,.TRUE.,ZSHEAR,ZLUP)
+!$mnh_expand_array(JI=D%NIB:D%NIE)
 ZLUP(:)=MAX(ZLUP(:),1.E-10)
+!$mnh_end_expand_array(JI=D%NIB:D%NIE)
 
-DO JI=1,D%NIT
+DO JI=D%NIB,D%NIE
   ! Compute Buoyancy flux at the ground
   ZWTHVSURF = (ZTHVM_F(JI,D%NKB)/ZTHM_F(JI,D%NKB))*PSFTH(JI)+     &
               (0.61*ZTHM_F(JI,D%NKB))*PSFRV(JI)
@@ -401,7 +419,7 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
  
 ! to find the LCL (check if JK is LCL or not)
 
-  DO JI=1,D%NIT
+  DO JI=D%NIB,D%NIE
     IF ((PRC_UP(JI,JK)+PRI_UP(JI,JK)>0.).AND.(.NOT.(GTESTLCL(JI)))) THEN
       KKLCL(JI) = JK           
       GTESTLCL(JI)=.TRUE.
@@ -416,18 +434,20 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
 
   ! Compute theta_v of updraft at flux level JK    
     
+    !$mnh_expand_array(JI=D%NIB:D%NIE)
     ZRC_UP(:)   =PRC_UP(:,JK) ! guess
     ZRI_UP(:)   =PRI_UP(:,JK) ! guess 
     ZRV_UP(:)   =PRV_UP(:,JK)
+    !$mnh_end_expand_array(JI=D%NIB:D%NIE)
     CALL TH_R_FROM_THL_RT(CST,NEB, D%NIT, HFRAC_ICE,PFRAC_ICE_UP(:,JK),&
                PPABSM(:,JK),PTHL_UP(:,JK),PRT_UP(:,JK),&
                ZTH_UP(:,JK),ZRV_UP,ZRC_UP,ZRI_UP,ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
                PBUF=ZBUF)
     
-  DO JI=1,D%NIT
+  DO JI=D%NIB,D%NIE
     IF (GTEST(JI)) THEN
-      PTHV_UP   (JI,JK) = ZTH_UP(JI,JK)*(1.+ZRVORD*ZRV_UP(JI))/(1.+PRT_UP(JI,JK))
-      ZBUO      (JI,JK) = ZG_O_THVREF(JI,JK)*(PTHV_UP(JI,JK) - ZTHVM_F(JI,JK))    
+      PTHV_UP(JI,JK)    = ZTH_UP(JI,JK)*(1.+ZRVORD*ZRV_UP(JI))/(1.+PRT_UP(JI,JK))
+      ZBUO(JI,JK)       = ZG_O_THVREF(JI,JK)*(PTHV_UP(JI,JK) - ZTHVM_F(JI,JK))    
       PBUO_INTEG(JI,JK) = ZBUO(JI,JK)*(PZZ(JI,JK+D%NKL)-PZZ(JI,JK))
       
       ZDZ(JI)   = MAX(ZEPS,PZZ(JI,JK+D%NKL)-PZZ(JI,JK))
@@ -476,7 +496,7 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
 
   IF(OMIXUV) THEN
     IF(JK/=D%NKB) THEN
-      DO JI=1,D%NIT
+      DO JI=D%NIB,D%NIE
         IF(GTEST(JI)) THEN
           PU_UP(JI,JK+D%NKL) = (PU_UP (JI,JK)*(1-0.5*ZMIX2(JI)) + PUM(JI,JK)*ZMIX2(JI)+ &
                             0.5*PARAMMF%XPRES_UV*(PZZ(JI,JK+D%NKL)-PZZ(JI,JK))*&
@@ -491,7 +511,7 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
         ENDIF
       ENDDO
     ELSE
-      DO JI=1,D%NIT
+      DO JI=D%NIB,D%NIE
         IF(GTEST(JI)) THEN
           PU_UP(JI,JK+D%NKL) = (PU_UP (JI,JK)*(1-0.5*ZMIX2(JI)) + PUM(JI,JK)*ZMIX2(JI)+ &
                             0.5*PARAMMF%XPRES_UV*(PZZ(JI,JK+D%NKL)-PZZ(JI,JK))*&
@@ -516,16 +536,18 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
 !  ENDDO  
   
   
-! Compute non cons. var. at level JK+KKL
+  ! Compute non cons. var. at level JK+KKL
+  !$mnh_expand_array(JI=D%NIB:D%NIE)
   ZRC_UP(:)=PRC_UP(:,JK) ! guess = level just below
   ZRI_UP(:)=PRI_UP(:,JK) ! guess = level just below
   ZRV_UP(:)=PRV_UP(:,JK)
+  !$mnh_end_expand_array(JI=D%NIB:D%NIE)
   CALL TH_R_FROM_THL_RT(CST,NEB, D%NIT, HFRAC_ICE,PFRAC_ICE_UP(:,JK+D%NKL),ZPRES_F(:,JK+D%NKL), &
           PTHL_UP(:,JK+D%NKL),PRT_UP(:,JK+D%NKL),ZTH_UP(:,JK+D%NKL),              &
           ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
           PBUF=ZBUF)
 
-  DO JI=1,D%NIT
+  DO JI=D%NIB,D%NIE
     IF(GTEST(JI)) THEN
       !ZT_UP(JI) = ZTH_UP(JI,JK+KKL)*PEXNM(JI,JK+KKL)
       !ZCP(JI) = XCPD + XCL * ZRC_UP(JI)
@@ -548,13 +570,13 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
     ENDIF
   ENDDO
 
-  DO JI=1,D%NIT
+  DO JI=D%NIB,D%NIB
     IF(GTEST(JI)) THEN
       PEMF(JI,JK+D%NKL)=PEMF(JI,JK)*EXP(ZMIX1(JI))
     ENDIF
   ENDDO
 
-  DO JI=1,D%NIT
+  DO JI=D%NIB,D%NIE
     IF(GTEST(JI)) THEN
       ! Updraft fraction must be smaller than XFRAC_UP_MAX
       PFRAC_UP(JI,JK+D%NKL)=MIN(PARAMMF%XFRAC_UP_MAX, &
@@ -564,7 +586,7 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
   ENDDO
 
 ! Test if the updraft has reach the ETL
-  DO JI=1,D%NIT
+  DO JI=D%NIB,D%NIE
     IF (GTEST(JI) .AND. (PBUO_INTEG(JI,JK)<=0.)) THEN
       KKETL(JI) = JK+D%NKL
     ENDIF
@@ -572,7 +594,7 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
 
 
 ! Test is we have reached the top of the updraft
-  DO JI=1,D%NIT
+  DO JI=D%NIB,D%NIB
     IF (GTEST(JI) .AND. ((ZW_UP2(JI,JK+D%NKL)<=ZEPS).OR.(PEMF(JI,JK+D%NKL)<=ZEPS))) THEN
       ZW_UP2   (JI,JK+D%NKL)=ZEPS
       PEMF     (JI,JK+D%NKL)=0.
@@ -590,8 +612,12 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
 
 ENDDO   ! Fin de la boucle verticale 
 
+!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
 PW_UP(:,:)=SQRT(ZW_UP2(:,:))
+!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+!$mnh_expand_array(JI=D%NIB:D%NIE)
 PEMF(:,D%NKB) =0.
+!$mnh_end_expand_array(JI=D%NIB:D%NIE)
 
 ! Limits the shallow convection scheme when cloud heigth is higher than 3000m.
 ! To do this, mass flux is multiplied by a coefficient decreasing linearly
@@ -599,16 +625,22 @@ PEMF(:,D%NKB) =0.
 ! This way, all MF fluxes are diminished by this amount.
 ! Diagnosed cloud fraction is also multiplied by the same coefficient.
 !
-DO JI=1,D%NIT
+DO JI=D%NIB,D%NIE
    PDEPTH(JI) = MAX(0., PZZ(JI,KKCTL(JI)) -  PZZ(JI,KKLCL(JI)) )
 ENDDO
 
+!$mnh_expand_array(JI=D%NIB:D%NIE)
 GWORK1(:)= (GTESTLCL(:) .AND. (PDEPTH(:) > ZDEPTH_MAX1) )
-GWORK2(:,:) = SPREAD( GWORK1(:), DIM=2, NCOPIES=D%NKT )
-ZCOEF(:,:) = SPREAD( (1.-(PDEPTH(:)-ZDEPTH_MAX1)/(ZDEPTH_MAX2-ZDEPTH_MAX1)), DIM=2, NCOPIES=D%NKT)
-ZCOEF(:,:)=MIN(MAX(ZCOEF(:,:),0.),1.)
-DO JK=1, D%NKT
-  DO JI=1,D%NIT
+!$mnh_end_expand_array(JI=D%NIB:D%NIE)
+DO JK=D%NKTB,D%NKTE
+  !$mnh_expand_array(JI=D%NIB:D%NIE)
+  GWORK2(:,JK) = GWORK1(:)
+  ZCOEF(:,JK) = (1.-(PDEPTH(:)-ZDEPTH_MAX1)/(ZDEPTH_MAX2-ZDEPTH_MAX1))
+  ZCOEF(:,JK)=MIN(MAX(ZCOEF(:,JK),0.),1.)
+  !$mnh_end_expand_array(JI=D%NIB:D%NIE)
+ENDDO
+DO JK=D%NKTB, D%NKTE
+  DO JI=D%NIB,D%NIE
     IF (GWORK2(JI,JK)) THEN
       PEMF(JI,JK)     = PEMF(JI,JK)     * ZCOEF(JI,JK) 
       PFRAC_UP(JI,JK) = PFRAC_UP(JI,JK) * ZCOEF(JI,JK) 
