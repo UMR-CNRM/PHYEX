@@ -17,6 +17,8 @@
 
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMMP0, ONLY : MYPROC
+USE OML_MOD, ONLY : OML_MY_THREAD
 !     ##########################################################################
 !
 !!****  * -  interface to call SHALLOW_MF :
@@ -152,6 +154,9 @@ REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZDETR,ZENTR
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 REAL          ::  ZIMPL        ! degree of implicitness
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
+CHARACTER(LEN=20) :: CLOFILE
+INTEGER           :: IFILE
+LOGICAL           :: LFILEEXISTS
 !
 !
 !
@@ -203,6 +208,56 @@ ZIMPL=1.
 !
 !         ---------------------------------
 !
+  IF(.FALSE.) THEN ! Activate or not the writing
+    LFILEEXISTS=.FALSE.
+  ELSE
+    IFILE=0
+    LFILEEXISTS=.TRUE.
+    DO WHILE(LFILEEXISTS)
+      IFILE=IFILE+1
+      WRITE(CLOFILE, '(I4.4,"_",I2.2,"_",I8.8,".dat")') MYPROC, OML_MY_THREAD(), IFILE
+      INQUIRE(FILE=CLOFILE, EXIST=LFILEEXISTS)
+    ENDDO
+    IF(IFILE==1 .AND. MYPROC==1) THEN
+      PRINT*, "SHALLOWMF CST: KRR, KRRL, KRRI, KSV", KRR, KRRL, KRRI, KSV
+      PRINT*, "SHALLOWMF CST: HMF_UPDRAFT, HMF_CLOUD, HFRAC_ICE", HMF_UPDRAFT, HMF_CLOUD, HFRAC_ICE
+      PRINT*, "SHALLOWMF CST: OMIXUV, ONOMIXLG, KSV_LGBEG, KSV_LGEND", OMIXUV, ONOMIXLG, KSV_LGBEG, KSV_LGEND
+      PRINT*, "SHALLOWMF CST: ZIMPL, PTSTEP", ZIMPL, PTSTEP
+    ENDIF
+    LFILEEXISTS=IFILE<500
+    IF(LFILEEXISTS) THEN
+      IFILE=7+OML_MY_THREAD()
+      OPEN(IFILE, FILE=CLOFILE, FORM='unformatted') !,access='stream')
+      WRITE(IFILE) SIZE(PRHODJ, 1), SIZE(PRHODJ, 2)
+      WRITE(IFILE) PDZZF
+      !IN
+      WRITE(IFILE) PZZ
+      WRITE(IFILE) PRHODJ
+      WRITE(IFILE) PRHODREF
+      WRITE(IFILE) PPABSM
+      WRITE(IFILE) PEXNM
+      WRITE(IFILE) PSFTH
+      WRITE(IFILE) PSFRV
+      WRITE(IFILE) PTHM
+      WRITE(IFILE) PRM
+      WRITE(IFILE) PUM
+      WRITE(IFILE) PVM
+      WRITE(IFILE) PTKEM
+      WRITE(IFILE) PSVM
+      !INOUT
+      WRITE(IFILE) PTHL_UP
+      WRITE(IFILE) PRT_UP
+      WRITE(IFILE) PRV_UP
+      WRITE(IFILE) PRC_UP
+      WRITE(IFILE) PRI_UP
+      WRITE(IFILE) PU_UP
+      WRITE(IFILE) PV_UP
+      WRITE(IFILE) PTHV_UP
+      WRITE(IFILE) PW_UP
+      WRITE(IFILE) PFRAC_UP
+      WRITE(IFILE) PEMF
+    ENDIF
+  ENDIF
   CALL SHALLOW_MF(YLDIMPHYEX, CST, NEB, PARAM_MFSHALLN, TURBN, CSTURB,                    &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                             &
      &HMF_UPDRAFT=HMF_UPDRAFT, HMF_CLOUD=HMF_CLOUD,HFRAC_ICE=HFRAC_ICE,OMIXUV=OMIXUV,     &
@@ -221,6 +276,43 @@ ZIMPL=1.
      &PU_UP=PU_UP, PV_UP=PV_UP, PTHV_UP=PTHV_UP, PW_UP=PW_UP,                             &
      &PFRAC_UP=PFRAC_UP,PEMF=PEMF,PDETR=ZDETR,PENTR=ZENTR,                                &
      &KKLCL=IKLCL,KKETL=IKETL,KKCTL=IKCTL,PDX=0.,PDY=0.                                   )
+  IF(LFILEEXISTS) THEN                                                                                                              
+    WRITE(IFILE) 
+    !OUT
+    WRITE(IFILE) PDUDT_MF
+    WRITE(IFILE) PDVDT_MF
+    WRITE(IFILE) PDTHLDT_MF
+    WRITE(IFILE) PDRTDT_MF
+    WRITE(IFILE) PDSVDT_MF
+    WRITE(IFILE) PSIGMF
+    WRITE(IFILE) PRC_MF
+    WRITE(IFILE) PRI_MF
+    WRITE(IFILE) PCF_MF
+    WRITE(IFILE) PFLXZTHVMF
+    WRITE(IFILE) ZFLXZTHMF
+    WRITE(IFILE) ZFLXZRMF
+    WRITE(IFILE) ZFLXZUMF
+    WRITE(IFILE) ZFLXZVMF
+    !INOUT
+    WRITE(IFILE) PTHL_UP
+    WRITE(IFILE) PRT_UP
+    WRITE(IFILE) PRV_UP
+    WRITE(IFILE) PRC_UP
+    WRITE(IFILE) PRI_UP
+    WRITE(IFILE) PU_UP
+    WRITE(IFILE) PV_UP
+    WRITE(IFILE) PTHV_UP
+    WRITE(IFILE) PW_UP
+    WRITE(IFILE) PFRAC_UP
+    WRITE(IFILE) PEMF
+    !OUT
+    WRITE(IFILE) ZDETR
+    WRITE(IFILE) ZENTR
+    WRITE(IFILE) IKLCL
+    WRITE(IFILE) IKETL
+    WRITE(IFILE) IKCTL
+    CLOSE(IFILE)                                                                                                                    
+  ENDIF  
 !
 !
 !------------------------------------------------------------------------------
