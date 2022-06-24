@@ -78,7 +78,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PLEPS ! Dissipative length
 !
 INTEGER :: IKB,IKE    ! first,last physical level
 INTEGER :: IKTB,IKTE  ! start, end of k loops in physical domain
-INTEGER :: JK,JI,JJ   ! loop counter
+INTEGER :: JK,JIJ   ! loop counter
 INTEGER :: IIE,IIB,IJE,IJB
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZZZ  ! height of mass
