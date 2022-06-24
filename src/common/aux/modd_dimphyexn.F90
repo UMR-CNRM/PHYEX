@@ -71,6 +71,8 @@ TYPE DIMPHYEX_t
   INTEGER :: NIEC  ! except in turbulence where external HALO points must be
   INTEGER :: NJEC  ! included so NIBC=NJBC=1 and NIEC/NJEC=NIT/NJT
   INTEGER :: NIJT  ! NIT*NJT for horizontal packing
+  INTEGER :: NIJB  ! First horizontal inner mass point index
+  INTEGER :: NIJE  ! Last horizontal inner mass point index
 !
 END TYPE DIMPHYEX_t
 !

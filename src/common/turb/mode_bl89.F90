@@ -144,9 +144,9 @@ ELSE !Atmosphere case
   END DO
 END IF
 !
-!$mnh_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
-ZSQRT_TKE(1:D%NIJT,1:D%NKT) = SQRT(PTKEM(1:D%NIJT,1:D%NKT))
-!$mnh_end_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
+ZSQRT_TKE(D%NIJB:D%NIJE,1:D%NKT) = SQRT(PTKEM(D%NIJB:D%NIJE,1:D%NKT))
+!$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
 !
 !ZBL89EXP is defined here because (and not in ini_cturb) because CSTURB%XCED is defined in read_exseg (depending on BL89/RM17)
 ZBL89EXP = LOG(16.)/(4.*LOG(CST%XKARMAN)+LOG(CSTURB%XCED)-3.*LOG(CSTURB%XCMFS))
@@ -157,18 +157,18 @@ ZUSRBL89 = 1./ZBL89EXP
 !              -----------------------------------------------
 !
 IF(KRR /= 0) THEN
-  ZSUM(1:D%NIJT,1:D%NKT) = 0.
+  ZSUM(D%NIJB:D%NIJE,1:D%NKT) = 0.
   DO JRR=1,KRR
-    !$mnh_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
-    ZSUM(1:D%NIJT,1:D%NKT) = ZSUM(1:D%NIJT,1:D%NKT)+PRM(1:D%NIJT,1:D%NKT,JRR)
-    !$mnh_end_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
+    ZSUM(D%NIJB:D%NIJE,1:D%NKT) = ZSUM(D%NIJB:D%NIJE,1:D%NKT)+PRM(D%NIJB:D%NIJE,1:D%NKT,JRR)
+    !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
   ENDDO
-  !$mnh_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
-  ZVPT(1:D%NIJT,1:D%NKT)=PTHLM(1:D%NIJT,1:D%NKT) * ( 1. + ZRVORD*PRM(1:D%NIJT,1:D%NKT,1) )  &
-                           / ( 1. + ZSUM(1:D%NIJT,1:D%NKT) )
-  !$mnh_end_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
+  ZVPT(D%NIJB:D%NIJE,1:D%NKT)=PTHLM(D%NIJB:D%NIJE,1:D%NKT) * ( 1. + ZRVORD*PRM(D%NIJB:D%NIJE,1:D%NKT,1) )  &
+                           / ( 1. + ZSUM(D%NIJB:D%NIJE,1:D%NKT) )
+  !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
 ELSE
-  ZVPT(1:D%NIJT,1:D%NKT)=PTHLM(1:D%NIJT,1:D%NKT)
+  ZVPT(D%NIJB:D%NIJE,1:D%NKT)=PTHLM(D%NIJB:D%NIJE,1:D%NKT)
 END IF
 !
 !!!!!!!!!!!!
@@ -215,7 +215,7 @@ DO JK=D%NKTB,D%NKTE
 !
 !*       4.  mixing length for a downwards displacement
 !            ------------------------------------------
-  ZINTE(1:D%NIJT)=PTKEM(1:D%NIJT,JK)
+  ZINTE(D%NIJB:D%NIJE)=PTKEM(D%NIJB:D%NIJE,JK)
   ZLWORK=0.
   ZTESTM=1.
   DO JKK=JK,D%NKB,-D%NKL
@@ -264,8 +264,8 @@ DO JK=D%NKTB,D%NKTE
 !*       6.  mixing length for an upwards displacement
 !            -----------------------------------------
 !
-  ZINTE(1:D%NIJT)=PTKEM(1:D%NIJT,JK)
-  ZLWORK(1:D%NIJT)=0.
+  ZINTE(D%NIJB:D%NIJE)=PTKEM(D%NIJB:D%NIJE,JK)
+  ZLWORK(D%NIJB:D%NIJE)=0.
   ZTESTM=1.
 !
   DO JKK=JK+D%NKL,D%NKE,D%NKL
@@ -330,9 +330,9 @@ END DO
 !*       9.  boundaries
 !            ----------
 !
-PLM(1:D%NIJT,D%NKA)=PLM(1:D%NIJT,D%NKB)
-PLM(1:D%NIJT,D%NKE)=PLM(1:D%NIJT,D%NKE-D%NKL)
-PLM(1:D%NIJT,D%NKU)=PLM(1:D%NIJT,D%NKE-D%NKL)
+PLM(D%NIJB:D%NIJE,D%NKA)=PLM(D%NIJB:D%NIJE,D%NKB)
+PLM(D%NIJB:D%NIJE,D%NKE)=PLM(D%NIJB:D%NIJE,D%NKE-D%NKL)
+PLM(D%NIJB:D%NIJE,D%NKU)=PLM(D%NIJB:D%NIJE,D%NKE-D%NKL)
 !
 !-------------------------------------------------------------------------------
 !

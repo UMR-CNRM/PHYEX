@@ -118,14 +118,14 @@ IJB=D%NJBC
 CALL MZF_PHY(D,PZZ,ZZZ)
 ! replace by height of mass points
 DO JK=1,D%NKT
-  !$mnh_expand_array(JIJ=1:D%NIJT)
-  ZZZ(1:D%NIJT,JK) = ZZZ(1:D%NIJT,JK) - PZZ(1:D%NIJT,IKB)
-  !$mnh_end_expand_array(JIJ=1:D%NIJT)
+  !$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
+  ZZZ(D%NIJB:D%NIJE,JK) = ZZZ(D%NIJB:D%NIJE,JK) - PZZ(D%NIJB:D%NIJE,IKB)
+  !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
 END DO
 ! fill upper level with physical value
-!$mnh_expand_array(JIJ=1:D%NIJT)
-ZZZ(1:D%NIJT,D%NKU) = 2.*ZZZ(1:D%NIJT,D%NKU-D%NKL) - ZZZ(1:D%NIJT,D%NKU-2*D%NKL)
-!$mnh_end_expand_array(JIJ=1:D%NIJT)
+!$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
+ZZZ(D%NIJB:D%NIJE,D%NKU) = 2.*ZZZ(D%NIJB:D%NIJE,D%NKU-D%NKL) - ZZZ(D%NIJB:D%NIJE,D%NKU-2*D%NKL)
+!$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
 !
 !-------------------------------------------------------------------------------
 !
@@ -134,18 +134,18 @@ ZZZ(1:D%NIJT,D%NKU) = 2.*ZZZ(1:D%NIJT,D%NKU-D%NKL) - ZZZ(1:D%NIJT,D%NKU-2*D%NKL)
 !
 ! z/LMO
 DO JK=1,D%NKT
-  !$mnh_expand_where(JIJ=1:D%NIJT)
-  WHERE (PLMO(1:D%NIJT)==XUNDEF)
-    ZZ_O_LMO(1:D%NIJT,JK)=0.
+  !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
+  WHERE (PLMO(D%NIJB:D%NIJE)==XUNDEF)
+    ZZ_O_LMO(D%NIJB:D%NIJE,JK)=0.
   ELSEWHERE
-    ZZ_O_LMO(1:D%NIJT,JK)=ZZZ(1:D%NIJT,JK)*PDIRCOSZW(1:D%NIJT)/PLMO(1:D%NIJT)
+    ZZ_O_LMO(D%NIJB:D%NIJE,JK)=ZZZ(D%NIJB:D%NIJE,JK)*PDIRCOSZW(D%NIJB:D%NIJE)/PLMO(D%NIJB:D%NIJE)
   END WHERE
-  !$mnh_end_expand_where(JIJ=1:D%NIJT)
+  !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 END DO
-!$mnh_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
-ZZ_O_LMO(1:D%NIJT,1:D%NKT) = MAX(ZZ_O_LMO(1:D%NIJT,1:D%NKT),-10.)
-ZZ_O_LMO(1:D%NIJT,1:D%NKT) = MIN(ZZ_O_LMO(1:D%NIJT,1:D%NKT), 10.)
-!$mnh_end_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
+ZZ_O_LMO(D%NIJB:D%NIJE,1:D%NKT) = MAX(ZZ_O_LMO(D%NIJB:D%NIJE,1:D%NKT),-10.)
+ZZ_O_LMO(D%NIJB:D%NIJE,1:D%NKT) = MIN(ZZ_O_LMO(D%NIJB:D%NIJE,1:D%NKT), 10.)
+!$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
 !
 !
 ! MO function for stress
@@ -169,42 +169,42 @@ SELECT CASE (HTURBLEN)
   CASE ('DELT','DEAR')
     CALL MXF_PHY(D,PDXX,ZWORK1)
     CALL MYF_PHY(D,PDYY,ZWORK2)
-    !$mnh_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
-    ZDH(1:D%NIJT,1:D%NKT) = SQRT(ZWORK1(1:D%NIJT,1:D%NKT)*ZWORK2(1:D%NIJT,1:D%NKT))
-    !$mnh_end_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
+    ZDH(D%NIJB:D%NIJE,1:D%NKT) = SQRT(ZWORK1(D%NIJB:D%NIJE,1:D%NKT)*ZWORK2(D%NIJB:D%NIJE,1:D%NKT))
+    !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
     ZDH(D%NIT*IJB:D%NIT*IJE:D%NIT,1:D%NKT) = ZDH(D%NIT*IJB-1:D%NIT*IJE-1:D%NIT,1:D%NKT)
     ZDH(D%NIJT-IIE+IIB:D%NIJT,1:D%NKT) = ZDH(D%NIJT-2*IIE+IIB:D%NIJT-IIE,1:D%NKT)
     DO JK=1,D%NKT
-      !$mnh_expand_array(JIJ=1:D%NIJT)
-      ZZC(1:D%NIJT,JK) = 2.*MIN(ZPHIM(1:D%NIJT,JK),1.)/CST%XKARMAN    &
-                     * MAX( PDZZ(1:D%NIJT,JK)*PDIRCOSZW(1:D%NIJT) , & 
-                     ZDH(1:D%NIJT,JK)/PDIRCOSZW(1:D%NIJT)/3. )
-      !$mnh_end_expand_array(JIJ=1:D%NIJT)
+      !$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
+      ZZC(D%NIJB:D%NIJE,JK) = 2.*MIN(ZPHIM(D%NIJB:D%NIJE,JK),1.)/CST%XKARMAN    &
+                     * MAX( PDZZ(D%NIJB:D%NIJE,JK)*PDIRCOSZW(D%NIJB:D%NIJE) , & 
+                     ZDH(D%NIJB:D%NIJE,JK)/PDIRCOSZW(D%NIJB:D%NIJE)/3. )
+      !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
     END DO
 !
 !*     4. factor controling the transition between SBL and free isotropic turb. (3D case)
 !         --------------------------------------------------------------------
 !
-    ZGAM(1:D%NIJT,D%NKA) = 0.
+    ZGAM(D%NIJB:D%NIJE,D%NKA) = 0.
     DO JK=IKTB,IKTE
-      !$mnh_expand_array(JIJ=1:D%NIJT)
-      ZGAM(1:D%NIJT,JK) = 1.  - EXP( -3.*(ZZZ(1:D%NIJT,JK)-ZZZ(1:D%NIJT,IKB))/(ZZC(1:D%NIJT,JK)) )
-      !$mnh_end_expand_array(JIJ=1:D%NIJT)
-      !$mnh_expand_where(JIJ=1:D%NIJT)
-      WHERE (ZGAM(1:D%NIJT,JK-D%NKL)>ZGAM(1:D%NIJT,JK) .OR. ZGAM(1:D%NIJT,JK-D%NKL)>0.99 ) 
-        ZGAM(1:D%NIJT,JK) = 1.
+      !$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
+      ZGAM(D%NIJB:D%NIJE,JK) = 1.  - EXP( -3.*(ZZZ(D%NIJB:D%NIJE,JK)-ZZZ(D%NIJB:D%NIJE,IKB))/(ZZC(D%NIJB:D%NIJE,JK)) )
+      !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
+      !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
+      WHERE (ZGAM(D%NIJB:D%NIJE,JK-D%NKL)>ZGAM(D%NIJB:D%NIJE,JK) .OR. ZGAM(D%NIJB:D%NIJE,JK-D%NKL)>0.99 ) 
+        ZGAM(D%NIJB:D%NIJE,JK) = 1.
       END WHERE
-     !$mnh_end_expand_where(JIJ=1:D%NIJT)
+     !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
     END DO
-    !$mnh_expand_array(JIJ=1:D%NIJT)
-    ZGAM(1:D%NIJT,D%NKU) = 1.  - EXP( -3.*(ZZZ(1:D%NIJT,D%NKU)-ZZZ(1:D%NIJT,IKB))& 
-                                   /(ZZC(1:D%NIJT,D%NKU)) )
-    !$mnh_end_expand_array(JIJ=1:D%NIJT)
-    !$mnh_expand_where(JIJ=1:D%NIJT)
-    WHERE (ZGAM(1:D%NIJT,D%NKU-D%NKL)>ZGAM(1:D%NIJT,D%NKU) .OR. ZGAM(1:D%NIJT,D%NKU-D%NKL)>0.99 ) 
-      ZGAM(1:D%NIJT,D%NKU) = 1.
+    !$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
+    ZGAM(D%NIJB:D%NIJE,D%NKU) = 1.  - EXP( -3.*(ZZZ(D%NIJB:D%NIJE,D%NKU)-ZZZ(D%NIJB:D%NIJE,IKB))& 
+                                   /(ZZC(D%NIJB:D%NIJE,D%NKU)) )
+    !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
+    !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
+    WHERE (ZGAM(D%NIJB:D%NIJE,D%NKU-D%NKL)>ZGAM(D%NIJB:D%NIJE,D%NKU) .OR. ZGAM(D%NIJB:D%NIJE,D%NKU-D%NKL)>0.99 ) 
+      ZGAM(D%NIJB:D%NIJE,D%NKU) = 1.
     END WHERE
-    !$mnh_end_expand_where(JIJ=1:D%NIJT)
+    !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 !   
 !
 !-------------------------------------------------------------------------------
@@ -214,30 +214,30 @@ SELECT CASE (HTURBLEN)
 !
   CASE DEFAULT
 !* SBL depth is used
-    ZGAM(1:D%NIJT,1:D%NKT) = 1.
-    ZGAM(1:D%NIJT,D%NKA) = 0.
+    ZGAM(D%NIJB:D%NIJE,1:D%NKT) = 1.
+    ZGAM(D%NIJB:D%NIJE,D%NKA) = 0.
     DO JK=IKTB,IKTE
-      !$mnh_expand_where(JIJ=1:D%NIJT)
-      WHERE(PSBL_DEPTH(1:D%NIJT)>0.)
-        ZGAM(1:D%NIJT,JK) = TANH( (ZZZ(1:D%NIJT,JK)-ZZZ(1:D%NIJT,IKB))/PSBL_DEPTH(1:D%NIJT) )
+      !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
+      WHERE(PSBL_DEPTH(D%NIJB:D%NIJE)>0.)
+        ZGAM(D%NIJB:D%NIJE,JK) = TANH( (ZZZ(D%NIJB:D%NIJE,JK)-ZZZ(D%NIJB:D%NIJE,IKB))/PSBL_DEPTH(D%NIJB:D%NIJE) )
       END WHERE
-      !$mnh_end_expand_where(JIJ=1:D%NIJT)
-      !$mnh_expand_where(JIJ=1:D%NIJT)
-      WHERE (ZGAM(1:D%NIJT,JK-D%NKL)>0.99 ) 
-        ZGAM(1:D%NIJT,JK) = 1.
+      !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
+      !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
+      WHERE (ZGAM(D%NIJB:D%NIJE,JK-D%NKL)>0.99 ) 
+        ZGAM(D%NIJB:D%NIJE,JK) = 1.
       END WHERE
-      !$mnh_end_expand_where(JIJ=1:D%NIJT)
+      !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
     END DO
-    !$mnh_expand_where(JIJ=1:D%NIJT)
-    WHERE(PSBL_DEPTH(1:D%NIJT)>0.)
-      ZGAM(1:D%NIJT,D%NKU) = TANH( (ZZZ(1:D%NIJT,D%NKU)-ZZZ(1:D%NIJT,IKB))/PSBL_DEPTH(1:D%NIJT) )
+    !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
+    WHERE(PSBL_DEPTH(D%NIJB:D%NIJE)>0.)
+      ZGAM(D%NIJB:D%NIJE,D%NKU) = TANH( (ZZZ(D%NIJB:D%NIJE,D%NKU)-ZZZ(D%NIJB:D%NIJE,IKB))/PSBL_DEPTH(D%NIJB:D%NIJE) )
     END WHERE
-   !$mnh_end_expand_where(JIJ=1:D%NIJT)
-   !$mnh_expand_where(JIJ=1:D%NIJT)
-    WHERE (ZGAM(1:D%NIJT,D%NKU-D%NKL)>0.99 ) 
-      ZGAM(1:D%NIJT,JK) = 1.
+   !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
+   !$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
+    WHERE (ZGAM(D%NIJB:D%NIJE,D%NKU-D%NKL)>0.99 ) 
+      ZGAM(D%NIJB:D%NIJE,JK) = 1.
     END WHERE
-    !$mnh_end_expand_where(JIJ=1:D%NIJT)
+    !$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 !
 !-------------------------------------------------------------------------------
 END SELECT
@@ -247,44 +247,44 @@ END SELECT
 !         ---------------------------------
 !
 DO JK=1,D%NKT
-!$mnh_expand_array(JIJ=1:D%NIJT)
-  ZL(1:D%NIJT,JK) =  CST%XKARMAN/SQRT(CSTURB%XALPSBL)/CSTURB%XCMFS                                      &
-              * ZZZ(1:D%NIJT,JK)*PDIRCOSZW(1:D%NIJT)/(ZPHIM(1:D%NIJT,JK)**2*SQRT(ZPHIE(1:D%NIJT,JK)))
-!$mnh_end_expand_array(JIJ=1:D%NIJT)
+!$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
+  ZL(D%NIJB:D%NIJE,JK) =  CST%XKARMAN/SQRT(CSTURB%XALPSBL)/CSTURB%XCMFS                                      &
+              * ZZZ(D%NIJB:D%NIJE,JK)*PDIRCOSZW(D%NIJB:D%NIJE)/(ZPHIM(D%NIJB:D%NIJE,JK)**2*SQRT(ZPHIE(D%NIJB:D%NIJE,JK)))
+!$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
 END DO
 !
-!$mnh_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
-PLK(1:D%NIJT,1:D%NKT)=(1.-ZGAM(1:D%NIJT,1:D%NKT))*ZL(1:D%NIJT,1:D%NKT) &
-                             +ZGAM(1:D%NIJT,1:D%NKT)*PLK(1:D%NIJT,1:D%NKT)
-!$mnh_end_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
+PLK(D%NIJB:D%NIJE,1:D%NKT)=(1.-ZGAM(D%NIJB:D%NIJE,1:D%NKT))*ZL(D%NIJB:D%NIJE,1:D%NKT) &
+                             +ZGAM(D%NIJB:D%NIJE,1:D%NKT)*PLK(D%NIJB:D%NIJE,1:D%NKT)
+!$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
 !
-PLK(1:D%NIJT,D%NKA) = PLK(1:D%NIJT,IKB)
-PLK(1:D%NIJT,D%NKU) = PLK(1:D%NIJT,IKE)
+PLK(D%NIJB:D%NIJE,D%NKA) = PLK(D%NIJB:D%NIJE,IKB)
+PLK(D%NIJB:D%NIJE,D%NKU) = PLK(D%NIJB:D%NIJE,IKE)
 !-------------------------------------------------------------------------------
 !
 !*     7. Modification of the dissipative length
 !         --------------------------------------
 !
-!$mnh_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
-ZL(1:D%NIJT,1:D%NKT) = ZL(1:D%NIJT,1:D%NKT) * (CSTURB%XALPSBL**(3./2.)*CST%XKARMAN*CSTURB%XCED) &
+!$mnh_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
+ZL(D%NIJB:D%NIJE,1:D%NKT) = ZL(D%NIJB:D%NIJE,1:D%NKT) * (CSTURB%XALPSBL**(3./2.)*CST%XKARMAN*CSTURB%XCED) &
         / (CST%XKARMAN/SQRT(CSTURB%XALPSBL)/CSTURB%XCMFS)
-!$mnh_end_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
+!$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
 !
-!$mnh_expand_where(JIJ=1:D%NIJT,JK=1:D%NKT)
-WHERE (ZZ_O_LMO(1:D%NIJT,1:D%NKT)<0.)
-  ZL(1:D%NIJT,1:D%NKT) = ZL(1:D%NIJT,1:D%NKT)/(1.-1.9*ZZ_O_LMO(1:D%NIJT,1:D%NKT))
+!$mnh_expand_where(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
+WHERE (ZZ_O_LMO(D%NIJB:D%NIJE,1:D%NKT)<0.)
+  ZL(D%NIJB:D%NIJE,1:D%NKT) = ZL(D%NIJB:D%NIJE,1:D%NKT)/(1.-1.9*ZZ_O_LMO(D%NIJB:D%NIJE,1:D%NKT))
 ELSEWHERE
-  ZL(1:D%NIJT,1:D%NKT) = ZL(1:D%NIJT,1:D%NKT)/(1.-0.3*SQRT(ZZ_O_LMO(1:D%NIJT,1:D%NKT)))
+  ZL(D%NIJB:D%NIJE,1:D%NKT) = ZL(D%NIJB:D%NIJE,1:D%NKT)/(1.-0.3*SQRT(ZZ_O_LMO(D%NIJB:D%NIJE,1:D%NKT)))
 END WHERE
-!$mnh_end_expand_where(JIJ=1:D%NIJT,JK=1:D%NKT)
+!$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
 !
-!$mnh_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
-PLEPS(1:D%NIJT,1:D%NKT)=(1.-ZGAM(1:D%NIJT,1:D%NKT))*ZL(1:D%NIJT,1:D%NKT) &
-                               +ZGAM(1:D%NIJT,1:D%NKT)*PLEPS(1:D%NIJT,1:D%NKT)
-!$mnh_end_expand_array(JIJ=1:D%NIJT,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
+PLEPS(D%NIJB:D%NIJE,1:D%NKT)=(1.-ZGAM(D%NIJB:D%NIJE,1:D%NKT))*ZL(D%NIJB:D%NIJE,1:D%NKT) &
+                               +ZGAM(D%NIJB:D%NIJE,1:D%NKT)*PLEPS(D%NIJB:D%NIJE,1:D%NKT)
+!$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
 !
-PLEPS(1:D%NIJT,D%NKA) = PLEPS(1:D%NIJT,IKB)
-PLEPS(1:D%NIJT,D%NKU) = PLEPS(1:D%NIJT,IKE)
+PLEPS(D%NIJB:D%NIJE,D%NKA) = PLEPS(D%NIJB:D%NIJE,IKB)
+PLEPS(D%NIJB:D%NIJE,D%NKU) = PLEPS(D%NIJB:D%NIJE,IKE)
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('RMC01',1,ZHOOK_HANDLE)
