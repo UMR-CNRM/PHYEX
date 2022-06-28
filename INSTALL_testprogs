@@ -1,0 +1,8 @@
+Testprogs data on sxphynh
+
+cd testprogs_data
+mkdir ice_adjust
+cd ice_adjust
+git clone git@github.com:pmarguinaud/ice_adjust.git
+mv ice_adjust/data/* .
+rm -rf ice_adjust/

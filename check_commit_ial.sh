@@ -65,7 +65,7 @@ function usage {
   echo
   echo "With the special reference REF commit, a suitable reference is guessed"
   echo
-  echo "If no test is aked for, the default on ($defaultTest) is executed"
+  echo "If no test is aked for, the default one ($defaultTest) is executed"
   echo
   echo "The directory (for commit only, not ref) can take the form server:directory"
   echo
