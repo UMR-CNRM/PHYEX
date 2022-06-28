@@ -57,7 +57,7 @@ function check_install_fcm() {
     cd fcm
     rm -f .gitkeep
     git clone https://github.com/metomi/fcm.git .
-    git checkout tags/$fcm_version
+    git checkout $fcm_version
     touch .gitkeep
     cd ..
     echo "...FCM installation done"
