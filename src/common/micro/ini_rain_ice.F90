@@ -4,7 +4,7 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ######spl
-      SUBROUTINE INI_RAIN_ICE ( KLUOUT, PTSTEP, PDZMIN, KSPLITR, HCLOUD )
+      SUBROUTINE INI_RAIN_ICE ( KLUOUT, HCLOUD )
 !     ###########################################################
 !
 !!****  *INI_RAIN_ICE * - initialize the constants necessary for the warm and
@@ -114,13 +114,6 @@ IMPLICIT NONE
 !
 !
 INTEGER,                 INTENT(IN) :: KLUOUT   ! Logical unit number for prints
-INTEGER,                 INTENT(OUT):: KSPLITR   ! Number of small time step
-                                                 ! integration for  rain
-                                                 ! sedimendation
-!
-REAL,                    INTENT(IN) :: PTSTEP    ! Effective Time step
-!
-REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
 !
 CHARACTER (LEN=4), INTENT(IN)       :: HCLOUD    ! Indicator of the cloud scheme
 !
@@ -185,29 +178,6 @@ IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',0,ZHOOK_HANDLE)
 !
 !
 !
-!        1.     COMPUTE KSPLTR FOR EACH MODEL
-!               ---------------------------------------------------------
-!
-!*       1.1    Set the hailstones maximum fall velocity
-!
-IF (CSEDIM == 'SPLI' .AND. .NOT. LRED ) THEN
- IF (HCLOUD == 'ICE4') THEN
-  ZVTRMAX = 40.
- ELSE IF (HCLOUD == 'ICE3') THEN
-  ZVTRMAX = 10.
- END IF
-END IF
-!
-!*       1.2    Compute the number of small time step integration
-!
-KSPLITR = 1
-IF (CSEDIM == 'SPLI' .AND. .NOT. LRED ) THEN
- SPLIT : DO
-  ZT = PTSTEP / REAL(KSPLITR)
-  IF ( ZT * ZVTRMAX / PDZMIN .LT. 1.) EXIT SPLIT
-  KSPLITR = KSPLITR + 1
- END DO SPLIT
-END IF
 !
 IF (ALLOCATED(XRTMIN)) THEN       ! In case of nesting microphysics constants of
                                   ! MODD_RAIN_ICE_PARAM are computed only once,
@@ -394,7 +364,9 @@ XLBH   = ( XAH*XCCH*MOMG(XALPHAH,XNUH,XBH) )**(-XLBEXH)
 !
 !*       3.5    Minimal values allowed for the mixing ratios
 !
+XLBDAR_MAX = 100000.0
 XLBDAS_MAX = 100000.0
+XLBDAG_MAX = 100000.0
 !
 ZCONC_MAX  = 1.E6 ! Maximal concentration for falling particules set to 1 per cc
 XLBDAS_MAX = ( ZCONC_MAX/XCCS )**(1./XCXS)
