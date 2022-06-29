@@ -4,7 +4,7 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ######spl
-      SUBROUTINE INI_RAIN_ICE ( KLUOUT, PTSTEP, PDZMIN, KSPLITR, HCLOUD )
+      SUBROUTINE INI_RAIN_ICE ( KLUOUT, HCLOUD )
 !     ###########################################################
 !
 !!****  *INI_RAIN_ICE * - initialize the constants necessary for the warm and
@@ -114,13 +114,6 @@ IMPLICIT NONE
 !
 !
 INTEGER,                 INTENT(IN) :: KLUOUT   ! Logical unit number for prints
-INTEGER,                 INTENT(OUT):: KSPLITR   ! Number of small time step
-                                                 ! integration for  rain
-                                                 ! sedimendation
-!
-REAL,                    INTENT(IN) :: PTSTEP    ! Effective Time step
-!
-REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
 !
 CHARACTER (LEN=4), INTENT(IN)       :: HCLOUD    ! Indicator of the cloud scheme
 !
@@ -174,12 +167,8 @@ REAL     :: PWETLBDAR_MAX,PWETLBDAH_MAX,PWETLBDAR_MIN,PWETLBDAH_MIN
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
+!
 IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',0,ZHOOK_HANDLE)
-!
-IF(.NOT.ASSOCIATED(XCEXVT)) CALL RAIN_ICE_DESCR_ASSOCIATE()
-IF(.NOT.ASSOCIATED(XFSEDC)) CALL RAIN_ICE_PARAM_ASSOCIATE()
-
-!
 !
 !*       0.     FUNCTION STATEMENTS
 !               -------------------
@@ -189,50 +178,13 @@ IF(.NOT.ASSOCIATED(XFSEDC)) CALL RAIN_ICE_PARAM_ASSOCIATE()
 !
 !
 !
-!        1.     COMPUTE KSPLTR FOR EACH MODEL
-!               ---------------------------------------------------------
 !
-!*       1.1    Set the hailstones maximum fall velocity
-!
-IF (CSEDIM == 'SPLI' .AND. .NOT. LRED ) THEN
- IF (HCLOUD == 'ICE4') THEN
-  ZVTRMAX = 40.
- ELSE IF (HCLOUD == 'ICE3') THEN
-  ZVTRMAX = 10.
- END IF
-END IF
-!
-!*       1.2    Compute the number of small time step integration
-!
-KSPLITR = 1
-IF (CSEDIM == 'SPLI' .AND. .NOT. LRED ) THEN
- SPLIT : DO
-  ZT = PTSTEP / REAL(KSPLITR)
-  IF ( ZT * ZVTRMAX / PDZMIN .LT. 1.) EXIT SPLIT
-  KSPLITR = KSPLITR + 1
- END DO SPLIT
-END IF
-!
-IF (ASSOCIATED(XRTMIN)) THEN       ! In case of nesting microphysics constants of
+IF (ALLOCATED(XRTMIN)) THEN       ! In case of nesting microphysics constants of
                                   ! MODD_RAIN_ICE_PARAM are computed only once,
                                   ! but if INI_RAIN_ICE has been called already
                                   ! one must change the XRTMIN size.
-  CALL RAIN_ICE_DESCR_DEALLOCATE()
+  DEALLOCATE(XRTMIN)
 END IF
-!
-IF (HCLOUD == 'ICE4') THEN
-  CALL RAIN_ICE_DESCR_ALLOCATE(7)
-ELSE IF (HCLOUD == 'ICE3') THEN
-  CALL RAIN_ICE_DESCR_ALLOCATE(6)
-END IF
-!
-XRTMIN(1) = 1.0E-20
-XRTMIN(2) = 1.0E-20
-XRTMIN(3) = 1.0E-20
-XRTMIN(4) = 1.0E-20
-XRTMIN(5) = 1.0E-15
-XRTMIN(6) = 1.0E-15
-IF (HCLOUD == 'ICE4') XRTMIN(7) = 1.0E-15
 !
 !-------------------------------------------------------------------------------
 !
@@ -412,10 +364,26 @@ XLBH   = ( XAH*XCCH*MOMG(XALPHAH,XNUH,XBH) )**(-XLBEXH)
 !
 !*       3.5    Minimal values allowed for the mixing ratios
 !
+XLBDAR_MAX = 100000.0
 XLBDAS_MAX = 100000.0
+XLBDAG_MAX = 100000.0
 !
 ZCONC_MAX  = 1.E6 ! Maximal concentration for falling particules set to 1 per cc
 XLBDAS_MAX = ( ZCONC_MAX/XCCS )**(1./XCXS)
+!
+IF (HCLOUD == 'ICE4') THEN
+  ALLOCATE( XRTMIN(7) )
+ELSE IF (HCLOUD == 'ICE3') THEN
+  ALLOCATE( XRTMIN(6) )
+END IF
+!
+XRTMIN(1) = 1.0E-20
+XRTMIN(2) = 1.0E-20
+XRTMIN(3) = 1.0E-20
+XRTMIN(4) = 1.0E-20
+XRTMIN(5) = 1.0E-15
+XRTMIN(6) = 1.0E-15
+IF (HCLOUD == 'ICE4') XRTMIN(7) = 1.0E-15
 !
 XCONC_SEA=1E8 ! 100/cm3
 XCONC_LAND=3E8 ! 300/cm3
@@ -661,9 +629,9 @@ XGAMINC_BOUND_MIN = 1.0E-1 ! Minimal value of (Lbda * D_cs^lim)**alpha
 XGAMINC_BOUND_MAX = 1.0E7  ! Maximal value of (Lbda * D_cs^lim)**alpha
 ZRATE = EXP(LOG(XGAMINC_BOUND_MAX/XGAMINC_BOUND_MIN)/REAL(NGAMINC-1))
 !
-IF( .NOT.ASSOCIATED(XGAMINC_RIM1) ) CALL RAIN_ICE_PARAM_ALLOCATE('XGAMINC_RIM1', NGAMINC)
-IF( .NOT.ASSOCIATED(XGAMINC_RIM2) ) CALL RAIN_ICE_PARAM_ALLOCATE('XGAMINC_RIM2', NGAMINC)
-IF( .NOT.ASSOCIATED(XGAMINC_RIM4) ) CALL RAIN_ICE_PARAM_ALLOCATE('XGAMINC_RIM4', NGAMINC)
+IF( .NOT.ALLOCATED(XGAMINC_RIM1) ) ALLOCATE( XGAMINC_RIM1(NGAMINC) )
+IF( .NOT.ALLOCATED(XGAMINC_RIM2) ) ALLOCATE( XGAMINC_RIM2(NGAMINC) )
+IF( .NOT.ALLOCATED(XGAMINC_RIM4) ) ALLOCATE( XGAMINC_RIM4(NGAMINC) )
 !
 DO J1=1,NGAMINC
   ZBOUND = XGAMINC_BOUND_MIN*ZRATE**(J1-1)
@@ -713,9 +681,9 @@ IND      = 50    ! Interval number, collection efficiency and infinite diameter
 ZESR     = 1.0   ! factor used to integrate the dimensional distributions when
 ZFDINFTY = 20.0  ! computing the kernels XKER_RACCSS, XKER_RACCS and XKER_SACCRG
 !
-IF( .NOT.ASSOCIATED(XKER_RACCSS) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RACCSS', NACCLBDAS,NACCLBDAR)
-IF( .NOT.ASSOCIATED(XKER_RACCS ) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RACCS', NACCLBDAS,NACCLBDAR)
-IF( .NOT.ASSOCIATED(XKER_SACCRG) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_SACCRG', NACCLBDAR,NACCLBDAS)
+IF( .NOT.ALLOCATED(XKER_RACCSS) ) ALLOCATE( XKER_RACCSS(NACCLBDAS,NACCLBDAR) )
+IF( .NOT.ALLOCATED(XKER_RACCS ) ) ALLOCATE( XKER_RACCS (NACCLBDAS,NACCLBDAR) )
+IF( .NOT.ALLOCATED(XKER_SACCRG) ) ALLOCATE( XKER_SACCRG(NACCLBDAR,NACCLBDAS) )
 !
 CALL READ_XKER_RACCS (KACCLBDAS,KACCLBDAR,KND,                                &
                       PALPHAS,PNUS,PALPHAR,PNUR,PESR,PBS,PBR,PCS,PDS,PCR,PDR, &
@@ -923,7 +891,7 @@ IND      = 50    ! Interval number, collection efficiency and infinite diameter
 ZEGS     = 1.0   ! factor used to integrate the dimensional distributions when
 ZFDINFTY = 20.0  ! computing the kernels XKER_SDRYG
 !
-IF( .NOT.ASSOCIATED(XKER_SDRYG) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_SDRYG', NDRYLBDAG,NDRYLBDAS)
+IF( .NOT.ALLOCATED(XKER_SDRYG) ) ALLOCATE( XKER_SDRYG(NDRYLBDAG,NDRYLBDAS) )
 !
 CALL READ_XKER_SDRYG (KDRYLBDAG,KDRYLBDAS,KND,                              &
                    PALPHAG,PNUG,PALPHAS,PNUS,PEGS,PBS,PCG,PDG,PCS,PDS,      &
@@ -989,7 +957,7 @@ IND      = 50    ! Number of interval used to integrate the dimensional
 ZEGR     = 1.0   ! distributions when computing the kernel XKER_RDRYG
 ZFDINFTY = 20.0
 !
-IF( .NOT.ASSOCIATED(XKER_RDRYG) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RDRYG', NDRYLBDAG,NDRYLBDAR)
+IF( .NOT.ALLOCATED(XKER_RDRYG) ) ALLOCATE( XKER_RDRYG(NDRYLBDAG,NDRYLBDAR) )
 !
 CALL READ_XKER_RDRYG (KDRYLBDAG,KDRYLBDAR,KND,                              &
                    PALPHAG,PNUG,PALPHAR,PNUR,PEGR,PBR,PCG,PDG,PCR,PDR,      &
@@ -1127,7 +1095,7 @@ IND      = 50    ! Interval number, collection efficiency and infinite diameter
 ZEHS     = 1.0   ! factor used to integrate the dimensional distributions when
 ZFDINFTY = 20.0  ! computing the kernels XKER_SWETH
 !
-IF( .NOT.ASSOCIATED(XKER_SWETH) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_SWETH', NWETLBDAH,NWETLBDAS)
+IF( .NOT.ALLOCATED(XKER_SWETH) ) ALLOCATE( XKER_SWETH(NWETLBDAH,NWETLBDAS) )
 !
 CALL READ_XKER_SWETH (KWETLBDAH,KWETLBDAS,KND,                              &
                    PALPHAH,PNUH,PALPHAS,PNUS,PEHS,PBS,PCH,PDH,PCS,PDS,      &
@@ -1193,7 +1161,7 @@ IND      = 50    ! Number of interval used to integrate the dimensional
 ZEHG     = 1.0   ! distributions when computing the kernel XKER_GWETH
 ZFDINFTY = 20.0
 !
-IF( .NOT.ASSOCIATED(XKER_GWETH) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_GWETH', NWETLBDAH,NWETLBDAG)
+IF( .NOT.ALLOCATED(XKER_GWETH) ) ALLOCATE( XKER_GWETH(NWETLBDAH,NWETLBDAG) )
 !
 CALL READ_XKER_GWETH (KWETLBDAH,KWETLBDAG,KND,                              &
                    PALPHAH,PNUH,PALPHAG,PNUG,PEHG,PBG,PCH,PDH,PCG,PDG,      &
@@ -1259,7 +1227,7 @@ IND      = 50    ! Number of interval used to integrate the dimensional
 ZEHR     = 1.0   ! distributions when computing the kernel XKER_RWETH
 ZFDINFTY = 20.0
 !
-IF( .NOT.ASSOCIATED(XKER_RWETH) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RWETH', NWETLBDAH,NWETLBDAR)
+IF( .NOT.ALLOCATED(XKER_RWETH) ) ALLOCATE( XKER_RWETH(NWETLBDAH,NWETLBDAR) )
 !
 CALL READ_XKER_RWETH (KWETLBDAH,KWETLBDAR,KND,                              &
                    PALPHAH,PNUH,PALPHAR,PNUR,PEHR,PBR,PCH,PDH,PCR,PDR,      &
