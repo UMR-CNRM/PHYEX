@@ -1,3 +1,7 @@
+This document must still be written
+
+Some elements to include (or not):
+
 The PHYEX parameterizations can be called from different models (eg. Meso-NH, AROME) and from
 a driver (which will be included in this repository).
 Moreover, PHYEX parameterizations call externals subroutines, which are dependencies.

@@ -1,0 +1,45 @@
+# OFFLINE documentation
+
+# ABOUT THIS DOCUMENT
+
+This document is intended for persons who want to use PHYEX in an offline mode.
+Some offline test programs are provided with the package and a library suitable for use with python is also available.
+
+# COMPILATION
+
+The build/with\_fcm directory contains a build system.
+This build system has two dependencies (installation is done automatically by the compilation script):
+ - [fcm](https://metomi.github.io/fcm/doc/user_guide/)
+ - [fiat](https://github.com/ecmwf-ifs/fiat)
+
+The script build/with\_fcm/make\_fcm.sh uses a configuration file and build the library and test programs.
+They can be found in the build/bin sudirectory in the architecture specific directory arch\_\<achitecture name\>.
+
+# TEST PROGRAM
+
+## Data generation
+
+The branch testprogs\_data contains modified source code for the AROME model to enable the generation of data samples.
+Using this branch, in the drivers of the different parameterisations (aro\_\* files), output can be enable for the AROME model.
+Running the AROME model with these modifications outputs files in the running directory.
+This must be done once by parametrisation.
+
+These files should be renamed with the folowing command:
+i=0; for file in ????_??_????????.dat; do mv $file `printf %08d $i`.dat; i=$((i+1)); done
+
+## Data storage for check\_commit\_testprogs.sh
+
+To be usable by the check\_commit\_testprogs.sh script, these data must be put in the corresponding directory under tools/testprogs\_data
+
+## Usage
+
+The different main\_\*.exe programs obtained by the compilation can be run. Each of these executables is expecting the presence of a 'data' directory in their working directory containing the different files.
+
+In addition, these data files can be used through the check\_commit\_testprogs.sh script (if installed accordingly).
+
+# PYTHON BINDING
+
+This section must be written. Key ideas are:
+  - ctypesforfortran
+  - example
+- 
