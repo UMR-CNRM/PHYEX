@@ -454,7 +454,7 @@ IF (CMICRO=='ICE4') THEN
                  &  PSEA=PSEA, PTOWN=PTOWN, &
                  &  PRHT=PRT(:,:,:,7), PRHS=PRS(:,:,:,7), PINPRH=PINPRH, PFPR=PFPR)
 ELSEIF (CMICRO=='ICE3') THEN
-  IF(.TRUE.) THEN ! Activate or not the writing
+  IF(.TRUE.) THEN ! .FALSE. to activate the writing, .TRUE. to not activate the writing
     LFILEEXISTS=.FALSE.
   ELSE
     IFILE=0

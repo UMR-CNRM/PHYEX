@@ -456,7 +456,7 @@ DO JRR=1, NBUDGET_RI
   YLBUDGET(JRR)%YDMDDH=>YDMDDH
 ENDDO
 OCOMPUTE_SRC=SIZE(PSIGS, 3)/=0
-IF(.TRUE.) THEN ! activate or not the writing
+IF(.TRUE.) THEN ! .FALSE. to activate the writing, .TRUE. to not activate the writing
   LFILEEXISTS=.FALSE.
 ELSE
   IFILE=0

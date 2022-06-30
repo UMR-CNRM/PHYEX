@@ -442,7 +442,7 @@ ZZZ(KIDIA:KFDIA,:,:) =  PZZF(KIDIA:KFDIA,:,:)
 !*       9.2    Perform the saturation adjustment over cloud ice and cloud water
 !
 IF (KRR==6) THEN
-  IF(.TRUE.) THEN ! Activate or not the writing
+  IF(.TRUE.) THEN ! .FALSE. to activate the writing, .TRUE. to not activate the writing
     LFILEEXISTS=.FALSE.
   ELSE
     IFILE=0
