@@ -12,8 +12,8 @@ SUBROUTINE DZF_MF(D, PA, PDZF)
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 IMPLICIT NONE
 TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass
                                                  ! localization
 END SUBROUTINE DZF_MF
 !
@@ -21,8 +21,8 @@ SUBROUTINE DZM_MF(D, PA, PDZM)
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 IMPLICIT NONE
 TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
                                                  ! side
 END SUBROUTINE DZM_MF
 !
@@ -30,8 +30,8 @@ SUBROUTINE MZF_MF(D, PA, PMZF)
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 IMPLICIT NONE
 TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PMZF   ! result at mass
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMZF   ! result at mass
                                                  ! localization
 END SUBROUTINE MZF_MF
 !
@@ -39,17 +39,17 @@ SUBROUTINE MZM_MF(D, PA, PMZM)
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 IMPLICIT NONE
 TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PMZM   ! result at flux localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMZM   ! result at flux localization
 END SUBROUTINE MZM_MF
 !
 SUBROUTINE GZ_M_W_MF(D, PY, PDZZ, PGZ_M_W)
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 IMPLICIT NONE
 TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PDZZ ! Metric coefficient d*zz
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PY   ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PGZ_M_W  ! result at flux side
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PDZZ ! Metric coefficient d*zz
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PY   ! variable at mass localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PGZ_M_W  ! result at flux side
 END SUBROUTINE GZ_M_W_MF
 !
 END INTERFACE
@@ -110,14 +110,14 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PMZF   ! result at mass
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMZF   ! result at mass
                                                  ! localization
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK             ! Loop index in z direction
+INTEGER :: JK, JI
 !
 !
 !-------------------------------------------------------------------------------
@@ -126,10 +126,14 @@ INTEGER :: JK             ! Loop index in z direction
 !              ------------------
 !
 DO JK=2,D%NKT-1
-  PMZF(:,JK) = 0.5*( PA(:,JK)+PA(:,JK+D%NKL) )
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
+  PMZF(D%NIJB:D%NIJE,JK) = 0.5*( PA(D%NIJB:D%NIJE,JK)+PA(D%NIJB:D%NIJE,JK+D%NKL) )
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 END DO
-PMZF(:,D%NKA) = 0.5*( PA(:,D%NKA)+PA(:,D%NKA+D%NKL) )
-PMZF(:,D%NKU) = PA(:,D%NKU)
+!$mnh_expand_array(JI=D%NIJB:D%NIJE)
+PMZF(D%NIJB:D%NIJE,D%NKA) = 0.5*( PA(D%NIJB:D%NIJE,D%NKA)+PA(D%NIJB:D%NIJE,D%NKA+D%NKL) )
+PMZF(D%NIJB:D%NIJE,D%NKU) = PA(D%NIJB:D%NIJE,D%NKU)
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 !
 !-------------------------------------------------------------------------------
 !
@@ -188,13 +192,13 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PMZM   ! result at flux localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMZM   ! result at flux localization
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK             ! Loop index in z direction
+INTEGER :: JK, JI
 !
 !
 !-------------------------------------------------------------------------------
@@ -203,10 +207,14 @@ INTEGER :: JK             ! Loop index in z direction
 !              ------------------
 !
 DO JK=2,D%NKT-1
-  PMZM(:,JK) = 0.5*( PA(:,JK)+PA(:,JK-D%NKL) )
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
+  PMZM(D%NIJB:D%NIJE,JK) = 0.5*( PA(D%NIJB:D%NIJE,JK)+PA(D%NIJB:D%NIJE,JK-D%NKL) )
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 END DO
-PMZM(:,D%NKA) = PA(:,D%NKA)
-PMZM(:,D%NKU) = 0.5*( PA(:,D%NKU)+PA(:,D%NKU-D%NKL) )
+!$mnh_expand_array(JI=D%NIJB:D%NIJE)
+PMZM(D%NIJB:D%NIJE,D%NKA) = PA(D%NIJB:D%NIJE,D%NKA)
+PMZM(D%NIJB:D%NIJE,D%NKU) = 0.5*( PA(D%NIJB:D%NIJE,D%NKU)+PA(D%NIJB:D%NIJE,D%NKU-D%NKL) )
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 !
 !-------------------------------------------------------------------------------
 !
@@ -265,14 +273,14 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux side
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass
                                                  ! localization
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK           ! Loop index in z direction
+INTEGER :: JK, JI
 !
 !-------------------------------------------------------------------------------
 !
@@ -280,10 +288,14 @@ INTEGER :: JK           ! Loop index in z direction
 !              ------------------
 !
 DO JK=2,D%NKT-1
-  PDZF(:,JK) = PA(:,JK+D%NKL) - PA(:,JK)
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
+  PDZF(D%NIJB:D%NIJE,JK) = PA(D%NIJB:D%NIJE,JK+D%NKL) - PA(D%NIJB:D%NIJE,JK)
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 END DO
-PDZF(:,D%NKA) = PA(:,D%NKA+D%NKL) - PA(:,D%NKA)
-PDZF(:,D%NKU) = 0.
+!$mnh_expand_array(JI=D%NIJB:D%NIJE)
+PDZF(D%NIJB:D%NIJE,D%NKA) = PA(D%NIJB:D%NIJE,D%NKA+D%NKL) - PA(D%NIJB:D%NIJE,D%NKA)
+PDZF(D%NIJB:D%NIJE,D%NKU) = 0.
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 !
 !-------------------------------------------------------------------------------
 !
@@ -342,14 +354,14 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
                                                  ! side
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK            ! Loop index in z direction
+INTEGER :: JK, JI
 !
 !-------------------------------------------------------------------------------
 !
@@ -357,10 +369,14 @@ INTEGER :: JK            ! Loop index in z direction
 !              ------------------
 !
 DO JK=2,D%NKT-1
-  PDZM(:,JK) = PA(:,JK) - PA(:,JK-D%NKL)
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
+  PDZM(D%NIJB:D%NIJE,JK) = PA(D%NIJB:D%NIJE,JK) - PA(D%NIJB:D%NIJE,JK-D%NKL)
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 END DO
-PDZM(:,D%NKA) = 0.
-PDZM(:,D%NKU) = PA(:,D%NKU) - PA(:,D%NKU-D%NKL)
+!$mnh_expand_array(JI=D%NIJB:D%NIJE)
+PDZM(D%NIJB:D%NIJE,D%NKA) = 0.
+PDZM(D%NIJB:D%NIJE,D%NKU) = PA(D%NIJB:D%NIJE,D%NKU) - PA(D%NIJB:D%NIJE,D%NKU-D%NKL)
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 !
 !-------------------------------------------------------------------------------
 !
@@ -420,24 +436,28 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),             INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PDZZ ! Metric coefficient d*zz
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)  :: PY   ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PGZ_M_W  ! result at flux side
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PDZZ ! Metric coefficient d*zz
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PY   ! variable at mass localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PGZ_M_W  ! result at flux side
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER  JK
+INTEGER  JK, JI
 !-------------------------------------------------------------------------------
 !
 !*       1.    COMPUTE THE GRADIENT ALONG Z
 !              -----------------------------
 !
 DO JK=2,D%NKT-1
-  PGZ_M_W(:,JK) = (PY(:,JK) - PY(:,JK-D%NKL)) / PDZZ(:,JK)
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
+  PGZ_M_W(D%NIJB:D%NIJE,JK) = (PY(D%NIJB:D%NIJE,JK) - PY(D%NIJB:D%NIJE,JK-D%NKL)) / PDZZ(D%NIJB:D%NIJE,JK)
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 END DO
-PGZ_M_W(:,D%NKA) = 0.
-PGZ_M_W(:,D%NKU) = (PY(:,D%NKU) - PY(:,D%NKU-D%NKL)) / PDZZ(:,D%NKU)
+!$mnh_expand_array(JI=D%NIJB:D%NIJE)
+PGZ_M_W(D%NIJB:D%NIJE,D%NKA) = 0.
+PGZ_M_W(D%NIJB:D%NIJE,D%NKU) = (PY(D%NIJB:D%NIJE,D%NKU) - PY(D%NIJB:D%NIJE,D%NKU-D%NKL)) / PDZZ(D%NIJB:D%NIJE,D%NKU)
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 !
 !-------------------------------------------------------------------------------
 !

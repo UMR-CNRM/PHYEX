@@ -85,39 +85,39 @@ INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
 REAL,                   INTENT(IN)   :: PIMPL       ! degree of implicitness
 REAL,                 INTENT(IN)     ::  PTSTEP   ! Dynamical timestep 
 !
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)   :: PDZZ        ! metric coefficients
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PDZZ        ! metric coefficients
 
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)   :: PRHODJ      ! dry density * Grid size
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PRHODJ      ! dry density * Grid size
 
 !   Conservative var. at t-dt
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) ::  PTHLM        ! conservative pot. temp.
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) ::  PRTM         ! water var.  where 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PTHLM        ! conservative pot. temp.
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PRTM         ! water var.  where 
 !  Virtual potential temperature at t-dt
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) ::  PTHVM 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PTHVM 
 !  Momentum at t-dt
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) ::  PUM
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) ::  PVM
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PUM
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PVM
 !  scalar variables at t-dt
-REAL, DIMENSION(D%NIT,D%NKT,KSV), INTENT(IN) ::  PSVM
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVM
 !
 ! Tendencies of conservative variables
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT) ::  PTHLDT
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PTHLDT
 
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT) ::  PRTDT 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PRTDT 
 ! Tendencies of momentum
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT) ::  PUDT
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT) ::  PVDT
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PUDT
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PVDT
 ! Tendencies of scalar variables
-REAL, DIMENSION(D%NIT,D%NKT,KSV), INTENT(OUT) ::  PSVDT
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT) ::  PSVDT
 
 
 ! Updraft characteritics
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)   ::  PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP
-REAL, DIMENSION(D%NIT,D%NKT,KSV), INTENT(IN) ::  PSV_UP
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSV_UP
 ! Fluxes
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)  ::  PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF
 
-REAL, DIMENSION(D%NIT,D%NKT,KSV), INTENT(OUT)::  PFLXZSVMF
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT)::  PFLXZSVMF
 !
 !
 !
@@ -126,7 +126,7 @@ REAL, DIMENSION(D%NIT,D%NKT,KSV), INTENT(OUT)::  PFLXZSVMF
 !       0.2  declaration of local variables
 !
 
-REAL, DIMENSION(D%NIT,D%NKT) :: ZVARS
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZVARS
 INTEGER :: JSV          !number of scalar variables and Loop counter
 INTEGER :: JI, JK
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
@@ -155,19 +155,19 @@ CALL MZM_MF(D, PTHLM(:,:), PFLXZTHMF(:,:))
 CALL MZM_MF(D, PRTM(:,:), PFLXZRMF(:,:))
 CALL MZM_MF(D, PTHVM(:,:), PFLXZTHVMF(:,:))
 
-!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-PFLXZTHMF(D%NIB:D%NIE,:) = PEMF(D%NIB:D%NIE,:)*(PTHL_UP(D%NIB:D%NIE,:)-PFLXZTHMF(D%NIB:D%NIE,:))
-PFLXZRMF(D%NIB:D%NIE,:) =  PEMF(D%NIB:D%NIE,:)*(PRT_UP(D%NIB:D%NIE,:)-PFLXZRMF(D%NIB:D%NIE,:))
-PFLXZTHVMF(D%NIB:D%NIE,:) = PEMF(D%NIB:D%NIE,:)*(PTHV_UP(D%NIB:D%NIE,:)-PFLXZTHVMF(D%NIB:D%NIE,:))
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+PFLXZTHMF(D%NIJB:D%NIJE,:) = PEMF(D%NIJB:D%NIJE,:)*(PTHL_UP(D%NIJB:D%NIJE,:)-PFLXZTHMF(D%NIJB:D%NIJE,:))
+PFLXZRMF(D%NIJB:D%NIJE,:) =  PEMF(D%NIJB:D%NIJE,:)*(PRT_UP(D%NIJB:D%NIJE,:)-PFLXZRMF(D%NIJB:D%NIJE,:))
+PFLXZTHVMF(D%NIJB:D%NIJE,:) = PEMF(D%NIJB:D%NIJE,:)*(PTHV_UP(D%NIJB:D%NIJE,:)-PFLXZTHVMF(D%NIJB:D%NIJE,:))
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 
 IF (OMIXUV) THEN
   CALL MZM_MF(D, PUM(:,:), PFLXZUMF(:,:))
   CALL MZM_MF(D, PVM(:,:), PFLXZVMF(:,:))
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-  PFLXZUMF(D%NIB:D%NIE,:) =  PEMF(D%NIB:D%NIE,:)*(PU_UP(D%NIB:D%NIE,:)-PFLXZUMF(D%NIB:D%NIE,:))
-  PFLXZVMF(D%NIB:D%NIE,:) =  PEMF(D%NIB:D%NIE,:)*(PV_UP(D%NIB:D%NIE,:)-PFLXZVMF(D%NIB:D%NIE,:))
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  PFLXZUMF(D%NIJB:D%NIJE,:) =  PEMF(D%NIJB:D%NIJE,:)*(PU_UP(D%NIJB:D%NIJE,:)-PFLXZUMF(D%NIJB:D%NIJE,:))
+  PFLXZVMF(D%NIJB:D%NIJE,:) =  PEMF(D%NIJB:D%NIJE,:)*(PV_UP(D%NIJB:D%NIJE,:)-PFLXZVMF(D%NIJB:D%NIJE,:))
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 ELSE
   PFLXZUMF(:,:) = 0.
   PFLXZVMF(:,:) = 0.
@@ -190,10 +190,10 @@ CALL TRIDIAG_MASSFLUX(D,PTHLM,PFLXZTHMF,-PEMF,PTSTEP,PIMPL,  &
                       PDZZ,PRHODJ,ZVARS )
 ! compute new flux and THL tendency
 CALL MZM_MF(D, ZVARS(:,:), PFLXZTHMF(:,:))
-!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-PFLXZTHMF(D%NIB:D%NIE,:) = PEMF(D%NIB:D%NIE,:)*(PTHL_UP(D%NIB:D%NIE,:)-PFLXZTHMF(D%NIB:D%NIE,:))
-PTHLDT(D%NIB:D%NIE,:)= (ZVARS(D%NIB:D%NIE,:)-PTHLM(D%NIB:D%NIE,:))/PTSTEP
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+PFLXZTHMF(D%NIJB:D%NIJE,:) = PEMF(D%NIJB:D%NIJE,:)*(PTHL_UP(D%NIJB:D%NIJE,:)-PFLXZTHMF(D%NIJB:D%NIJE,:))
+PTHLDT(D%NIJB:D%NIJE,:)= (ZVARS(D%NIJB:D%NIJE,:)-PTHLM(D%NIJB:D%NIJE,:))/PTSTEP
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 
 !
 ! 3.2 Compute the tendency for the conservative mixing ratio
@@ -202,10 +202,10 @@ CALL TRIDIAG_MASSFLUX(D,PRTM(:,:),PFLXZRMF,-PEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
 ! compute new flux and RT tendency
 CALL MZM_MF(D, ZVARS(:,:), PFLXZRMF(:,:))
-!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-PFLXZRMF(D%NIB:D%NIE,:) =  PEMF(D%NIB:D%NIE,:)*(PRT_UP(D%NIB:D%NIE,:)-PFLXZRMF(D%NIB:D%NIE,:))
-PRTDT(D%NIB:D%NIE,:) = (ZVARS(D%NIB:D%NIE,:)-PRTM(D%NIB:D%NIE,:))/PTSTEP
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+PFLXZRMF(D%NIJB:D%NIJE,:) =  PEMF(D%NIJB:D%NIJE,:)*(PRT_UP(D%NIJB:D%NIJE,:)-PFLXZRMF(D%NIJB:D%NIJE,:))
+PRTDT(D%NIJB:D%NIJE,:) = (ZVARS(D%NIJB:D%NIJE,:)-PRTM(D%NIJB:D%NIJE,:))/PTSTEP
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 !
 
 IF (OMIXUV) THEN
@@ -218,10 +218,10 @@ IF (OMIXUV) THEN
                                  PDZZ,PRHODJ,ZVARS )
   ! compute new flux and U tendency
   CALL MZM_MF(D, ZVARS(:,:), PFLXZUMF(:,:))
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-  PFLXZUMF(D%NIB:D%NIE,:) = PEMF(D%NIB:D%NIE,:)*(PU_UP(D%NIB:D%NIE,:)-PFLXZUMF(D%NIB:D%NIE,:))
-  PUDT(D%NIB:D%NIE,:)= (ZVARS(D%NIB:D%NIE,:)-PUM(D%NIB:D%NIE,:))/PTSTEP
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  PFLXZUMF(D%NIJB:D%NIJE,:) = PEMF(D%NIJB:D%NIJE,:)*(PU_UP(D%NIJB:D%NIJE,:)-PFLXZUMF(D%NIJB:D%NIJE,:))
+  PUDT(D%NIJB:D%NIJE,:)= (ZVARS(D%NIJB:D%NIJE,:)-PUM(D%NIJB:D%NIJE,:))/PTSTEP
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
   !
   !
   ! 3.4 Compute the tendency for the (non conservative but treated as it for the time beiing)
@@ -232,10 +232,10 @@ IF (OMIXUV) THEN
                                  PDZZ,PRHODJ,ZVARS )
   ! compute new flux and V tendency
   CALL MZM_MF(D, ZVARS(:,:), PFLXZVMF(:,:))
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-  PFLXZVMF(D%NIB:D%NIE,:) = PEMF(D%NIB:D%NIE,:)*(PV_UP(D%NIB:D%NIE,:)-PFLXZVMF(D%NIB:D%NIE,:))
-  PVDT(D%NIB:D%NIE,:)= (ZVARS(D%NIB:D%NIE,:)-PVM(D%NIB:D%NIE,:))/PTSTEP
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  PFLXZVMF(D%NIJB:D%NIJE,:) = PEMF(D%NIJB:D%NIJE,:)*(PV_UP(D%NIJB:D%NIJE,:)-PFLXZVMF(D%NIJB:D%NIJE,:))
+  PVDT(D%NIJB:D%NIJE,:)= (ZVARS(D%NIJB:D%NIJE,:)-PVM(D%NIJB:D%NIJE,:))/PTSTEP
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 ELSE
   PUDT(:,:)=0.
   PVDT(:,:)=0.
@@ -249,9 +249,9 @@ DO JSV=1,KSV
   !   ( Resulting fluxes are in flux level (w-point) as PEMF and PTHL_UP )
 
   CALL MZM_MF(D, PSVM(:,:,JSV), PFLXZSVMF(:,:,JSV))
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-  PFLXZSVMF(D%NIB:D%NIE,:,JSV) = PEMF(D%NIB:D%NIE,:)*(PSV_UP(D%NIB:D%NIE,:,JSV)-PFLXZSVMF(D%NIB:D%NIE,:,JSV))
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  PFLXZSVMF(D%NIJB:D%NIJE,:,JSV) = PEMF(D%NIJB:D%NIJE,:)*(PSV_UP(D%NIJB:D%NIJE,:,JSV)-PFLXZSVMF(D%NIJB:D%NIJE,:,JSV))
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
   !
   ! 3.5 Compute the tendency for scalar variables
   !     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
@@ -260,10 +260,10 @@ DO JSV=1,KSV
                         -PEMF,PTSTEP,PIMPL,PDZZ,PRHODJ,ZVARS )
   ! compute new flux and Sv tendency
   CALL MZM_MF(D, ZVARS, PFLXZSVMF(:,:,JSV))
-  !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-  PFLXZSVMF(D%NIB:D%NIE,:,JSV) = PEMF(D%NIB:D%NIE,:)*(PSV_UP(D%NIB:D%NIE,:,JSV)-PFLXZSVMF(D%NIB:D%NIE,:,JSV))
-  PSVDT(D%NIB:D%NIE,:,JSV)= (ZVARS(D%NIB:D%NIE,:)-PSVM(D%NIB:D%NIE,:,JSV))/PTSTEP
-  !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  PFLXZSVMF(D%NIJB:D%NIJE,:,JSV) = PEMF(D%NIJB:D%NIJE,:)*(PSV_UP(D%NIJB:D%NIJE,:,JSV)-PFLXZSVMF(D%NIJB:D%NIJE,:,JSV))
+  PSVDT(D%NIJB:D%NIJE,:,JSV)= (ZVARS(D%NIJB:D%NIJE,:)-PSVM(D%NIJB:D%NIJE,:,JSV))/PTSTEP
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 
 ENDDO
 !

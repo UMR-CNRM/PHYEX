@@ -55,25 +55,25 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)  :: PDZZ2D        ! height difference between two mass levels
-REAL, DIMENSION(D%NIT),     INTENT(IN)  :: PTKEM_DEP     ! TKE to consume
-REAL, DIMENSION(D%NIT),     INTENT(IN)  :: PG_O_THVREF   ! g/ThetaVRef at the departure point
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)  :: PVPT          ! ThetaV on mass levels
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)  :: PDZZ2D        ! height difference between two mass levels
+REAL, DIMENSION(D%NIJT),     INTENT(IN)  :: PTKEM_DEP     ! TKE to consume
+REAL, DIMENSION(D%NIJT),     INTENT(IN)  :: PG_O_THVREF   ! g/ThetaVRef at the departure point
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)  :: PVPT          ! ThetaV on mass levels
 INTEGER,                INTENT(IN)  :: KK            ! index of departure level
 LOGICAL,                INTENT(IN)  :: OUPORDN       ! switch to compute upward (true) or
                                                      !   downward (false) mixing length
 LOGICAL,                INTENT(IN)  :: OFLUX         ! Computation must be done from flux level
-REAL, DIMENSION(D%NIT),     INTENT(OUT) :: PLWORK        ! Resulting mixing length
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)  :: PSHEAR        ! vertical wind shear for RM17 mixing length
+REAL, DIMENSION(D%NIJT),     INTENT(OUT) :: PLWORK        ! Resulting mixing length
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)  :: PSHEAR        ! vertical wind shear for RM17 mixing length
 
 !          0.2 Local variable
 !
-REAL, DIMENSION(D%NIT) :: ZLWORK1,ZLWORK2 ! Temporary mixing length
-REAL, DIMENSION(D%NIT) :: ZINTE,ZPOTE     ! TKE and potential energy
+REAL, DIMENSION(D%NIJT) :: ZLWORK1,ZLWORK2 ! Temporary mixing length
+REAL, DIMENSION(D%NIJT) :: ZINTE,ZPOTE     ! TKE and potential energy
                                                  !   between 2 levels
-REAL, DIMENSION(D%NIT) :: ZVPT_DEP        ! Thetav on departure point
+REAL, DIMENSION(D%NIJT) :: ZVPT_DEP        ! Thetav on departure point
 !
-REAL, DIMENSION(D%NIT,D%NKT) :: ZDELTVPT,ZHLVPT                                
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZDELTVPT,ZHLVPT                                
                       !Virtual Potential Temp at Half level and DeltaThv between
                       !2 mass levels
 
@@ -113,7 +113,7 @@ IF (OUPORDN.EQV..TRUE.) THEN
  IF(OFLUX)THEN
    ZVPT_DEP(:)=ZHLVPT(:,KK) ! departure point is on flux level
    !We must compute what happens between flux level KK and mass level KK
-   DO J1D=1,D%NIT
+   DO J1D=D%NIJB,D%NIJE
      ZTEST0=0.5+SIGN(0.5,ZINTE(J1D)) ! test if there's energy to consume
      ! Energy consumed if parcel cross the entire layer
      ZPOTE(J1D) = ZTEST0*(PG_O_THVREF(J1D)      *      &
@@ -147,7 +147,7 @@ IF (OUPORDN.EQV..TRUE.) THEN
  DO JKK=KK+D%NKL,D%NKE,D%NKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0
-      DO J1D=1,D%NIT
+      DO J1D=D%NIJB,D%NIJE
         ZTEST0=0.5+SIGN(0.5,ZINTE(J1D))
         ZPOTE(J1D) = ZTEST0*(PG_O_THVREF(J1D)      *      &
             (ZHLVPT(J1D,JKK) - ZVPT_DEP(J1D))   &
@@ -186,7 +186,7 @@ IF (OUPORDN.EQV..FALSE.) THEN
  DO JKK=KK,D%NKB,-D%NKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0
-      DO J1D=1,D%NIT
+      DO J1D=D%NIJB,D%NIJE
         ZTEST0=0.5+SIGN(0.5,ZINTE(J1D))
          ZPOTE(J1D) = ZTEST0*(-PG_O_THVREF(J1D)      *      &
             (ZHLVPT(J1D,JKK) - PVPT(J1D,KK)) &

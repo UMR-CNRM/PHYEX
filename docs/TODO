@@ -89,4 +89,4 @@ rain_ice:
   - séparer l'avance temporelle du découpage en sous-blocs en créant une couche driver supplémentaire. Cette couche pourrait avoir différentes implémentations (filtre LLMICRO seul, filtre LLMICRO + découpage en sous-blocs, filtre LLMICRO + découpage en sous-blocs en respectant les colonnes, en passant tous les points)
   - mettre le code des interpolations linéaires et bi-linéaires dans des routines avec deux implémentations: avec et sans packing
 
-Dans shallow_mf (et toutes les routines appelées en-dessous) il faut remplacer l'utilisation des D%NIB, D%NIE, D%NIT par ce qui sera utilisé dans la turbulence
+shallow_mf_pack devrait être récrit pour appeler directement shallow_mf sans recopier les tableaux pour les changer de forme

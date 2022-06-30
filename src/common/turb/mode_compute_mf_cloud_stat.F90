@@ -72,24 +72,24 @@ TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 INTEGER,                INTENT(IN)   :: KRR                     ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL                    ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI                    ! number of ice water var.
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PFRAC_ICE               ! liquid/ice fraction
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PTHLM, PRTM             ! cons. var. at t-dt
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PPABSM                  ! Pressure at time t-1
-REAL, DIMENSION(D%NIT,D%NKT,KRR), INTENT(IN)   :: PRM                     ! water var. at t-dt
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PDZZ
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PTHM                    ! environement
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PEXNM
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PEMF                    ! updraft characteritics
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PTHL_UP, PRT_UP         ! rc,w,Mass Flux,Thetal,rt
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)  :: PSIGMF                  ! SQRT(variance) for statistical cloud scheme
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PFRAC_ICE               ! liquid/ice fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTHLM, PRTM             ! cons. var. at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PPABSM                  ! Pressure at time t-1
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)   :: PRM                     ! water var. at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PDZZ
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTHM                    ! environement
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PEXNM
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PEMF                    ! updraft characteritics
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTHL_UP, PRT_UP         ! rc,w,Mass Flux,Thetal,rt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PSIGMF                  ! SQRT(variance) for statistical cloud scheme
 !
 !*                    0.1  Declaration of local variables
 !
 !
-REAL, DIMENSION(D%NIT,D%NKT) :: ZFLXZ
-REAL, DIMENSION(D%NIT,D%NKT) :: ZT
-REAL, DIMENSION(D%NIT,D%NKT) :: ZAMOIST, ZATHETA
-REAL, DIMENSION(D%NIT,D%NKT) :: ZWK
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZFLXZ
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZT
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZAMOIST, ZATHETA
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZWK
 INTEGER :: JI, JK
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
@@ -116,18 +116,18 @@ IF (KRRL > 0)  THEN
 !
     CALL MZM_MF(D, PTHLM(:,:), ZFLXZ(:,:))
     CALL GZ_M_W_MF(D, PTHLM(:,:), PDZZ(:,:), ZWK(:,:))
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-    ZFLXZ(D%NIB:D%NIE,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(D%NIB:D%NIE,:)* &
-                         & (PTHL_UP(D%NIB:D%NIE,:)-ZFLXZ(D%NIB:D%NIE,:)) * ZWK(D%NIB:D%NIE,:)
+    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+    ZFLXZ(D%NIJB:D%NIJE,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(D%NIJB:D%NIJE,:)* &
+                         & (PTHL_UP(D%NIJB:D%NIJE,:)-ZFLXZ(D%NIJB:D%NIJE,:)) * ZWK(D%NIJB:D%NIJE,:)
     !
     !   Avoid negative values
-    ZFLXZ(D%NIB:D%NIE,:) = MAX(0.,ZFLXZ(D%NIB:D%NIE,:))
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+    ZFLXZ(D%NIJB:D%NIJE,:) = MAX(0.,ZFLXZ(D%NIJB:D%NIJE,:))
+    !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 
     CALL MZF_MF(D, ZFLXZ(:,:), PSIGMF(:,:))
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-    PSIGMF(D%NIB:D%NIE,:) = PSIGMF(D%NIB:D%NIE,:) * ZATHETA(D%NIB:D%NIE,:)**2
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+    PSIGMF(D%NIJB:D%NIJE,:) = PSIGMF(D%NIJB:D%NIJE,:) * ZATHETA(D%NIJB:D%NIJE,:)**2
+    !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 
 !
 !
@@ -138,24 +138,24 @@ IF (KRRL > 0)  THEN
 !
     CALL MZM_MF(D, PRTM(:,:), ZFLXZ(:,:))
     CALL GZ_M_W_MF(D, PRTM(:,:), PDZZ(:,:), ZWK(:,:))
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-    ZFLXZ(D%NIB:D%NIE,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(D%NIB:D%NIE,:)* &
-                         & (PRT_UP(D%NIB:D%NIE,:)-ZFLXZ(D%NIB:D%NIE,:)) * ZWK(D%NIB:D%NIE,:)
+    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+    ZFLXZ(D%NIJB:D%NIJE,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(D%NIJB:D%NIJE,:)* &
+                         & (PRT_UP(D%NIJB:D%NIJE,:)-ZFLXZ(D%NIJB:D%NIJE,:)) * ZWK(D%NIJB:D%NIJE,:)
     !
     !   Avoid negative values
-    ZFLXZ(D%NIB:D%NIE,:) = MAX(0.,ZFLXZ(D%NIB:D%NIE,:))
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+    ZFLXZ(D%NIJB:D%NIJE,:) = MAX(0.,ZFLXZ(D%NIJB:D%NIJE,:))
+    !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 
     CALL MZF_MF(D, ZFLXZ(:,:), ZWK(:,:))
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-    PSIGMF(D%NIB:D%NIE,:) = PSIGMF(D%NIB:D%NIE,:) + ZAMOIST(D%NIB:D%NIE,:) **2 * ZWK(D%NIB:D%NIE,:)
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+    PSIGMF(D%NIJB:D%NIJE,:) = PSIGMF(D%NIJB:D%NIJE,:) + ZAMOIST(D%NIJB:D%NIJE,:) **2 * ZWK(D%NIJB:D%NIJE,:)
+    !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 !
 !        1.3  Vertical part of Sigma_s
 !
-    !$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-    PSIGMF(D%NIB:D%NIE,:) =  SQRT( MAX (PSIGMF(D%NIB:D%NIE,:) , 0.) )
-    !$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+    PSIGMF(D%NIJB:D%NIJE,:) =  SQRT( MAX (PSIGMF(D%NIJB:D%NIJE,:) , 0.) )
+    !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 ELSE
   PSIGMF(:,:) = 0.
 END IF

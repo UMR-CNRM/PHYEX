@@ -272,7 +272,7 @@ TYPE(DIMPHYEX_t) :: YLDIMPHYEXPACK
 !------------------------------------------------------------------------
 
 !!! 1. Initialisation
-CALL FILL_DIMPHYEX(YLDIMPHYEXPACK, SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3), OHPACK=.TRUE.)
+CALL FILL_DIMPHYEX(YLDIMPHYEXPACK, SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3))
 
 ! Internal Domain
 IIU=SIZE(PTHM,1)

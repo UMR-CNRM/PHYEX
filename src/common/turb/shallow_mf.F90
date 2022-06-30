@@ -118,70 +118,70 @@ INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
 REAL,                   INTENT(IN)   :: PIMPL_MF     ! degre of implicitness
 REAL,                   INTENT(IN)   :: PTSTEP    ! Dynamical timestep 
 
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PZZ         ! Height of flux point
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PDZZ        ! Metric coefficients
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PRHODJ      ! dry density * Grid size
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PRHODREF    ! dry density of the
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PZZ         ! Height of flux point
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PDZZ        ! Metric coefficients
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PRHODJ      ! dry density * Grid size
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PRHODREF    ! dry density of the
                                                      ! reference state
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PPABSM      ! Pressure at time t-1
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PEXNM       ! Exner function at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PPABSM      ! Pressure at time t-1
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PEXNM       ! Exner function at t-dt
 
-REAL, DIMENSION(D%NIT),   INTENT(IN)   ::  PSFTH,PSFRV ! normal surface fluxes of theta and Rv 
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)   ::  PTHM        ! Theta at t-dt
-REAL, DIMENSION(D%NIT,D%NKT,KRR), INTENT(IN) ::  PRM         ! water var. at t-dt
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PUM,PVM     ! wind components at t-dt
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) ::  PTKEM       ! tke at t-dt
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTH,PSFRV ! normal surface fluxes of theta and Rv 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHM        ! Theta at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) ::  PRM         ! water var. at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PUM,PVM     ! wind components at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PTKEM       ! tke at t-dt
 
-REAL, DIMENSION(D%NIT,D%NKT,KSV), INTENT(IN) ::  PSVM        ! scalar variable a t-dt
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVM        ! scalar variable a t-dt
 
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)::  PDUDT_MF     ! tendency of U   by massflux scheme
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)::  PDVDT_MF     ! tendency of V   by massflux scheme
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)::  PDTHLDT_MF   ! tendency of thl by massflux scheme
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)::  PDRTDT_MF    ! tendency of rt  by massflux scheme
-REAL, DIMENSION(D%NIT,D%NKT,KSV), INTENT(OUT)::  PDSVDT_MF    ! tendency of Sv  by massflux scheme
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)::  PDUDT_MF     ! tendency of U   by massflux scheme
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)::  PDVDT_MF     ! tendency of V   by massflux scheme
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)::  PDTHLDT_MF   ! tendency of thl by massflux scheme
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)::  PDRTDT_MF    ! tendency of rt  by massflux scheme
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT)::  PDSVDT_MF    ! tendency of Sv  by massflux scheme
 
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)     ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)     ::  PFLXZTHMF
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)     ::  PFLXZRMF
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)     ::  PFLXZUMF
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT)     ::  PFLXZVMF
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) ::  PTHL_UP   ! Thl updraft characteristics
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) ::  PRT_UP    ! Rt  updraft characteristics
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) ::  PRV_UP    ! Vapor updraft characteristics
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) ::  PU_UP     ! U wind updraft characteristics
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) ::  PV_UP     ! V wind updraft characteristics
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) ::  PRC_UP    ! cloud content updraft characteristics
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) ::  PRI_UP    ! ice content   updraft characteristics
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) ::  PTHV_UP   ! Thv   updraft characteristics
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) ::  PW_UP     ! vertical speed updraft characteristics
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) ::  PFRAC_UP  ! updraft fraction
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) ::  PEMF      ! updraft mass flux
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) ::  PDETR     ! updraft detrainment
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) ::  PENTR     ! updraft entrainment
-INTEGER,DIMENSION(D%NIT), INTENT(OUT) :: KKLCL,KKETL,KKCTL ! level of LCL,ETL and CTL
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZTHMF
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZRMF
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZUMF
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZVMF
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PTHL_UP   ! Thl updraft characteristics
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PRT_UP    ! Rt  updraft characteristics
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PRV_UP    ! Vapor updraft characteristics
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PU_UP     ! U wind updraft characteristics
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PV_UP     ! V wind updraft characteristics
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PRC_UP    ! cloud content updraft characteristics
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PRI_UP    ! ice content   updraft characteristics
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PTHV_UP   ! Thv   updraft characteristics
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PW_UP     ! vertical speed updraft characteristics
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PFRAC_UP  ! updraft fraction
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PEMF      ! updraft mass flux
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) ::  PDETR     ! updraft detrainment
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) ::  PENTR     ! updraft entrainment
+INTEGER,DIMENSION(D%NIJT), INTENT(OUT) :: KKLCL,KKETL,KKCTL ! level of LCL,ETL and CTL
 REAL,                 INTENT(IN)  :: PDX, PDY
 !
 !                     0.2  Declaration of local variables
 !
-REAL, DIMENSION(D%NIT,D%NKT) ::     &
+REAL, DIMENSION(D%NIJT,D%NKT) ::     &
           ZTHLM,                                  & !
           ZRTM,                                   & !
           ZTHVM,                                  & !
           ZEMF_O_RHODREF,                         & ! entrainment/detrainment
           ZBUO_INTEG                                ! integrated buoyancy
-REAL, DIMENSION(D%NIT,D%NKT) :: ZFRAC_ICE
-REAL, DIMENSION(D%NIT,D%NKT) :: ZWK
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZFRAC_ICE
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZWK
 
-REAL, DIMENSION(D%NIT,D%NKT,KSV) ::  &
+REAL, DIMENSION(D%NIJT,D%NKT,KSV) ::  &
                                           ZSV_UP,&  ! updraft scalar var.
                                           ZFLXZSVMF ! Flux     
-REAL, DIMENSION(D%NIT) :: ZDEPTH             ! Deepness of cloud
-REAL, DIMENSION(D%NIT,D%NKT) :: ZFRAC_ICE_UP ! liquid/solid fraction in updraft
-REAL, DIMENSION(D%NIT,D%NKT) :: ZRSAT_UP ! Rsat in updraft
+REAL, DIMENSION(D%NIJT) :: ZDEPTH             ! Deepness of cloud
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZFRAC_ICE_UP ! liquid/solid fraction in updraft
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZRSAT_UP ! Rsat in updraft
 
 LOGICAL :: GENTR_DETR  ! flag to recompute entrainment, detrainment and mass flux
-INTEGER, DIMENSION(D%NIT,D%NKT) :: IERR
+INTEGER, DIMENSION(D%NIJT,D%NKT) :: IERR
 INTEGER :: JI, JK
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
@@ -201,15 +201,15 @@ ENDIF
 ! Thermodynamics functions
 ZFRAC_ICE(:,:) = 0.
 IF (KRR.GE.4) THEN
-  !$mnh_expand_where(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-  WHERE(PRM(D%NIB:D%NIE,:,2)+PRM(D%NIB:D%NIE,:,4) > 1.E-20)
-    ZFRAC_ICE(D%NIB:D%NIE,:) = PRM(D%NIB:D%NIE,:,4) / (PRM(D%NIB:D%NIE,:,2)+PRM(D%NIB:D%NIE,:,4))
+  !$mnh_expand_where(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  WHERE(PRM(D%NIJB:D%NIJE,:,2)+PRM(D%NIJB:D%NIJE,:,4) > 1.E-20)
+    ZFRAC_ICE(D%NIJB:D%NIJE,:) = PRM(D%NIJB:D%NIJE,:,4) / (PRM(D%NIJB:D%NIJE,:,2)+PRM(D%NIJB:D%NIJE,:,4))
   ENDWHERE
-  !$mnh_end_expand_where(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+  !$mnh_end_expand_where(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 ENDIF
-!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-ZWK(D%NIB:D%NIE,:)=PTHM(D%NIB:D%NIE,:)*PEXNM(D%NIB:D%NIE,:)
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+ZWK(D%NIJB:D%NIJE,:)=PTHM(D%NIJB:D%NIJE,:)*PEXNM(D%NIJB:D%NIJE,:)
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 CALL COMPUTE_FRAC_ICE(HFRAC_ICE,NEB,ZFRAC_ICE(:,:),ZWK(:,:), IERR(:,:))
 
 ! Conservative variables at t-dt
@@ -218,9 +218,9 @@ CALL THL_RT_FROM_TH_R_MF(D, CST, KRR,KRRL,KRRI,    &
                          ZTHLM, ZRTM       )
 
 ! Virtual potential temperature at t-dt
-!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-ZTHVM(D%NIB:D%NIE,:) = PTHM(D%NIB:D%NIE,:)*((1.+CST%XRV / CST%XRD *PRM(D%NIB:D%NIE,:,1))/(1.+ZRTM(D%NIB:D%NIE,:))) 
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+ZTHVM(D%NIJB:D%NIJE,:) = PTHM(D%NIJB:D%NIJE,:)*((1.+CST%XRV / CST%XRD *PRM(D%NIJB:D%NIJE,:,1))/(1.+ZRTM(D%NIJB:D%NIJE,:))) 
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 ! 
 !!! 2. Compute updraft
 !!!    ---------------
@@ -291,9 +291,9 @@ CALL COMPUTE_MF_CLOUD(D, CST, PARAMMF, KRR, KRRL, KRRI, &
 !!! 3. Compute fluxes of conservative variables and their divergence = tendency
 !!!    ------------------------------------------------------------------------
 !
-!$mnh_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
-ZEMF_O_RHODREF(D%NIB:D%NIE,:)=PEMF(D%NIB:D%NIE,:)/PRHODREF(D%NIB:D%NIE,:)
-!$mnh_end_expand_array(JI=D%NIB:D%NIE,JK=D%NKTB:D%NKTE)
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+ZEMF_O_RHODREF(D%NIJB:D%NIJE,:)=PEMF(D%NIJB:D%NIJE,:)/PRHODREF(D%NIJB:D%NIJE,:)
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 
 IF ( PIMPL_MF > 1.E-10 ) THEN  
   CALL MF_TURB(D, KSV, OMIXUV,                     &

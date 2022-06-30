@@ -86,24 +86,24 @@ INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   ::  KRRL         ! number of liquid water var.
 INTEGER,                INTENT(IN)   ::  KRRI         ! number of ice water var.
 CHARACTER (LEN=4),      INTENT(IN)   ::  HMF_CLOUD    ! Type of statistical cloud scheme
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   ::  PFRAC_ICE    ! liquid/ice fraction
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   ::  PRC_UP,PRI_UP,PEMF! updraft characteritics
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   ::  PTHL_UP, PRT_UP   ! rc,w,Mass Flux,Thetal,rt
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   ::  PFRAC_UP          ! Updraft Fraction
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   ::  PTHV_UP           ! updraft thetaV
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   ::  PFRAC_ICE_UP      ! liquid/solid fraction in updraft
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   ::  PRSAT_UP          ! Rsat in updraft
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   ::  PEXNM             ! exner function
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   ::  PTHLM, PRTM       ! cons. var. at t-dt
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   ::  PTHM, PTHVM       ! theta and thetaV
-REAL, DIMENSION(D%NIT,D%NKT,KRR), INTENT(IN)   ::  PRM               ! water var. at t-dt
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   ::  PDZZ, PZZ
-INTEGER, DIMENSION(D%NIT),  INTENT(IN)   ::  KKLCL             ! index of updraft condensation level
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   ::  PPABSM, PRHODREF  ! environement
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)  ::  PRC_MF, PRI_MF    ! cloud content (INPUT=environment, OUTPUT=conv. cloud)
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)  ::  PCF_MF            ! and cloud fraction for MF scheme
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)  ::  PSIGMF            ! SQRT(variance) for statistical cloud scheme
-REAL, DIMENSION(D%NIT),     INTENT(IN)   ::  PDEPTH            ! Deepness of cloud
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PFRAC_ICE    ! liquid/ice fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PRC_UP,PRI_UP,PEMF! updraft characteritics
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHL_UP, PRT_UP   ! rc,w,Mass Flux,Thetal,rt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PFRAC_UP          ! Updraft Fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHV_UP           ! updraft thetaV
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PFRAC_ICE_UP      ! liquid/solid fraction in updraft
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PRSAT_UP          ! Rsat in updraft
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PEXNM             ! exner function
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHLM, PRTM       ! cons. var. at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHM, PTHVM       ! theta and thetaV
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)   ::  PRM               ! water var. at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PDZZ, PZZ
+INTEGER, DIMENSION(D%NIJT),  INTENT(IN)   ::  KKLCL             ! index of updraft condensation level
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PPABSM, PRHODREF  ! environement
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PRC_MF, PRI_MF    ! cloud content (INPUT=environment, OUTPUT=conv. cloud)
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PCF_MF            ! and cloud fraction for MF scheme
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PSIGMF            ! SQRT(variance) for statistical cloud scheme
+REAL, DIMENSION(D%NIJT),     INTENT(IN)   ::  PDEPTH            ! Deepness of cloud
 
 !
 !                       1.2  Declaration of local variables

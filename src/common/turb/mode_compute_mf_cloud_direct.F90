@@ -64,11 +64,11 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
-INTEGER, DIMENSION(D%NIT),  INTENT(IN)   :: KKLCL          ! index of updraft condensation level
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PFRAC_UP       ! Updraft Fraction
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)   :: PRC_UP,PRI_UP  ! updraft characteritics
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)  :: PRC_MF, PRI_MF ! cloud content
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(OUT)  :: PCF_MF         ! and cloud fraction for MF scheme
+INTEGER, DIMENSION(D%NIJT),  INTENT(IN)   :: KKLCL          ! index of updraft condensation level
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PFRAC_UP       ! Updraft Fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PRC_UP,PRI_UP  ! updraft characteritics
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PRC_MF, PRI_MF ! cloud content
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PCF_MF         ! and cloud fraction for MF scheme
 !
 !*                    0.1  Declaration of local variables
 !
@@ -89,7 +89,7 @@ PRC_MF(:,:)=0.
 PRI_MF(:,:)=0.
 PCF_MF(:,:)=0.
 
-DO JI=D%NIB,D%NIE
+DO JI=D%NIJB,D%NIJE
 #ifdef REPRO48
   JK0=KKLCL(JI)-D%NKL ! first mass level with cloud
   JK0=MAX(JK0, MIN(D%NKB,D%NKE)) !protection if KKL=1
