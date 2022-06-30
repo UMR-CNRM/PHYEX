@@ -22,7 +22,7 @@ They can be found in the build/bin sudirectory in the architecture specific dire
 The branch testprogs\_data contains modified source code for the AROME model to enable the generation of data samples.
 Using this branch, in the drivers of the different parameterisations (aro\_\* files), output can be enable for the AROME model.
 Running the AROME model with these modifications outputs files in the running directory.
-This must be done once by parametrisation.
+This must be done once by parametrisation (note that the check\_commit\_ial.sh script can be used to execute an AROME simulation).
 
 These files should be renamed with the folowing command:
 i=0; for file in ????_??_????????.dat; do mv $file `printf %08d $i`.dat; i=$((i+1)); done
