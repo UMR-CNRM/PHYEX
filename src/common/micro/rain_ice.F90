@@ -680,7 +680,7 @@ ENDIF
 !  optimization by looking for locations where
 !  the microphysical fields are larger than a minimal value only !!!
 !
-IF (KSIZE /= COUNT(ODMICRO)) THEN
+IF (KSIZE /= COUNT(ODMICRO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE))) THEN
     CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'RAIN_ICE : KSIZE /= COUNT(ODMICRO)')
 ENDIF
 

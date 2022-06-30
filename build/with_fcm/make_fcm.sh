@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 fcm_version=tags/2021.05.0
 fiat_version=1295120464c3905e5edcbb887e4921686653eab8
 
@@ -55,7 +57,7 @@ function check_install_fcm() {
     cd fcm
     rm -f .gitkeep
     git clone https://github.com/metomi/fcm.git .
-    git checkout tags/$fcm_version
+    git checkout $fcm_version
     touch .gitkeep
     cd ..
     echo "...FCM installation done"
@@ -182,6 +184,7 @@ cd $builddir
 mkdir src
 cd src
 ln -s ../../../../src/common .
+ln -s ../../../../src/testprogs .
 ln -s ../../fiat/src fiat
 cat <<EOF > dummyprog.F90
 PROGRAM DUMMYPROG
