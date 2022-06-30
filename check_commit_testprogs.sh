@@ -10,7 +10,7 @@ set -e
 #ice_adjust: the ice adjust test case
 
 specialName="ref"
-availTests="ice_adjust"
+availTests="ice_adjust,rain_ice"
 defaultTest='ALL'
 separator='_' #- seprator must be in sync with prep_code.sh separator
 
@@ -82,7 +82,7 @@ while [ -n "$1" ]; do
   shift
 done
 
-TESTDIR=${TESTDIR:=$HOME/TESTPROGS}
+TESTDIR=${TESTPROGSDIR:=$HOME/TESTPROGS}
 
 function exescript () {
   #usage: exescript <output file> <script> [arg [arg ...]]

@@ -12,3 +12,7 @@ Some installations are needed:
 3) MNH_EXPAND
    This tool is composed of two parts: the filepp software, and the MNH_Expand_Array package.
    Installation is described in ** INSTALL_mnh_expand **
+
+4) TESTPROGS REFERENCE DATA
+   The script check\_commit\_testprogs.sh needs reference data.
+   The data generation is explained in ** INSTALL_testprogs **

@@ -7,8 +7,10 @@
 !/mnh_expand/.gitkeep
 
 # Ignore the content of testprogs_data but not the directory itself
-/testprogs_data/**
-!/testprogs_data/.gitkeep
+/testprogs_data/ice_adjust/**
+/testprogs_data/rain_ice/**
+!/testprogs_data/ice_adjust/.gitkeep
+!/testprogs_data/rain_ice/.gitkeep
 
 # Ignore vim swapp files
 .*.swp

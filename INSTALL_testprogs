@@ -1,8 +1,6 @@
-Testprogs data on sxphynh
+The testprogs_data directory must be filled by reference data.
+These data are generated according to the description provided in the Offline documentation.
 
-cd testprogs_data
-mkdir ice_adjust
-cd ice_adjust
-git clone git@github.com:pmarguinaud/ice_adjust.git
-mv ice_adjust/data/* .
-rm -rf ice_adjust/
+The check_commit_testprogs.sh script will run offline simulations in the directory given
+by the environment variable TESTPROGSDIR ($HOME/TESTPROGS will be used if the variable is not set).
+This directory must exist.
