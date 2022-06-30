@@ -4,3 +4,12 @@ These data are generated according to the description provided in the Offline do
 The check_commit_testprogs.sh script will run offline simulations in the directory given
 by the environment variable TESTPROGSDIR ($HOME/TESTPROGS will be used if the variable is not set).
 This directory must exist.
+
+The goal of the script is to compare outputs between two simulations (to check if bit-reproducibilty
+is achieved or not).
+A reference simulation must be performed and save. This reference simulation is run the same way as the
+test experiment but cannot be compared to something else:
+check_commit_testprogs.sh -c -r <reference_commit>
+
+If this reference simulation must become the 'absolute' reference (used when invoking the check_commit_testprogs.sh
+script with the 'REF' argument), the reference simulation directory (under $TESTPROGSDIR) must be renamed 'ref'.
