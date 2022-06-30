@@ -19,41 +19,39 @@ USE PARKIND1, ONLY : JPRB, JPIM
 IMPLICIT NONE
 
 INTEGER      :: KLON 
-INTEGER      :: KIDIA  
-INTEGER      :: KFDIA  
-INTEGER      :: KLEV  
-INTEGER      :: KRR  
+INTEGER      :: KLEV
+INTEGER      :: KRR
 
-REAL, ALLOCATABLE   :: PRHODJ         (:,:,:,:)   
-REAL, ALLOCATABLE   :: PEXNREF        (:,:,:,:)   
-REAL, ALLOCATABLE   :: PRHODREF       (:,:,:,:)   
-REAL, ALLOCATABLE   :: PPABSM         (:,:,:,:)   
-REAL, ALLOCATABLE   :: PTHT           (:,:,:,:)   
-REAL, ALLOCATABLE   :: PSIGS          (:,:,:,:)   
-REAL, ALLOCATABLE   :: PMFCONV        (:,:,:,:)   
-REAL, ALLOCATABLE   :: PRC_MF         (:,:,:,:)   
-REAL, ALLOCATABLE   :: PRI_MF         (:,:,:,:)   
-REAL, ALLOCATABLE   :: PCF_MF         (:,:,:,:)   
-REAL, ALLOCATABLE   :: PTHS           (:,:,:,:)   
-REAL, ALLOCATABLE   :: PRS            (:,:,:,:,:) 
-REAL, ALLOCATABLE   :: PSRCS          (:,:,:,:)   
-REAL, ALLOCATABLE   :: PCLDFR         (:,:,:,:)   
-REAL, ALLOCATABLE   :: PHLC_HRC       (:,:,:,:)   
-REAL, ALLOCATABLE   :: PHLC_HCF       (:,:,:,:)   
-REAL, ALLOCATABLE   :: PHLI_HRI       (:,:,:,:)   
-REAL, ALLOCATABLE   :: PHLI_HCF       (:,:,:,:)   
-REAL, ALLOCATABLE   :: ZRS            (:,:,:,:,:) 
-REAL, ALLOCATABLE   :: ZZZ            (:,:,:,:)   
-REAL, ALLOCATABLE   :: ZSIGQSAT       (:,:,:)   
-REAL, ALLOCATABLE   :: ZICE_CLD_WGT   (:,:,:)   
+REAL,    ALLOCATABLE   :: PRHODJ         (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PEXNREF        (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PRHODREF       (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PPABSM         (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PTHT           (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PSIGS          (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PMFCONV        (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PRC_MF         (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PRI_MF         (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PCF_MF         (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PTHS           (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PRS            (:,:,:,:,:) 
+REAL,    ALLOCATABLE   :: PSRCS          (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PCLDFR         (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PHLC_HRC       (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PHLC_HCF       (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PHLI_HRI       (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PHLI_HCF       (:,:,:,:)   
+REAL,    ALLOCATABLE   :: ZRS            (:,:,:,:,:) 
+REAL,    ALLOCATABLE   :: ZZZ            (:,:,:,:)   
+REAL,    ALLOCATABLE   :: ZSIGQSAT       (:,:,:)   
+REAL,    ALLOCATABLE   :: ZICE_CLD_WGT   (:,:,:)   
 
-REAL, ALLOCATABLE   :: PRS_OUT        (:,:,:,:,:) 
-REAL, ALLOCATABLE   :: PSRCS_OUT      (:,:,:,:)   
-REAL, ALLOCATABLE   :: PCLDFR_OUT     (:,:,:,:)   
-REAL, ALLOCATABLE   :: PHLC_HRC_OUT   (:,:,:,:)   
-REAL, ALLOCATABLE   :: PHLC_HCF_OUT   (:,:,:,:)   
-REAL, ALLOCATABLE   :: PHLI_HRI_OUT   (:,:,:,:)   
-REAL, ALLOCATABLE   :: PHLI_HCF_OUT   (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PRS_OUT        (:,:,:,:,:) 
+REAL,    ALLOCATABLE   :: PSRCS_OUT      (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PCLDFR_OUT     (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PHLC_HRC_OUT   (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PHLC_HCF_OUT   (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PHLI_HRI_OUT   (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PHLI_HCF_OUT   (:,:,:,:)   
 
 INTEGER :: NPROMA, NGPBLKS, NFLEVG
 INTEGER :: IBL, JLON, JLEV
