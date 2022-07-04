@@ -10,7 +10,7 @@ More specific documentation can be found:
  - Offline: how to compile the library and the test programs, how to use the library with python, how to use the test programs
  - Plugging : how to plug the physics package in a model
 
-This document is written using the markdown "language". With pandoc, it can be converted to HTML (pandoc \<filename\>.md -o \<filename\>.html) or PDF (pandoc \<filename\>.md -o \<filename\>.pdf).
+This document is written using the markdown "language". With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf).
 
 # HISTORY
 

@@ -3,11 +3,7 @@ Une solution serait de créer un module propre à PHYEX qui contiendrait des cl�
   pour la physique. Ce module serait initialisé dans Méso-NH à partir de clés actuellement en dehors
   de la physique.
 
-Dependencies:
-  - définir les interfaces propres
-  - créer des codes pour le driver
-  - liste dans document Interfaces
-  - pour AROME placés, en attendant, dans phyex/externals
+Documentation: search for the TODO keys in the *.md files of the docs directory
 
 Clé de compilation REPRO48 + REPRO55 ajoutées pour permettre de reproduire le cycle 48 MNH-5.5.0, elles:
   - contournent des corrections de bug

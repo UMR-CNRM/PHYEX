@@ -5,26 +5,29 @@
 This document is intended for developers who want to contribute to the PHYEX package.
 Developer who is interested in plugging the physics in a new model can refere to the Plugging documentation.
 The topics covered are as follows:
- - [Package organisation](#PACKAGE-ORGANISATION)
- - [Code preparation](#CODE-PREPARATION)
- - [Coding norms](#CODING-NORMS)
- - [Pull requests](#PULL-REQUESTS)
 
-This document is written using the markdown "language". With pandoc, it can be converted to HTML (pandoc \<filename\>.md -o \<filename\>.html) or PDF (pandoc \<filename\>.md -o \<filename\>.pdf).
+  - [Package organisation](#package-organisation)
+  - [Code preparation](#code-preparation)
+  - [Coding norms](#coding-norms)
+  - [Pull requests](#pull-requests)
+
+This document is written using the markdown "language". With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf).
 
 # PACKAGE ORGANISATION
 
 The package contains the folowing directories:
- - docs: for documentation
- - build: an autonomous build system is included in the package. Its usage is covered in the Offline documentation
- - src/common: the main source code which is the basis for all models
- - src/\<model\>: the source code specific to one model that must replace source code found in the common directory
+
+  - docs: for documentation
+  - build: an autonomous build system is included in the package. Its usage is covered in the Offline documentation
+  - src/common: the main source code which is the basis for all models
+  - src/\<model\>: the source code specific to one model that must replace source code found in the common directory
 
 In addition to this organisation, the package uses git branches. The main branches are as follows:
- - main: source code without rewriting for GPU transformation (used for official Meso-NH source code)
- - GPU: source code adapted for GPU transformations (used for official AROME source code, starting from the 48t3 cycle)
- - arome\_\<commit\>: source code ready for inclusion in the AROME compilation environment (the generation of such a branch is described in [Code preparation](#CODE-PREPARATION))
- - testprogs\_data: modified source code used to generate samples for the test programs (more on this topic in the Offline documentation)
+
+  - main: source code without rewriting for GPU transformation (used for official Meso-NH source code)
+  - GPU: source code adapted for GPU transformations (used for official AROME source code, starting from the 48t3 cycle)
+  - arome\_\<commit\>: source code ready for inclusion in the AROME compilation environment (the generation of such a branch is described in [Code preparation](#CODE-PREPARATION))
+  - testprogs\_data: modified source code used to generate samples for the test programs (more on this topic in the Offline documentation)
 
 # CODE PREPARATION
 
@@ -45,10 +48,11 @@ Installation and usage of the preprocessing tools are described in the PHYEX\_to
 The fortran file names use a capital F letter (eg: foo.F90) except if working a branch (mesonh\_\<commit\>) or in the folder (src/mesonh) specifci to the Meso-NH model.
 
 Names for the module:
- - modd\_ for module containing only variable declaration (eg: tuning parameters)
- - modi\_ for module containing only interface declaration
- - modn\_ for namelist declaration
- - mode\_ for module containing executable source code (subroutine or function)
+
+  - modd\_ for module containing only variable declaration (eg: tuning parameters)
+  - modi\_ for module containing only interface declaration
+  - modn\_ for namelist declaration
+  - mode\_ for module containing executable source code (subroutine or function)
 
 ## When using mode\_ or modi\_?
 When writing a new subroutine, should we put it in a module (in a mode\_ file) or should we write the subroutine in a file and write the interface bloc in another file (modi\_ file)?
@@ -58,14 +62,16 @@ The idea behind is to break compilation dependency at the parameterisation level
 
 ## Norm
 Several constraints are imposed:
- - The code must be written with up to 132 characters per line.
- - CODE IS IN CAPITAL LETTERS! comments in small letters
- - All variables must be declared: IMPLICIT NONE
- - except in rare cases, use automatic arrays, no allocatable
- - dimensions of dummy argument arrays are explicit (no (:,:))
- - use parenthesis when manipulating arrays (eg: A(:,:)=B(:,:)+C(:,:) instead of A=B+C)
+
+  - The code must be written with up to 132 characters per line.
+  - CODE IS IN CAPITAL LETTERS! comments in small letters
+  - All variables must be declared: IMPLICIT NONE
+  - except in rare cases, use automatic arrays, no allocatable
+  - dimensions of dummy argument arrays are explicit (no (:,:))
+  - use parenthesis when manipulating arrays (eg: A(:,:)=B(:,:)+C(:,:) instead of A=B+C)
 
 The variables are named according to the doctor norm:
+
 |Type / Status | INTEGER    | REAL       | LOGICAL     | CHARACTER      | TYPE             |
 |--------------|------------|------------|-------------|----------------|------------------|
 |Global        | N          | X          | L (not LP)  | C              | T (not TP,TS,TZ) |
@@ -75,20 +81,55 @@ The variables are named according to the doctor norm:
 
 Regarding array-syntax, code is written using array-syntax in the main branch and in mesonh specific branches based on the GPU branch, using array-syntax with mnh\_expand directives in the GPU branch, using DO loops in arome specific branches based on the GPU branch. If in doublt, check what is done in other routines in the brach you are working in.
 Be carrefull when using the mnh\_expand directives, code must respect some constraints:
- - parenthesis after array variables are mandatory (no A=B+C, but A(:,:)=B(:,:)+C(:,:))
- - no space between array variables and the opening parenthesis (no A (:)=B (:), but A(:)=B(:))
- - same bounds as declared in the mnh\_expand directive should be used in the array-syntax (A(D%NIB;D%NIE)=...)
+
+  - parenthesis after array variables are mandatory (no A=B+C, but A(:,:)=B(:,:)+C(:,:))
+  - no space between array variables and the opening parenthesis (no A (:)=B (:), but A(:)=B(:))
+  - same bounds as declared in the mnh\_expand directive should be used in the array-syntax (A(D%NIB;D%NIE)=...)
+
 A tool (verify\_mnh\_expand.py) can help at checking the validity of the written code.
 
 For the GPU branch (and branches on GPU, including model specific branches):
- - except variables declared with the PARAMETER attribute, no variable from modules can be used in the physics. Varaibles must be put in a type received by interface.
- - subroutines or functions must not be called from within a loop on horizontal or vertical dimensions (see below for exception)
- - functions returning arrays must be rewritten as subroutine
+
+  - except variables declared with the PARAMETER attribute, no variable from modules can be used in the physics. Varaibles must be put in a type received by interface.
+  - subroutines or functions must not be called from within a loop on horizontal or vertical dimensions (see below for exception)
+  - functions returning arrays must be rewritten as subroutine
 
 Call to external subroutine in loop on horizontal or vertical dimensions must be suppressed in the GPU version. If possible, the call must be put outside of the loop (acting on the full array as a whole) or the subroutine must be put in the CONTAINS part but, in this case, the included subroutine cannot use local array. There are 3 cases:
- - the subroutine does't use local array: subroutine is put in an include file (with the .h extension) and included with the fortran INCLUDE statement.
- - the subroutine use local arrays but it is called from only one place in the code: the source code of the subroutine is moved (no INCLUDE) in the CONTAINS part and the array declarations are moved in the main subroutine.
- - the subroutine use local arrays and is called from several places: the previous technique is not recommended. The source code is put in an include file (with the .h extension) and an extra argument is provided to the subroutine and is used as a buffer so there is no more need to declare local arrays in the called subroutine.
+
+  - the subroutine does't use local array: subroutine is put in an include file (with the .h extension) and included with the fortran INCLUDE statement.
+  - the subroutine use local arrays but it is called from only one place in the code: the source code of the subroutine is moved (no INCLUDE) in the CONTAINS part and the array declarations are moved in the main subroutine.
+  - the subroutine use local arrays and is called from several places: the previous technique is not recommended. The source code is put in an include file (with the .h extension) and an extra argument is provided to the subroutine and is used as a buffer so there is no more need to declare local arrays in the called subroutine.
+
+## Budgets
+
+In Meso-NH, the budget can be used in two ways:
+
+  - by giving to the budget machinery the tendency due to a given process
+  - by giving to the budget machinery the total tendency (S variable) before and after a given process. The budget machanism recomputes by difference the tendency only due to the given process.
+
+In AROME, we cannot provide the total tendency (S variable) before the process. This total tendency is stored internally by the machinery but cannot be set to a different value before doing a computation.
+
+The physics package must be usable from AROME and Meso-NH, several examples are given:
+
+Invalid for AROME:
+```
+budget_store_init(tempo_s)
+modification of tempo_s
+budget_store_end(tempo_s)
+```
+
+Valid:
+```
+budget_store_init(pronostic_s) #useless for AROME, but needed for Meso-NH
+modification of pronostic_s
+budget_store_end(pronostic_s)
+```
+
+Valid:
+```
+computation of delta tempo_s
+budget_store_add(delta tempo_s)
+```
 
 # PULL REQUESTS
 This section deals with the pull request procedure from the developer point of view. The integrator point of view is described in the Intergator documentation.

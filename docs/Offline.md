@@ -5,12 +5,15 @@
 This document is intended for persons who want to use PHYEX in an offline mode.
 Some offline test programs are provided with the package and a library suitable for use with python is also available.
 
+This document is written using the markdown "language". With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf).
+
 # COMPILATION
 
 The build/with\_fcm directory contains a build system.
 This build system has two dependencies (installation is done automatically by the compilation script):
- - [fcm](https://metomi.github.io/fcm/doc/user_guide/)
- - [fiat](https://github.com/ecmwf-ifs/fiat)
+
+  - [fcm](https://metomi.github.io/fcm/doc/user_guide/)
+  - [fiat](https://github.com/ecmwf-ifs/fiat)
 
 The script build/with\_fcm/make\_fcm.sh uses a configuration file and build the library and test programs.
 They can be found in the build/bin sudirectory in the architecture specific directory arch\_\<achitecture name\>.
@@ -39,7 +42,7 @@ In addition, these data files can be used through the check\_commit\_testprogs.s
 
 # PYTHON BINDING
 
-This section must be written. Key ideas are:
+**TODO** This section must be written. Key ideas are:
+
   - ctypesforfortran
   - example
-- 
