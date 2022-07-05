@@ -1,6 +1,10 @@
 # PHYEX
 PHYsique EXternalisée
 
+## Doc
+
+Some documentation can be found in the doc directory.
+
 ## Build
 
 The build systems can be found in the `build` directory.

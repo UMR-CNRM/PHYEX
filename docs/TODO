@@ -5,11 +5,7 @@ Module de clés namelists PHYEX. Des modules sont assez généraux et utilisés 
   - Une autre solution serait de supprimer ces modules de PHYEX et de recevoir ces quelques clés en argument (ex modd_lunit?)
   - si certains modules contiennent des clés purement physiques et d'autres purement dynamique, on pourrait scinder le module
 
-Dependencies:
-  - définir les interfaces propres
-  - créer des codes pour le driver
-  - liste dans document Interfaces
-  - pour AROME placés, en attendant, dans phyex/externals
+Documentation: search for the TODO keys in the *.md files of the docs directory
 
 Intégration de PHYEX dans des cycles/versions officielles:
 - Clés de compilation
@@ -26,15 +22,6 @@ Intégration de PHYEX dans des cycles/versions officielles:
   - Répertoire arome/ext et mesonh/ext contiennent les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
   - Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayadevront avoir été fournies par ailleurs
 - modd_spp_type est pour l'instant dans mpa/micro/externals mais n'est pas de la microphysique
-
-Ecrire doc sur marche à suivre pour intégrer un nouveau développement:
-  - dev dans MNH à faire en array-syntax
-  - dev dans AROME à faire en boucles do
-  - intégration dans PHYEX: en array-syntax avec directives mnh_expand
-  - les 3 tests suivants doivent donner les mêmes résultats (au bit près) dans chacun des deux modèles:
-    - compilation directe sans activer mnh_expand
-    - compilation en activant mnh_expand
-    - exécution en changeant le nombre de processeurs
 
 Merge pb:
   - rain_ice_old a rebrancher dans Meso-NH
