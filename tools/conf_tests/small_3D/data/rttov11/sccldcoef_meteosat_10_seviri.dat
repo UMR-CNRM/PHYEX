@@ -1,0 +1,488 @@
+ ! RTTOV coefficient file   msg-3   seviri-ir
+ ! automatic creation by subroutine Rttov_writecoef 
+ ! ------------------------------------------------------
+ ! ------------------------------------------------------
+WATERCLOUD_TYPES
+ !
+        8          ! number of channels for which optical parameters are stored
+        0          ! Number of channels for which phase function values are stored
+        0          ! index of first channel for which phase function values are available
+        5          ! number of water cloud types
+      208          ! number of angles for phase function for water cloud types
+   0.00   0.10   0.20   0.30   0.40   0.50   0.60   0.70   0.80   0.90
+   1.00   1.10   1.20   1.30   1.40   1.50   1.60   1.70   1.80   1.90
+   2.00   2.10   2.20   2.30   2.40   2.50   2.60   2.70   2.80   2.90
+   3.00   4.00   5.00   6.00   7.00   8.00   9.00  10.00  11.00  12.00
+  13.00  14.00  15.00  16.00  17.00  18.00  19.00  20.00  21.00  22.00
+  23.00  24.00  25.00  26.00  27.00  28.00  29.00  30.00  31.00  32.00
+  33.00  34.00  35.00  36.00  37.00  38.00  39.00  40.00  41.00  42.00
+  43.00  44.00  45.00  46.00  47.00  48.00  49.00  50.00  51.00  52.00
+  53.00  54.00  55.00  56.00  57.00  58.00  59.00  60.00  61.00  62.00
+  63.00  64.00  65.00  66.00  67.00  68.00  69.00  70.00  71.00  72.00
+  73.00  74.00  75.00  76.00  77.00  78.00  79.00  80.00  81.00  82.00
+  83.00  84.00  85.00  86.00  87.00  88.00  89.00  90.00  91.00  92.00
+  93.00  94.00  95.00  96.00  97.00  98.00  99.00 100.00 101.00 102.00
+ 103.00 104.00 105.00 106.00 107.00 108.00 109.00 110.00 111.00 112.00
+ 113.00 114.00 115.00 116.00 117.00 118.00 119.00 120.00 121.00 122.00
+ 123.00 124.00 125.00 126.00 127.00 128.00 129.00 130.00 131.00 132.00
+ 133.00 134.00 135.00 136.00 137.00 138.00 139.00 140.00 141.00 142.00
+ 143.00 144.00 145.00 146.00 147.00 148.00 149.00 150.00 151.00 152.00
+ 153.00 154.00 155.00 156.00 157.00 158.00 159.00 160.00 161.00 162.00
+ 163.00 164.00 165.00 166.00 167.00 168.00 169.00 170.00 171.00 172.00
+ 173.00 174.00 175.00 176.00 177.00 178.00 179.00 180.00
+ stco
+        1          !RH values for which parameters are available
+   0.00
+   892.857000      !Conversion from LWC to particle density
+ stma
+        1          !RH values for which parameters are available
+   0.00
+   266.667000      !Conversion from LWC to particle density
+ cucc
+        1          !RH values for which parameters are available
+   0.00
+  1538.461000      !Conversion from LWC to particle density
+ cucp
+        1          !RH values for which parameters are available
+   0.00
+  4347.826000      !Conversion from LWC to particle density
+ cuma
+        1          !RH values for which parameters are available
+   0.00
+   147.710000      !Conversion from LWC to particle density
+ ! ------------------------------------------------------
+WATERCLOUD_PARAMETERS
+ !
+ stco00
+  0.23202766E-01  0.11649686E+00  0.67700230E-01  0.64020365E-01  0.65288946E-01
+  0.80441639E-01  0.11286792E+00  0.13403660E+00
+  0.25703752E+00  0.19501935E+00  0.26191947E+00  0.21875679E+00  0.16081280E+00
+  0.74542023E-01  0.55941861E-01  0.74574977E-01
+  0.16351673E+00  0.11567638E+00  0.12305427E+00  0.12006054E+00  0.11973800E+00
+  0.12134679E+00  0.13386101E+00  0.15323022E+00
+ stma00
+  0.71545765E-01  0.28205636E+00  0.19559193E+00  0.18824933E+00  0.19093150E+00
+  0.22097471E+00  0.27293381E+00  0.30289865E+00
+  0.51288819E+00  0.34015214E+00  0.48323649E+00  0.51288235E+00  0.45936662E+00
+  0.25709388E+00  0.17983325E+00  0.21519488E+00
+  0.13704444E+00  0.91906473E-01  0.11596603E+00  0.10503107E+00  0.96510902E-01
+  0.88814497E-01  0.97123630E-01  0.11407106E+00
+ cucc00
+  0.14271228E-01  0.81859134E-01  0.43193884E-01  0.40555879E-01  0.41534077E-01
+  0.53044684E-01  0.80179699E-01  0.99102184E-01
+  0.20489246E+00  0.17059229E+00  0.19852012E+00  0.13988325E+00  0.92735581E-01
+  0.39963216E-01  0.32218274E-01  0.46361845E-01
+  0.17673728E+00  0.12229248E+00  0.12964804E+00  0.13640064E+00  0.14253764E+00
+  0.15053429E+00  0.16423547E+00  0.18367404E+00
+ cucp00
+  0.50993608E-02  0.34318864E-01  0.16074806E-01  0.14982166E-01  0.15441460E-01
+  0.20695796E-01  0.34855202E-01  0.46003547E-01
+  0.14668669E+00  0.82079180E-01  0.69439009E-01  0.41165069E-01  0.25059050E-01
+  0.10385546E-01  0.93279881E-02  0.14881059E-01
+  0.14939226E+00  0.14503263E+00  0.16125387E+00  0.17908175E+00  0.19184540E+00
+  0.20675765E+00  0.22596617E+00  0.25015652E+00
+ cuma00
+  0.12536427E+00  0.46162036E+00  0.33849984E+00  0.32717907E+00  0.33126587E+00
+  0.37674958E+00  0.44703662E+00  0.48465157E+00
+  0.79011190E+00  0.48968518E+00  0.67516309E+00  0.81368762E+00  0.79404169E+00
+  0.46693876E+00  0.31942701E+00  0.37094074E+00
+  0.12518208E+00  0.79016067E-01  0.11567782E+00  0.10057466E+00  0.89534186E-01
+  0.81227392E-01  0.88192001E-01  0.10344057E+00
+ ! ------------------------------------------------------
+ICECLOUD_TYPES
+ !
+        8          ! number of channels for which regression coefficients are stored
+        0          ! Number of channels for which phase function values are stored
+        0          ! index of first channel for which phase function values are available
+        4          ! number of coefficients used in the regression for absorption optical depth
+        4          ! number of coefficients used in the regression for scattering optical depth
+        4          ! number of coefficients used in the regression for backscattering parameter
+       30          ! number of size distributions used in the regression
+        2          ! number of ice crystal shapes for which parameters are available
+      208          ! number of angles for phase function for ice clouds
+   0.00   0.10   0.20   0.30   0.40   0.50   0.60   0.70   0.80   0.90
+   1.00   1.10   1.20   1.30   1.40   1.50   1.60   1.70   1.80   1.90
+   2.00   2.10   2.20   2.30   2.40   2.50   2.60   2.70   2.80   2.90
+   3.22   4.00   5.00   6.00   7.00   8.00   9.00  10.00  11.00  12.00
+  13.00  14.00  15.00  16.00  17.00  18.00  19.00  20.00  21.00  22.00
+  23.00  24.00  25.00  26.00  27.00  28.00  29.00  30.00  31.00  32.00
+  33.00  34.00  35.00  36.00  37.00  38.00  39.00  40.00  41.00  42.00
+  43.00  44.00  45.00  46.00  47.00  48.00  49.00  50.00  51.00  52.00
+  53.00  54.00  55.00  56.00  57.00  58.00  59.00  60.00  61.00  62.00
+  63.00  64.00  65.00  66.00  67.00  68.00  69.00  70.00  71.00  72.00
+  73.00  74.00  75.00  76.00  77.00  78.00  79.00  80.00  81.00  82.00
+  83.00  84.00  85.00  86.00  87.00  88.00  89.00  90.00  91.00  92.00
+  93.00  94.00  95.00  96.00  97.00  98.00  99.00 100.00 101.00 102.00
+ 103.00 104.00 105.00 106.00 107.00 108.00 109.00 110.00 111.00 112.00
+ 113.00 114.00 115.00 116.00 117.00 118.00 119.00 120.00 121.00 122.00
+ 123.00 124.00 125.00 126.00 127.00 128.00 129.00 130.00 131.00 132.00
+ 133.00 134.00 135.00 136.00 137.00 138.00 139.00 140.00 141.00 142.00
+ 143.00 144.00 145.00 146.00 147.00 148.00 149.00 150.00 151.00 152.00
+ 153.00 154.00 155.00 156.00 157.00 158.00 159.00 160.00 161.00 162.00
+ 163.00 164.00 165.00 166.00 167.00 168.00 169.00 170.00 171.00 172.00
+ 173.00 174.00 175.00 176.00 177.00 178.00 179.00 180.00
+ ! ------------------------------------------------------
+HEXAGONAL_PARAMETERS
+ !
+ ! Effective diameter for each size distribution
+ !
+   12.2000
+   15.5200
+   21.1500
+   21.3800
+   22.8700
+   23.8000
+   23.8200
+   28.2000
+   28.4200
+   28.6400
+   29.1000
+   35.2500
+   45.0100
+   45.7100
+   47.3200
+   48.8800
+   48.9400
+   51.7400
+   59.4500
+   60.6400
+   61.2300
+   63.6300
+   68.6100
+   71.0100
+   78.4000
+   82.3000
+   88.3500
+   93.1600
+   95.8900
+  118.3000
+ !
+ ! Regression coefficients for ice clouds
+ !
+  0.64003811E+01 -0.26399596E-01  0.71622955E+03 -0.35560801E+04
+ -0.76405873E+01  0.41385494E-01  0.15680033E+04 -0.53355415E+04
+ -0.55579243E+01  0.30172646E-01  0.14734604E+04 -0.68064727E+04
+ -0.20125468E+01  0.12171640E-01  0.12805786E+04 -0.68543853E+04
+ -0.99826324E+00  0.67445808E-02  0.12337614E+04 -0.66457583E+04
+ -0.63184266E+01  0.32530565E-01  0.14832975E+04 -0.42518696E+04
+ -0.10982167E+02  0.57320327E-01  0.16115201E+04 -0.11375728E+04
+ -0.11347686E+02  0.55123355E-01  0.17204604E+04 -0.16027778E+04
+ -0.16342790E+01  0.49228774E-03  0.15089324E+04  0.12055029E+05
+  0.80843616E+00 -0.23700830E-02  0.12620042E+04  0.58941172E+04
+ -0.49926319E+01  0.28845860E-01  0.15568785E+04  0.58446992E+04
+ -0.14014416E+02  0.76993890E-01  0.20543347E+04  0.24678651E+03
+ -0.24712929E+02  0.13495477E+00  0.26424475E+04 -0.10379197E+05
+  0.10527881E+02 -0.53249929E-01  0.86881561E+03 -0.52981494E+04
+  0.47926178E+01 -0.24675472E-01  0.12622720E+04 -0.41359590E+04
+  0.45071709E+00  0.12993838E-02  0.13965009E+04 -0.19878418E+04
+  0.11908994E+00 -0.19635644E-02  0.14502704E-04 -0.37791235E-07
+  0.62616497E-01 -0.12299709E-02  0.13325643E-04 -0.51607611E-07
+  0.72174162E-01 -0.11697554E-02  0.98224045E-05 -0.30606294E-07
+  0.68324089E-01 -0.84689260E-03  0.45355409E-05 -0.63104415E-08
+  0.56931596E-01 -0.93515049E-03  0.87689823E-05 -0.31551615E-07
+  0.51390402E-01 -0.13644001E-02  0.18834655E-04 -0.83637396E-07
+  0.70129909E-01 -0.80772216E-03  0.11069950E-04 -0.52953983E-07
+  0.10252771E+00 -0.22906575E-02  0.30656807E-04 -0.13378921E-06
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ Hexagonal   ! default name for rttov_writecoef
+ ! ------------------------------------------------------
+AGGREGATE_PARAMETERS
+ !
+ !
+ ! Effective diameter for each size distribution
+ !
+    5.6100
+    8.8800
+    9.0100
+    9.4500
+   14.3500
+   15.8200
+   24.3700
+   25.2400
+   26.4300
+   29.2600
+   32.5200
+   39.5500
+   45.5100
+   46.2700
+   57.9700
+   58.7900
+   63.0300
+   64.0500
+   66.2900
+   76.1600
+   76.4000
+   86.8400
+   88.4200
+  124.3700
+  128.9700
+  130.0400
+  133.0900
+  133.4700
+  139.2800
+  166.4600
+ !
+ ! Regression coefficients for ice clouds
+ !
+ -0.15282670E+02  0.88552661E-01  0.16587573E+04 -0.24140962E+04
+  0.12832741E+01  0.94161602E-02  0.78553448E+03 -0.25739033E+04
+  0.91405071E-01  0.15127842E-01  0.85235510E+03 -0.27431726E+04
+ -0.53135753E+01  0.42180121E-01  0.11354940E+04 -0.32193035E+04
+ -0.30236924E+01  0.30210618E-01  0.10431517E+04 -0.29327981E+04
+  0.98832502E+01 -0.39236326E-01  0.50693607E+03 -0.17478582E+04
+  0.10032014E+02 -0.39787620E-01  0.47141330E+03 -0.16472234E+04
+ -0.11245131E+01  0.75735883E-02  0.12518818E+04 -0.20311975E+04
+ -0.11680892E+02  0.83580606E-01  0.14672323E+04 -0.49353398E+04
+ -0.37234646E+02  0.21582274E+00  0.26354929E+04 -0.98802549E+04
+ -0.48982624E+02  0.27931580E+00  0.31584883E+04 -0.10609112E+05
+ -0.40750679E+02  0.23563761E+00  0.27874944E+04 -0.79119380E+04
+ -0.37815338E+02  0.21876369E+00  0.26855503E+04 -0.68213286E+04
+ -0.36672970E+02  0.19268803E+00  0.32355210E+04 -0.69164561E+04
+ -0.16671980E+02  0.74671552E-01  0.25622366E+04 -0.17568376E+04
+  0.10651572E+02 -0.65036565E-01  0.11677480E+04  0.26043652E+04
+  0.10203798E+00 -0.20213935E-02  0.19825742E-04 -0.62419659E-07
+  0.68776399E-01 -0.13006316E-02  0.11828876E-04 -0.36218459E-07
+  0.75444184E-01 -0.13110972E-02  0.11547753E-04 -0.34814036E-07
+  0.67282818E-01 -0.12141682E-02  0.11035047E-04 -0.33596816E-07
+  0.59988819E-01 -0.10552132E-02  0.94420038E-05 -0.28504887E-07
+  0.14332701E+00 -0.19259106E-02  0.17920498E-04 -0.58291302E-07
+  0.14829031E+00 -0.21389253E-02  0.19855604E-04 -0.63885238E-07
+  0.67149483E-01 -0.30850706E-03  0.34548575E-05 -0.13784123E-07
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
+ !
+ ! Phase function values
+ !
+ aggregate   ! default name for rttov_writecoef
