@@ -2,7 +2,7 @@
       SUBROUTINE  ARO_SHALLOW_MF(KKL, KLON,KLEV, KRR, KRRL, KRRI,KSV,     &
                 HMF_UPDRAFT, HMF_CLOUD, HFRAC_ICE, OMIXUV,            &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
-                KTCOUNT, PTSTEP,                                      &
+                KTCOUNT, PTSTEP, PDX, PDY,                            &
                 PZZ, PZZF, PDZZF,                                            &
                 PRHODJ, PRHODREF,                                     &
                 PPABSM, PEXNM,                                        &
@@ -93,6 +93,8 @@ INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
 
 INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
+REAL,                     INTENT(IN)   :: PDX      ! grid size along x-axis
+REAL,                     INTENT(IN)   :: PDY      ! grid size along y-axis
 !
 REAL, DIMENSION(KLON,KLEV),   INTENT(IN)   :: PZZ     ! Height of layer boundaries
 REAL, DIMENSION(KLON,KLEV),   INTENT(IN)   :: PZZF    ! Height of level
@@ -235,7 +237,7 @@ ZIMPL=1.
      &PTHL_UP=PTHL_UP,PRT_UP=PRT_UP,PRV_UP=PRV_UP,PRC_UP=PRC_UP,PRI_UP=PRI_UP,            &
      &PU_UP=PU_UP, PV_UP=PV_UP, PTHV_UP=PTHV_UP, PW_UP=PW_UP,                             &
      &PFRAC_UP=PFRAC_UP,PEMF=PEMF,PDETR=ZDETR,PENTR=ZENTR,                                &
-     &KKLCL=IKLCL,KKETL=IKETL,KKCTL=IKCTL,PDX=0.,PDY=0.                                   )
+     &KKLCL=IKLCL,KKETL=IKETL,KKCTL=IKCTL,PDX=PDX,PDY=PDY                                 )
 !
 !
 !------------------------------------------------------------------------------

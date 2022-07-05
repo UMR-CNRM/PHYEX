@@ -1,7 +1,9 @@
-Module de clés namelists PHYEX
-Une solution serait de créer un module propre à PHYEX qui contiendrait des clés de contrôle de haut niveau
-  pour la physique. Ce module serait initialisé dans Méso-NH à partir de clés actuellement en dehors
-  de la physique.
+Module de clés namelists PHYEX. Des modules sont assez généraux et utilisés ailleurs dans Méso-NH (répertoire aux)
+  - Une solution serait de créer un module propre à PHYEX qui contiendrait des clés de contrôle de haut niveau
+    pour la physique. Ce module serait initialisé dans Méso-NH à partir de clés actuellement en dehors
+    de la physique.
+  - Une autre solution serait de supprimer ces modules de PHYEX et de recevoir ces quelques clés en argument (ex modd_lunit?)
+  - si certains modules contiennent des clés purement physiques et d'autres purement dynamique, on pourrait scinder le module
 
 Dependencies:
   - définir les interfaces propres
@@ -9,15 +11,21 @@ Dependencies:
   - liste dans document Interfaces
   - pour AROME placés, en attendant, dans phyex/externals
 
-Clé de compilation REPRO48 + REPRO55 ajoutées pour permettre de reproduire le cycle 48 MNH-5.5.0, elles:
-  - contournent des corrections de bug
-  - modifient l'organisation de calculs
-  - REPRO48 reproduit les résultats obtenus avant l'introduction de la fraction précipitante froide dans l'ajustement
-Utilisation des clés:
-    - REPRO48 seule: la version de code qui sera retenue à la fin est celle de Méso-NH 5.5
-    - REPRO55 seule: la version de code qui sera retenue à la fin est celle du cycle 48 d'AROME
-    - defined(REPRO48) || defined(REPRO55): la version de code qui sera retenue à la fin est nouvelle
-Ces clés devront être supprimées
+Intégration de PHYEX dans des cycles/versions officielles:
+- Clés de compilation
+  - Clé de compilation REPRO48 + REPRO55 ajoutées pour permettre de reproduire le cycle 48 MNH-5.5.0, elles:
+      - contournent des corrections de bug
+      - modifient l'organisation de calculs
+      - REPRO48 reproduit les résultats obtenus avant l'introduction de la fraction précipitante froide dans l'ajustement
+  - Utilisation des clés:
+        - REPRO48 seule: la version de code qui sera retenue à la fin est celle de Méso-NH 5.5
+        - REPRO55 seule: la version de code qui sera retenue à la fin est celle du cycle 48 d'AROME
+        - defined(REPRO48) || defined(REPRO55): la version de code qui sera retenue à la fin est nouvelle
+  - Ces clés devront être supprimées
+- Répertoires ext
+  - Répertoire arome/ext et mesonh/ext contiennent les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
+  - Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayadevront avoir été fournies par ailleurs
+- modd_spp_type est pour l'instant dans mpa/micro/externals mais n'est pas de la microphysique
 
 Ecrire doc sur marche à suivre pour intégrer un nouveau développement:
   - dev dans MNH à faire en array-syntax
@@ -30,11 +38,6 @@ Ecrire doc sur marche à suivre pour intégrer un nouveau développement:
 
 Merge pb:
   - rain_ice_old a rebrancher dans Meso-NH
-  - rain_ice_red: le cas test MesoNH n'est pas bit repro (diffs > 1% sur rapports de melange)
-                  sur la modif src/mesonh/rain_ice_red au commit bdd10dd (First rain_ice new/red merge)
-  - shallow_mf (appels dans aro_shallow et arp_shallow):
-         Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
-         Dans AROME/ARP: où trouver la taille de maille?
 
 Pb identifiés à corriger plus tard:
   - deposition devrait être déplacée dans ice4_tendencies
@@ -45,16 +48,8 @@ Pb identifiés à corriger plus tard:
          => à corriger
   - seules quelques options sont testées avec les cas test (par exemple, il faudrait tester RMC01 mais
     l'option n'est pas remontée en namelist)
-  - arome/ini_cmfshall devrait s'appeler ini_param_mfshall
-  - th_r_from_thl_rt appelée partout, il faudrait limiter à OTEST
-  - doute sur le codage de MODD_PRECISION
-  - appel à abort à travers print_msg non testé
-  - indentation inorrecte dans les blocs mnh_expand
-  - sedimentation momentum non branchée (et à trasformer comme sedim_stat)
+  - sedimentation momentum non branchée
   - si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
-
-Répertoire arome/ext et mesonh/ext contiennent les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
-Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayadevront avoir été fournies par ailleurs
 
 Budgets/DDH
 - Le code dans budget_DDH devra être transféré dans mode_budget
@@ -63,15 +58,4 @@ Budgets/DDH
 - Le code des budgets devrait être revu: pas en phase avec celui de Méso-NH et phasage a priori
   inutile car très peu de code semble réellement utile pour AROME
 
-SPP
-- modd_spp_type est pour l'instant dans mpa/micro/externals mais n'est pas de la microphysique
-
-Nettoyage apl_arome non fait (pb a la compilation) ==> 4 arguments dans aro_turb_mnh supprimés (non utilisés)
-
-turb.F90 : il reste un CALL à SOURCES_NEG_CORRECT à ajouter.
-
-Regarder s'il ne serait pas possible/souhaitable de supprimer modd_lunit de PHYEX. On pourrait se contenter de recevoir le numero d'unité logique
-
-Nettoyage des répertoires aux nécessaire
-
-Initialiser dans AROME la variable ldiag_in_run de MODD_DIAG_IN_RUN pour pouvoir phaser le modd
+Initialiser dans AROME la variable ldiag_in_run de MODD_DIAG_IN_RUN pour pouvoir phaser le modd, ou passer la variable par l'interface
