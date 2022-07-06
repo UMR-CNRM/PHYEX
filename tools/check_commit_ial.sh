@@ -245,7 +245,8 @@ if [ $compilation -eq 1 ]; then
     fi
   else
     echo "Copy $fromdir"
-    scp -q -r $fromdir PHYEX
+    mkdir PHYEX
+    scp -q -r $fromdir/src PHYEX/
     $prep_code $expand_options $subs -m arome PHYEX
   fi
   find PHYEX -type f -exec touch {} \; #to be sure a recompilation occurs

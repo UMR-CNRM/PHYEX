@@ -46,3 +46,10 @@ Budgets/DDH
   inutile car très peu de code semble réellement utile pour AROME
 
 Initialiser dans AROME la variable ldiag_in_run de MODD_DIAG_IN_RUN pour pouvoir phaser le modd, ou passer la variable par l'interface
+
+Enable mnh_expand with fcm build
+
+Reprendre les différents outils en deux scripts principaux:
+- outil pour reprendre toutes les fonctionnalités sur le code: filepp, MNH_Expand_Array, correct_indent.py, verify_mnh_expand.py et renommage
+- outil prep_code débarrassé du renommage pour ne faire que la gestion des commit et lancer la manipulation sur le code
+Il restera, à part, les scripts de comparaison des résultats (à moins qu'ils puissent être placés dans les check_commit correspondant)

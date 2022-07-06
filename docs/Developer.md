@@ -1,6 +1,6 @@
 # PHYEX developer documentation
 
-# ABOUT THIS DOCUMENT
+## ABOUT THIS DOCUMENT
 
 This document is intended for developers who want to contribute to the PHYEX package.
 Developer who is interested in plugging the physics in a new model can refere to the Plugging documentation.
@@ -11,14 +11,14 @@ The topics covered are as follows:
   - [Coding norms](#coding-norms)
   - [Pull requests](#pull-requests)
 
-This document is written using the markdown "language". With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf).
+This document is written using the markdown language. With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf).
 
-# PACKAGE ORGANISATION
+## PACKAGE ORGANISATION
 
 The package contains the folowing directories:
 
   - docs: for documentation
-  - build: an autonomous build system is included in the package. Its usage is covered in the Offline documentation
+  - build: an autonomous build system is included in the package. Its usage is covered in the [Offline documentation](./Offline.md)
   - src/common: the main source code which is the basis for all models
   - src/\<model\>: the source code specific to one model that must replace source code found in the common directory
 
@@ -26,25 +26,23 @@ In addition to this organisation, the package uses git branches. The main branch
 
   - main: source code without rewriting for GPU transformation (used for official Meso-NH source code)
   - GPU: source code adapted for GPU transformations (used for official AROME source code, starting from the 48t3 cycle)
-  - arome\_\<commit\>: source code ready for inclusion in the AROME compilation environment (the generation of such a branch is described in [Code preparation](#CODE-PREPARATION))
-  - testprogs\_data: modified source code used to generate samples for the test programs (more on this topic in the Offline documentation)
+  - arome\_\<commit\>: source code ready for inclusion in the AROME compilation environment (the generation of such a branch is described in [Code preparation](#code-preparation))
+  - testprogs\_data: modified source code used to generate samples for the test programs (more on this topic in the [Offline documentation](./Offline.md))
 
-# CODE PREPARATION
+## CODE PREPARATION
 
 The source code stored in the main and GPU branches must be usable by all the models. But these models can have contradictory constraints. To bypass this difficulty, the source code is preprocessed before being included in the compilation environment of each model.
 
-This preprocessing step can be done on the fly (in this case the preprocessing tools must be available aside of the compilation tools), or the result of the preprocessing can be stored in the PHYEX package (in this case, the proeprocessing is done once and can be used by several users).
+This preprocessing step can be done on the fly (in this case the preprocessing tools must be available aside of the compilation tools), or the result of the preprocessing can be stored in the PHYEX package (in this case, the preprocessing is done once and can be used by several users).
 This second possibility is usefull to historize the source code really used during the model compilation and enables contributions to the PHYEX package without the need of the preprocessing tools.
 
 The preprocessed versions of the source code are put in branches named \<model\>\_\<commit\> where \<model\> is the name of the model for which the source code have been preprocessed and \<commit\> is the commit hash used as a basis.
 
-During the initial development step, it was found easier to store the preprocessing tools outside of the PHYEX repository in the [PHYEX\_tools](https://github.com/SebastienRietteMTO/PHYEX_tools) repository. In the future, they will be moved in the PHYEX repository.
+The preprocessing tools are described in the [Tools documentation](./Tools.md).
 
-Installation and usage of the preprocessing tools are described in the PHYEX\_tools package.
+## CODING NORMS
 
-# CODING NORMS
-
-## File names
+### File names
 The fortran file names use a capital F letter (eg: foo.F90) except if working a branch (mesonh\_\<commit\>) or in the folder (src/mesonh) specifci to the Meso-NH model.
 
 Names for the module:
@@ -54,13 +52,13 @@ Names for the module:
   - modn\_ for namelist declaration
   - mode\_ for module containing executable source code (subroutine or function)
 
-## When using mode\_ or modi\_?
+### When using mode\_ or modi\_?
 When writing a new subroutine, should we put it in a module (in a mode\_ file) or should we write the subroutine in a file and write the interface bloc in another file (modi\_ file)?
 
 The answer depends on whether the routine is the 'main' routine of the parameterisation or not. If it is the 'main' routine, the interface bloc is declared apart, if not we can use a module.
 The idea behind is to break compilation dependency at the parameterisation level, and to isolate the interface declaration of the different routines that must be pluged in the hosting model.
 
-## Norm
+### Norm
 Several constraints are imposed:
 
   - The code must be written with up to 132 characters per line.
@@ -100,7 +98,7 @@ Call to external subroutine in loop on horizontal or vertical dimensions must be
   - the subroutine use local arrays but it is called from only one place in the code: the source code of the subroutine is moved (no INCLUDE) in the CONTAINS part and the array declarations are moved in the main subroutine.
   - the subroutine use local arrays and is called from several places: the previous technique is not recommended. The source code is put in an include file (with the .h extension) and an extra argument is provided to the subroutine and is used as a buffer so there is no more need to declare local arrays in the called subroutine.
 
-## Budgets
+### Budgets
 
 In Meso-NH, the budget can be used in two ways:
 
@@ -131,7 +129,7 @@ computation of delta tempo_s
 budget_store_add(delta tempo_s)
 ```
 
-# PULL REQUESTS
+## PULL REQUESTS
 This section deals with the pull request procedure from the developer point of view. The integrator point of view is described in the Intergator documentation.
 
 To contribute to the PHYEX repository, developer must fork the repository, contribute on the main or on the GPU branch and send a pull request. Alternatively, a contribution on a model specific branch is also possible (especially for minor modifications).

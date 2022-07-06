@@ -176,7 +176,9 @@ if [ $compilation -eq 1 ]; then
     $prep_code -c $commit $expand_options $subs src
   else
     echo "Copy $fromdir"
-    scp -q -r $fromdir src
+    mkdir src
+    scp -q -r $fromdir/src src/
+    scp -q -r $fromdir/build src/
     $prep_code $expand_options $subs src
   fi
 

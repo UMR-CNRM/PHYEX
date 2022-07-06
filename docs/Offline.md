@@ -1,13 +1,13 @@
 # OFFLINE documentation
 
-# ABOUT THIS DOCUMENT
+## ABOUT THIS DOCUMENT
 
 This document is intended for persons who want to use PHYEX in an offline mode.
 Some offline test programs are provided with the package and a library suitable for use with python is also available.
 
-This document is written using the markdown "language". With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf).
+This document is written using the markdown language. With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf).
 
-# COMPILATION
+## COMPILATION
 
 The build/with\_fcm directory contains a build system.
 This build system has two dependencies (installation is done automatically by the compilation script):
@@ -18,9 +18,9 @@ This build system has two dependencies (installation is done automatically by th
 The script build/with\_fcm/make\_fcm.sh uses a configuration file and build the library and test programs.
 They can be found in the build/bin sudirectory in the architecture specific directory arch\_\<achitecture name\>.
 
-# TEST PROGRAM
+## TEST PROGRAM
 
-## Data generation
+### Data generation
 
 The branch testprogs\_data contains modified source code for the AROME model to enable the generation of data samples.
 Using this branch, in the drivers of the different parameterisations (aro\_\* files), output can be enable for the AROME model.
@@ -30,17 +30,11 @@ This must be done once by parametrisation (note that the check\_commit\_ial.sh s
 These files should be renamed with the folowing command:
 i=0; for file in ????_??_????????.dat; do mv $file `printf %08d $i`.dat; i=$((i+1)); done
 
-## Data storage for check\_commit\_testprogs.sh
-
-To be usable by the check\_commit\_testprogs.sh script, these data must be put in the corresponding directory under tools/testprogs\_data
-
-## Usage
+### Usage directly with the testprogs executables
 
 The different main\_\*.exe programs obtained by the compilation can be run. Each of these executables is expecting the presence of a 'data' directory in their working directory containing the different files.
 
-In addition, these data files can be used through the check\_commit\_testprogs.sh script (if installed accordingly).
-
-# PYTHON BINDING
+## PYTHON BINDING
 
 **TODO** This section must be written. Key ideas are:
 

@@ -1,12 +1,12 @@
 # PHYEX integrator documentation
 
-# ABOUT THIS DOCUMENT
+## ABOUT THIS DOCUMENT
 
 This document is intended for integrators who are in charge of assembling contributions received through pull requests.
 
-This document is written using the markdown "language". With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf).
+This document is written using the markdown language. With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf).
 
-# BRANCHES AND NORMS
+## BRANCHES AND NORMS
 
 Regarding array-syntax, the applicalble norm depends on the branch:
 
@@ -17,9 +17,9 @@ Regarding array-syntax, the applicalble norm depends on the branch:
 
 Pull requests can be received on all these kind of branches and must be merged into the main or the GPU branch with according norm.
 
-# TESTS
+## TESTS
 
-The source code must follow strict mnh\_expand directives (described in the Developer documentation). The script verify\_mnh\_expand.py must be used to give an additional check.
+The source code must follow strict mnh\_expand directives (described in the [Developer documentation](./Developer.md)). The script verify\_mnh\_expand.py must be used to give an additional check.
 
 In addition to the scientific validation, the folowing tests must give the same results (with bit-reproducibility) in each of the model:
 

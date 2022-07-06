@@ -160,7 +160,7 @@ if [ -n "${model-}" ]; then
   #Cleaning
   [ $verbose -gt 0 ] && echo "Cleaning unrelevant files"
   #multiple checks to prevent error
-  if [ $from == 'git' -a ! $(git config --get remote.origin.url) == "$repository" ]; then
+  if [ $from == 'git' -a ! "$(git config --get remote.origin.url)" == "$repository" ]; then
     echo "Not inside the right git!!!!!!!!!!!!!!!!"
     exit 8
   fi

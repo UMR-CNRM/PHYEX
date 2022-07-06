@@ -179,7 +179,8 @@ if [ $compilation -eq 1 ]; then
     fi
   else
     echo "Copy $fromdir"
-    scp -q -r $fromdir PHYEX
+    mkdir PHYEX
+    scp -q -r $fromdir/src PHYEX/
     $prep_code --renameFf $expand_options $subs -m mesonh PHYEX
   fi
   rm -rf PHYEX/.git
