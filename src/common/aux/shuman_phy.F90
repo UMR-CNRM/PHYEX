@@ -325,8 +325,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(:,:,:), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(:,:,:), INTENT(OUT) :: PDZM   ! result at flux
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
                                                             ! side
 !
 !*       0.2   Declarations of local variables
@@ -670,8 +670,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(:,:,:), INTENT(IN)  :: PA     ! variable at flux localization
-REAL, DIMENSION(:,:,:), INTENT(OUT) :: PDZF   ! result at mass localization 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux localization
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass localization 
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
