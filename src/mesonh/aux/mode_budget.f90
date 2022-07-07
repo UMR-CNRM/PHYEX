@@ -26,14 +26,47 @@ implicit none
 
 private
 
-public :: Budget_store_init
-public :: Budget_store_end
-public :: Budget_store_add
+public :: Budget_store_init,Budget_store_init_phy
+public :: Budget_store_end, Budget_store_end_phy
+public :: Budget_store_add, Budget_store_add_phy
 
 real :: ztime1, ztime2
 
 contains
 
+subroutine Budget_store_init_phy(D, tpbudget, hsource, pvars)
+  USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+  TYPE(DIMPHYEX_t),       INTENT(IN)    :: D
+  type(tbudgetdata),      intent(inout) :: tpbudget ! Budget datastructure
+  character(len=*),       intent(in)    :: hsource  ! Name of the source term
+  real, dimension(D%NIT,D%NJT,D%NKT), intent(in)    :: pvars    ! Current value to be stored
+!
+  call Budget_store_init(tpbudget, hsource, pvars)
+!
+end subroutine Budget_store_init_phy
+!
+subroutine Budget_store_end_phy(D, tpbudget, hsource, pvars)
+  USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+  TYPE(DIMPHYEX_t),       INTENT(IN)    :: D
+  type(tbudgetdata),      intent(inout) :: tpbudget ! Budget datastructure
+  character(len=*),       intent(in)    :: hsource  ! Name of the source term
+  real, dimension(D%NIT,D%NJT,D%NKT), intent(in)    :: pvars    ! Current value to be stored
+!
+  call Budget_store_end(tpbudget, hsource, pvars)
+!
+end subroutine Budget_store_end_phy
+!
+subroutine Budget_store_add_phy(D, tpbudget, hsource, pvars)
+  USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+  TYPE(DIMPHYEX_t),       INTENT(IN)    :: D
+  type(tbudgetdata),      intent(inout) :: tpbudget ! Budget datastructure
+  character(len=*),       intent(in)    :: hsource  ! Name of the source term
+  real, dimension(D%NIT,D%NJT,D%NKT), intent(in)    :: pvars    ! Current value to be stored
+!
+  call Budget_store_add(tpbudget, hsource, pvars)
+!
+end subroutine Budget_store_add_phy
+!
 subroutine Budget_store_init( tpbudget, hsource, pvars )
   use modd_les, only: lles_call
 
