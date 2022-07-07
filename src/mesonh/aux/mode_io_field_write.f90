@@ -43,6 +43,7 @@ MODULE MODE_IO_FIELD_WRITE
   PRIVATE
 
   public :: IO_Field_write, IO_Field_write_box, IO_Field_write_lb
+  public :: IO_Field_write_phy
   public :: IO_Fieldlist_write, IO_Field_user_write
   public :: IO_Header_write, IO_Field_create
 
@@ -67,6 +68,10 @@ MODULE MODE_IO_FIELD_WRITE
                       IO_Field_write_byfield_L0,IO_Field_write_byfield_L1, &
                       IO_Field_write_byfield_C0,IO_Field_write_byfield_C1, &
                       IO_Field_write_byfield_T0,IO_Field_write_byfield_T1
+  END INTERFACE
+
+  INTERFACE IO_Field_write_phy
+     MODULE PROCEDURE IO_Field_write_phy_byfield_X2, IO_Field_write_phy_byfield_X1
   END INTERFACE
 
   INTERFACE IO_Field_write_box
@@ -619,6 +624,77 @@ end subroutine IO_Ndimlist_reduce
     !
   END SUBROUTINE IO_Field_write_byname_X1
 
+  SUBROUTINE IO_Field_write_phy_byfield_X2(D, TPFILE, TPFIELD, PFIELD, KRESP, koffset )
+    USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+    !
+    IMPLICIT NONE
+    !
+    !*      0.1   Declarations of arguments
+    !
+    TYPE(DIMPHYEX_t),                     INTENT(IN)  :: D
+    TYPE(TFILEDATA),                      INTENT(IN)  :: TPFILE
+    TYPE(TFIELDDATA),                     INTENT(IN)  :: TPFIELD
+    REAL,DIMENSION(D%NIJT,D%NKT),TARGET,  INTENT(IN)  :: PFIELD   ! array containing the data field
+    INTEGER,                    OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
+    integer, dimension(3),      optional, intent(in)  :: koffset
+    !
+    CALL IO_Field_write_phy_unpack2D(D,TPFILE, TPFIELD, PFIELD, KRESP, koffset )
+    !
+  END SUBROUTINE IO_Field_write_phy_byfield_X2
+!
+  SUBROUTINE IO_Field_write_phy_unpack2D(D, TPFILE, TPFIELD, PFIELD, KRESP, koffset )
+    USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+    !
+    IMPLICIT NONE
+    !
+    !*      0.1   Declarations of arguments
+    !
+    TYPE(DIMPHYEX_t),                     INTENT(IN)  :: D
+    TYPE(TFILEDATA),                      INTENT(IN)  :: TPFILE
+    TYPE(TFIELDDATA),                     INTENT(IN)  :: TPFIELD
+    REAL,DIMENSION(D%NIT,D%NJT,D%NKT),TARGET,  INTENT(IN)  :: PFIELD   ! array containing the data field
+    INTEGER,                    OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
+    integer, dimension(3),      optional, intent(in)  :: koffset
+    !
+    CALL IO_Field_write_byfield_X3(TPFILE, TPFIELD, PFIELD, KRESP, koffset )
+    !
+  END SUBROUTINE IO_Field_write_phy_unpack2D
+!
+  SUBROUTINE IO_Field_write_phy_byfield_X1(D, TPFILE, TPFIELD, PFIELD, KRESP, koffset )
+    USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+    !
+    IMPLICIT NONE
+    !
+    !*      0.1   Declarations of arguments
+    !
+    TYPE(DIMPHYEX_t),                     INTENT(IN)  :: D
+    TYPE(TFILEDATA),                      INTENT(IN)  :: TPFILE
+    TYPE(TFIELDDATA),                     INTENT(IN)  :: TPFIELD
+    REAL,DIMENSION(D%NIJT),TARGET,  INTENT(IN)  :: PFIELD   ! array containing the data field
+    INTEGER,                    OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
+    integer, dimension(3),      optional, intent(in)  :: koffset
+    !
+    CALL IO_Field_write_phy_unpack1D(D,TPFILE, TPFIELD, PFIELD, KRESP, koffset )
+    !
+  END SUBROUTINE IO_Field_write_phy_byfield_X1
+!
+  SUBROUTINE IO_Field_write_phy_unpack1D(D, TPFILE, TPFIELD, PFIELD, KRESP, koffset )
+    USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+    !
+    IMPLICIT NONE
+    !
+    !*      0.1   Declarations of arguments
+    !
+    TYPE(DIMPHYEX_t),                     INTENT(IN)  :: D
+    TYPE(TFILEDATA),                      INTENT(IN)  :: TPFILE
+    TYPE(TFIELDDATA),                     INTENT(IN)  :: TPFIELD
+    REAL,DIMENSION(D%NIT,D%NJT),TARGET,  INTENT(IN)  :: PFIELD   ! array containing the data field
+    INTEGER,                    OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
+    integer, dimension(3),      optional, intent(in)  :: koffset
+    !
+    CALL IO_Field_write_byfield_X2(TPFILE, TPFIELD, PFIELD, KRESP, koffset )
+    !
+  END SUBROUTINE IO_Field_write_phy_unpack1D
 
   SUBROUTINE IO_Field_write_byfield_X1( TPFILE, TPFIELD, PFIELD, KRESP, koffset )
     USE MODD_IO,               ONLY: GSMONOPROC, ISP
