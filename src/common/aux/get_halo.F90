@@ -12,6 +12,14 @@
 !
 INTERFACE
 !
+SUBROUTINE GET_HALO_PHY(D,PSRC)
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+!
+TYPE(DIMPHYEX_t),        INTENT(IN)   :: D
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PSRC    ! variable at t
+!
+END SUBROUTINE GET_HALO_PHY
+!
 SUBROUTINE GET_HALO(PSRC)
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PSRC    ! variable at t
@@ -31,3 +39,13 @@ REAL, DIMENSION(:,:,:), INTENT(IN)  :: PSRC    ! variable at t
 !
 END SUBROUTINE GET_HALO
 !-----------------------------------------------------------------------
+!     #########################
+      SUBROUTINE GET_HALO_PHY(D,PSRC)
+!     #########################
+!
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+!
+TYPE(DIMPHYEX_t),        INTENT(IN)   :: D
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PSRC    ! variable at t
+!
+END SUBROUTINE GET_HALO_PHY

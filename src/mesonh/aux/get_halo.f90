@@ -26,6 +26,14 @@ REAL, DIMENSION(:,:,:), INTENT(IN)  :: PSRC    ! variable at t
 !
 END SUBROUTINE GET_HALO
 !
+SUBROUTINE GET_HALO_PHY(D,PSRC)
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+!
+TYPE(DIMPHYEX_t),        INTENT(IN)   :: D
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PSRC    ! variable at t
+!
+END SUBROUTINE GET_HALO_PHY
+!
 SUBROUTINE DEL_HALO2_ll(TPHALO2LIST)
 !
 USE MODD_ARGSLIST_ll, ONLY : HALO2LIST_ll
@@ -92,6 +100,31 @@ CALL UPDATE_HALO_ll(TZ_PSRC_ll,IERROR)
 CALL CLEANLIST_ll(TZ_PSRC_ll)
 !
 END SUBROUTINE GET_HALO
+!-------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------
+!     #########################
+      SUBROUTINE GET_HALO_PHY(D,PSRC)
+!     #########################
+!
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+USE MODE_ll
+USE MODD_ARGSLIST_ll, ONLY : LIST_ll
+!
+IMPLICIT NONE
+!
+TYPE(DIMPHYEX_t),        INTENT(IN)   :: D
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PSRC    ! variable at t
+!
+TYPE(LIST_ll)     , POINTER      :: TZ_PSRC_ll               ! halo
+INTEGER                          :: IERROR                 ! error return code 
+!
+NULLIFY( TZ_PSRC_ll)
+!
+CALL ADD2DFIELD_ll( TZ_PSRC_ll, PSRC, 'GET_HALO::PSRC' )
+CALL UPDATE_HALO_ll(TZ_PSRC_ll,IERROR)
+CALL CLEANLIST_ll(TZ_PSRC_ll)
+!
+END SUBROUTINE GET_HALO_PHY
 !-----------------------------------------------------------------------
 !
 !     ####################################
