@@ -9,10 +9,10 @@ CONTAINS
                     & PTRH,PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,        &
                     & PTSTEP,PIMPL,PEXPL,                              &
                     & HTURBLEN,HTURBDIM,                               &
-                    & TPFILE,OTURB_DIAG,                               &
+                    & TPFILE,OTURB_DIAG,ODIAG_IN_RUN,                  &
                     & PTP,PRTKES,PRTHLS,PCOEF_DISS,PTDIFF,PTDISS,PRTKEMS,&
                     & TBUDGETS, KBUDGETS, &
-                    & PEDR, PTR,PDISS                                  )
+                    & PEDR, PTR,PDISS, PCURRENT_TKE_DISS               )
 !     ##################################################################
 !
 !
@@ -134,7 +134,6 @@ USE MODD_BUDGET, ONLY: LBUDGET_TKE, LBUDGET_TH, NBUDGET_TKE, NBUDGET_TH, TBUDGET
 USE MODD_CONF
 USE MODD_CST
 USE MODD_CTURB
-USE MODD_DIAG_IN_RUN, ONLY : LDIAG_IN_RUN, XCURRENT_TKE_DISS
 USE MODD_FIELD, ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_LES
@@ -179,6 +178,7 @@ CHARACTER(LEN=4),        INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
 CHARACTER(LEN=4),        INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
 TYPE(TFILEDATA),         INTENT(IN)   ::  TPFILE       ! Output file
 LOGICAL,                 INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
+LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
                                   ! diagnostic fields in the syncronous FM-file
 REAL, DIMENSION(:,:,:),  INTENT(INOUT)::  PDP          ! Dyn. prod. of TKE
 REAL, DIMENSION(:,:,:),  INTENT(IN)   ::  PTRH
@@ -195,6 +195,7 @@ INTEGER, INTENT(IN) :: KBUDGETS
 REAL, DIMENSION(:,:,:),  INTENT(OUT), OPTIONAL  ::  PTR          ! Transport prod. of TKE
 REAL, DIMENSION(:,:,:),  INTENT(OUT), OPTIONAL  ::  PDISS        ! Dissipation of TKE
 REAL, DIMENSION(:,:,:),  INTENT(OUT), OPTIONAL  ::  PEDR         ! EDR 
+REAL, DIMENSION(:,:,:),  INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
 !
 !
 !
@@ -289,10 +290,10 @@ CALL GET_HALO(ZRES)
 !
 !* diagnose the dissipation
 !
-IF (LDIAG_IN_RUN) THEN
-  XCURRENT_TKE_DISS = ZFLX(:,:,:) * PTKEM(:,:,:) &
+IF (ODIAG_IN_RUN) THEN
+  PCURRENT_TKE_DISS = ZFLX(:,:,:) * PTKEM(:,:,:) &
                                   *(PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:))
-  CALL ADD3DFIELD_ll( TZFIELDDISS_ll, XCURRENT_TKE_DISS, 'TKE_EPS_SOURCES::XCURRENT_TKE_DISS' )
+  CALL ADD3DFIELD_ll( TZFIELDDISS_ll, PCURRENT_TKE_DISS, 'TKE_EPS_SOURCES::PCURRENT_TKE_DISS' )
   CALL UPDATE_HALO_ll(TZFIELDDISS_ll,IINFO_ll)
   CALL CLEANLIST_ll(TZFIELDDISS_ll)
 ENDIF

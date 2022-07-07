@@ -6,6 +6,7 @@
       SUBROUTINE TURB(KKA,KKU,KKL,KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,      &
               & KSPLIT,KMODEL_CL,                                     &
               & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,        &
+              & ODIAG_IN_RUN,                                         &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,PIMPL,      &
               & PTSTEP,TPFILE,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
@@ -22,7 +23,8 @@
               & TBUDGETS, KBUDGETS,                                   &
               & PEDR,PLEM,PRTKEMS,PTPMF,                              &
               & PDRUS_TURB,PDRVS_TURB,                                &
-              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS        ) 
+              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS,       &
+              & PCURRENT_TKE_DISS                                     ) 
 !     #################################################################
 !
 !
@@ -299,6 +301,7 @@ LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid
                                  ! CONDensation
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
+LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
@@ -395,6 +398,7 @@ REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL ::  PTR   ! Transport prod. of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL ::  PDISS ! Dissipation of TKE
+REAL, DIMENSION(:,:,:), INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
 !
 !
 !-------------------------------------------------------------------------------
@@ -1050,9 +1054,10 @@ CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,          &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,               &
                    & PTSTEP,PIMPL,ZEXPL,                                &
                    & HTURBLEN,HTURBDIM,                                 &
-                   & TPFILE,OTURB_DIAG,                                 &
+                   & TPFILE,OTURB_DIAG,ODIAG_IN_RUN,                    &
                    & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,ZRTKEMS,&
-                   & TBUDGETS,KBUDGETS, PEDR=PEDR, PTR=PTR,PDISS=PDISS)
+                   & TBUDGETS,KBUDGETS, PEDR=PEDR, PTR=PTR,PDISS=PDISS, &
+                   & PCURRENT_TKE_DISS=PCURRENT_TKE_DISS                )
 IF (LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS+ ZLVOCPEXNM * PRRS(:,:,:,2) &

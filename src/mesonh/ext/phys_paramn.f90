@@ -260,6 +260,7 @@ USE MODD_CURVCOR_n
 USE MODD_DEEP_CONVECTION_n
 USE MODD_DEF_EDDY_FLUX_n           ! Ajout PP
 USE MODD_DEF_EDDYUV_FLUX_n         ! Ajout PP
+USE MODD_DIAG_IN_RUN, ONLY: LDIAG_IN_RUN, XCURRENT_TKE_DISS
 USE MODD_DRAGBLDG_n
 USE MODD_DRAGTREE_n
 USE MODD_DUST
@@ -1487,7 +1488,7 @@ ALLOCATE(ZTDIFF(IIU,IJU,IKU))
 ALLOCATE(ZTDISS(IIU,IJU,IKU))
 !
    CALL TURB( 1, IKU, 1, IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,        &
-              LTURB_FLX, LTURB_DIAG, LSUBG_COND, LRMC01, LOCEAN,                     &
+              LTURB_FLX, LTURB_DIAG, LSUBG_COND, LRMC01, LOCEAN, LDIAG_IN_RUN,       &
               CTURBDIM, CTURBLEN, CTOM, CTURBLEN_CLOUD, CCLOUD,XIMPL,                &
               XTSTEP, TPFILE,                                                        &
               XDXX, XDYY, XDZZ, XDZX, XDZY, XZZ,                                     &
@@ -1502,7 +1503,7 @@ ALLOCATE(ZTDISS(IIU,IJU,IKU))
               XRUS, XRVS, XRWS, XRTHS, XRRS, XRSVS, XRTKES, XSIGS, XWTHVMF,          &
               XTHW_FLUX, XRCW_FLUX, XSVW_FLUX,XDYP, XTHP, XTR, XDISS,                &
               TBUDGETS, KBUDGETS=SIZE(TBUDGETS),PLEM=XLEM,PRTKEMS=XRTKEMS,           &
-              PTR=XTR, PDISS=XDISS                                                   )
+              PTR=XTR, PDISS=XDISS, PCURRENT_TKE_DISS=XCURRENT_TKE_DISS              )
 !
 DEALLOCATE(ZTDIFF)
 DEALLOCATE(ZTDISS)

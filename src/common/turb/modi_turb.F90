@@ -7,6 +7,7 @@ INTERFACE
       SUBROUTINE TURB(KKA, KKU, KKL, KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,   &
               & KSPLIT,KMODEL_CL,                                     &
               & OTURB_FLX,OTURB_DIAG,OSUBG_COND,ORMC01,OOCEAN,        &
+              & ODIAG_IN_RUN,                                         &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,            &
               & PIMPL,PTSTEP,TPFILE,                                  &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
@@ -24,7 +25,8 @@ INTERFACE
               & TBUDGETS, KBUDGETS,                                   &
               & PEDR,PLEM,PRTKEMS,PTPMF,                              &
               & PDRUS_TURB,PDRVS_TURB,                                &
-              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS        ) 
+              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS,       &
+              & PCURRENT_TKE_DISS                                     ) 
 !
 USE MODD_BUDGET, ONLY : TBUDGETDATA
 USE MODD_IO, ONLY : TFILEDATA
@@ -47,6 +49,7 @@ LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid
                                  ! CONDensation
 LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
+LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
 CHARACTER(LEN=4)       , INTENT(IN)   ::  HTURBDIM  ! dimensionality of the 
                                  ! turbulence scheme
 CHARACTER(LEN=4)      , INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
@@ -141,6 +144,7 @@ REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL :: PEDR  ! EDR
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL :: PLEM  ! Mixing length
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL ::  PTR  ! Transport prod. of TKE
 REAL, DIMENSION(:,:,:), INTENT(OUT), OPTIONAL ::  PDISS ! Dissipation of TKE
+REAL, DIMENSION(:,:,:), INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
 !
 !-------------------------------------------------------------------------------
 !
