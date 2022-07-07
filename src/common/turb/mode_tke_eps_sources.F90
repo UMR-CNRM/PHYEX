@@ -183,6 +183,7 @@ CHARACTER(LEN=6),        INTENT(IN)   ::  HPROGRAM     ! CPROGRAM is the program
 TYPE(TFILEDATA),         INTENT(IN)   ::  TPFILE       ! Output file
 LOGICAL,                 INTENT(IN)   ::  OLES_CALL    !
 LOGICAL,                 INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
+LOGICAL,                 INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
                                   ! diagnostic fields in the syncronous FM-file
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(INOUT)::  PDP          ! Dyn. prod. of TKE
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)   ::  PTRH
@@ -199,6 +200,7 @@ INTEGER, INTENT(IN) :: KBUDGETS
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PTR          ! Transport prod. of TKE
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PDISS        ! Dissipation of TKE
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PEDR         ! EDR 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
 !
 !
 !
