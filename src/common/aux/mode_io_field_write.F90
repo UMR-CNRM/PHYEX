@@ -21,7 +21,7 @@ SUBROUTINE IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,PFIELD)
     TYPE(DIMPHYEX_t),          INTENT(IN) :: D
     TYPE(TFILEDATA),           INTENT(IN) :: TPFILE
     TYPE(TFIELDDATA), INTENT(IN)          :: TZFIELD
-    REAL, DIMENSION(:,:,:),    INTENT(IN) :: PFIELD   ! array containing the data field
+    REAL, DIMENSION(D%NIT,D%NJT,D%NKT),    INTENT(IN) :: PFIELD   ! array containing the data field
     !
     CALL ABORT
 END SUBROUTINE IO_FIELD_WRITE_PHY
