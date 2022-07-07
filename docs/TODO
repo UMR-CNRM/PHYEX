@@ -45,8 +45,6 @@ Budgets/DDH
 - Le code des budgets devrait être revu: pas en phase avec celui de Méso-NH et phasage a priori
   inutile car très peu de code semble réellement utile pour AROME
 
-Initialiser dans AROME la variable ldiag_in_run de MODD_DIAG_IN_RUN pour pouvoir phaser le modd, ou passer la variable par l'interface
-
 Enable mnh_expand with fcm build
 
 Reprendre les différents outils en deux scripts principaux:
