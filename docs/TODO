@@ -66,6 +66,10 @@ Budgets/DDH
 - Le code des budgets devrait être revu: pas en phase avec celui de Méso-NH et phasage a priori
   inutile car très peu de code semble réellement utile pour AROME
 
+Budgets/LES
+Une fois toutes les routines de la turbulence ont leur dimension horizontale packée et
+utilisent LES_MEAN_SUBGRID_PHY a la place de LES_MEAN_SUBGRID_PHY : renommer les routines arome/turb et mesonh/turb en les_mean_subgrid.F90 et remplacer partout dans le code les appels (enlever le _PHY) + supprimer les anciennes routines
+
 SPP
 - modd_spp_type est pour l'instant dans mpa/micro/externals mais n'est pas de la microphysique
 

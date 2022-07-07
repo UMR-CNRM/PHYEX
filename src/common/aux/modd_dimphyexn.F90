@@ -53,6 +53,7 @@ TYPE DIMPHYEX_t
                   !  1: as for Méso-NH, levels are numbered from ground to space
                   ! -1: as for AROME, levels are numbered from space to ground
   INTEGER :: NKT  ! Array total dimension
+  INTEGER :: NKLES ! Total physical k dimension (for LES diag)
   INTEGER :: NKA  ! Near ground array index (is an unphysical level if JPVEXT!=0)
   INTEGER :: NKU  ! Uppest atmosphere array index (is an unphysical level if JPVEXT!=0)
   INTEGER :: NKB  ! Near ground physical array index (e.g. equal to 1+JPVEXT if NKL==1)
@@ -73,6 +74,8 @@ TYPE DIMPHYEX_t
   INTEGER :: NIJT  ! NIT*NJT for horizontal packing
   INTEGER :: NIJB  ! First horizontal inner mass point index
   INTEGER :: NIJE  ! Last horizontal inner mass point index
+  !
+  INTEGER :: NLESMASK ! Number of LES masks
 !
 END TYPE DIMPHYEX_t
 !
