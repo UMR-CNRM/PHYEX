@@ -20,11 +20,19 @@ Intégration de PHYEX dans des cycles/versions officielles:
   - Ces clés devront être supprimées
 - Répertoires ext
   - Répertoire arome/ext et mesonh/ext contiennent les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
-  - Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayadevront avoir été fournies par ailleurs
-- modd_spp_type est pour l'instant dans mpa/micro/externals mais n'est pas de la microphysique
+  - Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires devront avoir été fournies par ailleurs
+- Code AROME:
+  - supprimer les répertoires internals et modules de mpa/* qui sont repris par phyex
+  - supprimer les codes listés dans le fichier src/arome/gmkpack_ignored_files (ceux qui ne sont pas dans phyex)
+  - reprendre le code de src/arome/ext pour mettre à jour le code IAL
+  - déplacer dans mpa/conv: aro_convbu
+  - déplacer dans un nouveau mpa/aux: aro_startbu, aroini_budget, aro_suintbudget, aro_suintbudget_omp, aroini_cstmnh, aroini_frommpa, modd_spp_type
 
 Merge pb:
+  - AROME plante sur belenos lorsque le pack est complètement recompilé, constaté sur le commit c5379296bf399f376bddf02da37b81021c134717 (modifié pour initialisé CTURBLEN)
   - rain_ice_old a rebrancher dans Meso-NH
+  - LIMA à faire
+  - KFB ?
 
 Pb identifiés à corriger plus tard:
   - deposition devrait être déplacée dans ice4_tendencies
@@ -38,16 +46,9 @@ Pb identifiés à corriger plus tard:
   - sedimentation momentum non branchée
   - si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
 
-Budgets/DDH
-- Le code dans budget_DDH devra être transféré dans mode_budget
-- les routines arome specifiques aux budgets sont dans mpa/micro, il faudrait les mettre dans aux
-- Le module modd_dyn n'est utilisé que pour les budgets, voir s'il peut être supprimé
-- Le code des budgets devrait être revu: pas en phase avec celui de Méso-NH et phasage a priori
-  inutile car très peu de code semble réellement utile pour AROME
-
 Enable mnh_expand with fcm build
 
 Reprendre les différents outils en deux scripts principaux:
 - outil pour reprendre toutes les fonctionnalités sur le code: filepp, MNH_Expand_Array, correct_indent.py, verify_mnh_expand.py et renommage
 - outil prep_code débarrassé du renommage pour ne faire que la gestion des commit et lancer la manipulation sur le code
-Il restera, à part, les scripts de comparaison des résultats (à moins qu'ils puissent être placés dans les check_commit correspondant)
+Il restera, à part, les scripts de comparaison des résultats (à moins qu'ils puissent être inlinés dans les check_commit correspondant)

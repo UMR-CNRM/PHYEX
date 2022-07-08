@@ -18,6 +18,8 @@ This build system has two dependencies (installation is done automatically by th
 The script build/with\_fcm/make\_fcm.sh uses a configuration file and build the library and test programs.
 They can be found in the build/bin sudirectory in the architecture specific directory arch\_\<achitecture name\>.
 
+Some more details can be found in [build/with\_fcm/README.md file](../build/with_fcm/README.md).
+
 ## TEST PROGRAM
 
 ### Data generation
