@@ -77,6 +77,7 @@ USE MODD_CTURB,           ONLY: CSTURB_t
 USE MODI_SHUMAN_MF, ONLY: MZM_MF, MZF_MF, GZ_M_W_MF
 
 USE MODE_COMPUTE_BL89_ML, ONLY: COMPUTE_BL89_ML
+USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 
@@ -400,6 +401,9 @@ IF (OENTR_DETR) THEN
 
   ! Mass flux at KKB level (updraft triggered if PSFTH>0.)
   IF (PARAMMF%LGZ) THEN
+    IF(PDX==0. .OR. PDY==0.) THEN                                                                                                   
+      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'COMPUTE_UPDRAFT', 'PDX or PDY is NULL with option LGZ!')                                  
+    ENDIF
     ZSURF(D%NIJB:D%NIJE)=TANH(PARAMMF%XGZ*SQRT(PDX*PDY)/ZLUP(D%NIJB:D%NIJE))
   ELSE
     ZSURF(D%NIJB:D%NIJE)=1.

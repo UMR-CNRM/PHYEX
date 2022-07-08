@@ -72,26 +72,9 @@ INTEGER(KIND=JPIM),INTENT(IN)    :: KULOUT
 
 !     ------------------------------------------------------------------
 
-INTEGER(KIND=JPIM)   :: ILON
-INTEGER(KIND=JPIM)   :: ILEV
-INTEGER(KIND=JPIM)   :: ISV
-INTEGER(KIND=JPIM)   :: IRR
 
 REAL(KIND=JPRB) :: ZTSTEP
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
-
-!-- Next five strings are kept in modules in MNH, not in AROME !!!
-!   ( here they are hardcoded for use in AROINI_BUDGET )
-
-CHARACTER (LEN=4)   :: CLUOUT     ! name of output listing
-CHARACTER (LEN=4)   :: CLTURB     ! Kind of turbulence parameterization
-CHARACTER (LEN=4)   :: CLTURBDIM  ! dimensionality of the turbulence scheme
-CHARACTER (LEN=4)   :: CLRAD      ! Kind of radiation scheme
-CHARACTER (LEN=4)   :: CLDCONV    ! Kind of deep convection scheme
-CHARACTER (LEN=4)   :: CLSCONV    ! Kind of shallow convection scheme
-CHARACTER (LEN=4)   :: CLCLOUD    ! Kind of microphysical scheme
-CHARACTER (LEN=4)   :: CLMET_ADV_SCHEME ! type of advection scheme for meteorological scalar variables
-CHARACTER (LEN=4)   :: CLSV_ADV_SCHEME  ! type of advection scheme for tracer scalar variables
 
 LOGICAL :: LLNOTMAP
 !     ------------------------------------------------------------------
@@ -99,7 +82,6 @@ LOGICAL :: LLNOTMAP
 #include "sucvmnh.intfb.h"
 #include "aroini_cstmnh.h"
 #include "aroini_micro.h"
-#include "aro_subudget.h"
 #include "aroini_budget.h"
 #include "aroini_turb.h"
 #include "abor1.intfb.h"
@@ -126,7 +108,7 @@ ASSOCIATE(XDETR_LUP=>YDPARAR%XDETR_LUP, XCMF=>YDPARAR%XCMF, &
  & XPRES_UV=>YDPARAR%XPRES_UV, NRR=>YDPARAR%NRR, XCRAD_MF=>YDPARAR%XCRAD_MF, &
  & CMF_UPDRAFT=>YDPARAR%CMF_UPDRAFT, LHARATU=>YDPARAR%LHARATU, &
  & LMPA=>YDARPHY%LMPA, LKFBCONV=>YDARPHY%LKFBCONV, LMFSHAL=>YDARPHY%LMFSHAL, &
- & LMICRO=>YDARPHY%LMICRO, LTURB=>YDARPHY%LTURB, LGRADHPHY=>YDARPHY%LGRADHPHY, &
+ & LGRADHPHY=>YDARPHY%LGRADHPHY, &
  & NPROMA=>YDDIM%NPROMA, &
  & LEDKF=>YDPHY%LEDKF, LCVPPKF=>YDPHY%LCVPPKF, &
  & NFLEVG=>YDDIMV%NFLEVG, &
@@ -174,55 +156,8 @@ CALL AROINI_MICRO (KULOUT,ZTSTEP,LOWARM,CMICRO,NSPLITR,CSEDIM,LCRIAUTI,&
 
 !       3. Initialisation of Budget
 
-ILON = NPROMA
-ILEV = NFLEVG
-ISV  = NSV
-IRR  = NRR
-
-CALL TBUCONF_ASSOCIATE()
-IF (LMPA.AND.LSDDH) THEN
-LAROBU_ENABLE=.TRUE.
-CALL ARO_SUBUDGET(ILON,ILEV,ZTSTEP)
-ENDIF
- 
-!! WARNING:
-!!    Values of CLRAD,CLDCONV,CLTURB,CLTURBDIM, CLCLOUD
-!!    are hard coded here. In MNH they are saved
-!!    in modules.
- 
-CLUOUT     = 'AIBUO'
-CLRAD      = 'NONE'
-CLSCONV    = CMF_UPDRAFT
-CLMET_ADV_SCHEME='XXXX'
-CLSV_ADV_SCHEME='XXXX'
-
-IF(LKFBCONV.OR.LCVPPKF) THEN
-  CLDCONV    = 'KAFR'
-ELSE
-  CLDCONV    = 'NONE'
-ENDIF
- 
-IF(LTURB) THEN
-  CLTURB    = 'XXXX'
-  CLTURBDIM = '1DIM'
-ELSE
-  CLTURB    = 'NONE'
-  CLTURBDIM = 'NONE'
-ENDIF
- 
-IF(LMICRO) THEN
-  CLCLOUD = CMICRO
-ELSE
-  CLCLOUD = 'NONE'
-ENDIF
- 
-IF (LMPA.AND.LSDDH) THEN
-CALL AROINI_BUDGET(LAROBU_ENABLE,CLUOUT,KULOUT,ZTSTEP,ISV,IRR,&
-                   & CLRAD,CLDCONV,CLSCONV,CLTURB,CLTURBDIM,&
-                   & CLCLOUD,CLMET_ADV_SCHEME, CLSV_ADV_SCHEME)
-
-
-ENDIF
+LAROBU_ENABLE=LMPA.AND.LSDDH
+CALL AROINI_BUDGET(LAROBU_ENABLE)
 
 
 !       4. Initialisation of Turbulence scheme

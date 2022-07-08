@@ -10,7 +10,7 @@ INTERFACE
               & HPROGRAM, O2D, ONOMIXLG, OFLAT,                       &
               & OLES_CALL,OCOUPLES,OBLOWSNOW,                         &
               & OTURB_FLX,OTURB_DIAG,OSUBG_COND,OCOMPUTE_SRC,         &
-              & ORMC01,OOCEAN,ODEEPOC,OHARAT,                         &
+              & ORMC01,OOCEAN,ODEEPOC,OHARAT, ODIAG_IN_RUN,           &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,            &
               & PIMPL,PTSTEP,TPFILE,                                  &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
@@ -28,7 +28,8 @@ INTERFACE
               & TBUDGETS, KBUDGETS,                                   &
               & PEDR,PLEM,PRTKEMS,PTPMF,                              &
               & PDRUS_TURB,PDRVS_TURB,                                &
-              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS        ) 
+              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS,       &
+              & PCURRENT_TKE_DISS                                     ) 
 !
 USE MODD_BUDGET, ONLY : TBUDGETDATA,TBUDGETCONF_t
 USE MODD_IO, ONLY : TFILEDATA
@@ -64,6 +65,7 @@ LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororogr
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
+LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
                                                       ! turbulence scheme
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
@@ -171,6 +173,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL ::  PTR          ! Transport prod. of TKE
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL ::  PDISS        ! Dissipation of TKE
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
 !
 !-------------------------------------------------------------------------------
 !
