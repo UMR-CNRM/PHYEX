@@ -222,12 +222,14 @@ if [ $compilation -eq 1 ]; then
   ! grep -i MODI_TH_R_FROM_THL_RT_ $(ls MNH/compute_entr_detr.f90 MNH/compute_entr_detr.f90 PHYEX/turb/mode_compute_updraft*.f90 MNH/ice_adjust_bis.f90 MNH/prep_ideal_case.f90 MNH/set_rsou.f90 2>/dev/null)  > /dev/null && rm -f MNH/th_r_from_thl_rt_1d.f90 MNH/th_r_from_thl_rt_2d.f90 MNH/th_r_from_thl_rt_3d.f90
 
   #Configure and compilation
+  command -v module && modulelist=$(module -t list 2>&1 | tail -n +2) #save loaded modules
   ./configure
   set +e #file ends with a test that can return false
-  . ../conf/profile_mesonh-*
+  . ../conf/profile_mesonh-* #This lines modifies the list of loaded modules
   set -e
   make -j 8 | tee ../Output_compilation
   make installmaster | tee -a ../Output_compilation
+  command -v module && module load $modulelist #restore loaded modules
 fi
 
 if [ $run -ge 1 ]; then

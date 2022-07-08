@@ -192,9 +192,14 @@ phyex/micro/modd_nsv.F90
 phyex/micro/modd_refaro.F90
 phyex/micro/mode_fmbidon.F90
 phyex/micro/mode_fmwritbidon.F90
-phyex/turb/modd_dynn.F90
 phyex/turb/mode_thermo_mono.F90
 phyex/turb/modn_turb.F90
 mse/dummy/second_mnh.F90
 mse/dummy/les_mean_subgrid_surf.F90
 mse/dummy/les_mean_subgrid_3d.F90
+mpa/micro/externals/aro_buprocn.F90
+mpa/micro/interface/aro_buprocn.h
+mpa/micro/externals/aro_subudget.F90
+mpa/micro/interface/aro_subudget.h
+mpa/micro/interface/aroend_budget.h
+mpa/micro/externals/invert_vlev.F90
