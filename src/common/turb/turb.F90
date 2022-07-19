@@ -485,7 +485,7 @@ ZRVORD= XRV / XRD
 !
 !
 !Copy data into ZTHLM and ZRM only if needed
-IF (HTURBLEN=='BL89' .OR. HTURBLEN=='RM17' .OR. ORMC01) THEN
+IF (HTURBLEN=='BL89' .OR. HTURBLEN=='RM17' .OR. HTURBLEN=='ADAP' .OR. ORMC01) THEN
   ZTHLM(:,:,:) = PTHLT(:,:,:)
   ZRM(:,:,:,:) = PRT(:,:,:,:)
 END IF

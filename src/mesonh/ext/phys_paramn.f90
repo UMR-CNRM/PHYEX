@@ -684,6 +684,7 @@ IF (.NOT. OCLOUD_ONLY .AND. KTCOUNT /= 1)  THEN
          NDLON,NFLEV,CAER,NAER,NSTATM,                             &
          XSINDEL,XCOSDEL,XTSIDER,XCORSOL,                          &
          XSTATM,XOZON, XAER)
+  XAER_CLIM = XAER
  END IF
 END IF
 !

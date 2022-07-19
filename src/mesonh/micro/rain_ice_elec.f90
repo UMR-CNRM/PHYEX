@@ -3227,7 +3227,7 @@ IMPLICIT NONE
 
   if ( lbudget_rs ) call Budget_store_add( tbudgets(NBUDGET_RS), 'CMEL', &
                                            Unpack( -zzw(:) * zrhodj(:), mask = gmicro(:, :, :), field = 0. ) )
-  if ( lbudget_rg ) call Budget_store_end( tbudgets(NBUDGET_RG), 'CMEL', &
+  if ( lbudget_rg ) call Budget_store_add( tbudgets(NBUDGET_RG), 'CMEL', &
                                            Unpack(  zzw(:) * zrhodj(:), mask = gmicro(:, :, :), field = 0. ) )
   if ( lbudget_sv ) then
     call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_elecbeg + 4 ), 'CMEL', &
