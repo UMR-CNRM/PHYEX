@@ -23,6 +23,7 @@ CONTAINS
 !!     R.Honnert Oct 2016 : Update with AROME
 !!     Q.Rodier  01/2019 : support RM17 mixing length as in bl89.f90 
 !  P. Wautelet 10/04/2019: replace ABORT and STOP calls by Print_msg
+!  P. Wautelet 17/12/2021: bugfix: KK instead of JKK
 !!
 !-------------------------------------------------------------------------------
 !

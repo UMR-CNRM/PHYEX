@@ -8,7 +8,7 @@ set -e
 # Repertoire où MNH-V5-5-0_PHYEX.tar.gz modifie pour accueillir PHYEX se trouve
 #TARGZDIR=$HOME
 
-availTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, COLD_BUBBLE/002_mesonh"
+availTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, COLD_BUBBLE/002_mesonh, ARMLES/RUN, COLD_BUBBLE_3D/002_mesonh,"
 defaultTest="007_16janvier/008_run2"
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- seprator must be in sync with prep_code.sh separator
@@ -220,6 +220,10 @@ if [ $compilation -eq 1 ]; then
   # Supress some files if they are not used anymore
   ! grep -i MODI_COMPUTE_ENTR_DETR $(ls MNH/*compute_updraft* PHYEX/turb/*compute_updraft* 2>/dev/null) && rm -f MNH/compute_entr_detr.f90
   ! grep -i MODI_TH_R_FROM_THL_RT_ $(ls MNH/compute_entr_detr.f90 MNH/compute_entr_detr.f90 PHYEX/turb/mode_compute_updraft*.f90 MNH/ice_adjust_bis.f90 MNH/prep_ideal_case.f90 MNH/set_rsou.f90 2>/dev/null)  > /dev/null && rm -f MNH/th_r_from_thl_rt_1d.f90 MNH/th_r_from_thl_rt_2d.f90 MNH/th_r_from_thl_rt_3d.f90
+  # Routine that changed names (if mode_budget.f90 is present)
+  set +e
+  mv -f PHYEX/aux/mode_budget.f90 MNH/budget.f90
+  set -e
 
   #Configure and compilation
   command -v module && modulelist=$(module -t list 2>&1 | tail -n +2) #save loaded modules
@@ -284,6 +288,12 @@ if [ $check -eq 1 ]; then
     elif   [ $t == COLD_BUBBLE/002_mesonh ]; then
       path_user=$path_user_beg/MY_RUN/KTEST/COLD_BUBBLE/002_mesonh$path_user_end
       path_ref=$path_ref_beg/MY_RUN/KTEST/COLD_BUBBLE/002_mesonh$path_ref_end
+    elif   [ $t == COLD_BUBBLE_3D/002_mesonh ]; then
+      path_user=$path_user_beg/MY_RUN/KTEST/COLD_BUBBLE_3D/002_mesonh$path_user_end
+      path_ref=$path_ref_beg/MY_RUN/KTEST/COLD_BUBBLE_3D/002_mesonh$path_ref_end
+    elif   [ $t == ARMLES/RUN ]; then
+      path_user=$path_user_beg/MY_RUN/KTEST/ARMLES/RUN$path_user_end
+      path_ref=$path_ref_beg/MY_RUN/KTEST/ARMLES/RUN$path_ref_end
     else
       echo "cas $t non reconnu"
     fi
@@ -340,7 +350,63 @@ if [ $check -eq 1 ]; then
       echo "Compare with ncdump..."
       if [ -f $file1 -a -f $file2 ]; then
         set +e
-        diff <(ncdump $file1 | head -c 27350) <(ncdump $file2 | head -c 27350)
+        diff <(ncdump $file1 | head -c 27300) <(ncdump $file2 | head -c 27300)
+        t=$?
+        set -e
+        allt=$(($allt+$t))
+      else
+        [ ! -f $file1 ] && echo "  $file1 is missing"
+        [ ! -f $file2 ] && echo "  $file2 is missing"
+        allt=$(($allt+1))
+      fi
+    fi
+
+    if [ $case == COLD_BUBBLE_3D ]; then
+      echo "Compare with python..."
+      # Compare variable of both Synchronous and Diachronic files with printing difference
+      file1=$path_user/BUBBL.1.CEN4T.001.nc
+      file2=$path_ref/BUBBL.1.CEN4T.001.nc
+      file3=$path_user/BUBBL.1.CEN4T.000.nc
+      file4=$path_ref/BUBBL.1.CEN4T.000.nc
+      set +e
+      $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2 --f3 $file3 --f4 $file4
+      t=$?
+      set -e
+      allt=$(($allt+$t))
+
+      #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
+      echo "Compare with ncdump..."
+      if [ -f $file1 -a -f $file2 ]; then
+        set +e
+        diff <(ncdump $file1 | head -c 27300) <(ncdump $file2 | head -c 27300)
+        t=$?
+        set -e
+        allt=$(($allt+$t))
+      else
+        [ ! -f $file1 ] && echo "  $file1 is missing"
+        [ ! -f $file2 ] && echo "  $file2 is missing"
+        allt=$(($allt+1))
+      fi
+    fi
+
+    if [ $case == ARMLES ]; then
+      echo "Compare with python..."
+      # Compare variable of both Synchronous and Diachronic files with printing difference
+      file1=$path_user/ARM__.1.CEN4T.001.nc
+      file2=$path_ref/ARM__.1.CEN4T.001.nc
+      file3=$path_user/ARM__.1.CEN4T.000.nc
+      file4=$path_ref/ARM__.1.CEN4T.000.nc
+      set +e
+      $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2 --f3 $file3 --f4 $file4
+      t=$?
+      set -e
+      allt=$(($allt+$t))
+
+      #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
+      echo "Compare with ncdump..."
+      if [ -f $file1 -a -f $file2 ]; then
+        set +e
+        diff <(ncdump $file1 | head -c 62889) <(ncdump $file2 | head -c 62889)
         t=$?
         set -e
         allt=$(($allt+$t))
