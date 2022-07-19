@@ -173,11 +173,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL ::  PTR          ! Transport prod. of TKE
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL ::  PDISS        ! Dissipation of TKE
-<<<<<<< HEAD
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
-=======
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
->>>>>>> GPU
 !
 !-------------------------------------------------------------------------------
 !
