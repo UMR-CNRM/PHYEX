@@ -65,10 +65,10 @@ END MODULE MODI_ICE_ADJUST_BIS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST, ONLY : XCPD, XRD, XP00
+USE MODD_CST, ONLY : XCPD, XRD, XP00, CST
+USE MODD_NEB, ONLY : NEB
 !
 USE MODI_COMPUTE_FUNCTION_THERMO
-USE MODE_TH_R_FROM_THL_RT_3D
 USE MODI_THLRT_FROM_THRVRCRI
 !
 USE MODE_ll
@@ -89,6 +89,7 @@ REAL, DIMENSION(SIZE(PTH,1),SIZE(PTH,2),SIZE(PTH,3)) :: ZTHL, ZRW, ZRV, ZRC, &
                                                         ZRI, ZWORK
 REAL, DIMENSION(SIZE(PTH,1),SIZE(PTH,2),SIZE(PTH,3)) :: ZFRAC_ICE, ZRSATW, ZRSATI
 REAL, DIMENSION(SIZE(PTH,1),SIZE(PTH,2),SIZE(PTH,3)) :: ZT, ZEXN, ZLVOCPEXN,ZLSOCPEXN
+REAL, DIMENSION(SIZE(PTH,1),SIZE(PTH,2),SIZE(PTH,3), 16) :: ZBUF
 INTEGER :: IRR
 CHARACTER(LEN=1) :: YFRAC_ICE
 !
@@ -127,10 +128,11 @@ CALL COMPUTE_FUNCTION_THERMO( IRR,                                &
 CALL THLRT_FROM_THRVRCRI( IRR, PTH, PR, ZLVOCPEXN, ZLSOCPEXN,&
                           ZTHL, ZRW                          )
 !
-CALL TH_R_FROM_THL_RT_3D(YFRAC_ICE,ZFRAC_ICE(:,:,:),PP(:,:,:), &
+CALL TH_R_FROM_THL_RT(CST, NEB, SIZE(ZFRAC_ICE), YFRAC_ICE,ZFRAC_ICE(:,:,:),PP(:,:,:), &
                          ZTHL(:,:,:), ZRW(:,:,:), PTH(:,:,:),  &
                          ZRV(:,:,:), ZRC(:,:,:), ZRI(:,:,:),   &
-                         ZRSATW(:,:,:), ZRSATI(:,:,:),OOCEAN=.FALSE.)
+                         ZRSATW(:,:,:), ZRSATI(:,:,:),OOCEAN=.FALSE.,&
+                         PBUF=ZBUF)
 CALL ADD3DFIELD_ll( TZFIELDS_ll, PTH, 'ICE_ADJUST_BIS::PTH')
 IF (IRR>=1) THEN
   CALL ADD3DFIELD_ll( TZFIELDS_ll, ZRV, 'ICE_ADJUST_BIS::ZRV' )
@@ -152,4 +154,7 @@ PR(:,:,:,2) = ZRC(:,:,:)
 IF (IRR>=4) &
 PR(:,:,:,4) = ZRI(:,:,:)
 !
+CONTAINS
+INCLUDE "th_r_from_thl_rt.func.h"
+INCLUDE "compute_frac_ice.func.h"
 END SUBROUTINE ICE_ADJUST_BIS

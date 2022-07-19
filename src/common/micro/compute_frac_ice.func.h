@@ -30,13 +30,13 @@ CHARACTER(LEN=1), INTENT(IN)    :: HFRAC_ICE       ! scheme to use
 TYPE(NEB_t),      INTENT(IN)    :: NEB
 REAL,             INTENT(IN)    :: PT              ! temperature
 REAL,             INTENT(INOUT) :: PFRAC_ICE       ! Ice fraction (1 for ice only, 0 for liquid only)
-INTEGER,          INTENT(OUT)   :: KERR            ! Error code in return
+INTEGER, OPTIONAL,        INTENT(OUT)   :: KERR            ! Error code in return
 !
 !------------------------------------------------------------------------
 
 !                1. Compute FRAC_ICE
 !
-KERR=0
+IF (PRESENT(KERR)) KERR=0
 SELECT CASE(HFRAC_ICE)
   CASE ('T') !using Temperature
     PFRAC_ICE = MAX( 0., MIN(1., (( NEB%XTMAXMIX - PT ) / ( NEB%XTMAXMIX - NEB%XTMINMIX )) ) ) ! freezing interval
@@ -48,7 +48,7 @@ SELECT CASE(HFRAC_ICE)
     ! (almost) nothing to do
     PFRAC_ICE = MAX( 0., MIN(1., PFRAC_ICE ) )
   CASE DEFAULT
-    KERR=1
+    IF (PRESENT(KERR)) KERR=1
 END SELECT
 
 END SUBROUTINE COMPUTE_FRAC_ICE

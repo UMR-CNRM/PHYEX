@@ -8,7 +8,7 @@
 !
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE MF_TURB(KKA,KKB,KKE,KKU,KKL,OMIXUV,                  &
+      SUBROUTINE MF_TURB(D, KSV, OMIXUV,                  &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
                 PIMPL, PTSTEP,                                        &
                 PDZZ,                                                 &
@@ -62,11 +62,10 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+!
 USE MODI_SHUMAN_MF, ONLY: MZM_MF
 USE MODE_TRIDIAG_MASSFLUX, ONLY: TRIDIAG_MASSFLUX
-!
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
@@ -77,11 +76,8 @@ IMPLICIT NONE
 !*      0.1  declarations of arguments
 !
 !
-INTEGER,                INTENT(IN)   :: KKA          ! near ground array index
-INTEGER,                INTENT(IN)   :: KKB          ! near ground physical index
-INTEGER,                INTENT(IN)   :: KKE          ! uppest atmosphere physical index
-INTEGER,                INTENT(IN)   :: KKU          ! uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL          ! +1 if grid goes from ground to atmosphere top, -1 otherwise
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+INTEGER,                INTENT(IN)   :: KSV
 LOGICAL,                INTENT(IN)   :: OMIXUV      ! True if mixing of momentum
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
@@ -89,39 +85,39 @@ INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
 REAL,                   INTENT(IN)   :: PIMPL       ! degree of implicitness
 REAL,                 INTENT(IN)     ::  PTSTEP   ! Dynamical timestep 
 !
-REAL, DIMENSION(:,:), INTENT(IN)   :: PDZZ        ! metric coefficients
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PDZZ        ! metric coefficients
 
-REAL, DIMENSION(:,:), INTENT(IN)   :: PRHODJ      ! dry density * Grid size
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PRHODJ      ! dry density * Grid size
 
 !   Conservative var. at t-dt
-REAL, DIMENSION(:,:), INTENT(IN) ::  PTHLM        ! conservative pot. temp.
-REAL, DIMENSION(:,:), INTENT(IN) ::  PRTM         ! water var.  where 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PTHLM        ! conservative pot. temp.
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PRTM         ! water var.  where 
 !  Virtual potential temperature at t-dt
-REAL, DIMENSION(:,:), INTENT(IN) ::  PTHVM 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PTHVM 
 !  Momentum at t-dt
-REAL, DIMENSION(:,:), INTENT(IN) ::  PUM
-REAL, DIMENSION(:,:), INTENT(IN) ::  PVM
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PUM
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PVM
 !  scalar variables at t-dt
-REAL, DIMENSION(:,:,:), INTENT(IN) ::  PSVM
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVM
 !
 ! Tendencies of conservative variables
-REAL, DIMENSION(:,:),   INTENT(OUT) ::  PTHLDT
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PTHLDT
 
-REAL, DIMENSION(:,:),   INTENT(OUT) ::  PRTDT 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PRTDT 
 ! Tendencies of momentum
-REAL, DIMENSION(:,:),   INTENT(OUT) ::  PUDT
-REAL, DIMENSION(:,:),   INTENT(OUT) ::  PVDT
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PUDT
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PVDT
 ! Tendencies of scalar variables
-REAL, DIMENSION(:,:,:), INTENT(OUT) ::  PSVDT
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT) ::  PSVDT
 
 
 ! Updraft characteritics
-REAL, DIMENSION(:,:), INTENT(IN)   ::  PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP
-REAL, DIMENSION(:,:,:), INTENT(IN) ::  PSV_UP
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSV_UP
 ! Fluxes
-REAL, DIMENSION(:,:), INTENT(OUT)  ::  PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF
 
-REAL, DIMENSION(:,:,:), INTENT(OUT)::  PFLXZSVMF
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT)::  PFLXZSVMF
 !
 !
 !
@@ -130,8 +126,9 @@ REAL, DIMENSION(:,:,:), INTENT(OUT)::  PFLXZSVMF
 !       0.2  declaration of local variables
 !
 
-REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2)) :: ZVARS
-INTEGER :: ISV,JSV          !number of scalar variables and Loop counter
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZVARS
+INTEGER :: JSV          !number of scalar variables and Loop counter
+INTEGER :: JI, JK
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !----------------------------------------------------------------------------
@@ -140,10 +137,6 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !         -------------
 !
 IF (LHOOK) CALL DR_HOOK('MF_TURB',0,ZHOOK_HANDLE)
-!
-! number of scalar var
-ISV=SIZE(PSVM,3)
-
 !
 PFLXZSVMF = 0.
 PSVDT = 0.
@@ -158,15 +151,23 @@ PSVDT = 0.
 !   ( Resulting fluxes are in flux level (w-point) as PEMF and PTHL_UP )
 !
 
-PFLXZTHMF(:,:) = PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(PTHLM(:,:), KKA, KKU, KKL))
+CALL MZM_MF(D, PTHLM(:,:), PFLXZTHMF(:,:))
+CALL MZM_MF(D, PRTM(:,:), PFLXZRMF(:,:))
+CALL MZM_MF(D, PTHVM(:,:), PFLXZTHVMF(:,:))
 
-PFLXZRMF(:,:) =  PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(PRTM(:,:), KKA, KKU, KKL))
-
-PFLXZTHVMF(:,:) = PEMF(:,:)*(PTHV_UP(:,:)-MZM_MF(PTHVM(:,:), KKA, KKU, KKL))
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+PFLXZTHMF(D%NIJB:D%NIJE,:) = PEMF(D%NIJB:D%NIJE,:)*(PTHL_UP(D%NIJB:D%NIJE,:)-PFLXZTHMF(D%NIJB:D%NIJE,:))
+PFLXZRMF(D%NIJB:D%NIJE,:) =  PEMF(D%NIJB:D%NIJE,:)*(PRT_UP(D%NIJB:D%NIJE,:)-PFLXZRMF(D%NIJB:D%NIJE,:))
+PFLXZTHVMF(D%NIJB:D%NIJE,:) = PEMF(D%NIJB:D%NIJE,:)*(PTHV_UP(D%NIJB:D%NIJE,:)-PFLXZTHVMF(D%NIJB:D%NIJE,:))
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 
 IF (OMIXUV) THEN
-  PFLXZUMF(:,:) =  PEMF(:,:)*(PU_UP(:,:)-MZM_MF(PUM(:,:), KKA, KKU, KKL))
-  PFLXZVMF(:,:) =  PEMF(:,:)*(PV_UP(:,:)-MZM_MF(PVM(:,:), KKA, KKU, KKL))
+  CALL MZM_MF(D, PUM(:,:), PFLXZUMF(:,:))
+  CALL MZM_MF(D, PVM(:,:), PFLXZVMF(:,:))
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  PFLXZUMF(D%NIJB:D%NIJE,:) =  PEMF(D%NIJB:D%NIJE,:)*(PU_UP(D%NIJB:D%NIJE,:)-PFLXZUMF(D%NIJB:D%NIJE,:))
+  PFLXZVMF(D%NIJB:D%NIJE,:) =  PEMF(D%NIJB:D%NIJE,:)*(PV_UP(D%NIJB:D%NIJE,:)-PFLXZVMF(D%NIJB:D%NIJE,:))
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 ELSE
   PFLXZUMF(:,:) = 0.
   PFLXZVMF(:,:) = 0.
@@ -185,25 +186,26 @@ ENDIF
 ! 3.1 Compute the tendency for the conservative potential temperature
 !     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
 !
-CALL TRIDIAG_MASSFLUX(KKA,KKB,KKE,KKU,KKL,PTHLM,PFLXZTHMF,-PEMF,PTSTEP,PIMPL,  &
+CALL TRIDIAG_MASSFLUX(D,PTHLM,PFLXZTHMF,-PEMF,PTSTEP,PIMPL,  &
                       PDZZ,PRHODJ,ZVARS )
-! compute new flux
-PFLXZTHMF(:,:) = PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(ZVARS(:,:), KKA, KKU, KKL))
-
-!!! compute THL tendency
-!
-PTHLDT(:,:)= (ZVARS(:,:)-PTHLM(:,:))/PTSTEP
+! compute new flux and THL tendency
+CALL MZM_MF(D, ZVARS(:,:), PFLXZTHMF(:,:))
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+PFLXZTHMF(D%NIJB:D%NIJE,:) = PEMF(D%NIJB:D%NIJE,:)*(PTHL_UP(D%NIJB:D%NIJE,:)-PFLXZTHMF(D%NIJB:D%NIJE,:))
+PTHLDT(D%NIJB:D%NIJE,:)= (ZVARS(D%NIJB:D%NIJE,:)-PTHLM(D%NIJB:D%NIJE,:))/PTSTEP
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 
 !
 ! 3.2 Compute the tendency for the conservative mixing ratio
 !
-CALL TRIDIAG_MASSFLUX(KKA,KKB,KKE,KKU,KKL,PRTM(:,:),PFLXZRMF,-PEMF,PTSTEP,PIMPL,  &
+CALL TRIDIAG_MASSFLUX(D,PRTM(:,:),PFLXZRMF,-PEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
-! compute new flux
-PFLXZRMF(:,:) =  PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(ZVARS(:,:), KKA, KKU, KKL))
-
-!!! compute RT tendency
-PRTDT(:,:) = (ZVARS(:,:)-PRTM(:,:))/PTSTEP
+! compute new flux and RT tendency
+CALL MZM_MF(D, ZVARS(:,:), PFLXZRMF(:,:))
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+PFLXZRMF(D%NIJB:D%NIJE,:) =  PEMF(D%NIJB:D%NIJE,:)*(PRT_UP(D%NIJB:D%NIJE,:)-PFLXZRMF(D%NIJB:D%NIJE,:))
+PRTDT(D%NIJB:D%NIJE,:) = (ZVARS(D%NIJB:D%NIJE,:)-PRTM(D%NIJB:D%NIJE,:))/PTSTEP
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 !
 
 IF (OMIXUV) THEN
@@ -212,52 +214,56 @@ IF (OMIXUV) THEN
   !     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
   !
 
-  CALL TRIDIAG_MASSFLUX(KKA,KKB,KKE,KKU,KKL,PUM,PFLXZUMF,-PEMF,PTSTEP,PIMPL,  &
+  CALL TRIDIAG_MASSFLUX(D,PUM,PFLXZUMF,-PEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
-  ! compute new flux
-  PFLXZUMF(:,:) = PEMF(:,:)*(PU_UP(:,:)-MZM_MF(ZVARS(:,:), KKA, KKU, KKL))
-
-  ! compute U tendency
-  PUDT(:,:)= (ZVARS(:,:)-PUM(:,:))/PTSTEP
-
+  ! compute new flux and U tendency
+  CALL MZM_MF(D, ZVARS(:,:), PFLXZUMF(:,:))
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  PFLXZUMF(D%NIJB:D%NIJE,:) = PEMF(D%NIJB:D%NIJE,:)*(PU_UP(D%NIJB:D%NIJE,:)-PFLXZUMF(D%NIJB:D%NIJE,:))
+  PUDT(D%NIJB:D%NIJE,:)= (ZVARS(D%NIJB:D%NIJE,:)-PUM(D%NIJB:D%NIJE,:))/PTSTEP
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
   !
   !
   ! 3.4 Compute the tendency for the (non conservative but treated as it for the time beiing)
   !                                  meridian momentum
   !     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
   !
-  CALL TRIDIAG_MASSFLUX(KKA,KKB,KKE,KKU,KKL,PVM,PFLXZVMF,-PEMF,PTSTEP,PIMPL,  &
+  CALL TRIDIAG_MASSFLUX(D,PVM,PFLXZVMF,-PEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
-  ! compute new flux
-  PFLXZVMF(:,:) = PEMF(:,:)*(PV_UP(:,:)-MZM_MF(ZVARS(:,:), KKA, KKU, KKL))
-
-  ! compute V tendency
-  PVDT(:,:)= (ZVARS(:,:)-PVM(:,:))/PTSTEP
+  ! compute new flux and V tendency
+  CALL MZM_MF(D, ZVARS(:,:), PFLXZVMF(:,:))
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  PFLXZVMF(D%NIJB:D%NIJE,:) = PEMF(D%NIJB:D%NIJE,:)*(PV_UP(D%NIJB:D%NIJE,:)-PFLXZVMF(D%NIJB:D%NIJE,:))
+  PVDT(D%NIJB:D%NIJE,:)= (ZVARS(D%NIJB:D%NIJE,:)-PVM(D%NIJB:D%NIJE,:))/PTSTEP
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 ELSE
   PUDT(:,:)=0.
   PVDT(:,:)=0.
 ENDIF
 
-DO JSV=1,ISV 
+DO JSV=1,KSV 
 
   IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
   
   !*     compute mean flux of scalar variables at time t-dt
   !   ( Resulting fluxes are in flux level (w-point) as PEMF and PTHL_UP )
 
-  PFLXZSVMF(:,:,JSV) = PEMF(:,:)*(PSV_UP(:,:,JSV)-MZM_MF(PSVM(:,:,JSV), KKA, KKU, KKL))
-  
+  CALL MZM_MF(D, PSVM(:,:,JSV), PFLXZSVMF(:,:,JSV))
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  PFLXZSVMF(D%NIJB:D%NIJE,:,JSV) = PEMF(D%NIJB:D%NIJE,:)*(PSV_UP(D%NIJB:D%NIJE,:,JSV)-PFLXZSVMF(D%NIJB:D%NIJE,:,JSV))
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
   !
   ! 3.5 Compute the tendency for scalar variables
   !     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
   !
-  CALL TRIDIAG_MASSFLUX(KKA,KKB,KKE,KKU,KKL,PSVM(:,:,JSV),PFLXZSVMF(:,:,JSV),&
+  CALL TRIDIAG_MASSFLUX(D,PSVM(:,:,JSV),PFLXZSVMF(:,:,JSV),&
                         -PEMF,PTSTEP,PIMPL,PDZZ,PRHODJ,ZVARS )
-  ! compute new flux
-  PFLXZSVMF(:,:,JSV) = PEMF(:,:)*(PSV_UP(:,:,JSV)-MZM_MF(ZVARS, KKA, KKU, KKL))
-
-  ! compute Sv tendency
-  PSVDT(:,:,JSV)= (ZVARS(:,:)-PSVM(:,:,JSV))/PTSTEP
+  ! compute new flux and Sv tendency
+  CALL MZM_MF(D, ZVARS, PFLXZSVMF(:,:,JSV))
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  PFLXZSVMF(D%NIJB:D%NIJE,:,JSV) = PEMF(D%NIJB:D%NIJE,:)*(PSV_UP(D%NIJB:D%NIJE,:,JSV)-PFLXZSVMF(D%NIJB:D%NIJE,:,JSV))
+  PSVDT(D%NIJB:D%NIJE,:,JSV)= (ZVARS(D%NIJB:D%NIJE,:)-PSVM(D%NIJB:D%NIJE,:,JSV))/PTSTEP
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 
 ENDDO
 !

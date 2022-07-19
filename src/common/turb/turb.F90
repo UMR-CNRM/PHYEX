@@ -8,7 +8,7 @@
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
               & O2D,ONOMIXLG,OFLAT,OLES_CALL,OCOUPLES,OBLOWSNOW,      &
               & OTURB_FLX,OTURB_DIAG,OSUBG_COND,OCOMPUTE_SRC,         &
-              & ORMC01,OOCEAN,ODEEPOC,OHARAT,ODIAG_IN_RUN,            &
+              & ORMC01,OOCEAN,ODEEPOC,OHARAT, ODIAG_IN_RUN,           &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,PIMPL,      &
               & PTSTEP,TPFILE,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
@@ -24,8 +24,9 @@
               & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTDIFF,PTDISS,      &
               & TBUDGETS, KBUDGETS,                                   &
               & PEDR,PLEM,PRTKEMS,PTPMF,                              &
-              & PDRUS_TURB,PDRVS_TURB,PDRTHLS_TURB,PDRRTS_TURB,       &
-              & PDRSVS_TURB,PCURRENT_TKE_DISS,PTR,PDISS        )              
+              & PDRUS_TURB,PDRVS_TURB,                                &
+              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS,       &
+              & PCURRENT_TKE_DISS                                     ) 
 !     #################################################################
 !
 !
@@ -421,7 +422,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PTR          ! Transport prod. of TKE
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PDISS        ! Dissipation of TKE
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
 !
 !
 !-------------------------------------------------------------------------------
@@ -526,7 +527,7 @@ ZEXPL = 1.- PIMPL
 ZRVORD= CST%XRV / CST%XRD
 !
 !Copy data into ZTHLM and ZRM only if needed
-IF (HTURBLEN=='BL89' .OR. HTURBLEN=='RM17' .OR. ORMC01) THEN
+IF (HTURBLEN=='BL89' .OR. HTURBLEN=='RM17' .OR. HTURBLEN=='ADAP' .OR. ORMC01) THEN
   ZTHLM(IIB:IIE,IJB:IJE,1:D%NKT) = PTHLT(IIB:IIE,IJB:IJE,1:D%NKT)
   ZRM(IIB:IIE,IJB:IJE,1:D%NKT,:) = PRT(IIB:IIE,IJB:IJE,1:D%NKT,:)
 END IF
@@ -1142,14 +1143,15 @@ ELSE
   ZRTKEMS(:,:,:)=0.
 END IF
 !
-CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,HPROGRAM,                       &
-                   & KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,                       &
-                   & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,                &
-                   & PTSTEP,PIMPL,ZEXPL,                                 &
-                   & HTURBLEN,HTURBDIM,                                  &
-                   & TPFILE,OTURB_DIAG,OLES_CALL, ODIAG_IN_RUN,          &
-                   & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,ZRTKEMS, &
-                   & TBUDGETS,KBUDGETS, PEDR=PEDR, PTR=PTR,PDISS=PDISS,PCURRENT_TKE_DISS=PCURRENT_TKE_DISS)
+CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,HPROGRAM,                      &
+                   & KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,                      &
+                   & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,               &
+                   & PTSTEP,PIMPL,ZEXPL,                                &
+                   & HTURBLEN,HTURBDIM,                                 &
+                   & TPFILE,OTURB_DIAG,OLES_CALL,ODIAG_IN_RUN,          &
+                   & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,ZRTKEMS,&
+                   & TBUDGETS,KBUDGETS, PEDR=PEDR, PTR=PTR,PDISS=PDISS, &
+                   & PCURRENT_TKE_DISS=PCURRENT_TKE_DISS                )
 IF (BUCONF%LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS+ ZLVOCPEXNM * PRRS(:,:,:,2) &

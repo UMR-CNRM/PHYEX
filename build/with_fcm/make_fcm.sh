@@ -1,26 +1,28 @@
 #!/bin/bash
 
+set -e
+
 fcm_version=tags/2021.05.0
 fiat_version=1295120464c3905e5edcbb887e4921686653eab8
 
-function parse_args()
-{
-    # default values
-    ARCH_PATH=$PWD/arch
-    ARCH=gnu
-    # pass unrecognized arguments to fcm
-    FCM_ARGS=""
-    
-    while (($# > 0))
-    do
-	OPTION="$1" ; shift
-	case "$OPTION" in
-	    "-h") cat <<EOF
+function parse_args() {
+  # default values
+  ARCH_PATH=$PWD/arch
+  ARCH=
+  GMKFILE=
+  # pass unrecognized arguments to fcm
+  FCM_ARGS=""
+  
+  while (($# > 0)); do
+    OPTION="$1" ; shift
+    case "$OPTION" in
+      "-h") cat <<EOF
 	    Usage :
 $0 [options]
 --help -h   help
 --arch-path ARCH_PATH directory for architecture specific files (see below) [./arch]
 --arch ARCH  	        build using arch files $ARCH_PATH/arch-ARCH.* [gnu]
+--gmkfile FILE        build using a gmkpack configuration file (--arch must be used to give a name to the build dir)
 
 Unrecognized options are passed to the fcm build command. Useful options include :
 --new                   clean build tree before building
@@ -31,34 +33,38 @@ For details on FCM, see
     http://metomi.github.io/fcm/doc/user_guide/build.html
     http://metomi.github.io/fcm/doc/user_guide/command_ref.html#fcm-build
 EOF
-		  exit;;
-	    "--arch")
-		ARCH=$1 ; shift ;; 
-	    "--arch-path")
-		ARCH_PATH=$1 ; shift ;; 
-	    *)
-		FCM_ARGS="$FCM_ARGS $OPTION"
-		;;
-	esac
-    done
+        exit;;
+      "--arch")
+        ARCH=$1 ; shift ;; 
+      "--arch-path")
+        ARCH_PATH=$1 ; shift ;; 
+      "--gmkfile")
+        GMKFILE=$1 ; shift ;;
+      *)
+        FCM_ARGS="$FCM_ARGS $OPTION" ;;
+    esac
+  done
+  [ "$GMKFILE" == "" -a "$ARCH" == "" ] && ARCH=gnu
+  if [ "$GMKFILE" != "" -a "$ARCH" == "" ]; then
+    echo "--arch option is mandatory if --gmkfile option is used"
+    exit 2
+  fi
 }
 
-function check_install_fcm()
-{
+function check_install_fcm() {
   if [ ! -f fcm/bin/fcm ]; then
     echo "Performing FCM installation..."
     cd fcm
     rm -f .gitkeep
     git clone https://github.com/metomi/fcm.git .
-    git checkout tags/$fcm_version
+    git checkout $fcm_version
     touch .gitkeep
     cd ..
     echo "...FCM installation done"
   fi
 }
 
-function check_install_fiat()
-{
+function check_install_fiat() {
   if [ ! -d fiat/src ]; then
     echo "Performing fiat cloning..."
     cd fiat
@@ -72,8 +78,39 @@ function check_install_fiat()
 echo
 }
 
-function build_compilation_script()
-{
+function gmkfile2arch() {
+  GMKFILE=$1
+  ARCHFILE=$2
+cat <<EOF > $ARCHFILE
+# Compilation
+\$FCOMPILER     =     $(grep "^FRTNAME =" $GMKFILE | cut -d = -f 2)
+\$BASE_FFLAGS   =     $(grep "^FRTFLAGS =" $GMKFILE | cut -d = -f 2-) $(grep "^GMK_FCFLAGS_PHYEX =" $GMKFILE | cut -d = -f 2-)
+\$PROD_FFLAGS   =     $(grep "^OPT_FRTFLAGS =" $GMKFILE | cut -d = -f 2-)
+\$DEV_FFLAGS    =     $(grep "^DBG_FRTFLAGS =" $GMKFILE | cut -d = -f 2-)
+\$DEBUG_FFLAGS  =     $(grep "^DBG_FRTFLAGS =" $GMKFILE | cut -d = -f 2-) $(grep "^BCD_FRTFLAGS =" $GMKFILE | cut -d = -f 2-) $(grep "^NAN_FRTFLAGS =" $GMKFILE | cut -d = -f 2-)
+\$CCOMPILER     =     $(grep "^VCCNAME =" $GMKFILE | cut -d = -f 2)
+\$BASE_CFLAGS   =     $(grep "^VCCFLAGS =" $GMKFILE | cut -d = -f 2-)
+\$PROD_CFLAGS   =     $(grep "^OPT_VCCFLAGS =" $GMKFILE | cut -d = -f 2-)
+\$DEV_CFLAGS    =     
+\$DEBUG_CFLAGS  =     
+\$OMP_FFLAGS    =
+
+# Preprocessor
+\$FPP_FLAGS     =     $(grep "^MACROS_FRT =" $GMKFILE | cut -d = -f 2- | sed 's/-D//g')
+\$CPP_FLAGS     =     $(grep "^MACROS_CC =" $GMKFILE | cut -d = -f 2- | sed 's/-D//g')
+
+# Linker
+\$LINK          =     $(grep "^LNK_MPI =" $GMKFILE | cut -d = -f 2-)
+\$BASE_LD       =     $(grep "^LNK_FLAGS =" $GMKFILE | cut -d = -f 2-)
+\$OMP_LD        =
+\$LD_EXE_TO_SHARED = $(grep "^LNK_SOLIB =" $GMKFILE | cut -d = -f 2-  | sed 's/-o a.out//')
+
+# Other
+\$AR            =     $(grep "^AR =" $GMKFILE | cut -d = -f 2-)
+EOF
+}
+
+function build_compilation_script() {
 cat <<EOF > compilation.sh
 #!/bin/bash
 
@@ -135,13 +172,19 @@ if [ -d $builddir ]; then
   exit 1
 fi
 mkdir $builddir
-cp ${ARCH_PATH}/arch-${ARCH}.env $builddir/arch.env
-cp ${ARCH_PATH}/arch-${ARCH}.fcm $builddir/arch.fcm 
+if [ "$GMKFILE" != "" ]; then
+  touch $builddir/arch.env
+  gmkfile2arch $GMKFILE $builddir/arch.fcm
+else
+  cp ${ARCH_PATH}/arch-${ARCH}.env $builddir/arch.env
+  cp ${ARCH_PATH}/arch-${ARCH}.fcm $builddir/arch.fcm 
+fi
 cp fcm-make.cfg $builddir
 cd $builddir
 mkdir src
 cd src
 ln -s ../../../../src/common .
+ln -s ../../../../src/testprogs .
 ln -s ../../fiat/src fiat
 cat <<EOF > dummyprog.F90
 PROGRAM DUMMYPROG
@@ -157,3 +200,5 @@ ln -s build/bin/libphyex.so .
 
 # Check if python can open the resulting shared lib
 python3 -c "from ctypes import cdll; cdll.LoadLibrary('./libphyex.so')"
+
+# ldd -r ./libphyex.so should also give interesting results

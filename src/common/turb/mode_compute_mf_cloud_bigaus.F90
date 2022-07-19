@@ -9,7 +9,7 @@
 !
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE COMPUTE_MF_CLOUD_BIGAUS(KKA, KKB, KKE, KKU, KKL,&
+      SUBROUTINE COMPUTE_MF_CLOUD_BIGAUS(D, CST, PARAMMF,&
                                   PEMF, PDEPTH,&
                                   PRT_UP, PTHV_UP, PFRAC_ICE_UP, PRSAT_UP,&
                                   PRTM, PTHM, PTHVM,&
@@ -57,13 +57,11 @@ CONTAINS
 !
 !*      0. DECLARATIONS
 !          ------------
-USE MODD_PARAM_MFSHALL_n, ONLY : XALPHA_MF, XSIGMA_MF
-USE MODD_CST, ONLY  : XPI, XG
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+USE MODD_CST,             ONLY: CST_t
+USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
 USE MODI_SHUMAN_MF, ONLY: MZF_MF, GZ_M_W_MF
-USE MODI_GAMMA_INC
-!
-USE MODE_THERMO
 !
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
@@ -72,35 +70,33 @@ IMPLICIT NONE
 !
 !*                    0.1  Declaration of Arguments
 !
-INTEGER,                INTENT(IN)   :: KKA          ! near ground array index
-INTEGER,                INTENT(IN)   :: KKB          ! near ground physical index
-INTEGER,                INTENT(IN)   :: KKE          ! uppest atmosphere physical index
-INTEGER,                INTENT(IN)   :: KKU          ! uppest atmosphere array index
-INTEGER,                INTENT(IN)   :: KKL                     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PEMF                    ! updraft characteritics
-REAL, DIMENSION(:),     INTENT(IN)   :: PDEPTH                  ! Deepness of cloud
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PTHV_UP, PRSAT_UP, PRT_UP ! updraft characteritics
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PFRAC_ICE_UP            ! liquid/ice fraction in updraft
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PTHM, PRTM, PTHVM       ! env. var. at t-dt
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PDZZ, PZZ
-REAL, DIMENSION(:,:),   INTENT(IN)   :: PRHODREF
-REAL, DIMENSION(:,:),   INTENT(OUT)  :: PRC_MF, PRI_MF          ! cloud content
-REAL, DIMENSION(:,:),   INTENT(OUT)  :: PCF_MF                  ! and cloud fraction for MF scheme
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
+TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PEMF                    ! updraft characteritics
+REAL, DIMENSION(D%NIJT),     INTENT(IN)   :: PDEPTH                  ! Deepness of cloud
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTHV_UP, PRSAT_UP, PRT_UP ! updraft characteritics
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PFRAC_ICE_UP            ! liquid/ice fraction in updraft
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTHM, PRTM, PTHVM       ! env. var. at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PDZZ, PZZ
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PRHODREF
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PRC_MF, PRI_MF          ! cloud content
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PCF_MF                  ! and cloud fraction for MF scheme
 !
 !*                    0.1  Declaration of local variables
 !
 !
-REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZGRAD_Z_RT, &            !
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZGRAD_Z_RT, &            !
                                             & ZALPHA_UP_M, &           ! Variables used to compute variance
                                             & ZSIGMF                   ! and sqrt(variance)
-REAL, DIMENSION(SIZE(PTHM,1))              :: ZOMEGA_UP_M              !
-REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZW1 ! working array
-INTEGER                                    :: JK  ! vertical loop control
-REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZEMF_M, ZTHV_UP_M, &   !
+REAL, DIMENSION(D%NIJT)              :: ZOMEGA_UP_M              !
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZW1 ! working array
+INTEGER                                    :: JI, JK  ! loop control
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZEMF_M, ZTHV_UP_M, &   !
                                             & ZRSAT_UP_M, ZRT_UP_M,& ! Interpolation on mass points
                                             & ZFRAC_ICE_UP_M         !
-REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZCOND ! condensate
-REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2)) :: ZA, ZGAM ! used for integration
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZCOND ! condensate
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZA, ZGAM ! used for integration
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_BIGAUS',0,ZHOOK_HANDLE)
@@ -113,70 +109,83 @@ IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_BIGAUS',0,ZHOOK_HANDLE)
 !
 !
 !Vertical gradient of RT, result on mass points
-ZW1(:,:)=GZ_M_W_MF(PRTM(:,:), PDZZ(:,:), KKA, KKU, KKL)
-ZGRAD_Z_RT(:,:)=MZF_MF(ZW1(:,:), KKA, KKU, KKL)
+CALL GZ_M_W_MF(D, PRTM(:,:), PDZZ(:,:), ZW1(:,:))
+CALL MZF_MF(D, ZW1(:,:), ZGRAD_Z_RT(:,:))
 
 !Interpolation on mass points
-ZTHV_UP_M(:,:) = MZF_MF(PTHV_UP(:,:), KKA, KKU, KKL)
-ZRSAT_UP_M(:,:)= MZF_MF(PRSAT_UP(:,:), KKA, KKU, KKL)
-ZRT_UP_M(:,:)  = MZF_MF(PRT_UP(:,:), KKA, KKU, KKL)
-ZEMF_M(:,:)    = MZF_MF(PEMF(:,:), KKA, KKU, KKL)
-ZFRAC_ICE_UP_M(:,:) = MZF_MF(PFRAC_ICE_UP(:,:), KKA, KKU, KKL)
+CALL MZF_MF(D, PTHV_UP(:,:), ZTHV_UP_M(:,:))
+CALL MZF_MF(D, PRSAT_UP(:,:), ZRSAT_UP_M(:,:))
+CALL MZF_MF(D, PRT_UP(:,:), ZRT_UP_M(:,:))
+CALL MZF_MF(D, PEMF(:,:), ZEMF_M(:,:))
+CALL MZF_MF(D, PFRAC_ICE_UP(:,:), ZFRAC_ICE_UP_M(:,:))
 
 !computation of omega star up
 ZOMEGA_UP_M(:)=0.
-DO JK=KKB,KKE-KKL,KKL
+DO JK=D%NKB,D%NKE-D%NKL,D%NKL
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
   !Vertical integration over the entire column but only buoyant points are used
-  !ZOMEGA_UP_M(:)=ZOMEGA_UP_M(:) + &
-  !                ZEMF_M(:,JK) * &
-  !                MAX(0.,(ZTHV_UP_M(:,JK)-PTHVM(:,JK))) * &
-  !                (PZZ(:,JK+KKL)-PZZ(:,JK)) / &
-  !                (PTHM(:,JK) * PRHODREF(:,JK))
+  !ZOMEGA_UP_M(D%NIJB:D%NIJE)=ZOMEGA_UP_M(D%NIJB:D%NIJE) + &
+  !                ZEMF_M(D%NIJB:D%NIJE,JK) * &
+  !                MAX(0.,(ZTHV_UP_M(D%NIJB:D%NIJE,JK)-PTHVM(D%NIJB:D%NIJE,JK))) * &
+  !                (PZZ(D%NIJB:D%NIJE,JK+KKL)-PZZ(D%NIJB:D%NIJE,JK)) / &
+  !                (PTHM(D%NIJB:D%NIJE,JK) * PRHODREF(D%NIJB:D%NIJE,JK))
 
   !Vertical integration over the entire column
-  ZOMEGA_UP_M(:)=ZOMEGA_UP_M(:) + &
-                 ZEMF_M(:,JK) * &
-                 (ZTHV_UP_M(:,JK)-PTHVM(:,JK)) * &
-                 (PZZ(:,JK+KKL)-PZZ(:,JK)) / &
-                 (PTHM(:,JK) * PRHODREF(:,JK))
+  ZOMEGA_UP_M(D%NIJB:D%NIJE)=ZOMEGA_UP_M(D%NIJB:D%NIJE) + &
+                 ZEMF_M(D%NIJB:D%NIJE,JK) * &
+                 (ZTHV_UP_M(D%NIJB:D%NIJE,JK)-PTHVM(D%NIJB:D%NIJE,JK)) * &
+                 (PZZ(D%NIJB:D%NIJE,JK+D%NKL)-PZZ(D%NIJB:D%NIJE,JK)) / &
+                 (PTHM(D%NIJB:D%NIJE,JK) * PRHODREF(D%NIJB:D%NIJE,JK))
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 ENDDO
-ZOMEGA_UP_M(:)=MAX(ZOMEGA_UP_M(:), 1.E-20)
-ZOMEGA_UP_M(:)=(XG*ZOMEGA_UP_M(:))**(1./3.)
+!$mnh_expand_array(JI=D%NIJB:D%NIJE)
+ZOMEGA_UP_M(D%NIJB:D%NIJE)=MAX(ZOMEGA_UP_M(D%NIJB:D%NIJE), 1.E-20)
+ZOMEGA_UP_M(D%NIJB:D%NIJE)=(CST%XG*ZOMEGA_UP_M(D%NIJB:D%NIJE))**(1./3.)
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 
 !computation of alpha up
-DO JK=KKA,KKU,KKL
-  ZALPHA_UP_M(:,JK)=ZEMF_M(:,JK)/(XALPHA_MF*PRHODREF(:,JK)*ZOMEGA_UP_M(:))
+DO JK=D%NKA,D%NKU,D%NKL
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
+  ZALPHA_UP_M(D%NIJB:D%NIJE,JK)=ZEMF_M(D%NIJB:D%NIJE,JK)/(PARAMMF%XALPHA_MF*PRHODREF(D%NIJB:D%NIJE,JK)*ZOMEGA_UP_M(D%NIJB:D%NIJE))
+  ZALPHA_UP_M(D%NIJB:D%NIJE,JK)=MAX(0., MIN(ZALPHA_UP_M(D%NIJB:D%NIJE,JK), 1.))
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 ENDDO
-ZALPHA_UP_M(:,:)=MAX(0., MIN(ZALPHA_UP_M(:,:), 1.))
 
 !computation of sigma of the distribution
-DO JK=KKA,KKU,KKL
-  ZSIGMF(:,JK)=ZEMF_M(:,JK) * &
-               (ZRT_UP_M(:,JK) - PRTM(:,JK)) * &
-               PDEPTH(:) * ZGRAD_Z_RT(:,JK) / &
-               (XSIGMA_MF * ZOMEGA_UP_M(:) * PRHODREF(:,JK))
+DO JK=D%NKA,D%NKU,D%NKL
+  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
+  ZSIGMF(D%NIJB:D%NIJE,JK)=ZEMF_M(D%NIJB:D%NIJE,JK) * &
+               (ZRT_UP_M(D%NIJB:D%NIJE,JK) - PRTM(D%NIJB:D%NIJE,JK)) * &
+               PDEPTH(D%NIJB:D%NIJE) * ZGRAD_Z_RT(D%NIJB:D%NIJE,JK) / &
+               (PARAMMF%XSIGMA_MF * ZOMEGA_UP_M(D%NIJB:D%NIJE) * PRHODREF(D%NIJB:D%NIJE,JK))
+  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 ENDDO
-ZSIGMF(:,:)=SQRT(MAX(ABS(ZSIGMF(:,:)), 1.E-40))
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+ZSIGMF(D%NIJB:D%NIJE,:)=SQRT(MAX(ABS(ZSIGMF(D%NIJB:D%NIJE,:)), 1.E-40))
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 !
 !*      2. PDF integration
 !          ------------------------------------------------
 !
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 !The mean of the distribution is ZRT_UP
 !Computation of ZA and ZGAM (=efrc(ZA)) coefficient
-ZA(:,:)=(ZRSAT_UP_M(:,:)-ZRT_UP_M(:,:))/(sqrt(2.)*ZSIGMF(:,:))
+ZA(D%NIJB:D%NIJE,:)=(ZRSAT_UP_M(D%NIJB:D%NIJE,:)-ZRT_UP_M(D%NIJB:D%NIJE,:))/(sqrt(2.)*ZSIGMF(D%NIJB:D%NIJE,:))
 
 !Approximation of erf function
-ZGAM(:,:)=1-SIGN(1., ZA(:,:))*SQRT(1-EXP(-4*ZA(:,:)**2/XPI))
+ZGAM(D%NIJB:D%NIJE,:)=1-SIGN(1., ZA(D%NIJB:D%NIJE,:))*SQRT(1-EXP(-4*ZA(D%NIJB:D%NIJE,:)**2/CST%XPI))
 
 !computation of cloud fraction
-PCF_MF(:,:)=MAX( 0., MIN(1.,0.5*ZGAM(:,:) * ZALPHA_UP_M(:,:)))
+PCF_MF(D%NIJB:D%NIJE,:)=MAX( 0., MIN(1.,0.5*ZGAM(D%NIJB:D%NIJE,:) * ZALPHA_UP_M(D%NIJB:D%NIJE,:)))
 
 !computation of condensate, then PRC and PRI
-ZCOND(:,:)=(EXP(-ZA(:,:)**2)-ZA(:,:)*SQRT(XPI)*ZGAM(:,:))*ZSIGMF(:,:)/SQRT(2.*XPI) * ZALPHA_UP_M(:,:)
-ZCOND(:,:)=MAX(ZCOND(:,:), 0.) !due to approximation of ZGAM value, ZCOND could be slightly negative
-PRC_MF(:,:)=(1.-ZFRAC_ICE_UP_M(:,:)) * ZCOND(:,:)
-PRI_MF(:,:)=(   ZFRAC_ICE_UP_M(:,:)) * ZCOND(:,:)
-
+ZCOND(D%NIJB:D%NIJE,:)=(EXP(-ZA(D%NIJB:D%NIJE,:)**2)-ZA(D%NIJB:D%NIJE,:)*SQRT(CST%XPI)*ZGAM(D%NIJB:D%NIJE,:))* &
+                    &ZSIGMF(D%NIJB:D%NIJE,:)/SQRT(2.*CST%XPI) * ZALPHA_UP_M(D%NIJB:D%NIJE,:)
+ZCOND(D%NIJB:D%NIJE,:)=MAX(ZCOND(D%NIJB:D%NIJE,:), 0.) !due to approximation of ZGAM value, ZCOND could be slightly negative
+PRC_MF(D%NIJB:D%NIJE,:)=(1.-ZFRAC_ICE_UP_M(D%NIJB:D%NIJE,:)) * ZCOND(D%NIJB:D%NIJE,:)
+PRI_MF(D%NIJB:D%NIJE,:)=(   ZFRAC_ICE_UP_M(D%NIJB:D%NIJE,:)) * ZCOND(D%NIJB:D%NIJE,:)
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+!
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_BIGAUS',1,ZHOOK_HANDLE)
 
 END SUBROUTINE COMPUTE_MF_CLOUD_BIGAUS

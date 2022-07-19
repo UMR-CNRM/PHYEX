@@ -4,29 +4,6 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ######spl
-       MODULE MODI_INI_RAIN_ICE
-!      ########################
-!
-INTERFACE
-      SUBROUTINE INI_RAIN_ICE ( KLUOUT, PTSTEP, PDZMIN, KSPLITR, HCLOUD )
-!
-INTEGER,                 INTENT(IN) :: KLUOUT    ! Logical unit number for prints
-INTEGER,                 INTENT(OUT):: KSPLITR   ! Number of small time step
-                                                 ! integration for  rain
-                                                 ! sedimendation
-!
-REAL,                    INTENT(IN) :: PTSTEP    ! Effective Time step
-!
-REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
-!
-CHARACTER (LEN=4), INTENT(IN)       :: HCLOUD    ! Indicator of the cloud scheme
-!
-END SUBROUTINE INI_RAIN_ICE
-!
-END INTERFACE
-!
-END MODULE MODI_INI_RAIN_ICE
-!     ######spl
       SUBROUTINE INI_RAIN_ICE ( KLUOUT, PTSTEP, PDZMIN, KSPLITR, HCLOUD )
 !     ###########################################################
 !
@@ -201,7 +178,6 @@ IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',0,ZHOOK_HANDLE)
 !
 IF(.NOT.ASSOCIATED(XCEXVT)) CALL RAIN_ICE_DESCR_ASSOCIATE()
 IF(.NOT.ASSOCIATED(XFSEDC)) CALL RAIN_ICE_PARAM_ASSOCIATE()
-
 !
 !
 !*       0.     FUNCTION STATEMENTS
@@ -601,8 +577,7 @@ IF (GFLAG) THEN
   WRITE(UNIT=KLUOUT,FMT='(" Crit. ice cont. XCRIAUTI=",E13.6)') XCRIAUTI
   WRITE(UNIT=KLUOUT,FMT='(" A Coef. for cirrus law XACRIAUTI=",E13.6)')XACRIAUTI
   WRITE(UNIT=KLUOUT,FMT='(" B Coef. for cirrus law XBCRIAUTI=",E13.6)')XBCRIAUTI
-  WRITE(UNIT=KLUOUT, &
-   & FMT='(" Temp degC at which cirrus law starts to be used=",E13.6)') XT0CRIAUTI
+  WRITE(UNIT=KLUOUT,FMT='(" Temp degC at which cirrus law starts to be used=",E13.6)') XT0CRIAUTI
 END IF
 !
 !

@@ -10,7 +10,7 @@ INTERFACE
               & HPROGRAM, O2D, ONOMIXLG, OFLAT,                       &
               & OLES_CALL,OCOUPLES,OBLOWSNOW,                         &
               & OTURB_FLX,OTURB_DIAG,OSUBG_COND,OCOMPUTE_SRC,         &
-              & ORMC01,OOCEAN,ODEEPOC,OHARAT,ODIAG_IN_RUN,            &
+              & ORMC01,OOCEAN,ODEEPOC,OHARAT, ODIAG_IN_RUN,           &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,            &
               & PIMPL,PTSTEP,TPFILE,                                  &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
@@ -27,8 +27,9 @@ INTERFACE
               & PFLXZTHVMF,PWTH,PWRC,PWSV,PDP,PTP,PTDIFF,PTDISS,      &
               & TBUDGETS, KBUDGETS,                                   &
               & PEDR,PLEM,PRTKEMS,PTPMF,                              &
-              & PDRUS_TURB,PDRVS_TURB,PDRTHLS_TURB,PDRRTS_TURB,       &
-              & PDRSVS_TURB,PCURRENT_TKE_DISS,PTR,PDISS               )
+              & PDRUS_TURB,PDRVS_TURB,                                &
+              & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS,       &
+              & PCURRENT_TKE_DISS                                     ) 
 !
 USE MODD_BUDGET, ONLY : TBUDGETDATA,TBUDGETCONF_t
 USE MODD_IO, ONLY : TFILEDATA
@@ -172,7 +173,11 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL ::  PTR          ! Transport prod. of TKE
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL ::  PDISS        ! Dissipation of TKE
+<<<<<<< HEAD
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
+=======
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
+>>>>>>> GPU
 !
 !-------------------------------------------------------------------------------
 !

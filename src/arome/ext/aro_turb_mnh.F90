@@ -2,12 +2,12 @@
       SUBROUTINE  ARO_TURB_MNH( KKA,KKU,KKL,KLON,KLEV,KRR,KRRL,KRRI,KSV, &
                 KTCOUNT, KGRADIENTS, LDHARATU, CMICRO, PTSTEP,                  &
                 PZZ, PZZF, PZZTOP,                                    &
-                PRHODJ, PTHVREF,PRHODREF,HINST_SFU,HMF_UPDRAFT,&
+                PRHODJ, PTHVREF,HINST_SFU,                            &
                 PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
                 PPABSM,PUM,PVM,PWM,PTKEM,PEPSM,PSVM,PSRCM,            &
                 PTHM,PRM,                                &
                 PRUS,PRVS,PRWS,PRTHS,PRRS,PRSVSIN,PRSVS,PRTKES,PRTKES_OUT,PREPSS, &
-                ZHGRAD,PSIGS,OSUBG_COND,                                     &
+                PHGRAD,PSIGS,OSUBG_COND,                                     &
                 PFLXZTHVMF,PLENGTHM,PLENGTHH,MFMOIST,                 &
                 PDRUS_TURB,PDRVS_TURB,                                &
                 PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,                 &
@@ -106,7 +106,6 @@ INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
 INTEGER,                  INTENT(IN)   :: KGRADIENTS  ! Number of stored horizontal gradients
 LOGICAL,                  INTENT(IN)   :: LDHARATU ! HARATU scheme active
 CHARACTER (LEN=4),        INTENT(IN)   :: CMICRO  ! Microphysics scheme
-CHARACTER (LEN=4), INTENT(IN)     :: HMF_UPDRAFT   ! Type of mass flux scheme
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 !
 !
@@ -119,8 +118,6 @@ REAL, DIMENSION(KLON,1,KLEV+2),   INTENT(INOUT)   :: PRHODJ  !Dry density * Jaco
 REAL, DIMENSION(KLON,1,KLEV+2),   INTENT(INOUT)   :: MFMOIST  !Moist mass flux from Dual scheme
 REAL, DIMENSION(KLON,1,KLEV+2), INTENT(INOUT)     ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
-REAL, DIMENSION(KLON,1,KLEV+2), INTENT(INOUT)     ::  PRHODREF  ! dry density of the
-                                        ! reference state
 CHARACTER(LEN=1)           , INTENT(IN)   ::  HINST_SFU    ! temporal location of the
                                                       ! surface friction flux
 !
@@ -243,11 +240,9 @@ REAL,DIMENSION(KLON,1,KLEV+2)         :: ZWRC       ! cloud water flux
 REAL,DIMENSION(KLON,1,KLEV+2,KSV)     :: ZWSV,ZSVM,ZRSVS,ZDRSVS_TURB       ! scalar flux
 REAL,DIMENSION(KLON,1,KLEV+2)         :: ZZZ        ! Local value of PZZ
 REAL,DIMENSION(KLON,1,KLEV+2,KRR)     :: ZRM,ZRRS
-REAL,DIMENSION(KLON,1,KLEV+2,KGRADIENTS) :: ZHGRAD    ! Horizontal Gradients
+REAL,DIMENSION(KLON,1,KLEV+2,KGRADIENTS) :: PHGRAD    ! Horizontal Gradients
 !
 REAL, DIMENSION(KLON,1), TARGET     ::  ZERO, ZONE
-!
-CHARACTER(LEN=4)   ::  CL
 !
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !
@@ -411,7 +406,6 @@ ENDDO
 !
 CALL VERTICAL_EXTEND(PRHODJ)
 CALL VERTICAL_EXTEND(PTHVREF)
-CALL VERTICAL_EXTEND(PRHODREF)
 CALL VERTICAL_EXTEND(PPABSM)
 CALL VERTICAL_EXTEND(PUM)
 CALL VERTICAL_EXTEND(PVM)
@@ -456,7 +450,7 @@ CALL TURB (CST,CSTURB,TBUCONF,TURBN, YLDIMPHYEX,&
    & ISPLIT,IMI, KSV, KSV_LGBEG, KSV_LGEND, &
    & HPROGRAM, O2D, ONOMIXLG, OFLAT, LLES_CALL,OCOUPLES,OBLOWSNOW,& 
    & OTURB_FLX,OTURB_DIAG,OSUBG_COND,OCOMPUTE_SRC, &
-   & ORMC01,OOCEAN,ODEEPOC,LDHARATU,.FALSE.,    &
+   & ORMC01,OOCEAN,ODEEPOC,LDHARATU, .FALSE.,   &
    & HTURBDIM,HTURBLEN,'NONE','NONE',CMICRO,           &
    & ZIMPL,                                    &
    & 2*PTSTEP,ZTFILE,                                      &

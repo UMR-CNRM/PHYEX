@@ -123,11 +123,19 @@ END MODULE MODI_SHALLOW_MF_PACK
 !*      0. DECLARATIONS
 !          ------------
 !
+USE MODD_CST, ONLY: CST
+USE MODD_NEB, ONLY: NEB
+USE MODD_TURB_n, ONLY: TURBN
+USE MODD_CTURB,  ONLY: CSTURB
+USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALLN
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+!
+USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
+!
 use modd_budget,          only: lbudget_u, lbudget_v, lbudget_th, lbudget_rv, lbudget_sv,  &
                                 NBUDGET_U, NBUDGET_V, NBUDGET_TH, NBUDGET_RV, NBUDGET_SV1, &
                                 tbudgets
 USE MODD_CONF
-USE MODD_CST
 USE MODD_IO,              ONLY: TFILEDATA
 use modd_field,           only: tfielddata, TYPEREAL
 USE MODD_NSV
@@ -260,9 +268,11 @@ INTEGER :: IIU, IJU, IKU, IKB, IKE, IRR, ISV
 INTEGER :: JK,JRR,JSV                          ! Loop counters
 
 TYPE(TFIELDDATA) :: TZFIELD
+TYPE(DIMPHYEX_t) :: YLDIMPHYEXPACK
 !------------------------------------------------------------------------
 
 !!! 1. Initialisation
+CALL FILL_DIMPHYEX(YLDIMPHYEXPACK, SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3))
 
 ! Internal Domain
 IIU=SIZE(PTHM,1)
@@ -323,7 +333,8 @@ ZSFRV(:)=RESHAPE(PSFRV(:,:),(/ IIU*IJU /) )
 
 !!! 3. Call of the physical parameterization of massflux vertical transport
 
-CALL SHALLOW_MF(1,IKU,1,KRR,KRRL,KRRI,                              &
+CALL SHALLOW_MF(YLDIMPHYEXPACK, CST, NEB, PARAM_MFSHALLN, TURBN, CSTURB,&
+                KRR,KRRL,KRRI,ISV,                                    &
                 HMF_UPDRAFT, HMF_CLOUD, CFRAC_ICE_SHALLOW_MF, OMIXUV,                  &
                 LNOMIXLG,NSV_LGBEG,NSV_LGEND,                         &
                 PIMPL_MF, PTSTEP,                                     &

@@ -8,3 +8,7 @@
 # Ignore the content of the fiat directory but not the directory itself
 /build/with_fcm/fiat/**
 !/build/with_fcm/fiat/.gitkeep
+
+# VI temp files
+.*.swp
+.*.swo

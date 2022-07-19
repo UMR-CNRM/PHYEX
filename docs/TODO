@@ -1,41 +1,40 @@
-Module de clés namelists PHYEX
-Une solution serait de créer un module propre à PHYEX qui contiendrait des clés de contrôle de haut niveau
-  pour la physique. Ce module serait initialisé dans Méso-NH à partir de clés actuellement en dehors
-  de la physique.
+Module de clés namelists PHYEX. Des modules sont assez généraux et utilisés ailleurs dans Méso-NH (répertoire aux)
+  - Une solution serait de créer un module propre à PHYEX qui contiendrait des clés de contrôle de haut niveau
+    pour la physique. Ce module serait initialisé dans Méso-NH à partir de clés actuellement en dehors
+    de la physique.
+  - Une autre solution serait de supprimer ces modules de PHYEX et de recevoir ces quelques clés en argument (ex modd_lunit?)
+  - si certains modules contiennent des clés purement physiques et d'autres purement dynamique, on pourrait scinder le module
 
-Dependencies:
-  - définir les interfaces propres
-  - créer des codes pour le driver
-  - liste dans document Interfaces
-  - pour AROME placés, en attendant, dans phyex/externals
+Documentation: search for the TODO keys in the *.md files of the docs directory
 
-Clé de compilation REPRO48 + REPRO55 ajoutées pour permettre de reproduire le cycle 48 MNH-5.5.0, elles:
-  - contournent des corrections de bug
-  - modifient l'organisation de calculs
-  - REPRO48 reproduit les résultats obtenus avant l'introduction de la fraction précipitante froide dans l'ajustement
-Utilisation des clés:
-    - REPRO48 seule: la version de code qui sera retenue à la fin est celle de Méso-NH 5.5
-    - REPRO55 seule: la version de code qui sera retenue à la fin est celle du cycle 48 d'AROME
-    - defined(REPRO48) || defined(REPRO55): la version de code qui sera retenue à la fin est nouvelle
-Ces clés devront être supprimées
-
-Ecrire doc sur marche à suivre pour intégrer un nouveau développement:
-  - dev dans MNH à faire en array-syntax
-  - dev dans AROME à faire en boucles do
-  - intégration dans PHYEX: en array-syntax avec directives mnh_expand
-  - les 3 tests suivants doivent donner les mêmes résultats (au bit près) dans chacun des deux modèles:
-    - compilation directe sans activer mnh_expand
-    - compilation en activant mnh_expand
-    - exécution en changeant le nombre de processeurs
+Intégration de PHYEX dans des cycles/versions officielles:
+- Clés de compilation
+  - Clé de compilation REPRO48 + REPRO55 ajoutées pour permettre de reproduire le cycle 48 MNH-5.5.0, elles:
+      - contournent des corrections de bug
+      - modifient l'organisation de calculs
+      - REPRO48 reproduit les résultats obtenus avant l'introduction de la fraction précipitante froide dans l'ajustement
+  - Utilisation des clés:
+        - REPRO48 seule: la version de code qui sera retenue à la fin est celle de Méso-NH 5.5
+        - REPRO55 seule: la version de code qui sera retenue à la fin est celle du cycle 48 d'AROME
+        - defined(REPRO48) || defined(REPRO55): la version de code qui sera retenue à la fin est nouvelle
+  - Ces clés devront être supprimées
+- Répertoires ext
+  - Répertoire arome/ext et mesonh/ext contiennent les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
+  - Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires devront avoir été fournies par ailleurs
+- Code AROME:
+  - supprimer les répertoires internals et modules de mpa/* qui sont repris par phyex
+  - supprimer les codes listés dans le fichier src/arome/gmkpack_ignored_files (ceux qui ne sont pas dans phyex)
+  - reprendre le code de src/arome/ext pour mettre à jour le code IAL
+  - déplacer dans mpa/conv: aro_convbu
+  - déplacer dans un nouveau mpa/aux: aro_startbu, aroini_budget, aro_suintbudget, aro_suintbudget_omp, aroini_cstmnh, aroini_frommpa, modd_spp_type
 
 Merge pb:
   - rain_ice_old a rebrancher dans Meso-NH
   - appels à condensation temporairement supprimés de src/mesonh/micro/radtr_satel.f90,
         src/mesonh/micro/ice_adjust_elec.f90 et src/mesonh/micro/lima_adjust_split.f90
-  - shallow_mf (appels dans aro_shallow et arp_shallow):
-         Dans Méso-NH: shallow_mf doit être appelé avec PDX=XDXHAT(1) et PDY=XDYHAT(1)
-         Dans AROME/ARP: où trouver la taille de maille?
   - arp_shallow_mf non phasé
+  - LIMA à faire
+  - KFB ?
 
 Pb identifiés à corriger plus tard:
   - deposition devrait être déplacée dans ice4_tendencies
@@ -46,49 +45,29 @@ Pb identifiés à corriger plus tard:
          => à corriger
   - seules quelques options sont testées avec les cas test (par exemple, il faudrait tester RMC01 mais
     l'option n'est pas remontée en namelist)
-  - arome/ini_cmfshall devrait s'appeler ini_param_mfshall
   - th_r_from_thl_rt appelée partout, il faudrait limiter à OTEST
-  - doute sur le codage de MODD_PRECISION
-  - appel à abort à travers print_msg non testé
-  - indentation inorrecte dans les blocs mnh_expand
-  - sedimentation momentum non branchée (et à trasformer comme sedim_stat)
+  - sedimentation momentum non branchée
   - si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
   - il faudrait nettoyer les interfaces pour supprimer les clés passées directement
     alors qu'elles sont également disponibles dans les structures (ex: HMF_UPDRAFT)
+  - La taille du buffer utilisé pour th_r_from_thl_rt doit être mise en module et
+    utilisée pour déclarer le buffer dans les routines appelantes et dans th_r_from_thl_rt
+  - shallow_mf_pack devrait être récrit pour appeler directement shallow_mf sans recopier les tableaux pour les changer de forme
+  - rain_ice:
+    - séparer l'avance temporelle du découpage en sous-blocs en créant une couche driver supplémentaire. Cette couche pourrait
+      avoir différentes implémentations (filtre LLMICRO seul, filtre LLMICRO + découpage en sous-blocs, filtre LLMICR
+    - mettre le code des interpolations linéaires et bi-linéaires dans des routines avec deux implémentations: avec et sans packing
 
-Répertoire arome/ext et mesonh/ext contiennent les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
-Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires ayadevront avoir été fournies par ailleurs
-
-Budgets/DDH
-- Le code dans budget_DDH devra être transféré dans mode_budget
-- les routines arome specifiques aux budgets sont dans mpa/micro, il faudrait les mettre dans aux
-- Le module modd_dyn n'est utilisé que pour les budgets, voir s'il peut être supprimé
-- Le code des budgets devrait être revu: pas en phase avec celui de Méso-NH et phasage a priori
-  inutile car très peu de code semble réellement utile pour AROME
-
-Budgets/LES
+Nettoyage ultérieur :
+- Budgets/LES
 Une fois toutes les routines de la turbulence ont leur dimension horizontale packée et
 utilisent LES_MEAN_SUBGRID_PHY a la place de LES_MEAN_SUBGRID_PHY : renommer les routines arome/turb et mesonh/turb en les_mean_subgrid.F90 et remplacer partout dans le code les appels (enlever le _PHY) + supprimer les anciennes routines
 
-SPP
-- modd_spp_type est pour l'instant dans mpa/micro/externals mais n'est pas de la microphysique
 
-Nettoyage apl_arome non fait (pb a la compilation) ==> 4 arguments dans aro_turb_mnh supprimés (non utilisés)
+Enable mnh_expand with fcm build
 
-turb.F90 : il reste un CALL à SOURCES_NEG_CORRECT à ajouter.
-
-Regarder s'il ne serait pas possible/souhaitable de supprimer modd_lunit de PHYEX. On pourrait se contenter de recevoir le numero d'unité logique
-
-Nettoyage des répertoires aux nécessaire
-
-Initialiser dans AROME la variable ldiag_in_run de MODD_DIAG_IN_RUN pour pouvoir phaser le modd
-
-Faire une branche GPU qui contient les codes utilisés pour générer les fichiers pour Philippe.
-
-Ajouter un répertoire pour héberger un pseudo-modèle qui contiendrait les cas tests de Philippe.
-
-La taille du buffer utilisé pour th_r_from_thl_rt doit être mise en module et utilisée pour déclarer le module dans les routines appelantes et dans th_r_from_thl_rt
-
-rain_ice:
-  - séparer l'avance temporelle du découpage en sous-blocs en créant une couche driver supplémentaire. Cette couche pourrait avoir différentes implémentations (filtre LLMICRO seul, filtre LLMICRO + découpage en sous-blocs, filtre LLMICRO + découpage en sous-blocs en respectant les colonnes, en passant tous les points)
-  - mettre le code des interpolations linéaires et bi-linéaires dans des routines avec deux implémentations: avec et sans packing
+Reprendre les différents outils en deux scripts principaux:
+- outil pour reprendre toutes les fonctionnalités sur le code: filepp, MNH_Expand_Array, correct_indent.py, verify_mnh_expand.py et renommage
+- outil prep_code débarrassé du renommage pour ne faire que la gestion des commit et lancer la manipulation sur le code
+Il restera, à part, les scripts de comparaison des résultats (à moins qu'ils puissent être inlinés dans les check_commit correspondant)
+>>>>>>> GPU
