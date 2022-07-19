@@ -182,8 +182,6 @@ CHARACTER(LEN=6),        INTENT(IN)   ::  HPROGRAM     ! CPROGRAM is the program
 TYPE(TFILEDATA),         INTENT(IN)   ::  TPFILE       ! Output file
 LOGICAL,                 INTENT(IN)   ::  OLES_CALL    !
 LOGICAL,                 INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
-LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
-                                  ! diagnostic fields in the syncronous FM-file
 LOGICAL,                 INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(INOUT)::  PDP          ! Dyn. prod. of TKE
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PTRH
