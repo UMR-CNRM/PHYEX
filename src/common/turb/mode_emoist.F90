@@ -5,7 +5,7 @@
 MODULE MODE_EMOIST
 IMPLICIT NONE
 CONTAINS
-FUNCTION EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN) RESULT(PEMOIST)
+SUBROUTINE EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN,PEMOIST)
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !   ############################################################################
@@ -80,7 +80,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  ::   PAMOIST   ! Amoist
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  ::   PSRCM     ! Normalized 2dn_order
                                                     ! moment s'r'c/2Sigma_s2
 !
-REAL,DIMENSION(D%NIT,D%NJT,D%NKT) :: PEMOIST ! result
+REAL,DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PEMOIST ! result
 !
 !*       0.2 declarations of local variables
 !
@@ -190,5 +190,5 @@ END IF
 !---------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('EMOIST',1,ZHOOK_HANDLE)
-END FUNCTION EMOIST
+END SUBROUTINE EMOIST
 END MODULE MODE_EMOIST

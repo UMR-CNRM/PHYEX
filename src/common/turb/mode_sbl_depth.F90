@@ -48,7 +48,7 @@ CONTAINS
 USE MODD_PARAMETERS, ONLY : XUNDEF
 USE MODD_CTURB,      ONLY : XFTOP_O_FSURF, XSBL_O_BL
 !
-USE MODE_BL_DEPTH_DIAG
+USE MODE_BL_DEPTH_DIAG, ONLY : BL_DEPTH_DIAG
 !
 IMPLICIT NONE
 !
@@ -97,13 +97,15 @@ ZUSTAR2(:,:) = SQRT(ZWU**2+ZWV**2)
 !* BL and SBL diagnosed with friction criteria
 !
 ZWIND=SQRT(PFLXU**2+PFLXV**2)
-ZSBL_DYN = XSBL_O_BL * BL_DEPTH_DIAG(KKB,KKE,ZUSTAR2,PZZ(:,:,KKB),ZWIND,PZZ,XFTOP_O_FSURF) 
+CALL BL_DEPTH_DIAG(KKB,KKE,ZUSTAR2,PZZ(:,:,KKB),ZWIND,PZZ,XFTOP_O_FSURF,ZSBL_DYN) 
+ZSBL_DYN = XSBL_O_BL * ZSBL_DYN
 !
 !----------------------------------------------------------------------------
 !
 !* BL and SBL diagnosed with buoyancy flux criteria
 !
-ZSBL_THER= XSBL_O_BL * BL_DEPTH_DIAG(KKB,KKE,ZQ0,PZZ(:,:,KKB),PWTHV,PZZ,XFTOP_O_FSURF)
+CALL BL_DEPTH_DIAG(KKB,KKE,ZQ0,PZZ(:,:,KKB),PWTHV,PZZ,XFTOP_O_FSURF,ZSBL_THER)
+ZSBL_THER= XSBL_O_BL * ZSBL_THER
 !
 !----------------------------------------------------------------------------
 !

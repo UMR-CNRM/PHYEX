@@ -3264,9 +3264,9 @@ ELSE IF (CBL_HEIGHT_DEF=='FRI') THEN
                    +( XLES_SUBGRID_WV (:,NLES_CURRENT_TCOUNT,1)      &
                      +XLES_RESOLVED_WV(:,NLES_CURRENT_TCOUNT,1))**2 )
   ZFRIC_SURF = XLES_USTAR(NLES_CURRENT_TCOUNT)**2
-  XLES_BL_HEIGHT(NLES_CURRENT_TCOUNT) = BL_DEPTH_DIAG(IKB,IKE,ZFRIC_SURF, XLES_ZS, &
-                                                      ZFRIC_LES,  XLES_Z,  &
-                                                      XFTOP_O_FSURF        )
+  CALL BL_DEPTH_DIAG(IKB,IKE,ZFRIC_SURF, XLES_ZS, &
+                     ZFRIC_LES,  XLES_Z,  &
+                     XFTOP_O_FSURF,XLES_BL_HEIGHT(NLES_CURRENT_TCOUNT))
 END IF
 !
 !

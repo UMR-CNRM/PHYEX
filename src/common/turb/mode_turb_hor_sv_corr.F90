@@ -151,7 +151,7 @@ DO JSV=1,NSV
   ! covariance SvThv
   !
   IF (LLES_CALL) THEN
-    ZA(:,:,:)   =  ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC)
+    CALL ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC,ZA)
     IF (.NOT. L2D) THEN
       ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                          &
           *  (  GX_M_M(PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
@@ -166,7 +166,7 @@ DO JSV=1,NSV
     CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLX, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE. )
     !
     IF (KRR>=1) THEN
-      ZA(:,:,:)   =  EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN)
+      CALL  EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN,ZA)
       IF (.NOT. L2D) THEN
         ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                                 &
             *  (  GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX) * GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &

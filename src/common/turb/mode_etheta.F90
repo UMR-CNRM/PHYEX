@@ -5,7 +5,7 @@
 MODULE MODE_ETHETA
 IMPLICIT NONE
 CONTAINS
-FUNCTION ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC) RESULT(PETHETA)
+SUBROUTINE ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC,PETHETA)
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !   ############################################################################
@@ -82,7 +82,7 @@ REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)),   INTENT(IN)  ::   PSRCM     ! Normalized 2dn_order
                                                     ! moment s'r'c/2Sigma_s2
 !
-REAL,DIMENSION(D%NIT,D%NJT,D%NKT) :: PETHETA ! result
+REAL,DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PETHETA ! result
 !
 !
 !
@@ -186,5 +186,5 @@ END IF
 !---------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('ETHETA',1,ZHOOK_HANDLE)
-END FUNCTION ETHETA
+END SUBROUTINE ETHETA
 END MODULE MODE_ETHETA
