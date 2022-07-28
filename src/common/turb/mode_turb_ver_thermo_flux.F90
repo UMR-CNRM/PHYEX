@@ -237,7 +237,6 @@ USE MODD_METRICS_n,      ONLY: XDXX, XDYY, XDZX, XDZY, XDZZ
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB, JPHEXT
 USE MODD_TURB_n,         ONLY: TURB_t
 USE MODD_LES
-USE MODD_DIM_n, ONLY: NIMAX_ll, NJMAX_ll
 USE MODD_OCEANH, ONLY: XSSTFL
 USE MODD_TURB_n, ONLY: TURB_t
 !
@@ -393,7 +392,6 @@ INTEGER                    :: IIE,IJE       ! Upper bounds of the physical
 !
 REAL :: ZTIME1, ZTIME2
 REAL :: ZDELTAX
-REAL, DIMENSION(D%NIT,D%NJT) :: ZDIST ! distance
                                    ! from the center of the cooling               
 REAL :: ZFLPROV
 INTEGER           :: JKM          ! vertical index loop
