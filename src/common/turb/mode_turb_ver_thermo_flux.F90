@@ -238,11 +238,9 @@ USE MODD_PARAMETERS
 USE MODD_TURB_n,         ONLY: LHGRAD, XCOEFHGRADTHL, XCOEFHGRADRM, XALTHGRAD, XCLDTHOLD
 USE MODD_CONF
 USE MODD_LES
-USE MODD_DIM_n
 USE MODD_OCEANH
 USE MODD_REF,            ONLY: LCOUPLES
 USE MODD_TURB_n
-USE MODD_FRC
 !
 USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
@@ -258,8 +256,6 @@ USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 USE MODE_PRANDTL
 !
 USE MODI_SECOND_MNH
-USE MODE_ll
-USE MODE_GATHER_ll
 !
 IMPLICIT NONE
 !
@@ -384,24 +380,14 @@ INTEGER                    :: IIB,IJB       ! Lower bounds of the physical
 INTEGER                    :: IIE,IJE       ! Upper bounds of the physical
                                             ! sub-domain in x and y directions
 !
-REAL, DIMENSION(:), ALLOCATABLE   :: ZXHAT_ll    !  Position x in the conformal
-                                                 ! plane (array on the complete domain)
-REAL, DIMENSION(:), ALLOCATABLE   :: ZYHAT_ll    !   Position y in the conformal
-                                                 ! plane (array on the complete domain)
-!
-!
 REAL :: ZTIME1, ZTIME2
 REAL :: ZDELTAX
-REAL :: ZXBEG,ZXEND,ZYBEG,ZYEND ! Forcing size for ocean deep convection
-REAL, DIMENSION(SIZE(XXHAT),SIZE(XYHAT)) :: ZDIST ! distance
-                                   ! from the center of the cooling               
 REAL :: ZFLPROV
 INTEGER           :: JKM          ! vertical index loop
 INTEGER           :: JSW
 REAL :: ZSWA     ! index for time flux interpolation
 !
 INTEGER :: IIU, IJU
-INTEGER :: IRESP
 INTEGER :: JK
 LOGICAL :: GUSERV   ! flag to use water
 LOGICAL :: GFTH2    ! flag to use w'th'2
@@ -421,34 +407,6 @@ IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_FLUX',0,ZHOOK_HANDLE)
 ! Size for a given proc & a given model      
 IIU=SIZE(PTHLM,1) 
 IJU=SIZE(PTHLM,2)
-!
-!! Compute Shape of sfc flux for Oceanic Deep Conv Case
-! 
-IF (OOCEAN .AND. LDEEPOC) THEN
-  !*       COMPUTES THE PHYSICAL SUBDOMAIN BOUNDS
-  ALLOCATE(ZXHAT_ll(NIMAX_ll+2*JPHEXT),ZYHAT_ll(NJMAX_ll+2*JPHEXT))
-  !compute ZXHAT_ll = position in the (0:Lx) domain 1 (Lx=Size of domain1 )
-  !compute XXHAT_ll = position in the (L0_subproc,Lx_subproc) domain for the current subproc
-  !                                     L0_subproc as referenced in the full domain 1
-  CALL GATHERALL_FIELD_ll('XX',XXHAT,ZXHAT_ll,IRESP)
-  CALL GATHERALL_FIELD_ll('YY',XYHAT,ZYHAT_ll,IRESP)
-  CALL GET_DIM_EXT_ll('B',IIU,IJU)
-  CALL GET_INDICE_ll(IIB,IJB,IIE,IJE,IIU,IJU)
-  DO JJ = IJB,IJE
-    DO JI = IIB,IIE
-      ZDIST(JI,JJ) = SQRT(                         &
-      (( (XXHAT(JI)+XXHAT(JI+1))*0.5 - XCENTX_OC ) / XRADX_OC)**2 + &
-      (( (XYHAT(JJ)+XYHAT(JJ+1))*0.5 - XCENTY_OC ) / XRADY_OC)**2   &
-                                )
-    END DO
-  END DO
-  DO JJ=IJB,IJE
-    DO JI=IIB,IIE
-      IF ( ZDIST(JI,JJ) > 1.) XSSTFL(JI,JJ)=0.
-    END DO
-  END DO
-END IF !END DEEP OCEAN CONV CASE
-!
 IKT  =SIZE(PTHLM,3)  
 IKTE =IKT-JPVEXT_TURB  
 IKTB =1+JPVEXT_TURB               
@@ -1025,9 +983,6 @@ IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
   END IF
 !
 END IF !end of <w Rc>
-IF (OOCEAN .AND. LDEEPOC) THEN
-  DEALLOCATE(ZXHAT_ll,ZYHAT_ll)
-END IF
 !
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_FLUX',1,ZHOOK_HANDLE)
