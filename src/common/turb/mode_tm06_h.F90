@@ -65,7 +65,7 @@ REAL, DIMENSION(D%NIJT),   INTENT(INOUT) :: PBL_DEPTH ! boundary layer height
 !       0.2  declaration of local variables
 !
 !
-INTEGER                                  :: JK,JI,JJ     ! loop counter
+INTEGER                                  :: JK,JIJ     ! loop counter
 INTEGER :: IKB,IKTB,IKTE,IIJB,IIJE
 REAL, DIMENSION(D%NIJT) :: ZFLXZMIN ! minimum of temperature flux 
 REAL, DIMENSION(D%NIJT) :: ZBL_DEPTH! BL depth at previous time-step
@@ -88,31 +88,31 @@ IIJB=D%NIJB
 !
 ZBL_DEPTH(IIJB:IIJE) = PBL_DEPTH(IIJB:IIJE)
 !
-!$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
+!$mnh_expand_where(JIJ=IIJB:IIJE)
 WHERE(ZBL_DEPTH(IIJB:IIJE)==XUNDEF)
   ZBL_DEPTH(IIJB:IIJE)=0.
 END WHERE
-!$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
+!$mnh_end_expand_where(JIJ=IIJB:IIJE)
 !
-!$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
 PBL_DEPTH(IIJB:IIJE) = XUNDEF
 ZFLXZMIN (IIJB:IIJE) = PFLXZ(IIJB:IIJE,IKB)
-!$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 DO JK=IKTB,IKTE
-!$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
+!$mnh_expand_where(JIJ=IIJB:IIJE)
   WHERE(PFLXZ(IIJB:IIJE,IKB)>0. .AND. PFLXZ(IIJB:IIJE,JK)<ZFLXZMIN(IIJB:IIJE))
     PBL_DEPTH(IIJB:IIJE) = PZZ  (IIJB:IIJE,JK) - PZZ(IIJB:IIJE,IKB)
     ZFLXZMIN (IIJB:IIJE) = PFLXZ(IIJB:IIJE,JK)
   END WHERE
-!$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
+!$mnh_end_expand_where(JIJ=IIJB:IIJE)
 END DO
 !
-!$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
+!$mnh_expand_where(JIJ=IIJB:IIJE)
 WHERE(PBL_DEPTH(IIJB:IIJE)/=XUNDEF) 
   PBL_DEPTH(IIJB:IIJE)=MIN(PBL_DEPTH(IIJB:IIJE),ZBL_DEPTH(IIJB:IIJE)+ZGROWTH*PTSTEP)
 END WHERE
-!$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
+!$mnh_end_expand_where(JIJ=IIJB:IIJE)
 !
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TM06_H',1,ZHOOK_HANDLE)
