@@ -5,7 +5,7 @@
 MODULE MODE_TM06_H
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TM06_H(KKB,KKTB,KKTE,PTSTEP,PZZ,PFLXZ,PBL_DEPTH)
+SUBROUTINE TM06_H(D,PTSTEP,PZZ,PFLXZ,PBL_DEPTH)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     #################################################################
@@ -46,6 +46,7 @@ SUBROUTINE TM06_H(KKB,KKTB,KKTE,PTSTEP,PZZ,PFLXZ,PBL_DEPTH)
 !          ------------
 !
 USE MODD_PARAMETERS, ONLY : XUNDEF
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 !
 !
 IMPLICIT NONE
@@ -53,23 +54,21 @@ IMPLICIT NONE
 !
 !*      0.1  declarations of arguments
 !
-INTEGER,                INTENT(IN)    :: KKB       ! index of 1st physical level
-                                                   ! close to ground 
-INTEGER,                INTENT(IN)    :: KKTB      ! first physical level in k
-INTEGER,                INTENT(IN)    :: KKTE      ! last physical level in k
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 REAL,                   INTENT(IN)    :: PTSTEP    ! Double time step
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PZZ       ! altitude of flux levels
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PFLXZ     ! heat flux
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PBL_DEPTH ! boundary layer height
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PZZ       ! altitude of flux levels
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PFLXZ     ! heat flux
+REAL, DIMENSION(D%NIJT),   INTENT(INOUT) :: PBL_DEPTH ! boundary layer height
 !
 !-------------------------------------------------------------------------------
 !
 !       0.2  declaration of local variables
 !
 !
-INTEGER                                  :: JK     ! loop counter
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2)) :: ZFLXZMIN ! minimum of temperature flux 
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2)) :: ZBL_DEPTH! BL depth at previous time-step
+INTEGER                                  :: JK,JI,JJ     ! loop counter
+INTEGER :: IKB,IKTB,IKTE,IIJB,IIJE
+REAL, DIMENSION(D%NIJT) :: ZFLXZMIN ! minimum of temperature flux 
+REAL, DIMENSION(D%NIJT) :: ZBL_DEPTH! BL depth at previous time-step
 REAL                                     :: ZGROWTH  ! maximum BL growth rate
 !----------------------------------------------------------------------------
 !
@@ -80,20 +79,40 @@ ZGROWTH = 2.0 ! (m/s)
 !
 !----------------------------------------------------------------------------
 !
-ZBL_DEPTH(:,:) = PBL_DEPTH(:,:)
-WHERE(ZBL_DEPTH(:,:)==XUNDEF) ZBL_DEPTH(:,:)=0.
+IKTB=D%NKTB          
+IKTE=D%NKTE
+IKB=D%NKB
+IIJE=D%NIJE
+IIJB=D%NIJB
+
 !
-PBL_DEPTH(:,:) = XUNDEF
-ZFLXZMIN (:,:) = PFLXZ(:,:,KKB)
+ZBL_DEPTH(IIJB:IIJE) = PBL_DEPTH(IIJB:IIJE)
 !
-DO JK=KKTB,KKTE
-  WHERE (PFLXZ(:,:,KKB)>0. .AND. PFLXZ(:,:,JK)<ZFLXZMIN(:,:))
-    PBL_DEPTH(:,:) = PZZ  (:,:,JK) - PZZ(:,:,KKB)
-    ZFLXZMIN (:,:) = PFLXZ(:,:,JK)
+!$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
+WHERE(ZBL_DEPTH(IIJB:IIJE)==XUNDEF)
+  ZBL_DEPTH(IIJB:IIJE)=0.
+END WHERE
+!$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
+!
+!$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
+PBL_DEPTH(IIJB:IIJE) = XUNDEF
+ZFLXZMIN (IIJB:IIJE) = PFLXZ(IIJB:IIJE,IKB)
+!$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
+!
+DO JK=IKTB,IKTE
+!$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
+  WHERE(PFLXZ(IIJB:IIJE,IKB)>0. .AND. PFLXZ(IIJB:IIJE,JK)<ZFLXZMIN(IIJB:IIJE))
+    PBL_DEPTH(IIJB:IIJE) = PZZ  (IIJB:IIJE,JK) - PZZ(IIJB:IIJE,IKB)
+    ZFLXZMIN (IIJB:IIJE) = PFLXZ(IIJB:IIJE,JK)
   END WHERE
+!$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 END DO
 !
-WHERE(PBL_DEPTH(:,:)/=XUNDEF) PBL_DEPTH(:,:)=MIN(PBL_DEPTH(:,:),ZBL_DEPTH(:,:)+ZGROWTH*PTSTEP)
+!$mnh_expand_where(JIJ=D%NIJB:D%NIJE)
+WHERE(PBL_DEPTH(IIJB:IIJE)/=XUNDEF) 
+  PBL_DEPTH(IIJB:IIJE)=MIN(PBL_DEPTH(IIJB:IIJE),ZBL_DEPTH(IIJB:IIJE)+ZGROWTH*PTSTEP)
+END WHERE
+!$mnh_end_expand_where(JIJ=D%NIJB:D%NIJE)
 !
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TM06_H',1,ZHOOK_HANDLE)
