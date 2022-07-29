@@ -29,7 +29,7 @@ INTERFACE
               & PEDR,PLEM,PRTKEMS,PTPMF,                              &
               & PDRUS_TURB,PDRVS_TURB,                                &
               & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS,       &
-              & PCURRENT_TKE_DISS                                     ) 
+              & PCURRENT_TKE_DISS, PSSTFL, PSSTFL_C, PSSRFL_C         ) 
 !
 USE MODD_BUDGET, ONLY : TBUDGETDATA,TBUDGETCONF_t
 USE MODD_IO, ONLY : TFILEDATA
@@ -174,6 +174,9 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing len
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL ::  PTR          ! Transport prod. of TKE
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL ::  PDISS        ! Dissipation of TKE
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSTFL        ! Time evol Flux of T at sea surface (LOCEAN)
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSTFL_C  ! O-A interface flux for theta(LOCEAN and LCOUPLES)
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSRFL_C  ! O-A interface flux for vapor (LOCEAN and LCOUPLES) 
 !
 !-------------------------------------------------------------------------------
 !

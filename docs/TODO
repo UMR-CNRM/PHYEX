@@ -37,6 +37,7 @@ Merge pb:
   - KFB ?
 
 Pb identifiés à corriger plus tard:
+  - LHGRAD non porté sur GPU (mis en commentaire) : trop de gradient horizontaux à traiter et utilisation de XXHAT (domaine carré seulement). A traiter plus tard
   - deposition devrait être déplacée dans ice4_tendencies
   - avec les optimisations de Ryad, les tableaux 3D de precip passés à ice4_tendencies
     lorsque HSUBG_RC_RR_ACCR=='PRFR' ne sont  pas utilisables puisque les K1, K2 et K3

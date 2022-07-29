@@ -23,7 +23,8 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,KRR,KRRL,KRRI,   &
                       PFWTH,PFWR,PFTH2,PFR2,PFTHR,PBL_DEPTH,        &
                       PSBL_DEPTH,PLMO,                              &
                       PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,             &
-                      PDP,PTP,PSIGS,PWTH,PWRC,PWSV                  )
+                      PDP,PTP,PSIGS,PWTH,PWRC,PWSV,                 &
+                      PSSTFL,PSSTFL_C,PSSRFL_C                      )
 !     ###############################################################
 !
 !
@@ -351,7 +352,9 @@ REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PWTH      ! heat flux
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PWRC      ! cloud water flux
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV),INTENT(OUT) :: PWSV       ! scalar flux
-!
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSTFL        ! Time evol Flux of T at sea surface (LOCEAN)!
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSTFL_C  ! O-A interface flux for theta(LOCEAN and LCOUPLES)
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSRFL_C  ! O-A interface flux for vapor (LOCEAN and LCOUPLES) 
 !
 !*       0.2  declaration of local variables
 !
@@ -524,7 +527,8 @@ ENDIF
                         ZEMOIST, ZREDTH1, ZREDR1, ZPHI3, ZPSI3, ZD,   &
                         PFWTH,PFWR,PFTH2,PFR2,PFTHR,                  &
                         MFMOIST,PBL_DEPTH,ZWTHV,                      &
-                        PRTHLS,PRRS,ZTHLP,ZRP,PTP,PWTH,PWRC )
+                        PRTHLS,PRRS,ZTHLP,ZRP,PTP,PWTH,PWRC,          &
+                        PSSTFL, PSSTFL_C, PSSRFL_C                    )
 !
   CALL  TURB_VER_THERMO_CORR(D,CST,CSTURB,                            &
                         KRR,KRRL,KRRI,KSV,                            &
