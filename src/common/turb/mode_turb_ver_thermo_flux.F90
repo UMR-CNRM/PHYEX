@@ -380,7 +380,7 @@ INTEGER             :: IKB,IKE      ! I index values for the Beginning and End
                                     ! mass points of the domain in the 3 direct.
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
-INTEGER             :: JI, JJ, JK ! loop indexes
+INTEGER             :: JIJ, JK ! loop indexes
 INTEGER             :: IIJB, IIJE
 !
 REAL :: ZTIME1, ZTIME2
