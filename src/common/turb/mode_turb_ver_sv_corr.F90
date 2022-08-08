@@ -63,15 +63,11 @@ USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
 USE MODD_LES
 USE MODD_BLOWSNOW, ONLY: XRSNOW
 !
-!
-USE MODI_GRADIENT_U
-USE MODI_GRADIENT_V
-USE MODI_GRADIENT_W
-USE MODI_GRADIENT_M
-USE MODI_SHUMAN , ONLY : MZF
+USE SHUMAN_PHY, ONLY:  MZF_PHY
+USE MODE_GRADIENT_M_PHY, ONLY : GZ_M_W_PHY
 USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
-USE MODI_LES_MEAN_SUBGRID
+USE MODI_LES_MEAN_SUBGRID_PHY
 !
 USE MODI_SECOND_MNH
 !
@@ -93,26 +89,25 @@ LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimension
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   ::  KRRL         ! number of liquid var.
 INTEGER,                INTENT(IN)   ::  KRRI         ! number of ice var.
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PDZZ
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PDZZ
                                                       ! Metric coefficients
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTHLM        ! potential temperature at t-Delta t
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN) ::  PRM          ! Mixing ratios at t-Delta t
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! reference Thv
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PATHETA      ! coefficients between 
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
-REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
-                MERGE(D%NJT,0,OCOMPUTE_SRC),&
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHLM        ! potential temperature at t-Delta t
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) ::  PRM          ! Mixing ratios at t-Delta t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! reference Thv
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PATHETA      ! coefficients between 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(IN)   ::  PSRCM        ! normalized 
                   ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PPHI3        ! Inv.Turb.Sch.for temperature
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PPSI3        ! Inv.Turb.Sch.for humidity
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PWM          ! w at time t
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) ::  PSVM         ! scalar var. at t-Delta t
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length   
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLEPS        ! dissipative length   
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.for scalars
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PPHI3        ! Inv.Turb.Sch.for temperature
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PPSI3        ! Inv.Turb.Sch.for humidity
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PWM          ! w at time t
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVM         ! scalar var. at t-Delta t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length   
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLEPS        ! dissipative length   
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.for scalars
                             ! cumulated sources for the prognostic variables
 !
 !
@@ -121,12 +116,13 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.S
 !*       0.2  declaration of local variables
 !
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZA, ZFLXZ, &
+REAL, DIMENSION(D%NIJT,D%NKT)  :: ZA, ZFLXZ, &
               ZWORK1,ZWORK2,ZWORK3! working var. for shuman operators (array syntax)
 !
 REAL :: ZCSV          !constant for the scalar flux
 !
-INTEGER             :: JI,JJ,JK,JSV          ! loop counters
+INTEGER             :: JIJ,JK,JSV          ! loop counters
+INTEGER             :: IIJB, IIJE
 !
 REAL :: ZTIME1, ZTIME2
 !
@@ -137,6 +133,10 @@ REAL :: ZCQSVD = 2.4  ! constant for humidity - scalar covariance dissipation
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_CORR',0,ZHOOK_HANDLE)
+!
+IIJE=D%NIJE
+IIJB=D%NIJB
+!
 CALL SECOND_MNH(ZTIME1)
 !
 IF(OBLOWSNOW) THEN
@@ -154,14 +154,17 @@ DO JSV=1,KSV
   !
   IF (OLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
-    ZWORK1 = GZ_M_W(D%NKA, D%NKU, D%NKL,PSVM(:,:,:,JSV),PDZZ)
-    ZWORK2 = MZF(ZFLXZ(:,:,:), D%NKA, D%NKU, D%NKL)
-    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-    ZFLXZ(:,:,:) =  PPSI_SV(:,:,:,JSV)*ZWORK1(:,:,:)**2
-    ZFLXZ(:,:,:) = ZCSV / ZCSVD * PLM(:,:,:) * PLEPS(:,:,:) * ZWORK2(:,:,:)
-    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-    CALL LES_MEAN_SUBGRID(-2.*ZCSVD*SQRT(PTKEM)*ZFLXZ/PLEPS, X_LES_SUBGRID_DISS_Sv2(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID(MZF(PWM, D%NKA, D%NKU, D%NKL)*ZFLXZ, X_LES_RES_W_SBG_Sv2(:,:,:,JSV) )
+    CALL GZ_M_W_PHY(D,PSVM(:,:,JSV),PDZZ,ZWORK1)
+    CALL MZF_PHY(D,ZFLXZ,ZWORK2)
+    CALL MZF_PHY(D,PWM,ZWORK3)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    ZFLXZ(IIJB:IIJE,1:D%NKT) =  PPSI_SV(IIJB:IIJE,1:D%NKT,JSV)*ZWORK1(IIJB:IIJE,1:D%NKT)**2
+    ZFLXZ(IIJB:IIJE,1:D%NKT) = ZCSV / ZCSVD * PLM(IIJB:IIJE,1:D%NKT) * PLEPS(IIJB:IIJE,1:D%NKT) * ZWORK2(IIJB:IIJE,1:D%NKT)
+    ZWORK1(IIJB:IIJE,1:D%NKT) = -2.*ZCSVD*SQRT(PTKEM(IIJB:IIJE,1:D%NKT))*ZFLXZ(IIJB:IIJE,1:D%NKT)/PLEPS(IIJB:IIJE,1:D%NKT)
+    ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK3(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_DISS_Sv2(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2, X_LES_RES_W_SBG_Sv2(:,:,:,JSV) )
   END IF
   !
   ! covariance ThvSv
@@ -170,36 +173,40 @@ DO JSV=1,KSV
     ! approximation: diagnosed explicitely (without implicit term)
     CALL ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC,ZA)
     !
-    ZWORK1 = GZ_M_W(D%NKA, D%NKU, D%NKL,PTHLM,PDZZ)
-    ZWORK2 = GZ_M_W(D%NKA, D%NKU, D%NKL,PSVM(:,:,:,JSV),PDZZ)
+    CALL GZ_M_W_PHY(D,PTHLM,PDZZ,ZWORK1)
+    CALL GZ_M_W_PHY(D,PSVM(:,:,JSV),PDZZ,ZWORK2)
     !
-    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-    ZFLXZ(:,:,:)= ( CSTURB%XCSHF * PPHI3(:,:,:) + ZCSV * PPSI_SV(:,:,:,JSV) ) &
-                  *  ZWORK1(:,:,:) *  ZWORK2(:,:,:)
-    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    ZFLXZ(IIJB:IIJE,1:D%NKT)= ( CSTURB%XCSHF * PPHI3(IIJB:IIJE,1:D%NKT) + ZCSV * PPSI_SV(IIJB:IIJE,1:D%NKT,JSV) ) &
+                  *  ZWORK1(IIJB:IIJE,1:D%NKT) *  ZWORK2(IIJB:IIJE,1:D%NKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     !
-    ZWORK3 = MZF(ZFLXZ, D%NKA, D%NKU, D%NKL)
-    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-    ZFLXZ(:,:,:)= PLM(:,:,:) * PLEPS(:,:,:) / (2.*ZCTSVD) * ZWORK3(:,:,:)
-    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    CALL MZF_PHY(D,ZFLXZ,ZWORK3)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    ZFLXZ(IIJB:IIJE,1:D%NKT)= PLM(IIJB:IIJE,1:D%NKT) * PLEPS(IIJB:IIJE,1:D%NKT) / (2.*ZCTSVD) * ZWORK3(IIJB:IIJE,1:D%NKT)
+    ZWORK1(IIJB:IIJE,1:D%NKT) = ZA(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
+    ZWORK2(IIJB:IIJE,1:D%NKT) = -CST%XG/PTHVREF(IIJB:IIJE,1:D%NKT)/3.*ZA(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)    
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     !
-    CALL LES_MEAN_SUBGRID( ZA*ZFLXZ, X_LES_SUBGRID_SvThv(:,:,:,JSV) ) 
-    CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
+    CALL LES_MEAN_SUBGRID_PHY(D, ZWORK1, X_LES_SUBGRID_SvThv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID_PHY(D, ZWORK2, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
     !
     IF (KRR>=1) THEN
       CALL EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN,ZA)
       !
-      ZWORK1 = GZ_M_W(D%NKA, D%NKU, D%NKL,PRM(:,:,:,1),PDZZ)
-      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-      ZFLXZ(:,:,:)= ( ZCSV * PPSI3(:,:,:) + ZCSV * PPSI_SV(:,:,:,JSV) )  &
-                    *  ZWORK1(:,:,:) *  ZWORK2(:,:,:)
-      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-      ZWORK3 = MZF(ZFLXZ, D%NKA, D%NKU, D%NKL)
-      !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-      ZFLXZ(:,:,:)= PLM(:,:,:) * PLEPS(:,:,:) / (2.*ZCQSVD) * ZWORK3(:,:,:)
-      !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID( ZA*ZFLXZ, X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
-      CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLXZ, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
+      CALL GZ_M_W_PHY(D,PRM(:,:,1),PDZZ,ZWORK1)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      ZFLXZ(IIJB:IIJE,1:D%NKT)= ( ZCSV * PPSI3(IIJB:IIJE,1:D%NKT) + ZCSV * PPSI_SV(IIJB:IIJE,1:D%NKT,JSV) )  &
+                    *  ZWORK1(IIJB:IIJE,1:D%NKT) *  ZWORK2(IIJB:IIJE,1:D%NKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      CALL MZF_PHY(D,ZFLXZ,ZWORK3)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      ZFLXZ(IIJB:IIJE,1:D%NKT)= PLM(IIJB:IIJE,1:D%NKT) * PLEPS(IIJB:IIJE,1:D%NKT) / (2.*ZCQSVD) * ZWORK3(IIJB:IIJE,1:D%NKT)
+      ZWORK1(IIJB:IIJE,1:D%NKT) = ZA(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
+      ZWORK2(IIJB:IIJE,1:D%NKT) = -CST%XG/PTHVREF(IIJB:IIJE,1:D%NKT)/3.*ZA(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      CALL LES_MEAN_SUBGRID_PHY(D, ZWORK1, X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
+      CALL LES_MEAN_SUBGRID_PHY(D, ZWORK2, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
     END IF
   END IF
   !
