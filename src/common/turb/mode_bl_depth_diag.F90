@@ -55,19 +55,19 @@ USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 !
 IMPLICIT NONE
 !
-TYPE(DIMPHYEX_t),                   INTENT(IN)           :: D
-REAL, DIMENSION(D%NIT,D%NJT),       INTENT(IN)           :: PSURF        ! surface flux
-REAL, DIMENSION(D%NIT,D%NJT),       INTENT(IN)           :: PZS          ! orography
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)           :: PFLUX        ! flux
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)           :: PZZ          ! altitude of flux points
-REAL,                               INTENT(IN)           :: PFTOP_O_FSURF! Flux at BL top / Surface flux
-REAL, DIMENSION(D%NIT,D%NJT),       INTENT(OUT)          :: BL_DEPTH_DIAG3D
+TYPE(DIMPHYEX_t),              INTENT(IN)           :: D
+REAL, DIMENSION(D%NIJT),       INTENT(IN)           :: PSURF        ! surface flux
+REAL, DIMENSION(D%NIJT),       INTENT(IN)           :: PZS          ! orography
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)           :: PFLUX        ! flux
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)           :: PZZ          ! altitude of flux points
+REAL,                          INTENT(IN)           :: PFTOP_O_FSURF! Flux at BL top / Surface flux
+REAL, DIMENSION(D%NIJT),       INTENT(OUT)          :: BL_DEPTH_DIAG3D
 !
 !
 !       0.2  declaration of local variables
 !
-INTEGER :: JI,JJ,JK ! loop counters
-INTEGER :: IKB,IKE,IIB,IIE,IJB,IJE   ! index value for the Beginning
+INTEGER :: JIJ,JK ! loop counters
+INTEGER :: IKB,IKE,IIJB,IIJE   ! index value for the Beginning
 REAL    :: ZFLX     ! flux at top of BL
 !
 !----------------------------------------------------------------------------
@@ -76,34 +76,30 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('BL_DEPTH_DIAG_3D',0,ZHOOK_HANDLE)
 IKB=D%NKTB
 IKE=D%NKTE
-IIE=D%NIEC
-IIB=D%NIBC
-IJE=D%NJEC
-IJB=D%NJBC
+IIJE=D%NIJE
+IIJB=D%NIJB 
 !
-BL_DEPTH_DIAG3D(:,:) = 0.
+BL_DEPTH_DIAG3D(:) = 0.
 !
 
-DO JJ=1,IJE
-  DO JI=1,IIE
-    IF (PSURF(JI,JJ)==0.) CYCLE
+DO JIJ=IIJB,IIJE
+    IF (PSURF(JIJ)==0.) CYCLE
     DO JK=IKB,IKE,D%NKL
-      IF (PZZ(JI,JJ,JK-D%NKL)<=PZS(JI,JJ)) CYCLE
-      ZFLX = PSURF(JI,JJ) * PFTOP_O_FSURF
-      IF ( (PFLUX(JI,JJ,JK)-ZFLX)*(PFLUX(JI,JJ,JK-D%NKL)-ZFLX) <= 0. ) THEN
-        BL_DEPTH_DIAG3D(JI,JJ) = (PZZ  (JI,JJ,JK-D%NKL) - PZS(JI,JJ))     &
-                         + (PZZ  (JI,JJ,JK) - PZZ  (JI,JJ,JK-D%NKL))    &
-                         * (ZFLX            - PFLUX(JI,JJ,JK-D%NKL)  )  &
-                         / (PFLUX(JI,JJ,JK) - PFLUX(JI,JJ,JK-D%NKL)   )
+      IF (PZZ(JIJ,JK-D%NKL)<=PZS(JIJ)) CYCLE
+      ZFLX = PSURF(JIJ) * PFTOP_O_FSURF
+      IF ( (PFLUX(JIJ,JK)-ZFLX)*(PFLUX(JIJ,JK-D%NKL)-ZFLX) <= 0. ) THEN
+        BL_DEPTH_DIAG3D(JIJ) = (PZZ  (JIJ,JK-D%NKL) - PZS(JIJ))     &
+                         + (PZZ  (JIJ,JK) - PZZ  (JIJ,JK-D%NKL))    &
+                         * (ZFLX          - PFLUX(JIJ,JK-D%NKL)  )  &
+                         / (PFLUX(JIJ,JK) - PFLUX(JIJ,JK-D%NKL)   )
         EXIT
       END IF
     END DO
-  END DO
 END DO
 !
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-BL_DEPTH_DIAG3D(IIB:IIE,IJB:IJE) = BL_DEPTH_DIAG3D(IIB:IIE,IJB:IJE) / (1. - PFTOP_O_FSURF)
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+BL_DEPTH_DIAG3D(IIJB:IIJE) = BL_DEPTH_DIAG3D(IIJB:IIJE) / (1. - PFTOP_O_FSURF)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 IF (LHOOK) CALL DR_HOOK('BL_DEPTH_DIAG_3D',1,ZHOOK_HANDLE)
 END SUBROUTINE BL_DEPTH_DIAG_3D
