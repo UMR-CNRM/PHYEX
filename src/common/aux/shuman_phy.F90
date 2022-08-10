@@ -156,8 +156,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMYM   ! result at flux localization 
+REAL, DIMENSION(:,:,:), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(:,:,:), INTENT(OUT) :: PMYM   ! result at flux localization 
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
@@ -411,8 +411,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMXM   ! result at flux localization
+REAL, DIMENSION(:,:,:), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(:,:,:), INTENT(OUT) :: PMXM   ! result at flux localization
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
