@@ -419,7 +419,7 @@ IJB=D%NJBC
 !
 CALL PRANDTL(D,CST,CSTURB,KRR,KSV,KRRI,OTURB_FLX,  &
              HTURBDIM,OOCEAN,OHARAT,O2D,OCOMPUTE_SRC,&
-             TPFILE,                               &
+             TPFILE, OFLAT,                        &
              PDXX,PDYY,PDZZ,PDZX,PDZY,             &
              PTHVREF,PLOCPEXNM,PATHETA,PAMOIST,    &
              PLM,PLEPS,PTKEM,PTHLM,PRM,PSVM,PSRCM, &

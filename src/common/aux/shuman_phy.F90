@@ -156,8 +156,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(:,:,:), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(:,:,:), INTENT(OUT) :: PMYM   ! result at flux localization 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMYM   ! result at flux localization 
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
@@ -411,8 +411,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(:,:,:), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(:,:,:), INTENT(OUT) :: PMXM   ! result at flux localization
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMXM   ! result at flux localization
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
@@ -697,4 +697,158 @@ PDZF(:,:,D%NKU)    = -999.
 !
 IF (LHOOK) CALL DR_HOOK('DZF',1,ZHOOK_HANDLE)
 END SUBROUTINE DZF_PHY
+!
+!     ###############################
+      SUBROUTINE DXF_PHY(D,PA,PDXF)
+      USE PARKIND1, ONLY : JPRB
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!     ###############################
+!
+!!****  *DXF* -  Shuman operator : finite difference operator in x direction
+!!                                  for a variable at a flux side
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a finite difference
+!     along the x direction (I index) for a field PA localized at a x-flux
+!     point (u point). The result is localized at a mass point.
+!
+!!**  METHOD
+!!    ------
+!!        The result PDXF(i,:,:) is defined by (PA(i+1,:,:)-PA(i,:,:))
+!!        At i=size(PA,1), PDXF(i,:,:) are replaced by the values of PDXF,
+!!    which are the right values in the x-cyclic case
+!!
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      Module MODD_PARAMETERS: declaration of parameter variables
+!!        JPHEXT: define the number of marginal points out of the
+!!        physical domain along the horizontal directions.
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!      V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    05/07/94
+!!      Modification to include the periodic case 13/10/94 J.Stein
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux
+                                                          !  side
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDXF   ! result at mass
+                                                          ! localization
+!
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('DXF',0,ZHOOK_HANDLE)
+!
+CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
+!
+!-------------------------------------------------------------------------------
+!
+IF (LHOOK) CALL DR_HOOK('DXF',1,ZHOOK_HANDLE)
+END SUBROUTINE DXF_PHY
+!
+!     ###############################
+      SUBROUTINE DYF_PHY(D,PA,PDYF)
+      USE PARKIND1, ONLY : JPRB
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!     ###############################
+!
+!!****  *DYF* -  Shuman operator : finite difference operator in y direction
+!!                                  for a variable at a flux side
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a finite difference
+!     along the y direction (J index) for a field PA localized at a y-flux
+!     point (v point). The result is localized at a mass point.
+!
+!!**  METHOD
+!!    ------
+!!        The result PDYF(:,j,:) is defined by (PA(:,j+1,:)-PA(:,j,:))
+!!        At j=size(PA,2), PDYF(:,j,:) are replaced by the values of PDYM,
+!!    which are the right values in the y-cyclic case
+!!
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      Module MODD_PARAMETERS: declaration of parameter variables
+!!        JPHEXT: define the number of marginal points out of the
+!!        physical domain along the horizontal directions.
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!      V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    05/07/94
+!!      Modification to include the periodic case 13/10/94 J.Stein
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux
+                                                          !  side
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDYF   ! result at mass
+                                                          ! localization
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF DYF
+!              ------------------
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('DYF',0,ZHOOK_HANDLE)
+!
+CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
+!
+!-------------------------------------------------------------------------------
+!
+IF (LHOOK) CALL DR_HOOK('DYF',1,ZHOOK_HANDLE)
+END SUBROUTINE DYF_PHY
+!
 END MODULE SHUMAN_PHY
