@@ -26,7 +26,8 @@
               & PEDR,PLEM,PRTKEMS,PTPMF,                              &
               & PDRUS_TURB,PDRVS_TURB,                                &
               & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS,       &
-              & PCURRENT_TKE_DISS, PSSTFL, PSSTFL_C, PSSRFL_C         ) 
+              & PCURRENT_TKE_DISS, PSSTFL, PSSTFL_C, PSSRFL_C,        &
+              & PSSUFL_C, PSSVFL_C,PSSUFL,PSSVFL                      ) 
 !     #################################################################
 !
 !
@@ -426,6 +427,10 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DI
 REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSTFL        ! Time evol Flux of T at sea surface (LOCEAN)
 REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSTFL_C  ! O-A interface flux for theta(LOCEAN and LCOUPLES)
 REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSRFL_C  ! O-A interface flux for vapor (LOCEAN and LCOUPLES) 
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSUFL_C        ! Time evol Flux of U at sea surface (LOCEAN)
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSVFL_C  !
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSUFL   
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSVFL  !
 !
 !
 !-------------------------------------------------------------------------------
@@ -976,7 +981,8 @@ CALL TURB_VER(D, CST,CSTURB,TURBN,KRR, KRRL, KRRI,       &
           PSBL_DEPTH,ZLMO,                               &
           PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,              &
           PDP,PTP,PSIGS,PWTH,PWRC,PWSV,                  &
-          PSSTFL, PSSTFL_C, PSSRFL_C                     )
+          PSSTFL, PSSTFL_C, PSSRFL_C,PSSUFL_C,PSSVFL_C,  &
+          PSSUFL,PSSVFL                                  )
 
 IF( BUCONF%LBUDGET_U ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_U), 'VTURB', PRUS(:, :, :) )
 IF( BUCONF%LBUDGET_V ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_V), 'VTURB', PRVS(:, :, :) )

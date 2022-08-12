@@ -24,7 +24,8 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,KRR,KRRL,KRRI,   &
                       PSBL_DEPTH,PLMO,                              &
                       PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,             &
                       PDP,PTP,PSIGS,PWTH,PWRC,PWSV,                 &
-                      PSSTFL,PSSTFL_C,PSSRFL_C                      )
+                      PSSTFL,PSSTFL_C,PSSRFL_C,PSSUFL_C,PSSVFL_C,   &
+                      PSSUFL,PSSVFL                                 )
 !     ###############################################################
 !
 !
@@ -355,6 +356,10 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV),INTENT(OUT) :: PWSV       ! scalar flux
 REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSTFL        ! Time evol Flux of T at sea surface (LOCEAN)!
 REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSTFL_C  ! O-A interface flux for theta(LOCEAN and LCOUPLES)
 REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSRFL_C  ! O-A interface flux for vapor (LOCEAN and LCOUPLES) 
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSUFL_C        ! Time evol Flux of U at sea surface (LOCEAN)
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSVFL_C  !
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSUFL   
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSVFL  !
 !
 !*       0.2  declaration of local variables
 !
@@ -573,7 +578,7 @@ CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KSV,O2D,OFLAT,           &
                       PTHLM,PRM,PSVM,PUM,PVM,PWM,PUSLOPEM,PVSLOPEM, &
                       PTKEM,ZLM,MFMOIST,ZWU,ZWV,                    &
                       PRUS,PRVS,PRWS,                               &
-                      PDP,PTP                                       )
+                      PDP,PTP,PSSUFL_C,PSSVFL_C,PSSUFL,PSSVFL       )
 !
 !----------------------------------------------------------------------------
 !

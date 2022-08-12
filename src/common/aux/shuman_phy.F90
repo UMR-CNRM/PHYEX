@@ -65,37 +65,170 @@ TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMYF   ! result at flux localization 
 !
-!*       0.2   Declarations of local variables
-!              -------------------------------
-!
-INTEGER :: JJ             ! Loop index in y direction
-INTEGER :: IJU            ! upper bound in y direction of PA
-!
-!-------------------------------------------------------------------------------
-!
-!*       1.    DEFINITION OF MYF
+! 1.    DEFINITION OF MYF
 !              ------------------
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MYF',0,ZHOOK_HANDLE)
-IJU = SIZE(PA,2)
 
 !POUR AROME
-
+!
 PMYF=PA
-
-!
-!DO JJ=1,IJU-1
-!  PMYF(:,JJ,:) = 0.5*( PA(:,JJ,:)+PA(:,JJ+1,:) )
-!END DO
-!
-!
-!-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('MYF',1,ZHOOK_HANDLE)
 END SUBROUTINE MYF_PHY
 !
+!     ###############################
+      SUBROUTINE MYF2D_PHY(D,PA,PMYF)
+      USE PARKIND1, ONLY : JPRB
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!     ###############################
 !
+!!****  *MYF* -  Shuman operator : mean operator in y direction for a
+!!                                 variable at a flux side
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a mean
+!     along the y direction (J index) for a field PA localized at a y-flux
+!     point (v point). The result is localized at a mass point.
+!
+!!**  METHOD
+!!    ------
+!!        The result PMYF(i,:,:) is defined by 0.5*(PA(:,j,:)+PA(:,j+1,:))
+!!        At j=size(PA,2), PMYF(:,j,:) are replaced by the values of PMYF,
+!!    which are the right values in the y-cyclic case
+!!
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      Module MODD_PARAMETERS: declaration of parameter variables
+!!        JPHEXT: define the number of marginal points out of the
+!!        physical domain along the horizontal directions.
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!      V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    04/07/94
+!!      Modification to include the periodic case 13/10/94 J.Stein
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_PARAMETERS
+!
+!
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PMYF   ! result at flux localization 
+!
+! 1.    DEFINITION OF MYF
+!              ------------------
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('MYF',0,ZHOOK_HANDLE)
+
+!POUR AROME
+!
+PMYF=PA
+!
+IF (LHOOK) CALL DR_HOOK('MYF',1,ZHOOK_HANDLE)
+END SUBROUTINE MYF2D_PHY
+!
+!     ###############################
+      SUBROUTINE MYM2D_PHY(D,PA,PMYM)
+      USE PARKIND1, ONLY : JPRB
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!     ###############################
+!
+!!****  *MYM* -  Shuman operator : mean operator in y direction for a
+!!                                 mass variable
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a mean
+!     along the y direction (J index) for a field PA localized at a mass
+!     point. The result is localized at a y-flux point (v point).
+!
+!!**  METHOD
+!!    ------
+!!        The result PMYM(:,j,:) is defined by 0.5*(PA(:,j,:)+PA(:,j-1,:))
+!!    At j=1, PMYM(:,j,:) are replaced by the values of PMYM,
+!!    which are the right values in the y-cyclic case.
+!!
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      Module MODD_PARAMETERS: declaration of parameter variables
+!!        JPHEXT: define the number of marginal points out of the
+!!        physical domain along the horizontal directions.
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!      V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    04/07/94
+!!      Modification to include the periodic case 13/10/94 J.Stein
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_PARAMETERS
+!
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PMYM   ! result at flux localization 
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('MYM',0,ZHOOK_HANDLE)
+
+!POUR AROME
+
+PMYM=PA
+
+!-------------------------------------------------------------------------------
+!
+IF (LHOOK) CALL DR_HOOK('MYM',1,ZHOOK_HANDLE)
+END SUBROUTINE MYM2D_PHY
 !     ###############################
       SUBROUTINE MYM_PHY(D,PA,PMYM)
       USE PARKIND1, ONLY : JPRB
@@ -156,8 +289,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(:,:,:), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(:,:,:), INTENT(OUT) :: PMYM   ! result at flux localization 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMYM   ! result at flux localization 
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
@@ -178,13 +311,6 @@ IJU=SIZE(PA,2)
 
 PMYM=PA
 
-!
-!DO JJ=2,IJU
-!  PMYM(:,JJ,:) = 0.5*( PA(:,JJ,:)+PA(:,JJ-1,:) )
-!END DO
-!
-!PMYM(:,1,:)    = PMYM(:,IJU-2*JPHEXT+1,:)
-!
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('MYM',1,ZHOOK_HANDLE)
@@ -411,8 +537,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(:,:,:), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(:,:,:), INTENT(OUT) :: PMXM   ! result at flux localization
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMXM   ! result at flux localization
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
@@ -444,6 +570,83 @@ PMXM=PA
 !
 IF (LHOOK) CALL DR_HOOK('MXM',1,ZHOOK_HANDLE)
 END SUBROUTINE MXM_PHY
+!
+!     ###############################
+      SUBROUTINE MXM2D_PHY(D,PA,PMXM)
+      USE PARKIND1, ONLY : JPRB
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!     ###############################
+!
+!!****  *MXM* -  Shuman operator : mean operator in x direction for a
+!!                                 mass variable
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a mean
+!     along the x direction (I index) for a field PA localized at a mass
+!     point. The result is localized at a x-flux point (u point).
+!
+!!**  METHOD
+!!    ------
+!!        The result PMXM(i,:,:) is defined by 0.5*(PA(i,:,:)+PA(i-1,:,:))
+!!    At i=1, PMXM(1,:,:) are replaced by the values of PMXM,
+!!    which are the right values in the x-cyclic case.
+!!
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      Module MODD_PARAMETERS: declaration of parameter variables
+!!        JPHEXT: define the number of marginal points out of the
+!!        physical domain along the horizontal directions.
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!      V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    04/07/94
+!!      Modification to include the periodic case 13/10/94 J.Stein
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+USE MODD_PARAMETERS
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PMXM   ! result at flux localization
+!
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF MXM
+!              ------------------
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('MXM',0,ZHOOK_HANDLE)
+
+!POUR AROME
+
+PMXM=PA
+
+IF (LHOOK) CALL DR_HOOK('MXM',1,ZHOOK_HANDLE)
+END SUBROUTINE MXM2D_PHY
 !     ###############################
       SUBROUTINE MXF_PHY(D,PA,PMXF)      
       USE PARKIND1, ONLY : JPRB
@@ -505,36 +708,89 @@ TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMXF   ! result at flux localization 
 !
-!*       0.2   Declarations of local variables
-!              -------------------------------
+!*       1.    DEFINITION OF MXF
+!              ------------------
 !
-INTEGER :: JI             ! Loop index in x direction
-INTEGER :: IIU            ! upper bound in x direction of PA
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('MXF',0,ZHOOK_HANDLE)
+!POUR AROME
 !
+PMXF=PA
+!
+IF (LHOOK) CALL DR_HOOK('MXF',1,ZHOOK_HANDLE)
+END SUBROUTINE MXF_PHY
+!     ###############################
+      SUBROUTINE MXF2D_PHY(D,PA,PMXF)      
+      USE PARKIND1, ONLY : JPRB
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!     ###############################
+!
+!!****  *MXF* -  Shuman operator : mean operator in x direction for a
+!!                                 variable at a flux side
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a mean
+!     along the x direction (I index) for a field PA localized at a x-flux
+!     point (u point). The result is localized at a mass point.
+!
+!!**  METHOD
+!!    ------
+!!        The result PMXF(i,:,:) is defined by 0.5*(PA(i,:,:)+PA(i+1,:,:))
+!!        At i=size(PA,1), PMXF(i,:,:) are replaced by the values of PMXF,
+!!    which are the right values in the x-cyclic case
+!!
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      Module MODD_PARAMETERS: declaration of parameter variables
+!!        JPHEXT: define the number of marginal points out of the
+!!        physical domain along the horizontal directions.
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!      V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    04/07/94
+!!      Modification to include the periodic case 13/10/94 J.Stein
 !-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PMXF   ! result at flux localization 
 !
 !*       1.    DEFINITION OF MXF
 !              ------------------
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MXF',0,ZHOOK_HANDLE)
-IIU = SIZE(PA,1)
-!
 !POUR AROME
-
+!
 PMXF=PA
-
-!
-!DO JI=1,IIU-1
-!  PMXF(JI,:,:) = 0.5*( PA(JI,:,:)+PA(JI+1,:,:) )
-!END DO
-!
-!PMXF(IIU,:,:)    = PMXF(2*JPHEXT,:,:)
-!
-!-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('MXF',1,ZHOOK_HANDLE)
-END SUBROUTINE MXF_PHY
+END SUBROUTINE MXF2D_PHY
 !     ###############################
       SUBROUTINE MZF_PHY(D,PA,PMZF)
       USE PARKIND1, ONLY : JPRB
