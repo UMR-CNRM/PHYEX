@@ -156,8 +156,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMYM   ! result at flux localization 
+REAL, DIMENSION(:,:,:), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(:,:,:), INTENT(OUT) :: PMYM   ! result at flux localization 
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
@@ -411,8 +411,8 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMXM   ! result at flux localization
+REAL, DIMENSION(:,:,:), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(:,:,:), INTENT(OUT) :: PMXM   ! result at flux localization
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
@@ -698,6 +698,190 @@ PDZF(:,:,D%NKU)    = -999.
 IF (LHOOK) CALL DR_HOOK('DZF',1,ZHOOK_HANDLE)
 END SUBROUTINE DZF_PHY
 !
+!     ###############################
+      SUBROUTINE DYM_PHY(D,PA,PDYM)
+      USE PARKIND1, ONLY : JPRB
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!     ###############################
+!
+!!****  *DYM* -  Shuman operator : finite difference operator in y direction
+!!                                  for a variable at a mass localization
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a finite difference
+!     along the y direction (J index) for a field PA localized at a mass
+!     point. The result is localized at a y-flux point (v point).
+!
+!!**  METHOD
+!!    ------
+!!        The result PDYM(:,j,:) is defined by (PA(:,j,:)-PA(:,j-1,:))
+!!    At j=1, PDYM(:,1,:) are replaced by the values of PDYM,
+!!    which are the right values in the y-cyclic case.
+!!
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      Module MODD_PARAMETERS: declaration of parameter variables
+!!        JPHEXT: define the number of marginal points out of the
+!!        physical domain along the horizontal directions.
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!      V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    05/07/94
+!!      Modification to include the periodic case 13/10/94 J.Stein
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_PARAMETERS, ONLY: JPHEXT
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)                :: PA     ! variable at mass
+                                                            ! localization
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDYM     ! result at flux
+                                                            ! side
+!
+!
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+INTEGER :: JJ             ! Loop index in y direction
+INTEGER :: IJU            ! Size of the array in the y direction
+!
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF DYM
+!              ------------------
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('DYM',0,ZHOOK_HANDLE)
+IJU=SIZE(PA,2)
+!
+DO JJ=2,IJU
+  PDYM(:,JJ,:)          = PA(:,JJ,:) -  PA(:,JJ-1,:)
+END DO
+!
+PDYM(:,1,:)    =  PDYM(:,IJU-2*JPHEXT+1,:)
+CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
+!
+!-------------------------------------------------------------------------------
+!
+IF (LHOOK) CALL DR_HOOK('DYM',1,ZHOOK_HANDLE)
+END SUBROUTINE DYM_PHY
+!
+!     ###############################
+      SUBROUTINE DXM_PHY(D,PA,PDXM)
+      USE PARKIND1, ONLY : JPRB
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!     ###############################
+!
+!!****  *DXM* -  Shuman operator : finite difference operator in x direction
+!!                                  for a variable at a mass localization
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a finite difference
+!     along the x direction (I index) for a field PA localized at a mass
+!     point. The result is localized at a x-flux point (u point).
+!
+!!**  METHOD
+!!    ------
+!!        The result PDXM(i,:,:) is defined by (PA(i,:,:)-PA(i-1,:,:))
+!!    At i=1, PDXM(1,:,:) are replaced by the values of PDXM,
+!!    which are the right values in the x-cyclic case.
+!!
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      Module MODD_PARAMETERS: declaration of parameter variables
+!!        JPHEXT: define the number of marginal points out of the
+!!        physical domain along the horizontal directions.
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!      V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    05/07/94
+!!      Modification to include the periodic case 13/10/94 J.Stein
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_PARAMETERS, ONLY: JPHEXT
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)                :: PA     ! variable at mass
+                                                            ! localization
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDXM   ! result at flux
+                                                            ! side
+!
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+INTEGER :: JI             ! Loop index in x direction
+INTEGER :: IIU            ! Size of the array in the x direction
+!
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF DXM
+!              ------------------
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+IF (LHOOK) CALL DR_HOOK('DXM',0,ZHOOK_HANDLE)
+IIU = SIZE(PA,1)
+!
+DO JI=2,IIU
+  PDXM(JI,:,:)          = PA(JI,:,:) -  PA(JI-1,:,:)
+END DO
+!
+PDXM(1,:,:)    =  PDXM(IIU-2*JPHEXT+1,:,:)
+!
+CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
+!-------------------------------------------------------------------------------
+!
+IF (LHOOK) CALL DR_HOOK('DXM',1,ZHOOK_HANDLE)
+END SUBROUTINE DXM_PHY
 !     ###############################
       SUBROUTINE DXF_PHY(D,PA,PDXF)
       USE PARKIND1, ONLY : JPRB
