@@ -672,18 +672,16 @@ IF(HTURBDIM=='3DIM') THEN
   
   CALL DXM_PHY(D,PWM,ZWORK1) 
   !
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-  ZWORK2(IIB:IIE,IJB:IJE,IKB:IKB  ) = (PWM(IIB:IIE,IJB:IJE,IKB+2*D%NKL:IKB+2*D%NKL   )-PWM(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL)) &
+  ZWORK2(IIB:IIE,IJB:IJE,IKB:IKB) = (PWM(IIB:IIE,IJB:IJE,IKB+2*D%NKL:IKB+2*D%NKL)-PWM(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL)) &
                         / (PDZZ(IIB:IIE,IJB:IJE,IKB+2*D%NKL:IKB+2*D%NKL)+PDZZ(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL))       &
-                        + (PWM(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL)-PWM(IIB:IIE,IJB:IJE,IKB:IKB  ))                       &
+                        + (PWM(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL)-PWM(IIB:IIE,IJB:IJE,IKB:IKB))                       &
                         / (PDZZ(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL)+PDZZ(IIB:IIE,IJB:IJE,IKB:IKB  )) 
   !
   CALL MXM_PHY(D,ZWORK2,ZWORK5)
-  ZWORK3(IIB:IIE,IJB:IJE,IKB:IKB  ) = - ZFLXZ(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL) &
-                                    * ( ZWORK1(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL) - ZWORK5(IIB:IIE,IJB:IJE,IKB:IKB  ) &
+  ZWORK3(IIB:IIE,IJB:IJE,IKB:IKB) = - ZFLXZ(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL) &
+                                    * ( ZWORK1(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL) - ZWORK5(IIB:IIE,IJB:IJE,IKB:IKB) &
                                     *   PDZX(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL) ) &
                                     / (0.5*(PDXX(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL)+PDXX(IIB:IIE,IJB:IJE,IKB:IKB)))
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)  
   CALL MXF_PHY(D,ZWORK3,ZWORK4)
   ZA(IIB:IIE,IJB:IJE,IKB:IKB) = ZWORK4(IIB:IIE,IJB:IJE,IKB:IKB)
 
@@ -702,18 +700,17 @@ IF(HTURBDIM=='3DIM') THEN
 IF (OOCEAN) THEN
   ! evaluate the dynamic production at w(IKE-D%NKL) in PDP(IKE)
   !
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-  ZWORK2(IIB:IIE,IJB:IJE,IKE:IKE  ) = (PWM(IIB:IIE,IJB:IJE,IKE-2*D%NKL:IKE-2*D%NKL   )-PWM(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL)) &
+  ZWORK2(IIB:IIE,IJB:IJE,IKE:IKE) = (PWM(IIB:IIE,IJB:IJE,IKE-2*D%NKL:IKE-2*D%NKL)-PWM(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL)) &
                         / (PDZZ(IIB:IIE,IJB:IJE,IKE-2*D%NKL:IKE-2*D%NKL)+PDZZ(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL))       &
                         + (PWM(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL)-PWM(IIB:IIE,IJB:IJE,IKE:IKE  ))                       &
                         / (PDZZ(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL)+PDZZ(IIB:IIE,IJB:IJE,IKE:IKE  )) 
   !
+
   CALL MXM_PHY(D,ZWORK2,ZWORK5)
-  ZWORK3(IIB:IIE,IJB:IJE,IKE:IKE  ) = - ZFLXZ(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL) &
-                                    * ( ZWORK1(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL) - ZWORK5(IIB:IIE,IJB:IJE,IKE:IKE  ) &
+  ZWORK3(IIB:IIE,IJB:IJE,IKE:IKE) = - ZFLXZ(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL) &
+                                    * ( ZWORK1(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL) - ZWORK5(IIB:IIE,IJB:IJE,IKE:IKE) &
                                     *   PDZX(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL) ) &
                                     / (0.5*(PDXX(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL)+PDXX(IIB:IIE,IJB:IJE,IKE:IKE)))
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   CALL MXF_PHY(D,ZWORK3,ZWORK4)
   ZA(IIB:IIE,IJB:IJE,IKE:IKE) = ZWORK4(IIB:IIE,IJB:IJE,IKE:IKE)
   !ZA(:,:,IKE:IKE) = - MXF (                                                  &
@@ -1074,7 +1071,6 @@ IF(HTURBDIM=='3DIM') THEN
 
   CALL DYM_PHY(D,PWM,ZWORK1) 
   !
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   ZWORK2(IIB:IIE,IJB:IJE,IKB:IKB  ) = (PWM(IIB:IIE,IJB:IJE,IKB+2*D%NKL:IKB+2*D%NKL   )-PWM(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL)) &
                         / (PDZZ(IIB:IIE,IJB:IJE,IKB+2*D%NKL:IKB+2*D%NKL)+PDZZ(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL))       &
                         + (PWM(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL)-PWM(IIB:IIE,IJB:IJE,IKB:IKB  ))                       &
@@ -1085,7 +1081,6 @@ IF(HTURBDIM=='3DIM') THEN
                                     * ( ZWORK1(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL) - ZWORK5(IIB:IIE,IJB:IJE,IKB:IKB  ) &
                                     *   PDZY(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL) ) &
                                     / (0.5*(PDYY(IIB:IIE,IJB:IJE,IKB+D%NKL:IKB+D%NKL)+PDYY(IIB:IIE,IJB:IJE,IKB:IKB)))
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)  
   CALL MYF_PHY(D,ZWORK3,ZWORK4)
   ZA(IIB:IIE,IJB:IJE,IKB:IKB) = ZWORK4(IIB:IIE,IJB:IJE,IKB:IKB)
   !
@@ -1101,7 +1096,6 @@ IF(HTURBDIM=='3DIM') THEN
 !           * PDZY(:,:,IKE-D%NKL:IKE-D%NKL)                                      &
 !        ) / (0.5*(PDYY(:,:,IKE-D%NKL:IKE-D%NKL)+PDYY(:,:,IKE:IKE)))             &
 !                            )
-      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
       ZWORK2(IIB:IIE,IJB:IJE,IKE:IKE) = (PWM(IIB:IIE,IJB:IJE,IKE-2*D%NKL:IKE-2*D%NKL)-PWM(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL)) &
                             / (PDZZ(IIB:IIE,IJB:IJE,IKE-2*D%NKL:IKE-2*D%NKL)+PDZZ(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL))       &
                             + (PWM(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL)-PWM(IIB:IIE,IJB:IJE,IKE:IKE  ))                       &
@@ -1112,7 +1106,6 @@ IF(HTURBDIM=='3DIM') THEN
                                         * ( ZWORK1(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL) - ZWORK5(IIB:IIE,IJB:IJE,IKE:IKE  ) &
                                         *   PDZY(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL) ) &
                                         / (0.5*(PDYY(IIB:IIE,IJB:IJE,IKE-D%NKL:IKE-D%NKL)+PDYY(IIB:IIE,IJB:IJE,IKE:IKE)))
-      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
       CALL MYF_PHY(D,ZWORK3,ZWORK4)
       ZA(IIB:IIE,IJB:IJE,IKE:IKE) = ZWORK4(IIB:IIE,IJB:IJE,IKE:IKE)
     END IF
