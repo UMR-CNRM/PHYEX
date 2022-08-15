@@ -224,27 +224,22 @@ USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
-USE MODI_GRADIENT_M
-USE MODI_GRADIENT_W
 USE MODE_GRADIENT_M_PHY, ONLY : GZ_M_W_PHY
-USE MODI_TURB
+USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE_PHY
+USE MODE_PRANDTL, ONLY: PSI_SV, PSI3, PHI3, PRANDTL
+USE MODE_SBL_DEPTH, ONLY: SBL_DEPTH
 USE MODE_TURB_VER_THERMO_FLUX, ONLY: TURB_VER_THERMO_FLUX
 USE MODE_TURB_VER_THERMO_CORR, ONLY: TURB_VER_THERMO_CORR
 USE MODE_TURB_VER_DYN_FLUX, ONLY: TURB_VER_DYN_FLUX
 USE MODE_TURB_VER_SV_FLUX, ONLY: TURB_VER_SV_FLUX
 USE MODE_TURB_VER_SV_CORR, ONLY: TURB_VER_SV_CORR
-USE MODI_LES_MEAN_SUBGRID
-USE MODE_SBL_DEPTH, ONLY: SBL_DEPTH
-USE MODI_SECOND_MNH
 !
-USE MODE_IO_FIELD_WRITE, only: IO_Field_write
-USE MODE_PRANDTL, ONLY: PSI_SV, PSI3, PHI3, PRANDTL
+USE MODI_LES_MEAN_SUBGRID_PHY
+USE MODI_SECOND_MNH
 !
 IMPLICIT NONE
 !
 !*      0.1  declarations of arguments
-!
-!
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
@@ -275,97 +270,91 @@ REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                       ! Metric coefficients
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the
                                                       ! normal to the ground surface
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PZZ          ! altitudes at flux points
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PCOSSLOPE    ! cosinus of the angle 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PZZ          ! altitudes at flux points
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PCOSSLOPE    ! cosinus of the angle 
                                       ! between i and the slope vector
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PSINSLOPE    ! sinus of the angle 
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSINSLOPE    ! sinus of the angle 
                                       ! between i and the slope vector
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
 ! MFMOIST used in case of OHARATU
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  MFMOIST       ! moist mass flux dual scheme
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  MFMOIST       ! moist mass flux dual scheme
 
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
                                                       ! Potential Temperature 
 !
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at time
-REAL, DIMENSION(D%NIT,D%NJT,KSV), INTENT(IN)   ::  PSFSVM       ! t - deltat 
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at time
+REAL, DIMENSION(D%NIJT,KSV), INTENT(IN)   ::  PSFSVM       ! t - deltat 
 !
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PSFTHP,PSFRP ! surface fluxes at time
-REAL, DIMENSION(D%NIT,D%NJT,KSV), INTENT(IN)   ::  PSFSVP       ! t + deltat 
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTHP,PSFRP ! surface fluxes at time
+REAL, DIMENSION(D%NIJT,KSV), INTENT(IN)   ::  PSFSVP       ! t + deltat 
 !
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PCDUEFF     ! Cd * || u || at time t
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked 
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PCDUEFF     ! Cd * || u || at time t
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked 
        ! to the maximum slope direction and the surface normal and the binormal 
        ! at time t - dt
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PUM,PVM,PWM,PTHLM 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PUM,PVM,PWM,PTHLM 
   ! Wind and potential temperature at t-Delta t
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN) ::  PRM          ! Mixing ratios 
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) ::  PRM          ! Mixing ratios 
                                                       ! at t-Delta t
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) ::  PSVM         ! scalar var. at t-Delta t
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PUSLOPEM     ! wind component along the 
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVM         ! scalar var. at t-Delta t
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PUSLOPEM     ! wind component along the 
                                      ! maximum slope direction
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
                                      ! direction normal to the maximum slope one
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length   
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length   
 ! PLENGTHM PLENGTHH used in case of OHARATU
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLENGTHM     ! Turb. mixing length momentum
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLENGTHH     ! Turb. mixing length heat/moisture 
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLEPS        ! dissipative length
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PATHETA      ! coefficients between 
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
-REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
-                MERGE(D%NJT,0,OCOMPUTE_SRC),&
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLENGTHM     ! Turb. mixing length momentum
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLENGTHH     ! Turb. mixing length heat/moisture 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLEPS        ! dissipative length
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PATHETA      ! coefficients between 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(IN)   ::  PSRCM        ! normalized 
                   ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFRAC_ICE    ! ri fraction of rc+ri
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFWTH        ! d(w'2th' )/dz
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFWR         ! d(w'2r'  )/dz
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFTH2        ! d(w'th'2 )/dz
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFR2         ! d(w'r'2  )/dz
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PFTHR        ! d(w'th'r')/dz
-REAL, DIMENSION(MERGE(D%NIT,0,HTOM=='TM06'),&
-                MERGE(D%NJT,0,HTOM=='TM06')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
-REAL, DIMENSION(MERGE(D%NIT,0,ORMC01),&
-                MERGE(D%NJT,0,ORMC01)),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PLMO         ! Monin-Obukhov length
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFRAC_ICE    ! ri fraction of rc+ri
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFWTH        ! d(w'2th' )/dz
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFWR         ! d(w'2r'  )/dz
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFTH2        ! d(w'th'2 )/dz
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFR2         ! d(w'r'2  )/dz
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFTHR        ! d(w'th'r')/dz
+REAL, DIMENSION(MERGE(D%NIJT,0,HTOM=='TM06')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
+REAL, DIMENSION(MERGE(D%NIJT,0,ORMC01)),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PLMO         ! Monin-Obukhov length
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT)   ::  PRUS, PRVS, PRWS, PRTHLS
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)   ::  PRUS, PRVS, PRWS, PRTHLS
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS
                             ! cumulated sources for the prognostic variables
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PDP,PTP   ! Dynamic and thermal
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PDP,PTP   ! Dynamic and thermal
                                                    ! TKE production terms
-REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
-                MERGE(D%NJT,0,OCOMPUTE_SRC),&
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(OUT)     ::  PSIGS
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PWTH      ! heat flux
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PWRC      ! cloud water flux
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV),INTENT(OUT) :: PWSV       ! scalar flux
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSTFL        ! Time evol Flux of T at sea surface (LOCEAN)!
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSTFL_C  ! O-A interface flux for theta(LOCEAN and LCOUPLES)
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSRFL_C  ! O-A interface flux for vapor (LOCEAN and LCOUPLES) 
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSUFL_C        ! Time evol Flux of U at sea surface (LOCEAN)
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSVFL_C  !
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSUFL   
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSVFL  !
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PWTH      ! heat flux
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PWRC      ! cloud water flux
+REAL, DIMENSION(D%NIJT,D%NKT,KSV),INTENT(OUT) :: PWSV       ! scalar flux
+REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSTFL        ! Time evol Flux of T at sea surface (LOCEAN)!
+REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSTFL_C  ! O-A interface flux for theta(LOCEAN and LCOUPLES)
+REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSRFL_C  ! O-A interface flux for vapor (LOCEAN and LCOUPLES) 
+REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSUFL_C        ! Time evol Flux of U at sea surface (LOCEAN)
+REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSVFL_C  !
+REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSUFL   
+REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSVFL  !
 !
 !*       0.2  declaration of local variables
 !
-!JUAN BUG PGI
-!!$REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3))  ::  &
-REAL,  DIMENSION(D%NIT,D%NJT,D%NKT)  ::  &
+REAL,  DIMENSION(D%NIJT,D%NKT)  ::  &
        ZBETA,    & ! buoyancy coefficient
        ZSQRT_TKE,& ! sqrt(e)
        ZDTH_DZ,  & ! d(th)/dz
@@ -386,19 +375,18 @@ REAL,  DIMENSION(D%NIT,D%NJT,D%NKT)  ::  &
        ZWV,      & ! (v'w')
        ZTHLP,    & ! guess of potential temperature due to vert. turbulent flux
        ZRP         ! guess of total water due to vert. turbulent flux
-
-!!$REAL, DIMENSION(SIZE(PTHLM,1),SIZE(PTHLM,2),SIZE(PTHLM,3),KSV)  ::  &
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV)  ::  &
+!
+REAL, DIMENSION(D%NIJT,D%NKT,KSV)  ::  &
        ZPSI_SV,  & ! Prandtl number for scalars
        ZREDS1,   & ! 1D Redelsperger number R_sv
        ZRED2THS, & ! 3D Redelsperger number R*2_thsv
        ZRED2RS     ! 3D Redelsperger number R*2_rsv
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  ::  ZLM
+REAL, DIMENSION(D%NIJT,D%NKT)  ::  ZLM
 !
 LOGICAL :: GUSERV    ! flag to use water vapor
-INTEGER :: IKB,IKE,IIB,IIE,IJB,IJE   ! index value for the Beginning
+INTEGER :: IKB,IKE,IIJE,IIJB   ! index value for the Beginning
                                      ! and the End of the physical domain for the mass points
-INTEGER :: JSV,JI,JJ,JK ! loop counter
+INTEGER :: JSV,JIJ,JK ! loop counter
 REAL    :: ZTIME1
 REAL    :: ZTIME2
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
@@ -413,10 +401,8 @@ IF (LHOOK) CALL DR_HOOK('TURB_VER',0,ZHOOK_HANDLE)
 !
 IKB=D%NKTB
 IKE=D%NKTE
-IIE=D%NIEC
-IIB=D%NIBC
-IJE=D%NJEC
-IJB=D%NJBC
+IIJE=D%NIJE
+IIJB=D%NIJB
 !
 !
 ! 3D Redelsperger numbers
@@ -437,39 +423,39 @@ CALL PRANDTL(D,CST,CSTURB,KRR,KSV,KRRI,OTURB_FLX,  &
 ! Buoyancy coefficient
 !
 IF (OOCEAN) THEN
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-  ZBETA(IIB:IIE,IJB:IJE,1:D%NKT) = CST%XG*CST%XALPHAOC
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  ZBETA(IIJB:IIJE,1:D%NKT) = CST%XG*CST%XALPHAOC
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 ELSE
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-  ZBETA(IIB:IIE,IJB:IJE,1:D%NKT) = CST%XG/PTHVREF(IIB:IIE,IJB:IJE,1:D%NKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  ZBETA(IIJB:IIJE,1:D%NKT) = CST%XG/PTHVREF(IIJB:IIJE,1:D%NKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 END IF
 !
 ! Square root of Tke
 !
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-ZSQRT_TKE(IIB:IIE,IJB:IJE,1:D%NKT) = SQRT(PTKEM(IIB:IIE,IJB:IJE,1:D%NKT))
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+ZSQRT_TKE(IIJB:IIJE,1:D%NKT) = SQRT(PTKEM(IIJB:IIJE,1:D%NKT))
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
 ! gradients of mean quantities at previous time-step
 !
 CALL GZ_M_W_PHY(D,PTHLM,PDZZ,ZDTH_DZ)
-ZDR_DZ(:,:,:)  = 0.
-IF (KRR>0) CALL GZ_M_W_PHY(D,PRM(:,:,:,1),PDZZ,ZDR_DZ)
+ZDR_DZ(:,:)  = 0.
+IF (KRR>0) CALL GZ_M_W_PHY(D,PRM(:,:,1),PDZZ,ZDR_DZ)
 !
 !
 ! Denominator factor in 3rd order terms
 !
 IF (.NOT. OHARAT) THEN
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-  ZD(IIB:IIE,IJB:IJE,1:D%NKT) = (1.+ZREDTH1(IIB:IIE,IJB:IJE,1:D%NKT)+ZREDR1(IIB:IIE,IJB:IJE,1:D%NKT)) * &
-                               &(1.+0.5*(ZREDTH1(IIB:IIE,IJB:IJE,1:D%NKT)+ZREDR1(IIB:IIE,IJB:IJE,1:D%NKT)))
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  ZD(IIJB:IIJE,1:D%NKT) = (1.+ZREDTH1(IIJB:IIJE,1:D%NKT)+ZREDR1(IIJB:IIJE,1:D%NKT)) * &
+                               &(1.+0.5*(ZREDTH1(IIJB:IIJE,1:D%NKT)+ZREDR1(IIJB:IIJE,1:D%NKT)))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 ELSE
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-  ZD(IIB:IIE,IJB:IJE,1:D%NKT) = 1.
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  ZD(IIJB:IIJE,1:D%NKT) = 1.
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 ENDIF
 !
 ! Phi3 and Psi3 Prandtl numbers
@@ -488,9 +474,9 @@ CALL PSI_SV(D,CSTURB,KSV,ZREDTH1,ZREDR1,ZREDS1,ZRED2THS,ZRED2RS,ZPHI3,ZPSI3,ZPSI
 !
 IF (OLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID(ZPHI3,X_LES_SUBGRID_PHI3)
+  CALL LES_MEAN_SUBGRID_PHY(D,ZPHI3,X_LES_SUBGRID_PHI3)
   IF(KRR/=0) THEN
-    CALL LES_MEAN_SUBGRID(ZPSI3,X_LES_SUBGRID_PSI3)
+    CALL LES_MEAN_SUBGRID_PHY(D,ZPSI3,X_LES_SUBGRID_PSI3)
   END IF
   CALL SECOND_MNH(ZTIME2)
   XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
@@ -511,9 +497,9 @@ END IF
 !
 
 IF (OHARAT) THEN
-  ZLM=PLENGTHH
+  ZLM(:,:)=PLENGTHH(:,:)
 ELSE
-  ZLM=PLM
+  ZLM(:,:)=PLM(:,:)
 ENDIF
 !
   CALL  TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                      &
@@ -566,7 +552,7 @@ ENDIF
 !             -----------------------------------------------
 !
 !
-IF (OHARAT) ZLM=PLENGTHM
+IF (OHARAT) ZLM(:,:)=PLENGTHM(:,:)
 !
 CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KSV,O2D,OFLAT,           &
                       OTURB_FLX,KRR,OOCEAN,OHARAT,OCOUPLES,OLES_CALL,&
@@ -586,7 +572,7 @@ CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KSV,O2D,OFLAT,           &
 !*       8.   SOURCES OF PASSIVE SCALAR VARIABLES
 !             -----------------------------------
 !
-IF (OHARAT) ZLM=PLENGTHH
+IF (OHARAT) ZLM(:,:)=PLENGTHH(:,:)
 !
 IF (KSV>0)                                                          &
 CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,ONOMIXLG,                       &
@@ -640,7 +626,7 @@ IF ( OTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. OHARAT) THEN
   TZFIELD%NTYPE      = TYPEREAL
   TZFIELD%NDIMS      = 3
   TZFIELD%LTIMEDEP   = .TRUE.
-  CALL IO_Field_write(TPFILE,TZFIELD,ZPHI3)
+  CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZPHI3)
 !
 ! stores the Turbulent Schmidt number
 ! 
@@ -654,7 +640,7 @@ IF ( OTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. OHARAT) THEN
   TZFIELD%NTYPE      = TYPEREAL
   TZFIELD%NDIMS      = 3
   TZFIELD%LTIMEDEP   = .TRUE.
-  CALL IO_Field_write(TPFILE,TZFIELD,ZPSI3)
+  CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZPSI3)
 !
 !
 ! stores the Turbulent Schmidt number for the scalar variables
@@ -670,7 +656,7 @@ IF ( OTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. OHARAT) THEN
     WRITE(TZFIELD%CMNHNAME, '("PSI_SV_",I3.3)') JSV
     TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)
     TZFIELD%CCOMMENT   = 'X_Y_Z_'//TRIM(TZFIELD%CMNHNAME)
-    CALL IO_Field_write(TPFILE,TZFIELD,ZPSI_SV(:,:,:,JSV))
+    CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZPSI_SV(:,:,JSV))
   END DO
 !
 END IF
