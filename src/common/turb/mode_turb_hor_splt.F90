@@ -6,7 +6,7 @@ MODULE MODE_TURB_HOR_SPLT
 IMPLICIT NONE
 CONTAINS
            SUBROUTINE TURB_HOR_SPLT(D,CST,CSTURB,                    &
-                      KSPLIT, KRR, KRRL, KRRI, PTSTEP,HLBCX,HLBCY,   &
+                      KSPLIT, KRR,KRRL,KRRI,KSV, PTSTEP,HLBCX,HLBCY, &
                       OTURB_FLX,OSUBG_COND,OOCEAN,OCOMPUTE_SRC,      &
                       TPFILE,                                        &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
@@ -183,6 +183,7 @@ INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time splitting
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
+INTEGER,                INTENT(IN)   :: KSV           ! number of sv var.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
 CHARACTER (LEN=*), DIMENSION(:), INTENT(IN)       ::  HLBCX,HLBCY
 LOGICAL,                  INTENT(IN)    ::  OTURB_FLX    ! switch to write the
@@ -193,57 +194,58 @@ LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimension
 
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                          ! Metric coefficients
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PZZ          ! vertical grid
-REAL, DIMENSION(:,:),     INTENT(IN)    ::  PDIRCOSXW, PDIRCOSYW, PDIRCOSZW
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PZZ          ! vertical grid
+REAL, DIMENSION(D%NIT,D%NJT),     INTENT(IN)    ::  PDIRCOSXW, PDIRCOSYW, PDIRCOSZW
 ! Director Cosinus along x, y and z directions at surface w-point
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle 
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle 
                                       ! between i and the slope vector
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle 
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle 
                                       ! between i and the slope vector
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PRHODJ       ! density * grid volume
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PTHVREF      ! ref. state VPT       
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PRHODJ       ! density * grid volume
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTHVREF      ! ref. state VPT       
 !
-REAL, DIMENSION(:,:),     INTENT(IN)    ::  PSFTHM,PSFRM
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PSFSVM       ! surface fluxes
+REAL, DIMENSION(D%NIT,D%NJT),     INTENT(IN)    ::  PSFTHM,PSFRM
+REAL, DIMENSION(D%NIT,D%NJT,KSV),   INTENT(IN)    ::  PSFSVM       ! surface fluxes
 !
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCDUEFF      ! Cd * || u || at time t
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked 
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PCDUEFF      ! Cd * || u || at time t
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked 
        ! to the maximum slope direction and the surface normal and the binormal 
        ! at time t - dt
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTAU22M      ! <vv> in the same axes
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU22M      ! <vv> in the same axes
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
 !
 ! Variables at t-1
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PUM,PVM,PWM,PTHLM 
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    ::  PRM          ! mixing ratios at t-1,
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PUM,PVM,PWM,PTHLM 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(IN)    ::  PRM          ! mixing ratios at t-1,
                               !  where PRM(:,:,:,1) = conservative mixing ratio
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    ::  PSVM         ! scalar var. at t-1
-REAL, DIMENSION(:,:),      INTENT(IN)   ::  PUSLOPEM     ! wind component along the 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN)    ::  PSVM         ! scalar var. at t-1
+REAL, DIMENSION(D%NIT,D%NJT),      INTENT(IN)   ::  PUSLOPEM     ! wind component along the 
                                      ! maximum slope direction
-REAL, DIMENSION(:,:),      INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
+REAL, DIMENSION(D%NIT,D%NJT),      INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
                                      ! direction normal to the maximum slope one
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PLM          ! Turb. mixing length
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PLEPS        ! dissipative length
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PLOCPEXNM    ! Lv(T)/Cp/Exner at time t-1
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PATHETA      ! coefficients between 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PAMOIST      ! s and Thetal and Rnp
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM        ! TKE at time t- dt
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLEPS        ! dissipative length
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PLOCPEXNM    ! Lv(T)/Cp/Exner at time t-1
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PATHETA      ! coefficients between 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PAMOIST      ! s and Thetal and Rnp
 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PSRCM
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PSRCM
                                   ! normalized 2nd-order flux
                                   ! s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PFRAC_ICE    ! ri fraction of rc+ri
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PFRAC_ICE    ! ri fraction of rc+ri
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRUS, PRVS, PRWS, PRTHLS
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS,PRRS   ! var. at t+1 -split-
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PDP,PTP      ! TKE production terms
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   ::  PTRH
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRUS, PRVS, PRWS, PRTHLS
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS    ! var. at t+1 -split-
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS   ! var. at t+1 -split-
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PDP,PTP      ! TKE production terms
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(OUT)   ::  PTRH
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PSIGS
                                   ! IN: Vertical part of Sigma_s at t
                                   ! OUT: Total Sigma_s at t
 !
