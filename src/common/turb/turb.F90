@@ -268,13 +268,13 @@ USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
 USE MODE_IBM_MIXINGLENGTH, ONLY: IBM_MIXINGLENGTH
 !
-USE MODI_GRADIENT_W
-USE MODI_GRADIENT_M
-USE MODI_GRADIENT_U
-USE MODI_GRADIENT_V
 USE MODI_LES_MEAN_SUBGRID
-USE MODI_SHUMAN, ONLY : MZF, MXF, MYF
-USE SHUMAN_PHY, ONLY : MZF_PHY
+!
+USE SHUMAN_PHY, ONLY : MZF_PHY,MXF_PHY,MYF_PHY
+USE MODE_GRADIENT_U_PHY, ONLY : GZ_U_UW_PHY
+USE MODE_GRADIENT_V_PHY, ONLY : GZ_V_VW_PHY
+USE MODE_GRADIENT_W_PHY, ONLY : GZ_W_M_PHY
+USE MODE_GRADIENT_M_PHY, ONLY : GZ_M_W_PHY
 !
 IMPLICIT NONE
 !
@@ -452,7 +452,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::     &
           ZLVOCPEXNM,ZLSOCPEXNM,      &  ! Lv/Cp/EXNREF and Ls/Cp/EXNREF at t-1
           ZATHETA_ICE,ZAMOIST_ICE,    &  ! coefficients for s = f (Thetal,Rnp)
           ZRVSAT, ZDRVSATDT,          &  ! local array for routine compute_function_thermo
-          ZWORK1,                     &  ! working array syntax
+          ZWORK1,ZWORK2,              &  ! working array syntax
           ZETHETA,ZEMOIST,            &  ! coef ETHETA and EMOIST (for DEAR routine)
           ZDTHLDZ,ZDRTDZ,             &  ! dtheta_l/dz, drt_dz used for computing the stablity criterion
           ZCOEF_AMPL,                 &  ! Amplification coefficient of the mixing length
@@ -711,34 +711,48 @@ SELECT CASE (HTURBLEN)
 !           ------------------
 
   CASE ('RM17')
-    ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,D%NKA,D%NKU,D%NKL),D%NKA,D%NKU,D%NKL))
-    ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,D%NKA,D%NKU,D%NKL),D%NKA,D%NKU,D%NKL))
-    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-    ZSHEAR(:,:,:) = SQRT(ZDUDZ(:,:,:)*ZDUDZ(:,:,:) + ZDVDZ(:,:,:)*ZDVDZ(:,:,:))
-    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    CALL GZ_U_UW_PHY(D,PUT,PDZZ,ZWORK1)
+    CALL MZF_PHY(D,ZWORK1,ZWORK2)
+    CALL MXF_PHY(D,ZWORK2,ZDUDZ)
+    !
+    CALL GZ_V_VW_PHY(D,PVT,PDZZ,ZWORK1)
+    CALL MZF_PHY(D,ZWORK1,ZWORK2)
+    CALL MYF_PHY(D,ZWORK2,ZDVDZ)
+    !
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    ZSHEAR(IIB:IIE,IJB:IJE,1:D%NKT) = SQRT(ZDUDZ(IIB:IIE,IJB:IJE,1:D%NKT)*ZDUDZ(IIB:IIE,IJB:IJE,1:D%NKT) &
+                                    + ZDVDZ(IIB:IIE,IJB:IJE,1:D%NKT)*ZDVDZ(IIB:IIE,IJB:IJE,1:D%NKT))
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
     CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 !
 !*      3.3 Grey-zone combined RM17 & Deardorff mixing lengths 
 !           --------------------------------------------------
 
   CASE ('ADAP')
-    ZDUDZ = MXF(MZF(GZ_U_UW(PUT,PDZZ,D%NKA,D%NKU,D%NKL),D%NKA,D%NKU,D%NKL))
-    ZDVDZ = MYF(MZF(GZ_V_VW(PVT,PDZZ,D%NKA,D%NKU,D%NKL),D%NKA,D%NKU,D%NKL))
-    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-    ZSHEAR(:,:,:) = SQRT(ZDUDZ(:,:,:)*ZDUDZ(:,:,:) + ZDVDZ(:,:,:)*ZDVDZ(:,:,:))
-    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    CALL GZ_U_UW_PHY(D,PUT,PDZZ,ZWORK1)
+    CALL MZF_PHY(D,ZWORK1,ZWORK2)
+    CALL MXF_PHY(D,ZWORK2,ZDUDZ)
+    !
+    CALL GZ_V_VW_PHY(D,PVT,PDZZ,ZWORK1)
+    CALL MZF_PHY(D,ZWORK1,ZWORK2)
+    CALL MYF_PHY(D,ZWORK2,ZDVDZ)
+    !
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    ZSHEAR(IIB:IIE,IJB:IJE,1:D%NKT) = SQRT(ZDUDZ(IIB:IIE,IJB:IJE,1:D%NKT)*ZDUDZ(IIB:IIE,IJB:IJE,1:D%NKT) &
+                                    + ZDVDZ(IIB:IIE,IJB:IJE,1:D%NKT)*ZDVDZ(IIB:IIE,IJB:IJE,1:D%NKT))
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
     CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 
     CALL DELT(ZLMW,ODZ=.FALSE.)
     ! The minimum mixing length is chosen between Horizontal grid mesh (not taking into account the vertical grid mesh) and RM17.
     ! For large horizontal grid meshes, this is equal to RM17
     ! For LES grid meshes, this is equivalent to Deardorff : the base mixing lentgh is the horizontal grid mesh, 
-    !                      and it is limited by a stability-based length (RM17), as was done in Deardorff length (but taking into account shear as well)
+    !and it is limited by a stability-based length (RM17), as was done in Deardorff length (but taking into account shear as well)
     ! For grid meshes in the grey zone, then this is the smaller of the two.
     !
-    !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
-    ZLM(:,:,:) = MIN(ZLM(:,:,:),TURBN%XCADAP*ZLMW(:,:,:))
-    !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT,JK=1:D%NKT)
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    ZLM(IIB:IIE,IJB:IJE,1:D%NKT) = MIN(ZLM(IIB:IIE,IJB:IJE,1:D%NKT),TURBN%XCADAP*ZLMW(IIB:IIE,IJB:IJE,1:D%NKT))
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
 !*      3.4 Delta mixing length
 !           -------------------
@@ -757,20 +771,24 @@ SELECT CASE (HTURBLEN)
 !
   CASE ('BLKR')
    ZL0 = 100.
-   ZLM(:,:,:) = ZL0
+   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+   ZLM(IIB:IIE,IJB:IJE,1:D%NKT) = ZL0
+   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 
    ZALPHA=0.5**(-1.5)
    !
    DO JK=IKTB,IKTE
-     !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-     ZLM(:,:,JK) = ( 0.5*(PZZ(:,:,JK)+PZZ(:,:,JK+D%NKL)) - &
-     & PZZ(:,:,D%NKA+JPVEXT_TURB*D%NKL) ) * PDIRCOSZW(:,:)
-     ZLM(:,:,JK) = ZALPHA  * ZLM(:,:,JK) * ZL0 / ( ZL0 + ZALPHA*ZLM(:,:,JK) )
-     !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+     !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+     ZLM(IIB:IIE,IJB:IJE,JK) = ( 0.5*(PZZ(IIB:IIE,IJB:IJE,JK)+PZZ(IIB:IIE,IJB:IJE,JK+D%NKL)) - &
+     & PZZ(IIB:IIE,IJB:IJE,D%NKA+JPVEXT_TURB*D%NKL) ) * PDIRCOSZW(:,:)
+     ZLM(IIB:IIE,IJB:IJE,JK) = ZALPHA  * ZLM(IIB:IIE,IJB:IJE,JK) * ZL0 / ( ZL0 + ZALPHA*ZLM(IIB:IIE,IJB:IJE,JK) )
+     !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
    END DO
 !
-   ZLM(:,:,IKTB-1) = ZLM(:,:,IKTB)
-   ZLM(:,:,IKTE+1) = ZLM(:,:,IKTE)
+   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+   ZLM(IIB:IIE,IJB:IJE,IKTB-1) = ZLM(IIB:IIE,IJB:IJE,IKTB)
+   ZLM(IIB:IIE,IJB:IJE,IKTE+1) = ZLM(IIB:IIE,IJB:IJE,IKTE)
+   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 !
 !
 !
@@ -796,13 +814,13 @@ ENDIF
 !*      3.7 Correction in the Surface Boundary Layer (Redelsperger 2001)
 !           ----------------------------------------
 !
-!$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-ZLMO(:,:)=XUNDEF
-!$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+ZLMO(IIB:IIE,IJB:IJE)=XUNDEF
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 IF (ORMC01) THEN
-  !$mnh_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
-  ZUSTAR(:,:)=(PSFU(:,:)**2+PSFV(:,:)**2)**(0.25)
-  !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  ZUSTAR(IIB:IIE,IJB:IJE)=(PSFU(IIB:IIE,IJB:IJE)**2+PSFV(IIB:IIE,IJB:IJE)**2)**(0.25)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   IF (KRR>0) THEN
     CALL LMO(D,CST,ZUSTAR,ZTHLM(:,:,IKB),ZRM(:,:,IKB,1),PSFTH,PSFRV,ZLMO)
   ELSE
@@ -892,24 +910,19 @@ ZMTHR(:,:,:) = 0.     ! w'th'r'
 IF (HTOM=='TM06') THEN
   CALL TM06(D,CST,PTHVREF,PBL_DEPTH,PZZ,PSFTH,ZMWTH,ZMTH2)
 !
-  ZFWTH = -GZ_M_W(D%NKA,D%NKU,D%NKL,ZMWTH,PDZZ)    ! -d(w'2th' )/dz
-  !ZFWR  = -GZ_M_W(D%NKA,D%NKU,D%NKL,ZMWR, PDZZ)    ! -d(w'2r'  )/dz
-  ZFTH2 = -GZ_W_M(ZMTH2,PDZZ)    ! -d(w'th'2 )/dz
-  !ZFR2  = -GZ_W_M(ZMR2, PDZZ)    ! -d(w'r'2  )/dz
-  !ZFTHR = -GZ_W_M(ZMTHR,PDZZ)    ! -d(w'th'r')/dz
+   CALL GZ_M_W_PHY(D,ZMWTH,PDZZ,ZWORK1)    ! -d(w'2th' )/dz
+   CALL GZ_W_M_PHY(D,ZMTH2,PDZZ,ZWORK2)    ! -d(w'th'2 )/dz
+   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+   ZFWTH(IIB:IIE,IJB:IJE,1:D%NKT) = -ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT)
+   ZFTH2(IIB:IIE,IJB:IJE,1:D%NKT) = -ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)
+   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
   ZFWTH(:,:,IKTE:) = 0.
   ZFWTH(:,:,:IKTB) = 0.
-  !ZFWR (:,:,IKTE:) = 0.
-  !ZFWR (:,:,:IKTB) = 0.
   ZFWR(:,:,:)  = 0.
   ZFTH2(:,:,IKTE:) = 0.
   ZFTH2(:,:,:IKTB) = 0.
-  !ZFR2 (:,:,IKTE:) = 0.
-  !ZFR2 (:,:,:IKTB) = 0.
   ZFR2(:,:,:)  = 0.
-  !ZFTHR(:,:,IKTE:) = 0.
-  !ZFTHR(:,:,:IKTB) = 0.
   ZFTHR(:,:,:) = 0.
 ELSE
   ZFWTH(:,:,:) = 0.
@@ -1284,7 +1297,11 @@ IF (OLES_CALL) THEN
   END DO
   CALL LES_MEAN_SUBGRID(PSFU,X_LES_UW0)
   CALL LES_MEAN_SUBGRID(PSFV,X_LES_VW0)
-  CALL LES_MEAN_SUBGRID((PSFU*PSFU+PSFV*PSFV)**0.25,X_LES_USTAR)
+  !
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  ZWORK2D(IIB:IIE,IJB:IJE) = (PSFU(IIB:IIE,IJB:IJE)*PSFU(IIB:IIE,IJB:IJE)+PSFV(IIB:IIE,IJB:IJE)*PSFV(IIB:IIE,IJB:IJE))**0.25
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  CALL LES_MEAN_SUBGRID(ZWORK2D,X_LES_USTAR)
 !----------------------------------------------------------------------------
 !
 !*     10. LES for 3rd order moments
@@ -1304,17 +1321,36 @@ IF (OLES_CALL) THEN
 !          ------------------------------------------------
 !
   IF (HTURBDIM=="1DIM") THEN
-    CALL LES_MEAN_SUBGRID(2./3.*PTKET,X_LES_SUBGRID_U2)
+    !
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT) = 2./3.*PTKET(IIB:IIE,IJB:IJE,1:D%NKT)
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    CALL LES_MEAN_SUBGRID(ZWORK1,X_LES_SUBGRID_U2)
     X_LES_SUBGRID_V2(:,:,:) = X_LES_SUBGRID_U2(:,:,:)
     X_LES_SUBGRID_W2(:,:,:) = X_LES_SUBGRID_U2(:,:,:)
-    CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(D%NKA,D%NKU,D%NKL,PTHLT,PDZZ),&
-                          D%NKA, D%NKU, D%NKL),X_LES_RES_ddz_Thl_SBG_W2)
-    IF (KRR>=1) &
-    CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(D%NKA,D%NKU,D%NKL,PRT(:,:,:,1),PDZZ),&
-                         &D%NKA, D%NKU, D%NKL),X_LES_RES_ddz_Rt_SBG_W2)
+    !
+    CALL GZ_M_W_PHY(D,PTHLT,PDZZ,ZWORK1)
+    CALL MZF_PHY(D,ZWORK1,ZWORK2)
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)  = 2./3.*PTKET(IIB:IIE,IJB:IJE,1:D%NKT) *ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    CALL LES_MEAN_SUBGRID(ZWORK2,X_LES_RES_ddz_Thl_SBG_W2)
+    !
+    IF (KRR>=1) THEN
+      CALL GZ_M_W_PHY(D,PRT(:,:,:,1),PDZZ,ZWORK1)
+      CALL MZF_PHY(D,ZWORK1,ZWORK2)
+      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+      ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)  = 2./3.*PTKET(IIB:IIE,IJB:IJE,1:D%NKT) *ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)
+      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+      CALL LES_MEAN_SUBGRID(ZWORK2,X_LES_RES_ddz_Rt_SBG_W2)
+    END IF
     DO JSV=1,KSV
-      CALL LES_MEAN_SUBGRID(2./3.*PTKET*MZF(GZ_M_W(D%NKA,D%NKU,D%NKL,PSVT(:,:,:,JSV),PDZZ), &
-                           &D%NKA, D%NKU, D%NKL), X_LES_RES_ddz_Sv_SBG_W2(:,:,:,JSV))
+      CALL GZ_M_W_PHY(D,PSVT(:,:,:,JSV),PDZZ,ZWORK1)
+      CALL MZF_PHY(D,ZWORK1,ZWORK2)
+      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+      ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)  = 2./3.*PTKET(IIB:IIE,IJB:IJE,1:D%NKT) *ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)
+      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+      CALL LES_MEAN_SUBGRID(ZWORK2, X_LES_RES_ddz_Sv_SBG_W2(:,:,:,JSV))
     END DO
   END IF
 
@@ -1450,28 +1486,47 @@ LOGICAL,                INTENT(IN)    :: ODZ
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('TURB:DELT',0,ZHOOK_HANDLE2)
+!
+CALL MXF_PHY(D,PDXX,ZWORK1)
+IF (.NOT. O2D) THEN
+  CALL MYF_PHY(D,PDYY,ZWORK2)
+END IF
+!
 IF (ODZ) THEN
   ! Dz is take into account in the computation
   DO JK = IKTB,IKTE ! 1D turbulence scheme
-    PLM(:,:,JK) = PZZ(:,:,JK+D%NKL) - PZZ(:,:,JK)
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+    PLM(IIB:IIE,IJB:IJE,JK) = PZZ(IIB:IIE,IJB:IJE,JK+D%NKL) - PZZ(IIB:IIE,IJB:IJE,JK)
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   END DO
-  PLM(:,:,D%NKU) = PLM(:,:,IKE)
-  PLM(:,:,D%NKA) = PZZ(:,:,IKB) - PZZ(:,:,D%NKA)
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  PLM(IIB:IIE,IJB:IJE,D%NKU) = PLM(IIB:IIE,IJB:IJE,IKE)
+  PLM(IIB:IIE,IJB:IJE,D%NKA) = PZZ(IIB:IIE,IJB:IJE,IKB) - PZZ(IIB:IIE,IJB:IJE,D%NKA)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
   IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
     IF ( O2D) THEN
-      PLM(:,:,:) = SQRT( PLM(:,:,:)*MXF(PDXX(:,:,:)) ) 
+      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+      PLM(IIB:IIE,IJB:IJE,1:D%NKT) = SQRT( PLM(IIB:IIE,IJB:IJE,1:D%NKT)*ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT) )
+      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
     ELSE
-      PLM(:,:,:) = (PLM(:,:,:)*MXF(PDXX(:,:,:))*MYF(PDYY(:,:,:)) ) ** (1./3.)
+      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+      PLM(IIB:IIE,IJB:IJE,1:D%NKT) = (PLM(IIB:IIE,IJB:IJE,1:D%NKT)*ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT) &
+                                   * ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT) ) ** (1./3.)
+      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
     END IF
   END IF
 ELSE
   ! Dz not taken into account in computation to assure invariability with vertical grid mesh
-  PLM=1.E10
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  PLM(IIB:IIE,IJB:IJE,1:D%NKT)=1.E10
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
   IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
     IF ( O2D) THEN
-      PLM(:,:,:) = MXF(PDXX(:,:,:))
+      PLM(:,:,:) = ZWORK1(:,:,:)
     ELSE
-      PLM(:,:,:) = (MXF(PDXX(:,:,:))*MYF(PDYY(:,:,:)) ) ** (1./2.)
+      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+      PLM(IIB:IIE,IJB:IJE,1:D%NKT) = (ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT)*ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT) ) ** (1./2.)
+      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
     END IF
   END IF
 END IF
@@ -1508,8 +1563,10 @@ IF (.NOT. ORMC01) THEN
   END DO
 END IF
 !
-PLM(:,:,D%NKA) = PLM(:,:,IKB  )
-PLM(:,:,D%NKU  ) = PLM(:,:,IKE)
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+PLM(IIB:IIE,IJB:IJE,D%NKA) = PLM(IIB:IIE,IJB:IJE,IKB)
+PLM(IIB:IIE,IJB:IJE,D%NKU) = PLM(IIB:IIE,IJB:IJE,IKE)
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 !
 IF (LHOOK) CALL DR_HOOK('TURB:DELT',1,ZHOOK_HANDLE2)
 END SUBROUTINE DELT
@@ -1544,15 +1601,31 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PLM
 !
 !   initialize the mixing length with the mesh grid
 IF (LHOOK) CALL DR_HOOK('TURB:DEAR',0,ZHOOK_HANDLE2)
+IF ( HTURBDIM /= '1DIM' ) THEN
+  CALL MXF_PHY(D,PDXX,ZWORK1)
+  IF (.NOT. O2D) THEN
+    CALL MYF_PHY(D,PDYY,ZWORK2)
+  END IF
+END IF
 ! 1D turbulence scheme
-PLM(:,:,IKTB:IKTE) = PZZ(:,:,IKTB+D%NKL:IKTE+D%NKL) - PZZ(:,:,IKTB:IKTE)
-PLM(:,:,D%NKU) = PLM(:,:,IKE)
-PLM(:,:,D%NKA) = PZZ(:,:,IKB) - PZZ(:,:,D%NKA)
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=IKTB:IKTE)
+PLM(IIB:IIE,IJB:IJE,IKTB:IKTE) = PZZ(IIB:IIE,IJB:IJE,D%NKL+IKTB:IKTE+D%NKL) - PZZ(IIB:IIE,IJB:IJE,IKTB:IKTE)
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=IKTB:IKTE)
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+PLM(IIB:IIE,IJB:IJE,D%NKU) = PLM(IIB:IIE,IJB:IJE,IKE)
+PLM(IIB:IIE,IJB:IJE,D%NKA) = PZZ(IIB:IIE,IJB:IJE,IKB) - PZZ(IIB:IIE,IJB:IJE,D%NKA)
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+!
 IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
   IF ( O2D) THEN
-    PLM(:,:,:) = SQRT( PLM(:,:,:)*MXF(PDXX(:,:,:)) )
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    PLM(IIB:IIE,IJB:IJE,1:D%NKT) = SQRT( PLM(IIB:IIE,IJB:IJE,1:D%NKT)*ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT) )
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
   ELSE
-    PLM(:,:,:) = (PLM(:,:,:)*MXF(PDXX(:,:,:))*MYF(PDYY(:,:,:)) ) ** (1./3.)
+    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    PLM(IIB:IIE,IJB:IJE,1:D%NKT) = (PLM(IIB:IIE,IJB:IJE,1:D%NKT)*ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT) &
+                                 * ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT) ) ** (1./3.)
+    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
   END IF
 END IF
 !   compute a mixing length limited by the stability
@@ -1602,25 +1675,35 @@ ELSE! For dry atmos or unsalted ocean runs
     END DO
   END DO
 END IF
-!  special case near the surface 
-ZDTHLDZ(:,:,IKB)=(PTHLT(:,:,IKB+D%NKL)-PTHLT(:,:,IKB))/PDZZ(:,:,IKB+D%NKL)
+!  special case near the surface
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+ZDTHLDZ(IIB:IIE,IJB:IJE,IKB)=(PTHLT(IIB:IIE,IJB:IJE,IKB+D%NKL)-PTHLT(IIB:IIE,IJB:IJE,IKB))/PDZZ(IIB:IIE,IJB:IJE,IKB+D%NKL)
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 ! For dry simulations
 IF (KRR>0) THEN
-  ZDRTDZ(:,:,IKB)=(PRT(:,:,IKB+D%NKL,1)-PRT(:,:,IKB,1))/PDZZ(:,:,IKB+D%NKL)
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  ZDRTDZ(IIB:IIE,IJB:IJE,IKB)=(PRT(IIB:IIE,IJB:IJE,IKB+D%NKL,1)-PRT(IIB:IIE,IJB:IJE,IKB,1))/PDZZ(IIB:IIE,IJB:IJE,IKB+D%NKL)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 ELSE
   ZDRTDZ(:,:,IKB)=0
 ENDIF
 !
 IF (OOCEAN) THEN
-  ZWORK2D(:,:)=CST%XG*(CST%XALPHAOC*ZDTHLDZ(:,:,IKB)-CST%XBETAOC*ZDRTDZ(:,:,IKB))
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  ZWORK2D(IIB:IIE,IJB:IJE)=CST%XG*(CST%XALPHAOC*ZDTHLDZ(IIB:IIE,IJB:IJE,IKB)-CST%XBETAOC*ZDRTDZ(IIB:IIE,IJB:IJE,IKB))
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 ELSE
-  ZWORK2D(:,:)=CST%XG/PTHVREF(:,:,IKB)*                                           &
-              (ZETHETA(:,:,IKB)*ZDTHLDZ(:,:,IKB)+ZEMOIST(:,:,IKB)*ZDRTDZ(:,:,IKB))
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  ZWORK2D(IIB:IIE,IJB:IJE)=CST%XG/PTHVREF(IIB:IIE,IJB:IJE,IKB)*                                           &
+              (ZETHETA(IIB:IIE,IJB:IJE,IKB)*ZDTHLDZ(IIB:IIE,IJB:IJE,IKB)+ZEMOIST(IIB:IIE,IJB:IJE,IKB)*ZDRTDZ(IIB:IIE,IJB:IJE,IKB))
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 END IF
-WHERE(ZWORK2D(:,:)>0.)
-  PLM(:,:,IKB)=MAX(CST%XMNH_EPSILON,MIN( PLM(:,:,IKB),                 &
-                    0.76* SQRT(PTKET(:,:,IKB)/ZWORK2D(:,:))))
+!$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
+WHERE(ZWORK2D(IIB:IIE,IJB:IJE)>0.)
+  PLM(IIB:IIE,IJB:IJE,IKB)=MAX(CST%XMNH_EPSILON,MIN( PLM(IIB:IIE,IJB:IJE,IKB),                 &
+                    0.76* SQRT(PTKET(IIB:IIE,IJB:IJE,IKB)/ZWORK2D(IIB:IIE,IJB:IJE))))
 END WHERE
+!$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
 !
 !  mixing length limited by the distance normal to the surface (with the same factor as for BL89)
 !
@@ -1653,9 +1736,11 @@ IF (.NOT. ORMC01) THEN
   END DO
 END IF
 !
-PLM(:,:,D%NKA) = PLM(:,:,IKB  )
-PLM(:,:,IKE  ) = PLM(:,:,IKE-D%NKL)
-PLM(:,:,D%NKU  ) = PLM(:,:,D%NKU-D%NKL)
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+PLM(IIB:IIE,IJB:IJE,D%NKA) = PLM(IIB:IIE,IJB:IJE,IKB)
+PLM(IIB:IIE,IJB:IJE,IKE) = PLM(IIB:IIE,IJB:IJE,IKE-D%NKL)
+PLM(IIB:IIE,IJB:IJE,D%NKU) = PLM(IIB:IIE,IJB:IJE,D%NKU-D%NKL)
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 !
 IF (LHOOK) CALL DR_HOOK('TURB:DEAR',1,ZHOOK_HANDLE2)
 END SUBROUTINE DEAR
@@ -1720,21 +1805,29 @@ IF (LHOOK) CALL DR_HOOK('TURB:CLOUD_MODIF_LM',0,ZHOOK_HANDLE2)
 ZPENTE = ( PCOEF_AMPL_SAT - 1. ) / ( PCEI_MAX - PCEI_MIN ) 
 ZCOEF_AMPL_CEI_NUL = 1. - ZPENTE * PCEI_MIN
 !
-ZCOEF_AMPL(:,:,:) = 1.
+!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+ZCOEF_AMPL(IIB:IIE,IJB:IJE,1:D%NKT) = 1.
+!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
 !*       2.    CALCULATION OF THE AMPLIFICATION COEFFICIENT
 !              --------------------------------------------
 !
 ! Saturation
 !
-WHERE ( PCEI(:,:,:)>=PCEI_MAX ) ZCOEF_AMPL(:,:,:)=PCOEF_AMPL_SAT
+!$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+WHERE ( PCEI(IIB:IIE,IJB:IJE,1:D%NKT)>=PCEI_MAX ) 
+  ZCOEF_AMPL(IIB:IIE,IJB:IJE,1:D%NKT)=PCOEF_AMPL_SAT
+END WHERE
+!$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
 ! Between the min and max limits of CEI index, linear variation of the
 ! amplification coefficient ZCOEF_AMPL as a function of CEI
 !
-WHERE ( PCEI(:,:,:) <  PCEI_MAX .AND.                                        &
-        PCEI(:,:,:) >  PCEI_MIN      )                                       &
-        ZCOEF_AMPL(:,:,:) = ZPENTE * PCEI(:,:,:) + ZCOEF_AMPL_CEI_NUL  
+!$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+WHERE ( PCEI(IIB:IIE,IJB:IJE,1:D%NKT) <  PCEI_MAX .AND. PCEI(IIB:IIE,IJB:IJE,1:D%NKT) >  PCEI_MIN)
+  ZCOEF_AMPL(IIB:IIE,IJB:IJE,1:D%NKT) = ZPENTE * PCEI(IIB:IIE,IJB:IJE,1:D%NKT) + ZCOEF_AMPL_CEI_NUL  
+END WHERE
+!$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
 !
 !*       3.    CALCULATION OF THE MIXING LENGTH IN CLOUDS
@@ -1748,7 +1841,7 @@ ELSE
 !*         3.1 BL89 mixing length
 !           ------------------
   CASE ('BL89','RM17','ADAP')
-    ZSHEAR=0.
+    ZSHEAR(:,:,:)=0.
     CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD,OOCEAN,HPROGRAM)
 !
 !*         3.2 Delta mixing length
@@ -1784,11 +1877,19 @@ ENDIF
 !
 ! Amplification of the mixing length when the criteria are verified
 !
-WHERE (ZCOEF_AMPL(:,:,:) /= 1.) ZLM(:,:,:) = ZCOEF_AMPL(:,:,:)*ZLM_CLOUD(:,:,:)
+!$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+WHERE (ZCOEF_AMPL(IIB:IIE,IJB:IJE,1:D%NKT) /= 1.) 
+  ZLM(IIB:IIE,IJB:IJE,1:D%NKT) = ZCOEF_AMPL(IIB:IIE,IJB:IJE,1:D%NKT)*ZLM_CLOUD(IIB:IIE,IJB:IJE,1:D%NKT)
+END WHERE
+!$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
 ! Cloud mixing length in the clouds at the points which do not verified the CEI
 !
-WHERE (PCEI(:,:,:) == -1.) ZLM(:,:,:) = ZLM_CLOUD(:,:,:)
+!$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+WHERE (PCEI(IIB:IIE,IJB:IJE,1:D%NKT) == -1.)
+  ZLM(IIB:IIE,IJB:IJE,1:D%NKT) = ZLM_CLOUD(IIB:IIE,IJB:IJE,1:D%NKT)
+END WHERE
+!$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
 !
 !
 !*       5.    IMPRESSION
