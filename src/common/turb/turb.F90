@@ -260,15 +260,15 @@ USE MODE_TKE_EPS_SOURCES, ONLY: TKE_EPS_SOURCES
 USE MODE_RMC01, ONLY: RMC01
 USE MODE_TM06, ONLY: TM06
 USE MODE_UPDATE_LM, ONLY: UPDATE_LM
-USE MODE_BUDGET,         ONLY: BUDGET_STORE_INIT, BUDGET_STORE_END
-USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
+USE MODE_BUDGET,         ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
+USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE_PHY
 USE MODE_SBL_PHY, ONLY: LMO
 USE MODE_SOURCES_NEG_CORRECT, ONLY: SOURCES_NEG_CORRECT_PHY
 USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
 USE MODE_IBM_MIXINGLENGTH, ONLY: IBM_MIXINGLENGTH
 !
-USE MODI_LES_MEAN_SUBGRID
+USE MODI_LES_MEAN_SUBGRID_PHY
 !
 USE SHUMAN_PHY, ONLY : MZF_PHY,MXF_PHY,MYF_PHY
 USE MODE_GRADIENT_U_PHY, ONLY : GZ_U_UW_PHY
@@ -321,45 +321,41 @@ CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical sc
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   :: PDXX,PDYY,PDZZ,PDZX,PDZY
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PDXX,PDYY,PDZZ,PDZX,PDZY
                                         ! metric coefficients
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   :: PZZ       !  physical distance 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PZZ       !  physical distance 
 ! between 2 succesive grid points along the K direction
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)      ::  PDIRCOSXW, PDIRCOSYW, PDIRCOSZW
+REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PDIRCOSXW, PDIRCOSYW, PDIRCOSZW
 ! Director Cosinus along x, y and z directions at surface w-point
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle
                                  ! between i and the slope vector
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle
                                  ! between i and the slope vector
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)      ::  PRHODJ    ! dry density * Grid size
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PRHODJ    ! dry density * Grid size
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
 !
-REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
+REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of theta and Rv 
                                             PSFU,PSFV
 ! normal surface fluxes of (u,v) parallel to the orography
-REAL, DIMENSION(D%NIT,D%NJT,KSV), INTENT(IN)      ::  PSFSV
+REAL, DIMENSION(D%NIJT,KSV), INTENT(IN)      ::  PSFSV
 ! normal surface fluxes of Scalar var. 
 !
 !    prognostic variables at t- deltat
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) ::  PPABST      ! Pressure at time t
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) ::  PUT,PVT,PWT ! wind components
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) ::  PTKET       ! TKE
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(IN) ::  PSVT        ! passive scal. var.
-REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
-                MERGE(D%NJT,0,OCOMPUTE_SRC),&
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PPABST      ! Pressure at time t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PUT,PVT,PWT ! wind components
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PTKET       ! TKE
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVT        ! passive scal. var.
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)),   INTENT(IN) ::  PSRCT       ! Second-order flux
                       ! s'rc'/2Sigma_s2 at time t-1 multiplied by Lambda_3
-REAL, DIMENSION(MERGE(D%NIT,0,HTOM=='TM06'),&
-                MERGE(D%NJT,0,HTOM=='TM06')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
-REAL, DIMENSION(MERGE(D%NIT,0,ORMC01),&
-                MERGE(D%NJT,0,ORMC01)),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
+REAL, DIMENSION(MERGE(D%NIJT,0,HTOM=='TM06')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
+REAL, DIMENSION(MERGE(D%NIJT,0,ORMC01)),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
 !
 !    variables for cloud mixing length
-REAL, DIMENSION(MERGE(D%NIT,0,KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE'),&
-                MERGE(D%NJT,0,KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE'),&
+REAL, DIMENSION(MERGE(D%NIJT,0,KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE'),&
                 MERGE(D%NKT,0,KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE')),INTENT(IN)      ::  PCEI 
                                                  ! Cloud Entrainment instability
                                                  ! index to emphasize localy 
@@ -369,42 +365,41 @@ REAL, INTENT(IN)      ::  PCEI_MAX ! maximum threshold for the instability index
 REAL, INTENT(IN)      ::  PCOEF_AMPL_SAT ! saturation of the amplification coefficient
 !
 !   thermodynamical variables which are transformed in conservative var.
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PTHLT       ! conservative pot. temp.
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) ::  PRT         ! water var.  where 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PTHLT       ! conservative pot. temp.
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT) ::  PRT         ! water var.  where 
                              ! PRT(:,:,:,1) is the conservative mixing ratio        
 !
 ! sources of momentum, conservative potential temperature, Turb. Kin. Energy, 
 ! TKE dissipation
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(INOUT) ::  PRUS,PRVS,PRWS,PRTHLS,PRTKES
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PRUS,PRVS,PRWS,PRTHLS,PRTKES
 ! Source terms for all water kinds, PRRS(:,:,:,1) is used for the conservative
 ! mixing ratio
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN),OPTIONAL    ::  PRTKEMS
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN),OPTIONAL    ::  PRTKEMS
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS
 ! Source terms for all passive scalar variables
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS
 ! Sigma_s at time t+1 : square root of the variance of the deviation to the 
 ! saturation
-REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
-                MERGE(D%NJT,0,OCOMPUTE_SRC),&
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(OUT)     ::  PSIGS
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRUS_TURB   ! evolution of rhoJ*U   by turbulence only
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRVS_TURB   ! evolution of rhoJ*V   by turbulence only
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRTHLS_TURB ! evolution of rhoJ*thl by turbulence only
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRRTS_TURB  ! evolution of rhoJ*rt  by turbulence only
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV), INTENT(OUT),OPTIONAL ::  PDRSVS_TURB  ! evolution of rhoJ*Sv  by turbulence only
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)      ::  PFLXZTHVMF 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRUS_TURB   ! evolution of rhoJ*U   by turbulence only
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRVS_TURB   ! evolution of rhoJ*V   by turbulence only
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRTHLS_TURB ! evolution of rhoJ*thl by turbulence only
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRRTS_TURB  ! evolution of rhoJ*rt  by turbulence only
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT),OPTIONAL ::  PDRSVS_TURB  ! evolution of rhoJ*Sv  by turbulence only
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PFLXZTHVMF 
 !                                           MF contribution for vert. turb. transport
 !                                           used in the buoy. prod. of TKE
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PWTH       ! heat flux
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PWRC       ! cloud water flux
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KSV),INTENT(OUT) :: PWSV       ! scalar flux
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PTP        ! Thermal TKE production
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PWTH       ! heat flux
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PWRC       ! cloud water flux
+REAL, DIMENSION(D%NIJT,D%NKT,KSV),INTENT(OUT) :: PWSV       ! scalar flux
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTP        ! Thermal TKE production
                                                    ! MassFlux + turb
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT),OPTIONAL  :: PTPMF      ! Thermal TKE production
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL  :: PTPMF      ! Thermal TKE production
                                                    ! MassFlux Only
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PDP        ! Dynamic TKE production
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PTDIFF     ! Diffusion TKE term
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PDP        ! Dynamic TKE production
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTDIFF     ! Diffusion TKE term
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
 !
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
@@ -414,27 +409,27 @@ LOGICAL, INTENT(IN) :: ONOMIXLG          ! to use turbulence for lagrangian vari
 LOGICAL, INTENT(IN) :: O2D               ! Logical for 2D model version (modd_conf)
 !
 ! length scale from vdfexcu
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PLENGTHM, PLENGTHH
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PLENGTHM, PLENGTHH
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PTR          ! Transport prod. of TKE
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PDISS        ! Dissipation of TKE
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSTFL        ! Time evol Flux of T at sea surface (LOCEAN)
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSTFL_C  ! O-A interface flux for theta(LOCEAN and LCOUPLES)
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSRFL_C  ! O-A interface flux for vapor (LOCEAN and LCOUPLES) 
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSUFL_C        ! Time evol Flux of U at sea surface (LOCEAN)
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSVFL_C  !
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSUFL   
-REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN),OPTIONAL   ::  PSSVFL  !
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT), OPTIONAL  :: PEDR  ! EDR
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT), OPTIONAL  :: PLEM  ! Mixing length
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PTR          ! Transport prod. of TKE
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PDISS        ! Dissipation of TKE
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
+REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSTFL        ! Time evol Flux of T at sea surface (LOCEAN)
+REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSTFL_C  ! O-A interface flux for theta(LOCEAN and LCOUPLES)
+REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSRFL_C  ! O-A interface flux for vapor (LOCEAN and LCOUPLES) 
+REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSUFL_C        ! Time evol Flux of U at sea surface (LOCEAN)
+REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSVFL_C  !
+REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSUFL   
+REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSVFL  !
 !
 !
 !-------------------------------------------------------------------------------
 !
 !       0.2  declaration of local variables
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::     &
+REAL, DIMENSION(D%NIJT,D%NKT) ::     &
           ZCP,                        &  ! Cp at t-1
           ZEXN,                       &  ! EXN at t-1
           ZT,                         &  ! T at t-1
@@ -460,8 +455,8 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT) ::     &
           ZLM_CLOUD                      ! Turbulent mixing length in the clouds (routine CLOUD_MODIF_LM)
 !
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR) :: ZRM ! initial mixing ratio 
-REAL, DIMENSION(D%NIT,D%NJT) ::  ZTAU11M,ZTAU12M,  &
+REAL, DIMENSION(D%NIJT,D%NKT,KRR) :: ZRM ! initial mixing ratio 
+REAL, DIMENSION(D%NIJT) ::  ZTAU11M,ZTAU12M,  &
                                                  ZTAU22M,ZTAU33M,  &
             ! tangential surface fluxes in the axes following the orography
                                                  ZUSLOPE,ZVSLOPE,  &
@@ -486,13 +481,13 @@ REAL                :: ZPENTE       ! Slope of the amplification straight line (
 REAL                :: ZCOEF_AMPL_CEI_NUL! Ordonnate at the origin of the
                                          ! amplification straight line (for routine CLOUD_MODIF_LM)
 !
-INTEGER             :: IIE,IIB,IJE,IJB,IKB,IKE      ! index value for the
+INTEGER             :: IIJB,IIJE,IKB,IKE      ! index value for the
 INTEGER             :: IINFO_ll     ! return code of parallel routine
 ! Beginning and the End of the physical domain for the mass points
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
 INTEGER             :: JRR,JK,JSV   ! loop counters
-INTEGER             :: JI,JJ        ! loop counters
+INTEGER             :: JIJ          ! loop counters
 REAL                :: ZL0          ! Max. Mixing Length in Blakadar formula
 REAL                :: ZALPHA       ! work coefficient : 
                                     ! - proportionnality constant between Dz/2 and 
@@ -522,18 +517,16 @@ IKTB=D%NKTB
 IKTE=D%NKTE
 IKB=D%NKB
 IKE=D%NKE
-IIE=D%NIEC
-IIB=D%NIBC
-IJE=D%NJEC
-IJB=D%NJBC
+IIJE=D%NIJE
+IIJB=D%NIJB
 !
 ZEXPL = 1.- PIMPL
 ZRVORD= CST%XRV / CST%XRD
 !
 !Copy data into ZTHLM and ZRM only if needed
 IF (HTURBLEN=='BL89' .OR. HTURBLEN=='RM17' .OR. HTURBLEN=='ADAP' .OR. ORMC01) THEN
-  ZTHLM(IIB:IIE,IJB:IJE,1:D%NKT) = PTHLT(IIB:IIE,IJB:IJE,1:D%NKT)
-  ZRM(IIB:IIE,IJB:IJE,1:D%NKT,:) = PRT(IIB:IIE,IJB:IJE,1:D%NKT,:)
+  ZTHLM(IIJB:IIJE,1:D%NKT) = PTHLT(IIJB:IIJE,1:D%NKT)
+  ZRM(IIJB:IIJE,1:D%NKT,:) = PRT(IIJB:IIJE,1:D%NKT,:)
 END IF
 !
 !----------------------------------------------------------------------------
@@ -543,53 +536,53 @@ END IF
 !
 !*      2.1 Cph at t
 !
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-ZCP(IIB:IIE,IJB:IJE,1:D%NKT)=CST%XCPD
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+ZCP(IIJB:IIJE,1:D%NKT)=CST%XCPD
 !
-IF (KRR > 0) ZCP(IIB:IIE,IJB:IJE,1:D%NKT) = ZCP(IIB:IIE,IJB:IJE,1:D%NKT) + CST%XCPV * PRT(IIB:IIE,IJB:IJE,1:D%NKT,1)
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+IF (KRR > 0) ZCP(IIJB:IIJE,1:D%NKT) = ZCP(IIJB:IIJE,1:D%NKT) + CST%XCPV * PRT(IIJB:IIJE,1:D%NKT,1)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 DO JRR = 2,1+KRRL                          ! loop on the liquid components
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)  
-  ZCP(IIB:IIE,IJB:IJE,1:D%NKT)  = ZCP(IIB:IIE,IJB:IJE,1:D%NKT) + CST%XCL * PRT(IIB:IIE,IJB:IJE,1:D%NKT,JRR)
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)  
+  ZCP(IIJB:IIJE,1:D%NKT)  = ZCP(IIJB:IIJE,1:D%NKT) + CST%XCL * PRT(IIJB:IIJE,1:D%NKT,JRR)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 END DO
 !
 DO JRR = 2+KRRL,1+KRRL+KRRI                ! loop on the solid components   
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-  ZCP(IIB:IIE,IJB:IJE,1:D%NKT)  = ZCP(IIB:IIE,IJB:IJE,1:D%NKT)  + CST%XCI * PRT(IIB:IIE,IJB:IJE,1:D%NKT,JRR)
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  ZCP(IIJB:IIJE,1:D%NKT)  = ZCP(IIJB:IIJE,1:D%NKT)  + CST%XCI * PRT(IIJB:IIJE,1:D%NKT,JRR)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 END DO
 !
 !*      2.2 Exner function at t
 !
 IF (OOCEAN) THEN
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-  ZEXN(IIB:IIE,IJB:IJE,1:D%NKT) = 1.
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  ZEXN(IIJB:IIJE,1:D%NKT) = 1.
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 ELSE
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-  ZEXN(IIB:IIE,IJB:IJE,1:D%NKT) = (PPABST(IIB:IIE,IJB:IJE,1:D%NKT)/CST%XP00) ** (CST%XRD/CST%XCPD)
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  ZEXN(IIJB:IIJE,1:D%NKT) = (PPABST(IIJB:IIJE,1:D%NKT)/CST%XP00) ** (CST%XRD/CST%XCPD)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 END IF
 !
 !*      2.3 dissipative heating coeff a t
 !
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-ZCOEF_DISS(IIB:IIE,IJB:IJE,1:D%NKT) = 1/(ZCP(IIB:IIE,IJB:IJE,1:D%NKT) * ZEXN(IIB:IIE,IJB:IJE,1:D%NKT)) 
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+ZCOEF_DISS(IIJB:IIJE,1:D%NKT) = 1/(ZCP(IIJB:IIJE,1:D%NKT) * ZEXN(IIJB:IIJE,1:D%NKT)) 
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
 !
-ZFRAC_ICE(IIB:IIE,IJB:IJE,1:D%NKT) = 0.0
-ZATHETA(IIB:IIE,IJB:IJE,1:D%NKT) = 0.0
-ZAMOIST(IIB:IIE,IJB:IJE,1:D%NKT) = 0.0
+ZFRAC_ICE(IIJB:IIJE,1:D%NKT) = 0.0
+ZATHETA(IIJB:IIJE,1:D%NKT) = 0.0
+ZAMOIST(IIJB:IIJE,1:D%NKT) = 0.0
 !
 IF (KRRL >=1) THEN
 !
 !*      2.4 Temperature at t
 !
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-  ZT(IIB:IIE,IJB:IJE,1:D%NKT) =  PTHLT(IIB:IIE,IJB:IJE,1:D%NKT) * ZEXN(IIB:IIE,IJB:IJE,1:D%NKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  ZT(IIJB:IIJE,1:D%NKT) =  PTHLT(IIJB:IIJE,1:D%NKT) * ZEXN(IIJB:IIJE,1:D%NKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
 !*       2.5 Lv/Cph/Exn
 !
@@ -599,21 +592,21 @@ IF (KRRL >=1) THEN
     CALL COMPUTE_FUNCTION_THERMO(CST%XALPI,CST%XBETAI,CST%XGAMI,CST%XLSTT,CST%XCI,ZT,ZEXN,ZCP, &
                                  ZLSOCPEXNM,ZAMOIST_ICE,ZATHETA_ICE)
 !
-    !$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-    WHERE(PRT(IIB:IIE,IJB:IJE,1:D%NKT,2)+PRT(IIB:IIE,IJB:IJE,1:D%NKT,4)>0.0)
-      ZFRAC_ICE(IIB:IIE,IJB:IJE,1:D%NKT) = PRT(IIB:IIE,IJB:IJE,1:D%NKT,4) / ( PRT(IIB:IIE,IJB:IJE,1:D%NKT,2) & 
-                                          +PRT(IIB:IIE,IJB:IJE,1:D%NKT,4) )
+    !$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    WHERE(PRT(IIJB:IIJE,1:D%NKT,2)+PRT(IIJB:IIJE,1:D%NKT,4)>0.0)
+      ZFRAC_ICE(IIJB:IIJE,1:D%NKT) = PRT(IIJB:IIJE,1:D%NKT,4) / ( PRT(IIJB:IIJE,1:D%NKT,2) & 
+                                          +PRT(IIJB:IIJE,1:D%NKT,4) )
     END WHERE
-    !$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    !$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
-    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-    ZLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) = (1.0-ZFRAC_ICE(IIB:IIE,IJB:IJE,1:D%NKT))*ZLVOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) &
-                           +ZFRAC_ICE(IIB:IIE,IJB:IJE,1:D%NKT) *ZLSOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT)
-    ZAMOIST(IIB:IIE,IJB:IJE,1:D%NKT) = (1.0-ZFRAC_ICE(IIB:IIE,IJB:IJE,1:D%NKT))*ZAMOIST(IIB:IIE,IJB:IJE,1:D%NKT) &
-                         +ZFRAC_ICE(IIB:IIE,IJB:IJE,1:D%NKT) *ZAMOIST_ICE(IIB:IIE,IJB:IJE,1:D%NKT)
-    ZATHETA(IIB:IIE,IJB:IJE,1:D%NKT) = (1.0-ZFRAC_ICE(IIB:IIE,IJB:IJE,1:D%NKT))*ZATHETA(IIB:IIE,IJB:IJE,1:D%NKT) &
-                         +ZFRAC_ICE(IIB:IIE,IJB:IJE,1:D%NKT) *ZATHETA_ICE(IIB:IIE,IJB:IJE,1:D%NKT)
-    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    ZLOCPEXNM(IIJB:IIJE,1:D%NKT) = (1.0-ZFRAC_ICE(IIJB:IIJE,1:D%NKT))*ZLVOCPEXNM(IIJB:IIJE,1:D%NKT) &
+                           +ZFRAC_ICE(IIJB:IIJE,1:D%NKT) *ZLSOCPEXNM(IIJB:IIJE,1:D%NKT)
+    ZAMOIST(IIJB:IIJE,1:D%NKT) = (1.0-ZFRAC_ICE(IIJB:IIJE,1:D%NKT))*ZAMOIST(IIJB:IIJE,1:D%NKT) &
+                         +ZFRAC_ICE(IIJB:IIJE,1:D%NKT) *ZAMOIST_ICE(IIJB:IIJE,1:D%NKT)
+    ZATHETA(IIJB:IIJE,1:D%NKT) = (1.0-ZFRAC_ICE(IIJB:IIJE,1:D%NKT))*ZATHETA(IIJB:IIJE,1:D%NKT) &
+                         +ZFRAC_ICE(IIJB:IIJE,1:D%NKT) *ZATHETA_ICE(IIJB:IIJE,1:D%NKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ELSE
     CALL COMPUTE_FUNCTION_THERMO(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
                                  ZLOCPEXNM,ZAMOIST,ZATHETA)
@@ -631,7 +624,7 @@ IF (KRRL >=1) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZATHETA)
+    CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZATHETA)
 ! 
     TZFIELD%CMNHNAME   = 'AMOIST'
     TZFIELD%CSTDNAME   = ''
@@ -643,52 +636,52 @@ IF (KRRL >=1) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZAMOIST)
+    CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZAMOIST)
   END IF
 !
 ELSE
-  ZLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT)=0.
+  ZLOCPEXNM(IIJB:IIJE,1:D%NKT)=0.
 END IF              ! loop end on KRRL >= 1
 !
 ! computes conservative variables
 !
 IF ( KRRL >= 1 ) THEN
   IF ( KRRI >= 1 ) THEN
-    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ! Rnp at t
-    PRT(IIB:IIE,IJB:IJE,1:D%NKT,1)  = PRT(IIB:IIE,IJB:IJE,1:D%NKT,1)  + PRT(IIB:IIE,IJB:IJE,1:D%NKT,2)  & 
-                                    + PRT(IIB:IIE,IJB:IJE,1:D%NKT,4)
-    PRRS(IIB:IIE,IJB:IJE,1:D%NKT,1) = PRRS(IIB:IIE,IJB:IJE,1:D%NKT,1) + PRRS(IIB:IIE,IJB:IJE,1:D%NKT,2) & 
-                                    + PRRS(IIB:IIE,IJB:IJE,1:D%NKT,4)
+    PRT(IIJB:IIJE,1:D%NKT,1)  = PRT(IIJB:IIJE,1:D%NKT,1)  + PRT(IIJB:IIJE,1:D%NKT,2)  & 
+                                    + PRT(IIJB:IIJE,1:D%NKT,4)
+    PRRS(IIJB:IIJE,1:D%NKT,1) = PRRS(IIJB:IIJE,1:D%NKT,1) + PRRS(IIJB:IIJE,1:D%NKT,2) & 
+                                    + PRRS(IIJB:IIJE,1:D%NKT,4)
     ! Theta_l at t
-    PTHLT(IIB:IIE,IJB:IJE,1:D%NKT)  = PTHLT(IIB:IIE,IJB:IJE,1:D%NKT)  - ZLVOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) &
-                                    * PRT(IIB:IIE,IJB:IJE,1:D%NKT,2) &
-                                  - ZLSOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) * PRT(IIB:IIE,IJB:IJE,1:D%NKT,4)
-    PRTHLS(IIB:IIE,IJB:IJE,1:D%NKT) = PRTHLS(IIB:IIE,IJB:IJE,1:D%NKT) - ZLVOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) &
-                                    * PRRS(IIB:IIE,IJB:IJE,1:D%NKT,2) &
-                                  - ZLSOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) * PRRS(IIB:IIE,IJB:IJE,1:D%NKT,4)
-    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    PTHLT(IIJB:IIJE,1:D%NKT)  = PTHLT(IIJB:IIJE,1:D%NKT)  - ZLVOCPEXNM(IIJB:IIJE,1:D%NKT) &
+                                    * PRT(IIJB:IIJE,1:D%NKT,2) &
+                                  - ZLSOCPEXNM(IIJB:IIJE,1:D%NKT) * PRT(IIJB:IIJE,1:D%NKT,4)
+    PRTHLS(IIJB:IIJE,1:D%NKT) = PRTHLS(IIJB:IIJE,1:D%NKT) - ZLVOCPEXNM(IIJB:IIJE,1:D%NKT) &
+                                    * PRRS(IIJB:IIJE,1:D%NKT,2) &
+                                  - ZLSOCPEXNM(IIJB:IIJE,1:D%NKT) * PRRS(IIJB:IIJE,1:D%NKT,4)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ELSE
-    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ! Rnp at t
-    PRT(IIB:IIE,IJB:IJE,1:D%NKT,1)  = PRT(IIB:IIE,IJB:IJE,1:D%NKT,1)  + PRT(IIB:IIE,IJB:IJE,1:D%NKT,2) 
-    PRRS(IIB:IIE,IJB:IJE,1:D%NKT,1) = PRRS(IIB:IIE,IJB:IJE,1:D%NKT,1) + PRRS(IIB:IIE,IJB:IJE,1:D%NKT,2)
+    PRT(IIJB:IIJE,1:D%NKT,1)  = PRT(IIJB:IIJE,1:D%NKT,1)  + PRT(IIJB:IIJE,1:D%NKT,2) 
+    PRRS(IIJB:IIJE,1:D%NKT,1) = PRRS(IIJB:IIJE,1:D%NKT,1) + PRRS(IIJB:IIJE,1:D%NKT,2)
     ! Theta_l at t
-    PTHLT(IIB:IIE,IJB:IJE,1:D%NKT)  = PTHLT(IIB:IIE,IJB:IJE,1:D%NKT)  - ZLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) &
-                                    * PRT(IIB:IIE,IJB:IJE,1:D%NKT,2)
-    PRTHLS(IIB:IIE,IJB:IJE,1:D%NKT) = PRTHLS(IIB:IIE,IJB:IJE,1:D%NKT) - ZLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) &
-                                    * PRRS(IIB:IIE,IJB:IJE,1:D%NKT,2)
-    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    PTHLT(IIJB:IIJE,1:D%NKT)  = PTHLT(IIJB:IIJE,1:D%NKT)  - ZLOCPEXNM(IIJB:IIJE,1:D%NKT) &
+                                    * PRT(IIJB:IIJE,1:D%NKT,2)
+    PRTHLS(IIJB:IIJE,1:D%NKT) = PRTHLS(IIJB:IIJE,1:D%NKT) - ZLOCPEXNM(IIJB:IIJE,1:D%NKT) &
+                                    * PRRS(IIJB:IIJE,1:D%NKT,2)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   END IF
 END IF
 !
 !* stores value of conservative variables & wind before turbulence tendency (AROME diag)
 IF(PRESENT(PDRUS_TURB)) THEN
-  PDRUS_TURB = PRUS
-  PDRVS_TURB = PRVS
-  PDRTHLS_TURB = PRTHLS
-  PDRRTS_TURB  = PRRS(:,:,:,1)
-  PDRSVS_TURB  = PRSVS
+  PDRUS_TURB(:,:) = PRUS(:,:)
+  PDRVS_TURB(:,:) = PRVS(:,:)
+  PDRTHLS_TURB(:,:) = PRTHLS(:,:)
+  PDRRTS_TURB(:,:)  = PRRS(:,:,1)
+  PDRSVS_TURB(:,:,:)  = PRSVS(:,:,:)
 END IF
 !----------------------------------------------------------------------------
 !
@@ -704,7 +697,7 @@ SELECT CASE (HTURBLEN)
 !           ------------------
 
   CASE ('BL89')
-    ZSHEAR(:,:,:)=0.
+    ZSHEAR(:,:)=0.
     CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 !
 !*      3.2 RM17 mixing length
@@ -719,10 +712,10 @@ SELECT CASE (HTURBLEN)
     CALL MZF_PHY(D,ZWORK1,ZWORK2)
     CALL MYF_PHY(D,ZWORK2,ZDVDZ)
     !
-    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-    ZSHEAR(IIB:IIE,IJB:IJE,1:D%NKT) = SQRT(ZDUDZ(IIB:IIE,IJB:IJE,1:D%NKT)*ZDUDZ(IIB:IIE,IJB:IJE,1:D%NKT) &
-                                    + ZDVDZ(IIB:IIE,IJB:IJE,1:D%NKT)*ZDVDZ(IIB:IIE,IJB:IJE,1:D%NKT))
-    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    ZSHEAR(IIJB:IIJE,1:D%NKT) = SQRT(ZDUDZ(IIJB:IIJE,1:D%NKT)*ZDUDZ(IIJB:IIJE,1:D%NKT) &
+                                    + ZDVDZ(IIJB:IIJE,1:D%NKT)*ZDVDZ(IIJB:IIJE,1:D%NKT))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 !
 !*      3.3 Grey-zone combined RM17 & Deardorff mixing lengths 
@@ -737,10 +730,10 @@ SELECT CASE (HTURBLEN)
     CALL MZF_PHY(D,ZWORK1,ZWORK2)
     CALL MYF_PHY(D,ZWORK2,ZDVDZ)
     !
-    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-    ZSHEAR(IIB:IIE,IJB:IJE,1:D%NKT) = SQRT(ZDUDZ(IIB:IIE,IJB:IJE,1:D%NKT)*ZDUDZ(IIB:IIE,IJB:IJE,1:D%NKT) &
-                                    + ZDVDZ(IIB:IIE,IJB:IJE,1:D%NKT)*ZDVDZ(IIB:IIE,IJB:IJE,1:D%NKT))
-    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    ZSHEAR(IIJB:IIJE,1:D%NKT) = SQRT(ZDUDZ(IIJB:IIJE,1:D%NKT)*ZDUDZ(IIJB:IIJE,1:D%NKT) &
+                                    + ZDVDZ(IIJB:IIJE,1:D%NKT)*ZDVDZ(IIJB:IIJE,1:D%NKT))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 
     CALL DELT(ZLMW,ODZ=.FALSE.)
@@ -750,9 +743,9 @@ SELECT CASE (HTURBLEN)
     !and it is limited by a stability-based length (RM17), as was done in Deardorff length (but taking into account shear as well)
     ! For grid meshes in the grey zone, then this is the smaller of the two.
     !
-    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-    ZLM(IIB:IIE,IJB:IJE,1:D%NKT) = MIN(ZLM(IIB:IIE,IJB:IJE,1:D%NKT),TURBN%XCADAP*ZLMW(IIB:IIE,IJB:IJE,1:D%NKT))
-    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    ZLM(IIJB:IIJE,1:D%NKT) = MIN(ZLM(IIJB:IIJE,1:D%NKT),TURBN%XCADAP*ZLMW(IIJB:IIJE,1:D%NKT))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
 !*      3.4 Delta mixing length
 !           -------------------
@@ -771,24 +764,24 @@ SELECT CASE (HTURBLEN)
 !
   CASE ('BLKR')
    ZL0 = 100.
-   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-   ZLM(IIB:IIE,IJB:IJE,1:D%NKT) = ZL0
-   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+   ZLM(IIJB:IIJE,1:D%NKT) = ZL0
+   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 
    ZALPHA=0.5**(-1.5)
    !
    DO JK=IKTB,IKTE
-     !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-     ZLM(IIB:IIE,IJB:IJE,JK) = ( 0.5*(PZZ(IIB:IIE,IJB:IJE,JK)+PZZ(IIB:IIE,IJB:IJE,JK+D%NKL)) - &
-     & PZZ(IIB:IIE,IJB:IJE,D%NKA+JPVEXT_TURB*D%NKL) ) * PDIRCOSZW(:,:)
-     ZLM(IIB:IIE,IJB:IJE,JK) = ZALPHA  * ZLM(IIB:IIE,IJB:IJE,JK) * ZL0 / ( ZL0 + ZALPHA*ZLM(IIB:IIE,IJB:IJE,JK) )
-     !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+     !$mnh_expand_array(JIJ=IIJB:IIJE)
+     ZLM(IIJB:IIJE,JK) = ( 0.5*(PZZ(IIJB:IIJE,JK)+PZZ(IIJB:IIJE,JK+D%NKL)) - &
+     & PZZ(IIJB:IIJE,D%NKA+JPVEXT_TURB*D%NKL) ) * PDIRCOSZW(IIJB:IIJE)
+     ZLM(IIJB:IIJE,JK) = ZALPHA  * ZLM(IIJB:IIJE,JK) * ZL0 / ( ZL0 + ZALPHA*ZLM(IIJB:IIJE,JK) )
+     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
    END DO
 !
-   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-   ZLM(IIB:IIE,IJB:IJE,IKTB-1) = ZLM(IIB:IIE,IJB:IJE,IKTB)
-   ZLM(IIB:IIE,IJB:IJE,IKTE+1) = ZLM(IIB:IIE,IJB:IJE,IKTE)
-   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+   !$mnh_expand_array(JIJ=IIJB:IIJE)
+   ZLM(IIJB:IIJE,IKTB-1) = ZLM(IIJB:IIJE,IKTB)
+   ZLM(IIJB:IIJE,IKTE+1) = ZLM(IIJB:IIJE,IKTE)
+   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !
 !
@@ -804,38 +797,38 @@ ENDIF  ! end LHARRAT
 !           ------------------
 
 IF (OHARAT) THEN
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-  ZLEPS(IIB:IIE,IJB:IJE,1:D%NKT)=PLENGTHM(IIB:IIE,IJB:IJE,1:D%NKT)*(3.75**2.)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  ZLEPS(IIJB:IIJE,1:D%NKT)=PLENGTHM(IIJB:IIJE,1:D%NKT)*(3.75**2.)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 ELSE
-  ZLEPS(IIB:IIE,IJB:IJE,1:D%NKT)=ZLM(IIB:IIE,IJB:IJE,1:D%NKT)
+  ZLEPS(IIJB:IIJE,1:D%NKT)=ZLM(IIJB:IIJE,1:D%NKT)
 ENDIF
 !
 !*      3.7 Correction in the Surface Boundary Layer (Redelsperger 2001)
 !           ----------------------------------------
 !
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-ZLMO(IIB:IIE,IJB:IJE)=XUNDEF
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+ZLMO(IIJB:IIJE)=XUNDEF
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 IF (ORMC01) THEN
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-  ZUSTAR(IIB:IIE,IJB:IJE)=(PSFU(IIB:IIE,IJB:IJE)**2+PSFV(IIB:IIE,IJB:IJE)**2)**(0.25)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZUSTAR(IIJB:IIJE)=(PSFU(IIJB:IIJE)**2+PSFV(IIJB:IIJE)**2)**(0.25)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   IF (KRR>0) THEN
-    CALL LMO(D,CST,ZUSTAR,ZTHLM(:,:,IKB),ZRM(:,:,IKB,1),PSFTH,PSFRV,ZLMO)
+    CALL LMO(D,CST,ZUSTAR,ZTHLM(:,IKB),ZRM(:,IKB,1),PSFTH,PSFRV,ZLMO)
   ELSE
-    ZRVM(:,:)=0.
-    ZSFRV(:,:)=0.
-    CALL LMO(D,CST,ZUSTAR,ZTHLM(:,:,IKB),ZRVM,PSFTH,ZSFRV,ZLMO)
+    ZRVM(:)=0.
+    ZSFRV(:)=0.
+    CALL LMO(D,CST,ZUSTAR,ZTHLM(:,IKB),ZRVM,PSFTH,ZSFRV,ZLMO)
   END IF
   CALL RMC01(D,CST,CSTURB,HTURBLEN,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,ZLMO,ZLM,ZLEPS)
 END IF
 !
 !RMC01 is only applied on RM17 in ADAP
 IF (HTURBLEN=='ADAP') THEN
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-  ZLEPS(IIB:IIE,IJB:IJE,1:D%NKT) = MIN(ZLEPS(IIB:IIE,IJB:IJE,1:D%NKT),ZLMW(IIB:IIE,IJB:IJE,1:D%NKT)*TURBN%XCADAP)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  ZLEPS(IIJB:IIJE,1:D%NKT) = MIN(ZLEPS(IIJB:IIJE,1:D%NKT),ZLMW(IIJB:IIJE,1:D%NKT)*TURBN%XCADAP)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 END IF
 !
 !*      3.8 Mixing length in external points (used if HTURBDIM="3DIM")
@@ -870,66 +863,66 @@ IF (HPROGRAM/='AROME ') THEN
 !
   CALL UPDATE_ROTATE_WIND(D,ZUSLOPE,ZVSLOPE,HLBCX,HLBCY)
 ELSE
-  ZUSLOPE=PUT(IIB:IIE,IJB:IJE,D%NKA)
-  ZVSLOPE=PVT(IIB:IIE,IJB:IJE,D%NKA)
+  ZUSLOPE=PUT(IIJB:IIJE,D%NKA)
+  ZVSLOPE=PVT(IIJB:IIJE,D%NKA)
 END IF
 !
 !
 !*      4.2 compute the proportionality coefficient between wind and stress
 !
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-ZCDUEFF(IIB:IIE,IJB:IJE) =-SQRT ( (PSFU(IIB:IIE,IJB:IJE)**2 + PSFV(IIB:IIE,IJB:IJE)**2) /               &
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+ZCDUEFF(IIJB:IIJE) =-SQRT ( (PSFU(IIJB:IIJE)**2 + PSFV(IIJB:IIJE)**2) /               &
 #ifdef REPRO48
-                    (1.E-60 + ZUSLOPE(IIB:IIE,IJB:IJE)**2 + ZVSLOPE(IIB:IIE,IJB:IJE)**2 ) )
+                    (1.E-60 + ZUSLOPE(IIJB:IIJE)**2 + ZVSLOPE(IIJB:IIJE)**2 ) )
 #else
-                    (CST%XMNH_TINY + ZUSLOPE(IIB:IIE,IJB:IJE)**2 + ZVSLOPE(IIB:IIE,IJB:IJE)**2 ) )
+                    (CST%XMNH_TINY + ZUSLOPE(IIJB:IIJE)**2 + ZVSLOPE(IIJB:IIJE)**2 ) )
 #endif                      
 !
 !*       4.6 compute the surface tangential fluxes
 !
-ZTAU11M(IIB:IIE,IJB:IJE) =2./3.*(  (1.+ (PZZ(IIB:IIE,IJB:IJE,IKB+D%NKL)-PZZ(IIB:IIE,IJB:IJE,IKB))  &
-                           /(PDZZ(IIB:IIE,IJB:IJE,IKB+D%NKL)+PDZZ(IIB:IIE,IJB:IJE,IKB))  &
-                       )   *PTKET(IIB:IIE,IJB:IJE,IKB)                   &
-                     -0.5  *PTKET(IIB:IIE,IJB:IJE,IKB+D%NKL)                 &
+ZTAU11M(IIJB:IIJE) =2./3.*(  (1.+ (PZZ(IIJB:IIJE,IKB+D%NKL)-PZZ(IIJB:IIJE,IKB))  &
+                           /(PDZZ(IIJB:IIJE,IKB+D%NKL)+PDZZ(IIJB:IIJE,IKB))  &
+                       )   *PTKET(IIJB:IIJE,IKB)                   &
+                     -0.5  *PTKET(IIJB:IIJE,IKB+D%NKL)                 &
                     )
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-ZTAU12M(IIB:IIE,IJB:IJE) =0.0
-ZTAU22M(IIB:IIE,IJB:IJE) =ZTAU11M(IIB:IIE,IJB:IJE)
-ZTAU33M(IIB:IIE,IJB:IJE) =ZTAU11M(IIB:IIE,IJB:IJE)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
+ZTAU12M(IIJB:IIJE) =0.0
+ZTAU22M(IIJB:IIJE) =ZTAU11M(IIJB:IIJE)
+ZTAU33M(IIJB:IIJE) =ZTAU11M(IIJB:IIJE)
 !
 !*       4.7 third order terms in temperature and water fluxes and correlations
 !            ------------------------------------------------------------------
 !
 !
-ZMWTH(:,:,:) = 0.     ! w'2th'
-ZMWR(:,:,:)  = 0.     ! w'2r'
-ZMTH2(:,:,:) = 0.     ! w'th'2
-ZMR2(:,:,:)  = 0.     ! w'r'2
-ZMTHR(:,:,:) = 0.     ! w'th'r'
+ZMWTH(:,:) = 0.     ! w'2th'
+ZMWR(:,:)  = 0.     ! w'2r'
+ZMTH2(:,:) = 0.     ! w'th'2
+ZMR2(:,:)  = 0.     ! w'r'2
+ZMTHR(:,:) = 0.     ! w'th'r'
 !
 IF (HTOM=='TM06') THEN
   CALL TM06(D,CST,PTHVREF,PBL_DEPTH,PZZ,PSFTH,ZMWTH,ZMTH2)
 !
    CALL GZ_M_W_PHY(D,ZMWTH,PDZZ,ZWORK1)    ! -d(w'2th' )/dz
    CALL GZ_W_M_PHY(D,ZMTH2,PDZZ,ZWORK2)    ! -d(w'th'2 )/dz
-   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-   ZFWTH(IIB:IIE,IJB:IJE,1:D%NKT) = -ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT)
-   ZFTH2(IIB:IIE,IJB:IJE,1:D%NKT) = -ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)
-   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+   ZFWTH(IIJB:IIJE,1:D%NKT) = -ZWORK1(IIJB:IIJE,1:D%NKT)
+   ZFTH2(IIJB:IIJE,1:D%NKT) = -ZWORK2(IIJB:IIJE,1:D%NKT)
+   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
-  ZFWTH(:,:,IKTE:) = 0.
-  ZFWTH(:,:,:IKTB) = 0.
-  ZFWR(:,:,:)  = 0.
-  ZFTH2(:,:,IKTE:) = 0.
-  ZFTH2(:,:,:IKTB) = 0.
-  ZFR2(:,:,:)  = 0.
-  ZFTHR(:,:,:) = 0.
+  ZFWTH(:,IKTE:) = 0.
+  ZFWTH(:,:IKTB) = 0.
+  ZFWR(:,:)  = 0.
+  ZFTH2(:,IKTE:) = 0.
+  ZFTH2(:,:IKTB) = 0.
+  ZFR2(:,:)  = 0.
+  ZFTHR(:,:) = 0.
 ELSE
-  ZFWTH(:,:,:) = 0.
-  ZFWR(:,:,:)  = 0.
-  ZFTH2(:,:,:) = 0.
-  ZFR2(:,:,:)  = 0.
-  ZFTHR(:,:,:) = 0.
+  ZFWTH(:,:) = 0.
+  ZFWR(:,:)  = 0.
+  ZFTH2(:,:) = 0.
+  ZFR2(:,:)  = 0.
+  ZFTHR(:,:) = 0.
 ENDIF
 !
 !----------------------------------------------------------------------------
@@ -937,37 +930,37 @@ ENDIF
 !*      5. TURBULENT SOURCES
 !          -----------------
 !
-IF( BUCONF%LBUDGET_U )  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_U ), 'VTURB', PRUS(:, :, :)    )
-IF( BUCONF%LBUDGET_V )  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_V ), 'VTURB', PRVS(:, :, :)    )
-IF( BUCONF%LBUDGET_W )  CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_W ), 'VTURB', PRWS(:, :, :)    )
+IF( BUCONF%LBUDGET_U )  CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_U ), 'VTURB', PRUS(:,:)    )
+IF( BUCONF%LBUDGET_V )  CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_V ), 'VTURB', PRVS(:,:)    )
+IF( BUCONF%LBUDGET_W )  CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_W ), 'VTURB', PRWS(:,:)    )
 
 IF( BUCONF%LBUDGET_TH ) THEN
   IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
-    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:, :, :) + ZLVOCPEXNM(:, :, :) * PRRS(:, :, :, 2) &
-                                                                          + ZLSOCPEXNM(:, :, :) * PRRS(:, :, :, 4) )
+    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:,:) + ZLVOCPEXNM(:,:) * PRRS(:,:, 2) &
+                                                                          + ZLSOCPEXNM(:,:) * PRRS(:,:, 4) )
   ELSE IF( KRRL >= 1 ) THEN
-    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:, :, :) + ZLOCPEXNM(:, :, :) * PRRS(:, :, :, 2) )
+    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:,:) + ZLOCPEXNM(:,:) * PRRS(:,:, 2) )
   ELSE
-    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:, :, :) )
+    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:,:) )
   END IF
 END IF
 
 IF( BUCONF%LBUDGET_RV ) THEN
   IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
-    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) - PRRS(:, :, :, 4) )
+    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:,:, 1) - PRRS(:,:, 2) - PRRS(:,:, 4) )
   ELSE IF( KRRL >= 1 ) THEN
-    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) )
+    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:,:, 1) - PRRS(:,:, 2) )
   ELSE
-    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:, :, :, 1) )
+    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:,:, 1) )
   END IF
 END IF
 
-IF( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RC), 'VTURB', PRRS  (:, :, :, 2) )
-IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RI), 'VTURB', PRRS  (:, :, :, 4) )
+IF( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'VTURB', PRRS  (:,:, 2) )
+IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'VTURB', PRRS  (:,:, 4) )
 
 IF( BUCONF%LBUDGET_SV ) THEN
   DO JSV = 1, KSV
-    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'VTURB', PRSVS(:, :, :, JSV) )
+    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'VTURB', PRSVS(:,:, JSV) )
   END DO
 END IF
 
@@ -993,37 +986,37 @@ CALL TURB_VER(D, CST,CSTURB,TURBN,KRR, KRRL, KRRI,       &
           PSSTFL, PSSTFL_C, PSSRFL_C,PSSUFL_C,PSSVFL_C,  &
           PSSUFL,PSSVFL                                  )
 
-IF( BUCONF%LBUDGET_U ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_U), 'VTURB', PRUS(:, :, :) )
-IF( BUCONF%LBUDGET_V ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_V), 'VTURB', PRVS(:, :, :) )
-IF( BUCONF%LBUDGET_W ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_W), 'VTURB', PRWS(:, :, :) )
+IF( BUCONF%LBUDGET_U ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_U), 'VTURB', PRUS(:,:) )
+IF( BUCONF%LBUDGET_V ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_V), 'VTURB', PRVS(:,:) )
+IF( BUCONF%LBUDGET_W ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_W), 'VTURB', PRWS(:,:) )
 
 IF( BUCONF%LBUDGET_TH ) THEN
   IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
-    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:, :, :) + ZLVOCPEXNM(:, :, :) * PRRS(:, :, :, 2) &
-                                                                          + ZLSOCPEXNM(:, :, :) * PRRS(:, :, :, 4) )
+    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:,:) + ZLVOCPEXNM(:,:) * PRRS(:,:, 2) &
+                                                                          + ZLSOCPEXNM(:,:) * PRRS(:,:, 4) )
   ELSE IF( KRRL >= 1 ) THEN
-    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:, :, :) + ZLOCPEXNM(:, :, :) * PRRS(:, :, :, 2) )
+    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:,:) + ZLOCPEXNM(:,:) * PRRS(:,:, 2) )
   ELSE
-    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:, :, :) )
+    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'VTURB', PRTHLS(:,:) )
   END IF
 END IF
 
 IF( BUCONF%LBUDGET_RV ) THEN
   IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
-    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) - PRRS(:, :, :, 4) )
+    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:,:, 1) - PRRS(:,:, 2) - PRRS(:,:, 4) )
   ELSE IF( KRRL >= 1 ) THEN
-    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) )
+    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:,:, 1) - PRRS(:,:, 2) )
   ELSE
-    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:, :, :, 1) )
+    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'VTURB', PRRS(:,:, 1) )
   END IF
 END IF
 
-IF( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RC), 'VTURB', PRRS(:, :, :, 2) )
-IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RI), 'VTURB', PRRS(:, :, :, 4) )
+IF( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'VTURB', PRRS(:,:, 2) )
+IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'VTURB', PRRS(:,:, 4) )
 
 IF( BUCONF%LBUDGET_SV )  THEN
   DO JSV = 1, KSV
-    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'VTURB', PRSVS(:, :, :, JSV) )
+    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'VTURB', PRSVS(:,:, JSV) )
   END DO
 END IF
 !
@@ -1033,44 +1026,44 @@ END IF
 #else          
 IF( HTURBDIM == '3DIM' ) THEN
 #endif
-  IF( BUCONF%LBUDGET_U  ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_U ), 'HTURB', PRUS  (:, :, :) )
-  IF( BUCONF%LBUDGET_V  ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_V ), 'HTURB', PRVS  (:, :, :) )
-  IF( BUCONF%LBUDGET_W  ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_W ), 'HTURB', PRWS  (:, :, :) )
+  IF( BUCONF%LBUDGET_U  ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_U ), 'HTURB', PRUS  (:,:) )
+  IF( BUCONF%LBUDGET_V  ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_V ), 'HTURB', PRVS  (:,:) )
+  IF( BUCONF%LBUDGET_W  ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_W ), 'HTURB', PRWS  (:,:) )
 
   IF(BUCONF%LBUDGET_TH)  THEN
     IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
-      CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:, :, :) + ZLVOCPEXNM(:, :, :) * PRRS(:, :, :, 2) &
-                                                                             + ZLSOCPEXNM(:, :, :) * PRRS(:, :, :, 4) )
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:,:) + ZLVOCPEXNM(:,:) * PRRS(:,:, 2) &
+                                                                             + ZLSOCPEXNM(:,:) * PRRS(:,:, 4) )
     ELSE IF( KRRL >= 1 ) THEN
-      CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:, :, :) + ZLOCPEXNM(:, :, :) * PRRS(:, :, :, 2) )
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:,:) + ZLOCPEXNM(:,:) * PRRS(:,:, 2) )
     ELSE
-      CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:, :, :) )
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:,:) )
     END IF
   END IF
 
   IF( BUCONF%LBUDGET_RV ) THEN
     IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
-      CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) - PRRS(:, :, :, 4) )
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:,:, 1) - PRRS(:,:, 2) - PRRS(:,:, 4) )
     ELSE IF( KRRL >= 1 ) THEN
-      CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) )
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:,:, 1) - PRRS(:,:, 2) )
     ELSE
-      CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:, :, :, 1) )
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:,:, 1) )
     END IF
   END IF
 
-  IF( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RC), 'HTURB', PRRS(:, :, :, 2) )
-  IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_RI), 'HTURB', PRRS(:, :, :, 4) )
+  IF( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'HTURB', PRRS(:,:, 2) )
+  IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'HTURB', PRRS(:,:, 4) )
 
   IF( BUCONF%LBUDGET_SV )  THEN
     DO JSV = 1, KSV
-      CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:, :, :, JSV) )
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:,:, JSV) )
     END DO
   END IF
 !à supprimer une fois le précédent ifdef REPRO48 validé
 #ifdef REPRO48
 #else
     CALL TURB_HOR_SPLT(D,CST,CSTURB,                           &
-          KSPLIT, KRR, KRRL, KRRI, PTSTEP,HLBCX,HLBCY,         &
+          KSPLIT, KRR, KRRL, KRRI, KSV, PTSTEP,HLBCX,HLBCY,    &
           OTURB_FLX,OSUBG_COND,OOCEAN,OCOMPUTE_SRC,            &
           TPFILE,                                              &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                        &
@@ -1086,37 +1079,37 @@ IF( HTURBDIM == '3DIM' ) THEN
           ZTRH,                                                &
           PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS                     )
 #endif
-  IF( BUCONF%LBUDGET_U ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_U), 'HTURB', PRUS(:, :, :) )
-  IF( BUCONF%LBUDGET_V ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_V), 'HTURB', PRVS(:, :, :) )
-  IF( BUCONF%LBUDGET_W ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_W), 'HTURB', PRWS(:, :, :) )
+  IF( BUCONF%LBUDGET_U ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_U), 'HTURB', PRUS(:,:) )
+  IF( BUCONF%LBUDGET_V ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_V), 'HTURB', PRVS(:,:) )
+  IF( BUCONF%LBUDGET_W ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_W), 'HTURB', PRWS(:,:) )
 
   IF( BUCONF%LBUDGET_TH ) THEN
     IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
-      CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:, :, :) + ZLVOCPEXNM(:, :, :) * PRRS(:, :, :, 2) &
-                                                                            + ZLSOCPEXNM(:, :, :) * PRRS(:, :, :, 4) )
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:,:) + ZLVOCPEXNM(:,:) * PRRS(:,:, 2) &
+                                                                            + ZLSOCPEXNM(:,:) * PRRS(:,:, 4) )
     ELSE IF( KRRL >= 1 ) THEN
-      CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:, :, :) + ZLOCPEXNM(:, :, :) * PRRS(:, :, :, 2) )
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:,:) + ZLOCPEXNM(:,:) * PRRS(:,:, 2) )
     ELSE
-      CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:, :, :) )
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:,:) )
     END IF
   END IF
 
   IF( BUCONF%LBUDGET_RV ) THEN
     IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
-      CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) - PRRS(:, :, :, 4) )
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:,:, 1) - PRRS(:,:, 2) - PRRS(:,:, 4) )
     ELSE IF( KRRL >= 1 ) THEN
-      CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:, :, :, 1) - PRRS(:, :, :, 2) )
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:,:, 1) - PRRS(:,:, 2) )
     ELSE
-      CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:, :, :, 1) )
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:,:, 1) )
     END IF
   END IF
 
-  IF( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RC), 'HTURB', PRRS(:, :, :, 2) )
-  IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_RI), 'HTURB', PRRS(:, :, :, 4) )
+  IF( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'HTURB', PRRS(:,:, 2) )
+  IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'HTURB', PRRS(:,:, 4) )
 
   IF( BUCONF%LBUDGET_SV )  THEN
     DO JSV = 1, KSV
-      CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:, :, :, JSV) )
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:,:, JSV) )
     END DO
   END IF
 #ifdef REPRO48
@@ -1131,15 +1124,15 @@ END IF
 !  6.1 Contribution of mass-flux in the TKE buoyancy production if 
 !      cloud computation is not statistical 
 CALL MZF_PHY(D,PFLXZTHVMF,ZWORK1)
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-PTP(IIB:IIE,IJB:IJE,1:D%NKT) = PTP(IIB:IIE,IJB:IJE,1:D%NKT) &
-                             + CST%XG / PTHVREF(IIB:IIE,IJB:IJE,1:D%NKT) * ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT)
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+PTP(IIJB:IIJE,1:D%NKT) = PTP(IIJB:IIJE,1:D%NKT) &
+                             + CST%XG / PTHVREF(IIJB:IIJE,1:D%NKT) * ZWORK1(IIJB:IIJE,1:D%NKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 
 IF(PRESENT(PTPMF))  THEN
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-  PTPMF(IIB:IIE,IJB:IJE,1:D%NKT)=CST%XG / PTHVREF(IIB:IIE,IJB:IJE,1:D%NKT) * ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  PTPMF(IIJB:IIJE,1:D%NKT)=CST%XG / PTHVREF(IIJB:IIJE,1:D%NKT) * ZWORK1(IIJB:IIJE,1:D%NKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 END IF
 !  6.2 TKE evolution equation
 
@@ -1147,19 +1140,19 @@ IF (.NOT. OHARAT) THEN
 !
 IF (BUCONF%LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
-    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS+ ZLVOCPEXNM * PRRS(:,:,:,2) &
-                                                          & + ZLSOCPEXNM * PRRS(:,:,:,4) )
+    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS(:,:)+ ZLVOCPEXNM(:,:) * PRRS(:,:,2) &
+                                                          & + ZLSOCPEXNM(:,:) * PRRS(:,:,4) )
   ELSE IF ( KRRL >= 1 ) THEN
-    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS+ ZLOCPEXNM * PRRS(:,:,:,2) )
+    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS(:,:) + ZLOCPEXNM(:,:) * PRRS(:,:,2) )
   ELSE
-    CALL BUDGET_STORE_INIT( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS(:, :, :) )
+    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS(:,:) )
   END IF
 END IF
 !
 IF(PRESENT(PRTKEMS)) THEN
-  ZRTKEMS(:,:,:)=PRTKEMS(:,:,:)
+  ZRTKEMS(:,:)=PRTKEMS(:,:)
 ELSE
-  ZRTKEMS(:,:,:)=0.
+  ZRTKEMS(:,:)=0.
 END IF
 !
 CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,HPROGRAM,                      &
@@ -1173,12 +1166,12 @@ CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,HPROGRAM,                      &
                    & PCURRENT_TKE_DISS=PCURRENT_TKE_DISS                )
 IF (BUCONF%LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
-    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS+ ZLVOCPEXNM * PRRS(:,:,:,2) &
-                                                          & + ZLSOCPEXNM * PRRS(:,:,:,4) )
+    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS(:,:)+ ZLVOCPEXNM(:,:) * PRRS(:,:,2) &
+                                                          & + ZLSOCPEXNM(:,:) * PRRS(:,:,4) )
   ELSE IF ( KRRL >= 1 ) THEN
-    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS+ ZLOCPEXNM * PRRS(:,:,:,2) )
+    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS(:,:)+ ZLOCPEXNM(:,:) * PRRS(:,:,2) )
   ELSE
-    CALL BUDGET_STORE_END( TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS(:, :, :) )
+    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'DISSH', PRTHLS(:,:) )
   END IF
 END IF
 !
@@ -1203,7 +1196,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%NTYPE      = TYPEREAL
   TZFIELD%NDIMS      = 3
   TZFIELD%LTIMEDEP   = .TRUE.
-  CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZLM)
+  CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZLM)
 !
   IF (KRR /= 0) THEN
 !
@@ -1219,7 +1212,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,PTHLT)
+    CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,PTHLT)
 !
 ! stores the conservative mixing ratio
 !
@@ -1233,21 +1226,21 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     TZFIELD%NTYPE      = TYPEREAL
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,PRT(:,:,:,1))
+    CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,PRT(:,:,1))
    END IF
 END IF
 !
 !* stores value of conservative variables & wind before turbulence tendency (AROME only)
 IF(PRESENT(PDRUS_TURB)) THEN
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-  PDRUS_TURB(IIB:IIE,IJB:IJE,1:D%NKT)   = PRUS(IIB:IIE,IJB:IJE,1:D%NKT) - PDRUS_TURB(IIB:IIE,IJB:IJE,1:D%NKT)
-  PDRVS_TURB(IIB:IIE,IJB:IJE,1:D%NKT)   = PRVS(IIB:IIE,IJB:IJE,1:D%NKT) - PDRVS_TURB(IIB:IIE,IJB:IJE,1:D%NKT)
-  PDRTHLS_TURB(IIB:IIE,IJB:IJE,1:D%NKT) = PRTHLS(IIB:IIE,IJB:IJE,1:D%NKT) - PDRTHLS_TURB(IIB:IIE,IJB:IJE,1:D%NKT)
-  PDRRTS_TURB(IIB:IIE,IJB:IJE,1:D%NKT)  = PRRS(IIB:IIE,IJB:IJE,1:D%NKT,1) - PDRRTS_TURB(IIB:IIE,IJB:IJE,1:D%NKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT,JSV=1:KSV)  
-  PDRSVS_TURB(IIB:IIE,IJB:IJE,1:D%NKT,:)  = PRSVS(IIB:IIE,IJB:IJE,1:D%NKT,:) - PDRSVS_TURB(IIB:IIE,IJB:IJE,1:D%NKT,:)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT,JSV=1:KSV)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  PDRUS_TURB(IIJB:IIJE,1:D%NKT)   = PRUS(IIJB:IIJE,1:D%NKT) - PDRUS_TURB(IIJB:IIJE,1:D%NKT)
+  PDRVS_TURB(IIJB:IIJE,1:D%NKT)   = PRVS(IIJB:IIJE,1:D%NKT) - PDRVS_TURB(IIJB:IIJE,1:D%NKT)
+  PDRTHLS_TURB(IIJB:IIJE,1:D%NKT) = PRTHLS(IIJB:IIJE,1:D%NKT) - PDRTHLS_TURB(IIJB:IIJE,1:D%NKT)
+  PDRRTS_TURB(IIJB:IIJE,1:D%NKT)  = PRRS(IIJB:IIJE,1:D%NKT,1) - PDRRTS_TURB(IIJB:IIJE,1:D%NKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT,JSV=1:KSV)  
+  PDRSVS_TURB(IIJB:IIJE,1:D%NKT,:)  = PRSVS(IIJB:IIJE,1:D%NKT,:) - PDRSVS_TURB(IIJB:IIJE,1:D%NKT,:)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT,JSV=1:KSV)
 END IF
 !----------------------------------------------------------------------------
 !
@@ -1256,28 +1249,28 @@ END IF
 !
 IF ( KRRL >= 1 ) THEN
   IF ( KRRI >= 1 ) THEN
-    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-    PRT(IIB:IIE,IJB:IJE,1:D%NKT,1)  = PRT(IIB:IIE,IJB:IJE,1:D%NKT,1)  - PRT(IIB:IIE,IJB:IJE,1:D%NKT,2)  &
-                                    - PRT(IIB:IIE,IJB:IJE,1:D%NKT,4)
-    PRRS(IIB:IIE,IJB:IJE,1:D%NKT,1) = PRRS(IIB:IIE,IJB:IJE,1:D%NKT,1) - PRRS(IIB:IIE,IJB:IJE,1:D%NKT,2) &
-                                    - PRRS(IIB:IIE,IJB:IJE,1:D%NKT,4)
-    PTHLT(IIB:IIE,IJB:IJE,1:D%NKT)  = PTHLT(IIB:IIE,IJB:IJE,1:D%NKT)  + ZLVOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) &
-                                    * PRT(IIB:IIE,IJB:IJE,1:D%NKT,2) &
-                                    + ZLSOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) * PRT(IIB:IIE,IJB:IJE,1:D%NKT,4)
-    PRTHLS(IIB:IIE,IJB:IJE,1:D%NKT) = PRTHLS(IIB:IIE,IJB:IJE,1:D%NKT) + ZLVOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) &
-                                    * PRRS(IIB:IIE,IJB:IJE,1:D%NKT,2) &
-                                    + ZLSOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) * PRRS(IIB:IIE,IJB:IJE,1:D%NKT,4)
-    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    PRT(IIJB:IIJE,1:D%NKT,1)  = PRT(IIJB:IIJE,1:D%NKT,1)  - PRT(IIJB:IIJE,1:D%NKT,2)  &
+                                    - PRT(IIJB:IIJE,1:D%NKT,4)
+    PRRS(IIJB:IIJE,1:D%NKT,1) = PRRS(IIJB:IIJE,1:D%NKT,1) - PRRS(IIJB:IIJE,1:D%NKT,2) &
+                                    - PRRS(IIJB:IIJE,1:D%NKT,4)
+    PTHLT(IIJB:IIJE,1:D%NKT)  = PTHLT(IIJB:IIJE,1:D%NKT)  + ZLVOCPEXNM(IIJB:IIJE,1:D%NKT) &
+                                    * PRT(IIJB:IIJE,1:D%NKT,2) &
+                                    + ZLSOCPEXNM(IIJB:IIJE,1:D%NKT) * PRT(IIJB:IIJE,1:D%NKT,4)
+    PRTHLS(IIJB:IIJE,1:D%NKT) = PRTHLS(IIJB:IIJE,1:D%NKT) + ZLVOCPEXNM(IIJB:IIJE,1:D%NKT) &
+                                    * PRRS(IIJB:IIJE,1:D%NKT,2) &
+                                    + ZLSOCPEXNM(IIJB:IIJE,1:D%NKT) * PRRS(IIJB:IIJE,1:D%NKT,4)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
   ELSE
-    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-    PRT(IIB:IIE,IJB:IJE,1:D%NKT,1)  = PRT(IIB:IIE,IJB:IJE,1:D%NKT,1)  - PRT(IIB:IIE,IJB:IJE,1:D%NKT,2) 
-    PRRS(IIB:IIE,IJB:IJE,1:D%NKT,1) = PRRS(IIB:IIE,IJB:IJE,1:D%NKT,1) - PRRS(IIB:IIE,IJB:IJE,1:D%NKT,2)
-    PTHLT(IIB:IIE,IJB:IJE,1:D%NKT)  = PTHLT(IIB:IIE,IJB:IJE,1:D%NKT)  + ZLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) &
-                                    * PRT(IIB:IIE,IJB:IJE,1:D%NKT,2)
-    PRTHLS(IIB:IIE,IJB:IJE,1:D%NKT) = PRTHLS(IIB:IIE,IJB:IJE,1:D%NKT) + ZLOCPEXNM(IIB:IIE,IJB:IJE,1:D%NKT) &
-                                    * PRRS(IIB:IIE,IJB:IJE,1:D%NKT,2)
-    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    PRT(IIJB:IIJE,1:D%NKT,1)  = PRT(IIJB:IIJE,1:D%NKT,1)  - PRT(IIJB:IIJE,1:D%NKT,2) 
+    PRRS(IIJB:IIJE,1:D%NKT,1) = PRRS(IIJB:IIJE,1:D%NKT,1) - PRRS(IIJB:IIJE,1:D%NKT,2)
+    PTHLT(IIJB:IIJE,1:D%NKT)  = PTHLT(IIJB:IIJE,1:D%NKT)  + ZLOCPEXNM(IIJB:IIJE,1:D%NKT) &
+                                    * PRT(IIJB:IIJE,1:D%NKT,2)
+    PRTHLS(IIJB:IIJE,1:D%NKT) = PRTHLS(IIJB:IIJE,1:D%NKT) + ZLOCPEXNM(IIJB:IIJE,1:D%NKT) &
+                                    * PRRS(IIJB:IIJE,1:D%NKT,2)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   END IF
 END IF
 
@@ -1290,29 +1283,29 @@ CALL SOURCES_NEG_CORRECT_PHY(D,KSV,HCLOUD, 'NETUR',KRR,PTSTEP,PPABST,PTHLT,PRT,P
 !
 IF (OLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID(PSFTH,X_LES_Q0)
-  CALL LES_MEAN_SUBGRID(PSFRV,X_LES_E0)
+  CALL LES_MEAN_SUBGRID_PHY(D,PSFTH,X_LES_Q0)
+  CALL LES_MEAN_SUBGRID_PHY(D,PSFRV,X_LES_E0)
   DO JSV=1,KSV
-    CALL LES_MEAN_SUBGRID(PSFSV(:,:,JSV),X_LES_SV0(:,JSV))
+    CALL LES_MEAN_SUBGRID_PHY(D,PSFSV(:,JSV),X_LES_SV0(:,JSV))
   END DO
-  CALL LES_MEAN_SUBGRID(PSFU,X_LES_UW0)
-  CALL LES_MEAN_SUBGRID(PSFV,X_LES_VW0)
+  CALL LES_MEAN_SUBGRID_PHY(D,PSFU,X_LES_UW0)
+  CALL LES_MEAN_SUBGRID_PHY(D,PSFV,X_LES_VW0)
   !
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-  ZWORK2D(IIB:IIE,IJB:IJE) = (PSFU(IIB:IIE,IJB:IJE)*PSFU(IIB:IIE,IJB:IJE)+PSFV(IIB:IIE,IJB:IJE)*PSFV(IIB:IIE,IJB:IJE))**0.25
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-  CALL LES_MEAN_SUBGRID(ZWORK2D,X_LES_USTAR)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZWORK2D(IIJB:IIJE) = (PSFU(IIJB:IIJE)*PSFU(IIJB:IIJE)+PSFV(IIJB:IIJE)*PSFV(IIJB:IIJE))**0.25
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2D,X_LES_USTAR)
 !----------------------------------------------------------------------------
 !
 !*     10. LES for 3rd order moments
 !          -------------------------
 !
-  CALL LES_MEAN_SUBGRID(ZMWTH,X_LES_SUBGRID_W2Thl)
-  CALL LES_MEAN_SUBGRID(ZMTH2,X_LES_SUBGRID_WThl2)
+  CALL LES_MEAN_SUBGRID_PHY(D,ZMWTH,X_LES_SUBGRID_W2Thl)
+  CALL LES_MEAN_SUBGRID_PHY(D,ZMTH2,X_LES_SUBGRID_WThl2)
   IF (KRR>0) THEN
-    CALL LES_MEAN_SUBGRID(ZMWR,X_LES_SUBGRID_W2Rt)
-    CALL LES_MEAN_SUBGRID(ZMTHR,X_LES_SUBGRID_WThlRt)
-    CALL LES_MEAN_SUBGRID(ZMR2,X_LES_SUBGRID_WRt2)
+    CALL LES_MEAN_SUBGRID_PHY(D,ZMWR,X_LES_SUBGRID_W2Rt)
+    CALL LES_MEAN_SUBGRID_PHY(D,ZMTHR,X_LES_SUBGRID_WThlRt)
+    CALL LES_MEAN_SUBGRID_PHY(D,ZMR2,X_LES_SUBGRID_WRt2)
   END IF
 !
 !----------------------------------------------------------------------------
@@ -1322,35 +1315,35 @@ IF (OLES_CALL) THEN
 !
   IF (HTURBDIM=="1DIM") THEN
     !
-    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-    ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT) = 2./3.*PTKET(IIB:IIE,IJB:IJE,1:D%NKT)
-    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-    CALL LES_MEAN_SUBGRID(ZWORK1,X_LES_SUBGRID_U2)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    ZWORK1(IIJB:IIJE,1:D%NKT) = 2./3.*PTKET(IIJB:IIJE,1:D%NKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1,X_LES_SUBGRID_U2)
     X_LES_SUBGRID_V2(:,:,:) = X_LES_SUBGRID_U2(:,:,:)
     X_LES_SUBGRID_W2(:,:,:) = X_LES_SUBGRID_U2(:,:,:)
     !
     CALL GZ_M_W_PHY(D,PTHLT,PDZZ,ZWORK1)
     CALL MZF_PHY(D,ZWORK1,ZWORK2)
-    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-    ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)  = 2./3.*PTKET(IIB:IIE,IJB:IJE,1:D%NKT) *ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)
-    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-    CALL LES_MEAN_SUBGRID(ZWORK2,X_LES_RES_ddz_Thl_SBG_W2)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    ZWORK2(IIJB:IIJE,1:D%NKT)  = 2./3.*PTKET(IIJB:IIJE,1:D%NKT) *ZWORK2(IIJB:IIJE,1:D%NKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2,X_LES_RES_ddz_Thl_SBG_W2)
     !
     IF (KRR>=1) THEN
-      CALL GZ_M_W_PHY(D,PRT(:,:,:,1),PDZZ,ZWORK1)
+      CALL GZ_M_W_PHY(D,PRT(:,:,1),PDZZ,ZWORK1)
       CALL MZF_PHY(D,ZWORK1,ZWORK2)
-      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-      ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)  = 2./3.*PTKET(IIB:IIE,IJB:IJE,1:D%NKT) *ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)
-      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID(ZWORK2,X_LES_RES_ddz_Rt_SBG_W2)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      ZWORK2(IIJB:IIJE,1:D%NKT)  = 2./3.*PTKET(IIJB:IIJE,1:D%NKT) *ZWORK2(IIJB:IIJE,1:D%NKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2,X_LES_RES_ddz_Rt_SBG_W2)
     END IF
     DO JSV=1,KSV
-      CALL GZ_M_W_PHY(D,PSVT(:,:,:,JSV),PDZZ,ZWORK1)
+      CALL GZ_M_W_PHY(D,PSVT(:,:,JSV),PDZZ,ZWORK1)
       CALL MZF_PHY(D,ZWORK1,ZWORK2)
-      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-      ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)  = 2./3.*PTKET(IIB:IIE,IJB:IJE,1:D%NKT) *ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)
-      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID(ZWORK2, X_LES_RES_ddz_Sv_SBG_W2(:,:,:,JSV))
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      ZWORK2(IIJB:IIJE,1:D%NKT)  = 2./3.*PTKET(IIJB:IIJE,1:D%NKT) *ZWORK2(IIJB:IIJE,1:D%NKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2, X_LES_RES_ddz_Sv_SBG_W2(:,:,:,JSV))
     END DO
   END IF
 
@@ -1359,19 +1352,19 @@ IF (OLES_CALL) THEN
 !*     12. LES mixing end dissipative lengths, presso-correlations
 !          -------------------------------------------------------
 !
-  CALL LES_MEAN_SUBGRID(ZLM,X_LES_SUBGRID_LMix)
-  CALL LES_MEAN_SUBGRID(ZLEPS,X_LES_SUBGRID_LDiss)
+  CALL LES_MEAN_SUBGRID_PHY(D,ZLM,X_LES_SUBGRID_LMix)
+  CALL LES_MEAN_SUBGRID_PHY(D,ZLEPS,X_LES_SUBGRID_LDiss)
 !
 !* presso-correlations for subgrid Tke are equal to zero.
 !
-  ZLEPS(:,:,:) = 0. !ZLEPS is used as a work array (not used anymore)
-  CALL LES_MEAN_SUBGRID(ZLEPS,X_LES_SUBGRID_WP)
+  ZLEPS(:,:) = 0. !ZLEPS is used as a work array (not used anymore)
+  CALL LES_MEAN_SUBGRID_PHY(D,ZLEPS,X_LES_SUBGRID_WP)
 !
   CALL SECOND_MNH(ZTIME2)
   XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !
-IF(PRESENT(PLEM)) PLEM(IIB:IIE,IJB:IJE,IKTB:IKTE) = ZLM(IIB:IIE,IJB:IJE,IKTB:IKTE)
+IF(PRESENT(PLEM)) PLEM(IIJB:IIJE,IKTB:IKTE) = ZLM(IIJB:IIJE,IKTB:IKTE)
 !----------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('TURB',1,ZHOOK_HANDLE)
@@ -1403,10 +1396,10 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments 
 !
 REAL,                   INTENT(IN)    :: PALP,PBETA,PGAM,PLTT,PC
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PT,PEXN,PCP
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PT,PEXN,PCP
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PLOCPEXN
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PLOCPEXN
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
 !
 !-------------------------------------------------------------------------------
 !
@@ -1415,46 +1408,46 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
 !
 !*       1.1 Lv/Cph at  t
 !
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-  PLOCPEXN(IIB:IIE,IJB:IJE,1:D%NKT) = ( PLTT + (CST%XCPV-PC) *  (PT(IIB:IIE,IJB:IJE,1:D%NKT)-CST%XTT) ) &
-                                     / PCP(IIB:IIE,IJB:IJE,1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  PLOCPEXN(IIJB:IIJE,1:D%NKT) = ( PLTT + (CST%XCPV-PC) *  (PT(IIJB:IIJE,1:D%NKT)-CST%XTT) ) &
+                                     / PCP(IIJB:IIJE,1:D%NKT)
 !
 !*      1.2 Saturation vapor pressure at t
 !
-  ZRVSAT(IIB:IIE,IJB:IJE,1:D%NKT) =  EXP( PALP - PBETA/PT(IIB:IIE,IJB:IJE,1:D%NKT) - PGAM*ALOG( PT(IIB:IIE,IJB:IJE,1:D%NKT) ) )
+  ZRVSAT(IIJB:IIJE,1:D%NKT) =  EXP( PALP - PBETA/PT(IIJB:IIJE,1:D%NKT) - PGAM*ALOG( PT(IIJB:IIJE,1:D%NKT) ) )
 !
 !*      1.3 saturation  mixing ratio at t
 !
-  ZRVSAT(IIB:IIE,IJB:IJE,1:D%NKT) =  ZRVSAT(IIB:IIE,IJB:IJE,1:D%NKT) &
-                                    * ZEPS / ( PPABST(IIB:IIE,IJB:IJE,1:D%NKT) - ZRVSAT(IIB:IIE,IJB:IJE,1:D%NKT) )
+  ZRVSAT(IIJB:IIJE,1:D%NKT) =  ZRVSAT(IIJB:IIJE,1:D%NKT) &
+                                    * ZEPS / ( PPABST(IIJB:IIJE,1:D%NKT) - ZRVSAT(IIJB:IIJE,1:D%NKT) )
 !
 !*      1.4 compute the saturation mixing ratio derivative (rvs')
 !
-  ZDRVSATDT(IIB:IIE,IJB:IJE,1:D%NKT) = ( PBETA / PT(IIB:IIE,IJB:IJE,1:D%NKT)  - PGAM ) / PT(IIB:IIE,IJB:IJE,1:D%NKT)   &
-                 * ZRVSAT(IIB:IIE,IJB:IJE,1:D%NKT) * ( 1. + ZRVSAT(IIB:IIE,IJB:IJE,1:D%NKT) / ZEPS )
+  ZDRVSATDT(IIJB:IIJE,1:D%NKT) = ( PBETA / PT(IIJB:IIJE,1:D%NKT)  - PGAM ) / PT(IIJB:IIJE,1:D%NKT)   &
+                 * ZRVSAT(IIJB:IIJE,1:D%NKT) * ( 1. + ZRVSAT(IIJB:IIJE,1:D%NKT) / ZEPS )
 !
 !*      1.5 compute Amoist
 !
-  PAMOIST(IIB:IIE,IJB:IJE,1:D%NKT)=  0.5 / ( 1.0 + ZDRVSATDT(IIB:IIE,IJB:IJE,1:D%NKT) * PLOCPEXN(IIB:IIE,IJB:IJE,1:D%NKT) )
+  PAMOIST(IIJB:IIJE,1:D%NKT)=  0.5 / ( 1.0 + ZDRVSATDT(IIJB:IIJE,1:D%NKT) * PLOCPEXN(IIJB:IIJE,1:D%NKT) )
 !
 !*      1.6 compute Atheta
 !
-  PATHETA(IIB:IIE,IJB:IJE,1:D%NKT)= PAMOIST(IIB:IIE,IJB:IJE,1:D%NKT) * PEXN(IIB:IIE,IJB:IJE,1:D%NKT) *               &
-        ( ( ZRVSAT(IIB:IIE,IJB:IJE,1:D%NKT) - PRT(IIB:IIE,IJB:IJE,1:D%NKT,1) ) * PLOCPEXN(IIB:IIE,IJB:IJE,1:D%NKT) / &
-          ( 1. + ZDRVSATDT(IIB:IIE,IJB:IJE,1:D%NKT) * PLOCPEXN(IIB:IIE,IJB:IJE,1:D%NKT) )        *               &
+  PATHETA(IIJB:IIJE,1:D%NKT)= PAMOIST(IIJB:IIJE,1:D%NKT) * PEXN(IIJB:IIJE,1:D%NKT) *               &
+        ( ( ZRVSAT(IIJB:IIJE,1:D%NKT) - PRT(IIJB:IIJE,1:D%NKT,1) ) * PLOCPEXN(IIJB:IIJE,1:D%NKT) / &
+          ( 1. + ZDRVSATDT(IIJB:IIJE,1:D%NKT) * PLOCPEXN(IIJB:IIJE,1:D%NKT) )        *               &
           (                                                                  &
-           ZRVSAT(IIB:IIE,IJB:IJE,1:D%NKT) * (1. + ZRVSAT(IIB:IIE,IJB:IJE,1:D%NKT)/ZEPS)                         &
-                        * ( -2.*PBETA/PT(IIB:IIE,IJB:IJE,1:D%NKT) + PGAM ) / PT(IIB:IIE,IJB:IJE,1:D%NKT)**2      &
-          +ZDRVSATDT(IIB:IIE,IJB:IJE,1:D%NKT) * (1. + 2. * ZRVSAT(IIB:IIE,IJB:IJE,1:D%NKT)/ZEPS)                 &
-                        * ( PBETA/PT(IIB:IIE,IJB:IJE,1:D%NKT) - PGAM ) / PT(IIB:IIE,IJB:IJE,1:D%NKT)             &
+           ZRVSAT(IIJB:IIJE,1:D%NKT) * (1. + ZRVSAT(IIJB:IIJE,1:D%NKT)/ZEPS)                         &
+                        * ( -2.*PBETA/PT(IIJB:IIJE,1:D%NKT) + PGAM ) / PT(IIJB:IIJE,1:D%NKT)**2      &
+          +ZDRVSATDT(IIJB:IIJE,1:D%NKT) * (1. + 2. * ZRVSAT(IIJB:IIJE,1:D%NKT)/ZEPS)                 &
+                        * ( PBETA/PT(IIJB:IIJE,1:D%NKT) - PGAM ) / PT(IIJB:IIJE,1:D%NKT)             &
           )                                                                  &
-         - ZDRVSATDT(IIB:IIE,IJB:IJE,1:D%NKT)                                                  &
+         - ZDRVSATDT(IIJB:IIJE,1:D%NKT)                                                  &
         )
 !
 !*      1.7 Lv/Cph/Exner at t-1
 !
-  PLOCPEXN(IIB:IIE,IJB:IJE,1:D%NKT) = PLOCPEXN(IIB:IIE,IJB:IJE,1:D%NKT) / PEXN(IIB:IIE,IJB:IJE,1:D%NKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  PLOCPEXN(IIJB:IIJE,1:D%NKT) = PLOCPEXN(IIJB:IIJE,1:D%NKT) / PEXN(IIJB:IIJE,1:D%NKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
 IF (LHOOK) CALL DR_HOOK('TURB:COMPUTE_FUNCTION_THERMO',1,ZHOOK_HANDLE2)
 END SUBROUTINE COMPUTE_FUNCTION_THERMO
@@ -1481,7 +1474,7 @@ END SUBROUTINE COMPUTE_FUNCTION_THERMO
 !
 !*       0.1   Declarations of dummy arguments 
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PLM
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PLM
 LOGICAL,                INTENT(IN)    :: ODZ
 !-------------------------------------------------------------------------------
 !
@@ -1495,38 +1488,38 @@ END IF
 IF (ODZ) THEN
   ! Dz is take into account in the computation
   DO JK = IKTB,IKTE ! 1D turbulence scheme
-    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-    PLM(IIB:IIE,IJB:IJE,JK) = PZZ(IIB:IIE,IJB:IJE,JK+D%NKL) - PZZ(IIB:IIE,IJB:IJE,JK)
-    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+    !$mnh_expand_array(JIJ=IIJB:IIJE)
+    PLM(IIJB:IIJE,JK) = PZZ(IIJB:IIJE,JK+D%NKL) - PZZ(IIJB:IIJE,JK)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   END DO
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-  PLM(IIB:IIE,IJB:IJE,D%NKU) = PLM(IIB:IIE,IJB:IJE,IKE)
-  PLM(IIB:IIE,IJB:IJE,D%NKA) = PZZ(IIB:IIE,IJB:IJE,IKB) - PZZ(IIB:IIE,IJB:IJE,D%NKA)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  PLM(IIJB:IIJE,D%NKU) = PLM(IIJB:IIJE,IKE)
+  PLM(IIJB:IIJE,D%NKA) = PZZ(IIJB:IIJE,IKB) - PZZ(IIJB:IIJE,D%NKA)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
     IF ( O2D) THEN
-      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-      PLM(IIB:IIE,IJB:IJE,1:D%NKT) = SQRT( PLM(IIB:IIE,IJB:IJE,1:D%NKT)*ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT) )
-      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      PLM(IIJB:IIJE,1:D%NKT) = SQRT( PLM(IIJB:IIJE,1:D%NKT)*ZWORK1(IIJB:IIJE,1:D%NKT) )
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ELSE
-      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-      PLM(IIB:IIE,IJB:IJE,1:D%NKT) = (PLM(IIB:IIE,IJB:IJE,1:D%NKT)*ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT) &
-                                   * ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT) ) ** (1./3.)
-      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      PLM(IIJB:IIJE,1:D%NKT) = (PLM(IIJB:IIJE,1:D%NKT)*ZWORK1(IIJB:IIJE,1:D%NKT) &
+                                   * ZWORK2(IIJB:IIJE,1:D%NKT) ) ** (1./3.)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     END IF
   END IF
 ELSE
   ! Dz not taken into account in computation to assure invariability with vertical grid mesh
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-  PLM(IIB:IIE,IJB:IJE,1:D%NKT)=1.E10
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  PLM(IIJB:IIJE,1:D%NKT)=1.E10
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
     IF ( O2D) THEN
-      PLM(:,:,:) = ZWORK1(:,:,:)
+      PLM(:,:) = ZWORK1(:,:)
     ELSE
-      !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-      PLM(IIB:IIE,IJB:IJE,1:D%NKT) = (ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT)*ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT) ) ** (1./2.)
-      !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      PLM(IIJB:IIJE,1:D%NKT) = (ZWORK1(IIJB:IIJE,1:D%NKT)*ZWORK2(IIJB:IIJE,1:D%NKT) ) ** (1./2.)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     END IF
   END IF
 END IF
@@ -1537,36 +1530,34 @@ END IF
 IF (.NOT. ORMC01) THEN
   ZALPHA=0.5**(-1.5)
   !
-  DO JJ=1,SIZE(PUT,2)
-    DO JI=1,SIZE(PUT,1)
-      IF (OOCEAN) THEN
-        DO JK=IKTE,IKTB,-1
-          ZD=ZALPHA*(PZZ(JI,JJ,IKTE+1)-PZZ(JI,JJ,JK))
-          IF ( PLM(JI,JJ,JK)>ZD) THEN
-            PLM(JI,JJ,JK)=ZD
-          ELSE
-            EXIT
-          ENDIF
-       END DO
-      ELSE
-        DO JK=IKTB,IKTE
-          ZD=ZALPHA*(0.5*(PZZ(JI,JJ,JK)+PZZ(JI,JJ,JK+D%NKL))&
-          -PZZ(JI,JJ,IKB)) *PDIRCOSZW(JI,JJ)
-          IF ( PLM(JI,JJ,JK)>ZD) THEN
-            PLM(JI,JJ,JK)=ZD
-          ELSE
-            EXIT
-          ENDIF
-        END DO
-      ENDIF   
-    END DO
+  DO JIJ=IIJB,IIJE
+    IF (OOCEAN) THEN
+      DO JK=IKTE,IKTB,-1
+        ZD=ZALPHA*(PZZ(JIJ,IKTE+1)-PZZ(JIJ,JK))
+        IF ( PLM(JIJ,JK)>ZD) THEN
+          PLM(JIJ,JK)=ZD
+        ELSE
+          EXIT
+        ENDIF
+      END DO
+    ELSE
+      DO JK=IKTB,IKTE
+        ZD=ZALPHA*(0.5*(PZZ(JIJ,JK)+PZZ(JIJ,JK+D%NKL))&
+        -PZZ(JIJ,IKB)) *PDIRCOSZW(JIJ)
+        IF ( PLM(JIJ,JK)>ZD) THEN
+          PLM(JIJ,JK)=ZD
+        ELSE
+          EXIT
+        ENDIF
+      END DO
+    ENDIF   
   END DO
 END IF
 !
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-PLM(IIB:IIE,IJB:IJE,D%NKA) = PLM(IIB:IIE,IJB:IJE,IKB)
-PLM(IIB:IIE,IJB:IJE,D%NKU) = PLM(IIB:IIE,IJB:IJE,IKE)
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PLM(IIJB:IIJE,D%NKA) = PLM(IIJB:IIJE,IKB)
+PLM(IIJB:IIJE,D%NKU) = PLM(IIJB:IIJE,IKE)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 IF (LHOOK) CALL DR_HOOK('TURB:DELT',1,ZHOOK_HANDLE2)
 END SUBROUTINE DELT
@@ -1595,7 +1586,7 @@ END SUBROUTINE DELT
 !
 !*       0.1   Declarations of dummy arguments 
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PLM
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PLM
 !
 !-------------------------------------------------------------------------------
 !
@@ -1608,24 +1599,24 @@ IF ( HTURBDIM /= '1DIM' ) THEN
   END IF
 END IF
 ! 1D turbulence scheme
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=IKTB:IKTE)
-PLM(IIB:IIE,IJB:IJE,IKTB:IKTE) = PZZ(IIB:IIE,IJB:IJE,D%NKL+IKTB:IKTE+D%NKL) - PZZ(IIB:IIE,IJB:IJE,IKTB:IKTE)
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=IKTB:IKTE)
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-PLM(IIB:IIE,IJB:IJE,D%NKU) = PLM(IIB:IIE,IJB:IJE,IKE)
-PLM(IIB:IIE,IJB:IJE,D%NKA) = PZZ(IIB:IIE,IJB:IJE,IKB) - PZZ(IIB:IIE,IJB:IJE,D%NKA)
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
+PLM(IIJB:IIJE,IKTB:IKTE) = PZZ(IIJB:IIJE,D%NKL+IKTB:IKTE+D%NKL) - PZZ(IIJB:IIJE,IKTB:IKTE)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PLM(IIJB:IIJE,D%NKU) = PLM(IIJB:IIJE,IKE)
+PLM(IIJB:IIJE,D%NKA) = PZZ(IIJB:IIJE,IKB) - PZZ(IIJB:IIJE,D%NKA)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
   IF ( O2D) THEN
-    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-    PLM(IIB:IIE,IJB:IJE,1:D%NKT) = SQRT( PLM(IIB:IIE,IJB:IJE,1:D%NKT)*ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT) )
-    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    PLM(IIJB:IIJE,1:D%NKT) = SQRT( PLM(IIJB:IIJE,1:D%NKT)*ZWORK1(IIJB:IIJE,1:D%NKT) )
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ELSE
-    !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-    PLM(IIB:IIE,IJB:IJE,1:D%NKT) = (PLM(IIB:IIE,IJB:IJE,1:D%NKT)*ZWORK1(IIB:IIE,IJB:IJE,1:D%NKT) &
-                                 * ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT) ) ** (1./3.)
-    !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    PLM(IIJB:IIJE,1:D%NKT) = (PLM(IIJB:IIJE,1:D%NKT)*ZWORK1(IIJB:IIJE,1:D%NKT) &
+                                 * ZWORK2(IIJB:IIJE,1:D%NKT) ) ** (1./3.)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   END IF
 END IF
 !   compute a mixing length limited by the stability
@@ -1635,112 +1626,106 @@ CALL EMOIST(D,CST,KRR,KRRI,PTHLT,PRT,ZLOCPEXNM,ZAMOIST,PSRCT,OOCEAN,ZEMOIST)
 !
 IF (KRR>0) THEN
   DO JK = IKTB+1,IKTE-1
-    DO JJ=1,SIZE(PUT,2)
-      DO JI=1,SIZE(PUT,1)
-        ZDTHLDZ(JI,JJ,JK)= 0.5*((PTHLT(JI,JJ,JK+D%NKL)-PTHLT(JI,JJ,JK    ))/PDZZ(JI,JJ,JK+D%NKL)+ &
-                                (PTHLT(JI,JJ,JK    )-PTHLT(JI,JJ,JK-D%NKL))/PDZZ(JI,JJ,JK    ))
-        ZDRTDZ(JI,JJ,JK) = 0.5*((PRT(JI,JJ,JK+D%NKL,1)-PRT(JI,JJ,JK    ,1))/PDZZ(JI,JJ,JK+D%NKL)+ &
-                                (PRT(JI,JJ,JK    ,1)-PRT(JI,JJ,JK-D%NKL,1))/PDZZ(JI,JJ,JK    ))
-        IF (OOCEAN) THEN
-          ZVAR=CST%XG*(CST%XALPHAOC*ZDTHLDZ(JI,JJ,JK)-CST%XBETAOC*ZDRTDZ(JI,JJ,JK))
-        ELSE
-          ZVAR=CST%XG/PTHVREF(JI,JJ,JK)*                                                  &
-             (ZETHETA(JI,JJ,JK)*ZDTHLDZ(JI,JJ,JK)+ZEMOIST(JI,JJ,JK)*ZDRTDZ(JI,JJ,JK))
-        END IF
-        !
-        IF (ZVAR>0.) THEN
-          PLM(JI,JJ,JK)=MAX(CST%XMNH_EPSILON,MIN(PLM(JI,JJ,JK), &
-                        0.76* SQRT(PTKET(JI,JJ,JK)/ZVAR)))
-        END IF
-      END DO
+    DO JIJ=IIJB,IIJE
+      ZDTHLDZ(JIJ,JK)= 0.5*((PTHLT(JIJ,JK+D%NKL)-PTHLT(JIJ,JK    ))/PDZZ(JIJ,JK+D%NKL)+ &
+                              (PTHLT(JIJ,JK    )-PTHLT(JIJ,JK-D%NKL))/PDZZ(JIJ,JK    ))
+      ZDRTDZ(JIJ,JK) = 0.5*((PRT(JIJ,JK+D%NKL,1)-PRT(JIJ,JK    ,1))/PDZZ(JIJ,JK+D%NKL)+ &
+                              (PRT(JIJ,JK    ,1)-PRT(JIJ,JK-D%NKL,1))/PDZZ(JIJ,JK    ))
+      IF (OOCEAN) THEN
+        ZVAR=CST%XG*(CST%XALPHAOC*ZDTHLDZ(JIJ,JK)-CST%XBETAOC*ZDRTDZ(JIJ,JK))
+      ELSE
+        ZVAR=CST%XG/PTHVREF(JIJ,JK)*                                                  &
+           (ZETHETA(JIJ,JK)*ZDTHLDZ(JIJ,JK)+ZEMOIST(JIJ,JK)*ZDRTDZ(JIJ,JK))
+      END IF
+      !
+      IF (ZVAR>0.) THEN
+        PLM(JIJ,JK)=MAX(CST%XMNH_EPSILON,MIN(PLM(JIJ,JK), &
+                      0.76* SQRT(PTKET(JIJ,JK)/ZVAR)))
+      END IF
     END DO
   END DO
 ELSE! For dry atmos or unsalted ocean runs
   DO JK = IKTB+1,IKTE-1
-    DO JJ=1,SIZE(PUT,2)
-      DO JI=1,SIZE(PUT,1)
-        ZDTHLDZ(JI,JJ,JK)= 0.5*((PTHLT(JI,JJ,JK+D%NKL)-PTHLT(JI,JJ,JK    ))/PDZZ(JI,JJ,JK+D%NKL)+ &
-                                (PTHLT(JI,JJ,JK    )-PTHLT(JI,JJ,JK-D%NKL))/PDZZ(JI,JJ,JK    ))
-        IF (OOCEAN) THEN
-          ZVAR= CST%XG*CST%XALPHAOC*ZDTHLDZ(JI,JJ,JK)
-        ELSE
-          ZVAR= CST%XG/PTHVREF(JI,JJ,JK)*ZETHETA(JI,JJ,JK)*ZDTHLDZ(JI,JJ,JK)
-        END IF
+    DO JIJ=IIJB,IIJE
+      ZDTHLDZ(JIJ,JK)= 0.5*((PTHLT(JIJ,JK+D%NKL)-PTHLT(JIJ,JK    ))/PDZZ(JIJ,JK+D%NKL)+ &
+                              (PTHLT(JIJ,JK    )-PTHLT(JIJ,JK-D%NKL))/PDZZ(JIJ,JK    ))
+      IF (OOCEAN) THEN
+        ZVAR= CST%XG*CST%XALPHAOC*ZDTHLDZ(JIJ,JK)
+      ELSE
+        ZVAR= CST%XG/PTHVREF(JIJ,JK)*ZETHETA(JIJ,JK)*ZDTHLDZ(JIJ,JK)
+      END IF
 !
-        IF (ZVAR>0.) THEN
-          PLM(JI,JJ,JK)=MAX(CST%XMNH_EPSILON,MIN(PLM(JI,JJ,JK), &
-                        0.76* SQRT(PTKET(JI,JJ,JK)/ZVAR)))
-        END IF
-      END DO
+      IF (ZVAR>0.) THEN
+        PLM(JIJ,JK)=MAX(CST%XMNH_EPSILON,MIN(PLM(JIJ,JK), &
+                      0.76* SQRT(PTKET(JIJ,JK)/ZVAR)))
+      END IF
     END DO
   END DO
 END IF
 !  special case near the surface
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-ZDTHLDZ(IIB:IIE,IJB:IJE,IKB)=(PTHLT(IIB:IIE,IJB:IJE,IKB+D%NKL)-PTHLT(IIB:IIE,IJB:IJE,IKB))/PDZZ(IIB:IIE,IJB:IJE,IKB+D%NKL)
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+ZDTHLDZ(IIJB:IIJE,IKB)=(PTHLT(IIJB:IIJE,IKB+D%NKL)-PTHLT(IIJB:IIJE,IKB))/PDZZ(IIJB:IIJE,IKB+D%NKL)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 ! For dry simulations
 IF (KRR>0) THEN
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-  ZDRTDZ(IIB:IIE,IJB:IJE,IKB)=(PRT(IIB:IIE,IJB:IJE,IKB+D%NKL,1)-PRT(IIB:IIE,IJB:IJE,IKB,1))/PDZZ(IIB:IIE,IJB:IJE,IKB+D%NKL)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZDRTDZ(IIJB:IIJE,IKB)=(PRT(IIJB:IIJE,IKB+D%NKL,1)-PRT(IIJB:IIJE,IKB,1))/PDZZ(IIJB:IIJE,IKB+D%NKL)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 ELSE
-  ZDRTDZ(:,:,IKB)=0
+  ZDRTDZ(:,IKB)=0
 ENDIF
 !
 IF (OOCEAN) THEN
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-  ZWORK2D(IIB:IIE,IJB:IJE)=CST%XG*(CST%XALPHAOC*ZDTHLDZ(IIB:IIE,IJB:IJE,IKB)-CST%XBETAOC*ZDRTDZ(IIB:IIE,IJB:IJE,IKB))
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZWORK2D(IIJB:IIJE)=CST%XG*(CST%XALPHAOC*ZDTHLDZ(IIJB:IIJE,IKB)-CST%XBETAOC*ZDRTDZ(IIJB:IIJE,IKB))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 ELSE
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-  ZWORK2D(IIB:IIE,IJB:IJE)=CST%XG/PTHVREF(IIB:IIE,IJB:IJE,IKB)*                                           &
-              (ZETHETA(IIB:IIE,IJB:IJE,IKB)*ZDTHLDZ(IIB:IIE,IJB:IJE,IKB)+ZEMOIST(IIB:IIE,IJB:IJE,IKB)*ZDRTDZ(IIB:IIE,IJB:IJE,IKB))
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZWORK2D(IIJB:IIJE)=CST%XG/PTHVREF(IIJB:IIJE,IKB)*                                           &
+              (ZETHETA(IIJB:IIJE,IKB)*ZDTHLDZ(IIJB:IIJE,IKB)+ZEMOIST(IIJB:IIJE,IKB)*ZDRTDZ(IIJB:IIJE,IKB))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END IF
-!$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
-WHERE(ZWORK2D(IIB:IIE,IJB:IJE)>0.)
-  PLM(IIB:IIE,IJB:IJE,IKB)=MAX(CST%XMNH_EPSILON,MIN( PLM(IIB:IIE,IJB:IJE,IKB),                 &
-                    0.76* SQRT(PTKET(IIB:IIE,IJB:IJE,IKB)/ZWORK2D(IIB:IIE,IJB:IJE))))
+!$mnh_expand_where(JIJ=IIJB:IIJE)
+WHERE(ZWORK2D(IIJB:IIJE)>0.)
+  PLM(IIJB:IIJE,IKB)=MAX(CST%XMNH_EPSILON,MIN( PLM(IIJB:IIJE,IKB),                 &
+                    0.76* SQRT(PTKET(IIJB:IIJE,IKB)/ZWORK2D(IIJB:IIJE))))
 END WHERE
-!$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE)
+!$mnh_end_expand_where(JIJ=IIJB:IIJE)
 !
 !  mixing length limited by the distance normal to the surface (with the same factor as for BL89)
 !
 IF (.NOT. ORMC01) THEN
   ZALPHA=0.5**(-1.5)
   !
-  DO JJ=1,SIZE(PUT,2)
-    DO JI=1,SIZE(PUT,1)
-      IF (OOCEAN) THEN
-        DO JK=IKTE,IKTB,-1
-          ZD=ZALPHA*(PZZ(JI,JJ,IKTE+1)-PZZ(JI,JJ,JK))
-          IF ( PLM(JI,JJ,JK)>ZD) THEN
-            PLM(JI,JJ,JK)=ZD
-          ELSE
-            EXIT
-          ENDIF
-        END DO
-      ELSE
-        DO JK=IKTB,IKTE
-          ZD=ZALPHA*(0.5*(PZZ(JI,JJ,JK)+PZZ(JI,JJ,JK+D%NKL))-PZZ(JI,JJ,IKB)) &
-            *PDIRCOSZW(JI,JJ)
-          IF ( PLM(JI,JJ,JK)>ZD) THEN
-            PLM(JI,JJ,JK)=ZD
-          ELSE
-            EXIT
-          ENDIF
-        END DO
-      ENDIF 
-    END DO
+  DO JIJ=IIJB,IIJE
+    IF (OOCEAN) THEN
+      DO JK=IKTE,IKTB,-1
+        ZD=ZALPHA*(PZZ(JIJ,IKTE+1)-PZZ(JIJ,JK))
+        IF ( PLM(JIJ,JK)>ZD) THEN
+          PLM(JIJ,JK)=ZD
+        ELSE
+          EXIT
+        ENDIF
+      END DO
+    ELSE
+      DO JK=IKTB,IKTE
+        ZD=ZALPHA*(0.5*(PZZ(JIJ,JK)+PZZ(JIJ,JK+D%NKL))-PZZ(JIJ,IKB)) &
+          *PDIRCOSZW(JIJ)
+        IF ( PLM(JIJ,JK)>ZD) THEN
+          PLM(JIJ,JK)=ZD
+        ELSE
+          EXIT
+        ENDIF
+      END DO
+    ENDIF 
   END DO
 END IF
 !
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-PLM(IIB:IIE,IJB:IJE,D%NKA) = PLM(IIB:IIE,IJB:IJE,IKB)
-PLM(IIB:IIE,IJB:IJE,IKE) = PLM(IIB:IIE,IJB:IJE,IKE-D%NKL)
-PLM(IIB:IIE,IJB:IJE,D%NKU) = PLM(IIB:IIE,IJB:IJE,D%NKU-D%NKL)
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PLM(IIJB:IIJE,D%NKA) = PLM(IIJB:IIJE,IKB)
+PLM(IIJB:IIJE,IKE) = PLM(IIJB:IIJE,IKE-D%NKL)
+PLM(IIJB:IIJE,D%NKU) = PLM(IIJB:IIJE,D%NKU-D%NKL)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 IF (LHOOK) CALL DR_HOOK('TURB:DEAR',1,ZHOOK_HANDLE2)
 END SUBROUTINE DEAR
@@ -1805,43 +1790,43 @@ IF (LHOOK) CALL DR_HOOK('TURB:CLOUD_MODIF_LM',0,ZHOOK_HANDLE2)
 ZPENTE = ( PCOEF_AMPL_SAT - 1. ) / ( PCEI_MAX - PCEI_MIN ) 
 ZCOEF_AMPL_CEI_NUL = 1. - ZPENTE * PCEI_MIN
 !
-!$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-ZCOEF_AMPL(IIB:IIE,IJB:IJE,1:D%NKT) = 1.
-!$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+ZCOEF_AMPL(IIJB:IIJE,1:D%NKT) = 1.
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
 !*       2.    CALCULATION OF THE AMPLIFICATION COEFFICIENT
 !              --------------------------------------------
 !
 ! Saturation
 !
-!$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-WHERE ( PCEI(IIB:IIE,IJB:IJE,1:D%NKT)>=PCEI_MAX ) 
-  ZCOEF_AMPL(IIB:IIE,IJB:IJE,1:D%NKT)=PCOEF_AMPL_SAT
+!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
+WHERE ( PCEI(IIJB:IIJE,1:D%NKT)>=PCEI_MAX ) 
+  ZCOEF_AMPL(IIJB:IIJE,1:D%NKT)=PCOEF_AMPL_SAT
 END WHERE
-!$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
 ! Between the min and max limits of CEI index, linear variation of the
 ! amplification coefficient ZCOEF_AMPL as a function of CEI
 !
-!$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-WHERE ( PCEI(IIB:IIE,IJB:IJE,1:D%NKT) <  PCEI_MAX .AND. PCEI(IIB:IIE,IJB:IJE,1:D%NKT) >  PCEI_MIN)
-  ZCOEF_AMPL(IIB:IIE,IJB:IJE,1:D%NKT) = ZPENTE * PCEI(IIB:IIE,IJB:IJE,1:D%NKT) + ZCOEF_AMPL_CEI_NUL  
+!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
+WHERE ( PCEI(IIJB:IIJE,1:D%NKT) <  PCEI_MAX .AND. PCEI(IIJB:IIJE,1:D%NKT) >  PCEI_MIN)
+  ZCOEF_AMPL(IIJB:IIJE,1:D%NKT) = ZPENTE * PCEI(IIJB:IIJE,1:D%NKT) + ZCOEF_AMPL_CEI_NUL  
 END WHERE
-!$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
 !
 !*       3.    CALCULATION OF THE MIXING LENGTH IN CLOUDS
 !              ------------------------------------------
 !
 IF (HTURBLEN_CL == HTURBLEN) THEN
-  ZLM_CLOUD(:,:,:) = ZLM(:,:,:)
+  ZLM_CLOUD(:,:) = ZLM(:,:)
 ELSE
   SELECT CASE (HTURBLEN_CL)
 !
 !*         3.1 BL89 mixing length
 !           ------------------
   CASE ('BL89','RM17','ADAP')
-    ZSHEAR(:,:,:)=0.
+    ZSHEAR(:,:)=0.
     CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD,OOCEAN,HPROGRAM)
 !
 !*         3.2 Delta mixing length
@@ -1872,24 +1857,24 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%NTYPE      = TYPEREAL
   TZFIELD%NDIMS      = 3
   TZFIELD%LTIMEDEP   = .TRUE.
-  CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZLM)
+  CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZLM)
 ENDIF
 !
 ! Amplification of the mixing length when the criteria are verified
 !
-!$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-WHERE (ZCOEF_AMPL(IIB:IIE,IJB:IJE,1:D%NKT) /= 1.) 
-  ZLM(IIB:IIE,IJB:IJE,1:D%NKT) = ZCOEF_AMPL(IIB:IIE,IJB:IJE,1:D%NKT)*ZLM_CLOUD(IIB:IIE,IJB:IJE,1:D%NKT)
+!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
+WHERE (ZCOEF_AMPL(IIJB:IIJE,1:D%NKT) /= 1.) 
+  ZLM(IIJB:IIJE,1:D%NKT) = ZCOEF_AMPL(IIJB:IIJE,1:D%NKT)*ZLM_CLOUD(IIJB:IIJE,1:D%NKT)
 END WHERE
-!$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
 ! Cloud mixing length in the clouds at the points which do not verified the CEI
 !
-!$mnh_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
-WHERE (PCEI(IIB:IIE,IJB:IJE,1:D%NKT) == -1.)
-  ZLM(IIB:IIE,IJB:IJE,1:D%NKT) = ZLM_CLOUD(IIB:IIE,IJB:IJE,1:D%NKT)
+!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
+WHERE (PCEI(IIJB:IIJE,1:D%NKT) == -1.)
+  ZLM(IIJB:IIJE,1:D%NKT) = ZLM_CLOUD(IIJB:IIJE,1:D%NKT)
 END WHERE
-!$mnh_end_expand_where(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)
+!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
 !
 !*       5.    IMPRESSION
@@ -1906,7 +1891,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%NTYPE      = TYPEREAL
   TZFIELD%NDIMS      = 3
   TZFIELD%LTIMEDEP   = .TRUE.
-  CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZCOEF_AMPL)
+  CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZCOEF_AMPL)
   !
   TZFIELD%CMNHNAME   = 'LM_CLOUD'
   TZFIELD%CSTDNAME   = ''
@@ -1917,7 +1902,7 @@ IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%NGRID      = 1
   TZFIELD%NTYPE      = TYPEREAL
   TZFIELD%NDIMS      = 3
-  CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZLM_CLOUD)
+  CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZLM_CLOUD)
   !
 ENDIF
 !
