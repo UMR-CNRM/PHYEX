@@ -1060,7 +1060,7 @@ IF(HTURBDIM=='3DIM') THEN
   ZWORK31D(IIJB:IIJE  ) = - ZFLXZ(IIJB:IIJE,IKB+D%NKL) &
                                     * ( ZWORK1(IIJB:IIJE,IKB+D%NKL) - ZWORK51D(IIJB:IIJE  ) &
                                     *   PDZY(IIJB:IIJE,IKB+D%NKL) ) &
-                                    / (0.5*(PDYY(IIJB:IIJE,IKB+D%NKL)+PDYY(IIJB:IIJE,IKE)))
+                                    / (0.5*(PDYY(IIJB:IIJE,IKB+D%NKL)+PDYY(IIJB:IIJE,IKB)))
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   CALL MYF2D_PHY(D,ZWORK31D,ZWORK41D)
   ZA(IIJB:IIJE,IKB) = ZWORK41D(IIJB:IIJE)
