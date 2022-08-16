@@ -72,7 +72,7 @@ REAL, DIMENSION(D%NIJT,D%NKT):: ZZ_O_H ! normalized height z/h (where h=BL heigh
 REAL, DIMENSION(D%NIJT)            :: ZWSTAR ! normalized convective velocity w*
 REAL, DIMENSION(D%NIJT)            :: ZTSTAR ! normalized temperature velocity w*
 !
-INTEGER                                             :: JK     ! loop counter
+INTEGER                                             :: JK,JIJ     ! loop counter
 INTEGER                                             :: IIJE,IIJB
 INTEGER                                             :: IKTB,IKTE,IKB,IKE,IKT ! vertical levels
 !----------------------------------------------------------------------------
@@ -103,9 +103,9 @@ END WHERE
 !
 !* normalized height
 !
-!$mnh_expand_array(JIJ=IIJB:IIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 ZZ_O_H(IIJB:IIJE,1:D%NKT) = XUNDEF
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 DO JK=1,IKT
   !$mnh_expand_where(JIJ=IIJB:IIJE)
   WHERE (PBL_DEPTH(IIJB:IIJE)/=XUNDEF)
@@ -122,10 +122,12 @@ WHERE(ZZ_O_H(IIJB:IIJE,1:D%NKT) < 0.95 .AND. ZZ_O_H(IIJB:IIJE,1:D%NKT)/=XUNDEF)
   PMTH2(IIJB:IIJE,1:D%NKT) = 4.*(MAX(ZZ_O_H(IIJB:IIJE,1:D%NKT),0.))**0.4*(ZZ_O_H(IIJB:IIJE,1:D%NKT)-0.95)**2
 END WHERE
 !$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
-!$mnh_expand_array(JIJ=IIJB:IIJE)
 DO JK=IKTB+1,IKTE-1
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
   PMTH2(IIJB:IIJE,JK) = PMTH2(IIJB:IIJE,JK) * ZTSTAR(IIJB:IIJE)**2*ZWSTAR(IIJB:IIJE)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
+!$mnh_expand_array(JIJ=IIJB:IIJE)
 PMTH2(IIJB:IIJE,IKE)=PMTH2(IIJB:IIJE,IKE) * ZTSTAR(IIJB:IIJE)**2*ZWSTAR(IIJB:IIJE)
 PMTH2(IIJB:IIJE,D%NKU)=PMTH2(IIJB:IIJE,D%NKU) * ZTSTAR(IIJB:IIJE)**2*ZWSTAR(IIJB:IIJE)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
@@ -140,10 +142,13 @@ WHERE(ZZ_O_H(IIJB:IIJE,1:D%NKT) <0.9 .AND. ZZ_O_H(IIJB:IIJE,1:D%NKT)/=XUNDEF)
                            * (ABS(ZZ_O_H(IIJB:IIJE,1:D%NKT)-1.))**0.58 + 0.37, 0.)
 END WHERE
 !$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
-!$mnh_expand_array(JIJ=IIJB:IIJE)
+
 DO JK=IKTB+1,IKTE-1
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
   PMWTH(IIJB:IIJE,JK) = PMWTH(IIJB:IIJE,JK) * ZWSTAR(IIJB:IIJE)**2*ZTSTAR(IIJB:IIJE)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
+!$mnh_expand_array(JIJ=IIJB:IIJE)
 PMWTH(IIJB:IIJE,IKE) = PMWTH(IIJB:IIJE,IKE) * ZWSTAR(IIJB:IIJE)**2*ZTSTAR(IIJB:IIJE)
 PMWTH(IIJB:IIJE,D%NKU) = PMWTH(IIJB:IIJE,D%NKU) * ZWSTAR(IIJB:IIJE)**2*ZTSTAR(IIJB:IIJE)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
