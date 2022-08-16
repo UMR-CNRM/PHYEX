@@ -8,7 +8,7 @@
 IMPLICIT NONE
 CONTAINS
 !     ###########################################################
-      SUBROUTINE ROTATE_WIND(PU,PV,PW,                          &
+      SUBROUTINE ROTATE_WIND(D,PU,PV,PW,                          &
                              PDIRCOSXW, PDIRCOSYW, PDIRCOSZW,   &
                              PCOSSLOPE,PSINSLOPE,               &
                              PDXX,PDYY,PDZZ,                    &
@@ -74,34 +74,36 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 USE MODD_PARAMETERS, ONLY: JPVEXT
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 IMPLICIT NONE
 !
 !
 !*      0.1  declarations of arguments
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PU,PV,PW        ! cartesian components
+TYPE(DIMPHYEX_t),       INTENT(IN) :: D
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PU,PV,PW        ! cartesian components
                                  ! of the wind
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PDIRCOSXW, PDIRCOSYW, PDIRCOSZW
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PDIRCOSXW, PDIRCOSYW, PDIRCOSZW
 ! Director Cosinus along x, y and z directions at surface w-point
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle 
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle 
                                  ! between i and the slope vector
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle 
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle 
                                  ! between i and the slope vector
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDXX, PDYY, PDZZ
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PDXX, PDYY, PDZZ
                                  ! Metric coefficients
-REAL, DIMENSION(:,:),   INTENT(OUT)  ::  PUSLOPE         ! wind component along 
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(OUT)  ::  PUSLOPE         ! wind component along 
                                  ! the maximum slope direction
-REAL, DIMENSION(:,:),   INTENT(OUT)  ::  PVSLOPE         ! wind component along
+REAL, DIMENSION(D%NIT,D%NJT),   INTENT(OUT)  ::  PVSLOPE         ! wind component along
                                  !  the direction normal to the maximum slope one
 !
 !-------------------------------------------------------------------------------
 !
 !       0.2  declaration of local variables
 !
-INTEGER, DIMENSION(SIZE(PDIRCOSXW,1),SIZE(PDIRCOSXW,2)) :: ILOC,JLOC
+INTEGER, DIMENSION(D%NIT,D%NJT) :: ILOC,JLOC
               ! shift index to find the 4 nearest points in x and y directions
-REAL,    DIMENSION(SIZE(PDIRCOSXW,1),SIZE(PDIRCOSXW,2)) :: ZCOEFF,ZCOEFM,     &
+REAL,    DIMENSION(D%NIT,D%NJT) :: ZCOEFF,ZCOEFM,     &
               ! interpolation weigths for flux and mass locations
                                                            ZUINT,ZVINT,ZWINT, &
               ! intermediate values of the cartesian components after x interp.
@@ -121,8 +123,8 @@ INTEGER     :: JI,JJ
 !*      1.    PRELIMINARIES
 !             -------------
 !
-PUSLOPE=0.
-PVSLOPE=0.
+PUSLOPE(:,:)=0.
+PVSLOPE(:,:)=0.
 !
 IIB = 2
 IJB = 2
@@ -201,4 +203,76 @@ END DO
 !----------------------------------------------------------------------------
 !
 END SUBROUTINE ROTATE_WIND
+!
+!     ##############################################
+      SUBROUTINE UPDATE_ROTATE_WIND(D,PUSLOPE,PVSLOPE,HLBCX,HLBCY)
+!     ##############################################
+!!
+!!****  *UPDATE_ROTATE_WIND* routine to set rotate wind values at the border
+!
+!!    AUTHOR
+!!    ------
+!!
+!!     P Jabouille   *CNRM METEO-FRANCE
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original   24/06/99
+!!      J.Escobar 21/03/2013: for HALOK comment all NHALO=1 test
+!!
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODE_ll, ONLY: ADD2DFIELD_ll, UPDATE_HALO_ll, CLEANLIST_ll, &
+                   LWEST_ll, LEAST_ll, LSOUTH_ll, LNORTH_ll
+USE MODD_ARGSLIST_ll, ONLY : LIST_ll
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+IMPLICIT NONE
+!
+!*       0.1   Declarations of dummy arguments :
+!
+TYPE(DIMPHYEX_t),       INTENT(IN) :: D
+CHARACTER(LEN=4),DIMENSION(2),INTENT(IN):: HLBCX, HLBCY  ! X- and Y-direc LBC
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(INOUT) :: PUSLOPE,PVSLOPE
+!
+TYPE(LIST_ll), POINTER :: TZFIELDS_ll  ! list of fields to exchange
+INTEGER                :: IINFO_ll       ! return code of parallel routine
+!
+! tangential surface fluxes in the axes following the orography
+!
+!*        1  PROLOGUE
+!
+NULLIFY(TZFIELDS_ll)
+!
+!         2 Update halo if necessary
+!
+!!$IF (NHALO == 1) THEN
+  CALL ADD2DFIELD_ll( TZFIELDS_ll, PUSLOPE, 'UPDATE_ROTATE_WIND::PUSLOPE' )
+  CALL ADD2DFIELD_ll( TZFIELDS_ll, PVSLOPE, 'UPDATE_ROTATE_WIND::PVSLOPE' )
+  CALL UPDATE_HALO_ll(TZFIELDS_ll,IINFO_ll)
+  CALL CLEANLIST_ll(TZFIELDS_ll)
+!!$ENDIF
+!
+!        3 Boundary conditions for non cyclic case
+!
+IF ( HLBCX(1) /= "CYCL" .AND. LWEST_ll()) THEN
+  PUSLOPE(D%NIB-1,:)=PUSLOPE(D%NIB,:)
+  PVSLOPE(D%NIB-1,:)=PVSLOPE(D%NIB,:)
+END IF
+IF ( HLBCX(2) /= "CYCL" .AND. LEAST_ll()) THEN
+  PUSLOPE(D%NIE+1,:)=PUSLOPE(D%NIE,:)
+  PVSLOPE(D%NIE+1,:)=PVSLOPE(D%NIE,:)
+END IF
+IF ( HLBCY(1) /= "CYCL" .AND. LSOUTH_ll()) THEN
+  PUSLOPE(:,D%NJB-1)=PUSLOPE(:,D%NJB)
+  PVSLOPE(:,D%NJB-1)=PVSLOPE(:,D%NJB)
+END IF
+IF(  HLBCY(2) /= "CYCL" .AND. LNORTH_ll()) THEN
+  PUSLOPE(:,D%NJE+1)=PUSLOPE(:,D%NJE)
+  PVSLOPE(:,D%NJE+1)=PVSLOPE(:,D%NJE)
+END IF
+!
+END SUBROUTINE UPDATE_ROTATE_WIND
 END MODULE MODE_ROTATE_WIND

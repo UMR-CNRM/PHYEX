@@ -9,12 +9,14 @@ MODULE MODI_GROUND_PARAM_n
 !
 INTERFACE 
 !
-      SUBROUTINE GROUND_PARAM_n( PSFTH, PSFRV, PSFSV, PSFCO2, PSFU, PSFV, &
+      SUBROUTINE GROUND_PARAM_n(D, PSFTH, PSFRV, PSFSV, PSFCO2, PSFU, PSFV, &
                                  PDIR_ALB, PSCA_ALB, PEMIS, PTSRAD        )
 !
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !* surface fluxes
 !  --------------
 !
+TYPE(DIMPHYEX_t),     INTENT(IN)   :: D
 REAL, DIMENSION(:,:), INTENT(OUT) :: PSFTH ! surface flux of potential temperature (Km/s)
 REAL, DIMENSION(:,:), INTENT(OUT) :: PSFRV ! surface flux of water vapor           (m/s*kg/kg)
 REAL, DIMENSION(:,:,:),INTENT(OUT):: PSFSV ! surface flux of scalar                (m/s*kg/kg)
@@ -38,7 +40,7 @@ END INTERFACE
 END MODULE MODI_GROUND_PARAM_n
 !
 !     ######################################################################
-      SUBROUTINE GROUND_PARAM_n( PSFTH, PSFRV, PSFSV, PSFCO2, PSFU, PSFV, &
+      SUBROUTINE GROUND_PARAM_n(D, PSFTH, PSFRV, PSFSV, PSFCO2, PSFU, PSFV, &
                                  PDIR_ALB, PSCA_ALB, PEMIS, PTSRAD        )
 !     #######################################################################
 !
@@ -127,6 +129,7 @@ USE MODD_DYN, ONLY : XSEGLEN
 !
 USE MODD_LUNIT_n, ONLY: TLUOUT
 USE MODD_CST,        ONLY : XP00, XCPD, XRD, XRV,XRHOLW, XDAY, XPI, XLVTT, XMD, XAVOGADRO
+USE MODD_DIMPHYEX,   ONLY : DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY : JPVEXT, XUNDEF
 USE MODD_DYN_n,      ONLY : XTSTEP
 USE MODD_CH_MNHC_n,  ONLY : LUSECHEM
@@ -192,6 +195,7 @@ IMPLICIT NONE
 !* surface fluxes
 !  --------------
 !
+TYPE(DIMPHYEX_t),     INTENT(IN)   :: D
 REAL, DIMENSION(:,:), INTENT(OUT) :: PSFTH ! surface flux of potential temperature (Km/s)
 REAL, DIMENSION(:,:), INTENT(OUT) :: PSFRV ! surface flux of water vapor           (m/s*kg/kg)
 REAL, DIMENSION(:,:,:),INTENT(OUT):: PSFSV ! surface flux of scalar                (m/s*kg/kg)
@@ -417,7 +421,7 @@ END IF
 !        1.3    Rotate the wind
 !               ---------------
 !
-CALL ROTATE_WIND(XUT,XVT,XWT,           &
+CALL ROTATE_WIND(D,XUT,XVT,XWT,           &
      XDIRCOSXW, XDIRCOSYW, XDIRCOSZW,   &
      XCOSSLOPE,XSINSLOPE,               &
      XDXX,XDYY,XDZZ,                    &

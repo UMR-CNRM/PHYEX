@@ -246,7 +246,6 @@ USE MODD_BUDGET, ONLY:      NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUD
                             TBUDGETDATA, TBUDGETCONF_t
 USE MODD_FIELD, ONLY: TFIELDDATA,TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
-USE MODD_ARGSLIST_ll, ONLY : LIST_ll
 !
 USE MODD_LES
 USE MODD_IBM_PARAM_n,    ONLY: LIBM, XIBM_LS, XIBM_XMUT
@@ -255,7 +254,7 @@ USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODE_BL89, ONLY: BL89
 USE MODE_TURB_VER, ONLY : TURB_VER
-USE MODE_ROTATE_WIND, ONLY: ROTATE_WIND
+USE MODE_ROTATE_WIND, ONLY: ROTATE_WIND, UPDATE_ROTATE_WIND
 USE MODE_TURB_HOR_SPLT, ONLY: TURB_HOR_SPLT
 USE MODE_TKE_EPS_SOURCES, ONLY: TKE_EPS_SOURCES
 USE MODE_RMC01, ONLY: RMC01
@@ -263,18 +262,16 @@ USE MODE_TM06, ONLY: TM06
 USE MODE_UPDATE_LM, ONLY: UPDATE_LM
 USE MODE_BUDGET,         ONLY: BUDGET_STORE_INIT, BUDGET_STORE_END
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
-USE MODE_ll, ONLY: ADD2DFIELD_ll, UPDATE_HALO_ll, CLEANLIST_ll, &
-                   LWEST_ll, LEAST_ll, LSOUTH_ll, LNORTH_ll
-USE MODE_SBL, ONLY: LMO
-USE MODE_SOURCES_NEG_CORRECT, ONLY: SOURCES_NEG_CORRECT
+USE MODE_SBL_PHY, ONLY: LMO
+USE MODE_SOURCES_NEG_CORRECT, ONLY: SOURCES_NEG_CORRECT_PHY
 USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
+USE MODE_IBM_MIXINGLENGTH, ONLY: IBM_MIXINGLENGTH
 !
 USE MODI_GRADIENT_W
 USE MODI_GRADIENT_M
 USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
-USE MODI_IBM_MIXINGLENGTH
 USE MODI_LES_MEAN_SUBGRID
 USE MODI_SHUMAN, ONLY : MZF, MXF, MYF
 USE SHUMAN_PHY, ONLY : MZF_PHY
@@ -286,7 +283,7 @@ IMPLICIT NONE
 !
 !
 !
-TYPE(DIMPHYEX_t),       INTENT(IN)    :: D
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF
@@ -503,7 +500,6 @@ REAL                :: ZALPHA       ! work coefficient :
 !
 REAL :: ZTIME1, ZTIME2
 TYPE(TFIELDDATA) :: TZFIELD
-TYPE(LIST_ll), POINTER :: TZFIELDS_ll  ! list of fields to exchange (for UPDATE_ROTATE_WIND)
 !
 !*      1.PRELIMINARIES
 !         -------------
@@ -808,11 +804,11 @@ IF (ORMC01) THEN
   ZUSTAR(:,:)=(PSFU(:,:)**2+PSFV(:,:)**2)**(0.25)
   !$mnh_end_expand_array(JI=1:D%NIT,JJ=1:D%NJT)
   IF (KRR>0) THEN
-    CALL LMO(ZUSTAR,ZTHLM(:,:,IKB),ZRM(:,:,IKB,1),PSFTH,PSFRV,ZLMO)
+    CALL LMO(D,CST,ZUSTAR,ZTHLM(:,:,IKB),ZRM(:,:,IKB,1),PSFTH,PSFRV,ZLMO)
   ELSE
     ZRVM(:,:)=0.
     ZSFRV(:,:)=0.
-    CALL LMO(ZUSTAR,ZTHLM(:,:,IKB),ZRVM,PSFTH,ZSFRV,ZLMO)
+    CALL LMO(D,CST,ZUSTAR,ZTHLM(:,:,IKB),ZRVM,PSFTH,ZSFRV,ZLMO)
   END IF
   CALL RMC01(D,CST,CSTURB,HTURBLEN,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,ZLMO,ZLM,ZLEPS)
 END IF
@@ -828,14 +824,14 @@ END IF
 !           ----------------------------------------------------------
 !
 IF (HTURBDIM=="3DIM") THEN
-  CALL UPDATE_LM(HLBCX,HLBCY,ZLM,ZLEPS)
+  CALL UPDATE_LM(D,HLBCX,HLBCY,ZLM,ZLEPS)
 END IF
 !
 !*      3.9 Mixing length correction if immersed walls 
 !           ------------------------------------------
 !
 IF (LIBM) THEN
-   CALL IBM_MIXINGLENGTH(ZLM,ZLEPS,XIBM_XMUT,XIBM_LS(:,:,:,1),PTKET)
+   CALL IBM_MIXINGLENGTH(D,ZLM,ZLEPS,XIBM_XMUT,XIBM_LS(:,:,:,1),PTKET)
 ENDIF
 !----------------------------------------------------------------------------
 !
@@ -848,13 +844,13 @@ ENDIF
 !
 !
 IF (HPROGRAM/='AROME ') THEN
-  CALL ROTATE_WIND(PUT,PVT,PWT,                       &
+  CALL ROTATE_WIND(D,PUT,PVT,PWT,                       &
                      PDIRCOSXW, PDIRCOSYW, PDIRCOSZW,   &
                      PCOSSLOPE,PSINSLOPE,               &
                      PDXX,PDYY,PDZZ,                    &
                      ZUSLOPE,ZVSLOPE                    )
 !
-  CALL UPDATE_ROTATE_WIND(ZUSLOPE,ZVSLOPE)
+  CALL UPDATE_ROTATE_WIND(D,ZUSLOPE,ZVSLOPE,HLBCX,HLBCY)
 ELSE
   ZUSLOPE=PUT(IIB:IIE,IJB:IJE,D%NKA)
   ZVSLOPE=PVT(IIB:IIE,IJB:IJE,D%NKA)
@@ -894,7 +890,7 @@ ZMR2(:,:,:)  = 0.     ! w'r'2
 ZMTHR(:,:,:) = 0.     ! w'th'r'
 !
 IF (HTOM=='TM06') THEN
-  CALL TM06(D%NKA,D%NKU,D%NKL,PTHVREF,PBL_DEPTH,PZZ,PSFTH,ZMWTH,ZMTH2)
+  CALL TM06(D,CST,PTHVREF,PBL_DEPTH,PZZ,PSFTH,ZMWTH,ZMTH2)
 !
   ZFWTH = -GZ_M_W(D%NKA,D%NKU,D%NKL,ZMWTH,PDZZ)    ! -d(w'2th' )/dz
   !ZFWR  = -GZ_M_W(D%NKA,D%NKU,D%NKL,ZMWR, PDZZ)    ! -d(w'2r'  )/dz
@@ -1273,7 +1269,7 @@ IF ( KRRL >= 1 ) THEN
 END IF
 
 ! Remove non-physical negative values (unnecessary in a perfect world) + corresponding budgets
-CALL SOURCES_NEG_CORRECT(HCLOUD, 'NETUR',KRR,PTSTEP,PPABST,PTHLT,PRT,PRTHLS,PRRS,PRSVS)
+CALL SOURCES_NEG_CORRECT_PHY(D,KSV,HCLOUD, 'NETUR',KRR,PTSTEP,PPABST,PTHLT,PRT,PRTHLS,PRRS,PRSVS)
 !----------------------------------------------------------------------------
 !
 !*      9. LES averaged surface fluxes
@@ -1344,73 +1340,6 @@ IF(PRESENT(PLEM)) PLEM(IIB:IIE,IJB:IJE,IKTB:IKTE) = ZLM(IIB:IIE,IJB:IJE,IKTB:IKT
 !
 IF (LHOOK) CALL DR_HOOK('TURB',1,ZHOOK_HANDLE)
 CONTAINS
-!
-!
-!     ##############################################
-      SUBROUTINE UPDATE_ROTATE_WIND(PUSLOPE,PVSLOPE)
-!     ##############################################
-!!
-!!****  *UPDATE_ROTATE_WIND* routine to set rotate wind values at the border
-!
-!!    AUTHOR
-!!    ------
-!!
-!!     P Jabouille   *CNRM METEO-FRANCE
-!!
-!!    MODIFICATIONS
-!!    -------------
-!!      Original   24/06/99
-!!      J.Escobar 21/03/2013: for HALOK comment all NHALO=1 test
-!!
-!-------------------------------------------------------------------------------
-!
-!*       0.    DECLARATIONS
-!              ------------
-!
-IMPLICIT NONE
-!
-!*       0.1   Declarations of dummy arguments :
-!
-REAL, DIMENSION(:,:), INTENT(INOUT) :: PUSLOPE,PVSLOPE
-! tangential surface fluxes in the axes following the orography
-!
-IF (LHOOK) CALL DR_HOOK('TURB:UPDATE_ROTATE_WIND',0,ZHOOK_HANDLE2)
-!
-!*        1  PROLOGUE
-!
-NULLIFY(TZFIELDS_ll)
-!
-!         2 Update halo if necessary
-!
-!!$IF (NHALO == 1) THEN
-  CALL ADD2DFIELD_ll( TZFIELDS_ll, PUSLOPE, 'UPDATE_ROTATE_WIND::PUSLOPE' )
-  CALL ADD2DFIELD_ll( TZFIELDS_ll, PVSLOPE, 'UPDATE_ROTATE_WIND::PVSLOPE' )
-  CALL UPDATE_HALO_ll(TZFIELDS_ll,IINFO_ll)
-  CALL CLEANLIST_ll(TZFIELDS_ll)
-!!$ENDIF
-!
-!        3 Boundary conditions for non cyclic case
-!
-IF ( HLBCX(1) /= "CYCL" .AND. LWEST_ll()) THEN
-  PUSLOPE(D%NIB-1,:)=PUSLOPE(D%NIB,:)
-  PVSLOPE(D%NIB-1,:)=PVSLOPE(D%NIB,:)
-END IF
-IF ( HLBCX(2) /= "CYCL" .AND. LEAST_ll()) THEN
-  PUSLOPE(D%NIE+1,:)=PUSLOPE(D%NIE,:)
-  PVSLOPE(D%NIE+1,:)=PVSLOPE(D%NIE,:)
-END IF
-IF ( HLBCY(1) /= "CYCL" .AND. LSOUTH_ll()) THEN
-  PUSLOPE(:,D%NJB-1)=PUSLOPE(:,D%NJB)
-  PVSLOPE(:,D%NJB-1)=PVSLOPE(:,D%NJB)
-END IF
-IF(  HLBCY(2) /= "CYCL" .AND. LNORTH_ll()) THEN
-  PUSLOPE(:,D%NJE+1)=PUSLOPE(:,D%NJE)
-  PVSLOPE(:,D%NJE+1)=PVSLOPE(:,D%NJE)
-END IF
-!
-IF (LHOOK) CALL DR_HOOK('TURB:UPDATE_ROTATE_WIND',1,ZHOOK_HANDLE2)
-!
-END SUBROUTINE UPDATE_ROTATE_WIND
 !
 !     ########################################################################
       SUBROUTINE COMPUTE_FUNCTION_THERMO(PALP,PBETA,PGAM,PLTT,PC,PT,PEXN,PCP,&

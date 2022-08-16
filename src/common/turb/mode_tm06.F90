@@ -5,7 +5,7 @@
 MODULE MODE_TM06
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TM06(KKA,KKU,KKL,PTHVREF,PBL_DEPTH,PZZ,PSFTH,PMWTH,PMTH2)
+SUBROUTINE TM06(D,CST,PTHVREF,PBL_DEPTH,PZZ,PSFTH,PMWTH,PMTH2)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     #################################################################
@@ -45,10 +45,9 @@ SUBROUTINE TM06(KKA,KKU,KKL,PTHVREF,PBL_DEPTH,PZZ,PSFTH,PMWTH,PMTH2)
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_PARAMETERS, ONLY : XUNDEF
-USE MODD_CST,        ONLY : XG
-USE MODD_PARAMETERS, ONLY : JPVEXT_TURB
-
+USE MODD_CST,        ONLY: CST_t
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+USE MODD_PARAMETERS, ONLY: XUNDEF,JPVEXT_TURB
 !
 !
 IMPLICIT NONE
@@ -56,84 +55,98 @@ IMPLICIT NONE
 !
 !*      0.1  declarations of arguments
 !
-INTEGER,                INTENT(IN) :: KKA           !near ground array index  
-INTEGER,                INTENT(IN) :: KKU           !uppest atmosphere array index
-INTEGER,                INTENT(IN) :: KKL           !vert. levels type 1=MNH -1=ARO
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PTHVREF    ! reference potential temperature
-REAL, DIMENSION(:,:),   INTENT(IN) :: PBL_DEPTH ! boundary layer height
-REAL, DIMENSION(:,:,:), INTENT(IN) :: PZZ        ! altitude of flux levels
-REAL, DIMENSION(:,:),   INTENT(IN) :: PSFTH      ! surface heat flux
-REAL, DIMENSION(:,:,:), INTENT(OUT):: PMWTH      ! w'2th'
-REAL, DIMENSION(:,:,:), INTENT(OUT):: PMTH2      ! w'th'2
+TYPE(DIMPHYEX_t),       INTENT(IN) :: D
+TYPE(CST_t),            INTENT(IN) :: CST
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PTHVREF    ! reference potential temperature
+REAL, DIMENSION(D%NIJT),   INTENT(IN) :: PBL_DEPTH ! boundary layer height
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: PZZ        ! altitude of flux levels
+REAL, DIMENSION(D%NIJT),   INTENT(IN) :: PSFTH      ! surface heat flux
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT):: PMWTH      ! w'2th'
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT):: PMTH2      ! w'th'2
 !
 !-------------------------------------------------------------------------------
 !
 !       0.2  declaration of local variables
 !
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZZ_O_H ! normalized height z/h (where h=BL height)
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2))            :: ZWSTAR ! normalized convective velocity w*
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2))            :: ZTSTAR ! normalized temperature velocity w*
+REAL, DIMENSION(D%NIJT,D%NKT):: ZZ_O_H ! normalized height z/h (where h=BL height)
+REAL, DIMENSION(D%NIJT)            :: ZWSTAR ! normalized convective velocity w*
+REAL, DIMENSION(D%NIJT)            :: ZTSTAR ! normalized temperature velocity w*
 !
 INTEGER                                             :: JK     ! loop counter
-INTEGER                                             :: IKT    ! vertical size
-INTEGER                                             :: IKTB,IKTE,IKB,IKE ! vertical levels
+INTEGER                                             :: IIJE,IIJB
+INTEGER                                             :: IKTB,IKTE,IKB,IKE,IKT ! vertical levels
 !----------------------------------------------------------------------------
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TM06',0,ZHOOK_HANDLE)
-IKT=SIZE(PZZ,3)          
-IKTB=1+JPVEXT_TURB              
-IKTE=IKT-JPVEXT_TURB
-IKB=KKA+JPVEXT_TURB*KKL
-IKE=KKU-JPVEXT_TURB*KKL
-
+IKTB=D%NKTB          
+IKTE=D%NKTE
+IKB=D%NKB
+IKT=D%NKT
+IKE=D%NKE
+IIJE=D%NIJE
+IIJB=D%NIJB
 !
 !
 !* w* and T*
 !
-WHERE(PSFTH>0.)
-  ZWSTAR = ((XG/PTHVREF(:,:,IKB))*PSFTH*PBL_DEPTH)**(1./3.)
-  ZTSTAR = PSFTH / ZWSTAR
+!$mnh_expand_where(JIJ=IIJB:IIJE)
+WHERE(PSFTH(IIJB:IIJE)>0.)
+  ZWSTAR(IIJB:IIJE) = ((CST%XG/PTHVREF(IIJB:IIJE,IKB))*PSFTH(IIJB:IIJE)*PBL_DEPTH(IIJB:IIJE))**(1./3.)
+  ZTSTAR(IIJB:IIJE) = PSFTH(IIJB:IIJE) / ZWSTAR(IIJB:IIJE)
 ELSEWHERE
-  ZWSTAR = 0.
-  ZTSTAR = 0.
+  ZWSTAR(IIJB:IIJE) = 0.
+  ZTSTAR(IIJB:IIJE) = 0.
 END WHERE
+!$mnh_end_expand_where(JIJ=IIJB:IIJE)
 !
 !
 !* normalized height
 !
-ZZ_O_H = XUNDEF
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+ZZ_O_H(IIJB:IIJE,1:D%NKT) = XUNDEF
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 DO JK=1,IKT
-  WHERE (PBL_DEPTH/=XUNDEF)
-    ZZ_O_H(:,:,JK) = (PZZ(:,:,JK)-PZZ(:,:,IKB)) / PBL_DEPTH(:,:)
+  !$mnh_expand_where(JIJ=IIJB:IIJE)
+  WHERE (PBL_DEPTH(IIJB:IIJE)/=XUNDEF)
+    ZZ_O_H(IIJB:IIJE,JK) = (PZZ(IIJB:IIJE,JK)-PZZ(IIJB:IIJE,IKB)) / PBL_DEPTH(IIJB:IIJE)
   END WHERE
+  !$mnh_end_expand_where(JIJ=IIJB:IIJE)
 END DO
 !
 !* w'th'2
 !
-PMTH2 = 0.
-WHERE(ZZ_O_H < 0.95 .AND. ZZ_O_H/=XUNDEF)
-  PMTH2(:,:,:) = 4.*(MAX(ZZ_O_H,0.))**0.4*(ZZ_O_H-0.95)**2
+PMTH2(IIJB:IIJE,1:D%NKT) = 0.
+!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
+WHERE(ZZ_O_H(IIJB:IIJE,1:D%NKT) < 0.95 .AND. ZZ_O_H(IIJB:IIJE,1:D%NKT)/=XUNDEF)
+  PMTH2(IIJB:IIJE,1:D%NKT) = 4.*(MAX(ZZ_O_H(IIJB:IIJE,1:D%NKT),0.))**0.4*(ZZ_O_H(IIJB:IIJE,1:D%NKT)-0.95)**2
 END WHERE
+!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
 DO JK=IKTB+1,IKTE-1
-  PMTH2(:,:,JK) = PMTH2(:,:,JK) * ZTSTAR(:,:)**2*ZWSTAR(:,:)
+  PMTH2(IIJB:IIJE,JK) = PMTH2(IIJB:IIJE,JK) * ZTSTAR(IIJB:IIJE)**2*ZWSTAR(IIJB:IIJE)
 END DO
-PMTH2(:,:,IKE)=PMTH2(:,:,IKE) * ZTSTAR(:,:)**2*ZWSTAR(:,:)
-PMTH2(:,:,KKU)=PMTH2(:,:,KKU) * ZTSTAR(:,:)**2*ZWSTAR(:,:)
-
+PMTH2(IIJB:IIJE,IKE)=PMTH2(IIJB:IIJE,IKE) * ZTSTAR(IIJB:IIJE)**2*ZWSTAR(IIJB:IIJE)
+PMTH2(IIJB:IIJE,D%NKU)=PMTH2(IIJB:IIJE,D%NKU) * ZTSTAR(IIJB:IIJE)**2*ZWSTAR(IIJB:IIJE)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !
 !* w'2th'
 !
-PMWTH = 0.
-WHERE(ZZ_O_H <0.9 .AND. ZZ_O_H/=XUNDEF)
-  PMWTH(:,:,:) = MAX(-7.9*(ABS(ZZ_O_H-0.35))**2.9 * (ABS(ZZ_O_H-1.))**0.58 + 0.37, 0.)
+PMWTH(IIJB:IIJE,1:D%NKT) = 0.
+!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
+WHERE(ZZ_O_H(IIJB:IIJE,1:D%NKT) <0.9 .AND. ZZ_O_H(IIJB:IIJE,1:D%NKT)/=XUNDEF)
+  PMWTH(IIJB:IIJE,1:D%NKT) = MAX(-7.9*(ABS(ZZ_O_H(IIJB:IIJE,1:D%NKT)-0.35))**2.9 &
+                           * (ABS(ZZ_O_H(IIJB:IIJE,1:D%NKT)-1.))**0.58 + 0.37, 0.)
 END WHERE
+!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
 DO JK=IKTB+1,IKTE-1
-  PMWTH(:,:,JK) = PMWTH(:,:,JK) * ZWSTAR(:,:)**2*ZTSTAR(:,:)
+  PMWTH(IIJB:IIJE,JK) = PMWTH(IIJB:IIJE,JK) * ZWSTAR(IIJB:IIJE)**2*ZTSTAR(IIJB:IIJE)
 END DO
-PMWTH(:,:,IKE) = PMWTH(:,:,IKE) * ZWSTAR(:,:)**2*ZTSTAR(:,:)
-PMWTH(:,:,KKU) = PMWTH(:,:,KKU) * ZWSTAR(:,:)**2*ZTSTAR(:,:)
+PMWTH(IIJB:IIJE,IKE) = PMWTH(IIJB:IIJE,IKE) * ZWSTAR(IIJB:IIJE)**2*ZTSTAR(IIJB:IIJE)
+PMWTH(IIJB:IIJE,D%NKU) = PMWTH(IIJB:IIJE,D%NKU) * ZWSTAR(IIJB:IIJE)**2*ZTSTAR(IIJB:IIJE)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TM06',1,ZHOOK_HANDLE)
