@@ -154,6 +154,7 @@ INTEGER             :: JIJ,JK            ! loop counter
 INTEGER             :: IKB,IKE ! inner limits
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
+INTEGER             :: IIJB, IIJE    ! start, end of ij loops in physical domain
 !
 ! ---------------------------------------------------------------------------
 !                                              
@@ -167,12 +168,14 @@ IKTB=D%NKTB
 IKTE=D%NKTE
 IKB=D%NKB
 IKE=D%NKE
+IIJB=D%NIJB
+IIJE=D%NIJE
 !
 CALL MZM_PHY(D,PRHODJ,ZMZM_RHODJ)
-!$mnh_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
-ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,1:D%NKT) = ZMZM_RHODJ(D%NIJB:D%NIJE,1:D%NKT)*PDFDDTDZ(D%NIJB:D%NIJE,1:D%NKT) &
-                                                /PDZZ(D%NIJB:D%NIJE,1:D%NKT)**2
-!$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,1:D%NKT) = ZMZM_RHODJ(IIJB:IIJE,1:D%NKT)*PDFDDTDZ(IIJB:IIJE,1:D%NKT) &
+                                                /PDZZ(IIJB:IIJE,1:D%NKT)**2
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
 ZA=0.
 ZB=0.
@@ -183,33 +186,33 @@ ZY=0.
 !*      2.  COMPUTE THE RIGHT HAND SIDE
 !           ---------------------------
 !
-!$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
-ZY(D%NIJB:D%NIJE,IKB) = PRHODJ(D%NIJB:D%NIJE,IKB)*PVARM(D%NIJB:D%NIJE,IKB)/PTSTEP                  &
-    - ZMZM_RHODJ(D%NIJB:D%NIJE,IKB+D%NKL) * PF(D%NIJB:D%NIJE,IKB+D%NKL)/PDZZ(D%NIJB:D%NIJE,IKB+D%NKL)    &
-    + ZMZM_RHODJ(D%NIJB:D%NIJE,IKB  ) * PF(D%NIJB:D%NIJE,IKB  )/PDZZ(D%NIJB:D%NIJE,IKB  )          &
-    + ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,IKB+D%NKL) * PIMPL * PVARM(D%NIJB:D%NIJE,IKB+D%NKL) &
-    - ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,IKB+D%NKL) * PIMPL * PVARM(D%NIJB:D%NIJE,IKB  )
-!$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+ZY(IIJB:IIJE,IKB) = PRHODJ(IIJB:IIJE,IKB)*PVARM(IIJB:IIJE,IKB)/PTSTEP                  &
+    - ZMZM_RHODJ(IIJB:IIJE,IKB+D%NKL) * PF(IIJB:IIJE,IKB+D%NKL)/PDZZ(IIJB:IIJE,IKB+D%NKL)    &
+    + ZMZM_RHODJ(IIJB:IIJE,IKB  ) * PF(IIJB:IIJE,IKB  )/PDZZ(IIJB:IIJE,IKB  )          &
+    + ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKB+D%NKL) * PIMPL * PVARM(IIJB:IIJE,IKB+D%NKL) &
+    - ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKB+D%NKL) * PIMPL * PVARM(IIJB:IIJE,IKB  )
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 DO JK=IKTB+1,IKTE-1
-  !$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
-  ZY(D%NIJB:D%NIJE,JK) = PRHODJ(D%NIJB:D%NIJE,JK)*PVARM(D%NIJB:D%NIJE,JK)/PTSTEP                 &
-    - ZMZM_RHODJ(D%NIJB:D%NIJE,JK+D%NKL) * PF(D%NIJB:D%NIJE,JK+D%NKL)/PDZZ(D%NIJB:D%NIJE,JK+D%NKL)     &
-    + ZMZM_RHODJ(D%NIJB:D%NIJE,JK  ) * PF(D%NIJB:D%NIJE,JK  )/PDZZ(D%NIJB:D%NIJE,JK  )           &
-    + ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,JK+D%NKL) * PIMPL * PVARM(D%NIJB:D%NIJE,JK+D%NKL) &
-    - ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,JK+D%NKL) * PIMPL * PVARM(D%NIJB:D%NIJE,JK  )   &
-    - ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,JK    ) * PIMPL * PVARM(D%NIJB:D%NIJE,JK  )   &
-    + ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,JK    ) * PIMPL * PVARM(D%NIJB:D%NIJE,JK-D%NKL)
-  !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZY(IIJB:IIJE,JK) = PRHODJ(IIJB:IIJE,JK)*PVARM(IIJB:IIJE,JK)/PTSTEP                 &
+    - ZMZM_RHODJ(IIJB:IIJE,JK+D%NKL) * PF(IIJB:IIJE,JK+D%NKL)/PDZZ(IIJB:IIJE,JK+D%NKL)     &
+    + ZMZM_RHODJ(IIJB:IIJE,JK  ) * PF(IIJB:IIJE,JK  )/PDZZ(IIJB:IIJE,JK  )           &
+    + ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,JK+D%NKL) * PIMPL * PVARM(IIJB:IIJE,JK+D%NKL) &
+    - ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,JK+D%NKL) * PIMPL * PVARM(IIJB:IIJE,JK  )   &
+    - ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,JK    ) * PIMPL * PVARM(IIJB:IIJE,JK  )   &
+    + ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,JK    ) * PIMPL * PVARM(IIJB:IIJE,JK-D%NKL)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
 ! 
-!$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
-ZY(D%NIJB:D%NIJE,IKE) = PRHODJ(D%NIJB:D%NIJE,IKE)*PVARM(D%NIJB:D%NIJE,IKE)/PTSTEP               &
-    - ZMZM_RHODJ(D%NIJB:D%NIJE,IKE+D%NKL) * PF(D%NIJB:D%NIJE,IKE+D%NKL)/PDZZ(D%NIJB:D%NIJE,IKE+D%NKL) &
-    + ZMZM_RHODJ(D%NIJB:D%NIJE,IKE  ) * PF(D%NIJB:D%NIJE,IKE  )/PDZZ(D%NIJB:D%NIJE,IKE  )       &
-    - ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,IKE ) * PIMPL * PVARM(D%NIJB:D%NIJE,IKE  )   &
-    + ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,IKE ) * PIMPL * PVARM(D%NIJB:D%NIJE,IKE-D%NKL)
-!$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+ZY(IIJB:IIJE,IKE) = PRHODJ(IIJB:IIJE,IKE)*PVARM(IIJB:IIJE,IKE)/PTSTEP               &
+    - ZMZM_RHODJ(IIJB:IIJE,IKE+D%NKL) * PF(IIJB:IIJE,IKE+D%NKL)/PDZZ(IIJB:IIJE,IKE+D%NKL) &
+    + ZMZM_RHODJ(IIJB:IIJE,IKE  ) * PF(IIJB:IIJE,IKE  )/PDZZ(IIJB:IIJE,IKE  )       &
+    - ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKE ) * PIMPL * PVARM(IIJB:IIJE,IKE  )   &
+    + ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKE ) * PIMPL * PVARM(IIJB:IIJE,IKE-D%NKL)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !
 !*       3.  INVERSION OF THE TRIDIAGONAL SYSTEM
@@ -220,72 +223,72 @@ IF ( PIMPL > 1.E-10 ) THEN
 !*       3.1 arrays A, B, C
 !            --------------
 !
-  !$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
-  ZB(D%NIJB:D%NIJE,IKB) =   PRHODJ(D%NIJB:D%NIJE,IKB)/PTSTEP                   &
-                - ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,IKB+D%NKL) * PIMPL
-  ZC(D%NIJB:D%NIJE,IKB) =   ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,IKB+D%NKL) * PIMPL
-  !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZB(IIJB:IIJE,IKB) =   PRHODJ(IIJB:IIJE,IKB)/PTSTEP                   &
+                - ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKB+D%NKL) * PIMPL
+  ZC(IIJB:IIJE,IKB) =   ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKB+D%NKL) * PIMPL
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
   DO JK=IKTB+1,IKTE-1
-    !$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
-    ZA(D%NIJB:D%NIJE,JK) =   ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,JK) * PIMPL
-    ZB(D%NIJB:D%NIJE,JK) =   PRHODJ(D%NIJB:D%NIJE,JK)/PTSTEP                        &
-                            - ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,JK+D%NKL) * PIMPL &
-                            - ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,JK) * PIMPL
-    ZC(D%NIJB:D%NIJE,JK) =   ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,JK+D%NKL) * PIMPL
-    !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
+    !$mnh_expand_array(JIJ=IIJB:IIJE)
+    ZA(IIJB:IIJE,JK) =   ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,JK) * PIMPL
+    ZB(IIJB:IIJE,JK) =   PRHODJ(IIJB:IIJE,JK)/PTSTEP                        &
+                            - ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,JK+D%NKL) * PIMPL &
+                            - ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,JK) * PIMPL
+    ZC(IIJB:IIJE,JK) =   ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,JK+D%NKL) * PIMPL
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   END DO
 !
-  !$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
-  ZA(D%NIJB:D%NIJE,IKE) =   ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,IKE  ) * PIMPL
-  ZB(D%NIJB:D%NIJE,IKE) =   PRHODJ(D%NIJB:D%NIJE,IKE)/PTSTEP                   &
-                - ZRHODJ_DFDDTDZ_O_DZ2(D%NIJB:D%NIJE,IKE  ) * PIMPL
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZA(IIJB:IIJE,IKE) =   ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKE  ) * PIMPL
+  ZB(IIJB:IIJE,IKE) =   PRHODJ(IIJB:IIJE,IKE)/PTSTEP                   &
+                - ZRHODJ_DFDDTDZ_O_DZ2(IIJB:IIJE,IKE  ) * PIMPL
 !
 !*       3.2 going up
 !            --------
 !
-  ZBET(D%NIJB:D%NIJE) = ZB(D%NIJB:D%NIJE,IKB)  ! bet = b(ikb)
-  PVARP(D%NIJB:D%NIJE,IKB) = ZY(D%NIJB:D%NIJE,IKB) / ZBET(D%NIJB:D%NIJE)
-  !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
+  ZBET(IIJB:IIJE) = ZB(IIJB:IIJE,IKB)  ! bet = b(ikb)
+  PVARP(IIJB:IIJE,IKB) = ZY(IIJB:IIJE,IKB) / ZBET(IIJB:IIJE)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
   !
   DO JK = IKB+D%NKL,IKE-D%NKL,D%NKL
-    !$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
-    ZGAM(D%NIJB:D%NIJE,JK) = ZC(D%NIJB:D%NIJE,JK-D%NKL) / ZBET(D%NIJB:D%NIJE)  
+    !$mnh_expand_array(JIJ=IIJB:IIJE)
+    ZGAM(IIJB:IIJE,JK) = ZC(IIJB:IIJE,JK-D%NKL) / ZBET(IIJB:IIJE)  
                                                     ! gam(k) = c(k-1) / bet
-    ZBET(D%NIJB:D%NIJE)    = ZB(D%NIJB:D%NIJE,JK) - ZA(D%NIJB:D%NIJE,JK) * ZGAM(D%NIJB:D%NIJE,JK)
+    ZBET(IIJB:IIJE)    = ZB(IIJB:IIJE,JK) - ZA(IIJB:IIJE,JK) * ZGAM(IIJB:IIJE,JK)
                                                     ! bet = b(k) - a(k)* gam(k)  
-    PVARP(D%NIJB:D%NIJE,JK)= ( ZY(D%NIJB:D%NIJE,JK) - ZA(D%NIJB:D%NIJE,JK) * PVARP(D%NIJB:D%NIJE,JK-D%NKL) ) &
-                               / ZBET(D%NIJB:D%NIJE)
+    PVARP(IIJB:IIJE,JK)= ( ZY(IIJB:IIJE,JK) - ZA(IIJB:IIJE,JK) * PVARP(IIJB:IIJE,JK-D%NKL) ) &
+                               / ZBET(IIJB:IIJE)
                                         ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
-    !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   END DO 
   ! special treatment for the last level
-  !$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
-  ZGAM(D%NIJB:D%NIJE,IKE) = ZC(D%NIJB:D%NIJE,IKE-D%NKL) / ZBET(D%NIJB:D%NIJE) 
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZGAM(IIJB:IIJE,IKE) = ZC(IIJB:IIJE,IKE-D%NKL) / ZBET(IIJB:IIJE) 
                                                     ! gam(k) = c(k-1) / bet
-  ZBET(D%NIJB:D%NIJE)     = ZB(D%NIJB:D%NIJE,IKE) - ZA(D%NIJB:D%NIJE,IKE) * ZGAM(D%NIJB:D%NIJE,IKE)
+  ZBET(IIJB:IIJE)     = ZB(IIJB:IIJE,IKE) - ZA(IIJB:IIJE,IKE) * ZGAM(IIJB:IIJE,IKE)
                                                     ! bet = b(k) - a(k)* gam(k)  
-  PVARP(D%NIJB:D%NIJE,IKE)= ( ZY(D%NIJB:D%NIJE,IKE) - ZA(D%NIJB:D%NIJE,IKE) * PVARP(D%NIJB:D%NIJE,IKE-D%NKL) ) &
-                              / ZBET(D%NIJB:D%NIJE)
+  PVARP(IIJB:IIJE,IKE)= ( ZY(IIJB:IIJE,IKE) - ZA(IIJB:IIJE,IKE) * PVARP(IIJB:IIJE,IKE-D%NKL) ) &
+                              / ZBET(IIJB:IIJE)
                                        ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
-  !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !*       3.3 going down
 !            ----------
 !
   DO JK = IKE-D%NKL,IKB,-1*D%NKL
-    !$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
-    PVARP(D%NIJB:D%NIJE,JK) = PVARP(D%NIJB:D%NIJE,JK) - ZGAM(D%NIJB:D%NIJE,JK+D%NKL) * PVARP(D%NIJB:D%NIJE,JK+D%NKL)
-    !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
+    !$mnh_expand_array(JIJ=IIJB:IIJE)
+    PVARP(IIJB:IIJE,JK) = PVARP(IIJB:IIJE,JK) - ZGAM(IIJB:IIJE,JK+D%NKL) * PVARP(IIJB:IIJE,JK+D%NKL)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   END DO
 !
 ELSE
 ! 
   DO JK=IKTB,IKTE
-    !$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
-    PVARP(D%NIJB:D%NIJE,JK) = ZY(D%NIJB:D%NIJE,JK) * PTSTEP / PRHODJ(D%NIJB:D%NIJE,JK)
-    !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
+    !$mnh_expand_array(JIJ=IIJB:IIJE)
+    PVARP(IIJB:IIJE,JK) = ZY(IIJB:IIJE,JK) * PTSTEP / PRHODJ(IIJB:IIJE,JK)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   END DO
 !
 END IF 
@@ -294,10 +297,10 @@ END IF
 !*       4.  FILL THE UPPER AND LOWER EXTERNAL VALUES
 !            ----------------------------------------
 !
-!$mnh_expand_array(JIJ=D%NIJB:D%NIJE)
-PVARP(D%NIJB:D%NIJE,D%NKA)=PVARP(D%NIJB:D%NIJE,IKB)
-PVARP(D%NIJB:D%NIJE,D%NKU)=PVARP(D%NIJB:D%NIJE,IKE)
-!$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PVARP(IIJB:IIJE,D%NKA)=PVARP(IIJB:IIJE,IKB)
+PVARP(IIJB:IIJE,D%NKU)=PVARP(IIJB:IIJE,IKE)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !-------------------------------------------------------------------------------
 !

@@ -106,7 +106,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZG_O_THVREF
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZSQRT_TKE
 REAL, DIMENSION(D%NIJT,D%NKT) :: PLMDN
 !
-INTEGER :: IIU,IJU
+INTEGER :: IIJB, IIJE
 INTEGER :: JIJ        ! horizontal loop counter
 INTEGER :: JK,JKK     ! loop counters
 INTEGER :: JRR        ! moist loop counter
@@ -122,6 +122,8 @@ Z2SQRT2=2.*SQRT(2.)
 !
 ZRVORD = CST%XRV / CST%XRD
 !
+IIJB = D%NIJB
+IIJE = D%NIJE
 !-------------------------------------------------------------------------------
 !
 !*       1.    pack the horizontal dimensions into one
@@ -132,21 +134,21 @@ ZRVORD = CST%XRV / CST%XRD
 !
 IF (OOCEAN) THEN
   DO JK=1,D%NKT
-    DO JIJ=1,D%NIJT
+    DO JIJ=IIJB,IIJE
       ZG_O_THVREF(JIJ,JK) = CST%XG * CST%XALPHAOC
     END DO
   END DO
 ELSE !Atmosphere case
   DO JK=1,D%NKT
-    DO JIJ=1,D%NIJT
+    DO JIJ=IIJB,IIJE
       ZG_O_THVREF(JIJ,JK) = CST%XG / PTHVREF(JIJ,JK)
     END DO
   END DO
 END IF
 !
-!$mnh_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
-ZSQRT_TKE(D%NIJB:D%NIJE,1:D%NKT) = SQRT(PTKEM(D%NIJB:D%NIJE,1:D%NKT))
-!$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+ZSQRT_TKE(IIJB:IIJE,1:D%NKT) = SQRT(PTKEM(IIJB:IIJE,1:D%NKT))
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
 !ZBL89EXP is defined here because (and not in ini_cturb) because CSTURB%XCED is defined in read_exseg (depending on BL89/RM17)
 ZBL89EXP = LOG(16.)/(4.*LOG(CST%XKARMAN)+LOG(CSTURB%XCED)-3.*LOG(CSTURB%XCMFS))
@@ -157,18 +159,18 @@ ZUSRBL89 = 1./ZBL89EXP
 !              -----------------------------------------------
 !
 IF(KRR /= 0) THEN
-  ZSUM(D%NIJB:D%NIJE,1:D%NKT) = 0.
+  ZSUM(IIJB:IIJE,1:D%NKT) = 0.
   DO JRR=1,KRR
-    !$mnh_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
-    ZSUM(D%NIJB:D%NIJE,1:D%NKT) = ZSUM(D%NIJB:D%NIJE,1:D%NKT)+PRM(D%NIJB:D%NIJE,1:D%NKT,JRR)
-    !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    ZSUM(IIJB:IIJE,1:D%NKT) = ZSUM(IIJB:IIJE,1:D%NKT)+PRM(IIJB:IIJE,1:D%NKT,JRR)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ENDDO
-  !$mnh_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
-  ZVPT(D%NIJB:D%NIJE,1:D%NKT)=PTHLM(D%NIJB:D%NIJE,1:D%NKT) * ( 1. + ZRVORD*PRM(D%NIJB:D%NIJE,1:D%NKT,1) )  &
-                           / ( 1. + ZSUM(D%NIJB:D%NIJE,1:D%NKT) )
-  !$mnh_end_expand_array(JIJ=D%NIJB:D%NIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  ZVPT(IIJB:IIJE,1:D%NKT)=PTHLM(IIJB:IIJE,1:D%NKT) * ( 1. + ZRVORD*PRM(IIJB:IIJE,1:D%NKT,1) )  &
+                           / ( 1. + ZSUM(IIJB:IIJE,1:D%NKT) )
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 ELSE
-  ZVPT(D%NIJB:D%NIJE,1:D%NKT)=PTHLM(D%NIJB:D%NIJE,1:D%NKT)
+  ZVPT(IIJB:IIJE,1:D%NKT)=PTHLM(IIJB:IIJE,1:D%NKT)
 END IF
 !
 !!!!!!!!!!!!
@@ -183,13 +185,13 @@ END IF
 !!!!!!!!!!!!
 !
 DO JK=D%NKTB,D%NKTE
-  DO JIJ=1,D%NIJT
+  DO JIJ=IIJB,IIJE
     ZDELTVPT(JIJ,JK) = ZVPT(JIJ,JK) - ZVPT(JIJ,JK-D%NKL)
     ZHLVPT(JIJ,JK) = 0.5 * ( ZVPT(JIJ,JK) + ZVPT(JIJ,JK-D%NKL) )
   END DO
 END DO
 !
-DO JIJ=1,D%NIJT
+DO JIJ=IIJB,IIJE
   ZDELTVPT(JIJ,D%NKU) = ZVPT(JIJ,D%NKU) - ZVPT(JIJ,D%NKU-D%NKL)
   ZDELTVPT(JIJ,D%NKA) = 0.
   ZHLVPT(JIJ,D%NKU) = 0.5 * ( ZVPT(JIJ,D%NKU) + ZVPT(JIJ,D%NKU-D%NKL) )
@@ -197,7 +199,7 @@ DO JIJ=1,D%NIJT
 END DO
 !
 DO JK=1,D%NKT
-  DO JIJ=1,D%NIJT
+  DO JIJ=IIJB,IIJE
     IF(ABS(ZDELTVPT(JIJ,JK))<CSTURB%XLINF) THEN
       ZDELTVPT(JIJ,JK)=CSTURB%XLINF
     END IF
@@ -215,13 +217,13 @@ DO JK=D%NKTB,D%NKTE
 !
 !*       4.  mixing length for a downwards displacement
 !            ------------------------------------------
-  ZINTE(D%NIJB:D%NIJE)=PTKEM(D%NIJB:D%NIJE,JK)
+  ZINTE(IIJB:IIJE)=PTKEM(IIJB:IIJE,JK)
   ZLWORK=0.
   ZTESTM=1.
   DO JKK=JK,D%NKB,-D%NKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0.
-      DO JIJ=1,D%NIJT
+      DO JIJ=IIJB,IIJE
         ZTEST0=0.5+SIGN(0.5,ZINTE(JIJ))
         !--------- SHEAR + STABILITY -----------
         ZPOTE = ZTEST0* &
@@ -255,7 +257,7 @@ DO JK=D%NKTB,D%NKTE
 !*       5.  intermediate storage of the final mixing length
 !            -----------------------------------------------
 !
-  DO JIJ=1,D%NIJT
+  DO JIJ=IIJB,IIJE
     PLMDN(JIJ,JK)=MIN(ZLWORK(JIJ),0.5*(PZZ(JIJ,JK)+PZZ(JIJ,JK+D%NKL))-PZZ(JIJ,D%NKB))
   END DO
 !
@@ -264,14 +266,14 @@ DO JK=D%NKTB,D%NKTE
 !*       6.  mixing length for an upwards displacement
 !            -----------------------------------------
 !
-  ZINTE(D%NIJB:D%NIJE)=PTKEM(D%NIJB:D%NIJE,JK)
-  ZLWORK(D%NIJB:D%NIJE)=0.
+  ZINTE(IIJB:IIJE)=PTKEM(IIJB:IIJE,JK)
+  ZLWORK(IIJB:IIJE)=0.
   ZTESTM=1.
 !
   DO JKK=JK+D%NKL,D%NKE,D%NKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0.
-      DO JIJ=1,D%NIJT
+      DO JIJ=IIJB,IIJE
         ZTEST0=0.5+SIGN(0.5,ZINTE(JIJ))
         !--------- SHEAR + STABILITY -----------
         ZPOTE = ZTEST0* &
@@ -304,7 +306,7 @@ DO JK=D%NKTB,D%NKTE
 !
 !*       7.  final mixing length
 !
-  DO JIJ=1,D%NIJT
+  DO JIJ=IIJB,IIJE
     ZLWORK1=MAX(PLMDN(JIJ,JK),1.E-10_MNHREAL)
     ZLWORK2=MAX(ZLWORK(JIJ),1.E-10_MNHREAL)
     ZPOTE = ZLWORK1 / ZLWORK2
@@ -330,9 +332,9 @@ END DO
 !*       9.  boundaries
 !            ----------
 !
-PLM(D%NIJB:D%NIJE,D%NKA)=PLM(D%NIJB:D%NIJE,D%NKB)
-PLM(D%NIJB:D%NIJE,D%NKE)=PLM(D%NIJB:D%NIJE,D%NKE-D%NKL)
-PLM(D%NIJB:D%NIJE,D%NKU)=PLM(D%NIJB:D%NIJE,D%NKE-D%NKL)
+PLM(IIJB:IIJE,D%NKA)=PLM(IIJB:IIJE,D%NKB)
+PLM(IIJB:IIJE,D%NKE)=PLM(IIJB:IIJE,D%NKE-D%NKL)
+PLM(IIJB:IIJE,D%NKU)=PLM(IIJB:IIJE,D%NKE-D%NKL)
 !
 !-------------------------------------------------------------------------------
 !

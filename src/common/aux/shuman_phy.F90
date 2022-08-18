@@ -371,13 +371,13 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMZM   ! result at flux localization 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMZM   ! result at flux localization 
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK             ! Loop index in z direction
+INTEGER :: JK,JIJ,IIJB,IIJE             ! Loop index
 !
 !-------------------------------------------------------------------------------
 !
@@ -386,11 +386,17 @@ INTEGER :: JK             ! Loop index in z direction
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MZM',0,ZHOOK_HANDLE)
-DO JK=2,SIZE(PA,3)-1
-  PMZM(:,:,JK) = 0.5*( PA(:,:,JK)+PA(:,:,JK-D%NKL) )
+IIJB = D%NIJB
+IIJE = D%NIJE
+DO JK=2,D%NKT-1
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  PMZM(IIJB:IIJE,JK) = 0.5*( PA(IIJB:IIJE,JK)+PA(IIJB:IIJE,JK-D%NKL) )
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
-PMZM(:,:,D%NKA)    = -999.
-PMZM(:,:,D%NKU) = 0.5*( PA(:,:,D%NKU)+PA(:,:,D%NKU-D%NKL) )
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PMZM(IIJB:IIJE,D%NKA)    = -999.
+PMZM(IIJB:IIJE,D%NKU) = 0.5*( PA(IIJB:IIJE,D%NKU)+PA(IIJB:IIJE,D%NKU-D%NKL) )
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !
 !-------------------------------------------------------------------------------
@@ -451,14 +457,14 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at mass localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
                                                             ! side
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK            ! Loop index in z direction
+INTEGER :: JK,JIJ,IIJB,IIJE             ! Loop index
 !
 !-------------------------------------------------------------------------------
 !
@@ -467,11 +473,17 @@ INTEGER :: JK            ! Loop index in z direction
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DZM',0,ZHOOK_HANDLE)
-DO JK=2,SIZE(PA,3)-1
-  PDZM(:,:,JK)          = PA(:,:,JK) -  PA(:,:,JK-D%NKL)
+IIJB = D%NIJB
+IIJE = D%NIJE
+DO JK=2,D%NKT-1
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  PDZM(IIJB:IIJE,JK)          = PA(IIJB:IIJE,JK) -  PA(IIJB:IIJE,JK-D%NKL)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
-PDZM(:,:,D%NKA)    =  -999.
-PDZM(:,:,D%NKU)    = PA(:,:,D%NKU) -  PA(:,:,D%NKU-D%NKL)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PDZM(IIJB:IIJE,D%NKA)    =  -999.
+PDZM(IIJB:IIJE,D%NKU)    = PA(IIJB:IIJE,D%NKU) -  PA(IIJB:IIJE,D%NKU-D%NKL)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !-------------------------------------------------------------------------------
 !
@@ -845,14 +857,13 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMZF   ! result at mass localization 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMZF   ! result at mass localization 
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK             ! Loop index in z direction
-INTEGER :: IKT          ! upper bound in z direction of PA
+INTEGER :: JK,JIJ,IIJB,IIJE             ! Loop index
 !
 !-------------------------------------------------------------------------------
 !
@@ -861,12 +872,17 @@ INTEGER :: IKT          ! upper bound in z direction of PA
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MZF',0,ZHOOK_HANDLE)
-IKT = SIZE(PA,3)
-DO JK=2,IKT-1
-  PMZF(:,:,JK) = 0.5*( PA(:,:,JK)+PA(:,:,JK+D%NKL) )
+IIJB = D%NIJB
+IIJE = D%NIJE
+DO JK=2,D%NKT-1
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  PMZF(IIJB:IIJE,JK) = 0.5*( PA(IIJB:IIJE,JK)+PA(IIJB:IIJE,JK+D%NKL) )
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
-PMZF(:,:,D%NKU) = -999.
-PMZF(:,:,D%NKA) = 0.5*( PA(:,:,D%NKA)+PA(:,:,D%NKA+D%NKL) )
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PMZF(IIJB:IIJE,D%NKU) = -999.
+PMZF(IIJB:IIJE,D%NKA) = 0.5*( PA(IIJB:IIJE,D%NKA)+PA(IIJB:IIJE,D%NKA+D%NKL) )
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !-------------------------------------------------------------------------------
 !
@@ -926,14 +942,13 @@ IMPLICIT NONE
 !              ------------------------------------
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass localization 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)  :: PA     ! variable at flux localization
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass localization 
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK           ! Loop index in z direction
-INTEGER :: IKT          ! upper bound in z direction of PA
+INTEGER :: JK,JIJ,IIJB,IIJE             ! Loop index
 !
 !-------------------------------------------------------------------------------
 !
@@ -942,12 +957,17 @@ INTEGER :: IKT          ! upper bound in z direction of PA
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DZF',0,ZHOOK_HANDLE)
-IKT = SIZE(PA,3)
-DO JK=2,IKT-1
-  PDZF(:,:,JK)          = PA(:,:,JK+D%NKL) -  PA(:,:,JK)
+IIJB = D%NIJB
+IIJE = D%NIJE
+DO JK=2,D%NKT-1
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  PDZF(IIJB:IIJE,JK)          = PA(IIJB:IIJE,JK+D%NKL) -  PA(IIJB:IIJE,JK)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
-PDZF(:,:,D%NKA)    = PA(:,:,D%NKA+D%NKL) -  PA(:,:,D%NKA)
-PDZF(:,:,D%NKU)    = -999.
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PDZF(IIJB:IIJE,D%NKA)    = PA(IIJB:IIJE,D%NKA+D%NKL) -  PA(IIJB:IIJE,D%NKA)
+PDZF(IIJB:IIJE,D%NKU)    = -999.
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !-------------------------------------------------------------------------------
 !
