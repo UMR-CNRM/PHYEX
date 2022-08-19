@@ -63,7 +63,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZDH  ! hor. grid mesh
 !
 INTEGER :: IKB,IKE    ! first,last physical level
 INTEGER :: IKTB,IKTE  ! start, end of k loops in physical domain
-INTEGER :: JK,JIJ   ! loop counter
+INTEGER :: JK,JI,JJ   ! loop counter
 INTEGER :: IIE,IIB,IJE,IJB,IIU,IJU
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
