@@ -314,11 +314,11 @@ PREDR1  (:,:,:) = PREDR1  (:,:,:) * ZW1(:,:,:)
 !          ----------------------------------------------------------------
 !
 ZW2=SIGN(1.,PREDTH1(:,:,:))
-PREDTH1(:,:,:)= ZW2(:,:,:) * MAX(1.E-30, ZW2(:,:,:)*PREDTH1(:,:,:))
+PREDTH1(:,:,:)= ZW2(:,:,:) * MAX(XMNH_TINY_12, ZW2(:,:,:)*PREDTH1(:,:,:))
 !
 IF (KRR /= 0) THEN                ! dry case
   ZW2=SIGN(1.,PREDR1(:,:,:))
-  PREDR1(:,:,:)= ZW2(:,:,:) * MAX(1.E-30, ZW2(:,:,:)*PREDR1(:,:,:))
+  PREDR1(:,:,:)= ZW2(:,:,:) * MAX(XMNH_TINY_12, ZW2(:,:,:)*PREDR1(:,:,:))
 END IF
 !
 !
@@ -331,7 +331,7 @@ END DO
 !
 DO JSV=1,ISV
   ZW2=SIGN(1.,PREDS1(:,:,:,JSV))
-  PREDS1(:,:,:,JSV)= ZW2(:,:,:) * MAX(1.E-30, ZW2(:,:,:)*PREDS1(:,:,:,JSV))
+  PREDS1(:,:,:,JSV)= ZW2(:,:,:) * MAX(XMNH_TINY_12, ZW2(:,:,:)*PREDS1(:,:,:,JSV))
 END DO
 !
 !---------------------------------------------------------------------------
