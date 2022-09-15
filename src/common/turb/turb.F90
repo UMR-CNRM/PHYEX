@@ -788,6 +788,10 @@ ELSE
   ZUSLOPE=PUT(:,:,KKA)
   ZVSLOPE=PVT(:,:,KKA)
 END IF
+IF (LOCEAN) THEN
+    ZUSLOPE=PUT(:,:,KKU-1)
+    ZVSLOPE=PVT(:,:,KKU-1)
+END IF
 !
 !
 !*      4.2 compute the proportionality coefficient between wind and stress
@@ -801,11 +805,15 @@ ZCDUEFF(:,:) =-SQRT ( (PSFU(:,:)**2 + PSFV(:,:)**2) /               &
 !
 !*       4.6 compute the surface tangential fluxes
 !
-ZTAU11M(:,:) =2./3.*(  (1.+ (PZZ (:,:,IKB+KKL)-PZZ (:,:,IKB))  &
-                           /(PDZZ(:,:,IKB+KKL)+PDZZ(:,:,IKB))  &
-                       )   *PTKET(:,:,IKB)                   &
-                     -0.5  *PTKET(:,:,IKB+KKL)                 &
-                    )
+IF (LOCEAN) THEN
+  ZTAU11M(:,:)=0.
+ELSE
+  ZTAU11M(:,:) =2./3.*(  (1.+ (PZZ (:,:,IKB+KKL)-PZZ (:,:,IKB))  &
+                             /(PDZZ(:,:,IKB+KKL)+PDZZ(:,:,IKB))  &
+                         )   *PTKET(:,:,IKB)                   &
+                       -0.5  *PTKET(:,:,IKB+KKL)                 &
+                      )
+END IF
 ZTAU12M(:,:) =0.0
 ZTAU22M(:,:) =ZTAU11M(:,:)
 ZTAU33M(:,:) =ZTAU11M(:,:)
@@ -895,7 +903,7 @@ CALL TURB_VER(KKA,KKU,KKL,KRR, KRRL, KRRI,               &
           PTSTEP,TPFILE,                                 &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,        &
           PCOSSLOPE,PSINSLOPE,                           &
-          PRHODJ,PTHVREF,                                &
+          PRHODJ,PTHVREF,PSFU,PSFV,                      &
           PSFTH,PSFRV,PSFSV,PSFTH,PSFRV,PSFSV,           &
           ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU33M,               &
           PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,PSVT,    &
@@ -1071,7 +1079,7 @@ CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,          &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,               &
                    & PTSTEP,PIMPL,ZEXPL,                                &
                    & HTURBLEN,HTURBDIM,                                 &
-                   & TPFILE,OTURB_DIAG,ODIAG_IN_RUN,                    &
+                   & TPFILE,OTURB_DIAG,ODIAG_IN_RUN,,PSFU,PSFV,         &
                    & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,ZRTKEMS,&
                    & TBUDGETS,KBUDGETS, PEDR=PEDR, PTR=PTR,PDISS=PDISS, &
                    & PCURRENT_TKE_DISS=PCURRENT_TKE_DISS                )

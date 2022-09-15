@@ -241,7 +241,6 @@ USE MODD_TURB_n,         ONLY: LHGRAD, XCOEFHGRADTHL, XCOEFHGRADRM, XALTHGRAD, X
 USE MODD_CONF
 USE MODD_LES
 USE MODD_OCEANH
-USE MODD_REF,            ONLY: LCOUPLES
 USE MODD_TURB_n
 !
 USE MODI_GRADIENT_U
@@ -528,18 +527,10 @@ IF (GFTHR) THEN
   ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_WTHR_O_DDTDZ(Z3RDMOMENT,PREDTH1,&
     & PREDR1,PD,PBLL_O_E,PETHETA) * MZM(PFTHR, KKA, KKU, KKL)
 END IF
-! compute interface flux
-IF (LCOUPLES) THEN   ! Autocoupling O-A LES
-  IF (OOCEAN) THEN    ! ocean model in coupled case
-    ZF(:,:,IKE) =  (XSSTFL_C(:,:,1)+XSSRFL_C(:,:,1)) &
-                  *0.5* ( 1. + PRHODJ(:,:,KKU)/PRHODJ(:,:,IKE) )
-  ELSE                ! atmosph model in coupled case
-    ZF(:,:,IKB) =  XSSTFL_C(:,:,1) &
-                  *0.5* ( 1. + PRHODJ(:,:,KKA)/PRHODJ(:,:,IKB) )
-  ENDIF
-!
-ELSE  ! No coupling O and A cases
-  ! atmosp bottom
+! specialcase for surface
+IF (OOCEAN) THEN ! ocean sfc (domain top)
+  ZF(:,:,IKE+1) = PSFTHM(:,:) *0.5*(1. + PRHODJ(:,:,KKU) / PRHODJ(:,:,IKE))
+ELSE ! atmosp bottom
   !*In 3D, a part of the flux goes vertically,
   ! and another goes horizontally (in presence of slopes)
   !*In 1D, part of energy released in horizontal flux is taken into account in the vertical part
@@ -552,17 +543,14 @@ ELSE  ! No coupling O and A cases
                        / PDIRCOSZW(:,:)                       &
                        * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
   END IF
-!
-  IF (OOCEAN) THEN
-    ZF(:,:,IKE) = XSSTFL(:,:) *0.5*(1. + PRHODJ(:,:,KKU) / PRHODJ(:,:,IKE))
-  ELSE !end ocean case (in nocoupled case)
     ! atmos top
 #ifdef REPRO48
 #else
       ZF(:,:,IKE)=0.
+      !TODO merge : the following solution must be kept :
+      !ZF(:,:,IKE+1)=0.
 #endif
   END IF
-END IF !end no coupled cases
 !
 ! Compute the split conservative potential temperature at t+deltat
 CALL TRIDIAG_THERMO(KKA,KKU,KKL,PTHLM,ZF,ZDFDDTDZ,PTSTEP,PIMPL,PDZZ,&
@@ -597,9 +585,10 @@ IF (LHGRAD) THEN
  END WHERE
 END IF
 !
-ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB)
-IF (OOCEAN) THEN
-  ZFLXZ(:,:,KKU) = ZFLXZ(:,:,IKE)
+IF (LOCEAN) THEN
+  ZFLXZ(:,:,IKE+1) = ZFLXZ(:,:,IKE)
+ELSE ! ATMOS
+  ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
 END IF
 !
 DO JK=IKTB+1,IKTE-1
@@ -610,8 +599,8 @@ PWTH(:,:,IKB)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+KKL))
 !
 IF (OOCEAN) THEN
   PWTH(:,:,IKE)=0.5*(ZFLXZ(:,:,IKE)+ZFLXZ(:,:,IKE+KKL))
-  PWTH(:,:,KKA)=0.
-  PWTH(:,:,KKU)=ZFLXZ(:,:,KKU)
+  PWTH(:,:,KKA)=0. 
+  PWTH(:,:,KKU)=PWTH(:,:,IKE)! not used
 ELSE
   PWTH(:,:,KKA)=0.5*(ZFLXZ(:,:,KKA)+ZFLXZ(:,:,KKA+KKL))
   PWTH(:,:,IKE)=PWTH(:,:,IKE-KKL)
@@ -780,17 +769,12 @@ IF (KRR /= 0) THEN
      & PREDTH1,PD,PBLL_O_E,PEMOIST) * MZM(PFTHR, KKA, KKU, KKL)
   END IF
   !
-  ! compute interface flux
-  IF (LCOUPLES) THEN   ! coupling NH O-A
-    IF (OOCEAN) THEN    ! ocean model in coupled case
-      ! evap effect on salinity to be added later !!!
-      ZF(:,:,IKE) =  0.
-    ELSE                ! atmosph model in coupled case
-      ZF(:,:,IKB) =  0.
-      ! AJOUTER FLUX EVAP SUR MODELE ATMOS
-    ENDIF
-  !
-  ELSE  ! No coupling NH OA case
+   !special case at sfc
+    IF (OOCEAN) THEN
+      ! General ocean case
+      ! salinity/evap effect to be added later !!!!!
+      ZF(:,:,IKE) = 0.
+    ELSE ! atmosp case 
     ! atmosp bottom
     !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
     ! (in presence of slopes)
@@ -806,19 +790,12 @@ IF (KRR /= 0) THEN
                          / PDIRCOSZW(:,:)                       &
                          * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
     END IF
-    !
-    IF (OOCEAN) THEN
-      ! General ocean case
-      ! salinity/evap effect to be added later !!!!!
-      ZF(:,:,IKE) = 0.
-    ELSE !end ocean case (in nocoupled case)
       ! atmos top
 #ifdef REPRO48
 #else
       ZF(:,:,IKE)=0.
 #endif
     END IF
-  END IF!end no coupled cases
   ! Compute the split conservative potential temperature at t+deltat
   CALL TRIDIAG_THERMO(KKA,KKU,KKL,PRM(:,:,:,1),ZF,ZDFDDRDZ,PTSTEP,PIMPL,&
                       PDZZ,PRHODJ,PRP)
@@ -855,13 +832,23 @@ IF (KRR /= 0) THEN
   !
   ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB)
   !
+  IF (OOCEAN) THEN
+    ZFLXZ(:,:,KKU) = ZFLXZ(:,:,IKE)
+  END IF
+  !
   DO JK=IKTB+1,IKTE-1
    PWRC(:,:,JK)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+KKL))
   END DO
   PWRC(:,:,IKB)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+KKL))
-  PWRC(:,:,KKA)=0.5*(ZFLXZ(:,:,KKA)+ZFLXZ(:,:,KKA+KKL))
-  PWRC(:,:,IKE)=PWRC(:,:,IKE-KKL)
   !
+  IF (OOCEAN) THEN
+    PWRC(:,:,IKE)=0.5*(ZFLXZ(:,:,IKE)+ZFLXZ(:,:,IKE+KKL))
+    PWRC(:,:,KKA)=0.
+    PWRC(:,:,IKE+1)=ZFLXZ(:,:,IKE+1)
+  ELSE
+    PWRC(:,:,KKA)=0.5*(ZFLXZ(:,:,KKA)+ZFLXZ(:,:,KKA+KKL))
+    PWRC(:,:,IKE)=PWRC(:,:,IKE-KKL)
+  ENDIF
   !
   IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
     ! stores the conservative mixing ratio vertical flux
