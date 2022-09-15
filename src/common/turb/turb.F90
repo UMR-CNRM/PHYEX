@@ -788,7 +788,7 @@ ELSE
   ZUSLOPE=PUT(:,:,KKA)
   ZVSLOPE=PVT(:,:,KKA)
 END IF
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
     ZUSLOPE=PUT(:,:,KKU-1)
     ZVSLOPE=PVT(:,:,KKU-1)
 END IF
@@ -805,7 +805,7 @@ ZCDUEFF(:,:) =-SQRT ( (PSFU(:,:)**2 + PSFV(:,:)**2) /               &
 !
 !*       4.6 compute the surface tangential fluxes
 !
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
   ZTAU11M(:,:)=0.
 ELSE
   ZTAU11M(:,:) =2./3.*(  (1.+ (PZZ (:,:,IKB+KKL)-PZZ (:,:,IKB))  &
@@ -1078,8 +1078,8 @@ END IF
 CALL TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,          &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,               &
                    & PTSTEP,PIMPL,ZEXPL,                                &
-                   & HTURBLEN,HTURBDIM,                                 &
-                   & TPFILE,OTURB_DIAG,ODIAG_IN_RUN,,PSFU,PSFV,         &
+                   & HTURBLEN,HTURBDIM,OOCEAN,                          &
+                   & TPFILE,OTURB_DIAG,ODIAG_IN_RUN,PSFU,PSFV,          &
                    & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,ZRTKEMS,&
                    & TBUDGETS,KBUDGETS, PEDR=PEDR, PTR=PTR,PDISS=PDISS, &
                    & PCURRENT_TKE_DISS=PCURRENT_TKE_DISS                )

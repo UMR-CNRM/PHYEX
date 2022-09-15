@@ -8,10 +8,10 @@ CONTAINS
       SUBROUTINE TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKEM,PLM,PLEPS,PDP,  &
                     & PTRH,PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,        &
                     & PTSTEP,PIMPL,PEXPL,                              &
-                    & HTURBLEN,HTURBDIM,                               &
-                    & TPFILE,OTURB_DIAG,ODIAG_IN_RUN,, PSFUM,PSFVM,    &
+                    & HTURBLEN,HTURBDIM,OOCEAN,                        &
+                    & TPFILE,OTURB_DIAG,ODIAG_IN_RUN,PSFUM,PSFVM,      &
                     & PTP,PRTKES,PRTHLS,PCOEF_DISS,PTDIFF,PTDISS,PRTKEMS,&
-                    & TBUDGETS, KBUDGETS, &
+                    & TBUDGETS, KBUDGETS,                              &
                     & PEDR, PTR,PDISS, PCURRENT_TKE_DISS               )
 !     ##################################################################
 !
@@ -134,7 +134,6 @@ USE MODD_BUDGET, ONLY: LBUDGET_TKE, LBUDGET_TH, NBUDGET_TKE, NBUDGET_TH, TBUDGET
 USE MODD_CONF
 USE MODD_CST
 USE MODD_CTURB
-USE MODD_DYN_n, ONLY : LOCEAN
 USE MODD_FIELD, ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_LES
@@ -179,8 +178,10 @@ CHARACTER(LEN=4),        INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
 CHARACTER(LEN=4),        INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
 TYPE(TFILEDATA),         INTENT(IN)   ::  TPFILE       ! Output file
 LOGICAL,                 INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
-LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
-                                  ! diagnostic fields in the syncronous FM-file
+                                                       ! diagnostic fields in the syncronous FM-file
+LOGICAL,                 INTENT(IN)   ::  ODIAG_IN_RUN  ! switch to activate online diagnostics (mesonh)
+LOGICAL,                 INTENT(IN)   ::  OOCEAN        ! switch to activate LES OCEAN version
+
 REAL, DIMENSION(:,:,:),  INTENT(INOUT)::  PDP          ! Dyn. prod. of TKE
 REAL, DIMENSION(:,:,:),  INTENT(IN)   ::  PTRH
 REAL, DIMENSION(:,:,:),  INTENT(IN)   ::  PTP          ! Ther. prod. of TKE
