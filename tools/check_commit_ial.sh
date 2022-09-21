@@ -194,7 +194,6 @@ if [ $compilation -eq 1 ]; then
             -f $dirpack/ \
             -u $name
     reftree='main'
-    subs="-s gmkpack_ignored_files" #This file contains the list of source code files to exclude from recompilation
   else
     #Create main pack
     gmkpack -a -r 48t1 -b ${packBranch} -n 01 -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb -h $HOMEPACK/PHYEX
@@ -222,7 +221,6 @@ if [ $compilation -eq 1 ]; then
 
     resetpack -f #Is it really useful?
     reftree='local'
-    subs="" #There is nothing to exclude from compilation because (normally) only needed files are copied into the pack
   fi
   cd $HOMEPACK/$name/src/local/phyex
 
@@ -234,7 +232,7 @@ if [ $compilation -eq 1 ]; then
   else
     expand_options=""
   fi
-  subs="$subs -s turb -s micro -s aux -s ext -s conv -s externals" #externals is the old name for aux/ext
+  subs="-s gmkpack_ignored_files -s turb -s micro -s aux -s ext -s conv -s externals" #externals is the old name for aux/ext
   prep_code=$PHYEXTOOLSDIR/prep_code.sh
   if [ "$fromdir" == '' ]; then
     echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
@@ -254,7 +252,18 @@ if [ $compilation -eq 1 ]; then
     [ -d PHYEX/$rep ] && mv PHYEX/$rep .
   done
   if [ -f PHYEX/gmkpack_ignored_files ]; then
-    sed -i "/^end_of_ignored_files/i $(first=1; for line in $(cat PHYEX/gmkpack_ignored_files); do echo -n $(test $first -ne 1 && echo \\n)${line}; first=0; done)" $HOMEPACK/$name/ics_masterodb
+    #gmkpack_ignored_files contains a list of file, present in the reference pack, that is not used anymore
+    #and must be excluded from compilation (in case of a full comilation) or from re-compilation (in case of a non-full
+    #compilation).
+    if [ $fullcompilation == 0 ]; then
+      #Content is added in the ics_masterodb script
+      sed -i "/^end_of_ignored_files/i $(first=1; for line in $(cat PHYEX/gmkpack_ignored_files); do echo -n $(test $first -ne 1 && echo \\n)${line}; first=0; done)" $HOMEPACK/$name/ics_masterodb
+    else
+      #Files must be suppressed (non phyex files)
+      for file in $(cat PHYEX/gmkpack_ignored_files); do
+        [ -f $HOMEPACK/$name/src/local/$file ] && rm -f $HOMEPACK/$name/src/local/$file
+      done
+    fi
   fi
 
   EXT=PHYEX/ext/
@@ -268,6 +277,8 @@ if [ $compilation -eq 1 ]; then
     [ -f $EXT/suphmpa.F90 ] && mv $EXT/suphmpa.F90 ../arpifs/phys_dmn/
     #Special mpa case
     [ -f $EXT/modd_spp_type.F90 ] && mv $EXT/modd_spp_type.F90 ../mpa/micro/externals/
+    [ -f $EXT/spp_mod_type.F90 ] && mv $EXT/spp_mod_type.F90 ../mpa/micro/externals/
+    [ -d $EXT/dead_code ] && rm -rf $EXT/dead_code/
     if [ $EXT == "PHYEX/externals" ]; then
       mv $EXT .
     else
