@@ -16,9 +16,12 @@ set -e
 #small_3D_alt6: CMF_UPDRAFT='RAHA', CMF_CLOUD='BIGA'
 #small_3D_alt7: CMF_CLOUD='STAT', LOSIGMAS=.FALSE. #Needs 2 corrections in original cycle 48
 #small_3D_alt8: CMF_UPDRAFT='RHCJ'
+#small_3D_alt9: CCLOUD='OLD3', OCND2=.T.
 
 #The small_3D_alt8 is not included in the list of available tests because it needs to be compared against a special commit.
 #Indeed, on 3 February 2022 (commit 907e906) the mesonh version of compute_updraft_rhcj.F90 has been put in the common directory.
+
+#The small_3D_alt9 is not included in the list of available tests because it cannot be run before 21 September (commit edc3f88).
 
 specialPack="ori split recompil"
 availTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7"
