@@ -277,6 +277,7 @@ if [ $compilation -eq 1 ]; then
     [ -f $EXT/suphmpa.F90 ] && mv $EXT/suphmpa.F90 ../arpifs/phys_dmn/
     #Special mpa case
     [ -f $EXT/modd_spp_type.F90 ] && mv $EXT/modd_spp_type.F90 ../mpa/micro/externals/
+    [ -f $EXT/spp_mod_type.F90 ] && mv $EXT/spp_mod_type.F90 ../mpa/micro/externals/
     [ -d $EXT/dead_code ] && rm -rf $EXT/dead_code/
     if [ $EXT == "PHYEX/externals" ]; then
       mv $EXT .

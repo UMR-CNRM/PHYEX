@@ -252,8 +252,8 @@ SUBROUTINE APL_AROME(YDGEOMETRY,YDSURF, YDCFU, YDXFU, YDMODEL, KBL, KGPCOMP, KID
 
 !     Method
 !     ------
-!     - convert aladin variables into mesonh variables (level inversion 
-!       and q to r, t to theta) 
+!     - convert aladin variables into mesonh variables (level inversion
+!       and q to r, t to theta)
 !     - call mesoNH physics and ECMWF radiation scheme
 !     - convert mesoNH tendencies to aladin tendencies
 
@@ -265,44 +265,44 @@ SUBROUTINE APL_AROME(YDGEOMETRY,YDSURF, YDCFU, YDXFU, YDMODEL, KBL, KGPCOMP, KID
 !     externalisation of surface scheme call + small cleaning (20-07-04) Y.Seity
 !     Modifications
 !     -------------
-!      G. Hello 04-02-06: Add the call of KFB-convection scheme 
+!      G. Hello 04-02-06: Add the call of KFB-convection scheme
 !                         for future use in ALARO
-!      T.Kovacic 04-05-05: Added ZCVTENDPR_ and ZCVTENDPRS_ 
+!      T.Kovacic 04-05-05: Added ZCVTENDPR_ and ZCVTENDPRS_
 !        M.Hamrud      01-Oct-2003 CY28 Cleaning
 !      F.Bouyssel 04-05-05: New arguments in ACRADIN
 !     Y. Seity 30-Sept-2005 Add MNH Chemistry scheme
 !     R. Zaaboul 15-feb-2006 add surface scheme call
-!     T.Kovacic  2006-03-23: calls to subroutines for budgets 
+!     T.Kovacic  2006-03-23: calls to subroutines for budgets
 !                             and new arguments PFRTH and PFRSO
-!     Y. Seity   2007-05-07: add CFU and XFU calculations 
+!     Y. Seity   2007-05-07: add CFU and XFU calculations
 !                           and call aro_ground_diag
-!     S.Ivatek-S 2007-04-17: Over dimensioning of PGPAR by NGPAR+1 just 
+!     S.Ivatek-S 2007-04-17: Over dimensioning of PGPAR by NGPAR+1 just
 !                            (KLON,NGPAR) is used boundary checking bf
 !     T.Kovacic  2007-03-16: Fourth dim. in APFT
-!     JJMorcrette, ECMWF, 20080325: dummy arguments for RADACT to allow for 
+!     JJMorcrette, ECMWF, 20080325: dummy arguments for RADACT to allow for
 !                        using a new sulphate climatology in the ECMWF model
 !     Y. Seity   2008-06-15: correct calculations of PFRTHDS, PFRSODS and PFCLL
 !     Y. Seity   2008-09-29: phasing Chemistry corrections
 !     O.Riviere  2008-10-01: introduction of new data flow for DDH in Arome
 !     Y. Seity   2009-05-03: new version of EDKF and implementation of EDMF
-!     Y. Seity   2009-10-03: add missed deallocations 
+!     Y. Seity   2009-10-03: add missed deallocations
 !     S. Riette  2009-03-25: Arguments modification for AROCLDIA to add HTKERAF
 !     K. Yessad (Jul 2009): remove CDLOCK + some cleanings
 !     A. Alias   2009-09-01: Sulfate and Volcano aerosols added (call radaer)
 !     S. Riette  2010-01-19: ZUM__, ZVM__ and ZDEPTH_HEIGHT_ are given
-!                            ARO_GROUND_DIAG in 3D.                     
+!                            ARO_GROUND_DIAG in 3D.
 !     Y. Seity   2010-03-09: add PFEVN and PFEVL
 !     Y. Bouteloup 2010-03-26 : Add PQLRAD et PQIRAD
 !     Y. Seity : Test TKE > 0.
 !     Y. Seity : Optimized version of EDKF + diag HCLS
 !     Y. Seity : 2010-09 Save Ts at the end of apl_arome for ICMSH+0000
-!     L. Bengtsson (2010): Introduce cloud diagnostics based on geop. 
-!                               height (LWMOCLOUD), AND cloud-overlap assumptions 
+!     L. Bengtsson (2010): Introduce cloud diagnostics based on geop.
+!                               height (LWMOCLOUD), AND cloud-overlap assumptions
 !                               from C. Wittman 2009 (LACPANMX + WMXOV)
 !     S. Riette: 2010-12 aro_ground_diag interface modified
 !     Y. Seity: 2010-12 add hail diagnostic
 !     R. El Khatib 30-Jun-2010 NEC directive noloopfusion to preserve critical regions
-!     P.Marguinaud 2010-06-29 : KSURFEXCTL flag (disable SURFEX) 
+!     P.Marguinaud 2010-06-29 : KSURFEXCTL flag (disable SURFEX)
 !     2010-12    B. Decharme  : modify the radiative coupling with surfex (SW per band in ACRADIN and RADHEAT)
 !     2011-02    A. Voldoire : add ZAERINDS to CALL RADAER and ACRADIN
 !                              for sulfate indirect effect computation
@@ -331,11 +331,13 @@ SUBROUTINE APL_AROME(YDGEOMETRY,YDSURF, YDCFU, YDXFU, YDMODEL, KBL, KGPCOMP, KID
 !     2016-09, J. Masek: Proper calculation of sunshine duration in ACRANEB2.
 !     2016-10, P. Marguinaud : Port to single precision
 !     S. Riette 2016-11: Changes in ICE3/ICE4
+!     K.I Ivarsson 2018-02 : Some new variables for microphysics
 !     2018-09, E. Gleeson: Corrected misplaced arguments in ACRANEB2 call.
 !     2019-09-24 J.M. Piriou arguments for convective gusts.
 !     R. El Khatib 30-Oct-2018 substantial rewrite for optimization and coding standards respect.
 !     2018-10, I. Etchevers : add Visibilities
 !     2019-01, I. Etchevers, Y. Seity : add Precipitation Type
+!     2019-06, W. de Rooy: Modifications for new set-up statistical cloud scheme (LSTATNW)
 !     2019-09, J. Masek: Corrected dimensioning of dummy argument PGMU0.
 !                        Modified call to ACRANEB2 (clearsky fluxes).
 !     2019-10, I. Etchevers : Visibilities in ACVISIH, AROCLDIA=>ACCLDIA
@@ -375,12 +377,32 @@ USE YOMNSV     , ONLY : NSV_CO2
 USE DDH_MIX    , ONLY : ADD_FIELD_3D, NEW_ADD_FIELD_3D, TYP_DDH ! for new diag data flow
 USE YOMSPSDT   , ONLY : YSPPT_CONFIG, YSPPT
 USE SPP_MOD    , ONLY : YSPP_CONFIG, YSPP
+USE SPP_MOD_TYPE, ONLY : ALL_SPP_VARS, SET_ALL_SPP, CLEAR_ALL_SPP, APPLY_SPP
 USE YOMLSFORC  , ONLY : LMUSCLFA, NMUSCLFA, REMIS_FORC, RALB_FORC
 ! daand: radflex
 USE INTFLEX_MOD, ONLY : LINTFLEX, LRADFLEX,&
                       & TYPE_INTPROC, TYPE_INTPROCSET,&
                       & NEWINTFIELD, NEWINTPROC
 USE YOMMP0     , ONLY : MYPROC     
+
+
+
+
+
+
+
+
+!SR phasing step, must be removed in 48t3
+USE SPP_MOD_TYPE, ONLY : TSPP_CONFIG_TYPE
+
+
+
+
+
+
+
+
+
 
 !     --------------------------------------------------------------------------
 
@@ -759,6 +781,14 @@ REAL(KIND=JPRB) :: ZZTOP_(KFDIA),  ZCVTENDPR_(KFDIA),      ZCVTENDPRS_(KFDIA)
 ! surface flux of x and y component of wind. are they really necessary ? REK
 REAL(KIND=JPRB) :: ZSFU_(KFDIA),   ZSFV_(KFDIA)
 
+! local areas for OCND2 option:
+! ZICLDFR = ice cloud fraction , ZWCLDFR = water or mixed-phase cloud fraction,
+! ZSSIO = Super-saturation with respect to ice in ZICLDFR , 
+! ZSSIU = Sub-saturation with respect to ice outside ZICLDFR,
+! ZIFR = variable used for calulation of subgridscale ice
+! Meso-NH world
+REAL(KIND=JPRB) :: ZICLDFR_(KFDIA,KLEV),    ZWCLDFR_(KFDIA,KLEV)
+REAL(KIND=JPRB) :: ZSSIO_(KFDIA,KLEV),      ZSSIU_(KFDIA,KLEV),      ZIFR_(KFDIA,KLEV)
 
 ! Arpege-style dimensionning :
 ! --------------------------
@@ -934,6 +964,22 @@ REAL(KIND=JPRB) :: ZMU,ZVAL
 INTEGER(KIND=JPIM) :: JKO,JKE
 
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+!SR phasing step
+TYPE(TSPP_CONFIG_TYPE) :: YSPP1, YSPP2, YSPP3
 !     --------------------------------------------------------------------------
 
 #include "abor1.intfb.h"
@@ -1020,7 +1066,7 @@ ASSOCIATE(MINPRR=>YDPARAR%MINPRR, MINPRS=>YDPARAR%MINPRS, MVQS=>YDPARAR%MVQS, &
  & CFRAC_ICE_SHALLOW_MF=>YDPARAR%CFRAC_ICE_SHALLOW_MF, CFRAC_ICE_ADJUST=>YDPARAR%CFRAC_ICE_ADJUST, &
  & MVTS=>YDPARAR%MVTS, NREFROI2=>YDPARAR%NREFROI2, NREFROI1=>YDPARAR%NREFROI1, &
  & MVEMIS=>YDPARAR%MVEMIS, LOWARM=>YDPARAR%LOWARM, LOCND2=>YDPARAR%LOCND2, &
- & LGRSN=>YDPARAR%LGRSN, LOSIGMAS=>YDPARAR%LOSIGMAS, NRR=>YDPARAR%NRR, &
+ & LOSIGMAS=>YDPARAR%LOSIGMAS, NRR=>YDPARAR%NRR, &
  & LOSUBG_COND=>YDPARAR%LOSUBG_COND, RADGR=>YDPARAR%RADGR, &
  & CMF_UPDRAFT=>YDPARAR%CMF_UPDRAFT, LHARATU=>YDPARAR%LHARATU, &
  & XMINLM=>YDPHY0%XMINLM, XMAXLM=>YDPHY0%XMAXLM, AERCS1=>YDPHY0%AERCS1, &
@@ -1042,6 +1088,7 @@ ASSOCIATE(MINPRR=>YDPARAR%MINPRR, MINPRS=>YDPARAR%MINPRS, MVQS=>YDPARAR%MVQS, &
  & NGFL_EXT=>YGFL%NGFL_EXT, YLRAD=>YGFL%YLRAD, YIRAD=>YGFL%YIRAD, &
  & NGFL_EZDIAG=>YGFL%NGFL_EZDIAG, &
  & NLIMA=>YGFL%NLIMA, CMICRO=>YDPARAR%CMICRO,NPROMICRO=>YDPARAR%NPROMICRO, &
+ & LKOGAN=>YDPARAR%LKOGAN, LHGT_QS=>YDPARAR%LHGT_QS, LMODICEDEP=>YDPARAR%LMODICEDEP, &
  & YSD_VAD=>YDSURF%YSD_VAD, &
  & QCO2=>YDPHY3%QCO2, &
  & NTEND_DIAG_POS=>YDPHY%NTEND_DIAG_POS, NTEND_DIAG_FREQ_RESET=>YDPHY%NTEND_DIAG_FREQ_RESET, &
@@ -1188,6 +1235,11 @@ IF (INIT0 >= 0) THEN
   ZMFM_(:,:)=ZVALUE
   ZSIGM_(:,:)=ZVALUE
   ZNEBMNH_(:,:)=ZVALUE
+  ZICLDFR_(:,:)=ZVALUE
+  ZWCLDFR_(:,:)=ZVALUE
+  ZSSIO_(:,:)=ZVALUE
+  ZSSIU_(:,:)=ZVALUE
+  ZIFR_(:,:)=ZVALUE
   ZEVAP_(:,:)=ZVALUE
 
   ZRSWAP_(:,:,:)=ZVALUE
@@ -1655,10 +1707,14 @@ IF (LMICRO) THEN
      & YDDDH, YDMODEL%YRML_DIAG%YRLDDH, YDMODEL%YRML_DIAG%YRMDDH)
   ELSE
 
+YSPP1%LPERT=.FALSE.
+YSPP2%LPERT=.FALSE.
+YSPP3%LPERT=.FALSE.
+
+!SR phasing step, YSPP1 and YSPP2 must be replaced by their values
     CALL ARO_ADJUST (KLEV,IKU,IKL,KFDIA,KLEV,NRR,&
-     & NGFL_EZDIAG, &
      & CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3, LOSUBG_COND, &
-     & LOSIGMAS, CMICRO, LOCND2, CSUBG_MF_PDF, &
+     & LOSIGMAS, CMICRO, LOCND2, LHGT_QS, CSUBG_MF_PDF, &
      & ZDT,VSIGQSAT,ZZZ_F_,&
      & ZRHODJM__(:,1:KLEV),&
      & ZEXNREFM_,&
@@ -1670,10 +1726,12 @@ IF (LMICRO) THEN
      & ZRI_MF_,ZCF_MF_,&
      & ZTHS__(:,1:KLEV),ZRS_,&
      & ZSRCS__(:,1:KLEV),ZNEBMNH_,&
+     & ZICLDFR_,ZWCLDFR_,ZSSIO_,ZSSIU_,ZIFR_,&
      & ZHLC_HRC__(:,1:KLEV), ZHLC_HCF__(:,1:KLEV),&
      & ZHLI_HRI__(:,1:KLEV), ZHLI_HCF__(:,1:KLEV),&
-     & PGP2DSPP,PEZDIAG,&
-     & YDDDH, YDMODEL%YRML_DIAG%YRLDDH, YDMODEL%YRML_DIAG%YRMDDH)
+     & YDDDH, YDMODEL%YRML_DIAG%YRLDDH, YDMODEL%YRML_DIAG%YRMDDH,&
+     & YSPP1, YSPP2)
+!     & ZSPP_ALL%YSPP_PSIGQSAT,ZSPP_ALL%YSPP_ICE_CLD_WGT)
 
   ENDIF
   
@@ -3306,16 +3364,19 @@ IF (LMICRO) THEN
      & ZINPRR_NOTINCR_, ZINPRS_NOTINCR_, ZINPRG_NOTINCR_, ZINPRH_NOTINCR_,ZPFPR_,&
      & YDDDH, YDMODEL%YRML_DIAG%YRLDDH, YDMODEL%YRML_DIAG%YRMDDH )
   ELSE
-    CALL ARO_RAIN_ICE (NPROMICRO,KLEV,IKU,IKL,KFDIA,KLEV,NRR,KSTEP+1,NSPLITR,NGFL_EZDIAG,&
+!SR phasing step, YSPP1, YSPP2 and YSPP3 must be replaced by their values
+    CALL ARO_RAIN_ICE (NPROMICRO,KLEV,IKU,IKL,KFDIA,KLEV,NRR,KSTEP+1,NSPLITR,&
      & LOSUBG_COND, CSUBG_AUCV_RC, CSUBG_AUCV_RI, LOSEDIC,CSEDIM, CMICRO, ZDT,ZDZZ_ ,&
      & ZRHODJM__(:,1:KLEV),ZRHODREFM__(:,1:KLEV), ZEXNREFM_, ZPABSM__(:,1:KLEV),&
      & ZHLC_HRC__(:,1:KLEV), ZHLC_HCF__(:,1:KLEV),&
      & ZHLI_HRI__(:,1:KLEV), ZHLI_HCF__(:,1:KLEV),&
      & ZTHM__(:,1:KLEV),ZRM_, ZSIGS__(:,1:KLEV), ZNEBMNH_, ZTHS__(:,1:KLEV),ZRS_,&
-     & ZEVAP_, ZCIT_,LOWARM,ZSEA_,ZTOWN_, LOCND2,LGRSN,&
+     & ZEVAP_, ZCIT_,LOWARM,ZSEA_,ZTOWN_, &
+     & ZICLDFR_, ZWCLDFR_, ZSSIO_, ZSSIU_, ZIFR_, &
+     & LOCND2, LKOGAN, LMODICEDEP,&
      & ZINPRR_NOTINCR_, ZINPRS_NOTINCR_, ZINPRG_NOTINCR_, ZINPRH_NOTINCR_,ZPFPR_,&
-     & PGP2DSPP,PEZDIAG, &
-     & YDDDH, YDMODEL%YRML_DIAG%YRLDDH, YDMODEL%YRML_DIAG%YRMDDH)
+     & YDDDH, YDMODEL%YRML_DIAG%YRLDDH, YDMODEL%YRML_DIAG%YRMDDH,&
+     & YSPP1, YSPP2, YSPP3)
   ENDIF
 
   DO JLON=KIDIA,KFDIA

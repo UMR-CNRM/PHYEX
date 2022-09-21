@@ -57,7 +57,9 @@ REAL,SAVE :: XSCFAC,                           & ! Constants for raindrop
              X0EVAR,X1EVAR,XEX0EVAR,XEX1EVAR,  & ! evaporation: EVA and for
              X0DEPI,X2DEPI,                    & ! deposition : DEP on I,
              X0DEPS,X1DEPS,XEX0DEPS,XEX1DEPS,  & !                  on S and
-             X0DEPG,X1DEPG,XEX0DEPG,XEX1DEPG     !                  on G
+             XRDEPSRED,&
+             X0DEPG,X1DEPG,XEX0DEPG,XEX1DEPG,  & !                  on G
+             XRDEPGRED
 !
 REAL,SAVE :: XTIMAUTI,XTEXAUTI,XCRIAUTI,       & ! Constants for pristine ice
              XT0CRIAUTI,XACRIAUTI,XBCRIAUTI      ! autoconversion : AUT
@@ -181,5 +183,6 @@ REAL,DIMENSION(:,:), SAVE, ALLOCATABLE         &
                          :: XKER_SWETH,        & ! Normalized kernel for SWETH
                             XKER_GWETH,        & ! Normalized kernel for GWETH
                             XKER_RWETH           ! Normalized kernel for RWETH
+REAL,SAVE :: XFRMIN(40)                          ! Parmeters to modify melt and growth of graupels etc.
 !
 END MODULE MODD_RAIN_ICE_PARAM

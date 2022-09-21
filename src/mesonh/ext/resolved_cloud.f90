@@ -478,6 +478,7 @@ REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZICEFR
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZPRCFR
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZTM
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2)) :: ZSIGQSAT2D
+REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZDUM
 ZSIGQSAT2D(:,:) = PSIGQSAT
 !
 !------------------------------------------------------------------------------
@@ -743,10 +744,11 @@ SELECT CASE ( HCLOUD )
     ZZZ = MZF( PZZ )
     IF(LRED .AND. LADJ_BEFORE) THEN
       CALL ICE_ADJUST (1, IKU, 1, KRR, CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,   &
-                      'ADJU', OSUBG_COND, OSIGMAS, .FALSE., CSUBG_MF_PDF,      &
-                      PTSTEP, ZSIGQSAT2D,                                      &
+                      'ADJU', OSUBG_COND, OSIGMAS, .FALSE., .FALSE.,           &
+                      CSUBG_MF_PDF, PTSTEP, ZSIGQSAT2D,                        &
                       PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABST, ZZZ,  &
                       ZEXN, PCF_MF, PRC_MF, PRI_MF,                            &
+                      ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                            &
                       PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,        &
                       PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                    &
                       PTH=PTHS*PTSTEP, PTHS=PTHS, PSRCS=PSRCS, PCLDFR=PCLDFR,  &
@@ -795,10 +797,11 @@ SELECT CASE ( HCLOUD )
 !
     IF (.NOT. LRED .OR. (LRED .AND. LADJ_AFTER) ) THEN
       CALL ICE_ADJUST (1, IKU, 1, KRR, CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,   &
-                       'DEPI', OSUBG_COND, OSIGMAS, .FALSE.,CSUBG_MF_PDF,      &
-                       PTSTEP, ZSIGQSAT2D,                                     &
+                       'DEPI', OSUBG_COND, OSIGMAS, .FALSE., .FALSE.,          &
+                       CSUBG_MF_PDF, PTSTEP, ZSIGQSAT2D,                       &
                        PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABST, ZZZ, &
                        ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
+                       ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                           &
                        PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
                        PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                   &
                        PTH=PTHS*PTSTEP, PTHS=PTHS, PSRCS=PSRCS, PCLDFR=PCLDFR, &
@@ -830,10 +833,11 @@ SELECT CASE ( HCLOUD )
     ZZZ = MZF( PZZ )
     IF(LRED .AND. LADJ_BEFORE) THEN
       CALL ICE_ADJUST (1, IKU, 1, KRR, CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,   &
-                       'ADJU', OSUBG_COND, OSIGMAS, .FALSE., CSUBG_MF_PDF,     &
-                       PTSTEP, ZSIGQSAT2D,                                     &
+                       'ADJU', OSUBG_COND, OSIGMAS, .FALSE., .FALSE.,          &
+                       CSUBG_MF_PDF, PTSTEP, ZSIGQSAT2D,                       &
                        PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABST, ZZZ, &
                        ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
+                       ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                           &
                        PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
                        PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                   &
                        PTH=PTHS*PTSTEP, PTHS=PTHS, PSRCS=PSRCS, PCLDFR=PCLDFR, &
@@ -887,10 +891,11 @@ SELECT CASE ( HCLOUD )
 !
     IF (.NOT. LRED .OR. (LRED .AND. LADJ_AFTER) ) THEN
      CALL ICE_ADJUST (1, IKU, 1, KRR, CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,  &
-                     'DEPI', OSUBG_COND, OSIGMAS, .FALSE., CSUBG_MF_PDF,     &
-                     PTSTEP, ZSIGQSAT2D,                                     &
+                     'DEPI', OSUBG_COND, OSIGMAS, .FALSE., .FALSE.,          &
+                     CSUBG_MF_PDF, PTSTEP, ZSIGQSAT2D,                       &
                      PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABST, ZZZ, &
                      ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
+                     ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                           &
                      PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
                      PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                   &
                      PTH=PTHS*PTSTEP, PTHS=PTHS, PSRCS=PSRCS, PCLDFR=PCLDFR, &
