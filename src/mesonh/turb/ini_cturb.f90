@@ -223,7 +223,7 @@ XCPR5= XCPR2
 !         3. MINIMUM VALUES 
 !            --------------
 !
-XTKEMIN=0.01
+XTKEMIN=0.01 ! This value is replaced by XKEMIN in &NAM_TURBn
 !
 !XLINI=10.   ! BL mixing length
 XLINI=0.1   ! BL mixing length

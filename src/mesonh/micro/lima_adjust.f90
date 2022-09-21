@@ -137,6 +137,7 @@ END MODULE MODI_LIMA_ADJUST
 !  P. Wautelet 28/05/2020: bugfix: correct array start for PSVT and PSVS
 !  P. Wautelet 01/02/2021: bugfix: add missing CEDS source terms for SV budgets
 !  B. Vie         06/2020: fix PSRCS
+!  P. Wautelet 23/07/2021: replace non-standard FLOAT function by REAL function
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -694,9 +695,9 @@ IF( IMICRO >= 1 ) THEN
       ALLOCATE(ZZW2(IMICRO))
       ALLOCATE(ZVEC1(IMICRO))
       ALLOCATE(IVEC1(IMICRO))
-      ZVEC1(:) = MAX( 1.0001, MIN( FLOAT(NAHEN)-0.0001, XAHENINTP1 * ZZT(:) + XAHENINTP2 ) )
+      ZVEC1(:) = MAX( 1.0001, MIN( REAL(NAHEN)-0.0001, XAHENINTP1 * ZZT(:) + XAHENINTP2 ) )
       IVEC1(:) = INT( ZVEC1(:) )
-      ZVEC1(:) = ZVEC1(:) - FLOAT( IVEC1(:) )
+      ZVEC1(:) = ZVEC1(:) - REAL( IVEC1(:) )
       ZS(:) = ZRVS(:)*PTSTEP / ZRVSATW(:) - 1.
       ZZW(:) = ZCCS(:)*PTSTEP/(XLBC*ZCCS(:)/ZRCS(:))**XLBEXC
       ZZW2(:) = XAHENG3(IVEC1(:)+1)*ZVEC1(:)-XAHENG3(IVEC1(:))*(ZVEC1(:)-1.)

@@ -260,6 +260,8 @@ USE MODD_CURVCOR_n
 USE MODD_DEEP_CONVECTION_n
 USE MODD_DEF_EDDY_FLUX_n           ! Ajout PP
 USE MODD_DEF_EDDYUV_FLUX_n         ! Ajout PP
+USE MODD_DIAG_IN_RUN, ONLY: LDIAG_IN_RUN, XCURRENT_TKE_DISS
+USE MODD_DIM_n, ONLY: NIMAX_ll, NJMAX_ll
 USE MODD_DRAGBLDG_n
 USE MODD_DRAGTREE_n
 USE MODD_DUST
@@ -318,6 +320,7 @@ use mode_budget,            only: Budget_store_end, Budget_store_init
 USE MODE_DATETIME
 USE MODE_DUST_PSD
 USE MODE_ll
+USE MODE_GATHER_ll
 USE MODE_MNH_TIMING
 USE MODE_MODELN_HANDLER
 USE MODE_MPPDB
@@ -421,7 +424,7 @@ INTEGER :: IIU, IJU, IKU                              ! dimensional indexes
 !
 INTEGER     :: JSV              ! Loop index for Scalar Variables
 INTEGER     :: JSWB             ! loop on SW spectral bands
-INTEGER     :: IIB,IIE,IJB,IJE, IKB, IKE
+INTEGER     :: IIB,IIE,IJB,IJE, IKB, IKE, JI,JJ
 INTEGER     :: IMODEIDX
               ! index values for the Beginning or the End of the physical
               ! domain in x and y directions
@@ -455,6 +458,9 @@ REAL, DIMENSION(:), ALLOCATABLE :: ZPROSOL1(:),ZPROSOL2(:) ! Funtions for penetr
 !
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLENGTHM, ZLENGTHH, ZMFMOIST !LHARAT turb option from AROME
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZTDIFF, ZTDISS
+REAL, DIMENSION(:),ALLOCATABLE  :: ZXHAT_ll,ZYHAT_ll  !  Position x/y in the conformal
+                                                 ! plane (array on the complete domain)
+REAL, DIMENSION(:,:), ALLOCATABLE :: ZDIST ! distance from the center of the cooling 
 !
 !-----------------------------------------------------------------------------
 
@@ -683,6 +689,7 @@ IF (.NOT. OCLOUD_ONLY .AND. KTCOUNT /= 1)  THEN
          NDLON,NFLEV,CAER,NAER,NSTATM,                             &
          XSINDEL,XCOSDEL,XTSIDER,XCORSOL,                          &
          XSTATM,XOZON, XAER)
+  XAER_CLIM = XAER
  END IF
 END IF
 !
@@ -1486,8 +1493,37 @@ END IF
 ALLOCATE(ZTDIFF(IIU,IJU,IKU))
 ALLOCATE(ZTDISS(IIU,IJU,IKU))
 !
+!
+!! Compute Shape of sfc flux for Oceanic Deep Conv Case
+!
+IF (LOCEAN .AND. LDEEPOC) THEN
+  ALLOCATE(ZDIST(IIU,IJU))
+  !*       COMPUTES THE PHYSICAL SUBDOMAIN BOUNDS
+  ALLOCATE(ZXHAT_ll(NIMAX_ll+2*JPHEXT),ZYHAT_ll(NJMAX_ll+2*JPHEXT))
+  !compute ZXHAT_ll = position in the (0:Lx) domain 1 (Lx=Size of domain1 )
+  !compute XXHAT_ll = position in the (L0_subproc,Lx_subproc) domain for the current subproc
+  !                                     L0_subproc as referenced in the full domain 1
+  CALL GATHERALL_FIELD_ll('XX',XXHAT,ZXHAT_ll,IRESP)
+  CALL GATHERALL_FIELD_ll('YY',XYHAT,ZYHAT_ll,IRESP)
+  CALL GET_DIM_EXT_ll('B',IIU,IJU)
+  DO JJ = IJB,IJE
+    DO JI = IIB,IIE
+      ZDIST(JI,JJ) = SQRT(                         &
+      (( (XXHAT(JI)+XXHAT(JI+1))*0.5 - XCENTX_OC ) / XRADX_OC)**2 + &
+      (( (XYHAT(JJ)+XYHAT(JJ+1))*0.5 - XCENTY_OC ) / XRADY_OC)**2   &
+                                )
+    END DO
+  END DO
+  DO JJ=IJB,IJE
+    DO JI=IIB,IIE
+      IF ( ZDIST(JI,JJ) > 1.) XSSTFL(JI,JJ)=0.
+    END DO
+  END DO
+END IF !END DEEP OCEAN CONV CASE
+!
+!
    CALL TURB( 1, IKU, 1, IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,        &
-              LTURB_FLX, LTURB_DIAG, LSUBG_COND, LRMC01, LOCEAN,                     &
+              LTURB_FLX, LTURB_DIAG, LSUBG_COND, LRMC01, LOCEAN, LDIAG_IN_RUN,       &
               CTURBDIM, CTURBLEN, CTOM, CTURBLEN_CLOUD, CCLOUD,XIMPL,                &
               XTSTEP, TPFILE,                                                        &
               XDXX, XDYY, XDZZ, XDZX, XDZY, XZZ,                                     &
@@ -1502,7 +1538,7 @@ ALLOCATE(ZTDISS(IIU,IJU,IKU))
               XRUS, XRVS, XRWS, XRTHS, XRRS, XRSVS, XRTKES, XSIGS, XWTHVMF,          &
               XTHW_FLUX, XRCW_FLUX, XSVW_FLUX,XDYP, XTHP, XTR, XDISS,                &
               TBUDGETS, KBUDGETS=SIZE(TBUDGETS),PLEM=XLEM,PRTKEMS=XRTKEMS,           &
-              PTR=XTR, PDISS=XDISS                                                   )
+              PTR=XTR, PDISS=XDISS, PCURRENT_TKE_DISS=XCURRENT_TKE_DISS              )
 !
 DEALLOCATE(ZTDIFF)
 DEALLOCATE(ZTDISS)
