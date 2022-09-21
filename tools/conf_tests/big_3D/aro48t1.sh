@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -p normal256
-#SBATCH --export=MYLIB,HOMEPACK
+#SBATCH --export=MYLIB,HOMEPACK,TESTDIR
 #SBATCH -n 1280
 #SBATCH -c 4
 #SBATCH -N 40
@@ -103,8 +103,8 @@ echo ISYNC=$ISYNC
 #                               USER PREFERENCES
 #                               ================
 
-export NAMELDIR=/home/gmap/mrpm/khatib/pack/48t1_main.01#myref/run/cy47.forecast_arome_e700/Namelists
-
+#export NAMELDIR=/home/gmap/mrpm/khatib/pack/48t1_main.01#myref/run/cy47.forecast_arome_e700/Namelists
+export NAMELDIR=$TESTDIR/Namelists
 
 HOMEPACK=${HOMEPACK:=$HOME/pack}
 export BINDIR=$HOMEPACK/$MYLIB/bin
@@ -114,14 +114,15 @@ OUTPUTDIR=${OUTPUTDIR:-$PWD} #No cd command have been done before this line
 
 
 export DATADIR=/scratch/work/khatib/data/cy47.forecast_arome_e700
-export REFDIR=/home/gmap/mrpm/khatib/benchmarks/apps/modules/cy47.forecast_arome_e700/References
+#export REFDIR=/home/gmap/mrpm/khatib/benchmarks/apps/modules/cy47.forecast_arome_e700/References
 export TOOLSDIR=/home/gmap/mrpm/khatib/benchmarks/tools
-export ROOTDIR_ODB=/home/gmap/mrpm/khatib/odbpools/36t1_bench/cy47.forecast_arome_e700
+#export ROOTDIR_ODB=/home/gmap/mrpm/khatib/odbpools/36t1_bench/cy47.forecast_arome_e700
 
 # Check reliability of auxilary directories :
 # -----------------------------------------
 ierr=0
-for var in NAMELDIR BINDIR DATADIR REFDIR TOOLSDIR ; do
+#for var in NAMELDIR BINDIR DATADIR REFDIR TOOLSDIR ; do
+for var in NAMELDIR BINDIR DATADIR TOOLSDIR ; do
   eval "dir=\$$var"
   if [ ! "$dir" ] ; then
     echo "$var is not set."
@@ -145,9 +146,9 @@ done
 echo TOOLSDIR=$TOOLSDIR
 echo NAMELDIR=$NAMELDIR
 echo DATADIR=$DATADIR
-echo REFDIR=$REFDIR
+#echo REFDIR=$REFDIR
 echo BINDIR=$BINDIR
-echo ROOTDIR_ODB=$ROOTDIR_ODB
+#echo ROOTDIR_ODB=$ROOTDIR_ODB
 
 export PATH=$TOOLSDIR:$PATH
 export TOOLSDIR
@@ -289,7 +290,7 @@ NAMELIST=namel_previ.48
 CTRLLIST=extra_namelists48.list
 LINKS=links_inline48.scpt
 EXECUTABLE=MASTERODB
-REFLIST=$REFDIR/forecast.out
+#REFLIST=$REFDIR/forecast.out
 EXPLIST=./NODE.001_01
 set +x
 
@@ -424,7 +425,7 @@ set -x
 #MTOOL common join=step_1
 
 set -x
-$TOOLSDIR/getdata.ksh
+$TOOLSDIR/getdata.sh
 set +x
 
 #MTOOL common
@@ -498,13 +499,13 @@ set +x
 if [ $ISYNC -eq 0 ] ; then
   set -x
 #MTOOL common join=step_1
-  $TOOLSDIR/input_sync.ksh
+  $TOOLSDIR/input_sync.sh
 #MTOOL common
   set +x
 else
   set -x
 #MTOOL common join=step_2
-  $TOOLSDIR/input_sync.ksh
+  $TOOLSDIR/input_sync.sh
 #MTOOL common
   set +x
 fi
@@ -550,13 +551,13 @@ fi
 echo
 if [ "$OUTPUT_LISTING" = "YES" ] ; then
   set -x
-  $TOOLSDIR/outsync.ksh
+  $TOOLSDIR/outsync.sh
   set +x
 fi
 
 if [ $FTRACE_JOB -gt 0 ] ; then
   set -x
-  $TOOLSDIR/profsync.ksh
+  $TOOLSDIR/profsync.sh
   set +x
 fi
 
@@ -572,7 +573,7 @@ else
   mkdir $OUTPUTDIR/error
   cp $EXPLIST $OUTPUTDIR/error/
 fi
-if [ -f $REFLIST ] && [ -f $EXPLIST ] ; then $TOOLSDIR/diffNODE.001_01 $EXPLIST $REFLIST ; fi
+#if [ -f $REFLIST ] && [ -f $EXPLIST ] ; then $TOOLSDIR/diffNODE.001_01 $EXPLIST $REFLIST ; fi
 set +x
 #      ****************
 #      *  Cleanups    *
@@ -580,7 +581,7 @@ set +x
 
 set -x
 cd $TMPGFS
-$TOOLSDIR/cleansync.ksh
+$TOOLSDIR/cleansync.sh
 set +x
 
 #MTOOL common
@@ -590,7 +591,7 @@ set +x
 #       ****************
 
 set -x
-$TOOLSDIR/epilog.ksh
+$TOOLSDIR/epilog.sh
 set +x
 if [ "$MTOOL_IS" != "ON" ] && [ "$AUTO_CLEAN" = "ON" ] ; then
   cd $HOME
