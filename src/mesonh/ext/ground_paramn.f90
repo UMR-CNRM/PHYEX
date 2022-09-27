@@ -111,6 +111,7 @@ END MODULE MODI_GROUND_PARAM_n
 !!     (V. Vionnet)           18/07/2017 add coupling for blowing snow module 
 !!     (Bielli S.) 02/2019  Sea salt : significant sea wave height influences salt emission; 5 salt modes
 !  P. Wautelet 20/05/2019: add name argument to ADDnFIELD_ll + new ADD4DFIELD_ll subroutine
+!  P. Wautelet 09/02/2022: bugfix: add missing XCURRENT_LEI computation
 !-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS
@@ -122,7 +123,8 @@ USE MODI_GET_HALO
 USE MODI_MNH_OASIS_RECV
 USE MODI_MNH_OASIS_SEND
 USE MODD_SFX_OASIS, ONLY : LOASIS
-USE MODD_DYN, ONLY : XSEGLEN
+USE MODD_DYN,       ONLY : XSEGLEN
+USE MODD_DYN_n,     ONLY : DYN_MODEL
 #endif
 !
 USE MODD_LUNIT_n, ONLY: TLUOUT
@@ -335,7 +337,8 @@ REAL, DIMENSION(:),   ALLOCATABLE :: ZP_PET_B_COEF
 REAL, DIMENSION(:),   ALLOCATABLE :: ZP_PEQ_B_COEF
 REAL, DIMENSION(:),   ALLOCATABLE :: ZP_RN        ! net radiation           (W/m2)
 REAL, DIMENSION(:),   ALLOCATABLE :: ZP_H         ! sensible heat flux      (W/m2)
-REAL, DIMENSION(:),   ALLOCATABLE :: ZP_LE        ! latent heat flux        (W/m2)
+REAL, DIMENSION(:),   ALLOCATABLE :: ZP_LE        ! Total latent heat flux  (W/m2)
+REAL, DIMENSION(:),   ALLOCATABLE :: ZP_LEI       ! Solid Latent heat flux  (W/m2)
 REAL, DIMENSION(:),   ALLOCATABLE :: ZP_GFLUX     ! ground flux             (W/m2)
 REAL, DIMENSION(:),   ALLOCATABLE :: ZP_T2M       ! Air temperature at 2 meters (K)
 REAL, DIMENSION(:),   ALLOCATABLE :: ZP_Q2M       ! Air humidity at 2 meters    (kg/kg)
@@ -573,7 +576,7 @@ CALL DATETIME_DISTANCE(TDTSEG,TDTCUR,ZTIMEC)
 #ifdef CPLOASIS
 IF (LOASIS) THEN
   IF ( MOD(ZTIMEC,1.0) .LE. 1E-2 .OR. (1.0 - MOD(ZTIMEC,1.0)) .LE. 1E-2 ) THEN
-    IF ( NINT(ZTIMEC-(XSEGLEN-XTSTEP)) .LT. 0 ) THEN
+    IF ( NINT(ZTIMEC-(XSEGLEN-DYN_MODEL(1)%XTSTEP)) .LT. 0 ) THEN
       WRITE(ILUOUT,*) '----------------------------'
       WRITE(ILUOUT,*) ' Reception des champs avec OASIS'
       WRITE(ILUOUT,*) 'NINT(ZTIMEC)=', NINT(ZTIMEC)
@@ -603,7 +606,7 @@ CALL COUPLING_SURF_ATM_n(YSURF_CUR,'MESONH', 'E',ZTIMEC,                        
 #ifdef CPLOASIS
 IF (LOASIS) THEN
   IF ( MOD(ZTIMEC,1.0) .LE. 1E-2 .OR. (1.0 - MOD(ZTIMEC,1.0)) .LE. 1E-2 ) THEN
-    IF (NINT(ZTIMEC-(XSEGLEN-XTSTEP)) .LT. 0) THEN
+    IF (NINT(ZTIMEC-(XSEGLEN-DYN_MODEL(1)%XTSTEP)) .LT. 0) THEN
       WRITE(ILUOUT,*) '----------------------------'
       WRITE(ILUOUT,*) ' Envoi des champs avec OASIS'
       WRITE(ILUOUT,*) 'NINT(ZTIMEC)=', NINT(ZTIMEC)
@@ -616,9 +619,9 @@ END IF
 !
 IF (CPROGRAM=='DIAG  ' .OR. LDIAG_IN_RUN) THEN
   CALL DIAG_SURF_ATM_n(YSURF_CUR,'MESONH')
-  CALL  MNHGET_SURF_PARAM_n(PRN=ZP_RN,PH=ZP_H,PLE=ZP_LE,PGFLUX=ZP_GFLUX, &
-                           PT2M=ZP_T2M,PQ2M=ZP_Q2M,PHU2M=ZP_HU2M,        &
-                           PZON10M=ZP_ZON10M,PMER10M=ZP_MER10M           )
+  CALL  MNHGET_SURF_PARAM_n( PRN = ZP_RN,         PH = ZP_H,           PLE = ZP_LE,   PLEI = ZP_LEI,   &
+                             PGFLUX = ZP_GFLUX,   PT2M = ZP_T2M,       PQ2M = ZP_Q2M, PHU2M = ZP_HU2M, &
+                             PZON10M = ZP_ZON10M, PMER10M = ZP_MER10M                                  )
 END IF
 !
 ! Transform 1D output fields into 2D:
@@ -841,6 +844,7 @@ ALLOCATE(ZP_QSURF   (KDIM1D))
 ALLOCATE(ZP_RN      (KDIM1D))
 ALLOCATE(ZP_H       (KDIM1D))
 ALLOCATE(ZP_LE      (KDIM1D))
+ALLOCATE(ZP_LEI     (KDIM1D))
 ALLOCATE(ZP_GFLUX   (KDIM1D))
 ALLOCATE(ZP_T2M     (KDIM1D))
 ALLOCATE(ZP_Q2M     (KDIM1D))
@@ -964,6 +968,7 @@ IF (LDIAG_IN_RUN) THEN
   XCURRENT_RN      (IIB:IIE,IJB:IJE)  = RESHAPE(ZP_RN(:),     ISHAPE_2)
   XCURRENT_H       (IIB:IIE,IJB:IJE)  = RESHAPE(ZP_H (:),     ISHAPE_2)
   XCURRENT_LE      (IIB:IIE,IJB:IJE)  = RESHAPE(ZP_LE(:),     ISHAPE_2)
+  XCURRENT_LEI     (IIB:IIE,IJB:IJE)  = RESHAPE(ZP_LEI(:),    ISHAPE_2)
   XCURRENT_GFLUX   (IIB:IIE,IJB:IJE)  = RESHAPE(ZP_GFLUX(:),  ISHAPE_2)
   XCURRENT_T2M     (IIB:IIE,IJB:IJE)  = RESHAPE(ZP_T2M(:),    ISHAPE_2)
   XCURRENT_Q2M     (IIB:IIE,IJB:IJE)  = RESHAPE(ZP_Q2M(:),    ISHAPE_2)
@@ -1012,6 +1017,7 @@ DEALLOCATE(ZP_EMIS    )
 DEALLOCATE(ZP_RN      )
 DEALLOCATE(ZP_H       )
 DEALLOCATE(ZP_LE      )
+DEALLOCATE(ZP_LEI     )
 DEALLOCATE(ZP_GFLUX   )
 DEALLOCATE(ZP_T2M     )
 DEALLOCATE(ZP_Q2M     )
