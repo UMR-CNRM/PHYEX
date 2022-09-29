@@ -100,13 +100,8 @@ IF(LDSOFT) THEN
 ELSE
   PRCHONI(:) = 0.
   WHERE(ZMASK(:)==1.)
-#ifdef REPRO48
-    PRCHONI(:) = XHON*PRHODREF(:)*PRCT(:)       &
-                                 *EXP( XALPHA3*(PT(:)-XTT)-XBETA3 )
-#else
     PRCHONI(:) = MIN(1000.,XHON*PRHODREF(:)*PRCT(:)       &
                                  *EXP( XALPHA3*(PT(:)-XTT)-XBETA3 ))
-#endif
   ENDWHERE
 ENDIF
 !

@@ -16,11 +16,14 @@ set -e
 #small_3D_alt6: CMF_UPDRAFT='RAHA', CMF_CLOUD='BIGA'
 #small_3D_alt7: CMF_CLOUD='STAT', LOSIGMAS=.FALSE. #Needs 2 corrections in original cycle 48
 #small_3D_alt8: CMF_UPDRAFT='RHCJ'
+#small_3D_alt9: CCLOUD='OLD3', OCND2=.T.
 
 #The small_3D_alt8 is not included in the list of available tests because it needs to be compared against a special commit.
 #Indeed, on 3 February 2022 (commit 907e906) the mesonh version of compute_updraft_rhcj.F90 has been put in the common directory.
 
-specialPack="ori split recompil"
+#The small_3D_alt9 is not included in the list of available tests because it cannot be run before 21 September (commit edc3f88).
+
+specialPack="ori split split_48t1 split_48t3 recompil"
 availTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7"
 defaultTest="small_3D"
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
@@ -35,14 +38,14 @@ if [ $(hostname | cut -c 1-7) == 'belenos' -o $(hostname | cut -c 1-7) == 'taran
   gmkpack_l=MIMPIIFC1805
   gmkpack_o=2y
   defaultMainPackVersion=01
-  defaultRef=split
+  defaultRef='split_${cycle}'
   availTests="${availTests},big_3D"
 else
   HPC=0
   gmkpack_l=MPIGFORTRAN920DBL
   gmkpack_o=xfftw
   defaultMainPackVersion=01
-  defaultRef=split
+  defaultRef='split_${cycle}'
 fi
 mainPackVersion=${mainPackVersion:-${defaultMainPackVersion}}
 
@@ -60,6 +63,7 @@ function usage {
   echo "                or ALL to execute all tests"
   echo "--noexpand      do not use mnh_expand (code will be in array-syntax)"
   echo "-f              full compilation (do not use pre-compiled pack)"
+  echo "--cycle CYCLE   to force using CYCLE"
   echo ""
   echo "If nothing is asked (compilation, running, check) everything is done"
   echo
@@ -70,6 +74,8 @@ function usage {
   echo "The directory (for commit only, not ref) can take the form server:directory"
   echo
   echo "If using a directory (for commit or reference) it must contain at least one '/'"
+  echo
+  echo "The cycle will be guessed from the source code"
 }
 
 compilation=0
@@ -81,6 +87,7 @@ tests=""
 suppress=0
 useexpand=1
 fullcompilation=0
+cycle=""
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -92,6 +99,7 @@ while [ -n "$1" ]; do
     '-t') tests="$2"; shift;;
     '--noexpand') useexpand=0;;
     '-f') fullcompilation=1;;
+    '--cycle') cycle="$2"; shift;;
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
           commit=$1
@@ -145,30 +153,52 @@ if [ $check -eq 1 -a -z "${reference-}" ]; then
   exit 3
 fi
 
-#Name is choosen such as it can be produced with a main pack: PHYEX/48t1_XXXXXXXXX.01.${gmkpack_l}.${gmkpack_o}
+function content2cycle {
+  # variable content_apl_arome must contain the source code of apl_arome.F90
+  if grep CPG_DYN_TYPE <(echo $content_apl_arome) > /dev/null; then
+    echo 48t3
+  else
+    echo 48t1
+  fi
+}
+
+#Name is choosen such as it can be produced with a main pack: PHYEX/${cycle}_XXXXXXXXX.01.${gmkpack_l}.${gmkpack_o}
 fromdir=''
 if echo $commit | grep '/' > /dev/null; then
   fromdir=$commit
+  if [ "$cycle" == "" ]; then
+    content_apl_arome=$(cat $commit/src/arome/ext/apl_arome.F90)
+    cycle=$(content2cycle)
+  fi
   packBranch=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
-  name="PHYEX/48t1_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
+  name="PHYEX/${cycle}_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
   [ $suppress -eq 1 -a -d $HOMEPACK/$name ] && rm -rf $HOMEPACK/$name
 elif echo $specialPack | grep -w $commit > /dev/null; then
   name="PHYEX/$commit"
+  if [ $commit == split_48t3 ]; then
+    cycle=48t3
+  else
+    cycle=48t1
+  fi
 else
   packBranch="COMMIT$commit"
-  name="PHYEX/48t1_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
+  if [ "$cycle" == "" ]; then
+    content_apl_arome=$(wget https://raw.githubusercontent.com/QuentinRodier/PHYEX/${commit}/src/arome/ext/apl_arome.F90 -O - 2>/dev/null)
+    cycle=$(content2cycle)
+  fi
+  name="PHYEX/${cycle}_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
   [ $suppress -eq 1 -a -d $HOMEPACK/$name ] && rm -rf $HOMEPACK/$name
 fi
 if [ ! -z "${reference-}" ]; then
-  [ $reference == 'REF' ] && reference=$defaultRef
+  [ $reference == 'REF' ] && reference=$(eval echo $defaultRef) #echo to replace ${cycle} by value
   reffromdir=''
   if echo $reference | grep '/' > /dev/null; then
     reffromdir=$reference
-    refname="PHYEX/48t1_$(echo $reference | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g').01.${gmkpack_l}.${gmkpack_o}"
+    refname="PHYEX/*_$(echo $reference | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g').01.${gmkpack_l}.${gmkpack_o}"
   elif echo $specialPack | grep -w $reference > /dev/null; then
     refname="PHYEX/$reference"
   else
-    refname="PHYEX/48t1_COMMIT${reference}.01.${gmkpack_l}.${gmkpack_o}"
+    refname="PHYEX/*_COMMIT${reference}.01.${gmkpack_l}.${gmkpack_o}"
   fi
 fi
 
@@ -188,24 +218,24 @@ if [ $compilation -eq 1 ]; then
   export GMKTMP=/dev/shm
 
   if [ $fullcompilation == 0 ]; then
-    basepack=48t1_main.01.${gmkpack_l}.${gmkpack_o}
-    [ $HPC -eq 0 -a ! -d $ROOTPACK/$basepack ] &&  getpack $basepack
-    gmkpack -r 48t1 -b phyex -v $mainPackVersion -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb \
+    basepack=${cycle}_main.01.${gmkpack_l}.${gmkpack_o}
+    #[ $HPC -eq 0 -a ! -d $ROOTPACK/$basepack ] &&  getpack $basepack
+    gmkpack -r ${cycle} -b phyex -v $mainPackVersion -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb \
             -f $dirpack/ \
             -u $name
     reftree='main'
   else
     #Create main pack
-    gmkpack -a -r 48t1 -b ${packBranch} -n 01 -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb -h $HOMEPACK/PHYEX
+    gmkpack -a -r ${cycle} -b ${packBranch} -n 01 -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb -h $HOMEPACK/PHYEX
     #Populate (we keep everything from the official source code except internals and module subdirectories of mpa)
     cd $HOMEPACK/$name/src/local/
     if [ $HPC -eq 1 ]; then
-      ssh sxphynh.cnrm.meteo.fr "wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/48t1_main.01.tgz -O -" > 48t1_main.01.tgz
+      ssh sxphynh.cnrm.meteo.fr "wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/${cycle}_main.01.tgz -O -" > ${cycle}_main.01.tgz
     else
-      wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/48t1_main.01.tgz
+      wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/${cycle}_main.01.tgz
     fi
-    tar xf 48t1_main.01.tgz
-    rm -f 48t1_main.01.tgz
+    tar xf ${cycle}_main.01.tgz
+    rm -f ${cycle}_main.01.tgz
     for rep in turb micro conv; do
       mkdir -p phyex/$rep
       rm -rf mpa/$rep/internals mpa/$rep/module
@@ -217,7 +247,7 @@ if [ $compilation -eq 1 ]; then
     #Special modification of the compilation configuration file and script
     sed -i 's/-ftree-vectorize//' $HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
     sed -i "/MACROS_FRT/s/$/ -DREPRO48/" $HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
-    #sed -i "s/PHYEX\/48t1_$$.01.${gmkpack_l}.${gmkpack_o}/$(echo $name | sed 's/\//\\\//')/" $HOMEPACK/$name/ics_masterodb #this line could be used if pack was renamed before compilation but it does not work on belenos
+    #sed -i "s/PHYEX\/${cycle}_$$.01.${gmkpack_l}.${gmkpack_o}/$(echo $name | sed 's/\//\\\//')/" $HOMEPACK/$name/ics_masterodb #this line could be used if pack was renamed before compilation but it does not work on belenos
 
     resetpack -f #Is it really useful?
     reftree='local'
@@ -343,7 +373,7 @@ if [ $run -ge 1 ]; then
     cd $HOMEPACK/$name
     mkdir -p conf_tests/$t
     cd conf_tests/$t
-    MYLIB=$name TESTDIR=$dirconf/$t exescript Output_run $dirconf/$t/aro48t1.sh
+    MYLIB=$name TESTDIR=$dirconf/$t exescript Output_run $dirconf/$t/aro${cycle}.sh
   done
 fi
 
@@ -364,7 +394,7 @@ if [ $check -eq 1 ]; then
       tag=$(echo $tag_file | cut -d, -f1)
       file=$(echo $tag_file | cut -d, -f2)
       file1=$HOMEPACK/$name/$file
-      file2=$HOMEPACK/$refname/$file
+      file2=$(echo $HOMEPACK/$refname/$file) #echo to enable shell substitution
 
       mess=""
       t=0

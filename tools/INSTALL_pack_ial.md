@@ -20,6 +20,7 @@ is now automatically performed with the prep\_code.sh script.
 The same installation guide applies to sxphynh and belenos except for some commands.
 The directory in which the repository lies is designated by the TRUNK variable.
 The $TRUNK dir can be put on a shared directory to share this installation among several users.
+Tools are designed and tested with TRUNK=\<git repository\>/tools/pack/
 
 ## REFERENCE PACK CREATION
 
@@ -27,33 +28,34 @@ The $TRUNK dir can be put on a shared directory to share this installation among
 
 ```
 version=01
+cycle=48t1 or cy48t3 (after commit XXX on 22 September 2022)
 compiler=MPIGFORTRAN920DBL on ubuntu, MIMPIIFC1805 on belenos
 gmkfile=${compiler}.GMAP on ubuntu, ${compiler}.EPONA on belenos
 option=xfftw on ubuntu, 2y on belenos
-getpack 48t1_main.01.${compiler}.${option} #get source code on ubuntu, is it really necessary?
+getpack ${cycle}_main.01.${compiler}.${option} #get source code on ubuntu, is it really necessary?
 export GMKTMP=/dev/shm
 (. berootpack)
-gmkpack -a -r 48t1 -b phyex -n $version -l ${compiler} -o ${option} -p masterodb -h $TRUNK/tools/pack/ #create main pack
+gmkpack -a -r ${cycle} -b phyex -n $version -l ${compiler} -o ${option} -p masterodb -h $TRUNK/tools/pack/ #create main pack
 ```
 
 ### Populate main pack with source code
 
 ```
-cd $TRUNK/tools/pack/48t1_phyex.${version}.${compiler}.${option}/src/local
+cd $TRUNK/tools/pack/${cycle}_phyex.${version}.${compiler}.${option}/src/local
 if sxphynh; then
-  wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/48t1_main.01.tgz #only available at MF but equivalent must exist elsewhere
+  wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/${cycle}_main.01.tgz #only available at MF but equivalent must exist elsewhere
 else
-  ssh sxphynh.cnrm.meteo.fr "wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/48t1_main.01.tgz -O -" > 48t1_main.01.tgz
+  ssh sxphynh.cnrm.meteo.fr "wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/${cycle}_main.01.tgz -O -" > ${cycle}_main.01.tgz
 fi
-tar xf 48t1_main.01.tgz
-rm -f 48t1_main.01.tgz
+tar xf ${cycle}_main.01.tgz
+rm -f ${cycle}_main.01.tgz
 for rep in turb micro conv; do
   mkdir -p phyex/$rep
-  mv mpa/$rep/internals/* phyex/$rep/
-  mv mpa/$rep/module/* phyex/$rep/
+  mv -f mpa/$rep/internals/* phyex/$rep/
+  mv -f mpa/$rep/module/* phyex/$rep/
   rmdir mpa/$rep/internals mpa/$rep/module
 done
-tar xf /cnrm/algo/khatib/drhook.c_for_ubuntu.tar #only on ubuntu
+[ $cycle == 48t1 ] && tar xf /cnrm/algo/khatib/drhook.c_for_ubuntu.tar #only on ubuntu
 ```
 
 ### Apply some bug corrections
@@ -62,7 +64,7 @@ tar xf /cnrm/algo/khatib/drhook.c_for_ubuntu.tar #only on ubuntu
 sed -i 's/IF (LBUDGET_RH)/IF (LBUDGET_RH .AND. KRR==7)/' mpa/micro/externals/aro_rain_ice.F90
 ```
 
-Edition of arpifs/phys\_dmn/apl\_arome.F90 to modift (line 1573):
+Edition of arpifs/phys\_dmn/apl\_arome.F90 to modify (line 1573 in 48t1, 1496 in 48t3):
 
   ```
   IF (LMFSHAL .AND. (CMF_CLOUD=='DIRE'.OR.CMF_CLOUD=='BIGA')) THEN
@@ -71,7 +73,7 @@ Edition of arpifs/phys\_dmn/apl\_arome.F90 to modift (line 1573):
   ENDIF
   ```
 
-into:
+into (48t1):
 
   ```
   IF (LMFSHAL .AND. (CMF_CLOUD=='DIRE'.OR.CMF_CLOUD=='BIGA')) THEN
@@ -86,12 +88,27 @@ into:
   ENDIF
   ```
 
-Edition of apl\_arome.F90 to modify (line 1406):
+or (48t3):
+
+  ```
+  IF (LMFSHAL .AND. (CMF_CLOUD=='DIRE'.OR.CMF_CLOUD=='BIGA')) THEN
+    IOFF_MFSHAL=IOFF_MFSHAL+3
+    ...
+  ELSE
+    DO JLEV = 1, YDCPG_OPTS%KFLEVG
+      ZRC_MF_(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,JLEV)=0._JPRB                         
+      ZRI_MF_(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,JLEV)=0._JPRB                         
+      ZCF_MF_(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,JLEV)=0._JPRB                         
+    ENDDO
+  ENDIF
+  ```
+
+Edition of apl\_arome.F90 to modify (line 1406 in 48t1, 1329 in 48t3):
 
   ```
   IF ( LKFBCONV.AND.LOSUBG_COND.AND..NOT.LOSIGMAS) THEN
     DO JLEV = 1, KLEV
-      ZMFM_(KIDIA:KFDIA,JLEV)=PSIGM(KIDIA:KFDIA,JLEV)
+      ZMFM_(...
     ENDDO
   ENDIF
   ```
@@ -102,20 +119,91 @@ into:
   IF (LOSUBG_COND.AND..NOT.LOSIGMAS) THEN
     IF (LKFBCONV) THEN
       DO JLEV = 1, KLEV
-        ZMFM_(KIDIA:KFDIA,JLEV)=PSIGM(KIDIA:KFDIA,JLEV)
+        ZMFM_(...
       ENDDO
     ELSE
       DO JLEV = 1, KLEV
-        ZMFM_(KIDIA:KFDIA,JLEV)=0._JPRB
+        ZMFM_(...)=0._JPRB
       ENDDO
     ENDIF
   ENDIF
   ```
 
+If cycle is 48t3, edition of apl\_arome.F90 to modify (line 3616)
+
+  ```
+      ZTMP2(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,:)=ZFPR(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,:,2)+ZFPR(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,:,3)
+      CALL NEW_ADD_FIELD_3D(YDMODEL%YRML_DIAG%YRMDDH,ZTMP2(:,:),'FQTPRECISTL',YDDDH)
+      ZTMP2(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,:)=ZFPR(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,:,4)+ZFPR(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,:,5)
+      CALL NEW_ADD_FIELD_3D(YDMODEL%YRML_DIAG%YRMDDH,ZTMP2(:,:),'FQTPRECISTN',YDDDH)
+  ```
+
+into:
+
+  ```
+      ZTMP2(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,0)=0._JPRB
+      DO JLEV=1,YDCPG_OPTS%KFLEVG
+        ZTMP2(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,JLEV)=ZPFPR_(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,JLEV,2)+ZPFPR_(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,JLEV,4)
+      ENDDO
+      !ZTMP2(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,:)=ZFPR(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,:,2)+ZFPR(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,:,3)
+      CALL NEW_ADD_FIELD_3D(YDMODEL%YRML_DIAG%YRMDDH,ZTMP2(:,:),'FQTPRECISTL',YDDDH)
+      DO JLEV=1,YDCPG_OPTS%KFLEVG
+        ZTMP2(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,JLEV)=ZPFPR_(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,JLEV,4)+ZPFPR_(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,JLEV,5)
+      ENDDO
+      !ZTMP2(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,:)=ZFPR(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,:,4)+ZFPR(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,:,5)
+      CALL NEW_ADD_FIELD_3D(YDMODEL%YRML_DIAG%YRMDDH,ZTMP2(:,:),'FQTPRECISTN',YDDDH)
+  ```
+
+If cycle is 48t3, edition of apl\_arome.F90 to:
+
+add the folowing lines after the line 236 (YOMTRAJ use statement):
+
+  ```
+  #ifdef REPRO48
+  !To compensate a bug introduced in 48t3
+  !Must be suppressed as soon as the bug is corrected
+  USE MODD_BUDGET
+  #endif
+  ```
+
+and add the folowing lines at line 912 (to be one of the first execution statement but exact emplacement is not sensitive):
+
+  ```
+  #ifdef REPRO48
+  !see comment associated to the MODD_BUDGET use statement
+  LBU_ENABLE = YDMODEL%YRML_DIAG%YRLDDH%LSDDH
+  LBUDGET_U =LBU_ENABLE
+  LBUDGET_V =LBU_ENABLE
+  LBUDGET_W =LBU_ENABLE
+  LBUDGET_TH=LBU_ENABLE
+  LBUDGET_TKE=LBU_ENABLE
+  LBUDGET_RV=LBU_ENABLE
+  LBUDGET_RC=LBU_ENABLE
+  LBUDGET_RR =LBU_ENABLE
+  LBUDGET_RI =LBU_ENABLE
+  LBUDGET_RS =LBU_ENABLE
+  LBUDGET_RG =LBU_ENABLE
+  LBUDGET_RH =LBU_ENABLE
+  LBUDGET_SV=LBU_ENABLE
+  #endif
+  ```
+
+Edition of phyex/turb/compute\_mf\_cloud\_bigaus.F90 to modify (line 120):
+
+  ```
+  DO JK=KKB,KKE,KKL
+  ```
+
+into:
+
+  ```
+  DO JK=KKB,KKE-KKL,KKL
+  ```
+
 ### Compilation
 
 ```
-cd $TRUNK/tools/pack/48t1_phyex.${version}.${compiler}.${option}
+cd $TRUNK/tools/pack/${cycle}_phyex.${version}.${compiler}.${option}
 #Not needed anymore: grep MPA .gmkfile/${compiler}.GMAP | sed 's/MPA/PHYEX/g' >> .gmkfile/${gmkfile}
 Edition of .gmkfile/${gmkfile} to add -DREPRO48 to the MACROS_FRT variable in order to suppress bug corrections and be able to reproduce the original cy48
 #Not needed anymore: Edition of .gmkfile/${gmkfile} to suppress on ubuntu -ftree-vectorize
@@ -132,11 +220,11 @@ version=01
 compiler=MPIGFORTRAN920DBL on ubuntu, MIMPIIFC1805 on belenos
 gmkfile=${compiler}.GMAP on ubuntu, ${compiler}.EPONA on belenos
 option=xfftw on ubuntu, 2y on belenos
-getpack 48t1_main.01.${compiler}.${option} #get source code on ubuntu, is it really necessary?
+getpack ${cycle}_main.01.${compiler}.${option} #get source code on ubuntu, is it really necessary?
 
 commit=9ce8119430dd603d35308d8ae94cf18636157473 #exemple of commit to test against the reference pack
 
-gmkpack -r 48t1 -b phyex -v ${version} -l ${compiler} -o ${option} -p masterodb -f $TRUNK/tools/pack/ -u PHYEX/$commit
+gmkpack -r ${cycle} -b phyex -v ${version} -l ${compiler} -o ${option} -p masterodb -f $TRUNK/tools/pack/ -u PHYEX/$commit
 
 cd $HOMEPACK/PHYEX/$commit/src/local/phyex
 git clone git@github.com:QuentinRodier/PHYEX.git

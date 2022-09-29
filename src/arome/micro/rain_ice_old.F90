@@ -2070,11 +2070,7 @@ END DO
    PRIS(:,:,:) = PRIS(:,:,:) * ZINVTSTEP
 
 
-#ifdef REPRO48
-   PINPRS(:,:) = 0.
-#else
    PINPRS(:,:) = ZWSED(:,:,IKB)/XRHOLW
-#endif
 
 !
 !*       2.4   for aggregates/snow
@@ -3498,11 +3494,7 @@ IMPLICIT NONE
    END WHERE
    ELSE IF( KRR == 6 ) THEN
      WHERE( ZRGT(:)>XRTMIN(6) .AND. ZRGT(:)>XFRMIN(3) .AND.            &
-#ifdef REPRO48
-                                           ZZT(:)<XTT                  &
-#else
             ZRIS(:)*PTSTEP>XFRMIN(3) .AND. ZZT(:)<XTT                  &
-#endif
                                         .AND.                          & ! Wet
                               ZRDRYG(:)>=ZRWETG(:) .AND. ZRWETG(:)>0.0 ) ! case
     ZZW(:)  = ZRWETG(:)
@@ -3542,11 +3534,7 @@ IMPLICIT NONE
 
 !
   WHERE( ZRGT(:)>XRTMIN(6) .AND. ZRGT(:)>XFRMIN(4) .AND.               &
-#ifdef REPRO48
-                                        ZZT(:)<XTT                     &
-#else
          ZRIS(:)*PTSTEP>XFRMIN(4) .AND. ZZT(:)<XTT                     &
-#endif
                                         .AND.                          &
                                ZRDRYG(:)<ZRWETG(:) .AND. ZRDRYG(:)>0.0 ) ! Dry
     ZRCS(:) = ZRCS(:) - ZZW1(:,1)

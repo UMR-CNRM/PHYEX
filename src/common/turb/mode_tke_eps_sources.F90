@@ -350,9 +350,18 @@ END IF
 
 !Store the previous source terms in prtkes before initializing the next one
 !Should be in IF LBUDGET_TKE only. Was removed out for a correct comput. of PTDIFF in case of LBUDGET_TKE=F in AROME
+#ifdef REPRO48
+IF (LBUDGET_TKE) THEN
+PRTKES(:,:,:) = PRTKES(:,:,:) + PDP(:,:,:) * PRHODJ(:,:,:)
+PRTKES(:,:,:) = PRTKES(:,:,:) + PTP(:,:,:) * PRHODJ(:,:,:)
+PRTKES(:,:,:) = PRTKES(:,:,:) - XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * &
+                (PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:)) * PRHODJ(:,:,:)
+END IF
+#else
 PRTKES(:,:,:) = PRTKES(:,:,:) + PRHODJ(:,:,:) *                                                           &
                 ( PDP(:,:,:) + PTP(:,:,:)                                                                 &
                   - XCED * SQRT(PTKEM(:,:,:)) / PLEPS(:,:,:) * ( PEXPL*PTKEM(:,:,:) + PIMPL*ZRES(:,:,:) ) )
+#endif
 !
 PTDIFF(:,:,:) =  ZRES(:,:,:) / PTSTEP - PRTKES(:,:,:)/PRHODJ(:,:,:) &
  & - PDP(:,:,:)- PTP(:,:,:) - PTDISS(:,:,:)

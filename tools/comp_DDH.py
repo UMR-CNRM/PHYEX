@@ -22,6 +22,9 @@ def comp_DDH(filename1, filename2, output_fig, tol_ad=1.2E-7, tol_rd=1.E-6, verb
         toplt = False
         if not t:
             if verbose: print(fid, ':')
+            if numpy.array(v1).ndim == 0:
+                v1 = numpy.array([v1])
+                v2 = numpy.array([v2])
             for i in range(len(v1)):
                 if v1[i] - v2[i] != 0.:
                     ad = v1[i] - v2[i]
@@ -30,7 +33,7 @@ def comp_DDH(filename1, filename2, output_fig, tol_ad=1.2E-7, tol_rd=1.E-6, verb
                     if abs(ad) > tol_ad and abs(rd) > tol_rd: toplt = True
         return fid if toplt else None
     toplt = []
-    for fid in l1.intersection(l2):
+    for fid in [fid for fid in l1.intersection(l2) if fid != 'DOCFICHIER']:
         v1 = r1.readfield(fid)
         v2 = r2.readfield(fid)
         if isinstance(v1, epygram.base.FieldSet):
