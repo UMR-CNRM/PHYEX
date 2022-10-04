@@ -48,10 +48,13 @@ CONTAINS
 !!    -------------
 !!      Original 25 Aug 2011
 !!      S. Riette Jan 2012: support for both order of vertical levels
+!!      Wim de Rooy June 2019: update statistical cloud scheme (now including
+!!                             covariance term for MF contribution)
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
 !          ------------
+USE MODD_CTURB,           ONLY : LSTATNW, XCTV
 USE MODD_PARAM_MFSHALL_n, ONLY :  XTAUSIGMF
 USE MODD_PARAMETERS, ONLY : JPHEXT, JPVEXT
 !
@@ -113,8 +116,13 @@ IF (KRRL > 0)  THEN
 !
 
 !
-    ZFLXZ(:,:) = -2 * XTAUSIGMF * PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(PTHLM(:,:), KKA, KKU, KKL)) * &
-                      GZ_M_W_MF(PTHLM(:,:),PDZZ(:,:), KKA, KKU, KKL)
+    IF (LSTATNW) THEN
+      ZFLXZ(:,:) = -2 * XCTV * XTAUSIGMF * PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(PTHLM(:,:), KKA, KKU, KKL)) * &
+                        GZ_M_W_MF(PTHLM(:,:),PDZZ(:,:), KKA, KKU, KKL)
+    ELSE
+      ZFLXZ(:,:) = -2 * XTAUSIGMF * PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(PTHLM(:,:), KKA, KKU, KKL)) * &
+                        GZ_M_W_MF(PTHLM(:,:),PDZZ(:,:), KKA, KKU, KKL)
+    ENDIF
 !
 !   Avoid negative values
     ZFLXZ(:,:) = MAX(0.,ZFLXZ(:,:))
@@ -129,14 +137,30 @@ IF (KRRL > 0)  THEN
 !
 !
 !
-    ZFLXZ(:,:) = -2 * XTAUSIGMF * PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(PRTM(:,:), KKA, KKU, KKL)) * &
-                      GZ_M_W_MF(PRTM(:,:),PDZZ(:,:), KKA, KKU, KKL)
+    IF (LSTATNW) THEN
+      ZFLXZ(:,:) = -2 * XCTV * XTAUSIGMF * PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(PRTM(:,:), KKA, KKU, KKL)) * &
+                        GZ_M_W_MF(PRTM(:,:),PDZZ(:,:), KKA, KKU, KKL)
+    ELSE
+      ZFLXZ(:,:) = -2 * XTAUSIGMF * PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(PRTM(:,:), KKA, KKU, KKL)) * &
+                        GZ_M_W_MF(PRTM(:,:),PDZZ(:,:), KKA, KKU, KKL)
+    ENDIF
 !
 !   Avoid negative values
     ZFLXZ(:,:) = MAX(0.,ZFLXZ(:,:))
 !
 
     PSIGMF(:,:) = PSIGMF(:,:) + ZAMOIST(:,:) **2 * MZF_MF(ZFLXZ(:,:), KKA, KKU, KKL)
+    IF (LSTATNW) THEN
+      !wc Now including convection covariance contribution in case of LSTATNW=TRUE
+      !
+      !       1.2.2 contribution from <Rnp Thl>
+      ZFLXZ(:,:) = - XCTV * XTAUSIGMF * (PEMF(:,:)*(PRT_UP(:,:)-MZM_MF(PRTM(:,:), KKA, KKU, KKL)) * &
+                                   GZ_M_W_MF(PTHLM(:,:),PDZZ(:,:), KKA, KKU, KKL) + &
+                                   PEMF(:,:)*(PTHL_UP(:,:)-MZM_MF(PTHLM(:,:), KKA, KKU, KKL)) * &
+                                   GZ_M_W_MF(PRTM(:,:),PDZZ(:,:), KKA, KKU, KKL))      
+    
+      PSIGMF(:,:) = PSIGMF(:,:) - MIN(0.,2.*ZAMOIST(:,:)*ZATHETA(:,:)*MZF_MF(ZFLXZ(:,:), KKA, KKU, KKL))
+    ENDIF
 !
 !        1.3  Vertical part of Sigma_s
 !

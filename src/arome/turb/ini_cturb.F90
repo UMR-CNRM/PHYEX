@@ -65,7 +65,6 @@ IF (LHOOK) CALL DR_HOOK('INI_CTURB',0,ZHOOK_HANDLE)
 !         1.1 Constant for dissipation of Tke
 !
 !
-LHARAT=.FALSE.
 !
 !XCED  = 0.70
 XCED  = 0.85
@@ -118,7 +117,12 @@ XCTD  = 1.2
 !
 !         1.7 Constant for temperature and vapor pressure-correlations
 !
-XCTP  = 4.65
+!wc in STATNW consistent use of Redelsperger-Sommeria for (co)variances 
+IF (LSTATNW) THEN
+    XCTP  = 4.0
+  ELSE
+    XCTP  = 4.65
+ENDIF
 !       Redelsperger-Sommeria (1981) = 4.
 !       Schmidt-Schumann      (1989) = 3.25
 !       Cheng-Canuto-Howard   (2002) = 4.65

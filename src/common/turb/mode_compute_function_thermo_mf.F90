@@ -1,6 +1,6 @@
 !MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
-!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !     ######spl
      MODULE MODE_COMPUTE_FUNCTION_THERMO_MF
@@ -14,14 +14,14 @@ CONTAINS
 !     #################################################################
 !
 !!
-!!****  *COMPUTE_FUNCTION_THERMO_MF* - 
+!!****  *COMPUTE_FUNCTION_THERMO_MF* -
 !!
 !!    PURPOSE
 !!    -------
 !!
 !!**  METHOD
 !!    ------
-!!    
+!!
 !!
 !!    EXTERNAL
 !!    --------
@@ -35,7 +35,7 @@ CONTAINS
 !!
 !!    AUTHOR
 !!    ------
-!!     
+!!
 !!     JP Pinty      *LA*
 !!
 !!    MODIFICATIONS
@@ -44,13 +44,15 @@ CONTAINS
 !!     Externalisation of computations done in TURB and MF_TURB (Malardel and Pergaud, fev. 2007)
 !!     Optimization : V.Masson, 09/2010
 !!     S. Riette Sept 2011 : remove of unused PL?OCPEXN, use of received ice fraction
+!!     Wim de Rooy June 2019: update statistical cloud scheme
 !!
 !! --------------------------------------------------------------------------
-!       
+!
 !*      0. DECLARATIONS
 !          ------------
 !
 USE MODD_CST
+USE MODD_CTURB, ONLY : LSTATNW
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -73,12 +75,12 @@ REAL, DIMENSION(:,:), INTENT(OUT)   :: PT      ! temperature
 REAL, DIMENSION(:,:), INTENT(OUT)  ::  PAMOIST,PATHETA
 !
 !-------------------------------------------------------------------------------
-! 
+!
 !*       0.2   Declarations of local variables
 !
 REAL                :: ZEPS         ! XMV / XMD
 REAL, DIMENSION(SIZE(PTH,1),SIZE(PTH,2)) ::     &
-          ZCP,                        &  ! Cp 
+          ZCP,                        &  ! Cp
           ZE,                         &  ! Saturation mixing ratio
           ZDEDT,                      &  ! Saturation mixing ratio derivative
           ZAMOIST_W,                  &  ! Coefficients for s = f (Thetal,Rnp)
@@ -103,11 +105,11 @@ ZCP=XCPD
 
 IF (KRR > 0) ZCP(:,:) = ZCP(:,:) + XCPV * PR(:,:,1)
 
-DO JRR = 2,1+KRRL  ! loop on the liquid components  
+DO JRR = 2,1+KRRL  ! loop on the liquid components
    ZCP(:,:)  = ZCP(:,:) + XCL * PR(:,:,JRR)
 END DO
 
-DO JRR = 2+KRRL,1+KRRL+KRRI ! loop on the solid components   
+DO JRR = 2+KRRL,1+KRRL+KRRI ! loop on the solid components
   ZCP(:,:)  = ZCP(:,:)  + XCI * PR(:,:,JRR)
 END DO
 
@@ -118,9 +120,9 @@ PT(:,:) =  PTH(:,:) * PEXN(:,:)
 !
 !! Liquid water
 !
-IF ( KRRL >= 1 ) THEN 
+IF ( KRRL >= 1 ) THEN
 !
-!*       Lv/Cph 
+!*       Lv/Cph
 !
   ZLVOCP(:,:) = (XLVTT + (XCPV-XCL) *  (PT(:,:)-XTT) ) / ZCP(:,:)
 !
@@ -137,31 +139,32 @@ IF ( KRRL >= 1 ) THEN
   ZDEDT(:,:) = ( XBETAW / PT(:,:)  - XGAMW ) / PT(:,:)   &
                  * ZE(:,:) * ( 1. + ZE(:,:) / ZEPS )
 !
-!*      Compute Amoist
+!*      Compute Amoist and Atheta
 !
-  ZAMOIST_W(:,:)=  0.5 / ( 1.0 + ZDEDT(:,:) * ZLVOCP(:,:) )
-!
-!*      Compute Atheta
-!
-  ZATHETA_W(:,:)= ZAMOIST_W(:,:) * PEXN(:,:) *                          &
-        ( ( ZE(:,:) - PR(:,:,1) ) * ZLVOCP(:,:) /                    &
-          ( 1. + ZDEDT(:,:) * ZLVOCP(:,:) )           *              &
-          (                                                             &
-           ZE(:,:) * (1. + ZE(:,:)/ZEPS)                                &
-                        * ( -2.*XBETAW/PT(:,:) + XGAMW ) / PT(:,:)**2   &
-          +ZDEDT(:,:) * (1. + 2. * ZE(:,:)/ZEPS)                        &
-                        * ( XBETAW/PT(:,:) - XGAMW ) / PT(:,:)          &
-          )                                                             &
-         - ZDEDT(:,:)                                                   &
-        )
-
+  IF (LSTATNW) THEN
+    ZAMOIST_W(:,:)=  1.0 / ( 1.0 + ZDEDT(:,:) * ZLVOCP(:,:) )
+    ZATHETA_W(:,:)= ZAMOIST_W(:,:) * PEXN(:,:) * ZDEDT(:,:)
+  ELSE
+    ZAMOIST_W(:,:)=  0.5 / ( 1.0 + ZDEDT(:,:) * ZLVOCP(:,:) )
+    ZATHETA_W(:,:)= ZAMOIST_W(:,:) * PEXN(:,:) *                          &
+          ( ( ZE(:,:) - PR(:,:,1) ) * ZLVOCP(:,:) /                    &
+            ( 1. + ZDEDT(:,:) * ZLVOCP(:,:) )           *              &
+            (                                                             &
+             ZE(:,:) * (1. + ZE(:,:)/ZEPS)                                &
+                          * ( -2.*XBETAW/PT(:,:) + XGAMW ) / PT(:,:)**2   &
+            +ZDEDT(:,:) * (1. + 2. * ZE(:,:)/ZEPS)                        &
+                          * ( XBETAW/PT(:,:) - XGAMW ) / PT(:,:)          &
+            )                                                             &
+           - ZDEDT(:,:)                                                   &
+          )
+  ENDIF
 !
 !! Solid water
 !
-  IF ( KRRI >= 1 ) THEN 
+  IF ( KRRI >= 1 ) THEN
 
 !
-!*       Ls/Cph 
+!*       Ls/Cph
 !
     ZLSOCP(:,:) = (XLSTT + (XCPV-XCI) *  (PT(:,:)-XTT) ) / ZCP(:,:)
 !
@@ -178,23 +181,25 @@ IF ( KRRL >= 1 ) THEN
     ZDEDT(:,:) = ( XBETAI / PT(:,:)  - XGAMI ) / PT(:,:)   &
                    * ZE(:,:) * ( 1. + ZE(:,:) / ZEPS )
 !
-!*      Compute Amoist
+!*      Compute Amoist and Atheta
 !
-    ZAMOIST_I(:,:)=  0.5 / ( 1.0 + ZDEDT(:,:) * ZLSOCP(:,:) )
-!
-!*      Compute Atheta
-!
-    ZATHETA_I(:,:)= ZAMOIST_I(:,:) * PEXN(:,:) *                        &
-        ( ( ZE(:,:) - PR(:,:,1) ) * ZLSOCP(:,:) /                    &
-          ( 1. + ZDEDT(:,:) * ZLSOCP(:,:) )           *              &
-          (                                                             &
-           ZE(:,:) * (1. + ZE(:,:)/ZEPS)                                &
-                        * ( -2.*XBETAI/PT(:,:) + XGAMI ) / PT(:,:)**2   &
-          +ZDEDT(:,:) * (1. + 2. * ZE(:,:)/ZEPS)                        &
-                        * ( XBETAI/PT(:,:) - XGAMI ) / PT(:,:)          &
-          )                                                             &
-         - ZDEDT(:,:)                                                   &
-        )
+    IF (LSTATNW) THEN
+       ZAMOIST_I(:,:)=  1.0 / ( 1.0 + ZDEDT(:,:) * ZLSOCP(:,:) )
+       ZATHETA_I(:,:)= ZAMOIST_I(:,:) * PEXN(:,:) * ZDEDT(:,:)
+    ELSE
+      ZAMOIST_I(:,:)=  0.5 / ( 1.0 + ZDEDT(:,:) * ZLSOCP(:,:) )
+      ZATHETA_I(:,:)= ZAMOIST_I(:,:) * PEXN(:,:) *                        &
+          ( ( ZE(:,:) - PR(:,:,1) ) * ZLSOCP(:,:) /                    &
+            ( 1. + ZDEDT(:,:) * ZLSOCP(:,:) )           *              &
+            (                                                             &
+             ZE(:,:) * (1. + ZE(:,:)/ZEPS)                                &
+                          * ( -2.*XBETAI/PT(:,:) + XGAMI ) / PT(:,:)**2   &
+            +ZDEDT(:,:) * (1. + 2. * ZE(:,:)/ZEPS)                        &
+                          * ( XBETAI/PT(:,:) - XGAMI ) / PT(:,:)          &
+            )                                                             &
+           - ZDEDT(:,:)                                                   &
+          )
+    ENDIF
 
   ELSE
     ZAMOIST_I(:,:)=0.

@@ -5,7 +5,7 @@
 MODULE MODE_TURB_VER_THERMO_FLUX
 IMPLICIT NONE
 CONTAINS
-      
+
 SUBROUTINE TURB_VER_THERMO_FLUX(KKA,KKU,KKL,KRR,KRRL,KRRI,    &
                       OTURB_FLX,HTURBDIM,HTOM,OOCEAN,               &
                       PIMPL,PEXPL,                                  &
@@ -31,13 +31,13 @@ SUBROUTINE TURB_VER_THERMO_FLUX(KKA,KKU,KKL,KRR,KRRL,KRRI,    &
 !!    PURPOSE
 !!    -------
 !       The purpose of this routine is to compute the vertical turbulent
-!     fluxes of the evolutive variables and give back the source 
+!     fluxes of the evolutive variables and give back the source
 !     terms to the main program.	In the case of large horizontal meshes,
 !     the divergence of these vertical turbulent fluxes represent the whole
 !     effect of the turbulence but when the three-dimensionnal version of
 !     the turbulence scheme is activated (CTURBDIM="3DIM"), these divergences
-!     are completed in the next routine TURB_HOR. 
-!		  An arbitrary degree of implicitness has been implemented for the 
+!     are completed in the next routine TURB_HOR.
+!		  An arbitrary degree of implicitness has been implemented for the
 !     temporal treatment of these diffusion terms.
 !       The vertical boundary conditions are as follows:
 !           *  at the bottom, the surface fluxes are prescribed at the same
@@ -45,8 +45,8 @@ SUBROUTINE TURB_VER_THERMO_FLUX(KKA,KKU,KKL,KRR,KRRL,KRRI,    &
 !           *  at the top, the turbulent fluxes are set to 0.
 !       It should be noted that the condensation has been implicitely included
 !     in this turbulence scheme by using conservative variables and computing
-!     the subgrid variance of a statistical variable s indicating the presence 
-!     or not of condensation in a given mesh. 
+!     the subgrid variance of a statistical variable s indicating the presence
+!     or not of condensation in a given mesh.
 !
 !!**  METHOD
 !!    ------
@@ -55,27 +55,27 @@ SUBROUTINE TURB_VER_THERMO_FLUX(KKA,KKU,KKL,KRR,KRRL,KRRI,    &
 !!      implicit scheme (a Crank-Nicholson type with coefficients different
 !!      than 0.5), which allows to vary the degree of implicitness of the
 !!      formulation.
-!!      	 The different prognostic variables are treated one by one. 
-!!      The contributions of each turbulent fluxes are cumulated into the 
-!!      tendency  PRvarS, and into the dynamic and thermal production of 
+!!      	 The different prognostic variables are treated one by one.
+!!      The contributions of each turbulent fluxes are cumulated into the
+!!      tendency  PRvarS, and into the dynamic and thermal production of
 !!      TKE if necessary.
-!!        
+!!
 !!			 In section 2 and 3, the thermodynamical fields are considered.
 !!      Only the turbulent fluxes of the conservative variables
-!!      (Thetal and Rnp stored in PRx(:,:,:,1))  are computed. 
-!!       Note that the turbulent fluxes at the vertical 
+!!      (Thetal and Rnp stored in PRx(:,:,:,1))  are computed.
+!!       Note that the turbulent fluxes at the vertical
 !!      boundaries are given either by the soil scheme for the surface one
-!!      ( at the same instant as the others fluxes) and equal to 0 at the 
-!!      top of the model. The thermal production is computed by vertically 
+!!      ( at the same instant as the others fluxes) and equal to 0 at the
+!!      top of the model. The thermal production is computed by vertically
 !!      averaging the turbulent flux and multiply this flux at the mass point by
 !!      a function ETHETA or EMOIST, which preform the transformation from the
-!!      conservative variables to the virtual potential temperature. 
-!!     
+!!      conservative variables to the virtual potential temperature.
+!!
 !! 	    In section 4, the variance of the statistical variable
-!!      s indicating presence or not of condensation, is determined in function 
+!!      s indicating presence or not of condensation, is determined in function
 !!      of the turbulent moments of the conservative variables and its
-!!      squarred root is stored in PSIGS. This information will be completed in 
-!!      the horizontal turbulence if the turbulence dimensionality is not 
+!!      squarred root is stored in PSIGS. This information will be completed in
+!!      the horizontal turbulence if the turbulence dimensionality is not
 !!      equal to "1DIM".
 !!
 !!			 In section 5, the x component of the stress tensor is computed.
@@ -86,53 +86,53 @@ SUBROUTINE TURB_VER_THERMO_FLUX(KKA,KKU,KKL,KRR,KRRL,KRRI,    &
 !!        j" is also parallel to the surface and in the normal direction of
 !!           the maximum slope
 !!        k" is the normal to the surface
-!!      In order to prevent numerical instability, the implicit scheme has 
-!!      been extended to the surface flux regarding to its dependence in 
-!!      function of U. The dependence in function of the other components 
+!!      In order to prevent numerical instability, the implicit scheme has
+!!      been extended to the surface flux regarding to its dependence in
+!!      function of U. The dependence in function of the other components
 !!      introduced by the different rotations is only explicit.
-!!      The turbulent fluxes are used to compute the dynamic production of 
+!!      The turbulent fluxes are used to compute the dynamic production of
 !!      TKE. For the last TKE level ( located at PDZZ(:,:,IKB)/2 from the
-!!      ground), an harmonic extrapolation from the dynamic production at 
+!!      ground), an harmonic extrapolation from the dynamic production at
 !!      PDZZ(:,:,IKB) is used to avoid an evaluation of the gradient of U
 !!      in the surface layer.
 !!
 !!         In section 6, the same steps are repeated but for the y direction
-!!		  and in section 7, a diagnostic computation of the W variance is 
+!!		  and in section 7, a diagnostic computation of the W variance is
 !!      performed.
 !!
-!!         In section 8, the turbulent fluxes for the scalar variables are 
+!!         In section 8, the turbulent fluxes for the scalar variables are
 !!      computed by the same way as the conservative thermodynamical variables
 !!
-!!            
+!!
 !!    EXTERNAL
 !!    --------
-!!      GX_U_M, GY_V_M, GZ_W_M :  cartesian gradient operators 
+!!      GX_U_M, GY_V_M, GZ_W_M :  cartesian gradient operators
 !!      GX_U_UW,GY_V_VW	         (X,Y,Z) represent the direction of the gradient
-!!                               _(M,U,...)_ represent the localization of the 
+!!                               _(M,U,...)_ represent the localization of the
 !!                               field to be derivated
-!!                               _(M,UW,...) represent the localization of the 
+!!                               _(M,UW,...) represent the localization of the
 !!                               field	derivated
-!!                               
+!!
 !!
 !!      MXM,MXF,MYM,MYF,MZM,MZF
-!!                             :  Shuman functions (mean operators)     
+!!                             :  Shuman functions (mean operators)
 !!      DXF,DYF,DZF,DZM
-!!                             :  Shuman functions (difference operators)     
-!!                               
-!!      SUBROUTINE TRIDIAG     : to compute the split implicit evolution
+!!                             :  Shuman functions (difference operators)
+!!
+!!      SUBROUTINE TRIDIAG     : to compute the splitted implicit evolution
 !!                               of a variable located at a mass point
 !!
-!!      SUBROUTINE TRIDIAG_WIND: to compute the split implicit evolution
+!!      SUBROUTINE TRIDIAG_WIND: to compute the splitted implicit evolution
 !!                               of a variable located at a wind point
 !!
-!!      FUNCTIONs ETHETA and EMOIST  :  
+!!      FUNCTIONs ETHETA and EMOIST  :
 !!            allows to compute:
 !!            - the coefficients for the turbulent correlation between
-!!            any variable and the virtual potential temperature, of its 
-!!            correlations with the conservative potential temperature and 
+!!            any variable and the virtual potential temperature, of its
+!!            correlations with the conservative potential temperature and
 !!            the humidity conservative variable:
 !!            -------              -------              -------
-!!            A' Thv'  =  ETHETA   A' Thl'  +  EMOIST   A' Rnp'  
+!!            A' Thv'  =  ETHETA   A' Thl'  +  EMOIST   A' Rnp'
 !!
 !!
 !!    IMPLICIT ARGUMENTS
@@ -166,34 +166,34 @@ SUBROUTINE TURB_VER_THERMO_FLUX(KKA,KKU,KKL,KRR,KRRL,KRRI,    &
 !!    MODIFICATIONS
 !!    -------------
 !!      Original       August   19, 1994
-!!      Modifications: February 14, 1995 (J.Cuxart and J.Stein) 
+!!      Modifications: February 14, 1995 (J.Cuxart and J.Stein)
 !!                                  Doctorization and Optimization
-!!      Modifications: March 21, 1995 (J.M. Carriere) 
+!!      Modifications: March 21, 1995 (J.M. Carriere)
 !!                                  Introduction of cloud water
-!!      Modifications: June  14, 1995 (J.Cuxart and J. Stein) 
+!!      Modifications: June  14, 1995 (J.Cuxart and J. Stein)
 !!                                 Phi3 and Psi3 at w-point + bug in the all
-!!                                 or nothing condens. 
-!!      Modifications: Sept  15, 1995 (J.Cuxart and J. Stein) 
+!!                                 or nothing condens.
+!!      Modifications: Sept  15, 1995 (J.Cuxart and J. Stein)
 !!                                 Change the DP computation at the ground
-!!      Modifications: October 10, 1995 (J.Cuxart and J. Stein) 
+!!      Modifications: October 10, 1995 (J.Cuxart and J. Stein)
 !!                                 Psi for scal var and LES tools
 !!      Modifications: November 10, 1995 (J. Stein)
-!!                                 change the surface	relations 
+!!                                 change the surface	relations
 !!      Modifications: February 20, 1995 (J. Stein) optimization
-!!      Modifications: May 21, 1996 (J. Stein) 
-!!                                  bug in the vertical flux of the V wind 
+!!      Modifications: May 21, 1996 (J. Stein)
+!!                                  bug in the vertical flux of the V wind
 !!                                  component for explicit computation
-!!      Modifications: May 21, 1996 (N. wood) 
+!!      Modifications: May 21, 1996 (N. wood)
 !!                                  modify the computation of the vertical
 !!                                   part or the surface tangential flux
 !!      Modifications: May 21, 1996 (P. Jabouille)
 !!                                  same modification in the Y direction
-!!      
+!!
 !!      Modifications: Sept 17, 1996 (J. Stein) change the moist case by using
 !!                                  Pi instead of Piref + use Atheta and Amoist
 !!
-!!      Modifications: Nov  24, 1997 (V. Masson) removes the DO loops 
-!!      Modifications: Mar  31, 1998 (V. Masson) splits the routine TURB_VER_THERMO_FLUX 
+!!      Modifications: Nov  24, 1997 (V. Masson) removes the DO loops
+!!      Modifications: Mar  31, 1998 (V. Masson) splits the routine TURB_VER_THERMO_FLUX
 !!      Modifications: Oct  18, 2000 (V. Masson) LES computations
 !!      Modifications: Dec  01, 2000 (V. Masson) conservation of energy from
 !!                                               surface flux in 1DIM case
@@ -216,11 +216,13 @@ SUBROUTINE TURB_VER_THERMO_FLUX(KKA,KKU,KKL,KRR,KRRL,KRRI,    &
 !!                                 applied to vertical fluxes of r_np and Thl
 !!                                 for implicit version of turbulence scheme
 !!                                 corrections and cleaning
+!!      Modifications: June 2019 (Wim de Rooy) with energycascade, 50MF nog
+!!                                             longer necessary
 !!                     June 2020 (B. Vie) Patch preventing negative rc and ri in 2.3 and 3.3
 !! JL Redelsperger  : 03/2021: Ocean and Autocoupling O-A LES Cases
 !!                             Sfc flux shape for LDEEPOC Case
 !!--------------------------------------------------------------------------
-!       
+!
 !*      0. DECLARATIONS
 !          ------------
 !
@@ -239,7 +241,6 @@ USE MODD_TURB_n,         ONLY: LHGRAD, XCOEFHGRADTHL, XCOEFHGRADRM, XALTHGRAD, X
 USE MODD_CONF
 USE MODD_LES
 USE MODD_OCEANH
-USE MODD_REF,            ONLY: LCOUPLES
 USE MODD_TURB_n
 !
 USE MODI_GRADIENT_U
@@ -263,7 +264,7 @@ IMPLICIT NONE
 !
 !
 !
-INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
+INTEGER,                INTENT(IN)   :: KKA           !near ground array index
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
@@ -287,32 +288,32 @@ REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PZZ          ! altitudes
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  MFMOIST      ! moist mass flux dual scheme
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
-                                                      ! Potential Temperature 
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual
+                                                      ! Potential Temperature
 !
 REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at time
-!                                                     ! t - deltat 
+!                                                     ! t - deltat
 !
 REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSFTHP,PSFRP ! surface fluxes at time
-!                                                     ! t + deltat 
+!                                                     ! t + deltat
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PWM 
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PWM
 ! Vertical wind
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHLM 
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTHLM
 ! potential temperature at t-Delta t
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PRM          ! Mixing ratios 
+REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PRM          ! Mixing ratios
                                                       ! at t-Delta t
-REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM         ! Mixing ratios 
+REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM         ! Mixing ratios
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTKEM        ! TKE at time t
 !
 ! In case LHARAT=TRUE, PLM already includes all stability corrections
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM          ! Turb. mixing length   
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLEPS        ! dissipative length   
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLEPS        ! dissipative length
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PATHETA      ! coefficients between 
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PATHETA      ! coefficients between
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSRCM        ! normalized 
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSRCM        ! normalized
 ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PFRAC_ICE    ! ri fraction of rc+ri
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PBETA        ! buoyancy coefficient
@@ -372,8 +373,8 @@ REAL,DIMENSION(SIZE(XZS,1),SIZE(XZS,2),KKU)  :: ZALT
 INTEGER             :: IKB,IKE      ! I index values for the Beginning and End
                                     ! mass points of the domain in the 3 direct.
 INTEGER             :: IKT          ! array size in k direction
-INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
-INTEGER             :: JI, JJ ! loop indexes 
+INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
+INTEGER             :: JI, JJ ! loop indexes
 !
 INTEGER                    :: IIB,IJB       ! Lower bounds of the physical
                                             ! sub-domain in x and y directions
@@ -404,23 +405,24 @@ TYPE(TFIELDDATA) :: TZFIELD
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_FLUX',0,ZHOOK_HANDLE)
 !
-! Size for a given proc & a given model      
-IIU=SIZE(PTHLM,1) 
+! Size for a given proc & a given model
+IIU=SIZE(PTHLM,1)
 IJU=SIZE(PTHLM,2)
-IKT  =SIZE(PTHLM,3)  
-IKTE =IKT-JPVEXT_TURB  
-IKTB =1+JPVEXT_TURB               
+IKT  =SIZE(PTHLM,3)
+IKTE =IKT-JPVEXT_TURB
+IKTB =1+JPVEXT_TURB
 IKB=KKA+JPVEXT_TURB*KKL
 IKE=KKU-JPVEXT_TURB*KKL
 !
 GUSERV = (KRR/=0)
 !
-!  compute the coefficients for the uncentred gradient computation near the 
-!  ground
+!  compute the coefficients for the uncentred gradient computation near the ground
 !
 IF (LHARAT) THEN
-! LHARAT so TKE and length scales at half levels!
-  ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) +50.*MFMOIST(:,:,:)
+  ! LHARAT so TKE and length scales at half levels!
+  !wc 50MF can be omitted with energy cascade included
+  !ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) +50.*MFMOIST(:,:,:)
+  ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:))
 ELSE
   ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), KKA, KKU, KKL)
 ENDIF
@@ -454,8 +456,8 @@ IF (HTOM/='NONE') THEN
 END IF
 !----------------------------------------------------------------------------
 !
-!*       2.   SOURCES OF CONSERVATIVE POTENTIAL TEMPERATURE AND 
-!                                                  PARTIAL THERMAL PRODUCTION 
+!*       2.   SOURCES OF CONSERVATIVE POTENTIAL TEMPERATURE AND
+!                                                  PARTIAL THERMAL PRODUCTION
 !             ---------------------------------------------------------------
 !
 !*       2.1  Splitted value for cons. potential temperature at t+deltat
@@ -525,18 +527,10 @@ IF (GFTHR) THEN
   ZDFDDTDZ = ZDFDDTDZ + D_M3_WTH_WTHR_O_DDTDZ(Z3RDMOMENT,PREDTH1,&
     & PREDR1,PD,PBLL_O_E,PETHETA) * MZM(PFTHR, KKA, KKU, KKL)
 END IF
-! compute interface flux
-IF (LCOUPLES) THEN   ! Autocoupling O-A LES
-  IF (OOCEAN) THEN    ! ocean model in coupled case 
-    ZF(:,:,IKE) =  (XSSTFL_C(:,:,1)+XSSRFL_C(:,:,1)) &
-                  *0.5* ( 1. + PRHODJ(:,:,KKU)/PRHODJ(:,:,IKE) )
-  ELSE                ! atmosph model in coupled case
-    ZF(:,:,IKB) =  XSSTFL_C(:,:,1) &
-                  *0.5* ( 1. + PRHODJ(:,:,KKA)/PRHODJ(:,:,IKB) )
-  ENDIF 
-!
-ELSE  ! No coupling O and A cases
-  ! atmosp bottom
+! specialcase for surface
+IF (OOCEAN) THEN ! ocean sfc (domain top)
+  ZF(:,:,IKE+1) = PSFTHM(:,:) *0.5*(1. + PRHODJ(:,:,KKU) / PRHODJ(:,:,IKE))
+ELSE ! atmosp bottom
   !*In 3D, a part of the flux goes vertically,
   ! and another goes horizontally (in presence of slopes)
   !*In 1D, part of energy released in horizontal flux is taken into account in the vertical part
@@ -549,17 +543,14 @@ ELSE  ! No coupling O and A cases
                        / PDIRCOSZW(:,:)                       &
                        * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
   END IF
-!
-  IF (OOCEAN) THEN
-    ZF(:,:,IKE) = XSSTFL(:,:) *0.5*(1. + PRHODJ(:,:,KKU) / PRHODJ(:,:,IKE))
-  ELSE !end ocean case (in nocoupled case)
     ! atmos top
 #ifdef REPRO48
 #else
       ZF(:,:,IKE)=0.
+      !TODO merge : the following solution must be kept :
+      !ZF(:,:,IKE+1)=0.
 #endif
   END IF
-END IF !end no coupled cases
 !
 ! Compute the split conservative potential temperature at t+deltat
 CALL TRIDIAG_THERMO(KKA,KKU,KKL,PTHLM,ZF,ZDFDDTDZ,PTSTEP,PIMPL,PDZZ,&
@@ -583,7 +574,7 @@ PRTHLS(:,:,:)= PRTHLS(:,:,:)  + ZRWTHL(:,:,:)
 !
 !*       2.2  Partial Thermal Production
 !
-!  Conservative potential temperature flux : 
+!  Conservative potential temperature flux :
 !
 ZFLXZ(:,:,:)   = ZF                                                &
                + PIMPL * ZDFDDTDZ * DZM(PTHLP - PTHLM, KKA, KKU, KKL) / PDZZ
@@ -594,21 +585,22 @@ IF (LHGRAD) THEN
  END WHERE
 END IF
 !
-ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
 IF (OOCEAN) THEN
-  ZFLXZ(:,:,KKU) = ZFLXZ(:,:,IKE)
+  ZFLXZ(:,:,IKE+1) = ZFLXZ(:,:,IKE)
+ELSE ! ATMOS
+  ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
 END IF
-!  
+!
 DO JK=IKTB+1,IKTE-1
   PWTH(:,:,JK)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+KKL))
 END DO
 !
-PWTH(:,:,IKB)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+KKL)) 
+PWTH(:,:,IKB)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+KKL))
 !
 IF (OOCEAN) THEN
   PWTH(:,:,IKE)=0.5*(ZFLXZ(:,:,IKE)+ZFLXZ(:,:,IKE+KKL))
   PWTH(:,:,KKA)=0. 
-  PWTH(:,:,KKU)=ZFLXZ(:,:,KKU)
+  PWTH(:,:,KKU)=PWTH(:,:,IKE)! not used
 ELSE
   PWTH(:,:,KKA)=0.5*(ZFLXZ(:,:,KKA)+ZFLXZ(:,:,KKA+KKL))
   PWTH(:,:,IKE)=PWTH(:,:,IKE-KKL)
@@ -640,19 +632,19 @@ ELSE
   ELSE
     PTP(:,:,:)=  PBETA * MZF( ZFLXZ,KKA, KKU, KKL )
   END IF
-END IF 
+END IF
 !
 ! Buoyancy flux at flux points
-! 
+!
 PWTHV = MZM(PETHETA, KKA, KKU, KKL) * ZFLXZ
 PWTHV(:,:,IKB) = PETHETA(:,:,IKB) * ZFLXZ(:,:,IKB)
 !
 IF (OOCEAN) THEN
-  ! temperature contribution to Buy flux     
+  ! temperature contribution to Buy flux
   PWTHV(:,:,IKE) = PETHETA(:,:,IKE) * ZFLXZ(:,:,IKE)
 END IF
 !*       2.3  Partial vertical divergence of the < Rc w > flux
-! Correction for qc and qi negative in AROME 
+! Correction for qc and qi negative in AROME
 IF(CPROGRAM/='AROME  ') THEN
  IF ( KRRL >= 1 ) THEN
    IF ( KRRI >= 1 ) THEN
@@ -670,16 +662,16 @@ IF(CPROGRAM/='AROME  ') THEN
 END IF
 !
 !*       2.4  Storage in LES configuration
-! 
+!
 IF (LLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WThl ) 
+  CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WThl )
   CALL LES_MEAN_SUBGRID(MZF(PWM*ZFLXZ, KKA, KKU, KKL), X_LES_RES_W_SBG_WThl )
   CALL LES_MEAN_SUBGRID(GZ_W_M(PWM,PDZZ, KKA, KKU, KKL)*MZF(ZFLXZ, KKA, KKU, KKL),&
       & X_LES_RES_ddxa_W_SBG_UaThl )
   CALL LES_MEAN_SUBGRID(MZF(PDTH_DZ*ZFLXZ, KKA, KKU, KKL), X_LES_RES_ddxa_Thl_SBG_UaThl )
-  CALL LES_MEAN_SUBGRID(-XCTP*PSQRT_TKE/PLM*MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_ThlPz ) 
-  CALL LES_MEAN_SUBGRID(MZF(MZM(PETHETA, KKA, KKU, KKL)*ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WThv ) 
+  CALL LES_MEAN_SUBGRID(-XCTP*PSQRT_TKE/PLM*MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_ThlPz )
+  CALL LES_MEAN_SUBGRID(MZF(MZM(PETHETA, KKA, KKU, KKL)*ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WThv )
   IF (KRR>=1) THEN
     CALL LES_MEAN_SUBGRID(MZF(PDR_DZ*ZFLXZ, KKA, KKU, KKL), X_LES_RES_ddxa_Rt_SBG_UaThl )
   END IF
@@ -690,21 +682,21 @@ IF (LLES_CALL) THEN
   ZA(:,:,IKB) = XCSHF*PPHI3(:,:,IKB)*ZKEFF(:,:,IKB)
   ZA = MZF(ZA, KKA, KKU, KKL)
   ZA = MIN(MAX(ZA,-1000.),1000.)
-  CALL LES_MEAN_SUBGRID( ZA, X_LES_SUBGRID_Kh   ) 
+  CALL LES_MEAN_SUBGRID( ZA, X_LES_SUBGRID_Kh   )
   !
   CALL SECOND_MNH(ZTIME2)
   XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !
 !*       2.5  New boundary layer depth for TOMs
-! 
+!
 IF (HTOM=='TM06') CALL TM06_H(IKB,IKTB,IKTE,PTSTEP,PZZ,ZFLXZ,PBL_DEPTH)
 !
 !----------------------------------------------------------------------------
 !
 !
-!*       3.   SOURCES OF CONSERVATIVE AND CLOUD MIXING RATIO AND 
-!                                        COMPLETE THERMAL PRODUCTION 
+!*       3.   SOURCES OF CONSERVATIVE AND CLOUD MIXING RATIO AND
+!                                        COMPLETE THERMAL PRODUCTION
 !             ------------------------------------------------------
 !
 !*       3.1  Splitted value for cons. mixing ratio at t+deltat
@@ -755,7 +747,7 @@ IF (KRR /= 0) THEN
   IF (GFWTH) THEN
     ZF       = ZF       + M3_WR_W2TH(KKA,KKU,KKL,PD,ZKEFF,&
      & PTKEM,PBLL_O_E,PETHETA,PDR_DZ) * PFWTH
-    ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_W2TH_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,& 
+    ZDFDDRDZ = ZDFDDRDZ + D_M3_WR_W2TH_O_DDRDZ(KKA,KKU,KKL,PREDR1,PREDTH1,&
      & PD,ZKEFF,PTKEM,PBLL_O_E,PETHETA) * PFWTH
   END IF
   !
@@ -777,17 +769,12 @@ IF (KRR /= 0) THEN
      & PREDTH1,PD,PBLL_O_E,PEMOIST) * MZM(PFTHR, KKA, KKU, KKL)
   END IF
   !
-  ! compute interface flux
-  IF (LCOUPLES) THEN   ! coupling NH O-A
-    IF (OOCEAN) THEN    ! ocean model in coupled case
-      ! evap effect on salinity to be added later !!!
-      ZF(:,:,IKE) =  0.
-    ELSE                ! atmosph model in coupled case
-      ZF(:,:,IKB) =  0.
-      ! AJOUTER FLUX EVAP SUR MODELE ATMOS
-    ENDIF
-  !
-  ELSE  ! No coupling NH OA case
+   !special case at sfc
+    IF (OOCEAN) THEN
+      ! General ocean case
+      ! salinity/evap effect to be added later !!!!!
+      ZF(:,:,IKE) = 0.
+    ELSE ! atmosp case 
     ! atmosp bottom
     !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
     ! (in presence of slopes)
@@ -803,19 +790,12 @@ IF (KRR /= 0) THEN
                          / PDIRCOSZW(:,:)                       &
                          * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
     END IF
-    !
-    IF (OOCEAN) THEN
-      ! General ocean case
-      ! salinity/evap effect to be added later !!!!!
-      ZF(:,:,IKE) = 0.
-    ELSE !end ocean case (in nocoupled case)
       ! atmos top
 #ifdef REPRO48
 #else
       ZF(:,:,IKE)=0.
 #endif
     END IF
-  END IF!end no coupled cases
   ! Compute the split conservative potential temperature at t+deltat
   CALL TRIDIAG_THERMO(KKA,KKU,KKL,PRM(:,:,:,1),ZF,ZDFDDRDZ,PTSTEP,PIMPL,&
                       PDZZ,PRHODJ,PRP)
@@ -841,7 +821,7 @@ IF (KRR /= 0) THEN
   ! cons. mixing ratio flux :
   !
   ZFLXZ(:,:,:)   = ZF                                                &
-                 + PIMPL * ZDFDDRDZ * DZM(PRP - PRM(:,:,:,1), KKA, KKU, KKL) / PDZZ 
+                 + PIMPL * ZDFDDRDZ * DZM(PRP - PRM(:,:,:,1), KKA, KKU, KKL) / PDZZ
   !
   ! replace the flux by the Leonard terms above ZALT and ZCLD_THOLD
   IF (LHGRAD) THEN
@@ -850,15 +830,25 @@ IF (KRR /= 0) THEN
    END WHERE
   END IF
   !
-  ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
+  ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB)
+  !
+  IF (OOCEAN) THEN
+    ZFLXZ(:,:,KKU) = ZFLXZ(:,:,IKE)
+  END IF
   !
   DO JK=IKTB+1,IKTE-1
    PWRC(:,:,JK)=0.5*(ZFLXZ(:,:,JK)+ZFLXZ(:,:,JK+KKL))
   END DO
   PWRC(:,:,IKB)=0.5*(ZFLXZ(:,:,IKB)+ZFLXZ(:,:,IKB+KKL))
-  PWRC(:,:,KKA)=0.5*(ZFLXZ(:,:,KKA)+ZFLXZ(:,:,KKA+KKL))
-  PWRC(:,:,IKE)=PWRC(:,:,IKE-KKL)
   !
+  IF (OOCEAN) THEN
+    PWRC(:,:,IKE)=0.5*(ZFLXZ(:,:,IKE)+ZFLXZ(:,:,IKE+KKL))
+    PWRC(:,:,KKA)=0.
+    PWRC(:,:,IKE+1)=ZFLXZ(:,:,IKE+1)
+  ELSE
+    PWRC(:,:,KKA)=0.5*(ZFLXZ(:,:,KKA)+ZFLXZ(:,:,KKA+KKL))
+    PWRC(:,:,IKE)=PWRC(:,:,IKE-KKL)
+  ENDIF
   !
   IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
     ! stores the conservative mixing ratio vertical flux
@@ -886,12 +876,12 @@ IF (KRR /= 0) THEN
   END IF
   !
   ! Buoyancy flux at flux points
-  ! 
+  !
   PWTHV          = PWTHV          + MZM(PEMOIST, KKA, KKU, KKL) * ZFLXZ
   PWTHV(:,:,IKB) = PWTHV(:,:,IKB) + PEMOIST(:,:,IKB) * ZFLXZ(:,:,IKB)
   IF (OOCEAN) THEN
     PWTHV(:,:,IKE) = PWTHV(:,:,IKE) + PEMOIST(:,:,IKE)* ZFLXZ(:,:,IKE)
-  END IF   
+  END IF
 !
 !*       3.3  Complete vertical divergence of the < Rc w > flux
 ! Correction of qc and qi negative for AROME
@@ -912,17 +902,17 @@ IF(CPROGRAM/='AROME  ') THEN
 END IF
 !
 !*       3.4  Storage in LES configuration
-! 
+!
   IF (LLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
-    CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WRt ) 
+    CALL LES_MEAN_SUBGRID(MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WRt )
     CALL LES_MEAN_SUBGRID(MZF(PWM*ZFLXZ, KKA, KKU, KKL), X_LES_RES_W_SBG_WRt )
     CALL LES_MEAN_SUBGRID(GZ_W_M(PWM,PDZZ, KKA, KKU, KKL)*MZF(ZFLXZ, KKA, KKU, KKL),&
     & X_LES_RES_ddxa_W_SBG_UaRt )
     CALL LES_MEAN_SUBGRID(MZF(PDTH_DZ*ZFLXZ, KKA, KKU, KKL), X_LES_RES_ddxa_Thl_SBG_UaRt )
     CALL LES_MEAN_SUBGRID(MZF(PDR_DZ*ZFLXZ, KKA, KKU, KKL), X_LES_RES_ddxa_Rt_SBG_UaRt )
-    CALL LES_MEAN_SUBGRID(MZF(MZM(PEMOIST, KKA, KKU, KKL)*ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WThv , .TRUE. ) 
-    CALL LES_MEAN_SUBGRID(-XCTP*PSQRT_TKE/PLM*MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_RtPz ) 
+    CALL LES_MEAN_SUBGRID(MZF(MZM(PEMOIST, KKA, KKU, KKL)*ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WThv , .TRUE. )
+    CALL LES_MEAN_SUBGRID(-XCTP*PSQRT_TKE/PLM*MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_RtPz )
     CALL SECOND_MNH(ZTIME2)
     XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
   END IF
@@ -936,28 +926,28 @@ END IF
 !             -------------------------------
 !
 !
-!*       4.1  <w Rc>    
+!*       4.1  <w Rc>
 !
 IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
-!  
-! recover the Conservative potential temperature flux : 
+!
+! recover the Conservative potential temperature flux :
 ! With LHARAT is true tke and length scales at half levels
 ! yet modify to use length scale and tke at half levels from vdfexcuhl
  IF (LHARAT) THEN
   ZA(:,:,:)   = DZM(PIMPL * PTHLP + PEXPL * PTHLM, KKA, KKU, KKL) / PDZZ *       &
-                  (-PLM*PSQRT_TKE) 
+                  (-PLM*PSQRT_TKE)
  ELSE
   ZA(:,:,:)   = DZM(PIMPL * PTHLP + PEXPL * PTHLM, KKA, KKU, KKL) / PDZZ *       &
-                  (-PPHI3*MZM(PLM*PSQRT_TKE, KKA, KKU, KKL)) * XCSHF 
+                  (-PPHI3*MZM(PLM*PSQRT_TKE, KKA, KKU, KKL)) * XCSHF
  ENDIF
   ZA(:,:,IKB) = ( PIMPL*PSFTHP(:,:) + PEXPL*PSFTHM(:,:) ) &
                * PDIRCOSZW(:,:)
-  !  
+  !
   ! compute <w Rc>
   ZFLXZ(:,:,:) = MZM(PAMOIST * 2.* PSRCM, KKA, KKU, KKL) * ZFLXZ(:,:,:) + &
                  MZM(PATHETA * 2.* PSRCM, KKA, KKU, KKL) * ZA(:,:,:)
-  ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
-  !                 
+  ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB)
+  !
   ! store the liquid water mixing ratio vertical flux
   IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
     TZFIELD%CMNHNAME   = 'RCW_FLX'
@@ -972,12 +962,12 @@ IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. LLES_CALL) .AND. (KRRL > 0) ) THEN
     TZFIELD%LTIMEDEP   = .TRUE.
     CALL IO_Field_write(TPFILE,TZFIELD,ZFLXZ)
   END IF
-  !  
+  !
 ! and we store in LES configuration this subgrid flux <w'rc'>
 !
   IF (LLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
-    CALL LES_MEAN_SUBGRID( MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WRc ) 
+    CALL LES_MEAN_SUBGRID( MZF(ZFLXZ, KKA, KKU, KKL), X_LES_SUBGRID_WRc )
     CALL SECOND_MNH(ZTIME2)
     XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
   END IF

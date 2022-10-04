@@ -13,6 +13,7 @@ SUBROUTINE TURB_VER_DYN_FLUX(KKA,KKU,KKL,                     &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
                       PRHODJ,                                       &
+                      PSFUM,PSFVM,                                  &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU33M,              &
                       PTHLM,PRM,PSVM,PUM,PVM,PWM,PUSLOPEM,PVSLOPEM, &
                       PTKEM,PLM,MFMOIST,PWU,PWV,                    &
@@ -27,13 +28,13 @@ SUBROUTINE TURB_VER_DYN_FLUX(KKA,KKU,KKL,                     &
 !!    PURPOSE
 !!    -------
 !       The purpose of this routine is to compute the vertical turbulent
-!     fluxes of the evolutive variables and give back the source 
+!     fluxes of the evolutive variables and give back the source
 !     terms to the main program.	In the case of large horizontal meshes,
 !     the divergence of these vertical turbulent fluxes represent the whole
 !     effect of the turbulence but when the three-dimensionnal version of
 !     the turbulence scheme is activated (CTURBDIM="3DIM"), these divergences
-!     are completed in the next routine TURB_HOR. 
-!		  An arbitrary degree of implicitness has been implemented for the 
+!     are completed in the next routine TURB_HOR.
+!		  An arbitrary degree of implicitness has been implemented for the
 !     temporal treatment of these diffusion terms.
 !       The vertical boundary conditions are as follows:
 !           *  at the bottom, the surface fluxes are prescribed at the same
@@ -41,8 +42,8 @@ SUBROUTINE TURB_VER_DYN_FLUX(KKA,KKU,KKL,                     &
 !           *  at the top, the turbulent fluxes are set to 0.
 !       It should be noted that the condensation has been implicitely included
 !     in this turbulence scheme by using conservative variables and computing
-!     the subgrid variance of a statistical variable s indicating the presence 
-!     or not of condensation in a given mesh. 
+!     the subgrid variance of a statistical variable s indicating the presence
+!     or not of condensation in a given mesh.
 !
 !!**  METHOD
 !!    ------
@@ -51,27 +52,27 @@ SUBROUTINE TURB_VER_DYN_FLUX(KKA,KKU,KKL,                     &
 !!      implicit scheme (a Crank-Nicholson type with coefficients different
 !!      than 0.5), which allows to vary the degree of implicitness of the
 !!      formulation.
-!!      	 The different prognostic variables are treated one by one. 
-!!      The contributions of each turbulent fluxes are cumulated into the 
-!!      tendency  PRvarS, and into the dynamic and thermal production of 
+!!      	 The different prognostic variables are treated one by one.
+!!      The contributions of each turbulent fluxes are cumulated into the
+!!      tendency  PRvarS, and into the dynamic and thermal production of
 !!      TKE if necessary.
-!!        
+!!
 !!			 In section 2 and 3, the thermodynamical fields are considered.
 !!      Only the turbulent fluxes of the conservative variables
-!!      (Thetal and Rnp stored in PRx(:,:,:,1))  are computed. 
-!!       Note that the turbulent fluxes at the vertical 
+!!      (Thetal and Rnp stored in PRx(:,:,:,1))  are computed.
+!!       Note that the turbulent fluxes at the vertical
 !!      boundaries are given either by the soil scheme for the surface one
-!!      ( at the same instant as the others fluxes) and equal to 0 at the 
-!!      top of the model. The thermal production is computed by vertically 
+!!      ( at the same instant as the others fluxes) and equal to 0 at the
+!!      top of the model. The thermal production is computed by vertically
 !!      averaging the turbulent flux and multiply this flux at the mass point by
 !!      a function ETHETA or EMOIST, which preform the transformation from the
-!!      conservative variables to the virtual potential temperature. 
-!!     
+!!      conservative variables to the virtual potential temperature.
+!!
 !! 	    In section 4, the variance of the statistical variable
-!!      s indicating presence or not of condensation, is determined in function 
+!!      s indicating presence or not of condensation, is determined in function
 !!      of the turbulent moments of the conservative variables and its
-!!      squarred root is stored in PSIGS. This information will be completed in 
-!!      the horizontal turbulence if the turbulence dimensionality is not 
+!!      squarred root is stored in PSIGS. This information will be completed in
+!!      the horizontal turbulence if the turbulence dimensionality is not
 !!      equal to "1DIM".
 !!
 !!			 In section 5, the x component of the stress tensor is computed.
@@ -82,50 +83,50 @@ SUBROUTINE TURB_VER_DYN_FLUX(KKA,KKU,KKL,                     &
 !!        j" is also parallel to the surface and in the normal direction of
 !!           the maximum slope
 !!        k" is the normal to the surface
-!!      In order to prevent numerical instability, the implicit scheme has 
-!!      been extended to the surface flux regarding to its dependence in 
-!!      function of U. The dependence in function of the other components 
+!!      In order to prevent numerical instability, the implicit scheme has
+!!      been extended to the surface flux regarding to its dependence in
+!!      function of U. The dependence in function of the other components
 !!      introduced by the different rotations is only explicit.
-!!      The turbulent fluxes are used to compute the dynamic production of 
+!!      The turbulent fluxes are used to compute the dynamic production of
 !!      TKE. For the last TKE level ( located at PDZZ(:,:,IKB)/2 from the
-!!      ground), an harmonic extrapolation from the dynamic production at 
+!!      ground), an harmonic extrapolation from the dynamic production at
 !!      PDZZ(:,:,IKB) is used to avoid an evaluation of the gradient of U
 !!      in the surface layer.
 !!
 !!         In section 6, the same steps are repeated but for the y direction
-!!		  and in section 7, a diagnostic computation of the W variance is 
+!!		  and in section 7, a diagnostic computation of the W variance is
 !!      performed.
 !!
-!!         In section 8, the turbulent fluxes for the scalar variables are 
+!!         In section 8, the turbulent fluxes for the scalar variables are
 !!      computed by the same way as the conservative thermodynamical variables
 !!
-!!            
+!!
 !!    EXTERNAL
 !!    --------
-!!      GX_U_M, GY_V_M, GZ_W_M :  cartesian gradient operators 
+!!      GX_U_M, GY_V_M, GZ_W_M :  cartesian gradient operators
 !!      GX_U_UW,GY_V_VW	         (X,Y,Z) represent the direction of the gradient
-!!                               _(M,U,...)_ represent the localization of the 
+!!                               _(M,U,...)_ represent the localization of the
 !!                               field to be derivated
-!!                               _(M,UW,...) represent the localization of the 
+!!                               _(M,UW,...) represent the localization of the
 !!                               field	derivated
-!!                               
+!!
 !!
 !!      MXM,MXF,MYM,MYF,MZM,MZF
-!!                             :  Shuman functions (mean operators)     
+!!                             :  Shuman functions (mean operators)
 !!      DXF,DYF,DZF,DZM
-!!                             :  Shuman functions (difference operators)     
-!!                               
+!!                             :  Shuman functions (difference operators)
+!!
 !!      SUBROUTINE TRIDIAG_WIND: to compute the split implicit evolution
 !!                               of a variable located at a wind point
 !!
-!!      FUNCTIONs ETHETA and EMOIST  :  
+!!      FUNCTIONs ETHETA and EMOIST  :
 !!            allows to compute:
 !!            - the coefficients for the turbulent correlation between
-!!            any variable and the virtual potential temperature, of its 
-!!            correlations with the conservative potential temperature and 
+!!            any variable and the virtual potential temperature, of its
+!!            correlations with the conservative potential temperature and
 !!            the humidity conservative variable:
 !!            -------              -------              -------
-!!            A' Thv'  =  ETHETA   A' Thl'  +  EMOIST   A' Rnp'  
+!!            A' Thv'  =  ETHETA   A' Thl'  +  EMOIST   A' Rnp'
 !!
 !!
 !!    IMPLICIT ARGUMENTS
@@ -159,34 +160,34 @@ SUBROUTINE TURB_VER_DYN_FLUX(KKA,KKU,KKL,                     &
 !!    MODIFICATIONS
 !!    -------------
 !!      Original       August   19, 1994
-!!      Modifications: February 14, 1995 (J.Cuxart and J.Stein) 
+!!      Modifications: February 14, 1995 (J.Cuxart and J.Stein)
 !!                                  Doctorization and Optimization
-!!      Modifications: March 21, 1995 (J.M. Carriere) 
+!!      Modifications: March 21, 1995 (J.M. Carriere)
 !!                                  Introduction of cloud water
-!!      Modifications: June  14, 1995 (J.Cuxart and J. Stein) 
+!!      Modifications: June  14, 1995 (J.Cuxart and J. Stein)
 !!                                 Phi3 and Psi3 at w-point + bug in the all
-!!                                 or nothing condens. 
-!!      Modifications: Sept  15, 1995 (J.Cuxart and J. Stein) 
+!!                                 or nothing condens.
+!!      Modifications: Sept  15, 1995 (J.Cuxart and J. Stein)
 !!                                 Change the DP computation at the ground
-!!      Modifications: October 10, 1995 (J.Cuxart and J. Stein) 
+!!      Modifications: October 10, 1995 (J.Cuxart and J. Stein)
 !!                                 Psi for scal var and LES tools
 !!      Modifications: November 10, 1995 (J. Stein)
-!!                                 change the surface	relations 
+!!                                 change the surface	relations
 !!      Modifications: February 20, 1995 (J. Stein) optimization
-!!      Modifications: May 21, 1996 (J. Stein) 
-!!                                  bug in the vertical flux of the V wind 
+!!      Modifications: May 21, 1996 (J. Stein)
+!!                                  bug in the vertical flux of the V wind
 !!                                  component for explicit computation
-!!      Modifications: May 21, 1996 (N. wood) 
+!!      Modifications: May 21, 1996 (N. wood)
 !!                                  modify the computation of the vertical
 !!                                   part or the surface tangential flux
 !!      Modifications: May 21, 1996 (P. Jabouille)
 !!                                  same modification in the Y direction
-!!      
+!!
 !!      Modifications: Sept 17, 1996 (J. Stein) change the moist case by using
 !!                                  Pi instead of Piref + use Atheta and Amoist
 !!
-!!      Modifications: Nov  24, 1997 (V. Masson) removes the DO loops 
-!!      Modifications: Mar  31, 1998 (V. Masson) splits the routine TURB_VER_DYN_FLUX 
+!!      Modifications: Nov  24, 1997 (V. Masson) removes the DO loops
+!!      Modifications: Mar  31, 1998 (V. Masson) splits the routine TURB_VER_DYN_FLUX
 !!      Modifications: Oct  18, 2000 (J. Stein)  Bug in some computations for IKB level
 !!      Modifications: Oct  18, 2000 (V. Masson) LES computations + LFLAT switch
 !!                     Nov  06, 2002 (V. Masson) LES budgets
@@ -194,12 +195,14 @@ SUBROUTINE TURB_VER_DYN_FLUX(KKA,KKU,KKL,                     &
 !!                                              change of YCOMMENT
 !!      2012-02 Y. Seity,  add possibility to run with reversed vertical levels
 !!      Modifications  July 2015 (Wim de Rooy) LHARATU switch
-!!      J.Escobar : 15/09/2015 : WENO5 & JPHEXT <> 1 
+!!      J.Escobar : 15/09/2015 : WENO5 & JPHEXT <> 1
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !!      Q. Rodier      17/01/2019 : cleaning : remove cyclic conditions on DP and ZA
+!!      Modification   June 2019 (Wim de Rooy) 50*MF term can be removed with
+!!                                             inclusion of energy cascade
 !! JL Redelsperger 03/2021 : Add Ocean  & O-A Autocoupling LES Cases
 !!--------------------------------------------------------------------------
-!       
+!
 !*      0. DECLARATIONS
 !          ------------
 !
@@ -215,7 +218,6 @@ USE MODD_LES
 USE MODD_NSV
 USE MODD_OCEANH
 USE MODD_PARAMETERS
-USE MODD_REF, ONLY : LCOUPLES
 USE MODD_TURB_n
 !
 !
@@ -238,7 +240,7 @@ IMPLICIT NONE
 !
 !
 !
-INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
+INTEGER,                INTENT(IN)   :: KKA           !near ground array index
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
@@ -251,23 +253,24 @@ REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PDXX, PDYY, PDZZ, PDZX, PDZY
                                                       ! Metric coefficients
 REAL, DIMENSION(:,:),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the
                                                       ! normal to the ground surface
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PZZ          ! altitude of flux points
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCOSSLOPE    ! cosinus of the angle 
+REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCOSSLOPE    ! cosinus of the angle
                                       ! between i and the slope vector
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSINSLOPE    ! sinus of the angle 
+REAL, DIMENSION(:,:),   INTENT(IN)   ::  PSINSLOPE    ! sinus of the angle
                                       ! between i and the slope vector
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  MFMOIST      ! moist mass flux dual scheme
 
 !
+REAL, DIMENSION(:,:),   INTENT(IN)   :: PSFUM,PSFVM !  normal momentum sfc flux
 REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCDUEFF     ! Cd * || u || at time t
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked 
-       ! to the maximum slope direction and the surface normal and the binormal 
+REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTAU11M      ! <uu> in the axes linked
+       ! to the maximum slope direction and the surface normal and the binormal
        ! at time t - dt
 REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTAU12M      ! <uv> in the same axes
 REAL, DIMENSION(:,:),   INTENT(IN)   ::  PTAU33M      ! <ww> in the same axes
@@ -276,13 +279,13 @@ REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PUM,PVM,PWM, PTHLM
   ! Wind at t-Delta t
 REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PRM
 REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PUSLOPEM     ! wind component along the 
+REAL, DIMENSION(:,:),   INTENT(IN)   ::  PUSLOPEM     ! wind component along the
                                      ! maximum slope direction
-REAL, DIMENSION(:,:),   INTENT(IN)   ::  PVSLOPEM     ! wind component along the 
+REAL, DIMENSION(:,:),   INTENT(IN)   ::  PVSLOPEM     ! wind component along the
                                      ! direction normal to the maximum slope one
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTKEM        ! TKE at time t
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM          ! Turb. mixing length   
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM          ! Turb. mixing length
 REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PWU          ! momentum flux u'w'
 REAL, DIMENSION(:,:,:), INTENT(OUT)  ::  PWV          ! momentum flux v'w'
 !
@@ -300,7 +303,7 @@ REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTP          ! Thermal TKE production t
 !
 REAL, DIMENSION(SIZE(PUM,1),SIZE(PUM,2))  :: ZDIRSINZW ! sinus of the angle
                    ! between the normal and the vertical at the surface
-REAL, DIMENSION(SIZE(PUM,1),SIZE(PUM,2),1):: ZCOEFS    ! coeff. for the 
+REAL, DIMENSION(SIZE(PUM,1),SIZE(PUM,2),1):: ZCOEFS    ! coeff. for the
                    ! implicit scheme for the wind at the surface
 REAL, DIMENSION(SIZE(PUM,1),SIZE(PUM,2),SIZE(PUM,3))  ::  &
        ZA, &       ! under diagonal elements of the tri-diagonal matrix involved
@@ -308,7 +311,7 @@ REAL, DIMENSION(SIZE(PUM,1),SIZE(PUM,2),SIZE(PUM,3))  ::  &
                    ! J in Section 5)
        ZRES, &     ! guess of the treated variable at t+ deltat when the turbu-
                    ! lence is the only source of evolution added to the ones
-                   ! considered in ZSOURCE  
+                   ! considered in ZSOURCE
        ZFLXZ,  &   ! vertical flux of the treated variable
        ZSOURCE,  & ! source of evolution for the treated variable
        ZKEFF       ! effectif diffusion coeff = LT * SQRT( TKE )
@@ -322,7 +325,8 @@ REAL, DIMENSION(SIZE(PDZZ,1),SIZE(PDZZ,2),1) :: ZCOEFFLXU, &
                                     ZCOEFFLXV, ZUSLOPEM, ZVSLOPEM
                                     ! coefficients for the surface flux
                                     ! evaluation and copy of PUSLOPEM and
-                                    ! PVSLOPEM in local 3D arrays 
+                                    ! PVSLOPEM in local 3D arrays
+REAL, DIMENSION(SIZE(PDZZ,1),SIZE(PDZZ,2),1) :: ZFLUXSFCU,ZFLUXSFCV
 INTEGER             :: IIU,IJU      ! size of array in x,y,z directions
 !
 REAL :: ZTIME1, ZTIME2, ZCMFS
@@ -344,8 +348,8 @@ IKB=KKA+JPVEXT_TURB*KKL
 IKE=KKU-JPVEXT_TURB*KKL
 IKB=KKA+JPVEXT_TURB*KKL
 IKE=KKU-JPVEXT_TURB*KKL
-IKT=SIZE(PUM,3)          
-IKTB=1+JPVEXT_TURB              
+IKT=SIZE(PUM,3)
+IKTB=1+JPVEXT_TURB
 IKTE=IKT-JPVEXT_TURB
 !
 ZSOURCE = 0.
@@ -354,44 +358,48 @@ ZCMFS = XCMFS
 IF (LHARAT) ZCMFS=1.
 !
 ZDIRSINZW(:,:) = SQRT(1.-PDIRCOSZW(:,:)**2)
-!  compute the coefficients for the uncentred gradient computation near the 
+!  compute the coefficients for the uncentred gradient computation near the
 !  ground
 !
 ! With LHARATU length scale and TKE are at half levels so remove MZM
 !
 IF (LHARAT) THEN
-  ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50*MFMOIST(:,:,:)
-ELSE 
+  !wc with energy cascade 50*MF no longer necessary
+  !ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50*MFMOIST(:,:,:)
+  ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:))
+ELSE
   ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), KKA, KKU, KKL)
 ENDIF
 
 !
 ZUSLOPEM(:,:,1)=PUSLOPEM(:,:)
 ZVSLOPEM(:,:,1)=PVSLOPEM(:,:)
+ZFLUXSFCU(:,:,1)=PSFUM(:,:)
+ZFLUXSFCV(:,:,1)=PSFVM(:,:)
 !
 !----------------------------------------------------------------------------
 !
 !
-!*       5.   SOURCES OF U,W WIND COMPONENTS AND PARTIAL DYNAMIC PRODUCTION 
+!*       5.   SOURCES OF U,W WIND COMPONENTS AND PARTIAL DYNAMIC PRODUCTION
 !             -------------------------------------------------------------
 !
 !*       5.1  Source of U wind component
 !
-! Preparation of the arguments for TRIDIAG_WIND 
+! Preparation of the arguments for TRIDIAG_WIND
 !
 ZA(:,:,:)    = -PTSTEP * ZCMFS *                              &
               MXM( ZKEFF ) * MXM(MZM(PRHODJ, KKA, KKU, KKL)) / &
               MXM( PDZZ )**2
 !
 !
-! Compute the source of U wind component 
+! Compute the source of U wind component
 !
-! compute the coefficient between the vertical flux and the 2 components of the 
+! compute the coefficient between the vertical flux and the 2 components of the
 ! wind following the slope
 ZCOEFFLXU(:,:,1) = PCDUEFF(:,:) * (PDIRCOSZW(:,:)**2 - ZDIRSINZW(:,:)**2) &
                                    * PCOSSLOPE(:,:)
 ZCOEFFLXV(:,:,1) = PCDUEFF(:,:) * PDIRCOSZW(:,:) * PSINSLOPE(:,:)
-
+!
 ! prepare the implicit scheme coefficients for the surface flux
 ZCOEFS(:,:,1)=  ZCOEFFLXU(:,:,1) * PCOSSLOPE(:,:) * PDIRCOSZW(:,:)  &
                  +ZCOEFFLXV(:,:,1) * PSINSLOPE(:,:)
@@ -399,32 +407,20 @@ ZCOEFS(:,:,1)=  ZCOEFFLXU(:,:,1) * PCOSSLOPE(:,:) * PDIRCOSZW(:,:)  &
 ! average this flux to be located at the U,W vorticity point
 ZCOEFS(:,:,1:1)=MXM(ZCOEFS(:,:,1:1) / PDZZ(:,:,IKB:IKB) )
 !
-!
-! ZSOURCE= FLUX /DZ
-IF (OOCEAN) THEN  ! OCEAN MODEL ONLY
-  ! Sfx flux assumed to be in SI & at vorticity point
-  IF (LCOUPLES) THEN  
-    ZSOURCE(:,:,IKE:IKE) = XSSUFL_C(:,:,1:1)/PDZZ(:,:,IKE:IKE) &
-         *0.5 * ( 1. + MXM(PRHODJ(:,:,KKU:KKU)) / MXM(PRHODJ(:,:,IKE:IKE))) 
-  ELSE
-    ZSOURCE(:,:,IKE)     = XSSUFL(:,:)
-    ZSOURCE(:,:,IKE:IKE) = ZSOURCE (:,:,IKE:IKE) /PDZZ(:,:,IKE:IKE) &
-        *0.5 * ( 1. + MXM(PRHODJ(:,:,KKU:KKU)) / MXM(PRHODJ(:,:,IKE:IKE)) )
-  ENDIF
-  !No flux at the ocean domain bottom
+ ZSOURCE(:,:,IKTB+1:IKTE-1) = 0
+! ZSOURCE= sfc FLUX /DZ
+! Sfx flux assumed to be in SI & at vorticity point
+IF (OOCEAN) THEN  ! Ocean model
+     ZSOURCE(:,:,IKE:IKE) =MXM( ZFLUXSFCU(:,:,1:1) / PDZZ(:,:,IKE:IKE) ) &
+        * 0.5 * ( 1. + MXM(PRHODJ(:,:,KKU:KKU)) / MXM(PRHODJ(:,:,IKE:IKE)) )
+ ! Zero flux at the ocean domain bottom
    ZSOURCE(:,:,IKB)           = 0.
-   ZSOURCE(:,:,IKTB+1:IKTE-1) = 0
-!
-ELSE             !ATMOS MODEL ONLY
-  IF (LCOUPLES) THEN 
-   ZSOURCE(:,:,IKB:IKB) = XSSUFL_C(:,:,1:1)/PDZZ(:,:,IKB:IKB) &
-      * 0.5 * ( 1. + MXM(PRHODJ(:,:,KKA:KKA)) / MXM(PRHODJ(:,:,IKB:IKB)) )
-  ELSE               
-    ! compute the explicit tangential flux at the W point
+ELSE ! Atmosphere
+ ! Compute the explicit tangential flux at the W point
     ZSOURCE(:,:,IKB)     =                                              &
      PTAU11M(:,:) * PCOSSLOPE(:,:) * PDIRCOSZW(:,:) * ZDIRSINZW(:,:) &
      -PTAU12M(:,:) * PSINSLOPE(:,:) * ZDIRSINZW(:,:)                  &
-     -PTAU33M(:,:) * PCOSSLOPE(:,:) * ZDIRSINZW(:,:) * PDIRCOSZW(:,:)  
+     -PTAU33M(:,:) * PCOSSLOPE(:,:) * ZDIRSINZW(:,:) * PDIRCOSZW(:,:)
 !
     ! add the vertical part or the surface flux at the U,W vorticity point
 !
@@ -436,42 +432,34 @@ ELSE             !ATMOS MODEL ONLY
            *ZVSLOPEM(:,:,1:1)                      )    &
     -  ZCOEFS(:,:,1:1) * PUM(:,:,IKB:IKB) * PIMPL        &
     ) * 0.5 * ( 1. + MXM(PRHODJ(:,:,KKA:KKA)) / MXM(PRHODJ(:,:,IKB:IKB)) )
-  ENDIF 
-!
-  ZSOURCE(:,:,IKTB+1:IKTE-1) = 0.
+ ! Zero flux at upper BC for atmos case 
   ZSOURCE(:,:,IKE) = 0.
-ENDIF !end ocean or atmosphere cases
+ENDIF
 !
-! Obtention of the split U at t+ deltat 
+! Obtention of the split U at t+ deltat
 !
 CALL TRIDIAG_WIND(KKA,KKU,KKL,PUM,ZA,ZCOEFS(:,:,1),PTSTEP,PEXPL,PIMPL,   &
                   MXM(PRHODJ),ZSOURCE,ZRES)
-! 
+!
 !  Compute the equivalent tendency for the U wind component
 !
 PRUS(:,:,:)=PRUS(:,:,:)+MXM(PRHODJ(:,:,:))*(ZRES(:,:,:)-PUM(:,:,:))/PTSTEP
 !
-!
-!*       5.2  Partial Dynamic Production
+!*       5.2  Partial TKE Dynamic Production
 !
 ! vertical flux of the U wind component
 !
 ZFLXZ(:,:,:)     = -ZCMFS * MXM(ZKEFF) * &
                   DZM(PIMPL*ZRES + PEXPL*PUM, KKA, KKU, KKL) / MXM(PDZZ)
-!
-! surface flux 
-ZFLXZ(:,:,IKB:IKB)   =   MXM(PDZZ(:,:,IKB:IKB))  *                &
+IF (OOCEAN) THEN
+ ZFLXZ(:,:,IKE+1)   =  ZFLUXSFCU(:,:,1)
+ELSE
+ ZFLXZ(:,:,IKB:IKB)   =   MXM(PDZZ(:,:,IKB:IKB))  *                &
   ( ZSOURCE(:,:,IKB:IKB)                                          &
-   +ZCOEFS(:,:,1:1) * ZRES(:,:,IKB:IKB) * PIMPL                   &                
+   +ZCOEFS(:,:,1:1) * ZRES(:,:,IKB:IKB) * PIMPL                   &
   ) / 0.5 / ( 1. + MXM(PRHODJ(:,:,KKA:KKA)) / MXM(PRHODJ(:,:,IKB:IKB)) )
 !
-ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB) 
-
-IF (OOCEAN) THEN !ocean model at phys sfc (ocean domain top)
-  ZFLXZ(:,:,IKE:IKE)   =   MXM(PDZZ(:,:,IKE:IKE))  *                &
-                           ZSOURCE(:,:,IKE:IKE)                     &
-                           / 0.5 / ( 1. + MXM(PRHODJ(:,:,KKU:KKU)) / MXM(PRHODJ(:,:,IKE:IKE)) )
-  ZFLXZ(:,:,KKU) = ZFLXZ(:,:,IKE) 
+  ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB)
 END IF
 !
 IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
@@ -493,30 +481,32 @@ END IF
 !
 PWU(:,:,:) = ZFLXZ(:,:,:)
 !
-! Contribution to the dynamic production of TKE
-! compute the dynamic production at the mass point
+! Contribution to the TKE dynamic production of TKE
+! (computed at mass point)
 !
 PDP(:,:,:) = - MZF(MXF(ZFLXZ * GZ_U_UW(PUM,PDZZ, KKA, KKU, KKL)), KKA, KKU, KKL)
 !
+! Special cases near surface
+IF (OOCEAN) THEN
+! evaluate the dynamic production at w(IKE) and store in PDP(IKE)
+! before to be extrapolated in tke_eps routine
+  PDP(:,:,IKE:IKE) = - MXF (                                              &
+  ZFLXZ(:,:,IKE:IKE) * (PUM(:,:,IKE:IKE)-PUM(:,:,IKE-1:IKE-1))            &
+                           / MXM(PDZZ(:,:,IKE-1:IKE-1))                   &
+                           )
+ELSE ! Atmosphere
 ! evaluate the dynamic production at w(IKB+KKL) in PDP(IKB)
-PDP(:,:,IKB:IKB) = - MXF (                                                      &
-  ZFLXZ(:,:,IKB+KKL:IKB+KKL) * (PUM(:,:,IKB+KKL:IKB+KKL)-PUM(:,:,IKB:IKB))  &
+ PDP(:,:,IKB:IKB) = - MXF (                                                &
+ ZFLXZ(:,:,IKB+KKL:IKB+KKL) * (PUM(:,:,IKB+KKL:IKB+KKL)-PUM(:,:,IKB:IKB))  &
                          / MXM(PDZZ(:,:,IKB+KKL:IKB+KKL))                   &
                          )
-!
-IF (OOCEAN) THEN
-  ! evaluate the dynamic production at w(IKE-KKL) in PDP(IKE)
-  PDP(:,:,IKE:IKE) = - MXF (                                                      &
-    ZFLXZ(:,:,IKE-KKL:IKE-KKL) * (PUM(:,:,IKE:IKE)-PUM(:,:,IKE-KKL:IKE-KKL))  &
-                           / MXM(PDZZ(:,:,IKE-KKL:IKE-KKL))                   &
-                           ) 
 END IF
 !
 ! Storage in the LES configuration
-! 
+!
 IF (LLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID(MZF(MXF(ZFLXZ), KKA, KKU, KKL), X_LES_SUBGRID_WU ) 
+  CALL LES_MEAN_SUBGRID(MZF(MXF(ZFLXZ), KKA, KKU, KKL), X_LES_SUBGRID_WU )
   CALL LES_MEAN_SUBGRID(MZF(MXF(GZ_U_UW(PUM,PDZZ, KKA, KKU, KKL) &
                        & *ZFLXZ), KKA, KKU, KKL), X_LES_RES_ddxa_U_SBG_UaU )
   CALL LES_MEAN_SUBGRID( ZCMFS * ZKEFF, X_LES_SUBGRID_Km )
@@ -530,11 +520,8 @@ END IF
 IF(HTURBDIM=='3DIM') THEN
   ! Compute the source for the W wind component
                 ! used to compute the W source at the ground
-  ZFLXZ(:,:,KKA) = 2 * ZFLXZ(:,:,IKB) - ZFLXZ(:,:,IKB+KKL) ! extrapolation 
- IF (OOCEAN) THEN
-   ZFLXZ(:,:,KKU) = 2 * ZFLXZ(:,:,IKE) - ZFLXZ(:,:,IKE-KKL) ! extrapolation 
- END IF     
-     
+  ZFLXZ(:,:,KKA) = 2 * ZFLXZ(:,:,IKB) - ZFLXZ(:,:,IKB+KKL) ! extrapolation
+  IF (OOCEAN)   ZFLXZ(:,:,KKU) = 2 * ZFLXZ(:,:,IKE) - ZFLXZ(:,:,IKE-KKL) ! extrapolation
   !
   IF (.NOT. LFLAT) THEN
     PRWS(:,:,:)= PRWS                                      &
@@ -546,11 +533,19 @@ IF(HTURBDIM=='3DIM') THEN
     PRWS(:,:,:)= PRWS -DXF(MZM(MXM(PRHODJ) /PDXX, KKA, KKU, KKL)  * ZFLXZ )
   END IF
   !
-  ! Complete the Dynamical production with the W wind component 
+  ! Complete the TKE dynamical production with the W wind contribution 
   !
   ZA(:,:,:)=-MZF(MXF(ZFLXZ * GX_W_UW(PWM,PDXX,PDZZ,PDZX, KKA, KKU, KKL)), KKA, KKU, KKL)
   !
-  !
+! Special cases near surface
+  IF (OOCEAN) THEN
+  ! evaluate the dynamic production at w(IKE) and stored in PDP(IKE)
+    ZA(:,:,IKE:IKE) = - MXF (                                         &
+    ZFLXZ(:,:,IKE:IKE) *                                              &
+      DXM( PWM(:,:,IKE:IKE) )                                         &
+      / (0.5*(PDXX(:,:,IKE-1:IKE-1)+PDXX(:,:,IKE:IKE)))               &
+      )
+  ELSE !Atmosphere
   ! evaluate the dynamic production at w(IKB+KKL) in PDP(IKB)
   ZA(:,:,IKB:IKB) = - MXF (                                                  &
    ZFLXZ(:,:,IKB+KKL:IKB+KKL) *                                              &
@@ -563,26 +558,12 @@ IF(HTURBDIM=='3DIM') THEN
         * PDZX(:,:,IKB+KKL:IKB+KKL)                                          &
      ) / (0.5*(PDXX(:,:,IKB+KKL:IKB+KKL)+PDXX(:,:,IKB:IKB)))                 &
                           )
+  END IF
   !
-IF (OOCEAN) THEN
-  ! evaluate the dynamic production at w(IKE-KKL) in PDP(IKE)
-  ZA(:,:,IKE:IKE) = - MXF (                                                  &
-   ZFLXZ(:,:,IKE-KKL:IKE-KKL) *                                              &
-     ( DXM( PWM(:,:,IKE-KKL:IKE-KKL) )                                       &
-      -MXM(  (PWM(:,:,IKE-2*KKL:IKE-2*KKL   )-PWM(:,:,IKE-KKL:IKE-KKL))      &
-              /(PDZZ(:,:,IKE-2*KKL:IKE-2*KKL)+PDZZ(:,:,IKE-KKL:IKE-KKL))     &
-            +(PWM(:,:,IKE-KKL:IKE-KKL)-PWM(:,:,IKE:IKE  ))                   &
-              /(PDZZ(:,:,IKE-KKL:IKE-KKL)+PDZZ(:,:,IKE:IKE  ))               &
-          )                                                                  &
-         * PDZX(:,:,IKE-KKL:IKE-KKL)                                         &
-     ) / (0.5*(PDXX(:,:,IKE-KKL:IKE-KKL)+PDXX(:,:,IKE:IKE)))                 &
-                          )
-END IF
-  !
-  PDP(:,:,:)=PDP(:,:,:)+ZA(:,:,:)
+ PDP(:,:,:)=PDP(:,:,:)+ZA(:,:,:)
   !
   ! Storage in the LES configuration
-  ! 
+  !
   IF (LLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
     CALL LES_MEAN_SUBGRID(MZF(MXF(GX_W_UW(PWM,PDXX,&
@@ -605,7 +586,7 @@ END IF
 !----------------------------------------------------------------------------
 !
 !
-!*       6.   SOURCES OF V,W WIND COMPONENTS AND COMPLETE 1D DYNAMIC PRODUCTION 
+!*       6.   SOURCES OF V,W WIND COMPONENTS AND COMPLETE 1D TKE DYNAMIC PRODUCTION 
 !             -----------------------------------------------------------------
 !
 !*       6.1  Source of V wind component
@@ -619,7 +600,7 @@ ZA(:,:,:)    = - PTSTEP * ZCMFS *                              &
 !
 !
 ! Compute the source of V wind component
-! compute the coefficient between the vertical flux and the 2 components of the 
+! compute the coefficient between the vertical flux and the 2 components of the
 ! wind following the slope
 ZCOEFFLXU(:,:,1) = PCDUEFF(:,:) * (PDIRCOSZW(:,:)**2 - ZDIRSINZW(:,:)**2) &
                                    * PSINSLOPE(:,:)
@@ -632,24 +613,28 @@ ZCOEFS(:,:,1)=  ZCOEFFLXU(:,:,1) * PSINSLOPE(:,:) * PDIRCOSZW(:,:)  &
 ! average this flux to be located at the V,W vorticity point
 ZCOEFS(:,:,1:1)=MYM(ZCOEFS(:,:,1:1) / PDZZ(:,:,IKB:IKB) )
 !
+
+! No flux in SOURCE TERM NULL OUTSIDE BC 
+ZSOURCE(:,:,IKB+1:IKE-1) = 0.
+! Surface case
 IF (OOCEAN) THEN ! Ocean case
-  IF (LCOUPLES) THEN
-    ZSOURCE(:,:,IKE:IKE) =  XSSVFL_C(:,:,1:1)/PDZZ(:,:,IKE:IKE) &
-        *0.5 * ( 1. + MYM(PRHODJ(:,:,KKU:KKU)) / MYM(PRHODJ(:,:,IKE:IKE)) ) 
-  ELSE 
-    ZSOURCE(:,:,IKE) = XSSVFL(:,:)
-    ZSOURCE(:,:,IKE:IKE) = ZSOURCE(:,:,IKE:IKE)/PDZZ(:,:,IKE:IKE) &
-        *0.5 * ( 1. + MYM(PRHODJ(:,:,KKU:KKU)) / MYM(PRHODJ(:,:,IKE:IKE)) )
-  END IF
-  !No flux at the ocean domain bottom
-  ZSOURCE(:,:,IKB) = 0.
+ ZCOEFFLXU(:,:,1) = PCDUEFF(:,:)
+ ZCOEFFLXV(:,:,1) = PCDUEFF(:,:)
+ ZCOEFS(:,:,1)=ZCOEFFLXU(:,:,1)
+! average this flux to be located at the U,W vorticity point
+ ZCOEFS(:,:,1:1)=MYM(ZCOEFS(:,:,1:1) / PDZZ(:,:,IKE:IKE) )
+ ZSOURCE(:,:,IKE:IKE) = MYM( ZFLUXSFCV(:,:,1:1) / PDZZ(:,:,IKE:IKE) )         &
+     * 0.5 * ( 1. + MYM(PRHODJ(:,:,KKU:KKU)) / MYM(PRHODJ(:,:,IKE:IKE)) )
+!No flux at the ocean domain bottom
+ ZSOURCE(:,:,IKB) = 0.
+!!!!!!!!!!!!!!!!!!!!!!
 ELSE ! Atmos case
-  IF (.NOT.LCOUPLES) THEN !  only atmosp without coupling
+!!!!!!!!!!!!!!!!!!!!!
   ! compute the explicit tangential flux at the W point
     ZSOURCE(:,:,IKB)       =                                                  &
       PTAU11M(:,:) * PSINSLOPE(:,:) * PDIRCOSZW(:,:) * ZDIRSINZW(:,:)         &
      +PTAU12M(:,:) * PCOSSLOPE(:,:) * ZDIRSINZW(:,:)                          &
-     -PTAU33M(:,:) * PSINSLOPE(:,:) * ZDIRSINZW(:,:) * PDIRCOSZW(:,:) 
+     -PTAU33M(:,:) * PSINSLOPE(:,:) * ZDIRSINZW(:,:) * PDIRCOSZW(:,:)
 !
   ! add the vertical part or the surface flux at the V,W vorticity point
   ZSOURCE(:,:,IKB:IKB) =                                      &
@@ -661,15 +646,9 @@ ELSE ! Atmos case
      - ZCOEFS(:,:,1:1) * PVM(:,:,IKB:IKB) * PIMPL             &
     ) * 0.5 * ( 1. + MYM(PRHODJ(:,:,KKA:KKA)) / MYM(PRHODJ(:,:,IKB:IKB)) )
 !
-  ELSE   !atmosphere when coupling
-    ! input flux assumed to be in SI and at vorticity point
-    ZSOURCE(:,:,IKB:IKB) =     -XSSVFL_C(:,:,1:1)/(1.*PDZZ(:,:,IKB:IKB)) &
-      * 0.5 * ( 1. + MYM(PRHODJ(:,:,KKA:KKA)) / MYM(PRHODJ(:,:,IKB:IKB)) )
-  ENDIF
-  !No flux at the atmosphere top
+!No flux at the atmosphere top
   ZSOURCE(:,:,IKE) = 0.
-ENDIF ! End of Ocean or Atmospher Cases
-ZSOURCE(:,:,IKTB+1:IKTE-1) = 0.
+ENDIF ! End of Ocean or Atmospheric Cases
 ! 
 !  Obtention of the split V at t+ deltat 
 CALL TRIDIAG_WIND(KKA,KKU,KKL,PVM,ZA,ZCOEFS(:,:,1),PTSTEP,PEXPL,PIMPL,  &
@@ -687,20 +666,17 @@ PRVS(:,:,:)=PRVS(:,:,:)+MYM(PRHODJ(:,:,:))*(ZRES(:,:,:)-PVM(:,:,:))/PTSTEP
 ZFLXZ(:,:,:)   = -ZCMFS * MYM(ZKEFF) * &
                 DZM(PIMPL*ZRES + PEXPL*PVM, KKA, KKU, KKL) / MYM(PDZZ)
 !
-ZFLXZ(:,:,IKB:IKB)   =   MYM(PDZZ(:,:,IKB:IKB))  *                       &
-  ( ZSOURCE(:,:,IKB:IKB)                                                 &
-   +ZCOEFS(:,:,1:1) * ZRES(:,:,IKB:IKB) * PIMPL                      &      
-  ) / 0.5 / ( 1. + MYM(PRHODJ(:,:,KKA:KKA)) / MYM(PRHODJ(:,:,IKB:IKB)) )
-!  
-!
-ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB)
 !
 IF (OOCEAN) THEN
-  ZFLXZ(:,:,IKE:IKE)   =   MYM(PDZZ(:,:,IKE:IKE))  *                &
-      ZSOURCE(:,:,IKE:IKE)                                          &
-      / 0.5 / ( 1. + MYM(PRHODJ(:,:,KKU:KKU)) / MYM(PRHODJ(:,:,IKE:IKE)) )
-  ZFLXZ(:,:,KKU) = ZFLXZ(:,:,IKE) 
-END IF
+ ZFLXZ(:,:,IKE+1)  =   ZFLUXSFCV(:,:,1)
+ELSE
+ ZFLXZ(:,:,IKB:IKB)   =   MYM(PDZZ(:,:,IKB:IKB))  *                       &
+  ( ZSOURCE(:,:,IKB:IKB)                                                 &
+   +ZCOEFS(:,:,1:1) * ZRES(:,:,IKB:IKB) * PIMPL                      &
+  ) / 0.5 / ( 1. + MYM(PRHODJ(:,:,KKA:KKA)) / MYM(PRHODJ(:,:,IKB:IKB)) )
+!
+  ZFLXZ(:,:,KKA) = ZFLXZ(:,:,IKB)
+ END IF
 !
 IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the V wind component vertical flux
@@ -721,24 +697,25 @@ END IF
 !
 PWV(:,:,:) = ZFLXZ(:,:,:)
 !
-!  Contribution to the dynamic production of TKE
-! compute the dynamic production contribution at the mass point
+!  Contribution to the TKE dynamical production 
+!    computed at mass point
 !
 ZA(:,:,:) = - MZF(MYF(ZFLXZ * GZ_V_VW(PVM,PDZZ, KKA, KKU, KKL)), KKA, KKU, KKL)
 !
-! evaluate the dynamic production at w(IKB+KKL) in PDP(IKB)
-ZA(:,:,IKB:IKB)  =                                                 &
-                 - MYF (                                          &
-ZFLXZ(:,:,IKB+KKL:IKB+KKL) * (PVM(:,:,IKB+KKL:IKB+KKL)-PVM(:,:,IKB:IKB))  &
-                       / MYM(PDZZ(:,:,IKB+KKL:IKB+KKL))               &
-                       )
-!
+! Special cases at surface
 IF (OOCEAN) THEN
-  ! evaluate the dynamic production at w(IKE-KKL) in PDP(IKE)
+! evaluate the dynamic production at w(IKE) and stored in PDP(IKE)
+   ! before extrapolation done in routine tke_eps_source
   ZA(:,:,IKE:IKE) = - MYF (                                                  &
-   ZFLXZ(:,:,IKE-KKL:IKE-KKL) * (PVM(:,:,IKE:IKE)-PVM(:,:,IKE-KKL:IKE-KKL))  &
-                          / MYM(PDZZ(:,:,IKE-KKL:IKE-KKL))                   &
+  ZFLXZ(:,:,IKE:IKE) * (PVM(:,:,IKE:IKE)-PVM(:,:,IKE-1:IKE-1))  &
+                           / MYM(PDZZ(:,:,IKE-1:IKE-1))                   &
                           )
+ELSE ! Atmosphere  
+! evaluate the dynamic production at w(IKB+KL) and stored in PDP(IKB)
+  ZA(:,:,IKB:IKB)  = - MYF (                                                &
+  ZFLXZ(:,:,IKB+KKL:IKB+KKL) * (PVM(:,:,IKB+KKL:IKB+KKL)-PVM(:,:,IKB:IKB))  &
+                        / MYM(PDZZ(:,:,IKB+KKL:IKB+KKL))                   &
+                           )
 END IF
 !
 PDP(:,:,:)=PDP(:,:,:)+ZA(:,:,:)
@@ -747,7 +724,7 @@ PDP(:,:,:)=PDP(:,:,:)+ZA(:,:,:)
 !
 IF (LLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID(MZF(MYF(ZFLXZ), KKA, KKU, KKL), X_LES_SUBGRID_WV ) 
+  CALL LES_MEAN_SUBGRID(MZF(MYF(ZFLXZ), KKA, KKU, KKL), X_LES_SUBGRID_WV )
   CALL LES_MEAN_SUBGRID(MZF(MYF(GZ_V_VW(PVM,PDZZ, KKA, KKU, KKL)*&
                     & ZFLXZ), KKA, KKU, KKL), X_LES_RES_ddxa_V_SBG_UaV )
   CALL SECOND_MNH(ZTIME2)
@@ -755,16 +732,17 @@ IF (LLES_CALL) THEN
 END IF
 !
 !
-!*       6.3  Source of W wind component 
+!*       6.3  Source of W wind component
 !
 IF(HTURBDIM=='3DIM') THEN
   ! Compute the source for the W wind component
-  ZFLXZ(:,:,KKA) = 2 * ZFLXZ(:,:,IKB) - ZFLXZ(:,:,IKB+KKL) ! extrapolation 
-  IF (OOCEAN) THEN
-    ZFLXZ(:,:,KKU) = 2 * ZFLXZ(:,:,IKE) - ZFLXZ(:,:,IKE-KKL) ! extrapolation 
-  END IF
+ IF (OOCEAN) THEN
+    ZFLXZ(:,:,IKE+1) = 2 * ZFLXZ(:,:,IKE) - ZFLXZ(:,:,IKE-1) ! extrapolation 
+ ELSE
+    ZFLXZ(:,:,KKA) = 2 * ZFLXZ(:,:,IKB) - ZFLXZ(:,:,IKB+KKL) ! extrapolation 
+ END IF
   !
-  IF (.NOT. L2D) THEN 
+  IF (.NOT. L2D) THEN
     IF (.NOT. LFLAT) THEN
       PRWS(:,:,:)= PRWS(:,:,:)                               &
                   -DYF( MZM(MYM(PRHODJ) /PDYY, KKA, KKU, KKL) * ZFLXZ )   &
@@ -775,12 +753,19 @@ IF(HTURBDIM=='3DIM') THEN
       PRWS(:,:,:)= PRWS(:,:,:) -DYF(MZM(MYM(PRHODJ) /PDYY, KKA, KKU, KKL) * ZFLXZ )
     END IF
   END IF
-  ! 
-  ! Complete the Dynamical production with the W wind component 
+  !
+  ! Complete the TKE dynamical production with the W wind component
   IF (.NOT. L2D) THEN
     ZA(:,:,:) = - MZF(MYF(ZFLXZ * GY_W_VW(PWM,PDYY,PDZZ,PDZY, KKA, KKU, KKL)), KKA, KKU, KKL)
-  !
-  ! evaluate the dynamic production at w(IKB+KKL) in PDP(IKB)
+  ! Special case near surface
+   IF (OOCEAN) THEN
+  ! evaluate the dynamic production at w(IKE) and stored in PDP(IKE)
+     ZA(:,:,IKE:IKE) = - MYF (                                         &
+     ZFLXZ(:,:,IKE:IKE) * DYM( PWM(:,:,IKE:IKE) )                      &
+         / (0.5*(PDYY(:,:,IKE-1:IKE-1)+PDYY(:,:,IKE:IKE)))             &
+                              )
+    ELSE ! Atmosphere
+  ! evaluate the dynamic production at w(IKB+KKL) and stored in PDP(IKB)
     ZA(:,:,IKB:IKB) = - MYF (                                              &
      ZFLXZ(:,:,IKB+KKL:IKB+KKL) *                                          &
        ( DYM( PWM(:,:,IKB+KKL:IKB+KKL) )                                   &
@@ -793,20 +778,8 @@ IF(HTURBDIM=='3DIM') THEN
        ) / (0.5*(PDYY(:,:,IKB+KKL:IKB+KKL)+PDYY(:,:,IKB:IKB)))             &
                             )
   !
-    IF (OOCEAN) THEN
-     ZA(:,:,IKE:IKE) = - MYF (                                              &
-      ZFLXZ(:,:,IKE-KKL:IKE-KKL) *                                          &
-        ( DYM( PWM(:,:,IKE-KKL:IKE-KKL) )                                   &
-         -MYM(  (PWM(:,:,IKE-2*KKL:IKE-2*KKL)-PWM(:,:,IKE-KKL:IKE-KKL))     &
-                 /(PDZZ(:,:,IKE-2*KKL:IKE-2*KKL)+PDZZ(:,:,IKE-KKL:IKE-KKL)) &
-               +(PWM(:,:,IKE-KKL:IKE-KKL)-PWM(:,:,IKE:IKE  ))               &
-                 /(PDZZ(:,:,IKE-KKL:IKE-KKL)+PDZZ(:,:,IKE:IKE  ))           &
-             )                                                              &
-           * PDZY(:,:,IKE-KKL:IKE-KKL)                                      &
-        ) / (0.5*(PDYY(:,:,IKE-KKL:IKE-KKL)+PDYY(:,:,IKE:IKE)))             &
-                            )
     END IF
-!    
+!
     PDP(:,:,:)=PDP(:,:,:)+ZA(:,:,:)
   !
   END IF
@@ -842,7 +815,7 @@ IF ( OTURB_FLX .AND. TPFILE%LOPENED .AND. HTURBDIM == '1DIM') THEN
   ZFLXZ(:,:,:)= (2./3.) * PTKEM(:,:,:)                     &
      -ZCMFS*PLM(:,:,:)*SQRT(PTKEM(:,:,:))*GZ_W_M(PWM,PDZZ, KKA, KKU, KKL)
   ! to be tested &
-  !   +XCMFB*(4./3.)*PLM(:,:,:)/SQRT(PTKEM(:,:,:))*PTP(:,:,:) 
+  !   +XCMFB*(4./3.)*PLM(:,:,:)/SQRT(PTKEM(:,:,:))*PTP(:,:,:)
   ! stores the W variance
   TZFIELD%CMNHNAME   = 'W_VVAR'
   TZFIELD%CSTDNAME   = ''

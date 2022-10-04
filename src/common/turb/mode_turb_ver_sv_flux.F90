@@ -25,13 +25,13 @@ SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
 !!    PURPOSE
 !!    -------
 !       The purpose of this routine is to compute the vertical turbulent
-!     fluxes of the evolutive variables and give back the source 
+!     fluxes of the evolutive variables and give back the source
 !     terms to the main program.	In the case of large horizontal meshes,
 !     the divergence of these vertical turbulent fluxes represent the whole
 !     effect of the turbulence but when the three-dimensionnal version of
 !     the turbulence scheme is activated (CTURBDIM="3DIM"), these divergences
-!     are completed in the next routine TURB_HOR. 
-!		  An arbitrary degree of implicitness has been implemented for the 
+!     are completed in the next routine TURB_HOR.
+!		  An arbitrary degree of implicitness has been implemented for the
 !     temporal treatment of these diffusion terms.
 !       The vertical boundary conditions are as follows:
 !           *  at the bottom, the surface fluxes are prescribed at the same
@@ -39,8 +39,8 @@ SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
 !           *  at the top, the turbulent fluxes are set to 0.
 !       It should be noted that the condensation has been implicitely included
 !     in this turbulence scheme by using conservative variables and computing
-!     the subgrid variance of a statistical variable s indicating the presence 
-!     or not of condensation in a given mesh. 
+!     the subgrid variance of a statistical variable s indicating the presence
+!     or not of condensation in a given mesh.
 !
 !!**  METHOD
 !!    ------
@@ -49,27 +49,27 @@ SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
 !!      implicit scheme (a Crank-Nicholson type with coefficients different
 !!      than 0.5), which allows to vary the degree of implicitness of the
 !!      formulation.
-!!      	 The different prognostic variables are treated one by one. 
-!!      The contributions of each turbulent fluxes are cumulated into the 
-!!      tendency  PRvarS, and into the dynamic and thermal production of 
+!!      	 The different prognostic variables are treated one by one.
+!!      The contributions of each turbulent fluxes are cumulated into the
+!!      tendency  PRvarS, and into the dynamic and thermal production of
 !!      TKE if necessary.
-!!        
+!!
 !!			 In section 2 and 3, the thermodynamical fields are considered.
 !!      Only the turbulent fluxes of the conservative variables
-!!      (Thetal and Rnp stored in PRx(:,:,:,1))  are computed. 
-!!       Note that the turbulent fluxes at the vertical 
+!!      (Thetal and Rnp stored in PRx(:,:,:,1))  are computed.
+!!       Note that the turbulent fluxes at the vertical
 !!      boundaries are given either by the soil scheme for the surface one
-!!      ( at the same instant as the others fluxes) and equal to 0 at the 
-!!      top of the model. The thermal production is computed by vertically 
+!!      ( at the same instant as the others fluxes) and equal to 0 at the
+!!      top of the model. The thermal production is computed by vertically
 !!      averaging the turbulent flux and multiply this flux at the mass point by
 !!      a function ETHETA or EMOIST, which preform the transformation from the
-!!      conservative variables to the virtual potential temperature. 
-!!     
+!!      conservative variables to the virtual potential temperature.
+!!
 !! 	    In section 4, the variance of the statistical variable
-!!      s indicating presence or not of condensation, is determined in function 
+!!      s indicating presence or not of condensation, is determined in function
 !!      of the turbulent moments of the conservative variables and its
-!!      squarred root is stored in PSIGS. This information will be completed in 
-!!      the horizontal turbulence if the turbulence dimensionality is not 
+!!      squarred root is stored in PSIGS. This information will be completed in
+!!      the horizontal turbulence if the turbulence dimensionality is not
 !!      equal to "1DIM".
 !!
 !!			 In section 5, the x component of the stress tensor is computed.
@@ -80,53 +80,53 @@ SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
 !!        j" is also parallel to the surface and in the normal direction of
 !!           the maximum slope
 !!        k" is the normal to the surface
-!!      In order to prevent numerical instability, the implicit scheme has 
-!!      been extended to the surface flux regarding to its dependence in 
-!!      function of U. The dependence in function of the other components 
+!!      In order to prevent numerical instability, the implicit scheme has
+!!      been extended to the surface flux regarding to its dependence in
+!!      function of U. The dependence in function of the other components
 !!      introduced by the different rotations is only explicit.
-!!      The turbulent fluxes are used to compute the dynamic production of 
+!!      The turbulent fluxes are used to compute the dynamic production of
 !!      TKE. For the last TKE level ( located at PDZZ(:,:,IKB)/2 from the
-!!      ground), an harmonic extrapolation from the dynamic production at 
+!!      ground), an harmonic extrapolation from the dynamic production at
 !!      PDZZ(:,:,IKB) is used to avoid an evaluation of the gradient of U
 !!      in the surface layer.
 !!
 !!         In section 6, the same steps are repeated but for the y direction
-!!		  and in section 7, a diagnostic computation of the W variance is 
+!!		  and in section 7, a diagnostic computation of the W variance is
 !!      performed.
 !!
-!!         In section 8, the turbulent fluxes for the scalar variables are 
+!!         In section 8, the turbulent fluxes for the scalar variables are
 !!      computed by the same way as the conservative thermodynamical variables
 !!
-!!            
+!!
 !!    EXTERNAL
 !!    --------
-!!      GX_U_M, GY_V_M, GZ_W_M :  cartesian gradient operators 
+!!      GX_U_M, GY_V_M, GZ_W_M :  cartesian gradient operators
 !!      GX_U_UW,GY_V_VW	         (X,Y,Z) represent the direction of the gradient
-!!                               _(M,U,...)_ represent the localization of the 
+!!                               _(M,U,...)_ represent the localization of the
 !!                               field to be derivated
-!!                               _(M,UW,...) represent the localization of the 
+!!                               _(M,UW,...) represent the localization of the
 !!                               field	derivated
-!!                               
+!!
 !!
 !!      MXM,MXF,MYM,MYF,MZM,MZF
-!!                             :  Shuman functions (mean operators)     
+!!                             :  Shuman functions (mean operators)
 !!      DXF,DYF,DZF,DZM
-!!                             :  Shuman functions (difference operators)     
-!!                               
+!!                             :  Shuman functions (difference operators)
+!!
 !!      SUBROUTINE TRIDIAG     : to compute the split implicit evolution
 !!                               of a variable located at a mass point
 !!
 !!      SUBROUTINE TRIDIAG_WIND: to compute the split implicit evolution
 !!                               of a variable located at a wind point
 !!
-!!      FUNCTIONs ETHETA and EMOIST  :  
+!!      FUNCTIONs ETHETA and EMOIST  :
 !!            allows to compute:
 !!            - the coefficients for the turbulent correlation between
-!!            any variable and the virtual potential temperature, of its 
-!!            correlations with the conservative potential temperature and 
+!!            any variable and the virtual potential temperature, of its
+!!            correlations with the conservative potential temperature and
 !!            the humidity conservative variable:
 !!            -------              -------              -------
-!!            A' Thv'  =  ETHETA   A' Thl'  +  EMOIST   A' Rnp'  
+!!            A' Thv'  =  ETHETA   A' Thl'  +  EMOIST   A' Rnp'
 !!
 !!
 !!    IMPLICIT ARGUMENTS
@@ -160,34 +160,34 @@ SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
 !!    MODIFICATIONS
 !!    -------------
 !!      Original       August   19, 1994
-!!      Modifications: February 14, 1995 (J.Cuxart and J.Stein) 
+!!      Modifications: February 14, 1995 (J.Cuxart and J.Stein)
 !!                                  Doctorization and Optimization
-!!      Modifications: March 21, 1995 (J.M. Carriere) 
+!!      Modifications: March 21, 1995 (J.M. Carriere)
 !!                                  Introduction of cloud water
-!!      Modifications: June  14, 1995 (J.Cuxart and J. Stein) 
+!!      Modifications: June  14, 1995 (J.Cuxart and J. Stein)
 !!                                 Phi3 and Psi3 at w-point + bug in the all
-!!                                 or nothing condens. 
-!!      Modifications: Sept  15, 1995 (J.Cuxart and J. Stein) 
+!!                                 or nothing condens.
+!!      Modifications: Sept  15, 1995 (J.Cuxart and J. Stein)
 !!                                 Change the DP computation at the ground
-!!      Modifications: October 10, 1995 (J.Cuxart and J. Stein) 
+!!      Modifications: October 10, 1995 (J.Cuxart and J. Stein)
 !!                                 Psi for scal var and LES tools
 !!      Modifications: November 10, 1995 (J. Stein)
-!!                                 change the surface	relations 
+!!                                 change the surface	relations
 !!      Modifications: February 20, 1995 (J. Stein) optimization
-!!      Modifications: May 21, 1996 (J. Stein) 
-!!                                  bug in the vertical flux of the V wind 
+!!      Modifications: May 21, 1996 (J. Stein)
+!!                                  bug in the vertical flux of the V wind
 !!                                  component for explicit computation
-!!      Modifications: May 21, 1996 (N. wood) 
+!!      Modifications: May 21, 1996 (N. wood)
 !!                                  modify the computation of the vertical
 !!                                   part or the surface tangential flux
 !!      Modifications: May 21, 1996 (P. Jabouille)
 !!                                  same modification in the Y direction
-!!      
+!!
 !!      Modifications: Sept 17, 1996 (J. Stein) change the moist case by using
 !!                                  Pi instead of Piref + use Atheta and Amoist
 !!
 !!      Modifications: Nov  24, 1997 (V. Masson) removes the DO loops
-!!      Modifications: Mar  31, 1998 (V. Masson) splits the routine TURB_VER_SV_FLUX  
+!!      Modifications: Mar  31, 1998 (V. Masson) splits the routine TURB_VER_SV_FLUX
 !!      Modifications: Dec  01, 2000 (V. Masson) conservation of scalar emission
 !!                                               from surface in 1DIM case
 !!                                               when slopes are present
@@ -195,15 +195,17 @@ SUBROUTINE TURB_VER_SV_FLUX(KKA,KKU,KKL,                      &
 !!                     Nov  06, 2002 (V. Masson) LES budgets
 !!                     October 2009 (G. Tanguy) add ILENCH=LEN(YCOMMENT) after
 !!                                              change of YCOMMENT
-!!                     Feb 2012(Y. Seity) add possibility to run with reversed 
+!!                     Feb 2012(Y. Seity) add possibility to run with reversed
 !!                                              vertical levels
 !!      Modifications: July 2015 (Wim de Rooy) LHARAT switch
 !!                     Feb 2017(M. Leriche) add initialisation of ZSOURCE
 !!                                   to avoid unknwon values outside physical domain
 !!                                   and avoid negative values in sv tendencies
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
+!!      Modifications: June 2019 (Wim de Rooy) with energycascade, 50MF nog
+!!                                             longer necessary
 !!--------------------------------------------------------------------------
-!       
+!
 !*      0. DECLARATIONS
 !          ------------
 !
@@ -238,7 +240,7 @@ IMPLICIT NONE
 !*      0.1  declarations of arguments
 !
 !
-INTEGER,                INTENT(IN)   :: KKA           !near ground array index  
+INTEGER,                INTENT(IN)   :: KKA           !near ground array index
 INTEGER,                INTENT(IN)   :: KKU           !uppest atmosphere array index
 INTEGER,                INTENT(IN)   :: KKL           !vert. levels type 1=MNH -1=ARO
 LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
@@ -258,15 +260,15 @@ REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  MFMOIST       ! moist mf dual scheme
 
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSFSVM       ! t - deltat 
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSFSVM       ! t - deltat
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSFSVP       ! t + deltat 
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PSFSVP       ! t + deltat
 !
 REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM         ! scalar var. at t-Delta t
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PWM          ! vertical wind
 REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PTKEM        ! TKE at time t
-REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM          ! Turb. mixing length   
+REAL, DIMENSION(:,:,:), INTENT(IN)   ::  PLM          ! Turb. mixing length
 REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.for scalars
 !
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS
@@ -285,14 +287,14 @@ REAL, DIMENSION(SIZE(PSVM,1),SIZE(PSVM,2),SIZE(PSVM,3))  ::  &
                    ! J in Section 5)
        ZRES, &     ! guess of the treated variable at t+ deltat when the turbu-
                    ! lence is the only source of evolution added to the ones
-                   ! considered in ZSOURCE  
+                   ! considered in ZSOURCE
        ZFLXZ,  &   ! vertical flux of the treated variable
        ZSOURCE,  & ! source of evolution for the treated variable
        ZKEFF       ! effectif diffusion coeff = LT * SQRT( TKE )
 INTEGER             :: IKB,IKE      ! I index values for the Beginning and End
                                     ! mass points of the domain in the 3 direct.
 INTEGER             :: IKT          ! array size in k direction
-INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
+INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
 INTEGER             :: JSV          ! loop counters
 INTEGER             :: JK           ! loop
 INTEGER             :: ISV          ! number of scalar var.
@@ -314,19 +316,21 @@ IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_FLUX',0,ZHOOK_HANDLE)
 IKB=KKA+JPVEXT_TURB*KKL
 IKE=KKU-JPVEXT_TURB*KKL
 IKT=SIZE(PSVM,3)
-IKTE =IKT-JPVEXT_TURB  
-IKTB =1+JPVEXT_TURB               
+IKTE =IKT-JPVEXT_TURB
+IKTB =1+JPVEXT_TURB
 !
 ISV=SIZE(PSVM,4)
 !
 IF (LHARAT) THEN
-  ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50.*MFMOIST(:,:,:)
+  !wc 50MF can be omitted with energy cascade included
+  !ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:)) + 50.*MFMOIST(:,:,:)
+  ZKEFF(:,:,:) =  PLM(:,:,:) * SQRT(PTKEM(:,:,:))
 ELSE
   ZKEFF(:,:,:) = MZM(PLM(:,:,:) * SQRT(PTKEM(:,:,:)), KKA, KKU, KKL)
 ENDIF
 !
 IF(LBLOWSNOW) THEN
-! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables           
+! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
    ZCSV= XCHF/XRSNOW
 ELSE
    ZCSV= XCHF
@@ -340,7 +344,7 @@ DO JSV=1,ISV
 !
   IF (LNOMIXLG .AND. JSV >= NSV_LGBEG .AND. JSV<= NSV_LGEND) CYCLE
 !
-! Preparation of the arguments for TRIDIAG 
+! Preparation of the arguments for TRIDIAG
     IF (LHARAT) THEN
       ZA(:,:,:)    = -PTSTEP*   &
                    ZKEFF * MZM(PRHODJ, KKA, KKU, KKL) /   &
@@ -361,7 +365,7 @@ DO JSV=1,ISV
   IF (HTURBDIM=='3DIM') THEN
     ZSOURCE(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV)) / &
                        PDZZ(:,:,IKB) * PDIRCOSZW(:,:)                    &
-                     * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))   
+                     * 0.5 * (1. + PRHODJ(:,:,KKA) / PRHODJ(:,:,IKB))
   ELSE
 
     ZSOURCE(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV)) / &
@@ -371,7 +375,7 @@ DO JSV=1,ISV
   ZSOURCE(:,:,IKTB+1:IKTE-1) = 0.
   ZSOURCE(:,:,IKE) = 0.
 !
-! Obtention of the split JSV scalar variable at t+ deltat  
+! Obtention of the split JSV scalar variable at t+ deltat
   CALL TRIDIAG(KKA,KKU,KKL,PSVM(:,:,:,JSV),ZA,PTSTEP,PEXPL,PIMPL,PRHODJ,ZSOURCE,ZRES)
 !
 !  Compute the equivalent tendency for the JSV scalar variable
@@ -390,7 +394,7 @@ DO JSV=1,ISV
     ! is taken into account in the vertical part
     IF (HTURBDIM=='3DIM') THEN
       ZFLXZ(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV))  &
-                       * PDIRCOSZW(:,:)  
+                       * PDIRCOSZW(:,:)
     ELSE
       ZFLXZ(:,:,IKB) = (PIMPL*PSFSVP(:,:,JSV) + PEXPL*PSFSVM(:,:,JSV))  &
                        / PDIRCOSZW(:,:)
@@ -437,7 +441,7 @@ DO JSV=1,ISV
     XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
   END IF
   !
-END DO   ! end of scalar loop 
+END DO   ! end of scalar loop
 !
 !----------------------------------------------------------------------------
 !
