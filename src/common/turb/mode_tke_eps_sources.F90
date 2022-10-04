@@ -8,10 +8,10 @@ CONTAINS
       SUBROUTINE TKE_EPS_SOURCES(KKA,KKU,KKL,KMI,PTKEM,PLM,PLEPS,PDP,  &
                     & PTRH,PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,        &
                     & PTSTEP,PIMPL,PEXPL,                              &
-                    & HTURBLEN,HTURBDIM,                               &
-                    & TPFILE,OTURB_DIAG,ODIAG_IN_RUN,                  &
+                    & HTURBLEN,HTURBDIM,OOCEAN,                        &
+                    & TPFILE,OTURB_DIAG,ODIAG_IN_RUN,PSFUM,PSFVM,      &
                     & PTP,PRTKES,PRTHLS,PCOEF_DISS,PTDIFF,PTDISS,PRTKEMS,&
-                    & TBUDGETS, KBUDGETS, &
+                    & TBUDGETS, KBUDGETS,                              &
                     & PEDR, PTR,PDISS, PCURRENT_TKE_DISS               )
 !     ##################################################################
 !
@@ -178,8 +178,10 @@ CHARACTER(LEN=4),        INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
 CHARACTER(LEN=4),        INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
 TYPE(TFILEDATA),         INTENT(IN)   ::  TPFILE       ! Output file
 LOGICAL,                 INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
-LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
-                                  ! diagnostic fields in the syncronous FM-file
+                                                       ! diagnostic fields in the syncronous FM-file
+LOGICAL,                 INTENT(IN)   ::  ODIAG_IN_RUN  ! switch to activate online diagnostics (mesonh)
+LOGICAL,                 INTENT(IN)   ::  OOCEAN        ! switch to activate LES OCEAN version
+
 REAL, DIMENSION(:,:,:),  INTENT(INOUT)::  PDP          ! Dyn. prod. of TKE
 REAL, DIMENSION(:,:,:),  INTENT(IN)   ::  PTRH
 REAL, DIMENSION(:,:,:),  INTENT(IN)   ::  PTP          ! Ther. prod. of TKE
@@ -196,6 +198,7 @@ REAL, DIMENSION(:,:,:),  INTENT(OUT), OPTIONAL  ::  PTR          ! Transport pro
 REAL, DIMENSION(:,:,:),  INTENT(OUT), OPTIONAL  ::  PDISS        ! Dissipation of TKE
 REAL, DIMENSION(:,:,:),  INTENT(OUT), OPTIONAL  ::  PEDR         ! EDR 
 REAL, DIMENSION(:,:,:),  INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PSFUM,PSFVM ! momentum sfc flux
 !
 !
 !
@@ -263,8 +266,13 @@ END IF
 !*       2.2  Explicit TKE sources except horizontal turbulent transport 
 !
 ! extrapolate the dynamic production with a 1/Z law from its value at the 
-! W(IKB+1) value stored in PDP(IKB) to the mass localization tke(IKB)
-PDP(:,:,IKB) = PDP(:,:,IKB) * (1. + PDZZ(:,:,IKB+KKL)/PDZZ(:,:,IKB))
+IF (LOCEAN) THEN
+  ! W(IKE) value stored in PDP(IKE) to the mass localization of tke(IKE)
+  PDP(:,:,IKE) = PDP(:,:,IKE) * (1. + PDZZ(:,:,IKE)/PDZZ(:,:,IKE+1))
+ELSE
+  ! W(IKB+1) value stored in PDP(IKB) to the mass localization tke(IKB)
+  PDP(:,:,IKB) = PDP(:,:,IKB) * (1. + PDZZ(:,:,IKB+KKL)/PDZZ(:,:,IKB))
+END IF
 !
 ! Compute the source terms for TKE: ( ADVECtion + NUMerical DIFFusion + ..)
 ! + (Dynamical Production) + (Thermal Production) - (dissipation) 
@@ -276,6 +284,12 @@ ZSOURCE(:,:,:) = ( PRTKES(:,:,:) +  PRTKEMS(:,:,:) ) / PRHODJ(:,:,:) &
 !*       2.2  implicit vertical TKE transport
 !
 !
+! To add here in ZSOURCE surface flux of TKE 
+!(assumed to be 0 for ATM, 
+IF (LOCEAN) THEN
+  !for ocean:wave breaking  simple/very rough param wE = 100 Ustar**3 where ustar is the Tau_atmi/rhocea  
+  ZSOURCE (:,:,IKE)=ZSOURCE(:,:,IKE)-1.E2*((PSFUM(:,:)**2 + PSFVM(:,:)**2)**1.5) /PDZZ(:,:,IKE)
+END IF
 ! Compute the vector giving the elements just under the diagonal for the 
 ! matrix inverted in TRIDIAG 
 !
