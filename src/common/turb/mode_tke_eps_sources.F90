@@ -266,7 +266,7 @@ END IF
 !*       2.2  Explicit TKE sources except horizontal turbulent transport 
 !
 ! extrapolate the dynamic production with a 1/Z law from its value at the 
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
   ! W(IKE) value stored in PDP(IKE) to the mass localization of tke(IKE)
   PDP(:,:,IKE) = PDP(:,:,IKE) * (1. + PDZZ(:,:,IKE)/PDZZ(:,:,IKE+1))
 ELSE
@@ -286,7 +286,7 @@ ZSOURCE(:,:,:) = ( PRTKES(:,:,:) +  PRTKEMS(:,:,:) ) / PRHODJ(:,:,:) &
 !
 ! To add here in ZSOURCE surface flux of TKE 
 !(assumed to be 0 for ATM, 
-IF (LOCEAN) THEN
+IF (OOCEAN) THEN
   !for ocean:wave breaking  simple/very rough param wE = 100 Ustar**3 where ustar is the Tau_atmi/rhocea  
   ZSOURCE (:,:,IKE)=ZSOURCE(:,:,IKE)-1.E2*((PSFUM(:,:)**2 + PSFVM(:,:)**2)**1.5) /PDZZ(:,:,IKE)
 END IF
