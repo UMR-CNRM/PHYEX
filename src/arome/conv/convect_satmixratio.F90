@@ -52,7 +52,7 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST
+USE MODD_CST, ONLY : XALPW, XBETAW, XCI, XCL, XCPD, XCPV, XGAMW, XLSTT, XLVTT, XRD, XRV, XTT
 !
 !
 IMPLICIT NONE
