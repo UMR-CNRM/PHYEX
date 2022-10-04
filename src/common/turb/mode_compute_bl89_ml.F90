@@ -80,6 +80,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZDELTVPT,ZHLVPT
 
 INTEGER :: J1D                  !horizontal loop counter
 INTEGER :: JKK                  !loop counters
+INTEGER :: JI, JK
 REAL    :: ZTEST,ZTEST0,ZTESTM  !test for vectorization
 !-------------------------------------------------------------------------------------
 !
@@ -89,17 +90,21 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('COMPUTE_BL89_ML',0,ZHOOK_HANDLE)
 !
 CALL DZM_MF(D, PVPT(:,:), ZDELTVPT(:,:))
-ZDELTVPT(:,D%NKA)=0.
-WHERE (ABS(ZDELTVPT(:,:))<CSTURB%XLINF)
-  ZDELTVPT(:,:)=CSTURB%XLINF
+ZDELTVPT(D%NIJB:D%NIJE,D%NKA)=0.
+!$mnh_expand_where(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+WHERE (ABS(ZDELTVPT(D%NIJB:D%NIJE,:))<CSTURB%XLINF)
+  ZDELTVPT(D%NIJB:D%NIJE,:)=CSTURB%XLINF
 END WHERE
+!$mnh_end_expand_where(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 !
 CALL MZM_MF(D, PVPT(:,:), ZHLVPT(:,:))
 !
 !We consider that gradient between mass levels KKB and KKB+KKL is the same as
 !the gradient between flux level KKB and mass level KKB
-ZDELTVPT(:,D%NKB)=PDZZ2D(:,D%NKB)*ZDELTVPT(:,D%NKB+D%NKL)/PDZZ2D(:,D%NKB+D%NKL)
-ZHLVPT(:,D%NKB)=PVPT(:,D%NKB)-ZDELTVPT(:,D%NKB)*0.5
+!$mnh_expand_array(JI=D%NIJB:D%NIJE)
+ZDELTVPT(D%NIJB:D%NIJE,D%NKB)=PDZZ2D(D%NIJB:D%NIJE,D%NKB)*ZDELTVPT(D%NIJB:D%NIJE,D%NKB+D%NKL)/PDZZ2D(D%NIJB:D%NIJE,D%NKB+D%NKL)
+ZHLVPT(D%NIJB:D%NIJE,D%NKB)=PVPT(D%NIJB:D%NIJE,D%NKB)-ZDELTVPT(D%NIJB:D%NIJE,D%NKB)*0.5
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 !
 !
 !
@@ -108,11 +113,15 @@ ZHLVPT(:,D%NKB)=PVPT(:,D%NKB)-ZDELTVPT(:,D%NKB)*0.5
 !
 
 IF (OUPORDN.EQV..TRUE.) THEN 
- ZINTE(:)=PTKEM_DEP(:)
+ !$mnh_expand_array(JI=D%NIJB:D%NIJE)
+ ZINTE(D%NIJB:D%NIJE)=PTKEM_DEP(D%NIJB:D%NIJE)
+ !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
  PLWORK=0.
  ZTESTM=1.
  IF(OFLUX)THEN
-   ZVPT_DEP(:)=ZHLVPT(:,KK) ! departure point is on flux level
+   !$mnh_expand_array(JI=D%NIJB:D%NIJE)
+   ZVPT_DEP(D%NIJB:D%NIJE)=ZHLVPT(D%NIJB:D%NIJE,KK) ! departure point is on flux level
+   !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
    !We must compute what happens between flux level KK and mass level KK
    DO J1D=D%NIJB,D%NIJE
      ZTEST0=0.5+SIGN(0.5,ZINTE(J1D)) ! test if there's energy to consume
@@ -142,7 +151,9 @@ IF (OUPORDN.EQV..TRUE.) THEN
       ZINTE(J1D) = ZINTE(J1D) - ZPOTE(J1D)
    ENDDO
  ELSE
-   ZVPT_DEP(:)=PVPT(:,KK) ! departure point is on mass level
+   !$mnh_expand_array(JI=D%NIJB:D%NIJE)
+   ZVPT_DEP(D%NIJB:D%NIJE)=PVPT(D%NIJB:D%NIJE,KK) ! departure point is on mass level
+   !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
  ENDIF
 
  DO JKK=KK+D%NKL,D%NKE,D%NKL
@@ -181,7 +192,9 @@ ENDIF
 
 IF (OUPORDN.EQV..FALSE.) THEN 
  IF(OFLUX) CALL PRINT_MSG(NVERB_FATAL,'GEN','COMPUTE_BL89_ML','OFLUX option not coded for downward mixing length')
- ZINTE(:)=PTKEM_DEP(:)
+ !$mnh_expand_array(JI=D%NIJB:D%NIJE)
+ ZINTE(D%NIJB:D%NIJE)=PTKEM_DEP(D%NIJB:D%NIJE)
+ !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
  PLWORK=0.
  ZTESTM=1.
  DO JKK=KK,D%NKB,-D%NKL
