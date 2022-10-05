@@ -167,7 +167,7 @@ fromdir=''
 if echo $commit | grep '/' > /dev/null; then
   fromdir=$commit
   if [ "$cycle" == "" ]; then
-    content_apl_arome=$(cat $commit/src/arome/ext/apl_arome.F90)
+    content_apl_arome=$(scp $commit/src/arome/ext/apl_arome.F90 /dev/stdout)
     cycle=$(content2cycle)
   fi
   packBranch=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
@@ -296,7 +296,7 @@ if [ $compilation -eq 1 ]; then
     fi
   fi
 
-  EXT=PHYEX/ext/
+  EXT=PHYEX/ext
   [ ! -d $EXT ] && EXT=PHYEX/externals #old name for ext/aux
   if [ -d $EXT ]; then
     #Move manually files outside of mpa (a find on the whole repository would take too much a long time)
@@ -305,6 +305,7 @@ if [ $compilation -eq 1 ]; then
     [ -f $EXT/suparar.F90 ] && mv $EXT/suparar.F90 ../arpifs/phys_dmn/
     [ -f $EXT/apl_arome.F90 ] && mv $EXT/apl_arome.F90 ../arpifs/phys_dmn/
     [ -f $EXT/suphmpa.F90 ] && mv $EXT/suphmpa.F90 ../arpifs/phys_dmn/
+    [ -f $EXT/vdfhghtnhl.F90 ] && mv $EXT/vdfhghtnhl.F90 ../arpifs/phys_dmn/
     #Special mpa case
     [ -f $EXT/modd_spp_type.F90 ] && mv $EXT/modd_spp_type.F90 ../mpa/micro/externals/
     [ -f $EXT/spp_mod_type.F90 ] && mv $EXT/spp_mod_type.F90 ../mpa/micro/externals/
