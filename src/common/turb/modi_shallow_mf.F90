@@ -6,7 +6,7 @@ INTERFACE
 !     #################################################################
       SUBROUTINE SHALLOW_MF(D, CST, NEB, PARAMMF, TURB, CSTURB,       &
                 KRR, KRRL, KRRI, KSV,                                 &
-                HMF_UPDRAFT, HMF_CLOUD, HFRAC_ICE, OMIXUV,            &
+                HMF_UPDRAFT, HMF_CLOUD, HFRAC_ICE, OMIXUV,OSTATNW,    &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
                 PIMPL_MF, PTSTEP,                                     &
                 PDZZ, PZZ,                                            &
@@ -51,6 +51,7 @@ CHARACTER (LEN=4),      INTENT(IN)   :: HMF_CLOUD    ! Type of statistical cloud
 CHARACTER*1,            INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                INTENT(IN)   :: OMIXUV    ! True if mixing of momentum
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
+LOGICAL,                INTENT(IN)   :: OSTATNW      ! cloud scheme inclues convect. covar. contrib
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
 INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
 REAL,                   INTENT(IN)   :: PIMPL_MF     ! degre of implicitness

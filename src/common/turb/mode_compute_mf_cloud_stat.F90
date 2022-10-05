@@ -9,7 +9,8 @@
 IMPLICIT NONE
 CONTAINS
 !     ######spl
-      SUBROUTINE COMPUTE_MF_CLOUD_STAT(D, CST, PARAMMF, KRR, KRRL, KRRI,&
+      SUBROUTINE COMPUTE_MF_CLOUD_STAT(D, CST, CSTURB, PARAMMF, &
+                            &KRR, KRRL, KRRI, OSTATNW,     &
                             &PFRAC_ICE,&
                             &PTHLM, PRTM, PPABSM, PRM,&
                             &PDZZ, PTHM, PEXNM, &
@@ -48,6 +49,8 @@ CONTAINS
 !!    -------------
 !!      Original 25 Aug 2011
 !!      S. Riette Jan 2012: support for both order of vertical levels
+!!      Wim de Rooy June 2019: update statistical cloud scheme (now including
+!!                             covariance term for MF contribution)
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -55,6 +58,8 @@ CONTAINS
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY: CST_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
+USE MODD_CTURB,           ONLY: CSTURB_t
+
 !
 USE MODI_SHUMAN_MF, ONLY: MZF_MF, MZM_MF, GZ_M_W_MF
 USE MODE_COMPUTE_FUNCTION_THERMO_MF, ONLY: COMPUTE_FUNCTION_THERMO_MF
@@ -68,7 +73,9 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
+LOGICAL,                INTENT(IN)   :: OSTATNW      ! cloud scheme inclues convect. covar. contrib
 INTEGER,                INTENT(IN)   :: KRR                     ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL                    ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI                    ! number of ice water var.
@@ -86,10 +93,10 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PSIGMF                  ! SQRT(
 !*                    0.1  Declaration of local variables
 !
 !
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZFLXZ
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZFLXZ,ZFLXZ2,ZFLXZ3
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZT
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZAMOIST, ZATHETA
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZWK
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZWK,ZWK2
 INTEGER :: JI, JK
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
@@ -104,7 +111,7 @@ IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_STAT',0,ZHOOK_HANDLE)
 !          ------------------------------------------------
 !
 ! Thermodynamics functions
-CALL COMPUTE_FUNCTION_THERMO_MF( D, CST, KRR,KRRL,KRRI,                   &
+CALL COMPUTE_FUNCTION_THERMO_MF( D, CST, KRR,KRRL,KRRI,OSTATNW,   &
                                  PTHM,PRM,PEXNM,PFRAC_ICE,PPABSM, &
                                  ZT,ZAMOIST,ZATHETA               )
 !
@@ -116,13 +123,23 @@ IF (KRRL > 0)  THEN
 !
     CALL MZM_MF(D, PTHLM(:,:), ZFLXZ(:,:))
     CALL GZ_M_W_MF(D, PTHLM(:,:), PDZZ(:,:), ZWK(:,:))
-    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
-    ZFLXZ(D%NIJB:D%NIJE,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(D%NIJB:D%NIJE,:)* &
-                         & (PTHL_UP(D%NIJB:D%NIJE,:)-ZFLXZ(D%NIJB:D%NIJE,:)) * ZWK(D%NIJB:D%NIJE,:)
+    IF (OSTATNW) THEN
+      !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+      ZFLXZ(D%NIJB:D%NIJE,:) = -2 * CSTURB%XCTV* PARAMMF%XTAUSIGMF * PEMF(D%NIJB:D%NIJE,:)* &
+                           & (PTHL_UP(D%NIJB:D%NIJE,:)-ZFLXZ(D%NIJB:D%NIJE,:)) * ZWK(D%NIJB:D%NIJE,:)
+      !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+    ELSE
+      !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+      ZFLXZ(D%NIJB:D%NIJE,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(D%NIJB:D%NIJE,:)* &
+                           & (PTHL_UP(D%NIJB:D%NIJE,:)-ZFLXZ(D%NIJB:D%NIJE,:)) * ZWK(D%NIJB:D%NIJE,:)
+      !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+    END IF
     !
     !   Avoid negative values
+    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
     ZFLXZ(D%NIJB:D%NIJE,:) = MAX(0.,ZFLXZ(D%NIJB:D%NIJE,:))
     !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+
 
     CALL MZF_MF(D, ZFLXZ(:,:), PSIGMF(:,:))
     !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
@@ -136,20 +153,46 @@ IF (KRRL > 0)  THEN
 !
 !
 !
-    CALL MZM_MF(D, PRTM(:,:), ZFLXZ(:,:))
-    CALL GZ_M_W_MF(D, PRTM(:,:), PDZZ(:,:), ZWK(:,:))
-    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
-    ZFLXZ(D%NIJB:D%NIJE,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(D%NIJB:D%NIJE,:)* &
-                         & (PRT_UP(D%NIJB:D%NIJE,:)-ZFLXZ(D%NIJB:D%NIJE,:)) * ZWK(D%NIJB:D%NIJE,:)
+    CALL MZM_MF(D, PRTM(:,:), ZFLXZ2(:,:))
+    CALL GZ_M_W_MF(D, PRTM(:,:), PDZZ(:,:), ZWK2(:,:))
+    IF (OSTATNW) THEN
+      !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+      ZFLXZ2(D%NIJB:D%NIJE,:) = -2 * CSTURB%XCTV * PARAMMF%XTAUSIGMF * PEMF(D%NIJB:D%NIJE,:)* &
+                           & (PRT_UP(D%NIJB:D%NIJE,:)-ZFLXZ2(D%NIJB:D%NIJE,:)) * ZWK2(D%NIJB:D%NIJE,:)
+      !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+    ELSE
+      !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+      ZFLXZ2(D%NIJB:D%NIJE,:) = -2 * PARAMMF%XTAUSIGMF * PEMF(D%NIJB:D%NIJE,:)* &
+                           & (PRT_UP(D%NIJB:D%NIJE,:)-ZFLXZ2(D%NIJB:D%NIJE,:)) * ZWK2(D%NIJB:D%NIJE,:) 
+      !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+    END IF
     !
     !   Avoid negative values
-    ZFLXZ(D%NIJB:D%NIJE,:) = MAX(0.,ZFLXZ(D%NIJB:D%NIJE,:))
+    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+    ZFLXZ2(D%NIJB:D%NIJE,:) = MAX(0.,ZFLXZ2(D%NIJB:D%NIJE,:))
     !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
 
-    CALL MZF_MF(D, ZFLXZ(:,:), ZWK(:,:))
+    CALL MZF_MF(D, ZFLXZ2(:,:), ZWK2(:,:))
     !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
-    PSIGMF(D%NIJB:D%NIJE,:) = PSIGMF(D%NIJB:D%NIJE,:) + ZAMOIST(D%NIJB:D%NIJE,:) **2 * ZWK(D%NIJB:D%NIJE,:)
+    PSIGMF(D%NIJB:D%NIJE,:) = PSIGMF(D%NIJB:D%NIJE,:) + ZAMOIST(D%NIJB:D%NIJE,:) **2 * ZWK2(D%NIJB:D%NIJE,:)
     !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+    IF (OSTATNW) THEN
+      !wc Now including convection covariance contribution in case of OSTATNW=TRUE
+      !
+      !       1.2.2 contribution from <Rnp Thl>
+      !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+      ZFLXZ3(D%NIJB:D%NIJE,:) = - CSTURB%XCTV * PARAMMF%XTAUSIGMF * &
+                    (PEMF(D%NIJB:D%NIJE,:)*(PRT_UP(D%NIJB:D%NIJE,:)-ZFLXZ2(D%NIJB:D%NIJE,:)) * &
+                                   ZWK(D%NIJB:D%NIJE,:) + &
+                                   PEMF(D%NIJB:D%NIJE,:)*(PTHL_UP(D%NIJB:D%NIJE,:)-ZFLXZ(D%NIJB:D%NIJE,:)) * &
+                                   ZWK2(D%NIJB:D%NIJE,:))
+      !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+      CALL MZF_MF(D, ZFLXZ3, ZFLXZ)
+      !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+      PSIGMF(D%NIJB:D%NIJE,:) = PSIGMF(D%NIJB:D%NIJE,:) - &
+                                MIN(0.,2.*ZAMOIST(D%NIJB:D%NIJE,:)*ZATHETA(D%NIJB:D%NIJE,:)*ZFLXZ(D%NIJB:D%NIJE,:))
+      !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+    ENDIF
 !
 !        1.3  Vertical part of Sigma_s
 !

@@ -266,6 +266,9 @@ REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3),SIZE(PSVM,4)) ::  ZDSVDT 
 
 INTEGER :: IIU, IJU, IKU, IKB, IKE, IRR, ISV  
 INTEGER :: JK,JRR,JSV                          ! Loop counters
+!
+LOGICAL :: LSTATNW  !  switch for HARMONIE-AROME turb physics option
+                    ! TODO: linked with modd_turbn + init at default_desfmn 
 
 TYPE(TFIELDDATA) :: TZFIELD
 TYPE(DIMPHYEX_t) :: YLDIMPHYEXPACK
@@ -332,10 +335,12 @@ ZSFTH(:)=RESHAPE(PSFTH(:,:),(/ IIU*IJU /) )
 ZSFRV(:)=RESHAPE(PSFRV(:,:),(/ IIU*IJU /) )
 
 !!! 3. Call of the physical parameterization of massflux vertical transport
-
+!
+LSTATNW = .FALSE.
 CALL SHALLOW_MF(YLDIMPHYEXPACK, CST, NEB, PARAM_MFSHALLN, TURBN, CSTURB,&
                 KRR,KRRL,KRRI,ISV,                                    &
-                HMF_UPDRAFT, HMF_CLOUD, CFRAC_ICE_SHALLOW_MF, OMIXUV,                  &
+                HMF_UPDRAFT, HMF_CLOUD, CFRAC_ICE_SHALLOW_MF, OMIXUV, &
+                LSTATNW,                                              &
                 LNOMIXLG,NSV_LGBEG,NSV_LGEND,                         &
                 PIMPL_MF, PTSTEP,                                     &
                 ZDZZ, ZZZ,                                            &

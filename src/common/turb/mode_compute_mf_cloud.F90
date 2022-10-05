@@ -11,7 +11,8 @@ IMPLICIT NONE
 CONTAINS
 !
 !     ######spl
-      SUBROUTINE COMPUTE_MF_CLOUD(D, CST, PARAMMF, KRR, KRRL, KRRI, HMF_CLOUD,&
+      SUBROUTINE COMPUTE_MF_CLOUD(D, CST, CSTURB, PARAMMF, OSTATNW,         &
+                                  KRR, KRRL, KRRI, HMF_CLOUD,               &
                                   PFRAC_ICE,                                &
                                   PRC_UP,PRI_UP,PEMF,                       &
                                   PTHL_UP, PRT_UP, PFRAC_UP,                &
@@ -62,6 +63,7 @@ CONTAINS
 !
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY: CST_t
+USE MODD_CTURB,           ONLY: CSTURB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
 USE MODE_MSG
@@ -81,11 +83,13 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   ::  KRRL         ! number of liquid water var.
 INTEGER,                INTENT(IN)   ::  KRRI         ! number of ice water var.
 CHARACTER (LEN=4),      INTENT(IN)   ::  HMF_CLOUD    ! Type of statistical cloud scheme
+LOGICAL,                INTENT(IN)   :: OSTATNW      ! cloud scheme inclues convect. covar. contrib
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PFRAC_ICE    ! liquid/ice fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PRC_UP,PRI_UP,PEMF! updraft characteritics
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHL_UP, PRT_UP   ! rc,w,Mass Flux,Thetal,rt
@@ -104,7 +108,6 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PRC_MF, PRI_MF    ! cloud cont
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PCF_MF            ! and cloud fraction for MF scheme
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PSIGMF            ! SQRT(variance) for statistical cloud scheme
 REAL, DIMENSION(D%NIJT),     INTENT(IN)   ::  PDEPTH            ! Deepness of cloud
-
 !
 !                       1.2  Declaration of local variables
 !
@@ -116,7 +119,6 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD',0,ZHOOK_HANDLE)
 !
 !                     2.1 Internal domain
-
 PRC_MF = 0.
 PRI_MF = 0.
 PCF_MF = 0.
@@ -131,7 +133,8 @@ IF (HMF_CLOUD == 'DIRE') THEN
 ELSEIF (HMF_CLOUD == 'STAT') THEN
   !Statistical scheme using the PDF proposed by Bougeault (81, 82) and
   !Bechtold et al (95).
-  CALL COMPUTE_MF_CLOUD_STAT(D, CST, PARAMMF, KRR, KRRL, KRRI,&
+  CALL COMPUTE_MF_CLOUD_STAT(D, CST, CSTURB, PARAMMF, &
+                            &KRR, KRRL, KRRI, OSTATNW, &
                             &PFRAC_ICE,&
                             &PTHLM, PRTM, PPABSM, PRM,&
                             &PDZZ, PTHM, PEXNM,&

@@ -1,5 +1,5 @@
 !     ######spl
-SUBROUTINE AROINI_TURB(PLINI,OHARATU)
+SUBROUTINE AROINI_TURB(PLINI,OHARATU,OSTATNW)
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !**** *INI_TURB*   - Initialize common meso_NH MODD_ used in Turbulence scheme
@@ -43,7 +43,7 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 
 USE MODD_LES,   ONLY : LLES, LLES_CALL
 USE MODD_CTURB, ONLY : XLINI
-USE MODD_TURB_n, ONLY: LHARAT, CTURBLEN, TURB_GOTO_MODEL
+USE MODD_TURB_n, ONLY: LHARAT, LSTATNW, CTURBLEN, TURB_GOTO_MODEL
 USE MODI_INI_CTURB
 
 IMPLICIT NONE
@@ -53,6 +53,7 @@ IMPLICIT NONE
 !
 REAL,   INTENT(IN) :: PLINI ! minimum bl89 mixing length
 LOGICAL,INTENT(IN) :: OHARATU ! switch HARATU
+LOGICAL,INTENT(IN) :: OSTATNW ! switch LSTATNW
 !
 !     ------------------------------------------------------------------
 
@@ -68,6 +69,7 @@ CALL INI_CTURB
 !         1bis. Modification of MODD_CTURB values
 XLINI=PLINI
 LHARAT=OHARATU
+LSTATNW=OSTATNW
 
 !         2. Set implicit default values for MODD_LES
 

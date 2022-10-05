@@ -46,6 +46,7 @@
 !            ------------
 !
 USE MODD_CST
+USE MODD_TURB_n, ONLY : LSTATNW
 USE MODD_CTURB
 !
 USE PARKIND1, ONLY : JPRB
@@ -118,7 +119,12 @@ XCTD  = 1.2
 !
 !         1.7 Constant for temperature and vapor pressure-correlations
 !
-XCTP  = 4.65
+!wc in STATNW consistent use of Redelsperger-Sommeria for (co)variances 
+IF (LSTATNW) THEN
+    XCTP  = 4.0
+  ELSE
+    XCTP  = 4.65
+ENDIF
 !       Redelsperger-Sommeria (1981) = 4.
 !       Schmidt-Schumann      (1989) = 3.25
 !       Cheng-Canuto-Howard   (2002) = 4.65

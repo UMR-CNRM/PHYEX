@@ -162,7 +162,8 @@ CALL AROINI_BUDGET(LAROBU_ENABLE)
 
 !       4. Initialisation of Turbulence scheme
 
-CALL AROINI_TURB(XLINI,LHARATU)
+!SR phasing step, .FALSE. must be replaced by the value read in namelist
+CALL AROINI_TURB(XLINI,LHARATU,.FALSE.)
 
 !       5. Initialisation of Mass Flux Shallow convection scheme
 

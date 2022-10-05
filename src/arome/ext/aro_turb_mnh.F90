@@ -1,6 +1,6 @@
 !     ######spl
       SUBROUTINE  ARO_TURB_MNH( KKA,KKU,KKL,KLON,KLEV,KRR,KRRL,KRRI,KSV, &
-                KTCOUNT, KGRADIENTS, LDHARATU, CMICRO, PTSTEP,                  &
+                KTCOUNT, KGRADIENTS, LDHARATU, CMICRO, PTSTEP,        &
                 PZZ, PZZF, PZZTOP,                                    &
                 PRHODJ, PTHVREF,HINST_SFU,                            &
                 PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
@@ -450,7 +450,7 @@ CALL TURB (CST,CSTURB,TBUCONF,TURBN, YLDIMPHYEX,&
    & ISPLIT,IMI, KSV, KSV_LGBEG, KSV_LGEND, &
    & HPROGRAM, O2D, ONOMIXLG, OFLAT, LLES_CALL,OCOUPLES,OBLOWSNOW,& 
    & OTURB_FLX,OTURB_DIAG,OSUBG_COND,OCOMPUTE_SRC, &
-   & ORMC01,OOCEAN,ODEEPOC,LDHARATU, .FALSE.,   &
+   & ORMC01,OOCEAN,ODEEPOC,LDHARATU, TURBN%LSTATNW, .FALSE.,   &
    & HTURBDIM,HTURBLEN,'NONE','NONE',CMICRO,           &
    & ZIMPL,                                    &
    & 2*PTSTEP,ZTFILE,                                      &

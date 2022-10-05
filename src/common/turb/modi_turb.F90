@@ -10,7 +10,7 @@ INTERFACE
               & HPROGRAM, O2D, ONOMIXLG, OFLAT,                       &
               & OLES_CALL,OCOUPLES,OBLOWSNOW,                         &
               & OTURB_FLX,OTURB_DIAG,OSUBG_COND,OCOMPUTE_SRC,         &
-              & ORMC01,OOCEAN,ODEEPOC,OHARAT, ODIAG_IN_RUN,           &
+              & ORMC01,OOCEAN,ODEEPOC,OHARAT,OSTATNW,ODIAG_IN_RUN,    &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,            &
               & PIMPL,PTSTEP,TPFILE,                                  &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
@@ -62,6 +62,7 @@ LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
 LOGICAL,                INTENT(IN)   ::  OHARAT       ! switch for LHARATU from AROME
+LOGICAL,                INTENT(IN)   :: OSTATNW       ! cloud scheme inclues convect. covar. contrib
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 

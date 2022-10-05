@@ -32,13 +32,13 @@ SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                 &
 !!    PURPOSE
 !!    -------
 !       The purpose of this routine is to compute the vertical turbulent
-!     fluxes of the evolutive variables and give back the source 
+!     fluxes of the evolutive variables and give back the source
 !     terms to the main program.	In the case of large horizontal meshes,
 !     the divergence of these vertical turbulent fluxes represent the whole
 !     effect of the turbulence but when the three-dimensionnal version of
 !     the turbulence scheme is activated (CTURBDIM="3DIM"), these divergences
-!     are completed in the next routine TURB_HOR. 
-!		  An arbitrary degree of implicitness has been implemented for the 
+!     are completed in the next routine TURB_HOR.
+!		  An arbitrary degree of implicitness has been implemented for the
 !     temporal treatment of these diffusion terms.
 !       The vertical boundary conditions are as follows:
 !           *  at the bottom, the surface fluxes are prescribed at the same
@@ -46,8 +46,8 @@ SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                 &
 !           *  at the top, the turbulent fluxes are set to 0.
 !       It should be noted that the condensation has been implicitely included
 !     in this turbulence scheme by using conservative variables and computing
-!     the subgrid variance of a statistical variable s indicating the presence 
-!     or not of condensation in a given mesh. 
+!     the subgrid variance of a statistical variable s indicating the presence
+!     or not of condensation in a given mesh.
 !
 !!**  METHOD
 !!    ------
@@ -56,27 +56,27 @@ SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                 &
 !!      implicit scheme (a Crank-Nicholson type with coefficients different
 !!      than 0.5), which allows to vary the degree of implicitness of the
 !!      formulation.
-!!      	 The different prognostic variables are treated one by one. 
-!!      The contributions of each turbulent fluxes are cumulated into the 
-!!      tendency  PRvarS, and into the dynamic and thermal production of 
+!!      	 The different prognostic variables are treated one by one.
+!!      The contributions of each turbulent fluxes are cumulated into the
+!!      tendency  PRvarS, and into the dynamic and thermal production of
 !!      TKE if necessary.
-!!        
+!!
 !!			 In section 2 and 3, the thermodynamical fields are considered.
 !!      Only the turbulent fluxes of the conservative variables
-!!      (Thetal and Rnp stored in PRx(:,:,:,1))  are computed. 
-!!       Note that the turbulent fluxes at the vertical 
+!!      (Thetal and Rnp stored in PRx(:,:,:,1))  are computed.
+!!       Note that the turbulent fluxes at the vertical
 !!      boundaries are given either by the soil scheme for the surface one
-!!      ( at the same instant as the others fluxes) and equal to 0 at the 
-!!      top of the model. The thermal production is computed by vertically 
+!!      ( at the same instant as the others fluxes) and equal to 0 at the
+!!      top of the model. The thermal production is computed by vertically
 !!      averaging the turbulent flux and multiply this flux at the mass point by
 !!      a function ETHETA or EMOIST, which preform the transformation from the
-!!      conservative variables to the virtual potential temperature. 
-!!     
+!!      conservative variables to the virtual potential temperature.
+!!
 !! 	    In section 4, the variance of the statistical variable
-!!      s indicating presence or not of condensation, is determined in function 
+!!      s indicating presence or not of condensation, is determined in function
 !!      of the turbulent moments of the conservative variables and its
-!!      squarred root is stored in PSIGS. This information will be completed in 
-!!      the horizontal turbulence if the turbulence dimensionality is not 
+!!      squarred root is stored in PSIGS. This information will be completed in
+!!      the horizontal turbulence if the turbulence dimensionality is not
 !!      equal to "1DIM".
 !!
 !!			 In section 5, the x component of the stress tensor is computed.
@@ -87,53 +87,53 @@ SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                 &
 !!        j" is also parallel to the surface and in the normal direction of
 !!           the maximum slope
 !!        k" is the normal to the surface
-!!      In order to prevent numerical instability, the implicit scheme has 
-!!      been extended to the surface flux regarding to its dependence in 
-!!      function of U. The dependence in function of the other components 
+!!      In order to prevent numerical instability, the implicit scheme has
+!!      been extended to the surface flux regarding to its dependence in
+!!      function of U. The dependence in function of the other components
 !!      introduced by the different rotations is only explicit.
-!!      The turbulent fluxes are used to compute the dynamic production of 
+!!      The turbulent fluxes are used to compute the dynamic production of
 !!      TKE. For the last TKE level ( located at PDZZ(:,:,IKB)/2 from the
-!!      ground), an harmonic extrapolation from the dynamic production at 
+!!      ground), an harmonic extrapolation from the dynamic production at
 !!      PDZZ(:,:,IKB) is used to avoid an evaluation of the gradient of U
 !!      in the surface layer.
 !!
 !!         In section 6, the same steps are repeated but for the y direction
-!!		  and in section 7, a diagnostic computation of the W variance is 
+!!		  and in section 7, a diagnostic computation of the W variance is
 !!      performed.
 !!
-!!         In section 8, the turbulent fluxes for the scalar variables are 
+!!         In section 8, the turbulent fluxes for the scalar variables are
 !!      computed by the same way as the conservative thermodynamical variables
 !!
-!!            
+!!
 !!    EXTERNAL
 !!    --------
-!!      GX_U_M, GY_V_M, GZ_W_M :  cartesian gradient operators 
+!!      GX_U_M, GY_V_M, GZ_W_M :  cartesian gradient operators
 !!      GX_U_UW,GY_V_VW	         (X,Y,Z) represent the direction of the gradient
-!!                               _(M,U,...)_ represent the localization of the 
+!!                               _(M,U,...)_ represent the localization of the
 !!                               field to be derivated
-!!                               _(M,UW,...) represent the localization of the 
+!!                               _(M,UW,...) represent the localization of the
 !!                               field	derivated
-!!                               
+!!
 !!
 !!      MXM,MXF,MYM,MYF,MZM,MZF
-!!                             :  Shuman functions (mean operators)     
+!!                             :  Shuman functions (mean operators)
 !!      DXF,DYF,DZF,DZM
-!!                             :  Shuman functions (difference operators)     
-!!                               
-!!      SUBROUTINE TRIDIAG     : to compute the split implicit evolution
+!!                             :  Shuman functions (difference operators)
+!!
+!!      SUBROUTINE TRIDIAG     : to compute the splitted implicit evolution
 !!                               of a variable located at a mass point
 !!
-!!      SUBROUTINE TRIDIAG_WIND: to compute the split implicit evolution
+!!      SUBROUTINE TRIDIAG_WIND: to compute the splitted implicit evolution
 !!                               of a variable located at a wind point
 !!
-!!      FUNCTIONs ETHETA and EMOIST  :  
+!!      FUNCTIONs ETHETA and EMOIST  :
 !!            allows to compute:
 !!            - the coefficients for the turbulent correlation between
-!!            any variable and the virtual potential temperature, of its 
-!!            correlations with the conservative potential temperature and 
+!!            any variable and the virtual potential temperature, of its
+!!            correlations with the conservative potential temperature and
 !!            the humidity conservative variable:
 !!            -------              -------              -------
-!!            A' Thv'  =  ETHETA   A' Thl'  +  EMOIST   A' Rnp'  
+!!            A' Thv'  =  ETHETA   A' Thl'  +  EMOIST   A' Rnp'
 !!
 !!
 !!    IMPLICIT ARGUMENTS
@@ -167,34 +167,34 @@ SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                 &
 !!    MODIFICATIONS
 !!    -------------
 !!      Original       August   19, 1994
-!!      Modifications: February 14, 1995 (J.Cuxart and J.Stein) 
+!!      Modifications: February 14, 1995 (J.Cuxart and J.Stein)
 !!                                  Doctorization and Optimization
-!!      Modifications: March 21, 1995 (J.M. Carriere) 
+!!      Modifications: March 21, 1995 (J.M. Carriere)
 !!                                  Introduction of cloud water
-!!      Modifications: June  14, 1995 (J.Cuxart and J. Stein) 
+!!      Modifications: June  14, 1995 (J.Cuxart and J. Stein)
 !!                                 Phi3 and Psi3 at w-point + bug in the all
-!!                                 or nothing condens. 
-!!      Modifications: Sept  15, 1995 (J.Cuxart and J. Stein) 
+!!                                 or nothing condens.
+!!      Modifications: Sept  15, 1995 (J.Cuxart and J. Stein)
 !!                                 Change the DP computation at the ground
-!!      Modifications: October 10, 1995 (J.Cuxart and J. Stein) 
+!!      Modifications: October 10, 1995 (J.Cuxart and J. Stein)
 !!                                 Psi for scal var and LES tools
 !!      Modifications: November 10, 1995 (J. Stein)
-!!                                 change the surface	relations 
+!!                                 change the surface	relations
 !!      Modifications: February 20, 1995 (J. Stein) optimization
-!!      Modifications: May 21, 1996 (J. Stein) 
-!!                                  bug in the vertical flux of the V wind 
+!!      Modifications: May 21, 1996 (J. Stein)
+!!                                  bug in the vertical flux of the V wind
 !!                                  component for explicit computation
-!!      Modifications: May 21, 1996 (N. wood) 
+!!      Modifications: May 21, 1996 (N. wood)
 !!                                  modify the computation of the vertical
 !!                                   part or the surface tangential flux
 !!      Modifications: May 21, 1996 (P. Jabouille)
 !!                                  same modification in the Y direction
-!!      
+!!
 !!      Modifications: Sept 17, 1996 (J. Stein) change the moist case by using
 !!                                  Pi instead of Piref + use Atheta and Amoist
 !!
-!!      Modifications: Nov  24, 1997 (V. Masson) removes the DO loops 
-!!      Modifications: Mar  31, 1998 (V. Masson) splits the routine TURB_VER_THERMO_FLUX 
+!!      Modifications: Nov  24, 1997 (V. Masson) removes the DO loops
+!!      Modifications: Mar  31, 1998 (V. Masson) splits the routine TURB_VER_THERMO_FLUX
 !!      Modifications: Oct  18, 2000 (V. Masson) LES computations
 !!      Modifications: Dec  01, 2000 (V. Masson) conservation of energy from
 !!                                               surface flux in 1DIM case
@@ -217,11 +217,13 @@ SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                 &
 !!                                 applied to vertical fluxes of r_np and Thl
 !!                                 for implicit version of turbulence scheme
 !!                                 corrections and cleaning
+!!      Modifications: June 2019 (Wim de Rooy) with energycascade, 50MF nog
+!!                                             longer necessary
 !!                     June 2020 (B. Vie) Patch preventing negative rc and ri in 2.3 and 3.3
 !! JL Redelsperger  : 03/2021: Ocean and Autocoupling O-A LES Cases
 !!                             Sfc flux shape for LDEEPOC Case
 !!--------------------------------------------------------------------------
-!       
+!
 !*      0. DECLARATIONS
 !          ------------
 !
@@ -288,33 +290,33 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PZZ          ! altitudes
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  MFMOIST      ! moist mass flux dual scheme
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
-                                                      ! Potential Temperature 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual
+                                                      ! Potential Temperature
 !
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at time
-!                                                     ! t - deltat 
+!                                                     ! t - deltat
 !
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTHP,PSFRP ! surface fluxes at time
-!                                                     ! t + deltat 
+!                                                     ! t + deltat
 !
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PWM 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PWM
 ! Vertical wind
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHLM 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHLM
 ! potential temperature at t-Delta t
-REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) ::  PRM          ! Mixing ratios 
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) ::  PRM          ! Mixing ratios
                                                       ! at t-Delta t
-REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVM         ! Mixing ratios 
+REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVM         ! Mixing ratios
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
 !
 ! In case OHARAT=TRUE, PLM already includes all stability corrections
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length   
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLEPS        ! dissipative length   
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLEPS        ! dissipative length
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PATHETA      ! coefficients between 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PATHETA      ! coefficients between
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PAMOIST      ! s and Thetal and Rnp
 REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC)*MERGE(D%NJT,0,OCOMPUTE_SRC),&
-                MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(IN)   ::  PSRCM        ! normalized 
+                MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(IN)   ::  PSRCM        ! normalized
 ! 2nd-order flux s'r'c/2Sigma_s2 at t-1 multiplied by Lambda_3
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFRAC_ICE    ! ri fraction of rc+ri
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PBETA        ! buoyancy coefficient
@@ -379,13 +381,12 @@ REAL, DIMENSION(D%NIJT,D%NKT)  ::  &
 INTEGER             :: IKB,IKE      ! I index values for the Beginning and End
                                     ! mass points of the domain in the 3 direct.
 INTEGER             :: IKT          ! array size in k direction
-INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
+INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
 INTEGER             :: JIJ, JK ! loop indexes
 INTEGER             :: IIJB, IIJE
 !
 REAL :: ZTIME1, ZTIME2
 REAL :: ZDELTAX
-                                   ! from the center of the cooling               
 REAL :: ZFLPROV
 INTEGER           :: JKM          ! vertical index loop
 INTEGER           :: JSW
@@ -407,27 +408,26 @@ TYPE(TFIELDDATA) :: TZFIELD
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_FLUX',0,ZHOOK_HANDLE)
 !
-! Size for a given proc & a given model      
+! Size for a given proc & a given model
 IIU=D%NIT
 IJU=D%NJT
 IIJE=D%NIJE
 IIJB=D%NIJB
-IKT=D%NKT  
-IKTB=D%NKTB          
+IKT=D%NKT
+IKTB=D%NKTB
 IKTE=D%NKTE
 IKB=D%NKB
 IKE=D%NKE
 !
 GUSERV = (KRR/=0)
 !
-!  compute the coefficients for the uncentred gradient computation near the 
-!  ground
+!  compute the coefficients for the uncentred gradient computation near the ground
 !
 IF (OHARAT) THEN
-! OHARAT so TKE and length scales at half levels!
+ ! LHARAT so TKE and length scales at half levels!
+  !wc 50MF can be omitted with energy cascade included
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZKEFF(IIJB:IIJE,1:D%NKT) =  PLM(IIJB:IIJE,1:D%NKT) * SQRT(PTKEM(IIJB:IIJE,1:D%NKT)) & 
-                                   +50.*MFMOIST(IIJB:IIJE,1:D%NKT)
+  ZKEFF(IIJB:IIJE,1:D%NKT) =  PLM(IIJB:IIJE,1:D%NKT) * SQRT(PTKEM(IIJB:IIJE,1:D%NKT))
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 ELSE
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -469,8 +469,8 @@ IF (HTOM/='NONE') THEN
 END IF
 !----------------------------------------------------------------------------
 !
-!*       2.   SOURCES OF CONSERVATIVE POTENTIAL TEMPERATURE AND 
-!                                                  PARTIAL THERMAL PRODUCTION 
+!*       2.   SOURCES OF CONSERVATIVE POTENTIAL TEMPERATURE AND
+!                                                  PARTIAL THERMAL PRODUCTION
 !             ---------------------------------------------------------------
 !
 !*       2.1  Splitted value for cons. potential temperature at t+deltat
@@ -658,7 +658,7 @@ PRTHLS(IIJB:IIJE,1:D%NKT)= PRTHLS(IIJB:IIJE,1:D%NKT)  + ZRWTHL(IIJB:IIJE,1:D%NKT
 !
 !*       2.2  Partial Thermal Production
 !
-!  Conservative potential temperature flux : 
+!  Conservative potential temperature flux :
 !
 !
 ZFLXZ(IIJB:IIJE,1:D%NKT)   = ZF(IIJB:IIJE,1:D%NKT) + PIMPL * ZDFDDTDZ(IIJB:IIJE,1:D%NKT) * & 
@@ -691,7 +691,7 @@ END DO
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 PWTH(IIJB:IIJE,IKB)=0.5*(ZFLXZ(IIJB:IIJE,IKB)+ZFLXZ(IIJB:IIJE,IKB+D%NKL)) 
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)    
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 IF (OOCEAN) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -746,7 +746,7 @@ ELSE
     PTP(IIJB:IIJE,1:D%NKT)=  PBETA(IIJB:IIJE,1:D%NKT) * ZWORK1(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   END IF
-END IF 
+END IF
 !
 ! Buoyancy flux at flux points
 !
@@ -760,12 +760,12 @@ PWTHV(IIJB:IIJE,IKB) = PETHETA(IIJB:IIJE,IKB) * ZFLXZ(IIJB:IIJE,IKB)
 !
 IF (OOCEAN) THEN
   ! temperature contribution to Buy flux
-  !$mnh_expand_array(JIJ=IIJB:IIJE) 
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
   PWTHV(IIJB:IIJE,IKE) = PETHETA(IIJB:IIJE,IKE) * ZFLXZ(IIJB:IIJE,IKE)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END IF
 !*       2.3  Partial vertical divergence of the < Rc w > flux
-! Correction for qc and qi negative in AROME 
+! Correction for qc and qi negative in AROME
 IF(HPROGRAM/='AROME  ') THEN
  IF ( KRRL >= 1 ) THEN
    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -792,13 +792,13 @@ IF(HPROGRAM/='AROME  ') THEN
 END IF
 !
 !*       2.4  Storage in LES configuration
-! 
+!
 IF (OLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
   !
   CALL MZF_PHY(D,ZFLXZ,ZWORK1)
   !
-  CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_WThl ) 
+  CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_WThl )
   !
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ZWORK2(IIJB:IIJE,1:D%NKT) = PWM(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
@@ -856,21 +856,21 @@ IF (OLES_CALL) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ZA(IIJB:IIJE,1:D%NKT) = MIN(MAX(ZA(IIJB:IIJE,1:D%NKT),-1000.),1000.)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  CALL LES_MEAN_SUBGRID_PHY(D,ZA, X_LES_SUBGRID_Kh ) 
+  CALL LES_MEAN_SUBGRID_PHY(D,ZA, X_LES_SUBGRID_Kh )
   !
   CALL SECOND_MNH(ZTIME2)
   XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !
 !*       2.5  New boundary layer depth for TOMs
-! 
+!
 IF (HTOM=='TM06') CALL TM06_H(D,PTSTEP,PZZ,ZFLXZ,PBL_DEPTH)
 !
 !----------------------------------------------------------------------------
 !
 !
-!*       3.   SOURCES OF CONSERVATIVE AND CLOUD MIXING RATIO AND 
-!                                        COMPLETE THERMAL PRODUCTION 
+!*       3.   SOURCES OF CONSERVATIVE AND CLOUD MIXING RATIO AND
+!                                        COMPLETE THERMAL PRODUCTION
 !             ------------------------------------------------------
 !
 !*       3.1  Splitted value for cons. mixing ratio at t+deltat
@@ -938,7 +938,7 @@ IF (KRR /= 0) THEN
   IF (GFWTH) THEN
     CALL M3_WR_W2TH(D,CSTURB,PD,ZKEFF,&
      & PTKEM,PBLL_O_E,PETHETA,PDR_DZ,ZWORK1)
-    CALL D_M3_WR_W2TH_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,& 
+    CALL D_M3_WR_W2TH_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,&
      & PD,ZKEFF,PTKEM,PBLL_O_E,PETHETA,ZWORK2)
   !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -1064,7 +1064,7 @@ IF (KRR /= 0) THEN
   ! cons. mixing ratio flux :
   !
   ZFLXZ(IIJB:IIJE,1:D%NKT)   = ZF(IIJB:IIJE,1:D%NKT)                                                &
-                 + PIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK2(IIJB:IIJE,1:D%NKT) / PDZZ(IIJB:IIJE,1:D%NKT) 
+                 + PIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK2(IIJB:IIJE,1:D%NKT) / PDZZ(IIJB:IIJE,1:D%NKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   !
   ! replace the flux by the Leonard terms above ZALT and ZCLD_THOLD
@@ -1077,7 +1077,7 @@ IF (KRR /= 0) THEN
   END IF
   !
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB) 
+  ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   !
   DO JK=IKTB+1,IKTE-1
@@ -1108,7 +1108,7 @@ IF (KRR /= 0) THEN
   END IF
   !
   ! Contribution of the conservative water flux to the Buoyancy flux
-  IF (OOCEAN) THEN     
+  IF (OOCEAN) THEN
      CALL MZF_PHY(D,ZFLXZ,ZWORK1)
      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
      ZA(IIJB:IIJE,1:D%NKT)=  -CST%XG*CST%XBETAOC  * ZWORK1(IIJB:IIJE,1:D%NKT)
@@ -1145,7 +1145,7 @@ IF (KRR /= 0) THEN
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     PWTHV(IIJB:IIJE,IKE) = PWTHV(IIJB:IIJE,IKE) + PEMOIST(IIJB:IIJE,IKE)* ZFLXZ(IIJB:IIJE,IKE)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-  END IF   
+  END IF
 !
 !*       3.3  Complete vertical divergence of the < Rc w > flux
 ! Correction of qc and qi negative for AROME
@@ -1177,13 +1177,13 @@ IF(HPROGRAM/='AROME  ') THEN
 END IF
 !
 !*       3.4  Storage in LES configuration
-! 
+!
   IF (OLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
     !
     CALL MZF_PHY(D,ZFLXZ,ZWORK1)
     !
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_WRt ) 
+    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_WRt )
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK2(IIJB:IIJE,1:D%NKT) = PWM(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
@@ -1214,13 +1214,13 @@ END IF
     ZWORK3(IIJB:IIJE,1:D%NKT) = ZWORK2(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     CALL MZF_PHY(D,ZWORK3,ZWORK4)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK4, X_LES_SUBGRID_WThv , .TRUE. ) 
+    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK4, X_LES_SUBGRID_WThv , .TRUE. )
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK2(IIJB:IIJE,1:D%NKT) = -CSTURB%XCTP*PSQRT_TKE(IIJB:IIJE,1:D%NKT)/PLM(IIJB:IIJE,1:D%NKT) &
                                       *ZWORK1(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2, X_LES_SUBGRID_RtPz ) 
+    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2, X_LES_SUBGRID_RtPz )
     CALL SECOND_MNH(ZTIME2)
     XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
   END IF
@@ -1234,11 +1234,11 @@ END IF
 !             -------------------------------
 !
 !
-!*       4.1  <w Rc>    
+!*       4.1  <w Rc>
 !
 IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL) .AND. (KRRL > 0) ) THEN
-!  
-! recover the Conservative potential temperature flux : 
+!
+! recover the Conservative potential temperature flux :
 ! With OHARAT is true tke and length scales at half levels
 ! yet modify to use length scale and tke at half levels from vdfexcuhl
  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -1278,7 +1278,7 @@ IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL) .AND. (KRRL > 0) ) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-  !                 
+  !
   ! store the liquid water mixing ratio vertical flux
   IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
     TZFIELD%CMNHNAME   = 'RCW_FLX'
@@ -1293,13 +1293,13 @@ IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL) .AND. (KRRL > 0) ) THEN
     TZFIELD%LTIMEDEP   = .TRUE.
     CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ)
   END IF
-  !  
+  !
 ! and we store in LES configuration this subgrid flux <w'rc'>
 !
   IF (OLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
     CALL MZF_PHY(D,ZFLXZ,ZWORK1)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_WRc ) 
+    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_WRc )
     CALL SECOND_MNH(ZTIME2)
     XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
   END IF

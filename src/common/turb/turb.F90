@@ -3,12 +3,12 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,D,              &
-              & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,            &
+      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,D,                      &
+              & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,                        &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
               & O2D,ONOMIXLG,OFLAT,OLES_CALL,OCOUPLES,OBLOWSNOW,      &
               & OTURB_FLX,OTURB_DIAG,OSUBG_COND,OCOMPUTE_SRC,         &
-              & ORMC01,OOCEAN,ODEEPOC,OHARAT, ODIAG_IN_RUN,           &
+              & ORMC01,OOCEAN,ODEEPOC,OHARAT,OSTATNW,ODIAG_IN_RUN,    &
               & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,PIMPL,      &
               & PTSTEP,TPFILE,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
@@ -27,26 +27,26 @@
               & PDRUS_TURB,PDRVS_TURB,                                &
               & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS,       &
               & PCURRENT_TKE_DISS, PSSTFL, PSSTFL_C, PSSRFL_C,        &
-              & PSSUFL_C, PSSVFL_C,PSSUFL,PSSVFL                      ) 
+              & PSSUFL_C, PSSVFL_C,PSSUFL,PSSVFL                      )
 !     #################################################################
 !
 !
 !!****  *TURB* - computes the turbulent source terms for the prognostic
-!!               variables. 
+!!               variables.
 !!
 !!    PURPOSE
 !!    -------
-!!****  The purpose of this routine is to compute the source terms in 
-!!    the evolution equations due to the turbulent mixing. 
+!!****  The purpose of this routine is to compute the source terms in
+!!    the evolution equations due to the turbulent mixing.
 !!      The source term is computed as the divergence of the turbulent fluxes.
 !!    The cartesian fluxes are obtained by a one and a half order closure, based
-!!    on a prognostic equation for the Turbulence Kinetic Energy( TKE ). The 
-!!    system is closed by prescribing a turbulent mixing length. Different 
-!!    choices are available for this length. 
+!!    on a prognostic equation for the Turbulence Kinetic Energy( TKE ). The
+!!    system is closed by prescribing a turbulent mixing length. Different
+!!    choices are available for this length.
 !
 !!**  METHOD
 !!    ------
-!!    
+!!
 !!      The dimensionality of the turbulence parameterization can be chosen by
 !!    means of the parameter HTURBDIM:
 !!           * HTURBDIM='1DIM' the parameterization is 1D but can be used in
@@ -54,7 +54,7 @@
 !!    turbulent fluxes are taken into account.
 !!           *  HTURBDIM='3DIM' the parameterization is fully 2D or 3D depending
 !!    on the model  dimensionality. Of course, it does not make any sense to
-!!    activate this option with a 1D model. 
+!!    activate this option with a 1D model.
 !!
 !!      The following steps are made:
 !!      1- Preliminary computations.
@@ -65,39 +65,39 @@
 !!             original level of an air particule having an initial internal
 !!             energy equal to its TKE and stopped by the buoyancy forces.
 !!             The discrete formulation is second order accurate.
-!!           * HTURBLEN='DELT' the mixing length is given by the mesh size 
-!!             depending on the model dimensionality, this length is limited 
+!!           * HTURBLEN='DELT' the mixing length is given by the mesh size
+!!             depending on the model dimensionality, this length is limited
 !!             with the ground distance.
-!!           * HTURBLEN='DEAR' the mixing length is given by the mesh size 
-!!             depending on the model dimensionality, this length is limited 
+!!           * HTURBLEN='DEAR' the mixing length is given by the mesh size
+!!             depending on the model dimensionality, this length is limited
 !!             with the ground distance and also by the Deardorff mixing length
 !!             pertinent in the stable cases.
-!!           * HTURBLEN='KEPS' the mixing length is deduced from the TKE 
+!!           * HTURBLEN='KEPS' the mixing length is deduced from the TKE
 !!             dissipation, which becomes a prognostic variable of the model (
-!!             Duynkerke formulation).   
+!!             Duynkerke formulation).
 !!      3'- The cloud mixing length is computed according to HTURBLEN_CLOUD
 !!             and emphasized following the CEI index
 !!      4- The conservative variables are computed along with Lv/Cp.
 !!      5- The turbulent Prandtl numbers are computed from the resolved fields
-!!         and TKE 
+!!         and TKE
 !!      6- The sources associated to the vertical turbulent fluxes are computed
-!!      with a temporal scheme allowing a degree of implicitness given by 
+!!      with a temporal scheme allowing a degree of implicitness given by
 !!      PIMPL, varying from PIMPL=0. ( purely explicit scheme) to PIMPL=1.
 !!      ( purely implicit scheme)
 !!      The sources associated to the horizontal fluxes are computed with a
 !!      purely explicit temporal scheme. These sources are only computed when
 !!      the turbulence parameterization is 2D or 3D( HTURBDIM='3DIM' ).
-!!      7- The sources for TKE are computed, along with the dissipation of TKE 
+!!      7- The sources for TKE are computed, along with the dissipation of TKE
 !!      if HTURBLEN='KEPS'.
-!!      8- Some turbulence-related quantities are stored in the synchronous 
+!!      8- Some turbulence-related quantities are stored in the synchronous
 !!      FM-file.
-!!      9- The non-conservative variables are retrieved.  
-!!    
-!!      
+!!      9- The non-conservative variables are retrieved.
+!!
+!!
 !!      The saving of the fields in the synchronous FM-file is controlled by:
 !!        * OTURB_FLX => saves all the turbulent fluxes and correlations
 !!        * OTURB_DIAG=> saves the turbulent Prandtl and Schmidt numbers, the
-!!                       source terms of TKE and dissipation of TKE 
+!!                       source terms of TKE and dissipation of TKE
 !!
 !!    EXTERNAL
 !!    --------
@@ -124,24 +124,24 @@
 !!
 !!       MODD_CTURB : contains turbulence scheme constants
 !!                    XCMFS,XCED       to compute the dissipation mixing length
-!!                    XTKEMIN  minimum values for the TKE 
-!!                    CST%XLINI,CST%XLINF      to compute Bougeault-Lacarrere mixing 
+!!                    XTKEMIN  minimum values for the TKE
+!!                    CST%XLINI,CST%XLINF      to compute Bougeault-Lacarrere mixing
 !!                                     length
 !!      Module MODD_BUDGET:
-!!         NBUMOD  
-!!         CBUTYPE 
-!!         LBU_RU     
-!!         LBU_RV     
-!!         LBU_RW     
-!!         LBU_RTH    
-!!         LBU_RSV1   
-!!         LBU_RRV    
-!!         LBU_RRC    
-!!         LBU_RRR    
-!!         LBU_RRI    
-!!         LBU_RRS    
-!!         LBU_RRG    
-!!         LBU_RRH    
+!!         NBUMOD
+!!         CBUTYPE
+!!         LBU_RU
+!!         LBU_RV
+!!         LBU_RW
+!!         LBU_RTH
+!!         LBU_RSV1
+!!         LBU_RRV
+!!         LBU_RRC
+!!         LBU_RRR
+!!         LBU_RRI
+!!         LBU_RRS
+!!         LBU_RRG
+!!         LBU_RRH
 !!
 !!    REFERENCE
 !!    ---------
@@ -155,11 +155,11 @@
 !!    MODIFICATIONS
 !!    -------------
 !!      Original         05/10/94
-!!      Modifications: Feb 14, 1995 (J.Cuxart and J.Stein) 
+!!      Modifications: Feb 14, 1995 (J.Cuxart and J.Stein)
 !!                                  Doctorization and Optimization
-!!      Modifications: March 21, 1995 (J.M. Carriere) 
+!!      Modifications: March 21, 1995 (J.M. Carriere)
 !!                                  Introduction of cloud water
-!!      Modifications: June   1, 1995 (J.Cuxart     ) 
+!!      Modifications: June   1, 1995 (J.Cuxart     )
 !!                                  take min(Kz,delta)
 !!      Modifications: June   1, 1995 (J.Stein J.Cuxart)
 !!                                  remove unnecessary arrays and change Prandtl
@@ -167,18 +167,18 @@
 !!      Modifications: July  20, 1995 (J.Stein) remove MODI_ground_ocean +
 !!                                TZDTCUR + MODD_TIME because they are not used
 !!                                change RW in RNP for the outputs
-!!      Modifications: August 21, 1995 (Ph. Bougeault)   
+!!      Modifications: August 21, 1995 (Ph. Bougeault)
 !!                                  take min(K(z-zsol),delta)
 !!      Modifications: Sept 14, 1995 (Ph Bougeault, J. Cuxart)
-!!         second order BL89 mixing length computations + add Deardorff length 
+!!         second order BL89 mixing length computations + add Deardorff length
 !!         in the Delta case for stable cases
 !!      Modifications: Sept 19, 1995 (J. Stein, J. Cuxart)
 !!         define a DEAR case for the mixing length, add MODI_BUDGET and change
 !!         some BUDGET calls, add LES tools
 !!      Modifications: Oct  16, 1995 (J. Stein) change the budget calls
-!!      Modifications: Feb  28, 1996 (J. Stein) optimization + 
+!!      Modifications: Feb  28, 1996 (J. Stein) optimization +
 !!                                              remove min(K(z-zsol),delta)+
-!!                                              bug in the tangential fluxes 
+!!                                              bug in the tangential fluxes
 !!      Modifications: Oct  16, 1996 (J. Stein) change the subgrid condensation
 !!                                              scheme + temporal discretization
 !!      Modifications: Dec  19, 1996 (J.-P. Pinty) update the budget calls
@@ -201,7 +201,7 @@
 !!                     Feb 20, 2003 (J.-P. Pinty) Add reversible ice processes
 !!                     May,26  2004 (P Jabouille) coef for computing dissipative heating
 !!                     Sept 2004 (M.Tomasini) Cloud Mixing length modification
-!!                                            following the instability 
+!!                                            following the instability
 !!                                            criterium CEI calculated in modeln
 !!                     May   2006    Remove KEPS
 !!                     Sept.2006 (I.Sandu): Modification of the stability criterion for
@@ -223,6 +223,7 @@
 !  P. Wautelet 05/2016-04/2018: new data structures and calls for I/O
 !  Q. Rodier      01/2018: introduction of RM17
 !  P. Wautelet 20/05/2019: add name argument to ADDnFIELD_ll + new ADD4DFIELD_ll subroutine
+!!                     June 2019 (Wim de Rooy)  update statistical cloud scheme
 !  P. Wautelet    02/2020: use the new data structures and subroutines for budgets
 !  B. Vie         03/2020: LIMA negativity checks after turbulence, advection and microphysics budgets
 !  P. Wautelet 11/06/2020: bugfix: correct PRSVS array indices
@@ -288,7 +289,7 @@ TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
-INTEGER,                INTENT(IN)   :: KMI           ! model index number  
+INTEGER,                INTENT(IN)   :: KMI           ! model index number
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
@@ -306,6 +307,7 @@ LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
 LOGICAL,                INTENT(IN)   ::  OHARAT       ! switch for LHARATU from AROME
+LOGICAL,                INTENT(IN)   ::  OSTATNW      ! cloud scheme inclues convect. covar. contrib
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
@@ -318,12 +320,12 @@ CHARACTER(LEN=4),       INTENT(IN)   ::  HTOM         ! kind of Third Order Mome
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
 REAL,                   INTENT(IN)   ::  PIMPL        ! degree of implicitness
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
-REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
+REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PDXX,PDYY,PDZZ,PDZX,PDZY
                                         ! metric coefficients
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PZZ       !  physical distance 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PZZ       !  physical distance
 ! between 2 succesive grid points along the K direction
 REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PDIRCOSXW, PDIRCOSYW, PDIRCOSZW
 ! Director Cosinus along x, y and z directions at surface w-point
@@ -337,11 +339,11 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
 !
 REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
-! normal surface fluxes of theta and Rv 
+! normal surface fluxes of theta and Rv
                                             PSFU,PSFV
 ! normal surface fluxes of (u,v) parallel to the orography
 REAL, DIMENSION(D%NIJT,KSV), INTENT(IN)      ::  PSFSV
-! normal surface fluxes of Scalar var. 
+! normal surface fluxes of Scalar var.
 !
 !    prognostic variables at t- deltat
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PPABST      ! Pressure at time t
@@ -356,9 +358,9 @@ REAL, DIMENSION(MERGE(D%NIJT,0,ORMC01)),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth 
 !
 !    variables for cloud mixing length
 REAL, DIMENSION(MERGE(D%NIJT,0,KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE'),&
-                MERGE(D%NKT,0,KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE')),INTENT(IN)      ::  PCEI 
+                MERGE(D%NKT,0,KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE')),INTENT(IN)      ::  PCEI
                                                  ! Cloud Entrainment instability
-                                                 ! index to emphasize localy 
+                                                 ! index to emphasize localy
                                                  ! turbulent fluxes
 REAL, INTENT(IN)      ::  PCEI_MIN ! minimum threshold for the instability index CEI
 REAL, INTENT(IN)      ::  PCEI_MAX ! maximum threshold for the instability index CEI
@@ -366,10 +368,10 @@ REAL, INTENT(IN)      ::  PCOEF_AMPL_SAT ! saturation of the amplification coeff
 !
 !   thermodynamical variables which are transformed in conservative var.
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PTHLT       ! conservative pot. temp.
-REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT) ::  PRT         ! water var.  where 
-                             ! PRT(:,:,:,1) is the conservative mixing ratio        
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT) ::  PRT         ! water var.  where
+                             ! PRT(:,:,:,1) is the conservative mixing ratio
 !
-! sources of momentum, conservative potential temperature, Turb. Kin. Energy, 
+! sources of momentum, conservative potential temperature, Turb. Kin. Energy,
 ! TKE dissipation
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) ::  PRUS,PRVS,PRWS,PRTHLS,PRTKES
 ! Source terms for all water kinds, PRRS(:,:,:,1) is used for the conservative
@@ -378,7 +380,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN),OPTIONAL    ::  PRTKEMS
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT) ::  PRRS
 ! Source terms for all passive scalar variables
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS
-! Sigma_s at time t+1 : square root of the variance of the deviation to the 
+! Sigma_s at time t+1 : square root of the variance of the deviation to the
 ! saturation
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(OUT)     ::  PSIGS
@@ -387,7 +389,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRVS_TURB   ! evolu
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRTHLS_TURB ! evolution of rhoJ*thl by turbulence only
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT),OPTIONAL     ::  PDRRTS_TURB  ! evolution of rhoJ*rt  by turbulence only
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT),OPTIONAL ::  PDRSVS_TURB  ! evolution of rhoJ*Sv  by turbulence only
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PFLXZTHVMF 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PFLXZTHVMF
 !                                           MF contribution for vert. turb. transport
 !                                           used in the buoy. prod. of TKE
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PWTH       ! heat flux
@@ -436,7 +438,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) ::     &
           ZLOCPEXNM,                  &  ! Lv/Cp/EXNREF at t-1
           ZLM,ZLMW,                   &  ! Turbulent mixing length (+ work array)
           ZLEPS,                      &  ! Dissipative length
-          ZTRH,                       &  ! 
+          ZTRH,                       &  !
           ZATHETA,ZAMOIST,            &  ! coefficients for s = f (Thetal,Rnp)
           ZCOEF_DISS,                 &  ! 1/(Cph*Exner) for dissipative heating
           ZFRAC_ICE,                  &  ! ri fraction of rc+ri
@@ -455,15 +457,15 @@ REAL, DIMENSION(D%NIJT,D%NKT) ::     &
           ZLM_CLOUD                      ! Turbulent mixing length in the clouds (routine CLOUD_MODIF_LM)
 !
 !
-REAL, DIMENSION(D%NIJT,D%NKT,KRR) :: ZRM ! initial mixing ratio 
+REAL, DIMENSION(D%NIJT,D%NKT,KRR) :: ZRM ! initial mixing ratio
 REAL, DIMENSION(D%NIJT) ::  ZTAU11M,ZTAU12M,  &
                                                  ZTAU22M,ZTAU33M,  &
             ! tangential surface fluxes in the axes following the orography
                                                  ZUSLOPE,ZVSLOPE,  &
-            ! wind components at the first mass level parallel 
-            ! to the orography 
+            ! wind components at the first mass level parallel
+            ! to the orography
                                                  ZCDUEFF,          &
-            ! - Cd*||u|| where ||u|| is the module of the wind tangential to 
+            ! - Cd*||u|| where ||u|| is the module of the wind tangential to
             ! orography (ZUSLOPE,ZVSLOPE) at the surface.
                                                  ZUSTAR, ZLMO,     &
                                                  ZRVM, ZSFRV,ZWORK2D
@@ -485,12 +487,12 @@ INTEGER             :: IIJB,IIJE,IKB,IKE      ! index value for the
 INTEGER             :: IINFO_ll     ! return code of parallel routine
 ! Beginning and the End of the physical domain for the mass points
 INTEGER             :: IKT          ! array size in k direction
-INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
+INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
 INTEGER             :: JRR,JK,JSV   ! loop counters
 INTEGER             :: JIJ          ! loop counters
 REAL                :: ZL0          ! Max. Mixing Length in Blakadar formula
-REAL                :: ZALPHA       ! work coefficient : 
-                                    ! - proportionnality constant between Dz/2 and 
+REAL                :: ZALPHA       ! work coefficient :
+                                    ! - proportionnality constant between Dz/2 and
 !                                   !   BL89 mixing length near the surface
 !
 REAL :: ZTIME1, ZTIME2
@@ -499,7 +501,7 @@ TYPE(TFIELDDATA) :: TZFIELD
 !*      1.PRELIMINARIES
 !         -------------
 !
-!*      1.1 Set the internal domains, ZEXPL 
+!*      1.1 Set the internal domains, ZEXPL
 !
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE,ZHOOK_HANDLE2
@@ -512,8 +514,8 @@ IF (OHARAT .AND. OLES_CALL) THEN
   CALL ABOR1('OHARATU not implemented for option LLES_CALL')
 ENDIF
 !
-IKT=D%NKT  
-IKTB=D%NKTB          
+IKT=D%NKT
+IKTB=D%NKTB
 IKTE=D%NKTE
 IKB=D%NKB
 IKE=D%NKE
@@ -568,7 +570,7 @@ END IF
 !*      2.3 dissipative heating coeff a t
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-ZCOEF_DISS(IIJB:IIJE,1:D%NKT) = 1/(ZCP(IIJB:IIJE,1:D%NKT) * ZEXN(IIJB:IIJE,1:D%NKT)) 
+ZCOEF_DISS(IIJB:IIJE,1:D%NKT) = 1/(ZCP(IIJB:IIJE,1:D%NKT) * ZEXN(IIJB:IIJE,1:D%NKT))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
 !
@@ -586,15 +588,23 @@ IF (KRRL >=1) THEN
 !
 !*       2.5 Lv/Cph/Exn
 !
-  IF ( KRRI >= 1 ) THEN 
-    CALL COMPUTE_FUNCTION_THERMO(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
+  IF ( KRRI >= 1 ) THEN
+    IF (OSTATNW) THEN
+    !wc call new functions depending on statnew
+       CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
                                  ZLVOCPEXNM,ZAMOIST,ZATHETA)
-    CALL COMPUTE_FUNCTION_THERMO(CST%XALPI,CST%XBETAI,CST%XGAMI,CST%XLSTT,CST%XCI,ZT,ZEXN,ZCP, &
+       CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(CST%XALPI,CST%XBETAI,CST%XGAMI,CST%XLSTT,CST%XCI,ZT,ZEXN,ZCP, &
                                  ZLSOCPEXNM,ZAMOIST_ICE,ZATHETA_ICE)
+    ELSE
+      CALL COMPUTE_FUNCTION_THERMO(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
+                                 ZLVOCPEXNM,ZAMOIST,ZATHETA)
+      CALL COMPUTE_FUNCTION_THERMO(CST%XALPI,CST%XBETAI,CST%XGAMI,CST%XLSTT,CST%XCI,ZT,ZEXN,ZCP, &
+                                 ZLSOCPEXNM,ZAMOIST_ICE,ZATHETA_ICE)
+    ENDIF
 !
     !$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
     WHERE(PRT(IIJB:IIJE,1:D%NKT,2)+PRT(IIJB:IIJE,1:D%NKT,4)>0.0)
-      ZFRAC_ICE(IIJB:IIJE,1:D%NKT) = PRT(IIJB:IIJE,1:D%NKT,4) / ( PRT(IIJB:IIJE,1:D%NKT,2) & 
+      ZFRAC_ICE(IIJB:IIJE,1:D%NKT) = PRT(IIJB:IIJE,1:D%NKT,4) / ( PRT(IIJB:IIJE,1:D%NKT,2) &
                                           +PRT(IIJB:IIJE,1:D%NKT,4) )
     END WHERE
     !$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -608,8 +618,14 @@ IF (KRRL >=1) THEN
                          +ZFRAC_ICE(IIJB:IIJE,1:D%NKT) *ZATHETA_ICE(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ELSE
-    CALL COMPUTE_FUNCTION_THERMO(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
+    !wc call new stat functions or not
+    IF (OSTATNW) THEN
+      CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
                                  ZLOCPEXNM,ZAMOIST,ZATHETA)
+    ELSE
+      CALL COMPUTE_FUNCTION_THERMO(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
+                                   ZLOCPEXNM,ZAMOIST,ZATHETA)
+    ENDIF
   END IF
 !
 !
@@ -625,7 +641,7 @@ IF (KRRL >=1) THEN
     TZFIELD%NDIMS      = 3
     TZFIELD%LTIMEDEP   = .TRUE.
     CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZATHETA)
-! 
+!
     TZFIELD%CMNHNAME   = 'AMOIST'
     TZFIELD%CSTDNAME   = ''
     TZFIELD%CLONGNAME  = 'AMOIST'
@@ -664,7 +680,7 @@ IF ( KRRL >= 1 ) THEN
   ELSE
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ! Rnp at t
-    PRT(IIJB:IIJE,1:D%NKT,1)  = PRT(IIJB:IIJE,1:D%NKT,1)  + PRT(IIJB:IIJE,1:D%NKT,2) 
+    PRT(IIJB:IIJE,1:D%NKT,1)  = PRT(IIJB:IIJE,1:D%NKT,1)  + PRT(IIJB:IIJE,1:D%NKT,2)
     PRRS(IIJB:IIJE,1:D%NKT,1) = PRRS(IIJB:IIJE,1:D%NKT,1) + PRRS(IIJB:IIJE,1:D%NKT,2)
     ! Theta_l at t
     PTHLT(IIJB:IIJE,1:D%NKT)  = PTHLT(IIJB:IIJE,1:D%NKT)  - ZLOCPEXNM(IIJB:IIJE,1:D%NKT) &
@@ -718,7 +734,7 @@ SELECT CASE (HTURBLEN)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
 !
-!*      3.3 Grey-zone combined RM17 & Deardorff mixing lengths 
+!*      3.3 Grey-zone combined RM17 & Deardorff mixing lengths
 !           --------------------------------------------------
 
   CASE ('ADAP')
@@ -739,7 +755,7 @@ SELECT CASE (HTURBLEN)
     CALL DELT(ZLMW,ODZ=.FALSE.)
     ! The minimum mixing length is chosen between Horizontal grid mesh (not taking into account the vertical grid mesh) and RM17.
     ! For large horizontal grid meshes, this is equal to RM17
-    ! For LES grid meshes, this is equivalent to Deardorff : the base mixing lentgh is the horizontal grid mesh, 
+    ! For LES grid meshes, this is equivalent to Deardorff : the base mixing lentgh is the horizontal grid mesh,
     !and it is limited by a stability-based length (RM17), as was done in Deardorff length (but taking into account shear as well)
     ! For grid meshes in the grey zone, then this is the smaller of the two.
     !
@@ -838,7 +854,7 @@ IF (HTURBDIM=="3DIM") THEN
   CALL UPDATE_LM(D,HLBCX,HLBCY,ZLM,ZLEPS)
 END IF
 !
-!*      3.9 Mixing length correction if immersed walls 
+!*      3.9 Mixing length correction if immersed walls
 !           ------------------------------------------
 !
 IF (LIBM) THEN
@@ -876,7 +892,7 @@ ZCDUEFF(IIJB:IIJE) =-SQRT ( (PSFU(IIJB:IIJE)**2 + PSFV(IIJB:IIJE)**2) /         
                     (1.E-60 + ZUSLOPE(IIJB:IIJE)**2 + ZVSLOPE(IIJB:IIJE)**2 ) )
 #else
                     (CST%XMNH_TINY + ZUSLOPE(IIJB:IIJE)**2 + ZVSLOPE(IIJB:IIJE)**2 ) )
-#endif                      
+#endif
 !
 !*       4.6 compute the surface tangential fluxes
 !
@@ -968,7 +984,7 @@ CALL TURB_VER(D, CST,CSTURB,TURBN,KRR, KRRL, KRRI,       &
           OTURB_FLX, OOCEAN, ODEEPOC, OHARAT,OCOMPUTE_SRC,&
           KSV,KSV_LGBEG,KSV_LGEND,                       &
           HTURBDIM,HTOM,PIMPL,ZEXPL,                     &
-          HPROGRAM, O2D, ONOMIXLG, OFLAT,                &
+          HPROGRAM, O2D, ONOMIXLG, OFLAT, OSTATNW,       &
           OLES_CALL,OCOUPLES,OBLOWSNOW, ORMC01,          &
           PTSTEP,TPFILE,                                 &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,        &
@@ -1022,8 +1038,8 @@ END IF
 !
 !Les budgets des termes horizontaux de la turb sont présents dans AROME
 ! alors que ces termes ne sont pas calculés
-#ifdef REPRO48 
-#else          
+#ifdef REPRO48
+#else
 IF( HTURBDIM == '3DIM' ) THEN
 #endif
   IF( BUCONF%LBUDGET_U  ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_U ), 'HTURB', PRUS  (:,:) )
@@ -1118,11 +1134,11 @@ END IF
 #endif
 !----------------------------------------------------------------------------
 !
-!*      6. EVOLUTION OF THE TKE AND ITS DISSIPATION 
+!*      6. EVOLUTION OF THE TKE AND ITS DISSIPATION
 !          ----------------------------------------
 !
-!  6.1 Contribution of mass-flux in the TKE buoyancy production if 
-!      cloud computation is not statistical 
+!  6.1 Contribution of mass-flux in the TKE buoyancy production if
+!      cloud computation is not statistical
 CALL MZF_PHY(D,PFLXZTHVMF,ZWORK1)
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 PTP(IIJB:IIJE,1:D%NKT) = PTP(IIJB:IIJE,1:D%NKT) &
@@ -1183,9 +1199,9 @@ ENDIF
 !          ---------------------------------------------------------
 !
 IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
-! 
+!
 ! stores the mixing length
-! 
+!
   TZFIELD%CMNHNAME   = 'LM'
   TZFIELD%CSTDNAME   = ''
   TZFIELD%CLONGNAME  = 'LM'
@@ -1264,7 +1280,7 @@ IF ( KRRL >= 1 ) THEN
 !
   ELSE
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    PRT(IIJB:IIJE,1:D%NKT,1)  = PRT(IIJB:IIJE,1:D%NKT,1)  - PRT(IIJB:IIJE,1:D%NKT,2) 
+    PRT(IIJB:IIJE,1:D%NKT,1)  = PRT(IIJB:IIJE,1:D%NKT,1)  - PRT(IIJB:IIJE,1:D%NKT,2)
     PRRS(IIJB:IIJE,1:D%NKT,1) = PRRS(IIJB:IIJE,1:D%NKT,1) - PRRS(IIJB:IIJE,1:D%NKT,2)
     PTHLT(IIJB:IIJE,1:D%NKT)  = PTHLT(IIJB:IIJE,1:D%NKT)  + ZLOCPEXNM(IIJB:IIJE,1:D%NKT) &
                                     * PRT(IIJB:IIJE,1:D%NKT,2)
@@ -1393,7 +1409,7 @@ CONTAINS
 !
 IMPLICIT NONE
 !
-!*       0.1   Declarations of dummy arguments 
+!*       0.1   Declarations of dummy arguments
 !
 REAL,                   INTENT(IN)    :: PALP,PBETA,PGAM,PLTT,PC
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PT,PEXN,PCP
@@ -1451,6 +1467,79 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
 !
 IF (LHOOK) CALL DR_HOOK('TURB:COMPUTE_FUNCTION_THERMO',1,ZHOOK_HANDLE2)
 END SUBROUTINE COMPUTE_FUNCTION_THERMO
+
+!     ########################################################################
+      SUBROUTINE COMPUTE_FUNCTION_THERMO_NEW_STAT(PALP,PBETA,PGAM,PLTT,PC,PT,PEXN,PCP,&
+                                         PLOCPEXN,PAMOIST,PATHETA            )
+!     ########################################################################
+!!
+!!****  *COMPUTE_FUNCTION_THERMO* routine to compute several thermo functions
+!
+!!    AUTHOR
+!!    ------
+!!
+!!     JP Pinty      *LA*
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original   24/02/03
+!!     Modified: Wim de Rooy 06-02-2019
+!!
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+USE MODD_CST
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of dummy arguments
+!
+REAL, INTENT(IN)                      :: PALP,PBETA,PGAM,PLTT,PC
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PT,PEXN,PCP
+!
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PLOCPEXN
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
+!
+!-------------------------------------------------------------------------------
+!
+  IF (LHOOK) CALL DR_HOOK('TURB:COMPUTE_FUNCTION_THERMO_NEW_STAT',0,ZHOOK_HANDLE2)
+  ZEPS = CST%XMV / CST%XMD
+!
+!*       1.1 Lv/Cph at  t
+!
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  PLOCPEXN(IIJB:IIJE,1:D%NKT) = ( PLTT + (CST%XCPV-PC) *  (PT(IIJB:IIJE,1:D%NKT)-CST%XTT) ) / PCP(IIJB:IIJE,1:D%NKT)
+!
+!*      1.2 Saturation vapor pressure at t
+!
+  ZRVSAT(IIJB:IIJE,1:D%NKT) =  EXP( PALP - PBETA/PT(IIJB:IIJE,1:D%NKT) - PGAM*ALOG( PT(IIJB:IIJE,1:D%NKT) ) )
+!
+!*      1.3 saturation  mixing ratio at t
+!
+  ZRVSAT(IIJB:IIJE,1:D%NKT) =  ZRVSAT(IIJB:IIJE,1:D%NKT) * ZEPS / ( PPABST(IIJB:IIJE,1:D%NKT) - ZRVSAT(IIJB:IIJE,1:D%NKT) )
+!
+!*      1.4 compute the saturation mixing ratio derivative (rvs')
+!
+  ZDRVSATDT(IIJB:IIJE,1:D%NKT) = ( PBETA / PT(IIJB:IIJE,1:D%NKT)  - PGAM ) / PT(IIJB:IIJE,1:D%NKT)   &
+                 * ZRVSAT(IIJB:IIJE,1:D%NKT) * ( 1. + ZRVSAT(IIJB:IIJE,1:D%NKT) / ZEPS )
+!
+!*      1.5 compute Amoist
+!
+  PAMOIST(IIJB:IIJE,1:D%NKT)=  1.0 / ( 1.0 + ZDRVSATDT(IIJB:IIJE,1:D%NKT) * PLOCPEXN(IIJB:IIJE,1:D%NKT) )
+!
+!*      1.6 compute Atheta
+!
+  PATHETA(IIJB:IIJE,1:D%NKT)= PAMOIST(IIJB:IIJE,1:D%NKT) * PEXN(IIJB:IIJE,1:D%NKT) * ZDRVSATDT(IIJB:IIJE,1:D%NKT)
+!
+!*      1.7 Lv/Cph/Exner at t-1
+!
+  PLOCPEXN(IIJB:IIJE,1:D%NKT) = PLOCPEXN(IIJB:IIJE,1:D%NKT) / PEXN(IIJB:IIJE,1:D%NKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!
+IF (LHOOK) CALL DR_HOOK('TURB:COMPUTE_FUNCTION_THERMO_NEW_STAT',1,ZHOOK_HANDLE2)
+END SUBROUTINE COMPUTE_FUNCTION_THERMO_NEW_STAT
+
 !
 !     ####################
       SUBROUTINE DELT(PLM,ODZ)
@@ -1472,7 +1561,7 @@ END SUBROUTINE COMPUTE_FUNCTION_THERMO
 !*       0.    DECLARATIONS
 !              ------------
 !
-!*       0.1   Declarations of dummy arguments 
+!*       0.1   Declarations of dummy arguments
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PLM
 LOGICAL,                INTENT(IN)    :: ODZ
@@ -1524,7 +1613,7 @@ ELSE
   END IF
 END IF
 !
-!  mixing length limited by the distance normal to the surface 
+!  mixing length limited by the distance normal to the surface
 !  (with the same factor as for BL89)
 !
 IF (.NOT. ORMC01) THEN
@@ -1550,7 +1639,7 @@ IF (.NOT. ORMC01) THEN
           EXIT
         ENDIF
       END DO
-    ENDIF   
+    ENDIF
   END DO
 END IF
 !
@@ -1584,7 +1673,7 @@ END SUBROUTINE DELT
 !*       0.    DECLARATIONS
 !              ------------
 !
-!*       0.1   Declarations of dummy arguments 
+!*       0.1   Declarations of dummy arguments
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PLM
 !
@@ -1717,7 +1806,7 @@ IF (.NOT. ORMC01) THEN
           EXIT
         ENDIF
       END DO
-    ENDIF 
+    ENDIF
   END DO
 END IF
 !
@@ -1787,7 +1876,7 @@ IMPLICIT NONE
 !              --------------
 !
 IF (LHOOK) CALL DR_HOOK('TURB:CLOUD_MODIF_LM',0,ZHOOK_HANDLE2)
-ZPENTE = ( PCOEF_AMPL_SAT - 1. ) / ( PCEI_MAX - PCEI_MIN ) 
+ZPENTE = ( PCOEF_AMPL_SAT - 1. ) / ( PCEI_MAX - PCEI_MIN )
 ZCOEF_AMPL_CEI_NUL = 1. - ZPENTE * PCEI_MIN
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -1810,7 +1899,7 @@ END WHERE
 !
 !$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
 WHERE ( PCEI(IIJB:IIJE,1:D%NKT) <  PCEI_MAX .AND. PCEI(IIJB:IIJE,1:D%NKT) >  PCEI_MIN)
-  ZCOEF_AMPL(IIJB:IIJE,1:D%NKT) = ZPENTE * PCEI(IIJB:IIJE,1:D%NKT) + ZCOEF_AMPL_CEI_NUL  
+  ZCOEF_AMPL(IIJB:IIJE,1:D%NKT) = ZPENTE * PCEI(IIJB:IIJE,1:D%NKT) + ZCOEF_AMPL_CEI_NUL
 END WHERE
 !$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
@@ -1909,4 +1998,4 @@ ENDIF
 IF (LHOOK) CALL DR_HOOK('TURB:CLOUD_MODIF_LM',1,ZHOOK_HANDLE2)
 END SUBROUTINE CLOUD_MODIF_LM
 !
-END SUBROUTINE TURB    
+END SUBROUTINE TURB

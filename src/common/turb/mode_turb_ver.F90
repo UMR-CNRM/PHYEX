@@ -9,7 +9,7 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,KRR,KRRL,KRRI,   &
                       OTURB_FLX,OOCEAN,ODEEPOC,OHARAT,OCOMPUTE_SRC, &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
                       HTURBDIM,HTOM,PIMPL,PEXPL,                    &
-                      HPROGRAM, O2D, ONOMIXLG, OFLAT,               &
+                      HPROGRAM, O2D, ONOMIXLG, OFLAT, OSTATNW,      &
                       OLES_CALL,OCOUPLES,OBLOWSNOW, ORMC01,         &                      
                       PTSTEP, TPFILE,                               &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
@@ -254,6 +254,7 @@ LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
 LOGICAL,                INTENT(IN)   ::  OHARAT       ! 
+LOGICAL,                INTENT(IN)   ::  OSTATNW      ! cloud scheme inclues convect. covar.
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
@@ -524,7 +525,7 @@ ENDIF
   CALL  TURB_VER_THERMO_CORR(D,CST,CSTURB,                            &
                         KRR,KRRL,KRRI,KSV,                            &
                         OTURB_FLX,HTURBDIM,HTOM, OHARAT,OCOMPUTE_SRC, &
-                        OCOUPLES,OLES_CALL,                           &                        
+                        OCOUPLES,OLES_CALL,OSTATNW,                   &                        
                         PIMPL,PEXPL,TPFILE,                           &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,           &
                         PRHODJ,PTHVREF,                               &

@@ -414,6 +414,8 @@ REAL     :: ZTEMP_DIST          ! time between 2 instants (in seconds)
 !
 LOGICAL :: GRAD                 ! conditionnal call for the full radiation
                                 !         computations
+LOGICAL :: LHARAT, LSTATNW      !  switch for HARMONIE-AROME turb physics option
+                                ! TODO: linked with modd_turbn + init at default_desfmn 
 REAL    :: ZRAD_GLOB_ll         ! 'real' global parallel mask of 'GRAD'
 INTEGER :: INFO_ll              ! error report of parallel routines
                                 !      the only cloudy columns
@@ -1533,13 +1535,15 @@ IF (LOCEAN .AND. LDEEPOC) THEN
   END DO
 END IF !END DEEP OCEAN CONV CASE
 !
+LSTATNW = .FALSE.
+LHARAT = .FALSE.
 !
    CALL TURB( CST,CSTURB, TBUCONF, TURBN,YLDIMPHYEX,&
               IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,       &
               NSV, NSV_LGBEG, NSV_LGEND,CPROGRAM, L2D, LNOMIXLG,LFLAT,               &
               LLES_CALL, LCOUPLES, LBLOWSNOW,                                        &
               LTURB_FLX, LTURB_DIAG, LSUBG_COND, GCOMPUTE_SRC,                       &
-              LRMC01, LOCEAN, LDEEPOC, .FALSE., LDIAG_IN_RUN,                        &
+              LRMC01, LOCEAN, LDEEPOC, LHARAT, LSTATNW, LDIAG_IN_RUN,                &
               CTURBDIM, CTURBLEN, CTOM, CTURBLEN_CLOUD, CCLOUD,XIMPL,                &
               XTSTEP, TPFILE,                                                        &
               XDXX, XDYY, XDZZ, XDZX, XDZY, XZZ,                                     &

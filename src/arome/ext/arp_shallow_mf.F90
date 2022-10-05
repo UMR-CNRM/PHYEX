@@ -191,6 +191,7 @@ REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZU
 REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZV
 REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZZZF
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
+LOGICAL :: OSTATNW
 #include "abor1.intfb.h"
 
 !------------------------------------------------------------------------------
@@ -390,10 +391,11 @@ ZDRTDT_MF(:,:)  = 0.
 !*       4.   APPEL DE LA TURBULENCE MESONH
 !
 !         ---------------------------------
-
+OSTATNW = .FALSE.
   CALL SHALLOW_MF(YLDIMPHYEX, CST, NEB, PARAM_MFSHALLN, TURBN, CSTURB,   &
        KRR=IKR,KRRL=IKRL,KRRI=IKRI, KSV=1,                             &
        HMF_UPDRAFT=HMF_UPDRAFT, HMF_CLOUD=HMF_CLOUD,HFRAC_ICE='N',OMIXUV=LLOMIXUV,     &
+       OSTATNW=OSTATNW,                                                  &
        ONOMIXLG=LLONOMIXLG,KSV_LGBEG=ISV_LGBEG,KSV_LGEND=ISV_LGEND,      &
       PIMPL_MF=PIMPL, PTSTEP=ZDT,                                        &
       PDZZ=ZDZZ,PZZ=ZZZ,                                                 &

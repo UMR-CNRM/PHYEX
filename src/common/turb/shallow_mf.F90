@@ -6,7 +6,7 @@
 !     ################################################################
       SUBROUTINE SHALLOW_MF(D, CST, NEB, PARAMMF, TURB, CSTURB,       &
                 KRR, KRRL, KRRI, KSV,                                 &
-                HMF_UPDRAFT, HMF_CLOUD, HFRAC_ICE, OMIXUV,            &
+                HMF_UPDRAFT, HMF_CLOUD, HFRAC_ICE, OMIXUV, OSTATNW,   &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
                 PIMPL_MF, PTSTEP,                                     &
                 PDZZ, PZZ,                                            &
@@ -111,6 +111,7 @@ CHARACTER(LEN=4),       INTENT(IN)   :: HMF_UPDRAFT  ! Type of Mass Flux Scheme
 CHARACTER(LEN=4),       INTENT(IN)   :: HMF_CLOUD    ! Type of statistical cloud
                                                      ! scheme
 CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
+LOGICAL,                INTENT(IN)   :: OSTATNW      ! cloud scheme inclues convect. covar. contrib
 LOGICAL,                INTENT(IN)   :: OMIXUV    ! True if mixing of momentum
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
@@ -276,7 +277,8 @@ ENDIF
 !!! 5. Compute diagnostic convective cloud fraction and content
 !!!    --------------------------------------------------------
 !
-CALL COMPUTE_MF_CLOUD(D, CST, PARAMMF, KRR, KRRL, KRRI, &
+CALL COMPUTE_MF_CLOUD(D, CST, CSTURB, PARAMMF, OSTATNW, &
+                      KRR, KRRL, KRRI,                  &
                       HMF_CLOUD,ZFRAC_ICE,              &
                       PRC_UP,PRI_UP,PEMF,               &
                       PTHL_UP,PRT_UP,PFRAC_UP,          &
