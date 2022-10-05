@@ -183,7 +183,7 @@ elif echo $specialPack | grep -w $commit > /dev/null; then
 else
   packBranch="COMMIT$commit"
   if [ "$cycle" == "" ]; then
-    content_apl_arome=$(wget https://raw.githubusercontent.com/QuentinRodier/PHYEX/${commit}/src/arome/ext/apl_arome.F90 -O - 2>/dev/null)
+    content_apl_arome=$(wget --no-check-certificate https://raw.githubusercontent.com/QuentinRodier/PHYEX/${commit}/src/arome/ext/apl_arome.F90 -O - 2>/dev/null)
     cycle=$(content2cycle)
   fi
   name="PHYEX/${cycle}_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
