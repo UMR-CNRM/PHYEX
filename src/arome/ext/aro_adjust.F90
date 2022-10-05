@@ -1,16 +1,16 @@
 !     ######spl
       SUBROUTINE  ARO_ADJUST(KLON,KIDIA,KFDIA,KLEV,  KRR,  &
-                                  NGFL_EZDIAG, &
                                   HFRAC_ICE, HCONDENS, HLAMBDA3, OSUBG_COND, &
-                                  OSIGMAS, CMICRO, OCND2, HSUBG_MF_PDF, &
+                                  OSIGMAS, CMICRO, OCND2, LHGT_QS, HSUBG_MF_PDF, &
                                   PTSTEP, PSIGQSAT, &
                                   PZZF, PRHODJ, PEXNREF, PRHODREF,&
                                   PPABSM, PTHT, PRT, PSIGS, &
                                   PMFCONV, PRC_MF, PRI_MF, PCF_MF, &
                                   PTHS, PRS,  PSRCS, PCLDFR,&
+                                  PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, &
                                   PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
-                                  PGP2DSPP,PEZDIAG, &
-                                  YDDDH,YDLDDH,YDMDDH)
+                                  YDDDH,YDLDDH,YDMDDH,&
+                                  YSPP_PSIGQSAT,YSPP_ICE_CLD_WGT)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ##########################################################################
@@ -76,6 +76,7 @@
 !!      S. Riette ice for EDKF
 !!      2012-02 Y. Seity,  add possibility to run with reversed vertical levels
 !!      2016-11 S. Riette: new ice_adjust interface, add OLD3/OLD4 schemes
+!!      2018-02 K.I Ivarsson : More outputs from OCND2 option
 !!      2020-12 U. Andrae : Introduce SPP for HARMONIE-AROME
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !!
@@ -87,14 +88,14 @@
 USE MODD_CST, ONLY: CST
 USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM
 USE MODD_NEB, ONLY: NEB
+USE MODD_TURB_n, ONLY: TURBN
 USE MODD_BUDGET, ONLY: TBUDGETDATA, NBUDGET_RI, TBUCONF
-USE MODD_SPP_TYPE
+USE SPP_MOD_TYPE, ONLY : TSPP_CONFIG_TYPE, CLEAR_SPP_TYPE, APPLY_SPP
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODI_ICE_ADJUST
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 !
-USE SPP_MOD, ONLY : YSPP_CONFIG,YSPP
 !
 USE DDH_MIX , ONLY : TYP_DDH
 USE YOMLDDH , ONLY : TLDDH
@@ -112,7 +113,6 @@ INTEGER,                  INTENT(IN)   :: KIDIA    !start index (=1)
 INTEGER,                  INTENT(IN)   :: KFDIA    !end index (=KLON only if block is full)
 INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
-INTEGER,                  INTENT(IN)   :: NGFL_EZDIAG  ! Diagnostic array dimension
 CHARACTER*1,              INTENT(IN)   :: HFRAC_ICE
 CHARACTER*80,             INTENT(IN)   :: HCONDENS
 CHARACTER*4,              INTENT(IN)   :: HLAMBDA3 ! formulation for lambda3 coeff
@@ -122,6 +122,7 @@ LOGICAL,                  INTENT(IN)   :: OSIGMAS  ! Switch for Sigma_s:
                                         ! or that from turbulence scheme
 CHARACTER (LEN=4),        INTENT(IN)   :: CMICRO  ! Microphysics scheme
 LOGICAL,                  INTENT(IN)   :: OCND2
+LOGICAL,                  INTENT(IN)   :: LHGT_QS
 CHARACTER*80,             INTENT(IN)   :: HSUBG_MF_PDF
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 REAL,                     INTENT(IN)   :: PSIGQSAT ! coeff applied to qsat variance contribution
@@ -149,18 +150,24 @@ REAL, DIMENSION(KLON,1,KLEV),   INTENT(OUT)   :: PSRCS ! Second-order flux
                                                  ! s'rc'/2Sigma_s2 at time t+1
                                                  ! multiplied by Lambda_3
 REAL, DIMENSION(KLON,1,KLEV), INTENT(INOUT)   :: PCLDFR! Cloud fraction
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(OUT)   :: PICLDFR ! ice cloud fraction
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(OUT)   :: PWCLDFR ! water or mixed-phase cloud fraction
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(OUT)   :: PSSIO   ! Super-saturation with respect to ice in the 
+                                                         ! supersaturated fraction
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(OUT)   :: PSSIU   ! Sub-saturation with respect to ice in the 
+                                                         ! subsaturated fraction 
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(OUT)   :: PIFR    ! Ratio cloud ice moist part to dry part
 !
 REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLC_HRC
 REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLC_HCF
 REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLI_HRI
 REAL, DIMENSION(KLON,1,KLEV), INTENT(OUT)   :: PHLI_HCF
 !
-REAL, DIMENSION(KLON,YSPP%N2D), TARGET, INTENT(INOUT) :: PGP2DSPP
-REAL, DIMENSION(KLON,KLEV,NGFL_EZDIAG), INTENT(INOUT) :: PEZDIAG
-!
 TYPE(TYP_DDH), INTENT(INOUT), TARGET :: YDDDH
 TYPE(TLDDH), INTENT(IN), TARGET :: YDLDDH
 TYPE(TMDDH), INTENT(IN), TARGET :: YDMDDH
+!
+TYPE(TSPP_CONFIG_TYPE), INTENT(INOUT) :: YSPP_PSIGQSAT,YSPP_ICE_CLD_WGT
 !
 !*       0.2   Declarations of local variables :
 
@@ -179,12 +186,9 @@ REAL  :: ZMASSTOT                   ! total mass  for one water category
 REAL  :: ZMASSPOS                   ! total mass  for one water category
                                     ! after removing the negative values
 REAL  :: ZRATIO                     ! ZMASSTOT / ZMASSCOR
-REAL  :: ZCOR(KLON)                       ! for the correction of negative rv
+REAL  :: ZCOR(KLON)                 ! for the correction of negative rv
 !
-TYPE(TSPP_CONFIG_MPA) :: YSPP_PSIGQSAT,YSPP_ICE_CLD_WGT
-REAL  :: ZMU, ZVAL
 REAL, DIMENSION(KLON,1) :: ZSIGQSAT, ZICE_CLD_WGT
-INTEGER :: JI
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RI) :: YLBUDGET !NBUDGET_RI is the one with the highest number
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !
@@ -200,69 +204,20 @@ IF (LHOOK) CALL DR_HOOK('ARO_ADJUST',0,ZHOOK_HANDLE)
 !Dimensions
 CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, 0, KFDIA)
 
-! Copy SPP settings
-IF ( YSPP_CONFIG%LSPP ) THEN
+!
+! Apply SPP perturbations
+!
 
-  IF ( YSPP_CONFIG%LPERT_PSIGQSAT ) &
-  CALL SET_SPP_TYPE(YSPP_PSIGQSAT, &
-   YSPP_CONFIG%LLNN_MEAN1, YSPP_CONFIG%LLNN_MEAN1_PSIGQSAT, &
-   YSPP_CONFIG%CMPERT_PSIGQSAT, YSPP_CONFIG%SDEV, &
-   YSPP_CONFIG%CLIP_PSIGQSAT, &
-   YSPP%MP_PSIGQSAT, &
-   KLON,KLEV,YSPP%N2D,NGFL_EZDIAG, &
-   YSPP_CONFIG%IEZDIAG_POS, &
-   PGP2DSPP,PSIGQSAT,PEZDIAG)
-                    
-  IF ( YSPP_CONFIG%LPERT_ICE_CLD_WGT ) &
-  CALL SET_SPP_TYPE(YSPP_ICE_CLD_WGT, &
-   YSPP_CONFIG%LLNN_MEAN1, YSPP_CONFIG%LLNN_MEAN1_ICE_CLD_WGT, &
-   YSPP_CONFIG%CMPERT_ICE_CLD_WGT, YSPP_CONFIG%SDEV, &
-   YSPP_CONFIG%CLIP_ICE_CLD_WGT, &
-   YSPP%MP_ICE_CLD_WGT, &
-   KLON,KLEV,YSPP%N2D,NGFL_EZDIAG, &
-   YSPP_CONFIG%IEZDIAG_POS, &
-   PGP2DSPP,1.0_JPRB,PEZDIAG)
-   ! Awaiting merge of HARMONIE-AROME physics 
-   !PGP2DSPP,XFRMIN(21),PEZDIAG)
-
-ENDIF 
-
-! Compute perturbations 
-! Perturb PSIGQSAT
 IF (YSPP_PSIGQSAT%LPERT) THEN
-  IF (YSPP_PSIGQSAT%LLNN_MEAN1.OR.YSPP_PSIGQSAT%LLNN_MEAN1_SELF) THEN
-    ZMU = -0.5 * (YSPP_PSIGQSAT%CMPERT * YSPP_PSIGQSAT%SDEV)**2
-  ELSE
-    ZMU = 0.
-  ENDIF
-  DO JI=KIDIA,KFDIA
-    ZVAL = &
-      PSIGQSAT*EXP(ZMU+YSPP_PSIGQSAT%CMPERT*YSPP_PSIGQSAT%PGP2DSPP(JI)) 
-    ZSIGQSAT(JI,1) = MAX(YSPP_PSIGQSAT%CLIP(1),MIN(ZVAL,YSPP_PSIGQSAT%CLIP(2)))
-  ENDDO
+ CALL APPLY_SPP(YSPP_PSIGQSAT,KLON,1,KLON,PSIGQSAT,ZSIGQSAT)
 ELSE
-  ZSIGQSAT(KIDIA:KFDIA,1) = PSIGQSAT
+ ZSIGQSAT(:,:) = PSIGQSAT
 ENDIF
 
-! Perturb ICE_CLD_WGT
 IF (YSPP_ICE_CLD_WGT%LPERT) THEN
-  IF (YSPP_ICE_CLD_WGT%LLNN_MEAN1.OR.YSPP_ICE_CLD_WGT%LLNN_MEAN1_SELF) THEN
-    ZMU = -0.5 * (YSPP_ICE_CLD_WGT%CMPERT * YSPP_ICE_CLD_WGT%SDEV)**2
-  ELSE
-    ZMU = 0.
-  ENDIF
-  DO JI=KIDIA,KFDIA
-  ! Awaiting HARMONIE-AROME physics changes
-  !    ZVAL = &
-  !     XFRMIN(21)* EXP(ZMU+YSPP_ICE_CLD_WGT%CMPERT*YSPP_ICE_CLD_WGT%PGP2DSPP(JI)) 
-     ZVAL = &
-      1.5* EXP(ZMU+YSPP_ICE_CLD_WGT%CMPERT*YSPP_ICE_CLD_WGT%PGP2DSPP(JI)) 
-    ZICE_CLD_WGT(JI,1) = &
-    MAX(YSPP_ICE_CLD_WGT%CLIP(1),MIN(ZVAL,YSPP_ICE_CLD_WGT%CLIP(2)))
-  ENDDO
+ CALL APPLY_SPP(YSPP_ICE_CLD_WGT,KLON,1,KLON,RAIN_ICE_PARAM%XFRMIN(21),ZICE_CLD_WGT)
 ELSE
-!  ZICE_CLD_WGT(:) = XFRMIN(21)
-   ZICE_CLD_WGT(KIDIA:KFDIA,1) = 1.5
+ ZICE_CLD_WGT(:,:) = RAIN_ICE_PARAM%XFRMIN(21)
 ENDIF
 
 HBUNAME='DEPI'
@@ -437,14 +392,16 @@ ZZZ(KIDIA:KFDIA,:,:) =  PZZF(KIDIA:KFDIA,:,:)
 !*       9.2    Perform the saturation adjustment over cloud ice and cloud water
 !
 IF (KRR==6) THEN
-  CALL ICE_ADJUST ( YLDIMPHYEX, CST=CST, ICEP=RAIN_ICE_PARAM, NEB=NEB, BUCONF=TBUCONF, KRR=KRR,&
+  CALL ICE_ADJUST ( YLDIMPHYEX, CST=CST, ICEP=RAIN_ICE_PARAM, NEB=NEB, TURBN=TURBN, BUCONF=TBUCONF, KRR=KRR,&
     & HFRAC_ICE=HFRAC_ICE, HCONDENS=HCONDENS, HLAMBDA3=HLAMBDA3, HBUNAME=HBUNAME, &
     & OSUBG_COND=OSUBG_COND, OSIGMAS=OSIGMAS, &
-    & OCND2=OCND2, HSUBG_MF_PDF=HSUBG_MF_PDF, &
+    & OCND2=OCND2, LHGT_QS=LHGT_QS, HSUBG_MF_PDF=HSUBG_MF_PDF, &
     & PTSTEP=ZTWOTSTEP,PSIGQSAT=ZSIGQSAT, &
     & PRHODJ=PRHODJ ,PEXNREF=PEXNREF, PRHODREF=PRHODREF,   &
     & PSIGS=PSIGS, LMFCONV=.TRUE., PMFCONV=PMFCONV, PPABST=PPABSM, PZZ=ZZZ,    &
     & PEXN=PEXNREF, PCF_MF=PCF_MF,PRC_MF=PRC_MF,PRI_MF=PRI_MF, &
+    & PICLDFR=PICLDFR, PWCLDFR=PWCLDFR, & 
+    & PSSIO=PSSIO, PSSIU=PSSIU, PIFR=PIFR, &
     & PRV=ZRS(:,:,:,1), PRC=ZRS(:,:,:,2),  &
     & PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2), &
     & PTH=ZRS(:,:,:,0), PTHS=PTHS,OCOMPUTE_SRC=.TRUE.,PSRCS=PSRCS, PCLDFR=PCLDFR, &
@@ -452,19 +409,21 @@ IF (KRR==6) THEN
     & PRI=ZRS(:,:,:,4), PRIS=PRS(:,:,:,4), &
     & PRS=ZRS(:,:,:,5), &
     & PRG=ZRS(:,:,:,6), &
-    & PHLC_HRC=PHLC_HRC(:,:,:), PHLC_HCF=PHLC_HCF(:,:,:), &
-    & PHLI_HRI=PHLI_HRI(:,:,:), PHLI_HCF=PHLI_HCF(:,:,:), &
+    & TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
     & PICE_CLD_WGT=ZICE_CLD_WGT(:,:), &
-    & TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET))
+    & PHLC_HRC=PHLC_HRC(:,:,:), PHLC_HCF=PHLC_HCF(:,:,:), &
+    & PHLI_HRI=PHLI_HRI(:,:,:), PHLI_HCF=PHLI_HCF(:,:,:))
 ELSE
-  CALL ICE_ADJUST ( YLDIMPHYEX, CST=CST, ICEP=RAIN_ICE_PARAM, NEB=NEB, BUCONF=TBUCONF, KRR=KRR,&
+  CALL ICE_ADJUST ( YLDIMPHYEX, CST=CST, ICEP=RAIN_ICE_PARAM, NEB=NEB, TURBN=TURBN, BUCONF=TBUCONF, KRR=KRR,&
     & HFRAC_ICE=HFRAC_ICE, HCONDENS=HCONDENS, HLAMBDA3=HLAMBDA3, HBUNAME=HBUNAME,    &
     & OSUBG_COND=OSUBG_COND, OSIGMAS=OSIGMAS, &
-    & OCND2=OCND2, HSUBG_MF_PDF=HSUBG_MF_PDF, &
+    & OCND2=OCND2, LHGT_QS=LHGT_QS, HSUBG_MF_PDF=HSUBG_MF_PDF, &
     & PTSTEP=ZTWOTSTEP,PSIGQSAT=ZSIGQSAT, &
     & PRHODJ=PRHODJ ,PEXNREF=PEXNREF, PRHODREF=PRHODREF,   &
     & PSIGS=PSIGS, LMFCONV=.TRUE., PMFCONV=PMFCONV, PPABST=PPABSM, PZZ=ZZZ,    &
     & PEXN=PEXNREF, PCF_MF=PCF_MF,PRC_MF=PRC_MF,PRI_MF=PRI_MF, &
+    & PICLDFR=PICLDFR, PWCLDFR=PWCLDFR, & 
+    & PSSIO=PSSIO, PSSIU=PSSIU, PIFR=PIFR, &
     & PRV=ZRS(:,:,:,1), PRC=ZRS(:,:,:,2), &
     & PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2), &
     & PTH=ZRS(:,:,:,0), PTHS=PTHS,OCOMPUTE_SRC=.TRUE.,PSRCS=PSRCS, PCLDFR=PCLDFR, &
@@ -472,11 +431,11 @@ ELSE
     & PRI=ZRS(:,:,:,4), PRIS=PRS(:,:,:,4), &
     & PRS=ZRS(:,:,:,5), &
     & PRG=ZRS(:,:,:,6), &
+    & TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
+    & PICE_CLD_WGT=ZICE_CLD_WGT(:,:), &
     & PRH=ZRS(:,:,:,7), &
     & PHLC_HRC=PHLC_HRC(:,:,:), PHLC_HCF=PHLC_HCF(:,:,:), & 
-    & PHLI_HRI=PHLI_HRI(:,:,:), PHLI_HCF=PHLI_HCF(:,:,:), &
-    & PICE_CLD_WGT=ZICE_CLD_WGT(:,:), &
-    & TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET))
+    & PHLI_HRI=PHLI_HRI(:,:,:), PHLI_HCF=PHLI_HCF(:,:,:))
 ENDIF
 
 CALL CLEAR_SPP_TYPE(YSPP_PSIGQSAT)

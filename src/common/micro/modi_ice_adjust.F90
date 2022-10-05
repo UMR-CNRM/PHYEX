@@ -4,24 +4,26 @@
 !
 INTERFACE
 !
-      SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEB, BUCONF, KRR,                   &
+      SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEB, TURBN, BUCONF, KRR,            &
                             &HFRAC_ICE, HCONDENS, HLAMBDA3,&
-                            &HBUNAME, OSUBG_COND, OSIGMAS, OCND2, HSUBG_MF_PDF,&
-                            &PTSTEP, PSIGQSAT,                                 &
+                            &HBUNAME, OSUBG_COND, OSIGMAS, OCND2, LHGT_QS,     &
+                            &HSUBG_MF_PDF, PTSTEP, PSIGQSAT,                   &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
                             &PPABST, PZZ,                                      &
                             &PEXN, PCF_MF, PRC_MF, PRI_MF,                     &
+                            &PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR,             &
                             &PRV, PRC, PRVS, PRCS, PTH, PTHS,                  &
-                            &OCOMPUTE_SRC, PSRCS, PCLDFR,   &
-                            &PRR, PRI, PRIS, PRS, PRG, PRH,                    &
+                            &OCOMPUTE_SRC, PSRCS, PCLDFR,                      &
+                            &PRR, PRI, PRIS, PRS, PRG, TBUDGETS, KBUDGETS,     &
+                            &PICE_CLD_WGT,                                     &
+                            &PRH,                                              &
                             &POUT_RV, POUT_RC, POUT_RI, POUT_TH,               &
-                            &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,           &
-                            &TBUDGETS, KBUDGETS,                               &
-                            &PICE_CLD_WGT)
+                            &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF)
 USE MODD_BUDGET,         ONLY: TBUDGETDATA, TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 USE MODD_NEB,            ONLY: NEB_t
+USE MODD_TURB_n,         ONLY: TURB_t
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 IMPLICIT NONE
 !
@@ -33,6 +35,7 @@ TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(NEB_t),              INTENT(IN)    :: NEB
+TYPE(TURB_t),             INTENT(IN)    :: TURBN
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KRR      ! Number of moist variables
 CHARACTER(LEN=1),         INTENT(IN)    :: HFRAC_ICE
@@ -44,10 +47,11 @@ LOGICAL,                  INTENT(IN)    :: OSUBG_COND ! Switch for Subgrid
 LOGICAL,                  INTENT(IN)    :: OSIGMAS  ! Switch for Sigma_s:
                                                     ! use values computed in CONDENSATION
                                                     ! or that from turbulence scheme
-LOGICAL,                  INTENT(IN)    :: OCND2    ! logical switch to sparate liquid
+LOGICAL,                  INTENT(IN)    :: OCND2    ! logical switch to separate liquid
                                                     ! and ice
-                                                    ! more rigid (DEFALT value : .FALSE.)
-CHARACTER(LEN=80),        INTENT(IN)    :: HSUBG_MF_PDF
+                                                    ! more rigid (DEFAULT value : .FALSE.)
+LOGICAL,                  INTENT(IN)   :: LHGT_QS   ! logical switch for height dependent VQSIGSAT
+CHARACTER(LEN=80),        INTENT(IN)   :: HSUBG_MF_PDF
 REAL,                     INTENT(IN)   :: PTSTEP    ! Double Time step
                                                     ! (single if cold start)
 REAL, DIMENSION(D%NIT,D%NJT),                INTENT(IN)    :: PSIGQSAT  ! coeff applied to qsat variance contribution
@@ -67,12 +71,12 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PPABST  ! Absolute Pressur
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PZZ     ! height of model layer
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PEXN    ! Exner function
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PCF_MF! Convective Mass Flux Cloud fraction
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRC_MF! Convective Mass Flux liquid mixing ratio
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRI_MF! Convective Mass Flux ice mixing ratio
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PCF_MF   ! Convective Mass Flux Cloud fraction
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRC_MF   ! Convective Mass Flux liquid mixing ratio
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRI_MF   ! Convective Mass Flux ice mixing ratio
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PRV     ! Water vapor m.r. to adjust
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PRC     ! Cloud water m.r. to adjust
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRV     ! Water vapor m.r. to adjust
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRC     ! Cloud water m.r. to adjust
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT) :: PRVS    ! Water vapor m.r. source
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PTH     ! Theta to adjust
@@ -83,13 +87,23 @@ REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(OUT)   :: PSRCS   ! Second-order flux
                                                                        ! s'rc'/2Sigma_s2 at time t+1
                                                                        ! multiplied by Lambda_3
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PCLDFR  ! Cloud fraction
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PCLDFR  ! Cloud fraction
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PICLDFR ! ice cloud fraction
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PWCLDFR ! water or mixed-phase cloud fraction
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PSSIO   ! Super-saturation with respect to ice in the  
+                                                             ! supersaturated fraction
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PSSIU   ! Sub-saturation with respect to ice in the  
+                                                             ! subsaturated fraction 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PIFR    ! Ratio cloud ice moist part to dry part
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT)::  PRIS ! Cloud ice  m.r. at t+1
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRR  ! Rain water m.r. to adjust
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRI  ! Cloud ice  m.r. to adjust
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRS  ! Aggregate  m.r. to adjust
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRG  ! Graupel    m.r. to adjust
+TYPE(TBUDGETDATA), DIMENSION(KBUDGETS),       INTENT(INOUT)::  TBUDGETS
+INTEGER,                                      INTENT(IN)   ::  KBUDGETS
+REAL, DIMENSION(D%NIT,D%NJT),       OPTIONAL, INTENT(IN)   ::  PICE_CLD_WGT
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PRH  ! Hail       m.r. to adjust
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_RV ! Adjusted value
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_RC ! Adjusted value
@@ -99,10 +113,6 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLC_HRC
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLC_HCF
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLI_HRI
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLI_HCF
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS),                        INTENT(INOUT) :: TBUDGETS
-INTEGER,                                                       INTENT(IN)    :: KBUDGETS
-REAL, DIMENSION(D%NIT,D%NJT),                OPTIONAL, INTENT(IN)   :: PICE_CLD_WGT
-
 !
 END SUBROUTINE ICE_ADJUST
 !

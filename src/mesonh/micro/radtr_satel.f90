@@ -258,7 +258,7 @@ REAL, DIMENSION(:,:,:), ALLOCATABLE  :: ZRC_IN, ZRC_OUT ! grid scale r_c mixing 
 REAL, DIMENSION(:,:,:), ALLOCATABLE  :: ZRI_IN, ZRI_OUT ! grid scale r_i (kg/kg)
 REAL, DIMENSION(:,:,:), ALLOCATABLE  :: ZRV_IN, ZRV_OUT ! grid scale r_v (kg/kg)
 REAL, DIMENSION(:,:,:), ALLOCATABLE  :: ZRHO
-REAL, DIMENSION(SIZE(PPABST,1),SIZE(PPABST,2)) :: ZSIGQSAT2D
+REAL, DIMENSION(SIZE(PPABST,1),SIZE(PPABST,2)) :: ZSIGQSAT2D, ZDUM
 !----------------------------------------------------------------------------
 !
 !*       1.    INITIALIZATION OF CONSTANTS FOR TRANSFERT CODE
@@ -484,10 +484,12 @@ IF( SIZE(PRT(:,:,:,:),4) >= 2 ) THEN
     ALLOCATE(ZRHO(IIU,IJU,IKU))
     ZRHO=1. !unused
     ZSIGQSAT2D(:,:)=PSIGQSAT
-    !CALL CONDENSATION( IIU, IJU, IKU, IIB, IIE, IJB, IJE, IKB, IKE, 1, 'T', 'CB02', 'CB',&
+    !CALL CONDENSATION( IIU, IJU, IKU, IIB, IIE, IJB, IJE, IKB, IKE, 1, &
+    !     'T', 'CB02', 'CB',&
     !     PPABST, PZZ, ZRHO, ZTEMP, ZRV_IN, ZRV_OUT, ZRC_IN, ZRC_OUT, ZRI_IN, ZRI_OUT, &
-    !     PRT(:,:,:,2), PRT(:,:,:,5), PRT(:,:,:,6), PSIGS,&
-    !     PMFCONV, ZNCLD, ZSIGRC, OUSERI, OSIGMAS, .FALSE., PSIGQSAT=ZSIGQSAT2D )
+    !     PRT(:,:,:,2), PRT(:,:,:,5), PRT(:,:,:,6), PSIGS, PMFCONV, ZNCLD, &
+    !     ZSIGRC, OUSERI, OSIGMAS, .FALSE., .FALSE., &
+    !     ZDUM, ZDUM, ZDUM, ZDUM, ZDUM, ZSIGQSAT2D )
     DEALLOCATE(ZTEMP,ZSIGRC)
     DEALLOCATE(ZRV_OUT)
   ELSE

@@ -58,7 +58,9 @@ REAL      :: XSCFAC,                           & ! Constants for raindrop
              X0EVAR,X1EVAR,XEX0EVAR,XEX1EVAR,  & ! evaporation: EVA and for
              X0DEPI,X2DEPI,                    & ! deposition : DEP on I,
              X0DEPS,X1DEPS,XEX0DEPS,XEX1DEPS,  & !                  on S and
-             X0DEPG,X1DEPG,XEX0DEPG,XEX1DEPG     !                  on G
+             XRDEPSRED,&
+             X0DEPG,X1DEPG,XEX0DEPG,XEX1DEPG,  & !                  on G
+             XRDEPGRED
 !
 REAL      :: XTIMAUTI,XTEXAUTI,XCRIAUTI,       & ! Constants for pristine ice
              XT0CRIAUTI,XACRIAUTI,XBCRIAUTI      ! autoconversion : AUT
@@ -182,11 +184,13 @@ REAL,DIMENSION(:,:), ALLOCATABLE         &
                          :: XKER_SWETH,        & ! Normalized kernel for SWETH
                             XKER_GWETH,        & ! Normalized kernel for GWETH
                             XKER_RWETH           ! Normalized kernel for RWETH
+REAL, DIMENSION(40) :: XFRMIN                    ! Parmeters to modify melt and growth of graupels etc.
 END TYPE RAIN_ICE_PARAM_t
 !
 TYPE(RAIN_ICE_PARAM_t), SAVE, TARGET :: RAIN_ICE_PARAM
 !
 REAL,DIMENSION(:),POINTER :: XFSEDC => NULL()
+REAL,DIMENSION(:),POINTER :: XFRMIN => NULL()
 
 REAL,POINTER :: XFSEDR => NULL(), &
                 XEXSEDR => NULL(), &
@@ -218,10 +222,12 @@ REAL,POINTER :: XFSEDR => NULL(), &
                 X1DEPS => NULL(), &
                 XEX0DEPS => NULL(), &
                 XEX1DEPS => NULL(), &
+                XRDEPSRED => NULL(), &
                 X0DEPG => NULL(), &
                 X1DEPG => NULL(), &
                 XEX0DEPG => NULL(), &
                 XEX1DEPG => NULL(), &
+                XRDEPGRED => NULL(), &
                 XTIMAUTI => NULL(), &
                 XTEXAUTI => NULL(), &
                 XCRIAUTI => NULL(), &
@@ -370,6 +376,7 @@ CONTAINS
 SUBROUTINE RAIN_ICE_PARAM_ASSOCIATE()
   IMPLICIT NONE
   XFSEDC => RAIN_ICE_PARAM%XFSEDC
+  XFRMIN => RAIN_ICE_PARAM%XFRMIN
   !
   XFSEDR => RAIN_ICE_PARAM%XFSEDR
   XEXSEDR => RAIN_ICE_PARAM%XEXSEDR
@@ -401,10 +408,12 @@ SUBROUTINE RAIN_ICE_PARAM_ASSOCIATE()
   X1DEPS => RAIN_ICE_PARAM%X1DEPS
   XEX0DEPS => RAIN_ICE_PARAM%XEX0DEPS
   XEX1DEPS => RAIN_ICE_PARAM%XEX1DEPS
+  XRDEPSRED => RAIN_ICE_PARAM%XRDEPSRED
   X0DEPG => RAIN_ICE_PARAM%X0DEPG
   X1DEPG => RAIN_ICE_PARAM%X1DEPG
   XEX0DEPG => RAIN_ICE_PARAM%XEX0DEPG
   XEX1DEPG => RAIN_ICE_PARAM%XEX1DEPG
+  XRDEPGRED => RAIN_ICE_PARAM%XRDEPGRED
   XTIMAUTI => RAIN_ICE_PARAM%XTIMAUTI
   XTEXAUTI => RAIN_ICE_PARAM%XTEXAUTI
   XCRIAUTI => RAIN_ICE_PARAM%XCRIAUTI

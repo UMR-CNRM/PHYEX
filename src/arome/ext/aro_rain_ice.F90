@@ -1,15 +1,15 @@
 !     ######spl
       SUBROUTINE  ARO_RAIN_ICE(KPROMA,KKA,KKU,KKL,KLON,KLEV, KFDIA, KRR, KTCOUNT, KSPLITR,&
-                                  KEZDIAG, &
                                   OSUBG_COND, CSUBG_AUCV_RC, CSUBG_AUCV_RI,OSEDIC, CSEDIM, CMICRO, &
                                   PTSTEP, PDZZ, PRHODJ, PRHODREF, PEXNREF,&
                                   PPABSM, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PTHT, PRT, PSIGS,PCLDFR, &
                                   PTHS, PRS, PEVAP,  &
                                   PCIT, OWARM, PSEA, PTOWN,   &
-                                  OCND2,LGRSN, &
+                                  PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR,  &
+                                  OCND2, LKOGAN, LMODICEDEP,&
                                   PINPRR,PINPRS,PINPRG,PINPRH,PFPR,     &
-                                  PGP2DSPP,PEZDIAG, &
-                                  YDDDH, YDLDDH, YDMDDH)
+                                  YDDDH, YDLDDH, YDMDDH, &
+                                  YSPP_ICENU,YSPP_KGN_ACON,YSPP_KGN_SBGR)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ##########################################################################
@@ -78,6 +78,7 @@
 !!      2014-11 S. Riette, ICE3/ICE4 modified, old versions under OLD3/OLD4
 !!      2014-11 S. Riette, ICE3/ICE4 modified, old versions under OLD3/OLD4
 !!      2020-12 U. Andrae : Introduce SPP for HARMONIE-AROME
+!!      2018-02 K.I: Ivarsson: More inputs to OCND2-option for saving computing time.
 !!     R. El Khatib 24-Aug-2021 Specific cache-blocking factor for microphysics
 !!
 !-------------------------------------------------------------------------------
@@ -91,7 +92,6 @@ USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR
 USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM
 USE MODD_PARAM_ICE,      ONLY: PARAM_ICE
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODD_SPP_TYPE
 !
 USE MODD_BUDGET, ONLY: TBUDGETDATA, NBUDGET_RH, TBUCONF
 USE MODE_BUDGET, ONLY: BUDGET_DDH
@@ -99,7 +99,7 @@ USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 !
 USE MODI_RAIN_ICE
 !
-USE SPP_MOD, ONLY : YSPP_CONFIG,YSPP
+USE SPP_MOD_TYPE, ONLY : TSPP_CONFIG_TYPE, APPLY_SPP
 !
 USE MODI_RAIN_ICE_OLD
 !
@@ -124,7 +124,6 @@ INTEGER,                  INTENT(IN)   :: KFDIA
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
 INTEGER,                  INTENT(IN)   :: KSPLITR  ! Number of small time step
-INTEGER,                  INTENT(IN)   :: KEZDIAG  ! Size of diagnostics array
                                        ! integrations for  rain sedimendation
 LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid Cond.
 CHARACTER (LEN=4),        INTENT(IN)   :: CSUBG_AUCV_RC
@@ -153,6 +152,16 @@ REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PTHT    ! Theta at time t
 REAL, DIMENSION(KLON,1,KLEV,KRR), INTENT(INOUT):: PRT   ! Moist variables at time t
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PSIGS   ! Sigma_s at time t
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PCLDFR  ! Cloud fraction
+! input from aro_adjust / condensation with OCND2, dummy if OCND2 = F
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PICLDFR ! ice cloud fraction
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PWCLDFR ! water or mixed-phase cloud fraction
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PSSIO   ! Super-saturation with respect to ice in the  
+                                                        ! supersaturated fraction
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PSSIU   ! Sub-saturation with respect to ice in the  
+                                                        ! subsaturated fraction 
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(INOUT):: PIFR    ! Ratio cloud ice moist part to dry part 
+!REAL, DIMENSION (KLON,1),       INTENT(IN)  :: PPBL    ! PBL top above ground (m)
+! input from aro_adjust / condensation with OCND2 END.
 !
 !
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(INOUT) :: PTHS    ! Theta source
@@ -167,7 +176,8 @@ LOGICAL,                  INTENT(IN)    :: OWARM ! Control of the rain formation
                                                  !  by slow warm microphysical
                                                  !         processes
 LOGICAL,                  INTENT(IN)    :: OCND2 ! Logical switch to separate liquid and ice
-LOGICAL,                  INTENT(IN)    :: LGRSN ! Logical switch to turn graupel to snow for high supersaturation wrt ice 
+LOGICAL,                  INTENT(IN)    :: LKOGAN! Logical switch for using Kogan autoconversion of liquid
+LOGICAL,                  INTENT(IN)    :: LMODICEDEP ! Logical switch for alternative dep/evap of ice
 REAL, DIMENSION(KLON,1), INTENT(IN)        :: PSEA  ! Land sea mask
 REAL, DIMENSION(KLON,1), INTENT(IN)        :: PTOWN  ! Town mask
 REAL, DIMENSION(KLON,1), INTENT(OUT)       :: PINPRR! Rain instant precip
@@ -175,12 +185,12 @@ REAL, DIMENSION(KLON,1), INTENT(OUT)       :: PINPRS! Snow instant precip
 REAL, DIMENSION(KLON,1), INTENT(OUT)       :: PINPRG! Graupel instant precip
 REAL, DIMENSION(KLON,1), INTENT(OUT)       :: PINPRH! Hail instant precip
 REAL, DIMENSION(KLON,1,KLEV,KRR), INTENT(INOUT) :: PFPR ! upper-air precip
-REAL, DIMENSION(KLON,YSPP%N2D), TARGET, INTENT(INOUT) :: PGP2DSPP
-REAL, DIMENSION(KLON,KLEV,KEZDIAG), INTENT(INOUT) :: PEZDIAG
 !
 TYPE(TYP_DDH), INTENT(INOUT), TARGET :: YDDDH
 TYPE(TLDDH), INTENT(IN), TARGET :: YDLDDH
 TYPE(TMDDH), INTENT(IN), TARGET :: YDMDDH
+!
+TYPE(TSPP_CONFIG_TYPE), INTENT(INOUT) :: YSPP_ICENU,YSPP_KGN_ACON,YSPP_KGN_SBGR 
 !
 !
 !*       0.2   Declarations of local variables :
@@ -192,6 +202,7 @@ REAL, DIMENSION(KLON,1,KLEV):: ZT,ZLV,ZLS,ZCPH
 REAL, DIMENSION(KLON,1,KLEV):: ZCOR
 REAL, DIMENSION(KLON,1):: ZINDEP     ! surf cloud deposition (already contained in sedimentation)
 REAL, DIMENSION(KLON,1,KLEV):: ZRAINFR
+REAL, DIMENSION(KLON,1) :: ZICENU, ZKGN_ACON, ZKGN_SBGR
 REAL, DIMENSION(KLON,1):: ZINPRC    ! surf cloud sedimentation
                                     ! for the correction of negative rv
 REAL  :: ZMASSTOT                   ! total mass  for one water category
@@ -199,8 +210,6 @@ REAL  :: ZMASSTOT                   ! total mass  for one water category
 REAL  :: ZMASSPOS                   ! total mass  for one water category
                                     ! after removing the negative values
 REAL  :: ZRATIO                     ! ZMASSTOT / ZMASSCOR
-
-TYPE(TSPP_CONFIG_MPA) :: YSPP_ICENU,YSPP_KGN_ACON,YSPP_KGN_SBGR
 
 LOGICAL, DIMENSION(KLON, 1, KLEV) :: LLMICRO !mask to limit computation
 
@@ -224,43 +233,6 @@ CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, 0, KFDIA)
 
 ZINPRC=0.
 PINPRH=0.
-
-! Copy SPP settings
-IF ( YSPP_CONFIG%LSPP ) THEN
-
-  ! Awaiting HARMONIE-AROME physics changes
-
-  IF ( YSPP_CONFIG%LPERT_ICENU ) &
-  CALL SET_SPP_TYPE(YSPP_ICENU, &
-   YSPP_CONFIG%LLNN_MEAN1, YSPP_CONFIG%LLNN_MEAN1_ICENU, &
-   YSPP_CONFIG%CMPERT_ICENU, YSPP_CONFIG%SDEV, &
-   YSPP_CONFIG%CLIP_ICENU, &
-   YSPP%MP_ICENU, KLON,KLEV,YSPP%N2D,KEZDIAG, &
-   YSPP_CONFIG%IEZDIAG_POS, &
-   PGP2DSPP, 1.0_JPRB,PEZDIAG)
-   !PGP2DSPP, XFRMIN(9),PEZDIAG)
-
-  IF ( YSPP_CONFIG%LPERT_KGN_ACON ) &
-  CALL SET_SPP_TYPE(YSPP_KGN_ACON, &
-   YSPP_CONFIG%LLNN_MEAN1, YSPP_CONFIG%LLNN_MEAN1_KGN_ACON, &
-   YSPP_CONFIG%CMPERT_KGN_ACON, YSPP_CONFIG%SDEV, &
-   YSPP_CONFIG%CLIP_KGN_ACON, &
-   YSPP%MP_KGN_ACON, KLON,KLEV,YSPP%N2D,KEZDIAG, &
-   YSPP_CONFIG%IEZDIAG_POS, &
-   PGP2DSPP, 10._JPRB ,PEZDIAG)
-   !PGP2DSPP, XFRMIN(10),PEZDIAG)
-
-  IF ( YSPP_CONFIG%LPERT_KGN_SBGR ) &
-  CALL SET_SPP_TYPE(YSPP_KGN_SBGR, &
-   YSPP_CONFIG%LLNN_MEAN1, YSPP_CONFIG%LLNN_MEAN1_KGN_SBGR, &
-   YSPP_CONFIG%CMPERT_KGN_SBGR, YSPP_CONFIG%SDEV, &
-   YSPP_CONFIG%CLIP_KGN_SBGR, &
-   YSPP%MP_KGN_SBGR, KLON,KLEV,YSPP%N2D,KEZDIAG, &
-   YSPP_CONFIG%IEZDIAG_POS, &
-   PGP2DSPP, 1.0_JPRB,PEZDIAG)
-   !PGP2DSPP, XFRMIN(11),PEZDIAG)
-
-ENDIF
 
 !Mask to limit computation
 IF ( KRR == 7 ) THEN
@@ -474,11 +446,31 @@ ELSEIF (CMICRO=='ICE3') THEN
                  &  TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
                  &  PSEA=PSEA, PTOWN=PTOWN, PFPR=PFPR)
 ELSEIF (CMICRO=='OLD4') THEN
-    CALL RAIN_ICE_OLD( OSEDIC=OSEDIC, OCND2=OCND2, LGRSN=LGRSN, HSEDIM=CSEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC,&
+    IF (YSPP_ICENU%LPERT) THEN
+     CALL APPLY_SPP(YSPP_ICENU,KLON,1,KLON,RAIN_ICE_PARAM%XFRMIN(9),ZICENU)
+    ELSE
+     ZICENU(:,:) = RAIN_ICE_PARAM%XFRMIN(9)
+    ENDIF
+   
+    IF (YSPP_KGN_ACON%LPERT) THEN
+     CALL APPLY_SPP(YSPP_KGN_ACON,KLON,1,KLON,RAIN_ICE_PARAM%XFRMIN(10),ZKGN_ACON)
+    ELSE
+     ZKGN_ACON(:,:) = RAIN_ICE_PARAM%XFRMIN(10)
+    ENDIF
+   
+    IF (YSPP_KGN_SBGR%LPERT) THEN
+     CALL APPLY_SPP(YSPP_KGN_SBGR,KLON,1,KLON,RAIN_ICE_PARAM%XFRMIN(11),ZKGN_SBGR)
+    ELSE
+     ZKGN_SBGR(:,:) = RAIN_ICE_PARAM%XFRMIN(11)
+    ENDIF
+    CALL RAIN_ICE_OLD( OSEDIC=OSEDIC, OCND2=OCND2, LKOGAN=LKOGAN, LMODICEDEP=LMODICEDEP, &
+                 &  HSEDIM=CSEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC, &
                  &  OWARM=OWARM,KKA=KKA,KKU=KKU,KKL=KKL,KSPLITR=KSPLITR, &
                  &  PTSTEP=2*PTSTEP, KRR=KRR,                              &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF, PEXNREF=PEXNREF,&
                  &  PPABST=PPABSM, PCIT=PCIT, PCLDFR=PCLDFR,  &
+                 &  PICLDFR=PICLDFR, PWCLDFR=PWCLDFR, &
+                 &  PSSIO=PSSIO, PSSIU=PSSIU, PIFR=PIFR, &
                  &  PTHT=PTHT,PRVT= PRT(:,:,:,1),PRCT= PRT(:,:,:,2), &
                  &  PRRT=PRT(:,:,:,3), &
                  &  PRIT=PRT(:,:,:,4), PRST=PRT(:,:,:,5), &
@@ -488,15 +480,39 @@ ELSEIF (CMICRO=='OLD4') THEN
                  &  PRIS=PRS(:,:,:,4),PRSS= PRS(:,:,:,5),PRGS= PRS(:,:,:,6),&
                  &  PINPRC=ZINPRC,PINPRR=PINPRR,PEVAP3D=PEVAP,&
                  &  PINPRS=PINPRS, PINPRG=PINPRG, &
-                 &  PSIGS=PSIGS, PSEA=PSEA, PTOWN=PTOWN, PRHT=PRT(:,:,:,7),&
+                 &  PSIGS=PSIGS, PSEA=PSEA, PTOWN=PTOWN, &
+                 &  YDDDH=YDDDH,YDLDDH=YDLDDH,YDMDDH=YDMDDH, &
+                 &  PRHT=PRT(:,:,:,7),&
                  &  PRHS=PRS(:,:,:,7), PINPRH=PINPRH, PFPR=PFPR, &
-                 &  YDDDH=YDDDH,YDLDDH=YDLDDH,YDMDDH=YDMDDH )
+                 &  PICENU=ZICENU, &
+                 &  PKGN_ACON=ZKGN_ACON, &
+                 &  PKGN_SBGR=ZKGN_SBGR)
 ELSE
-      CALL RAIN_ICE_OLD ( OSEDIC=OSEDIC, OCND2=OCND2, LGRSN=LGRSN, HSEDIM=CSEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC, &
+    IF (YSPP_ICENU%LPERT) THEN
+     CALL APPLY_SPP(YSPP_ICENU,KLON,1,KLON,RAIN_ICE_PARAM%XFRMIN(9),ZICENU)
+    ELSE
+     ZICENU(:,:) = RAIN_ICE_PARAM%XFRMIN(9)
+    ENDIF
+   
+    IF (YSPP_KGN_ACON%LPERT) THEN
+     CALL APPLY_SPP(YSPP_KGN_ACON,KLON,1,KLON,RAIN_ICE_PARAM%XFRMIN(10),ZKGN_ACON)
+    ELSE
+     ZKGN_ACON(:,:) = RAIN_ICE_PARAM%XFRMIN(10)
+    ENDIF
+   
+    IF (YSPP_KGN_SBGR%LPERT) THEN
+     CALL APPLY_SPP(YSPP_KGN_SBGR,KLON,1,KLON,RAIN_ICE_PARAM%XFRMIN(11),ZKGN_SBGR)
+    ELSE
+     ZKGN_SBGR(:,:) = RAIN_ICE_PARAM%XFRMIN(11)
+    ENDIF
+    CALL RAIN_ICE_OLD( OSEDIC=OSEDIC, OCND2=OCND2, LKOGAN=LKOGAN, LMODICEDEP=LMODICEDEP, &
+                 &  HSEDIM=CSEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC, &
                  &  OWARM=OWARM,KKA=KKA,KKU=KKU,KKL=KKL,KSPLITR=KSPLITR, &
                  &  PTSTEP=2*PTSTEP, KRR=KRR,                              &
-                 &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF,PEXNREF=PEXNREF,&
+                 &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF, PEXNREF=PEXNREF,&
                  &  PPABST=PPABSM, PCIT=PCIT, PCLDFR=PCLDFR,  &
+                 &  PICLDFR=PICLDFR, PWCLDFR=PWCLDFR, &
+                 &  PSSIO=PSSIO, PSSIU=PSSIU, PIFR=PIFR, &
                  &  PTHT=PTHT,PRVT= PRT(:,:,:,1),PRCT= PRT(:,:,:,2), &
                  &  PRRT=PRT(:,:,:,3), &
                  &  PRIT=PRT(:,:,:,4), PRST=PRT(:,:,:,5), &
@@ -506,10 +522,12 @@ ELSE
                  &  PRIS=PRS(:,:,:,4),PRSS= PRS(:,:,:,5),PRGS= PRS(:,:,:,6),&
                  &  PINPRC=ZINPRC,PINPRR=PINPRR,PEVAP3D=PEVAP,&
                  &  PINPRS=PINPRS, PINPRG=PINPRG, &
-                 &  PSIGS=PSIGS, PSEA=PSEA, PTOWN=PTOWN, PFPR=PFPR, &          
+                 &  PSIGS=PSIGS, PSEA=PSEA, PTOWN=PTOWN, &
                  &  YDDDH=YDDDH,YDLDDH=YDLDDH,YDMDDH=YDMDDH, &
-                 &  YSPP_KGN_ACON=YSPP_KGN_ACON, &
-                 &  YSPP_KGN_SBGR=YSPP_KGN_SBGR)
+                 &  PFPR=PFPR, &
+                 &  PICENU=ZICENU, &
+                 &  PKGN_ACON=ZKGN_ACON, &
+                 &  PKGN_SBGR=ZKGN_SBGR)
 ENDIF
 !add ZINPRC in PINPRR
 PINPRR=PINPRR+ZINPRC

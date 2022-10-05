@@ -420,7 +420,7 @@ XLBDAS_MAX = 100000.0
 XLBDAG_MAX = 100000.0
 !
 ZCONC_MAX  = 1.E6 ! Maximal concentration for falling particules set to 1 per cc
-XLBDAS_MAX = ( ZCONC_MAX/XCCS )**(1./XCXS)
+IF(XCCS>0. .AND. XCXS>0. )XLBDAS_MAX = ( ZCONC_MAX/XCCS )**(1./XCXS)
 !
 XCONC_SEA=1E8 ! 100/cm3
 XCONC_LAND=3E8 ! 300/cm3
@@ -552,16 +552,26 @@ X0DEPS = (4.0*XPI)*XCCS*XC1S*XF0S*MOMG(XALPHAS,XNUS,1.)
 X1DEPS = (4.0*XPI)*XCCS*XC1S*XF1S*SQRT(XCS)*MOMG(XALPHAS,XNUS,0.5*XDS+1.5)
 XEX0DEPS = XCXS-1.0
 XEX1DEPS = XCXS-0.5*(XDS+3.0)
+XRDEPSRED = 1.0
 !
 X0DEPG = (4.0*XPI)*XCCG*XC1G*XF0G*MOMG(XALPHAG,XNUG,1.)
 X1DEPG = (4.0*XPI)*XCCG*XC1G*XF1G*SQRT(XCG)*MOMG(XALPHAG,XNUG,0.5*XDG+1.5)
 XEX0DEPG = XCXG-1.0
 XEX1DEPG = XCXG-0.5*(XDG+3.0)
+XRDEPGRED = 1.0
 !
 X0DEPH = (4.0*XPI)*XCCH*XC1H*XF0H*MOMG(XALPHAH,XNUH,1.)
 X1DEPH = (4.0*XPI)*XCCH*XC1H*XF1H*SQRT(XCH)*MOMG(XALPHAH,XNUH,0.5*XDH+1.5)
 XEX0DEPH = XCXH-1.0
 XEX1DEPH = XCXH-0.5*(XDH+3.0)
+
+GFLAG = .TRUE.
+IF (GFLAG) THEN
+  WRITE(UNIT=KLUOUT,FMT='("      factors sublimation snow/groupel")')
+  WRITE(UNIT=KLUOUT,FMT='(" mod sublim snow =",E13.6)') XRDEPSRED
+  WRITE(UNIT=KLUOUT,FMT='(" mod sublim graupel =",E13.6)') XRDEPGRED
+END IF
+
 !
 !*       5.3    Constants for pristine ice autoconversion
 !
@@ -1058,6 +1068,26 @@ IF( (KDRYLBDAG/=RAIN_ICE_PARAM%NDRYLBDAG) .OR. (KDRYLBDAR/=RAIN_ICE_PARAM%NDRYLB
                      PFDINFTY,XKER_RDRYG                                      )
   WRITE(UNIT=KLUOUT,FMT='(" Read XKER_RDRYG")')
 END IF
+         
+!          8.2.6 Constants for possible modifying some processes related to 
+!                graupeln in XFRMIN(1:8),  IN - concentration in XFRMIN(9) and Kogan 
+!                autoconversion in XFRMIN(10:11). May be used for e.g. ensemble spread
+  XFRMIN(1:6)=0.
+  XFRMIN(7:9)=1.
+  XFRMIN(10) =10.
+  XFRMIN(11) =1.
+  XFRMIN(12) =100. !0 in suparar
+  XFRMIN(13) =1.0E-15
+  XFRMIN(14) =120.
+  XFRMIN(15) =1.0E-4
+  XFRMIN(16:20)=0.
+  XFRMIN(21:22)=1.
+  XFRMIN(23)=0.5
+  XFRMIN(24)=1.5
+  XFRMIN(25)=30.
+  XFRMIN(26:38)=0.
+  XFRMIN(39)=0.25
+  XFRMIN(40)=0.15
 !
 !
 !-------------------------------------------------------------------------------

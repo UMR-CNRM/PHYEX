@@ -263,7 +263,7 @@ REAL, DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3)) &
                             ZLV,  &  ! guess of the Lv at t+1
                             ZLS,  &  ! guess of the Ls at t+1
       ZW1,ZW2,ZW3,ZW4,ZW5,ZW6,ZW7,&  ! Work arrays for intermediate fields
-      ZW1_IN, ZW2_IN, ZW3_IN,     &
+    ZW1_IN, ZW2_IN, ZW3_IN, ZDUM, &
                             ZCND     ! CND=(T-T00)/(T0-T00) cf sc doc and TAO etal (89)
 REAL, DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3)) &
                          :: ZWE1, &
@@ -377,11 +377,13 @@ DO JITER = 1, ITERMAX
     ZSIGQSAT2D(:,:)=PSIGQSAT
     ZW4 = 1. ! PRODREF is not used if HL variables are not present
 !
-!    CALL CONDENSATION( IIU, IJU, IKU, IIB, IIE, IJB, IJE, IKB, IKE,1, 'T', 'CB02', 'CB',   &
-!       PPABST, PZZ, ZW4, ZT, ZW3_IN, ZW3, ZW1_IN, ZW1, ZW2_IN, ZW2, &
-!       PRRS*PTSTEP, PRSS*PTSTEP, PRGS*PTSTEP, &
-!       PSIGS, PMFCONV, PCLDFR, PSRCS, .TRUE., &
-!       OSIGMAS, .FALSE., ZSIGQSAT2D, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
+    !CALL CONDENSATION( IIU, IJU, IKU, IIB, IIE, IJB, IJE, IKB, IKE,1, &
+    !   'T', 'CB02', 'CB',   &
+    !   PPABST, PZZ, ZW4, ZT, ZW3_IN, ZW3, ZW1_IN, ZW1, ZW2_IN, ZW2, &
+    !   PRRS*PTSTEP, PRSS*PTSTEP, PRGS*PTSTEP, PSIGS, PMFCONV, PCLDFR, &
+    !   PSRCS, .TRUE., OSIGMAS, .FALSE., .FALSE., &
+    !   ZDUM, ZDUM, ZDUM, ZDUM, ZDUM, ZSIGQSAT2D, &
+    !   PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
 !
 !*       3.2    compute the variation of mixing ratio
 !
