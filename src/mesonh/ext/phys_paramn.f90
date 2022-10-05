@@ -414,8 +414,6 @@ REAL     :: ZTEMP_DIST          ! time between 2 instants (in seconds)
 !
 LOGICAL :: GRAD                 ! conditionnal call for the full radiation
                                 !         computations
-LOGICAL :: LHARAT, LSTATNW      !  switch for HARMONIE-AROME turb physics option
-                                ! TODO: linked with modd_turbn + init at default_desfmn 
 REAL    :: ZRAD_GLOB_ll         ! 'real' global parallel mask of 'GRAD'
 INTEGER :: INFO_ll              ! error report of parallel routines
                                 !      the only cloudy columns
