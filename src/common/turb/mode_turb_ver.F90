@@ -14,7 +14,7 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,KRR,KRRL,KRRI,   &
                       PTSTEP, TPFILE,                               &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
-                      PRHODJ,PTHVREF,                               &
+                      PRHODJ,PTHVREF,PSFUM,PSFVM,                   &
                       PSFTHM,PSFRM,PSFSVM,PSFTHP,PSFRP,PSFSVP,      &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU33M,              &
                       PUM,PVM,PWM,PUSLOPEM,PVSLOPEM,PTHLM,PRM,PSVM, &
@@ -288,6 +288,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  MFMOIST       ! moist mass flux 
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
                                                       ! Potential Temperature 
 !
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFUM,PSFVM ! surface fluxes
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at time
 REAL, DIMENSION(D%NIJT,KSV), INTENT(IN)   ::  PSFSVM       ! t - deltat 
 !
@@ -560,7 +561,7 @@ CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KSV,O2D,OFLAT,           &
                       HTURBDIM,PIMPL,PEXPL,PTSTEP,TPFILE,           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
-                      PRHODJ,                                       &
+                      PRHODJ,PSFUM,PSFVM,                           &
                       PCDUEFF,PTAU11M,PTAU12M,PTAU33M,              &
                       PTHLM,PRM,PSVM,PUM,PVM,PWM,PUSLOPEM,PVSLOPEM, &
                       PTKEM,ZLM,MFMOIST,ZWU,ZWV,                    &

@@ -879,8 +879,12 @@ IF (HPROGRAM/='AROME ') THEN
 !
   CALL UPDATE_ROTATE_WIND(D,ZUSLOPE,ZVSLOPE,HLBCX,HLBCY)
 ELSE
-  ZUSLOPE=PUT(IIJB:IIJE,D%NKA)
-  ZVSLOPE=PVT(IIJB:IIJE,D%NKA)
+  ZUSLOPE(IIJB:IIJE)=PUT(IIJB:IIJE,D%NKA)
+  ZVSLOPE(IIJB:IIJE)=PVT(IIJB:IIJE,D%NKA)
+END IF
+IF (OOCEAN) THEN
+  ZUSLOPE(IIJB:IIJE)=PUT(IIJB:IIJE,D%NKU-1)
+  ZVSLOPE(IIJB:IIJE)=PVT(IIJB:IIJE,D%NKU-1)
 END IF
 !
 !
@@ -893,15 +897,21 @@ ZCDUEFF(IIJB:IIJE) =-SQRT ( (PSFU(IIJB:IIJE)**2 + PSFV(IIJB:IIJE)**2) /         
 #else
                     (CST%XMNH_TINY + ZUSLOPE(IIJB:IIJE)**2 + ZVSLOPE(IIJB:IIJE)**2 ) )
 #endif
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !*       4.6 compute the surface tangential fluxes
 !
-ZTAU11M(IIJB:IIJE) =2./3.*(  (1.+ (PZZ(IIJB:IIJE,IKB+D%NKL)-PZZ(IIJB:IIJE,IKB))  &
+IF (OOCEAN) THEN
+  ZTAU11M(IIJB:IIJE)=0.
+ELSE
+  !$mnh_expand_array(JIJ=IIJB:IIJE)        
+  ZTAU11M(IIJB:IIJE) =2./3.*(  (1.+ (PZZ(IIJB:IIJE,IKB+D%NKL)-PZZ(IIJB:IIJE,IKB))  &
                            /(PDZZ(IIJB:IIJE,IKB+D%NKL)+PDZZ(IIJB:IIJE,IKB))  &
                        )   *PTKET(IIJB:IIJE,IKB)                   &
                      -0.5  *PTKET(IIJB:IIJE,IKB+D%NKL)                 &
                     )
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+END IF
 ZTAU12M(IIJB:IIJE) =0.0
 ZTAU22M(IIJB:IIJE) =ZTAU11M(IIJB:IIJE)
 ZTAU33M(IIJB:IIJE) =ZTAU11M(IIJB:IIJE)
@@ -989,7 +999,7 @@ CALL TURB_VER(D, CST,CSTURB,TURBN,KRR, KRRL, KRRI,       &
           PTSTEP,TPFILE,                                 &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,        &
           PCOSSLOPE,PSINSLOPE,                           &
-          PRHODJ,PTHVREF,                                &
+          PRHODJ,PTHVREF,PSFU,PSFV,                      &
           PSFTH,PSFRV,PSFSV,PSFTH,PSFRV,PSFSV,           &
           ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU33M,               &
           PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,PSVT,    &
@@ -1176,7 +1186,8 @@ CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,HPROGRAM,                      &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,               &
                    & PTSTEP,PIMPL,ZEXPL,                                &
                    & HTURBLEN,HTURBDIM,                                 &
-                   & TPFILE,OTURB_DIAG,OLES_CALL,ODIAG_IN_RUN,          &
+                   & TPFILE,OTURB_DIAG,OLES_CALL,ODIAG_IN_RUN,OOCEAN,   &
+                   & PSFU,PSFV,                                         &
                    & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,ZRTKEMS,&
                    & TBUDGETS,KBUDGETS, PEDR=PEDR, PTR=PTR,PDISS=PDISS, &
                    & PCURRENT_TKE_DISS=PCURRENT_TKE_DISS                )

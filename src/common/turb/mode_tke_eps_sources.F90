@@ -10,7 +10,8 @@ CONTAINS
                     & PTRH,PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,        &
                     & PTSTEP,PIMPL,PEXPL,                              &
                     & HTURBLEN,HTURBDIM,                               &
-                    & TPFILE,OTURB_DIAG,OLES_CALL,ODIAG_IN_RUN,        &
+                    & TPFILE,OTURB_DIAG,OLES_CALL,ODIAG_IN_RUN,OOCEAN, &
+                    & PSFUM,PSFVM,                                     &
                     & PTP,PRTKES,PRTHLS,PCOEF_DISS,PTDIFF,PTDISS,PRTKEMS,&
                     & TBUDGETS, KBUDGETS,                              &
                     & PEDR, PTR,PDISS, PCURRENT_TKE_DISS               )
@@ -183,6 +184,7 @@ TYPE(TFILEDATA),         INTENT(IN)   ::  TPFILE       ! Output file
 LOGICAL,                 INTENT(IN)   ::  OLES_CALL    !
 LOGICAL,                 INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
 LOGICAL,                 INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
+LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(INOUT)::  PDP          ! Dyn. prod. of TKE
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PTRH
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PTP          ! Ther. prod. of TKE
@@ -199,6 +201,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PTR          ! Transp
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PDISS        ! Dissipation of TKE
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PEDR         ! EDR 
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
+REAL, DIMENSION(D%NIJT),   INTENT(IN)    :: PSFUM,PSFVM ! momentum sfc flux
 !
 !
 !
@@ -266,11 +269,17 @@ END IF
 !*       2.2  Explicit TKE sources except horizontal turbulent transport 
 !
 ! extrapolate the dynamic production with a 1/Z law from its value at the 
-! W(IKB+1) value stored in PDP(IKB) to the mass localization tke(IKB)
-!
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-PDP(IIJB:IIJE,IKB) = PDP(IIJB:IIJE,IKB) * (1. + PDZZ(IIJB:IIJE,IKB+D%NKL)/PDZZ(IIJB:IIJE,IKB))
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
+IF (OOCEAN) THEN
+  ! W(IKE) value stored in PDP(IKE) to the mass localization of tke(IKE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)  
+  PDP(IIJB:IIJE,IKE) = PDP(IIJB:IIJE,IKE) * (1. + PDZZ(IIJB:IIJE,IKE)/PDZZ(IIJB:IIJE,IKE+1))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)  
+ELSE
+  ! W(IKB+1) value stored in PDP(IKB) to the mass localization tke(IKB)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  PDP(IIJB:IIJE,IKB) = PDP(IIJB:IIJE,IKB) * (1. + PDZZ(IIJB:IIJE,IKB+D%NKL)/PDZZ(IIJB:IIJE,IKB))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+END IF
 !
 ! Compute the source terms for TKE: ( ADVECtion + NUMerical DIFFusion + ..)
 ! + (Dynamical Production) + (Thermal Production) - (dissipation) 
@@ -288,6 +297,14 @@ ZSOURCE(IIJB:IIJE,1:D%NKT) = ( PRTKES(IIJB:IIJE,1:D%NKT) +  PRTKEMS(IIJB:IIJE,1:
 !*       2.2  implicit vertical TKE transport
 !
 !
+! To add here in ZSOURCE surface flux of TKE 
+!(assumed to be 0 for ATM, 
+IF (OOCEAN) THEN
+  !for ocean:wave breaking  simple/very rough param wE = 100 Ustar**3 where ustar is the Tau_atmi/rhocea  
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZSOURCE (IIJB:IIJE,IKE)=ZSOURCE(IIJB:IIJE,IKE)-1.E2*((PSFUM(IIJB:IIJE)**2 + PSFVM(IIJB:IIJE)**2)**1.5) /PDZZ(IIJB:IIJE,IKE)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)  
+END IF
 ! Compute the vector giving the elements just under the diagonal for the 
 ! matrix inverted in TRIDIAG 
 !

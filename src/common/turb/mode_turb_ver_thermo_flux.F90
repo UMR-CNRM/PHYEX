@@ -573,22 +573,13 @@ IF (GFTHR) THEN
                                       * ZWORK2(IIJB:IIJE,1:D%NKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 END IF
-! compute interface flux
-IF (OCOUPLES) THEN   ! Autocoupling O-A LES
-  IF (OOCEAN) THEN    ! ocean model in coupled case
-    !$mnh_expand_array(JIJ=IIJB:IIJE) 
-    ZF(IIJB:IIJE,IKE) =  (PSSTFL_C(IIJB:IIJE)+PSSRFL_C(IIJB:IIJE)) &
-                  *0.5* ( 1. + PRHODJ(IIJB:IIJE,D%NKU)/PRHODJ(IIJB:IIJE,IKE) )
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE) 
-  ELSE                ! atmosph model in coupled case
-    !$mnh_expand_array(JIJ=IIJB:IIJE) 
-    ZF(IIJB:IIJE,IKB) =  PSSTFL_C(IIJB:IIJE) &
-                  *0.5* ( 1. + PRHODJ(IIJB:IIJE,D%NKA)/PRHODJ(IIJB:IIJE,IKB) )
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE) 
-  ENDIF 
-!
-ELSE  ! No coupling O and A cases
-  ! atmosp bottom
+! specialcase for surface
+IF (OOCEAN) THEN    ! ocean model in coupled case
+  !$mnh_expand_array(JIJ=IIJB:IIJE) 
+  ZF(IIJB:IIJE,IKE+1) =  PSFTHM(IIJB:IIJE) &
+                *0.5* ( 1. + PRHODJ(IIJB:IIJE,D%NKU)/PRHODJ(IIJB:IIJE,IKE) )
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE) 
+ELSE ! atmosp bottom
   !*In 3D, a part of the flux goes vertically,
   ! and another goes horizontally (in presence of slopes)
   !*In 1D, part of energy released in horizontal flux is taken into account in the vertical part
@@ -606,18 +597,14 @@ ELSE  ! No coupling O and A cases
     !$mnh_end_expand_array(JIJ=IIJB:IIJE) 
   END IF
 !
-  IF (OOCEAN) THEN
-    !$mnh_expand_array(JIJ=IIJB:IIJE)
-    ZF(IIJB:IIJE,IKE) = PSSTFL(IIJB:IIJE) *0.5*(1. + PRHODJ(IIJB:IIJE,D%NKU) / PRHODJ(IIJB:IIJE,IKE))
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-  ELSE !end ocean case (in nocoupled case)
     ! atmos top
 #ifdef REPRO48
 #else
       ZF(IIJB:IIJE,IKE)=0.
+      !TODO merge : the following solution must be kept :
+      !ZF((IIJB:IIJE,IKE+1)=0.
 #endif
-  END IF
-END IF !end no coupled cases
+END IF
 !
 ! Compute the split conservative potential temperature at t+deltat
 CALL TRIDIAG_THERMO(D,PTHLM,ZF,ZDFDDTDZ,PTSTEP,PIMPL,PDZZ,&
@@ -674,12 +661,13 @@ IF (TURBN%LHGRAD) THEN
  !$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
 END IF
 !
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 IF (OOCEAN) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZFLXZ(IIJB:IIJE,D%NKU) = ZFLXZ(IIJB:IIJE,IKE)
+  ZFLXZ(IIJB:IIJE,IKE+1) = ZFLXZ(IIJB:IIJE,IKE)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+ELSE
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END IF
 !
@@ -696,8 +684,8 @@ PWTH(IIJB:IIJE,IKB)=0.5*(ZFLXZ(IIJB:IIJE,IKB)+ZFLXZ(IIJB:IIJE,IKB+D%NKL))
 IF (OOCEAN) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   PWTH(IIJB:IIJE,IKE)=0.5*(ZFLXZ(IIJB:IIJE,IKE)+ZFLXZ(IIJB:IIJE,IKE+D%NKL))
-  PWTH(IIJB:IIJE,D%NKA)=0. 
-  PWTH(IIJB:IIJE,D%NKU)=ZFLXZ(IIJB:IIJE,D%NKU)
+  PWTH(IIJB:IIJE,D%NKA)=0.
+  PWTH(IIJB:IIJE,D%NKU)=PWTH(IIJB:IIJE,IKE)! not used
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 ELSE
   !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -979,17 +967,12 @@ IF (KRR /= 0) THEN
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   END IF
   !
-  ! compute interface flux
-  IF (OCOUPLES) THEN   ! coupling NH O-A
-    IF (OOCEAN) THEN    ! ocean model in coupled case
-      ! evap effect on salinity to be added later !!!
-      ZF(IIJB:IIJE,IKE) =  0.
-    ELSE                ! atmosph model in coupled case
-      ZF(IIJB:IIJE,IKB) =  0.
-      ! AJOUTER FLUX EVAP SUR MODELE ATMOS
-    ENDIF
-  !
-  ELSE  ! No coupling NH OA case
+   !special case at sfc
+    IF (OOCEAN) THEN
+      ! General ocean case
+      ! salinity/evap effect to be added later !!!!!
+      ZF(IIJB:IIJE,IKE) = 0.
+    ELSE ! atmosp case 
     ! atmosp bottom
     !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
     ! (in presence of slopes)
@@ -1009,19 +992,12 @@ IF (KRR /= 0) THEN
                          * 0.5 * (1. + PRHODJ(IIJB:IIJE,D%NKA) / PRHODJ(IIJB:IIJE,IKB))
       !$mnh_end_expand_array(JIJ=IIJB:IIJE) 
     END IF
-    !
-    IF (OOCEAN) THEN
-      ! General ocean case
-      ! salinity/evap effect to be added later !!!!!
-      ZF(IIJB:IIJE,IKE) = 0.
-    ELSE !end ocean case (in nocoupled case)
       ! atmos top
 #ifdef REPRO48
 #else
       ZF(IIJB:IIJE,IKE)=0.
 #endif
     END IF
-  END IF!end no coupled cases
   ! Compute the split conservative potential temperature at t+deltat
   CALL TRIDIAG_THERMO(D,PRM(:,:,1),ZF,ZDFDDRDZ,PTSTEP,PIMPL,&
                       PDZZ,PRHODJ,PRP)
@@ -1035,11 +1011,11 @@ IF (KRR /= 0) THEN
   !
   ! replace the flux by the Leonard terms above ZALT and ZCLD_THOLD
   IF (TURBN%LHGRAD) THEN
-   DO JK=1,D%NKU
+!   DO JK=1,D%NKU
 !   !$mnh_expand_array(JIJ=IIJB:IIJE)
 !    ZALT(IIJB:IIJE,JK) = PZZ(IIJB:IIJE,JK)-XZS(IIJB:IIJE)  !TODO TO BE ADDED AS ARGS OF TURB
 !   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-   END DO
+!   END DO
    CALL MZM_PHY(D,PRHODJ,ZWORK1)
    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
    ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT)*ZF_LEONARD(IIJB:IIJE,1:D%NKT)
@@ -1080,6 +1056,10 @@ IF (KRR /= 0) THEN
   ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   !
+  IF (OOCEAN) THEN
+    ZFLXZ(IIJB:IIJE,D%NKU) = ZFLXZ(IIJB:IIJE,IKE)
+  END IF
+  !
   DO JK=IKTB+1,IKTE-1
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     PWRC(IIJB:IIJE,JK)=0.5*(ZFLXZ(IIJB:IIJE,JK)+ZFLXZ(IIJB:IIJE,JK+D%NKL))
@@ -1087,10 +1067,20 @@ IF (KRR /= 0) THEN
   END DO
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   PWRC(IIJB:IIJE,IKB)=0.5*(ZFLXZ(IIJB:IIJE,IKB)+ZFLXZ(IIJB:IIJE,IKB+D%NKL))
-  PWRC(IIJB:IIJE,D%NKA)=0.5*(ZFLXZ(IIJB:IIJE,D%NKA)+ZFLXZ(IIJB:IIJE,D%NKA+D%NKL))
-  PWRC(IIJB:IIJE,IKE)=PWRC(IIJB:IIJE,IKE-D%NKL)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   !
+  IF (OOCEAN) THEN
+    !$mnh_expand_array(JIJ=IIJB:IIJE)          
+    PWRC(IIJB:IIJE,IKE)=0.5*(ZFLXZ(IIJB:IIJE,IKE)+ZFLXZ(IIJB:IIJE,IKE+D%NKL))
+    PWRC(IIJB:IIJE,D%NKA)=0.
+    PWRC(IIJB:IIJE,IKE+1)=ZFLXZ(IIJB:IIJE,IKE+1)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE)    
+  ELSE
+    !$mnh_expand_array(JIJ=IIJB:IIJE)
+    PWRC(IIJB:IIJE,D%NKA)=0.5*(ZFLXZ(IIJB:IIJE,D%NKA)+ZFLXZ(IIJB:IIJE,D%NKA+D%NKL))
+    PWRC(IIJB:IIJE,IKE)=PWRC(IIJB:IIJE,IKE-D%NKL)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE)    
+  ENDIF
   !
   IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
     ! stores the conservative mixing ratio vertical flux
