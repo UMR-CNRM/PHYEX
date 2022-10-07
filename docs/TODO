@@ -51,6 +51,7 @@ Pb identifiés à corriger plus tard:
   - si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
   - il faudrait nettoyer les interfaces pour supprimer les clés passées directement
     alors qu'elles sont également disponibles dans les structures (ex: HMF_UPDRAFT)
+  - il faudrait harmoniser l'utilisation des variables D% (cad faire IKT=D%NKT en haut ou utiliser directement D%NKT)
   - La taille du buffer utilisé pour th_r_from_thl_rt doit être mise en module et
     utilisée pour déclarer le buffer dans les routines appelantes et dans th_r_from_thl_rt
   - shallow_mf_pack devrait être récrit pour appeler directement shallow_mf sans recopier les tableaux pour les changer de forme
@@ -71,4 +72,3 @@ Reprendre les différents outils en deux scripts principaux:
 - outil pour reprendre toutes les fonctionnalités sur le code: filepp, MNH_Expand_Array, correct_indent.py, verify_mnh_expand.py et renommage
 - outil prep_code débarrassé du renommage pour ne faire que la gestion des commit et lancer la manipulation sur le code
 Il restera, à part, les scripts de comparaison des résultats (à moins qu'ils puissent être inlinés dans les check_commit correspondant)
->>>>>>> GPU
