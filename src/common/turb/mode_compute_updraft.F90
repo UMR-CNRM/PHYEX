@@ -280,7 +280,7 @@ IF (OENTR_DETR) THEN
 
   PFRAC_ICE_UP(:,:)=0.
   !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-  PRSAT_UP(D%NIJB:D%NIJE,:)=PRVM(D%NIJB:D%NIJE,:) ! should be initialised correctly but is (normaly) not used
+  PRSAT_UP(D%NIJB:D%NIJE,1:D%NKT)=PRVM(D%NIJB:D%NIJE,1:D%NKT) ! should be initialised correctly but is (normaly) not used
   !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 
   !cloud/dry air mixture cloud content
@@ -304,13 +304,13 @@ END DO
 !                     
 !          Initialisation of updraft characteristics 
 !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-PTHL_UP(D%NIJB:D%NIJE,:)=ZTHLM_F(D%NIJB:D%NIJE,:)
-PRT_UP(D%NIJB:D%NIJE,:)=ZRTM_F(D%NIJB:D%NIJE,:)
-PU_UP(D%NIJB:D%NIJE,:)=ZUM_F(D%NIJB:D%NIJE,:)
-PV_UP(D%NIJB:D%NIJE,:)=ZVM_F(D%NIJB:D%NIJE,:)
+PTHL_UP(D%NIJB:D%NIJE,1:D%NKT)=ZTHLM_F(D%NIJB:D%NIJE,1:D%NKT)
+PRT_UP(D%NIJB:D%NIJE,1:D%NKT)=ZRTM_F(D%NIJB:D%NIJE,1:D%NKT)
+PU_UP(D%NIJB:D%NIJE,1:D%NKT)=ZUM_F(D%NIJB:D%NIJE,1:D%NKT)
+PV_UP(D%NIJB:D%NIJE,1:D%NKT)=ZVM_F(D%NIJB:D%NIJE,1:D%NKT)
 !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT,JSV=1:KSV)
-PSV_UP(D%NIJB:D%NIJE,:,:)=ZSVM_F(D%NIJB:D%NIJE,:,:)
+PSV_UP(D%NIJB:D%NIJE,1:D%NKT,:)=ZSVM_F(D%NIJB:D%NIJE,1:D%NKT,:)
 !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT,JSV=1:KSV)
 
 ! Computation or initialisation of updraft characteristics at the KKB level
@@ -330,12 +330,12 @@ IF (OENTR_DETR) THEN
 
   !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
   ! thetav at mass and flux levels
-  ZTHVM_F(D%NIJB:D%NIJE,:)=ZTHM_F(D%NIJB:D%NIJE,:)* &
-                                    &((1.+ZRVORD*ZRVM_F(D%NIJB:D%NIJE,:))/(1.+ZRTM_F(D%NIJB:D%NIJE,:)))
-  ZTHVM(D%NIJB:D%NIJE,:)=PTHM(D%NIJB:D%NIJE,:)* &
-                                    &((1.+ZRVORD*PRVM(D%NIJB:D%NIJE,:))/(1.+PRTM(D%NIJB:D%NIJE,:)))
+  ZTHVM_F(D%NIJB:D%NIJE,1:D%NKT)=ZTHM_F(D%NIJB:D%NIJE,1:D%NKT)* &
+                                    &((1.+ZRVORD*ZRVM_F(D%NIJB:D%NIJE,1:D%NKT))/(1.+ZRTM_F(D%NIJB:D%NIJE,1:D%NKT)))
+  ZTHVM(D%NIJB:D%NIJE,1:D%NKT)=PTHM(D%NIJB:D%NIJE,1:D%NKT)* &
+                                    &((1.+ZRVORD*PRVM(D%NIJB:D%NIJE,1:D%NKT))/(1.+PRTM(D%NIJB:D%NIJE,1:D%NKT)))
 
-  PTHV_UP(D%NIJB:D%NIJE,:)=ZTHVM_F(D%NIJB:D%NIJE,:)
+  PTHV_UP(D%NIJB:D%NIJE,1:D%NKT)=ZTHVM_F(D%NIJB:D%NIJE,1:D%NKT)
   !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 
   ZW_UP2(:,:)=0.
@@ -364,7 +364,7 @@ IF (OENTR_DETR) THEN
   !
 
   !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-  ZG_O_THVREF(D%NIJB:D%NIJE,:)=CST%XG/ZTHVM_F(D%NIJB:D%NIJE,:)
+  ZG_O_THVREF(D%NIJB:D%NIJE,1:D%NKT)=CST%XG/ZTHVM_F(D%NIJB:D%NIJE,1:D%NKT)
   !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 
   ! compute L_up
@@ -379,7 +379,7 @@ IF (OENTR_DETR) THEN
     CALL GZ_M_W_MF(D, PVM, PDZZ, ZWK)
     CALL MZF_MF(D, ZWK, ZDVDZ)
     !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-    ZSHEAR(D%NIJB:D%NIJE,:) = SQRT(ZDUDZ(D%NIJB:D%NIJE,:)**2 + ZDVDZ(D%NIJB:D%NIJE,:)**2)
+    ZSHEAR(D%NIJB:D%NIJE,1:D%NKT) = SQRT(ZDUDZ(D%NIJB:D%NIJE,1:D%NKT)**2 + ZDVDZ(D%NIJB:D%NIJE,1:D%NKT)**2)
     !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
   ELSE
     ZSHEAR = 0. !no shear in bl89 mixing length
@@ -657,7 +657,7 @@ ENDDO
 IF(OENTR_DETR) THEN
 
   !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-  PW_UP(D%NIJB:D%NIJE,:)=SQRT(ZW_UP2(D%NIJB:D%NIJE,:))
+  PW_UP(D%NIJB:D%NIJE,1:D%NKT)=SQRT(ZW_UP2(D%NIJB:D%NIJE,1:D%NKT))
   !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 
   !$mnh_expand_array(JI=D%NIJB:D%NIJE)
@@ -685,9 +685,9 @@ IF(OENTR_DETR) THEN
     !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
   ENDDO
   !$mnh_expand_where(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-  WHERE (GWORK2(D%NIJB:D%NIJE,:)) 
-    PEMF(D%NIJB:D%NIJE,:)     = PEMF(D%NIJB:D%NIJE,:)     * ZCOEF(D%NIJB:D%NIJE,:)
-    PFRAC_UP(D%NIJB:D%NIJE,:) = PFRAC_UP(D%NIJB:D%NIJE,:) * ZCOEF(D%NIJB:D%NIJE,:)
+  WHERE (GWORK2(D%NIJB:D%NIJE,1:D%NKT)) 
+    PEMF(D%NIJB:D%NIJE,1:D%NKT)     = PEMF(D%NIJB:D%NIJE,1:D%NKT)     * ZCOEF(D%NIJB:D%NIJE,1:D%NKT)
+    PFRAC_UP(D%NIJB:D%NIJE,1:D%NKT) = PFRAC_UP(D%NIJB:D%NIJE,1:D%NKT) * ZCOEF(D%NIJB:D%NIJE,1:D%NKT)
   ENDWHERE
   !$mnh_end_expand_where(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 ENDIF

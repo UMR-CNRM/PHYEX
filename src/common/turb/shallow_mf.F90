@@ -202,15 +202,15 @@ ENDIF
 ! Thermodynamics functions
 ZFRAC_ICE(:,:) = 0.
 IF (KRR.GE.4) THEN
-  !$mnh_expand_where(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
-  WHERE(PRM(D%NIJB:D%NIJE,:,2)+PRM(D%NIJB:D%NIJE,:,4) > 1.E-20)
-    ZFRAC_ICE(D%NIJB:D%NIJE,:) = PRM(D%NIJB:D%NIJE,:,4) / (PRM(D%NIJB:D%NIJE,:,2)+PRM(D%NIJB:D%NIJE,:,4))
+  !$mnh_expand_where(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+  WHERE(PRM(D%NIJB:D%NIJE,1:D%NKT,2)+PRM(D%NIJB:D%NIJE,1:D%NKT,4) > 1.E-20)
+    ZFRAC_ICE(D%NIJB:D%NIJE,1:D%NKT) = PRM(D%NIJB:D%NIJE,1:D%NKT,4) / (PRM(D%NIJB:D%NIJE,1:D%NKT,2)+PRM(D%NIJB:D%NIJE,1:D%NKT,4))
   ENDWHERE
-  !$mnh_end_expand_where(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  !$mnh_end_expand_where(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 ENDIF
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
-ZWK(D%NIJB:D%NIJE,:)=PTHM(D%NIJB:D%NIJE,:)*PEXNM(D%NIJB:D%NIJE,:)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+ZWK(D%NIJB:D%NIJE,1:D%NKT)=PTHM(D%NIJB:D%NIJE,1:D%NKT)*PEXNM(D%NIJB:D%NIJE,1:D%NKT)
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 CALL COMPUTE_FRAC_ICE(HFRAC_ICE,NEB,ZFRAC_ICE(:,:),ZWK(:,:), IERR(:,:))
 
 ! Conservative variables at t-dt
@@ -219,9 +219,10 @@ CALL THL_RT_FROM_TH_R_MF(D, CST, KRR,KRRL,KRRI,    &
                          ZTHLM, ZRTM       )
 
 ! Virtual potential temperature at t-dt
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
-ZTHVM(D%NIJB:D%NIJE,:) = PTHM(D%NIJB:D%NIJE,:)*((1.+CST%XRV / CST%XRD *PRM(D%NIJB:D%NIJE,:,1))/(1.+ZRTM(D%NIJB:D%NIJE,:))) 
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+ZTHVM(D%NIJB:D%NIJE,1:D%NKT) = PTHM(D%NIJB:D%NIJE,1:D%NKT)*&
+                             & ((1.+CST%XRV / CST%XRD *PRM(D%NIJB:D%NIJE,1:D%NKT,1))/(1.+ZRTM(D%NIJB:D%NIJE,1:D%NKT))) 
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 ! 
 !!! 2. Compute updraft
 !!!    ---------------
@@ -293,9 +294,9 @@ CALL COMPUTE_MF_CLOUD(D, CST, CSTURB, PARAMMF, OSTATNW, &
 !!! 3. Compute fluxes of conservative variables and their divergence = tendency
 !!!    ------------------------------------------------------------------------
 !
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
-ZEMF_O_RHODREF(D%NIJB:D%NIJE,:)=PEMF(D%NIJB:D%NIJE,:)/PRHODREF(D%NIJB:D%NIJE,:)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+ZEMF_O_RHODREF(D%NIJB:D%NIJE,1:D%NKT)=PEMF(D%NIJB:D%NIJE,1:D%NKT)/PRHODREF(D%NIJB:D%NIJE,1:D%NKT)
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 
 IF ( PIMPL_MF > 1.E-10 ) THEN  
   CALL MF_TURB(D, KSV, OMIXUV,                     &

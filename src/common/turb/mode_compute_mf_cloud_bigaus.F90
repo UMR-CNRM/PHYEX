@@ -160,31 +160,33 @@ DO JK=D%NKA,D%NKU,D%NKL
                (PARAMMF%XSIGMA_MF * ZOMEGA_UP_M(D%NIJB:D%NIJE) * PRHODREF(D%NIJB:D%NIJE,JK))
   !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 ENDDO
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
-ZSIGMF(D%NIJB:D%NIJE,:)=SQRT(MAX(ABS(ZSIGMF(D%NIJB:D%NIJE,:)), 1.E-40))
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+ZSIGMF(D%NIJB:D%NIJE,1:D%NKT)=SQRT(MAX(ABS(ZSIGMF(D%NIJB:D%NIJE,1:D%NKT)), 1.E-40))
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 !
 !*      2. PDF integration
 !          ------------------------------------------------
 !
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 !The mean of the distribution is ZRT_UP
 !Computation of ZA and ZGAM (=efrc(ZA)) coefficient
-ZA(D%NIJB:D%NIJE,:)=(ZRSAT_UP_M(D%NIJB:D%NIJE,:)-ZRT_UP_M(D%NIJB:D%NIJE,:))/(sqrt(2.)*ZSIGMF(D%NIJB:D%NIJE,:))
+ZA(D%NIJB:D%NIJE,1:D%NKT)=(ZRSAT_UP_M(D%NIJB:D%NIJE,1:D%NKT)-ZRT_UP_M(D%NIJB:D%NIJE,1:D%NKT))/&
+                         &(sqrt(2.)*ZSIGMF(D%NIJB:D%NIJE,1:D%NKT))
 
 !Approximation of erf function
-ZGAM(D%NIJB:D%NIJE,:)=1-SIGN(1., ZA(D%NIJB:D%NIJE,:))*SQRT(1-EXP(-4*ZA(D%NIJB:D%NIJE,:)**2/CST%XPI))
+ZGAM(D%NIJB:D%NIJE,1:D%NKT)=1-SIGN(1., ZA(D%NIJB:D%NIJE,1:D%NKT))*SQRT(1-EXP(-4*ZA(D%NIJB:D%NIJE,1:D%NKT)**2/CST%XPI))
 
 !computation of cloud fraction
-PCF_MF(D%NIJB:D%NIJE,:)=MAX( 0., MIN(1.,0.5*ZGAM(D%NIJB:D%NIJE,:) * ZALPHA_UP_M(D%NIJB:D%NIJE,:)))
+PCF_MF(D%NIJB:D%NIJE,1:D%NKT)=MAX( 0., MIN(1.,0.5*ZGAM(D%NIJB:D%NIJE,1:D%NKT) * ZALPHA_UP_M(D%NIJB:D%NIJE,1:D%NKT)))
 
 !computation of condensate, then PRC and PRI
-ZCOND(D%NIJB:D%NIJE,:)=(EXP(-ZA(D%NIJB:D%NIJE,:)**2)-ZA(D%NIJB:D%NIJE,:)*SQRT(CST%XPI)*ZGAM(D%NIJB:D%NIJE,:))* &
-                    &ZSIGMF(D%NIJB:D%NIJE,:)/SQRT(2.*CST%XPI) * ZALPHA_UP_M(D%NIJB:D%NIJE,:)
-ZCOND(D%NIJB:D%NIJE,:)=MAX(ZCOND(D%NIJB:D%NIJE,:), 0.) !due to approximation of ZGAM value, ZCOND could be slightly negative
-PRC_MF(D%NIJB:D%NIJE,:)=(1.-ZFRAC_ICE_UP_M(D%NIJB:D%NIJE,:)) * ZCOND(D%NIJB:D%NIJE,:)
-PRI_MF(D%NIJB:D%NIJE,:)=(   ZFRAC_ICE_UP_M(D%NIJB:D%NIJE,:)) * ZCOND(D%NIJB:D%NIJE,:)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+ZCOND(D%NIJB:D%NIJE,1:D%NKT)=(EXP(-ZA(D%NIJB:D%NIJE,1:D%NKT)**2)-&
+                             &ZA(D%NIJB:D%NIJE,1:D%NKT)*SQRT(CST%XPI)*ZGAM(D%NIJB:D%NIJE,1:D%NKT))* &
+                    &ZSIGMF(D%NIJB:D%NIJE,1:D%NKT)/SQRT(2.*CST%XPI) * ZALPHA_UP_M(D%NIJB:D%NIJE,1:D%NKT)
+ZCOND(D%NIJB:D%NIJE,1:D%NKT)=MAX(ZCOND(D%NIJB:D%NIJE,1:D%NKT), 0.) !due to approximation of ZGAM value, ZCOND could be slightly negative
+PRC_MF(D%NIJB:D%NIJE,1:D%NKT)=(1.-ZFRAC_ICE_UP_M(D%NIJB:D%NIJE,1:D%NKT)) * ZCOND(D%NIJB:D%NIJE,1:D%NKT)
+PRI_MF(D%NIJB:D%NIJE,1:D%NKT)=(   ZFRAC_ICE_UP_M(D%NIJB:D%NIJE,1:D%NKT)) * ZCOND(D%NIJB:D%NIJE,1:D%NKT)
+!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 !
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_BIGAUS',1,ZHOOK_HANDLE)
 

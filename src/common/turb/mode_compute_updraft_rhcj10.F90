@@ -243,7 +243,7 @@ ZBUO      =0.
 PRI_UP(:,:)=0.
 PFRAC_ICE_UP(:,:)=0.
 !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-PRSAT_UP(D%NIJB:D%NIJE,:)=PRVM(D%NIJB:D%NIJE,:) ! should be initialised correctly but is (normaly) not used
+PRSAT_UP(D%NIJB:D%NIJE,1:D%NKT)=PRVM(D%NIJB:D%NIJE,1:D%NKT) ! should be initialised correctly but is (normaly) not used
 !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 
 ! Initialisation of environment variables at t-dt
@@ -267,12 +267,12 @@ CALL MZM_MF(D, PTKEM(:,:), ZTKEM_F(:,:))
 
 !          Initialisation of updraft characteristics 
 !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-PTHL_UP(D%NIJB:D%NIJE,:)=ZTHLM_F(D%NIJB:D%NIJE,:)
-PRT_UP(D%NIJB:D%NIJE,:)=ZRTM_F(D%NIJB:D%NIJE,:)
-PU_UP(D%NIJB:D%NIJE,:)=ZUM_F(D%NIJB:D%NIJE,:)
-PV_UP(D%NIJB:D%NIJE,:)=ZVM_F(D%NIJB:D%NIJE,:)
+PTHL_UP(D%NIJB:D%NIJE,1:D%NKT)=ZTHLM_F(D%NIJB:D%NIJE,1:D%NKT)
+PRT_UP(D%NIJB:D%NIJE,1:D%NKT)=ZRTM_F(D%NIJB:D%NIJE,1:D%NKT)
+PU_UP(D%NIJB:D%NIJE,1:D%NKT)=ZUM_F(D%NIJB:D%NIJE,1:D%NKT)
+PV_UP(D%NIJB:D%NIJE,1:D%NKT)=ZVM_F(D%NIJB:D%NIJE,1:D%NKT)
 !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-PSV_UP(D%NIJB:D%NIJE,:,:)=0.
+PSV_UP(D%NIJB:D%NIJE,1:D%NKT,:)=0.
 ! This updraft is not yet ready to use scalar variables
 !IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) then
 !    PSV_UP(D%NIJB:D%NIJE,:,:)=ZSVM_F(D%NIJB:D%NIJE,:,:)
@@ -303,8 +303,8 @@ DO JK=1,D%NKT
 ENDDO
 
 !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-PTHV_UP(D%NIJB:D%NIJE,:)= ZTHVM_F(D%NIJB:D%NIJE,:)
-PRV_UP(D%NIJB:D%NIJE,:)= ZRVM_F(D%NIJB:D%NIJE,:)
+PTHV_UP(D%NIJB:D%NIJE,1:D%NKT)= ZTHVM_F(D%NIJB:D%NIJE,1:D%NKT)
+PRV_UP(D%NIJB:D%NIJE,1:D%NKT)= ZRVM_F(D%NIJB:D%NIJE,1:D%NKT)
 !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 
 ZW_UP2(:,:)=ZEPS
@@ -336,7 +336,7 @@ ENDDO
 !  boucle verticale, une pour w et une pour PEMF                                                            
 
 !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-ZG_O_THVREF(D%NIJB:D%NIJE,:)=CST%XG/ZTHVM_F(D%NIJB:D%NIJE,:)
+ZG_O_THVREF(D%NIJB:D%NIJE,1:D%NKT)=CST%XG/ZTHVM_F(D%NIJB:D%NIJE,1:D%NKT)
 !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 
 ! Calcul de la fermeture de Julien Pergaut comme limite max de PHY
@@ -359,7 +359,7 @@ IF(TURB%CTURBLEN=='RM17') THEN
   CALL GZ_M_W_MF(D, PVM, PDZZ, ZWK)
   CALL MZF_MF(D, ZWK, ZDVDZ)
   !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-  ZSHEAR(D%NIJB:D%NIJE,:) = SQRT(ZDUDZ(D%NIJB:D%NIJE,:)**2 + ZDVDZ(D%NIJB:D%NIJE,:)**2)
+  ZSHEAR(D%NIJB:D%NIJE,1:D%NKT) = SQRT(ZDUDZ(D%NIJB:D%NIJE,1:D%NKT)**2 + ZDVDZ(D%NIJB:D%NIJE,1:D%NKT)**2)
   !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 ELSE
   ZSHEAR(D%NIJB:D%NIJE,:) = 0. !no shear in bl89 mixing length
@@ -613,7 +613,7 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
 ENDDO   ! Fin de la boucle verticale 
 
 !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-PW_UP(D%NIJB:D%NIJE,:)=SQRT(ZW_UP2(D%NIJB:D%NIJE,:))
+PW_UP(D%NIJB:D%NIJE,1:D%NKT)=SQRT(ZW_UP2(D%NIJB:D%NIJE,1:D%NKT))
 !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 !$mnh_expand_array(JI=D%NIJB:D%NIJE)
 PEMF(D%NIJB:D%NIJE,D%NKB) =0.

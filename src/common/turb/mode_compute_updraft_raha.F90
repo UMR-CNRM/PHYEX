@@ -237,7 +237,7 @@ ZBUO(:,:)      =0.
 PRI_UP(:,:)=0.
 PFRAC_ICE_UP(:,:)=0.
 !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-PRSAT_UP(D%NIJB:D%NIJE,:)=PRVM(D%NIJB:D%NIJE,:) ! should be initialised correctly but is (normaly) not used
+PRSAT_UP(D%NIJB:D%NIJE,1:D%NKT)=PRVM(D%NIJB:D%NIJE,1:D%NKT) ! should be initialised correctly but is (normaly) not used
 !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 
 ! Initialisation of environment variables at t-dt
@@ -257,10 +257,10 @@ CALL MZM_MF(D, PTKEM(:,:), ZTKEM_F(:,:))
 
 !          Initialisation of updraft characteristics 
 !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-PTHL_UP(D%NIJB:D%NIJE,:)=ZTHLM_F(D%NIJB:D%NIJE,:)
-PRT_UP(D%NIJB:D%NIJE,:)=ZRTM_F(D%NIJB:D%NIJE,:)
-PU_UP(D%NIJB:D%NIJE,:)=ZUM_F(D%NIJB:D%NIJE,:)
-PV_UP(D%NIJB:D%NIJE,:)=ZVM_F(D%NIJB:D%NIJE,:)
+PTHL_UP(D%NIJB:D%NIJE,1:D%NKT)=ZTHLM_F(D%NIJB:D%NIJE,1:D%NKT)
+PRT_UP(D%NIJB:D%NIJE,1:D%NKT)=ZRTM_F(D%NIJB:D%NIJE,1:D%NKT)
+PU_UP(D%NIJB:D%NIJE,1:D%NKT)=ZUM_F(D%NIJB:D%NIJE,1:D%NKT)
+PV_UP(D%NIJB:D%NIJE,1:D%NKT)=ZVM_F(D%NIJB:D%NIJE,1:D%NKT)
 !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 PSV_UP(:,:,:)=0.
 !IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) then
@@ -287,11 +287,12 @@ CALL MZM_MF(D, PRVM(:,:), ZRVM_F(:,:))
 
 !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 ! thetav at mass and flux levels 
-ZTHVM_F(D%NIJB:D%NIJE,:)=ZTHM_F(D%NIJB:D%NIJE,:)*((1.+ZRVORD*ZRVM_F(D%NIJB:D%NIJE,:))/(1.+ZRTM_F(D%NIJB:D%NIJE,:)))
-ZTHVM(D%NIJB:D%NIJE,:)=PTHM(D%NIJB:D%NIJE,:)*((1.+ZRVORD*PRVM(D%NIJB:D%NIJE,:))/(1.+PRTM(D%NIJB:D%NIJE,:)))
+ZTHVM_F(D%NIJB:D%NIJE,1:D%NKT)=ZTHM_F(D%NIJB:D%NIJE,1:D%NKT)*((1.+ZRVORD*ZRVM_F(D%NIJB:D%NIJE,1:D%NKT))/&
+                                                             &(1.+ZRTM_F(D%NIJB:D%NIJE,1:D%NKT)))
+ZTHVM(D%NIJB:D%NIJE,1:D%NKT)=PTHM(D%NIJB:D%NIJE,1:D%NKT)*((1.+ZRVORD*PRVM(D%NIJB:D%NIJE,1:D%NKT))/(1.+PRTM(D%NIJB:D%NIJE,1:D%NKT)))
 
-PTHV_UP(D%NIJB:D%NIJE,:)= ZTHVM_F(D%NIJB:D%NIJE,:)
-PRV_UP(D%NIJB:D%NIJE,:) = ZRVM_F(D%NIJB:D%NIJE,:)
+PTHV_UP(D%NIJB:D%NIJE,1:D%NKT)= ZTHVM_F(D%NIJB:D%NIJE,1:D%NKT)
+PRV_UP(D%NIJB:D%NIJE,1:D%NKT) = ZRVM_F(D%NIJB:D%NIJE,1:D%NKT)
 !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 
 ZW_UP2(:,:)=ZEPS
@@ -323,7 +324,7 @@ PRSAT_UP(D%NIJB:D%NIJE,D%NKB) = ZRSATW(D%NIJB:D%NIJE)*(1-PFRAC_ICE_UP(D%NIJB:D%N
 !Tout est commente pour tester dans un premier temps la s�paration en deux de la 
 !  boucle verticale, une pour w et une pour PEMF                                                            
 !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-ZG_O_THVREF(D%NIJB:D%NIJE,:)=CST%XG/ZTHVM_F(D%NIJB:D%NIJE,:)
+ZG_O_THVREF(D%NIJB:D%NIJE,1:D%NKT)=CST%XG/ZTHVM_F(D%NIJB:D%NIJE,1:D%NKT)
 !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 
 !  Definition de l'alimentation au sens de la fermeture de Hourdin et al
@@ -612,7 +613,7 @@ DO JK=D%NKB+D%NKL,D%NKE-D%NKL,D%NKL !  Vertical loop
 ENDDO
 
 !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-PW_UP(D%NIJB:D%NIJE,:)=SQRT(ZW_UP2(D%NIJB:D%NIJE,:))
+PW_UP(D%NIJB:D%NIJE,1:D%NKT)=SQRT(ZW_UP2(D%NIJB:D%NIJE,1:D%NKT))
 !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 !$mnh_expand_array(JI=D%NIJB:D%NIJE)
 PEMF(D%NIJB:D%NIJE,D%NKB) =0.
@@ -639,9 +640,9 @@ DO JK=1,D%NKT
   !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
 ENDDO
 !$mnh_expand_where(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-WHERE (GWORK2(D%NIJB:D%NIJE,:)) 
-  PEMF(D%NIJB:D%NIJE,:)     = PEMF(D%NIJB:D%NIJE,:)     * ZCOEF(D%NIJB:D%NIJE,:)
-  PFRAC_UP(D%NIJB:D%NIJE,:) = PFRAC_UP(D%NIJB:D%NIJE,:) * ZCOEF(D%NIJB:D%NIJE,:)
+WHERE (GWORK2(D%NIJB:D%NIJE,1:D%NKT)) 
+  PEMF(D%NIJB:D%NIJE,1:D%NKT)     = PEMF(D%NIJB:D%NIJE,1:D%NKT)     * ZCOEF(D%NIJB:D%NIJE,1:D%NKT)
+  PFRAC_UP(D%NIJB:D%NIJE,1:D%NKT) = PFRAC_UP(D%NIJB:D%NIJE,1:D%NKT) * ZCOEF(D%NIJB:D%NIJE,1:D%NKT)
 ENDWHERE
 !$mnh_end_expand_where(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
 
