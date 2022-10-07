@@ -8,7 +8,8 @@ set -e
 # Repertoire où MNH-V5-5-0_PHYEX.tar.gz modifie pour accueillir PHYEX se trouve
 #TARGZDIR=$HOME
 
-availTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, COLD_BUBBLE/002_mesonh, ARMLES/RUN, COLD_BUBBLE_3D/002_mesonh,"
+availTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, COLD_BUBBLE/002_mesonh, 
+            ARMLES/RUN, COLD_BUBBLE_3D/002_mesonh,OCEAN_LES/004_run2"
 defaultTest="007_16janvier/008_run2"
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- seprator must be in sync with prep_code.sh separator
@@ -294,6 +295,9 @@ if [ $check -eq 1 ]; then
     elif   [ $t == ARMLES/RUN ]; then
       path_user=$path_user_beg/MY_RUN/KTEST/ARMLES/RUN$path_user_end
       path_ref=$path_ref_beg/MY_RUN/KTEST/ARMLES/RUN$path_ref_end
+    elif   [ $t == OCEAN_LES/004_run2 ]; then
+      path_user=$path_user_beg/MY_RUN/KTEST/OCEAN_LES/004_run2$path_user_end
+      path_ref=$path_ref_beg/MY_RUN/KTEST/OCEAN_LES/004_run2$path_ref_end
     else
       echo "cas $t non reconnu"
     fi
@@ -360,6 +364,32 @@ if [ $check -eq 1 ]; then
         allt=$(($allt+1))
       fi
     fi
+
+   if [ $case == OCEAN_LES ]; then
+        echo "Compare with python..."
+        # Compare variable of both Synchronous files with printing difference
+        file1=$path_user/SPWAN.2.25m00.001.nc
+        file2=$path_ref/SPWAN.2.25m00.001.nc
+        set +e
+        $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2
+        t=$?
+        set -e
+        allt=$(($allt+$t))
+  
+        #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
+        echo "Compare with ncdump..."
+        if [ -f $file1 -a -f $file2 ]; then
+          set +e
+          diff <(ncdump $file1 | head -c 18400) <(ncdump $file2 | head -c 18400)
+          t=$?
+          set -e
+          allt=$(($allt+$t))
+        else
+          [ ! -f $file1 ] && echo "  $file1 is missing"
+          [ ! -f $file2 ] && echo "  $file2 is missing"
+          allt=$(($allt+1))
+        fi
+      fi
 
     if [ $case == COLD_BUBBLE_3D ]; then
       echo "Compare with python..."
