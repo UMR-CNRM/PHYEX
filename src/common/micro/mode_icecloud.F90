@@ -3,12 +3,13 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICECLOUD  &
 !   Input :
-     & ( NP,PP,PZ,PDZ,PT,PR,PTSTEP,PPBLH,PWCLD,XW2D, &
+     & ( D,PP,PZ,PDZ,PT,PR,PTSTEP,PPBLH,PWCLD,XW2D, &
 !   Output :
      &  SIFRC,SSIO,SSIU,W2D,RSI)
 
   USE PARKIND1, ONLY : JPRB
   USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+  USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
   USE MODD_CST,ONLY : XCPD,XCPV,XLVTT,XLSTT,XG,XRD,XEPSILO
   USE MODE_TIWMX, ONLY: ESATW, ESATI
   USE MODE_QSATMX_TAB, ONLY: QSATMX_TAB
@@ -51,30 +52,30 @@ SUBROUTINE ICECLOUD  &
 !                 the gridbox and parts of the gridbox 
 !     RSI       : Saturation mixing ratio over ice
 
-INTEGER, INTENT(IN) ::     NP
-REAL,  INTENT(IN)  ::      PP(NP)
-REAL,  INTENT(IN)  ::      PZ(NP)
-REAL,  INTENT(IN)  ::      PDZ(NP)
-REAL,  INTENT(IN)  ::      PT(NP)
-REAL,  INTENT(IN)  ::      PR(NP)
+TYPE(DIMPHYEX_t), INTENT(IN)    :: D
+REAL,  INTENT(IN)  ::      PP(D%NIJT)
+REAL,  INTENT(IN)  ::      PZ(D%NIJT)
+REAL,  INTENT(IN)  ::      PDZ(D%NIJT)
+REAL,  INTENT(IN)  ::      PT(D%NIJT)
+REAL,  INTENT(IN)  ::      PR(D%NIJT)
 REAL,  INTENT(IN)  ::      PTSTEP
 REAL,  INTENT(IN)  ::      PPBLH
-REAL,  INTENT(IN)  ::      PWCLD(NP)
+REAL,  INTENT(IN)  ::      PWCLD(D%NIJT)
 REAL,  INTENT(IN)  ::      XW2D
 
 !     OUTPUT  arguments  (arguments d'sortie)
 !---------------------------------------------
-REAL,  INTENT(OUT) ::      SIFRC(NP)
-REAL,  INTENT(OUT) ::      SSIO(NP)
-REAL,  INTENT(OUT) ::      SSIU(NP)
-REAL,  INTENT(OUT) ::      W2D(NP)
-REAL,  INTENT(OUT) ::      RSI(NP)
+REAL,  INTENT(OUT) ::      SIFRC(D%NIJT)
+REAL,  INTENT(OUT) ::      SSIO(D%NIJT)
+REAL,  INTENT(OUT) ::      SSIU(D%NIJT)
+REAL,  INTENT(OUT) ::      W2D(D%NIJT)
+REAL,  INTENT(OUT) ::      RSI(D%NIJT)
 
 !     Working variables:
 REAL :: ZSIGMAX,ZSIGMAY,ZSIGMAZ,ZXDIST,ZYDIST,&
      & ZRSW,ZRHW,ZRHIN,ZDRHDZ,ZZ,ZRHDIST,ZRHLIM, &
      & ZRHDIF,ZWCLD,ZI2W,ZRHLIMICE,ZRHLIMINV,ZA,ZRHI,ZR
-INTEGER :: JK
+INTEGER :: JIJ
 
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('ICECLOUD',0,ZHOOK_HANDLE)
@@ -91,31 +92,31 @@ ZXDIST=2500.
    ! due to stronger vertical velocities.
 ZYDIST=ZXDIST          ! gridsize in  y axis (m)
 
-DO JK = 1, NP
-   ZR = MAX(0.,PR(JK)*PTSTEP)
-   SIFRC(JK) = 0.
-   ZA = ZR*PP(JK)/(XEPSILO + ZR)
-   ZRHW = ZA/ESATW(PT(JK))  
-   RSI(JK) = QSATMX_TAB(PP(JK),PT(JK),1.)
-   ZRHI = ZA/ESATI(PT(JK))
-   ZI2W =  ESATW(PT(JK))/ESATI(PT(JK))
+DO JIJ = D%NIJB, D%NIJE
+   ZR = MAX(0.,PR(JIJ)*PTSTEP)
+   SIFRC(JIJ) = 0.
+   ZA = ZR*PP(JIJ)/(XEPSILO + ZR)
+   ZRHW = ZA/ESATW(PT(JIJ))  
+   RSI(JIJ) = QSATMX_TAB(PP(JIJ),PT(JIJ),1.)
+   ZRHI = ZA/ESATI(PT(JIJ))
+   ZI2W =  ESATW(PT(JIJ))/ESATI(PT(JIJ))
 
-   SSIU(JK) = MIN(ZI2W,ZRHI)
-   SSIO(JK) = SSIU(JK)
-   W2D(JK) = 1.
+   SSIU(JIJ) = MIN(ZI2W,ZRHI)
+   SSIO(JIJ) = SSIU(JIJ)
+   W2D(JIJ) = 1.
 
-   IF (PT(JK)>273.1 .OR. ZR<=0. .OR. ESATI(PT(JK)) >= PP(JK)*0.5) THEN
-      SSIU(JK) = SSIU(JK) - 1.
-      SSIO(JK) = SSIU(JK)
-      IF(PWCLD(JK)>=0.) SIFRC(JK) = PWCLD(JK)
+   IF (PT(JIJ)>273.1 .OR. ZR<=0. .OR. ESATI(PT(JIJ)) >= PP(JIJ)*0.5) THEN
+      SSIU(JIJ) = SSIU(JIJ) - 1.
+      SSIO(JIJ) = SSIU(JIJ)
+      IF(PWCLD(JIJ)>=0.) SIFRC(JIJ) = PWCLD(JIJ)
       CYCLE
    ENDIF
 
 
    ZRHIN = MAX(0.05, MIN(1.,ZRHW))
 
-   ZDRHDZ=ZRHIN*XG /(PT(JK)*XRD)*  &
-        &     ( XEPSILO*XLVTT/(XCPD*PT(JK)) - 1.) ! correct
+   ZDRHDZ=ZRHIN*XG /(PT(JIJ)*XRD)*  &
+        &     ( XEPSILO*XLVTT/(XCPD*PT(JIJ)) - 1.) ! correct
 !              &     ( ZEPSILO*XLSTT/(XCPD*PT) -1.)  ! incorrect 
 !          more exact
 !          assumed rh variation in the z axis (rh/m) in the pbl .
@@ -124,9 +125,9 @@ DO JK = 1, NP
 
    ZZ=0.
    IF(PPBLH < 0. )THEN ! Assume boundary layer height is not available 
-      ZZ = MIN(1.,MAX(0.,PZ(JK)*0.001))
+      ZZ = MIN(1.,MAX(0.,PZ(JIJ)*0.001))
    ELSE
-      IF(PZ(JK) > 35. .AND. PZ(JK) > PPBLH) ZZ = 1.
+      IF(PZ(JIJ) > 35. .AND. PZ(JIJ) > PPBLH) ZZ = 1.
    ENDIF
 
 !        1.6e-2 rh/m means variations is of order 0.5 for a 1km dept.
@@ -138,7 +139,7 @@ DO JK = 1, NP
 !        assumed to be fairly constantly increasing with height
 
    ZRHDIST = SQRT( ZXDIST*ZSIGMAX**2 + ZYDIST*ZSIGMAY**2 +  &
-        &         (1.-ZZ)* (PDZ(JK)*ZDRHDZ)**2 + ZZ*PDZ(JK)*ZSIGMAZ**2)
+        &         (1.-ZZ)* (PDZ(JIJ)*ZDRHDZ)**2 + ZZ*PDZ(JIJ)*ZSIGMAZ**2)
 !         z-variation of rh in the pbl    z-variation of rh outside the pbl
 !         Safety for very coarse vertical resolution:
    IF(ZZ > 0.1) ZRHDIST = ZRHDIST/(1.+ZRHDIST)
@@ -147,20 +148,20 @@ DO JK = 1, NP
 
    ZRHLIM = MAX(0.5,MIN(0.99,1.-0.5*ZRHDIST))
 
-   IF(PWCLD(JK) < 0.)THEN
+   IF(PWCLD(JIJ) < 0.)THEN
    !  Assume water/mixed-phase cloud cover from e.g. 
    ! statistical cloud scheme is not available
       ZRHDIF = (1. - ZRHW)/(1.0-ZRHLIM)
       ZRHDIF =  1. - SQRT(MAX(0.,ZRHDIF))
       ZWCLD = MIN(1.,MAX(ZRHDIF,0.0))
    ELSE
-      ZWCLD = PWCLD(JK)
+      ZWCLD = PWCLD(JIJ)
 ! possible to backwards compute a critical relative humity consitent with 
 !  input cloudcover:
 !   IF(PWCLD < 0.99 .AND. PWCLD > 0.01) ZRHLIM= 1. - (1.-ZRHW)/(1.-PWCLD)**2
    ENDIF
 
-   SIFRC(JK) = ZWCLD
+   SIFRC(JIJ) = ZWCLD
 
 !              relation rhlim with respect to water to that of ice:
 !ZRHLIMICE = MAX(ZRHDMIN*ZI2W,1.+ ZI2W*( ZRHLIM - 1.))
@@ -173,30 +174,30 @@ DO JK = 1, NP
       ZRHDIF = (ZRHI - ZRHLIMICE)*ZRHLIMINV
 
       IF(ZWCLD==0.)THEN
-         SIFRC(JK) = MIN(1.,0.5*MAX(0.,ZRHDIF))
+         SIFRC(JIJ) = MIN(1.,0.5*MAX(0.,ZRHDIF))
       ELSE
          ZA = 1. -  1./ZI2W
-         SIFRC(JK) = MIN(1.,ZA*0.5/ (1. - ZRHLIM))
-         SIFRC(JK) = MIN(1.,ZWCLD + SIFRC(JK))
+         SIFRC(JIJ) = MIN(1.,ZA*0.5/ (1. - ZRHLIM))
+         SIFRC(JIJ) = MIN(1.,ZWCLD + SIFRC(JIJ))
       ENDIF
    ENDIF
 
-   IF(SIFRC(JK) > 0.01) THEN
-      SSIU(JK) = SIFRC(JK) + ZRHLIMICE*(1.-SIFRC(JK))
-      SSIO(JK) = (ZRHI - (1.- SIFRC(JK))*SSIU(JK))/SIFRC(JK)
+   IF(SIFRC(JIJ) > 0.01) THEN
+      SSIU(JIJ) = SIFRC(JIJ) + ZRHLIMICE*(1.-SIFRC(JIJ))
+      SSIO(JIJ) = (ZRHI - (1.- SIFRC(JIJ))*SSIU(JIJ))/SIFRC(JIJ)
    ELSE
-      SIFRC(JK) = 0.! to aviod mismatch with output variables
+      SIFRC(JIJ) = 0.! to aviod mismatch with output variables
       ZA = MIN(0.,ZRHI-ZRHLIMICE)
-      SSIU(JK) = MAX(0.,SIFRC(JK) + ZRHLIMICE*(1.-SIFRC(JK)) + 2.*ZA )
+      SSIU(JIJ) = MAX(0.,SIFRC(JIJ) + ZRHLIMICE*(1.-SIFRC(JIJ)) + 2.*ZA )
    ENDIF
-   SSIO(JK) = MIN(ZI2W,SSIO(JK))
-   SSIU(JK) = MAX(0.,SSIU(JK))
+   SSIO(JIJ) = MIN(ZI2W,SSIO(JIJ))
+   SSIU(JIJ) = MAX(0.,SSIU(JIJ))
 
 ! Transform from relative humidity to degree of saturation:
-   SSIU(JK) = SSIU(JK) - 1.
-   SSIO(JK) = SSIO(JK) - 1.
+   SSIU(JIJ) = SSIU(JIJ) - 1.
+   SSIO(JIJ) = SSIO(JIJ) - 1.
 
-   IF (XW2D > 1.) W2D(JK) = 1./(1. - SIFRC(JK) + XW2D*SIFRC(JK))
+   IF (XW2D > 1.) W2D(JIJ) = 1./(1. - SIFRC(JIJ) + XW2D*SIFRC(JIJ))
 
 ENDDO
 

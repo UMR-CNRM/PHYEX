@@ -54,65 +54,62 @@ LOGICAL,                  INTENT(IN)   :: LHGT_QS   ! logical switch for height 
 CHARACTER(LEN=80),        INTENT(IN)   :: HSUBG_MF_PDF
 REAL,                     INTENT(IN)   :: PTSTEP    ! Double Time step
                                                     ! (single if cold start)
-REAL, DIMENSION(D%NIT,D%NJT),                INTENT(IN)    :: PSIGQSAT  ! coeff applied to qsat variance contribution
+REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PSIGQSAT  ! coeff applied to qsat variance contribution
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PRHODJ  ! Dry density * Jacobian
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PEXNREF ! Reference Exner function
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PRHODREF
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PRHODJ  ! Dry density * Jacobian
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PEXNREF ! Reference Exner function
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PRHODREF
 !
-REAL, DIMENSION(MERGE(D%NIT,0,OSUBG_COND),&
-                MERGE(D%NJT,0,OSUBG_COND),&
+REAL, DIMENSION(MERGE(D%NIJT,0,OSUBG_COND),&
                 MERGE(D%NKT,0,OSUBG_COND)),           INTENT(IN)    ::  PSIGS   ! Sigma_s at time t
-LOGICAL,                                                       INTENT(IN)    ::  LMFCONV ! =SIZE(PMFCONV)!=0
-REAL, DIMENSION(MERGE(D%NIT,0,LMFCONV),&
-                MERGE(D%NJT,0,LMFCONV),&
+LOGICAL,                                              INTENT(IN)    ::  LMFCONV ! =SIZE(PMFCONV)!=0
+REAL, DIMENSION(MERGE(D%NIJT,0,LMFCONV),&
                 MERGE(D%NKT,0,LMFCONV)),              INTENT(IN)   ::  PMFCONV ! convective mass flux
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PPABST  ! Absolute Pressure at t
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PZZ     ! height of model layer
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    ::  PEXN    ! Exner function
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PPABST  ! Absolute Pressure at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PZZ     ! height of model layer
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PEXN    ! Exner function
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PCF_MF   ! Convective Mass Flux Cloud fraction
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRC_MF   ! Convective Mass Flux liquid mixing ratio
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRI_MF   ! Convective Mass Flux ice mixing ratio
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PCF_MF   ! Convective Mass Flux Cloud fraction
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRC_MF   ! Convective Mass Flux liquid mixing ratio
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRI_MF   ! Convective Mass Flux ice mixing ratio
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRV     ! Water vapor m.r. to adjust
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRC     ! Cloud water m.r. to adjust
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT) :: PRVS    ! Water vapor m.r. source
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PTH     ! Theta to adjust
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT) :: PTHS    ! Theta source
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRV     ! Water vapor m.r. to adjust
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRC     ! Cloud water m.r. to adjust
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRVS    ! Water vapor m.r. source
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PTH     ! Theta to adjust
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PTHS    ! Theta source
 LOGICAL,                            INTENT(IN)    :: OCOMPUTE_SRC
-REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC),&
-                MERGE(D%NJT,0,OCOMPUTE_SRC),&
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(OUT)   :: PSRCS   ! Second-order flux
                                                                        ! s'rc'/2Sigma_s2 at time t+1
                                                                        ! multiplied by Lambda_3
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PCLDFR  ! Cloud fraction
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PICLDFR ! ice cloud fraction
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PWCLDFR ! water or mixed-phase cloud fraction
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PSSIO   ! Super-saturation with respect to ice in the  
-                                                             ! supersaturated fraction
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PSSIU   ! Sub-saturation with respect to ice in the  
-                                                             ! subsaturated fraction 
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  ::  PIFR    ! Ratio cloud ice moist part to dry part
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PCLDFR  ! Cloud fraction
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PICLDFR ! ice cloud fraction
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PWCLDFR ! water or mixed-phase cloud fraction
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PSSIO   ! Super-saturation with respect to ice in the  
+                                                        ! supersaturated fraction
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PSSIU   ! Sub-saturation with respect to ice in the  
+                                                        ! subsaturated fraction 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PIFR    ! Ratio cloud ice moist part to dry part
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT)::  PRIS ! Cloud ice  m.r. at t+1
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRR  ! Rain water m.r. to adjust
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRI  ! Cloud ice  m.r. to adjust
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRS  ! Aggregate  m.r. to adjust
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)   ::  PRG  ! Graupel    m.r. to adjust
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)::  PRIS ! Cloud ice  m.r. at t+1
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PRR  ! Rain water m.r. to adjust
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PRI  ! Cloud ice  m.r. to adjust
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PRS  ! Aggregate  m.r. to adjust
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PRG  ! Graupel    m.r. to adjust
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS),       INTENT(INOUT)::  TBUDGETS
 INTEGER,                                      INTENT(IN)   ::  KBUDGETS
-REAL, DIMENSION(D%NIT,D%NJT),       OPTIONAL, INTENT(IN)   ::  PICE_CLD_WGT
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PRH  ! Hail       m.r. to adjust
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_RV ! Adjusted value
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_RC ! Adjusted value
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_RI ! Adjusted value
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_TH ! Adjusted value
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLC_HRC
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLC_HCF
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLI_HRI
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLI_HCF
+REAL, DIMENSION(D%NIJT),       OPTIONAL, INTENT(IN)   ::  PICE_CLD_WGT
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PRH  ! Hail       m.r. to adjust
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_RV ! Adjusted value
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_RC ! Adjusted value
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_RI ! Adjusted value
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  POUT_TH ! Adjusted value
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLC_HRC
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLC_HCF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLI_HRI
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLI_HCF
 !
 END SUBROUTINE ICE_ADJUST
 !
