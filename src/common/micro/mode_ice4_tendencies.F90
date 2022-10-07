@@ -10,7 +10,7 @@ SUBROUTINE ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, KPROMA, KSIZE, &
                           &KRR, ODSOFT, LDCOMPUTE, &
                           &OWARM, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
                           &HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
-                          &PEXN, PRHODREF, PLVFACT, PLSFACT, K1, K2, K3, &
+                          &PEXN, PRHODREF, PLVFACT, PLSFACT, K1, K2, &
                           &PPRES, PCF, PSIGMA_RC, &
                           &PCIT, &
                           &PT, PVART, &
@@ -107,7 +107,6 @@ REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLVFACT
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLSFACT
 INTEGER, DIMENSION(KPROMA),    INTENT(IN)    :: K1
 INTEGER, DIMENSION(KPROMA),    INTENT(IN)    :: K2
-INTEGER, DIMENSION(KPROMA),    INTENT(IN)    :: K3
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PPRES
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PCF
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PSIGMA_RC
@@ -175,7 +174,7 @@ REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLI_HCF
 REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLI_LCF
 REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLI_HRI
 REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLI_LRI
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)   :: PRAINFR   ! Rain fraction
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PRAINFR   ! Rain fraction
 !
 !*       0.2  declaration of local variables
 !
@@ -184,7 +183,7 @@ REAL, DIMENSION(KPROMA) :: ZT, ZRAINFR, &
                         & ZKA, ZDV, ZAI, ZCJ, &
                         & ZLBDAR, ZLBDAS, ZLBDAG, ZLBDAH, ZLBDAR_RF, &
                         & ZRGSI, ZRGSI_MR
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZRRT3D, ZRST3D, ZRGT3D, ZRHT3D
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZRRT3D, ZRST3D, ZRGT3D, ZRHT3D
 INTEGER :: JL, JV
 LOGICAL, DIMENSION(KPROMA) :: LLWETG ! .TRUE. if graupel growths in wet mode
 REAL :: ZZW
@@ -316,34 +315,34 @@ CALL ICE4_COMPUTE_PDF(CST, ICEP, ICED, KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUB
 LLRFR=HSUBG_RC_RR_ACCR=='PRFR' .OR. HSUBG_RR_EVAP=='PRFR'
 IF (LLRFR) THEN
   !Diagnostic of precipitation fraction
-  PRAINFR(:,:,:) = 0.
-  ZRRT3D (:,:,:) = 0.
-  ZRST3D (:,:,:) = 0.
-  ZRGT3D (:,:,:) = 0.
-  ZRHT3D (:,:,:) = 0.
+  PRAINFR(:,:) = 0.
+  ZRRT3D (:,:) = 0.
+  ZRST3D (:,:) = 0.
+  ZRGT3D (:,:) = 0.
+  ZRHT3D (:,:) = 0.
   DO JL=1,KSIZE
-    PRAINFR(K1(JL), K2(JL), K3(JL)) = ZRAINFR(JL)
-    ZRRT3D (K1(JL), K2(JL), K3(JL)) = ZVART(JL,IRR)
+    PRAINFR(K1(JL), K2(JL)) = ZRAINFR(JL)
+    ZRRT3D (K1(JL), K2(JL)) = ZVART(JL,IRR)
 #ifndef REPRO48
-    ZRST3D (K1(JL), K2(JL), K3(JL)) = ZVART(JL,IRS)
-    ZRGT3D (K1(JL), K2(JL), K3(JL)) = ZVART(JL,IRG)
+    ZRST3D (K1(JL), K2(JL)) = ZVART(JL,IRS)
+    ZRGT3D (K1(JL), K2(JL)) = ZVART(JL,IRG)
 #endif
   END DO
   IF (KRR==7) THEN
     DO JL=1,KSIZE    
-      ZRHT3D (K1(JL), K2(JL), K3(JL)) = ZVART(JL,IRH)
+      ZRHT3D (K1(JL), K2(JL)) = ZVART(JL,IRH)
     ENDDO
-    CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR(:,:,:), &
-                         &ZRRT3D(:,:,:), ZRST3D(:,:,:), ZRGT3D(:,:,:), ZRHT3D(:,:,:))
+    CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR(:,:), &
+                         &ZRRT3D(:,:), ZRST3D(:,:), ZRGT3D(:,:), ZRHT3D(:,:))
   ELSE
-    CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR(:,:,:), &
-                         &ZRRT3D(:,:,:), ZRST3D(:,:,:), ZRGT3D(:,:,:))
+    CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR(:,:), &
+                         &ZRRT3D(:,:), ZRST3D(:,:), ZRGT3D(:,:))
   ENDIF
   DO JL=1,KSIZE
-    ZRAINFR(JL)=PRAINFR(K1(JL), K2(JL), K3(JL))
+    ZRAINFR(JL)=PRAINFR(K1(JL), K2(JL))
   END DO
 ELSE
-  PRAINFR(:,:,:)=1.
+  PRAINFR(:,:)=1.
   ZRAINFR(:)=1.
 ENDIF
 !

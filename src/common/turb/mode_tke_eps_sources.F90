@@ -293,6 +293,7 @@ ZSOURCE(IIJB:IIJE,1:D%NKT) = ( PRTKES(IIJB:IIJE,1:D%NKT) +  PRTKEMS(IIJB:IIJE,1:
                                      / PRHODJ(IIJB:IIJE,1:D%NKT) - PTKEM(IIJB:IIJE,1:D%NKT) / PTSTEP &
    + PDP(IIJB:IIJE,1:D%NKT) + PTP(IIJB:IIJE,1:D%NKT) + ZTR(IIJB:IIJE,1:D%NKT) & 
    - PEXPL * ZFLX(IIJB:IIJE,1:D%NKT) * PTKEM(IIJB:IIJE,1:D%NKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
 !*       2.2  implicit vertical TKE transport
 !
@@ -308,6 +309,7 @@ END IF
 ! Compute the vector giving the elements just under the diagonal for the 
 ! matrix inverted in TRIDIAG 
 !
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 ZA(IIJB:IIJE,1:D%NKT)     = - PTSTEP * CSTURB%XCET * ZMWORK1(IIJB:IIJE,1:D%NKT) & 
                                     * ZMWORK2(IIJB:IIJE,1:D%NKT) / PDZZ(IIJB:IIJE,1:D%NKT)**2
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
