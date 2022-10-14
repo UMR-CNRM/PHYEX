@@ -3,7 +3,7 @@
 ## ABOUT THIS DOCUMENT
 
 This document is intended for developers who want to contribute to the PHYEX package.
-Developer who is interested in plugging the physics in a new model can refere to the Plugging documentation.
+Developer who is interested in plugging the physics in a new model can refer to the Plugging documentation.
 The topics covered are as follows:
 
   - [Package organisation](#package-organisation)
@@ -18,13 +18,13 @@ This document is written using the markdown language. With pandoc, it can be con
 The package contains two kinds of branches:
 
   - generic branches which contain codes for all the models and applications (eg: main and GPU branches)
-  - model specific branches which are automaticaly derived from generic branches (eg: arome\_\<commit\_hash\>, mesonh\_\<commit\_hash\>)
+  - model specific branches which are automatically derived from generic branches (eg: arome\_\<commit\_hash\>, mesonh\_\<commit\_hash\>)
 
 The directories found in the package are different depending on the kind (generic or model specific) branches.
 
-For model specific branches, only the source code adapted for a given model is present (on directory per parameterization and an aux directory). No compilation engine or scripts are present in these branches. They are intended to be included directly in the compilation system of the hosting model.
+For model specific branches, only the source code adapted for a given model is present (on directory per parametrisation and an aux directory). No compilation engine or scripts are present in these branches. They are intended to be included directly in the compilation system of the hosting model.
 
-The generic branches contains the folowing directories:
+The generic branches contains the following directories:
 
   - docs: for documentation
   - build: an autonomous build system is included in the package. Its usage is covered in the [Offline documentation](./Offline.md)
@@ -43,11 +43,11 @@ Here is a short description of the different generic branches:
 
 The AROME build systems are evolving.
 Until cycle 49t1 (included), the physics source code is directly included in the source code tree.
-After cycle 49t1, the physics source code (as well as other model parts such as ectrans, fiat...) will be available through "boundles".
+After cycle 49t1, the physics source code (as well as other model parts such as ectrans, fiat...) will be available through "bundles".
 
 This evolution will impact the way to contribute to the PHYEX repository.
 
-But, whatever is the cycle, the AROME-HARMONIE developers only see codes comming from arome specific branches (branches named arome\_\<commit\_hash\>). This code is ready for inclusion (array-syntax already transformed into DO loops for instance).
+But, whatever is the cycle, the AROME-HARMONIE developers only see codes coming from arome specific branches (branches named arome\_\<commit\_hash\>). This code is ready for inclusion (array-syntax already transformed into DO loops for instance).
 
 Said differently, developers do not need to manipulate code transformation tools.
 
@@ -68,7 +68,7 @@ Workflow details (getting the source code in blue, pull request in red, integrat
 
 ## After cycle 49t1
 
-Workflow summary: after the cycle 49t1 (starting from 49t2?), HARMONIE/AROME will become a boudle. Il will be built with source codes coming from various places. One of these places will be the PHYEX repository. Pull requests must be send to each modified boundles.
+Workflow summary: after the cycle 49t1 (starting from 49t2?), HARMONIE/AROME will become a bundle. Il will be built with source codes coming from various places. One of these places will be the PHYEX repository. Pull requests must be send to each modified bundles.
 
 ![](./AROMEworkflow2.svg)
 
@@ -90,4 +90,4 @@ Pull requests concerning the physics continue to follow the same path as before 
 
 ## CONTRIBUTION WORKFLOW FOR OTHER DEVELOPERS
 
-Other developers must work with source code comming directly from the GPU branch. They issue pull requests directly on this branch as usual with git repositories.
+Other developers must work with source code coming directly from the GPU branch. They issue pull requests directly on this branch as usual with git repositories.

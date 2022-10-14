@@ -55,24 +55,23 @@ Integration details:
   - The Meso-NH integrator extracts, from the different pull requests, what concern the PHYEX repository and send a pull request on PHYEX based on a mesonh specific branch
   - The PHYEX administrator:
     - validates (see [below](#tests)) the contribution
-    - integrates the contribution in the arome branch and merges it in the GPU branch
+    - integrates the contribution in the mesonh branch and merges it in the GPU branch
     - regularly, he tags a new (minor) version of the GPU branch
-    - when asked by the IAL integrator, he builds a new arome specific branch (see [below](#code-preparation))
-    - when an arome specific branch is used in an official cycle, the arome specific branch is tagged accordingly
- puis teste les différents modèles et l'intègre dans la branche GPU (avec tag réguliers)
+    - when asked by the Meso-NH integrator, he builds a new mesonh specific branch (see [below](#code-preparation))
+    - when a mesonh specific branch is used in an official release, the mesonh specific branch is tagged accordingly
 
 ## NORMAL WORKFLOW FOR ANOTHER CONTRIBUTION
 
 Pull requests must be based on the GPU branch.
   - validates (see [below](#tests)) the contribution
-  - integrates the contribution in the arome branch and merges it in the GPU branch
+  - integrates the contribution in the GPU branch
   - regularly, he tags a new (minor) version of the GPU branch
 
 ## TESTS
 
 The source code must follow strict mnh\_expand directives (described in the [Coding Norms documentation](./CodingNorms.md)). The script verify\_mnh\_expand.py must be used to give an additional check.
 
-In addition to the scientific validation, the folowing tests must give the same results (with bit-reproducibility) in each of the model (arome, mesonh and testprogs):
+In addition to the scientific validation, the following tests must give the same results (with bit-reproducibility) in each of the model (arome, mesonh and testprogs):
 
   - compilation transforming the mnh\_expand directives in DO loop
   - compilation keeping the array-syntax
@@ -85,7 +84,7 @@ When possible, the new version of PHYEX must reproduce the old results (scientif
 The source code stored in the main and GPU branches must be usable by all the models. But these models can have contradictory constraints. To bypass this difficulty, the source code is preprocessed before being included in the compilation environment of each model.
 
 This preprocessing step can be done on the fly (in this case the preprocessing tools must be available aside of the compilation tools), or the result of the preprocessing can be stored in the PHYEX package (in this case, the preprocessing is done once and can be used by several users).
-This second possibility is usefull to historize the source code really used during the model compilation and enables contributions to the PHYEX package without the need of the preprocessing tools.
+This second possibility is useful to historize the source code really used during the model compilation and enables contributions to the PHYEX package without the need of the preprocessing tools.
 
 The preprocessed versions of the source code are put in branches named \<model\>\_\<commit\> where \<model\> is the name of the model for which the source code have been preprocessed and \<commit\> is the commit hash used as a basis.
 

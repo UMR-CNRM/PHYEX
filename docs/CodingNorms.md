@@ -1,4 +1,4 @@
-# PHYEX developer documentation
+# PHYEX coding norms documentation
 
 ## ABOUT THIS DOCUMENT
 
@@ -9,7 +9,7 @@ This document is written using the markdown language. With pandoc, it can be con
 ## CODING NORMS
 
 ### Namelists
-We must be able to reproduce (binary comparison of the output files) the model results before and after code modifications. It means that every modification must be controled by a namelist key (with the exception of bug corrections).
+We must be able to reproduce (binary comparison of the output files) the model results before and after code modifications. It means that every modification must be controlled by a namelist key (with the exception of bug corrections).
 
 ### File names
 The fortran file names use a capital F letter (eg: foo.F90) except if working in a Meso-NH branch (mesonh\_\<commit\>) or in the folder (src/mesonh) specific to the Meso-NH model.
@@ -24,8 +24,8 @@ Names for the module:
 ### When using mode\_ or modi\_?
 When writing a new subroutine, should we put it in a module (in a mode\_ file) or should we write the subroutine in a file and write the interface bloc in another file (modi\_ file)?
 
-The answer depends on whether the routine is the 'main' routine of the parameterisation or not. If it is the 'main' routine, the interface bloc is declared apart, if not we can use a module.
-The idea behind is to break compilation dependency at the parameterisation level, and to isolate the interface declaration of the different routines that must be pluged in the hosting model.
+The answer depends on whether the routine is the 'main' routine of the parametrisation or not. If it is the 'main' routine, the interface bloc is declared apart, if not we can use a module.
+The idea behind is to break compilation dependency at the parametrisation level, and to isolate the interface declaration of the different routines that must be plugged in the hosting model.
 
 ### Norm
 Several constraints are imposed:
@@ -46,7 +46,7 @@ The variables are named according to the doctor norm:
 |Local         | I (not IS) | Z (not ZS) | G (not GS)  | Y (not YS, YP) | TZ               |
 |Loop control  | J (not JP) | -          | -           | -              | -                |
 
-Regarding array-syntax, code is written using array-syntax in the main branch and in mesonh specific branches based on the GPU branch, using array-syntax with mnh\_expand directives in the GPU branch, using DO loops in arome specific branches based on the GPU branch. If in doublt, check what is done in other routines in the brach you are working in.
+Regarding array-syntax, code is written using array-syntax in the main branch and in mesonh specific branches based on the GPU branch, using array-syntax with mnh\_expand directives in the GPU branch, using DO loops in arome specific branches based on the GPU branch. If in doubt, check what is done in other routines in the branch you are working in.
 Be carrefull when using the mnh\_expand directives, code must respect some constraints:
 
   - parenthesis after array variables are mandatory (no A=B+C, but A(:,:)=B(:,:)+C(:,:))
@@ -57,13 +57,13 @@ A tool (verify\_mnh\_expand.py) can help at checking the validity of the written
 
 For the GPU branch (and branches on GPU, including model specific branches):
 
-  - except variables declared with the PARAMETER attribute, no variable from modules can be used in the physics. Varaibles must be put in a type received by interface.
+  - except variables declared with the PARAMETER attribute, no variable from modules can be used in the physics. Variables must be put in a type received by interface.
   - subroutines or functions must not be called from within a loop on horizontal or vertical dimensions (see below for exception)
   - functions returning arrays must be rewritten as subroutine
 
 Call to external subroutine in loop on horizontal or vertical dimensions must be suppressed in the GPU version. If possible, the call must be put outside of the loop (acting on the full array as a whole) or the subroutine must be put in the CONTAINS part but, in this case, the included subroutine cannot use local array. There are 3 cases:
 
-  - the subroutine does't use local array: subroutine is put in an include file (with the .h extension) and included with the fortran INCLUDE statement.
+  - the subroutine doesn't use local array: subroutine is put in an include file (with the .h extension) and included with the fortran INCLUDE statement.
   - the subroutine use local arrays but it is called from only one place in the code: the source code of the subroutine is moved (no INCLUDE) in the CONTAINS part and the array declarations are moved in the main subroutine.
   - the subroutine use local arrays and is called from several places: the previous technique is not recommended. The source code is put in an include file (with the .h extension) and an extra argument is provided to the subroutine and is used as a buffer so there is no more need to declare local arrays in the called subroutine.
 
@@ -72,7 +72,7 @@ Call to external subroutine in loop on horizontal or vertical dimensions must be
 In Meso-NH, the budget can be used in two ways:
 
   - by giving to the budget machinery the tendency due to a given process
-  - by giving to the budget machinery the total tendency (S variable) before and after a given process. The budget machanism recomputes by difference the tendency only due to the given process.
+  - by giving to the budget machinery the total tendency (S variable) before and after a given process. The budget mechanism recomputes by difference the tendency only due to the given process.
 
 In AROME, we cannot provide the total tendency (S variable) before the process. This total tendency is stored internally by the machinery but cannot be set to a different value before doing a computation.
 

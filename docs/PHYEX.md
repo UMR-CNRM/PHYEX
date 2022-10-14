@@ -25,10 +25,10 @@ The last evolution was to extract the physics to build the independent PHYEX pac
 
 ## CONTENT
 
-The folowing paramerisations are included in the PHYEX package (see the MesoNH documentation for references):
+The following parametrisations are included in the PHYEX package (see the MesoNH documentation for references):
 
  - turbulence scheme
  - shallow convection scheme
  - microphysics schemes
 
-In addition to the parametrisatin source code, test programs and a library for python binding are also provided.
+In addition to the parametrisations source code, test programs and a library for python binding are also provided.
