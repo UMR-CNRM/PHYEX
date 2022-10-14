@@ -63,6 +63,8 @@ Integration details:
 ## NORMAL WORKFLOW FOR ANOTHER CONTRIBUTION
 
 Pull requests must be based on the GPU branch.
+
+The PHYEX administrator:
   - validates (see [below](#tests)) the contribution
   - integrates the contribution in the GPU branch
   - regularly, he tags a new (minor) version of the GPU branch
