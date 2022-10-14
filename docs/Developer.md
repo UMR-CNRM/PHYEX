@@ -20,9 +20,9 @@ The package contains two kinds of branches:
   - generic branches which contain codes for all the models and applications (eg: main and GPU branches)
   - model specific branches which are automatically derived from generic branches (eg: arome\_\<commit\_hash\>, mesonh\_\<commit\_hash\>)
 
-The directories found in the package are different depending on the kind (generic or model specific) branches.
+The directories found in the package are different depending on the branches (generic or model specific).
 
-For model specific branches, only the source code adapted for a given model is present (on directory per parametrisation and an aux directory). No compilation engine or scripts are present in these branches. They are intended to be included directly in the compilation system of the hosting model.
+For model specific branches, only the source code adapted for a given model is present (one directory per parametrisation and an aux directory). No compilation engine or scripts are present in these branches. They are intended to be included directly in the compilation system of the hosting model.
 
 The generic branches contains the following directories:
 
@@ -47,7 +47,7 @@ After cycle 49t1, the physics source code (as well as other model parts such as 
 
 This evolution will impact the way to contribute to the PHYEX repository.
 
-But, whatever is the cycle, the AROME-HARMONIE developers only see codes coming from arome specific branches (branches named arome\_\<commit\_hash\>). This code is ready for inclusion (array-syntax already transformed into DO loops for instance).
+Whatever is the cycle, the AROME-HARMONIE developers only see codes coming from arome specific branches (branches named arome\_\<commit\_hash\>). This code is ready for inclusion (array-syntax already transformed into DO loops for instance).
 
 Said differently, developers do not need to manipulate code transformation tools.
 
@@ -68,7 +68,7 @@ Workflow details (getting the source code in blue, pull request in red, integrat
 
 ## After cycle 49t1
 
-Workflow summary: after the cycle 49t1 (starting from 49t2?), HARMONIE/AROME will become a bundle. Il will be built with source codes coming from various places. One of these places will be the PHYEX repository. Pull requests must be send to each modified bundles.
+Workflow summary: after the cycle 49t1 (starting from 49t2?), HARMONIE/AROME will become a bundle. Il will be built with source codes coming from various places. One of these places will be the PHYEX repository. Pull requests must be sent to each modified bundles.
 
 ![](./AROMEworkflow2.svg)
 
