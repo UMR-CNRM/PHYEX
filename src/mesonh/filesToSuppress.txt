@@ -8,7 +8,6 @@ aux/modd_field.f90
 aux/modd_argslist_ll.f90
 aux/modd_frc.f90
 aux/modd_ibm_paramn.f90
-aux/modd_oceanh.f90
 aux/modd_parameters.f90
 aux/modd_precision.f90
 aux/modd_ref.f90

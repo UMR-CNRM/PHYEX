@@ -5,11 +5,10 @@
 MODULE MODE_TURB_VER_THERMO_CORR
 IMPLICIT NONE
 CONTAINS      
-SUBROUTINE TURB_VER_THERMO_CORR(D,CST,CSTURB,                       &
+SUBROUTINE TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,                 &
                       KRR,KRRL,KRRI,KSV,                            &
-                      OTURB_FLX,HTURBDIM,HTOM,OHARAT,OCOMPUTE_SRC,  &
-                      OCOUPLES,OLES_CALL,OSTATNW,                   &
-                      PIMPL,PEXPL,TPFILE,                           &
+                      OCOMPUTE_SRC,OCOUPLES,OLES_CALL,              &
+                      PEXPL,TPFILE,                                 &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,           &
                       PRHODJ,PTHVREF,                               &
                       PSFTHM,PSFRM,PSFTHP,PSFRP,                    &
@@ -196,7 +195,7 @@ SUBROUTINE TURB_VER_THERMO_CORR(D,CST,CSTURB,                       &
 !!                                              change of YCOMMENT
 !!                     2012-02 (Y. Seity) add possibility to run with reversed
 !!                                              vertical levels
-!!      Modifications  July 2015 (Wim de Rooy) OHARAT switch
+!!      Modifications  July 2015 (Wim de Rooy) TURBN%LHARAT switch
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !!      Modifications  June 2019 (Wim de Rooy) New set up cloud scheme
 !!--------------------------------------------------------------------------
@@ -208,6 +207,7 @@ USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
@@ -231,21 +231,15 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
+TYPE(TURB_t),           INTENT(IN)   :: TURBN
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KSV           ! number of scalar var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
-LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
-                                                      ! turbulence scheme
-CHARACTER(len=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
-LOGICAL,                INTENT(IN)   ::  OHARAT
-LOGICAL,                INTENT(IN)   ::  OSTATNW      ! cloud scheme inclues convect. covar.
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and version 
-REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
+REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PDZZ, PDXX, PDYY, PDZX, PDZY
@@ -274,7 +268,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) ::  PRM          ! Mixing ratios
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVM         ! Mixing ratios
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
-! In case OHARATU=TRUE, PLM already includes all stability corrections
+! In case TURBN%LHARATU=TRUE, PLM already includes all stability corrections
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLEPS        ! dissipative length
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
@@ -322,7 +316,7 @@ REAL, DIMENSION(D%NIJT,D%NKT)  ::  &
        ZDFDDTDZ, & ! dF/d(dTh/dz)
        ZDFDDRDZ, & ! dF/d(dr/dz)
        Z3RDMOMENT, & ! 3 order term in flux or variance equation
-! Estimate of full level length and dissipation length scale in case OHARATU
+! Estimate of full level length and dissipation length scale in case TURBN%LHARATU
        PLMF,     & ! estimate full level length scale from half levels (sub optimal)
        PLEPSF,   & ! estimate full level diss length scale from half levels (sub optimal)
        ZWORK1,ZWORK2,&
@@ -379,10 +373,10 @@ ZCOEFF(IIJB:IIJE,IKB)= - (PDZZ(IIJB:IIJE,IKB+2*D%NKL)+2.*PDZZ(IIJB:IIJE,IKB+D%NK
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !
-IF (OHARAT) THEN
+IF (TURBN%LHARAT) THEN
   CALL MZF_PHY(D,PLM,PLMF)
   !wc Part of the new statistical cloud scheme set up
-  IF (OSTATNW) THEN
+  IF (TURBN%LSTATNW) THEN
     CALL MZF_PHY(D,PLEPS,PLEPSF)
   ELSE
     PLEPSF(:,:)=PLMF(:,:)
@@ -412,7 +406,7 @@ GFTHR = .FALSE.
 GFWTH = .FALSE.
 GFWR  = .FALSE.
 !
-IF (HTOM/='NONE') THEN
+IF (TURBN%CTOM/='NONE') THEN
   GFTH2 = ANY(PFTH2/=0.)
   GFR2  = ANY(PFR2 /=0.) .AND. GUSERV
   GFTHR = ANY(PFTHR/=0.) .AND. GUSERV
@@ -430,12 +424,12 @@ END IF
 !
 ! Compute the turbulent variance F and F' at time t-dt.
 !
-  IF (OHARAT) THEN
+  IF (TURBN%LHARAT) THEN
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK1(IIJB:IIJE,1:D%NKT)=PDTH_DZ(IIJB:IIJE,1:D%NKT)**2
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     CALL MZF_PHY(D,ZWORK1,ZWORK2)
-    IF (OSTATNW) THEN
+    IF (TURBN%LSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZF(IIJB:IIJE,1:D%NKT) = CSTURB%XCTV * & 
                               PLMF(IIJB:IIJE,1:D%NKT)*PLEPSF(IIJB:IIJE,1:D%NKT)*ZWORK2(IIJB:IIJE,1:D%NKT)
@@ -548,12 +542,12 @@ END IF
   CALL MZF_PHY(D,ZWORK3,ZWORK4)
   !
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZFLXZ(IIJB:IIJE,1:D%NKT)   = ZF(IIJB:IIJE,1:D%NKT) + PIMPL * ZDFDDTDZ(IIJB:IIJE,1:D%NKT) &
+  ZFLXZ(IIJB:IIJE,1:D%NKT)   = ZF(IIJB:IIJE,1:D%NKT) + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,1:D%NKT) &
                                     * ZWORK4(IIJB:IIJE,1:D%NKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   !
   ! special case near the ground ( uncentred gradient )
-  IF (OHARAT) THEN
+  IF (TURBN%LHARAT) THEN
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZFLXZ(IIJB:IIJE,IKB) =  PLMF(IIJB:IIJE,IKB)   &
      * PLEPSF(IIJB:IIJE,IKB)                                         &
@@ -561,13 +555,13 @@ END IF
      ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PTHLM(IIJB:IIJE,IKB+2*D%NKL)             &
       +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PTHLM(IIJB:IIJE,IKB+D%NKL  )             & 
       +ZCOEFF(IIJB:IIJE,IKB      )*PTHLM(IIJB:IIJE,IKB  )   )**2          &
-     +PIMPL *                                                  &
+     +TURBN%XIMPL *                                                  &
      ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PTHLP(IIJB:IIJE,IKB+2*D%NKL)             &
       +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PTHLP(IIJB:IIJE,IKB+D%NKL  )             &
       +ZCOEFF(IIJB:IIJE,IKB      )*PTHLP(IIJB:IIJE,IKB  )   )**2          &
     ) 
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-    IF (OSTATNW) THEN
+    IF (TURBN%LSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE)
       ZFLXZ(IIJB:IIJE,IKB) = CSTURB%XCTV * ZFLXZ(IIJB:IIJE,IKB)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
@@ -580,7 +574,7 @@ END IF
      ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PTHLM(IIJB:IIJE,IKB+2*D%NKL)             &
       +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PTHLM(IIJB:IIJE,IKB+D%NKL  )             & 
       +ZCOEFF(IIJB:IIJE,IKB      )*PTHLM(IIJB:IIJE,IKB  )   )**2          &
-     +PIMPL *                                                  &
+     +TURBN%XIMPL *                                                  &
      ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PTHLP(IIJB:IIJE,IKB+2*D%NKL)             &
       +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PTHLP(IIJB:IIJE,IKB+D%NKL  )             &
       +ZCOEFF(IIJB:IIJE,IKB      )*PTHLP(IIJB:IIJE,IKB  )   )**2          &
@@ -592,7 +586,7 @@ END IF
   ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   !
-  IF (OSTATNW) THEN
+  IF (TURBN%LSTATNW) THEN
     !wc  The variance from the budget eq should be multiplied by 2 here
     !    thl'2=2*L*LEPS*(dthl/dz**2)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -614,7 +608,7 @@ END IF
   !
   !
   ! stores <THl THl>
-  IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+  IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
     TZFIELD%CMNHNAME   = 'THL_VVAR'
     TZFIELD%CSTDNAME   = ''
     TZFIELD%CLONGNAME  = 'THL_VVAR'
@@ -668,12 +662,12 @@ END IF
 !
 !
     ! Compute the turbulent variance F and F' at time t-dt.
-  IF (OHARAT) THEN
+  IF (TURBN%LHARAT) THEN
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK1(IIJB:IIJE,1:D%NKT) = PDTH_DZ(IIJB:IIJE,1:D%NKT)*PDR_DZ(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     CALL MZF_PHY(D,ZWORK1,ZWORK2)
-    IF (OSTATNW) THEN
+    IF (TURBN%LSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZF(IIJB:IIJE,1:D%NKT) = CSTURB%XCTV * &
                               PLMF(IIJB:IIJE,1:D%NKT)*PLEPSF(IIJB:IIJE,1:D%NKT)*ZWORK2(IIJB:IIJE,1:D%NKT)
@@ -805,7 +799,7 @@ END IF
     CALL MZF_PHY(D,ZWORK1,ZWORK7)
     CALL MZF_PHY(D,ZWORK2,ZWORK8)
     !
-    IF (OHARAT) THEN
+    IF (TURBN%LHARAT) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)  
       ZWORK5(IIJB:IIJE,1:D%NKT) = 2. *PDR_DZ(IIJB:IIJE,1:D%NKT)  *ZWORK3(IIJB:IIJE,1:D%NKT) &
                                        / PDZZ(IIJB:IIJE,1:D%NKT)               &
@@ -815,24 +809,24 @@ END IF
       CALL MZF_PHY(D,ZWORK5,ZWORK6)
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZFLXZ(IIJB:IIJE,1:D%NKT)   = ZF(IIJB:IIJE,1:D%NKT)                  &
-        + PIMPL * PLMF(IIJB:IIJE,1:D%NKT)*PLEPSF(IIJB:IIJE,1:D%NKT)*0.5   &
+        + TURBN%XIMPL * PLMF(IIJB:IIJE,1:D%NKT)*PLEPSF(IIJB:IIJE,1:D%NKT)*0.5   &
         * ZWORK5(IIJB:IIJE,1:D%NKT)                                       &
-        + PIMPL * ZDFDDTDZ(IIJB:IIJE,1:D%NKT) * ZWORK7(IIJB:IIJE,1:D%NKT) &
-        + PIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK8(IIJB:IIJE,1:D%NKT)
+        + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,1:D%NKT) * ZWORK7(IIJB:IIJE,1:D%NKT) &
+        + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK8(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      IF (OSTATNW) THEN    
+      IF (TURBN%LSTATNW) THEN    
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
         ZFLXZ(IIJB:IIJE,1:D%NKT)   = CSTURB%XCTV * ZFLXZ(IIJB:IIJE,1:D%NKT)
         !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       END IF
     ELSE
-      CALL D_PHI3DTDZ_O_DDTDZ(D,CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,GUSERV,ZWKPHIPSI1) 
+      CALL D_PHI3DTDZ_O_DDTDZ(D,CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,TURBN%CTURBDIM,GUSERV,ZWKPHIPSI1) 
       ! d(phi3*dthdz)/ddthdz term
-      CALL D_PSI3DTDZ_O_DDTDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,GUSERV,ZWKPHIPSI2) 
+      CALL D_PSI3DTDZ_O_DDTDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,TURBN%CTURBDIM,GUSERV,ZWKPHIPSI2) 
       ! d(psi3*dthdz)/ddthdz term
-      CALL D_PHI3DRDZ_O_DDRDZ(D,CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,GUSERV,ZWKPHIPSI3)
+      CALL D_PHI3DRDZ_O_DDRDZ(D,CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,TURBN%CTURBDIM,GUSERV,ZWKPHIPSI3)
       ! d(phi3*drdz )/ddrdz term
-      CALL D_PSI3DRDZ_O_DDRDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,GUSERV,ZWKPHIPSI4)
+      CALL D_PSI3DRDZ_O_DDRDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,TURBN%CTURBDIM,GUSERV,ZWKPHIPSI4)
       ! d(psi3*drdz )/ddrdz term
  
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -845,15 +839,15 @@ END IF
       
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZFLXZ(IIJB:IIJE,1:D%NKT)   = ZF(IIJB:IIJE,1:D%NKT)                          &
-        + PIMPL * CSTURB%XCTV*PLM(IIJB:IIJE,1:D%NKT)*PLEPS(IIJB:IIJE,1:D%NKT)*0.5 &
+        + TURBN%XIMPL * CSTURB%XCTV*PLM(IIJB:IIJE,1:D%NKT)*PLEPS(IIJB:IIJE,1:D%NKT)*0.5 &
           * ZWORK6(IIJB:IIJE,1:D%NKT)                                                   &
-        + PIMPL * ZDFDDTDZ(IIJB:IIJE,1:D%NKT) * ZWORK7(IIJB:IIJE,1:D%NKT)         &
-        + PIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK8(IIJB:IIJE,1:D%NKT)
+        + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,1:D%NKT) * ZWORK7(IIJB:IIJE,1:D%NKT)         &
+        + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK8(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ENDIF
     !
     ! special case near the ground ( uncentred gradient )
-    IF (OHARAT) THEN
+    IF (TURBN%LHARAT) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE)
       ZFLXZ(IIJB:IIJE,IKB) =                                                            & 
       (1. )                                                                                   &
@@ -864,7 +858,7 @@ END IF
         *( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PRM(IIJB:IIJE,IKB+2*D%NKL,1)             &
           +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PRM(IIJB:IIJE,IKB+D%NKL,1  )             & 
           +ZCOEFF(IIJB:IIJE,IKB      )*PRM(IIJB:IIJE,IKB  ,1    ))                &
-        +PIMPL *                                                                              &
+        +TURBN%XIMPL *                                                                              &
          ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PTHLP(IIJB:IIJE,IKB+2*D%NKL)             &
           +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PTHLP(IIJB:IIJE,IKB+D%NKL  )             &
           +ZCOEFF(IIJB:IIJE,IKB      )*PTHLP(IIJB:IIJE,IKB      ))                &
@@ -873,7 +867,7 @@ END IF
           +ZCOEFF(IIJB:IIJE,IKB      )*PRP(IIJB:IIJE,IKB        ))                &
        )
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-    IF (OSTATNW) THEN
+    IF (TURBN%LSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE)
       ZFLXZ(IIJB:IIJE,IKB) = (CSTURB%XCHT1 + CSTURB%XCHT2) * ZFLXZ(IIJB:IIJE,IKB)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
@@ -889,7 +883,7 @@ END IF
         *( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PRM(IIJB:IIJE,IKB+2*D%NKL,1)             &
           +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PRM(IIJB:IIJE,IKB+D%NKL,1  )             & 
           +ZCOEFF(IIJB:IIJE,IKB      )*PRM(IIJB:IIJE,IKB  ,1    ))                &
-        +PIMPL *                                                                              &
+        +TURBN%XIMPL *                                                                              &
          ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PTHLP(IIJB:IIJE,IKB+2*D%NKL)             &
           +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PTHLP(IIJB:IIJE,IKB+D%NKL  )             &
           +ZCOEFF(IIJB:IIJE,IKB      )*PTHLP(IIJB:IIJE,IKB      ))                &
@@ -904,7 +898,7 @@ END IF
     ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     !
-    IF (OSTATNW) THEN
+    IF (TURBN%LSTATNW) THEN
       !wc  The variance from the budget eq should be multiplied by 2 here
       !    e.g. thl'2=2*L*LEPS*(cab)^-1 *(dthl/dz**2)
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -912,7 +906,7 @@ END IF
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ENDIF
     IF ( KRRL > 0 ) THEN
-      IF (OSTATNW) THEN
+      IF (TURBN%LSTATNW) THEN
         !wc Part of the new statistical cloud scheme set up. Normal notation so - sign
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
         PSIGS(IIJB:IIJE,1:D%NKT) = PSIGS(IIJB:IIJE,1:D%NKT) -     &
@@ -927,7 +921,7 @@ END IF
       ENDIF
     END IF
     ! stores <THl Rnp>
-    IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+    IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
       TZFIELD%CMNHNAME   = 'THLRCONS_VCOR'
       TZFIELD%CSTDNAME   = ''
       TZFIELD%CLONGNAME  = 'THLRCONS_VCOR'
@@ -991,7 +985,7 @@ END IF
 !
 !
     ! Compute the turbulent variance F and F' at time t-dt.
-IF (OHARAT) THEN
+IF (TURBN%LHARAT) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ZWORK1(IIJB:IIJE,1:D%NKT) = PDR_DZ(IIJB:IIJE,1:D%NKT)**2
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -999,7 +993,7 @@ IF (OHARAT) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ZF(IIJB:IIJE,1:D%NKT) = PLMF(IIJB:IIJE,1:D%NKT)*PLEPSF(IIJB:IIJE,1:D%NKT)*ZWORK2(IIJB:IIJE,1:D%NKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  IF (OSTATNW) THEN
+  IF (TURBN%LSTATNW) THEN
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZF(IIJB:IIJE,1:D%NKT) = CSTURB%XCTV * ZF(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -1098,7 +1092,7 @@ ENDIF
   ZWORK1(IIJB:IIJE,1:D%NKT) = PRP(IIJB:IIJE,1:D%NKT) - PRM(IIJB:IIJE,1:D%NKT,1)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   CALL DZM_PHY(D,ZWORK1,ZWORK2)
-  IF (OHARAT) THEN
+  IF (TURBN%LHARAT) THEN
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK5(IIJB:IIJE,1:D%NKT) = ZWORK2(IIJB:IIJE,1:D%NKT) / PDZZ(IIJB:IIJE,1:D%NKT)
     ZWORK3(IIJB:IIJE,1:D%NKT) = 2.*PDR_DZ(IIJB:IIJE,1:D%NKT)* ZWORK5(IIJB:IIJE,1:D%NKT)
@@ -1108,17 +1102,17 @@ ENDIF
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZFLXZ(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT)                   &
-          + PIMPL * PLMF(IIJB:IIJE,1:D%NKT) *PLEPSF(IIJB:IIJE,1:D%NKT) &
+          + TURBN%XIMPL * PLMF(IIJB:IIJE,1:D%NKT) *PLEPSF(IIJB:IIJE,1:D%NKT) &
             * ZWORK4(IIJB:IIJE,1:D%NKT) &
-          + PIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK6(IIJB:IIJE,1:D%NKT)
+          + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK6(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    IF (OSTATNW) THEN
+    IF (TURBN%LSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZFLXZ(IIJB:IIJE,1:D%NKT) = CSTURB%XCTV * ZFLXZ(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT) 
      END IF
   ELSE
-    CALL D_PSI3DRDZ2_O_DDRDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,PDR_DZ,HTURBDIM,GUSERV,ZWKPHIPSI1)
+    CALL D_PSI3DRDZ2_O_DDRDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,PDR_DZ,TURBN%CTURBDIM,GUSERV,ZWKPHIPSI1)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK1(IIJB:IIJE,1:D%NKT) = ZWKPHIPSI1(IIJB:IIJE,1:D%NKT)*ZWORK2(IIJB:IIJE,1:D%NKT) &
                                       / PDZZ(IIJB:IIJE,1:D%NKT)
@@ -1132,14 +1126,14 @@ ENDIF
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZFLXZ(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT)                             &
-          + PIMPL * CSTURB%XCTV*PLM(IIJB:IIJE,1:D%NKT) *PLEPS(IIJB:IIJE,1:D%NKT) &
+          + TURBN%XIMPL * CSTURB%XCTV*PLM(IIJB:IIJE,1:D%NKT) *PLEPS(IIJB:IIJE,1:D%NKT) &
             * ZWORK3(IIJB:IIJE,1:D%NKT) &
-          + PIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK5(IIJB:IIJE,1:D%NKT)
+          + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK5(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)  
   ENDIF
     !
     ! special case near the ground ( uncentred gradient )
-  IF (OHARAT) THEN
+  IF (TURBN%LHARAT) THEN
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZFLXZ(IIJB:IIJE,IKB) =  PLMF(IIJB:IIJE,IKB)   &
         * PLEPSF(IIJB:IIJE,IKB)                                        &
@@ -1147,13 +1141,13 @@ ENDIF
        ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PRM(IIJB:IIJE,IKB+2*D%NKL,1)             &
         +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PRM(IIJB:IIJE,IKB+D%NKL,1  )             & 
         +ZCOEFF(IIJB:IIJE,IKB      )*PRM(IIJB:IIJE,IKB  ,1    ))**2         &
-      +PIMPL *                                                  &
+      +TURBN%XIMPL *                                                  &
        ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PRP(IIJB:IIJE,IKB+2*D%NKL)               &
         +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PRP(IIJB:IIJE,IKB+D%NKL  )               &
         +ZCOEFF(IIJB:IIJE,IKB      )*PRP(IIJB:IIJE,IKB      ))**2           &
     )
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-    IF (OSTATNW) THEN
+    IF (TURBN%LSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE)
       ZFLXZ(IIJB:IIJE,IKB) = CSTURB%XCHV * ZFLXZ(IIJB:IIJE,IKB)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
@@ -1166,7 +1160,7 @@ ENDIF
        ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PRM(IIJB:IIJE,IKB+2*D%NKL,1)             &
         +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PRM(IIJB:IIJE,IKB+D%NKL,1  )             & 
         +ZCOEFF(IIJB:IIJE,IKB      )*PRM(IIJB:IIJE,IKB  ,1    ))**2         &
-      +PIMPL *                                                  &
+      +TURBN%XIMPL *                                                  &
        ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PRP(IIJB:IIJE,IKB+2*D%NKL)               &
         +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PRP(IIJB:IIJE,IKB+D%NKL  )               &
         +ZCOEFF(IIJB:IIJE,IKB      )*PRP(IIJB:IIJE,IKB      ))**2           &
@@ -1177,7 +1171,7 @@ ENDIF
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-    IF (OSTATNW) THEN
+    IF (TURBN%LSTATNW) THEN
       !wc  The variance from the budget eq should be multiplied by 2 here
       !    thl'2=2*L*LEPS*(dthl/dz**2)
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -1192,7 +1186,7 @@ ENDIF
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     END IF
     ! stores <Rnp Rnp>
-    IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+    IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
       TZFIELD%CMNHNAME   = 'RTOT_VVAR'
       TZFIELD%CSTDNAME   = ''
       TZFIELD%CLONGNAME  = 'RTOT_VVAR'

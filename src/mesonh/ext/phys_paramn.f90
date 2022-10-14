@@ -244,7 +244,7 @@ END MODULE MODI_PHYS_PARAM_n
 !
 USE MODD_ADV_n,       ONLY : XRTKEMS
 USE MODD_ARGSLIST_ll, ONLY : LIST_ll
-USE MODD_BLOWSNOW,    ONLY : LBLOWSNOW
+USE MODD_BLOWSNOW,    ONLY : LBLOWSNOW,XRSNOW
 USE MODD_BUDGET,      ONLY: NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RI, NBUDGET_SV1, &
                             TBUDGETS, xtime_bu_process, TBUCONF
 USE MODD_CH_AEROSOL
@@ -1549,12 +1549,12 @@ LSTATNW = .FALSE.
 LHARAT = .FALSE.
 !
    CALL TURB( CST,CSTURB, TBUCONF, TURBN,YLDIMPHYEX,&
-              IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,       &
+              IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,                   &
               NSV, NSV_LGBEG, NSV_LGEND,CPROGRAM, L2D, LNOMIXLG,LFLAT,               &
               LLES_CALL, LCOUPLES, LBLOWSNOW,                                        &
-              LTURB_FLX, LTURB_DIAG, LSUBG_COND, GCOMPUTE_SRC,                       &
-              LRMC01, LOCEAN, LDEEPOC, LHARAT, LSTATNW, LDIAG_IN_RUN,                &
-              CTURBDIM, CTURBLEN, CTOM, CTURBLEN_CLOUD, CCLOUD,XIMPL,                &
+              GCOMPUTE_SRC, XRSNOW,                                                  &
+              LOCEAN, LDEEPOC, LDIAG_IN_RUN,                                         &
+              CTURBLEN_CLOUD, CCLOUD,                                                &
               XTSTEP, TPFILE,                                                        &
               XDXX, XDYY, XDZZ, XDZX, XDZY, XZZ,                                     &
               XDIRCOSXW, XDIRCOSYW, XDIRCOSZW, XCOSSLOPE, XSINSLOPE,                 &

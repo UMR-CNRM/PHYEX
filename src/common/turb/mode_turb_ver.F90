@@ -5,12 +5,11 @@
 MODULE MODE_TURB_VER
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,KRR,KRRL,KRRI,   &
-                      OTURB_FLX,OOCEAN,ODEEPOC,OHARAT,OCOMPUTE_SRC, &
+SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,KRR,KRRL,KRRI,               &
+                      OOCEAN,ODEEPOC,OCOMPUTE_SRC,                  &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
-                      HTURBDIM,HTOM,PIMPL,PEXPL,                    &
-                      HPROGRAM, O2D, ONOMIXLG, OFLAT, OSTATNW,      &
-                      OLES_CALL,OCOUPLES,OBLOWSNOW, ORMC01,         &                      
+                      PEXPL, HPROGRAM, O2D, ONOMIXLG, OFLAT,        &
+                      OLES_CALL,OCOUPLES,OBLOWSNOW,PRSNOW,          &                      
                       PTSTEP, TPFILE,                               &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
@@ -249,25 +248,18 @@ INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 INTEGER,                INTENT(IN)   :: KSV, KSV_LGBEG, KSV_LGEND ! number of scalar variables
-LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
-LOGICAL,                INTENT(IN)   ::  OHARAT       ! 
-LOGICAL,                INTENT(IN)   ::  OSTATNW      ! cloud scheme inclues convect. covar.
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
-LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
+REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 CHARACTER(LEN=6),       INTENT(IN)   ::  HPROGRAM     ! HPROGRAM is the program currently running
 LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for lagrangian variables
 LOGICAL,                INTENT(IN)   ::  O2D          ! Logical for 2D model version
-CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
-                                                      ! turbulence scheme
-CHARACTER(LEN=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
-REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
+REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
@@ -282,7 +274,7 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSINSLOPE    ! sinus of the angle
                                       ! between i and the slope vector
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
-! MFMOIST used in case of OHARATU
+! MFMOIST used in case of TURBN%LHARATU
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  MFMOIST       ! moist mass flux dual scheme
 
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
@@ -314,7 +306,7 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PVSLOPEM     ! wind component along 
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length   
-! PLENGTHM PLENGTHH used in case of OHARATU
+! PLENGTHM PLENGTHH used in case of TURBN%LHARATU
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLENGTHM     ! Turb. mixing length momentum
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLENGTHH     ! Turb. mixing length heat/moisture 
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLEPS        ! dissipative length
@@ -330,8 +322,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFWR         ! d(w'2r'  )/dz
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFTH2        ! d(w'th'2 )/dz
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFR2         ! d(w'r'2  )/dz
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFTHR        ! d(w'th'r')/dz
-REAL, DIMENSION(MERGE(D%NIJT,0,HTOM=='TM06')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
-REAL, DIMENSION(MERGE(D%NIJT,0,ORMC01)),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%CTOM=='TM06')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LRMC01)),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PLMO         ! Monin-Obukhov length
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT)   ::  PRUS, PRVS, PRWS, PRTHLS
@@ -410,8 +402,8 @@ IIJB=D%NIJB
 ! 3D Redelsperger numbers
 !
 !
-CALL PRANDTL(D,CST,CSTURB,KRR,KSV,KRRI,OTURB_FLX,  &
-             HTURBDIM,OOCEAN,OHARAT,O2D,OCOMPUTE_SRC,&
+CALL PRANDTL(D,CST,CSTURB,KRR,KSV,KRRI,TURBN%LTURB_FLX,  &
+             TURBN%CTURBDIM,OOCEAN,TURBN%LHARAT,O2D,OCOMPUTE_SRC,&
              TPFILE, OFLAT,                        &
              PDXX,PDYY,PDZZ,PDZX,PDZY,             &
              PTHVREF,PLOCPEXNM,PATHETA,PAMOIST,    &
@@ -449,7 +441,7 @@ IF (KRR>0) CALL GZ_M_W_PHY(D,PRM(:,:,1),PDZZ,ZDR_DZ)
 !
 ! Denominator factor in 3rd order terms
 !
-IF (.NOT. OHARAT) THEN
+IF (.NOT. TURBN%LHARAT) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ZD(IIJB:IIJE,1:D%NKT) = (1.+ZREDTH1(IIJB:IIJE,1:D%NKT)+ZREDR1(IIJB:IIJE,1:D%NKT)) * &
                                &(1.+0.5*(ZREDTH1(IIJB:IIJE,1:D%NKT)+ZREDR1(IIJB:IIJE,1:D%NKT)))
@@ -464,9 +456,9 @@ ENDIF
 !
 GUSERV = KRR/=0
 !
-CALL PHI3(D,CSTURB,ZREDTH1,ZREDR1,ZRED2TH3,ZRED2R3,ZRED2THR3,HTURBDIM,GUSERV,ZPHI3)
+CALL PHI3(D,CSTURB,ZREDTH1,ZREDR1,ZRED2TH3,ZRED2R3,ZRED2THR3,TURBN%CTURBDIM,GUSERV,ZPHI3)
 IF(KRR/=0) &
-CALL PSI3(D,CSTURB,ZREDR1,ZREDTH1,ZRED2R3,ZRED2TH3,ZRED2THR3,HTURBDIM,GUSERV,ZPSI3)
+CALL PSI3(D,CSTURB,ZREDR1,ZREDTH1,ZRED2R3,ZRED2TH3,ZRED2THR3,TURBN%CTURBDIM,GUSERV,ZPSI3)
 !
 ! Prandtl numbers for scalars
 !
@@ -498,7 +490,7 @@ END IF
 !             ----------------------------------------------------------------
 !
 
-IF (OHARAT) THEN
+IF (TURBN%LHARAT) THEN
   ZLM(:,:)=PLENGTHH(:,:)
 ELSE
   ZLM(:,:)=PLM(:,:)
@@ -506,9 +498,9 @@ ENDIF
 !
   CALL  TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                      &
                         KRR,KRRL,KRRI,KSV,                            &
-                        OTURB_FLX,HTURBDIM,HTOM,OOCEAN,ODEEPOC,OHARAT,&
+                        OOCEAN,ODEEPOC,                               &
                         OCOUPLES,OLES_CALL,OCOMPUTE_SRC,              &
-                        PIMPL,PEXPL,PTSTEP,HPROGRAM,TPFILE,           &
+                        PEXPL,PTSTEP,HPROGRAM,TPFILE,                 &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                         PRHODJ,PTHVREF,                               &
                         PSFTHM,PSFRM,PSFTHP,PSFRP,                    &
@@ -523,11 +515,11 @@ ENDIF
                         PRTHLS,PRRS,ZTHLP,ZRP,PTP,PWTH,PWRC,          &
                         PSSTFL, PSSTFL_C, PSSRFL_C                    )
 !
-  CALL  TURB_VER_THERMO_CORR(D,CST,CSTURB,                            &
+  CALL  TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,                      &
                         KRR,KRRL,KRRI,KSV,                            &
-                        OTURB_FLX,HTURBDIM,HTOM, OHARAT,OCOMPUTE_SRC, &
-                        OCOUPLES,OLES_CALL,OSTATNW,                   &                        
-                        PIMPL,PEXPL,TPFILE,                           &
+                        OCOMPUTE_SRC,                                 &
+                        OCOUPLES,OLES_CALL,                           &
+                        PEXPL,TPFILE,                                 &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,           &
                         PRHODJ,PTHVREF,                               &
                         PSFTHM,PSFRM,PSFTHP,PSFRP,                    &
@@ -554,11 +546,11 @@ ENDIF
 !             -----------------------------------------------
 !
 !
-IF (OHARAT) ZLM(:,:)=PLENGTHM(:,:)
+IF (TURBN%LHARAT) ZLM(:,:)=PLENGTHM(:,:)
 !
 CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KSV,O2D,OFLAT,           &
-                      OTURB_FLX,KRR,OOCEAN,OHARAT,OCOUPLES,OLES_CALL,&
-                      HTURBDIM,PIMPL,PEXPL,PTSTEP,TPFILE,           &
+                      KRR,OOCEAN,OCOUPLES,OLES_CALL,                &
+                      PEXPL,PTSTEP,TPFILE,                          &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
                       PRHODJ,PSFUM,PSFVM,                           &
@@ -574,14 +566,13 @@ CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KSV,O2D,OFLAT,           &
 !*       8.   SOURCES OF PASSIVE SCALAR VARIABLES
 !             -----------------------------------
 !
-IF (OHARAT) ZLM(:,:)=PLENGTHH(:,:)
+IF (TURBN%LHARAT) ZLM(:,:)=PLENGTHH(:,:)
 !
 IF (KSV>0)                                                          &
-CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,ONOMIXLG,                       &
+CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,ONOMIXLG,                 &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
-                      OTURB_FLX,HTURBDIM,OHARAT,OBLOWSNOW,OLES_CALL,&
-                      PIMPL,PEXPL,PTSTEP,                           &
-                      TPFILE,                                       &
+                      OBLOWSNOW,OLES_CALL,                          &
+                      PEXPL,PTSTEP,TPFILE,PRSNOW,                   &
                       PDZZ,PDIRCOSZW,                               &
                       PRHODJ,PWM,                                   &
                       PSFSVM,PSFSVP,                                &
@@ -593,7 +584,7 @@ CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,ONOMIXLG,                       &
 IF (KSV>0 .AND. OLES_CALL)                                          &
 CALL  TURB_VER_SV_CORR(D,CST,CSTURB,KRR,KRRL,KRRI,OOCEAN,           &
                       PDZZ,KSV,KSV_LGBEG,KSV_LGEND,ONOMIXLG,        &
-                      OBLOWSNOW,OLES_CALL,OCOMPUTE_SRC,             &
+                      OBLOWSNOW,OLES_CALL,OCOMPUTE_SRC,PRSNOW,      &
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,ZPHI3,ZPSI3,  &
                       PWM,PSVM,                                     &
@@ -605,7 +596,7 @@ CALL  TURB_VER_SV_CORR(D,CST,CSTURB,KRR,KRRL,KRRI,OOCEAN,           &
 !*       9.   DIAGNOSTIC OF Surface Boundary Layer Depth
 !             ------------------------------------------
 !
-IF (ORMC01) CALL SBL_DEPTH(D,CSTURB,PZZ,ZWU,ZWV,ZWTHV,PLMO,PSBL_DEPTH)
+IF (TURBN%LRMC01) CALL SBL_DEPTH(D,CSTURB,PZZ,ZWU,ZWV,ZWTHV,PLMO,PSBL_DEPTH)
 !
 !----------------------------------------------------------------------------
 !
@@ -614,7 +605,7 @@ IF (ORMC01) CALL SBL_DEPTH(D,CSTURB,PZZ,ZWU,ZWV,ZWTHV,PLMO,PSBL_DEPTH)
 !             ------
 !
 !
-IF ( OTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. OHARAT) THEN
+IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. TURBN%LHARAT) THEN
 !
 ! stores the Turbulent Prandtl number
 ! 

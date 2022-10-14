@@ -7,9 +7,9 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                 &
                       KRR,KRRL,KRRI,KSV,                            &
-                      OTURB_FLX,HTURBDIM,HTOM,OOCEAN,ODEEPOC,OHARAT,&
+                      OOCEAN,ODEEPOC,                               &
                       OCOUPLES,OLES_CALL, OCOMPUTE_SRC,             &
-                      PIMPL,PEXPL,PTSTEP,HPROGRAM,                  &
+                      PEXPL,PTSTEP,HPROGRAM,                        &
                       TPFILE,                                       &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PRHODJ,PTHVREF,                               &
@@ -210,7 +210,7 @@ SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                 &
 !!                                              change of YCOMMENT
 !!                     2012-02 (Y. Seity) add possibility to run with reversed
 !!                                             vertical levels
-!!      Modifications  July 2015 (Wim de Rooy) OHARAT switch
+!!      Modifications  July 2015 (Wim de Rooy) TURBN%LHARAT switch
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !!                     2021 (D. Ricard) last version of HGRAD turbulence scheme
 !!                                 Leronard terms instead of Reynolds terms
@@ -266,17 +266,11 @@ INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KSV           ! number of scalar var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
-LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
-LOGICAL,                INTENT(IN)   ::  OHARAT
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and
-CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
-                                                      ! turbulence scheme
 CHARACTER(LEN=6), INTENT(IN) :: HPROGRAM ! CPROGRAM is the program currently running (modd_conf)
-CHARACTER(LEN=4),       INTENT(IN)   ::  HTOM         ! type of Third Order Moment
-REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
+REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
@@ -309,7 +303,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVM         ! Mixing ratios
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
 !
-! In case OHARAT=TRUE, PLM already includes all stability corrections
+! In case TURBN%LHARAT=TRUE, PLM already includes all stability corrections
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLM          ! Turb. mixing length
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLEPS        ! dissipative length
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PLOCPEXNM    ! Lv(T)/Cp/Exnref at time t-1
@@ -339,8 +333,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFWR         ! d(w'2r'  )/dz (at
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFTH2        ! d(w'th'2 )/dz (at mass point)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFR2         ! d(w'r'2  )/dz (at mass point)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFTHR        ! d(w'th'r')/dz (at mass point)
-REAL, DIMENSION(MERGE(D%NIT,0,HTOM=='TM06'),&
-                MERGE(D%NJT,0,HTOM=='TM06')),   INTENT(INOUT)::  PBL_DEPTH    ! BL depth
+REAL, DIMENSION(MERGE(D%NIT,0,TURBN%CTOM=='TM06'),&
+                MERGE(D%NJT,0,TURBN%CTOM=='TM06')),   INTENT(INOUT)::  PBL_DEPTH    ! BL depth
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PWTHV         ! buoyancy flux
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRTHLS     ! cumulated source for theta
@@ -423,7 +417,7 @@ GUSERV = (KRR/=0)
 !
 !  compute the coefficients for the uncentred gradient computation near the ground
 !
-IF (OHARAT) THEN
+IF (TURBN%LHARAT) THEN
  ! LHARAT so TKE and length scales at half levels!
   !wc 50MF can be omitted with energy cascade included
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -460,7 +454,7 @@ GFTHR = .FALSE.
 GFWTH = .FALSE.
 GFWR  = .FALSE.
 !
-IF (HTOM/='NONE') THEN
+IF (TURBN%CTOM/='NONE') THEN
   GFTH2 = ANY(PFTH2/=0.)
   GFR2  = ANY(PFR2 /=0.) .AND. GUSERV
   GFTHR = ANY(PFTHR/=0.) .AND. GUSERV
@@ -478,8 +472,8 @@ END IF
 ! Compute the turbulent flux F and F' at time t-dt.
 !
 CALL DZM_PHY(D,PTHLM,ZWORK1)
-CALL D_PHI3DTDZ_O_DDTDZ(D,CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,HTURBDIM,GUSERV,ZWORK2)
-IF (OHARAT) THEN
+CALL D_PHI3DTDZ_O_DDTDZ(D,CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,TURBN%CTURBDIM,GUSERV,ZWORK2)
+IF (TURBN%LHARAT) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ZF(IIJB:IIJE,1:D%NKT) = -ZKEFF(IIJB:IIJE,1:D%NKT)*ZWORK1(IIJB:IIJE,1:D%NKT)/PDZZ(IIJB:IIJE,1:D%NKT)
   ZDFDDTDZ(IIJB:IIJE,1:D%NKT) = -ZKEFF(IIJB:IIJE,1:D%NKT)
@@ -583,15 +577,15 @@ ELSE ! atmosp bottom
   !*In 3D, a part of the flux goes vertically,
   ! and another goes horizontally (in presence of slopes)
   !*In 1D, part of energy released in horizontal flux is taken into account in the vertical part
-  IF (HTURBDIM=='3DIM') THEN
+  IF (TURBN%CTURBDIM=='3DIM') THEN
     !$mnh_expand_array(JIJ=IIJB:IIJE) 
-    ZF(IIJB:IIJE,IKB) = ( PIMPL*PSFTHP(IIJB:IIJE) + PEXPL*PSFTHM(IIJB:IIJE) )   &
+    ZF(IIJB:IIJE,IKB) = ( TURBN%XIMPL*PSFTHP(IIJB:IIJE) + PEXPL*PSFTHM(IIJB:IIJE) )   &
                        * PDIRCOSZW(IIJB:IIJE)                       &
                        * 0.5 * (1. + PRHODJ(IIJB:IIJE,D%NKA) / PRHODJ(IIJB:IIJE,IKB))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE) 
   ELSE
     !$mnh_expand_array(JIJ=IIJB:IIJE) 
-    ZF(IIJB:IIJE,IKB) = ( PIMPL*PSFTHP(IIJB:IIJE) + PEXPL*PSFTHM(IIJB:IIJE) )   &
+    ZF(IIJB:IIJE,IKB) = ( TURBN%XIMPL*PSFTHP(IIJB:IIJE) + PEXPL*PSFTHM(IIJB:IIJE) )   &
                        / PDIRCOSZW(IIJB:IIJE)                       &
                        * 0.5 * (1. + PRHODJ(IIJB:IIJE,D%NKA) / PRHODJ(IIJB:IIJE,IKB))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE) 
@@ -607,7 +601,7 @@ ELSE ! atmosp bottom
 END IF
 !
 ! Compute the split conservative potential temperature at t+deltat
-CALL TRIDIAG_THERMO(D,PTHLM,ZF,ZDFDDTDZ,PTSTEP,PIMPL,PDZZ,&
+CALL TRIDIAG_THERMO(D,PTHLM,ZF,ZDFDDTDZ,PTSTEP,TURBN%XIMPL,PDZZ,&
                     PRHODJ,PTHLP)
 !
 ! Compute the equivalent tendency for the conservative potential temperature
@@ -648,7 +642,7 @@ PRTHLS(IIJB:IIJE,1:D%NKT)= PRTHLS(IIJB:IIJE,1:D%NKT)  + ZRWTHL(IIJB:IIJE,1:D%NKT
 !  Conservative potential temperature flux :
 !
 !
-ZFLXZ(IIJB:IIJE,1:D%NKT)   = ZF(IIJB:IIJE,1:D%NKT) + PIMPL * ZDFDDTDZ(IIJB:IIJE,1:D%NKT) * & 
+ZFLXZ(IIJB:IIJE,1:D%NKT)   = ZF(IIJB:IIJE,1:D%NKT) + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,1:D%NKT) * & 
                                    ZWORK2(IIJB:IIJE,1:D%NKT)/ PDZZ(IIJB:IIJE,1:D%NKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
@@ -694,7 +688,7 @@ ELSE
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END IF
 !
-IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the conservative potential temperature vertical flux
   TZFIELD%CMNHNAME   = 'THW_FLX'
   TZFIELD%CSTDNAME   = ''
@@ -852,7 +846,7 @@ END IF
 !
 !*       2.5  New boundary layer depth for TOMs
 !
-IF (HTOM=='TM06') CALL TM06_H(D,PTSTEP,PZZ,ZFLXZ,PBL_DEPTH)
+IF (TURBN%CTOM=='TM06') CALL TM06_H(D,PTSTEP,PZZ,ZFLXZ,PBL_DEPTH)
 !
 !----------------------------------------------------------------------------
 !
@@ -868,13 +862,13 @@ IF (KRR /= 0) THEN
   ! Compute the turbulent flux F and F' at time t-dt.
   !
   CALL DZM_PHY(D,PRM(:,:,1),ZWORK1)
- IF (OHARAT) THEN
+ IF (TURBN%LHARAT) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)    
   ZF(IIJB:IIJE,1:D%NKT) = -ZKEFF(IIJB:IIJE,1:D%NKT)*ZWORK1(IIJB:IIJE,1:D%NKT)/PDZZ(IIJB:IIJE,1:D%NKT)
   ZDFDDRDZ(IIJB:IIJE,1:D%NKT) = -ZKEFF(IIJB:IIJE,1:D%NKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)    
  ELSE
-  CALL D_PSI3DRDZ_O_DDRDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,HTURBDIM,GUSERV,ZWORK2)
+  CALL D_PSI3DRDZ_O_DDRDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,TURBN%CTURBDIM,GUSERV,ZWORK2)
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)    
   ZF(IIJB:IIJE,1:D%NKT) = -CSTURB%XCSHF*PPSI3(IIJB:IIJE,1:D%NKT)*ZKEFF(IIJB:IIJE,1:D%NKT)& 
                                 *ZWORK1(IIJB:IIJE,1:D%NKT)/PDZZ(IIJB:IIJE,1:D%NKT)
@@ -979,15 +973,15 @@ IF (KRR /= 0) THEN
     !* in 1DIM case, the part of energy released in horizontal flux
     ! is taken into account in the vertical part
     !
-    IF (HTURBDIM=='3DIM') THEN
+    IF (TURBN%CTURBDIM=='3DIM') THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE) 
-      ZF(IIJB:IIJE,IKB) = ( PIMPL*PSFRP(IIJB:IIJE) + PEXPL*PSFRM(IIJB:IIJE) )       &
+      ZF(IIJB:IIJE,IKB) = ( TURBN%XIMPL*PSFRP(IIJB:IIJE) + PEXPL*PSFRM(IIJB:IIJE) )       &
                            * PDIRCOSZW(IIJB:IIJE)                       &
                          * 0.5 * (1. + PRHODJ(IIJB:IIJE,D%NKA) / PRHODJ(IIJB:IIJE,IKB))
       !$mnh_end_expand_array(JIJ=IIJB:IIJE) 
     ELSE
       !$mnh_expand_array(JIJ=IIJB:IIJE) 
-      ZF(IIJB:IIJE,IKB) = ( PIMPL*PSFRP(IIJB:IIJE) + PEXPL*PSFRM(IIJB:IIJE) )     &
+      ZF(IIJB:IIJE,IKB) = ( TURBN%XIMPL*PSFRP(IIJB:IIJE) + PEXPL*PSFRM(IIJB:IIJE) )     &
                          / PDIRCOSZW(IIJB:IIJE)                       &
                          * 0.5 * (1. + PRHODJ(IIJB:IIJE,D%NKA) / PRHODJ(IIJB:IIJE,IKB))
       !$mnh_end_expand_array(JIJ=IIJB:IIJE) 
@@ -999,7 +993,7 @@ IF (KRR /= 0) THEN
 #endif
     END IF
   ! Compute the split conservative potential temperature at t+deltat
-  CALL TRIDIAG_THERMO(D,PRM(:,:,1),ZF,ZDFDDRDZ,PTSTEP,PIMPL,&
+  CALL TRIDIAG_THERMO(D,PRM(:,:,1),ZF,ZDFDDRDZ,PTSTEP,TURBN%XIMPL,&
                       PDZZ,PRHODJ,PRP)
   !
   ! Compute the equivalent tendency for the conservative mixing ratio
@@ -1040,7 +1034,7 @@ IF (KRR /= 0) THEN
   ! cons. mixing ratio flux :
   !
   ZFLXZ(IIJB:IIJE,1:D%NKT)   = ZF(IIJB:IIJE,1:D%NKT)                                                &
-                 + PIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK2(IIJB:IIJE,1:D%NKT) / PDZZ(IIJB:IIJE,1:D%NKT)
+                 + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK2(IIJB:IIJE,1:D%NKT) / PDZZ(IIJB:IIJE,1:D%NKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   !
   ! replace the flux by the Leonard terms above ZALT and ZCLD_THOLD
@@ -1082,7 +1076,7 @@ IF (KRR /= 0) THEN
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)    
   ENDIF
   !
-  IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+  IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
     ! stores the conservative mixing ratio vertical flux
     TZFIELD%CMNHNAME   = 'RCONSW_FLX'
     TZFIELD%CSTDNAME   = ''
@@ -1226,16 +1220,16 @@ END IF
 !
 !*       4.1  <w Rc>
 !
-IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL) .AND. (KRRL > 0) ) THEN
+IF ( ((TURBN%LTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL) .AND. (KRRL > 0) ) THEN
 !
 ! recover the Conservative potential temperature flux :
-! With OHARAT is true tke and length scales at half levels
+! With TURBN%LHARAT is true tke and length scales at half levels
 ! yet modify to use length scale and tke at half levels from vdfexcuhl
  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
- ZWORK1(IIJB:IIJE,1:D%NKT) = PIMPL * PTHLP(IIJB:IIJE,1:D%NKT) + PEXPL * PTHLM(IIJB:IIJE,1:D%NKT)
+ ZWORK1(IIJB:IIJE,1:D%NKT) = TURBN%XIMPL * PTHLP(IIJB:IIJE,1:D%NKT) + PEXPL * PTHLM(IIJB:IIJE,1:D%NKT)
  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
  CALL DZM_PHY(D,ZWORK1,ZWORK2)
- IF (OHARAT) THEN
+ IF (TURBN%LHARAT) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ZA(IIJB:IIJE,1:D%NKT)   = ZWORK2(IIJB:IIJE,1:D%NKT)/ PDZZ(IIJB:IIJE,1:D%NKT) * &
                                  (-PLM(IIJB:IIJE,1:D%NKT)*PSQRT_TKE(IIJB:IIJE,1:D%NKT))
@@ -1251,7 +1245,7 @@ IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL) .AND. (KRRL > 0) ) THEN
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
  ENDIF
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZA(IIJB:IIJE,IKB) = (PIMPL*PSFTHP(IIJB:IIJE) + PEXPL*PSFTHM(IIJB:IIJE)) * PDIRCOSZW(IIJB:IIJE)
+  ZA(IIJB:IIJE,IKB) = (TURBN%XIMPL*PSFTHP(IIJB:IIJE) + PEXPL*PSFTHM(IIJB:IIJE)) * PDIRCOSZW(IIJB:IIJE)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   !  
   ! compute <w Rc>
@@ -1270,7 +1264,7 @@ IF ( ((OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL) .AND. (KRRL > 0) ) THEN
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   !
   ! store the liquid water mixing ratio vertical flux
-  IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+  IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
     TZFIELD%CMNHNAME   = 'RCW_FLX'
     TZFIELD%CSTDNAME   = ''
     TZFIELD%CLONGNAME  = 'RCW_FLX'

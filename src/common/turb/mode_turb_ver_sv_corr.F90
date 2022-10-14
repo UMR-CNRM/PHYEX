@@ -7,7 +7,7 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE TURB_VER_SV_CORR(D,CST,CSTURB,KRR,KRRL,KRRI,OOCEAN,&
                       PDZZ,KSV,KSV_LGBEG,KSV_LGEND,ONOMIXLG,        &
-                      OBLOWSNOW,OLES_CALL,OCOMPUTE_SRC,             &
+                      OBLOWSNOW,OLES_CALL,OCOMPUTE_SRC,PRSNOW,      &
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PPHI3,PPSI3,  &
                       PWM,PSVM,                                     &
@@ -61,7 +61,6 @@ USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
 USE MODD_LES
-USE MODD_BLOWSNOW, ONLY: XRSNOW
 !
 USE SHUMAN_PHY, ONLY:  MZF_PHY
 USE MODE_GRADIENT_M_PHY, ONLY : GZ_M_W_PHY
@@ -86,6 +85,7 @@ LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for la
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and
+REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   ::  KRRL         ! number of liquid var.
 INTEGER,                INTENT(IN)   ::  KRRI         ! number of ice var.
@@ -141,7 +141,7 @@ CALL SECOND_MNH(ZTIME1)
 !
 IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables          
-   ZCSV= CSTURB%XCHF/XRSNOW
+   ZCSV= CSTURB%XCHF/PRSNOW
 ELSE
    ZCSV= CSTURB%XCHF
 ENDIF

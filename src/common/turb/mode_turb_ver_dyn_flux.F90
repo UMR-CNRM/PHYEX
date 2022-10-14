@@ -5,11 +5,9 @@
 MODULE MODE_TURB_VER_DYN_FLUX
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KSV,O2D,OFLAT,&
-                      OTURB_FLX,KRR,OOCEAN,OHARAT,OCOUPLES,OLES_CALL,&
-                      HTURBDIM,PIMPL,PEXPL,                         &
-                      PTSTEP,                                       &
-                      TPFILE,                                       &
+SUBROUTINE TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KSV,O2D,OFLAT,      &
+                      KRR,OOCEAN,OCOUPLES,OLES_CALL,                &
+                      PEXPL,PTSTEP,TPFILE,                          &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
                       PRHODJ,                                       &
@@ -194,7 +192,7 @@ SUBROUTINE TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KSV,O2D,OFLAT,&
 !!                     October 2009 (G. Tanguy) add ILENCH=LEN(YCOMMENT) after
 !!                                              change of YCOMMENT
 !!      2012-02 Y. Seity,  add possibility to run with reversed vertical levels
-!!      Modifications  July 2015 (Wim de Rooy) OHARATU switch
+!!      Modifications  July 2015 (Wim de Rooy) TURBN%LHARATU switch
 !!      J.Escobar : 15/09/2015 : WENO5 & JPHEXT <> 1
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !!      Q. Rodier      17/01/2019 : cleaning : remove cyclic conditions on DP and ZA
@@ -243,18 +241,13 @@ TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
 INTEGER,                INTENT(IN)   :: KSV           ! number of scalar variables
-LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
-LOGICAL,                INTENT(IN)   ::  OHARAT
 LOGICAL,                INTENT(IN)   ::  O2D          ! Logical for 2D model version (modd_conf)
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
-CHARACTER(len=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
-                                                      ! turbulence scheme
-REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
+REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
@@ -362,7 +355,7 @@ IIJB=D%NIJB
 ZSOURCE(:,:) = 0.
 ZFLXZ(:,:) = 0.
 ZCMFS = CSTURB%XCMFS
-IF (OHARAT) ZCMFS=1.
+IF (TURBN%LHARAT) ZCMFS=1.
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZDIRSINZW(IIJB:IIJE) = SQRT(1.-PDIRCOSZW(IIJB:IIJE)**2)
@@ -370,9 +363,9 @@ ZDIRSINZW(IIJB:IIJE) = SQRT(1.-PDIRCOSZW(IIJB:IIJE)**2)
 !  compute the coefficients for the uncentred gradient computation near the
 !  ground
 !
-! With OHARATU length scale and TKE are at half levels so remove MZM
+! With TURBN%LHARATU length scale and TKE are at half levels so remove MZM
 !
-IF (OHARAT) THEN
+IF (TURBN%LHARAT) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ZKEFF(IIJB:IIJE,1:D%NKT) =  PLM(IIJB:IIJE,1:D%NKT) * SQRT(PTKEM(IIJB:IIJE,1:D%NKT))
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -468,7 +461,7 @@ ELSE ! Atmosphere
   ZSOURCE(IIJB:IIJE,IKB) =                                  &
   (   ZWORK41D(IIJB:IIJE) &
   +  ZWORK61D(IIJB:IIJE)   &
-  -  ZCOEFS(IIJB:IIJE) * PUM(IIJB:IIJE,IKB) * PIMPL        &
+  -  ZCOEFS(IIJB:IIJE) * PUM(IIJB:IIJE,IKB) * TURBN%XIMPL        &
   ) * 0.5 * ( 1. + ZWORK1(IIJB:IIJE,D%NKA) / ZWORK1(IIJB:IIJE,IKB) )
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
@@ -477,7 +470,7 @@ ENDIF
 !
 ! Obtention of the split U at t+ deltat
 !
-CALL TRIDIAG_WIND(D,PUM,ZA,ZCOEFS,PTSTEP,PEXPL,PIMPL,   &
+CALL TRIDIAG_WIND(D,PUM,ZA,ZCOEFS,PTSTEP,PEXPL,TURBN%XIMPL,   &
                   ZWORK1,ZSOURCE,ZRES)
 !
 !  Compute the equivalent tendency for the U wind component
@@ -485,7 +478,7 @@ CALL TRIDIAG_WIND(D,PUM,ZA,ZCOEFS,PTSTEP,PEXPL,PIMPL,   &
 CALL MXM_PHY(D,PRHODJ,ZWORK1)
 CALL MXM_PHY(D,ZKEFF,ZWORK2)
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-ZWORK3(IIJB:IIJE,1:D%NKT)=PIMPL*ZRES(IIJB:IIJE,1:D%NKT) + PEXPL*PUM(IIJB:IIJE,1:D%NKT)
+ZWORK3(IIJB:IIJE,1:D%NKT)=TURBN%XIMPL*ZRES(IIJB:IIJE,1:D%NKT) + PEXPL*PUM(IIJB:IIJE,1:D%NKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 CALL DZM_PHY(D,ZWORK3,ZWORK4)
 CALL MXM_PHY(D,PDZZ,ZWORK5)
@@ -510,14 +503,14 @@ ELSE
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZFLXZ(IIJB:IIJE,IKB)   =   ZWORK1(IIJB:IIJE,IKB)  *                &
     ( ZSOURCE(IIJB:IIJE,IKB)                                         &
-     +ZCOEFS(IIJB:IIJE) * ZRES(IIJB:IIJE,IKB) * PIMPL                &
+     +ZCOEFS(IIJB:IIJE) * ZRES(IIJB:IIJE,IKB) * TURBN%XIMPL                &
     ) / 0.5 / ( 1. + ZWORK2(IIJB:IIJE,D%NKA)/ ZWORK2(IIJB:IIJE,IKB) )
   !
   ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END IF
 !
-IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the U wind component vertical flux
   TZFIELD%CMNHNAME   = 'UW_VFLX'
   TZFIELD%CSTDNAME   = ''
@@ -604,7 +597,7 @@ END IF
 !*       5.3  Source of W wind component
 !
 !
-IF(HTURBDIM=='3DIM') THEN
+IF(TURBN%CTURBDIM=='3DIM') THEN
   ! Compute the source for the W wind component
                 ! used to compute the W source at the ground
   !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -836,7 +829,7 @@ ELSE ! Atmos case
   ZSOURCE(IIJB:IIJE,IKB) =                                      &
   (  ZWORK51D(IIJB:IIJE)                                        &
    + ZWORK61D(IIJB:IIJE)                                        &
-   - ZCOEFS(IIJB:IIJE) * PVM(IIJB:IIJE,IKB) * PIMPL             &
+   - ZCOEFS(IIJB:IIJE) * PVM(IIJB:IIJE,IKB) * TURBN%XIMPL             &
   ) * 0.5 * ( 1. + ZWORK1(IIJB:IIJE,D%NKA) / ZWORK1(IIJB:IIJE,IKB) )
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
@@ -845,7 +838,7 @@ ELSE ! Atmos case
 ENDIF ! End of Ocean or Atmospher Cases
 ! 
 !  Obtention of the split V at t+ deltat 
-CALL TRIDIAG_WIND(D,PVM,ZA,ZCOEFS,PTSTEP,PEXPL,PIMPL,  &
+CALL TRIDIAG_WIND(D,PVM,ZA,ZCOEFS,PTSTEP,PEXPL,TURBN%XIMPL,  &
                   ZWORK1,ZSOURCE,ZRES)
 !
 ! Compute the equivalent tendency for the V wind component
@@ -853,7 +846,7 @@ CALL TRIDIAG_WIND(D,PVM,ZA,ZCOEFS,PTSTEP,PEXPL,PIMPL,  &
 CALL MYM_PHY(D,PRHODJ,ZWORK1)
 CALL MYM_PHY(D,ZKEFF,ZWORK2)
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-ZWORK3(IIJB:IIJE,1:D%NKT)=PIMPL*ZRES(IIJB:IIJE,1:D%NKT) + PEXPL*PVM(IIJB:IIJE,1:D%NKT)
+ZWORK3(IIJB:IIJE,1:D%NKT)=TURBN%XIMPL*ZRES(IIJB:IIJE,1:D%NKT) + PEXPL*PVM(IIJB:IIJE,1:D%NKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 CALL DZM_PHY(D,ZWORK3,ZWORK4)
 CALL MYM_PHY(D,PDZZ,ZWORK5)
@@ -876,14 +869,14 @@ ELSE
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZFLXZ(IIJB:IIJE,IKB)   =   ZWORK5(IIJB:IIJE,IKB)  *                &
     ( ZSOURCE(IIJB:IIJE,IKB)                                         &
-     +ZCOEFS(IIJB:IIJE) * ZRES(IIJB:IIJE,IKB) * PIMPL                &
+     +ZCOEFS(IIJB:IIJE) * ZRES(IIJB:IIJE,IKB) * TURBN%XIMPL                &
     ) / 0.5 / ( 1. + ZWORK1(IIJB:IIJE,D%NKA) / ZWORK1(IIJB:IIJE,IKB) )
   !
   ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END IF
 !
-IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the V wind component vertical flux
   TZFIELD%CMNHNAME   = 'VW_VFLX'
   TZFIELD%CSTDNAME   = ''
@@ -969,7 +962,7 @@ END IF
 !
 !*       6.3  Source of W wind component
 !
-IF(HTURBDIM=='3DIM') THEN
+IF(TURBN%CTURBDIM=='3DIM') THEN
   ! Compute the source for the W wind component
   IF (OOCEAN) THEN
     !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -1113,7 +1106,7 @@ END IF
 !*       7.   DIAGNOSTIC COMPUTATION OF THE 1D <W W> VARIANCE
 !             -----------------------------------------------
 !
-IF ( OTURB_FLX .AND. TPFILE%LOPENED .AND. HTURBDIM == '1DIM') THEN
+IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED .AND. TURBN%CTURBDIM == '1DIM') THEN
   CALL GZ_W_M_PHY(D,PWM,PDZZ,ZWORK1)
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ZFLXZ(IIJB:IIJE,1:D%NKT)= (2./3.) * PTKEM(IIJB:IIJE,1:D%NKT)                     &

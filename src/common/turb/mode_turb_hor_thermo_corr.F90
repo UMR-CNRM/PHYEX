@@ -6,8 +6,9 @@
 MODULE MODE_TURB_HOR_THERMO_CORR
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_THERMO_CORR(D,CST,KRR, KRRL, KRRI,         &
-                      OTURB_FLX,OSUBG_COND,OOCEAN,OCOMPUTE_SRC,      &
+      SUBROUTINE TURB_HOR_THERMO_CORR(D,CST,TURBN,                   &
+                      KRR, KRRL, KRRI,                               &
+                      OOCEAN,OCOMPUTE_SRC,                           &
                       TPFILE,                                        &
                       PINV_PDXX,PINV_PDYY,                           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
@@ -63,6 +64,7 @@ USE MODD_CONF
 USE MODD_CTURB
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_LES
@@ -90,12 +92,10 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
+TYPE(TURB_t),           INTENT(IN)   :: TURBN
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
-LOGICAL,                  INTENT(IN)    ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
-LOGICAL,                 INTENT(IN)  ::   OSUBG_COND ! Switch for sub-grid condensation
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
@@ -168,7 +168,7 @@ ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2)+2.*PDZZ(:,:,IKB+1)) /      &
 !
 !
 !
-IF ( ( KRRL > 0 .AND. OSUBG_COND) .OR. ( OTURB_FLX .AND. TPFILE%LOPENED ) &
+IF ( ( KRRL > 0 .AND. TURBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) &
                                   .OR. ( LLES_CALL )                  ) THEN
 !
 !*       8.1  <THl THl>
@@ -209,7 +209,7 @@ IF ( ( KRRL > 0 .AND. OSUBG_COND) .OR. ( OTURB_FLX .AND. TPFILE%LOPENED ) &
   END IF
   !
   ! stores <THl THl>
-  IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+  IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
     TZFIELD%CMNHNAME   = 'THL_HVAR'
     TZFIELD%CSTDNAME   = ''
     TZFIELD%CLONGNAME  = 'THL_HVAR'
@@ -297,7 +297,7 @@ IF ( ( KRRL > 0 .AND. OSUBG_COND) .OR. ( OTURB_FLX .AND. TPFILE%LOPENED ) &
     END IF                    
     !
     ! stores <THl Rnp>
-    IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+    IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
       TZFIELD%CMNHNAME   = 'THLR_HCOR'
       TZFIELD%CSTDNAME   = ''
       TZFIELD%CLONGNAME  = 'THLR_HCOR'
@@ -365,7 +365,7 @@ IF ( ( KRRL > 0 .AND. OSUBG_COND) .OR. ( OTURB_FLX .AND. TPFILE%LOPENED ) &
     END IF
     !
     ! stores <Rnp Rnp>
-    IF ( OTURB_FLX .AND. TPFILE%LOPENED ) THEN
+    IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
       TZFIELD%CMNHNAME   = 'R_HVAR'
       TZFIELD%CSTDNAME   = ''
       TZFIELD%CLONGNAME  = 'R_HVAR'
