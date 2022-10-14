@@ -55,17 +55,16 @@ Integration details:
   - The Meso-NH integrator extracts, from the different pull requests, what concern the PHYEX repository and send a pull request on PHYEX based on a mesonh specific branch
   - The PHYEX administrator:
     - validates (see [below](#tests)) the contribution
-    - integrates the contribution in the arome branch and merges it in the GPU branch
+    - integrates the contribution in the mesonh branch and merges it in the GPU branch
     - regularly, he tags a new (minor) version of the GPU branch
-    - when asked by the IAL integrator, he builds a new arome specific branch (see [below](#code-preparation))
-    - when an arome specific branch is used in an official cycle, the arome specific branch is tagged accordingly
- puis teste les différents modèles et l'intègre dans la branche GPU (avec tag réguliers)
+    - when asked by the IAL integrator, he builds a new mesonh specific branch (see [below](#code-preparation))
+    - when a mesonh specific branch is used in an official cycle, the mesonh specific branch is tagged accordingly
 
 ## NORMAL WORKFLOW FOR ANOTHER CONTRIBUTION
 
 Pull requests must be based on the GPU branch.
   - validates (see [below](#tests)) the contribution
-  - integrates the contribution in the arome branch and merges it in the GPU branch
+  - integrates the contribution in its own model branch and merges it in the GPU branch
   - regularly, he tags a new (minor) version of the GPU branch
 
 ## TESTS
