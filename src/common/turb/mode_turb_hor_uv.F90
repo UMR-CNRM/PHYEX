@@ -7,8 +7,7 @@ MODULE MODE_TURB_HOR_UV
 IMPLICIT NONE
 CONTAINS
 !     ################################################################
-      SUBROUTINE TURB_HOR_UV(KSPLT,                                  &
-                      OTURB_FLX,                                     &
+      SUBROUTINE TURB_HOR_UV(TURBN,KSPLT,                            &
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
@@ -59,6 +58,8 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
+USE MODD_TURB_n, ONLY: TURB_t
+!
 USE MODD_CST
 USE MODD_CONF
 USE MODD_CTURB
@@ -86,9 +87,8 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(TURB_t),             INTENT(IN)    :: TURBN
 INTEGER,                  INTENT(IN)    ::  KSPLT        ! split process index
-LOGICAL,                  INTENT(IN)    ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
@@ -205,7 +205,7 @@ ZFLX(:,:,IKB-1:IKB-1) = 2. * MXM( MYM( ZFLX(:,:,IKB-1:IKB-1) ) )  &
                    - ZFLX(:,:,IKB:IKB)
 !     
 ! stores  <U V>
-IF ( TPFILE%LOPENED .AND. OTURB_FLX ) THEN
+IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
   TZFIELD%CMNHNAME   = 'UV_FLX'
   TZFIELD%CSTDNAME   = ''
   TZFIELD%CLONGNAME  = 'UV_FLX'

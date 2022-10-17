@@ -7,10 +7,11 @@
               & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,                        &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
               & O2D,ONOMIXLG,OFLAT,OLES_CALL,OCOUPLES,OBLOWSNOW,      &
-              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,OCOMPUTE_SRC,         &
-              & ORMC01,OOCEAN,ODEEPOC,OHARAT,OSTATNW,ODIAG_IN_RUN,    &
-              & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,PIMPL,      &
-              & PTSTEP,TPFILE,PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,           &
+              & OCOMPUTE_SRC, PRSNOW,                                 &
+              & OOCEAN,ODEEPOC,ODIAG_IN_RUN,                          &
+              & HTURBLEN_CL,HCLOUD,                                   &
+              & PTSTEP,TPFILE,                                        &
+              & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
               & PRHODJ,PTHVREF,                                       &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
@@ -48,11 +49,11 @@
 !!    ------
 !!
 !!      The dimensionality of the turbulence parameterization can be chosen by
-!!    means of the parameter HTURBDIM:
-!!           * HTURBDIM='1DIM' the parameterization is 1D but can be used in
+!!    means of the parameter TURBN%CTURBDIM:
+!!           * TURBN%CTURBDIM='1DIM' the parameterization is 1D but can be used in
 !!    3D , 2D or 1D simulations. Only the sources associated to the vertical
 !!    turbulent fluxes are taken into account.
-!!           *  HTURBDIM='3DIM' the parameterization is fully 2D or 3D depending
+!!           *  TURBN%CTURBDIM='3DIM' the parameterization is fully 2D or 3D depending
 !!    on the model  dimensionality. Of course, it does not make any sense to
 !!    activate this option with a 1D model.
 !!
@@ -60,19 +61,19 @@
 !!      1- Preliminary computations.
 !!      2- The metric coefficients are recovered from the grid knowledge.
 !!      3- The mixing length is computed according to its choice:
-!!           * HTURBLEN='BL89' the Bougeault and Lacarrere algorithm is used.
+!!           * TURBN%CTURBLEN='BL89' the Bougeault and Lacarrere algorithm is used.
 !!             The mixing length is given by the vertical displacement from its
 !!             original level of an air particule having an initial internal
 !!             energy equal to its TKE and stopped by the buoyancy forces.
 !!             The discrete formulation is second order accurate.
-!!           * HTURBLEN='DELT' the mixing length is given by the mesh size
+!!           * TURBN%CTURBLEN='DELT' the mixing length is given by the mesh size
 !!             depending on the model dimensionality, this length is limited
 !!             with the ground distance.
-!!           * HTURBLEN='DEAR' the mixing length is given by the mesh size
+!!           * TURBN%CTURBLEN='DEAR' the mixing length is given by the mesh size
 !!             depending on the model dimensionality, this length is limited
 !!             with the ground distance and also by the Deardorff mixing length
 !!             pertinent in the stable cases.
-!!           * HTURBLEN='KEPS' the mixing length is deduced from the TKE
+!!           * TURBN%CTURBLEN='KEPS' the mixing length is deduced from the TKE
 !!             dissipation, which becomes a prognostic variable of the model (
 !!             Duynkerke formulation).
 !!      3'- The cloud mixing length is computed according to HTURBLEN_CLOUD
@@ -82,21 +83,21 @@
 !!         and TKE
 !!      6- The sources associated to the vertical turbulent fluxes are computed
 !!      with a temporal scheme allowing a degree of implicitness given by
-!!      PIMPL, varying from PIMPL=0. ( purely explicit scheme) to PIMPL=1.
+!!      TURBN%XIMPL, varying from TURBN%XIMPL=0. ( purely explicit scheme) to TURBN%XIMPL=1.
 !!      ( purely implicit scheme)
 !!      The sources associated to the horizontal fluxes are computed with a
 !!      purely explicit temporal scheme. These sources are only computed when
-!!      the turbulence parameterization is 2D or 3D( HTURBDIM='3DIM' ).
+!!      the turbulence parameterization is 2D or 3D( TURBN%CTURBDIM='3DIM' ).
 !!      7- The sources for TKE are computed, along with the dissipation of TKE
-!!      if HTURBLEN='KEPS'.
+!!      if TURBN%CTURBLEN='KEPS'.
 !!      8- Some turbulence-related quantities are stored in the synchronous
 !!      FM-file.
 !!      9- The non-conservative variables are retrieved.
 !!
 !!
 !!      The saving of the fields in the synchronous FM-file is controlled by:
-!!        * OTURB_FLX => saves all the turbulent fluxes and correlations
-!!        * OTURB_DIAG=> saves the turbulent Prandtl and Schmidt numbers, the
+!!        * TURBN%LTURB_FLX => saves all the turbulent fluxes and correlations
+!!        * TURBN%LTURB_DIAG=> saves the turbulent Prandtl and Schmidt numbers, the
 !!                       source terms of TKE and dissipation of TKE
 !!
 !!    EXTERNAL
@@ -218,7 +219,7 @@
 !!                     10/2012 J.Escobar Bypass PGI bug , redefine some allocatable array inplace of automatic
 !!                     2014-11 Y. Seity,  add output terms for TKE DDHs budgets
 !!                     July 2015 (Wim de Rooy)  modifications to run with RACMO
-!!                                              turbulence (OHARAT=TRUE)
+!!                                              turbulence (TURBN%LHARAT=TRUE)
 !!                     04/2016  (C.Lac) correction of negativity for KHKO
 !  P. Wautelet 05/2016-04/2018: new data structures and calls for I/O
 !  Q. Rodier      01/2018: introduction of RM17
@@ -297,29 +298,17 @@ INTEGER,                INTENT(IN)   :: KSV, KSV_LGBEG, KSV_LGEND ! number of sc
 CHARACTER(LEN=4),DIMENSION(2),INTENT(IN):: HLBCX, HLBCY  ! X- and Y-direc LBC
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time-splitting
 INTEGER,                INTENT(IN)   :: KMODEL_CL     ! model number for cloud mixing length
-LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
-LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
-                                 ! diagnostic fields in the syncronous FM-file
-LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid CONDensation
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
-LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
-LOGICAL,                INTENT(IN)   ::  OHARAT       ! switch for LHARATU from AROME
-LOGICAL,                INTENT(IN)   ::  OSTATNW      ! cloud scheme inclues convect. covar. contrib
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
-CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
-                                                      ! turbulence scheme
-CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
-CHARACTER(LEN=4),       INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
-REAL,                   INTENT(IN)   ::  PIMPL        ! degree of implicitness
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
+REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
@@ -353,8 +342,8 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVT        ! passive scal. va
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)),   INTENT(IN) ::  PSRCT       ! Second-order flux
                       ! s'rc'/2Sigma_s2 at time t-1 multiplied by Lambda_3
-REAL, DIMENSION(MERGE(D%NIJT,0,HTOM=='TM06')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
-REAL, DIMENSION(MERGE(D%NIJT,0,ORMC01)),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%CTOM=='TM06')),INTENT(INOUT) :: PBL_DEPTH  ! BL height for TOMS
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LRMC01)),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
 !
 !    variables for cloud mixing length
 REAL, DIMENSION(MERGE(D%NIJT,0,KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE'),&
@@ -474,7 +463,7 @@ REAL, DIMENSION(D%NIJT) ::  ZTAU11M,ZTAU12M,  &
             ! Virtual Potential Temp. used
             ! in the Deardorff mixing length computation
 !
-REAL                :: ZEXPL        ! 1-PIMPL deg of expl.
+REAL                :: ZEXPL        ! 1-TURBN%XIMPL deg of expl.
 REAL                :: ZRVORD       ! RV/RD
 REAL                :: ZEPS         ! XMV / XMD
 REAL                :: ZD           ! distance to the surface (for routine DELT)
@@ -507,11 +496,11 @@ TYPE(TFIELDDATA) :: TZFIELD
 REAL(KIND=JPRB) :: ZHOOK_HANDLE,ZHOOK_HANDLE2
 IF (LHOOK) CALL DR_HOOK('TURB',0,ZHOOK_HANDLE)
 !
-IF (OHARAT .AND. HTURBDIM /= '1DIM') THEN
-  CALL ABOR1('OHARATU only implemented for option HTURBDIM=1DIM!')
+IF (TURBN%LHARAT .AND. TURBN%CTURBDIM /= '1DIM') THEN
+  CALL ABOR1('TURBN%LHARATU only implemented for option TURBN%CTURBDIM=1DIM!')
 ENDIF
-IF (OHARAT .AND. OLES_CALL) THEN
-  CALL ABOR1('OHARATU not implemented for option LLES_CALL')
+IF (TURBN%LHARAT .AND. OLES_CALL) THEN
+  CALL ABOR1('TURBN%LHARATU not implemented for option LLES_CALL')
 ENDIF
 !
 IKT=D%NKT
@@ -522,11 +511,11 @@ IKE=D%NKE
 IIJE=D%NIJE
 IIJB=D%NIJB
 !
-ZEXPL = 1.- PIMPL
+ZEXPL = 1.- TURBN%XIMPL
 ZRVORD= CST%XRV / CST%XRD
 !
 !Copy data into ZTHLM and ZRM only if needed
-IF (HTURBLEN=='BL89' .OR. HTURBLEN=='RM17' .OR. HTURBLEN=='ADAP' .OR. ORMC01) THEN
+IF (TURBN%CTURBLEN=='BL89' .OR. TURBN%CTURBLEN=='RM17' .OR. TURBN%CTURBLEN=='ADAP' .OR. TURBN%LRMC01) THEN
   ZTHLM(IIJB:IIJE,1:D%NKT) = PTHLT(IIJB:IIJE,1:D%NKT)
   ZRM(IIJB:IIJE,1:D%NKT,:) = PRT(IIJB:IIJE,1:D%NKT,:)
 END IF
@@ -589,7 +578,7 @@ IF (KRRL >=1) THEN
 !*       2.5 Lv/Cph/Exn
 !
   IF ( KRRI >= 1 ) THEN
-    IF (OSTATNW) THEN
+    IF (TURBN%LSTATNW) THEN
     !wc call new functions depending on statnew
        CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
                                  ZLVOCPEXNM,ZAMOIST,ZATHETA)
@@ -619,7 +608,7 @@ IF (KRRL >=1) THEN
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ELSE
     !wc call new stat functions or not
-    IF (OSTATNW) THEN
+    IF (TURBN%LSTATNW) THEN
       CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
                                  ZLOCPEXNM,ZAMOIST,ZATHETA)
     ELSE
@@ -629,7 +618,7 @@ IF (KRRL >=1) THEN
   END IF
 !
 !
-  IF ( TPFILE%LOPENED .AND. OTURB_DIAG ) THEN
+  IF ( TPFILE%LOPENED .AND. TURBN%LTURB_DIAG ) THEN
     TZFIELD%CMNHNAME   = 'ATHETA'
     TZFIELD%CSTDNAME   = ''
     TZFIELD%CLONGNAME  = 'ATHETA'
@@ -705,9 +694,9 @@ END IF
 !          -----------------------------------------
 !
 !
-IF (.NOT. OHARAT) THEN
+IF (.NOT. TURBN%LHARAT) THEN
 
-SELECT CASE (HTURBLEN)
+SELECT CASE (TURBN%CTURBLEN)
 !
 !*      3.1 BL89 mixing length
 !           ------------------
@@ -812,7 +801,7 @@ ENDIF  ! end LHARRAT
 !*      3.6 Dissipative length
 !           ------------------
 
-IF (OHARAT) THEN
+IF (TURBN%LHARAT) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ZLEPS(IIJB:IIJE,1:D%NKT)=PLENGTHM(IIJB:IIJE,1:D%NKT)*(3.75**2.)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -826,7 +815,7 @@ ENDIF
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZLMO(IIJB:IIJE)=XUNDEF
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-IF (ORMC01) THEN
+IF (TURBN%LRMC01) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZUSTAR(IIJB:IIJE)=(PSFU(IIJB:IIJE)**2+PSFV(IIJB:IIJE)**2)**(0.25)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
@@ -837,20 +826,20 @@ IF (ORMC01) THEN
     ZSFRV(:)=0.
     CALL LMO(D,CST,ZUSTAR,ZTHLM(:,IKB),ZRVM,PSFTH,ZSFRV,ZLMO)
   END IF
-  CALL RMC01(D,CST,CSTURB,HTURBLEN,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,ZLMO,ZLM,ZLEPS)
+  CALL RMC01(D,CST,CSTURB,TURBN%CTURBLEN,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,ZLMO,ZLM,ZLEPS)
 END IF
 !
 !RMC01 is only applied on RM17 in ADAP
-IF (HTURBLEN=='ADAP') THEN
+IF (TURBN%CTURBLEN=='ADAP') THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ZLEPS(IIJB:IIJE,1:D%NKT) = MIN(ZLEPS(IIJB:IIJE,1:D%NKT),ZLMW(IIJB:IIJE,1:D%NKT)*TURBN%XCADAP)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 END IF
 !
-!*      3.8 Mixing length in external points (used if HTURBDIM="3DIM")
+!*      3.8 Mixing length in external points (used if TURBN%CTURBDIM="3DIM")
 !           ----------------------------------------------------------
 !
-IF (HTURBDIM=="3DIM") THEN
+IF (TURBN%CTURBDIM=="3DIM") THEN
   CALL UPDATE_LM(D,HLBCX,HLBCY,ZLM,ZLEPS)
 END IF
 !
@@ -926,7 +915,7 @@ ZMTH2(:,:) = 0.     ! w'th'2
 ZMR2(:,:)  = 0.     ! w'r'2
 ZMTHR(:,:) = 0.     ! w'th'r'
 !
-IF (HTOM=='TM06') THEN
+IF (TURBN%CTOM=='TM06') THEN
   CALL TM06(D,CST,PTHVREF,PBL_DEPTH,PZZ,PSFTH,ZMWTH,ZMTH2)
 !
    CALL GZ_M_W_PHY(D,ZMWTH,PDZZ,ZWORK1)    ! -d(w'2th' )/dz
@@ -991,11 +980,10 @@ IF( BUCONF%LBUDGET_SV ) THEN
 END IF
 
 CALL TURB_VER(D, CST,CSTURB,TURBN,KRR, KRRL, KRRI,       &
-          OTURB_FLX, OOCEAN, ODEEPOC, OHARAT,OCOMPUTE_SRC,&
+          OOCEAN, ODEEPOC, OCOMPUTE_SRC,                 &
           KSV,KSV_LGBEG,KSV_LGEND,                       &
-          HTURBDIM,HTOM,PIMPL,ZEXPL,                     &
-          HPROGRAM, O2D, ONOMIXLG, OFLAT, OSTATNW,       &
-          OLES_CALL,OCOUPLES,OBLOWSNOW, ORMC01,          &
+          ZEXPL,HPROGRAM, O2D, ONOMIXLG, OFLAT,          &
+          OLES_CALL,OCOUPLES,OBLOWSNOW, PRSNOW,          &
           PTSTEP,TPFILE,                                 &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,        &
           PCOSSLOPE,PSINSLOPE,                           &
@@ -1050,7 +1038,7 @@ END IF
 ! alors que ces termes ne sont pas calculés
 #ifdef REPRO48
 #else
-IF( HTURBDIM == '3DIM' ) THEN
+IF( TURBN%CTURBDIM == '3DIM' ) THEN
 #endif
   IF( BUCONF%LBUDGET_U  ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_U ), 'HTURB', PRUS  (:,:) )
   IF( BUCONF%LBUDGET_V  ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_V ), 'HTURB', PRVS  (:,:) )
@@ -1088,9 +1076,9 @@ IF( HTURBDIM == '3DIM' ) THEN
 !à supprimer une fois le précédent ifdef REPRO48 validé
 #ifdef REPRO48
 #else
-    CALL TURB_HOR_SPLT(D,CST,CSTURB,                           &
+    CALL TURB_HOR_SPLT(D,CST,CSTURB, TURBN,                    &
           KSPLIT, KRR, KRRL, KRRI, KSV, PTSTEP,HLBCX,HLBCY,    &
-          OTURB_FLX,OSUBG_COND,OOCEAN,OCOMPUTE_SRC,            &
+          OOCEAN,OCOMPUTE_SRC,                                 &
           TPFILE,                                              &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                        &
           PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                       &
@@ -1162,7 +1150,7 @@ IF(PRESENT(PTPMF))  THEN
 END IF
 !  6.2 TKE evolution equation
 
-IF (.NOT. OHARAT) THEN
+IF (.NOT. TURBN%LHARAT) THEN
 !
 IF (BUCONF%LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
@@ -1181,12 +1169,11 @@ ELSE
   ZRTKEMS(:,:)=0.
 END IF
 !
-CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,HPROGRAM,                      &
+CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,TURBN,HPROGRAM,                &
                    & KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,                      &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,               &
-                   & PTSTEP,PIMPL,ZEXPL,                                &
-                   & HTURBLEN,HTURBDIM,                                 &
-                   & TPFILE,OTURB_DIAG,OLES_CALL,ODIAG_IN_RUN,OOCEAN,   &
+                   & PTSTEP,ZEXPL,                                      &
+                   & TPFILE,OLES_CALL,ODIAG_IN_RUN,OOCEAN,              &
                    & PSFU,PSFV,                                         &
                    & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,ZRTKEMS,&
                    & TBUDGETS,KBUDGETS, PEDR=PEDR, PTR=PTR,PDISS=PDISS, &
@@ -1209,7 +1196,7 @@ ENDIF
 !*      7. STORES SOME INFORMATIONS RELATED TO THE TURBULENCE SCHEME
 !          ---------------------------------------------------------
 !
-IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
+IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
 !
 ! stores the mixing length
 !
@@ -1340,7 +1327,7 @@ IF (OLES_CALL) THEN
 !*     11. LES quantities depending on <w'2> in "1DIM" mode
 !          ------------------------------------------------
 !
-  IF (HTURBDIM=="1DIM") THEN
+  IF (TURBN%CTURBDIM=="1DIM") THEN
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK1(IIJB:IIJE,1:D%NKT) = 2./3.*PTKET(IIJB:IIJE,1:D%NKT)
@@ -1596,7 +1583,7 @@ IF (ODZ) THEN
   PLM(IIJB:IIJE,D%NKU) = PLM(IIJB:IIJE,IKE)
   PLM(IIJB:IIJE,D%NKA) = PZZ(IIJB:IIJE,IKB) - PZZ(IIJB:IIJE,D%NKA)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-  IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
+  IF ( TURBN%CTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
     IF ( O2D) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       PLM(IIJB:IIJE,1:D%NKT) = SQRT( PLM(IIJB:IIJE,1:D%NKT)*ZWORK1(IIJB:IIJE,1:D%NKT) )
@@ -1613,7 +1600,7 @@ ELSE
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   PLM(IIJB:IIJE,1:D%NKT)=1.E10
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
+  IF ( TURBN%CTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
     IF ( O2D) THEN
       PLM(:,:) = ZWORK1(:,:)
     ELSE
@@ -1627,7 +1614,7 @@ END IF
 !  mixing length limited by the distance normal to the surface
 !  (with the same factor as for BL89)
 !
-IF (.NOT. ORMC01) THEN
+IF (.NOT. TURBN%LRMC01) THEN
   ZALPHA=0.5**(-1.5)
   !
   DO JIJ=IIJB,IIJE
@@ -1692,7 +1679,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PLM
 !
 !   initialize the mixing length with the mesh grid
 IF (LHOOK) CALL DR_HOOK('TURB:DEAR',0,ZHOOK_HANDLE2)
-IF ( HTURBDIM /= '1DIM' ) THEN
+IF ( TURBN%CTURBDIM /= '1DIM' ) THEN
   CALL MXF_PHY(D,PDXX,ZWORK1)
   IF (.NOT. O2D) THEN
     CALL MYF_PHY(D,PDYY,ZWORK2)
@@ -1707,7 +1694,7 @@ PLM(IIJB:IIJE,D%NKU) = PLM(IIJB:IIJE,IKE)
 PLM(IIJB:IIJE,D%NKA) = PZZ(IIJB:IIJE,IKB) - PZZ(IIJB:IIJE,D%NKA)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
-IF ( HTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
+IF ( TURBN%CTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
   IF ( O2D) THEN
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     PLM(IIJB:IIJE,1:D%NKT) = SQRT( PLM(IIJB:IIJE,1:D%NKT)*ZWORK1(IIJB:IIJE,1:D%NKT) )
@@ -1794,7 +1781,7 @@ END WHERE
 !
 !  mixing length limited by the distance normal to the surface (with the same factor as for BL89)
 !
-IF (.NOT. ORMC01) THEN
+IF (.NOT. TURBN%LRMC01) THEN
   ZALPHA=0.5**(-1.5)
   !
   DO JIJ=IIJB,IIJE
@@ -1918,7 +1905,7 @@ END WHERE
 !*       3.    CALCULATION OF THE MIXING LENGTH IN CLOUDS
 !              ------------------------------------------
 !
-IF (HTURBLEN_CL == HTURBLEN) THEN
+IF (HTURBLEN_CL == TURBN%CTURBLEN) THEN
   ZLM_CLOUD(:,:) = ZLM(:,:)
 ELSE
   SELECT CASE (HTURBLEN_CL)
@@ -1946,7 +1933,7 @@ ENDIF
 !              -----------------------------------------------
 !
 ! Impression before modification of the mixing length
-IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
+IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%CMNHNAME   = 'LM_CLEAR_SKY'
   TZFIELD%CSTDNAME   = ''
   TZFIELD%CLONGNAME  = 'LM_CLEAR_SKY'
@@ -1980,7 +1967,7 @@ END WHERE
 !*       5.    IMPRESSION
 !              ----------
 !
-IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
+IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   TZFIELD%CMNHNAME   = 'COEF_AMPL'
   TZFIELD%CSTDNAME   = ''
   TZFIELD%CLONGNAME  = 'COEF_AMPL'

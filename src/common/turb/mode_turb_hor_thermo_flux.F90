@@ -7,8 +7,7 @@ MODULE MODE_TURB_HOR_THERMO_FLUX
 IMPLICIT NONE
 CONTAINS
 !     ################################################################
-      SUBROUTINE TURB_HOR_THERMO_FLUX(KSPLT, KRR, KRRL, KRRI,        &
-                      OTURB_FLX,OSUBG_COND,                          &
+      SUBROUTINE TURB_HOR_THERMO_FLUX(TURBN, KSPLT, KRR, KRRL, KRRI, &
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
@@ -62,6 +61,8 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
+USE MODD_TURB_n, ONLY: TURB_t
+!
 USE MODD_CST
 USE MODD_CONF
 USE MODD_CTURB
@@ -90,14 +91,11 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(TURB_t),             INTENT(IN)    :: TURBN
 INTEGER,                  INTENT(IN)    :: KSPLT         ! split process index
 INTEGER,                  INTENT(IN)    :: KRR           ! number of moist var.
 INTEGER,                  INTENT(IN)    :: KRRL          ! number of liquid water var.
 INTEGER,                  INTENT(IN)    :: KRRI          ! number of ice water var.
-LOGICAL,                  INTENT(IN)    ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
-LOGICAL,                 INTENT(IN)  ::   OSUBG_COND ! Switch for sub-grid 
-!                                                    condensation
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
@@ -245,7 +243,7 @@ END IF
 !!ZWORK(:,:,:) = ZFLX(:,:,:) 
 !
 ! stores the horizontal  <U THl>
-IF ( TPFILE%LOPENED .AND. OTURB_FLX ) THEN
+IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
   TZFIELD%CMNHNAME   = 'UTHL_FLX'
   TZFIELD%CSTDNAME   = ''
   TZFIELD%CLONGNAME  = 'UTHL_FLX'
@@ -348,7 +346,7 @@ IF (KRR/=0) THEN
   END IF
   !
   ! stores the horizontal  <U Rnp>
-  IF ( TPFILE%LOPENED .AND. OTURB_FLX ) THEN
+  IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
     TZFIELD%CMNHNAME   = 'UR_FLX'
     TZFIELD%CSTDNAME   = ''
     TZFIELD%CLONGNAME  = 'UR_FLX'
@@ -397,7 +395,7 @@ END IF
 !!     ZFLX(:,:,:)*MXM(EMOIST(KRR,KRRI,PTHLT,PEXNREF,PRT,PLOCPT,PSRCM))
 !!  !
 !!  ! stores the horizontal  <U VPT>
-!!  IF ( TPFILE%LOPENED .AND. OTURB_FLX ) THEN
+!!  IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
 !!    TZFIELD%CMNHNAME   = 'UVPT_FLX'
 !!    TZFIELD%CSTDNAME   = ''
 !!    TZFIELD%CLONGNAME  = 'UVPT_FLX'
@@ -457,7 +455,7 @@ END IF
 !
 ! Compute the equivalent tendancy for Rc and Ri
 !
-!IF ( OSUBG_COND .AND. KRRL > 0 .AND. .NOT. L2D) THEN
+!IF ( TURBN%LSUBG_COND .AND. KRRL > 0 .AND. .NOT. L2D) THEN
 IF ( KRRL >= 1 .AND. .NOT. L2D) THEN
   IF (.NOT. LFLAT) THEN
     ZFLXC = 2.*( MYF( MYM( PRHODJ*PATHETA*PSRCM )*ZFLX )                       &
@@ -500,7 +498,7 @@ END IF
 !!ZWORK(:,:,:) = ZFLX(:,:,:) 
 !
 ! stores the horizontal  <V THl>
-IF ( TPFILE%LOPENED .AND. OTURB_FLX ) THEN
+IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
   TZFIELD%CMNHNAME   = 'VTHL_FLX'
   TZFIELD%CSTDNAME   = ''
   TZFIELD%CLONGNAME  = 'VTHL_FLX'
@@ -612,7 +610,7 @@ IF (KRR/=0) THEN
   END IF
   !
   ! stores the horizontal  <V Rnp>
-  IF ( TPFILE%LOPENED .AND. OTURB_FLX ) THEN
+  IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
     TZFIELD%CMNHNAME   = 'VR_FLX'
     TZFIELD%CSTDNAME   = ''
     TZFIELD%CLONGNAME  = 'VR_FLX'
@@ -665,7 +663,7 @@ END IF
 !!  END IF
 !!  !
 !!  ! stores the horizontal  <V VPT>
-!!  IF ( TPFILE%LOPENED .AND. OTURB_FLX ) THEN
+!!  IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
 !!    TZFIELD%CMNHNAME   = 'VVPT_FLX'
 !!    TZFIELD%CSTDNAME   = ''
 !!    TZFIELD%CLONGNAME  = 'VVPT_FLX'

@@ -6,8 +6,8 @@
 MODULE MODE_TURB_HOR_DYN_CORR
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_DYN_CORR(KSPLT, PTSTEP,                    &
-                      OTURB_FLX,KRR,                                 &
+      SUBROUTINE TURB_HOR_DYN_CORR(TURBN,KSPLT, PTSTEP,              &
+                      KRR,                                           &
                       TPFILE,                                        &
                       PK,PINV_PDZZ,                                  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
@@ -70,6 +70,8 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
+USE MODD_TURB_n, ONLY: TURB_t
+!
 USE MODD_ARGSLIST_ll,    ONLY: LIST_ll
 USE MODD_CST
 USE MODD_CONF
@@ -102,10 +104,9 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(TURB_t),             INTENT(IN)    :: TURBN
 INTEGER,                  INTENT(IN)    ::  KSPLT        ! split process index
 REAL,                     INTENT(IN)    ::  PTSTEP       ! timestep
-LOGICAL,                  INTENT(IN)    ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
 INTEGER,                  INTENT(IN)    ::  KRR          ! number of moist var.
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
@@ -299,7 +300,7 @@ ZFLX(:,:,IKB-1) =                                                            &
 ZFLX(:,:,IKB-1) = 2. * ZFLX(:,:,IKB-1) -  ZFLX(:,:,IKB)
 !
 CALL UPDATE_HALO_ll(TZFIELDS_ll, IINFO_ll)
-IF ( TPFILE%LOPENED .AND. OTURB_FLX ) THEN
+IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
   ! stores <U U>  
   TZFIELD%CMNHNAME   = 'U_VAR'
   TZFIELD%CSTDNAME   = ''
@@ -394,7 +395,7 @@ ZFLX(:,:,IKB-1) = 2. * ZFLX(:,:,IKB-1) -  ZFLX(:,:,IKB)
 !
 CALL UPDATE_HALO_ll(TZFIELDS_ll, IINFO_ll)
 !
-IF ( TPFILE%LOPENED .AND. OTURB_FLX ) THEN
+IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
   ! stores <V V>  
   TZFIELD%CMNHNAME   = 'V_VAR'
   TZFIELD%CSTDNAME   = ''
@@ -481,7 +482,7 @@ ZFLX(:,:,IKB-1) =                                                     &
   ! 
 ZFLX(:,:,IKB-1) = 2. * ZFLX(:,:,IKB-1) - ZFLX(:,:,IKB)
 !
-IF ( TPFILE%LOPENED .AND. OTURB_FLX ) THEN
+IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
   ! stores <W W>  
   TZFIELD%CMNHNAME   = 'W_VAR'
   TZFIELD%CSTDNAME   = ''

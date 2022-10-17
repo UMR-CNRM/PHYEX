@@ -7,8 +7,8 @@ MODULE MODE_TURB_HOR_UW
 IMPLICIT NONE
 CONTAINS
 !     ################################################################
-      SUBROUTINE TURB_HOR_UW(KSPLT,                                  &
-                      OTURB_FLX,KRR,                                 &
+      SUBROUTINE TURB_HOR_UW(TURBN,KSPLT,                            &
+                      KRR,                                           &
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDZZ,PMZM_PRHODJ,            &
                       PDXX,PDZZ,PDZX,                                &
@@ -62,6 +62,8 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
+USE MODD_TURB_n, ONLY: TURB_t
+!
 USE MODD_CST
 USE MODD_CONF
 USE MODD_CTURB
@@ -90,9 +92,8 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(TURB_t),             INTENT(IN)    :: TURBN
 INTEGER,                  INTENT(IN)    ::  KSPLT        ! split process index
-LOGICAL,                  INTENT(IN)    ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
 INTEGER,                  INTENT(IN)    ::  KRR          ! number of moist var.
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
@@ -167,7 +168,7 @@ ZFLX(:,:,IKB) = 0.
 ZFLX(:,:,IKB-1)=2.*ZFLX(:,:,IKB)- ZFLX(:,:,IKB+1)
 !
 ! stores  <U W>
-IF ( TPFILE%LOPENED .AND. OTURB_FLX ) THEN
+IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
   TZFIELD%CMNHNAME   = 'UW_HFLX'
   TZFIELD%CSTDNAME   = ''
   TZFIELD%CLONGNAME  = 'UW_HFLX'

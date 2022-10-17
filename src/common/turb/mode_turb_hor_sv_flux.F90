@@ -6,8 +6,7 @@
 MODULE MODE_TURB_HOR_SV_FLUX
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_SV_FLUX(KSPLT,                             &
-                      OTURB_FLX,                                     &
+      SUBROUTINE TURB_HOR_SV_FLUX(TURBN,KSPLT,                       &
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
@@ -60,6 +59,8 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
+USE MODD_TURB_n, ONLY: TURB_t
+!
 USE MODD_CST
 USE MODD_CONF
 USE MODD_CTURB
@@ -89,9 +90,8 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(TURB_t),             INTENT(IN)    :: TURBN
 INTEGER,                  INTENT(IN)    ::  KSPLT        ! split process index
-LOGICAL,                  INTENT(IN)    ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
@@ -197,7 +197,7 @@ DO JSV=1,ISV
   ZFLXX(:,:,IKB-1:IKB-1) = 2. * MXM( ZWORK2D(:,:,1:1) ) - ZFLXX(:,:,IKB:IKB)
   !
   ! stores  <U SVth>
-  IF ( TPFILE%LOPENED .AND. OTURB_FLX ) THEN
+  IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
     WRITE(TZFIELD%CMNHNAME,'("USV_FLX_",I3.3)') JSV
     TZFIELD%CSTDNAME   = ''
     TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)
@@ -248,7 +248,7 @@ DO JSV=1,ISV
     ZFLXY(:,:,IKB-1:IKB-1) = 2. * MYM( ZWORK2D(:,:,1:1) ) - ZFLXY(:,:,IKB:IKB)
   !
   ! stores  <V SVth>
-    IF ( TPFILE%LOPENED .AND. OTURB_FLX ) THEN
+    IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
       WRITE(TZFIELD%CMNHNAME,'("VSV_FLX_",I3.3)') JSV
       TZFIELD%CSTDNAME   = ''
       TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)

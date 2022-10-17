@@ -9,10 +9,10 @@ INTERFACE
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,             &
               & HPROGRAM, O2D, ONOMIXLG, OFLAT,                       &
               & OLES_CALL,OCOUPLES,OBLOWSNOW,                         &
-              & OTURB_FLX,OTURB_DIAG,OSUBG_COND,OCOMPUTE_SRC,         &
-              & ORMC01,OOCEAN,ODEEPOC,OHARAT,OSTATNW,ODIAG_IN_RUN,    &
-              & HTURBDIM,HTURBLEN,HTOM,HTURBLEN_CL,HCLOUD,            &
-              & PIMPL,PTSTEP,TPFILE,                                  &
+              & OCOMPUTE_SRC, PRSNOW,                                 &
+              & OOCEAN,ODEEPOC,ODIAG_IN_RUN,                          &
+              & HTURBLEN_CL,HCLOUD,                                   &
+              & PTSTEP,TPFILE,                                        &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
               & PRHODJ,PTHVREF,                                       &
@@ -52,29 +52,17 @@ INTEGER,                INTENT(IN)   :: KSV, KSV_LGBEG, KSV_LGEND ! number of sc
 CHARACTER(LEN=*),DIMENSION(2),INTENT(IN):: HLBCX, HLBCY  ! X- and Y-direc LBC
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time-splitting
 INTEGER,                INTENT(IN)   :: KMODEL_CL     ! model number for cloud mixing length
-LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
-LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
-                                 ! diagnostic fields in the syncronous FM-file
-LOGICAL,                INTENT(IN)   ::  OSUBG_COND   ! switch for SUBGrid CONDensation
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
-LOGICAL,                INTENT(IN)   ::  ORMC01       ! switch for RMC01 lengths in SBL
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
-LOGICAL,                INTENT(IN)   ::  OHARAT       ! switch for LHARATU from AROME
-LOGICAL,                INTENT(IN)   :: OSTATNW       ! cloud scheme inclues convect. covar. contrib
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
-CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
-                                                      ! turbulence scheme
-CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN     ! kind of mixing length
-CHARACTER(LEN=4),       INTENT(IN)   ::  HTOM         ! kind of Third Order Moment
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
-REAL,                   INTENT(IN)   ::  PIMPL        ! degree of implicitness
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
+REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !

@@ -5,9 +5,9 @@
 MODULE MODE_TURB_HOR_SPLT
 IMPLICIT NONE
 CONTAINS
-           SUBROUTINE TURB_HOR_SPLT(D,CST,CSTURB,                    &
+           SUBROUTINE TURB_HOR_SPLT(D,CST,CSTURB,TURBN,              &
                       KSPLIT, KRR,KRRL,KRRI,KSV, PTSTEP,HLBCX,HLBCY, &
-                      OTURB_FLX,OSUBG_COND,OOCEAN,OCOMPUTE_SRC,      &
+                      OOCEAN,OCOMPUTE_SRC,                           &
                       TPFILE,                                        &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
                       PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &
@@ -160,6 +160,8 @@ USE MODD_CONF
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_DIMPHYEX, ONLY : DIMPHYEX_t
+USE MODD_TURB_n, ONLY: TURB_t
+!
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_PARAMETERS
 !
@@ -179,6 +181,7 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
+TYPE(TURB_t),           INTENT(IN)   :: TURBN
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time splitting
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
@@ -186,9 +189,6 @@ INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 INTEGER,                INTENT(IN)   :: KSV           ! number of sv var.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
 CHARACTER (LEN=*), DIMENSION(:), INTENT(IN)       ::  HLBCX,HLBCY
-LOGICAL,                  INTENT(IN)    ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
-LOGICAL,                 INTENT(IN)  ::   OSUBG_COND ! Switch for sub-grid condensation
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 
@@ -364,8 +364,9 @@ IF (KSPLIT>1 .AND. CPROGRAM=='MESONH') THEN
   DO JSPLT=1,KSPLIT
 !
 ! compute the turbulent tendencies for the small time step
-    CALL TURB_HOR(D,CST,CSTURB,JSPLT, KRR, KRRL, KRRI, PTSTEP,    &
-                   OTURB_FLX,OSUBG_COND,OOCEAN,OCOMPUTE_SRC,      &
+    CALL TURB_HOR(D,CST,CSTURB,TURBN,                             &
+                   JSPLT, KRR, KRRL, KRRI, PTSTEP,    &
+                   OOCEAN,OCOMPUTE_SRC,                           &
                    TPFILE,                                        &
                    PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
                    PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &
@@ -505,8 +506,9 @@ IF (KSPLIT>1 .AND. CPROGRAM=='MESONH') THEN
 !
 ELSE
 !
-  CALL TURB_HOR(D,CST,CSTURB,1, KRR, KRRL, KRRI,  PTSTEP,      &
-                OTURB_FLX,OSUBG_COND,OOCEAN,OCOMPUTE_SRC,      &
+  CALL TURB_HOR(D,CST,CSTURB,TURBN,                            &
+                1, KRR, KRRL, KRRI,  PTSTEP,                   &
+                OOCEAN,OCOMPUTE_SRC,                           &
                 TPFILE,                                        &
                 PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
                 PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &

@@ -5,12 +5,10 @@
 MODULE MODE_TURB_VER_SV_FLUX
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,ONOMIXLG,                  &
+SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,ONOMIXLG,            &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
-                      OTURB_FLX,HTURBDIM,OHARAT,OBLOWSNOW,OLES_CALL,&
-                      PIMPL,PEXPL,                                  &
-                      PTSTEP,                                       &
-                      TPFILE,                                       &
+                      OBLOWSNOW,OLES_CALL,                          &
+                      PEXPL,PTSTEP,TPFILE,PRSNOW,                   &
                       PDZZ,PDIRCOSZW,                               &
                       PRHODJ,PWM,                                   &
                       PSFSVM,PSFSVP,                                &
@@ -198,7 +196,7 @@ SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,ONOMIXLG,                  &
 !!                                              change of YCOMMENT
 !!                     Feb 2012(Y. Seity) add possibility to run with reversed
 !!                                              vertical levels
-!!      Modifications: July 2015 (Wim de Rooy) OHARAT switch
+!!      Modifications: July 2015 (Wim de Rooy) TURBN%LHARAT switch
 !!                     Feb 2017(M. Leriche) add initialisation of ZSOURCE
 !!                                   to avoid unknwon values outside physical domain
 !!                                   and avoid negative values in sv tendencies
@@ -216,11 +214,11 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
 USE MODD_LES
-USE MODD_BLOWSNOW, ONLY: XRSNOW
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE_PHY
 !
 
@@ -242,17 +240,14 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
+TYPE(TURB_t),           INTENT(IN)   :: TURBN
 INTEGER,                INTENT(IN)   :: KSV, &
                                        KSV_LGBEG, KSV_LGEND ! number of scalar variables
-LOGICAL,                INTENT(IN)   ::  OTURB_FLX    ! switch to write the
-                                 ! turbulent fluxes in the syncronous FM-file
 LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for lagrangian variables (modd_conf)
-CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! dimensionality of the
-                                                      ! turbulence scheme
-LOGICAL,                INTENT(IN)   ::  OHARAT
 LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
-REAL,                   INTENT(IN)   ::  PIMPL, PEXPL ! Coef. for temporal disc.
+REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
+REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
@@ -323,7 +318,7 @@ IKE=D%NKE
 IIJE=D%NIJE
 IIJB=D%NIJB          
 !
-IF (OHARAT) THEN
+IF (TURBN%LHARAT) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   ZKEFF(IIJB:IIJE,IKB:IKE) =  PLM(IIJB:IIJE,IKB:IKE) * SQRT(PTKEM(IIJB:IIJE,IKB:IKE))
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -336,7 +331,7 @@ ENDIF
 !
 IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
-   ZCSV=CSTURB%XCHF/XRSNOW
+   ZCSV=CSTURB%XCHF/PRSNOW
 ELSE
    ZCSV=CSTURB%XCHF
 ENDIF
@@ -351,7 +346,7 @@ DO JSV=1,KSV
   IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
 !
 ! Preparation of the arguments for TRIDIAG
-    IF (OHARAT) THEN
+    IF (TURBN%LHARAT) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)  
       ZA(IIJB:IIJE,IKB:IKE) = -PTSTEP * ZKEFF(IIJB:IIJE,IKB:IKE) * ZWORK1(IIJB:IIJE,IKB:IKE) &
                                    / PDZZ(IIJB:IIJE,IKB:IKE)**2
@@ -370,15 +365,15 @@ DO JSV=1,KSV
 ! (in presence of slopes)
 !* in 1DIM case, the part of energy released in horizontal flux
 ! is taken into account in the vertical part
-  IF (HTURBDIM=='3DIM') THEN
+  IF (TURBN%CTURBDIM=='3DIM') THEN
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    ZSOURCE(IIJB:IIJE,IKB) = (PIMPL*PSFSVP(IIJB:IIJE,JSV) + PEXPL*PSFSVM(IIJB:IIJE,JSV)) / &
+    ZSOURCE(IIJB:IIJE,IKB) = (TURBN%XIMPL*PSFSVP(IIJB:IIJE,JSV) + PEXPL*PSFSVM(IIJB:IIJE,JSV)) / &
                        PDZZ(IIJB:IIJE,IKB) * PDIRCOSZW(IIJB:IIJE)                    &
                      * 0.5 * (1. + PRHODJ(IIJB:IIJE,D%NKA) / PRHODJ(IIJB:IIJE,IKB))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   ELSE
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    ZSOURCE(IIJB:IIJE,IKB) = (PIMPL*PSFSVP(IIJB:IIJE,JSV) + PEXPL*PSFSVM(IIJB:IIJE,JSV)) / &
+    ZSOURCE(IIJB:IIJE,IKB) = (TURBN%XIMPL*PSFSVP(IIJB:IIJE,JSV) + PEXPL*PSFSVM(IIJB:IIJE,JSV)) / &
                        PDZZ(IIJB:IIJE,IKB) / PDIRCOSZW(IIJB:IIJE)                    &
                      * 0.5 * (1. + PRHODJ(IIJB:IIJE,D%NKA) / PRHODJ(IIJB:IIJE,IKB))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
@@ -387,7 +382,7 @@ DO JSV=1,KSV
   ZSOURCE(IIJB:IIJE,IKE) = 0.
 !
 ! Obtention of the split JSV scalar variable at t+ deltat
-  CALL TRIDIAG(D,PSVM(:,:,JSV),ZA,PTSTEP,PEXPL,PIMPL,PRHODJ,ZSOURCE,ZRES)
+  CALL TRIDIAG(D,PSVM(:,:,JSV),ZA,PTSTEP,PEXPL,TURBN%XIMPL,PRHODJ,ZSOURCE,ZRES)
 !
 !  Compute the equivalent tendency for the JSV scalar variable
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -395,12 +390,12 @@ DO JSV=1,KSV
                     PRHODJ(IIJB:IIJE,IKB:IKE)*(ZRES(IIJB:IIJE,IKB:IKE)-PSVM(IIJB:IIJE,IKB:IKE,JSV))/PTSTEP
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
-  IF ( (OTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL ) THEN
+  IF ( (TURBN%LTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK1(IIJB:IIJE,1:D%NKT) = PLM(IIJB:IIJE,1:D%NKT)*SQRT(PTKEM(IIJB:IIJE,1:D%NKT))
-    ZWORK2(IIJB:IIJE,1:D%NKT) = PIMPL*ZRES(IIJB:IIJE,1:D%NKT) + PEXPL*PSVM(IIJB:IIJE,1:D%NKT,JSV)
+    ZWORK2(IIJB:IIJE,1:D%NKT) = TURBN%XIMPL*ZRES(IIJB:IIJE,1:D%NKT) + PEXPL*PSVM(IIJB:IIJE,1:D%NKT,JSV)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     CALL MZM_PHY(D,ZWORK1,ZWORK3)
     CALL DZM_PHY(D,ZWORK2,ZWORK4)
@@ -414,14 +409,14 @@ DO JSV=1,KSV
     ! (in presence of slopes)
     !* in 1DIM case, the part of energy released in horizontal flux
     ! is taken into account in the vertical part
-    IF (HTURBDIM=='3DIM') THEN
+    IF (TURBN%CTURBDIM=='3DIM') THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE)
-      ZFLXZ(IIJB:IIJE,IKB) = (PIMPL*PSFSVP(IIJB:IIJE,JSV) + PEXPL*PSFSVM(IIJB:IIJE,JSV))  &
+      ZFLXZ(IIJB:IIJE,IKB) = (TURBN%XIMPL*PSFSVP(IIJB:IIJE,JSV) + PEXPL*PSFSVM(IIJB:IIJE,JSV))  &
                        * PDIRCOSZW(IIJB:IIJE)  
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     ELSE
       !$mnh_expand_array(JIJ=IIJB:IIJE)
-      ZFLXZ(IIJB:IIJE,IKB) = (PIMPL*PSFSVP(IIJB:IIJE,JSV) + PEXPL*PSFSVM(IIJB:IIJE,JSV))  &
+      ZFLXZ(IIJB:IIJE,IKB) = (TURBN%XIMPL*PSFSVP(IIJB:IIJE,JSV) + PEXPL*PSFSVM(IIJB:IIJE,JSV))  &
                        / PDIRCOSZW(IIJB:IIJE)
      !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     END IF
@@ -442,7 +437,7 @@ DO JSV=1,KSV
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
  END IF
   !
-  IF (OTURB_FLX .AND. TPFILE%LOPENED) THEN
+  IF (TURBN%LTURB_FLX .AND. TPFILE%LOPENED) THEN
     ! stores the JSVth vertical flux
     WRITE(TZFIELD%CMNHNAME,'("WSV_FLX_",I3.3)') JSV
     TZFIELD%CSTDNAME   = ''
