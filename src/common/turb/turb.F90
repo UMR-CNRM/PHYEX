@@ -1078,7 +1078,7 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
 #else
     CALL TURB_HOR_SPLT(D,CST,CSTURB, TURBN,                    &
           KSPLIT, KRR, KRRL, KRRI, KSV, PTSTEP,HLBCX,HLBCY,    &
-          OOCEAN,OCOMPUTE_SRC,                                 &
+          OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,PRSNOW,                &
           TPFILE,                                              &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                        &
           PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                       &

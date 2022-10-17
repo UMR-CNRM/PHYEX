@@ -7,9 +7,9 @@ IMPLICIT NONE
 CONTAINS
              SUBROUTINE TURB_HOR(D,CST,CSTURB,TURBN,                 &
                       KSPLT, KRR, KRRL, KRRI, PTSTEP,                &
-                      OOCEAN,OCOMPUTE_SRC,                           &
+                      OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,                 &
                       TPFILE,                                        &
-                      PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
+                      PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,PRSNOW,           &
                       PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &
                       PCOSSLOPE,PSINSLOPE,                           &
                       PINV_PDXX, PINV_PDYY, PINV_PDZZ, PMZM_PRHODJ,  &
@@ -169,13 +169,16 @@ INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 REAL,                   INTENT(IN)   ::  PTSTEP       !
-LOGICAL,                  INTENT(IN) ::  OOCEAN ! switch for ocean version
+LOGICAL,                INTENT(IN)   ::  OOCEAN ! switch for ocean version
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
+LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
+
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                          ! Metric coefficients
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PZZ          ! vertical grid
+REAL,                     INTENT(IN)    ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 REAL, DIMENSION(:,:),     INTENT(IN)    ::  PDIRCOSXW, PDIRCOSYW, PDIRCOSZW
 ! Director Cosinus along x, y and z directions at surface w-point
 REAL, DIMENSION(:,:),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the angle 
@@ -347,10 +350,10 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !
 !*      15.   HORIZONTAL FLUXES OF PASSIVE SCALARS
 !
-      CALL      TURB_HOR_SV_FLUX(TURBN,KSPLT,                        &
+      CALL      TURB_HOR_SV_FLUX(TURBN,KSPLT,OBLOWSNOW,              &
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
-                      PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
+                      PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
                       PDIRCOSXW,PDIRCOSYW,                           &
                       PRHODJ,PWM,                                    &
                       PSFSVM,                                        &
@@ -359,8 +362,8 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !
       IF (KSPLT==1 .AND. LLES_CALL)                                  &
       CALL      TURB_HOR_SV_CORR(D,CST,CSTURB,                       &
-                      KRR,KRRL,KRRI,OOCEAN,OCOMPUTE_SRC,             &
-                      PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
+                      KRR,KRRL,KRRI,OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,   &
+                      PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
                       PLM,PLEPS,PTKEM,PTHVREF,                       &
                       PTHLM,PRM,                                     &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,               &

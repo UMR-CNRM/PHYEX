@@ -6,8 +6,8 @@ MODULE MODE_TURB_HOR_SV_CORR
 IMPLICIT NONE
 CONTAINS
       SUBROUTINE TURB_HOR_SV_CORR(D,CST,CSTURB,                      &
-                      KRR,KRRL,KRRI,OOCEAN,OCOMPUTE_SRC,             &
-                      PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
+                      KRR,KRRL,KRRI,OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,   &
+                      PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
                       PLM,PLEPS,PTKEM,PTHVREF,                       &
                       PTHLM,PRM,                                     &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,               &
@@ -55,7 +55,6 @@ USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_PARAMETERS
 USE MODD_NSV, ONLY : NSV,NSV_LGBEG,NSV_LGEND
 USE MODD_LES
-USE MODD_BLOWSNOW
 !
 USE MODI_GRADIENT_M
 USE MODI_GRADIENT_U
@@ -83,6 +82,8 @@ INTEGER,                  INTENT(IN)    ::  KRRL         ! number of liquid var.
 INTEGER,                  INTENT(IN)    ::  KRRI         ! number of ice var.
 LOGICAL,                  INTENT(IN)    ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                  INTENT(IN)    ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
+LOGICAL,                  INTENT(IN)    ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
+REAL,                     INTENT(IN)    ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                          ! Metric coefficients
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PLM          ! mixing length
@@ -121,9 +122,9 @@ REAL :: ZCSV          !constant for the scalar flux
 IKU=SIZE(PTKEM,3)
 CALL SECOND_MNH(ZTIME1)
 !
-IF(LBLOWSNOW) THEN
+IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables        
-   ZCSV= CSTURB%XCHF/XRSNOW 
+   ZCSV= CSTURB%XCHF/PRSNOW 
 ELSE
    ZCSV= CSTURB%XCHF
 ENDIF

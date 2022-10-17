@@ -7,7 +7,7 @@ IMPLICIT NONE
 CONTAINS
            SUBROUTINE TURB_HOR_SPLT(D,CST,CSTURB,TURBN,              &
                       KSPLIT, KRR,KRRL,KRRI,KSV, PTSTEP,HLBCX,HLBCY, &
-                      OOCEAN,OCOMPUTE_SRC,                           &
+                      OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,PRSNOW,          &
                       TPFILE,                                        &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
                       PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &
@@ -191,7 +191,8 @@ REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep
 CHARACTER (LEN=*), DIMENSION(:), INTENT(IN)       ::  HLBCX,HLBCY
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
-
+LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
+REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PDXX, PDYY, PDZZ, PDZX, PDZY 
@@ -365,10 +366,10 @@ IF (KSPLIT>1 .AND. CPROGRAM=='MESONH') THEN
 !
 ! compute the turbulent tendencies for the small time step
     CALL TURB_HOR(D,CST,CSTURB,TURBN,                             &
-                   JSPLT, KRR, KRRL, KRRI, PTSTEP,    &
-                   OOCEAN,OCOMPUTE_SRC,                           &
+                   JSPLT, KRR, KRRL, KRRI, PTSTEP,                &
+                   OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,                 &
                    TPFILE,                                        &
-                   PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
+                   PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,PRSNOW,           &
                    PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &
                    PCOSSLOPE,PSINSLOPE,                           &
                    ZINV_PDXX, ZINV_PDYY, ZINV_PDZZ, ZMZM_PRHODJ,  &
@@ -508,9 +509,9 @@ ELSE
 !
   CALL TURB_HOR(D,CST,CSTURB,TURBN,                            &
                 1, KRR, KRRL, KRRI,  PTSTEP,                   &
-                OOCEAN,OCOMPUTE_SRC,                           &
+                OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,                 &
                 TPFILE,                                        &
-                PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
+                PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,PRSNOW,           &
                 PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &
                 PCOSSLOPE,PSINSLOPE,                           &
                 ZINV_PDXX, ZINV_PDYY, ZINV_PDZZ, ZMZM_PRHODJ,  &

@@ -6,10 +6,10 @@
 MODULE MODE_TURB_HOR_SV_FLUX
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_SV_FLUX(TURBN,KSPLT,                       &
+      SUBROUTINE TURB_HOR_SV_FLUX(TURBN,KSPLT,OBLOWSNOW,             &
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
-                      PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
+                      PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
                       PDIRCOSXW,PDIRCOSYW,                           &
                       PRHODJ,PWM,                                    &
                       PSFSVM,                                        &
@@ -69,7 +69,6 @@ USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_NSV,            ONLY: NSV_LGBEG, NSV_LGEND
 USE MODD_LES
-USE MODD_BLOWSNOW
 !
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 !
@@ -93,9 +92,11 @@ IMPLICIT NONE
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
 INTEGER,                  INTENT(IN)    ::  KSPLT        ! split process index
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
+LOGICAL,                  INTENT(IN)    ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
                                                         ! PK = PLM * SQRT(PTKEM)
+REAL,                     INTENT(IN)    ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PINV_PDXX   ! 1./PDXX
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PINV_PDYY   ! 1./PDYY
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PINV_PDZZ   ! 1./PDZZ
@@ -149,9 +150,9 @@ IKU = SIZE(PSVM,3)
 !
 ISV = SIZE(PSVM,4)
 !
-IF(LBLOWSNOW) THEN
+IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables              
-   ZCSV= XCHF/XRSNOW
+   ZCSV= XCHF/PRSNOW
 ELSE
    ZCSV= XCHF
 ENDIF

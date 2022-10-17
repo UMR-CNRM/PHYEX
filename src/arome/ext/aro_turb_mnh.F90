@@ -452,7 +452,6 @@ CALL TURB (CST,CSTURB,TBUCONF,TURBN, YLDIMPHYEX,&
    & OCOMPUTE_SRC, 1.0, &
    & OOCEAN,ODEEPOC, .FALSE.,   &
    & 'NONE',CMICRO,           &
-   & ZIMPL,                                    &
    & 2*PTSTEP,ZTFILE,                                      &
    & ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &
    & ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE,    &
