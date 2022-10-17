@@ -24,6 +24,10 @@ Tools are designed and tested with TRUNK=\<git repository\>/tools/pack/
 
 ## REFERENCE PACK CREATION
 
+### Prerequiste
+gmkpack must be installed
+fypp python module must be instaled (pip3 install --user fypp)
+
 ### Create the pack
 
 ```
@@ -32,16 +36,14 @@ cycle=48t1 or cy48t3 (after commit XXX on 22 September 2022)
 compiler=MPIGFORTRAN920DBL on ubuntu, MIMPIIFC1805 on belenos
 gmkfile=${compiler}.GMAP on ubuntu, ${compiler}.EPONA on belenos
 option=xfftw on ubuntu, 2y on belenos
-getpack ${cycle}_main.01.${compiler}.${option} #get source code on ubuntu, is it really necessary?
 export GMKTMP=/dev/shm
-(. berootpack)
 gmkpack -a -r ${cycle} -b phyex -n $version -l ${compiler} -o ${option} -p masterodb -h $TRUNK/tools/pack/ #create main pack
 ```
 
 ### Populate main pack with source code
 
 ```
-cd $TRUNK/tools/pack/${cycle}_phyex.${version}.${compiler}.${option}/src/local
+cd $TRUNK${cycle}_phyex.${version}.${compiler}.${option}/src/local
 if sxphynh; then
   wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/${cycle}_main.01.tgz #only available at MF but equivalent must exist elsewhere
 else
@@ -203,10 +205,8 @@ into:
 ### Compilation
 
 ```
-cd $TRUNK/tools/pack/${cycle}_phyex.${version}.${compiler}.${option}
-#Not needed anymore: grep MPA .gmkfile/${compiler}.GMAP | sed 's/MPA/PHYEX/g' >> .gmkfile/${gmkfile}
+cd $TRUNK/${cycle}_phyex.${version}.${compiler}.${option}
 Edition of .gmkfile/${gmkfile} to add -DREPRO48 to the MACROS_FRT variable in order to suppress bug corrections and be able to reproduce the original cy48
-#Not needed anymore: Edition of .gmkfile/${gmkfile} to suppress on ubuntu -ftree-vectorize
 sed -i 's/GMK_THREADS=1/GMK_THREADS=10/' ics_masterodb
 cleanpack -f
 resetpack -f
@@ -220,11 +220,10 @@ version=01
 compiler=MPIGFORTRAN920DBL on ubuntu, MIMPIIFC1805 on belenos
 gmkfile=${compiler}.GMAP on ubuntu, ${compiler}.EPONA on belenos
 option=xfftw on ubuntu, 2y on belenos
-getpack ${cycle}_main.01.${compiler}.${option} #get source code on ubuntu, is it really necessary?
 
 commit=9ce8119430dd603d35308d8ae94cf18636157473 #exemple of commit to test against the reference pack
 
-gmkpack -r ${cycle} -b phyex -v ${version} -l ${compiler} -o ${option} -p masterodb -f $TRUNK/tools/pack/ -u PHYEX/$commit
+gmkpack -r ${cycle} -b phyex -v ${version} -l ${compiler} -o ${option} -p masterodb -f $TRUNK -u PHYEX/$commit
 
 cd $HOMEPACK/PHYEX/$commit/src/local/phyex
 git clone git@github.com:QuentinRodier/PHYEX.git

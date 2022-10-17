@@ -9,6 +9,8 @@ set -e
 
 #ice_adjust: the ice adjust test case
 
+#ref is commit 855b8f8 for ice_adjust, rain_ice, turb and shallow_mf
+
 specialName="ref"
 availTests="ice_adjust,rain_ice"
 defaultTest='ALL'
@@ -174,11 +176,14 @@ if [ $compilation -eq 1 ]; then
   if [ "$fromdir" == '' ]; then
     echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
     $prep_code -c $commit $expand_options $subs src
+    mv src/build src/build_from_commit #We do not use the compilation system as it used to be when commiting
+    cp -r $PHYEXTOOLSDIR/../build src/ #We use the compilation system from the same commit as the current script
   else
     echo "Copy $fromdir"
     mkdir src
     scp -q -r $fromdir/src src/
-    scp -q -r $fromdir/build src/
+    #scp -q -r $fromdir/build src/ #We do not use the compilation system present with the source code
+    cp -r $PHYEXTOOLSDIR/../build src/ #We use the compilation system from the same commit as the current script
     $prep_code $expand_options $subs src
   fi
 

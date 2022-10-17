@@ -4,12 +4,14 @@ USE XRD_GETOPTIONS
 USE GETDATA_ICE_ADJUST_MOD
 USE MODI_ICE_ADJUST
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODD_CST,        ONLY: CST_t, CST
-USE MODD_NEB,        ONLY: NEB_t, NEB
-USE MODD_RAIN_ICE_PARAM, ONLY : RAIN_ICE_PARAM_t
+USE MODD_CST,        ONLY: CST
+USE MODD_NEB,        ONLY: NEB
+USE MODD_TURB_n,     ONLY: TURBN, TURB_GOTO_MODEL
+USE MODD_RAIN_ICE_PARAM, ONLY : RAIN_ICE_PARAM_t, RAIN_ICE_PARAM_ASSOCIATE
 USE MODI_INI_CST
 USE MODI_INI_NEB
-USE MODD_BUDGET, ONLY: TBUDGETDATA, NBUDGET_RI, TBUCONF
+USE MODI_INI_RAIN_ICE
+USE MODD_BUDGET !, ONLY: TBUCONF_ASSOCIATE, TBUDGETDATA, NBUDGET_RI, TBUCONF
 USE STACK_MOD
 USE OMP_LIB
 USE YOMHOOK, ONLY : LHOOK, DR_HOOK
@@ -44,6 +46,11 @@ REAL,    ALLOCATABLE   :: ZRS            (:,:,:,:,:)
 REAL,    ALLOCATABLE   :: ZZZ            (:,:,:,:)   
 REAL,    ALLOCATABLE   :: ZSIGQSAT       (:,:,:)   
 REAL,    ALLOCATABLE   :: ZICE_CLD_WGT   (:,:,:)   
+REAL,    ALLOCATABLE   :: ZDUM1          (:,:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM2          (:,:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM3          (:,:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM4          (:,:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM5          (:,:,:,:)
 
 REAL,    ALLOCATABLE   :: PRS_OUT        (:,:,:,:,:) 
 REAL,    ALLOCATABLE   :: PSRCS_OUT      (:,:,:,:)   
@@ -64,7 +71,8 @@ CHARACTER(LEN=4)         :: HLAMBDA3
 CHARACTER(LEN=4)         :: HBUNAME  
 LOGICAL                  :: OSUBG_COND
 LOGICAL                  :: OSIGMAS  
-LOGICAL                  :: OCND2    
+LOGICAL                  :: OCND2
+LOGICAL                  :: LHGT_QS
 LOGICAL                  :: LMFCONV
 CHARACTER(LEN=80)        :: HSUBG_MF_PDF
 REAL                     :: PTSTEP    
@@ -117,10 +125,9 @@ IF (LLBIND) THEN
 ENDIF
 
 CALL GETDATA_ICE_ADJUST (NPROMA, NGPBLKS, NFLEVG, PRHODJ, PEXNREF, PRHODREF, PPABSM, PTHT, ZICE_CLD_WGT,     &
-& ZSIGQSAT, PSIGS, PMFCONV, PRC_MF, PRI_MF, PCF_MF, PTHS, PRS, PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, &
+& ZSIGQSAT, PSIGS, PMFCONV, PRC_MF, PRI_MF, PCF_MF, ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, PTHS, PRS, PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, &
 & PHLI_HRI, PHLI_HCF, ZRS, ZZZ, PRS_OUT, PSRCS_OUT, PCLDFR_OUT, PHLC_HRC_OUT, PHLC_HCF_OUT,       &
 & PHLI_HRI_OUT, PHLI_HCF_OUT, LLVERBOSE)
-
 
 KLEV = SIZE (PRS, 3)
 KRR  = SIZE (PRS, 4)
@@ -129,8 +136,26 @@ IF (LLVERBOSE) PRINT *, " KLEV = ", KLEV, " KRR = ", KRR
 
 PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
 
+CALL RAIN_ICE_PARAM_ASSOCIATE
 CALL INI_CST
 CALL INI_NEB
+CALL TURB_GOTO_MODEL(1, 1)
+TURBN%LSTATNW=.FALSE.
+CALL TBUCONF_ASSOCIATE
+LBU_ENABLE=.FALSE.                                                                                                       
+LBUDGET_U=.FALSE.
+LBUDGET_V=.FALSE.
+LBUDGET_W=.FALSE.
+LBUDGET_TH=.FALSE.
+LBUDGET_TKE=.FALSE.
+LBUDGET_RV=.FALSE.
+LBUDGET_RC=.FALSE.
+LBUDGET_RR=.FALSE.
+LBUDGET_RI=.FALSE.
+LBUDGET_RS=.FALSE.
+LBUDGET_RG=.FALSE.
+LBUDGET_RH=.FALSE.
+LBUDGET_SV=.FALSE.
 
 ! Taken from ini_rain_ice.F90; we only need these for ice_adjust.F90
 ICEP%XCRIAUTI  = 0.2E-4 
@@ -153,6 +178,7 @@ HBUNAME      = 'DEPI'
 OSUBG_COND   = .TRUE.
 OSIGMAS      = .TRUE.
 OCND2        = .FALSE.
+LHGT_QS      = .FALSE.
 HSUBG_MF_PDF = 'TRIANGLE'
 PTSTEP       = 50.000000000000000    
 LMFCONV      = .TRUE.
@@ -166,6 +192,9 @@ D0%NIE  = NPROMA
 D0%NJT  = 1
 D0%NJB  = 1
 D0%NJE  = 1
+D0%NIJT = D0%NIT * D0%NJT
+D0%NIJB = 1
+D0%NIJE = NPROMA
 D0%NKL  = -1
 D0%NKT  = KLEV
 D0%NKA  = KLEV
@@ -190,8 +219,8 @@ DO ITIME = 1, NTIME
   TSD = OMP_GET_WTIME ()
 
 !$acc data &
-!$acc      & copyin  (D0, CST, ICEP, NEB, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND, OSIGMAS, OCND2, HSUBG_MF_PDF, PTSTEP, LMFCONV, &
-!$acc      &          ZSIGQSAT, PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, ZRS, ZICE_CLD_WGT) &
+!$acc      & copyin  (D0, CST, ICEP, NEB, TURBN, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND, OSIGMAS, OCND2, LHGT_QS, HSUBG_MF_PDF, PTSTEP, LMFCONV, &
+!$acc      &          ZSIGQSAT, PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, ZRS, ZICE_CLD_WGT) &
 !$acc      & copy    (PRS, PTHS), &
 !$acc      & copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &
 !$acc      & create  (PSTACK) 
@@ -228,6 +257,8 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     D = D0
     D%NIB = JLON
     D%NIE = JLON
+    D%NIJB = JLON
+    D%NIJE = JLON
 #endif
 
 #ifdef USE_OPENMP
@@ -242,18 +273,22 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%U = 0
 #endif
 
-    CALL ICE_ADJUST (D, CST, ICEP, NEB, TBUCONF, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND,                       &
-    & OSIGMAS, OCND2, HSUBG_MF_PDF, PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL), PEXNREF=PEXNREF (:, :, :, IBL), &
+    CALL ICE_ADJUST (D, CST, ICEP, NEB, TURBN, TBUCONF, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND,                &
+    & OSIGMAS, OCND2, LHGT_QS, HSUBG_MF_PDF, PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL),                        &
+    & PEXNREF=PEXNREF (:, :, :, IBL), &
     & PRHODREF=PRHODREF (:, :, :, IBL), PSIGS=PSIGS (:, :, :, IBL), LMFCONV=LMFCONV, PMFCONV=PMFCONV (:, :, :, IBL),            &
     & PPABST=PPABSM (:, :, :, IBL), PZZ=ZZZ (:, :, :, IBL), PEXN=PEXNREF (:, :, :, IBL), PCF_MF=PCF_MF (:, :, :, IBL),          &
-    & PRC_MF=PRC_MF (:, :, :, IBL), PRI_MF=PRI_MF  (:, :, :, IBL), PRV=ZRS(:, :, :, 1, IBL), PRC=ZRS(:, :, :, 2, IBL),          &
+    & PRC_MF=PRC_MF (:, :, :, IBL), PRI_MF=PRI_MF  (:, :, :, IBL),                                                              &
+    & PICLDFR=ZDUM1(:, :, :, IBL), PWCLDFR=ZDUM2(:, :, :, IBL), PSSIO=ZDUM3(:, :, :, IBL),                                      &
+    & PSSIU=ZDUM4(:, :, :, IBL), PIFR=ZDUM5(:, :, :, IBL),                                                                        &
+    & PRV=ZRS(:, :, :, 1, IBL), PRC=ZRS(:, :, :, 2, IBL),          &
     & PRVS=PRS(:, :, :, 1, IBL), PRCS=PRS(:, :, :, 2, IBL), PTH=ZRS(:, :, :, 0, IBL), PTHS=PTHS (:, :, :, IBL),                 &
     & OCOMPUTE_SRC=.TRUE.,                                                                                                      &
     & PSRCS=PSRCS (:, :, :, IBL), PCLDFR=PCLDFR (:, :, :, IBL), PRR=ZRS(:, :, :, 3, IBL), PRI=ZRS(:, :, :, 4, IBL),             &
-    & PRIS=PRS(:, :, :, 4, IBL), PRS=ZRS(:, :, :, 5, IBL), PRG=ZRS(:, :, :, 6, IBL), PHLC_HRC=PHLC_HRC(:, :, :, IBL),           &
-    & PHLC_HCF=PHLC_HCF(:, :, :, IBL), PHLI_HRI=PHLI_HRI(:, :, :, IBL), PHLI_HCF=PHLI_HCF(:, :, :, IBL),                        &
-    & TBUDGETS=YLBUDGET, KBUDGETS=NBUDGET_RI, &
-    & PICE_CLD_WGT=ZICE_CLD_WGT(:, :, IBL) &
+    & PRIS=PRS(:, :, :, 4, IBL), PRS=ZRS(:, :, :, 5, IBL), PRG=ZRS(:, :, :, 6, IBL), TBUDGETS=YLBUDGET, KBUDGETS=NBUDGET_RI,    &
+    & PICE_CLD_WGT=ZICE_CLD_WGT(:, :, IBL),                                                                                     &
+    & PHLC_HRC=PHLC_HRC(:, :, :, IBL), PHLC_HCF=PHLC_HCF(:, :, :, IBL),                                                         &
+    & PHLI_HRI=PHLI_HRI(:, :, :, IBL), PHLI_HCF=PHLI_HCF(:, :, :, IBL)                                                          &
 #ifdef USE_STACK
     & , YDSTACK=YLSTACK &
 #endif

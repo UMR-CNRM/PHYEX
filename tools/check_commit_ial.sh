@@ -23,6 +23,12 @@ set -e
 
 #The small_3D_alt9 is not included in the list of available tests because it cannot be run before 21 September (commit edc3f88).
 
+#Special pack names:
+# - recompil: original source code (everything under mpa)
+# - split_48t1: original 48t1 source code but with physics source code under phyex directory
+# - split_48t3: same as split_48t1 but for the 48t3 cycle
+# - split: symbolic link to split_48t1 (backward compatibility)
+
 specialPack="ori split split_48t1 split_48t3 recompil"
 availTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7"
 defaultTest="small_3D"

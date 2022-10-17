@@ -1,6 +1,6 @@
 # Compilation
 $FCOMPILER     =     gfortran
-$BASE_FFLAGS   =     -c -fPIC -fdefault-real-8 -fdefault-double-8 -ffree-line-length-none -fopenmp -fconvert=swap
+$BASE_FFLAGS   =     -c -fPIC -fdefault-real-8 -fdefault-double-8 -ffree-line-length-none -fopenmp -fconvert=swap -fallow-argument-mismatch
 $PROD_FFLAGS   =     -O3
 $DEV_FFLAGS    =     -O1
 $DEBUG_FFLAGS  =     -fbounds-check
