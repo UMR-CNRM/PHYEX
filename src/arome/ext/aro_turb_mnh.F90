@@ -204,26 +204,15 @@ CHARACTER(LEN=4),DIMENSION(2)  :: HLBCX, HLBCY  ! X- and Y-direc LBC
 
 INTEGER       :: ISPLIT        ! number of time-splitting
 
-LOGICAL       ::  OTURB_FLX    ! switch to write the
-                               ! turbulent fluxes in the syncronous FM-file
-LOGICAL       ::  OTURB_DIAG   ! switch to write some
-                               ! diagnostic fields in the syncronous FM-file
-LOGICAL       ::  ORMC01       ! switch for RMC01 lengths in SBL
 LOGICAL       ::  OOCEAN,ODEEPOC! switch for OCEAN version of turbulence scheme
 LOGICAL       ::  OCOUPLES     ! switch for ocean-atm LES coupling
 LOGICAL       ::  OBLOWSNOW    ! switch for prognostic blow snow scheme
 LOGICAL       ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables 
-CHARACTER(LEN=4)   ::  HTURBDIM     ! dimensionality of the
-                               ! turbulence scheme
-CHARACTER(LEN=4)   ::  HTURBLEN     ! kind of mixing length
 CHARACTER(LEN=6)   ::  HPROGRAM     ! Program (AROME or MESONH prog)
 LOGICAL   :: OFLAT        ! Logical for zero ororography
 LOGICAL   :: ONOMIXLG          ! to use turbulence for lagrangian variables (modd_conf)
 LOGICAL   :: O2D               ! Logical for 2D model version (modd_conf)
 INTEGER   :: KSV_LGBEG, KSV_LGEND ! number of scalar variables
-
-
-REAL          ::  ZIMPL        ! degree of implicitness
 !
 REAL, DIMENSION(KLON,1,KLEV+2)   :: ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY
                                         ! metric coefficients
@@ -283,17 +272,6 @@ HLBCY(:)='CYCL'
 
 ! en dur a 1 dans MNH
 ISPLIT=1
-
-! pour ecriture et diagnostic dans mesoNH, � priori les switches toujours � .F.
-OTURB_FLX=.FALSE.
-OTURB_DIAG=.FALSE.
-
-! a mettre en namelist
-ORMC01=.FALSE.
-
-HTURBDIM='1DIM'
-HTURBLEN='BL89'
-ZIMPL=1.
 
 !Version Ocean du schema de turbulence
 OOCEAN=.FALSE.
