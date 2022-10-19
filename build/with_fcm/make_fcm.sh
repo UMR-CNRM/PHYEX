@@ -183,8 +183,14 @@ cp fcm-make.cfg $builddir
 cd $builddir
 mkdir src
 cd src
-ln -s ../../../../src/common .
-ln -s ../../../../src/testprogs .
+if [ -d ../../../../src/common ]; then
+  #We compile directly from a PHYEX repository
+  ln -s ../../../../src/common/* .
+  ln -s ../../../../src/testprogs/* .
+else
+  #We compile after an execution of prep_code
+  ln -s ../../../../src/* .
+fi
 ln -s ../../fiat/src fiat
 cat <<EOF > dummyprog.F90
 PROGRAM DUMMYPROG

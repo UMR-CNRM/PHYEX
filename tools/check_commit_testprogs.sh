@@ -171,23 +171,25 @@ if [ $compilation -eq 1 ]; then
   else
     expand_options=""
   fi
-  subs="$subs -s turb -s micro -s aux -s ice_adjust"
+  subs="$subs -s turb -s micro -s aux -s ice_adjust -s rain_ice -s support"
   prep_code=$PHYEXTOOLSDIR/prep_code.sh
+
   if [ "$fromdir" == '' ]; then
     echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
-    $prep_code -c $commit $expand_options $subs src
-    mv src/build src/build_from_commit #We do not use the compilation system as it used to be when commiting
-    cp -r $PHYEXTOOLSDIR/../build src/ #We use the compilation system from the same commit as the current script
+    if [[ $commit == testprogs${separator}* ]]; then
+      $prep_code -c $commit src #This commit is ready for inclusion
+    else
+      $prep_code -c $commit $expand_options $subs -m testprogs src
+    fi
   else
     echo "Copy $fromdir"
     mkdir src
     scp -q -r $fromdir/src src/
-    #scp -q -r $fromdir/build src/ #We do not use the compilation system present with the source code
-    cp -r $PHYEXTOOLSDIR/../build src/ #We use the compilation system from the same commit as the current script
-    $prep_code $expand_options $subs src
+    $prep_code $expand_options $subs -m testprogs src
   fi
+  cp -r $PHYEXTOOLSDIR/../build . #We use the compilation system from the same commit as the current script
 
-  cd $TESTDIR/$name/src/build/with_fcm/
+  cd $TESTDIR/$name/build/with_fcm/
   rm -rf arch_*
   ./make_fcm.sh --arch $archfile 2>&1 | tee Output_compilation
 fi
@@ -196,7 +198,7 @@ if [ $run -ge 1 ]; then
   echo "### Running of commit $commit"
 
   for t in $(echo $tests | sed 's/,/ /g'); do
-    if [ ! -f $TESTDIR/$name/src/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe ]; then
+    if [ ! -f $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe ]; then
       echo "Pack does not exist ($TESTDIR/$name) or compilation has failed, please check"
       exit 6
     fi
@@ -216,7 +218,7 @@ if [ $run -ge 1 ]; then
     mkdir -p tests/$t
     cd tests/$t
     ln -s $dirdata/$t data
-    $TESTDIR/$name/src/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe --check 2>&1 > Output_run
+    $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe --check 2>&1 > Output_run
   done
 fi
 
