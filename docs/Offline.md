@@ -16,7 +16,7 @@ This build system has two dependencies (installation is done automatically by th
   - [fiat](https://github.com/ecmwf-ifs/fiat)
 
 The script build/with\_fcm/make\_fcm.sh uses a configuration file and build the library and test programs.
-They can be found in the build/bin sudirectory in the architecture specific directory arch\_\<achitecture name\>.
+They can be found in the build/bin subdirectory in the architecture specific directory arch\_\<architecture name\>.
 
 Some more details can be found in [build/with\_fcm/README.md file](../build/with_fcm/README.md).
 
@@ -25,11 +25,11 @@ Some more details can be found in [build/with\_fcm/README.md file](../build/with
 ### Data generation
 
 The branch testprogs\_data contains modified source code for the AROME model to enable the generation of data samples.
-Using this branch, in the drivers of the different parameterisations (aro\_\* files), output can be enable for the AROME model.
+Using this branch, in the drivers of the different parametrisations (aro\_\* files), output can be enable for the AROME model.
 Running the AROME model with these modifications outputs files in the running directory.
 This must be done once by parametrisation (note that the check\_commit\_ial.sh script can be used to execute an AROME simulation).
 
-These files should be renamed with the folowing command:
+These files should be renamed with the following command:
 i=0; for file in ????_??_????????.dat; do mv $file `printf %08d $i`.dat; i=$((i+1)); done
 
 ### Usage directly with the testprogs executables

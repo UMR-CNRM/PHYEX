@@ -3,136 +3,91 @@
 ## ABOUT THIS DOCUMENT
 
 This document is intended for developers who want to contribute to the PHYEX package.
-Developer who is interested in plugging the physics in a new model can refere to the Plugging documentation.
+Developer who is interested in plugging the physics in a new model can refer to the Plugging documentation.
 The topics covered are as follows:
 
   - [Package organisation](#package-organisation)
-  - [Code preparation](#code-preparation)
-  - [Coding norms](#coding-norms)
-  - [Pull requests](#pull-requests)
+  - [Contribution workflow for AROME-HARMONIE developers](#contribution-workflow-for-arome-harmonie-developers)
+  - [Contribution workflow for Méso-NH developers](#contribution-workflow-for-mesonh-developers)
+  - [Contribution workflow for other developers](#contribution-workflow-for-other-developers)
 
 This document is written using the markdown language. With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf).
 
 ## PACKAGE ORGANISATION
 
-The package contains the folowing directories:
+The package contains two kinds of branches:
+
+  - generic branches which contain codes for all the models and applications (eg: main and GPU branches)
+  - model specific branches which are automatically derived from generic branches (eg: arome\_\<commit\_hash\>, mesonh\_\<commit\_hash\>)
+
+The directories found in the package are different depending on the branches (generic or model specific).
+
+For model specific branches, only the source code adapted for a given model is present (one directory per parametrisation and an aux directory). No compilation engine or scripts are present in these branches. They are intended to be included directly in the compilation system of the hosting model.
+
+The generic branches contains the following directories:
 
   - docs: for documentation
   - build: an autonomous build system is included in the package. Its usage is covered in the [Offline documentation](./Offline.md)
   - src/common: the main source code which is the basis for all models
-  - src/\<model\>: the source code specific to one model that must replace source code found in the common directory
+  - src/\<model\>: the source code specific to one model that must replace or complement the source code found in the common directory
+  - tools: scripts to build model specific branches and run test cases (described in the [Integrator](./Integrator.md) documentation).
 
-In addition to this organisation, the package uses git branches. The main branches are as follows:
+Here is a short description of the different generic branches:
 
-  - main: source code without rewriting for GPU transformation (used for official Meso-NH source code)
-  - GPU: source code adapted for GPU transformations (used for official AROME source code, starting from the 48t3 cycle)
-  - arome\_\<commit\>: source code ready for inclusion in the AROME compilation environment (the generation of such a branch is described in [Code preparation](#code-preparation))
+  - main: source code without rewriting for GPU transformation
+  - GPU: source code adapted for GPU transformations
+  - testHUGE: modified source code to check the incomplete NPROMA feature
   - testprogs\_data: modified source code used to generate samples for the test programs (more on this topic in the [Offline documentation](./Offline.md))
 
-## CODE PREPARATION
+## CONTRIBUTION WORKFLOW FOR AROME-HARMONIE DEVELOPERS
 
-The source code stored in the main and GPU branches must be usable by all the models. But these models can have contradictory constraints. To bypass this difficulty, the source code is preprocessed before being included in the compilation environment of each model.
+The AROME build systems are evolving.
+Until cycle 49t1 (included), the physics source code is directly included in the source code tree.
+After cycle 49t1, the physics source code (as well as other model parts such as ectrans, fiat...) will be available through "bundles".
 
-This preprocessing step can be done on the fly (in this case the preprocessing tools must be available aside of the compilation tools), or the result of the preprocessing can be stored in the PHYEX package (in this case, the preprocessing is done once and can be used by several users).
-This second possibility is usefull to historize the source code really used during the model compilation and enables contributions to the PHYEX package without the need of the preprocessing tools.
+This evolution will impact the way to contribute to the PHYEX repository.
 
-The preprocessed versions of the source code are put in branches named \<model\>\_\<commit\> where \<model\> is the name of the model for which the source code have been preprocessed and \<commit\> is the commit hash used as a basis.
+Whatever is the cycle, the AROME-HARMONIE developers only see codes coming from arome specific branches (branches named arome\_\<commit\_hash\>). This code is ready for inclusion (array-syntax already transformed into DO loops for instance).
 
-The preprocessing tools are described in the [Tools documentation](./Tools.md).
+Said differently, developers do not need to manipulate code transformation tools.
 
-## CODING NORMS
+## Until cycle 49t1
 
-### File names
-The fortran file names use a capital F letter (eg: foo.F90) except if working a branch (mesonh\_\<commit\>) or in the folder (src/mesonh) specifci to the Meso-NH model.
+Workflow summary: because the physics source code is still included in the IAL source code, pull requests concerning the physics continue to follow the same path as before (ie pull requests are submitted to the IAL repository). Afterwards, the IAL integrator will submit a pull request to the PHYEX repository with only the relevant files.
 
-Names for the module:
+![](./AROMEworkflow1.svg)
 
-  - modd\_ for module containing only variable declaration (eg: tuning parameters)
-  - modi\_ for module containing only interface declaration
-  - modn\_ for namelist declaration
-  - mode\_ for module containing executable source code (subroutine or function)
+Workflow details (getting the source code in blue, pull request in red, integration in green):
 
-### When using mode\_ or modi\_?
-When writing a new subroutine, should we put it in a module (in a mode\_ file) or should we write the subroutine in a file and write the interface bloc in another file (modi\_ file)?
+  - 1: PHYEX administrator sends (pull request) the content of a specific arome branch to the IAL Integrator. The IAL integrator tags a new release of IAL.
+  - 2: AROME-HARMONIE developer forks the IAL repository
+  - 3: AROME-HARMONIE developer compiles, executes, modifies the source code in its environment
+  - 4: AROME-HARMONIE developer sends a pull request to the IAL repository
+  - 5: The IAL integrator extracts the physics source files and sends a pull request to the PHYEX repository
+  - 6: The PHYEX administrator checks and integrates the modifications in the GPU branch and, eventually, produce a new arome specific branch for future integration in IAL
 
-The answer depends on whether the routine is the 'main' routine of the parameterisation or not. If it is the 'main' routine, the interface bloc is declared apart, if not we can use a module.
-The idea behind is to break compilation dependency at the parameterisation level, and to isolate the interface declaration of the different routines that must be pluged in the hosting model.
+## After cycle 49t1
 
-### Norm
-Several constraints are imposed:
+Workflow summary: after the cycle 49t1 (starting from 49t2?), HARMONIE/AROME will become a bundle. Il will be built with source codes coming from various places. One of these places will be the PHYEX repository. Pull requests must be sent to each modified bundles.
 
-  - The code must be written with up to 132 characters per line.
-  - CODE IS IN CAPITAL LETTERS! comments in small letters
-  - All variables must be declared: IMPLICIT NONE
-  - except in rare cases, use automatic arrays, no allocatable
-  - dimensions of dummy argument arrays are explicit (no (:,:))
-  - use parenthesis when manipulating arrays (eg: A(:,:)=B(:,:)+C(:,:) instead of A=B+C)
+![](./AROMEworkflow2.svg)
 
-The variables are named according to the doctor norm:
+Workflow details (getting the source code in blue, pull request in red, integration in green):
 
-|Type / Status | INTEGER    | REAL       | LOGICAL     | CHARACTER      | TYPE             |
-|--------------|------------|------------|-------------|----------------|------------------|
-|Global        | N          | X          | L (not LP)  | C              | T (not TP,TS,TZ) |
-|Dummy argument| K          | P (not PP) | O           | H              | TP               |
-|Local         | I (not IS) | Z (not ZS) | G (not GS)  | Y (not YS, YP) | TZ               |
-|Loop control  | J (not JP) | -          | -           | -              | -                |
+  - 1 and 2: AROME-HARMONIE developer forks the different repositories needed to build the model
+  - 3: AROME-HARMONIE developer compiles, executes, modifies the source code in its environment
+  - 4 and 5: AROME-HARMONIE developer sends pull requests to the different repositories where files have been modified
+  - 6: The PHYEX administrator checks the pull requests in the other applications, the IAL integrator integrates on the arome specific branch; then the PHYEX administrator integrates the modifications in the GPU branch and, eventually, produce a new arome specific branch for future integration in IAL
 
-Regarding array-syntax, code is written using array-syntax in the main branch and in mesonh specific branches based on the GPU branch, using array-syntax with mnh\_expand directives in the GPU branch, using DO loops in arome specific branches based on the GPU branch. If in doublt, check what is done in other routines in the brach you are working in.
-Be carrefull when using the mnh\_expand directives, code must respect some constraints:
 
-  - parenthesis after array variables are mandatory (no A=B+C, but A(:,:)=B(:,:)+C(:,:))
-  - no space between array variables and the opening parenthesis (no A (:)=B (:), but A(:)=B(:))
-  - same bounds as declared in the mnh\_expand directive should be used in the array-syntax (A(D%NIB;D%NIE)=...)
+## CONTRIBUTION WORKFLOW FOR MESO-NH DEVELOPERS
 
-A tool (verify\_mnh\_expand.py) can help at checking the validity of the written code.
+The physics source code is embedded in the Méso-NH source code.
 
-For the GPU branch (and branches on GPU, including model specific branches):
+The physics source code comes directly from a mesonh specific branch (these branches are named mesonh\_\<commit\_hash\>) which contain code ready for use in the Méso-NH model (array-syntax...).
 
-  - except variables declared with the PARAMETER attribute, no variable from modules can be used in the physics. Varaibles must be put in a type received by interface.
-  - subroutines or functions must not be called from within a loop on horizontal or vertical dimensions (see below for exception)
-  - functions returning arrays must be rewritten as subroutine
+Pull requests concerning the physics continue to follow the same path as before (ie pull requests are submitted to the Meso-NH repository). The Meso-NH integrator will submit a pull request to the PHYEX repository with only the relevant files.
 
-Call to external subroutine in loop on horizontal or vertical dimensions must be suppressed in the GPU version. If possible, the call must be put outside of the loop (acting on the full array as a whole) or the subroutine must be put in the CONTAINS part but, in this case, the included subroutine cannot use local array. There are 3 cases:
+## CONTRIBUTION WORKFLOW FOR OTHER DEVELOPERS
 
-  - the subroutine does't use local array: subroutine is put in an include file (with the .h extension) and included with the fortran INCLUDE statement.
-  - the subroutine use local arrays but it is called from only one place in the code: the source code of the subroutine is moved (no INCLUDE) in the CONTAINS part and the array declarations are moved in the main subroutine.
-  - the subroutine use local arrays and is called from several places: the previous technique is not recommended. The source code is put in an include file (with the .h extension) and an extra argument is provided to the subroutine and is used as a buffer so there is no more need to declare local arrays in the called subroutine.
-
-### Budgets
-
-In Meso-NH, the budget can be used in two ways:
-
-  - by giving to the budget machinery the tendency due to a given process
-  - by giving to the budget machinery the total tendency (S variable) before and after a given process. The budget machanism recomputes by difference the tendency only due to the given process.
-
-In AROME, we cannot provide the total tendency (S variable) before the process. This total tendency is stored internally by the machinery but cannot be set to a different value before doing a computation.
-
-The physics package must be usable from AROME and Meso-NH, several examples are given:
-
-Invalid for AROME:
-```
-budget_store_init(tempo_s)
-modification of tempo_s
-budget_store_end(tempo_s)
-```
-
-Valid:
-```
-budget_store_init(pronostic_s) #useless for AROME, but needed for Meso-NH
-modification of pronostic_s
-budget_store_end(pronostic_s)
-```
-
-Valid:
-```
-computation of delta tempo_s
-budget_store_add(delta tempo_s)
-```
-
-## PULL REQUESTS
-This section deals with the pull request procedure from the developer point of view. The integrator point of view is described in the Intergator documentation.
-
-To contribute to the PHYEX repository, developer must fork the repository, contribute on the main or on the GPU branch and send a pull request. Alternatively, a contribution on a model specific branch is also possible (especially for minor modifications).
-
-If a modification must be applied to the main and to the GPU branches, the pull request must be made on the main branch (and will be merged into the GPU branch).
-
+Other developers must work with source code coming directly from the GPU branch. They issue pull requests directly on this branch as usual with git repositories.

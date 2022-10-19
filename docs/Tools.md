@@ -28,7 +28,7 @@ Before being usable, the AROME model must be installed following the [INSTALL\_p
 
 ### check\_commit\_mesonh.sh
 
-The check\_commit\_mesonhsh script compiles, runs a test case of the Meso-NH model and compares the results against a reference simulation.
+The check\_commit\_mesonh.sh script compiles, runs a test case of the Meso-NH model and compares the results against a reference simulation.
 
 Script options can be displayed with the -h option.
 
@@ -50,7 +50,7 @@ Script options can be displayed with the -h option.
 
 To be usable the check\_commit\_testprogs.sh script needs input data. The generation and installation of these data are described in the [INSTALL\_testprogs documentation](../tools/INSTALL_testprogs.md).
 
-The goal of the script is to compare outputs between two simulations (to check if bit-reproducibilty is achieved or not).
+The goal of the script is to compare outputs between two simulations (to check if bit-reproducibility is achieved or not).
 A reference simulation must be performed and save. This reference simulation is run the same way as the
 test experiment but cannot be compared to something else:
 check\_commit\_testprogs.sh -c -r <reference_commit>

@@ -2,7 +2,7 @@
 
 ## ABOUT THIS DOCUMENT
 
-The PHYEX parameterizations can be called from the Meso-NH and AROME models, from
+The PHYEX parametrisations can be called from the Meso-NH and AROME models, from
 test programs and from a driver.
 This document is intended for developers who want to plug in the physics in a new model or program.
 
