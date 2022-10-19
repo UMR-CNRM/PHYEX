@@ -10,16 +10,16 @@ This document is written using the markdown language. With pandoc, it can be con
 
 Regarding array-syntax, the [applicable norm](./CodingNorms.md) depends on the branch:
 
-  - The main branch of PHYEX (and all branches based on main) is written using array-syntax
-  - The GPU branch is written using array-syntax with mnh\_expand directives
-  - arome specific branches based on the GPU branch are written using DO loops
-  - mesonh specific branches based on the GPU branch are written using array-syntax
+  - The legacy main branch of PHYEX (and all branches based on main) was written using array-syntax
+  - The master branch is written using array-syntax with mnh\_expand directives
+  - arome specific branches based on the master branch are written using DO loops
+  - mesonh specific branches based on the master branch are written using array-syntax
 
-Pull requests can be received on all these kind of branches and must be merged into the main or the GPU branch with according norm.
+Pull requests can be received on all these kind of branches and must be merged into the master branch with according norm.
 
-## NORMAL WORKFLOW FOR A CONTRIBUTION DEVELOPED IN AROME-HARMONIE
+## NORMAL WORKFLOW FOR A CONTRIBUTION DEVELOPED IN AROME AND HARMONIE-AROME
 
-### Until cycle 49t1
+### Scientific contributions until cycle 49t1
 
 ![](./AROMEworkflow1.svg)
 
@@ -27,12 +27,12 @@ The pull request comes from the IAL integrator. It must be based on an arome spe
 
 Details for point 6, the PHYEX administrator:
   - validates (see [below](#tests)) the contribution
-  - integrates the contribution in the arome branch and merges it in the GPU branch
-  - regularly, he tags a new (minor) version of the GPU branch
+  - integrates the contribution in the arome branch and merges it in the master branch
+  - regularly, he tags a new (minor) version of the master branch
   - when asked by the IAL integrator, he builds a new arome specific branch
   - when an arome specific branch is used in an official cycle, the arome specific branch is tagged accordingly
 
-### After cycle 49t1
+### Refactoring contributions from now on, and scientific contributions after cycle 49t1
 
 ![](./AROMEworkflow2.svg)
 
@@ -42,8 +42,8 @@ Details for point 6:
   - The PHYEX administrator checks the pull requests in the other applications (see [below](#tests))
   - The IAL integrator integrates the contribution on the arome specific branch
   - The PHYEX administrator
-    - integrates the modifications in the GPU branch
-    - regularly, tags a new (minor) version of the GPU branch
+    - integrates the modifications in the master branch
+    - regularly, tags a new (minor) version of the master branch
     - when asked by the IAL integrator, builds a new arome specific branch (see [below](#code-preparation))
     - when an arome specific branch is used in an official cycle, the arome specific branch is tagged accordingly
 
@@ -55,19 +55,19 @@ Integration details:
   - The Meso-NH integrator extracts, from the different pull requests, what concern the PHYEX repository and send a pull request on PHYEX based on a mesonh specific branch
   - The PHYEX administrator:
     - validates (see [below](#tests)) the contribution
-    - integrates the contribution in the mesonh branch and merges it in the GPU branch
-    - regularly, he tags a new (minor) version of the GPU branch
+    - integrates the contribution in the mesonh branch and merges it in the master branch
+    - regularly, he tags a new (minor) version of the master branch
     - when asked by the Meso-NH integrator, he builds a new mesonh specific branch (see [below](#code-preparation))
     - when a mesonh specific branch is used in an official release, the mesonh specific branch is tagged accordingly
 
 ## NORMAL WORKFLOW FOR ANOTHER CONTRIBUTION
 
-Pull requests must be based on the GPU branch.
+Pull requests must be based on the master branch.
 
 The PHYEX administrator:
   - validates (see [below](#tests)) the contribution
-  - integrates the contribution in the GPU branch
-  - regularly, he tags a new (minor) version of the GPU branch
+  - integrates the contribution in the master branch
+  - regularly, he tags a new (minor) version of the master branch
 
 ## TESTS
 
@@ -83,7 +83,7 @@ When possible, the new version of PHYEX must reproduce the old results (scientif
 
 ## CODE PREPARATION
 
-The source code stored in the main and GPU branches must be usable by all the models. But these models can have contradictory constraints. To bypass this difficulty, the source code is preprocessed before being included in the compilation environment of each model.
+The source code stored in the master branches must be usable by all the models. But these models can have contradictory constraints. To bypass this difficulty, the source code is preprocessed before being included in the compilation environment of each model.
 
 This preprocessing step can be done on the fly (in this case the preprocessing tools must be available aside of the compilation tools), or the result of the preprocessing can be stored in the PHYEX package (in this case, the preprocessing is done once and can be used by several users).
 This second possibility is useful to historize the source code really used during the model compilation and enables contributions to the PHYEX package without the need of the preprocessing tools.

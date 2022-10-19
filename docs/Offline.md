@@ -18,7 +18,28 @@ This build system has two dependencies (installation is done automatically by th
 The script build/with\_fcm/make\_fcm.sh uses a configuration file and build the library and test programs.
 They can be found in the build/bin subdirectory in the architecture specific directory arch\_\<architecture name\>.
 
-Some more details can be found in [build/with\_fcm/README.md file](../build/with_fcm/README.md).
+Some more details on the build system can be found in [build/with\_fcm/README.md file](../build/with_fcm/README.md).
+
+### Compilation in the repository
+
+When on a master commit, the build/with\_fcm/make\_fcm.sh script can be used to compile the offline tools.
+
+### Compilation of a testprogs specific commit
+
+When on a master commit, the tools/check\_commit\_testprogs.sh script can be used to compile a testprogs\_\<commit\_hash\> commit already available in the PHYEX repository.
+
+### Modification of a testprogs specific commit
+
+The idea is to use two clones of PHYEX: one to provide the building tools, the another one to provide the source code.
+Something like this can be used:
+
+- cd $HOME; git clone \<PHYEX url\> PHYEXtools
+- cd PHYEXtools; git checkout master
+- cd $HOME; git clone \<PHYEX url\> PHYEX
+- cd PHYEX; git checkout arome\_\<commit\_hash\>; source code moddifications...
+- . PHYEXtools/tools/env.sh; check\_commit\_testprogs.sh $HOME/PHYEX REF
+
+The last step will creates a directory (in $HOME/TESTPROGS) with a copy of your source code and the build system, builds the testprogs and executes them.
 
 ## TEST PROGRAM
 
@@ -35,6 +56,10 @@ i=0; for file in ????_??_????????.dat; do mv $file `printf %08d $i`.dat; i=$((i+
 ### Usage directly with the testprogs executables
 
 The different main\_\*.exe programs obtained by the compilation can be run. Each of these executables is expecting the presence of a 'data' directory in their working directory containing the different files.
+
+### Usage through the check\_commit\_testprogs.sh script
+
+As described in [COMPILATION](#compilation).
 
 ## PYTHON BINDING
 

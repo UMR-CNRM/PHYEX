@@ -46,7 +46,7 @@ The variables are named according to the doctor norm:
 |Local         | I (not IS) | Z (not ZS) | G (not GS)  | Y (not YS, YP) | TZ               |
 |Loop control  | J (not JP) | -          | -           | -              | -                |
 
-Regarding array-syntax, code is written using array-syntax in the main branch and in mesonh specific branches based on the GPU branch, using array-syntax with mnh\_expand directives in the GPU branch, using DO loops in arome specific branches based on the GPU branch. If in doubt, check what is done in other routines in the branch you are working in.
+Regarding array-syntax, code is written using array-syntax in the legacy main branch, using array-syntax with mnh\_expand directives in the master branch and in mesonh specific branches based on the master branch, using DO loops in arome specific branches based on the master branch. If in doubt, check what is done in other routines in the branch you are working in.
 Be carrefull when using the mnh\_expand directives, code must respect some constraints:
 
   - parenthesis after array variables are mandatory (no A=B+C, but A(:,:)=B(:,:)+C(:,:))
@@ -55,13 +55,13 @@ Be carrefull when using the mnh\_expand directives, code must respect some const
 
 A tool (verify\_mnh\_expand.py) can help at checking the validity of the written code.
 
-For the GPU branch (and branches on GPU, including model specific branches):
+For the master branch (and branches on master, including model specific branches):
 
   - except variables declared with the PARAMETER attribute, no variable from modules can be used in the physics. Variables must be put in a type received by interface.
   - subroutines or functions must not be called from within a loop on horizontal or vertical dimensions (see below for exception)
   - functions returning arrays must be rewritten as subroutine
 
-Call to external subroutine in loop on horizontal or vertical dimensions must be suppressed in the GPU version. If possible, the call must be put outside of the loop (acting on the full array as a whole) or the subroutine must be put in the CONTAINS part but, in this case, the included subroutine cannot use local array. There are 3 cases:
+Call to external subroutine in loop on horizontal or vertical dimensions must be suppressed in the master version. If possible, the call must be put outside of the loop (acting on the full array as a whole) or the subroutine must be put in the CONTAINS part but, in this case, the included subroutine cannot use local array. There are 3 cases:
 
   - the subroutine doesn't use local array: subroutine is put in an include file (with the .h extension) and included with the fortran INCLUDE statement.
   - the subroutine use local arrays but it is called from only one place in the code: the source code of the subroutine is moved (no INCLUDE) in the CONTAINS part and the array declarations are moved in the main subroutine.
