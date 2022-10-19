@@ -42,7 +42,7 @@ Here is a short description of the different generic branches:
 
 The build systems are evolving.
 Until cycle 49t1 (included), the physics source code is directly included in the source code tree.
-After cycle 49t1, the physics source code (as well as other model parts such as ectrans, fiat...) will be available through a bundle component.
+After cycle 49t1, the physics source code (as well as other model parts such as ectrans, fiat...) will be available as a _component_ of a _bundle_.
 
 This evolution will impact the way to contribute to the PHYEX repository.
 
@@ -57,7 +57,7 @@ The workflow was chosen so that the developers would not have to change their wo
 
 ### Scientific contributions until cycle 49t1
 
-Who: developers with scientific contributions based on cycles 48t1, 48t2, 48t3 and 49t1
+Who: developers with scientific contributions based on cycles 48t1, 48t2, 48t3 and 49
 
 Workflow summary: because the physics source code is still included in the IAL source code, pull requests concerning the physics continue to follow the same path as before (ie pull requests are submitted to the IAL repository). Afterwards, the IAL integrator will submit a pull request to the PHYEX repository with only the relevant files.
 
@@ -74,9 +74,9 @@ Workflow details (getting the source code in blue, pull request in red, integrat
 
 ### Refactoring contributions from now on, and scientific contributions after cycle 49t1
 
-Who: developers with scientific contributions based on cycles 49t2 and following; and developers with GPU-refactoring contributions.
+Who: developers with scientific contributions based on cycles 49t1 and following; and developers with GPU-refactoring contributions.
 
-Workflow summary: after the cycle 49t1 (starting from 49t2?), AROME and HARMONIE-AROME will become a bundle. Il will be built with source codes coming from various places. One of these places will be the PHYEX repository. Pull requests must be sent to each modified components of the bundle.
+Workflow summary: after the cycle 49t1 (probably starting from cycle 50), AROME and HARMONIE-AROME will become a bundle. Il will be built with source codes coming from various places. One of these places will be the PHYEX repository. Pull requests must be sent to each modified components of the bundle.
 
 Developer must use a model specific branch (arome\_\<commit\_hash\> when working with the model, or testprogs\_\<commit\_hash\> when working with the offline tools).
 These branches receive tags based on the master branch version. For example the commit, in the master branch, corresponding to the version 1.0.0 of PHYEX will receive the tag "v1.0.0".
@@ -91,16 +91,18 @@ Workflow details (getting the source code in blue, pull request in red, integrat
   - 4 and 5: AROME or HARMONIE-AROME developer sends pull requests to the different repositories where files have been modified
   - 6: The PHYEX administrator checks the pull requests in the other applications, the IAL integrator integrates on the arome specific branch; then the PHYEX administrator integrates the modifications in the master branch and, eventually, produce a new arome specific branch for future integration in IAL
 
-### Special notes for building the model from PHYEX before cycle 49t2
+### Special notes for building the AROME or HARMONIE-AROME model from PHYEX until cycle 49t1 included
 
 The model version hosted in IAL is incompatible with the content of the PHYEX repository.
-To build the model, you must:
+To build the model from PHYEX, you must:
 
-- take the source code of cycle 48t3
+- checkout the IAL source code of cycle 48t3 or 49
 - remove the directories 'mpa/\*/internals' and 'mpa/\*/modules'
 - put the PHYEX directories 'aux', 'conv', 'micro' and 'turb' into a new directory (at the same level as 'mpa') named 'phyex'
 - dispatch the code contained in 'ext' into the subdirectories of 'arpifs'
 - remove the files listed in the PHYEX repository in the 'src/arome/gmkpack\_ignored\_files' file
+
+However, for scientific contributions to 49t1, we suggest scientists to use the physics code present in IAL, rather than from PHYEX.
 
 ## CONTRIBUTION WORKFLOW FOR MESO-NH DEVELOPERS
 
