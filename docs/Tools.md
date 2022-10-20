@@ -1,14 +1,12 @@
-# TOOLS DOCUMENTATION
+# PHYEX TOOLS DOCUMENATTION
 
-## ABOUT THIS DOCUMENT
+## About this section
 
 This document is intended for persons who want to use the prep\_code.sh or the check\_commit\_\*.sh scripts.
 
-This document is written using the markdown language. With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf).
+## Installation, path...
 
-## INSTALLATION, PATH...
-
-Installation is covered in the [INSTALL documentation](../tools/INSTALL.md).
+Installation is covered in the [tools/INSTALL.md file](../tools/INSTALL.md).
 
 Environment variables can be set with:
 
@@ -16,7 +14,7 @@ Environment variables can be set with:
 . <git repository>/tools/env.sh
 ```
 
-## TOOLS
+## Tools
 
 ### check\_commit\_ial.sh
 
@@ -24,7 +22,7 @@ The check\_commit\_ial script compiles, executes IAL test cases and compare the 
 
 Script options can be displayed with the -h option.
 
-Before being usable, the AROME model must be installed following the [INSTALL\_pack\_ial documentation](../tools/INSTALL_pack\_ial.md).
+Before being usable, the AROME model must be installed following the [tools/INSTALL\_pack\_ial.md file](../tools/INSTALL_pack\_ial.md).
 
 ### check\_commit\_mesonh.sh
 
@@ -32,7 +30,7 @@ The check\_commit\_mesonh.sh script compiles, runs a test case of the Meso-NH mo
 
 Script options can be displayed with the -h option.
 
-Before being usable, the mesonh model must be installed following the [INSTALL\_pack\_mesonh documentation](../tools/INSTALL_pack_mesonh.md).
+Before being usable, the mesonh model must be installed following the [tools/INSTALL\_pack\_mesonh.md file](../tools/INSTALL_pack_mesonh.md).
 
 For check\_commit\_mesonh.sh the following environment variables can be set:
 
@@ -48,12 +46,12 @@ This directory must exist.
 
 Script options can be displayed with the -h option.
 
-To be usable the check\_commit\_testprogs.sh script needs input data. The generation and installation of these data are described in the [INSTALL\_testprogs documentation](../tools/INSTALL_testprogs.md).
+To be usable the check\_commit\_testprogs.sh script needs input data. The generation and installation of these data are described in the [tools/INSTALL\_testprogs.md file](../tools/INSTALL_testprogs.md).
 
 The goal of the script is to compare outputs between two simulations (to check if bit-reproducibility is achieved or not).
 A reference simulation must be performed and save. This reference simulation is run the same way as the
 test experiment but cannot be compared to something else:
-check\_commit\_testprogs.sh -c -r <reference_commit>
+check\_commit\_testprogs.sh -c -r \<reference\_commit\>
 
 If this reference simulation must become the 'absolute' reference (used when invoking the check\_commit\_testprogs.sh
 script with the 'REF' argument), the reference simulation directory (under $TESTPROGSDIR) must be renamed 'ref'.
@@ -61,7 +59,7 @@ script with the 'REF' argument), the reference simulation directory (under $TEST
 ### prep\_code.sh
 
 This script is used by the different check\_commit\_\* scripts and can be used directly to pre-process the source code.
- The installation is described in the [INSTALL\_mnh\_expand documentation](../tools/INSTALL_mnh_expand.md)
+ The installation is described in the [tools/INSTALL\_mnh\_expand.md file](../tools/INSTALL_mnh_expand.md)
 
 ### others
 
@@ -72,3 +70,4 @@ Other scripts are:
   - correct\_indent.py: correct source code indentation in mnh\_expand blocs
   - diffNODE.001\_01: compare NODE.0001\_01 output files
   - verify\_mnh\_expand.py: check syntax in mnh\_expand blocs
+  - generate\_standalone\_doc.sh: to generate a standalone doc from the different md files

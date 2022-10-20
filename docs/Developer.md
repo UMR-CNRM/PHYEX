@@ -1,8 +1,8 @@
-# PHYEX developer documentation
+# PHYEX DEVELOPER DOCUMENTATION
 
-## ABOUT THIS DOCUMENT
+## About this section
 
-This document is intended for developers who want to contribute to the PHYEX package.
+This section is intended for developers who want to contribute to the PHYEX package.
 Developer who is interested in plugging the physics in a new model can refer to the Plugging documentation.
 The topics covered are as follows:
 
@@ -11,9 +11,7 @@ The topics covered are as follows:
   - [Contribution workflow for Méso-NH developers](#contribution-workflow-for-mesonh-developers)
   - [Contribution workflow for other developers](#contribution-workflow-for-other-developers)
 
-This document is written using the markdown language. With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf).
-
-## PACKAGE ORGANISATION
+## Package organisation
 
 The package contains two kinds of branches:
 
@@ -38,7 +36,7 @@ Here is a short description of the different generic branches:
   - testHUGE: modified source code to check the incomplete NPROMA feature
   - testprogs\_data: modified source code used to generate samples for the test programs (more on this topic in the [Offline documentation](./Offline.md))
 
-## CONTRIBUTION WORKFLOW FOR AROME and HARMONIE-AROME DEVELOPERS
+## Contribution workflow for AROME and HARMONIE-AROME developers
 
 The build systems are evolving.
 Until cycle 49t1 (included), the physics source code is directly included in the source code tree.
@@ -102,7 +100,7 @@ To build the model, you must:
 - dispatch the code contained in 'ext' into the subdirectories of 'arpifs'
 - remove the files listed in the PHYEX repository in the 'src/arome/gmkpack\_ignored\_files' file
 
-## CONTRIBUTION WORKFLOW FOR MESO-NH DEVELOPERS
+## Contribution workflow for MESO-NH developers
 
 The physics source code is embedded in the Méso-NH source code.
 
@@ -110,6 +108,6 @@ The physics source code comes directly from a mesonh specific branch (these bran
 
 Pull requests concerning the physics continue to follow the same path as before (ie pull requests are submitted to the Meso-NH repository). The Meso-NH integrator will submit a pull request to the PHYEX repository with only the relevant files.
 
-## CONTRIBUTION WORKFLOW FOR OTHER DEVELOPERS
+## Contribution workflow for other developers
 
 Other developers must work with source code coming directly from the master branch. They issue pull requests directly on this branch as usual with git repositories.

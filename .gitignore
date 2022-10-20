@@ -12,3 +12,7 @@
 # VI temp files
 .*.swp
 .*.swo
+
+# Eclipse project files
+/.cproject
+/.project

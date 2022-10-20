@@ -1,12 +1,10 @@
-# PHYEX coding norms documentation
+# PHYEX CODING NORMS DOCUMENTATION
 
-## ABOUT THIS DOCUMENT
+## About this section
 
-This document is intended for developers and integrators and describes the coding norms to use.
+This section is intended for developers and integrators and describes the coding norms to use.
 
-This document is written using the markdown language. With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf).
-
-## CODING NORMS
+## Coding norms
 
 ### Namelists
 We must be able to reproduce (binary comparison of the output files) the model results before and after code modifications. It means that every modification must be controlled by a namelist key (with the exception of bug corrections).

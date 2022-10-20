@@ -1,12 +1,10 @@
-# PHYEX integrator documentation
+# PHYEX INTEGRATOR DOCUMENTATION
 
-## ABOUT THIS DOCUMENT
+## About this section
 
 This document is intended for integrators who are in charge of assembling contributions received through pull requests.
 
-This document is written using the markdown language. With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf).
-
-## BRANCHES AND NORMS
+## Branches and norms
 
 Regarding array-syntax, the [applicable norm](./CodingNorms.md) depends on the branch:
 
@@ -17,7 +15,7 @@ Regarding array-syntax, the [applicable norm](./CodingNorms.md) depends on the b
 
 Pull requests can be received on all these kind of branches and must be merged into the master branch with according norm.
 
-## NORMAL WORKFLOW FOR A CONTRIBUTION DEVELOPED IN AROME AND HARMONIE-AROME
+## Normal workflow for a contribution developed in AROME and HARMONIE-AROME
 
 ### Scientific contributions until cycle 49t1
 
@@ -26,6 +24,7 @@ Pull requests can be received on all these kind of branches and must be merged i
 The pull request comes from the IAL integrator. It must be based on an arome specific branch.
 
 Details for point 6, the PHYEX administrator:
+
   - validates (see [below](#tests)) the contribution
   - integrates the contribution in the arome branch and merges it in the master branch
   - regularly, he tags a new (minor) version of the master branch
@@ -39,6 +38,7 @@ Details for point 6, the PHYEX administrator:
 The pull request comes directly from a developer. It must be based on an arome specific branch.
 
 Details for point 6:
+
   - The PHYEX administrator checks the pull requests in the other applications (see [below](#tests))
   - The IAL integrator integrates the contribution on the arome specific branch
   - The PHYEX administrator
@@ -47,11 +47,12 @@ Details for point 6:
     - when asked by the IAL integrator, builds a new arome specific branch (see [below](#code-preparation))
     - when an arome specific branch is used in an official cycle, the arome specific branch is tagged accordingly
 
-## NORMAL WORKFLOW FOR A CONTRIBUTION DEVELOPED IN MESONH
+## Normal workflow for a contribution developed in MESONH
 
 The developer sends its pull request on the Méso-NH repository (the physics source code is embedded in the model source code).
 
 Integration details:
+
   - The Meso-NH integrator extracts, from the different pull requests, what concern the PHYEX repository and send a pull request on PHYEX based on a mesonh specific branch
   - The PHYEX administrator:
     - validates (see [below](#tests)) the contribution
@@ -60,16 +61,17 @@ Integration details:
     - when asked by the Meso-NH integrator, he builds a new mesonh specific branch (see [below](#code-preparation))
     - when a mesonh specific branch is used in an official release, the mesonh specific branch is tagged accordingly
 
-## NORMAL WORKFLOW FOR ANOTHER CONTRIBUTION
+## Normal workflow for another contribution
 
 Pull requests must be based on the master branch.
 
 The PHYEX administrator:
+
   - validates (see [below](#tests)) the contribution
   - integrates the contribution in the master branch
   - regularly, he tags a new (minor) version of the master branch
 
-## TESTS
+## Tests
 
 The source code must follow strict mnh\_expand directives (described in the [Coding Norms documentation](./CodingNorms.md)). The script verify\_mnh\_expand.py must be used to give an additional check.
 
@@ -81,7 +83,7 @@ In addition to the scientific validation, the following tests must give the same
 
 When possible, the new version of PHYEX must reproduce the old results (scientific modifications must be activated with namelist keys).
 
-## CODE PREPARATION
+## Code preparation
 
 The source code stored in the master branches must be usable by all the models. But these models can have contradictory constraints. To bypass this difficulty, the source code is preprocessed before being included in the compilation environment of each model.
 

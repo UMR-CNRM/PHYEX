@@ -1,13 +1,11 @@
-# OFFLINE documentation
+# PHYEX OFFLINE DOCUMENTATION
 
-## ABOUT THIS DOCUMENT
+## About this section
 
 This document is intended for persons who want to use PHYEX in an offline mode.
 Some offline test programs are provided with the package and a library suitable for use with python is also available.
 
-This document is written using the markdown language. With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf).
-
-## COMPILATION
+## Compilation
 
 The build/with\_fcm directory contains a build system.
 This build system has two dependencies (installation is done automatically by the compilation script):
@@ -41,7 +39,7 @@ Something like this can be used:
 
 The last step will creates a directory (in $HOME/TESTPROGS) with a copy of your source code and the build system, builds the testprogs and executes them.
 
-## TEST PROGRAM
+## Test program
 
 ### Data generation
 
@@ -61,9 +59,9 @@ The different main\_\*.exe programs obtained by the compilation can be run. Each
 
 As described in [COMPILATION](#compilation).
 
-## PYTHON BINDING
+## Python bindings
 
-**TODO** This section must be written. Key ideas are:
+**TODO** This section (and code) must be written. Key ideas are:
 
   - ctypesforfortran
   - example
