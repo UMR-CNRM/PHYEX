@@ -1,0 +1,614 @@
+!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+MODULE MODE_ICE4_TENDENCIES
+IMPLICIT NONE
+CONTAINS
+SUBROUTINE ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, KPROMA, KSIZE, &
+                          &KRR, ODSOFT, LDCOMPUTE, &
+                          &OWARM, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
+                          &HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
+                          &PEXN, PRHODREF, PLVFACT, PLSFACT, K1, K2, &
+                          &PPRES, PCF, PSIGMA_RC, &
+                          &PCIT, &
+                          &PT, PVART, &
+                          &PRVHENI_MR, PRRHONG_MR, PRIMLTC_MR, PRSRIMCG_MR, &
+                          &PRCHONI, PRVDEPS, PRIAGGS, PRIAUTS, PRVDEPG, &
+                          &PRCAUTR, PRCACCR, PRREVAV, &
+                          &PRCRIMSS, PRCRIMSG, PRSRIMCG, PRRACCSS, PRRACCSG, PRSACCRG, PRSMLTG, PRCMLTSR, &
+                          &PRICFRRG, PRRCFRIG, PRICFRR, PRCWETG, PRIWETG, PRRWETG, PRSWETG, &
+                          &PRCDRYG, PRIDRYG, PRRDRYG, PRSDRYG, PRWETGH, PRWETGH_MR, PRGMLTR, &
+                          &PRCWETH, PRIWETH, PRSWETH, PRGWETH, PRRWETH, &
+                          &PRCDRYH, PRIDRYH, PRSDRYH, PRRDRYH, PRGDRYH, PRDRYHG, PRHMLTR, &
+                          &PRCBERI, &
+                          &PRS_TEND, PRG_TEND, PRH_TEND, PSSI, &
+                          &PA, PB, &
+                          &PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
+                          &PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, &
+                          &PRAINFR)
+!!
+!!**  PURPOSE
+!!    -------
+!!      Computes the tendencies
+!!
+!!    AUTHOR
+!!    ------
+!!      S. Riette from the splitting of rain_ice source code (nov. 2014)
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!
+!  P. Wautelet 29/05/2019: remove PACK/UNPACK intrinsics (to get more performance and better OpenACC support)
+!!     R. El Khatib 24-Aug-2021 Optimizations
+!
+!
+!*      0. DECLARATIONS
+!          ------------
+!
+USE MODD_BUDGET,         ONLY: TBUDGETCONF_t
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
+USE MODE_MSG,            ONLY: PRINT_MSG, NVERB_FATAL
+USE MODD_CST,            ONLY: CST_t
+USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
+!
+USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
+      & ITH,     & ! Potential temperature
+      & IRV,     & ! Water vapor
+      & IRC,     & ! Cloud water
+      & IRR,     & ! Rain water
+      & IRI,     & ! Pristine ice
+      & IRS,     & ! Snow/aggregate
+      & IRG,     & ! Graupel
+      & IRH        ! Hail
+!
+USE MODE_ICE4_RRHONG, ONLY: ICE4_RRHONG
+USE MODE_ICE4_RIMLTC, ONLY: ICE4_RIMLTC
+USE MODE_ICE4_RSRIMCG_OLD, ONLY: ICE4_RSRIMCG_OLD
+USE MODE_ICE4_COMPUTE_PDF, ONLY: ICE4_COMPUTE_PDF
+USE MODE_ICE4_RAINFR_VERT, ONLY: ICE4_RAINFR_VERT
+USE MODE_ICE4_SLOW, ONLY: ICE4_SLOW
+USE MODE_ICE4_WARM, ONLY: ICE4_WARM
+USE MODE_ICE4_FAST_RS, ONLY: ICE4_FAST_RS
+USE MODE_ICE4_FAST_RG, ONLY: ICE4_FAST_RG
+USE MODE_ICE4_FAST_RH, ONLY: ICE4_FAST_RH
+USE MODE_ICE4_FAST_RI, ONLY: ICE4_FAST_RI
+USE MODE_ICE4_NUCLEATION, ONLY: ICE4_NUCLEATION
+!
+USE PARKIND1, ONLY : JPRB
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of dummy arguments :
+!
+TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
+TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
+TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
+TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
+TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+INTEGER,                      INTENT(IN)    :: KPROMA, KSIZE
+INTEGER,                      INTENT(IN)    :: KRR
+LOGICAL,                      INTENT(IN)    :: ODSOFT
+LOGICAL, DIMENSION(KPROMA),   INTENT(IN)    :: LDCOMPUTE
+LOGICAL,                      INTENT(IN)    :: OWARM
+CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_RC_RR_ACCR
+CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_RR_EVAP
+CHARACTER(LEN=4),             INTENT(IN)    :: HSUBG_AUCV_RC
+CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_AUCV_RI
+CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_PR_PDF ! pdf for subgrid precipitation
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PEXN
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRHODREF
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLVFACT
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLSFACT
+INTEGER, DIMENSION(KPROMA),    INTENT(IN)    :: K1
+INTEGER, DIMENSION(KPROMA),    INTENT(IN)    :: K2
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PPRES
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PCF
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PSIGMA_RC
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PCIT
+REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PT
+REAL, DIMENSION(KPROMA,0:KRR), INTENT(IN)    :: PVART
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRVHENI_MR
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRRHONG_MR
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRIMLTC_MR
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRSRIMCG_MR
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRCHONI
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRVDEPS
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRIAGGS
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRIAUTS
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRVDEPG
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRCAUTR
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRCACCR
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRREVAV
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRCRIMSS
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRCRIMSG
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRSRIMCG
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRRACCSS
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRRACCSG
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRSACCRG
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRSMLTG
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRCMLTSR
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRICFRRG
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRRCFRIG
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRICFRR
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRCWETG
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRIWETG
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRRWETG
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRSWETG
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRCDRYG
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRIDRYG
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRRDRYG
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRSDRYG
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRWETGH
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRWETGH_MR
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRGMLTR
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRCWETH
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRIWETH
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRSWETH
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRGWETH
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRRWETH
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRCDRYH
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRIDRYH
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRSDRYH
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRRDRYH
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRGDRYH
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PRDRYHG
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRHMLTR
+REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PRCBERI
+REAL, DIMENSION(KPROMA, 8),    INTENT(INOUT) :: PRS_TEND
+REAL, DIMENSION(KPROMA, 8),    INTENT(INOUT) :: PRG_TEND
+REAL, DIMENSION(KPROMA, 10),   INTENT(INOUT) :: PRH_TEND
+REAL, DIMENSION(KPROMA),       INTENT(OUT)   :: PSSI
+REAL, DIMENSION(KPROMA,0:7),   INTENT(OUT)   :: PA
+REAL, DIMENSION(KPROMA,0:7),   INTENT(OUT)   :: PB
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLC_HCF
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLC_LCF
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLC_HRC
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLC_LRC
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLI_HCF
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLI_LCF
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLI_HRI
+REAL, DIMENSION(KPROMA),       INTENT(INOUT)   :: PHLI_LRI
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PRAINFR   ! Rain fraction
+!
+!*       0.2  declaration of local variables
+!
+REAL, DIMENSION(KPROMA,0:KRR) :: ZVART
+REAL, DIMENSION(KPROMA) :: ZT, ZRAINFR, &
+                        & ZKA, ZDV, ZAI, ZCJ, &
+                        & ZLBDAR, ZLBDAS, ZLBDAG, ZLBDAH, ZLBDAR_RF, &
+                        & ZRGSI, ZRGSI_MR
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZRRT3D, ZRST3D, ZRGT3D, ZRHT3D
+INTEGER :: JL, JV
+LOGICAL, DIMENSION(KPROMA) :: LLWETG ! .TRUE. if graupel growths in wet mode
+REAL :: ZZW
+LOGICAL :: LLRFR
+!
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+
+IF (LHOOK) CALL DR_HOOK('ICE4_TENDENCIES', 0, ZHOOK_HANDLE)
+
+
+!
+ZT(:)=PT(:)
+DO JV=0,KRR
+  ZVART(:,JV)=PVART(:,JV)
+  PA(:,JV)=0.
+  PB(:,JV)=0.
+ENDDO
+!
+IF(ODSOFT) THEN
+  PRVHENI_MR(:)=0.
+  PRRHONG_MR(:)=0.
+  PRIMLTC_MR(:)=0.
+  PRSRIMCG_MR(:)=0.
+ELSE
+  !
+  !*       2.     COMPUTES THE SLOW COLD PROCESS SOURCES
+  !               --------------------------------------
+  CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, KSIZE, LDCOMPUTE(:), &
+                   ZVART(:,ITH), PPRES(:), PRHODREF(:), PEXN(:), PLSFACT(:), ZT(:), &
+                   ZVART(:,IRV), &
+                   PCIT(:), PRVHENI_MR(:))
+  DO JL=1, KSIZE
+    ZVART(JL,ITH)=ZVART(JL,ITH) + PRVHENI_MR(JL)*PLSFACT(JL)
+    ZT(JL) = ZVART(JL,ITH) * PEXN(JL)
+    ZVART(JL,IRV)=ZVART(JL,IRV) - PRVHENI_MR(JL)
+    ZVART(JL,IRI)=ZVART(JL,IRI) + PRVHENI_MR(JL)
+  ENDDO
+  !
+  !*       3.3     compute the spontaneous freezing source: RRHONG
+  !
+  CALL ICE4_RRHONG(CST, PARAMI, ICED, KPROMA, KSIZE, LDCOMPUTE, &
+                  &PEXN, PLVFACT, PLSFACT, &
+                  &ZT, ZVART(:,IRR), &
+                  &ZVART(:,ITH), &
+                  &PRRHONG_MR)
+  DO JL=1, KSIZE
+    ZVART(JL,ITH) = ZVART(JL,ITH) + PRRHONG_MR(JL)*(PLSFACT(JL)-PLVFACT(JL)) ! f(L_f*(RRHONG))
+    ZT(JL) = ZVART(JL,ITH) * PEXN(JL)
+    ZVART(JL,IRR) = ZVART(JL,IRR) - PRRHONG_MR(JL)
+    ZVART(JL,IRG) = ZVART(JL,IRG) + PRRHONG_MR(JL)
+  ENDDO
+  !
+  !*       7.1    cloud ice melting
+  !
+  CALL ICE4_RIMLTC(CST, PARAMI, KPROMA, KSIZE, LDCOMPUTE, &
+                  &PEXN, PLVFACT, PLSFACT, &
+                  &ZT, &
+                  &ZVART(:,ITH), ZVART(:,IRI), &
+                  &PRIMLTC_MR)
+  DO JL=1, KSIZE
+    ZVART(JL,ITH) = ZVART(JL,ITH) - PRIMLTC_MR(JL)*(PLSFACT(JL)-PLVFACT(JL)) ! f(L_f*(-RIMLTC))
+    ZT(JL) = ZVART(JL,ITH) * PEXN(JL)
+    ZVART(JL,IRC) = ZVART(JL,IRC) + PRIMLTC_MR(JL)
+    ZVART(JL,IRI) = ZVART(JL,IRI) - PRIMLTC_MR(JL)
+  ENDDO
+  !
+  !        5.1.6  riming-conversion of the large sized aggregates into graupel (old parametrisation)
+  !
+  IF(PARAMI%CSNOWRIMING=='OLD ') THEN
+    DO JL=1,KSIZE 
+      IF(ZVART(JL,IRS)>0.)THEN
+        ZLBDAS(JL)  = MIN(ICED%XLBDAS_MAX, ICED%XLBS*(PRHODREF(JL)*MAX(ZVART(JL,IRS), ICED%XRTMIN(5)))**ICED%XLBEXS)
+      ELSE
+        ZLBDAS(JL)=0.
+      ENDIF
+    ENDDO
+    CALL ICE4_RSRIMCG_OLD(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, &
+                         &PRHODREF, &
+                         &ZLBDAS, &
+                         &ZT, ZVART(:,IRC), ZVART(:,IRS), &
+                         &PRSRIMCG_MR)
+    DO JL=1, KSIZE
+      ZVART(JL,IRS) = ZVART(JL,IRS) - PRSRIMCG_MR(JL)
+      ZVART(JL,IRG) = ZVART(JL,IRG) + PRSRIMCG_MR(JL)
+    ENDDO
+  ELSE
+    PRSRIMCG_MR(:) = 0.
+  ENDIF
+ 
+  DO JL=1, KSIZE
+    PB(JL, ITH)=PB(JL, ITH) + PRVHENI_MR(JL)*PLSFACT(JL)
+    PB(JL, ITH)=PB(JL, ITH) + PRRHONG_MR(JL)*(PLSFACT(JL)-PLVFACT(JL))
+    PB(JL, ITH)=PB(JL, ITH) - PRIMLTC_MR(JL)*(PLSFACT(JL)-PLVFACT(JL))
+
+    PB(JL, IRV)=PB(JL, IRV) - PRVHENI_MR(JL)
+
+    PB(JL, IRC)=PB(JL, IRC) + PRIMLTC_MR(JL)
+
+    PB(JL, IRR)=PB(JL, IRR) - PRRHONG_MR(JL)
+
+    PB(JL, IRI)=PB(JL, IRI) + PRVHENI_MR(JL)
+    PB(JL, IRI)=PB(JL, IRI) - PRIMLTC_MR(JL)
+
+    PB(JL, IRS)=PB(JL, IRS) - PRSRIMCG_MR(JL)
+
+    PB(JL, IRG)=PB(JL, IRG) + PRRHONG_MR(JL)
+    PB(JL, IRG)=PB(JL, IRG) + PRSRIMCG_MR(JL)
+  ENDDO
+ !
+  !* Derived fields
+  !
+  DO JL=1, KSIZE
+    ZZW = EXP(CST%XALPI-CST%XBETAI/ZT(JL)-CST%XGAMI*ALOG(ZT(JL)))
+    PSSI(JL) = ZVART(JL,IRV)*( PPRES(JL)-ZZW ) / ( CST%XEPSILO * ZZW ) - 1.0
+                                                      ! Supersaturation over ice
+    ZKA(JL) = 2.38E-2 + 0.0071E-2*(ZT(JL)-CST%XTT) ! k_a
+    ZDV(JL) = 0.211E-4*(ZT(JL)/CST%XTT)**1.94 * (CST%XP00/PPRES(JL)) ! D_v
+    ZAI(JL) = (CST%XLSTT+(CST%XCPV-CST%XCI)*(ZT(JL)-CST%XTT))**2 / (ZKA(JL)*CST%XRV*ZT(JL)**2) &
+                                 + ( CST%XRV*ZT(JL) ) / (ZDV(JL)*ZZW)
+    ZCJ(JL) = ICEP%XSCFAC*PRHODREF(JL)**0.3 / SQRT(1.718E-5+0.0049E-5*(ZT(JL)-CST%XTT))
+  ENDDO
+ENDIF ! ODSOFT
+!
+!Cloud water split between high and low content part is done here
+CALL ICE4_COMPUTE_PDF(CST, ICEP, ICED, KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF,&
+                      PRHODREF, ZVART(:,IRC), ZVART(:,IRI), PCF, ZT, PSIGMA_RC, &
+                      PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
+                      PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, ZRAINFR)
+LLRFR=HSUBG_RC_RR_ACCR=='PRFR' .OR. HSUBG_RR_EVAP=='PRFR'
+IF (LLRFR) THEN
+  !Diagnostic of precipitation fraction
+  PRAINFR(:,:) = 0.
+  ZRRT3D (:,:) = 0.
+  ZRST3D (:,:) = 0.
+  ZRGT3D (:,:) = 0.
+  ZRHT3D (:,:) = 0.
+  DO JL=1,KSIZE
+    PRAINFR(K1(JL), K2(JL)) = ZRAINFR(JL)
+    ZRRT3D (K1(JL), K2(JL)) = ZVART(JL,IRR)
+#ifndef REPRO48
+    ZRST3D (K1(JL), K2(JL)) = ZVART(JL,IRS)
+    ZRGT3D (K1(JL), K2(JL)) = ZVART(JL,IRG)
+#endif
+  END DO
+  IF (KRR==7) THEN
+    DO JL=1,KSIZE    
+      ZRHT3D (K1(JL), K2(JL)) = ZVART(JL,IRH)
+    ENDDO
+    CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR(:,:), &
+                         &ZRRT3D(:,:), ZRST3D(:,:), ZRGT3D(:,:), ZRHT3D(:,:))
+  ELSE
+    CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR(:,:), &
+                         &ZRRT3D(:,:), ZRST3D(:,:), ZRGT3D(:,:))
+  ENDIF
+  DO JL=1,KSIZE
+    ZRAINFR(JL)=PRAINFR(K1(JL), K2(JL))
+  END DO
+ELSE
+  PRAINFR(:,:)=1.
+  ZRAINFR(:)=1.
+ENDIF
+!
+!*  compute the slope parameters
+!
+DO JL=1, KSIZE
+  !ZLBDAR will be used when we consider rain diluted over the grid box
+  IF(ZVART(JL,IRR)>0.) THEN
+    ZLBDAR(JL)=ICED%XLBR*(PRHODREF(JL)*MAX(ZVART(JL,IRR), ICED%XRTMIN(3)))**ICED%XLBEXR
+  ELSE
+    ZLBDAR(JL)=0.
+  ENDIF
+  !ZLBDAR_RF is used when we consider rain concentrated in its fraction
+  IF(LLRFR) THEN
+    IF(ZVART(JL,IRR)>0. .AND. ZRAINFR(JL)>0.) THEN
+      ZLBDAR_RF(JL)=ICED%XLBR*(PRHODREF(JL)*MAX(ZVART(JL,IRR)/ZRAINFR(JL), ICED%XRTMIN(3)))**ICED%XLBEXR
+    ELSE
+      ZLBDAR_RF(JL)=0.
+    ENDIF
+  ELSE
+    ZLBDAR_RF(JL)=ZLBDAR(JL)
+  ENDIF
+  IF(ZVART(JL,IRS)>0.) THEN
+    ZLBDAS(JL)=MIN(ICED%XLBDAS_MAX, ICED%XLBS*(PRHODREF(JL)*MAX(ZVART(JL,IRS), ICED%XRTMIN(5)))**ICED%XLBEXS)
+  ELSE
+    ZLBDAS(JL)=0.
+  ENDIF
+  IF(ZVART(JL,IRG)>0.) THEN
+    ZLBDAG(JL)=ICED%XLBG*(PRHODREF(JL)*MAX(ZVART(JL,IRG), ICED%XRTMIN(6)))**ICED%XLBEXG
+  ELSE
+    ZLBDAG(JL)=0.
+  ENDIF
+  IF(KRR==7) THEN
+    IF(ZVART(JL,IRH)>0.) THEN
+      ZLBDAH(JL)=ICED%XLBH*(PRHODREF(JL)*MAX(ZVART(JL,IRH), ICED%XRTMIN(7)))**ICED%XLBEXH
+    ELSE
+      ZLBDAH(JL)=0.
+    ENDIF
+  ENDIF
+ENDDO
+!
+!
+CALL ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, PRHODREF, ZT, &
+              &PSSI, PLVFACT, PLSFACT, &
+              &ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRI), ZVART(:,IRS), ZVART(:,IRG), &
+              &ZLBDAS, ZLBDAG, &
+              &ZAI, ZCJ, PHLI_HCF, PHLI_HRI, &
+              &PRCHONI, PRVDEPS, PRIAGGS, PRIAUTS, PRVDEPG)
+!
+!-------------------------------------------------------------------------------
+!
+!
+!*       3.     COMPUTES THE SLOW WARM PROCESS SOURCES
+!               --------------------------------------
+!
+!
+IF(OWARM) THEN    !  Check if the formation of the raindrops by the slow
+                  !  warm processes is allowed
+  CALL ICE4_WARM(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
+                &PRHODREF, PLVFACT, ZT, PPRES, ZVART(:,ITH),&
+                &ZLBDAR, ZLBDAR_RF, ZKA, ZDV, ZCJ, &
+                &PHLC_LCF, PHLC_HCF, PHLC_LRC, PHLC_HRC, &
+                &PCF, ZRAINFR, &
+                &ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRR), &
+                &PRCAUTR, PRCACCR, PRREVAV)
+ELSE
+  PRCAUTR(:)=0.
+  PRCACCR(:)=0.
+  PRREVAV(:)=0.
+END IF
+!
+!-------------------------------------------------------------------------------
+!
+!
+!*       4.     COMPUTES THE FAST COLD PROCESS SOURCES FOR r_s
+!               ----------------------------------------------
+!
+CALL ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, &
+                 &PRHODREF, PLVFACT, PLSFACT, PPRES, &
+                 &ZDV, ZKA, ZCJ, &
+                 &ZLBDAR, ZLBDAS, &
+                 &ZT, ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRR), ZVART(:,IRS), &
+                 &PRIAGGS, &
+                 &PRCRIMSS, PRCRIMSG, PRSRIMCG, &
+                 &PRRACCSS, PRRACCSG, PRSACCRG, PRSMLTG, &
+                 &PRCMLTSR, &
+                 &PRS_TEND)
+!
+!-------------------------------------------------------------------------------
+!
+!
+!*       5.        COMPUTES THE FAST COLD PROCESS SOURCES FOR r_g
+!                  ------------------------------------------------------
+!
+DO JL=1, KSIZE
+  ZRGSI(JL) = PRVDEPG(JL) + PRSMLTG(JL) + PRRACCSG(JL) + &
+           & PRSACCRG(JL) + PRCRIMSG(JL) + PRSRIMCG(JL)
+  ZRGSI_MR(JL) = PRRHONG_MR(JL) + PRSRIMCG_MR(JL)
+ENDDO
+CALL ICE4_FAST_RG(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, KRR, &
+                 &PRHODREF, PLVFACT, PLSFACT, PPRES, &
+                 &ZDV, ZKA, ZCJ, PCIT, &
+                 &ZLBDAR, ZLBDAS, ZLBDAG, &
+                 &ZT, ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRR), ZVART(:,IRI), ZVART(:,IRS), ZVART(:,IRG), &
+                 &ZRGSI, ZRGSI_MR(:), &
+                 &LLWETG, &
+                 &PRICFRRG, PRRCFRIG, PRICFRR, PRCWETG, PRIWETG, PRRWETG, PRSWETG, &
+                 &PRCDRYG, PRIDRYG, PRRDRYG, PRSDRYG, PRWETGH, PRWETGH_MR, PRGMLTR, &
+                 &PRG_TEND)
+!
+!-------------------------------------------------------------------------------
+!
+!
+!*       6.     COMPUTES THE FAST COLD PROCESS SOURCES FOR r_h
+!               ----------------------------------------------
+!
+IF (KRR==7) THEN
+  CALL ICE4_FAST_RH(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, LLWETG, &
+                   &PRHODREF, PLVFACT, PLSFACT, PPRES, &
+                   &ZDV, ZKA, ZCJ, &
+                   &ZLBDAS, ZLBDAG, ZLBDAR, ZLBDAH, &
+                   &ZT,  ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRR), ZVART(:,IRI), ZVART(:,IRS), ZVART(:,IRG), ZVART(:,IRH), &
+                   &PRCWETH, PRIWETH, PRSWETH, PRGWETH, PRRWETH, &
+                   &PRCDRYH, PRIDRYH, PRSDRYH, PRRDRYH, PRGDRYH, PRDRYHG, PRHMLTR, &
+                   &PRH_TEND)
+ELSEIF (BUCONF%LBU_ENABLE) THEN
+  PRCWETH(:)=0.
+  PRIWETH(:)=0.
+  PRSWETH(:)=0.
+  PRGWETH(:)=0.
+  PRRWETH(:)=0.
+  PRCDRYH(:)=0.
+  PRIDRYH(:)=0.
+  PRSDRYH(:)=0.
+  PRRDRYH(:)=0.
+  PRGDRYH(:)=0.
+  PRDRYHG(:)=0.
+  PRHMLTR(:)=0.
+END IF
+!
+!-------------------------------------------------------------------------------
+!
+!
+!*       7.     COMPUTES SPECIFIC SOURCES OF THE WARM AND COLD CLOUDY SPECIES
+!               -------------------------------------------------------------
+!
+CALL ICE4_FAST_RI(ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, &
+                 &PRHODREF, PLVFACT, PLSFACT, &
+                 &ZAI, ZCJ, PCIT, &
+                 &PSSI, &
+                 &ZVART(:,IRC), ZVART(:,IRI), &
+                 &PRCBERI)
+!
+!-------------------------------------------------------------------------------
+!
+!
+!*       8.     COMPUTES TOTAL TENDENCIES
+!               -------------------------
+!
+DO JL=1, KSIZE
+  PA(JL, ITH) = PA(JL, ITH) + PRVDEPG(JL)*PLSFACT(JL)
+  PA(JL, ITH) = PA(JL, ITH) + PRCHONI(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) + PRVDEPS(JL)*PLSFACT(JL)
+  PA(JL, ITH) = PA(JL, ITH) - PRREVAV(JL)*PLVFACT(JL)
+  PA(JL, ITH) = PA(JL, ITH) + PRCRIMSS(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) + PRCRIMSG(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) + PRRACCSS(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) + PRRACCSG(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) + (PRRCFRIG(JL) - PRICFRR(JL))*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) + (PRCWETG(JL) + PRRWETG(JL))*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) + (PRCDRYG(JL)+PRRDRYG(JL))*(PLSFACT(JL)-PLVFACT(JL))
+  PA(JL, ITH) = PA(JL, ITH) - PRGMLTR(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  IF (KRR==7) THEN
+    PA(JL, ITH) = PA(JL, ITH) + (PRRWETH(JL)+PRCWETH(JL))*(PLSFACT(JL)-PLVFACT(JL))
+    PA(JL, ITH) = PA(JL, ITH) + (PRCDRYH(JL)+PRRDRYH(JL))*(PLSFACT(JL)-PLVFACT(JL))
+    PA(JL, ITH) = PA(JL, ITH) - PRHMLTR(JL)*(PLSFACT(JL)-PLVFACT(JL))
+  ENDIF
+  PA(JL, ITH) = PA(JL, ITH) + PRCBERI(JL)*(PLSFACT(JL)-PLVFACT(JL))
+
+  PA(JL, IRV) = PA(JL, IRV) - PRVDEPG(JL)
+  PA(JL, IRV) = PA(JL, IRV) - PRVDEPS(JL)
+  PA(JL, IRV) = PA(JL, IRV) + PRREVAV(JL)
+
+  PA(JL, IRC) = PA(JL, IRC) - PRCHONI(JL)
+  PA(JL, IRC) = PA(JL, IRC) - PRCAUTR(JL)
+  PA(JL, IRC) = PA(JL, IRC) - PRCACCR(JL)
+  PA(JL, IRC) = PA(JL, IRC) - PRCRIMSS(JL)
+  PA(JL, IRC) = PA(JL, IRC) - PRCRIMSG(JL)
+  PA(JL, IRC) = PA(JL, IRC) - PRCMLTSR(JL)
+  PA(JL, IRC) = PA(JL, IRC) - PRCWETG(JL)
+  PA(JL, IRC) = PA(JL, IRC) - PRCDRYG(JL)
+  IF (KRR==7) THEN
+    PA(JL, IRC) = PA(JL, IRC) - PRCWETH(JL)
+    PA(JL, IRC) = PA(JL, IRC) - PRCDRYH(JL)
+  ENDIF
+  PA(JL, IRC) = PA(JL, IRC) - PRCBERI(JL)
+
+  PA(JL, IRR) = PA(JL, IRR) + PRCAUTR(JL)
+  PA(JL, IRR) = PA(JL, IRR) + PRCACCR(JL)
+  PA(JL, IRR) = PA(JL, IRR) - PRREVAV(JL)
+  PA(JL, IRR) = PA(JL, IRR) - PRRACCSS(JL)
+  PA(JL, IRR) = PA(JL, IRR) - PRRACCSG(JL)
+  PA(JL, IRR) = PA(JL, IRR) + PRCMLTSR(JL)
+  PA(JL, IRR) = PA(JL, IRR) - PRRCFRIG(JL) + PRICFRR(JL)
+  PA(JL, IRR) = PA(JL, IRR) - PRRWETG(JL)
+  PA(JL, IRR) = PA(JL, IRR) - PRRDRYG(JL)
+  PA(JL, IRR) = PA(JL, IRR) + PRGMLTR(JL)
+  IF(KRR==7) THEN
+    PA(JL, IRR) = PA(JL, IRR) - PRRWETH(JL)
+    PA(JL, IRR) = PA(JL, IRR) - PRRDRYH(JL)
+    PA(JL, IRR) = PA(JL, IRR) + PRHMLTR(JL)
+  ENDIF
+
+  PA(JL, IRI) = PA(JL, IRI) + PRCHONI(JL)
+  PA(JL, IRI) = PA(JL, IRI) - PRIAGGS(JL)
+  PA(JL, IRI) = PA(JL, IRI) - PRIAUTS(JL)
+  PA(JL, IRI) = PA(JL, IRI) - PRICFRRG(JL) - PRICFRR(JL)
+  PA(JL, IRI) = PA(JL, IRI) - PRIWETG(JL)
+  PA(JL, IRI) = PA(JL, IRI) - PRIDRYG(JL)
+  IF (KRR==7) THEN
+    PA(JL, IRI) = PA(JL, IRI) - PRIWETH(JL)
+    PA(JL, IRI) = PA(JL, IRI) - PRIDRYH(JL)
+  ENDIF
+  PA(JL, IRI) = PA(JL, IRI) + PRCBERI(JL)
+
+  PA(JL, IRS) = PA(JL, IRS) + PRVDEPS(JL)
+  PA(JL, IRS) = PA(JL, IRS) + PRIAGGS(JL)
+  PA(JL, IRS) = PA(JL, IRS) + PRIAUTS(JL)
+  PA(JL, IRS) = PA(JL, IRS) + PRCRIMSS(JL)
+  PA(JL, IRS) = PA(JL, IRS) - PRSRIMCG(JL)
+  PA(JL, IRS) = PA(JL, IRS) + PRRACCSS(JL)
+  PA(JL, IRS) = PA(JL, IRS) - PRSACCRG(JL)
+  PA(JL, IRS) = PA(JL, IRS) - PRSMLTG(JL)
+  PA(JL, IRS) = PA(JL, IRS) - PRSWETG(JL)
+  PA(JL, IRS) = PA(JL, IRS) - PRSDRYG(JL)
+  IF (KRR==7) THEN
+    PA(JL, IRS) = PA(JL, IRS) - PRSWETH(JL)
+    PA(JL, IRS) = PA(JL, IRS) - PRSDRYH(JL)
+  ENDIF
+
+  PA(JL, IRG) = PA(JL, IRG) + PRVDEPG(JL)
+  PA(JL, IRG) = PA(JL, IRG) + PRCRIMSG(JL)+PRSRIMCG(JL)
+  PA(JL, IRG) = PA(JL, IRG) + PRRACCSG(JL)+PRSACCRG(JL)
+  PA(JL, IRG) = PA(JL, IRG) + PRSMLTG(JL)
+  PA(JL, IRG) = PA(JL, IRG) + PRICFRRG(JL) + PRRCFRIG(JL)
+  PA(JL, IRG) = PA(JL, IRG) + PRCWETG(JL) + PRIWETG(JL) + PRSWETG(JL) + PRRWETG(JL)
+  PA(JL, IRG) = PA(JL, IRG) - PRWETGH(JL)
+  PB(JL, IRG) = PB(JL, IRG) - PRWETGH_MR(JL)
+  PA(JL, IRG) = PA(JL, IRG) + PRCDRYG(JL) + PRIDRYG(JL) + PRSDRYG(JL) + PRRDRYG(JL)
+  PA(JL, IRG) = PA(JL, IRG) - PRGMLTR(JL)
+  IF (KRR==7) THEN
+    PA(JL, IRG) = PA(JL, IRG) - PRGWETH(JL)
+    PA(JL, IRG) = PA(JL, IRG) - PRGDRYH(JL) + PRDRYHG(JL)
+  ENDIF
+
+  IF (KRR==7) THEN
+    PA(JL, IRH) = PA(JL, IRH) + PRWETGH(JL)
+    PB(JL, IRH) = PB(JL, IRH) + PRWETGH_MR(JL)
+    PA(JL, IRH) = PA(JL, IRH) + PRCWETH(JL)+PRIWETH(JL)+PRSWETH(JL)+PRGWETH(JL)+PRRWETH(JL)
+    PA(JL, IRH) = PA(JL, IRH) + PRCDRYH(JL)+PRIDRYH(JL)+PRSDRYH(JL)+&
+                           &PRRDRYH(JL)+PRGDRYH(JL) - PRDRYHG(JL)
+    PA(JL, IRH) = PA(JL, IRH) - PRHMLTR(JL)
+  ENDIF
+ENDDO
+!
+IF (LHOOK) CALL DR_HOOK('ICE4_TENDENCIES', 1, ZHOOK_HANDLE)
+!
+END SUBROUTINE ICE4_TENDENCIES
+END MODULE MODE_ICE4_TENDENCIES
