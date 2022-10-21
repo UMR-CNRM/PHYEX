@@ -26,6 +26,10 @@ function usage {
   echo "-t              comma separated list of tests to execute"
   echo "                or ALL to execute all tests"
   echo "--expand        use mnh_expand (code will use do loops)"
+  echo "--repo-user     user hosting the PHYEX repository on github,"
+  echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
+  echo "--repo-protocol protocol (https or ssh) to reach the PHYEX repository on github,"
+  echo "                defaults to the env variable PHYEXREOprotocol (=$PHYEXREOprotocol)"
   echo ""
   echo "If nothing is asked (compilation, running, check) everything is done"
   echo 
@@ -54,7 +58,8 @@ while [ -n "$1" ]; do
     '-C') check=1;;
     '-t') tests="$2"; shift;;
     '--expand') useexpand=1;;
-    #-b) param="$2"; shift ;;
+    '--repo-user') export PHYEXREPOuser=$2; shift;;
+    '--repo-protocol') export PHYEXREPOprotocol=$2; shift;;
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
           commit=$1

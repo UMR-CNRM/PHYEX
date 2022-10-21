@@ -70,6 +70,10 @@ function usage {
   echo "--noexpand      do not use mnh_expand (code will be in array-syntax)"
   echo "-f              full compilation (do not use pre-compiled pack)"
   echo "--cycle CYCLE   to force using CYCLE"
+  echo "--repo-user     user hosting the PHYEX repository on github,"
+  echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
+  echo "--repo-protocol protocol (https or ssh) to reach the PHYEX repository on github,"
+  echo "                defaults to the env variable PHYEXREOprotocol (=$PHYEXREOprotocol)"
   echo ""
   echo "If nothing is asked (compilation, running, check) everything is done"
   echo
@@ -106,6 +110,8 @@ while [ -n "$1" ]; do
     '--noexpand') useexpand=0;;
     '-f') fullcompilation=1;;
     '--cycle') cycle="$2"; shift;;
+    '--repo-user') export PHYEXREPOuser=$2; shift;;
+    '--repo-protocol') export PHYEXREPOprotocol=$2; shift;;
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
           commit=$1
@@ -159,7 +165,7 @@ if [ $check -eq 1 -a -z "${reference-}" ]; then
   exit 3
 fi
 
-function content2cycle {
+function apl_arome_content2cycle {
   # variable content_apl_arome must contain the source code of apl_arome.F90
   if grep CPG_DYN_TYPE <(echo $content_apl_arome) > /dev/null; then
     echo 48t3
@@ -168,13 +174,23 @@ function content2cycle {
   fi
 }
 
+function ial_version_content2cycle {
+  # variable content_ial_version must contain the source code of ial_version.json
+  content_ial_version=$content_ial_version python3 -c "import json; import os; print(json.loads(os.environ['content_ial_version'])['cycle'])"
+}
+
 #Name is choosen such as it can be produced with a main pack: PHYEX/${cycle}_XXXXXXXXX.01.${gmkpack_l}.${gmkpack_o}
 fromdir=''
 if echo $commit | grep '/' > /dev/null; then
   fromdir=$commit
   if [ "$cycle" == "" ]; then
-    content_apl_arome=$(scp $commit/src/arome/ext/apl_arome.F90 /dev/stdout)
-    cycle=$(content2cycle)
+    content_ial_version=$(scp $commit/src/arome/ial_version.json /dev/stdout 2>/dev/null || echo "")
+    if [ "$content_ial_version" == "" ]; then
+      content_apl_arome=$(scp $commit/src/arome/ext/apl_arome.F90 /dev/stdout)
+      cycle=$(apl_arome_content2cycle)
+    else
+      cycle=$(ial_version_content2cycle)
+    fi
   fi
   packBranch=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
   name="PHYEX/${cycle}_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
@@ -189,8 +205,13 @@ elif echo $specialPack | grep -w $commit > /dev/null; then
 else
   packBranch="COMMIT$commit"
   if [ "$cycle" == "" ]; then
-    content_apl_arome=$(wget --no-check-certificate https://raw.githubusercontent.com/QuentinRodier/PHYEX/${commit}/src/arome/ext/apl_arome.F90 -O - 2>/dev/null)
-    cycle=$(content2cycle)
+    content_ial_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${commit}/src/arome/ial_version.json -O - 2>/dev/null || echo "")
+    if [ "$content_ial_version" == "" ]; then
+      content_apl_arome=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${commit}/src/arome/ext/apl_arome.F90 -O - 2>/dev/null)
+      cycle=$(apl_arome_content2cycle)
+    else
+      cycle=$(ial_version_content2cycle)
+    fi
   fi
   name="PHYEX/${cycle}_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
   [ $suppress -eq 1 -a -d $HOMEPACK/$name ] && rm -rf $HOMEPACK/$name

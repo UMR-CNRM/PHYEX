@@ -11,9 +11,6 @@ set -e
 
 
 ###### CONFIGURATION
-repository_https=https://github.com/QuentinRodier/PHYEX.git
-repository_ssh=git@github.com:QuentinRodier/PHYEX.git
-
 PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ###### COMMAND LINE ARGUMENTS
@@ -29,7 +26,8 @@ function usage {
   echo "-p                    push the result as a new branch"
   echo "-s SUB                subdiretory or file (under src) to consider when merging and applying mnh_expand"
   echo "--renameFf            rename .F90 into .f90"
-  echo "--ssh                 use ssh instead of https for git cloning"
+  echo "--repo                use this repository instead of the one derived (if any) from the env variables"
+  echo "                      PHYEXREPOuser (=$PHYEXREPOuser) and PHYEXREPOprotocol (=$PHYEXREPOprotocol)"
   echo "-v                    add verbosity (up to 3 -v)"
   echo ""
   echo "* If the -c option is not provided, DIRECTORY must already contain files and directory as if"
@@ -54,7 +52,17 @@ push=0
 subs=""
 renameFf=0
 verbose=0
-repository=$repository_https
+if [ -z "${PHYEXREPOprotocol-}" ]; then
+  repository=""
+else
+  if [ $PHYEXREPOprotocol == 'https' ]; then
+    repository=https://github.com/$PHYEXREPOuser/PHYEX.git
+  elif [ $PHYEXREPOprotocol == 'ssh' ]; then
+    repository=git@github.com:$PHYEXREPOuser/PHYEX.git
+  else
+    repository=""
+  fi
+fi
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -65,7 +73,7 @@ while [ -n "$1" ]; do
     '-s') subs="$subs $2"; shift;;
     '-p') push=1;;
     '--renameFf') renameFf=1;;
-    '--ssh') repository=$repository_ssh;;
+    '--repo') repository=$2; shift;;
     '-v') verbose=$(($verbose+1));;
      *) directory="$1";;
   esac

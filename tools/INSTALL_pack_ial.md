@@ -226,7 +226,7 @@ commit=9ce8119430dd603d35308d8ae94cf18636157473 #exemple of commit to test again
 gmkpack -r ${cycle} -b phyex -v ${version} -l ${compiler} -o ${option} -p masterodb -f $TRUNK -u PHYEX/$commit
 
 cd $HOMEPACK/PHYEX/$commit/src/local/phyex
-git clone git@github.com:QuentinRodier/PHYEX.git
+git clone git@github.com:UMR-CNRM/PHYEX.git
 cd PHYEX
 git checkout $commit
 #The exact manipulation to perform depends on the commit to test. For a full description, please see the check\_commit\_ial.sh script
