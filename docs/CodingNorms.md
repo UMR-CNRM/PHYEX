@@ -25,7 +25,7 @@ When writing a new subroutine, should we put it in a module (in a mode\_ file) o
 The answer depends on whether the routine is the 'main' routine of the parametrisation or not. If it is the 'main' routine, the interface bloc is declared apart, if not we can use a module.
 The idea behind is to break compilation dependency at the parametrisation level, and to isolate the interface declaration of the different routines that must be plugged in the hosting model.
 
-### Norm
+### Miscellaneous constraints
 Several constraints are imposed:
 
   - The code must be written with up to 132 characters per line.
@@ -33,8 +33,10 @@ Several constraints are imposed:
   - All variables must be declared: IMPLICIT NONE
   - except in rare cases, use automatic arrays, no allocatable
   - dimensions of dummy argument arrays are explicit (no (:,:))
-  - use parenthesis when manipulating arrays (eg: A(:,:)=B(:,:)+C(:,:) instead of A=B+C)
+  - except variables declared with the PARAMETER attribute, no variable from modules can be used in the physics. Variables must be put in a type received by interface.
+  - functions returning arrays must be rewritten as subroutine
 
+### Doctor norm
 The variables are named according to the doctor norm:
 
 |Type / Status | INTEGER    | REAL       | LOGICAL     | CHARACTER      | TYPE             |
@@ -44,21 +46,17 @@ The variables are named according to the doctor norm:
 |Local         | I (not IS) | Z (not ZS) | G (not GS)  | Y (not YS, YP) | TZ               |
 |Loop control  | J (not JP) | -          | -           | -              | -                |
 
-Regarding array-syntax, code is written using array-syntax in the legacy main branch, using array-syntax with mnh\_expand directives in the master branch and in mesonh specific branches based on the master branch, using DO loops in arome specific branches based on the master branch. If in doubt, check what is done in other routines in the branch you are working in.
-Be carrefull when using the mnh\_expand directives, code must respect some constraints:
+### Array-syntax or not?
+The master branch and the Méso-NH specifc branches are written using array-syntax with mnh\_expand directives.
 
+For these branches, developer must be carrefull when using the mnh\_expand directives, code must respect some constraints (the verify\_mnh\_expand.py tool can help the PHYEX admin at checking the validity of the written code):
   - parenthesis after array variables are mandatory (no A=B+C, but A(:,:)=B(:,:)+C(:,:))
   - no space between array variables and the opening parenthesis (no A (:)=B (:), but A(:)=B(:))
-  - same bounds as declared in the mnh\_expand directive should be used in the array-syntax (A(D%NIB;D%NIE)=...)
+  - same bounds as declared in the mnh\_expand directive should be used in the array-syntax (A(D%NIB:D%NIE)=...)
 
-A tool (verify\_mnh\_expand.py) can help at checking the validity of the written code.
+The arome and testprogs specific branches are written using DO loops.
 
-For the master branch (and branches on master, including model specific branches):
-
-  - except variables declared with the PARAMETER attribute, no variable from modules can be used in the physics. Variables must be put in a type received by interface.
-  - subroutines or functions must not be called from within a loop on horizontal or vertical dimensions (see below for exception)
-  - functions returning arrays must be rewritten as subroutine
-
+### Call to routines from within a loop on horizontal or vertical dimensions
 Call to external subroutine in loop on horizontal or vertical dimensions must be suppressed in the master version. If possible, the call must be put outside of the loop (acting on the full array as a whole) or the subroutine must be put in the CONTAINS part but, in this case, the included subroutine cannot use local array. There are 3 cases:
 
   - the subroutine doesn't use local array: subroutine is put in an include file (with the .h extension) and included with the fortran INCLUDE statement.

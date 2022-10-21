@@ -33,7 +33,7 @@ The generic branches contains the following directories:
 Here is a short description of the different generic branches:
 
   - master: source code adapted for GPU transformations
-  - testHUGE: modified source code to check the incomplete NPROMA feature
+  - testHUGE: modified source code to check if incomplete NPROMA blocs are working well (only useful for testing)
   - testprogs\_data: modified source code used to generate samples for the test programs (more on this topic in the [Offline documentation](./Offline.md))
 
 ## Contribution workflow for AROME and HARMONIE-AROME developers
