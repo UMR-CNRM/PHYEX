@@ -91,14 +91,18 @@ Workflow details (getting the source code in blue, pull request in red, integrat
 
 ### Special notes for building the model from PHYEX before cycle 49t2
 
-The model version hosted in IAL is incompatible with the content of the PHYEX repository.
+Because the interfaces between the physics and the rest of the model can change, one have to choose the right version of IAL to use with PHYEX.
+The file 'src/arome/ial\_version.json' contains a description of this IAL version.
+
+If no IAL version suits correctly, this json file is accompanied by the 'ext' directory and/or by the 'src/arome/gmkpack\_ignored\_files' file.
+
 To build the model, you must:
 
-- take the source code of cycle 48t3
-- remove the directories 'mpa/\*/internals' and 'mpa/\*/modules'
-- put the PHYEX directories 'aux', 'conv', 'micro' and 'turb' into a new directory (at the same level as 'mpa') named 'phyex'
-- dispatch the code contained in 'ext' into the subdirectories of 'arpifs'
-- remove the files listed in the PHYEX repository in the 'src/arome/gmkpack\_ignored\_files' file
+- checkout the IAL source code using the version described in the file src/arome/ial\_version.json
+- remove the directories 'mpa/\*/internals' and 'mpa/\*/modules' (if they still exist in IAL, eg: 48t3)
+- put the PHYEX directories 'aux', 'conv', 'micro' and 'turb' into a directory (at the same level as 'mpa') named 'phyex'
+- if the 'ext' directory exists, dispatch its content into the subdirectories of IAL
+- remove from the source tree the files listed in the 'src/arome/gmkpack\_ignored\_files' file
 
 ## Contribution workflow for MESO-NH developers
 

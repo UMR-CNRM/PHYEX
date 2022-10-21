@@ -47,6 +47,14 @@ Details for point 6:
     - when asked by the IAL integrator, builds a new arome specific branch (see [below](#code-preparation))
     - when an arome specific branch is used in an official cycle, the arome specific branch is tagged accordingly
 
+### PHYEX - IAL compatibility
+
+Because the interfaces between the physics and the rest of the model can change, the right version of IAL to use with PHYEX must be referenced in the 'src/arome/ial\_version.json' file.
+
+If no IAL version is able to receive directly the PHYEX physics, an 'ext' directory can be added to hold the files that must be modified on top of the IAL version described in the 'src/arome/ial\_version.json' file.
+
+In addition, if some files must be excluded from the IAL compilation, they must be listed in the 'src/arome/gmkpack\_ignored\_files' file.
+
 ## Normal workflow for a contribution developed in MESONH
 
 The developer sends its pull request on the Méso-NH repository (the physics source code is embedded in the model source code).
