@@ -3,6 +3,8 @@ PROGRAM MAIN_RAIN_ICE_OLD
 use xrd_getoptions, only: initoptions, getoption
 use getdata_rain_ice_old_mod, only: getdata_rain_ice_old
 
+use modi_rain_ice_old
+
 use yomhook, only: lhook, dr_hook
 use parkind1, only: jprb, jpim
 
@@ -18,36 +20,36 @@ integer :: n_gp_blocks, &
            n_proma, &
            n_levels
 
-real, allocatable, dimension(:,:,:)     :: pexnref
-real, allocatable, dimension(:,:,:,:)   :: pdzz
-real, allocatable, dimension(:,:,:,:)   :: prhodj
-real, allocatable, dimension(:,:,:,:)   :: prhodref
-real, allocatable, dimension(:,:,:)     :: pexnref2
-real, allocatable, dimension(:,:,:,:)   :: ppabsm
-real, allocatable, dimension(:,:,:,:)   :: pcit
-real, allocatable, dimension(:,:,:,:)   :: pcldfr
-real, allocatable, dimension(:,:,:,:)   :: phlc_hrc
-real, allocatable, dimension(:,:,:,:)   :: phlc_hcf
-real, allocatable, dimension(:,:,:,:)   :: phli_hri
-real, allocatable, dimension(:,:,:,:)   :: phli_hcf
-real, allocatable, dimension(:,:,:,:)   :: ptht
-real, allocatable, dimension(:,:,:,:)   :: prt
-real, allocatable, dimension(:,:,:,:)   :: pths
-real, allocatable, dimension(:,:,:,:)   :: prs
-real, allocatable, dimension(:,:,:,:)   :: psigs
-real, allocatable, dimension(:,:,:)     :: psea
-real, allocatable, dimension(:,:,:)     :: ptown
-real, allocatable, dimension(:,:,:,:)   :: pcit_out
-real, allocatable, dimension(:,:,:,:,:) :: prs_out
+real, allocatable, dimension(:,:,:)   :: pexnref
+real, allocatable, dimension(:,:,:)   :: pdzz
+real, allocatable, dimension(:,:,:)   :: prhodj
+real, allocatable, dimension(:,:,:)   :: prhodref
+real, allocatable, dimension(:,:,:)   :: pexnref2
+real, allocatable, dimension(:,:,:)   :: ppabsm
+real, allocatable, dimension(:,:,:)   :: pcit
+real, allocatable, dimension(:,:,:)   :: pcldfr
+real, allocatable, dimension(:,:,:)   :: phlc_hrc
+real, allocatable, dimension(:,:,:)   :: phlc_hcf
+real, allocatable, dimension(:,:,:)   :: phli_hri
+real, allocatable, dimension(:,:,:)   :: phli_hcf
+real, allocatable, dimension(:,:,:)   :: ptht
+real, allocatable, dimension(:,:,:,:) :: prt
+real, allocatable, dimension(:,:,:)   :: pths
+real, allocatable, dimension(:,:,:,:) :: prs
+real, allocatable, dimension(:,:,:)   :: psigs
+real, allocatable, dimension(:,:)     :: psea
+real, allocatable, dimension(:,:)     :: ptown
+real, allocatable, dimension(:,:,:)   :: pcit_out
+real, allocatable, dimension(:,:,:,:) :: prs_out
 
-real, allocatable, dimension(:,:,:)     :: zinprc, zinprc_out
-real, allocatable, dimension(:,:,:)     :: pinprr, pinprr_out
-real, allocatable, dimension(:,:,:,:)   :: pevap, pevap_out
-real, allocatable, dimension(:,:,:)     :: pinprs, pinprs_out
-real, allocatable, dimension(:,:,:)     :: pinprg, pinprg_out
-real, allocatable, dimension(:,:,:)     :: zindep, zindep_out
-real, allocatable, dimension(:,:,:,:)   :: zrainfr, zrainfr_out
-real, allocatable, dimension(:,:,:,:,:) :: pfpr, pfpr_out
+real, allocatable, dimension(:,:)     :: zinprc, zinprc_out
+real, allocatable, dimension(:,:)     :: pinprr, pinprr_out
+real, allocatable, dimension(:,:,:)   :: pevap, pevap_out
+real, allocatable, dimension(:,:)     :: pinprs, pinprs_out
+real, allocatable, dimension(:,:)     :: pinprg, pinprg_out
+real, allocatable, dimension(:,:)     :: zindep, zindep_out
+real, allocatable, dimension(:,:,:)   :: zrainfr, zrainfr_out
+real, allocatable, dimension(:,:,:,:) :: pfpr, pfpr_out
 
 logical, allocatable, dimension(:,:,:)     :: l_micro
 
@@ -74,8 +76,8 @@ logical :: osedic
 logical :: ocnd2
 logical :: lkogan
 logical :: lmodicedep
-logical :: csedim
-logical :: csubg_aucv_rc
+character(len=4) :: csedim
+character(len=4) :: csubg_aucv_rc
 logical :: owarm
 
 real    :: ptstep
@@ -124,8 +126,8 @@ osedic = .false.
 ocnd2 = .true.
 lkogan = .false.
 lmodicedep = .false.
-csedim = .false.
-csubg_aucv_rc = .false.
+csedim = 'STAT'
+csubg_aucv_rc = 'PDF'
 owarm = .true.
 
 ptstep = 25.0000000000000
@@ -142,27 +144,25 @@ time_start_real = real(counter,8)/c_rate
 
 do i_block = 1, n_gp_blocks
 
-    CALL RAIN_ICE_OLD(OSEDIC=OSEDIC, OCND2=OCND2, LKOGAN=LKOGAN, LMODICEDEP=LMODICEDEP, &
-                      HSEDIM=CSEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC, &
-                      OWARM=OWARM,KKA=KKA,KKU=KKU,KKL=KKL,KSPLITR=KSPLITR, &
-                      PTSTEP=2*PTSTEP, KRR=KRR, &
-                      PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF, PEXNREF=PEXNREF, &
-                      PPABST=PPABSM, PCIT=PCIT, PCLDFR=PCLDFR, &
-                      PICLDFR=PICLDFR, PWCLDFR=PWCLDFR, &
-                      PSSIO=PSSIO, PSSIU=PSSIU, PIFR=PIFR, &
-                      PTHT=PTHT,PRVT=PRT(:,:,:,1),PRCT= PRT(:,:,:,2), &
-                      PRRT=PRT(:,:,:,3), &
-                      PRIT=PRT(:,:,:,4), PRST=PRT(:,:,:,5), &
-                      PRGT=PRT(:,:,:,6), &
-                      PTHS=PTHS, PRVS=PRS(:,:,:,1),PRCS=PRS(:,:,:,2), &
-                      PRRS=PRS(:,:,:,3), &
-                      PRIS=PRS(:,:,:,4),PRSS= PRS(:,:,:,5),PRGS= PRS(:,:,:,6), &
-                      PINPRC=ZINPRC,PINPRR=PINPRR,PEVAP3D=PEVAP, &
-                      PINPRS=PINPRS, PINPRG=PINPRG, &
-                      PSIGS=PSIGS, PSEA=PSEA, PTOWN=PTOWN, &
-                      YDDDH=YDDDH,YDLDDH=YDLDDH,YDMDDH=YDMDDH, &
-                      PICENU=PICENU, PKGN_ACON=PKGN_ACON, PKGN_SBGR=PKGN_SBGR, &
-                      PFPR=PFPR(:,:,:,:,i_block))
+    CALL RAIN_ICE_OLD(OSEDIC=OSEDIC, OCND2=OCND2, LKOGAN=LKOGAN, LMODICEDEP=LMODICEDEP,  &
+                      HSEDIM=CSEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC, OWARM=OWARM,           &
+                      KKA=KKA, KKU=KKU, KKL=KKL,                                         &
+                      KSPLITR=KSPLITR, PTSTEP=2*PTSTEP, KRR=KRR,                         &
+                      PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF, PEXNREF=PEXNREF,      &
+                      PPABST=PPABSM, PCIT=PCIT, PCLDFR=PCLDFR,                           &
+                      PICLDFR=PICLDFR, PWCLDFR=PWCLDFR,                                  &
+                      PSSIO=PSSIO, PSSIU=PSSIU, PIFR=PIFR,                               &
+                      PTHT=PTHT,                                                         &
+                      PRVT=PRT(:,:,:,1), PRCT=PRT(:,:,:,2), PRRT=PRT(:,:,:,3),           &
+                      PRIT=PRT(:,:,:,4), PRST=PRT(:,:,:,5), PRGT=PRT(:,:,:,6),           &
+                      PTHS=PTHS,                                                         &
+                      PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2), PRRS=PRS(:,:,:,3),           &
+                      PRIS=PRS(:,:,:,4), PRSS=PRS(:,:,:,5), PRGS=PRS(:,:,:,6),           &
+                      PINPRC=ZINPRC, PINPRR=PINPRR, PEVAP3D=PEVAP,                       &
+                      PINPRS=PINPRS, PINPRG=PINPRG, PSIGS=PSIGS, PSEA=PSEA, PTOWN=PTOWN, &
+                      YDDDH=YDDDH, YDLDDH=YDLDDH, YDMDDH=YDMDDH,                         &
+                      PICENU=PICENU, PKGN_ACON=PKGN_ACON, PKGN_SBGR=PKGN_SBGR,           &
+                      PFPR=PFPR)
 
 enddo
 
