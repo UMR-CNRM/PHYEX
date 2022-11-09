@@ -205,9 +205,16 @@ elif echo $specialPack | grep -w $commit > /dev/null; then
 else
   packBranch="COMMIT$commit"
   if [ "$cycle" == "" ]; then
-    content_ial_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${commit}/src/arome/ial_version.json -O - 2>/dev/null || echo "")
+    if [[ $commit == arome${separator}* ]]; then
+      apl_arome_file="ext/apl_arome.F90"
+      ial_version_file="ext/ial_version.json"
+    else
+      apl_arome_file="src/arome/ext/apl_arome.F90"
+      ial_version_file="src/arome/ial_version.json"
+    fi
+    content_ial_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${commit}/$ial_version_file -O - 2>/dev/null || echo "")
     if [ "$content_ial_version" == "" ]; then
-      content_apl_arome=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${commit}/src/arome/ext/apl_arome.F90 -O - 2>/dev/null)
+      content_apl_arome=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${commit}/$apl_arome_file -O - 2>/dev/null)
       cycle=$(apl_arome_content2cycle)
     else
       cycle=$(ial_version_content2cycle)

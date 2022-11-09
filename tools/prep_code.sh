@@ -103,11 +103,17 @@ if [ -z "${checkout_point-}" ]; then
   fi
   cd $directory
   from='dir'
+  mv='mv -f'
+  rm='rm -f'
 else
   [ $verbose -gt 0 ] && echo "Clone and checkout $checkout_point into $directory directory"
   if [ -d $directory ]; then
     echo "$directory already exists, suppress it before executing the script (or remove the -c option)"
     exit 3
+  fi
+  if [ -z "${repository-}" ]; then
+    echo "A repository must be set (use -h option to get help)"
+    exit 1
   fi
   git clone $repository $directory
   cd $directory
@@ -120,13 +126,16 @@ else
   fi
   git checkout $branch $checkout_point
   from='git'
+  mv='git mv -f'
+  rm='git rm -q -f'
 fi
 
 ###### RENAME .F90 into .f90
 if [ $renameFf -eq 1 ]; then
+  #we use find/while/read in case the number of files is too big to be hold on a single shell line
   find . -type f  -name \*.F90 -print0 | \
     while IFS= read -r -d '' file; do
-      mv -- "$file" "${file%.F90}.f90"
+      $mv "$file" "${file%.F90}.f90"
     done
 fi
 
@@ -151,8 +160,23 @@ if [ -n "${model-}" ]; then
       echo "$sub must not exist in the repository root, this is a limitation of the script"
       exit 7
     fi
-    [ -e src/common/$sub ] && mv src/common/$sub .
-    [ -e src/$model/$sub ] && cp -rlf src/$model/$sub . && rm -rf src/$model/$sub
+    [ -e src/common/$sub ] && $mv src/common/$sub . #sub doesn't exist, we can move it directly
+    if [ -e src/$model/$sub ]; then
+      if [ -f src/$model/$sub ]; then
+        #$sub is a file, it can be overwritten
+        $mv "src/$model/$sub" $sub
+      else
+        #directory can exist, we must move files one by one
+        #we use find/while/read in case the number of files is too big to be hold on a single shell line
+        (cd src/$model/$sub; find . -type f -print0) | \
+          while IFS= read -r -d '' file; do
+            dname=$(dirname $file)
+            [ ! -d $sub/$dname ] && mkdir -p $sub/$dname
+            $mv "src/$model/$sub/$file" "$sub/$file"
+          done
+        rmdir --ignore-fail-on-non-empty -p "src/$model/$sub" #suppress tree if empty
+      fi
+    fi
   done
 
   #Supression of unwanted files
@@ -161,7 +185,7 @@ if [ -n "${model-}" ]; then
     #because these files are already existing elsewhere in the model source code
     while read -r line; do
       filename=$(echo $line | sed -e 's/^[[:space:]]*//' | sed -e 's/[[:space:]]*$//') #trim
-      [ -f "$filename" ] && rm -f "$filename"
+      [ -f "$filename" ] && $rm "$filename"
     done < src/$model/filesToSuppress.txt
   fi
 
@@ -173,9 +197,9 @@ if [ -n "${model-}" ]; then
     exit 8
   fi
   for file in $files; do
-    if [ $from == 'dir' -o $(git ls-files --error-unmatch $file 2>/dev/null | wc -l) -gt 0 ] ; then
-      [ $verbose -gt 1 ] && echo "Suppression of $file"
-      rm -rf $file
+    [ $verbose -gt 1 ] && echo "Suppression of $file"
+    if [ -e "$file" -a "$file" != '.git' -a "$file" != '.git/' ]; then
+      $rm -r "$file"
     fi
   done
 fi
@@ -183,13 +207,20 @@ fi
 ###### MNH_EXPAND
 if [ -n "${mnh_expand_options-}" ]; then
   [ $verbose -gt 0 ] && echo "Applying mnh_expand"
+
+  #Update PATH if needed
+  UPDATEDPATH=$PATH
+  which correct_indent.py > /dev/null || UPDATEDPATH=$PHYEXTOOLSDIR:$UPDATEDPATH
+  which mnh_expand  > /dev/null || UPDATEDPATH=$PHYEXTOOLSDIR/mnh_expand/MNH_Expand_Array:$UPDATEDPATH
+  which filepp > /dev/null || UPDATEDPATH=$PHYEXTOOLSDIR/mnh_expand/filepp:$UPDATEDPATH
+
   function apply_mnh_expand () {
     if grep mnh_expand $1 > /dev/null 2>&1 ; then
       [ $verbose -gt 1 ] && echo "Applying mnh_expand on $1"
-      $PHYEXTOOLSDIR/correct_indent.py $1 "detect"
-      mnh_expand -DMNH_EXPAND_NOCPP $mnh_expand_options $1_EXPAND > tempo_mnh_expand
+      PATH=$UPDATEDPATH correct_indent.py $1 "detect"
+      PATH=$UPDATEDPATH mnh_expand -DMNH_EXPAND_NOCPP $mnh_expand_options $1_EXPAND > tempo_mnh_expand
       rm -f $1_EXPAND
-      $PHYEXTOOLSDIR/correct_indent.py tempo_mnh_expand "indent"
+      PATH=$UPDATEDPATH correct_indent.py tempo_mnh_expand "indent"
       mv tempo_mnh_expand_CORRECT_INDENT $1
       rm -f tempo_mnh_expand
     fi
