@@ -10,6 +10,7 @@ function parse_args() {
   ARCH_PATH=$PWD/arch
   ARCH=
   GMKFILE=
+  MESONHPROFILE=
   # pass unrecognized arguments to fcm
   FCM_ARGS=""
   
@@ -23,6 +24,7 @@ $0 [options]
 --arch-path ARCH_PATH directory for architecture specific files (see below) [./arch]
 --arch ARCH  	        build using arch files $ARCH_PATH/arch-ARCH.* [gnu]
 --gmkfile FILE        build using a gmkpack configuration file (--arch must be used to give a name to the build dir)
+--mesonhprofile FILE  build using Méso-NH profile and rules (--arch must be used to give a name to the build dir)
 
 Unrecognized options are passed to the fcm build command. Useful options include :
 --new                   clean build tree before building
@@ -40,14 +42,20 @@ EOF
         ARCH_PATH=$1 ; shift ;; 
       "--gmkfile")
         GMKFILE=$1 ; shift ;;
+      "--mesonhprofile")
+        MESONHPROFILE=$1 ; shift ;;
       *)
         FCM_ARGS="$FCM_ARGS $OPTION" ;;
     esac
   done
-  [ "$GMKFILE" == "" -a "$ARCH" == "" ] && ARCH=gnu
+  [ "$GMKFILE" == "" -a "$MESONHPROFILE" == "" -a "$ARCH" == "" ] && ARCH=gnu
   if [ "$GMKFILE" != "" -a "$ARCH" == "" ]; then
     echo "--arch option is mandatory if --gmkfile option is used"
     exit 2
+  fi
+  if [ "$MESONHPROFILE" != "" -a "$ARCH" == "" ]; then
+    echo "--arch option is mandatory if --mesonhprofile option is used"
+    exit 3
   fi
 }
 
@@ -108,6 +116,73 @@ cat <<EOF > $ARCHFILE
 # Other
 \$AR            =     $(grep "^AR =" $GMKFILE | cut -d = -f 2-)
 EOF
+}
+
+function mesonhprofile2archenv() {
+  MESONHPROFILE=$1
+  ARCHFILE=$2
+  ENVFILE=$3
+
+  echo "
+   You are trying to produce a configuration file for fcm from a Meso-NH configuration.
+   The resulting file is certainly incomplete and must be modified as follows:
+      Optimisation level:
+        The opt level is set in the mesonh profile file; as a consequence, the BASE_FFLAGS contains
+        the base *and* the opt flags.
+        To compile with other opt level, the profile file must be modified before executing this function.
+      Long lines:
+        Meso-NH rules does not allow the compilation of long lines. Depending on compilers, it might be needed to
+        manually add an option to allow long lines.
+        For gfortran: add '-ffree-line-length-none' to BASE_FFLAGS
+      OpenMP:
+        Meso-NH does not use OpenMP but testprogs do; as a consequence, openmp flags are not included in the
+        Meso-NH rules, they must be manually added.
+        For gfortran: add '-fopenmp' to BASE_FFLAGS and to BASE_LD
+      Position Independent Code:
+        Meso-NH does not need to build position independent code, flags must be set manually.
+        For gfortran ('-fPIC' already in BASE_FFLAGS): add '-fPIC' to BASE_CFLAGS
+      Shared lib:
+        Flags needed to build shared lib are not defined in Meso-NH rules, only hard coded in Makefile to build a
+        specific lib. The flags to set for building a shared lib, in addition to flags used to build an object, must
+        be manually set.
+        For gfortran: add '-shared' to LD_EXE_TO_SHARED
+      Swap:
+        Meso-NH rules does not swap IO byte order (litle-/big-endian). Depending on your endianess, the
+        corresponding flag may have to be set manually.
+        For gfortran: add '-fconvert=swap' to BASE_FFLAGS"
+  tac $MESONHPROFILE | grep -m1 '#' -B $(cat $MESONHPROFILE | wc -l) | tac | grep -v '#' > $ENVFILE
+  MAKEFILE='
+include Rules.$(ARCH)$(F).mk
+
+archfile :
+	echo "# Compilation"
+	echo "\$$FCOMPILER     =     $(F90)"
+	echo "\$$BASE_FFLAGS   =     -c $(F90FLAGS)"
+	echo "\$$PROD_FFLAGS   =     "
+	echo "\$$DEV_FFLAGS    =     "
+	echo "\$$DEBUG_FFLAGS  =     "
+	echo "\$$CCOMPILER     =     $(CC)"
+	echo "\$$BASE_CFLAGS   =     -c $(CFLAGS)"
+	echo "\$$PROD_CFLAGS   =     "
+	echo "\$$DEV_CFLAGS    =     "
+	echo "\$$DEBUG_CFLAGS  =     "
+	echo "\$$OMP_FFLAGS    ="
+	echo ""
+	echo "# Preprocessor"
+	echo "\$$FPP_FLAGS     =     $(CPPFLAGS)"
+	echo "\$$CPP_FLAGS     =     $(CPPFLAGS)" 
+	echo ""
+	echo "# Linker"
+	echo "\$$LINK          =     $(FC)"
+	echo "\$$BASE_LD       =     $(LDFLAGS)"
+	echo "\$$OMP_LD        ="
+	echo "\$$LD_EXE_TO_SHARED =  "
+	echo ""
+	echo "# Other" 
+	echo "\$$AR            =     $(AR)"
+
+'
+  (. $MESONHPROFILE; make -f <(echo -e "$MAKEFILE") -s -I $(dirname $MESONHPROFILE)/../src archfile) | sed 's/-D//g' > $ARCHFILE
 }
 
 function build_compilation_script() {
@@ -175,6 +250,9 @@ mkdir $builddir
 if [ "$GMKFILE" != "" ]; then
   touch $builddir/arch.env
   gmkfile2arch $GMKFILE $builddir/arch.fcm
+elif [ "$MESONHPROFILE" != "" ]; then
+  touch $builddir/arch.env
+  mesonhprofile2archenv $MESONHPROFILE $builddir/arch.fcm $builddir/arch.env
 else
   cp ${ARCH_PATH}/arch-${ARCH}.env $builddir/arch.env
   cp ${ARCH_PATH}/arch-${ARCH}.fcm $builddir/arch.fcm 

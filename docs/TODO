@@ -72,9 +72,6 @@ Nettoyage ultérieur :
 Une fois toutes les routines de la turbulence ont leur dimension horizontale packée et
 utilisent LES_MEAN_SUBGRID_PHY a la place de LES_MEAN_SUBGRID_PHY : renommer les routines arome/turb et mesonh/turb en les_mean_subgrid.F90 et remplacer partout dans le code les appels (enlever le _PHY) + supprimer les anciennes routines
 
-
-Enable mnh_expand with fcm build
-
 Reprendre les différents outils en deux scripts principaux:
 - outil pour reprendre toutes les fonctionnalités sur le code: filepp, MNH_Expand_Array, correct_indent.py, verify_mnh_expand.py et renommage
 - outil prep_code débarrassé du renommage pour ne faire que la gestion des commit et lancer la manipulation sur le code
