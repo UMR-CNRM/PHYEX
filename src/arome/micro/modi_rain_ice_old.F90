@@ -3,7 +3,7 @@
 !      ####################
 !
 INTERFACE
-      SUBROUTINE RAIN_ICE_OLD ( OSEDIC, OCND2, LKOGAN, LMODICEDEP, HSEDIM, HSUBG_AUCV_RC, OWARM,    &
+      SUBROUTINE RAIN_ICE_OLD (D, OSEDIC, OCND2, LKOGAN, LMODICEDEP, HSEDIM, HSUBG_AUCV_RC, OWARM, &
                             KKA, KKU, KKL,                                        &
                             KSPLITR, PTSTEP, KRR,                            &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
@@ -19,7 +19,10 @@ INTERFACE
 USE DDH_MIX, ONLY : TYP_DDH
 USE YOMLDDH, ONLY : TLDDH
 USE YOMMDDH, ONLY : TMDDH
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
 !
+TYPE(DIMPHYEX_T), INTENT(IN) :: D
+
 LOGICAL,                  INTENT(IN)    :: OSEDIC ! Switch for droplet sedim.
 LOGICAL,                  INTENT(IN)    :: OCND2  ! Logical switch to separate liquid and ice
 LOGICAL,                  INTENT(IN)    :: LKOGAN ! Logical switch for using Kogan autoconversion of liquid.

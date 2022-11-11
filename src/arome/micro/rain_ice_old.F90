@@ -1,5 +1,6 @@
 !     ######spl
-      SUBROUTINE RAIN_ICE_OLD ( OSEDIC, OCND2, LKOGAN, LMODICEDEP, HSEDIM, HSUBG_AUCV_RC, OWARM,      &
+      SUBROUTINE RAIN_ICE_OLD (D,  OSEDIC, OCND2, LKOGAN, LMODICEDEP, &
+                            HSEDIM, HSUBG_AUCV_RC, OWARM,      &
                             KKA,KKU,KKL,                                          &
                             KSPLITR, PTSTEP, KRR,                            &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
@@ -14,6 +15,7 @@
 
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -181,7 +183,7 @@ USE MODE_TIWMX_TAB, ONLY : TIWMX_TAB
 USE DDH_MIX, ONLY  : TYP_DDH
 USE YOMLDDH, ONLY  : TLDDH
 USE YOMMDDH, ONLY  : TMDDH
-
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
 !
 IMPLICIT NONE
 !
@@ -189,6 +191,8 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(DIMPHYEX_T), INTENT(IN) :: D
+
 LOGICAL,                  INTENT(IN)    :: OSEDIC ! Switch for droplet sedim.
 LOGICAL,                  INTENT(IN)    :: OCND2  ! Logical switch to separate liquid and ice
 LOGICAL,                  INTENT(IN)    :: LKOGAN ! Logical switch for using Kogan autoconversion of liquid.
@@ -472,12 +476,13 @@ LOGICAL LTEST ! Only for test !
 LOGICAL LCHECKNOISE ! Noise check on/off
 LOGICAL LTIW   ! Use TIW for graupel melting ( set by XFRMIN(18) ~ 1)
 !
+REAL(KIND=JPRB) :: ZHOOK_HANDLE
+!
 !-------------------------------------------------------------------------------
 !
 !*       1.1     COMPUTE THE LOOP BOUNDS
 !               -----------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD',0,ZHOOK_HANDLE)
 LTEST=.FALSE.
 LCHECKNOISE=.TRUE.
