@@ -43,7 +43,7 @@ REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step
                                                    ! (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDZZ    ! Layer thickness (m)
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PDZZ    ! Layer thickness (m)
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF! Reference density
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF ! Reference Exner function

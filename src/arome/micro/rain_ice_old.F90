@@ -213,7 +213,7 @@ REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step
                                                    ! (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDZZ    ! Layer thickness (m)
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PDZZ    ! Layer thickness (m)
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF! Reference density
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
@@ -488,11 +488,11 @@ LTEST=.FALSE.
 LCHECKNOISE=.TRUE.
 IIB=1+JPHEXT
 IIE=SIZE(PDZZ,1) - JPHEXT
-IJB=1+JPHEXT
-IJE=SIZE(PDZZ,2) - JPHEXT
+IJB=1
+IJE=1
 IKB=KKA+JPVEXT*KKL
 IKE=KKU-JPVEXT*KKL
-IKT=SIZE(PDZZ,3)
+IKT=SIZE(PDZZ,2)
 IKTB=1+JPVEXT
 IKTE=IKT-JPVEXT
 
@@ -543,11 +543,11 @@ ZRDEPGRED = XRDEPGRED
 
 IF (OSEDIC.OR.OCND2) THEN
    ZRAY(:,:,:)   = 0.
-   ZZZZ(:,:,IKTE)   = PDZZ(:,:,IKTE)*0.5
-   ZZZT(:,:,IKTE)   = PDZZ(:,:,IKTE)
+   ZZZZ(:,:,D%NKTE)   = PDZZ(:,D%NKTE)*0.5
+   ZZZT(:,:,D%NKTE)   = PDZZ(:,D%NKTE)
    IF (XFRMIN(26)>0.001) THEN ! Use alternative concentration given by (XFRMIN(26)
       ZCONC_TMP(:,:) = XFRMIN(26)
-      DO JK=IKTB,IKTE
+      DO JK=D%NKTB,D%NKTE
          ZLBC(:,:,JK)   = 0.5* (XLBC(2)+XLBC(1)) ! Assume "average" distr. func for simplicity
          ZFSEDC(:,:,JK) = 0.5* (XFSEDC(2)+XFSEDC(1))
          ZFSEDC(:,:,JK) = MAX(MIN(XFSEDC(1),XFSEDC(2)),ZFSEDC(:,:,JK))
@@ -558,7 +558,7 @@ IF (OSEDIC.OR.OCND2) THEN
    ELSE
      ZCONC_TMP(:,:)=PSEA(:,:)*XCONC_SEA+(1.-PSEA(:,:))*XCONC_LAND
 
-     DO JK=IKTB,IKTE
+     DO JK=D%NKTB,D%NKTE
         ZLBC(:,:,JK)   = PSEA(:,:)*XLBC(2)+(1.-PSEA(:,:))*XLBC(1)
         ZFSEDC(:,:,JK) = (PSEA(:,:)*XFSEDC(2)+(1.-PSEA(:,:))*XFSEDC(1))
         ZFSEDC(:,:,JK) = MAX(MIN(XFSEDC(1),XFSEDC(2)),ZFSEDC(:,:,JK))
@@ -568,13 +568,13 @@ IF (OSEDIC.OR.OCND2) THEN
      ENDDO
    ENDIF
 
-   ZCONC3D(:,:,IKTE)= ZCONC3D(:,:,IKTE)*MAX(0.001,XFRMIN(22))
+   ZCONC3D(:,:,D%NKTE)= ZCONC3D(:,:,D%NKTE)*MAX(0.001,XFRMIN(22))
    ZRAY(:,:,:)      = MAX(1.,ZRAY(:,:,:))
    ZLBC(:,:,:)      = MAX(MIN(XLBC(1),XLBC(2)),ZLBC(:,:,:))
 
-   DO JK=IKTE-1,IKTB,-1
-     ZZZT(:,:,JK) = ZZZT(:,:,JK+1) + PDZZ(:,:,JK) 
-     ZZZZ(:,:,JK) = ZZZT(:,:,JK) - 0.5*PDZZ(:,:,JK)
+   DO JK=D%NKTE-1,D%NKTB,-1
+     ZZZT(:,:,JK) = ZZZT(:,:,JK+1) + PDZZ(:,JK) 
+     ZZZZ(:,:,JK) = ZZZT(:,:,JK) - 0.5*PDZZ(:,JK)
    ENDDO
 ENDIF
 
@@ -588,39 +588,39 @@ GMICRO(:,:,:) = .FALSE.
 
 IF (OCND2) THEN
   IF ( KRR == 7 ) THEN
-    GMICRO(IIB:IIE,IJB:IJE,IKTB:IKTE) =                           &
-                PSSIO(IIB:IIE,IJB:IJE,IKTB:IKTE)>XFRMIN(12)  .OR. &
-                PRCT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XFRMIN(13)   .OR. &
-                PRRT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XFRMIN(13)   .OR. &
-                PRIT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XFRMIN(13)   .OR. &
-                PRST(IIB:IIE,IJB:IJE,IKTB:IKTE)>XFRMIN(13)   .OR. &
-                PRGT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XFRMIN(13)   .OR. &
-                PRHT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XFRMIN(13)
+    GMICRO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                           &
+                PSSIO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(12)  .OR. &
+                PRCT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRRT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRIT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRST(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRGT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRHT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)
   ELSEIF ( KRR == 6 ) THEN
-    GMICRO(IIB:IIE,IJB:IJE,IKTB:IKTE) =                           &
-                PSSIO(IIB:IIE,IJB:IJE,IKTB:IKTE)>XFRMIN(12)  .OR. &
-                PRCT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XFRMIN(13)   .OR. &
-                PRRT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XFRMIN(13)   .OR. &
-                PRIT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XFRMIN(13)   .OR. &
-                PRST(IIB:IIE,IJB:IJE,IKTB:IKTE)>XFRMIN(13)   .OR. &
-                PRGT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XFRMIN(13)
+    GMICRO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                           &
+                PSSIO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(12)  .OR. &
+                PRCT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRRT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRIT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRST(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRGT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)
   ENDIF
 ELSE
   IF ( KRR == 7 ) THEN
-    GMICRO(IIB:IIE,IJB:IJE,IKTB:IKTE) =                        &
-                PRCT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XRTMIN(2) .OR. &
-                PRRT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XRTMIN(3) .OR. &
-                PRIT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XRTMIN(4) .OR. &
-                PRST(IIB:IIE,IJB:IJE,IKTB:IKTE)>XRTMIN(5) .OR. &
-                PRGT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XRTMIN(6) .OR. &
-                PRHT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XRTMIN(7)
+    GMICRO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                        &
+                PRCT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(2) .OR. &
+                PRRT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(3) .OR. &
+                PRIT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(4) .OR. &
+                PRST(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(5) .OR. &
+                PRGT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(6) .OR. &
+                PRHT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(7)
   ELSEIF ( KRR == 6 ) THEN
-    GMICRO(IIB:IIE,IJB:IJE,IKTB:IKTE) =                        &
-                PRCT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XRTMIN(2) .OR. &
-                PRRT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XRTMIN(3) .OR. &
-                PRIT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XRTMIN(4) .OR. &
-                PRST(IIB:IIE,IJB:IJE,IKTB:IKTE)>XRTMIN(5) .OR. &
-                PRGT(IIB:IIE,IJB:IJE,IKTB:IKTE)>XRTMIN(6)
+    GMICRO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                        &
+                PRCT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(2) .OR. &
+                PRRT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(3) .OR. &
+                PRIT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(4) .OR. &
+                PRST(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(5) .OR. &
+                PRGT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(6)
   ENDIF
 ENDIF
 IMICRO = COUNTJV( GMICRO(:,:,:),I1(:),I2(:),I3(:))
@@ -1470,8 +1470,8 @@ DO JN = 1 , KSPLITR
    PRSS(:,:,:) = PRSS(:,:,:) + ZPRSS(:,:,:)/KSPLITR
    PRGS(:,:,:) = PRGS(:,:,:) + ZPRGS(:,:,:)/KSPLITR
    IF ( KRR == 7 ) PRHS(:,:,:) = PRHS(:,:,:) + ZPRHS(:,:,:)/KSPLITR
-   DO JK = IKTB , IKTE
-     ZW(:,:,JK) =ZTSPLITR/(PRHODREF(:,:,JK)* PDZZ(:,:,JK))
+   DO JK = D%NKTB , D%NKTE
+     ZW(:,:,JK) =ZTSPLITR/(PRHODREF(:,:,JK)* PDZZ(:,JK))
    END DO
  ELSE
    IF (OSEDIC) PRCS(:,:,:) = PRCS(:,:,:) + ZPRCS(:,:,:)*ZTSPLITR
@@ -1481,18 +1481,18 @@ DO JN = 1 , KSPLITR
    IF ( KRR == 7 ) PRHS(:,:,:) = PRHS(:,:,:) + ZPRHS(:,:,:)*ZTSPLITR
  END IF
  !
- IF (OSEDIC) GSEDIMC(IIB:IIE,IJB:IJE,IKTB:IKTE) =                &
-                  PRCS(IIB:IIE,IJB:IJE,IKTB:IKTE)>ZRTMIN(2)
- GSEDIMR(IIB:IIE,IJB:IJE,IKTB:IKTE) =                            &
-                  PRRS(IIB:IIE,IJB:IJE,IKTB:IKTE)>ZRTMIN(3)
- GSEDIMI(IIB:IIE,IJB:IJE,IKTB:IKTE) =                            &
-                  PRIS(IIB:IIE,IJB:IJE,IKTB:IKTE)>ZRTMIN(4)
- GSEDIMS(IIB:IIE,IJB:IJE,IKTB:IKTE) =                            &
-                  PRSS(IIB:IIE,IJB:IJE,IKTB:IKTE)>ZRTMIN(5)
- GSEDIMG(IIB:IIE,IJB:IJE,IKTB:IKTE) =                            &
-                  PRGS(IIB:IIE,IJB:IJE,IKTB:IKTE)>ZRTMIN(6)
- IF ( KRR == 7 ) GSEDIMH(IIB:IIE,IJB:IJE,IKTB:IKTE) =            &
-                  PRHS(IIB:IIE,IJB:IJE,IKTB:IKTE)>ZRTMIN(7)
+ IF (OSEDIC) GSEDIMC(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                &
+                  PRCS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>ZRTMIN(2)
+ GSEDIMR(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                            &
+                  PRRS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>ZRTMIN(3)
+ GSEDIMI(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                            &
+                  PRIS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>ZRTMIN(4)
+ GSEDIMS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                            &
+                  PRSS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>ZRTMIN(5)
+ GSEDIMG(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                            &
+                  PRGS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>ZRTMIN(6)
+ IF ( KRR == 7 ) GSEDIMH(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =            &
+                  PRHS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>ZRTMIN(7)
 !
  IF (OSEDIC) ISEDIMC = COUNTJV( GSEDIMC(:,:,:),IC1(:),IC2(:),IC3(:))
  ISEDIMR = COUNTJV( GSEDIMR(:,:,:),IR1(:),IR2(:),IR3(:))
@@ -1553,11 +1553,11 @@ DO JN = 1 , KSPLITR
           END IF
        END DO
   END IF
-       DO JK = IKTB , IKTE
+       DO JK = D%NKTB , D%NKTE
          PRCS(:,:,JK) = PRCS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
        END DO
        IF (PRESENT(PFPR)) THEN
-         DO JK = IKTB , IKTE
+         DO JK = D%NKTB , D%NKTE
            PFPR(:,:,JK,2)=ZWSED(:,:,JK)
          ENDDO
        ENDIF
@@ -1599,11 +1599,11 @@ DO JN = 1 , KSPLITR
                                         ZRHODREFR(JL)**(XEXSEDR-XCEXVT)
        END DO
   END IF
-       DO JK = IKTB , IKTE
+       DO JK = D%NKTB , D%NKTE
          PRRS(:,:,JK) = PRRS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
        END DO
        IF (PRESENT(PFPR)) THEN
-         DO JK = IKTB , IKTE
+         DO JK = D%NKTB , D%NKTE
            PFPR(:,:,JK,3)=ZWSED(:,:,JK)
          ENDDO
        ENDIF
@@ -1646,11 +1646,11 @@ DO JN = 1 , KSPLITR
                                ALOG(ZRHODREFI(JL)*ZRIS(JL)) )**XEXCSEDI
        END DO
   END IF
-       DO JK = IKTB , IKTE
+       DO JK = D%NKTB , D%NKTE
          PRIS(:,:,JK) = PRIS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
        END DO
        IF (PRESENT(PFPR)) THEN
-         DO JK = IKTB , IKTE
+         DO JK = D%NKTB , D%NKTE
            PFPR(:,:,JK,4)=ZWSED(:,:,JK)
          ENDDO
        ENDIF
@@ -1690,11 +1690,11 @@ DO JN = 1 , KSPLITR
                                         ZRHODREFS(JL)**(XEXSEDS-XCEXVT)
        END DO
   END IF
-       DO JK = IKTB , IKTE
+       DO JK = D%NKTB , D%NKTE
          PRSS(:,:,JK) = PRSS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
        END DO
        IF (PRESENT(PFPR)) THEN
-         DO JK = IKTB , IKTE
+         DO JK = D%NKTB , D%NKTE
            PFPR(:,:,JK,5)=ZWSED(:,:,JK)
          ENDDO
        ENDIF
@@ -1735,11 +1735,11 @@ PINPRS(:,:) = PINPRS(:,:) + ZWSED(:,:,IKB)/XRHOLW/KSPLITR
                                         ZRHODREFG(JL)**(XEXSEDG-XCEXVT)
        END DO
 END IF
-       DO JK = IKTB , IKTE
+       DO JK = D%NKTB , D%NKTE
          PRGS(:,:,JK) = PRGS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
        END DO
        IF (PRESENT(PFPR)) THEN
-         DO JK = IKTB , IKTE
+         DO JK = D%NKTB , D%NKTE
            PFPR(:,:,JK,6)=ZWSED(:,:,JK)
          ENDDO
        ENDIF
@@ -1781,11 +1781,11 @@ END IF
                                         ZRHODREFH(JL)**(XEXSEDH-XCEXVT)
        END DO
   END IF
-       DO JK = IKTB , IKTE
+       DO JK = D%NKTB , D%NKTE
          PRHS(:,:,JK) = PRHS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
        END DO
        IF (PRESENT(PFPR)) THEN
-         DO JK = IKTB , IKTE
+         DO JK = D%NKTB , D%NKTE
            PFPR(:,:,JK,7)=ZWSED(:,:,JK)
          ENDDO
        ENDIF
@@ -1881,8 +1881,8 @@ PRRS(:,:,:) = PRRS(:,:,:) + ZPRRS(:,:,:)
 PRSS(:,:,:) = PRSS(:,:,:) + ZPRSS(:,:,:)
 PRGS(:,:,:) = PRGS(:,:,:) + ZPRGS(:,:,:)
 IF ( KRR == 7 ) PRHS(:,:,:) = PRHS(:,:,:) + ZPRHS(:,:,:)
-DO JK = IKTB , IKTE
-  ZW(:,:,JK) =PTSTEP/(PRHODREF(:,:,JK)* PDZZ(:,:,JK) )
+DO JK = D%NKTB , D%NKTE
+  ZW(:,:,JK) =PTSTEP/(PRHODREF(:,:,JK)* PDZZ(:,JK) )
 END DO
 
 !
@@ -1925,9 +1925,9 @@ END DO
          ENDIF
        ENDDO
 
-       DO JJ = IJB, IJE
-         DO JI = IIB, IIE
-           ZH=PDZZ(JI,JJ,JK)
+       DO JJ = D%NJB, D%NJE
+         DO JI = D%NIB, D%NIE
+           ZH=PDZZ(JI,JK)
            ZP1 = MIN(1., ZWSEDW1(JI,JJ,JK) * PTSTEP / ZH)
            ! mars 2009 : correction : ZWSEDW1 =>  ZWSEDW2
            !IF (ZWSEDW1(JI,JJ,JK) /= 0.) THEN
@@ -1944,11 +1944,11 @@ END DO
        ENDDO
      ENDDO
 
-     DO JK = IKTB , IKTE
+     DO JK = D%NKTB , D%NKTE
        PRCS(:,:,JK) = PRCS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
      END DO
      IF (PRESENT(PFPR)) THEN
-       DO JK = IKTB , IKTE
+       DO JK = D%NKTB , D%NKTE
          PFPR(:,:,JK,2)=ZWSED(:,:,JK)
        ENDDO
      ENDIF
@@ -1986,9 +1986,9 @@ END DO
          PRHODREF(JI,JJ,JK)**(XEXSEDR-XCEXVT-1)
        ENDIF
      ENDDO
-     DO JJ = IJB, IJE
-       DO JI = IIB, IIE
-         ZH=PDZZ(JI,JJ,JK)
+     DO JJ = D%NJB, D%NJE
+       DO JI = D%NIB, D%NIE
+         ZH=PDZZ(JI,JK)
          ZP1 = MIN(1., ZWSEDW1(JI,JJ,JK) * PTSTEP / ZH )
          IF (ZWSEDW2(JI,JJ,JK) /= 0.) THEN
            ZP2 = MAX(0.,1 -  ZH &
@@ -2003,11 +2003,11 @@ END DO
      ENDDO
    ENDDO
 
-   DO JK = IKTB , IKTE
+   DO JK = D%NKTB , D%NKTE
      PRRS(:,:,JK) = PRRS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
    ENDDO
    IF (PRESENT(PFPR)) THEN
-     DO JK = IKTB , IKTE
+     DO JK = D%NKTB , D%NKTE
        PFPR(:,:,JK,3)=ZWSED(:,:,JK)
      ENDDO
    ENDIF
@@ -2046,9 +2046,9 @@ END DO
          &  ALOG(PRHODREF(JI,JJ,JK)*ZQP(JI,JJ)) )**XEXCSEDI
        ENDIF
      ENDDO
-     DO JJ = IJB, IJE
-       DO JI = IIB, IIE
-         ZH=PDZZ(JI,JJ,JK)
+     DO JJ = D%NJB, D%NJE
+       DO JI = D%NIB, D%NIE
+         ZH=PDZZ(JI,JK)
          ZP1 = MIN(1., ZWSEDW1(JI,JJ,JK) * PTSTEP / ZH )
          IF (ZWSEDW2(JI,JJ,JK) /= 0.) THEN
            ZP2 = MAX(0.,1 - ZH  &
@@ -2063,11 +2063,11 @@ END DO
      ENDDO
    ENDDO
 
-   DO JK = IKTB , IKTE
+   DO JK = D%NKTB , D%NKTE
      PRIS(:,:,JK) = PRIS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
    ENDDO
    IF (PRESENT(PFPR)) THEN
-     DO JK = IKTB , IKTE
+     DO JK = D%NKTB , D%NKTE
        PFPR(:,:,JK,4)=ZWSED(:,:,JK)
      ENDDO
    ENDIF
@@ -2106,9 +2106,9 @@ END DO
          PRHODREF(JI,JJ,JK)**(XEXSEDS-XCEXVT-1)
        ENDIF
      ENDDO
-     DO JJ = IJB, IJE
-       DO JI = IIB, IIE
-         ZH=PDZZ(JI,JJ,JK)
+     DO JJ = D%NJB, D%NJE
+       DO JI = D%NIB, D%NIE
+         ZH=PDZZ(JI,JK)
          ZP1 = MIN(1., ZWSEDW1(JI,JJ,JK) * PTSTEP / ZH )
          IF (ZWSEDW2(JI,JJ,JK) /= 0.) THEN
            ZP2 = MAX(0.,1 - ZH&
@@ -2123,11 +2123,11 @@ END DO
      ENDDO
    ENDDO
 
-   DO JK = IKTB , IKTE
+   DO JK = D%NKTB , D%NKTE
      PRSS(:,:,JK) = PRSS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
    ENDDO
    IF (PRESENT(PFPR)) THEN
-     DO JK = IKTB , IKTE
+     DO JK = D%NKTB , D%NKTE
        PFPR(:,:,JK,5)=ZWSED(:,:,JK)
      ENDDO
    ENDIF
@@ -2166,9 +2166,9 @@ END DO
                                   PRHODREF(JI,JJ,JK)**(XEXSEDG-XCEXVT-1)
        ENDIF
      ENDDO
-     DO JJ = IJB, IJE
-       DO JI = IIB, IIE
-         ZH=PDZZ(JI,JJ,JK)
+     DO JJ = D%NJB, D%NJE
+       DO JI = D%NIB, D%NIE
+         ZH=PDZZ(JI,JK)
          ZP1 = MIN(1., ZWSEDW1(JI,JJ,JK) * PTSTEP / ZH )
          IF (ZWSEDW2(JI,JJ,JK) /= 0.) THEN
            ZP2 = MAX(0.,1 - ZH &
@@ -2183,11 +2183,11 @@ END DO
      ENDDO
    ENDDO
 
-   DO JK = IKTB , IKTE
+   DO JK = D%NKTB , D%NKTE
          PRGS(:,:,JK) = PRGS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
    ENDDO
    IF (PRESENT(PFPR)) THEN
-     DO JK = IKTB , IKTE
+     DO JK = D%NKTB , D%NKTE
        PFPR(:,:,JK,6)=ZWSED(:,:,JK)
      ENDDO
    ENDIF
@@ -2224,9 +2224,9 @@ END DO
                                     PRHODREF(JI,JJ,JK)**(XEXSEDH-XCEXVT-1)
          ENDIF
        ENDDO
-       DO JJ = IJB, IJE
-         DO JI = IIB, IIE
-           ZH=PDZZ(JI,JJ,JK)
+       DO JJ = D%NJB, D%NJE
+         DO JI = D%NIB, D%NIE
+           ZH=PDZZ(JI,JK)
            ZP1 = MIN(1., ZWSEDW1(JI,JJ,JK) * PTSTEP / ZH)
            IF (ZWSEDW2(JI,JJ,JK) /= 0.) THEN
              ZP2 = MAX(0.,1 - ZH &
@@ -2241,11 +2241,11 @@ END DO
        ENDDO
      ENDDO
 
-     DO JK = IKTB , IKTE
+     DO JK = D%NKTB , D%NKTE
        PRHS(:,:,JK) = PRHS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
      ENDDO
      IF (PRESENT(PFPR)) THEN
-       DO JK = IKTB , IKTE
+       DO JK = D%NKTB , D%NKTE
          PFPR(:,:,JK,7)=ZWSED(:,:,JK)
        ENDDO
      ENDIF
@@ -2302,7 +2302,7 @@ ZT(:,:,:) = PTHT(:,:,:) * ( PPABST(:,:,:) / XP00 ) ** (XRD/XCPD)
 !  the temperature is negative only !!!
 !
 GNEGT(:,:,:) = .FALSE.
-GNEGT(IIB:IIE,IJB:IJE,IKTB:IKTE) = ZT(IIB:IIE,IJB:IJE,IKTB:IKTE)<XTT
+GNEGT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) = ZT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)<XTT
 INEGT = COUNTJV( GNEGT(:,:,:),I1(:),I2(:),I3(:))
 IF( INEGT >= 1 ) THEN
   ALLOCATE(ZRVT(INEGT)) ;
@@ -4063,8 +4063,8 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 INTEGER :: JI, JJ, JK
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAINFR_VERT',0,ZHOOK_HANDLE)
 !
-DO JI = IIB,IIE
-   DO JJ = IJB, IJE
+DO JI = D%NIB,D%NIE
+   DO JJ = D%NJB, D%NJE
       ZPRFR(JI,JJ,IKE)=0.
       DO JK=IKE-KKL, IKB, -KKL
          IF (ZRR(JI,JJ,JK) .GT. XRTMIN(3)) THEN

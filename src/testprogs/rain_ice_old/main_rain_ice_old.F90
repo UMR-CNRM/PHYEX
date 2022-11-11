@@ -192,9 +192,6 @@ program main_rain_ice_old
 
   do i_block = 1, n_gp_blocks
 
-    write(output_unit, *) 'lalala 1'
-    flush(output_unit)
-
     call rain_ice_old(D, osedic=osedic, ocnd2=ocnd2, lkogan=lkogan, lmodicedep=lmodicedep,  &
                       hsedim=c_sedim, hsubg_aucv_rc=csubg_aucv_rc, owarm=owarm,          &
                       kka=kka, kku=kku, kkl=kkl,                                         &
@@ -214,9 +211,6 @@ program main_rain_ice_old
                       ydddh=ydddh, ydlddh=ydlddh, ydmddh=ydmddh,                         &
                       picenu=picenu, pkgn_acon=pkgn_acon, pkgn_sbgr=pkgn_sbgr,           &
                       pfpr=pfpr)
-
-    write(output_unit, *) 'lalala 2'
-    flush(output_unit)
 
   enddo
 
