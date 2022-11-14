@@ -196,7 +196,7 @@ program main_rain_ice_old
                       hsedim=c_sedim, hsubg_aucv_rc=csubg_aucv_rc, owarm=owarm,          &
                       kka=kka, kku=kku, kkl=kkl,                                         &
                       ksplitr=ksplitr, ptstep=2*ptstep, krr=krr,                         &
-                      pdzz=pdzz(:,:,i_block), prhodj=prhodj(:,:,i_block), prhodref=prhodref, pexnref=pexnref,      &
+                      pdzz=pdzz(:,:,i_block), prhodj=prhodj(:,:,i_block), prhodref=prhodref(:,:,i_block), pexnref=pexnref,      &
                       ppabst=ppabsm, pcit=pcit, pcldfr=pcldfr,                           &
                       picldfr=picldfr, pwcldfr=pwcldfr,                                  &
                       pssio=pssio, pssiu=pssiu, pifr=pifr,                               &
