@@ -196,14 +196,14 @@ program main_rain_ice_old
                       hsedim=c_sedim, hsubg_aucv_rc=csubg_aucv_rc, owarm=owarm,          &
                       kka=kka, kku=kku, kkl=kkl,                                         &
                       ksplitr=ksplitr, ptstep=2*ptstep, krr=krr,                         &
-                      pdzz=pdzz, prhodj=prhodj, prhodref=prhodref, pexnref=pexnref,      &
+                      pdzz=pdzz(:,:,i_block), prhodj=prhodj(:,:,i_block), prhodref=prhodref, pexnref=pexnref,      &
                       ppabst=ppabsm, pcit=pcit, pcldfr=pcldfr,                           &
                       picldfr=picldfr, pwcldfr=pwcldfr,                                  &
                       pssio=pssio, pssiu=pssiu, pifr=pifr,                               &
                       ptht=ptht,                                                         &
                       prvt=prt(:,:,:,1), prct=prt(:,:,:,2), prrt=prt(:,:,:,3),           &
                       prit=prt(:,:,:,4), prst=prt(:,:,:,5), prgt=prt(:,:,:,6),           &
-                      pths=pths,                                                         &
+                      pths=pths(:,:,i_block),                                            &
                       prvs=prs(:,:,:,1), prcs=prs(:,:,:,2), prrs=prs(:,:,:,3),           &
                       pris=prs(:,:,:,4), prss=prs(:,:,:,5), prgs=prs(:,:,:,6),           &
                       pinprc=zinprc, pinprr=pinprr, pevap3d=pevap,                       &

@@ -44,7 +44,7 @@ REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 !
 REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PDZZ    ! Layer thickness (m)
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF! Reference density
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST  ! absolute pressure at t
@@ -70,7 +70,7 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PSSIU   ! Sub-saturation with respect
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PIFR    ! Ratio cloud ice moist part to dry part 
 ! input from aro_adjust / condensation with OCND2 END.
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS    ! Theta source
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PTHS    ! Theta source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRVS    ! Water vapor m.r. source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRRS    ! Rain water m.r. source
