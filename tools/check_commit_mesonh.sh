@@ -104,7 +104,8 @@ fi
 # - they can be done in the reference pack
 #They are done in the current pack except if the reference pack
 #already contains a tested simulation
-run_in_ref=$(ls -d $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_* 2> /dev/null | tail -1 |wc -l)
+#To check this, we use the case 007_16janvier/008_run2_turb3D
+run_in_ref=$(ls -d $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_turb3D_* 2> /dev/null | tail -1 |wc -l)
 
 #Name and directory for compiling and executing user pack
 fromdir=''
@@ -258,15 +259,19 @@ if [ $run -ge 1 ]; then
       [ ! -d ${exedir}_$commit ] && cp -R ${exedir} ${exedir}_$commit
       cd $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/${exedir}_$commit
     else
-      cd $MNHPACK/$name/MY_RUN/KTEST/$case/
-      for rep in ???_*; do
+      rep=$MNHPACK/$name/MY_RUN/KTEST/$case
+      [ -d $rep ] && rm -rf $rep
+      mkdir $rep
+      cd $rep
+      for repref in $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/$rep/*; do
+        rep=$(basename $repref)
         if [ $rep != ${exedir} ]; then
           rm -rf $rep
           ln -s $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/$rep .
+        else
+          cp -R $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/$rep .
         fi
       done
-      [ -d ${exedir} ] && rm -rf ${exedir}
-      cp -R $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/${exedir} .
       cd ${exedir}
     fi
   

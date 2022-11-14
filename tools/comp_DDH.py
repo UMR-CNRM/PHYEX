@@ -30,7 +30,9 @@ def comp_DDH(filename1, filename2, output_fig, tol_ad=1.2E-7, tol_rd=1.E-6, verb
                     ad = v1[i] - v2[i]
                     rd = 200 * (v1[i] - v2[i]) / (v1[i] + v2[i])
                     if verbose: print("   v1={v1}, v2={v2}, diff={ad}, rdiff={rd}".format(v1=v1[i], v2=v2[i], ad=ad, rd=rd))
-                    if abs(ad) > tol_ad and abs(rd) > tol_rd: toplt = True
+                    if abs(ad) > tol_ad and abs(rd) > tol_rd:
+                      if verbose: print("  ==> plot")
+                      toplt = True
         return fid if toplt else None
     toplt = []
     for fid in [fid for fid in l1.intersection(l2) if fid != 'DOCFICHIER']:
