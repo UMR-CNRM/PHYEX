@@ -216,7 +216,7 @@ INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PDZZ    ! Layer thickness (m)
 REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
 REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PEXNREF ! Reference Exner function
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST  ! absolute pressure at t
 !
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
@@ -287,12 +287,9 @@ INTEGER :: ISEDIMR,ISEDIMC, ISEDIMI, ISEDIMS, ISEDIMG, ISEDIMH, &
 INTEGER :: IGRIM, IGACC, IGDRY ! Case number of riming, accretion and dry growth
                                ! locations
 INTEGER :: IGWET, IHAIL   ! wet growth locations and case number
-LOGICAL, DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3)) &
-    :: GSEDIMR,GSEDIMC, GSEDIMI, GSEDIMS, GSEDIMG, GSEDIMH ! Test where to compute the SED processes
-LOGICAL, DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3)) &
-                     :: GNEGT  ! Test where to compute the HEN process
-LOGICAL, DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3)) &
-                     :: GMICRO ! Test where to compute all processes
+LOGICAL, DIMENSION(D%NIT,D%NKT) :: GSEDIMR,GSEDIMC, GSEDIMI, GSEDIMS, GSEDIMG, GSEDIMH ! Test where to compute the SED processes
+LOGICAL, DIMENSION(D%NIT,D%NKT) :: GNEGT  ! Test where to compute the HEN process
+LOGICAL, DIMENSION(D%NIT,D%NKT) :: GMICRO ! Test where to compute all processes
 LOGICAL, DIMENSION(:), ALLOCATABLE :: GRIM ! Test where to compute riming
 LOGICAL, DIMENSION(:), ALLOCATABLE :: GACC ! Test where to compute accretion
 LOGICAL, DIMENSION(:), ALLOCATABLE :: GDRY ! Test where to compute dry growth
@@ -302,25 +299,19 @@ INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1,IVEC2       ! Vectors of indices for
                                 ! interpolations
 REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1,ZVEC2,ZVEC3 ! Work vectors for
                                 ! interpolations
-REAL,    DIMENSION(D%NIT,D%NKT) :: ZW ! work array
-REAL,    DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3))   &
-      :: ZPRCS,ZPRRS,ZPRSS,ZPRGS,ZPRHS   ! Mixing ratios created during the time step
-REAL,    DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),0:SIZE(PEXNREF,3)+1)   &
-                                  :: ZWSED        ! sedimentation fluxes
-REAL,    DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),0:SIZE(PEXNREF,3)+1)   &
-                                  :: ZWSEDW1       ! sedimentation speed
-REAL,    DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),0:SIZE(PEXNREF,3)+1)   &
-                                  :: ZWSEDW2       ! sedimentation speed
-REAL,    DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2))                   &
-                                  :: ZCONC_TMP    ! Weighted concentration
-REAL,    DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3))   &
-                                  :: ZT ! Temperature
-REAL,    DIMENSION(D%NIT,D%NKT) :: ZRAY,   & ! Cloud Mean radius
-                                   ZLBC,   & ! XLBC weighted by sea fraction
-                                   ZFSEDC, &
-                                   ZCONC3D,&  !  droplet concentration m-3
-                                   ZZZZ,&! geometric height
-                                   ZZZT  ! tempoary value for geometric height
+REAL,    DIMENSION(D%NIT,D%NKT)     :: ZW ! work array
+REAL,    DIMENSION(D%NIT,D%NKT)     :: ZPRCS,ZPRRS,ZPRSS,ZPRGS,ZPRHS   ! Mixing ratios created during the time step
+REAL,    DIMENSION(D%NIT,0:D%NKT+1) :: ZWSED        ! sedimentation fluxes
+REAL,    DIMENSION(D%NIT,0:D%NKT+1) :: ZWSEDW1       ! sedimentation speed
+REAL,    DIMENSION(D%NIT,0:D%NKT+1) :: ZWSEDW2       ! sedimentation speed
+REAL,    DIMENSION(D%NIT)           :: ZCONC_TMP    ! Weighted concentration
+REAL,    DIMENSION(D%NIT,D%NKT)     :: ZT ! Temperature
+REAL,    DIMENSION(D%NIT,D%NKT)     :: ZRAY,   & ! Cloud Mean radius
+                                       ZLBC,   & ! XLBC weighted by sea fraction
+                                       ZFSEDC, &
+                                       ZCONC3D,&  !  droplet concentration m-3
+                                       ZZZZ,&! geometric height
+                                       ZZZT  ! tempoary value for geometric height
 
 !Diagnostics
 REAL, DIMENSION(SIZE(PTHT,1),SIZE(PTHT,2),SIZE(PTHT,3)) :: ZRAINFR,   &
@@ -544,23 +535,23 @@ IF (OSEDIC.OR.OCND2) THEN
    ZZZZ(:,D%NKTE)   = PDZZ(:,D%NKTE)*0.5
    ZZZT(:,D%NKTE)   = PDZZ(:,D%NKTE)
    IF (XFRMIN(26)>0.001) THEN ! Use alternative concentration given by (XFRMIN(26)
-      ZCONC_TMP(:,:) = XFRMIN(26)
+      ZCONC_TMP(:) = XFRMIN(26)
       DO JK=D%NKTB,D%NKTE
          ZLBC(:,JK)   = 0.5* (XLBC(2)+XLBC(1)) ! Assume "average" distr. func for simplicity
          ZFSEDC(:,JK) = 0.5* (XFSEDC(2)+XFSEDC(1))
          ZFSEDC(:,JK) = MAX(MIN(XFSEDC(1),XFSEDC(2)),ZFSEDC(:,JK))
-         ZCONC3D(:,JK)= ZCONC_TMP(:,1)*PPABST(:,1,JK)/XP00 ! Let it be diluted with decreasing pressure
+         ZCONC3D(:,JK)= ZCONC_TMP(:)*PPABST(:,1,JK)/XP00 ! Let it be diluted with decreasing pressure
          ZRAY(:,JK)   = 0.5*( 0.5*GAMMA(XNUC+1.0/XALPHAC)/(GAMMA(XNUC)) + &
            0.5*GAMMA(XNUC2+1.0/XALPHAC2)/(GAMMA(XNUC2)))
       ENDDO
    ELSE
-     ZCONC_TMP(:,:)=PSEA(:,:)*XCONC_SEA+(1.-PSEA(:,:))*XCONC_LAND
+     ZCONC_TMP(:)=PSEA(:,1)*XCONC_SEA+(1.-PSEA(:,1))*XCONC_LAND
 
      DO JK=D%NKTB,D%NKTE
         ZLBC(:,JK)   = PSEA(:,1)*XLBC(2)+(1.-PSEA(:,1))*XLBC(1)
         ZFSEDC(:,JK) = (PSEA(:,1)*XFSEDC(2)+(1.-PSEA(:,1))*XFSEDC(1))
         ZFSEDC(:,JK) = MAX(MIN(XFSEDC(1),XFSEDC(2)),ZFSEDC(:,JK))
-        ZCONC3D(:,JK)= (1.-PTOWN(:,1))*ZCONC_TMP(:,1)+PTOWN(:,1)*XCONC_URBAN
+        ZCONC3D(:,JK)= (1.-PTOWN(:,1))*ZCONC_TMP(:)+PTOWN(:,1)*XCONC_URBAN
         ZRAY(:,JK)   = 0.5*((1.-PSEA(:,1))*GAMMA(XNUC+1.0/XALPHAC)/(GAMMA(XNUC)) + &
            PSEA(:,1)*GAMMA(XNUC2+1.0/XALPHAC2)/(GAMMA(XNUC2)))
      ENDDO
@@ -582,46 +573,46 @@ CALL RAIN_ICE_NUCLEATION
 !  optimization by looking for locations where
 !  the microphysical fields are larger than a minimal value only !!!
 !
-GMICRO(:,:,:) = .FALSE.
+GMICRO(:,:) = .FALSE.
 
 IF (OCND2) THEN
   IF ( KRR == 7 ) THEN
-    GMICRO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                           &
-                PSSIO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(12)  .OR. &
-                PRCT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRRT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRIT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRST(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRGT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRHT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)
+    GMICRO(D%NIB:D%NIE,D%NKTB:D%NKTE) =                           &
+                PSSIO(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XFRMIN(12)  .OR. &
+                PRCT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRRT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRIT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRST(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRGT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRHT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XFRMIN(13)
   ELSEIF ( KRR == 6 ) THEN
-    GMICRO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                           &
-                PSSIO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(12)  .OR. &
-                PRCT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRRT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRIT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRST(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRGT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XFRMIN(13)
+    GMICRO(D%NIB:D%NIE,D%NKTB:D%NKTE) =                           &
+                PSSIO(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XFRMIN(12)  .OR. &
+                PRCT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRRT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRIT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRST(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
+                PRGT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XFRMIN(13)
   ENDIF
 ELSE
   IF ( KRR == 7 ) THEN
-    GMICRO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                        &
-                PRCT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(2) .OR. &
-                PRRT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(3) .OR. &
-                PRIT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(4) .OR. &
-                PRST(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(5) .OR. &
-                PRGT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(6) .OR. &
-                PRHT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(7)
+    GMICRO(D%NIB:D%NIE,D%NKTB:D%NKTE) =                        &
+                PRCT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XRTMIN(2) .OR. &
+                PRRT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XRTMIN(3) .OR. &
+                PRIT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XRTMIN(4) .OR. &
+                PRST(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XRTMIN(5) .OR. &
+                PRGT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XRTMIN(6) .OR. &
+                PRHT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XRTMIN(7)
   ELSEIF ( KRR == 6 ) THEN
-    GMICRO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                        &
-                PRCT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(2) .OR. &
-                PRRT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(3) .OR. &
-                PRIT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(4) .OR. &
-                PRST(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(5) .OR. &
-                PRGT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(6)
+    GMICRO(D%NIB:D%NIE,D%NKTB:D%NKTE) =                        &
+                PRCT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XRTMIN(2) .OR. &
+                PRRT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XRTMIN(3) .OR. &
+                PRIT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XRTMIN(4) .OR. &
+                PRST(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XRTMIN(5) .OR. &
+                PRGT(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>XRTMIN(6)
   ENDIF
 ENDIF
-IMICRO = COUNTJV( GMICRO(:,:,:),I1(:),I2(:),I3(:))
+IMICRO = COUNTJV( GMICRO(:,:),I1(:),I3(:))
 IF ( IMICRO >= 0 ) THEN
   ALLOCATE(ZRVT(IMICRO))
   ALLOCATE(ZRCT(IMICRO))
@@ -717,11 +708,11 @@ IF ( IMICRO >= 0 ) THEN
     ZTHS(JL) = PTHS(I1(JL),I3(JL))
 !
     ZRHODREF(JL) = PRHODREF(I1(JL),I3(JL))
-    ZZT(JL) = ZT(I1(JL),I2(JL),I3(JL))
+    ZZT(JL) = ZT(I1(JL),I3(JL))
     ZTHT(JL) = PTHT(I1(JL),I2(JL),I3(JL))
     ZTHLT(JL) = ZTHT(JL) - XLVTT * ZTHT(JL) / XCPD / ZZT(JL) * ZRCT(JL)
     ZPRES(JL) = PPABST(I1(JL),I2(JL),I3(JL))
-    ZEXNREF(JL) = PEXNREF(I1(JL),I2(JL),I3(JL))
+    ZEXNREF(JL) = PEXNREF(I1(JL),I3(JL))
     ZCOLF(JL)=1. ! No change from orignal when  OCND2 = .FALSE.
     ZACRF(JL)=1. !    "      "       "            "       "
     ZCONCM(JL)=ZCONC3D(I1(JL),I3(JL))*0.000001 ! From m-3 to cm-3
@@ -802,7 +793,7 @@ IF ( IMICRO >= 0 ) THEN
 !
   IF (LBU_ENABLE .OR. LLES_CALL) THEN
     ALLOCATE(ZRHODJ(IMICRO))
-    ZRHODJ(:) = PACK( PRHODJ(:,:),MASK=GMICRO(:,1,:) )
+    ZRHODJ(:) = PACK( PRHODJ(:,:),MASK=GMICRO(:,:) )
   END IF
 !
 
@@ -996,7 +987,7 @@ IF ( IMICRO >= 0 ) THEN
 
   !Diagnostic of precipitation fraction
   ZW(:,:) = 0.
-  ZRAINFR(:,1,:) = UNPACK( ZRF(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:) )
+  ZRAINFR(:,1,:) = UNPACK( ZRF(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
   CALL RAINFR_VERT(ZRAINFR(:,:,:), PRRT(:,:,:))
   DO JL=1,IMICRO
     ZRF(JL)=ZRAINFR(I1(JL),I2(JL),I3(JL))
@@ -1122,40 +1113,40 @@ IF ( IMICRO >= 0 ) THEN
 !
 !
   ZW(:,:) = PRVS(:,1,:)
-  PRVS(:,1,:) = UNPACK( ZRVS(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:) )
+  PRVS(:,1,:) = UNPACK( ZRVS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
   ZW(:,:) = PRCS(:,1,:)
-  PRCS(:,1,:) = UNPACK( ZRCS(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:) )
+  PRCS(:,1,:) = UNPACK( ZRCS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
   ZW(:,:) = PRRS(:,1,:)
-  PRRS(:,1,:) = UNPACK( ZRRS(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:) )
+  PRRS(:,1,:) = UNPACK( ZRRS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
   ZW(:,:) = PRIS(:,1,:)
-  PRIS(:,1,:) = UNPACK( ZRIS(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:) )
+  PRIS(:,1,:) = UNPACK( ZRIS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
   ZW(:,:) = PRSS(:,1,:)
-  PRSS(:,1,:) = UNPACK( ZRSS(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:) )
+  PRSS(:,1,:) = UNPACK( ZRSS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
   ZW(:,:) = PRGS(:,1,:)
-  PRGS(:,1,:) = UNPACK( ZRGS(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:) )
+  PRGS(:,1,:) = UNPACK( ZRGS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
   IF ( KRR == 7 ) THEN
     ZW(:,:) = PRHS(:,1,:)
-    PRHS(:,1,:) = UNPACK( ZRHS(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:) )
+    PRHS(:,1,:) = UNPACK( ZRHS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
   END IF
   ZW(:,:) = PTHS(:,:)
-  PTHS(:,:) = UNPACK( ZTHS(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:) )
+  PTHS(:,:) = UNPACK( ZTHS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
   ZW(:,:) = PCIT(:,1,:)
-  PCIT(:,1,:) = UNPACK( ZCIT(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:) )
+  PCIT(:,1,:) = UNPACK( ZCIT(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
 !
   ZW(:,:) = ZRAINFR(:,1,:)
-  ZRAINFR(:,1,:) = UNPACK( ZRF(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:) )
+  ZRAINFR(:,1,:) = UNPACK( ZRF(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
 !
   ZW(:,:) = 0.
-  ZHLC_HCF3D(:,1,:) = UNPACK( ZHLC_HCF(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:) )
+  ZHLC_HCF3D(:,1,:) = UNPACK( ZHLC_HCF(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
 !
   ZW(:,:) = 0.
-  ZHLC_LCF3D(:,1,:) = UNPACK( ZHLC_LCF(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:) )
+  ZHLC_LCF3D(:,1,:) = UNPACK( ZHLC_LCF(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
 !
   ZW(:,:) = 0.
-  ZHLC_HRC3D(:,1,:) = UNPACK( ZHLC_HRC(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:) )
+  ZHLC_HRC3D(:,1,:) = UNPACK( ZHLC_HRC(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
 !
   ZW(:,:) = 0.
-  ZHLC_LRC3D(:,1,:) = UNPACK( ZHLC_LRC(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:) )
+  ZHLC_LRC3D(:,1,:) = UNPACK( ZHLC_LRC(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
 !
 !
   DEALLOCATE(ZZW1)
@@ -1421,12 +1412,12 @@ IF ( KRR == 7 ) PINPRH (:,:) = 0.
 !  For optimization we consider each variable separately
 
 ZRTMIN(:)    = XRTMIN(:) * ZINVTSTEP
-IF (OSEDIC) GSEDIMC(:,:,:) = .FALSE.
-GSEDIMR(:,:,:) = .FALSE.
-GSEDIMI(:,:,:) = .FALSE.
-GSEDIMS(:,:,:) = .FALSE.
-GSEDIMG(:,:,:) = .FALSE.
-IF ( KRR == 7 ) GSEDIMH(:,:,:) = .FALSE.
+IF (OSEDIC) GSEDIMC(:,:) = .FALSE.
+GSEDIMR(:,:) = .FALSE.
+GSEDIMI(:,:) = .FALSE.
+GSEDIMS(:,:) = .FALSE.
+GSEDIMG(:,:) = .FALSE.
+IF ( KRR == 7 ) GSEDIMH(:,:) = .FALSE.
 !
 ILENALLOCR = 0
 IF (OSEDIC) ILENALLOCC = 0
@@ -1439,19 +1430,19 @@ IF ( KRR == 7 ) ILENALLOCH = 0
 ! PRiS = Source of the previous time step
 !
 IF (OSEDIC) THEN
-  ZPRCS(:,:,:) = 0.0
-  ZPRCS(:,:,:) = PRCS(:,:,:)-PRCT(:,:,:)* ZINVTSTEP
+  ZPRCS(:,:) = 0.0
+  ZPRCS(:,:) = PRCS(:,1,:)-PRCT(:,1,:)* ZINVTSTEP
   PRCS(:,:,:)  = PRCT(:,:,:)* ZINVTSTEP
 END IF
-ZPRRS(:,:,:) = 0.0
-ZPRSS(:,:,:) = 0.0
-ZPRGS(:,:,:) = 0.0
-IF ( KRR == 7 ) ZPRHS(:,:,:) = 0.0
+ZPRRS(:,:) = 0.0
+ZPRSS(:,:) = 0.0
+ZPRGS(:,:) = 0.0
+IF ( KRR == 7 ) ZPRHS(:,:) = 0.0
 !
-ZPRRS(:,:,:) = PRRS(:,:,:)-PRRT(:,:,:)* ZINVTSTEP
-ZPRSS(:,:,:) = PRSS(:,:,:)-PRST(:,:,:)* ZINVTSTEP
-ZPRGS(:,:,:) = PRGS(:,:,:)-PRGT(:,:,:)* ZINVTSTEP
-IF ( KRR == 7 ) ZPRHS(:,:,:) = PRHS(:,:,:)-PRHT(:,:,:)* ZINVTSTEP
+ZPRRS(:,:) = PRRS(:,1,:)-PRRT(:,1,:)* ZINVTSTEP
+ZPRSS(:,:) = PRSS(:,1,:)-PRST(:,1,:)* ZINVTSTEP
+ZPRGS(:,:) = PRGS(:,1,:)-PRGT(:,1,:)* ZINVTSTEP
+IF ( KRR == 7 ) ZPRHS(:,:) = PRHS(:,1,:)-PRHT(:,1,:)* ZINVTSTEP
 PRRS(:,:,:)  = PRRT(:,:,:)* ZINVTSTEP
 PRSS(:,:,:)  = PRST(:,:,:)* ZINVTSTEP
 PRGS(:,:,:)  = PRGT(:,:,:)* ZINVTSTEP
@@ -1462,48 +1453,48 @@ IF ( KRR == 7 ) PRHS(:,:,:)  = PRHT(:,:,:)* ZINVTSTEP
 !
 DO JN = 1 , KSPLITR
   IF( JN==1 ) THEN
-   IF (OSEDIC) PRCS(:,:,:) = PRCS(:,:,:) + ZPRCS(:,:,:)/KSPLITR
-   PRRS(:,:,:) = PRRS(:,:,:) + ZPRRS(:,:,:)/KSPLITR
-   PRSS(:,:,:) = PRSS(:,:,:) + ZPRSS(:,:,:)/KSPLITR
-   PRGS(:,:,:) = PRGS(:,:,:) + ZPRGS(:,:,:)/KSPLITR
-   IF ( KRR == 7 ) PRHS(:,:,:) = PRHS(:,:,:) + ZPRHS(:,:,:)/KSPLITR
+   IF (OSEDIC) PRCS(:,1,:) = PRCS(:,1,:) + ZPRCS(:,:)/KSPLITR
+   PRRS(:,1,:) = PRRS(:,1,:) + ZPRRS(:,:)/KSPLITR
+   PRSS(:,1,:) = PRSS(:,1,:) + ZPRSS(:,:)/KSPLITR
+   PRGS(:,1,:) = PRGS(:,1,:) + ZPRGS(:,:)/KSPLITR
+   IF ( KRR == 7 ) PRHS(:,1,:) = PRHS(:,1,:) + ZPRHS(:,:)/KSPLITR
   DO JK = D%NKTB , D%NKTE
     DO JI = D%NIB , D%NIE
       ZW(JI,JK) =ZTSPLITR/(PRHODREF(JI,JK)* PDZZ(JI,JK))
     END DO
   END DO
  ELSE
-   IF (OSEDIC) PRCS(:,:,:) = PRCS(:,:,:) + ZPRCS(:,:,:)*ZTSPLITR
-   PRRS(:,:,:) = PRRS(:,:,:) + ZPRRS(:,:,:)*ZTSPLITR
-   PRSS(:,:,:) = PRSS(:,:,:) + ZPRSS(:,:,:)*ZTSPLITR
-   PRGS(:,:,:) = PRGS(:,:,:) + ZPRGS(:,:,:)*ZTSPLITR
-   IF ( KRR == 7 ) PRHS(:,:,:) = PRHS(:,:,:) + ZPRHS(:,:,:)*ZTSPLITR
+   IF (OSEDIC) PRCS(:,1,:) = PRCS(:,1,:) + ZPRCS(:,:)*ZTSPLITR
+   PRRS(:,1,:) = PRRS(:,1,:) + ZPRRS(:,:)*ZTSPLITR
+   PRSS(:,1,:) = PRSS(:,1,:) + ZPRSS(:,:)*ZTSPLITR
+   PRGS(:,1,:) = PRGS(:,1,:) + ZPRGS(:,:)*ZTSPLITR
+   IF ( KRR == 7 ) PRHS(:,1,:) = PRHS(:,1,:) + ZPRHS(:,:)*ZTSPLITR
  END IF
  !
- IF (OSEDIC) GSEDIMC(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                &
-                  PRCS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>ZRTMIN(2)
- GSEDIMR(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                            &
-                  PRRS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>ZRTMIN(3)
- GSEDIMI(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                            &
-                  PRIS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>ZRTMIN(4)
- GSEDIMS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                            &
-                  PRSS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>ZRTMIN(5)
- GSEDIMG(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =                            &
-                  PRGS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>ZRTMIN(6)
- IF ( KRR == 7 ) GSEDIMH(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) =            &
-                  PRHS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>ZRTMIN(7)
+ IF (OSEDIC) GSEDIMC(D%NIB:D%NIE,D%NKTB:D%NKTE) =                &
+                  PRCS(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>ZRTMIN(2)
+ GSEDIMR(D%NIB:D%NIE,D%NKTB:D%NKTE) =                            &
+                  PRRS(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>ZRTMIN(3)
+ GSEDIMI(D%NIB:D%NIE,D%NKTB:D%NKTE) =                            &
+                  PRIS(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>ZRTMIN(4)
+ GSEDIMS(D%NIB:D%NIE,D%NKTB:D%NKTE) =                            &
+                  PRSS(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>ZRTMIN(5)
+ GSEDIMG(D%NIB:D%NIE,D%NKTB:D%NKTE) =                            &
+                  PRGS(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>ZRTMIN(6)
+ IF ( KRR == 7 ) GSEDIMH(D%NIB:D%NIE,D%NKTB:D%NKTE) =            &
+                  PRHS(D%NIB:D%NIE,1,D%NKTB:D%NKTE)>ZRTMIN(7)
 !
- IF (OSEDIC) ISEDIMC = COUNTJV( GSEDIMC(:,:,:),IC1(:),IC2(:),IC3(:))
- ISEDIMR = COUNTJV( GSEDIMR(:,:,:),IR1(:),IR2(:),IR3(:))
- ISEDIMI = COUNTJV( GSEDIMI(:,:,:),II1(:),II2(:),II3(:))
- ISEDIMS = COUNTJV( GSEDIMS(:,:,:),IS1(:),IS2(:),IS3(:))
- ISEDIMG = COUNTJV( GSEDIMG(:,:,:),IG1(:),IG2(:),IG3(:))
- IF ( KRR == 7 ) ISEDIMH = COUNTJV( GSEDIMH(:,:,:),IH1(:),IH2(:),IH3(:))
+ IF (OSEDIC) ISEDIMC = COUNTJV( GSEDIMC(:,:),IC1(:),IC3(:))
+ ISEDIMR = COUNTJV( GSEDIMR(:,:),IR1(:),IR3(:))
+ ISEDIMI = COUNTJV( GSEDIMI(:,:),II1(:),II3(:))
+ ISEDIMS = COUNTJV( GSEDIMS(:,:),IS1(:),IS3(:))
+ ISEDIMG = COUNTJV( GSEDIMG(:,:),IG1(:),IG3(:))
+ IF ( KRR == 7 ) ISEDIMH = COUNTJV( GSEDIMH(:,:),IH1(:),IH3(:))
 !
 !*       2.1   for cloud
 !
  IF (OSEDIC) THEN
-  ZWSED(:,:,:) = 0.
+  ZWSED(:,:) = 0.
   IF( JN==1 ) PRCS(:,:,:) = PRCS(:,:,:) * PTSTEP
   IF( ISEDIMC >= 1 ) THEN
     IF ( ISEDIMC .GT. ILENALLOCC ) THEN
@@ -1547,20 +1538,20 @@ DO JN = 1 , KSPLITR
             ZZT(JL)    = ZZT(JL) * (ZPRES(JL)/XP00)**(XRD/XCPD)
             ZWLBDA(JL) = 6.6E-8*(101325./ZPRES(JL))*(ZZT(JL)/293.15)
             ZCC(JL)    = XCC*(1.+1.26*ZWLBDA(JL)/ZRAY1D(JL)) !! XCC modified for cloud
-            ZWSED (IC1(JL),IC2(JL),IC3(JL))= ZRHODREFC(JL)**(-XCEXVT +1 ) *   &
+            ZWSED (IC1(JL),IC3(JL))= ZRHODREFC(JL)**(-XCEXVT +1 ) *   &
               ZWLBDC(JL)**(-XDC)*ZCC(JL)*ZFSEDC1D(JL) * ZRCS(JL)
           END IF
        END DO
   END IF
        DO JK = D%NKTB , D%NKTE
-         PRCS(:,1,JK) = PRCS(:,1,JK) + ZW(:,JK)*(ZWSED(:,1,JK+KKL)-ZWSED(:,1,JK))
+         PRCS(:,1,JK) = PRCS(:,1,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
        END DO
        IF (PRESENT(PFPR)) THEN
          DO JK = D%NKTB , D%NKTE
-           PFPR(:,:,JK,2)=ZWSED(:,:,JK)
+           PFPR(:,1,JK,2)=ZWSED(:,JK)
          ENDDO
        ENDIF
-      PINPRC(:,:) = PINPRC(:,:) + ZWSED(:,:,IKB) / XRHOLW / KSPLITR
+      PINPRC(:,1) = PINPRC(:,1) + ZWSED(:,IKB) / XRHOLW / KSPLITR
       IF( JN==KSPLITR ) THEN
         PRCS(:,:,:) = PRCS(:,:,:) * ZINVTSTEP
       END IF
@@ -1569,7 +1560,7 @@ DO JN = 1 , KSPLITR
 !*       2.2   for rain
 !
   IF( JN==1 ) PRRS(:,:,:) = PRRS(:,:,:) * PTSTEP
-  ZWSED(:,:,:) = 0.
+  ZWSED(:,:) = 0.
   IF( ISEDIMR >= 1 ) THEN
     IF ( ISEDIMR .GT. ILENALLOCR ) THEN
       IF ( ILENALLOCR .GT. 0 ) THEN
@@ -1594,19 +1585,19 @@ DO JN = 1 , KSPLITR
     END DO
        DO JJ = 1, ILISTLENR
           JL = ILISTR(JJ)
-           ZWSED (IR1(JL),IR2(JL),IR3(JL))= XFSEDR  * ZRRS(JL)**XEXSEDR *   &
+           ZWSED (IR1(JL),IR3(JL))= XFSEDR  * ZRRS(JL)**XEXSEDR *   &
                                         ZRHODREFR(JL)**(XEXSEDR-XCEXVT)
        END DO
   END IF
        DO JK = D%NKTB , D%NKTE
-         PRRS(:,1,JK) = PRRS(:,1,JK) + ZW(:,JK)*(ZWSED(:,1,JK+KKL)-ZWSED(:,1,JK))
+         PRRS(:,1,JK) = PRRS(:,1,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
        END DO
        IF (PRESENT(PFPR)) THEN
          DO JK = D%NKTB , D%NKTE
-           PFPR(:,:,JK,3)=ZWSED(:,:,JK)
+           PFPR(:,1,JK,3)=ZWSED(:,JK)
          ENDDO
        ENDIF
-       PINPRR(:,:) = PINPRR(:,:) + ZWSED(:,:,IKB)/XRHOLW/KSPLITR
+       PINPRR(:,1) = PINPRR(:,1) + ZWSED(:,IKB)/XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
         PRRS(:,:,:) = PRRS(:,:,:) * ZINVTSTEP
       END IF
@@ -1614,7 +1605,7 @@ DO JN = 1 , KSPLITR
 !*       2.3   for pristine ice
 !
   IF( JN==1 ) PRIS(:,:,:) = PRIS(:,:,:) * PTSTEP
-  ZWSED(:,:,:) = 0.
+  ZWSED(:,:) = 0.
   IF( ISEDIMI >= 1 ) THEN
     IF ( ISEDIMI .GT. ILENALLOCI ) THEN
       IF ( ILENALLOCI .GT. 0 ) THEN
@@ -1639,18 +1630,18 @@ DO JN = 1 , KSPLITR
     END DO
        DO JJ = 1, ILISTLENI
           JL = ILISTI(JJ)
-              ZWSED (II1(JL),II2(JL),II3(JL))= XFSEDI * ZRIS(JL) *  &
+              ZWSED (II1(JL),II3(JL))= XFSEDI * ZRIS(JL) *  &
                                ZRHODREFI(JL)**(1.0-XCEXVT) * & !    McF&H
                                MAX( 0.05E6,-0.15319E6-0.021454E6* &
                                ALOG(ZRHODREFI(JL)*ZRIS(JL)) )**XEXCSEDI
        END DO
   END IF
        DO JK = D%NKTB , D%NKTE
-         PRIS(:,1,JK) = PRIS(:,1,JK) + ZW(:,JK)*(ZWSED(:,1,JK+KKL)-ZWSED(:,1,JK))
+         PRIS(:,1,JK) = PRIS(:,1,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
        END DO
        IF (PRESENT(PFPR)) THEN
          DO JK = D%NKTB , D%NKTE
-           PFPR(:,:,JK,4)=ZWSED(:,:,JK)
+           PFPR(:,1,JK,4)=ZWSED(:,JK)
          ENDDO
        ENDIF
       IF( JN==KSPLITR ) THEN
@@ -1660,7 +1651,7 @@ DO JN = 1 , KSPLITR
 !*       2.4   for aggregates/snow
 !
   IF( JN==1 ) PRSS(:,:,:) = PRSS(:,:,:) * PTSTEP
-  ZWSED(:,:,:) = 0.
+  ZWSED(:,:) = 0.
   IF( ISEDIMS >= 1 ) THEN
     IF ( ISEDIMS .GT. ILENALLOCS ) THEN
       IF ( ILENALLOCS .GT. 0 ) THEN
@@ -1685,26 +1676,26 @@ DO JN = 1 , KSPLITR
     END DO
        DO JJ = 1, ILISTLENS
           JL = ILISTS(JJ)
-             ZWSED (IS1(JL),IS2(JL),IS3(JL))= XFSEDS * ZRSS(JL)**XEXSEDS *  &
+             ZWSED (IS1(JL),IS3(JL))= XFSEDS * ZRSS(JL)**XEXSEDS *  &
                                         ZRHODREFS(JL)**(XEXSEDS-XCEXVT)
        END DO
   END IF
        DO JK = D%NKTB , D%NKTE
-         PRSS(:,1,JK) = PRSS(:,1,JK) + ZW(:,JK)*(ZWSED(:,1,JK+KKL)-ZWSED(:,1,JK))
+         PRSS(:,1,JK) = PRSS(:,1,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
        END DO
        IF (PRESENT(PFPR)) THEN
          DO JK = D%NKTB , D%NKTE
-           PFPR(:,:,JK,5)=ZWSED(:,:,JK)
+           PFPR(:,1,JK,5)=ZWSED(:,JK)
          ENDDO
        ENDIF
-PINPRS(:,:) = PINPRS(:,:) + ZWSED(:,:,IKB)/XRHOLW/KSPLITR
+      PINPRS(:,1) = PINPRS(:,1) + ZWSED(:,IKB)/XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
         PRSS(:,:,:) = PRSS(:,:,:) * ZINVTSTEP
       END IF
 !
 !*       2.5   for graupeln
 !
-  ZWSED(:,:,:) = 0.
+  ZWSED(:,:) = 0.
   IF( JN==1 ) PRGS(:,:,:) = PRGS(:,:,:) * PTSTEP
   IF( ISEDIMG >= 1 ) THEN
     IF ( ISEDIMG .GT. ILENALLOCG ) THEN
@@ -1730,19 +1721,19 @@ PINPRS(:,:) = PINPRS(:,:) + ZWSED(:,:,IKB)/XRHOLW/KSPLITR
     END DO
        DO JJ = 1, ILISTLENG
           JL = ILISTG(JJ)
-             ZWSED (IG1(JL),IG2(JL),IG3(JL))= XFSEDG  * ZRGS(JL)**XEXSEDG *   &
+             ZWSED (IG1(JL),IG3(JL))= XFSEDG  * ZRGS(JL)**XEXSEDG *   &
                                         ZRHODREFG(JL)**(XEXSEDG-XCEXVT)
        END DO
 END IF
        DO JK = D%NKTB , D%NKTE
-         PRGS(:,1,JK) = PRGS(:,1,JK) + ZW(:,JK)*(ZWSED(:,1,JK+KKL)-ZWSED(:,1,JK))
+         PRGS(:,1,JK) = PRGS(:,1,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
        END DO
        IF (PRESENT(PFPR)) THEN
          DO JK = D%NKTB , D%NKTE
-           PFPR(:,:,JK,6)=ZWSED(:,:,JK)
+           PFPR(:,1,JK,6)=ZWSED(:,JK)
          ENDDO
        ENDIF
-       PINPRG(:,:) = PINPRG(:,:) + ZWSED(:,:,IKB)/XRHOLW/KSPLITR
+       PINPRG(:,1) = PINPRG(:,1) + ZWSED(:,IKB)/XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
         PRGS(:,:,:) = PRGS(:,:,:) * ZINVTSTEP
       END IF
@@ -1751,7 +1742,7 @@ END IF
 !
  IF ( KRR == 7 ) THEN
   IF( JN==1 ) PRHS(:,:,:) = PRHS(:,:,:) * PTSTEP
-  ZWSED(:,:,:) = 0.
+  ZWSED(:,:) = 0.
   IF( ISEDIMH >= 1 ) THEN
     IF ( ISEDIMH .GT. ILENALLOCH ) THEN
       IF ( ILENALLOCH .GT. 0 ) THEN
@@ -1776,19 +1767,19 @@ END IF
     END DO
        DO JJ = 1, ILISTLENH
           JL = ILISTH(JJ)
-             ZWSED (IH1(JL),IH2(JL),IH3(JL))= XFSEDH  * ZRHS(JL)**XEXSEDH *   &
+             ZWSED (IH1(JL),IH3(JL))= XFSEDH  * ZRHS(JL)**XEXSEDH *   &
                                         ZRHODREFH(JL)**(XEXSEDH-XCEXVT)
        END DO
   END IF
        DO JK = D%NKTB , D%NKTE
-         PRHS(:,1,JK) = PRHS(:,1,JK) + ZW(:,JK)*(ZWSED(:,1,JK+KKL)-ZWSED(:,1,JK))
+         PRHS(:,1,JK) = PRHS(:,1,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
        END DO
        IF (PRESENT(PFPR)) THEN
          DO JK = D%NKTB , D%NKTE
-           PFPR(:,:,JK,7)=ZWSED(:,:,JK)
+           PFPR(:,1,JK,7)=ZWSED(:,JK)
          ENDDO
        ENDIF
-       PINPRH(:,:) = PINPRH(:,:) + ZWSED(:,:,IKB)/XRHOLW/KSPLITR
+       PINPRH(1,:) = PINPRH(1,:) + ZWSED(:,IKB)/XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
         PRHS(:,:,:) = PRHS(:,:,:) * ZINVTSTEP
       END IF
@@ -1856,29 +1847,29 @@ IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_SEDIMENTATION_STAT',0,ZHOOK_HANDL
 ZRTMIN(:)    = XRTMIN(:) * ZINVTSTEP
 !
 IF (OSEDIC) THEN
-  ZPRCS(:,:,:) = 0.0
-  ZPRCS(:,:,:) = PRCS(:,:,:)-PRCT(:,:,:)* ZINVTSTEP
+  ZPRCS(:,:) = 0.0
+  ZPRCS(:,:) = PRCS(:,1,:)-PRCT(:,1,:)* ZINVTSTEP
   PRCS(:,:,:)  = PRCT(:,:,:)* ZINVTSTEP
 END IF
-ZPRRS(:,:,:) = 0.0
-ZPRSS(:,:,:) = 0.0
-ZPRGS(:,:,:) = 0.0
-IF ( KRR == 7 ) ZPRHS(:,:,:) = 0.0
+ZPRRS(:,:) = 0.0
+ZPRSS(:,:) = 0.0
+ZPRGS(:,:) = 0.0
+IF ( KRR == 7 ) ZPRHS(:,:) = 0.0
 !
-ZPRRS(:,:,:) = PRRS(:,:,:)-PRRT(:,:,:)* ZINVTSTEP
-ZPRSS(:,:,:) = PRSS(:,:,:)-PRST(:,:,:)* ZINVTSTEP
-ZPRGS(:,:,:) = PRGS(:,:,:)-PRGT(:,:,:)* ZINVTSTEP
-IF ( KRR == 7 ) ZPRHS(:,:,:) = PRHS(:,:,:)-PRHT(:,:,:)* ZINVTSTEP
+ZPRRS(:,:) = PRRS(:,1,:)-PRRT(:,1,:)* ZINVTSTEP
+ZPRSS(:,:) = PRSS(:,1,:)-PRST(:,1,:)* ZINVTSTEP
+ZPRGS(:,:) = PRGS(:,1,:)-PRGT(:,1,:)* ZINVTSTEP
+IF ( KRR == 7 ) ZPRHS(:,:) = PRHS(:,1,:)-PRHT(:,1,:)* ZINVTSTEP
 PRRS(:,:,:)  = PRRT(:,:,:)* ZINVTSTEP
 PRSS(:,:,:)  = PRST(:,:,:)* ZINVTSTEP
 PRGS(:,:,:)  = PRGT(:,:,:)* ZINVTSTEP
 IF ( KRR == 7 ) PRHS(:,:,:)  = PRHT(:,:,:)* ZINVTSTEP
 !
-IF (OSEDIC) PRCS(:,:,:) = PRCS(:,:,:) + ZPRCS(:,:,:)
-PRRS(:,:,:) = PRRS(:,:,:) + ZPRRS(:,:,:)
-PRSS(:,:,:) = PRSS(:,:,:) + ZPRSS(:,:,:)
-PRGS(:,:,:) = PRGS(:,:,:) + ZPRGS(:,:,:)
-IF ( KRR == 7 ) PRHS(:,:,:) = PRHS(:,:,:) + ZPRHS(:,:,:)
+IF (OSEDIC) PRCS(:,1,:) = PRCS(:,1,:) + ZPRCS(:,:)
+PRRS(:,1,:) = PRRS(:,1,:) + ZPRRS(:,:)
+PRSS(:,1,:) = PRSS(:,1,:) + ZPRSS(:,:)
+PRGS(:,1,:) = PRGS(:,1,:) + ZPRGS(:,:)
+IF ( KRR == 7 ) PRHS(:,1,:) = PRHS(:,1,:) + ZPRHS(:,:)
 DO JK = D%NKTB , D%NKTE
   DO JI = D%NIB , D%NIE
     ZW(JI,JK) =PTSTEP/(PRHODREF(JI,JK)* PDZZ(JI,JK) )
@@ -1890,15 +1881,15 @@ END DO
 !
  IF (OSEDIC) THEN
      PRCS(:,:,:) = PRCS(:,:,:) * PTSTEP
-     ZWSED(:,:,:) = 0.
-     ZWSEDW1(:,:,:) = 0.
-     ZWSEDW2(:,:,:) = 0.
+     ZWSED(:,:) = 0.
+     ZWSEDW1(:,:) = 0.
+     ZWSEDW2(:,:) = 0.
 
 ! calculation of P1, P2 and sedimentation flux
     DO JK = IKE , IKB, -1*KKL
        !estimation of q' taking into account incomming ZWSED
       DO JI = D%NIB , D%NIE
-        ZQP(JI,1)=ZWSED(JI,1,JK+KKL)*ZW(JI,JK)
+        ZQP(JI,1)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
       END DO
 
        JCOUNT=COUNTJV2((PRCS(:,:,JK) > ZRTMIN(2) .AND. PRCT(:,:,JK) > ZRTMIN(2)) .OR. &
@@ -1914,7 +1905,7 @@ END DO
            ZZWLBDC=(ZLBC(JI,JK)*ZCONC3D(JI,JK)  &
                 &/(PRHODREF(JI,JK)*PRCT(JI,JJ,JK)))**XLBEXC
            ZZCC=XCC*(1.+1.26*ZZWLBDA*ZZWLBDC/ZRAY(JI,JK)) !! ZCC  : Fall speed
-           ZWSEDW1 (JI,JJ,JK)=PRHODREF(JI,JK)**(-XCEXVT ) *   &
+           ZWSEDW1 (JI,JK)=PRHODREF(JI,JK)**(-XCEXVT ) *   &
              &  ZZWLBDC**(-XDC)*ZZCC*ZFSEDC(JI,JK)
          ENDIF
          IF ( ZQP(JI,JJ) > ZRTMIN(2) ) THEN
@@ -1922,7 +1913,7 @@ END DO
            ZZWLBDC=(ZLBC(JI,JK)*ZCONC3D(JI,JK)  &
                 &/(PRHODREF(JI,JK)*ZQP(JI,JJ)))**XLBEXC
            ZZCC=XCC*(1.+1.26*ZZWLBDA*ZZWLBDC/ZRAY(JI,JK)) !! ZCC  : Fall speed
-           ZWSEDW2 (JI,JJ,JK)=PRHODREF(JI,JK)**(-XCEXVT ) *   &
+           ZWSEDW2 (JI,JK)=PRHODREF(JI,JK)**(-XCEXVT ) *   &
              &  ZZWLBDC**(-XDC)*ZZCC*ZFSEDC(JI,JK)
          ENDIF
        ENDDO
@@ -1930,32 +1921,32 @@ END DO
        DO JJ = D%NJB, D%NJE
          DO JI = D%NIB, D%NIE
            ZH=PDZZ(JI,JK)
-           ZP1 = MIN(1., ZWSEDW1(JI,JJ,JK) * PTSTEP / ZH)
+           ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH)
            ! mars 2009 : correction : ZWSEDW1 =>  ZWSEDW2
            !IF (ZWSEDW1(JI,JJ,JK) /= 0.) THEN
-           IF (ZWSEDW2(JI,JJ,JK) /= 0.) THEN
+           IF (ZWSEDW2(JI,JK) /= 0.) THEN
              ZP2 = MAX(0.,1 -  ZH &
-           &  / (PTSTEP*ZWSEDW2(JI,JJ,JK)) )
+           &  / (PTSTEP*ZWSEDW2(JI,JK)) )
            ELSE
              ZP2 = 0.
            ENDIF
-           ZWSED (JI,JJ,JK)=ZP1*PRHODREF(JI,JK)*&
+           ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
            &ZH*PRCS(JI,JJ,JK)&
-           &* ZINVTSTEP+ ZP2 * ZWSED (JI,JJ,JK+KKL)
+           &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
          ENDDO
        ENDDO
      ENDDO
 
      DO JK = D%NKTB , D%NKTE
-       PRCS(:,1,JK) = PRCS(:,1,JK) + ZW(:,JK)*(ZWSED(:,1,JK+KKL)-ZWSED(:,1,JK))
+       PRCS(:,1,JK) = PRCS(:,1,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
      END DO
      IF (PRESENT(PFPR)) THEN
        DO JK = D%NKTB , D%NKTE
-         PFPR(:,:,JK,2)=ZWSED(:,:,JK)
+         PFPR(:,1,JK,2)=ZWSED(:,JK)
        ENDDO
      ENDIF
 
-     PINPRC(:,:) = ZWSED(:,:,IKB)/XRHOLW                        ! in m/s
+     PINPRC(:,1) = ZWSED(:,IKB)/XRHOLW                        ! in m/s
      PRCS(:,:,:) = PRCS(:,:,:) * ZINVTSTEP
  ENDIF
 
@@ -1964,15 +1955,15 @@ END DO
 !
 
    PRRS(:,:,:) = PRRS(:,:,:) * PTSTEP
-   ZWSED(:,:,:) = 0.
-   ZWSEDW1(:,:,:) = 0.
-   ZWSEDW2(:,:,:) = 0.
+   ZWSED(:,:) = 0.
+   ZWSEDW1(:,:) = 0.
+   ZWSEDW2(:,:) = 0.
 
 ! calculation of ZP1, ZP2 and sedimentation flux
   DO JK = IKE , IKB, -1*KKL
     !estimation of q' taking into account incomming ZWSED
     DO JI = D%NIB, D%NIE
-      ZQP(JI,1)=ZWSED(JI,1,JK+KKL)*ZW(JI,JK)
+      ZQP(JI,1)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
     END DO
 
      JCOUNT=COUNTJV2((PRRS(:,:,JK) > ZRTMIN(3)) .OR. &
@@ -1982,42 +1973,42 @@ END DO
       JJ=I2(JL)
       !calculation of w
       IF ( PRRS(JI,JJ,JK) > ZRTMIN(3) ) THEN
-        ZWSEDW1 (JI,JJ,JK)= XFSEDR *PRRS(JI,JJ,JK)**(XEXSEDR-1)* &
+        ZWSEDW1 (JI,JK)= XFSEDR *PRRS(JI,JJ,JK)**(XEXSEDR-1)* &
         PRHODREF(JI,JK)**(XEXSEDR-XCEXVT-1)
       ENDIF
       IF ( ZQP(JI,JJ) > ZRTMIN(3) ) THEN
-        ZWSEDW2 (JI,JJ,JK)= XFSEDR *(ZQP(JI,JJ))**(XEXSEDR-1)* &
+        ZWSEDW2 (JI,JK)= XFSEDR *(ZQP(JI,JJ))**(XEXSEDR-1)* &
         PRHODREF(JI,JK)**(XEXSEDR-XCEXVT-1)
       ENDIF
     ENDDO
     DO JJ = D%NJB, D%NJE
       DO JI = D%NIB, D%NIE
         ZH=PDZZ(JI,JK)
-        ZP1 = MIN(1., ZWSEDW1(JI,JJ,JK) * PTSTEP / ZH )
-        IF (ZWSEDW2(JI,JJ,JK) /= 0.) THEN
+        ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
+        IF (ZWSEDW2(JI,JK) /= 0.) THEN
           ZP2 = MAX(0.,1 -  ZH &
-        & / (PTSTEP*ZWSEDW2(JI,JJ,JK)) )
+        & / (PTSTEP*ZWSEDW2(JI,JK)) )
         ELSE
           ZP2 = 0.
         ENDIF
-        ZWSED (JI,JJ,JK)=ZP1*PRHODREF(JI,JK)*&
+        ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
         &ZH*PRRS(JI,JJ,JK)&
-        &* ZINVTSTEP+ ZP2 * ZWSED (JI,JJ,JK+KKL)
+        &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
       ENDDO
     ENDDO
   ENDDO
 
   DO JK = D%NKTB , D%NKTE
     DO JI = D%NIB, D%NIE
-      PRRS(:,1,JK) = PRRS(:,1,JK) + ZW(:,JK)*(ZWSED(:,1,JK+KKL)-ZWSED(:,1,JK))
+      PRRS(:,1,JK) = PRRS(:,1,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
     ENDDO
   ENDDO
    IF (PRESENT(PFPR)) THEN
      DO JK = D%NKTB , D%NKTE
-       PFPR(:,:,JK,3)=ZWSED(:,:,JK)
+       PFPR(:,1,JK,3)=ZWSED(:,JK)
      ENDDO
    ENDIF
-   PINPRR(:,:) = ZWSED(:,:,IKB)/XRHOLW                        ! in m/s
+   PINPRR(:,1) = ZWSED(:,IKB)/XRHOLW                        ! in m/s
    PRRS(:,:,:) = PRRS(:,:,:) * ZINVTSTEP
 
 !
@@ -2025,14 +2016,14 @@ END DO
 !
 
    PRIS(:,:,:) = PRIS(:,:,:) * PTSTEP
-   ZWSED(:,:,:) = 0.
-   ZWSEDW1(:,:,:) = 0.
-   ZWSEDW2(:,:,:) = 0.
+   ZWSED(:,:) = 0.
+   ZWSEDW1(:,:) = 0.
+   ZWSEDW2(:,:) = 0.
 ! calculation of ZP1, ZP2 and sedimentation flux
   DO JK = IKE , IKB, -1*KKL
     !estimation of q' taking into account incomming ZWSED
     DO JI = D%NIB, D%NIE
-      ZQP(JI,1)=ZWSED(JI,1,JK+KKL)*ZW(JI,JK)
+      ZQP(JI,1)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
     ENDDO
 
      JCOUNT=COUNTJV2((PRIS(:,:,JK) > MAX(ZRTMIN(4),1.0E-7 )) .OR. &
@@ -2042,13 +2033,13 @@ END DO
        JJ=I2(JL)
        !calculation of w
        IF ( PRIS(JI,JJ,JK) > MAX(ZRTMIN(4),1.0E-7 ) ) THEN
-         ZWSEDW1 (JI,JJ,JK)= XFSEDI *  &
+         ZWSEDW1 (JI,JK)= XFSEDI *  &
          &  PRHODREF(JI,JK)**(XCEXVT) * & !    McF&H
          &  MAX( 0.05E6,-0.15319E6-0.021454E6* &
          &  ALOG(PRHODREF(JI,JK)*PRIS(JI,JJ,JK)) )**XEXCSEDI
        ENDIF
        IF ( ZQP(JI,JJ) > MAX(ZRTMIN(4),1.0E-7 ) ) THEN
-         ZWSEDW2 (JI,JJ,JK)= XFSEDI *  &
+         ZWSEDW2 (JI,JK)= XFSEDI *  &
          &  PRHODREF(JI,JK)**(XCEXVT) * & !    McF&H
          &  MAX( 0.05E6,-0.15319E6-0.021454E6* &
          &  ALOG(PRHODREF(JI,JK)*ZQP(JI,JJ)) )**XEXCSEDI
@@ -2057,47 +2048,47 @@ END DO
      DO JJ = D%NJB, D%NJE
        DO JI = D%NIB, D%NIE
          ZH=PDZZ(JI,JK)
-         ZP1 = MIN(1., ZWSEDW1(JI,JJ,JK) * PTSTEP / ZH )
-         IF (ZWSEDW2(JI,JJ,JK) /= 0.) THEN
+         ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
+         IF (ZWSEDW2(JI,JK) /= 0.) THEN
            ZP2 = MAX(0.,1 - ZH  &
-           &  / (PTSTEP*ZWSEDW2(JI,JJ,JK)) )
+           &  / (PTSTEP*ZWSEDW2(JI,JK)) )
          ELSE
            ZP2 = 0.
          ENDIF
-         ZWSED (JI,JJ,JK)=ZP1*PRHODREF(JI,JK)*&
+         ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
          &ZH*PRIS(JI,JJ,JK)&
-         &* ZINVTSTEP+ ZP2 * ZWSED (JI,JJ,JK+KKL)
+         &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
        ENDDO
      ENDDO
    ENDDO
 
    DO JK = D%NKTB , D%NKTE
-     PRIS(:,1,JK) = PRIS(:,1,JK) + ZW(:,JK)*(ZWSED(:,1,JK+KKL)-ZWSED(:,1,JK))
+     PRIS(:,1,JK) = PRIS(:,1,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
    ENDDO
    IF (PRESENT(PFPR)) THEN
      DO JK = D%NKTB , D%NKTE
-       PFPR(:,:,JK,4)=ZWSED(:,:,JK)
+       PFPR(:,1,JK,4)=ZWSED(:,JK)
      ENDDO
    ENDIF
 
    PRIS(:,:,:) = PRIS(:,:,:) * ZINVTSTEP
 
 
-   PINPRS(:,:) = ZWSED(:,:,IKB)/XRHOLW
+   PINPRS(:,1) = ZWSED(:,IKB)/XRHOLW
 
 !
 !*       2.4   for aggregates/snow
 !
 
    PRSS(:,:,:) = PRSS(:,:,:) * PTSTEP
-   ZWSED(:,:,:) = 0.
-   ZWSEDW1(:,:,:) = 0.
-   ZWSEDW2(:,:,:) = 0.
+   ZWSED(:,:) = 0.
+   ZWSEDW1(:,:) = 0.
+   ZWSEDW2(:,:) = 0.
 
 ! calculation of ZP1, ZP2 and sedimentation flux
    DO JK = IKE , IKB, -1*KKL
      !estimation of q' taking into account incomming ZWSED
-     ZQP(:,1)=ZWSED(:,1,JK+KKL)*ZW(:,JK)
+     ZQP(:,1)=ZWSED(:,JK+KKL)*ZW(:,JK)
 
      JCOUNT=COUNTJV2((PRSS(:,:,JK) > ZRTMIN(5)) .OR. &
                      (ZQP(:,:) > ZRTMIN(5)),I1(:),I2(:))
@@ -2106,41 +2097,41 @@ END DO
        JJ=I2(JL)
        !calculation of w
        IF (PRSS(JI,JJ,JK) > ZRTMIN(5) ) THEN
-         ZWSEDW1(JI,JJ,JK)=XFSEDS*(PRSS(JI,JJ,JK))**(XEXSEDS-1)*&
+         ZWSEDW1(JI,JK)=XFSEDS*(PRSS(JI,JJ,JK))**(XEXSEDS-1)*&
          PRHODREF(JI,JK)**(XEXSEDS-XCEXVT-1)
        ENDIF
        IF ( ZQP(JI,JJ) > ZRTMIN(5) ) THEN
-         ZWSEDW2(JI,JJ,JK)=XFSEDS*(ZQP(JI,JJ))**(XEXSEDS-1)*&
+         ZWSEDW2(JI,JK)=XFSEDS*(ZQP(JI,JJ))**(XEXSEDS-1)*&
          PRHODREF(JI,JK)**(XEXSEDS-XCEXVT-1)
        ENDIF
      ENDDO
      DO JJ = D%NJB, D%NJE
        DO JI = D%NIB, D%NIE
          ZH=PDZZ(JI,JK)
-         ZP1 = MIN(1., ZWSEDW1(JI,JJ,JK) * PTSTEP / ZH )
-         IF (ZWSEDW2(JI,JJ,JK) /= 0.) THEN
+         ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
+         IF (ZWSEDW2(JI,JK) /= 0.) THEN
            ZP2 = MAX(0.,1 - ZH&
-          / (PTSTEP*ZWSEDW2(JI,JJ,JK)) )
+          / (PTSTEP*ZWSEDW2(JI,JK)) )
          ELSE
            ZP2 = 0.
          ENDIF
-         ZWSED (JI,JJ,JK)=ZP1*PRHODREF(JI,JK)*&
+         ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
          &ZH*PRSS(JI,JJ,JK)&
-         &* ZINVTSTEP+ ZP2 * ZWSED (JI,JJ,JK+KKL)
+         &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
        ENDDO
      ENDDO
    ENDDO
 
    DO JK = D%NKTB , D%NKTE
-     PRSS(:,1,JK) = PRSS(:,1,JK) + ZW(:,JK)*(ZWSED(:,1,JK+KKL)-ZWSED(:,1,JK))
+     PRSS(:,1,JK) = PRSS(:,1,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
    ENDDO
    IF (PRESENT(PFPR)) THEN
      DO JK = D%NKTB , D%NKTE
-       PFPR(:,:,JK,5)=ZWSED(:,:,JK)
+       PFPR(:,1,JK,5)=ZWSED(:,JK)
      ENDDO
    ENDIF
 
-   PINPRS(:,:) = ZWSED(:,:,IKB)/XRHOLW    +  PINPRS(:,:)    ! in m/s (add ice fall)
+   PINPRS(:,1) = ZWSED(:,IKB)/XRHOLW    +  PINPRS(:,1)    ! in m/s (add ice fall)
 
    PRSS(:,:,:) = PRSS(:,:,:) * ZINVTSTEP
 
@@ -2150,14 +2141,14 @@ END DO
 !
 
    PRGS(:,:,:) = PRGS(:,:,:) * PTSTEP
-   ZWSED(:,:,:) = 0.
-   ZWSEDW1(:,:,:) = 0.
-   ZWSEDW2(:,:,:) = 0.
+   ZWSED(:,:) = 0.
+   ZWSEDW1(:,:) = 0.
+   ZWSEDW2(:,:) = 0.
 
 ! calculation of ZP1, ZP2 and sedimentation flux
    DO JK = IKE,  IKB, -1*KKL
      !estimation of q' taking into account incomming ZWSED
-     ZQP(:,1)=ZWSED(:,1,JK+KKL)*ZW(:,JK)
+     ZQP(:,1)=ZWSED(:,JK+KKL)*ZW(:,JK)
 
      JCOUNT=COUNTJV2((PRGS(:,:,JK) > ZRTMIN(6)) .OR. &
                      (ZQP(:,:) > ZRTMIN(6)),I1(:),I2(:))
@@ -2166,41 +2157,41 @@ END DO
        JJ=I2(JL)
        !calculation of w
        IF ( PRGS(JI,JJ,JK) > ZRTMIN(6) ) THEN
-         ZWSEDW1 (JI,JJ,JK)= XFSEDG*(PRGS(JI,JJ,JK))**(XEXSEDG-1) * &
+         ZWSEDW1 (JI,JK)= XFSEDG*(PRGS(JI,JJ,JK))**(XEXSEDG-1) * &
                                   PRHODREF(JI,JK)**(XEXSEDG-XCEXVT-1)
        ENDIF
        IF ( ZQP(JI,JJ) > ZRTMIN(6) ) THEN
-         ZWSEDW2 (JI,JJ,JK)= XFSEDG*(ZQP(JI,JJ))**(XEXSEDG-1) * &
+         ZWSEDW2 (JI,JK)= XFSEDG*(ZQP(JI,JJ))**(XEXSEDG-1) * &
                                   PRHODREF(JI,JK)**(XEXSEDG-XCEXVT-1)
        ENDIF
      ENDDO
      DO JJ = D%NJB, D%NJE
        DO JI = D%NIB, D%NIE
          ZH=PDZZ(JI,JK)
-         ZP1 = MIN(1., ZWSEDW1(JI,JJ,JK) * PTSTEP / ZH )
-         IF (ZWSEDW2(JI,JJ,JK) /= 0.) THEN
+         ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
+         IF (ZWSEDW2(JI,JK) /= 0.) THEN
            ZP2 = MAX(0.,1 - ZH &
-         & / (PTSTEP*ZWSEDW2(JI,JJ,JK)) )
+         & / (PTSTEP*ZWSEDW2(JI,JK)) )
          ELSE
            ZP2 = 0.
          ENDIF
-         ZWSED (JI,JJ,JK)=ZP1*PRHODREF(JI,JK)*&
+         ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
          &ZH*PRGS(JI,JJ,JK)&
-         &* ZINVTSTEP+ ZP2 * ZWSED (JI,JJ,JK+KKL)
+         &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
        ENDDO
      ENDDO
    ENDDO
 
    DO JK = D%NKTB , D%NKTE
-         PRGS(:,1,JK) = PRGS(:,1,JK) + ZW(:,JK)*(ZWSED(:,1,JK+KKL)-ZWSED(:,1,JK))
+         PRGS(:,1,JK) = PRGS(:,1,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
    ENDDO
    IF (PRESENT(PFPR)) THEN
      DO JK = D%NKTB , D%NKTE
-       PFPR(:,:,JK,6)=ZWSED(:,:,JK)
+       PFPR(:,1,JK,6)=ZWSED(:,JK)
      ENDDO
    ENDIF
 
-   PINPRG(:,:) = ZWSED(:,:,IKB)/XRHOLW                        ! in m/s
+   PINPRG(:,1) = ZWSED(:,IKB)/XRHOLW                        ! in m/s
 
    PRGS(:,:,:) = PRGS(:,:,:) * ZINVTSTEP
 
@@ -2209,13 +2200,13 @@ END DO
 !
  IF ( KRR == 7 ) THEN
      PRHS(:,:,:) = PRHS(:,:,:) * PTSTEP
-     ZWSED(:,:,:) = 0.
-     ZWSEDW1(:,:,:) = 0.
-     ZWSEDW2(:,:,:) = 0.
+     ZWSED(:,:) = 0.
+     ZWSEDW1(:,:) = 0.
+     ZWSEDW2(:,:) = 0.
 ! calculation of ZP1, ZP2 and sedimentation flux
      DO JK = IKE , IKB, -1*KKL
      !estimation of q' taking into account incomming ZWSED
-     ZQP(:,1)=ZWSED(:,1,JK+KKL)*ZW(:,JK)
+     ZQP(:,1)=ZWSED(:,JK+KKL)*ZW(:,JK)
 
      JCOUNT=COUNTJV2((PRHS(:,:,JK)+ZQP(:,:) > ZRTMIN(7)) .OR. &
                      (ZQP(:,:) > ZRTMIN(7)),I1(:),I2(:))
@@ -2224,41 +2215,41 @@ END DO
        JJ=I2(JL)
          !calculation of w
          IF ((PRHS(JI,JJ,JK)+ZQP(JI,JJ)) > ZRTMIN(7) ) THEN
-           ZWSEDW1 (JI,JJ,JK)= XFSEDH  * (PRHS(JI,JJ,JK))**(XEXSEDH-1) *   &
+           ZWSEDW1 (JI,JK)= XFSEDH  * (PRHS(JI,JJ,JK))**(XEXSEDH-1) *   &
                                     PRHODREF(JI,JK)**(XEXSEDH-XCEXVT-1)
          ENDIF
          IF ( ZQP(JI,JJ) > ZRTMIN(7) ) THEN
-           ZWSEDW2 (JI,JJ,JK)= XFSEDH  * ZQP(JI,JJ)**(XEXSEDH-1) *   &
+           ZWSEDW2 (JI,JK)= XFSEDH  * ZQP(JI,JJ)**(XEXSEDH-1) *   &
                                     PRHODREF(JI,JK)**(XEXSEDH-XCEXVT-1)
          ENDIF
        ENDDO
        DO JJ = D%NJB, D%NJE
          DO JI = D%NIB, D%NIE
            ZH=PDZZ(JI,JK)
-           ZP1 = MIN(1., ZWSEDW1(JI,JJ,JK) * PTSTEP / ZH)
-           IF (ZWSEDW2(JI,JJ,JK) /= 0.) THEN
+           ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH)
+           IF (ZWSEDW2(JI,JK) /= 0.) THEN
              ZP2 = MAX(0.,1 - ZH &
-           &  / (PTSTEP*ZWSEDW2(JI,JJ,JK)) )
+           &  / (PTSTEP*ZWSEDW2(JI,JK)) )
            ELSE
              ZP2 = 0.
            ENDIF
-           ZWSED (JI,JJ,JK)=ZP1*PRHODREF(JI,JK)*&
+           ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
            &ZH*PRHS(JI,JJ,JK)&
-           &* ZINVTSTEP+ ZP2 * ZWSED (JI,JJ,JK+KKL)
+           &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
          ENDDO
        ENDDO
      ENDDO
 
      DO JK = D%NKTB , D%NKTE
-       PRHS(:,1,JK) = PRHS(:,1,JK) + ZW(:,JK)*(ZWSED(:,1,JK+KKL)-ZWSED(:,1,JK))
+       PRHS(:,1,JK) = PRHS(:,1,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
      ENDDO
      IF (PRESENT(PFPR)) THEN
        DO JK = D%NKTB , D%NKTE
-         PFPR(:,:,JK,7)=ZWSED(:,:,JK)
+         PFPR(:,1,JK,7)=ZWSED(:,JK)
        ENDDO
      ENDIF
 
-     PINPRH(:,:) = ZWSED(:,:,IKB)/XRHOLW                        ! in m/s
+     PINPRH(:,1) = ZWSED(:,IKB)/XRHOLW                        ! in m/s
 
      PRHS(:,:,:) = PRHS(:,:,:) * ZINVTSTEP
 
@@ -2304,14 +2295,14 @@ INTEGER                           :: JL       ! and PACK intrinsics
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_NUCLEATION',0,ZHOOK_HANDLE)
-ZT(:,:,:) = PTHT(:,:,:) * ( PPABST(:,:,:) / XP00 ) ** (XRD/XCPD)
+ZT(:,:) = PTHT(:,1,:) * ( PPABST(:,1,:) / XP00 ) ** (XRD/XCPD)
 !
 !  optimization by looking for locations where
 !  the temperature is negative only !!!
 !
-GNEGT(:,:,:) = .FALSE.
-GNEGT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) = ZT(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)<XTT
-INEGT = COUNTJV( GNEGT(:,:,:),I1(:),I2(:),I3(:))
+GNEGT(:,:) = .FALSE.
+GNEGT(D%NIB:D%NIE,D%NKTB:D%NKTE) = ZT(D%NIB:D%NIE,D%NKTB:D%NKTE)<XTT
+INEGT = COUNTJV( GNEGT(:,:),I1(:),I3(:))
 IF( INEGT >= 1 ) THEN
   ALLOCATE(ZRVT(INEGT)) ;
   ALLOCATE(ZCIT(INEGT)) ;
@@ -2329,7 +2320,7 @@ IF( INEGT >= 1 ) THEN
   DO JL=1,INEGT
     ZRVT(JL) = PRVT(I1(JL),I2(JL),I3(JL))
     ZCIT(JL) = PCIT(I1(JL),I2(JL),I3(JL))
-    ZZT(JL) = ZT(I1(JL),I2(JL),I3(JL))
+    ZZT(JL) = ZT(I1(JL),I3(JL))
     ZPRES(JL) = PPABST(I1(JL),I2(JL),I3(JL))
     ZZICENU(JL) = PICENU(I1(JL),I2(JL))
     IF (OCND2) THEN
@@ -2395,24 +2386,24 @@ IF( INEGT >= 1 ) THEN
 
     ZZW(:) = MIN( ZZW(:),50.E3 ) ! limitation provisoire a 50 l^-1
     IF(.NOT.OCND2)THEN
-       ZW(:,:) = UNPACK( ZZW(:),MASK=GNEGT(:,1,:),FIELD=0.0 )
+       ZW(:,:) = UNPACK( ZZW(:),MASK=GNEGT(:,:),FIELD=0.0 )
        ZW(:,:) = MAX( ZW(:,:) ,0.0 ) *XMNU0/(PRHODREF(:,:)*PTSTEP)
        PRIS(:,1,:) = PRIS(:,1,:) + ZW(:,:)
        PRVS(:,1,:) = PRVS(:,1,:) - ZW(:,:)
        IF ( KRR == 7 ) THEN
-          PTHS(:,:) = PTHS(:,:) + ZW(:,:)*(XLSTT+(XCPV-XCI)*(ZT(:,1,:)-XTT))   &
+          PTHS(:,:) = PTHS(:,:) + ZW(:,:)*(XLSTT+(XCPV-XCI)*(ZT(:,:)-XTT))   &
                /( (XCPD + XCPV*PRVT(:,1,:) + XCL*(PRCT(:,1,:)+PRRT(:,1,:))   &
-               + XCI*(PRIT(:,1,:)+PRST(:,1,:)+PRGT(:,1,:)+PRHT(:,1,:)))*PEXNREF(:,1,:) )
+               + XCI*(PRIT(:,1,:)+PRST(:,1,:)+PRGT(:,1,:)+PRHT(:,1,:)))*PEXNREF(:,:) )
        ELSE IF( KRR == 6 ) THEN
-          PTHS(:,:) = PTHS(:,:) + ZW(:,:)*(XLSTT+(XCPV-XCI)*(ZT(:,1,:)-XTT))   &
+          PTHS(:,:) = PTHS(:,:) + ZW(:,:)*(XLSTT+(XCPV-XCI)*(ZT(:,:)-XTT))   &
                /( (XCPD + XCPV*PRVT(:,1,:) + XCL*(PRCT(:,1,:)+PRRT(:,1,:))   &
-               + XCI*(PRIT(:,1,:)+PRST(:,1,:)+PRGT(:,1,:)))*PEXNREF(:,1,:) )
+               + XCI*(PRIT(:,1,:)+PRST(:,1,:)+PRGT(:,1,:)))*PEXNREF(:,:) )
        END IF
     ENDIF
                                  ! f(L_s*(RVHENI))
     ZZW(:) = MAX( ZZW(:)+ZCIT(:),ZCIT(:) )
-    PCIT(:,:,:) = MAX( UNPACK( ZZW(:),MASK=GNEGT(:,:,:),FIELD=0.0 ) , &
-                       PCIT(:,:,:) )
+    PCIT(:,1,:) = MAX( UNPACK( ZZW(:),MASK=GNEGT(:,:),FIELD=0.0 ) , &
+                       PCIT(:,1,:) )
   END IF
   DEALLOCATE(ZSSI)
   DEALLOCATE(ZUSW)
@@ -2984,7 +2975,7 @@ IMPLICIT NONE
 !                     UNPACK(ZRRS(:)*ZRHODJ(:),MASK=GMICRO(:,:,:),FIELD=0.0),    &
 !                                                              8,'REVA_BU_RRR',YDDDH, YDLDDH, YDMDDH)
     ZW(:,:)=PEVAP3D(:,1,:)
-    PEVAP3D(:,1,:)=UNPACK(ZZW(:),MASK=GMICRO(:,1,:),FIELD=ZW(:,:))
+    PEVAP3D(:,1,:)=UNPACK(ZZW(:),MASK=GMICRO(:,:),FIELD=ZW(:,:))
 !
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_WARM',1,ZHOOK_HANDLE)
   END SUBROUTINE RAIN_ICE_WARM
@@ -4095,7 +4086,7 @@ END SUBROUTINE RAINFR_VERT
 !-------------------------------------------------------------------------------
 !
 !
-  FUNCTION COUNTJV(LTAB,I1,I2,I3) RESULT(IC)
+  FUNCTION COUNTJV(LTAB,I1,I3) RESULT(IC)
 !
 !*      0. DECLARATIONS
 !          ------------
@@ -4105,25 +4096,22 @@ IMPLICIT NONE
 !*       0.2  declaration of local variables
 !
 !
-LOGICAL, DIMENSION(:,:,:) :: LTAB ! Mask
-INTEGER, DIMENSION(:) :: I1,I2,I3 ! Used to replace the COUNT and PACK
-INTEGER :: JI,JJ,JK,IC
+LOGICAL, DIMENSION(:,:) :: LTAB ! Mask
+INTEGER, DIMENSION(:) :: I1,I3 ! Used to replace the COUNT and PACK
+INTEGER :: JI,JK,IC
 !
 !-------------------------------------------------------------------------------
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:COUNTJV',0,ZHOOK_HANDLE)
 IC = 0
-DO JK = 1,SIZE(LTAB,3)
-  DO JJ = 1,SIZE(LTAB,2)
-    DO JI = 1,SIZE(LTAB,1)
-      IF( LTAB(JI,JJ,JK) ) THEN
-        IC = IC +1
-        I1(IC) = JI
-        I2(IC) = JJ
-        I3(IC) = JK
-      END IF
-    END DO
+DO JK = 1,SIZE(LTAB,2)
+  DO JI = 1,SIZE(LTAB,1)
+    IF(LTAB(JI,JK)) THEN
+      IC = IC +1
+      I1(IC) = JI
+      I3(IC) = JK
+    END IF
   END DO
 END DO
 !
