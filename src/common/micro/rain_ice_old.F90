@@ -1807,7 +1807,7 @@ IMPLICIT NONE
 !
 
 REAL :: ZP1,ZP2,ZH,ZZWLBDA,ZZWLBDC,ZZCC
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) :: ZQP
+REAL, DIMENSION(SIZE(PRHODREF,1)) :: ZQP
 INTEGER :: JI,JJ,JK
 INTEGER :: JCOUNT, JL
 INTEGER, DIMENSION(SIZE(PRHODREF,1)*SIZE(PRHODREF,2)) :: I1, I2
@@ -1871,11 +1871,11 @@ END DO
     DO JK = IKE , IKB, -1*KKL
        !estimation of q' taking into account incomming ZWSED
       DO JI = D%NIB , D%NIE
-        ZQP(JI,1)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
+        ZQP(JI)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
       END DO
 
        JCOUNT=COUNTJV2((PRCS(:,JK) > ZRTMIN(2) .AND. PRCT(:,JK) > ZRTMIN(2)) .OR. &
-                       (ZQP(:,1) > ZRTMIN(2)),I1(:))
+                       (ZQP(:) > ZRTMIN(2)),I1(:))
        DO JL=1, JCOUNT
          JI=I1(JL)
          JJ=I2(JL)
@@ -1890,10 +1890,10 @@ END DO
            ZWSEDW1 (JI,JK)=PRHODREF(JI,JK)**(-XCEXVT ) *   &
              &  ZZWLBDC**(-XDC)*ZZCC*ZFSEDC(JI,JK)
          ENDIF
-         IF ( ZQP(JI,JJ) > ZRTMIN(2) ) THEN
+         IF ( ZQP(JI) > ZRTMIN(2) ) THEN
            ZZWLBDA=6.6E-8*(101325./PPABST(JI,JK))*(PTHT(JI,JK)/293.15)
            ZZWLBDC=(ZLBC(JI,JK)*ZCONC3D(JI,JK)  &
-                &/(PRHODREF(JI,JK)*ZQP(JI,JJ)))**XLBEXC
+                &/(PRHODREF(JI,JK)*ZQP(JI)))**XLBEXC
            ZZCC=XCC*(1.+1.26*ZZWLBDA*ZZWLBDC/ZRAY(JI,JK)) !! ZCC  : Fall speed
            ZWSEDW2 (JI,JK)=PRHODREF(JI,JK)**(-XCEXVT ) *   &
              &  ZZWLBDC**(-XDC)*ZZCC*ZFSEDC(JI,JK)
@@ -1945,11 +1945,11 @@ END DO
   DO JK = IKE , IKB, -1*KKL
     !estimation of q' taking into account incomming ZWSED
     DO JI = D%NIB, D%NIE
-      ZQP(JI,1)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
+      ZQP(JI)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
     END DO
 
      JCOUNT=COUNTJV2((PRRS(:,JK) > ZRTMIN(3)) .OR. &
-                     (ZQP(:,1) > ZRTMIN(3)),I1(:))
+                     (ZQP(:) > ZRTMIN(3)),I1(:))
     DO JL=1, JCOUNT
       JI=I1(JL)
       JJ=I2(JL)
@@ -1958,8 +1958,8 @@ END DO
         ZWSEDW1 (JI,JK)= XFSEDR *PRRS(JI,JK)**(XEXSEDR-1)* &
         PRHODREF(JI,JK)**(XEXSEDR-XCEXVT-1)
       ENDIF
-      IF ( ZQP(JI,JJ) > ZRTMIN(3) ) THEN
-        ZWSEDW2 (JI,JK)= XFSEDR *(ZQP(JI,JJ))**(XEXSEDR-1)* &
+      IF ( ZQP(JI) > ZRTMIN(3) ) THEN
+        ZWSEDW2 (JI,JK)= XFSEDR *(ZQP(JI))**(XEXSEDR-1)* &
         PRHODREF(JI,JK)**(XEXSEDR-XCEXVT-1)
       ENDIF
     ENDDO
@@ -2005,11 +2005,11 @@ END DO
   DO JK = IKE , IKB, -1*KKL
     !estimation of q' taking into account incomming ZWSED
     DO JI = D%NIB, D%NIE
-      ZQP(JI,1)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
+      ZQP(JI)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
     ENDDO
 
      JCOUNT=COUNTJV2((PRIS(:,JK) > MAX(ZRTMIN(4),1.0E-7 )) .OR. &
-                     (ZQP(:,1) > MAX(ZRTMIN(4),1.0E-7 )),I1(:))
+                     (ZQP(:) > MAX(ZRTMIN(4),1.0E-7 )),I1(:))
      DO JL=1, JCOUNT
        JI=I1(JL)
        JJ=I2(JL)
@@ -2020,11 +2020,11 @@ END DO
          &  MAX( 0.05E6,-0.15319E6-0.021454E6* &
          &  ALOG(PRHODREF(JI,JK)*PRIS(JI,JK)) )**XEXCSEDI
        ENDIF
-       IF ( ZQP(JI,JJ) > MAX(ZRTMIN(4),1.0E-7 ) ) THEN
+       IF ( ZQP(JI) > MAX(ZRTMIN(4),1.0E-7 ) ) THEN
          ZWSEDW2 (JI,JK)= XFSEDI *  &
          &  PRHODREF(JI,JK)**(XCEXVT) * & !    McF&H
          &  MAX( 0.05E6,-0.15319E6-0.021454E6* &
-         &  ALOG(PRHODREF(JI,JK)*ZQP(JI,JJ)) )**XEXCSEDI
+         &  ALOG(PRHODREF(JI,JK)*ZQP(JI)) )**XEXCSEDI
        ENDIF
      ENDDO
      DO JJ = D%NJB, D%NJE
@@ -2070,10 +2070,10 @@ END DO
 ! calculation of ZP1, ZP2 and sedimentation flux
    DO JK = IKE , IKB, -1*KKL
      !estimation of q' taking into account incomming ZWSED
-     ZQP(:,1)=ZWSED(:,JK+KKL)*ZW(:,JK)
+     ZQP(:)=ZWSED(:,JK+KKL)*ZW(:,JK)
 
      JCOUNT=COUNTJV2((PRSS(:,JK) > ZRTMIN(5)) .OR. &
-                     (ZQP(:,1) > ZRTMIN(5)),I1(:))
+                     (ZQP(:) > ZRTMIN(5)),I1(:))
      DO JL=1, JCOUNT
        JI=I1(JL)
        JJ=I2(JL)
@@ -2082,8 +2082,8 @@ END DO
          ZWSEDW1(JI,JK)=XFSEDS*(PRSS(JI,JK))**(XEXSEDS-1)*&
          PRHODREF(JI,JK)**(XEXSEDS-XCEXVT-1)
        ENDIF
-       IF ( ZQP(JI,JJ) > ZRTMIN(5) ) THEN
-         ZWSEDW2(JI,JK)=XFSEDS*(ZQP(JI,JJ))**(XEXSEDS-1)*&
+       IF ( ZQP(JI) > ZRTMIN(5) ) THEN
+         ZWSEDW2(JI,JK)=XFSEDS*(ZQP(JI))**(XEXSEDS-1)*&
          PRHODREF(JI,JK)**(XEXSEDS-XCEXVT-1)
        ENDIF
      ENDDO
@@ -2130,10 +2130,10 @@ END DO
 ! calculation of ZP1, ZP2 and sedimentation flux
    DO JK = IKE,  IKB, -1*KKL
      !estimation of q' taking into account incomming ZWSED
-     ZQP(:,1)=ZWSED(:,JK+KKL)*ZW(:,JK)
+     ZQP(:)=ZWSED(:,JK+KKL)*ZW(:,JK)
 
      JCOUNT=COUNTJV2((PRGS(:,JK) > ZRTMIN(6)) .OR. &
-                     (ZQP(:,1) > ZRTMIN(6)),I1(:))
+                     (ZQP(:) > ZRTMIN(6)),I1(:))
      DO JL=1, JCOUNT
        JI=I1(JL)
        JJ=I2(JL)
@@ -2142,8 +2142,8 @@ END DO
          ZWSEDW1 (JI,JK)= XFSEDG*(PRGS(JI,JK))**(XEXSEDG-1) * &
                                   PRHODREF(JI,JK)**(XEXSEDG-XCEXVT-1)
        ENDIF
-       IF ( ZQP(JI,JJ) > ZRTMIN(6) ) THEN
-         ZWSEDW2 (JI,JK)= XFSEDG*(ZQP(JI,JJ))**(XEXSEDG-1) * &
+       IF ( ZQP(JI) > ZRTMIN(6) ) THEN
+         ZWSEDW2 (JI,JK)= XFSEDG*(ZQP(JI))**(XEXSEDG-1) * &
                                   PRHODREF(JI,JK)**(XEXSEDG-XCEXVT-1)
        ENDIF
      ENDDO
@@ -2188,20 +2188,20 @@ END DO
 ! calculation of ZP1, ZP2 and sedimentation flux
      DO JK = IKE , IKB, -1*KKL
      !estimation of q' taking into account incomming ZWSED
-     ZQP(:,1)=ZWSED(:,JK+KKL)*ZW(:,JK)
+     ZQP(:)=ZWSED(:,JK+KKL)*ZW(:,JK)
 
-     JCOUNT=COUNTJV2((PRHS(:,JK)+ZQP(:,1) > ZRTMIN(7)) .OR. &
-                     (ZQP(:,1) > ZRTMIN(7)),I1(:))
+     JCOUNT=COUNTJV2((PRHS(:,JK)+ZQP(:) > ZRTMIN(7)) .OR. &
+                     (ZQP(:) > ZRTMIN(7)),I1(:))
      DO JL=1, JCOUNT
        JI=I1(JL)
        JJ=I2(JL)
          !calculation of w
-         IF ((PRHS(JI,JK)+ZQP(JI,JJ)) > ZRTMIN(7) ) THEN
+         IF ((PRHS(JI,JK)+ZQP(JI)) > ZRTMIN(7) ) THEN
            ZWSEDW1 (JI,JK)= XFSEDH  * (PRHS(JI,JK))**(XEXSEDH-1) *   &
                                     PRHODREF(JI,JK)**(XEXSEDH-XCEXVT-1)
          ENDIF
-         IF ( ZQP(JI,JJ) > ZRTMIN(7) ) THEN
-           ZWSEDW2 (JI,JK)= XFSEDH  * ZQP(JI,JJ)**(XEXSEDH-1) *   &
+         IF ( ZQP(JI) > ZRTMIN(7) ) THEN
+           ZWSEDW2 (JI,JK)= XFSEDH  * ZQP(JI)**(XEXSEDH-1) *   &
                                     PRHODREF(JI,JK)**(XEXSEDH-XCEXVT-1)
          ENDIF
        ENDDO
@@ -2953,7 +2953,6 @@ IMPLICIT NONE
   ZZW1(:,:) = 0.0
 !
   ALLOCATE(GRIM(IMICRO))
-! GRIM(:) = (ZRCT(:)>0.0) .AND. (ZRST(:)>0.0) .AND.            &
   GRIM(:) = (ZRCT(:)>XRTMIN(2)) .AND. (ZRST(:)>XRTMIN(5)) .AND.            &
                                 (ZRCS(:)>0.0) .AND. (ZZT(:)<XTT)
   IGRIM = COUNT( GRIM(:) )
