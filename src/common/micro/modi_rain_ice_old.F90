@@ -7,7 +7,7 @@ INTERFACE
                             KKA, KKU, KKL,                                        &
                             KSPLITR, PTSTEP, KRR,                            &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
-                            PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR,                 &
+                            PICLDFR, PSSIO, PSSIU, PIFR,                 &
                             PTHT, PRVT, PRCT, PRRT, PRIT, PRST, &
                             PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS, &
                             PINPRC, PINPRR, PEVAP3D,                    &
@@ -47,52 +47,51 @@ REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PDZZ    ! Layer thickness (m)
 REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
 REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRHODREF! Reference density
 REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PEXNREF ! Reference Exner function
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST  ! absolute pressure at t
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PPABST  ! absolute pressure at t
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCLDFR  ! Cloud fraction
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PCLDFR  ! Cloud fraction
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT    ! Theta at time t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRVT    ! Water vapor m.r. at t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRCT    ! Cloud water m.r. at t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRIT    ! Pristine ice m.r. at t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRGT    ! Graupel/hail m.r. at t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PTHT    ! Theta at time t
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRVT    ! Water vapor m.r. at t
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRCT    ! Cloud water m.r. at t
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRIT    ! Pristine ice m.r. at t
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRGT    ! Graupel/hail m.r. at t
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
 ! input from aro_adjust / condensation with OCND2, dummy if OCND2 = F
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PICLDFR ! ice cloud fraction
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PWCLDFR ! water or mixed-phase cloud fraction
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PSSIO   ! Super-saturation with respect to ice in the  
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PICLDFR ! ice cloud fraction
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PSSIO   ! Super-saturation with respect to ice in the  
                                                    ! supersaturated fraction
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the  
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the  
                                                    ! subsaturated fraction 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PIFR    ! Ratio cloud ice moist part to dry part 
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PIFR    ! Ratio cloud ice moist part to dry part 
 ! input from aro_adjust / condensation with OCND2 END.
 !
 REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PTHS    ! Theta source
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRVS    ! Water vapor m.r. source
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRRS    ! Rain water m.r. source
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRIS    ! Pristine ice m.r. source
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRSS    ! Snow/aggregate m.r. source
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRGS    ! Graupel m.r. source
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PRVS    ! Water vapor m.r. source
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PRRS    ! Rain water m.r. source
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PRIS    ! Pristine ice m.r. source
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PRSS    ! Snow/aggregate m.r. source
+REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PRGS    ! Graupel m.r. source
 !
-REAL, DIMENSION(:,:), INTENT(INOUT)     :: PINPRC! Cloud instant precip
-REAL, DIMENSION(:,:), INTENT(INOUT)     :: PINPRR! Rain instant precip
-REAL, DIMENSION(:,:,:), INTENT(INOUT)   :: PEVAP3D! Rain evap profile
-REAL, DIMENSION(:,:), INTENT(INOUT)     :: PINPRS! Snow instant precip
-REAL, DIMENSION(:,:), INTENT(INOUT)     :: PINPRG! Graupel instant precip
-REAL, DIMENSION(:,:), INTENT(IN)        :: PSEA ! Sea Mask
-REAL, DIMENSION(:,:), INTENT(IN)        :: PTOWN! Fraction that is town
+REAL, DIMENSION(D%NIT), INTENT(INOUT)         :: PINPRC! Cloud instant precip
+REAL, DIMENSION(D%NIT), INTENT(INOUT)         :: PINPRR! Rain instant precip
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT)   :: PEVAP3D! Rain evap profile
+REAL, DIMENSION(D%NIT), INTENT(INOUT)         :: PINPRS! Snow instant precip
+REAL, DIMENSION(D%NIT), INTENT(INOUT)         :: PINPRG! Graupel instant precip
+REAL, DIMENSION(D%NIT), INTENT(IN)            :: PSEA ! Sea Mask
+REAL, DIMENSION(D%NIT), INTENT(IN)            :: PTOWN! Fraction that is town
 TYPE(TYP_DDH),        INTENT(INOUT)     :: YDDDH
 TYPE(TLDDH),          INTENT(IN)        :: YDLDDH
 TYPE(TMDDH),          INTENT(IN)        :: YDMDDH
-REAL, DIMENSION(:,:), INTENT(IN)        :: PICENU, PKGN_ACON, PKGN_SBGR
-REAL, DIMENSION(:,:,:),   OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
-REAL, DIMENSION(:,:,:),   OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
-REAL, DIMENSION(:,:),     OPTIONAL, INTENT(INOUT) :: PINPRH  ! Hail instant precip
-REAL, DIMENSION(:,:,:,:), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-air precipitation fluxes
+REAL, DIMENSION(D%NIT), INTENT(IN)            :: PICENU, PKGN_ACON, PKGN_SBGR
+REAL, DIMENSION(D%NIT,D%NKT),   OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
+REAL, DIMENSION(D%NIT,D%NKT),   OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
+REAL, DIMENSION(D%NIT),         OPTIONAL, INTENT(INOUT) :: PINPRH  ! Hail instant precip
+REAL, DIMENSION(D%NIT,D%NKT,KRR), OPTIONAL, INTENT(OUT) :: PFPR    ! upper-air precipitation fluxes
 !
 END SUBROUTINE RAIN_ICE_OLD
 END INTERFACE

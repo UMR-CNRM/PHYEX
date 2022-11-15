@@ -86,7 +86,7 @@ program main_rain_ice_old
 
   real    :: ptstep
 
-  integer :: i_block
+  integer :: i
 
   type(typ_ddh) :: ydddh
   type(tlddh)   :: ydlddh
@@ -190,28 +190,31 @@ program main_rain_ice_old
   call system_clock(count=counter, count_rate=c_rate)
   time_start_real = real(counter,8)/c_rate
 
-  do i_block = 1, n_gp_blocks
+  do i = 1, n_gp_blocks
 
-    call rain_ice_old(D, osedic=osedic, ocnd2=ocnd2, lkogan=lkogan, lmodicedep=lmodicedep,  &
-                      hsedim=c_sedim, hsubg_aucv_rc=csubg_aucv_rc, owarm=owarm,          &
-                      kka=kka, kku=kku, kkl=kkl,                                         &
-                      ksplitr=ksplitr, ptstep=2*ptstep, krr=krr,                         &
-                      pdzz=pdzz(:,:,i_block), prhodj=prhodj(:,:,i_block),                &
-                      prhodref=prhodref(:,:,i_block), pexnref=pexnref(:,:,i_block),      &
-                      ppabst=ppabsm, pcit=pcit, pcldfr=pcldfr,                           &
-                      picldfr=picldfr, pwcldfr=pwcldfr,                                  &
-                      pssio=pssio, pssiu=pssiu, pifr=pifr,                               &
-                      ptht=ptht,                                                         &
-                      prvt=prt(:,:,:,1), prct=prt(:,:,:,2), prrt=prt(:,:,:,3),           &
-                      prit=prt(:,:,:,4), prst=prt(:,:,:,5), prgt=prt(:,:,:,6),           &
-                      pths=pths(:,:,i_block),                                            &
-                      prvs=prs(:,:,:,1), prcs=prs(:,:,:,2), prrs=prs(:,:,:,3),           &
-                      pris=prs(:,:,:,4), prss=prs(:,:,:,5), prgs=prs(:,:,:,6),           &
-                      pinprc=zinprc, pinprr=pinprr, pevap3d=pevap,                       &
-                      pinprs=pinprs, pinprg=pinprg, psigs=psigs, psea=psea, ptown=ptown, &
-                      ydddh=ydddh, ydlddh=ydlddh, ydmddh=ydmddh,                         &
-                      picenu=picenu, pkgn_acon=pkgn_acon, pkgn_sbgr=pkgn_sbgr,           &
-                      pfpr=pfpr)
+    call rain_ice_old(D, osedic=osedic, ocnd2=ocnd2,                                    &
+                      lkogan=lkogan, lmodicedep=lmodicedep,                             &
+                      hsedim=c_sedim, hsubg_aucv_rc=csubg_aucv_rc, owarm=owarm,         &
+                      kka=kka, kku=kku, kkl=kkl,                                        &
+                      ksplitr=ksplitr, ptstep=2*ptstep, krr=krr,                        &
+                      pdzz=pdzz(:,:,i), prhodj=prhodj(:,:,i), prhodref=prhodref(:,:,i), &
+                      pexnref=pexnref(:,:,i), ppabst=ppabsm(:,:,i),                     &
+                      pcit=pcit(:,:,i), pcldfr=pcldfr(:,:,i), picldfr=picldfr(:,:,i),   &
+                      pssio=pssio(:,:,i), pssiu=pssiu(:,:,i),                           &
+                      pifr=pifr(:,:,i),                                                 &
+                      ptht=ptht(:,:,i),                                                 &
+                      prvt=prt(:,:,1,i), prct=prt(:,:,2,i), prrt=prt(:,:,3,i),          &
+                      prit=prt(:,:,4,i), prst=prt(:,:,5,i), prgt=prt(:,:,6,i),          &
+                      pths=pths(:,:,i),                                                 &
+                      prvs=prs(:,:,1,i), prcs=prs(:,:,2,i), prrs=prs(:,:,3,i),          &
+                      pris=prs(:,:,4,i), prss=prs(:,:,5,i), prgs=prs(:,:,6,i),          &
+                      pinprc=zinprc(:,i), pinprr=pinprr(:,i), pevap3d=pevap(:,:,i),     &
+                      pinprs=pinprs(:,i), pinprg=pinprg(:,i), psigs=psigs(:,:,i),       &
+                      psea=psea(:,i), ptown=ptown(:,i),                                 &
+                      ydddh=ydddh, ydlddh=ydlddh, ydmddh=ydmddh,                        &
+                      picenu=picenu(:,i),                                               &
+                      pkgn_acon=pkgn_acon(:,i), pkgn_sbgr=pkgn_sbgr(:,i),               &
+                      pfpr=pfpr(:,:,:,i))
 
   enddo
 
