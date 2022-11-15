@@ -54,12 +54,12 @@ SUBROUTINE BUDGET_DDH(PVARS, KBUDN, HSOURCE, YDDDH, YDLDDH, YDMDDH, LDISDIFF)
   USE YOMLDDH, ONLY  : TLDDH
   USE YOMMDDH, ONLY  : TMDDH
 
-  REAL, DIMENSION(:,:,:), INTENT(IN)    :: PVARS    ! source of the variable
-  INTEGER,                INTENT(IN)    :: KBUDN    ! variable number
-  CHARACTER(LEN=*),       INTENT(IN)    :: HSOURCE  ! Identifier of the Budget
-  TYPE(TYP_DDH),          INTENT(INOUT) :: YDDDH
-  TYPE(TLDDH),            INTENT(IN)    :: YDLDDH
-  TYPE(TMDDH),            INTENT(IN)    :: YDMDDH
-  LOGICAL, OPTIONAL,      INTENT(IN)    :: LDISDIFF ! PVARS contains the increment (default is .FALSE.)
+  REAL, DIMENSION(:,:), INTENT(IN)    :: PVARS    ! source of the variable
+  INTEGER,              INTENT(IN)    :: KBUDN    ! variable number
+  CHARACTER(LEN=*),     INTENT(IN)    :: HSOURCE  ! Identifier of the Budget
+  TYPE(TYP_DDH),        INTENT(INOUT) :: YDDDH
+  TYPE(TLDDH),          INTENT(IN)    :: YDLDDH
+  TYPE(TMDDH),          INTENT(IN)    :: YDMDDH
+  LOGICAL, OPTIONAL,    INTENT(IN)    :: LDISDIFF ! PVARS contains the increment (default is .FALSE.)
 END SUBROUTINE BUDGET_DDH
 END MODULE MODE_BUDGET
