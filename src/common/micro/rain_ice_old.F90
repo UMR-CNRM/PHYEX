@@ -270,12 +270,8 @@ INTEGER :: JK            ! Vertical loop index for the rain sedimentation
 INTEGER :: JN            ! Temporal loop index for the rain sedimentation
 INTEGER :: JJ            ! Loop index for the interpolation
 INTEGER :: JI            ! Loop index for the interpolation
-INTEGER :: IIB           !  Define the domain where is
-INTEGER :: IIE           !  the microphysical sources have to be computed
-INTEGER :: IJB           !
-INTEGER :: IJE           !
-INTEGER :: IKB,IKTB,IKT  !
-INTEGER :: IKE,IKTE      !
+INTEGER :: IKB           !
+INTEGER :: IKE           !
 !
 REAL    :: ZTSPLITR      ! Small time step for rain sedimentation
 !
@@ -474,15 +470,8 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD',0,ZHOOK_HANDLE)
 LTEST=.FALSE.
 LCHECKNOISE=.TRUE.
-IIB=1+JPHEXT
-IIE=SIZE(PDZZ,1) - JPHEXT
-IJB=1
-IJE=1
 IKB=KKA+JPVEXT*KKL
 IKE=KKU-JPVEXT*KKL
-IKT=SIZE(PDZZ,2)
-IKTB=1+JPVEXT
-IKTE=IKT-JPVEXT
 
 !
 !*       1.2     COMPUTE SOME CONSTANT PARAMETERS 
