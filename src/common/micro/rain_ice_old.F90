@@ -1808,7 +1808,7 @@ IMPLICIT NONE
 
 REAL :: ZP1,ZP2,ZH,ZZWLBDA,ZZWLBDC,ZZCC
 REAL, DIMENSION(SIZE(PRHODREF,1)) :: ZQP
-INTEGER :: JI,JJ,JK
+INTEGER :: JI,JK
 INTEGER :: JCOUNT, JL
 INTEGER, DIMENSION(SIZE(PRHODREF,1)*SIZE(PRHODREF,2)) :: I1, I2
 !
@@ -1874,50 +1874,45 @@ END DO
         ZQP(JI)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
       END DO
 
-       JCOUNT=COUNTJV2((PRCS(:,JK) > ZRTMIN(2) .AND. PRCT(:,JK) > ZRTMIN(2)) .OR. &
+        JCOUNT=COUNTJV2((PRCS(:,JK) > ZRTMIN(2) .AND. PRCT(:,JK) > ZRTMIN(2)) .OR. &
                        (ZQP(:) > ZRTMIN(2)),I1(:))
-       DO JL=1, JCOUNT
-         JI=I1(JL)
-         JJ=I2(JL)
-         !calculation of w
-         ! mars 2009 : ajout d'un test
-         !IF ( PRCS(JI,JJ,JK) > ZRTMIN(2) ) THEN
-         IF(PRCS(JI,JK) > ZRTMIN(2) .AND. PRCT(JI,JK) > ZRTMIN(2)) THEN
-           ZZWLBDA=6.6E-8*(101325./PPABST(JI,JK))*(PTHT(JI,JK)/293.15)
-           ZZWLBDC=(ZLBC(JI,JK)*ZCONC3D(JI,JK)  &
-                &/(PRHODREF(JI,JK)*PRCT(JI,JK)))**XLBEXC
-           ZZCC=XCC*(1.+1.26*ZZWLBDA*ZZWLBDC/ZRAY(JI,JK)) !! ZCC  : Fall speed
-           ZWSEDW1 (JI,JK)=PRHODREF(JI,JK)**(-XCEXVT ) *   &
-             &  ZZWLBDC**(-XDC)*ZZCC*ZFSEDC(JI,JK)
-         ENDIF
-         IF ( ZQP(JI) > ZRTMIN(2) ) THEN
-           ZZWLBDA=6.6E-8*(101325./PPABST(JI,JK))*(PTHT(JI,JK)/293.15)
-           ZZWLBDC=(ZLBC(JI,JK)*ZCONC3D(JI,JK)  &
-                &/(PRHODREF(JI,JK)*ZQP(JI)))**XLBEXC
-           ZZCC=XCC*(1.+1.26*ZZWLBDA*ZZWLBDC/ZRAY(JI,JK)) !! ZCC  : Fall speed
-           ZWSEDW2 (JI,JK)=PRHODREF(JI,JK)**(-XCEXVT ) *   &
-             &  ZZWLBDC**(-XDC)*ZZCC*ZFSEDC(JI,JK)
-         ENDIF
-       ENDDO
+        DO JL=1, JCOUNT
+          JI=I1(JL)
+          !calculation of w
+          ! mars 2009 : ajout d'un test
+          IF(PRCS(JI,JK) > ZRTMIN(2) .AND. PRCT(JI,JK) > ZRTMIN(2)) THEN
+            ZZWLBDA=6.6E-8*(101325./PPABST(JI,JK))*(PTHT(JI,JK)/293.15)
+            ZZWLBDC=(ZLBC(JI,JK)*ZCONC3D(JI,JK)  &
+                  &/(PRHODREF(JI,JK)*PRCT(JI,JK)))**XLBEXC
+            ZZCC=XCC*(1.+1.26*ZZWLBDA*ZZWLBDC/ZRAY(JI,JK)) !! ZCC  : Fall speed
+            ZWSEDW1 (JI,JK)=PRHODREF(JI,JK)**(-XCEXVT ) *   &
+               &  ZZWLBDC**(-XDC)*ZZCC*ZFSEDC(JI,JK)
+          ENDIF
+          IF ( ZQP(JI) > ZRTMIN(2) ) THEN
+            ZZWLBDA=6.6E-8*(101325./PPABST(JI,JK))*(PTHT(JI,JK)/293.15)
+            ZZWLBDC=(ZLBC(JI,JK)*ZCONC3D(JI,JK)  &
+                  &/(PRHODREF(JI,JK)*ZQP(JI)))**XLBEXC
+            ZZCC=XCC*(1.+1.26*ZZWLBDA*ZZWLBDC/ZRAY(JI,JK)) !! ZCC  : Fall speed
+            ZWSEDW2 (JI,JK)=PRHODREF(JI,JK)**(-XCEXVT ) *   &
+               &  ZZWLBDC**(-XDC)*ZZCC*ZFSEDC(JI,JK)
+          ENDIF
+        ENDDO
 
-       DO JJ = D%NJB, D%NJE
-         DO JI = D%NIB, D%NIE
-           ZH=PDZZ(JI,JK)
-           ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH)
-           ! mars 2009 : correction : ZWSEDW1 =>  ZWSEDW2
-           !IF (ZWSEDW1(JI,JJ,JK) /= 0.) THEN
-           IF (ZWSEDW2(JI,JK) /= 0.) THEN
-             ZP2 = MAX(0.,1 -  ZH &
-           &  / (PTSTEP*ZWSEDW2(JI,JK)) )
-           ELSE
-             ZP2 = 0.
-           ENDIF
-           ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
-           &ZH*PRCS(JI,JK)&
-           &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
-         ENDDO
-       ENDDO
-     ENDDO
+        DO JI = D%NIB, D%NIE
+          ZH=PDZZ(JI,JK)
+          ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH)
+          ! mars 2009 : correction : ZWSEDW1 =>  ZWSEDW2
+          IF (ZWSEDW2(JI,JK) /= 0.) THEN
+            ZP2 = MAX(0.,1 -  ZH &
+          &  / (PTSTEP*ZWSEDW2(JI,JK)) )
+          ELSE
+            ZP2 = 0.
+          ENDIF
+          ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
+          &ZH*PRCS(JI,JK)&
+          &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
+        ENDDO
+      ENDDO
 
      DO JK = D%NKTB , D%NKTE
        PRCS(:,JK) = PRCS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
@@ -1952,7 +1947,6 @@ END DO
                      (ZQP(:) > ZRTMIN(3)),I1(:))
     DO JL=1, JCOUNT
       JI=I1(JL)
-      JJ=I2(JL)
       !calculation of w
       IF ( PRRS(JI,JK) > ZRTMIN(3) ) THEN
         ZWSEDW1 (JI,JK)= XFSEDR *PRRS(JI,JK)**(XEXSEDR-1)* &
@@ -1963,20 +1957,18 @@ END DO
         PRHODREF(JI,JK)**(XEXSEDR-XCEXVT-1)
       ENDIF
     ENDDO
-    DO JJ = D%NJB, D%NJE
-      DO JI = D%NIB, D%NIE
-        ZH=PDZZ(JI,JK)
-        ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
-        IF (ZWSEDW2(JI,JK) /= 0.) THEN
-          ZP2 = MAX(0.,1 -  ZH &
-        & / (PTSTEP*ZWSEDW2(JI,JK)) )
-        ELSE
-          ZP2 = 0.
-        ENDIF
-        ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
-        &ZH*PRRS(JI,JK)&
-        &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
-      ENDDO
+    DO JI = D%NIB, D%NIE
+      ZH=PDZZ(JI,JK)
+      ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
+      IF (ZWSEDW2(JI,JK) /= 0.) THEN
+        ZP2 = MAX(0.,1 -  ZH &
+      & / (PTSTEP*ZWSEDW2(JI,JK)) )
+      ELSE
+        ZP2 = 0.
+      ENDIF
+      ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
+      &ZH*PRRS(JI,JK)&
+      &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
     ENDDO
   ENDDO
 
@@ -2012,7 +2004,6 @@ END DO
                      (ZQP(:) > MAX(ZRTMIN(4),1.0E-7 )),I1(:))
      DO JL=1, JCOUNT
        JI=I1(JL)
-       JJ=I2(JL)
        !calculation of w
        IF ( PRIS(JI,JK) > MAX(ZRTMIN(4),1.0E-7 ) ) THEN
          ZWSEDW1 (JI,JK)= XFSEDI *  &
@@ -2027,20 +2018,18 @@ END DO
          &  ALOG(PRHODREF(JI,JK)*ZQP(JI)) )**XEXCSEDI
        ENDIF
      ENDDO
-     DO JJ = D%NJB, D%NJE
-       DO JI = D%NIB, D%NIE
-         ZH=PDZZ(JI,JK)
-         ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
-         IF (ZWSEDW2(JI,JK) /= 0.) THEN
-           ZP2 = MAX(0.,1 - ZH  &
-           &  / (PTSTEP*ZWSEDW2(JI,JK)) )
-         ELSE
-           ZP2 = 0.
-         ENDIF
-         ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
-         &ZH*PRIS(JI,JK)&
-         &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
-       ENDDO
+     DO JI = D%NIB, D%NIE
+       ZH=PDZZ(JI,JK)
+       ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
+       IF (ZWSEDW2(JI,JK) /= 0.) THEN
+         ZP2 = MAX(0.,1 - ZH  &
+         &  / (PTSTEP*ZWSEDW2(JI,JK)) )
+       ELSE
+         ZP2 = 0.
+       ENDIF
+       ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
+       &ZH*PRIS(JI,JK)&
+       &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
      ENDDO
    ENDDO
 
@@ -2076,7 +2065,6 @@ END DO
                      (ZQP(:) > ZRTMIN(5)),I1(:))
      DO JL=1, JCOUNT
        JI=I1(JL)
-       JJ=I2(JL)
        !calculation of w
        IF (PRSS(JI,JK) > ZRTMIN(5) ) THEN
          ZWSEDW1(JI,JK)=XFSEDS*(PRSS(JI,JK))**(XEXSEDS-1)*&
@@ -2087,20 +2075,18 @@ END DO
          PRHODREF(JI,JK)**(XEXSEDS-XCEXVT-1)
        ENDIF
      ENDDO
-     DO JJ = D%NJB, D%NJE
-       DO JI = D%NIB, D%NIE
-         ZH=PDZZ(JI,JK)
-         ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
-         IF (ZWSEDW2(JI,JK) /= 0.) THEN
-           ZP2 = MAX(0.,1 - ZH&
-          / (PTSTEP*ZWSEDW2(JI,JK)) )
-         ELSE
-           ZP2 = 0.
-         ENDIF
-         ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
-         &ZH*PRSS(JI,JK)&
-         &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
-       ENDDO
+     DO JI = D%NIB, D%NIE
+       ZH=PDZZ(JI,JK)
+       ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
+       IF (ZWSEDW2(JI,JK) /= 0.) THEN
+         ZP2 = MAX(0.,1 - ZH&
+        / (PTSTEP*ZWSEDW2(JI,JK)) )
+       ELSE
+         ZP2 = 0.
+       ENDIF
+       ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
+       &ZH*PRSS(JI,JK)&
+       &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
      ENDDO
    ENDDO
 
@@ -2136,7 +2122,6 @@ END DO
                      (ZQP(:) > ZRTMIN(6)),I1(:))
      DO JL=1, JCOUNT
        JI=I1(JL)
-       JJ=I2(JL)
        !calculation of w
        IF ( PRGS(JI,JK) > ZRTMIN(6) ) THEN
          ZWSEDW1 (JI,JK)= XFSEDG*(PRGS(JI,JK))**(XEXSEDG-1) * &
@@ -2147,20 +2132,18 @@ END DO
                                   PRHODREF(JI,JK)**(XEXSEDG-XCEXVT-1)
        ENDIF
      ENDDO
-     DO JJ = D%NJB, D%NJE
-       DO JI = D%NIB, D%NIE
-         ZH=PDZZ(JI,JK)
-         ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
-         IF (ZWSEDW2(JI,JK) /= 0.) THEN
-           ZP2 = MAX(0.,1 - ZH &
-         & / (PTSTEP*ZWSEDW2(JI,JK)) )
-         ELSE
-           ZP2 = 0.
-         ENDIF
-         ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
-         &ZH*PRGS(JI,JK)&
-         &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
-       ENDDO
+     DO JI = D%NIB, D%NIE
+       ZH=PDZZ(JI,JK)
+       ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
+       IF (ZWSEDW2(JI,JK) /= 0.) THEN
+         ZP2 = MAX(0.,1 - ZH &
+       & / (PTSTEP*ZWSEDW2(JI,JK)) )
+       ELSE
+         ZP2 = 0.
+       ENDIF
+       ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
+       &ZH*PRGS(JI,JK)&
+       &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
      ENDDO
    ENDDO
 
@@ -2187,14 +2170,13 @@ END DO
      ZWSEDW2(:,:) = 0.
 ! calculation of ZP1, ZP2 and sedimentation flux
      DO JK = IKE , IKB, -1*KKL
-     !estimation of q' taking into account incomming ZWSED
-     ZQP(:)=ZWSED(:,JK+KKL)*ZW(:,JK)
-
-     JCOUNT=COUNTJV2((PRHS(:,JK)+ZQP(:) > ZRTMIN(7)) .OR. &
-                     (ZQP(:) > ZRTMIN(7)),I1(:))
-     DO JL=1, JCOUNT
-       JI=I1(JL)
-       JJ=I2(JL)
+       !estimation of q' taking into account incomming ZWSED
+       ZQP(:)=ZWSED(:,JK+KKL)*ZW(:,JK)
+      
+       JCOUNT=COUNTJV2((PRHS(:,JK)+ZQP(:) > ZRTMIN(7)) .OR. &
+                       (ZQP(:) > ZRTMIN(7)),I1(:))
+       DO JL=1, JCOUNT
+         JI=I1(JL)
          !calculation of w
          IF ((PRHS(JI,JK)+ZQP(JI)) > ZRTMIN(7) ) THEN
            ZWSEDW1 (JI,JK)= XFSEDH  * (PRHS(JI,JK))**(XEXSEDH-1) *   &
@@ -2205,20 +2187,18 @@ END DO
                                     PRHODREF(JI,JK)**(XEXSEDH-XCEXVT-1)
          ENDIF
        ENDDO
-       DO JJ = D%NJB, D%NJE
-         DO JI = D%NIB, D%NIE
-           ZH=PDZZ(JI,JK)
-           ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH)
-           IF (ZWSEDW2(JI,JK) /= 0.) THEN
-             ZP2 = MAX(0.,1 - ZH &
-           &  / (PTSTEP*ZWSEDW2(JI,JK)) )
-           ELSE
-             ZP2 = 0.
-           ENDIF
-           ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
-           &ZH*PRHS(JI,JK)&
-           &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
-         ENDDO
+       DO JI = D%NIB, D%NIE
+         ZH=PDZZ(JI,JK)
+         ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH)
+         IF (ZWSEDW2(JI,JK) /= 0.) THEN
+           ZP2 = MAX(0.,1 - ZH &
+         &  / (PTSTEP*ZWSEDW2(JI,JK)) )
+         ELSE
+           ZP2 = 0.
+         ENDIF
+         ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
+         &ZH*PRHS(JI,JK)&
+         &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
        ENDDO
      ENDDO
 
