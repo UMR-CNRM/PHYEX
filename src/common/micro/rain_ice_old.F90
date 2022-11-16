@@ -213,47 +213,47 @@ REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step
                                                    ! (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 !
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PDZZ    ! Layer thickness (m)
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PEXNREF ! Reference Exner function
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PPABST  ! absolute pressure at t
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PDZZ    ! Layer thickness (m)
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODREF! Reference density
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PEXNREF ! Reference Exner function
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PPABST  ! absolute pressure at t
 !
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PCLDFR  ! Cloud fraction
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PCLDFR  ! Cloud fraction
 !
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PTHT    ! Theta at time t
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRVT    ! Water vapor m.r. at t
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRCT    ! Cloud water m.r. at t
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRIT    ! Pristine ice m.r. at t
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRGT    ! Graupel/hail m.r. at t
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PTHT    ! Theta at time t
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRVT    ! Water vapor m.r. at t
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRCT    ! Cloud water m.r. at t
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRRT    ! Rain water m.r. at t
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRIT    ! Pristine ice m.r. at t
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRGT    ! Graupel/hail m.r. at t
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PSIGS   ! Sigma_s at t
 ! input from aro_adjust / condensation with OCND2, dummy if OCND2 = F
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PICLDFR ! ice cloud fraction
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PSSIO   ! Super-saturation with respect to ice in the  
-                                                   ! supersaturated fraction
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the  
-                                                   ! subsaturated fraction 
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PIFR    ! Ratio cloud ice moist part to dry part 
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PICLDFR ! ice cloud fraction
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PSSIO   ! Super-saturation with respect to ice in the  
+                                                 ! supersaturated fraction
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PSSIU   ! Sub-saturation with respect to ice in the  
+                                                 ! subsaturated fraction 
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PIFR    ! Ratio cloud ice moist part to dry part 
 ! input from aro_adjust / condensation with OCND2 END.
 !
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PTHS    ! Theta source
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PRVS    ! Water vapor m.r. source
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PRRS    ! Rain water m.r. source
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PRIS    ! Pristine ice m.r. source
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PRSS    ! Snow/aggregate m.r. source
-REAL, DIMENSION(D%NIT,D%NKT),   INTENT(INOUT) :: PRGS    ! Graupel m.r. source
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PTHS    ! Theta source
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRVS    ! Water vapor m.r. source
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRCS    ! Cloud water m.r. source
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRRS    ! Rain water m.r. source
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRIS    ! Pristine ice m.r. source
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRSS    ! Snow/aggregate m.r. source
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRGS    ! Graupel m.r. source
 !
-REAL, DIMENSION(D%NIT), INTENT(INOUT)         :: PINPRC! Cloud instant precip
-REAL, DIMENSION(D%NIT), INTENT(INOUT)         :: PINPRR! Rain instant precip
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT)   :: PEVAP3D! Rain evap profile
-REAL, DIMENSION(D%NIT), INTENT(INOUT)         :: PINPRS! Snow instant precip
-REAL, DIMENSION(D%NIT), INTENT(INOUT)         :: PINPRG! Graupel instant precip
-REAL, DIMENSION(D%NIT), INTENT(IN)            :: PSEA ! Sea Mask
-REAL, DIMENSION(D%NIT), INTENT(IN)            :: PTOWN! Fraction that is town
+REAL, DIMENSION(D%NIT),       INTENT(INOUT) :: PINPRC! Cloud instant precip
+REAL, DIMENSION(D%NIT),       INTENT(INOUT) :: PINPRR! Rain instant precip
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PEVAP3D! Rain evap profile
+REAL, DIMENSION(D%NIT),       INTENT(INOUT) :: PINPRS! Snow instant precip
+REAL, DIMENSION(D%NIT),       INTENT(INOUT) :: PINPRG! Graupel instant precip
+REAL, DIMENSION(D%NIT),       INTENT(IN)    :: PSEA ! Sea Mask
+REAL, DIMENSION(D%NIT),       INTENT(IN)    :: PTOWN! Fraction that is town
 TYPE(TYP_DDH),        INTENT(INOUT)     :: YDDDH
 TYPE(TLDDH),          INTENT(IN)        :: YDLDDH
 TYPE(TMDDH),          INTENT(IN)        :: YDMDDH
@@ -2665,7 +2665,7 @@ IMPLICIT NONE
   ZZW2(:) = 0.0
   IF (XFRMIN(5)> 1.0E-12 .AND. XFRMIN(6) > 0.01) &
         &        ZZW2(:) = MAX(0., MIN(1., (XFRMIN(5) - ZRGS(:))/XFRMIN(5)))* &
-        &	MAX(0.,MIN(1.,ZSSI(:)/XFRMIN(6)))
+        & MAX(0.,MIN(1.,ZSSI(:)/XFRMIN(6)))
 
 
   WHERE ( ZRGT(:)>0.0 )
