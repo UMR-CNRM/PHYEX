@@ -992,7 +992,7 @@ SELECT CASE ( HCLOUD )
                          PTHS,PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),        &
                          PCLDFR, PSRCS                                           )
    ELSE IF (LPTSPLIT) THEN
-    CALL LIMA_ADJUST_SPLIT(KRR, KMI, TPFILE, CCONDENS, CLAMBDA3,                     &
+    CALL LIMA_ADJUST_SPLIT(YLDIMPHYEX, KRR, KMI, TPFILE, CCONDENS, CLAMBDA3,                     &
                      OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,                          &
                      PRHODREF, PRHODJ, PEXNREF, PPABST, PSIGS, PMFCONV, PPABST, ZZZ, &
                      PDTHRAD, PW_ACT,                                                &
