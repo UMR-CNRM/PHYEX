@@ -9,7 +9,7 @@ import numpy
 import matplotlib.pyplot as plt
 epygram.init_env()
 
-def comp_DDH(filename1, filename2, output_fig, tol_ad=1.2E-7, tol_rd=1.E-6, verbose=False):
+def comp_DDH(filename1, filename2, output_fig, tol_ad=3E-7, tol_rd=1.E-6, verbose=False):
     r1 = epygram.formats.resource(filename1, 'r')
     r2 = epygram.formats.resource(filename2, 'r')
 

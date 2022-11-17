@@ -297,7 +297,7 @@ CALL MZM_MF(D, PRVM(:,:), ZRVM_F(:,:))
 
 ! thetav at mass and flux levels 
 DO JK=1,D%NKT
-  DO JI=d%NIB,D%NIJE
+  DO JI=D%NIB,D%NIJE
     ZTHVM_F(JI,JK)=ZTHM_F(JI,JK)*((1.+ZRVORD*ZRVM_F(JI,JK))/(1.+ZRTM_F(JI,JK)))
   ENDDO
 ENDDO
@@ -570,7 +570,7 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
     ENDIF
   ENDDO
 
-  DO JI=D%NIJB,D%NIJB
+  DO JI=D%NIJB,D%NIJE
     IF(GTEST(JI)) THEN
       PEMF(JI,JK+D%NKL)=PEMF(JI,JK)*EXP(ZMIX1(JI))
     ENDIF
@@ -594,7 +594,7 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
 
 
 ! Test is we have reached the top of the updraft
-  DO JI=D%NIJB,D%NIJB
+  DO JI=D%NIJB,D%NIJE
     IF (GTEST(JI) .AND. ((ZW_UP2(JI,JK+D%NKL)<=ZEPS).OR.(PEMF(JI,JK+D%NKL)<=ZEPS))) THEN
       ZW_UP2   (JI,JK+D%NKL)=ZEPS
       PEMF     (JI,JK+D%NKL)=0.
