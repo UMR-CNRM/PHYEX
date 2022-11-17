@@ -111,9 +111,14 @@ END MODULE MODI_RADTR_SATEL
 USE MODD_CST
 USE MODD_PARAMETERS
 USE MODD_GRID_n
+USE MODD_RAIN_ICE_PARAM,   ONLY: RAIN_ICE_PARAM
+USE MODD_NEB,              ONLY: NEB
+USE MODD_TURB_n,           ONLY: TURBN
+USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 !
 USE MODD_RAD_TRANSF
 USE MODE_ll
+USE MODE_FILL_DIMPHYEX,   ONLY: FILL_DIMPHYEX
 !
 USE MODI_INIT_NBMOD
 USE MODI_DETER_ANGLE
@@ -259,6 +264,7 @@ REAL, DIMENSION(:,:,:), ALLOCATABLE  :: ZRI_IN, ZRI_OUT ! grid scale r_i (kg/kg)
 REAL, DIMENSION(:,:,:), ALLOCATABLE  :: ZRV_IN, ZRV_OUT ! grid scale r_v (kg/kg)
 REAL, DIMENSION(:,:,:), ALLOCATABLE  :: ZRHO
 REAL, DIMENSION(SIZE(PPABST,1),SIZE(PPABST,2)) :: ZSIGQSAT2D, ZDUM
+TYPE(DIMPHYEX_t)    :: D
 !----------------------------------------------------------------------------
 !
 !*       1.    INITIALIZATION OF CONSTANTS FOR TRANSFERT CODE
@@ -280,6 +286,7 @@ IKU = SIZE(PTHT,3)
 CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
 IKB = 1 + JPVEXT
 IKE = IKU - JPVEXT
+CALL FILL_DIMPHYEX(D, IIU, IJU, IKU)
 !
 IKSTAE = SIZE(PSTATM,1)
 IKUP   = IKE-JPVEXT+1
@@ -490,6 +497,12 @@ IF( SIZE(PRT(:,:,:,:),4) >= 2 ) THEN
     !     PRT(:,:,:,2), PRT(:,:,:,5), PRT(:,:,:,6), PSIGS, PMFCONV, ZNCLD, &
     !     ZSIGRC, OUSERI, OSIGMAS, .FALSE., .FALSE., &
     !     ZDUM, ZDUM, ZDUM, ZDUM, ZDUM, ZSIGQSAT2D )
+    CALL CONDENSATION(D, CST, RAIN_ICE_PARAM, NEB, TURBN, &                                                                         
+                     &'T', 'CB02', 'CB',                                                  &                                         
+                     &PPABST, PZZ, ZRHO, ZTEMP, ZRV_IN, ZRV_OUT, ZRC_IN, ZRC_OUT, ZRI_IN, ZRI_OUT,    &                                             
+                     &PRT(:,:,:,2), PRT(:,:,:,5), PRT(:,:,:,6), PSIGS, .FALSE., PMFCONV, ZNCLD, ZSIGRC, .FALSE.,                 &     
+                     &OSIGMAS, .FALSE., .FALSE.,                                                        &                           
+                     &ZDUM, ZDUM, ZDUM, ZDUM, ZDUM, ZSIGQSAT2D)
     DEALLOCATE(ZTEMP,ZSIGRC)
     DEALLOCATE(ZRV_OUT)
   ELSE
