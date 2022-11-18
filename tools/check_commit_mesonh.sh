@@ -8,7 +8,7 @@ set -e
 # Repertoire où MNH-V5-5-0_PHYEX.tar.gz modifie pour accueillir PHYEX se trouve
 #TARGZDIR=$HOME
 
-availTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, COLD_BUBBLE/002_mesonh, 
+availTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, 007_16janvier/008_run2_lredf, COLD_BUBBLE/002_mesonh, 
             ARMLES/RUN, COLD_BUBBLE_3D/002_mesonh,OCEAN_LES/004_run2"
 defaultTest="007_16janvier/008_run2"
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
@@ -259,22 +259,34 @@ if [ $run -ge 1 ]; then
       [ ! -d ${exedir}_$commit ] && cp -R ${exedir} ${exedir}_$commit
       cd $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/${exedir}_$commit
     else
+      #If the test case didn't exist in the tar.gz, we copy it from from the reference version
       rep=$MNHPACK/$name/MY_RUN/KTEST/$case
-      [ -d $rep ] && rm -rf $rep
-      mkdir $rep
+      [ ! -d $rep ] && cp -r $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case $rep
       cd $rep
-      for repref in $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/$rep/*; do
-        rep=$(basename $repref)
-        if [ $rep != ${exedir} ]; then
-          rm -rf $rep
-          ln -s $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/$rep .
-        else
-          cp -R $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/$rep .
+
+      #Loop on the directories
+      for rep in *; do
+        if [ -d "$rep" ]; then
+          if echo $availTests | grep ${case}/$rep > /dev/null; then
+            #This directory is a test case
+            if [ $rep == ${exedir} ]; then
+              #this is the case we want to run
+              rm -rf $rep
+              cp -r $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/$rep .
+            fi
+          else
+            #This directory might be neede to run the test case, we take the reference version
+            rm -rf $rep
+            ln -s $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/$rep 
+          fi
         fi
       done
+
+      #In case subcase does not exist we create it
+      [ ! -d ${exedir} ] && cp -r $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/${exedir} .
       cd ${exedir}
     fi
-  
+
     set +e #file ends with a test that can return false
     [ $compilation -eq 0 ] && . $MNHPACK/$name/conf/profile_mesonh-*
     set -e
@@ -296,6 +308,9 @@ if [ $check -eq 1 ]; then
     elif  [ $t == 007_16janvier/008_run2_turb3D ]; then
       path_user=$path_user_beg/MY_RUN/KTEST/007_16janvier/008_run2_turb3D$path_user_end
       path_ref=$path_ref_beg/MY_RUN/KTEST/007_16janvier/008_run2_turb3D$path_ref_end
+    elif  [ $t == 007_16janvier/008_run2_lredf ]; then
+      path_user=$path_user_beg/MY_RUN/KTEST/007_16janvier/008_run2_lredf$path_user_end
+      path_ref=$path_ref_beg/MY_RUN/KTEST/007_16janvier/008_run2_lredf$path_ref_end
     elif   [ $t == COLD_BUBBLE/002_mesonh ]; then
       path_user=$path_user_beg/MY_RUN/KTEST/COLD_BUBBLE/002_mesonh$path_user_end
       path_ref=$path_ref_beg/MY_RUN/KTEST/COLD_BUBBLE/002_mesonh$path_ref_end

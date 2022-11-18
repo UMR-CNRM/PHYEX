@@ -29,9 +29,9 @@ Intégration de PHYEX dans des cycles/versions officielles:
   - déplacer dans un nouveau mpa/aux: aro_startbu, aroini_budget, aro_suintbudget, aro_suintbudget_omp, aroini_cstmnh, aroini_frommpa, modd_spp_type
 
 Merge pb:
-  - rain_ice_old a rebrancher dans Meso-NH
-  - appels à condensation temporairement supprimés de src/mesonh/micro/radtr_satel.f90,
+  - appels à condensation remis dans src/mesonh/micro/radtr_satel.f90,
         src/mesonh/micro/ice_adjust_elec.f90 et src/mesonh/micro/lima_adjust_split.f90
+        mais non testés
   - arp_shallow_mf non phasé
   - LIMA à faire
   - KFB ?

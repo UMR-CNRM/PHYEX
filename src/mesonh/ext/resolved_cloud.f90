@@ -324,6 +324,7 @@ USE MODI_LIMA_NOTADJUST
 USE MODI_LIMA_WARM
 USE MODI_RAIN_C2R2_KHKO
 USE MODI_RAIN_ICE
+USE MODI_RAIN_ICE_OLD
 USE MODI_SHUMAN
 USE MODI_SLOW_TERMS
 !
@@ -803,7 +804,17 @@ SELECT CASE ( HCLOUD )
                     TBUDGETS,SIZE(TBUDGETS),           &
                     PSEA,PTOWN, PFPR=ZFPR                                )
     ELSE 
-!    CALL RAIN_ICE_OLD
+      CALL RAIN_ICE_OLD (YLDIMPHYEX, OSEDIC, CSEDIM, HSUBG_AUCV, OWARM, 1, IKU, 1,    &
+                    KSPLITR, PTSTEP, KRR,                                 &
+                    ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
+                    PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                     &
+                    PRT(:,:,:,3), PRT(:,:,:,4),                           &
+                    PRT(:,:,:,5), PRT(:,:,:,6),                           &
+                    PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),       &
+                    PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),             &
+                    PINPRC,PINPRR, PINPRR3D, PEVAP3D,                     &
+                    PINPRS, PINPRG, PSIGS,PINDEP, PRAINFR,                &
+                    PSEA, PTOWN, PFPR=ZFPR)
     END IF
 
 !
@@ -902,7 +913,18 @@ SELECT CASE ( HCLOUD )
                     PSEA, PTOWN,                                          &
                     PRT(:,:,:,7), PRS(:,:,:,7), PINPRH, PFPR=ZFPR         )
     ELSE
-    !CALL RAIN_ICE_OLD
+      CALL RAIN_ICE_OLD (YLDIMPHYEX, OSEDIC, CSEDIM, HSUBG_AUCV, OWARM, 1, IKU, 1,    &
+                    KSPLITR, PTSTEP, KRR,                                 &
+                    ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
+                    PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                     &
+                    PRT(:,:,:,3), PRT(:,:,:,4),                           &
+                    PRT(:,:,:,5), PRT(:,:,:,6),                           &
+                    PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),       &
+                    PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),             &
+                    PINPRC,PINPRR, PINPRR3D, PEVAP3D,                     &
+                    PINPRS, PINPRG, PSIGS,PINDEP, PRAINFR,                &
+                    PSEA, PTOWN,                                          &
+                    PRT(:,:,:,7),  PRS(:,:,:,7), PINPRH, PFPR=ZFPR)
     END IF
 
 
