@@ -14,6 +14,10 @@ defaultTest="007_16janvier/008_run2"
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- seprator must be in sync with prep_code.sh separator
 
+#For the OCEAN_LES/004_run2 case, results obtained are different from those obtained with the original version
+#of Meso-NH because of new developments and bug correction. The reference version is given by commit e053c59.
+#In this commit two modifications must be done in turb/mode_tke_eps_sources.f90 to change twice LOCEAN into OOCEAN.
+
 PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 function usage {
   echo "Usage: $0 [-h] [-c] [-r] [-C] [-s] [--expand]  [-t test] commit reference"
