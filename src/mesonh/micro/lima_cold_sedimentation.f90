@@ -233,7 +233,7 @@ END IF
    END IF
 !
    ISEDIM = COUNTJV( GSEDIM(:,:,:),I1(:),I2(:),I3(:))
-   IF( ISEDIM >= 1 ) THEN
+   IF( ISEDIM >= 0 ) THEN
 !
       IF( JN==1 ) THEN
          IF( OSEDI ) THEN
@@ -477,7 +477,7 @@ END IF
          IF(NMOM_G.GE.2) PCGS(:,:,:) = PCGS(:,:,:) / PTSTEP
          IF(NMOM_H.GE.2) PCHS(:,:,:) = PCHS(:,:,:) / PTSTEP 
       END IF
-   END IF
+   END IF ! ISEDIM
 END DO
 !++cb++
 DEALLOCATE(ZRTMIN)
