@@ -193,7 +193,7 @@ GEVAP(IIB:IIE,IJB:IJE,IKB:IKE) =                              &
 !
 IEVAP = COUNTJV( GEVAP(:,:,:),I1(:),I2(:),I3(:))
 !
-IF( IEVAP >= 1 ) THEN
+IF( IEVAP >= 0 ) THEN
    ALLOCATE(ZRVT(IEVAP))
    ALLOCATE(ZRCT(IEVAP))
    ALLOCATE(ZRRT(IEVAP))
