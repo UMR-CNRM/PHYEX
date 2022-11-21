@@ -173,9 +173,14 @@ USE MODD_ELEC_DESCR, ONLY : XRTMIN_ELEC, XQTMIN, XFC, XFI, XECHARGE
 USE MODD_NSV, ONLY : NSV_ELECBEG, NSV_ELECEND
 USE MODD_PARAMETERS
 USE MODD_RAIN_ICE_DESCR, ONLY : XRTMIN, XBI
+USE MODD_RAIN_ICE_PARAM,   ONLY: RAIN_ICE_PARAM
+USE MODD_NEB,              ONLY: NEB
+USE MODD_TURB_n,           ONLY: TURBN
+USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 
 use mode_budget,          only: Budget_store_init, Budget_store_end
 use mode_tools_ll,        only: GET_INDICE_ll
+USE MODE_FILL_DIMPHYEX,   ONLY: FILL_DIMPHYEX
 
 USE MODI_CONDENSATION
 USE MODI_GET_HALO
@@ -285,6 +290,8 @@ INTEGER             :: JITER,ITERMAX ! iterative loop for first order adjustment
 !
 LOGICAL             :: LPRETREATMENT, LNEW_ADJUST
 !
+TYPE(DIMPHYEX_t)    :: D
+!
 !-------------------------------------------------------------------------------
 !
 !*       1.     PRELIMINARIES
@@ -296,6 +303,7 @@ IKU = SIZE(PEXNREF,3)
 CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
 IKB = 1 + JPVEXT
 IKE = IKU - JPVEXT
+CALL FILL_DIMPHYEX(D, IIU, IJU, IKU)
 !
 ZEPS = XMV / XMD
 !
@@ -377,13 +385,13 @@ DO JITER = 1, ITERMAX
     ZSIGQSAT2D(:,:)=PSIGQSAT
     ZW4 = 1. ! PRODREF is not used if HL variables are not present
 !
-    !CALL CONDENSATION( IIU, IJU, IKU, IIB, IIE, IJB, IJE, IKB, IKE,1, &
-    !   'T', 'CB02', 'CB',   &
-    !   PPABST, PZZ, ZW4, ZT, ZW3_IN, ZW3, ZW1_IN, ZW1, ZW2_IN, ZW2, &
-    !   PRRS*PTSTEP, PRSS*PTSTEP, PRGS*PTSTEP, PSIGS, PMFCONV, PCLDFR, &
-    !   PSRCS, .TRUE., OSIGMAS, .FALSE., .FALSE., &
-    !   ZDUM, ZDUM, ZDUM, ZDUM, ZDUM, ZSIGQSAT2D, &
-    !   PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
+    CALL CONDENSATION(D, CST, RAIN_ICE_PARAM, NEB, TURBN, &
+                     &'T', 'CB02', 'CB',                                                  &
+                     &PPABST, PZZ, ZW4, ZT, ZW3_IN, ZW3, ZW1_IN, ZW1, ZW2_IN, ZW2,    &
+                     &PRRS*PTSTEP, PRSS*PTSTEP, PRGS*PTSTEP, PSIGS, .FALSE., PMFCONV, PCLDFR, PSRCS, .FALSE.,                 &
+                     &OSIGMAS, .FALSE., .FALSE.,                                                        &
+                     &ZDUM, ZDUM, ZDUM, ZDUM, ZDUM, ZSIGQSAT2D, &
+                     &ZLV, ZLS, ZCPH)
 !
 !*       3.2    compute the variation of mixing ratio
 !

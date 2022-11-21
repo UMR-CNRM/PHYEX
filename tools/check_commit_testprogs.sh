@@ -21,10 +21,10 @@ PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 dirdata=$PHYEXTOOLSDIR/testprogs_data
 if [ $(hostname | cut -c 1-7) == 'belenos' -o $(hostname | cut -c 1-7) == 'taranis' ]; then
   HPC=1
-  archfile=MIMPIIFC1805.EPONA
+  defaultarchfile=MIMPIIFC1805.EPONA
 else
   HPC=0
-  archfile=gnu
+  defaultarchfile=gnu
 fi
 defaultRef=ref
 
@@ -32,7 +32,7 @@ function usage {
   echo "Usage: $0 [-h] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t test] commit reference"
   echo "commit          commit hash (or a directory, or among $specialName) to test"
   echo "reference       commit hash (or a directory, or among $specialName) REF to use as a reference"
-  echo "-s              suppress compilation pack"
+  echo "-s              suppress compilation directory"
   echo "-c              performs compilation"
   echo "-r              runs the tests"
   echo "-C              checks the result against the reference"
@@ -43,6 +43,8 @@ function usage {
   echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
   echo "--repo-protocol protocol (https or ssh) to reach the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREOprotocol (=$PHYEXREOprotocol)"
+  echo "-a arch         architecture name to use to build and run the commit (=$defaultarchfile)"
+  echo "-A arch         architecture name to use for the reference simulation (=$defaultarchfile)"
   echo ""
   echo "If nothing is asked (compilation, running, check) everything is done"
   echo
@@ -63,6 +65,8 @@ reference=""
 tests=""
 suppress=0
 useexpand=1
+archfile=$defaultarchfile
+refarchfile=$defaultarchfile
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -75,6 +79,8 @@ while [ -n "$1" ]; do
     '--noexpand') useexpand=0;;
     '--repo-user') export PHYEXREPOuser=$2; shift;;
     '--repo-protocol') export PHYEXREPOprotocol=$2; shift;;
+    '-a') archfile="$2"; shift;;
+    '-A') refarchfile="$2"; shift;;
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
           commit=$1
@@ -129,7 +135,6 @@ if [ $check -eq 1 -a -z "${reference-}" ]; then
   exit 3
 fi
 
-#Name is choosen such as it can be produced with a main pack: PHYEX/48t1_XXXXXXXXX.01.${gmkpack_l}.${gmkpack_o}
 fromdir=''
 if echo $commit | grep '/' > /dev/null; then
   fromdir=$commit
@@ -163,7 +168,7 @@ if [ $compilation -eq 1 ]; then
   fi
 
   if [ -d $TESTDIR/$name ]; then
-    echo "Pack already exists ($TESTDIR/$name), suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
+    echo "Directory already exists ($TESTDIR/$name), suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
     exit 5
   fi
   mkdir $TESTDIR/$name
@@ -205,7 +210,7 @@ if [ $run -ge 1 ]; then
 
   for t in $(echo $tests | sed 's/,/ /g'); do
     if [ ! -f $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe ]; then
-      echo "Pack does not exist ($TESTDIR/$name) or compilation has failed, please check"
+      echo "Directory does not exist ($TESTDIR/$name) or compilation has failed, please check"
       exit 6
     fi
   done
@@ -213,16 +218,16 @@ if [ $run -ge 1 ]; then
   #Cleaning to suppress old results that may be confusing in case of a crash during the run
   for t in $(echo $tests | sed 's/,/ /g'); do
     cd $TESTDIR/$name
-    if [ -d tests/$t ]; then
-      rm -rf tests/$t
+    if [ -d tests/with_fcm/arch_${archfile}/$t ]; then
+      rm -rf tests/with_fcm/arch_${archfile}/$t
     fi
   done
 
   #Run the tests one after the other
   for t in $(echo $tests | sed 's/,/ /g'); do
     cd $TESTDIR/$name
-    mkdir -p tests/$t
-    cd tests/$t
+    mkdir -p tests/with_fcm/arch_${archfile}/$t
+    cd tests/with_fcm/arch_${archfile}/$t
     ln -s $dirdata/$t data
     $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe --check 2>&1 > Output_run
   done
@@ -234,8 +239,8 @@ if [ $check -eq 1 ]; then
   alltests=0
   message=""
   for t in $(echo $tests | sed 's/,/ /g'); do
-    file1=$TESTDIR/$name/tests/$t/Output_run
-    file2=$TESTDIR/$refname/tests/$t/Output_run
+    file1=$TESTDIR/$name/tests/with_fcm/arch_${archfile}/$t/Output_run
+    file2=$TESTDIR/$refname/tests/with_fcm/arch_${refarchfile}/$t/Output_run
     mess=""
     te=0
     if [ ! -f "$file1" ]; then

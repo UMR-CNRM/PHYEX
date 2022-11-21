@@ -29,9 +29,9 @@ Intégration de PHYEX dans des cycles/versions officielles:
   - déplacer dans un nouveau mpa/aux: aro_startbu, aroini_budget, aro_suintbudget, aro_suintbudget_omp, aroini_cstmnh, aroini_frommpa, modd_spp_type
 
 Merge pb:
-  - rain_ice_old a rebrancher dans Meso-NH
-  - appels à condensation temporairement supprimés de src/mesonh/micro/radtr_satel.f90,
+  - appels à condensation remis dans src/mesonh/micro/radtr_satel.f90,
         src/mesonh/micro/ice_adjust_elec.f90 et src/mesonh/micro/lima_adjust_split.f90
+        mais non testés
   - arp_shallow_mf non phasé
   - LIMA à faire
   - KFB ?
@@ -71,9 +71,6 @@ Nettoyage ultérieur :
 - Budgets/LES
 Une fois toutes les routines de la turbulence ont leur dimension horizontale packée et
 utilisent LES_MEAN_SUBGRID_PHY a la place de LES_MEAN_SUBGRID_PHY : renommer les routines arome/turb et mesonh/turb en les_mean_subgrid.F90 et remplacer partout dans le code les appels (enlever le _PHY) + supprimer les anciennes routines
-
-
-Enable mnh_expand with fcm build
 
 Reprendre les différents outils en deux scripts principaux:
 - outil pour reprendre toutes les fonctionnalités sur le code: filepp, MNH_Expand_Array, correct_indent.py, verify_mnh_expand.py et renommage

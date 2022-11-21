@@ -9,7 +9,7 @@
 !
 INTERFACE
 !
-      SUBROUTINE LIMA_ADJUST_SPLIT(KRR, KMI, TPFILE, HCONDENS, HLAMBDA3,        &
+      SUBROUTINE LIMA_ADJUST_SPLIT(D, KRR, KMI, TPFILE, HCONDENS, HLAMBDA3,        &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
                              PRHODREF, PRHODJ, PEXNREF, PPABSM, PSIGS, PMFCONV, &
                              PPABST, PZZ, PDTHRAD, PW_NU,                       &
@@ -18,7 +18,9 @@ INTERFACE
 !
 USE MODD_IO,    ONLY: TFILEDATA
 USE MODD_NSV,   only: NSV_LIMA_BEG
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 !
+TYPE(DIMPHYEX_t),         INTENT(IN)   :: D
 INTEGER,                  INTENT(IN)   :: KRR        ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KMI        ! Model index 
 TYPE(TFILEDATA),          INTENT(IN)   :: TPFILE     ! Output file
@@ -68,7 +70,7 @@ END INTERFACE
 END MODULE MODI_LIMA_ADJUST_SPLIT
 !
 !     ###########################################################################
-      SUBROUTINE LIMA_ADJUST_SPLIT(KRR, KMI, TPFILE, HCONDENS, HLAMBDA3,        &
+      SUBROUTINE LIMA_ADJUST_SPLIT(D, KRR, KMI, TPFILE, HCONDENS, HLAMBDA3,        &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
                              PRHODREF, PRHODJ, PEXNREF, PPABSM, PSIGS, PMFCONV, &
                              PPABST, PZZ, PDTHRAD, PW_NU,                       &
@@ -162,6 +164,10 @@ USE MODD_PARAM_LIMA
 USE MODD_PARAM_LIMA_COLD
 USE MODD_PARAM_LIMA_MIXED
 USE MODD_PARAM_LIMA_WARM
+USE MODD_RAIN_ICE_PARAM,   ONLY: RAIN_ICE_PARAM
+USE MODD_NEB,              ONLY: NEB
+USE MODD_TURB_n,           ONLY: TURBN
+USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 !
 use mode_budget,           only: Budget_store_init, Budget_store_end
 USE MODE_IO_FIELD_WRITE,   only: IO_Field_write
@@ -178,6 +184,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 !
+TYPE(DIMPHYEX_t),         INTENT(IN)   :: D
 INTEGER,                  INTENT(IN)   :: KRR        ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KMI        ! Model index 
 TYPE(TFILEDATA),          INTENT(IN)   :: TPFILE     ! Output file
@@ -510,13 +517,13 @@ DO JITER =1,ITERMAX
       ZRI=0.
       ZSIGS=PSIGS
       ZSIGQSAT2D(:,:)=PSIGQSAT
-      !CALL CONDENSATION(IIU, IJU, IKU, IIB, IIE, IJB, IJE, IKB, IKE, 1, &
-      !     'S', HCONDENS, HLAMBDA3, &
-      !     PPABST, PZZ, PRHODREF, ZT, ZRV_IN, ZRV, ZRC_IN, ZRC, ZRI_IN, ZRI,&
-      !     PRRS*PTSTEP, PRSS*PTSTEP, PRGS*PTSTEP, ZSIGS, PMFCONV, PCLDFR, &
-      !     PSRCS, .FALSE., OSIGMAS, .FALSE., .FALSE., &
-      !     ZDUM, ZDUM, ZDUM, ZDUM, ZDUM, ZSIGQSAT2D, &
-      !     PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
+      CALL CONDENSATION(D, CST, RAIN_ICE_PARAM, NEB, TURBN, &
+                       &'S', HCONDENS, HLAMBDA3,                                                  &
+                       &PPABST, PZZ, PRHODREF, ZT, ZRV_IN, ZRV, ZRC_IN, ZRC, ZRI_IN, ZRI,    &
+                       &PRRS*PTSTEP, PRSS*PTSTEP, PRGS*PTSTEP, ZSIGS, .FALSE., PMFCONV, PCLDFR, PSRCS, .FALSE.,                 &
+                       &OSIGMAS, .FALSE., .FALSE.,                                                        &
+                       &ZDUM, ZDUM, ZDUM, ZDUM, ZDUM, ZSIGQSAT2D, &
+                       &ZLV, ZLS, ZCPH)
       PCLDFR(:,:,:) = MIN(PCLDFR(:,:,:) + PCF_MF(:,:,:) , 1.)
       ZRV(:,:,:) = ZRV(:,:,:) - MAX(MIN(PRC_MF(:,:,:), ZRV(:,:,:)),0.)
       ZRC(:,:,:) = ZRC(:,:,:) + MAX(MIN(PRC_MF(:,:,:), ZRV(:,:,:)),0.)

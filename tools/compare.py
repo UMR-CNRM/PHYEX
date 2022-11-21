@@ -38,7 +38,7 @@ def compareBACKUPFiles(file_user, file_ref):
   nj=len(da['nj'])
   nk=len(da['level'])
   variables = list(da.keys())
-  for var in variables:
+  for var in [var for var in variables if da[var].dtype.char != 'S']:
     try:
       if da[var].ndim == 4: #Variables time, level, nj, ni
         ecart_min=float(da2[var][0,JPVEXT:nk-1-JPVEXT,JPHEXT:nj-1-JPHEXT,JPHEXT:ni-1-JPHEXT].min())-float(da[var][0,JPVEXT:nk-1-JPVEXT,JPHEXT:nj-1-JPHEXT,JPHEXT:ni-1-JPHEXT].min())
@@ -64,6 +64,7 @@ def compareBACKUPFiles(file_user, file_ref):
         status += 1
         print(var, ecart_min, ecart_moy, ecart_max)
     except:
+      #raise
       pass
   return status
 

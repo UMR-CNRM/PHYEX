@@ -24,10 +24,3 @@ $LD_EXE_TO_SHARED =
 # Other
 $AR            =     ar
 
-#Kept for latter use
-#$FPP           =     mpiifort -E
-#$MAKE          =     gmake
-#$FPP_FLAGS     =     -P
-#$FPP_DEF       =     KEY_NONE CPP_NETCDF4
-#$MPI_LD
-#$MPI_FFLAGS     

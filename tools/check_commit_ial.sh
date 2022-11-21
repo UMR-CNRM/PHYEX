@@ -18,10 +18,24 @@ set -e
 #small_3D_alt8: CMF_UPDRAFT='RHCJ'
 #small_3D_alt9: CCLOUD='OLD3', OCND2=.T.
 
-#The small_3D_alt8 is not included in the list of available tests because it needs to be compared against a special commit.
-#Indeed, on 3 February 2022 (commit 907e906) the mesonh version of compute_updraft_rhcj.F90 has been put in the common directory.
+#The small_3D_alt7 needed a correction in apl_arome which has been introduced in d37dd1f. But the reference pack has been modified
+#                  afterwards to enable this test case to be run (documented in INSTALL_pack_ial.md). In consequence, the reference
+#                  to use is the same as for the other test cases and this case cannot be run for commit before d37dd1f (20 April 2022).
 
-#The small_3D_alt9 is not included in the list of available tests because it cannot be run before 21 September (commit edc3f88).
+#The small_3D_alt8 is not included in the list of available tests because it needs to be compared against a special commit.
+#                  Indeed, on 3 February 2022 (commit 907e906) the mesonh version of compute_updraft_rhcj.F90 has been put in the common directory.
+#                  The reference is
+#                       the commit 907e906 when running in 48t1
+#                       the commit d10ed48 when running in 48t3
+#                  Indeed, it was checked that edc3f88 (last commit in 48t1) is identical to 907e906.
+#                  Between edc3f88 and d10ed48 only the reference change, physics source code is identical.
+
+#The small_3D_alt9 is not included in the list of available tests because it needs to be compared against a special commit.
+#                  Indeed, some pieces are missing in the reference pack. Theses pieces have been added in commit edc3f88 during phasing with 48t3.
+#                  The reference is
+#                       the commit edc3f88 (21 September 2022) when running in 48t1
+#                       the commit d10ed48 in 48t3 (29 september 2022) when running in 48t3
+#                  Between edc3f88 and d10ed48 only the reference change, physics source code is identical.
 
 #Special pack names:
 # - recompil: original source code (everything under mpa)
@@ -205,9 +219,16 @@ elif echo $specialPack | grep -w $commit > /dev/null; then
 else
   packBranch="COMMIT$commit"
   if [ "$cycle" == "" ]; then
-    content_ial_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${commit}/src/arome/ial_version.json -O - 2>/dev/null || echo "")
+    if [[ $commit == arome${separator}* ]]; then
+      apl_arome_file="ext/apl_arome.F90"
+      ial_version_file="ext/ial_version.json"
+    else
+      apl_arome_file="src/arome/ext/apl_arome.F90"
+      ial_version_file="src/arome/ial_version.json"
+    fi
+    content_ial_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${commit}/$ial_version_file -O - 2>/dev/null || echo "")
     if [ "$content_ial_version" == "" ]; then
-      content_apl_arome=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${commit}/src/arome/ext/apl_arome.F90 -O - 2>/dev/null)
+      content_apl_arome=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${commit}/$apl_arome_file -O - 2>/dev/null)
       cycle=$(apl_arome_content2cycle)
     else
       cycle=$(ial_version_content2cycle)

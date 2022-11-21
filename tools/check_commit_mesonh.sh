@@ -8,11 +8,15 @@ set -e
 # Repertoire où MNH-V5-5-0_PHYEX.tar.gz modifie pour accueillir PHYEX se trouve
 #TARGZDIR=$HOME
 
-availTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, COLD_BUBBLE/002_mesonh, 
+availTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, 007_16janvier/008_run2_lredf, COLD_BUBBLE/002_mesonh, 
             ARMLES/RUN, COLD_BUBBLE_3D/002_mesonh,OCEAN_LES/004_run2"
 defaultTest="007_16janvier/008_run2"
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- seprator must be in sync with prep_code.sh separator
+
+#For the OCEAN_LES/004_run2 case, results obtained are different from those obtained with the original version
+#of Meso-NH because of new developments and bug correction. The reference version is given by commit e053c59.
+#In this commit two modifications must be done in turb/mode_tke_eps_sources.f90 to change twice LOCEAN into OOCEAN.
 
 PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 function usage {
@@ -104,7 +108,8 @@ fi
 # - they can be done in the reference pack
 #They are done in the current pack except if the reference pack
 #already contains a tested simulation
-run_in_ref=$(ls -d $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_* 2> /dev/null | tail -1 |wc -l)
+#To check this, we use the case 007_16janvier/008_run2_turb3D
+run_in_ref=$(ls -d $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_turb3D_* 2> /dev/null | tail -1 |wc -l)
 
 #Name and directory for compiling and executing user pack
 fromdir=''
@@ -258,18 +263,34 @@ if [ $run -ge 1 ]; then
       [ ! -d ${exedir}_$commit ] && cp -R ${exedir} ${exedir}_$commit
       cd $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/${exedir}_$commit
     else
-      cd $MNHPACK/$name/MY_RUN/KTEST/$case/
-      for rep in ???_*; do
-        if [ $rep != ${exedir} ]; then
-          rm -rf $rep
-          ln -s $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/$rep .
+      #If the test case didn't exist in the tar.gz, we copy it from from the reference version
+      rep=$MNHPACK/$name/MY_RUN/KTEST/$case
+      [ ! -d $rep ] && cp -r $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case $rep
+      cd $rep
+
+      #Loop on the directories
+      for rep in *; do
+        if [ -d "$rep" ]; then
+          if echo $availTests | grep ${case}/$rep > /dev/null; then
+            #This directory is a test case
+            if [ $rep == ${exedir} ]; then
+              #this is the case we want to run
+              rm -rf $rep
+              cp -r $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/$rep .
+            fi
+          else
+            #This directory might be neede to run the test case, we take the reference version
+            rm -rf $rep
+            ln -s $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/$rep 
+          fi
         fi
       done
-      [ -d ${exedir} ] && rm -rf ${exedir}
-      cp -R $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/${exedir} .
+
+      #In case subcase does not exist we create it
+      [ ! -d ${exedir} ] && cp -r $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/$case/${exedir} .
       cd ${exedir}
     fi
-  
+
     set +e #file ends with a test that can return false
     [ $compilation -eq 0 ] && . $MNHPACK/$name/conf/profile_mesonh-*
     set -e
@@ -291,6 +312,9 @@ if [ $check -eq 1 ]; then
     elif  [ $t == 007_16janvier/008_run2_turb3D ]; then
       path_user=$path_user_beg/MY_RUN/KTEST/007_16janvier/008_run2_turb3D$path_user_end
       path_ref=$path_ref_beg/MY_RUN/KTEST/007_16janvier/008_run2_turb3D$path_ref_end
+    elif  [ $t == 007_16janvier/008_run2_lredf ]; then
+      path_user=$path_user_beg/MY_RUN/KTEST/007_16janvier/008_run2_lredf$path_user_end
+      path_ref=$path_ref_beg/MY_RUN/KTEST/007_16janvier/008_run2_lredf$path_ref_end
     elif   [ $t == COLD_BUBBLE/002_mesonh ]; then
       path_user=$path_user_beg/MY_RUN/KTEST/COLD_BUBBLE/002_mesonh$path_user_end
       path_ref=$path_ref_beg/MY_RUN/KTEST/COLD_BUBBLE/002_mesonh$path_ref_end
