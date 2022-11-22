@@ -21,45 +21,35 @@ program main_rain_ice_old
              n_proma, &
              n_levels
 
-  real, allocatable, dimension(:,:,:)   :: pexnref
   real, allocatable, dimension(:,:,:)   :: pdzz
   real, allocatable, dimension(:,:,:)   :: prhodj
   real, allocatable, dimension(:,:,:)   :: prhodref
-  real, allocatable, dimension(:,:,:)   :: pexnref2
+  real, allocatable, dimension(:,:,:)   :: pexnref
   real, allocatable, dimension(:,:,:)   :: ppabsm
-  real, allocatable, dimension(:,:,:)   :: pcit
+  real, allocatable, dimension(:,:,:)   :: pcit, pcit_out
   real, allocatable, dimension(:,:,:)   :: pcldfr
-  real, allocatable, dimension(:,:,:)   :: phlc_hrc
-  real, allocatable, dimension(:,:,:)   :: phlc_hcf
-  real, allocatable, dimension(:,:,:)   :: phli_hri
-  real, allocatable, dimension(:,:,:)   :: phli_hcf
   real, allocatable, dimension(:,:,:)   :: ptht
   real, allocatable, dimension(:,:,:,:) :: prt
-  real, allocatable, dimension(:,:,:)   :: pths
-  real, allocatable, dimension(:,:,:,:) :: prs
+  real, allocatable, dimension(:,:,:)   :: pths, pths_out
+  real, allocatable, dimension(:,:,:,:) :: prs, prs_out
   real, allocatable, dimension(:,:,:)   :: psigs
   real, allocatable, dimension(:,:)     :: psea
   real, allocatable, dimension(:,:)     :: ptown
-  real, allocatable, dimension(:,:,:)   :: pcit_out
-  real, allocatable, dimension(:,:,:,:) :: prs_out
 
   real, allocatable, dimension(:,:)     :: zinprc, zinprc_out
   real, allocatable, dimension(:,:)     :: pinprr, pinprr_out
   real, allocatable, dimension(:,:,:)   :: pevap, pevap_out
   real, allocatable, dimension(:,:)     :: pinprs, pinprs_out
   real, allocatable, dimension(:,:)     :: pinprg, pinprg_out
-  real, allocatable, dimension(:,:)     :: zindep, zindep_out
-  real, allocatable, dimension(:,:,:)   :: zrainfr, zrainfr_out
   real, allocatable, dimension(:,:,:,:) :: pfpr, pfpr_out
 
-  logical, allocatable, dimension(:,:,:)     :: l_micro
+  real, allocatable, dimension(:,:)     :: pinprh, pinprh_out
 
   !Dummies for now
   !Spp stuff
   real, allocatable, dimension(:,:)   :: picenu, pkgn_acon, pkgn_sbgr
   !Ocnd2 stuff
   real, allocatable, dimension(:,:,:) :: picldfr ! Ice cloud fraction
-  real, allocatable, dimension(:,:,:) :: pwcldfr ! Water or mixed-phase cloud fraction
   real, allocatable, dimension(:,:,:) :: pifr    ! Ratio cloud ice moist part to dry part
   real, allocatable, dimension(:,:,:) :: pssio   ! Super-saturation with respect to ice in the supersaturated fraction
   real, allocatable, dimension(:,:,:) :: pssiu   ! Sub-saturation with respect to ice in the subsaturated fraction
@@ -127,28 +117,23 @@ program main_rain_ice_old
   write(output_unit, *) 'n_levels:    ', n_levels
   write(output_unit, *) 'total:       ', n_levels*n_proma*n_gp_blocks
 
-  call getdata_rain_ice_old(n_proma, n_gp_blocks, n_levels, l_micro, pexnref, pdzz, prhodj, prhodref, &
-                            pexnref2, ppabsm, pcit, pcldfr, phlc_hrc, phlc_hcf, phli_hri, phli_hcf,   &
-                            ptht, prt, pths, prs, psigs, psea, ptown, pcit_out, prs_out,              &
-                            zinprc, zinprc_out, pinprr, pinprr_out, pevap, pevap_out,                 &
-                            pinprs, pinprs_out, pinprg, pinprg_out, zindep, zindep_out,               &
-                            zrainfr, zrainfr_out, pfpr, pfpr_out, l_verbose)
-
-  !dummies
-  allocate(picenu(n_proma, 1))
-  allocate(pkgn_acon(n_proma, 1))
-  allocate(pkgn_sbgr(n_proma, 1))
-
-  allocate(picldfr(n_proma, 1, n_levels))
-  allocate(pwcldfr(n_proma, 1, n_levels))
-
-  allocate(pifr(n_proma, 1, n_levels))
-  allocate(pssio(n_proma, 1, n_levels))
-  allocate(pssiu(n_proma, 1, n_levels))
-
-  picenu = 1.0
-  pkgn_acon = 1.0
-  pkgn_sbgr = 1.0
+  call getdata_rain_ice_old(n_proma, n_gp_blocks, n_levels, &
+                            pdzz, prhodj, prhodref, &
+                            pexnref, ppabsm, &
+                            pcit, pcit_out, &
+                            pcldfr, &
+                            picldfr, pssio, pssiu, pifr,  &
+                            ptht, prt, pths, pths_out, &
+                            prs, prs_out, &
+                            psigs, psea, ptown,     &
+                            zinprc, zinprc_out, &
+                            pinprr, pinprr_out, &
+                            pevap, pevap_out,        &
+                            pinprs, pinprs_out, &
+                            pinprg, pinprg_out,      &
+                            pinprh, pinprh_out,      &
+                            picenu, pkgn_acon, pkgn_sbgr, &
+                            pfpr, pfpr_out, l_verbose)
 
   osedic = .false.
   ocnd2 = .true.
@@ -199,8 +184,8 @@ program main_rain_ice_old
                       ksplitr=ksplitr, ptstep=2*ptstep, krr=krr,                        &
                       pdzz=pdzz(:,:,i), prhodj=prhodj(:,:,i), prhodref=prhodref(:,:,i), &
                       pexnref=pexnref(:,:,i), ppabst=ppabsm(:,:,i),                     &
-                      pcit=pcit(:,:,i), pcldfr=pcldfr(:,:,i), picldfr=picldfr(:,:,i),   &
-                      pssio=pssio(:,:,i), pssiu=pssiu(:,:,i),                           &
+                      pcit=pcit(:,:,i), pcldfr=pcldfr(:,:,i),                           &
+                      picldfr=picldfr(:,:,i), pssio=pssio(:,:,i), pssiu=pssiu(:,:,i),   &
                       pifr=pifr(:,:,i),                                                 &
                       ptht=ptht(:,:,i),                                                 &
                       prvt=prt(:,:,1,i), prct=prt(:,:,2,i), prrt=prt(:,:,3,i),          &
