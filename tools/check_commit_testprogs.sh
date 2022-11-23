@@ -12,7 +12,7 @@ set -e
 #ref is commit 855b8f8 for ice_adjust, rain_ice, turb and shallow_mf
 
 specialName="ref"
-availTests="ice_adjust,rain_ice"
+availTests="ice_adjust,rain_ice,turb"
 defaultTest='ALL'
 separator='_' #- seprator must be in sync with prep_code.sh separator
 
@@ -182,7 +182,7 @@ if [ $compilation -eq 1 ]; then
   else
     expand_options=""
   fi
-  subs="$subs -s turb -s micro -s aux -s ice_adjust -s rain_ice -s support"
+  subs="$subs -s turb -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s support"
   prep_code=$PHYEXTOOLSDIR/prep_code.sh
 
   if [ "$fromdir" == '' ]; then
