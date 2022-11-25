@@ -60,7 +60,7 @@ implicit none
 
 public
 
-integer, parameter :: NBULISTMAXLEN   = 256
+integer, parameter :: NBULISTMAXLEN   = 128
 integer, parameter :: NBULISTMAXLINES = 50
 
 integer, parameter :: NBUDGET_RHO = 0  ! Reference number for budget of RhoJ
