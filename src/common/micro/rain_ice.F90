@@ -173,6 +173,7 @@
 !  P. Wautelet    02/2020: use the new data structures and subroutines for budgets
 !  P. Wautelet 25/02/2020: bugfix: add missing budget: WETH_BU_RRG
 !!     R. El Khatib 24-Aug-2021 Optimizations
+!  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
 !-----------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -304,6 +305,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZRST    ! Snow/aggregate m.r. source at t
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRGT    ! Graupel m.r. source at t
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRHT    ! Hail m.r. source at t
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZCITOUT ! Output value for CIT
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZLBDAS  ! Modif  !lbda parameter snow
 
 !Diagnostics
 REAL, DIMENSION(D%NIJT) :: ZINPRI ! Pristine ice instant precip
@@ -468,6 +470,34 @@ DO JK = D%NKTB,D%NKTE
   ENDDO
 ENDDO
 !
+!Compute lambda_snow parameter
+!ZT en KELVIN
+DO JK = D%NKTB,D%NKTE
+  DO JIJ = D%NIJB,D%NIJE
+    ZLBDAS(JIJ,JK)=1000.
+  END DO
+END DO
+DO JK = D%NKTB,D%NKTE
+   DO JIJ = D%NIJB,D%NIJE
+         IF (PARAMI%LSNOW_T) THEN 
+            IF (PRST(JIJ,JK)>ICED%XRTMIN(5)) THEN
+               IF(ZT(JIJ,JK)>CST%XTT-10.0) THEN
+                  ZLBDAS(JIJ,JK) = MAX(MIN(ICED%XLBDAS_MAX, 10**(14.554-0.0423*ZT(JIJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
+               ELSE
+                  ZLBDAS(JIJ,JK) = MAX(MIN(ICED%XLBDAS_MAX, 10**(6.226-0.0106*ZT(JIJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
+               END IF
+            END IF
+#if defined(REPRO48) || defined(REPRO55)
+#else
+         ELSE
+            IF (PRST(JIJ,JK).GT.ICED%XRTMIN(5)) THEN
+               ZLBDAS(JIJ,JK)  = MAX(MIN(ICED%XLBDAS_MAX,ICED%XLBS*(PRHODREF(JIJ,JK)*PRST(JIJ,JK))**ICED%XLBEXS),ICED%XLBDAS_MIN)
+            END IF
+#endif
+         END IF
+   END DO
+END DO
+!
 !-------------------------------------------------------------------------------
 !
 !*       2.     COMPUTE THE SEDIMENTATION (RS) SOURCE
@@ -529,7 +559,7 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
     IF(KRR==7) THEN
       CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
                                    &PTSTEP, KRR, OSEDIC, PDZZ, &
-                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
+                                   &PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                    &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
                                    &PSEA=PSEA, PTOWN=PTOWN, &
@@ -537,7 +567,7 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
     ELSE
       CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
                                    &PTSTEP, KRR, OSEDIC, PDZZ, &
-                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
+                                   &PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                    &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
                                    &PSEA=PSEA, PTOWN=PTOWN, &
@@ -1612,7 +1642,7 @@ IF(PARAMI%LSEDIM_AFTER) THEN
     IF(KRR==7) THEN
       CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
                                    &PTSTEP, KRR, OSEDIC, PDZZ, &
-                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
+                                   &PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                    &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
                                    &PSEA=PSEA, PTOWN=PTOWN, &
@@ -1620,7 +1650,7 @@ IF(PARAMI%LSEDIM_AFTER) THEN
     ELSE
       CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
                                    &PTSTEP, KRR, OSEDIC, PDZZ, &
-                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
+                                   &PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                    &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
                                    &PSEA=PSEA, PTOWN=PTOWN, &

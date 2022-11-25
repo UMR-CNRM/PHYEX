@@ -77,6 +77,7 @@ CHARACTER(LEN=1) :: CFRAC_ICE_SHALLOW_MF ! ice fraction for shallow_mf
 LOGICAL :: LSEDIM_AFTER ! sedimentation done before (.FALSE.) or after (.TRUE.) microphysics
 !
 REAL :: XSPLIT_MAXCFL ! Maximum CFL number allowed for SPLIT scheme
+LOGICAL :: LSNOW_T         ! Snow parameterization from Wurtz (2021)
 END TYPE PARAM_ICE_t
 !
 TYPE(PARAM_ICE_t), SAVE, TARGET :: PARAM_ICE
@@ -94,7 +95,8 @@ LOGICAL, POINTER :: LWARM => NULL(), &
                     LCRFLIMIT => NULL(), &
                     LADJ_BEFORE => NULL(), &
                     LADJ_AFTER => NULL(), &
-                    LSEDIM_AFTER => NULL()
+                    LSEDIM_AFTER => NULL(),&
+                    LSNOW_T => NULL()
 
 REAL, POINTER :: XVDEPOSC => NULL(), &
                  XFRACM90 => NULL(), &
@@ -132,6 +134,7 @@ SUBROUTINE PARAM_ICE_ASSOCIATE()
   LADJ_BEFORE => PARAM_ICE%LADJ_BEFORE
   LADJ_AFTER => PARAM_ICE%LADJ_AFTER
   LSEDIM_AFTER => PARAM_ICE%LSEDIM_AFTER
+  LSNOW_T => PARAM_ICE%LSNOW_T
   !
   XVDEPOSC => PARAM_ICE%XVDEPOSC
   XFRACM90 => PARAM_ICE%XFRACM90

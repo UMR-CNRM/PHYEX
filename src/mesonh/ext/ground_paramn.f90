@@ -10,11 +10,13 @@ MODULE MODI_GROUND_PARAM_n
 INTERFACE 
 !
       SUBROUTINE GROUND_PARAM_n(D, PSFTH, PSFRV, PSFSV, PSFCO2, PSFU, PSFV, &
-                                 PDIR_ALB, PSCA_ALB, PEMIS, PTSRAD        )
+                                 PDIR_ALB, PSCA_ALB, PEMIS, PTSRAD, KTCOUNT, TPFILE )
 !
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !* surface fluxes
 !  --------------
+!
+USE MODD_IO,      ONLY: TFILEDATA
 !
 TYPE(DIMPHYEX_t),     INTENT(IN)   :: D
 REAL, DIMENSION(:,:), INTENT(OUT) :: PSFTH ! surface flux of potential temperature (Km/s)
@@ -33,6 +35,8 @@ REAL, DIMENSION(:,:,:), INTENT(OUT) :: PSCA_ALB  ! diffuse albedo for each spect
 REAL, DIMENSION(:,:,:), INTENT(OUT) :: PEMIS     ! surface emissivity                    (-)
 REAL, DIMENSION(:,:),   INTENT(OUT) :: PTSRAD    ! surface radiative temperature         (K)
 !
+INTEGER,                INTENT(IN)  :: KTCOUNT   ! temporal iteration count
+TYPE(TFILEDATA),        INTENT(IN)  :: TPFILE    ! Synchronous output file
 END SUBROUTINE GROUND_PARAM_n
 !
 END INTERFACE
@@ -41,7 +45,7 @@ END MODULE MODI_GROUND_PARAM_n
 !
 !     ######################################################################
       SUBROUTINE GROUND_PARAM_n(D, PSFTH, PSFRV, PSFSV, PSFCO2, PSFU, PSFV, &
-                                 PDIR_ALB, PSCA_ALB, PEMIS, PTSRAD        )
+                                 PDIR_ALB, PSCA_ALB, PEMIS, PTSRAD, KTCOUNT, TPFILE )
 !     #######################################################################
 !
 !
@@ -114,6 +118,7 @@ END MODULE MODI_GROUND_PARAM_n
 !!     (Bielli S.) 02/2019  Sea salt : significant sea wave height influences salt emission; 5 salt modes
 !  P. Wautelet 20/05/2019: add name argument to ADDnFIELD_ll + new ADD4DFIELD_ll subroutine
 !  P. Wautelet 09/02/2022: bugfix: add missing XCURRENT_LEI computation
+!  A. Costes      12/2021: Blaze Fire model
 !-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS
@@ -135,7 +140,12 @@ USE MODD_DIMPHYEX,   ONLY : DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY : JPVEXT, XUNDEF
 USE MODD_DYN_n,      ONLY : XTSTEP
 USE MODD_CH_MNHC_n,  ONLY : LUSECHEM
-USE MODD_FIELD_n,    ONLY : XUT, XVT, XWT, XTHT, XRT, XPABST, XSVT, XTKET, XZWS
+USE MODD_CH_M9_n,   ONLY : CNAMES
+USE MODD_FIELD_n,    ONLY : XUT, XVT, XWT, XTHT, XRT, XPABST, XSVT, XTKET, XZWS,&
+XLSPHI, XBMAP, XFMR0, XFMRFA, XFMWF0, XFMR00, XFMIGNITION, XFMFUELTYPE,&
+XFIRETAU, XFLUXPARAMH, XFLUXPARAMW, XFIRERW, XFMASE, XFMAWC, XFMWALKIG,&
+XFMFLUXHDH, XFMFLUXHDW, XRTHS, XRRS, XFMHWS, XFMWINDU, XFMWINDV, XFMWINDW, XGRADLSPHIX, &
+XGRADLSPHIY, XFIREWIND, XFMGRADOROX, XFMGRADOROY
 USE MODD_METRICS_n,  ONLY : XDXX, XDYY, XDZZ
 USE MODD_DIM_n,      ONLY : NKMAX
 USE MODD_GRID_n,     ONLY : XLON, XZZ, XDIRCOSXW, XDIRCOSYW, XDIRCOSZW, &
@@ -188,6 +198,14 @@ USE MODD_TIME
 !
 USE MODD_PARAM_LIMA, ONLY : MSEDC=>LSEDC
 !
+USE MODD_FIRE
+USE MODD_FIELD
+USE MODI_FIRE_MODEL
+USE MODD_CONF, ONLY : NVERB, NHALO
+USE MODE_MNH_TIMING, ONLY : SECOND_MNH2
+USE MODE_MSG
+USE MODD_IO,      ONLY: TFILEDATA
+!
 IMPLICIT NONE
 !
 !
@@ -214,6 +232,8 @@ REAL, DIMENSION(:,:,:), INTENT(OUT) :: PSCA_ALB  ! diffuse albedo for each spect
 REAL, DIMENSION(:,:,:), INTENT(OUT) :: PEMIS     ! surface emissivity                    (-)
 REAL, DIMENSION(:,:),   INTENT(OUT) :: PTSRAD    ! surface radiative temperature         (K)
 !
+INTEGER,                INTENT(IN)  :: KTCOUNT   ! temporal iteration count
+TYPE(TFILEDATA),        INTENT(IN)  :: TPFILE    ! Synchronous output file
 !
 !-------------------------------------------------------------------------------
 !
@@ -359,6 +379,16 @@ CHARACTER(LEN=6), DIMENSION(:), ALLOCATABLE :: YSV_SURF ! name of the scalar var
 REAL                              :: ZTIMEC
 INTEGER           :: ILUOUT         ! logical unit
 !
+! Fire model
+REAL, DIMENSION(2)                    :: ZFIRETIME1, ZFIRETIME2           ! CPU time for Blaze perf profiling
+REAL, DIMENSION(2)                    :: ZGRADTIME1, ZGRADTIME2           ! CPU time for Blaze perf profiling
+REAL, DIMENSION(2)                    :: ZPROPAGTIME1, ZPROPAGTIME2       ! CPU time for Blaze perf profiling
+REAL, DIMENSION(2)                    :: ZFLUXTIME1, ZFLUXTIME2           ! CPU time for Blaze perf profiling
+REAL, DIMENSION(2)                    :: ZROSWINDTIME1, ZROSWINDTIME2     ! CPU time for Blaze perf profiling
+REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: ZFIREFUELMAP                     ! Fuel map
+CHARACTER(LEN=7)                      :: YFUELMAPFILE                     ! Fuel Map file name
+TYPE(LIST_ll), POINTER                :: TZFIELDFIRE_ll                   ! list of fields to exchange
+
 !-------------------------------------------------------------------------------
 !
 !
@@ -668,6 +698,158 @@ WHERE (ZSFU(:,:)/=XUNDEF .AND. ZWIND(:,:)>0.)
   PSFV(:,:) = - SQRT(ZSFU**2+ZSFV**2) * ZVA(:,:) / ZWIND(:,:) / XRHODREF(:,:,IKB)
 END WHERE
 !
+
+!*       2.1    Blaze Fire Model
+!               ----------------
+!
+IF (LBLAZE) THEN
+  ! get start time
+  CALL SECOND_MNH2( ZFIRETIME1 )
+
+  !*       2.1.1  Local variables allocation
+  !               --------------------------
+  !
+
+  ! Parallel fuel
+  NULLIFY(TZFIELDFIRE_ll)
+  IF (KTCOUNT <= 1) THEN
+    ! fuelmap
+    SELECT CASE (CPROPAG_MODEL)
+    CASE('SANTONI2011')
+      !
+      ALLOCATE( ZFIREFUELMAP(SIZE(XLSPHI,1), SIZE(XLSPHI,2), SIZE(XLSPHI,3), 22) );
+      ! Parallel fuel
+      CALL ADD4DFIELD_ll( TZFIELDFIRE_ll, ZFIREFUELMAP(:,:,:,1::22), 'MODEL_n::ZFIREFUELMAP' )
+      ! Default value
+      ZFIREFUELMAP(:,:,:,:) = 0.
+    END SELECT
+
+    !*       2.1.2  Read fuel map file
+    !               ------------------
+    !
+    ! Fuel map file name
+    YFUELMAPFILE = 'FuelMap'
+    !
+    CALL FIRE_READFUEL( TPFILE, ZFIREFUELMAP, XFMIGNITION, XFMWALKIG )
+
+    !*       2.1.3  Ignition LS function with ignition map
+    !               --------------------------------------
+    !
+    SELECT CASE (CFIRE_CPL_MODE)
+    CASE('2WAYCPL', 'ATM2FIR')
+      ! force ignition
+      WHERE (XFMIGNITION <= TDTCUR%XTIME ) XLSPHI = 1.
+      ! walking ignition
+      CALL FIRE_LS_RECONSTRUCTION_FROM_BMAP( XLSPHI, XFMWALKIG, 0.)
+      !
+      !*       2.1.4  Update BMAP
+      !               -----------
+      !
+      WHERE (XLSPHI >= .5 .AND. XBMAP < 0) XBMAP = TDTCUR%XTIME
+      !
+    CASE('FIR2ATM')
+      CALL FIRE_READBMAP(TPFILE,XBMAP)
+      
+    END SELECT
+    !
+    !*       2.1.5  Compute R0, A, Wf0, R00
+    !               -----------------------
+    !
+    SELECT CASE (CPROPAG_MODEL)
+    CASE('SANTONI2011')
+      CALL FIRE_NOWINDROS( ZFIREFUELMAP, XFMR0, XFMRFA, XFMWF0, XFMR00, XFMFUELTYPE, XFIRETAU, XFLUXPARAMH, &
+                           XFLUXPARAMW, XFMASE, XFMAWC )
+    END SELECT
+    !
+    !*       2.1.6  Compute orographic gradient
+    !               ---------------------------
+    CALL FIRE_GRAD_OROGRAPHY( XZS, XFMGRADOROX, XFMGRADOROY )
+    !
+    !*       2.1.7  Test halo size
+    !               --------------
+    IF (NHALO < 2 .AND. NFIRE_WENO_ORDER == 3) THEN
+      WRITE(ILUOUT,'(A/A)') 'ERROR BLAZE-FIRE : WENO3 fire gradient calculation needs NHALO >= 2'
+      !callabortstop
+      CALL PRINT_MSG(NVERB_FATAL,'GEN','GROUND_PARAM_n','')
+    ELSEIF (NHALO < 3 .AND. NFIRE_WENO_ORDER == 5) THEN
+      WRITE(ILUOUT,'(A/A)') 'ERROR : WENO5 fire gradient calculation needs NHALO >= 3'
+      !callabortstop
+      CALL PRINT_MSG(NVERB_FATAL,'GEN','GROUND_PARAM_n','')
+    END IF
+    !
+  END IF
+  !
+  !*       2.1.6  Compute grad of level set function phi
+  !               --------------------------------------
+  !
+  SELECT CASE (CFIRE_CPL_MODE)
+  CASE('2WAYCPL', 'ATM2FIR')
+    ! get time 1
+    CALL SECOND_MNH2( ZGRADTIME1 )
+    CALL FIRE_GRADPHI( XLSPHI, XGRADLSPHIX, XGRADLSPHIY )
+
+    ! get time 2
+    CALL SECOND_MNH2( ZGRADTIME2 )
+    XGRADPERF = XGRADPERF + ZGRADTIME2 - ZGRADTIME1
+    !
+    !*       2.1.7  Get horizontal wind speed projected on LS gradient direction
+    !               ------------------------------------------------------------
+    !
+    CALL FIRE_GETWIND( XUT, XVT, XWT, XGRADLSPHIX, XGRADLSPHIY, XFIREWIND, KTCOUNT, XTSTEP, XFMGRADOROX, XFMGRADOROY )
+    !
+    !*       2.1.8  Compute ROS XFIRERW with wind
+    !               -----------------------------
+    !
+    !
+    SELECT CASE (CPROPAG_MODEL)
+    CASE('SANTONI2011')
+      CALL FIRE_RATEOFSPREAD( XFMFUELTYPE, XFMR0, XFMRFA, XFMWF0, XFMR00, XFIREWIND, XGRADLSPHIX, XGRADLSPHIY, &
+                              XFMGRADOROX, XFMGRADOROY, XFIRERW )
+    END SELECT
+    CALL SECOND_MNH2( ZROSWINDTIME2 )
+    XROSWINDPERF = XROSWINDPERF + ZROSWINDTIME2 - ZGRADTIME2
+    !
+    !*       2.1.8  Integrate model on atm time step to propagate
+    !               ---------------------------------------------
+    !
+    SELECT CASE (CPROPAG_MODEL)
+    CASE('SANTONI2011')
+      CALL FIRE_PROPAGATE( XLSPHI, XBMAP, XFMIGNITION, XFMWALKIG, XGRADLSPHIX, XGRADLSPHIY, XTSTEP, XFIRERW )
+    END SELECT
+    CALL SECOND_MNH2( ZPROPAGTIME2 )
+    XPROPAGPERF = XPROPAGPERF + ZPROPAGTIME2 - ZROSWINDTIME2
+    !
+  CASE('FIR2ATM')
+    !
+    CALL SECOND_MNH2( ZPROPAGTIME1 )
+    CALL FIRE_LS_RECONSTRUCTION_FROM_BMAP( XLSPHI, XBMAP, XTSTEP )
+    CALL SECOND_MNH2( ZPROPAGTIME2 )
+    XPROPAGPERF = XPROPAGPERF + ZPROPAGTIME2 - ZPROPAGTIME1
+    XGRADPERF(:) = 0.
+    !
+  END SELECT
+  !
+  !*       2.1.8  Compute fluxes
+  !               --------------
+  !
+  SELECT CASE (CFIRE_CPL_MODE)
+  CASE('2WAYCPL','FIR2ATM')
+    CALL SECOND_MNH2( ZFLUXTIME1 )
+    ! 2 way coupling
+    CALL FIRE_HEATFLUXES( XLSPHI, XBMAP, XFIRETAU, XTSTEP, XFLUXPARAMH, XFLUXPARAMW, XFMFLUXHDH, XFMFLUXHDW, XFMASE, XFMAWC )
+    ! vertical distribution of fire heat fluxes
+    CALL FIRE_VERTICALFLUXDISTRIB( XFMFLUXHDH, XFMFLUXHDW, XRTHS, XRRS, ZSFTS, XEXNREF, XRHODJ, XRT, XRHODREF )
+    !
+    CALL SECOND_MNH2( ZFLUXTIME2 )
+    XFLUXPERF = XFLUXPERF + ZFLUXTIME2 - ZFLUXTIME1
+  CASE DEFAULT
+    XFLUXPERF(:) = 0.
+  END SELECT
+  ! get end time
+  CALL SECOND_MNH2( ZFIRETIME2 )
+  ! add to Blaze time
+  XFIREPERF = XFIREPERF + ZFIRETIME2 - ZFIRETIME1
+END IF
 !* conversion from H (W/m2) to w'Theta'
 !
 PSFTH(:,:) = ZSFTH(:,:) /  XCPD / XRHODREF(:,:,IKB)
@@ -691,7 +873,7 @@ END IF
 IF (LUSECHEM) THEN
    DO JSV=NSV_CHEMBEG,NSV_CHEMEND
       PSFSV(:,:,JSV) = ZSFTS(:,:,JSV) * XMD / ( XAVOGADRO * XRHODREF(:,:,IKB))
-      IF ((LCHEMDIAG).AND.(CPROGRAM == 'DIAG  ')) XCHFLX(:,:,JSV) = PSFSV(:,:,JSV)    
+      IF ((LCHEMDIAG).AND.(CPROGRAM == 'DIAG  ')) XCHFLX(:,:,JSV-NSV_CHEMBEG+1) = PSFSV(:,:,JSV)    
    END DO
 ELSE
   PSFSV(:,:,NSV_CHEMBEG:NSV_CHEMEND) = 0.
@@ -756,7 +938,7 @@ IF (LDIAG_IN_RUN) THEN
   XCURRENT_SFCO2(:,:) = ZSFCO2(:,:)
   XCURRENT_DSTAOD(:,:)=0.0
   XCURRENT_SLTAOD(:,:)=0.0
-  IF (CRAD=='ECMW') THEN
+  IF (CRAD/='NONE') THEN
   XCURRENT_LWD  (:,:) = XFLALWD(:,:)
   XCURRENT_SWD  (:,:) = SUM(XDIRSRFSWD(:,:,:)+XSCAFLASWD(:,:,:),DIM=3)
   XCURRENT_LWU  (:,:) = XLWU(:,:,IKB) 
@@ -797,6 +979,12 @@ IF (LDIAG_IN_RUN) THEN
   CALL CLEANLIST_ll(TZFIELDSURF_ll)
 END IF
 !
+IF (LBLAZE) THEN
+  IF (KTCOUNT <= 1) THEN
+      DEALLOCATE(ZFIREFUELMAP)
+  END IF
+  CALL CLEANLIST_ll(TZFIELDFIRE_ll)
+END IF
 !==================================================================================
 !
 CONTAINS

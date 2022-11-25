@@ -31,6 +31,7 @@
 !!       V. Vionnet     07/17   add blowing snow
 !  P. Wautelet 10/03/2021: add CSVNAMES and CSVNAMES_A to store the name of all the scalar variables
 !  B. Vie         06/2021: add prognostic supersaturation for LIMA
+!  A. Costes      12/2021: add Blaze fire model smoke
 !
 !-------------------------------------------------------------------------------
 !
@@ -132,6 +133,9 @@ INTEGER,DIMENSION(JPMODELMAX)::NSV_LIMA_CCN_FREE_A = 0 ! First Free CCN conc.
 INTEGER,DIMENSION(JPMODELMAX)::NSV_LIMA_CCN_ACTI_A = 0 ! First Acti. CNN conc.
 INTEGER,DIMENSION(JPMODELMAX)::NSV_LIMA_SCAVMASS_A = 0 ! Scavenged mass variable
 INTEGER,DIMENSION(JPMODELMAX)::NSV_LIMA_NI_A = 0       ! First Ni var.
+INTEGER,DIMENSION(JPMODELMAX)::NSV_LIMA_NS_A = 0       ! First Ns var.
+INTEGER,DIMENSION(JPMODELMAX)::NSV_LIMA_NG_A = 0       ! First Ng var.
+INTEGER,DIMENSION(JPMODELMAX)::NSV_LIMA_NH_A = 0       ! First Nh var.
 INTEGER,DIMENSION(JPMODELMAX)::NSV_LIMA_IFN_FREE_A = 0 ! First Free IFN conc.
 INTEGER,DIMENSION(JPMODELMAX)::NSV_LIMA_IFN_NUCL_A = 0 ! First Nucl. IFN conc.
 INTEGER,DIMENSION(JPMODELMAX)::NSV_LIMA_IMM_NUCL_A = 0 ! First Nucl. IMM conc.
@@ -145,6 +149,10 @@ INTEGER,DIMENSION(JPMODELMAX)::NSV_FFEND_A = 0 ! NSV_FFBEG_A...NSV_FFEND_A
 #endif
 !
 INTEGER,DIMENSION(JPMODELMAX)::NSV_CO2_A = 0    ! index for CO2
+! Blaze smoke indexes
+INTEGER,DIMENSION(JPMODELMAX)::NSV_FIRE_A = 0    ! number of Blaze smoke scalar variables
+INTEGER,DIMENSION(JPMODELMAX)::NSV_FIREBEG_A = 0 ! with indices in the range :
+INTEGER,DIMENSION(JPMODELMAX)::NSV_FIREEND_A = 0 ! NSV_FIREBEG_A...NSV_FIREEND_A
 !
 INTEGER,DIMENSION(JPMODELMAX)::NSV_SNW_A = 0    ! number of blowing snow scalar
 INTEGER,DIMENSION(JPMODELMAX)::NSV_SNWBEG_A = 0 ! with indices in the range :
@@ -237,6 +245,9 @@ INTEGER :: NSV_LIMA_CCN_FREE !
 INTEGER :: NSV_LIMA_CCN_ACTI !
 INTEGER :: NSV_LIMA_SCAVMASS !
 INTEGER :: NSV_LIMA_NI       !
+INTEGER :: NSV_LIMA_NS       !
+INTEGER :: NSV_LIMA_NG       !
+INTEGER :: NSV_LIMA_NH       !
 INTEGER :: NSV_LIMA_IFN_FREE !
 INTEGER :: NSV_LIMA_IFN_NUCL !
 INTEGER :: NSV_LIMA_IMM_NUCL !
@@ -250,6 +261,10 @@ INTEGER :: NSV_FFEND = 0 ! NSV_FFBEG...NSV_FFEND
 #endif
 !
 INTEGER :: NSV_CO2     = 0 ! index for CO2
+! Blaze smoke
+INTEGER :: NSV_FIRE    = 0 ! number of Blaze smoke scalar variables
+INTEGER :: NSV_FIREBEG = 0 ! with indices in the range :
+INTEGER :: NSV_FIREEND = 0 ! NSV_FIREBEG...NSV_FIREEND
 !
 INTEGER :: NSV_SNW     = 0 ! number of blowing snow scalar variables
 INTEGER :: NSV_SNWBEG  = 0 ! with indices in the range :

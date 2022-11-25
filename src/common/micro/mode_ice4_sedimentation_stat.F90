@@ -9,6 +9,7 @@ CONTAINS
 SUBROUTINE ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
+                                  &PLBDAS, &
                                   &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, &
                                   &PRSS, PRST, PRGS, PRGT,&
                                   &PINPRC, PINPRR, PINPRI, PINPRS, PINPRG, &
@@ -32,6 +33,7 @@ SUBROUTINE ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
 !!      Ryad El Khatib 09-Oct-2019 Substantial re-write for optimization
 !!       (outerunrolling, vectorization, memory cache saving, unrolling)
 !  P. Wautelet 21/01/2021: initialize untouched part of PFPR
+!  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
 !
 !
 !*      0. DECLARATIONS
@@ -61,6 +63,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PRHODREF! Referen
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PPABST  ! absolute pressure at t
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PTHT    ! Theta at time t
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PRHODJ  ! Dry density * Jacobian
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PLBDAS  ! lambda parameter for snow
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT)           :: PRCS    ! Cloud water m.r. source
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PRCT    ! Cloud water m.r. at t
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT)           :: PRRS    ! Rain water m.r. source

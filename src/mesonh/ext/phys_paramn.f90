@@ -237,6 +237,7 @@ END MODULE MODI_PHYS_PARAM_n
 !  C. Lac         11/2019: correction in the drag formula and application to building in addition to tree
 !  F. Auguste     02/2021: add IBM
 !  JL Redelsperger 03/2021: add the SW flux penetration for Ocean model case
+!  A. Costes      12/2021: add Blaze fire model
 !!-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS
@@ -289,7 +290,8 @@ USE MODD_NESTING, ONLY : XWAY,NDAD, NDXRATIO_ALL, NDYRATIO_ALL
 USE MODD_NSV, ONLY : NSV, NSV_LGBEG, NSV_LGEND, &
                      NSV_SLTBEG,NSV_SLTEND,NSV_SLT,&
                      NSV_AERBEG,NSV_AEREND, &
-                     NSV_DSTBEG,NSV_DSTEND, NSV_DST
+                     NSV_DSTBEG,NSV_DSTEND, NSV_DST,&
+                     NSV_LIMA_NR,NSV_LIMA_NS,NSV_LIMA_NG,NSV_LIMA_NH
 USE MODD_OCEANH
 USE MODD_OUT_n
 USE MODD_PARAM_C2R2,       ONLY : LSEDC
@@ -644,7 +646,7 @@ IF (CRAD /='NONE') THEN
 !   
   IF (CRAD =='ECMW' .OR. CRAD =='ECRA') THEN
     IF (GRAD .AND. NRR.LE.3 ) THEN 
-      IF( MAXVAL(XCLDFR(:,:,:)).LE. 1.E-10 .AND. OCLOUD_ONLY ) THEN
+      IF( MAX(MAXVAL(XCLDFR(:,:,:)),MAXVAL(XICEFR(:,:,:))).LE. 1.E-10 .AND. OCLOUD_ONLY ) THEN
           GRAD = .FALSE.                ! only the cloudy verticals would be 
                                         ! refreshed but there is no clouds 
       END IF
@@ -759,7 +761,7 @@ CALL SUNPOS_n   ( XZENITH, ZCOSZEN, ZSINZEN, ZAZIMSOL )
                        COPWLW, COPILW, XFUDG,                                                    &
                        NDLON, NFLEV, NRAD_DIAG, NFLUX, NRAD, NAER, NSWB_OLD, NSWB_MNH, NLWB_MNH, &
                        NSTATM, NRAD_COLNBR, ZCOSZEN, XSEA, XCORSOL,                              &
-                       XDIR_ALB, XSCA_ALB, XEMIS, XCLDFR, XCCO2, XTSRAD, XSTATM, XTHT, XRT,      &
+                       XDIR_ALB, XSCA_ALB, XEMIS, MAX(XCLDFR,XICEFR), XCCO2, XTSRAD, XSTATM, XTHT, XRT,      &
                        XPABST, XOZON, XAER,XDST_WL, XAER_CLIM, XSVT,                             &
                        XDTHRAD, XFLALWD, XDIRFLASWD, XSCAFLASWD, XRHODREF, XZZ ,                 &
                        XRADEFF, XSWU, XSWD, XLWU, XLWD, XDTHRADSW, XDTHRADLW                     )
@@ -1251,7 +1253,7 @@ IF (CSURF=='EXTE') THEN
     DEALLOCATE( ZSAVE_DIRFLASWD,ZSAVE_SCAFLASWD,ZSAVE_DIRSRFSWD)
  END IF
   CALL GROUND_PARAM_n(YLDIMPHYEX,ZSFTH, ZSFRV, ZSFSV, ZSFCO2, ZSFU, ZSFV, &
-                      ZDIR_ALB, ZSCA_ALB, ZEMIS, ZTSRAD        )
+                      ZDIR_ALB, ZSCA_ALB, ZEMIS, ZTSRAD, KTCOUNT, TPFILE )
   !
   IF (LIBM) THEN
     WHERE(XIBM_LS(:,:,IKB,1).GT.-XIBM_EPSI)
@@ -1550,7 +1552,9 @@ LHARAT = .FALSE.
 !
    CALL TURB( CST,CSTURB, TBUCONF, TURBN,YLDIMPHYEX,&
               IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,                   &
-              NSV, NSV_LGBEG, NSV_LGEND,CPROGRAM, L2D, LNOMIXLG,LFLAT,               &
+              NSV, NSV_LGBEG, NSV_LGEND,CPROGRAM,                                    &
+              NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,                    &
+              L2D, LNOMIXLG,LFLAT,                                                   &
               LLES_CALL, LCOUPLES, LBLOWSNOW,                                        &
               GCOMPUTE_SRC, XRSNOW,                                                  &
               LOCEAN, LDEEPOC, LDIAG_IN_RUN,                                         &

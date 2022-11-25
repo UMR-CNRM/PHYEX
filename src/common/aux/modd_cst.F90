@@ -97,7 +97,7 @@ REAL :: XD2=23.
 !REAL :: XD1=0.35
 !REAL :: XD2=23.
 
-REAL :: XRHOLI             ! Volumic mass of liquid water
+REAL :: XRHOLI             ! Volumic mass of ice
 !
 INTEGER :: NDAYSEC        ! Number of seconds in a day
 !
