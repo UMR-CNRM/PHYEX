@@ -24,7 +24,7 @@ INTEGER      :: KLEV
 INTEGER      :: KRR, KRRL, KRRI
 INTEGER      :: KSV
 
-!Inputs
+!IN and INOUTS
 REAL, ALLOCATABLE   :: ZDXX               (:,:,:,:)
 REAL, ALLOCATABLE   :: ZDYY               (:,:,:,:)
 REAL, ALLOCATABLE   :: ZDZZ               (:,:,:,:)
@@ -50,64 +50,66 @@ REAL, ALLOCATABLE   :: PWM                (:,:,:,:)
 REAL, ALLOCATABLE   :: PTKEM              (:,:,:,:)
 REAL, ALLOCATABLE   :: ZSVM               (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
 REAL, ALLOCATABLE   :: PSRCM              (:,:,:,:)
-REAL, ALLOCATABLE   :: PTHM               (:,:,:,:)
-REAL, ALLOCATABLE   :: ZRM                (:,:,:,:,:) !(KLON,1,KLEV+2,KRR)
-REAL, ALLOCATABLE   :: PRUS               (:,:,:,:)
-REAL, ALLOCATABLE   :: PRVS               (:,:,:,:)
-REAL, ALLOCATABLE   :: PRWS               (:,:,:,:)
-REAL, ALLOCATABLE   :: PRTHS              (:,:,:,:)
-REAL, ALLOCATABLE   :: PRTKES             (:,:,:,:)
-REAL, ALLOCATABLE   :: PRRS               (:,:,:,:,:) !(KLON,1,KLEV+2,KRR)
-REAL, ALLOCATABLE   :: PRSVS              (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
-REAL, ALLOCATABLE   :: PSIGS              (:,:,:,:)
-REAL, ALLOCATABLE   :: PFLXZTHVMF         (:,:,:,:)
 REAL, ALLOCATABLE   :: PLENGTHM           (:,:,:,:)
 REAL, ALLOCATABLE   :: PLENGTHH           (:,:,:,:)
 REAL, ALLOCATABLE   :: MFMOIST            (:,:,:,:)
 REAL, ALLOCATABLE   :: ZBL_DEPTH          (:,:,:)
 REAL, ALLOCATABLE   :: ZSBL_DEPTH         (:,:,:)
 REAL, ALLOCATABLE   :: ZCEI               (:,:,:,:)
-!Outputs
+REAL, ALLOCATABLE   :: PTHM               (:,:,:,:)
+REAL, ALLOCATABLE   :: ZRM                (:,:,:,:,:) !(KLON,1,KLEV+2,KRR)
+REAL, ALLOCATABLE   :: PRUS               (:,:,:,:)
+REAL, ALLOCATABLE   :: PRVS               (:,:,:,:)
+REAL, ALLOCATABLE   :: PRWS               (:,:,:,:)
+REAL, ALLOCATABLE   :: PRTHS              (:,:,:,:)
+REAL, ALLOCATABLE   :: ZRRS               (:,:,:,:,:) !(KLON,1,KLEV+2,KRR)
+REAL, ALLOCATABLE   :: ZRSVS              (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
+REAL, ALLOCATABLE   :: PRTKES_OUT         (:,:,:,:)
+REAL, ALLOCATABLE   :: PFLXZTHVMF         (:,:,:,:)
+
+!OUT
+REAL, ALLOCATABLE   :: PSIGS              (:,:,:,:)
+REAL, ALLOCATABLE   :: ZWTH               (:,:,:,:)
+REAL, ALLOCATABLE   :: ZWRC               (:,:,:,:)
+REAL, ALLOCATABLE   :: ZWSV               (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
+REAL, ALLOCATABLE   :: PDP                (:,:,:,:)
+REAL, ALLOCATABLE   :: PTP                (:,:,:,:)
+REAL, ALLOCATABLE   :: PTDIFF             (:,:,:,:)
+REAL, ALLOCATABLE   :: PTDISS             (:,:,:,:)
+REAL, ALLOCATABLE   :: PEDR               (:,:,:,:)
+REAL, ALLOCATABLE   :: PTPMF              (:,:,:,:)
+REAL, ALLOCATABLE   :: PDRUS_TURB         (:,:,:,:)
+REAL, ALLOCATABLE   :: PDRVS_TURB         (:,:,:,:)
+REAL, ALLOCATABLE   :: PDRTHLS_TURB       (:,:,:,:)
+REAL, ALLOCATABLE   :: PDRRTS_TURB        (:,:,:,:)
+REAL, ALLOCATABLE   :: ZDRSVS_TURB        (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
+
+!Expected values
+REAL, ALLOCATABLE   :: ZBL_DEPTH_OUT      (:,:,:)
+REAL, ALLOCATABLE   :: ZSBL_DEPTH_OUT     (:,:,:)
 REAL, ALLOCATABLE   :: PTHM_OUT           (:,:,:,:)
 REAL, ALLOCATABLE   :: ZRM_OUT            (:,:,:,:,:) !(KLON,1,KLEV+2,KRR)
 REAL, ALLOCATABLE   :: PRUS_OUT           (:,:,:,:)
 REAL, ALLOCATABLE   :: PRVS_OUT           (:,:,:,:)
 REAL, ALLOCATABLE   :: PRWS_OUT           (:,:,:,:)
 REAL, ALLOCATABLE   :: PRTHS_OUT          (:,:,:,:)
-REAL, ALLOCATABLE   :: PRTKES_OUT         (:,:,:,:)
-REAL, ALLOCATABLE   :: PRTKES_OUT_OUT     (:,:,:,:)
-REAL, ALLOCATABLE   :: ZRRS               (:,:,:,:,:) !(KLON,1,KLEV+2,KRR)
 REAL, ALLOCATABLE   :: ZRRS_OUT           (:,:,:,:,:) !(KLON,1,KLEV+2,KRR)
-REAL, ALLOCATABLE   :: ZRSVS              (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
 REAL, ALLOCATABLE   :: ZRSVS_OUT          (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
+REAL, ALLOCATABLE   :: PRTKES_OUT_OUT     (:,:,:,:)
 REAL, ALLOCATABLE   :: PSIGS_OUT          (:,:,:,:)
-REAL, ALLOCATABLE   :: ZWTH               (:,:,:,:)
 REAL, ALLOCATABLE   :: ZWTH_OUT           (:,:,:,:)
-REAL, ALLOCATABLE   :: ZWRC               (:,:,:,:)
 REAL, ALLOCATABLE   :: ZWRC_OUT           (:,:,:,:)
-REAL, ALLOCATABLE   :: ZWSV               (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
 REAL, ALLOCATABLE   :: ZWSV_OUT           (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
-REAL, ALLOCATABLE   :: PDP                (:,:,:,:)
 REAL, ALLOCATABLE   :: PDP_OUT            (:,:,:,:)
-REAL, ALLOCATABLE   :: PTP                (:,:,:,:)
 REAL, ALLOCATABLE   :: PTP_OUT            (:,:,:,:)
-REAL, ALLOCATABLE   :: PTDIFF             (:,:,:,:)
 REAL, ALLOCATABLE   :: PTDIFF_OUT         (:,:,:,:)
-REAL, ALLOCATABLE   :: PTDISS             (:,:,:,:)
 REAL, ALLOCATABLE   :: PTDISS_OUT         (:,:,:,:)
-REAL, ALLOCATABLE   :: PEDR               (:,:,:,:)
 REAL, ALLOCATABLE   :: PEDR_OUT           (:,:,:,:)
-REAL, ALLOCATABLE   :: PTPMF              (:,:,:,:)
 REAL, ALLOCATABLE   :: PTPMF_OUT          (:,:,:,:)
-REAL, ALLOCATABLE   :: PDRUS_TURB         (:,:,:,:)
 REAL, ALLOCATABLE   :: PDRUS_TURB_OUT     (:,:,:,:)
-REAL, ALLOCATABLE   :: PDRVS_TURB         (:,:,:,:)
 REAL, ALLOCATABLE   :: PDRVS_TURB_OUT     (:,:,:,:)
-REAL, ALLOCATABLE   :: PDRTHLS_TURB       (:,:,:,:)
 REAL, ALLOCATABLE   :: PDRTHLS_TURB_OUT   (:,:,:,:)
-REAL, ALLOCATABLE   :: PDRRTS_TURB        (:,:,:,:)
 REAL, ALLOCATABLE   :: PDRRTS_TURB_OUT    (:,:,:,:)
-REAL, ALLOCATABLE   :: ZDRSVS_TURB        (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
 REAL, ALLOCATABLE   :: ZDRSVS_TURB_OUT    (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
 
 INTEGER :: NPROMA, NGPBLKS, NFLEVG
@@ -172,35 +174,42 @@ IF (LLBIND) THEN
   CALL LINUX_BIND_DUMP (IRANK, ISIZE)
 ENDIF
 
-CALL GETDATA_TURB (NPROMA, NGPBLKS, NFLEVG, &
-                  !Inputs
-                  &ZDXX, ZDYY, ZDZZ, ZDZX, ZDZY, ZZZ, ZDIRCOSXW, ZDIRCOSYW, ZDIRCOSZW, &
-                  &ZCOSSLOPE, ZSINSLOPE, PRHODJ, &
-                  &PTHVREF, PSFTH, PSFRV, PSFU, PSFV, PSFSV, PPABSM, PUM, &
-                  &PVM, PWM, PTKEM, ZSVM, PSRCM, PTHM, ZRM, PRUS, &
-                  &PRVS, PRWS, PRTHS, PRTKES, PRRS, PRSVS, PSIGS, PFLXZTHVMF, &
-                  &PLENGTHM, PLENGTHH, MFMOIST, ZBL_DEPTH, ZSBL_DEPTH, ZCEI, &
-                  !Outputs
-                  &PTHM_OUT, ZRM_OUT, PRUS_OUT, PRVS_OUT, PRWS_OUT, PRTHS_OUT, PRTKES_OUT, PRTKES_OUT_OUT, &
-                  &ZRRS, ZRRS_OUT, ZRSVS, ZRSVS_OUT, PSIGS_OUT, ZWTH, ZWTH_OUT, ZWRC, ZWRC_OUT, &
-                  &ZWSV, ZWSV_OUT, PDP, PDP_OUT, PTP, PTP_OUT, &
-                  &PTDIFF, PTDIFF_OUT, PTDISS, PTDISS_OUT, PEDR, PEDR_OUT, PTPMF, PTPMF_OUT, &
-                  &PDRUS_TURB, PDRUS_TURB_OUT, PDRVS_TURB, PDRVS_TURB_OUT, &
-                  &PDRTHLS_TURB, PDRTHLS_TURB_OUT, PDRRTS_TURB, PDRRTS_TURB_OUT, ZDRSVS_TURB, ZDRSVS_TURB_OUT)
-
-KLEV = SIZE (PRRS, 3)
-KRR  = SIZE (PRRS, 4)
-KRRL = 2
-KRRI = 3
-KSV  = SIZE (PRSVS, 4)
+CALL GETDATA_TURB (NPROMA, NGPBLKS, NFLEVG, KRR, KRRL, KRRI, KSV, KLEV, &
+                  !IN and INOUT (allocation and values are needed for the call)
+                  &ZDXX, ZDYY, ZDZZ, ZDZX, ZDZY, ZZZ, &
+                  &ZDIRCOSXW, ZDIRCOSYW, ZDIRCOSZW, ZCOSSLOPE, ZSINSLOPE, &
+                  &PRHODJ, PTHVREF, &
+                  &PSFTH, PSFRV, PSFU, PSFV, PSFSV, &
+                  &PPABSM, PUM, PVM, PWM, PTKEM, ZSVM, PSRCM, &
+                  &PLENGTHM, PLENGTHH, MFMOIST, &
+                  &ZBL_DEPTH, ZSBL_DEPTH, &
+                  &ZCEI, &
+                  &PTHM, ZRM, &
+                  &PRUS, PRVS, PRWS, PRTHS, ZRRS, ZRSVS, PRTKES_OUT, &
+                  &PFLXZTHVMF, &
+                  !OUT only (needed to allocate the array to be passed to the subroutine)
+                  &PSIGS, &
+                  &ZWTH,ZWRC,ZWSV,PDP,PTP,PTDIFF,PTDISS, &
+                  &PEDR,PTPMF, &
+                  &PDRUS_TURB,PDRVS_TURB, &
+                  &PDRTHLS_TURB,PDRRTS_TURB,ZDRSVS_TURB, &
+                  !OUT and INOUT (expected values)
+                  &ZBL_DEPTH_OUT, ZSBL_DEPTH_OUT, &
+                  &PTHM_OUT, ZRM_OUT, &
+                  &PRUS_OUT, PRVS_OUT, PRWS_OUT, PRTHS_OUT, ZRRS_OUT, ZRSVS_OUT, PRTKES_OUT_OUT, &
+                  &PSIGS_OUT, &
+                  &ZWTH_OUT, ZWRC_OUT, ZWSV_OUT, PDP_OUT, PTP_OUT, PTDIFF_OUT, PTDISS_OUT, &
+                  &PEDR_OUT, PTPMF_OUT, &
+                  &PDRUS_TURB_OUT, PDRVS_TURB_OUT, &
+                  &PDRTHLS_TURB_OUT, PDRRTS_TURB_OUT, ZDRSVS_TURB_OUT)
 
 IF (LLVERBOSE) PRINT *, " KLEV = ", KLEV, " KRR = ", KRR
 
 PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
 
 IMI = 1
-HLBCX(:)='CYCL'
-HLBCY(:)='CYCL'
+HLBCX(:)='CYCLCYCL'
+HLBCY(:)='CYCLCYCL'
 ISPLIT = 1
 KSV_LGBEG = 0
 KSV_LGEND = 0
@@ -221,6 +230,9 @@ ZCEI_MIN=0.0
 ZCOEF_AMPL_SAT=0.0
 !
 PTSTEP = 25.0000000000000
+print*, 'OCOMPUTE_SRC=', OCOMPUTE_SRC
+print*, 'KRR', KRR
+
 CALL INIT_PHYEX ()
 
 DO JRR=1, NBUDGET_RH
@@ -246,8 +258,8 @@ D0%NKTB = 2
 D0%NKTE = KLEV-1
 D0%NIBC = 1
 D0%NJBC = 1
-D0%NIEC = D%NIE
-D0%NJEC = D%NJT
+D0%NIEC = D0%NIE
+D0%NJEC = D0%NJT
 
 ISTSZ = NPROMA * 20 * KLEV
 ALLOCATE (PSTACK (ISTSZ, NGPBLKS))
@@ -304,6 +316,8 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     D%NIE = JLON
     D%NIJB = JLON
     D%NIJE = JLON
+    D%NIBC = JLON
+    D%NIEC = JLON
 #endif
 
 #ifdef USE_OPENMP
@@ -326,21 +340,21 @@ CALL TURB (CST,CSTURB,TBUCONF,TURBN, D,&
    & OOCEAN,ODEEPOC, .FALSE.,   &
    & 'NONE',CMICRO,           &
    & 2*PTSTEP,ZTFILE,                                      &
-   & ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &
+   & ZDXX(:,:,:,IBL),ZDYY(:,:,:,IBL),ZDZZ(:,:,:,IBL),ZDZX(:,:,:,IBL),ZDZY(:,:,:,IBL),ZZZ(:,:,:,IBL),          &
    & ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE,    &
-   & PRHODJ,PTHVREF,                              &
-   & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
-   & PPABSM,PUM,PVM,PWM,PTKEM,ZSVM,PSRCM,                  &
-   & PLENGTHM,PLENGTHH,MFMOIST,                            &
-   & ZBL_DEPTH,ZSBL_DEPTH,                                 &
-   & ZCEI,ZCEI_MIN,ZCEI_MAX,ZCOEF_AMPL_SAT,    &
-   & PTHM,ZRM, &
-   & PRUS,PRVS,PRWS,PRTHS,ZRRS,ZRSVS,PRTKES_OUT,         &
-   & PSIGS,                                         &
-   & PFLXZTHVMF,ZWTH,ZWRC,ZWSV,PDP,PTP,PTDIFF,PTDISS,&
-   & YLBUDGET, KBUDGETS=SIZE(YLBUDGET),PEDR=PEDR,PTPMF=PTPMF,&
-   & PDRUS_TURB=PDRUS_TURB,PDRVS_TURB=PDRVS_TURB,          &
-   & PDRTHLS_TURB=PDRTHLS_TURB,PDRRTS_TURB=PDRRTS_TURB,PDRSVS_TURB=ZDRSVS_TURB)
+   & PRHODJ(:,:,:,IBL),PTHVREF(:,:,:,IBL),                              &
+   & PSFTH(:,:,IBL),PSFRV(:,:,IBL),PSFSV(:,:,:,IBL),PSFU(:,:,IBL),PSFV(:,:,IBL),                          &
+   & PPABSM(:,:,:,IBL),PUM(:,:,:,IBL),PVM(:,:,:,IBL),PWM(:,:,:,IBL),PTKEM(:,:,:,IBL),ZSVM(:,:,:,:,IBL),PSRCM(:,:,:,IBL),                  &
+   & PLENGTHM(:,:,:,IBL),PLENGTHH(:,:,:,IBL),MFMOIST(:,:,:,IBL),                            &
+   & ZBL_DEPTH(:,:,IBL),ZSBL_DEPTH(:,:,IBL),                                 &
+   & ZCEI(:,:,:,IBL),ZCEI_MIN,ZCEI_MAX,ZCOEF_AMPL_SAT,    &
+   & PTHM(:,:,:,IBL),ZRM(:,:,:,:,IBL), &
+   & PRUS(:,:,:,IBL),PRVS(:,:,:,IBL),PRWS(:,:,:,IBL),PRTHS(:,:,:,IBL),ZRRS(:,:,:,:,IBL),ZRSVS(:,:,:,:,IBL),PRTKES_OUT(:,:,:,IBL),         &
+   & PSIGS(:,:,:,IBL),                                         &
+   & PFLXZTHVMF(:,:,:,IBL),ZWTH(:,:,:,IBL),ZWRC(:,:,:,IBL),ZWSV(:,:,:,:,IBL),PDP(:,:,:,IBL),PTP(:,:,:,IBL),PTDIFF(:,:,:,IBL),PTDISS(:,:,:,IBL),&
+   & YLBUDGET, KBUDGETS=SIZE(YLBUDGET),PEDR=PEDR(:,:,:,IBL),PTPMF=PTPMF(:,:,:,IBL),&
+   & PDRUS_TURB=PDRUS_TURB(:,:,:,IBL),PDRVS_TURB=PDRVS_TURB(:,:,:,IBL),          &
+   & PDRTHLS_TURB=PDRTHLS_TURB(:,:,:,IBL),PDRRTS_TURB=PDRRTS_TURB(:,:,:,IBL),PDRSVS_TURB=ZDRSVS_TURB(:,:,:,:,IBL))
 
 #ifdef _OPENACC
     ENDDO
@@ -384,6 +398,8 @@ IF (LLCHECK .OR. LLSTAT .OR. LLCHECKDIFF) THEN
       WRITE (CLTEXT, '("ZRRS JRR=",I3.3)') JRR
       CALL DIFF3 (CLTEXT,      ZRRS_OUT       (:,:,:,JRR,IBL), ZRRS      (:,:,:,JRR,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
     ENDDO
+    CALL DIFF2 ("ZBL_DEPTH   ", ZBL_DEPTH_OUT    (:,:,IBL)  , ZBL_DEPTH   (:,:,IBL)  , LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF2 ("ZSBL_DEPTH  ", ZSBL_DEPTH_OUT   (:,:,IBL)  , ZSBL_DEPTH  (:,:,IBL)  , LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
     CALL DIFF3 ("PTHM        ", PTHM_OUT         (:,:,:,IBL), PTHM        (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
     CALL DIFF3 ("PRUS        ", PRUS_OUT         (:,:,:,IBL), PRUS        (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
     CALL DIFF3 ("PRVS        ", PRVS_OUT         (:,:,:,IBL), PRVS        (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
