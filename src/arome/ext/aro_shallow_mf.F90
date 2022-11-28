@@ -208,7 +208,7 @@ ZIMPL=1.
 !
 !         ---------------------------------
 !
-  IF(.FALSE.) THEN ! .FALSE. to activate the writing, .TRUE. to not activate the writing
+  IF(.TRUE.) THEN ! .FALSE. to activate the writing, .TRUE. to not activate the writing
     LFILEEXISTS=.FALSE.
   ELSE
     IFILE=0
