@@ -31,20 +31,20 @@ IF (LLCHECK) THEN
   IF (SUM (ABS (POUT) + ABS (PREF)) > 0) THEN
   WRITE (*, '(A4)', ADVANCE='NO') ""
   DO JLON = 1, NPROMA
-    WRITE (*, '("|",I12,A12)', ADVANCE='NO') JLON, ""
+    WRITE (*, '("|",I12,"..",A12)', ADVANCE='NO') JLON, ""
   ENDDO
   WRITE (*, '("|")')
   DO JLEV = 1, KLEV
     WRITE (*, '(I4)', ADVANCE='NO') JLEV
     DO JLON = 1, NPROMA
       IF (ABS (PREF (JLON, 1, JLEV)) + ABS (POUT (JLON, 1, JLEV)) == 0.) THEN
-        WRITE (*, '("|",2A12)', ADVANCE='NO') "", ""
+        WRITE (*, '("|",A12,"..",A12)', ADVANCE='NO') "", ""
       ELSE
-        !IF(ABS(POUT (JLON, 1, JLEV)-PREF (JLON, 1, JLEV))>0.001 * ABS(PREF (JLON, 1, JLEV))) THEN
-        !  WRITE (*, '("|",E12.5,"!=",E12.5)', ADVANCE='NO') PREF (JLON, 1, JLEV), POUT (JLON, 1, JLEV)
-        !ELSE
-          WRITE (*, '("|",2E12.5)', ADVANCE='NO') PREF (JLON, 1, JLEV), POUT (JLON, 1, JLEV)
-        !ENDIF
+        IF(ABS(POUT (JLON, 1, JLEV)-PREF (JLON, 1, JLEV))>0.001 * ABS(PREF (JLON, 1, JLEV))) THEN
+          WRITE (*, '("|",E12.5,"!=",E12.5)', ADVANCE='NO') PREF (JLON, 1, JLEV), POUT (JLON, 1, JLEV)
+        ELSE
+          WRITE (*, '("|",E12.5,"~=",E12.5)', ADVANCE='NO') PREF (JLON, 1, JLEV), POUT (JLON, 1, JLEV)
+        ENDIF
       ENDIF
     ENDDO
     WRITE (*, '("|")')
