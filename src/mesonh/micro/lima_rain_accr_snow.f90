@@ -288,7 +288,7 @@ WHERE( GACC )
               XLBSACCR2/( PLBDR(:)    * PLBDS(:)    ) + &
               XLBSACCR3/(               PLBDS(:)**2 ) )
 !
-   ZZWC5(:)= XFNSACCRG * ZZW3(:) * PCRT(:) *             & ! RSACCRG
+   ZZWC5(:)= XFNSACCRG * ZZWC3(:) * PCRT(:) *            & ! RSACCRG
              PCST(:) * PRHODREF(:)**(1-XCEXVT) * &
             ( XLBNSACCR1/( PLBDR(:)**2               ) + &
               XLBNSACCR2/( PLBDR(:)    * PLBDS(:)    ) + &
