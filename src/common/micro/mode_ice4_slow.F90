@@ -139,7 +139,8 @@ DO JL=1, KSIZE
                          * PLBDAS(JL)**ICEP%XEXIAGGS          &
                          * PRHODREF(JL)**(-ICED%XCEXVT)
 #else
-                         * PRST(JL) * (1+(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEXIAGGS/ICED%XALPHAS) &
+                         * PRST(JL) * (1+(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**&
+                         (-ICED%XNUS+ICEP%XEXIAGGS/ICED%XALPHAS) &
                          * PRHODREF(JL)**(-ICED%XCEXVT+1.) &
                          * ((PLBDAS(JL))**(ICED%XBS+ICEP%XEXIAGGS))
 #endif
