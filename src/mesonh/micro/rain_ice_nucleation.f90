@@ -81,9 +81,9 @@ REAL,    DIMENSION(SIZE(PEXNREF,1),SIZE(PEXNREF,2),SIZE(PEXNREF,3))   &
 !
 !-------------------------------------------------------------------------------
 
-if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'HENU', pths(:, :, :) * prhodj(:, :, :) )
-if ( lbudget_rv ) call Budget_store_init( tbudgets(NBUDGET_RV), 'HENU', prvs(:, :, :) * prhodj(:, :, :) )
-if ( lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'HENU', pris(:, :, :) * prhodj(:, :, :) )
+if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'HIN', pths(:, :, :) * prhodj(:, :, :) )
+if ( lbudget_rv ) call Budget_store_init( tbudgets(NBUDGET_RV), 'HIN', prvs(:, :, :) * prhodj(:, :, :) )
+if ( lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'HIN', pris(:, :, :) * prhodj(:, :, :) )
 !
 !  compute the temperature and the pressure
 !
@@ -171,9 +171,9 @@ END IF
 !
 !*       3.1.3   budget storage
 !
-if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'HENU', pths(:, :, :) * prhodj(:, :, :) )
-if ( lbudget_rv ) call Budget_store_end( tbudgets(NBUDGET_RV), 'HENU', prvs(:, :, :) * prhodj(:, :, :) )
-if ( lbudget_ri ) call Budget_store_end( tbudgets(NBUDGET_RI), 'HENU', pris(:, :, :) * prhodj(:, :, :) )
+if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'HIN', pths(:, :, :) * prhodj(:, :, :) )
+if ( lbudget_rv ) call Budget_store_end( tbudgets(NBUDGET_RV), 'HIN', prvs(:, :, :) * prhodj(:, :, :) )
+if ( lbudget_ri ) call Budget_store_end( tbudgets(NBUDGET_RI), 'HIN', pris(:, :, :) * prhodj(:, :, :) )
 
 END SUBROUTINE RAIN_ICE_NUCLEATION
 

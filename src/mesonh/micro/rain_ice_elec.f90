@@ -198,6 +198,7 @@ END MODULE MODI_RAIN_ICE_ELEC
 !  P. Wautelet 28/05/2019: move COUNTJV function to tools.f90
 !  P. Wautelet    03/2020: use the new data structures and subroutines for budgets
 !  P .Wautelet 09/03/2020: add missing budgets for electricity
+!  C. Barthe   07/04/2022: correction of budget for CMEL
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -2274,9 +2275,9 @@ GNEGT(IIB:IIE,IJB:IJE,IKB:IKE) = ZT(IIB:IIE,IJB:IJE,IKB:IKE) < XTT
 INEGT = COUNTJV( GNEGT(:,:,:),I1(:),I2(:),I3(:))
 !
 IF( INEGT >= 1 ) THEN
-  if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'HENU', pths(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rv ) call Budget_store_init( tbudgets(NBUDGET_RV), 'HENU', prvs(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'HENU', pris(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'HIN', pths(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rv ) call Budget_store_init( tbudgets(NBUDGET_RV), 'HIN', prvs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'HIN', pris(:, :, :) * prhodj(:, :, :) )
 
   ALLOCATE(ZRVT(INEGT))
   ALLOCATE(ZCIT(INEGT)) 
@@ -2350,9 +2351,9 @@ IF( INEGT >= 1 ) THEN
   DEALLOCATE(ZCIT)
   DEALLOCATE(ZRVT)
 
-  if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'HENU', pths(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rv ) call Budget_store_end( tbudgets(NBUDGET_RV), 'HENU', prvs(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_ri ) call Budget_store_end( tbudgets(NBUDGET_RI), 'HENU', pris(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'HIN', pths(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rv ) call Budget_store_end( tbudgets(NBUDGET_RV), 'HIN', prvs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_ri ) call Budget_store_end( tbudgets(NBUDGET_RI), 'HIN', pris(:, :, :) * prhodj(:, :, :) )
 
 END IF
 
