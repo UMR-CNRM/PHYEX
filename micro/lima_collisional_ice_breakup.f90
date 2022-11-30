@@ -128,7 +128,8 @@ REAL                               :: ZFACT1_XNDEBRIS, ZFACT2_XNDEBRIS
 !
 !-------------------------------------------------------------------------------
 
-GCIBU(:) = LCIBU .AND. (PRST(:)>XRTMIN(5)) .AND. (PRGT(:)>XRTMIN(6)) .AND. LDCOMPUTE(:)
+GCIBU(:) = LCIBU        .AND. PRST(:)>XRTMIN(5) .AND. PRGT(:)>XRTMIN(6) .AND. &
+           LDCOMPUTE(:) .AND. PCST(:)>XCTMIN(5) .AND. PCGT(:)>XCTMIN(6)
 ICIBU    = COUNT( GCIBU(:) )
 !
 P_RI_CIBU(:)=0.

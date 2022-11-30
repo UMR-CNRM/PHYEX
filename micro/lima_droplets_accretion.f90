@@ -116,6 +116,7 @@ ZW4(:) = 0.0
 IF ( LKHKO ) THEN
 !
    GACCR(:) = PRRT(:)>XRTMIN(3) .AND. &
+              PCRT(:)>XCTMIN(3) .AND. &
               PRCT(:)>XRTMIN(2) .AND. &
               PCCT(:)>XCTMIN(2)
 !
@@ -130,8 +131,8 @@ IF ( LKHKO ) THEN
    END WHERE
 !
 ELSE IF (NMOM_C.EQ.1 .AND. NMOM_R.EQ.1) THEN
-   GACCR(:) = PRRT(:)>XRTMIN(3) .AND. &
-              PRCT(:)>XRTMIN(2)
+   GACCR(:) = PRRT(:)>XRTMIN(3) .AND. PCRT(:)>XCTMIN(3) .AND. &
+              PRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2)
    WHERE ( GACCR(:) )
       P_RC_ACCR(:) = - XFCACCR * PRCT(:)    &
                    * PLBDR(:)**XEXCACCR     &

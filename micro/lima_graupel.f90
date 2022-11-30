@@ -146,7 +146,7 @@ END MODULE MODI_LIMA_GRAUPEL
 !              ------------
 !
 USE MODD_CST,              ONLY : XTT, XMD, XMV, XRD, XRV, XLVTT, XLMTT, XESTT, XCL, XCI, XCPV
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCEXVT, LHAIL
+USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, XCEXVT, LHAIL
 USE MODD_PARAM_LIMA_MIXED, ONLY : XCXG, XDG, X0DEPG, X1DEPG, NGAMINC,                             &
                                   XFCDRYG, XFIDRYG, XCOLIG, XCOLSG, XCOLEXIG, XCOLEXSG,           &
                                   XFSDRYG, XLBSDRYG1, XLBSDRYG2, XLBSDRYG3, XKER_SDRYG,           &
@@ -323,7 +323,7 @@ END WHERE
 !*           1.b Collection of rs in the dry mode
 !            ------------------------------------
 !
-GDRY(:) = PRST(:)>XRTMIN(5) .AND. PRGT(:)>XRTMIN(6) .AND. LDCOMPUTE(:)
+GDRY(:) = PRST(:)>XRTMIN(5) .AND. PCST(:)>XCTMIN(5) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. LDCOMPUTE(:)
 !
 WHERE( GDRY )
 !
@@ -389,7 +389,7 @@ END WHERE
 !*           1.c  Collection of rr in the dry mode
 !            -------------------------------------
 !
-GDRY(:) = PRRT(:)>XRTMIN(3) .AND. PRGT(:)>XRTMIN(6) .AND. LDCOMPUTE(:)
+GDRY(:) = PRRT(:)>XRTMIN(3) .AND. PCRT(:)>XCTMIN(3) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. LDCOMPUTE(:)
 !
 WHERE( GDRY )
 !
@@ -462,7 +462,7 @@ ZRDRYG(:) = ZZW1(:) + ZZW2(:) + ZZW3(:) + ZZW4(:)
 !            ------------------------------
 !
 ZZW(:) = 0.0
-WHERE( PRGT(:)>XRTMIN(6) .AND. LDCOMPUTE(:) )
+WHERE( PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. LDCOMPUTE(:) )
    ZZW5(:) = ZZW2(:) / (XCOLIG*EXP(XCOLEXIG*(PT(:)-XTT)) ) ! RIWETG
    ZZW6(:) = ZZW3(:) / (XCOLSG*EXP(XCOLEXSG*(PT(:)-XTT)) ) ! RSWETG
    ZZW6N(:)= ZZW3N(:)/ (XCOLSG*EXP(XCOLEXSG*(PT(:)-XTT)) ) ! NSWETG
@@ -488,7 +488,7 @@ END WHERE
 ZZW(:) = 0.0
 NHAIL = 0.
 IF (LHAIL) NHAIL = 1. 
-WHERE( LDCOMPUTE(:) .AND. PRGT(:)>XRTMIN(6) .AND. PT(:)<XTT .AND. &
+WHERE( LDCOMPUTE(:) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)<XTT .AND. &
        (ZRDRYG(:)-ZZW2(:)-ZZW3(:))>=(ZRWETG(:)-ZZW5(:)-ZZW6(:)) .AND. ZRWETG(:)-ZZW5(:)-ZZW6(:)>0.0 ) 
 !
 ! Mass of rain and cloud droplets frozen by graupel in wet mode : RCWETG + RRWETG = RWETG - RIWETG - RSWETG
@@ -517,7 +517,7 @@ END WHERE
 !            1.g Dry mode
 !            ------------
 !
-WHERE( LDCOMPUTE(:) .AND. PRGT(:)>XRTMIN(6) .AND. PT(:)<XTT .AND.                  &
+WHERE( LDCOMPUTE(:) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)<XTT .AND.                  &
        (ZRDRYG(:)-ZZW2(:)-ZZW3(:))<(ZRWETG(:)-ZZW5(:)-ZZW6(:)) .AND. ZRDRYG(:)>0.0 )
    !
    P_RC_DRYG(:) = - ZZW1(:)
@@ -540,7 +540,7 @@ END WHERE
 ! BVIE test ZRDRYG<ZZW ?????????????????????????
 !GDRY(:) = (PT(:)<XHMTMAX) .AND. (PT(:)>XHMTMIN)    .AND. (ZRDRYG(:)<ZZW(:))&
 GDRY(:) = PT(:)<XHMTMAX .AND. PT(:)>XHMTMIN .AND. PRGT(:)>XRTMIN(6) .AND. PRCT(:)>XRTMIN(2) .AND. LDCOMPUTE(:) .AND. &
-          (ZRDRYG(:)-ZZW2(:)-ZZW3(:))<(ZRWETG(:)-ZZW5(:)-ZZW6(:))
+          PCGT(:)>XCTMIN(6) .AND. PCCT(:)>XCTMIN(2) .AND. (ZRDRYG(:)-ZZW2(:)-ZZW3(:))<(ZRWETG(:)-ZZW5(:)-ZZW6(:))
 
 ZZX(:)=9999.
 ZVEC1(:)=0.
@@ -571,7 +571,7 @@ END WHERE
 !        -------------------
 !
 ZZX(:) = 0.0
-WHERE( (PRGT(:)>XRTMIN(6)) .AND. (PT(:)>XTT) .AND. LDCOMPUTE(:) )
+WHERE( PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)>XTT .AND. LDCOMPUTE(:) )
    ZZX(:) = PRVT(:)*PPRES(:)/((XMV/XMD)+PRVT(:)) ! Vapor pressure
    ZZX(:) = PKA(:)*(XTT-PT(:)) +                                 &
               ( PDV(:)*(XLVTT + ( XCPV - XCL ) * ( PT(:) - XTT )) &

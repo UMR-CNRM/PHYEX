@@ -65,7 +65,7 @@ END MODULE MODI_LIMA_RAIN_FREEZING
 !              ------------
 !
 USE MODD_CST,              ONLY : XTT
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCEXVT
+USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, XCEXVT
 USE MODD_PARAM_LIMA_MIXED, ONLY : XICFRR, XEXICFRR, XRCFRI, XEXRCFRI
 !
 IMPLICIT NONE
@@ -111,7 +111,8 @@ P_CI_CFRZ(:)=0.
 ZW1(:)=0.
 ZW2(:)=0.
 !
-WHERE( (PRIT(:)>XRTMIN(4)) .AND. (PRRT(:)>XRTMIN(3)) .AND. (PT(:)<XTT) .AND. LDCOMPUTE(:) )
+WHERE( PRIT(:)>XRTMIN(4) .AND. PRRT(:)>XRTMIN(3) .AND. PT(:)<XTT .AND. &
+       PCIT(:)>XCTMIN(4) .AND. PCRT(:)>XCTMIN(3) .AND. LDCOMPUTE(:) )
 !
    ZW1(:) = XICFRR * PRIT(:) * PCRT(:)                    & ! RICFRRG
                                      * PLBDR(:)**XEXICFRR         &
