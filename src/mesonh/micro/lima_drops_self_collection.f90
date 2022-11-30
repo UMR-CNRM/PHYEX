@@ -105,12 +105,12 @@ ZW1(:) = 0.0
 ZW2(:) = 0.0
 ZW3(:) = 0.0
 !
-WHERE (PCRT(:)>XCTMIN(3) .AND. (ZW4(:)>1.E-4) .AND. LDCOMPUTE(:))  ! analytical integration
+WHERE ( PCRT(:)>XCTMIN(3) .AND. ZW4(:)>1.E-4 .AND. LDCOMPUTE(:))  ! analytical integration
    ZW1(:) = XSCBU2 * PCRT(:)**2 / PLBDR3(:)                        ! D>100 10-6 m
    ZW3(:) = ZW1(:)*ZSCBU(:)
 END WHERE
 !
-WHERE (PCRT(:)>XCTMIN(3) .AND. (ZW4(:)<=1.E-4) .AND. LDCOMPUTE(:))
+WHERE ( PCRT(:)>XCTMIN(3) .AND. ZW4(:)<=1.E-4 .AND. LDCOMPUTE(:))
    ZW2(:) = XSCBU3 *(PCRT(:) / PLBDR3(:))**2                       ! D<100 10-6 m
    ZW3(:) = ZW2(:)
 END WHERE

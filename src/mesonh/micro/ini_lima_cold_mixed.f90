@@ -343,8 +343,8 @@ IF (GFLAG) THEN
   WRITE(UNIT=ILUOUT0,FMT='(" XLBEXH =",E13.6," XLBH =",E13.6)') XLBEXH,XLBH
 END IF
 !
-XLBDAS_MAX = 500000. ! used only before transforming lambda for non MP PSD
-XLBDAS_MIN = 1000. *1.E-10
+XLBDAS_MAX = 1.E7 ! (eq to r~1E-7kg/kg) (for non MP PSD, use conversion XTRANS_MP_GAMMAS)
+XLBDAS_MIN = 1.   ! (eq to r~0.18kg/kg) (for non MP PSD, use conversion XTRANS_MP_GAMMAS)
 XLBDAG_MAX = 100000.0
 !
 ZCONC_MAX  = 1.E6 ! Maximal concentration for falling particules set to 1 per cc

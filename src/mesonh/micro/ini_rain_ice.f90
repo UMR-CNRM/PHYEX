@@ -442,11 +442,11 @@ XLBH   = ( XAH*XCCH*MOMG(XALPHAH,XNUH,XBH) )**(-XLBEXH)
 XLBDAS_MAX = 100000.0
 !
 ZCONC_MAX  = 1.E6 ! Maximal concentration for falling particules set to 1 per cc
-#if defined(REPRO48) || defined(REPRO55)
 IF(XCCS>0. .AND. XCXS>0. )XLBDAS_MAX = ( ZCONC_MAX/XCCS )**(1./XCXS)
+#if defined(REPRO48) || defined(REPRO55)
 #else
-XLBDAS_MAX = 1.E6
-XLBDAS_MIN = 1000.
+IF (LSNOW_T) XLBDAS_MAX = 1.E6
+XLBDAS_MIN = 1.E-10
 #endif
 !
 XCONC_SEA=1E8 ! 100/cm3

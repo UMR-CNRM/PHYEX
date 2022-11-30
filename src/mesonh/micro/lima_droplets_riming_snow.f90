@@ -76,7 +76,7 @@ END MODULE MODI_LIMA_DROPLETS_RIMING_SNOW
 !              ------------
 !
 USE MODD_CST,              ONLY : XTT
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCEXVT, XNUS, XALPHAS, LMURAKAMI
+USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, XCEXVT, XNUS, XALPHAS, LMURAKAMI
 USE MODD_PARAM_LIMA_MIXED, ONLY : NGAMINC, XRIMINTP1, XRIMINTP2, XGAMINC_RIM1, XGAMINC_RIM2, XGAMINC_RIM4, &
                                   XCRIMSS, XEXCRIMSS, XSRIMCG, XEXSRIMCG, XSRIMCG2, XSRIMCG3, XEXSRIMCG2, &
                                   XHMLINTP1, XHMLINTP2, XGAMINC_HMC, XHM_FACTS, XHMTMIN, XHMTMAX
@@ -129,7 +129,8 @@ DO JI = 1, SIZE(PRCT)
 !*       Cloud droplet riming of the aggregates  
 !        --------------------------------------
 !
-   IF ( PRCT(JI)>XRTMIN(2) .AND. PRST(JI)>XRTMIN(5) .AND. PT(JI)<XTT .AND. LDCOMPUTE(JI) ) THEN
+   IF ( PRCT(JI)>XRTMIN(2) .AND. PRST(JI)>XRTMIN(5) .AND. PT(JI)<XTT .AND. &
+        PCCT(JI)>XCTMIN(2) .AND. PCST(JI)>XCTMIN(5) .AND. LDCOMPUTE(JI) ) THEN
 !
       ZVEC1(JI) = PLBDS(JI)
       ZVEC1W(JI)= ( XFVELOS**XALPHAS + PLBDS(JI)**XALPHAS ) ** (1./XALPHAS) ! modified equivalent lambda
@@ -200,8 +201,8 @@ DO JI = 1, SIZE(PRCT)
 !*       Hallett-Mossop ice production (HMS)  
 !        -----------------------------------
 !
-   IF ( PT(JI)<XHMTMAX .AND. PT(JI)>XHMTMIN .AND.                      &
-        PRST(JI)>XRTMIN(5) .AND. PRCT(JI)>XRTMIN(2) .AND. LDCOMPUTE(JI) ) THEN
+   IF ( PRST(JI)>XRTMIN(5) .AND. PRCT(JI)>XRTMIN(2) .AND. PT(JI)<XHMTMAX .AND. PT(JI)>XHMTMIN .AND. &
+        PCST(JI)>XCTMIN(5) .AND. PCCT(JI)>XCTMIN(2) .AND. LDCOMPUTE(JI) ) THEN
 !
       ZVEC1(JI) = PLBDC(JI)
       ZVEC2(JI) = MAX( 1.0001, MIN( REAL(NGAMINC)-0.0001,           &
