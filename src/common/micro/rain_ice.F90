@@ -529,6 +529,7 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
       CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
+                                  &ZLBDAS, &
                                   &PRCS, ZRCT, PRRS, ZRRT, PRIS, ZRIT,&
                                   &PRSS, ZRST, PRGS, ZRGT,&
                                   &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
@@ -547,6 +548,7 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
       CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
+                                  &ZLBDAS, &
                                   &PRCS, ZRCT, PRRS, ZRRT, PRIS, ZRIT,&
                                   &PRSS, ZRST, PRGS, ZRGT,&
                                   &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
@@ -1208,10 +1210,15 @@ IF(BUCONF%LBU_ENABLE) THEN
       ZW(JIJ,JK)=ZW(JIJ,JK)+ZZ_RVHENI(JIJ,JK)
     ENDDO
   ENDDO
+#ifdef REPRO48
   IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HENU',  ZW(:, :)*ZZ_LSFACT(:, :)*PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HENU', -ZW(:, :)                *PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HENU',  ZW(:, :)                *PRHODJ(:, :))
-
+#else
+  IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HIN',  ZW(:, :)*ZZ_LSFACT(:, :)*PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HIN', -ZW(:, :)                *PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIN',  ZW(:, :)                *PRHODJ(:, :))
+#endif
   ZW(:,:) = 0.
   DO JL=1, KSIZE
     ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RCHONI(JL) * ZINV_TSTEP
@@ -1611,6 +1618,7 @@ IF(PARAMI%LSEDIM_AFTER) THEN
       CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
+                                  &ZLBDAS, &
                                   &PRCS, ZRCT, PRRS, ZRRT, PRIS, ZRIT,&
                                   &PRSS, ZRST, PRGS, ZRGT,&
                                   &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
@@ -1629,6 +1637,7 @@ IF(PARAMI%LSEDIM_AFTER) THEN
       CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
+                                  &ZLBDAS, &
                                   &PRCS, ZRCT, PRRS, ZRRT, PRIS, ZRIT,&
                                   &PRSS, ZRST, PRGS, ZRGT,&
                                   &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &

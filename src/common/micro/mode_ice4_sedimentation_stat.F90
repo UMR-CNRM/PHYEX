@@ -173,7 +173,11 @@ DO JK = D%NKE , D%NKB, -1*D%NKL
     ELSEIF (JRR==5) THEN
 
       !*       2.4   for aggregates/snow
+#ifdef REPRO48
       CALL OTHER_SPECIES(ICEP%XFSEDS,ICEP%XEXSEDS,PRST(:,:,JK))
+#else
+      CALL SNOW(PRST(:,:,JK))
+#endif
 
     ELSEIF (JRR==6) THEN
 
@@ -351,6 +355,55 @@ CONTAINS
     !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:PRISTINE_ICE',1,ZHOOK_HANDLE)
 
   END SUBROUTINE PRISTINE_ICE
+
+  SUBROUTINE SNOW(PRXT)
+
+    REAL, INTENT(IN)    :: PRXT(D%NIT,D%NJT) ! mr of specy X
+
+    REAL(KIND=JPRB) :: ZHOOK_HANDLE
+
+    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:SNOW',0,ZHOOK_HANDLE)
+
+    ! ******* for snow
+    DO JJ = D%NJB, D%NJE
+      DO JI = D%NIB, D%NIE
+        ZQP=ZSED(JI,JJ,IKPLUS,JRR)*ZTSORHODZ(JI,JJ)
+        IF ((PRXT(JI,JJ) > ICED%XRTMIN(JRR)) .OR. (ZQP > ICED%XRTMIN(JRR))) THEN
+          !calculation of w
+          IF ( PRXT(JI,JJ) > ICED%XRTMIN(JRR) ) THEN
+            ZWSEDW1(JI)= ICEP%XFSEDS *  &
+                          & PRHODREF(JI,JJ,JK)**(-ICED%XCEXVT) * &
+                          & (1+(ICED%XFVELOS/PLBDAS(JI,JJ,JK))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEXSEDS/ICED%XALPHAS)* &
+			   & PLBDAS(JI,JJ,JK)**(ICED%XBS+ICEP%XEXSEDS) 
+          ELSE
+            ZWSEDW1(JI)=0.
+          ENDIF
+          IF ( ZQP > ICED%XRTMIN(JRR) ) THEN
+            ZWSEDW2(JI)= ICEP%XFSEDS *  &
+                          & PRHODREF(JI,JJ,JK)**(-ICED%XCEXVT) * &
+                          & (1+(ICED%XFVELOS/PLBDAS(JI,JJ,JK))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEXSEDS/ICED%XALPHAS)* &
+			   & PLBDAS(JI,JJ,JK)**(ICED%XBS+ICEP%XEXSEDS) 
+          ELSE
+            ZWSEDW2(JI)=0.
+          ENDIF
+        ELSE
+          ZWSEDW1(JI)=0.
+          ZWSEDW2(JI)=0.
+        ENDIF
+!- duplicated code -------------------------------------------------------------------------
+        IF (ZWSEDW2(JI) /= 0.) THEN
+          ZSED(JI,JJ,IK,JRR)=FWSED1(ZWSEDW1(JI),PTSTEP,PDZZ(JI,JJ,JK),PRHODREF(JI,JJ,JK),PRXT(JI,JJ),ZINVTSTEP) &
+           & + FWSED2(ZWSEDW2(JI),PTSTEP,PDZZ(JI,JJ,JK),ZSED(JI,JJ,IKPLUS,JRR))
+        ELSE
+          ZSED(JI,JJ,IK,JRR)=FWSED1(ZWSEDW1(JI),PTSTEP,PDZZ(JI,JJ,JK),PRHODREF(JI,JJ,JK),PRXT(JI,JJ),ZINVTSTEP)
+        ENDIF
+!-------------------------------------------------------------------------------------------
+      ENDDO
+    ENDDO
+
+    !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:SNOW',1,ZHOOK_HANDLE)
+
+  END SUBROUTINE SNOW
 
   SUBROUTINE OTHER_SPECIES(PFSED,PEXSED,PRXT)
 
