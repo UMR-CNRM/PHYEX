@@ -51,6 +51,7 @@ REAL    :: XVDEPOSC    ! Droplet deposition velocity
 CHARACTER(LEN=4) :: CPRISTINE_ICE ! Pristine ice type PLAT, COLU or BURO
 CHARACTER(LEN=4) :: CSEDIM        ! Sedimentation calculation mode      
 !
+LOGICAL :: LRED       ! To use modified ICE3/ICE4 to reduce time step dependency
 LOGICAL :: LFEEDBACKT ! When .TRUE. feed back on temperature is taken into account
 LOGICAL :: LEVLIMIT   ! When .TRUE. water vapour pressure is limited by saturation
 LOGICAL :: LNULLWETG  ! When .TRUE. graupel wet growth is activated with null rate (to allow water shedding)
@@ -85,6 +86,7 @@ TYPE(PARAM_ICE_t), SAVE, TARGET :: PARAM_ICE
 LOGICAL, POINTER :: LWARM => NULL(), &
                     LSEDIC => NULL(), &
                     LDEPOSC => NULL(), &
+                    LRED => NULL(), &
                     LFEEDBACKT => NULL(), &
                     LEVLIMIT => NULL(), &
                     LNULLWETG => NULL(), &
@@ -123,6 +125,7 @@ SUBROUTINE PARAM_ICE_ASSOCIATE()
   LWARM => PARAM_ICE%LWARM
   LSEDIC => PARAM_ICE%LSEDIC
   LDEPOSC => PARAM_ICE%LDEPOSC
+  LRED => PARAM_ICE%LRED
   LFEEDBACKT => PARAM_ICE%LFEEDBACKT
   LEVLIMIT => PARAM_ICE%LEVLIMIT
   LNULLWETG => PARAM_ICE%LNULLWETG
