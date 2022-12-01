@@ -76,6 +76,7 @@ function usage {
   echo "commit          commit hash (or a directory, or among $specialPack) to test"
   echo "reference       commit hash (or a directory, or among $specialPack) REF to use as a reference"
   echo "-s              suppress compilation pack"
+  echo "-p              creates pack"
   echo "-c              performs compilation"
   echo "-r              runs the tests"
   echo "-C              checks the result against the reference"
@@ -100,8 +101,11 @@ function usage {
   echo "If using a directory (for commit or reference) it must contain at least one '/'"
   echo
   echo "The cycle will be guessed from the source code"
+  echo
+  echo "The -f flag (full recompilation) is active only at pack creation"
 }
 
+packcreation=0
 compilation=0
 run=0
 check=0
@@ -117,6 +121,7 @@ while [ -n "$1" ]; do
   case "$1" in
     '-h') usage;;
     '-s') suppress=1;;
+    '-p') packcreation=1;;
     '-c') compilation=1;;
     '-r') run=$(($run+1));;
     '-C') check=1;;
@@ -161,9 +166,11 @@ elif [ $tests == 'ALL' ]; then
   tests=$availTests
 fi
 
-if [ $compilation -eq 0 -a \
+if [ $packcreation -eq 0 -a \
+     $compilation -eq 0 -a \
      $run -eq 0 -a \
      $check -eq 0 ]; then
+  packcreation=1
   compilation=1
   run=1
   check=1
@@ -250,7 +257,7 @@ if [ ! -z "${reference-}" ]; then
   fi
 fi
 
-if [ $compilation -eq 1 ]; then
+if [ $packcreation -eq 1 ]; then
   echo "### Compilation of commit $commit"
 
   if echo $specialPack | grep -w $commit > /dev/null; then
@@ -375,9 +382,13 @@ if [ $compilation -eq 1 ]; then
     fi
   fi
   rm -rf PHYEX
+fi
+
+if [ $compilation -eq 1 ]; then
+  echo "### Compilation of commit $commit"
 
   cd $HOMEPACK/$name
-  sed -i 's/GMK_THREADS=1/GMK_THREADS=10/' ics_masterodb
+  sed -i 's/GMK_THREADS=1$/GMK_THREADS=10/' ics_masterodb
   cleanpack -f
 
   exescript Output_compilation ics_masterodb
