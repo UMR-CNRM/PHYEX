@@ -526,7 +526,7 @@ DO JITER =1,ITERMAX
       CALL CONDENSATION(D, CST, RAIN_ICE_PARAM, NEB, TURBN,                    &
           'S', HCONDENS, HLAMBDA3,                                             &
            PPABST, PZZ, PRHODREF, ZT, ZRV_IN, ZRV, ZRC_IN, ZRC, ZRI_IN, ZRI,   &
-           PRSS*PTSTEP, PRGS*PTSTEP, &
+           PRRS*PTSTEP,PRSS*PTSTEP, PRGS*PTSTEP, &
            Z_SIGS, .FALSE., PMFCONV, PCLDFR, Z_SRCS, GUSERI, G_SIGMAS, .FALSE., .FALSE.,&
            ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,              &
            ZSIGQSAT2D, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
