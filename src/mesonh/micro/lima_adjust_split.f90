@@ -11,10 +11,10 @@ INTERFACE
 !
       SUBROUTINE LIMA_ADJUST_SPLIT(D, KRR, KMI, TPFILE, HCONDENS, HLAMBDA3,        &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
-                             PRHODREF, PRHODJ, PEXNREF, PPABSM, PSIGS, PMFCONV, &
-                             PPABST, PZZ, PDTHRAD, PW_NU,                       &
+                             PRHODREF, PRHODJ, PEXNREF, PSIGS, PMFCONV,         &
+                             PPABST, PPABSTT, PZZ, PDTHRAD, PW_NU,              &
                              PRT, PRS, PSVT, PSVS,                              &
-                             PTHS, PSRCS, PCLDFR, PRC_MF, PCF_MF                )
+                             PTHS, PSRCS, PCLDFR, PICEFR, PRC_MF, PRI_MF, PCF_MF)
 !
 USE MODD_IO,    ONLY: TFILEDATA
 USE MODD_NSV,   only: NSV_LIMA_BEG
@@ -38,10 +38,10 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PRHODREF  ! Dry density of the
                                                      ! reference state
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PRHODJ    ! Dry density * Jacobian
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PEXNREF   ! Reference Exner function
-REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PPABSM    ! Absolute Pressure at t-dt
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PSIGS     ! Sigma_s at time t
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PMFCONV   ! 
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PPABST    ! Absolute Pressure at t     
+REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PPABSTT   ! Absolute Pressure at t+dt     
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PZZ       !     
 REAL, DIMENSION(:,:,:),   INTENT(IN)   :: PDTHRAD   ! Radiative temperature tendency
 REAL, DIMENSION(:,:,:),   INTENT(IN)   :: PW_NU     ! updraft velocity used for
@@ -60,7 +60,9 @@ REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PSRCS     ! Second-order flux
                                                      ! s'rc'/2Sigma_s2 at time t+1
                                                      ! multiplied by Lambda_3
 REAL, DIMENSION(:,:,:),   INTENT(INOUT)   :: PCLDFR    ! Cloud fraction          
+REAL, DIMENSION(:,:,:),   INTENT(INOUT)   :: PICEFR    ! Cloud fraction          
 REAL, DIMENSION(:,:,:),     INTENT(IN)    :: PRC_MF! Convective Mass Flux liquid mixing ratio
+REAL, DIMENSION(:,:,:),     INTENT(IN)    :: PRI_MF! Convective Mass Flux ice mixing ratio
 REAL, DIMENSION(:,:,:),     INTENT(IN)    :: PCF_MF! Convective Mass Flux Cloud fraction 
 !
 END SUBROUTINE LIMA_ADJUST_SPLIT
@@ -72,10 +74,10 @@ END MODULE MODI_LIMA_ADJUST_SPLIT
 !     ###########################################################################
       SUBROUTINE LIMA_ADJUST_SPLIT(D, KRR, KMI, TPFILE, HCONDENS, HLAMBDA3,        &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
-                             PRHODREF, PRHODJ, PEXNREF, PPABSM, PSIGS, PMFCONV, &
-                             PPABST, PZZ, PDTHRAD, PW_NU,                       &
+                             PRHODREF, PRHODJ, PEXNREF, PSIGS, PMFCONV,         &
+                             PPABST, PPABSTT, PZZ, PDTHRAD, PW_NU,              &
                              PRT, PRS, PSVT, PSVS,                              &
-                             PTHS, PSRCS, PCLDFR, PRC_MF, PCF_MF                )
+                             PTHS, PSRCS, PCLDFR, PICEFR, PRC_MF, PRI_MF, PCF_MF)
 !     ###########################################################################
 !
 !!****  *MIMA_ADJUST* -  compute the fast microphysical sources 
@@ -144,6 +146,7 @@ END MODULE MODI_LIMA_ADJUST_SPLIT
 !!    -------------
 !!      Original             06/2021 forked from lima_adjust.f90 
 !  P. Wautelet 23/07/2021: replace non-standard FLOAT function by REAL function
+!  B. Vie         03/2022: Add option for 1-moment pristine ice
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -202,10 +205,10 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PRHODREF  ! Dry density of the
                                                      ! reference state
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PRHODJ    ! Dry density * Jacobian
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PEXNREF   ! Reference Exner function
-REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PPABSM    ! Absolute Pressure at t-dt
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PSIGS     ! Sigma_s at time t
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PMFCONV   ! 
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PPABST    ! Absolute Pressure at t     
+REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PPABSTT   ! Absolute Pressure at t+dt     
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PZZ       !     
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDTHRAD   ! Radiative temperature tendency
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU     ! updraft velocity used for
@@ -224,7 +227,9 @@ REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PSRCS     ! Second-order flux
                                                      ! s'rc'/2Sigma_s2 at time t+1
                                                      ! multiplied by Lambda_3
 REAL, DIMENSION(:,:,:),   INTENT(INOUT)   :: PCLDFR    ! Cloud fraction          
+REAL, DIMENSION(:,:,:),   INTENT(INOUT)   :: PICEFR    ! Cloud fraction          
 REAL, DIMENSION(:,:,:),     INTENT(IN)    :: PRC_MF! Convective Mass Flux liquid mixing ratio
+REAL, DIMENSION(:,:,:),     INTENT(IN)    :: PRI_MF! Convective Mass Flux ice mixing ratio
 REAL, DIMENSION(:,:,:),     INTENT(IN)    :: PCF_MF! Convective Mass Flux Cloud fraction 
 !
 !
@@ -279,24 +284,13 @@ REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) &
                             ZMASK,&
                             ZRV, ZRV2,ZRV_IN,  &
                             ZRC, ZRC2,ZRC_IN,  &
-                            ZRI, ZRI_IN, &
-                            ZSIGS, &
-                            ZW_MF
+                            ZRI, ZRI_IN,  &
+                            Z_SIGS, Z_SRCS, &
+                            ZW_MF, &
+                            ZCND, ZS, ZVEC1
 REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2)) :: ZSIGQSAT2D, ZDUM
-LOGICAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) &
-                         :: GMICRO ! Test where to compute cond/dep proc.
-INTEGER                  :: IMICRO
-REAL, DIMENSION(:), ALLOCATABLE &
-                         :: ZRVT, ZRCT, ZRIT, ZRVS, ZRCS, ZRIS, ZTHS,        &
-                            ZCCT, ZCIT, ZCCS, ZCIS,                          &
-                            ZRHODREF, ZZT, ZPRES, ZEXNREF, ZZCPH,            &
-                            ZZW, ZLVFACT, ZLSFACT,                           &
-                            ZRVSATW, ZRVSATI, ZRVSATW_PRIME, ZRVSATI_PRIME,  &
-                            ZAW, ZAI, ZCJ, ZKA, ZDV, ZITW, ZITI, ZAWW, ZAIW, &
-                            ZAWI, ZAII, ZFACT, ZDELTW,                       &
-                            ZDELTI, ZDELT1, ZDELT2, ZCND, ZDEP, ZS, ZVEC1, ZZW2
 !
-INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1
+INTEGER, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) :: IVEC1
 !
 INTEGER                  :: IRESP      ! Return code of FM routines
 INTEGER                  :: IIU,IJU,IKU! dimensions of dummy arrays
@@ -312,12 +306,11 @@ REAL, DIMENSION(:), ALLOCATABLE   :: ZRTMIN
 REAL, DIMENSION(:), ALLOCATABLE   :: ZCTMIN
 !
 integer :: idx
-INTEGER , DIMENSION(SIZE(GMICRO)) :: I1,I2,I3 ! Used to replace the COUNT
-INTEGER                           :: JL       ! and PACK intrinsics
+integer :: JI, JJ, JK, jl
 INTEGER                           :: JMOD, JMOD_IFN, JMOD_IMM
 !
-INTEGER , DIMENSION(3) :: BV
 TYPE(TFIELDDATA)  :: TZFIELD
+LOGICAL :: G_SIGMAS, GUSERI
 !
 !-------------------------------------------------------------------------------
 !
@@ -388,11 +381,11 @@ PCIT(:,:,:) = 0.
 PCCS(:,:,:) = 0.
 ! PCIS(:,:,:) = 0.
 !
-IF ( LWARM ) PCCT(:,:,:) = PSVS(:,:,:,NSV_LIMA_NC)*PTSTEP
-IF ( LCOLD ) PCIT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NI)
+IF ( LWARM .AND. NMOM_C.GE.2 ) PCCT(:,:,:) = PSVS(:,:,:,NSV_LIMA_NC)*PTSTEP
+IF ( LCOLD .AND. NMOM_I.GE.2 ) PCIT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NI)
 !
-IF ( LWARM ) PCCS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NC)
-! IF ( LCOLD ) PCIS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NI)
+IF ( LWARM .AND. NMOM_C.GE.2 ) PCCS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NC)
+! IF ( LCOLD .AND. NMOM_I.GE.2 ) PCIS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NI)
 !
 IF ( LSCAV .AND. LAERO_MASS ) PMAS(:,:,:) = PSVS(:,:,:,NSV_LIMA_SCAVMASS)
 ! 
@@ -427,7 +420,7 @@ if ( nbumod == kmi .and. lbu_enable ) then
   !Remark: PRIS is not modified but source term kept for better coherence with lima_adjust and lima_notadjust
   if ( lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'CEDS', pris(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv ) then
-    if ( lwarm ) &
+    if ( lwarm .and. nmom_c.ge.2) &
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CEDS', pccs(:, :, :) * prhodj(:, :, :) )
     if ( lscav .and. laero_mass ) &
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', pmas(:, :, :) * prhodj(:, :, :) )
@@ -476,7 +469,7 @@ END WHERE
 !
 !*       2.2    estimate the Exner function at t+1
 !
-ZEXNS(:,:,:) = ( (2. * PPABST(:,:,:) - PPABSM(:,:,:)) / XP00 ) ** (XRD/XCPD)  
+ZEXNS(:,:,:) = ( PPABSTT(:,:,:) / XP00 ) ** (XRD/XCPD)  
 !
 !    beginning of the iterative loop
 !
@@ -505,240 +498,190 @@ DO JITER =1,ITERMAX
 !*       3.     FIRST ORDER SUBGRID CONDENSATION SCHEME
 !               ---------------------------------------
 !
-   IF ( OSUBG_COND ) THEN
-     !
-      ZRV=PRVS*PTSTEP
-      ZRC=PRCS*PTSTEP
-      ZRV_IN=ZRV
-      ZRC_IN=ZRC
-      ZRI_IN=0.
-      ZRV2=PRVT
-      ZRC2=PRCT
-      ZRI=0.
-      ZSIGS=PSIGS
-      ZSIGQSAT2D(:,:)=PSIGQSAT
-      CALL CONDENSATION(D, CST, RAIN_ICE_PARAM, NEB, TURBN, &
-                       &'S', HCONDENS, HLAMBDA3,                                                  &
-                       &PPABST, PZZ, PRHODREF, ZT, ZRV_IN, ZRV, ZRC_IN, ZRC, ZRI_IN, ZRI,    &
-                       &PRRS*PTSTEP, PRSS*PTSTEP, PRGS*PTSTEP, ZSIGS, .FALSE., PMFCONV, PCLDFR, PSRCS, .FALSE.,                 &
-                       &OSIGMAS, .FALSE., .FALSE.,                                                        &
-                       &ZDUM, ZDUM, ZDUM, ZDUM, ZDUM, ZSIGQSAT2D, &
-                       &ZLV, ZLS, ZCPH)
-      PCLDFR(:,:,:) = MIN(PCLDFR(:,:,:) + PCF_MF(:,:,:) , 1.)
-      ZRV(:,:,:) = ZRV(:,:,:) - MAX(MIN(PRC_MF(:,:,:), ZRV(:,:,:)),0.)
-      ZRC(:,:,:) = ZRC(:,:,:) + MAX(MIN(PRC_MF(:,:,:), ZRV(:,:,:)),0.)
-      ZW_MF=0.
-      CALL LIMA_CCN_ACTIVATION (TPFILE,                         &
-           PRHODREF, PEXNREF, PPABST, ZT2, PDTHRAD, PW_NU+ZW_MF, &
-           PTHT, ZRV2, ZRC2, PCCT, PRRT, PNFT, PNAT,              &
-           PCLDFR                                               )
-!
+   ZRV=PRVS*PTSTEP
+   ZRC=PRCS*PTSTEP
+   ZRV2=PRVT
+   ZRC2=PRCT
+   ZRV_IN=ZRV
+   ZRC_IN=ZRC
+   ZRI_IN=0.
+   IF (NMOM_I.EQ.1) THEN
+      ZRI=PRIS*PTSTEP
+      GUSERI=.TRUE.
    ELSE
-!
-!-------------------------------------------------------------------------------
-!
-!
-!
-!*              FULLY IMPLICIT CONDENSATION SCHEME
-!               ---------------------------------
-! 
-!*              select cases where r_c>0
-! 
-!
-      GMICRO(:,:,:) = .FALSE.
-      GMICRO(IIB:IIE,IJB:IJE,IKB:IKE) =( PRCS(IIB:IIE,IJB:IJE,IKB:IKE)>0. .AND.        &
-                                         PCCS(IIB:IIE,IJB:IJE,IKB:IKE)>0.      )
-      IMICRO = COUNTJV( GMICRO(:,:,:),I1(:),I2(:),I3(:))
-      IF( IMICRO >= 1 ) THEN
-         ALLOCATE(ZRVT(IMICRO))
-         ALLOCATE(ZRCT(IMICRO))
-!
-         ALLOCATE(ZRVS(IMICRO))
-         ALLOCATE(ZRCS(IMICRO))
-         ALLOCATE(ZCCS(IMICRO))
-         ALLOCATE(ZTHS(IMICRO))
-!
-         ALLOCATE(ZRHODREF(IMICRO))
-         ALLOCATE(ZZT(IMICRO))
-         ALLOCATE(ZPRES(IMICRO))
-         ALLOCATE(ZEXNREF(IMICRO))
-         ALLOCATE(ZZCPH(IMICRO))
-         DO JL=1,IMICRO
-            ZRVT(JL) = PRVT(I1(JL),I2(JL),I3(JL))
-            ZRCT(JL) = PRCT(I1(JL),I2(JL),I3(JL))
-            !
-            ZRVS(JL) = PRVS(I1(JL),I2(JL),I3(JL))
-            ZRCS(JL) = PRCS(I1(JL),I2(JL),I3(JL))
-            ZCCS(JL) = PCCS(I1(JL),I2(JL),I3(JL))
-            ZTHS(JL) = PTHS(I1(JL),I2(JL),I3(JL))
-            !
-            ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
-            ZZT(JL) = ZT(I1(JL),I2(JL),I3(JL))
-            ZPRES(JL) = 2.0*PPABST(I1(JL),I2(JL),I3(JL))-PPABSM(I1(JL),I2(JL),I3(JL))
-            ZEXNREF(JL) = PEXNREF(I1(JL),I2(JL),I3(JL))
-            ZZCPH(JL) = ZCPH(I1(JL),I2(JL),I3(JL))
-         ENDDO
-         ALLOCATE(ZZW(IMICRO))
-         ALLOCATE(ZLVFACT(IMICRO))
-         ALLOCATE(ZRVSATW(IMICRO))
-         ALLOCATE(ZCND(IMICRO))
-         ZLVFACT(:) = (XLVTT+(XCPV-XCL)*(ZZT(:)-XTT))/ZZCPH(:) ! L_v/C_ph
-         ZZW(:) = EXP( XALPW - XBETAW/ZZT(:) - XGAMW*ALOG(ZZT(:) ) ) ! es_w
-         ZRVSATW(:) = ZEPS*ZZW(:) / ( ZPRES(:)-ZZW(:) )              ! r_sw
+      ZRI=0.
+      GUSERI=.FALSE.
+   END IF
+   IF (OSUBG_COND) THEN
+      Z_SIGS=PSIGS
+      G_SIGMAS=OSIGMAS
+      ZSIGQSAT2D(:,:)=PSIGQSAT
+   ELSE
+      Z_SIGS=0.
+      G_SIGMAS=.TRUE.
+      ZSIGQSAT2D(:,:)=0.
+   END IF
 
-         IF (LADJ) THEN
-            ALLOCATE(ZRVSATW_PRIME(IMICRO))
-            ALLOCATE(ZAWW(IMICRO))
-            ALLOCATE(ZDELT1(IMICRO))
-            ALLOCATE(ZDELT2(IMICRO))
-            ZRVSATW_PRIME(:) = (( XBETAW/ZZT(:) - XGAMW ) / ZZT(:))  &  ! r'_sw
-                               * ZRVSATW(:) * ( 1. + ZRVSATW(:)/ZEPS )
-            ZAWW(:) = 1.0 + ZRVSATW_PRIME(:)*ZLVFACT(:)
-            ZDELT2(:) = (ZRVSATW_PRIME(:)*ZLVFACT(:)/ZAWW(:)) *                     &
-                        ( ((-2.*XBETAW+XGAMW*ZZT(:))/(XBETAW-XGAMW*ZZT(:))          &
-                        + (XBETAW/ZZT(:)-XGAMW)*(1.0+2.0*ZRVSATW(:)/ZEPS))/ZZT(:) )
-            ZDELT1(:) = (ZLVFACT(:)/ZAWW(:)) * ( ZRVSATW(:) - ZRVS(:)*ZDT )
-            ZCND(:) = - ZDELT1(:)*( 1.0 + 0.5*ZDELT1(:)*ZDELT2(:) ) / (ZLVFACT(:)*ZDT)
-            DEALLOCATE(ZRVSATW_PRIME)
-            DEALLOCATE(ZAWW)
-            DEALLOCATE(ZDELT1)
-            DEALLOCATE(ZDELT2)
-         ELSE
-            ALLOCATE(ZS(IMICRO))
-            ALLOCATE(ZZW2(IMICRO))
-            ALLOCATE(ZVEC1(IMICRO))
-            ALLOCATE(IVEC1(IMICRO))
-            ZVEC1(:) = MAX( 1.0001, MIN( REAL(NAHEN)-0.0001, XAHENINTP1 * ZZT(:) + XAHENINTP2 ) )
-            IVEC1(:) = INT( ZVEC1(:) )
-            ZVEC1(:) = ZVEC1(:) - REAL( IVEC1(:) )
-            ZS(:) = ZRVS(:)*PTSTEP / ZRVSATW(:) - 1.
-            ZZW(:) = ZCCS(:)*PTSTEP/(XLBC*ZCCS(:)/ZRCS(:))**XLBEXC
-            ZZW2(:) = XAHENG3(IVEC1(:)+1)*ZVEC1(:)-XAHENG3(IVEC1(:))*(ZVEC1(:)-1.)
-            ZCND(:) = 2.*3.14*1000.*ZZW2(:)*ZS(:)*ZZW(:)
-            DEALLOCATE(ZS)
-            DEALLOCATE(ZZW2)
-            DEALLOCATE(ZVEC1)
-            DEALLOCATE(IVEC1)
-         END IF
+   IF (LADJ) THEN
+      CALL CONDENSATION(D, CST, RAIN_ICE_PARAM, NEB, TURBN,                    &
+          'S', HCONDENS, HLAMBDA3,                                             &
+           PPABST, PZZ, PRHODREF, ZT, ZRV_IN, ZRV, ZRC_IN, ZRC, ZRI_IN, ZRI,   &
+           PRSS*PTSTEP, PRGS*PTSTEP, &
+           Z_SIGS, .FALSE., PMFCONV, PCLDFR, Z_SRCS, GUSERI, G_SIGMAS, .FALSE., .FALSE.,&
+           ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,              &
+           ZSIGQSAT2D, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
+   END IF
+   IF (OSUBG_COND .AND. NMOM_C.GE.2 .AND. LACTI) THEN
+      PSRCS=Z_SRCS
+      ZW_MF=0.
+      CALL LIMA_CCN_ACTIVATION (TPFILE,                          &
+           PRHODREF, PEXNREF, PPABST, ZT2, PDTHRAD, PW_NU+ZW_MF, &
+           PTHT, ZRV2, ZRC2, PCCT, PRRT, PNFT, PNAT,             &
+           PCLDFR                                                )      
+   END IF
+
+END DO
 !
+!*       5.1    compute the sources
 !
-! Integration
+IF (LADJ) THEN
+                                                           !         Rc - Rc*
+   ZW1(:,:,:) = (ZRC(:,:,:) - PRCS(:,:,:)*PTSTEP) / PTSTEP ! Pcon = ----------
+                                                           !         2 Delta t
+   WHERE( ZW1(:,:,:) < 0.0 )
+      ZW1(:,:,:) = MAX ( ZW1(:,:,:), -PRCS(:,:,:) )
+   ELSEWHERE
+      ZW1(:,:,:) = MIN ( ZW1(:,:,:),  PRVS(:,:,:) )
+   END WHERE
+   PRVS(:,:,:) = PRVS(:,:,:) - ZW1(:,:,:)
+   PRCS(:,:,:) = PRCS(:,:,:) + ZW1(:,:,:)
+   PTHS(:,:,:) = PTHS(:,:,:) +        &
+              ZW1(:,:,:) * ZLV(:,:,:) / (ZCPH(:,:,:) * PEXNREF(:,:,:))
+ELSE
+   DO JI=1,SIZE(PRCS,1)
+      DO JJ=1,SIZE(PRCS,2)
+         DO JK=1,SIZE(PRCS,3)
+            IF (PRCS(JI,JJ,JK).GE.XRTMIN(2) .AND. PCCS(JI,JJ,JK).GE.XCTMIN(2)) THEN
+               ZVEC1(JI,JJ,JK) = MAX( 1.0001, MIN( FLOAT(NAHEN)-0.0001, XAHENINTP1 * ZT(JI,JJ,JK) + XAHENINTP2 ) )
+               IVEC1(JI,JJ,JK) = INT( ZVEC1(JI,JJ,JK) )
+               ZVEC1(JI,JJ,JK) = ZVEC1(JI,JJ,JK) - FLOAT( IVEC1(JI,JJ,JK) )
+               ZW(JI,JJ,JK)=EXP( XALPW - XBETAW/ZT(JI,JJ,JK) - XGAMW*ALOG(ZT(JI,JJ,JK) ) ) ! es_w
+               ZW(JI,JJ,JK)=ZEPS*ZW(JI,JJ,JK) / ( PPABST(JI,JJ,JK)-ZW(JI,JJ,JK) ) 
+               ZS(JI,JJ,JK) = PRVS(JI,JJ,JK)*PTSTEP / ZW(JI,JJ,JK) - 1.
+               ZW(JI,JJ,JK) = PCCS(JI,JJ,JK)*PTSTEP/(XLBC*PCCS(JI,JJ,JK)/PRCS(JI,JJ,JK))**XLBEXC
+               ZW2(JI,JJ,JK) = XAHENG3(IVEC1(JI,JJ,JK)+1)*ZVEC1(JI,JJ,JK)-XAHENG3(IVEC1(JI,JJ,JK))*(ZVEC1(JI,JJ,JK)-1.)
+               ZCND(JI,JJ,JK) = 2.*3.14*1000.*ZW2(JI,JJ,JK)*ZS(JI,JJ,JK)*ZW(JI,JJ,JK)
+               IF(ZCND(JI,JJ,JK).LE.0.) THEN
+                  ZCND(JI,JJ,JK) = MAX ( ZCND(JI,JJ,JK), -PRCS(JI,JJ,JK) )
+               ELSE
+                  ZCND(JI,JJ,JK) = MIN ( ZCND(JI,JJ,JK),  PRVS(JI,JJ,JK) )
+               END IF
+               PRVS(JI,JJ,JK) = PRVS(JI,JJ,JK) - ZCND(JI,JJ,JK)
+               PRCS(JI,JJ,JK) = PRCS(JI,JJ,JK) + ZCND(JI,JJ,JK)
+               PTHS(JI,JJ,JK) = PTHS(JI,JJ,JK) + ZCND(JI,JJ,JK) * ZLV(JI,JJ,JK) / (ZCPH(JI,JJ,JK) * PEXNREF(JI,JJ,JK))
+            END IF
+         END DO
+      END DO
+   END DO
+END IF
 !
-         WHERE( ZCND(:) < 0.0 )
-            ZCND(:) = MAX ( ZCND(:), -ZRCS(:) )
-         ELSEWHERE
-            ZCND(:) = MIN ( ZCND(:),  ZRVS(:) )
-         END WHERE
-         ZRVS(:) = ZRVS(:) - ZCND(:)
-         ZRCS(:) = ZRCS(:) + ZCND(:)
-         ZTHS(:) = ZTHS(:) + ZCND(:) * ZLVFACT(:) / ZEXNREF(:)
+IF (NMOM_I.EQ.1) THEN
+   ZW2(:,:,:) = (ZRI(:,:,:) - PRIS(:,:,:)*PTSTEP) / PTSTEP ! idem ZW1 but for Ri
 !
-         ZW(:,:,:) = PRVS(:,:,:)
-         PRVS(:,:,:) = UNPACK( ZRVS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:) )
-         ZW(:,:,:) = PRCS(:,:,:)
-         PRCS(:,:,:) = UNPACK( ZRCS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:) )
-         ZW(:,:,:) = PTHS(:,:,:)
-         PTHS(:,:,:) = UNPACK( ZTHS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:) )
+   WHERE( ZW2(:,:,:) < 0.0 )
+      ZW2(:,:,:) = MAX ( ZW2(:,:,:), -PRIS(:,:,:) )
+   ELSEWHERE
+      ZW2(:,:,:) = MIN ( ZW2(:,:,:),  PRVS(:,:,:) )
+   END WHERE
+   PRVS(:,:,:) = PRVS(:,:,:) - ZW2(:,:,:)
+   PRIS(:,:,:) = PRIS(:,:,:) + ZW2(:,:,:)
+   PTHS(:,:,:) = PTHS(:,:,:) +        &
+                 ZW2(:,:,:) * ZLS(:,:,:) / (ZCPH(:,:,:) * PEXNREF(:,:,:))
+END IF
 !
-         DEALLOCATE(ZRVT)
-         DEALLOCATE(ZRCT)
-         DEALLOCATE(ZRVS)
-         DEALLOCATE(ZRCS)
-         DEALLOCATE(ZTHS)
-         DEALLOCATE(ZRHODREF)
-         DEALLOCATE(ZZT)
-         DEALLOCATE(ZPRES)
-         DEALLOCATE(ZEXNREF)
-         DEALLOCATE(ZZCPH)
-         DEALLOCATE(ZZW)
-         DEALLOCATE(ZLVFACT)
-         DEALLOCATE(ZRVSATW)
-         DEALLOCATE(ZCND)
-      END IF ! IMICRO
+!*       5.2    compute the cloud fraction PCLDFR
 !
-   END IF ! end of adjustment procedure (test on OSUBG_COND)
+IF ( .NOT. OSUBG_COND ) THEN
+  WHERE (PRCS(:,:,:) + PRIS(:,:,:) > 1.E-12 / PTSTEP)
+    PCLDFR(:,:,:)  = 1.
+  ELSEWHERE
+    PCLDFR(:,:,:)  = 0. 
+  ENDWHERE 
+  IF ( SIZE(PSRCS,3) /= 0 ) THEN
+     WHERE (PRCS(:,:,:) + PRIS(:,:,:) > 1.E-12 / ZDT)
+        PSRCS(:,:,:)  = 1.
+     ELSEWHERE
+        PSRCS(:,:,:)  = 0.
+     ENDWHERE
+  END IF
+ELSE
+! We limit PRC_MF+PRI_MF to PRVS*PTSTEP to avoid negative humidity
+   ZW1(:,:,:)=PRC_MF(:,:,:)/PTSTEP
+   IF (NMOM_I.EQ.1) THEN
+      ZW2(:,:,:)=PRI_MF(:,:,:)/PTSTEP
+   ELSE
+      ZW2(:,:,:)=0.
+   END IF
+   WHERE(ZW1(:,:,:)+ZW2(:,:,:)>PRVS(:,:,:))
+      ZW1(:,:,:)=ZW1(:,:,:)*PRVS(:,:,:)/(ZW1(:,:,:)+ZW2(:,:,:))
+      ZW2(:,:,:)=PRVS(:,:,:)-ZW1(:,:,:)
+   ENDWHERE
+! Compute CF and update rc, ri from MF scheme
+   PRVS(:,:,:)   = PRVS(:,:,:) - ZW1(:,:,:) -ZW2(:,:,:)
+   PRCS(:,:,:)   = PRCS(:,:,:) + ZW1(:,:,:)
+   PRIS(:,:,:)   = PRIS(:,:,:) + ZW2(:,:,:)
+   PCCS(:,:,:)   = PCCT(:,:,:) / PTSTEP
+   PNFS(:,:,:,:) = PNFT(:,:,:,:) / PTSTEP
+   PNAS(:,:,:,:) = PNAT(:,:,:,:) / PTSTEP
+   PTHS(:,:,:)   = PTHS(:,:,:) + &
+                   (ZW1(:,:,:) * ZLV(:,:,:) + ZW2 * ZLS(:,:,:)) / ZCPH(:,:,:)     &
+                   /  PEXNREF(:,:,:)
+END IF
 !
 ! Remove cloud droplets if there are few
-
-   ZMASK(:,:,:) = 0.0
-   ZW(:,:,:) = 0.
-   WHERE (PRCS(:,:,:) <= ZRTMIN(2) .OR. PCCS(:,:,:) <= ZCTMIN(2)) 
+!
+ZMASK(:,:,:) = 0.0
+ZW(:,:,:) = 0.
+IF (NMOM_C .GE. 2) THEN
+   WHERE (PRCS(:,:,:) <= ZRTMIN(2) .OR. PCCS(:,:,:) <=0.) 
       PRVS(:,:,:) = PRVS(:,:,:) + PRCS(:,:,:) 
       PTHS(:,:,:) = PTHS(:,:,:) - PRCS(:,:,:)*ZLV(:,:,:)/(ZCPH(:,:,:)*ZEXNS(:,:,:))
       PRCS(:,:,:) = 0.0
       ZW(:,:,:)   = MAX(PCCS(:,:,:),0.)
       PCCS(:,:,:) = 0.0
    END WHERE
-!
-   ZW1(:,:,:) = 0.
-   IF (LWARM .AND. NMOD_CCN.GE.1) ZW1(:,:,:) = SUM(PNAS,DIM=4)
-   ZW (:,:,:) = MIN( ZW(:,:,:), ZW1(:,:,:) )
-   ZW2(:,:,:) = 0.
-   WHERE ( ZW(:,:,:) > 0. )
-      ZMASK(:,:,:) = 1.0
-      ZW2(:,:,:) = ZW(:,:,:) / ZW1(:,:,:)
-   ENDWHERE
-!
-   IF (LWARM .AND. NMOD_CCN.GE.1) THEN
-      DO JMOD = 1, NMOD_CCN
-         PNFS(:,:,:,JMOD) = PNFS(:,:,:,JMOD) +                           &
-                            ZMASK(:,:,:) * PNAS(:,:,:,JMOD) * ZW2(:,:,:)
-         PNAS(:,:,:,JMOD) = PNAS(:,:,:,JMOD) -                           &
-                            ZMASK(:,:,:) * PNAS(:,:,:,JMOD) * ZW2(:,:,:)
-         PNAS(:,:,:,JMOD) = MAX( 0.0 , PNAS(:,:,:,JMOD) )
-      ENDDO
-   END IF
-!
-   IF (LSCAV .AND. LAERO_MASS) PMAS(:,:,:) = PMAS(:,:,:) * (1-ZMASK(:,:,:))
-!
-!
-END DO !  end of the iterative loop
-!
-!
-!*       5.2    compute the cloud fraction PCLDFR (binary !!!!!!!)
-!
-IF ( .NOT. OSUBG_COND ) THEN
-   WHERE (PRCS(:,:,:) + PRIS(:,:,:) + PRSS(:,:,:) > 1.E-12 / ZDT)
-      PCLDFR(:,:,:)  = 1.
-   ELSEWHERE
-      PCLDFR(:,:,:)  = 0.
-   ENDWHERE
 END IF
 !
-IF ( SIZE(PSRCS,3) /= 0 ) THEN
-   WHERE (PRCS(:,:,:) + PRIS(:,:,:) > 1.E-12 / ZDT)
-      PSRCS(:,:,:)  = 1.
-   ELSEWHERE
-      PSRCS(:,:,:)  = 0.
-   ENDWHERE
+ZW1(:,:,:) = 0.
+IF (LWARM .AND. NMOD_CCN.GE.1) ZW1(:,:,:) = SUM(PNAS,DIM=4)
+ZW (:,:,:) = MIN( ZW(:,:,:), ZW1(:,:,:) )
+ZW2(:,:,:) = 0.
+WHERE ( ZW(:,:,:) > 0. )
+   ZMASK(:,:,:) = 1.0
+   ZW2(:,:,:) = ZW(:,:,:) / ZW1(:,:,:)
+ENDWHERE
+!
+IF (LWARM .AND. NMOD_CCN.GE.1) THEN
+   DO JMOD = 1, NMOD_CCN
+      PNFS(:,:,:,JMOD) = PNFS(:,:,:,JMOD) +                           &
+           ZMASK(:,:,:) * PNAS(:,:,:,JMOD) * ZW2(:,:,:)
+      PNAS(:,:,:,JMOD) = PNAS(:,:,:,JMOD) -                           &
+           ZMASK(:,:,:) * PNAS(:,:,:,JMOD) * ZW2(:,:,:)
+      PNAS(:,:,:,JMOD) = MAX( 0.0 , PNAS(:,:,:,JMOD) )
+   ENDDO
 END IF
 !
-IF ( OSUBG_COND ) THEN
-   !
-   ! Mixing ratio change (cloud liquid water)
-   !
-   ZW1(:,:,:) = (ZRC(:,:,:) - PRCS(:,:,:)*PTSTEP) / PTSTEP
-   WHERE( ZW1(:,:,:) < 0.0 )
-      ZW1(:,:,:) = MAX ( ZW1(:,:,:), -PRCS(:,:,:) )
-   ELSEWHERE
-      ZW1(:,:,:) = MIN ( ZW1(:,:,:),  PRVS(:,:,:) )
-   END WHERE
-
-   WHERE (PCCT(:,:,:) < PCLDFR(:,:,:)*XCTMIN(2) .OR. ZRC(:,:,:)<PCLDFR(:,:,:)*XRTMIN(2))
-      ZW1=-PRCS
-      PCCS=0.
-      PCLDFR=0.
-   END WHERE
-   
-   PRVS(:,:,:)   = PRVS(:,:,:) - ZW1(:,:,:)
-   PRCS(:,:,:)   = PRCS(:,:,:) + ZW1(:,:,:)
-   PCCS(:,:,:)   = PCCT(:,:,:) / PTSTEP
-   PNFS(:,:,:,:) = PNFT(:,:,:,:) / PTSTEP
-   PNAS(:,:,:,:) = PNAT(:,:,:,:) / PTSTEP
-   PTHS(:,:,:)   = PTHS(:,:,:) +        &
-                   ZW1(:,:,:) * ZLV(:,:,:) / (ZCPH(:,:,:) * PEXNREF(:,:,:))
-END IF ! fin test OSUBG_COND
-
+IF (LSCAV .AND. LAERO_MASS) PMAS(:,:,:) = PMAS(:,:,:) * (1-ZMASK(:,:,:))
+!
+!
+!
+PICEFR(:,:,:)=0.
+IF (NMOM_I.EQ.1) THEN
+   WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. PCIT(:,:,:)>XCTMIN(4)) PICEFR(:,:,:)=PCLDFR(:,:,:)
+ELSE
+   WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. PCIT(:,:,:)>XCTMIN(4)) PICEFR(:,:,:)=1.
+END IF
+!
 IF ( tpfile%lopened ) THEN
    TZFIELD%CMNHNAME   = 'NEB'
    TZFIELD%CSTDNAME   = ''
@@ -757,7 +700,6 @@ END IF
 !*       6.  SAVE CHANGES IN PRS AND PSVS
 !            ----------------------------
 !
-!
 ! Prepare 3D water mixing ratios
 PRS(:,:,:,1) = PRVS(:,:,:)
 IF ( KRR .GE. 2 ) PRS(:,:,:,2) = PRCS(:,:,:)
@@ -768,8 +710,8 @@ IF ( KRR .GE. 6 ) PRS(:,:,:,6) = PRGS(:,:,:)
 !
 ! Prepare 3D number concentrations
 !
-IF ( LWARM ) PSVS(:,:,:,NSV_LIMA_NC) = PCCS(:,:,:)
-! IF ( LCOLD ) PSVS(:,:,:,NSV_LIMA_NI) = PCIS(:,:,:)
+IF ( LWARM .AND. NMOM_C.GE.2 ) PSVS(:,:,:,NSV_LIMA_NC) = PCCS(:,:,:)
+! IF ( LCOLD .AND. NMOM_I.GE.2 ) PSVS(:,:,:,NSV_LIMA_NI) = PCIS(:,:,:)
 !
 IF ( LSCAV .AND. LAERO_MASS ) PSVS(:,:,:,NSV_LIMA_SCAVMASS) = PMAS(:,:,:)
 ! 
@@ -792,7 +734,7 @@ END IF
 IF ( tpfile%lopened ) THEN
    ZT(:,:,:) = ( PTHS(:,:,:) * ZDT ) * ZEXNS(:,:,:)
    ZW(:,:,:) = EXP( XALPI - XBETAI/ZT(:,:,:) - XGAMI*ALOG(ZT(:,:,:) ) )
-   ZW1(:,:,:)= 2.0*PPABST(:,:,:)-PPABSM(:,:,:)
+   ZW1(:,:,:)= PPABSTT(:,:,:)
    ZW(:,:,:) = PRVT(:,:,:)*( ZW1(:,:,:)-ZW(:,:,:) ) / ( (XMV/XMD) * ZW(:,:,:) ) - 1.0
    
    TZFIELD%CMNHNAME   = 'SSI'
@@ -816,10 +758,9 @@ if ( nbumod == kmi .and. lbu_enable ) then
   if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'CEDS', pths(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_rv ) call Budget_store_end( tbudgets(NBUDGET_RV), 'CEDS', prvs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'CEDS', prcs(:, :, :) * prhodj(:, :, :) )
-  !Remark: PRIS is not modified but source term kept for better coherence with lima_adjust and lima_notadjust
   if ( lbudget_ri ) call Budget_store_end( tbudgets(NBUDGET_RI), 'CEDS', pris(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv ) then
-    if ( lwarm ) &
+    if ( lwarm .and. nmom_c.ge.2) &
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CEDS', pccs(:, :, :) * prhodj(:, :, :) )
     if ( lscav .and. laero_mass ) &
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', pmas(:, :, :) * prhodj(:, :, :) )

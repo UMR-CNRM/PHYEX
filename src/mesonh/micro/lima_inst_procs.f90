@@ -102,7 +102,7 @@ SUBROUTINE LIMA_INST_PROCS (PTSTEP, LDCOMPUTE,                                  
 !-------------------------------------------------------------------------------
 !
 !
-USE MODD_PARAM_LIMA, ONLY : LCOLD, LWARM, LRAIN
+USE MODD_PARAM_LIMA, ONLY : LCOLD, LWARM, LRAIN, NMOM_R
 !
 USE MODI_LIMA_DROPS_BREAK_UP
 USE MODI_LIMA_DROPS_HOM_FREEZING
@@ -159,7 +159,7 @@ REAL, DIMENSION(:)  , INTENT(INOUT) :: PPF1D      ! Precipitation fraction
 !
 !-------------------------------------------------------------------------------
 !
-IF (LWARM .AND. LRAIN) THEN
+IF (LWARM .AND. LRAIN .AND. NMOM_R.GE.2) THEN
    CALL LIMA_DROPS_BREAK_UP (LDCOMPUTE,    & ! no dependance on CF, IF or PF
                              PCRT, PRRT,   &
                              P_CR_BRKU,    &

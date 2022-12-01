@@ -287,7 +287,7 @@ fh     = DSDD(PX2,XDDRY,XKAPPA,XT)
             fl=fnew
          else if (PX2 .lt. 0.05) then
             PX2 = PX2 + 1.0E-2
-            PRINT*, 'PX2 ALWAYS too small, we put a greater one : PX2 =',PX2
+!            PRINT*, 'PX2 ALWAYS too small, we put a greater one : PX2 =',PX2
             fh   = DSDD(PX2,XDDRY,XKAPPA,XT)
             go to 100
             STOP
@@ -303,7 +303,7 @@ fh     = DSDD(PX2,XDDRY,XKAPPA,XT)
       PZRIDDR=PX2
    else if (PX2 .lt. 0.05) then
       PX2 = PX2 + 1.0E-2
-      PRINT*, 'PX2 too small, we put a greater one : PX2 =',PX2
+!      PRINT*, 'PX2 too small, we put a greater one : PX2 =',PX2
       fh   = DSDD(PX2,XDDRY,XKAPPA,XT)
       go to 100
    else

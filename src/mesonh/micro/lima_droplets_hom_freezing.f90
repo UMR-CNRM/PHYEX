@@ -10,8 +10,7 @@ INTERFACE
    SUBROUTINE LIMA_DROPLETS_HOM_FREEZING (PTSTEP, LDCOMPUTE,                &
                                           PT, PLVFACT, PLSFACT,             &
                                           PRCT, PCCT, PLBDC,                &
-                                          P_TH_HONC, P_RC_HONC, P_CC_HONC,  &
-                                          PA_TH, PA_RC, PA_CC, PA_RI, PA_CI )
+                                          P_TH_HONC, P_RC_HONC, P_CC_HONC   )
 !
 REAL,                 INTENT(IN)    :: PTSTEP 
 LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
@@ -28,12 +27,6 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_HONC
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_HONC
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CC_HONC
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_TH
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RC
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CC
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RI
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CI
-!
 END SUBROUTINE LIMA_DROPLETS_HOM_FREEZING
 END INTERFACE
 END MODULE MODI_LIMA_DROPLETS_HOM_FREEZING
@@ -42,8 +35,7 @@ END MODULE MODI_LIMA_DROPLETS_HOM_FREEZING
       SUBROUTINE LIMA_DROPLETS_HOM_FREEZING (PTSTEP,  LDCOMPUTE,               &
                                              PT, PLVFACT, PLSFACT,             &
                                              PRCT, PCCT, PLBDC,                &
-                                             P_TH_HONC, P_RC_HONC, P_CC_HONC,  &
-                                             PA_TH, PA_RC, PA_CC, PA_RI, PA_CI )
+                                             P_TH_HONC, P_RC_HONC, P_CC_HONC   )
 !     ##########################################################################
 !
 !!    PURPOSE
@@ -91,12 +83,6 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_HONC
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_HONC
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CC_HONC
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_TH
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RC
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CC
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RI
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CI
-!
 !*       0.2   Declarations of local variables :
 !
 REAL, DIMENSION(SIZE(PT)) ::  ZZW, ZZX, ZZY, ZTCELSIUS
@@ -130,13 +116,7 @@ WHERE ( (PT(:)<XTT-35.0) .AND. (PCCT(:)>XCTMIN(2)) .AND. (PRCT(:)>XRTMIN(2)) )
 !
    P_RC_HONC(:) = - ZZY(:)/PTSTEP
    P_CC_HONC(:) = - ZZW(:)/PTSTEP
-   P_TH_HONC(:) = P_RC_HONC(:) * (PLSFACT(:)-PLVFACT(:))
-!
-   PA_TH(:) = PA_TH(:) + P_TH_HONC(:)
-   PA_RC(:) = PA_RC(:) + P_RC_HONC(:)
-   PA_CC(:) = PA_CC(:) + P_CC_HONC(:)
-   PA_RI(:) = PA_RI(:) - P_RC_HONC(:)
-   PA_CI(:) = PA_CI(:) - P_CC_HONC(:)
+!   P_TH_HONC(:) = P_RC_HONC(:) * (PLSFACT(:)-PLVFACT(:))
 !
 END WHERE
 !

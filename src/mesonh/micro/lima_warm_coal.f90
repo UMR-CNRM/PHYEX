@@ -98,12 +98,14 @@ END MODULE MODI_LIMA_WARM_COAL
 !  P. Wautelet 05/2016-04/2018: new data structures and calls for I/O
 !  P. Wautelet 28/05/2019: move COUNTJV function to tools.f90
 !  P. Wautelet    02/2020: use the new data structures and subroutines for budgets (no more budget calls in this subroutine)
+!       Delbeke/Vie     03/2022 : KHKO option
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
 !
 use modd_budget,          only: lbudget_rc, lbudget_rr, lbudget_sv, NBUDGET_RC, NBUDGET_RR, NBUDGET_SV1, tbudgets
+USE MODD_CST,             ONLY: XPI, XRHOLW
 USE MODD_NSV,             ONLY: NSV_LIMA_NC, NSV_LIMA_NR
 USE MODD_PARAMETERS,      ONLY: JPHEXT, JPVEXT
 USE MODD_PARAM_LIMA
@@ -252,7 +254,7 @@ IF (LRAIN) THEN
 
    GSELF(:) = ZCCT(:)>XCTMIN(2)
    ISELF = COUNT(GSELF(:))
-   IF( ISELF>0 ) THEN
+   IF( ISELF>0 .AND. .NOT.LKHKO) THEN
       ZZW1(:) = XSELFC*(ZCCT(:)/ZLBDC3(:))**2 * ZRHODREF(:) ! analytical integration
       WHERE( GSELF(:) )
          ZCCS(:) = ZCCS(:) - MIN( ZCCS(:),ZZW1(:) )
@@ -273,38 +275,54 @@ IF (LRAIN) THEN
   if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'AUTO', prcs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_rr ) call Budget_store_init( tbudgets(NBUDGET_RR), 'AUTO', prrs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv ) then
-    !call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'AUTO', pccs(:, :, :) * prhodj(:, :, :) )
+    call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'AUTO', pccs(:, :, :) * prhodj(:, :, :) )
     call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nr), 'AUTO', pcrs(:, :, :) * prhodj(:, :, :) )
   end if
 
    ZZW2(:) = 0.0
    ZZW1(:) = 0.0
-   WHERE( ZRCT(:)>XRTMIN(2) )
-      ZZW2(:) = MAX( 0.0,XLAUTR*ZRHODREF(:)*ZRCT(:)*             &
+   IF (LKHKO) THEN
+      WHERE ( ZRCT(:) .GT. XRTMIN(2) .AND. ZCCT(:) .GT. XCTMIN(2)                 &
+            .AND. (ZRCS(:) .GT. 0.0) .AND. (ZCCS(:) .GT. 0.0))
+!
+         ZZW1(:)= 1350.0 * ZRCT(:)**(2.47) * (ZCCT(:)/1.0E6)**(-1.79) ! ZCCT in cm-3         
+         ZZW1(:) = min (ZRCS(:), ZZW1(:))
+         ZRCS(:) = ZRCS(:) - ZZW1(:)
+         ZRRS(:) = ZRRS(:) + ZZW1(:)
+!
+         ZCRS(:) = ZCRS(:) + ZZW1(:) * 3. * ZRHODREF(:)/(4.*XPI*XRHOLW*(XR0)**(3.))
+!
+         ZZW1(:) = min ( ZCCS(:),ZZW1(:) * ZCCT(:) / ZRCT(:))
+         ZCCS(:) = ZCCS(:) - ZZW1(:)
+!
+      END WHERE
+   ELSE
+      WHERE( ZRCT(:)>XRTMIN(2) )
+         ZZW2(:) = MAX( 0.0,XLAUTR*ZRHODREF(:)*ZRCT(:)*             &
                            (XAUTO1/min(ZLBDC(:),1.e9)**4-XLAUTR_THRESHOLD) ) ! L 
 !
-      ZZW3(:) = MIN( ZRCS(:), MAX( 0.0,XITAUTR*ZZW2(:)*ZRCT(:)*  &
+         ZZW3(:) = MIN( ZRCS(:), MAX( 0.0,XITAUTR*ZZW2(:)*ZRCT(:)*  &
                            (XAUTO2/ZLBDC(:)-XITAUTR_THRESHOLD) ) ) ! L/tau
 !
-      ZRCS(:) = ZRCS(:) - ZZW3(:)
-      ZRRS(:) = ZRRS(:) + ZZW3(:)
+         ZRCS(:) = ZRCS(:) - ZZW3(:)
+         ZRRS(:) = ZRRS(:) + ZZW3(:)
 !
-      ZZW1(:) = MIN( MIN( 1.2E4,(XACCR4/ZLBDC(:)-XACCR5)/XACCR3),   &
+         ZZW1(:) = MIN( MIN( 1.2E4,(XACCR4/ZLBDC(:)-XACCR5)/XACCR3),   &
                            ZLBDR(:)/XACCR1 ) ! D**-1 threshold diameter for 
                                              ! switching the autoconversion regimes
                                              ! min (80 microns, D_h, D_r)
-      ZZW3(:) = ZZW3(:) * MAX( 0.0,ZZW1(:) )**3 / XAC 
-      ZCRS(:) = ZCRS(:) + ZZW3(:)
-   END WHERE
-
+         ZZW3(:) = ZZW3(:) * MAX( 0.0,ZZW1(:) )**3 / XAC 
+         ZCRS(:) = ZCRS(:) + ZZW3(:)
+      END WHERE
+   END IF
   if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'AUTO', &
                                            Unpack( zrcs(:), mask = gmicro(:, :, :), field = prcs(:, :, :) ) * prhodj(:, :, :) )
   if ( lbudget_rr ) call Budget_store_end( tbudgets(NBUDGET_RR), 'AUTO', &
                                            Unpack( zrrs(:), mask = gmicro(:, :, :), field = prrs(:, :, :) ) * prhodj(:, :, :) )
   if ( lbudget_sv ) then
     !This budget is = 0 for nsv_lima_nc => not necessary to call it (ZCCS is not modified in this part)
-    !call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'AUTO', &
-    !                       Unpack( zccs(:), mask = gmicro(:, :, :), field = pccs(:, :, :) ) * prhodj(:, :, :) )
+    call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'AUTO', &
+                           Unpack( zccs(:), mask = gmicro(:, :, :), field = pccs(:, :, :) ) * prhodj(:, :, :) )
     call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nr), 'AUTO', &
                            Unpack( zcrs(:), mask = gmicro(:, :, :), field = pcrs(:, :, :) ) * prhodj(:, :, :) )
   end if
@@ -334,31 +352,45 @@ IF (LRAIN) THEN
                                               Unpack( zrrs(:), mask = gmicro(:, :, :), field = prrs(:, :, :) ) * prhodj(:, :, :) )
     if ( lbudget_sv ) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'ACCR', &
                                               Unpack( zccs(:), mask = gmicro(:, :, :), field = pccs(:, :, :) ) * prhodj(:, :, :) )
-      WHERE( GACCR(:).AND.(ZZW4(:)>1.E-4) ) ! Accretion for D>100 10-6 m
-         ZZW3(:) = ZLBDC3(:) / ZLBDR3(:)
-         ZZW1(:) = ( ZCCT(:)*ZCRT(:) / ZLBDC3(:) )*ZRHODREF(:)
-         ZZW2(:) = MIN( ZZW1(:)*(XACCR_CLARGE1+XACCR_CLARGE2*ZZW3(:)),ZCCS(:) )
-         ZCCS(:) = ZCCS(:) - ZZW2(:)
+    IF (LKHKO) THEN
+       WHERE ( (ZRCT(:) .GT. XRTMIN(2)) .AND. (ZRRT(:) .GT. XRTMIN(3))                 &
+               .AND. (ZRCS(:) .GT. 0.0) .AND. (ZCCS(:) .GT. 0.0))
+          ZZW1(:) = 67.0 * ( ZRCT(:) * ZRRT(:) )**1.15
+          ZZW1(:) = MIN (ZRCS(:),ZZW1(:))
+          ZRCS(:) = ZRCS(:) - ZZW1(:)
+          ZRRS(:) = ZRRS(:) + ZZW1(:)
 !
-         ZZW1(:) = ( ZZW1(:) / ZLBDC3(:) )
-         ZZW2(:) = MIN( ZZW1(:)*(XACCR_RLARGE1+XACCR_RLARGE2*ZZW3(:)),ZRCS(:) )
-         ZRCS(:) = ZRCS(:) - ZZW2(:)
-         ZRRS(:) = ZRRS(:) + ZZW2(:)
-      END WHERE
-      WHERE( GACCR(:).AND.(ZZW4(:)<=1.E-4) ) ! Accretion for D<100 10-6 m
-         ZZW3(:) = MIN(ZLBDC3(:) / ZLBDR3(:), 1.E8)
-         ZZW1(:) = ( ZCCT(:)*ZCRT(:) / ZLBDC3(:) )*ZRHODREF(:)
-         ZZW1(:) = ZZW1(:) / ZLBDC3(:)
-         ZZW3(:) = ZZW3(:)**2
-         ZZW2(:) = MIN( ZZW1(:)*(XACCR_CSMALL1+XACCR_CSMALL2*ZZW3(:)),ZCCS(:) )
-         ZCCS(:) = ZCCS(:) - ZZW2(:)
+          ZZW1(:) = MIN (ZCCS(:),ZZW1(:) * ZCCT(:) / ZRCT(:))
+          ZCCS(:) = ZCCS(:) - ZZW1(:)
 !
-         ZZW1(:) = ZZW1(:) / ZLBDC3(:)
-         ZZW2(:) = MIN( ZZW1(:)*(XACCR_RSMALL1+XACCR_RSMALL2*ZZW3(:))             &
+       END WHERE
+    ELSE
+       WHERE( GACCR(:).AND.(ZZW4(:)>1.E-4) ) ! Accretion for D>100 10-6 m
+          ZZW3(:) = ZLBDC3(:) / ZLBDR3(:)
+          ZZW1(:) = ( ZCCT(:)*ZCRT(:) / ZLBDC3(:) )*ZRHODREF(:)
+          ZZW2(:) = MIN( ZZW1(:)*(XACCR_CLARGE1+XACCR_CLARGE2*ZZW3(:)),ZCCS(:) )
+          ZCCS(:) = ZCCS(:) - ZZW2(:)
+!
+          ZZW1(:) = ( ZZW1(:) / ZLBDC3(:) )
+          ZZW2(:) = MIN( ZZW1(:)*(XACCR_RLARGE1+XACCR_RLARGE2*ZZW3(:)),ZRCS(:) )
+          ZRCS(:) = ZRCS(:) - ZZW2(:)
+          ZRRS(:) = ZRRS(:) + ZZW2(:)
+       END WHERE
+       WHERE( GACCR(:).AND.(ZZW4(:)<=1.E-4) ) ! Accretion for D<100 10-6 m
+          ZZW3(:) = MIN(ZLBDC3(:) / ZLBDR3(:), 1.E8)
+          ZZW1(:) = ( ZCCT(:)*ZCRT(:) / ZLBDC3(:) )*ZRHODREF(:)
+          ZZW1(:) = ZZW1(:) / ZLBDC3(:)
+          ZZW3(:) = ZZW3(:)**2
+          ZZW2(:) = MIN( ZZW1(:)*(XACCR_CSMALL1+XACCR_CSMALL2*ZZW3(:)),ZCCS(:) )
+          ZCCS(:) = ZCCS(:) - ZZW2(:)
+!
+          ZZW1(:) = ZZW1(:) / ZLBDC3(:)
+          ZZW2(:) = MIN( ZZW1(:)*(XACCR_RSMALL1+XACCR_RSMALL2*ZZW3(:))             &
                                                           ,ZRCS(:) )
-         ZRCS(:) = ZRCS(:) - ZZW2(:)
-         ZRRS(:) = ZRRS(:) + ZZW2(:)
-      END WHERE
+          ZRCS(:) = ZRCS(:) - ZZW2(:)
+          ZRRS(:) = ZRRS(:) + ZZW2(:)
+       END WHERE
+    END IF
 
     if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'ACCR', &
                                              Unpack( zrcs(:), mask = gmicro(:, :, :), field = prcs(:, :, :) ) * prhodj(:, :, :) )
@@ -380,7 +412,7 @@ IF (LRAIN) THEN
    ELSE
       ISCBU = 0.0
    END IF
-   IF( ISCBU>0 ) THEN
+   IF( ISCBU>0 .AND. .NOT.LKHKO) THEN
     if ( lbudget_sv ) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nr), 'SCBU', &
                                               Unpack( zcrs(:), mask = gmicro(:, :, :), field = pcrs(:, :, :) ) * prhodj(:, :, :) )
 !

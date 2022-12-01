@@ -58,16 +58,18 @@ END MODULE MODI_LIMA_DROPLETS_ACCRETION
 !!    -------------
 !!      Original             15/03/2018 
 !!
+!       Delbeke/Vie     03/2022 : KHKO option
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN
+USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, LKHKO, NMOM_C, NMOM_R, XCEXVT
 USE MODD_PARAM_LIMA_WARM, ONLY : XLAUTR, XAUTO1, XLAUTR_THRESHOLD, &
                                  XACCR4, XACCR5, XACCR3, XACCR2, XACCR1, &
                                  XACCR_CLARGE1, XACCR_CLARGE2, XACCR_RLARGE1, XACCR_RLARGE2, &
-                                 XACCR_CSMALL1, XACCR_CSMALL2, XACCR_RSMALL1, XACCR_RSMALL2
+                                 XACCR_CSMALL1, XACCR_CSMALL2, XACCR_RSMALL1, XACCR_RSMALL2, &
+                                 XFCACCR, XEXCACCR
 !
 IMPLICIT NONE
 !
@@ -109,50 +111,79 @@ ZW2(:) = 0.0
 ZW3(:) = 0.0
 ZW4(:) = 0.0
 !
-WHERE( PRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2) .AND. PRRT(:)>XRTMIN(3) .AND. PCRT(:)>XCTMIN(3) .AND. LDCOMPUTE(:) )
-   ZW2(:) = MAX( 0.0,XLAUTR*PRHODREF(:)*PRCT(:)*(XAUTO1/PLBDC(:)**4-XLAUTR_THRESHOLD) ) ! L 
-   ZW4(:) = XACCR1/PLBDR(:)
-END WHERE
 !
-GACCR(:) = LDCOMPUTE(:)      .AND. &
-               PRRT(:)>XRTMIN(3) .AND. &
-               PCRT(:)>XCTMIN(3) .AND. &
-               PRCT(:)>XRTMIN(2) .AND. &
-               PCCT(:)>XCTMIN(2) .AND. &
-               (PRRT(:)>1.2*ZW2(:)/PRHODREF(:) .OR. &
+!
+IF ( LKHKO ) THEN
+!
+   GACCR(:) = PRRT(:)>XRTMIN(3) .AND. &
+              PRCT(:)>XRTMIN(2) .AND. &
+              PCCT(:)>XCTMIN(2)
+!
+   WHERE ( GACCR(:) )
+!
+      ZW1(:) = 67.0 * ( PRCT(:) * PRRT(:) )**1.15
+      P_RC_ACCR(:) = - ZW1(:)
+!
+      ZW2(:) = ZW1(:) * PCCT(:) / PRCT(:)
+      P_CC_ACCR(:) = - ZW2(:)
+!
+   END WHERE
+!
+ELSE IF (NMOM_C.EQ.1 .AND. NMOM_R.EQ.1) THEN
+   GACCR(:) = PRRT(:)>XRTMIN(3) .AND. &
+              PRCT(:)>XRTMIN(2)
+   WHERE ( GACCR(:) )
+      P_RC_ACCR(:) = - XFCACCR * PRCT(:)    &
+                   * PLBDR(:)**XEXCACCR     &
+                   * PRHODREF(:)**(-XCEXVT)
+   END WHERE
+ELSE
+!
+   WHERE( PRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2) .AND. PRRT(:)>XRTMIN(3) .AND. PCRT(:)>XCTMIN(3) .AND. LDCOMPUTE(:) )
+      ZW2(:) = MAX( 0.0,XLAUTR*PRHODREF(:)*PRCT(:)*(XAUTO1/PLBDC(:)**4-XLAUTR_THRESHOLD) ) ! L 
+      ZW4(:) = XACCR1/PLBDR(:)
+   END WHERE
+!
+   GACCR(:) = LDCOMPUTE(:)      .AND. &
+              PRRT(:)>XRTMIN(3) .AND. &
+              PCRT(:)>XCTMIN(3) .AND. &
+              PRCT(:)>XRTMIN(2) .AND. &
+              PCCT(:)>XCTMIN(2) .AND. &
+              (PRRT(:)>1.2*ZW2(:)/PRHODREF(:) .OR. &
                 ZW4(:)>=MAX(XACCR2,XACCR3/(XACCR4/PLBDC(:)-XACCR5)) )
 !
 ! Accretion for D>100 10-6 m
-WHERE( GACCR(:).AND.(ZW4(:)>1.E-4) )
-   ZW3(:) = MIN(PLBDC3(:) / PLBDR3(:),1.E15)
-   ZW1(:) = ( PCCT(:)*PCRT(:) / PLBDC3(:) )*PRHODREF(:)
-   ZW2(:) = ZW1(:)*(XACCR_CLARGE1+XACCR_CLARGE2*ZW3(:))
+   WHERE( GACCR(:).AND.(ZW4(:)>1.E-4) )
+      ZW3(:) = MIN(PLBDC3(:) / PLBDR3(:),1.E15)
+      ZW1(:) = ( PCCT(:)*PCRT(:) / PLBDC3(:) )*PRHODREF(:)
+      ZW2(:) = ZW1(:)*(XACCR_CLARGE1+XACCR_CLARGE2*ZW3(:))
 !
-   P_CC_ACCR(:) = - ZW2(:)
+      P_CC_ACCR(:) = - ZW2(:)
 !
-   ZW1(:) = ( ZW1(:) / PLBDC3(:) )
-   ZW2(:) = ZW1(:)*(XACCR_RLARGE1+XACCR_RLARGE2*ZW3(:))
+      ZW1(:) = ( ZW1(:) / PLBDC3(:) )
+      ZW2(:) = ZW1(:)*(XACCR_RLARGE1+XACCR_RLARGE2*ZW3(:))
 !
-   P_RC_ACCR(:) = - ZW2(:)
-END WHERE
+      P_RC_ACCR(:) = - ZW2(:)
+   END WHERE
 !
 ! Accretion for D<100 10-6 m
-WHERE( GACCR(:).AND.(ZW4(:)<=1.E-4) )
-   ZW3(:) = MIN(PLBDC3(:) / PLBDR3(:), 1.E8)
-   ZW1(:) = ( PCCT(:)*PCRT(:) / PLBDC3(:) )*PRHODREF(:)
-   ZW1(:) =  ZW1(:)/PLBDC3(:)
+   WHERE( GACCR(:).AND.(ZW4(:)<=1.E-4) )
+      ZW3(:) = MIN(PLBDC3(:) / PLBDR3(:), 1.E8)
+      ZW1(:) = ( PCCT(:)*PCRT(:) / PLBDC3(:) )*PRHODREF(:)
+      ZW1(:) =  ZW1(:)/PLBDC3(:)
    
-   ZW3(:) = ZW3(:)**2
-   ZW2(:) = ZW1(:)*(XACCR_CSMALL1+XACCR_CSMALL2*ZW3(:))
+      ZW3(:) = ZW3(:)**2
+      ZW2(:) = ZW1(:)*(XACCR_CSMALL1+XACCR_CSMALL2*ZW3(:))
 !
-   P_CC_ACCR(:) = - ZW2(:)
+      P_CC_ACCR(:) = - ZW2(:)
 !
-   ZW1(:) = ZW1(:) / PLBDC3(:)
-   ZW2(:) = ZW1(:)*(XACCR_RSMALL1+XACCR_RSMALL2*ZW3(:))
+      ZW1(:) = ZW1(:) / PLBDC3(:)
+      ZW2(:) = ZW1(:)*(XACCR_RSMALL1+XACCR_RSMALL2*ZW3(:))
 !
-   P_RC_ACCR(:) = - ZW2(:)
-END WHERE
+      P_RC_ACCR(:) = - ZW2(:)
+   END WHERE
 !
+END IF
 !
 !
 !-------------------------------------------------------------------------------

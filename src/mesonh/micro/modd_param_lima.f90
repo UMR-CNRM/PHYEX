@@ -31,6 +31,7 @@
 !!    MODIFICATIONS
 !!    -------------
 !!      Original             ??/??/13 
+!!      C. Barthe            14/03/2022  add CIBU and RDSF
 !!
 !-------------------------------------------------------------------------------
 !
@@ -58,6 +59,12 @@ LOGICAL, SAVE :: LHHONI                 ! TRUE to enable freezing of haze partic
 LOGICAL, SAVE :: LSNOW                  ! TRUE to enable snow and graupel
 LOGICAL, SAVE :: LHAIL                  ! TRUE to enable hail
 LOGICAL, SAVE :: LMEYERS                ! TRUE to use Meyers nucleation
+LOGICAL, SAVE :: LCIBU                  ! TRUE to use collisional ice breakup
+LOGICAL, SAVE :: LRDSF                  ! TRUE to use rain drop shattering by freezing
+INTEGER, SAVE :: NMOM_I                 ! Number of moments for pristine ice
+INTEGER, SAVE :: NMOM_S                 ! Number of moments for snow
+INTEGER, SAVE :: NMOM_G                 ! Number of moments for graupel
+INTEGER, SAVE :: NMOM_H                 ! Number of moments for hail
 !
 ! 1.2 IFN initialisation
 !
@@ -80,11 +87,13 @@ REAL, DIMENSION(:),    SAVE, ALLOCATABLE :: XFRAC_REF       ! AP compostion in P
 !
 ! 1.3 Ice characteristics
 !
+LOGICAL, SAVE :: LSNOW_T                     ! TRUE to enable snow param. after Wurtz 2021
+LOGICAL, SAVE :: LMURAKAMI                   ! snow + liq -> graupel after Murakami (as in RAIN_ICE_RED)
 CHARACTER(LEN=4), SAVE :: CPRISTINE_ICE_LIMA ! Pristine type PLAT, COLU or BURO
 CHARACTER(LEN=4), SAVE :: CHEVRIMED_ICE_LIMA ! Heavily rimed type GRAU or HAIL
 REAL,SAVE              :: XALPHAI,XNUI,    & ! Pristine ice   distribution parameters
-	                  XALPHAS,XNUS,    & ! Snow/aggregate distribution parameters
-	                  XALPHAG,XNUG       ! Graupel        distribution parameters
+                          XALPHAS,XNUS,    & ! Snow/aggregate distribution parameters
+                          XALPHAG,XNUG       ! Graupel        distribution parameters
 !
 ! 1.4 Phillips (2013) nucleation parameterization
 !
@@ -113,6 +122,11 @@ REAL,SAVE :: XFACTNUC_DEP,XFACTNUC_CON  ! Amplification factor for IN conc.
                                         !   DEP refers to DEPosition mode
                                         !   CON refers to CONtact    mode
 !
+! 1.6 Collisional Ice Break Up parameterization
+!
+REAL,SAVE :: XNDEBRIS_CIBU              ! Number of ice crystal debris produced
+                                        ! by the break up of aggregate particles
+!
 !-------------------------------------------------------------------------------
 !
 !
@@ -133,6 +147,11 @@ LOGICAL, SAVE :: LDEPOC        ! Deposition of rc at 1st level above ground
 LOGICAL, SAVE :: LACTTKE       ! TRUE to take into account TKE in W for activation
 LOGICAL, SAVE :: LADJ          ! TRUE for adjustment procedure + Smax (false for diagnostic supersaturation)
 LOGICAL, SAVE :: LSPRO         ! TRUE for prognostic supersaturation                     
+LOGICAL, SAVE :: LKHKO         ! TRUE for Scu simulation (replicates the previous KHKO scheme)                     
+LOGICAL, SAVE :: LKESSLERAC    ! TRUE for Kessler autoconversion (if NMOM_C=1)
+!
+INTEGER, SAVE :: NMOM_C        ! Number of moments for cloud droplets
+INTEGER, SAVE :: NMOM_R        ! Number of moments for rain drops
 !
 ! 2.2 CCN initialisation
 !

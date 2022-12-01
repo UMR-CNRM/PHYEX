@@ -12,7 +12,7 @@ INTERFACE
                                            PRHODREF, PEXNREF, PPABST,                &
                                            PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                            PTHS, PRVS, PRIS, PRSS,                   &
-                                           PCIT, PCIS                                )
+                                           PCIT, PCIS, PCST, PCSS                    )
 !
 REAL,                     INTENT(IN)    :: PTSTEP  ! Time step          
 INTEGER,                  INTENT(IN)    :: KMI     ! Model index 
@@ -37,8 +37,10 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRIS    ! Pristine ice m.r. source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRSS    ! Snow/aggregate m.r. source
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCIT    ! Ice crystal C. at t
+REAL, DIMENSION(:,:,:),OPTIONAL,   INTENT(IN)    :: PCST    ! Ice crystal C. at t
 !
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIS    ! Ice crystal C. source
+REAL, DIMENSION(:,:,:),OPTIONAL,   INTENT(INOUT) :: PCSS    ! Snow/aggregates C. source  
 !
 END SUBROUTINE LIMA_COLD_SLOW_PROCESSES
 END INTERFACE
@@ -49,7 +51,7 @@ END MODULE MODI_LIMA_COLD_SLOW_PROCESSES
                                            PRHODREF, PEXNREF, PPABST,                &
                                            PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                            PTHS, PRVS, PRIS, PRSS,                   &
-                                           PCIT, PCIS                                )
+                                           PCIT, PCIS, PCST, PCSS                    )
 !     ################################################################################
 !
 !!    PURPOSE
@@ -80,6 +82,8 @@ END MODULE MODI_LIMA_COLD_SLOW_PROCESSES
 !  P. Wautelet 05/2016-04/2018: new data structures and calls for I/O
 !  P. Wautelet 28/05/2019: move COUNTJV function to tools.f90
 !  P. Wautelet    03/2020: use the new data structures and subroutines for budgets
+!  J. Wurtz       03/2022: new snow characteristics
+!  M. Taufour     07/2022: add concentration for snow, graupel, hail
 !
 !-------------------------------------------------------------------------------
 !
@@ -92,18 +96,19 @@ use modd_budget,          only: lbu_enable, nbumod,                             
                                 tbudgets
 USE MODD_CST,             ONLY: XP00, XRD, XRV, XMV, XMD, XCPD, XCPV,        &
                                 XCL, XCI, XTT, XLSTT, XALPI, XBETAI, XGAMI
-USE MODD_NSV,             ONLY: NSV_LIMA_NI
+USE MODD_NSV,             ONLY: NSV_LIMA_NI, NSV_LIMA_NS
 USE MODD_PARAMETERS,      ONLY: JPHEXT, JPVEXT
-USE MODD_PARAM_LIMA,      ONLY: LSNOW, XRTMIN, XCTMIN, XALPHAI, XALPHAS,     &
-                                XNUI
-USE MODD_PARAM_LIMA_COLD, ONLY: XLBI, XLBEXI, XLBS, XLBEXS, XBI, XCXS, XCCS, &
+USE MODD_PARAM_LIMA,      ONLY: LSNOW, LSNOW_T, XRTMIN, XCTMIN,              &
+                                XALPHAI, XALPHAS, XNUI, XNUS, NMOM_S
+USE MODD_PARAM_LIMA_COLD, ONLY: XLBI, XLBEXI, XLBS, XLBEXS, XNS, XBI, XCXS, XCCS, &
                                 XLBDAS_MAX, XDSCNVI_LIM, XLBDASCNVI_MAX,     &
                                 XC0DEPSI, XC1DEPSI, XR0DEPSI, XR1DEPSI,      &
                                 XSCFAC, X1DEPS, X0DEPS, XEX1DEPS, XEX0DEPS,  &
                                 XDICNVS_LIM, XLBDAICNVS_LIM,                 &
                                 XC0DEPIS, XC1DEPIS, XR0DEPIS, XR1DEPIS,      &
                                 XCOLEXIS, XAGGS_CLARGE1, XAGGS_CLARGE2,      &
-                                XAGGS_RLARGE1, XAGGS_RLARGE2
+                                XAGGS_RLARGE1, XAGGS_RLARGE2, XBS,           &
+                                XLBDAS_MIN,XFVELOS,XTRANS_MP_GAMMAS
 
 use mode_budget,          only: Budget_store_init, Budget_store_end
 use mode_tools,           only: Countjv
@@ -135,8 +140,10 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRIS    ! Pristine ice m.r. source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRSS    ! Snow/aggregate m.r. source
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCIT    ! Ice crystal C. at t
+REAL, DIMENSION(:,:,:),OPTIONAL,   INTENT(IN)    :: PCST    ! Snow/aggregates C. at t 
 !
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIS    ! Ice crystal C. source
+REAL, DIMENSION(:,:,:),OPTIONAL,   INTENT(INOUT) :: PCSS    ! Snow/aggregates C. source  
 !
 !*       0.2   Declarations of local variables :
 !
@@ -154,6 +161,7 @@ REAL, DIMENSION(:), ALLOCATABLE :: ZRST    ! Snow/aggregate m.r. at t
 REAL, DIMENSION(:), ALLOCATABLE :: ZRGT    ! Graupel/hail m.r. at t
 !
 REAL, DIMENSION(:), ALLOCATABLE :: ZCIT    ! Pristine ice conc. at t
+REAL, DIMENSION(:), ALLOCATABLE :: ZCST    ! Snow/aggregate conc. at t !
 !
 REAL, DIMENSION(:), ALLOCATABLE :: ZRVS    ! Water vapor m.r. source
 REAL, DIMENSION(:), ALLOCATABLE :: ZRIS    ! Pristine ice m.r. source
@@ -162,6 +170,7 @@ REAL, DIMENSION(:), ALLOCATABLE :: ZRSS    ! Snow/aggregate m.r. source
 REAL, DIMENSION(:),   ALLOCATABLE :: ZTHS    ! Theta source
 !
 REAL, DIMENSION(:),   ALLOCATABLE :: ZCIS    ! Pristine ice conc. source
+REAL, DIMENSION(:),   ALLOCATABLE :: ZCSS    ! Snow/aggregates conc. source 
 !
 REAL, DIMENSION(:), ALLOCATABLE &
                    :: ZRHODREF, & ! RHO Dry REFerence
@@ -246,6 +255,8 @@ IF( IMICRO >= 1 ) THEN
    ALLOCATE(ZTHS(IMICRO))
 !
    ALLOCATE(ZCIS(IMICRO))
+   ALLOCATE(ZCST(IMICRO))
+   ALLOCATE(ZCSS(IMICRO)) 
 ! 
    ALLOCATE(ZRHODREF(IMICRO)) 
    ALLOCATE(ZZT(IMICRO)) 
@@ -268,6 +279,10 @@ IF( IMICRO >= 1 ) THEN
       ZTHS(JL) = PTHS(I1(JL),I2(JL),I3(JL))
 !
       ZCIS(JL) = PCIS(I1(JL),I2(JL),I3(JL))
+      if (NMOM_S.GE.2) then
+              ZCST(JL) = PCST(I1(JL),I2(JL),I3(JL)) 
+              ZCSS(JL) = PCSS(I1(JL),I2(JL),I3(JL)) 
+      end if
 !
       ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
       ZZT(JL)      = ZT(I1(JL),I2(JL),I3(JL))
@@ -316,9 +331,27 @@ IF( IMICRO >= 1 ) THEN
       ZLBDAI(:) = ( XLBI*ZCIT(:) / ZRIT(:) )**XLBEXI
    END WHERE
    ZLBDAS(:)  = 1.E10
-   WHERE (ZRST(:)>XRTMIN(5) )
-      ZLBDAS(:) = XLBS*( ZRHODREF(:)*ZRST(:) )**XLBEXS
-   END WHERE
+   IF (LSNOW_T .AND. NMOM_S.EQ.1) THEN
+      WHERE(ZZT(:)>263.15 .AND. ZRST(:)>XRTMIN(5)) 
+         ZLBDAS(:) = MAX(MIN(XLBDAS_MAX, 10**(14.554-0.0423*ZZT(:))),XLBDAS_MIN)
+      END WHERE
+      WHERE(ZZT(:)<=263.15 .AND. ZRST(:)>XRTMIN(5)) 
+         ZLBDAS(:) = MAX(MIN(XLBDAS_MAX, 10**(6.226-0.0106*ZZT(:))),XLBDAS_MIN)
+      END WHERE
+      ZLBDAS(:) = ZLBDAS(:) * XTRANS_MP_GAMMAS
+      ZCST(:) = (XNS*ZRST(:)*ZLBDAS(:)**XBS)
+      ZCSS(:) = (XNS*ZRSS(:)*ZLBDAS(:)**XBS)
+   ELSE IF (NMOM_S.GE.2) THEN
+	WHERE (ZRST(:)>XRTMIN(5) .AND. ZCST(:)>XCTMIN(5))
+                ZLBDAS(:) = ( XLBS*ZCST(:) / ZRST(:) )**XLBEXS 
+        END WHERE
+   ELSE
+      WHERE (ZRST(:)>XRTMIN(5) )
+         ZLBDAS(:) = MAX(MIN(XLBDAS_MAX,XLBS*( ZRHODREF(:)*ZRST(:) )**XLBEXS),XLBDAS_MIN)
+      END WHERE
+      ZCST(:) = XCCS*ZLBDAS(:)**XCXS / ZRHODREF(:)
+      ZCSS(:) = XCCS*ZLBDAS(:)**XCXS / ZRHODREF(:)
+   END IF
 !
    ZKA(:) = 2.38E-2 + 0.0071E-2 * ( ZZT(:) - XTT )          ! k_a
    ZDV(:) = 0.211E-4 * (ZZT(:)/XTT)**1.94 * (XP00/ZPRES(:)) ! D_v
@@ -340,25 +373,23 @@ IF( IMICRO >= 1 ) THEN
         if ( lbudget_rs ) call Budget_store_init( tbudgets(NBUDGET_RS), 'CNVI', prss(:, :, :) * prhodj(:, :, :) )
         if ( lbudget_sv ) &
           call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'CNVI', pcis(:, :, :) * prhodj(:, :, :) )
+        if ( lbudget_sv .AND. NMOM_S.GE.2) &
+          call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ns), 'CNVI', pcss(:, :, :) * prhodj(:, :, :) )
       end if
-
-      WHERE ( ZRST(:)>XRTMIN(5) )
-         ZLBDAS(:)  = MIN( XLBDAS_MAX,                                           &
-                           XLBS*( ZRHODREF(:)*MAX( ZRST(:),XRTMIN(5) ) )**XLBEXS )
-      END WHERE
+!
       ZZW(:) = 0.0
-      WHERE ( ZLBDAS(:)<XLBDASCNVI_MAX .AND. (ZRST(:)>XRTMIN(5)) &
-                                       .AND. (ZSSI(:)<0.0)       )
+      WHERE ( ZLBDAS(:)<XLBDASCNVI_MAX .AND. (ZRST(:)>XRTMIN(5)) .AND.(ZCST(:)>XCTMIN(5))   &
+                                         .AND. (ZSSI(:)<0.0)       )
          ZZW(:) = (ZLBDAS(:)*XDSCNVI_LIM)**(XALPHAS)
-         ZZX(:) = ( -ZSSI(:)/ZAI(:) ) * (XCCS*ZLBDAS(:)**XCXS)/ZRHODREF(:) * (ZZW(:)**XNUI) &
-                                                               * EXP(-ZZW(:))
+         ZZX(:) = ( -ZSSI(:)/ZAI(:) ) * (ZCST(:)) * (ZZW(:)**XNUS) * EXP(-ZZW(:))
 !
          ZZW(:) = MIN( ( XR0DEPSI+XR1DEPSI*ZCJ(:) )*ZZX(:),ZRSS(:) )
          ZRIS(:) = ZRIS(:) + ZZW(:)
          ZRSS(:) = ZRSS(:) - ZZW(:)
 !
-         ZZW(:) = ZZW(:)*( XC0DEPSI+XC1DEPSI*ZCJ(:) )/( XR0DEPSI+XR1DEPSI*ZCJ(:) )
+         ZZW(:) = MIN(ZZW(:)*( XC0DEPSI+XC1DEPSI*ZCJ(:) )/( XR0DEPSI+XR1DEPSI*ZCJ(:)),ZCSS(:) )
          ZCIS(:) = ZCIS(:) + ZZW(:)
+         ZCSS(:) = ZCSS(:) - ZZW(:)
       END WHERE
 !
 ! Budget storage
@@ -369,6 +400,9 @@ IF( IMICRO >= 1 ) THEN
                                                Unpack( zrss(:), mask = gmicro(:, :, :), field = prss(:, :, :) ) * prhodj(:, :, :) )
         if ( lbudget_sv ) call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'CNVI', &
                                                Unpack( zcis(:), mask = gmicro(:, :, :), field = pcis(:, :, :) ) * prhodj(:, :, :) )
+        if ( lbudget_sv .AND. NMOM_S.GE.2 ) &
+            call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ns), 'CNVI', &
+                                               Unpack( zcss(:), mask = gmicro(:, :, :), field = pcss(:, :, :) ) * prhodj(:, :, :) )
       end if
 !
 !
@@ -383,15 +417,17 @@ IF( IMICRO >= 1 ) THEN
       end if
 
       ZZW(:) = 0.0
-      WHERE ( (ZRST(:)>XRTMIN(5)) .AND. (ZRSS(:)>ZRTMIN(5)) )
-         ZZW(:) = ( ZSSI(:)/(ZRHODREF(:)*ZAI(:)) ) *                               &
-                  ( X0DEPS*ZLBDAS(:)**XEX0DEPS + X1DEPS*ZCJ(:)*ZLBDAS(:)**XEX1DEPS )
-         ZZW(:) =    MIN( ZRVS(:),ZZW(:)      )*(0.5+SIGN(0.5,ZZW(:))) &
-                   - MIN( ZRSS(:),ABS(ZZW(:)) )*(0.5-SIGN(0.5,ZZW(:)))
-         ZRSS(:) = ZRSS(:) + ZZW(:)
-         ZRVS(:) = ZRVS(:) - ZZW(:)
-         ZTHS(:) = ZTHS(:) + ZZW(:)*ZLSFACT(:)
-      END WHERE
+         WHERE ( (ZRST(:)>XRTMIN(5)) .AND. (ZRSS(:)>ZRTMIN(5)) )
+            ZZW(:) = ( ZSSI(:)/(ZRHODREF(:)*ZAI(:)) ) * ZCST(:) *  &
+                      ( X0DEPS*ZLBDAS(:)**XEX0DEPS +               &
+                        X1DEPS*ZCJ(:)*ZLBDAS(:)**XEX1DEPS *        &
+                             (1+0.5*(XFVELOS/ZLBDAS(:))**XALPHAS)**(-XNUS+XEX1DEPS/XALPHAS) )
+            ZZW(:) =    MIN( ZRVS(:),ZZW(:)      )*(0.5+SIGN(0.5,ZZW(:))) &
+                      - MIN( ZRSS(:),ABS(ZZW(:)) )*(0.5-SIGN(0.5,ZZW(:)))
+            ZRSS(:) = ZRSS(:) + ZZW(:)
+            ZRVS(:) = ZRVS(:) - ZZW(:)
+            ZTHS(:) = ZTHS(:) + ZZW(:)*ZLSFACT(:)
+         END WHERE
 ! Budget storage
       if ( nbumod == kmi .and. lbu_enable ) then
         if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'DEPS', &
@@ -412,25 +448,27 @@ IF( IMICRO >= 1 ) THEN
                                                Unpack( zrss(:), mask = gmicro(:, :, :), field = prss(:, :, :) ) * prhodj(:, :, :) )
         if ( lbudget_sv ) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'CNVS', &
                                                Unpack( zcis(:), mask = gmicro(:, :, :), field = pcis(:, :, :) ) * prhodj(:, :, :) )
+        if ( lbudget_sv .AND. NMOM_S.GE.2 ) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ns), 'CNVS', &
+                                               Unpack( zcss(:), mask = gmicro(:, :, :), field = pcss(:, :, :) ) * prhodj(:, :, :) )
       end if
 
       ZZW(:) = 0.0
       WHERE ( (ZLBDAI(:)<XLBDAICNVS_LIM) .AND. (ZCIT(:)>XCTMIN(4)) &
-                                         .AND. (ZSSI(:)>0.0)       )
+                                            .AND. (ZSSI(:)>0.0)       )
          ZZW(:) = (ZLBDAI(:)*XDICNVS_LIM)**(XALPHAI)
          ZZX(:) = ( ZSSI(:)/ZAI(:) )*ZCIT(:) * (ZZW(:)**XNUI) *EXP(-ZZW(:))
 !
 ! Correction BVIE
 !         ZZW(:) = MAX( MIN( ( XR0DEPIS + XR1DEPIS*ZCJ(:) )*ZZX(:)/ZRHODREF(:) &
-         ZZW(:) = MAX( MIN( ( XR0DEPIS + XR1DEPIS*ZCJ(:) )*ZZX(:) &
-                            ,ZRIS(:) ) + ZRTMIN(5), ZRTMIN(5) ) - ZRTMIN(5)
+         ZZW(:) = MAX( MIN( ( XR0DEPIS + XR1DEPIS*ZCJ(:) )*ZZX(:) , ZRIS(:) ) , 0. )
          ZRIS(:) = ZRIS(:) - ZZW(:)
          ZRSS(:) = ZRSS(:) + ZZW(:)
 !
          ZZW(:) = MIN( ZZW(:)*(( XC0DEPIS+XC1DEPIS*ZCJ(:) )                   &
-                             /( XR0DEPIS+XR1DEPIS*ZCJ(:) )),ZCIS(:) )
+                                /( XR0DEPIS+XR1DEPIS*ZCJ(:) )),ZCIS(:) )
          ZCIS(:) = ZCIS(:) - ZZW(:)
-      END WHERE
+         ZCSS(:) = ZCSS(:) + ZZW(:)
+         END WHERE
 !
 ! Budget storage
       if ( nbumod == kmi .and. lbu_enable ) then
@@ -440,6 +478,8 @@ IF( IMICRO >= 1 ) THEN
                                                Unpack( zrss(:), mask = gmicro(:, :, :), field = prss(:, :, :) ) * prhodj(:, :, :) )
         if ( lbudget_sv ) call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'CNVS', &
                                                Unpack( zcis(:), mask = gmicro(:, :, :), field = pcis(:, :, :) ) * prhodj(:, :, :) )
+        if ( lbudget_sv .AND. NMOM_S.GE.2 ) call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ns), 'CNVS', &
+                                               Unpack( zcss(:), mask = gmicro(:, :, :), field = pcss(:, :, :) ) * prhodj(:, :, :) )
       end if
 !
 !
@@ -454,12 +494,11 @@ IF( IMICRO >= 1 ) THEN
         if ( lbudget_sv ) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'AGGS', &
                                                Unpack( zcis(:), mask = gmicro(:, :, :), field = pcis(:, :, :) ) * prhodj(:, :, :) )
       end if
-
+!
       WHERE ( (ZRIT(:)>XRTMIN(4)) .AND. (ZRST(:)>XRTMIN(5)) .AND. (ZRIS(:)>ZRTMIN(4)) &
-                                                            .AND. (ZCIS(:)>ZCTMIN(4)) )
+                                                               .AND. (ZCIS(:)>ZCTMIN(4)) )
          ZZW1(:,3) = (ZLBDAI(:) / ZLBDAS(:))**3
-         ZZW1(:,1) = (ZCIT(:)*(XCCS*ZLBDAS(:)**XCXS)/ZRHODREF(:)*EXP( XCOLEXIS*(ZZT(:)-XTT) )) &
-                                                    / (ZLBDAI(:)**3)
+         ZZW1(:,1) = (ZCIT(:)*ZCST(:)*EXP( XCOLEXIS*(ZZT(:)-XTT) )) / (ZLBDAI(:)**3)
          ZZW1(:,2) = MIN( ZZW1(:,1)*(XAGGS_CLARGE1+XAGGS_CLARGE2*ZZW1(:,3)),ZCIS(:) )
          ZCIS(:) = ZCIS(:) - ZZW1(:,2)
 !
@@ -493,6 +532,11 @@ IF( IMICRO >= 1 ) THEN
 !
   ZW(:,:,:) = PCIS(:,:,:)
   PCIS(:,:,:) = UNPACK( ZCIS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:) )
+  if (NMOM_S.GE.2) then
+    ZW(:,:,:) = PCSS(:,:,:)
+    PCSS(:,:,:) = UNPACK( ZCSS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:) )
+  end if
+
 !
   ZW(:,:,:) = PTHS(:,:,:)
   PTHS(:,:,:) = UNPACK( ZTHS(:),MASK=GMICRO(:,:,:),FIELD=ZW(:,:,:) )
@@ -508,7 +552,9 @@ IF( IMICRO >= 1 ) THEN
   DEALLOCATE(ZRIS)
   DEALLOCATE(ZRSS)
   DEALLOCATE(ZTHS)
-  DEALLOCATE(ZCIS)  
+  DEALLOCATE(ZCIS)
+  DEALLOCATE(ZCSS)  
+  DEALLOCATE(ZCST)  
   DEALLOCATE(ZRHODREF) 
   DEALLOCATE(ZZT) 
   DEALLOCATE(ZPRES) 

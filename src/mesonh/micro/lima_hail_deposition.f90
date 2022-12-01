@@ -4,36 +4,36 @@
 !MNH_LIC for details. version 1.
 !-------------------------------------------------------------------------------
 !      #################################
-       MODULE MODI_LIMA_GRAUPEL_DEPOSITION
+       MODULE MODI_LIMA_HAIL_DEPOSITION
 !      #################################
 !
 INTERFACE
-   SUBROUTINE LIMA_GRAUPEL_DEPOSITION (LDCOMPUTE, PRHODREF,                        &
-                                       PRGT, PCGT, PSSI, PLBDG, PAI, PCJ, PLSFACT, &
-                                       P_TH_DEPG, P_RG_DEPG                        )
+   SUBROUTINE LIMA_HAIL_DEPOSITION (LDCOMPUTE, PRHODREF,                        &
+                                    PRHT, PCHT, PSSI, PLBDH, PAI, PCJ, PLSFACT, &
+                                    P_TH_DEPH, P_RH_DEPH                        )
 !
 LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! 
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRGT     ! graupel mr
-REAL, DIMENSION(:),   INTENT(IN)    :: PCGT     ! graupel conc
+REAL, DIMENSION(:),   INTENT(IN)    :: PRHT     ! hail mr
+REAL, DIMENSION(:),   INTENT(IN)    :: PCHT     ! hail conc
 REAL, DIMENSION(:),   INTENT(IN)    :: PSSI     ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDG    ! 
+REAL, DIMENSION(:),   INTENT(IN)    :: PLBDH    ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PAI      ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PCJ      ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT  ! 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_DEPG
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_DEPG
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_DEPH
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_RH_DEPH
 !!
-END SUBROUTINE LIMA_GRAUPEL_DEPOSITION
+END SUBROUTINE LIMA_HAIL_DEPOSITION
 END INTERFACE
-END MODULE MODI_LIMA_GRAUPEL_DEPOSITION
+END MODULE MODI_LIMA_HAIL_DEPOSITION
 !
 !     ###########################################################################
-      SUBROUTINE LIMA_GRAUPEL_DEPOSITION (LDCOMPUTE, PRHODREF,                        &
-                                          PRGT, PCGT, PSSI, PLBDG, PAI, PCJ, PLSFACT, &
-                                          P_TH_DEPG, P_RG_DEPG                        )
+      SUBROUTINE LIMA_HAIL_DEPOSITION (LDCOMPUTE, PRHODREF,                        &
+                                       PRHT, PCHT, PSSI, PLBDH, PAI, PCJ, PLSFACT, &
+                                       P_TH_DEPH, P_RH_DEPH                        )
 !     ###########################################################################
 !
 !!    PURPOSE
@@ -59,7 +59,7 @@ END MODULE MODI_LIMA_GRAUPEL_DEPOSITION
 !              ------------
 !
 USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN
-USE MODD_PARAM_LIMA_MIXED, ONLY : X0DEPG, XEX0DEPG, X1DEPG, XEX1DEPG
+USE MODD_PARAM_LIMA_MIXED, ONLY : X0DEPH, XEX0DEPH, X1DEPH, XEX1DEPH
 !
 IMPLICIT NONE
 !
@@ -68,16 +68,16 @@ IMPLICIT NONE
 LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! 
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRGT     ! graupel mr
-REAL, DIMENSION(:),   INTENT(IN)    :: PCGT     ! graupel conc
+REAL, DIMENSION(:),   INTENT(IN)    :: PRHT     ! hail mr
+REAL, DIMENSION(:),   INTENT(IN)    :: PCHT     ! hail conc
 REAL, DIMENSION(:),   INTENT(IN)    :: PSSI     ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDG    ! 
+REAL, DIMENSION(:),   INTENT(IN)    :: PLBDH    ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PAI      ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PCJ      ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT  ! 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_DEPG
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_DEPG
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_DEPH
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_RH_DEPH
 !
 !
 !-------------------------------------------------------------------------------
@@ -86,15 +86,15 @@ REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_DEPG
 !*       1.     Deposition of vapour on graupel
 !	        -------------------------------
 !
-P_TH_DEPG(:) = 0.0
-P_RG_DEPG(:) = 0.0
-WHERE ( PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. LDCOMPUTE(:) )
-   P_RG_DEPG(:) = PSSI(:) / PAI(:) * PCGT(:) *                      &
-                ( X0DEPG*PLBDG(:)**XEX0DEPG + X1DEPG*PCJ(:)*PLBDG(:)**XEX1DEPG )
-   P_TH_DEPG(:) = P_RG_DEPG(:)*PLSFACT(:)
+P_TH_DEPH(:) = 0.0
+P_RH_DEPH(:) = 0.0
+WHERE ( PRHT(:)>XRTMIN(7) .AND. PCHT(:)>XCTMIN(7) .AND. LDCOMPUTE(:) )
+   P_RH_DEPH(:) = PSSI(:) / PAI(:) * PCHT(:) *                      &
+                ( X0DEPH*PLBDH(:)**XEX0DEPH + X1DEPH*PCJ(:)*PLBDH(:)**XEX1DEPH )
+   P_TH_DEPH(:) = P_RH_DEPH(:)*PLSFACT(:)
 END WHERE
 !
 !
 !-------------------------------------------------------------------------------
 !
-END SUBROUTINE LIMA_GRAUPEL_DEPOSITION
+END SUBROUTINE LIMA_HAIL_DEPOSITION
