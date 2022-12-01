@@ -162,8 +162,17 @@ ZGAMR(6) = MOMG(XALPHAR,XNUR,3.)**(2./3.)/MOMG(XALPHAR,XNUR,2.)
 !
 XLBC   = XAR*ZGAMC(2)
 XLBEXC = 1.0/XBC
-XLBR   = XAR*ZGAMR(2)
-XLBEXR = 1.0/XBR
+!
+XNR = 1.0/(XAR*MOMG(XALPHAR,XNUR,XBR))
+XCCR   = 8.E6
+XCXR   = -1.
+IF (NMOM_R.EQ.1) THEN
+   XLBEXR = 1.0/(XCXR-XBR)
+   XLBR   = ( XAR*XCCR*MOMG(XALPHAR,XNUR,XBR) )**(-XLBEXR)
+ELSE
+   XLBR   = XAR*ZGAMR(2)
+   XLBEXR = 1.0/XBR
+END IF
 !
 !
 !------------------------------------------------------------------------------
@@ -334,6 +343,7 @@ XLAUTR_THRESHOLD  = 0.4
 XITAUTR= 0.27 ! (Notice that T2 of BR74 is uncorrect and that 0.27=1./3.7
 XITAUTR_THRESHOLD = 7.5
 XCAUTR = 3.5E9
+XR0 = 25.0E-6
 !
 ! Cst for the accretion process
 !
@@ -351,6 +361,11 @@ XACCR_CSMALL1 = XKERA1*ZGAMC(3)
 XACCR_CSMALL2 = XKERA1*ZGAMR(3)
 XACCR_RSMALL1 = XKERA1*ZGAMC(5)*XRHOLW*(XPI/6.0)
 XACCR_RSMALL2 = XKERA1*ZGAMC(2)*ZGAMR(3)*XRHOLW*(XPI/6.0)
+!
+! ICE3 accretion of cloud droplets by rain drops
+!
+XFCACCR  = (XPI/4.0)*XCCR*XCR*(ZRHO00**XCEXVT)*MOMG(XALPHAR,XNUR,XDR+2.0)
+XEXCACCR = -XDR-3.0
 !
 ! Cst for the raindrop self-collection/breakup process
 !
@@ -405,6 +420,7 @@ X0EVAR = (12.0)*XF0R*GAMMA_X0D(XNUR+1./XALPHAR)/GAMMA_X0D(XNUR+3./XALPHAR)
 X1EVAR = (12.0)*XF1R*((ZRHO00)**(XCEXVT)*(XCR/0.15E-4))**0.5*    &
            GAMMA_X0D(XNUR+(XDR+3.0)/(2.0*XALPHAR))/GAMMA_X0D(XNUR+3./XALPHAR)
 !
+XCEVAP = 0.86
 !
 !------------------------------------------------------------------------------
 !

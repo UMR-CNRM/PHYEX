@@ -10,8 +10,8 @@
 INTERFACE
    SUBROUTINE LIMA_CONVERSION_MELTING_SNOW (LDCOMPUTE,                          &
                                             PRHODREF, PPRES, PT, PKA, PDV, PCJ, &
-                                            PRVT, PRST, PLBDS,                  &
-                                            P_RS_CMEL                           )
+                                            PRVT, PRST, PCST, PLBDS,            &
+                                            P_RS_CMEL, P_CS_CMEL                )
 !
 LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
 !
@@ -23,10 +23,12 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PDV      !
 REAL, DIMENSION(:),   INTENT(IN)    :: PCJ      !
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRVT    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PRST    ! Cloud water C. at t
+REAL, DIMENSION(:),   INTENT(IN)    :: PRST    ! Snow mr at t
+REAL, DIMENSION(:),   INTENT(IN)    :: PCST    ! Snow C. at t
 REAL, DIMENSION(:),   INTENT(IN)    :: PLBDS   ! 
 !
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_CMEL
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_CMEL
 !
 END SUBROUTINE LIMA_CONVERSION_MELTING_SNOW
 END INTERFACE
@@ -35,8 +37,8 @@ END MODULE MODI_LIMA_CONVERSION_MELTING_SNOW
 !     ##############################################################################
       SUBROUTINE LIMA_CONVERSION_MELTING_SNOW (LDCOMPUTE,                          &
                                                PRHODREF, PPRES, PT, PKA, PDV, PCJ, &
-                                               PRVT, PRST, PLBDS,                  &
-                                               P_RS_CMEL                           )
+                                               PRVT, PRST, PCST, PLBDS,            &
+                                               P_RS_CMEL, P_CS_CMEL                )
 !     ##############################################################################
 !
 !!    PURPOSE
@@ -55,15 +57,16 @@ END MODULE MODI_LIMA_CONVERSION_MELTING_SNOW
 !!    -------------
 !!      Original             15/03/2018 
 !!
+!  J. Wurtz       03/2022: new snow characteristics
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
 !
 USE MODD_CST,              ONLY : XTT, XMV, XMD, XLVTT, XCPV, XCL, XESTT, XRV
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN
+USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XNUS, XALPHAS
 USE MODD_PARAM_LIMA_MIXED, ONLY : XFSCVMG
-USE MODD_PARAM_LIMA_COLD,  ONLY : X0DEPS, XEX0DEPS, X1DEPS, XEX1DEPS
+USE MODD_PARAM_LIMA_COLD,  ONLY : X0DEPS, XEX0DEPS, X1DEPS, XEX1DEPS, XBS, XFVELOS
 !
 IMPLICIT NONE
 !
@@ -79,10 +82,12 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PDV      !
 REAL, DIMENSION(:),   INTENT(IN)    :: PCJ      !
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRVT    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PRST    ! Cloud water C. at t
+REAL, DIMENSION(:),   INTENT(IN)    :: PRST    ! Snow mr at t
+REAL, DIMENSION(:),   INTENT(IN)    :: PCST    ! Snow C. at t
 REAL, DIMENSION(:),   INTENT(IN)    :: PLBDS   ! 
 !
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_CMEL
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_CMEL
 !
 !*       0.2   Declarations of local variables :
 !
@@ -96,6 +101,7 @@ REAL, DIMENSION(SIZE(PRST)) :: ZW ! work arrays
 !
 !
 P_RS_CMEL(:)=0.
+P_CS_CMEL(:)=0.
 !
 ZW(:) = 0.0
 WHERE( (PRST(:)>XRTMIN(5)) .AND. (PT(:)>XTT) .AND. LDCOMPUTE(:) )
@@ -106,12 +112,14 @@ WHERE( (PRST(:)>XRTMIN(5)) .AND. (PT(:)>XTT) .AND. LDCOMPUTE(:) )
 !
 ! compute RSMLT
 !
-   ZW(:)  = XFSCVMG*MAX( 0.0,( -ZW(:) *             &
-                          ( X0DEPS*           PLBDS(:)**XEX0DEPS +     &
-                            X1DEPS*PCJ(:)*PLBDS(:)**XEX1DEPS ) ))!-    &
+   ZW(:)  = XFSCVMG*MAX( 0.0,( -ZW(:) * PCST(:) *                        &
+                               ( X0DEPS*PLBDS(:)**XEX0DEPS +             &
+                                 X1DEPS*PCJ(:)*PLBDS(:)**XEX1DEPS *      &
+                                   (1+0.5*(XFVELOS/PLBDS(:))**XALPHAS)**(-XNUS+XEX1DEPS/XALPHAS)) ))
 ! On ne tient pas compte de la collection de pluie et gouttelettes par la neige si T>0 !!!! 
 ! Note that no heat is exchanged because the graupeln produced are still icy!!!
    P_RS_CMEL(:) = - ZW(:)
+   P_CS_CMEL(:) = - ZW(:) * PCST(:) / PRST(:)
 !
 END WHERE
 !

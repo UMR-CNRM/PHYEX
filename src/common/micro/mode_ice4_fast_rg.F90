@@ -30,6 +30,7 @@ SUBROUTINE ICE4_FAST_RG(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUT
 !  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
 !  P. Wautelet 29/05/2019: remove PACK/UNPACK intrinsics (to get more performance and better OpenACC support)
 !!     R. El Khatib 24-Aug-2021 Optimizations
+!  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
 !
 !
 !*      0. DECLARATIONS
@@ -226,8 +227,13 @@ IF(.NOT. LDSOFT) THEN
     WHERE(GDRY(1:KSIZE))
       PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
                                     / ICEP%XCOLSG &
+#if defined(REPRO48) || defined(REPRO55)
                   *(PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
                   *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.))                    &
+#else
+                  *(PRST(1:KSIZE))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
+                  *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT))                    &
+#endif
                        *( ICEP%XLBSDRYG1/( PLBDAG(1:KSIZE)**2              ) + &
                           ICEP%XLBSDRYG2/( PLBDAG(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
                           ICEP%XLBSDRYG3/(               PLBDAS(1:KSIZE)**2))

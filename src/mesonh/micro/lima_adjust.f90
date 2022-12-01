@@ -9,12 +9,12 @@
 !
 INTERFACE
 !
-      SUBROUTINE LIMA_ADJUST(KRR, KMI, TPFILE,                  &
-                             OSUBG_COND, PTSTEP,                &
-                             PRHODREF, PRHODJ, PEXNREF, PPABSM, &
-                             PPABST,                            &
-                             PRT, PRS, PSVT, PSVS,              &
-                             PTHS, PSRCS, PCLDFR                )
+      SUBROUTINE LIMA_ADJUST(KRR, KMI, TPFILE,                    &
+                             OSUBG_COND, PTSTEP,                  &
+                             PRHODREF, PRHODJ, PEXNREF,           &
+                             PPABST, PPABSTT,                     &
+                             PRT, PRS, PSVT, PSVS,                &
+                             PTHS, PSRCS, PCLDFR, PICEFR, PRAINFR )
 !
 USE MODD_IO,  ONLY: TFILEDATA
 USE MODD_NSV, only: NSV_LIMA_BEG
@@ -30,8 +30,8 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PRHODREF  ! Dry density of the
                                                      ! reference state
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PRHODJ    ! Dry density * Jacobian
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PEXNREF   ! Reference Exner function
-REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PPABSM    ! Absolute Pressure at t-dt
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PPABST    ! Absolute Pressure at t     
+REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PPABSTT   ! Absolute Pressure at t+dt     
 !
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT       ! m.r. at t
 !
@@ -47,6 +47,8 @@ REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PSRCS     ! Second-order flux
                                                      ! s'rc'/2Sigma_s2 at time t+1
                                                      ! multiplied by Lambda_3
 REAL, DIMENSION(:,:,:),   INTENT(INOUT)   :: PCLDFR    ! Cloud fraction          
+REAL, DIMENSION(:,:,:),   INTENT(INOUT)   :: PICEFR    ! Cloud fraction          
+REAL, DIMENSION(:,:,:),   INTENT(INOUT)   :: PRAINFR   ! Cloud fraction          
 !
 END SUBROUTINE LIMA_ADJUST
 !
@@ -54,14 +56,14 @@ END INTERFACE
 !
 END MODULE MODI_LIMA_ADJUST
 !
-!     ###########################################################
-      SUBROUTINE LIMA_ADJUST(KRR, KMI, TPFILE,                  &
-                             OSUBG_COND, PTSTEP,                &
-                             PRHODREF, PRHODJ, PEXNREF, PPABSM, &
-                             PPABST,                            &
-                             PRT, PRS, PSVT, PSVS,              &
-                             PTHS, PSRCS, PCLDFR                )
-!     ###########################################################
+!     #############################################################
+      SUBROUTINE LIMA_ADJUST(KRR, KMI, TPFILE,                    &
+                             OSUBG_COND, PTSTEP,                  &
+                             PRHODREF, PRHODJ, PEXNREF,           &
+                             PPABST, PPABSTT,                     &
+                             PRT, PRS, PSVT, PSVS,                &
+                             PTHS, PSRCS, PCLDFR, PICEFR, PRAINFR )
+!     #############################################################
 !
 !!****  *MIMA_ADJUST* -  compute the fast microphysical sources 
 !!
@@ -185,8 +187,8 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PRHODREF  ! Dry density of the
                                                      ! reference state
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PRHODJ    ! Dry density * Jacobian
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PEXNREF   ! Reference Exner function
-REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PPABSM    ! Absolute Pressure at t-dt
 REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PPABST    ! Absolute Pressure at t     
+REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PPABSTT   ! Absolute Pressure at t+dt     
 !
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT       ! m.r. at t
 !
@@ -202,6 +204,8 @@ REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PSRCS     ! Second-order flux
                                                      ! s'rc'/2Sigma_s2 at time t+1
                                                      ! multiplied by Lambda_3
 REAL, DIMENSION(:,:,:),   INTENT(INOUT)   :: PCLDFR    ! Cloud fraction          
+REAL, DIMENSION(:,:,:),   INTENT(INOUT)   :: PICEFR    ! Cloud fraction          
+REAL, DIMENSION(:,:,:),   INTENT(INOUT)   :: PRAINFR   ! Cloud fraction          
 !
 !
 !*       0.2   Declarations of local variables :
@@ -386,9 +390,9 @@ if ( nbumod == kmi .and. lbu_enable ) then
   if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'CEDS', prcs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'CEDS', pris(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv ) then
-    if ( lwarm ) &
+    if ( lwarm .and. nmom_c.ge.2) &
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc),       'CEDS', pccs(:, :, :) * prhodj(:, :, :) )
-    if ( lcold ) &
+    if ( lcold .and. nmom_i.ge.2) &
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni),       'CEDS', pcis(:, :, :) * prhodj(:, :, :) )
     if ( lscav .and. laero_mass ) &
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', pmas(:, :, :) * prhodj(:, :, :) )
@@ -436,7 +440,7 @@ END WHERE
 !
 !*       2.2    estimate the Exner function at t+1
 !
-ZEXNS(:,:,:) = ( (2. * PPABST(:,:,:) - PPABSM(:,:,:)) / XP00 ) ** (XRD/XCPD)  
+ZEXNS(:,:,:) = ( PPABSTT(:,:,:) / XP00 ) ** (XRD/XCPD)  
 !
 !    beginning of the iterative loop
 !
@@ -511,7 +515,7 @@ IF( IMICRO >= 1 ) THEN
 !
       ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
       ZZT(JL) = ZT(I1(JL),I2(JL),I3(JL))
-      ZPRES(JL) = 2.0*PPABST(I1(JL),I2(JL),I3(JL))-PPABSM(I1(JL),I2(JL),I3(JL))
+      ZPRES(JL) = PPABSTT(I1(JL),I2(JL),I3(JL))
       ZEXNREF(JL) = PEXNREF(I1(JL),I2(JL),I3(JL))
       ZZCPH(JL) = ZCPH(I1(JL),I2(JL),I3(JL))
    ENDDO
@@ -661,7 +665,7 @@ IF( IMICRO >= 1 ) THEN
 !
       ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
       ZZT(JL) = ZT(I1(JL),I2(JL),I3(JL))
-      ZPRES(JL) = 2.0*PPABST(I1(JL),I2(JL),I3(JL))-PPABSM(I1(JL),I2(JL),I3(JL))
+      ZPRES(JL) = PPABSTT(I1(JL),I2(JL),I3(JL))
       ZEXNREF(JL) = PEXNREF(I1(JL),I2(JL),I3(JL))
       ZZCPH(JL) = ZCPH(I1(JL),I2(JL),I3(JL))
    ENDDO
@@ -797,7 +801,7 @@ IF( IMICRO >= 1 ) THEN
 !
       ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
       ZZT(JL) = ZT(I1(JL),I2(JL),I3(JL))
-      ZPRES(JL) = 2.0*PPABST(I1(JL),I2(JL),I3(JL))-PPABSM(I1(JL),I2(JL),I3(JL))
+      ZPRES(JL) = PPABSTT(I1(JL),I2(JL),I3(JL))
       ZEXNREF(JL) = PEXNREF(I1(JL),I2(JL),I3(JL))
       ZZCPH(JL) = ZCPH(I1(JL),I2(JL),I3(JL))
    ENDDO
@@ -1171,10 +1175,20 @@ END DO
 !*       5.2    compute the cloud fraction PCLDFR (binary !!!!!!!)
 !
 IF ( .NOT. OSUBG_COND ) THEN
-  WHERE (PRCS(:,:,:) + PRIS(:,:,:) + PRSS(:,:,:) > 1.E-12 / ZDT)
+   WHERE (PRCS(:,:,:) + PRIS(:,:,:) + PRSS(:,:,:) > 1.E-12 / ZDT)
       PCLDFR(:,:,:)  = 1.
    ELSEWHERE
       PCLDFR(:,:,:)  = 0.
+   ENDWHERE
+   WHERE (PRIS(:,:,:) > 1.E-12 / ZDT)
+      PICEFR(:,:,:)  = 1.
+   ELSEWHERE
+      PICEFR(:,:,:)  = 0.
+   ENDWHERE
+   WHERE (PRRS(:,:,:)+PRSS(:,:,:)+PRGS(:,:,:) > 1.E-12 / ZDT)
+      PRAINFR(:,:,:)  = 1.
+   ELSEWHERE
+      PRAINFR(:,:,:)  = 0.
    ENDWHERE
 END IF
 !
@@ -1239,7 +1253,7 @@ END IF
 IF ( tpfile%lopened ) THEN
   ZT(:,:,:) = ( PTHS(:,:,:) * ZDT ) * ZEXNS(:,:,:)
   ZW(:,:,:) = EXP( XALPI - XBETAI/ZT(:,:,:) - XGAMI*ALOG(ZT(:,:,:) ) )
-  ZW1(:,:,:)= 2.0*PPABST(:,:,:)-PPABSM(:,:,:)
+  ZW1(:,:,:)= PPABSTT(:,:,:)
   ZW(:,:,:) = PRVT(:,:,:)*( ZW1(:,:,:)-ZW(:,:,:) ) / ( (XMV/XMD) * ZW(:,:,:) ) - 1.0
 
   TZFIELD%CMNHNAME   = 'SSI'
@@ -1265,9 +1279,9 @@ if ( nbumod == kmi .and. lbu_enable ) then
   if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'CEDS', prcs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_ri ) call Budget_store_end( tbudgets(NBUDGET_RI), 'CEDS', pris(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv ) then
-    if ( lwarm ) &
+    if ( lwarm .and. nmom_c.ge.2) &
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc),       'CEDS', pccs(:, :, :) * prhodj(:, :, :) )
-    if ( lcold ) &
+    if ( lcold .and. nmom_i.ge.2) &
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni),       'CEDS', pcis(:, :, :) * prhodj(:, :, :) )
     if ( lscav .and. laero_mass ) &
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', pmas(:, :, :) * prhodj(:, :, :) )

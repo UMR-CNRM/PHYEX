@@ -11,7 +11,6 @@ INTERFACE
       SUBROUTINE LIMA_COLD (OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,           &
                            KRR, PZZ, PRHODJ,                               &
                            PRHODREF, PEXNREF, PPABST, PW_NU,               &
-                           PTHM, PPABSM,                                   &
                            PTHT, PRT, PSVT,                                &
                            PTHS, PRS, PSVS,                                &
                            PINPRS, PINPRG, PINPRH)
@@ -36,9 +35,6 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU   ! updraft velocity used for
                                                    ! the nucleation param.
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHM    ! Theta at time t-dt
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABSM  ! abs. pressure at time t-dt
-!
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT    ! Theta at time t
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT     ! m.r. at t 
 REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(IN)    :: PSVT ! Concentrations at time t
@@ -59,7 +55,6 @@ END MODULE MODI_LIMA_COLD
       SUBROUTINE LIMA_COLD (OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,           &
                            KRR, PZZ, PRHODJ,                               &
                            PRHODREF, PEXNREF, PPABST, PW_NU,               &
-                           PTHM, PPABSM,                                   &
                            PTHT, PRT, PSVT,                                &
                            PTHS, PRS, PSVS,                                &
                            PINPRS, PINPRG, PINPRH)
@@ -122,6 +117,7 @@ use modd_budget,     only: lbu_enable,                                          
                            tbudgets
 USE MODD_NSV
 USE MODD_PARAM_LIMA
+USE MODD_PARAM_LIMA_COLD, only: XLBS, XLBEXS, XACCS1, XSPONBUDS1, XSPONBUDS2, XSPONBUDS3, XSPONCOEFS2
 
 use mode_budget,          only: Budget_store_init, Budget_store_end
 
@@ -152,9 +148,6 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU   ! updraft velocity used for
                                                    ! the nucleation param.
-!
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHM    ! Theta at time t-dt
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABSM  ! abs. pressure at time t-dt
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT    ! Theta at time t
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT     ! m.r. at t 
@@ -190,10 +183,18 @@ REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3))  &
                                        PCCT,    & ! Cloud water C. at t
                                        PCRT,    & ! Rain water C. at t
                                        PCIT,    & ! Ice crystal C. at t
+                                       PCST,    & ! Snow/aggregates C. at t      
+                                       PCGT,    & ! Graupel C. at t               
+                                       PCHT,    & ! Hail C. at t                  
                                        !
                                        PCCS,    & ! Cloud water C. source
                                        PCRS,    & ! Rain water C. source
-                                       PCIS       ! Ice crystal C. source
+                                       PCIS,    & ! Ice crystal C. source
+                                       PCSS,    & ! Snow/aggregates C. source   
+                                       PCGS,    & ! Graupel C. source           
+                                       PCHS,    & ! Hail C. source               
+                                       !
+                                       ZWLBDS     ! Snow/aggregates lambda       
 !
 REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: PNFS     ! CCN C. available source
                                                   !used as Free ice nuclei for
@@ -250,17 +251,29 @@ IF ( KRR .GE. 7 ) PRHS(:,:,:) = PRS(:,:,:,7)
 PCCT(:,:,:) = 0.
 PCRT(:,:,:) = 0.
 PCIT(:,:,:) = 0.
+PCST(:,:,:) = 0.  
+PCGT(:,:,:) = 0. 
+PCHT(:,:,:) = 0. 
 PCCS(:,:,:) = 0.
 PCRS(:,:,:) = 0.
 PCIS(:,:,:) = 0.
+PCSS(:,:,:) = 0. 
+PCGS(:,:,:) = 0.  
+PCHS(:,:,:) = 0.
 !
 IF ( LWARM ) PCCT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NC)
 IF ( LWARM .AND. LRAIN ) PCRT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NR)
 IF ( LCOLD ) PCIT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NI)
+IF ( NMOM_S.GE.2 ) PCST(:,:,:) = PSVT(:,:,:,NSV_LIMA_NS)        
+IF ( NMOM_G.GE.2 ) PCGT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NG)        
+IF ( NMOM_H.GE.2 ) PCHT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NH)        
 !
 IF ( LWARM ) PCCS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NC)
 IF ( LWARM .AND. LRAIN ) PCRS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NR)
 IF ( LCOLD ) PCIS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NI)
+IF ( NMOM_S.GE.2 ) PCSS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NS)       
+IF ( NMOM_G.GE.2 ) PCGS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NG)        
+IF ( NMOM_H.GE.2 ) PCHS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NH)       
 !
 IF ( NMOD_CCN .GE. 1 ) THEN
    ALLOCATE( PNFS(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3),NMOD_CCN) )
@@ -315,15 +328,17 @@ if ( lbu_enable ) then
   if ( lbudget_rh .and. lhail ) call Budget_store_init( tbudgets(NBUDGET_RH), 'SEDI', prhs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv .and. osedi ) &
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'SEDI', pcis(:, :, :) * prhodj(:, :, :) )
+  if (NMOM_S.GE.2) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ns), 'SEDI', pcss(:, :, :) * prhodj(:, :, :) )
+  if (NMOM_G.GE.2) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ng), 'SEDI', pcgs(:, :, :) * prhodj(:, :, :) )
+  if (NMOM_H.GE.2) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nh), 'SEDI', pchs(:, :, :) * prhodj(:, :, :) )
 end if
 
 CALL LIMA_COLD_SEDIMENTATION (OSEDI, KSPLITG, PTSTEP, KMI,     &
                               PZZ, PRHODJ, PRHODREF,           &
                               PRIT, PCIT,                      &
                               PRIS, PRSS, PRGS, PRHS, PCIS,    &
-                              PINPRS, PINPRG,&
-                              PINPRH                  )
-
+                              PINPRS, PINPRG, PINPRH,          &
+                              PCSS=PCSS, PCGS=PCGS, PCHS=PCHS    )
 if ( lbu_enable ) then
   if ( lbudget_ri .and. osedi ) call Budget_store_end( tbudgets(NBUDGET_RI), 'SEDI', pris(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_rs .and. lsnow ) call Budget_store_end( tbudgets(NBUDGET_RS), 'SEDI', prss(:, :, :) * prhodj(:, :, :) )
@@ -331,6 +346,9 @@ if ( lbu_enable ) then
   if ( lbudget_rh .and. lhail ) call Budget_store_end( tbudgets(NBUDGET_RH), 'SEDI', prhs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv .and. osedi ) &
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'SEDI', pcis(:, :, :) * prhodj(:, :, :) )
+  if (NMOM_S.GE.2) call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ns), 'SEDI', pcss(:, :, :) * prhodj(:, :, :) )
+  if (NMOM_G.GE.2) call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ng), 'SEDI', pcgs(:, :, :) * prhodj(:, :, :) )
+  if (NMOM_H.GE.2) call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nh), 'SEDI', pchs(:, :, :) * prhodj(:, :, :) )
 end if
 !-------------------------------------------------------------------------------
 !
@@ -377,12 +395,42 @@ END IF
 !
 IF (LSNOW) THEN
 !
-   CALL LIMA_COLD_SLOW_PROCESSES(PTSTEP, KMI, PZZ, PRHODJ,                 &
+   IF(NMOM_S.GE.2) THEN
+      CALL LIMA_COLD_SLOW_PROCESSES(PTSTEP, KMI, PZZ, PRHODJ,                 &
                                  PRHODREF, PEXNREF, PPABST,                &
                                  PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                  PTHS, PRVS, PRIS, PRSS,                   &
-                                 PCIT, PCIS                                )
+                                 PCIT, PCIS, PCST=PCST, PCSS=PCSS          )  
+   ELSE
+        CALL LIMA_COLD_SLOW_PROCESSES(PTSTEP, KMI, PZZ, PRHODJ,                 &
+                                   PRHODREF, PEXNREF, PPABST,                &
+                                   PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
+                                   PTHS, PRVS, PRIS, PRSS,                   &
+                                   PCIT, PCIS                                )
+   END IF 
+END IF
 !
+IF (NMOM_S.GE.2) THEN
+!
+!        5.    SPONTANEOUS BREAK-UP (NUMERICAL FILTER)
+!              --------------------
+!
+  if ( lbu_enable .and. lbudget_sv) then
+      call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ns), 'BRKU', pcss(:, :, :) * prhodj(:, :, :) )             
+  end if
+
+   ZWLBDS(:,:,:) = 1.E10
+   WHERE ((PRSS(:,:,:)>XRTMIN(5)/PTSTEP) .AND. (PCSS(:,:,:)>XCTMIN(5)/PTSTEP ))
+      ZWLBDS(:,:,:) = (XLBS * PCSS(:,:,:) / PRSS(:,:,:) )**XLBEXS
+   END WHERE
+   WHERE (ZWLBDS(:,:,:)<(XACCS1/XSPONBUDS1))
+      PCSS(:,:,:) = PCSS(:,:,:)*MAX((1.+XSPONCOEFS2*(XACCS1/ZWLBDS(:,:,:)-XSPONBUDS1)**2),&
+                                                     (XACCS1/ZWLBDS(:,:,:)/XSPONBUDS3)**3)
+   END WHERE
+!
+  if ( lbu_enable .and. lbudget_sv) then
+      call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ns), 'BRKU', pcss(:, :, :) * prhodj(:, :, :) )             
+  end if
 END IF
 !
 !------------------------------------------------------------------------------
@@ -404,6 +452,9 @@ IF ( KRR .GE. 7 ) PRS(:,:,:,7) = PRHS(:,:,:)
 IF ( LWARM ) PSVS(:,:,:,NSV_LIMA_NC) = PCCS(:,:,:)
 IF ( LWARM .AND. LRAIN ) PSVS(:,:,:,NSV_LIMA_NR) = PCRS(:,:,:)
 IF ( LCOLD ) PSVS(:,:,:,NSV_LIMA_NI) = PCIS(:,:,:)
+IF ( NMOM_S.GE.2 ) PSVS(:,:,:,NSV_LIMA_NS) = PCSS(:,:,:) 
+IF ( NMOM_G.GE.2 ) PSVS(:,:,:,NSV_LIMA_NG) = PCGS(:,:,:) 
+IF ( NMOM_H.GE.2 ) PSVS(:,:,:,NSV_LIMA_NH) = PCHS(:,:,:) 
 !
 IF ( NMOD_CCN .GE. 1 ) THEN
    PSVS(:,:,:,NSV_LIMA_CCN_FREE:NSV_LIMA_CCN_FREE+NMOD_CCN-1) = PNFS(:,:,:,:)

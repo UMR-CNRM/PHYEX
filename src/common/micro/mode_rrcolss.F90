@@ -10,7 +10,7 @@
 IMPLICIT NONE
 CONTAINS
       SUBROUTINE RRCOLSS( KND, PALPHAS, PNUS, PALPHAR, PNUR,                 &
-                         PESR, PEXMASSR, PFALLS, PEXFALLS, PFALLR, PEXFALLR, &
+                         PESR, PEXMASSR, PFALLS, PEXFALLS, PFALLEXPS, PFALLR, PEXFALLR, &
                          PLBDASMAX, PLBDARMAX, PLBDASMIN, PLBDARMIN,         &
                          PDINFTY, PRRCOLSS, PAG, PBS, PAS                    )
       USE PARKIND1, ONLY : JPRB
@@ -80,6 +80,7 @@ CONTAINS
 !!      Original    8/11/95
 !!
 !  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
+!  J. Wurtz       03/2022: new snow characteristics
 !
 !-------------------------------------------------------------------------------
 !
@@ -114,6 +115,7 @@ REAL, INTENT(IN) :: PESR      ! Efficiency of aggregates collecting rain
 REAL, INTENT(IN) :: PEXMASSR  ! Mass exponent of rain 
 REAL, INTENT(IN) :: PFALLS    ! Fall speed constant of aggregates
 REAL, INTENT(IN) :: PEXFALLS  ! Fall speed exponent of aggregates
+REAL, INTENT(IN) :: PFALLEXPS ! Fall speed exponential of aggregates  (Thompson 2008)
 REAL, INTENT(IN) :: PFALLR    ! Fall speed constant of rain 
 REAL, INTENT(IN) :: PEXFALLR  ! Fall speed exponent of rain 
 REAL, INTENT(IN) :: PLBDASMAX ! Maximun slope of size distribution of aggregates
@@ -242,11 +244,19 @@ DO JLBDAS = 1,SIZE(PRRCOLSS(:,:),1)
           DO JDR = 1,INR-1
             ZDR = ZDDCOLLR * REAL(JDR)
             ZCOLLR = ZCOLLR + (ZDS+ZDR)**2 * ZDR**PEXMASSR                     &
+#if defined(REPRO48) || defined(REPRO55)
                        * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDR**PEXFALLR) &
+#else
+                       * PESR * ABS(PFALLS*ZDS**PEXFALLS * EXP(-(PFALLEXPS*ZDS)**PALPHAS)-PFALLR*ZDR**PEXFALLR) &
+#endif
                                       * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDR)
           END DO
           ZCOLLDRMAX = (ZDS+ZDRMAX)**2 * ZDRMAX**PEXMASSR                      &
+#if defined(REPRO48) || defined(REPRO55)
                     * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDRMAX**PEXFALLR) &
+#else
+                    * PESR * ABS(PFALLS*ZDS**PEXFALLS* EXP(-(PFALLEXPS*ZDS)**PALPHAS)-PFALLR*ZDRMAX**PEXFALLR) &
+#endif
                                    * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDRMAX)
           ZCOLLR = (ZCOLLR + 0.5*ZCOLLDRMAX)*(ZDDCOLLR/ZDDSCALR)
 !

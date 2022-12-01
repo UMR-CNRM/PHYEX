@@ -102,7 +102,7 @@ use modd_field,           only: TFIELDDATA, TYPEREAL
 USE MODD_IO,              ONLY: TFILEDATA
 USE MODD_LUNIT_n,         ONLY: TLUOUT
 USE MODD_PARAMETERS,      ONLY: JPHEXT, JPVEXT
-USE MODD_PARAM_LIMA,      ONLY: LACTIT, NMOD_CCN, XCTMIN, XKHEN_MULTI, XRTMIN, XLIMIT_FACTOR
+USE MODD_PARAM_LIMA,      ONLY: LADJ, LACTIT, NMOD_CCN, XCTMIN, XKHEN_MULTI, XRTMIN, XLIMIT_FACTOR
 USE MODD_PARAM_LIMA_WARM, ONLY: XWMIN, NAHEN, NHYP, XAHENINTP1, XAHENINTP2, XCSTDCRIT, XHYPF12,      &
                                 XHYPINTP1, XHYPINTP2, XTMIN, XHYPF32, XPSI3, XAHENG, XAHENG2, XPSI1, &
                                 XLBC, XLBEXC
@@ -167,7 +167,7 @@ REAL, DIMENSION(:), ALLOCATABLE    :: ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6, &
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZTMP, ZCHEN_MULTI
 !
 REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))   &
-                                   :: ZTDT, ZDRC, ZRVSAT, ZW, ZW2  
+                                   :: ZTDT, ZDRC, ZRVSAT, ZW, ZW2, ZCLDFR  
 REAL, DIMENSION(SIZE(PNFT,1),SIZE(PNFT,2),SIZE(PNFT,3))               &
                                    :: ZCONC_TOT         ! total CCN C. available
 !
@@ -215,22 +215,32 @@ ENDDO
 !
 GNUCT(:,:,:) = .FALSE.
 !
-GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) =      PW_NU(IIB:IIE,IJB:IJE,IKB:IKE)>XWMIN                          &
-                                 .OR. PRVT(IIB:IIE,IJB:IJE,IKB:IKE)>ZRVSAT(IIB:IIE,IJB:IJE,IKB:IKE)
-IF (LACTIT) GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) =      GNUCT(IIB:IIE,IJB:IJE,IKB:IKE)      &
-                                             .OR. ZTDT(IIB:IIE,IJB:IJE,IKB:IKE)<XTMIN
+IF (LADJ) THEN
+   GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) =      PW_NU(IIB:IIE,IJB:IJE,IKB:IKE)>XWMIN                          &
+                                    .OR. PRVT(IIB:IIE,IJB:IJE,IKB:IKE)>ZRVSAT(IIB:IIE,IJB:IJE,IKB:IKE)
+   IF (LACTIT) GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) =      GNUCT(IIB:IIE,IJB:IJE,IKB:IKE)      &
+                                                .OR. ZTDT(IIB:IIE,IJB:IJE,IKB:IKE)<XTMIN
 !
-GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) =       GNUCT(IIB:IIE,IJB:IJE,IKB:IKE)                       &
-                                 .AND. PT(IIB:IIE,IJB:IJE,IKB:IKE)>(XTT-22.)                &
-                                 .AND. ZCONC_TOT(IIB:IIE,IJB:IJE,IKB:IKE)>XCTMIN(2)
+   GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) =       GNUCT(IIB:IIE,IJB:IJE,IKB:IKE)                       &
+                                    .AND. PT(IIB:IIE,IJB:IJE,IKB:IKE)>(XTT-22.)                &
+                                    .AND. ZCONC_TOT(IIB:IIE,IJB:IJE,IKB:IKE)>XCTMIN(2)
 !
-IF (LSUBG_COND) GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) = GNUCT(IIB:IIE,IJB:IJE,IKB:IKE)       &
-                                           .AND. PCLDFR(IIB:IIE,IJB:IJE,IKB:IKE)>0.01
-IF (.NOT. LSUBG_COND) GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) = GNUCT(IIB:IIE,IJB:IJE,IKB:IKE)       &
-                                                 .AND. PRVT(IIB:IIE,IJB:IJE,IKB:IKE).GE.ZRVSAT(IIB:IIE,IJB:IJE,IKB:IKE)
+   IF (LSUBG_COND) GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) = GNUCT(IIB:IIE,IJB:IJE,IKB:IKE)       &
+                                              .AND. PCLDFR(IIB:IIE,IJB:IJE,IKB:IKE)>0.01
+   IF (.NOT. LSUBG_COND) GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) = GNUCT(IIB:IIE,IJB:IJE,IKB:IKE)       &
+                                                    .AND. PRVT(IIB:IIE,IJB:IJE,IKB:IKE).GE.ZRVSAT(IIB:IIE,IJB:IJE,IKB:IKE)
+ELSE
+   GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) =       PRVT(IIB:IIE,IJB:IJE,IKB:IKE).GE.ZRVSAT(IIB:IIE,IJB:IJE,IKB:IKE) &
+                                    .AND. PT(IIB:IIE,IJB:IJE,IKB:IKE)>(XTT-22.)                            &
+                                    .AND. ZCONC_TOT(IIB:IIE,IJB:IJE,IKB:IKE)>XCTMIN(2)
+END IF
 !
-
-
+IF (.NOT. LSUBG_COND) THEN
+   ZCLDFR(:,:,:) = 1.
+ELSE
+   ZCLDFR(:,:,:) = PCLDFR(:,:,:)
+END IF
+!
 INUCT = COUNTJV( GNUCT(:,:,:),I1(:),I2(:),I3(:))
 !
 IF( INUCT >= 1 ) THEN
@@ -255,8 +265,8 @@ IF( INUCT >= 1 ) THEN
    ALLOCATE(ZRHODREF(INUCT)) 
    ALLOCATE(ZEXNREF(INUCT)) 
    DO JL=1,INUCT
-      ZRCT(JL) = PRCT(I1(JL),I2(JL),I3(JL))/PCLDFR(I1(JL),I2(JL),I3(JL))
-      ZCCT(JL) = PCCT(I1(JL),I2(JL),I3(JL))/PCLDFR(I1(JL),I2(JL),I3(JL))
+      ZRCT(JL) = PRCT(I1(JL),I2(JL),I3(JL))/ZCLDFR(I1(JL),I2(JL),I3(JL))
+      ZCCT(JL) = PCCT(I1(JL),I2(JL),I3(JL))/ZCLDFR(I1(JL),I2(JL),I3(JL))
       ZZT(JL)  = PT(I1(JL),I2(JL),I3(JL))
       ZZW1(JL) = ZRVSAT(I1(JL),I2(JL),I3(JL))
       ZZW2(JL) = PW_NU(I1(JL),I2(JL),I3(JL))
@@ -272,8 +282,10 @@ IF( INUCT >= 1 ) THEN
       ENDDO
    ENDDO
 !
-   ZZW1(:) = 1.0/ZEPS + 1.0/ZZW1(:)                                   &
-             + (((XLVTT+(XCPV-XCL)*(ZZT(:)-XTT))/ZZT(:))**2)/(XCPD*XRV) ! Psi2
+   ALLOCATE(ZSMAX(INUCT))
+   IF (LADJ) THEN
+      ZZW1(:) = 1.0/ZEPS + 1.0/ZZW1(:)                                   &
+                + (((XLVTT+(XCPV-XCL)*(ZZT(:)-XTT))/ZZT(:))**2)/(XCPD*XRV) ! Psi2
 !
 !
 !-------------------------------------------------------------------------------
@@ -285,13 +297,12 @@ IF( INUCT >= 1 ) THEN
 !  Remark : in LIMA's nucleation parameterization, Smax=0.01 for a supersaturation of 1% !
 !
 !
-   ZVEC1(:) = MAX( 1.0001, MIN( REAL(NAHEN)-0.0001, XAHENINTP1 * ZZT(:) + XAHENINTP2 ) )
-   IVEC1(:) = INT( ZVEC1(:) )
-   ZVEC1(:) = ZVEC1(:) - REAL( IVEC1(:) )
-   ALLOCATE(ZSMAX(INUCT))
+      ZVEC1(:) = MAX( 1.0001, MIN( REAL(NAHEN)-0.0001, XAHENINTP1 * ZZT(:) + XAHENINTP2 ) )
+      IVEC1(:) = INT( ZVEC1(:) )
+      ZVEC1(:) = ZVEC1(:) - REAL( IVEC1(:) )
 !
 !
-   IF (LACTIT) THEN ! including a cooling rate
+      IF (LACTIT) THEN ! including a cooling rate
 !
 !       Compute the tabulation of function of ZZW3 :
 !
@@ -300,20 +311,20 @@ IF( INUCT >= 1 ) THEN
 !                                                   2*pi*rho_l*G**(3/2)     
 !
 !
-        ZZW4(:)=XPSI1( IVEC1(:)+1)*ZZW2(:)+XPSI3(IVEC1(:)+1)*ZZTDT(:)
-        ZZW5(:)=XPSI1( IVEC1(:)  )*ZZW2(:)+XPSI3(IVEC1(:)  )*ZZTDT(:)
-        WHERE (ZZW4(:) < 0. .OR. ZZW5(:) < 0.)
-           ZZW4(:) = 0.
-           ZZW5(:) = 0.
-        END WHERE
-        ZZW3(:) =   XAHENG( IVEC1(:)+1)*(ZZW4(:)**1.5)* ZVEC1(:)      &
-                  - XAHENG( IVEC1(:)  )*(ZZW5(:)**1.5)*(ZVEC1(:) - 1.0)
+         ZZW4(:)=XPSI1( IVEC1(:)+1)*ZZW2(:)+XPSI3(IVEC1(:)+1)*ZZTDT(:)
+         ZZW5(:)=XPSI1( IVEC1(:)  )*ZZW2(:)+XPSI3(IVEC1(:)  )*ZZTDT(:)
+         WHERE (ZZW4(:) < 0. .OR. ZZW5(:) < 0.)
+            ZZW4(:) = 0.
+            ZZW5(:) = 0.
+         END WHERE
+         ZZW3(:) =   XAHENG( IVEC1(:)+1)*(ZZW4(:)**1.5)* ZVEC1(:)      &
+                   - XAHENG( IVEC1(:)  )*(ZZW5(:)**1.5)*(ZVEC1(:) - 1.0)
                        ! Cste*((Psi1*w+Psi3*dT/dt)/(G))**1.5
-        ZZW6(:) =   XAHENG2( IVEC1(:)+1)*(ZZW4(:)**0.5)* ZVEC1(:)      &
-                  - XAHENG2( IVEC1(:)  )*(ZZW5(:)**0.5)*(ZVEC1(:) - 1.0)
+         ZZW6(:) =   XAHENG2( IVEC1(:)+1)*(ZZW4(:)**0.5)* ZVEC1(:)      &
+                   - XAHENG2( IVEC1(:)  )*(ZZW5(:)**0.5)*(ZVEC1(:) - 1.0)
 !
 !
-   ELSE ! LACTIT , for clouds
+      ELSE ! LACTIT , for clouds
 !
 !
 !       Compute the tabulation of function of ZZW3 :
@@ -323,32 +334,32 @@ IF( INUCT >= 1 ) THEN
 !                                            2 pi rho_l * G**(3/2)  
 !
 !
-        ZZW2(:)=MAX(ZZW2(:),0.)
-        ZZW3(:)=XAHENG(IVEC1(:)+1)*((XPSI1(IVEC1(:)+1)*ZZW2(:))**1.5)* ZVEC1(:)    &
-               -XAHENG(IVEC1(:)  )*((XPSI1(IVEC1(:)  )*ZZW2(:))**1.5)*(ZVEC1(:)-1.0)
+         ZZW2(:)=MAX(ZZW2(:),0.)
+         ZZW3(:)=XAHENG(IVEC1(:)+1)*((XPSI1(IVEC1(:)+1)*ZZW2(:))**1.5)* ZVEC1(:)    &
+                -XAHENG(IVEC1(:)  )*((XPSI1(IVEC1(:)  )*ZZW2(:))**1.5)*(ZVEC1(:)-1.0)
 !
-        ZZW6(:)=XAHENG2(IVEC1(:)+1)*((XPSI1(IVEC1(:)+1)*ZZW2(:))**0.5)* ZVEC1(:)    &
-               -XAHENG2(IVEC1(:)  )*((XPSI1(IVEC1(:)  )*ZZW2(:))**0.5)*(ZVEC1(:)-1.0)
+         ZZW6(:)=XAHENG2(IVEC1(:)+1)*((XPSI1(IVEC1(:)+1)*ZZW2(:))**0.5)* ZVEC1(:)    &
+                -XAHENG2(IVEC1(:)  )*((XPSI1(IVEC1(:)  )*ZZW2(:))**0.5)*(ZVEC1(:)-1.0)
 !
-   END IF ! LACTIT
+      END IF ! LACTIT
 !
 !
 !              (Psi1*w+Psi3*DT/Dt)**1.5   rho_air
 !       ZZW3 = ------------------------ * -------
 !                 2*pi*rho_l*G**(3/2)       Psi2
 !
-   ZZW5(:) = 1.
-   ZZW3(:) = (ZZW3(:)/ZZW1(:))*ZRHODREF(:) ! R.H.S. of Eq 9 of CPB 98 but
-   ! for multiple aerosol modes
-   WHERE (ZRCT(:) > XRTMIN(2) .AND. ZCCT(:) > XCTMIN(2))
-      ZZW6(:) = ZZW6(:) * ZRHODREF(:) * ZCCT(:) / (XLBC*ZCCT(:)/ZRCT(:))**XLBEXC
-   ELSEWHERE
-      ZZW6(:)=0.
-   END WHERE
+      ZZW5(:) = 1.
+      ZZW3(:) = (ZZW3(:)/ZZW1(:))*ZRHODREF(:) ! R.H.S. of Eq 9 of CPB 98 but
+      ! for multiple aerosol modes
+      WHERE (ZRCT(:) > XRTMIN(2) .AND. ZCCT(:) > XCTMIN(2))
+         ZZW6(:) = ZZW6(:) * ZRHODREF(:) * ZCCT(:) / (XLBC*ZCCT(:)/ZRCT(:))**XLBEXC
+      ELSEWHERE
+         ZZW6(:)=0.
+      END WHERE
 
-   WHERE (ZZW3(:) == 0. .AND. .NOT.(ZSW>0.))
-      ZZW5(:) = -1.
-   END WHERE
+      WHERE (ZZW3(:) == 0. .AND. .NOT.(ZSW>0.))
+         ZZW5(:) = -1.
+      END WHERE
 !
 !-------------------------------------------------------------------------------
 !
@@ -362,13 +373,17 @@ IF( INUCT >= 1 ) THEN
 !
 ! Interval bounds to tabulate sursaturation Smax
 ! Check with values used for tabulation in ini_lima_warm.f90
-   ZS1 = 1.0E-5                   ! corresponds to  0.001% supersaturation
-   ZS2 = 5.0E-2                   ! corresponds to 5.0% supersaturation 
-   ZXACC = 1.0E-10                ! Accuracy needed for the search in [NO UNITS]
+      ZS1 = 1.0E-5                   ! corresponds to  0.001% supersaturation
+      ZS2 = 5.0E-2                   ! corresponds to 5.0% supersaturation 
+      ZXACC = 1.0E-10                ! Accuracy needed for the search in [NO UNITS]
 !
-   ZSMAX(:) = ZRIDDR(ZS1,ZS2,ZXACC,ZZW3(:),ZZW6(:),INUCT)    ! ZSMAX(:) is in [NO UNITS]
-   ZSMAX(:) = MIN(MAX(ZSMAX(:), ZSW(:)),ZS2)
-!
+      ZSMAX(:) = ZRIDDR(ZS1,ZS2,ZXACC,ZZW3(:),ZZW6(:),INUCT)    ! ZSMAX(:) is in [NO UNITS]
+      ZSMAX(:) = MIN(MAX(ZSMAX(:), ZSW(:)),ZS2)
+      !
+   ELSE
+      ZSMAX(:) = ZSW(:)
+      ZZW5(:) = 1.
+   END IF
 !
 !-------------------------------------------------------------------------------
 !
@@ -637,7 +652,7 @@ DO JL = 1, NPTS
             fl(JL)=fnew(JL)
          else if (PX2 .lt. 0.05) then
             PX2 = PX2 + 1.0E-2
-            PRINT*, 'PX2 ALWAYS too small, we put a greater one : PX2 =',PX2
+!            PRINT*, 'PX2 ALWAYS too small, we put a greater one : PX2 =',PX2
             fh(JL)   = SINGL_FUNCSMAX(PX2,PZZW3(JL),PZZW6(JL),JL)
             go to 100
          end if
@@ -658,7 +673,7 @@ DO JL = 1, NPTS
       PZRIDDR(JL)=PX2
    else if (PX2 .lt. 0.05) then
       PX2 = PX2 + 1.0E-2
-      PRINT*, 'PX2 too small, we put a greater one : PX2 =',PX2
+!      PRINT*, 'PX2 too small, we put a greater one : PX2 =',PX2
       fh(JL)   = SINGL_FUNCSMAX(PX2,PZZW3(JL),PZZW6(JL),JL)
       go to 100
    else

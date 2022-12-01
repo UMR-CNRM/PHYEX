@@ -10,8 +10,8 @@
 INTERFACE
       SUBROUTINE LIMA_RAIN_EVAPORATION (PTSTEP, LDCOMPUTE,                          &
                                         PRHODREF, PT, PLV, PLVFACT, PEVSAT, PRVSAT, &
-                                        PRVT, PRCT, PRRT, PLBDR,                    &
-                                        P_TH_EVAP, P_RR_EVAP,                       &
+                                        PRVT, PRCT, PRRT, PCRT, PLBDR,              &
+                                        P_TH_EVAP, P_RR_EVAP, P_CR_EVAP,            &
                                         PEVAP3D                                     )
 !
 REAL,                 INTENT(IN)    :: PTSTEP     ! Time step
@@ -27,10 +27,12 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PRVSAT     !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRVT       ! Water vapor m.r. at t 
 REAL, DIMENSION(:),   INTENT(IN)    :: PRCT       ! Cloud water m.r. at t 
 REAL, DIMENSION(:),   INTENT(IN)    :: PRRT       ! Rain water m.r. at t 
+REAL, DIMENSION(:),   INTENT(IN)    :: PCRT       ! Rain water conc at t 
 REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR     ! Lambda(rain)
 !
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_EVAP
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_EVAP
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_EVAP
 !
 REAL, DIMENSION(:),   INTENT(INOUT) :: PEVAP3D    ! Rain evap profile
 !
@@ -40,8 +42,8 @@ END MODULE MODI_LIMA_RAIN_EVAPORATION
 !     ###############################################################################
       SUBROUTINE LIMA_RAIN_EVAPORATION (PTSTEP, LDCOMPUTE,                          &
                                         PRHODREF, PT, PLV, PLVFACT, PEVSAT, PRVSAT, &
-                                        PRVT, PRCT, PRRT, PLBDR,                    &
-                                        P_TH_EVAP, P_RR_EVAP,                       &
+                                        PRVT, PRCT, PRRT, PCRT, PLBDR,              &
+                                        P_TH_EVAP, P_RR_EVAP, P_CR_EVAP,            &
                                         PEVAP3D                                     )
 !     ###############################################################################
 !
@@ -63,14 +65,15 @@ END MODULE MODI_LIMA_RAIN_EVAPORATION
 !!    -------------
 !!      Original             15/03/2018
 !!
+!       Delbeke/Vie     03/2022 : KHKO option
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,             ONLY : XRHOLW, XRV
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN
-USE MODD_PARAM_LIMA_WARM, ONLY : X0EVAR, XEX0EVAR, X1EVAR, XEX2EVAR, XEX1EVAR, XTHCO, XDIVA
+USE MODD_CST,             ONLY : XRHOLW, XRV, XPI
+USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, LKHKO
+USE MODD_PARAM_LIMA_WARM, ONLY : X0EVAR, XEX0EVAR, X1EVAR, XEX2EVAR, XEX1EVAR, XTHCO, XDIVA, XCEVAP
 !
 IMPLICIT NONE
 !
@@ -89,10 +92,12 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PRVSAT     !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRVT       ! Water vapor m.r. at t 
 REAL, DIMENSION(:),   INTENT(IN)    :: PRCT       ! Cloud water m.r. at t 
 REAL, DIMENSION(:),   INTENT(IN)    :: PRRT       ! Rain water m.r. at t 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR     ! Lambda(rain)
+REAL, DIMENSION(:),   INTENT(IN)    :: PCRT       ! Rain water conc at t 
+REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR      ! Lambda(rain)
 !
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_EVAP
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_EVAP
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_EVAP
 !
 REAL, DIMENSION(:),   INTENT(INOUT) :: PEVAP3D    ! Rain evap profile
 !
@@ -110,40 +115,56 @@ REAL, DIMENSION(SIZE(PRHODREF))    :: ZZW1, ZZW2
 !
 P_TH_EVAP(:) = 0.
 P_RR_EVAP(:) = 0.
+P_CR_EVAP(:) = 0.
+!
+ZZW1(:) = 0.
+ZZW2(:) = 0.
 !
 GEVAP(:) = .FALSE.
 GEVAP(:) = LDCOMPUTE(:)      .AND. &
            PRRT(:)>XRTMIN(3) .AND. &
-           PRVT(:)<PRVSAT(:)
-!
-WHERE ( GEVAP )
-!
-!-------------------------------------------------------------------------------
+           PRVT(:)<PRVSAT(:) .AND. &
+           PCRT(:)>XCTMIN(3)
 !
 !
-!*       2. compute the evaporation of rain drops    
-!   	 ----------------------------------------
 !
+IF (LKHKO) THEN
+
+   ZZW1(:) = MAX((1.0 - PRVT(:)/ZZW1(:)),0.0)  ! Subsaturation
+    
+   ZZW2(:) = 1. / ( XRHOLW*((((PLV(:)/PT(:))**2)/(XTHCO*XRV)) +          & ! G
+        (XRV*PT(:))/(XDIVA*PEVSAT(:))))
+
+   ZZW2(:) = 3.0 * XCEVAP * ZZW2(:) * (4.*XPI*XRHOLW/(3.))**(2./3.) *    &
+        (PRRT(:))**(1./3.) * (PCRT(:))**(2./3.) * ZZW1(:)                            
+   P_RR_EVAP(:) = - ZZW2(:)
+
+   ZZW2(:) = ZZW2(:) * PCRT(:)/PRRT(:)
+   P_CR_EVAP = - ZZW2(:)
+
+ELSE
+
+   WHERE ( GEVAP )
 !
-   ZZW1(:) = MAX((1.0 - PRVT(:)/PRVSAT(:)),0.0)  ! Subsaturation
+      ZZW1(:) = MAX((1.0 - PRVT(:)/PRVSAT(:)),0.0)  ! Subsaturation
 !
 ! Compute the function G(T)
 !
-   ZZW2(:) = 1. / ( XRHOLW*((((PLV(:)/PT(:))**2)/(XTHCO*XRV)) +          & ! G
-          (XRV*PT(:))/(XDIVA*PEVSAT(:))))
+      ZZW2(:) = 1. / ( XRHOLW*((((PLV(:)/PT(:))**2)/(XTHCO*XRV)) + (XRV*PT(:))/(XDIVA*PEVSAT(:)))) !G
 !
 ! Compute the evaporation tendency
 !
-   ZZW2(:) = ZZW2(:) * ZZW1(:) * PRRT(:) *        &
-        (X0EVAR * PLBDR(:)**XEX0EVAR + X1EVAR * PRHODREF(:)**XEX2EVAR * PLBDR(:)**XEX1EVAR)
-   ZZW2(:) = MAX(ZZW2(:),0.0)
+      ZZW2(:) = ZZW2(:) * ZZW1(:) * PRRT(:) *        &
+           (X0EVAR * PLBDR(:)**XEX0EVAR + X1EVAR * PRHODREF(:)**XEX2EVAR * PLBDR(:)**XEX1EVAR)
+      ZZW2(:) = MAX(ZZW2(:),0.0)
 !
-   P_RR_EVAP(:) = - ZZW2(:)
+      P_RR_EVAP(:) = - ZZW2(:)
 !   P_TH_EVAP(:) = P_RR_EVAP(:) * PLVFACT(:)
 !   PEVAP3D(:) = - P_RR_EVAP(:)
 !
-END WHERE
+   END WHERE
 !
+END IF
 !-----------------------------------------------------------------------------
 !
 END SUBROUTINE LIMA_RAIN_EVAPORATION

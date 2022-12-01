@@ -6,6 +6,7 @@
       SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,D,                      &
               & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,                        &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
+              & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
               & O2D,ONOMIXLG,OFLAT,OLES_CALL,OCOUPLES,OBLOWSNOW,      &
               & OCOMPUTE_SRC, PRSNOW,                                 &
               & OOCEAN,ODEEPOC,ODIAG_IN_RUN,                          &
@@ -295,6 +296,7 @@ INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 INTEGER,                INTENT(IN)   :: KSV, KSV_LGBEG, KSV_LGEND ! number of scalar variables
+INTEGER,                INTENT(IN)   :: KSV_LIMA_NR,KSV_LIMA_NS,KSV_LIMA_NG,KSV_LIMA_NH
 CHARACTER(LEN=4),DIMENSION(2),INTENT(IN):: HLBCX, HLBCY  ! X- and Y-direc LBC
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time-splitting
 INTEGER,                INTENT(IN)   :: KMODEL_CL     ! model number for cloud mixing length
@@ -463,6 +465,9 @@ REAL, DIMENSION(D%NIJT) ::  ZTAU11M,ZTAU12M,  &
             ! Virtual Potential Temp. used
             ! in the Deardorff mixing length computation
 !
+!with LIMA, do not change rain, snow, graupel and hail concentrations (mixing ratio is not changed)
+REAL, DIMENSION(D%NIJT,D%NKT,KSV) :: ZRSVS
+!
 REAL                :: ZEXPL        ! 1-TURBN%XIMPL deg of expl.
 REAL                :: ZRVORD       ! RV/RD
 REAL                :: ZEPS         ! XMV / XMD
@@ -519,6 +524,10 @@ IF (TURBN%CTURBLEN=='BL89' .OR. TURBN%CTURBLEN=='RM17' .OR. TURBN%CTURBLEN=='ADA
   ZTHLM(IIJB:IIJE,1:D%NKT) = PTHLT(IIJB:IIJE,1:D%NKT)
   ZRM(IIJB:IIJE,1:D%NKT,:) = PRT(IIJB:IIJE,1:D%NKT,:)
 END IF
+!
+!Save LIMA scalar variables sources
+ZRSVS(IIJB:IIJE,1:D%NKT,1:KSV)=PRSVS(IIJB:IIJE,1:D%NKT,1:KSV)
+!
 !
 !----------------------------------------------------------------------------
 !
@@ -1000,6 +1009,13 @@ CALL TURB_VER(D, CST,CSTURB,TURBN,KRR, KRRL, KRRI,       &
           PSSTFL, PSSTFL_C, PSSRFL_C,PSSUFL_C,PSSVFL_C,  &
           PSSUFL,PSSVFL                                  )
 
+IF (HCLOUD == 'LIMA') THEN
+   IF (KSV_LIMA_NR.GT.0) PRSVS(:,:,KSV_LIMA_NR) = ZRSVS(:,:,KSV_LIMA_NR) 
+   IF (KSV_LIMA_NS.GT.0) PRSVS(:,:,KSV_LIMA_NS) = ZRSVS(:,:,KSV_LIMA_NS)
+   IF (KSV_LIMA_NG.GT.0) PRSVS(:,:,KSV_LIMA_NG) = ZRSVS(:,:,KSV_LIMA_NG) 
+   IF (KSV_LIMA_NH.GT.0) PRSVS(:,:,KSV_LIMA_NH) = ZRSVS(:,:,KSV_LIMA_NH)
+END IF
+
 IF( BUCONF%LBUDGET_U ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_U), 'VTURB', PRUS(:,:) )
 IF( BUCONF%LBUDGET_V ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_V), 'VTURB', PRVS(:,:) )
 IF( BUCONF%LBUDGET_W ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_W), 'VTURB', PRWS(:,:) )
@@ -1093,6 +1109,14 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
           ZTRH,                                                &
           PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS                     )
 #endif
+  !
+  IF (HCLOUD == 'LIMA') THEN
+     IF (KSV_LIMA_NR.GT.0) PRSVS(:,:,KSV_LIMA_NR) = ZRSVS(:,:,KSV_LIMA_NR) 
+     IF (KSV_LIMA_NS.GT.0) PRSVS(:,:,KSV_LIMA_NS) = ZRSVS(:,:,KSV_LIMA_NS)
+     IF (KSV_LIMA_NG.GT.0) PRSVS(:,:,KSV_LIMA_NG) = ZRSVS(:,:,KSV_LIMA_NG) 
+     IF (KSV_LIMA_NH.GT.0) PRSVS(:,:,KSV_LIMA_NH) = ZRSVS(:,:,KSV_LIMA_NH)
+  END IF
+  !
   IF( BUCONF%LBUDGET_U ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_U), 'HTURB', PRUS(:,:) )
   IF( BUCONF%LBUDGET_V ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_V), 'HTURB', PRVS(:,:) )
   IF( BUCONF%LBUDGET_W ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_W), 'HTURB', PRWS(:,:) )

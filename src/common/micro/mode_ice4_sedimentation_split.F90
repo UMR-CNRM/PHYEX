@@ -8,7 +8,7 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
                                    &PTSTEP, KRR, OSEDIC, PDZZ, &
-                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
+                                   &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                    &PINPRC, PINPRR, PINPRI, PINPRS, PINPRG, &
                                    &PSEA, PTOWN,  &
@@ -27,6 +27,7 @@ SUBROUTINE ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
 !!    -------------
 !!
 !  P. Wautelet 10/04/2019: replace ABORT and STOP calls by Print_msg
+!  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
 !
 !
 !*      0. DECLARATIONS
@@ -60,6 +61,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PDZZ    ! Layer t
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PRHODREF! Reference density
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PPABST  ! absolute pressure at t
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PTHT    ! Theta at time t
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PT      ! Temperature at time t
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PRHODJ  ! Dry density * Jacobian
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT)           :: PRCS    ! Cloud water m.r. source
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PRCT    ! Cloud water m.r. at t
@@ -207,9 +209,8 @@ ENDDO
 !*       2.1   for cloud
 !
 IF (GSEDIC) THEN
-    CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, KRR, &
-                          &PARAMI%XSPLIT_MAXCFL, &
-                          &PRHODREF, ZW, PDZZ, PPABST, PTHT, PTSTEP, &
+    CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, KRR, &
+                          &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
                           &2, &
                           &ZRCT, PRCS, PINPRC, ZPRCS, &
                           &ZRAY, ZLBC, ZFSEDC, ZCONC3D, PFPR=PFPR)
@@ -217,36 +218,32 @@ ENDIF
 !
 !*       2.2   for rain
 !
-  CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, KRR, &
-                          &PARAMI%XSPLIT_MAXCFL, &
-                          &PRHODREF, ZW, PDZZ, PPABST, PTHT, PTSTEP, &
+  CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, KRR, &
+                          &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
                           &3, &
                           &ZRRT, PRRS, PINPRR, ZPRRS, &
                           &PFPR=PFPR)
 !
 !*       2.3   for pristine ice
 !
-  CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, KRR, &
-                          &PARAMI%XSPLIT_MAXCFL, &
-                          &PRHODREF, ZW, PDZZ, PPABST, PTHT, PTSTEP, &
+  CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, KRR, &
+                          &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
                           &4, &
                           &ZRIT, PRIS, PINPRI, ZPRIS, &
                           &PFPR=PFPR)
 !
 !*       2.4   for aggregates/snow
 !
-  CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, KRR, &
-                        &PARAMI%XSPLIT_MAXCFL, &
-                        &PRHODREF, ZW, PDZZ, PPABST, PTHT, PTSTEP, &
+  CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, KRR, &
+                        &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
                         &5, &
                         &ZRST, PRSS, PINPRS, ZPRSS, &
                         &PFPR=PFPR)
 !
 !*       2.5   for graupeln
 !
-  CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, KRR, &
-                        &PARAMI%XSPLIT_MAXCFL, &
-                        &PRHODREF, ZW, PDZZ, PPABST, PTHT, PTSTEP, &
+  CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, KRR, &
+                        &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
                         &6, &
                         &ZRGT, PRGS, PINPRG, ZPRGS, &
                         &PFPR=PFPR)
@@ -254,9 +251,8 @@ ENDIF
 !*       2.6   for hail
 !
 IF (IRR==7) THEN
-    CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, KRR, &
-                          &PARAMI%XSPLIT_MAXCFL, &
-                          &PRHODREF, ZW, PDZZ, PPABST, PTHT, PTSTEP, &
+    CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, KRR, &
+                          &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
                           &7, &
                           &ZRHT, PRHS, PINPRH, ZPRHS, &
                           &PFPR=PFPR)
@@ -270,8 +266,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
 !
-SUBROUTINE INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, KRR, &
-                              &PMAXCFL, PRHODREF, POORHODZ, PDZZ, PPABST, PTHT, PTSTEP, &
+SUBROUTINE INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, KRR, &
+                              &PRHODREF, POORHODZ, PDZZ, PPABST,PTHT,PT,PTSTEP, &
                               &KSPE, PRXT, PRXS, PINPRX, PPRXS, &
                               &PRAY, PLBC, PFSEDC, PCONC3D, PFPR)
 !
@@ -281,6 +277,7 @@ SUBROUTINE INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, KRR, &
 USE MODD_CST,            ONLY: CST_t
 USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
 !
 IMPLICIT NONE
 !
@@ -290,13 +287,14 @@ TYPE(DIMPHYEX_t),             INTENT(IN)              :: D
 TYPE(CST_t),                  INTENT(IN)              :: CST
 TYPE(RAIN_ICE_PARAM_t),       INTENT(IN)              :: ICEP
 TYPE(RAIN_ICE_DESCR_t),       INTENT(IN)              :: ICED
+TYPE(PARAM_ICE_t),            INTENT(IN)              :: PARAMI
 INTEGER,                      INTENT(IN)              :: KRR
-REAL,                         INTENT(IN)              :: PMAXCFL ! maximum CFL allowed
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PRHODREF ! Reference density
 REAL, DIMENSION(D%NIT,D%NJT,D%NKTB:D%NKTE), INTENT(IN)        :: POORHODZ ! One Over (Rhodref times delta Z)
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PDZZ ! layer thikness (m)
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PPABST
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PTHT
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PT
 REAL,                         INTENT(IN)              :: PTSTEP  ! total timestep
 INTEGER,                      INTENT(IN)              :: KSPE ! 1 for rc, 2 for rr...
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT)           :: PRXT ! mr of specy X
@@ -315,6 +313,7 @@ INTEGER, DIMENSION(D%NIT*D%NJT*D%NKT) :: I1,I2,I3   ! Used to replace the COUNT
 LOGICAL                         :: GPRESENT_PFPR
 REAL                            :: ZINVTSTEP
 REAL                            :: ZZWLBDC, ZRAY, ZZT, ZZWLBDA, ZZCC
+REAL                            :: ZLBDA
 REAL                            :: ZFSED, ZEXSED
 REAL                                :: ZMRCHANGE
 REAL, DIMENSION(D%NIT, D%NJT)       :: ZMAX_TSTEP ! Maximum CFL in column
@@ -397,15 +396,44 @@ DO WHILE (ANY(ZREMAINT>0.))
                             &      ALOG(PRHODREF(JI,JJ,JK)*PRXT(JI,JJ,JK)) )**ICEP%XEXCSEDI
       ENDIF
     ENDDO
+#if defined(REPRO48) || defined(REPRO55)
+#else
+    ELSEIF(KSPE==5) THEN
+      ! ******* for snow
+      ZWSED(:,:,:) = 0.
+      DO JL=1, ISEDIM
+        JI=I1(JL)
+        JJ=I2(JL)
+        JK=I3(JL)
+        IF(PRXT(JI,JJ,JK)> ICED%XRTMIN(KSPE)) THEN
+           IF (PARAMI%LSNOW_T .AND. PT(JI,JJ,JK)>263.15) THEN
+              ZLBDA = MAX(MIN(ICED%XLBDAS_MAX, 10**(14.554-0.0423*PT(JI,JJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
+           ELSE IF (PARAMI%LSNOW_T) THEN
+              ZLBDA = MAX(MIN(ICED%XLBDAS_MAX, 10**(6.226 -0.0106*PT(JI,JJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
+           ELSE
+              ZLBDA=MAX(MIN(ICED%XLBDAS_MAX, ICED%XLBS * ( PRHODREF(JI,JJ,JK) * PRXT(JI,JJ,JK) )**ICED%XLBEXS),ICED%XLBDAS_MIN)
+           END IF
+           ZWSED(JI, JJ, JK) = ICEP%XFSEDS *  &
+                & PRXT(JI,JJ,JK)* &
+                & PRHODREF(JI,JJ,JK)**(1-ICED%XCEXVT) * &
+                & (1 + (ICED%XFVELOS/ZLBDA)**ICED%XALPHAS)** (-ICED%XNUS+ICEP%XEXSEDS/ICED%XALPHAS) * &
+                & ZLBDA ** (ICED%XBS+ICEP%XEXSEDS)
+
+        ENDIF
+      ENDDO
+#endif
   ELSE
     ! ******* for other species
     SELECT CASE(KSPE)
       CASE(3)
         ZFSED=ICEP%XFSEDR
         ZEXSED=ICEP%XEXSEDR
+#if defined(REPRO48) || defined(REPRO55)
       CASE(5)
         ZFSED=ICEP%XFSEDS
         ZEXSED=ICEP%XEXSEDS
+#else
+#endif
       CASE(6)
         ZFSED=ICEP%XFSEDG
         ZEXSED=ICEP%XEXSEDG
@@ -434,7 +462,7 @@ DO WHILE (ANY(ZREMAINT>0.))
     JJ=I2(JL)
     JK=I3(JL)
     IF(PRXT(JI,JJ,JK)>ICED%XRTMIN(KSPE) .AND. ZWSED(JI, JJ, JK)>1.E-20) THEN
-      ZMAX_TSTEP(JI, JJ) = MIN(ZMAX_TSTEP(JI, JJ), PMAXCFL * PRHODREF(JI, JJ, JK) * &
+      ZMAX_TSTEP(JI, JJ) = MIN(ZMAX_TSTEP(JI, JJ), PARAMI%XSPLIT_MAXCFL * PRHODREF(JI, JJ, JK) * &
                          & PRXT(JI, JJ, JK) * PDZZ(JI, JJ, JK) / ZWSED(JI, JJ, JK))
     ENDIF
   ENDDO

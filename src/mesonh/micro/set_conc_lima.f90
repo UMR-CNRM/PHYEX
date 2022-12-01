@@ -73,10 +73,12 @@ contains
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, LCOLD, LWARM, LRAIN, NMOD_CCN, NMOD_IFN
-USE MODD_PARAM_LIMA_COLD, ONLY : XAI, XBI
+USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, LCOLD, LWARM, LRAIN, NMOD_CCN, NMOD_IFN, &
+                                 NMOM_C, NMOM_R, NMOM_I
+USE MODD_PARAM_LIMA_COLD, ONLY : XAI, XBI, XAS, XBS
+USE MODD_PARAM_LIMA_MIXED,ONLY : XAG, XBG, XAH, XBH
 USE MODD_NSV,             ONLY : NSV_LIMA_BEG_A, NSV_LIMA_NC_A, NSV_LIMA_NR_A, NSV_LIMA_CCN_ACTI_A, &
-                                 NSV_LIMA_NI_A, NSV_LIMA_IFN_NUCL_A
+                                 NSV_LIMA_NI_A, NSV_LIMA_NS_A, NSV_LIMA_NG_A, NSV_LIMA_NH_A, NSV_LIMA_IFN_NUCL_A
 USE MODD_CST,             ONLY : XPI, XRHOLW, XRHOLI
 USE MODD_CONF,            ONLY : NVERB
 USE MODD_CONF_n,          ONLY : NRR
@@ -99,7 +101,7 @@ REAL,  DIMENSION(:,:,:,NSV_LIMA_BEG_A(kmi):), INTENT(INOUT):: PSVT     ! microph
 !
 INTEGER    :: IRESP   ! Return code of FM routines
 INTEGER    :: ILUOUT  ! Logical unit number of output-listing
-REAL       :: ZCONCC, ZCONCR, ZCONCI
+REAL       :: ZCONC
 !
 !-------------------------------------------------------------------------------
 !*       1.    RETRIEVE LOGICAL UNIT NUMBER
@@ -110,13 +112,13 @@ ILUOUT = TLUOUT%NLU
 !*       2.    INITIALIZATION
 !              --------------
 !
-IF (LWARM .AND. NRR.GE.2) THEN
+IF (LWARM .AND. NRR.GE.2 .AND. NMOM_C.GE.2) THEN
 !
 !  droplets
 !
-   ZCONCC = 300.E6 ! droplet concentration set at 300 cm-3
+   ZCONC = 300.E6 ! droplet concentration set at 300 cm-3
    WHERE ( PRT(:,:,:,2) > 1.E-11 )
-      PSVT(:,:,:,NSV_LIMA_NC_A(kmi)) = ZCONCC
+      PSVT(:,:,:,NSV_LIMA_NC_A(kmi)) = ZCONC
    END WHERE
    WHERE ( PRT(:,:,:,2) <= 1.E-11 )
       PRT(:,:,:,2)  = 0.0
@@ -125,54 +127,54 @@ IF (LWARM .AND. NRR.GE.2) THEN
    
    IF (NMOD_CCN .GE. 1) THEN
       WHERE ( PRT(:,:,:,2) > 1.E-11 )
-         PSVT(:,:,:,NSV_LIMA_CCN_ACTI_A(kmi)) = ZCONCC
+         PSVT(:,:,:,NSV_LIMA_CCN_ACTI_A(kmi)) = ZCONC
       END WHERE
       WHERE ( PRT(:,:,:,2) <= 1.E-11 )
          PSVT(:,:,:,NSV_LIMA_CCN_ACTI_A(kmi)) = 0.0
       END WHERE
    END IF
    
-   IF( NVERB >= 5 ) THEN
-      WRITE (UNIT=ILUOUT,FMT=*) "!INI_MODEL$n: The droplet concentration has "
-      WRITE (UNIT=ILUOUT,FMT=*) "been roughly initialised"
-   END IF
+!   IF( NVERB >= 5 ) THEN
+!      WRITE (UNIT=ILUOUT,FMT=*) "!INI_MODEL$n: The droplet concentration has "
+!      WRITE (UNIT=ILUOUT,FMT=*) "been roughly initialised"
+!   END IF
 END IF
 !
-IF (LWARM .AND. LRAIN .AND. NRR.GE.3) THEN
+IF (LWARM .AND. LRAIN .AND. NRR.GE.3 .AND. NMOM_R.GE.2) THEN
 !
 !  drops
 !
-   ZCONCR = (1.E7)**3/(XPI*XRHOLW) ! cf XCONCR_PARAM_INI in ini_rain_c2r2.f90
+   ZCONC = (1.E7)**3/(XPI*XRHOLW) ! cf XCONCR_PARAM_INI in ini_rain_c2r2.f90
    IF (HGETCLOUD == 'INI1') THEN ! init from REVE scheme
       PSVT(:,:,:,NSV_LIMA_NR_A(kmi)) = 0.0
    ELSE ! init from KESS, ICE3...
       WHERE ( PRT(:,:,:,3) > 1.E-11 )
          PSVT(:,:,:,NSV_LIMA_NR_A(kmi)) = MAX( SQRT(SQRT(PRHODREF(:,:,:)*PRT(:,:,:,3) &
-              *ZCONCR)),1. )
+              *ZCONC)),1. )
       END WHERE
       WHERE ( PRT(:,:,:,3) <= 1.E-11 )
          PRT(:,:,:,3)  = 0.0
          PSVT(:,:,:,NSV_LIMA_NR_A(kmi)) = 0.0
       END WHERE
-      IF( NVERB >= 5 ) THEN
-         WRITE (UNIT=ILUOUT,FMT=*) "!INI_MODEL$n: The raindrop concentration has "
-         WRITE (UNIT=ILUOUT,FMT=*) "been roughly initialised"
-      END IF
+!      IF( NVERB >= 5 ) THEN
+!         WRITE (UNIT=ILUOUT,FMT=*) "!INI_MODEL$n: The raindrop concentration has "
+!         WRITE (UNIT=ILUOUT,FMT=*) "been roughly initialised"
+!      END IF
    END IF
 END IF
 !
-IF (LCOLD .AND. NRR.GE.4) THEN
+IF (LCOLD .AND. NRR.GE.4 .AND. NMOM_I.GE.2) THEN
 !
 ! ice crystals
 !
-   ZCONCI = 100.E3 ! maximum ice concentration set at 100/L
+   ZCONC = 100.E3 ! maximum ice concentration set at 100/L
    WHERE ( PRT(:,:,:,4) > 1.E-11 )
 !
 !      PSVT(:,:,:,NSV_LIMA_NI_A(kmi)) = MIN( PRHODREF(:,:,:) /                                     &
 !           ( XRHOLI * XAI*(10.E-06)**XBI * PRT(:,:,:,4) ), &
-!           ZCONCI )
+!           ZCONC )
 ! Correction
-      PSVT(:,:,:,NSV_LIMA_NI_A(kmi)) = MIN(PRT(:,:,:,4)/(0.82*(10.E-06)**2.5),ZCONCI )
+      PSVT(:,:,:,NSV_LIMA_NI_A(kmi)) = MIN(PRT(:,:,:,4)/(0.82*(10.E-06)**2.5),ZCONC )
    END WHERE
    WHERE ( PRT(:,:,:,4) <= 1.E-11 )
       PRT(:,:,:,4)  = 0.0
@@ -188,11 +190,50 @@ IF (LCOLD .AND. NRR.GE.4) THEN
       END WHERE
    END IF
 
-   IF( NVERB >= 5 ) THEN
-      WRITE (UNIT=ILUOUT,FMT=*) "!INI_MODEL$n: The cloud ice concentration has "
-      WRITE (UNIT=ILUOUT,FMT=*) "been roughly initialised"
-   END IF
+!   IF( NVERB >= 5 ) THEN
+!      WRITE (UNIT=ILUOUT,FMT=*) "!INI_MODEL$n: The cloud ice concentration has "
+!      WRITE (UNIT=ILUOUT,FMT=*) "been roughly initialised"
+!   END IF
 !
+END IF
+!
+IF (NSV_LIMA_NS_A(KMI).GE.1) THEN
+!
+!  snow
+!
+   ZCONC = 1./ (XAS*0.001**XBS) ! 1mm particle size
+   WHERE ( PRT(:,:,:,5) > 1.E-11 )
+      PSVT(:,:,:,NSV_LIMA_NS_A(KMI)) = PRT(:,:,:,5) * ZCONC
+   ELSEWHERE
+      PRT(:,:,:,5)  = 0.0
+      PSVT(:,:,:,NSV_LIMA_NS_A(KMI)) = 0.0
+   END WHERE
+END IF
+!
+IF (NSV_LIMA_NG_A(KMI).GE.1) THEN
+!
+!  graupel
+!
+   ZCONC = 1./ (XAG*0.001**XBG) ! 1mm particle size
+   WHERE ( PRT(:,:,:,6) > 1.E-11 )
+      PSVT(:,:,:,NSV_LIMA_NG_A(KMI)) = PRT(:,:,:,6) * ZCONC
+   ELSEWHERE
+      PRT(:,:,:,6)  = 0.0
+      PSVT(:,:,:,NSV_LIMA_NG_A(KMI)) = 0.0
+   END WHERE
+END IF
+!
+IF (NSV_LIMA_NH_A(KMI).GE.1) THEN
+!
+!  hail
+!
+   ZCONC = 1./ (XAH*0.001**XBH) ! 1mm particle size
+   WHERE ( PRT(:,:,:,7) > 1.E-11 )
+      PSVT(:,:,:,NSV_LIMA_NH_A(KMI)) = PRT(:,:,:,7) * ZCONC
+   ELSEWHERE
+      PRT(:,:,:,7)  = 0.0
+      PSVT(:,:,:,NSV_LIMA_NH_A(KMI)) = 0.0
+   END WHERE
 END IF
 !
 END SUBROUTINE SET_CONC_LIMA

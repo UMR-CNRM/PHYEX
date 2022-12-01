@@ -10,8 +10,7 @@ INTERFACE
    SUBROUTINE LIMA_BERGERON (LDCOMPUTE,                         &
                              PRCT, PRIT, PCIT, PLBDI,           &
                              PSSIW, PAI, PCJ, PLVFACT, PLSFACT, &
-                             P_TH_BERFI, P_RC_BERFI,            &
-                             PA_TH, PA_RC, PA_RI                )
+                             P_TH_BERFI, P_RC_BERFI             )
 !
 LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
 !
@@ -28,10 +27,6 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT !
 !
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_BERFI
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_BERFI
-!
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_TH
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RC
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RI
 !!
 END SUBROUTINE LIMA_BERGERON
 END INTERFACE
@@ -41,8 +36,7 @@ END MODULE MODI_LIMA_BERGERON
       SUBROUTINE LIMA_BERGERON( LDCOMPUTE,                        &
                                PRCT, PRIT, PCIT, PLBDI,           &
                                PSSIW, PAI, PCJ, PLVFACT, PLSFACT, &
-                               P_TH_BERFI, P_RC_BERFI,            &
-                               PA_TH, PA_RC, PA_RI                )
+                               P_TH_BERFI, P_RC_BERFI             )
 !     #############################################################
 !
 !!    PURPOSE
@@ -89,18 +83,9 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT !
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_BERFI
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_BERFI
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_TH
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RC
-REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RI
-!
-!*       0.2   Declarations of local variables :
-!
-!
 !-------------------------------------------------------------------------------
 !
-!
-!*       1.     Bergeron-Findeisen process
-!	        --------------------------
+! Bergeron-Findeisen process
 !
 P_TH_BERFI(:) = 0.0
 P_RC_BERFI(:) = 0.0
@@ -110,11 +95,6 @@ WHERE( (PRCT(:)>XRTMIN(2)) .AND. (PRIT(:)>XRTMIN(4)) .AND. (PCIT(:)>XCTMIN(4)) .
         ( X0DEPI/PLBDI(:)+X2DEPI*PCJ(:)*PCJ(:)/PLBDI(:)**(XDI+2.0) )
    P_TH_BERFI(:) = - P_RC_BERFI(:)*(PLSFACT(:)-PLVFACT(:))
 END WHERE
-!
-PA_RC(:) = PA_RC(:) + P_RC_BERFI(:)
-PA_RI(:) = PA_RI(:) - P_RC_BERFI(:)
-PA_TH(:) = PA_TH(:) + P_TH_BERFI(:)
-!
 !
 !-------------------------------------------------------------------------------
 !

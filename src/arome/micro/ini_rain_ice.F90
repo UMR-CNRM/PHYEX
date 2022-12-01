@@ -83,6 +83,7 @@
 !!                         to reproduce results on belenos. The reason why
 !!                         those variables must have a specifi treatment was
 !!                         not understood
+!  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
 !
 !-------------------------------------------------------------------------------
 !
@@ -167,7 +168,7 @@ REAL     :: PALPHAR,PALPHAS,PALPHAG,PALPHAH
 REAL     :: PNUR,PNUS,PNUG,PNUH
 REAL     :: PBR,PBS,PBG
 REAL     :: PCR,PCS,PCG,PCH
-REAL     :: PDR,PDS,PDG,PDH
+REAL     :: PDR,PDS,PFVELOS,PDG,PDH
 REAL     :: PESR,PEGS,PEGR,PEHS,PEHG,PEHR
 REAL     :: PFDINFTY
 REAL     :: PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN
@@ -301,11 +302,25 @@ XF2I = 0.14
 !
 XAS = 0.02
 XBS = 1.9
-XCS = 5.1
-XDS = 0.27
+IF (LSNOW_T) THEN
+  !Cas Gamma generalisee
+  XCS = 11.52
+  XDS = 0.39
+  XFVELOS =0.097
+  !Cas MP
+  !XCS = 13.2
+  !XDS = 0.423       
+  !XFVELOS = 25.14
+ELSE
+  XCS = 5.1
+  XDS = 0.27
+  XFVELOS = 0.
+END IF
 !
-XCCS = 5.0
-XCXS = 1.0
+IF (.NOT. LSNOW_T) THEN
+  XCCS = 5.0
+  XCXS = 1.0
+END IF
 !
 XF0S = 0.86
 XF1S = 0.28
@@ -381,8 +396,17 @@ XNUR    = 1.0  ! Exponential law
 XALPHAI = 3.0  ! Gamma law for the ice crystal volume
 XNUI    = 3.0  ! Gamma law with little dispersion
 !
-XALPHAS = 1.0  ! Exponential law
-XNUS    = 1.0  ! Exponential law
+IF (LSNOW_T) THEN
+!Cas GAMMAGEN
+   XALPHAS = .214   ! Generalized gamma law
+   XNUS    = 43.7   ! Generalized gamma law
+   XTRANS_MP_GAMMAS = SQRT( ( GAMMA(XNUS + 2./XALPHAS)*GAMMA(XNUS + 4./XALPHAS) ) / &
+                            ( 8.* GAMMA(XNUS + 1./XALPHAS)*GAMMA(XNUS + 3./XALPHAS) ) )
+ELSE
+   XALPHAS = 1.0  ! Exponential law
+   XNUS    = 1.0  ! Exponential law
+   XTRANS_MP_GAMMAS = 1.
+END IF
 !
 XALPHAG = 1.0  ! Exponential law
 XNUG    = 1.0  ! Exponential law
@@ -404,6 +428,10 @@ XLBR   = ( XAR*XCCR*MOMG(XALPHAR,XNUR,XBR) )**(-XLBEXR)
 XLBEXI = 1.0/(-XBI)
 XLBI   = ( XAI*MOMG(XALPHAI,XNUI,XBI) )**(-XLBEXI)
 !
+#if defined(REPRO48) || defined(REPRO55)
+#else
+XNS   = 1.0/(XAS*MOMG(XALPHAS,XNUS,XBS))
+#endif
 XLBEXS = 1.0/(XCXS-XBS)
 XLBS   = ( XAS*XCCS*MOMG(XALPHAS,XNUS,XBS) )**(-XLBEXS)
 !
@@ -421,6 +449,11 @@ XLBDAG_MAX = 100000.0
 !
 ZCONC_MAX  = 1.E6 ! Maximal concentration for falling particules set to 1 per cc
 IF(XCCS>0. .AND. XCXS>0. )XLBDAS_MAX = ( ZCONC_MAX/XCCS )**(1./XCXS)
+#if defined(REPRO48) || defined(REPRO55)
+#else
+XLBDAS_MAX = 1.E6
+XLBDAS_MIN = 1000.
+#endif
 !
 XCONC_SEA=1E8 ! 100/cm3
 XCONC_LAND=3E8 ! 300/cm3
@@ -473,9 +506,21 @@ XEXCSEDI =-0.9324*3.0
 WRITE (KLUOUT,FMT=*)' PRISTINE ICE SEDIMENTATION for columns XFSEDI =',XFSEDI
 !
 !
+#if defined(REPRO48) || defined(REPRO55)
 XEXSEDS = (XBS+XDS-XCXS)/(XBS-XCXS)
 XFSEDS  = XCS*XAS*XCCS*MOMG(XALPHAS,XNUS,XBS+XDS)*                         &
+          (XAS*XCCS*MOMG(XALPHAS,XNUS,XBS))**(-XEXSEDS)*(ZRHO00)**XCEXVT
+#else
+IF (LRED) THEN
+   XEXSEDS = -XDS-XBS
+   XFSEDS  = XCS*MOMG(XALPHAS,XNUS,XBS+XDS)/(MOMG(XALPHAS,XNUS,XBS))    &
+            *(ZRHO00)**XCEXVT
+ELSE
+   XEXSEDS = (XBS+XDS-XCXS)/(XBS-XCXS)
+   XFSEDS  = XCS*XAS*XCCS*MOMG(XALPHAS,XNUS,XBS+XDS)*                         &
             (XAS*XCCS*MOMG(XALPHAS,XNUS,XBS))**(-XEXSEDS)*(ZRHO00)**XCEXVT
+END IF
+#endif
 !
 XEXSEDG = (XBG+XDG-XCXG)/(XBG-XCXG)
 XFSEDG  = XCG*XAG*XCCG*MOMG(XALPHAG,XNUG,XBG+XDG)*                         &
@@ -548,10 +593,17 @@ XSCFAC = (0.63**(1./3.))*SQRT((ZRHO00)**XCEXVT) ! One assumes Sc=0.63
 X0DEPI = (4.0*XPI)*XC1I*XF0I*MOMG(XALPHAI,XNUI,1.)
 X2DEPI = (4.0*XPI)*XC1I*XF2I*XC_I*MOMG(XALPHAI,XNUI,XDI+2.0)
 !
+#if defined(REPRO48) || defined(REPRO55)
 X0DEPS = (4.0*XPI)*XCCS*XC1S*XF0S*MOMG(XALPHAS,XNUS,1.)
 X1DEPS = (4.0*XPI)*XCCS*XC1S*XF1S*SQRT(XCS)*MOMG(XALPHAS,XNUS,0.5*XDS+1.5)
 XEX0DEPS = XCXS-1.0
 XEX1DEPS = XCXS-0.5*(XDS+3.0)
+#else
+X0DEPS = XNS*(4.0*XPI)*XC1S*XF0S*MOMG(XALPHAS,XNUS,1.)
+X1DEPS = XNS*(4.0*XPI)*XC1S*XF1S*SQRT(XCS)*MOMG(XALPHAS,XNUS,0.5*XDS+1.5)
+XEX0DEPS = -1.0
+XEX1DEPS = -0.5*(XDS+3.0)
+#endif
 XRDEPSRED = 1.0
 !
 X0DEPG = (4.0*XPI)*XCCG*XC1G*XF0G*MOMG(XALPHAG,XNUG,1.)
@@ -601,8 +653,13 @@ END IF
 !
 XCOLIS   = 0.25 ! Collection efficiency of I+S
 XCOLEXIS = 0.05 ! Temperature factor of the I+S collection efficiency
+#if defined(REPRO48) || defined(REPRO55)
 XFIAGGS  = (XPI/4.0)*XCOLIS*XCCS*XCS*(ZRHO00**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
 XEXIAGGS = XCXS-XDS-2.0
+#else
+XFIAGGS  = XNS*(XPI/4.0)*XCOLIS*XCS*(ZRHO00**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
+XEXIAGGS = -XDS - 2.0 ! GAMMGEN LH_EXTENDED
+#endif
 !
 GFLAG = .TRUE.
 IF (GFLAG) THEN
@@ -653,15 +710,28 @@ XEX1EVAR = -1.0-0.5*(XDR+3.0)
 !
 XDCSLIM  = 0.007 ! D_cs^lim = 7 mm as suggested by Farley et al. (1989)
 XCOLCS   = 1.0
+#if defined(REPRO48) || defined(REPRO55)
 XEXCRIMSS= XCXS-XDS-2.0
 XCRIMSS  = (XPI/4.0)*XCOLCS*XCCS*XCS*(ZRHO00**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
+#else
+XEXCRIMSS= -XDS-2.0
+XCRIMSS  = XNS * (XPI/4.0)*XCOLCS*XCS*(ZRHO00**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
+#endif
 XEXCRIMSG= XEXCRIMSS
 XCRIMSG  = XCRIMSS
+#if defined(REPRO48) || defined(REPRO55)
 XSRIMCG  = XCCS*XAS*MOMG(XALPHAS,XNUS,XBS)
 XEXSRIMCG= XCXS-XBS
 XSRIMCG2 = XCCS*XAG*MOMG(XALPHAS,XNUS,XBG)
 XSRIMCG3 = XFRACM90
 XEXSRIMCG2=XCXS-XBG
+#else
+XSRIMCG  = XNS*XAS*MOMG(XALPHAS,XNUS,XBS)
+XEXSRIMCG = -XBS
+XSRIMCG2 = XNS*XAG*MOMG(XALPHAS,XNUS,XBG)
+XSRIMCG3 = XFRACM90
+XEXSRIMCG2=XBS-XBG
+#endif
 !
 GFLAG = .TRUE.
 IF (GFLAG) THEN
@@ -691,13 +761,21 @@ RAIN_ICE_PARAM%XRIMINTP2 = 1.0 + RAIN_ICE_PARAM%XRIMINTP1*LOG( XDCSLIM/(RAIN_ICE
 !
 !*       7.2    Constants for the accretion of raindrops onto aggregates
 !
+#if defined(REPRO48) || defined(REPRO55)
 XFRACCSS = ((XPI**2)/24.0)*XCCS*XCCR*XRHOLW*(ZRHO00**XCEXVT)
+#else
+XFRACCSS = XNS*((XPI**2)/24.0)*XCCR*XRHOLW*(ZRHO00**XCEXVT)
+#endif
 !
 XLBRACCS1   =    MOMG(XALPHAS,XNUS,2.)*MOMG(XALPHAR,XNUR,3.)
 XLBRACCS2   = 2.*MOMG(XALPHAS,XNUS,1.)*MOMG(XALPHAR,XNUR,4.)
 XLBRACCS3   =                          MOMG(XALPHAR,XNUR,5.)
 !
+#if defined(REPRO48) || defined(REPRO55)
 XFSACCRG = (XPI/4.0)*XAS*XCCS*XCCR*(ZRHO00**XCEXVT)
+#else
+XFSACCRG = XNS*(XPI/4.0)*XAS*XCCR*(ZRHO00**XCEXVT)
+#endif
 !
 XLBSACCR1   =    MOMG(XALPHAR,XNUR,2.)*MOMG(XALPHAS,XNUS,XBS)
 XLBSACCR2   = 2.*MOMG(XALPHAR,XNUR,1.)*MOMG(XALPHAS,XNUS,XBS+1.)
@@ -731,30 +809,30 @@ IF( .NOT.ASSOCIATED(XKER_RACCSS) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RACCSS', R
 IF( .NOT.ASSOCIATED(XKER_RACCS ) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RACCS', RAIN_ICE_PARAM%NACCLBDAS,RAIN_ICE_PARAM%NACCLBDAR)
 IF( .NOT.ASSOCIATED(XKER_SACCRG) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_SACCRG', RAIN_ICE_PARAM%NACCLBDAR,RAIN_ICE_PARAM%NACCLBDAS)
 !
-CALL READ_XKER_RACCS (KACCLBDAS,KACCLBDAR,KND,                                &
-                      PALPHAS,PNUS,PALPHAR,PNUR,PESR,PBS,PBR,PCS,PDS,PCR,PDR, &
-                      PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN,&
-                      PFDINFTY                                                )
+CALL READ_XKER_RACCS (KACCLBDAS,KACCLBDAR,KND,                                        &
+                      PALPHAS,PNUS,PALPHAR,PNUR,PESR,PBS,PBR,PCS,PDS,PFVELOS,PCR,PDR, &
+                      PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN,        &
+                      PFDINFTY                                                        )
 IF( (KACCLBDAS/=RAIN_ICE_PARAM%NACCLBDAS) .OR. (KACCLBDAR/=RAIN_ICE_PARAM%NACCLBDAR) .OR. (KND/=IND) .OR. &
     (PALPHAS/=XALPHAS) .OR. (PNUS/=XNUS)                               .OR. &
     (PALPHAR/=XALPHAR) .OR. (PNUR/=XNUR)                               .OR. &
     (PESR/=ZESR) .OR. (PBS/=XBS) .OR. (PBR/=XBR)                       .OR. &
-    (PCS/=XCS) .OR. (PDS/=XDS) .OR. (PCR/=XCR) .OR. (PDR/=XDR)         .OR. &
+    (PCS/=XCS) .OR. (PDS/=XDS) .OR. (PFVELOS/=XFVELOS) .OR. (PCR/=XCR) .OR. (PDR/=XDR) .OR. &
     (PACCLBDAS_MAX/=RAIN_ICE_PARAM%XACCLBDAS_MAX) .OR. (PACCLBDAR_MAX/=RAIN_ICE_PARAM%XACCLBDAR_MAX) .OR. &
     (PACCLBDAS_MIN/=RAIN_ICE_PARAM%XACCLBDAS_MIN) .OR. (PACCLBDAR_MIN/=RAIN_ICE_PARAM%XACCLBDAR_MIN) .OR. &
     (PFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RRCOLSS ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-                 ZESR, XBR, XCS, XDS, XCR, XDR,                              &
+                 ZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR,                     & 
                  RAIN_ICE_PARAM%XACCLBDAS_MAX, RAIN_ICE_PARAM%XACCLBDAR_MAX, &
                  RAIN_ICE_PARAM%XACCLBDAS_MIN, RAIN_ICE_PARAM%XACCLBDAR_MIN, &
                  ZFDINFTY, XKER_RACCSS, XAG, XBS, XAS                        )
   CALL RZCOLX  ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-                 ZESR, XBR, XCS, XDS, XCR, XDR,                              &
+                 ZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR, 0.,                 & 
                  RAIN_ICE_PARAM%XACCLBDAS_MAX, RAIN_ICE_PARAM%XACCLBDAR_MAX, &
                  RAIN_ICE_PARAM%XACCLBDAS_MIN, RAIN_ICE_PARAM%XACCLBDAR_MIN, &
                  ZFDINFTY, XKER_RACCS                                        )
   CALL RSCOLRG ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-                 ZESR, XBS, XCS, XDS, XCR, XDR,                              &
+                 ZESR, XBS, XCS, XDS, XFVELOS, XCR, XDR,                     & 
                  RAIN_ICE_PARAM%XACCLBDAS_MAX, RAIN_ICE_PARAM%XACCLBDAR_MAX, &
                  RAIN_ICE_PARAM%XACCLBDAS_MIN, RAIN_ICE_PARAM%XACCLBDAR_MIN, &
                  ZFDINFTY, XKER_SACCRG,  XAG, XBS, XAS                       )
@@ -776,6 +854,7 @@ IF( (KACCLBDAS/=RAIN_ICE_PARAM%NACCLBDAS) .OR. (KACCLBDAR/=RAIN_ICE_PARAM%NACCLB
   WRITE(UNIT=KLUOUT,FMT='("PBR=",E13.6)') XBR
   WRITE(UNIT=KLUOUT,FMT='("PCS=",E13.6)') XCS
   WRITE(UNIT=KLUOUT,FMT='("PDS=",E13.6)') XDS
+  WRITE(UNIT=KLUOUT,FMT='("PFVELOS=",E13.6)') XFVELOS
   WRITE(UNIT=KLUOUT,FMT='("PCR=",E13.6)') XCR
   WRITE(UNIT=KLUOUT,FMT='("PDR=",E13.6)') XDR
   WRITE(UNIT=KLUOUT,FMT='("PACCLBDAS_MAX=",E13.6)') &
@@ -815,10 +894,10 @@ IF( (KACCLBDAS/=RAIN_ICE_PARAM%NACCLBDAS) .OR. (KACCLBDAR/=RAIN_ICE_PARAM%NACCLB
   END DO
   WRITE(UNIT=KLUOUT,FMT='("END IF")')
   ELSE
-  CALL READ_XKER_RACCS (KACCLBDAS,KACCLBDAR,KND,                               &
-                       PALPHAS,PNUS,PALPHAR,PNUR,PESR,PBS,PBR,PCS,PDS,PCR,PDR, &
-                       PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN,&
-                       PFDINFTY,XKER_RACCSS,XKER_RACCS,XKER_SACCRG             )
+  CALL READ_XKER_RACCS (KACCLBDAS,KACCLBDAR,KND,                                       &
+                       PALPHAS,PNUS,PALPHAR,PNUR,PESR,PBS,PBR,PCS,PDS,PFVELOS,PCR,PDR, &
+                       PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN,        &
+                       PFDINFTY,XKER_RACCSS,XKER_RACCS,XKER_SACCRG                     )
   WRITE(UNIT=KLUOUT,FMT='(" Read XKER_RACCSS")')
   WRITE(UNIT=KLUOUT,FMT='(" Read XKER_RACCS ")')
   WRITE(UNIT=KLUOUT,FMT='(" Read XKER_SACCRG")')
@@ -892,7 +971,11 @@ XCOLSG   = 0.01 ! Collection efficiency of S+G
 XCOLEXSG = 0.1  ! Temperature factor of the S+G collection efficiency
 WRITE (KLUOUT, FMT=*) ' NEW Constants for the aggregate collection by the graupeln'
 WRITE (KLUOUT, FMT=*) ' XCOLSG, XCOLEXSG  = ',XCOLSG,XCOLEXSG
+#if defined(REPRO48) || defined(REPRO55)
 XFSDRYG = (XPI/4.0)*XCOLSG*XCCG*XCCS*XAS*(ZRHO00**XCEXVT)
+#else
+XFSDRYG = XNS*(XPI/4.0)*XCOLSG*XCCG*XAS*(ZRHO00**XCEXVT)
+#endif
 !
 XLBSDRYG1   =    MOMG(XALPHAG,XNUG,2.)*MOMG(XALPHAS,XNUS,XBS)
 XLBSDRYG2   = 2.*MOMG(XALPHAG,XNUG,1.)*MOMG(XALPHAS,XNUS,XBS+1.)
@@ -943,7 +1026,7 @@ ZFDINFTY = 20.0  ! computing the kernels XKER_SDRYG
 IF( .NOT.ASSOCIATED(XKER_SDRYG) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_SDRYG', RAIN_ICE_PARAM%NDRYLBDAG,RAIN_ICE_PARAM%NDRYLBDAS)
 !
 CALL READ_XKER_SDRYG (KDRYLBDAG,KDRYLBDAS,KND,                              &
-                   PALPHAG,PNUG,PALPHAS,PNUS,PEGS,PBS,PCG,PDG,PCS,PDS,      &
+                   PALPHAG,PNUG,PALPHAS,PNUS,PEGS,PBS,PCG,PDG,PCS,PDS,PFVELOS, &
                    PDRYLBDAG_MAX,PDRYLBDAS_MAX,PDRYLBDAG_MIN,PDRYLBDAS_MIN, &
                    PFDINFTY                                                 )
 IF( (KDRYLBDAG/=RAIN_ICE_PARAM%NDRYLBDAG) .OR. (KDRYLBDAS/=RAIN_ICE_PARAM%NDRYLBDAS) .OR. (KND/=IND) .OR. &
@@ -955,7 +1038,7 @@ IF( (KDRYLBDAG/=RAIN_ICE_PARAM%NDRYLBDAG) .OR. (KDRYLBDAS/=RAIN_ICE_PARAM%NDRYLB
     (PDRYLBDAG_MIN/=RAIN_ICE_PARAM%XDRYLBDAG_MIN) .OR. (PDRYLBDAS_MIN/=RAIN_ICE_PARAM%XDRYLBDAS_MIN) .OR. &
     (PFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAG, XNUG, XALPHAS, XNUS,                          &
-                ZEGS, XBS, XCG, XDG, XCS, XDS,                              &
+                ZEGS, XBS, XCG, XDG, 0., XCS, XDS, XFVELOS,                 &
                 RAIN_ICE_PARAM%XDRYLBDAG_MAX, RAIN_ICE_PARAM%XDRYLBDAS_MAX, &
                 RAIN_ICE_PARAM%XDRYLBDAG_MIN, RAIN_ICE_PARAM%XDRYLBDAS_MIN, &
                 ZFDINFTY, XKER_SDRYG                                        )
@@ -976,6 +1059,7 @@ IF( (KDRYLBDAG/=RAIN_ICE_PARAM%NDRYLBDAG) .OR. (KDRYLBDAS/=RAIN_ICE_PARAM%NDRYLB
   WRITE(UNIT=KLUOUT,FMT='("PDG=",E13.6)') XDG
   WRITE(UNIT=KLUOUT,FMT='("PCS=",E13.6)') XCS
   WRITE(UNIT=KLUOUT,FMT='("PDS=",E13.6)') XDS
+  WRITE(UNIT=KLUOUT,FMT='("PFVELOS=",E13.6)') XFVELOS
   WRITE(UNIT=KLUOUT,FMT='("PDRYLBDAG_MAX=",E13.6)') &
                                                     RAIN_ICE_PARAM%XDRYLBDAG_MAX
   WRITE(UNIT=KLUOUT,FMT='("PDRYLBDAS_MAX=",E13.6)') &
@@ -996,7 +1080,7 @@ IF( (KDRYLBDAG/=RAIN_ICE_PARAM%NDRYLBDAG) .OR. (KDRYLBDAS/=RAIN_ICE_PARAM%NDRYLB
   WRITE(UNIT=KLUOUT,FMT='("END IF")')
   ELSE
   CALL READ_XKER_SDRYG (KDRYLBDAG,KDRYLBDAS,KND,                              &
-                     PALPHAG,PNUG,PALPHAS,PNUS,PEGS,PBS,PCG,PDG,PCS,PDS,      &
+                     PALPHAG,PNUG,PALPHAS,PNUS,PEGS,PBS,PCG,PDG,PCS,PDS,PFVELOS, &
                      PDRYLBDAG_MAX,PDRYLBDAS_MAX,PDRYLBDAG_MIN,PDRYLBDAS_MIN, &
                      PFDINFTY,XKER_SDRYG                                      )
   WRITE(UNIT=KLUOUT,FMT='(" Read XKER_SDRYG")')
@@ -1022,7 +1106,7 @@ IF( (KDRYLBDAG/=RAIN_ICE_PARAM%NDRYLBDAG) .OR. (KDRYLBDAR/=RAIN_ICE_PARAM%NDRYLB
     (PDRYLBDAG_MIN/=RAIN_ICE_PARAM%XDRYLBDAG_MIN) .OR. (PDRYLBDAR_MIN/=RAIN_ICE_PARAM%XDRYLBDAR_MIN) .OR. &
     (PFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAG, XNUG, XALPHAR, XNUR,                          &
-                ZEGR, XBR, XCG, XDG, XCR, XDR,                              &
+                ZEGR, XBR, XCG, XDG, 0., XCR, XDR, 0.,                      &
                 RAIN_ICE_PARAM%XDRYLBDAG_MAX, RAIN_ICE_PARAM%XDRYLBDAR_MAX, &
                 RAIN_ICE_PARAM%XDRYLBDAG_MIN, RAIN_ICE_PARAM%XDRYLBDAR_MIN, &
                 ZFDINFTY, XKER_RDRYG                                        )
@@ -1109,7 +1193,11 @@ XFWETH = (XPI/4.0)*XCCH*XCH*(ZRHO00**XCEXVT)*MOMG(XALPHAH,XNUH,XDH+2.0)
 !
 XCOLSH   = 0.01 ! Collection efficiency of S+H
 XCOLEXSH = 0.1  ! Temperature factor of the S+H collection efficiency
+#if defined(REPRO48) || defined(REPRO55)
 XFSWETH = (XPI/4.0)*XCCH*XCCS*XAS*(ZRHO00**XCEXVT)
+#else
+XFSWETH = XNS*(XPI/4.0)*XCCH*XAS*(ZRHO00**XCEXVT) ! Wurtz
+#endif
 !
 XLBSWETH1   =    MOMG(XALPHAH,XNUH,2.)*MOMG(XALPHAS,XNUS,XBS)
 XLBSWETH2   = 2.*MOMG(XALPHAH,XNUH,1.)*MOMG(XALPHAS,XNUS,XBS+1.)
@@ -1169,19 +1257,19 @@ ZFDINFTY = 20.0  ! computing the kernels XKER_SWETH
 IF( .NOT.ASSOCIATED(XKER_SWETH) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_SWETH', RAIN_ICE_PARAM%NWETLBDAH,RAIN_ICE_PARAM%NWETLBDAS)
 !
 CALL READ_XKER_SWETH (KWETLBDAH,KWETLBDAS,KND,                              &
-                   PALPHAH,PNUH,PALPHAS,PNUS,PEHS,PBS,PCH,PDH,PCS,PDS,      &
+                   PALPHAH,PNUH,PALPHAS,PNUS,PEHS,PBS,PCH,PDH,PCS,PDS,PFVELOS, &
                    PWETLBDAH_MAX,PWETLBDAS_MAX,PWETLBDAH_MIN,PWETLBDAS_MIN, &
                    PFDINFTY                                                 )
 IF( (KWETLBDAH/=RAIN_ICE_PARAM%NWETLBDAH) .OR. (KWETLBDAS/=RAIN_ICE_PARAM%NWETLBDAS) .OR. (KND/=IND) .OR. &
     (PALPHAH/=XALPHAH) .OR. (PNUH/=XNUH)                               .OR. &
     (PALPHAS/=XALPHAS) .OR. (PNUS/=XNUS)                               .OR. &
     (PEHS/=ZEHS) .OR. (PBS/=XBS)                                       .OR. &
-    (PCH/=XCH) .OR. (PDH/=XDH) .OR. (PCS/=XCS) .OR. (PDS/=XDS)         .OR. &
+    (PCH/=XCH) .OR. (PDH/=XDH) .OR. (PCS/=XCS) .OR. (PDS/=XDS) .OR. (PFVELOS/=XFVELOS) .OR. &
     (PWETLBDAH_MAX/=RAIN_ICE_PARAM%XWETLBDAH_MAX) .OR. (PWETLBDAS_MAX/=RAIN_ICE_PARAM%XWETLBDAS_MAX) .OR. &
     (PWETLBDAH_MIN/=RAIN_ICE_PARAM%XWETLBDAH_MIN) .OR. (PWETLBDAS_MIN/=RAIN_ICE_PARAM%XWETLBDAS_MIN) .OR. &
     (PFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAH, XNUH, XALPHAS, XNUS,                          &
-                ZEHS, XBS, XCH, XDH, XCS, XDS,                              &
+                ZEHS, XBS, XCH, XDH, 0., XCS, XDS, XFVELOS,                 &
                 RAIN_ICE_PARAM%XWETLBDAH_MAX, RAIN_ICE_PARAM%XWETLBDAS_MAX, &
                 RAIN_ICE_PARAM%XWETLBDAH_MIN, RAIN_ICE_PARAM%XWETLBDAS_MIN, &
                 ZFDINFTY, XKER_SWETH                                        )
@@ -1202,6 +1290,7 @@ IF( (KWETLBDAH/=RAIN_ICE_PARAM%NWETLBDAH) .OR. (KWETLBDAS/=RAIN_ICE_PARAM%NWETLB
   WRITE(UNIT=KLUOUT,FMT='("PDH=",E13.6)') XDH
   WRITE(UNIT=KLUOUT,FMT='("PCS=",E13.6)') XCS
   WRITE(UNIT=KLUOUT,FMT='("PDS=",E13.6)') XDS
+  WRITE(UNIT=KLUOUT,FMT='("PFVELOS=",E13.6)') XFVELOS
   WRITE(UNIT=KLUOUT,FMT='("PWETLBDAH_MAX=",E13.6)') &
                                                     RAIN_ICE_PARAM%XWETLBDAH_MAX
   WRITE(UNIT=KLUOUT,FMT='("PWETLBDAS_MAX=",E13.6)') &
@@ -1222,7 +1311,7 @@ IF( (KWETLBDAH/=RAIN_ICE_PARAM%NWETLBDAH) .OR. (KWETLBDAS/=RAIN_ICE_PARAM%NWETLB
   WRITE(UNIT=KLUOUT,FMT='("END IF")')
   ELSE
   CALL READ_XKER_SWETH (KWETLBDAH,KWETLBDAS,KND,                              &
-                     PALPHAH,PNUH,PALPHAS,PNUS,PEHS,PBS,PCH,PDH,PCS,PDS,      &
+                     PALPHAH,PNUH,PALPHAS,PNUS,PEHS,PBS,PCH,PDH,PCS,PDS,PFVELOS, &
                      PWETLBDAH_MAX,PWETLBDAS_MAX,PWETLBDAH_MIN,PWETLBDAS_MIN, &
                      PFDINFTY,XKER_SWETH                                      )
   WRITE(UNIT=KLUOUT,FMT='(" Read XKER_SWETH")')
@@ -1248,7 +1337,7 @@ IF( (KWETLBDAH/=RAIN_ICE_PARAM%NWETLBDAH) .OR. (KWETLBDAG/=RAIN_ICE_PARAM%NWETLB
     (PWETLBDAH_MIN/=RAIN_ICE_PARAM%XWETLBDAH_MIN) .OR. (PWETLBDAG_MIN/=RAIN_ICE_PARAM%XWETLBDAG_MIN) .OR. &
     (PFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAH, XNUH, XALPHAG, XNUG,                          &
-                ZEHG, XBG, XCH, XDH, XCG, XDG,                              &
+                ZEHG, XBG, XCH, XDH, 0., XCG, XDG, 0.,                      &
                 RAIN_ICE_PARAM%XWETLBDAH_MAX, RAIN_ICE_PARAM%XWETLBDAG_MAX, &
                 RAIN_ICE_PARAM%XWETLBDAH_MIN, RAIN_ICE_PARAM%XWETLBDAG_MIN, &
                 ZFDINFTY, XKER_GWETH                                        )
@@ -1315,7 +1404,7 @@ IF( (KWETLBDAH/=RAIN_ICE_PARAM%NWETLBDAH) .OR. (KWETLBDAR/=RAIN_ICE_PARAM%NWETLB
     (PWETLBDAH_MIN/=RAIN_ICE_PARAM%XWETLBDAH_MIN) .OR. (PWETLBDAR_MIN/=RAIN_ICE_PARAM%XWETLBDAR_MIN) .OR. &
     (PFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAH, XNUH, XALPHAR, XNUR,                          &
-                ZEHR, XBR, XCH, XDH, XCR, XDR,                              &
+                ZEHR, XBR, XCH, XDH, 0., XCR, XDR, 0.,                      &
                 RAIN_ICE_PARAM%XWETLBDAH_MAX, RAIN_ICE_PARAM%XWETLBDAR_MAX, &
                 RAIN_ICE_PARAM%XWETLBDAH_MIN, RAIN_ICE_PARAM%XWETLBDAR_MIN, &
                 ZFDINFTY, XKER_RWETH                                        )
