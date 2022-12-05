@@ -594,9 +594,7 @@ ELSE ! atmosp bottom
     ! atmos top
 #ifdef REPRO48
 #else
-      ZF(IIJB:IIJE,IKE)=0.
-      !TODO merge : the following solution must be kept :
-      !ZF((IIJB:IIJE,IKE+1)=0.
+      ZF(IIJB:IIJE,IKE+1)=0.
 #endif
 END IF
 !
@@ -989,7 +987,7 @@ IF (KRR /= 0) THEN
       ! atmos top
 #ifdef REPRO48
 #else
-      ZF(IIJB:IIJE,IKE)=0.
+      ZF(IIJB:IIJE,IKE+1)=0.
 #endif
     END IF
   ! Compute the split conservative potential temperature at t+deltat
