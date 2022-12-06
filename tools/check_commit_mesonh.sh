@@ -112,13 +112,12 @@ fi
 run_in_ref=$(ls -d $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_turb3D_* 2> /dev/null | tail -1 |wc -l)
 
 #Name and directory for compiling and executing user pack
-fromdir=''
-if echo $commit | grep '/' > /dev/null; then
+if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
   fromdir=$commit
-  tag=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
 else
-  tag=$commit
+  fromdir=''
 fi
+tag=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
 name=MNH-V5-5-0-$tag
 [ $suppress -eq 1 -a -d $MNHPACK/$name ] && rm -rf $MNHPACK/$name
 if [ $run_in_ref -eq 1 ]; then

@@ -72,7 +72,7 @@ mainPackVersion=${mainPackVersion:-${defaultMainPackVersion}}
 extraCompilationCheck=1
 
 function usage {
-  echo "Usage: $0 [-h] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t test] commit reference"
+  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t test] [--cycle CYCLE] [--repo-user] [--repo-protocol] commit [reference]"
   echo "commit          commit hash (or a directory, or among $specialPack) to test"
   echo "reference       commit hash (or a directory, or among $specialPack) REF to use as a reference"
   echo "-s              suppress compilation pack"
@@ -90,15 +90,13 @@ function usage {
   echo "--repo-protocol protocol (https or ssh) to reach the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREOprotocol (=$PHYEXREOprotocol)"
   echo ""
-  echo "If nothing is asked (compilation, running, check) everything is done"
-  echo
-  echo "With the special reference REF commit, a suitable reference is guessed"
-  echo
+  echo "If nothing is asked (pack creation, compilation, running, check) everything is done"
   echo "If no test is aked for, the default one ($defaultTest) is executed"
   echo
+  echo "With the special reference REF commit, a suitable reference is guessed"
   echo "The directory (for commit only, not ref) can take the form server:directory"
-  echo
   echo "If using a directory (for commit or reference) it must contain at least one '/'"
+  echo "The commit can be a tag, written with syntagx tags/<TAG>"
   echo
   echo "The cycle will be guessed from the source code"
   echo
@@ -202,7 +200,7 @@ function ial_version_content2cycle {
 
 #Name is choosen such as it can be produced with a main pack: PHYEX/${cycle}_XXXXXXXXX.01.${gmkpack_l}.${gmkpack_o}
 fromdir=''
-if echo $commit | grep '/' > /dev/null; then
+if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
   fromdir=$commit
   if [ "$cycle" == "" ]; then
     content_ial_version=$(scp $commit/src/arome/ial_version.json /dev/stdout 2>/dev/null || echo "")
@@ -224,7 +222,7 @@ elif echo $specialPack | grep -w $commit > /dev/null; then
     cycle=48t1
   fi
 else
-  packBranch="COMMIT$commit"
+  packBranch="COMMIT$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')"
   if [ "$cycle" == "" ]; then
     if [[ $commit == arome${separator}* ]]; then
       apl_arome_file="ext/apl_arome.F90"
@@ -233,9 +231,14 @@ else
       apl_arome_file="src/arome/ext/apl_arome.F90"
       ial_version_file="src/arome/ial_version.json"
     fi
-    content_ial_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${commit}/$ial_version_file -O - 2>/dev/null || echo "")
+    if echo $commit | grep '^tags/' > /dev/null; then
+      urlcommit=$(echo $commit | cut -d / -f 2-)
+    else
+      urlcommit=$commit
+    fi
+    content_ial_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$ial_version_file -O - 2>/dev/null || echo "")
     if [ "$content_ial_version" == "" ]; then
-      content_apl_arome=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${commit}/$apl_arome_file -O - 2>/dev/null)
+      content_apl_arome=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$apl_arome_file -O - 2>/dev/null)
       cycle=$(apl_arome_content2cycle)
     else
       cycle=$(ial_version_content2cycle)
