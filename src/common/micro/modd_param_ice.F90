@@ -51,6 +51,7 @@ REAL    :: XVDEPOSC    ! Droplet deposition velocity
 CHARACTER(LEN=4) :: CPRISTINE_ICE ! Pristine ice type PLAT, COLU or BURO
 CHARACTER(LEN=4) :: CSEDIM        ! Sedimentation calculation mode      
 !
+LOGICAL :: LRED       ! To use modified ICE3/ICE4 to reduce time step dependency
 LOGICAL :: LFEEDBACKT ! When .TRUE. feed back on temperature is taken into account
 LOGICAL :: LEVLIMIT   ! When .TRUE. water vapour pressure is limited by saturation
 LOGICAL :: LNULLWETG  ! When .TRUE. graupel wet growth is activated with null rate (to allow water shedding)
@@ -77,6 +78,7 @@ CHARACTER(LEN=1) :: CFRAC_ICE_SHALLOW_MF ! ice fraction for shallow_mf
 LOGICAL :: LSEDIM_AFTER ! sedimentation done before (.FALSE.) or after (.TRUE.) microphysics
 !
 REAL :: XSPLIT_MAXCFL ! Maximum CFL number allowed for SPLIT scheme
+LOGICAL :: LSNOW_T         ! Snow parameterization from Wurtz (2021)
 END TYPE PARAM_ICE_t
 !
 TYPE(PARAM_ICE_t), SAVE, TARGET :: PARAM_ICE
@@ -84,6 +86,7 @@ TYPE(PARAM_ICE_t), SAVE, TARGET :: PARAM_ICE
 LOGICAL, POINTER :: LWARM => NULL(), &
                     LSEDIC => NULL(), &
                     LDEPOSC => NULL(), &
+                    LRED => NULL(), &
                     LFEEDBACKT => NULL(), &
                     LEVLIMIT => NULL(), &
                     LNULLWETG => NULL(), &
@@ -94,7 +97,8 @@ LOGICAL, POINTER :: LWARM => NULL(), &
                     LCRFLIMIT => NULL(), &
                     LADJ_BEFORE => NULL(), &
                     LADJ_AFTER => NULL(), &
-                    LSEDIM_AFTER => NULL()
+                    LSEDIM_AFTER => NULL(),&
+                    LSNOW_T => NULL()
 
 REAL, POINTER :: XVDEPOSC => NULL(), &
                  XFRACM90 => NULL(), &
@@ -121,6 +125,7 @@ SUBROUTINE PARAM_ICE_ASSOCIATE()
   LWARM => PARAM_ICE%LWARM
   LSEDIC => PARAM_ICE%LSEDIC
   LDEPOSC => PARAM_ICE%LDEPOSC
+  LRED => PARAM_ICE%LRED
   LFEEDBACKT => PARAM_ICE%LFEEDBACKT
   LEVLIMIT => PARAM_ICE%LEVLIMIT
   LNULLWETG => PARAM_ICE%LNULLWETG
@@ -132,6 +137,7 @@ SUBROUTINE PARAM_ICE_ASSOCIATE()
   LADJ_BEFORE => PARAM_ICE%LADJ_BEFORE
   LADJ_AFTER => PARAM_ICE%LADJ_AFTER
   LSEDIM_AFTER => PARAM_ICE%LSEDIM_AFTER
+  LSNOW_T => PARAM_ICE%LSNOW_T
   !
   XVDEPOSC => PARAM_ICE%XVDEPOSC
   XFRACM90 => PARAM_ICE%XFRACM90

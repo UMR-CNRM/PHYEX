@@ -10,7 +10,7 @@
 INTERFACE
       SUBROUTINE LIMA_WARM_NUCL( OACTIT, PTSTEP, KMI, TPFILE,               &
                                  PRHODREF, PEXNREF, PPABST, PT, PTM, PW_NU, &
-                                 PRCM, PRVT, PRCT, PRRT,                    &
+                                 PRVT, PRCT, PRRT,                          &
                                  PTHS, PRVS, PRCS, PCCS, PNFS, PNAS         )
 !
 USE MODD_IO,   ONLY: TFILEDATA
@@ -32,8 +32,6 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTM        ! Temperature at time t-dt
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
                                                       ! the nucleation param.
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRCM       ! Cloud water m.r. at t-dt
-!   
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRVT       ! Water vapor m.r. at t 
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRCT       ! Cloud water m.r. at t 
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRRT       ! Rain water m.r. at t 
@@ -52,7 +50,7 @@ END MODULE MODI_LIMA_WARM_NUCL
 !     #######################################################################
       SUBROUTINE LIMA_WARM_NUCL( OACTIT, PTSTEP, KMI, TPFILE,               &
                                  PRHODREF, PEXNREF, PPABST, PT, PTM, PW_NU, &
-                                 PRCM, PRVT, PRCT, PRRT,                    &
+                                 PRVT, PRCT, PRRT,                          &
                                  PTHS, PRVS, PRCS, PCCS, PNFS, PNAS         )
 !     #######################################################################
 !
@@ -142,8 +140,6 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTM        ! Temperature at time t-dt
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
                                                       ! the nucleation param.
-!
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRCM       ! Cloud water m.r. at t-dt
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRVT       ! Water vapor m.r. at t 
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRCT       ! Cloud water m.r. at t 
@@ -662,7 +658,7 @@ DO JL = 1, NPTS
             fl(JL)=fnew(JL)
          else if (PX2 .lt. 0.05) then
             PX2 = PX2 + 1.0E-2
-            PRINT*, 'PX2 ALWAYS too small, we put a greater one : PX2 =',PX2
+!            PRINT*, 'PX2 ALWAYS too small, we put a greater one : PX2 =',PX2
             fh(JL)   = SINGL_FUNCSMAX(PX2,PZZW3(JL),PZZW6(JL),JL)
             go to 100
          end if
@@ -683,7 +679,7 @@ DO JL = 1, NPTS
       PZRIDDR(JL)=PX2
    else if (PX2 .lt. 0.05) then
       PX2 = PX2 + 1.0E-2
-      PRINT*, 'PX2 too small, we put a greater one : PX2 =',PX2
+!      PRINT*, 'PX2 too small, we put a greater one : PX2 =',PX2
       fh(JL)   = SINGL_FUNCSMAX(PX2,PZZW3(JL),PZZW6(JL),JL)
       go to 100
    else

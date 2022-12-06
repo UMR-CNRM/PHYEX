@@ -67,11 +67,13 @@ REAL :: XALPHAC,XNUC,XALPHAC2,XNUC2, XLBEXC      ! Cloud droplet  distribution p
 REAL,DIMENSION(2) :: XLBC ! Cloud droplet distribution parameters
 REAL :: XALPHAR,XNUR,XLBEXR,XLBR ! Raindrop       distribution parameters
 REAL :: XALPHAI,XNUI,XLBEXI,XLBI ! Cloud ice      distribution parameters
-REAL :: XALPHAS,XNUS,XLBEXS,XLBS ! Snow/agg.      distribution parameters
+REAL :: XALPHAS,XNUS,XLBEXS,XLBS,XNS ! Snow/agg.      distribution parameters
 REAL :: XALPHAG,XNUG,XLBEXG,XLBG ! Graupel        distribution parameters
 REAL :: XALPHAH,XNUH,XLBEXH,XLBH ! Hail           distribution parameters
 !
-REAL :: XLBDAR_MAX,XLBDAS_MAX,XLBDAG_MAX ! Max values allowed for the shape
+REAL :: XFVELOS            ! factor for snow fall speed after Thompson (2008)
+REAL :: XTRANS_MP_GAMMAS    ! coefficient to convert lambdas for gamma function
+REAL :: XLBDAR_MAX,XLBDAS_MIN,XLBDAS_MAX,XLBDAG_MAX ! Max values allowed for the shape
                                               ! parameters (rain,snow,graupeln)
 !
 REAL,DIMENSION(:),ALLOCATABLE :: XRTMIN ! Min values allowed for the mixing ratios
@@ -145,6 +147,7 @@ REAL, POINTER :: XCEXVT => NULL(), &
                  XLBI => NULL(), &
                  XALPHAS => NULL(), &
                  XNUS => NULL(), &
+                 XNS => NULL(), &
                  XLBEXS => NULL(), &
                  XLBS => NULL(), &
                  XALPHAG => NULL(), &
@@ -160,7 +163,10 @@ REAL, POINTER :: XCEXVT => NULL(), &
                  XLBDAG_MAX => NULL(), &
                  XCONC_SEA => NULL(), &
                  XCONC_LAND => NULL(), &
-                 XCONC_URBAN => NULL()
+                 XCONC_URBAN => NULL(), &
+                 XFVELOS => NULL(), &
+                 XTRANS_MP_GAMMAS => NULL(), &
+                 XLBDAS_MIN => NULL()
 !
 CONTAINS
 SUBROUTINE RAIN_ICE_DESCR_ASSOCIATE()
@@ -243,6 +249,10 @@ SUBROUTINE RAIN_ICE_DESCR_ASSOCIATE()
   XCONC_SEA => RAIN_ICE_DESCR%XCONC_SEA
   XCONC_LAND => RAIN_ICE_DESCR%XCONC_LAND
   XCONC_URBAN => RAIN_ICE_DESCR%XCONC_URBAN
+  XNS => RAIN_ICE_DESCR%XNS
+  XFVELOS => RAIN_ICE_DESCR%XFVELOS
+  XTRANS_MP_GAMMAS => RAIN_ICE_DESCR%XTRANS_MP_GAMMAS
+  XLBDAS_MIN => RAIN_ICE_DESCR%XLBDAS_MIN
 END SUBROUTINE
 !
 SUBROUTINE RAIN_ICE_DESCR_ALLOCATE(KRR)

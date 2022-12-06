@@ -11,17 +11,17 @@ INTERFACE
    SUBROUTINE LIMA_GRAUPEL (PTSTEP, LDCOMPUTE,                                     &
                             PRHODREF, PPRES, PT, PKA, PDV, PCJ,                    &
                             PRVT, PRCT, PRRT, PRIT, PRST, PRGT,                    &
-                            PCCT, PCRT, PCIT,                                      &
+                            PCCT, PCRT, PCIT, PCST, PCGT,                          &
                             PLBDC, PLBDR, PLBDS, PLBDG,                            &
                             PLVFACT, PLSFACT,                                      &
                             P_TH_WETG, P_RC_WETG, P_CC_WETG, P_RR_WETG, P_CR_WETG, &
-                            P_RI_WETG, P_CI_WETG, P_RS_WETG, P_RG_WETG, P_RH_WETG, &
+                            P_RI_WETG, P_CI_WETG, P_RS_WETG, P_CS_WETG, P_RG_WETG, P_CG_WETG, P_RH_WETG, &
                             P_TH_DRYG, P_RC_DRYG, P_CC_DRYG, P_RR_DRYG, P_CR_DRYG, &
-                            P_RI_DRYG, P_CI_DRYG, P_RS_DRYG, P_RG_DRYG,            &
+                            P_RI_DRYG, P_CI_DRYG, P_RS_DRYG, P_CS_DRYG, P_RG_DRYG, &
                             P_RI_HMG, P_CI_HMG, P_RG_HMG,                          &
-                            P_TH_GMLT, P_RR_GMLT, P_CR_GMLT,                       &
+                            P_TH_GMLT, P_RR_GMLT, P_CR_GMLT, P_CG_GMLT,            &
                             PA_TH, PA_RC, PA_CC, PA_RR, PA_CR,                     &
-                            PA_RI, PA_CI, PA_RS, PA_RG, PA_RH                      )
+                            PA_RI, PA_CI, PA_RS, PA_CS, PA_RG, PA_CG, PA_RH, PA_CH )
 !
 REAL,                 INTENT(IN)    :: PTSTEP 
 LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
@@ -43,6 +43,8 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PRGT    !
 REAL, DIMENSION(:),   INTENT(IN)    :: PCCT    !
 REAL, DIMENSION(:),   INTENT(IN)    :: PCRT    !
 REAL, DIMENSION(:),   INTENT(IN)    :: PCIT    !
+REAL, DIMENSION(:),   INTENT(IN)    :: PCST    !
+REAL, DIMENSION(:),   INTENT(IN)    :: PCGT    !
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PLBDC   ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR   ! 
@@ -60,7 +62,9 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_WETG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_WETG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_WETG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_WETG
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_CS_WETG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_WETG
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_CG_WETG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RH_WETG
 !
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_DRYG
@@ -71,6 +75,7 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_DRYG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_DRYG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_DRYG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_DRYG
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_CS_DRYG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_DRYG
 !
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_HMG
@@ -80,6 +85,7 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_HMG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_GMLT
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_GMLT
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_GMLT
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_CG_GMLT
 !
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_TH
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RC
@@ -89,8 +95,11 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CR
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RI
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CI
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RS
+REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CS
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RG
+REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CG
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RH
+REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CH
 !
 END SUBROUTINE LIMA_GRAUPEL
 END INTERFACE
@@ -100,17 +109,17 @@ END MODULE MODI_LIMA_GRAUPEL
       SUBROUTINE LIMA_GRAUPEL (PTSTEP, LDCOMPUTE,                                     &
                                PRHODREF, PPRES, PT, PKA, PDV, PCJ,                    &
                                PRVT, PRCT, PRRT, PRIT, PRST, PRGT,                    &
-                               PCCT, PCRT, PCIT,                                      &
+                               PCCT, PCRT, PCIT, PCST, PCGT,                          &
                                PLBDC, PLBDR, PLBDS, PLBDG,                            &
                                PLVFACT, PLSFACT,                                      &
                                P_TH_WETG, P_RC_WETG, P_CC_WETG, P_RR_WETG, P_CR_WETG, &
-                               P_RI_WETG, P_CI_WETG, P_RS_WETG, P_RG_WETG, P_RH_WETG, &
+                               P_RI_WETG, P_CI_WETG, P_RS_WETG, P_CS_WETG, P_RG_WETG, P_CG_WETG, P_RH_WETG, &
                                P_TH_DRYG, P_RC_DRYG, P_CC_DRYG, P_RR_DRYG, P_CR_DRYG, &
-                               P_RI_DRYG, P_CI_DRYG, P_RS_DRYG, P_RG_DRYG,            &
+                               P_RI_DRYG, P_CI_DRYG, P_RS_DRYG, P_CS_DRYG, P_RG_DRYG, &
                                P_RI_HMG, P_CI_HMG, P_RG_HMG,                          &
-                               P_TH_GMLT, P_RR_GMLT, P_CR_GMLT,                       &
+                               P_TH_GMLT, P_RR_GMLT, P_CR_GMLT, P_CG_GMLT,            &
                                PA_TH, PA_RC, PA_CC, PA_RR, PA_CR,                     &
-                               PA_RI, PA_CI, PA_RS, PA_RG, PA_RH                      )
+                               PA_RI, PA_CI, PA_RS, PA_CS, PA_RG, PA_CG, PA_RH, PA_CH )
 !     #################################################################################
 !
 !!    PURPOSE
@@ -129,6 +138,7 @@ END MODULE MODI_LIMA_GRAUPEL
 !!    -------------
 !!      Original             15/03/2018
 !  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
+!  J. Wurtz       03/2022: new snow characteristics
 !
 !-------------------------------------------------------------------------------
 !
@@ -140,7 +150,9 @@ USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCEXVT, LHAIL
 USE MODD_PARAM_LIMA_MIXED, ONLY : XCXG, XDG, X0DEPG, X1DEPG, NGAMINC,                             &
                                   XFCDRYG, XFIDRYG, XCOLIG, XCOLSG, XCOLEXIG, XCOLEXSG,           &
                                   XFSDRYG, XLBSDRYG1, XLBSDRYG2, XLBSDRYG3, XKER_SDRYG,           &
+                                  XFNSDRYG, XLBNSDRYG1, XLBNSDRYG2, XLBNSDRYG3, XKER_N_SDRYG,     &
                                   XFRDRYG, XLBRDRYG1, XLBRDRYG2, XLBRDRYG3, XKER_RDRYG,           &
+                                  XFNRDRYG, XLBNRDRYG1, XLBNRDRYG2, XLBNRDRYG3, XKER_N_RDRYG,     &
                                   XHMTMIN, XHMTMAX, XHMLINTP1, XHMLINTP2, XHM_FACTG, XGAMINC_HMC, &
                                   XEX0DEPG, XEX1DEPG,                                             &
                                   XDRYINTP1R, XDRYINTP1S, XDRYINTP1G,                             &
@@ -172,6 +184,8 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PRGT    !
 REAL, DIMENSION(:),   INTENT(IN)    :: PCCT    !
 REAL, DIMENSION(:),   INTENT(IN)    :: PCRT    !
 REAL, DIMENSION(:),   INTENT(IN)    :: PCIT    !
+REAL, DIMENSION(:),   INTENT(IN)    :: PCST    !
+REAL, DIMENSION(:),   INTENT(IN)    :: PCGT    !
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PLBDC   ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR   ! 
@@ -189,7 +203,9 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_WETG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_WETG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_WETG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_WETG
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_CS_WETG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_WETG
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_CG_WETG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RH_WETG
 !
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_DRYG
@@ -200,6 +216,7 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_DRYG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_DRYG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_DRYG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_DRYG
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_CS_DRYG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_DRYG
 !
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_HMG
@@ -209,6 +226,7 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_HMG
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_GMLT
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_GMLT
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_GMLT
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_CG_GMLT
 !
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_TH
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RC
@@ -218,8 +236,11 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CR
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RI
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CI
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RS
+REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CS
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RG
+REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CG
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RH
+REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CH
 !
 !*       0.2   Declarations of local variables :
 !
@@ -229,6 +250,7 @@ INTEGER                         :: JJ
 !
 REAL,    DIMENSION(SIZE(PRCT))  :: Z1, Z2, Z3, Z4
 REAL,    DIMENSION(SIZE(PRCT))  :: ZZX, ZZW, ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6, ZZW7
+REAL,    DIMENSION(SIZE(PRCT))  :: ZZW3N, ZZW4N, ZZW6N 
 REAL,    DIMENSION(SIZE(PRCT))  :: ZRDRYG, ZRWETG
 !
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC1,IVEC2        ! Vectors of indices
@@ -239,6 +261,7 @@ INTEGER                         :: NHAIL
 !-------------------------------------------------------------------------------
 !
 !
+P_TH_WETG(:) = 0.
 P_RC_WETG(:) = 0.
 P_CC_WETG(:) = 0.
 P_RR_WETG(:) = 0.
@@ -246,9 +269,12 @@ P_CR_WETG(:) = 0.
 P_RI_WETG(:) = 0.
 P_CI_WETG(:) = 0.
 P_RS_WETG(:) = 0.
+P_CS_WETG(:) = 0.
 P_RG_WETG(:) = 0.
+P_CG_WETG(:) = 0.
 P_RH_WETG(:) = 0.
 !
+P_TH_DRYG(:) = 0.
 P_RC_DRYG(:) = 0.
 P_CC_DRYG(:) = 0.
 P_RR_DRYG(:) = 0.
@@ -256,19 +282,24 @@ P_CR_DRYG(:) = 0.
 P_RI_DRYG(:) = 0.
 P_CI_DRYG(:) = 0.
 P_RS_DRYG(:) = 0.
+P_CS_DRYG(:) = 0.
 P_RG_DRYG(:) = 0.
 !
 P_RI_HMG(:) = 0.
 P_CI_HMG(:) = 0.
 P_RG_HMG(:) = 0.
 !
+P_TH_GMLT(:) = 0.
 P_RR_GMLT(:) = 0.
 P_CR_GMLT(:) = 0.
+P_CG_GMLT(:) = 0.
 !
 ZZW1(:) = 0. ! RCDRYG
 ZZW2(:) = 0. ! RIDRYG
 ZZW3(:) = 0. ! RSDRYG
+ZZW3N(:) = 0.! NSDRYG
 ZZW4(:) = 0. ! RRDRYG
+ZZW4N(:) = 0.! NRDRYG
 ZZW5(:) = 0. ! RIWETG
 ZZW6(:) = 0. ! RSWETG
 ZZW7(:) = 0. ! 
@@ -284,15 +315,15 @@ ZRWETG(:) = 0.
 !            --------------------------------------------
 !
 WHERE( PRGT(:)>XRTMIN(6) .AND. LDCOMPUTE(:) )
-   ZZW(:) = PLBDG(:)**(XCXG-XDG-2.0) * PRHODREF(:)**(-XCEXVT)
-   ZZW1(:) = XFCDRYG * PRCT(:) * ZZW(:)                                   ! RCDRYG - rc collected by graupel in dry mode 
+   ZZW(:) = PCGT(:) * PLBDG(:)**(-XDG-2.0) * PRHODREF(:)**(1-XCEXVT)
+   ZZW1(:) = XFCDRYG * PRCT(:) * ZZW(:)                               ! RCDRYG - rc collected by graupel in dry mode 
    ZZW2(:) = XFIDRYG * EXP( XCOLEXIG*(PT(:)-XTT) ) * PRIT(:) * ZZW(:) ! RIDRYG - ri collected by graupel in dry mode
 END WHERE
 !
 !*           1.b Collection of rs in the dry mode
 !            ------------------------------------
 !
-GDRY(:) = (PRST(:)>XRTMIN(5)) .AND. (PRGT(:)>XRTMIN(6)) .AND. LDCOMPUTE(:)
+GDRY(:) = PRST(:)>XRTMIN(5) .AND. PRGT(:)>XRTMIN(6) .AND. LDCOMPUTE(:)
 !
 WHERE( GDRY )
 !
@@ -329,19 +360,36 @@ WHERE( GDRY )
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
        			                                    * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
+   ZZW3(:) = XFSDRYG * ZZW(:) * EXP( XCOLEXSG*(PT(:)-XTT) )       & ! RSDRYG - rs collected by graupel in dry mode
+                    *  PRST(:) * PCGT(:)                          &
+                    *  PRHODREF(:)**(1-XCEXVT)                    &
+                    *( XLBSDRYG1/( PLBDG(:)**2                ) + &
+                       XLBSDRYG2/( PLBDG(:)    * PLBDS(:)     ) + &
+                       XLBSDRYG3/(               PLBDS(:)**2) )
 !
-   ZZW3(:) = XFSDRYG * ZZW(:) * EXP( XCOLEXSG*(PT(:)-XTT) )  & ! RSDRYG - rs collected by graupel in dry mode
-                    *( PLBDS(:)**(XCXS-XBS) )*( PLBDG(:)**XCXG )    &
-                    *( PRHODREF(:)**(-XCEXVT-1.) )                      &
-                    *( XLBSDRYG1/( PLBDG(:)**2                 ) + &
-                       XLBSDRYG2/( PLBDG(:)   * PLBDS(:)   ) + &
-                       XLBSDRYG3/(                  PLBDS(:)**2) )
+   Z1(:) = GET_XKER_N_SDRYG(IVEC1(:)+1,IVEC2(:)+1)
+   Z2(:) = GET_XKER_N_SDRYG(IVEC1(:)+1,IVEC2(:)  )
+   Z3(:) = GET_XKER_N_SDRYG(IVEC1(:)  ,IVEC2(:)+1)
+   Z4(:) = GET_XKER_N_SDRYG(IVEC1(:)  ,IVEC2(:)  )
+   ZVEC3(:) =  (      Z1(:)* ZVEC2(:)          &
+                    - Z2(:)*(ZVEC2(:) - 1.0) ) &
+      			 	                            *  ZVEC1(:)    &
+                 - (  Z3(:)* ZVEC2(:)          &
+                    - Z4(:)*(ZVEC2(:) - 1.0) ) &
+       			                                    * (ZVEC1(:) - 1.0)
+   ZZW(:) = ZVEC3(:)
+   ZZW3N(:) = XFNSDRYG * ZZW(:) * EXP( XCOLEXSG*(PT(:)-XTT) )        & ! NSDRYG - Ns collected by graupel in dry mode
+                      *  PCST(:) * PCGT(:)                           &
+                      *  PRHODREF(:)**(1-XCEXVT)                     &
+                      *( XLBNSDRYG1/( PLBDG(:)**2                ) + &
+                         XLBNSDRYG2/( PLBDG(:)    * PLBDS(:)     ) + &
+                         XLBNSDRYG3/(               PLBDS(:)**2) )
 END WHERE
 !
 !*           1.c  Collection of rr in the dry mode
 !            -------------------------------------
 !
-GDRY(:) = (PRRT(:)>XRTMIN(3)) .AND. (PRGT(:)>XRTMIN(6)) .AND. LDCOMPUTE(:)
+GDRY(:) = PRRT(:)>XRTMIN(3) .AND. PRGT(:)>XRTMIN(6) .AND. LDCOMPUTE(:)
 !
 WHERE( GDRY )
 !
@@ -378,14 +426,31 @@ WHERE( GDRY )
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
                                  			     * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
+   ZZW4(:) = XFRDRYG * ZZW(:)                                     & ! RRDRYG
+                     * PRRT(:) * PCGT(:)                          &
+                     * PRHODREF(:)**(1-XCEXVT)                    &
+                     *( XLBRDRYG1/( PLBDG(:)**2               ) + &
+                        XLBRDRYG2/( PLBDG(:)   * PLBDR(:)     ) + &
+                        XLBRDRYG3/(              PLBDR(:)**2) )
 !
-! BVIE manque PCRT ???????????????????????????????????
-!      ZZW4(:) = XFRDRYG * ZZW(:)                                 & ! RRDRYG
-   ZZW4(:) = XFRDRYG * ZZW(:) * PCRT(:)                   & ! RRDRYG
-                    *( PLBDG(:)**XCXG ) * ( PRHODREF(:)**(-XCEXVT-1.) ) &
-                    *( XLBRDRYG1/( PLBDG(:)**2                   ) + &
-                       XLBRDRYG2/( PLBDG(:)   * PLBDR(:)     ) + &
-                       XLBRDRYG3/(                  PLBDR(:)**2) ) / PLBDR(:)**3
+   Z1(:) = GET_XKER_N_RDRYG(IVEC1(:)+1,IVEC2(:)+1)
+   Z2(:) = GET_XKER_N_RDRYG(IVEC1(:)+1,IVEC2(:)  )
+   Z3(:) = GET_XKER_N_RDRYG(IVEC1(:)  ,IVEC2(:)+1)
+   Z4(:) = GET_XKER_N_RDRYG(IVEC1(:)  ,IVEC2(:)  )
+      ZVEC3(:) =  (   Z1(:)* ZVEC2(:)          &
+                    - Z2(:)*(ZVEC2(:) - 1.0) ) &
+                     			 	             *  ZVEC1(:)   &
+                 - (  Z3(:)* ZVEC2(:)          &
+                    - Z4(:)*(ZVEC2(:) - 1.0) ) &
+                                 			     * (ZVEC1(:) - 1.0)
+   ZZW(:) = ZVEC3(:)
+   ZZW4N(:) = XFNRDRYG * ZZW(:)                                      & ! NRDRYG
+                       * PCRT(:) * PCGT(:)                           &
+                       * PRHODREF(:)**(1-XCEXVT)                     &
+                       *( XLBNRDRYG1/( PLBDG(:)**2               ) + &
+                          XLBNRDRYG2/( PLBDG(:)   * PLBDR(:)     ) + &
+                          XLBNRDRYG3/(              PLBDR(:)**2) )
+   
 END WHERE
 !
 !            1.d Total collection in the dry mode
@@ -400,6 +465,7 @@ ZZW(:) = 0.0
 WHERE( PRGT(:)>XRTMIN(6) .AND. LDCOMPUTE(:) )
    ZZW5(:) = ZZW2(:) / (XCOLIG*EXP(XCOLEXIG*(PT(:)-XTT)) ) ! RIWETG
    ZZW6(:) = ZZW3(:) / (XCOLSG*EXP(XCOLEXSG*(PT(:)-XTT)) ) ! RSWETG
+   ZZW6N(:)= ZZW3N(:)/ (XCOLSG*EXP(XCOLEXSG*(PT(:)-XTT)) ) ! NSWETG
 !
    ZZW(:) = PRVT(:)*PPRES(:)/((XMV/XMD)+PRVT(:)) ! Vapor pressure
    ZZW(:) = PKA(:)*(XTT-PT(:)) +                                  &
@@ -407,12 +473,13 @@ WHERE( PRGT(:)>XRTMIN(6) .AND. LDCOMPUTE(:) )
                           *(XESTT-ZZW(:))/(XRV*PT(:))             )
 !
 ! Total mass gained by graupel in wet mode
-   ZRWETG(:)  = MAX( 0.0,                                                  &
-                   ( ZZW(:) * ( X0DEPG*           PLBDG(:)**XEX0DEPG +     &
-                                    X1DEPG*PCJ(:)*PLBDG(:)**XEX1DEPG ) +   &
-                   ( ZZW5(:)+ZZW6(:) ) *                            &
-                   ( PRHODREF(:)*(XLMTT+(XCI-XCL)*(XTT-PT(:)))   ) ) / &
-                                   ( PRHODREF(:)*(XLMTT-XCL*(XTT-PT(:))) )   )
+   ZRWETG(:)  = MAX( 0.0,                                                        &
+                   ( ZZW(:) * PCGT(:) * ( X0DEPG*       PLBDG(:)**XEX0DEPG +     &
+                                          X1DEPG*PCJ(:)*PLBDG(:)**XEX1DEPG ) +   &
+                   ( ZZW5(:)+ZZW6(:) ) * ( XLMTT + (XCI-XCL)*(XTT-PT(:)) )   )   &
+                   / (XLMTT-XCL*(XTT-PT(:)))                                     )
+  !We must agregate, at least, the cold species
+   ZRWETG(:)=MAX(ZRWETG(:), ZZW5(:)+ZZW6(:))
 END WHERE
 !
 !            1.f Wet mode and partial conversion to hail
@@ -421,8 +488,8 @@ END WHERE
 ZZW(:) = 0.0
 NHAIL = 0.
 IF (LHAIL) NHAIL = 1. 
-WHERE( LDCOMPUTE(:)      .AND. PRGT(:)>XRTMIN(6)        .AND. PT(:)<XTT       &
-                             .AND. ZRDRYG(:)>=ZRWETG(:) .AND. ZRWETG(:)>0.0 ) 
+WHERE( LDCOMPUTE(:) .AND. PRGT(:)>XRTMIN(6) .AND. PT(:)<XTT .AND. &
+       (ZRDRYG(:)-ZZW2(:)-ZZW3(:))>=(ZRWETG(:)-ZZW5(:)-ZZW6(:)) .AND. ZRWETG(:)-ZZW5(:)-ZZW6(:)>0.0 ) 
 !
 ! Mass of rain and cloud droplets frozen by graupel in wet mode : RCWETG + RRWETG = RWETG - RIWETG - RSWETG
    ZZW7(:) = ZRWETG(:) - ZZW5(:) - ZZW6(:)
@@ -439,7 +506,9 @@ WHERE( LDCOMPUTE(:)      .AND. PRGT(:)>XRTMIN(6)        .AND. PT(:)<XTT       &
    P_RI_WETG(:) = - ZZW5(:)
    P_CI_WETG(:) = P_RI_WETG(:) * PCIT(:)/MAX(PRIT(:),XRTMIN(4))
    P_RS_WETG(:) = - ZZW6(:)
+   P_CS_WETG(:) = - ZZW6N(:)
    P_RG_WETG(:) = - PRGT(:)/PTSTEP * ZZW(:) + ZRWETG(:) * (1.-ZZW(:))
+   P_CG_WETG(:) = - PCGT(:)/PTSTEP * ZZW(:)
    P_RH_WETG(:) =   PRGT(:)/PTSTEP * ZZW(:) + ZRWETG(:) *     ZZW(:)
    !
    P_TH_WETG(:) = ZZW7(:) * (PLSFACT(:)-PLVFACT(:))
@@ -448,16 +517,17 @@ END WHERE
 !            1.g Dry mode
 !            ------------
 !
-WHERE( LDCOMPUTE(:)      .AND. PRGT(:)>XRTMIN(6)       .AND. PT(:)<XTT       &
-                             .AND. ZRDRYG(:)<ZRWETG(:) .AND. ZRDRYG(:)>0.0 )
+WHERE( LDCOMPUTE(:) .AND. PRGT(:)>XRTMIN(6) .AND. PT(:)<XTT .AND.                  &
+       (ZRDRYG(:)-ZZW2(:)-ZZW3(:))<(ZRWETG(:)-ZZW5(:)-ZZW6(:)) .AND. ZRDRYG(:)>0.0 )
    !
    P_RC_DRYG(:) = - ZZW1(:)
    P_CC_DRYG(:) = P_RC_DRYG(:) * PCCT(:)/MAX(PRCT(:),XRTMIN(2))
    P_RR_DRYG(:) = - ZZW4(:)
-   P_CR_DRYG(:) = P_RR_DRYG(:) * PCRT(:)/MAX(PRRT(:),XRTMIN(3))
+   P_CR_DRYG(:) = - ZZW4N(:)
    P_RI_DRYG(:) = - ZZW2(:)
    P_CI_DRYG(:) = P_RI_DRYG(:) * PCIT(:)/MAX(PRIT(:),XRTMIN(4))
    P_RS_DRYG(:) = - ZZW3(:)
+   P_CS_DRYG(:) = - ZZW3N(:)
    P_RG_DRYG(:) =   ZRDRYG(:)
    !
    P_TH_DRYG(:) = (ZZW1(:) + ZZW4(:)) * (PLSFACT(:)-PLVFACT(:))
@@ -469,8 +539,8 @@ END WHERE
 !
 ! BVIE test ZRDRYG<ZZW ?????????????????????????
 !GDRY(:) = (PT(:)<XHMTMAX) .AND. (PT(:)>XHMTMIN)    .AND. (ZRDRYG(:)<ZZW(:))&
-GDRY(:) = (PT(:)<XHMTMAX) .AND. (PT(:)>XHMTMIN)     .AND. (ZRDRYG(:)<ZRWETG(:))&
-               .AND. (PRGT(:)>XRTMIN(6)) .AND. (PRCT(:)>XRTMIN(2)) .AND. LDCOMPUTE(:)
+GDRY(:) = PT(:)<XHMTMAX .AND. PT(:)>XHMTMIN .AND. PRGT(:)>XRTMIN(6) .AND. PRCT(:)>XRTMIN(2) .AND. LDCOMPUTE(:) .AND. &
+          (ZRDRYG(:)-ZZW2(:)-ZZW3(:))<(ZRWETG(:)-ZZW5(:)-ZZW6(:))
 
 ZZX(:)=9999.
 ZVEC1(:)=0.
@@ -509,14 +579,14 @@ WHERE( (PRGT(:)>XRTMIN(6)) .AND. (PT(:)>XTT) .AND. LDCOMPUTE(:) )
 !
 ! compute RGMLTR
 !
-   ZZX(:)  = MAX( 0.0,( -ZZX(:) *                     &
-                          ( X0DEPG*           PLBDG(:)**XEX0DEPG +     &
+   ZZX(:)  = MAX( 0.0,( -ZZX(:) * PCGT(:) *                        &
+                          ( X0DEPG*       PLBDG(:)**XEX0DEPG +     &
                             X1DEPG*PCJ(:)*PLBDG(:)**XEX1DEPG ) -   &
-                                      ( ZZW1(:)+ZZW4(:) ) *        &
-                               ( PRHODREF(:)*XCL*(XTT-PT(:))) ) /  &
-                                            ( PRHODREF(:)*XLMTT ) )
+                        ( ZZW1(:)+ZZW4(:) ) * ( XCL*(XTT-PT(:))) ) &
+                        / XLMTT                                    )
    P_RR_GMLT(:) = ZZX(:)
    P_CR_GMLT(:) = ZZX(:) * 5.0E6  ! obtained after averaging, Dshed=1mm and 500 microns 
+   P_CG_GMLT(:) = - ZZX(:) * PCGT(:)/PRGT(:)
    !
    P_TH_GMLT(:) = - P_RR_GMLT(:) * (PLSFACT(:)-PLVFACT(:))
 END WHERE
@@ -531,8 +601,11 @@ PA_CR(:) = PA_CR(:) + P_CR_WETG(:) + P_CR_DRYG(:)               + P_CR_GMLT(:)
 PA_RI(:) = PA_RI(:) + P_RI_WETG(:) + P_RI_DRYG(:) + P_RI_HMG(:) 
 PA_CI(:) = PA_CI(:) + P_CI_WETG(:) + P_CI_DRYG(:) + P_CI_HMG(:) 
 PA_RS(:) = PA_RS(:) + P_RS_WETG(:) + P_RS_DRYG(:) 
+PA_CS(:) = PA_CS(:) + P_CS_WETG(:) + P_CS_DRYG(:) 
 PA_RG(:) = PA_RG(:) + P_RG_WETG(:) + P_RG_DRYG(:) + P_RG_HMG(:) - P_RR_GMLT(:)
+PA_CG(:) = PA_CG(:) + P_CG_WETG(:)                              + P_CG_GMLT(:)
 PA_RH(:) = PA_RH(:) + P_RH_WETG(:) 
+PA_CH(:) = PA_CH(:) - P_CG_WETG(:) 
 PA_TH(:) = PA_TH(:) + P_TH_WETG(:) + P_TH_DRYG(:)               + P_TH_GMLT(:) 
 !
 !-------------------------------------------------------------------------------
@@ -552,6 +625,20 @@ CONTAINS
 !
 !-------------------------------------------------------------------------------
 !
+  FUNCTION GET_XKER_N_SDRYG(GRAUPEL,SNOW) RESULT(RET)
+    INTEGER, DIMENSION(:) :: GRAUPEL
+    INTEGER, DIMENSION(:) :: SNOW
+    REAL, DIMENSION(SIZE(SNOW)) :: RET
+    !
+    INTEGER I
+    !
+    DO I=1,SIZE(GRAUPEL)
+       RET(I) = XKER_N_SDRYG(MAX(MIN(GRAUPEL(I),SIZE(XKER_N_SDRYG,1)),1),MAX(MIN(SNOW(I),SIZE(XKER_N_SDRYG,2)),1))
+    END DO
+  END FUNCTION GET_XKER_N_SDRYG
+!
+!-------------------------------------------------------------------------------
+!
   FUNCTION GET_XKER_RDRYG(GRAUPEL,RAIN) RESULT(RET)
     INTEGER, DIMENSION(:) :: GRAUPEL
     INTEGER, DIMENSION(:) :: RAIN
@@ -563,6 +650,20 @@ CONTAINS
        RET(I) = XKER_RDRYG(MAX(MIN(GRAUPEL(I),SIZE(XKER_RDRYG,1)),1),MAX(MIN(RAIN(I),SIZE(XKER_RDRYG,2)),1))
     END DO
   END FUNCTION GET_XKER_RDRYG
+!
+!-------------------------------------------------------------------------------
+!
+  FUNCTION GET_XKER_N_RDRYG(GRAUPEL,RAIN) RESULT(RET)
+    INTEGER, DIMENSION(:) :: GRAUPEL
+    INTEGER, DIMENSION(:) :: RAIN
+    REAL, DIMENSION(SIZE(RAIN)) :: RET
+    !
+    INTEGER I
+    !
+    DO I=1,SIZE(GRAUPEL)
+       RET(I) = XKER_N_RDRYG(MAX(MIN(GRAUPEL(I),SIZE(XKER_N_RDRYG,1)),1),MAX(MIN(RAIN(I),SIZE(XKER_N_RDRYG,2)),1))
+    END DO
+  END FUNCTION GET_XKER_N_RDRYG
 !
 !-------------------------------------------------------------------------------
 !

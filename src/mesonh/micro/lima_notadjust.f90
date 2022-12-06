@@ -10,8 +10,8 @@
 INTERFACE
 !
       SUBROUTINE LIMA_NOTADJUST(KMI, TPFILE, HRAD,                                       &
-                                PTSTEP, PRHODJ, PPABSM,  PPABST, PRHODREF, PEXNREF, PZZ, &
-                                PTHT,PRT, PSVT, PTHS, PRS,PSVS, PCLDFR, PSRCS            )
+                                PTSTEP, PRHODJ, PPABSTT,  PPABST, PRHODREF, PEXNREF, PZZ, &
+                                PTHT,PRT, PSVT, PTHS, PRS,PSVS, PCLDFR, PICEFR, PRAINFR, PSRCS )
 !
 USE MODD_IO, ONLY: TFILEDATA
 !
@@ -22,7 +22,7 @@ REAL,                     INTENT(IN)    :: PTSTEP   ! Double Time step
                                                     ! (single if cold start)
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PRHODJ  ! Dry density * Jacobian
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PPABSM  ! Absolute Pressure at t-dt
+REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PPABSTT  ! Absolute Pressure at t+dt
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PPABST  ! Absolute Pressure at t     
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF ! Reference density
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF ! Reference density
@@ -38,6 +38,8 @@ REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PSRCS   ! Second-order flux
                                                    ! s'rc'/2Sigma_s2 at time t+1
                                                    ! multiplied by Lambda_3
 REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PCLDFR  ! Cloud fraction
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR    ! Cloud fraction          
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRAINFR   ! Cloud fraction          
 !
 !
 END SUBROUTINE LIMA_NOTADJUST
@@ -48,8 +50,8 @@ END MODULE MODI_LIMA_NOTADJUST
 !
 !     ####################################################################################
       SUBROUTINE LIMA_NOTADJUST(KMI, TPFILE, HRAD,                                       &
-                                PTSTEP, PRHODJ, PPABSM,  PPABST, PRHODREF, PEXNREF, PZZ, &
-                                PTHT,PRT, PSVT, PTHS, PRS,PSVS, PCLDFR, PSRCS            )
+                                PTSTEP, PRHODJ, PPABSTT,  PPABST, PRHODREF, PEXNREF, PZZ, &
+                                PTHT,PRT, PSVT, PTHS, PRS,PSVS, PCLDFR, PICEFR, PRAINFR, PSRCS )
 !     ####################################################################################
 !
 !!****  * -  compute pseudo-prognostic of supersaturation according to Thouron
@@ -110,7 +112,7 @@ REAL,                     INTENT(IN)    :: PTSTEP   ! Double Time step
                                                     ! (single if cold start)
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PRHODJ  ! Dry density * Jacobian
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PPABSM  ! Absolute Pressure at t-dt
+REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PPABSTT  ! Absolute Pressure at t+dt
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PPABST  ! Absolute Pressure at t     
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF ! Reference density
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF ! Reference density
@@ -126,6 +128,8 @@ REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PSRCS   ! Second-order flux
                                                    ! s'rc'/2Sigma_s2 at time t+1
                                                    ! multiplied by Lambda_3
 REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PCLDFR  ! Cloud fraction
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR    ! Cloud fraction          
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRAINFR   ! Cloud fraction          
 !
 !
 !*       0.2   Declarations of local variables :
@@ -188,7 +192,7 @@ if ( nbumod == kmi .and. lbu_enable ) then
   if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'CEDS', prs(:, :, :, 2) * prhodj(:, :, :) )
   if ( lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'CEDS', prs(:, :, :, 4) * prhodj(:, :, :) )
   if ( lbudget_sv ) then
-    if ( lwarm ) then
+    if ( lwarm .and. nmom_c.ge.2) then
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CEDS', psvs(:, :, :, nsv_lima_nc) * prhodj(:, :, :) )
       do jl = nsv_lima_ccn_free, nsv_lima_ccn_free + nmod_ccn - 1
         idx = NBUDGET_SV1 - 1 + jl
@@ -246,7 +250,7 @@ END IF
 !
 !*       2.2    estimate the Exner function at t+1 and t respectively
 !
-ZEXNS(:,:,:)=((2.* PPABST(:,:,:)-PPABSM(:,:,:))/XP00 )**(XRD/XCPD)
+ZEXNS(:,:,:)=(PPABSTT(:,:,:)/XP00 )**(XRD/XCPD)
 ZEXNT(:,:,:)=(PPABST(:,:,:)/XP00 )**(XRD/XCPD)
 !sources terms *dt
 PRS(:,:,:,:)   = PRS(:,:,:,:) * PTSTEP
@@ -333,7 +337,7 @@ IF( IMICRO >= 1 .AND. .NOT.LPTSPLIT) THEN
 !
       ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
       ZZT(JL) = ZT(I1(JL),I2(JL),I3(JL))
-      ZPRES(JL) = 2.0*PPABST(I1(JL),I2(JL),I3(JL))-PPABSM(I1(JL),I2(JL),I3(JL))
+      ZPRES(JL) = PPABSTT(I1(JL),I2(JL),I3(JL))
       ZEXNREF(JL) = PEXNREF(I1(JL),I2(JL),I3(JL))
       ZZCPH(JL) = ZCPH(I1(JL),I2(JL),I3(JL))
    ENDDO
@@ -447,9 +451,10 @@ GNUCT(:,:,:) = .FALSE.
 !GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) = ZSAT(IIB:IIE,IJB:IJE,IKB:IKE)>0.0 .OR.   &
 !                                 ZCCS(IIB:IIE,IJB:IJE,IKB:IKE)>0.0
 !GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) = ZSAT(IIB:IIE,IJB:IJE,IKB:IKE)>0.0 
-GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) = ZSAT(IIB:IIE,IJB:IJE,IKB:IKE)>0.0 .OR.   &
+GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) = ZSAT(IIB:IIE,IJB:IJE,IKB:IKE)>-1.0 .AND.  &
+                                 ( ZSAT(IIB:IIE,IJB:IJE,IKB:IKE)>0.0 .OR.  &
 !                                ZCCS(IIB:IIE,IJB:IJE,IKB:IKE)>1.E+05
-                                 ZCCS(IIB:IIE,IJB:IJE,IKB:IKE)>XCTMIN(2)
+                                 ZCCS(IIB:IIE,IJB:IJE,IKB:IKE)>XCTMIN(2) )
 INUCT = COUNTJV( GNUCT(:,:,:),I1(:),I2(:),I3(:))
 !3D array to 1D array
 !
@@ -468,7 +473,7 @@ IF( INUCT >= 1 ) THEN
   ALLOCATE(ZZLV(INUCT))
   ALLOCATE(ZZCPH(INUCT))
   DO JL=1,INUCT
-   ZPRES(JL) = 2. * PPABST(I1(JL),I2(JL),I3(JL)) - PPABSM(I1(JL),I2(JL),I3(JL))
+   ZPRES(JL) = PPABSTT(I1(JL),I2(JL),I3(JL))
    ZRHOD(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
    ZRR(JL)   = PRS(I1(JL),I2(JL),I3(JL),3)
    ZTT(JL)   = PTHS(I1(JL),I2(JL),I3(JL))
@@ -531,7 +536,7 @@ ENDIF
 WHERE(.NOT.GNUCT(:,:,:) )
  ZRVSAT(:,:,:) = EXP(XALPW-XBETAW/PTHS(:,:,:)-XGAMW*ALOG(PTHS(:,:,:)))
  !rvsat
- ZRVSAT(:,:,:) = (XMV / XMD)*ZRVSAT(:,:,:)/((2.* PPABST(:,:,:)-PPABSM(:,:,:))-ZRVSAT(:,:,:))
+ ZRVSAT(:,:,:) = (XMV / XMD)*ZRVSAT(:,:,:)/(PPABSTT(:,:,:)-ZRVSAT(:,:,:))
  ZSAT(:,:,:)   = (PRS(:,:,:,1)/ZRVSAT(:,:,:))-1D0
 ENDWHERE
 !
@@ -564,6 +569,23 @@ IF ( HRAD /= 'NONE' ) THEN
      PCLDFR(:,:,:) = ZW1(:,:,:)
 END IF
 !
+ZW1(:,:,:)=0.
+IF (SIZE(PRS,4)>3) ZW1(:,:,:)=ZW1(:,:,:) + PRS(:,:,:,4)
+WHERE (ZW1(:,:,:) > 1.E-15)
+   PICEFR(:,:,:)  = 1.
+ELSEWHERE
+   PICEFR(:,:,:)  = 0.
+ENDWHERE
+ZW1(:,:,:)=0.
+IF (SIZE(PRS,4)>2) ZW1(:,:,:)=ZW1(:,:,:) + PRS(:,:,:,3)
+IF (SIZE(PRS,4)>4) ZW1(:,:,:)=ZW1(:,:,:) + PRS(:,:,:,5)
+IF (SIZE(PRS,4)>5) ZW1(:,:,:)=ZW1(:,:,:) + PRS(:,:,:,6)
+WHERE (ZW1(:,:,:) > 1.E-15)
+   PRAINFR(:,:,:)  = 1.
+ELSEWHERE
+   PRAINFR(:,:,:)  = 0.
+ENDWHERE
+!
 IF ( tpfile%lopened ) THEN
   ZW(:,:,:)=SUM(ZNAS,4)-ZW(:,:,:)
   TZFIELD%CMNHNAME   = 'NACT'
@@ -588,7 +610,7 @@ if ( nbumod == kmi .and. lbu_enable ) then
   if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'CEDS', prs(:, :, :, 2) * prhodj(:, :, :) )
   if ( lbudget_ri ) call Budget_store_end( tbudgets(NBUDGET_RI), 'CEDS', prs(:, :, :, 4) * prhodj(:, :, :) )
   if ( lbudget_sv ) then
-    if ( lwarm ) then
+    if ( lwarm .and. nmom_c.ge.2) then
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CEDS', psvs(:, :, :, nsv_lima_nc) * prhodj(:, :, :) )
       do jl = nsv_lima_ccn_free, nsv_lima_ccn_free + nmod_ccn - 1
         idx = NBUDGET_SV1 - 1 + jl

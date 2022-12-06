@@ -10,7 +10,7 @@
 INTERFACE
       SUBROUTINE LIMA_SNOW_DEPOSITION (LDCOMPUTE,                         &
                                        PRHODREF, PSSI, PAI, PCJ, PLSFACT, &
-                                       PRST, PLBDS,                       &
+                                       PRST, PCST, PLBDS,                 &
                                        P_RI_CNVI, P_CI_CNVI,              &
                                        P_TH_DEPS, P_RS_DEPS               )
 !
@@ -23,6 +23,7 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PCJ  ! abs. pressure at time t
 REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT  ! abs. pressure at time t
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
+REAL, DIMENSION(:),   INTENT(IN)    :: PCST    ! Snow/aggregate concentration 
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PLBDS    ! Graupel m.r. at t 
 !
@@ -38,7 +39,7 @@ END MODULE MODI_LIMA_SNOW_DEPOSITION
 !     ##########################################################################
 SUBROUTINE LIMA_SNOW_DEPOSITION (LDCOMPUTE,                                &
                                  PRHODREF,  PSSI, PAI, PCJ, PLSFACT,       &
-                                 PRST, PLBDS,                              &
+                                 PRST, PCST, PLBDS,                        &
                                  P_RI_CNVI, P_CI_CNVI,                     &
                                  P_TH_DEPS, P_RS_DEPS                      )
 !     ##########################################################################
@@ -63,20 +64,23 @@ SUBROUTINE LIMA_SNOW_DEPOSITION (LDCOMPUTE,                                &
 !!    -------------
 !!      Original             15/03/2018
 !!
+!  J. Wurtz       03/2022: new snow characteristics
+!  B. Vie         03/2022: Add option for 1-moment pristine ice
+!  M. Taufour     07/2022: add snow concentration
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, XALPHAI, XALPHAS, XNUI, XNUS 
-USE MODD_PARAM_LIMA_COLD, ONLY : XCXS, XCCS, &
+USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, XALPHAI, XALPHAS, XNUI, XNUS, NMOM_I
+USE MODD_PARAM_LIMA_COLD, ONLY : XNS,XBS, &
                                  XLBDAS_MAX, XDSCNVI_LIM, XLBDASCNVI_MAX,     &
                                  XC0DEPSI, XC1DEPSI, XR0DEPSI, XR1DEPSI,      &
                                  XSCFAC, X1DEPS, X0DEPS, XEX1DEPS, XEX0DEPS,  &
                                  XDICNVS_LIM, XLBDAICNVS_LIM,                 &
                                  XC0DEPIS, XC1DEPIS, XR0DEPIS, XR1DEPIS,      &
                                  XCOLEXIS, XAGGS_CLARGE1, XAGGS_CLARGE2,      &
-                                 XAGGS_RLARGE1, XAGGS_RLARGE2  
+                                 XAGGS_RLARGE1, XAGGS_RLARGE2, XFVELOS
 
 !
 IMPLICIT NONE
@@ -92,6 +96,7 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PCJ  ! abs. pressure at time t
 REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT  ! abs. pressure at time t
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
+REAL, DIMENSION(:),   INTENT(IN)    :: PCST    ! Snow/aggregate m.r. at t 
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PLBDS    ! Graupel m.r. at t 
 !
@@ -105,7 +110,6 @@ REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_DEPS
 LOGICAL, DIMENSION(SIZE(PRHODREF)) :: GMICRO ! Computations only where necessary
 REAL,    DIMENSION(SIZE(PRHODREF)) :: ZZW, ZZW2, ZZX ! Work array
 !
-!
 !-------------------------------------------------------------------------------
 !
 P_RI_CNVI(:) = 0.
@@ -113,51 +117,63 @@ P_CI_CNVI(:) = 0.
 P_TH_DEPS(:) = 0.
 P_RS_DEPS(:) = 0.
 !
-! Physical limitations
-!
-!
 ! Looking for regions where computations are necessary
-!
 GMICRO(:) = LDCOMPUTE(:) .AND. PRST(:)>XRTMIN(5)
 !
+IF (NMOM_I.EQ.1) THEN
+   WHERE( GMICRO )
 !
-WHERE( GMICRO )
+! Deposition of water vapor on r_s: RVDEPS
+!
+      ZZW(:) = 0.0
+      WHERE ( PRST(:)>XRTMIN(5) )
+         ZZW(:) = PCST(:) * PSSI(:) / PAI(:) * &
+              ( X0DEPS*PLBDS(:)**XEX0DEPS +             &
+                X1DEPS*PLBDS(:)**XEX1DEPS *PCJ(:) *     &
+                     (1+0.5*(XFVELOS/PLBDS(:))**XALPHAS)**(-XNUS+XEX1DEPS/XALPHAS) )
+         ZZW(:) =    ZZW(:)*(0.5+SIGN(0.5,ZZW(:))) - ABS(ZZW(:))*(0.5-SIGN(0.5,ZZW(:)))
+      END WHERE
+      P_RS_DEPS(:) = ZZW(:)
+   END WHERE
+ELSE
+   WHERE( GMICRO )
 !
 !*       2.1    Conversion of snow to r_i: RSCNVI
 !        ----------------------------------------
 !
 !
-   ZZW2(:) = 0.0
-   ZZW(:) = 0.0
-   WHERE ( PLBDS(:)<XLBDASCNVI_MAX .AND. (PRST(:)>XRTMIN(5)) &
-                                   .AND. (PSSI(:)<0.0)       )
-      ZZW(:) = (PLBDS(:)*XDSCNVI_LIM)**(XALPHAS)
-      ZZX(:) = ( -PSSI(:)/PAI(:) ) * (XCCS*PLBDS(:)**XCXS) * (ZZW(:)**XNUS) * EXP(-ZZW(:))
+      ZZW2(:) = 0.0
+      ZZW(:) = 0.0
+      WHERE ( PLBDS(:)<XLBDASCNVI_MAX .AND. PRST(:)>XRTMIN(5) .AND. PCST(:)>XCTMIN(5) &
+                                      .AND. PSSI(:)<0.0                               )
+         ZZW(:) = (PLBDS(:)*XDSCNVI_LIM)**(XALPHAS)
+         ZZX(:) = ( -PSSI(:)/PAI(:) ) * PCST(:) * (ZZW(:)**XNUS) * EXP(-ZZW(:))
 !
-      ZZW(:) = ( XR0DEPSI+XR1DEPSI*PCJ(:) )*ZZX(:)
+         ZZW(:) = ( XR0DEPSI+XR1DEPSI*PCJ(:) )*ZZX(:)
 !
-      ZZW2(:) = ZZW(:)*( XC0DEPSI+XC1DEPSI*PCJ(:) )/( XR0DEPSI+XR1DEPSI*PCJ(:) )
-   END WHERE
+         ZZW2(:)= ( XC0DEPSI+XC1DEPSI*PCJ(:) )*ZZX(:)
+      END WHERE
 !
-   P_RI_CNVI(:) = ZZW(:)
-   P_CI_CNVI(:) = ZZW2(:)
+      P_RI_CNVI(:) = ZZW(:)
+      P_CI_CNVI(:) = ZZW2(:)
 !
 !
 !*       2.2    Deposition of water vapor on r_s: RVDEPS
 !        -----------------------------------------------
 !
 !
-   ZZW(:) = 0.0
-   WHERE ( (PRST(:)>XRTMIN(5)) )
-      ZZW(:) = ( PSSI(:)/(PAI(:)) ) * &
-           ( X0DEPS*PLBDS(:)**XEX0DEPS + X1DEPS*PCJ(:)*PLBDS(:)**XEX1DEPS )
-      ZZW(:) =    ZZW(:)*(0.5+SIGN(0.5,ZZW(:))) - ABS(ZZW(:))*(0.5-SIGN(0.5,ZZW(:)))
-   END WHERE
+      ZZW(:) = 0.0
+      WHERE ( PRST(:)>XRTMIN(5) .AND. PCST(:)>XCTMIN(5) )
+         ZZW(:) = ( PCST(:)*PSSI(:)/PAI(:) ) *     &
+              ( X0DEPS*PLBDS(:)**XEX0DEPS +        &
+              ( X1DEPS*PCJ(:)*PLBDS(:)**XEX1DEPS * &
+                   (1+0.5*(XFVELOS/PLBDS(:))**XALPHAS)**(-XNUS+XEX1DEPS/XALPHAS)) )
+         ZZW(:) =    ZZW(:)*(0.5+SIGN(0.5,ZZW(:))) - ABS(ZZW(:))*(0.5-SIGN(0.5,ZZW(:)))
+      END WHERE
 !
-   P_RS_DEPS(:) = ZZW(:)
-!!$   P_TH_DEPS(:) = P_RS_DEPS(:) * PLSFACT(:)
+      P_RS_DEPS(:) = ZZW(:)
 ! 
-END WHERE
-!
+   END WHERE
+END IF
 !
 END SUBROUTINE LIMA_SNOW_DEPOSITION

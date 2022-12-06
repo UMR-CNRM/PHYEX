@@ -10,8 +10,9 @@
 IMPLICIT NONE
 CONTAINS
       SUBROUTINE RZCOLX( KND, PALPHAX, PNUX, PALPHAZ, PNUZ,                  &
-                         PEXZ, PEXMASSZ, PFALLX, PEXFALLX, PFALLZ, PEXFALLZ, &
-                         PLBDAXMAX, PLBDAZMAX, PLBDAXMIN, PLBDAZMIN,         &
+                         PEXZ, PEXMASSZ, PFALLX, PEXFALLX, PFALLEXPX,        &
+                         PFALLZ, PEXFALLZ, PFALLEXPZ,                        &
+		         PLBDAXMAX, PLBDAZMAX, PLBDAXMIN, PLBDAZMIN,         &
                          PDINFTY, PRZCOLX                                    )
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
@@ -84,6 +85,7 @@ CONTAINS
 !!      Original    8/11/95
 !!
 !  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
+!  J. Wurtz       03/2022: new snow characteristics
 !
 !-------------------------------------------------------------------------------
 !
@@ -115,8 +117,10 @@ REAL, INTENT(IN) :: PEXZ      ! Efficiency of specy X collecting specy Z
 REAL, INTENT(IN) :: PEXMASSZ  ! Mass exponent of specy Z
 REAL, INTENT(IN) :: PFALLX    ! Fall speed constant of specy X
 REAL, INTENT(IN) :: PEXFALLX  ! Fall speed exponent of specy X
+REAL, INTENT(IN) :: PFALLEXPX ! Fall speed exponential constant of specy X
 REAL, INTENT(IN) :: PFALLZ    ! Fall speed constant of specy Z
 REAL, INTENT(IN) :: PEXFALLZ  ! Fall speed exponent of specy Z
+REAL, INTENT(IN) :: PFALLEXPZ ! Fall speed exponential constant of specy Z
 REAL, INTENT(IN) :: PLBDAXMAX ! Maximun slope of size distribution of specy X
 REAL, INTENT(IN) :: PLBDAZMAX ! Maximun slope of size distribution of specy Z
 REAL, INTENT(IN) :: PLBDAXMIN ! Minimun slope of size distribution of specy X
@@ -211,8 +215,13 @@ DO JLBDAX = 1,SIZE(PRZCOLX(:,:),1)
 !*       1.7     Compute the scaled fall speed difference by integration over
 !                the dimensional spectrum of specy Z
 !
+#if defined(REPRO48) || defined(REPRO55)
         ZCOLLZ = ZCOLLZ + ZFUNC                                               &
                         * PEXZ * ABS(PFALLX*ZDX**PEXFALLX-PFALLZ*ZDZ**PEXFALLZ)
+#else
+         ZCOLLZ = ZCOLLZ + ZFUNC * PEXZ * ABS( PFALLX*ZDX**PEXFALLX * EXP(-(ZDX*PFALLEXPX)**PALPHAX) &
+                                             - PFALLZ*ZDZ**PEXFALLZ * EXP(-(ZDZ*PFALLEXPZ)**PALPHAZ))
+#endif
       END DO
 !
 !*       1.8     Compute the normalization factor by integration over the

@@ -148,9 +148,9 @@ XCTMIN(1) = 1.0       ! Not used
 XCTMIN(2) = 1.0E-3    ! Nc
 XCTMIN(3) = 1.0E-3    ! Nr
 XCTMIN(4) = 1.0E-3    ! Ni
-XCTMIN(5) = 1.0E-3    ! Not used
-XCTMIN(6) = 1.0E-3    ! Not used
-XCTMIN(7) = 1.0E-3    ! Not used
+XCTMIN(5) = 1.0E-3    ! Ns
+XCTMIN(6) = 1.0E-3    ! Ng
+XCTMIN(7) = 1.0E-3    ! Nh
 !
 !
 ! Air density fall speed correction

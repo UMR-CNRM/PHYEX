@@ -29,7 +29,7 @@ fi
 defaultRef=ref
 
 function usage {
-  echo "Usage: $0 [-h] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t test] commit reference"
+  echo "Usage: $0 [-h] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t test] [--repo-user user] [--repo-protocol protocol] [-a arch] [-A arch] commit [reference]"
   echo "commit          commit hash (or a directory, or among $specialName) to test"
   echo "reference       commit hash (or a directory, or among $specialName) REF to use as a reference"
   echo "-s              suppress compilation directory"
@@ -136,14 +136,14 @@ if [ $check -eq 1 -a -z "${reference-}" ]; then
 fi
 
 fromdir=''
-if echo $commit | grep '/' > /dev/null; then
+if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
   fromdir=$commit
   name=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
   [ $suppress -eq 1 -a -d $TESTDIR/$name ] && rm -rf $TESTDIR/$name
 elif echo $specialName | grep -w $commit > /dev/null; then
   name="$commit"
 else
-  name="COMMIT$commit"
+  name="COMMIT$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')"
   [ $suppress -eq 1 -a -d $TESTDIR/$name ] && rm -rf $TESTDIR/$name
 fi
 if [ ! -z "${reference-}" ]; then

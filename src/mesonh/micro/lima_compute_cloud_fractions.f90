@@ -11,7 +11,9 @@ MODULE MODI_LIMA_COMPUTE_CLOUD_FRACTIONS
                                               PCCT, PRCT,                        &
                                               PCRT, PRRT,                        &
                                               PCIT, PRIT,                        &
-                                              PRST, PRGT, PRHT,                  &
+                                              PCST, PRST,                        &
+                                              PCGT, PRGT,                        &
+                                              PCHT, PRHT,                        &
                                               PCLDFR, PICEFR, PPRCFR             )
        INTEGER,               INTENT(IN)    :: KIB           !  
        INTEGER,               INTENT(IN)    :: KIE           !  
@@ -30,8 +32,13 @@ MODULE MODI_LIMA_COMPUTE_CLOUD_FRACTIONS
        REAL, DIMENSION(:,:,:),INTENT(IN)    :: PCIT          !
        REAL, DIMENSION(:,:,:),INTENT(IN)    :: PRIT          !
        !
+       REAL, DIMENSION(:,:,:),INTENT(IN)    :: PCST          !
        REAL, DIMENSION(:,:,:),INTENT(IN)    :: PRST          !
+       !
+       REAL, DIMENSION(:,:,:),INTENT(IN)    :: PCGT          !
        REAL, DIMENSION(:,:,:),INTENT(IN)    :: PRGT          !
+       !
+       REAL, DIMENSION(:,:,:),INTENT(IN)    :: PCHT          !
        REAL, DIMENSION(:,:,:),INTENT(IN)    :: PRHT          !
        !
        REAL, DIMENSION(:,:,:),INTENT(INOUT) :: PCLDFR        ! 
@@ -48,7 +55,9 @@ SUBROUTINE LIMA_COMPUTE_CLOUD_FRACTIONS (KIB, KIE, KJB, KJE, KKB, KKE, KKL, &
                                          PCCT, PRCT,                        &
                                          PCRT, PRRT,                        &
                                          PCIT, PRIT,                        &
-                                         PRST, PRGT, PRHT,                  &
+                                         PCST, PRST,                        &
+                                         PCGT, PRGT,                        &
+                                         PCHT, PRHT,                        &
                                          PCLDFR, PICEFR, PPRCFR             )
 !################################################################
 !
@@ -70,7 +79,8 @@ SUBROUTINE LIMA_COMPUTE_CLOUD_FRACTIONS (KIB, KIE, KJB, KJE, KKB, KKE, KKL, &
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA,      ONLY : XCTMIN, XRTMIN
+USE MODD_PARAM_LIMA,      ONLY : XCTMIN, XRTMIN, &
+                                 NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
 !
 IMPLICIT NONE
 !
@@ -93,8 +103,13 @@ REAL, DIMENSION(:,:,:),INTENT(IN)    :: PRRT          !
 REAL, DIMENSION(:,:,:),INTENT(IN)    :: PCIT          !
 REAL, DIMENSION(:,:,:),INTENT(IN)    :: PRIT          !
 !
+REAL, DIMENSION(:,:,:),INTENT(IN)    :: PCST          !
 REAL, DIMENSION(:,:,:),INTENT(IN)    :: PRST          !
+!
+REAL, DIMENSION(:,:,:),INTENT(IN)    :: PCGT          !
 REAL, DIMENSION(:,:,:),INTENT(IN)    :: PRGT          !
+!
+REAL, DIMENSION(:,:,:),INTENT(IN)    :: PCHT          !
 REAL, DIMENSION(:,:,:),INTENT(IN)    :: PRHT          !
 !
 REAL, DIMENSION(:,:,:),INTENT(INOUT) :: PCLDFR        ! 
@@ -111,11 +126,11 @@ INTEGER :: JI, JJ, JK
 !              ---------------
 !
 ! Liquid cloud fraction is kept from input data, except where PCLDFR=0 and rc>0
-WHERE(PCLDFR(:,:,:)<1.E-10 .AND. PRCT(:,:,:)>XRTMIN(2) .AND. PCCT(:,:,:)>XCTMIN(2)) PCLDFR(:,:,:)=1.
+WHERE(PCLDFR(:,:,:)<1.E-10 .AND. PRCT(:,:,:)>XRTMIN(2) .AND. (NMOM_C.EQ.1 .OR. PCCT(:,:,:)>XCTMIN(2))) PCLDFR(:,:,:)=1.
 !
 ! Ice cloud fraction is currently 0 or 1
 PICEFR(:,:,:)=0.
-WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. PCIT(:,:,:)>XCTMIN(4)) PICEFR(:,:,:)=1.
+WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. (NMOM_I.EQ.1 .OR. PCIT(:,:,:)>XCTMIN(4))) PICEFR(:,:,:)=1.
 !
 ! Precipitation fraction
 !!$PPRCFR(:,:,:) = MAX(PCLDFR(:,:,:),PICEFR(:,:,:))
@@ -163,10 +178,10 @@ WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. PCIT(:,:,:)>XCTMIN(
 !!$         PRHT(:,:,:).GT.XRTMIN(7)                                      )  PPRCFR(:,:,:) = 1.
 !!$
 PPRCFR(:,:,:) = 0.
-WHERE ( (PRRT(:,:,:).GT.0. .AND. PCRT(:,:,:).GT.0.) .OR. &
-         PRST(:,:,:).GT.0.                          .OR. &
-         PRGT(:,:,:).GT.0.                          .OR. &
-         PRHT(:,:,:).GT.0.                               )  PPRCFR(:,:,:) = 1.
+WHERE ( (PRRT(:,:,:).GT.0. .AND. (NMOM_R.EQ.1 .OR. PCRT(:,:,:).GT.0.) ) .OR. &
+        (PRST(:,:,:).GT.0. .AND. (NMOM_S.EQ.1 .OR. PCST(:,:,:).GT.0.) ) .OR. &
+        (PRGT(:,:,:).GT.0. .AND. (NMOM_G.EQ.1 .OR. PCGT(:,:,:).GT.0.) ) .OR. &
+        (PRHT(:,:,:).GT.0. .AND. (NMOM_H.EQ.1 .OR. PCHT(:,:,:).GT.0.) ) )  PPRCFR(:,:,:) = 1.
 !
 !-------------------------------------------------------------------------------
 !

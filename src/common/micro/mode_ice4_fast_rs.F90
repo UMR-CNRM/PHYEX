@@ -30,6 +30,7 @@ SUBROUTINE ICE4_FAST_RS(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUT
 !  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
 !  P. Wautelet 29/05/2019: remove PACK/UNPACK intrinsics (to get more performance and better OpenACC support)
 !!     R. El Khatib 24-Aug-2021 Optimizations
+!  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
 !
 !
 !*      0. DECLARATIONS
@@ -110,8 +111,14 @@ DO JL=1, KSIZE
       PRS_TEND(JL, IFREEZ1)=PKA(JL)*(CST%XTT-PT(JL)) +                              &
                            &(PDV(JL)*(CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(JL)-CST%XTT)) &
                            &*(CST%XESTT-PRS_TEND(JL, IFREEZ1))/(CST%XRV*PT(JL))           )
+#if defined(REPRO48) || defined(REPRO55)
       PRS_TEND(JL, IFREEZ1)=PRS_TEND(JL, IFREEZ1)* (ICEP%X0DEPS*       PLBDAS(JL)**ICEP%XEX0DEPS +     &
                            &                        ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS )/ &
+#else
+      PRS_TEND(JL, IFREEZ1)=PRS_TEND(JL, IFREEZ1)* PRST(JL) *(ICEP%X0DEPS*       PLBDAS(JL)**ICEP%XEX0DEPS +     &
+                           &                        ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**(ICEP%XBS+ICEP%XEX1DEPS )*   &
+         (1+0.5*(ICEP%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICEP%XNUS+ICEP%XEX1DEPS/ICED%XALPHAS))/ &
+#endif
                            &(PRHODREF(JL)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(JL))))
       PRS_TEND(JL, IFREEZ2)=(PRHODREF(JL)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-PT(JL)))   ) / &
                            &(PRHODREF(JL)*(CST%XLMTT-CST%XCL*(CST%XTT-PT(JL))))
@@ -151,7 +158,7 @@ IF(.NOT. LDSOFT) THEN
     !        5.1.1  select the PLBDAS
     !
     DO JJ = 1, IGRIM
-      ZVEC1(JJ) = PLBDAS(I1(JJ))
+      ZVEC1(JJ) = (PLBDAS(I1(JJ))**ICED%XALPHAS + ICED%XFVELOS**ICED%XALPHAS)**(1./ICED%XALPHAS)
     END DO
     !
     !        5.1.2  find the next lower indice for the PLBDAS in the geometrical
@@ -180,8 +187,14 @@ IF(.NOT. LDSOFT) THEN
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE (GRIM(1:KSIZE))
       PRS_TEND(1:KSIZE, IRCRIMSS) = ICEP%XCRIMSS * ZZW(1:KSIZE) * PRCT(1:KSIZE) & ! RCRIMSS
+#if defined(REPRO48) || defined(REPRO55)
                                       *   PLBDAS(1:KSIZE)**ICEP%XEXCRIMSS &
                                       * PRHODREF(1:KSIZE)**(-ICED%XCEXVT)
+#else
+                                      *   PRST(1:KSIZE)*(1+(ICEP%XFVELOS/PLBDAS(1:KSIZE))**ICED%XALPHAS)**(-ICEP%XNUS+ICEP%XEXCRIMSS/ICED%XALPHAS) &
+                                      * PRHODREF(1:KSIZE)**(-ICED%XCEXVT+1.) &
+				      * (PLBDAS(1:KSIZE)) ** (ICEP%XEXCRIMSS+ICEP%XBS)
+#endif
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
     !
@@ -213,8 +226,14 @@ IF(.NOT. LDSOFT) THEN
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GRIM(1:KSIZE))
       PRS_TEND(1:KSIZE, IRCRIMS)=ICEP%XCRIMSG * PRCT(1:KSIZE)               & ! RCRIMS
+#if defined(REPRO48) || defined(REPRO55)
                                    * PLBDAS(1:KSIZE)**ICEP%XEXCRIMSG  &
                                    * PRHODREF(1:KSIZE)**(-ICED%XCEXVT)
+#else
+                                   * PRST(1:KSIZE)*(1+(ICED%XFVELOS/PLBDAS(1:KSIZE))**(ICED%XALPHAS))**(-ICED%XNUS+ICED%XEXCRIMSG/ICED%XALPHAS) &
+                                   * PRHODREF(1:KSIZE)**(-ICED%XCEXVT+1.) &
+                                   * PLBDAS(1:KSIZE)**(ICEP%XBS+ICEP%XEXCRIMSG)
+#endif
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
 
@@ -223,10 +242,18 @@ IF(.NOT. LDSOFT) THEN
       !$mnh_expand_where(JL=1:KSIZE)
       WHERE(GRIM(1:KSIZE))
         ZZW6(1:KSIZE) = PRS_TEND(1:KSIZE, IRCRIMS) - PRS_TEND(1:KSIZE, IRCRIMSS) ! RCRIMSG
+#if defined(REPRO48) || defined(REPRO55)
         PRS_TEND(1:KSIZE, IRSRIMCG)=ICEP%XSRIMCG * PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG*(1.0-ZZW(1:KSIZE))
+#else
+        PRS_TEND(1:KSIZE, IRSRIMCG)=ICEP%XSRIMCG * PRST(1:KSIZE)*PRHODREF(1:KSIZE)*PLBDAS(1:KSIZE)**(ICEP%XEXSRIMCG+ICEP%XBS)*(1.0-ZZW(1:KSIZE))
+#endif
         PRS_TEND(1:KSIZE, IRSRIMCG)=ZZW6(1:KSIZE)*PRS_TEND(1:KSIZE, IRSRIMCG)/ &
                        MAX(1.E-20, &
+#if defined(REPRO48) || defined(REPRO55)
                            ICEP%XSRIMCG3*ICEP%XSRIMCG2*PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG2*(1.-ZZW2(1:KSIZE)) - &
+#else
+                           ICEP%XSRIMCG3*ICEP%XSRIMCG2*PRST(1:KSIZE)*PRHODREF(1:KSIZE)*PLBDAS(1:KSIZE)***ICEP%XEXSRIMCG2*(1.-ZZW2(1:KSIZE)) - &
+#endif
                            ICEP%XSRIMCG3*PRS_TEND(1:KSIZE, IRSRIMCG))
       END WHERE
       !$mnh_end_expand_where(JL=1:KSIZE)
@@ -321,7 +348,11 @@ IF(.NOT. LDSOFT) THEN
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GACC(1:KSIZE))
       ZZW6(1:KSIZE) =                                                        & !! coef of RRACCS
+#if defined(REPRO48) || defined(REPRO55)
             ICEP%XFRACCSS*( PLBDAS(1:KSIZE)**ICED%XCXS )*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) ) &
+#else
+            ICEP%XFRACCSS*( PRST(1:KSIZE)*PLBDAS(1:KSIZE)**ICED%XBS )*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT) ) &
+#endif
        *( ICEP%XLBRACCS1/((PLBDAS(1:KSIZE)**2)               ) +                  &
           ICEP%XLBRACCS2/( PLBDAS(1:KSIZE)    * PLBDAR(1:KSIZE)    ) +                  &
           ICEP%XLBRACCS3/(               (PLBDAR(1:KSIZE)**2)) )/PLBDAR(1:KSIZE)**4
@@ -371,7 +402,11 @@ IF(.NOT. LDSOFT) THEN
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GACC(1:KSIZE))
       PRS_TEND(1:KSIZE, IRSACCRG) = ICEP%XFSACCRG*ZZW(1:KSIZE)*                    & ! RSACCRG
+#if defined(REPRO48) || defined(REPRO55)
           ( PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS) )*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) ) &
+#else
+          ( PRST(1:KSIZE))*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT) ) &
+#endif
          *( ICEP%XLBSACCR1/((PLBDAR(1:KSIZE)**2)               ) +           &
             ICEP%XLBSACCR2/( PLBDAR(1:KSIZE)    * PLBDAS(1:KSIZE)    ) +           &
             ICEP%XLBSACCR3/(               (PLBDAS(1:KSIZE)**2)) )/PLBDAR(1:KSIZE)
@@ -415,11 +450,22 @@ DO JL=1, KSIZE
       !
       ! compute RSMLT
       !
-      PRSMLTG(JL)  = ICEP%XFSCVMG*MAX(0., (-PRSMLTG(JL) * (ICEP%X0DEPS*       PLBDAS(JL)**ICEP%XEX0DEPS +     &
-                                                           ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS)    &
-                                           -(PRS_TEND(JL, IRCRIMS) + PRS_TEND(JL, IRRACCS)) *       &
-                                            (PRHODREF(JL)*CST%XCL*(CST%XTT-PT(JL))) &
-                                          ) / (PRHODREF(JL)*CST%XLMTT))
+      PRSMLTG(JL)  = ICEP%XFSCVMG*MAX(0., (-PRSMLTG(JL) * &
+#if defined(REPRO48) || defined(REPRO55)
+                 (ICEP%X0DEPS*       PLBDAS(JL)**ICEP%XEX0DEPS +     &
+                 ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS)    &
+#else
+                 PRST(1:KSIZE)*PRHODREF(1:KSIZE) *    &
+                 (ICEP%X0DEPS*       PLBDAS(JL)**(ICEP%XABS+ICEP%XEX0DEPS) + &
+                 ICEP%X1DEPS*PCJ(JL)*(1+0.5*(ICED%XFVELOS/PLBDAS(1:KSIZE))**ICED%XALPHAS)**(-ICED%XNUS+ICED%XEX1DEPS/ICED%XALPHAS)*PLBDAS(1:KSIZE)**(ICED%XBS+ICED%XEX1DEPS)) &
+#endif
+                 -(PRS_TEND(JL, IRCRIMS) + PRS_TEND(JL, IRRACCS)) *       &
+                 (PRHODREF(JL)*CST%XCL*(CST%XTT-PT(JL))) &
+                 ) / (PRHODREF(JL)*CST%XLMTT))
+      !
+      ! note that RSCVMG = RSMLT*XFSCVMG but no heat is exchanged (at the rate RSMLT)
+      ! because the graupeln produced by this process are still icy!!!
+      !
       ! When T < XTT, rc is collected by snow (riming) to produce snow and graupel
       ! When T > XTT, if riming was still enabled, rc would produce snow and graupel with snow becomming graupel (conversion/melting) and graupel becomming rain (melting)
       ! To insure consistency when crossing T=XTT, rc collected with T>XTT must be transformed in rain.

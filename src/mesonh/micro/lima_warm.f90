@@ -10,8 +10,8 @@
 INTERFACE
       SUBROUTINE LIMA_WARM (OACTIT, OSEDC, ORAIN, KSPLITR, PTSTEP, KMI,   &
                             TPFILE, KRR, PZZ, PRHODJ,                     &
-                            PRHODREF, PEXNREF, PW_NU, PPABSM, PPABST,     &
-                            PTHM, PRCM,                                   &
+                            PRHODREF, PEXNREF, PW_NU, PPABST,             &
+                            PTHM,                                         &
                             PTHT, PRT, PSVT,                              &
                             PTHS, PRS, PSVS,                              &
                             PINPRC, PINPRR, PINDEP, PINPRR3D, PEVAP3D     )
@@ -42,11 +42,9 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
                                                       ! the nucleation param.
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABSM     ! abs. pressure at time t-dt
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST     ! abs. pressure at time t
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHM       ! Theta at time t-dt
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRCM       ! Cloud water m.r. at t-dt
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT        ! m.r. at t 
@@ -70,8 +68,8 @@ END MODULE MODI_LIMA_WARM
 !     #####################################################################
       SUBROUTINE LIMA_WARM (OACTIT, OSEDC, ORAIN, KSPLITR, PTSTEP, KMI,   &
                             TPFILE, KRR, PZZ, PRHODJ,                     &
-                            PRHODREF, PEXNREF, PW_NU, PPABSM, PPABST,     &
-                            PTHM, PRCM,                                   &
+                            PRHODREF, PEXNREF, PW_NU, PPABST,             &
+                            PTHM,                                         &
                             PTHT, PRT, PSVT,                              &
                             PTHS, PRS, PSVS,                              &
                             PINPRC, PINPRR, PINDEP, PINPRR3D, PEVAP3D     )
@@ -183,11 +181,9 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
                                                       ! the nucleation param.
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABSM     ! abs. pressure at time t-dt
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST     ! abs. pressure at time t
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHM       ! Theta at time t-dt
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRCM       ! Cloud water m.r. at t-dt
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT        ! m.r. at t 
@@ -378,7 +374,7 @@ IF ( LACTI .AND. NMOD_CCN > 0 .AND. .NOT. LSPRO ) THEN
 
   CALL LIMA_WARM_NUCL( OACTIT, PTSTEP, KMI, TPFILE,                &
                        PRHODREF, PEXNREF, PPABST, ZT, PTHM, PW_NU, &
-                       PRCM, PRVT, PRCT, PRRT,                     &
+                       PRVT, PRCT, PRRT,                     &
                        PTHS, PRVS, PRCS, PCCS, ZNFS, ZNAS          )
 
   if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'HENU', pths(:, :, :) * prhodj(:, :, :) )

@@ -31,23 +31,23 @@ END MODULE MODI_INI_SEG_n
       SUBROUTINE INI_SEG_n(KMI,TPINIFILE,HINIFILEPGD,PTSTEP_ALL)
 !     #############################################################
 !
-!!****  *INI_SEG_n * - routine to read and update the descriptor files for 
+!!****  *INI_SEG_n * - routine to read and update the descriptor files for
 !!                   model KMI
 !!
 !!    PURPOSE
 !!    -------
 !       The purpose of this routine is to read the descriptor files in the
 !     following order :
-!         - DESFM file which gives informations about the initial file  
-!     (i.e. the description of the segment that produced the initial file 
+!         - DESFM file which gives informations about the initial file
+!     (i.e. the description of the segment that produced the initial file
 !     or the description of the preinitialisation that created the initial file)
 !         - EXSEG file which gives informations about the segment to perform.
 !
 !      Informations in EXSEG file are completed by DESFM file informations
-!      and if the informations are not in DESFM file, they are  set 
-!      to default values. 
+!      and if the informations are not in DESFM file, they are  set
+!      to default values.
 !
-!        The descriptor file EXSEG corresponding to the segment of simulation 
+!        The descriptor file EXSEG corresponding to the segment of simulation
 !      to be performed, is then updated with the combined informations.
 !      We also store in the updated EXSEG file, the informations on the status
 !      of the different variables ( skip, init, read) in the namelist NAM_GETn,
@@ -58,41 +58,41 @@ END MODULE MODI_INI_SEG_n
 !
 !        In order not to duplicate the routines called by ini_seg, we use the
 !      modules modd, corresponding to the first model to store the informations
-!      read on the different files ( DESFM and EXSEG ). The final filling of 
-!      the modules modd (MODD_CONFn ....) will be realized in the subroutine 
-!      INI_MODELn. The goal of the INI_SEG_n part of the initialization is to 
-!      built the final EXSEG, which will be associated to the LFI files 
-!      generated during the segment ( and therefore not to fill the modd). 
-!       
+!      read on the different files ( DESFM and EXSEG ). The final filling of
+!      the modules modd (MODD_CONFn ....) will be realized in the subroutine
+!      INI_MODELn. The goal of the INI_SEG_n part of the initialization is to
+!      built the final EXSEG, which will be associated to the LFI files
+!      generated during the segment ( and therefore not to fill the modd).
+!
 !
 !!**  METHOD
 !!    ------
 !!      For a nested model of index KMI :
 !!         - Logical unit numbers  are associated to output-listing file and
 !!      descriptor EXSEG  file by FMATTR. Then these files are   opened.
-!!      The  name of the initial file is read in EXSEG file.     
+!!      The  name of the initial file is read in EXSEG file.
 !!         - Default values are supplied for variables in descriptor files
 !!      (by DEFAULT_DESFM).
 !!         - The Initial file (LFIFM + DESFM) is opened by IO_File_open.
-!!         - The descriptor DESFM file is read (by READ_DESFM_n). 
+!!         - The descriptor DESFM file is read (by READ_DESFM_n).
 !!         - The descriptor file EXSEG is read (by READ_EXSEG_n) and coherence
-!!      between the initial file and the description of segment is also checked 
+!!      between the initial file and the description of segment is also checked
 !!      in this routine.
 !!         - If there is more than one model the EXSEG file is updated
 !!     (by WRITE_DESFM$n).  This routine prints also EXSEG content on
-!!     output-listing. 
+!!     output-listing.
 !!         - If there is only one model (i.e. no grid-nesting),
 !!      EXSEG  file is also closed (logical unit number associated with this
-!!      file is also released by FMFREE).   
-!!     
-!!       
+!!      file is also released by FMFREE).
+!!
+!!
 !!
 !!    EXTERNAL
 !!    --------
-!!      FMATTR        : to associate a logical unit number to a file 
+!!      FMATTR        : to associate a logical unit number to a file
 !!      IO_File_open : to open descriptor file or LFI file
 !!      DEFAULT_DESFM1: to set default values
-!!      READ_DESFM_n    : to read a DESFM file 
+!!      READ_DESFM_n    : to read a DESFM file
 !!      READ_EXSEG_n    : to read a EXSEG file
 !!      WRITE_DESFM1   : to write the DESFM part of the future outputs
 !!      FMFREE        : to release a logical unit number linked to a file
@@ -108,19 +108,19 @@ END MODULE MODI_INI_SEG_n
 !!
 !!      Module MODD_CONF   : contains configuration variables
 !!         CCONF      : Configuration of models
-!!         NMODEL     : Number of nested models           
+!!         NMODEL     : Number of nested models
 !!         NVERB      : Level of informations on output-listing
 !!                          0 for minimum of prints
 !!                          5 for intermediate level of prints
-!!                         10 for maximum of prints 
+!!                         10 for maximum of prints
 !!
 !!      Module MODN_LUNIT1 : contains declarations of namelist NAMLUNITMN
-!!                           and module MODD_LUNIT1 
+!!                           and module MODD_LUNIT1
 !!
 !!    REFERENCE
 !!    ---------
 !!      Book2 of documentation (routine INI_SEG)
-!!      
+!!
 !!
 !!    AUTHOR
 !!    ------
@@ -128,7 +128,7 @@ END MODULE MODI_INI_SEG_n
 !!
 !!    MODIFICATIONS
 !!    -------------
-!!      Original         07/06/94 
+!!      Original         07/06/94
 !!      Modification     26/10/94  remove the NAM_GETn from the namelist present
 !!                                 in the EXSEG file  (J.Stein)
 !!                       11/01/95  change the read_exseg and desfm CALLS to add
@@ -140,7 +140,7 @@ END MODULE MODI_INI_SEG_n
 !!                                  (J. Stein)
 !!                       11/04/96  add the ice conc. control (J.-P. Pinty)
 !!                       11/01/97  add the deep convection control (J.-P. Pinty)
-!!                       17/07/96  correction for WRITE_DESFM1 call (J. P. Lafore)              
+!!                       17/07/96  correction for WRITE_DESFM1 call (J. P. Lafore)
 !!                       22/07/96  PTSTEP_ALL introduction for nesting (J. P. Lafore)
 !!                        7/08/98    //     (V. Ducrocq)
 !!                       02/08/99  remove unused argument for read_desfm (J. Stein)
@@ -156,8 +156,8 @@ END MODULE MODI_INI_SEG_n
 !!                       02/2012   add GFOREFIRE (Pialat/Tulet)
 !!                       05/2014   missing reading of IMASDEV before COUPLING
 !!                                 test (Escobar)
-!!                       10/02/15  remove ABORT in parallel case for SPAWNING 
-!!   J.Escobar : 15/09/2015 : WENO5 & JPHEXT <> 1 
+!!                       10/02/15  remove ABORT in parallel case for SPAWNING
+!!   J.Escobar : 15/09/2015 : WENO5 & JPHEXT <> 1
 !!                       01/2015   add GLNOX_EXPLICIT (C. Barthe)
 !!                       04/2016   add ABORT if CINIFILEPGD is not specified (G.Delautier)
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
@@ -197,10 +197,11 @@ USE MODI_WRITE_DESFM_n
 !
 USE MODN_CONFIO,           ONLY: NAM_CONFIO
 USE MODN_LUNIT_n
+USE MODN_FIRE
 !
 IMPLICIT NONE
 !
-!*       0.1   declarations of arguments 
+!*       0.1   declarations of arguments
 !
 INTEGER,                    INTENT(IN)    :: KMI          !Model index
 TYPE(TFILEDATA),   POINTER, INTENT(OUT)   :: TPINIFILE    !Initial file
@@ -213,7 +214,7 @@ LOGICAL            :: GFOUND              ! Return code when searching namelist
 CHARACTER (LEN=28) :: YINIFILE                    ! name of initial file
 CHARACTER (LEN=2)  :: YMI                         ! string for model index
 INTEGER            :: ILUOUT                      ! Logical unit number
-                                                  ! associated with TLUOUT 
+                                                  ! associated with TLUOUT
                                                   !
 INTEGER            :: IRESP,ILUSEG                ! File management variables
 CHARACTER (LEN=5)  :: YCONF                       ! Local variables which have
@@ -223,7 +224,7 @@ LOGICAL            :: GUSERS,GUSERG,GUSERH,GUSECI ! MODD_CONFn, MODD_PARAMn,
 LOGICAL            :: GUSECHEM                    ! flag for chemistry
 LOGICAL            :: GUSECHAQ                    ! flag for aq. phase chemistry
 LOGICAL            :: GUSECHIC                    ! flag for ice phase chemistry
-LOGICAL            :: GCH_PH                      ! flag for pH 
+LOGICAL            :: GCH_PH                      ! flag for pH
 LOGICAL            :: GCH_CONV_LINOX
 LOGICAL            :: GDUST
 LOGICAL,DIMENSION(JPMODELMAX) :: GDEPOS_DST, GDEPOS_SLT, GDEPOS_AER
@@ -231,19 +232,20 @@ LOGICAL            :: GSALT
 LOGICAL            :: GORILAM
 LOGICAL            :: GLG
 LOGICAL            :: GPASPOL
+LOGICAL            :: GFIRE
 #ifdef MNH_FOREFIRE
 LOGICAL            :: GFOREFIRE
 #endif
 LOGICAL            :: GCONDSAMP
 LOGICAL            :: GBLOWSNOW
-LOGICAL            :: GCHTRANS 
+LOGICAL            :: GCHTRANS
 LOGICAL            :: GLNOX_EXPLICIT              ! flag for LNOx
                                                   ! These variables
-                                                  ! are used to locally store 
-INTEGER            :: ISV                         ! the value read in DESFM 
+                                                  ! are used to locally store
+INTEGER            :: ISV                         ! the value read in DESFM
 INTEGER            :: IRIMX,IRIMY                 ! number of points for the
                                                   ! horizontal relaxation
-CHARACTER (LEN=4)  :: YTURB                       ! file in order to check the 
+CHARACTER (LEN=4)  :: YTURB                       ! file in order to check the
 CHARACTER (LEN=4)  :: YRAD                        ! corresponding informations
 CHARACTER (LEN=4)  :: YTOM                        ! read in EXSEG file.
 LOGICAL            :: GRMC01
@@ -297,7 +299,7 @@ ELSE IF (CPROGRAM=='DIAG  ') THEN
   CALL IO_File_open(TINIFILE_n)
   TPINIFILE  => TINIFILE_n
   TZFILE_DES => TPINIFILE%TDESFILE
-!   
+!
 !*       1.4   Other program cases
 !              -------------------
 !
@@ -322,7 +324,7 @@ CALL DEFAULT_DESFM_n(KMI)
 !              --------------------------------------------
 !
 CALL POSNAM(ILUSEG,'NAM_LUNITN',GFOUND)
-IF (GFOUND) THEN 
+IF (GFOUND) THEN
   CALL INIT_NAM_LUNITn
   READ(UNIT=ILUSEG,NML=NAM_LUNITn)
   CALL UPDATE_NAM_LUNITn
@@ -339,6 +341,9 @@ IF (CPROGRAM=='MESONH') THEN
       CALL POSNAM(ILUSEG,'NAM_CONFIO',GFOUND,ILUOUT)
       IF (GFOUND) READ(UNIT=ILUSEG,NML=NAM_CONFIO)
       CALL IO_Config_set()
+      ! read Blaze namelist to get NREFINX and NREFINY before INI_FIELD_LIST
+      CALL POSNAM(ILUSEG,'NAM_FIRE',GFOUND,ILUOUT)
+      IF (GFOUND) READ(UNIT=ILUSEG,NML=NAM_FIRE)
    END IF
   HINIFILEPGD=CINIFILEPGD_n
   YINIFILE=CINIFILE_n
@@ -357,12 +362,12 @@ CALL READ_DESFM_n(KMI,TPINIFILE,YCONF,GFLAT,GUSERV,GUSERC,                  &
                 GUSERR,GUSERI,GUSECI,GUSERS,GUSERG,GUSERH,GUSECHEM,GUSECHAQ,&
                 GUSECHIC,GCH_PH,GCH_CONV_LINOX,GSALT,GDEPOS_SLT,GDUST,      &
                 GDEPOS_DST, GCHTRANS, GORILAM,                              &
-                GDEPOS_AER, GLG, GPASPOL,                                   &
+                GDEPOS_AER, GLG, GPASPOL,GFIRE,                             &
 #ifdef MNH_FOREFIRE
                 GFOREFIRE,                                                  &
 #endif
                 GLNOX_EXPLICIT,                                             &
-                GCONDSAMP,GBLOWSNOW, IRIMX,IRIMY,ISV,                                 &
+                GCONDSAMP,GBLOWSNOW, IRIMX,IRIMY,ISV,                       &
                 YTURB,YTOM,GRMC01,YRAD,YDCONV,YSCONV,YCLOUD,YELEC,YEQNSYS   )
 !
 !-------------------------------------------------------------------------------
@@ -409,8 +414,8 @@ END IF
 !callabortstop
     CALL PRINT_MSG(NVERB_FATAL,'GEN','INI_SEG_n','')
   END IF
-IF (KMI == 1) THEN 
-! Read the geometry kind 
+IF (KMI == 1) THEN
+! Read the geometry kind
   CALL IO_Field_read(TPINIFILE,'CARTESIAN',LCARTESIAN)
 ! Read the thinshell approximation
   CALL IO_Field_read(TPINIFILE,'THINSHELL',LTHINSHELL)
@@ -440,7 +445,7 @@ END IF
 !*      7.    READ EXSEG FILE
 !             ---------------
 !   We pass by arguments the informations read in DESFM descriptor to the
-! routine which read related informations in the EXSEG descriptor in order to 
+! routine which read related informations in the EXSEG descriptor in order to
 ! check coherence between both informations.
 !
 CALL IO_Field_read(TPINIFILE,'LOCEAN',LOCEAN,IRESP)
@@ -450,7 +455,7 @@ CALL READ_EXSEG_n(KMI,TZFILE_DES,YCONF,GFLAT,GUSERV,GUSERC,                 &
                 GUSERR,GUSERI,GUSECI,GUSERS,GUSERG,GUSERH,GUSECHEM,         &
                 GUSECHAQ,GUSECHIC,GCH_PH,                                   &
                 GCH_CONV_LINOX,GSALT,GDEPOS_SLT,GDUST,GDEPOS_DST,GCHTRANS,  &
-                GORILAM,GDEPOS_AER,GLG,GPASPOL, &
+                GORILAM,GDEPOS_AER,GLG,GPASPOL,GFIRE,                       &
 #ifdef MNH_FOREFIRE
                 GFOREFIRE, &
 #endif

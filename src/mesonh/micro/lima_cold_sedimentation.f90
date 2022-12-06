@@ -12,7 +12,8 @@ INTERFACE
                                           PZZ, PRHODJ, PRHODREF,           &
                                           PRIT, PCIT,                      &
                                           PRIS, PRSS, PRGS, PRHS, PCIS,    &
-                                          PINPRS, PINPRG, PINPRH )
+                                          PINPRS, PINPRG, PINPRH,          &
+                                          PCSS, PCGS, PCHS)
 !
 LOGICAL,                  INTENT(IN)    :: OSEDI      ! switch to activate the 
                                                       ! cloud ice sedimentation
@@ -32,6 +33,9 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRSS       ! Snow/aggregate m.r. sour
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRGS       ! Graupel m.r. source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRHS       ! Hail m.r. source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIS       ! Ice crystal C. source
+REAL, DIMENSION(:,:,:),OPTIONAL,   INTENT(INOUT) :: PCSS       ! Snow/aggregate C. source   
+REAL, DIMENSION(:,:,:),OPTIONAL,   INTENT(INOUT) :: PCGS       ! Graupel C. source       
+REAL, DIMENSION(:,:,:),OPTIONAL,   INTENT(INOUT) :: PCHS       ! Hail C. source
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRS  ! Snow instant precip
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRG  ! Graupel instant precip
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRH  ! Hail instant precip
@@ -47,8 +51,8 @@ END MODULE MODI_LIMA_COLD_SEDIMENTATION
                                           PZZ, PRHODJ, PRHODREF,           &
                                           PRIT, PCIT,                      &
                                           PRIS, PRSS, PRGS, PRHS, PCIS,    &
-                                          PINPRS,PINPRG,&
-                                          PINPRH                )
+                                          PINPRS,PINPRG,PINPRH,            &
+                                          PCSS, PCGS, PCHS)
 !     ######################################################################
 !
 !!    PURPOSE
@@ -77,6 +81,7 @@ END MODULE MODI_LIMA_COLD_SEDIMENTATION
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
 !  P. Wautelet 28/05/2019: move COUNTJV function to tools.f90
+!  M. Taufour     07/2022: add concentration for snow, graupel, hail
 !
 !-------------------------------------------------------------------------------
 !
@@ -86,10 +91,17 @@ END MODULE MODI_LIMA_COLD_SEDIMENTATION
 USE MODD_CST,              ONLY : XRHOLW
 USE MODD_NSV
 USE MODD_PARAMETERS,       ONLY : JPHEXT, JPVEXT
-USE MODD_PARAM_LIMA,       ONLY : XCEXVT, XRTMIN, XCTMIN
+USE MODD_PARAM_LIMA,       ONLY : XCEXVT, XRTMIN, XCTMIN, &
+                                  NMOM_S, NMOM_G, NMOM_H
 USE MODD_PARAM_LIMA_COLD,  ONLY : XLBEXI, XLBI, XDI,                 &
-                                  XFSEDRI, XFSEDCI, XFSEDS, XEXSEDS
-USE MODD_PARAM_LIMA_MIXED, ONLY : XFSEDG, XEXSEDG, XFSEDH, XEXSEDH
+                                  XFSEDRI, XFSEDCI, XFSEDS, XEXSEDS, &
+                                  XLBEXS, XLBS, XDS,                 &
+                                  XFSEDRS, XFSEDCS 
+                               
+USE MODD_PARAM_LIMA_MIXED, ONLY : XFSEDG, XEXSEDG, XFSEDH, XEXSEDH, &
+                                  XLBEXG, XLBG, XDG,                &
+                                  XLBEXH, XLBH, XDH,                &
+                                  XFSEDRG, XFSEDCG, XFSEDRH, XFSEDCH
 !
 use mode_tools,           only: Countjv
 !
@@ -117,6 +129,9 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRSS       ! Snow/aggregate m.r. sour
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRGS       ! Graupel m.r. source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRHS       ! Hail m.r. source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIS       ! Ice crystal C. source
+REAL, DIMENSION(:,:,:),OPTIONAL,   INTENT(INOUT) :: PCSS       ! Snow/aggregate C. source  
+REAL, DIMENSION(:,:,:),OPTIONAL,   INTENT(INOUT) :: PCGS       ! Graupel C. source       
+REAL, DIMENSION(:,:,:),OPTIONAL,   INTENT(INOUT) :: PCHS       ! Hail C. source
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRS  ! Snow instant precip
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRG  ! Graupel instant precip
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRH  ! Hail instant precip
@@ -139,8 +154,11 @@ REAL, DIMENSION(:), ALLOCATABLE         &
                            :: ZRIS,     & ! Pristine ice m.r. source
                               ZCIS,     & ! Pristine ice conc. source
                               ZRSS,     & ! Snow/aggregate m.r. source
+                              ZCSS,     & ! Snow/aggregate conc. source
                               ZRGS,     & ! Graupel/hail m.r. source
+                              ZCGS,     & ! Graupel/hail conc. source
                               ZRHS,     & ! Graupel/hail m.r. source
+                              ZCHS,     & ! Graupel/hail conc. source 
                               ZRIT,     & ! Pristine ice m.r. at t
                               ZCIT,     & ! Pristine ice conc. at t
                               ZRHODREF, & ! RHO Dry REFerence
@@ -148,8 +166,8 @@ REAL, DIMENSION(:), ALLOCATABLE         &
                               ZZW,      & ! Work array
                               ZZX,      & ! Work array
                               ZZY,      & ! Work array
-                              ZLBDAI,   & ! Slope parameter of the ice crystal distr.
-                              ZRTMIN 
+                              ZLBDAI, ZLBDAS, ZLBDAG, ZLBDAH,   & ! Slope parameter of the ice crystal distr.
+                              ZRTMIN, ZCTMIN 
 !
 INTEGER , DIMENSION(SIZE(PRHODREF)) :: I1,I2,I3 ! Indexes for PACK replacement
 !
@@ -170,7 +188,9 @@ IKE=SIZE(PZZ,3) - JPVEXT
 ! Time splitting and ZRTMIN
 !
 ALLOCATE(ZRTMIN(SIZE(XRTMIN)))
+ALLOCATE(ZCTMIN(SIZE(XCTMIN)))
 ZRTMIN(:) = XRTMIN(:) / PTSTEP
+ZCTMIN(:) = XCTMIN(:) / PTSTEP
 !
 ZTSPLITG= PTSTEP / REAL(KSPLITG)
 !
@@ -185,9 +205,28 @@ PINPRH(:,:) = 0.
 DO JN = 1 , KSPLITG 
   ! Computation only where enough ice, snow, graupel or hail
    GSEDIM(:,:,:) = .FALSE.
-   GSEDIM(IIB:IIE,IJB:IJE,IKB:IKE) = PRSS(IIB:IIE,IJB:IJE,IKB:IKE)>ZRTMIN(5) &
-                                .OR. PRGS(IIB:IIE,IJB:IJE,IKB:IKE)>ZRTMIN(6) &
-                                .OR. PRHS(IIB:IIE,IJB:IJE,IKB:IKE)>ZRTMIN(7)
+IF (NMOM_S.EQ.2) THEN
+   GSEDIM(IIB:IIE,IJB:IJE,IKB:IKE) = PRSS(IIB:IIE,IJB:IJE,IKB:IKE)>ZRTMIN(5) .AND. &
+                                     PCSS(IIB:IIE,IJB:IJE,IKB:IKE)>ZCTMIN(5)
+ELSE
+   GSEDIM(IIB:IIE,IJB:IJE,IKB:IKE) = PRSS(IIB:IIE,IJB:IJE,IKB:IKE)>ZRTMIN(5)
+END IF
+IF (NMOM_G.EQ.2) THEN
+   GSEDIM(IIB:IIE,IJB:IJE,IKB:IKE) = GSEDIM(IIB:IIE,IJB:IJE,IKB:IKE) .OR. &
+                                   ( PRGS(IIB:IIE,IJB:IJE,IKB:IKE)>ZRTMIN(6) .AND. &
+                                     PCGS(IIB:IIE,IJB:IJE,IKB:IKE)>ZCTMIN(6) )
+ELSE
+   GSEDIM(IIB:IIE,IJB:IJE,IKB:IKE) = GSEDIM(IIB:IIE,IJB:IJE,IKB:IKE) .OR. &
+                                     PRGS(IIB:IIE,IJB:IJE,IKB:IKE)>ZRTMIN(6)
+END IF
+IF (NMOM_H.EQ.2) THEN
+   GSEDIM(IIB:IIE,IJB:IJE,IKB:IKE) = GSEDIM(IIB:IIE,IJB:IJE,IKB:IKE) .OR. &
+                                   ( PRSS(IIB:IIE,IJB:IJE,IKB:IKE)>ZRTMIN(7) .AND. &
+                                     PCSS(IIB:IIE,IJB:IJE,IKB:IKE)>ZCTMIN(7) )
+ELSE
+   GSEDIM(IIB:IIE,IJB:IJE,IKB:IKE) = GSEDIM(IIB:IIE,IJB:IJE,IKB:IKE) .OR. &
+                                     PRSS(IIB:IIE,IJB:IJE,IKB:IKE)>ZRTMIN(7)
+END IF
    IF( OSEDI ) THEN
       GSEDIM(IIB:IIE,IJB:IJE,IKB:IKE) = GSEDIM(IIB:IIE,IJB:IJE,IKB:IKE) &
                                 .OR. PRIS(IIB:IIE,IJB:IJE,IKB:IKE)>ZRTMIN(4)
@@ -204,6 +243,9 @@ DO JN = 1 , KSPLITG
          PRSS(:,:,:) = PRSS(:,:,:) * PTSTEP
          PRGS(:,:,:) = PRGS(:,:,:) * PTSTEP
          PRHS(:,:,:) = PRHS(:,:,:) * PTSTEP
+         IF(NMOM_S.EQ.2) PCSS(:,:,:) = PCSS(:,:,:) * PTSTEP
+         IF(NMOM_G.EQ.2) PCGS(:,:,:) = PCGS(:,:,:) * PTSTEP
+         IF(NMOM_H.EQ.2) PCHS(:,:,:) = PCHS(:,:,:) * PTSTEP
          DO JK = IKB , IKE
             ZW(:,:,JK)=ZTSPLITG/(PZZ(:,:,JK+1)-PZZ(:,:,JK))
          END DO
@@ -259,21 +301,52 @@ DO JN = 1 , KSPLITG
 !*       2.22   for aggregates
 !
       ZZW(:) = 0.
+      ZZX(:) = 0.0                                                
+      ZZY(:) = 0.0
       IF( MAXVAL(PRSS(:,:,:))>XRTMIN(5) ) THEN
          ALLOCATE(ZRSS(ISEDIM)) 
-         DO JL = 1,ISEDIM
-            ZRSS(JL) = PRSS(I1(JL),I2(JL),I3(JL))
-         END DO
-         WHERE( ZRSS(:)>XRTMIN(5) )
-            ZZW(:) = XFSEDS * (ZRSS(:)*ZRHODREF(:))**XEXSEDS * ZRHODREF(:)**(-XCEXVT)
-         END WHERE
-         ZWSEDR(:,:,:) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
-         ZWSEDR(:,:,IKB:IKE) = MIN( ZWSEDR(:,:,IKB:IKE), PRSS(:,:,IKB:IKE) * PRHODREF(:,:,IKB:IKE) / ZW(:,:,IKB:IKE) )
-         DO JK = IKB , IKE
-            PRSS(:,:,JK) = PRSS(:,:,JK) + ZW(:,:,JK)* &
-                 (ZWSEDR(:,:,JK+1)-ZWSEDR(:,:,JK))/PRHODREF(:,:,JK)
-         END DO
-         DEALLOCATE(ZRSS)
+         IF(NMOM_S.GE.2) THEN
+            ALLOCATE(ZCSS(ISEDIM))  
+            ALLOCATE(ZLBDAS(ISEDIM))
+            DO JL = 1,ISEDIM
+               ZRSS(JL) = PRSS(I1(JL),I2(JL),I3(JL))
+               ZCSS(JL) = PCSS(I1(JL),I2(JL),I3(JL))       
+            END DO
+            ZLBDAS(:)  = 1.E10         
+            WHERE( ZRSS(:)>XRTMIN(5) .AND. ZCSS(:)>XCTMIN(5) )            
+               ZLBDAS(:) = ( XLBS*ZCSS(:) / ZRSS(:) )**XLBEXS    
+               ZZY(:) = ZRHODREF(:)**(-XCEXVT) * (ZLBDAS(:)**(-XDS))
+               ZZW(:) = XFSEDRS * ZRSS(:) * ZZY(:) * ZRHODREF(:)
+               ZZX(:) = XFSEDCS * ZCSS(:) * ZZY(:) * ZRHODREF(:)
+            END WHERE
+            ZWSEDR(:,:,:) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
+            ZWSEDR(:,:,IKB:IKE) = MIN( ZWSEDR(:,:,IKB:IKE), PRSS(:,:,IKB:IKE) * PRHODREF(:,:,IKB:IKE) / ZW(:,:,IKB:IKE) )
+            ZWSEDC(:,:,:) = UNPACK( ZZX(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
+            ZWSEDC(:,:,IKB:IKE) = MIN( ZWSEDC(:,:,IKB:IKE), PCSS(:,:,IKB:IKE) * PRHODREF(:,:,IKB:IKE) / ZW(:,:,IKB:IKE) )
+            DO JK = IKB , IKE
+               PRSS(:,:,JK) = PRSS(:,:,JK) + ZW(:,:,JK)*                      &
+                    (ZWSEDR(:,:,JK+1)-ZWSEDR(:,:,JK))/PRHODREF(:,:,JK)
+               PCSS(:,:,JK) = PCSS(:,:,JK) + ZW(:,:,JK)*                      &
+                    (ZWSEDC(:,:,JK+1)-ZWSEDC(:,:,JK))/PRHODREF(:,:,JK)
+            END DO
+            DEALLOCATE(ZRSS)
+            DEALLOCATE(ZCSS)
+            DEALLOCATE(ZLBDAS) 
+         ELSE
+            DO JL = 1,ISEDIM
+               ZRSS(JL) = PRSS(I1(JL),I2(JL),I3(JL))
+            END DO
+            WHERE( ZRSS(:)>XRTMIN(5) )
+               ZZW(:) = XFSEDS * (ZRSS(:)*ZRHODREF(:))**XEXSEDS * ZRHODREF(:)**(-XCEXVT)
+            END WHERE
+            ZWSEDR(:,:,:) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
+            ZWSEDR(:,:,IKB:IKE) = MIN( ZWSEDR(:,:,IKB:IKE), PRSS(:,:,IKB:IKE) * PRHODREF(:,:,IKB:IKE) / ZW(:,:,IKB:IKE) )
+            DO JK = IKB , IKE
+               PRSS(:,:,JK) = PRSS(:,:,JK) + ZW(:,:,JK)* &
+                    (ZWSEDR(:,:,JK+1)-ZWSEDR(:,:,JK))/PRHODREF(:,:,JK)
+            END DO
+            DEALLOCATE(ZRSS)
+         END IF
       ELSE
          ZWSEDR(:,:,IKB) = 0.0
       END IF
@@ -283,21 +356,52 @@ DO JN = 1 , KSPLITG
 !*       2.23   for graupeln
 !
       ZZW(:) = 0.
+      ZZX(:) = 0.0                                          
+      ZZY(:) = 0.0
       IF( MAXVAL(PRGS(:,:,:))>XRTMIN(6) ) THEN
          ALLOCATE(ZRGS(ISEDIM)) 
-         DO JL = 1,ISEDIM
-            ZRGS(JL) = PRGS(I1(JL),I2(JL),I3(JL))
-         END DO
-         WHERE( ZRGS(:)>XRTMIN(6) )
-            ZZW(:) = XFSEDG * (ZRGS(:)*ZRHODREF(:))**XEXSEDG * ZRHODREF(:)**(-XCEXVT)
-         END WHERE
-         ZWSEDR(:,:,:) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
-         ZWSEDR(:,:,IKB:IKE) = MIN( ZWSEDR(:,:,IKB:IKE), PRGS(:,:,IKB:IKE) * PRHODREF(:,:,IKB:IKE) / ZW(:,:,IKB:IKE) )
-         DO JK = IKB , IKE
-            PRGS(:,:,JK) = PRGS(:,:,JK) + ZW(:,:,JK)* &
-                 (ZWSEDR(:,:,JK+1)-ZWSEDR(:,:,JK))/PRHODREF(:,:,JK)
-         END DO
-         DEALLOCATE(ZRGS)
+         IF(NMOM_G.GE.2) THEN
+                 ALLOCATE(ZCGS(ISEDIM))                                   
+                 ALLOCATE(ZLBDAG(ISEDIM))                  
+                 DO JL = 1,ISEDIM
+                    ZRGS(JL) = PRGS(I1(JL),I2(JL),I3(JL))
+                    ZCGS(JL) = PCGS(I1(JL),I2(JL),I3(JL))            
+                 END DO 
+                 ZLBDAG(:)  = 1.E10         
+                 WHERE( ZRGS(:)>XRTMIN(6) .AND. ZCGS(:)>XCTMIN(6) )                          
+                    ZLBDAG(:) = ( XLBS*ZCGS(:) / ZRGS(:) )**XLBEXG    
+                    ZZY(:) = ZRHODREF(:)**(-XCEXVT) * (ZLBDAG(:)**(-XDG))
+                    ZZW(:) = XFSEDRG * ZRGS(:) * ZZY(:) * ZRHODREF(:)
+                    ZZX(:) = XFSEDCG * ZCGS(:) * ZZY(:) * ZRHODREF(:)
+                 END WHERE
+                 ZWSEDR(:,:,:) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
+                 ZWSEDR(:,:,IKB:IKE) = MIN( ZWSEDR(:,:,IKB:IKE), PRGS(:,:,IKB:IKE) * PRHODREF(:,:,IKB:IKE) / ZW(:,:,IKB:IKE) )
+                 ZWSEDC(:,:,:) = UNPACK( ZZX(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
+                 ZWSEDC(:,:,IKB:IKE) = MIN( ZWSEDC(:,:,IKB:IKE), PCGS(:,:,IKB:IKE) * PRHODREF(:,:,IKB:IKE) / ZW(:,:,IKB:IKE) )
+                 DO JK = IKB , IKE
+                    PRGS(:,:,JK) = PRGS(:,:,JK) + ZW(:,:,JK)*                      &
+                         (ZWSEDR(:,:,JK+1)-ZWSEDR(:,:,JK))/PRHODREF(:,:,JK)
+                    PCGS(:,:,JK) = PCGS(:,:,JK) + ZW(:,:,JK)*                      &
+                         (ZWSEDC(:,:,JK+1)-ZWSEDC(:,:,JK))/PRHODREF(:,:,JK)
+                 END DO          
+                 DEALLOCATE(ZRGS)
+                 DEALLOCATE(ZCGS)           
+                 DEALLOCATE(ZLBDAG)
+         ELSE
+                 DO JL = 1,ISEDIM
+                    ZRGS(JL) = PRGS(I1(JL),I2(JL),I3(JL))
+                 END DO
+                 WHERE( ZRGS(:)>XRTMIN(6) )
+                    ZZW(:) = XFSEDG * (ZRGS(:)*ZRHODREF(:))**XEXSEDG * ZRHODREF(:)**(-XCEXVT)
+                 END WHERE
+                 ZWSEDR(:,:,:) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
+                 ZWSEDR(:,:,IKB:IKE) = MIN( ZWSEDR(:,:,IKB:IKE), PRGS(:,:,IKB:IKE) * PRHODREF(:,:,IKB:IKE) / ZW(:,:,IKB:IKE) )
+                 DO JK = IKB , IKE
+                    PRGS(:,:,JK) = PRGS(:,:,JK) + ZW(:,:,JK)* &
+                         (ZWSEDR(:,:,JK+1)-ZWSEDR(:,:,JK))/PRHODREF(:,:,JK)
+                 END DO
+                 DEALLOCATE(ZRGS)
+         END IF
       ELSE
          ZWSEDR(:,:,IKB) = 0.0
       END IF
@@ -307,21 +411,48 @@ DO JN = 1 , KSPLITG
 !*       2.23   for hail
 !
       ZZW(:) = 0.
+      ZZX(:) = 0.
+      ZZY(:) = 0.      
       IF( MAXVAL(PRHS(:,:,:))>XRTMIN(7) ) THEN
          ALLOCATE(ZRHS(ISEDIM)) 
-         DO JL = 1,ISEDIM
-            ZRHS(JL) = PRHS(I1(JL),I2(JL),I3(JL))
-         END DO
-         WHERE( ZRHS(:)>XRTMIN(7) )
-            ZZW(:) = XFSEDH * (ZRHS(:)*ZRHODREF(:))**XEXSEDH * ZRHODREF(:)**(-XCEXVT)
-         END WHERE
-         ZWSEDR(:,:,:) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
-         ZWSEDR(:,:,IKB:IKE) = MIN( ZWSEDR(:,:,IKB:IKE), PRHS(:,:,IKB:IKE) * PRHODREF(:,:,IKB:IKE) / ZW(:,:,IKB:IKE) )
-         DO JK = IKB , IKE
-            PRHS(:,:,JK) = PRHS(:,:,JK) + ZW(:,:,JK)* &
-                 (ZWSEDR(:,:,JK+1)-ZWSEDR(:,:,JK))/PRHODREF(:,:,JK)
-         END DO
-         DEALLOCATE(ZRHS)
+         IF(NMOM_H.GE.2) THEN
+                ALLOCATE(ZCHS(ISEDIM))          
+                ALLOCATE(ZLBDAH(ISEDIM))                  
+                 DO JL = 1,ISEDIM
+                    ZRHS(JL) = PRHS(I1(JL),I2(JL),I3(JL))
+                    ZCHS(JL) = PCHS(I1(JL),I2(JL),I3(JL))            
+                 END DO
+                 ZLBDAH(:)  = 1.E10         
+                 WHERE( ZRHS(:)>XRTMIN(7) .AND. ZCHS(:)>XCTMIN(7) )
+                    ZLBDAH(:) = ( XLBH*ZCHS(:) / ZRHS(:) )**XLBEXH    
+                    ZZY(:) = ZRHODREF(:)**(-XCEXVT) * (ZLBDAH(:)**(-XDH))
+                    ZZW(:) = XFSEDRH * ZRHS(:) * ZZY(:) * ZRHODREF(:)
+                    ZZX(:) = XFSEDCH * ZCHS(:) * ZZY(:) * ZRHODREF(:)
+                 END WHERE
+                 ZWSEDR(:,:,:) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
+                 ZWSEDR(:,:,IKB:IKE) = MIN( ZWSEDR(:,:,IKB:IKE), PRHS(:,:,IKB:IKE) * PRHODREF(:,:,IKB:IKE) / ZW(:,:,IKB:IKE) )
+                 DO JK = IKB , IKE
+                    PRHS(:,:,JK) = PRHS(:,:,JK) + ZW(:,:,JK)*                      &
+                         (ZWSEDR(:,:,JK+1)-ZWSEDR(:,:,JK))/PRHODREF(:,:,JK)
+                 END DO
+                 DEALLOCATE(ZRHS)
+                 DEALLOCATE(ZLBDAH)
+                 DEALLOCATE(ZCHS)
+         ELSE
+                 DO JL = 1,ISEDIM
+                    ZRHS(JL) = PRHS(I1(JL),I2(JL),I3(JL))
+                 END DO
+                 WHERE( ZRHS(:)>XRTMIN(7) )
+                    ZZW(:) = XFSEDH * (ZRHS(:)*ZRHODREF(:))**XEXSEDH * ZRHODREF(:)**(-XCEXVT)
+                 END WHERE
+                 ZWSEDR(:,:,:) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
+                 ZWSEDR(:,:,IKB:IKE) = MIN( ZWSEDR(:,:,IKB:IKE), PRHS(:,:,IKB:IKE) * PRHODREF(:,:,IKB:IKE) / ZW(:,:,IKB:IKE) )
+                 DO JK = IKB , IKE
+                    PRHS(:,:,JK) = PRHS(:,:,JK) + ZW(:,:,JK)* &
+                         (ZWSEDR(:,:,JK+1)-ZWSEDR(:,:,JK))/PRHODREF(:,:,JK)
+                 END DO
+                 DEALLOCATE(ZRHS)
+         END IF
       ELSE
          ZWSEDR(:,:,IKB) = 0.0
       END IF
@@ -342,11 +473,15 @@ DO JN = 1 , KSPLITG
          PRSS(:,:,:) = PRSS(:,:,:) / PTSTEP
          PRGS(:,:,:) = PRGS(:,:,:) / PTSTEP
          PRHS(:,:,:) = PRHS(:,:,:) / PTSTEP
+         IF(NMOM_S.GE.2) PCSS(:,:,:) = PCSS(:,:,:) / PTSTEP
+         IF(NMOM_G.GE.2) PCGS(:,:,:) = PCGS(:,:,:) / PTSTEP
+         IF(NMOM_H.GE.2) PCHS(:,:,:) = PCHS(:,:,:) / PTSTEP 
       END IF
    END IF
 END DO
 !++cb++
 DEALLOCATE(ZRTMIN)
+DEALLOCATE(ZCTMIN)
 !--cb--
 !
 END SUBROUTINE LIMA_COLD_SEDIMENTATION
