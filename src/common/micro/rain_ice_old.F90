@@ -185,6 +185,8 @@ USE YOMLDDH, ONLY  : TLDDH
 USE YOMMDDH, ONLY  : TMDDH
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
 !
+  use iso_fortran_env, only: output_unit
+
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
@@ -247,20 +249,20 @@ REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRIS    ! Pristine ice m.r. sourc
 REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRSS    ! Snow/aggregate m.r. source
 REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PRGS    ! Graupel m.r. source
 !
-REAL, DIMENSION(D%NIT),       INTENT(INOUT) :: PINPRC! Cloud instant precip
-REAL, DIMENSION(D%NIT),       INTENT(INOUT) :: PINPRR! Rain instant precip
-REAL, DIMENSION(D%NIT,D%NKT), INTENT(INOUT) :: PEVAP3D! Rain evap profile
-REAL, DIMENSION(D%NIT),       INTENT(INOUT) :: PINPRS! Snow instant precip
-REAL, DIMENSION(D%NIT),       INTENT(INOUT) :: PINPRG! Graupel instant precip
-REAL, DIMENSION(D%NIT),       INTENT(IN)    :: PSEA ! Sea Mask
-REAL, DIMENSION(D%NIT),       INTENT(IN)    :: PTOWN! Fraction that is town
+REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRC! Cloud instant precip
+REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRR! Rain instant precip
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(OUT) :: PEVAP3D! Rain evap profile
+REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRS! Snow instant precip
+REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRG! Graupel instant precip
+REAL, DIMENSION(D%NIT),       INTENT(IN)  :: PSEA ! Sea Mask
+REAL, DIMENSION(D%NIT),       INTENT(IN)  :: PTOWN! Fraction that is town
 TYPE(TYP_DDH),        INTENT(INOUT)     :: YDDDH
 TYPE(TLDDH),          INTENT(IN)        :: YDLDDH
 TYPE(TMDDH),          INTENT(IN)        :: YDMDDH
 REAL, DIMENSION(D%NIT), INTENT(IN)            :: PICENU, PKGN_ACON, PKGN_SBGR
 REAL, DIMENSION(D%NIT,D%NKT),   OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
 REAL, DIMENSION(D%NIT,D%NKT),   OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
-REAL, DIMENSION(D%NIT),         OPTIONAL, INTENT(INOUT) :: PINPRH  ! Hail instant precip
+REAL, DIMENSION(D%NIT),         OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip
 REAL, DIMENSION(D%NIT,D%NKT,KRR), OPTIONAL, INTENT(OUT) :: PFPR    ! upper-air precipitation fluxes
 
 !
@@ -462,6 +464,7 @@ LOGICAL LTIW   ! Use TIW for graupel melting ( set by XFRMIN(18) ~ 1)
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
+integer :: i,j
 !-------------------------------------------------------------------------------
 !
 !*       1.1     COMPUTE THE LOOP BOUNDS
@@ -511,7 +514,6 @@ IF (NINT(XFRMIN(18)) == 1) LTIW=.TRUE.
 
 ZRDEPSRED = XRDEPSRED
 ZRDEPGRED = XRDEPGRED
-
 
 !
 !*       1.3    COMPUTE THE DROPLET NUMBER CONCENTRATION 
@@ -600,6 +602,7 @@ ELSE
                 PRGT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XRTMIN(6)
   ENDIF
 ENDIF
+
 IMICRO = COUNTJV( GMICRO(:,:),I1(:),I3(:))
 IF ( IMICRO >= 0 ) THEN
   ALLOCATE(ZRVT(IMICRO))
@@ -659,6 +662,7 @@ IF ( IMICRO >= 0 ) THEN
      ALLOCATE(ZAA2W(IMICRO))
      ALLOCATE(ZBB3W(IMICRO))
   ENDIF
+
   IF (OCND2) THEN
      IF (LMODICEDEP) THEN
         DO JL=1,IMICRO
@@ -741,6 +745,7 @@ IF ( IMICRO >= 0 ) THEN
 
     ENDIF
   ENDDO
+
   ALLOCATE(ZZW(IMICRO))
   ALLOCATE(ZZW2(IMICRO))
   ALLOCATE(ZZW3(IMICRO))
@@ -1022,6 +1027,7 @@ IF ( IMICRO >= 0 ) THEN
 !*       5.     COMPUTES THE FAST COLD PROCESS SOURCES FOR r_g
 !               ----------------------------------------------
 !
+
   CALL RAIN_ICE_FAST_RG
 !
 !-------------------------------------------------------------------------------
@@ -1040,6 +1046,7 @@ IF ( IMICRO >= 0 ) THEN
 !*       7.     COMPUTES SPECIFIC SOURCES OF THE WARM AND COLD CLOUDY SPECIES
 !               -------------------------------------------------------------
 !
+
   CALL RAIN_ICE_FAST_RI
 
   IF (OCND2.AND.LCHECKNOISE) THEN
@@ -1048,50 +1055,50 @@ IF ( IMICRO >= 0 ) THEN
 ! Do not override saturation point over ice for temperatures below freezing. 
 ! If so, adjust total ice and then moisture  and temperature. 
  
-     DO JL=1,IMICRO
-        ZRSA=ZRIS(JL)+ZRSS(JL) +ZRGS(JL) ! total solid
-        ZRSTS=ZRIT(JL)+ZRST(JL) +ZRGT(JL) ! total solid timestep t
-        IF(ZZT(JL)<XTT .AND. ABS(ZRSA*PTSTEP-ZRSTS)> 1.0E-12 .AND. &
-              &  ZESI(JL) < ZPRES(JL)*0.5 )THEN
-           ZTSP = TIWMX_TAB(ZPRES(JL),ZZT(JL), ZRVS(JL)*PTSTEP,1._JPRB,ZRSP,ZRSI,0.1_JPRB)
-           ZRVSOLD =ZRVS(JL)
-           ZRISOLD =ZRIS(JL)
-           ZRSSOLD =ZRSS(JL)
-           ZRGSOLD =ZRGS(JL)
-           !       Fractions of total solid for cloud ice, snow and graupel 
-           !       (hail not concidered yet):
-           ZRISFRC = 1._JPRB !(Default)
-           ZRSSFRC = 0._JPRB !(Default)
-           ZRGSFRC = 0._JPRB !(Default)
-           IF(ZRSA > 0._JPRB )THEN
-              ZRISFRC = ZRISOLD/ZRSA
-              ZRSSFRC = ZRSSOLD/ZRSA
-              ZRGSFRC = ZRGSOLD/ZRSA
-           ENDIF
-
-           ZRSDIF =0._JPRB
-           ZRFRAC=   ZRVS(JL)*PTSTEP - ZRSA*PTSTEP  +ZRSTS 
-           IF(ZRVS(JL)*PTSTEP < ZRSI )THEN ! sub - saturation over ice:
-              ! Avoid drying of ice leading to supersaturation with
-              ! respect to ice
-
-              ! ZRFRAC should not exceed ZRSP, if so adjust
-              ZRSDIF = MIN(0._JPRB,ZRSP-ZRFRAC)
-           ELSE  ! super - saturation over ice:
-              ! ZRFRAC should not go below ZRSP, if so adjust
-!              ZRSDIF = MAX(0._JPRB,ZRSP-ZRFRAC)
-           ENDIF
-           ZRSB = ZRSA*PTSTEP  - ZRSDIF
-           ZRVS(JL) = ZRVS(JL) -  (ZRSB/PTSTEP-ZRSA) ! total H2O should not change
-           ZTHS(JL) = ZTHS(JL) +  (ZRSB/PTSTEP-ZRSA)*ZLSFACT(JL) ! total energy should not change
-
-           ZRIS(JL) = ZRSB*ZRISFRC/PTSTEP ! individual fractions should not change
-           ZRSS(JL) = ZRSB*ZRSSFRC/PTSTEP ! execpt for increase from no ice, when
-           ZRGS(JL) = ZRSB*ZRGSFRC/PTSTEP ! new all becomes cloud ice only. (No precipipitation) 
-
+    DO JL=1,IMICRO
+      ZRSA=ZRIS(JL)+ZRSS(JL) +ZRGS(JL) ! total solid
+      ZRSTS=ZRIT(JL)+ZRST(JL) +ZRGT(JL) ! total solid timestep t
+      IF(ZZT(JL)<XTT .AND. ABS(ZRSA*PTSTEP-ZRSTS)> 1.0E-12 .AND. &
+      &  ZESI(JL) < ZPRES(JL)*0.5 )THEN
+        ZTSP = TIWMX_TAB(ZPRES(JL),ZZT(JL), ZRVS(JL)*PTSTEP,1._JPRB,ZRSP,ZRSI,0.1_JPRB)
+        ZRVSOLD =ZRVS(JL)
+        ZRISOLD =ZRIS(JL)
+        ZRSSOLD =ZRSS(JL)
+        ZRGSOLD =ZRGS(JL)
+        !       Fractions of total solid for cloud ice, snow and graupel 
+        !       (hail not concidered yet):
+        ZRISFRC = 1._JPRB !(Default)
+        ZRSSFRC = 0._JPRB !(Default)
+        ZRGSFRC = 0._JPRB !(Default)
+        IF(ZRSA > 0._JPRB )THEN
+          ZRISFRC = ZRISOLD/ZRSA
+          ZRSSFRC = ZRSSOLD/ZRSA
+          ZRGSFRC = ZRGSOLD/ZRSA
         ENDIF
-     ENDDO
-     ! End check 
+
+        ZRSDIF =0._JPRB
+        ZRFRAC=   ZRVS(JL)*PTSTEP - ZRSA*PTSTEP  +ZRSTS 
+        IF(ZRVS(JL)*PTSTEP < ZRSI )THEN ! sub - saturation over ice:
+          ! Avoid drying of ice leading to supersaturation with
+          ! respect to ice
+
+          ! ZRFRAC should not exceed ZRSP, if so adjust
+          ZRSDIF = MIN(0._JPRB,ZRSP-ZRFRAC)
+        ELSE  ! super - saturation over ice:
+          ! ZRFRAC should not go below ZRSP, if so adjust
+!          ZRSDIF = MAX(0._JPRB,ZRSP-ZRFRAC)
+        ENDIF
+        ZRSB = ZRSA*PTSTEP  - ZRSDIF
+        ZRVS(JL) = ZRVS(JL) -  (ZRSB/PTSTEP-ZRSA) ! total H2O should not change
+        ZTHS(JL) = ZTHS(JL) +  (ZRSB/PTSTEP-ZRSA)*ZLSFACT(JL) ! total energy should not change
+
+        ZRIS(JL) = ZRSB*ZRISFRC/PTSTEP ! individual fractions should not change
+        ZRSS(JL) = ZRSB*ZRSSFRC/PTSTEP ! execpt for increase from no ice, when
+        ZRGS(JL) = ZRSB*ZRGSFRC/PTSTEP ! new all becomes cloud ice only. (No precipipitation) 
+
+      ENDIF
+    ENDDO
+    ! End check 
 
   ENDIF
 !
@@ -1586,6 +1593,7 @@ DO JN = 1 , KSPLITR
 !
 !*       2.3   for pristine ice
 !
+
   IF( JN==1 ) PRIS(:,:) = PRIS(:,:) * PTSTEP
   ZWSED(:,:) = 0.
   IF( ISEDIMI >= 1 ) THEN
@@ -1605,30 +1613,31 @@ DO JN = 1 , KSPLITR
 !
     ILISTLENI = 0
     DO JL=1,ISEDIMI
-     IF( ZRIS(JL) .GT.  MAX(ZRTMIN(4),1.0E-7 )) THEN ! limitation of the McF&H formula
-       ILISTLENI = ILISTLENI + 1
-       ILISTI(ILISTLENI) = JL
-     END IF
+      IF( ZRIS(JL) .GT.  MAX(ZRTMIN(4),1.0E-7 )) THEN ! limitation of the McF&H formula
+        ILISTLENI = ILISTLENI + 1
+        ILISTI(ILISTLENI) = JL
+      END IF
     END DO
-       DO JJ = 1, ILISTLENI
-          JL = ILISTI(JJ)
-              ZWSED (II1(JL),II3(JL))= XFSEDI * ZRIS(JL) *  &
-                               ZRHODREFI(JL)**(1.0-XCEXVT) * & !    McF&H
-                               MAX( 0.05E6,-0.15319E6-0.021454E6* &
-                               ALOG(ZRHODREFI(JL)*ZRIS(JL)) )**XEXCSEDI
+      DO JJ = 1, ILISTLENI
+        JL = ILISTI(JJ)
+        ZWSED (II1(JL),II3(JL))= XFSEDI * ZRIS(JL) *  &
+                        ZRHODREFI(JL)**(1.0-XCEXVT) * & !    McF&H
+                        MAX( 0.05E6,-0.15319E6-0.021454E6* &
+                        ALOG(ZRHODREFI(JL)*ZRIS(JL)) )**XEXCSEDI
        END DO
   END IF
-       DO JK = D%NKTB , D%NKTE
-         PRIS(:,JK) = PRIS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
-       END DO
-       IF (PRESENT(PFPR)) THEN
-         DO JK = D%NKTB , D%NKTE
-           PFPR(:,JK,4)=ZWSED(:,JK)
-         ENDDO
-       ENDIF
-      IF( JN==KSPLITR ) THEN
-        PRIS(:,:) = PRIS(:,:) * ZINVTSTEP
-      END IF
+
+  DO JK = D%NKTB , D%NKTE
+    PRIS(:,JK) = PRIS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
+  END DO
+  IF (PRESENT(PFPR)) THEN
+    DO JK = D%NKTB , D%NKTE
+      PFPR(:,JK,4)=ZWSED(:,JK)
+    ENDDO
+  ENDIF
+  IF( JN==KSPLITR ) THEN
+    PRIS(:,:) = PRIS(:,:) * ZINVTSTEP
+  END IF
 !
 !*       2.4   for aggregates/snow
 !
@@ -1988,7 +1997,6 @@ END DO
 !
 !*       2.3   for pristine ice
 !
-
    PRIS(:,:) = PRIS(:,:) * PTSTEP
    ZWSED(:,:) = 0.
    ZWSEDW1(:,:) = 0.
@@ -2000,52 +2008,52 @@ END DO
       ZQP(JI)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
     ENDDO
 
-     JCOUNT=COUNTJV2((PRIS(:,JK) > MAX(ZRTMIN(4),1.0E-7 )) .OR. &
+    JCOUNT=COUNTJV2((PRIS(:,JK) > MAX(ZRTMIN(4),1.0E-7 )) .OR. &
                      (ZQP(:) > MAX(ZRTMIN(4),1.0E-7 )),I1(:))
-     DO JL=1, JCOUNT
-       JI=I1(JL)
-       !calculation of w
-       IF ( PRIS(JI,JK) > MAX(ZRTMIN(4),1.0E-7 ) ) THEN
-         ZWSEDW1 (JI,JK)= XFSEDI *  &
-         &  PRHODREF(JI,JK)**(XCEXVT) * & !    McF&H
-         &  MAX( 0.05E6,-0.15319E6-0.021454E6* &
-         &  ALOG(PRHODREF(JI,JK)*PRIS(JI,JK)) )**XEXCSEDI
-       ENDIF
-       IF ( ZQP(JI) > MAX(ZRTMIN(4),1.0E-7 ) ) THEN
-         ZWSEDW2 (JI,JK)= XFSEDI *  &
-         &  PRHODREF(JI,JK)**(XCEXVT) * & !    McF&H
-         &  MAX( 0.05E6,-0.15319E6-0.021454E6* &
-         &  ALOG(PRHODREF(JI,JK)*ZQP(JI)) )**XEXCSEDI
-       ENDIF
-     ENDDO
-     DO JI = D%NIB, D%NIE
-       ZH=PDZZ(JI,JK)
-       ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
-       IF (ZWSEDW2(JI,JK) /= 0.) THEN
-         ZP2 = MAX(0.,1 - ZH  &
-         &  / (PTSTEP*ZWSEDW2(JI,JK)) )
-       ELSE
-         ZP2 = 0.
-       ENDIF
-       ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
-       &ZH*PRIS(JI,JK)&
-       &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
-     ENDDO
-   ENDDO
+    DO JL=1, JCOUNT
+      JI=I1(JL)
+      !calculation of w
+      IF ( PRIS(JI,JK) > MAX(ZRTMIN(4),1.0E-7 ) ) THEN
+        ZWSEDW1 (JI,JK)= XFSEDI *  &
+        &  PRHODREF(JI,JK)**(XCEXVT) * & !    McF&H
+        &  MAX( 0.05E6,-0.15319E6-0.021454E6* &
+        &  ALOG(PRHODREF(JI,JK)*PRIS(JI,JK)) )**XEXCSEDI
+      ENDIF
+      IF ( ZQP(JI) > MAX(ZRTMIN(4),1.0E-7 ) ) THEN
+        ZWSEDW2 (JI,JK)= XFSEDI *  &
+        &  PRHODREF(JI,JK)**(XCEXVT) * & !    McF&H
+        &  MAX( 0.05E6,-0.15319E6-0.021454E6* &
+        &  ALOG(PRHODREF(JI,JK)*ZQP(JI)) )**XEXCSEDI
+      ENDIF
+    ENDDO
+    DO JI = D%NIB, D%NIE
+      ZH=PDZZ(JI,JK)
+      ZP1 = MIN(1., ZWSEDW1(JI,JK) * PTSTEP / ZH )
+      IF (ZWSEDW2(JI,JK) /= 0.) THEN
+        ZP2 = MAX(0.,1 - ZH  &
+        &  / (PTSTEP*ZWSEDW2(JI,JK)) )
+      ELSE
+        ZP2 = 0.
+      ENDIF
+      ZWSED (JI,JK)=ZP1*PRHODREF(JI,JK)*&
+      &ZH*PRIS(JI,JK)&
+      &* ZINVTSTEP+ ZP2 * ZWSED (JI,JK+KKL)
+    ENDDO
+  ENDDO
 
-   DO JK = D%NKTB , D%NKTE
-     PRIS(:,JK) = PRIS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
-   ENDDO
-   IF (PRESENT(PFPR)) THEN
-     DO JK = D%NKTB , D%NKTE
-       PFPR(:,JK,4)=ZWSED(:,JK)
-     ENDDO
-   ENDIF
+  DO JK = D%NKTB , D%NKTE
+    PRIS(:,JK) = PRIS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
+  ENDDO
 
-   PRIS(:,:) = PRIS(:,:) * ZINVTSTEP
+  IF (PRESENT(PFPR)) THEN
+    DO JK = D%NKTB , D%NKTE
+      PFPR(:,JK,4)=ZWSED(:,JK)
+    ENDDO
+  ENDIF
 
+  PRIS(:,:) = PRIS(:,:) * ZINVTSTEP
 
-   PINPRS(:) = ZWSED(:,IKB)/XRHOLW
+  PINPRS(:) = ZWSED(:,IKB)/XRHOLW
 
 !
 !*       2.4   for aggregates/snow
@@ -2255,6 +2263,7 @@ INTEGER                           :: JL       ! and PACK intrinsics
 !  compute the temperature and the pressure
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
+
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_NUCLEATION',0,ZHOOK_HANDLE)
 ZT(:,:) = PTHT(:,:) * ( PPABST(:,:) / XP00 ) ** (XRD/XCPD)
 !
@@ -2293,10 +2302,12 @@ IF( INEGT >= 1 ) THEN
        ZSIFRC(JL) = PICLDFR(I1(JL),I3(JL))
     ENDIF
   ENDDO
+
   ALLOCATE(ZZW(INEGT))
   ALLOCATE(ZUSW(INEGT))
   ALLOCATE(ZSSI(INEGT))
   IF(OCND2)THEN ! try to do some optimazation :
+
     ZZW(:) = MIN(ZPRES(:)/2., ZESI(:))             ! safety limitation  es_i
     ZZW(:) = MIN(ZPRES(:)/2., ZZW(:))             ! safety limitation
     ZSSI(:) = ZRVT(:)*( ZPRES(:)-ZZW(:) ) / ( XEPSILO * ZZW(:) ) - 1.0
@@ -2321,6 +2332,7 @@ IF( INEGT >= 1 ) THEN
 !
   ZZW(:) = 0.0
   ZSSI(:) = MIN( ZSSI(:), ZUSW(:) ) ! limitation of SSi according to SSw=0
+
   IF(OCND2)THEN
      IF (LMODICEDEP) THEN
        ZZW(:) = 5.*EXP(0.304*(XTT-ZZT(:)))
@@ -2328,6 +2340,7 @@ IF( INEGT >= 1 ) THEN
      ELSE
        ZZW(:) = ZREDIN(:)* MAX(0.1,((20000.- MIN(20000.,ZZZ(:)))/20000.)**4) &
           &   *ZAM3(:)*(0.0001 + 0.9999*ZSIFRC(:))
+
      ENDIF
   ELSE
      WHERE( (ZZT(:)<XTT-5.0) .AND. (ZSSI(:)>0.0) )
@@ -2339,13 +2352,16 @@ IF( INEGT >= 1 ) THEN
              ( ZSSI(:)/ZUSW(:) )**XALPHA1 )
      END WHERE
   ENDIF
+
   ZZW(:) = ZZW(:)*ZZICENU(:) - ZCIT(:)
+
   IF( MAXVAL(ZZW(:)) > 0.0 ) THEN
 !
 !*       3.1.2   update the r_i and r_v mixing ratios
 !
 
     ZZW(:) = MIN( ZZW(:),50.E3 ) ! limitation provisoire a 50 l^-1
+
     IF(.NOT.OCND2)THEN
        ZW(:,:) = UNPACK( ZZW(:),MASK=GNEGT(:,:),FIELD=0.0 )
        ZW(:,:) = MAX( ZW(:,:) ,0.0 ) *XMNU0/(PRHODREF(:,:)*PTSTEP)
@@ -2363,8 +2379,10 @@ IF( INEGT >= 1 ) THEN
     ENDIF
                                  ! f(L_s*(RVHENI))
     ZZW(:) = MAX( ZZW(:)+ZCIT(:),ZCIT(:) )
+
     PCIT(:,:) = MAX( UNPACK( ZZW(:),MASK=GNEGT(:,:),FIELD=0.0 ) , PCIT(:,:) )
   END IF
+
   DEALLOCATE(ZSSI)
   DEALLOCATE(ZUSW)
   DEALLOCATE(ZZW)
@@ -2484,6 +2502,7 @@ IMPLICIT NONE
   REAL(KIND=JPRB) :: ZHOOK_HANDLE
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_SLOW',0,ZHOOK_HANDLE)
   ZZW(:) = 0.0
+
   WHERE( (ZZT(:)<XTT-35.0) .AND. (ZRCT(:)>XRTMIN(2)) .AND. (ZRCS(:)>0.) )
     ZZW(:) = MIN( ZRCS(:),XHON*ZRHODREF(:)*ZRCT(:)       &
                                  *EXP( XALPHA3*(ZZT(:)-XTT)-XBETA3 ) )
@@ -2595,6 +2614,7 @@ IMPLICIT NONE
     ZRSS(:)  = ZRSS(:)  + ZZW(:)
     ZRIS(:)  = ZRIS(:)  - ZZW(:)
   END WHERE
+
   IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                    9,'AGGS_BU_RRI',YDDDH, YDLDDH, YDMDDH)
   IF (LBUDGET_RS) CALL BUDGET_DDH(UNPACK(ZRSS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
@@ -2645,6 +2665,7 @@ IMPLICIT NONE
            ZRSS(:) =   ZRSS(:)  + ZBFT(:)
            ZRIS(:) =   ZRIS(:)  - ZBFT(:)
      END WHERE
+
 !     DO JL=1,IMICRO
 
 !       IF(ZRIS(JL)>XFRMIN(13) .AND.ZCIT(JL) > 0. ) THEN
@@ -2698,6 +2719,7 @@ IMPLICIT NONE
                                   11,'DEPG_BU_RRG',YDDDH, YDLDDH, YDMDDH)
 
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_SLOW',1,ZHOOK_HANDLE)
+
   END SUBROUTINE RAIN_ICE_SLOW
 !
 !-------------------------------------------------------------------------------
@@ -3807,6 +3829,7 @@ IMPLICIT NONE
 !*       7.1    cloud ice melting
 !
   REAL(KIND=JPRB) :: ZHOOK_HANDLE
+
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RI',0,ZHOOK_HANDLE)
   ZZW(:) = 0.0
   WHERE( (ZRIS(:)>0.0) .AND. (ZZT(:)>XTT) )
@@ -3833,12 +3856,13 @@ IMPLICIT NONE
      ! ZSIFRC with a superaturation ZSSIO and a subsaturated part (1.- ZSIFRC)
      ! with a (negative) superaturation of ZSSIU
 
-
      IF (LMODICEDEP) THEN
+
        DO JL=1,IMICRO
          ZZW2(JL) = MAX(ZCIT(JL),ICENUMBER2(ZRIS(JL)*PTSTEP,ZZT(JL))* &
          ZRHODREF(JL))
        ENDDO
+
        WHERE( ZZW2(:)>0.0 .AND. ZESI(:) < ZPRES(:)*0.5)
           ZZW(:)= X0DEPI/(XLBI*ZAI(:)) *(ZZW2(:)/ZRHODREF(:))**(1.+XLBEXI) * &
              & (PTSTEP*MAX(XRTMIN(4)/PTSTEP,ZRIS(:))*ZW2D(:) )**(-XLBEXI)
@@ -3850,7 +3874,9 @@ IMPLICIT NONE
           ZTHS(:) = ZTHS(:) + ZZW(:)*ZLSFACT(:) ! f(L_f*(RCBERI))
 
        END WHERE
+
      ELSE
+
       DO JK=1,IMICRO
 
         ZTC =  MAX(-18.,MIN(-1.,ZZT(JK)-XTT))
@@ -3862,14 +3888,10 @@ IMPLICIT NONE
         IF(ZRIS(JK)*PTSTEP > 1.0e-12)THEN
             ZCI2S(JK)  =  ZRIS(JK)*(1. - MIN(1., 0.5*ZQIMAX /ZRIS(JK)/PTSTEP))* &
                 &  (1.-ZSIFRC(JK))*ZW2D(JK)
-!                0.5*ZQIMAX /ZRIS(JK)/PTSTEP reduce ice wich a factot of 0.5 when 
-!                ZQIMAX = cloud ice content. 
-!                (1.-ZSIFRC(JK))/(  ZXW2D*ZSIFRC(JK) +  1.-ZSIFRC(JK)) is the ratio for cloudice 
-!                in the subsaturated part to the total cloudice
         ENDIF
 
-
       ENDDO
+
       WHERE( ZCIT(:)>0.0 .AND. ZESI(:) < ZPRES(:)*0.5)
         ZZWC(:)=ZCRYSHA(:)*0.878/ZAI(:)*(ZCIT(:)/ZRHODREF(:))**0.667 &
              &*(MAX(XRTMIN(4)/PTSTEP,ZRIS(:))*PTSTEP*ZW2D(:))**0.333
@@ -3882,7 +3904,6 @@ IMPLICIT NONE
         END WHERE
 !    Ice subsaturated part of grid box: 
         WHERE(  ZSSIU(:)<0. .AND. ZSIFRC(:) <0.98_JPRB )
-
            ZRIS(:) =ZRIS(:) - ZCI2S(:)
            ZRSS(:) =ZRSS(:) + ZCI2S(:)
            ZZW(:)  =ZZWC(:)*ZCITRED23*ZSSIU(:)
@@ -3891,7 +3912,9 @@ IMPLICIT NONE
            ZTHS(:) = ZTHS(:) + ZZW(:)*ZLSFACT(:)*(1.-ZSIFRC(:))
         END WHERE
       END WHERE
+
      ENDIF
+
   ELSE ! End OCND2
   WHERE( (ZRCS(:)>0.0) .AND. (ZSSI(:)>0.0) .AND. &
          (ZRIT(:)>XRTMIN(4)) .AND. (ZCIT(:)>0.0)       )
@@ -3912,6 +3935,7 @@ IMPLICIT NONE
                                    9,'BERFI_BU_RRI',YDDDH, YDLDDH, YDMDDH)
 
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RI',1,ZHOOK_HANDLE)
+
   END SUBROUTINE RAIN_ICE_FAST_RI
 !
 SUBROUTINE RAINFR_VERT(ZPRFR, ZRR)

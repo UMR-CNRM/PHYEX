@@ -76,7 +76,7 @@ program main_rain_ice_old
 
   real    :: ptstep
 
-  integer :: i
+  integer :: i,j
 
   type(typ_ddh) :: ydddh
   type(tlddh)   :: ydlddh
@@ -87,16 +87,31 @@ program main_rain_ice_old
 
   interface
 
-    subroutine init_rain_ice_old(kulout, l_warm, c_sedim, csubg_aucv_rc)
+    subroutine init_rain_ice_old(kulout)
 
       implicit none
 
       integer, intent (in)            :: kulout
-      logical, intent (in)            :: l_warm
-      character(4), intent (in)       :: c_sedim
-      character(len=4), intent(inout) :: csubg_aucv_rc
 
     end subroutine init_rain_ice_old
+
+    subroutine print_diff_1(array, ref)
+
+      implicit none
+
+      real, intent(in), dimension(:) :: array
+      real, intent(in), dimension(:) :: ref
+
+    end subroutine print_diff_1
+
+    subroutine print_diff_2(array, ref)
+
+      implicit none
+
+      real, intent(in), dimension(:,:) :: array
+      real, intent(in), dimension(:,:) :: ref
+
+    end subroutine print_diff_2
 
   end interface
 
@@ -104,6 +119,19 @@ program main_rain_ice_old
   n_gp_blocks = 150
   n_proma = 32
   n_levels = 90
+  krr = 6
+
+  owarm = .true.
+
+  kka = 1
+  kku = n_levels
+  kkl = -1
+  ksplitr = 2
+
+  c_sedim = 'STAT'
+  csubg_aucv_rc = 'PDF'
+
+  ptstep = 25.0000000000000
 
   call initoptions()
 
@@ -117,7 +145,10 @@ program main_rain_ice_old
   write(output_unit, *) 'n_levels:    ', n_levels
   write(output_unit, *) 'total:       ', n_levels*n_proma*n_gp_blocks
 
-  call getdata_rain_ice_old(n_proma, n_gp_blocks, n_levels, &
+  call getdata_rain_ice_old(n_proma, n_gp_blocks, n_levels, krr, &
+                            osedic, ocnd2, lkogan, lmodicedep, owarm, &
+                            kka, kku, kkl, ksplitr, &
+                            ptstep, c_sedim, csubg_aucv_rc, &
                             pdzz, prhodj, prhodref, &
                             pexnref, ppabsm, &
                             pcit, pcit_out, &
@@ -135,21 +166,18 @@ program main_rain_ice_old
                             picenu, pkgn_acon, pkgn_sbgr, &
                             pfpr, pfpr_out, l_verbose)
 
-  osedic = .false.
-  ocnd2 = .true.
-  lkogan = .false.
-  lmodicedep = .false.
-  c_sedim = 'STAT'
-  csubg_aucv_rc = 'PDF'
-  owarm = .true.
-
-  ptstep = 25.0000000000000
-
-  kka = 1
-  kku = n_levels
-  kkl = -1
-  krr = 6
-  ksplitr = 2
+  write(output_unit, *) 'osedic:        ', osedic
+  write(output_unit, *) 'ocnd2:         ', ocnd2
+  write(output_unit, *) 'lkogan:        ', lkogan
+  write(output_unit, *) 'lmodicedep:    ', lmodicedep
+  write(output_unit, *) 'owarm:         ', owarm
+  write(output_unit, *) 'kka:           ', kka
+  write(output_unit, *) 'kku:           ', kku
+  write(output_unit, *) 'kkl:           ', kkl
+  write(output_unit, *) 'ksplitr:       ', ksplitr
+  write(output_unit, *) 'ptstep:        ', ptstep
+  write(output_unit, *) 'c_sedim:       ', c_sedim
+  write(output_unit, *) 'csubg_aucv_rc: ', csubg_aucv_rc
 
   D%nit  = n_proma
   D%nib  = 1
@@ -169,7 +197,7 @@ program main_rain_ice_old
   D%nktb = 1
   D%nkte = n_levels
 
-  call init_rain_ice_old(20, owarm, c_sedim, csubg_aucv_rc)
+  call init_rain_ice_old(20)
 
   call cpu_time(time_start_cpu)
   call system_clock(count=counter, count_rate=c_rate)
@@ -211,9 +239,83 @@ program main_rain_ice_old
 
   write (output_unit, '(a11,f8.2,a)') 'cpu time: ', time_end_cpu - time_start_cpu,' s'
 
+  write(output_unit, *)
+
+  write(output_unit, *) 'PEVAP'
+  call print_diff_2(pevap(:,:,1), pevap_out(:,:,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'ZINPRC'
+  call print_diff_1(zinprc(:,1), zinprc_out(:,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PINPRR'
+  call print_diff_1(pinprr(:,1), pinprr_out(:,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PINPRS'
+  call print_diff_1(pinprs(:,1), pinprs_out(:,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PINPRG'
+  call print_diff_1(pinprg(:,1), pinprg_out(:,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PTHS'
+  call print_diff_2(pths(:,:,1), pths_out(:,:,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PCIT'
+  call print_diff_2(pcit(:,:,1), pcit_out(:,:,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PRVS'
+  call print_diff_2(prs(:,:,1,1), prs_out(:,:,1,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PRCS'
+  call print_diff_2(prs(:,:,2,1), prs_out(:,:,2,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PRRS'
+  call print_diff_2(prs(:,:,3,1), prs_out(:,:,3,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PRIS'
+  call print_diff_2(prs(:,:,4,1), prs_out(:,:,4,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PRSS'
+  call print_diff_2(prs(:,:,5,1), prs_out(:,:,5,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PRGS'
+  call print_diff_2(prs(:,:,6,1), prs_out(:,:,6,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PFPR 2'
+  call print_diff_2(pfpr(:,:,2,1), pfpr_out(:,:,2,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PFPR 3'
+  call print_diff_2(pfpr(:,:,3,1), pfpr_out(:,:,3,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PFPR 4'
+  call print_diff_2(pfpr(:,:,4,1), pfpr_out(:,:,4,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PFPR 5'
+  call print_diff_2(pfpr(:,:,5,1), pfpr_out(:,:,5,1))
+  write(output_unit, *)
+
+  write(output_unit, *) 'PFPR 6'
+  call print_diff_2(pfpr(:,:,6,1), pfpr_out(:,:,6,1))
+  write(output_unit, *)
+
 end program
 
-subroutine init_rain_ice_old(kulout, l_warm, c_sedim, csubg_aucv_rc)
+subroutine init_rain_ice_old(kulout)
 
   use modd_rain_ice_param, only: rain_ice_param_associate
   use modd_rain_ice_descr, only: rain_ice_descr_associate
@@ -230,12 +332,12 @@ subroutine init_rain_ice_old(kulout, l_warm, c_sedim, csubg_aucv_rc)
   implicit none
 
   integer, intent (in)            :: kulout
-  logical, intent (in)            :: l_warm
-  character(4), intent (in)       :: c_sedim
-  character(len=4), intent(inout) :: csubg_aucv_rc
+
   character(len=4) :: c_micro
 
   call ini_cst
+
+  call ini_tiwmx
 
   call param_ice_associate
 
@@ -257,39 +359,72 @@ subroutine init_rain_ice_old(kulout, l_warm, c_sedim, csubg_aucv_rc)
   lbudget_sv=.false.
 
   ! 1. set implicit default values for modd_param_ice
-  lwarm = l_warm
   cpristine_ice = 'PLAT'
-  csedim = c_sedim
-  csubg_aucv_rc = 'PDF'
   csubg_rc_rr_accr = 'NONE'
   csubg_rr_evap = 'NONE'
   csubg_pr_pdf = 'SIGM'
   c_micro = 'ICE3'
 
-  ! snow riming
-  csnowriming='m90 '
-  xfracm90=0.1 ! fraction used for the murakami 1990 formulation
-
-  lfeedbackt=.true. ! when .true. feed back on temperature is taken into account
-  levlimit=.true.   ! when .true. water vapour pressure is limited by saturation
-  lnullwetg=.true.  ! when .true. graupel wet growth is activated with null rate (to allow water shedding)
-  lwetgpost=.true.  ! when .true. graupel wet growth is activated with positive temperature (to allow water shedding)
-  lnullweth=.true.  ! same as lnullwetg but for hail
-  lwethpost=.true.  ! same as lwetgpost but for hail
-  lconvhg=.true. ! true to allow the conversion from hail to graupel
-  lcrflimit=.true. !true to limit rain contact freezing to possible heat exchange
-  cfrac_ice_adjust='S' ! ice/liquid partition rule to use in adjustment
-  cfrac_ice_shallow_mf='S' ! ice/liquid partition rule to use in shallow_mf
-  lsedim_after=.false. ! sedimentation done after microphysics
-  xsplit_maxcfl=0.8
-  ldeposc=.false.  ! water deposition on vegetation
-  xvdeposc=0.02    ! deposition speed (2 cm.s-1)
-
   ! 2. set implicit default values for modd_rain_ice_descr and modd_rain_ice_param
-
-  xthvrefz=300.
 
   call ini_rain_ice(kulout, c_micro)
 
 end subroutine init_rain_ice_old
+
+
+subroutine print_diff_1(array, ref)
+
+  use iso_fortran_env, only: output_unit
+
+  implicit none
+
+  real, intent(in), dimension(:) :: array
+  real, intent(in), dimension(:) :: ref
+
+  real, parameter :: threshold = 1.0e-12
+
+  integer :: i
+
+  real :: absval
+
+  do i = 1, size(array, 1)
+    absval = max(abs(array(i)), abs(ref(i)))
+    if (absval .gt. 0.) then
+      if (abs(array(i) - ref(i))/absval .gt. threshold) then
+        write(output_unit, '(2i4, 4e15.6)') i, array(i), ref(i), abs(array(i) - ref(i)), abs(array(i) - ref(i))/absval 
+      endif
+    endif
+  enddo
+
+end subroutine print_diff_1
+
+
+subroutine print_diff_2(array, ref)
+
+  use iso_fortran_env, only: output_unit
+
+  implicit none
+
+  real, intent(in), dimension(:,:) :: array
+  real, intent(in), dimension(:,:) :: ref
+
+  real, parameter :: threshold = 1.0e-12
+
+  integer :: i, j
+
+  real :: absval
+
+  do j = 1, size(array, 2)
+    do i = 1, size(array, 1)
+      absval = max(abs(array(i,j)), abs(ref(i,j)))
+      if (absval .gt. 0.) then
+        if (abs(array(i,j) - ref(i,j))/absval .gt. threshold) then
+          write(output_unit, '(2i4, 4e15.6)') i, j, array(i,j), ref(i,j), abs(array(i,j) - ref(i,j)), abs(array(i,j) - ref(i,j))/absval 
+        endif
+      endif
+    enddo
+ enddo
+
+end subroutine print_diff_2
+
 
