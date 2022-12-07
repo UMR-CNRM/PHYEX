@@ -101,7 +101,7 @@ TYPE TURB_t
   REAL, DIMENSION(:,:,:), POINTER :: XSSVFL_C=>NULL() ! O-A interface flux for v
   REAL, DIMENSION(:,:,:), POINTER :: XSSTFL_C=>NULL() ! O-A interface flux for theta
   REAL, DIMENSION(:,:,:), POINTER :: XSSRFL_C=>NULL() ! O-A interface flux for vapor
-  LOGICAL            :: LHGRAD ! logical switch for the computation of the Leornard Terms
+  LOGICAL            :: LLEONARD ! logical switch for the computation of the Leornard Terms
   REAL               :: XCOEFHGRADTHL  ! coeff applied to thl contribution
   REAL               :: XCOEFHGRADRM  ! coeff applied to mixing ratio contribution
   REAL               :: XALTHGRAD  ! altitude from which to apply the Leonard terms
@@ -146,7 +146,7 @@ REAL, DIMENSION(:,:,:), POINTER :: XSSUFL_C=>NULL()
 REAL, DIMENSION(:,:,:), POINTER :: XSSVFL_C=>NULL()
 REAL, DIMENSION(:,:,:), POINTER :: XSSTFL_C=>NULL()
 REAL, DIMENSION(:,:,:), POINTER :: XSSRFL_C=>NULL()
-LOGICAL, POINTER :: LHGRAD=>NULL()
+LOGICAL, POINTER :: LLEONARD=>NULL()
 REAL, POINTER :: XCOEFHGRADTHL=>NULL()
 REAL, POINTER :: XCOEFHGRADRM=>NULL()
 REAL, POINTER :: XALTHGRAD=>NULL()
@@ -208,7 +208,7 @@ XSSUFL_C=>TURB_MODEL(KTO)%XSSUFL_C
 XSSVFL_C=>TURB_MODEL(KTO)%XSSVFL_C
 XSSTFL_C=>TURB_MODEL(KTO)%XSSTFL_C
 XSSRFL_C=>TURB_MODEL(KTO)%XSSRFL_C
-LHGRAD=>TURB_MODEL(KTO)%LHGRAD
+LLEONARD=>TURB_MODEL(KTO)%LLEONARD
 XCOEFHGRADTHL=>TURB_MODEL(KTO)%XCOEFHGRADTHL
 XCOEFHGRADRM=>TURB_MODEL(KTO)%XCOEFHGRADRM
 XALTHGRAD=>TURB_MODEL(KTO)%XALTHGRAD

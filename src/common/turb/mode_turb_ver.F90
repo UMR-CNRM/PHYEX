@@ -5,7 +5,7 @@
 MODULE MODE_TURB_VER
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,KRR,KRRL,KRRI,               &
+SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,KRR,KRRL,KRRI,KGRADIENTS,    &
                       OOCEAN,ODEEPOC,OCOMPUTE_SRC,                  &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
                       PEXPL, HPROGRAM, O2D, ONOMIXLG, OFLAT,        &
@@ -20,7 +20,7 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,KRR,KRRL,KRRI,               &
                       PTKEM,PLM,PLENGTHM,PLENGTHH,PLEPS,MFMOIST,    &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PFRAC_ICE,    &
                       PFWTH,PFWR,PFTH2,PFR2,PFTHR,PBL_DEPTH,        &
-                      PSBL_DEPTH,PLMO,                              &
+                      PSBL_DEPTH,PLMO,PHGRAD,PZS,                   &
                       PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,             &
                       PDP,PTP,PSIGS,PWTH,PWRC,PWSV,                 &
                       PSSTFL,PSSTFL_C,PSSRFL_C,PSSUFL_C,PSSVFL_C,   &
@@ -244,6 +244,7 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
+INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
@@ -273,12 +274,14 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PCOSSLOPE    ! cosinus of the angle
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSINSLOPE    ! sinus of the angle 
                                       ! between i and the slope vector
 !
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PZS ! orography (for LEONARD terms)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
 ! MFMOIST used in case of TURBN%LHARATU
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  MFMOIST       ! moist mass flux dual scheme
 
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual 
                                                       ! Potential Temperature 
+REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTS),INTENT(IN) :: PHGRAD  ! horizontal gradients
 !
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFUM,PSFVM ! surface fluxes
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at time
@@ -497,12 +500,12 @@ ELSE
 ENDIF
 !
   CALL  TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                      &
-                        KRR,KRRL,KRRI,KSV,                            &
+                        KRR,KRRL,KRRI,KSV,KGRADIENTS,                 &
                         OOCEAN,ODEEPOC,                               &
                         OCOUPLES,OLES_CALL,OCOMPUTE_SRC,              &
                         PEXPL,PTSTEP,HPROGRAM,TPFILE,                 &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
-                        PRHODJ,PTHVREF,                               &
+                        PRHODJ,PTHVREF,PHGRAD,PZS,                    &
                         PSFTHM,PSFRM,PSFTHP,PSFRP,                    &
                         PWM,PTHLM,PRM,PSVM,                           &
                         PTKEM,ZLM,PLEPS,                              &

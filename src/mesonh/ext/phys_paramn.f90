@@ -346,6 +346,8 @@ USE MODI_EDDYUV_FLUX_n             ! Ajout PP
 USE MODI_EDDYUV_FLUX_ONE_WAY_n     ! Ajout PP
 USE MODI_EOL_MAIN
 USE MODI_GROUND_PARAM_n
+USE MODI_GRADIENT_M
+USE MODI_GRADIENT_W
 USE MODI_PASPOL
 USE MODI_RADIATIONS
 USE MODI_SALT_FILTER
@@ -455,6 +457,7 @@ LOGICAL :: GCLD                     ! conditionnal call for dust wet deposition
 !  calls
 INTEGER           :: IMODSON        ! Number of son models of IMI with XWAY=2
 INTEGER           :: IKIDM          ! index loop                                 
+INTEGER           :: IGRADIENTS     ! Number of horizontal gradients in turb
 REAL, DIMENSION(:,:,:),   ALLOCATABLE  :: ZSAVE_INPRR,ZSAVE_INPRS,ZSAVE_INPRG,ZSAVE_INPRH
 REAL, DIMENSION(:,:,:),   ALLOCATABLE  :: ZSAVE_INPRC,ZSAVE_PRCONV,ZSAVE_PRSCONV
 REAL, DIMENSION(:,:,:,:), ALLOCATABLE  :: ZSAVE_DIRFLASWD, ZSAVE_SCAFLASWD,ZSAVE_DIRSRFSWD
@@ -471,6 +474,7 @@ REAL, DIMENSION(:),ALLOCATABLE  :: ZXHAT_ll,ZYHAT_ll  !  Position x/y in the con
                                                  ! plane (array on the complete domain)
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZDIST ! distance from the center of the cooling 
 !
+REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: ZHGRAD ! horizontal gradient used in turb
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 LOGICAL :: GCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables 
 !-----------------------------------------------------------------------------
@@ -1550,8 +1554,18 @@ END IF !END DEEP OCEAN CONV CASE
 LSTATNW = .FALSE.
 LHARAT = .FALSE.
 !
+IF(LLEONARD) THEN
+  IGRADIENTS=6
+  ALLOCATE(ZHGRAD(IIU,IJU,IKU,IGRADIENTS))
+  ZHGRAD(:,:,:,1) = GX_W_UW(XWT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
+  ZHGRAD(:,:,:,2) = GY_W_VW(XWT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
+  ZHGRAD(:,:,:,3) = GX_M_M(XTHT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
+  ZHGRAD(:,:,:,4) = GY_M_M(XTHT(:,:,:), XDXX,XDZZ,XDZX,1,IKU,1)
+  ZHGRAD(:,:,:,5) = GX_M_M(XRT(:,:,:,1), XDXX,XDZZ,XDZX,1,IKU,1)
+  ZHGRAD(:,:,:,6) = GY_M_M(XRT(:,:,:,1), XDXX,XDZZ,XDZX,1,IKU,1)
+END IF
    CALL TURB( CST,CSTURB, TBUCONF, TURBN,YLDIMPHYEX,&
-              IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, 1, NMODEL_CLOUD,                   &
+              IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, IGRADIENTS, 1, NMODEL_CLOUD,       &
               NSV, NSV_LGBEG, NSV_LGEND,CPROGRAM,                                    &
               NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,                    &
               L2D, LNOMIXLG,LFLAT,                                                   &
@@ -1562,7 +1576,7 @@ LHARAT = .FALSE.
               XTSTEP, TPFILE,                                                        &
               XDXX, XDYY, XDZZ, XDZX, XDZY, XZZ,                                     &
               XDIRCOSXW, XDIRCOSYW, XDIRCOSZW, XCOSSLOPE, XSINSLOPE,                 &
-              XRHODJ, XTHVREF,                                                       &
+              XRHODJ, XTHVREF, ZHGRAD, XZS,                                          &
               ZSFTH, ZSFRV, ZSFSV, ZSFU, ZSFV,                                       &
               XPABST, XUT, XVT, XWT, XTKET, XSVT, XSRCT,                             &
               ZLENGTHM, ZLENGTHH, ZMFMOIST,                                          &
@@ -1578,6 +1592,7 @@ LHARAT = .FALSE.
 !
 DEALLOCATE(ZTDIFF)
 DEALLOCATE(ZTDISS)
+IF(LLEONARD) DEALLOCATE(ZHGRAD)
 !
 IF (LRMC01) THEN
   CALL ADD2DFIELD_ll( TZFIELDS_ll, XSBL_DEPTH, 'PHYS_PARAM_n::XSBL_DEPTH' )
