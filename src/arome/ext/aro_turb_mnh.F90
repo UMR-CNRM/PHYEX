@@ -217,6 +217,7 @@ INTEGER   :: KSV_LGBEG, KSV_LGEND ! number of scalar variables
 !
 REAL, DIMENSION(KLON,1,KLEV+2)   :: ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY
                                         ! metric coefficients
+REAL, DIMENSION(KLON,1) :: PZS ! TODO: to be sent from above aro_turb_mnh
 REAL, POINTER ::  ZDIRCOSXW(:,:), ZDIRCOSYW(:,:), ZDIRCOSZW(:,:)
 ! Director Cosinus along x, y and z directions at surface w-point
 REAL, POINTER    ::  ZCOSSLOPE(:,:)   ! cosinus of the anglebetween i and the slope vector
@@ -425,7 +426,7 @@ DO JRR=1, NBUDGET_RI
 ENDDO
 OCOMPUTE_SRC=SIZE(PSIGS, 3)/=0
 CALL TURB (CST,CSTURB,TBUCONF,TURBN, YLDIMPHYEX,&
-   & IMI, KRR, KRRL, KRRI, HLBCX, HLBCY,&
+   & IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, KGRADIENTS,&
    & ISPLIT,IMI, KSV, KSV_LGBEG, KSV_LGEND, HPROGRAM,&
    & NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,   &
    & O2D, ONOMIXLG, OFLAT, LLES_CALL,OCOUPLES,OBLOWSNOW,& 
@@ -435,7 +436,7 @@ CALL TURB (CST,CSTURB,TBUCONF,TURBN, YLDIMPHYEX,&
    & 2*PTSTEP,ZTFILE,                                      &
    & ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &
    & ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE,    &
-   & PRHODJ,PTHVREF,                              &
+   & PRHODJ,PTHVREF,PHGRAD,PZS,                            &
    & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
    & PPABSM,PUM,PVM,PWM,PTKEM,ZSVM,PSRCM,                  &
    & PLENGTHM,PLENGTHH,MFMOIST,                            &

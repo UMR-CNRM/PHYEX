@@ -6,13 +6,13 @@ MODULE MODE_TURB_VER_THERMO_FLUX
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                 &
-                      KRR,KRRL,KRRI,KSV,                            &
+                      KRR,KRRL,KRRI,KSV,KGRADIENTS,                 &
                       OOCEAN,ODEEPOC,                               &
                       OCOUPLES,OLES_CALL, OCOMPUTE_SRC,             &
                       PEXPL,PTSTEP,HPROGRAM,                        &
                       TPFILE,                                       &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
-                      PRHODJ,PTHVREF,                               &
+                      PRHODJ,PTHVREF,PHGRAD,PZS,                    &
                       PSFTHM,PSFRM,PSFTHP,PSFRP,                    &
                       PWM,PTHLM,PRM,PSVM,                           &
                       PTKEM,PLM,PLEPS,                              &
@@ -234,7 +234,6 @@ USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
-!USE MODD_GRID_n,         ONLY: XZS, XXHAT, XYHAT !TODO TO BE ADDED in args of turb
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB, JPHEXT
 USE MODD_TURB_n,         ONLY: TURB_t
@@ -247,7 +246,8 @@ USE MODE_TM06_H, ONLY: TM06_H
 !
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE_PHY
 USE MODE_PRANDTL
-USE SHUMAN_PHY, ONLY: MZM_PHY, MZF_PHY, DZM_PHY, DZF_PHY
+USE SHUMAN_PHY, ONLY: MZM_PHY, MZF_PHY, DZM_PHY, DZF_PHY, &
+                      MXF_PHY,MYF_PHY
 USE MODE_GRADIENT_W_PHY, ONLY: GZ_W_M_PHY
 !
 USE MODI_SECOND_MNH
@@ -262,6 +262,7 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
+INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KSV           ! number of scalar var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
@@ -292,6 +293,7 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at tim
 !
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTHP,PSFRP ! surface fluxes at time
 !                                                     ! t + deltat
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PZS ! orography (for LEONARD terms)
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PWM
 ! Vertical wind
@@ -333,6 +335,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFWR         ! d(w'2r'  )/dz (at
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFTH2        ! d(w'th'2 )/dz (at mass point)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFR2         ! d(w'r'2  )/dz (at mass point)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFTHR        ! d(w'th'r')/dz (at mass point)
+REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTS),INTENT(IN) :: PHGRAD  ! horizontal gradients
 REAL, DIMENSION(MERGE(D%NIT,0,TURBN%CTOM=='TM06'),&
                 MERGE(D%NJT,0,TURBN%CTOM=='TM06')),   INTENT(INOUT)::  PBL_DEPTH    ! BL depth
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PWTHV         ! buoyancy flux
@@ -380,7 +383,6 @@ INTEGER             :: JIJ, JK ! loop indexes
 INTEGER             :: IIJB, IIJE
 !
 REAL :: ZTIME1, ZTIME2
-REAL :: ZDELTAX
 REAL :: ZFLPROV
 INTEGER           :: JKM          ! vertical index loop
 INTEGER           :: JSW
@@ -432,7 +434,7 @@ ENDIF
 !
 ! Define a cloud mask with ri and rc (used after with a threshold) for Leonard terms
 !
-IF(TURBN%LHGRAD) THEN
+IF(TURBN%LLEONARD) THEN
   IF ( KRRL >= 1 ) THEN
     IF ( KRRI >= 1 ) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -486,16 +488,18 @@ ELSE
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 END IF
 !
-! TODO: fonctions SHUMAN et GRADIENT 3D HPACKED 
-!IF (TURBN%LHGRAD) THEN
+IF (TURBN%LLEONARD) THEN
 ! ! Compute the Leonard terms for thl
-! ZDELTAX= XXHAT(3) - XXHAT(2)
-! ZF_LEONARD (:,:,:)= TURBN%XCOEFHGRADTHL*ZDELTAX*ZDELTAX/12.0*(      &
-!                 MXF(GX_W_UW(PWM(:,:,:), PDXX,PDZZ,PDZX,D%NKA,D%NKU,D%NKL))&
-!                *MZM(GX_M_M(PTHLM(:,:,:),PDXX,PDZZ,PDZX,D%NKA, D%NKU, D%NKL), D%NKA, D%NKU, D%NKL)  &
-!              +  MYF(GY_W_VW(PWM(:,:,:), PDYY,PDZZ,PDZY,D%NKA,D%NKU,D%NKL))  &
-!                *MZM(GY_M_M(PTHLM(:,:,:),PDYY,PDZZ,PDZY,D%NKA, D%NKU, D%NKL), D%NKA, D%NKU, D%NKL) )
-!END IF
+  CALL MXF_PHY(D,PHGRAD(:,:,1),ZWORK1) ! GX_W_UW(XWT)
+  CALL MZM_PHY(D,PHGRAD(:,:,3),ZWORK2) ! GX_M_M(PTHLM
+  CALL MYF_PHY(D,PHGRAD(:,:,2),ZWORK3) ! GY_W_VW(PWM)
+  CALL MZM_PHY(D,PHGRAD(:,:,4),ZWORK4) ! GY_M_M(PTHLM)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)  
+  ZF_LEONARD (IIJB:IIJE,1:D%NKT)= TURBN%XCOEFHGRADTHL*PDXX(IIJB:IIJE,1:D%NKT)*PDYY(IIJB:IIJE,1:D%NKT)/12.0*( &
+                     ZWORK1(IIJB:IIJE,1:D%NKT)*ZWORK2(IIJB:IIJE,1:D%NKT) &
+                   + ZWORK3(IIJB:IIJE,1:D%NKT)*ZWORK4(IIJB:IIJE,1:D%NKT))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+END IF
 !
 ! Effect of 3rd order terms in temperature flux (at flux point)
 !
@@ -609,11 +613,11 @@ ZRWTHL(IIJB:IIJE,1:D%NKT)= PRHODJ(IIJB:IIJE,1:D%NKT)*(PTHLP(IIJB:IIJE,1:D%NKT)-P
                                  /PTSTEP
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)    
 ! replace the flux by the Leonard terms above ZALT and ZCLD_THOLD
-IF (TURBN%LHGRAD) THEN
- DO JK=1,D%NKU
-!  !$mnh_expand_array(JIJ=IIJB:IIJE)
-!  ZALT(IIJB:IIJE,JK) = PZZ(IIJB:IIJE,JK)-XZS(IIJB:IIJE) !TODO TO BE ADDED AS ARGS OF TURB
-!  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+IF (TURBN%LLEONARD) THEN
+ DO JK=1,D%NKT
+   !$mnh_expand_array(JIJ=IIJB:IIJE)
+   ZALT(IIJB:IIJE,JK) = PZZ(IIJB:IIJE,JK)-PZS(IIJB:IIJE) 
+   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
  END DO
  CALL MZM_PHY(D,PRHODJ,ZWORK1)
  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -623,6 +627,7 @@ IF (TURBN%LHGRAD) THEN
  !$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
  WHERE ( (ZCLD_THOLD(IIJB:IIJE,1:D%NKT) >= TURBN%XCLDTHOLD) .AND. ( ZALT(IIJB:IIJE,1:D%NKT) >= TURBN%XALTHGRAD) )
   ZRWTHL(IIJB:IIJE,1:D%NKT) = -ZWORK3(IIJB:IIJE,1:D%NKT)
+  PTHLP(IIJB:IIJE,1:D%NKT)=PTHLM(IIJB:IIJE,1:D%NKT)+PTSTEP*ZRWTHL(IIJB:IIJE,1:D%NKT)/PRHODJ(IIJB:IIJE,1:D%NKT)
  END WHERE
  !$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
 END IF
@@ -645,7 +650,7 @@ ZFLXZ(IIJB:IIJE,1:D%NKT)   = ZF(IIJB:IIJE,1:D%NKT) + TURBN%XIMPL * ZDFDDTDZ(IIJB
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
 ! replace the flux by the Leonard terms
-IF (TURBN%LHGRAD) THEN
+IF (TURBN%LLEONARD) THEN
  !$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
  WHERE ( (ZCLD_THOLD(IIJB:IIJE,1:D%NKT) >= TURBN%XCLDTHOLD) .AND. ( ZALT(IIJB:IIJE,1:D%NKT) >= TURBN%XALTHGRAD) )
   ZFLXZ(IIJB:IIJE,1:D%NKT) = ZF_LEONARD(IIJB:IIJE,1:D%NKT)
@@ -875,14 +880,17 @@ IF (KRR /= 0) THEN
  ENDIF
   !
   ! Compute Leonard Terms for Cloud mixing ratio
-!  IF (TURBN%LHGRAD) THEN
-!    ZDELTAX= XXHAT(3) - XXHAT(2)
-!    ZF_LEONARD (:,:,:)= TURBN%XCOEFHGRADRM*ZDELTAX*ZDELTAX/12.0*(        &
-!                MXF(GX_W_UW(PWM(:,:,:),  PDXX,PDZZ,PDZX,D%NKA,D%NKU,D%NKL))       &
-!                *MZM(GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX,D%NKA,D%NKU,D%NKL),D%NKA,D%NKU,D%NKL) &
-!                +MYF(GY_W_VW(PWM(:,:,:), PDYY,PDZZ,PDZY,D%NKA,D%NKU,D%NKL))        &
-!                *MZM(GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY,D%NKA,D%NKU,D%NKL),D%NKA,D%NKU,D%NKL) )
-!   END IF
+ IF (TURBN%LLEONARD) THEN
+  CALL MXF_PHY(D,PHGRAD(:,:,1),ZWORK1) ! GX_W_UW(PWM)
+  CALL MZM_PHY(D,PHGRAD(:,:,5),ZWORK2) ! GX_M_M(PRM)
+  CALL MYF_PHY(D,PHGRAD(:,:,2),ZWORK3) ! GY_W_VW(PWM)
+  CALL MZM_PHY(D,PHGRAD(:,:,6),ZWORK4) ! GY_M_M(PRM)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)  
+  ZF_LEONARD (IIJB:IIJE,1:D%NKT)= TURBN%XCOEFHGRADTHL*PDXX(IIJB:IIJE,1:D%NKT)*PDYY(IIJB:IIJE,1:D%NKT)/12.0*( &
+                     ZWORK1(IIJB:IIJE,1:D%NKT)*ZWORK2(IIJB:IIJE,1:D%NKT) &
+                   + ZWORK3(IIJB:IIJE,1:D%NKT)*ZWORK4(IIJB:IIJE,1:D%NKT))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+ END IF
   !
   ! Effect of 3rd order terms in temperature flux (at flux point)
   !
@@ -1002,12 +1010,7 @@ IF (KRR /= 0) THEN
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)    
   !
   ! replace the flux by the Leonard terms above ZALT and ZCLD_THOLD
-  IF (TURBN%LHGRAD) THEN
-!   DO JK=1,D%NKU
-!   !$mnh_expand_array(JIJ=IIJB:IIJE)
-!    ZALT(IIJB:IIJE,JK) = PZZ(IIJB:IIJE,JK)-XZS(IIJB:IIJE)  !TODO TO BE ADDED AS ARGS OF TURB
-!   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-!   END DO
+  IF (TURBN%LLEONARD) THEN
    CALL MZM_PHY(D,PRHODJ,ZWORK1)
    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
    ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT)*ZF_LEONARD(IIJB:IIJE,1:D%NKT)
@@ -1016,6 +1019,7 @@ IF (KRR /= 0) THEN
    !$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
    WHERE ( (ZCLD_THOLD(IIJB:IIJE,1:D%NKT) >= TURBN%XCLDTHOLD ) .AND. ( ZALT(IIJB:IIJE,1:D%NKT) >= TURBN%XALTHGRAD ) )
     ZRWRNP(IIJB:IIJE,1:D%NKT) =  -ZWORK3(IIJB:IIJE,1:D%NKT)
+    PRP(IIJB:IIJE,1:D%NKT)=PRM(IIJB:IIJE,1:D%NKT,1)+PTSTEP*ZRWTHL(IIJB:IIJE,1:D%NKT)/PRHODJ(IIJB:IIJE,1:D%NKT)
    END WHERE
    !$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
   END IF
@@ -1036,7 +1040,7 @@ IF (KRR /= 0) THEN
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
   !
   ! replace the flux by the Leonard terms above ZALT and ZCLD_THOLD
-  IF (TURBN%LHGRAD) THEN
+  IF (TURBN%LLEONARD) THEN
    !$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
    WHERE ( (ZCLD_THOLD(IIJB:IIJE,1:D%NKT) >= TURBN%XCLDTHOLD ) .AND. ( ZALT(IIJB:IIJE,1:D%NKT) >= TURBN%XALTHGRAD ) )
     ZFLXZ(IIJB:IIJE,1:D%NKT) = ZF_LEONARD(IIJB:IIJE,1:D%NKT)

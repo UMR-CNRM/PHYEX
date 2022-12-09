@@ -4,7 +4,7 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
       SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,D,                      &
-              & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,                        &
+              & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,             &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
               & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
               & O2D,ONOMIXLG,OFLAT,OLES_CALL,OCOUPLES,OBLOWSNOW,      &
@@ -14,7 +14,7 @@
               & PTSTEP,TPFILE,                                        &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
-              & PRHODJ,PTHVREF,                                       &
+              & PRHODJ,PTHVREF,PHGRAD,PZS,                            &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
               & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
               & PLENGTHM,PLENGTHH,MFMOIST,                            &
@@ -291,6 +291,7 @@ TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
+INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
 INTEGER,                INTENT(IN)   :: KMI           ! model index number
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
@@ -324,6 +325,7 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PCOSSLOPE       ! cosinus of the ang
                                  ! between i and the slope vector
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSINSLOPE       ! sinus of the angle
                                  ! between i and the slope vector
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PZS ! orography (for LEONARD terms)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PRHODJ    ! dry density * Grid size
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
@@ -335,6 +337,7 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of (u,v) parallel to the orography
 REAL, DIMENSION(D%NIJT,KSV), INTENT(IN)      ::  PSFSV
 ! normal surface fluxes of Scalar var.
+REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTS),   INTENT(IN) ::  PHGRAD      ! horizontal gradients
 !
 !    prognostic variables at t- deltat
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PPABST      ! Pressure at time t
@@ -988,7 +991,7 @@ IF( BUCONF%LBUDGET_SV ) THEN
   END DO
 END IF
 
-CALL TURB_VER(D, CST,CSTURB,TURBN,KRR, KRRL, KRRI,       &
+CALL TURB_VER(D,CST,CSTURB,TURBN,KRR,KRRL,KRRI,KGRADIENTS,&
           OOCEAN, ODEEPOC, OCOMPUTE_SRC,                 &
           KSV,KSV_LGBEG,KSV_LGEND,                       &
           ZEXPL,HPROGRAM, O2D, ONOMIXLG, OFLAT,          &
@@ -1003,7 +1006,7 @@ CALL TURB_VER(D, CST,CSTURB,TURBN,KRR, KRRL, KRRI,       &
           PTKET,ZLM,PLENGTHM,PLENGTHH,ZLEPS,MFMOIST,     &
           ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,     &
           ZFWTH,ZFWR,ZFTH2,ZFR2,ZFTHR,PBL_DEPTH,         &
-          PSBL_DEPTH,ZLMO,                               &
+          PSBL_DEPTH,ZLMO,PHGRAD,PZS,                    &
           PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,              &
           PDP,PTP,PSIGS,PWTH,PWRC,PWSV,                  &
           PSSTFL, PSSTFL_C, PSSRFL_C,PSSUFL_C,PSSVFL_C,  &
