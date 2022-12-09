@@ -448,8 +448,8 @@ XLBDAS_MAX = 100000.0
 XLBDAG_MAX = 100000.0
 !
 ZCONC_MAX  = 1.E6 ! Maximal concentration for falling particules set to 1 per cc
-IF(XCCS>0. .AND. XCXS>0. )XLBDAS_MAX = ( ZCONC_MAX/XCCS )**(1./XCXS)
 #if defined(REPRO48) || defined(REPRO55)
+IF(XCCS>0. .AND. XCXS>0. )XLBDAS_MAX = ( ZCONC_MAX/XCCS )**(1./XCXS)
 #else
 XLBDAS_MAX = 1.E6
 XLBDAS_MIN = 1000.
@@ -511,7 +511,7 @@ XEXSEDS = (XBS+XDS-XCXS)/(XBS-XCXS)
 XFSEDS  = XCS*XAS*XCCS*MOMG(XALPHAS,XNUS,XBS+XDS)*                         &
           (XAS*XCCS*MOMG(XALPHAS,XNUS,XBS))**(-XEXSEDS)*(ZRHO00)**XCEXVT
 #else
-IF (LRED) THEN
+IF (HCLOUD == 'ICE3' .OR. HCLOUD == 'ICE4') THEN
    XEXSEDS = -XDS-XBS
    XFSEDS  = XCS*MOMG(XALPHAS,XNUS,XBS+XDS)/(MOMG(XALPHAS,XNUS,XBS))    &
             *(ZRHO00)**XCEXVT
@@ -822,12 +822,12 @@ IF( (KACCLBDAS/=RAIN_ICE_PARAM%NACCLBDAS) .OR. (KACCLBDAR/=RAIN_ICE_PARAM%NACCLB
     (PACCLBDAS_MIN/=RAIN_ICE_PARAM%XACCLBDAS_MIN) .OR. (PACCLBDAR_MIN/=RAIN_ICE_PARAM%XACCLBDAR_MIN) .OR. &
     (PFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RRCOLSS ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-                 ZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR,                     & 
+                 ZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR,                     &
                  RAIN_ICE_PARAM%XACCLBDAS_MAX, RAIN_ICE_PARAM%XACCLBDAR_MAX, &
                  RAIN_ICE_PARAM%XACCLBDAS_MIN, RAIN_ICE_PARAM%XACCLBDAR_MIN, &
                  ZFDINFTY, XKER_RACCSS, XAG, XBS, XAS                        )
   CALL RZCOLX  ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-                 ZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR, 0.,                 & 
+                 ZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR, 0.,                 &
                  RAIN_ICE_PARAM%XACCLBDAS_MAX, RAIN_ICE_PARAM%XACCLBDAR_MAX, &
                  RAIN_ICE_PARAM%XACCLBDAS_MIN, RAIN_ICE_PARAM%XACCLBDAR_MIN, &
                  ZFDINFTY, XKER_RACCS                                        )
@@ -1033,7 +1033,7 @@ IF( (KDRYLBDAG/=RAIN_ICE_PARAM%NDRYLBDAG) .OR. (KDRYLBDAS/=RAIN_ICE_PARAM%NDRYLB
     (PALPHAG/=XALPHAG) .OR. (PNUG/=XNUG)                               .OR. &
     (PALPHAS/=XALPHAS) .OR. (PNUS/=XNUS)                               .OR. &
     (PEGS/=ZEGS) .OR. (PBS/=XBS)                                       .OR. &
-    (PCG/=XCG) .OR. (PDG/=XDG) .OR. (PCS/=XCS) .OR. (PDS/=XDS)         .OR. &
+    (PCG/=XCG) .OR. (PDG/=XDG) .OR. (PCS/=XCS) .OR. (PDS/=XDS) .OR. (PFVELOS/=XFVELOS) .OR. &
     (PDRYLBDAG_MAX/=RAIN_ICE_PARAM%XDRYLBDAG_MAX) .OR. (PDRYLBDAS_MAX/=RAIN_ICE_PARAM%XDRYLBDAS_MAX) .OR. &
     (PDRYLBDAG_MIN/=RAIN_ICE_PARAM%XDRYLBDAG_MIN) .OR. (PDRYLBDAS_MIN/=RAIN_ICE_PARAM%XDRYLBDAS_MIN) .OR. &
     (PFDINFTY/=ZFDINFTY)                                               ) THEN
