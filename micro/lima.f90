@@ -681,6 +681,13 @@ ZT(:,:,:)   = ZTHT(:,:,:) * ZEXN(:,:,:)
 !               -------------
 !
 !
+PINPRC=0.
+PINDEP=0.
+PINPRR=0.
+PINPRI=0.
+PINPRS=0.
+PINPRG=0.
+PINPRH=0.
 if ( lbu_enable ) then
   if ( lbudget_th )                         call Budget_store_init( tbudgets(NBUDGET_TH), 'SEDI', zths(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_rc .and. lwarm .and. lsedc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'SEDI', zrcs(:, :, :) * prhodj(:, :, :) )
