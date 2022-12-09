@@ -45,10 +45,9 @@ program main_rain_ice_old
 
   real, allocatable, dimension(:,:)     :: pinprh, pinprh_out
 
-  !Dummies for now
-  !Spp stuff
+  !spp stuff
   real, allocatable, dimension(:,:)   :: picenu, pkgn_acon, pkgn_sbgr
-  !Ocnd2 stuff
+  !ocnd2 stuff
   real, allocatable, dimension(:,:,:) :: picldfr ! Ice cloud fraction
   real, allocatable, dimension(:,:,:) :: pifr    ! Ratio cloud ice moist part to dry part
   real, allocatable, dimension(:,:,:) :: pssio   ! Super-saturation with respect to ice in the supersaturated fraction
@@ -331,7 +330,7 @@ subroutine init_rain_ice_old(kulout)
 
   implicit none
 
-  integer, intent (in)            :: kulout
+  integer, intent (in) :: kulout
 
   character(len=4) :: c_micro
 
