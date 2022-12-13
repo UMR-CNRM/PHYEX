@@ -4,11 +4,11 @@
 !
 INTERFACE
 !
-      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,D,                      &
+      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,D,TLES,                 &
               & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,             &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
               & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
-              & O2D,ONOMIXLG,OFLAT,OLES_CALL,OCOUPLES,OBLOWSNOW,      &
+              & O2D,ONOMIXLG,OFLAT,OCOUPLES,OBLOWSNOW,                &
               & OCOMPUTE_SRC, PRSNOW,                                 &
               & OOCEAN,ODEEPOC,ODIAG_IN_RUN,                          &
               & HTURBLEN_CL,HCLOUD,                                   &
@@ -38,12 +38,14 @@ USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+USE MODD_LES, ONLY: TLES_t
 !
-TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
-TYPE(CST_t),            INTENT(IN)   :: CST
-TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
-TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF
-TYPE(TURB_t),           INTENT(IN)   :: TURBN
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D             ! PHYEX variables dimensions structure
+TYPE(CST_t),            INTENT(IN)   :: CST           ! modd_cst general constant structure
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB        ! modd_csturb turb constant structure
+TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF        ! budget structure
+TYPE(TURB_t),           INTENT(IN)   :: TURBN         ! modn_turbn (turb namelist) structure
+TYPE(TLES_t),           INTENT(IN)   :: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
 INTEGER,                INTENT(IN)   :: KMI           ! model index number
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
@@ -58,7 +60,6 @@ LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimension
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
-LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)

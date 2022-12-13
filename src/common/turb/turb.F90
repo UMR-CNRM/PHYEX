@@ -3,11 +3,11 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,D,                      &
+      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,D,TLES,                 &
               & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,             &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
               & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
-              & O2D,ONOMIXLG,OFLAT,OLES_CALL,OCOUPLES,OBLOWSNOW,      &
+              & O2D,ONOMIXLG,OFLAT,OCOUPLES,OBLOWSNOW,                &
               & OCOMPUTE_SRC, PRSNOW,                                 &
               & OOCEAN,ODEEPOC,ODIAG_IN_RUN,                          &
               & HTURBLEN_CL,HCLOUD,                                   &
@@ -250,7 +250,7 @@ USE MODD_BUDGET, ONLY:      NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUD
 USE MODD_FIELD, ONLY: TFIELDDATA,TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
 !
-USE MODD_LES
+USE MODD_LES, ONLY : TLES_t
 USE MODD_IBM_PARAM_n,    ONLY: LIBM, XIBM_LS, XIBM_XMUT
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_TURB_n, ONLY: TURB_t
@@ -286,11 +286,12 @@ IMPLICIT NONE
 !
 !
 !
-TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
-TYPE(CST_t),            INTENT(IN)   :: CST
-TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
-TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF
-TYPE(TURB_t),           INTENT(IN)   :: TURBN
+TYPE(DIMPHYEX_t),       INTENT(IN)   :: D             ! PHYEX variables dimensions structure
+TYPE(CST_t),            INTENT(IN)   :: CST           ! modd_cst general constant structure
+TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB        ! modd_csturb turb constant structure
+TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF        ! budget structure
+TYPE(TURB_t),           INTENT(IN)   :: TURBN         ! modn_turbn (turb namelist) structure
+TYPE(TLES_t),           INTENT(INOUT)   :: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
 INTEGER,                INTENT(IN)   :: KMI           ! model index number
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
@@ -305,7 +306,6 @@ LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimension
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
-LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
@@ -507,7 +507,7 @@ IF (LHOOK) CALL DR_HOOK('TURB',0,ZHOOK_HANDLE)
 IF (TURBN%LHARAT .AND. TURBN%CTURBDIM /= '1DIM') THEN
   CALL ABOR1('TURBN%LHARATU only implemented for option TURBN%CTURBDIM=1DIM!')
 ENDIF
-IF (TURBN%LHARAT .AND. OLES_CALL) THEN
+IF (TURBN%LHARAT .AND. TLES%LLES_CALL) THEN
   CALL ABOR1('TURBN%LHARATU not implemented for option LLES_CALL')
 ENDIF
 !
@@ -991,11 +991,12 @@ IF( BUCONF%LBUDGET_SV ) THEN
   END DO
 END IF
 
-CALL TURB_VER(D,CST,CSTURB,TURBN,KRR,KRRL,KRRI,KGRADIENTS,&
+CALL TURB_VER(D,CST,CSTURB,TURBN,TLES,                   &
+          KRR,KRRL,KRRI,KGRADIENTS,                      &
           OOCEAN, ODEEPOC, OCOMPUTE_SRC,                 &
           KSV,KSV_LGBEG,KSV_LGEND,                       &
           ZEXPL,HPROGRAM, O2D, ONOMIXLG, OFLAT,          &
-          OLES_CALL,OCOUPLES,OBLOWSNOW, PRSNOW,          &
+          OCOUPLES,OBLOWSNOW, PRSNOW,                    &
           PTSTEP,TPFILE,                                 &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,        &
           PCOSSLOPE,PSINSLOPE,                           &
@@ -1095,7 +1096,7 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
 !à supprimer une fois le précédent ifdef REPRO48 validé
 #ifdef REPRO48
 #else
-    CALL TURB_HOR_SPLT(D,CST,CSTURB, TURBN,                    &
+    CALL TURB_HOR_SPLT(D,CST,CSTURB, TURBN, TLES,              &
           KSPLIT, KRR, KRRL, KRRI, KSV, PTSTEP,HLBCX,HLBCY,    &
           OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,PRSNOW,                &
           TPFILE,                                              &
@@ -1196,11 +1197,11 @@ ELSE
   ZRTKEMS(:,:)=0.
 END IF
 !
-CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,TURBN,HPROGRAM,                &
+CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,TURBN,TLES,HPROGRAM,           &
                    & KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,                      &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,               &
                    & PTSTEP,ZEXPL,                                      &
-                   & TPFILE,OLES_CALL,ODIAG_IN_RUN,OOCEAN,              &
+                   & TPFILE,ODIAG_IN_RUN,OOCEAN,                        &
                    & PSFU,PSFV,                                         &
                    & PTP,PRTKES,PRTHLS,ZCOEF_DISS,PTDIFF,PTDISS,ZRTKEMS,&
                    & TBUDGETS,KBUDGETS, PEDR=PEDR, PTR=PTR,PDISS=PDISS, &
@@ -1322,31 +1323,31 @@ CALL SOURCES_NEG_CORRECT_PHY(D,KSV,HCLOUD, 'NETUR',KRR,PTSTEP,PPABST,PTHLT,PRT,P
 !*      9. LES averaged surface fluxes
 !          ---------------------------
 !
-IF (OLES_CALL) THEN
+IF (TLES%LLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID_PHY(D,PSFTH,X_LES_Q0)
-  CALL LES_MEAN_SUBGRID_PHY(D,PSFRV,X_LES_E0)
+  CALL LES_MEAN_SUBGRID_PHY(D,TLES,PSFTH,TLES%X_LES_Q0)
+  CALL LES_MEAN_SUBGRID_PHY(D,TLES,PSFRV,TLES%X_LES_E0)
   DO JSV=1,KSV
-    CALL LES_MEAN_SUBGRID_PHY(D,PSFSV(:,JSV),X_LES_SV0(:,JSV))
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,PSFSV(:,JSV),TLES%X_LES_SV0(:,JSV))
   END DO
-  CALL LES_MEAN_SUBGRID_PHY(D,PSFU,X_LES_UW0)
-  CALL LES_MEAN_SUBGRID_PHY(D,PSFV,X_LES_VW0)
+  CALL LES_MEAN_SUBGRID_PHY(D,TLES,PSFU,TLES%X_LES_UW0)
+  CALL LES_MEAN_SUBGRID_PHY(D,TLES,PSFV,TLES%X_LES_VW0)
   !
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZWORK2D(IIJB:IIJE) = (PSFU(IIJB:IIJE)*PSFU(IIJB:IIJE)+PSFV(IIJB:IIJE)*PSFV(IIJB:IIJE))**0.25
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-  CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2D,X_LES_USTAR)
+  CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2D,TLES%X_LES_USTAR)
 !----------------------------------------------------------------------------
 !
 !*     10. LES for 3rd order moments
 !          -------------------------
 !
-  CALL LES_MEAN_SUBGRID_PHY(D,ZMWTH,X_LES_SUBGRID_W2Thl)
-  CALL LES_MEAN_SUBGRID_PHY(D,ZMTH2,X_LES_SUBGRID_WThl2)
+  CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZMWTH,TLES%X_LES_SUBGRID_W2Thl)
+  CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZMTH2,TLES%X_LES_SUBGRID_WThl2)
   IF (KRR>0) THEN
-    CALL LES_MEAN_SUBGRID_PHY(D,ZMWR,X_LES_SUBGRID_W2Rt)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZMTHR,X_LES_SUBGRID_WThlRt)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZMR2,X_LES_SUBGRID_WRt2)
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZMWR,TLES%X_LES_SUBGRID_W2Rt)
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZMTHR,TLES%X_LES_SUBGRID_WThlRt)
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZMR2,TLES%X_LES_SUBGRID_WRt2)
   END IF
 !
 !----------------------------------------------------------------------------
@@ -1359,16 +1360,16 @@ IF (OLES_CALL) THEN
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK1(IIJB:IIJE,1:D%NKT) = 2./3.*PTKET(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1,X_LES_SUBGRID_U2)
-    X_LES_SUBGRID_V2(:,:,:) = X_LES_SUBGRID_U2(:,:,:)
-    X_LES_SUBGRID_W2(:,:,:) = X_LES_SUBGRID_U2(:,:,:)
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1,TLES%X_LES_SUBGRID_U2)
+    TLES%X_LES_SUBGRID_V2(:,:,:) = TLES%X_LES_SUBGRID_U2(:,:,:)
+    TLES%X_LES_SUBGRID_W2(:,:,:) = TLES%X_LES_SUBGRID_U2(:,:,:)
     !
     CALL GZ_M_W_PHY(D,PTHLT,PDZZ,ZWORK1)
     CALL MZF_PHY(D,ZWORK1,ZWORK2)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK2(IIJB:IIJE,1:D%NKT)  = 2./3.*PTKET(IIJB:IIJE,1:D%NKT) *ZWORK2(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2,X_LES_RES_ddz_Thl_SBG_W2)
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2,TLES%X_LES_RES_ddz_Thl_SBG_W2)
     !
     IF (KRR>=1) THEN
       CALL GZ_M_W_PHY(D,PRT(:,:,1),PDZZ,ZWORK1)
@@ -1376,7 +1377,7 @@ IF (OLES_CALL) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZWORK2(IIJB:IIJE,1:D%NKT)  = 2./3.*PTKET(IIJB:IIJE,1:D%NKT) *ZWORK2(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2,X_LES_RES_ddz_Rt_SBG_W2)
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2,TLES%X_LES_RES_ddz_Rt_SBG_W2)
     END IF
     DO JSV=1,KSV
       CALL GZ_M_W_PHY(D,PSVT(:,:,JSV),PDZZ,ZWORK1)
@@ -1384,7 +1385,7 @@ IF (OLES_CALL) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZWORK2(IIJB:IIJE,1:D%NKT)  = 2./3.*PTKET(IIJB:IIJE,1:D%NKT) *ZWORK2(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2, X_LES_RES_ddz_Sv_SBG_W2(:,:,:,JSV))
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2, TLES%X_LES_RES_ddz_Sv_SBG_W2(:,:,:,JSV))
     END DO
   END IF
 
@@ -1393,16 +1394,16 @@ IF (OLES_CALL) THEN
 !*     12. LES mixing end dissipative lengths, presso-correlations
 !          -------------------------------------------------------
 !
-  CALL LES_MEAN_SUBGRID_PHY(D,ZLM,X_LES_SUBGRID_LMix)
-  CALL LES_MEAN_SUBGRID_PHY(D,ZLEPS,X_LES_SUBGRID_LDiss)
+  CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZLM,TLES%X_LES_SUBGRID_LMix)
+  CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZLEPS,TLES%X_LES_SUBGRID_LDiss)
 !
 !* presso-correlations for subgrid Tke are equal to zero.
 !
   ZLEPS(:,:) = 0. !ZLEPS is used as a work array (not used anymore)
-  CALL LES_MEAN_SUBGRID_PHY(D,ZLEPS,X_LES_SUBGRID_WP)
+  CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZLEPS,TLES%X_LES_SUBGRID_WP)
 !
   CALL SECOND_MNH(ZTIME2)
-  XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+  TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !
 IF(PRESENT(PLEM)) PLEM(IIJB:IIJE,IKTB:IKTE) = ZLM(IIJB:IIJE,IKTB:IKTE)

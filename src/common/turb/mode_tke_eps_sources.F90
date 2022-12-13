@@ -5,11 +5,11 @@
 MODULE MODE_TKE_EPS_SOURCES
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,TURBN,            &
+      SUBROUTINE TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,TURBN,TLES,       &
                     & HPROGRAM, KMI,PTKEM,PLM,PLEPS,PDP,               &
                     & PTRH,PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,        &
                     & PTSTEP,PEXPL,                                    &
-                    & TPFILE,OLES_CALL,ODIAG_IN_RUN,OOCEAN,            &
+                    & TPFILE,ODIAG_IN_RUN,OOCEAN,                      &
                     & PSFUM,PSFVM,                                     &
                     & PTP,PRTKES,PRTHLS,PCOEF_DISS,PTDIFF,PTDISS,PRTKEMS,&
                     & TBUDGETS, KBUDGETS,                              &
@@ -138,7 +138,7 @@ USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_FIELD, ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
-USE MODD_LES
+USE MODD_LES, ONLY: TLES_t
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
 !
 USE MODE_BUDGET, ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_END_PHY, BUDGET_STORE_INIT_PHY
@@ -148,10 +148,6 @@ USE MODE_ll
 USE SHUMAN_PHY, ONLY: MZM_PHY, MZF_PHY, DZF_PHY, DZM_PHY
 !
 USE MODI_GET_HALO
-!USE MODI_GRADIENT_M
-!USE MODI_GRADIENT_U
-!USE MODI_GRADIENT_V
-!USE MODI_GRADIENT_W
 USE MODI_LES_MEAN_SUBGRID_PHY
 USE MODE_TRIDIAG_TKE, ONLY: TRIDIAG_TKE
 !
@@ -167,6 +163,7 @@ TYPE(CST_t),             INTENT(IN)   :: CST
 TYPE(CSTURB_t),          INTENT(IN)   :: CSTURB
 TYPE(TBUDGETCONF_t),     INTENT(IN)   :: BUCONF
 TYPE(TURB_t),            INTENT(IN)   :: TURBN
+TYPE(TLES_t),            INTENT(INOUT):: TLES
 INTEGER,                 INTENT(IN)   ::  KMI          ! model index number  
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PTKEM        ! TKE at t-deltat
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PLM          ! mixing length         
@@ -179,7 +176,6 @@ REAL,                    INTENT(IN)   ::  PTSTEP       ! Time step
 REAL,                    INTENT(IN)   ::  PEXPL        ! Coef. temporal. disc.
 CHARACTER(LEN=6),        INTENT(IN)   ::  HPROGRAM     ! CPROGRAM is the program currently running (modd_conf)
 TYPE(TFILEDATA),         INTENT(IN)   ::  TPFILE       ! Output file
-LOGICAL,                 INTENT(IN)   ::  OLES_CALL    !
 LOGICAL,                 INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(INOUT)::  PDP          ! Dyn. prod. of TKE
@@ -345,7 +341,7 @@ PTDISS(IIJB:IIJE,1:D%NKT) = - ZFLX(IIJB:IIJE,1:D%NKT)*(PEXPL*PTKEM(IIJB:IIJE,1:D
                                       + TURBN%XIMPL*ZRES(IIJB:IIJE,1:D%NKT))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
-IF ( OLES_CALL .OR.                         &
+IF ( TLES%LLES_CALL .OR.                         &
      (TURBN%LTURB_DIAG .AND. TPFILE%LOPENED)  ) THEN
 !
 ! Compute the cartesian vertical flux of TKE in ZFLX
@@ -378,10 +374,10 @@ IF ( OLES_CALL .OR.                         &
 !
 ! Storage in the LES configuration
 !
-  IF (OLES_CALL) THEN
+  IF (TLES%LLES_CALL) THEN
     CALL MZF_PHY(D,ZFLX,ZMWORK1)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZMWORK1, X_LES_SUBGRID_WTke )
-    CALL LES_MEAN_SUBGRID_PHY(D, -ZTR, X_LES_SUBGRID_ddz_WTke )
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZMWORK1, TLES%X_LES_SUBGRID_WTke )
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES, -ZTR, TLES%X_LES_SUBGRID_ddz_WTke )
   END IF
 !
 END IF
@@ -535,8 +531,8 @@ END IF
 ! Storage in the LES configuration of the Dynamic Production of TKE and
 ! the dissipation of TKE 
 ! 
-IF (OLES_CALL ) THEN
-  CALL LES_MEAN_SUBGRID_PHY(D, PDISS, X_LES_SUBGRID_DISS_Tke )
+IF (TLES%LLES_CALL ) THEN
+  CALL LES_MEAN_SUBGRID_PHY(D,TLES, PDISS, TLES%X_LES_SUBGRID_DISS_Tke )
 END IF
 !
 !----------------------------------------------------------------------------

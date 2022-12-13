@@ -5,11 +5,11 @@
 MODULE MODE_TURB_VER
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,KRR,KRRL,KRRI,KGRADIENTS,    &
+SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,TLES,KRR,KRRL,KRRI,KGRADIENTS,&
                       OOCEAN,ODEEPOC,OCOMPUTE_SRC,                  &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
                       PEXPL, HPROGRAM, O2D, ONOMIXLG, OFLAT,        &
-                      OLES_CALL,OCOUPLES,OBLOWSNOW,PRSNOW,          &                      
+                      OCOUPLES,OBLOWSNOW,PRSNOW,                    & 
                       PTSTEP, TPFILE,                               &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
@@ -218,7 +218,7 @@ USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
-USE MODD_LES
+USE MODD_LES, ONLY: TLES_t
 USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODE_EMOIST, ONLY: EMOIST
@@ -244,6 +244,7 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
+TYPE(TLES_t),           INTENT(INOUT):: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
@@ -253,7 +254,6 @@ LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model v
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
-LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
@@ -469,14 +469,14 @@ CALL PSI_SV(D,CSTURB,KSV,ZREDTH1,ZREDR1,ZREDS1,ZRED2THS,ZRED2RS,ZPHI3,ZPSI3,ZPSI
 !
 ! LES diagnostics
 !
-IF (OLES_CALL) THEN
+IF (TLES%LLES_CALL) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID_PHY(D,ZPHI3,X_LES_SUBGRID_PHI3)
+  CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZPHI3,TLES%X_LES_SUBGRID_PHI3)
   IF(KRR/=0) THEN
-    CALL LES_MEAN_SUBGRID_PHY(D,ZPSI3,X_LES_SUBGRID_PSI3)
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZPSI3,TLES%X_LES_SUBGRID_PSI3)
   END IF
   CALL SECOND_MNH(ZTIME2)
-  XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+  TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !----------------------------------------------------------------------------
 !
@@ -499,10 +499,10 @@ ELSE
   ZLM(:,:)=PLM(:,:)
 ENDIF
 !
-  CALL  TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,                      &
+  CALL  TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,TLES,                 &
                         KRR,KRRL,KRRI,KSV,KGRADIENTS,                 &
                         OOCEAN,ODEEPOC,                               &
-                        OCOUPLES,OLES_CALL,OCOMPUTE_SRC,              &
+                        OCOUPLES,OCOMPUTE_SRC,                        &
                         PEXPL,PTSTEP,HPROGRAM,TPFILE,                 &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                         PRHODJ,PTHVREF,PHGRAD,PZS,                    &
@@ -518,10 +518,10 @@ ENDIF
                         PRTHLS,PRRS,ZTHLP,ZRP,PTP,PWTH,PWRC,          &
                         PSSTFL, PSSTFL_C, PSSRFL_C                    )
 !
-  CALL  TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,                      &
+  CALL  TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,TLES,                 &
                         KRR,KRRL,KRRI,KSV,                            &
                         OCOMPUTE_SRC,                                 &
-                        OCOUPLES,OLES_CALL,                           &
+                        OCOUPLES,                                     &
                         PEXPL,TPFILE,                                 &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,           &
                         PRHODJ,PTHVREF,                               &
@@ -551,8 +551,8 @@ ENDIF
 !
 IF (TURBN%LHARAT) ZLM(:,:)=PLENGTHM(:,:)
 !
-CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KSV,O2D,OFLAT,           &
-                      KRR,OOCEAN,OCOUPLES,OLES_CALL,                &
+CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,TLES,KSV,O2D,OFLAT,      &
+                      KRR,OOCEAN,OCOUPLES,                          &
                       PEXPL,PTSTEP,TPFILE,                          &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
@@ -572,9 +572,9 @@ CALL  TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KSV,O2D,OFLAT,           &
 IF (TURBN%LHARAT) ZLM(:,:)=PLENGTHH(:,:)
 !
 IF (KSV>0)                                                          &
-CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,ONOMIXLG,                 &
+CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,TLES,ONOMIXLG,            &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
-                      OBLOWSNOW,OLES_CALL,                          &
+                      OBLOWSNOW,                                    &
                       PEXPL,PTSTEP,TPFILE,PRSNOW,                   &
                       PDZZ,PDIRCOSZW,                               &
                       PRHODJ,PWM,                                   &
@@ -584,10 +584,10 @@ CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,ONOMIXLG,                 &
                       PRSVS,PWSV                                    )
 !
 !
-IF (KSV>0 .AND. OLES_CALL)                                          &
-CALL  TURB_VER_SV_CORR(D,CST,CSTURB,KRR,KRRL,KRRI,OOCEAN,           &
+IF (KSV>0 .AND. TLES%LLES_CALL)                                          &
+CALL  TURB_VER_SV_CORR(D,CST,CSTURB,TLES,KRR,KRRL,KRRI,OOCEAN,      &
                       PDZZ,KSV,KSV_LGBEG,KSV_LGEND,ONOMIXLG,        &
-                      OBLOWSNOW,OLES_CALL,OCOMPUTE_SRC,PRSNOW,      &
+                      OBLOWSNOW,OCOMPUTE_SRC,PRSNOW,                &
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,ZPHI3,ZPSI3,  &
                       PWM,PSVM,                                     &

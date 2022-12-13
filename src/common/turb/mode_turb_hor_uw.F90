@@ -7,7 +7,7 @@ MODULE MODE_TURB_HOR_UW
 IMPLICIT NONE
 CONTAINS
 !     ################################################################
-      SUBROUTINE TURB_HOR_UW(TURBN,KSPLT,                            &
+      SUBROUTINE TURB_HOR_UW(TURBN,TLES,KSPLT,                       &
                       KRR,                                           &
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDZZ,PMZM_PRHODJ,            &
@@ -70,7 +70,7 @@ USE MODD_CTURB
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
-USE MODD_LES
+USE MODD_LES, ONLY: TLES_t
 USE MODD_NSV
 !
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
@@ -93,6 +93,7 @@ IMPLICIT NONE
 !
 !
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
+TYPE(TLES_t),             INTENT(INOUT) :: TLES          ! modd_les structure
 INTEGER,                  INTENT(IN)    ::  KSPLT        ! split process index
 INTEGER,                  INTENT(IN)    ::  KRR          ! number of moist var.
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
@@ -225,23 +226,23 @@ END IF
 !
 ! Storage in the LES configuration (addition to TURB_VER computation)
 !
-IF (LLES_CALL .AND. KSPLT==1) THEN
+IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID( MZF(MXF(ZFLX)), X_LES_SUBGRID_WU , .TRUE. )
-  CALL LES_MEAN_SUBGRID( MZF(MXF(GZ_U_UW(PUM,PDZZ)*ZFLX)), X_LES_RES_ddxa_U_SBG_UaU , .TRUE.)
-  CALL LES_MEAN_SUBGRID( MZF(MXF(GX_W_UW_PWM*ZFLX)), X_LES_RES_ddxa_W_SBG_UaW , .TRUE.)
+  CALL LES_MEAN_SUBGRID( MZF(MXF(ZFLX)), TLES%X_LES_SUBGRID_WU , .TRUE. )
+  CALL LES_MEAN_SUBGRID( MZF(MXF(GZ_U_UW(PUM,PDZZ)*ZFLX)), TLES%X_LES_RES_ddxa_U_SBG_UaU , .TRUE.)
+  CALL LES_MEAN_SUBGRID( MZF(MXF(GX_W_UW_PWM*ZFLX)), TLES%X_LES_RES_ddxa_W_SBG_UaW , .TRUE.)
   CALL LES_MEAN_SUBGRID( MXF(GX_M_U(1,IKU,1,PTHLM,PDXX,PDZZ,PDZX)*MZF(ZFLX)),&
-                         X_LES_RES_ddxa_Thl_SBG_UaW , .TRUE.)
+                         TLES%X_LES_RES_ddxa_Thl_SBG_UaW , .TRUE.)
   IF (KRR>=1) THEN
     CALL LES_MEAN_SUBGRID( MXF(GX_M_U(1,IKU,1,PRM(:,:,:,1),PDXX,PDZZ,PDZX)*MZF(ZFLX)), &
-                           X_LES_RES_ddxa_Rt_SBG_UaW , .TRUE.)
+                           TLES%X_LES_RES_ddxa_Rt_SBG_UaW , .TRUE.)
   END IF
   DO JSV=1,NSV
     CALL LES_MEAN_SUBGRID( MXF(GX_M_U(1,IKU,1,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)*MZF(ZFLX)), &
-                           X_LES_RES_ddxa_Sv_SBG_UaW(:,:,:,JSV) , .TRUE.)
+                           TLES%X_LES_RES_ddxa_Sv_SBG_UaW(:,:,:,JSV) , .TRUE.)
   END DO
   CALL SECOND_MNH(ZTIME2)
-  XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+  TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 END IF
 
 !

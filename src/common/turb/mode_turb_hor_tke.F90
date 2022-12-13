@@ -6,7 +6,7 @@
 MODULE MODE_TURB_HOR_TKE
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_TKE(KSPLT,                                 &
+      SUBROUTINE TURB_HOR_TKE(KSPLT,TLES,                            &
                       PDXX, PDYY, PDZZ,PDZX,PDZY,                    &
                       PINV_PDXX, PINV_PDYY, PINV_PDZZ, PMZM_PRHODJ,  &
                       PK, PRHODJ, PTKEM,                             &
@@ -52,7 +52,7 @@ USE MODD_CONF
 USE MODD_CST
 USE MODD_CTURB
 USE MODD_PARAMETERS
-USE MODD_LES
+USE MODD_LES, ONLY: TLES_t
 !
 !
 USE MODI_SHUMAN 
@@ -67,8 +67,8 @@ IMPLICIT NONE
 !*       0.1  declaration of arguments
 !
 !
+TYPE(TLES_t),             INTENT(INOUT) :: TLES          ! modd_les structure
 INTEGER,                  INTENT(IN) :: KSPLT        ! current split index
-!
 REAL, DIMENSION(:,:,:),   INTENT(IN) :: PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                      ! Metric coefficients
 REAL, DIMENSION(:,:,:),   INTENT(IN) :: PK           ! Turbulent diffusion doef.
@@ -151,11 +151,11 @@ ELSE
          ) /PRHODJ
 END IF
 !
-IF (LLES_CALL .AND. KSPLT==1) THEN
+IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID( MXF(ZFLX), X_LES_SUBGRID_UTke ) 
+  CALL LES_MEAN_SUBGRID( MXF(ZFLX), TLES%X_LES_SUBGRID_UTke ) 
   CALL SECOND_MNH(ZTIME2)
-  XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+  TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !
 !
@@ -198,11 +198,11 @@ IF (.NOT. L2D) THEN
                   ) /PRHODJ
   END IF
 !
-  IF (LLES_CALL .AND. KSPLT==1) THEN
+  IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
     CALL SECOND_MNH(ZTIME1)
-    CALL LES_MEAN_SUBGRID( MYF(ZFLX), X_LES_SUBGRID_VTke )
+    CALL LES_MEAN_SUBGRID( MYF(ZFLX), TLES%X_LES_SUBGRID_VTke )
     CALL SECOND_MNH(ZTIME2)
-    XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+    TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
   END IF
 !
 END IF

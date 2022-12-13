@@ -5,7 +5,7 @@
 MODULE MODE_TURB_HOR  
 IMPLICIT NONE
 CONTAINS
-             SUBROUTINE TURB_HOR(D,CST,CSTURB,TURBN,                 &
+             SUBROUTINE TURB_HOR(D,CST,CSTURB,TURBN,TLES,            &
                       KSPLT, KRR, KRRL, KRRI, PTSTEP,                &
                       OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,                 &
                       TPFILE,                                        &
@@ -143,7 +143,7 @@ USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_PARAMETERS
-USE MODD_LES
+USE MODD_LES, ONLY: TLES_t
 !
 USE MODE_TURB_HOR_THERMO_FLUX, ONLY: TURB_HOR_THERMO_FLUX
 USE MODE_TURB_HOR_THERMO_CORR, ONLY: TURB_HOR_THERMO_CORR
@@ -164,6 +164,7 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
+TYPE(TLES_t),           INTENT(INOUT):: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KSPLT         ! current split index
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
@@ -256,7 +257,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !*       6.   < V' R'np >
 !*       7.   < V' TPV' >
 !
-      CALL      TURB_HOR_THERMO_FLUX(TURBN,KSPLT, KRR, KRRL, KRRI,   &
+      CALL      TURB_HOR_THERMO_FLUX(TURBN,TLES,KSPLT, KRR,KRRL,KRRI,&
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
@@ -271,7 +272,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !*       8.   TURBULENT CORRELATIONS : <THl THl>, <THl Rnp>, <Rnp Rnp>, Sigma_s
 !
       IF (KSPLT==1)                                                  &
-      CALL      TURB_HOR_THERMO_CORR(D,CST,TURBN,                    &
+      CALL      TURB_HOR_THERMO_CORR(D,CST,TURBN,TLES,               &
                       KRR, KRRL, KRRI,                               &
                       OOCEAN,OCOMPUTE_SRC,                           &
                       TPFILE,                                        &
@@ -288,7 +289,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !*      10.   < V'V'>
 !*      11.   < W'W'>
 ! 
-      CALL       TURB_HOR_DYN_CORR(TURBN,KSPLT, PTSTEP,              &
+      CALL       TURB_HOR_DYN_CORR(TURBN,TLES,KSPLT, PTSTEP,         &
                       KRR,                                           &
                       TPFILE,                                        &
                       PK,PINV_PDZZ,                                  &
@@ -306,7 +307,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !
 !*      12.   < U'V'>
 !
-      CALL      TURB_HOR_UV(TURBN,KSPLT,                             &
+      CALL      TURB_HOR_UV(TURBN,TLES,KSPLT,                        &
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
@@ -321,7 +322,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !
 !*      13.   < U'W'>
 !
-      CALL      TURB_HOR_UW(TURBN,KSPLT,                             &
+      CALL      TURB_HOR_UW(TURBN,TLES,KSPLT,                        &
                       KRR,                                           &
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDZZ,PMZM_PRHODJ,            &
@@ -335,7 +336,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !
 !*      14.   < V'W'>
 !
-      CALL      TURB_HOR_VW(TURBN,KSPLT,                             &
+      CALL      TURB_HOR_VW(TURBN,TLES,KSPLT,                        &
                       KRR,                                           &
                       TPFILE,                                        &
                       PK,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,            &
@@ -350,7 +351,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !
 !*      15.   HORIZONTAL FLUXES OF PASSIVE SCALARS
 !
-      CALL      TURB_HOR_SV_FLUX(TURBN,KSPLT,OBLOWSNOW,              &
+      CALL      TURB_HOR_SV_FLUX(TURBN,TLES,KSPLT,OBLOWSNOW,         &
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
@@ -360,8 +361,8 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
                       PSVM,                                          &
                       PRSVS                                          )
 !
-      IF (KSPLT==1 .AND. LLES_CALL)                                  &
-      CALL      TURB_HOR_SV_CORR(D,CST,CSTURB,                       &
+      IF (KSPLT==1 .AND. TLES%LLES_CALL)                             &
+      CALL      TURB_HOR_SV_CORR(D,CST,CSTURB,TLES,                  &
                       KRR,KRRL,KRRI,OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,   &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
                       PLM,PLEPS,PTKEM,PTHVREF,                       &

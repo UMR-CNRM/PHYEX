@@ -6,7 +6,7 @@
 MODULE MODE_TURB_HOR_DYN_CORR
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_DYN_CORR(TURBN,KSPLT, PTSTEP,              &
+      SUBROUTINE TURB_HOR_DYN_CORR(TURBN,TLES,KSPLT, PTSTEP,         &
                       KRR,                                           &
                       TPFILE,                                        &
                       PK,PINV_PDZZ,                                  &
@@ -79,7 +79,7 @@ USE MODD_CTURB
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
-USE MODD_LES
+USE MODD_LES, ONLY: TLES_t
 USE MODD_NSV
 !
 USE MODE_ll
@@ -105,6 +105,7 @@ IMPLICIT NONE
 !
 !
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
+TYPE(TLES_t),             INTENT(INOUT) :: TLES          ! modd_les structure
 INTEGER,                  INTENT(IN)    ::  KSPLT        ! split process index
 REAL,                     INTENT(IN)    ::  PTSTEP       ! timestep
 INTEGER,                  INTENT(IN)    ::  KRR          ! number of moist var.
@@ -342,12 +343,12 @@ END IF
 !
 ! Storage in the LES configuration
 !
-IF (LLES_CALL .AND. KSPLT==1) THEN
+IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID( ZFLX, X_LES_SUBGRID_U2 ) 
-  CALL LES_MEAN_SUBGRID( -ZWORK, X_LES_RES_ddxa_U_SBG_UaU , .TRUE.)
+  CALL LES_MEAN_SUBGRID( ZFLX, TLES%X_LES_SUBGRID_U2 ) 
+  CALL LES_MEAN_SUBGRID( -ZWORK, TLES%X_LES_RES_ddxa_U_SBG_UaU , .TRUE.)
   CALL SECOND_MNH(ZTIME2)
-  XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+  TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 END IF
 
 !
@@ -438,12 +439,12 @@ END IF
 !
 ! Storage in the LES configuration
 !
-IF (LLES_CALL .AND. KSPLT==1) THEN
+IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID( ZFLX, X_LES_SUBGRID_V2 ) 
-  CALL LES_MEAN_SUBGRID( -ZWORK, X_LES_RES_ddxa_V_SBG_UaV , .TRUE.)
+  CALL LES_MEAN_SUBGRID( ZFLX, TLES%X_LES_SUBGRID_V2 ) 
+  CALL LES_MEAN_SUBGRID( -ZWORK, TLES%X_LES_RES_ddxa_V_SBG_UaV , .TRUE.)
   CALL SECOND_MNH(ZTIME2)
-  XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+  TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !
 !*      11.   < W'W'>
@@ -528,26 +529,26 @@ END IF
 ! Storage in the LES configuration
 !
 !
-IF (LLES_CALL .AND. KSPLT==1) THEN
+IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID( ZFLX, X_LES_SUBGRID_W2 ) 
-  CALL LES_MEAN_SUBGRID( -ZWORK, X_LES_RES_ddxa_W_SBG_UaW , .TRUE.)
-  CALL LES_MEAN_SUBGRID( GZ_M_M(PTHLM,PDZZ)*ZFLX, X_LES_RES_ddxa_Thl_SBG_UaW , .TRUE.)
-  CALL LES_MEAN_SUBGRID(ZFLX*MZF(GZ_M_W(1,IKU,1,PTHLM,PDZZ)),X_LES_RES_ddz_Thl_SBG_W2)
+  CALL LES_MEAN_SUBGRID( ZFLX, TLES%X_LES_SUBGRID_W2 ) 
+  CALL LES_MEAN_SUBGRID( -ZWORK, TLES%X_LES_RES_ddxa_W_SBG_UaW , .TRUE.)
+  CALL LES_MEAN_SUBGRID( GZ_M_M(PTHLM,PDZZ)*ZFLX, TLES%X_LES_RES_ddxa_Thl_SBG_UaW , .TRUE.)
+  CALL LES_MEAN_SUBGRID(ZFLX*MZF(GZ_M_W(1,IKU,1,PTHLM,PDZZ)),TLES%X_LES_RES_ddz_Thl_SBG_W2)
   IF (KRR>=1) THEN
     CALL LES_MEAN_SUBGRID( GZ_M_M(PRM(:,:,:,1),PDZZ)*ZFLX, &
-                           X_LES_RES_ddxa_Rt_SBG_UaW , .TRUE.)
+                           TLES%X_LES_RES_ddxa_Rt_SBG_UaW , .TRUE.)
     CALL LES_MEAN_SUBGRID(ZFLX*MZF(GZ_M_W(1,IKU,1,PRM(:,:,:,1),PDZZ)), &
-                           X_LES_RES_ddz_Rt_SBG_W2)
+                           TLES%X_LES_RES_ddz_Rt_SBG_W2)
   END IF
   DO JSV=1,NSV
     CALL LES_MEAN_SUBGRID( GZ_M_M(PSVM(:,:,:,JSV),PDZZ)*ZFLX, &
-                           X_LES_RES_ddxa_Sv_SBG_UaW(:,:,:,JSV) , .TRUE.)
+                           TLES%X_LES_RES_ddxa_Sv_SBG_UaW(:,:,:,JSV) , .TRUE.)
     CALL LES_MEAN_SUBGRID(ZFLX*MZF(GZ_M_W(1,IKU,1,PSVM(:,:,:,JSV),PDZZ)), &
-                           X_LES_RES_ddz_Sv_SBG_W2(:,:,:,JSV))
+                           TLES%X_LES_RES_ddz_Sv_SBG_W2(:,:,:,JSV))
   END DO
   CALL SECOND_MNH(ZTIME2)
-  XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+  TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !
 CALL CLEANLIST_ll(TZFIELDS_ll)

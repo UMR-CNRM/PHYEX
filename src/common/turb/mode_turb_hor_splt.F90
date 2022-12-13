@@ -5,7 +5,7 @@
 MODULE MODE_TURB_HOR_SPLT
 IMPLICIT NONE
 CONTAINS
-           SUBROUTINE TURB_HOR_SPLT(D,CST,CSTURB,TURBN,              &
+           SUBROUTINE TURB_HOR_SPLT(D,CST,CSTURB,TURBN,TLES,         &
                       KSPLIT, KRR,KRRL,KRRI,KSV, PTSTEP,HLBCX,HLBCY, &
                       OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,PRSNOW,          &
                       TPFILE,                                        &
@@ -160,6 +160,7 @@ USE MODD_CONF
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_DIMPHYEX, ONLY : DIMPHYEX_t
+USE MODD_LES, ONLY: TLES_t
 USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODD_IO, ONLY: TFILEDATA
@@ -182,6 +183,7 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
+TYPE(TLES_t),           INTENT(INOUT):: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time splitting
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
@@ -365,7 +367,7 @@ IF (KSPLIT>1 .AND. CPROGRAM=='MESONH') THEN
   DO JSPLT=1,KSPLIT
 !
 ! compute the turbulent tendencies for the small time step
-    CALL TURB_HOR(D,CST,CSTURB,TURBN,                             &
+    CALL TURB_HOR(D,CST,CSTURB,TURBN,TLES,                        &
                    JSPLT, KRR, KRRL, KRRI, PTSTEP,                &
                    OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,                 &
                    TPFILE,                                        &
@@ -385,7 +387,7 @@ IF (KSPLIT>1 .AND. CPROGRAM=='MESONH') THEN
 !
 ! horizontal transport of Tke
 !
-  CALL   TURB_HOR_TKE(JSPLT,                                         &
+  CALL   TURB_HOR_TKE(JSPLT,TLES,                                    &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
                       ZINV_PDXX, ZINV_PDYY, ZINV_PDZZ, ZMZM_PRHODJ,  &
                       ZK, PRHODJ, ZTKEM,                             &
@@ -507,7 +509,7 @@ IF (KSPLIT>1 .AND. CPROGRAM=='MESONH') THEN
 !
 ELSE
 !
-  CALL TURB_HOR(D,CST,CSTURB,TURBN,                            &
+  CALL TURB_HOR(D,CST,CSTURB,TURBN,TLES,                       &
                 1, KRR, KRRL, KRRI,  PTSTEP,                   &
                 OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,                 &
                 TPFILE,                                        &
@@ -528,7 +530,7 @@ ELSE
 ! horizontal transport of Tke
 !
 
-  CALL   TURB_HOR_TKE(1,                                             &
+  CALL   TURB_HOR_TKE(1,TLES,                                        &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
                       ZINV_PDXX, ZINV_PDYY, ZINV_PDZZ, ZMZM_PRHODJ,  &
                       ZK, PRHODJ, PTKEM,                             &

@@ -5,7 +5,7 @@
 MODULE MODE_TURB_HOR_SV_CORR
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_SV_CORR(D,CST,CSTURB,                      &
+      SUBROUTINE TURB_HOR_SV_CORR(D,CST,CSTURB,TLES,                 &
                       KRR,KRRL,KRRI,OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,   &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
                       PLM,PLEPS,PTKEM,PTHVREF,                       &
@@ -54,7 +54,7 @@ USE MODD_CTURB, ONLY : CSTURB_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_PARAMETERS
 USE MODD_NSV, ONLY : NSV,NSV_LGBEG,NSV_LGEND
-USE MODD_LES
+USE MODD_LES, ONLY: TLES_t
 !
 USE MODI_GRADIENT_M
 USE MODI_GRADIENT_U
@@ -77,6 +77,7 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),         INTENT(IN)    ::  D
 TYPE(CST_t),              INTENT(IN)    ::  CST
 TYPE(CSTURB_t),           INTENT(IN)    ::  CSTURB
+TYPE(TLES_t),             INTENT(INOUT) :: TLES          ! modd_les structure
 INTEGER,                  INTENT(IN)    ::  KRR          ! number of moist var.
 INTEGER,                  INTENT(IN)    ::  KRRL         ! number of liquid var.
 INTEGER,                  INTENT(IN)    ::  KRRI         ! number of ice var.
@@ -135,7 +136,7 @@ DO JSV=1,NSV
   !
   ! variance Sv2
   !
-  IF (LLES_CALL) THEN
+  IF (TLES%LLES_CALL) THEN
     IF (.NOT. L2D) THEN
       ZFLX(:,:,:) =  ZCSV / ZCSVD * PLM(:,:,:) * PLEPS(:,:,:) *   &
          (  GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)**2             &
@@ -145,13 +146,13 @@ DO JSV=1,NSV
             GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)**2
     END IF
     CALL LES_MEAN_SUBGRID( -2.*ZCSVD*SQRT(PTKEM)*ZFLX/PLEPS, &
-                           X_LES_SUBGRID_DISS_Sv2(:,:,:,JSV), .TRUE. )
-    CALL LES_MEAN_SUBGRID( MZF(PWM)*ZFLX, X_LES_RES_W_SBG_Sv2(:,:,:,JSV), .TRUE. )
+                           TLES%X_LES_SUBGRID_DISS_Sv2(:,:,:,JSV), .TRUE. )
+    CALL LES_MEAN_SUBGRID( MZF(PWM)*ZFLX, TLES%X_LES_RES_W_SBG_Sv2(:,:,:,JSV), .TRUE. )
   END IF
   !
   ! covariance SvThv
   !
-  IF (LLES_CALL) THEN
+  IF (TLES%LLES_CALL) THEN
     CALL ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC,ZA)
     IF (.NOT. L2D) THEN
       ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                          &
@@ -163,8 +164,8 @@ DO JSV=1,NSV
               * GX_M_M(PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
               * (CSTURB%XCSHF+ZCSV) / (2.*ZCTSVD)
     END IF
-    CALL LES_MEAN_SUBGRID( ZA*ZFLX, X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
-    CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLX, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE. )
+    CALL LES_MEAN_SUBGRID( ZA*ZFLX, TLES%X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
+    CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLX, TLES%X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE. )
     !
     IF (KRR>=1) THEN
       CALL  EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN,ZA)
@@ -178,15 +179,15 @@ DO JSV=1,NSV
                 * GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX) * GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
                 * (CSTURB%XCHF+ZCSV) / (2.*ZCQSVD)
       END IF
-      CALL LES_MEAN_SUBGRID( ZA*ZFLX, X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
-      CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLX, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE. )
+      CALL LES_MEAN_SUBGRID( ZA*ZFLX, TLES%X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
+      CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLX, TLES%X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE. )
     END IF
   END IF
 !
 END DO    ! end loop JSV
 !
 CALL SECOND_MNH(ZTIME2)
-XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 !
 END SUBROUTINE TURB_HOR_SV_CORR
 END MODULE MODE_TURB_HOR_SV_CORR
