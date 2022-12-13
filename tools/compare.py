@@ -4,28 +4,17 @@ import xarray as xr
 
 avail_groups=['Stations/sta1',
 'LES_budgets/Miscellaneous/Cartesian/Not_time_averaged/Not_normalized/cart/',
-'LES_budgets/Miscellaneous/Cartesian/Time_averaged/Not_normalized/cart/',
 'LES_budgets/Mean/Cartesian/Not_time_averaged/Not_normalized/cart/',
-'LES_budgets/Mean/Cartesian/Time_averaged/Not_normalized/cart/',
 'LES_budgets/Resolved/Cartesian/Not_time_averaged/Not_normalized/cart/',
-'LES_budgets/Resolved/Cartesian/Time_averaged/Not_normalized/cart/',
 'LES_budgets/Subgrid/Cartesian/Not_time_averaged/Not_normalized/cart/',
-'LES_budgets/Subgrid/Cartesian/Time_averaged/Not_normalized/cart/',
 'LES_budgets/Surface/Cartesian/Not_time_averaged/Not_normalized/cart/',
-'LES_budgets/Surface/Cartesian/Time_averaged/Not_normalized/cart/',
 'LES_budgets/BU_KE/Cartesian/Not_time_averaged/Not_normalized/cart/',
-'LES_budgets/BU_KE/Cartesian/Time_averaged/Not_normalized/cart/',
 'LES_budgets/BU_THL2/Cartesian/Not_time_averaged/Not_normalized/cart/',
-'LES_budgets/BU_THL2/Cartesian/Time_averaged/Not_normalized/cart/',
 'LES_budgets/BU_WTHL/Cartesian/Not_time_averaged/Not_normalized/cart/',
-'LES_budgets/BU_WTHL/Cartesian/Time_averaged/Not_normalized/cart/',
 'LES_budgets/BU_RT2/Cartesian/Not_time_averaged/Not_normalized/cart/',
-'LES_budgets/BU_RT2/Cartesian/Time_averaged/Not_normalized/cart/',
 'LES_budgets/BU_WRT/Cartesian/Not_time_averaged/Not_normalized/cart/',
-'LES_budgets/BU_WRT/Cartesian/Time_averaged/Not_normalized/cart/',
 'LES_budgets/BU_THLR/Cartesian/Not_time_averaged/Not_normalized/cart/',
-'LES_budgets/BU_THLR/Cartesian/Time_averaged/Not_normalized/cart/']
-
+]
 
 
 def compareBACKUPFiles(file_user, file_ref):
@@ -73,6 +62,10 @@ def compareTSERIESFiles(file_user, file_ref):
   da = xr.open_dataset(file_user)
   da2 = xr.open_dataset(file_ref)
   variables = list(da.keys())
+  try: 
+    nk=len(da['level_les'])
+  except:
+    pass
   for var in variables:
     try:
       ecart_min = float(da2[var].min())-float(da[var].min())
@@ -86,11 +79,9 @@ def compareTSERIESFiles(file_user, file_ref):
   # Groups comparison
   for grp in avail_groups:
     try:
-      nk=len(da['level_les'])
       da = xr.open_dataset(file_user, group=grp)
       da2 = xr.open_dataset(file_ref, group=grp)
       variables = list(da.keys())
-      print(grp)
       for var in variables:
         try:
           ecart_min = float(da2[var][:,:nk-JPVEXT].min())-float(da[var][:,:nk-JPVEXT].min())
