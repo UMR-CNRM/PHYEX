@@ -1570,7 +1570,7 @@ END IF
               NSV, NSV_LGBEG, NSV_LGEND,CPROGRAM,                                    &
               NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,                    &
               L2D, LNOMIXLG,LFLAT,                                                   &
-              LLES_CALL, LCOUPLES, LBLOWSNOW,                                        &
+              LCOUPLES, LBLOWSNOW,                                                   &
               GCOMPUTE_SRC, XRSNOW,                                                  &
               LOCEAN, LDEEPOC, LDIAG_IN_RUN,                                         &
               CTURBLEN_CLOUD, CCLOUD,                                                &

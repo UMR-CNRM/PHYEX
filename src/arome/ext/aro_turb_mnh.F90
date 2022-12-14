@@ -69,7 +69,6 @@
 !              ------------
 !
 USE MODD_CONF
-USE MODD_NSV, ONLY: NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH
 USE MODD_CST, ONLY:CST
 USE MODD_CTURB, ONLY:CSTURB
 USE MODD_LES, ONLY:TLES
@@ -217,6 +216,7 @@ INTEGER   :: KSV_LGBEG, KSV_LGEND ! number of scalar variables
 !
 REAL, DIMENSION(KLON,1,KLEV+2)   :: ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY
                                         ! metric coefficients
+INTEGER :: NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH ! TODO LIMA integration : to be sent from above aro_turb_mnh
 REAL, DIMENSION(KLON,1) :: PZS ! TODO: to be sent from above aro_turb_mnh
 REAL, POINTER ::  ZDIRCOSXW(:,:), ZDIRCOSYW(:,:), ZDIRCOSZW(:,:)
 ! Director Cosinus along x, y and z directions at surface w-point
@@ -429,7 +429,7 @@ CALL TURB (CST,CSTURB,TBUCONF,TURBN, YLDIMPHYEX,TLES,&
    & IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, KGRADIENTS,1, &
    & ISPLIT,IMI, KSV, KSV_LGBEG, KSV_LGEND, HPROGRAM,&
    & NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,   &
-   & O2D, ONOMIXLG, OFLAT, TLES%LLES_CALL,OCOUPLES,OBLOWSNOW,& 
+   & O2D, ONOMIXLG, OFLAT, OCOUPLES,OBLOWSNOW,& 
    & OCOMPUTE_SRC, 1.0, &
    & OOCEAN,ODEEPOC, .FALSE.,   &
    & 'NONE',CMICRO,           &
