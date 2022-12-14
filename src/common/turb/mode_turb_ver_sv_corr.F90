@@ -5,9 +5,9 @@
 MODULE MODE_TURB_VER_SV_CORR
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER_SV_CORR(D,CST,CSTURB,KRR,KRRL,KRRI,OOCEAN,&
+SUBROUTINE TURB_VER_SV_CORR(D,CST,CSTURB,TLES,KRR,KRRL,KRRI,OOCEAN, &
                       PDZZ,KSV,KSV_LGBEG,KSV_LGEND,ONOMIXLG,        &
-                      OBLOWSNOW,OLES_CALL,OCOMPUTE_SRC,PRSNOW,      &
+                      OBLOWSNOW,OCOMPUTE_SRC,PRSNOW,                &
                       PTHLM,PRM,PTHVREF,                            &
                       PLOCPEXNM,PATHETA,PAMOIST,PSRCM,PPHI3,PPSI3,  &
                       PWM,PSVM,                                     &
@@ -60,7 +60,7 @@ USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
-USE MODD_LES
+USE MODD_LES, ONLY: TLES_t
 !
 USE SHUMAN_PHY, ONLY:  MZF_PHY
 USE MODE_GRADIENT_M_PHY, ONLY : GZ_M_W_PHY
@@ -79,10 +79,10 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),       INTENT(IN)   ::  D
 TYPE(CST_t),            INTENT(IN)   ::  CST
 TYPE(CSTURB_t),         INTENT(IN)   ::  CSTURB
+TYPE(TLES_t),           INTENT(INOUT)::  TLES         ! modd_les structure
 INTEGER,                INTENT(IN)   ::  KSV, KSV_LGBEG, KSV_LGEND ! number of scalar variables
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for lagrangian variables (modd_conf)
-LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
@@ -152,7 +152,7 @@ DO JSV=1,KSV
   !
   ! variance Sv2
   !
-  IF (OLES_CALL) THEN
+  IF (TLES%LLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
     CALL GZ_M_W_PHY(D,PSVM(:,:,JSV),PDZZ,ZWORK1)
     CALL MZF_PHY(D,ZFLXZ,ZWORK2)
@@ -163,13 +163,13 @@ DO JSV=1,KSV
     ZWORK1(IIJB:IIJE,1:D%NKT) = -2.*ZCSVD*SQRT(PTKEM(IIJB:IIJE,1:D%NKT))*ZFLXZ(IIJB:IIJE,1:D%NKT)/PLEPS(IIJB:IIJE,1:D%NKT)
     ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK3(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_DISS_Sv2(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2, X_LES_RES_W_SBG_Sv2(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_DISS_Sv2(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2, TLES%X_LES_RES_W_SBG_Sv2(:,:,:,JSV) )
   END IF
   !
   ! covariance ThvSv
   !
-  IF (OLES_CALL) THEN
+  IF (TLES%LLES_CALL) THEN
     ! approximation: diagnosed explicitely (without implicit term)
     CALL ETHETA(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PATHETA,PSRCM,OOCEAN,OCOMPUTE_SRC,ZA)
     !
@@ -188,8 +188,8 @@ DO JSV=1,KSV
     ZWORK2(IIJB:IIJE,1:D%NKT) = -CST%XG/PTHVREF(IIJB:IIJE,1:D%NKT)/3.*ZA(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)    
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     !
-    CALL LES_MEAN_SUBGRID_PHY(D, ZWORK1, X_LES_SUBGRID_SvThv(:,:,:,JSV) )
-    CALL LES_MEAN_SUBGRID_PHY(D, ZWORK2, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES, ZWORK1, TLES%X_LES_SUBGRID_SvThv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES, ZWORK2, TLES%X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
     !
     IF (KRR>=1) THEN
       CALL EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN,ZA)
@@ -205,15 +205,15 @@ DO JSV=1,KSV
       ZWORK1(IIJB:IIJE,1:D%NKT) = ZA(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
       ZWORK2(IIJB:IIJE,1:D%NKT) = -CST%XG/PTHVREF(IIJB:IIJE,1:D%NKT)/3.*ZA(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID_PHY(D, ZWORK1, X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
-      CALL LES_MEAN_SUBGRID_PHY(D, ZWORK2, X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES, ZWORK1, TLES%X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES, ZWORK2, TLES%X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE.)
     END IF
   END IF
   !
 END DO   ! end of scalar loop 
 !
 CALL SECOND_MNH(ZTIME2)
-IF(OLES_CALL) XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+IF(TLES%LLES_CALL) TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 !----------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_CORR',1,ZHOOK_HANDLE)

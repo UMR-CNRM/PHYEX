@@ -7,7 +7,7 @@ MODULE MODE_TURB_HOR_UV
 IMPLICIT NONE
 CONTAINS
 !     ################################################################
-      SUBROUTINE TURB_HOR_UV(TURBN,KSPLT,OFLAT,O2D,                  &
+      SUBROUTINE TURB_HOR_UV(TURBN,TLES,KSPLT,OFLAT,O2D,             &
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
@@ -65,7 +65,7 @@ USE MODD_CTURB
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
-USE MODD_LES
+USE MODD_LES, ONLY: TLES_t
 !
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 !
@@ -87,6 +87,7 @@ IMPLICIT NONE
 !
 !
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
+TYPE(TLES_t),             INTENT(INOUT) :: TLES          ! modd_les structure
 INTEGER,                  INTENT(IN)    ::  KSPLT        ! split process index
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 LOGICAL,                  INTENT(IN)    ::  OFLAT        ! Logical for zero ororography
@@ -279,13 +280,13 @@ END IF
 !
 ! Storage in the LES configuration
 !
-IF (LLES_CALL .AND. KSPLT==1) THEN
+IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID( MXF(MYF(ZFLX)), X_LES_SUBGRID_UV ) 
-  CALL LES_MEAN_SUBGRID( MXF(MYF(GY_U_UV(PUM,PDYY,PDZZ,PDZY)*ZFLX)), X_LES_RES_ddxa_U_SBG_UaU , .TRUE.)
-  CALL LES_MEAN_SUBGRID( MXF(MYF(GX_V_UV(PVM,PDXX,PDZZ,PDZX)*ZFLX)), X_LES_RES_ddxa_V_SBG_UaV , .TRUE.)
+  CALL LES_MEAN_SUBGRID( MXF(MYF(ZFLX)), TLES%X_LES_SUBGRID_UV ) 
+  CALL LES_MEAN_SUBGRID( MXF(MYF(GY_U_UV(PUM,PDYY,PDZZ,PDZY)*ZFLX)), TLES%X_LES_RES_ddxa_U_SBG_UaU , .TRUE.)
+  CALL LES_MEAN_SUBGRID( MXF(MYF(GX_V_UV(PVM,PDXX,PDZZ,PDZX)*ZFLX)), TLES%X_LES_RES_ddxa_V_SBG_UaV , .TRUE.)
   CALL SECOND_MNH(ZTIME2)
-  XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+  TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !
 !

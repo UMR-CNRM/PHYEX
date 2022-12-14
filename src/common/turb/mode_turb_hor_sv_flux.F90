@@ -6,7 +6,7 @@
 MODULE MODE_TURB_HOR_SV_FLUX
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_SV_FLUX(TURBN,KSPLT,OBLOWSNOW,OFLAT,       &
+      SUBROUTINE TURB_HOR_SV_FLUX(TURBN,TLES,KSPLT,OBLOWSNOW,OFLAT,  &
                       TPFILE,KSV_LGBEG,KSV_LGEND,O2D,ONOMIXLG,       &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
@@ -66,7 +66,7 @@ USE MODD_CTURB
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
-USE MODD_LES
+USE MODD_LES, ONLY: TLES_t
 !
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 !
@@ -88,6 +88,7 @@ IMPLICIT NONE
 !
 !
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
+TYPE(TLES_t),             INTENT(INOUT) :: TLES          ! modd_les structure
 INTEGER,                  INTENT(IN)    ::  KSPLT        ! split process index
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 INTEGER,                  INTENT(IN)    ::  KSV_LGBEG,KSV_LGEND ! number of sv var.
@@ -214,15 +215,15 @@ DO JSV=1,ISV
     CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLXX)
   END IF
 !
-  IF (LLES_CALL .AND. KSPLT==1) THEN
+  IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
     CALL SECOND_MNH(ZTIME1)
-    CALL LES_MEAN_SUBGRID( MXF(ZFLXX), X_LES_SUBGRID_USv(:,:,:,JSV) ) 
+    CALL LES_MEAN_SUBGRID( MXF(ZFLXX), TLES%X_LES_SUBGRID_USv(:,:,:,JSV) ) 
     CALL LES_MEAN_SUBGRID( MZF(MXF(GX_W_UW(PWM,PDXX,PDZZ,PDZX)*MZM(ZFLXX))), &
-                           X_LES_RES_ddxa_W_SBG_UaSv(:,:,:,JSV) , .TRUE. )
+                           TLES%X_LES_RES_ddxa_W_SBG_UaSv(:,:,:,JSV) , .TRUE. )
     CALL LES_MEAN_SUBGRID( GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)*MXF(ZFLXX), &
-                           X_LES_RES_ddxa_Sv_SBG_UaSv(:,:,:,JSV), .TRUE. )
+                           TLES%X_LES_RES_ddxa_Sv_SBG_UaSv(:,:,:,JSV), .TRUE. )
     CALL SECOND_MNH(ZTIME2)
-    XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+    TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
   END IF
 !
 !       15.2   <V' SVth'>
@@ -269,15 +270,15 @@ DO JSV=1,ISV
     ZFLXY=0.
   END IF
 !
-  IF (LLES_CALL .AND. KSPLT==1) THEN
+  IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
     CALL SECOND_MNH(ZTIME1)
-    CALL LES_MEAN_SUBGRID( MYF(ZFLXY), X_LES_SUBGRID_VSv(:,:,:,JSV) ) 
+    CALL LES_MEAN_SUBGRID( MYF(ZFLXY), TLES%X_LES_SUBGRID_VSv(:,:,:,JSV) ) 
     CALL LES_MEAN_SUBGRID( MZF(MYF(GY_W_VW(PWM,PDYY,PDZZ,PDZY)*MZM(ZFLXY))), &
-                           X_LES_RES_ddxa_W_SBG_UaSv(:,:,:,JSV) , .TRUE. )
+                           TLES%X_LES_RES_ddxa_W_SBG_UaSv(:,:,:,JSV) , .TRUE. )
     CALL LES_MEAN_SUBGRID( GY_M_M(PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)*MYF(ZFLXY), &
-                           X_LES_RES_ddxa_Sv_SBG_UaSv(:,:,:,JSV) , .TRUE. )
+                           TLES%X_LES_RES_ddxa_Sv_SBG_UaSv(:,:,:,JSV) , .TRUE. )
     CALL SECOND_MNH(ZTIME2)
-    XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+    TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
   END IF
 !
 !

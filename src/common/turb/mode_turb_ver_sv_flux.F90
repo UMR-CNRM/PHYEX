@@ -5,9 +5,9 @@
 MODULE MODE_TURB_VER_SV_FLUX
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,ONOMIXLG,            &
+SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,TLES,ONOMIXLG,       &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
-                      OBLOWSNOW,OLES_CALL,                          &
+                      OBLOWSNOW,                                    &
                       PEXPL,PTSTEP,TPFILE,PRSNOW,                   &
                       PDZZ,PDIRCOSZW,                               &
                       PRHODJ,PWM,                                   &
@@ -218,7 +218,7 @@ USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
-USE MODD_LES
+USE MODD_LES, ONLY: TLES_t
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE_PHY
 !
 
@@ -241,10 +241,10 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
+TYPE(TLES_t),           INTENT(INOUT):: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KSV, &
                                        KSV_LGBEG, KSV_LGEND ! number of scalar variables
 LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for lagrangian variables (modd_conf)
-LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
@@ -390,7 +390,7 @@ DO JSV=1,KSV
                     PRHODJ(IIJB:IIJE,IKB:IKE)*(ZRES(IIJB:IIJE,IKB:IKE)-PSVM(IIJB:IIJE,IKB:IKE,JSV))/PTSTEP
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
 !
-  IF ( (TURBN%LTURB_FLX .AND. TPFILE%LOPENED) .OR. OLES_CALL ) THEN
+  IF ( (TURBN%LTURB_FLX .AND. TPFILE%LOPENED) .OR. TLES%LLES_CALL ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
@@ -456,39 +456,39 @@ DO JSV=1,KSV
   !
   ! Storage in the LES configuration
   !
-  IF (OLES_CALL) THEN
+  IF (TLES%LLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
     !
     CALL MZF_PHY(D,ZFLXZ,ZWORK1)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_WSv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_WSv(:,:,:,JSV) )
     !
     CALL GZ_W_M_PHY(D,PWM,PDZZ,ZWORK2)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK3(IIJB:IIJE,1:D%NKT) = ZWORK2(IIJB:IIJE,1:D%NKT) * ZWORK1(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK3, X_LES_RES_ddxa_W_SBG_UaSv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK3, TLES%X_LES_RES_ddxa_W_SBG_UaSv(:,:,:,JSV) )
     !
     CALL GZ_M_W_PHY(D,PSVM(:,:,JSV),PDZZ,ZWORK1)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     CALL MZF_PHY(D,ZWORK2,ZWORK3)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK3, X_LES_RES_ddxa_Sv_SBG_UaSv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK3, TLES%X_LES_RES_ddxa_Sv_SBG_UaSv(:,:,:,JSV) )
     !
     CALL MZF_PHY(D,ZFLXZ,ZWORK1)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK2(IIJB:IIJE,1:D%NKT) = -ZCSVP*SQRT(PTKEM(IIJB:IIJE,1:D%NKT))/PLM(IIJB:IIJE,1:D%NKT)*ZWORK1(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2, X_LES_SUBGRID_SvPz(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2, TLES%X_LES_SUBGRID_SvPz(:,:,:,JSV) )
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK1(IIJB:IIJE,1:D%NKT) = PWM(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     CALL MZF_PHY(D,ZWORK1,ZWORK2)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2, X_LES_RES_W_SBG_WSv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2, TLES%X_LES_RES_W_SBG_WSv(:,:,:,JSV) )
     !
     CALL SECOND_MNH(ZTIME2)
-    XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+    TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
   END IF
   !
 END DO   ! end of scalar loop

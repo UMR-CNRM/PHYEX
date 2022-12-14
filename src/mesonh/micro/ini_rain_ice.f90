@@ -1149,12 +1149,18 @@ END IF
   XFRMIN(7:9)=1.
   XFRMIN(10) =10.
   XFRMIN(11) =1.
-  XFRMIN(12) =100.
+  XFRMIN(12) =100. !0 in suparar
   XFRMIN(13) =1.0E-15
   XFRMIN(14) =120.
   XFRMIN(15) =1.0E-4
   XFRMIN(16:20)=0.
-  XFRMIN(21)=1.
+  XFRMIN(21:22)=1.
+  XFRMIN(23)=0.5
+  XFRMIN(24)=1.5
+  XFRMIN(25)=30.
+  XFRMIN(26:38)=0.
+  XFRMIN(39)=0.25
+  XFRMIN(40)=0.15
 !
 !
 !-------------------------------------------------------------------------------

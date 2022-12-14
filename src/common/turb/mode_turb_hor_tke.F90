@@ -6,7 +6,7 @@
 MODULE MODE_TURB_HOR_TKE
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_TKE(KSPLT,OFLAT,O2D,                       &
+      SUBROUTINE TURB_HOR_TKE(KSPLT,TLES,OFLAT,O2D,                  &
                       PDXX, PDYY, PDZZ,PDZX,PDZY,                    &
                       PINV_PDXX, PINV_PDYY, PINV_PDZZ, PMZM_PRHODJ,  &
                       PK, PRHODJ, PTKEM,                             &
@@ -51,7 +51,7 @@ CONTAINS
 USE MODD_CST
 USE MODD_CTURB
 USE MODD_PARAMETERS
-USE MODD_LES
+USE MODD_LES, ONLY: TLES_t
 !
 !
 USE MODI_SHUMAN 
@@ -66,6 +66,7 @@ IMPLICIT NONE
 !*       0.1  declaration of arguments
 !
 !
+TYPE(TLES_t),             INTENT(INOUT) :: TLES          ! modd_les structure
 INTEGER,                  INTENT(IN) :: KSPLT        ! current split index
 LOGICAL,                  INTENT(IN) ::  OFLAT       ! Logical for zero ororography
 LOGICAL,                  INTENT(IN) ::  O2D         ! Logical for 2D model version (modd_conf)
@@ -151,11 +152,11 @@ ELSE
          ) /PRHODJ
 END IF
 !
-IF (LLES_CALL .AND. KSPLT==1) THEN
+IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID( MXF(ZFLX), X_LES_SUBGRID_UTke ) 
+  CALL LES_MEAN_SUBGRID( MXF(ZFLX), TLES%X_LES_SUBGRID_UTke ) 
   CALL SECOND_MNH(ZTIME2)
-  XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+  TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !
 !
@@ -198,11 +199,11 @@ IF (.NOT. O2D) THEN
                   ) /PRHODJ
   END IF
 !
-  IF (LLES_CALL .AND. KSPLT==1) THEN
+  IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
     CALL SECOND_MNH(ZTIME1)
-    CALL LES_MEAN_SUBGRID( MYF(ZFLX), X_LES_SUBGRID_VTke )
+    CALL LES_MEAN_SUBGRID( MYF(ZFLX), TLES%X_LES_SUBGRID_VTke )
     CALL SECOND_MNH(ZTIME2)
-    XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+    TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
   END IF
 !
 END IF
