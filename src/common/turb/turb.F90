@@ -4,7 +4,7 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
       SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,D,                      &
-              & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,             &
+              & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,KHALO,       &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
               & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
               & O2D,ONOMIXLG,OFLAT,OLES_CALL,OCOUPLES,OBLOWSNOW,      &
@@ -311,6 +311,8 @@ LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate prono
 LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
+INTEGER,                INTENT(IN)   ::  KHALO        ! Size of the halo for parallel distribution
+
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
@@ -1096,9 +1098,10 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
 #ifdef REPRO48
 #else
     CALL TURB_HOR_SPLT(D,CST,CSTURB, TURBN,                    &
-          KSPLIT, KRR, KRRL, KRRI, KSV, PTSTEP,HLBCX,HLBCY,    &
+          KSPLIT, KRR, KRRL, KRRI, KSV,KSV_LGBEG,KSV_LGEND,    & 
+          PTSTEP,HLBCX,HLBCY, OFLAT,O2D, ONOMIXLG,             & 
           OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,PRSNOW,                &
-          TPFILE,                                              &
+          TPFILE, HPROGRAM, KHALO,                             &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                        &
           PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                       &
           PCOSSLOPE,PSINSLOPE,                                 &

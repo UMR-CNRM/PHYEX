@@ -1565,7 +1565,8 @@ IF(LLEONARD) THEN
   ZHGRAD(:,:,:,6) = GY_M_M(XRT(:,:,:,1), XDXX,XDZZ,XDZX,1,IKU,1)
 END IF
    CALL TURB( CST,CSTURB, TBUCONF, TURBN,YLDIMPHYEX,&
-              IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, IGRADIENTS, 1, NMODEL_CLOUD,       &
+              IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, IGRADIENTS, NHALO,                 &
+              1, NMODEL_CLOUD,                                                       &
               NSV, NSV_LGBEG, NSV_LGEND,CPROGRAM,                                    &
               NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,                    &
               L2D, LNOMIXLG,LFLAT,                                                   &

@@ -187,7 +187,7 @@ SUBROUTINE TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,KSV,O2D,OFLAT,      &
 !!      Modifications: Nov  24, 1997 (V. Masson) removes the DO loops
 !!      Modifications: Mar  31, 1998 (V. Masson) splits the routine TURB_VER_DYN_FLUX
 !!      Modifications: Oct  18, 2000 (J. Stein)  Bug in some computations for IKB level
-!!      Modifications: Oct  18, 2000 (V. Masson) LES computations + LFLAT switch
+!!      Modifications: Oct  18, 2000 (V. Masson) LES computations + OFLAT switch
 !!                     Nov  06, 2002 (V. Masson) LES budgets
 !!                     October 2009 (G. Tanguy) add ILENCH=LEN(YCOMMENT) after
 !!                                              change of YCOMMENT

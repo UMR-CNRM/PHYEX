@@ -6,9 +6,10 @@ MODULE MODE_TURB_HOR_SPLT
 IMPLICIT NONE
 CONTAINS
            SUBROUTINE TURB_HOR_SPLT(D,CST,CSTURB,TURBN,              &
-                      KSPLIT, KRR,KRRL,KRRI,KSV, PTSTEP,HLBCX,HLBCY, &
+                      KSPLIT, KRR,KRRL,KRRI,KSV, KSV_LGBEG,KSV_LGEND,&
+                      PTSTEP,HLBCX,HLBCY, OFLAT, O2D, ONOMIXLG,      &
                       OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,PRSNOW,          &
-                      TPFILE,                                        &
+                      TPFILE, HPROGRAM, KHALO,                       &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
                       PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &
                       PCOSSLOPE,PSINSLOPE,                           &
@@ -113,7 +114,7 @@ CONTAINS
 !!
 !!      Module MODD_CONF
 !!
-!!           CPROGRAM
+!!           HPROGRAM
 !!           
 !!
 !!    REFERENCE
@@ -156,7 +157,6 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CONF
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_DIMPHYEX, ONLY : DIMPHYEX_t
@@ -186,12 +186,17 @@ INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time splitting
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
-INTEGER,                INTENT(IN)   :: KSV           ! number of sv var.
+INTEGER,                INTENT(IN)   :: KSV,KSV_LGBEG,KSV_LGEND ! number of sv var.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep 
 CHARACTER (LEN=*), DIMENSION(:), INTENT(IN)       ::  HLBCX,HLBCY
+LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
+LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for lagrangian variables (modd_conf)
+LOGICAL,                INTENT(IN)   ::  O2D          ! Logical for 2D model version (modd_conf)
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
+CHARACTER(LEN=6), INTENT(IN) :: HPROGRAM ! HPROGRAM is the program currently running (modd_conf)
+INTEGER,                INTENT(IN)   ::  KHALO        ! Size of the halo for parallel distribution
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
@@ -307,7 +312,7 @@ NULLIFY(TZFIELDS_ll)
 !*       2.   SPLIT PROCESS LOOP
 !             ------------------
 !
-IF (KSPLIT>1 .AND. CPROGRAM=='MESONH') THEN
+IF (KSPLIT>1 .AND. HPROGRAM=='MESONH') THEN
 !
 !*       2.1  allocations
 !             -----------
@@ -367,6 +372,7 @@ IF (KSPLIT>1 .AND. CPROGRAM=='MESONH') THEN
 ! compute the turbulent tendencies for the small time step
     CALL TURB_HOR(D,CST,CSTURB,TURBN,                             &
                    JSPLT, KRR, KRRL, KRRI, PTSTEP,                &
+                   KSV, KSV_LGBEG, KSV_LGEND, OFLAT,O2D, ONOMIXLG,&
                    OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,                 &
                    TPFILE,                                        &
                    PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,PRSNOW,           &
@@ -385,7 +391,7 @@ IF (KSPLIT>1 .AND. CPROGRAM=='MESONH') THEN
 !
 ! horizontal transport of Tke
 !
-  CALL   TURB_HOR_TKE(JSPLT,                                         &
+  CALL   TURB_HOR_TKE(JSPLT,OFLAT,O2D,                               &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
                       ZINV_PDXX, ZINV_PDYY, ZINV_PDZZ, ZMZM_PRHODJ,  &
                       ZK, PRHODJ, ZTKEM,                             &
@@ -410,7 +416,7 @@ IF (KSPLIT>1 .AND. CPROGRAM=='MESONH') THEN
 !
 ! reinforce boundary conditions
 !
-    IF (JSPLT<KSPLIT-NHALO+1) CALL UPDATE_HALO_ll(TZFIELDS_ll,IINFO_ll)
+    IF (JSPLT<KSPLIT-KHALO+1) CALL UPDATE_HALO_ll(TZFIELDS_ll,IINFO_ll)
     !
     IF ( HLBCX(1) /= "CYCL" .AND. LWEST_ll()) THEN
        ZUM(IIB  ,:,:)=PUM(IIB  ,:,:)
@@ -509,6 +515,7 @@ ELSE
 !
   CALL TURB_HOR(D,CST,CSTURB,TURBN,                            &
                 1, KRR, KRRL, KRRI,  PTSTEP,                   &
+                KSV, KSV_LGBEG, KSV_LGEND, OFLAT,O2D, ONOMIXLG,&                
                 OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,                 &
                 TPFILE,                                        &
                 PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,PRSNOW,           &
@@ -528,7 +535,7 @@ ELSE
 ! horizontal transport of Tke
 !
 
-  CALL   TURB_HOR_TKE(1,                                             &
+  CALL   TURB_HOR_TKE(1,OFLAT,O2D,                                   &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
                       ZINV_PDXX, ZINV_PDYY, ZINV_PDZZ, ZMZM_PRHODJ,  &
                       ZK, PRHODJ, PTKEM,                             &

@@ -8,7 +8,7 @@ IMPLICIT NONE
 CONTAINS
 !     ################################################################
       SUBROUTINE TURB_HOR_THERMO_FLUX(TURBN, KSPLT, KRR, KRRL, KRRI, &
-                      TPFILE,                                        &
+                      TPFILE,OFLAT,O2D,                              &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
                       PDIRCOSXW,PDIRCOSYW,                           &
@@ -50,7 +50,7 @@ CONTAINS
 !!                     Aug    , 1997 (V. Saravane) spliting of TURB_HOR
 !!                     Nov  27, 1997 (V. Masson) clearing of the routine
 !!                     Feb. 18, 1998 (J. Stein) bug for v'RC'
-!!                     Oct  18, 2000 (V. Masson) LES computations + LFLAT switch
+!!                     Oct  18, 2000 (V. Masson) LES computations + OFLAT switch
 !!                     Nov  06, 2002 (V. Masson) LES budgets
 !!                     Feb  20, 2003 (JP Pinty)  Add PFRAC_ICE
 !!                     October 2009 (G. Tanguy) add ILENCH=LEN(YCOMMENT) after
@@ -64,7 +64,6 @@ CONTAINS
 USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODD_CST
-USE MODD_CONF
 USE MODD_CTURB
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
@@ -96,6 +95,8 @@ INTEGER,                  INTENT(IN)    :: KSPLT         ! split process index
 INTEGER,                  INTENT(IN)    :: KRR           ! number of moist var.
 INTEGER,                  INTENT(IN)    :: KRRL          ! number of liquid water var.
 INTEGER,                  INTENT(IN)    :: KRRI          ! number of ice water var.
+LOGICAL,                  INTENT(IN)    ::  OFLAT        ! Logical for zero ororography
+LOGICAL,                  INTENT(IN)    ::  O2D          ! Logical for 2D model version (modd_conf)
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
@@ -191,7 +192,7 @@ ZFLX(:,:,IKB-1:IKB-1) = 2. * MXM(  SPREAD( PSFTHM(:,:)* PDIRCOSXW(:,:), 3,1) )  
 !
 ! Add this source to the Theta_l sources
 !
-IF (.NOT. LFLAT) THEN
+IF (.NOT. OFLAT) THEN
   PRTHLS(:,:,:) =  PRTHLS                                                   &
                 - DXF( MXM(PRHODJ) * ZFLX * PINV_PDXX )                          &
                 + DZF( PMZM_PRHODJ *MXF(PDZX*(MZM(ZFLX * PINV_PDXX))) * PINV_PDZZ )
@@ -202,7 +203,7 @@ END IF
 ! Compute the equivalent tendancy for Rc and Ri
 !
 IF ( KRRL >= 1 ) THEN
-  IF (.NOT. LFLAT) THEN
+  IF (.NOT. OFLAT) THEN
     ZFLXC = 2.*( MXF( MXM( PRHODJ*PATHETA*PSRCM )*ZFLX )                       &
                 +MZF( MZM( PRHODJ*PATHETA*PSRCM )*MXF(                         &
                                                PDZX*(MZM( ZFLX*PINV_PDXX )) ) )&
@@ -296,7 +297,7 @@ IF (KRR/=0) THEN
   !
   ! Add this source to the conservative mixing ratio sources
   !
-  IF (.NOT. LFLAT) THEN
+  IF (.NOT. OFLAT) THEN
     PRRS(:,:,:,1) = PRRS(:,:,:,1)                                             &
                   - DXF( MXM(PRHODJ) * ZFLX * PINV_PDXX )                          &
                   + DZF( PMZM_PRHODJ *MXF(PDZX*(MZM(ZFLX * PINV_PDXX))) * PINV_PDZZ )
@@ -307,7 +308,7 @@ IF (KRR/=0) THEN
   ! Compute the equivalent tendancy for Rc and Ri
   !
   IF ( KRRL >= 1 ) THEN
-    IF (.NOT. LFLAT) THEN
+    IF (.NOT. OFLAT) THEN
       ZFLXC = ZFLXC            &
             + 2.*( MXF( MXM( PRHODJ*PAMOIST*PSRCM )*ZFLX )                     &
                   +MZF( MZM( PRHODJ*PAMOIST*PSRCM )*MXF(                       &
@@ -418,7 +419,7 @@ END IF
 !             --------------
 !
 !
-IF (.NOT. L2D) THEN
+IF (.NOT. O2D) THEN
   ZFLX(:,:,:)     = -XCSHF * MYM( PK ) * GY_M_V(1,IKU,1,PTHLM,PDYY,PDZZ,PDZY)
   ZFLX(:,:,IKE+1) = ZFLX(:,:,IKE) 
 ELSE
@@ -443,8 +444,8 @@ ZFLX(:,:,IKB-1:IKB-1) = 2. * MYM(  SPREAD( PSFTHM(:,:)* PDIRCOSYW(:,:), 3,1) ) &
 !
 ! Add this source to the Theta_l sources
 !
-IF (.NOT. L2D) THEN 
-  IF (.NOT. LFLAT) THEN
+IF (.NOT. O2D) THEN 
+  IF (.NOT. OFLAT) THEN
     PRTHLS(:,:,:) =  PRTHLS                                                         &
                   - DYF( MYM(PRHODJ) * ZFLX * PINV_PDYY )                           &
                   + DZF( PMZM_PRHODJ *MYF(PDZY*(MZM(ZFLX * PINV_PDYY))) * PINV_PDZZ )
@@ -455,9 +456,9 @@ END IF
 !
 ! Compute the equivalent tendancy for Rc and Ri
 !
-!IF ( TURBN%LSUBG_COND .AND. KRRL > 0 .AND. .NOT. L2D) THEN
-IF ( KRRL >= 1 .AND. .NOT. L2D) THEN
-  IF (.NOT. LFLAT) THEN
+!IF ( TURBN%LSUBG_COND .AND. KRRL > 0 .AND. .NOT. O2D) THEN
+IF ( KRRL >= 1 .AND. .NOT. O2D) THEN
+  IF (.NOT. OFLAT) THEN
     ZFLXC = 2.*( MYF( MYM( PRHODJ*PATHETA*PSRCM )*ZFLX )                       &
                 +MZF( MZM( PRHODJ*PATHETA*PSRCM )*MYF(                         &
                                                PDZY*(MZM( ZFLX*PINV_PDYY )) ) )&
@@ -533,7 +534,7 @@ END IF
 !
 IF (KRR/=0) THEN
   !
-  IF (.NOT. L2D) THEN
+  IF (.NOT. O2D) THEN
     ZFLX(:,:,:)     = -XCHF * MYM( PK ) * GY_M_V(1,IKU,1,PRM(:,:,:,1),PDYY,PDZZ,PDZY)
     ZFLX(:,:,IKE+1) = ZFLX(:,:,IKE) 
   ELSE
@@ -557,8 +558,8 @@ IF (KRR/=0) THEN
   !
   ! Add this source to the conservative mixing ratio sources
   !
-  IF (.NOT. L2D) THEN 
-    IF (.NOT. LFLAT) THEN
+  IF (.NOT. O2D) THEN 
+    IF (.NOT. OFLAT) THEN
       PRRS(:,:,:,1) = PRRS(:,:,:,1)                                              &
                     - DYF( MYM(PRHODJ) * ZFLX * PINV_PDYY )                           &
 
@@ -570,8 +571,8 @@ IF (KRR/=0) THEN
   !
   ! Compute the equivalent tendancy for Rc and Ri
   !
-  IF ( KRRL >= 1 .AND. .NOT. L2D) THEN   ! Sub-grid condensation
-    IF (.NOT. LFLAT) THEN
+  IF ( KRRL >= 1 .AND. .NOT. O2D) THEN   ! Sub-grid condensation
+    IF (.NOT. OFLAT) THEN
       ZFLXC = ZFLXC            &
             + 2.*( MXF( MYM( PRHODJ*PAMOIST*PSRCM )*ZFLX )                     &
                 +  MZF( MZM( PRHODJ*PAMOIST*PSRCM )*MYF(                       &
@@ -654,7 +655,7 @@ END IF
 !!IF (KRR/=0) THEN
 !!  ! here ZFLX= <V'R'np> and ZWORK= <V'Theta'l>
 !!  !
-!!  IF (.NOT. L2D) THEN        &
+!!  IF (.NOT. O2D) THEN        &
 !!    ZVPTV(:,:,:) =                                                         &
 !!        ZWORK(:,:,:)*MYM(ETHETA(KRR,KRRI,PTHLT,PEXNREF,PRT,PLOCPT,PSRCM)) +       &
 !!         ZFLX(:,:,:)*MYM(EMOIST(KRR,KRRI,PTHLT,PEXNREF,PRT,PLOCPT,PSRCM))

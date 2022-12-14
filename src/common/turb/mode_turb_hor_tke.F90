@@ -6,7 +6,7 @@
 MODULE MODE_TURB_HOR_TKE
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_TKE(KSPLT,                                 &
+      SUBROUTINE TURB_HOR_TKE(KSPLT,OFLAT,O2D,                       &
                       PDXX, PDYY, PDZZ,PDZX,PDZY,                    &
                       PINV_PDXX, PINV_PDYY, PINV_PDZZ, PMZM_PRHODJ,  &
                       PK, PRHODJ, PTKEM,                             &
@@ -48,7 +48,6 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CONF
 USE MODD_CST
 USE MODD_CTURB
 USE MODD_PARAMETERS
@@ -68,7 +67,8 @@ IMPLICIT NONE
 !
 !
 INTEGER,                  INTENT(IN) :: KSPLT        ! current split index
-!
+LOGICAL,                  INTENT(IN) ::  OFLAT       ! Logical for zero ororography
+LOGICAL,                  INTENT(IN) ::  O2D         ! Logical for 2D model version (modd_conf)
 REAL, DIMENSION(:,:,:),   INTENT(IN) :: PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                      ! Metric coefficients
 REAL, DIMENSION(:,:,:),   INTENT(IN) :: PK           ! Turbulent diffusion doef.
@@ -142,7 +142,7 @@ ZFLX(:,:,IKB-1) = - ZFLX(:,:,IKB)
 !
 ZFLX(:,:,IKU) =  ZFLX(:,:,IKU-1)
 !
-IF (.NOT. LFLAT) THEN
+IF (.NOT. OFLAT) THEN
   PTRH =-(  DXF( MXM(PRHODJ) * ZFLX                             * PINV_PDXX)&
           - DZF( PMZM_PRHODJ * MXF( PDZX * MZM(ZFLX*PINV_PDXX)) * PINV_PDZZ)&
          ) /PRHODJ
@@ -164,7 +164,7 @@ END IF
 !*       3.   horizontal transport of Tke v'e
 !             -------------------------------
 !
-IF (.NOT. L2D) THEN
+IF (.NOT. O2D) THEN
   ZFLX =-XCET * MYM(PK) * GY_M_V(1,IKU,1,PTKEM,PDYY,PDZZ,PDZY) ! < v'e >
 !
 ! special case near the ground ( uncentred gradient )
@@ -189,7 +189,7 @@ IF (.NOT. L2D) THEN
 !
 ! complete the explicit turbulent transport
 !
-  IF (.NOT. LFLAT) THEN
+  IF (.NOT. OFLAT) THEN
     PTRH = PTRH - (  DYF( MYM(PRHODJ) * ZFLX                              * PINV_PDYY )  &
                    - DZF( PMZM_PRHODJ * MYF( PDZY * MZM(ZFLX*PINV_PDYY) ) * PINV_PDZZ )  &
                   ) /PRHODJ

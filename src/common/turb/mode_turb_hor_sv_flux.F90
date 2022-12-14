@@ -6,8 +6,8 @@
 MODULE MODE_TURB_HOR_SV_FLUX
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_SV_FLUX(TURBN,KSPLT,OBLOWSNOW,             &
-                      TPFILE,                                        &
+      SUBROUTINE TURB_HOR_SV_FLUX(TURBN,KSPLT,OBLOWSNOW,OFLAT,       &
+                      TPFILE,KSV_LGBEG,KSV_LGEND,O2D,ONOMIXLG,       &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
                       PDIRCOSXW,PDIRCOSYW,                           &
@@ -47,7 +47,7 @@ CONTAINS
 !!    -------------
 !!                     Aug    , 1997 (V. Saravane) spliting of TURB_HOR
 !!                     Nov  27, 1997 (V. Masson) clearing of the routine
-!!                     Oct  18, 2000 (V. Masson) LES computations + LFLAT swith
+!!                     Oct  18, 2000 (V. Masson) LES computations + OFLAT swith
 !!                                              + bug on Y scalar flux
 !!                     Jun  20, 2001 (J Stein) case of lagragian variables
 !!                     Nov  06, 2002 (V. Masson) LES budgets
@@ -62,12 +62,10 @@ CONTAINS
 USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODD_CST
-USE MODD_CONF
 USE MODD_CTURB
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
-USE MODD_NSV,            ONLY: NSV_LGBEG, NSV_LGEND
 USE MODD_LES
 !
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
@@ -92,6 +90,10 @@ IMPLICIT NONE
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
 INTEGER,                  INTENT(IN)    ::  KSPLT        ! split process index
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
+INTEGER,                  INTENT(IN)    ::  KSV_LGBEG,KSV_LGEND ! number of sv var.
+LOGICAL,                  INTENT(IN)    ::  OFLAT        ! Logical for zero ororography
+LOGICAL,                  INTENT(IN)    ::  ONOMIXLG     ! to use turbulence for lagrangian variables (modd_conf)
+LOGICAL,                  INTENT(IN)    ::  O2D          ! Logical for 2D model version (modd_conf)
 LOGICAL,                  INTENT(IN)    ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PK          ! Turbulent diffusion doef.
@@ -173,7 +175,7 @@ ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2)+2.*PDZZ(:,:,IKB+1)) /      &
 !
 DO JSV=1,ISV
 !
-  IF (LNOMIXLG .AND. JSV >= NSV_LGBEG .AND. JSV<= NSV_LGEND) CYCLE
+  IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
 !
 !       15.1   <U' SVth'>
 !              ----------
@@ -226,7 +228,7 @@ DO JSV=1,ISV
 !       15.2   <V' SVth'>
 !              ----------
 !
-  IF (.NOT. L2D) THEN
+  IF (.NOT. O2D) THEN
 !
 ! Computes the flux in the Y direction
     ZFLXY(:,:,:)=-ZCSV * MYM(PK) * GY_M_V(1,IKU,1,PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)
@@ -282,8 +284,8 @@ DO JSV=1,ISV
 !       15.3   Horizontal source terms
 !              -----------------------
 !
-  IF (.NOT. L2D) THEN
-    IF (.NOT. LFLAT) THEN
+  IF (.NOT. O2D) THEN
+    IF (.NOT. OFLAT) THEN
       PRSVS(:,:,:,JSV)=   PRSVS(:,:,:,JSV)                                          &
         -DXF( MXM(PRHODJ) * ZFLXX * PINV_PDXX  )                                    &
         -DYF( MYM(PRHODJ) * ZFLXY * PINV_PDYY  )                                    &
@@ -296,7 +298,7 @@ DO JSV=1,ISV
         -DYF( MYM(PRHODJ) * ZFLXY * PINV_PDYY  )
     END IF
   ELSE
-    IF (.NOT. LFLAT) THEN
+    IF (.NOT. OFLAT) THEN
       PRSVS(:,:,:,JSV)=   PRSVS(:,:,:,JSV)                                          &
         -DXF( MXM(PRHODJ) * ZFLXX * PINV_PDXX  )                                    &
         +DZF( PMZM_PRHODJ * PINV_PDZZ *                                             &
