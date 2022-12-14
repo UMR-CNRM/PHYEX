@@ -279,7 +279,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
       IF (KSPLT==1)                                                  &
       CALL      TURB_HOR_THERMO_CORR(D,CST,TURBN,TLES,               &
                       KRR, KRRL, KRRI,                               &
-                      OOCEAN,OCOMPUTE_SRC,                           &
+                      OOCEAN,OCOMPUTE_SRC,O2D,                       &
                       TPFILE,                                        &
                       PINV_PDXX,PINV_PDYY,                           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &

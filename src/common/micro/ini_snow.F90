@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE INI_SNOW ( KLUOUT )
+      SUBROUTINE INI_SNOW ( KLUOUT, PTHVREFZ )
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ###########################################################
@@ -50,7 +50,6 @@ USE MODD_PARAMETERS
 USE MODD_PARAM_ICE
 USE MODD_RAIN_ICE_DESCR
 USE MODD_RAIN_ICE_PARAM
-USE MODD_REF
 !
 USE MODI_GAMMA
 USE MODI_GAMMA_INC
@@ -70,7 +69,7 @@ IMPLICIT NONE
 !
 !
 INTEGER,                 INTENT(IN) :: KLUOUT   ! Logical unit number for prints
-
+REAL, DIMENSION(:) :: PTHVREFZ
 !*       0.2   Declarations of local variables :
 !
 INTEGER :: IKB                ! Coordinates of the first physical
@@ -88,7 +87,7 @@ IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',0,ZHOOK_HANDLE)
 XCCS = XFRMIN(16)
 XCXS = XFRMIN(17)
 IKB = 1 + JPVEXT
-ZRHO00 = XP00/(XRD*XTHVREFZ(IKB))
+ZRHO00 = XP00/(XRD*PTHVREFZ(IKB))
 !     recalculate ini_rain_ice stuff:
 
 !     3.4    Constants for shape parameter
