@@ -6,17 +6,13 @@ aux/mode_msg.f90
 aux/modd_io.f90
 aux/modd_field.f90
 aux/modd_argslist_ll.f90
-aux/modd_frc.f90
-aux/modd_ibm_paramn.f90
 aux/modd_parameters.f90
 aux/modd_precision.f90
-aux/modd_ref.f90
 aux/mode_gather_ll.f90
 aux/mode_ll.f90
 aux/mode_argslist_ll.f90
 aux/mode_mppdb.f90
 aux/mode_sources_neg_correct.f90
-aux/ibm_mixinglength.f90
 aux/modi_shuman.f90
 aux/modi_second_mnh.f90
 aux/second_mnh.f90
