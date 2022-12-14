@@ -7,7 +7,7 @@
               & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,KHALO,       &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
               & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
-              & O2D,ONOMIXLG,OFLAT,OCOUPLES,OBLOWSNOW,                &
+              & O2D,ONOMIXLG,OFLAT,OCOUPLES,OBLOWSNOW,OIBM,           &
               & OCOMPUTE_SRC, PRSNOW,                                 &
               & OOCEAN,ODEEPOC,ODIAG_IN_RUN,                          &
               & HTURBLEN_CL,HCLOUD,                                   &
@@ -28,6 +28,7 @@
               & PEDR,PLEM,PRTKEMS,PTPMF,                              &
               & PDRUS_TURB,PDRVS_TURB,                                &
               & PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,PTR,PDISS,       &
+              & PIBM_LS, PIBM_XMUT,                                   &
               & PCURRENT_TKE_DISS, PSSTFL, PSSTFL_C, PSSRFL_C,        &
               & PSSUFL_C, PSSVFL_C,PSSUFL,PSSVFL                      )
 !     #################################################################
@@ -251,7 +252,6 @@ USE MODD_FIELD, ONLY: TFIELDDATA,TYPEREAL
 USE MODD_IO, ONLY: TFILEDATA
 !
 USE MODD_LES, ONLY : TLES_t
-USE MODD_IBM_PARAM_n,    ONLY: LIBM, XIBM_LS, XIBM_XMUT
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_TURB_n, ONLY: TURB_t
 !
@@ -309,6 +309,7 @@ LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororogr
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
+LOGICAL,                INTENT(IN)   ::  OIBM         ! switch to modity mixing length near building with IBM
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
 INTEGER,                INTENT(IN)   ::  KHALO        ! Size of the halo for parallel distribution
@@ -421,6 +422,9 @@ REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSUFL_C        ! Time evol F
 REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSVFL_C  !
 REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSUFL   
 REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSVFL  !
+!
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT), OPTIONAL :: PIBM_XMUT ! IBM turbulent viscosity
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN), OPTIONAL  :: PIBM_LS ! IBM Level-set function
 !
 !
 !-------------------------------------------------------------------------------
@@ -860,8 +864,8 @@ END IF
 !*      3.9 Mixing length correction if immersed walls
 !           ------------------------------------------
 !
-IF (LIBM) THEN
-   CALL IBM_MIXINGLENGTH(D,ZLM,ZLEPS,XIBM_XMUT,XIBM_LS(:,:,:,1),PTKET)
+IF (OIBM) THEN
+   CALL IBM_MIXINGLENGTH(D,ZLM,ZLEPS,PIBM_XMUT,PIBM_LS,PTKET)
 ENDIF
 !----------------------------------------------------------------------------
 !

@@ -275,7 +275,7 @@ USE MODD_FRC
 USE MODD_FRC_n
 USE MODD_GRID
 USE MODD_GRID_n
-USE MODD_IBM_PARAM_n,      ONLY: LIBM, XIBM_EPSI, XIBM_LS
+USE MODD_IBM_PARAM_n,      ONLY: LIBM, XIBM_EPSI, XIBM_LS, XIBM_XMUT
 USE MODD_ICE_C1R3_DESCR,  ONLY : XRTMIN_C1R3=>XRTMIN
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_LATZ_EDFLX
@@ -1570,7 +1570,7 @@ END IF
               NSV, NSV_LGBEG, NSV_LGEND,CPROGRAM,                                    &
               NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,                    &
               L2D, LNOMIXLG,LFLAT,                                                   &
-              LLES_CALL, LCOUPLES, LBLOWSNOW,                                        &
+              LCOUPLES, LBLOWSNOW, LIBM,                                             &
               GCOMPUTE_SRC, XRSNOW,                                                  &
               LOCEAN, LDEEPOC, LDIAG_IN_RUN,                                         &
               CTURBLEN_CLOUD, CCLOUD,                                                &
@@ -1588,6 +1588,7 @@ END IF
               XTHW_FLUX, XRCW_FLUX, XSVW_FLUX,XDYP, XTHP, ZTDIFF, ZTDISS,            &
               TBUDGETS, KBUDGETS=SIZE(TBUDGETS),PLEM=XLEM,PRTKEMS=XRTKEMS,           &
               PTR=XTR, PDISS=XDISS, PCURRENT_TKE_DISS=XCURRENT_TKE_DISS,             &
+              PIBM_LS=XIBM_LS(:,:,:,1), PIBM_XMUT=XIBM_XMUT,                         & 
               PSSTFL=XSSTFL, PSSTFL_C=XSSTFL_C, PSSRFL_C=XSSRFL_C,                   &
               PSSUFL_C=XSSUFL_C, PSSVFL_C=XSSVFL_C, PSSUFL=XSSUFL, PSSVFL=XSSVFL     )
 !
