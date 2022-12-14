@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE INI_SNOW ( KLUOUT, PTHVREFZ )
+      SUBROUTINE INI_SNOW ( KLUOUT )
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ###########################################################
@@ -69,12 +69,8 @@ IMPLICIT NONE
 !
 !
 INTEGER,                 INTENT(IN) :: KLUOUT   ! Logical unit number for prints
-REAL, DIMENSION(:) :: PTHVREFZ
 !*       0.2   Declarations of local variables :
 !
-INTEGER :: IKB                ! Coordinates of the first physical
-                              ! points along z
-
 REAL :: ZRHO00                ! Surface reference air density
 
 REAL :: ZCONC_MAX ! Maximal concentration for snow
@@ -86,8 +82,7 @@ IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',0,ZHOOK_HANDLE)
 
 XCCS = XFRMIN(16)
 XCXS = XFRMIN(17)
-IKB = 1 + JPVEXT
-ZRHO00 = XP00/(XRD*PTHVREFZ(IKB))
+ZRHO00 = XP00/(XRD*300.0)
 !     recalculate ini_rain_ice stuff:
 
 !     3.4    Constants for shape parameter
