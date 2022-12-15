@@ -80,7 +80,9 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZDELTVPT,ZHLVPT
 
 INTEGER :: J1D                  !horizontal loop counter
 INTEGER :: JKK                  !loop counters
-INTEGER :: JI, JK
+INTEGER :: JIJ, JK
+INTEGER :: IIJB,IIJE ! physical horizontal domain indices
+INTEGER :: IKT,IKB,IKA,IKE,IKL
 REAL    :: ZTEST,ZTEST0,ZTESTM  !test for vectorization
 !-------------------------------------------------------------------------------------
 !
@@ -89,22 +91,30 @@ REAL    :: ZTEST,ZTEST0,ZTESTM  !test for vectorization
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('COMPUTE_BL89_ML',0,ZHOOK_HANDLE)
 !
+IIJE=D%NIJE
+IIJB=D%NIJB
+IKT=D%NKT
+IKB=D%NKB
+IKA=D%NKA
+IKE=D%NKE
+IKL=D%NKL
+!
 CALL DZM_MF(D, PVPT(:,:), ZDELTVPT(:,:))
-ZDELTVPT(D%NIJB:D%NIJE,D%NKA)=0.
-!$mnh_expand_where(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-WHERE (ABS(ZDELTVPT(D%NIJB:D%NIJE,1:D%NKT))<CSTURB%XLINF)
-  ZDELTVPT(D%NIJB:D%NIJE,1:D%NKT)=CSTURB%XLINF
+ZDELTVPT(IIJB:IIJE,IKA)=0.
+!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
+WHERE (ABS(ZDELTVPT(IIJB:IIJE,1:IKT))<CSTURB%XLINF)
+  ZDELTVPT(IIJB:IIJE,1:IKT)=CSTURB%XLINF
 END WHERE
-!$mnh_end_expand_where(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
 !
 CALL MZM_MF(D, PVPT(:,:), ZHLVPT(:,:))
 !
 !We consider that gradient between mass levels KKB and KKB+KKL is the same as
 !the gradient between flux level KKB and mass level KKB
-!$mnh_expand_array(JI=D%NIJB:D%NIJE)
-ZDELTVPT(D%NIJB:D%NIJE,D%NKB)=PDZZ2D(D%NIJB:D%NIJE,D%NKB)*ZDELTVPT(D%NIJB:D%NIJE,D%NKB+D%NKL)/PDZZ2D(D%NIJB:D%NIJE,D%NKB+D%NKL)
-ZHLVPT(D%NIJB:D%NIJE,D%NKB)=PVPT(D%NIJB:D%NIJE,D%NKB)-ZDELTVPT(D%NIJB:D%NIJE,D%NKB)*0.5
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+ZDELTVPT(IIJB:IIJE,IKB)=PDZZ2D(IIJB:IIJE,IKB)*ZDELTVPT(IIJB:IIJE,IKB+IKL)/PDZZ2D(IIJB:IIJE,IKB+IKL)
+ZHLVPT(IIJB:IIJE,IKB)=PVPT(IIJB:IIJE,IKB)-ZDELTVPT(IIJB:IIJE,IKB)*0.5
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !
 !
@@ -113,15 +123,15 @@ ZHLVPT(D%NIJB:D%NIJE,D%NKB)=PVPT(D%NIJB:D%NIJE,D%NKB)-ZDELTVPT(D%NIJB:D%NIJE,D%N
 !
 
 IF (OUPORDN.EQV..TRUE.) THEN 
- !$mnh_expand_array(JI=D%NIJB:D%NIJE)
- ZINTE(D%NIJB:D%NIJE)=PTKEM_DEP(D%NIJB:D%NIJE)
- !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+ !$mnh_expand_array(JIJ=IIJB:IIJE)
+ ZINTE(IIJB:IIJE)=PTKEM_DEP(IIJB:IIJE)
+ !$mnh_end_expand_array(JIJ=IIJB:IIJE)
  PLWORK=0.
  ZTESTM=1.
  IF(OFLUX)THEN
-   !$mnh_expand_array(JI=D%NIJB:D%NIJE)
-   ZVPT_DEP(D%NIJB:D%NIJE)=ZHLVPT(D%NIJB:D%NIJE,KK) ! departure point is on flux level
-   !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+   !$mnh_expand_array(JIJ=IIJB:IIJE)
+   ZVPT_DEP(IIJB:IIJE)=ZHLVPT(IIJB:IIJE,KK) ! departure point is on flux level
+   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
    !We must compute what happens between flux level KK and mass level KK
    DO J1D=D%NIJB,D%NIJE
      ZTEST0=0.5+SIGN(0.5,ZINTE(J1D)) ! test if there's energy to consume
@@ -151,12 +161,12 @@ IF (OUPORDN.EQV..TRUE.) THEN
       ZINTE(J1D) = ZINTE(J1D) - ZPOTE(J1D)
    ENDDO
  ELSE
-   !$mnh_expand_array(JI=D%NIJB:D%NIJE)
-   ZVPT_DEP(D%NIJB:D%NIJE)=PVPT(D%NIJB:D%NIJE,KK) ! departure point is on mass level
-   !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+   !$mnh_expand_array(JIJ=IIJB:IIJE)
+   ZVPT_DEP(IIJB:IIJE)=PVPT(IIJB:IIJE,KK) ! departure point is on mass level
+   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
  ENDIF
 
- DO JKK=KK+D%NKL,D%NKE,D%NKL
+ DO JKK=KK+IKL,IKE,IKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0
       DO J1D=D%NIJB,D%NIJE
@@ -169,11 +179,11 @@ IF (OUPORDN.EQV..TRUE.) THEN
         ZLWORK1(J1D)=PDZZ2D(J1D,JKK)
         !ZLWORK2 jump of the last reached level
         ZLWORK2(J1D)=        ( - PG_O_THVREF(J1D) *                     &
-            (  PVPT(J1D,JKK-D%NKL) - ZVPT_DEP(J1D) )                              &
+            (  PVPT(J1D,JKK-IKL) - ZVPT_DEP(J1D) )                              &
             - CSTURB%XRM17*PSHEAR(J1D,JKK)*sqrt(abs(PTKEM_DEP(J1D))) &
           + SQRT (ABS(                                                   &
             (CSTURB%XRM17*PSHEAR(J1D,JKK)*sqrt(abs(PTKEM_DEP(J1D))) +  &
-             PG_O_THVREF(J1D) * (PVPT(J1D,JKK-D%NKL) - ZVPT_DEP(J1D)) )**2  &
+             PG_O_THVREF(J1D) * (PVPT(J1D,JKK-IKL) - ZVPT_DEP(J1D)) )**2  &
             + 2. * ZINTE(J1D) * PG_O_THVREF(J1D)                        &
                  * ZDELTVPT(J1D,JKK) / PDZZ2D(J1D,JKK) ))    ) /             &
         ( PG_O_THVREF(J1D) * ZDELTVPT(J1D,JKK) / PDZZ2D(J1D,JKK) ) 
@@ -192,12 +202,12 @@ ENDIF
 
 IF (OUPORDN.EQV..FALSE.) THEN 
  IF(OFLUX) CALL PRINT_MSG(NVERB_FATAL,'GEN','COMPUTE_BL89_ML','OFLUX option not coded for downward mixing length')
- !$mnh_expand_array(JI=D%NIJB:D%NIJE)
- ZINTE(D%NIJB:D%NIJE)=PTKEM_DEP(D%NIJB:D%NIJE)
- !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+ !$mnh_expand_array(JIJ=IIJB:IIJE)
+ ZINTE(IIJB:IIJE)=PTKEM_DEP(IIJB:IIJE)
+ !$mnh_end_expand_array(JIJ=IIJB:IIJE)
  PLWORK=0.
  ZTESTM=1.
- DO JKK=KK,D%NKB,-D%NKL
+ DO JKK=KK,IKB,-IKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0
       DO J1D=D%NIJB,D%NIJE

@@ -87,8 +87,7 @@ CHARACTER(LEN=6),         INTENT(IN)  ::  HPROGRAM     ! CPROGRAM is the program
 !*       0.2   Declaration of local variables
 !              ------------------------------
 !
-INTEGER :: IKB,IKE
-INTEGER :: IKTB,IKTE    ! start, end of k loops in physical domain
+INTEGER :: IKT,IKB,IKA,IKU
 
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZVPT  ! Virtual Potential Temp at half levels
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZDELTVPT
@@ -107,6 +106,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZSQRT_TKE
 REAL, DIMENSION(D%NIJT,D%NKT) :: PLMDN
 !
 INTEGER :: IIJB, IIJE
+INTEGER :: IKTB, IKTE, IKE,IKL
 INTEGER :: JIJ        ! horizontal loop counter
 INTEGER :: JK,JKK     ! loop counters
 INTEGER :: JRR        ! moist loop counter
@@ -122,8 +122,16 @@ Z2SQRT2=2.*SQRT(2.)
 !
 ZRVORD = CST%XRV / CST%XRD
 !
-IIJB = D%NIJB
-IIJE = D%NIJE
+IIJB=D%NIJB
+IIJE=D%NIJE
+IKTB=D%NKTB
+IKTE=D%NKTE
+IKT=D%NKT
+IKB=D%NKB
+IKE=D%NKE
+IKA=D%NKA
+IKU=D%NKU
+IKL=D%NKL
 !-------------------------------------------------------------------------------
 !
 !*       1.    pack the horizontal dimensions into one
@@ -133,22 +141,22 @@ IIJE = D%NIJE
 ! 2D array => 3D array
 !
 IF (OOCEAN) THEN
-  DO JK=1,D%NKT
+  DO JK=1,IKT
     DO JIJ=IIJB,IIJE
       ZG_O_THVREF(JIJ,JK) = CST%XG * CST%XALPHAOC
     END DO
   END DO
 ELSE !Atmosphere case
-  DO JK=1,D%NKT
+  DO JK=1,IKT
     DO JIJ=IIJB,IIJE
       ZG_O_THVREF(JIJ,JK) = CST%XG / PTHVREF(JIJ,JK)
     END DO
   END DO
 END IF
 !
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-ZSQRT_TKE(IIJB:IIJE,1:D%NKT) = SQRT(PTKEM(IIJB:IIJE,1:D%NKT))
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZSQRT_TKE(IIJB:IIJE,1:IKT) = SQRT(PTKEM(IIJB:IIJE,1:IKT))
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
 !ZBL89EXP is defined here because (and not in ini_cturb) because CSTURB%XCED is defined in read_exseg (depending on BL89/RM17)
 ZBL89EXP = LOG(16.)/(4.*LOG(CST%XKARMAN)+LOG(CSTURB%XCED)-3.*LOG(CSTURB%XCMFS))
@@ -159,18 +167,18 @@ ZUSRBL89 = 1./ZBL89EXP
 !              -----------------------------------------------
 !
 IF(KRR /= 0) THEN
-  ZSUM(IIJB:IIJE,1:D%NKT) = 0.
+  ZSUM(IIJB:IIJE,1:IKT) = 0.
   DO JRR=1,KRR
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZSUM(IIJB:IIJE,1:D%NKT) = ZSUM(IIJB:IIJE,1:D%NKT)+PRM(IIJB:IIJE,1:D%NKT,JRR)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZSUM(IIJB:IIJE,1:IKT) = ZSUM(IIJB:IIJE,1:IKT)+PRM(IIJB:IIJE,1:IKT,JRR)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ENDDO
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZVPT(IIJB:IIJE,1:D%NKT)=PTHLM(IIJB:IIJE,1:D%NKT) * ( 1. + ZRVORD*PRM(IIJB:IIJE,1:D%NKT,1) )  &
-                           / ( 1. + ZSUM(IIJB:IIJE,1:D%NKT) )
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZVPT(IIJB:IIJE,1:IKT)=PTHLM(IIJB:IIJE,1:IKT) * ( 1. + ZRVORD*PRM(IIJB:IIJE,1:IKT,1) )  &
+                           / ( 1. + ZSUM(IIJB:IIJE,1:IKT) )
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ELSE
-  ZVPT(IIJB:IIJE,1:D%NKT)=PTHLM(IIJB:IIJE,1:D%NKT)
+  ZVPT(IIJB:IIJE,1:IKT)=PTHLM(IIJB:IIJE,1:IKT)
 END IF
 !
 !!!!!!!!!!!!
@@ -184,21 +192,21 @@ END IF
 !but algorithm must remain the same.
 !!!!!!!!!!!!
 !
-DO JK=D%NKTB,D%NKTE
+DO JK=IKTB,IKTE
   DO JIJ=IIJB,IIJE
-    ZDELTVPT(JIJ,JK) = ZVPT(JIJ,JK) - ZVPT(JIJ,JK-D%NKL)
-    ZHLVPT(JIJ,JK) = 0.5 * ( ZVPT(JIJ,JK) + ZVPT(JIJ,JK-D%NKL) )
+    ZDELTVPT(JIJ,JK) = ZVPT(JIJ,JK) - ZVPT(JIJ,JK-IKL)
+    ZHLVPT(JIJ,JK) = 0.5 * ( ZVPT(JIJ,JK) + ZVPT(JIJ,JK-IKL) )
   END DO
 END DO
 !
 DO JIJ=IIJB,IIJE
-  ZDELTVPT(JIJ,D%NKU) = ZVPT(JIJ,D%NKU) - ZVPT(JIJ,D%NKU-D%NKL)
-  ZDELTVPT(JIJ,D%NKA) = 0.
-  ZHLVPT(JIJ,D%NKU) = 0.5 * ( ZVPT(JIJ,D%NKU) + ZVPT(JIJ,D%NKU-D%NKL) )
-  ZHLVPT(JIJ,D%NKA) = ZVPT(JIJ,D%NKA)
+  ZDELTVPT(JIJ,IKU) = ZVPT(JIJ,IKU) - ZVPT(JIJ,IKU-IKL)
+  ZDELTVPT(JIJ,IKA) = 0.
+  ZHLVPT(JIJ,IKU) = 0.5 * ( ZVPT(JIJ,IKU) + ZVPT(JIJ,IKU-IKL) )
+  ZHLVPT(JIJ,IKA) = ZVPT(JIJ,IKA)
 END DO
 !
-DO JK=1,D%NKT
+DO JK=1,IKT
   DO JIJ=IIJB,IIJE
     IF(ABS(ZDELTVPT(JIJ,JK))<CSTURB%XLINF) THEN
       ZDELTVPT(JIJ,JK)=CSTURB%XLINF
@@ -211,7 +219,7 @@ END DO
 !*       3.  loop on model levels
 !            --------------------
 !
-DO JK=D%NKTB,D%NKTE
+DO JK=IKTB,IKTE
 !
 !-------------------------------------------------------------------------------
 !
@@ -220,7 +228,7 @@ DO JK=D%NKTB,D%NKTE
   ZINTE(IIJB:IIJE)=PTKEM(IIJB:IIJE,JK)
   ZLWORK=0.
   ZTESTM=1.
-  DO JKK=JK,D%NKB,-D%NKL
+  DO JKK=JK,IKB,-IKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0.
       DO JIJ=IIJB,IIJE
@@ -258,7 +266,7 @@ DO JK=D%NKTB,D%NKTE
 !            -----------------------------------------------
 !
   DO JIJ=IIJB,IIJE
-    PLMDN(JIJ,JK)=MIN(ZLWORK(JIJ),0.5*(PZZ(JIJ,JK)+PZZ(JIJ,JK+D%NKL))-PZZ(JIJ,D%NKB))
+    PLMDN(JIJ,JK)=MIN(ZLWORK(JIJ),0.5*(PZZ(JIJ,JK)+PZZ(JIJ,JK+IKL))-PZZ(JIJ,IKB))
   END DO
 !
 !-------------------------------------------------------------------------------
@@ -270,7 +278,7 @@ DO JK=D%NKTB,D%NKTE
   ZLWORK(IIJB:IIJE)=0.
   ZTESTM=1.
 !
-  DO JKK=JK+D%NKL,D%NKE,D%NKL
+  DO JKK=JK+IKL,IKE,IKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0.
       DO JIJ=IIJB,IIJE
@@ -284,11 +292,11 @@ DO JK=D%NKTB,D%NKTE
         ZTESTM=ZTESTM+ZTEST0
         ZLWORK1=PDZZ(JIJ,JKK)
         !--------- SHEAR + STABILITY ----------- 
-        ZLWORK2= ( - ZG_O_THVREF(JIJ,JK) *(ZVPT(JIJ,JKK-D%NKL) - ZVPT(JIJ,JK) )  &
+        ZLWORK2= ( - ZG_O_THVREF(JIJ,JK) *(ZVPT(JIJ,JKK-IKL) - ZVPT(JIJ,JK) )  &
                    - CSTURB%XRM17*PSHEAR(JIJ,JKK)*ZSQRT_TKE(JIJ,JK)  &
           + SQRT (ABS(                                                       &
           (CSTURB%XRM17*PSHEAR(JIJ,JKK)*ZSQRT_TKE(JIJ,JK)   &
-            + ( ZG_O_THVREF(JIJ,JK) * (ZVPT(JIJ,JKK-D%NKL) - ZVPT(JIJ,JK))) )**2    &
+            + ( ZG_O_THVREF(JIJ,JK) * (ZVPT(JIJ,JKK-IKL) - ZVPT(JIJ,JK))) )**2    &
             + 2. * ZINTE(JIJ) * &
 #ifdef REPRO48
              ZG_O_THVREF(JIJ,JK)* ZDELTVPT(JIJ,JKK)/PDZZ(JIJ,JKK)))) / &
@@ -332,9 +340,9 @@ END DO
 !*       9.  boundaries
 !            ----------
 !
-PLM(IIJB:IIJE,D%NKA)=PLM(IIJB:IIJE,D%NKB)
-PLM(IIJB:IIJE,D%NKE)=PLM(IIJB:IIJE,D%NKE-D%NKL)
-PLM(IIJB:IIJE,D%NKU)=PLM(IIJB:IIJE,D%NKE-D%NKL)
+PLM(IIJB:IIJE,IKA)=PLM(IIJB:IIJE,IKB)
+PLM(IIJB:IIJE,IKE)=PLM(IIJB:IIJE,IKE-IKL)
+PLM(IIJB:IIJE,IKU)=PLM(IIJB:IIJE,IKE-IKL)
 !
 !-------------------------------------------------------------------------------
 !

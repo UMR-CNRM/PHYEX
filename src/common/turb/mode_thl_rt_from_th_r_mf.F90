@@ -78,63 +78,70 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PRT      ! total non precip. wate
 !----------------------------------------------------------------------------
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZCP, ZT
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZLVOCPEXN, ZLSOCPEXN
-INTEGER :: JRR, JI, JK
+INTEGER :: JRR, JIJ, JK
+INTEGER :: IIJB,IIJE ! physical horizontal domain indices
+INTEGER :: IKT
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !----------------------------------------------------------------------------
 !
 !
 IF (LHOOK) CALL DR_HOOK('THL_RT_FRM_TH_R_MF',0,ZHOOK_HANDLE)
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+!
+IIJE=D%NIJE
+IIJB=D%NIJB
+IKT=D%NKT
+!
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !temperature
-ZT(D%NIJB:D%NIJE,:) = PTH(D%NIJB:D%NIJE,:) * PEXN(D%NIJB:D%NIJE,:)
+ZT(IIJB:IIJE,:) = PTH(IIJB:IIJE,:) * PEXN(IIJB:IIJE,:)
 
 !Cp
-ZCP(D%NIJB:D%NIJE,:)=CST%XCPD
-IF (KRR > 0) ZCP(D%NIJB:D%NIJE,:) = ZCP(D%NIJB:D%NIJE,:) + CST%XCPV * PR(D%NIJB:D%NIJE,:,1)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+ZCP(IIJB:IIJE,:)=CST%XCPD
+IF (KRR > 0) ZCP(IIJB:IIJE,:) = ZCP(IIJB:IIJE,:) + CST%XCPV * PR(IIJB:IIJE,:,1)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 DO JRR = 2,1+KRRL  ! loop on the liquid components
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-  ZCP(D%NIJB:D%NIJE,:)  = ZCP(D%NIJB:D%NIJE,:) + CST%XCL * PR(D%NIJB:D%NIJE,:,JRR)
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZCP(IIJB:IIJE,:)  = ZCP(IIJB:IIJE,:) + CST%XCL * PR(IIJB:IIJE,:,JRR)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END DO
 DO JRR = 2+KRRL,1+KRRL+KRRI ! loop on the solid components
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-  ZCP(D%NIJB:D%NIJE,:)  = ZCP(D%NIJB:D%NIJE,:)  + CST%XCI * PR(D%NIJB:D%NIJE,:,JRR)
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZCP(IIJB:IIJE,:)  = ZCP(IIJB:IIJE,:)  + CST%XCI * PR(IIJB:IIJE,:,JRR)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END DO
 
 IF ( KRRL >= 1 ) THEN
   IF ( KRRI >= 1 ) THEN
-    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !ZLVOCPEXN and ZLSOCPEXN
-    ZLVOCPEXN(D%NIJB:D%NIJE,:)=(CST%XLVTT + (CST%XCPV-CST%XCL) *  (ZT(D%NIJB:D%NIJE,:)-CST%XTT) ) & 
-                            &/ ZCP(D%NIJB:D%NIJE,:) / PEXN(D%NIJB:D%NIJE,:)
-    ZLSOCPEXN(D%NIJB:D%NIJE,:)=(CST%XLSTT + (CST%XCPV-CST%XCI) *  (ZT(D%NIJB:D%NIJE,:)-CST%XTT) ) &
-                            &/ ZCP(D%NIJB:D%NIJE,:) / PEXN(D%NIJB:D%NIJE,:)
+    ZLVOCPEXN(IIJB:IIJE,:)=(CST%XLVTT + (CST%XCPV-CST%XCL) *  (ZT(IIJB:IIJE,:)-CST%XTT) ) & 
+                            &/ ZCP(IIJB:IIJE,:) / PEXN(IIJB:IIJE,:)
+    ZLSOCPEXN(IIJB:IIJE,:)=(CST%XLSTT + (CST%XCPV-CST%XCI) *  (ZT(IIJB:IIJE,:)-CST%XTT) ) &
+                            &/ ZCP(IIJB:IIJE,:) / PEXN(IIJB:IIJE,:)
     ! Rnp 
-    PRT(D%NIJB:D%NIJE,:)  = PR(D%NIJB:D%NIJE,:,1)  + PR(D%NIJB:D%NIJE,:,2)  + PR(D%NIJB:D%NIJE,:,4)
+    PRT(IIJB:IIJE,:)  = PR(IIJB:IIJE,:,1)  + PR(IIJB:IIJE,:,2)  + PR(IIJB:IIJE,:,4)
     ! Theta_l 
-    PTHL(D%NIJB:D%NIJE,:)  = PTH(D%NIJB:D%NIJE,:)  - ZLVOCPEXN(D%NIJB:D%NIJE,:) * PR(D%NIJB:D%NIJE,:,2) &
-                           - ZLSOCPEXN(D%NIJB:D%NIJE,:) * PR(D%NIJB:D%NIJE,:,4)
-    !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+    PTHL(IIJB:IIJE,:)  = PTH(IIJB:IIJE,:)  - ZLVOCPEXN(IIJB:IIJE,:) * PR(IIJB:IIJE,:,2) &
+                           - ZLSOCPEXN(IIJB:IIJE,:) * PR(IIJB:IIJE,:,4)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ELSE
-    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !ZLVOCPEXN
-    ZLVOCPEXN(D%NIJB:D%NIJE,:)=(CST%XLVTT + (CST%XCPV-CST%XCL) *  (ZT(D%NIJB:D%NIJE,:)-CST%XTT) ) &
-                            &/ ZCP(D%NIJB:D%NIJE,:) / PEXN(D%NIJB:D%NIJE,:)
+    ZLVOCPEXN(IIJB:IIJE,:)=(CST%XLVTT + (CST%XCPV-CST%XCL) *  (ZT(IIJB:IIJE,:)-CST%XTT) ) &
+                            &/ ZCP(IIJB:IIJE,:) / PEXN(IIJB:IIJE,:)
     ! Rnp
-    PRT(D%NIJB:D%NIJE,:)  = PR(D%NIJB:D%NIJE,:,1)  + PR(D%NIJB:D%NIJE,:,2) 
+    PRT(IIJB:IIJE,:)  = PR(IIJB:IIJE,:,1)  + PR(IIJB:IIJE,:,2) 
     ! Theta_l
-    PTHL(D%NIJB:D%NIJE,:) = PTH(D%NIJB:D%NIJE,:)  - ZLVOCPEXN(D%NIJB:D%NIJE,:) * PR(D%NIJB:D%NIJE,:,2)
-    !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+    PTHL(IIJB:IIJE,:) = PTH(IIJB:IIJE,:)  - ZLVOCPEXN(IIJB:IIJE,:) * PR(IIJB:IIJE,:,2)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   END IF
 ELSE
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ! Rnp = rv
-  PRT(D%NIJB:D%NIJE,:)  = PR(D%NIJB:D%NIJE,:,1)
+  PRT(IIJB:IIJE,:)  = PR(IIJB:IIJE,:,1)
   ! Theta_l = Theta
-  PTHL(D%NIJB:D%NIJE,:) = PTH(D%NIJB:D%NIJE,:)
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+  PTHL(IIJB:IIJE,:) = PTH(IIJB:IIJE,:)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END IF
 IF (LHOOK) CALL DR_HOOK('THL_RT_FRM_TH_R_MF',1,ZHOOK_HANDLE)
 END SUBROUTINE THL_RT_FROM_TH_R_MF

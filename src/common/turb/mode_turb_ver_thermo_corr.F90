@@ -326,12 +326,13 @@ REAL, DIMENSION(D%NIJT,D%NKT)  ::  &
        ZWKPHIPSI1,ZWKPHIPSI2,&
        ZWKPHIPSI3,ZWKPHIPSI4       ! working var. for shuman operators (array syntax)
 
-INTEGER             :: IIJB, IIJE, IKB,IKE      ! index value for the mass points of the domain 
+INTEGER             :: IIJB, IIJE, IKB,IKE,IKT,IKA,IKU ! index value for the mass points of the domain 
 INTEGER             :: IKU  ! array sizes
+INTEGER             :: IKL
 INTEGER             :: JIJ, JK ! loop indexes 
 
-REAL, DIMENSION(D%NIJT,MIN(D%NKA+JPVEXT_TURB*D%NKL,D%NKA+JPVEXT_TURB*D%NKL+2*D%NKL):&
-                            MAX(D%NKA+JPVEXT_TURB*D%NKL,D%NKA+JPVEXT_TURB*D%NKL+2*D%NKL))&
+REAL, DIMENSION(D%NIJT,MIN(IKA+JPVEXT_TURB*IKL,IKA+JPVEXT_TURB*IKL+2*IKL):&
+                            MAX(IKA+JPVEXT_TURB*IKL,IKA+JPVEXT_TURB*IKL+2*IKL))&
                     :: ZCOEFF
                                     ! coefficients for the uncentred gradient
                                     ! computation near the ground, defined in
@@ -356,6 +357,10 @@ IF (LHOOK) CALL DR_HOOK('TURB_VER_THERMO_CORR',0,ZHOOK_HANDLE)
 !
 IKB=D%NKB
 IKE=D%NKE
+IKT=D%NKT
+IKA=D%NKA
+IKU=D%NKU
+IKL=D%NKL
 IIJE=D%NIJE
 IIJB=D%NIJB
 !
@@ -364,12 +369,12 @@ GUSERV = (KRR/=0)
 !  compute the coefficients for the uncentred gradient computation near the
 !  ground
 !$mnh_expand_array(JIJ=IIJB:IIJE)
-ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)= - PDZZ(IIJB:IIJE,IKB+D%NKL) /      &
-       ( (PDZZ(IIJB:IIJE,IKB+2*D%NKL)+PDZZ(IIJB:IIJE,IKB+D%NKL)) * PDZZ(IIJB:IIJE,IKB+2*D%NKL) )
-ZCOEFF(IIJB:IIJE,IKB+D%NKL)=   (PDZZ(IIJB:IIJE,IKB+2*D%NKL)+PDZZ(IIJB:IIJE,IKB+D%NKL)) /      &
-       ( PDZZ(IIJB:IIJE,IKB+D%NKL) * PDZZ(IIJB:IIJE,IKB+2*D%NKL) )
-ZCOEFF(IIJB:IIJE,IKB)= - (PDZZ(IIJB:IIJE,IKB+2*D%NKL)+2.*PDZZ(IIJB:IIJE,IKB+D%NKL)) /      &
-       ( (PDZZ(IIJB:IIJE,IKB+2*D%NKL)+PDZZ(IIJB:IIJE,IKB+D%NKL)) * PDZZ(IIJB:IIJE,IKB+D%NKL) )
+ZCOEFF(IIJB:IIJE,IKB+2*IKL)= - PDZZ(IIJB:IIJE,IKB+IKL) /      &
+       ( (PDZZ(IIJB:IIJE,IKB+2*IKL)+PDZZ(IIJB:IIJE,IKB+IKL)) * PDZZ(IIJB:IIJE,IKB+2*IKL) )
+ZCOEFF(IIJB:IIJE,IKB+IKL)=   (PDZZ(IIJB:IIJE,IKB+2*IKL)+PDZZ(IIJB:IIJE,IKB+IKL)) /      &
+       ( PDZZ(IIJB:IIJE,IKB+IKL) * PDZZ(IIJB:IIJE,IKB+2*IKL) )
+ZCOEFF(IIJB:IIJE,IKB)= - (PDZZ(IIJB:IIJE,IKB+2*IKL)+2.*PDZZ(IIJB:IIJE,IKB+IKL)) /      &
+       ( (PDZZ(IIJB:IIJE,IKB+2*IKL)+PDZZ(IIJB:IIJE,IKB+IKL)) * PDZZ(IIJB:IIJE,IKB+IKL) )
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !
@@ -384,17 +389,17 @@ IF (TURBN%LHARAT) THEN
   !  function MZF produces -999 for level IKU (82 for 80 levels)
   !  so put these to normal value as this level (82) is indeed calculated
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PLMF(IIJB:IIJE,D%NKT)=0.001
-  PLEPSF(IIJB:IIJE,D%NKT)=0.001
+  PLMF(IIJB:IIJE,IKT)=0.001
+  PLEPSF(IIJB:IIJE,IKT)=0.001
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   ! with energy cascade contribution 50MF term can be omitted
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZKEFF(IIJB:IIJE,1:D%NKT) = PLM(IIJB:IIJE,1:D%NKT) * SQRT(PTKEM(IIJB:IIJE,1:D%NKT))
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZKEFF(IIJB:IIJE,1:IKT) = PLM(IIJB:IIJE,1:IKT) * SQRT(PTKEM(IIJB:IIJE,1:IKT))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ELSE
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZWORK1(IIJB:IIJE,1:D%NKT) = PLM(IIJB:IIJE,1:D%NKT) * SQRT(PTKEM(IIJB:IIJE,1:D%NKT))
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK1(IIJB:IIJE,1:IKT) = PLM(IIJB:IIJE,1:IKT) * SQRT(PTKEM(IIJB:IIJE,1:IKT))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   CALL MZM_PHY(D,ZWORK1,ZKEFF)
 ENDIF
 !
@@ -425,29 +430,29 @@ END IF
 ! Compute the turbulent variance F and F' at time t-dt.
 !
   IF (TURBN%LHARAT) THEN
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK1(IIJB:IIJE,1:D%NKT)=PDTH_DZ(IIJB:IIJE,1:D%NKT)**2
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK1(IIJB:IIJE,1:IKT)=PDTH_DZ(IIJB:IIJE,1:IKT)**2
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MZF_PHY(D,ZWORK1,ZWORK2)
     IF (TURBN%LSTATNW) THEN
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZF(IIJB:IIJE,1:D%NKT) = CSTURB%XCTV * & 
-                              PLMF(IIJB:IIJE,1:D%NKT)*PLEPSF(IIJB:IIJE,1:D%NKT)*ZWORK2(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZF(IIJB:IIJE,1:IKT) = CSTURB%XCTV * & 
+                              PLMF(IIJB:IIJE,1:IKT)*PLEPSF(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ELSE
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZF(IIJB:IIJE,1:D%NKT) = PLMF(IIJB:IIJE,1:D%NKT)*PLEPSF(IIJB:IIJE,1:D%NKT)*ZWORK2(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZF(IIJB:IIJE,1:IKT) = PLMF(IIJB:IIJE,1:IKT)*PLEPSF(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
   ELSE
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK1(IIJB:IIJE,1:D%NKT)=PPHI3(IIJB:IIJE,1:D%NKT)*PDTH_DZ(IIJB:IIJE,1:D%NKT)**2
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK1(IIJB:IIJE,1:IKT)=PPHI3(IIJB:IIJE,1:IKT)*PDTH_DZ(IIJB:IIJE,1:IKT)**2
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MZF_PHY(D,ZWORK1,ZWORK2)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZF(IIJB:IIJE,1:D%NKT) = CSTURB%XCTV*PLM(IIJB:IIJE,1:D%NKT)*PLEPS(IIJB:IIJE,1:D%NKT)& 
-                                 * ZWORK2(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZF(IIJB:IIJE,1:IKT) = CSTURB%XCTV*PLM(IIJB:IIJE,1:IKT)*PLEPS(IIJB:IIJE,1:IKT)& 
+                                 * ZWORK2(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ENDIF
   ZDFDDTDZ(:,:) = 0.     ! this term, because of discretization, is treated separately
   !
@@ -459,12 +464,12 @@ END IF
     CALL D_M3_TH2_WTH2_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,&
      & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,ZWORK2)
     !
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZF(IIJB:IIJE,1:D%NKT)       = ZF(IIJB:IIJE,1:D%NKT) + ZWORK1(IIJB:IIJE,1:D%NKT) &
-                                      * PFTH2(IIJB:IIJE,1:D%NKT)
-    ZDFDDTDZ(IIJB:IIJE,1:D%NKT) = ZDFDDTDZ(IIJB:IIJE,1:D%NKT) + ZWORK2(IIJB:IIJE,1:D%NKT) &
-                                      * PFTH2(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZF(IIJB:IIJE,1:IKT)       = ZF(IIJB:IIJE,1:IKT) + ZWORK1(IIJB:IIJE,1:IKT) &
+                                      * PFTH2(IIJB:IIJE,1:IKT)
+    ZDFDDTDZ(IIJB:IIJE,1:IKT) = ZDFDDTDZ(IIJB:IIJE,1:IKT) + ZWORK2(IIJB:IIJE,1:IKT) &
+                                      * PFTH2(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   END IF
   !
   ! d(w'2th')/dz
@@ -475,12 +480,12 @@ END IF
     CALL D_M3_TH2_W2TH_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,&
      & PLM,PLEPS,PTKEM,GUSERV,ZWORK3)
     !
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZF(IIJB:IIJE,1:D%NKT)  = ZF(IIJB:IIJE,1:D%NKT) + ZWORK1(IIJB:IIJE,1:D%NKT) &
-                                 * ZWORK2(IIJB:IIJE,1:D%NKT)
-    ZDFDDTDZ(IIJB:IIJE,1:D%NKT) = ZDFDDTDZ(IIJB:IIJE,1:D%NKT) + ZWORK3(IIJB:IIJE,1:D%NKT) &
-                                      * ZWORK2(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZF(IIJB:IIJE,1:IKT)  = ZF(IIJB:IIJE,1:IKT) + ZWORK1(IIJB:IIJE,1:IKT) &
+                                 * ZWORK2(IIJB:IIJE,1:IKT)
+    ZDFDDTDZ(IIJB:IIJE,1:IKT) = ZDFDDTDZ(IIJB:IIJE,1:IKT) + ZWORK3(IIJB:IIJE,1:IKT) &
+                                      * ZWORK2(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   END IF
   !
   IF (KRR/=0) THEN
@@ -491,12 +496,12 @@ END IF
       CALL D_M3_TH2_WR2_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,&
        & PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTH_DZ,ZWORK2)
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZF(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT) + ZWORK1(IIJB:IIJE,1:D%NKT) &
-                                  * PFR2(IIJB:IIJE,1:D%NKT)
-      ZDFDDTDZ(IIJB:IIJE,1:D%NKT) = ZDFDDTDZ(IIJB:IIJE,1:D%NKT) + ZWORK2(IIJB:IIJE,1:D%NKT) &
-                                        * PFR2(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZF(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT) + ZWORK1(IIJB:IIJE,1:IKT) &
+                                  * PFR2(IIJB:IIJE,1:IKT)
+      ZDFDDTDZ(IIJB:IIJE,1:IKT) = ZDFDDTDZ(IIJB:IIJE,1:IKT) + ZWORK2(IIJB:IIJE,1:IKT) &
+                                        * PFR2(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
     !
     ! d(w'2r')/dz
@@ -507,12 +512,12 @@ END IF
       CALL D_M3_TH2_W2R_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,PD,&
        & PLM,PLEPS,PTKEM,PBLL_O_E,PEMOIST,PDTH_DZ,ZWORK3)
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZF(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT) + ZWORK1(IIJB:IIJE,1:D%NKT) &
-                                  * ZWORK2(IIJB:IIJE,1:D%NKT)
-      ZDFDDTDZ(IIJB:IIJE,1:D%NKT) = ZDFDDTDZ(IIJB:IIJE,1:D%NKT) + ZWORK3(IIJB:IIJE,1:D%NKT) &
-                                        * ZWORK1(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZF(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT) + ZWORK1(IIJB:IIJE,1:IKT) &
+                                  * ZWORK2(IIJB:IIJE,1:IKT)
+      ZDFDDTDZ(IIJB:IIJE,1:IKT) = ZDFDDTDZ(IIJB:IIJE,1:IKT) + ZWORK3(IIJB:IIJE,1:IKT) &
+                                        * ZWORK1(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
     !
     ! d(w'th'r')/dz
@@ -522,29 +527,29 @@ END IF
        CALL D_M3_TH2_WTHR_O_DDTDZ(D,CSTURB,PREDTH1,PREDR1,&
        & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTH_DZ,ZWORK2)
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZF(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT) + ZWORK1(IIJB:IIJE,1:D%NKT) &
-                                  * PFTHR(IIJB:IIJE,1:D%NKT)
-      ZDFDDTDZ(IIJB:IIJE,1:D%NKT) = ZDFDDTDZ(IIJB:IIJE,1:D%NKT) + ZWORK2(IIJB:IIJE,1:D%NKT) &
-                                        * PFTHR(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZF(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT) + ZWORK1(IIJB:IIJE,1:IKT) &
+                                  * PFTHR(IIJB:IIJE,1:IKT)
+      ZDFDDTDZ(IIJB:IIJE,1:IKT) = ZDFDDTDZ(IIJB:IIJE,1:IKT) + ZWORK2(IIJB:IIJE,1:IKT) &
+                                        * PFTHR(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
 
   END IF
   !
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZWORK1(IIJB:IIJE,1:D%NKT) = PTHLP(IIJB:IIJE,1:D%NKT) - PTHLM(IIJB:IIJE,1:D%NKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK1(IIJB:IIJE,1:IKT) = PTHLP(IIJB:IIJE,1:IKT) - PTHLM(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   CALL DZM_PHY(D,ZWORK1,ZWORK2)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZWORK3(IIJB:IIJE,1:D%NKT) = ZWORK2(IIJB:IIJE,1:D%NKT) / PDZZ(IIJB:IIJE,1:D%NKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK3(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) / PDZZ(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   CALL MZF_PHY(D,ZWORK3,ZWORK4)
   !
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZFLXZ(IIJB:IIJE,1:D%NKT)   = ZF(IIJB:IIJE,1:D%NKT) + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,1:D%NKT) &
-                                    * ZWORK4(IIJB:IIJE,1:D%NKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZFLXZ(IIJB:IIJE,1:IKT)   = ZF(IIJB:IIJE,1:IKT) + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,1:IKT) &
+                                    * ZWORK4(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !
   ! special case near the ground ( uncentred gradient )
   IF (TURBN%LHARAT) THEN
@@ -552,12 +557,12 @@ END IF
     ZFLXZ(IIJB:IIJE,IKB) =  PLMF(IIJB:IIJE,IKB)   &
      * PLEPSF(IIJB:IIJE,IKB)                                         &
      *( PEXPL *                                                  &
-     ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PTHLM(IIJB:IIJE,IKB+2*D%NKL)             &
-      +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PTHLM(IIJB:IIJE,IKB+D%NKL  )             & 
+     ( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PTHLM(IIJB:IIJE,IKB+2*IKL)             &
+      +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PTHLM(IIJB:IIJE,IKB+IKL  )             & 
       +ZCOEFF(IIJB:IIJE,IKB      )*PTHLM(IIJB:IIJE,IKB  )   )**2          &
      +TURBN%XIMPL *                                                  &
-     ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PTHLP(IIJB:IIJE,IKB+2*D%NKL)             &
-      +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PTHLP(IIJB:IIJE,IKB+D%NKL  )             &
+     ( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PTHLP(IIJB:IIJE,IKB+2*IKL)             &
+      +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PTHLP(IIJB:IIJE,IKB+IKL  )             &
       +ZCOEFF(IIJB:IIJE,IKB      )*PTHLP(IIJB:IIJE,IKB  )   )**2          &
     ) 
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
@@ -568,40 +573,40 @@ END IF
      END IF
   ELSE
      !$mnh_expand_array(JIJ=IIJB:IIJE)
-     ZFLXZ(IIJB:IIJE,IKB) = CSTURB%XCTV * PPHI3(IIJB:IIJE,IKB+D%NKL) * PLM(IIJB:IIJE,IKB)   &
+     ZFLXZ(IIJB:IIJE,IKB) = CSTURB%XCTV * PPHI3(IIJB:IIJE,IKB+IKL) * PLM(IIJB:IIJE,IKB)   &
      * PLEPS(IIJB:IIJE,IKB)                                         &
      *( PEXPL *                                                  &
-     ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PTHLM(IIJB:IIJE,IKB+2*D%NKL)             &
-      +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PTHLM(IIJB:IIJE,IKB+D%NKL  )             & 
+     ( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PTHLM(IIJB:IIJE,IKB+2*IKL)             &
+      +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PTHLM(IIJB:IIJE,IKB+IKL  )             & 
       +ZCOEFF(IIJB:IIJE,IKB      )*PTHLM(IIJB:IIJE,IKB  )   )**2          &
      +TURBN%XIMPL *                                                  &
-     ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PTHLP(IIJB:IIJE,IKB+2*D%NKL)             &
-      +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PTHLP(IIJB:IIJE,IKB+D%NKL  )             &
+     ( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PTHLP(IIJB:IIJE,IKB+2*IKL)             &
+      +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PTHLP(IIJB:IIJE,IKB+IKL  )             &
       +ZCOEFF(IIJB:IIJE,IKB      )*PTHLP(IIJB:IIJE,IKB  )   )**2          &
      )
      !$mnh_end_expand_array(JIJ=IIJB:IIJE)
    ENDIF
   !
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB)
+  ZFLXZ(IIJB:IIJE,IKA) = ZFLXZ(IIJB:IIJE,IKB)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   !
   IF (TURBN%LSTATNW) THEN
     !wc  The variance from the budget eq should be multiplied by 2 here
     !    thl'2=2*L*LEPS*(dthl/dz**2)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZFLXZ(IIJB:IIJE,1:D%NKT) = MAX(0., 2.*ZFLXZ(IIJB:IIJE,1:D%NKT))
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZFLXZ(IIJB:IIJE,1:IKT) = MAX(0., 2.*ZFLXZ(IIJB:IIJE,1:IKT))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ELSE
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZFLXZ(IIJB:IIJE,1:D%NKT) = MAX(0., ZFLXZ(IIJB:IIJE,1:D%NKT))
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZFLXZ(IIJB:IIJE,1:IKT) = MAX(0., ZFLXZ(IIJB:IIJE,1:IKT))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   END IF
   !
   IF (KRRL > 0)  THEN
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    PSIGS(IIJB:IIJE,1:D%NKT) = ZFLXZ(IIJB:IIJE,1:D%NKT) * PATHETA(IIJB:IIJE,1:D%NKT)**2
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    PSIGS(IIJB:IIJE,1:IKT) = ZFLXZ(IIJB:IIJE,1:IKT) * PATHETA(IIJB:IIJE,1:IKT)**2
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ELSE
     PSIGS(:,:) = 0.
   END IF
@@ -630,26 +635,26 @@ END IF
     CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZFLXZ, TLES%X_LES_SUBGRID_Thl2 )
     !
     CALL MZF_PHY(D,PWM,ZWORK1)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK2(IIJB:IIJE,1:IKT) = ZWORK1(IIJB:IIJE,1:IKT) * ZFLXZ(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2, TLES%X_LES_RES_W_SBG_Thl2 )
     !
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK1(IIJB:IIJE,1:D%NKT) = -2.*CSTURB%XCTD*PSQRT_TKE(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT) &
-                                      / PLEPS(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK1(IIJB:IIJE,1:IKT) = -2.*CSTURB%XCTD*PSQRT_TKE(IIJB:IIJE,1:IKT)*ZFLXZ(IIJB:IIJE,1:IKT) &
+                                      / PLEPS(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_DISS_Thl2 )
     !
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK1(IIJB:IIJE,1:D%NKT) = PETHETA(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK1(IIJB:IIJE,1:IKT) = PETHETA(IIJB:IIJE,1:IKT)*ZFLXZ(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_ThlThv )
     !
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK1(IIJB:IIJE,1:D%NKT) = -CSTURB%XA3*PBETA(IIJB:IIJE,1:D%NKT)*PETHETA(IIJB:IIJE,1:D%NKT) &
-                                      * ZFLXZ(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK1(IIJB:IIJE,1:IKT) = -CSTURB%XA3*PBETA(IIJB:IIJE,1:IKT)*PETHETA(IIJB:IIJE,1:IKT) &
+                                      * ZFLXZ(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_ThlPz, .TRUE. )
     !
     CALL SECOND_MNH(ZTIME2)
@@ -663,30 +668,30 @@ END IF
 !
     ! Compute the turbulent variance F and F' at time t-dt.
   IF (TURBN%LHARAT) THEN
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK1(IIJB:IIJE,1:D%NKT) = PDTH_DZ(IIJB:IIJE,1:D%NKT)*PDR_DZ(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK1(IIJB:IIJE,1:IKT) = PDTH_DZ(IIJB:IIJE,1:IKT)*PDR_DZ(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MZF_PHY(D,ZWORK1,ZWORK2)
     IF (TURBN%LSTATNW) THEN
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZF(IIJB:IIJE,1:D%NKT) = CSTURB%XCTV * &
-                              PLMF(IIJB:IIJE,1:D%NKT)*PLEPSF(IIJB:IIJE,1:D%NKT)*ZWORK2(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZF(IIJB:IIJE,1:IKT) = CSTURB%XCTV * &
+                              PLMF(IIJB:IIJE,1:IKT)*PLEPSF(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ELSE
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZF(IIJB:IIJE,1:D%NKT) = PLMF(IIJB:IIJE,1:D%NKT)*PLEPSF(IIJB:IIJE,1:D%NKT)*ZWORK2(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZF(IIJB:IIJE,1:IKT) = PLMF(IIJB:IIJE,1:IKT)*PLEPSF(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
   ELSE
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK1(IIJB:IIJE,1:D%NKT) = 0.5*(PPHI3(IIJB:IIJE,1:D%NKT)+PPSI3(IIJB:IIJE,1:D%NKT))& 
-                                      *PDTH_DZ(IIJB:IIJE,1:D%NKT)*PDR_DZ(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK1(IIJB:IIJE,1:IKT) = 0.5*(PPHI3(IIJB:IIJE,1:IKT)+PPSI3(IIJB:IIJE,1:IKT))& 
+                                      *PDTH_DZ(IIJB:IIJE,1:IKT)*PDR_DZ(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MZF_PHY(D,ZWORK1,ZWORK2)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZF(IIJB:IIJE,1:D%NKT) = CSTURB%XCTV*PLM(IIJB:IIJE,1:D%NKT)*PLEPS(IIJB:IIJE,1:D%NKT)& 
-                                 * ZWORK2(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZF(IIJB:IIJE,1:IKT) = CSTURB%XCTV*PLM(IIJB:IIJE,1:IKT)*PLEPS(IIJB:IIJE,1:IKT)& 
+                                 * ZWORK2(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ENDIF
     ZDFDDTDZ(:,:) = 0.     ! this term, because of discretization, is treated separately
     ZDFDDRDZ(:,:) = 0.     ! this term, because of discretization, is treated separately
@@ -702,13 +707,13 @@ END IF
       CALL D_M3_THR_WTH2_O_DDRDZ(D,CSTURB,PREDTH1,PREDR1,&
        & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,ZWORK3)
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZF(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT) + ZWORK1(IIJB:IIJE,1:D%NKT) * PFTH2(IIJB:IIJE,1:D%NKT)
-      ZDFDDTDZ(IIJB:IIJE,1:D%NKT) = ZDFDDTDZ(IIJB:IIJE,1:D%NKT) + ZWORK2(IIJB:IIJE,1:D%NKT) &
-                                        * PFTH2(IIJB:IIJE,1:D%NKT)
-      ZDFDDRDZ(IIJB:IIJE,1:D%NKT) = ZDFDDRDZ(IIJB:IIJE,1:D%NKT) + ZWORK3(IIJB:IIJE,1:D%NKT) &
-                                        * PFTH2(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZF(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT) + ZWORK1(IIJB:IIJE,1:IKT) * PFTH2(IIJB:IIJE,1:IKT)
+      ZDFDDTDZ(IIJB:IIJE,1:IKT) = ZDFDDTDZ(IIJB:IIJE,1:IKT) + ZWORK2(IIJB:IIJE,1:IKT) &
+                                        * PFTH2(IIJB:IIJE,1:IKT)
+      ZDFDDRDZ(IIJB:IIJE,1:IKT) = ZDFDDRDZ(IIJB:IIJE,1:IKT) + ZWORK3(IIJB:IIJE,1:IKT) &
+                                        * PFTH2(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
     !
     ! d(w'2th')/dz
@@ -721,14 +726,14 @@ END IF
       CALL D_M3_THR_W2TH_O_DDRDZ(D,CSTURB,PREDTH1,PREDR1,&
        & PD,PLM,PLEPS,PTKEM,ZWORK4)
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZF(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT) + ZWORK2(IIJB:IIJE,1:D%NKT) &
-                                  * ZWORK1(IIJB:IIJE,1:D%NKT)
-      ZDFDDTDZ(IIJB:IIJE,1:D%NKT) = ZDFDDTDZ(IIJB:IIJE,1:D%NKT) + ZWORK3(IIJB:IIJE,1:D%NKT) &
-                                        * ZWORK1(IIJB:IIJE,1:D%NKT)
-      ZDFDDRDZ(IIJB:IIJE,1:D%NKT) = ZDFDDRDZ(IIJB:IIJE,1:D%NKT) + ZWORK4(IIJB:IIJE,1:D%NKT) &
-                                        * ZWORK1(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZF(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT) + ZWORK2(IIJB:IIJE,1:IKT) &
+                                  * ZWORK1(IIJB:IIJE,1:IKT)
+      ZDFDDTDZ(IIJB:IIJE,1:IKT) = ZDFDDTDZ(IIJB:IIJE,1:IKT) + ZWORK3(IIJB:IIJE,1:IKT) &
+                                        * ZWORK1(IIJB:IIJE,1:IKT)
+      ZDFDDRDZ(IIJB:IIJE,1:IKT) = ZDFDDRDZ(IIJB:IIJE,1:IKT) + ZWORK4(IIJB:IIJE,1:IKT) &
+                                        * ZWORK1(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
     !
     ! d(w'r'2)/dz
@@ -740,13 +745,13 @@ END IF
       CALL D_M3_THR_WR2_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,&
        & PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,PDTH_DZ,ZWORK3)
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZF(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT) + ZWORK1(IIJB:IIJE,1:D%NKT) * PFR2(IIJB:IIJE,1:D%NKT)
-      ZDFDDTDZ(IIJB:IIJE,1:D%NKT) = ZDFDDTDZ(IIJB:IIJE,1:D%NKT) + ZWORK2(IIJB:IIJE,1:D%NKT) &
-                                        * PFR2(IIJB:IIJE,1:D%NKT)
-      ZDFDDRDZ(IIJB:IIJE,1:D%NKT) = ZDFDDRDZ(IIJB:IIJE,1:D%NKT) + ZWORK3(IIJB:IIJE,1:D%NKT) &
-                                        * PFR2(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZF(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT) + ZWORK1(IIJB:IIJE,1:IKT) * PFR2(IIJB:IIJE,1:IKT)
+      ZDFDDTDZ(IIJB:IIJE,1:IKT) = ZDFDDTDZ(IIJB:IIJE,1:IKT) + ZWORK2(IIJB:IIJE,1:IKT) &
+                                        * PFR2(IIJB:IIJE,1:IKT)
+      ZDFDDRDZ(IIJB:IIJE,1:IKT) = ZDFDDRDZ(IIJB:IIJE,1:IKT) + ZWORK3(IIJB:IIJE,1:IKT) &
+                                        * PFR2(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
     !
       ! d(w'2r')/dz
@@ -759,13 +764,13 @@ END IF
       CALL D_M3_THR_W2R_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,PD,&
       & PLM,PLEPS,PTKEM,PBLL_O_E,PDTH_DZ,PEMOIST,ZWORK4)
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZF(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT) + ZWORK2(IIJB:IIJE,1:D%NKT)*ZWORK1(IIJB:IIJE,1:D%NKT)
-      ZDFDDTDZ(IIJB:IIJE,1:D%NKT) = ZDFDDTDZ(IIJB:IIJE,1:D%NKT) + ZWORK3(IIJB:IIJE,1:D%NKT) &
-                                        * ZWORK1(IIJB:IIJE,1:D%NKT)
-      ZDFDDRDZ(IIJB:IIJE,1:D%NKT) = ZDFDDRDZ(IIJB:IIJE,1:D%NKT) + ZWORK4(IIJB:IIJE,1:D%NKT) &
-                                        * ZWORK1(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZF(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT) + ZWORK2(IIJB:IIJE,1:IKT)*ZWORK1(IIJB:IIJE,1:IKT)
+      ZDFDDTDZ(IIJB:IIJE,1:IKT) = ZDFDDTDZ(IIJB:IIJE,1:IKT) + ZWORK3(IIJB:IIJE,1:IKT) &
+                                        * ZWORK1(IIJB:IIJE,1:IKT)
+      ZDFDDRDZ(IIJB:IIJE,1:IKT) = ZDFDDRDZ(IIJB:IIJE,1:IKT) + ZWORK4(IIJB:IIJE,1:IKT) &
+                                        * ZWORK1(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
     !
     ! d(w'th'r')/dz
@@ -777,47 +782,47 @@ END IF
       CALL D_M3_THR_WTHR_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,&
       & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,ZWORK3)
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZF(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT) + ZWORK1(IIJB:IIJE,1:D%NKT) * PFTHR(IIJB:IIJE,1:D%NKT)
-      ZDFDDTDZ(IIJB:IIJE,1:D%NKT) = ZDFDDTDZ(IIJB:IIJE,1:D%NKT) + ZWORK2(IIJB:IIJE,1:D%NKT) &
-                                        * PFTHR(IIJB:IIJE,1:D%NKT)
-      ZDFDDRDZ(IIJB:IIJE,1:D%NKT) = ZDFDDRDZ(IIJB:IIJE,1:D%NKT) + ZWORK3(IIJB:IIJE,1:D%NKT) &
-                                        * PFTHR(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZF(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT) + ZWORK1(IIJB:IIJE,1:IKT) * PFTHR(IIJB:IIJE,1:IKT)
+      ZDFDDTDZ(IIJB:IIJE,1:IKT) = ZDFDDTDZ(IIJB:IIJE,1:IKT) + ZWORK2(IIJB:IIJE,1:IKT) &
+                                        * PFTHR(IIJB:IIJE,1:IKT)
+      ZDFDDRDZ(IIJB:IIJE,1:IKT) = ZDFDDRDZ(IIJB:IIJE,1:IKT) + ZWORK3(IIJB:IIJE,1:IKT) &
+                                        * PFTHR(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
     !
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK1(IIJB:IIJE,1:D%NKT) = PTHLP(IIJB:IIJE,1:D%NKT) - PTHLM(IIJB:IIJE,1:D%NKT)
-    ZWORK2(IIJB:IIJE,1:D%NKT) = PRP(IIJB:IIJE,1:D%NKT) - PRM(IIJB:IIJE,1:D%NKT,1)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK1(IIJB:IIJE,1:IKT) = PTHLP(IIJB:IIJE,1:IKT) - PTHLM(IIJB:IIJE,1:IKT)
+    ZWORK2(IIJB:IIJE,1:IKT) = PRP(IIJB:IIJE,1:IKT) - PRM(IIJB:IIJE,1:IKT,1)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL DZM_PHY(D,ZWORK1,ZWORK3)
     CALL DZM_PHY(D,ZWORK2,ZWORK4)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK1(IIJB:IIJE,1:D%NKT) = ZWORK3(IIJB:IIJE,1:D%NKT) / PDZZ(IIJB:IIJE,1:D%NKT)
-    ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK4(IIJB:IIJE,1:D%NKT) / PDZZ(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK1(IIJB:IIJE,1:IKT) = ZWORK3(IIJB:IIJE,1:IKT) / PDZZ(IIJB:IIJE,1:IKT)
+    ZWORK2(IIJB:IIJE,1:IKT) = ZWORK4(IIJB:IIJE,1:IKT) / PDZZ(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MZF_PHY(D,ZWORK1,ZWORK7)
     CALL MZF_PHY(D,ZWORK2,ZWORK8)
     !
     IF (TURBN%LHARAT) THEN
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)  
-      ZWORK5(IIJB:IIJE,1:D%NKT) = 2. *PDR_DZ(IIJB:IIJE,1:D%NKT)  *ZWORK3(IIJB:IIJE,1:D%NKT) &
-                                       / PDZZ(IIJB:IIJE,1:D%NKT)               &
-               + 2. *PDTH_DZ(IIJB:IIJE,1:D%NKT) *ZWORK4(IIJB:IIJE,1:D%NKT) / PDZZ(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)  
+      ZWORK5(IIJB:IIJE,1:IKT) = 2. *PDR_DZ(IIJB:IIJE,1:IKT)  *ZWORK3(IIJB:IIJE,1:IKT) &
+                                       / PDZZ(IIJB:IIJE,1:IKT)               &
+               + 2. *PDTH_DZ(IIJB:IIJE,1:IKT) *ZWORK4(IIJB:IIJE,1:IKT) / PDZZ(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !
       CALL MZF_PHY(D,ZWORK5,ZWORK6)
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZFLXZ(IIJB:IIJE,1:D%NKT)   = ZF(IIJB:IIJE,1:D%NKT)                  &
-        + TURBN%XIMPL * PLMF(IIJB:IIJE,1:D%NKT)*PLEPSF(IIJB:IIJE,1:D%NKT)*0.5   &
-        * ZWORK5(IIJB:IIJE,1:D%NKT)                                       &
-        + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,1:D%NKT) * ZWORK7(IIJB:IIJE,1:D%NKT) &
-        + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK8(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZFLXZ(IIJB:IIJE,1:IKT)   = ZF(IIJB:IIJE,1:IKT)                  &
+        + TURBN%XIMPL * PLMF(IIJB:IIJE,1:IKT)*PLEPSF(IIJB:IIJE,1:IKT)*0.5   &
+        * ZWORK5(IIJB:IIJE,1:IKT)                                       &
+        + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,1:IKT) * ZWORK7(IIJB:IIJE,1:IKT) &
+        + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:IKT) * ZWORK8(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       IF (TURBN%LSTATNW) THEN    
-        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-        ZFLXZ(IIJB:IIJE,1:D%NKT)   = CSTURB%XCTV * ZFLXZ(IIJB:IIJE,1:D%NKT)
-        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        ZFLXZ(IIJB:IIJE,1:IKT)   = CSTURB%XCTV * ZFLXZ(IIJB:IIJE,1:IKT)
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       END IF
     ELSE
       CALL D_PHI3DTDZ_O_DDTDZ(D,CSTURB,PPHI3,PREDTH1,PREDR1,PRED2TH3,PRED2THR3,TURBN%CTURBDIM,GUSERV,ZWKPHIPSI1) 
@@ -829,21 +834,21 @@ END IF
       CALL D_PSI3DRDZ_O_DDRDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,TURBN%CTURBDIM,GUSERV,ZWKPHIPSI4)
       ! d(psi3*drdz )/ddrdz term
  
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZWORK5(IIJB:IIJE,1:D%NKT) = (ZWKPHIPSI1(IIJB:IIJE,1:D%NKT)+ZWKPHIPSI2(IIJB:IIJE,1:D%NKT))& 
-      *PDR_DZ(IIJB:IIJE,1:D%NKT)*ZWORK3(IIJB:IIJE,1:D%NKT)/PDZZ(IIJB:IIJE,1:D%NKT) &
-                    + (ZWKPHIPSI3(IIJB:IIJE,1:D%NKT) + ZWKPHIPSI4(IIJB:IIJE,1:D%NKT)) & 
-                    *PDTH_DZ(IIJB:IIJE,:D%NKT)*ZWORK4(IIJB:IIJE,1:D%NKT)/PDZZ(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK5(IIJB:IIJE,1:IKT) = (ZWKPHIPSI1(IIJB:IIJE,1:IKT)+ZWKPHIPSI2(IIJB:IIJE,1:IKT))& 
+      *PDR_DZ(IIJB:IIJE,1:IKT)*ZWORK3(IIJB:IIJE,1:IKT)/PDZZ(IIJB:IIJE,1:IKT) &
+                    + (ZWKPHIPSI3(IIJB:IIJE,1:IKT) + ZWKPHIPSI4(IIJB:IIJE,1:IKT)) & 
+                    *PDTH_DZ(IIJB:IIJE,1:IKT)*ZWORK4(IIJB:IIJE,1:IKT)/PDZZ(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       CALL MZF_PHY(D,ZWORK5,ZWORK6)      
       
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZFLXZ(IIJB:IIJE,1:D%NKT)   = ZF(IIJB:IIJE,1:D%NKT)                          &
-        + TURBN%XIMPL * CSTURB%XCTV*PLM(IIJB:IIJE,1:D%NKT)*PLEPS(IIJB:IIJE,1:D%NKT)*0.5 &
-          * ZWORK6(IIJB:IIJE,1:D%NKT)                                                   &
-        + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,1:D%NKT) * ZWORK7(IIJB:IIJE,1:D%NKT)         &
-        + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK8(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZFLXZ(IIJB:IIJE,1:IKT)   = ZF(IIJB:IIJE,1:IKT)                          &
+        + TURBN%XIMPL * CSTURB%XCTV*PLM(IIJB:IIJE,1:IKT)*PLEPS(IIJB:IIJE,1:IKT)*0.5 &
+          * ZWORK6(IIJB:IIJE,1:IKT)                                                   &
+        + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,1:IKT) * ZWORK7(IIJB:IIJE,1:IKT)         &
+        + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:IKT) * ZWORK8(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ENDIF
     !
     ! special case near the ground ( uncentred gradient )
@@ -852,18 +857,18 @@ END IF
       ZFLXZ(IIJB:IIJE,IKB) =                                                            & 
       (1. )                                                                                   &
       *( PEXPL *                                                                              &
-         ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PTHLM(IIJB:IIJE,IKB+2*D%NKL)             &
-          +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PTHLM(IIJB:IIJE,IKB+D%NKL  )             & 
+         ( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PTHLM(IIJB:IIJE,IKB+2*IKL)             &
+          +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PTHLM(IIJB:IIJE,IKB+IKL  )             & 
           +ZCOEFF(IIJB:IIJE,IKB      )*PTHLM(IIJB:IIJE,IKB      ))                &
-        *( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PRM(IIJB:IIJE,IKB+2*D%NKL,1)             &
-          +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PRM(IIJB:IIJE,IKB+D%NKL,1  )             & 
+        *( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PRM(IIJB:IIJE,IKB+2*IKL,1)             &
+          +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PRM(IIJB:IIJE,IKB+IKL,1  )             & 
           +ZCOEFF(IIJB:IIJE,IKB      )*PRM(IIJB:IIJE,IKB  ,1    ))                &
         +TURBN%XIMPL *                                                                              &
-         ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PTHLP(IIJB:IIJE,IKB+2*D%NKL)             &
-          +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PTHLP(IIJB:IIJE,IKB+D%NKL  )             &
+         ( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PTHLP(IIJB:IIJE,IKB+2*IKL)             &
+          +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PTHLP(IIJB:IIJE,IKB+IKL  )             &
           +ZCOEFF(IIJB:IIJE,IKB      )*PTHLP(IIJB:IIJE,IKB      ))                &
-        *( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PRP(IIJB:IIJE,IKB+2*D%NKL  )             &
-          +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PRP(IIJB:IIJE,IKB+D%NKL    )             & 
+        *( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PRP(IIJB:IIJE,IKB+2*IKL  )             &
+          +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PRP(IIJB:IIJE,IKB+IKL    )             & 
           +ZCOEFF(IIJB:IIJE,IKB      )*PRP(IIJB:IIJE,IKB        ))                &
        )
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
@@ -875,49 +880,49 @@ END IF
     ELSE 
       !$mnh_expand_array(JIJ=IIJB:IIJE)
       ZFLXZ(IIJB:IIJE,IKB) =                                                            & 
-      (CSTURB%XCHT1 * PPHI3(IIJB:IIJE,IKB+D%NKL) + CSTURB%XCHT2 * PPSI3(IIJB:IIJE,IKB+D%NKL))   &
+      (CSTURB%XCHT1 * PPHI3(IIJB:IIJE,IKB+IKL) + CSTURB%XCHT2 * PPSI3(IIJB:IIJE,IKB+IKL))   &
       *( PEXPL *                                                                              &
-         ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PTHLM(IIJB:IIJE,IKB+2*D%NKL)             &
-          +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PTHLM(IIJB:IIJE,IKB+D%NKL  )             & 
+         ( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PTHLM(IIJB:IIJE,IKB+2*IKL)             &
+          +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PTHLM(IIJB:IIJE,IKB+IKL  )             & 
           +ZCOEFF(IIJB:IIJE,IKB      )*PTHLM(IIJB:IIJE,IKB      ))                &
-        *( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PRM(IIJB:IIJE,IKB+2*D%NKL,1)             &
-          +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PRM(IIJB:IIJE,IKB+D%NKL,1  )             & 
+        *( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PRM(IIJB:IIJE,IKB+2*IKL,1)             &
+          +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PRM(IIJB:IIJE,IKB+IKL,1  )             & 
           +ZCOEFF(IIJB:IIJE,IKB      )*PRM(IIJB:IIJE,IKB  ,1    ))                &
         +TURBN%XIMPL *                                                                              &
-         ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PTHLP(IIJB:IIJE,IKB+2*D%NKL)             &
-          +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PTHLP(IIJB:IIJE,IKB+D%NKL  )             &
+         ( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PTHLP(IIJB:IIJE,IKB+2*IKL)             &
+          +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PTHLP(IIJB:IIJE,IKB+IKL  )             &
           +ZCOEFF(IIJB:IIJE,IKB      )*PTHLP(IIJB:IIJE,IKB      ))                &
-        *( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PRP(IIJB:IIJE,IKB+2*D%NKL  )             &
-          +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PRP(IIJB:IIJE,IKB+D%NKL    )             & 
+        *( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PRP(IIJB:IIJE,IKB+2*IKL  )             &
+          +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PRP(IIJB:IIJE,IKB+IKL    )             & 
           +ZCOEFF(IIJB:IIJE,IKB      )*PRP(IIJB:IIJE,IKB        ))                &
        )
        !$mnh_end_expand_array(JIJ=IIJB:IIJE) 
     ENDIF
     !    
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB)
+    ZFLXZ(IIJB:IIJE,IKA) = ZFLXZ(IIJB:IIJE,IKB)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     !
     IF (TURBN%LSTATNW) THEN
       !wc  The variance from the budget eq should be multiplied by 2 here
       !    e.g. thl'2=2*L*LEPS*(cab)^-1 *(dthl/dz**2)
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZFLXZ(IIJB:IIJE,1:D%NKT) = MIN(0., 2.*ZFLXZ(IIJB:IIJE,1:D%NKT))
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZFLXZ(IIJB:IIJE,1:IKT) = MIN(0., 2.*ZFLXZ(IIJB:IIJE,1:IKT))
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ENDIF
     IF ( KRRL > 0 ) THEN
       IF (TURBN%LSTATNW) THEN
         !wc Part of the new statistical cloud scheme set up. Normal notation so - sign
-        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-        PSIGS(IIJB:IIJE,1:D%NKT) = PSIGS(IIJB:IIJE,1:D%NKT) -     &
-                       2. * PATHETA(IIJB:IIJE,1:D%NKT) * PAMOIST(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
-        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        PSIGS(IIJB:IIJE,1:IKT) = PSIGS(IIJB:IIJE,1:IKT) -     &
+                       2. * PATHETA(IIJB:IIJE,1:IKT) * PAMOIST(IIJB:IIJE,1:IKT) * ZFLXZ(IIJB:IIJE,1:IKT)
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ELSE
         !  NB PATHETA is -b in Chaboureau Bechtold 2002 which explains the + sign here
-        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-        PSIGS(IIJB:IIJE,1:D%NKT) = PSIGS(IIJB:IIJE,1:D%NKT) +     &
-                       2. * PATHETA(IIJB:IIJE,1:D%NKT) * PAMOIST(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
-        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        PSIGS(IIJB:IIJE,1:IKT) = PSIGS(IIJB:IIJE,1:IKT) +     &
+                       2. * PATHETA(IIJB:IIJE,1:IKT) * PAMOIST(IIJB:IIJE,1:IKT) * ZFLXZ(IIJB:IIJE,1:IKT)
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ENDIF
     END IF
     ! stores <THl Rnp>
@@ -943,37 +948,37 @@ IF (TLES%LLES_CALL) THEN
       CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZFLXZ, TLES%X_LES_SUBGRID_THlRt )
       !
       CALL MZF_PHY(D,PWM,ZWORK1)
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK2(IIJB:IIJE,1:IKT) = ZWORK1(IIJB:IIJE,1:IKT) * ZFLXZ(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2, TLES%X_LES_RES_W_SBG_ThlRt )
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZWORK1(IIJB:IIJE,1:D%NKT) = -2.*CSTURB%XCTD*PSQRT_TKE(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT) &
-                                        / PLEPS(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK1(IIJB:IIJE,1:IKT) = -2.*CSTURB%XCTD*PSQRT_TKE(IIJB:IIJE,1:IKT)*ZFLXZ(IIJB:IIJE,1:IKT) &
+                                        / PLEPS(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_DISS_ThlRt )
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZWORK1(IIJB:IIJE,1:D%NKT) = PETHETA(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK1(IIJB:IIJE,1:IKT) = PETHETA(IIJB:IIJE,1:IKT)*ZFLXZ(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_RtThv )
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZWORK1(IIJB:IIJE,1:D%NKT) = -CSTURB%XA3*PBETA(IIJB:IIJE,1:D%NKT)*PETHETA(IIJB:IIJE,1:D%NKT) &
-                                        * ZFLXZ(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK1(IIJB:IIJE,1:IKT) = -CSTURB%XA3*PBETA(IIJB:IIJE,1:IKT)*PETHETA(IIJB:IIJE,1:IKT) &
+                                        * ZFLXZ(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_RtPz, .TRUE. )
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZWORK1(IIJB:IIJE,1:D%NKT) = PEMOIST(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK1(IIJB:IIJE,1:IKT) = PEMOIST(IIJB:IIJE,1:IKT)*ZFLXZ(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_ThlThv , .TRUE. )
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZWORK1(IIJB:IIJE,1:D%NKT) = -CSTURB%XA3*PBETA(IIJB:IIJE,1:D%NKT)*PEMOIST(IIJB:IIJE,1:D%NKT) &
-                                        * ZFLXZ(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK1(IIJB:IIJE,1:IKT) = -CSTURB%XA3*PBETA(IIJB:IIJE,1:IKT)*PEMOIST(IIJB:IIJE,1:IKT) &
+                                        * ZFLXZ(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_ThlPz, .TRUE. )
       !
       CALL SECOND_MNH(ZTIME2)
@@ -986,27 +991,27 @@ END IF
 !
     ! Compute the turbulent variance F and F' at time t-dt.
 IF (TURBN%LHARAT) THEN
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZWORK1(IIJB:IIJE,1:D%NKT) = PDR_DZ(IIJB:IIJE,1:D%NKT)**2
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK1(IIJB:IIJE,1:IKT) = PDR_DZ(IIJB:IIJE,1:IKT)**2
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   CALL MZF_PHY(D,ZWORK1,ZWORK2)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZF(IIJB:IIJE,1:D%NKT) = PLMF(IIJB:IIJE,1:D%NKT)*PLEPSF(IIJB:IIJE,1:D%NKT)*ZWORK2(IIJB:IIJE,1:D%NKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZF(IIJB:IIJE,1:IKT) = PLMF(IIJB:IIJE,1:IKT)*PLEPSF(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   IF (TURBN%LSTATNW) THEN
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZF(IIJB:IIJE,1:D%NKT) = CSTURB%XCTV * ZF(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZF(IIJB:IIJE,1:IKT) = CSTURB%XCTV * ZF(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   END IF
 ELSE
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZWORK1(IIJB:IIJE,1:D%NKT) = PPSI3(IIJB:IIJE,1:D%NKT)*PDR_DZ(IIJB:IIJE,1:D%NKT)**2
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK1(IIJB:IIJE,1:IKT) = PPSI3(IIJB:IIJE,1:IKT)*PDR_DZ(IIJB:IIJE,1:IKT)**2
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   CALL MZF_PHY(D,ZWORK1,ZWORK2)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZF(IIJB:IIJE,1:D%NKT) = CSTURB%XCTV*PLM(IIJB:IIJE,1:D%NKT)*PLEPS(IIJB:IIJE,1:D%NKT)& 
-                                *ZWORK2(IIJB:IIJE,1:D%NKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZF(IIJB:IIJE,1:IKT) = CSTURB%XCTV*PLM(IIJB:IIJE,1:IKT)*PLEPS(IIJB:IIJE,1:IKT)& 
+                                *ZWORK2(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ENDIF
     ZDFDDRDZ(:,:) = 0.     ! this term, because of discretization, is treated separately
     !
@@ -1019,11 +1024,11 @@ ENDIF
       CALL D_M3_R2_WR2_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,&
       & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PEMOIST,ZWORK2)
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZF(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT) + ZWORK1(IIJB:IIJE,1:D%NKT) * PFR2(IIJB:IIJE,1:D%NKT)
-      ZDFDDRDZ(IIJB:IIJE,1:D%NKT) = ZDFDDRDZ(IIJB:IIJE,1:D%NKT) + ZWORK2(IIJB:IIJE,1:D%NKT) &
-                                        * PFR2(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZF(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT) + ZWORK1(IIJB:IIJE,1:IKT) * PFR2(IIJB:IIJE,1:IKT)
+      ZDFDDRDZ(IIJB:IIJE,1:IKT) = ZDFDDRDZ(IIJB:IIJE,1:IKT) + ZWORK2(IIJB:IIJE,1:IKT) &
+                                        * PFR2(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
     !
     ! d(w'2r')/dz
@@ -1034,11 +1039,11 @@ ENDIF
       CALL D_M3_R2_W2R_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,&
       & PD,PLM,PLEPS,PTKEM,GUSERV,ZWORK3)
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZF(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT) + ZWORK2(IIJB:IIJE,1:D%NKT)*ZWORK1(IIJB:IIJE,1:D%NKT)
-      ZDFDDRDZ(IIJB:IIJE,1:D%NKT) = ZDFDDRDZ(IIJB:IIJE,1:D%NKT) + ZWORK3(IIJB:IIJE,1:D%NKT) &
-                                        * ZWORK1(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZF(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT) + ZWORK2(IIJB:IIJE,1:IKT)*ZWORK1(IIJB:IIJE,1:IKT)
+      ZDFDDRDZ(IIJB:IIJE,1:IKT) = ZDFDDRDZ(IIJB:IIJE,1:IKT) + ZWORK3(IIJB:IIJE,1:IKT) &
+                                        * ZWORK1(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
     !
     IF (KRR/=0) THEN
@@ -1049,11 +1054,11 @@ ENDIF
         CALL D_M3_R2_WTH2_O_DDRDZ(D,CSTURB,PREDR1,&
           & PREDTH1,PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDR_DZ,ZWORK2)
         !
-        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-        ZF(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT) + ZWORK1(IIJB:IIJE,1:D%NKT)*PFTH2(IIJB:IIJE,1:D%NKT) 
-        ZDFDDRDZ(IIJB:IIJE,1:D%NKT) = ZDFDDRDZ(IIJB:IIJE,1:D%NKT) + ZWORK2(IIJB:IIJE,1:D%NKT) &
-                                          * PFTH2(IIJB:IIJE,1:D%NKT)
-        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        ZF(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT) + ZWORK1(IIJB:IIJE,1:IKT)*PFTH2(IIJB:IIJE,1:IKT) 
+        ZDFDDRDZ(IIJB:IIJE,1:IKT) = ZDFDDRDZ(IIJB:IIJE,1:IKT) + ZWORK2(IIJB:IIJE,1:IKT) &
+                                          * PFTH2(IIJB:IIJE,1:IKT)
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       END IF
       !
       ! d(w'2r')/dz
@@ -1064,11 +1069,11 @@ ENDIF
         CALL D_M3_R2_W2TH_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,&
           & PD,PLM,PLEPS,PTKEM,PBLL_O_E,PETHETA,PDR_DZ,ZWORK3)
         !
-        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-        ZF(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT)+ZWORK2(IIJB:IIJE,1:D%NKT)*ZWORK1(IIJB:IIJE,1:D%NKT)
-        ZDFDDRDZ(IIJB:IIJE,1:D%NKT) = ZDFDDRDZ(IIJB:IIJE,1:D%NKT) + ZWORK3(IIJB:IIJE,1:D%NKT) &
-                                          * ZWORK1(IIJB:IIJE,1:D%NKT)
-        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        ZF(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT)+ZWORK2(IIJB:IIJE,1:IKT)*ZWORK1(IIJB:IIJE,1:IKT)
+        ZDFDDRDZ(IIJB:IIJE,1:IKT) = ZDFDDRDZ(IIJB:IIJE,1:IKT) + ZWORK3(IIJB:IIJE,1:IKT) &
+                                          * ZWORK1(IIJB:IIJE,1:IKT)
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       END IF
       !
       ! d(w'th'r')/dz
@@ -1078,58 +1083,58 @@ ENDIF
         CALL D_M3_R2_WTHR_O_DDRDZ(D,CSTURB,PREDR1,PREDTH1,&
           & PD,PLEPS,PSQRT_TKE,PBLL_O_E,PETHETA,PDR_DZ,ZWORK2)
         !
-        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-        ZF(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT) + ZWORK1(IIJB:IIJE,1:D%NKT) &
-                                    * PFTHR(IIJB:IIJE,1:D%NKT) 
-        ZDFDDRDZ(IIJB:IIJE,1:D%NKT) = ZDFDDRDZ(IIJB:IIJE,1:D%NKT) + ZWORK2(IIJB:IIJE,1:D%NKT) &
-                                          * PFTHR(IIJB:IIJE,1:D%NKT)
-        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        ZF(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT) + ZWORK1(IIJB:IIJE,1:IKT) &
+                                    * PFTHR(IIJB:IIJE,1:IKT) 
+        ZDFDDRDZ(IIJB:IIJE,1:IKT) = ZDFDDRDZ(IIJB:IIJE,1:IKT) + ZWORK2(IIJB:IIJE,1:IKT) &
+                                          * PFTHR(IIJB:IIJE,1:IKT)
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       END IF
 
     END IF
     !
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZWORK1(IIJB:IIJE,1:D%NKT) = PRP(IIJB:IIJE,1:D%NKT) - PRM(IIJB:IIJE,1:D%NKT,1)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK1(IIJB:IIJE,1:IKT) = PRP(IIJB:IIJE,1:IKT) - PRM(IIJB:IIJE,1:IKT,1)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   CALL DZM_PHY(D,ZWORK1,ZWORK2)
   IF (TURBN%LHARAT) THEN
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK5(IIJB:IIJE,1:D%NKT) = ZWORK2(IIJB:IIJE,1:D%NKT) / PDZZ(IIJB:IIJE,1:D%NKT)
-    ZWORK3(IIJB:IIJE,1:D%NKT) = 2.*PDR_DZ(IIJB:IIJE,1:D%NKT)* ZWORK5(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK5(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) / PDZZ(IIJB:IIJE,1:IKT)
+    ZWORK3(IIJB:IIJE,1:IKT) = 2.*PDR_DZ(IIJB:IIJE,1:IKT)* ZWORK5(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MZF_PHY(D,ZWORK3,ZWORK4)
     CALL MZF_PHY(D,ZWORK5,ZWORK6)
     !
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZFLXZ(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT)                   &
-          + TURBN%XIMPL * PLMF(IIJB:IIJE,1:D%NKT) *PLEPSF(IIJB:IIJE,1:D%NKT) &
-            * ZWORK4(IIJB:IIJE,1:D%NKT) &
-          + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK6(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZFLXZ(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT)                   &
+          + TURBN%XIMPL * PLMF(IIJB:IIJE,1:IKT) *PLEPSF(IIJB:IIJE,1:IKT) &
+            * ZWORK4(IIJB:IIJE,1:IKT) &
+          + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:IKT) * ZWORK6(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     IF (TURBN%LSTATNW) THEN
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZFLXZ(IIJB:IIJE,1:D%NKT) = CSTURB%XCTV * ZFLXZ(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT) 
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZFLXZ(IIJB:IIJE,1:IKT) = CSTURB%XCTV * ZFLXZ(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT) 
      END IF
   ELSE
     CALL D_PSI3DRDZ2_O_DDRDZ(D,CSTURB,PPSI3,PREDR1,PREDTH1,PRED2R3,PRED2THR3,PDR_DZ,TURBN%CTURBDIM,GUSERV,ZWKPHIPSI1)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK1(IIJB:IIJE,1:D%NKT) = ZWKPHIPSI1(IIJB:IIJE,1:D%NKT)*ZWORK2(IIJB:IIJE,1:D%NKT) &
-                                      / PDZZ(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK1(IIJB:IIJE,1:IKT) = ZWKPHIPSI1(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT) &
+                                      / PDZZ(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MZF_PHY(D,ZWORK1,ZWORK3)
     !
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK4(IIJB:IIJE,1:D%NKT) = ZWORK2(IIJB:IIJE,1:D%NKT) / PDZZ(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK4(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) / PDZZ(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MZF_PHY(D,ZWORK4,ZWORK5)
     !
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZFLXZ(IIJB:IIJE,1:D%NKT) = ZF(IIJB:IIJE,1:D%NKT)                             &
-          + TURBN%XIMPL * CSTURB%XCTV*PLM(IIJB:IIJE,1:D%NKT) *PLEPS(IIJB:IIJE,1:D%NKT) &
-            * ZWORK3(IIJB:IIJE,1:D%NKT) &
-          + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:D%NKT) * ZWORK5(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)  
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZFLXZ(IIJB:IIJE,1:IKT) = ZF(IIJB:IIJE,1:IKT)                             &
+          + TURBN%XIMPL * CSTURB%XCTV*PLM(IIJB:IIJE,1:IKT) *PLEPS(IIJB:IIJE,1:IKT) &
+            * ZWORK3(IIJB:IIJE,1:IKT) &
+          + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:IKT) * ZWORK5(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)  
   ENDIF
     !
     ! special case near the ground ( uncentred gradient )
@@ -1138,12 +1143,12 @@ ENDIF
     ZFLXZ(IIJB:IIJE,IKB) =  PLMF(IIJB:IIJE,IKB)   &
         * PLEPSF(IIJB:IIJE,IKB)                                        &
     *( PEXPL *                                                  &
-       ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PRM(IIJB:IIJE,IKB+2*D%NKL,1)             &
-        +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PRM(IIJB:IIJE,IKB+D%NKL,1  )             & 
+       ( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PRM(IIJB:IIJE,IKB+2*IKL,1)             &
+        +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PRM(IIJB:IIJE,IKB+IKL,1  )             & 
         +ZCOEFF(IIJB:IIJE,IKB      )*PRM(IIJB:IIJE,IKB  ,1    ))**2         &
       +TURBN%XIMPL *                                                  &
-       ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PRP(IIJB:IIJE,IKB+2*D%NKL)               &
-        +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PRP(IIJB:IIJE,IKB+D%NKL  )               &
+       ( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PRP(IIJB:IIJE,IKB+2*IKL)               &
+        +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PRP(IIJB:IIJE,IKB+IKL  )               &
         +ZCOEFF(IIJB:IIJE,IKB      )*PRP(IIJB:IIJE,IKB      ))**2           &
     )
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
@@ -1154,36 +1159,36 @@ ENDIF
     END IF 
   ELSE
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    ZFLXZ(IIJB:IIJE,IKB) = CSTURB%XCHV * PPSI3(IIJB:IIJE,IKB+D%NKL) * PLM(IIJB:IIJE,IKB)   &
+    ZFLXZ(IIJB:IIJE,IKB) = CSTURB%XCHV * PPSI3(IIJB:IIJE,IKB+IKL) * PLM(IIJB:IIJE,IKB)   &
         * PLEPS(IIJB:IIJE,IKB)                                        &
     *( PEXPL *                                                  &
-       ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PRM(IIJB:IIJE,IKB+2*D%NKL,1)             &
-        +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PRM(IIJB:IIJE,IKB+D%NKL,1  )             & 
+       ( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PRM(IIJB:IIJE,IKB+2*IKL,1)             &
+        +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PRM(IIJB:IIJE,IKB+IKL,1  )             & 
         +ZCOEFF(IIJB:IIJE,IKB      )*PRM(IIJB:IIJE,IKB  ,1    ))**2         &
       +TURBN%XIMPL *                                                  &
-       ( ZCOEFF(IIJB:IIJE,IKB+2*D%NKL)*PRP(IIJB:IIJE,IKB+2*D%NKL)               &
-        +ZCOEFF(IIJB:IIJE,IKB+D%NKL  )*PRP(IIJB:IIJE,IKB+D%NKL  )               &
+       ( ZCOEFF(IIJB:IIJE,IKB+2*IKL)*PRP(IIJB:IIJE,IKB+2*IKL)               &
+        +ZCOEFF(IIJB:IIJE,IKB+IKL  )*PRP(IIJB:IIJE,IKB+IKL  )               &
         +ZCOEFF(IIJB:IIJE,IKB      )*PRP(IIJB:IIJE,IKB      ))**2           &
      ) 
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   ENDIF
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB)
+    ZFLXZ(IIJB:IIJE,IKA) = ZFLXZ(IIJB:IIJE,IKB)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     IF (TURBN%LSTATNW) THEN
       !wc  The variance from the budget eq should be multiplied by 2 here
       !    thl'2=2*L*LEPS*(dthl/dz**2)
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZFLXZ(IIJB:IIJE,1:D%NKT) = MAX(0., 2.*ZFLXZ(IIJB:IIJE,1:D%NKT))
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZFLXZ(IIJB:IIJE,1:IKT) = MAX(0., 2.*ZFLXZ(IIJB:IIJE,1:IKT))
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ENDIF
     !
     IF ( KRRL > 0 ) THEN
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      PSIGS(IIJB:IIJE,1:D%NKT) = PSIGS(IIJB:IIJE,1:D%NKT) + PAMOIST(IIJB:IIJE,1:D%NKT) **2 &
-                                     * ZFLXZ(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      PSIGS(IIJB:IIJE,1:IKT) = PSIGS(IIJB:IIJE,1:IKT) + PAMOIST(IIJB:IIJE,1:IKT) **2 &
+                                     * ZFLXZ(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
     ! stores <Rnp Rnp>
     IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
@@ -1208,26 +1213,26 @@ ENDIF
       CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZFLXZ, TLES%X_LES_SUBGRID_Rt2 )
       !
       CALL MZF_PHY(D,PWM,ZWORK1)
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK2(IIJB:IIJE,1:IKT) = ZWORK1(IIJB:IIJE,1:IKT) * ZFLXZ(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2, TLES%X_LES_RES_W_SBG_Rt2 )
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZWORK1(IIJB:IIJE,1:D%NKT) = PEMOIST(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK1(IIJB:IIJE,1:IKT) = PEMOIST(IIJB:IIJE,1:IKT)*ZFLXZ(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_RtThv , .TRUE. )
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZWORK1(IIJB:IIJE,1:D%NKT) = -CSTURB%XA3*PBETA(IIJB:IIJE,1:D%NKT)*PEMOIST(IIJB:IIJE,1:D%NKT) &
-                                        * ZFLXZ(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK1(IIJB:IIJE,1:IKT) = -CSTURB%XA3*PBETA(IIJB:IIJE,1:IKT)*PEMOIST(IIJB:IIJE,1:IKT) &
+                                        * ZFLXZ(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_RtPz, .TRUE. )
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZWORK1(IIJB:IIJE,1:D%NKT) = -2.*CSTURB%XCTD*PSQRT_TKE(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT) &
-                                        / PLEPS(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK1(IIJB:IIJE,1:IKT) = -2.*CSTURB%XCTD*PSQRT_TKE(IIJB:IIJE,1:IKT)*ZFLXZ(IIJB:IIJE,1:IKT) &
+                                        / PLEPS(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_DISS_Rt2 )
       !
       CALL SECOND_MNH(ZTIME2)
@@ -1242,17 +1247,17 @@ ENDIF
   IF ( KRRL > 0 ) THEN
     ! Extrapolate PSIGS at the ground and at the top
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    PSIGS(IIJB:IIJE,D%NKA) = PSIGS(IIJB:IIJE,IKB)
-    PSIGS(IIJB:IIJE,D%NKU) = PSIGS(IIJB:IIJE,IKE)
+    PSIGS(IIJB:IIJE,IKA) = PSIGS(IIJB:IIJE,IKB)
+    PSIGS(IIJB:IIJE,IKU) = PSIGS(IIJB:IIJE,IKE)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 #ifdef REPRO48
-    PSIGS(IIJB:IIJE,1:D%NKT) =  MAX (PSIGS(IIJB:IIJE,1:D%NKT) , 0.)
-    PSIGS(IIJB:IIJE,1:D%NKT) =  SQRT(PSIGS(IIJB:IIJE,1:D%NKT))
+    PSIGS(IIJB:IIJE,1:IKT) =  MAX (PSIGS(IIJB:IIJE,1:IKT) , 0.)
+    PSIGS(IIJB:IIJE,1:IKT) =  SQRT(PSIGS(IIJB:IIJE,1:IKT))
 #else
-    PSIGS(IIJB:IIJE,1:D%NKT) =  SQRT( MAX (PSIGS(IIJB:IIJE,1:D%NKT) , 1.E-12) )
+    PSIGS(IIJB:IIJE,1:IKT) =  SQRT( MAX (PSIGS(IIJB:IIJE,1:IKT) , 1.E-12) )
 #endif
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   END IF
 
 !

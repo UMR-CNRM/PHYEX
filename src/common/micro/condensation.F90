@@ -159,7 +159,8 @@ REAL, DIMENSION(D%NIJT),       OPTIONAL, INTENT(IN)    :: PICE_CLD_WGT
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER  :: JIJ, JK, JKP, JKM                    ! loop index
+INTEGER :: JIJ, JK, JKP, JKM                    ! loop index
+INTEGER :: IKTB, IKTE, IKB, IKE, IKL, IIJB, IIJE
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZTLK, ZRT     ! work arrays for T_l and total water mixing ratio
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZL            ! length scale
 INTEGER, DIMENSION(D%NIJT)  :: ITPL            ! top levels of troposphere
@@ -217,6 +218,14 @@ REAL, DIMENSION(-22:11),PARAMETER :: ZSRC_1D =(/                         &
 !
 IF (LHOOK) CALL DR_HOOK('CONDENSATION',0,ZHOOK_HANDLE)
 !
+IKTB=D%NKTB
+IKTE=D%NKTE
+IKB=D%NKB
+IKE=D%NKE
+IKL=D%NKL
+IIJB=D%NIJB
+IIJE=D%NIJE
+!
 PCLDFR(:,:) = 0. ! Initialize values
 PSIGRC(:,:) = 0. ! Initialize values
 ZPRIFACT = 1.      ! Initialize value
@@ -240,8 +249,8 @@ IF(OCND2)ZPRIFACT = 0.
 !
 !-------------------------------------------------------------------------------
 ! store total water mixing ratio
-DO JK=D%NKTB,D%NKTE
-  DO JIJ=D%NIJB,D%NIJE
+DO JK=IKTB,IKTE
+  DO JIJ=IIJB,IIJE
     ZRT(JIJ,JK)  = PRV_IN(JIJ,JK) + PRC_IN(JIJ,JK) + PRI_IN(JIJ,JK)*ZPRIFACT
   END DO
 END DO
@@ -252,8 +261,8 @@ IF(PRESENT(PLV) .AND. PRESENT(PLS)) THEN
   ZLV(:,:)=PLV(:,:)
   ZLS(:,:)=PLS(:,:)
 ELSE
-  DO JK=D%NKTB,D%NKTE
-    DO JIJ=D%NIJB,D%NIJE
+  DO JK=IKTB,IKTE
+    DO JIJ=IIJB,IIJE
       ! latent heat of vaporisation/sublimation
       ZLV(JIJ,JK) = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( PT(JIJ,JK) - CST%XTT )
       ZLS(JIJ,JK) = CST%XLSTT + ( CST%XCPV - CST%XCI ) * ( PT(JIJ,JK) - CST%XTT )
@@ -263,8 +272,8 @@ ENDIF
 IF(PRESENT(PCPH)) THEN
   ZCPD(:,:)=PCPH(:,:)
 ELSE
-  DO JK=D%NKTB,D%NKTE
-    DO JIJ=D%NIJB,D%NIJE
+  DO JK=IKTB,IKTE
+    DO JIJ=IIJB,IIJE
       ZCPD(JIJ,JK) = CST%XCPD + CST%XCPV*PRV_IN(JIJ,JK) + CST%XCL*PRC_IN(JIJ,JK) + CST%XCI*PRI_IN(JIJ,JK) + &
 #if defined(REPRO48) || defined(REPRO55)
 #else
@@ -276,8 +285,8 @@ ELSE
 ENDIF
 ! Preliminary calculations needed for computing the "turbulent part" of Sigma_s
 IF ( .NOT. OSIGMAS ) THEN
-  DO JK=D%NKTB,D%NKTE
-    DO JIJ=D%NIJB,D%NIJE
+  DO JK=IKTB,IKTE
+    DO JIJ=IIJB,IIJE
       ! store temperature at saturation
       ZTLK(JIJ,JK) = PT(JIJ,JK) - ZLV(JIJ,JK)*PRC_IN(JIJ,JK)/ZCPD(JIJ,JK) &
                                     - ZLS(JIJ,JK)*PRI_IN(JIJ,JK)/ZCPD(JIJ,JK)*ZPRIFACT
@@ -285,16 +294,16 @@ IF ( .NOT. OSIGMAS ) THEN
   END DO
   ! Determine tropopause/inversion  height from minimum temperature
 #ifdef REPRO48
-  ITPL(:)  = D%NIJB+1
+  ITPL(:)  = IIJB+1
   !I (Sébastien Riette) don't understand why tropopause level is set
   !with the index of the second physical point on the horizontal (i.e. 2+JPHEXT)!!!
   !I assume it is a bug...
 #else
-  ITPL(:)  = D%NKB+D%NKL
+  ITPL(:)  = IKB+IKL
 #endif
   ZTMIN(:) = 400.
-  DO JK = D%NKTB+1,D%NKTE-1
-    DO JIJ=D%NIJB,D%NIJE
+  DO JK = IKTB+1,IKTE-1
+    DO JIJ=IIJB,IIJE
       IF ( PT(JIJ,JK) < ZTMIN(JIJ) ) THEN
         ZTMIN(JIJ) = PT(JIJ,JK)
         ITPL(JIJ) = JK
@@ -302,37 +311,37 @@ IF ( .NOT. OSIGMAS ) THEN
     END DO
   END DO
   ! Set the mixing length scale
-  ZL(:,D%NKB) = 20.
-  DO JK = D%NKB+D%NKL,D%NKE,D%NKL
-    DO JIJ=D%NIJB,D%NIJE
+  ZL(:,IKB) = 20.
+  DO JK = IKB+IKL,IKE,IKL
+    DO JIJ=IIJB,IIJE
       ! free troposphere
       ZL(JIJ,JK) = ZL0
-      ZZZ =  PZZ(JIJ,JK) -  PZZ(JIJ,D%NKB)
+      ZZZ =  PZZ(JIJ,JK) -  PZZ(JIJ,IKB)
       JKP = ITPL(JIJ)
       ! approximate length for boundary-layer
       IF ( ZL0 > ZZZ ) ZL(JIJ,JK) = ZZZ
       ! gradual decrease of length-scale near and above tropopause
-      IF ( ZZZ > 0.9*(PZZ(JIJ,JKP)-PZZ(JIJ,D%NKB)) ) &
-           ZL(JIJ,JK) = .6 * ZL(JIJ,JK-D%NKL)
+      IF ( ZZZ > 0.9*(PZZ(JIJ,JKP)-PZZ(JIJ,IKB)) ) &
+           ZL(JIJ,JK) = .6 * ZL(JIJ,JK-IKL)
     END DO
   END DO
 END IF
 !-------------------------------------------------------------------------------
 !
-DO JK=D%NKTB,D%NKTE
-  JKP=MAX(MIN(JK+D%NKL,D%NKTE),D%NKTB)
-  JKM=MAX(MIN(JK-D%NKL,D%NKTE),D%NKTB)
+DO JK=IKTB,IKTE
+  JKP=MAX(MIN(JK+IKL,IKTE),IKTB)
+  JKM=MAX(MIN(JK-IKL,IKTE),IKTB)
   IF (OCND2) THEN
-     DO JIJ = D%NIJB, D%NIJE
-       ZDZ(JIJ) = PZZ(JIJ,JKP) - PZZ(JIJ,JKP-D%NKL)
+     DO JIJ = IIJB, IIJE
+       ZDZ(JIJ) = PZZ(JIJ,JKP) - PZZ(JIJ,JKP-IKL)
      ENDDO
      CALL ICECLOUD(D,PPABS(:,JK),PZZ(:,JK),ZDZ(:), &
           & PT(:,JK),PRV_IN(:,JK),1.,-1., &
-          & ZCLDINI(:),PIFR(D%NIJB,JK),PICLDFR(:,JK), &
+          & ZCLDINI(:),PIFR(IIJB,JK),PICLDFR(:,JK), &
           & PSSIO(:,JK),PSSIU(:,JK),ZARDUM2(:),ZARDUM(:))
      ! latent heats
      ! saturated water vapor mixing ratio over liquid water and ice
-     DO JIJ=D%NIJB,D%NIJE
+     DO JIJ=IIJB,IIJE
        ESATW_T(JIJ)=ESATW(PT(JIJ,JK))
        ZPV(JIJ)  = MIN(ESATW_T(JIJ), .99*PPABS(JIJ,JK))
        ZPIV(JIJ) = MIN(ESATI(PT(JIJ,JK)), .99*PPABS(JIJ,JK))
@@ -340,7 +349,7 @@ DO JK=D%NKTB,D%NKTE
   ELSE
      ! latent heats
      ! saturated water vapor mixing ratio over liquid water and ice
-    DO JIJ=D%NIJB,D%NIJE
+    DO JIJ=IIJB,IIJE
       ZPV(JIJ)  = MIN(EXP( CST%XALPW - CST%XBETAW / PT(JIJ,JK) - CST%XGAMW * LOG( PT(JIJ,JK) ) ), .99*PPABS(JIJ,JK))
       ZPIV(JIJ) = MIN(EXP( CST%XALPI - CST%XBETAI / PT(JIJ,JK) - CST%XGAMI * LOG( PT(JIJ,JK) ) ), .99*PPABS(JIJ,JK))
     END DO
@@ -348,16 +357,16 @@ DO JK=D%NKTB,D%NKTE
   !Ice fraction
   ZFRAC(:) = 0.
   IF (OUSERI .AND. .NOT.OCND2) THEN
-    DO JIJ=D%NIJB,D%NIJE
+    DO JIJ=IIJB,IIJE
       IF (PRC_IN(JIJ,JK)+PRI_IN(JIJ,JK) > 1.E-20) THEN
         ZFRAC(JIJ) = PRI_IN(JIJ,JK) / (PRC_IN(JIJ,JK)+PRI_IN(JIJ,JK))
       ENDIF
     END DO
-    DO JIJ=D%NIJB,D%NIJE
+    DO JIJ=IIJB,IIJE
       CALL COMPUTE_FRAC_ICE(HFRAC_ICE, NEB, ZFRAC(JIJ), PT(JIJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
     ENDDO
   ENDIF
-  DO JIJ=D%NIJB,D%NIJE
+  DO JIJ=IIJB,IIJE
     ZQSL(JIJ)   = CST%XRD / CST%XRV * ZPV(JIJ) / ( PPABS(JIJ,JK) - ZPV(JIJ) )
     ZQSI(JIJ)   = CST%XRD / CST%XRV * ZPIV(JIJ) / ( PPABS(JIJ,JK) - ZPIV(JIJ) )
 
@@ -376,10 +385,10 @@ DO JK=D%NKTB,D%NKTE
   ! switch to take either present computed value of SIGMAS
   ! or that of Meso-NH turbulence scheme
   IF ( OSIGMAS ) THEN
-    DO JIJ=D%NIJB,D%NIJE
+    DO JIJ=IIJB,IIJE
       IF (PSIGQSAT(JIJ)/=0.) THEN
         ZDZFACT = 1.
-        IF(LHGT_QS .AND. JK+1 <= D%NKTE)THEN
+        IF(LHGT_QS .AND. JK+1 <= IKTE)THEN
            ZDZFACT= MAX(ICEP%XFRMIN(23),MIN(ICEP%XFRMIN(24),(PZZ(JIJ,JK) - PZZ(JIJ,JK+1))/ZDZREF))
         ELSEIF(LHGT_QS)THEN
            ZDZFACT= MAX(ICEP%XFRMIN(23),MIN(ICEP%XFRMIN(24),((PZZ(JIJ,JK-1) - PZZ(JIJ,JK)))*0.8/ZDZREF))
@@ -398,7 +407,7 @@ DO JK=D%NKTB,D%NKTE
       END IF
     END DO
   ELSE
-    DO JIJ=D%NIJB,D%NIJE
+    DO JIJ=IIJB,IIJE
       ! parameterize Sigma_s with first_order closure
       DZZ    =  PZZ(JIJ,JKP) - PZZ(JIJ,JKM)
       ZDRW   =  ZRT(JIJ,JKP) - ZRT(JIJ,JKM)
@@ -413,14 +422,14 @@ DO JK=D%NKTB,D%NKTE
            ZSIG_CONV * ZSIG_CONV ) )
     END DO
   END IF
-  DO JIJ=D%NIJB,D%NIJE
+  DO JIJ=IIJB,IIJE
     ZSIGMA(JIJ)= MAX( 1.E-10, ZSIGMA(JIJ) )
 
     ! normalized saturation deficit
     ZQ1(JIJ)   = ZSBAR(JIJ)/ZSIGMA(JIJ)
   END DO
   IF(HCONDENS == 'GAUS') THEN
-    DO JIJ=D%NIJB,D%NIJE
+    DO JIJ=IIJB,IIJE
       ! Gaussian Probability Density Function around ZQ1
       ! Computation of ZG and ZGAM(=erf(ZG))
       ZGCOND = -ZQ1(JIJ)/SQRT(2.)
@@ -439,7 +448,7 @@ DO JK=D%NKTB,D%NKTE
     END DO
     !Computation warm/cold Cloud Fraction and content in high water content part
     IF(PRESENT(PHLC_HCF) .AND. PRESENT(PHLC_HRC))THEN
-      DO JIJ=D%NIJB,D%NIJE
+      DO JIJ=IIJB,IIJE
         IF(1-ZFRAC(JIJ) > 1.E-20)THEN
           ZAUTC = (ZSBAR(JIJ) - ICEP%XCRIAUTC/(PRHODREF(JIJ,JK)*(1-ZFRAC(JIJ))))/ZSIGMA(JIJ)
           ZGAUTC = -ZAUTC/SQRT(2.)
@@ -457,7 +466,7 @@ DO JK=D%NKTB,D%NKTE
     ENDIF
 
     IF(PRESENT(PHLI_HCF) .AND. PRESENT(PHLI_HRI))THEN
-      DO JIJ=D%NIJB,D%NIJE
+      DO JIJ=IIJB,IIJE
         IF(ZFRAC(JIJ) > 1.E-20)THEN
           ZCRIAUTI=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(JIJ,JK)-CST%XTT)+ICEP%XBCRIAUTI))
           ZAUTI = (ZSBAR(JIJ) - ZCRIAUTI/ZFRAC(JIJ))/ZSIGMA(JIJ)
@@ -476,7 +485,7 @@ DO JK=D%NKTB,D%NKTE
     ENDIF
 
   ELSEIF(HCONDENS == 'CB02')THEN
-    DO JIJ=D%NIJB,D%NIJE
+    DO JIJ=IIJB,IIJE
       !Total condensate
       IF (ZQ1(JIJ) > 0. .AND. ZQ1(JIJ) <= 2) THEN
         ZCOND(JIJ) = MIN(EXP(-1.)+.66*ZQ1(JIJ)+.086*ZQ1(JIJ)**2, 2.) ! We use the MIN function for continuity
@@ -513,7 +522,7 @@ DO JK=D%NKTB,D%NKTE
   END IF !HCONDENS
 
   IF(.NOT. OCND2) THEN
-    DO JIJ=D%NIJB,D%NIJE
+    DO JIJ=IIJB,IIJE
       PRC_OUT(JIJ,JK) = (1.-ZFRAC(JIJ)) * ZCOND(JIJ) ! liquid condensate
       PRI_OUT(JIJ,JK) = ZFRAC(JIJ) * ZCOND(JIJ)   ! solid condensate
       PT(JIJ,JK) = PT(JIJ,JK) + ((PRC_OUT(JIJ,JK)-PRC_IN(JIJ,JK))*ZLV(JIJ,JK) + &
@@ -522,7 +531,7 @@ DO JK=D%NKTB,D%NKTE
       PRV_OUT(JIJ,JK) = ZRT(JIJ,JK) - PRC_OUT(JIJ,JK) - PRI_OUT(JIJ,JK)*ZPRIFACT
     END DO
   ELSE
-    DO JIJ=D%NIJB,D%NIJE
+    DO JIJ=IIJB,IIJE
       PRC_OUT(JIJ,JK) = (1.-ZFRAC(JIJ)) * ZCOND(JIJ) ! liquid condensate
       ZLWINC = PRC_OUT(JIJ,JK) - PRC_IN(JIJ,JK)
       !
@@ -551,7 +560,7 @@ DO JK=D%NKTB,D%NKTE
       PWCLDFR(JIJ,JK) = PCLDFR(JIJ,JK)
       ZDUM1 = MIN(1.0,20.* PRC_OUT(JIJ,JK)*SQRT(ZDZ(JIJ))/ZQSL(JIJ)) ! cloud liquid water factor
       ZDUM3 = MAX(0.,PICLDFR(JIJ,JK)-PWCLDFR(JIJ,JK)) ! pure ice cloud part
-      IF (JK==D%NKTB) THEN
+      IF (JK==IKTB) THEN
         ZDUM4 = PRI_IN(JIJ,JK)
       ELSE
         ZDUM4 = PRI_IN(JIJ,JK) + PRS(JIJ,JK)*0.5 + PRG(JIJ,JK)*0.25
@@ -573,7 +582,7 @@ DO JK=D%NKTB,D%NKTE
     END DO
   END IF ! End OCND2
   IF(HLAMBDA3=='CB')THEN
-    DO JIJ=D%NIJB,D%NIJE
+    DO JIJ=IIJB,IIJE
       ! s r_c/ sig_s^2
       !    PSIGRC(JIJ,JK) = PCLDFR(JIJ,JK)  ! use simple Gaussian relation
       !

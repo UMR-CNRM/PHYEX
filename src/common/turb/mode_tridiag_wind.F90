@@ -143,11 +143,12 @@ REAL, DIMENSION(D%NIJT,D%NKT)  :: ZY ,ZGAM
                                          ! RHS of the equation, 3D work array
 REAL, DIMENSION(D%NIJT)                :: ZBET
                                          ! 2D work array
-INTEGER             :: JIJ,JK     ! loop counter
+INTEGER             :: JIJ,JK       ! loop counter
 INTEGER             :: IKB,IKE      ! inner vertical limits
-INTEGER             :: IKT          ! array size in k direction
+INTEGER             :: IKT,IKA,IKU  ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain 
 INTEGER             :: IIJB, IIJE   ! start, end of ij loops in physical domain
+INTEGER             :: IKL
 !
 ! ---------------------------------------------------------------------------
 !                                              
@@ -162,29 +163,32 @@ IKTB=D%NKTB
 IKTE=D%NKTE
 IKB=D%NKB
 IKE=D%NKE
+IKA=D%NKA
+IKU=D%NKU
+IKL=D%NKL
 IIJB=D%NIJB
 IIJE=D%NIJE
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZY(IIJB:IIJE,IKB) = PVARM(IIJB:IIJE,IKB)  + PTSTEP*PSOURCE(IIJB:IIJE,IKB) -   &
-  PEXPL / PRHODJA(IIJB:IIJE,IKB) * PA(IIJB:IIJE,IKB+D%NKL) * &
-  (PVARM(IIJB:IIJE,IKB+D%NKL) - PVARM(IIJB:IIJE,IKB))
+  PEXPL / PRHODJA(IIJB:IIJE,IKB) * PA(IIJB:IIJE,IKB+IKL) * &
+  (PVARM(IIJB:IIJE,IKB+IKL) - PVARM(IIJB:IIJE,IKB))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 DO JK=IKTB+1,IKTE-1
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZY(IIJB:IIJE,JK)= PVARM(IIJB:IIJE,JK)  + PTSTEP*PSOURCE(IIJB:IIJE,JK) -               &
       PEXPL / PRHODJA(IIJB:IIJE,JK) *                                          &
-                             ( PVARM(IIJB:IIJE,JK-D%NKL)*PA(IIJB:IIJE,JK)                &
-                              -PVARM(IIJB:IIJE,JK)*(PA(IIJB:IIJE,JK)+PA(IIJB:IIJE,JK+D%NKL))   &
-                              +PVARM(IIJB:IIJE,JK+D%NKL)*PA(IIJB:IIJE,JK+D%NKL)              &
+                             ( PVARM(IIJB:IIJE,JK-IKL)*PA(IIJB:IIJE,JK)                &
+                              -PVARM(IIJB:IIJE,JK)*(PA(IIJB:IIJE,JK)+PA(IIJB:IIJE,JK+IKL))   &
+                              +PVARM(IIJB:IIJE,JK+IKL)*PA(IIJB:IIJE,JK+IKL)              &
                              ) 
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
 ! 
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZY(IIJB:IIJE,IKE)= PVARM(IIJB:IIJE,IKE) + PTSTEP*PSOURCE(IIJB:IIJE,IKE) +               &
-  PEXPL / PRHODJA(IIJB:IIJE,IKE) * PA(IIJB:IIJE,IKE) * (PVARM(IIJB:IIJE,IKE)-PVARM(IIJB:IIJE,IKE-D%NKL))
+  PEXPL / PRHODJA(IIJB:IIJE,IKE) * PA(IIJB:IIJE,IKE) * (PVARM(IIJB:IIJE,IKE)-PVARM(IIJB:IIJE,IKE-IKL))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !
@@ -197,43 +201,43 @@ IF ( PIMPL > 1.E-10 ) THEN
   !  going up
   !
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZBET(IIJB:IIJE) = 1. - PIMPL * (  PA(IIJB:IIJE,IKB+D%NKL) / PRHODJA(IIJB:IIJE,IKB) &  
+  ZBET(IIJB:IIJE) = 1. - PIMPL * (  PA(IIJB:IIJE,IKB+IKL) / PRHODJA(IIJB:IIJE,IKB) &  
                             + PCOEFS(IIJB:IIJE) *  PTSTEP        )   ! bet = b(ikb)
   PVARP(IIJB:IIJE,IKB) = ZY(IIJB:IIJE,IKB) / ZBET(IIJB:IIJE)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)               
   !
-  DO JK = IKB+D%NKL,IKE-D%NKL,D%NKL
+  DO JK = IKB+IKL,IKE-IKL,IKL
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    ZGAM(IIJB:IIJE,JK) = PIMPL * PA(IIJB:IIJE,JK) / PRHODJA(IIJB:IIJE,JK-D%NKL) / ZBET(IIJB:IIJE)  
+    ZGAM(IIJB:IIJE,JK) = PIMPL * PA(IIJB:IIJE,JK) / PRHODJA(IIJB:IIJE,JK-IKL) / ZBET(IIJB:IIJE)  
                                                     ! gam(k) = c(k-1) / bet
     ZBET(IIJB:IIJE)    = 1. - PIMPL * (  PA(IIJB:IIJE,JK) * (1. + ZGAM(IIJB:IIJE,JK))  &
-                                 + PA(IIJB:IIJE,JK+D%NKL)                      &
+                                 + PA(IIJB:IIJE,JK+IKL)                      &
                                 ) / PRHODJA(IIJB:IIJE,JK)  
                                                     ! bet = b(k) - a(k)* gam(k)  
     PVARP(IIJB:IIJE,JK)= ( ZY(IIJB:IIJE,JK) - PIMPL * PA(IIJB:IIJE,JK) / PRHODJA(IIJB:IIJE,JK) &
-                    * PVARP(IIJB:IIJE,JK-D%NKL)                                 &
+                    * PVARP(IIJB:IIJE,JK-IKL)                                 &
                    ) / ZBET(IIJB:IIJE)
                                         ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   END DO
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ! special treatment for the last level
-  ZGAM(IIJB:IIJE,IKE) = PIMPL * PA(IIJB:IIJE,IKE) / PRHODJA(IIJB:IIJE,IKE-D%NKL) / ZBET(IIJB:IIJE) 
+  ZGAM(IIJB:IIJE,IKE) = PIMPL * PA(IIJB:IIJE,IKE) / PRHODJA(IIJB:IIJE,IKE-IKL) / ZBET(IIJB:IIJE) 
                                                     ! gam(k) = c(k-1) / bet
   ZBET(IIJB:IIJE)    = 1. - PIMPL * (  PA(IIJB:IIJE,IKE) * (1. + ZGAM(IIJB:IIJE,IKE))  &
                               ) / PRHODJA(IIJB:IIJE,IKE)  
                                                     ! bet = b(k) - a(k)* gam(k)  
   PVARP(IIJB:IIJE,IKE)= ( ZY(IIJB:IIJE,IKE) - PIMPL * PA(IIJB:IIJE,IKE) / PRHODJA(IIJB:IIJE,IKE) &
-                                 * PVARP(IIJB:IIJE,IKE-D%NKL)                      &
+                                 * PVARP(IIJB:IIJE,IKE-IKL)                      &
                   ) / ZBET(IIJB:IIJE)
                                         ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
   !
   !  going down
   !
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-  DO JK = IKE-D%NKL,IKB,-1*D%NKL
+  DO JK = IKE-IKL,IKB,-1*IKL
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-    PVARP(IIJB:IIJE,JK) = PVARP(IIJB:IIJE,JK) - ZGAM(IIJB:IIJE,JK+D%NKL) * PVARP(IIJB:IIJE,JK+D%NKL) 
+    PVARP(IIJB:IIJE,JK) = PVARP(IIJB:IIJE,JK) - ZGAM(IIJB:IIJE,JK+IKL) * PVARP(IIJB:IIJE,JK+IKL) 
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   END DO
 !
@@ -252,8 +256,8 @@ END IF
 !            ----------------------------------------
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE)
-PVARP(IIJB:IIJE,D%NKA)=PVARP(IIJB:IIJE,IKB)
-PVARP(IIJB:IIJE,D%NKU)=PVARP(IIJB:IIJE,IKE)
+PVARP(IIJB:IIJE,IKA)=PVARP(IIJB:IIJE,IKB)
+PVARP(IIJB:IIJE,IKU)=PVARP(IIJB:IIJE,IKE)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !-------------------------------------------------------------------------------

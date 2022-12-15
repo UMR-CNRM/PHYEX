@@ -72,13 +72,16 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PCF_MF         ! and cloud frac
 !
 !*                    0.1  Declaration of local variables
 !
-INTEGER  :: JI,JK, JK0
+INTEGER  :: JI,JK, JK0, IKB,IKE,IKL
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !*                    0.2 Initialisation
 !
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_DIRECT',0,ZHOOK_HANDLE)
 !
+IKB=D%NKB
+IKE=D%NKE
+IKL=D%NKL
 !*      1. COMPUTATION OF SUBGRID CLOUD
 !          ----------------------------
 
@@ -91,19 +94,19 @@ PCF_MF(:,:)=0.
 
 DO JI=D%NIJB,D%NIJE
 #ifdef REPRO48
-  JK0=KKLCL(JI)-D%NKL ! first mass level with cloud
-  JK0=MAX(JK0, MIN(D%NKB,D%NKE)) !protection if KKL=1
-  JK0=MIN(JK0, MAX(D%NKB,D%NKE)) !protection if KKL=-1
-  DO JK=JK0,D%NKE-D%NKL,D%NKL
+  JK0=KKLCL(JI)-IKL ! first mass level with cloud
+  JK0=MAX(JK0, MIN(IKB,IKE)) !protection if KKL=1
+  JK0=MIN(JK0, MAX(IKB,IKE)) !protection if KKL=-1
+  DO JK=JK0,IKE-IKL,IKL
 #else
-  DO JK=KKLCL(JI),D%NKE-D%NKL,D%NKL
+  DO JK=KKLCL(JI),IKE-IKL,IKL
 #endif
     PCF_MF(JI,JK ) = MAX( 0., MIN(1.,PARAMMF%XKCF_MF *0.5* (       &
-                &    PFRAC_UP(JI,JK) +  PFRAC_UP(JI,JK+D%NKL) ) ))
+                &    PFRAC_UP(JI,JK) +  PFRAC_UP(JI,JK+IKL) ) ))
     PRC_MF(JI,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JI,JK)*PRC_UP(JI,JK)  &
-                         + PFRAC_UP(JI,JK+D%NKL)*PRC_UP(JI,JK+D%NKL) )
+                         + PFRAC_UP(JI,JK+IKL)*PRC_UP(JI,JK+IKL) )
     PRI_MF(JI,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JI,JK)*PRI_UP(JI,JK)  &
-                         + PFRAC_UP(JI,JK+D%NKL)*PRI_UP(JI,JK+D%NKL) )
+                         + PFRAC_UP(JI,JK+IKL)*PRI_UP(JI,JK+IKL) )
   END DO
 END DO
 

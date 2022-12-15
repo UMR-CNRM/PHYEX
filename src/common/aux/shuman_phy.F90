@@ -377,7 +377,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMZM   ! result at flux localizati
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK,JIJ,IIJB,IIJE             ! Loop index
+INTEGER :: JK,JIJ,IIJB,IIJE,IKT             ! Loop index
+INTEGER :: IKL,IKA,IKU
 !
 !-------------------------------------------------------------------------------
 !
@@ -388,14 +389,18 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MZM',0,ZHOOK_HANDLE)
 IIJB = D%NIJB
 IIJE = D%NIJE
-DO JK=2,D%NKT-1
+IKT=D%NKT
+IKL=D%NKL
+IKA=D%NKA
+IKU=D%NKU
+DO JK=2,IKT-1
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PMZM(IIJB:IIJE,JK) = 0.5*( PA(IIJB:IIJE,JK)+PA(IIJB:IIJE,JK-D%NKL) )
+  PMZM(IIJB:IIJE,JK) = 0.5*( PA(IIJB:IIJE,JK)+PA(IIJB:IIJE,JK-IKL) )
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
 !$mnh_expand_array(JIJ=IIJB:IIJE)
-PMZM(IIJB:IIJE,D%NKA)    = -999.
-PMZM(IIJB:IIJE,D%NKU) = 0.5*( PA(IIJB:IIJE,D%NKU)+PA(IIJB:IIJE,D%NKU-D%NKL) )
+PMZM(IIJB:IIJE,IKA)    = -999.
+PMZM(IIJB:IIJE,IKU) = 0.5*( PA(IIJB:IIJE,IKU)+PA(IIJB:IIJE,IKU-IKL) )
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !
@@ -464,7 +469,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK,JIJ,IIJB,IIJE             ! Loop index
+INTEGER :: JK,JIJ,IIJB,IIJE,IKT             ! Loop index
+INTEGER :: IKL, IKA, IKU
 !
 !-------------------------------------------------------------------------------
 !
@@ -475,14 +481,18 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DZM',0,ZHOOK_HANDLE)
 IIJB = D%NIJB
 IIJE = D%NIJE
-DO JK=2,D%NKT-1
+IKT=D%NKT
+IKL=D%NKL
+IKA=D%NKA
+IKU=D%NKU
+DO JK=2,IKT-1
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PDZM(IIJB:IIJE,JK)          = PA(IIJB:IIJE,JK) -  PA(IIJB:IIJE,JK-D%NKL)
+  PDZM(IIJB:IIJE,JK)          = PA(IIJB:IIJE,JK) -  PA(IIJB:IIJE,JK-IKL)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
 !$mnh_expand_array(JIJ=IIJB:IIJE)
-PDZM(IIJB:IIJE,D%NKA)    =  -999.
-PDZM(IIJB:IIJE,D%NKU)    = PA(IIJB:IIJE,D%NKU) -  PA(IIJB:IIJE,D%NKU-D%NKL)
+PDZM(IIJB:IIJE,IKA)    =  -999.
+PDZM(IIJB:IIJE,IKU)    = PA(IIJB:IIJE,IKU) -  PA(IIJB:IIJE,IKU-IKL)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !-------------------------------------------------------------------------------
@@ -863,7 +873,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMZF   ! result at mass localizati
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK,JIJ,IIJB,IIJE             ! Loop index
+INTEGER :: JK,JIJ,IIJB,IIJE,IKT             ! Loop index
+INTEGER :: IKL, IKA, IKU
 !
 !-------------------------------------------------------------------------------
 !
@@ -874,14 +885,18 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MZF',0,ZHOOK_HANDLE)
 IIJB = D%NIJB
 IIJE = D%NIJE
-DO JK=2,D%NKT-1
+IKT=D%NKT
+IKL=D%NKL
+IKA=D%NKA
+IKU=D%NKU
+DO JK=2,IKT-1
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PMZF(IIJB:IIJE,JK) = 0.5*( PA(IIJB:IIJE,JK)+PA(IIJB:IIJE,JK+D%NKL) )
+  PMZF(IIJB:IIJE,JK) = 0.5*( PA(IIJB:IIJE,JK)+PA(IIJB:IIJE,JK+IKL) )
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
 !$mnh_expand_array(JIJ=IIJB:IIJE)
-PMZF(IIJB:IIJE,D%NKU) = -999.
-PMZF(IIJB:IIJE,D%NKA) = 0.5*( PA(IIJB:IIJE,D%NKA)+PA(IIJB:IIJE,D%NKA+D%NKL) )
+PMZF(IIJB:IIJE,IKU) = -999.
+PMZF(IIJB:IIJE,IKA) = 0.5*( PA(IIJB:IIJE,IKA)+PA(IIJB:IIJE,IKA+IKL) )
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !-------------------------------------------------------------------------------
@@ -948,7 +963,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass localizati
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK,JIJ,IIJB,IIJE             ! Loop index
+INTEGER :: JK,JIJ,IIJB,IIJE,IKT             ! Loop index
+INTEGER :: IKL, IKA, IKU
 !
 !-------------------------------------------------------------------------------
 !
@@ -959,14 +975,18 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DZF',0,ZHOOK_HANDLE)
 IIJB = D%NIJB
 IIJE = D%NIJE
-DO JK=2,D%NKT-1
+IKT=D%NKT
+IKL=D%NKL
+IKA=D%NKA
+IKU=D%NKU
+DO JK=2,IKT-1
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PDZF(IIJB:IIJE,JK)          = PA(IIJB:IIJE,JK+D%NKL) -  PA(IIJB:IIJE,JK)
+  PDZF(IIJB:IIJE,JK)          = PA(IIJB:IIJE,JK+IKL) -  PA(IIJB:IIJE,JK)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
 !$mnh_expand_array(JIJ=IIJB:IIJE)
-PDZF(IIJB:IIJE,D%NKA)    = PA(IIJB:IIJE,D%NKA+D%NKL) -  PA(IIJB:IIJE,D%NKA)
-PDZF(IIJB:IIJE,D%NKU)    = -999.
+PDZF(IIJB:IIJE,IKA)    = PA(IIJB:IIJE,IKA+IKL) -  PA(IIJB:IIJE,IKA)
+PDZF(IIJB:IIJE,IKU)    = -999.
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !-------------------------------------------------------------------------------

@@ -321,10 +321,11 @@ REAL, DIMENSION(D%NIJT,D%NKT)  ::  &
        ZWORK3,ZWORK4,&
        ZWORK5,ZWORK6! working var. for shuman operators (array syntax)
 !
-INTEGER             :: IIJE,IIJB,IKB,IKE      ! index value for the mass points of the domain 
+INTEGER             :: IIJE,IIJB,IKB,IKE,IKA,IKU ! index value for the mass points of the domain 
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
 INTEGER             :: JSV,JIJ,JK          ! scalar loop counter
+INTEGER             :: IKL
 REAL, DIMENSION(D%NIJT)   :: ZCOEFFLXU, &
                              ZCOEFFLXV, ZUSLOPEM, ZVSLOPEM, &
                              ZFLUXSFCU,ZFLUXSFCV
@@ -349,6 +350,9 @@ IKTB=D%NKTB
 IKTE=D%NKTE
 IKB=D%NKB
 IKE=D%NKE
+IKA=D%NKA
+IKU=D%NKU
+IKL=D%NKL
 IIJE=D%NIJE
 IIJB=D%NIJB
 !
@@ -366,13 +370,13 @@ ZDIRSINZW(IIJB:IIJE) = SQRT(1.-PDIRCOSZW(IIJB:IIJE)**2)
 ! With TURBN%LHARATU length scale and TKE are at half levels so remove MZM
 !
 IF (TURBN%LHARAT) THEN
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZKEFF(IIJB:IIJE,1:D%NKT) =  PLM(IIJB:IIJE,1:D%NKT) * SQRT(PTKEM(IIJB:IIJE,1:D%NKT))
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZKEFF(IIJB:IIJE,1:IKT) =  PLM(IIJB:IIJE,1:IKT) * SQRT(PTKEM(IIJB:IIJE,1:IKT))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ELSE
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZWORK1(IIJB:IIJE,1:D%NKT) = PLM(IIJB:IIJE,1:D%NKT) * SQRT(PTKEM(IIJB:IIJE,1:D%NKT))
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK1(IIJB:IIJE,1:IKT) = PLM(IIJB:IIJE,1:IKT) * SQRT(PTKEM(IIJB:IIJE,1:IKT))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   CALL MZM_PHY(D,ZWORK1,ZKEFF)
 ENDIF
 !
@@ -395,10 +399,10 @@ CALL MXM_PHY(D,ZKEFF,ZWORK1)
 CALL MXM_PHY(D,PDZZ,ZWORK2)
 CALL MZM_PHY(D,PRHODJ,ZWORK3)
 CALL MXM_PHY(D,ZWORK3,ZWORK4)
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-ZA(IIJB:IIJE,1:D%NKT) = -PTSTEP * ZCMFS * ZWORK1(IIJB:IIJE,1:D%NKT)* ZWORK4(IIJB:IIJE,1:D%NKT) &
-                              / ZWORK2(IIJB:IIJE,1:D%NKT)**2
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZA(IIJB:IIJE,1:IKT) = -PTSTEP * ZCMFS * ZWORK1(IIJB:IIJE,1:IKT)* ZWORK4(IIJB:IIJE,1:IKT) &
+                              / ZWORK2(IIJB:IIJE,1:IKT)**2
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
 !
 ! Compute the source of U wind component
@@ -433,7 +437,7 @@ IF (OOCEAN) THEN  ! Ocean model
   !
   !$mnh_expand_array(JIJ=IIJB:IIJE)  
   ZSOURCE(IIJB:IIJE,IKE) = ZWORK31D(IIJB:IIJE) &
-       *0.5 * ( 1. + ZWORK1(IIJB:IIJE,D%NKU) / ZWORK1(IIJB:IIJE,IKE)) 
+       *0.5 * ( 1. + ZWORK1(IIJB:IIJE,IKU) / ZWORK1(IIJB:IIJE,IKE)) 
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   !
   ! Zero flux at the ocean domain bottom
@@ -462,7 +466,7 @@ ELSE ! Atmosphere
   (   ZWORK41D(IIJB:IIJE) &
   +  ZWORK61D(IIJB:IIJE)   &
   -  ZCOEFS(IIJB:IIJE) * PUM(IIJB:IIJE,IKB) * TURBN%XIMPL        &
-  ) * 0.5 * ( 1. + ZWORK1(IIJB:IIJE,D%NKA) / ZWORK1(IIJB:IIJE,IKB) )
+  ) * 0.5 * ( 1. + ZWORK1(IIJB:IIJE,IKA) / ZWORK1(IIJB:IIJE,IKB) )
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
   ZSOURCE(IIJB:IIJE,IKE) = 0.
@@ -477,22 +481,22 @@ CALL TRIDIAG_WIND(D,PUM,ZA,ZCOEFS,PTSTEP,PEXPL,TURBN%XIMPL,   &
 !
 CALL MXM_PHY(D,PRHODJ,ZWORK1)
 CALL MXM_PHY(D,ZKEFF,ZWORK2)
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-ZWORK3(IIJB:IIJE,1:D%NKT)=TURBN%XIMPL*ZRES(IIJB:IIJE,1:D%NKT) + PEXPL*PUM(IIJB:IIJE,1:D%NKT)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZWORK3(IIJB:IIJE,1:IKT)=TURBN%XIMPL*ZRES(IIJB:IIJE,1:IKT) + PEXPL*PUM(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 CALL DZM_PHY(D,ZWORK3,ZWORK4)
 CALL MXM_PHY(D,PDZZ,ZWORK5)
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-PRUS(IIJB:IIJE,1:D%NKT)= PRUS(IIJB:IIJE,1:D%NKT)+ZWORK1(IIJB:IIJE,1:D%NKT)*(ZRES(IIJB:IIJE,1:D%NKT) & 
-                              - PUM(IIJB:IIJE,1:D%NKT))/PTSTEP
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+PRUS(IIJB:IIJE,1:IKT)= PRUS(IIJB:IIJE,1:IKT)+ZWORK1(IIJB:IIJE,1:IKT)*(ZRES(IIJB:IIJE,1:IKT) & 
+                              - PUM(IIJB:IIJE,1:IKT))/PTSTEP
 !
 !*       5.2  Partial TKE Dynamic Production
 !
 ! vertical flux of the U wind component
 !
-ZFLXZ(IIJB:IIJE,1:D%NKT)     = -ZCMFS * ZWORK2(IIJB:IIJE,1:D%NKT) * ZWORK4(IIJB:IIJE,1:D%NKT) &
-                                   / ZWORK5(IIJB:IIJE,1:D%NKT)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+ZFLXZ(IIJB:IIJE,1:IKT)     = -ZCMFS * ZWORK2(IIJB:IIJE,1:IKT) * ZWORK4(IIJB:IIJE,1:IKT) &
+                                   / ZWORK5(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
 IF (OOCEAN) THEN
   ZFLXZ(IIJB:IIJE,IKE+1) = ZFLUXSFCU(IIJB:IIJE)
@@ -504,9 +508,9 @@ ELSE
   ZFLXZ(IIJB:IIJE,IKB)   =   ZWORK1(IIJB:IIJE,IKB)  *                &
     ( ZSOURCE(IIJB:IIJE,IKB)                                         &
      +ZCOEFS(IIJB:IIJE) * ZRES(IIJB:IIJE,IKB) * TURBN%XIMPL                &
-    ) / 0.5 / ( 1. + ZWORK2(IIJB:IIJE,D%NKA)/ ZWORK2(IIJB:IIJE,IKB) )
+    ) / 0.5 / ( 1. + ZWORK2(IIJB:IIJE,IKA)/ ZWORK2(IIJB:IIJE,IKB) )
   !
-  ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB)
+  ZFLXZ(IIJB:IIJE,IKA) = ZFLXZ(IIJB:IIJE,IKB)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END IF
 !
@@ -527,20 +531,20 @@ END IF
 !
 ! first part of total momentum flux
 !
-PWU(IIJB:IIJE,1:D%NKT) = ZFLXZ(IIJB:IIJE,1:D%NKT)
+PWU(IIJB:IIJE,1:IKT) = ZFLXZ(IIJB:IIJE,1:IKT)
 !
 ! Contribution to the TKE dynamic production of TKE
 ! (computed at mass point)
 !
 CALL GZ_U_UW_PHY(D,PUM,PDZZ,ZWORK1)
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-ZWORK2(IIJB:IIJE,1:D%NKT) = ZFLXZ(IIJB:IIJE,1:D%NKT) * ZWORK1(IIJB:IIJE,1:D%NKT)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZWORK2(IIJB:IIJE,1:IKT) = ZFLXZ(IIJB:IIJE,1:IKT) * ZWORK1(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 CALL MXF_PHY(D,ZWORK2,ZWORK3)
 CALL MZF_PHY(D,ZWORK3,ZWORK4)
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-PDP(IIJB:IIJE,1:D%NKT) = -ZWORK4(IIJB:IIJE,1:D%NKT)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+PDP(IIJB:IIJE,1:IKT) = -ZWORK4(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
 ! Special cases near surface
 CALL MXM_PHY(D,PDZZ,ZWORK1)
@@ -548,8 +552,8 @@ IF (OOCEAN) THEN
   ! evaluate the dynamic production at w(IKE) and store in PDP(IKE)
   ! before to be extrapolated in tke_eps routine
   !$mnh_expand_array(JIJ=IIJB:IIJE)  
-  ZWORK2(IIJB:IIJE,IKE) = ZFLXZ(IIJB:IIJE,IKE) * (PUM(IIJB:IIJE,IKE)-PUM(IIJB:IIJE,IKE-D%NKL))  &
-                         / ZWORK1(IIJB:IIJE,IKE-D%NKL)
+  ZWORK2(IIJB:IIJE,IKE) = ZFLXZ(IIJB:IIJE,IKE) * (PUM(IIJB:IIJE,IKE)-PUM(IIJB:IIJE,IKE-IKL))  &
+                         / ZWORK1(IIJB:IIJE,IKE-IKL)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)                 
   CALL MXF_PHY(D,ZWORK2,ZWORK3)
   !$mnh_expand_array(JIJ=IIJB:IIJE)  
@@ -558,8 +562,8 @@ IF (OOCEAN) THEN
 ELSE ! Atmosphere
   ! evaluate the dynamic production at w(IKB+KKL) in PDP(IKB)
   !$mnh_expand_array(JIJ=IIJB:IIJE)  
-  ZWORK2(IIJB:IIJE,IKB) = ZFLXZ(IIJB:IIJE,IKB+D%NKL) * (PUM(IIJB:IIJE,IKB+D%NKL)-PUM(IIJB:IIJE,IKB))  &
-                           / ZWORK1(IIJB:IIJE,IKB+D%NKL)
+  ZWORK2(IIJB:IIJE,IKB) = ZFLXZ(IIJB:IIJE,IKB+IKL) * (PUM(IIJB:IIJE,IKB+IKL)-PUM(IIJB:IIJE,IKB))  &
+                           / ZWORK1(IIJB:IIJE,IKB+IKL)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)                   
   CALL MXF_PHY(D,ZWORK2,ZWORK3)
   !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -578,16 +582,16 @@ IF (TLES%LLES_CALL) THEN
   CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2, TLES%X_LES_SUBGRID_WU )
   !
   CALL GZ_U_UW_PHY(D,PUM,PDZZ,ZWORK1)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZWORK1(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK1(IIJB:IIJE,1:IKT) = ZWORK1(IIJB:IIJE,1:IKT) * ZFLXZ(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   CALL MXF_PHY(D,ZWORK1,ZWORK2)
   CALL MZF_PHY(D,ZWORK2,ZWORK3) 
   CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK3, TLES%X_LES_RES_ddxa_U_SBG_UaU )
   !
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZWORK1(IIJB:IIJE,1:D%NKT) = ZCMFS * ZKEFF(IIJB:IIJE,1:D%NKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK1(IIJB:IIJE,1:IKT) = ZCMFS * ZKEFF(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   CALL LES_MEAN_SUBGRID_PHY(D,TLES, ZWORK1, TLES%X_LES_SUBGRID_Km )
   !
   CALL SECOND_MNH(ZTIME2)
@@ -601,61 +605,61 @@ IF(TURBN%CTURBDIM=='3DIM') THEN
   ! Compute the source for the W wind component
                 ! used to compute the W source at the ground
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZFLXZ(IIJB:IIJE,D%NKA) = 2 * ZFLXZ(IIJB:IIJE,IKB) - ZFLXZ(IIJB:IIJE,IKB+D%NKL) ! extrapolation 
+  ZFLXZ(IIJB:IIJE,IKA) = 2 * ZFLXZ(IIJB:IIJE,IKB) - ZFLXZ(IIJB:IIJE,IKB+IKL) ! extrapolation 
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
  IF (OOCEAN) THEN
    !$mnh_expand_array(JIJ=IIJB:IIJE)
-   ZFLXZ(IIJB:IIJE,D%NKU) = 2 * ZFLXZ(IIJB:IIJE,IKE) - ZFLXZ(IIJB:IIJE,IKE-D%NKL) ! extrapolation
+   ZFLXZ(IIJB:IIJE,IKU) = 2 * ZFLXZ(IIJB:IIJE,IKE) - ZFLXZ(IIJB:IIJE,IKE-IKL) ! extrapolation
    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
  END IF
   !
   CALL MXM_PHY(D,PRHODJ,ZWORK1)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZWORK1(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) / PDXX(IIJB:IIJE,1:D%NKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK1(IIJB:IIJE,1:IKT) = ZWORK1(IIJB:IIJE,1:IKT) / PDXX(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   CALL MZM_PHY(D,ZWORK1,ZWORK2)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK2(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK2(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * ZFLXZ(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   CALL DXF_PHY(D,ZWORK2,ZWORK1)
   !
   IF (.NOT. OFLAT) THEN
     !
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK2(IIJB:IIJE,1:D%NKT) = ZFLXZ(IIJB:IIJE,1:D%NKT)*PDZX(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK2(IIJB:IIJE,1:IKT) = ZFLXZ(IIJB:IIJE,1:IKT)*PDZX(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MZF_PHY(D,ZWORK2,ZWORK3)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK3(IIJB:IIJE,1:D%NKT) = ZWORK3(IIJB:IIJE,1:D%NKT) / PDXX(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK3(IIJB:IIJE,1:IKT) = ZWORK3(IIJB:IIJE,1:IKT) / PDXX(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MXF_PHY(D,ZWORK3,ZWORK2)
     CALL MZF_PHY(D,PDZZ,ZWORK3)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK3(IIJB:IIJE,1:D%NKT) = PRHODJ(IIJB:IIJE,1:D%NKT) &
-                                             / ZWORK3(IIJB:IIJE,1:D%NKT) * ZWORK2(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK3(IIJB:IIJE,1:IKT) = PRHODJ(IIJB:IIJE,1:IKT) &
+                                             / ZWORK3(IIJB:IIJE,1:IKT) * ZWORK2(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL DZM_PHY(D,ZWORK3,ZWORK2)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    PRWS(IIJB:IIJE,1:D%NKT) = PRWS(IIJB:IIJE,1:D%NKT) - ZWORK1(IIJB:IIJE,1:D%NKT) &
-                                  + ZWORK2(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    PRWS(IIJB:IIJE,1:IKT) = PRWS(IIJB:IIJE,1:IKT) - ZWORK1(IIJB:IIJE,1:IKT) &
+                                  + ZWORK2(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ELSE
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    PRWS(IIJB:IIJE,1:D%NKT)= PRWS(IIJB:IIJE,1:D%NKT) - ZWORK1(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    PRWS(IIJB:IIJE,1:IKT)= PRWS(IIJB:IIJE,1:IKT) - ZWORK1(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   END IF
   !
   ! Complete the TKE dynamical production with the W wind contribution 
   !
   CALL GX_W_UW_PHY(D,OFLAT,PWM,PDXX,PDZZ,PDZX, ZWORK1)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZWORK1(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK1(IIJB:IIJE,1:IKT) = ZWORK1(IIJB:IIJE,1:IKT) * ZFLXZ(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   CALL MXF_PHY(D,ZWORK1,ZWORK2)
   CALL MZF_PHY(D,ZWORK2,ZWORK3)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZA(IIJB:IIJE,1:D%NKT) = -ZWORK3(IIJB:IIJE,1:D%NKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZA(IIJB:IIJE,1:IKT) = -ZWORK3(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !
   ! Special cases near surface
   CALL DXM_PHY(D,PWM,ZWORK1)
@@ -664,36 +668,36 @@ IF(TURBN%CTURBDIM=='3DIM') THEN
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZWORK31D(IIJB:IIJE) = - ZFLXZ(IIJB:IIJE,IKE) *  ZWORK1(IIJB:IIJE,IKE) &
-                            / (0.5*(PDXX(IIJB:IIJE,IKE-D%NKL)+PDXX(IIJB:IIJE,IKE)))
+                            / (0.5*(PDXX(IIJB:IIJE,IKE-IKL)+PDXX(IIJB:IIJE,IKE)))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     CALL MXF2D_PHY(D,ZWORK31D,ZWORK41D)
     ZA(IIJB:IIJE,IKE) = ZWORK41D(IIJB:IIJE)
   !
   ELSE !Atmosphere
-    ! evaluate the dynamic production at w(IKB+D%NKL) in PDP(IKB)
+    ! evaluate the dynamic production at w(IKB+IKL) in PDP(IKB)
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    ZWORK21D(IIJB:IIJE) = (PWM(IIJB:IIJE,IKB+2*D%NKL)-PWM(IIJB:IIJE,IKB+D%NKL)) &
-                          / (PDZZ(IIJB:IIJE,IKB+2*D%NKL)+PDZZ(IIJB:IIJE,IKB+D%NKL))       &
-                          + (PWM(IIJB:IIJE,IKB+D%NKL)-PWM(IIJB:IIJE,IKB))                       &
-                          / (PDZZ(IIJB:IIJE,IKB+D%NKL)+PDZZ(IIJB:IIJE,IKB)) 
+    ZWORK21D(IIJB:IIJE) = (PWM(IIJB:IIJE,IKB+2*IKL)-PWM(IIJB:IIJE,IKB+IKL)) &
+                          / (PDZZ(IIJB:IIJE,IKB+2*IKL)+PDZZ(IIJB:IIJE,IKB+IKL))       &
+                          + (PWM(IIJB:IIJE,IKB+IKL)-PWM(IIJB:IIJE,IKB))                       &
+                          / (PDZZ(IIJB:IIJE,IKB+IKL)+PDZZ(IIJB:IIJE,IKB)) 
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     !
     CALL MXM2D_PHY(D,ZWORK21D,ZWORK51D)
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    ZWORK31D(IIJB:IIJE) = - ZFLXZ(IIJB:IIJE,IKB+D%NKL) &
-                                      * ( ZWORK1(IIJB:IIJE,IKB+D%NKL) - ZWORK51D(IIJB:IIJE) &
-                                      *   PDZX(IIJB:IIJE,IKB+D%NKL) ) &
-                                      / (0.5*(PDXX(IIJB:IIJE,IKB+D%NKL)+PDXX(IIJB:IIJE,IKB)))
+    ZWORK31D(IIJB:IIJE) = - ZFLXZ(IIJB:IIJE,IKB+IKL) &
+                                      * ( ZWORK1(IIJB:IIJE,IKB+IKL) - ZWORK51D(IIJB:IIJE) &
+                                      *   PDZX(IIJB:IIJE,IKB+IKL) ) &
+                                      / (0.5*(PDXX(IIJB:IIJE,IKB+IKL)+PDXX(IIJB:IIJE,IKB)))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     CALL MXF2D_PHY(D,ZWORK31D,ZWORK41D)
     ZA(IIJB:IIJE,IKB) = ZWORK41D(IIJB:IIJE)
     !
   END IF
   !
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  PDP(IIJB:IIJE,1:D%NKT)=PDP(IIJB:IIJE,1:D%NKT)+ZA(IIJB:IIJE,1:D%NKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PDP(IIJB:IIJE,1:IKT)=PDP(IIJB:IIJE,1:IKT)+ZA(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !
   ! Storage in the LES configuration
   !
@@ -701,36 +705,36 @@ IF(TURBN%CTURBDIM=='3DIM') THEN
     CALL SECOND_MNH(ZTIME1)
     !
     CALL GX_W_UW_PHY(D,OFLAT,PWM,PDXX,PDZZ,PDZX,ZWORK1)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK1(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK1(IIJB:IIJE,1:IKT) = ZWORK1(IIJB:IIJE,1:IKT)*ZFLXZ(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MXF_PHY(D,ZWORK1,ZWORK2)
     CALL MZF_PHY(D,ZWORK2,ZWORK1)
     CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_RES_ddxa_W_SBG_UaW )
     !
     CALL GX_M_U_PHY(D,OFLAT,PTHLM,PDXX,PDZZ,PDZX,ZWORK1)
     CALL MZF_PHY(D,ZFLXZ,ZWORK2)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK2(IIJB:IIJE,1:D%NKT) * ZWORK1(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK2(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * ZWORK1(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MXF_PHY(D,ZWORK2,ZWORK1)
     CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_RES_ddxa_Thl_SBG_UaW )
     !
     IF (KRR>=1) THEN
       CALL GX_U_M_PHY(D,OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX,ZWORK1)
       CALL MZF_PHY(D,ZFLXZ,ZWORK2)
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZWORK1(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) * ZWORK2(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK1(IIJB:IIJE,1:IKT) = ZWORK1(IIJB:IIJE,1:IKT) * ZWORK2(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       CALL MXF_PHY(D,ZWORK1,ZWORK2)
       CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2,TLES%X_LES_RES_ddxa_Rt_SBG_UaW )
     END IF
     DO JSV=1,KSV
       CALL GX_U_M_PHY(D,OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX,ZWORK1)
       CALL MZF_PHY(D,ZFLXZ,ZWORK2)
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZWORK1(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) * ZWORK2(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK1(IIJB:IIJE,1:IKT) = ZWORK1(IIJB:IIJE,1:IKT) * ZWORK2(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       CALL MXF_PHY(D,ZWORK1,ZWORK2)
       CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2,TLES%X_LES_RES_ddxa_Sv_SBG_UaW(:,:,:,JSV) )
     END DO
@@ -753,10 +757,10 @@ CALL MYM_PHY(D,ZKEFF,ZWORK1)
 CALL MYM_PHY(D,PDZZ,ZWORK2)
 CALL MZM_PHY(D,PRHODJ,ZWORK3)
 CALL MYM_PHY(D,ZWORK3,ZWORK4)
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-ZA(IIJB:IIJE,1:D%NKT) = -PTSTEP * ZCMFS * ZWORK1(IIJB:IIJE,1:D%NKT)* ZWORK4(IIJB:IIJE,1:D%NKT) & 
-                              / ZWORK2(IIJB:IIJE,1:D%NKT)**2
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZA(IIJB:IIJE,1:IKT) = -PTSTEP * ZCMFS * ZWORK1(IIJB:IIJE,1:IKT)* ZWORK4(IIJB:IIJE,1:IKT) & 
+                              / ZWORK2(IIJB:IIJE,1:IKT)**2
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
 !
 !
@@ -798,7 +802,7 @@ IF (OOCEAN) THEN ! Ocean case
   !
   !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZSOURCE(IIJB:IIJE,IKE) = ZWORK21D(IIJB:IIJE) &
-        *0.5 * ( 1. + ZWORK1(IIJB:IIJE,D%NKU) / ZWORK1(IIJB:IIJE,IKE))
+        *0.5 * ( 1. + ZWORK1(IIJB:IIJE,IKU) / ZWORK1(IIJB:IIJE,IKE))
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   !No flux at the ocean domain bottom
   ZSOURCE(IIJB:IIJE,IKB) = 0.
@@ -830,7 +834,7 @@ ELSE ! Atmos case
   (  ZWORK51D(IIJB:IIJE)                                        &
    + ZWORK61D(IIJB:IIJE)                                        &
    - ZCOEFS(IIJB:IIJE) * PVM(IIJB:IIJE,IKB) * TURBN%XIMPL             &
-  ) * 0.5 * ( 1. + ZWORK1(IIJB:IIJE,D%NKA) / ZWORK1(IIJB:IIJE,IKB) )
+  ) * 0.5 * ( 1. + ZWORK1(IIJB:IIJE,IKA) / ZWORK1(IIJB:IIJE,IKB) )
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
   !No flux at the atmosphere top
@@ -845,23 +849,23 @@ CALL TRIDIAG_WIND(D,PVM,ZA,ZCOEFS,PTSTEP,PEXPL,TURBN%XIMPL,  &
 !
 CALL MYM_PHY(D,PRHODJ,ZWORK1)
 CALL MYM_PHY(D,ZKEFF,ZWORK2)
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-ZWORK3(IIJB:IIJE,1:D%NKT)=TURBN%XIMPL*ZRES(IIJB:IIJE,1:D%NKT) + PEXPL*PVM(IIJB:IIJE,1:D%NKT)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZWORK3(IIJB:IIJE,1:IKT)=TURBN%XIMPL*ZRES(IIJB:IIJE,1:IKT) + PEXPL*PVM(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 CALL DZM_PHY(D,ZWORK3,ZWORK4)
 CALL MYM_PHY(D,PDZZ,ZWORK5)
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-PRVS(IIJB:IIJE,1:D%NKT) = PRVS(IIJB:IIJE,1:D%NKT)+ZWORK1(IIJB:IIJE,1:D%NKT)*(ZRES(IIJB:IIJE,1:D%NKT)& 
-                               - PVM(IIJB:IIJE,1:D%NKT))/PTSTEP
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+PRVS(IIJB:IIJE,1:IKT) = PRVS(IIJB:IIJE,1:IKT)+ZWORK1(IIJB:IIJE,1:IKT)*(ZRES(IIJB:IIJE,1:IKT)& 
+                               - PVM(IIJB:IIJE,1:IKT))/PTSTEP
 !
 !
 !*       6.2  Complete 1D dynamic Production
 !
 !  vertical flux of the V wind component
 !
-ZFLXZ(IIJB:IIJE,1:D%NKT)   = -ZCMFS * ZWORK2(IIJB:IIJE,1:D%NKT) * ZWORK4(IIJB:IIJE,1:D%NKT) &
-                                   / ZWORK5(IIJB:IIJE,1:D%NKT)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+ZFLXZ(IIJB:IIJE,1:IKT)   = -ZCMFS * ZWORK2(IIJB:IIJE,1:IKT) * ZWORK4(IIJB:IIJE,1:IKT) &
+                                   / ZWORK5(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
 IF (OOCEAN) THEN
   ZFLXZ(IIJB:IIJE,IKE+1)  = ZFLUXSFCV(IIJB:IIJE)
@@ -870,9 +874,9 @@ ELSE
   ZFLXZ(IIJB:IIJE,IKB)   =   ZWORK5(IIJB:IIJE,IKB)  *                &
     ( ZSOURCE(IIJB:IIJE,IKB)                                         &
      +ZCOEFS(IIJB:IIJE) * ZRES(IIJB:IIJE,IKB) * TURBN%XIMPL                &
-    ) / 0.5 / ( 1. + ZWORK1(IIJB:IIJE,D%NKA) / ZWORK1(IIJB:IIJE,IKB) )
+    ) / 0.5 / ( 1. + ZWORK1(IIJB:IIJE,IKA) / ZWORK1(IIJB:IIJE,IKB) )
   !
-  ZFLXZ(IIJB:IIJE,D%NKA) = ZFLXZ(IIJB:IIJE,IKB)
+  ZFLXZ(IIJB:IIJE,IKA) = ZFLXZ(IIJB:IIJE,IKB)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END IF
 !
@@ -893,20 +897,20 @@ END IF
 !
 ! second part of total momentum flux
 !
-PWV(IIJB:IIJE,1:D%NKT) = ZFLXZ(IIJB:IIJE,1:D%NKT)
+PWV(IIJB:IIJE,1:IKT) = ZFLXZ(IIJB:IIJE,1:IKT)
 !
 !  Contribution to the TKE dynamical production 
 !    computed at mass point
 !
 CALL GZ_V_VW_PHY(D,PVM,PDZZ,ZWORK1)
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-ZWORK2(IIJB:IIJE,1:D%NKT) = ZFLXZ(IIJB:IIJE,1:D%NKT) * ZWORK1(IIJB:IIJE,1:D%NKT)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZWORK2(IIJB:IIJE,1:IKT) = ZFLXZ(IIJB:IIJE,1:IKT) * ZWORK1(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 CALL MYF_PHY(D,ZWORK2,ZWORK3)
 CALL MZF_PHY(D,ZWORK3,ZWORK4)
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-ZA(IIJB:IIJE,1:D%NKT) = -ZWORK4(IIJB:IIJE,1:D%NKT)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZA(IIJB:IIJE,1:IKT) = -ZWORK4(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
 ! Special cases at surface
 CALL MYM_PHY(D,PDZZ,ZWORK1)
@@ -914,8 +918,8 @@ IF (OOCEAN) THEN
   ! evaluate the dynamic production at w(IKE) in PDP(IKE)
   ! before extrapolation done in routine tke_eps_source
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZWORK2(IIJB:IIJE,IKE) = ZFLXZ(IIJB:IIJE,IKE) * (PVM(IIJB:IIJE,IKE)-PVM(IIJB:IIJE,IKE-D%NKL))  &
-                         / ZWORK1(IIJB:IIJE,IKE-D%NKL)
+  ZWORK2(IIJB:IIJE,IKE) = ZFLXZ(IIJB:IIJE,IKE) * (PVM(IIJB:IIJE,IKE)-PVM(IIJB:IIJE,IKE-IKL))  &
+                         / ZWORK1(IIJB:IIJE,IKE-IKL)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   CALL MYF_PHY(D,ZWORK2,ZWORK3)
   !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -923,10 +927,10 @@ IF (OOCEAN) THEN
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 ELSE ! Atmosphere
-  ! evaluate the dynamic production at w(IKB+D%NKL) in PDP(IKB)
+  ! evaluate the dynamic production at w(IKB+IKL) in PDP(IKB)
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZWORK2(IIJB:IIJE,IKB) = ZFLXZ(IIJB:IIJE,IKB+D%NKL) * (PVM(IIJB:IIJE,IKB+D%NKL)-PVM(IIJB:IIJE,IKB))  &
-                           / ZWORK1(IIJB:IIJE,IKB+D%NKL)
+  ZWORK2(IIJB:IIJE,IKB) = ZFLXZ(IIJB:IIJE,IKB+IKL) * (PVM(IIJB:IIJE,IKB+IKL)-PVM(IIJB:IIJE,IKB))  &
+                           / ZWORK1(IIJB:IIJE,IKB+IKL)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   CALL MYF_PHY(D,ZWORK2,ZWORK3)
   !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -934,9 +938,9 @@ ELSE ! Atmosphere
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END IF
 !
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-PDP(IIJB:IIJE,1:D%NKT)=PDP(IIJB:IIJE,1:D%NKT)+ZA(IIJB:IIJE,1:D%NKT)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+PDP(IIJB:IIJE,1:IKT)=PDP(IIJB:IIJE,1:IKT)+ZA(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
 ! Storage in the LES configuration
 !
@@ -948,9 +952,9 @@ IF (TLES%LLES_CALL) THEN
   CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2, TLES%X_LES_SUBGRID_WV )
   !
   CALL GZ_V_VW_PHY(D,PVM,PDZZ,ZWORK1)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZWORK1(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZWORK1(IIJB:IIJE,1:IKT) = ZWORK1(IIJB:IIJE,1:IKT) * ZFLXZ(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   CALL MYF_PHY(D,ZWORK1,ZWORK2)
   CALL MZF_PHY(D,ZWORK2,ZWORK1)
   CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_RES_ddxa_V_SBG_UaV )
@@ -966,65 +970,65 @@ IF(TURBN%CTURBDIM=='3DIM') THEN
   ! Compute the source for the W wind component
   IF (OOCEAN) THEN
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    ZFLXZ(IIJB:IIJE,IKE+D%NKL) = 2 * ZFLXZ(IIJB:IIJE,IKE) - ZFLXZ(IIJB:IIJE,IKE-D%NKL) ! extrapolation 
+    ZFLXZ(IIJB:IIJE,IKE+IKL) = 2 * ZFLXZ(IIJB:IIJE,IKE) - ZFLXZ(IIJB:IIJE,IKE-IKL) ! extrapolation 
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   ELSE
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    ZFLXZ(IIJB:IIJE,D%NKA) = 2 * ZFLXZ(IIJB:IIJE,IKB) - ZFLXZ(IIJB:IIJE,IKB+D%NKL) ! extrapolation
+    ZFLXZ(IIJB:IIJE,IKA) = 2 * ZFLXZ(IIJB:IIJE,IKB) - ZFLXZ(IIJB:IIJE,IKB+IKL) ! extrapolation
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   END IF
   !
   IF (.NOT. O2D) THEN
     CALL MYM_PHY(D,PRHODJ,ZWORK1)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK1(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) / PDYY(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK1(IIJB:IIJE,1:IKT) = ZWORK1(IIJB:IIJE,1:IKT) / PDYY(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MZM_PHY(D,ZWORK1,ZWORK2)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK2(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK2(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * ZFLXZ(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL DYF_PHY(D,ZWORK2,ZWORK1)
     !
-    !ZWORK1 = DYF( MZM(MYM(PRHODJ) /PDYY, D%NKA, D%NKU, D%NKL) * ZFLXZ ) 
+    !ZWORK1 = DYF( MZM(MYM(PRHODJ) /PDYY, IKA, IKU, IKL) * ZFLXZ ) 
     IF (.NOT. OFLAT) THEN
       CALL MZF_PHY(D,PDZZ,ZWORK3)
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZWORK2(IIJB:IIJE,1:D%NKT) = ZFLXZ(IIJB:IIJE,1:D%NKT) * PDZY(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)      
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK2(IIJB:IIJE,1:IKT) = ZFLXZ(IIJB:IIJE,1:IKT) * PDZY(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)      
       CALL MZF_PHY(D,ZWORK2,ZWORK4)
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)      
-      ZWORK4(IIJB:IIJE,1:D%NKT) = ZWORK4(IIJB:IIJE,1:D%NKT) / PDYY(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)      
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)      
+      ZWORK4(IIJB:IIJE,1:IKT) = ZWORK4(IIJB:IIJE,1:IKT) / PDYY(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)      
       CALL MYF_PHY(D,ZWORK4,ZWORK2)
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)      
-      ZWORK3(IIJB:IIJE,1:D%NKT) = PRHODJ(IIJB:IIJE,1:D%NKT) / ZWORK3(IIJB:IIJE,1:D%NKT) &
-                                      * ZWORK2(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)      
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)      
+      ZWORK3(IIJB:IIJE,1:IKT) = PRHODJ(IIJB:IIJE,1:IKT) / ZWORK3(IIJB:IIJE,1:IKT) &
+                                      * ZWORK2(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)      
       CALL DZM_PHY(D,ZWORK3,ZWORK2)
       !ZWORK2 = DZM(PRHODJ / MZF(PDZZ) * MYF(MZF(ZFLXZ*PDZY) / PDYY ) )
       !
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      PRWS(IIJB:IIJE,1:D%NKT) = PRWS(IIJB:IIJE,1:D%NKT) - ZWORK1(IIJB:IIJE,1:D%NKT) &
-                                    + ZWORK2(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      PRWS(IIJB:IIJE,1:IKT) = PRWS(IIJB:IIJE,1:IKT) - ZWORK1(IIJB:IIJE,1:IKT) &
+                                    + ZWORK2(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ELSE
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      PRWS(IIJB:IIJE,1:D%NKT)= PRWS(IIJB:IIJE,1:D%NKT) - ZWORK1(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      PRWS(IIJB:IIJE,1:IKT)= PRWS(IIJB:IIJE,1:IKT) - ZWORK1(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
   END IF
   ! 
   ! Complete the Dynamical production with the W wind component 
   IF (.NOT. O2D) THEN
     CALL GY_W_VW_PHY(D,OFLAT,PWM,PDYY,PDZZ,PDZY, ZWORK1)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK1(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK1(IIJB:IIJE,1:IKT) = ZWORK1(IIJB:IIJE,1:IKT) * ZFLXZ(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MYF_PHY(D,ZWORK1,ZWORK2)
     CALL MZF_PHY(D,ZWORK2,ZWORK3)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZA(IIJB:IIJE,1:D%NKT) = -ZWORK3(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZA(IIJB:IIJE,1:IKT) = -ZWORK3(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !
     CALL DYM_PHY(D,PWM,ZWORK1)
     ! Special case near surface 
@@ -1032,34 +1036,34 @@ IF(TURBN%CTURBDIM=='3DIM') THEN
       ! evaluate the dynamic production at w(IKE) and stored in PDP(IKE)
       !$mnh_expand_array(JIJ=IIJB:IIJE)
       ZWORK31D(IIJB:IIJE) = - ZFLXZ(IIJB:IIJE,IKE) *  ZWORK1(IIJB:IIJE,IKE) &
-                            / (0.5*(PDYY(IIJB:IIJE,IKE-D%NKL)+PDYY(IIJB:IIJE,IKE)))
+                            / (0.5*(PDYY(IIJB:IIJE,IKE-IKL)+PDYY(IIJB:IIJE,IKE)))
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
       CALL MYF2D_PHY(D,ZWORK31D,ZWORK41D)
       ZA(IIJB:IIJE,IKE) = ZWORK41D(IIJB:IIJE)
     ELSE ! Atmosphere
       ! evaluate the dynamic production at w(IKB+KKL) and stored in PDP(IKB)
       !$mnh_expand_array(JIJ=IIJB:IIJE)
-      ZWORK21D(IIJB:IIJE) = (PWM(IIJB:IIJE,IKB+2*D%NKL   )-PWM(IIJB:IIJE,IKB+D%NKL)) &
-                            / (PDZZ(IIJB:IIJE,IKB+2*D%NKL)+PDZZ(IIJB:IIJE,IKB+D%NKL))       &
-                            + (PWM(IIJB:IIJE,IKB+D%NKL)-PWM(IIJB:IIJE,IKB))                       &
-                            / (PDZZ(IIJB:IIJE,IKB+D%NKL)+PDZZ(IIJB:IIJE,IKB)) 
+      ZWORK21D(IIJB:IIJE) = (PWM(IIJB:IIJE,IKB+2*IKL   )-PWM(IIJB:IIJE,IKB+IKL)) &
+                            / (PDZZ(IIJB:IIJE,IKB+2*IKL)+PDZZ(IIJB:IIJE,IKB+IKL))       &
+                            + (PWM(IIJB:IIJE,IKB+IKL)-PWM(IIJB:IIJE,IKB))                       &
+                            / (PDZZ(IIJB:IIJE,IKB+IKL)+PDZZ(IIJB:IIJE,IKB)) 
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
       !
       CALL MYM2D_PHY(D,ZWORK21D,ZWORK51D)
       !$mnh_expand_array(JIJ=IIJB:IIJE)
-      ZWORK31D(IIJB:IIJE  ) = - ZFLXZ(IIJB:IIJE,IKB+D%NKL) &
-                                        * ( ZWORK1(IIJB:IIJE,IKB+D%NKL) - ZWORK51D(IIJB:IIJE  ) &
-                                        *   PDZY(IIJB:IIJE,IKB+D%NKL) ) &
-                                        / (0.5*(PDYY(IIJB:IIJE,IKB+D%NKL)+PDYY(IIJB:IIJE,IKB)))
+      ZWORK31D(IIJB:IIJE  ) = - ZFLXZ(IIJB:IIJE,IKB+IKL) &
+                                        * ( ZWORK1(IIJB:IIJE,IKB+IKL) - ZWORK51D(IIJB:IIJE  ) &
+                                        *   PDZY(IIJB:IIJE,IKB+IKL) ) &
+                                        / (0.5*(PDYY(IIJB:IIJE,IKB+IKL)+PDYY(IIJB:IIJE,IKB)))
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
       CALL MYF2D_PHY(D,ZWORK31D,ZWORK41D)
       ZA(IIJB:IIJE,IKB) = ZWORK41D(IIJB:IIJE)
     !
     END IF
 !
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    PDP(IIJB:IIJE,1:D%NKT)=PDP(IIJB:IIJE,1:D%NKT)+ZA(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    PDP(IIJB:IIJE,1:IKT)=PDP(IIJB:IIJE,1:IKT)+ZA(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   !
   END IF
   !
@@ -1069,27 +1073,27 @@ IF(TURBN%CTURBDIM=='3DIM') THEN
     CALL SECOND_MNH(ZTIME1)
     !
     CALL GY_W_VW_PHY(D,OFLAT,PWM,PDYY,PDZZ,PDZY,ZWORK1)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK1(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK1(IIJB:IIJE,1:IKT) = ZWORK1(IIJB:IIJE,1:IKT)*ZFLXZ(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MYF_PHY(D,ZWORK1,ZWORK2)
     CALL MZF_PHY(D,ZWORK2,ZWORK1)
     CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1,TLES%X_LES_RES_ddxa_W_SBG_UaW , .TRUE. )
     !
     CALL GY_M_V_PHY(D,OFLAT,PTHLM,PDYY,PDZZ,PDZY,ZWORK1)
     CALL MZF_PHY(D,ZFLXZ,ZWORK2)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK2(IIJB:IIJE,1:D%NKT) * ZWORK1(IIJB:IIJE,1:D%NKT)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWORK2(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * ZWORK1(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MYF_PHY(D,ZWORK2,ZWORK1)
     CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1,TLES%X_LES_RES_ddxa_Thl_SBG_UaW , .TRUE. )
     !
     IF (KRR>=1) THEN
       CALL GY_V_M_PHY(D,OFLAT,PRM(:,:,1),PDYY,PDZZ,PDZY,ZWORK1)
       CALL MZF_PHY(D,ZFLXZ,ZWORK2)
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      ZWORK1(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) * ZWORK2(IIJB:IIJE,1:D%NKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZWORK1(IIJB:IIJE,1:IKT) = ZWORK1(IIJB:IIJE,1:IKT) * ZWORK2(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       CALL MYF_PHY(D,ZWORK1,ZWORK2)
       CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2,TLES%X_LES_RES_ddxa_Rt_SBG_UaW , .TRUE. )
     END IF
@@ -1108,10 +1112,10 @@ END IF
 !
 IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED .AND. TURBN%CTURBDIM == '1DIM') THEN
   CALL GZ_W_M_PHY(D,PWM,PDZZ,ZWORK1)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZFLXZ(IIJB:IIJE,1:D%NKT)= (2./3.) * PTKEM(IIJB:IIJE,1:D%NKT)                     &
-     -ZCMFS*PLM(IIJB:IIJE,1:D%NKT)*SQRT(PTKEM(IIJB:IIJE,1:D%NKT))*ZWORK1(IIJB:IIJE,1:D%NKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZFLXZ(IIJB:IIJE,1:IKT)= (2./3.) * PTKEM(IIJB:IIJE,1:IKT)                     &
+     -ZCMFS*PLM(IIJB:IIJE,1:IKT)*SQRT(PTKEM(IIJB:IIJE,1:IKT))*ZWORK1(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ! to be tested &
   !   +XCMFB*(4./3.)*PLM(:,:,:)/SQRT(PTKEM(:,:,:))*PTP(:,:,:)
   ! stores the W variance
