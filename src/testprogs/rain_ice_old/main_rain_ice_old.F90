@@ -237,9 +237,9 @@ program main_rain_ice_old
   call system_clock(count=counter, count_rate=c_rate)
   time_end_real = real(counter,8)/c_rate
 
-  write (output_unit, '(a11,f8.2,a)') 'real time: ', time_end_real - time_start_real,' s'
+!  write (output_unit, '(a11,f8.2,a)') 'real time: ', time_end_real - time_start_real,' s'
 
-  write (output_unit, '(a11,f8.2,a)') 'cpu time: ', time_end_cpu - time_start_cpu,' s'
+!  write (output_unit, '(a11,f8.2,a)') 'cpu time: ', time_end_cpu - time_start_cpu,' s'
 
   if (checkdiff) then
 
