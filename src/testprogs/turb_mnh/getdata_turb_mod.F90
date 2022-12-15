@@ -17,6 +17,7 @@ SUBROUTINE GETDATA_TURB (NPROMA, NGPBLKS, NFLEVG, KRR, KRRL, KRRI, KSV, KLEV, &
                         &PTHM_B, ZRM_B, &
                         &PRUS_B, PRVS_B, PRWS_B, PRTHS_B, ZRRS_B, ZRSVS_B, PRTKES_OUT_B, &
                         &PFLXZTHVMF_B, &
+                        &PHGRAD_B, PZS_B, &
                         !OUT (allocation)
                         &PSIGS_B, &
                         &ZWTH_B,ZWRC_B,ZWSV_B,PDP_B,PTP_B,PTDIFF_B,PTDISS_B, &
@@ -89,6 +90,8 @@ REAL, ALLOCATABLE   :: ZRRS_B             (:,:,:,:,:) !(KLON,1,KLEV+2,KRR)
 REAL, ALLOCATABLE   :: ZRSVS_B            (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
 REAL, ALLOCATABLE   :: PRTKES_OUT_B       (:,:,:,:)
 REAL, ALLOCATABLE   :: PFLXZTHVMF_B       (:,:,:,:)
+REAL, ALLOCATABLE   :: PHGRAD_B           (:,:,:,:,:) !(KLON,1,KLEV+2,KGRADIENTS)
+REAL, ALLOCATABLE   :: PZS_B              (:,:,:)
 
 !OUT
 REAL, ALLOCATABLE   :: PSIGS_B            (:,:,:,:)
@@ -264,6 +267,8 @@ ALLOCATE (ZRRS_B             (NPROMA,1,NFLEVG,KRR,NGPBLKS))
 ALLOCATE (ZRSVS_B            (NPROMA,1,NFLEVG,KSV,NGPBLKS))
 ALLOCATE (PRTKES_OUT_B       (NPROMA,1,NFLEVG,NGPBLKS))
 ALLOCATE (PFLXZTHVMF_B       (NPROMA,1,NFLEVG,NGPBLKS))
+ALLOCATE (PHGRAD_B           (NPROMA,1,NFLEVG,0,NGPBLKS))
+ALLOCATE (PZS_B              (NPROMA,1,NGPBLKS))
 
 ALLOCATE (PSIGS_B            (NPROMA,1,NFLEVG,NGPBLKS))
 ALLOCATE (ZWTH_B             (NPROMA,1,NFLEVG,NGPBLKS))
@@ -349,6 +354,8 @@ CALL SET (ZRRS_B             )
 CALL SET (ZRSVS_B            )
 CALL SET (PRTKES_OUT_B       )
 CALL SET (PFLXZTHVMF_B       )
+CALL SET (PHGRAD_B           )
+CALL SET (PZS_B              )
 
 CALL SET (PSIGS_B            )
 CALL SET (ZWTH_B             )

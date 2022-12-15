@@ -342,7 +342,6 @@ USE MODD_RAIN_ICE_PARAM
 USE MODD_PARAM_ICE
 USE MODD_TURB_N, ONLY: TURB_GOTO_MODEL, CSUBG_MF_PDF
 
-USE MODD_REF
 USE MODI_INI_RAIN_ICE
 
 IMPLICIT NONE
@@ -411,7 +410,6 @@ XVDEPOSC=0.02    ! deposition speed (2 cm.s-1)
 !
 !        2. Set implicit default values for MODD_RAIN_ICE_DESCR 
 !                     et MODD_RAIN_ICE_PARAM
-XTHVREFZ=300.
 !
 CALL INI_RAIN_ICE (KULOUT, CMICRO)
 !update values from namparar
