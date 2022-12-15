@@ -140,7 +140,6 @@ program main_rain_ice_old
   call getoption ("--nproma", n_proma)
   call getoption ("--nflevg", n_levels)
   call getoption ("--verbose", l_verbose)
-  call getoption ("--checkdiff", checkdiff)
 
   write(output_unit, *) 'n_gp_blocks: ', n_gp_blocks
   write(output_unit, *) 'n_proma:     ', n_proma
@@ -237,87 +236,79 @@ program main_rain_ice_old
   call system_clock(count=counter, count_rate=c_rate)
   time_end_real = real(counter,8)/c_rate
 
-!  write (output_unit, '(a11,f8.2,a)') 'real time: ', time_end_real - time_start_real,' s'
+  write(output_unit, *)
 
-!  write (output_unit, '(a11,f8.2,a)') 'cpu time: ', time_end_cpu - time_start_cpu,' s'
+  write(output_unit, *) 'PEVAP'
+  call print_diff_2(pevap(:,:,1), pevap_out(:,:,1))
+  write(output_unit, *)
 
-  if (checkdiff) then
+  write(output_unit, *) 'ZINPRC'
+  call print_diff_1(zinprc(:,1), zinprc_out(:,1))
+  write(output_unit, *)
 
-    write(output_unit, *)
+  write(output_unit, *) 'PINPRR'
+  call print_diff_1(pinprr(:,1), pinprr_out(:,1))
+  write(output_unit, *)
 
-    write(output_unit, *) 'PEVAP'
-    call print_diff_2(pevap(:,:,1), pevap_out(:,:,1))
-    write(output_unit, *)
+  write(output_unit, *) 'PINPRS'
+  call print_diff_1(pinprs(:,1), pinprs_out(:,1))
+  write(output_unit, *)
 
-    write(output_unit, *) 'ZINPRC'
-    call print_diff_1(zinprc(:,1), zinprc_out(:,1))
-    write(output_unit, *)
+  write(output_unit, *) 'PINPRG'
+  call print_diff_1(pinprg(:,1), pinprg_out(:,1))
+  write(output_unit, *)
 
-    write(output_unit, *) 'PINPRR'
-    call print_diff_1(pinprr(:,1), pinprr_out(:,1))
-    write(output_unit, *)
+  write(output_unit, *) 'PTHS'
+  call print_diff_2(pths(:,:,1), pths_out(:,:,1))
+  write(output_unit, *)
 
-    write(output_unit, *) 'PINPRS'
-    call print_diff_1(pinprs(:,1), pinprs_out(:,1))
-    write(output_unit, *)
+  write(output_unit, *) 'PCIT'
+  call print_diff_2(pcit(:,:,1), pcit_out(:,:,1))
+  write(output_unit, *)
 
-    write(output_unit, *) 'PINPRG'
-    call print_diff_1(pinprg(:,1), pinprg_out(:,1))
-    write(output_unit, *)
+  write(output_unit, *) 'PRVS'
+  call print_diff_2(prs(:,:,1,1), prs_out(:,:,1,1))
+  write(output_unit, *)
 
-    write(output_unit, *) 'PTHS'
-    call print_diff_2(pths(:,:,1), pths_out(:,:,1))
-    write(output_unit, *)
+  write(output_unit, *) 'PRCS'
+  call print_diff_2(prs(:,:,2,1), prs_out(:,:,2,1))
+  write(output_unit, *)
 
-    write(output_unit, *) 'PCIT'
-    call print_diff_2(pcit(:,:,1), pcit_out(:,:,1))
-    write(output_unit, *)
+  write(output_unit, *) 'PRRS'
+  call print_diff_2(prs(:,:,3,1), prs_out(:,:,3,1))
+  write(output_unit, *)
 
-    write(output_unit, *) 'PRVS'
-    call print_diff_2(prs(:,:,1,1), prs_out(:,:,1,1))
-    write(output_unit, *)
+  write(output_unit, *) 'PRIS'
+  call print_diff_2(prs(:,:,4,1), prs_out(:,:,4,1))
+  write(output_unit, *)
 
-    write(output_unit, *) 'PRCS'
-    call print_diff_2(prs(:,:,2,1), prs_out(:,:,2,1))
-    write(output_unit, *)
+  write(output_unit, *) 'PRSS'
+  call print_diff_2(prs(:,:,5,1), prs_out(:,:,5,1))
+  write(output_unit, *)
 
-    write(output_unit, *) 'PRRS'
-    call print_diff_2(prs(:,:,3,1), prs_out(:,:,3,1))
-    write(output_unit, *)
+  write(output_unit, *) 'PRGS'
+  call print_diff_2(prs(:,:,6,1), prs_out(:,:,6,1))
+  write(output_unit, *)
 
-    write(output_unit, *) 'PRIS'
-    call print_diff_2(prs(:,:,4,1), prs_out(:,:,4,1))
-    write(output_unit, *)
+  write(output_unit, *) 'PFPR 2'
+  call print_diff_2(pfpr(:,:,2,1), pfpr_out(:,:,2,1))
+  write(output_unit, *)
 
-    write(output_unit, *) 'PRSS'
-    call print_diff_2(prs(:,:,5,1), prs_out(:,:,5,1))
-    write(output_unit, *)
+  write(output_unit, *) 'PFPR 3'
+  call print_diff_2(pfpr(:,:,3,1), pfpr_out(:,:,3,1))
+  write(output_unit, *)
 
-    write(output_unit, *) 'PRGS'
-    call print_diff_2(prs(:,:,6,1), prs_out(:,:,6,1))
-    write(output_unit, *)
+  write(output_unit, *) 'PFPR 4'
+  call print_diff_2(pfpr(:,:,4,1), pfpr_out(:,:,4,1))
+  write(output_unit, *)
 
-    write(output_unit, *) 'PFPR 2'
-    call print_diff_2(pfpr(:,:,2,1), pfpr_out(:,:,2,1))
-    write(output_unit, *)
+  write(output_unit, *) 'PFPR 5'
+  call print_diff_2(pfpr(:,:,5,1), pfpr_out(:,:,5,1))
+  write(output_unit, *)
 
-    write(output_unit, *) 'PFPR 3'
-    call print_diff_2(pfpr(:,:,3,1), pfpr_out(:,:,3,1))
-    write(output_unit, *)
-
-    write(output_unit, *) 'PFPR 4'
-    call print_diff_2(pfpr(:,:,4,1), pfpr_out(:,:,4,1))
-    write(output_unit, *)
-
-    write(output_unit, *) 'PFPR 5'
-    call print_diff_2(pfpr(:,:,5,1), pfpr_out(:,:,5,1))
-    write(output_unit, *)
-
-    write(output_unit, *) 'PFPR 6'
-    call print_diff_2(pfpr(:,:,6,1), pfpr_out(:,:,6,1))
-    write(output_unit, *)
-
-  endif
+  write(output_unit, *) 'PFPR 6'
+  call print_diff_2(pfpr(:,:,6,1), pfpr_out(:,:,6,1))
+  write(output_unit, *)
 
 end program
 
