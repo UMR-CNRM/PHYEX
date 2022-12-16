@@ -436,7 +436,7 @@ IF ( OMF_FLX .AND. tpfile%lopened ) THEN
   TZFIELD%LTIMEDEP   = .TRUE.
   CALL IO_Field_write(TPFILE,TZFIELD,PFLXZTHVMF)
   !
- IF (OMIXUV) THEN
+ IF (PARAM_MFSHALLN%LMIXUV) THEN
   ! stores the U momentum vertical flux
   ZWORK(:,:,:)=RESHAPE(ZFLXZUMF(:,:),(/ IIU,IJU,IKU /) )
   TZFIELD%CMNHNAME   = 'MF_UW_FLX'

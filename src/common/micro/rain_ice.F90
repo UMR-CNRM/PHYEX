@@ -527,7 +527,7 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
         ENDDO
       ENDDO
       CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
-                                  &PTSTEP, KRR, OSEDIC, PDZZ, &
+                                  &PTSTEP, KRR, PARAMI%LSEDIC, PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
                                   &ZLBDAS, &
                                   &PRCS, ZRCT, PRRS, ZRRT, PRIS, ZRIT,&
@@ -546,7 +546,7 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
         ENDDO
       ENDDO
       CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
-                                  &PTSTEP, KRR, OSEDIC, PDZZ, &
+                                  &PTSTEP, KRR, PARAMI%LSEDIC, PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
                                   &ZLBDAS, &
                                   &PRCS, ZRCT, PRRS, ZRRT, PRIS, ZRIT,&
@@ -883,8 +883,7 @@ IF (KSIZE > 0) THEN
     CALL ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &KPROMA, IMICRO, &
                         &KRR, LSOFT, LLCOMPUTE, &
-                        &PARAMI%LWARM, PARAMI%CSUBG_RC_RR_ACCR, PARAMI%CSUBG_RR_EVAP, &
-                        &HSUBG_AUCV_RC, HSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF, &
+                        &HSUBG_AUCV_RC, HSUBG_AUCV_RI, &
                         &ZEXN, ZRHODREF, ZLVFACT, ZLSFACT, I1, I2, &
                         &ZPRES, ZCF, ZSIGMA_RC, &
                         &ZCIT, &
@@ -1616,7 +1615,7 @@ IF(PARAMI%LSEDIM_AFTER) THEN
         ENDDO
       ENDDO
       CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
-                                  &PTSTEP, KRR, OSEDIC, PDZZ, &
+                                  &PTSTEP, KRR, PARAMI%LSEDIC, PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
                                   &ZLBDAS, &
                                   &PRCS, ZRCT, PRRS, ZRRT, PRIS, ZRIT,&
@@ -1635,7 +1634,7 @@ IF(PARAMI%LSEDIM_AFTER) THEN
         ENDDO
       ENDDO
       CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
-                                  &PTSTEP, KRR, OSEDIC, PDZZ, &
+                                  &PTSTEP, KRR, PARAMI%LSEDIC, PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
                                   &ZLBDAS, &
                                   &PRCS, ZRCT, PRRS, ZRRT, PRIS, ZRIT,&
@@ -1650,7 +1649,7 @@ IF(PARAMI%LSEDIM_AFTER) THEN
     !SR: It *seems* that we must have two separate calls for ifort
     IF(KRR==7) THEN
       CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
-                                   &PTSTEP, KRR, PARAMI%LSEDIC, PDZZ, &
+                                   &PTSTEP, KRR, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                    &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
@@ -1658,7 +1657,7 @@ IF(PARAMI%LSEDIM_AFTER) THEN
                                    &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
     ELSE
       CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
-                                   &PTSTEP, KRR, PARAMI%LSEDIC, PDZZ, &
+                                   &PTSTEP, KRR, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                    &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &

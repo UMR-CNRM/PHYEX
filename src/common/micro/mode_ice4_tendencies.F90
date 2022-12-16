@@ -8,8 +8,7 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, KPROMA, KSIZE, &
                           &KRR, ODSOFT, LDCOMPUTE, &
-                          &HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
-                          &HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
+                          &HSUBG_AUCV_RC, HSUBG_AUCV_RI,  &
                           &PEXN, PRHODREF, PLVFACT, PLSFACT, K1, K2, &
                           &PPRES, PCF, PSIGMA_RC, &
                           &PCIT, &
@@ -95,11 +94,8 @@ INTEGER,                      INTENT(IN)    :: KPROMA, KSIZE
 INTEGER,                      INTENT(IN)    :: KRR
 LOGICAL,                      INTENT(IN)    :: ODSOFT
 LOGICAL, DIMENSION(KPROMA),   INTENT(IN)    :: LDCOMPUTE
-CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_RC_RR_ACCR
-CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_RR_EVAP
 CHARACTER(LEN=4),             INTENT(IN)    :: HSUBG_AUCV_RC
 CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_AUCV_RI
-CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_PR_PDF ! pdf for subgrid precipitation
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PEXN
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRHODREF
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLVFACT
@@ -307,11 +303,11 @@ ELSE
 ENDIF ! ODSOFT
 !
 !Cloud water split between high and low content part is done here
-CALL ICE4_COMPUTE_PDF(CST, ICEP, ICED, KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF,&
+CALL ICE4_COMPUTE_PDF(CST, ICEP, ICED, KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF,&
                       PRHODREF, ZVART(:,IRC), ZVART(:,IRI), PCF, ZT, PSIGMA_RC, &
                       PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
                       PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, ZRAINFR)
-LLRFR=HSUBG_RC_RR_ACCR=='PRFR' .OR. HSUBG_RR_EVAP=='PRFR'
+LLRFR=PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR'
 IF (LLRFR) THEN
   !Diagnostic of precipitation fraction
   PRAINFR(:,:) = 0.
@@ -400,7 +396,8 @@ CALL ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, PRHODREF, ZT, 
 !
 IF(PARAMI%LWARM) THEN    !  Check if the formation of the raindrops by the slow
                   !  warm processes is allowed
-  CALL ICE4_WARM(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
+  CALL ICE4_WARM(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT,LDCOMPUTE, &
+                &PARAMI%CSUBG_RC_RR_ACCR, PARAMI%CSUBG_RR_EVAP, &
                 &PRHODREF, PLVFACT, ZT, PPRES, ZVART(:,ITH),&
                 &ZLBDAR, ZLBDAR_RF, ZKA, ZDV, ZCJ, &
                 &PHLC_LCF, PHLC_HCF, PHLC_LRC, PHLC_HRC, &

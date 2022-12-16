@@ -277,7 +277,7 @@ ENDIF
 !!! 5. Compute diagnostic convective cloud fraction and content
 !!!    --------------------------------------------------------
 !
-CALL COMPUTE_MF_CLOUD(D,CST,CSTURB,PARAMMF,TURBN%OSTATNW,&
+CALL COMPUTE_MF_CLOUD(D,CST,CSTURB,PARAMMF,TURBN%LSTATNW,&
                       KRR, KRRL, KRRI,                  &
                       ZFRAC_ICE,                        &
                       PRC_UP,PRI_UP,PEMF,               &
