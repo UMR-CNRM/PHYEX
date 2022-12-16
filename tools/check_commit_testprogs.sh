@@ -11,10 +11,10 @@ set -e
 
 #ref is commit 855b8f8 for ice_adjust, rain_ice
 #ref is commit 4171c53 for turb
+#ref is commit 7e44ab1 for shallow
 
-#Commit 4171c53 can be used for turb (ref commit for this testprogs), and for
-#rain_ice and ice_adjust (as it gives the same results as commit 855b8f8
-#for these test cases).
+#Commit 7e44ab1 can be used for shallow (ref commit for this testprogs), and for
+#turb, rain_ice and ice_adjust (as it gives the same results for these test cases).
 
 specialName="ref"
 availTests="ice_adjust,rain_ice,turb,shallow"
