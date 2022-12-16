@@ -318,7 +318,6 @@ subroutine init_rain_ice_old(kulout)
   use modd_rain_ice_descr, only: rain_ice_descr_associate
   use modd_param_ice
 
-  use modd_ref
   use modi_ini_rain_ice
 
   use modi_ini_cst
