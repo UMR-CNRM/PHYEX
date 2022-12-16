@@ -326,13 +326,13 @@ REAL, DIMENSION(D%NIJT,D%NKT)  ::  &
        ZWKPHIPSI1,ZWKPHIPSI2,&
        ZWKPHIPSI3,ZWKPHIPSI4       ! working var. for shuman operators (array syntax)
 
-INTEGER             :: IIJB, IIJE, IKB,IKE,IKT,IKA,IKU ! index value for the mass points of the domain 
+INTEGER             :: IIJB, IIJE, IKB,IKE,IKT,IKA ! index value for the mass points of the domain 
 INTEGER             :: IKU  ! array sizes
 INTEGER             :: IKL
 INTEGER             :: JIJ, JK ! loop indexes 
 
-REAL, DIMENSION(D%NIJT,MIN(IKA+JPVEXT_TURB*IKL,IKA+JPVEXT_TURB*IKL+2*IKL):&
-                            MAX(IKA+JPVEXT_TURB*IKL,IKA+JPVEXT_TURB*IKL+2*IKL))&
+REAL, DIMENSION(D%NIJT,MIN(D%NKA+JPVEXT_TURB*D%NKL,D%NKA+JPVEXT_TURB*D%NKL+2*D%NKL):&
+                            MAX(D%NKA+JPVEXT_TURB*D%NKL,D%NKA+JPVEXT_TURB*D%NKL+2*D%NKL))&
                     :: ZCOEFF
                                     ! coefficients for the uncentred gradient
                                     ! computation near the ground, defined in

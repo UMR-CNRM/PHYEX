@@ -133,7 +133,7 @@ IF (OUPORDN.EQV..TRUE.) THEN
    ZVPT_DEP(IIJB:IIJE)=ZHLVPT(IIJB:IIJE,KK) ! departure point is on flux level
    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
    !We must compute what happens between flux level KK and mass level KK
-   DO J1D=D%NIJB,D%NIJE
+   DO J1D=IIJB,IIJE
      ZTEST0=0.5+SIGN(0.5,ZINTE(J1D)) ! test if there's energy to consume
      ! Energy consumed if parcel cross the entire layer
      ZPOTE(J1D) = ZTEST0*(PG_O_THVREF(J1D)      *      &
@@ -169,7 +169,7 @@ IF (OUPORDN.EQV..TRUE.) THEN
  DO JKK=KK+IKL,IKE,IKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0
-      DO J1D=D%NIJB,D%NIJE
+      DO J1D=IIJB,IIJE
         ZTEST0=0.5+SIGN(0.5,ZINTE(J1D))
         ZPOTE(J1D) = ZTEST0*(PG_O_THVREF(J1D)      *      &
             (ZHLVPT(J1D,JKK) - ZVPT_DEP(J1D))   &
@@ -210,7 +210,7 @@ IF (OUPORDN.EQV..FALSE.) THEN
  DO JKK=KK,IKB,-IKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0
-      DO J1D=D%NIJB,D%NIJE
+      DO J1D=IIJB,IIJE
         ZTEST0=0.5+SIGN(0.5,ZINTE(J1D))
          ZPOTE(J1D) = ZTEST0*(-PG_O_THVREF(J1D)      *      &
             (ZHLVPT(J1D,JKK) - PVPT(J1D,KK)) &

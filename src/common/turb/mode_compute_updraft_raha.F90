@@ -634,8 +634,8 @@ PEMF(IIJB:IIJE,IKB) =0.
 ! This way, all MF fluxes are diminished by this amount.
 ! Diagnosed cloud fraction is also multiplied by the same coefficient.
 !
-DO JI=D%NIJB,D%NIJE 
-  PDEPTH(JI) = MAX(0., PZZ(JI,KKCTL(JI)) -  PZZ(JI,KKLCL(JI)) )
+DO JIJ=IIJB,IIJE 
+  PDEPTH(JIJ) = MAX(0., PZZ(JIJ,KKCTL(JIJ)) -  PZZ(JIJ,KKLCL(JIJ)) )
 END DO
 
 !$mnh_expand_array(JIJ=IIJB:IIJE)

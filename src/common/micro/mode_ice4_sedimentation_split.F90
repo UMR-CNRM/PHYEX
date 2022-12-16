@@ -89,6 +89,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upp
 !
 !
 INTEGER                                                             :: JI, JJ, JK
+INTEGER :: IKTB, IKTE, IKB, IKL, IIE, IIB, IJB, IJE
 INTEGER                                                             :: IRR !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
 LOGICAL                                                             :: GSEDIC !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
 LOGICAL                                                             :: GPRESENT_PFPR, GPRESENT_PSEA
@@ -115,6 +116,13 @@ IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT', 0, ZHOOK_HANDLE)
 !
 GSEDIC = OSEDIC
 IRR    = KRR
+!
+IKTB=D%NKTB
+IKTE=D%NKTE
+IIB=D%NIB
+IIE=D%NIE
+IJB=D%NJB
+IJE=D%NJE
 !
 IF (PRESENT(PFPR)) THEN
   GPRESENT_PFPR = .TRUE.

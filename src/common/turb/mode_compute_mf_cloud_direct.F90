@@ -72,7 +72,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PCF_MF         ! and cloud frac
 !
 !*                    0.1  Declaration of local variables
 !
-INTEGER  :: JI,JK, JK0, IKB,IKE,IKL
+INTEGER  :: JI,JK, JK0, IKB,IKE,IKL,IIJB,IIJE
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !*                    0.2 Initialisation
@@ -82,6 +82,8 @@ IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_DIRECT',0,ZHOOK_HANDLE)
 IKB=D%NKB
 IKE=D%NKE
 IKL=D%NKL
+IIJB=D%NIJB
+IIJE=D%NIJE
 !*      1. COMPUTATION OF SUBGRID CLOUD
 !          ----------------------------
 
@@ -92,7 +94,7 @@ PRC_MF(:,:)=0.
 PRI_MF(:,:)=0.
 PCF_MF(:,:)=0.
 
-DO JI=D%NIJB,D%NIJE
+DO JI=IIJB,IIJE
 #ifdef REPRO48
   JK0=KKLCL(JI)-IKL ! first mass level with cloud
   JK0=MAX(JK0, MIN(IKB,IKE)) !protection if KKL=1

@@ -69,7 +69,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)                :: PY       ! vari
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PGZ_M_W  ! result at flux
                                                               ! side
 !
-INTEGER :: IKT,IKTB,IKTE,IIB,IJB,IIE,IJE,IKA,IKU
+INTEGER :: IKT,IKTB,IKTE,IIB,IJB,IIE,IJE,IKA,IKU,IKL
 INTEGER :: JI,JJ,JK
 !-------------------------------------------------------------------------------
 !
@@ -86,6 +86,7 @@ IJB=D%NJBC
 IKT=D%NKT
 IKA=D%NKA
 IKU=D%NKU
+IKL=D%NKL
 !
 DO JK=IKTB,IKTE 
   DO JJ=IJB,IJE 
@@ -318,6 +319,7 @@ IIE=D%NIEC
 IIB=D%NIBC
 IJE=D%NJEC
 IJB=D%NJBC
+IKT=D%NKT
 !
 !----------------------------------------------------------------------------
 !
@@ -435,7 +437,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PGX_M_U  ! result at flux
                                                               ! side
 REAL, DIMENSION(D%NIT*D%NJT*D%NKT) :: ZGX_M_U
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZY, ZDXX,ZDZZ,ZDZX
-INTEGER  IIU,IKU,JI,JK,IKL, IKA, IKU
+INTEGER  IIU,IKU,JI,JK,IKL, IKA
 !
 INTEGER :: JJK,IJU
 INTEGER :: JIJK,JIJKOR,JIJKEND
@@ -454,7 +456,6 @@ IJU=D%NJT
 IKU=D%NKT
 IKL=D%NKL
 IKA=D%NKA
-IKU=D%NKU
 IF (.NOT. OFLAT) THEN
   JIJKOR  = 1 + JPHEXT + IIU*IJU*(JPVEXT_TURB+1 - 1)
   JIJKEND = IIU*IJU*(IKU-JPVEXT_TURB)
@@ -587,7 +588,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),INTENT(OUT) :: PGY_M_V  ! result at flux
                                                               ! side
 !REAL, DIMENSION(D%NIT*D%NJT*D%NKT) :: ZGY_M_V
 !REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZY, ZDYY,ZDZZ,ZDZY
-INTEGER  IJU,IKU,JI,JJ,JK,IKL, IKA, IKU
+INTEGER  IJU,IKU,JI,JJ,JK,IKL, IKA
 !
 !-------------------------------------------------------------------------------
 !

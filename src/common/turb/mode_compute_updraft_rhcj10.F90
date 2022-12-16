@@ -289,13 +289,13 @@ PSV_UP(IIJB:IIJE,1:IKT,:)=0.
 ! Computation or initialisation of updraft characteristics at the KKB level
 ! thetal_up,rt_up,thetaV_up, w,Buoyancy term and mass flux (PEMF)
 
-DO JI=D%NIJB,D%NIJE
-  !PTHL_UP(JI,KKB)= ZTHLM_F(JI,KKB)+MAX(0.,MIN(ZTMAX,(PSFTH(JI)/SQRT(ZTKEM_F(JI,KKB)))*XALP_PERT))
-  !PRT_UP(JI,KKB) = ZRTM_F(JI,KKB)+MAX(0.,MIN(ZRMAX,(PSFRV(JI)/SQRT(ZTKEM_F(JI,KKB)))*XALP_PERT)) 
-  PTHL_UP(JI,IKB)= ZTHLM_F(JI,IKB)
-  PRT_UP(JI,IKB) = ZRTM_F(JI,IKB)
-  !ZQT_UP(JI) = PRT_UP(JI,KKB)/(1.+PRT_UP(JI,KKB))
-  !ZTHS_UP(JI,KKB)=PTHL_UP(JI,KKB)*(1.+XLAMBDA_MF*ZQT_UP(JI))
+DO JIJ=IIJB,IIJE
+  !PTHL_UP(JIJ,KKB)= ZTHLM_F(JIJ,KKB)+MAX(0.,MIN(ZTMAX,(PSFTH(JIJ)/SQRT(ZTKEM_F(JIJ,KKB)))*XALP_PERT))
+  !PRT_UP(JIJ,KKB) = ZRTM_F(JIJ,KKB)+MAX(0.,MIN(ZRMAX,(PSFRV(JIJ)/SQRT(ZTKEM_F(JIJ,KKB)))*XALP_PERT)) 
+  PTHL_UP(JIJ,IKB)= ZTHLM_F(JIJ,IKB)
+  PRT_UP(JIJ,IKB) = ZRTM_F(JIJ,IKB)
+  !ZQT_UP(JIJ) = PRT_UP(JIJ,KKB)/(1.+PRT_UP(JIJ,KKB))
+  !ZTHS_UP(JIJ,KKB)=PTHL_UP(JIJ,KKB)*(1.+XLAMBDA_MF*ZQT_UP(JIJ))
 ENDDO
 
 CALL MZM_MF(D, PTHM (:,:), ZTHM_F(:,:))
@@ -305,8 +305,8 @@ CALL MZM_MF(D, PRVM(:,:), ZRVM_F(:,:))
 
 ! thetav at mass and flux levels 
 DO JK=1,IKT
-  DO JI=D%NIB,D%NIJE
-    ZTHVM_F(JI,JK)=ZTHM_F(JI,JK)*((1.+ZRVORD*ZRVM_F(JI,JK))/(1.+ZRTM_F(JI,JK)))
+  DO JIJ=D%NIB,D%NIJE
+    ZTHVM_F(JIJ,JK)=ZTHM_F(JIJ,JK)*((1.+ZRVORD*ZRVM_F(JIJ,JK))/(1.+ZRTM_F(JIJ,JK)))
   ENDDO
 ENDDO
 
@@ -333,11 +333,11 @@ CALL TH_R_FROM_THL_RT(CST,NEB,D%NIJT,HFRAC_ICE,PFRAC_ICE_UP(:,IKB),ZPRES_F(:,IKB
              PRV_UP(:,IKB),PRC_UP(:,IKB),PRI_UP(:,IKB),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
              PBUF=ZBUF, KB=D%NIJB, KE=D%NIJE)
 
-DO JI=D%NIJB,D%NIJE
+DO JIJ=IIJB,IIJE
   ! compute updraft thevav and buoyancy term at KKB level             
-  PTHV_UP(JI,IKB) = ZTH_UP(JI,IKB)*((1+ZRVORD*PRV_UP(JI,IKB))/(1+PRT_UP(JI,IKB))) 
+  PTHV_UP(JIJ,IKB) = ZTH_UP(JIJ,IKB)*((1+ZRVORD*PRV_UP(JIJ,IKB))/(1+PRT_UP(JIJ,IKB))) 
   ! compute mean rsat in updraft
-  PRSAT_UP(JI,IKB) = ZRSATW(JI)*(1-PFRAC_ICE_UP(JI,IKB)) + ZRSATI(JI)*PFRAC_ICE_UP(JI,IKB)
+  PRSAT_UP(JIJ,IKB) = ZRSATW(JIJ)*(1-PFRAC_ICE_UP(JIJ,IKB)) + ZRSATI(JIJ)*PFRAC_ICE_UP(JIJ,IKB)
 ENDDO
 
 !Tout est commente pour tester dans un premier temps la separation en deux de la 
@@ -350,8 +350,8 @@ ZG_O_THVREF(IIJB:IIJE,1:IKT)=CST%XG/ZTHVM_F(IIJB:IIJE,1:IKT)
 ! Calcul de la fermeture de Julien Pergaut comme limite max de PHY
 
 DO JK=IKB,IKE-IKL,IKL   !  Vertical loop
-  DO JI=D%NIJB,D%NIJE
-    ZZDZ(JI,JK)   = MAX(ZEPS,PZZ(JI,JK+IKL)-PZZ(JI,JK))  ! <== Delta Z between two flux level
+  DO JIJ=IIJB,IIJE
+    ZZDZ(JIJ,JK)   = MAX(ZEPS,PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))  ! <== Delta Z between two flux level
   ENDDO
 ENDDO
 
@@ -379,21 +379,21 @@ CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ,ZTKEM_F(:,IKB),ZG_O_THVREF(:,IKB), &
 ZLUP(IIJB:IIJE)=MAX(ZLUP(IIJB:IIJE),1.E-10)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
-DO JI=D%NIJB,D%NIJE
+DO JIJ=IIJB,IIJE
   ! Compute Buoyancy flux at the ground
-  ZWTHVSURF = (ZTHVM_F(JI,IKB)/ZTHM_F(JI,IKB))*PSFTH(JI)+     &
-              (0.61*ZTHM_F(JI,IKB))*PSFRV(JI)
+  ZWTHVSURF = (ZTHVM_F(JIJ,IKB)/ZTHM_F(JIJ,IKB))*PSFTH(JIJ)+     &
+              (0.61*ZTHM_F(JIJ,IKB))*PSFRV(JIJ)
 
   ! Mass flux at KKB level (updraft triggered if PSFTH>0.)
   IF (ZWTHVSURF>0.010) THEN ! <==  Not 0 Important to have stratocumulus !!!!!
-    PEMF(JI,IKB) = PARAMMF%XCMF * ZRHO_F(JI,IKB) * ((ZG_O_THVREF(JI,IKB))*ZWTHVSURF*ZLUP(JI))**(1./3.)
-    PFRAC_UP(JI,IKB)=MIN(PEMF(JI,IKB)/(SQRT(ZW_UP2(JI,IKB))*ZRHO_F(JI,IKB)),PARAMMF%XFRAC_UP_MAX)
-    !PEMF(JI,KKB) = ZRHO_F(JI,KKB)*PFRAC_UP(JI,KKB)*SQRT(ZW_UP2(JI,KKB))
-    ZW_UP2(JI,IKB)=(PEMF(JI,IKB)/(PFRAC_UP(JI,IKB)*ZRHO_F(JI,IKB)))**2
-    GTEST(JI)=.TRUE.
+    PEMF(JIJ,IKB) = PARAMMF%XCMF * ZRHO_F(JIJ,IKB) * ((ZG_O_THVREF(JIJ,IKB))*ZWTHVSURF*ZLUP(JIJ))**(1./3.)
+    PFRAC_UP(JIJ,IKB)=MIN(PEMF(JIJ,IKB)/(SQRT(ZW_UP2(JIJ,IKB))*ZRHO_F(JIJ,IKB)),PARAMMF%XFRAC_UP_MAX)
+    !PEMF(JIJ,KKB) = ZRHO_F(JIJ,KKB)*PFRAC_UP(JIJ,KKB)*SQRT(ZW_UP2(JIJ,KKB))
+    ZW_UP2(JIJ,IKB)=(PEMF(JIJ,IKB)/(PFRAC_UP(JIJ,IKB)*ZRHO_F(JIJ,IKB)))**2
+    GTEST(JIJ)=.TRUE.
   ELSE
-    PEMF(JI,IKB) =0.
-    GTEST(JI)=.FALSE.
+    PEMF(JIJ,IKB) =0.
+    GTEST(JIJ)=.FALSE.
   ENDIF
 ENDDO
 
@@ -427,10 +427,10 @@ DO JK=IKB,IKE-IKL,IKL
  
 ! to find the LCL (check if JK is LCL or not)
 
-  DO JI=D%NIJB,D%NIJE
-    IF ((PRC_UP(JI,JK)+PRI_UP(JI,JK)>0.).AND.(.NOT.(GTESTLCL(JI)))) THEN
-      KKLCL(JI) = JK           
-      GTESTLCL(JI)=.TRUE.
+  DO JIJ=IIJB,IIJE
+    IF ((PRC_UP(JIJ,JK)+PRI_UP(JIJ,JK)>0.).AND.(.NOT.(GTESTLCL(JIJ)))) THEN
+      KKLCL(JIJ) = JK           
+      GTESTLCL(JIJ)=.TRUE.
     ENDIF
   ENDDO
 
@@ -452,83 +452,83 @@ DO JK=IKB,IKE-IKL,IKL
                ZTH_UP(:,JK),ZRV_UP,ZRC_UP,ZRI_UP,ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
                PBUF=ZBUF, KB=D%NIJB, KE=D%NIJE)
     
-  DO JI=D%NIJB,D%NIJE
-    IF (GTEST(JI)) THEN
-      PTHV_UP(JI,JK)    = ZTH_UP(JI,JK)*(1.+ZRVORD*ZRV_UP(JI))/(1.+PRT_UP(JI,JK))
-      ZBUO(JI,JK)       = ZG_O_THVREF(JI,JK)*(PTHV_UP(JI,JK) - ZTHVM_F(JI,JK))    
-      PBUO_INTEG(JI,JK) = ZBUO(JI,JK)*(PZZ(JI,JK+IKL)-PZZ(JI,JK))
+  DO JIJ=IIJB,IIJE
+    IF (GTEST(JIJ)) THEN
+      PTHV_UP(JIJ,JK)    = ZTH_UP(JIJ,JK)*(1.+ZRVORD*ZRV_UP(JIJ))/(1.+PRT_UP(JIJ,JK))
+      ZBUO(JIJ,JK)       = ZG_O_THVREF(JIJ,JK)*(PTHV_UP(JIJ,JK) - ZTHVM_F(JIJ,JK))    
+      PBUO_INTEG(JIJ,JK) = ZBUO(JIJ,JK)*(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))
       
-      ZDZ(JI)   = MAX(ZEPS,PZZ(JI,JK+IKL)-PZZ(JI,JK))
-      ZTEST(JI) = PARAMMF%XA1*ZBUO(JI,JK) -  PARAMMF%XB*ZW_UP2(JI,JK)
+      ZDZ(JIJ)   = MAX(ZEPS,PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))
+      ZTEST(JIJ) = PARAMMF%XA1*ZBUO(JIJ,JK) -  PARAMMF%XB*ZW_UP2(JIJ,JK)
 
       !  Ancien calcul de la vitesse
-      ZCOE(JI)      = ZDZ(JI)
-      IF (ZTEST(JI)>0.) THEN
-        ZCOE(JI)    = ZDZ(JI)/(1.+ PARAMMF%XBETA1)
+      ZCOE(JIJ)      = ZDZ(JIJ)
+      IF (ZTEST(JIJ)>0.) THEN
+        ZCOE(JIJ)    = ZDZ(JIJ)/(1.+ PARAMMF%XBETA1)
       ENDIF
 
       !  Convective Vertical speed computation
-      ZWCOE(JI)         = (1.-PARAMMF%XB*ZCOE(JI))/(1.+PARAMMF%XB*ZCOE(JI))
-      ZBUCOE(JI)        =  2.*ZCOE(JI)/(1.+PARAMMF%XB*ZCOE(JI))
+      ZWCOE(JIJ)         = (1.-PARAMMF%XB*ZCOE(JIJ))/(1.+PARAMMF%XB*ZCOE(JIJ))
+      ZBUCOE(JIJ)        =  2.*ZCOE(JIJ)/(1.+PARAMMF%XB*ZCOE(JIJ))
 
       ! Second Rachel bug correction (XA1 has been forgotten)
-      ZW_UP2(JI,JK+IKL) = MAX(ZEPS,ZW_UP2(JI,JK)*ZWCOE(JI) + PARAMMF%XA1*ZBUO(JI,JK)*ZBUCOE(JI) )  
-      ZW_MAX(JI) = MAX(ZW_MAX(JI), SQRT(ZW_UP2(JI,JK+IKL)))
-      ZWUP_MEAN(JI)     = MAX(ZEPS,0.5*(ZW_UP2(JI,JK+IKL)+ZW_UP2(JI,JK)))
+      ZW_UP2(JIJ,JK+IKL) = MAX(ZEPS,ZW_UP2(JIJ,JK)*ZWCOE(JIJ) + PARAMMF%XA1*ZBUO(JIJ,JK)*ZBUCOE(JIJ) )  
+      ZW_MAX(JIJ) = MAX(ZW_MAX(JIJ), SQRT(ZW_UP2(JIJ,JK+IKL)))
+      ZWUP_MEAN(JIJ)     = MAX(ZEPS,0.5*(ZW_UP2(JIJ,JK+IKL)+ZW_UP2(JIJ,JK)))
  
       !  Entrainement and detrainement
 
       ! First Rachel bug correction (Parenthesis around 1+beta1 ==> impact is small)   
-      PENTR(JI,JK)  = MAX(0.,(PARAMMF%XBETA1/(1.+PARAMMF%XBETA1))*(PARAMMF%XA1*ZBUO(JI,JK)/ZWUP_MEAN(JI)-PARAMMF%XB))
-      ZDETR_BUO(JI) = MAX(0., -(PARAMMF%XBETA1/(1.+PARAMMF%XBETA1))*PARAMMF%XA1*ZBUO(JI,JK)/ZWUP_MEAN(JI))
-      ZDETR_RT(JI)  = PARAMMF%XC*SQRT(MAX(0.,(PRT_UP(JI,JK) - ZRTM_F(JI,JK))) / MAX(ZEPS,ZRTM_F(JI,JK)) / ZWUP_MEAN(JI))
-      PDETR(JI,JK)  = ZDETR_RT(JI)+ZDETR_BUO(JI)
+      PENTR(JIJ,JK)  = MAX(0.,(PARAMMF%XBETA1/(1.+PARAMMF%XBETA1))*(PARAMMF%XA1*ZBUO(JIJ,JK)/ZWUP_MEAN(JIJ)-PARAMMF%XB))
+      ZDETR_BUO(JIJ) = MAX(0., -(PARAMMF%XBETA1/(1.+PARAMMF%XBETA1))*PARAMMF%XA1*ZBUO(JIJ,JK)/ZWUP_MEAN(JIJ))
+      ZDETR_RT(JIJ)  = PARAMMF%XC*SQRT(MAX(0.,(PRT_UP(JIJ,JK) - ZRTM_F(JIJ,JK))) / MAX(ZEPS,ZRTM_F(JIJ,JK)) / ZWUP_MEAN(JIJ))
+      PDETR(JIJ,JK)  = ZDETR_RT(JIJ)+ZDETR_BUO(JIJ)
    
       ! If the updraft did not stop, compute cons updraft characteritics at jk+1
-      ZZTOP(JI) = MAX(ZZTOP(JI),PZZ(JI,JK+IKL))
-      ZMIX2(JI) = (PZZ(JI,JK+IKL)-PZZ(JI,JK))*PENTR(JI,JK) !&
+      ZZTOP(JIJ) = MAX(ZZTOP(JIJ),PZZ(JIJ,JK+IKL))
+      ZMIX2(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*PENTR(JIJ,JK) !&
 
-      !ZQTM(JI) = PRTM(JI,JK)/(1.+PRTM(JI,JK))            
-      !ZTHSM(JI,JK) = PTHLM(JI,JK)*(1.+XLAMBDA_MF*ZQTM(JI))
-      !ZTHS_UP(JI,JK+KKL)=(ZTHS_UP(JI,JK)*(1.-0.5*ZMIX2(JI)) + ZTHSM(JI,JK)*ZMIX2(JI)) &
-      !                     /(1.+0.5*ZMIX2(JI))
-      PRT_UP(JI,JK+IKL) =(PRT_UP (JI,JK)*(1.-0.5*ZMIX2(JI)) + PRTM(JI,JK)*ZMIX2(JI))  &
-                           /(1.+0.5*ZMIX2(JI))
-      !ZQT_UP(JI) = PRT_UP(JI,JK+KKL)/(1.+PRT_UP(JI,JK+KKL))
-      !PTHL_UP(JI,JK+KKL)=ZTHS_UP(JI,JK+KKL)/(1.+XLAMBDA_MF*ZQT_UP(JI))
-      PTHL_UP(JI,JK+IKL)=(PTHL_UP(JI,JK)*(1.-0.5*ZMIX2(JI)) + PTHLM(JI,JK)*ZMIX2(JI)) &
-                           /(1.+0.5*ZMIX2(JI))
+      !ZQTM(JIJ) = PRTM(JIJ,JK)/(1.+PRTM(JIJ,JK))            
+      !ZTHSM(JIJ,JK) = PTHLM(JIJ,JK)*(1.+XLAMBDA_MF*ZQTM(JIJ))
+      !ZTHS_UP(JIJ,JK+KKL)=(ZTHS_UP(JIJ,JK)*(1.-0.5*ZMIX2(JIJ)) + ZTHSM(JIJ,JK)*ZMIX2(JIJ)) &
+      !                     /(1.+0.5*ZMIX2(JIJ))
+      PRT_UP(JIJ,JK+IKL) =(PRT_UP (JIJ,JK)*(1.-0.5*ZMIX2(JIJ)) + PRTM(JIJ,JK)*ZMIX2(JIJ))  &
+                           /(1.+0.5*ZMIX2(JIJ))
+      !ZQT_UP(JIJ) = PRT_UP(JIJ,JK+KKL)/(1.+PRT_UP(JIJ,JK+KKL))
+      !PTHL_UP(JIJ,JK+KKL)=ZTHS_UP(JIJ,JK+KKL)/(1.+XLAMBDA_MF*ZQT_UP(JIJ))
+      PTHL_UP(JIJ,JK+IKL)=(PTHL_UP(JIJ,JK)*(1.-0.5*ZMIX2(JIJ)) + PTHLM(JIJ,JK)*ZMIX2(JIJ)) &
+                           /(1.+0.5*ZMIX2(JIJ))
     ENDIF  ! GTEST
   ENDDO
   
 
   IF(OMIXUV) THEN
     IF(JK/=IKB) THEN
-      DO JI=D%NIJB,D%NIJE
-        IF(GTEST(JI)) THEN
-          PU_UP(JI,JK+IKL) = (PU_UP (JI,JK)*(1-0.5*ZMIX2(JI)) + PUM(JI,JK)*ZMIX2(JI)+ &
-                            0.5*PARAMMF%XPRES_UV*(PZZ(JI,JK+IKL)-PZZ(JI,JK))*&
-                            ((PUM(JI,JK+IKL)-PUM(JI,JK))/PDZZ(JI,JK+IKL)+&
-                             (PUM(JI,JK)-PUM(JI,JK-IKL))/PDZZ(JI,JK))        )   &
-                            /(1+0.5*ZMIX2(JI))
-          PV_UP(JI,JK+IKL) = (PV_UP (JI,JK)*(1-0.5*ZMIX2(JI)) + PVM(JI,JK)*ZMIX2(JI)+ &
-                            0.5*PARAMMF%XPRES_UV*(PZZ(JI,JK+IKL)-PZZ(JI,JK))*&
-                            ((PVM(JI,JK+IKL)-PVM(JI,JK))/PDZZ(JI,JK+IKL)+&
-                             (PVM(JI,JK)-PVM(JI,JK-IKL))/PDZZ(JI,JK))    )   &
-                            /(1+0.5*ZMIX2(JI))
+      DO JIJ=IIJB,IIJE
+        IF(GTEST(JIJ)) THEN
+          PU_UP(JIJ,JK+IKL) = (PU_UP (JIJ,JK)*(1-0.5*ZMIX2(JIJ)) + PUM(JIJ,JK)*ZMIX2(JIJ)+ &
+                            0.5*PARAMMF%XPRES_UV*(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*&
+                            ((PUM(JIJ,JK+IKL)-PUM(JIJ,JK))/PDZZ(JIJ,JK+IKL)+&
+                             (PUM(JIJ,JK)-PUM(JIJ,JK-IKL))/PDZZ(JIJ,JK))        )   &
+                            /(1+0.5*ZMIX2(JIJ))
+          PV_UP(JIJ,JK+IKL) = (PV_UP (JIJ,JK)*(1-0.5*ZMIX2(JIJ)) + PVM(JIJ,JK)*ZMIX2(JIJ)+ &
+                            0.5*PARAMMF%XPRES_UV*(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*&
+                            ((PVM(JIJ,JK+IKL)-PVM(JIJ,JK))/PDZZ(JIJ,JK+IKL)+&
+                             (PVM(JIJ,JK)-PVM(JIJ,JK-IKL))/PDZZ(JIJ,JK))    )   &
+                            /(1+0.5*ZMIX2(JIJ))
         ENDIF
       ENDDO
     ELSE
-      DO JI=D%NIJB,D%NIJE
-        IF(GTEST(JI)) THEN
-          PU_UP(JI,JK+IKL) = (PU_UP (JI,JK)*(1-0.5*ZMIX2(JI)) + PUM(JI,JK)*ZMIX2(JI)+ &
-                            0.5*PARAMMF%XPRES_UV*(PZZ(JI,JK+IKL)-PZZ(JI,JK))*&
-                            ((PUM(JI,JK+IKL)-PUM(JI,JK))/PDZZ(JI,JK+IKL))        ) &
-                            /(1+0.5*ZMIX2(JI))
-          PV_UP(JI,JK+IKL) = (PV_UP (JI,JK)*(1-0.5*ZMIX2(JI)) + PVM(JI,JK)*ZMIX2(JI)+ &
-                            0.5*PARAMMF%XPRES_UV*(PZZ(JI,JK+IKL)-PZZ(JI,JK))*&
-                            ((PVM(JI,JK+IKL)-PVM(JI,JK))/PDZZ(JI,JK+IKL))    )   &
-                            /(1+0.5*ZMIX2(JI))
+      DO JIJ=IIJB,IIJE
+        IF(GTEST(JIJ)) THEN
+          PU_UP(JIJ,JK+IKL) = (PU_UP (JIJ,JK)*(1-0.5*ZMIX2(JIJ)) + PUM(JIJ,JK)*ZMIX2(JIJ)+ &
+                            0.5*PARAMMF%XPRES_UV*(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*&
+                            ((PUM(JIJ,JK+IKL)-PUM(JIJ,JK))/PDZZ(JIJ,JK+IKL))        ) &
+                            /(1+0.5*ZMIX2(JIJ))
+          PV_UP(JIJ,JK+IKL) = (PV_UP (JIJ,JK)*(1-0.5*ZMIX2(JIJ)) + PVM(JIJ,JK)*ZMIX2(JIJ)+ &
+                            0.5*PARAMMF%XPRES_UV*(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*&
+                            ((PVM(JIJ,JK+IKL)-PVM(JIJ,JK))/PDZZ(JIJ,JK+IKL))    )   &
+                            /(1+0.5*ZMIX2(JIJ))
         ENDIF
       ENDDO
     ENDIF
@@ -555,66 +555,66 @@ DO JK=IKB,IKE-IKL,IKL
           ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
           PBUF=ZBUF, KB=D%NIJB, KE=D%NIJE)
 
-  DO JI=D%NIJB,D%NIJE
-    IF(GTEST(JI)) THEN
-      !ZT_UP(JI) = ZTH_UP(JI,JK+KKL)*PEXNM(JI,JK+KKL)
-      !ZCP(JI) = XCPD + XCL * ZRC_UP(JI)
-      !ZLVOCPEXN(JI)=(XLVTT + (XCPV-XCL) *  (ZT_UP(JI)-XTT) ) / ZCP(JI) / PEXNM(JI,JK+KKL)
-      !PRC_UP(JI,JK+KKL)=MIN(0.5E-3,ZRC_UP(JI))  ! On ne peut depasser 0.5 g/kg (autoconversion donc elimination !)
-      !PTHL_UP(JI,JK+KKL) = PTHL_UP(JI,JK+KKL)+ZLVOCPEXN(JI)*(ZRC_UP(JI)-PRC_UP(JI,JK+KKL))
-      PRC_UP(JI,JK+IKL)=ZRC_UP(JI)
-      PRV_UP(JI,JK+IKL)=ZRV_UP(JI)
-      PRI_UP(JI,JK+IKL)=ZRI_UP(JI)
-      !PRT_UP(JI,JK+KKL)  = PRC_UP(JI,JK+KKL) + PRV_UP(JI,JK+KKL)
-      PRSAT_UP(JI,JK+IKL) = ZRSATW(JI)*(1-PFRAC_ICE_UP(JI,JK+IKL)) + ZRSATI(JI)*PFRAC_ICE_UP(JI,JK+IKL)
+  DO JIJ=IIJB,IIJE
+    IF(GTEST(JIJ)) THEN
+      !ZT_UP(JIJ) = ZTH_UP(JIJ,JK+KKL)*PEXNM(JIJ,JK+KKL)
+      !ZCP(JIJ) = XCPD + XCL * ZRC_UP(JIJ)
+      !ZLVOCPEXN(JIJ)=(XLVTT + (XCPV-XCL) *  (ZT_UP(JIJ)-XTT) ) / ZCP(JIJ) / PEXNM(JIJ,JK+KKL)
+      !PRC_UP(JIJ,JK+KKL)=MIN(0.5E-3,ZRC_UP(JIJ))  ! On ne peut depasser 0.5 g/kg (autoconversion donc elimination !)
+      !PTHL_UP(JIJ,JK+KKL) = PTHL_UP(JIJ,JK+KKL)+ZLVOCPEXN(JIJ)*(ZRC_UP(JIJ)-PRC_UP(JIJ,JK+KKL))
+      PRC_UP(JIJ,JK+IKL)=ZRC_UP(JIJ)
+      PRV_UP(JIJ,JK+IKL)=ZRV_UP(JIJ)
+      PRI_UP(JIJ,JK+IKL)=ZRI_UP(JIJ)
+      !PRT_UP(JIJ,JK+KKL)  = PRC_UP(JIJ,JK+KKL) + PRV_UP(JIJ,JK+KKL)
+      PRSAT_UP(JIJ,JK+IKL) = ZRSATW(JIJ)*(1-PFRAC_ICE_UP(JIJ,JK+IKL)) + ZRSATI(JIJ)*PFRAC_ICE_UP(JIJ,JK+IKL)
 
       ! Compute the updraft theta_v, buoyancy and w**2 for level JK+1   
       !PTHV_UP(IIJB:IIJE,JK+KKL) = PTH_UP(IIJB:IIJE,JK+KKL)*((1+ZRVORD*PRV_UP(IIJB:IIJE,JK+KKL))/(1+PRT_UP(IIJB:IIJE,JK+KKL)))
-      !PTHV_UP(JI,JK+KKL) = ZTH_UP(JI,JK+KKL)*(1.+0.608*PRV_UP(JI,JK+KKL) - PRC_UP(JI,JK+KKL))
+      !PTHV_UP(JIJ,JK+KKL) = ZTH_UP(JIJ,JK+KKL)*(1.+0.608*PRV_UP(JIJ,JK+KKL) - PRC_UP(JIJ,JK+KKL))
       !! A corriger pour utiliser q et non r !!!!      
-      !ZMIX1(JI)=ZZDZ(JI,JK)*(PENTR(JI,JK)-PDETR(JI,JK))
-      PTHV_UP(JI,JK+IKL) = ZTH_UP(JI,JK+IKL)*((1+ZRVORD*PRV_UP(JI,JK+IKL))/(1+PRT_UP(JI,JK+IKL)))
-      ZMIX1(JI)=ZZDZ(JI,JK)*(PENTR(JI,JK)-PDETR(JI,JK))
+      !ZMIX1(JIJ)=ZZDZ(JIJ,JK)*(PENTR(JIJ,JK)-PDETR(JIJ,JK))
+      PTHV_UP(JIJ,JK+IKL) = ZTH_UP(JIJ,JK+IKL)*((1+ZRVORD*PRV_UP(JIJ,JK+IKL))/(1+PRT_UP(JIJ,JK+IKL)))
+      ZMIX1(JIJ)=ZZDZ(JIJ,JK)*(PENTR(JIJ,JK)-PDETR(JIJ,JK))
     ENDIF
   ENDDO
 
-  DO JI=D%NIJB,D%NIJE
-    IF(GTEST(JI)) THEN
-      PEMF(JI,JK+IKL)=PEMF(JI,JK)*EXP(ZMIX1(JI))
+  DO JIJ=IIJB,IIJE
+    IF(GTEST(JIJ)) THEN
+      PEMF(JIJ,JK+IKL)=PEMF(JIJ,JK)*EXP(ZMIX1(JIJ))
     ENDIF
   ENDDO
 
-  DO JI=D%NIJB,D%NIJE
-    IF(GTEST(JI)) THEN
+  DO JIJ=IIJB,IIJE
+    IF(GTEST(JIJ)) THEN
       ! Updraft fraction must be smaller than XFRAC_UP_MAX
-      PFRAC_UP(JI,JK+IKL)=MIN(PARAMMF%XFRAC_UP_MAX, &
-                             &PEMF(JI,JK+IKL)/(SQRT(ZW_UP2(JI,JK+IKL))*ZRHO_F(JI,JK+IKL)))
-      !PEMF(JI,JK+KKL) = ZRHO_F(JI,JK+KKL)*PFRAC_UP(JI,JK+KKL)*SQRT(ZW_UP2(JI,JK+KKL))
+      PFRAC_UP(JIJ,JK+IKL)=MIN(PARAMMF%XFRAC_UP_MAX, &
+                             &PEMF(JIJ,JK+IKL)/(SQRT(ZW_UP2(JIJ,JK+IKL))*ZRHO_F(JIJ,JK+IKL)))
+      !PEMF(JIJ,JK+KKL) = ZRHO_F(JIJ,JK+KKL)*PFRAC_UP(JIJ,JK+KKL)*SQRT(ZW_UP2(JIJ,JK+KKL))
     ENDIF
   ENDDO
 
 ! Test if the updraft has reach the ETL
-  DO JI=D%NIJB,D%NIJE
-    IF (GTEST(JI) .AND. (PBUO_INTEG(JI,JK)<=0.)) THEN
-      KKETL(JI) = JK+IKL
+  DO JIJ=IIJB,IIJE
+    IF (GTEST(JIJ) .AND. (PBUO_INTEG(JIJ,JK)<=0.)) THEN
+      KKETL(JIJ) = JK+IKL
     ENDIF
   ENDDO
 
 
 ! Test is we have reached the top of the updraft
-  DO JI=D%NIJB,D%NIJE
-    IF (GTEST(JI) .AND. ((ZW_UP2(JI,JK+IKL)<=ZEPS).OR.(PEMF(JI,JK+IKL)<=ZEPS))) THEN
-      ZW_UP2   (JI,JK+IKL)=ZEPS
-      PEMF     (JI,JK+IKL)=0.
-      GTEST    (JI)       =.FALSE.
-      PTHL_UP  (JI,JK+IKL)=ZTHLM_F(JI,JK+IKL)
-      PRT_UP   (JI,JK+IKL)=ZRTM_F(JI,JK+IKL)
-      PRC_UP   (JI,JK+IKL)=0.
-      PRI_UP   (JI,JK+IKL)=0.
-      PRV_UP   (JI,JK+IKL)=ZRVM_F (JI,JK+IKL)
-      PTHV_UP  (JI,JK+IKL)=ZTHVM_F(JI,JK+IKL)
-      PFRAC_UP (JI,JK+IKL)=0.
-      KKCTL    (JI)       =JK+IKL
+  DO JIJ=IIJB,IIJE
+    IF (GTEST(JIJ) .AND. ((ZW_UP2(JIJ,JK+IKL)<=ZEPS).OR.(PEMF(JIJ,JK+IKL)<=ZEPS))) THEN
+      ZW_UP2   (JIJ,JK+IKL)=ZEPS
+      PEMF     (JIJ,JK+IKL)=0.
+      GTEST    (JIJ)       =.FALSE.
+      PTHL_UP  (JIJ,JK+IKL)=ZTHLM_F(JIJ,JK+IKL)
+      PRT_UP   (JIJ,JK+IKL)=ZRTM_F(JIJ,JK+IKL)
+      PRC_UP   (JIJ,JK+IKL)=0.
+      PRI_UP   (JIJ,JK+IKL)=0.
+      PRV_UP   (JIJ,JK+IKL)=ZRVM_F (JIJ,JK+IKL)
+      PTHV_UP  (JIJ,JK+IKL)=ZTHVM_F(JIJ,JK+IKL)
+      PFRAC_UP (JIJ,JK+IKL)=0.
+      KKCTL    (JIJ)       =JK+IKL
     ENDIF
   ENDDO
 
@@ -633,8 +633,8 @@ PEMF(IIJB:IIJE,IKB) =0.
 ! This way, all MF fluxes are diminished by this amount.
 ! Diagnosed cloud fraction is also multiplied by the same coefficient.
 !
-DO JI=D%NIJB,D%NIJE
-   PDEPTH(JI) = MAX(0., PZZ(JI,KKCTL(JI)) -  PZZ(JI,KKLCL(JI)) )
+DO JIJ=IIJB,IIJE
+   PDEPTH(JIJ) = MAX(0., PZZ(JIJ,KKCTL(JIJ)) -  PZZ(JIJ,KKLCL(JIJ)) )
 ENDDO
 
 !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -648,10 +648,10 @@ DO JK=1,IKT
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 ENDDO
 DO JK=1,IKT
-  DO JI=D%NIJB,D%NIJE
-    IF (GWORK2(JI,JK)) THEN
-      PEMF(JI,JK)     = PEMF(JI,JK)     * ZCOEF(JI,JK) 
-      PFRAC_UP(JI,JK) = PFRAC_UP(JI,JK) * ZCOEF(JI,JK) 
+  DO JIJ=IIJB,IIJE
+    IF (GWORK2(JIJ,JK)) THEN
+      PEMF(JIJ,JK)     = PEMF(JIJ,JK)     * ZCOEF(JIJ,JK) 
+      PFRAC_UP(JIJ,JK) = PFRAC_UP(JIJ,JK) * ZCOEF(JIJ,JK) 
     ENDIF
   ENDDO
 ENDDO

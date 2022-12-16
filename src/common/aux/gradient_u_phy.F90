@@ -69,7 +69,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PGZ_U_UW ! result UW point
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: PA_WORK, PDZZ_WORK
 !
-INTEGER :: JI,JJ,JK, IIB, IIE, IJB, IJE
+INTEGER :: JI,JJ,JK, IIB, IIE, IJB, IJE,IKT
 
 !
 !*       0.2   declaration of local variables

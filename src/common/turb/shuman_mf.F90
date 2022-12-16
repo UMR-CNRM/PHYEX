@@ -210,7 +210,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMZM   ! result at flux localizati
 !
 INTEGER :: JK, JIJ
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
-INTEGER :: IKA,IKU,IKT
+INTEGER :: IKA,IKU,IKT,IKL
 !
 !
 IIJE=D%NIJE
@@ -218,6 +218,7 @@ IIJB=D%NIJB
 IKA=D%NKA
 IKU=D%NKU
 IKT=D%NKT
+IKL=D%NKL
 !
 !-------------------------------------------------------------------------------
 !
@@ -300,7 +301,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass
 !
 INTEGER :: JK, JIJ
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
-INTEGER :: IKA,IKU,IKT
+INTEGER :: IKA,IKU,IKT,IKL
 !
 !-------------------------------------------------------------------------------
 !
@@ -309,6 +310,7 @@ IIJB=D%NIJB
 IKA=D%NKA
 IKU=D%NKU
 IKT=D%NKT
+IKL=D%NKL
 !
 !*       1.    DEFINITION OF DZF
 !              ------------------
@@ -389,7 +391,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
 !
 INTEGER :: JK, JIJ
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
-INTEGER :: IKA,IKU,IKT
+INTEGER :: IKA,IKU,IKT,IKL
 !
 !-------------------------------------------------------------------------------
 !
@@ -398,6 +400,7 @@ IIJB=D%NIJB
 IKA=D%NKA
 IKU=D%NKU
 IKT=D%NKT
+IKL=D%NKL
 !
 !*       1.    DEFINITION OF DZM
 !              ------------------
@@ -479,7 +482,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PGZ_M_W  ! result at flux side
 !
 INTEGER  JK, JIJ
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
-INTEGER :: IKA,IKU,IKT
+INTEGER :: IKA,IKU,IKT,IKL
 !-------------------------------------------------------------------------------
 !
 IIJE=D%NIJE
@@ -487,6 +490,7 @@ IIJB=D%NIJB
 IKA=D%NKA
 IKU=D%NKU
 IKT=D%NKT
+IKL=D%NKL
 !
 !*       1.    COMPUTE THE GRADIENT ALONG Z
 !              -----------------------------
