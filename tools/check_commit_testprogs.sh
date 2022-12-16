@@ -17,7 +17,7 @@ set -e
 #for these test cases).
 
 specialName="ref"
-availTests="ice_adjust,rain_ice,turb"
+availTests="ice_adjust,rain_ice,turb,shallow"
 defaultTest='ALL'
 separator='_' #- seprator must be in sync with prep_code.sh separator
 
@@ -187,7 +187,7 @@ if [ $compilation -eq 1 ]; then
   else
     expand_options=""
   fi
-  subs="$subs -s turb -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s support"
+  subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s support"
   prep_code=$PHYEXTOOLSDIR/prep_code.sh
 
   if [ "$fromdir" == '' ]; then
