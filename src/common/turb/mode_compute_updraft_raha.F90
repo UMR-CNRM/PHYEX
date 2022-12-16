@@ -10,7 +10,7 @@
 IMPLICIT NONE
 CONTAINS
       SUBROUTINE COMPUTE_UPDRAFT_RAHA(D, CST, NEB, PARAMMF,          &
-                                 KSV, HFRAC_ICE, OENTR_DETR, OMIXUV, &
+                                 KSV, HFRAC_ICE, OENTR_DETR,         &
                                  ONOMIXLG,KSV_LGBEG,KSV_LGEND,       &
                                  PZZ,PDZZ,                           &
                                  PSFTH,PSFRV,                        &
@@ -81,7 +81,6 @@ TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 INTEGER,                INTENT(IN)   :: KSV
 CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                INTENT(IN) :: OENTR_DETR! flag to recompute entrainment, detrainment and mass flux
-LOGICAL,                INTENT(IN) :: OMIXUV    ! True if mixing of momentum
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
 INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
@@ -467,7 +466,7 @@ DO JK=IKB,IKE-IKL,IKL
   ENDWHERE
   
 
-  IF(OMIXUV) THEN
+  IF(PARAMMF%LMIXUV) THEN
     IF(JK/=IKB) THEN
       WHERE(GTEST(IIJB:IIJE))
         PU_UP(IIJB:IIJE,JK+IKL) = (PU_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &

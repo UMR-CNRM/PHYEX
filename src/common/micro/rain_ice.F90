@@ -6,8 +6,7 @@
 !     ######spl
       SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
                             KPROMA, KSIZE,                                        &
-                            OSEDIC, OCND2, HSEDIM, HSUBG_AUCV_RC, HSUBG_AUCV_RI,  &
-                            OWARM,                                                &
+                            OCND2,HSUBG_AUCV_RC, HSUBG_AUCV_RI,  &
                             PTSTEP, KRR, ODMICRO, PEXN,                           &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
@@ -223,14 +222,9 @@ TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KPROMA ! cache-blocking factor for microphysic loop
 INTEGER,                  INTENT(IN)    :: KSIZE
-LOGICAL,                  INTENT(IN)    :: OSEDIC ! Switch for droplet sedim.
 LOGICAL                                 :: OCND2  ! Logical switch to separate liquid and ice
-CHARACTER(LEN=4),         INTENT(IN)    :: HSEDIM ! Sedimentation scheme
 CHARACTER(LEN=4),         INTENT(IN)    :: HSUBG_AUCV_RC ! Kind of Subgrid autoconversion method
 CHARACTER(LEN=80),        INTENT(IN)    :: HSUBG_AUCV_RI ! Kind of Subgrid autoconversion method
-LOGICAL,                  INTENT(IN)    :: OWARM   ! .TRUE. allows raindrops to
-                                                   !   form by warm processes
-                                                   !      (Kessler scheme)
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: ODMICRO ! mask to limit computation
@@ -513,14 +507,14 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
   !
   !*       2.1     sedimentation
   !
-  IF (BUCONF%LBUDGET_RC .AND. OSEDIC) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', PRCS(:, :) * PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RC .AND. PARAMI%LSEDIC) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', PRCS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RR)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'SEDI', PRRS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RI)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'SEDI', PRIS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RS)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', PRSS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RG)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', PRGS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:, :) * PRHODJ(:, :))
 
-  IF(HSEDIM=='STAT') THEN
+  IF(PARAMI%CSEDIM=='STAT') THEN
     IF(KRR==7) THEN
       DO JK = IKTB,IKTE
         DO JIJ = IIJB,IIJE
@@ -563,10 +557,10 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
     ENDIF
     PINPRS(IIJB:IIJE) = PINPRS(IIJB:IIJE) + ZINPRI(IIJB:IIJE)
     !No negativity correction here as we apply sedimentation on PR.S*PTSTEP variables
-  ELSEIF(HSEDIM=='SPLI') THEN
+  ELSEIF(PARAMI%CSEDIM=='SPLI') THEN
     IF(KRR==7) THEN
       CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
-                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
+                                   &PTSTEP, KRR, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                    &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
@@ -574,7 +568,7 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
                                    &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
     ELSE
       CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
-                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
+                                   &PTSTEP, KRR, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                    &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
@@ -595,9 +589,9 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
     CALL CORRECT_NEGATIVITIES(D, KRR, PRVS, PRCS, PRRS, &
                              &PRIS, PRSS, PRGS, &
                              &PTHS, ZZ_LVFACT, ZZ_LSFACT, PRHS)
-  ELSEIF(HSEDIM=='NONE') THEN
+  ELSEIF(PARAMI%CSEDIM=='NONE') THEN
   ELSE
-    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'no sedimentation scheme for HSEDIM='//HSEDIM)
+    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'no sedimentation scheme for PARAMI%CSEDIM='//PARAMI%CSEDIM)
   END IF
 
 
@@ -623,7 +617,7 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
   !
   !*       2.2     budget storage
   !
-  IF (BUCONF%LBUDGET_RC .AND. OSEDIC) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', PRCS(:, :) * PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RC .AND. PARAMI%LSEDIC) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', PRCS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RR)              CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'SEDI', PRRS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RI)              CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'SEDI', PRIS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RS)              CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', PRSS(:, :) * PRHODJ(:, :))
@@ -647,7 +641,7 @@ DO JK = IKTB,IKTE
   ENDIF
 
   !Preset for output 3D variables
-  IF(OWARM) THEN
+  IF(PARAMI%LWARM) THEN
     PEVAP3D(:,JK)=0.
   ENDIF
   PRAINFR(:,JK)=0.
@@ -889,7 +883,7 @@ IF (KSIZE > 0) THEN
     CALL ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &KPROMA, IMICRO, &
                         &KRR, LSOFT, LLCOMPUTE, &
-                        &OWARM, PARAMI%CSUBG_RC_RR_ACCR, PARAMI%CSUBG_RR_EVAP, &
+                        &PARAMI%LWARM, PARAMI%CSUBG_RC_RR_ACCR, PARAMI%CSUBG_RR_EVAP, &
                         &HSUBG_AUCV_RC, HSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF, &
                         &ZEXN, ZRHODREF, ZLVFACT, ZLSFACT, I1, I2, &
                         &ZPRES, ZCF, ZSIGMA_RC, &
@@ -1104,7 +1098,7 @@ IF (KSIZE > 0) THEN
 !
     DO JL=1, IMICRO
       ZCITOUT  (I1(JL),I2(JL))=ZCIT   (JL)
-      IF(OWARM) THEN
+      IF(PARAMI%LWARM) THEN
         PEVAP3D(I1(JL),I2(JL))=ZRREVAV(JL)
       ENDIF
       ZWR(I1(JL),I2(JL),IRV)=ZVART(JL, IRV)
@@ -1271,7 +1265,7 @@ IF(BUCONF%LBU_ENABLE) THEN
   IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'DEPG', -ZW(:, :)                *PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'DEPG',  ZW(:, :)                *PRHODJ(:, :))
 
-  IF(OWARM) THEN
+  IF(PARAMI%LWARM) THEN
     ZW(:,:) = 0.
     DO JL=1, KSIZE
       ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RCAUTR(JL) * ZINV_TSTEP
@@ -1602,14 +1596,14 @@ IF(PARAMI%LSEDIM_AFTER) THEN
   !
   !*       8.1     sedimentation
   !
-  IF (BUCONF%LBUDGET_RC .AND. OSEDIC) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', PRCS(:, :) * PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RC .AND. PARAMI%LSEDIC) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', PRCS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RR)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'SEDI', PRRS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RI)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'SEDI', PRIS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RS)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', PRSS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RG)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', PRGS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:, :) * PRHODJ(:, :))
 
-  IF(HSEDIM=='STAT') THEN
+  IF(PARAMI%CSEDIM=='STAT') THEN
     IF (KRR==7) THEN
       DO JK = IKTB,IKTE
         DO JIJ = IIJB,IIJE
@@ -1652,11 +1646,11 @@ IF(PARAMI%LSEDIM_AFTER) THEN
     ENDIF
     PINPRS(IIJB:IIJE) = PINPRS(IIJB:IIJE) + ZINPRI(IIJB:IIJE)
     !No negativity correction here as we apply sedimentation on PR.S*PTSTEP variables
-  ELSEIF(HSEDIM=='SPLI') THEN
+  ELSEIF(PARAMI%CSEDIM=='SPLI') THEN
     !SR: It *seems* that we must have two separate calls for ifort
     IF(KRR==7) THEN
       CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
-                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
+                                   &PTSTEP, KRR, PARAMI%LSEDIC, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                    &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
@@ -1664,7 +1658,7 @@ IF(PARAMI%LSEDIM_AFTER) THEN
                                    &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
     ELSE
       CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
-                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
+                                   &PTSTEP, KRR, PARAMI%LSEDIC, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                    &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
@@ -1686,12 +1680,12 @@ IF(PARAMI%LSEDIM_AFTER) THEN
                              &PRIS, PRSS, PRGS, &
                              &PTHS, ZZ_LVFACT, ZZ_LSFACT, PRHS)
   ELSE
-    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'no sedimentation scheme for HSEDIM='//HSEDIM)
+    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'no sedimentation scheme for PARAMI%CSEDIM='//PARAMI%CSEDIM)
   END IF
   !
   !*       8.2     budget storage
   !
-  IF (BUCONF%LBUDGET_RC .AND. OSEDIC)   CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', PRCS(:, :) * PRHODJ(:, :))
+  IF (BUCONF%LBUDGET_RC .AND. PARAMI%LSEDIC)   CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', PRCS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RR)                CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'SEDI', PRRS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RI)                CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'SEDI', PRIS(:, :) * PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RS)                CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', PRSS(:, :) * PRHODJ(:, :))

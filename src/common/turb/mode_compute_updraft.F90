@@ -9,9 +9,9 @@
 !
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE COMPUTE_UPDRAFT(D, CST, NEB, PARAMMF, TURB, CSTURB, &
+      SUBROUTINE COMPUTE_UPDRAFT(D,CST,NEB,PARAMMF,TURBN,CSTURB,  &
                                  KSV, HFRAC_ICE,                  &
-                                 OENTR_DETR,OMIXUV,               &
+                                 OENTR_DETR,                      &
                                  ONOMIXLG,KSV_LGBEG,KSV_LGEND,    &
                                  PZZ,PDZZ,                        &
                                  PSFTH,PSFRV,                     &
@@ -91,12 +91,11 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(NEB_t),            INTENT(IN)   :: NEB
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
-TYPE(TURB_t),           INTENT(IN)   :: TURB
+TYPE(TURB_t),           INTENT(IN)   :: TURBN
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 INTEGER,                INTENT(IN)   :: KSV
 CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                INTENT(IN) :: OENTR_DETR! flag to recompute entrainment, detrainment and mass flux
-LOGICAL,                INTENT(IN) :: OMIXUV    ! True if mixing of momentum
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
 INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
@@ -381,7 +380,7 @@ IF (OENTR_DETR) THEN
   ZTKEM_F(IIJB:IIJE,IKB)=0.
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   !
-  IF(TURB%CTURBLEN=='RM17') THEN
+  IF(TURBN%CTURBLEN=='RM17') THEN
     CALL GZ_M_W_MF(D, PUM, PDZZ, ZWK)
     CALL MZF_MF(D, ZWK, ZDUDZ)
     CALL GZ_M_W_MF(D, PVM, PDZZ, ZWK)
@@ -533,7 +532,7 @@ DO JK=IKB,IKE-IKL,IKL
     ENDIF
   ENDDO
   
-  IF(OMIXUV) THEN
+  IF(PARAMMF%LMIXUV) THEN
     IF(JK/=IKB) THEN
       !$mnh_expand_where(JIJ=IIJB:IIJE)
       WHERE(GTEST(IIJB:IIJE))
@@ -567,7 +566,7 @@ DO JK=IKB,IKE-IKL,IKL
       ENDWHERE
       !$mnh_end_expand_where(JIJ=IIJB:IIJE)
     ENDIF
-  ENDIF !OMIXUV
+  ENDIF !PARAMMF%LMIXUV
   DO JSV=1,KSV 
     IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
     !$mnh_expand_where(JIJ=IIJB:IIJE)

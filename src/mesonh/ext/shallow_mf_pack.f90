@@ -10,7 +10,6 @@
 INTERFACE
 !     #################################################################
       SUBROUTINE SHALLOW_MF_PACK(KRR,KRRL,KRRI,                       &
-                HMF_UPDRAFT, HMF_CLOUD, OMIXUV,                       &
                 OMF_FLX,TPFILE,PTIME_LES,                             &
                 PIMPL_MF, PTSTEP,                                     &
                 PDZZ, PZZ, PDX,PDY,                                   &
@@ -31,11 +30,6 @@ use modd_precision, only: MNHTIME
 INTEGER,                INTENT(IN)   :: KRR        ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL       ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI       ! number of ice water var.
-CHARACTER (LEN=4),      INTENT(IN)   :: HMF_UPDRAFT! Type of Mass Flux Scheme
-                                     ! 'NONE' if no parameterization 
-CHARACTER (LEN=4),      INTENT(IN)   :: HMF_CLOUD  ! Type of statistical cloud
-                                                   ! scheme
-LOGICAL,                INTENT(IN)   :: OMIXUV     ! True if mixing of momentum
 LOGICAL,                INTENT(IN)   :: OMF_FLX    ! switch to write the
                                                    ! MF fluxes in the synchronous FM-file
 TYPE(TFILEDATA),        INTENT(IN)   :: TPFILE     ! Output file
@@ -74,7 +68,6 @@ END MODULE MODI_SHALLOW_MF_PACK
 
 !     #################################################################
       SUBROUTINE SHALLOW_MF_PACK(KRR,KRRL,KRRI,                       &
-                HMF_UPDRAFT, HMF_CLOUD, OMIXUV,                       &
                 OMF_FLX,TPFILE,PTIME_LES,                             &
                 PIMPL_MF, PTSTEP,                                     &
                 PDZZ, PZZ, PDX,PDY,                                   &
@@ -160,11 +153,6 @@ IMPLICIT NONE
 INTEGER,                INTENT(IN)   :: KRR        ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL       ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI       ! number of ice water var.
-CHARACTER (LEN=4),      INTENT(IN)   :: HMF_UPDRAFT! Type of Mass Flux Scheme
-                                     ! 'NONE' if no parameterization 
-CHARACTER (LEN=4),      INTENT(IN)   :: HMF_CLOUD  ! Type of statistical cloud
-                                                   ! scheme
-LOGICAL,                INTENT(IN)   :: OMIXUV     ! True if mixing of momentum
 LOGICAL,                INTENT(IN)   :: OMF_FLX    ! switch to write the
                                                    ! MF fluxes in the synchronous FM-file
 TYPE(TFILEDATA),        INTENT(IN)   :: TPFILE     ! Output file
@@ -339,9 +327,7 @@ ZSFRV(:)=RESHAPE(PSFRV(:,:),(/ IIU*IJU /) )
 LSTATNW = .FALSE.
 CALL SHALLOW_MF(YLDIMPHYEXPACK, CST, NEB, PARAM_MFSHALLN, TURBN, CSTURB,&
                 KRR,KRRL,KRRI,ISV,                                    &
-                HMF_UPDRAFT, HMF_CLOUD, CFRAC_ICE_SHALLOW_MF, OMIXUV, &
-                LSTATNW,                                              &
-                LNOMIXLG,NSV_LGBEG,NSV_LGEND,                         &
+                CFRAC_ICE_SHALLOW_MF,LNOMIXLG,NSV_LGBEG,NSV_LGEND,    &
                 PIMPL_MF, PTSTEP,                                     &
                 ZDZZ, ZZZ,                                            &
                 ZRHODJ,ZRHODREF,                                      &

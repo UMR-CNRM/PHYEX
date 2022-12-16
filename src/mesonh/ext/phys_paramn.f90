@@ -1634,7 +1634,7 @@ IF (CSCONV == 'EDKF') THEN
      CALL CLEANLIST_ll(TZFIELDS_ll)
      CALL MPPDB_CHECK3D(ZEXN,"physparam.7::ZEXN",PRECISION)
  !    
-     CALL SHALLOW_MF_PACK(NRR,NRRL,NRRI, CMF_UPDRAFT, CMF_CLOUD, LMIXUV,  &
+     CALL SHALLOW_MF_PACK(NRR,NRRL,NRRI,                                  &
                    LMF_FLX,TPFILE,ZTIME_LES_MF,                           &
                    XIMPL_MF, XTSTEP,                                      &
                    XDZZ, XZZ,XDXHAT(1),XDYHAT(1),                         &

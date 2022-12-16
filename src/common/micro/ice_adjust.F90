@@ -5,9 +5,8 @@
 !-----------------------------------------------------------------
 !     ##########################################################################
       SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEB, TURBN, BUCONF, KRR,            &
-                            &HFRAC_ICE, HCONDENS, HLAMBDA3,&
-                            &HBUNAME, OSUBG_COND, OSIGMAS, OCND2, LHGT_QS,     &
-                            &HSUBG_MF_PDF, PTSTEP, PSIGQSAT,                   &
+                            &HFRAC_ICE, HBUNAME, OCND2, LHGT_QS,               &
+                            &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
                             &PPABST, PZZ,                                      &
                             &PEXN, PCF_MF, PRC_MF, PRI_MF,                     &
@@ -137,19 +136,11 @@ TYPE(TURB_t),             INTENT(IN)    :: TURBN
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KRR      ! Number of moist variables
 CHARACTER(LEN=1),         INTENT(IN)    :: HFRAC_ICE
-CHARACTER(LEN=80),        INTENT(IN)    :: HCONDENS
-CHARACTER(LEN=4),         INTENT(IN)    :: HLAMBDA3 ! formulation for lambda3 coeff
 CHARACTER(LEN=4),         INTENT(IN)    :: HBUNAME  ! Name of the budget
-LOGICAL,                  INTENT(IN)    :: OSUBG_COND ! Switch for Subgrid
-                                                    ! Condensation
-LOGICAL,                  INTENT(IN)    :: OSIGMAS  ! Switch for Sigma_s:
-                                                    ! use values computed in CONDENSATION
-                                                    ! or that from turbulence scheme
 LOGICAL,                  INTENT(IN)    :: OCND2    ! logical switch to separate liquid
                                                     ! and ice
                                                     ! more rigid (DEFAULT value : .FALSE.)
 LOGICAL,                  INTENT(IN)   :: LHGT_QS   ! logical switch for height dependent VQSIGSAT
-CHARACTER(LEN=80),        INTENT(IN)   :: HSUBG_MF_PDF
 REAL,                     INTENT(IN)   :: PTSTEP    ! Double Time step
                                                     ! (single if cold start)
 REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PSIGQSAT  ! coeff applied to qsat variance contribution
@@ -158,8 +149,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PRHODJ  ! Dry density * Jacobia
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PEXNREF ! Reference Exner function
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PRHODREF
 !
-REAL, DIMENSION(MERGE(D%NIJT,0,OSUBG_COND),&
-                MERGE(D%NKT,0,OSUBG_COND)),           INTENT(IN)    ::  PSIGS   ! Sigma_s at time t
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LSUBG_COND),&
+                MERGE(D%NKT,0,TURBN%LSUBG_COND)),           INTENT(IN)    ::  PSIGS   ! Sigma_s at time t
 LOGICAL,                                              INTENT(IN)    ::  LMFCONV ! =SIZE(PMFCONV)!=0
 REAL, DIMENSION(MERGE(D%NIJT,0,LMFCONV),&
                 MERGE(D%NKT,0,LMFCONV)),              INTENT(IN)   ::  PMFCONV ! convective mass flux
@@ -320,7 +311,7 @@ DO JK=IKTB,IKTE
   !
   !*       5.2    compute the cloud fraction PCLDFR
   !
-  IF ( .NOT. OSUBG_COND ) THEN
+  IF ( .NOT. TURBN%LSUBG_COND ) THEN
     DO JIJ=IIJB,IIJE
       IF (PRCS(JIJ,JK) + PRIS(JIJ,JK) > 1.E-12 / PTSTEP) THEN
         PCLDFR(JIJ,JK)  = 1.
@@ -331,7 +322,7 @@ DO JK=IKTB,IKTE
         PSRCS(JIJ,JK) = PCLDFR(JIJ,JK)
       END IF
     ENDDO
-  ELSE !OSUBG_COND case
+  ELSE !TURBN%LSUBG_COND case
     DO JIJ=IIJB,IIJE
       !We limit PRC_MF+PRI_MF to PRVS*PTSTEP to avoid negative humidity
       ZW1=PRC_MF(JIJ,JK)/PTSTEP
@@ -349,12 +340,12 @@ DO JK=IKTB,IKTE
       !
       IF(PRESENT(PHLC_HRC) .AND. PRESENT(PHLC_HCF)) THEN
         ZCRIAUT=ICEP%XCRIAUTC/PRHODREF(JIJ,JK)
-        IF(HSUBG_MF_PDF=='NONE')THEN
+        IF(TURBN%CSUBG_MF_PDF=='NONE')THEN
           IF(ZW1*PTSTEP>PCF_MF(JIJ,JK) * ZCRIAUT) THEN
             PHLC_HRC(JIJ,JK)=PHLC_HRC(JIJ,JK)+ZW1*PTSTEP
             PHLC_HCF(JIJ,JK)=MIN(1.,PHLC_HCF(JIJ,JK)+PCF_MF(JIJ,JK))
           ENDIF
-        ELSEIF(HSUBG_MF_PDF=='TRIANGLE')THEN
+        ELSEIF(TURBN%CSUBG_MF_PDF=='TRIANGLE')THEN
           !ZHCF is the precipitating part of the *cloud* and not of the grid cell
           IF(ZW1*PTSTEP>PCF_MF(JIJ,JK)*ZCRIAUT) THEN
             ZHCF=1.-.5*(ZCRIAUT*PCF_MF(JIJ,JK) / MAX(1.E-20, ZW1*PTSTEP))**2
@@ -377,12 +368,12 @@ DO JK=IKTB,IKTE
       ENDIF
       IF(PRESENT(PHLI_HRI) .AND. PRESENT(PHLI_HCF)) THEN
         ZCRIAUT=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(ZT(JIJ,JK)-CST%XTT)+ICEP%XBCRIAUTI))
-        IF(HSUBG_MF_PDF=='NONE')THEN
+        IF(TURBN%CSUBG_MF_PDF=='NONE')THEN
           IF(ZW2*PTSTEP>PCF_MF(JIJ,JK) * ZCRIAUT) THEN
             PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)+ZW2*PTSTEP
             PHLI_HCF(JIJ,JK)=MIN(1.,PHLI_HCF(JIJ,JK)+PCF_MF(JIJ,JK))
           ENDIF
-        ELSEIF(HSUBG_MF_PDF=='TRIANGLE')THEN
+        ELSEIF(TURBN%CSUBG_MF_PDF=='TRIANGLE')THEN
           !ZHCF is the precipitating part of the *cloud* and not of the grid cell
           IF(ZW2*PTSTEP>PCF_MF(JIJ,JK)*ZCRIAUT) THEN
             ZHCF=1.-.5*(ZCRIAUT*PCF_MF(JIJ,JK) / (ZW2*PTSTEP))**2
@@ -418,7 +409,7 @@ DO JK=IKTB,IKTE
                     (ZW1 * ZLV(JIJ,JK) + ZW2 * ZLS(JIJ,JK)) / ZCPH(JIJ,JK)
       ENDDO
     ENDIF
-  ENDIF !OSUBG_COND
+  ENDIF !TURBN%LSUBG_COND
 ENDDO
 !
 IF(PRESENT(POUT_RV)) POUT_RV=ZRV
@@ -475,7 +466,7 @@ DO JK=IKTB,IKTE
   ENDDO
 ENDDO
 !
-IF ( OSUBG_COND ) THEN
+IF ( TURBN%LSUBG_COND ) THEN
   !
   !*       3.     SUBGRID CONDENSATION SCHEME
   !               ---------------------------
@@ -483,10 +474,10 @@ IF ( OSUBG_COND ) THEN
   !   PSRC= s'rci'/Sigma_s^2
   !   ZT is INOUT
   CALL CONDENSATION(D, CST, ICEP, NEB, TURBN, &
-       HFRAC_ICE, HCONDENS, HLAMBDA3,                                    &
+       HFRAC_ICE,TURBN%CCONDENS, TURBN%CLAMBDA3,                             &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
        PRR, PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, &
-       PSRCS, .TRUE., OSIGMAS, OCND2, LHGT_QS,                           &
+       PSRCS, .TRUE., TURBN%LSIGMAS,OCND2, LHGT_QS,                      &
        PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, PSIGQSAT,                   &
        PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                                      &
        PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,&
@@ -502,7 +493,7 @@ ELSE
   !We use ZSRCS because in Méso-NH, PSRCS can be a zero-length array in this case
   !ZT is INOUT
   CALL CONDENSATION(D, CST, ICEP, NEB, TURBN, &
-       HFRAC_ICE, HCONDENS, HLAMBDA3,                                    &
+       HFRAC_ICE,TURBN%CCONDENS, TURBN%CLAMBDA3,                             &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
        PRR, PRS, PRG, ZSIGS, LMFCONV, PMFCONV, PCLDFR, &
        ZSRCS, .TRUE., .TRUE., OCND2, LHGT_QS,                            &

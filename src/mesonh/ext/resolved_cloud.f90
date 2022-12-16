@@ -813,9 +813,9 @@ SELECT CASE ( HCLOUD )
     ZZZ = MZF( PZZ )
     IF(LRED .AND. LADJ_BEFORE) THEN
       CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAM, NEB, TURBN, TBUCONF, KRR, &
-                      CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,   &
-                      'ADJU', OSUBG_COND, OSIGMAS, .FALSE., .FALSE.,           &
-                      CSUBG_MF_PDF, PTSTEP, ZSIGQSAT2D,                        &
+                      CFRAC_ICE_ADJUST,                                        &
+                      'ADJU', .FALSE., .FALSE.,                                &
+                      PTSTEP, ZSIGQSAT2D,                                      &
                       PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV,PMFCONV, PPABST, ZZZ,  &
                       ZEXN, PCF_MF, PRC_MF, PRI_MF,                            &
                       ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                            &
@@ -846,8 +846,7 @@ SELECT CASE ( HCLOUD )
                    PRS(IIB:IIE,IJB:IJE,IKB:IKE,6)>ZRSMIN(6)
       CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICE, RAIN_ICE_PARAM, RAIN_ICE_DESCR,TBUCONF,&
                     COUNT(LLMICRO), COUNT(LLMICRO), &
-                    OSEDIC, .FALSE.,CSEDIM, HSUBG_AUCV, CSUBG_AUCV_RI,&
-                    OWARM,                                               &
+                    .FALSE., HSUBG_AUCV, CSUBG_AUCV_RI,&
                     PTSTEP, KRR, LLMICRO, ZEXN,                          &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT,PCLDFR,&
                     PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,              &
@@ -880,9 +879,9 @@ SELECT CASE ( HCLOUD )
 !
     IF (.NOT. LRED .OR. (LRED .AND. LADJ_AFTER) ) THEN
       CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAM, NEB, TURBN, TBUCONF, KRR,       &
-                       CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,   &
-                       'DEPI', OSUBG_COND, OSIGMAS, .FALSE., .FALSE.,          &
-                       CSUBG_MF_PDF, PTSTEP, ZSIGQSAT2D,                       &
+                       CFRAC_ICE_ADJUST,                                       &
+                       'DEPI', .FALSE., .FALSE.,                               &
+                       PTSTEP, ZSIGQSAT2D,                                     &
                        PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,PPABST, ZZZ, &
                        ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
                        ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                           &
@@ -918,9 +917,9 @@ SELECT CASE ( HCLOUD )
     ZZZ = MZF( PZZ )
     IF(LRED .AND. LADJ_BEFORE) THEN
       CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAM, NEB, TURBN, TBUCONF, KRR,        &
-                       CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,   &
-                       'ADJU', OSUBG_COND, OSIGMAS, .FALSE., .FALSE.,          &
-                       CSUBG_MF_PDF, PTSTEP, ZSIGQSAT2D,                       &
+                       CFRAC_ICE_ADJUST,                                       &
+                       'ADJU', .FALSE., .FALSE.,                               &
+                       PTSTEP, ZSIGQSAT2D,                                     &
                        PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV,PMFCONV, PPABST, ZZZ, &
                        ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
                        ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                           &
@@ -954,8 +953,7 @@ SELECT CASE ( HCLOUD )
                    PRS(IIB:IIE,IJB:IJE,IKB:IKE,7)>ZRSMIN(7)
      CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICE, RAIN_ICE_PARAM, RAIN_ICE_DESCR,TBUCONF,&
                     COUNT(LLMICRO), COUNT(LLMICRO), &
-                    OSEDIC, .FALSE., CSEDIM, HSUBG_AUCV, CSUBG_AUCV_RI,&
-                    OWARM,                                                &
+                    .FALSE., HSUBG_AUCV, CSUBG_AUCV_RI,&
                     PTSTEP, KRR, LLMICRO, ZEXN,             &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                     PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
@@ -990,9 +988,9 @@ SELECT CASE ( HCLOUD )
 !
     IF (.NOT. LRED .OR. (LRED .AND. LADJ_AFTER) ) THEN
      CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAM, NEB, TURBN, TBUCONF, KRR,      &
-                     CFRAC_ICE_ADJUST, CCONDENS, CLAMBDA3,  &
-                     'DEPI', OSUBG_COND, OSIGMAS, .FALSE., .FALSE.,          &
-                     CSUBG_MF_PDF, PTSTEP, ZSIGQSAT2D,                       &
+                     CFRAC_ICE_ADJUST,                                       &
+                     'DEPI', .FALSE., .FALSE.,                               &
+                     PTSTEP, ZSIGQSAT2D,                                     &
                      PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,PPABST, ZZZ, &
                      ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
                      ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                           &

@@ -5,9 +5,9 @@
 INTERFACE
 !
       SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEB, TURBN, BUCONF, KRR,            &
-                            &HFRAC_ICE, HCONDENS, HLAMBDA3,&
-                            &HBUNAME, OSUBG_COND, OSIGMAS, OCND2, LHGT_QS,     &
-                            &HSUBG_MF_PDF, PTSTEP, PSIGQSAT,                   &
+                            &HFRAC_ICE,                                        &
+                            &HBUNAME, OCND2, LHGT_QS,                          &
+                            &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
                             &PPABST, PZZ,                                      &
                             &PEXN, PCF_MF, PRC_MF, PRI_MF,                     &
@@ -39,19 +39,11 @@ TYPE(TURB_t),             INTENT(IN)    :: TURBN
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KRR      ! Number of moist variables
 CHARACTER(LEN=1),         INTENT(IN)    :: HFRAC_ICE
-CHARACTER(LEN=80),        INTENT(IN)    :: HCONDENS
-CHARACTER(LEN=4),         INTENT(IN)    :: HLAMBDA3 ! formulation for lambda3 coeff
 CHARACTER(LEN=4),         INTENT(IN)    :: HBUNAME  ! Name of the budget
-LOGICAL,                  INTENT(IN)    :: OSUBG_COND ! Switch for Subgrid
-                                                    ! Condensation
-LOGICAL,                  INTENT(IN)    :: OSIGMAS  ! Switch for Sigma_s:
-                                                    ! use values computed in CONDENSATION
-                                                    ! or that from turbulence scheme
 LOGICAL,                  INTENT(IN)    :: OCND2    ! logical switch to separate liquid
                                                     ! and ice
                                                     ! more rigid (DEFAULT value : .FALSE.)
 LOGICAL,                  INTENT(IN)   :: LHGT_QS   ! logical switch for height dependent VQSIGSAT
-CHARACTER(LEN=80),        INTENT(IN)   :: HSUBG_MF_PDF
 REAL,                     INTENT(IN)   :: PTSTEP    ! Double Time step
                                                     ! (single if cold start)
 REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PSIGQSAT  ! coeff applied to qsat variance contribution
@@ -60,8 +52,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PRHODJ  ! Dry density * Jacobia
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PEXNREF ! Reference Exner function
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PRHODREF
 !
-REAL, DIMENSION(MERGE(D%NIJT,0,OSUBG_COND),&
-                MERGE(D%NKT,0,OSUBG_COND)),           INTENT(IN)    ::  PSIGS   ! Sigma_s at time t
+REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LSUBG_COND),&
+                MERGE(D%NKT,0,TURBN%LSUBG_COND)),           INTENT(IN)    ::  PSIGS   ! Sigma_s at time t
 LOGICAL,                                              INTENT(IN)    ::  LMFCONV ! =SIZE(PMFCONV)!=0
 REAL, DIMENSION(MERGE(D%NIJT,0,LMFCONV),&
                 MERGE(D%NKT,0,LMFCONV)),              INTENT(IN)   ::  PMFCONV ! convective mass flux

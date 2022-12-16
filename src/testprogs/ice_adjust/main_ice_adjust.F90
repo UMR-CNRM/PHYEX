@@ -67,15 +67,10 @@ INTEGER :: IBL, JLON, JLEV
 TYPE(DIMPHYEX_t)         :: D, D0
 TYPE(RAIN_ICE_PARAM_t)   :: ICEP
 CHARACTER(LEN=1)         :: HFRAC_ICE
-CHARACTER(LEN=80)        :: HCONDENS
-CHARACTER(LEN=4)         :: HLAMBDA3 
 CHARACTER(LEN=4)         :: HBUNAME  
-LOGICAL                  :: OSUBG_COND
-LOGICAL                  :: OSIGMAS  
 LOGICAL                  :: OCND2
 LOGICAL                  :: LHGT_QS
 LOGICAL                  :: LMFCONV
-CHARACTER(LEN=80)        :: HSUBG_MF_PDF
 REAL                     :: PTSTEP    
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RI) :: YLBUDGET
 LOGICAL                  :: LLCHECK
@@ -173,14 +168,14 @@ ICEP%XBCRIAUTI = -3.3840957210994582
 
 
 HFRAC_ICE    = 'S'
-HCONDENS     = 'CB02'
-HLAMBDA3     = 'CB'
+TURBN%CCONDENS     = 'CB02'
+TURBN%LLAMBDA3     = 'CB'
 HBUNAME      = 'DEPI'
-OSUBG_COND   = .TRUE.
-OSIGMAS      = .TRUE.
+TURBN%LSUBG_COND   = .TRUE.
+TURBN%LSIGMAS      = .TRUE.
 OCND2        = .FALSE.
 LHGT_QS      = .FALSE.
-HSUBG_MF_PDF = 'TRIANGLE'
+TURBN%CSUBG_MF_PDF = 'TRIANGLE'
 PTSTEP       = 50.000000000000000    
 LMFCONV      = .TRUE.
 DO JRR=1, NBUDGET_RI
@@ -274,15 +269,15 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%U = 0
 #endif
 
-    CALL ICE_ADJUST (D, CST, ICEP, NEB, TURBN, TBUCONF, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND,                &
-    & OSIGMAS, OCND2, LHGT_QS, HSUBG_MF_PDF, PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL),                        &
-    & PEXNREF=PEXNREF (:, :, :, IBL), &
+    CALL ICE_ADJUST (D, CST, ICEP, NEB, TURBN, TBUCONF, KRR, HFRAC_ICE, HBUNAME,                                                &
+    & OCND2, LHGT_QS, PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL),                                               &
+    & PEXNREF=PEXNREF (:, :, :, IBL),                                                                                           &
     & PRHODREF=PRHODREF (:, :, :, IBL), PSIGS=PSIGS (:, :, :, IBL), LMFCONV=LMFCONV, PMFCONV=PMFCONV (:, :, :, IBL),            &
     & PPABST=PPABSM (:, :, :, IBL), PZZ=ZZZ (:, :, :, IBL), PEXN=PEXNREF (:, :, :, IBL), PCF_MF=PCF_MF (:, :, :, IBL),          &
     & PRC_MF=PRC_MF (:, :, :, IBL), PRI_MF=PRI_MF  (:, :, :, IBL),                                                              &
     & PICLDFR=ZDUM1(:, :, :, IBL), PWCLDFR=ZDUM2(:, :, :, IBL), PSSIO=ZDUM3(:, :, :, IBL),                                      &
-    & PSSIU=ZDUM4(:, :, :, IBL), PIFR=ZDUM5(:, :, :, IBL),                                                                        &
-    & PRV=ZRS(:, :, :, 1, IBL), PRC=ZRS(:, :, :, 2, IBL),          &
+    & PSSIU=ZDUM4(:, :, :, IBL), PIFR=ZDUM5(:, :, :, IBL),                                                                      &
+    & PRV=ZRS(:, :, :, 1, IBL), PRC=ZRS(:, :, :, 2, IBL),                                                                       &
     & PRVS=PRS(:, :, :, 1, IBL), PRCS=PRS(:, :, :, 2, IBL), PTH=ZRS(:, :, :, 0, IBL), PTHS=PTHS (:, :, :, IBL),                 &
     & OCOMPUTE_SRC=.TRUE.,                                                                                                      &
     & PSRCS=PSRCS (:, :, :, IBL), PCLDFR=PCLDFR (:, :, :, IBL), PRR=ZRS(:, :, :, 3, IBL), PRI=ZRS(:, :, :, 4, IBL),             &

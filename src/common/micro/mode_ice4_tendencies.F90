@@ -8,7 +8,7 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, KPROMA, KSIZE, &
                           &KRR, ODSOFT, LDCOMPUTE, &
-                          &OWARM, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
+                          &HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
                           &HSUBG_AUCV_RC, HSUBG_AUCV_RI, HSUBG_PR_PDF, &
                           &PEXN, PRHODREF, PLVFACT, PLSFACT, K1, K2, &
                           &PPRES, PCF, PSIGMA_RC, &
@@ -95,7 +95,6 @@ INTEGER,                      INTENT(IN)    :: KPROMA, KSIZE
 INTEGER,                      INTENT(IN)    :: KRR
 LOGICAL,                      INTENT(IN)    :: ODSOFT
 LOGICAL, DIMENSION(KPROMA),   INTENT(IN)    :: LDCOMPUTE
-LOGICAL,                      INTENT(IN)    :: OWARM
 CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_RC_RR_ACCR
 CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_RR_EVAP
 CHARACTER(LEN=4),             INTENT(IN)    :: HSUBG_AUCV_RC
@@ -399,7 +398,7 @@ CALL ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, PRHODREF, ZT, 
 !               --------------------------------------
 !
 !
-IF(OWARM) THEN    !  Check if the formation of the raindrops by the slow
+IF(PARAMI%LWARM) THEN    !  Check if the formation of the raindrops by the slow
                   !  warm processes is allowed
   CALL ICE4_WARM(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, HSUBG_RC_RR_ACCR, HSUBG_RR_EVAP, &
                 &PRHODREF, PLVFACT, ZT, PPRES, ZVART(:,ITH),&

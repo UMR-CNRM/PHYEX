@@ -4,10 +4,9 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ################################################################
-      SUBROUTINE SHALLOW_MF(D, CST, NEB, PARAMMF, TURB, CSTURB,       &
+      SUBROUTINE SHALLOW_MF(D, CST, NEB, PARAMMF, TURBN, CSTURB,      &
                 KRR, KRRL, KRRI, KSV,                                 &
-                HMF_UPDRAFT, HMF_CLOUD, HFRAC_ICE, OMIXUV, OSTATNW,   &
-                ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
+                HFRAC_ICE,ONOMIXLG,KSV_LGBEG,KSV_LGEND,               &
                 PIMPL_MF, PTSTEP,                                     &
                 PDZZ, PZZ,                                            &
                 PRHODJ, PRHODREF,                                     &
@@ -100,19 +99,13 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(NEB_t),            INTENT(IN)   :: NEB
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
-TYPE(TURB_t),           INTENT(IN)   :: TURB
+TYPE(TURB_t),           INTENT(IN)   :: TURBN
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 INTEGER,                INTENT(IN)   :: KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL         ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI         ! number of ice water var.
 INTEGER,                INTENT(IN)   :: KSV
-CHARACTER(LEN=4),       INTENT(IN)   :: HMF_UPDRAFT  ! Type of Mass Flux Scheme
-                                     ! 'NONE' if no parameterization 
-CHARACTER(LEN=4),       INTENT(IN)   :: HMF_CLOUD    ! Type of statistical cloud
-                                                     ! scheme
 CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
-LOGICAL,                INTENT(IN)   :: OSTATNW      ! cloud scheme inclues convect. covar. contrib
-LOGICAL,                INTENT(IN)   :: OMIXUV    ! True if mixing of momentum
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
 INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
@@ -198,7 +191,7 @@ IIJB=D%NIJB
 IKT=D%NKT
 !
 ! updraft governing variables
-IF (HMF_UPDRAFT == 'EDKF'  .OR. HMF_UPDRAFT == 'RHCJ') THEN
+IF (PARAMMF%CMF_UPDRAFT == 'EDKF'  .OR. PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
   PENTR      = 1.E20
   PDETR      = 1.E20
   PEMF       = 1.E20
@@ -233,10 +226,10 @@ ZTHVM(IIJB:IIJE,1:IKT) = PTHM(IIJB:IIJE,1:IKT)*&
 !!! 2. Compute updraft
 !!!    ---------------
 !
-IF (HMF_UPDRAFT == 'EDKF') THEN
+IF (PARAMMF%CMF_UPDRAFT == 'EDKF') THEN
   GENTR_DETR = .TRUE.
-  CALL COMPUTE_UPDRAFT(D, CST, NEB, PARAMMF, TURB, CSTURB,       &
-                       KSV, HFRAC_ICE, GENTR_DETR, OMIXUV,       &
+  CALL COMPUTE_UPDRAFT(D, CST, NEB, PARAMMF, TURBN, CSTURB,      &
+                       KSV, HFRAC_ICE, GENTR_DETR,               &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
                        PSFTH,PSFRV,PPABSM,PRHODREF,              &
@@ -247,10 +240,10 @@ IF (HMF_UPDRAFT == 'EDKF') THEN
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PEMF,PDETR,&
                        PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH,&
                        PDX,PDY)
-ELSEIF (HMF_UPDRAFT == 'RHCJ') THEN
+ELSEIF (PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
   GENTR_DETR = .TRUE.
-  CALL COMPUTE_UPDRAFT_RHCJ10(D, CST, NEB, PARAMMF, TURB, CSTURB,&
-                       KSV, HFRAC_ICE, GENTR_DETR, OMIXUV,       &
+  CALL COMPUTE_UPDRAFT_RHCJ10(D, CST, NEB, PARAMMF, TURBN, CSTURB,&
+                       KSV, HFRAC_ICE, GENTR_DETR,               &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
                        PSFTH,PSFRV,PPABSM,PRHODREF,              &
@@ -260,9 +253,9 @@ ELSEIF (HMF_UPDRAFT == 'RHCJ') THEN
                        PTHV_UP, PW_UP, PU_UP, PV_UP, ZSV_UP,     &
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PEMF,PDETR,&
                        PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH )
-ELSEIF (HMF_UPDRAFT == 'RAHA') THEN
+ELSEIF (PARAMMF%CMF_UPDRAFT == 'RAHA') THEN
    CALL COMPUTE_UPDRAFT_RAHA(D, CST, NEB, PARAMMF,               &
-                       KSV, HFRAC_ICE, GENTR_DETR, OMIXUV,       &
+                       KSV, HFRAC_ICE, GENTR_DETR,               &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
                        PSFTH,PSFRV,                              &
@@ -275,18 +268,18 @@ ELSEIF (HMF_UPDRAFT == 'RAHA') THEN
                        PEMF,PDETR,PENTR,                         &
                        ZBUO_INTEG,KKLCL,KKETL,KKCTL,             &
                        ZDEPTH )
-ELSEIF (HMF_UPDRAFT == 'DUAL') THEN
+ELSEIF (PARAMMF%CMF_UPDRAFT == 'DUAL') THEN
   !Updraft characteristics are already computed and received by interface
 ELSE
-  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'SHALLOW_MF', 'no updraft model for EDKF: CMF_UPDRAFT='//TRIM(HMF_UPDRAFT) )
+  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'SHALLOW_MF', 'no updraft model for EDKF: CMF_UPDRAFT='//TRIM(PARAMMF%CMF_UPDRAFT) )
 ENDIF
 
 !!! 5. Compute diagnostic convective cloud fraction and content
 !!!    --------------------------------------------------------
 !
-CALL COMPUTE_MF_CLOUD(D, CST, CSTURB, PARAMMF, OSTATNW, &
+CALL COMPUTE_MF_CLOUD(D,CST,CSTURB,PARAMMF,TURBN%OSTATNW,&
                       KRR, KRRL, KRRI,                  &
-                      HMF_CLOUD,ZFRAC_ICE,              &
+                      ZFRAC_ICE,                        &
                       PRC_UP,PRI_UP,PEMF,               &
                       PTHL_UP,PRT_UP,PFRAC_UP,          &
                       PTHV_UP,ZFRAC_ICE_UP,             &
@@ -305,7 +298,7 @@ ZEMF_O_RHODREF(IIJB:IIJE,1:IKT)=PEMF(IIJB:IIJE,1:IKT)/PRHODREF(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
 IF ( PIMPL_MF > 1.E-10 ) THEN  
-  CALL MF_TURB(D, KSV, OMIXUV,                     &
+  CALL MF_TURB(D, KSV, PARAMMF%LMIXUV,                                &
              ONOMIXLG,KSV_LGBEG,KSV_LGEND,                            &
              PIMPL_MF, PTSTEP,                                        &
              PDZZ,                                                    &
@@ -316,17 +309,16 @@ IF ( PIMPL_MF > 1.E-10 ) THEN
              PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,         &
              ZFLXZSVMF                                                )
 ELSE
-  CALL MF_TURB_EXPL(D, PARAMMF, OMIXUV,                 &
-         PRHODJ,                                                       &
-         ZTHLM,ZTHVM,ZRTM,PUM,PVM,                                     &
+  CALL MF_TURB_EXPL(D, PARAMMF,                                        &
+         PRHODJ,ZTHLM,ZTHVM,ZRTM,PUM,PVM,                              &
          PDTHLDT_MF,PDRTDT_MF,PDUDT_MF,PDVDT_MF,                       &
          ZEMF_O_RHODREF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,            &
          PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF)
 ENDIF
 
-! security in the case HMF_UPDRAFT = 'DUAL'
+! security in the case PARAMMF%CMF_UPDRAFT = 'DUAL'
 ! to be modified if 'DUAL' is evolving (momentum mixing for example)
-IF( HMF_UPDRAFT == 'DUAL') THEN
+IF( PARAMMF%CMF_UPDRAFT == 'DUAL') THEN
   ! Now thetav_up from vdfhghtnn is used!
   PFLXZTHVMF=0.
   ! Yes/No UV mixing!

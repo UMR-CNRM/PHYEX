@@ -33,7 +33,7 @@ Merge pb:
         src/mesonh/micro/ice_adjust_elec.f90 et src/mesonh/micro/lima_adjust_split.f90
         mais non testés
   - arp_shallow_mf non phasé
-  - LIMA à faire
+  - LIMA à faire dans AROME (récupérer code dans mesonh)
   - KFB ?
 
 Pb identifiés à corriger plus tard:
@@ -48,9 +48,6 @@ Pb identifiés à corriger plus tard:
   - th_r_from_thl_rt appelée partout, il faudrait limiter à OTEST
   - sedimentation momentum non branchée
   - si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
-  - il faudrait nettoyer les interfaces pour supprimer les clés passées directement
-    alors qu'elles sont également disponibles dans les structures (ex: HMF_UPDRAFT)
-  - il faudrait harmoniser l'utilisation des variables D% (cad faire IKT=D%NKT en haut ou utiliser directement D%NKT)
   - La taille du buffer utilisé pour th_r_from_thl_rt doit être mise en module et
     utilisée pour déclarer le buffer dans les routines appelantes et dans th_r_from_thl_rt
   - shallow_mf_pack devrait être récrit pour appeler directement shallow_mf sans recopier les tableaux pour les changer de forme

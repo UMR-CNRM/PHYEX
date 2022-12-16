@@ -7,7 +7,7 @@ MODULE MODE_ICE4_SEDIMENTATION_SPLIT
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
-                                   &PTSTEP, KRR, OSEDIC, PDZZ, &
+                                   &PTSTEP, KRR, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                    &PINPRC, PINPRR, PINPRI, PINPRS, PINPRG, &
@@ -56,7 +56,6 @@ TYPE(RAIN_ICE_DESCR_t),       INTENT(IN)              :: ICED
 TYPE(PARAM_ICE_t),            INTENT(IN)              :: PARAMI
 REAL,                         INTENT(IN)              :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                      INTENT(IN)              :: KRR     ! Number of moist variable
-LOGICAL,                      INTENT(IN)              :: OSEDIC  ! Switch for droplet sedim.
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PDZZ    ! Layer thikness (m)
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PRHODREF! Reference density
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PPABST  ! absolute pressure at t
@@ -114,7 +113,7 @@ IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT', 0, ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------
 !
 !
-GSEDIC = OSEDIC
+GSEDIC = PARAMI%LSEDIC
 IRR    = KRR
 !
 IKTB=D%NKTB

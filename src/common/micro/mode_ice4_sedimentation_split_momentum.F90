@@ -7,7 +7,7 @@ MODULE MODE_ICE4_SEDIMENTATION_SPLIT_MOMENTUM
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_SEDIMENTATION_SPLIT_MOMENTUM(KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKE, KKTB, KKTE, KKT, KKL, &
-                                   &PTSTEP, KRR, OSEDIC, OMOMENTUM, PDZZ, &
+                                   &PTSTEP, KRR, PARAMI%LSEDIC, OMOMENTUM, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                    &PINPRC, PINPRR, PINPRI, PINPRS, PINPRG, &
@@ -51,7 +51,7 @@ INTEGER, INTENT(IN) :: KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKE, KKTB, KKTE, KKT
 INTEGER,                      INTENT(IN)              :: KKL     !vert. levels type 1=MNH -1=ARO
 REAL,                         INTENT(IN)              :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                      INTENT(IN)              :: KRR     ! Number of moist variable
-LOGICAL,                      INTENT(IN)              :: OSEDIC  ! Switch for droplet sedim.
+LOGICAL,                      INTENT(IN)              :: PARAMI%LSEDIC  ! Switch for droplet sedim.
 LOGICAL,                      INTENT(IN)              :: OMOMENTUM  ! Switch to use momentum flux
 REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PDZZ    ! Layer thikness (m)
 REAL, DIMENSION(KIT,KJT,KKT), INTENT(IN)              :: PRHODREF! Reference density
@@ -119,7 +119,7 @@ REAL, DIMENSION(SIZE(XRTMIN)) :: ZRSMIN
 !
 ZINVTSTEP=1./PTSTEP
 ZRSMIN(:) = XRTMIN(:) * ZINVTSTEP
-IF (OSEDIC) PINPRC (:,:) = 0.
+IF (PARAMI%LSEDIC) PINPRC (:,:) = 0.
 PINPRR (:,:) = 0.
 PINPRI (:,:) = 0.
 PINPRS (:,:) = 0.
@@ -129,7 +129,7 @@ IF (PRESENT(PFPR)) PFPR(:,:,:,:) = 0.
 !
 !*       1. Parameters for cloud sedimentation
 !
-IF (OSEDIC) THEN
+IF (PARAMI%LSEDIC) THEN
   ZRAY(:,:,:)   = 0.
   ZLBC(:,:,:)   = XLBC(1)
   ZFSEDC(:,:,:) = XFSEDC(1)
@@ -160,7 +160,7 @@ ENDIF
 !  For optimization we consider each variable separately
 !
 ! External tendecies
-IF (OSEDIC) THEN
+IF (PARAMI%LSEDIC) THEN
   ZPRCS(:,:,:) = PRCS(:,:,:)-PRCT(:,:,:)*ZINVTSTEP
 ENDIF
 ZPRRS(:,:,:) = PRRS(:,:,:)-PRRT(:,:,:)*ZINVTSTEP
@@ -188,7 +188,7 @@ END DO
 !
 !*       2.1   for cloud
 !
-IF (OSEDIC) THEN
+IF (PARAMI%LSEDIC) THEN
   ZREMAINT(:,:) = PTSTEP
   FIRST = .TRUE.
   DO WHILE (ANY(ZREMAINT>0.))

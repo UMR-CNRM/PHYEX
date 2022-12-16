@@ -7,7 +7,7 @@ MODULE MODE_ICE4_SEDIMENTATION_STAT
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
-                                  &PTSTEP, KRR, OSEDIC, PDZZ, &
+                                  &PTSTEP, KRR, PARAMI%LSEDIC, PDZZ, &
                                   &PRHODREF, PPABST, PTHT, PRHODJ, &
                                   &PLBDAS, &
                                   &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, &
@@ -57,7 +57,7 @@ TYPE(RAIN_ICE_PARAM_t),       INTENT(IN)              :: ICEP
 TYPE(RAIN_ICE_DESCR_t),       INTENT(IN)              :: ICED
 REAL,                         INTENT(IN)              :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                      INTENT(IN)              :: KRR     ! Number of moist variable
-LOGICAL,                      INTENT(IN)              :: OSEDIC  ! Switch for droplet sedim.
+LOGICAL,                      INTENT(IN)              :: PARAMI%LSEDIC  ! Switch for droplet sedim.
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PDZZ    ! Layer thikness (m)
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PRHODREF! Reference density
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)              :: PPABST  ! absolute pressure at t
@@ -166,7 +166,7 @@ DO JK = IKE , IKB, -1*IKL
     IF (JRR==2) THEN
 
       !******* for cloud
-      IF (OSEDIC) THEN
+      IF (PARAMI%LSEDIC) THEN
         CALL CLOUD(PRCT(:,:,JK))
       ELSE
         ZSED(:,:,IK,JRR)=0.
@@ -230,7 +230,7 @@ DO JK = IKE , IKB, -1*IKL
   IF (JK==IKB) THEN
     DO JJ = IJB, IJE
       DO JI = IIB, IIE
-        IF(OSEDIC) PINPRC(JI,JJ) = ZSED(JI,JJ,IK,2)/CST%XRHOLW
+        IF(PARAMI%LSEDIC) PINPRC(JI,JJ) = ZSED(JI,JJ,IK,2)/CST%XRHOLW
         PINPRR(JI,JJ) = ZSED(JI,JJ,IK,3)/CST%XRHOLW
         PINPRI(JI,JJ) = ZSED(JI,JJ,IK,4)/CST%XRHOLW
         PINPRS(JI,JJ) = ZSED(JI,JJ,IK,5)/CST%XRHOLW

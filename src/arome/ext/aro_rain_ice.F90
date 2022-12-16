@@ -398,9 +398,8 @@ IF (CMICRO=='ICE4') THEN
     CALL RAIN_ICE(  YLDIMPHYEX, CST, PARAM_ICE, RAIN_ICE_PARAM, &
                  &  RAIN_ICE_DESCR, TBUCONF, &
                  &  IPROMA, ISIZE, &
-                 &  OSEDIC=OSEDIC, OCND2=OCND2, HSEDIM=CSEDIM, &
+                 &  OCND2=OCND2, &
                  &  HSUBG_AUCV_RC=CSUBG_AUCV_RC, HSUBG_AUCV_RI=CSUBG_AUCV_RI,&
-                 &  OWARM=OWARM, &
                  &  PTSTEP=2*PTSTEP, &
                  &  KRR=KRR, ODMICRO=LLMICRO, PEXN=PEXNREF,            &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF, PEXNREF=PEXNREF,&
@@ -424,9 +423,8 @@ ELSEIF (CMICRO=='ICE3') THEN
     CALL RAIN_ICE(  YLDIMPHYEX, CST, PARAM_ICE, RAIN_ICE_PARAM, &
                  &  RAIN_ICE_DESCR, TBUCONF, &
                  &  IPROMA, ISIZE, &
-                 &  OSEDIC=OSEDIC, OCND2=OCND2, HSEDIM=CSEDIM, &
+                 &  OCND2=OCND2, &
                  &  HSUBG_AUCV_RC=CSUBG_AUCV_RC, HSUBG_AUCV_RI=CSUBG_AUCV_RI,&
-                 &  OWARM=OWARM, &
                  &  PTSTEP=2*PTSTEP, &
                  &  KRR=KRR, ODMICRO=LLMICRO, PEXN=PEXNREF,            &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF,PEXNREF=PEXNREF,&

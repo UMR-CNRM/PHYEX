@@ -5,9 +5,8 @@
 INTERFACE
       SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
                             KPROMA, KSIZE,                                        &
-                            OSEDIC, OCND2, HSEDIM, HSUBG_AUCV_RC, HSUBG_AUCV_RI,  &
-                            OWARM,                                                & 
-                            PTSTEP, KRR, ODMICRO, PEXN,             &
+                            OCND2, HSUBG_AUCV_RC, HSUBG_AUCV_RI,                  &
+                            PTSTEP, KRR, ODMICRO, PEXN,                           &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
                             PTHT, PRVT, PRCT, PRRT, PRIT, PRST,                   &
@@ -35,17 +34,11 @@ TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KPROMA ! cache-blocking factor for microphysic loop
 INTEGER,                  INTENT(IN)    :: KSIZE
-LOGICAL,                  INTENT(IN)    :: OSEDIC ! Switch for droplet sedim.
 LOGICAL                                 :: OCND2  ! Logical switch to separate liquid and ice
-CHARACTER(LEN=4),         INTENT(IN)    :: HSEDIM ! Sedimentation scheme
 CHARACTER(LEN=4),         INTENT(IN)    :: HSUBG_AUCV_RC ! Switch for rc->rr Subgrid autoconversion
                                         ! Kind of Subgrid autoconversion method
 CHARACTER(LEN=80),        INTENT(IN)    :: HSUBG_AUCV_RI ! Switch for ri->rs Subgrid autoconversion
                                         ! Kind of Subgrid autoconversion method
-LOGICAL,                  INTENT(IN)    :: OWARM   ! .TRUE. allows raindrops to
-                                                   !   form by warm processes
-                                                   !      (Kessler scheme)
-!
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step
                                                    ! (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
