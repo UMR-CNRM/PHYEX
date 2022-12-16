@@ -3,7 +3,7 @@ $FCOMPILER     =     gfortran
 $BASE_FFLAGS   =     -c -fPIC -fdefault-real-8 -fdefault-double-8 -ffree-line-length-none -fopenmp -fconvert=swap -fallow-argument-mismatch
 $PROD_FFLAGS   =     -O3
 $DEV_FFLAGS    =     -O1
-$DEBUG_FFLAGS  =     -fbounds-check
+$DEBUG_FFLAGS  =     -O0 -g -fbounds-check -finit-real=snan -ffpe-trap=invalid,zero,overflow
 $CCOMPILER     =     gcc
 $BASE_CFLAGS   =     -c -fPIC -fopenmp
 $PROD_CFLAGS   =     -O3

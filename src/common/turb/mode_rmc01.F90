@@ -50,7 +50,7 @@ USE MODD_CST, ONLY : CST_t
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CTURB, ONLY: CSTURB_t
 !
-USE MODE_RMC01_3D, ONLY: RMC01_3D
+USE MODE_UPDATE_IIJU_PHY, ONLY: UPDATE_IIJU_PHY
 USE MODE_SBL_PHY, ONLY: BUSINGER_PHIM, BUSINGER_PHIE
 !
 USE SHUMAN_PHY, ONLY: MZF_PHY, MYF_PHY, MXF_PHY
@@ -96,6 +96,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZZC  ! alt. where turb. is isotr.
                                                              ! size
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZL   ! SBL length
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZWORK1, ZWORK2
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZDH  ! hor. grid mesh
 !-------------------------------------------------------------------------------
 !
 !*     1. Initializations
@@ -164,7 +165,21 @@ SELECT CASE (HTURBLEN)
 !  same law as in the neutral case (i.e. with Phim = 1).
 !
   CASE ('DELT','DEAR')
-    CALL RMC01_3D(D,CST,PDXX,PDYY,PDZZ,PDIRCOSZW,ZPHIM,ZZC)
+    CALL MXF_PHY(D,PDXX,ZWORK1)
+    CALL MYF_PHY(D,PDYY,ZWORK2)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    ZDH(IIJB:IIJE,1:D%NKT) = SQRT(ZWORK1(IIJB:IIJE,1:D%NKT)*ZWORK2(IIJB:IIJE,1:D%NKT))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+    !
+    CALL UPDATE_IIJU_PHY(D,ZZC)
+    !
+    DO JK=1,D%NKT
+      !$mnh_expand_array(JIJ=IIJB:IIJE)
+      ZZC(IIJB:IIJE,JK) = 2.*MIN(ZPHIM(IIJB:IIJE,JK),1.)/CST%XKARMAN    &
+                            * MAX( PDZZ(IIJB:IIJE,JK)*PDIRCOSZW(IIJB:IIJE) , & 
+                            ZDH(IIJB:IIJE,JK)/PDIRCOSZW(IIJB:IIJE)/3. )
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+    END DO
     !
 !*     4. factor controling the transition between SBL and free isotropic turb. (3D case)
 !         --------------------------------------------------------------------

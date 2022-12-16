@@ -9,10 +9,15 @@ set -e
 
 #ice_adjust: the ice adjust test case
 
-#ref is commit 855b8f8 for ice_adjust, rain_ice, turb and shallow_mf
+#ref is commit 855b8f8 for ice_adjust, rain_ice
+#ref is commit 4171c53 for turb
+
+#Commit 4171c53 can be used for turb (ref commit for this testprogs), and for
+#rain_ice and ice_adjust (as it gives the same results as commit 855b8f8
+#for these test cases).
 
 specialName="ref"
-availTests="ice_adjust,rain_ice,rain_ice_old"
+availTests="ice_adjust,rain_ice,rain_ice_old,turb"
 defaultTest='ALL'
 separator='_' #- seprator must be in sync with prep_code.sh separator
 
@@ -182,7 +187,7 @@ if [ $compilation -eq 1 ]; then
   else
     expand_options=""
   fi
-  subs="$subs -s turb -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s support"
+  subs="$subs -s turb -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s support"
   prep_code=$PHYEXTOOLSDIR/prep_code.sh
 
   if [ "$fromdir" == '' ]; then
@@ -258,9 +263,13 @@ if [ $check -eq 1 ]; then
     fi
     if [ $te -eq 0 ]; then
       set +e
-      mess=$(cmp $file1 $file2 246 246 2>&1)
+      mess=$(cmp <(cat $file1 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g') \
+                 <(cat $file2 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g') 246 246 2>&1)
       te=$?
       set -e
+      #The use of "<()" bash syntax replaces the actual file name seen by cmp
+      #We modify the cmp output to display the actual file names
+      mess=$(echo $mess | sed "s#^.*differ# $file1 $file2 differ#")
     fi
     [ $te -ne 0 ] && message="$message $mess \n"
     alltests=$(($alltests+$te))

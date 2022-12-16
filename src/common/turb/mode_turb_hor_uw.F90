@@ -7,8 +7,8 @@ MODULE MODE_TURB_HOR_UW
 IMPLICIT NONE
 CONTAINS
 !     ################################################################
-      SUBROUTINE TURB_HOR_UW(TURBN,KSPLT,                            &
-                      KRR,                                           &
+      SUBROUTINE TURB_HOR_UW(TURBN,TLES,KSPLT,                       &
+                      KRR,KSV,OFLAT,                                 &
                       TPFILE,                                        &
                       PK,PINV_PDXX,PINV_PDZZ,PMZM_PRHODJ,            &
                       PDXX,PDZZ,PDZX,                                &
@@ -49,7 +49,7 @@ CONTAINS
 !!    -------------
 !!                     Aug    , 1997 (V. Saravane) spliting of TURB_HOR
 !!                     Nov  27, 1997 (V. Masson) clearing of the routine
-!!                     Oct  18, 2000 (V. Masson) LES computations + LFLAT switch
+!!                     Oct  18, 2000 (V. Masson) LES computations + OFLAT switch
 !!                     Feb  14, 2001 (V. Masson and J. Stein) DZF bug on PRWS
 !!                                   + remove the use of W=0 at the ground
 !!                                   + extrapolation under the ground
@@ -65,13 +65,11 @@ CONTAINS
 USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODD_CST
-USE MODD_CONF
 USE MODD_CTURB
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
-USE MODD_LES
-USE MODD_NSV
+USE MODD_LES, ONLY: TLES_t
 !
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 !
@@ -93,8 +91,11 @@ IMPLICIT NONE
 !
 !
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
+TYPE(TLES_t),             INTENT(INOUT) :: TLES          ! modd_les structure
 INTEGER,                  INTENT(IN)    ::  KSPLT        ! split process index
 INTEGER,                  INTENT(IN)    ::  KRR          ! number of moist var.
+INTEGER,                  INTENT(IN)    ::  KSV          ! number of sv var.
+LOGICAL,                  INTENT(IN)    ::  OFLAT        ! Logical for zero ororography
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
 !
 
@@ -188,7 +189,7 @@ END IF
 PRUS(:,:,:) = PRUS(:,:,:) - DZF( ZFLX* MXM( PMZM_PRHODJ ) / MXM( PDZZ ) )
 !
 !computation of the source for rho*W due to this flux
-IF (.NOT. LFLAT) THEN
+IF (.NOT. OFLAT) THEN
   PRWS(:,:,:) = PRWS(:,:,:)                              &
         -DXF( MZM( MXM(PRHODJ) * PINV_PDXX) * ZFLX)           &
         +DZM( PRHODJ * MXF( MZF( ZFLX*PDZX ) * PINV_PDXX ) / MZF(PDZZ) )
@@ -225,23 +226,23 @@ END IF
 !
 ! Storage in the LES configuration (addition to TURB_VER computation)
 !
-IF (LLES_CALL .AND. KSPLT==1) THEN
+IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
   CALL SECOND_MNH(ZTIME1)
-  CALL LES_MEAN_SUBGRID( MZF(MXF(ZFLX)), X_LES_SUBGRID_WU , .TRUE. )
-  CALL LES_MEAN_SUBGRID( MZF(MXF(GZ_U_UW(PUM,PDZZ)*ZFLX)), X_LES_RES_ddxa_U_SBG_UaU , .TRUE.)
-  CALL LES_MEAN_SUBGRID( MZF(MXF(GX_W_UW_PWM*ZFLX)), X_LES_RES_ddxa_W_SBG_UaW , .TRUE.)
+  CALL LES_MEAN_SUBGRID( MZF(MXF(ZFLX)), TLES%X_LES_SUBGRID_WU , .TRUE. )
+  CALL LES_MEAN_SUBGRID( MZF(MXF(GZ_U_UW(PUM,PDZZ)*ZFLX)), TLES%X_LES_RES_ddxa_U_SBG_UaU , .TRUE.)
+  CALL LES_MEAN_SUBGRID( MZF(MXF(GX_W_UW_PWM*ZFLX)), TLES%X_LES_RES_ddxa_W_SBG_UaW , .TRUE.)
   CALL LES_MEAN_SUBGRID( MXF(GX_M_U(1,IKU,1,PTHLM,PDXX,PDZZ,PDZX)*MZF(ZFLX)),&
-                         X_LES_RES_ddxa_Thl_SBG_UaW , .TRUE.)
+                         TLES%X_LES_RES_ddxa_Thl_SBG_UaW , .TRUE.)
   IF (KRR>=1) THEN
     CALL LES_MEAN_SUBGRID( MXF(GX_M_U(1,IKU,1,PRM(:,:,:,1),PDXX,PDZZ,PDZX)*MZF(ZFLX)), &
-                           X_LES_RES_ddxa_Rt_SBG_UaW , .TRUE.)
+                           TLES%X_LES_RES_ddxa_Rt_SBG_UaW , .TRUE.)
   END IF
-  DO JSV=1,NSV
+  DO JSV=1,KSV
     CALL LES_MEAN_SUBGRID( MXF(GX_M_U(1,IKU,1,PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)*MZF(ZFLX)), &
-                           X_LES_RES_ddxa_Sv_SBG_UaW(:,:,:,JSV) , .TRUE.)
+                           TLES%X_LES_RES_ddxa_Sv_SBG_UaW(:,:,:,JSV) , .TRUE.)
   END DO
   CALL SECOND_MNH(ZTIME2)
-  XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+  TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 END IF
 
 !

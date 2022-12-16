@@ -41,10 +41,10 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !        Original : 03-12-12
 !     ------------------------------------------------------------------
 
-USE MODD_LES,   ONLY : LLES, LLES_CALL
+USE MODD_LES,   ONLY : TLES
 USE MODD_CTURB, ONLY : XLINI
 USE MODD_TURB_n, ONLY: LHARAT, LSTATNW, CTURBLEN, TURB_GOTO_MODEL, LTURB_FLX, LTURB_DIAG, &
-                       LSUBG_COND, LRMC01, CTURBDIM, XIMPL
+                       LSUBG_COND, LRMC01, CTURBDIM, XIMPL, CTOM
 USE MODI_INI_CTURB
 
 IMPLICIT NONE
@@ -67,7 +67,6 @@ IF (LHOOK) CALL DR_HOOK('AROINI_TURB',0,ZHOOK_HANDLE)
 CALL TURB_GOTO_MODEL(1,1)
 !
 CALL INI_CTURB
-
 !         1bis. Modification of MODD_CTURB values
 XLINI=PLINI
 LHARAT=OHARATU
@@ -75,8 +74,8 @@ LSTATNW=OSTATNW
 
 !         2. Set implicit default values for MODD_LES
 
-LLES=.FALSE.
-LLES_CALL=.FALSE.
+TLES%LLES=.FALSE.
+TLES%LLES_CALL=.FALSE.
 
 !         3. Set implicit default values for MODD_TURB_n
 
@@ -87,6 +86,7 @@ LTURB_DIAG = .FALSE.
 XIMPL = 1.
 LSUBG_COND = OSUBG_COND
 LRMC01 = .FALSE.
+CTOM = 'NONE'
 
 !     ------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('AROINI_TURB',1,ZHOOK_HANDLE)

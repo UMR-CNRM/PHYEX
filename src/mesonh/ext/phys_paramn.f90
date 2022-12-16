@@ -275,7 +275,7 @@ USE MODD_FRC
 USE MODD_FRC_n
 USE MODD_GRID
 USE MODD_GRID_n
-USE MODD_IBM_PARAM_n,      ONLY: LIBM, XIBM_EPSI, XIBM_LS
+USE MODD_IBM_PARAM_n,      ONLY: LIBM, XIBM_EPSI, XIBM_LS, XIBM_XMUT
 USE MODD_ICE_C1R3_DESCR,  ONLY : XRTMIN_C1R3=>XRTMIN
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_LATZ_EDFLX
@@ -868,12 +868,12 @@ IF (LOCEAN) THEN
   ZIZOCE(IKU)   = XSSOLA_T(JSW+1)*(1.-ZSWA)+XSSOLA_T(JSW+2)*ZSWA
   ZPROSOL1(IKU) = CST%XROC*ZIZOCE(IKU)
   ZPROSOL2(IKU) = (1.-CST%XROC)*ZIZOCE(IKU)
-!  IF(NVERB >= 5 ) THEN   
+  IF(NVERB >= 5 ) THEN   
 !    WRITE(ILUOUT,*)'ZSWA JSW TDTCUR XTSTEP FT FU FV SolarR(IKU)', NINFRT, ZSWA,JSW,&
 !       TDTCUR%xtime, XTSTEP, ZSFTH(2,2), ZSFU(2,2),ZSFV(2,2),ZIZOCE(IKU)
-!   WRITE(ILUOUT,*)'XSSTP1,XSSTP,NINFRT,ZSWA,JSW,TDTCUR%xtime,ZSFT', &
-!      XSSTFL_T(JSW+1),XSSTFL_T(JSW),NINFRT,ZSWA,JSW, TDTCUR%xtime,ZSFTH(2,2)
-!  END IF
+   WRITE(ILUOUT,*)'XSSTP1,XSSTP,NINFRT,ZSWA,JSW,TDTCUR%xtime,ZSFT', &
+      XSSTFL_T(JSW+1),XSSTFL_T(JSW),NINFRT,ZSWA,JSW, TDTCUR%xtime,ZSFTH(2,2)
+  END IF
   if ( TBUCONF%LBUDGET_th ) call Budget_store_init( TBUDGETS(NBUDGET_TH), 'OCEAN', xrths(:, :, :) ) 
   DO JKM=IKU-1,2,-1
     ZPROSOL1(JKM) = ZPROSOL1(JKM+1)* exp(-XDZZ(2,2,JKM)/CST%XD1)
@@ -1564,12 +1564,13 @@ IF(LLEONARD) THEN
   ZHGRAD(:,:,:,5) = GX_M_M(XRT(:,:,:,1), XDXX,XDZZ,XDZX,1,IKU,1)
   ZHGRAD(:,:,:,6) = GY_M_M(XRT(:,:,:,1), XDXX,XDZZ,XDZX,1,IKU,1)
 END IF
-   CALL TURB( CST,CSTURB, TBUCONF, TURBN,YLDIMPHYEX,&
-              IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, IGRADIENTS, 1, NMODEL_CLOUD,       &
+   CALL TURB( CST,CSTURB, TBUCONF, TURBN,YLDIMPHYEX,TLES, &
+              IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, IGRADIENTS, NHALO,                 &
+              1, NMODEL_CLOUD,                                                       &
               NSV, NSV_LGBEG, NSV_LGEND,CPROGRAM,                                    &
               NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,                    &
               L2D, LNOMIXLG,LFLAT,                                                   &
-              LLES_CALL, LCOUPLES, LBLOWSNOW,                                        &
+              LCOUPLES, LBLOWSNOW, LIBM,                                             &
               GCOMPUTE_SRC, XRSNOW,                                                  &
               LOCEAN, LDEEPOC, LDIAG_IN_RUN,                                         &
               CTURBLEN_CLOUD, CCLOUD,                                                &
@@ -1587,6 +1588,7 @@ END IF
               XTHW_FLUX, XRCW_FLUX, XSVW_FLUX,XDYP, XTHP, ZTDIFF, ZTDISS,            &
               TBUDGETS, KBUDGETS=SIZE(TBUDGETS),PLEM=XLEM,PRTKEMS=XRTKEMS,           &
               PTR=XTR, PDISS=XDISS, PCURRENT_TKE_DISS=XCURRENT_TKE_DISS,             &
+              PIBM_LS=XIBM_LS(:,:,:,1), PIBM_XMUT=XIBM_XMUT,                         & 
               PSSTFL=XSSTFL, PSSTFL_C=XSSTFL_C, PSSRFL_C=XSSRFL_C,                   &
               PSSUFL_C=XSSUFL_C, PSSVFL_C=XSSVFL_C, PSSUFL=XSSUFL, PSSVFL=XSSVFL     )
 !

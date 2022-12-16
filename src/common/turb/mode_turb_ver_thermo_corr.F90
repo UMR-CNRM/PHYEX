@@ -5,9 +5,9 @@
 MODULE MODE_TURB_VER_THERMO_CORR
 IMPLICIT NONE
 CONTAINS      
-SUBROUTINE TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,                 &
+SUBROUTINE TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,TLES,            &
                       KRR,KRRL,KRRI,KSV,                            &
-                      OCOMPUTE_SRC,OCOUPLES,OLES_CALL,              &
+                      OCOMPUTE_SRC,OCOUPLES,                        &
                       PEXPL,TPFILE,                                 &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,           &
                       PRHODJ,PTHVREF,                               &
@@ -212,7 +212,7 @@ USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
-USE MODD_LES
+USE MODD_LES, ONLY: TLES_t
 !
 USE MODI_LES_MEAN_SUBGRID_PHY
 !
@@ -232,11 +232,11 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
+TYPE(TLES_t),           INTENT(INOUT):: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KSV           ! number of scalar var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
-LOGICAL,                INTENT(IN)   ::  OLES_CALL    ! compute the LES diagnostics at current time-step
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and version 
 REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
@@ -624,36 +624,36 @@ END IF
 !
 ! and we store in LES configuration
 !
-  IF (OLES_CALL) THEN
+  IF (TLES%LLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
     !
-    CALL LES_MEAN_SUBGRID_PHY(D,ZFLXZ, X_LES_SUBGRID_Thl2 )
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZFLXZ, TLES%X_LES_SUBGRID_Thl2 )
     !
     CALL MZF_PHY(D,PWM,ZWORK1)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2, X_LES_RES_W_SBG_Thl2 )
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2, TLES%X_LES_RES_W_SBG_Thl2 )
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK1(IIJB:IIJE,1:D%NKT) = -2.*CSTURB%XCTD*PSQRT_TKE(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT) &
                                       / PLEPS(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_DISS_Thl2 )
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_DISS_Thl2 )
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK1(IIJB:IIJE,1:D%NKT) = PETHETA(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_ThlThv )
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_ThlThv )
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
     ZWORK1(IIJB:IIJE,1:D%NKT) = -CSTURB%XA3*PBETA(IIJB:IIJE,1:D%NKT)*PETHETA(IIJB:IIJE,1:D%NKT) &
                                       * ZFLXZ(IIJB:IIJE,1:D%NKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-    CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_ThlPz, .TRUE. )
+    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_ThlPz, .TRUE. )
     !
     CALL SECOND_MNH(ZTIME2)
-    XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+    TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
   END IF
 !
   IF ( KRR /= 0 ) THEN
@@ -937,47 +937,47 @@ END IF
 !
 ! and we store in LES configuration
 !
-IF (OLES_CALL) THEN
+IF (TLES%LLES_CALL) THEN
       CALL SECOND_MNH(ZTIME1)
       !
-      CALL LES_MEAN_SUBGRID_PHY(D,ZFLXZ, X_LES_SUBGRID_THlRt )
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZFLXZ, TLES%X_LES_SUBGRID_THlRt )
       !
       CALL MZF_PHY(D,PWM,ZWORK1)
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2, X_LES_RES_W_SBG_ThlRt )
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2, TLES%X_LES_RES_W_SBG_ThlRt )
       !
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZWORK1(IIJB:IIJE,1:D%NKT) = -2.*CSTURB%XCTD*PSQRT_TKE(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT) &
                                         / PLEPS(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_DISS_ThlRt )
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_DISS_ThlRt )
       !
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZWORK1(IIJB:IIJE,1:D%NKT) = PETHETA(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_RtThv )
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_RtThv )
       !
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZWORK1(IIJB:IIJE,1:D%NKT) = -CSTURB%XA3*PBETA(IIJB:IIJE,1:D%NKT)*PETHETA(IIJB:IIJE,1:D%NKT) &
                                         * ZFLXZ(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_RtPz, .TRUE. )
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_RtPz, .TRUE. )
       !
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZWORK1(IIJB:IIJE,1:D%NKT) = PEMOIST(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_ThlThv , .TRUE. )
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_ThlThv , .TRUE. )
       !
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZWORK1(IIJB:IIJE,1:D%NKT) = -CSTURB%XA3*PBETA(IIJB:IIJE,1:D%NKT)*PEMOIST(IIJB:IIJE,1:D%NKT) &
                                         * ZFLXZ(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_ThlPz, .TRUE. )
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_ThlPz, .TRUE. )
       !
       CALL SECOND_MNH(ZTIME2)
-      XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+      TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 END IF
 !
 !
@@ -1202,36 +1202,36 @@ ENDIF
     !
     ! and we store in LES configuration
     !
-    IF (OLES_CALL) THEN
+    IF (TLES%LLES_CALL) THEN
       CALL SECOND_MNH(ZTIME1)
       !
-      CALL LES_MEAN_SUBGRID_PHY(D,ZFLXZ, X_LES_SUBGRID_Rt2 )
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZFLXZ, TLES%X_LES_SUBGRID_Rt2 )
       !
       CALL MZF_PHY(D,PWM,ZWORK1)
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZWORK2(IIJB:IIJE,1:D%NKT) = ZWORK1(IIJB:IIJE,1:D%NKT) * ZFLXZ(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID_PHY(D,ZWORK2, X_LES_RES_W_SBG_Rt2 )
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2, TLES%X_LES_RES_W_SBG_Rt2 )
       !
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZWORK1(IIJB:IIJE,1:D%NKT) = PEMOIST(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_RtThv , .TRUE. )
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_RtThv , .TRUE. )
       !
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZWORK1(IIJB:IIJE,1:D%NKT) = -CSTURB%XA3*PBETA(IIJB:IIJE,1:D%NKT)*PEMOIST(IIJB:IIJE,1:D%NKT) &
                                         * ZFLXZ(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_RtPz, .TRUE. )
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_RtPz, .TRUE. )
       !
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
       ZWORK1(IIJB:IIJE,1:D%NKT) = -2.*CSTURB%XCTD*PSQRT_TKE(IIJB:IIJE,1:D%NKT)*ZFLXZ(IIJB:IIJE,1:D%NKT) &
                                         / PLEPS(IIJB:IIJE,1:D%NKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-      CALL LES_MEAN_SUBGRID_PHY(D,ZWORK1, X_LES_SUBGRID_DISS_Rt2 )
+      CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_DISS_Rt2 )
       !
       CALL SECOND_MNH(ZTIME2)
-      XTIME_LES = XTIME_LES + ZTIME2 - ZTIME1
+      TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
     END IF
     !
   END IF  ! end if KRR ne 0
