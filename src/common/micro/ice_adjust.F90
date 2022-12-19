@@ -225,6 +225,7 @@ REAL :: ZCRIAUT, & ! Autoconversion thresholds
 !
 INTEGER             :: JITER,ITERMAX ! iterative loop for first order adjustment
 INTEGER             :: JIJ, JK
+INTEGER :: IKTB, IKTE, IIJB, IIJE
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZSIGS, ZSRCS
 REAL, DIMENSION(D%NIJT) :: ZSIGQSAT
@@ -236,6 +237,11 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !               -------------
 !
 IF (LHOOK) CALL DR_HOOK('ICE_ADJUST',0,ZHOOK_HANDLE)
+!
+IKTB=D%NKTB
+IKTE=D%NKTE
+IIJB=D%NIJB
+IIJE=D%NIJE
 !
 ITERMAX=1
 !
@@ -256,8 +262,8 @@ DO JITER =1,ITERMAX
   !*       2.3    compute the latent heat of vaporization Lv(T*) at t+1
   !                   and the latent heat of sublimation  Ls(T*) at t+1
   !
-  DO JK=D%NKTB,D%NKTE
-    DO JIJ=D%NIJB,D%NIJE
+  DO JK=IKTB,IKTE
+    DO JIJ=IIJB,IIJE
       IF (JITER==1) ZT(JIJ,JK) = PTH(JIJ,JK) * PEXN(JIJ,JK)
       ZLV(JIJ,JK) = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZT(JIJ,JK) -CST%XTT )
       ZLS(JIJ,JK) = CST%XLSTT + ( CST%XCPV - CST%XCI ) * ( ZT(JIJ,JK) -CST%XTT )
@@ -279,8 +285,8 @@ ENDDO         ! end of the iterative loop
 !               -------------------------------------------------
 !
 !
-DO JK=D%NKTB,D%NKTE
-  DO JIJ=D%NIJB,D%NIJE
+DO JK=IKTB,IKTE
+  DO JIJ=IIJB,IIJE
     !
     !*       5.0    compute the variation of mixing ratio
     !
@@ -315,7 +321,7 @@ DO JK=D%NKTB,D%NKTE
   !*       5.2    compute the cloud fraction PCLDFR
   !
   IF ( .NOT. OSUBG_COND ) THEN
-    DO JIJ=D%NIJB,D%NIJE
+    DO JIJ=IIJB,IIJE
       IF (PRCS(JIJ,JK) + PRIS(JIJ,JK) > 1.E-12 / PTSTEP) THEN
         PCLDFR(JIJ,JK)  = 1.
       ELSE
@@ -326,7 +332,7 @@ DO JK=D%NKTB,D%NKTE
       END IF
     ENDDO
   ELSE !OSUBG_COND case
-    DO JIJ=D%NIJB,D%NIJE
+    DO JIJ=IIJB,IIJE
       !We limit PRC_MF+PRI_MF to PRVS*PTSTEP to avoid negative humidity
       ZW1=PRC_MF(JIJ,JK)/PTSTEP
       ZW2=PRI_MF(JIJ,JK)/PTSTEP
@@ -398,7 +404,7 @@ DO JK=D%NKTB,D%NKTE
     !
     IF(PRESENT(POUT_RV) .OR. PRESENT(POUT_RC) .OR. &
       &PRESENT(POUT_RI) .OR. PRESENT(POUT_TH)) THEN
-      DO JIJ=D%NIJB,D%NIJE
+      DO JIJ=IIJB,IIJE
         ZW1=PRC_MF(JIJ,JK)
         ZW2=PRI_MF(JIJ,JK)
         IF(ZW1+ZW2>ZRV(JIJ,JK)) THEN
@@ -444,8 +450,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PRC_OUT ! Cloud water m.r. to adju
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PRI_OUT ! Cloud ice   m.r. to adjust in output
 !
 !*       2.4    compute the specific heat for moist air (Cph) at t+1
-DO JK=D%NKTB,D%NKTE
-  DO JIJ=D%NIJB,D%NIJE
+DO JK=IKTB,IKTE
+  DO JIJ=IIJB,IIJE
     SELECT CASE(KRR)
       CASE(7)
         ZCPH(JIJ,JK) = CST%XCPD + CST%XCPV * PRV_IN(JIJ,JK)                             &

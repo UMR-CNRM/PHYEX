@@ -74,7 +74,7 @@ REAL, DIMENSION(D%NIJT)            :: ZTSTAR ! normalized temperature velocity w
 !
 INTEGER                                             :: JK,JIJ     ! loop counter
 INTEGER                                             :: IIJE,IIJB
-INTEGER                                             :: IKTB,IKTE,IKB,IKE,IKT ! vertical levels
+INTEGER                                             :: IKTB,IKTE,IKB,IKE,IKT,IKU ! vertical levels
 !----------------------------------------------------------------------------
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
@@ -86,6 +86,7 @@ IKT=D%NKT
 IKE=D%NKE
 IIJE=D%NIJE
 IIJB=D%NIJB
+IKU=D%NKU
 !
 !
 !* w* and T*
@@ -103,9 +104,9 @@ END WHERE
 !
 !* normalized height
 !
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-ZZ_O_H(IIJB:IIJE,1:D%NKT) = XUNDEF
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZZ_O_H(IIJB:IIJE,1:IKT) = XUNDEF
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 DO JK=1,IKT
   !$mnh_expand_where(JIJ=IIJB:IIJE)
   WHERE (PBL_DEPTH(IIJB:IIJE)/=XUNDEF)
@@ -116,12 +117,12 @@ END DO
 !
 !* w'th'2
 !
-PMTH2(IIJB:IIJE,1:D%NKT) = 0.
-!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
-WHERE(ZZ_O_H(IIJB:IIJE,1:D%NKT) < 0.95 .AND. ZZ_O_H(IIJB:IIJE,1:D%NKT)/=XUNDEF)
-  PMTH2(IIJB:IIJE,1:D%NKT) = 4.*(MAX(ZZ_O_H(IIJB:IIJE,1:D%NKT),0.))**0.4*(ZZ_O_H(IIJB:IIJE,1:D%NKT)-0.95)**2
+PMTH2(IIJB:IIJE,1:IKT) = 0.
+!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
+WHERE(ZZ_O_H(IIJB:IIJE,1:IKT) < 0.95 .AND. ZZ_O_H(IIJB:IIJE,1:IKT)/=XUNDEF)
+  PMTH2(IIJB:IIJE,1:IKT) = 4.*(MAX(ZZ_O_H(IIJB:IIJE,1:IKT),0.))**0.4*(ZZ_O_H(IIJB:IIJE,1:IKT)-0.95)**2
 END WHERE
-!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
 DO JK=IKTB+1,IKTE-1
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   PMTH2(IIJB:IIJE,JK) = PMTH2(IIJB:IIJE,JK) * ZTSTAR(IIJB:IIJE)**2*ZWSTAR(IIJB:IIJE)
@@ -129,19 +130,19 @@ DO JK=IKTB+1,IKTE-1
 END DO
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 PMTH2(IIJB:IIJE,IKE)=PMTH2(IIJB:IIJE,IKE) * ZTSTAR(IIJB:IIJE)**2*ZWSTAR(IIJB:IIJE)
-PMTH2(IIJB:IIJE,D%NKU)=PMTH2(IIJB:IIJE,D%NKU) * ZTSTAR(IIJB:IIJE)**2*ZWSTAR(IIJB:IIJE)
+PMTH2(IIJB:IIJE,IKU)=PMTH2(IIJB:IIJE,IKU) * ZTSTAR(IIJB:IIJE)**2*ZWSTAR(IIJB:IIJE)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !
 !* w'2th'
 !
-PMWTH(IIJB:IIJE,1:D%NKT) = 0.
-!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
-WHERE(ZZ_O_H(IIJB:IIJE,1:D%NKT) <0.9 .AND. ZZ_O_H(IIJB:IIJE,1:D%NKT)/=XUNDEF)
-  PMWTH(IIJB:IIJE,1:D%NKT) = MAX(-7.9*(ABS(ZZ_O_H(IIJB:IIJE,1:D%NKT)-0.35))**2.9 &
-                           * (ABS(ZZ_O_H(IIJB:IIJE,1:D%NKT)-1.))**0.58 + 0.37, 0.)
+PMWTH(IIJB:IIJE,1:IKT) = 0.
+!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
+WHERE(ZZ_O_H(IIJB:IIJE,1:IKT) <0.9 .AND. ZZ_O_H(IIJB:IIJE,1:IKT)/=XUNDEF)
+  PMWTH(IIJB:IIJE,1:IKT) = MAX(-7.9*(ABS(ZZ_O_H(IIJB:IIJE,1:IKT)-0.35))**2.9 &
+                           * (ABS(ZZ_O_H(IIJB:IIJE,1:IKT)-1.))**0.58 + 0.37, 0.)
 END WHERE
-!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
 
 DO JK=IKTB+1,IKTE-1
   !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -150,7 +151,7 @@ DO JK=IKTB+1,IKTE-1
 END DO
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 PMWTH(IIJB:IIJE,IKE) = PMWTH(IIJB:IIJE,IKE) * ZWSTAR(IIJB:IIJE)**2*ZTSTAR(IIJB:IIJE)
-PMWTH(IIJB:IIJE,D%NKU) = PMWTH(IIJB:IIJE,D%NKU) * ZWSTAR(IIJB:IIJE)**2*ZTSTAR(IIJB:IIJE)
+PMWTH(IIJB:IIJE,IKU) = PMWTH(IIJB:IIJE,IKU) * ZWSTAR(IIJB:IIJE)**2*ZTSTAR(IIJB:IIJE)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !----------------------------------------------------------------------------

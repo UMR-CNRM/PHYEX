@@ -117,7 +117,17 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMZF   ! result at mass
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK, JI
+INTEGER :: JK, JIJ
+INTEGER :: IIJB,IIJE ! physical horizontal domain indices
+INTEGER :: IKA,IKU,IKT
+INTEGER :: IKL
+!
+IIJE=D%NIJE
+IIJB=D%NIJB
+IKA=D%NKA
+IKU=D%NKU
+IKT=D%NKT
+IKL=D%NKL
 !
 !
 !-------------------------------------------------------------------------------
@@ -125,15 +135,15 @@ INTEGER :: JK, JI
 !*       1.    DEFINITION OF MZF
 !              ------------------
 !
-DO JK=2,D%NKT-1
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
-  PMZF(D%NIJB:D%NIJE,JK) = 0.5*( PA(D%NIJB:D%NIJE,JK)+PA(D%NIJB:D%NIJE,JK+D%NKL) )
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+DO JK=2,IKT-1
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  PMZF(IIJB:IIJE,JK) = 0.5*( PA(IIJB:IIJE,JK)+PA(IIJB:IIJE,JK+IKL) )
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
-!$mnh_expand_array(JI=D%NIJB:D%NIJE)
-PMZF(D%NIJB:D%NIJE,D%NKA) = 0.5*( PA(D%NIJB:D%NIJE,D%NKA)+PA(D%NIJB:D%NIJE,D%NKA+D%NKL) )
-PMZF(D%NIJB:D%NIJE,D%NKU) = PA(D%NIJB:D%NIJE,D%NKU)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PMZF(IIJB:IIJE,IKA) = 0.5*( PA(IIJB:IIJE,IKA)+PA(IIJB:IIJE,IKA+IKL) )
+PMZF(IIJB:IIJE,IKU) = PA(IIJB:IIJE,IKU)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !-------------------------------------------------------------------------------
 !
@@ -198,23 +208,32 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PMZM   ! result at flux localizati
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK, JI
+INTEGER :: JK, JIJ
+INTEGER :: IIJB,IIJE ! physical horizontal domain indices
+INTEGER :: IKA,IKU,IKT,IKL
 !
+!
+IIJE=D%NIJE
+IIJB=D%NIJB
+IKA=D%NKA
+IKU=D%NKU
+IKT=D%NKT
+IKL=D%NKL
 !
 !-------------------------------------------------------------------------------
 !
 !*       1.    DEFINITION OF MZM
 !              ------------------
 !
-DO JK=2,D%NKT-1
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
-  PMZM(D%NIJB:D%NIJE,JK) = 0.5*( PA(D%NIJB:D%NIJE,JK)+PA(D%NIJB:D%NIJE,JK-D%NKL) )
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+DO JK=2,IKT-1
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  PMZM(IIJB:IIJE,JK) = 0.5*( PA(IIJB:IIJE,JK)+PA(IIJB:IIJE,JK-IKL) )
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
-!$mnh_expand_array(JI=D%NIJB:D%NIJE)
-PMZM(D%NIJB:D%NIJE,D%NKA) = PA(D%NIJB:D%NIJE,D%NKA)
-PMZM(D%NIJB:D%NIJE,D%NKU) = 0.5*( PA(D%NIJB:D%NIJE,D%NKU)+PA(D%NIJB:D%NIJE,D%NKU-D%NKL) )
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PMZM(IIJB:IIJE,IKA) = PA(IIJB:IIJE,IKA)
+PMZM(IIJB:IIJE,IKU) = 0.5*( PA(IIJB:IIJE,IKU)+PA(IIJB:IIJE,IKU-IKL) )
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !-------------------------------------------------------------------------------
 !
@@ -280,22 +299,31 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZF   ! result at mass
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK, JI
+INTEGER :: JK, JIJ
+INTEGER :: IIJB,IIJE ! physical horizontal domain indices
+INTEGER :: IKA,IKU,IKT,IKL
 !
 !-------------------------------------------------------------------------------
+!
+IIJE=D%NIJE
+IIJB=D%NIJB
+IKA=D%NKA
+IKU=D%NKU
+IKT=D%NKT
+IKL=D%NKL
 !
 !*       1.    DEFINITION OF DZF
 !              ------------------
 !
-DO JK=2,D%NKT-1
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
-  PDZF(D%NIJB:D%NIJE,JK) = PA(D%NIJB:D%NIJE,JK+D%NKL) - PA(D%NIJB:D%NIJE,JK)
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+DO JK=2,IKT-1
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  PDZF(IIJB:IIJE,JK) = PA(IIJB:IIJE,JK+IKL) - PA(IIJB:IIJE,JK)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
-!$mnh_expand_array(JI=D%NIJB:D%NIJE)
-PDZF(D%NIJB:D%NIJE,D%NKA) = PA(D%NIJB:D%NIJE,D%NKA+D%NKL) - PA(D%NIJB:D%NIJE,D%NKA)
-PDZF(D%NIJB:D%NIJE,D%NKU) = 0.
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PDZF(IIJB:IIJE,IKA) = PA(IIJB:IIJE,IKA+IKL) - PA(IIJB:IIJE,IKA)
+PDZF(IIJB:IIJE,IKU) = 0.
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !-------------------------------------------------------------------------------
 !
@@ -361,22 +389,31 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK, JI
+INTEGER :: JK, JIJ
+INTEGER :: IIJB,IIJE ! physical horizontal domain indices
+INTEGER :: IKA,IKU,IKT,IKL
 !
 !-------------------------------------------------------------------------------
+!
+IIJE=D%NIJE
+IIJB=D%NIJB
+IKA=D%NKA
+IKU=D%NKU
+IKT=D%NKT
+IKL=D%NKL
 !
 !*       1.    DEFINITION OF DZM
 !              ------------------
 !
-DO JK=2,D%NKT-1
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
-  PDZM(D%NIJB:D%NIJE,JK) = PA(D%NIJB:D%NIJE,JK) - PA(D%NIJB:D%NIJE,JK-D%NKL)
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+DO JK=2,IKT-1
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  PDZM(IIJB:IIJE,JK) = PA(IIJB:IIJE,JK) - PA(IIJB:IIJE,JK-IKL)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
-!$mnh_expand_array(JI=D%NIJB:D%NIJE)
-PDZM(D%NIJB:D%NIJE,D%NKA) = 0.
-PDZM(D%NIJB:D%NIJE,D%NKU) = PA(D%NIJB:D%NIJE,D%NKU) - PA(D%NIJB:D%NIJE,D%NKU-D%NKL)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PDZM(IIJB:IIJE,IKA) = 0.
+PDZM(IIJB:IIJE,IKU) = PA(IIJB:IIJE,IKU) - PA(IIJB:IIJE,IKU-IKL)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !-------------------------------------------------------------------------------
 !
@@ -443,21 +480,30 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) :: PGZ_M_W  ! result at flux side
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER  JK, JI
+INTEGER  JK, JIJ
+INTEGER :: IIJB,IIJE ! physical horizontal domain indices
+INTEGER :: IKA,IKU,IKT,IKL
 !-------------------------------------------------------------------------------
+!
+IIJE=D%NIJE
+IIJB=D%NIJB
+IKA=D%NKA
+IKU=D%NKU
+IKT=D%NKT
+IKL=D%NKL
 !
 !*       1.    COMPUTE THE GRADIENT ALONG Z
 !              -----------------------------
 !
-DO JK=2,D%NKT-1
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
-  PGZ_M_W(D%NIJB:D%NIJE,JK) = (PY(D%NIJB:D%NIJE,JK) - PY(D%NIJB:D%NIJE,JK-D%NKL)) / PDZZ(D%NIJB:D%NIJE,JK)
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+DO JK=2,IKT-1
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  PGZ_M_W(IIJB:IIJE,JK) = (PY(IIJB:IIJE,JK) - PY(IIJB:IIJE,JK-IKL)) / PDZZ(IIJB:IIJE,JK)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
-!$mnh_expand_array(JI=D%NIJB:D%NIJE)
-PGZ_M_W(D%NIJB:D%NIJE,D%NKA) = 0.
-PGZ_M_W(D%NIJB:D%NIJE,D%NKU) = (PY(D%NIJB:D%NIJE,D%NKU) - PY(D%NIJB:D%NIJE,D%NKU-D%NKL)) / PDZZ(D%NIJB:D%NIJE,D%NKU)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PGZ_M_W(IIJB:IIJE,IKA) = 0.
+PGZ_M_W(IIJB:IIJE,IKU) = (PY(IIJB:IIJE,IKU) - PY(IIJB:IIJE,IKU-IKL)) / PDZZ(IIJB:IIJE,IKU)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !-------------------------------------------------------------------------------
 !

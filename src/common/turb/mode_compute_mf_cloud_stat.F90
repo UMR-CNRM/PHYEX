@@ -97,12 +97,18 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZFLXZ,ZFLXZ2,ZFLXZ3
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZT
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZAMOIST, ZATHETA
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZWK,ZWK2
-INTEGER :: JI, JK
+INTEGER :: JIJ, JK
+INTEGER :: IIJB,IIJE ! physical horizontal domain indices
+INTEGER :: IKT
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !*                    0.2 initialisation
 !
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_STAT',0,ZHOOK_HANDLE)
+!
+IIJE=D%NIJE
+IIJB=D%NIJB
+IKT=D%NKT
 !
 !----------------------------------------------------------------------------
 !
@@ -124,27 +130,27 @@ IF (KRRL > 0)  THEN
     CALL MZM_MF(D, PTHLM(:,:), ZFLXZ(:,:))
     CALL GZ_M_W_MF(D, PTHLM(:,:), PDZZ(:,:), ZWK(:,:))
     IF (OSTATNW) THEN
-      !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-      ZFLXZ(D%NIJB:D%NIJE,1:D%NKT) = -2 * CSTURB%XCTV* PARAMMF%XTAUSIGMF * PEMF(D%NIJB:D%NIJE,1:D%NKT)* &
-                           & (PTHL_UP(D%NIJB:D%NIJE,1:D%NKT)-ZFLXZ(D%NIJB:D%NIJE,1:D%NKT)) * ZWK(D%NIJB:D%NIJE,1:D%NKT)
-      !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZFLXZ(IIJB:IIJE,1:IKT) = -2 * CSTURB%XCTV* PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
+                           & (PTHL_UP(IIJB:IIJE,1:IKT)-ZFLXZ(IIJB:IIJE,1:IKT)) * ZWK(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ELSE
-      !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-      ZFLXZ(D%NIJB:D%NIJE,1:D%NKT) = -2 * PARAMMF%XTAUSIGMF * PEMF(D%NIJB:D%NIJE,1:D%NKT)* &
-                           & (PTHL_UP(D%NIJB:D%NIJE,1:D%NKT)-ZFLXZ(D%NIJB:D%NIJE,1:D%NKT)) * ZWK(D%NIJB:D%NIJE,1:D%NKT)
-      !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZFLXZ(IIJB:IIJE,1:IKT) = -2 * PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
+                           & (PTHL_UP(IIJB:IIJE,1:IKT)-ZFLXZ(IIJB:IIJE,1:IKT)) * ZWK(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
     !
     !   Avoid negative values
-    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-    ZFLXZ(D%NIJB:D%NIJE,1:D%NKT) = MAX(0.,ZFLXZ(D%NIJB:D%NIJE,1:D%NKT))
-    !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZFLXZ(IIJB:IIJE,1:IKT) = MAX(0.,ZFLXZ(IIJB:IIJE,1:IKT))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
 
     CALL MZF_MF(D, ZFLXZ(:,:), PSIGMF(:,:))
-    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-    PSIGMF(D%NIJB:D%NIJE,1:D%NKT) = PSIGMF(D%NIJB:D%NIJE,1:D%NKT) * ZATHETA(D%NIJB:D%NIJE,1:D%NKT)**2
-    !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    PSIGMF(IIJB:IIJE,1:IKT) = PSIGMF(IIJB:IIJE,1:IKT) * ZATHETA(IIJB:IIJE,1:IKT)**2
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
 !
 !
@@ -156,50 +162,50 @@ IF (KRRL > 0)  THEN
     CALL MZM_MF(D, PRTM(:,:), ZFLXZ2(:,:))
     CALL GZ_M_W_MF(D, PRTM(:,:), PDZZ(:,:), ZWK2(:,:))
     IF (OSTATNW) THEN
-      !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-      ZFLXZ2(D%NIJB:D%NIJE,1:D%NKT) = -2 * CSTURB%XCTV * PARAMMF%XTAUSIGMF * PEMF(D%NIJB:D%NIJE,1:D%NKT)* &
-                           & (PRT_UP(D%NIJB:D%NIJE,1:D%NKT)-ZFLXZ2(D%NIJB:D%NIJE,1:D%NKT)) * ZWK2(D%NIJB:D%NIJE,1:D%NKT)
-      !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZFLXZ2(IIJB:IIJE,1:IKT) = -2 * CSTURB%XCTV * PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
+                           & (PRT_UP(IIJB:IIJE,1:IKT)-ZFLXZ2(IIJB:IIJE,1:IKT)) * ZWK2(IIJB:IIJE,1:IKT)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ELSE
-      !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-      ZFLXZ2(D%NIJB:D%NIJE,1:D%NKT) = -2 * PARAMMF%XTAUSIGMF * PEMF(D%NIJB:D%NIJE,1:D%NKT)* &
-                           & (PRT_UP(D%NIJB:D%NIJE,1:D%NKT)-ZFLXZ2(D%NIJB:D%NIJE,1:D%NKT)) * ZWK2(D%NIJB:D%NIJE,1:D%NKT) 
-      !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZFLXZ2(IIJB:IIJE,1:IKT) = -2 * PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
+                           & (PRT_UP(IIJB:IIJE,1:IKT)-ZFLXZ2(IIJB:IIJE,1:IKT)) * ZWK2(IIJB:IIJE,1:IKT) 
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     END IF
     !
     !   Avoid negative values
-    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-    ZFLXZ2(D%NIJB:D%NIJE,1:D%NKT) = MAX(0.,ZFLXZ2(D%NIJB:D%NIJE,1:D%NKT))
-    !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZFLXZ2(IIJB:IIJE,1:IKT) = MAX(0.,ZFLXZ2(IIJB:IIJE,1:IKT))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
     CALL MZF_MF(D, ZFLXZ2(:,:), ZWK2(:,:))
-    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-    PSIGMF(D%NIJB:D%NIJE,1:D%NKT) = PSIGMF(D%NIJB:D%NIJE,1:D%NKT) + ZAMOIST(D%NIJB:D%NIJE,1:D%NKT) **2 *ZWK2(D%NIJB:D%NIJE,1:D%NKT)
-    !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    PSIGMF(IIJB:IIJE,1:IKT) = PSIGMF(IIJB:IIJE,1:IKT) + ZAMOIST(IIJB:IIJE,1:IKT) **2 *ZWK2(IIJB:IIJE,1:IKT)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     IF (OSTATNW) THEN
       !wc Now including convection covariance contribution in case of OSTATNW=TRUE
       !
       !       1.2.2 contribution from <Rnp Thl>
-      !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-      ZFLXZ3(D%NIJB:D%NIJE,1:D%NKT) = - CSTURB%XCTV * PARAMMF%XTAUSIGMF * &
-                    (PEMF(D%NIJB:D%NIJE,1:D%NKT)*(PRT_UP(D%NIJB:D%NIJE,1:D%NKT)-ZFLXZ2(D%NIJB:D%NIJE,1:D%NKT)) * &
-                                   ZWK(D%NIJB:D%NIJE,1:D%NKT) + &
-                                   PEMF(D%NIJB:D%NIJE,1:D%NKT)*(PTHL_UP(D%NIJB:D%NIJE,1:D%NKT)-ZFLXZ(D%NIJB:D%NIJE,1:D%NKT)) * &
-                                   ZWK2(D%NIJB:D%NIJE,1:D%NKT))
-      !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      ZFLXZ3(IIJB:IIJE,1:IKT) = - CSTURB%XCTV * PARAMMF%XTAUSIGMF * &
+                    (PEMF(IIJB:IIJE,1:IKT)*(PRT_UP(IIJB:IIJE,1:IKT)-ZFLXZ2(IIJB:IIJE,1:IKT)) * &
+                                   ZWK(IIJB:IIJE,1:IKT) + &
+                                   PEMF(IIJB:IIJE,1:IKT)*(PTHL_UP(IIJB:IIJE,1:IKT)-ZFLXZ(IIJB:IIJE,1:IKT)) * &
+                                   ZWK2(IIJB:IIJE,1:IKT))
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       CALL MZF_MF(D, ZFLXZ3, ZFLXZ)
-      !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-      PSIGMF(D%NIJB:D%NIJE,1:D%NKT) = PSIGMF(D%NIJB:D%NIJE,1:D%NKT) - &
-                                MIN(0.,2.*ZAMOIST(D%NIJB:D%NIJE,1:D%NKT)*ZATHETA(D%NIJB:D%NIJE,1:D%NKT)*&
-                                      &ZFLXZ(D%NIJB:D%NIJE,1:D%NKT))
-      !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      PSIGMF(IIJB:IIJE,1:IKT) = PSIGMF(IIJB:IIJE,1:IKT) - &
+                                MIN(0.,2.*ZAMOIST(IIJB:IIJE,1:IKT)*ZATHETA(IIJB:IIJE,1:IKT)*&
+                                      &ZFLXZ(IIJB:IIJE,1:IKT))
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ENDIF
 !
 !        1.3  Vertical part of Sigma_s
 !
-    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-    PSIGMF(D%NIJB:D%NIJE,1:D%NKT) =  SQRT( MAX (PSIGMF(D%NIJB:D%NIJE,1:D%NKT) , 0.) )
-    !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    PSIGMF(IIJB:IIJE,1:IKT) =  SQRT( MAX (PSIGMF(IIJB:IIJE,1:IKT) , 0.) )
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ELSE
   PSIGMF(:,:) = 0.
 END IF

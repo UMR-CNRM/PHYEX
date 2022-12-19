@@ -89,7 +89,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upp
 !*       0.2  declaration of local variables
 !
 LOGICAL :: LLSEA_AND_TOWN
-INTEGER :: JRR, JI, JJ, JK
+INTEGER :: JRR, JI, JJ, JK, IKB, IKE,IKL, IIE, IIB, IJB, IJE, IKTB, IKTE
 INTEGER :: ISHIFT, IK, IKPLUS
 REAL :: ZQP, ZP1, ZINVTSTEP, ZGAC, ZGC, ZGAC2, ZGC2, ZRAYDEFO
 REAL, DIMENSION(D%NIT)     :: ZWSEDW1, ZWSEDW2 ! sedimentation speed
@@ -111,10 +111,21 @@ FWSED2(PWSEDW,PTSTEP1,PDZZ1,PWSEDWSUP)=MAX(0.,1.-PDZZ1/(PTSTEP1*PWSEDW))*PWSEDWS
 
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT',0,ZHOOK_HANDLE)
+!
+IKB=D%NKB
+IKE=D%NKE
+IKL=D%NKL
+IIB=D%NIB
+IIE=D%NIE
+IJB=D%NJB
+IJE=D%NJE
+IKTB=D%NKTB
+IKTE=D%NKTE
+!
 IF ( PRESENT( PFPR ) ) THEN
  !Set to 0. to avoid undefined values (in files)
- PFPR(:, :, : D%NKTB, :) = 0.
- PFPR(:, :, D%NKTE :, :) = 0.
+ PFPR(:, :, : IKTB, :) = 0.
+ PFPR(:, :, IKTE :, :) = 0.
 END IF
 
 !-------------------------------------------------------------------------------
@@ -142,10 +153,10 @@ DO JRR=2,KRR
 ENDDO
 
 ! calculation sedimentation flux
-DO JK = D%NKE , D%NKB, -1*D%NKL
+DO JK = IKE , IKB, -1*IKL
 
-  DO JJ = D%NJB, D%NJE
-    DO JI = D%NIB, D%NIE
+  DO JJ = IJB, IJE
+    DO JI = IIB, IIE
       ZTSORHODZ(JI,JJ) =PTSTEP/(PRHODREF(JI,JJ,JK)*PDZZ(JI,JJ,JK))
     ENDDO
   ENDDO
@@ -203,8 +214,8 @@ DO JK = D%NKE , D%NKB, -1*D%NKL
     ENDDO
   ENDIF
 
-    DO JJ = D%NJB, D%NJE
-      DO JI = D%NIB, D%NIE
+    DO JJ = IJB, IJE
+      DO JI = IIB, IIE
         PRCS(JI,JJ,JK) = PRCS(JI,JJ,JK)+ZTSORHODZ(JI,JJ)*(ZSED(JI,JJ,IKPLUS,2)-ZSED(JI,JJ,IK,2))*ZINVTSTEP
         PRRS(JI,JJ,JK) = PRRS(JI,JJ,JK)+ZTSORHODZ(JI,JJ)*(ZSED(JI,JJ,IKPLUS,3)-ZSED(JI,JJ,IK,3))*ZINVTSTEP
         PRIS(JI,JJ,JK) = PRIS(JI,JJ,JK)+ZTSORHODZ(JI,JJ)*(ZSED(JI,JJ,IKPLUS,4)-ZSED(JI,JJ,IK,4))*ZINVTSTEP
@@ -216,9 +227,9 @@ DO JK = D%NKE , D%NKB, -1*D%NKL
       ENDDO
     ENDDO
 
-  IF (JK==D%NKB) THEN
-    DO JJ = D%NJB, D%NJE
-      DO JI = D%NIB, D%NIE
+  IF (JK==IKB) THEN
+    DO JJ = IJB, IJE
+      DO JI = IIB, IIE
         IF(OSEDIC) PINPRC(JI,JJ) = ZSED(JI,JJ,IK,2)/CST%XRHOLW
         PINPRR(JI,JJ) = ZSED(JI,JJ,IK,3)/CST%XRHOLW
         PINPRI(JI,JJ) = ZSED(JI,JJ,IK,4)/CST%XRHOLW
@@ -254,8 +265,8 @@ CONTAINS
 
     !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:CLOUD',0,ZHOOK_HANDLE)
 
-    DO JJ = D%NJB, D%NJE
-      DO JI = D%NIB, D%NIE
+    DO JJ = IJB, IJE
+      DO JI = IIB, IIE
         !estimation of q' taking into account incoming ZWSED from previous vertical level
         ZQP=ZSED(JI,JJ,IKPLUS,JRR)*ZTSORHODZ(JI,JJ)
         IF ((PRXT(JI,JJ) > ICED%XRTMIN(JRR)) .OR. (ZQP > ICED%XRTMIN(JRR))) THEN
@@ -316,8 +327,8 @@ CONTAINS
     !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:PRISTINE_ICE',0,ZHOOK_HANDLE)
 
     ! ******* for pristine ice
-    DO JJ = D%NJB, D%NJE
-      DO JI = D%NIB, D%NIE
+    DO JJ = IJB, IJE
+      DO JI = IIB, IIE
         ZQP=ZSED(JI,JJ,IKPLUS,JRR)*ZTSORHODZ(JI,JJ)
         IF ((PRXT(JI,JJ) > ICED%XRTMIN(JRR)) .OR. (ZQP > ICED%XRTMIN(JRR))) THEN
           !calculation of w
@@ -365,8 +376,8 @@ CONTAINS
     !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:SNOW',0,ZHOOK_HANDLE)
 
     ! ******* for snow
-    DO JJ = D%NJB, D%NJE
-      DO JI = D%NIB, D%NIE
+    DO JJ = IJB, IJE
+      DO JI = IIB, IIE
         ZQP=ZSED(JI,JJ,IKPLUS,JRR)*ZTSORHODZ(JI,JJ)
         IF ((PRXT(JI,JJ) > ICED%XRTMIN(JRR)) .OR. (ZQP > ICED%XRTMIN(JRR))) THEN
           !calculation of w
@@ -416,8 +427,8 @@ CONTAINS
     !!IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT:OTHER_SPECIES',0,ZHOOK_HANDLE)
 
     ! for all but cloud and pristine ice :
-    DO JJ = D%NJB, D%NJE
-      DO JI = D%NIB, D%NIE
+    DO JJ = IJB, IJE
+      DO JI = IIB, IIE
         ZQP=ZSED(JI,JJ,IKPLUS,JRR)*ZTSORHODZ(JI,JJ)
         IF ((PRXT(JI,JJ) > ICED%XRTMIN(JRR)) .OR. (ZQP > ICED%XRTMIN(JRR))) THEN
           !calculation of w

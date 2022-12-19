@@ -71,7 +71,7 @@ REAL, DIMENSION(D%NIJT),   INTENT(INOUT) :: PSBL_DEPTH! boundary layer height
 !
 !
 INTEGER                                  :: JLOOP,JIJ,JK    ! loop counter
-INTEGER :: IKB,IKE,IIJB,IIJE   ! index value for the Beginning
+INTEGER :: IKB,IKE,IIJB,IIJE,IKT   ! index value for the Beginning
 REAL, DIMENSION(D%NIJT) :: ZQ0      ! surface buoyancy flux
 REAL, DIMENSION(D%NIJT) :: ZWU      ! surface friction u'w'
 REAL, DIMENSION(D%NIJT) :: ZWV      ! surface friction v'w'
@@ -92,7 +92,8 @@ IF (LHOOK) CALL DR_HOOK('SBL_DEPTH',0,ZHOOK_HANDLE)
 IKB=D%NKTB
 IKE=D%NKTE
 IIJE=D%NIJE
-IIJB=D%NIJB 
+IIJB=D%NIJB
+IKT=D%NKT
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZWU(IIJB:IIJE) = PFLXU(IIJB:IIJE,IKB)
@@ -106,9 +107,9 @@ ZUSTAR2(IIJB:IIJE) = SQRT(ZWU(IIJB:IIJE)**2+ZWV(IIJB:IIJE)**2)
 !
 !* BL and SBL diagnosed with friction criteria
 !
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-ZWIND(IIJB:IIJE,1:D%NKT)=SQRT(PFLXU(IIJB:IIJE,1:D%NKT)**2+PFLXV(IIJB:IIJE,1:D%NKT)**2)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZWIND(IIJB:IIJE,1:IKT)=SQRT(PFLXU(IIJB:IIJE,1:IKT)**2+PFLXV(IIJB:IIJE,1:IKT)**2)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 CALL BL_DEPTH_DIAG(D,ZUSTAR2,PZZ(:,IKB),ZWIND,PZZ,CSTURB%XFTOP_O_FSURF,ZSBL_DYN)
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZSBL_DYN(IIJB:IIJE) = CSTURB%XSBL_O_BL * ZSBL_DYN(IIJB:IIJE)

@@ -381,7 +381,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV)  ::  &
 REAL, DIMENSION(D%NIJT,D%NKT)  ::  ZLM
 !
 LOGICAL :: GUSERV    ! flag to use water vapor
-INTEGER :: IKB,IKE,IIJE,IIJB   ! index value for the Beginning
+INTEGER :: IKB,IKE,IIJE,IIJB,IKT   ! index value for the Beginning
                                      ! and the End of the physical domain for the mass points
 INTEGER :: JSV,JIJ,JK ! loop counter
 REAL    :: ZTIME1
@@ -398,6 +398,7 @@ IF (LHOOK) CALL DR_HOOK('TURB_VER',0,ZHOOK_HANDLE)
 !
 IKB=D%NKTB
 IKE=D%NKTE
+IKT=D%NKT
 IIJE=D%NIJE
 IIJB=D%NIJB
 !
@@ -420,20 +421,20 @@ CALL PRANDTL(D,CST,CSTURB,KRR,KSV,KRRI,TURBN%LTURB_FLX,  &
 ! Buoyancy coefficient
 !
 IF (OOCEAN) THEN
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZBETA(IIJB:IIJE,1:D%NKT) = CST%XG*CST%XALPHAOC
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZBETA(IIJB:IIJE,1:IKT) = CST%XG*CST%XALPHAOC
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ELSE
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZBETA(IIJB:IIJE,1:D%NKT) = CST%XG/PTHVREF(IIJB:IIJE,1:D%NKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZBETA(IIJB:IIJE,1:IKT) = CST%XG/PTHVREF(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END IF
 !
 ! Square root of Tke
 !
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-ZSQRT_TKE(IIJB:IIJE,1:D%NKT) = SQRT(PTKEM(IIJB:IIJE,1:D%NKT))
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZSQRT_TKE(IIJB:IIJE,1:IKT) = SQRT(PTKEM(IIJB:IIJE,1:IKT))
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
 ! gradients of mean quantities at previous time-step
 !
@@ -445,14 +446,14 @@ IF (KRR>0) CALL GZ_M_W_PHY(D,PRM(:,:,1),PDZZ,ZDR_DZ)
 ! Denominator factor in 3rd order terms
 !
 IF (.NOT. TURBN%LHARAT) THEN
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZD(IIJB:IIJE,1:D%NKT) = (1.+ZREDTH1(IIJB:IIJE,1:D%NKT)+ZREDR1(IIJB:IIJE,1:D%NKT)) * &
-                               &(1.+0.5*(ZREDTH1(IIJB:IIJE,1:D%NKT)+ZREDR1(IIJB:IIJE,1:D%NKT)))
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZD(IIJB:IIJE,1:IKT) = (1.+ZREDTH1(IIJB:IIJE,1:IKT)+ZREDR1(IIJB:IIJE,1:IKT)) * &
+                               &(1.+0.5*(ZREDTH1(IIJB:IIJE,1:IKT)+ZREDR1(IIJB:IIJE,1:IKT)))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ELSE
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
-  ZD(IIJB:IIJE,1:D%NKT) = 1.
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:D%NKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZD(IIJB:IIJE,1:IKT) = 1.
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ENDIF
 !
 ! Phi3 and Psi3 Prandtl numbers

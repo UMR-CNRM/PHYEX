@@ -91,16 +91,27 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZGRAD_Z_RT, &            !
                                             & ZSIGMF                   ! and sqrt(variance)
 REAL, DIMENSION(D%NIJT)              :: ZOMEGA_UP_M              !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZW1 ! working array
-INTEGER                                    :: JI, JK  ! loop control
+INTEGER                                    :: JIJ, JK  ! loop control
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZEMF_M, ZTHV_UP_M, &   !
                                             & ZRSAT_UP_M, ZRT_UP_M,& ! Interpolation on mass points
                                             & ZFRAC_ICE_UP_M         !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZCOND ! condensate
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZA, ZGAM ! used for integration
+INTEGER :: IIJB,IIJE ! physical horizontal domain indices
+INTEGER :: IKT,IKB,IKA,IKU,IKE,IKL
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_BIGAUS',0,ZHOOK_HANDLE)
-
+!
+IIJE=D%NIJE
+IIJB=D%NIJB
+IKT=D%NKT
+IKB=D%NKB
+IKA=D%NKA
+IKU=D%NKU
+IKE=D%NKE
+IKL=D%NKL
+!
 !Computation is done on mass points
 !----------------------------------------------------------------------------
 !
@@ -121,72 +132,72 @@ CALL MZF_MF(D, PFRAC_ICE_UP(:,:), ZFRAC_ICE_UP_M(:,:))
 
 !computation of omega star up
 ZOMEGA_UP_M(:)=0.
-DO JK=D%NKB,D%NKE-D%NKL,D%NKL
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
+DO JK=IKB,IKE-IKL,IKL
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
   !Vertical integration over the entire column but only buoyant points are used
-  !ZOMEGA_UP_M(D%NIJB:D%NIJE)=ZOMEGA_UP_M(D%NIJB:D%NIJE) + &
-  !                ZEMF_M(D%NIJB:D%NIJE,JK) * &
-  !                MAX(0.,(ZTHV_UP_M(D%NIJB:D%NIJE,JK)-PTHVM(D%NIJB:D%NIJE,JK))) * &
-  !                (PZZ(D%NIJB:D%NIJE,JK+KKL)-PZZ(D%NIJB:D%NIJE,JK)) / &
-  !                (PTHM(D%NIJB:D%NIJE,JK) * PRHODREF(D%NIJB:D%NIJE,JK))
+  !ZOMEGA_UP_M(IIJB:IIJE)=ZOMEGA_UP_M(IIJB:IIJE) + &
+  !                ZEMF_M(IIJB:IIJE,JK) * &
+  !                MAX(0.,(ZTHV_UP_M(IIJB:IIJE,JK)-PTHVM(IIJB:IIJE,JK))) * &
+  !                (PZZ(IIJB:IIJE,JK+KKL)-PZZ(IIJB:IIJE,JK)) / &
+  !                (PTHM(IIJB:IIJE,JK) * PRHODREF(IIJB:IIJE,JK))
 
   !Vertical integration over the entire column
-  ZOMEGA_UP_M(D%NIJB:D%NIJE)=ZOMEGA_UP_M(D%NIJB:D%NIJE) + &
-                 ZEMF_M(D%NIJB:D%NIJE,JK) * &
-                 (ZTHV_UP_M(D%NIJB:D%NIJE,JK)-PTHVM(D%NIJB:D%NIJE,JK)) * &
-                 (PZZ(D%NIJB:D%NIJE,JK+D%NKL)-PZZ(D%NIJB:D%NIJE,JK)) / &
-                 (PTHM(D%NIJB:D%NIJE,JK) * PRHODREF(D%NIJB:D%NIJE,JK))
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+  ZOMEGA_UP_M(IIJB:IIJE)=ZOMEGA_UP_M(IIJB:IIJE) + &
+                 ZEMF_M(IIJB:IIJE,JK) * &
+                 (ZTHV_UP_M(IIJB:IIJE,JK)-PTHVM(IIJB:IIJE,JK)) * &
+                 (PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK)) / &
+                 (PTHM(IIJB:IIJE,JK) * PRHODREF(IIJB:IIJE,JK))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 ENDDO
-!$mnh_expand_array(JI=D%NIJB:D%NIJE)
-ZOMEGA_UP_M(D%NIJB:D%NIJE)=MAX(ZOMEGA_UP_M(D%NIJB:D%NIJE), 1.E-20)
-ZOMEGA_UP_M(D%NIJB:D%NIJE)=(CST%XG*ZOMEGA_UP_M(D%NIJB:D%NIJE))**(1./3.)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+ZOMEGA_UP_M(IIJB:IIJE)=MAX(ZOMEGA_UP_M(IIJB:IIJE), 1.E-20)
+ZOMEGA_UP_M(IIJB:IIJE)=(CST%XG*ZOMEGA_UP_M(IIJB:IIJE))**(1./3.)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
 !computation of alpha up
-DO JK=D%NKA,D%NKU,D%NKL
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
-  ZALPHA_UP_M(D%NIJB:D%NIJE,JK)=ZEMF_M(D%NIJB:D%NIJE,JK)/(PARAMMF%XALPHA_MF*PRHODREF(D%NIJB:D%NIJE,JK)*ZOMEGA_UP_M(D%NIJB:D%NIJE))
-  ZALPHA_UP_M(D%NIJB:D%NIJE,JK)=MAX(0., MIN(ZALPHA_UP_M(D%NIJB:D%NIJE,JK), 1.))
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+DO JK=IKA,IKU,IKL
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZALPHA_UP_M(IIJB:IIJE,JK)=ZEMF_M(IIJB:IIJE,JK)/(PARAMMF%XALPHA_MF*PRHODREF(IIJB:IIJE,JK)*ZOMEGA_UP_M(IIJB:IIJE))
+  ZALPHA_UP_M(IIJB:IIJE,JK)=MAX(0., MIN(ZALPHA_UP_M(IIJB:IIJE,JK), 1.))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 ENDDO
 
 !computation of sigma of the distribution
-DO JK=D%NKA,D%NKU,D%NKL
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
-  ZSIGMF(D%NIJB:D%NIJE,JK)=ZEMF_M(D%NIJB:D%NIJE,JK) * &
-               (ZRT_UP_M(D%NIJB:D%NIJE,JK) - PRTM(D%NIJB:D%NIJE,JK)) * &
-               PDEPTH(D%NIJB:D%NIJE) * ZGRAD_Z_RT(D%NIJB:D%NIJE,JK) / &
-               (PARAMMF%XSIGMA_MF * ZOMEGA_UP_M(D%NIJB:D%NIJE) * PRHODREF(D%NIJB:D%NIJE,JK))
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+DO JK=IKA,IKU,IKL
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZSIGMF(IIJB:IIJE,JK)=ZEMF_M(IIJB:IIJE,JK) * &
+               (ZRT_UP_M(IIJB:IIJE,JK) - PRTM(IIJB:IIJE,JK)) * &
+               PDEPTH(IIJB:IIJE) * ZGRAD_Z_RT(IIJB:IIJE,JK) / &
+               (PARAMMF%XSIGMA_MF * ZOMEGA_UP_M(IIJB:IIJE) * PRHODREF(IIJB:IIJE,JK))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 ENDDO
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-ZSIGMF(D%NIJB:D%NIJE,1:D%NKT)=SQRT(MAX(ABS(ZSIGMF(D%NIJB:D%NIJE,1:D%NKT)), 1.E-40))
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZSIGMF(IIJB:IIJE,1:IKT)=SQRT(MAX(ABS(ZSIGMF(IIJB:IIJE,1:IKT)), 1.E-40))
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
 !*      2. PDF integration
 !          ------------------------------------------------
 !
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !The mean of the distribution is ZRT_UP
 !Computation of ZA and ZGAM (=efrc(ZA)) coefficient
-ZA(D%NIJB:D%NIJE,1:D%NKT)=(ZRSAT_UP_M(D%NIJB:D%NIJE,1:D%NKT)-ZRT_UP_M(D%NIJB:D%NIJE,1:D%NKT))/&
-                         &(sqrt(2.)*ZSIGMF(D%NIJB:D%NIJE,1:D%NKT))
+ZA(IIJB:IIJE,1:IKT)=(ZRSAT_UP_M(IIJB:IIJE,1:IKT)-ZRT_UP_M(IIJB:IIJE,1:IKT))/&
+                         &(sqrt(2.)*ZSIGMF(IIJB:IIJE,1:IKT))
 
 !Approximation of erf function
-ZGAM(D%NIJB:D%NIJE,1:D%NKT)=1-SIGN(1., ZA(D%NIJB:D%NIJE,1:D%NKT))*SQRT(1-EXP(-4*ZA(D%NIJB:D%NIJE,1:D%NKT)**2/CST%XPI))
+ZGAM(IIJB:IIJE,1:IKT)=1-SIGN(1., ZA(IIJB:IIJE,1:IKT))*SQRT(1-EXP(-4*ZA(IIJB:IIJE,1:IKT)**2/CST%XPI))
 
 !computation of cloud fraction
-PCF_MF(D%NIJB:D%NIJE,1:D%NKT)=MAX( 0., MIN(1.,0.5*ZGAM(D%NIJB:D%NIJE,1:D%NKT) * ZALPHA_UP_M(D%NIJB:D%NIJE,1:D%NKT)))
+PCF_MF(IIJB:IIJE,1:IKT)=MAX( 0., MIN(1.,0.5*ZGAM(IIJB:IIJE,1:IKT) * ZALPHA_UP_M(IIJB:IIJE,1:IKT)))
 
 !computation of condensate, then PRC and PRI
-ZCOND(D%NIJB:D%NIJE,1:D%NKT)=(EXP(-ZA(D%NIJB:D%NIJE,1:D%NKT)**2)-&
-                             &ZA(D%NIJB:D%NIJE,1:D%NKT)*SQRT(CST%XPI)*ZGAM(D%NIJB:D%NIJE,1:D%NKT))* &
-                    &ZSIGMF(D%NIJB:D%NIJE,1:D%NKT)/SQRT(2.*CST%XPI) * ZALPHA_UP_M(D%NIJB:D%NIJE,1:D%NKT)
-ZCOND(D%NIJB:D%NIJE,1:D%NKT)=MAX(ZCOND(D%NIJB:D%NIJE,1:D%NKT), 0.) !due to approximation of ZGAM value, ZCOND could be slightly negative
-PRC_MF(D%NIJB:D%NIJE,1:D%NKT)=(1.-ZFRAC_ICE_UP_M(D%NIJB:D%NIJE,1:D%NKT)) * ZCOND(D%NIJB:D%NIJE,1:D%NKT)
-PRI_MF(D%NIJB:D%NIJE,1:D%NKT)=(   ZFRAC_ICE_UP_M(D%NIJB:D%NIJE,1:D%NKT)) * ZCOND(D%NIJB:D%NIJE,1:D%NKT)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+ZCOND(IIJB:IIJE,1:IKT)=(EXP(-ZA(IIJB:IIJE,1:IKT)**2)-&
+                             &ZA(IIJB:IIJE,1:IKT)*SQRT(CST%XPI)*ZGAM(IIJB:IIJE,1:IKT))* &
+                    &ZSIGMF(IIJB:IIJE,1:IKT)/SQRT(2.*CST%XPI) * ZALPHA_UP_M(IIJB:IIJE,1:IKT)
+ZCOND(IIJB:IIJE,1:IKT)=MAX(ZCOND(IIJB:IIJE,1:IKT), 0.) !due to approximation of ZGAM value, ZCOND could be slightly negative
+PRC_MF(IIJB:IIJE,1:IKT)=(1.-ZFRAC_ICE_UP_M(IIJB:IIJE,1:IKT)) * ZCOND(IIJB:IIJE,1:IKT)
+PRI_MF(IIJB:IIJE,1:IKT)=(   ZFRAC_ICE_UP_M(IIJB:IIJE,1:IKT)) * ZCOND(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_BIGAUS',1,ZHOOK_HANDLE)
 

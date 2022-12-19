@@ -67,7 +67,7 @@ REAL, DIMENSION(D%NIJT),       INTENT(OUT)          :: BL_DEPTH_DIAG3D
 !       0.2  declaration of local variables
 !
 INTEGER :: JIJ,JK ! loop counters
-INTEGER :: IKB,IKE,IIJB,IIJE   ! index value for the Beginning
+INTEGER :: IKB,IKE,IIJB,IIJE,IKL
 REAL    :: ZFLX     ! flux at top of BL
 !
 !----------------------------------------------------------------------------
@@ -76,6 +76,7 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('BL_DEPTH_DIAG_3D',0,ZHOOK_HANDLE)
 IKB=D%NKTB
 IKE=D%NKTE
+IKL=D%NKL
 IIJE=D%NIJE
 IIJB=D%NIJB 
 !
@@ -84,14 +85,14 @@ BL_DEPTH_DIAG3D(:) = 0.
 
 DO JIJ=IIJB,IIJE
     IF (PSURF(JIJ)==0.) CYCLE
-    DO JK=IKB,IKE,D%NKL
-      IF (PZZ(JIJ,JK-D%NKL)<=PZS(JIJ)) CYCLE
+    DO JK=IKB,IKE,IKL
+      IF (PZZ(JIJ,JK-IKL)<=PZS(JIJ)) CYCLE
       ZFLX = PSURF(JIJ) * PFTOP_O_FSURF
-      IF ( (PFLUX(JIJ,JK)-ZFLX)*(PFLUX(JIJ,JK-D%NKL)-ZFLX) <= 0. ) THEN
-        BL_DEPTH_DIAG3D(JIJ) = (PZZ  (JIJ,JK-D%NKL) - PZS(JIJ))     &
-                         + (PZZ  (JIJ,JK) - PZZ  (JIJ,JK-D%NKL))    &
-                         * (ZFLX          - PFLUX(JIJ,JK-D%NKL)  )  &
-                         / (PFLUX(JIJ,JK) - PFLUX(JIJ,JK-D%NKL)   )
+      IF ( (PFLUX(JIJ,JK)-ZFLX)*(PFLUX(JIJ,JK-IKL)-ZFLX) <= 0. ) THEN
+        BL_DEPTH_DIAG3D(JIJ) = (PZZ  (JIJ,JK-IKL) - PZS(JIJ))     &
+                         + (PZZ  (JIJ,JK) - PZZ  (JIJ,JK-IKL))    &
+                         * (ZFLX          - PFLUX(JIJ,JK-IKL)  )  &
+                         / (PFLUX(JIJ,JK) - PFLUX(JIJ,JK-IKL)   )
         EXIT
       END IF
     END DO
@@ -126,12 +127,14 @@ REAL, DIMENSION(1,1,D%NKT)       :: ZFLUX
 REAL, DIMENSION(1,1,D%NKT)       :: ZZZ
 REAL, DIMENSION(1,1)             :: ZBL_DEPTH_DIAG
 !
+INTEGER :: IKT
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('BL_DEPTH_DIAG_1D',0,ZHOOK_HANDLE)
+IKT=D%NKT
 ZSURF        = PSURF
 ZZS          = PZS
-ZFLUX(1,1,1:D%NKT) = PFLUX(1:D%NKT)
-ZZZ  (1,1,1:D%NKT) = PZZ  (1:D%NKT)
+ZFLUX(1,1,1:IKT) = PFLUX(1:IKT)
+ZZZ  (1,1,1:IKT) = PZZ  (1:IKT)
 !
 CALL BL_DEPTH_DIAG_3D(D,ZSURF,ZZS,ZFLUX,ZZZ,PFTOP_O_FSURF,ZBL_DEPTH_DIAG)
 !

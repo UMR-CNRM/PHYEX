@@ -75,11 +75,14 @@ REAL,  INTENT(OUT) ::      RSI(D%NIJT)
 REAL :: ZSIGMAX,ZSIGMAY,ZSIGMAZ,ZXDIST,ZYDIST,&
      & ZRSW,ZRHW,ZRHIN,ZDRHDZ,ZZ,ZRHDIST,ZRHLIM, &
      & ZRHDIF,ZWCLD,ZI2W,ZRHLIMICE,ZRHLIMINV,ZA,ZRHI,ZR
-INTEGER :: JIJ
+INTEGER :: JIJ, IIJB, IIJE
 
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('ICECLOUD',0,ZHOOK_HANDLE)
-
+!
+IIJB=D%NIJB
+IIJE=D%NIJE
+!
 ZSIGMAX=3.E-4         ! assumed rh variation in x axis direction
 ZSIGMAY=ZSIGMAX            ! assumed rh variation in y axis direction
 ZSIGMAZ=1.E-2
@@ -92,7 +95,7 @@ ZXDIST=2500.
    ! due to stronger vertical velocities.
 ZYDIST=ZXDIST          ! gridsize in  y axis (m)
 
-DO JIJ = D%NIJB, D%NIJE
+DO JIJ = IIJB, IIJE
    ZR = MAX(0.,PR(JIJ)*PTSTEP)
    SIFRC(JIJ) = 0.
    ZA = ZR*PP(JIJ)/(XEPSILO + ZR)

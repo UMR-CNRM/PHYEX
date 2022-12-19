@@ -287,6 +287,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)  :: PFPR ! upper-air pr
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 INTEGER :: JIJ, JK
+INTEGER :: IKTB, IKTE, IKB, IIJB, IIJE
 INTEGER :: ISTIJ, ISTK
 !
 !Arrays for nucleation call outisde of ODMICRO points
@@ -434,6 +435,11 @@ LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLW3D
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 0, ZHOOK_HANDLE)
 !
+IKTB=D%NKTB
+IKTE=D%NKTE
+IKB=D%NKB
+IIJB=D%NIJB
+IIJE=D%NIJE
 !-------------------------------------------------------------------------------
 !
 IF(OCND2) THEN
@@ -456,8 +462,8 @@ ZINV_TSTEP=1./PTSTEP
 GEXT_TEND=.TRUE.
 !
 ! LSFACT and LVFACT without exner
-DO JK = D%NKTB,D%NKTE
-  DO JIJ = D%NIJB,D%NIJE
+DO JK = IKTB,IKTE
+  DO JIJ = IIJB,IIJE
     IF (KRR==7) THEN
       ZRICE=PRIT(JIJ,JK)+PRST(JIJ,JK)+PRGT(JIJ,JK)+PRHT(JIJ,JK)
     ELSE
@@ -472,13 +478,13 @@ ENDDO
 !
 !Compute lambda_snow parameter
 !ZT en KELVIN
-DO JK = D%NKTB,D%NKTE
-  DO JIJ = D%NIJB,D%NIJE
+DO JK = IKTB,IKTE
+  DO JIJ = IIJB,IIJE
     ZLBDAS(JIJ,JK)=1000.
   END DO
 END DO
-DO JK = D%NKTB,D%NKTE
-   DO JIJ = D%NIJB,D%NIJE
+DO JK = IKTB,IKTE
+   DO JIJ = IIJB,IIJE
          IF (PARAMI%LSNOW_T) THEN 
             IF (PRST(JIJ,JK)>ICED%XRTMIN(5)) THEN
                IF(ZT(JIJ,JK)>CST%XTT-10.0) THEN
@@ -516,8 +522,8 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
 
   IF(HSEDIM=='STAT') THEN
     IF(KRR==7) THEN
-      DO JK = D%NKTB,D%NKTE
-        DO JIJ = D%NIJB,D%NIJE
+      DO JK = IKTB,IKTE
+        DO JIJ = IIJB,IIJE
           ZRCT(JIJ,JK)=PRCS(JIJ,JK)*PTSTEP
           ZRRT(JIJ,JK)=PRRS(JIJ,JK)*PTSTEP
           ZRIT(JIJ,JK)=PRIS(JIJ,JK)*PTSTEP
@@ -536,8 +542,8 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
                                   &PSEA=PSEA, PTOWN=PTOWN, &
                                   &PINPRH=PINPRH, PRHT=ZRHT, PRHS=PRHS, PFPR=PFPR)
     ELSE
-      DO JK = D%NKTB,D%NKTE
-        DO JIJ = D%NIJB,D%NIJE
+      DO JK = IKTB,IKTE
+        DO JIJ = IIJB,IIJE
           ZRCT(JIJ,JK)=PRCS(JIJ,JK)*PTSTEP
           ZRRT(JIJ,JK)=PRRS(JIJ,JK)*PTSTEP
           ZRIT(JIJ,JK)=PRIS(JIJ,JK)*PTSTEP
@@ -555,7 +561,7 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
                                   &PSEA=PSEA, PTOWN=PTOWN, &
                                   &PFPR=PFPR)
     ENDIF
-    PINPRS(D%NIJB:D%NIJE) = PINPRS(D%NIJB:D%NIJE) + ZINPRI(D%NIJB:D%NIJE)
+    PINPRS(IIJB:IIJE) = PINPRS(IIJB:IIJE) + ZINPRI(IIJB:IIJE)
     !No negativity correction here as we apply sedimentation on PR.S*PTSTEP variables
   ELSEIF(HSEDIM=='SPLI') THEN
     IF(KRR==7) THEN
@@ -575,7 +581,7 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
                                    &PSEA=PSEA, PTOWN=PTOWN, &
                                    &PFPR=PFPR)
     ENDIF
-    PINPRS(D%NIJB:D%NIJE) = PINPRS(D%NIJB:D%NIJE) + ZINPRI(D%NIJB:D%NIJE)
+    PINPRS(IIJB:IIJE) = PINPRS(IIJB:IIJE) + ZINPRI(IIJB:IIJE)
     !We correct negativities with conservation
     !SPLI algorith uses a time-splitting. Inside the loop a temporary m.r. is used.
     !   It is initialized with the m.r. at T and is modified by two tendencies:
@@ -626,7 +632,7 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
 ENDIF
 !
 
-DO JK = D%NKTB,D%NKTE
+DO JK = IKTB,IKTE
   !Backup of T variables
   ZWR(:,JK,IRV)=PRVT(:,JK)
   ZWR(:,JK,IRC)=PRCT(:,JK)
@@ -704,7 +710,7 @@ ENDIF
 !  optimization by looking for locations where
 !  the microphysical fields are larger than a minimal value only !!!
 !
-IF (KSIZE /= COUNT(ODMICRO(D%NIJB:D%NIJE,D%NKTB:D%NKTE))) THEN
+IF (KSIZE /= COUNT(ODMICRO(IIJB:IIJE,IKTB:IKTE))) THEN
     CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'RAIN_ICE : KSIZE /= COUNT(ODMICRO)')
 ENDIF
 
@@ -727,8 +733,8 @@ IF (KSIZE > 0) THEN
 
   ! starting indexes :
   IC=0
-  ISTK=D%NKTB
-  ISTIJ=D%NIJB
+  ISTK=IKTB
+  ISTIJ=IIJB
 
   DO JMICRO=1,KSIZE,KPROMA
 
@@ -738,9 +744,9 @@ IF (KSIZE > 0) THEN
 !               --------
 
     ! Setup packing parameters
-    OUTER_LOOP: DO JK = ISTK, D%NKTE
+    OUTER_LOOP: DO JK = ISTK, IKTE
       IF (ANY(ODMICRO(:,JK))) THEN
-        DO JIJ = ISTIJ, D%NIJE
+        DO JIJ = ISTIJ, IIJE
           IF (ODMICRO(JIJ,JK)) THEN
             IC=IC+1
             ! Initialization of variables in packed format :
@@ -789,14 +795,14 @@ IF (KSIZE > 0) THEN
             IF (IC==IMICRO) THEN
               ! the end of the chunk has been reached, then reset the starting index :
               ISTIJ=JIJ+1
-              IF (ISTIJ <= D%NIJE) THEN
+              IF (ISTIJ <= IIJE) THEN
                 ISTK=JK
               ELSE
                 ! end of line, restart from 1 and increment upper loop
                 ISTK=JK+1
-                IF (ISTK > D%NKTE) THEN
+                IF (ISTK > IKTE) THEN
                   ! end of line, restart from 1
-                  ISTK=D%NKTB
+                  ISTK=IKTB
                 ENDIF
               ENDIF
               IC=0
@@ -806,7 +812,7 @@ IF (KSIZE > 0) THEN
         ENDDO
       ENDIF
       ! restart inner loop on JIJ :
-      ISTIJ=D%NIJB
+      ISTIJ=IIJB
     ENDDO OUTER_LOOP
 
     IF (GEXT_TEND) THEN
@@ -1124,8 +1130,8 @@ PCIT(:,:)=ZCITOUT(:,:)
 !               ----------------------------------------------------------------
 !
 LLW3D(:,:)=.FALSE.
-DO JK=D%NKTB,D%NKTE
-  DO JIJ=D%NIJB,D%NIJE
+DO JK=IKTB,IKTE
+  DO JIJ=IIJB,IIJE
     IF (.NOT. ODMICRO(JIJ, JK)) THEN
       LLW3D(JIJ, JK)=.TRUE.
       ZW3D(JIJ, JK)=ZZ_LSFACT(JIJ, JK)/PEXN(JIJ, JK)
@@ -1148,8 +1154,8 @@ CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, D%NIJT*D%NKT, LLW3D(:,:), &
 !
 !***     7.1    total tendencies limited by available species
 !
-DO JK = D%NKTB, D%NKTE
-  DO CONCURRENT (JIJ=D%NIJB:D%NIJE)
+DO JK = IKTB, IKTE
+  DO CONCURRENT (JIJ=IIJB:IIJE)
     !LV/LS
     ZZ_LSFACT(JIJ,JK)=ZZ_LSFACT(JIJ,JK)/PEXNREF(JIJ,JK)
     ZZ_LVFACT(JIJ,JK)=ZZ_LVFACT(JIJ,JK)/PEXNREF(JIJ,JK)
@@ -1194,8 +1200,8 @@ ENDDO
 IF(BUCONF%LBU_ENABLE) THEN
   IF (BUCONF%LBUDGET_TH) THEN
     ZZ_DIFF(:,:)=0.
-    DO JK = D%NKTB, D%NKTE
-      DO JIJ = D%NIJB, D%NIJE
+    DO JK = IKTB, IKTE
+      DO JIJ = IIJB, IIJE
         ZZ_DIFF(JIJ, JK) = ZZ_LSFACT(JIJ, JK) - ZZ_LVFACT(JIJ, JK)
       ENDDO
     ENDDO
@@ -1205,8 +1211,8 @@ IF(BUCONF%LBU_ENABLE) THEN
   DO JL=1, KSIZE
     ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RVHENI(JL) * ZINV_TSTEP
   END DO
-  DO JK = D%NKTB, D%NKTE
-    DO JIJ = D%NIJB, D%NIJE
+  DO JK = IKTB, IKTE
+    DO JIJ = IIJB, IIJE
       ZW(JIJ,JK)=ZW(JIJ,JK)+ZZ_RVHENI(JIJ,JK)
     ENDDO
   ENDDO
@@ -1605,8 +1611,8 @@ IF(PARAMI%LSEDIM_AFTER) THEN
 
   IF(HSEDIM=='STAT') THEN
     IF (KRR==7) THEN
-      DO JK = D%NKTB,D%NKTE
-        DO JIJ = D%NIJB,D%NIJE
+      DO JK = IKTB,IKTE
+        DO JIJ = IIJB,IIJE
           ZRCT(JIJ,JK)=PRCS(JIJ,JK)*PTSTEP
           ZRRT(JIJ,JK)=PRRS(JIJ,JK)*PTSTEP
           ZRIT(JIJ,JK)=PRIS(JIJ,JK)*PTSTEP
@@ -1625,8 +1631,8 @@ IF(PARAMI%LSEDIM_AFTER) THEN
                                   &PSEA=PSEA, PTOWN=PTOWN, &
                                   &PINPRH=PINPRH, PRHT=ZRHT, PRHS=PRHS, PFPR=PFPR)
     ELSE
-      DO JK = D%NKTB,D%NKTE
-        DO JIJ = D%NIJB,D%NIJE
+      DO JK = IKTB,IKTE
+        DO JIJ = IIJB,IIJE
           ZRCT(JIJ,JK)=PRCS(JIJ,JK)*PTSTEP
           ZRRT(JIJ,JK)=PRRS(JIJ,JK)*PTSTEP
           ZRIT(JIJ,JK)=PRIS(JIJ,JK)*PTSTEP
@@ -1644,7 +1650,7 @@ IF(PARAMI%LSEDIM_AFTER) THEN
                                   &PSEA=PSEA, PTOWN=PTOWN, &
                                   &PFPR=PFPR)
     ENDIF
-    PINPRS(D%NIJB:D%NIJE) = PINPRS(D%NIJB:D%NIJE) + ZINPRI(D%NIJB:D%NIJE)
+    PINPRS(IIJB:IIJE) = PINPRS(IIJB:IIJE) + ZINPRI(IIJB:IIJE)
     !No negativity correction here as we apply sedimentation on PR.S*PTSTEP variables
   ELSEIF(HSEDIM=='SPLI') THEN
     !SR: It *seems* that we must have two separate calls for ifort
@@ -1665,7 +1671,7 @@ IF(PARAMI%LSEDIM_AFTER) THEN
                                    &PSEA=PSEA, PTOWN=PTOWN, &
                                    &PFPR=PFPR)
     ENDIF
-    PINPRS(D%NIJB:D%NIJE) = PINPRS(D%NIJB:D%NIJE) + ZINPRI(D%NIJB:D%NIJE)
+    PINPRS(IIJB:IIJE) = PINPRS(IIJB:IIJE) + ZINPRI(IIJB:IIJE)
     !We correct negativities with conservation
     !SPLI algorith uses a time-splitting. Inside the loop a temporary m.r. is used.
     !   It is initialized with the m.r. at T and is modified by two tendencies:
@@ -1713,9 +1719,9 @@ IF (PARAMI%LDEPOSC) THEN !cloud water deposition on vegetation
 
   PINDEP(:)=0.
 !DEC$ IVDEP
-  DO JIJ = D%NIJB, D%NIJE
-    PINDEP(JIJ) = PARAMI%XVDEPOSC * PRCT(JIJ, D%NKB) * PRHODREF(JIJ, D%NKB) / CST%XRHOLW
-    PRCS(JIJ, D%NKB) = PRCS(JIJ, D%NKB) - PARAMI%XVDEPOSC * PRCT(JIJ, D%NKB) / PDZZ(JIJ, D%NKB)
+  DO JIJ = IIJB, IIJE
+    PINDEP(JIJ) = PARAMI%XVDEPOSC * PRCT(JIJ, IKB) * PRHODREF(JIJ, IKB) / CST%XRHOLW
+    PRCS(JIJ, IKB) = PRCS(JIJ, IKB) - PARAMI%XVDEPOSC * PRCT(JIJ, IKB) / PDZZ(JIJ, IKB)
     PINPRC(JIJ) = PINPRC(JIJ) + PINDEP(JIJ)
   ENDDO
 
@@ -1746,8 +1752,8 @@ CONTAINS
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE:CORRECT_NEGATIVITIES', 0, ZHOOK_HANDLE)
   !
   !We correct negativities with conservation
-  DO JK = D%NKTB, D%NKTE
-    DO JIJ = D%NIJB, D%NIJE
+  DO JK = IKTB, IKTE
+    DO JIJ = IIJB, IIJE
       ! 1) deal with negative values for mixing ratio, except for vapor
       ZW         =PRC(JIJ,JK)-MAX(PRC(JIJ,JK), 0.)
       PRV(JIJ,JK)=PRV(JIJ,JK)+ZW

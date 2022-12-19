@@ -183,14 +183,20 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZRSAT_UP ! Rsat in updraft
 
 LOGICAL :: GENTR_DETR  ! flag to recompute entrainment, detrainment and mass flux
 INTEGER, DIMENSION(D%NIJT,D%NKT) :: IERR
-INTEGER :: JI, JK
+INTEGER :: JIJ, JK
+INTEGER :: IIJB,IIJE ! physical horizontal domain indices
+INTEGER :: IKT
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !------------------------------------------------------------------------
 
 !!! 1. Initialisation
 IF (LHOOK) CALL DR_HOOK('SHALLOW_MF',0,ZHOOK_HANDLE)
-
+!
+IIJE=D%NIJE
+IIJB=D%NIJB
+IKT=D%NKT
+!
 ! updraft governing variables
 IF (HMF_UPDRAFT == 'EDKF'  .OR. HMF_UPDRAFT == 'RHCJ') THEN
   PENTR      = 1.E20
@@ -202,15 +208,15 @@ ENDIF
 ! Thermodynamics functions
 ZFRAC_ICE(:,:) = 0.
 IF (KRR.GE.4) THEN
-  !$mnh_expand_where(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-  WHERE(PRM(D%NIJB:D%NIJE,1:D%NKT,2)+PRM(D%NIJB:D%NIJE,1:D%NKT,4) > 1.E-20)
-    ZFRAC_ICE(D%NIJB:D%NIJE,1:D%NKT) = PRM(D%NIJB:D%NIJE,1:D%NKT,4) / (PRM(D%NIJB:D%NIJE,1:D%NKT,2)+PRM(D%NIJB:D%NIJE,1:D%NKT,4))
+  !$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
+  WHERE(PRM(IIJB:IIJE,1:IKT,2)+PRM(IIJB:IIJE,1:IKT,4) > 1.E-20)
+    ZFRAC_ICE(IIJB:IIJE,1:IKT) = PRM(IIJB:IIJE,1:IKT,4) / (PRM(IIJB:IIJE,1:IKT,2)+PRM(IIJB:IIJE,1:IKT,4))
   ENDWHERE
-  !$mnh_end_expand_where(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+  !$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
 ENDIF
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-ZWK(D%NIJB:D%NIJE,1:D%NKT)=PTHM(D%NIJB:D%NIJE,1:D%NKT)*PEXNM(D%NIJB:D%NIJE,1:D%NKT)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZWK(IIJB:IIJE,1:IKT)=PTHM(IIJB:IIJE,1:IKT)*PEXNM(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 CALL COMPUTE_FRAC_ICE(HFRAC_ICE,NEB,ZFRAC_ICE(:,:),ZWK(:,:), IERR(:,:))
 
 ! Conservative variables at t-dt
@@ -219,10 +225,10 @@ CALL THL_RT_FROM_TH_R_MF(D, CST, KRR,KRRL,KRRI,    &
                          ZTHLM, ZRTM       )
 
 ! Virtual potential temperature at t-dt
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-ZTHVM(D%NIJB:D%NIJE,1:D%NKT) = PTHM(D%NIJB:D%NIJE,1:D%NKT)*&
-                             & ((1.+CST%XRV / CST%XRD *PRM(D%NIJB:D%NIJE,1:D%NKT,1))/(1.+ZRTM(D%NIJB:D%NIJE,1:D%NKT))) 
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZTHVM(IIJB:IIJE,1:IKT) = PTHM(IIJB:IIJE,1:IKT)*&
+                             & ((1.+CST%XRV / CST%XRD *PRM(IIJB:IIJE,1:IKT,1))/(1.+ZRTM(IIJB:IIJE,1:IKT))) 
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ! 
 !!! 2. Compute updraft
 !!!    ---------------
@@ -294,9 +300,9 @@ CALL COMPUTE_MF_CLOUD(D, CST, CSTURB, PARAMMF, OSTATNW, &
 !!! 3. Compute fluxes of conservative variables and their divergence = tendency
 !!!    ------------------------------------------------------------------------
 !
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-ZEMF_O_RHODREF(D%NIJB:D%NIJE,1:D%NKT)=PEMF(D%NIJB:D%NIJE,1:D%NKT)/PRHODREF(D%NIJB:D%NIJE,1:D%NKT)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZEMF_O_RHODREF(IIJB:IIJE,1:IKT)=PEMF(IIJB:IIJE,1:IKT)/PRHODREF(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
 IF ( PIMPL_MF > 1.E-10 ) THEN  
   CALL MF_TURB(D, KSV, OMIXUV,                     &

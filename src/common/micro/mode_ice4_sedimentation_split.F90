@@ -89,6 +89,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upp
 !
 !
 INTEGER                                                             :: JI, JJ, JK
+INTEGER :: IKTB, IKTE, IKB, IKL, IIE, IIB, IJB, IJE
 INTEGER                                                             :: IRR !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
 LOGICAL                                                             :: GSEDIC !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
 LOGICAL                                                             :: GPRESENT_PFPR, GPRESENT_PSEA
@@ -115,6 +116,13 @@ IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT', 0, ZHOOK_HANDLE)
 !
 GSEDIC = OSEDIC
 IRR    = KRR
+!
+IKTB=D%NKTB
+IKTE=D%NKTE
+IIB=D%NIB
+IIE=D%NIE
+IJB=D%NJB
+IJE=D%NJE
 !
 IF (PRESENT(PFPR)) THEN
   GPRESENT_PFPR = .TRUE.
@@ -144,14 +152,14 @@ IF (GSEDIC) THEN
   ZCONC3D(:,:,:)= ICED%XCONC_LAND
   ZCONC_TMP(:,:)= ICED%XCONC_LAND
   IF (GPRESENT_PSEA) THEN
-    DO JJ = D%NJB, D%NJE
-      DO JI = D%NIB, D%NIE
+    DO JJ = IJB, IJE
+      DO JI = IIB, IIE
         ZCONC_TMP(JI,JJ)=PSEA(JI,JJ)*ICED%XCONC_SEA+(1.-PSEA(JI,JJ))*ICED%XCONC_LAND
       ENDDO
     ENDDO
-    DO JK=D%NKTB, D%NKTE
-      DO JJ = D%NJB, D%NJE
-        DO JI = D%NIB, D%NIE
+    DO JK=IKTB, IKTE
+      DO JJ = IJB, IJE
+        DO JI = IIB, IIE
           ZLBC(JI,JJ,JK)   = PSEA(JI,JJ)*ICED%XLBC(2)+(1.-PSEA(JI,JJ))*ICED%XLBC(1)
           ZFSEDC(JI,JJ,JK) = (PSEA(JI,JJ)*ICEP%XFSEDC(2)+(1.-PSEA(JI,JJ))*ICEP%XFSEDC(1))
           ZFSEDC(JI,JJ,JK) = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(JI,JJ,JK))
@@ -175,9 +183,9 @@ ENDIF
 !  the precipitating fields are larger than a minimal value only !!!
 !  For optimization we consider each variable separately
 !
-DO JK=D%NKTB, D%NKTE
-  DO JJ = D%NJB, D%NJE
-    DO JI = D%NIB, D%NIE
+DO JK=IKTB, IKTE
+  DO JJ = IJB, IJE
+    DO JI = IIB, IIE
       ! External tendecies
       IF (GSEDIC) THEN
         ZPRCS(JI,JJ,JK) = PRCS(JI,JJ,JK)-PRCT(JI,JJ,JK)*ZINVTSTEP
@@ -320,9 +328,18 @@ REAL, DIMENSION(D%NIT, D%NJT)       :: ZMAX_TSTEP ! Maximum CFL in column
 REAL, DIMENSION(SIZE(ICED%XRTMIN))   :: ZRSMIN
 REAL, DIMENSION(D%NIT, D%NJT)       :: ZREMAINT   ! Remaining time until the timestep end
 REAL, DIMENSION(D%NIT, D%NJT, 0:D%NKT+1) :: ZWSED   ! Sedimentation fluxes
+INTEGER :: IKTB, IKTE, IKB, IKL, IIE, IIB, IJB, IJE
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT', 0, ZHOOK_HANDLE)
 !
+IKTB=D%NKTB
+IKTE=D%NKTE
+IKB=D%NKB
+IKL=D%NKL
+IIB=D%NIB
+IIE=D%NIE
+IJB=D%NJB
+IJE=D%NJE
 !-------------------------------------------------------------------------------
 IF (KSPE<2 .OR. KSPE>7) CALL PRINT_MSG(NVERB_FATAL,'GEN','INTERNAL_SEDIM_SPLIT','invalid species (KSPE variable)')
 !
@@ -336,13 +353,13 @@ PINPRX(:,:) = 0.
 ZINVTSTEP=1./PTSTEP
 ZRSMIN(:) = ICED%XRTMIN(:) * ZINVTSTEP
 ZREMAINT(:,:) = 0.
-ZREMAINT(D%NIB:D%NIE,D%NJB:D%NJE) = PTSTEP
+ZREMAINT(IIB:IIE,IJB:IJE) = PTSTEP
 !
 DO WHILE (ANY(ZREMAINT>0.))
   ISEDIM = 0
-  DO JK = D%NKTB,D%NKTE
-    DO JJ = D%NJB,D%NJE
-      DO JI = D%NIB,D%NIE
+  DO JK = IKTB,IKTE
+    DO JJ = IJB,IJE
+      DO JI = IIB,IIE
         IF( (PRXT (JI,JJ,JK)>ICED%XRTMIN(KSPE) .OR.    &
              PPRXS(JI,JJ,JK)>ZRSMIN(KSPE)) .AND. &
              ZREMAINT(JI,JJ)>0. ) THEN
@@ -467,17 +484,17 @@ DO WHILE (ANY(ZREMAINT>0.))
     ENDIF
   ENDDO
 
-  DO JJ = D%NJB, D%NJE
-    DO JI = D%NIB, D%NIE
+  DO JJ = IJB, IJE
+    DO JI = IIB, IIE
       ZREMAINT(JI,JJ) = ZREMAINT(JI,JJ) - ZMAX_TSTEP(JI,JJ)
-      PINPRX(JI,JJ) = PINPRX(JI,JJ) + ZWSED(JI,JJ,D%NKB) / CST%XRHOLW * (ZMAX_TSTEP(JI,JJ) * ZINVTSTEP)
+      PINPRX(JI,JJ) = PINPRX(JI,JJ) + ZWSED(JI,JJ,IKB) / CST%XRHOLW * (ZMAX_TSTEP(JI,JJ) * ZINVTSTEP)
     ENDDO
   ENDDO
 
-  DO JK = D%NKTB , D%NKTE
-    DO JJ = D%NJB, D%NJE
-      DO JI = D%NIB, D%NIE
-        ZMRCHANGE = ZMAX_TSTEP(JI,JJ) * POORHODZ(JI,JJ,JK)*(ZWSED(JI,JJ,JK+D%NKL)-ZWSED(JI,JJ,JK))
+  DO JK = IKTB , IKTE
+    DO JJ = IJB, IJE
+      DO JI = IIB, IIE
+        ZMRCHANGE = ZMAX_TSTEP(JI,JJ) * POORHODZ(JI,JJ,JK)*(ZWSED(JI,JJ,JK+IKL)-ZWSED(JI,JJ,JK))
         PRXT(JI,JJ,JK) = PRXT(JI,JJ,JK) + ZMRCHANGE + PPRXS(JI,JJ,JK) * ZMAX_TSTEP(JI,JJ)
         PRXS(JI,JJ,JK) = PRXS(JI,JJ,JK) + ZMRCHANGE * ZINVTSTEP
         IF (GPRESENT_PFPR) THEN

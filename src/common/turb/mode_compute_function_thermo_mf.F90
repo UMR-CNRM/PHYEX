@@ -92,12 +92,19 @@ REAL, DIMENSION(D%NIJT,D%NKT) ::      &
           ZATHETA_I,                  &  !
           ZLVOCP,ZLSOCP
 
-INTEGER             :: JRR, JI, JK
+INTEGER             :: JRR, JIJ, JK
+INTEGER :: IIJB,IIJE ! physical horizontal domain indices
+INTEGER :: IKTB,IKTE
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('COMPUTE_FUNCTION_THERMO_MF',0,ZHOOK_HANDLE)
+!
+IIJE=D%NIJE
+IIJB=D%NIJB
+IKTB=D%NKTB
+IKTE=D%NKTE
 !
   ZEPS = CST%XMV / CST%XMD
 
@@ -107,140 +114,140 @@ IF (LHOOK) CALL DR_HOOK('COMPUTE_FUNCTION_THERMO_MF',0,ZHOOK_HANDLE)
 ZCP=CST%XCPD
 
 IF (KRR > 0) THEN
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
-  ZCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = ZCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE) + CST%XCPV * PR(D%NIJB:D%NIJE,D%NKTB:D%NKTE,1)
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
+  ZCP(IIJB:IIJE,IKTB:IKTE) = ZCP(IIJB:IIJE,IKTB:IKTE) + CST%XCPV * PR(IIJB:IIJE,IKTB:IKTE,1)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
 ENDIF
 
 DO JRR = 2,1+KRRL  ! loop on the liquid components
-   !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
-   ZCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE)  = ZCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE) + CST%XCL * PR(D%NIJB:D%NIJE,D%NKTB:D%NKTE,JRR)
-   !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
+   ZCP(IIJB:IIJE,IKTB:IKTE)  = ZCP(IIJB:IIJE,IKTB:IKTE) + CST%XCL * PR(IIJB:IIJE,IKTB:IKTE,JRR)
+   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
 END DO
 
 DO JRR = 2+KRRL,1+KRRL+KRRI ! loop on the solid components
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
-  ZCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE)  = ZCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE)  + CST%XCI * PR(D%NIJB:D%NIJE,D%NKTB:D%NKTE,JRR)
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
+  ZCP(IIJB:IIJE,IKTB:IKTE)  = ZCP(IIJB:IIJE,IKTB:IKTE)  + CST%XCI * PR(IIJB:IIJE,IKTB:IKTE,JRR)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
 
 END DO
 
 !*      Temperature
 !
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
-PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) =  PTH(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * PEXN(D%NIJB:D%NIJE,D%NKTB:D%NKTE)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
+PT(IIJB:IIJE,IKTB:IKTE) =  PTH(IIJB:IIJE,IKTB:IKTE) * PEXN(IIJB:IIJE,IKTB:IKTE)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
 !
 !
 !! Liquid water
 !
 IF ( KRRL >= 1 ) THEN
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
   !
   !*       Lv/Cph
   !
-  ZLVOCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = (CST%XLVTT + (CST%XCPV-CST%XCL) *  (PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)-CST%XTT) ) / &
-                                      & ZCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE)
+  ZLVOCP(IIJB:IIJE,IKTB:IKTE) = (CST%XLVTT + (CST%XCPV-CST%XCL) *  (PT(IIJB:IIJE,IKTB:IKTE)-CST%XTT) ) / &
+                                      & ZCP(IIJB:IIJE,IKTB:IKTE)
   !
   !*      Saturation vapor pressure with respect to water
   !
-  ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) =  EXP(CST%XALPW - CST%XBETAW/PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) - &
-                                        &CST%XGAMW*ALOG( PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) ) )
+  ZE(IIJB:IIJE,IKTB:IKTE) =  EXP(CST%XALPW - CST%XBETAW/PT(IIJB:IIJE,IKTB:IKTE) - &
+                                        &CST%XGAMW*ALOG( PT(IIJB:IIJE,IKTB:IKTE) ) )
   !
   !*      Saturation  mixing ratio with respect to water
   !
-  ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) =  ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * ZEPS / &
-                                  & ( PPABS(D%NIJB:D%NIJE,D%NKTB:D%NKTE) - ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) )
+  ZE(IIJB:IIJE,IKTB:IKTE) =  ZE(IIJB:IIJE,IKTB:IKTE) * ZEPS / &
+                                  & ( PPABS(IIJB:IIJE,IKTB:IKTE) - ZE(IIJB:IIJE,IKTB:IKTE) )
   !
   !*      Compute the saturation mixing ratio derivative (rvs')
   !
-  ZDEDT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = (CST%XBETAW/PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)  - CST%XGAMW) / PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)&
-                 * ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * ( 1. + ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) / ZEPS )
+  ZDEDT(IIJB:IIJE,IKTB:IKTE) = (CST%XBETAW/PT(IIJB:IIJE,IKTB:IKTE)  - CST%XGAMW) / PT(IIJB:IIJE,IKTB:IKTE)&
+                 * ZE(IIJB:IIJE,IKTB:IKTE) * ( 1. + ZE(IIJB:IIJE,IKTB:IKTE) / ZEPS )
   !
   !*      Compute Amoist and Atheta
   !
   IF (OSTATNW) THEN
-    ZAMOIST_W(D%NIJB:D%NIJE,D%NKTB:D%NKTE)=  1.0/( 1.0 + ZDEDT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * ZLVOCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE))
-    ZATHETA_W(D%NIJB:D%NIJE,D%NKTB:D%NKTE)= ZAMOIST_W(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * PEXN(D%NIJB:D%NIJE,D%NKTB:D%NKTE) &
-                                            * ZDEDT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)
+    ZAMOIST_W(IIJB:IIJE,IKTB:IKTE)=  1.0/( 1.0 + ZDEDT(IIJB:IIJE,IKTB:IKTE) * ZLVOCP(IIJB:IIJE,IKTB:IKTE))
+    ZATHETA_W(IIJB:IIJE,IKTB:IKTE)= ZAMOIST_W(IIJB:IIJE,IKTB:IKTE) * PEXN(IIJB:IIJE,IKTB:IKTE) &
+                                            * ZDEDT(IIJB:IIJE,IKTB:IKTE)
   ELSE
-    ZAMOIST_W(D%NIJB:D%NIJE,D%NKTB:D%NKTE)= 0.5/( 1.0 + ZDEDT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * ZLVOCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE) )
-    ZATHETA_W(D%NIJB:D%NIJE,D%NKTB:D%NKTE)= ZAMOIST_W(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * PEXN(D%NIJB:D%NIJE,D%NKTB:D%NKTE) *         &
-          ( ( ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) - PR(D%NIJB:D%NIJE,D%NKTB:D%NKTE,1) ) * ZLVOCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE) /      &
-            ( 1. + ZDEDT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * ZLVOCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE) )           *              &
+    ZAMOIST_W(IIJB:IIJE,IKTB:IKTE)= 0.5/( 1.0 + ZDEDT(IIJB:IIJE,IKTB:IKTE) * ZLVOCP(IIJB:IIJE,IKTB:IKTE) )
+    ZATHETA_W(IIJB:IIJE,IKTB:IKTE)= ZAMOIST_W(IIJB:IIJE,IKTB:IKTE) * PEXN(IIJB:IIJE,IKTB:IKTE) *         &
+          ( ( ZE(IIJB:IIJE,IKTB:IKTE) - PR(IIJB:IIJE,IKTB:IKTE,1) ) * ZLVOCP(IIJB:IIJE,IKTB:IKTE) /      &
+            ( 1. + ZDEDT(IIJB:IIJE,IKTB:IKTE) * ZLVOCP(IIJB:IIJE,IKTB:IKTE) )           *              &
             (                                                             &
-             ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * (1. + ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE)/ZEPS)                                &
-                            * ( -2.*CST%XBETAW/PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) + CST%XGAMW ) / PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)**2&
-            +ZDEDT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * (1. + 2. * ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE)/ZEPS)                        &
-                          * ( CST%XBETAW/PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) - CST%XGAMW ) / PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)         &
+             ZE(IIJB:IIJE,IKTB:IKTE) * (1. + ZE(IIJB:IIJE,IKTB:IKTE)/ZEPS)                                &
+                            * ( -2.*CST%XBETAW/PT(IIJB:IIJE,IKTB:IKTE) + CST%XGAMW ) / PT(IIJB:IIJE,IKTB:IKTE)**2&
+            +ZDEDT(IIJB:IIJE,IKTB:IKTE) * (1. + 2. * ZE(IIJB:IIJE,IKTB:IKTE)/ZEPS)                        &
+                          * ( CST%XBETAW/PT(IIJB:IIJE,IKTB:IKTE) - CST%XGAMW ) / PT(IIJB:IIJE,IKTB:IKTE)         &
             )                                                             &
-           - ZDEDT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)                                                   &
+           - ZDEDT(IIJB:IIJE,IKTB:IKTE)                                                   &
           )
   END IF
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
   !
   !! Solid water
   !
   IF ( KRRI >= 1 ) THEN
-    !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
     !
     !*       Ls/Cph
     !
-    ZLSOCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = (CST%XLSTT + (CST%XCPV-CST%XCI) *  (PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)-CST%XTT) ) / &
-                                        & ZCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE)
+    ZLSOCP(IIJB:IIJE,IKTB:IKTE) = (CST%XLSTT + (CST%XCPV-CST%XCI) *  (PT(IIJB:IIJE,IKTB:IKTE)-CST%XTT) ) / &
+                                        & ZCP(IIJB:IIJE,IKTB:IKTE)
     !
     !*      Saturation vapor pressure with respect to ice
     !
-    ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) =  EXP(CST%XALPI - CST%XBETAI/PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) - &
-                                          &CST%XGAMI*ALOG( PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) ) )
+    ZE(IIJB:IIJE,IKTB:IKTE) =  EXP(CST%XALPI - CST%XBETAI/PT(IIJB:IIJE,IKTB:IKTE) - &
+                                          &CST%XGAMI*ALOG( PT(IIJB:IIJE,IKTB:IKTE) ) )
     !
     !*      Saturation  mixing ratio with respect to ice
     !
-    ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) =  ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * ZEPS / &
-                                    & ( PPABS(D%NIJB:D%NIJE,D%NKTB:D%NKTE) - ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) )
+    ZE(IIJB:IIJE,IKTB:IKTE) =  ZE(IIJB:IIJE,IKTB:IKTE) * ZEPS / &
+                                    & ( PPABS(IIJB:IIJE,IKTB:IKTE) - ZE(IIJB:IIJE,IKTB:IKTE) )
     !
     !*      Compute the saturation mixing ratio derivative (rvs')
     !
-    ZDEDT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = (CST%XBETAI/PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)-CST%XGAMI) /PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)&
-                   * ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * ( 1. + ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) / ZEPS )
+    ZDEDT(IIJB:IIJE,IKTB:IKTE) = (CST%XBETAI/PT(IIJB:IIJE,IKTB:IKTE)-CST%XGAMI) /PT(IIJB:IIJE,IKTB:IKTE)&
+                   * ZE(IIJB:IIJE,IKTB:IKTE) * ( 1. + ZE(IIJB:IIJE,IKTB:IKTE) / ZEPS )
     !
     !*      Compute Amoist and Atheta
     !
     IF (OSTATNW) THEN
-      ZAMOIST_I(D%NIJB:D%NIJE,D%NKTB:D%NKTE)= 1.0/( 1.0 + ZDEDT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) *ZLVOCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE))
-      ZATHETA_I(D%NIJB:D%NIJE,D%NKTB:D%NKTE)= ZAMOIST_I(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * PEXN(D%NIJB:D%NIJE,D%NKTB:D%NKTE) &
-                                            * ZDEDT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)
+      ZAMOIST_I(IIJB:IIJE,IKTB:IKTE)= 1.0/( 1.0 + ZDEDT(IIJB:IIJE,IKTB:IKTE) *ZLVOCP(IIJB:IIJE,IKTB:IKTE))
+      ZATHETA_I(IIJB:IIJE,IKTB:IKTE)= ZAMOIST_I(IIJB:IIJE,IKTB:IKTE) * PEXN(IIJB:IIJE,IKTB:IKTE) &
+                                            * ZDEDT(IIJB:IIJE,IKTB:IKTE)
     ELSE
-      ZAMOIST_I(D%NIJB:D%NIJE,D%NKTB:D%NKTE)= 0.5/(1.0 + ZDEDT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * ZLSOCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE))
-      ZATHETA_I(D%NIJB:D%NIJE,D%NKTB:D%NKTE)= ZAMOIST_I(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * PEXN(D%NIJB:D%NIJE,D%NKTB:D%NKTE) *      &
-        ( ( ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) - PR(D%NIJB:D%NIJE,D%NKTB:D%NKTE,1) ) * ZLSOCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE) /       &
-          ( 1. + ZDEDT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * ZLSOCP(D%NIJB:D%NIJE,D%NKTB:D%NKTE) )           *              &
+      ZAMOIST_I(IIJB:IIJE,IKTB:IKTE)= 0.5/(1.0 + ZDEDT(IIJB:IIJE,IKTB:IKTE) * ZLSOCP(IIJB:IIJE,IKTB:IKTE))
+      ZATHETA_I(IIJB:IIJE,IKTB:IKTE)= ZAMOIST_I(IIJB:IIJE,IKTB:IKTE) * PEXN(IIJB:IIJE,IKTB:IKTE) *      &
+        ( ( ZE(IIJB:IIJE,IKTB:IKTE) - PR(IIJB:IIJE,IKTB:IKTE,1) ) * ZLSOCP(IIJB:IIJE,IKTB:IKTE) /       &
+          ( 1. + ZDEDT(IIJB:IIJE,IKTB:IKTE) * ZLSOCP(IIJB:IIJE,IKTB:IKTE) )           *              &
           (                                                             &
-           ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * (1. + ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE)/ZEPS)                                &
-                        * ( -2.*CST%XBETAI/PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) + CST%XGAMI ) / PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)**2   &
-          +ZDEDT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) * (1. + 2. * ZE(D%NIJB:D%NIJE,D%NKTB:D%NKTE)/ZEPS)                        &
-                        * ( CST%XBETAI/PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) - CST%XGAMI ) / PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)          &
+           ZE(IIJB:IIJE,IKTB:IKTE) * (1. + ZE(IIJB:IIJE,IKTB:IKTE)/ZEPS)                                &
+                        * ( -2.*CST%XBETAI/PT(IIJB:IIJE,IKTB:IKTE) + CST%XGAMI ) / PT(IIJB:IIJE,IKTB:IKTE)**2   &
+          +ZDEDT(IIJB:IIJE,IKTB:IKTE) * (1. + 2. * ZE(IIJB:IIJE,IKTB:IKTE)/ZEPS)                        &
+                        * ( CST%XBETAI/PT(IIJB:IIJE,IKTB:IKTE) - CST%XGAMI ) / PT(IIJB:IIJE,IKTB:IKTE)          &
           )                                                             &
-         - ZDEDT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)                                                   &
+         - ZDEDT(IIJB:IIJE,IKTB:IKTE)                                                   &
         )
     END IF
-    !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
 
   ELSE
-    ZAMOIST_I(D%NIJB:D%NIJE,D%NKTB:D%NKTE)=0.
-    ZATHETA_I(D%NIJB:D%NIJE,D%NKTB:D%NKTE)=0.
+    ZAMOIST_I(IIJB:IIJE,IKTB:IKTE)=0.
+    ZATHETA_I(IIJB:IIJE,IKTB:IKTE)=0.
   ENDIF
 
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
-  PAMOIST(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = (1.0-PFRAC_ICE(D%NIJB:D%NIJE,D%NKTB:D%NKTE))*ZAMOIST_W(D%NIJB:D%NIJE,D%NKTB:D%NKTE) &
-                         +PFRAC_ICE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) *ZAMOIST_I(D%NIJB:D%NIJE,D%NKTB:D%NKTE)
-  PATHETA(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = (1.0-PFRAC_ICE(D%NIJB:D%NIJE,D%NKTB:D%NKTE))*ZATHETA_W(D%NIJB:D%NIJE,D%NKTB:D%NKTE) &
-                         +PFRAC_ICE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) *ZATHETA_I(D%NIJB:D%NIJE,D%NKTB:D%NKTE)
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=D%NKTB:D%NKTE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
+  PAMOIST(IIJB:IIJE,IKTB:IKTE) = (1.0-PFRAC_ICE(IIJB:IIJE,IKTB:IKTE))*ZAMOIST_W(IIJB:IIJE,IKTB:IKTE) &
+                         +PFRAC_ICE(IIJB:IIJE,IKTB:IKTE) *ZAMOIST_I(IIJB:IIJE,IKTB:IKTE)
+  PATHETA(IIJB:IIJE,IKTB:IKTE) = (1.0-PFRAC_ICE(IIJB:IIJE,IKTB:IKTE))*ZATHETA_W(IIJB:IIJE,IKTB:IKTE) &
+                         +PFRAC_ICE(IIJB:IIJE,IKTB:IKTE) *ZATHETA_I(IIJB:IIJE,IKTB:IKTE)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
   !
 ELSE
-  PAMOIST(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = 0.
-  PATHETA(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = 0.
+  PAMOIST(IIJB:IIJE,IKTB:IKTE) = 0.
+  PATHETA(IIJB:IIJE,IKTB:IKTE) = 0.
 ENDIF
 IF (LHOOK) CALL DR_HOOK('COMPUTE_FUNCTION_THERMO_MF',1,ZHOOK_HANDLE)
 END SUBROUTINE COMPUTE_FUNCTION_THERMO_MF

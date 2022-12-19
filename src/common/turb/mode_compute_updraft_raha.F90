@@ -157,7 +157,9 @@ REAL, DIMENSION(D%NIJT) :: ZLUP         ! Upward Mixing length from the ground
 
 REAL, DIMENSION(D%NIJT) :: ZDEPTH       ! Deepness limit for cloud
 
-INTEGER  :: JK,JI,JJ,JSV          ! loop counters
+INTEGER  :: JK,JIJ,JSV          ! loop counters
+INTEGER :: IIJB,IIJE ! physical horizontal domain indices
+INTEGEr :: IKT,IKB,IKE,IKL
 
 LOGICAL, DIMENSION(D%NIJT) ::  GTEST,GTESTLCL,GTESTETL
                                ! Test if the ascent continue, if LCL or ETL is reached
@@ -190,7 +192,14 @@ REAL, DIMENSION(D%NIJT,16)           ::  ZBUF
 
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('COMPUTE_UPDRAF_RAHA',0,ZHOOK_HANDLE)
-
+!
+IIJE=D%NIJE
+IIJB=D%NIJB
+IKT=D%NKT
+IKB=D%NKB
+IKE=D%NKE
+IKL=D%NKL
+!
 ! Thresholds for the  perturbation of
 ! theta_l and r_t at the first level of the updraft
 
@@ -209,9 +218,9 @@ ZDEPTH_MAX2=5000. ! clouds with depth superior to this value are suppressed
 
 !                 Local variables, internal domain
 ! Initialisation of intersesting Level :LCL,ETL,CTL
-KKLCL(:)=D%NKE
-KKETL(:)=D%NKE
-KKCTL(:)=D%NKE
+KKLCL(:)=IKE
+KKETL(:)=IKE
+KKCTL(:)=IKE
 
 ! 
 ! Initialisation
@@ -236,9 +245,9 @@ ZBUO(:,:)      =0.
 !no ice cloud coded yet 
 PRI_UP(:,:)=0.
 PFRAC_ICE_UP(:,:)=0.
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-PRSAT_UP(D%NIJB:D%NIJE,1:D%NKT)=PRVM(D%NIJB:D%NIJE,1:D%NKT) ! should be initialised correctly but is (normaly) not used
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+PRSAT_UP(IIJB:IIJE,1:IKT)=PRVM(IIJB:IIJE,1:IKT) ! should be initialised correctly but is (normaly) not used
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
 ! Initialisation of environment variables at t-dt
 
@@ -251,110 +260,110 @@ CALL MZM_MF(D, PTKEM(:,:), ZTKEM_F(:,:))
 
 !DO JSV=1,ISV 
 ! IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
-!   ZSVM_F(D%NIJB:D%NIJE,KKB:IKU,JSV) = 0.5*(PSVM(D%NIJB:D%NIJE,KKB:IKU,JSV)+PSVM(D%NIJB:D%NIJE,1:IKU-1,JSV))
-!   ZSVM_F(D%NIJB:D%NIJE,1,JSV)       = ZSVM_F(D%NIJB:D%NIJE,KKB,JSV) 
+!   ZSVM_F(IIJB:IIJE,KKB:IKU,JSV) = 0.5*(PSVM(IIJB:IIJE,KKB:IKU,JSV)+PSVM(IIJB:IIJE,1:IKU-1,JSV))
+!   ZSVM_F(IIJB:IIJE,1,JSV)       = ZSVM_F(IIJB:IIJE,KKB,JSV) 
 !END DO  
 
 !          Initialisation of updraft characteristics 
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-PTHL_UP(D%NIJB:D%NIJE,1:D%NKT)=ZTHLM_F(D%NIJB:D%NIJE,1:D%NKT)
-PRT_UP(D%NIJB:D%NIJE,1:D%NKT)=ZRTM_F(D%NIJB:D%NIJE,1:D%NKT)
-PU_UP(D%NIJB:D%NIJE,1:D%NKT)=ZUM_F(D%NIJB:D%NIJE,1:D%NKT)
-PV_UP(D%NIJB:D%NIJE,1:D%NKT)=ZVM_F(D%NIJB:D%NIJE,1:D%NKT)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+PTHL_UP(IIJB:IIJE,1:IKT)=ZTHLM_F(IIJB:IIJE,1:IKT)
+PRT_UP(IIJB:IIJE,1:IKT)=ZRTM_F(IIJB:IIJE,1:IKT)
+PU_UP(IIJB:IIJE,1:IKT)=ZUM_F(IIJB:IIJE,1:IKT)
+PV_UP(IIJB:IIJE,1:IKT)=ZVM_F(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 PSV_UP(:,:,:)=0.
 !IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) then
-!    PSV_UP(D%NIJB:D%NIJE,:,:)=ZSVM_F(D%NIJB:D%NIJE,:,:)
+!    PSV_UP(IIJB:IIJE,:,:)=ZSVM_F(IIJB:IIJE,:,:)
 !ENDIF
 
 ! Computation or initialisation of updraft characteristics at the KKB level
 ! thetal_up,rt_up,thetaV_up, w�,Buoyancy term and mass flux (PEMF)
 
-!$mnh_expand_array(JI=D%NIJB:D%NIJE)
-PTHL_UP(D%NIJB:D%NIJE,D%NKB)= ZTHLM_F(D%NIJB:D%NIJE,D%NKB)+ &
-                          & MAX(0.,MIN(ZTMAX,(PSFTH(D%NIJB:D%NIJE)/SQRT(ZTKEM_F(D%NIJB:D%NIJE,D%NKB)))*PARAMMF%XALP_PERT))
-PRT_UP(D%NIJB:D%NIJE,D%NKB) = ZRTM_F(D%NIJB:D%NIJE,D%NKB)+ &
-                          & MAX(0.,MIN(ZRMAX,(PSFRV(D%NIJB:D%NIJE)/SQRT(ZTKEM_F(D%NIJB:D%NIJE,D%NKB)))*PARAMMF%XALP_PERT)) 
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PTHL_UP(IIJB:IIJE,IKB)= ZTHLM_F(IIJB:IIJE,IKB)+ &
+                          & MAX(0.,MIN(ZTMAX,(PSFTH(IIJB:IIJE)/SQRT(ZTKEM_F(IIJB:IIJE,IKB)))*PARAMMF%XALP_PERT))
+PRT_UP(IIJB:IIJE,IKB) = ZRTM_F(IIJB:IIJE,IKB)+ &
+                          & MAX(0.,MIN(ZRMAX,(PSFRV(IIJB:IIJE)/SQRT(ZTKEM_F(IIJB:IIJE,IKB)))*PARAMMF%XALP_PERT)) 
 
-ZQT_UP(D%NIJB:D%NIJE) = PRT_UP(D%NIJB:D%NIJE,D%NKB)/(1.+PRT_UP(D%NIJB:D%NIJE,D%NKB))
-ZTHS_UP(D%NIJB:D%NIJE,D%NKB)=PTHL_UP(D%NIJB:D%NIJE,D%NKB)*(1.+PARAMMF%XLAMBDA_MF*ZQT_UP(D%NIJB:D%NIJE))
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+ZQT_UP(IIJB:IIJE) = PRT_UP(IIJB:IIJE,IKB)/(1.+PRT_UP(IIJB:IIJE,IKB))
+ZTHS_UP(IIJB:IIJE,IKB)=PTHL_UP(IIJB:IIJE,IKB)*(1.+PARAMMF%XLAMBDA_MF*ZQT_UP(IIJB:IIJE))
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
 CALL MZM_MF(D, PTHM (:,:), ZTHM_F(:,:))
 CALL MZM_MF(D, PPABSM(:,:), ZPRES_F(:,:))
 CALL MZM_MF(D, PRHODREF(:,:), ZRHO_F(:,:))
 CALL MZM_MF(D, PRVM(:,:), ZRVM_F(:,:))
 
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ! thetav at mass and flux levels 
-ZTHVM_F(D%NIJB:D%NIJE,1:D%NKT)=ZTHM_F(D%NIJB:D%NIJE,1:D%NKT)*((1.+ZRVORD*ZRVM_F(D%NIJB:D%NIJE,1:D%NKT))/&
-                                                             &(1.+ZRTM_F(D%NIJB:D%NIJE,1:D%NKT)))
-ZTHVM(D%NIJB:D%NIJE,1:D%NKT)=PTHM(D%NIJB:D%NIJE,1:D%NKT)*((1.+ZRVORD*PRVM(D%NIJB:D%NIJE,1:D%NKT))/(1.+PRTM(D%NIJB:D%NIJE,1:D%NKT)))
+ZTHVM_F(IIJB:IIJE,1:IKT)=ZTHM_F(IIJB:IIJE,1:IKT)*((1.+ZRVORD*ZRVM_F(IIJB:IIJE,1:IKT))/&
+                                                             &(1.+ZRTM_F(IIJB:IIJE,1:IKT)))
+ZTHVM(IIJB:IIJE,1:IKT)=PTHM(IIJB:IIJE,1:IKT)*((1.+ZRVORD*PRVM(IIJB:IIJE,1:IKT))/(1.+PRTM(IIJB:IIJE,1:IKT)))
 
-PTHV_UP(D%NIJB:D%NIJE,1:D%NKT)= ZTHVM_F(D%NIJB:D%NIJE,1:D%NKT)
-PRV_UP(D%NIJB:D%NIJE,1:D%NKT) = ZRVM_F(D%NIJB:D%NIJE,1:D%NKT)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+PTHV_UP(IIJB:IIJE,1:IKT)= ZTHVM_F(IIJB:IIJE,1:IKT)
+PRV_UP(IIJB:IIJE,1:IKT) = ZRVM_F(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
 ZW_UP2(:,:)=ZEPS
-!$mnh_expand_array(JI=D%NIJB:D%NIJE)
-ZW_UP2(D%NIJB:D%NIJE,D%NKB) = MAX(0.0001,(1./6.)*ZTKEM_F(D%NIJB:D%NIJE,D%NKB))
-GTEST(D%NIJB:D%NIJE) = (ZW_UP2(D%NIJB:D%NIJE,D%NKB) > ZEPS)  
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+ZW_UP2(IIJB:IIJE,IKB) = MAX(0.0001,(1./6.)*ZTKEM_F(IIJB:IIJE,IKB))
+GTEST(IIJB:IIJE) = (ZW_UP2(IIJB:IIJE,IKB) > ZEPS)  
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
 ! Computation of non conservative variable for the KKB level of the updraft
 ! (all or nothing ajustement)
-!$mnh_expand_array(JI=D%NIJB:D%NIJE)
-PRC_UP(D%NIJB:D%NIJE,D%NKB)=0.
-PRI_UP(D%NIJB:D%NIJE,D%NKB)=0.
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PRC_UP(IIJB:IIJE,IKB)=0.
+PRI_UP(IIJB:IIJE,IKB)=0.
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
-CALL TH_R_FROM_THL_RT(CST, NEB, D%NIJT, HFRAC_ICE,PFRAC_ICE_UP(:,D%NKB),ZPRES_F(:,D%NKB), &
-             PTHL_UP(:,D%NKB),PRT_UP(:,D%NKB),ZTH_UP(:,D%NKB), &
-             PRV_UP(:,D%NKB),PRC_UP(:,D%NKB),PRI_UP(:,D%NKB),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
+CALL TH_R_FROM_THL_RT(CST, NEB, D%NIJT, HFRAC_ICE,PFRAC_ICE_UP(:,IKB),ZPRES_F(:,IKB), &
+             PTHL_UP(:,IKB),PRT_UP(:,IKB),ZTH_UP(:,IKB), &
+             PRV_UP(:,IKB),PRC_UP(:,IKB),PRI_UP(:,IKB),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
              PBUF=ZBUF, KB=D%NIJB, KE=D%NIJE)
 
-!$mnh_expand_array(JI=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
 ! compute updraft thevav and buoyancy term at KKB level             
-PTHV_UP(D%NIJB:D%NIJE,D%NKB) = ZTH_UP(D%NIJB:D%NIJE,D%NKB)*((1+ZRVORD*PRV_UP(D%NIJB:D%NIJE,D%NKB))/(1+PRT_UP(D%NIJB:D%NIJE,D%NKB))) 
+PTHV_UP(IIJB:IIJE,IKB) = ZTH_UP(IIJB:IIJE,IKB)*((1+ZRVORD*PRV_UP(IIJB:IIJE,IKB))/(1+PRT_UP(IIJB:IIJE,IKB))) 
 ! compute mean rsat in updraft
-PRSAT_UP(D%NIJB:D%NIJE,D%NKB) = ZRSATW(D%NIJB:D%NIJE)*(1-PFRAC_ICE_UP(D%NIJB:D%NIJE,D%NKB)) + &
-                            & ZRSATI(D%NIJB:D%NIJE)*PFRAC_ICE_UP(D%NIJB:D%NIJE,D%NKB)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+PRSAT_UP(IIJB:IIJE,IKB) = ZRSATW(IIJB:IIJE)*(1-PFRAC_ICE_UP(IIJB:IIJE,IKB)) + &
+                            & ZRSATI(IIJB:IIJE)*PFRAC_ICE_UP(IIJB:IIJE,IKB)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
 !Tout est commente pour tester dans un premier temps la s�paration en deux de la 
 !  boucle verticale, une pour w et une pour PEMF                                                            
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-ZG_O_THVREF(D%NIJB:D%NIJE,1:D%NKT)=CST%XG/ZTHVM_F(D%NIJB:D%NIJE,1:D%NKT)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZG_O_THVREF(IIJB:IIJE,1:IKT)=CST%XG/ZTHVM_F(IIJB:IIJE,1:IKT)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
 !  Definition de l'alimentation au sens de la fermeture de Hourdin et al
 
 ZALIM_STAR(:,:)   = 0.
 ZALIM_STAR_TOT(:) = 0.    ! <== Normalization of ZALIM_STAR
-IALIM(:)          = D%NKB   ! <== Top level of the alimentation layer
+IALIM(:)          = IKB   ! <== Top level of the alimentation layer
 
-DO JK=D%NKB,D%NKE-D%NKL,D%NKL   !  Vertical loop
-  !$mnh_expand_where(JI=D%NIJB:D%NIJE)
-  ZZDZ(D%NIJB:D%NIJE,JK)   = MAX(ZEPS,PZZ(D%NIJB:D%NIJE,JK+D%NKL)-PZZ(D%NIJB:D%NIJE,JK))       ! <== Delta Z between two flux level
-  ZZZ(D%NIJB:D%NIJE,JK)    = MAX(0.,0.5*(PZZ(D%NIJB:D%NIJE,JK+D%NKL)+PZZ(D%NIJB:D%NIJE,JK)) )  ! <== Hight of mass levels
-  ZDTHETASDZ(D%NIJB:D%NIJE,JK) = (ZTHVM_F(D%NIJB:D%NIJE,JK)-ZTHVM_F(D%NIJB:D%NIJE,JK+D%NKL))   ! <== Delta theta_v
+DO JK=IKB,IKE-IKL,IKL   !  Vertical loop
+  !$mnh_expand_where(JIJ=IIJB:IIJE)
+  ZZDZ(IIJB:IIJE,JK)   = MAX(ZEPS,PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))       ! <== Delta Z between two flux level
+  ZZZ(IIJB:IIJE,JK)    = MAX(0.,0.5*(PZZ(IIJB:IIJE,JK+IKL)+PZZ(IIJB:IIJE,JK)) )  ! <== Hight of mass levels
+  ZDTHETASDZ(IIJB:IIJE,JK) = (ZTHVM_F(IIJB:IIJE,JK)-ZTHVM_F(IIJB:IIJE,JK+IKL))   ! <== Delta theta_v
   
-  WHERE ((ZTHVM_F(D%NIJB:D%NIJE,JK+D%NKL)<ZTHVM_F(D%NIJB:D%NIJE,JK)) .AND. &
-        &(ZTHVM_F(D%NIJB:D%NIJE,D%NKB)>=ZTHVM_F(D%NIJB:D%NIJE,JK)))
-     ZALIM_STAR(D%NIJB:D%NIJE,JK)  = SQRT(ZZZ(D%NIJB:D%NIJE,JK))*ZDTHETASDZ(D%NIJB:D%NIJE,JK)/ZZDZ(D%NIJB:D%NIJE,JK)
-     ZALIM_STAR_TOT(D%NIJB:D%NIJE) = ZALIM_STAR_TOT(D%NIJB:D%NIJE)+ZALIM_STAR(D%NIJB:D%NIJE,JK)*ZZDZ(D%NIJB:D%NIJE,JK)
-     IALIM(D%NIJB:D%NIJE)          = JK
+  WHERE ((ZTHVM_F(IIJB:IIJE,JK+IKL)<ZTHVM_F(IIJB:IIJE,JK)) .AND. &
+        &(ZTHVM_F(IIJB:IIJE,IKB)>=ZTHVM_F(IIJB:IIJE,JK)))
+     ZALIM_STAR(IIJB:IIJE,JK)  = SQRT(ZZZ(IIJB:IIJE,JK))*ZDTHETASDZ(IIJB:IIJE,JK)/ZZDZ(IIJB:IIJE,JK)
+     ZALIM_STAR_TOT(IIJB:IIJE) = ZALIM_STAR_TOT(IIJB:IIJE)+ZALIM_STAR(IIJB:IIJE,JK)*ZZDZ(IIJB:IIJE,JK)
+     IALIM(IIJB:IIJE)          = JK
   ENDWHERE
-  !$mnh_end_expand_where(JI=D%NIJB:D%NIJE)
+  !$mnh_end_expand_where(JIJ=IIJB:IIJE)
 ENDDO
 
 ! Normalization of ZALIM_STAR
-DO JK=D%NKB,D%NKE-D%NKL,D%NKL   !  Vertical loop   
-   !$mnh_expand_where(JI=D%NIJB:D%NIJE)
-   WHERE (ZALIM_STAR_TOT(D%NIJB:D%NIJE) > ZEPS)
-      ZALIM_STAR(D%NIJB:D%NIJE,JK)  = ZALIM_STAR(D%NIJB:D%NIJE,JK)/ZALIM_STAR_TOT(D%NIJB:D%NIJE)
+DO JK=IKB,IKE-IKL,IKL   !  Vertical loop   
+   !$mnh_expand_where(JIJ=IIJB:IIJE)
+   WHERE (ZALIM_STAR_TOT(IIJB:IIJE) > ZEPS)
+      ZALIM_STAR(IIJB:IIJE,JK)  = ZALIM_STAR(IIJB:IIJE,JK)/ZALIM_STAR_TOT(IIJB:IIJE)
    ENDWHERE
-   !$mnh_end_expand_where(JI=D%NIJB:D%NIJE)
+   !$mnh_end_expand_where(JIJ=IIJB:IIJE)
 ENDDO
 ZALIM_STAR_TOT(:) = 0.
 
@@ -380,20 +389,20 @@ ZZTOP(:)       = 0.
 ZPHI(:) = 0.
 
 
-DO JK=D%NKB,D%NKE-D%NKL,D%NKL
-  !$mnh_expand_where(JI=D%NIJB:D%NIJE)
+DO JK=IKB,IKE-IKL,IKL
+  !$mnh_expand_where(JIJ=IIJB:IIJE)
   ! IF the updraft top is reached for all column, stop the loop on levels
 
-  !ITEST=COUNT(GTEST(D%NIJB:D%NIJE))
+  !ITEST=COUNT(GTEST(IIJB:IIJE))
   !IF (ITEST==0) CYCLE
 
   !       Computation of entrainment and detrainment with KF90
   !       parameterization in clouds and LR01 in subcloud layer
 
   ! to find the LCL (check if JK is LCL or not)
-  WHERE ((PRC_UP(D%NIJB:D%NIJE,JK)+PRI_UP(D%NIJB:D%NIJE,JK)>0.).AND.(.NOT.(GTESTLCL(D%NIJB:D%NIJE))))
-    KKLCL(D%NIJB:D%NIJE) = JK           
-    GTESTLCL(D%NIJB:D%NIJE)=.TRUE.
+  WHERE ((PRC_UP(IIJB:IIJE,JK)+PRI_UP(IIJB:IIJE,JK)>0.).AND.(.NOT.(GTESTLCL(IIJB:IIJE))))
+    KKLCL(IIJB:IIJE) = JK           
+    GTESTLCL(IIJB:IIJE)=.TRUE.
   ENDWHERE
 
   ! COMPUTE PENTR and PDETR at mass level JK
@@ -403,221 +412,221 @@ DO JK=D%NKB,D%NKE-D%NKL,D%NKL
 
   ! Compute theta_v of updraft at flux level JK    
     
-  ZRC_UP(D%NIJB:D%NIJE)  = PRC_UP(D%NIJB:D%NIJE,JK)
-  ZRI_UP(D%NIJB:D%NIJE)  = PRI_UP(D%NIJB:D%NIJE,JK) ! guess 
-  ZRV_UP(D%NIJB:D%NIJE)  = PRV_UP(D%NIJB:D%NIJE,JK)
-  ZBUO(D%NIJB:D%NIJE,JK) = ZG_O_THVREF(D%NIJB:D%NIJE,JK)*(PTHV_UP(D%NIJB:D%NIJE,JK) - ZTHVM_F(D%NIJB:D%NIJE,JK))
-  PBUO_INTEG(D%NIJB:D%NIJE,JK) = ZBUO(D%NIJB:D%NIJE,JK)*(PZZ(D%NIJB:D%NIJE,JK+D%NKL)-PZZ(D%NIJB:D%NIJE,JK))
+  ZRC_UP(IIJB:IIJE)  = PRC_UP(IIJB:IIJE,JK)
+  ZRI_UP(IIJB:IIJE)  = PRI_UP(IIJB:IIJE,JK) ! guess 
+  ZRV_UP(IIJB:IIJE)  = PRV_UP(IIJB:IIJE,JK)
+  ZBUO(IIJB:IIJE,JK) = ZG_O_THVREF(IIJB:IIJE,JK)*(PTHV_UP(IIJB:IIJE,JK) - ZTHVM_F(IIJB:IIJE,JK))
+  PBUO_INTEG(IIJB:IIJE,JK) = ZBUO(IIJB:IIJE,JK)*(PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))
   
-  ZDZ(D%NIJB:D%NIJE)   = MAX(ZEPS,PZZ(D%NIJB:D%NIJE,JK+D%NKL)-PZZ(D%NIJB:D%NIJE,JK))
-  ZTEST(D%NIJB:D%NIJE) = PARAMMF%XA1*ZBUO(D%NIJB:D%NIJE,JK) -  PARAMMF%XB*ZW_UP2(D%NIJB:D%NIJE,JK)
+  ZDZ(IIJB:IIJE)   = MAX(ZEPS,PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))
+  ZTEST(IIJB:IIJE) = PARAMMF%XA1*ZBUO(IIJB:IIJE,JK) -  PARAMMF%XB*ZW_UP2(IIJB:IIJE,JK)
 
-  ZCOE(D%NIJB:D%NIJE)      = ZDZ(D%NIJB:D%NIJE)
-  WHERE (ZTEST(D%NIJB:D%NIJE)>0.)
-    ZCOE(D%NIJB:D%NIJE)    = ZDZ(D%NIJB:D%NIJE)/(1.+ PARAMMF%XBETA1)
+  ZCOE(IIJB:IIJE)      = ZDZ(IIJB:IIJE)
+  WHERE (ZTEST(IIJB:IIJE)>0.)
+    ZCOE(IIJB:IIJE)    = ZDZ(IIJB:IIJE)/(1.+ PARAMMF%XBETA1)
   ENDWHERE   
 
   !  Calcul de la vitesse
 
-  ZWCOE(D%NIJB:D%NIJE)         = (1.-PARAMMF%XB*ZCOE(D%NIJB:D%NIJE))/(1.+PARAMMF%XB*ZCOE(D%NIJB:D%NIJE))
-  ZBUCOE(D%NIJB:D%NIJE)        =  2.*ZCOE(D%NIJB:D%NIJE)/(1.+PARAMMF%XB*ZCOE(D%NIJB:D%NIJE))
+  ZWCOE(IIJB:IIJE)         = (1.-PARAMMF%XB*ZCOE(IIJB:IIJE))/(1.+PARAMMF%XB*ZCOE(IIJB:IIJE))
+  ZBUCOE(IIJB:IIJE)        =  2.*ZCOE(IIJB:IIJE)/(1.+PARAMMF%XB*ZCOE(IIJB:IIJE))
 
-  ZW_UP2(D%NIJB:D%NIJE,JK+D%NKL) = MAX(ZEPS,ZW_UP2(D%NIJB:D%NIJE,JK)*ZWCOE(D%NIJB:D%NIJE) + &
-                                         &PARAMMF%XA1*ZBUO(D%NIJB:D%NIJE,JK)*ZBUCOE(D%NIJB:D%NIJE))
-  ZW_MAX(D%NIJB:D%NIJE) = MAX(ZW_MAX(D%NIJB:D%NIJE), SQRT(ZW_UP2(D%NIJB:D%NIJE,JK+D%NKL)))
-  ZWUP_MEAN(D%NIJB:D%NIJE)     = MAX(ZEPS,0.5*(ZW_UP2(D%NIJB:D%NIJE,JK+D%NKL)+ZW_UP2(D%NIJB:D%NIJE,JK)))
+  ZW_UP2(IIJB:IIJE,JK+IKL) = MAX(ZEPS,ZW_UP2(IIJB:IIJE,JK)*ZWCOE(IIJB:IIJE) + &
+                                         &PARAMMF%XA1*ZBUO(IIJB:IIJE,JK)*ZBUCOE(IIJB:IIJE))
+  ZW_MAX(IIJB:IIJE) = MAX(ZW_MAX(IIJB:IIJE), SQRT(ZW_UP2(IIJB:IIJE,JK+IKL)))
+  ZWUP_MEAN(IIJB:IIJE)     = MAX(ZEPS,0.5*(ZW_UP2(IIJB:IIJE,JK+IKL)+ZW_UP2(IIJB:IIJE,JK)))
 
   !  Entrainement et detrainement
 
-  PENTR(D%NIJB:D%NIJE,JK)  = MAX(0.,(PARAMMF%XBETA1/(1.+PARAMMF%XBETA1))* &
-                                 &(PARAMMF%XA1*ZBUO(D%NIJB:D%NIJE,JK)/ZWUP_MEAN(D%NIJB:D%NIJE)-PARAMMF%XB))
+  PENTR(IIJB:IIJE,JK)  = MAX(0.,(PARAMMF%XBETA1/(1.+PARAMMF%XBETA1))* &
+                                 &(PARAMMF%XA1*ZBUO(IIJB:IIJE,JK)/ZWUP_MEAN(IIJB:IIJE)-PARAMMF%XB))
   
-  ZDETR_BUO(D%NIJB:D%NIJE) = MAX(0., -(PARAMMF%XBETA1/(1.+PARAMMF%XBETA1))*PARAMMF%XA1*ZBUO(D%NIJB:D%NIJE,JK)/ &
-                                   &ZWUP_MEAN(D%NIJB:D%NIJE))
-  ZDETR_RT(D%NIJB:D%NIJE)  = PARAMMF%XC*SQRT(MAX(0.,(PRT_UP(D%NIJB:D%NIJE,JK) - ZRTM_F(D%NIJB:D%NIJE,JK))) / &
-                                          &MAX(ZEPS,ZRTM_F(D%NIJB:D%NIJE,JK)) / ZWUP_MEAN(D%NIJB:D%NIJE))
-  PDETR(D%NIJB:D%NIJE,JK)  = ZDETR_RT(D%NIJB:D%NIJE)+ZDETR_BUO(D%NIJB:D%NIJE)
+  ZDETR_BUO(IIJB:IIJE) = MAX(0., -(PARAMMF%XBETA1/(1.+PARAMMF%XBETA1))*PARAMMF%XA1*ZBUO(IIJB:IIJE,JK)/ &
+                                   &ZWUP_MEAN(IIJB:IIJE))
+  ZDETR_RT(IIJB:IIJE)  = PARAMMF%XC*SQRT(MAX(0.,(PRT_UP(IIJB:IIJE,JK) - ZRTM_F(IIJB:IIJE,JK))) / &
+                                          &MAX(ZEPS,ZRTM_F(IIJB:IIJE,JK)) / ZWUP_MEAN(IIJB:IIJE))
+  PDETR(IIJB:IIJE,JK)  = ZDETR_RT(IIJB:IIJE)+ZDETR_BUO(IIJB:IIJE)
 
    
   ! If the updraft did not stop, compute cons updraft characteritics at jk+1
-  WHERE(GTEST(D%NIJB:D%NIJE))     
-    ZZTOP(D%NIJB:D%NIJE) = MAX(ZZTOP(D%NIJB:D%NIJE),PZZ(D%NIJB:D%NIJE,JK+D%NKL))
-    ZMIX2(D%NIJB:D%NIJE) = (PZZ(D%NIJB:D%NIJE,JK+D%NKL)-PZZ(D%NIJB:D%NIJE,JK))*PENTR(D%NIJB:D%NIJE,JK) !&
-    ZMIX3(D%NIJB:D%NIJE) = (PZZ(D%NIJB:D%NIJE,JK+D%NKL)-PZZ(D%NIJB:D%NIJE,JK))*PDETR(D%NIJB:D%NIJE,JK) !&                   
+  WHERE(GTEST(IIJB:IIJE))     
+    ZZTOP(IIJB:IIJE) = MAX(ZZTOP(IIJB:IIJE),PZZ(IIJB:IIJE,JK+IKL))
+    ZMIX2(IIJB:IIJE) = (PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))*PENTR(IIJB:IIJE,JK) !&
+    ZMIX3(IIJB:IIJE) = (PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))*PDETR(IIJB:IIJE,JK) !&                   
            
-    ZQTM(D%NIJB:D%NIJE) = PRTM(D%NIJB:D%NIJE,JK)/(1.+PRTM(D%NIJB:D%NIJE,JK))            
-    ZTHSM(D%NIJB:D%NIJE,JK) = PTHLM(D%NIJB:D%NIJE,JK)*(1.+PARAMMF%XLAMBDA_MF*ZQTM(D%NIJB:D%NIJE))
-    ZTHS_UP(D%NIJB:D%NIJE,JK+D%NKL)=(ZTHS_UP(D%NIJB:D%NIJE,JK)*(1.-0.5*ZMIX2(D%NIJB:D%NIJE)) + &
-                                    &ZTHSM(D%NIJB:D%NIJE,JK)*ZMIX2(D%NIJB:D%NIJE))&
-                          /(1.+0.5*ZMIX2(D%NIJB:D%NIJE))   
-    PRT_UP(D%NIJB:D%NIJE,JK+D%NKL)=(PRT_UP(D%NIJB:D%NIJE,JK)*(1.-0.5*ZMIX2(D%NIJB:D%NIJE)) + &
-                                   &PRTM(D%NIJB:D%NIJE,JK)*ZMIX2(D%NIJB:D%NIJE))  &
-                          /(1.+0.5*ZMIX2(D%NIJB:D%NIJE))
-    ZQT_UP(D%NIJB:D%NIJE) = PRT_UP(D%NIJB:D%NIJE,JK+D%NKL)/(1.+PRT_UP(D%NIJB:D%NIJE,JK+D%NKL))
-    PTHL_UP(D%NIJB:D%NIJE,JK+D%NKL)=ZTHS_UP(D%NIJB:D%NIJE,JK+D%NKL)/(1.+PARAMMF%XLAMBDA_MF*ZQT_UP(D%NIJB:D%NIJE))                      
+    ZQTM(IIJB:IIJE) = PRTM(IIJB:IIJE,JK)/(1.+PRTM(IIJB:IIJE,JK))            
+    ZTHSM(IIJB:IIJE,JK) = PTHLM(IIJB:IIJE,JK)*(1.+PARAMMF%XLAMBDA_MF*ZQTM(IIJB:IIJE))
+    ZTHS_UP(IIJB:IIJE,JK+IKL)=(ZTHS_UP(IIJB:IIJE,JK)*(1.-0.5*ZMIX2(IIJB:IIJE)) + &
+                                    &ZTHSM(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE))&
+                          /(1.+0.5*ZMIX2(IIJB:IIJE))   
+    PRT_UP(IIJB:IIJE,JK+IKL)=(PRT_UP(IIJB:IIJE,JK)*(1.-0.5*ZMIX2(IIJB:IIJE)) + &
+                                   &PRTM(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE))  &
+                          /(1.+0.5*ZMIX2(IIJB:IIJE))
+    ZQT_UP(IIJB:IIJE) = PRT_UP(IIJB:IIJE,JK+IKL)/(1.+PRT_UP(IIJB:IIJE,JK+IKL))
+    PTHL_UP(IIJB:IIJE,JK+IKL)=ZTHS_UP(IIJB:IIJE,JK+IKL)/(1.+PARAMMF%XLAMBDA_MF*ZQT_UP(IIJB:IIJE))                      
   ENDWHERE
   
 
   IF(OMIXUV) THEN
-    IF(JK/=D%NKB) THEN
-      WHERE(GTEST(D%NIJB:D%NIJE))
-        PU_UP(D%NIJB:D%NIJE,JK+D%NKL) = (PU_UP(D%NIJB:D%NIJE,JK)*(1-0.5*ZMIX2(D%NIJB:D%NIJE)) + &
-                                        &PUM(D%NIJB:D%NIJE,JK)*ZMIX2(D%NIJB:D%NIJE)+ &
-                          0.5*PARAMMF%XPRES_UV*(PZZ(D%NIJB:D%NIJE,JK+D%NKL)-PZZ(D%NIJB:D%NIJE,JK))*&
-                          ((PUM(D%NIJB:D%NIJE,JK+D%NKL)-PUM(D%NIJB:D%NIJE,JK))/PDZZ(D%NIJB:D%NIJE,JK+D%NKL)+&
-                           (PUM(D%NIJB:D%NIJE,JK)-PUM(D%NIJB:D%NIJE,JK-D%NKL))/PDZZ(D%NIJB:D%NIJE,JK))        )   &
-                          /(1+0.5*ZMIX2(D%NIJB:D%NIJE))
-        PV_UP(D%NIJB:D%NIJE,JK+D%NKL) = (PV_UP(D%NIJB:D%NIJE,JK)*(1-0.5*ZMIX2(D%NIJB:D%NIJE)) + &
-                                        &PVM(D%NIJB:D%NIJE,JK)*ZMIX2(D%NIJB:D%NIJE)+ &
-                          0.5*PARAMMF%XPRES_UV*(PZZ(D%NIJB:D%NIJE,JK+D%NKL)-PZZ(D%NIJB:D%NIJE,JK))*&
-                          ((PVM(D%NIJB:D%NIJE,JK+D%NKL)-PVM(D%NIJB:D%NIJE,JK))/PDZZ(D%NIJB:D%NIJE,JK+D%NKL)+&
-                           (PVM(D%NIJB:D%NIJE,JK)-PVM(D%NIJB:D%NIJE,JK-D%NKL))/PDZZ(D%NIJB:D%NIJE,JK))    )   &
-                          /(1+0.5*ZMIX2(D%NIJB:D%NIJE))
+    IF(JK/=IKB) THEN
+      WHERE(GTEST(IIJB:IIJE))
+        PU_UP(IIJB:IIJE,JK+IKL) = (PU_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
+                                        &PUM(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE)+ &
+                          0.5*PARAMMF%XPRES_UV*(PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))*&
+                          ((PUM(IIJB:IIJE,JK+IKL)-PUM(IIJB:IIJE,JK))/PDZZ(IIJB:IIJE,JK+IKL)+&
+                           (PUM(IIJB:IIJE,JK)-PUM(IIJB:IIJE,JK-IKL))/PDZZ(IIJB:IIJE,JK))        )   &
+                          /(1+0.5*ZMIX2(IIJB:IIJE))
+        PV_UP(IIJB:IIJE,JK+IKL) = (PV_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
+                                        &PVM(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE)+ &
+                          0.5*PARAMMF%XPRES_UV*(PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))*&
+                          ((PVM(IIJB:IIJE,JK+IKL)-PVM(IIJB:IIJE,JK))/PDZZ(IIJB:IIJE,JK+IKL)+&
+                           (PVM(IIJB:IIJE,JK)-PVM(IIJB:IIJE,JK-IKL))/PDZZ(IIJB:IIJE,JK))    )   &
+                          /(1+0.5*ZMIX2(IIJB:IIJE))
       ENDWHERE
     ELSE
-      WHERE(GTEST(D%NIJB:D%NIJE))
-        PU_UP(D%NIJB:D%NIJE,JK+D%NKL) = (PU_UP(D%NIJB:D%NIJE,JK)*(1-0.5*ZMIX2(D%NIJB:D%NIJE)) + &
-                                        &PUM(D%NIJB:D%NIJE,JK)*ZMIX2(D%NIJB:D%NIJE)+ &
-                          0.5*PARAMMF%XPRES_UV*(PZZ(D%NIJB:D%NIJE,JK+D%NKL)-PZZ(D%NIJB:D%NIJE,JK))*&
-                          ((PUM(D%NIJB:D%NIJE,JK+D%NKL)-PUM(D%NIJB:D%NIJE,JK))/PDZZ(D%NIJB:D%NIJE,JK+D%NKL))        )   &
-                          /(1+0.5*ZMIX2(D%NIJB:D%NIJE))
-        PV_UP(D%NIJB:D%NIJE,JK+D%NKL) = (PV_UP(D%NIJB:D%NIJE,JK)*(1-0.5*ZMIX2(D%NIJB:D%NIJE)) + &
-                                        &PVM(D%NIJB:D%NIJE,JK)*ZMIX2(D%NIJB:D%NIJE)+ &
-                          0.5*PARAMMF%XPRES_UV*(PZZ(D%NIJB:D%NIJE,JK+D%NKL)-PZZ(D%NIJB:D%NIJE,JK))*&
-                          ((PVM(D%NIJB:D%NIJE,JK+D%NKL)-PVM(D%NIJB:D%NIJE,JK))/PDZZ(D%NIJB:D%NIJE,JK+D%NKL))    )   &
-                          /(1+0.5*ZMIX2(D%NIJB:D%NIJE))
+      WHERE(GTEST(IIJB:IIJE))
+        PU_UP(IIJB:IIJE,JK+IKL) = (PU_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
+                                        &PUM(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE)+ &
+                          0.5*PARAMMF%XPRES_UV*(PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))*&
+                          ((PUM(IIJB:IIJE,JK+IKL)-PUM(IIJB:IIJE,JK))/PDZZ(IIJB:IIJE,JK+IKL))        )   &
+                          /(1+0.5*ZMIX2(IIJB:IIJE))
+        PV_UP(IIJB:IIJE,JK+IKL) = (PV_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
+                                        &PVM(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE)+ &
+                          0.5*PARAMMF%XPRES_UV*(PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK))*&
+                          ((PVM(IIJB:IIJE,JK+IKL)-PVM(IIJB:IIJE,JK))/PDZZ(IIJB:IIJE,JK+IKL))    )   &
+                          /(1+0.5*ZMIX2(IIJB:IIJE))
       ENDWHERE
 
     ENDIF
   ENDIF
   !DO JSV=1,ISV 
   !   IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
-  !    WHERE(GTEST(D%NIJB:D%NIJE)) 
-  !         PSV_UP(D%NIJB:D%NIJE,JK+KKL,JSV) = (PSV_UP(D%NIJB:D%NIJE,JK,JSV)*(1-0.5*ZMIX2(D%NIJB:D%NIJE)) + &
-  !                      PSVM(D%NIJB:D%NIJE,JK,JSV)*ZMIX2(D%NIJB:D%NIJE))  /(1+0.5*ZMIX2(D%NIJB:D%NIJE))
+  !    WHERE(GTEST(IIJB:IIJE)) 
+  !         PSV_UP(IIJB:IIJE,JK+KKL,JSV) = (PSV_UP(IIJB:IIJE,JK,JSV)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
+  !                      PSVM(IIJB:IIJE,JK,JSV)*ZMIX2(IIJB:IIJE))  /(1+0.5*ZMIX2(IIJB:IIJE))
   !    ENDWHERE                        
   !ENDDO  
   
   
   ! Compute non cons. var. at level JK+KKL
-  ZRC_UP(D%NIJB:D%NIJE)=PRC_UP(D%NIJB:D%NIJE,JK) ! guess = level just below
-  ZRI_UP(D%NIJB:D%NIJE)=PRI_UP(D%NIJB:D%NIJE,JK) ! guess = level just below
-  ZRV_UP(D%NIJB:D%NIJE)=PRV_UP(D%NIJB:D%NIJE,JK)
-  !$mnh_end_expand_where(JI=D%NIJB:D%NIJE)
-  CALL TH_R_FROM_THL_RT(CST,NEB, D%NIJT, HFRAC_ICE,PFRAC_ICE_UP(:,JK+D%NKL),ZPRES_F(:,JK+D%NKL), &
-          PTHL_UP(:,JK+D%NKL),PRT_UP(:,JK+D%NKL),ZTH_UP(:,JK+D%NKL),              &
+  ZRC_UP(IIJB:IIJE)=PRC_UP(IIJB:IIJE,JK) ! guess = level just below
+  ZRI_UP(IIJB:IIJE)=PRI_UP(IIJB:IIJE,JK) ! guess = level just below
+  ZRV_UP(IIJB:IIJE)=PRV_UP(IIJB:IIJE,JK)
+  !$mnh_end_expand_where(JIJ=IIJB:IIJE)
+  CALL TH_R_FROM_THL_RT(CST,NEB, D%NIJT, HFRAC_ICE,PFRAC_ICE_UP(:,JK+IKL),ZPRES_F(:,JK+IKL), &
+          PTHL_UP(:,JK+IKL),PRT_UP(:,JK+IKL),ZTH_UP(:,JK+IKL),              &
           ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
           PBUF=ZBUF, KB=D%NIJB, KE=D%NIJE)
-  !$mnh_expand_where(JI=D%NIJB:D%NIJE)
-  WHERE(GTEST(D%NIJB:D%NIJE))
-    ZT_UP(D%NIJB:D%NIJE) = ZTH_UP(D%NIJB:D%NIJE,JK+D%NKL)*PEXNM(D%NIJB:D%NIJE,JK+D%NKL)
-    ZCP(D%NIJB:D%NIJE) = CST%XCPD + CST%XCL * ZRC_UP(D%NIJB:D%NIJE)
-    ZLVOCPEXN(D%NIJB:D%NIJE)=(CST%XLVTT + (CST%XCPV-CST%XCL) *  (ZT_UP(D%NIJB:D%NIJE)-CST%XTT) ) / &
-                          &ZCP(D%NIJB:D%NIJE) / PEXNM(D%NIJB:D%NIJE,JK+D%NKL)
-    PRC_UP(D%NIJB:D%NIJE,JK+D%NKL)=MIN(0.5E-3,ZRC_UP(D%NIJB:D%NIJE))  ! On ne peut depasser 0.5 g/kg (autoconversion donc elimination !)
-    PTHL_UP(D%NIJB:D%NIJE,JK+D%NKL) = PTHL_UP(D%NIJB:D%NIJE,JK+D%NKL)+ &
-                                  & ZLVOCPEXN(D%NIJB:D%NIJE)*(ZRC_UP(D%NIJB:D%NIJE)-PRC_UP(D%NIJB:D%NIJE,JK+D%NKL))
-    PRV_UP(D%NIJB:D%NIJE,JK+D%NKL)=ZRV_UP(D%NIJB:D%NIJE)
-    PRI_UP(D%NIJB:D%NIJE,JK+D%NKL)=ZRI_UP(D%NIJB:D%NIJE)
-    PRT_UP(D%NIJB:D%NIJE,JK+D%NKL)  = PRC_UP(D%NIJB:D%NIJE,JK+D%NKL) + PRV_UP(D%NIJB:D%NIJE,JK+D%NKL)
-    PRSAT_UP(D%NIJB:D%NIJE,JK+D%NKL) = ZRSATW(D%NIJB:D%NIJE)*(1-PFRAC_ICE_UP(D%NIJB:D%NIJE,JK+D%NKL)) + &
-                                   & ZRSATI(D%NIJB:D%NIJE)*PFRAC_ICE_UP(D%NIJB:D%NIJE,JK+D%NKL)
+  !$mnh_expand_where(JIJ=IIJB:IIJE)
+  WHERE(GTEST(IIJB:IIJE))
+    ZT_UP(IIJB:IIJE) = ZTH_UP(IIJB:IIJE,JK+IKL)*PEXNM(IIJB:IIJE,JK+IKL)
+    ZCP(IIJB:IIJE) = CST%XCPD + CST%XCL * ZRC_UP(IIJB:IIJE)
+    ZLVOCPEXN(IIJB:IIJE)=(CST%XLVTT + (CST%XCPV-CST%XCL) *  (ZT_UP(IIJB:IIJE)-CST%XTT) ) / &
+                          &ZCP(IIJB:IIJE) / PEXNM(IIJB:IIJE,JK+IKL)
+    PRC_UP(IIJB:IIJE,JK+IKL)=MIN(0.5E-3,ZRC_UP(IIJB:IIJE))  ! On ne peut depasser 0.5 g/kg (autoconversion donc elimination !)
+    PTHL_UP(IIJB:IIJE,JK+IKL) = PTHL_UP(IIJB:IIJE,JK+IKL)+ &
+                                  & ZLVOCPEXN(IIJB:IIJE)*(ZRC_UP(IIJB:IIJE)-PRC_UP(IIJB:IIJE,JK+IKL))
+    PRV_UP(IIJB:IIJE,JK+IKL)=ZRV_UP(IIJB:IIJE)
+    PRI_UP(IIJB:IIJE,JK+IKL)=ZRI_UP(IIJB:IIJE)
+    PRT_UP(IIJB:IIJE,JK+IKL)  = PRC_UP(IIJB:IIJE,JK+IKL) + PRV_UP(IIJB:IIJE,JK+IKL)
+    PRSAT_UP(IIJB:IIJE,JK+IKL) = ZRSATW(IIJB:IIJE)*(1-PFRAC_ICE_UP(IIJB:IIJE,JK+IKL)) + &
+                                   & ZRSATI(IIJB:IIJE)*PFRAC_ICE_UP(IIJB:IIJE,JK+IKL)
   ENDWHERE
   
 
   ! Compute the updraft theta_v, buoyancy and w**2 for level JK+1   
-  WHERE(GTEST(D%NIJB:D%NIJE))
-    !PTHV_UP(D%NIJB:D%NIJE,JK+KKL) = ZTH_UP(D%NIJB:D%NIJE,JK+KKL)*((1+ZRVORD*PRV_UP(D%NIJB:D%NIJE,JK+KKL))/(1+PRT_UP(D%NIJB:D%NIJE,JK+KKL)))
-    PTHV_UP(D%NIJB:D%NIJE,JK+D%NKL) = ZTH_UP(D%NIJB:D%NIJE,JK+D%NKL)* &
-                                  & (1.+0.608*PRV_UP(D%NIJB:D%NIJE,JK+D%NKL) - PRC_UP(D%NIJB:D%NIJE,JK+D%NKL))
+  WHERE(GTEST(IIJB:IIJE))
+    !PTHV_UP(IIJB:IIJE,JK+KKL) = ZTH_UP(IIJB:IIJE,JK+KKL)*((1+ZRVORD*PRV_UP(IIJB:IIJE,JK+KKL))/(1+PRT_UP(IIJB:IIJE,JK+KKL)))
+    PTHV_UP(IIJB:IIJE,JK+IKL) = ZTH_UP(IIJB:IIJE,JK+IKL)* &
+                                  & (1.+0.608*PRV_UP(IIJB:IIJE,JK+IKL) - PRC_UP(IIJB:IIJE,JK+IKL))
   ENDWHERE
 
 
   ! Test if the updraft has reach the ETL
-  GTESTETL(D%NIJB:D%NIJE)=.FALSE.
-  WHERE (GTEST(D%NIJB:D%NIJE).AND.(PBUO_INTEG(D%NIJB:D%NIJE,JK)<=0.))
-    KKETL(D%NIJB:D%NIJE) = JK+D%NKL
-    GTESTETL(D%NIJB:D%NIJE)=.TRUE.
+  GTESTETL(IIJB:IIJE)=.FALSE.
+  WHERE (GTEST(IIJB:IIJE).AND.(PBUO_INTEG(IIJB:IIJE,JK)<=0.))
+    KKETL(IIJB:IIJE) = JK+IKL
+    GTESTETL(IIJB:IIJE)=.TRUE.
   ENDWHERE
 
   ! Test is we have reached the top of the updraft
-  WHERE (GTEST(D%NIJB:D%NIJE).AND.((ZW_UP2(D%NIJB:D%NIJE,JK+D%NKL)<=ZEPS)))
-    ZW_UP2(D%NIJB:D%NIJE,JK+D%NKL)=ZEPS
-    GTEST(D%NIJB:D%NIJE)=.FALSE.
-    PTHL_UP(D%NIJB:D%NIJE,JK+D%NKL)=ZTHLM_F(D%NIJB:D%NIJE,JK+D%NKL)
-    PRT_UP(D%NIJB:D%NIJE,JK+D%NKL)=ZRTM_F(D%NIJB:D%NIJE,JK+D%NKL)
-    PRC_UP(D%NIJB:D%NIJE,JK+D%NKL)=0.
-    PRI_UP(D%NIJB:D%NIJE,JK+D%NKL)=0.
-    PRV_UP(D%NIJB:D%NIJE,JK+D%NKL)=0.
-    PTHV_UP(D%NIJB:D%NIJE,JK+D%NKL)=ZTHVM_F(D%NIJB:D%NIJE,JK+D%NKL)
-    PFRAC_UP(D%NIJB:D%NIJE,JK+D%NKL)=0.
-    KKCTL(D%NIJB:D%NIJE)=JK+D%NKL
+  WHERE (GTEST(IIJB:IIJE).AND.((ZW_UP2(IIJB:IIJE,JK+IKL)<=ZEPS)))
+    ZW_UP2(IIJB:IIJE,JK+IKL)=ZEPS
+    GTEST(IIJB:IIJE)=.FALSE.
+    PTHL_UP(IIJB:IIJE,JK+IKL)=ZTHLM_F(IIJB:IIJE,JK+IKL)
+    PRT_UP(IIJB:IIJE,JK+IKL)=ZRTM_F(IIJB:IIJE,JK+IKL)
+    PRC_UP(IIJB:IIJE,JK+IKL)=0.
+    PRI_UP(IIJB:IIJE,JK+IKL)=0.
+    PRV_UP(IIJB:IIJE,JK+IKL)=0.
+    PTHV_UP(IIJB:IIJE,JK+IKL)=ZTHVM_F(IIJB:IIJE,JK+IKL)
+    PFRAC_UP(IIJB:IIJE,JK+IKL)=0.
+    KKCTL(IIJB:IIJE)=JK+IKL
   ENDWHERE
-  !$mnh_end_expand_where(JI=D%NIJB:D%NIJE)
+  !$mnh_end_expand_where(JIJ=IIJB:IIJE)
 ENDDO 
 
 ! Closure assumption for mass flux at KKB+1 level (Mass flux is supposed to be 0 at KKB level !)
 !   Hourdin et al 2002 formulation
 
 
-!$mnh_expand_array(JI=D%NIJB:D%NIJE)
-ZZTOP(D%NIJB:D%NIJE) = MAX(ZZTOP(D%NIJB:D%NIJE),ZEPS)
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+ZZTOP(IIJB:IIJE) = MAX(ZZTOP(IIJB:IIJE),ZEPS)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
-DO JK=D%NKB+D%NKL,D%NKE-D%NKL,D%NKL !  Vertical loop
-  !$mnh_expand_where(JI=D%NIJB:D%NIJE)
-   WHERE(JK<=IALIM(D%NIJB:D%NIJE))
-     ZALIM_STAR_TOT(D%NIJB:D%NIJE) = ZALIM_STAR_TOT(D%NIJB:D%NIJE) + ZALIM_STAR(D%NIJB:D%NIJE,JK)**2* &
-                                                               & ZZDZ(D%NIJB:D%NIJE,JK)/PRHODREF(D%NIJB:D%NIJE,JK)
+DO JK=IKB+IKL,IKE-IKL,IKL !  Vertical loop
+  !$mnh_expand_where(JIJ=IIJB:IIJE)
+   WHERE(JK<=IALIM(IIJB:IIJE))
+     ZALIM_STAR_TOT(IIJB:IIJE) = ZALIM_STAR_TOT(IIJB:IIJE) + ZALIM_STAR(IIJB:IIJE,JK)**2* &
+                                                               & ZZDZ(IIJB:IIJE,JK)/PRHODREF(IIJB:IIJE,JK)
    ENDWHERE
-  !$mnh_end_expand_where(JI=D%NIJB:D%NIJE)
+  !$mnh_end_expand_where(JIJ=IIJB:IIJE)
 ENDDO   
 
-!$mnh_expand_where(JI=D%NIJB:D%NIJE)
-WHERE (ZALIM_STAR_TOT(D%NIJB:D%NIJE)*ZZTOP(D%NIJB:D%NIJE) > ZEPS)
- ZPHI(D%NIJB:D%NIJE) =  ZW_MAX(D%NIJB:D%NIJE)/(PARAMMF%XR*ZZTOP(D%NIJB:D%NIJE)*ZALIM_STAR_TOT(D%NIJB:D%NIJE))
+!$mnh_expand_where(JIJ=IIJB:IIJE)
+WHERE (ZALIM_STAR_TOT(IIJB:IIJE)*ZZTOP(IIJB:IIJE) > ZEPS)
+ ZPHI(IIJB:IIJE) =  ZW_MAX(IIJB:IIJE)/(PARAMMF%XR*ZZTOP(IIJB:IIJE)*ZALIM_STAR_TOT(IIJB:IIJE))
 ENDWHERE
 
-GTEST(D%NIJB:D%NIJE) = .TRUE.
-PEMF(D%NIJB:D%NIJE,D%NKB+D%NKL) = ZPHI(D%NIJB:D%NIJE)*ZZDZ(D%NIJB:D%NIJE,D%NKB)*ZALIM_STAR(D%NIJB:D%NIJE,D%NKB)
+GTEST(IIJB:IIJE) = .TRUE.
+PEMF(IIJB:IIJE,IKB+IKL) = ZPHI(IIJB:IIJE)*ZZDZ(IIJB:IIJE,IKB)*ZALIM_STAR(IIJB:IIJE,IKB)
 ! Updraft fraction must be smaller than XFRAC_UP_MAX
-PFRAC_UP(D%NIJB:D%NIJE,D%NKB+D%NKL)=PEMF(D%NIJB:D%NIJE,D%NKB+D%NKL)/ &
-                                 &(SQRT(ZW_UP2(D%NIJB:D%NIJE,D%NKB+D%NKL))*ZRHO_F(D%NIJB:D%NIJE,D%NKB+D%NKL))
-PFRAC_UP(D%NIJB:D%NIJE,D%NKB+D%NKL)=MIN(PARAMMF%XFRAC_UP_MAX,PFRAC_UP(D%NIJB:D%NIJE,D%NKB+D%NKL))
-PEMF(D%NIJB:D%NIJE,D%NKB+D%NKL) = ZRHO_F(D%NIJB:D%NIJE,D%NKB+D%NKL)*PFRAC_UP(D%NIJB:D%NIJE,D%NKB+D%NKL)* &
-                              & SQRT(ZW_UP2(D%NIJB:D%NIJE,D%NKB+D%NKL))
-!$mnh_end_expand_where(JI=D%NIJB:D%NIJE)
+PFRAC_UP(IIJB:IIJE,IKB+IKL)=PEMF(IIJB:IIJE,IKB+IKL)/ &
+                                 &(SQRT(ZW_UP2(IIJB:IIJE,IKB+IKL))*ZRHO_F(IIJB:IIJE,IKB+IKL))
+PFRAC_UP(IIJB:IIJE,IKB+IKL)=MIN(PARAMMF%XFRAC_UP_MAX,PFRAC_UP(IIJB:IIJE,IKB+IKL))
+PEMF(IIJB:IIJE,IKB+IKL) = ZRHO_F(IIJB:IIJE,IKB+IKL)*PFRAC_UP(IIJB:IIJE,IKB+IKL)* &
+                              & SQRT(ZW_UP2(IIJB:IIJE,IKB+IKL))
+!$mnh_end_expand_where(JIJ=IIJB:IIJE)
 
-DO JK=D%NKB+D%NKL,D%NKE-D%NKL,D%NKL !  Vertical loop
-  !$mnh_expand_where(JI=D%NIJB:D%NIJE)
+DO JK=IKB+IKL,IKE-IKL,IKL !  Vertical loop
+  !$mnh_expand_where(JIJ=IIJB:IIJE)
      
-  GTEST(D%NIJB:D%NIJE) = (ZW_UP2(D%NIJB:D%NIJE,JK) > ZEPS)  
+  GTEST(IIJB:IIJE) = (ZW_UP2(IIJB:IIJE,JK) > ZEPS)  
 
-  WHERE (GTEST(D%NIJB:D%NIJE))
-    WHERE(JK<IALIM(D%NIJB:D%NIJE))
-      PEMF(D%NIJB:D%NIJE,JK+D%NKL) = MAX(0.,PEMF(D%NIJB:D%NIJE,JK) + ZPHI(D%NIJB:D%NIJE)*ZZDZ(D%NIJB:D%NIJE,JK)* &
-                                                                & (PENTR(D%NIJB:D%NIJE,JK) - PDETR(D%NIJB:D%NIJE,JK)))
+  WHERE (GTEST(IIJB:IIJE))
+    WHERE(JK<IALIM(IIJB:IIJE))
+      PEMF(IIJB:IIJE,JK+IKL) = MAX(0.,PEMF(IIJB:IIJE,JK) + ZPHI(IIJB:IIJE)*ZZDZ(IIJB:IIJE,JK)* &
+                                                                & (PENTR(IIJB:IIJE,JK) - PDETR(IIJB:IIJE,JK)))
     ELSEWHERE
-      ZMIX1(D%NIJB:D%NIJE)=ZZDZ(D%NIJB:D%NIJE,JK)*(PENTR(D%NIJB:D%NIJE,JK)-PDETR(D%NIJB:D%NIJE,JK))
-      PEMF(D%NIJB:D%NIJE,JK+D%NKL)=PEMF(D%NIJB:D%NIJE,JK)*EXP(ZMIX1(D%NIJB:D%NIJE))
+      ZMIX1(IIJB:IIJE)=ZZDZ(IIJB:IIJE,JK)*(PENTR(IIJB:IIJE,JK)-PDETR(IIJB:IIJE,JK))
+      PEMF(IIJB:IIJE,JK+IKL)=PEMF(IIJB:IIJE,JK)*EXP(ZMIX1(IIJB:IIJE))
     ENDWHERE
 
 ! Updraft fraction must be smaller than XFRAC_UP_MAX
-    PFRAC_UP(D%NIJB:D%NIJE,JK+D%NKL)=PEMF(D%NIJB:D%NIJE,JK+D%NKL)/&
-                                    &(SQRT(ZW_UP2(D%NIJB:D%NIJE,JK+D%NKL))*ZRHO_F(D%NIJB:D%NIJE,JK+D%NKL))
-    PFRAC_UP(D%NIJB:D%NIJE,JK+D%NKL)=MIN(PARAMMF%XFRAC_UP_MAX,PFRAC_UP(D%NIJB:D%NIJE,JK+D%NKL))
-    PEMF(D%NIJB:D%NIJE,JK+D%NKL) = ZRHO_F(D%NIJB:D%NIJE,JK+D%NKL)*PFRAC_UP(D%NIJB:D%NIJE,JK+D%NKL)*&
-                                 & SQRT(ZW_UP2(D%NIJB:D%NIJE,JK+D%NKL))
+    PFRAC_UP(IIJB:IIJE,JK+IKL)=PEMF(IIJB:IIJE,JK+IKL)/&
+                                    &(SQRT(ZW_UP2(IIJB:IIJE,JK+IKL))*ZRHO_F(IIJB:IIJE,JK+IKL))
+    PFRAC_UP(IIJB:IIJE,JK+IKL)=MIN(PARAMMF%XFRAC_UP_MAX,PFRAC_UP(IIJB:IIJE,JK+IKL))
+    PEMF(IIJB:IIJE,JK+IKL) = ZRHO_F(IIJB:IIJE,JK+IKL)*PFRAC_UP(IIJB:IIJE,JK+IKL)*&
+                                 & SQRT(ZW_UP2(IIJB:IIJE,JK+IKL))
   ENDWHERE
-  !$mnh_end_expand_where(JI=D%NIJB:D%NIJE)
+  !$mnh_end_expand_where(JIJ=IIJB:IIJE)
 ENDDO
 
-!$mnh_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-PW_UP(D%NIJB:D%NIJE,1:D%NKT)=SQRT(ZW_UP2(D%NIJB:D%NIJE,1:D%NKT))
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-!$mnh_expand_array(JI=D%NIJB:D%NIJE)
-PEMF(D%NIJB:D%NIJE,D%NKB) =0.
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+PW_UP(IIJB:IIJE,1:IKT)=SQRT(ZW_UP2(IIJB:IIJE,1:IKT))
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+PEMF(IIJB:IIJE,IKB) =0.
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
 ! Limits the shallow convection scheme when cloud heigth is higher than 3000m.
 ! To do this, mass flux is multiplied by a coefficient decreasing linearly
@@ -625,26 +634,26 @@ PEMF(D%NIJB:D%NIJE,D%NKB) =0.
 ! This way, all MF fluxes are diminished by this amount.
 ! Diagnosed cloud fraction is also multiplied by the same coefficient.
 !
-DO JI=D%NIJB,D%NIJE 
-  PDEPTH(JI) = MAX(0., PZZ(JI,KKCTL(JI)) -  PZZ(JI,KKLCL(JI)) )
+DO JIJ=IIJB,IIJE 
+  PDEPTH(JIJ) = MAX(0., PZZ(JIJ,KKCTL(JIJ)) -  PZZ(JIJ,KKLCL(JIJ)) )
 END DO
 
-!$mnh_expand_array(JI=D%NIJB:D%NIJE)
-GWORK1(D%NIJB:D%NIJE)= (GTESTLCL(D%NIJB:D%NIJE) .AND. (PDEPTH(D%NIJB:D%NIJE) > ZDEPTH_MAX1) )
-!$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+!$mnh_expand_array(JIJ=IIJB:IIJE)
+GWORK1(IIJB:IIJE)= (GTESTLCL(IIJB:IIJE) .AND. (PDEPTH(IIJB:IIJE) > ZDEPTH_MAX1) )
+!$mnh_end_expand_array(JIJ=IIJB:IIJE)
 DO JK=1,D%NKT
-  !$mnh_expand_array(JI=D%NIJB:D%NIJE)
-  GWORK2(D%NIJB:D%NIJE,JK) = GWORK1(D%NIJB:D%NIJE)
-  ZCOEF(D%NIJB:D%NIJE,JK) = (1.-(PDEPTH(D%NIJB:D%NIJE)-ZDEPTH_MAX1)/(ZDEPTH_MAX2-ZDEPTH_MAX1))
-  ZCOEF(D%NIJB:D%NIJE,JK)=MIN(MAX(ZCOEF(D%NIJB:D%NIJE,JK),0.),1.)
-  !$mnh_end_expand_array(JI=D%NIJB:D%NIJE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  GWORK2(IIJB:IIJE,JK) = GWORK1(IIJB:IIJE)
+  ZCOEF(IIJB:IIJE,JK) = (1.-(PDEPTH(IIJB:IIJE)-ZDEPTH_MAX1)/(ZDEPTH_MAX2-ZDEPTH_MAX1))
+  ZCOEF(IIJB:IIJE,JK)=MIN(MAX(ZCOEF(IIJB:IIJE,JK),0.),1.)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 ENDDO
-!$mnh_expand_where(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
-WHERE (GWORK2(D%NIJB:D%NIJE,1:D%NKT)) 
-  PEMF(D%NIJB:D%NIJE,1:D%NKT)     = PEMF(D%NIJB:D%NIJE,1:D%NKT)     * ZCOEF(D%NIJB:D%NIJE,1:D%NKT)
-  PFRAC_UP(D%NIJB:D%NIJE,1:D%NKT) = PFRAC_UP(D%NIJB:D%NIJE,1:D%NKT) * ZCOEF(D%NIJB:D%NIJE,1:D%NKT)
+!$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
+WHERE (GWORK2(IIJB:IIJE,1:IKT)) 
+  PEMF(IIJB:IIJE,1:IKT)     = PEMF(IIJB:IIJE,1:IKT)     * ZCOEF(IIJB:IIJE,1:IKT)
+  PFRAC_UP(IIJB:IIJE,1:IKT) = PFRAC_UP(IIJB:IIJE,1:IKT) * ZCOEF(IIJB:IIJE,1:IKT)
 ENDWHERE
-!$mnh_end_expand_where(JI=D%NIJB:D%NIJE,JK=1:D%NKT)
+!$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
 
 IF (LHOOK) CALL DR_HOOK('COMPUTE_UPDRAF_RAHA',1,ZHOOK_HANDLE)
 !

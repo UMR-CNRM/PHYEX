@@ -42,6 +42,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRS !Snow field
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRG !Graupel field
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(IN)    :: PRH !Hail field
 !
+INTEGER :: IKB, IKE, IKL, IIE, IIB, IJB, IJE
 !*       0.2  declaration of local variables
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
@@ -51,11 +52,19 @@ LOGICAL :: MASK
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('ICE4_RAINFR_VERT',0,ZHOOK_HANDLE)
 !
+IKB=D%NKB
+IKE=D%NKE
+IKL=D%NKL
+IIB=D%NIB
+IIE=D%NIE
+IJB=D%NJB
+IJE=D%NJE
+!
 !-------------------------------------------------------------------------------
-DO JI = D%NIB,D%NIE
-   DO JJ = D%NJB, D%NJE
-      PPRFR(JI,JJ,D%NKE)=0.
-      DO JK=D%NKE-D%NKL, D%NKB, -D%NKL
+DO JI = IIB,IIE
+   DO JJ = IJB, IJE
+      PPRFR(JI,JJ,IKE)=0.
+      DO JK=IKE-IKL, IKB, -IKL
          IF(PRESENT(PRH)) THEN
             MASK=PRR(JI,JJ,JK) .GT. ICED%XRTMIN(3) .OR. PRS(JI,JJ,JK) .GT. ICED%XRTMIN(5) &
             .OR. PRG(JI,JJ,JK) .GT. ICED%XRTMIN(6) .OR. PRH(JI,JJ,JK) .GT. ICED%XRTMIN(7)
@@ -64,7 +73,7 @@ DO JI = D%NIB,D%NIE
             .OR. PRG(JI,JJ,JK) .GT. ICED%XRTMIN(6) 
          END IF
          IF (MASK) THEN
-            PPRFR(JI,JJ,JK)=MAX(PPRFR(JI,JJ,JK),PPRFR(JI,JJ,JK+D%NKL))
+            PPRFR(JI,JJ,JK)=MAX(PPRFR(JI,JJ,JK),PPRFR(JI,JJ,JK+IKL))
             IF (PPRFR(JI,JJ,JK)==0) THEN
                PPRFR(JI,JJ,JK)=1.
             END IF

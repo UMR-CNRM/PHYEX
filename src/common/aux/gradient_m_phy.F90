@@ -69,7 +69,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)                :: PY       ! vari
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PGZ_M_W  ! result at flux
                                                               ! side
 !
-INTEGER :: IKT,IKTB,IKTE,IIB,IJB,IIE,IJE
+INTEGER :: IKT,IKTB,IKTE,IIB,IJB,IIE,IJE,IKA,IKU,IKL
 INTEGER :: JI,JJ,JK
 !-------------------------------------------------------------------------------
 !
@@ -83,17 +83,22 @@ IIE=D%NIEC
 IIB=D%NIBC
 IJE=D%NJEC
 IJB=D%NJBC
+IKT=D%NKT
+IKA=D%NKA
+IKU=D%NKU
+IKL=D%NKL
+!
 DO JK=IKTB,IKTE 
   DO JJ=IJB,IJE 
     DO JI=IIB,IIE 
-      PGZ_M_W(JI,JJ,JK) =  (PY(JI,JJ,JK)-PY(JI,JJ,JK-D%NKL )) / PDZZ(JI,JJ,JK)
+      PGZ_M_W(JI,JJ,JK) =  (PY(JI,JJ,JK)-PY(JI,JJ,JK-IKL )) / PDZZ(JI,JJ,JK)
   ENDDO
  ENDDO
 ENDDO
 !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
-PGZ_M_W(IIB:IIE,IJB:IJE,D%NKU)=  (PY(IIB:IIE,IJB:IJE,D%NKU)-PY(IIB:IIE,IJB:IJE,D%NKU-D%NKL))  &
-                           / PDZZ(IIB:IIE,IJB:IJE,D%NKU)
-PGZ_M_W(IIB:IIE,IJB:IJE,D%NKA)= PGZ_M_W(IIB:IIE,IJB:IJE,D%NKU) ! -999.
+PGZ_M_W(IIB:IIE,IJB:IJE,IKU)=  (PY(IIB:IIE,IJB:IJE,IKU)-PY(IIB:IIE,IJB:IJE,IKU-IKL))  &
+                           / PDZZ(IIB:IIE,IJB:IJE,IKU)
+PGZ_M_W(IIB:IIE,IJB:IJE,IKA)= PGZ_M_W(IIB:IIE,IJB:IJE,IKU) ! -999.
 !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE)
 !
 !-------------------------------------------------------------------------------
@@ -178,7 +183,7 @@ LOGICAL, INTENT(IN) :: OFLAT
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PGX_M_M ! result mass point
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5, ZWORK6, ZMXF_PDXX
 !
-INTEGER :: IIB,IJB,IIE,IJE
+INTEGER :: IIB,IJB,IIE,IJE,IKT
 INTEGER :: JI,JJ,JK
 !
 !*       0.2   declaration of local variables
@@ -197,6 +202,7 @@ IIE=D%NIEC
 IIB=D%NIBC
 IJE=D%NJEC
 IJB=D%NJBC
+IKT=D%NKT
 !
 CALL MXF_PHY(D,PDXX,ZMXF_PDXX)
 CALL MXM_PHY(D,PA,ZWORK1)
@@ -205,19 +211,19 @@ CALL DXF_PHY(D,ZWORK1,ZWORK2)
 IF (.NOT. OFLAT) THEN
   CALL DZM_PHY(D,PA,ZWORK3)
   CALL MXF_PHY(D,PDZX,ZWORK4)
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)    
-  ZWORK5(IIB:IIE,IJB:IJE,1:D%NKT) = ZWORK3(IIB:IIE,IJB:IJE,1:D%NKT) * ZWORK4(IIB:IIE,IJB:IJE,1:D%NKT) &
-                                    / PDZZ(IIB:IIE,IJB:IJE,1:D%NKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)    
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
+  ZWORK5(IIB:IIE,IJB:IJE,1:IKT) = ZWORK3(IIB:IIE,IJB:IJE,1:IKT) * ZWORK4(IIB:IIE,IJB:IJE,1:IKT) &
+                                    / PDZZ(IIB:IIE,IJB:IJE,1:IKT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
   CALL MZF_PHY(D,ZWORK5,ZWORK6)
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)    
-  PGX_M_M(IIB:IIE,IJB:IJE,1:D%NKT)= (ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT) - ZWORK6(IIB:IIE,IJB:IJE,1:D%NKT)) &
-                                    / ZMXF_PDXX(IIB:IIE,IJB:IJE,1:D%NKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)    
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
+  PGX_M_M(IIB:IIE,IJB:IJE,1:IKT)= (ZWORK2(IIB:IIE,IJB:IJE,1:IKT) - ZWORK6(IIB:IIE,IJB:IJE,1:IKT)) &
+                                    / ZMXF_PDXX(IIB:IIE,IJB:IJE,1:IKT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
 ELSE
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)    
-  PGX_M_M(IIB:IIE,IJB:IJE,1:D%NKT)= ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT) / ZMXF_PDXX(IIB:IIE,IJB:IJE,1:D%NKT) 
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)    
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
+  PGX_M_M(IIB:IIE,IJB:IJE,1:IKT)= ZWORK2(IIB:IIE,IJB:IJE,1:IKT) / ZMXF_PDXX(IIB:IIE,IJB:IJE,1:IKT) 
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
 END IF
 !
 !----------------------------------------------------------------------------
@@ -301,7 +307,7 @@ LOGICAL, INTENT(IN) :: OFLAT
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),INTENT(OUT) :: PGY_M_M ! result mass point
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: ZWORK1, ZWORK2, ZWORK3, ZWORK4, ZWORK5, ZMYF_PDYY
 !
-INTEGER :: IIB,IJB,IIE,IJE
+INTEGER :: IIB,IJB,IIE,IJE,IKT
 INTEGER :: JI,JJ,JK
 !
 !*       0.2   declaration of local variables
@@ -313,6 +319,7 @@ IIE=D%NIEC
 IIB=D%NIBC
 IJE=D%NJEC
 IJB=D%NJBC
+IKT=D%NKT
 !
 !----------------------------------------------------------------------------
 !
@@ -327,19 +334,19 @@ IF (.NOT. OFLAT) THEN
   !
   CALL DZM_PHY(D,PA,ZWORK3)
   CALL MYF_PHY(D,PDZY,ZWORK4)
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)    
-  ZWORK5(IIB:IIE,IJB:IJE,1:D%NKT) = ZWORK4(IIB:IIE,IJB:IJE,1:D%NKT) * ZWORK3(IIB:IIE,IJB:IJE,1:D%NKT) &
-                                   / PDZZ(IIB:IIE,IJB:IJE,1:D%NKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)    
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
+  ZWORK5(IIB:IIE,IJB:IJE,1:IKT) = ZWORK4(IIB:IIE,IJB:IJE,1:IKT) * ZWORK3(IIB:IIE,IJB:IJE,1:IKT) &
+                                   / PDZZ(IIB:IIE,IJB:IJE,1:IKT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
   CALL MZF_PHY(D,ZWORK5,ZWORK4)
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)    
-  PGY_M_M(IIB:IIE,IJB:IJE,1:D%NKT)= (ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)-ZWORK4(IIB:IIE,IJB:IJE,1:D%NKT)) &
-                                    /ZMYF_PDYY(IIB:IIE,IJB:IJE,1:D%NKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)    
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
+  PGY_M_M(IIB:IIE,IJB:IJE,1:IKT)= (ZWORK2(IIB:IIE,IJB:IJE,1:IKT)-ZWORK4(IIB:IIE,IJB:IJE,1:IKT)) &
+                                    /ZMYF_PDYY(IIB:IIE,IJB:IJE,1:IKT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
 ELSE
-  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)    
-  PGY_M_M(IIB:IIE,IJB:IJE,1:D%NKT) = ZWORK2(IIB:IIE,IJB:IJE,1:D%NKT)/ZMYF_PDYY(IIB:IIE,IJB:IJE,1:D%NKT)
-  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:D%NKT)    
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
+  PGY_M_M(IIB:IIE,IJB:IJE,1:IKT) = ZWORK2(IIB:IIE,IJB:IJE,1:IKT)/ZMYF_PDYY(IIB:IIE,IJB:IJE,1:IKT)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)    
 ENDIF  
 !
 !----------------------------------------------------------------------------
@@ -430,7 +437,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PGX_M_U  ! result at flux
                                                               ! side
 REAL, DIMENSION(D%NIT*D%NJT*D%NKT) :: ZGX_M_U
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZY, ZDXX,ZDZZ,ZDZX
-INTEGER  IIU,IKU,JI,JK
+INTEGER  IIU,IKU,JI,JK,IKL, IKA
 !
 INTEGER :: JJK,IJU
 INTEGER :: JIJK,JIJKOR,JIJKEND
@@ -447,6 +454,8 @@ IF (LHOOK) CALL DR_HOOK('GX_M_U',0,ZHOOK_HANDLE)
 IIU=D%NIT
 IJU=D%NJT
 IKU=D%NKT
+IKL=D%NKL
+IKA=D%NKA
 IF (.NOT. OFLAT) THEN
   JIJKOR  = 1 + JPHEXT + IIU*IJU*(JPVEXT_TURB+1 - 1)
   JIJKEND = IIU*IJU*(IKU-JPVEXT_TURB)
@@ -455,10 +464,10 @@ IF (.NOT. OFLAT) THEN
   DO JIJK=JIJKOR , JIJKEND
 ! indexation
     JI_1JK   = JIJK - 1
-    JIJK_1   = JIJK     - IIU*IJU*D%NKL
-    JI_1JK_1 = JIJK - 1 - IIU*IJU*D%NKL
-    JIJKP1   = JIJK     + IIU*IJU*D%NKL
-    JI_1JKP1 = JIJK - 1 + IIU*IJU*D%NKL
+    JIJK_1   = JIJK     - IIU*IJU*IKL
+    JI_1JK_1 = JIJK - 1 - IIU*IJU*IKL
+    JIJKP1   = JIJK     + IIU*IJU*IKL
+    JI_1JKP1 = JIJK - 1 + IIU*IJU*IKL
 !
     ZGX_M_U(JIJK)=                                              &
        (  PY(JIJK)-PY(JI_1JK)                               &
@@ -478,8 +487,8 @@ CALL D1D_TO_3D(D,PDZX,ZDZX)
 CALL D1D_TO_3D(D,PY,ZY)
 !
   DO JI=1+JPHEXT,IIU
-    PGX_M_U(JI,:,D%NKU)=  ( ZY(JI,:,D%NKU)-ZY(JI-1,:,D%NKU)  )  / ZDXX(JI,:,D%NKU)
-    PGX_M_U(JI,:,D%NKA)=  -999.
+    PGX_M_U(JI,:,IKU)=  ( ZY(JI,:,IKU)-ZY(JI-1,:,IKU)  )  / ZDXX(JI,:,IKU)
+    PGX_M_U(JI,:,IKA)=  -999.
   END DO
 !
   PGX_M_U(1,:,:)=PGX_M_U(IIU-2*JPHEXT+1,:,:)
@@ -579,7 +588,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),INTENT(OUT) :: PGY_M_V  ! result at flux
                                                               ! side
 !REAL, DIMENSION(D%NIT*D%NJT*D%NKT) :: ZGY_M_V
 !REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZY, ZDYY,ZDZZ,ZDZY
-INTEGER  IJU,IKU,JI,JJ,JK
+INTEGER  IJU,IKU,JI,JJ,JK,IKL, IKA
 !
 !-------------------------------------------------------------------------------
 !
@@ -590,25 +599,28 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GY_M_V',0,ZHOOK_HANDLE)
 IJU=D%NJT
 IKU=D%NKT
+IKL=D%NKL
+IKA=D%NKA
+IKU=D%NKU
 IF (.NOT. OFLAT) THEN
 !  PGY_M_V = (   DYM(PY)  -  MZF (   MYM(  DZM(PY) /PDZZ  ) * PDZY   )   )/PDYY
   DO JK=1+JPVEXT_TURB,IKU-JPVEXT_TURB
     DO JJ=1+JPHEXT,IJU
         PGY_M_V(:,JJ,JK)=                                                 &
            (  PY(:,JJ,JK)-PY(:,JJ-1,JK)                                   &
-             -(  (PY(:,JJ,JK)-PY(:,JJ,JK-D%NKL))     / PDZZ(:,JJ,JK)          &
-                +(PY(:,JJ-1,JK)-PY(:,JJ-D%NKL,JK-D%NKL)) / PDZZ(:,JJ-1,JK)        &
+             -(  (PY(:,JJ,JK)-PY(:,JJ,JK-IKL))     / PDZZ(:,JJ,JK)          &
+                +(PY(:,JJ-1,JK)-PY(:,JJ-IKL,JK-IKL)) / PDZZ(:,JJ-1,JK)        &
               ) * PDZY(:,JJ,JK)* 0.25                                     &
-             -(  (PY(:,JJ,JK+D%NKL)-PY(:,JJ,JK))     / PDZZ(:,JJ,JK+D%NKL)        &
-                +(PY(:,JJ-1,JK+D%NKL)-PY(:,JJ-1,JK)) / PDZZ(:,JJ-1,JK+D%NKL)      &
-              ) * PDZY(:,JJ,JK+D%NKL)* 0.25                                   &
+             -(  (PY(:,JJ,JK+IKL)-PY(:,JJ,JK))     / PDZZ(:,JJ,JK+IKL)        &
+                +(PY(:,JJ-1,JK+IKL)-PY(:,JJ-1,JK)) / PDZZ(:,JJ-1,JK+IKL)      &
+              ) * PDZY(:,JJ,JK+IKL)* 0.25                                   &
             )  / PDYY(:,JJ,JK)
     END DO
   END DO
 !
   DO JJ=1+JPHEXT,IJU
-    PGY_M_V(:,JJ,D%NKU)=  ( PY(:,JJ,D%NKU)-PY(:,JJ-1,D%NKU)  )  / PDYY(:,JJ,D%NKU)
-    PGY_M_V(:,JJ,D%NKA)=  -999.
+    PGY_M_V(:,JJ,IKU)=  ( PY(:,JJ,IKU)-PY(:,JJ-1,IKU)  )  / PDYY(:,JJ,IKU)
+    PGY_M_V(:,JJ,IKA)=  -999.
   END DO
 !
   PGY_M_V(:,1,:)=PGY_M_V(:,IJU-2*JPHEXT+1,:)
