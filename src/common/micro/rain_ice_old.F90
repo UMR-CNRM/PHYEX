@@ -340,83 +340,82 @@ REAL, DIMENSION(:), ALLOCATABLE :: ZTHT    ! Potential temperature
 REAL, DIMENSION(:), ALLOCATABLE :: ZTHLT   ! Liquid potential temperature
 REAL, DIMENSION(:), ALLOCATABLE :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
 !
-REAL, DIMENSION(:), ALLOCATABLE &
-               :: ZRHODREF, & ! RHO Dry REFerence
+REAL, DIMENSION(KSIZE) :: ZRHODREF, & ! RHO Dry REFerence
+                          ZRHODJ,   & ! RHO times Jacobian
+                          ZEXNREF,  & ! EXNer Pressure REFerence
+                          ZZWC,     & ! Work array
+                          ZZW2,     & ! Work array
+                          ZZW3,     & ! Work array
+                          ZZW4,     & ! Work array
+                          ZLSFACT,  & ! L_s/(Pi_ref*C_ph)
+                          ZLVFACT,  & ! L_v/(Pi_ref*C_ph)
+                          ZLBDAR,   & ! Slope parameter of the raindrop  distribution
+                          ZLBDAR_RF,& ! Slope parameter of the raindrop  distribution
+                                      ! for the Rain Fraction part
+                          ZLBDAS,   & ! Slope parameter of the aggregate distribution
+                          ZLBDAG,   & ! Slope parameter of the graupel   distribution
+                          ZLBDAH,   & ! Slope parameter of the hail      distribution
+                          ZRDRYG,   & ! Dry growth rate of the graupeln
+                          ZRWETG,   & ! Wet growth rate of the graupeln
+                          ZAI,      & ! Thermodynamical function
+                          ZCJ,      & ! Function to compute the ventilation coefficient
+                          ZKA,      & ! Thermal conductivity of the air
+                          ZDV,      & ! Diffusivity of water vapor in the air
+                          ZSIGMA_RC,& ! Standard deviation of rc at time t
+                          ZCF,      & ! Cloud fraction
+                          ZRF,      & ! Rain fraction
+!                          *******  used for logical switch OCND2 : *******
+                          ZSSIO,    & ! Super-saturation with respect to ice in the  
+                                      ! supersaturated fraction of gridbox 
+                          ZSSIU,    & ! Sub-saturation with respect to ice in the 
+                                      ! sub-saturated fraction  of gridbox 
+                          ZW2D,     & ! Factor for subgridscale calculations
+                          ZXW2D,    & ! Ratio cloud ice moist part to dry part 
+                          ZXW2D13,  & ! ZXW2D**0.333 or other expression for LMODICEDEP=T
+                          ZCRYSHA,  & ! Ice crystal habit factor 
+                          ZCI2S,    & ! factor to turn cloud ice with few lagre crystals into snow
+                          ZCOLF,    & ! collision factor cloud liquid to snow / graupel
+                          ZACRF,    & ! collision factor cloud liquid to rain
+                          ZCONCM,   & ! Same as ZCONC3D but GMICRO-array only and cm-3 instead of m-3
+
+                          ZHLC_HCF, & ! HLCLOUDS : fraction of High Cloud Fraction in grid
+                          ZHLC_LCF, & ! HLCLOUDS : fraction of Low  Cloud Fraction in grid
+                                      !    note that ZCF = ZHLC_HCF + ZHLC_LCF
+                          ZHLC_HRC, & ! HLCLOUDS : LWC that is High LWC in grid
+                          ZHLC_LRC, & ! HLCLOUDS : LWC that is Low  LWC in grid
+                                      !    note that ZRC = ZHLC_HRC + ZHLC_LRC
+                        ZHLC_RCMAX, & ! HLCLOUDS : maximum value for RC in distribution
+                          ZRCRAUTC, & ! RC value to begin rain formation =XCRIAUTC/RHODREF
+                     ZHLC_HRCLOCAL, & ! HLCLOUDS : LWC that is High LWC local in HCF
+                     ZHLC_LRCLOCAL, & ! HLCLOUDS : LWC that is Low  LWC local in LCF
+                                      !    note that ZRC/CF = ZHLC_HRCLOCAL+ ZHLC_LRCLOCAL
+                                      !                     = ZHLC_HRC/HCF+ ZHLC_LRC/LCF
+                          ZAA2,     & ! Part of ZAI used for optimized code
+                          ZBB3,     & ! Part of ZAI used for optimized code
+                          ZAA2W,    & ! as ZAA2 but for liquid
+                          ZBB3W,    & ! as ZBB3 but for liquid
+                          ZTIW,     & ! Wet bulb temperature
+                          ZARTMP      ! temporary work array
+
+REAL, DIMENSION(:), ALLOCATABLE :: &
                   ZRHODREFC,& ! RHO Dry REFerence
                   ZRHODREFR,& ! RHO Dry REFerence
                   ZRHODREFI,& ! RHO Dry REFerence
                   ZRHODREFS,& ! RHO Dry REFerence
                   ZRHODREFG,& ! RHO Dry REFerence
                   ZRHODREFH,& ! RHO Dry REFerence
-                  ZRHODJ,   & ! RHO times Jacobian
                   ZZT,      & ! Temperature
                   ZPRES,    & ! Pressure
-                  ZEXNREF,  & ! EXNer Pressure REFerence
                   ZZW,      & ! Work array
-                  ZZWC,     & ! Work array
-                  ZZW2,     & ! Work array
-                  ZZW3,     & ! Work array
-                  ZZW4,     & ! Work array
-                  ZLSFACT,  & ! L_s/(Pi_ref*C_ph)
-                  ZLVFACT,  & ! L_v/(Pi_ref*C_ph)
                   ZUSW,     & ! Undersaturation over water
                   ZSSI,     & ! Supersaturation over ice
-                  ZLBDAR,   & ! Slope parameter of the raindrop  distribution
-                  ZLBDAR_RF,& ! Slope parameter of the raindrop  distribution
-                                 ! for the Rain Fraction part
-                  ZLBDAS,   & ! Slope parameter of the aggregate distribution
-                  ZLBDAG,   & ! Slope parameter of the graupel   distribution
-                  ZLBDAH,   & ! Slope parameter of the hail      distribution
-                  ZRDRYG,   & ! Dry growth rate of the graupeln
-                  ZRWETG,   & ! Wet growth rate of the graupeln
-                  ZAI,      & ! Thermodynamical function
-                  ZCJ,      & ! Function to compute the ventilation coefficient
-                  ZKA,      & ! Thermal conductivity of the air
-                  ZDV,      & ! Diffusivity of water vapor in the air
-                  ZSIGMA_RC,& ! Standard deviation of rc at time t
-                  ZCF,      & ! Cloud fraction
-                  ZRF,      & ! Rain fraction
-                  ZHLC_HCF, & ! HLCLOUDS : fraction of High Cloud Fraction in grid
-                  ZHLC_LCF, & ! HLCLOUDS : fraction of Low  Cloud Fraction in grid
-                              !    note that ZCF = ZHLC_HCF + ZHLC_LCF
-                  ZHLC_HRC, & ! HLCLOUDS : LWC that is High LWC in grid
-                  ZHLC_LRC, & ! HLCLOUDS : LWC that is Low  LWC in grid
-                              !    note that ZRC = ZHLC_HRC + ZHLC_LRC
-                ZHLC_RCMAX, & ! HLCLOUDS : maximum value for RC in distribution
-                  ZRCRAUTC, & ! RC value to begin rain formation =XCRIAUTC/RHODREF
-             ZHLC_HRCLOCAL, & ! HLCLOUDS : LWC that is High LWC local in HCF
-             ZHLC_LRCLOCAL, & ! HLCLOUDS : LWC that is Low  LWC local in LCF
-                              !    note that ZRC/CF = ZHLC_HRCLOCAL+ ZHLC_LRCLOCAL
-                              !                     = ZHLC_HRC/HCF+ ZHLC_LRC/LCF
-!                          *******  used for logical switch OCND2 : *******
-                  ZBFT,     & ! Mean time for a pristine ice crystal to reach 
-                              ! size of an snow/graupel particle (ZDICRIT)
-                  ZZZ,      & ! height of model layer (m)
-                  ZDZ,      & ! thickness of model layer (m)
+
                   ZSIFRC,   & ! subgridscale fraction with supersaturation with 
                               ! respect to ice.  
-                  ZSSIO,    & ! Super-saturation with respect to ice in the  
-                              ! supersaturated fraction of gridbox 
-                  ZSSIU,    & ! Sub-saturation with respect to ice in the 
-                              ! sub-saturated fraction  of gridbox 
-                  ZW2D,     & ! Factor for subgridscale calculations
-                  ZXW2D,    & ! Ratio cloud ice moist part to dry part 
-                  ZXW2D13,  & ! ZXW2D**0.333 or other expression for LMODICEDEP=T
-                  ZCRYSHA,  & ! Ice crystal habit factor 
-                  ZCI2S,    & ! factor to turn cloud ice with few lagre crystals into snow
-                  ZCOLF,    & ! collision factor cloud liquid to snow / graupel
-                  ZACRF,    & ! collision factor cloud liquid to rain
-                  ZCONCM,   & ! Same as ZCONC3D but GMICRO-array only and cm-3 instead of m-3
                   ZESI,     & ! saturation pressure over ice
                   ZESW,     & ! saturation pressure over water 
-                  ZAA2,     & ! Part of ZAI used for optimized code
-                  ZBB3,     & ! Part of ZAI used for optimized code
-                  ZAA2W,    & ! as ZAA2 but for liquid
-                  ZBB3W,    & ! as ZBB3 but for liquid
                   ZAM3,     & ! Meyers IN concentration function
                   ZREDIN,   & ! Reduction of IN concentration between 0 and -25 C
-                  ZTIW,     & ! Wet bulb temperature
-                  ZARTMP,   & ! temporary work array
 !                          *******  end logical switch OCND2 *******
                   ZCC,      & ! terminal velocity
                   ZFSEDC1D, & ! For cloud sedimentation
@@ -582,44 +581,14 @@ IF ( KSIZE >= 0 ) THEN
   ALLOCATE(ZTHS(KSIZE))
   ALLOCATE(ZTHT(KSIZE))
   ALLOCATE(ZTHLT(KSIZE))
-  ALLOCATE(ZRHODREF(KSIZE))
   ALLOCATE(ZZT(KSIZE))
   ALLOCATE(ZPRES(KSIZE))
-  ALLOCATE(ZEXNREF(KSIZE))
-  ALLOCATE(ZSIGMA_RC(KSIZE))
-  ALLOCATE(ZCF(KSIZE))
-  ALLOCATE(ZRF(KSIZE))
-  ALLOCATE(ZHLC_HCF(KSIZE))
-  ALLOCATE(ZHLC_LCF(KSIZE))
-  ALLOCATE(ZHLC_HRC(KSIZE))
-  ALLOCATE(ZHLC_LRC(KSIZE))
-  ALLOCATE(ZHLC_RCMAX(KSIZE))
-  ALLOCATE(ZRCRAUTC(KSIZE))
-  ALLOCATE(ZHLC_HRCLOCAL(KSIZE))
-  ALLOCATE(ZHLC_LRCLOCAL(KSIZE))
-  ALLOCATE(ZCOLF(KSIZE))
-  ALLOCATE(ZACRF(KSIZE))
-  ALLOCATE(ZCONCM(KSIZE))
   ALLOCATE(ZZKGN_ACON(KSIZE))
   ALLOCATE(ZZKGN_SBGR(KSIZE))
-  IF (LTIW) ALLOCATE(ZTIW(KSIZE))
   IF (OCND2) THEN
      ALLOCATE(ZESI(KSIZE))
      ALLOCATE(ZESW(KSIZE))
      ALLOCATE(ZSIFRC(KSIZE))
-     ALLOCATE(ZSSIO(KSIZE))
-     ALLOCATE(ZSSIU(KSIZE))
-     ALLOCATE(ZZWC(KSIZE))
-     ALLOCATE(ZW2D(KSIZE))
-     ALLOCATE(ZXW2D(KSIZE))
-     ALLOCATE(ZXW2D13(KSIZE))
-     ALLOCATE(ZCRYSHA(KSIZE))
-     ALLOCATE(ZCI2S(KSIZE))
-     IF (LTEST) ALLOCATE(ZARTMP(KSIZE))
-     ALLOCATE(ZAA2(KSIZE))
-     ALLOCATE(ZBB3(KSIZE))
-     ALLOCATE(ZAA2W(KSIZE))
-     ALLOCATE(ZBB3W(KSIZE))
   ENDIF
 
   IF (OCND2) THEN
@@ -711,11 +680,6 @@ IF ( KSIZE >= 0 ) THEN
   ENDDO
 
   ALLOCATE(ZZW(KSIZE))
-  ALLOCATE(ZZW2(KSIZE))
-  ALLOCATE(ZZW3(KSIZE))
-  ALLOCATE(ZZW4(KSIZE))
-  ALLOCATE(ZLSFACT(KSIZE))
-  ALLOCATE(ZLVFACT(KSIZE))
 
     ZZW(:)  = ZEXNREF(:)*( XCPD+XCPV*ZRVT(:)+XCL*(ZRCT(:)+ZRRT(:)) &
                                     +XCI*(ZRIT(:)+ZRST(:)+ZRGT(:)) )
@@ -733,18 +697,6 @@ IF ( KSIZE >= 0 ) THEN
                                                       ! Supersaturation over ice
     ENDIF
 
-  ALLOCATE(ZLBDAR(KSIZE))
-  ALLOCATE(ZLBDAR_RF(KSIZE))
-  ALLOCATE(ZLBDAS(KSIZE))
-  ALLOCATE(ZLBDAG(KSIZE))
-  IF ( KRR == 7 ) ALLOCATE(ZLBDAH(KSIZE))
-  ALLOCATE(ZRDRYG(KSIZE))
-  ALLOCATE(ZRWETG(KSIZE))
-  ALLOCATE(ZAI(KSIZE))
-  ALLOCATE(ZCJ(KSIZE))
-  ALLOCATE(ZKA(KSIZE))
-  ALLOCATE(ZDV(KSIZE))
-
   IF ( KRR == 7 ) THEN
     ALLOCATE(ZZW1(KSIZE,7))
   ELSE IF( KRR == 6 ) THEN
@@ -752,8 +704,6 @@ IF ( KSIZE >= 0 ) THEN
   ENDIF
 !
   IF (LBU_ENABLE .OR. TLES%LLES_CALL) THEN
-
-    ALLOCATE(ZRHODJ(KSIZE))
 
     ZRHODJ(:) = PACK( PRHODJ(:,:),MASK=GMICRO(:,:) )
 
@@ -1114,28 +1064,11 @@ IF ( KSIZE >= 0 ) THEN
 !
 !
   DEALLOCATE(ZZW1)
-  DEALLOCATE(ZDV)
-  DEALLOCATE(ZCJ)
-  DEALLOCATE(ZRDRYG)
-  DEALLOCATE(ZRWETG)
-  DEALLOCATE(ZLBDAG)
-  IF ( KRR == 7 ) DEALLOCATE(ZLBDAH)
-  DEALLOCATE(ZLBDAS)
-  DEALLOCATE(ZLBDAR)
-  DEALLOCATE(ZLBDAR_RF)
   DEALLOCATE(ZSSI)
   DEALLOCATE(ZUSW)
-  DEALLOCATE(ZLVFACT)
-  DEALLOCATE(ZLSFACT)
   DEALLOCATE(ZZW)
-  DEALLOCATE(ZZW2)
-  DEALLOCATE(ZZW3)
-  DEALLOCATE(ZZW4)
-  DEALLOCATE(ZEXNREF)
   DEALLOCATE(ZPRES)
-  DEALLOCATE(ZRHODREF)
   DEALLOCATE(ZZT)
-  IF(LBU_ENABLE .OR. TLES%LLES_CALL) DEALLOCATE(ZRHODJ)
   DEALLOCATE(ZTHS)
   DEALLOCATE(ZTHT)
   DEALLOCATE(ZTHLT)
@@ -1152,43 +1085,13 @@ IF ( KSIZE >= 0 ) THEN
   DEALLOCATE(ZRST)
   DEALLOCATE(ZRIT)
   DEALLOCATE(ZRRT)
-  DEALLOCATE(ZAI)
   DEALLOCATE(ZRCT)
-  DEALLOCATE(ZKA)
   DEALLOCATE(ZRVT)
-  DEALLOCATE(ZSIGMA_RC)
-  DEALLOCATE(ZCF)
-  DEALLOCATE(ZRF)
-  DEALLOCATE(ZHLC_HCF)
-  DEALLOCATE(ZHLC_LCF)
-  DEALLOCATE(ZHLC_HRC)
-  DEALLOCATE(ZHLC_LRC)
-  DEALLOCATE(ZHLC_RCMAX)
-  DEALLOCATE(ZRCRAUTC)
-  DEALLOCATE(ZHLC_HRCLOCAL)
-  DEALLOCATE(ZHLC_LRCLOCAL)
-  DEALLOCATE(ZCOLF)
-  DEALLOCATE(ZACRF)
-  DEALLOCATE(ZCONCM)
   DEALLOCATE(ZZKGN_ACON,ZZKGN_SBGR)
-  IF (LTIW) DEALLOCATE(ZTIW)
   IF (OCND2) THEN
      DEALLOCATE(ZESI)
      DEALLOCATE(ZESW)
      DEALLOCATE(ZSIFRC)
-     DEALLOCATE(ZSSIO)
-     DEALLOCATE(ZSSIU)
-     DEALLOCATE(ZZWC)
-     DEALLOCATE(ZW2D)
-     DEALLOCATE(ZXW2D)
-     DEALLOCATE(ZXW2D13)
-     DEALLOCATE(ZCRYSHA)
-     DEALLOCATE(ZCI2S)
-     DEALLOCATE(ZAA2)
-     DEALLOCATE(ZBB3)
-     DEALLOCATE(ZAA2W)
-     DEALLOCATE(ZBB3W)
-     IF (LTEST) DEALLOCATE(ZARTMP)
   ENDIF
 
 !
@@ -2228,6 +2131,7 @@ INTEGER                           :: JL       ! and PACK intrinsics
 !
 !-------------------------------------------------------------------------------
 !
+REAL, DIMENSION(:), ALLOCATABLE :: ZZZ ! height of model layer (m)
 !
 !  compute the temperature and the pressure
 !
@@ -2472,6 +2376,9 @@ IMPLICIT NONE
 !
 !*       3.2     compute the homogeneous nucleation source: RCHONI
 !
+REAL, DIMENSION(KSIZE) :: ZBFT ! Mean time for a pristine ice crystal to reach 
+                               ! size of an snow/graupel particle (ZDICRIT)
+
   REAL(KIND=JPRB) :: ZHOOK_HANDLE
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_SLOW',0,ZHOOK_HANDLE)
   ZZW(:) = 0.0
@@ -2608,7 +2515,6 @@ IMPLICIT NONE
   IF (OCND2 .AND. .NOT. LMODICEDEP) THEN ! 3.4.5 B: 
                 ! Turn ice crystals lagrer than a precribed size into snow:
                 ! (For the moment sperical ice crystals are assumed)
-     ALLOCATE(ZBFT(KSIZE))
 
      WHERE (  (ZRIS(:)>0.0_JPRB) .AND.(ZSSI(:)>0.001_JPRB) )
         ZBFT(:) =   0.5_JPRB*87.5_JPRB*(ZDICRIT)**2*ZAI(:)/ ZSSI(:)
@@ -2617,7 +2523,6 @@ IMPLICIT NONE
         ZRIS(:) =   ZRIS(:)  - ZBFT(:)*ZRIS(:)
      END WHERE
 
-     DEALLOCATE(ZBFT)
   ENDIF
 
   IF (OCND2 .AND. LMODICEDEP) THEN ! 3.4.5 B: 
@@ -2625,7 +2530,6 @@ IMPLICIT NONE
                 ! the ice crystal diameter for the (mass x N_i) maximum 
                 ! is lagrer than a precribed size. 
                 ! (ZDICRIT) The general gamma function is assumed
-     ALLOCATE(ZBFT(KSIZE))
      DO JL=1,KSIZE
         ZZW2(JL) = &
         MAX(ZCIT(JL),ICENUMBER2(ZRIS(JL)*PTSTEP,ZZT(JL))*ZRHODREF(JL))
@@ -2639,13 +2543,6 @@ IMPLICIT NONE
            ZRIS(:) =   ZRIS(:)  - ZBFT(:)
      END WHERE
 
-!     DO JL=1,KSIZE
-
-!       IF(ZRIS(JL)>XFRMIN(13) .AND.ZCIT(JL) > 0. ) THEN
-!        print*,'345JL', ZZW2(JL),ZRIS(JL),ZBFT(JL),ZZT(JL)-XTT
-!       ENDIF
-!    ENDDO
-     DEALLOCATE(ZBFT)
   ENDIF
 
   DEALLOCATE(ZCRIAUTI)

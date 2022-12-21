@@ -98,6 +98,27 @@ program main_rain_ice_old
 
     end subroutine init_rain_ice_old
 
+    subroutine init_gmicro(D, krr, n_gp_blocks, odmicro, prt, pssio, ocnd2, prht)
+
+      use modd_dimphyex, only: dimphyex_t
+      use modd_rain_ice_descr, only: xrtmin
+      use modd_rain_ice_param, only: xfrmin
+
+      implicit none
+
+      type(dimphyex_t) :: D
+
+      integer, intent(in) :: krr, n_gp_blocks
+      logical, dimension(D%nit, D%nkt, n_gp_blocks), intent(inout) :: odmicro
+
+      real, dimension(D%nit, D%nkt, krr, n_gp_blocks), intent(in) :: prt
+      real, dimension(D%nit, D%nkt, n_gp_blocks), intent(in) :: pssio
+      real, dimension(D%nit, D%nkt, n_gp_blocks), optional, intent(in) :: prht
+
+      logical, intent(in) :: ocnd2
+
+    end subroutine init_gmicro
+
     subroutine print_diff_1(array, ref)
 
       implicit none
@@ -206,40 +227,42 @@ program main_rain_ice_old
 
   call init_gmicro(D, krr, n_gp_blocks, llmicro, prt, pssio, ocnd2)
 
-  isize = count(llmicro)
-
-  write(output_unit, *) 'isize: ', isize
-
   call cpu_time(time_start_cpu)
   call system_clock(count=counter, count_rate=c_rate)
   time_start_real = real(counter,8)/c_rate
 
   do i = 1, n_gp_blocks
 
-    call rain_ice_old(D, osedic=osedic, ocnd2=ocnd2,                                    &
-                      lkogan=lkogan, lmodicedep=lmodicedep,                             &
-                      hsedim=c_sedim, hsubg_aucv_rc=csubg_aucv_rc, owarm=owarm,         &
-                      kka=kka, kku=kku, kkl=kkl,                                        &
-                      ksplitr=ksplitr, ptstep=2*ptstep, krr=krr,                        &
-                      ksize=isize, gmicro=llmicro(:,:,i),                                    &
-                      pdzz=pdzz(:,:,i), prhodj=prhodj(:,:,i), prhodref=prhodref(:,:,i), &
-                      pexnref=pexnref(:,:,i), ppabst=ppabsm(:,:,i),                     &
-                      pcit=pcit(:,:,i), pcldfr=pcldfr(:,:,i),                           &
-                      picldfr=picldfr(:,:,i), pssio=pssio(:,:,i), pssiu=pssiu(:,:,i),   &
-                      pifr=pifr(:,:,i),                                                 &
-                      ptht=ptht(:,:,i),                                                 &
-                      prvt=prt(:,:,1,i), prct=prt(:,:,2,i), prrt=prt(:,:,3,i),          &
-                      prit=prt(:,:,4,i), prst=prt(:,:,5,i), prgt=prt(:,:,6,i),          &
-                      pths=pths(:,:,i),                                                 &
-                      prvs=prs(:,:,1,i), prcs=prs(:,:,2,i), prrs=prs(:,:,3,i),          &
-                      pris=prs(:,:,4,i), prss=prs(:,:,5,i), prgs=prs(:,:,6,i),          &
-                      pinprc=zinprc(:,i), pinprr=pinprr(:,i), pevap3d=pevap(:,:,i),     &
-                      pinprs=pinprs(:,i), pinprg=pinprg(:,i), psigs=psigs(:,:,i),       &
-                      psea=psea(:,i), ptown=ptown(:,i),                                 &
-                      ydddh=ydddh, ydlddh=ydlddh, ydmddh=ydmddh,                        &
-                      picenu=picenu(:,i),                                               &
-                      pkgn_acon=pkgn_acon(:,i), pkgn_sbgr=pkgn_sbgr(:,i),               &
-                      pfpr=pfpr(:,:,:,i))
+    isize = count(llmicro(:,:,i))
+
+    if (isize .gt. 0) then
+
+      call rain_ice_old(D, osedic=osedic, ocnd2=ocnd2,                                    &
+                        lkogan=lkogan, lmodicedep=lmodicedep,                             &
+                        hsedim=c_sedim, hsubg_aucv_rc=csubg_aucv_rc, owarm=owarm,         &
+                        kka=kka, kku=kku, kkl=kkl,                                        &
+                        ksplitr=ksplitr, ptstep=2*ptstep, krr=krr,                        &
+                        ksize=isize, gmicro=llmicro(:,:,i),                               &
+                        pdzz=pdzz(:,:,i), prhodj=prhodj(:,:,i), prhodref=prhodref(:,:,i), &
+                        pexnref=pexnref(:,:,i), ppabst=ppabsm(:,:,i),                     &
+                        pcit=pcit(:,:,i), pcldfr=pcldfr(:,:,i),                           &
+                        picldfr=picldfr(:,:,i), pssio=pssio(:,:,i), pssiu=pssiu(:,:,i),   &
+                        pifr=pifr(:,:,i),                                                 &
+                        ptht=ptht(:,:,i),                                                 &
+                        prvt=prt(:,:,1,i), prct=prt(:,:,2,i), prrt=prt(:,:,3,i),          &
+                        prit=prt(:,:,4,i), prst=prt(:,:,5,i), prgt=prt(:,:,6,i),          &
+                        pths=pths(:,:,i),                                                 &
+                        prvs=prs(:,:,1,i), prcs=prs(:,:,2,i), prrs=prs(:,:,3,i),          &
+                        pris=prs(:,:,4,i), prss=prs(:,:,5,i), prgs=prs(:,:,6,i),          &
+                        pinprc=zinprc(:,i), pinprr=pinprr(:,i), pevap3d=pevap(:,:,i),     &
+                        pinprs=pinprs(:,i), pinprg=pinprg(:,i), psigs=psigs(:,:,i),       &
+                        psea=psea(:,i), ptown=ptown(:,i),                                 &
+                        ydddh=ydddh, ydlddh=ydlddh, ydmddh=ydmddh,                        &
+                        picenu=picenu(:,i),                                               &
+                        pkgn_acon=pkgn_acon(:,i), pkgn_sbgr=pkgn_sbgr(:,i),               &
+                        pfpr=pfpr(:,:,:,i))
+
+    endif
 
   enddo
 
