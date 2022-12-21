@@ -55,6 +55,8 @@ program main_rain_ice_old
 
   logical, allocatable, dimension(:,:,:) :: llmicro
 
+  integer :: isize
+
   type(dimphyex_t) :: D
 
   integer :: counter, c_rate
@@ -204,6 +206,10 @@ program main_rain_ice_old
 
   call init_gmicro(D, krr, n_gp_blocks, llmicro, prt, pssio, ocnd2)
 
+  isize = count(llmicro)
+
+  write(output_unit, *) 'isize: ', isize
+
   call cpu_time(time_start_cpu)
   call system_clock(count=counter, count_rate=c_rate)
   time_start_real = real(counter,8)/c_rate
@@ -214,7 +220,8 @@ program main_rain_ice_old
                       lkogan=lkogan, lmodicedep=lmodicedep,                             &
                       hsedim=c_sedim, hsubg_aucv_rc=csubg_aucv_rc, owarm=owarm,         &
                       kka=kka, kku=kku, kkl=kkl,                                        &
-                      ksplitr=ksplitr, ptstep=2*ptstep, krr=krr, gmicro=llmicro(:,:,i), &
+                      ksplitr=ksplitr, ptstep=2*ptstep, krr=krr,                        &
+                      ksize=isize, gmicro=llmicro(:,:,i),                                    &
                       pdzz=pdzz(:,:,i), prhodj=prhodj(:,:,i), prhodref=prhodref(:,:,i), &
                       pexnref=pexnref(:,:,i), ppabst=ppabsm(:,:,i),                     &
                       pcit=pcit(:,:,i), pcldfr=pcldfr(:,:,i),                           &

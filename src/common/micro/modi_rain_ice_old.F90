@@ -5,7 +5,7 @@
 INTERFACE
       SUBROUTINE RAIN_ICE_OLD (D, OSEDIC, OCND2, LKOGAN, LMODICEDEP, HSEDIM, HSUBG_AUCV_RC, OWARM, &
                             KKA, KKU, KKL,                                        &
-                            KSPLITR, PTSTEP, KRR, GMICRO,                    &
+                            KSPLITR, PTSTEP, KRR, KSIZE, GMICRO,                    &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                             PICLDFR, PSSIO, PSSIU, PIFR,                 &
                             PTHT, PRVT, PRCT, PRRT, PRIT, PRST, &
@@ -44,6 +44,8 @@ REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 !
 LOGICAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN) :: GMICRO
+
+INTEGER, INTENT(IN) :: KSIZE
 
 REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PDZZ    ! Layer thickness (m)
 REAL, DIMENSION(D%NIT,D%NKT),   INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
