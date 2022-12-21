@@ -53,6 +53,8 @@ program main_rain_ice_old
   real, allocatable, dimension(:,:,:) :: pssio   ! Super-saturation with respect to ice in the supersaturated fraction
   real, allocatable, dimension(:,:,:) :: pssiu   ! Sub-saturation with respect to ice in the subsaturated fraction
 
+  logical, allocatable, dimension(:,:,:) :: llmicro
+
   type(dimphyex_t) :: D
 
   integer :: counter, c_rate
@@ -165,7 +167,7 @@ program main_rain_ice_old
                             pinprg, pinprg_out,      &
                             pinprh, pinprh_out,      &
                             picenu, pkgn_acon, pkgn_sbgr, &
-                            pfpr, pfpr_out, l_verbose)
+                            pfpr, pfpr_out, llmicro, l_verbose)
 
   write(output_unit, *) 'osedic:        ', osedic
   write(output_unit, *) 'ocnd2:         ', ocnd2
@@ -200,6 +202,8 @@ program main_rain_ice_old
 
   call init_rain_ice_old(20)
 
+  call init_gmicro(D, krr, n_gp_blocks, llmicro, prt, pssio, ocnd2)
+
   call cpu_time(time_start_cpu)
   call system_clock(count=counter, count_rate=c_rate)
   time_start_real = real(counter,8)/c_rate
@@ -210,7 +214,7 @@ program main_rain_ice_old
                       lkogan=lkogan, lmodicedep=lmodicedep,                             &
                       hsedim=c_sedim, hsubg_aucv_rc=csubg_aucv_rc, owarm=owarm,         &
                       kka=kka, kku=kku, kkl=kkl,                                        &
-                      ksplitr=ksplitr, ptstep=2*ptstep, krr=krr,                        &
+                      ksplitr=ksplitr, ptstep=2*ptstep, krr=krr, gmicro=llmicro(:,:,i), &
                       pdzz=pdzz(:,:,i), prhodj=prhodj(:,:,i), prhodref=prhodref(:,:,i), &
                       pexnref=pexnref(:,:,i), ppabst=ppabsm(:,:,i),                     &
                       pcit=pcit(:,:,i), pcldfr=pcldfr(:,:,i),                           &
@@ -322,6 +326,7 @@ subroutine init_rain_ice_old(kulout)
 
   use modi_ini_cst
   use modd_budget
+  use modd_les, only: tles
 
   use iso_fortran_env, only: output_unit
 
@@ -353,6 +358,7 @@ subroutine init_rain_ice_old(kulout)
   lbudget_rg=.false.
   lbudget_rh=.false.
   lbudget_sv=.false.
+  tles%lles_call = .false.
 
   ! 1. set implicit default values for modd_param_ice
   cpristine_ice = 'PLAT'
@@ -366,6 +372,80 @@ subroutine init_rain_ice_old(kulout)
   call ini_rain_ice(kulout, c_micro)
 
 end subroutine init_rain_ice_old
+
+
+subroutine init_gmicro(D, krr, n_gp_blocks, odmicro, prt, pssio, ocnd2, prht)
+
+  use modd_dimphyex, only: dimphyex_t
+  use modd_rain_ice_descr, only: xrtmin
+  use modd_rain_ice_param, only: xfrmin
+
+  implicit none
+
+  type(dimphyex_t) :: D
+
+  integer, intent(in) :: krr, n_gp_blocks
+  logical, dimension(D%nit, D%nkt, n_gp_blocks), intent(inout) :: odmicro
+
+  real, dimension(D%nit, D%nkt, krr, n_gp_blocks), intent(in) :: prt
+  real, dimension(D%nit, D%nkt, n_gp_blocks), intent(in) :: pssio
+  real, dimension(D%nit, D%nkt, n_gp_blocks), optional, intent(in) :: prht
+
+  logical, intent(in) :: ocnd2
+
+  integer :: i, k, ikrr, iblock
+
+  if (ocnd2) then
+
+    do iblock = 1, n_gp_blocks
+
+      do k = 1, D%nkt
+        do i = 1, D%nit
+          odmicro(i, k, iblock) = odmicro(i, k, iblock) .or. pssio(i, k, iblock) > xfrmin(12)
+        enddo
+      enddo
+
+      do ikrr = 2, 6
+        do k = 1, D%nkt
+          do i = 1, D%nit
+            odmicro(i, k, iblock) = odmicro(i, k, iblock) .or. prt(i, k, ikrr, iblock) > xfrmin(13)
+          enddo
+        enddo
+      enddo
+
+      if (krr == 7) then
+        do k = 1, D%nkt
+          do i = 1, D%nit
+            odmicro(i, k, iblock) = odmicro(i, k, iblock) .or. prht(i, k, iblock) > xfrmin(13)
+          enddo
+        enddo
+      endif
+
+    enddo
+
+  else
+
+    do iblock = 1, n_gp_blocks
+      do ikrr = 2, 6
+        do k = 1, D%nkt
+          do i = 1, D%nit
+            odmicro(i, k, iblock) = odmicro(i, k, iblock) .or. prt(i, k, ikrr, iblock) > xrtmin(ikrr)
+          enddo
+        enddo
+      enddo
+    enddo
+
+    if (krr == 7) then
+      do k = 1, D%nkt
+        do i = 1, D%nit
+          odmicro(i, k, iblock) = odmicro(i, k, iblock) .or. prht(i, k, iblock) > xrtmin(7)
+        enddo
+      enddo
+    endif
+
+  endif
+
+end subroutine init_gmicro
 
 
 subroutine print_diff_1(array, ref)
@@ -387,7 +467,7 @@ subroutine print_diff_1(array, ref)
     absval = max(abs(array(i)), abs(ref(i)))
     if (absval .gt. 0.) then
       if (abs(array(i) - ref(i))/absval .gt. threshold) then
-        write(output_unit, '(2i4, 4e15.6)') i, array(i), ref(i), abs(array(i) - ref(i)), abs(array(i) - ref(i))/absval 
+        write(output_unit, '(2i4, 4e16.6)') i, array(i), ref(i), abs(array(i) - ref(i)), abs(array(i) - ref(i))/absval 
       endif
     endif
   enddo
@@ -415,7 +495,7 @@ subroutine print_diff_2(array, ref)
       absval = max(abs(array(i,j)), abs(ref(i,j)))
       if (absval .gt. 0.) then
         if (abs(array(i,j) - ref(i,j))/absval .gt. threshold) then
-          write(output_unit, '(2i4, 4e15.6)') i, j, array(i,j), ref(i,j), abs(array(i,j) - ref(i,j)), abs(array(i,j) - ref(i,j))/absval 
+          write(output_unit, '(2i4, 4e22.14)') i, j, array(i,j), ref(i,j), abs(array(i,j) - ref(i,j)), abs(array(i,j) - ref(i,j))/absval 
         endif
       endif
     enddo

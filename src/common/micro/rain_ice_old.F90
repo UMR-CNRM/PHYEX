@@ -1,16 +1,16 @@
 !     ######spl
-      SUBROUTINE RAIN_ICE_OLD (D,  OSEDIC, OCND2, LKOGAN, LMODICEDEP, &
-                            HSEDIM, HSUBG_AUCV_RC, OWARM,      &
-                            KKA,KKU,KKL,                                          &
-                            KSPLITR, PTSTEP, KRR,                            &
-                            PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
-                            PICLDFR, PSSIO, PSSIU, PIFR,                 &
-                            PTHT, PRVT, PRCT, PRRT, PRIT, PRST, &
-                            PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS, &
-                            PINPRC, PINPRR, PEVAP3D,                    &
-                            PINPRS, PINPRG, PSIGS, PSEA, PTOWN,                   &
-                            YDDDH, YDLDDH, YDMDDH, &
-                            PICENU, PKGN_ACON, PKGN_SBGR, &
+      SUBROUTINE RAIN_ICE_OLD (D,  OSEDIC, OCND2, LKOGAN, LMODICEDEP,              &
+                            HSEDIM, HSUBG_AUCV_RC, OWARM,                          &
+                            KKA,KKU,KKL,                                           &
+                            KSPLITR, PTSTEP, KRR, GMICRO,                          &
+                            PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR, &
+                            PICLDFR, PSSIO, PSSIU, PIFR,                           &
+                            PTHT, PRVT, PRCT, PRRT, PRIT, PRST,                    &
+                            PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,        &
+                            PINPRC, PINPRR, PEVAP3D,                               &
+                            PINPRS, PINPRG, PSIGS, PSEA, PTOWN,                    &
+                            YDDDH, YDLDDH, YDMDDH,                                 &
+                            PICENU, PKGN_ACON, PKGN_SBGR,                          &
                             PRHT, PRHS, PINPRH, PFPR)
 
       USE PARKIND1, ONLY : JPRB
@@ -174,7 +174,7 @@ USE MODD_RAIN_ICE_DESCR
 USE MODD_RAIN_ICE_PARAM
 USE MODD_PARAM_ICE
 USE MODD_BUDGET
-USE MODD_LES
+USE MODD_LES, ONLY: TLES
 USE MODE_BUDGET, ONLY: BUDGET_DDH
 USE MODI_GAMMA
 USE MODE_TIWMX
@@ -185,7 +185,7 @@ USE YOMLDDH, ONLY  : TLDDH
 USE YOMMDDH, ONLY  : TMDDH
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
 !
-  use iso_fortran_env, only: output_unit
+use iso_fortran_env, only: output_unit
 
 IMPLICIT NONE
 !
@@ -214,6 +214,8 @@ INTEGER,                  INTENT(IN)    :: KSPLITR ! Number of small time step
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step
                                                    ! (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
+!
+LOGICAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: GMICRO    ! Layer thickness (m)
 !
 REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PDZZ    ! Layer thickness (m)
 REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
@@ -286,7 +288,6 @@ INTEGER :: IGRIM, IGACC, IGDRY ! Case number of riming, accretion and dry growth
 INTEGER :: IGWET, IHAIL   ! wet growth locations and case number
 LOGICAL, DIMENSION(D%NIT,D%NKT) :: GSEDIMR,GSEDIMC, GSEDIMI, GSEDIMS, GSEDIMG, GSEDIMH ! Test where to compute the SED processes
 LOGICAL, DIMENSION(D%NIT,D%NKT) :: GNEGT  ! Test where to compute the HEN process
-LOGICAL, DIMENSION(D%NIT,D%NKT) :: GMICRO ! Test where to compute all processes
 LOGICAL, DIMENSION(:), ALLOCATABLE :: GRIM ! Test where to compute riming
 LOGICAL, DIMENSION(:), ALLOCATABLE :: GACC ! Test where to compute accretion
 LOGICAL, DIMENSION(:), ALLOCATABLE :: GDRY ! Test where to compute dry growth
@@ -453,7 +454,7 @@ REAL, DIMENSION(SIZE(XRTMIN))     :: ZRTMIN
 ! XRTMIN = Minimum value for the mixing ratio
 ! ZRTMIN = Minimum value for the source (tendency)
 !
-INTEGER , DIMENSION(SIZE(GMICRO)) :: I1,I2,I3 ! Used to replace the COUNT
+INTEGER , DIMENSION(SIZE(GMICRO)) :: I1, I3 ! Used to replace the COUNT
 INTEGER                           :: JL       ! and PACK intrinsics
 CHARACTER (LEN=100) :: YCOMMENT   ! Comment string in LFIFM file
 CHARACTER (LEN=16)  :: YRECFM     ! Name of the desired field in LFIFM file
@@ -514,7 +515,6 @@ IF (NINT(XFRMIN(18)) == 1) LTIW=.TRUE.
 
 ZRDEPSRED = XRDEPSRED
 ZRDEPGRED = XRDEPGRED
-
 !
 !*       1.3    COMPUTE THE DROPLET NUMBER CONCENTRATION 
 !   	        ----------------------------------------
@@ -558,52 +558,9 @@ IF (OSEDIC.OR.OCND2) THEN
 ENDIF
 
 CALL RAIN_ICE_NUCLEATION
-!
-!
-!  optimization by looking for locations where
-!  the microphysical fields are larger than a minimal value only !!!
-!
-GMICRO(:,:) = .FALSE.
-
-IF (OCND2) THEN
-  IF ( KRR == 7 ) THEN
-    GMICRO(D%NIB:D%NIE,D%NKTB:D%NKTE) =                           &
-                PSSIO(D%NIB:D%NIE,D%NKTB:D%NKTE)>XFRMIN(12)  .OR. &
-                PRCT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRRT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRIT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRST(D%NIB:D%NIE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRGT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRHT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XFRMIN(13)
-  ELSEIF ( KRR == 6 ) THEN
-    GMICRO(D%NIB:D%NIE,D%NKTB:D%NKTE) =                           &
-                PSSIO(D%NIB:D%NIE,D%NKTB:D%NKTE)>XFRMIN(12)  .OR. &
-                PRCT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRRT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRIT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRST(D%NIB:D%NIE,D%NKTB:D%NKTE)>XFRMIN(13)   .OR. &
-                PRGT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XFRMIN(13)
-  ENDIF
-ELSE
-  IF ( KRR == 7 ) THEN
-    GMICRO(D%NIB:D%NIE,D%NKTB:D%NKTE) =                        &
-                PRCT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XRTMIN(2) .OR. &
-                PRRT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XRTMIN(3) .OR. &
-                PRIT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XRTMIN(4) .OR. &
-                PRST(D%NIB:D%NIE,D%NKTB:D%NKTE)>XRTMIN(5) .OR. &
-                PRGT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XRTMIN(6) .OR. &
-                PRHT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XRTMIN(7)
-  ELSEIF ( KRR == 6 ) THEN
-    GMICRO(D%NIB:D%NIE,D%NKTB:D%NKTE) =                        &
-                PRCT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XRTMIN(2) .OR. &
-                PRRT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XRTMIN(3) .OR. &
-                PRIT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XRTMIN(4) .OR. &
-                PRST(D%NIB:D%NIE,D%NKTB:D%NKTE)>XRTMIN(5) .OR. &
-                PRGT(D%NIB:D%NIE,D%NKTB:D%NKTE)>XRTMIN(6)
-  ENDIF
-ENDIF
 
 IMICRO = COUNTJV( GMICRO(:,:),I1(:),I3(:))
+
 IF ( IMICRO >= 0 ) THEN
   ALLOCATE(ZRVT(IMICRO))
   ALLOCATE(ZRCT(IMICRO))
@@ -684,12 +641,14 @@ IF ( IMICRO >= 0 ) THEN
     ZRIT(JL) = PRIT(I1(JL),I3(JL))
     ZRST(JL) = PRST(I1(JL),I3(JL))
     ZRGT(JL) = PRGT(I1(JL),I3(JL))
+
     IF ( KRR == 7 ) ZRHT(JL) = PRHT(I1(JL),I3(JL))
     ZCIT(JL) = PCIT(I1(JL),I3(JL))
     ZCF(JL) = PCLDFR(I1(JL),I3(JL))
     IF ( HSUBG_AUCV_RC == 'PDF ' .AND. CSUBG_PR_PDF == 'SIGM' ) THEN
       ZSIGMA_RC(JL) = PSIGS(I1(JL),I3(JL)) * 2.
     END IF
+
     ZRVS(JL) = PRVS(I1(JL),I3(JL))
     ZRCS(JL) = PRCS(I1(JL),I3(JL))
     ZRRS(JL) = PRRS(I1(JL),I3(JL))
@@ -699,6 +658,7 @@ IF ( IMICRO >= 0 ) THEN
     IF ( KRR == 7 ) ZRHS(JL) = PRHS(I1(JL),I3(JL))
     ZTHS(JL) = PTHS(I1(JL),I3(JL))
 !
+
     ZRHODREF(JL) = PRHODREF(I1(JL),I3(JL))
     ZZT(JL) = ZT(I1(JL),I3(JL))
     ZTHT(JL) = PTHT(I1(JL),I3(JL))
@@ -711,6 +671,7 @@ IF ( IMICRO >= 0 ) THEN
     IF (LTIW) ZTIW(JL)=TIWMX_TAB(ZPRES(JL),ZZT(JL), ZRVS(JL)*PTSTEP,0._JPRB,ZRSP,ZRSW,0.1_JPRB)
     ZZKGN_ACON(JL)=PKGN_ACON(I1(JL))
     ZZKGN_SBGR(JL)=PKGN_SBGR(I1(JL))
+
     IF (OCND2) THEN
        ZESI(JL) = ESATI(ZZT(JL))
        ZESW(JL) = ESATW(ZZT(JL))
@@ -744,6 +705,7 @@ IF ( IMICRO >= 0 ) THEN
        ENDIF
 
     ENDIF
+
   ENDDO
 
   ALLOCATE(ZZW(IMICRO))
@@ -752,12 +714,15 @@ IF ( IMICRO >= 0 ) THEN
   ALLOCATE(ZZW4(IMICRO))
   ALLOCATE(ZLSFACT(IMICRO))
   ALLOCATE(ZLVFACT(IMICRO))
+
     ZZW(:)  = ZEXNREF(:)*( XCPD+XCPV*ZRVT(:)+XCL*(ZRCT(:)+ZRRT(:)) &
                                     +XCI*(ZRIT(:)+ZRST(:)+ZRGT(:)) )
     ZLSFACT(:) = (XLSTT+(XCPV-XCI)*(ZZT(:)-XTT))/ZZW(:) ! L_s/(Pi_ref*C_ph)
     ZLVFACT(:) = (XLVTT+(XCPV-XCL)*(ZZT(:)-XTT))/ZZW(:) ! L_v/(Pi_ref*C_ph)
+
   ALLOCATE(ZUSW(IMICRO))
   ALLOCATE(ZSSI(IMICRO))
+
     IF(OCND2)THEN
       ZSSI(:) = ZRVT(:)*( ZPRES(:)-ZESI(:) ) / ( XEPSILO * ZESI(:) ) - 1.0
     ELSE                                                  ! Supersaturation over ice
@@ -765,7 +730,7 @@ IF ( IMICRO >= 0 ) THEN
       ZSSI(:) = ZRVT(:)*( ZPRES(:)-ZZW(:) ) / ( XEPSILO * ZZW(:) ) - 1.0
                                                       ! Supersaturation over ice
     ENDIF
-!
+
   ALLOCATE(ZLBDAR(IMICRO))
   ALLOCATE(ZLBDAR_RF(IMICRO))
   ALLOCATE(ZLBDAS(IMICRO))
@@ -777,19 +742,21 @@ IF ( IMICRO >= 0 ) THEN
   ALLOCATE(ZCJ(IMICRO))
   ALLOCATE(ZKA(IMICRO))
   ALLOCATE(ZDV(IMICRO))
-!
+
   IF ( KRR == 7 ) THEN
     ALLOCATE(ZZW1(IMICRO,7))
   ELSE IF( KRR == 6 ) THEN
     ALLOCATE(ZZW1(IMICRO,6))
   ENDIF
 !
-  IF (LBU_ENABLE .OR. LLES_CALL) THEN
+  IF (LBU_ENABLE .OR. TLES%LLES_CALL) THEN
+
     ALLOCATE(ZRHODJ(IMICRO))
+
     ZRHODJ(:) = PACK( PRHODJ(:,:),MASK=GMICRO(:,:) )
+
   END IF
 !
-
   !Cloud water split between high and low content part is done here
   !according to autoconversion option
   ZRCRAUTC(:)   = XCRIAUTC/ZRHODREF(:) ! Autoconversion rc threshold
@@ -1166,7 +1133,7 @@ IF ( IMICRO >= 0 ) THEN
   DEALLOCATE(ZPRES)
   DEALLOCATE(ZRHODREF)
   DEALLOCATE(ZZT)
-  IF(LBU_ENABLE .OR. LLES_CALL) DEALLOCATE(ZRHODJ)
+  IF(LBU_ENABLE .OR. TLES%LLES_CALL) DEALLOCATE(ZRHODJ)
   DEALLOCATE(ZTHS)
   DEALLOCATE(ZTHT)
   DEALLOCATE(ZTHLT)
@@ -2331,13 +2298,17 @@ IF( INEGT >= 1 ) THEN
 !*       3.1.1   compute the cloud ice concentration
 !
   ZZW(:) = 0.0
+
   ZSSI(:) = MIN( ZSSI(:), ZUSW(:) ) ! limitation of SSi according to SSw=0
 
+
   IF(OCND2)THEN
+
      IF (LMODICEDEP) THEN
        ZZW(:) = 5.*EXP(0.304*(XTT-ZZT(:)))
        ZZW(:) = MIN(1.,MAX(ZSSI(:)*10.,0.01))*ZZW(:)
      ELSE
+
        ZZW(:) = ZREDIN(:)* MAX(0.1,((20000.- MIN(20000.,ZZZ(:)))/20000.)**4) &
           &   *ZAM3(:)*(0.0001 + 0.9999*ZSIFRC(:))
 
