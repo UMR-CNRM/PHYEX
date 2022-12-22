@@ -290,11 +290,6 @@ INTEGER :: IGRIM, IGACC, IGDRY ! Case number of riming, accretion and dry growth
 INTEGER :: IGWET, IHAIL   ! wet growth locations and case number
 LOGICAL, DIMENSION(D%NIT,D%NKT) :: GSEDIMR,GSEDIMC, GSEDIMI, GSEDIMS, GSEDIMG, GSEDIMH ! Test where to compute the SED processes
 LOGICAL, DIMENSION(D%NIT,D%NKT) :: GNEGT  ! Test where to compute the HEN process
-LOGICAL, DIMENSION(:), ALLOCATABLE :: GRIM ! Test where to compute riming
-LOGICAL, DIMENSION(:), ALLOCATABLE :: GACC ! Test where to compute accretion
-LOGICAL, DIMENSION(:), ALLOCATABLE :: GDRY ! Test where to compute dry growth
-LOGICAL, DIMENSION(:), ALLOCATABLE :: GWET  ! Test where to compute wet growth
-LOGICAL, DIMENSION(:), ALLOCATABLE :: GHAIL ! Test where to compute hail growth
 INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1,IVEC2       ! Vectors of indices for
                                 ! interpolations
 REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1,ZVEC2,ZVEC3 ! Work vectors for
@@ -321,24 +316,23 @@ REAL, DIMENSION(D%NIT,D%NKT) :: ZRAINFR,    &
                                 ZHLC_LRC3D    ! HLCLOUDS cloud water content in low water content
 REAL, DIMENSION(:), ALLOCATABLE :: ZRVT    ! Water vapor m.r. at t
 REAL, DIMENSION(:), ALLOCATABLE :: ZRCT    ! Cloud water m.r. at t
-REAL, DIMENSION(:), ALLOCATABLE :: ZRRT    ! Rain water m.r. at t
-REAL, DIMENSION(:), ALLOCATABLE :: ZRIT    ! Pristine ice m.r. at t
-REAL, DIMENSION(:), ALLOCATABLE :: ZRST    ! Snow/aggregate m.r. at t
-REAL, DIMENSION(:), ALLOCATABLE :: ZRGT    ! Graupel m.r. at t
-REAL, DIMENSION(:), ALLOCATABLE :: ZRHT    ! Hail m.r. at t
+REAL, DIMENSION(KSIZE) :: ZRRT    ! Rain water m.r. at t
+REAL, DIMENSION(KSIZE) :: ZRIT    ! Pristine ice m.r. at t
+REAL, DIMENSION(KSIZE) :: ZRST    ! Snow/aggregate m.r. at t
+REAL, DIMENSION(KSIZE) :: ZRGT    ! Graupel m.r. at t
+REAL, DIMENSION(KSIZE) :: ZRHT    ! Hail m.r. at t
 REAL, DIMENSION(:), ALLOCATABLE :: ZCIT    ! Pristine ice conc. at t
 !
-REAL, DIMENSION(:), ALLOCATABLE :: ZRVS    ! Water vapor m.r. source
+REAL, DIMENSION(KSIZE) :: ZRVS    ! Water vapor m.r. source
 REAL, DIMENSION(:), ALLOCATABLE :: ZRCS    ! Cloud water m.r. source
 REAL, DIMENSION(:), ALLOCATABLE :: ZRRS    ! Rain water m.r. source
 REAL, DIMENSION(:), ALLOCATABLE :: ZRIS    ! Pristine ice m.r. source
 REAL, DIMENSION(:), ALLOCATABLE :: ZRSS    ! Snow/aggregate m.r. source
 REAL, DIMENSION(:), ALLOCATABLE :: ZRGS    ! Graupel m.r. source
 REAL, DIMENSION(:), ALLOCATABLE :: ZRHS    ! Hail m.r. source
-REAL, DIMENSION(:), ALLOCATABLE :: ZTHS    ! Theta source
-REAL, DIMENSION(:), ALLOCATABLE :: ZTHT    ! Potential temperature
-REAL, DIMENSION(:), ALLOCATABLE :: ZTHLT   ! Liquid potential temperature
-REAL, DIMENSION(:), ALLOCATABLE :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
+REAL, DIMENSION(KSIZE) :: ZTHS    ! Theta source
+REAL, DIMENSION(KSIZE) :: ZTHT    ! Potential temperature
+REAL, DIMENSION(KSIZE) :: ZTHLT   ! Liquid potential temperature
 !
 REAL, DIMENSION(KSIZE) :: ZRHODREF, & ! RHO Dry REFerence
                           ZRHODJ,   & ! RHO times Jacobian
@@ -386,6 +380,7 @@ REAL, DIMENSION(KSIZE) :: ZRHODREF, & ! RHO Dry REFerence
                                       !    note that ZRC = ZHLC_HRC + ZHLC_LRC
                         ZHLC_RCMAX, & ! HLCLOUDS : maximum value for RC in distribution
                           ZRCRAUTC, & ! RC value to begin rain formation =XCRIAUTC/RHODREF
+!                          *******  end logical switch OCND2 *******
                      ZHLC_HRCLOCAL, & ! HLCLOUDS : LWC that is High LWC local in HCF
                      ZHLC_LRCLOCAL, & ! HLCLOUDS : LWC that is Low  LWC local in LCF
                                       !    note that ZRC/CF = ZHLC_HRCLOCAL+ ZHLC_LRCLOCAL
@@ -409,13 +404,12 @@ REAL, DIMENSION(:), ALLOCATABLE :: &
                   ZZW,      & ! Work array
                   ZUSW,     & ! Undersaturation over water
                   ZSSI,     & ! Supersaturation over ice
-
+!                          *******  used for logical switch OCND2 : *******
                   ZSIFRC,   & ! subgridscale fraction with supersaturation with 
                               ! respect to ice.  
                   ZESI,     & ! saturation pressure over ice
                   ZESW,     & ! saturation pressure over water 
                   ZAM3,     & ! Meyers IN concentration function
-                  ZREDIN,   & ! Reduction of IN concentration between 0 and -25 C
 !                          *******  end logical switch OCND2 *******
                   ZCC,      & ! terminal velocity
                   ZFSEDC1D, & ! For cloud sedimentation
@@ -423,7 +417,7 @@ REAL, DIMENSION(:), ALLOCATABLE :: &
                   ZCONC,    & ! Concentration des aerosols
                   ZRAY1D,   & ! Mean radius
                   ZWLBDA      ! Libre parcours moyen
-REAL, DIMENSION(:,:), ALLOCATABLE :: ZZW1 ! Work arrays
+REAL, DIMENSION(KSIZE, KRR) :: ZZW1 ! Work arrays
 REAL            :: ZTIMAUTIC,XDUMMY6,XDUMMY7
 REAL            :: ZINVTSTEP
 
@@ -444,7 +438,8 @@ REAL            :: ZRVSOLD,ZTSP,&
 !    *******  end logical switch OCND2 *******
 
 ! SPP arrays
-REAL, DIMENSION(:), ALLOCATABLE :: ZZICENU,ZZKGN_ACON,ZZKGN_SBGR
+REAL, DIMENSION(:), ALLOCATABLE :: ZZICENU
+REAL, DIMENSION(KSIZE) :: ZZKGN_ACON,ZZKGN_SBGR
 
 !  Tuning of sublimation (neg. sublimation)
 REAL            :: ZRDEPSRED, ZRDEPGRED            
@@ -565,26 +560,15 @@ IMICRO = COUNTJV( GMICRO(:,:),I1(:),I3(:))
 IF ( KSIZE >= 0 ) THEN
   ALLOCATE(ZRVT(KSIZE))
   ALLOCATE(ZRCT(KSIZE))
-  ALLOCATE(ZRRT(KSIZE))
-  ALLOCATE(ZRIT(KSIZE))
-  ALLOCATE(ZRST(KSIZE))
-  ALLOCATE(ZRGT(KSIZE))
-  IF ( KRR == 7 ) ALLOCATE(ZRHT(KSIZE))
   ALLOCATE(ZCIT(KSIZE))
-  ALLOCATE(ZRVS(KSIZE))
   ALLOCATE(ZRCS(KSIZE))
   ALLOCATE(ZRRS(KSIZE))
   ALLOCATE(ZRIS(KSIZE))
   ALLOCATE(ZRSS(KSIZE))
   ALLOCATE(ZRGS(KSIZE))
   IF ( KRR == 7 ) ALLOCATE(ZRHS(KSIZE))
-  ALLOCATE(ZTHS(KSIZE))
-  ALLOCATE(ZTHT(KSIZE))
-  ALLOCATE(ZTHLT(KSIZE))
   ALLOCATE(ZZT(KSIZE))
   ALLOCATE(ZPRES(KSIZE))
-  ALLOCATE(ZZKGN_ACON(KSIZE))
-  ALLOCATE(ZZKGN_SBGR(KSIZE))
   IF (OCND2) THEN
      ALLOCATE(ZESI(KSIZE))
      ALLOCATE(ZESW(KSIZE))
@@ -697,12 +681,6 @@ IF ( KSIZE >= 0 ) THEN
                                                       ! Supersaturation over ice
     ENDIF
 
-  IF ( KRR == 7 ) THEN
-    ALLOCATE(ZZW1(KSIZE,7))
-  ELSE IF( KRR == 6 ) THEN
-    ALLOCATE(ZZW1(KSIZE,6))
-  ENDIF
-!
   IF (LBU_ENABLE .OR. TLES%LLES_CALL) THEN
 
     ZRHODJ(:) = PACK( PRHODJ(:,:),MASK=GMICRO(:,:) )
@@ -1063,31 +1041,20 @@ IF ( KSIZE >= 0 ) THEN
   ZHLC_LRC3D(:,:) = UNPACK( ZHLC_LRC(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
 !
 !
-  DEALLOCATE(ZZW1)
   DEALLOCATE(ZSSI)
   DEALLOCATE(ZUSW)
   DEALLOCATE(ZZW)
   DEALLOCATE(ZPRES)
   DEALLOCATE(ZZT)
-  DEALLOCATE(ZTHS)
-  DEALLOCATE(ZTHT)
-  DEALLOCATE(ZTHLT)
   IF ( KRR == 7 ) DEALLOCATE(ZRHS)
   DEALLOCATE(ZRGS)
   DEALLOCATE(ZRSS)
   DEALLOCATE(ZRIS)
   DEALLOCATE(ZRRS)
   DEALLOCATE(ZRCS)
-  DEALLOCATE(ZRVS)
   DEALLOCATE(ZCIT)
-  DEALLOCATE(ZRGT)
-  IF ( KRR == 7 ) DEALLOCATE(ZRHT)
-  DEALLOCATE(ZRST)
-  DEALLOCATE(ZRIT)
-  DEALLOCATE(ZRRT)
   DEALLOCATE(ZRCT)
   DEALLOCATE(ZRVT)
-  DEALLOCATE(ZZKGN_ACON,ZZKGN_SBGR)
   IF (OCND2) THEN
      DEALLOCATE(ZESI)
      DEALLOCATE(ZESW)
@@ -2131,7 +2098,8 @@ INTEGER                           :: JL       ! and PACK intrinsics
 !
 !-------------------------------------------------------------------------------
 !
-REAL, DIMENSION(:), ALLOCATABLE :: ZZZ ! height of model layer (m)
+REAL, DIMENSION(:), ALLOCATABLE :: ZZZ    ! height of model layer (m)
+REAL, DIMENSION(:), ALLOCATABLE :: ZREDIN ! Reduction of IN concentration between 0 and -25 C
 !
 !  compute the temperature and the pressure
 !
@@ -2378,6 +2346,7 @@ IMPLICIT NONE
 !
 REAL, DIMENSION(KSIZE) :: ZBFT ! Mean time for a pristine ice crystal to reach 
                                ! size of an snow/graupel particle (ZDICRIT)
+REAL, DIMENSION(KSIZE) :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
 
   REAL(KIND=JPRB) :: ZHOOK_HANDLE
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_SLOW',0,ZHOOK_HANDLE)
@@ -2502,7 +2471,6 @@ REAL, DIMENSION(KSIZE) :: ZBFT ! Mean time for a pristine ice crystal to reach
 
 !*       3.4.5  compute the autoconversion of r_i for r_s production: RIAUTS
 
-  ALLOCATE(ZCRIAUTI(KSIZE))
   ZCRIAUTI(:)=MIN(XCRIAUTI,10**(XACRIAUTI*(ZZT(:)-XTT)+XBCRIAUTI))
   ZZW(:) = 0.0
   WHERE ( (ZRIT(:)>XRTMIN(4)) .AND. (ZRIS(:)>0.0) )
@@ -2545,7 +2513,6 @@ REAL, DIMENSION(KSIZE) :: ZBFT ! Mean time for a pristine ice crystal to reach
 
   ENDIF
 
-  DEALLOCATE(ZCRIAUTI)
   IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                    9,'AUTS_BU_RRI',YDDDH, YDLDDH, YDMDDH)
   IF (LBUDGET_RS) CALL BUDGET_DDH(UNPACK(ZRSS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
@@ -2814,17 +2781,18 @@ IMPLICIT NONE
 !*      0. DECLARATIONS
 !          ------------
 !
-IMPLICIT NONE
-!
+  IMPLICIT NONE
+
+  LOGICAL, DIMENSION(KSIZE) :: GRIM ! Test where to compute riming
+  LOGICAL, DIMENSION(KSIZE) :: GACC ! Test where to compute accretion
+  REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
 !*       5.1    cloud droplet riming of the aggregates
 !
-  REAL(KIND=JPRB) :: ZHOOK_HANDLE
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RS',0,ZHOOK_HANDLE)
   ZZW1(:,:) = 0.0
 !
-  ALLOCATE(GRIM(KSIZE))
   GRIM(:) = (ZRCT(:)>XRTMIN(2)) .AND. (ZRST(:)>XRTMIN(5)) .AND.            &
                                 (ZRCS(:)>0.0) .AND. (ZZT(:)<XTT)
   IGRIM = COUNT( GRIM(:) )
@@ -2908,13 +2876,11 @@ IMPLICIT NONE
                                   10,'RIM_BU_RRS',YDDDH, YDLDDH, YDMDDH)
   IF (LBUDGET_RG) CALL BUDGET_DDH(UNPACK(ZRGS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                   11,'RIM_BU_RRG',YDDDH, YDLDDH, YDMDDH)
-  DEALLOCATE(GRIM)
 
 !*       5.2    rain accretion onto the aggregates
 
   ZZW1(:,2:3) = 0.0
-  ALLOCATE(GACC(KSIZE))
-   GACC(:) = (ZRRT(:)>XRTMIN(3)) .AND. (ZRST(:)>XRTMIN(5)) .AND.            &
+  GACC(:) = (ZRRT(:)>XRTMIN(3)) .AND. (ZRST(:)>XRTMIN(5)) .AND.            &
                             (ZRRS(:)>0.0) .AND. (ZZT(:)<XTT)
   IGACC = COUNT( GACC(:) )
 !
@@ -3024,7 +2990,7 @@ IMPLICIT NONE
     DEALLOCATE(ZVEC2)
     DEALLOCATE(ZVEC1)
   END IF
-  DEALLOCATE(GACC)
+
   IF (LBUDGET_TH) CALL BUDGET_DDH (                                     &
                UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:), &
                                                              4,'ACC_BU_RTH',YDDDH, YDLDDH, YDMDDH)
@@ -3078,13 +3044,14 @@ IMPLICIT NONE
 !*      0. DECLARATIONS
 !          ------------
 !
-IMPLICIT NONE
+  IMPLICIT NONE
 !
+  LOGICAL, DIMENSION(KSIZE) :: GDRY ! Test where to compute dry growth
+  REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
 !*       6.1    rain contact freezing
 !
-  REAL(KIND=JPRB) :: ZHOOK_HANDLE
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RG',0,ZHOOK_HANDLE)
   ZZW1(:,3:4) = 0.0
   WHERE( (ZRIT(:)>XRTMIN(4) .AND. ZRIT(:)>XFRMIN(2)) .AND. (ZRRT(:)>XRTMIN(3)) .AND.  &
@@ -3124,7 +3091,6 @@ IMPLICIT NONE
 !
 !*       6.2.1  accretion of aggregates on the graupeln
 !
-  ALLOCATE(GDRY(KSIZE))
   GDRY(:) = (ZRST(:)>XRTMIN(5)) .AND. (ZRGT(:)>XRTMIN(6)) .AND. (ZRSS(:)>0.0)
   IGDRY = COUNT( GDRY(:) )
 !
@@ -3253,7 +3219,6 @@ IMPLICIT NONE
   END IF
 !
   ZRDRYG(:) = ZZW1(:,1) + ZZW1(:,2) + ZZW1(:,3) + ZZW1(:,4)
-  DEALLOCATE(GDRY)
 !
 !*       6.3    compute the Wet growth case
 !
@@ -3436,13 +3401,16 @@ IMPLICIT NONE
 !*      0. DECLARATIONS
 !          ------------
 !
-IMPLICIT NONE
-!
+  IMPLICIT NONE
+
+  LOGICAL, DIMENSION(KSIZE) :: GWET  ! Test where to compute wet growth
+  LOGICAL, DIMENSION(KSIZE) :: GHAIL ! Test where to compute hail growth
+
+  REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
-  REAL(KIND=JPRB) :: ZHOOK_HANDLE
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RH',0,ZHOOK_HANDLE)
-  ALLOCATE(GHAIL(KSIZE))
+
   GHAIL(:) = ZRHT(:)>XRTMIN(7)
   IHAIL = COUNT(GHAIL(:))
 !
@@ -3466,7 +3434,6 @@ IMPLICIT NONE
 !
 !*       7.2.1  accretion of aggregates on the hailstones
 !
-    ALLOCATE(GWET(KSIZE))
     GWET(:) = GHAIL(:) .AND. (ZRST(:)>XRTMIN(5) .AND. ZRSS(:)>0.0)
     IGWET = COUNT( GWET(:) )
 !
@@ -3588,7 +3555,6 @@ IMPLICIT NONE
       DEALLOCATE(ZVEC2)
       DEALLOCATE(ZVEC1)
     END IF
-    DEALLOCATE(GWET)
 !
 !*       7.3    compute the Wet growth of hail
 !
@@ -3672,7 +3638,6 @@ IMPLICIT NONE
       ZTHS(:) = ZTHS(:) - ZZW(:)*(ZLSFACT(:)-ZLVFACT(:)) ! f(L_f*(-RHMLTR))
     END WHERE
   END IF
-  DEALLOCATE(GHAIL)
 
   IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),&
                                    4,'HMLT_BU_RTH',YDDDH, YDLDDH, YDMDDH)
