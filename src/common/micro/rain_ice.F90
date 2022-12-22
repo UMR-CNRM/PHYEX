@@ -485,7 +485,7 @@ DO JK = IKTB,IKTE
 END DO
 DO JK = IKTB,IKTE
    DO JIJ = IIJB,IIJE
-         IF (PARAMI%LSNOW_T) THEN 
+         IF (PARAMI%LSNOW_T) THEN
             IF (PRST(JIJ,JK)>ICED%XRTMIN(5)) THEN
                IF(ZT(JIJ,JK)>CST%XTT-10.0) THEN
                   ZLBDAS(JIJ,JK) = MAX(MIN(ICED%XLBDAS_MAX, 10**(14.554-0.0423*ZT(JIJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
@@ -825,7 +825,7 @@ IF (KSIZE > 0) THEN
     IF (LLSIGMA_RC) THEN
       DO JL=1, IMICRO
         ZSIGMA_RC(JL)=ZSIGMA_RC(JL)*2.
-      ENDDO 
+      ENDDO
     ENDIF
     IF (LL_AUCV_ADJU) THEN
       DO JL=1, IMICRO
@@ -1141,9 +1141,9 @@ DO JK=IKTB,IKTE
   ENDDO
 ENDDO
 CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, D%NIJT*D%NKT, LLW3D(:,:), &
-                     PTHT(:, :), PPABST(:, :), PRHODREF(:, :), &                                       
-                     PEXN(:, :), ZW3D(:, :), ZT(:, :), &                                                           
-                     PRVT(:, :), &                                                                                 
+                     PTHT(:, :), PPABST(:, :), PRHODREF(:, :), &
+                     PEXN(:, :), ZW3D(:, :), ZT(:, :), &
+                     PRVT(:, :), &
                      PCIT(:, :), ZZ_RVHENI_MR(:, :))
 !
 !-------------------------------------------------------------------------------
@@ -1468,7 +1468,7 @@ IF(BUCONF%LBU_ENABLE) THEN
     DO JL=1, KSIZE
       ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RGWETH(JL) * ZINV_TSTEP
     END DO
-#endif 
+#endif
 #ifdef REPRO48
     IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'HGCV', (-ZW5(:, :)-ZW(:, :))*PRHODJ(:, :))
 #endif
@@ -1710,7 +1710,7 @@ ENDIF
 !
 !-------------------------------------------------------------------------------
 !
-!*       9.     COMPUTE THE FOG DEPOSITION TERM 
+!*       9.     COMPUTE THE FOG DEPOSITION TERM
 !               -------------------------------------
 !
 IF (PARAMI%LDEPOSC) THEN !cloud water deposition on vegetation

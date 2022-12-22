@@ -385,7 +385,7 @@ CONTAINS
             ZWSEDW1(JI)= ICEP%XFSEDS *  &
                           & PRHODREF(JI,JJ,JK)**(-ICED%XCEXVT) * &
                           & (1+(ICED%XFVELOS/PLBDAS(JI,JJ,JK))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEXSEDS/ICED%XALPHAS)* &
-			   & PLBDAS(JI,JJ,JK)**(ICED%XBS+ICEP%XEXSEDS) 
+         & PLBDAS(JI,JJ,JK)**(ICED%XBS+ICEP%XEXSEDS)
           ELSE
             ZWSEDW1(JI)=0.
           ENDIF
@@ -393,7 +393,7 @@ CONTAINS
             ZWSEDW2(JI)= ICEP%XFSEDS *  &
                           & PRHODREF(JI,JJ,JK)**(-ICED%XCEXVT) * &
                           & (1+(ICED%XFVELOS/PLBDAS(JI,JJ,JK))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEXSEDS/ICED%XALPHAS)* &
-			   & PLBDAS(JI,JJ,JK)**(ICED%XBS+ICEP%XEXSEDS) 
+         & PLBDAS(JI,JJ,JK)**(ICED%XBS+ICEP%XEXSEDS)
           ELSE
             ZWSEDW2(JI)=0.
           ENDIF
