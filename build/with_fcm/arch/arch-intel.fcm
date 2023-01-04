@@ -1,6 +1,6 @@
 # Compilation
 $FCOMPILER     =     ifort
-$BASE_FFLAGS   =     -c -fpic -i4 -r8 -auto -align all -fp-model strict
+$BASE_FFLAGS   =     -c -convert big_endian -fpic -i4 -r8 -auto -align all -fp-model strict
 $PROD_FFLAGS   =     -g -traceback -O3 -xHost -qopt-zmm-usage=high
 $DEV_FFLAGS    =     -g -O1 -traceback
 $DEBUG_FFLAGS  =     -g -traceback -check bounds
