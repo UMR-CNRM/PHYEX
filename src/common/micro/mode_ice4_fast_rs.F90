@@ -158,7 +158,11 @@ IF(.NOT. LDSOFT) THEN
     !        5.1.1  select the PLBDAS
     !
     DO JJ = 1, IGRIM
+#if defined(REPRO48) || defined(REPRO55)
+      ZVEC1(JJ) = PLBDAS(I1(JJ))
+#else
       ZVEC1(JJ) = (PLBDAS(I1(JJ))**ICED%XALPHAS + ICED%XFVELOS**ICED%XALPHAS)**(1./ICED%XALPHAS)
+#endif
     END DO
     !
     !        5.1.2  find the next lower indice for the PLBDAS in the geometrical
