@@ -119,8 +119,8 @@ DO JL=1, KSIZE
 #else
   PRVDEPS(JL) = ( PRST(JL)*(PSSI(JL)/PAI(JL)) ) *                               &
                  ( ICEP%X0DEPS*PLBDAS(JL)**(ICED%XBS+ICEP%XEX0DEPS) + ICEP%X1DEPS*PCJ(JL) * &
-                 (1+0.5*(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICED%XEX1DEPS/ICED%XALPHAS) &
-                  *(PLBDAS(JL))**(ICED%XBS+ICED%XEX1DEPS) )
+                 (1+0.5*(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEX1DEPS/ICED%XALPHAS) &
+                  *(PLBDAS(JL))**(ICED%XBS+ICEP%XEX1DEPS) )
 #endif
     ENDIF
   ELSE
