@@ -146,7 +146,8 @@ XTSTEP_TS=PTSTEP_TS ! Approximative time step for time-splitting (0 for no time-
 !
 !        2. Set implicit default values for MODD_RAIN_ICE_DESCR 
 !                     et MODD_RAIN_ICE_PARAM
-
+LSNOW_T=.FALSE.
+LRED=CMICRO=='ICE3' .OR. CMICRO=='ICE4'
 CALL INI_RAIN_ICE (KULOUT, PTSTEP, 20.,KSPLITR,CMICRO)
 CALL INI_TIWMX
 
