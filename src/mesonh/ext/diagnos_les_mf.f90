@@ -25,12 +25,12 @@ use modd_precision, only: MNHTIME
 !
 INTEGER,                INTENT(IN)  :: KIU, KJU, KKU ! 3D grid size
 REAL(kind=MNHTIME), DIMENSION(2), INTENT(OUT) :: PTIME_LES
-REAL, DIMENSION(:,:),   INTENT(IN)  :: PTHL_UP,PRT_UP,PRV_UP,&
+REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PTHL_UP,PRT_UP,PRV_UP,&
                                        PRC_UP,PRI_UP   ! updraft properties
-REAL, DIMENSION(:,:),   INTENT(IN)  :: PU_UP, PV_UP
-REAL, DIMENSION(:,:),   INTENT(IN)  :: PTHV_UP,PW_UP,&
+REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PU_UP, PV_UP
+REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PTHV_UP,PW_UP,&
                                        PFRAC_UP,PEMF,PDETR,PENTR
-REAL, DIMENSION(:,:),   INTENT(IN)  :: PWTHMF,PWTHVMF,PWRTMF, &
+REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PWTHMF,PWTHVMF,PWRTMF, &
                                        PWUMF,PWVMF
 INTEGER, DIMENSION(:),  INTENT(IN)  :: KKLCL,KKETL,KKCTL
                                            
@@ -100,12 +100,12 @@ IMPLICIT NONE
 !
 INTEGER,                INTENT(IN)  :: KIU, KJU, KKU ! 3D grid size
 REAL(kind=MNHTIME), DIMENSION(2), INTENT(OUT) :: PTIME_LES
-REAL, DIMENSION(:,:),   INTENT(IN)  :: PTHL_UP,PRT_UP,PRV_UP,&
+REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PTHL_UP,PRT_UP,PRV_UP,&
                                        PRC_UP,PRI_UP   ! updraft properties
-REAL, DIMENSION(:,:),   INTENT(IN)  :: PU_UP, PV_UP
-REAL, DIMENSION(:,:),   INTENT(IN)  :: PTHV_UP,PW_UP,&
+REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PU_UP, PV_UP
+REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PTHV_UP,PW_UP,&
                                        PFRAC_UP,PEMF,PDETR,PENTR
-REAL, DIMENSION(:,:),   INTENT(IN)  :: PWTHMF,PWTHVMF,PWRTMF, &
+REAL, DIMENSION(:,:,:),   INTENT(IN)  :: PWTHMF,PWTHVMF,PWRTMF, &
                                        PWUMF,PWVMF
 INTEGER, DIMENSION(:),  INTENT(IN)  :: KKLCL,KKETL,KKCTL
                                            
@@ -113,7 +113,6 @@ INTEGER, DIMENSION(:),  INTENT(IN)  :: KKLCL,KKETL,KKCTL
 !
 !                     0.2  Declaration of local variables
 !
-REAL, DIMENSION(KIU,KJU,KKU)          :: ZWORK
 REAL, DIMENSION(:,:,:), ALLOCATABLE   :: ZTHLMFFLX_LES,ZRTMFFLX_LES, &
                                          ZTHVMFFLX_LES,ZUMFFLX_LES, &
                                          ZVMFFLX_LES
@@ -150,84 +149,68 @@ CALL SECOND_MNH2(ZTIME1)
     ALLOCATE( ZVMFFLX_LES  (KIU,KJU,NLES_K) )
 
     
-    ZWORK(:,:,:)=RESHAPE(PWTHMF(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT(MZF(ZWORK)  ,ZTHLMFFLX_LES  )
+    CALL LES_VER_INT(MZF(PWTHMF)  ,ZTHLMFFLX_LES  )
     CALL LES_MEAN_ll(ZTHLMFFLX_LES,LLES_CURRENT_CART_MASK, &
                     X_LES_SUBGRID_WTHLMF(:,NLES_CURRENT_TCOUNT,1))
     
-    ZWORK(:,:,:)=RESHAPE(PWRTMF(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT( MZF(ZWORK)  ,ZRTMFFLX_LES  )
+    CALL LES_VER_INT( MZF(PWRTMF)  ,ZRTMFFLX_LES  )
     CALL LES_MEAN_ll (ZRTMFFLX_LES , LLES_CURRENT_CART_MASK,          &
                     X_LES_SUBGRID_WRTMF(:,NLES_CURRENT_TCOUNT,1)     )
                     
-    ZWORK(:,:,:)=RESHAPE(PWUMF(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT( MZF(ZWORK)  ,ZUMFFLX_LES  )
+    CALL LES_VER_INT( MZF(PWUMF)  ,ZUMFFLX_LES  )
     CALL LES_MEAN_ll (ZUMFFLX_LES , LLES_CURRENT_CART_MASK,              &
                     X_LES_SUBGRID_WUMF(:,NLES_CURRENT_TCOUNT,1)     )
                     
-    ZWORK(:,:,:)=RESHAPE(PWVMF(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT( MZF(ZWORK)  ,ZVMFFLX_LES  )
+    CALL LES_VER_INT( MZF(PWVMF)  ,ZVMFFLX_LES  )
     CALL LES_MEAN_ll (ZVMFFLX_LES , LLES_CURRENT_CART_MASK,                   &
                     X_LES_SUBGRID_WVMF(:,NLES_CURRENT_TCOUNT,1)     )
                     
-    ZWORK(:,:,:)=RESHAPE(PWTHVMF(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT( MZF(ZWORK)  ,ZTHVMFFLX_LES  )
+    CALL LES_VER_INT( MZF(PWTHVMF)  ,ZTHVMFFLX_LES  )
     CALL LES_MEAN_ll (ZTHVMFFLX_LES , LLES_CURRENT_CART_MASK,    &
                     X_LES_SUBGRID_WTHVMF(:,NLES_CURRENT_TCOUNT,1)     )
                     
 
-    ZWORK(:,:,:)=RESHAPE(PTHL_UP(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT( MZF(ZWORK)  ,ZTHLUP_MF_LES  )
+    CALL LES_VER_INT( MZF(PTHL_UP)  ,ZTHLUP_MF_LES  )
     CALL LES_MEAN_ll (ZTHLUP_MF_LES , LLES_CURRENT_CART_MASK,    &
                    X_LES_SUBGRID_THLUP_MF(:,NLES_CURRENT_TCOUNT,1)     )
                    
-    ZWORK(:,:,:)=RESHAPE(PRT_UP(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT( MZF(ZWORK)  ,ZRTUP_MF_LES  )
+    CALL LES_VER_INT( MZF(PRT_UP)  ,ZRTUP_MF_LES  )
     CALL LES_MEAN_ll (ZRTUP_MF_LES , LLES_CURRENT_CART_MASK,       &
                     X_LES_SUBGRID_RTUP_MF(:,NLES_CURRENT_TCOUNT,1)     )
                     
-    ZWORK(:,:,:)=RESHAPE(PRV_UP(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT( MZF(ZWORK)  ,ZRVUP_MF_LES  )
+    CALL LES_VER_INT( MZF(PRV_UP)  ,ZRVUP_MF_LES  )
     CALL LES_MEAN_ll (ZRVUP_MF_LES , LLES_CURRENT_CART_MASK,       &
                     X_LES_SUBGRID_RVUP_MF(:,NLES_CURRENT_TCOUNT,1)     )
                     
-    ZWORK(:,:,:)=RESHAPE(PRC_UP(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT( MZF(ZWORK)  ,ZRCUP_MF_LES  )
+    CALL LES_VER_INT( MZF(PRC_UP)  ,ZRCUP_MF_LES  )
     CALL LES_MEAN_ll (ZRCUP_MF_LES , LLES_CURRENT_CART_MASK,        &
                     X_LES_SUBGRID_RCUP_MF(:,NLES_CURRENT_TCOUNT,1)     )
                     
-    ZWORK(:,:,:)=RESHAPE(PRI_UP(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT( MZF(ZWORK)  ,ZRIUP_MF_LES  )
+    CALL LES_VER_INT( MZF(PRI_UP)  ,ZRIUP_MF_LES  )
     CALL LES_MEAN_ll (ZRIUP_MF_LES , LLES_CURRENT_CART_MASK,        &
                     X_LES_SUBGRID_RIUP_MF(:,NLES_CURRENT_TCOUNT,1)     )            
                     
-    ZWORK(:,:,:)=RESHAPE(PEMF(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT( MZF(ZWORK)  ,ZEMF_MF_LES  )
+    CALL LES_VER_INT( MZF(PEMF)  ,ZEMF_MF_LES  )
     CALL LES_MEAN_ll (ZEMF_MF_LES , LLES_CURRENT_CART_MASK,       &
                    X_LES_SUBGRID_MASSFLUX(:,NLES_CURRENT_TCOUNT,1)     )
                    
-    ZWORK(:,:,:)=RESHAPE(PDETR(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT( MZF(ZWORK)  ,ZDETR_MF_LES  )
+    CALL LES_VER_INT( MZF(PDETR)  ,ZDETR_MF_LES  )
     CALL LES_MEAN_ll (ZDETR_MF_LES , LLES_CURRENT_CART_MASK,       &
                    X_LES_SUBGRID_DETR(:,NLES_CURRENT_TCOUNT,1)         )
                    
-    ZWORK(:,:,:)=RESHAPE(PENTR(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT( MZF(ZWORK)  ,ZENTR_MF_LES  )
+    CALL LES_VER_INT( MZF(PENTR)  ,ZENTR_MF_LES  )
     CALL LES_MEAN_ll (ZENTR_MF_LES , LLES_CURRENT_CART_MASK,       &
                    X_LES_SUBGRID_ENTR(:,NLES_CURRENT_TCOUNT,1)     )
                    
-    ZWORK(:,:,:)=RESHAPE(PW_UP(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT( MZF(ZWORK)  ,ZWUP_MF_LES  )
+    CALL LES_VER_INT( MZF(PW_UP)  ,ZWUP_MF_LES  )
     CALL LES_MEAN_ll (ZWUP_MF_LES , LLES_CURRENT_CART_MASK,       &
                    X_LES_SUBGRID_WUP_MF(:,NLES_CURRENT_TCOUNT,1)     )
                    
-    ZWORK(:,:,:)=RESHAPE(PFRAC_UP(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT( MZF(ZWORK)  ,ZFRACUP_MF_LES  )
+    CALL LES_VER_INT( MZF(PFRAC_UP)  ,ZFRACUP_MF_LES  )
     CALL LES_MEAN_ll (ZFRACUP_MF_LES , LLES_CURRENT_CART_MASK,       &
                    X_LES_SUBGRID_FRACUP(:,NLES_CURRENT_TCOUNT,1)     )
                    
-    ZWORK(:,:,:)=RESHAPE(PTHV_UP(:,:),(/ KIU,KJU,KKU /) )
-    CALL LES_VER_INT( MZF(ZWORK)  ,ZTHVUP_MF_LES  )
+    CALL LES_VER_INT( MZF(PTHV_UP)  ,ZTHVUP_MF_LES  )
     CALL LES_MEAN_ll (ZTHVUP_MF_LES , LLES_CURRENT_CART_MASK,       &
                    X_LES_SUBGRID_THVUP_MF(:,NLES_CURRENT_TCOUNT,1)     )
                    

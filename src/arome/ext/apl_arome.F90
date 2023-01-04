@@ -2777,8 +2777,8 @@ IF (LMFSHAL) THEN
     & PSVM=ZSVM_, PDUDT_MF=ZMFUS_, PDVDT_MF=ZMFVS_, PDTHLDT_MF=ZTHLS_, PDRTDT_MF=ZRTS_, PDSVDT_MF=ZSVXXX_,                          &
     & PSIGMF=ZSIGMF_, PRC_MF=ZRC_MF_, PRI_MF=ZRI_MF_, PCF_MF=ZCF_MF_, PFLXZTHVMF=ZARG_FLXZTHVMF_, PTHL_UP=ZTHETAL_UP_,              &
     & PRT_UP= ZRT_UP_, PRV_UP=ZZRV_UP_, PRC_UP=ZRC_UP_, PRI_UP=ZRI_UP_, PU_UP=ZZU_UP_, PV_UP=ZZV_UP_,                               &
-    & PTHV_UP=ZTHETAV_UP_, PW_UP=ZZW_UP_, PFRAC_UP=ZZFRAC_UP_, PEMF=ZMF_UP__(:, 1:YDCPG_OPTS%KFLEVG)                                &
-    & )
+    & PTHV_UP=ZTHETAV_UP_, PW_UP=ZZW_UP_, PFRAC_UP=ZZFRAC_UP_, PEMF=ZMF_UP__(:, 1:YDCPG_OPTS%KFLEVG),                               &
+    & YDDDH=YDDDH, YDLDDH=YDMODEL%YRML_DIAG%YRLDDH, YDMDDH=YDMODEL%YRML_DIAG%YRMDDH)
 
     !wc No variance due to dry updraft yet.
     ! Putting ZSIGMF to 0 for dry updraft might be obsolete 

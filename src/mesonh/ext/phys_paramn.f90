@@ -1639,7 +1639,7 @@ IF (CSCONV == 'EDKF') THEN
                    XIMPL_MF, XTSTEP,                                      &
                    XDZZ, XZZ,XDXHAT(1),XDYHAT(1),                         &
                    XRHODJ, XRHODREF, XPABST, ZEXN, ZSFTH, ZSFRV,          &
-                   XTHT,XRT,XUT,XVT,XWT,XTKET,XSVT,                       &
+                   XTHT,XRT,XUT,XVT,XTKET,XSVT,                           &
                    XRTHS,XRRS,XRUS,XRVS,XRSVS,                            &
                    ZSIGMF,XRC_MF, XRI_MF, XCF_MF, XWTHVMF)
 !
