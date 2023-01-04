@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-set -x
+#set -x
 
 ################################
 #Command line arguments and help
@@ -19,6 +19,7 @@ function usage {
   echo "IALDIRECTORY                            local directory containing the IAL repository"
   echo "IALVERSION                              version to checkout in the IAL repository"
   echo "PHYEXVERSION                            commit, tag (as tags/<tag>) of PHYEX to use"
+  echo "BRANCH                                  name of the newly created branch on IAL"
   echo
   echo "The scripts builds a pack using PHYEX (with the help of the check_commit_ial.sh script)"
   echo "and puts the content of the pack in the IAL repository."
