@@ -41,7 +41,7 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !        Original : 03-12-12
 !     ------------------------------------------------------------------
 
-USE MODD_LES,   ONLY : TLES
+USE MODD_LES,   ONLY : TLES, LES_ASSOCIATE
 USE MODD_CTURB, ONLY : XLINI
 USE MODD_TURB_n, ONLY: LHARAT, LSTATNW, CTURBLEN, TURB_GOTO_MODEL, LTURB_FLX, LTURB_DIAG, &
                        LSUBG_COND, LRMC01, CTURBDIM, XIMPL, CTOM, CCONDENS, CLAMBDA3,  &
@@ -79,6 +79,7 @@ LSTATNW=OSTATNW
 
 !         2. Set implicit default values for MODD_LES
 
+CALL LES_ASSOCIATE()
 TLES%LLES=.FALSE.
 TLES%LLES_CALL=.FALSE.
 
