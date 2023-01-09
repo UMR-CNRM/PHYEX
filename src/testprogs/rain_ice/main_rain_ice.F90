@@ -407,6 +407,7 @@ LSEDIM_AFTER=.FALSE. ! Sedimentation done after microphysics
 XSPLIT_MAXCFL=0.8
 LDEPOSC=.FALSE.  ! water deposition on vegetation
 XVDEPOSC=0.02    ! deposition speed (2 cm.s-1)
+LPACK_INTERP=.TRUE.
 !
 !        2. Set implicit default values for MODD_RAIN_ICE_DESCR 
 !                     et MODD_RAIN_ICE_PARAM

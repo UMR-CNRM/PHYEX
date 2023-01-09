@@ -880,6 +880,7 @@ IF (KMI == 1) THEN
   LDEPOSC = .FALSE.
   XVDEPOSC= 0.02 ! 2 cm/s
   LSNOW_T=.FALSE.
+  LPACK_INTERP=.TRUE.
 END IF
 !
 !-------------------------------------------------------------------------------

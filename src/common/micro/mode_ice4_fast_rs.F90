@@ -85,11 +85,11 @@ INTEGER, PARAMETER :: IRCRIMS=1, IRCRIMSS=2, IRSRIMCG=3, IRRACCS=4, IRRACCSS=5, 
                     & IFREEZ1=7, IFREEZ2=8
 LOGICAL, DIMENSION(KPROMA) :: GRIM, GACC
 INTEGER :: IGRIM, IGACC
-INTEGER, DIMENSION(KPROMA) :: I1
-REAL, DIMENSION(KPROMA) :: ZVEC1, ZVEC2, ZVEC3
-INTEGER, DIMENSION(KPROMA) :: IVEC1, IVEC2
-REAL, DIMENSION(KPROMA) :: ZZW, ZZW2, ZZW6, ZFREEZ_RATE
+INTEGER, DIMENSION(KPROMA) :: IBUF1, IBUF2, IBUF3
+REAL, DIMENSION(KPROMA) :: ZBUF1, ZBUF2, ZBUF3
+REAL, DIMENSION(KPROMA) :: ZZW, ZZW1, ZZW2, ZZW3, ZFREEZ_RATE
 INTEGER :: JJ, JL
+REAL :: ZZW0D
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
@@ -137,11 +137,13 @@ ENDDO
 !
 !*       5.1    cloud droplet riming of the aggregates
 !
-IGRIM = 0
 DO JL=1, KSIZE
   IF (PRCT(JL)>ICED%XRTMIN(2) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
-    IGRIM = IGRIM + 1
-    I1(IGRIM) = JL
+#if defined(REPRO48) || defined(REPRO55)
+    ZZW(JL) = PLBDAS(JL)
+#else
+    ZZW(JL) = (PLBDAS(JL)**ICED%XALPHAS + ICED%XFVELOS**ICED%XALPHAS)**(1./ICED%XALPHAS)
+#endif
     GRIM(JL) = .TRUE.
   ELSE
     GRIM(JL) = .FALSE.
@@ -153,76 +155,28 @@ ENDDO
 !
 ! Collection of cloud droplets by snow: this rate is used for riming (T<0) and for conversion/melting (T>0)
 IF(.NOT. LDSOFT) THEN
+  CALL INTERP_MICRO_1D(KPROMA, KSIZE, ZZW, ICEP%NGAMINC, ICEP%XRIMINTP1, ICEP%XRIMINTP2, &
+                           PARAMI%LPACK_INTERP, GRIM(:), IBUF1, IBUF2, ZBUF1, ZBUF2, &
+                           IGRIM, &
+                           ICEP%XGAMINC_RIM1(:), ZZW1(:), ICEP%XGAMINC_RIM2(:), ZZW2(:), ICEP%XGAMINC_RIM4(:), ZZW3(:))
   IF(IGRIM>0) THEN
-    !
-    !        5.1.1  select the PLBDAS
-    !
-    DO JJ = 1, IGRIM
-#if defined(REPRO48) || defined(REPRO55)
-      ZVEC1(JJ) = PLBDAS(I1(JJ))
-#else
-      ZVEC1(JJ) = (PLBDAS(I1(JJ))**ICED%XALPHAS + ICED%XFVELOS**ICED%XALPHAS)**(1./ICED%XALPHAS)
-#endif
-    END DO
-    !
-    !        5.1.2  find the next lower indice for the PLBDAS in the geometrical
-    !               set of Lbda_s used to tabulate some moments of the incomplete
-    !               gamma function
-    !
-    !$mnh_expand_where(JJ=1:IGRIM)
-    ZVEC2(1:IGRIM) = MAX( 1.00001, MIN( REAL(ICEP%NGAMINC)-0.00001,           &
-                          ICEP%XRIMINTP1 * LOG( ZVEC1(1:IGRIM) ) + ICEP%XRIMINTP2 ) )
-    IVEC2(1:IGRIM) = INT( ZVEC2(1:IGRIM) )
-    ZVEC2(1:IGRIM) = ZVEC2(1:IGRIM) - REAL( IVEC2(1:IGRIM) )
-    !
-    !        5.1.3  perform the linear interpolation of the normalized
-    !               "2+XDS"-moment of the incomplete gamma function
-    !
-    ZVEC1(1:IGRIM) =   ICEP%XGAMINC_RIM1( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
-                     - ICEP%XGAMINC_RIM1( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
-    !$mnh_end_expand_where(JJ=1:IGRIM)
-    ZZW(:) = 0.
-    DO JJ = 1, IGRIM
-      ZZW(I1(JJ)) = ZVEC1(JJ)
-    END DO
     !
     !        5.1.4  riming of the small sized aggregates
     !
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE (GRIM(1:KSIZE))
-      PRS_TEND(1:KSIZE, IRCRIMSS) = ICEP%XCRIMSS * ZZW(1:KSIZE) * PRCT(1:KSIZE) & ! RCRIMSS
+      PRS_TEND(1:KSIZE, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(1:KSIZE) * PRCT(1:KSIZE) & ! RCRIMSS
 #if defined(REPRO48) || defined(REPRO55)
-                                      *   PLBDAS(1:KSIZE)**ICEP%XEXCRIMSS &
+                                      * PLBDAS(1:KSIZE)**ICEP%XEXCRIMSS &
                                       * PRHODREF(1:KSIZE)**(-ICED%XCEXVT)
 #else
-                                      *   PRST(1:KSIZE)*(1+(ICED%XFVELOS/PLBDAS(1:KSIZE))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEXCRIMSS/ICED%XALPHAS) &
+                                      * PRST(1:KSIZE)*(1+(ICED%XFVELOS/PLBDAS(1:KSIZE))**ICED%XALPHAS) &
+                                        **(-ICED%XNUS+ICEP%XEXCRIMSS/ICED%XALPHAS) &
                                       * PRHODREF(1:KSIZE)**(-ICED%XCEXVT+1.) &
-				      * (PLBDAS(1:KSIZE)) ** (ICEP%XEXCRIMSS+ICED%XBS)
+                                      * (PLBDAS(1:KSIZE)) ** (ICEP%XEXCRIMSS+ICED%XBS)
 #endif
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
-    !
-    !        5.1.5  perform the linear interpolation of the normalized
-    !               "XBS"-moment of the incomplete gamma function (XGAMINC_RIM2) and
-    !               "XBG"-moment of the incomplete gamma function (XGAMINC_RIM4)
-    !
-    !$mnh_expand_where(JJ=1:IGRIM)
-    ZVEC1(1:IGRIM) =  ICEP%XGAMINC_RIM2( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
-                    - ICEP%XGAMINC_RIM2( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
-    !$mnh_end_expand_where(JJ=1:IGRIM)
-    ZZW(:) = 0.
-    DO JJ = 1, IGRIM
-      ZZW(I1(JJ)) = ZVEC1(JJ)
-    END DO
-
-    !$mnh_expand_where(JJ=1:IGRIM)
-    ZVEC1(1:IGRIM) =  ICEP%XGAMINC_RIM4( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
-                    - ICEP%XGAMINC_RIM4( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
-    !$mnh_end_expand_where(JJ=1:IGRIM)
-    ZZW2(:) = 0.
-    DO JJ = 1, IGRIM
-      ZZW2(I1(JJ)) = ZVEC1(JJ)
-    END DO
     !
     !        5.1.6  riming-conversion of the large sized aggregates into graupeln
     !
@@ -234,7 +188,8 @@ IF(.NOT. LDSOFT) THEN
                                    * PLBDAS(1:KSIZE)**ICEP%XEXCRIMSG  &
                                    * PRHODREF(1:KSIZE)**(-ICED%XCEXVT)
 #else
-                                   * PRST(1:KSIZE)*(1+(ICED%XFVELOS/PLBDAS(1:KSIZE))**(ICED%XALPHAS))**(-ICED%XNUS+ICEP%XEXCRIMSG/ICED%XALPHAS) &
+                                   * PRST(1:KSIZE)*(1+(ICED%XFVELOS/PLBDAS(1:KSIZE))**(ICED%XALPHAS)) &
+                                     **(-ICED%XNUS+ICEP%XEXCRIMSG/ICED%XALPHAS) &
                                    * PRHODREF(1:KSIZE)**(-ICED%XCEXVT+1.) &
                                    * PLBDAS(1:KSIZE)**(ICED%XBS+ICEP%XEXCRIMSG)
 #endif
@@ -245,18 +200,20 @@ IF(.NOT. LDSOFT) THEN
       !Murakami 1990
       !$mnh_expand_where(JL=1:KSIZE)
       WHERE(GRIM(1:KSIZE))
-        ZZW6(1:KSIZE) = PRS_TEND(1:KSIZE, IRCRIMS) - PRS_TEND(1:KSIZE, IRCRIMSS) ! RCRIMSG
+        ZZW(1:KSIZE) = PRS_TEND(1:KSIZE, IRCRIMS) - PRS_TEND(1:KSIZE, IRCRIMSS) ! RCRIMSG
 #if defined(REPRO48) || defined(REPRO55)
-        PRS_TEND(1:KSIZE, IRSRIMCG)=ICEP%XSRIMCG * PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG*(1.0-ZZW(1:KSIZE))
+        PRS_TEND(1:KSIZE, IRSRIMCG)=ICEP%XSRIMCG * PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG*(1.0-ZZW2(1:KSIZE))
 #else
-        PRS_TEND(1:KSIZE, IRSRIMCG)=ICEP%XSRIMCG * PRST(1:KSIZE)*PRHODREF(1:KSIZE)*PLBDAS(1:KSIZE)**(ICEP%XEXSRIMCG+ICED%XBS)*(1.0-ZZW(1:KSIZE))
+        PRS_TEND(1:KSIZE, IRSRIMCG)=ICEP%XSRIMCG * PRST(1:KSIZE)*PRHODREF(1:KSIZE) &
+                                                 * PLBDAS(1:KSIZE)**(ICEP%XEXSRIMCG+ICED%XBS)*(1.0-ZZW2(1:KSIZE))
 #endif
-        PRS_TEND(1:KSIZE, IRSRIMCG)=ZZW6(1:KSIZE)*PRS_TEND(1:KSIZE, IRSRIMCG)/ &
+        PRS_TEND(1:KSIZE, IRSRIMCG)=ZZW(1:KSIZE)*PRS_TEND(1:KSIZE, IRSRIMCG)/ &
                        MAX(1.E-20, &
 #if defined(REPRO48) || defined(REPRO55)
-                           ICEP%XSRIMCG3*ICEP%XSRIMCG2*PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG2*(1.-ZZW2(1:KSIZE)) - &
+                           ICEP%XSRIMCG3*ICEP%XSRIMCG2*PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG2*(1.-ZZW3(1:KSIZE)) - &
 #else
-                           ICEP%XSRIMCG3*ICEP%XSRIMCG2*PRST(1:KSIZE)*PRHODREF(1:KSIZE)*PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG2*(1.-ZZW2(1:KSIZE)) - &
+                           ICEP%XSRIMCG3*ICEP%XSRIMCG2*PRST(1:KSIZE)*PRHODREF(1:KSIZE) &
+                                                      *PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG2*(1.-ZZW3(1:KSIZE)) - &
 #endif
                            ICEP%XSRIMCG3*PRS_TEND(1:KSIZE, IRSRIMCG))
       END WHERE
@@ -272,10 +229,10 @@ DO JL=1, KSIZE
   IF(GRIM(JL) .AND. PT(JL)<CST%XTT) THEN
     PRCRIMSS(JL)=MIN(ZFREEZ_RATE(JL), PRS_TEND(JL, IRCRIMSS))
     ZFREEZ_RATE(JL)=MAX(0., ZFREEZ_RATE(JL)-PRCRIMSS(JL))
-    ZZW(JL) = MIN(1., ZFREEZ_RATE(JL) / MAX(1.E-20, PRS_TEND(JL, IRCRIMS) - PRCRIMSS(JL))) ! proportion we are able to freeze
-    PRCRIMSG(JL) = ZZW(JL) * MAX(0., PRS_TEND(JL, IRCRIMS) - PRCRIMSS(JL)) ! RCRIMSG
+    ZZW0D = MIN(1., ZFREEZ_RATE(JL) / MAX(1.E-20, PRS_TEND(JL, IRCRIMS) - PRCRIMSS(JL))) ! proportion we are able to freeze
+    PRCRIMSG(JL) = ZZW0D * MAX(0., PRS_TEND(JL, IRCRIMS) - PRCRIMSS(JL)) ! RCRIMSG
     ZFREEZ_RATE(JL)=MAX(0., ZFREEZ_RATE(JL)-PRCRIMSG(JL))
-    PRSRIMCG(JL) = ZZW(JL) * PRS_TEND(JL, IRSRIMCG)
+    PRSRIMCG(JL) = ZZW0D * PRS_TEND(JL, IRSRIMCG)
 
     PRSRIMCG(JL) = PRSRIMCG(JL) * MAX(0., -SIGN(1., -PRCRIMSG(JL)))
     PRCRIMSG(JL)=MAX(0., PRCRIMSG(JL))
@@ -288,11 +245,8 @@ ENDDO
 !
 !*       5.2    rain accretion onto the aggregates
 !
-IGACC = 0
 DO JL = 1, KSIZE
   IF (PRRT(JL)>ICED%XRTMIN(3) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
-    IGACC = IGACC + 1
-    I1(IGACC) = JL
     GACC(JL) = .TRUE.
   ELSE
     GACC(JL) = .FALSE.
@@ -305,53 +259,17 @@ IF(.NOT. LDSOFT) THEN
   PRS_TEND(:, IRRACCS)=0.
   PRS_TEND(:, IRRACCSS)=0.
   PRS_TEND(:, IRSACCRG)=0.
+  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAS, PLBDAR, ICEP%NACCLBDAS, ICEP%NACCLBDAR, &
+                      &ICEP%XACCINTP1S, ICEP%XACCINTP2S, ICEP%XACCINTP1R, ICEP%XACCINTP2R,&
+                      &PARAMI%LPACK_INTERP, GACC(:), IBUF1(:), IBUF2(:), IBUF3(:), ZBUF1(:), ZBUF2(:), ZBUF3(:), &
+                      &IGACC, &
+                      &ICEP%XKER_RACCSS(:,:), ZZW1(:), ICEP%XKER_RACCS(:,:), ZZW2(:), ICEP%XKER_SACCRG(:,:), ZZW3(:))
   IF(IGACC>0)THEN
-    !
-    !
-    !        5.2.1  select the (PLBDAS,PLBDAR) couplet
-    !
-    DO JJ = 1, IGACC
-      ZVEC1(JJ) = PLBDAS(I1(JJ))
-      ZVEC2(JJ) = PLBDAR(I1(JJ))
-    ENDDO
-    !
-    !        5.2.2  find the next lower indice for the PLBDAS and for the PLBDAR
-    !               in the geometrical set of (Lbda_s,Lbda_r) couplet use to
-    !               tabulate the RACCSS-kernel
-    !
-    !$mnh_expand_where(JJ=1:IGACC)
-    ZVEC1(1:IGACC) = MAX( 1.00001, MIN( REAL(ICEP%NACCLBDAS)-0.00001,           &
-                          ICEP%XACCINTP1S * LOG( ZVEC1(1:IGACC) ) + ICEP%XACCINTP2S ) )
-    IVEC1(1:IGACC) = INT( ZVEC1(1:IGACC) )
-    ZVEC1(1:IGACC) = ZVEC1(1:IGACC) - REAL( IVEC1(1:IGACC) )
-    !
-    ZVEC2(1:IGACC) = MAX( 1.00001, MIN( REAL(ICEP%NACCLBDAR)-0.00001,           &
-                          ICEP%XACCINTP1R * LOG( ZVEC2(1:IGACC) ) + ICEP%XACCINTP2R ) )
-    IVEC2(1:IGACC) = INT( ZVEC2(1:IGACC) )
-    ZVEC2(1:IGACC) = ZVEC2(1:IGACC) - REAL( IVEC2(1:IGACC) )
-    !$mnh_end_expand_where(JJ=1:IGACC)
-    !
-    !        5.2.3  perform the bilinear interpolation of the normalized
-    !               RACCSS-kernel
-    !
-    DO JJ = 1, IGACC
-      ZVEC3(JJ) =  (  ICEP%XKER_RACCSS(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - ICEP%XKER_RACCSS(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                          * ZVEC1(JJ) &
-                 - (  ICEP%XKER_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - ICEP%XKER_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                          * (ZVEC1(JJ) - 1.0)
-    END DO
-    ZZW(:) = 0.
-    DO JJ = 1, IGACC
-      ZZW(I1(JJ)) = ZVEC3(JJ)
-    END DO
-    !
     !        5.2.4  raindrop accretion on the small sized aggregates
     !
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GACC(1:KSIZE))
-      ZZW6(1:KSIZE) =                                                        & !! coef of RRACCS
+      ZZW(1:KSIZE) =                                                        & !! coef of RRACCS
 #if defined(REPRO48) || defined(REPRO55)
             ICEP%XFRACCSS*( PLBDAS(1:KSIZE)**ICED%XCXS )*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) ) &
 #else
@@ -360,52 +278,22 @@ IF(.NOT. LDSOFT) THEN
        *( ICEP%XLBRACCS1/((PLBDAS(1:KSIZE)**2)               ) +                  &
           ICEP%XLBRACCS2/( PLBDAS(1:KSIZE)    * PLBDAR(1:KSIZE)    ) +                  &
           ICEP%XLBRACCS3/(               (PLBDAR(1:KSIZE)**2)) )/PLBDAR(1:KSIZE)**4
-      PRS_TEND(1:KSIZE, IRRACCSS) =ZZW(1:KSIZE)*ZZW6(1:KSIZE)
+      PRS_TEND(1:KSIZE, IRRACCSS) =ZZW1(1:KSIZE)*ZZW(1:KSIZE)
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
     !
-    !        5.2.4b perform the bilinear interpolation of the normalized
-    !               RACCS-kernel
-    !
-    DO JJ = 1, IGACC
-      ZVEC3(JJ) =  (   ICEP%XKER_RACCS(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    -  ICEP%XKER_RACCS(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                                   * ZVEC1(JJ) &
-                 - (   ICEP%XKER_RACCS(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    -  ICEP%XKER_RACCS(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                           * (ZVEC1(JJ) - 1.0)
-    END DO
-    ZZW(:) = 0.
-    DO JJ = 1, IGACC
-      ZZW(I1(JJ)) = ZVEC3(JJ)
-    END DO
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GACC(1:KSIZE))
-      PRS_TEND(1:KSIZE, IRRACCS) = ZZW(1:KSIZE)*ZZW6(1:KSIZE)
+      PRS_TEND(1:KSIZE, IRRACCS) = ZZW2(1:KSIZE)*ZZW(1:KSIZE)
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
-    !        5.2.5  perform the bilinear interpolation of the normalized
-    !               SACCRG-kernel
-    !
-    DO JJ = 1, IGACC
-        ZVEC3(JJ) =  (  ICEP%XKER_SACCRG(IVEC2(JJ)+1,IVEC1(JJ)+1)* ZVEC1(JJ)          &
-                      - ICEP%XKER_SACCRG(IVEC2(JJ)+1,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
-                                                            * ZVEC2(JJ) &
-                   - (  ICEP%XKER_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)+1)* ZVEC1(JJ)          &
-                      - ICEP%XKER_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
-                                                            * (ZVEC2(JJ) - 1.0)
-    END DO
-    ZZW(:) = 0.
-    DO JJ = 1, IGACC
-      ZZW(I1(JJ)) = ZVEC3(JJ)
-    END DO
     !
     !        5.2.6  raindrop accretion-conversion of the large sized aggregates
     !               into graupeln
     !
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GACC(1:KSIZE))
-      PRS_TEND(1:KSIZE, IRSACCRG) = ICEP%XFSACCRG*ZZW(1:KSIZE)*                    & ! RSACCRG
+      PRS_TEND(1:KSIZE, IRSACCRG) = ICEP%XFSACCRG*ZZW3(1:KSIZE)*                    & ! RSACCRG
 #if defined(REPRO48) || defined(REPRO55)
           ( PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS) )*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) ) &
 #else
@@ -483,6 +371,10 @@ DO JL=1, KSIZE
 ENDDO
 
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RS', 1, ZHOOK_HANDLE)
+!
+CONTAINS
+!
+INCLUDE "interp_micro.func.h"
 !
 END SUBROUTINE ICE4_FAST_RS
 END MODULE MODE_ICE4_FAST_RS

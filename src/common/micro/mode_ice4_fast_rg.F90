@@ -97,15 +97,14 @@ REAL, DIMENSION(KPROMA, 8),   INTENT(INOUT) :: PRG_TEND ! Individual tendencies
 INTEGER, PARAMETER :: IRCDRYG=1, IRIDRYG=2, IRIWETG=3, IRSDRYG=4, IRSWETG=5, IRRDRYG=6, &
                     & IFREEZ1=7, IFREEZ2=8
 LOGICAL, DIMENSION(KPROMA) :: GDRY, LLDRYG
-INTEGER, DIMENSION(KPROMA) :: I1
 INTEGER :: IGDRY
-REAL, DIMENSION(KPROMA) :: ZVEC1, ZVEC2, ZVEC3
-INTEGER, DIMENSION(KPROMA) :: IVEC1, IVEC2
+REAL, DIMENSION(KPROMA) :: ZBUF1, ZBUF2, ZBUF3
+INTEGER, DIMENSION(KPROMA) :: IBUF1, IBUF2, IBUF3
 REAL, DIMENSION(KPROMA) :: ZZW, &
                            ZRDRYG_INIT, & !Initial dry growth rate of the graupeln
                            ZRWETG_INIT !Initial wet growth rate of the graupeln
 REAL :: ZZW0D
-INTEGER :: JJ, JL
+INTEGER :: JL
 
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
@@ -171,58 +170,23 @@ DO JL=1, KSIZE
 ENDDO
 
 ! Wet and dry collection of rs on graupel (6.2.1)
-IGDRY = 0
 DO JL = 1, KSIZE
   IF (PRST(JL)>ICED%XRTMIN(5) .AND. PRGT(JL)>ICED%XRTMIN(6) .AND. LDCOMPUTE(JL)) THEN
-    IGDRY = IGDRY + 1
-    I1(IGDRY) = JL
     GDRY(JL) = .TRUE.
   ELSE
     GDRY(JL) = .FALSE.
     PRG_TEND(JL, IRSDRYG)=0.
     PRG_TEND(JL, IRSWETG)=0.
-  END IF
+  ENDIF
 ENDDO
+
 IF(.NOT. LDSOFT) THEN
+  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAG(:), PLBDAS(:), ICEP%NDRYLBDAG, ICEP%NDRYLBDAS, &
+                       &ICEP%XDRYINTP1G, ICEP%XDRYINTP2G, ICEP%XDRYINTP1S, ICEP%XDRYINTP2S, &
+                       &PARAMI%LPACK_INTERP, GDRY(:), IBUF1(:), IBUF2(:), IBUF3(:), ZBUF1(:), ZBUF2(:), ZBUF3(:), &
+                       &IGDRY, &
+                       &ICEP%XKER_SDRYG(:,:), ZZW(:))
   IF(IGDRY>0)THEN
-    !
-    !*       6.2.3  select the (PLBDAG,PLBDAS) couplet
-    !
-    DO JJ = 1, IGDRY
-      ZVEC1(JJ) = PLBDAG(I1(JJ))
-      ZVEC2(JJ) = PLBDAS(I1(JJ))
-    END DO
-    !
-    !*       6.2.4  find the next lower indice for the PLBDAG and for the PLBDAS
-    !               in the geometrical set of (Lbda_g,Lbda_s) couplet use to
-    !               tabulate the SDRYG-kernel
-    !
-    ZVEC1(1:IGDRY)=MAX(1.00001, MIN(REAL(ICEP%NDRYLBDAG)-0.00001,           &
-                          ICEP%XDRYINTP1G*LOG(ZVEC1(1:IGDRY))+ICEP%XDRYINTP2G))
-    IVEC1(1:IGDRY)=INT(ZVEC1(1:IGDRY) )
-    ZVEC1(1:IGDRY)=ZVEC1(1:IGDRY)-REAL(IVEC1(1:IGDRY))
-    !
-    ZVEC2(1:IGDRY)=MAX(1.00001, MIN( REAL(ICEP%NDRYLBDAS)-0.00001,           &
-                          ICEP%XDRYINTP1S*LOG(ZVEC2(1:IGDRY))+ICEP%XDRYINTP2S))
-    IVEC2(1:IGDRY)=INT(ZVEC2(1:IGDRY))
-    ZVEC2(1:IGDRY)=ZVEC2(1:IGDRY)-REAL(IVEC2(1:IGDRY))
-    !
-    !*       6.2.5  perform the bilinear interpolation of the normalized
-    !               SDRYG-kernel
-    !
-    DO JJ=1, IGDRY
-      ZVEC3(JJ) =  (  ICEP%XKER_SDRYG(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - ICEP%XKER_SDRYG(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                         * ZVEC1(JJ) &
-                 - (  ICEP%XKER_SDRYG(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - ICEP%XKER_SDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                         *(ZVEC1(JJ) - 1.0)
-    END DO
-    ZZW(:) = 0.
-    DO JJ = 1, IGDRY
-      ZZW(I1(JJ)) = ZVEC3(JJ)
-    END DO
-    !
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GDRY(1:KSIZE))
       PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
@@ -245,11 +209,8 @@ ENDIF
 !
 !*       6.2.6  accretion of raindrops on the graupeln
 !
-IGDRY = 0
 DO JL = 1, KSIZE
   IF (PRRT(JL)>ICED%XRTMIN(3) .AND. PRGT(JL)>ICED%XRTMIN(6) .AND. LDCOMPUTE(JL)) THEN
-    IGDRY = IGDRY + 1
-    I1(IGDRY) = JL
     GDRY(JL) = .TRUE.
   ELSE
     GDRY(JL) = .FALSE.
@@ -258,45 +219,12 @@ DO JL = 1, KSIZE
 ENDDO
 IF(.NOT. LDSOFT) THEN
   !
+  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAG(:), PLBDAR(:), ICEP%NDRYLBDAG, ICEP%NDRYLBDAR, &
+                       &ICEP%XDRYINTP1G, ICEP%XDRYINTP2G, ICEP%XDRYINTP1R, ICEP%XDRYINTP2R, &
+                       &PARAMI%LPACK_INTERP, GDRY(:), IBUF1(:), IBUF2(:), IBUF3(:), ZBUF1(:), ZBUF2(:), ZBUF3(:), &
+                       &IGDRY, &
+                       &ICEP%XKER_RDRYG(:,:), ZZW(:))
   IF(IGDRY>0) THEN
-    !
-    !*       6.2.8  select the (PLBDAG,PLBDAR) couplet
-    !
-    DO JJ = 1, IGDRY
-      ZVEC1(JJ) = PLBDAG(I1(JJ))
-      ZVEC2(JJ) = PLBDAR(I1(JJ))
-    ENDDO
-    !
-    !*       6.2.9  find the next lower indice for the PLBDAG and for the PLBDAR
-    !               in the geometrical set of (Lbda_g,Lbda_r) couplet use to
-    !               tabulate the RDRYG-kernel
-    !
-    ZVEC1(1:IGDRY)=MAX(1.00001, MIN( REAL(ICEP%NDRYLBDAG)-0.00001,           &
-                          ICEP%XDRYINTP1G*LOG(ZVEC1(1:IGDRY))+ICEP%XDRYINTP2G))
-    IVEC1(1:IGDRY)=INT(ZVEC1(1:IGDRY))
-    ZVEC1(1:IGDRY)=ZVEC1(1:IGDRY)-REAL(IVEC1(1:IGDRY))
-    !
-    ZVEC2(1:IGDRY)=MAX(1.00001, MIN( REAL(ICEP%NDRYLBDAR)-0.00001,           &
-                          ICEP%XDRYINTP1R*LOG(ZVEC2(1:IGDRY))+ICEP%XDRYINTP2R))
-    IVEC2(1:IGDRY)=INT(ZVEC2(1:IGDRY))
-    ZVEC2(1:IGDRY)=ZVEC2(1:IGDRY)-REAL(IVEC2(1:IGDRY))
-    !
-    !*       6.2.10 perform the bilinear interpolation of the normalized
-    !               RDRYG-kernel
-    !
-    DO JJ=1, IGDRY
-      ZVEC3(JJ)= (  ICEP%XKER_RDRYG(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - ICEP%XKER_RDRYG(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                                  * ZVEC1(JJ) &
-                 - (  ICEP%XKER_RDRYG(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - ICEP%XKER_RDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                         *(ZVEC1(JJ) - 1.0)
-    END DO
-    ZZW(:) = 0.
-    DO JJ = 1, IGDRY
-      ZZW(I1(JJ)) = ZVEC3(JJ)
-    END DO
-    !
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GDRY(1:KSIZE))
       PRG_TEND(1:KSIZE, IRRDRYG) = ICEP%XFRDRYG*ZZW(1:KSIZE)                    & ! RRDRYG
@@ -439,6 +367,11 @@ DO JL=1, KSIZE
 ENDDO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RG', 1, ZHOOK_HANDLE)
-
+!
+CONTAINS
+!
+INCLUDE "interp_micro.func.h"
+!
 END SUBROUTINE ICE4_FAST_RG
+!
 END MODULE MODE_ICE4_FAST_RG

@@ -93,9 +93,8 @@ INTEGER, PARAMETER :: IRCWETH=1, IRRWETH=2, IRIDRYH=3, IRIWETH=4, IRSDRYH=5, IRS
                     & IFREEZ1=9, IFREEZ2=10
 LOGICAL, DIMENSION(KPROMA) :: GWET
 INTEGER :: IGWET
-INTEGER, DIMENSION(KPROMA) :: I1
-REAL, DIMENSION(KPROMA) :: ZVEC1, ZVEC2, ZVEC3
-INTEGER, DIMENSION(KPROMA) :: IVEC1, IVEC2
+REAL, DIMENSION(KPROMA) :: ZBUF1, ZBUF2, ZBUF3
+INTEGER, DIMENSION(KPROMA) :: IBUF1, IBUF2, IBUF3
 REAL, DIMENSION(KPROMA) :: ZZW, &
                            ZRDRYH_INIT, ZRWETH_INIT, &
                            ZRDRYHG
@@ -134,11 +133,8 @@ ENDDO
 !
 !*       7.2.1  accretion of aggregates on the hailstones
 !
-IGWET = 0
 DO JL = 1, KSIZE
   IF (PRHT(JL)>ICED%XRTMIN(7) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
-    IGWET = IGWET + 1
-    I1(IGWET) = JL
     GWET(JL) = .TRUE.
   ELSE
     GWET(JL) = .FALSE.
@@ -147,45 +143,12 @@ DO JL = 1, KSIZE
   ENDIF
 ENDDO
 IF(.NOT. LDSOFT) THEN
+   CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAH(:), PLBDAS(:), ICEP%NWETLBDAH, ICEP%NWETLBDAS, &
+                       &ICEP%XWETINTP1H, ICEP%XWETINTP2H, ICEP%XWETINTP1S, ICEP%XWETINTP2S, &
+                       &PARAMI%LPACK_INTERP, GWET(:), IBUF1(:), IBUF2(:), IBUF3(:), ZBUF1(:), ZBUF2(:), ZBUF3(:), &
+                       &IGWET, &
+                       &ICEP%XKER_SWETH(:,:), ZZW(:))
   IF(IGWET>0)THEN
-    !
-    !*       7.2.3  select the (PLBDAH,PLBDAS) couplet
-    !
-    DO JJ = 1, IGWET
-      ZVEC1(JJ) = PLBDAH(I1(JJ))
-      ZVEC2(JJ) = PLBDAS(I1(JJ))
-    ENDDO
-    !
-    !*       7.2.4  find the next lower indice for the PLBDAG and for the PLBDAS
-    !               in the geometrical set of (Lbda_h,Lbda_s) couplet use to
-    !               tabulate the SWETH-kernel
-    !
-    ZVEC1(1:IGWET) = MAX( 1.00001, MIN( REAL(ICEP%NWETLBDAH)-0.00001,           &
-                          ICEP%XWETINTP1H * LOG( ZVEC1(1:IGWET) ) + ICEP%XWETINTP2H ) )
-    IVEC1(1:IGWET) = INT( ZVEC1(1:IGWET) )
-    ZVEC1(1:IGWET) = ZVEC1(1:IGWET) - REAL( IVEC1(1:IGWET) )
-    !
-    ZVEC2(1:IGWET) = MAX( 1.00001, MIN( REAL(ICEP%NWETLBDAS)-0.00001,           &
-                          ICEP%XWETINTP1S * LOG( ZVEC2(1:IGWET) ) + ICEP%XWETINTP2S ) )
-    IVEC2(1:IGWET) = INT( ZVEC2(1:IGWET) )
-    ZVEC2(1:IGWET) = ZVEC2(1:IGWET) - REAL( IVEC2(1:IGWET) )
-    !
-    !*       7.2.5  perform the bilinear interpolation of the normalized
-    !               SWETH-kernel
-    !
-    DO JJ = 1,IGWET
-      ZVEC3(JJ) = (  ICEP%XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                   - ICEP%XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                                 * ZVEC1(JJ) &
-                  - ( ICEP%XKER_SWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                  - ICEP%XKER_SWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                         * (ZVEC1(JJ) - 1.0)
-    END DO
-    ZZW(:) = 0.
-    DO JJ = 1, IGWET
-      ZZW(I1(JJ)) = ZVEC3(JJ)
-    END DO
-    !
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GWET(1:KSIZE))
       PRH_TEND(1:KSIZE, IRSWETH)=ICEP%XFSWETH*ZZW(1:KSIZE)                       & ! RSWETH
@@ -207,11 +170,8 @@ ENDIF
 !
 !*       7.2.6  accretion of graupeln on the hailstones
 !
-IGWET = 0
 DO JL = 1, KSIZE
   IF (PRHT(JL)>ICED%XRTMIN(7) .AND. PRGT(JL)>ICED%XRTMIN(6) .AND. LDCOMPUTE(JL)) THEN
-    IGWET = IGWET + 1
-    I1(IGWET) = JL
     GWET(JL) = .TRUE.
   ELSE
     GWET(JL) = .FALSE.
@@ -220,45 +180,12 @@ DO JL = 1, KSIZE
   END IF
 ENDDO
 IF(.NOT. LDSOFT) THEN
+  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAH(:), PLBDAG(:), ICEP%NWETLBDAH, ICEP%NWETLBDAG, &
+                       &ICEP%XWETINTP1H, ICEP%XWETINTP2H, ICEP%XWETINTP1G, ICEP%XWETINTP2G, &
+                       &PARAMI%LPACK_INTERP, GWET(:), IBUF1(:), IBUF2(:), IBUF3(:), ZBUF1(:), ZBUF2(:), ZBUF3(:), &
+                       &IGWET, &
+                       &ICEP%XKER_GWETH(:,:), ZZW(:))
   IF(IGWET>0)THEN
-    !
-    !*       7.2.8  select the (PLBDAH,PLBDAG) couplet
-    !
-    DO JJ = 1, IGWET
-      ZVEC1(JJ) = PLBDAH(I1(JJ))
-      ZVEC2(JJ) = PLBDAG(I1(JJ))
-    END DO
-    !
-    !*       7.2.9  find the next lower indice for the PLBDAH and for the PLBDAG
-    !               in the geometrical set of (Lbda_h,Lbda_g) couplet use to
-    !               tabulate the GWETH-kernel
-    !
-    ZVEC1(1:IGWET) = MAX( 1.00001, MIN( REAL(ICEP%NWETLBDAG)-0.00001,           &
-                          ICEP%XWETINTP1H * LOG( ZVEC1(1:IGWET) ) + ICEP%XWETINTP2H ) )
-    IVEC1(1:IGWET) = INT( ZVEC1(1:IGWET) )
-    ZVEC1(1:IGWET) = ZVEC1(1:IGWET) - REAL( IVEC1(1:IGWET) )
-    !
-    ZVEC2(1:IGWET) = MAX( 1.00001, MIN( REAL(ICEP%NWETLBDAG)-0.00001,           &
-                          ICEP%XWETINTP1G * LOG( ZVEC2(1:IGWET) ) + ICEP%XWETINTP2G ) )
-    IVEC2(1:IGWET) = INT( ZVEC2(1:IGWET) )
-    ZVEC2(1:IGWET) = ZVEC2(1:IGWET) - REAL( IVEC2(1:IGWET) )
-    !
-    !*       7.2.10 perform the bilinear interpolation of the normalized
-    !               GWETH-kernel
-    !
-    DO JJ = 1,IGWET
-      ZVEC3(JJ) = (  ICEP%XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                   - ICEP%XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                                 * ZVEC1(JJ) &
-                - (  ICEP%XKER_GWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                   - ICEP%XKER_GWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                        * (ZVEC1(JJ) - 1.0)
-    END DO
-    ZZW(:) = 0.
-    DO JJ = 1, IGWET
-      ZZW(I1(JJ)) = ZVEC3(JJ)
-    END DO
-    !
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GWET(1:KSIZE))
       PRH_TEND(1:KSIZE, IRGWETH)=ICEP%XFGWETH*ZZW(1:KSIZE)                       & ! RGWETH
@@ -279,11 +206,8 @@ ENDIF
 !
 !*       7.2.11  accretion of raindrops on the hailstones
 !
-IGWET = 0
 DO JL = 1, KSIZE
   IF (PRHT(JL)>ICED%XRTMIN(7) .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)) THEN
-    IGWET = IGWET + 1
-    I1(IGWET) = JL
     GWET(JL) = .TRUE.
   ELSE
     GWET(JL) = .FALSE.
@@ -291,45 +215,12 @@ DO JL = 1, KSIZE
   ENDIF
 ENDDO
 IF(.NOT. LDSOFT) THEN
+  CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAH(:), PLBDAR(:), ICEP%NWETLBDAH, ICEP%NWETLBDAR, &
+                       &ICEP%XWETINTP1H, ICEP%XWETINTP2H, ICEP%XWETINTP1R, ICEP%XWETINTP2R, &
+                       &PARAMI%LPACK_INTERP, GWET(:), IBUF1(:), IBUF2(:), IBUF3(:), ZBUF1(:), ZBUF2(:), ZBUF3(:), &
+                       &IGWET, &
+                       &ICEP%XKER_RWETH(:,:), ZZW(:))
   IF(IGWET>0)THEN
-    !
-    !*       7.2.12  select the (PLBDAH,PLBDAR) couplet
-    !
-    DO JJ = 1, IGWET
-      ZVEC1(JJ) = PLBDAH(I1(JJ))
-      ZVEC2(JJ) = PLBDAR(I1(JJ))
-    ENDDO
-    !
-    !*       7.2.13 find the next lower indice for the PLBDAH and for the PLBDAR
-    !               in the geometrical set of (Lbda_h,Lbda_r) couplet use to
-    !               tabulate the RWETH-kernel
-    !
-    ZVEC1(1:IGWET)=MAX(1.00001, MIN( REAL(ICEP%NWETLBDAH)-0.00001,           &
-                          ICEP%XWETINTP1H*LOG(ZVEC1(1:IGWET))+ICEP%XWETINTP2H))
-    IVEC1(1:IGWET)=INT(ZVEC1(1:IGWET))
-    ZVEC1(1:IGWET)=ZVEC1(1:IGWET)-REAL(IVEC1(1:IGWET))
-    !
-    ZVEC2(1:IGWET)=MAX(1.00001, MIN( REAL(ICEP%NWETLBDAR)-0.00001,           &
-                          ICEP%XWETINTP1R*LOG(ZVEC2(1:IGWET))+ICEP%XWETINTP2R))
-    IVEC2(1:IGWET)=INT(ZVEC2(1:IGWET))
-    ZVEC2(1:IGWET)=ZVEC2(1:IGWET)-REAL(IVEC2(1:IGWET))
-    !
-    !*       7.2.14 perform the bilinear interpolation of the normalized
-    !               RWETH-kernel
-    !
-    DO JJ=1, IGWET
-      ZVEC3(JJ)= (  ICEP%XKER_RWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - ICEP%XKER_RWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                                  * ZVEC1(JJ) &
-                 - (  ICEP%XKER_RWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - ICEP%XKER_RWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                         *(ZVEC1(JJ) - 1.0)
-    END DO
-    ZZW(:) = 0.
-    DO JJ = 1, IGWET
-      ZZW(I1(JJ)) = ZVEC3(JJ)
-    END DO
-    !
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GWET(1:KSIZE))
       PRH_TEND(1:KSIZE, IRRWETH) = ICEP%XFRWETH*ZZW(1:KSIZE)                    & ! RRWETH
@@ -475,6 +366,10 @@ DO JL=1, KSIZE
 ENDDO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RH', 1, ZHOOK_HANDLE)
+!
+CONTAINS
+!
+INCLUDE "interp_micro.func.h"
 !
 END SUBROUTINE ICE4_FAST_RH
 END MODULE MODE_ICE4_FAST_RH

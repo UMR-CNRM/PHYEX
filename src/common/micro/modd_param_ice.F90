@@ -79,6 +79,8 @@ LOGICAL :: LSEDIM_AFTER ! sedimentation done before (.FALSE.) or after (.TRUE.) 
 !
 REAL :: XSPLIT_MAXCFL ! Maximum CFL number allowed for SPLIT scheme
 LOGICAL :: LSNOW_T         ! Snow parameterization from Wurtz (2021)
+!
+LOGICAL :: LPACK_INTERP !To pack arrays before computing the different interpolations (kernels and other)
 END TYPE PARAM_ICE_t
 !
 TYPE(PARAM_ICE_t), SAVE, TARGET :: PARAM_ICE
@@ -98,7 +100,8 @@ LOGICAL, POINTER :: LWARM => NULL(), &
                     LADJ_BEFORE => NULL(), &
                     LADJ_AFTER => NULL(), &
                     LSEDIM_AFTER => NULL(),&
-                    LSNOW_T => NULL()
+                    LSNOW_T => NULL(),&
+                    LPACK_INTERP => NULL()
 
 REAL, POINTER :: XVDEPOSC => NULL(), &
                  XFRACM90 => NULL(), &
@@ -138,6 +141,7 @@ SUBROUTINE PARAM_ICE_ASSOCIATE()
   LADJ_AFTER => PARAM_ICE%LADJ_AFTER
   LSEDIM_AFTER => PARAM_ICE%LSEDIM_AFTER
   LSNOW_T => PARAM_ICE%LSNOW_T
+  LPACK_INTERP => PARAM_ICE%LPACK_INTERP
   !
   XVDEPOSC => PARAM_ICE%XVDEPOSC
   XFRACM90 => PARAM_ICE%XFRACM90

@@ -255,7 +255,7 @@ ELSE
       ZLBDAS(1:KSIZE)=0.
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
-    CALL ICE4_RSRIMCG_OLD(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, &
+    CALL ICE4_RSRIMCG_OLD(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, &
                          &PRHODREF, &
                          &ZLBDAS, &
                          &ZT, ZVART(:,IRC), ZVART(:,IRS), &
