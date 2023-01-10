@@ -84,7 +84,7 @@ done
 
 MNHPACK=${MNHPACK:=$HOME/MesoNH/PHYEX}
 REFDIR=${REFDIR:=$PHYEXTOOLSDIR/pack/}
-TARGZDIR=${TARGZDIR:=$PHYEXTOOLSDIR/pack/}
+TARGZDIR=${TARGZDIR:=/home/rodierq/UBUNTU22/}
 if [ -z "${tests-}" ]; then
   tests=$defaultTest
 elif [ $tests == 'ALL' ]; then
