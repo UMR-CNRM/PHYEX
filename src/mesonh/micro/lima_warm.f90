@@ -262,11 +262,11 @@ PCRT(:,:,:) = 0.
 PCCS(:,:,:) = 0.
 PCRS(:,:,:) = 0.
 !
-IF ( LWARM ) PCCT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NC)
-IF ( LWARM .AND. LRAIN ) PCRT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NR)
+IF ( NMOM_C.GE.2 ) PCCT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NC)
+IF ( NMOM_R.GE.2 ) PCRT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NR)
 !
-IF ( LWARM ) PCCS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NC)
-IF ( LWARM .AND. LRAIN ) PCRS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NR)
+IF ( NMOM_C.GE.2 ) PCCS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NC)
+IF ( NMOM_R.GE.2 ) PCRS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NR)
 !
 IF ( NMOD_CCN .GE. 1 ) THEN
    ALLOCATE( ZNFS(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3),NMOD_CCN) )
@@ -311,10 +311,10 @@ ZT(:,:,:)  = PTHT(:,:,:) * (PPABST(:,:,:)/XP00)**(XRD/XCPD)
 !
 !
 if ( lbudget_rc .and. osedc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'SEDI', prcs(:, :, :) * prhodj(:, :, :) )
-if ( lbudget_rr .and. orain ) call Budget_store_init( tbudgets(NBUDGET_RR), 'SEDI', prrs(:, :, :) * prhodj(:, :, :) )
+if ( lbudget_rr .and. nmom_r.ge.1 ) call Budget_store_init( tbudgets(NBUDGET_RR), 'SEDI', prrs(:, :, :) * prhodj(:, :, :) )
 if ( lbudget_sv ) then
   if ( osedc ) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'SEDI', pccs(:, :, :) * prhodj(:, :, :) )
-  if ( orain ) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nr), 'SEDI', pcrs(:, :, :) * prhodj(:, :, :) )
+  if ( nmom_r.ge.2 ) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nr), 'SEDI', pcrs(:, :, :) * prhodj(:, :, :) )
 end if
 
 CALL LIMA_WARM_SEDIMENTATION (OSEDC, KSPLITR, PTSTEP, KMI,  &
@@ -326,10 +326,10 @@ CALL LIMA_WARM_SEDIMENTATION (OSEDC, KSPLITR, PTSTEP, KMI,  &
                               PINPRR3D    )
 
 if ( lbudget_rc .and. osedc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'SEDI', prcs(:, :, :) * prhodj(:, :, :) )
-if ( lbudget_rr .and. orain ) call Budget_store_end( tbudgets(NBUDGET_RR), 'SEDI', prrs(:, :, :) * prhodj(:, :, :) )
+if ( lbudget_rr .and. nmom_r.ge.1 ) call Budget_store_end( tbudgets(NBUDGET_RR), 'SEDI', prrs(:, :, :) * prhodj(:, :, :) )
 if ( lbudget_sv ) then
   if ( osedc ) call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'SEDI', pccs(:, :, :) * prhodj(:, :, :) )
-  if ( orain ) call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nr), 'SEDI', pcrs(:, :, :) * prhodj(:, :, :) )
+  if ( nmom_r.ge.2 ) call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nr), 'SEDI', pcrs(:, :, :) * prhodj(:, :, :) )
 end if
 !
 ! 2.bis Deposition at 1st level above ground
@@ -411,7 +411,7 @@ END IF ! LACTI
 !              ------------------------
 !
 !
-IF (ORAIN) THEN
+IF (NMOM_R.GE.2) THEN
 
   if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH),                    'REVA', pths(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_rv ) call Budget_store_init( tbudgets(NBUDGET_RV),                    'REVA', prvs(:, :, :) * prhodj(:, :, :) )
@@ -466,8 +466,8 @@ IF ( KRR .GE. 3 ) PRS(:,:,:,3) = PRRS(:,:,:)
 !
 ! Prepare 3D number concentrations
 !
-IF ( LWARM ) PSVS(:,:,:,NSV_LIMA_NC) = PCCS(:,:,:)
-IF ( LWARM .AND. LRAIN ) PSVS(:,:,:,NSV_LIMA_NR) = PCRS(:,:,:)
+IF ( NMOM_C.GE.2 ) PSVS(:,:,:,NSV_LIMA_NC) = PCCS(:,:,:)
+IF ( NMOM_R.GE.2 ) PSVS(:,:,:,NSV_LIMA_NR) = PCRS(:,:,:)
 !
 IF ( NMOD_CCN .GE. 1 ) THEN
    PSVS(:,:,:,NSV_LIMA_CCN_FREE:NSV_LIMA_CCN_FREE+NMOD_CCN-1) = ZNFS(:,:,:,:)

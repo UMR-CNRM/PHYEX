@@ -104,7 +104,7 @@ USE MODD_CST,             ONLY: XP00, XRD, XRV, XMV, XMD, XCPD, XCPV, XCL, XCI, 
                                 XG
 USE MODD_NSV
 USE MODD_PARAMETERS,      ONLY: JPHEXT, JPVEXT
-USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN, NMOD_IMM, XRTMIN, XCTMIN, XNUC, LWARM, LRAIN
+USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN, NMOD_IMM, XRTMIN, XCTMIN, XNUC, NMOM_C, NMOM_R
 USE MODD_PARAM_LIMA_COLD, ONLY: XRCOEF_HONH, XCEXP_DIFVAP_HONH, XCOEF_DIFVAP_HONH,&
                                 XCRITSAT1_HONH, XCRITSAT2_HONH, XTMAX_HONH,       &
                                 XTMIN_HONH, XC1_HONH, XC2_HONH, XC3_HONH,         &
@@ -485,7 +485,7 @@ IF (INEGT.GT.0) THEN
 !  Compute the droplet homogeneous nucleation source: RCHONI
 !                 -> Pruppacher(1995)
 !
-IF (LWARM) THEN
+IF (NMOM_C.GE.2) THEN
   if ( nbumod == kmi .and. lbu_enable ) then
     if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'HONC', &
                                              Unpack( zths(:), mask = gnegt(:, :, :), field = pths(:, :, :) ) * prhodj(:, :, :) )
@@ -547,7 +547,7 @@ END IF
 !
 !  Compute the drop homogeneous nucleation source: RRHONG
 !
-IF (LWARM .AND. LRAIN) THEN
+IF (NMOM_R.GE.2) THEN
   if ( nbumod == kmi .and. lbu_enable ) then
     if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'HONR', &
                                              Unpack( zths(:), mask = gnegt(:, :, :), field = pths(:, :, :) ) * prhodj(:, :, :) )

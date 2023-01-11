@@ -123,10 +123,9 @@ USE MODD_NSV,             ONLY: NSV_LIMA_BEG,                                   
                                 NSV_LIMA_NI, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,             &
                                 NSV_LIMA_IFN_FREE, NSV_LIMA_IFN_NUCL, NSV_LIMA_IMM_NUCL, NSV_LIMA_HOM_HAZE
 USE MODD_PARAMETERS,      ONLY: JPHEXT, JPVEXT
-USE MODD_PARAM_LIMA,      ONLY: LCOLD, LRAIN, LWARM, NMOD_CCN, NMOD_IFN, NMOD_IMM, LHHONI,      &
+USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN, NMOD_IFN, NMOD_IMM, LHHONI,      &
                                 LACTIT, LFEEDBACKT, NMAXITER, XMRSTEP, XTSTEP_TS,               &
                                 LSEDC, LSEDI, XRTMIN, XCTMIN, LDEPOC, XVDEPOC,                  &
-                                LHAIL, LSNOW,                                                   &
                                 NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
 USE MODD_PARAM_LIMA_COLD, ONLY: XAI, XBI
 USE MODD_PARAM_LIMA_WARM, ONLY: XLBC, XLBEXC, XAC, XBC, XAR, XBR
@@ -575,32 +574,32 @@ ELSE
    ZCCT(:,:,:)   = 300.E6 / PRHODREF(:,:,:)
    ZCCS(:,:,:)   = ZCCT(:,:,:) / PTSTEP
 END IF
-IF ( LWARM .AND. LRAIN .AND. NMOM_R.GE.2) ZCRT(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NR) * PTSTEP
-IF ( LWARM .AND. LRAIN .AND. NMOM_R.GE.2) ZCRS(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NR)
-IF ( LCOLD .AND. NMOM_I.GE.2)             ZCIT(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NI) * PTSTEP
-IF ( LCOLD .AND. NMOM_I.GE.2)             ZCIS(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NI)
-IF ( LCOLD .AND. LSNOW .AND. NMOM_S.GE.2) ZCST(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NS) * PTSTEP
-IF ( LCOLD .AND. LSNOW .AND. NMOM_S.GE.2) ZCSS(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NS)
-IF ( LCOLD .AND. NMOM_G.GE.2)             ZCGT(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NG) * PTSTEP
-IF ( LCOLD .AND. NMOM_G.GE.2)             ZCGS(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NG)
-IF ( LCOLD .AND. NMOM_H.GE.2)             ZCHT(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NH) * PTSTEP
-IF ( LCOLD .AND. NMOM_H.GE.2)             ZCHS(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NH)
+IF ( NMOM_R.GE.2) ZCRT(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NR) * PTSTEP
+IF ( NMOM_R.GE.2) ZCRS(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NR)
+IF ( NMOM_I.GE.2) ZCIT(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NI) * PTSTEP
+IF ( NMOM_I.GE.2) ZCIS(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NI)
+IF ( NMOM_S.GE.2) ZCST(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NS) * PTSTEP
+IF ( NMOM_S.GE.2) ZCSS(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NS)
+IF ( NMOM_G.GE.2) ZCGT(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NG) * PTSTEP
+IF ( NMOM_G.GE.2) ZCGS(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NG)
+IF ( NMOM_H.GE.2) ZCHT(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NH) * PTSTEP
+IF ( NMOM_H.GE.2) ZCHS(:,:,:)   = PSVS(:,:,:,NSV_LIMA_NH)
 !
-IF ( NMOD_CCN .GE. 1 )   ZCCNFT(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_CCN_FREE:NSV_LIMA_CCN_FREE+NMOD_CCN-1) * PTSTEP
-IF ( NMOD_CCN .GE. 1 )   ZCCNAT(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_CCN_ACTI:NSV_LIMA_CCN_ACTI+NMOD_CCN-1) * PTSTEP
-IF ( NMOD_CCN .GE. 1 )   ZCCNFS(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_CCN_FREE:NSV_LIMA_CCN_FREE+NMOD_CCN-1)
-IF ( NMOD_CCN .GE. 1 )   ZCCNAS(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_CCN_ACTI:NSV_LIMA_CCN_ACTI+NMOD_CCN-1)
+IF ( NMOD_CCN .GE. 1 ) ZCCNFT(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_CCN_FREE:NSV_LIMA_CCN_FREE+NMOD_CCN-1) * PTSTEP
+IF ( NMOD_CCN .GE. 1 ) ZCCNAT(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_CCN_ACTI:NSV_LIMA_CCN_ACTI+NMOD_CCN-1) * PTSTEP
+IF ( NMOD_CCN .GE. 1 ) ZCCNFS(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_CCN_FREE:NSV_LIMA_CCN_FREE+NMOD_CCN-1)
+IF ( NMOD_CCN .GE. 1 ) ZCCNAS(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_CCN_ACTI:NSV_LIMA_CCN_ACTI+NMOD_CCN-1)
 !
-IF ( NMOD_IFN .GE. 1 )   ZIFNFT(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_IFN_FREE:NSV_LIMA_IFN_FREE+NMOD_IFN-1) * PTSTEP
-IF ( NMOD_IFN .GE. 1 )   ZIFNNT(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_IFN_NUCL:NSV_LIMA_IFN_NUCL+NMOD_IFN-1) * PTSTEP
-IF ( NMOD_IFN .GE. 1 )   ZIFNFS(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_IFN_FREE:NSV_LIMA_IFN_FREE+NMOD_IFN-1)
-IF ( NMOD_IFN .GE. 1 )   ZIFNNS(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_IFN_NUCL:NSV_LIMA_IFN_NUCL+NMOD_IFN-1)
+IF ( NMOD_IFN .GE. 1 ) ZIFNFT(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_IFN_FREE:NSV_LIMA_IFN_FREE+NMOD_IFN-1) * PTSTEP
+IF ( NMOD_IFN .GE. 1 ) ZIFNNT(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_IFN_NUCL:NSV_LIMA_IFN_NUCL+NMOD_IFN-1) * PTSTEP
+IF ( NMOD_IFN .GE. 1 ) ZIFNFS(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_IFN_FREE:NSV_LIMA_IFN_FREE+NMOD_IFN-1)
+IF ( NMOD_IFN .GE. 1 ) ZIFNNS(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_IFN_NUCL:NSV_LIMA_IFN_NUCL+NMOD_IFN-1)
 !
-IF ( NMOD_IMM .GE. 1 )   ZIMMNT(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_IMM_NUCL:NSV_LIMA_IMM_NUCL+NMOD_IMM-1) * PTSTEP
-IF ( NMOD_IMM .GE. 1 )   ZIMMNS(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_IMM_NUCL:NSV_LIMA_IMM_NUCL+NMOD_IMM-1)
+IF ( NMOD_IMM .GE. 1 ) ZIMMNT(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_IMM_NUCL:NSV_LIMA_IMM_NUCL+NMOD_IMM-1) * PTSTEP
+IF ( NMOD_IMM .GE. 1 ) ZIMMNS(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_IMM_NUCL:NSV_LIMA_IMM_NUCL+NMOD_IMM-1)
 !
-IF ( LCOLD .AND. LHHONI ) ZHOMFT(:,:,:)  = PSVS(:,:,:,NSV_LIMA_HOM_HAZE) * PTSTEP
-IF ( LCOLD .AND. LHHONI ) ZHOMFS(:,:,:)  = PSVS(:,:,:,NSV_LIMA_HOM_HAZE)
+IF ( LHHONI ) ZHOMFT(:,:,:) = PSVS(:,:,:,NSV_LIMA_HOM_HAZE) * PTSTEP
+IF ( LHHONI ) ZHOMFS(:,:,:) = PSVS(:,:,:,NSV_LIMA_HOM_HAZE)
 !
 ZINV_TSTEP  = 1./PTSTEP
 ZEXN(:,:,:) = (PPABST(:,:,:)/XP00)**(XRD/XCPD)
@@ -624,7 +623,7 @@ ZT(:,:,:)   = ZTHT(:,:,:) * ZEXN(:,:,:)
 !       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'CORR', zcis(:, :, :) * prhodj(:, :, :) )
 !   end if
 ! end if
-!!$IF (LWARM .AND. LRAIN) THEN
+!!$IF (NMOM_R.GE.2) THEN
 !!$   WHERE( ZRCT>XRTMIN(2) .AND. ZCCT>XCTMIN(2) .AND. ZRCT>XAC*ZCCT*(100.E-6)**XBC )
 !!$      ZRRT=ZRRT+ZRCT
 !!$      ZRRS=ZRRS+ZRCS
@@ -637,7 +636,7 @@ ZT(:,:,:)   = ZTHT(:,:,:) * ZEXN(:,:,:)
 !!$   END WHERE
 !!$END IF
 !!$!
-!!$IF (LWARM .AND. LRAIN) THEN
+!!$IF (NMOM_R.GE.2) THEN
 !!$   WHERE( ZRRT>XRTMIN(3) .AND. ZCRT>XCTMIN(3) .AND. ZRRT<XAR*ZCRT*(60.E-6)**XBR )
 !!$      ZRCT=ZRCT+ZRRT
 !!$      ZRCS=ZRCS+ZRRS
@@ -650,7 +649,7 @@ ZT(:,:,:)   = ZTHT(:,:,:) * ZEXN(:,:,:)
 !!$   END WHERE
 !!$END IF
 !!$!
-!!$IF (LCOLD .AND. LSNOW) THEN
+!!$IF (NMOM_S.GE.2) THEN
 !!$   WHERE( ZRIT>XRTMIN(4) .AND. ZCIT>XCTMIN(4) .AND. ZRIT>XAI*ZCIT*(250.E-6)**XBI )
 !!$      ZRST=ZRST+ZRIT
 !!$      ZRSS=ZRSS+ZRIS
@@ -690,45 +689,51 @@ PINPRG=0.
 PINPRH=0.
 if ( lbu_enable ) then
   if ( lbudget_th )                         call Budget_store_init( tbudgets(NBUDGET_TH), 'SEDI', zths(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rc .and. lwarm .and. lsedc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'SEDI', zrcs(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rr .and. lwarm .and. lrain ) call Budget_store_init( tbudgets(NBUDGET_RR), 'SEDI', zrrs(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_ri .and. lcold .and. lsedi ) call Budget_store_init( tbudgets(NBUDGET_RI), 'SEDI', zris(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rs .and. lcold .and. lsnow ) call Budget_store_init( tbudgets(NBUDGET_RS), 'SEDI', zrss(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rg .and. lcold .and. lsnow ) call Budget_store_init( tbudgets(NBUDGET_RG), 'SEDI', zrgs(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rh .and. lcold .and. lhail ) call Budget_store_init( tbudgets(NBUDGET_RH), 'SEDI', zrhs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rc .and. nmom_c.ge.1 .and. lsedc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'SEDI', zrcs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rr .and. nomm_r.ge.1 ) call Budget_store_init( tbudgets(NBUDGET_RR), 'SEDI', zrrs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_ri .and. nmom_i.ge.1 .and. lsedi ) call Budget_store_init( tbudgets(NBUDGET_RI), 'SEDI', zris(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rs .and. nmom_s.ge.1 ) call Budget_store_init( tbudgets(NBUDGET_RS), 'SEDI', zrss(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rg .and. nmom_g.ge.1 ) call Budget_store_init( tbudgets(NBUDGET_RG), 'SEDI', zrgs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rh .and. nmom_h.ge.1 ) call Budget_store_init( tbudgets(NBUDGET_RH), 'SEDI', zrhs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv ) then
-    if ( lwarm .and. lsedc .and. nmom_c.ge.2) &
+    if ( lsedc .and. nmom_c.ge.2) &
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'SEDI', zccs(:, :, :) * prhodj(:, :, :) )
-    if ( lwarm .and. lrain .and. nmom_r.ge.2) &
+    if ( nmom_r.ge.2) &
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nr), 'SEDI', zcrs(:, :, :) * prhodj(:, :, :) )
-    if ( lcold .and. lsedi .and. nmom_i.ge.2) &
+    if ( lsedi .and. nmom_i.ge.2) &
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'SEDI', zcis(:, :, :) * prhodj(:, :, :) )
+    if ( nmom_s.ge.2) &
+      call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ns), 'SEDI', zcss(:, :, :) * prhodj(:, :, :) )
+    if ( nmom_g.ge.2) &
+      call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ng), 'SEDI', zcgs(:, :, :) * prhodj(:, :, :) )
+    if ( nmom_h.ge.2) &
+      call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nh), 'SEDI', zchs(:, :, :) * prhodj(:, :, :) )
   end if
 end if
 
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = XCPD + (XCPV * ZRVS + XCL * (ZRCS + ZRRS) + XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
-IF (LWARM .AND. LSEDC) CALL LIMA_SEDIMENTATION(IIB, IIE, IIT, IJB, IJE, IJT, IKB, IKE, IKTB, IKTE, IKT, KKL, &
+IF (NMOM_C.GE.1 .AND. LSEDC) CALL LIMA_SEDIMENTATION(IIB, IIE, IIT, IJB, IJE, IJT, IKB, IKE, IKTB, IKTE, IKT, KKL, &
      'L', 2, 2, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRCS, ZCCS, PINPRC)
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = XCPD + (XCPV * ZRVS + XCL * (ZRCS + ZRRS) + XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
-IF (LWARM .AND. LRAIN) CALL LIMA_SEDIMENTATION(IIB, IIE, IIT, IJB, IJE, IJT, IKB, IKE, IKTB, IKTE, IKT, KKL, &
+IF (NMOM_R.GE.1) CALL LIMA_SEDIMENTATION(IIB, IIE, IIT, IJB, IJE, IJT, IKB, IKE, IKTB, IKTE, IKT, KKL, &
      'L', NMOM_R, 3, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRRS, ZCRS, PINPRR)
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = XCPD + (XCPV * ZRVS + XCL * (ZRCS + ZRRS) + XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
-IF (LCOLD .AND. LSEDI) CALL LIMA_SEDIMENTATION(IIB, IIE, IIT, IJB, IJE, IJT, IKB, IKE, IKTB, IKTE, IKT, KKL, &
+IF (NMOM_I.GE.1 .AND. LSEDI) CALL LIMA_SEDIMENTATION(IIB, IIE, IIT, IJB, IJE, IJT, IKB, IKE, IKTB, IKTE, IKT, KKL, &
      'I', NMOM_I, 4, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRIS, ZCIS, ZW2D)
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = XCPD + (XCPV * ZRVS + XCL * (ZRCS + ZRRS) + XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
-IF (LCOLD .AND. LSNOW) CALL LIMA_SEDIMENTATION(IIB, IIE, IIT, IJB, IJE, IJT, IKB, IKE, IKTB, IKTE, IKT, KKL, &
+IF (NMOM_S.GE.1) CALL LIMA_SEDIMENTATION(IIB, IIE, IIT, IJB, IJE, IJT, IKB, IKE, IKTB, IKTE, IKT, KKL, &
      'I', NMOM_S, 5, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRSS, ZCSS, PINPRS)
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = XCPD + (XCPV * ZRVS + XCL * (ZRCS + ZRRS) + XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
-IF (LCOLD .AND. LSNOW) CALL LIMA_SEDIMENTATION(IIB, IIE, IIT, IJB, IJE, IJT, IKB, IKE, IKTB, IKTE, IKT, KKL, &
+IF (NMOM_G.GE.1) CALL LIMA_SEDIMENTATION(IIB, IIE, IIT, IJB, IJE, IJT, IKB, IKE, IKTB, IKTE, IKT, KKL, &
      'I', NMOM_G, 6, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRGS, ZCGS, PINPRG)
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = XCPD + (XCPV * ZRVS + XCL * (ZRCS + ZRRS) + XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
-IF (LCOLD .AND. LHAIL) CALL LIMA_SEDIMENTATION(IIB, IIE, IIT, IJB, IJE, IJT, IKB, IKE, IKTB, IKTE, IKT, KKL, &
+IF (NMOM_H.GE.1) CALL LIMA_SEDIMENTATION(IIB, IIE, IIT, IJB, IJE, IJT, IKB, IKE, IKTB, IKTE, IKT, KKL, &
      'I', NMOM_H, 7, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRHS, ZCHS, PINPRH)
 !
 ZTHS(:,:,:) = ZT(:,:,:) / ZEXN(:,:,:) * ZINV_TSTEP
@@ -737,26 +742,32 @@ ZTHS(:,:,:) = ZT(:,:,:) / ZEXN(:,:,:) * ZINV_TSTEP
 !
 if ( lbu_enable ) then
   if ( lbudget_th )                         call Budget_store_end( tbudgets(NBUDGET_TH), 'SEDI', zths(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rc .and. lwarm .and. lsedc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'SEDI', zrcs(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rr .and. lwarm .and. lrain ) call Budget_store_end( tbudgets(NBUDGET_RR), 'SEDI', zrrs(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_ri .and. lcold .and. lsedi ) call Budget_store_end( tbudgets(NBUDGET_RI), 'SEDI', zris(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rs .and. lcold .and. lsnow ) call Budget_store_end( tbudgets(NBUDGET_RS), 'SEDI', zrss(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rg .and. lcold .and. lsnow ) call Budget_store_end( tbudgets(NBUDGET_RG), 'SEDI', zrgs(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rh .and. lcold .and. lhail ) call Budget_store_end( tbudgets(NBUDGET_RH), 'SEDI', zrhs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rc .and. nmom_c.ge.1 .and. lsedc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'SEDI', zrcs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rr .and. nmom_r.ge.2 ) call Budget_store_end( tbudgets(NBUDGET_RR), 'SEDI', zrrs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_ri .and. nmom_i.ge.1 .and. lsedi ) call Budget_store_end( tbudgets(NBUDGET_RI), 'SEDI', zris(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rs .and. nmom_s.ge.1 ) call Budget_store_end( tbudgets(NBUDGET_RS), 'SEDI', zrss(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rg .and. nmom_g.ge.1 ) call Budget_store_end( tbudgets(NBUDGET_RG), 'SEDI', zrgs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rh .and. nmom_h.ge.1 ) call Budget_store_end( tbudgets(NBUDGET_RH), 'SEDI', zrhs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv ) then
-    if ( lwarm .and. lsedc .and. nmom_c.ge.2) &
+    if ( lsedc .and. nmom_c.ge.2 ) &
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'SEDI', zccs(:, :, :) * prhodj(:, :, :) )
-    if ( lwarm .and. lrain .and. nmom_r.ge.2) &
+    if ( nmom_r.ge.2 ) &
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nr), 'SEDI', zcrs(:, :, :) * prhodj(:, :, :) )
-    if ( lcold .and. lsedi .and. nmom_i.ge.2) &
+    if ( lsedi .and. nmom_i.ge.2 ) &
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'SEDI', zcis(:, :, :) * prhodj(:, :, :) )
+    if ( nmom_s.ge.2 ) &
+      call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ns), 'SEDI', zcss(:, :, :) * prhodj(:, :, :) )
+    if ( nmom_g.ge.2 ) &
+      call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ng), 'SEDI', zcgs(:, :, :) * prhodj(:, :, :) )
+    if ( nmom_h.ge.2 ) &
+      call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nh), 'SEDI', zchs(:, :, :) * prhodj(:, :, :) )
   end if
 end if
 !
 ! 1.bis Deposition at 1st level above ground
 !
-IF (LWARM .AND. LDEPOC) THEN
-  if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC),                    'DEPO', zrcs(:, :, :) * prhodj(:, :, :) )
+IF (NMOM_C.GE.1 .AND. LDEPOC) THEN
+  if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'DEPO', zrcs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv .and. nmom_c.ge.2) &
        call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'DEPO', zccs(:, :, :) * prhodj(:, :, :) )
 
@@ -770,13 +781,15 @@ IF (LWARM .AND. LDEPOC) THEN
      PINDEP(:,:) = XVDEPOC * ZRCT(:,:,IKB) *  PRHODREF(:,:,IKB) /XRHOLW
   END WHERE
 
-  if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC),                    'DEPO', zrcs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'DEPO', zrcs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv .and. nmom_c.ge.2) &
        call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'DEPO', zccs(:, :, :) * prhodj(:, :, :) )
 END IF
 !
 !
-!!$IF (LWARM .AND. LRAIN) THEN
+!!$Z_RR_CVRC(:,:,:) = 0.
+!!$Z_CR_CVRC(:,:,:) = 0.
+!!$IF (NMOM_R.GE.2) THEN
 !!$   if( lbu_enable ) then
 !!$    if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC),                    'R2C1', zrcs(:, :, :) * prhodj(:, :, :) )
 !!$    if ( lbudget_rr ) call Budget_store_init( tbudgets(NBUDGET_RR),                    'R2C1', zrrs(:, :, :) * prhodj(:, :, :) )
@@ -816,12 +829,12 @@ IF ( KRR .GE. 5 ) ZRST(:,:,:) = ZRSS(:,:,:) * PTSTEP
 IF ( KRR .GE. 6 ) ZRGT(:,:,:) = ZRGS(:,:,:) * PTSTEP
 IF ( KRR .GE. 7 ) ZRHT(:,:,:) = ZRHS(:,:,:) * PTSTEP
 !
-IF ( LWARM .AND. NMOM_C.GE.2 )             ZCCT(:,:,:)   = ZCCS(:,:,:) * PTSTEP
-IF ( LWARM .AND. LRAIN .AND. NMOM_R.GE.2 ) ZCRT(:,:,:)   = ZCRS(:,:,:) * PTSTEP
-IF ( LCOLD .AND. NMOM_I.GE.2 )             ZCIT(:,:,:)   = ZCIS(:,:,:) * PTSTEP
-IF ( LCOLD .AND. NMOM_S.GE.2 )             ZCST(:,:,:)   = ZCSS(:,:,:) * PTSTEP
-IF ( LCOLD .AND. NMOM_G.GE.2 )             ZCGT(:,:,:)   = ZCGS(:,:,:) * PTSTEP
-IF ( LCOLD .AND. NMOM_H.GE.2 )             ZCHT(:,:,:)   = ZCHS(:,:,:) * PTSTEP
+IF ( NMOM_C.GE.2 ) ZCCT(:,:,:) = ZCCS(:,:,:) * PTSTEP
+IF ( NMOM_R.GE.2 ) ZCRT(:,:,:) = ZCRS(:,:,:) * PTSTEP
+IF ( NMOM_I.GE.2 ) ZCIT(:,:,:) = ZCIS(:,:,:) * PTSTEP
+IF ( NMOM_S.GE.2 ) ZCST(:,:,:) = ZCSS(:,:,:) * PTSTEP
+IF ( NMOM_G.GE.2 ) ZCGT(:,:,:) = ZCGS(:,:,:) * PTSTEP
+IF ( NMOM_H.GE.2 ) ZCHT(:,:,:) = ZCHS(:,:,:) * PTSTEP
 ! 
 !-------------------------------------------------------------------------------
 !
@@ -1803,19 +1816,19 @@ IF ( KRR .GE. 5 ) PRS(:,:,:,5) = ZRST(:,:,:) *ZINV_TSTEP
 IF ( KRR .GE. 6 ) PRS(:,:,:,6) = ZRGT(:,:,:) *ZINV_TSTEP
 IF ( KRR .GE. 7 ) PRS(:,:,:,7) = ZRHT(:,:,:) *ZINV_TSTEP
 !
-IF ( LWARM .AND. NMOM_C.GE.2 )             PSVS(:,:,:,NSV_LIMA_NC) = ZCCT(:,:,:) *ZINV_TSTEP
-IF ( LWARM .AND. LRAIN .AND. NMOM_R.GE.2 ) PSVS(:,:,:,NSV_LIMA_NR) = ZCRT(:,:,:) *ZINV_TSTEP
-IF ( LCOLD .AND. NMOM_I.GE.2 )             PSVS(:,:,:,NSV_LIMA_NI) = ZCIT(:,:,:) *ZINV_TSTEP
-IF ( LCOLD .AND. NMOM_S.GE.2 )             PSVS(:,:,:,NSV_LIMA_NS) = ZCST(:,:,:) *ZINV_TSTEP
-IF ( LCOLD .AND. NMOM_G.GE.2 )             PSVS(:,:,:,NSV_LIMA_NG) = ZCGT(:,:,:) *ZINV_TSTEP
-IF ( LCOLD .AND. NMOM_H.GE.2 )             PSVS(:,:,:,NSV_LIMA_NH) = ZCHT(:,:,:) *ZINV_TSTEP
+IF ( NMOM_C.GE.2 ) PSVS(:,:,:,NSV_LIMA_NC) = ZCCT(:,:,:) *ZINV_TSTEP
+IF ( NMOM_R.GE.2 ) PSVS(:,:,:,NSV_LIMA_NR) = ZCRT(:,:,:) *ZINV_TSTEP
+IF ( NMOM_I.GE.2 ) PSVS(:,:,:,NSV_LIMA_NI) = ZCIT(:,:,:) *ZINV_TSTEP
+IF ( NMOM_S.GE.2 ) PSVS(:,:,:,NSV_LIMA_NS) = ZCST(:,:,:) *ZINV_TSTEP
+IF ( NMOM_G.GE.2 ) PSVS(:,:,:,NSV_LIMA_NG) = ZCGT(:,:,:) *ZINV_TSTEP
+IF ( NMOM_H.GE.2 ) PSVS(:,:,:,NSV_LIMA_NH) = ZCHT(:,:,:) *ZINV_TSTEP
 !
 IF ( NMOD_CCN .GE. 1 )   PSVS(:,:,:,NSV_LIMA_CCN_FREE:NSV_LIMA_CCN_FREE+NMOD_CCN-1) = ZCCNFT(:,:,:,:) *ZINV_TSTEP
 IF ( NMOD_CCN .GE. 1 )   PSVS(:,:,:,NSV_LIMA_CCN_ACTI:NSV_LIMA_CCN_ACTI+NMOD_CCN-1) = ZCCNAT(:,:,:,:) *ZINV_TSTEP
 IF ( NMOD_IFN .GE. 1 )   PSVS(:,:,:,NSV_LIMA_IFN_FREE:NSV_LIMA_IFN_FREE+NMOD_IFN-1) = ZIFNFT(:,:,:,:) *ZINV_TSTEP
 IF ( NMOD_IFN .GE. 1 )   PSVS(:,:,:,NSV_LIMA_IFN_NUCL:NSV_LIMA_IFN_NUCL+NMOD_IFN-1) = ZIFNNT(:,:,:,:) *ZINV_TSTEP
 IF ( NMOD_IMM .GE. 1 )   PSVS(:,:,:,NSV_LIMA_IMM_NUCL:NSV_LIMA_IMM_NUCL+NMOD_IMM-1) = ZIMMNT(:,:,:,:) *ZINV_TSTEP
-IF ( LCOLD .AND. LHHONI) PSVS(:,:,:,NSV_LIMA_HOM_HAZE) = ZHOMFT(:,:,:) *ZINV_TSTEP
+IF ( LHHONI) PSVS(:,:,:,NSV_LIMA_HOM_HAZE) = ZHOMFT(:,:,:) *ZINV_TSTEP
 !
 !
 !

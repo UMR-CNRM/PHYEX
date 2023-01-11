@@ -244,7 +244,7 @@ IF( IMICRO >= 0 ) THEN
 !
 !-------------------------------------------------------------------------------
 !
-IF (LRAIN) THEN
+IF (NMOM_R.GE.2) THEN
 !
 !*       2. Self-collection of cloud droplets    
 !   	 ------------------------------------
@@ -445,7 +445,7 @@ IF (LRAIN) THEN
     if ( lbudget_sv ) call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nr), 'SCBU', &
                                              Unpack( zcrs(:), mask = gmicro(:, :, :), field = pcrs(:, :, :) ) * prhodj(:, :, :) )
    END IF
-END IF ! LRAIN
+END IF
 !
 !
 !-------------------------------------------------------------------------------

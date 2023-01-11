@@ -52,12 +52,9 @@ REAL,    SAVE :: XTSTEP_TS              ! maximum time for the sub-time-step
 !
 ! 1.1 Cold scheme configuration
 !
-LOGICAL, SAVE :: LCOLD                  ! TRUE to enable the cold scheme
 LOGICAL, SAVE :: LNUCL                  ! TRUE to enable ice nucleation
 LOGICAL, SAVE :: LSEDI                  ! TRUE to enable pristine ice sedimentation
 LOGICAL, SAVE :: LHHONI                 ! TRUE to enable freezing of haze particules
-LOGICAL, SAVE :: LSNOW                  ! TRUE to enable snow and graupel
-LOGICAL, SAVE :: LHAIL                  ! TRUE to enable hail
 LOGICAL, SAVE :: LMEYERS                ! TRUE to use Meyers nucleation
 LOGICAL, SAVE :: LCIBU                  ! TRUE to use collisional ice breakup
 LOGICAL, SAVE :: LRDSF                  ! TRUE to use rain drop shattering by freezing
@@ -135,9 +132,7 @@ REAL,SAVE :: XNDEBRIS_CIBU              ! Number of ice crystal debris produced
 !
 ! 2.1 Warm scheme configuration
 !
-LOGICAL, SAVE :: LWARM         ! TRUE to enable the warm scheme
 LOGICAL, SAVE :: LACTI         ! TRUE to enable CCN activation
-LOGICAL, SAVE :: LRAIN         ! TRUE to enable the formation of rain
 LOGICAL, SAVE :: LSEDC         ! TRUE to enable the droplet sedimentation
 LOGICAL, SAVE :: LACTIT        ! TRUE to enable the usage of dT/dt in CCN activation
 LOGICAL, SAVE :: LBOUND        ! TRUE to enable the continuously replenishing

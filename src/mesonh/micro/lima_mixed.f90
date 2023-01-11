@@ -104,9 +104,9 @@ USE MODD_CST,              ONLY: XP00, XRD, XRV, XMV, XMD, XCPD, XCPV,       &
                                  XALPI, XBETAI, XGAMI
 USE MODD_NSV
 USE MODD_PARAMETERS,       ONLY: JPHEXT, JPVEXT
-USE MODD_PARAM_LIMA,       ONLY: NMOD_IFN, XRTMIN, XCTMIN, LWARM, LCOLD,     &
-                                 NMOD_CCN, NMOD_IMM, LRAIN, LSNOW, LHAIL, LSNOW_T,    &
-                                 NMOM_S, NMOM_G, NMOM_H
+USE MODD_PARAM_LIMA,       ONLY: NMOD_IFN, XRTMIN, XCTMIN,     &
+                                 NMOD_CCN, NMOD_IMM, LSNOW_T,    &
+                                 NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
 USE MODD_PARAM_LIMA_WARM,  ONLY: XLBC, XLBEXC, XLBR, XLBEXR
 USE MODD_PARAM_LIMA_COLD,  ONLY: XLBI, XLBEXI, XLBS, XLBEXS, XSCFAC, &
                                  XLBDAS_MAX, XLBDAS_MIN, XTRANS_MP_GAMMAS, &
@@ -316,16 +316,16 @@ PCSS(:,:,:) = 0.
 PCGS(:,:,:) = 0. 
 PCHS(:,:,:) = 0. 
 !
-IF ( LWARM ) PCCT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NC) 
-IF ( LWARM .AND. LRAIN ) PCRT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NR)
-IF ( LCOLD ) PCIT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NI)
+IF ( NMOM_C.GE.2 ) PCCT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NC) 
+IF ( NMOM_R.GE.2 ) PCRT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NR)
+IF ( NMOM_I.GE.2 ) PCIT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NI)
 IF ( NMOM_S.GE.2 ) PCST(:,:,:) = PSVT(:,:,:,NSV_LIMA_NS)
 IF ( NMOM_G.GE.2 ) PCGT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NG)
 IF ( NMOM_H.GE.2 ) PCHT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NH)
 !
-IF ( LWARM ) PCCS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NC)
-IF ( LWARM .AND. LRAIN ) PCRS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NR)
-IF ( LCOLD ) PCIS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NI)
+IF ( NMOM_C.GE.2 ) PCCS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NC)
+IF ( NMOM_R.GE.2 ) PCRS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NR)
+IF ( NMOM_I.GE.2 ) PCIS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NI)
 IF ( NMOM_S.GE.2 ) PCSS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NS)
 IF ( NMOM_G.GE.2 ) PCGS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NG)
 IF ( NMOM_H.GE.2 ) PCHS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NH)
@@ -608,7 +608,7 @@ IF( IMICRO >= 0 ) THEN
 !        3.     Compute the fast RS and RG processes
 !   	        ------------------------------------
 !
-IF (LSNOW) THEN
+IF (NMOM_S.GE.1) THEN
    CALL LIMA_MIXED_FAST_PROCESSES(ZRHODREF, ZZT, ZPRES, PTSTEP,                   &
                                   ZLSFACT, ZLVFACT, ZKA, ZDV, ZCJ,                &
                                   ZRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT,             &
@@ -749,12 +749,12 @@ IF ( KRR .GE. 7 ) PRS(:,:,:,7) = PRHS(:,:,:)
 !
 ! Prepare 3D number concentrations
 !
-PSVS(:,:,:,NSV_LIMA_NC) = PCCS(:,:,:)
-IF ( LRAIN ) PSVS(:,:,:,NSV_LIMA_NR) = PCRS(:,:,:)
+IF ( NMOM_C.GE.2 ) PSVS(:,:,:,NSV_LIMA_NC) = PCCS(:,:,:)
+IF ( NMOM_R.GE.2 ) PSVS(:,:,:,NSV_LIMA_NR) = PCRS(:,:,:)
+IF ( NMOM_I.GE.2 ) PSVS(:,:,:,NSV_LIMA_NI) = PCIS(:,:,:)
 IF ( NMOM_S.GE.2 ) PSVS(:,:,:,NSV_LIMA_NS) = PCSS(:,:,:)
 IF ( NMOM_G.GE.2 ) PSVS(:,:,:,NSV_LIMA_NG) = PCGS(:,:,:)
 IF ( NMOM_H.GE.2 ) PSVS(:,:,:,NSV_LIMA_NH) = PCHS(:,:,:)
-PSVS(:,:,:,NSV_LIMA_NI) = PCIS(:,:,:)
 !
 IF ( NMOD_CCN .GE. 1 ) THEN
    PSVS(:,:,:,NSV_LIMA_CCN_FREE:NSV_LIMA_CCN_FREE+NMOD_CCN-1) = PNFS(:,:,:,:)

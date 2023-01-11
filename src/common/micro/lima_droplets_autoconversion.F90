@@ -100,8 +100,8 @@ IF (NMOM_C.EQ.1 .AND. LKESSLERAC) THEN
    P_RC_AUTO(:) = - 1.E-3 * MAX ( PRCT(:) - 0.5E-3 / PRHODREF(:), 0. )
 ELSE IF (LKHKO) THEN
 !
-!        1. Autoconversion of cloud droplets (Berry-Reinhardt parameterization)
-!   	 ----------------------------------------------------------------------
+!        1. Autoconversion of cloud droplets
+!   	 -----------------------------------
 !
    WHERE ( PRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2) .AND. LDCOMPUTE(:) )
 !

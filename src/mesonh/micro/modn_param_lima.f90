@@ -17,7 +17,7 @@ USE MODD_PARAM_LIMA
 IMPLICIT NONE
 !
 !
-NAMELIST/NAM_PARAM_LIMA/LCOLD, LNUCL, LSEDI, LSNOW, LHAIL, LHHONI, LMEYERS,&
+NAMELIST/NAM_PARAM_LIMA/LNUCL, LSEDI, LHHONI, LMEYERS,                     &
                         NMOM_I, NMOM_S, NMOM_G, NMOM_H,                    &
                         NMOD_IFN, XIFN_CONC, LIFN_HOM,                     &
                         CIFN_SPECIES, CINT_MIXING, NMOD_IMM, NIND_SPECIE,  &
@@ -25,7 +25,7 @@ NAMELIST/NAM_PARAM_LIMA/LCOLD, LNUCL, LSEDI, LSNOW, LHAIL, LHHONI, LMEYERS,&
                         XALPHAI, XNUI, XALPHAS, XNUS, XALPHAG, XNUG,       &
                         XFACTNUC_DEP, XFACTNUC_CON, NPHILLIPS,             &
                         LCIBU, XNDEBRIS_CIBU, LRDSF, LMURAKAMI,            &
-                        LWARM, LACTI, LRAIN, LSEDC, LACTIT, LBOUND, LSPRO, &
+                        LACTI, LSEDC, LACTIT, LBOUND, LSPRO,               &
                         LADJ, LKHKO, LKESSLERAC, NMOM_C, NMOM_R,           &
                         NMOD_CCN, XCCN_CONC,                               &
                         LCCN_HOM, CCCN_MODES, HINI_CCN, HTYPE_CCN,         &

@@ -74,7 +74,7 @@ SUBROUTINE LIMA_ICE_DEPOSITION (PTSTEP, LDCOMPUTE,                        &
 !              ------------
 !
 USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, XALPHAI, XALPHAS, XNUI, XNUS,&
-                                 LSNOW, NMOM_I 
+                                 NMOM_I, NMOM_S 
 USE MODD_PARAM_LIMA_COLD, ONLY : XCXS, XCCS,                                  &
                                  XLBDAS_MAX, XDSCNVI_LIM, XLBDASCNVI_MAX,     &
                                  XC0DEPSI, XC1DEPSI, XR0DEPSI, XR1DEPSI,      &
@@ -177,7 +177,7 @@ ELSE
    END WHERE
 END IF
 !
-IF (.NOT.LSNOW) THEN
+IF (NMOM_S.EQ.0) THEN
    P_RI_CNVS(:) = 0.
    P_CI_CNVS(:) = 0.
 END IF

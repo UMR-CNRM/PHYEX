@@ -296,7 +296,7 @@ SUBROUTINE LIMA_TENDENCIES (PTSTEP, LDCOMPUTE,                                  
 USE MODD_CST,              ONLY : XP00, XRD, XRV, XMD, XMV, XCPD, XCPV, XCL, XCI, XLVTT, XLSTT, XTT, &
                                   XALPW, XBETAW, XGAMW, XALPI, XBETAI, XGAMI
 USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, XNUS, LCIBU, LRDSF,                                &
-                                  LCOLD, LNUCL, LSNOW, LHAIL, LWARM, LACTI, LRAIN, LKHKO, LSNOW_T,   &
+                                  LNUCL, LACTI, LKHKO, LSNOW_T,   &
                                   NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
 USE MODD_PARAM_LIMA_WARM,  ONLY : XLBC, XLBEXC, XLBR, XLBEXR, XCCR, XCXR
 USE MODD_PARAM_LIMA_MIXED, ONLY : XLBG, XLBEXG, XCCG, XCXG, XLBH, XLBEXH, XCCH, XCXH, XLBDAG_MAX
@@ -722,7 +722,7 @@ END IF
 !-------------------------------------------------------------------------------
 ! Call microphysical processes   
 !
-IF (LCOLD .AND. LWARM) THEN
+IF (NMOM_C.GE.1 .AND. NMOM_I.GE.1) THEN
    CALL LIMA_DROPLETS_HOM_FREEZING (PTSTEP, LDCOMPUTE,                 & ! independent from CF,IF,PF
                                     ZT, ZLVFACT, ZLSFACT,              &
                                     ZRCT, PCCT, ZLBDC,                 &
@@ -735,7 +735,7 @@ IF (LCOLD .AND. LWARM) THEN
    PA_TH(:) = PA_TH(:) + P_TH_HONC(:)
 END IF
 !
-IF (LWARM .AND. LRAIN .AND. (.NOT. LKHKO) .AND. NMOM_C.GE.2) THEN
+IF ((.NOT. LKHKO) .AND. NMOM_C.GE.2) THEN
    CALL LIMA_DROPLETS_SELF_COLLECTION (LDCOMPUTE,          & ! depends on CF
                                        PRHODREF,           &
                                        PCCT/ZCF1D, ZLBDC3, &
@@ -744,7 +744,7 @@ IF (LWARM .AND. LRAIN .AND. (.NOT. LKHKO) .AND. NMOM_C.GE.2) THEN
    PA_CC(:) = PA_CC(:) + P_CC_SELF(:)
 END IF
 !
-IF (LWARM .AND. LRAIN) THEN
+IF (NMOM_C.GE.1 .AND. NMOM_R.GE.1) THEN
    CALL LIMA_DROPLETS_AUTOCONVERSION (LDCOMPUTE,                             & ! depends on CF
                                       PRHODREF,                              &
                                       ZRCT/ZCF1D, PCCT/ZCF1D, ZLBDC, ZLBDR,  &
@@ -759,7 +759,7 @@ IF (LWARM .AND. LRAIN) THEN
    IF (NMOM_R.GE.2) PA_CR(:) = PA_CR(:) + P_CR_AUTO(:)
 END IF
 !
-IF (LWARM .AND. LRAIN) THEN
+IF (NMOM_C.GE.1 .AND. NMOM_R.GE.1) THEN
    CALL LIMA_DROPLETS_ACCRETION (LDCOMPUTE,                                     & ! depends on CF, PF
                                  PRHODREF,                                      &
                                  ZRCT/ZCF1D, ZRRT/ZPF1D, PCCT/ZCF1D, PCRT/ZPF1D,&
@@ -774,7 +774,7 @@ IF (LWARM .AND. LRAIN) THEN
    PA_RR(:) = PA_RR(:) - P_RC_ACCR(:)
 END IF
 !
-IF (LWARM .AND. LRAIN .AND. (.NOT. LKHKO) .AND. NMOM_R.GE.2) THEN 
+IF ((.NOT. LKHKO) .AND. NMOM_R.GE.2) THEN 
    CALL LIMA_DROPS_SELF_COLLECTION (LDCOMPUTE,           & ! depends on PF
                                     PRHODREF,            &
                                     PCRT/ZPF1D(:), ZLBDR, ZLBDR3, &
@@ -785,7 +785,7 @@ IF (LWARM .AND. LRAIN .AND. (.NOT. LKHKO) .AND. NMOM_R.GE.2) THEN
    PA_CR(:) = PA_CR(:) + P_CR_SCBU(:)
 END IF
 !
-IF (LWARM .AND. LRAIN) THEN
+IF (NMOM_R.GE.2) THEN
    CALL LIMA_RAIN_EVAPORATION (PTSTEP, LDCOMPUTE,                               & ! depends on PF > CF 
                                PRHODREF, ZT, ZLV, ZLVFACT, ZEVSAT, ZRVSAT,      &
                                PRVT, ZRCT/ZPF1D, ZRRT/ZPF1D, PCRT/ZPF1D, ZLBDR, &
@@ -802,7 +802,7 @@ IF (LWARM .AND. LRAIN) THEN
    IF (NMOM_R.GE.2) PA_CR(:) = PA_CR(:) + P_CR_EVAP(:)
 END IF
 !
-IF (LCOLD) THEN
+IF (NMOM_I.GE.1) THEN
    !
    ! Includes vapour deposition on ice, ice -> snow conversion
    !
@@ -826,7 +826,7 @@ IF (LCOLD) THEN
 
 END IF
 !
-IF (LCOLD .AND. LSNOW) THEN
+IF (NMOM_S.GE.1) THEN
    !
    ! Includes vapour deposition on snow, snow -> ice conversion
    !
@@ -850,7 +850,7 @@ IF (LCOLD .AND. LSNOW) THEN
 
 END IF
 !
-IF (LSNOW .AND. NMOM_S.GE.2) THEN 
+IF (NMOM_S.GE.2) THEN 
    CALL LIMA_SNOW_SELF_COLLECTION (LDCOMPUTE,           & ! depends on PF
                                    PRHODREF,            &
                                    ZRST(:)/ZPF1D(:), PCST/ZPF1D(:), ZLBDS, ZLBDS3, &
@@ -867,7 +867,7 @@ END IF
 !ZLBDS(:) = MIN( XLBDAS_MAX, ZLBDS(:))
 !
 !
-IF (LCOLD .AND. LSNOW) THEN
+IF (NMOM_I.GE.1 .AND. NMOM_S.GE.1) THEN
    CALL LIMA_ICE_AGGREGATION_SNOW (LDCOMPUTE,                                                    & ! depends on IF, PF
                                    ZT, PRHODREF,                                                 &
                                    ZRIT/ZIF1D, ZRST/ZPF1D, PCIT/ZIF1D, PCST/ZPF1D, ZLBDI, ZLBDS, &
@@ -880,7 +880,7 @@ IF (LCOLD .AND. LSNOW) THEN
    PA_RS(:) = PA_RS(:) - P_RI_AGGS(:)
 END IF
 !
-IF (LWARM .AND. LCOLD) THEN
+IF (NMOM_G.GE.1) THEN
    CALL LIMA_GRAUPEL_DEPOSITION (LDCOMPUTE, PRHODREF,                                    & ! depends on PF ?
                                  ZRGT/ZPF1D, PCGT/ZPF1D, ZSSI, ZLBDG, ZAI, ZCJ, ZLSFACT, &
                                  P_TH_DEPG, P_RG_DEPG                                    )
@@ -892,7 +892,7 @@ IF (LWARM .AND. LCOLD) THEN
    PA_TH(:) = PA_TH(:) + P_TH_DEPG(:)
 END IF
 !
-IF (LWARM .AND. LCOLD .AND. NMOM_I.EQ.1) THEN
+IF (NMOM_C.GE.1 .AND. NMOM_I.EQ.1) THEN
    CALL LIMA_BERGERON (LDCOMPUTE,                                 & ! depends on CF, IF
                        ZRCT/ZCF1D, ZRIT/ZIF1D, PCIT/ZIF1D, ZLBDI, &
                        ZSSIW, ZAI, ZCJ, ZLVFACT, ZLSFACT,         &
@@ -905,7 +905,7 @@ IF (LWARM .AND. LCOLD .AND. NMOM_I.EQ.1) THEN
    PA_TH(:) = PA_TH(:) + P_TH_BERFI(:)
 END IF
 !
-IF (LWARM .AND. LCOLD .AND. LSNOW) THEN
+IF (NMOM_C.GE.1 .AND. NMOM_S.GE.1) THEN
      !
      ! Graupel production as tendency (or should be tendency + instant to stick to the previous version ?)
      ! Includes the Hallett Mossop process for riming of droplets by snow (HMS)
@@ -937,7 +937,7 @@ IF (LWARM .AND. LCOLD .AND. LSNOW) THEN
 
 END IF
 !
-IF (LWARM .AND. LRAIN .AND. LCOLD .AND. LSNOW) THEN
+IF (NMOM_R.GE.1 .AND. NMOM_S.GE.1) THEN
    CALL LIMA_RAIN_ACCR_SNOW (PTSTEP, LDCOMPUTE,                                & ! depends on PF
                              PRHODREF, ZT,                                     &
                              ZRRT/ZPF1D, PCRT/ZPF1D, ZRST/ZPF1D, PCST/ZPF1D, ZLBDR, ZLBDS, ZLVFACT, ZLSFACT, &
@@ -959,7 +959,7 @@ IF (LWARM .AND. LRAIN .AND. LCOLD .AND. LSNOW) THEN
 
 END IF
 !
-IF (LWARM .AND. LCOLD .AND. LSNOW) THEN
+IF (NMOM_S.GE.1) THEN
    !
    ! Conversion melting of snow should account for collected droplets and drops where T>0C, but does not !
    ! Some thermodynamical computations inside, to externalize ?
@@ -978,7 +978,7 @@ IF (LWARM .AND. LCOLD .AND. LSNOW) THEN
 
 END IF
 !
-IF (LWARM .AND. LRAIN .AND. LCOLD ) THEN
+IF (NMOM_R.GE.1) THEN
    CALL LIMA_RAIN_FREEZING (LDCOMPUTE,                                             & ! depends on PF, IF
                             PRHODREF, ZT, ZLVFACT, ZLSFACT,                        &
                             ZRRT/ZPF1D, PCRT/ZPF1D, ZRIT/ZIF1D, PCIT/ZIF1D, ZLBDR, &
@@ -999,7 +999,7 @@ IF (LWARM .AND. LRAIN .AND. LCOLD ) THEN
 
 END IF
 !
-IF (LWARM .AND. LCOLD .AND. LSNOW .AND. LCIBU) THEN
+IF (NMOM_S.GE.1 .AND. NMOM_G.GE.1 .AND. LCIBU) THEN
    !
    ! Conversion melting of snow should account for collected droplets and drops where T>0C, but does not !
    ! Some thermodynamical computations inside, to externalize ?
@@ -1018,7 +1018,7 @@ IF (LWARM .AND. LCOLD .AND. LSNOW .AND. LCIBU) THEN
 
 END IF
 !
-IF (LWARM .AND. LRAIN .AND. LCOLD .AND. LSNOW .AND. LRDSF) THEN
+IF (NMOM_R.GE.1 .AND. NMOM_I.GE.1 .AND. LRDSF) THEN
    !
    ! Conversion melting of snow should account for collected droplets and drops where T>0C, but does not !
    ! Some thermodynamical computations inside, to externalize ?
@@ -1037,7 +1037,7 @@ IF (LWARM .AND. LRAIN .AND. LCOLD .AND. LSNOW .AND. LRDSF) THEN
 
 END IF
 !
-IF (LWARM .AND. LCOLD) THEN
+IF (NMOM_G.GE.1) THEN
      !
      ! Melting of graupel should account for collected droplets and drops where T>0C, but does not !
      ! Collection and water shedding should also happen where T>0C, but do not !
@@ -1061,7 +1061,7 @@ IF (LWARM .AND. LCOLD) THEN
                       PA_RI, PA_CI, PA_RS, PA_CS, PA_RG, PA_CG, PA_RH, PA_CH )
 END IF
 !
-IF (LWARM .AND. LCOLD .AND. LHAIL) THEN
+IF (NMOM_H.GE.1) THEN
    CALL LIMA_HAIL_DEPOSITION (LDCOMPUTE, PRHODREF,                                    & ! depends on PF ?
                               ZRHT/ZPF1D, PCHT/ZPF1D, ZSSI, ZLBDH, ZAI, ZCJ, ZLSFACT, &
                               P_TH_DEPH, P_RH_DEPH                                    )

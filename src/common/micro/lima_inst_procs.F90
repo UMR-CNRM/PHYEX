@@ -102,7 +102,7 @@ SUBROUTINE LIMA_INST_PROCS (PTSTEP, LDCOMPUTE,                                  
 !-------------------------------------------------------------------------------
 !
 !
-USE MODD_PARAM_LIMA, ONLY : LCOLD, LWARM, LRAIN, NMOM_R
+USE MODD_PARAM_LIMA, ONLY : NMOM_C, NMOM_R, NMOM_I, NMOM_G
 !
 USE MODI_LIMA_DROPS_BREAK_UP
 USE MODI_LIMA_DROPS_HOM_FREEZING
@@ -159,7 +159,7 @@ REAL, DIMENSION(:)  , INTENT(INOUT) :: PPF1D      ! Precipitation fraction
 !
 !-------------------------------------------------------------------------------
 !
-IF (LWARM .AND. LRAIN .AND. NMOM_R.GE.2) THEN
+IF (NMOM_R.GE.2) THEN
    CALL LIMA_DROPS_BREAK_UP (LDCOMPUTE,    & ! no dependance on CF, IF or PF
                              PCRT, PRRT,   &
                              P_CR_BRKU,    &
@@ -168,7 +168,7 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
-IF (LCOLD .AND. LWARM .AND. LRAIN) THEN
+IF (NMOM_G.GE.1 .AND. NMOM_R.GE.1) THEN
    CALL LIMA_DROPS_HOM_FREEZING (PTSTEP, LDCOMPUTE,                        & ! no dependance on CF, IF or PF
                                  PEXNREF, PPABST,                          &
                                  PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
@@ -179,7 +179,7 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
-IF (LCOLD .AND. LWARM) THEN
+IF (NMOM_C.GE.1 .AND. NMOM_I.GE.1) THEN
    CALL LIMA_ICE_MELTING (PTSTEP, LDCOMPUTE,                        & ! no dependance on CF, IF or PF
                           PEXNREF, PPABST,                          & ! but ice fraction becomes cloud fraction
                           PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, & ! -> where ?

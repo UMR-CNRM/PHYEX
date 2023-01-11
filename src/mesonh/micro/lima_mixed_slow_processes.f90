@@ -132,7 +132,7 @@ use modd_budget,           only: lbu_enable, nbumod,                            
 USE MODD_CST,              ONLY : XTT, XALPI, XBETAI, XGAMI,          &
                                        XALPW, XBETAW, XGAMW
 USE MODD_NSV
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, NMOD_IFN, LSNOW, LHAIL, NMOM_S, NMOM_G, NMOM_H
+USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, NMOD_IFN, NMOM_S, NMOM_G, NMOM_H
 USE MODD_PARAM_LIMA_COLD,  ONLY : XDI, X0DEPI, X2DEPI, XSCFAC
 USE MODD_PARAM_LIMA_MIXED, ONLY : XLBG, XLBEXG, XLBDAG_MAX, XCCG, XCXG, &
                                   X0DEPG, XEX0DEPG, X1DEPG, XEX1DEPG,   &
@@ -202,7 +202,7 @@ INTEGER :: JMOD_IFN
 !        ---------------------------------------------
 !
 !
-IF (LSNOW) THEN
+IF (NMOM_S.GE.1) THEN
    ZZW(:) = 0.0
    WHERE ( (ZRGT(:)>XRTMIN(6)) .AND. (ZRGS(:)>XRTMIN(6)/PTSTEP) ) 
       ZZW(:) = ( ZSSI(:)/ZAI(:)/ZRHODREF(:) ) *  ZCGT(:) *               &
@@ -230,7 +230,7 @@ END IF
 !        ---------------------------------------------
 !
 !
-IF (LHAIL .AND. NMOM_H.GE.2) THEN
+IF (NMOM_H.GE.2) THEN
    ZZW(:) = 0.0
    WHERE ( (ZRHT(:)>XRTMIN(7)) .AND. (ZRHS(:)>XRTMIN(7)/PTSTEP) )
       ZZW(:) = ( ZSSI(:)/(ZAI(:)) ) *  ZCHT(:) *                                 &   
