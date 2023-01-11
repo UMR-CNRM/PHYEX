@@ -202,11 +202,10 @@ USE MODE_BUDGET,         ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDG
 USE MODE_MSG,            ONLY: PRINT_MSG, NVERB_FATAL
 
 USE MODE_ICE4_RAINFR_VERT, ONLY: ICE4_RAINFR_VERT
-USE MODE_ICE4_SEDIMENTATION_STAT, ONLY: ICE4_SEDIMENTATION_STAT
-USE MODE_ICE4_SEDIMENTATION_SPLIT, ONLY: ICE4_SEDIMENTATION_SPLIT
-USE MODE_ICE4_SEDIMENTATION_SPLIT_MOMENTUM, ONLY: ICE4_SEDIMENTATION_SPLIT_MOMENTUM
+USE MODE_ICE4_SEDIMENTATION, ONLY: ICE4_SEDIMENTATION
 USE MODE_ICE4_TENDENCIES, ONLY: ICE4_TENDENCIES
 USE MODE_ICE4_NUCLEATION, ONLY: ICE4_NUCLEATION
+USE MODE_ICE4_CORRECT_NEGATIVITIES, ONLY: ICE4_CORRECT_NEGATIVITIES
 !
 IMPLICIT NONE
 !
@@ -302,8 +301,6 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZRHT    ! Hail m.r. source at t
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZCITOUT ! Output value for CIT
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZLBDAS  ! Modif  !lbda parameter snow
 
-!Diagnostics
-REAL, DIMENSION(D%NIJT) :: ZINPRI ! Pristine ice instant precip
 !
 LOGICAL :: GEXT_TEND
 LOGICAL :: LSOFT ! Must we really compute tendencies or only adjust them to new T variables
@@ -504,125 +501,25 @@ END DO
 !               -------------------------------------
 !
 IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
-  !
-  !*       2.1     sedimentation
-  !
-  IF (BUCONF%LBUDGET_RC .AND. PARAMI%LSEDIC) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', PRCS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RR)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'SEDI', PRRS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'SEDI', PRIS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RS)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', PRSS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', PRGS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:, :) * PRHODJ(:, :))
-
-  IF(PARAMI%CSEDIM=='STAT') THEN
-    IF(KRR==7) THEN
-      DO JK = IKTB,IKTE
-        DO JIJ = IIJB,IIJE
-          ZRCT(JIJ,JK)=PRCS(JIJ,JK)*PTSTEP
-          ZRRT(JIJ,JK)=PRRS(JIJ,JK)*PTSTEP
-          ZRIT(JIJ,JK)=PRIS(JIJ,JK)*PTSTEP
-          ZRST(JIJ,JK)=PRSS(JIJ,JK)*PTSTEP
-          ZRGT(JIJ,JK)=PRGS(JIJ,JK)*PTSTEP
-          ZRHT(JIJ,JK)=PRHS(JIJ,JK)*PTSTEP
-        ENDDO
-      ENDDO
-      CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
-                                  &PTSTEP, KRR, PARAMI%LSEDIC, PDZZ, &
-                                  &PRHODREF, PPABST, PTHT, PRHODJ, &
-                                  &ZLBDAS, &
-                                  &PRCS, ZRCT, PRRS, ZRRT, PRIS, ZRIT,&
-                                  &PRSS, ZRST, PRGS, ZRGT,&
-                                  &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
-                                  &PSEA=PSEA, PTOWN=PTOWN, &
-                                  &PINPRH=PINPRH, PRHT=ZRHT, PRHS=PRHS, PFPR=PFPR)
-    ELSE
-      DO JK = IKTB,IKTE
-        DO JIJ = IIJB,IIJE
-          ZRCT(JIJ,JK)=PRCS(JIJ,JK)*PTSTEP
-          ZRRT(JIJ,JK)=PRRS(JIJ,JK)*PTSTEP
-          ZRIT(JIJ,JK)=PRIS(JIJ,JK)*PTSTEP
-          ZRST(JIJ,JK)=PRSS(JIJ,JK)*PTSTEP
-          ZRGT(JIJ,JK)=PRGS(JIJ,JK)*PTSTEP
-        ENDDO
-      ENDDO
-      CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
-                                  &PTSTEP, KRR, PARAMI%LSEDIC, PDZZ, &
-                                  &PRHODREF, PPABST, PTHT, PRHODJ, &
-                                  &ZLBDAS, &
-                                  &PRCS, ZRCT, PRRS, ZRRT, PRIS, ZRIT,&
-                                  &PRSS, ZRST, PRGS, ZRGT,&
-                                  &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
-                                  &PSEA=PSEA, PTOWN=PTOWN, &
-                                  &PFPR=PFPR)
-    ENDIF
-    PINPRS(IIJB:IIJE) = PINPRS(IIJB:IIJE) + ZINPRI(IIJB:IIJE)
-    !No negativity correction here as we apply sedimentation on PR.S*PTSTEP variables
-  ELSEIF(PARAMI%CSEDIM=='SPLI') THEN
-    IF(KRR==7) THEN
-      CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
-                                   &PTSTEP, KRR, PDZZ, &
-                                   &PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
-                                   &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                                   &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
-                                   &PSEA=PSEA, PTOWN=PTOWN, &
-                                   &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
-    ELSE
-      CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
-                                   &PTSTEP, KRR, PDZZ, &
-                                   &PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
-                                   &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                                   &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
-                                   &PSEA=PSEA, PTOWN=PTOWN, &
-                                   &PFPR=PFPR)
-    ENDIF
-    PINPRS(IIJB:IIJE) = PINPRS(IIJB:IIJE) + ZINPRI(IIJB:IIJE)
-    !We correct negativities with conservation
-    !SPLI algorith uses a time-splitting. Inside the loop a temporary m.r. is used.
-    !   It is initialized with the m.r. at T and is modified by two tendencies:
-    !   sedimentation tendency and an external tendency which represents all other
-    !   processes (mainly advection and microphysical processes). If both tendencies
-    !   are negative, sedimentation can remove a species at a given sub-timestep. From
-    !   this point sedimentation stops for the remaining sub-timesteps but the other tendency
-    !   will be still active and will lead to negative values.
-    !   We could prevent the algorithm to not consume too much a species, instead we apply
-    !   a correction here.
-    CALL CORRECT_NEGATIVITIES(D, KRR, PRVS, PRCS, PRRS, &
-                             &PRIS, PRSS, PRGS, &
-                             &PTHS, ZZ_LVFACT, ZZ_LSFACT, PRHS)
-  ELSEIF(PARAMI%CSEDIM=='NONE') THEN
+  IF(KRR==7) THEN
+    CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, BUCONF, &
+                           &PTSTEP, KRR, PDZZ, &
+                           &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
+                           &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
+                           &PINPRC, PINPRR, PINPRS, PINPRG, &
+                           &TBUDGETS, KBUDGETS, &
+                           &PSEA=PSEA, PTOWN=PTOWN, &
+                           &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
   ELSE
-    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'no sedimentation scheme for PARAMI%CSEDIM='//PARAMI%CSEDIM)
-  END IF
-
-
-
-
-
-
-!!!!! ajouter momentum
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  !
-  !*       2.2     budget storage
-  !
-  IF (BUCONF%LBUDGET_RC .AND. PARAMI%LSEDIC) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', PRCS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RR)              CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'SEDI', PRRS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI)              CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'SEDI', PRIS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RS)              CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', PRSS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG)              CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', PRGS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:, :) * PRHODJ(:, :))
+    CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, BUCONF, &
+                           &PTSTEP, KRR, PDZZ, &
+                           &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
+                           &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
+                           &PINPRC, PINPRR, PINPRS, PINPRG, &
+                           &TBUDGETS, KBUDGETS, &
+                           &PSEA=PSEA, PTOWN=PTOWN, &
+                           &PFPR=PFPR)
+  ENDIF
 ENDIF
 !
 
@@ -1571,9 +1468,9 @@ END IF
 !  call must only be due to the correction of negativities.
 !
 !We correct negativities with conservation
-CALL CORRECT_NEGATIVITIES(D, KRR, PRVS, PRCS, PRRS, &
-                         &PRIS, PRSS, PRGS, &
-                         &PTHS, ZZ_LVFACT, ZZ_LSFACT, PRHS)
+CALL ICE4_CORRECT_NEGATIVITIES(D, ICED, KRR, PRVS, PRCS, PRRS, &
+                              &PRIS, PRSS, PRGS, &
+                              &PTHS, ZZ_LVFACT, ZZ_LSFACT, PRHS)
 
 IF (BUCONF%LBU_ENABLE) THEN
   IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'CORR', PTHS(:, :)*PRHODJ(:, :))
@@ -1592,104 +1489,25 @@ END IF
 !               -------------------------------------
 !
 IF(PARAMI%LSEDIM_AFTER) THEN
-  !
-  !*       8.1     sedimentation
-  !
-  IF (BUCONF%LBUDGET_RC .AND. PARAMI%LSEDIC) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', PRCS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RR)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'SEDI', PRRS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'SEDI', PRIS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RS)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', PRSS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', PRGS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:, :) * PRHODJ(:, :))
-
-  IF(PARAMI%CSEDIM=='STAT') THEN
-    IF (KRR==7) THEN
-      DO JK = IKTB,IKTE
-        DO JIJ = IIJB,IIJE
-          ZRCT(JIJ,JK)=PRCS(JIJ,JK)*PTSTEP
-          ZRRT(JIJ,JK)=PRRS(JIJ,JK)*PTSTEP
-          ZRIT(JIJ,JK)=PRIS(JIJ,JK)*PTSTEP
-          ZRST(JIJ,JK)=PRSS(JIJ,JK)*PTSTEP
-          ZRGT(JIJ,JK)=PRGS(JIJ,JK)*PTSTEP
-          ZRHT(JIJ,JK)=PRHS(JIJ,JK)*PTSTEP
-        ENDDO
-      ENDDO
-      CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
-                                  &PTSTEP, KRR, PARAMI%LSEDIC, PDZZ, &
-                                  &PRHODREF, PPABST, PTHT, PRHODJ, &
-                                  &ZLBDAS, &
-                                  &PRCS, ZRCT, PRRS, ZRRT, PRIS, ZRIT,&
-                                  &PRSS, ZRST, PRGS, ZRGT,&
-                                  &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
-                                  &PSEA=PSEA, PTOWN=PTOWN, &
-                                  &PINPRH=PINPRH, PRHT=ZRHT, PRHS=PRHS, PFPR=PFPR)
-    ELSE
-      DO JK = IKTB,IKTE
-        DO JIJ = IIJB,IIJE
-          ZRCT(JIJ,JK)=PRCS(JIJ,JK)*PTSTEP
-          ZRRT(JIJ,JK)=PRRS(JIJ,JK)*PTSTEP
-          ZRIT(JIJ,JK)=PRIS(JIJ,JK)*PTSTEP
-          ZRST(JIJ,JK)=PRSS(JIJ,JK)*PTSTEP
-          ZRGT(JIJ,JK)=PRGS(JIJ,JK)*PTSTEP
-        ENDDO
-      ENDDO
-      CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
-                                  &PTSTEP, KRR, PARAMI%LSEDIC, PDZZ, &
-                                  &PRHODREF, PPABST, PTHT, PRHODJ, &
-                                  &ZLBDAS, &
-                                  &PRCS, ZRCT, PRRS, ZRRT, PRIS, ZRIT,&
-                                  &PRSS, ZRST, PRGS, ZRGT,&
-                                  &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
-                                  &PSEA=PSEA, PTOWN=PTOWN, &
-                                  &PFPR=PFPR)
-    ENDIF
-    PINPRS(IIJB:IIJE) = PINPRS(IIJB:IIJE) + ZINPRI(IIJB:IIJE)
-    !No negativity correction here as we apply sedimentation on PR.S*PTSTEP variables
-  ELSEIF(PARAMI%CSEDIM=='SPLI') THEN
-    !SR: It *seems* that we must have two separate calls for ifort
-    IF(KRR==7) THEN
-      CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
-                                   &PTSTEP, KRR, PDZZ, &
-                                   &PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
-                                   &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                                   &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
-                                   &PSEA=PSEA, PTOWN=PTOWN, &
-                                   &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
-    ELSE
-      CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
-                                   &PTSTEP, KRR, PDZZ, &
-                                   &PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
-                                   &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                                   &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
-                                   &PSEA=PSEA, PTOWN=PTOWN, &
-                                   &PFPR=PFPR)
-    ENDIF
-    PINPRS(IIJB:IIJE) = PINPRS(IIJB:IIJE) + ZINPRI(IIJB:IIJE)
-    !We correct negativities with conservation
-    !SPLI algorith uses a time-splitting. Inside the loop a temporary m.r. is used.
-    !   It is initialized with the m.r. at T and is modified by two tendencies:
-    !   sedimentation tendency and an external tendency which represents all other
-    !   processes (mainly advection and microphysical processes). If both tendencies
-    !   are negative, sedimentation can remove a species at a given sub-timestep. From
-    !   this point sedimentation stops for the remaining sub-timesteps but the other tendency
-    !   will be still active and will lead to negative values.
-    !   We could prevent the algorithm to not consume too much a species, instead we apply
-    !   a correction here.
-    CALL CORRECT_NEGATIVITIES(D, KRR, PRVS, PRCS, PRRS, &
-                             &PRIS, PRSS, PRGS, &
-                             &PTHS, ZZ_LVFACT, ZZ_LSFACT, PRHS)
+  IF(KRR==7) THEN
+    CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, BUCONF, &
+                           &PTSTEP, KRR, PDZZ, &
+                           &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
+                           &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
+                           &PINPRC, PINPRR, PINPRS, PINPRG, &
+                           &TBUDGETS, KBUDGETS, &
+                           &PSEA=PSEA, PTOWN=PTOWN, &
+                           &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
   ELSE
-    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'no sedimentation scheme for PARAMI%CSEDIM='//PARAMI%CSEDIM)
-  END IF
-  !
-  !*       8.2     budget storage
-  !
-  IF (BUCONF%LBUDGET_RC .AND. PARAMI%LSEDIC)   CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', PRCS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RR)                CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'SEDI', PRRS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI)                CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'SEDI', PRIS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RS)                CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', PRSS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG)                CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', PRGS(:, :) * PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RH .AND. KRR==7)   CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:, :) * PRHODJ(:, :))
+    CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, BUCONF, &
+                           &PTSTEP, KRR, PDZZ, &
+                           &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
+                           &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
+                           &PINPRC, PINPRR, PINPRS, PINPRG, &
+                           &TBUDGETS, KBUDGETS, &
+                           &PSEA=PSEA, PTOWN=PTOWN, &
+                           &PFPR=PFPR)
+  ENDIF
 
   !"sedimentation" of rain fraction
   IF (PRESENT(PRHS)) THEN
@@ -1723,104 +1541,5 @@ IF (PARAMI%LDEPOSC) THEN !cloud water deposition on vegetation
 ENDIF
 
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 1, ZHOOK_HANDLE)
-!
-CONTAINS
-  !
-  SUBROUTINE CORRECT_NEGATIVITIES(D, KRR, PRV, PRC, PRR, &
-                                 &PRI, PRS, PRG, &
-                                 &PTH, PLVFACT, PLSFACT, PRH)
-  !
-  IMPLICIT NONE
-  !
-  TYPE(DIMPHYEX_t),                     INTENT(IN)    :: D
-  INTEGER,                              INTENT(IN)    :: KRR
-  REAL, DIMENSION(D%NIJT, D%NKT), INTENT(INOUT) :: PRV, PRC, PRR, PRI, PRS, PRG, PTH
-  REAL, DIMENSION(D%NIJT, D%NKT), INTENT(IN)    :: PLVFACT, PLSFACT
-  REAL, DIMENSION(D%NIJT, D%NKT), OPTIONAL, INTENT(INOUT) :: PRH
-  !
-  REAL :: ZW
-  INTEGER :: JIJ, JK
-  REAL(KIND=JPRB) :: ZHOOK_HANDLE
-  !
-  IF (LHOOK) CALL DR_HOOK('RAIN_ICE:CORRECT_NEGATIVITIES', 0, ZHOOK_HANDLE)
-  !
-  !We correct negativities with conservation
-  DO JK = IKTB, IKTE
-    DO JIJ = IIJB, IIJE
-      ! 1) deal with negative values for mixing ratio, except for vapor
-      ZW         =PRC(JIJ,JK)-MAX(PRC(JIJ,JK), 0.)
-      PRV(JIJ,JK)=PRV(JIJ,JK)+ZW
-      PTH(JIJ,JK)=PTH(JIJ,JK)-ZW*PLVFACT(JIJ,JK)
-      PRC(JIJ,JK)=PRC(JIJ,JK)-ZW
-
-      ZW         =PRR(JIJ,JK)-MAX(PRR(JIJ,JK), 0.)
-      PRV(JIJ,JK)=PRV(JIJ,JK)+ZW
-      PTH(JIJ,JK)=PTH(JIJ,JK)-ZW*PLVFACT(JIJ,JK)
-      PRR(JIJ,JK)=PRR(JIJ,JK)-ZW
-
-      ZW         =PRI(JIJ,JK)-MAX(PRI(JIJ,JK), 0.)
-      PRV(JIJ,JK)=PRV(JIJ,JK)+ZW
-      PTH(JIJ,JK)=PTH(JIJ,JK)-ZW*PLSFACT(JIJ,JK)
-      PRI(JIJ,JK)=PRI(JIJ,JK)-ZW
-
-      ZW         =PRS(JIJ,JK)-MAX(PRS(JIJ,JK), 0.)
-      PRV(JIJ,JK)=PRV(JIJ,JK)+ZW
-      PTH(JIJ,JK)=PTH(JIJ,JK)-ZW*PLSFACT(JIJ,JK)
-      PRS(JIJ,JK)=PRS(JIJ,JK)-ZW
-
-      ZW         =PRG(JIJ,JK)-MAX(PRG(JIJ,JK), 0.)
-      PRV(JIJ,JK)=PRV(JIJ,JK)+ZW
-      PTH(JIJ,JK)=PTH(JIJ,JK)-ZW*PLSFACT(JIJ,JK)
-      PRG(JIJ,JK)=PRG(JIJ,JK)-ZW
-
-      IF(KRR==7) THEN
-        ZW         =PRH(JIJ,JK)-MAX(PRH(JIJ,JK), 0.)
-        PRV(JIJ,JK)=PRV(JIJ,JK)+ZW
-        PTH(JIJ,JK)=PTH(JIJ,JK)-ZW*PLSFACT(JIJ,JK)
-        PRH(JIJ,JK)=PRH(JIJ,JK)-ZW
-      ENDIF
-
-      ! 2) deal with negative vapor mixing ratio
-
-      ! for rc and ri, we keep ice fraction constant
-      ZW=MIN(1., MAX(ICED%XRTMIN(1)-PRV(JIJ,JK), 0.) / &
-                &MAX(PRC(JIJ,JK)+PRI(JIJ,JK), 1.E-20)) ! Proportion of rc+ri to convert into rv
-      PTH(JIJ,JK)=PTH(JIJ,JK)-ZW* &
-                   &(PRC(JIJ,JK)*PLVFACT(JIJ,JK)+PRI(JIJ,JK)*PLSFACT(JIJ,JK))
-      PRV(JIJ,JK)=PRV(JIJ,JK)+ZW*(PRC(JIJ,JK)+PRI(JIJ,JK))
-      PRC(JIJ,JK)=(1.-ZW)*PRC(JIJ,JK)
-      PRI(JIJ,JK)=(1.-ZW)*PRI(JIJ,JK)
-
-      ZW=MIN(MAX(PRR(JIJ,JK), 0.), &
-            &MAX(ICED%XRTMIN(1)-PRV(JIJ,JK), 0.)) ! Quantity of rr to convert into rv
-      PRV(JIJ,JK)=PRV(JIJ,JK)+ZW
-      PRR(JIJ,JK)=PRR(JIJ,JK)-ZW
-      PTH(JIJ,JK)=PTH(JIJ,JK)-ZW*PLVFACT(JIJ,JK)
-
-      ZW=MIN(MAX(PRS(JIJ,JK), 0.), &
-            &MAX(ICED%XRTMIN(1)-PRV(JIJ,JK), 0.)) ! Quantity of rs to convert into rv
-      PRV(JIJ,JK)=PRV(JIJ,JK)+ZW
-      PRS(JIJ,JK)=PRS(JIJ,JK)-ZW
-      PTH(JIJ,JK)=PTH(JIJ,JK)-ZW*PLSFACT(JIJ,JK)
-
-      ZW=MIN(MAX(PRG(JIJ,JK), 0.), &
-            &MAX(ICED%XRTMIN(1)-PRV(JIJ,JK), 0.)) ! Quantity of rg to convert into rv
-      PRV(JIJ,JK)=PRV(JIJ,JK)+ZW
-      PRG(JIJ,JK)=PRG(JIJ,JK)-ZW
-      PTH(JIJ,JK)=PTH(JIJ,JK)-ZW*PLSFACT(JIJ,JK)
-
-      IF(KRR==7) THEN
-        ZW=MIN(MAX(PRH(JIJ,JK), 0.), &
-              &MAX(ICED%XRTMIN(1)-PRV(JIJ,JK), 0.)) ! Quantity of rh to convert into rv
-        PRV(JIJ,JK)=PRV(JIJ,JK)+ZW
-        PRH(JIJ,JK)=PRH(JIJ,JK)-ZW
-        PTH(JIJ,JK)=PTH(JIJ,JK)-ZW*PLSFACT(JIJ,JK)
-      ENDIF
-    ENDDO
-  ENDDO
-  !
-  IF (LHOOK) CALL DR_HOOK('RAIN_ICE:CORRECT_NEGATIVITIES', 1, ZHOOK_HANDLE)
-  !
-  END SUBROUTINE CORRECT_NEGATIVITIES
 !
 END SUBROUTINE RAIN_ICE
