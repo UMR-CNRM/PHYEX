@@ -8,11 +8,15 @@
 !      ###################################
 !
 INTERFACE
-      SUBROUTINE LIMA_SEDIMENTATION (KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKE, KKTB, KKTE, KKT, KKL, &
+      SUBROUTINE LIMA_SEDIMENTATION (D, CST, &
                                      HPHASE, KMOMENTS, KID, KSPLITG, PTSTEP, PDZZ, PRHODREF,       &
                                      PPABST, PT, PRT_SUM, PCPT, PRS, PCS, PINPR )
 !
-INTEGER,                  INTENT(IN)    :: KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKE, KKTB, KKTE, KKT, KKL
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+USE MODD_CST,            ONLY: CST_t
+!
+TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
+TYPE(CST_t),              INTENT(IN)    :: CST
 CHARACTER(1),             INTENT(IN)    :: HPHASE    ! Liquid or solid hydrometeors
 INTEGER,                  INTENT(IN)    :: KMOMENTS  ! Number of moments 
 INTEGER,                  INTENT(IN)    :: KID       ! Hydrometeor ID
@@ -34,7 +38,7 @@ END MODULE MODI_LIMA_SEDIMENTATION
 !
 !
 !     ######################################################################
-      SUBROUTINE LIMA_SEDIMENTATION (KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKE, KKTB, KKTE, KKT, KKL, &
+      SUBROUTINE LIMA_SEDIMENTATION (D, CST, &
                                      HPHASE, KMOMENTS, KID, KSPLITG, PTSTEP, PDZZ, PRHODREF,       &
                                      PPABST, PT, PRT_SUM, PCPT, PRS, PCS, PINPR )
 !     ######################################################################
@@ -72,7 +76,8 @@ END MODULE MODI_LIMA_SEDIMENTATION
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,              ONLY: XRHOLW, XCL, XCI, XPI
+USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
+USE MODD_CST,              ONLY: CST_t
 USE MODD_PARAMETERS,       ONLY: JPHEXT, JPVEXT
 USE MODD_PARAM_LIMA,       ONLY: XCEXVT, XRTMIN, XCTMIN, NSPLITSED,           &
                                  XLB, XLBEX, XD, XFSEDR, XFSEDC,              &
@@ -89,7 +94,8 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-INTEGER,                  INTENT(IN)    :: KIB, KIE, KIT, KJB, KJE, KJT, KKB, KKE, KKTB, KKTE, KKT, KKL
+TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
+TYPE(CST_t),              INTENT(IN)    :: CST
 CHARACTER(1),             INTENT(IN)    :: HPHASE    ! Liquid or solid hydrometeors
 INTEGER,                  INTENT(IN)    :: KMOMENTS  ! Number of moments 
 INTEGER,                  INTENT(IN)    :: KID       ! Hydrometeor ID
@@ -150,16 +156,16 @@ PINPR(:,:) = 0.
 !
 PRS(:,:,:) = PRS(:,:,:) * PTSTEP
 IF (KMOMENTS==2) PCS(:,:,:) = PCS(:,:,:) * PTSTEP
-DO JK = KKTB , KKTE
+DO JK = D%NKTB , D%NKTE
    ZW(:,:,JK)=ZTSPLITG/PDZZ(:,:,JK)
 END DO
 !
-IF (HPHASE=='L') ZC=XCL
-IF (HPHASE=='I') ZC=XCI
+IF (HPHASE=='L') ZC=CST%XCL
+IF (HPHASE=='I') ZC=CST%XCI
 !
 IF (KID==4 .AND. ZMOMENTS==1) THEN
    ZMOMENTS=2
-   WHERE(PRS(:,:,:)>0) PCS(:,:,:)=1/(4*XPI*900.) * PRS(:,:,:) * &
+   WHERE(PRS(:,:,:)>0) PCS(:,:,:)=1/(4*CST%XPI*900.) * PRS(:,:,:) * &
         MAX(0.05E6,-0.15319E6-0.021454E6*ALOG(PRHODREF(:,:,:)*PRS(:,:,:)))**3
 END IF
 !
@@ -170,7 +176,7 @@ END IF
 DO JN = 1 ,  NSPLITSED(KID)
   ! Computation only where enough ice, snow, graupel or hail
    GSEDIM(:,:,:) = .FALSE.
-   GSEDIM(KIB:KIE,KJB:KJE,KKTB:KKTE) = PRS(KIB:KIE,KJB:KJE,KKTB:KKTE)>XRTMIN(KID)
+   GSEDIM(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) = PRS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(KID)
    IF (ZMOMENTS==2)  GSEDIM(:,:,:) = GSEDIM(:,:,:) .AND. PCS(:,:,:)>XCTMIN(KID)
    ISEDIM = COUNTJV( GSEDIM(:,:,:),I1(:),I2(:),I3(:))
 !
@@ -225,25 +231,25 @@ DO JN = 1 ,  NSPLITSED(KID)
       END IF
 
       ZWSEDR(:,:,:) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
-      ZWSEDR(:,:,KKTB:KKTE) = MIN( ZWSEDR(:,:,KKTB:KKTE), PRS(:,:,KKTB:KKTE) * PRHODREF(:,:,KKTB:KKTE) / ZW(:,:,KKTB:KKTE) )
+      ZWSEDR(:,:,D%NKTB:D%NKTE) = MIN( ZWSEDR(:,:,D%NKTB:D%NKTE), PRS(:,:,D%NKTB:D%NKTE) * PRHODREF(:,:,D%NKTB:D%NKTE) / ZW(:,:,D%NKTB:D%NKTE) )
       IF (KMOMENTS==2) THEN
          ZWSEDC(:,:,:) = UNPACK( ZZX(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
-         ZWSEDC(:,:,KKTB:KKTE) = MIN( ZWSEDC(:,:,KKTB:KKTE), PCS(:,:,KKTB:KKTE) * PRHODREF(:,:,KKTB:KKTE) / ZW(:,:,KKTB:KKTE) )
+         ZWSEDC(:,:,D%NKTB:D%NKTE) = MIN( ZWSEDC(:,:,D%NKTB:D%NKTE), PCS(:,:,D%NKTB:D%NKTE) * PRHODREF(:,:,D%NKTB:D%NKTE) / ZW(:,:,D%NKTB:D%NKTE) )
       END IF
       
-      DO JK = KKTB , KKTE
+      DO JK = D%NKTB , D%NKTE
          PRS(:,:,JK) = PRS(:,:,JK) + ZW(:,:,JK)*    &
-              (ZWSEDR(:,:,JK+KKL)-ZWSEDR(:,:,JK))/PRHODREF(:,:,JK)
+              (ZWSEDR(:,:,JK+D%NKL)-ZWSEDR(:,:,JK))/PRHODREF(:,:,JK)
          IF (KMOMENTS==2) PCS(:,:,JK) = PCS(:,:,JK) + ZW(:,:,JK)*    &
-              (ZWSEDC(:,:,JK+KKL)-ZWSEDC(:,:,JK))/PRHODREF(:,:,JK)
+              (ZWSEDC(:,:,JK+D%NKL)-ZWSEDC(:,:,JK))/PRHODREF(:,:,JK)
          ! Heat transport
-         !PRT_SUM(:,:,JK-KKL) = PRT_SUM(:,:,JK-KKL) + ZW(:,:,JK-KKL)*ZWSEDR(:,:,JK)/PRHODREF(:,:,JK-KKL)
+         !PRT_SUM(:,:,JK-D%NKL) = PRT_SUM(:,:,JK-D%NKL) + ZW(:,:,JK-D%NKL)*ZWSEDR(:,:,JK)/PRHODREF(:,:,JK-D%NKL)
          !PRT_SUM(:,:,JK) = PRT_SUM(:,:,JK) - ZW(:,:,JK)*ZWSEDR(:,:,JK)/PRHODREF(:,:,JK)
-         !PCPT(:,:,JK-KKL) = PCPT(:,:,JK-KKL) + ZC * (ZW(:,:,JK-KKL)*ZWSEDR(:,:,JK)/PRHODREF(:,:,JK-KKL))
+         !PCPT(:,:,JK-D%NKL) = PCPT(:,:,JK-D%NKL) + ZC * (ZW(:,:,JK-D%NKL)*ZWSEDR(:,:,JK)/PRHODREF(:,:,JK-D%NKL))
          !PCPT(:,:,JK) = PCPT(:,:,JK) - ZC * (ZW(:,:,JK)*ZWSEDR(:,:,JK)/PRHODREF(:,:,JK))
-         !ZWDT(:,:,JK) =(PRHODREF(:,:,JK+KKL)*(1.+PRT_SUM(:,:,JK))*PCPT(:,:,JK)*PT(:,:,JK) + &
-         !     ZW(:,:,JK)*ZWSEDR(:,:,JK+1)*ZC*PT(:,:,JK+KKL)) / &
-         !     (PRHODREF(:,:,JK+KKL)*(1.+PRT_SUM(:,:,JK))*PCPT(:,:,JK) + ZW(:,:,JK)*ZWSEDR(:,:,JK+KKL)*ZC)
+         !ZWDT(:,:,JK) =(PRHODREF(:,:,JK+D%NKL)*(1.+PRT_SUM(:,:,JK))*PCPT(:,:,JK)*PT(:,:,JK) + &
+         !     ZW(:,:,JK)*ZWSEDR(:,:,JK+1)*ZC*PT(:,:,JK+D%NKL)) / &
+         !     (PRHODREF(:,:,JK+D%NKL)*(1.+PRT_SUM(:,:,JK))*PCPT(:,:,JK) + ZW(:,:,JK)*ZWSEDR(:,:,JK+D%NKL)*ZC)
          !ZWDT(:,:,JK) = ZWDT(:,:,JK) - PT(:,:,JK)
       END DO
       DEALLOCATE(ZRHODREF)
@@ -257,7 +263,7 @@ DO JN = 1 ,  NSPLITSED(KID)
       DEALLOCATE(ZZX)
       DEALLOCATE(ZZY)
       !      
-      PINPR(:,:) = PINPR(:,:) + ZWSEDR(:,:,KKB)/XRHOLW/NSPLITSED(KID)                          ! in m/s
+      PINPR(:,:) = PINPR(:,:) + ZWSEDR(:,:,D%NKB)/CST%XRHOLW/NSPLITSED(KID)                          ! in m/s
       !PT(:,:,:) = PT(:,:,:) + ZWDT(:,:,:)
       
    END IF

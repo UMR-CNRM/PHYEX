@@ -8,14 +8,16 @@
 !      ########################################
 !
 INTERFACE
-   SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION (PTSTEP,                                   &
+   SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION (CST, PTSTEP,                              &
                                             PRHODREF, PEXNREF, PPABST,                &
                                             PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                             PCCT, PCIT, PNAT, PIFT, PINT, PNIT,       &
                                             P_TH_HIND, P_RI_HIND, P_CI_HIND,          &
                                             P_TH_HINC, P_RC_HINC, P_CC_HINC,          &
                                             PICEFR                                    )
+USE MODD_CST,            ONLY: CST_t
 !
+TYPE(CST_t),              INTENT(IN)    :: CST
 REAL,                     INTENT(IN)    :: PTSTEP 
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF! Reference density
@@ -51,7 +53,7 @@ END INTERFACE
 END MODULE MODI_LIMA_PHILLIPS_IFN_NUCLEATION
 !
 !     #################################################################################
-   SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION (PTSTEP,                                   &
+   SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION (CST, PTSTEP,                              &
                                             PRHODREF, PEXNREF, PPABST,                &
                                             PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                             PCCT, PCIT, PNAT, PIFT, PINT, PNIT,       &
@@ -115,9 +117,7 @@ END MODULE MODI_LIMA_PHILLIPS_IFN_NUCLEATION
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,             ONLY : XP00, XRD, XMV, XMD, XCPD, XCPV, XCL, XCI,        &
-                                 XTT, XLSTT, XLVTT, XALPI, XBETAI, XGAMI,          &
-                                 XALPW, XBETAW, XGAMW, XPI
+USE MODD_CST,            ONLY: CST_t
 USE MODD_NSV, ONLY : NSV_LIMA_NC, NSV_LIMA_NI, NSV_LIMA_IFN_FREE
 USE MODD_PARAMETERS,      ONLY : JPHEXT, JPVEXT
 USE MODD_PARAM_LIMA,      ONLY : NMOD_IFN, NSPECIE, XFRAC,                         &
@@ -134,6 +134,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(CST_t),              INTENT(IN)    :: CST
 REAL,                     INTENT(IN)    :: PTSTEP 
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF! Reference density
@@ -240,12 +241,12 @@ IKE=SIZE(PTHT,3) - JPVEXT
 !
 ! Temperature
 !
-ZT(:,:,:)  = PTHT(:,:,:) * ( PPABST(:,:,:)/XP00 ) ** (XRD/XCPD)
+ZT(:,:,:)  = PTHT(:,:,:) * ( PPABST(:,:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
 !
 ! Saturation over ice
 !
-ZW(:,:,:) = EXP( XALPI - XBETAI/ZT(:,:,:) - XGAMI*ALOG(ZT(:,:,:) ) )
-ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (XMV/XMD) * ZW(:,:,:) )
+ZW(:,:,:) = EXP( CST%XALPI - CST%XBETAI/ZT(:,:,:) - CST%XGAMI*ALOG(ZT(:,:,:) ) )
+ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:,:,:) )
 !
 !
 !-------------------------------------------------------------------------------
@@ -256,7 +257,7 @@ ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (XMV/XMD) * ZW(:,:,:) )
 !
 !
 GNEGT(:,:,:) = .FALSE.
-GNEGT(IIB:IIE,IJB:IJE,IKB:IKE) = ZT(IIB:IIE,IJB:IJE,IKB:IKE)<XTT-2.0 .AND. &
+GNEGT(IIB:IIE,IJB:IJE,IKB:IKE) = ZT(IIB:IIE,IJB:IJE,IKB:IKE)<CST%XTT-2.0 .AND. &
                                  ZW(IIB:IIE,IJB:IJE,IKB:IKE)>0.95 
 !
 INEGT = COUNTJV( GNEGT(:,:,:),I1(:),I2(:),I3(:))
@@ -334,17 +335,17 @@ IF (INEGT > 0) THEN
 !	        -----------------------------------------
 !
 !
-   ZTCELSIUS(:) = ZZT(:)-XTT                                    ! T [°C]
-   ZZW(:)  = ZEXNREF(:)*( XCPD+XCPV*ZRVT(:)+XCL*(ZRCT(:)+ZRRT(:)) &
-        +XCI*(ZRIT(:)+ZRST(:)+ZRGT(:)) )
-   ZLSFACT(:) = (XLSTT+(XCPV-XCI)*ZTCELSIUS(:))/ZZW(:)          ! L_s/(Pi_ref*C_ph)
-   ZLVFACT(:) = (XLVTT+(XCPV-XCL)*ZTCELSIUS(:))/ZZW(:)          ! L_v/(Pi_ref*C_ph)
+   ZTCELSIUS(:) = ZZT(:)-CST%XTT                                    ! T [°C]
+   ZZW(:)  = ZEXNREF(:)*( CST%XCPD+CST%XCPV*ZRVT(:)+CST%XCL*(ZRCT(:)+ZRRT(:)) &
+        +CST%XCI*(ZRIT(:)+ZRST(:)+ZRGT(:)) )
+   ZLSFACT(:) = (CST%XLSTT+(CST%XCPV-CST%XCI)*ZTCELSIUS(:))/ZZW(:)          ! L_s/(Pi_ref*C_ph)
+   ZLVFACT(:) = (CST%XLVTT+(CST%XCPV-CST%XCL)*ZTCELSIUS(:))/ZZW(:)          ! L_v/(Pi_ref*C_ph)
 !
-   ZZW(:)  = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) ) ! es_i
-   ZSI(:)  = ZRVT(:)*(ZPRES(:)-ZZW(:))/((XMV/XMD)*ZZW(:))       ! Saturation over ice
+   ZZW(:)  = EXP( CST%XALPI - CST%XBETAI/ZZT(:) - CST%XGAMI*ALOG(ZZT(:) ) ) ! es_i
+   ZSI(:)  = ZRVT(:)*(ZPRES(:)-ZZW(:))/((CST%XMV/CST%XMD)*ZZW(:))       ! Saturation over ice
 !
-   ZZY(:)  = EXP( XALPW - XBETAW/ZZT(:) - XGAMW*ALOG(ZZT(:) ) ) ! es_w
-   ZSW(:)  = ZRVT(:)*(ZPRES(:)-ZZY(:))/((XMV/XMD)*ZZY(:))       ! Saturation over water
+   ZZY(:)  = EXP( CST%XALPW - CST%XBETAW/ZZT(:) - CST%XGAMW*ALOG(ZZT(:) ) ) ! es_w
+   ZSW(:)  = ZRVT(:)*(ZPRES(:)-ZZY(:))/((CST%XMV/CST%XMD)*ZZY(:))       ! Saturation over water
 !
    ZSI_W(:)= ZZY(:)/ZZW(:)     ! Saturation over ice at water saturation: es_w/es_i
 !
@@ -373,12 +374,12 @@ IF (INEGT > 0) THEN
 !
 ! Computation of the reference activity spectrum ( ZZY = N_{IN,1,*} )
 !
-   CALL LIMA_PHILLIPS_REF_SPECTRUM(ZZT, ZSI, ZSI_W, ZZY)
+   CALL LIMA_PHILLIPS_REF_SPECTRUM(CST, ZZT, ZSI, ZSI_W, ZZY)
 !
 ! For each aerosol species (DM1, DM2, BC, O), compute the fraction that may be activated
 ! Z_FRAC_ACT(INEGT,NSPECIE) = fraction of each species that may be activated
 !
-   CALL LIMA_PHILLIPS_INTEG(ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
+   CALL LIMA_PHILLIPS_INTEG(CST, ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
 !
 !
 !-------------------------------------------------------------------------------

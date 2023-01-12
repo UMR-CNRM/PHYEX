@@ -3,8 +3,10 @@
 !      ###############################
 !
 INTERFACE
-      SUBROUTINE LIMA_PHILLIPS_INTEG (ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
+      SUBROUTINE LIMA_PHILLIPS_INTEG (CST, ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
 !
+USE MODD_CST,            ONLY: CST_t
+TYPE(CST_t),              INTENT(IN)    :: CST
 REAL, DIMENSION(:),   INTENT(IN)    :: ZZT
 REAL, DIMENSION(:),   INTENT(IN)    :: ZSI
 REAL, DIMENSION(:,:), INTENT(IN)    :: ZSI0
@@ -17,7 +19,7 @@ END INTERFACE
 END MODULE MODI_LIMA_PHILLIPS_INTEG
 !
 !     ######################################################################
-      SUBROUTINE LIMA_PHILLIPS_INTEG (ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
+      SUBROUTINE LIMA_PHILLIPS_INTEG (CST, ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
 !     ######################################################################
 !!
 !!    PURPOSE
@@ -48,7 +50,7 @@ END MODULE MODI_LIMA_PHILLIPS_INTEG
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,             ONLY : XTT, XPI
+USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAM_LIMA,      ONLY : XMDIAM_IFN, XSIGMA_IFN, NSPECIE, XFRAC_REF, &
                                  XH, XAREA1, XGAMMA, XABSCISS, XWEIGHT, NDIAM,     &
                                  XT0, XDT0, XDSI0, XSW0, XTX1, XTX2
@@ -59,6 +61,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(CST_t),              INTENT(IN)    :: CST
 REAL, DIMENSION(:),   INTENT(IN)    :: ZZT
 REAL, DIMENSION(:),   INTENT(IN)    :: ZSI
 REAL, DIMENSION(:,:), INTENT(IN)    :: ZSI0
@@ -105,15 +108,15 @@ DO JSPECIE = 1, NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively
 ! For T warmer than -35°C, the integration is approximated with µ_X << 1
 ! Error function : GAMMA_INC(1/2, x**2) = ERF(x) !!! for x>=0 !!!
 !   
-!   WHERE (ZZT(:)>(XTT-35.) .AND. ZEMBRYO(:)>1.0E-8)   
-!      ZZX(:) = ZZX(:) + ZEMBRYO(:) * XPI * (XMDIAM_IFN(JSPECIE))**2 / 2.0           &
+!   WHERE (ZZT(:)>(CST%XTT-35.) .AND. ZEMBRYO(:)>1.0E-8)   
+!      ZZX(:) = ZZX(:) + ZEMBRYO(:) * CST%XPI * (XMDIAM_IFN(JSPECIE))**2 / 2.0           &
 !           * EXP(2*(LOG(XSIGMA_IFN(JSPECIE)))**2)                                   &
 !           * (1.0+GAMMA_INC(0.5,(SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE))-XB)**2))     
 !   END WHERE
 
    DO JL = 1, SIZE(ZZT)
-      IF (ZZT(JL)>(XTT-35.) .AND. ZEMBRYO(JL)>1.0E-8) THEN
-         ZZX(JL) = ZZX(JL) + ZEMBRYO(JL) * XPI * (XMDIAM_IFN(JSPECIE))**2 / 2.0        &
+      IF (ZZT(JL)>(CST%XTT-35.) .AND. ZEMBRYO(JL)>1.0E-8) THEN
+         ZZX(JL) = ZZX(JL) + ZEMBRYO(JL) * CST%XPI * (XMDIAM_IFN(JSPECIE))**2 / 2.0        &
               * EXP(2*(LOG(XSIGMA_IFN(JSPECIE)))**2)                                   &
               * (1.0+SIGN(1.,SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE))-XB)*GAMMA_INC(0.5,(SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE))-XB)**2))     
       END IF
@@ -124,12 +127,12 @@ DO JSPECIE = 1, NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively
 ! quadrature method and integration between 0 and 0.1 uses e(x) ~ 1+x+O(x**2)
 ! Beware : here, weights are normalized : XWEIGHT = wi/sqrt(pi)
 !
-   GINTEG(:) = ZZT(:)<=(XTT-35.) .AND. ZSI(:)>1.0 .AND. ZEMBRYO(:)>1.0E-8
+   GINTEG(:) = ZZT(:)<=(CST%XTT-35.) .AND. ZSI(:)>1.0 .AND. ZEMBRYO(:)>1.0E-8
 !
    DO JL = 1, NDIAM
       DO JL2 = 1, SIZE(GINTEG)
          IF (GINTEG(JL2)) THEN
-            ZZX(JL2) = ZZX(JL2) - XWEIGHT(JL)*EXP(-ZEMBRYO(JL2)*XPI*(XMDIAM_IFN(JSPECIE))**2 & 
+            ZZX(JL2) = ZZX(JL2) - XWEIGHT(JL)*EXP(-ZEMBRYO(JL2)*CST%XPI*(XMDIAM_IFN(JSPECIE))**2 & 
                  * EXP(2.0*SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE)) * XABSCISS(JL)) ) 
          END IF
       ENDDO
@@ -137,7 +140,7 @@ DO JSPECIE = 1, NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively
 !
 !   DO JL2 = 1, SIZE(GINTEG)
 !      IF (GINTEG(JL2)) THEN
-!         ZZX(JL2) = ZZX(JL2) + 0.5* XPI*ZEMBRYO(JL2)*(XMDIAM_IFN(JSPECIE))**2                &
+!         ZZX(JL2) = ZZX(JL2) + 0.5* CST%XPI*ZEMBRYO(JL2)*(XMDIAM_IFN(JSPECIE))**2                &
 !              * (1.0-( 1.0-GAMMA_INC(0.5,(SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE))-XB)**2))  &
 !              * EXP( 2.0*(LOG(XSIGMA_IFN(JSPECIE)))**2)  )
 !      END IF
@@ -145,7 +148,7 @@ DO JSPECIE = 1, NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively
    DO JL2 = 1, SIZE(GINTEG)
       IF (GINTEG(JL2)) THEN
          ZZX(JL2) = 1 + ZZX(JL2)  &
-              - ( 0.5* XPI*ZEMBRYO(JL2)*(XMDIAM_IFN(JSPECIE))**2 * EXP( 2.0*(LOG(XSIGMA_IFN(JSPECIE)))**2)   &
+              - ( 0.5* CST%XPI*ZEMBRYO(JL2)*(XMDIAM_IFN(JSPECIE))**2 * EXP( 2.0*(LOG(XSIGMA_IFN(JSPECIE)))**2)   &
               * ( 1.0-SIGN(1.,SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE))-XB)*GAMMA_INC(0.5,(SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE))-XB)**2)) )
       END IF
    ENDDO

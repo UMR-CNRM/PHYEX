@@ -8,14 +8,16 @@
 !      ##################################
 !
 INTERFACE
-   SUBROUTINE LIMA_MEYERS_NUCLEATION (PTSTEP,                                     &
+   SUBROUTINE LIMA_MEYERS_NUCLEATION (CST, PTSTEP,                                &
                                       PRHODREF, PEXNREF, PPABST,                  &
                                       PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,   &
                                       PCCT, PCIT, PINT,                           &
                                       P_TH_HIND, P_RI_HIND, P_CI_HIND,            &
                                       P_TH_HINC, P_RC_HINC, P_CC_HINC,            &
                                       PICEFR                                      )
+USE MODD_CST,            ONLY: CST_t
 !
+TYPE(CST_t),              INTENT(IN)    :: CST
 REAL,                     INTENT(IN)    :: PTSTEP
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF! Reference density
@@ -48,7 +50,7 @@ END INTERFACE
 END MODULE MODI_LIMA_MEYERS_NUCLEATION
 !
 !     #############################################################################
-   SUBROUTINE LIMA_MEYERS_NUCLEATION (PTSTEP,                                     &
+   SUBROUTINE LIMA_MEYERS_NUCLEATION (CST, PTSTEP,                                &
                                       PRHODREF, PEXNREF, PPABST,                  &
                                       PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,   &
                                       PCCT, PCIT, PINT,                           &
@@ -80,7 +82,7 @@ END MODULE MODI_LIMA_MEYERS_NUCLEATION
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST
+USE MODD_CST,            ONLY: CST_t
 USE MODD_NSV,             ONLY: NSV_LIMA_NC, NSV_LIMA_NI
 USE MODD_PARAMETERS
 USE MODD_PARAM_LIMA
@@ -92,6 +94,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(CST_t),              INTENT(IN)    :: CST
 REAL,                     INTENT(IN)    :: PTSTEP
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF! Reference density
@@ -188,12 +191,12 @@ IKE=SIZE(PTHT,3) - JPVEXT
 !
 ! Temperature
 !
-ZT(:,:,:)  = PTHT(:,:,:) * ( PPABST(:,:,:)/XP00 ) ** (XRD/XCPD)
+ZT(:,:,:)  = PTHT(:,:,:) * ( PPABST(:,:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
 !
 ! Saturation over ice
 !
-ZW(:,:,:) = EXP( XALPI - XBETAI/ZT(:,:,:) - XGAMI*ALOG(ZT(:,:,:) ) )
-ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (XMV/XMD) * ZW(:,:,:) )
+ZW(:,:,:) = EXP( CST%XALPI - CST%XBETAI/ZT(:,:,:) - CST%XGAMI*ALOG(ZT(:,:,:) ) )
+ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:,:,:) )
 !
 !
 !-------------------------------------------------------------------------------
@@ -202,7 +205,7 @@ ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (XMV/XMD) * ZW(:,:,:) )
 !  the temperature is negative only !!!
 !
 GNEGT(:,:,:) = .FALSE.
-GNEGT(IIB:IIE,IJB:IJE,IKB:IKE) = ZT(IIB:IIE,IJB:IJE,IKB:IKE)<XTT .AND. &
+GNEGT(IIB:IIE,IJB:IJE,IKB:IKE) = ZT(IIB:IIE,IJB:IJE,IKB:IKE)<CST%XTT .AND. &
                                  ZW(IIB:IIE,IJB:IJE,IKB:IKE)>0.8 
 INEGT = COUNTJV( GNEGT(:,:,:),I1(:),I2(:),I3(:))
 IF( INEGT >= 1 ) THEN
@@ -251,14 +254,14 @@ IF( INEGT >= 1 ) THEN
   ALLOCATE(ZSSI(INEGT))
   ALLOCATE(ZTCELSIUS(INEGT))
 !
-  ZZW(:)  = ZEXNREF(:)*( XCPD+XCPV*ZRVT(:)+XCL*(ZRCT(:)+ZRRT(:)) &
-                                  +XCI*(ZRIT(:)+ZRST(:)+ZRGT(:)) )
-  ZTCELSIUS(:) = MAX( ZZT(:)-XTT,-50.0 )
-  ZLSFACT(:) = (XLSTT+(XCPV-XCI)*ZTCELSIUS(:))/ZZW(:) ! L_s/(Pi_ref*C_ph)
-  ZLVFACT(:) = (XLVTT+(XCPV-XCL)*ZTCELSIUS(:))/ZZW(:) ! L_v/(Pi_ref*C_ph)
+  ZZW(:)  = ZEXNREF(:)*( CST%XCPD+CST%XCPV*ZRVT(:)+CST%XCL*(ZRCT(:)+ZRRT(:)) &
+                                  +CST%XCI*(ZRIT(:)+ZRST(:)+ZRGT(:)) )
+  ZTCELSIUS(:) = MAX( ZZT(:)-CST%XTT,-50.0 )
+  ZLSFACT(:) = (CST%XLSTT+(CST%XCPV-CST%XCI)*ZTCELSIUS(:))/ZZW(:) ! L_s/(Pi_ref*C_ph)
+  ZLVFACT(:) = (CST%XLVTT+(CST%XCPV-CST%XCL)*ZTCELSIUS(:))/ZZW(:) ! L_v/(Pi_ref*C_ph)
 !
-  ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:)) ) ! es_i
-  ZSSI(:) = ZRVT(:)*(ZPRES(:)-ZZW(:))/((XMV/XMD)*ZZW(:)) - 1.0
+  ZZW(:) = EXP( CST%XALPI - CST%XBETAI/ZZT(:) - CST%XGAMI*ALOG(ZZT(:)) ) ! es_i
+  ZSSI(:) = ZRVT(:)*(ZPRES(:)-ZZW(:))/((CST%XMV/CST%XMD)*ZZW(:)) - 1.0
                                                     ! Supersaturation over ice
 !
 !---------------------------------------------------------------------------
@@ -272,7 +275,7 @@ IF( INEGT >= 1 ) THEN
   ZZX(:) = 0.0
   ZZY(:) = 0.0
 !
-  WHERE( ZZT(:)<XTT-5.0 .AND. ZSSI(:)>0.0 )
+  WHERE( ZZT(:)<CST%XTT-5.0 .AND. ZSSI(:)>0.0 )
     ZZY(:) = XNUC_DEP*EXP( XEXSI_DEP*100.*MIN(1.,ZSSI(:))+XEX_DEP)/ZRHODREF(:)
     ZZX(:) = MAX( ZZY(:)-ZINT(:,1) , 0.0 ) ! number of ice crystals formed at this time step #/kg
     ZZW(:) = MIN( XMNU0*ZZX(:) , ZRVT(:) ) ! mass of ice formed at this time step (kg/kg)
@@ -299,7 +302,7 @@ IF( INEGT >= 1 ) THEN
   ZZX(:) = 0.0
   ZZY(:) = 0.0
 !
-  WHERE( ZZT(:)<XTT-2.0 .AND. ZCCT(:)>XCTMIN(2) .AND. ZRCT(:)>XRTMIN(2) )
+  WHERE( ZZT(:)<CST%XTT-2.0 .AND. ZCCT(:)>XCTMIN(2) .AND. ZRCT(:)>XRTMIN(2) )
     ZZY(:) = MIN( XNUC_CON * EXP( XEXTT_CON*ZTCELSIUS(:)+XEX_CON )             &
                                                /ZRHODREF(:) , ZCCT(:) )
     ZZX(:) = MAX( ZZY(:)-ZINT(:,1),0.0 )

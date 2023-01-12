@@ -8,17 +8,19 @@
 !      ###############################
 !
 INTERFACE
-   SUBROUTINE LIMA_NUCLEATION_PROCS (PTSTEP, TPFILE, PRHODJ,                       &
+   SUBROUTINE LIMA_NUCLEATION_PROCS (CST, PTSTEP, PRHODJ,                  &
                                      PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,&
                                      PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,     &
                                      PCCT, PCRT, PCIT,                             &
                                      PNFT, PNAT, PIFT, PINT, PNIT, PNHT,           &
                                      PCLDFR, PICEFR, PPRCFR                        )
 !
-USE MODD_IO, ONLY: TFILEDATA
+USE MODD_CST,            ONLY: CST_t
+!USE MODD_IO, ONLY: TFILEDATA
 !
+TYPE(CST_t),              INTENT(IN)    :: CST
 REAL,                     INTENT(IN)    :: PTSTEP     ! Double Time step
-TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file
+!TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODJ     ! Reference density
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF   ! Reference density
@@ -55,7 +57,7 @@ END SUBROUTINE LIMA_NUCLEATION_PROCS
 END INTERFACE
 END MODULE MODI_LIMA_NUCLEATION_PROCS
 !     #############################################################################
-SUBROUTINE LIMA_NUCLEATION_PROCS (PTSTEP, TPFILE, PRHODJ,                       &
+SUBROUTINE LIMA_NUCLEATION_PROCS (CST, PTSTEP, PRHODJ,                  &
                                   PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,&
                                   PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,     &
                                   PCCT, PCRT, PCIT,                             &
@@ -82,11 +84,12 @@ SUBROUTINE LIMA_NUCLEATION_PROCS (PTSTEP, TPFILE, PRHODJ,                       
 !  B. Vie         03/2022: Add option for 1-moment pristine ice
 !-------------------------------------------------------------------------------
 !
+USE MODD_CST,            ONLY: CST_t
 use modd_budget,     only: lbu_enable, lbudget_th, lbudget_rv, lbudget_rc, lbudget_rr,  &
                            lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, lbudget_sv,  &
                            NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RI, NBUDGET_SV1, &
                            tbudgets
-USE MODD_IO,         ONLY: TFILEDATA
+!USE MODD_IO,         ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY : JPHEXT, JPVEXT
 USE MODD_NSV,        ONLY : NSV_LIMA_NC, NSV_LIMA_NR, NSV_LIMA_CCN_FREE, NSV_LIMA_CCN_ACTI, &
                             NSV_LIMA_NI, NSV_LIMA_IFN_FREE, NSV_LIMA_IFN_NUCL, NSV_LIMA_IMM_NUCL, NSV_LIMA_HOM_HAZE
@@ -108,8 +111,9 @@ IMPLICIT NONE
 !
 !-------------------------------------------------------------------------------
 !
+TYPE(CST_t),              INTENT(IN)    :: CST
 REAL,                     INTENT(IN)    :: PTSTEP     ! Double Time step
-TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file
+!TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODJ     ! Reference density
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF   ! Reference density
@@ -171,7 +175,7 @@ IF ( LACTI .AND. NMOD_CCN >=1 .AND. NMOM_C.GE.2) THEN
       end if
     end if
 
-    CALL LIMA_CCN_ACTIVATION( TPFILE,                                           &
+    CALL LIMA_CCN_ACTIVATION( CST,                                      &
                               PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,    &
                               PTHT, PRVT, PRCT, PCCT, PRRT, PNFT, PNAT, PCLDFR  )
     if ( lbu_enable ) then
@@ -218,7 +222,7 @@ IF ( LNUCL .AND. NMOM_I>=2 .AND. .NOT.LMEYERS .AND. NMOD_IFN >= 1 ) THEN
     end if
   end if
 
-   CALL LIMA_PHILLIPS_IFN_NUCLEATION (PTSTEP,                                           &
+   CALL LIMA_PHILLIPS_IFN_NUCLEATION (CST, PTSTEP,                                      &
                                       PRHODREF, PEXNREF, PPABST,                        &
                                       PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,         &
                                       PCCT, PCIT, PNAT, PIFT, PINT, PNIT,               &
@@ -264,7 +268,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 IF (LNUCL .AND. NMOM_I>=2 .AND. LMEYERS) THEN
-   CALL LIMA_MEYERS_NUCLEATION (PTSTEP,                                     &
+   CALL LIMA_MEYERS_NUCLEATION (CST, PTSTEP,                                &
                                 PRHODREF, PEXNREF, PPABST,                  &
                                 PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,   &
                                 PCCT, PCIT, PINT,                           &
@@ -366,10 +370,10 @@ IF ( LNUCL .AND. LHHONI .AND. NMOD_CCN >= 1 .AND. NMOM_I.GE.2) THEN
     end if
   end if
 
-  CALL LIMA_CCN_HOM_FREEZING (PRHODREF, PEXNREF, PPABST, PW_NU,          &
-                               PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
-                               PCCT, PCRT, PCIT, PNFT, PNHT,             &
-                               PICEFR                                    )
+  CALL LIMA_CCN_HOM_FREEZING (CST, PRHODREF, PEXNREF, PPABST, PW_NU,    &
+                              PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
+                              PCCT, PCRT, PCIT, PNFT, PNHT,             &
+                              PICEFR                                    )
   WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. PCIT(:,:,:)>XCTMIN(4)) PICEFR(:,:,:)=1.
 !
   if ( lbu_enable ) then

@@ -7,8 +7,11 @@
 !      #################################
 !
 INTERFACE
-      SUBROUTINE LIMA_DROPS_TO_DROPLETS_CONV (PRHODREF, PRCT, PRRT, PCCT, PCRT, &
+      SUBROUTINE LIMA_DROPS_TO_DROPLETS_CONV (CST, PRHODREF, PRCT, PRRT, PCCT, PCRT, &
                                               P_RR_CVRC, P_CR_CVRC    )
+!
+USE MODD_CST, ONLY: CST_t
+TYPE(CST_t),              INTENT(IN)    :: CST
 !
 REAL, DIMENSION(:,:,:),    INTENT(IN)    :: PRHODREF! Cloud water m.r. at t 
 REAL, DIMENSION(:,:,:),    INTENT(IN)    :: PRCT    ! Cloud water m.r. at t 
@@ -25,7 +28,7 @@ END INTERFACE
 END MODULE MODI_LIMA_DROPS_TO_DROPLETS_CONV
 !
 !     ######################################################################
-      SUBROUTINE LIMA_DROPS_TO_DROPLETS_CONV (PRHODREF, PRCT, PRRT, PCCT, PCRT, &
+      SUBROUTINE LIMA_DROPS_TO_DROPLETS_CONV (CST, PRHODREF, PRCT, PRRT, PCCT, PCRT, &
                                               P_RR_CVRC, P_CR_CVRC    )
 !     ######################################################################
 !
@@ -50,7 +53,7 @@ END MODULE MODI_LIMA_DROPS_TO_DROPLETS_CONV
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,             ONLY : XPI, XRHOLW 
+USE MODD_CST,             ONLY : CST_t
 USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN
 USE MODD_PARAM_LIMA_WARM, ONLY : XLBR, XLBEXR, XLBC, XLBEXC, &
                                  XACCR1, XACCR3, XACCR4, XACCR5
@@ -58,6 +61,8 @@ USE MODD_PARAM_LIMA_WARM, ONLY : XLBR, XLBEXR, XLBC, XLBEXC, &
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
+!
+TYPE(CST_t),              INTENT(IN)    :: CST
 !
 REAL, DIMENSION(:,:,:),    INTENT(IN)    :: PRHODREF! Cloud water m.r. at t 
 REAL, DIMENSION(:,:,:),    INTENT(IN)    :: PRCT    ! Cloud water m.r. at t 
@@ -88,7 +93,7 @@ ZDR(:,:,:) = 9999.
 ZMASKR(:,:,:) = PRRT(:,:,:).GT.XRTMIN(3) .AND. PCRT(:,:,:).GT.XCTMIN(3)
 ZMASKC(:,:,:) = PRCT(:,:,:).GT.XRTMIN(2) .AND. PCCT(:,:,:).GT.XCTMIN(2)
 WHERE(ZMASKR(:,:,:))
-   ZDR(:,:,:)=(6.*PRRT(:,:,:)/XPI/XRHOLW/PCRT(:,:,:))**0.33
+   ZDR(:,:,:)=(6.*PRRT(:,:,:)/CST%XPI/CST%XRHOLW/PCRT(:,:,:))**0.33
 END WHERE
 !
 ! Transfer all drops in droplets if out of cloud and Dr<82microns
