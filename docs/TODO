@@ -46,8 +46,6 @@ Pb identifiés à corriger plus tard:
   - seules quelques options sont testées avec les cas test (par exemple, il faudrait tester RMC01 mais
     l'option n'est pas remontée en namelist)
   - th_r_from_thl_rt appelée partout, il faudrait limiter à OTEST
-  - sedimentation momentum non branchée
-  - si possible, modifier ice4_sedimentation_split* dans le même esprit que stat, supprimer le faux packing
   - La taille du buffer utilisé pour th_r_from_thl_rt doit être mise en module et
     utilisée pour déclarer le buffer dans les routines appelantes et dans th_r_from_thl_rt
   - rain_ice:

@@ -238,27 +238,27 @@ ENDIF
 !*       2.4   for aggregates/snow
 !
   CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, KRR, &
-                        &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
-                        &5, &
-                        &ZRST, PRSS, PINPRS, ZPRSS, &
-                        &PFPR=PFPR)
+                          &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
+                          &5, &
+                          &ZRST, PRSS, PINPRS, ZPRSS, &
+                          &PFPR=PFPR)
 !
 !*       2.5   for graupeln
 !
   CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, KRR, &
-                        &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
-                        &6, &
-                        &ZRGT, PRGS, PINPRG, ZPRGS, &
-                        &PFPR=PFPR)
+                          &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
+                          &6, &
+                          &ZRGT, PRGS, PINPRG, ZPRGS, &
+                          &PFPR=PFPR)
 !
 !*       2.6   for hail
 !
 IF (IRR==7) THEN
     CALL INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, KRR, &
-                          &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
-                          &7, &
-                          &ZRHT, PRHS, PINPRH, ZPRHS, &
-                          &PFPR=PFPR)
+                            &PRHODREF, ZW, PDZZ, PPABST, PTHT, PT, PTSTEP, &
+                            &7, &
+                            &ZRHT, PRHS, PINPRH, ZPRHS, &
+                            &PFPR=PFPR)
 ENDIF
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT', 1, ZHOOK_HANDLE)
@@ -270,8 +270,9 @@ CONTAINS
 !
 !
 SUBROUTINE INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, KRR, &
-                              &PRHODREF, POORHODZ, PDZZ, PPABST,PTHT,PT,PTSTEP, &
-                              &KSPE, PRXT, PRXS, PINPRX, PPRXS, &
+                              &PRHODREF, POORHODZ, PDZZ, PPABST, PTHT, PT, PTSTEP, &
+                              &KSPE, &
+                              &PRXT, PRXS, PINPRX, PPRXS, &
                               &PRAY, PLBC, PFSEDC, PCONC3D, PFPR)
 !
 !*      0. DECLARATIONS
@@ -293,7 +294,7 @@ TYPE(RAIN_ICE_DESCR_t),       INTENT(IN)              :: ICED
 TYPE(PARAM_ICE_t),            INTENT(IN)              :: PARAMI
 INTEGER,                      INTENT(IN)              :: KRR
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PRHODREF ! Reference density
-REAL, DIMENSION(D%NIJT,D%NKTB:D%NKTE), INTENT(IN)        :: POORHODZ ! One Over (Rhodref times delta Z)
+REAL, DIMENSION(D%NIJT,D%NKTB:D%NKTE), INTENT(IN)      :: POORHODZ ! One Over (Rhodref times delta Z)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PDZZ ! layer thikness (m)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PPABST
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)              :: PTHT
@@ -310,9 +311,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT), OPTIONAL :: PFPR    ! upper-ai
 !*       0.2  declaration of local variables
 !
 CHARACTER(LEN=10) :: YSPE ! String for error message
-INTEGER                         :: IDX, ISEDIM
 INTEGER                         :: JIJ, JK, JL
-INTEGER, DIMENSION(D%NIJT*D%NKT) :: I1,I2   ! Used to replace the COUNT
 LOGICAL                         :: GPRESENT_PFPR
 REAL                            :: ZINVTSTEP
 REAL                            :: ZZWLBDC, ZRAY, ZZT, ZZWLBDA, ZZCC
@@ -349,19 +348,6 @@ ZREMAINT(:) = 0.
 ZREMAINT(IIJB:IIJE) = PTSTEP
 !
 DO WHILE (ANY(ZREMAINT>0.))
-  ISEDIM = 0
-  DO JK = IKTB,IKTE
-    DO JIJ = IIJB,IIJE
-      IF( (PRXT (JIJ,JK)>ICED%XRTMIN(KSPE) .OR.    &
-           PPRXS(JIJ,JK)>ZRSMIN(KSPE)) .AND. &
-           ZREMAINT(JIJ)>0. ) THEN
-        ISEDIM = ISEDIM + 1
-        IDX = ISEDIM
-        I1(IDX) = JIJ
-        I2(IDX) = JK
-      END IF
-    END DO
-  END DO
   !
   !
   !*       1. Parameters for cloud sedimentation
@@ -373,43 +359,42 @@ DO WHILE (ANY(ZREMAINT>0.))
   IF(KSPE==2) THEN
     !******* for cloud
     ZWSED(:,:) = 0.
-    DO JL=1, ISEDIM
-      JIJ=I1(JL)
-      JK=I2(JL)
-      IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE)) THEN
-        ZZWLBDC = PLBC(JIJ,JK) * PCONC3D(JIJ,JK) / &
-                 &(PRHODREF(JIJ,JK) * PRXT(JIJ,JK))
-        ZZWLBDC = ZZWLBDC**ICED%XLBEXC
-        ZRAY = PRAY(JIJ,JK) / ZZWLBDC
-        ZZT = PTHT(JIJ,JK) * (PPABST(JIJ,JK)/CST%XP00)**(CST%XRD/CST%XCPD)
-        ZZWLBDA = 6.6E-8*(101325./PPABST(JIJ,JK))*(ZZT/293.15)
-        ZZCC = ICED%XCC*(1.+1.26*ZZWLBDA/ZRAY)
-        ZWSED(JIJ, JK) = PRHODREF(JIJ,JK)**(-ICED%XCEXVT +1 ) *   &
-                           &ZZWLBDC**(-ICED%XDC)*ZZCC*PFSEDC(JIJ,JK) * PRXT(JIJ,JK)
-      ENDIF
+    DO JK = IKTB,IKTE
+      DO JIJ = IIJB,IIJE
+        IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
+          ZZWLBDC = PLBC(JIJ,JK) * PCONC3D(JIJ,JK) / &
+                   &(PRHODREF(JIJ,JK) * PRXT(JIJ,JK))
+          ZZWLBDC = ZZWLBDC**ICED%XLBEXC
+          ZRAY = PRAY(JIJ,JK) / ZZWLBDC
+          ZZT = PTHT(JIJ,JK) * (PPABST(JIJ,JK)/CST%XP00)**(CST%XRD/CST%XCPD)
+          ZZWLBDA = 6.6E-8*(101325./PPABST(JIJ,JK))*(ZZT/293.15)
+          ZZCC = ICED%XCC*(1.+1.26*ZZWLBDA/ZRAY)
+          ZWSED(JIJ, JK) = PRHODREF(JIJ,JK)**(-ICED%XCEXVT +1 ) *   &
+                             &ZZWLBDC**(-ICED%XDC)*ZZCC*PFSEDC(JIJ,JK) * PRXT(JIJ,JK)
+        ENDIF
+      ENDDO
     ENDDO
   ELSEIF(KSPE==4) THEN
     ! ******* for pristine ice
     ZWSED(:,:) = 0.
-    DO JL=1, ISEDIM
-      JIJ=I1(JL)
-      JK=I2(JL)
-      IF(PRXT(JIJ, JK) .GT. MAX(ICED%XRTMIN(4), 1.0E-7)) THEN
-        ZWSED(JIJ, JK) =  ICEP%XFSEDI * PRXT(JIJ, JK) *  &
-                            & PRHODREF(JIJ,JK)**(1.-ICED%XCEXVT) * & !    McF&H
-                            & MAX( 0.05E6,-0.15319E6-0.021454E6* &
-                            &      ALOG(PRHODREF(JIJ,JK)*PRXT(JIJ,JK)) )**ICEP%XEXCSEDI
-      ENDIF
+    DO JK = IKTB,IKTE
+      DO JIJ = IIJB,IIJE
+        IF(PRXT(JIJ, JK) .GT. MAX(ICED%XRTMIN(4), 1.0E-7) .AND. ZREMAINT(JIJ)>0.) THEN
+          ZWSED(JIJ, JK) =  ICEP%XFSEDI * PRXT(JIJ, JK) *  &
+                              & PRHODREF(JIJ,JK)**(1.-ICED%XCEXVT) * & !    McF&H
+                              & MAX( 0.05E6,-0.15319E6-0.021454E6* &
+                              &      ALOG(PRHODREF(JIJ,JK)*PRXT(JIJ,JK)) )**ICEP%XEXCSEDI
+        ENDIF
+      ENDDO
     ENDDO
 #if defined(REPRO48) || defined(REPRO55)
 #else
-    ELSEIF(KSPE==5) THEN
-      ! ******* for snow
-      ZWSED(:,:) = 0.
-      DO JL=1, ISEDIM
-        JIJ=I1(JL)
-        JK=I2(JL)
-        IF(PRXT(JIJ,JK)> ICED%XRTMIN(KSPE)) THEN
+  ELSEIF(KSPE==5) THEN
+    ! ******* for snow
+    ZWSED(:,:) = 0.
+    DO JK = IKTB,IKTE
+      DO JIJ = IIJB,IIJE
+        IF(PRXT(JIJ,JK)> ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
            IF (PARAMI%LSNOW_T .AND. PT(JIJ,JK)>263.15) THEN
               ZLBDA = MAX(MIN(ICED%XLBDAS_MAX, 10**(14.554-0.0423*PT(JIJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
            ELSE IF (PARAMI%LSNOW_T) THEN
@@ -425,6 +410,7 @@ DO WHILE (ANY(ZREMAINT>0.))
 
         ENDIF
       ENDDO
+    ENDDO
 #endif
   ELSE
     ! ******* for other species
@@ -450,23 +436,23 @@ DO WHILE (ANY(ZREMAINT>0.))
     END SELECT
     !
     ZWSED(:,:) = 0.
-    DO JL=1, ISEDIM
-      JIJ=I1(JL)
-      JK=I2(JL)
-      IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE)) THEN
-        ZWSED(JIJ, JK) = ZFSED  * PRXT(JIJ, JK)**ZEXSED            &
-                       &        * PRHODREF(JIJ, JK)**(ZEXSED-ICED%XCEXVT)
-      ENDIF
+    DO JK = IKTB,IKTE
+      DO JIJ = IIJB,IIJE
+        IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
+          ZWSED(JIJ, JK) = ZFSED  * PRXT(JIJ, JK)**ZEXSED            &
+                         &        * PRHODREF(JIJ, JK)**(ZEXSED-ICED%XCEXVT)
+        ENDIF
+      ENDDO
     ENDDO
   ENDIF
   ZMAX_TSTEP(:) = ZREMAINT(:)
-  DO JL=1, ISEDIM
-    JIJ=I1(JL)
-    JK=I2(JL)
-    IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZWSED(JIJ, JK)>1.E-20) THEN
-      ZMAX_TSTEP(JIJ) = MIN(ZMAX_TSTEP(JIJ), PARAMI%XSPLIT_MAXCFL * PRHODREF(JIJ, JK) * &
-                      & PRXT(JIJ, JK) * PDZZ(JIJ, JK) / ZWSED(JIJ, JK))
-    ENDIF
+  DO JK = IKTB,IKTE
+    DO JIJ = IIJB,IIJE
+      IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZWSED(JIJ, JK)>1.E-20 .AND. ZREMAINT(JIJ)>0.) THEN
+        ZMAX_TSTEP(JIJ) = MIN(ZMAX_TSTEP(JIJ), PARAMI%XSPLIT_MAXCFL * PRHODREF(JIJ, JK) * &
+                        & PRXT(JIJ, JK) * PDZZ(JIJ, JK) / ZWSED(JIJ, JK))
+      ENDIF
+    ENDDO
   ENDDO
 
   DO JIJ = IIJB, IIJE
