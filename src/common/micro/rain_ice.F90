@@ -196,11 +196,17 @@ USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & IRI,     & ! Pristine ice
       & IRS,     & ! Snow/aggregate
       & IRG,     & ! Graupel
-      & IRH        ! Hail
+      & IRH,     & ! Hail
+      & IBUNUM,       & ! Number of tendency terms
+      & IBUNUM_MR,    & ! Number of tendency terms expressed as mixing ratio changes
+      & IBUNUM_EXTRA, & ! Number of extra tendency terms
+      & IRREVAV,      & ! Index for the evaporation tendency
+      & IBUEXTRAIND     ! Index indirection
 
 USE MODE_BUDGET,         ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 USE MODE_MSG,            ONLY: PRINT_MSG, NVERB_FATAL
 
+USE MODE_ICE4_BUDGETS, ONLY: ICE4_BUDGETS
 USE MODE_ICE4_RAINFR_VERT, ONLY: ICE4_RAINFR_VERT
 USE MODE_ICE4_SEDIMENTATION, ONLY: ICE4_SEDIMENTATION
 USE MODE_ICE4_TENDENCIES, ONLY: ICE4_TENDENCIES
@@ -288,8 +294,6 @@ REAL,    DIMENSION(D%NIJT, D%NKT) :: ZW ! work array
 REAL,    DIMENSION(D%NIJT, D%NKT) :: ZT ! Temperature
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZZ_RVHENI_MR, & ! heterogeneous nucleation mixing ratio change
                                 & ZZ_RVHENI       ! heterogeneous nucleation
-REAL, DIMENSION(MERGE(D%NIJT, 0, BUCONF%LBU_ENABLE), &
-               &MERGE(D%NKT, 0, BUCONF%LBU_ENABLE)) :: ZW1, ZW2, ZW3, ZW4, ZW5, ZW6 !Work arrays
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZZ_LVFACT, ZZ_LSFACT, ZZ_DIFF
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRCT    ! Cloud water m.r. source at t
@@ -299,7 +303,6 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZRST    ! Snow/aggregate m.r. source at t
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRGT    ! Graupel m.r. source at t
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRHT    ! Hail m.r. source at t
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZCITOUT ! Output value for CIT
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZLBDAS  ! Modif  !lbda parameter snow
 
 !
 LOGICAL :: GEXT_TEND
@@ -313,35 +316,11 @@ REAL :: ZTIME_THRESHOLD ! Time to reach threshold
 REAL, DIMENSION(D%NIJT,D%NKT,0:7) :: ZWR
 !
 !Output packed total mixing ratio change (for budgets only)
-REAL, DIMENSION(KSIZE) :: ZTOT_RVHENI, & ! heterogeneous nucleation mixing ratio change
-                        & ZTOT_RCHONI, & ! Homogeneous nucleation
-                        & ZTOT_RRHONG, & ! Spontaneous freezing mixing ratio change
-                        & ZTOT_RVDEPS, & ! Deposition on r_s,
-                        & ZTOT_RIAGGS, & ! Aggregation on r_s
-                        & ZTOT_RIAUTS, & ! Autoconversion of r_i for r_s production
-                        & ZTOT_RVDEPG, & ! Deposition on r_g
-                        & ZTOT_RCAUTR,  & ! Autoconversion of r_c for r_r production
-                        & ZTOT_RCACCR, & ! Accretion of r_c for r_r production
-                        & ZTOT_RREVAV, & ! Evaporation of r_r
-                        & ZTOT_RCRIMSS, ZTOT_RCRIMSG, ZTOT_RSRIMCG, & ! Cloud droplet riming of the aggregates
-                        & ZTOT_RIMLTC, & ! Cloud ice melting mixing ratio change
-                        & ZTOT_RCBERI, & ! Bergeron-Findeisen effect
-                        & ZTOT_RHMLTR, & ! Melting of the hailstones
-                        & ZTOT_RSMLTG, & ! Conversion-Melting of the aggregates
-                        & ZTOT_RCMLTSR, & ! Cloud droplet collection onto aggregates by positive temperature
-                        & ZTOT_RRACCSS, ZTOT_RRACCSG, ZTOT_RSACCRG, & ! Rain accretion onto the aggregates
-                        & ZTOT_RICFRRG, ZTOT_RRCFRIG, ZTOT_RICFRR, & ! Rain contact freezing
-                        & ZTOT_RCWETG, ZTOT_RIWETG, ZTOT_RRWETG, ZTOT_RSWETG, &  ! Graupel wet growth
-                        & ZTOT_RCDRYG, ZTOT_RIDRYG, ZTOT_RRDRYG, ZTOT_RSDRYG, &  ! Graupel dry growth
-                        & ZTOT_RWETGH, & ! Conversion of graupel into hail
-                        & ZTOT_RGMLTR, & ! Melting of the graupel
-                        & ZTOT_RCWETH, ZTOT_RIWETH, ZTOT_RSWETH, ZTOT_RGWETH, ZTOT_RRWETH, & ! Dry growth of hailstone
-                        & ZTOT_RCDRYH, ZTOT_RIDRYH, ZTOT_RSDRYH, ZTOT_RRDRYH, ZTOT_RGDRYH, & ! Wet growth of hailstone
-                        & ZTOT_RDRYHG    ! Conversion of hailstone into graupel
+REAL, DIMENSION(KSIZE, IBUNUM-IBUNUM_EXTRA) :: ZBU_PACK
 !
 !For packing
 INTEGER :: IMICRO ! Case r_x>0 locations
-INTEGER :: JL, JV
+INTEGER :: JL, JV, JJV
 REAL, DIMENSION(KPROMA) :: ZTIME ! Current integration time (starts with 0 and ends with PTSTEP)
 REAL, DIMENSION(KPROMA) :: &
                         & ZMAXTIME, & ! Time on which we can apply the current tendencies
@@ -369,32 +348,8 @@ REAL, DIMENSION(KPROMA) :: &
 LOGICAL, DIMENSION(KPROMA) :: LLCOMPUTE ! .TRUE. or points where we must compute tendencies,
 !
 !Output packed tendencies (for budgets only)
-REAL, DIMENSION(KPROMA) :: ZRVHENI_MR, & ! heterogeneous nucleation mixing ratio change
-                        & ZRCHONI, & ! Homogeneous nucleation
-                        & ZRRHONG_MR, & ! Spontaneous freezing mixing ratio change
-                        & ZRVDEPS, & ! Deposition on r_s,
-                        & ZRIAGGS, & ! Aggregation on r_s
-                        & ZRIAUTS, & ! Autoconversion of r_i for r_s production
-                        & ZRVDEPG, & ! Deposition on r_g
-                        & ZRCAUTR,  & ! Autoconversion of r_c for r_r production
-                        & ZRCACCR, & ! Accretion of r_c for r_r production
-                        & ZRREVAV, & ! Evaporation of r_r
-                        & ZRIMLTC_MR, & ! Cloud ice melting mixing ratio change
-                        & ZRCBERI, & ! Bergeron-Findeisen effect
-                        & ZRHMLTR, & ! Melting of the hailstones
-                        & ZRSMLTG, & ! Conversion-Melting of the aggregates
-                        & ZRCMLTSR, & ! Cloud droplet collection onto aggregates by positive temperature
-                        & ZRRACCSS, ZRRACCSG, ZRSACCRG, & ! Rain accretion onto the aggregates
-                        & ZRCRIMSS, ZRCRIMSG, ZRSRIMCG, ZRSRIMCG_MR, & ! Cloud droplet riming of the aggregates
-                        & ZRICFRRG, ZRRCFRIG, ZRICFRR, & ! Rain contact freezing
-                        & ZRCWETG, ZRIWETG, ZRRWETG, ZRSWETG, &  ! Graupel wet growth
-                        & ZRCDRYG, ZRIDRYG, ZRRDRYG, ZRSDRYG, &  ! Graupel dry growth
-                        & ZRWETGH, & ! Conversion of graupel into hail
-                        & ZRWETGH_MR, & ! Conversion of graupel into hail, mr change
-                        & ZRGMLTR, & ! Melting of the graupel
-                        & ZRCWETH, ZRIWETH, ZRSWETH, ZRGWETH, ZRRWETH, & ! Dry growth of hailstone
-                        & ZRCDRYH, ZRIDRYH, ZRSDRYH, ZRRDRYH, ZRGDRYH, & ! Wet growth of hailstone
-                        & ZRDRYHG    ! Conversion of hailstone into graupel
+REAL, DIMENSION(KPROMA, IBUNUM-IBUNUM_EXTRA) :: ZBU_SUM
+REAL, DIMENSION(KPROMA, IBUNUM) :: ZBU_INST
 !
 !For mixing-ratio-splitting
 LOGICAL :: LLCPZ0RT
@@ -467,33 +422,6 @@ DO JK = IKTB,IKTE
   ENDDO
 ENDDO
 !
-!Compute lambda_snow parameter
-!ZT en KELVIN
-DO JK = IKTB,IKTE
-  DO JIJ = IIJB,IIJE
-    ZLBDAS(JIJ,JK)=1000.
-  END DO
-END DO
-DO JK = IKTB,IKTE
-   DO JIJ = IIJB,IIJE
-         IF (PARAMI%LSNOW_T) THEN 
-            IF (PRST(JIJ,JK)>ICED%XRTMIN(5)) THEN
-               IF(ZT(JIJ,JK)>CST%XTT-10.0) THEN
-                  ZLBDAS(JIJ,JK) = MAX(MIN(ICED%XLBDAS_MAX, 10**(14.554-0.0423*ZT(JIJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
-               ELSE
-                  ZLBDAS(JIJ,JK) = MAX(MIN(ICED%XLBDAS_MAX, 10**(6.226-0.0106*ZT(JIJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
-               END IF
-            END IF
-#if defined(REPRO48) || defined(REPRO55)
-#else
-         ELSE
-            IF (PRST(JIJ,JK).GT.ICED%XRTMIN(5)) THEN
-               ZLBDAS(JIJ,JK)  = MAX(MIN(ICED%XLBDAS_MAX,ICED%XLBS*(PRHODREF(JIJ,JK)*PRST(JIJ,JK))**ICED%XLBEXS),ICED%XLBDAS_MIN)
-            END IF
-#endif
-         END IF
-   END DO
-END DO
 !
 !-------------------------------------------------------------------------------
 !
@@ -550,51 +478,10 @@ DO JK = IKTB,IKTE
 ENDDO
 
 IF(BUCONF%LBU_ENABLE) THEN
-  ZTOT_RVHENI(:)=0.
-  ZTOT_RCHONI(:)=0.
-  ZTOT_RRHONG(:)=0.
-  ZTOT_RVDEPS(:)=0.
-  ZTOT_RIAGGS(:)=0.
-  ZTOT_RIAUTS(:)=0.
-  ZTOT_RVDEPG(:)=0.
-  ZTOT_RCAUTR(:)=0.
-  ZTOT_RCACCR(:)=0.
-  ZTOT_RREVAV(:)=0.
-  ZTOT_RCRIMSS(:)=0.
-  ZTOT_RCRIMSG(:)=0.
-  ZTOT_RSRIMCG(:)=0.
-  ZTOT_RIMLTC(:)=0.
-  ZTOT_RCBERI(:)=0.
-  ZTOT_RHMLTR(:)=0.
-  ZTOT_RSMLTG(:)=0.
-  ZTOT_RCMLTSR(:)=0.
-  ZTOT_RRACCSS(:)=0.
-  ZTOT_RRACCSG(:)=0.
-  ZTOT_RSACCRG(:)=0.
-  ZTOT_RICFRRG(:)=0.
-  ZTOT_RRCFRIG(:)=0.
-  ZTOT_RICFRR(:)=0.
-  ZTOT_RCWETG(:)=0.
-  ZTOT_RIWETG(:)=0.
-  ZTOT_RRWETG(:)=0.
-  ZTOT_RSWETG(:)=0.
-  ZTOT_RCDRYG(:)=0.
-  ZTOT_RIDRYG(:)=0.
-  ZTOT_RRDRYG(:)=0.
-  ZTOT_RSDRYG(:)=0.
-  ZTOT_RWETGH(:)=0.
-  ZTOT_RGMLTR(:)=0.
-  ZTOT_RCWETH(:)=0.
-  ZTOT_RIWETH(:)=0.
-  ZTOT_RSWETH(:)=0.
-  ZTOT_RGWETH(:)=0.
-  ZTOT_RRWETH(:)=0.
-  ZTOT_RCDRYH(:)=0.
-  ZTOT_RIDRYH(:)=0.
-  ZTOT_RSDRYH(:)=0.
-  ZTOT_RRDRYH(:)=0.
-  ZTOT_RGDRYH(:)=0.
-  ZTOT_RDRYHG(:)=0.
+  DO JV=1, IBUNUM-IBUNUM_EXTRA
+    ZBU_PACK(:, JV)=0.
+    ZBU_SUM(:, JV)=0.
+  ENDDO
 ENDIF
 
 !-------------------------------------------------------------------------------
@@ -785,15 +672,7 @@ IF (KSIZE > 0) THEN
                         &ZPRES, ZCF, ZSIGMA_RC, &
                         &ZCIT, &
                         &ZZT, ZVART, &
-                        &ZRVHENI_MR, ZRRHONG_MR, ZRIMLTC_MR, ZRSRIMCG_MR, &
-                        &ZRCHONI, ZRVDEPS, ZRIAGGS, ZRIAUTS, ZRVDEPG, &
-                        &ZRCAUTR, ZRCACCR, ZRREVAV, &
-                        &ZRCRIMSS, ZRCRIMSG, ZRSRIMCG, ZRRACCSS, ZRRACCSG, ZRSACCRG, ZRSMLTG, ZRCMLTSR, &
-                        &ZRICFRRG, ZRRCFRIG, ZRICFRR, ZRCWETG, ZRIWETG, ZRRWETG, ZRSWETG, &
-                        &ZRCDRYG, ZRIDRYG, ZRRDRYG, ZRSDRYG, ZRWETGH, ZRWETGH_MR, ZRGMLTR, &
-                        &ZRCWETH, ZRIWETH, ZRSWETH, ZRGWETH, ZRRWETH, &
-                        &ZRCDRYH, ZRIDRYH, ZRSDRYH, ZRRDRYH, ZRGDRYH, ZRDRYHG, ZRHMLTR, &
-                        &ZRCBERI, &
+                        &ZBU_INST, &
                         &ZRS_TEND, ZRG_TEND, ZRH_TEND, ZSSI, &
                         &ZA, ZB, &
                         &ZHLC_HCF, ZHLC_LCF, ZHLC_HRC, ZHLC_LRC, &
@@ -923,52 +802,26 @@ IF (KSIZE > 0) THEN
         !***       4.4 Mixing ratio change due to each process
         !
         IF(BUCONF%LBU_ENABLE) THEN
-          DO JL=1, IMICRO
-            ZTOT_RVHENI (JMICRO+JL-1)=ZTOT_RVHENI (JMICRO+JL-1)+ZRVHENI_MR(JL)
-            ZTOT_RCHONI (JMICRO+JL-1)=ZTOT_RCHONI (JMICRO+JL-1)+ZRCHONI   (JL)*ZMAXTIME(JL)
-            ZTOT_RRHONG (JMICRO+JL-1)=ZTOT_RRHONG (JMICRO+JL-1)+ZRRHONG_MR(JL)
-            ZTOT_RVDEPS (JMICRO+JL-1)=ZTOT_RVDEPS (JMICRO+JL-1)+ZRVDEPS   (JL)*ZMAXTIME(JL)
-            ZTOT_RIAGGS (JMICRO+JL-1)=ZTOT_RIAGGS (JMICRO+JL-1)+ZRIAGGS   (JL)*ZMAXTIME(JL)
-            ZTOT_RIAUTS (JMICRO+JL-1)=ZTOT_RIAUTS (JMICRO+JL-1)+ZRIAUTS   (JL)*ZMAXTIME(JL)
-            ZTOT_RVDEPG (JMICRO+JL-1)=ZTOT_RVDEPG (JMICRO+JL-1)+ZRVDEPG   (JL)*ZMAXTIME(JL)
-            ZTOT_RCAUTR (JMICRO+JL-1)=ZTOT_RCAUTR (JMICRO+JL-1)+ZRCAUTR   (JL)*ZMAXTIME(JL)
-            ZTOT_RCACCR (JMICRO+JL-1)=ZTOT_RCACCR (JMICRO+JL-1)+ZRCACCR   (JL)*ZMAXTIME(JL)
-            ZTOT_RREVAV (JMICRO+JL-1)=ZTOT_RREVAV (JMICRO+JL-1)+ZRREVAV   (JL)*ZMAXTIME(JL)
-            ZTOT_RCRIMSS(JMICRO+JL-1)=ZTOT_RCRIMSS(JMICRO+JL-1)+ZRCRIMSS  (JL)*ZMAXTIME(JL)
-            ZTOT_RCRIMSG(JMICRO+JL-1)=ZTOT_RCRIMSG(JMICRO+JL-1)+ZRCRIMSG  (JL)*ZMAXTIME(JL)
-            ZTOT_RSRIMCG(JMICRO+JL-1)=ZTOT_RSRIMCG(JMICRO+JL-1)+ZRSRIMCG  (JL)*ZMAXTIME(JL)+ZRSRIMCG_MR(JL)
-            ZTOT_RRACCSS(JMICRO+JL-1)=ZTOT_RRACCSS(JMICRO+JL-1)+ZRRACCSS  (JL)*ZMAXTIME(JL)
-            ZTOT_RRACCSG(JMICRO+JL-1)=ZTOT_RRACCSG(JMICRO+JL-1)+ZRRACCSG  (JL)*ZMAXTIME(JL)
-            ZTOT_RSACCRG(JMICRO+JL-1)=ZTOT_RSACCRG(JMICRO+JL-1)+ZRSACCRG  (JL)*ZMAXTIME(JL)
-            ZTOT_RSMLTG (JMICRO+JL-1)=ZTOT_RSMLTG (JMICRO+JL-1)+ZRSMLTG   (JL)*ZMAXTIME(JL)
-            ZTOT_RCMLTSR(JMICRO+JL-1)=ZTOT_RCMLTSR(JMICRO+JL-1)+ZRCMLTSR  (JL)*ZMAXTIME(JL)
-            ZTOT_RICFRRG(JMICRO+JL-1)=ZTOT_RICFRRG(JMICRO+JL-1)+ZRICFRRG  (JL)*ZMAXTIME(JL)
-            ZTOT_RRCFRIG(JMICRO+JL-1)=ZTOT_RRCFRIG(JMICRO+JL-1)+ZRRCFRIG  (JL)*ZMAXTIME(JL)
-            ZTOT_RICFRR (JMICRO+JL-1)=ZTOT_RICFRR (JMICRO+JL-1)+ZRICFRR   (JL)*ZMAXTIME(JL)
-            ZTOT_RCWETG (JMICRO+JL-1)=ZTOT_RCWETG (JMICRO+JL-1)+ZRCWETG   (JL)*ZMAXTIME(JL)
-            ZTOT_RIWETG (JMICRO+JL-1)=ZTOT_RIWETG (JMICRO+JL-1)+ZRIWETG   (JL)*ZMAXTIME(JL)
-            ZTOT_RRWETG (JMICRO+JL-1)=ZTOT_RRWETG (JMICRO+JL-1)+ZRRWETG   (JL)*ZMAXTIME(JL)
-            ZTOT_RSWETG (JMICRO+JL-1)=ZTOT_RSWETG (JMICRO+JL-1)+ZRSWETG   (JL)*ZMAXTIME(JL)
-            ZTOT_RWETGH (JMICRO+JL-1)=ZTOT_RWETGH (JMICRO+JL-1)+ZRWETGH   (JL)*ZMAXTIME(JL)+ZRWETGH_MR(JL)
-            ZTOT_RCDRYG (JMICRO+JL-1)=ZTOT_RCDRYG (JMICRO+JL-1)+ZRCDRYG   (JL)*ZMAXTIME(JL)
-            ZTOT_RIDRYG (JMICRO+JL-1)=ZTOT_RIDRYG (JMICRO+JL-1)+ZRIDRYG   (JL)*ZMAXTIME(JL)
-            ZTOT_RRDRYG (JMICRO+JL-1)=ZTOT_RRDRYG (JMICRO+JL-1)+ZRRDRYG   (JL)*ZMAXTIME(JL)
-            ZTOT_RSDRYG (JMICRO+JL-1)=ZTOT_RSDRYG (JMICRO+JL-1)+ZRSDRYG   (JL)*ZMAXTIME(JL)
-            ZTOT_RGMLTR (JMICRO+JL-1)=ZTOT_RGMLTR (JMICRO+JL-1)+ZRGMLTR   (JL)*ZMAXTIME(JL)
-            ZTOT_RCWETH (JMICRO+JL-1)=ZTOT_RCWETH (JMICRO+JL-1)+ZRCWETH   (JL)*ZMAXTIME(JL)
-            ZTOT_RIWETH (JMICRO+JL-1)=ZTOT_RIWETH (JMICRO+JL-1)+ZRIWETH   (JL)*ZMAXTIME(JL)
-            ZTOT_RSWETH (JMICRO+JL-1)=ZTOT_RSWETH (JMICRO+JL-1)+ZRSWETH   (JL)*ZMAXTIME(JL)
-            ZTOT_RGWETH (JMICRO+JL-1)=ZTOT_RGWETH (JMICRO+JL-1)+ZRGWETH   (JL)*ZMAXTIME(JL)
-            ZTOT_RRWETH (JMICRO+JL-1)=ZTOT_RRWETH (JMICRO+JL-1)+ZRRWETH   (JL)*ZMAXTIME(JL)
-            ZTOT_RCDRYH (JMICRO+JL-1)=ZTOT_RCDRYH (JMICRO+JL-1)+ZRCDRYH   (JL)*ZMAXTIME(JL)
-            ZTOT_RIDRYH (JMICRO+JL-1)=ZTOT_RIDRYH (JMICRO+JL-1)+ZRIDRYH   (JL)*ZMAXTIME(JL)
-            ZTOT_RSDRYH (JMICRO+JL-1)=ZTOT_RSDRYH (JMICRO+JL-1)+ZRSDRYH   (JL)*ZMAXTIME(JL)
-            ZTOT_RRDRYH (JMICRO+JL-1)=ZTOT_RRDRYH (JMICRO+JL-1)+ZRRDRYH   (JL)*ZMAXTIME(JL)
-            ZTOT_RGDRYH (JMICRO+JL-1)=ZTOT_RGDRYH (JMICRO+JL-1)+ZRGDRYH   (JL)*ZMAXTIME(JL)
-            ZTOT_RDRYHG (JMICRO+JL-1)=ZTOT_RDRYHG (JMICRO+JL-1)+ZRDRYHG   (JL)*ZMAXTIME(JL)
-            ZTOT_RHMLTR (JMICRO+JL-1)=ZTOT_RHMLTR (JMICRO+JL-1)+ZRHMLTR   (JL)*ZMAXTIME(JL)
-            ZTOT_RIMLTC (JMICRO+JL-1)=ZTOT_RIMLTC (JMICRO+JL-1)+ZRIMLTC_MR(JL)
-            ZTOT_RCBERI (JMICRO+JL-1)=ZTOT_RCBERI (JMICRO+JL-1)+ZRCBERI   (JL)*ZMAXTIME(JL)
+          !Mixing ratio change due to a tendency
+          DO JV=1, IBUNUM-IBUNUM_MR-IBUNUM_EXTRA
+            DO JL=1, IMICRO
+              ZBU_SUM(JL, JV) = ZBU_SUM(JL, JV) + ZBU_INST(JL, JV)*ZMAXTIME(JL)
+            ENDDO
+          ENDDO
+
+          !Mixing ratio change due to a mixing ratio change
+          DO JV=IBUNUM-IBUNUM_MR-IBUNUM_EXTRA+1, IBUNUM-IBUNUM_EXTRA
+            DO JL=1, IMICRO
+              ZBU_SUM(JL, JV) = ZBU_SUM(JL, JV) + ZBU_INST(JL, JV)
+            ENDDO
+          ENDDO
+
+          !Extra contribution as a mixing ratio change
+          DO JV=IBUNUM-IBUNUM_EXTRA+1, IBUNUM
+            JJV=IBUEXTRAIND(JV)
+            DO JL=1, IMICRO
+              ZBU_SUM(JL, JJV) = ZBU_SUM(JL, JJV) + ZBU_INST(JL, JV)
+            ENDDO
           ENDDO
         ENDIF
         !
@@ -995,7 +848,7 @@ IF (KSIZE > 0) THEN
     DO JL=1, IMICRO
       ZCITOUT  (I1(JL),I2(JL))=ZCIT   (JL)
       IF(PARAMI%LWARM) THEN
-        PEVAP3D(I1(JL),I2(JL))=ZRREVAV(JL)
+        PEVAP3D(I1(JL),I2(JL))=ZBU_INST(JL, IRREVAV)
       ENDIF
       ZWR(I1(JL),I2(JL),IRV)=ZVART(JL, IRV)
       ZWR(I1(JL),I2(JL),IRC)=ZVART(JL, IRC)
@@ -1007,6 +860,14 @@ IF (KSIZE > 0) THEN
         ZWR(I1(JL),I2(JL),IRH)=ZVART(JL, IRH)
       ENDIF
     ENDDO
+    IF(BUCONF%LBU_ENABLE) THEN
+      DO JV=1, IBUNUM-IBUNUM_EXTRA
+        DO JL=1, IMICRO
+          ZBU_PACK(JMICRO+JL-1, JV) = ZBU_SUM(JL, JV)
+        ENDDO
+      ENDDO
+    ENDIF
+
 
   ENDDO ! JMICRO
 ENDIF ! KSIZE > 0
@@ -1088,366 +949,15 @@ ENDDO
 !***     7.2    LBU_ENABLE case
 !
 IF(BUCONF%LBU_ENABLE) THEN
-  IF (BUCONF%LBUDGET_TH) THEN
-    ZZ_DIFF(:,:)=0.
-    DO JK = IKTB, IKTE
-      DO JIJ = IIJB, IIJE
-        ZZ_DIFF(JIJ, JK) = ZZ_LSFACT(JIJ, JK) - ZZ_LVFACT(JIJ, JK)
-      ENDDO
-    ENDDO
-  END IF
-
-  ZW(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RVHENI(JL) * ZINV_TSTEP
-  END DO
-  DO JK = IKTB, IKTE
-    DO JIJ = IIJB, IIJE
-      ZW(JIJ,JK)=ZW(JIJ,JK)+ZZ_RVHENI(JIJ,JK)
-    ENDDO
-  ENDDO
-#ifdef REPRO48
-  IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HENU',  ZW(:, :)*ZZ_LSFACT(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HENU', -ZW(:, :)                *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HENU',  ZW(:, :)                *PRHODJ(:, :))
-#else
-  IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HIN',  ZW(:, :)*ZZ_LSFACT(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HIN', -ZW(:, :)                *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIN',  ZW(:, :)                *PRHODJ(:, :))
-#endif
-  ZW(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RCHONI(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HON',  ZW(:, :)*ZZ_DIFF(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'HON', -ZW(:, :)              *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HON',  ZW(:, :)              *PRHODJ(:, :))
-
-  ZW(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RRHONG(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'SFR',  ZW(:, :)*ZZ_DIFF(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'SFR', -ZW(:, :)              *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'SFR',  ZW(:, :)              *PRHODJ(:, :))
-
-  ZW(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RVDEPS(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'DEPS',  ZW(:, :)*ZZ_LSFACT(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'DEPS', -ZW(:, :)                *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'DEPS',  ZW(:, :)                *PRHODJ(:, :))
-
-  ZW(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RIAGGS(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'AGGS', -ZW(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'AGGS',  ZW(:, :)*PRHODJ(:, :))
-
-  ZW(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RIAUTS(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'AUTS', -ZW(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'AUTS',  ZW(:, :)*PRHODJ(:, :))
-
-  ZW(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RVDEPG(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'DEPG',  ZW(:, :)*ZZ_LSFACT(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'DEPG', -ZW(:, :)                *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'DEPG',  ZW(:, :)                *PRHODJ(:, :))
-
-  IF(PARAMI%LWARM) THEN
-    ZW(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RCAUTR(JL) * ZINV_TSTEP
-    END DO
-    IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'AUTO', -ZW(:, :)*PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'AUTO',  ZW(:, :)*PRHODJ(:, :))
-
-    ZW(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RCACCR(JL) * ZINV_TSTEP
-    END DO
-    IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'ACCR', -ZW(:, :)*PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'ACCR',  ZW(:, :)*PRHODJ(:, :))
-
-    ZW(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RREVAV(JL) * ZINV_TSTEP
-    END DO
-    IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'REVA', -ZW(:, :)*ZZ_LVFACT(:, :)*PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'REVA',  ZW(:, :)                *PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'REVA', -ZW(:, :)                *PRHODJ(:, :))
-  ENDIF
-
-  ZW1(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW1(I1TOT(JL), I2TOT(JL)) = ZTOT_RCRIMSS(JL) * ZINV_TSTEP
-  END DO
-  ZW2(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW2(I1TOT(JL), I2TOT(JL)) = ZTOT_RCRIMSG(JL) * ZINV_TSTEP
-  END DO
-  ZW3(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW3(I1TOT(JL), I2TOT(JL)) = ZTOT_RSRIMCG(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_TH) &
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'RIM', (ZW1(:, :)+ZW2(:, :))*ZZ_DIFF(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'RIM', (-ZW1(:, :)-ZW2(:, :))*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'RIM', ( ZW1(:, :)-ZW3(:, :))*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'RIM', ( ZW2(:, :)+ZW3(:, :))*PRHODJ(:, :))
-
-  ZW1(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW1(I1TOT(JL), I2TOT(JL)) = ZTOT_RRACCSS(JL) * ZINV_TSTEP
-  END DO
-  ZW2(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW2(I1TOT(JL), I2TOT(JL)) = ZTOT_RRACCSG(JL) * ZINV_TSTEP
-  END DO
-  ZW3(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW3(I1TOT(JL), I2TOT(JL)) = ZTOT_RSACCRG(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_TH) &
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'ACC', (ZW1(:, :)+ZW2(:, :) )*ZZ_DIFF(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'ACC', (-ZW1(:, :)-ZW2(:, :))*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'ACC', ( ZW1(:, :)-ZW3(:, :))*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'ACC', ( ZW2(:, :)+ZW3(:, :))*PRHODJ(:, :))
-
-  ZW(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RSMLTG(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'CMEL', -ZW(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'CMEL',  ZW(:, :)*PRHODJ(:, :))
-  ZW(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RCMLTSR(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'CMEL', -ZW(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'CMEL',  ZW(:, :)*PRHODJ(:, :))
-
-  ZW1(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW1(I1TOT(JL), I2TOT(JL)) = ZTOT_RICFRRG(JL) * ZINV_TSTEP
-  END DO
-  ZW2(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW2(I1TOT(JL), I2TOT(JL)) = ZTOT_RRCFRIG(JL) * ZINV_TSTEP
-  END DO
-  ZW3(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW3(I1TOT(JL), I2TOT(JL)) = ZTOT_RICFRR(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_TH) &
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'CFRZ', ZW2(:, :)*ZZ_DIFF(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'CFRZ', (-ZW2(:, :)+ZW3(:, :))*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'CFRZ', (-ZW1(:, :)-ZW3(:, :))*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'CFRZ', ( ZW1(:, :)+ZW2(:, :))*PRHODJ(:, :))
-
-  ZW1(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW1(I1TOT(JL), I2TOT(JL)) = ZTOT_RCWETG(JL) * ZINV_TSTEP
-  END DO
-  ZW2(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW2(I1TOT(JL), I2TOT(JL)) = ZTOT_RRWETG(JL) * ZINV_TSTEP
-  END DO
-  ZW3(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW3(I1TOT(JL), I2TOT(JL)) = ZTOT_RIWETG(JL) * ZINV_TSTEP
-  END DO
-  ZW4(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW4(I1TOT(JL), I2TOT(JL)) = ZTOT_RSWETG(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_TH) &
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'WETG', (ZW1(:, :)+ZW2(:, :))*ZZ_DIFF(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'WETG', -ZW1(:, :)    *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'WETG', -ZW2(:, :)    *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'WETG', -ZW3(:, :)    *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'WETG', -ZW4(:, :)    *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'WETG', (ZW1(:, :)+ZW2(:, :)+ZW3(:, :)+ZW4(:, :)) &
-                                                                      &                             *PRHODJ(:, :))
-
-  IF(KRR==7) THEN
-    ZW(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RWETGH(JL) * ZINV_TSTEP
-    END DO
-    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'GHCV', -ZW(:, :)*PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RH), 'GHCV',  ZW(:, :)*PRHODJ(:, :))
-  END IF
-
-  ZW1(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW1(I1TOT(JL), I2TOT(JL)) = ZTOT_RCDRYG(JL) * ZINV_TSTEP
-  END DO
-  ZW2(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW2(I1TOT(JL), I2TOT(JL)) = ZTOT_RRDRYG(JL) * ZINV_TSTEP
-  END DO
-  ZW3(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW3(I1TOT(JL), I2TOT(JL)) = ZTOT_RIDRYG(JL) * ZINV_TSTEP
-  END DO
-  ZW4(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW4(I1TOT(JL), I2TOT(JL)) = ZTOT_RSDRYG(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_TH) &
-    CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'DRYG', (ZW1(:, :)+ZW2(:, :) )*ZZ_DIFF(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'DRYG', -ZW1(:, :)     *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'DRYG', -ZW2(:, :)     *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'DRYG', -ZW3(:, :)     *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'DRYG', -ZW4(:, :)     *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'DRYG', (ZW1(:, :)+ZW2(:, :)+ZW3(:, :)+ZW4(:, :)) &
-                                                                      &                              *PRHODJ(:, :))
-
-  ZW(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RGMLTR(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'GMLT', -ZW(:, :)*ZZ_DIFF(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'GMLT',  ZW(:, :)              *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'GMLT', -ZW(:, :)              *PRHODJ(:, :))
-
-  IF(KRR==7) THEN
-    ZW1(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW1(I1TOT(JL), I2TOT(JL)) = ZTOT_RCWETH(JL) * ZINV_TSTEP
-    END DO
-    ZW2(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW2(I1TOT(JL), I2TOT(JL)) = ZTOT_RRWETH(JL) * ZINV_TSTEP
-    END DO
-    ZW3(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW3(I1TOT(JL), I2TOT(JL)) = ZTOT_RIWETH(JL) * ZINV_TSTEP
-    END DO
-    ZW4(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW4(I1TOT(JL), I2TOT(JL)) = ZTOT_RSWETH(JL) * ZINV_TSTEP
-    END DO
-    ZW5(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW5(I1TOT(JL), I2TOT(JL)) = ZTOT_RGWETH(JL) * ZINV_TSTEP
-    END DO
-    IF (BUCONF%LBUDGET_TH) &
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'WETH', (ZW1(:, :)+ZW2(:, :))*ZZ_DIFF(:, :)*PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'WETH', -ZW1(:, :)    *PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'WETH', -ZW2(:, :)    *PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'WETH', -ZW3(:, :)    *PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'WETH', -ZW4(:, :)    *PRHODJ(:, :))
-#ifdef REPRO48
-#else
-    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'WETH', -ZW5(:, :)    *PRHODJ(:, :))
-#endif
-    IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RH), 'WETH', (ZW1(:, :)+ZW2(:, :)+ZW3(:, :)+ &
-                                                                        &ZW4(:, :)+ZW5(:, : ))  *PRHODJ(:, :))
-
-#if defined(REPRO48) || defined(REPRO55)
-    ZW(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RGWETH(JL) * ZINV_TSTEP
-    END DO
-#endif 
-#ifdef REPRO48
-    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'HGCV', (-ZW5(:, :)-ZW(:, :))*PRHODJ(:, :))
-#endif
-#ifdef REPRO55
-    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'HGCV', -ZW(:, :)*PRHODJ(:, :))
-#endif
-#if defined(REPRO48) || defined(REPRO55)
-    IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RH), 'HGCV',  ZW(:, :)*PRHODJ(:, :))
-#endif
-
-    ZW1(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW1(I1TOT(JL), I2TOT(JL)) = ZTOT_RCDRYH(JL) * ZINV_TSTEP
-    END DO
-    ZW2(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW2(I1TOT(JL), I2TOT(JL)) = ZTOT_RRDRYH(JL) * ZINV_TSTEP
-    END DO
-    ZW3(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW3(I1TOT(JL), I2TOT(JL)) = ZTOT_RIDRYH(JL) * ZINV_TSTEP
-    END DO
-    ZW4(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW4(I1TOT(JL), I2TOT(JL)) = ZTOT_RSDRYH(JL) * ZINV_TSTEP
-    END DO
-    ZW5(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW5(I1TOT(JL), I2TOT(JL)) = ZTOT_RGDRYH(JL) * ZINV_TSTEP
-    END DO
-    ZW6(:,:) = 0.
-#if defined(REPRO48) || defined(REPRO55)
-    !ZW6 must be removed when REPRO* will be suppressed
-    DO JL=1, KSIZE
-      ZW6(I1TOT(JL), I2TOT(JL)) = ZTOT_RDRYHG(JL) * ZINV_TSTEP
-    END DO
-#endif
-    IF (BUCONF%LBUDGET_TH) &
-      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'DRYH', (ZW1(:, :)+ZW2(:, :))*ZZ_DIFF(:, :)*PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'DRYH', -ZW1(:, :)                 *PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'DRYH', -ZW2(:, :)                 *PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'DRYH', -ZW3(:, :)                 *PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'DRYH', -ZW4(:, :)                 *PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'DRYH', (-ZW5(:, :)+ZW6(:, :))     *PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RH), 'DRYH', (ZW1(:, :)+ZW2(:, :)+ZW3(:, :)+   &
-                                                                        &ZW4(:, :)+ZW5(:, :)-ZW6(:, :)) &
-                                                                        &                             *PRHODJ(:, :))
-
-#if defined(REPRO48) || defined(REPRO55)
-#else
-    !When REPRO48 will be suppressed, ZW6 must be removed
-    ZW(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RDRYHG(JL) * ZINV_TSTEP
-    END DO
-    IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'HGCV', -ZW(:, :)*PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RH), 'HGCV',  ZW(:, :)*PRHODJ(:, :))
-#endif
-
-    ZW(:,:) = 0.
-    DO JL=1, KSIZE
-      ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RHMLTR(JL) * ZINV_TSTEP
-    END DO
-    IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HMLT', -ZW(:, :)*ZZ_DIFF(:, :)*PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'HMLT',  ZW(:, :)              *PRHODJ(:, :))
-    IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RH), 'HMLT', -ZW(:, :)              *PRHODJ(:, :))
-  ENDIF
-
-  ZW(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RIMLTC(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'IMLT', -ZW(:, :)*ZZ_DIFF(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'IMLT',  ZW(:, :)              *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'IMLT', -ZW(:, :)              *PRHODJ(:, :))
-
-  ZW(:,:) = 0.
-  DO JL=1, KSIZE
-    ZW(I1TOT(JL), I2TOT(JL)) = ZTOT_RCBERI(JL) * ZINV_TSTEP
-  END DO
-  IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'BERFI',  ZW(:, :)*ZZ_DIFF(:, :)*PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'BERFI', -ZW(:, :)              *PRHODJ(:, :))
-  IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'BERFI',  ZW(:, :)              *PRHODJ(:, :))
-
-ENDIF
-!
-!***     7.3    Final tendencies
-!
-IF (BUCONF%LBU_ENABLE) THEN
+  !Budgets for the different processes
+  !They have been put in a subroutine because they perform pack/unpack
+  CALL ICE4_BUDGETS(D, PARAMI, BUCONF, KSIZE, KPROMA, PTSTEP, KRR, I1TOT, I2TOT, &
+                    ZZ_LVFACT, ZZ_LSFACT, PRHODJ, &
+                    ZZ_RVHENI, ZBU_PACK, &
+                    TBUDGETS, KBUDGETS)
+  !
+  !***     7.3    Final tendencies
+  !
   IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'CORR', PTHS(:, :)*PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'CORR', PRVS(:, :)*PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', PRCS(:, :)*PRHODJ(:, :))
