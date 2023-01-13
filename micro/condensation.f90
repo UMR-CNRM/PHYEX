@@ -239,10 +239,12 @@ ZDZREF = ICEP%XFRMIN(25) ! Thickness for unchanged vqsigsat (only used for LHGT_
 PRC_OUT = PRC_IN
 PRV_OUT = PRV_IN
 PRI_OUT = PRI_IN
-PHLC_HRC = 0.
-PHLC_HCF = 0.
-PHLI_HRI = 0.
-PHLI_HCF = 0.
+IF(PRESENT(PHLC_HRC)) THEN
+ PHLC_HRC = 0.
+ PHLC_HCF = 0.
+ PHLI_HRI = 0.
+ PHLI_HCF = 0.
+END IF
 #endif
 IF(OCND2)ZPRIFACT = 0.
 !

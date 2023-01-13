@@ -287,8 +287,8 @@ REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) &
                             ZRI, ZRI_IN,  &
                             Z_SIGS, Z_SRCS, &
                             ZW_MF, &
-                            ZCND, ZS, ZVEC1
-REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2)) :: ZSIGQSAT2D, ZDUM
+                            ZCND, ZS, ZVEC1,ZDUM
+REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2)) :: ZSIGQSAT2D
 !
 INTEGER, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) :: IVEC1
 !
