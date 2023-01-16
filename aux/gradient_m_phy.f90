@@ -436,7 +436,7 @@ REAL, DIMENSION(D%NIT*D%NJT*D%NKT),  INTENT(IN)  :: PDZX    ! metric coefficient
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PGX_M_U  ! result at flux
                                                               ! side
 REAL, DIMENSION(D%NIT*D%NJT*D%NKT) :: ZGX_M_U
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZY, ZDXX,ZDZZ,ZDZX
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZY, ZDXX
 INTEGER  IIU,IKU,JI,JK,IKL, IKA
 !
 INTEGER :: JJK,IJU
@@ -456,6 +456,10 @@ IJU=D%NJT
 IKU=D%NKT
 IKL=D%NKL
 IKA=D%NKA
+!
+CALL D1D_TO_3D(D,PDXX,ZDXX)
+CALL D1D_TO_3D(D,PY,ZY)
+!
 IF (.NOT. OFLAT) THEN
   JIJKOR  = 1 + JPHEXT + IIU*IJU*(JPVEXT_TURB+1 - 1)
   JIJKEND = IIU*IJU*(IKU-JPVEXT_TURB)
@@ -479,26 +483,22 @@ IF (.NOT. OFLAT) THEN
        ) * PDZX(JIJKP1)* 0.25                                   &
         )  / PDXX(JIJK)
   END DO
-
+!
 CALL D1D_TO_3D(D,ZGX_M_U,PGX_M_U)
-CALL D1D_TO_3D(D,PDXX,ZDXX)
-CALL D1D_TO_3D(D,PDZZ,ZDZZ)
-CALL D1D_TO_3D(D,PDZX,ZDZX)
-CALL D1D_TO_3D(D,PY,ZY)
 !
   DO JI=1+JPHEXT,IIU
     PGX_M_U(JI,:,IKU)=  ( ZY(JI,:,IKU)-ZY(JI-1,:,IKU)  )  / ZDXX(JI,:,IKU)
     PGX_M_U(JI,:,IKA)=  -999.
   END DO
-!
-  PGX_M_U(1,:,:)=PGX_M_U(IIU-2*JPHEXT+1,:,:)
 ELSE
 !  PGX_M_U = DXM(PY) / PDXX
-  PGX_M_U(1+JPHEXT:IIU,:,:) = ( ZY(1+JPHEXT:IIU,:,:)-ZY(JPHEXT:IIU-1,:,:) ) &
-                             / ZDXX(1+JPHEXT:IIU,:,:)
+  PGX_M_U(1+1:IIU,:,:) = ( ZY(1+1:IIU,:,:)-ZY(1:IIU-1,:,:) ) &
+                             / ZDXX(1+1:IIU,:,:)
 !
-  PGX_M_U(1,:,:)=PGX_M_U(IIU-2*JPHEXT+1,:,:)
 ENDIF
+DO JI=1,JPHEXT
+  PGX_M_U(JI,:,:)=PGX_M_U(IIU-2*JPHEXT+JI,:,:) ! for reprod JPHEXT <> 1
+END DO  
 !
 !-------------------------------------------------------------------------------
 !
@@ -623,14 +623,15 @@ IF (.NOT. OFLAT) THEN
     PGY_M_V(:,JJ,IKA)=  -999.
   END DO
 !
-  PGY_M_V(:,1,:)=PGY_M_V(:,IJU-2*JPHEXT+1,:)
 ELSE
 !  PGY_M_V = DYM(PY)/PDYY
-  PGY_M_V(:,1+JPHEXT:IJU,:) = ( PY(:,1+JPHEXT:IJU,:)-PY(:,JPHEXT:IJU-1,:) ) &
-                               / PDYY(:,1+JPHEXT:IJU,:)
+  PGY_M_V(:,1+1:IJU,:) = ( PY(:,1+1:IJU,:)-PY(:,1:IJU-1,:) ) &
+                               / PDYY(:,1+1:IJU,:)
 !
-  PGY_M_V(:,1,:)=PGY_M_V(:,IJU-2*JPHEXT+1,:)
 ENDIF
+DO JJ=1,JPHEXT
+  PGY_M_V(:,JJ,:)=PGY_M_V(:,IJU-2*JPHEXT+JJ,:)
+END DO
 !
 !-------------------------------------------------------------------------------
 !
