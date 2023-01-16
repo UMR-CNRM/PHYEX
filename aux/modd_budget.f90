@@ -164,20 +164,20 @@ type tbudgetdata
 end type tbudgetdata
 
 TYPE TBUDGETCONF_t
- LOGICAL :: LBU_ENABLE
- LOGICAL :: LBUDGET_U  ! flag to compute budget of RhoJu  and/or LES budgets with u
- LOGICAL :: LBUDGET_V  ! flag to compute budget of RhoJv  and/or LES budgets with u
- LOGICAL :: LBUDGET_W  ! flag to compute budget of RhoJw  and/or LES budgets with u
- LOGICAL :: LBUDGET_TH ! flag to compute budget of RhoJTh and/or LES budgets with th
- LOGICAL :: LBUDGET_TKE! flag to compute budget of RhoJTke and/or LES budgets with Tke
- LOGICAL :: LBUDGET_RV ! flag to compute budget of RhoJrv and/or LES budgets with rv
- LOGICAL :: LBUDGET_RC ! flag to compute budget of RhoJrc and/or LES budgets with rc
- LOGICAL :: LBUDGET_RR ! flag to compute budget of RhoJrr and/or LES budgets with rr
- LOGICAL :: LBUDGET_RI ! flag to compute budget of RhoJri and/or LES budgets with ri
- LOGICAL :: LBUDGET_RS ! flag to compute budget of RhoJrs and/or LES budgets with rs
- LOGICAL :: LBUDGET_RG ! flag to compute budget of RhoJrg and/or LES budgets with rg
- LOGICAL :: LBUDGET_RH ! flag to compute budget of RhoJrh and/or LES budgets with rh
- LOGICAL :: LBUDGET_SV ! flag to compute budget of RhoJsv and/or LES budgets with sv
+ LOGICAL :: LBU_ENABLE=.FALSE.
+ LOGICAL :: LBUDGET_U=.FALSE.  ! flag to compute budget of RhoJu  and/or LES budgets with u
+ LOGICAL :: LBUDGET_V=.FALSE.  ! flag to compute budget of RhoJv  and/or LES budgets with u
+ LOGICAL :: LBUDGET_W=.FALSE.  ! flag to compute budget of RhoJw  and/or LES budgets with u
+ LOGICAL :: LBUDGET_TH=.FALSE. ! flag to compute budget of RhoJTh and/or LES budgets with th
+ LOGICAL :: LBUDGET_TKE=.FALSE.! flag to compute budget of RhoJTke and/or LES budgets with Tke
+ LOGICAL :: LBUDGET_RV=.FALSE. ! flag to compute budget of RhoJrv and/or LES budgets with rv
+ LOGICAL :: LBUDGET_RC=.FALSE. ! flag to compute budget of RhoJrc and/or LES budgets with rc
+ LOGICAL :: LBUDGET_RR=.FALSE. ! flag to compute budget of RhoJrr and/or LES budgets with rr
+ LOGICAL :: LBUDGET_RI=.FALSE. ! flag to compute budget of RhoJri and/or LES budgets with ri
+ LOGICAL :: LBUDGET_RS=.FALSE. ! flag to compute budget of RhoJrs and/or LES budgets with rs
+ LOGICAL :: LBUDGET_RG=.FALSE. ! flag to compute budget of RhoJrg and/or LES budgets with rg
+ LOGICAL :: LBUDGET_RH=.FALSE. ! flag to compute budget of RhoJrh and/or LES budgets with rh
+ LOGICAL :: LBUDGET_SV=.FALSE. ! flag to compute budget of RhoJsv and/or LES budgets with sv
 END TYPE TBUDGETCONF_t
 !
 TYPE(TBUDGETCONF_t), TARGET :: TBUCONF
@@ -187,7 +187,7 @@ type(tburhodata),                pointer,     save :: tburhodj => null() ! Budge
 
 
 !                       General variables
-LOGICAL, POINTER :: LBU_ENABLE=>TBUCONF%LBU_ENABLE
+LOGICAL, POINTER :: LBU_ENABLE=>NULL()
 !
 CHARACTER (LEN=4), SAVE :: CBUTYPE         ! type of desired budget 'CART'
                                            ! (cartesian box) or 'MASK' (budget
@@ -369,18 +369,38 @@ CHARACTER(LEN=NBULISTMAXLEN), DIMENSION(:), ALLOCATABLE :: CBULIST_RSV
 REAL :: XTIME_BU          ! budget time in this time-step
 REAL :: XTIME_BU_PROCESS  ! budget time per process for this time-step
 !
-LOGICAL, POINTER :: LBUDGET_U=>TBUCONF%LBUDGET_U  ! flag to compute budget of RhoJu  and/or LES budgets with u
-LOGICAL, POINTER :: LBUDGET_V=>TBUCONF%LBUDGET_V  ! flag to compute budget of RhoJv  and/or LES budgets with u
-LOGICAL, POINTER :: LBUDGET_W=>TBUCONF%LBUDGET_W  ! flag to compute budget of RhoJw  and/or LES budgets with u
-LOGICAL, POINTER :: LBUDGET_TH=>TBUCONF%LBUDGET_TH ! flag to compute budget of RhoJTh and/or LES budgets with th
-LOGICAL, POINTER :: LBUDGET_TKE=>TBUCONF%LBUDGET_TKE ! flag to compute budget of RhoJTke and/or LES budgets with Tke
-LOGICAL, POINTER :: LBUDGET_RV=>TBUCONF%LBUDGET_RV ! flag to compute budget of RhoJrv and/or LES budgets with rv
-LOGICAL, POINTER :: LBUDGET_RC=>TBUCONF%LBUDGET_RC ! flag to compute budget of RhoJrc and/or LES budgets with rc
-LOGICAL, POINTER :: LBUDGET_RR=>TBUCONF%LBUDGET_RR ! flag to compute budget of RhoJrr and/or LES budgets with rr
-LOGICAL, POINTER :: LBUDGET_RI=>TBUCONF%LBUDGET_RI ! flag to compute budget of RhoJri and/or LES budgets with ri
-LOGICAL, POINTER :: LBUDGET_RS=>TBUCONF%LBUDGET_RS ! flag to compute budget of RhoJrs and/or LES budgets with rs
-LOGICAL, POINTER :: LBUDGET_RG=>TBUCONF%LBUDGET_RG ! flag to compute budget of RhoJrg and/or LES budgets with rg
-LOGICAL, POINTER :: LBUDGET_RH=>TBUCONF%LBUDGET_RH ! flag to compute budget of RhoJrh and/or LES budgets with rh
-LOGICAL, POINTER :: LBUDGET_SV=>TBUCONF%LBUDGET_SV ! flag to compute budget of RhoJsv and/or LES budgets with sv
+LOGICAL, POINTER :: LBUDGET_U=>NULL() ! flag to compute budget of RhoJu  and/or LES budgets with u
+LOGICAL, POINTER :: LBUDGET_V=>NULL()  ! flag to compute budget of RhoJv  and/or LES budgets with u
+LOGICAL, POINTER :: LBUDGET_W=>NULL()  ! flag to compute budget of RhoJw  and/or LES budgets with u
+LOGICAL, POINTER :: LBUDGET_TH=>NULL() ! flag to compute budget of RhoJTh and/or LES budgets with th
+LOGICAL, POINTER :: LBUDGET_TKE=>NULL() ! flag to compute budget of RhoJTke and/or LES budgets with Tke
+LOGICAL, POINTER :: LBUDGET_RV=>NULL() ! flag to compute budget of RhoJrv and/or LES budgets with rv
+LOGICAL, POINTER :: LBUDGET_RC=>NULL() ! flag to compute budget of RhoJrc and/or LES budgets with rc
+LOGICAL, POINTER :: LBUDGET_RR=>NULL() ! flag to compute budget of RhoJrr and/or LES budgets with rr
+LOGICAL, POINTER :: LBUDGET_RI=>NULL() ! flag to compute budget of RhoJri and/or LES budgets with ri
+LOGICAL, POINTER :: LBUDGET_RS=>NULL() ! flag to compute budget of RhoJrs and/or LES budgets with rs
+LOGICAL, POINTER :: LBUDGET_RG=>NULL() ! flag to compute budget of RhoJrg and/or LES budgets with rg
+LOGICAL, POINTER :: LBUDGET_RH=>NULL() ! flag to compute budget of RhoJrh and/or LES budgets with rh
+LOGICAL, POINTER :: LBUDGET_SV=>NULL() ! flag to compute budget of RhoJsv and/or LES budgets with sv
 !
+CONTAINS
+SUBROUTINE TBUCONF_ASSOCIATE()
+  IMPLICIT NONE
+  LBU_ENABLE=>TBUCONF%LBU_ENABLE
+
+  LBUDGET_U=>TBUCONF%LBUDGET_U
+  LBUDGET_V=>TBUCONF%LBUDGET_V
+  LBUDGET_W=>TBUCONF%LBUDGET_W
+  LBUDGET_TH=>TBUCONF%LBUDGET_TH
+  LBUDGET_TKE=>TBUCONF%LBUDGET_TKE
+  LBUDGET_RV=>TBUCONF%LBUDGET_RV
+  LBUDGET_RC=>TBUCONF%LBUDGET_RC
+  LBUDGET_RR=>TBUCONF%LBUDGET_RR
+  LBUDGET_RI=>TBUCONF%LBUDGET_RI
+  LBUDGET_RS=>TBUCONF%LBUDGET_RS
+  LBUDGET_RG=>TBUCONF%LBUDGET_RG
+  LBUDGET_RH=>TBUCONF%LBUDGET_RH
+  LBUDGET_SV=>TBUCONF%LBUDGET_SV
+END SUBROUTINE TBUCONF_ASSOCIATE
+
 END MODULE MODD_BUDGET
