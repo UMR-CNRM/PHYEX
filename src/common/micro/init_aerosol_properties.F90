@@ -44,7 +44,7 @@ END MODULE MODI_INIT_AEROSOL_PROPERTIES
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_LUNIT,           ONLY : TLUOUT0
+!USE MODD_LUNIT,           ONLY : TLUOUT0
 USE MODD_PARAM_LIMA,      ONLY : NMOD_CCN, HINI_CCN, HTYPE_CCN,        &
                                  XR_MEAN_CCN, XLOGSIG_CCN, XRHO_CCN,                 &
                                  XKHEN_MULTI, XMUHEN_MULTI, XBETAHEN_MULTI,          &
@@ -52,7 +52,8 @@ USE MODD_PARAM_LIMA,      ONLY : NMOD_CCN, HINI_CCN, HTYPE_CCN,        &
                                  XACTEMP_CCN, XFSOLUB_CCN,                           &
                                  NMOD_IFN, NSPECIE, CIFN_SPECIES,       &
                                  XMDIAM_IFN, XSIGMA_IFN, XRHO_IFN, XFRAC, XFRAC_REF, &
-                                 CINT_MIXING, NPHILLIPS
+                                 CINT_MIXING, NPHILLIPS,           &
+                                 NIMM, NMOD_IMM, NINDICE_CCN_IMM
 !
 use mode_msg
 !
@@ -84,8 +85,8 @@ REAL, DIMENSION(3) :: RHOCCN
 !
 INTEGER            :: I,J,JMOD
 !
-INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
-INTEGER  :: IRESP   ! Return code of FM-routines
+!INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
+!INTEGER  :: IRESP   ! Return code of FM-routines
 !
 REAL :: X1, X2, X3, X4, X5
 ! REAL, DIMENSION(7) :: diameters=(/ 0.01E-6, 0.05E-6, 0.1E-6, 0.2E-6, 0.5E-6, 1.E-6, 2.E-6 /)
@@ -97,7 +98,7 @@ INTEGER :: II, IJ, IK
 !
 !-------------------------------------------------------------------------------
 !
-ILUOUT0 = TLUOUT0%NLU
+!ILUOUT0 = TLUOUT0%NLU
 !
 !!!!!!!!!!!!!!!!
 ! CCN properties
@@ -183,13 +184,13 @@ IF ( NMOD_CCN .GE. 1 ) THEN
   IF (.NOT.(ALLOCATED(XLIMIT_FACTOR)))  ALLOCATE(XLIMIT_FACTOR(NMOD_CCN))
 !
   IF (HINI_CCN == 'CCN') THEN
-    IF (LSCAV) THEN
-! Attention !
-      WRITE(UNIT=ILUOUT0,FMT='("You are using a numerical initialization &
-        &not depending on the aerosol properties, however you need it for &
-        &scavenging.                                                      &
-        &With LSCAV = true, HINI_CCN should be set to AER for consistency")')
-    END IF
+!!$    IF (LSCAV) THEN
+!!$! Attention !
+!!$      WRITE(UNIT=ILUOUT0,FMT='("You are using a numerical initialization &
+!!$        &not depending on the aerosol properties, however you need it for &
+!!$        &scavenging.                                                      &
+!!$        &With LSCAV = true, HINI_CCN should be set to AER for consistency")')
+!!$    END IF
 ! Numerical initialization without dependence on AP physical properties
     DO JMOD = 1, NMOD_CCN
       XKHEN_MULTI(JMOD)    = XKHEN_TMP(JMOD)  
@@ -430,6 +431,22 @@ IF ( NMOD_IFN .GE. 1 ) THEN
          XFRAC_REF(3)=0.28
          XFRAC_REF(4)=0.06
       END IF
+!
+! Immersion modes
+!
+   IF (.NOT.(ALLOCATED(NIMM))) ALLOCATE(NIMM(NMOD_CCN))
+   NIMM(:)=0
+   IF (ALLOCATED(NINDICE_CCN_IMM)) DEALLOCATE(NINDICE_CCN_IMM)
+   ALLOCATE(NINDICE_CCN_IMM(MAX(1,NMOD_IMM)))
+   IF (NMOD_IMM .GE. 1) THEN
+      DO J = 0, NMOD_IMM-1
+         NIMM(NMOD_CCN-J)=1
+         NINDICE_CCN_IMM(NMOD_IMM-J) = NMOD_CCN-J
+      END DO
+!   ELSE IF (NMOD_IMM == 0) THEN ! PNIS existe mais vaut 0, pour l'appel à resolved_cloud
+!      NMOD_IMM = 1
+!      NINDICE_CCN_IMM(1) = 0
+   END IF
 !
 END IF ! NMOD_IFN > 0
 ! 

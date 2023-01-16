@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE  ARO_ADJUST_LIMA(KKA,KKU,KKL,KLON,KLEV,  KRR, KSV, KTCOUNT,  &
+      SUBROUTINE  ARO_ADJUST_LIMA(KKA,KKU,KKL,KLON,KLEV,KFDIA,  KRR, KSV, KTCOUNT,  &
                                   OSUBG_COND, OSIGMAS, OCND2, &
                                   PTSTEP, PSIGQSAT, &
                                   PZZF, PRHODJ, PRHODREF, PEXNREF,&
@@ -93,6 +93,8 @@ USE DDH_MIX, ONLY  : TYP_DDH
 USE YOMLDDH, ONLY  : TLDDH
 USE YOMMDDH, ONLY  : TMDDH
 !
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+!
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
@@ -105,6 +107,7 @@ INTEGER,                  INTENT(IN)   :: KKU    !uppest atmosphere array index
 INTEGER,                  INTENT(IN)   :: KKL    !vert. levels type 1=MNH -1=ARO
 INTEGER,                  INTENT(IN)   :: KLON     !NPROMA under CPG
 INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels
+INTEGER,                  INTENT(IN)   :: KFDIA    !
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KSV      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
@@ -173,6 +176,8 @@ REAL  :: ZMASSPOS                   ! total mass  for one water category
                                     ! after removing the negative values
 REAL  :: ZRATIO                     ! ZMASSTOT / ZMASSCOR
 !
+TYPE(TBUDGETDATA), DIMENSION(NBUDGET_SV1+NSV_LIMA-1) :: YLBUDGET
+TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !
 !------------------------------------------------------------------------------
 !
@@ -189,7 +194,7 @@ HRAD='NONE'
 HTURBDIM='1DIM'
 KMI=1
 
-
+CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, 0, KFDIA)
 
 !
 !*       2.     TRANSFORMATION INTO PHYSICAL TENDENCIES
@@ -242,7 +247,7 @@ ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
 !*       3.2    Correct negative values
 !
 ! Correction where rc<0
-     IF (LWARM_LIMA) THEN
+     IF (NMOM_C.GE.1) THEN
 !        WHERE (PRS(:,:,:,2) < 0. .OR. PSVS(:,:,:,NSV_LIMA_NC) < 0.)
         WHERE (PRS(:,:,:,2) < 0.)
            PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,2)
@@ -253,7 +258,7 @@ ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
         END WHERE
      END IF
 ! Correction where rr<0
-     IF (LWARM_LIMA .AND. LRAIN_LIMA) THEN
+     IF (NMOM_R.GE.1) THEN
 !        WHERE (PRS(:,:,:,3) < 0. .OR. PSVS(:,:,:,NSV_LIMA_NR) < 0.)
         WHERE (PRS(:,:,:,3) < 0.)
            PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,3)
@@ -275,7 +280,7 @@ ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
 !        ENDDO
 !     END IF
 ! Correction where ri<0
-     IF (LCOLD_LIMA) THEN
+     IF (NMOM_I.GE.1) THEN
 !        WHERE (PRS(:,:,:,4) < 0. .OR. PSVS(:,:,:,NSV_LIMA_NI) < 0.)
         WHERE (PRS(:,:,:,4) < 0.)
            PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,4)
@@ -301,7 +306,12 @@ ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
 !IF (LBUDGET_RH) CALL BUDGET (PRS(:,:,:,7) * PRHODJ(:,:,:),12,'NEGA_BU_RRH')
 !IF (LBUDGET_TH) CALL BUDGET (PTHS(:,:,:)  * PRHODJ(:,:,:), 4,'NEGA_BU_RTH')
 
-
+DO JRR=1, NBUDGET_SV1+NSV_LIMA-1
+  YLBUDGET(JRR)%NBUDGET=JRR
+  YLBUDGET(JRR)%YDDDH=>YDDDH
+  YLBUDGET(JRR)%YDLDDH=>YDLDDH
+  YLBUDGET(JRR)%YDMDDH=>YDMDDH
+ENDDO
 !
 !-------------------------------------------------------------------------------
 !
@@ -314,7 +324,8 @@ ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
 !
     ZZZ =  PZZF
 
-    CALL LIMA_ADJUST(KRR=KRR, KMI=KMI, HFMFILE='DUMMY', HLUOUT='DUMMY', HRAD='DUMMY',                  &
+    CALL LIMA_ADJUST_SPLIT(YLDIMPHYEX, CST, TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
+                     KRR=KRR, KMI=KMI, HFMFILE='DUMMY', HLUOUT='DUMMY', HRAD='DUMMY',                  &
                      HTURBDIM=HTURBDIM, OCLOSE_OUT=.FALSE., OSUBG_COND=.FALSE., PTSTEP=2*PTSTEP,         &
                      PRHODREF=PRHODREF, PRHODJ=PRHODJ, PEXNREF=PEXNREF, PPABSM=PPABSM, PSIGS=PSIGS, PPABST=PPABSM, &
                      PRT=PRT, PRS=PRS, PSVT=PSVT, PSVS=PSVS,                             &

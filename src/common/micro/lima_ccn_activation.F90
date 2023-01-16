@@ -102,7 +102,7 @@ END MODULE MODI_LIMA_CCN_ACTIVATION
 USE MODD_CST,            ONLY: CST_t
 !use modd_field,           only: TFIELDDATA, TYPEREAL
 !USE MODD_IO,              ONLY: TFILEDATA
-USE MODD_LUNIT_n,         ONLY: TLUOUT
+!USE MODD_LUNIT_n,         ONLY: TLUOUT
 USE MODD_PARAMETERS,      ONLY: JPHEXT, JPVEXT
 USE MODD_PARAM_LIMA,      ONLY: LADJ, LACTIT, NMOD_CCN, XCTMIN, XKHEN_MULTI, XRTMIN, XLIMIT_FACTOR
 USE MODD_PARAM_LIMA_WARM, ONLY: XWMIN, NAHEN, NHYP, XAHENINTP1, XAHENINTP2, XCSTDCRIT, XHYPF12,      &
@@ -110,7 +110,7 @@ USE MODD_PARAM_LIMA_WARM, ONLY: XWMIN, NAHEN, NHYP, XAHENINTP1, XAHENINTP2, XCST
                                 XLBC, XLBEXC
 USE MODD_TURB_n,          ONLY: LSUBG_COND
 
-USE MODE_IO_FIELD_WRITE,  only: IO_Field_write
+!USE MODE_IO_FIELD_WRITE,  only: IO_Field_write
 use mode_tools,           only: Countjv
 
 USE MODI_GAMMA
@@ -183,11 +183,11 @@ REAL    :: ZS1, ZS2, ZXACC
 INTEGER :: JMOD
 INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE        ! Physical domain
 !
-INTEGER                  :: ILUOUT     ! Logical unit of output listing 
-TYPE(TFIELDMETADATA) :: TZFIELD
+!!$INTEGER                  :: ILUOUT     ! Logical unit of output listing 
+!!$TYPE(TFIELDMETADATA) :: TZFIELD
 !-------------------------------------------------------------------------------
 !
-ILUOUT = TLUOUT%NLU
+!ILUOUT = TLUOUT%NLU
 !
 !*       1.     PREPARE COMPUTATIONS - PACK
 !   	        ---------------------------

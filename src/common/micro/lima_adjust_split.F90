@@ -9,21 +9,28 @@
 !
 INTERFACE
 !
-      SUBROUTINE LIMA_ADJUST_SPLIT(D, KRR, KMI, TPFILE, HCONDENS, HLAMBDA3,        &
+   SUBROUTINE LIMA_ADJUST_SPLIT(D, CST, BUCONF, TBUDGETS, KBUDGETS, &
+                             KRR, KMI, HCONDENS, HLAMBDA3,        &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS, PMFCONV,         &
                              PPABST, PPABSTT, PZZ, PDTHRAD, PW_NU,              &
                              PRT, PRS, PSVT, PSVS,                              &
                              PTHS, PSRCS, PCLDFR, PICEFR, PRC_MF, PRI_MF, PCF_MF)
 !
-USE MODD_IO,    ONLY: TFILEDATA
+!USE MODD_IO,    ONLY: TFILEDATA
 USE MODD_NSV,   only: NSV_LIMA_BEG
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
+USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_t
+USE MODD_CST,            ONLY: CST_t
 !
 TYPE(DIMPHYEX_t),         INTENT(IN)   :: D
+TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+INTEGER, INTENT(IN) :: KBUDGETS
+!
 INTEGER,                  INTENT(IN)   :: KRR        ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KMI        ! Model index 
-TYPE(TFILEDATA),          INTENT(IN)   :: TPFILE     ! Output file
 CHARACTER(len=80),        INTENT(IN)   :: HCONDENS
 CHARACTER(len=4),         INTENT(IN)   :: HLAMBDA3   ! formulation for lambda3 coeff
 LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid
@@ -72,7 +79,7 @@ END INTERFACE
 END MODULE MODI_LIMA_ADJUST_SPLIT
 !
 !     ###########################################################################
-      SUBROUTINE LIMA_ADJUST_SPLIT(D, KRR, KMI, TPFILE, HCONDENS, HLAMBDA3,        &
+      SUBROUTINE LIMA_ADJUST_SPLIT(D, KRR, KMI, HCONDENS, HLAMBDA3,        &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS, PMFCONV,         &
                              PPABST, PPABSTT, PZZ, PDTHRAD, PW_NU,              &
@@ -152,15 +159,12 @@ END MODULE MODI_LIMA_ADJUST_SPLIT
 !*       0.    DECLARATIONS
 !              ------------
 !
-use modd_budget,           only: lbu_enable, nbumod,                                          &
-                                 lbudget_th, lbudget_rv, lbudget_rc, lbudget_ri, lbudget_sv,  &
-                                 NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RI, NBUDGET_SV1, &
-                                 tbudgets
+USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_t
+USE MODD_CST,            ONLY: CST_t
 USE MODD_CONF
-USE MODD_CST
-use modd_field,            only: TFIELDMETADATA, TYPEREAL
-USE MODD_IO,               ONLY: TFILEDATA
-USE MODD_LUNIT_n,          ONLY: TLUOUT
+!use modd_field,            only: TFIELDDATA, TYPEREAL
+!USE MODD_IO,               ONLY: TFILEDATA
+!USE MODD_LUNIT_n,          ONLY: TLUOUT
 USE MODD_NSV
 USE MODD_PARAMETERS
 USE MODD_PARAM_LIMA
@@ -172,8 +176,8 @@ USE MODD_NEB,              ONLY: NEB
 USE MODD_TURB_n,           ONLY: TURBN
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 !
-use mode_budget,           only: Budget_store_init, Budget_store_end
-USE MODE_IO_FIELD_WRITE,   only: IO_Field_write
+use mode_budget,           only: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
+!USE MODE_IO_FIELD_WRITE,   only: IO_Field_write
 use mode_msg
 use mode_tools,            only: Countjv
 !
@@ -188,9 +192,13 @@ IMPLICIT NONE
 !
 !
 TYPE(DIMPHYEX_t),         INTENT(IN)   :: D
+TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+INTEGER, INTENT(IN) :: KBUDGETS
+!
 INTEGER,                  INTENT(IN)   :: KRR        ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KMI        ! Model index 
-TYPE(TFILEDATA),          INTENT(IN)   :: TPFILE     ! Output file
 CHARACTER(len=80),        INTENT(IN)    :: HCONDENS
 CHARACTER(len=4),         INTENT(IN)    :: HLAMBDA3  ! formulation for lambda3 coeff
 LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid 
@@ -244,6 +252,7 @@ REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) &
                             PRIT,        & ! Cloud ice  m.r. at t
                             PRST,        & ! Aggregate  m.r. at t
                             PRGT,        & ! Graupel    m.r. at t
+                            PRHT,        & ! Hail       m.r. at t
 !
                             PRVS,        & ! Water vapor m.r. source
                             PRCS,        & ! Cloud water m.r. source
@@ -251,6 +260,7 @@ REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) &
                             PRIS,        & ! Cloud ice  m.r. source
                             PRSS,        & ! Aggregate  m.r. source
                             PRGS,        & ! Graupel    m.r. source
+                            PRHS,        & ! Hail       m.r. source
 !
                             PCCT,        & ! Cloud water conc. at t
                             PCIT,        & ! Cloud ice   conc. at t
@@ -292,14 +302,14 @@ REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2)) :: ZSIGQSAT2D
 !
 INTEGER, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) :: IVEC1
 !
-INTEGER                  :: IRESP      ! Return code of FM routines
+!INTEGER                  :: IRESP      ! Return code of FM routines
 INTEGER                  :: IIU,IJU,IKU! dimensions of dummy arrays
 INTEGER                  :: IKB        ! K index value of the first inner mass point
 INTEGER                  :: IKE        ! K index value of the last inner mass point
 INTEGER                  :: IIB,IJB    ! Horz index values of the first inner mass points
 INTEGER                  :: IIE,IJE    ! Horz index values of the last inner mass points
 INTEGER                  :: JITER,ITERMAX  ! iterative loop for first order adjustment
-INTEGER                  :: ILUOUT     ! Logical unit of output listing 
+!INTEGER                  :: ILUOUT     ! Logical unit of output listing 
 !
 INTEGER                           :: ISIZE
 LOGICAL                           :: G_SIGMAS, GUSERI
@@ -317,19 +327,9 @@ TYPE(TFIELDMETADATA)     :: TZFIELD
 !*       1.     PRELIMINARIES
 !               -------------
 !
-ILUOUT = TLUOUT%NLU
+!ILUOUT = TLUOUT%NLU
 !
-IIU = SIZE(PEXNREF,1)
-IJU = SIZE(PEXNREF,2)
-IKU = SIZE(PEXNREF,3)
-IIB = 1 + JPHEXT
-IIE = SIZE(PRHODJ,1) - JPHEXT
-IJB = 1 + JPHEXT
-IJE = SIZE(PRHODJ,2) - JPHEXT
-IKB = 1 + JPVEXT
-IKE = SIZE(PRHODJ,3) - JPVEXT
-!
-ZEPS= XMV / XMD
+ZEPS= CST%XMV / CST%XMD
 !
 IF (OSUBG_COND) THEN
   ITERMAX=1
@@ -363,6 +363,8 @@ PRST(:,:,:) = 0.
 PRSS(:,:,:) = 0.
 PRGT(:,:,:) = 0.
 PRGS(:,:,:) = 0.
+PRHT(:,:,:) = 0.
+PRHS(:,:,:) = 0.
 !
 IF ( KRR .GE. 2 ) PRCT(:,:,:) = PRS(:,:,:,2)*PTSTEP
 IF ( KRR .GE. 2 ) PRCS(:,:,:) = PRS(:,:,:,2)
@@ -374,6 +376,8 @@ IF ( KRR .GE. 5 ) PRST(:,:,:) = PRT(:,:,:,5)
 IF ( KRR .GE. 5 ) PRSS(:,:,:) = PRS(:,:,:,5) 
 IF ( KRR .GE. 6 ) PRGT(:,:,:) = PRT(:,:,:,6)
 IF ( KRR .GE. 6 ) PRGS(:,:,:) = PRS(:,:,:,6)
+IF ( KRR .GE. 7 ) PRHT(:,:,:) = PRT(:,:,:,7)
+IF ( KRR .GE. 7 ) PRHS(:,:,:) = PRS(:,:,:,7)
 !
 ! Prepare 3D number concentrations
 PCCT(:,:,:) = 0.
@@ -413,36 +417,36 @@ END IF
 ! END IF
 !
 !
-if ( nbumod == kmi .and. lbu_enable ) then
-  if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'CEDS', pths(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rv ) call Budget_store_init( tbudgets(NBUDGET_RV), 'CEDS', prvs(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'CEDS', prcs(:, :, :) * prhodj(:, :, :) )
+if ( nbumod == kmi .and. BUCONF%lbu_enable ) then
+  if ( BUCONF%lbudget_th ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'CEDS', pths(:, :, :) * prhodj(:, :, :) )
+  if ( BUCONF%lbudget_rv ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'CEDS', prvs(:, :, :) * prhodj(:, :, :) )
+  if ( BUCONF%lbudget_rc ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'CEDS', prcs(:, :, :) * prhodj(:, :, :) )
   !Remark: PRIS is not modified but source term kept for better coherence with lima_adjust and lima_notadjust
-  if ( lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'CEDS', pris(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_sv ) then
+  if ( BUCONF%lbudget_ri ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'CEDS', pris(:, :, :) * prhodj(:, :, :) )
+  if ( BUCONF%lbudget_sv ) then
     if ( nmom_c.ge.2) &
-      call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CEDS', pccs(:, :, :) * prhodj(:, :, :) )
+      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CEDS', pccs(:, :, :) * prhodj(:, :, :) )
     if ( lscav .and. laero_mass ) &
-      call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', pmas(:, :, :) * prhodj(:, :, :) )
+      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', pmas(:, :, :) * prhodj(:, :, :) )
     if ( nmom_c.ge.1 ) then
       do jl = 1, nmod_ccn
         idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + jl
-        call Budget_store_init( tbudgets(idx), 'CEDS', pnfs(:, :, :, jl) * prhodj(:, :, :) )
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', pnfs(:, :, :, jl) * prhodj(:, :, :) )
         idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + jl
-        call Budget_store_init( tbudgets(idx), 'CEDS', pnas(:, :, :, jl) * prhodj(:, :, :) )
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', pnas(:, :, :, jl) * prhodj(:, :, :) )
       end do
     end if
 !     if ( nmom_i.ge.2 ) then
-!       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'CEDS', pcis(:, :, :) * prhodj(:, :, :) )
+!       call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ni), 'CEDS', pcis(:, :, :) * prhodj(:, :, :) )
 !       do jl = 1, nmod_ifn
 !         idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_free - 1 + jl
-!         call Budget_store_init( tbudgets(idx), 'CEDS', pifs(:, :, :, jl) * prhodj(:, :, :) )
+!         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', pifs(:, :, :, jl) * prhodj(:, :, :) )
 !         idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_nucl - 1 + jl
-!         call Budget_store_init( tbudgets(idx), 'CEDS', pins(:, :, :, jl) * prhodj(:, :, :) )
+!         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', pins(:, :, :, jl) * prhodj(:, :, :) )
 !       end do
 !       do jl = 1, nmod_imm
 !         idx = NBUDGET_SV1 - 1 + nsv_lima_imm_nucl - 1 + jl
-!         call Budget_store_init( tbudgets(idx), 'CEDS', pnis(:, :, :, jl) * prhodj(:, :, :) )
+!         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', pnis(:, :, :, jl) * prhodj(:, :, :) )
 !       end do
 !     end if
   end if
@@ -469,7 +473,7 @@ END WHERE
 !
 !*       2.2    estimate the Exner function at t+1
 !
-ZEXNS(:,:,:) = ( PPABSTT(:,:,:) / XP00 ) ** (XRD/XCPD)  
+ZEXNS(:,:,:) = ( PPABSTT(:,:,:) / CST%XP00 ) ** (CST%XRD/CST%XCPD)  
 !
 !    beginning of the iterative loop
 !
@@ -482,15 +486,15 @@ DO JITER =1,ITERMAX
 !
 !*       2.4    compute the specific heat for moist air (Cph) at t+1
 !
-   ZCPH(:,:,:) = XCPD + XCPV  *ZDT*   PRVS(:,:,:)                             &
-                      + XCL   *ZDT* ( PRCS(:,:,:) + PRRS(:,:,:) )             &
-                      + XCI   *ZDT* ( PRIS(:,:,:) + PRSS(:,:,:) + PRGS(:,:,:) )
+   ZCPH(:,:,:) = CST%XCPD + CST%XCPV  *ZDT*   PRVS(:,:,:)                             &
+                      + CST%XCL *ZDT* ( PRCS(:,:,:) + PRRS(:,:,:) )             &
+                      + CST%XCI *ZDT* ( PRIS(:,:,:) + PRSS(:,:,:) + PRGS(:,:,:) + PRHS(:,:,:) )
 !
 !*       2.5    compute the latent heat of vaporization Lv(T*) at t+1
 !               and of sublimation Ls(T*) at t+1
 !
-   ZLV(:,:,:) = XLVTT + ( XCPV - XCL ) * ( ZT(:,:,:) -XTT )
-   ZLS(:,:,:) = XLSTT + ( XCPV - XCI ) * ( ZT(:,:,:) -XTT )
+   ZLV(:,:,:) = CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZT(:,:,:) -CST%XTT )
+   ZLS(:,:,:) = CST%XLSTT + ( CST%XCPV - CST%XCI ) * ( ZT(:,:,:) -CST%XTT )
 !
 !
 !-------------------------------------------------------------------------------
@@ -533,7 +537,7 @@ DO JITER =1,ITERMAX
    IF (OSUBG_COND .AND. NMOM_C.GE.2 .AND. LACTI) THEN
       PSRCS=Z_SRCS
       ZW_MF=0.
-      CALL LIMA_CCN_ACTIVATION (TPFILE,                          &
+      CALL LIMA_CCN_ACTIVATION (CST,                          &
            PRHODREF, PEXNREF, PPABST, ZT2, PDTHRAD, PW_NU+ZW_MF, &
            PTHT, ZRV2, ZRC2, PCCT, PRRT, PNFT, PNAT,             &
            PCLDFR                                                )      
@@ -564,7 +568,7 @@ ELSE
                ZVEC1(JI,JJ,JK) = MAX( 1.0001, MIN( FLOAT(NAHEN)-0.0001, XAHENINTP1 * ZT(JI,JJ,JK) + XAHENINTP2 ) )
                IVEC1(JI,JJ,JK) = INT( ZVEC1(JI,JJ,JK) )
                ZVEC1(JI,JJ,JK) = ZVEC1(JI,JJ,JK) - FLOAT( IVEC1(JI,JJ,JK) )
-               ZW(JI,JJ,JK)=EXP( XALPW - XBETAW/ZT(JI,JJ,JK) - XGAMW*ALOG(ZT(JI,JJ,JK) ) ) ! es_w
+               ZW(JI,JJ,JK)=EXP( CST%XALPW - CST%XBETAW/ZT(JI,JJ,JK) - CST%XGAMW*ALOG(ZT(JI,JJ,JK) ) ) ! es_w
                ZW(JI,JJ,JK)=ZEPS*ZW(JI,JJ,JK) / ( PPABST(JI,JJ,JK)-ZW(JI,JJ,JK) ) 
                ZS(JI,JJ,JK) = PRVS(JI,JJ,JK)*PTSTEP / ZW(JI,JJ,JK) - 1.
                ZW(JI,JJ,JK) = PCCS(JI,JJ,JK)*PTSTEP/(XLBC*PCCS(JI,JJ,JK)/PRCS(JI,JJ,JK))**XLBEXC
@@ -681,20 +685,20 @@ ELSE
    WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. PCIT(:,:,:)>XCTMIN(4)) PICEFR(:,:,:)=1.
 END IF
 !
-IF ( tpfile%lopened ) THEN
-   TZFIELD = TFIELDMETADATA(   &
-     CMNHNAME   = 'NEB',       &
-     CSTDNAME   = '',          &
-     CLONGNAME  = 'NEB',       &
-     CUNITS     = '1',         &
-     CDIR       = 'XY',        &
-     CCOMMENT   = 'X_Y_Z_NEB', &
-     NGRID      = 1,           &
-     NTYPE      = TYPEREAL,    &
-     NDIMS      = 3,           &
-     LTIMEDEP   = .TRUE.       )
-   CALL IO_Field_write(TPFILE,TZFIELD,PCLDFR)
-END IF
+!!$IF ( tpfile%lopened ) THEN
+!!$   TZFIELD = TFIELDMETADATA(   &
+!!$     CMNHNAME   = 'NEB',       &
+!!$     CSTDNAME   = '',          &
+!!$     CLONGNAME  = 'NEB',       &
+!!$     CUNITS     = '1',         &
+!!$     CDIR       = 'XY',        &
+!!$     CCOMMENT   = 'X_Y_Z_NEB', &
+!!$     NGRID      = 1,           &
+!!$     NTYPE      = TYPEREAL,    &
+!!$     NDIMS      = 3,           &
+!!$     LTIMEDEP   = .TRUE.       )
+!!$   CALL IO_Field_write(TPFILE,TZFIELD,PCLDFR)
+!!$END IF
 !
 !
 !*       6.  SAVE CHANGES IN PRS AND PSVS
@@ -707,6 +711,7 @@ IF ( KRR .GE. 3 ) PRS(:,:,:,3) = PRRS(:,:,:)
 IF ( KRR .GE. 4 ) PRS(:,:,:,4) = PRIS(:,:,:)
 IF ( KRR .GE. 5 ) PRS(:,:,:,5) = PRSS(:,:,:)
 IF ( KRR .GE. 6 ) PRS(:,:,:,6) = PRGS(:,:,:)
+IF ( KRR .GE. 7 ) PRS(:,:,:,7) = PRHS(:,:,:)
 !
 ! Prepare 3D number concentrations
 !
@@ -731,59 +736,59 @@ END IF
 !
 ! write SSI in LFI
 !
-IF ( tpfile%lopened ) THEN
-   ZT(:,:,:) = ( PTHS(:,:,:) * ZDT ) * ZEXNS(:,:,:)
-   ZW(:,:,:) = EXP( XALPI - XBETAI/ZT(:,:,:) - XGAMI*ALOG(ZT(:,:,:) ) )
-   ZW1(:,:,:)= PPABSTT(:,:,:)
-   ZW(:,:,:) = PRVT(:,:,:)*( ZW1(:,:,:)-ZW(:,:,:) ) / ( (XMV/XMD) * ZW(:,:,:) ) - 1.0
-   
-   TZFIELD = TFIELDMETADATA(   &
-     CMNHNAME   = 'SSI',       &
-     CSTDNAME   = '',          &
-     CLONGNAME  = 'SSI',       &
-     CUNITS     = '',          &
-     CDIR       = 'XY',        &
-     CCOMMENT   = 'X_Y_Z_SSI', &
-     NGRID      = 1,           &
-     NTYPE      = TYPEREAL,    &
-     NDIMS      = 3,           &
-     LTIMEDEP   = .TRUE.       )
-   CALL IO_Field_write(TPFILE,TZFIELD,ZW)
-END IF
+!!$IF ( tpfile%lopened ) THEN
+!!$   ZT(:,:,:) = ( PTHS(:,:,:) * ZDT ) * ZEXNS(:,:,:)
+!!$   ZW(:,:,:) = EXP( XALPI - XBETAI/ZT(:,:,:) - XGAMI*ALOG(ZT(:,:,:) ) )
+!!$   ZW1(:,:,:)= PPABSTT(:,:,:)
+!!$   ZW(:,:,:) = PRVT(:,:,:)*( ZW1(:,:,:)-ZW(:,:,:) ) / ( (XMV/XMD) * ZW(:,:,:) ) - 1.0
+!!$   
+!!$   TZFIELD = TFIELDMETADATA(   &
+!!$     CMNHNAME   = 'SSI',       &
+!!$     CSTDNAME   = '',          &
+!!$     CLONGNAME  = 'SSI',       &
+!!$     CUNITS     = '',          &
+!!$     CDIR       = 'XY',        &
+!!$     CCOMMENT   = 'X_Y_Z_SSI', &
+!!$     NGRID      = 1,           &
+!!$     NTYPE      = TYPEREAL,    &
+!!$     NDIMS      = 3,           &
+!!$     LTIMEDEP   = .TRUE.       )
+!!$   CALL IO_Field_write(TPFILE,TZFIELD,ZW)
+!!$END IF
 !
 !
 !*       7.  STORE THE BUDGET TERMS
 !            ----------------------
 !
-if ( nbumod == kmi .and. lbu_enable ) then
-  if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'CEDS', pths(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rv ) call Budget_store_end( tbudgets(NBUDGET_RV), 'CEDS', prvs(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'CEDS', prcs(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_ri ) call Budget_store_end( tbudgets(NBUDGET_RI), 'CEDS', pris(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_sv ) then
+if ( nbumod == kmi .and. BUCONF%lbu_enable ) then
+  if ( BUCONF%lbudget_th ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'CEDS', pths(:, :, :) * prhodj(:, :, :) )
+  if ( BUCONF%lbudget_rv ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'CEDS', prvs(:, :, :) * prhodj(:, :, :) )
+  if ( BUCONF%lbudget_rc ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'CEDS', prcs(:, :, :) * prhodj(:, :, :) )
+  if ( BUCONF%lbudget_ri ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'CEDS', pris(:, :, :) * prhodj(:, :, :) )
+  if ( BUCONF%lbudget_sv ) then
     if ( nmom_c.ge.2) &
-      call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CEDS', pccs(:, :, :) * prhodj(:, :, :) )
+      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CEDS', pccs(:, :, :) * prhodj(:, :, :) )
     if ( lscav .and. laero_mass ) &
-      call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', pmas(:, :, :) * prhodj(:, :, :) )
+      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', pmas(:, :, :) * prhodj(:, :, :) )
     if ( nmom_c.ge.1 ) then
       do jl = 1, nmod_ccn
         idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + jl
-        call Budget_store_end( tbudgets(idx), 'CEDS', pnfs(:, :, :, jl) * prhodj(:, :, :) )
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'CEDS', pnfs(:, :, :, jl) * prhodj(:, :, :) )
         idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + jl
-        call Budget_store_end( tbudgets(idx), 'CEDS', pnas(:, :, :, jl) * prhodj(:, :, :) )
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'CEDS', pnas(:, :, :, jl) * prhodj(:, :, :) )
       end do
     end if
 !     if ( nmom_i.ge.2 ) then
-!       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'CEDS', pcis(:, :, :) * prhodj(:, :, :) )
+!       call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ni), 'CEDS', pcis(:, :, :) * prhodj(:, :, :) )
 !       do jl = 1, nmod_ifn
 !         idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_free - 1 + jl
-!         call Budget_store_end( tbudgets(idx), 'CEDS', pifs(:, :, :, jl) * prhodj(:, :, :) )
+!         call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'CEDS', pifs(:, :, :, jl) * prhodj(:, :, :) )
 !         idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_nucl - 1 + jl
-!         call Budget_store_end( tbudgets(idx), 'CEDS', pins(:, :, :, jl) * prhodj(:, :, :) )
+!         call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'CEDS', pins(:, :, :, jl) * prhodj(:, :, :) )
 !       end do
 !       do jl = 1, nmod_imm
 !         idx = NBUDGET_SV1 - 1 + nsv_lima_imm_nucl - 1 + jl
-!         call Budget_store_init( tbudgets(idx), 'CEDS', pnis(:, :, :, jl) * prhodj(:, :, :) )
+!         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', pnis(:, :, :, jl) * prhodj(:, :, :) )
 !       end do
 !     end if
   end if

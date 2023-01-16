@@ -50,7 +50,7 @@ USE MODD_REF
 USE MODD_PARAM_LIMA
 USE MODD_PARAM_LIMA_WARM
 USE MODD_PARAMETERS
-USE MODD_LUNIT, ONLY : TLUOUT0
+!USE MODD_LUNIT, ONLY : TLUOUT0
 !
 USE MODI_LIMA_FUNCTIONS
 USE MODI_HYPGEO
@@ -85,9 +85,9 @@ REAL :: ZSMIN, ZSMAX          ! Minimal and maximal supersaturation used to
                               ! discretize the HYP functions
 !
 !
-INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
-INTEGER  :: IRESP   ! Return code of FM-routines
-LOGICAL  :: GFLAG   ! Logical flag for printing the constatnts on the output
+!INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
+!INTEGER  :: IRESP   ! Return code of FM-routines
+!LOGICAL  :: GFLAG   ! Logical flag for printing the constatnts on the output
                     ! listing
 !  
 !-------------------------------------------------------------------------------
@@ -448,29 +448,29 @@ XCRER = 1.0/ (ZGAMR(6) * XAR**(2.0/3.0))
 !   	        -----------------------
 !
 !
-GFLAG = .TRUE.
-IF (GFLAG) THEN
-  ILUOUT0 = TLUOUT0%NLU
-  WRITE(UNIT=ILUOUT0,FMT='(" Summary of the cloud particule characteristics")')
-  WRITE(UNIT=ILUOUT0,FMT='("             CLOUD")')
-  WRITE(UNIT=ILUOUT0,FMT='("                   masse: A=",E13.6," B=",E13.6)') &
-                                                      XAR,XBR
-  WRITE(UNIT=ILUOUT0,FMT='("                 vitesse: C=",E13.6," D=",E13.6)') &
-                                                      XCC,XDC
-  WRITE(UNIT=ILUOUT0,FMT='("            distribution:AL=",E13.6,"NU=",E13.6)') &
-                                                      XALPHAC,XNUC
-  WRITE(UNIT=ILUOUT0,FMT='("               RAIN")')
-  WRITE(UNIT=ILUOUT0,FMT='("                   masse: A=",E13.6," B=",E13.6)') &
-                                                      XAR,XBR
-  WRITE(UNIT=ILUOUT0,FMT='("                 vitesse: C=",E13.6," D=",E13.6)') &
-                                                      XCR,XDR
+!!$GFLAG = .TRUE.
+!!$IF (GFLAG) THEN
+!!$  ILUOUT0 = TLUOUT0%NLU
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Summary of the cloud particule characteristics")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("             CLOUD")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("                   masse: A=",E13.6," B=",E13.6)') &
+!!$                                                      XAR,XBR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("                 vitesse: C=",E13.6," D=",E13.6)') &
+!!$                                                      XCC,XDC
+!!$  WRITE(UNIT=ILUOUT0,FMT='("            distribution:AL=",E13.6,"NU=",E13.6)') &
+!!$                                                      XALPHAC,XNUC
+!!$  WRITE(UNIT=ILUOUT0,FMT='("               RAIN")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("                   masse: A=",E13.6," B=",E13.6)') &
+!!$                                                      XAR,XBR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("                 vitesse: C=",E13.6," D=",E13.6)') &
+!!$                                                      XCR,XDR
 !!$  WRITE(UNIT=ILUOUT0,FMT='("            distribution:AL=",E13.6,"NU=",E13.6)') &
 !!$                                                      XALPHAR,XNUR
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Description of the nucleation spectrum")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("         C=",E13.6,"  k=",E13.6)') XCHEN, XKHEN
 !!$  WRITE(UNIT=ILUOUT0,FMT='("      Beta=",E13.6," MU=",E13.6)') XBETAHEN, XMUHEN
 !!$  WRITE(UNIT=ILUOUT0,FMT='("      CCN max=",E13.6)') XCONC_CCN
-END IF
+!!$END IF
 !
 !------------------------------------------------------------------------------
 !

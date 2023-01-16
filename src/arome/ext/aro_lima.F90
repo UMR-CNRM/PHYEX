@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE  ARO_LIMA(KKA,KKU,KKL,KLON,KLEV,  KRR, KSV, KTCOUNT, KSPLITR, KSPLITG, &
+      SUBROUTINE  ARO_LIMA(KKA,KKU,KKL,KLON,KLEV,KFDIA,KRR, KSV, KTCOUNT, KSPLITR, KSPLITG, &
                                   PTSTEP, PDZZ, PRHODJ, PRHODREF, PEXNREF,&
                                   PPABSM, PW_NU, PTHT, PRT, PSVT, &
                                   PTHS, PRS, PSVS, PEVAP,  &
@@ -75,6 +75,7 @@ INTEGER,                  INTENT(IN)   :: KKU  !uppest atmosphere array index
 INTEGER,                  INTENT(IN)   :: KKL  !vert. levels type 1=MNH -1=ARO
 INTEGER,                  INTENT(IN)   :: KLON     !NPROMA under CPG
 INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels
+INTEGER,                  INTENT(IN)   :: KFDIA    !
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KSV      ! Number of LIMA variables
 INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
@@ -145,7 +146,7 @@ REAL  :: ZRATIO                     ! ZMASSTOT / ZMASSCOR
 
 LOGICAL :: LL_RRR_BUDGET
 !
-TYPE(TBUDGETDATA), DIMENSION() :: YLBUDGET
+TYPE(TBUDGETDATA), DIMENSION(NBUDGET_SV1+NSV_LIMA-1) :: YLBUDGET
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !
 !------------------------------------------------------------------------------

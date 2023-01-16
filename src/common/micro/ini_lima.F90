@@ -55,7 +55,7 @@ USE MODD_CST
 USE MODD_REF
 USE MODD_PARAM_LIMA
 USE MODD_PARAMETERS
-USE MODD_LUNIT, ONLY : TLUOUT0
+!USE MODD_LUNIT, ONLY : TLUOUT0
 !
 IMPLICIT NONE
 !
@@ -88,7 +88,7 @@ INTEGER  :: IRESP   ! Return code of FM-routines
 !
 !
 ! Init output listing
-ILUOUT0 = TLUOUT0%NLU
+!ILUOUT0 = TLUOUT0%NLU
 !
 !
 ZVTRMAX(2) = 0.3         ! Maximum cloud droplet fall speed

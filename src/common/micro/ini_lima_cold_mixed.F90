@@ -51,7 +51,7 @@ END MODULE MODI_INI_LIMA_COLD_MIXED
 !              ------------
 !
 USE MODD_CST
-USE MODD_LUNIT, ONLY: TLUOUT0
+!USE MODD_LUNIT, ONLY: TLUOUT0
 USE MODD_PARAMETERS
 USE MODD_PARAM_LIMA
 USE MODD_PARAM_LIMA_WARM
@@ -109,9 +109,9 @@ REAL :: ZESR, ZESS            ! Mean efficiency of rain-aggregate collection, ag
 REAL :: ZFDINFTY              ! Factor used to define the "infinite" diameter
 !
 !
-INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
-LOGICAL  :: GFLAG   ! Logical flag for printing the constatnts on the output
-                    ! listing
+!INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
+!LOGICAL  :: GFLAG   ! Logical flag for printing the constatnts on the output
+!                    ! listing
 REAL     :: ZCONC_MAX ! Maximal concentration for snow
 REAL     :: ZFACT_NUCL! Amplification factor for the minimal ice concentration
 !  
@@ -150,7 +150,7 @@ REAL :: ZRHOIW ! ice density
 !-------------------------------------------------------------------------------
 !
 !
-ILUOUT0 = TLUOUT0%NLU
+!ILUOUT0 = TLUOUT0%NLU
 !
 !
 !*       1.     CHARACTERISTICS OF THE SPECIES
@@ -334,14 +334,14 @@ ELSE
    XLBH   = XAH * MOMG(XALPHAH,XNUH,XBH)
 END IF
 !
-GFLAG = .TRUE.
-IF (GFLAG) THEN
-  WRITE(UNIT=ILUOUT0,FMT='("      Shape Parameters")')
-  WRITE(UNIT=ILUOUT0,FMT='(" XLBEXI =",E13.6," XLBI =",E13.6)') XLBEXI,XLBI
-  WRITE(UNIT=ILUOUT0,FMT='(" XLBEXS =",E13.6," XLBS =",E13.6)') XLBEXS,XLBS
-  WRITE(UNIT=ILUOUT0,FMT='(" XLBEXG =",E13.6," XLBG =",E13.6)') XLBEXG,XLBG
-  WRITE(UNIT=ILUOUT0,FMT='(" XLBEXH =",E13.6," XLBH =",E13.6)') XLBEXH,XLBH
-END IF
+!!$GFLAG = .TRUE.
+!!$IF (GFLAG) THEN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("      Shape Parameters")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" XLBEXI =",E13.6," XLBI =",E13.6)') XLBEXI,XLBI
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" XLBEXS =",E13.6," XLBS =",E13.6)') XLBEXS,XLBS
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" XLBEXG =",E13.6," XLBG =",E13.6)') XLBEXG,XLBG
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" XLBEXH =",E13.6," XLBH =",E13.6)') XLBEXH,XLBH
+!!$END IF
 !
 XLBDAS_MAX = 1.E7 ! (eq to r~1E-7kg/kg) (for non MP PSD, use conversion XTRANS_MP_GAMMAS)
 XLBDAS_MIN = 1.   ! (eq to r~0.18kg/kg) (for non MP PSD, use conversion XTRANS_MP_GAMMAS)
@@ -593,14 +593,14 @@ XEX_CON    = -2.8
 !
 XMNU0 = 6.88E-13
 !
-IF (LMEYERS) THEN
-  WRITE(UNIT=ILUOUT0,FMT='("      Heterogeneous nucleation")')
-  WRITE(UNIT=ILUOUT0,FMT='(" XNUC_DEP=",E13.6," XEXSI=",E13.6," XEX=",E13.6)') &
-                                                      XNUC_DEP,XEXSI_DEP,XEX_DEP
-  WRITE(UNIT=ILUOUT0,FMT='(" XNUC_CON=",E13.6," XEXTT=",E13.6," XEX=",E13.6)') &
-                                                      XNUC_CON,XEXTT_CON,XEX_CON
-  WRITE(UNIT=ILUOUT0,FMT='(" mass of embryo XMNU0=",E13.6)') XMNU0
-END IF
+!!$IF (LMEYERS) THEN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("      Heterogeneous nucleation")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" XNUC_DEP=",E13.6," XEXSI=",E13.6," XEX=",E13.6)') &
+!!$                                                      XNUC_DEP,XEXSI_DEP,XEX_DEP
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" XNUC_CON=",E13.6," XEXTT=",E13.6," XEX=",E13.6)') &
+!!$                                                      XNUC_CON,XEXTT_CON,XEX_CON
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" mass of embryo XMNU0=",E13.6)') XMNU0
+!!$END IF
 !
 !                 ***************** 
 !*          4.3   NUCLEATION for NMOM_I=1
@@ -655,16 +655,16 @@ ELSE
                   '/= 3. No algorithm developed for this case' )
 END IF
 !
-GFLAG = .TRUE.
-IF (GFLAG) THEN
-  WRITE(UNIT=ILUOUT0,FMT='("      Homogeneous nucleation")')
-  WRITE(UNIT=ILUOUT0,FMT='(" XTEXP1_HONC=",E13.6)') XTEXP1_HONC
-  WRITE(UNIT=ILUOUT0,FMT='(" XTEXP2_HONC=",E13.6)') XTEXP2_HONC
-  WRITE(UNIT=ILUOUT0,FMT='(" XTEXP3_HONC=",E13.6)') XTEXP3_HONC
-  WRITE(UNIT=ILUOUT0,FMT='(" XTEXP4_HONC=",E13.6)') XTEXP4_HONC
-  WRITE(UNIT=ILUOUT0,FMT='(" XTEXP5_HONC=",E13.6)') XTEXP5_HONC
-  WRITE(UNIT=ILUOUT0,FMT='("XC_HONC=",E13.6," XR_HONC=",E13.6)') XC_HONC,XR_HONC
-END IF
+!!$GFLAG = .TRUE.
+!!$IF (GFLAG) THEN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("      Homogeneous nucleation")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" XTEXP1_HONC=",E13.6)') XTEXP1_HONC
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" XTEXP2_HONC=",E13.6)') XTEXP2_HONC
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" XTEXP3_HONC=",E13.6)') XTEXP3_HONC
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" XTEXP4_HONC=",E13.6)') XTEXP4_HONC
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" XTEXP5_HONC=",E13.6)') XTEXP5_HONC
+!!$  WRITE(UNIT=ILUOUT0,FMT='("XC_HONC=",E13.6," XR_HONC=",E13.6)') XC_HONC,XR_HONC
+!!$END IF
 !
 !
 !*       5.2    Constants for vapor deposition on ice
@@ -756,11 +756,11 @@ XCOLEXII = 0.025   !  Temperature factor of the I+I collection efficiency
 !
 XTEXAUTI = 0.025   !  Temperature factor of the I+I collection efficiency
 !
-GFLAG = .TRUE.
-IF (GFLAG) THEN
-  WRITE(UNIT=ILUOUT0,FMT='("      pristine ice autoconversion")')
-  WRITE(UNIT=ILUOUT0,FMT='(" Temp. factor    XTEXAUTI=",E13.6)') XTEXAUTI
-END IF
+!!$GFLAG = .TRUE.
+!!$IF (GFLAG) THEN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("      pristine ice autoconversion")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Temp. factor    XTEXAUTI=",E13.6)') XTEXAUTI
+!!$END IF
 !
 XAUTO3 = 6.25E18*(ZGAMI(2))**(1./3.)*SQRT(ZGAMI(4))
 XAUTO4 = 0.5E6*(ZGAMI(4))**(1./6.)
@@ -780,11 +780,11 @@ XAGGS_CLARGE2 = XKER_ZRNIC_A2*ZGAMS(2)
 XAGGS_RLARGE1 = XKER_ZRNIC_A2*ZGAMI(6)*XAI
 XAGGS_RLARGE2 = XKER_ZRNIC_A2*ZGAMI(7)*ZGAMS(2)*XAI
 !
-GFLAG = .TRUE.
-IF (GFLAG) THEN
-  WRITE(UNIT=ILUOUT0,FMT='("      snow aggregation")')
-  WRITE(UNIT=ILUOUT0,FMT='(" Temp. factor     XCOLEXIS=",E13.6)') XCOLEXIS
-END IF
+!!$GFLAG = .TRUE.
+!!$IF (GFLAG) THEN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("      snow aggregation")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Temp. factor     XCOLEXIS=",E13.6)') XCOLEXIS
+!!$END IF
 !  
 !-------------------------------------------------------------------------------
 !
@@ -809,13 +809,13 @@ XEXSRIMCG= -XBS
 XSRIMCG2 = XAG*MOMG(XALPHAS,XNUS,XBG)
 XSRIMCG3 = 0.1
 XEXSRIMCG2=XBG
-GFLAG = .TRUE.
-IF (GFLAG) THEN
-  WRITE(UNIT=ILUOUT0,FMT='("      riming of the aggregates")')
-  WRITE(UNIT=ILUOUT0,FMT='(" D_cs^lim (Farley et al.) XDCSLIM=",E13.6)') XDCSLIM
-  WRITE(UNIT=ILUOUT0,FMT='(" Coll. efficiency          XCOLCS=",E13.6)') XCOLCS
-END IF
-!
+!!$GFLAG = .TRUE.
+!!$IF (GFLAG) THEN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("      riming of the aggregates")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" D_cs^lim (Farley et al.) XDCSLIM=",E13.6)') XDCSLIM
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Coll. efficiency          XCOLCS=",E13.6)') XCOLCS
+!!$END IF
+!!$!
 NGAMINC = 80
 XGAMINC_BOUND_MIN = (1000.*XTRANS_MP_GAMMAS*XDCSLIM)**XALPHAS !1.0E-1 ! Minimal value of (Lbda * D_cs^lim)**alpha
 XGAMINC_BOUND_MAX = (50000.*XTRANS_MP_GAMMAS*XDCSLIM)**XALPHAS !1.0E7 ! Maximal value of (Lbda * D_cs^lim)**alpha
@@ -929,33 +929,33 @@ CALL NSCOLRG ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
                ZESR, XCS, XDS, XFVELOS, XCR, XDR,                          & 
                XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, & 
                ZFDINFTY, XKER_N_SACCRG,XAG, XBS, XAS                       )
-WRITE(UNIT=ILUOUT0,FMT='("!")')
-WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RACCSS) ) THEN")')          
-DO J1 = 1 , NACCLBDAS                                                    
-  DO J2 = 1 , NACCLBDAR                                                  
-  WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_RACCSS(",I3,",",I3,") = ",E13.6)') &
-                    J1,J2,XKER_N_RACCSS(J1,J2)                          
-  END DO                                                                
-END DO                                                                   
-WRITE(UNIT=ILUOUT0,FMT='("!")')                                           
-WRITE(UNIT=ILUOUT0,FMT='("!")')
-WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RACCS) ) THEN")')          
-DO J1 = 1 , NACCLBDAS                                                    
-  DO J2 = 1 , NACCLBDAR                                                  
-  WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_RACCS(",I3,",",I3,") = ",E13.6)') &
-                    J1,J2,XKER_N_RACCS(J1,J2)                          
-  END DO                                                                
-END DO                                                                   
-WRITE(UNIT=ILUOUT0,FMT='("!")') 
-WRITE(UNIT=ILUOUT0,FMT='("!")')
-WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SACCRG) ) THEN")')          
-DO J1 = 1 , NACCLBDAR                                                    
-  DO J2 = 1 , NACCLBDAS                                                  
-  WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SACCRG(",I3,",",I3,") = ",E13.6)') &
-                    J1,J2,XKER_N_SACCRG(J1,J2)                          
-  END DO                                                                
-END DO                                                                   
-WRITE(UNIT=ILUOUT0,FMT='("!")') 
+!!$WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RACCSS) ) THEN")')          
+!!$DO J1 = 1 , NACCLBDAS                                                    
+!!$  DO J2 = 1 , NACCLBDAR                                                  
+!!$  WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_RACCSS(",I3,",",I3,") = ",E13.6)') &
+!!$                    J1,J2,XKER_N_RACCSS(J1,J2)                          
+!!$  END DO                                                                
+!!$END DO                                                                   
+!!$WRITE(UNIT=ILUOUT0,FMT='("!")')                                           
+!!$WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RACCS) ) THEN")')          
+!!$DO J1 = 1 , NACCLBDAS                                                    
+!!$  DO J2 = 1 , NACCLBDAR                                                  
+!!$  WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_RACCS(",I3,",",I3,") = ",E13.6)') &
+!!$                    J1,J2,XKER_N_RACCS(J1,J2)                          
+!!$  END DO                                                                
+!!$END DO                                                                   
+!!$WRITE(UNIT=ILUOUT0,FMT='("!")') 
+!!$WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SACCRG) ) THEN")')          
+!!$DO J1 = 1 , NACCLBDAR                                                    
+!!$  DO J2 = 1 , NACCLBDAS                                                  
+!!$  WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SACCRG(",I3,",",I3,") = ",E13.6)') &
+!!$                    J1,J2,XKER_N_SACCRG(J1,J2)                          
+!!$  END DO                                                                
+!!$END DO                                                                   
+!!$WRITE(UNIT=ILUOUT0,FMT='("!")') 
 
 !
 CALL LIMA_READ_XKER_RACCS (KACCLBDAS,KACCLBDAR,KND,                                        &
@@ -982,71 +982,71 @@ IF( (KACCLBDAS/=NACCLBDAS) .OR. (KACCLBDAR/=NACCLBDAR) .OR. (KND/=IND) .OR. &
                  ZESR, XBS, XCS, XDS, XFVELOS, XCR, XDR,                     &
                  XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
                  ZFDINFTY, XKER_SACCRG,XAG, XBS, XAS                         )
-  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
-  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF RACSS KERNELS ****")')
-  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF RACS  KERNELS ****")')
-  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SACRG KERNELS ****")')
-  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-  WRITE(UNIT=ILUOUT0,FMT='("KACCLBDAS=",I3)') NACCLBDAS
-  WRITE(UNIT=ILUOUT0,FMT='("KACCLBDAR=",I3)') NACCLBDAR
-  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
-  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
-  WRITE(UNIT=ILUOUT0,FMT='("PALPHAR=",E13.6)') XALPHAR
-  WRITE(UNIT=ILUOUT0,FMT='("PNUR=",E13.6)') XNUR
-  WRITE(UNIT=ILUOUT0,FMT='("PESR=",E13.6)') ZESR
-  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
-  WRITE(UNIT=ILUOUT0,FMT='("PBR=",E13.6)') XBR
-  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
-  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
-  WRITE(UNIT=ILUOUT0,FMT='("PFVELOS=",E13.6)') XFVELOS
-  WRITE(UNIT=ILUOUT0,FMT='("PCR=",E13.6)') XCR
-  WRITE(UNIT=ILUOUT0,FMT='("PDR=",E13.6)') XDR
-  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAS_MAX=",E13.6)') &
-                                                    XACCLBDAS_MAX
-  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAR_MAX=",E13.6)') &
-                                                    XACCLBDAR_MAX
-  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAS_MIN=",E13.6)') &
-                                                    XACCLBDAS_MIN
-  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAR_MIN=",E13.6)') &
-                                                    XACCLBDAR_MIN
-  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_RACCSS) ) THEN")')
-  DO J1 = 1 , NACCLBDAS
-    DO J2 = 1 , NACCLBDAR
-    WRITE(UNIT=ILUOUT0,FMT='("  PKER_RACCSS(",I3,",",I3,") = ",E13.6)') &
-                        J1,J2,XKER_RACCSS(J1,J2)
-    END DO
-  END DO
-  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_RACCS ) ) THEN")')
-  DO J1 = 1 , NACCLBDAS
-    DO J2 = 1 , NACCLBDAR
-    WRITE(UNIT=ILUOUT0,FMT='("  PKER_RACCS (",I3,",",I3,") = ",E13.6)') &
-                        J1,J2,XKER_RACCS (J1,J2)
-    END DO
-  END DO
-  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_SACCRG) ) THEN")')
-  DO J1 = 1 , NACCLBDAR
-    DO J2 = 1 , NACCLBDAS
-    WRITE(UNIT=ILUOUT0,FMT='("  PKER_SACCRG(",I3,",",I3,") = ",E13.6)') &
-                        J1,J2,XKER_SACCRG(J1,J2)
-    END DO
-  END DO
-  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF RACSS KERNELS ****")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF RACS  KERNELS ****")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SACRG KERNELS ****")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KACCLBDAS=",I3)') NACCLBDAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KACCLBDAR=",I3)') NACCLBDAR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAR=",E13.6)') XALPHAR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUR=",E13.6)') XNUR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PESR=",E13.6)') ZESR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PBR=",E13.6)') XBR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PFVELOS=",E13.6)') XFVELOS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PCR=",E13.6)') XCR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDR=",E13.6)') XDR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAS_MAX=",E13.6)') &
+!!$                                                    XACCLBDAS_MAX
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAR_MAX=",E13.6)') &
+!!$                                                    XACCLBDAR_MAX
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAS_MIN=",E13.6)') &
+!!$                                                    XACCLBDAS_MIN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAR_MIN=",E13.6)') &
+!!$                                                    XACCLBDAR_MIN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_RACCSS) ) THEN")')
+!!$  DO J1 = 1 , NACCLBDAS
+!!$    DO J2 = 1 , NACCLBDAR
+!!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_RACCSS(",I3,",",I3,") = ",E13.6)') &
+!!$                        J1,J2,XKER_RACCSS(J1,J2)
+!!$    END DO
+!!$  END DO
+!!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_RACCS ) ) THEN")')
+!!$  DO J1 = 1 , NACCLBDAS
+!!$    DO J2 = 1 , NACCLBDAR
+!!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_RACCS (",I3,",",I3,") = ",E13.6)') &
+!!$                        J1,J2,XKER_RACCS (J1,J2)
+!!$    END DO
+!!$  END DO
+!!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_SACCRG) ) THEN")')
+!!$  DO J1 = 1 , NACCLBDAR
+!!$    DO J2 = 1 , NACCLBDAS
+!!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_SACCRG(",I3,",",I3,") = ",E13.6)') &
+!!$                        J1,J2,XKER_SACCRG(J1,J2)
+!!$    END DO
+!!$  END DO
+!!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
   CALL LIMA_READ_XKER_RACCS (KACCLBDAS,KACCLBDAR,KND,                                        &
                              PALPHAS,PNUS,PALPHAR,PNUR,PESR,PBS,PBR,PCS,PDS,PFVELOS,PCR,PDR, &
                              PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN,        &
                              PFDINFTY,XKER_RACCSS,XKER_RACCS,XKER_SACCRG                     )
-  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_RACCSS")')
-  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_RACCS ")')
-  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_SACCRG")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_RACCSS")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_RACCS ")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_SACCRG")')
 END IF
 !
 !*       7.2N  Computations of the tabulated normalized kernels Snow Self Collection !! 
@@ -1083,31 +1083,31 @@ XSCINTP2S = 1.0 - LOG( XSCLBDAS_MIN ) / ZRATE
                XSCLBDAS_MAX, XSCLBDAS_MAX, XSCLBDAS_MIN, XSCLBDAS_MIN, & 
                ZFDINFTY, XKER_N_SSCS                                      ) 
 !
-  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
-  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SSCS  KERNELS ***")')
-  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-  WRITE(UNIT=ILUOUT0,FMT='("KSCLBDAS=",I3)') NSCLBDAS
-  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
-  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
-  WRITE(UNIT=ILUOUT0,FMT='("PESS=",E13.6)') ZESS
-  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
-  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
-  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
-  WRITE(UNIT=ILUOUT0,FMT='("PSCLBDAS_MAX=",E13.6)') &
-                                                  XSCLBDAS_MAX
-  WRITE(UNIT=ILUOUT0,FMT='("PSCLBDAS_MIN=",E13.6)') &
-                                                  XSCLBDAS_MIN
-  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SSCS ) ) THEN")')           
-  DO J1 = 1 , NSCLBDAS                                                     
-    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SSCS (",I3,",",I3,") = ",E13.6)') & 
-                      J1,J1,XKER_N_SSCS (J1,J1)                          
-  END DO                                                                    
-  WRITE(UNIT=ILUOUT0,FMT='("!")')  
+!!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SSCS  KERNELS ***")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KSCLBDAS=",I3)') NSCLBDAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PESS=",E13.6)') ZESS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PSCLBDAS_MAX=",E13.6)') &
+!!$                                                  XSCLBDAS_MAX
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PSCLBDAS_MIN=",E13.6)') &
+!!$                                                  XSCLBDAS_MIN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SSCS ) ) THEN")')           
+!!$  DO J1 = 1 , NSCLBDAS                                                     
+!!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SSCS (",I3,",",I3,") = ",E13.6)') & 
+!!$                      J1,J1,XKER_N_SSCS (J1,J1)                          
+!!$  END DO                                                                    
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')  
 !
 !*       7.2N2    Constants for the 'spontaneous' break-up
 !
@@ -1123,11 +1123,11 @@ XSCINTP2S = 1.0 - LOG( XSCLBDAS_MIN ) / ZRATE
 !
 XFSCVMG = 2.0
 !
-GFLAG = .TRUE.
-IF (GFLAG) THEN
-  WRITE(UNIT=ILUOUT0,FMT='("      conversion-melting of the aggregates")')
-  WRITE(UNIT=ILUOUT0,FMT='(" Conv. factor XFSCVMG=",E13.6)') XFSCVMG
-END IF
+!!$GFLAG = .TRUE.
+!!$IF (GFLAG) THEN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("      conversion-melting of the aggregates")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Conv. factor XFSCVMG=",E13.6)') XFSCVMG
+!!$END IF
 !
 !
 !*       7.4 Constants for Ice-Ice collision process (CIBU)
@@ -1136,12 +1136,12 @@ XDCSLIM_CIBU_MIN = 2.0E-4 ! D_cs lim min
 XDCSLIM_CIBU_MAX = 1.0E-3 ! D_cs lim max
 XDCGLIM_CIBU_MIN = 2.0E-3 ! D_cg lim min
 !
-GFLAG = .TRUE.
-IF (GFLAG) THEN
-  WRITE(UNIT=ILUOUT0,FMT='(" Ice-ice collision process")')
-  WRITE(UNIT=ILUOUT0,FMT='(" D_cs^lim min-max =",E13.6)') XDCSLIM_CIBU_MIN,XDCSLIM_CIBU_MAX
-  WRITE(UNIT=ILUOUT0,FMT='(" D_cg^lim min     =",E13.6)') XDCGLIM_CIBU_MIN
-END IF
+!!$GFLAG = .TRUE.
+!!$IF (GFLAG) THEN
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Ice-ice collision process")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" D_cs^lim min-max =",E13.6)') XDCSLIM_CIBU_MIN,XDCSLIM_CIBU_MAX
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" D_cg^lim min     =",E13.6)') XDCGLIM_CIBU_MIN
+!!$END IF
 !
 NGAMINC = 80
 !
@@ -1196,11 +1196,11 @@ XMOMGS_CIBU_3 = MOMG(XALPHAS,XNUS,XBS+XDS)
 !
 XDCRLIM_RDSF_MIN = 0.1E-3 ! D_cr lim min
 !
-GFLAG = .TRUE.
-IF (GFLAG) THEN
-  WRITE(UNIT=ILUOUT0,FMT='(" Ice-rain collision process")')
-  WRITE(UNIT=ILUOUT0,FMT='(" D_cr^lim min     =",E13.6)') XDCRLIM_RDSF_MIN
-END IF
+!!$GFLAG = .TRUE.
+!!$IF (GFLAG) THEN
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Ice-rain collision process")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" D_cr^lim min     =",E13.6)') XDCRLIM_RDSF_MIN
+!!$END IF
 !
 NGAMINC = 80
 !
@@ -1246,11 +1246,11 @@ XEXICFRR  = -XDR-2.0
 XICFRR    = (XPI/4.0)*XCOLIR*XCR*(ZRHO00**XCEXVT)                  &
                                                      *MOMG(XALPHAR,XNUR,XDR+2.0)
 !
-GFLAG = .TRUE.
-IF (GFLAG) THEN
-  WRITE(UNIT=ILUOUT0,FMT='("      rain contact freezing")')
-  WRITE(UNIT=ILUOUT0,FMT='(" Coll. efficiency          XCOLIR=",E13.6)') XCOLIR
-END IF
+!!$GFLAG = .TRUE.
+!!$IF (GFLAG) THEN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("      rain contact freezing")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Coll. efficiency          XCOLIR=",E13.6)') XCOLIR
+!!$END IF
 !
 !
 !*       8.2    Constants for the dry growth of the graupeln
@@ -1270,16 +1270,16 @@ XCOLIG    = 0.25 ! Collection efficiency of I+G
 XCOLEXIG  = 0.05 ! Temperature factor of the I+G collection efficiency
 XCOLIG   = 0.01 ! Collection efficiency of I+G
 XCOLEXIG = 0.1  ! Temperature factor of the I+G collection efficiency
-WRITE (ILUOUT0, FMT=*) ' NEW Constants for the cloud ice collection by the graupeln'
-WRITE (ILUOUT0, FMT=*) ' XCOLIG, XCOLEXIG  = ',XCOLIG,XCOLEXIG
+!!$WRITE (ILUOUT0, FMT=*) ' NEW Constants for the cloud ice collection by the graupeln'
+!!$WRITE (ILUOUT0, FMT=*) ' XCOLIG, XCOLEXIG  = ',XCOLIG,XCOLEXIG
 XFIDRYG = (XPI/4.0)*XCOLIG*XCG*(ZRHO00**XCEXVT)*MOMG(XALPHAG,XNUG,XDG+2.0)
 !
-GFLAG = .TRUE.
-IF (GFLAG) THEN
-  WRITE(UNIT=ILUOUT0,FMT='("      cloud ice collection by the graupeln")')
-  WRITE(UNIT=ILUOUT0,FMT='(" Coll. efficiency XCOLIG=",E13.6)') XCOLIG
-  WRITE(UNIT=ILUOUT0,FMT='(" Temp. factor     XCOLEXIG=",E13.6)') XCOLEXIG
-END IF
+!!$GFLAG = .TRUE.
+!!$IF (GFLAG) THEN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("      cloud ice collection by the graupeln")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Coll. efficiency XCOLIG=",E13.6)') XCOLIG
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Temp. factor     XCOLEXIG=",E13.6)') XCOLEXIG
+!!$END IF
 !
 !*       8.2.3  Constants for the aggregate collection by the graupeln
 !
@@ -1287,8 +1287,8 @@ XCOLSG    = 0.25 ! Collection efficiency of S+G
 XCOLEXSG  = 0.05 ! Temperature factor of the S+G collection efficiency
 XCOLSG   = 0.01 ! Collection efficiency of S+G
 XCOLEXSG = 0.1  ! Temperature factor of the S+G collection efficiency
-WRITE (ILUOUT0, FMT=*) ' NEW Constants for the aggregate collection by the graupeln'
-WRITE (ILUOUT0, FMT=*) ' XCOLSG, XCOLEXSG  = ',XCOLSG,XCOLEXSG
+!!$WRITE (ILUOUT0, FMT=*) ' NEW Constants for the aggregate collection by the graupeln'
+!!$WRITE (ILUOUT0, FMT=*) ' XCOLSG, XCOLEXSG  = ',XCOLSG,XCOLEXSG
 XFSDRYG = XNS*(XPI/4.0)*XCOLSG*XAS*(ZRHO00**XCEXVT)
 XFNSDRYG= (XPI/4.0)*XCOLSG*(ZRHO00**XCEXVT)
 !
@@ -1299,12 +1299,12 @@ XLBSDRYG1   =    MOMG(XALPHAG,XNUG,2.)*MOMG(XALPHAS,XNUS,XBS)
 XLBSDRYG2   = 2.*MOMG(XALPHAG,XNUG,1.)*MOMG(XALPHAS,XNUS,XBS+1.)
 XLBSDRYG3   =                          MOMG(XALPHAS,XNUS,XBS+2.)
 !
-GFLAG = .TRUE.
-IF (GFLAG) THEN
-  WRITE(UNIT=ILUOUT0,FMT='("      aggregate collection by the graupeln")')
-  WRITE(UNIT=ILUOUT0,FMT='(" Coll. efficiency XCOLSG=",E13.6)') XCOLSG
-  WRITE(UNIT=ILUOUT0,FMT='(" Temp. factor     XCOLEXSG=",E13.6)') XCOLEXSG
-END IF
+!!$GFLAG = .TRUE.
+!!$IF (GFLAG) THEN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("      aggregate collection by the graupeln")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Coll. efficiency XCOLSG=",E13.6)') XCOLSG
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Temp. factor     XCOLEXSG=",E13.6)') XCOLEXSG
+!!$END IF
 !
 !*       8.2.4  Constants for the raindrop collection by the graupeln
 !
@@ -1352,15 +1352,15 @@ ALLOCATE( XKER_SDRYG(NDRYLBDAG,NDRYLBDAS) )
               ZEGS, XCG, XDG, 0., XCS, XDS, XFVELOS,                        & 
               XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, & 
               ZFDINFTY, XKER_N_SDRYG                                      ) 
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SDRYG) ) THEN")')          
-  DO J1 = 1 , NDRYLBDAG                                                    
-    DO J2 = 1 , NDRYLBDAS                                                  
-    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SDRYG(",I3,",",I3,") = ",E13.6)') &
-                      J1,J2,XKER_N_SDRYG(J1,J2)                          
-    END DO                                                                
-  END DO                                                                   
-  WRITE(UNIT=ILUOUT0,FMT='("!")') 
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SDRYG) ) THEN")')          
+!!$  DO J1 = 1 , NDRYLBDAG                                                    
+!!$    DO J2 = 1 , NDRYLBDAS                                                  
+!!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SDRYG(",I3,",",I3,") = ",E13.6)') &
+!!$                      J1,J2,XKER_N_SDRYG(J1,J2)                          
+!!$    END DO                                                                
+!!$  END DO                                                                   
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")') 
 !end if
 !
 CALL LIMA_READ_XKER_SDRYG (KDRYLBDAG,KDRYLBDAS,KND,                                    &
@@ -1379,48 +1379,48 @@ IF( (KDRYLBDAG/=NDRYLBDAG) .OR. (KDRYLBDAS/=NDRYLBDAS) .OR. (KND/=IND) .OR. &
                 ZEGS, XBS, XCG, XDG, 0., XCS, XDS, XFVELOS,                 &
                 XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, &
                 ZFDINFTY, XKER_SDRYG                                        )
-  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
-  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SDRYG KERNELS ****")')
-  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAG=",I3)') NDRYLBDAG
-  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAS=",I3)') NDRYLBDAS
-  WRITE(UNIT=ILUOUT0,FMT='("PALPHAG=",E13.6)') XALPHAG
-  WRITE(UNIT=ILUOUT0,FMT='("PNUG=",E13.6)') XNUG
-  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
-  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
-  WRITE(UNIT=ILUOUT0,FMT='("PEGS=",E13.6)') ZEGS
-  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
-  WRITE(UNIT=ILUOUT0,FMT='("PCG=",E13.6)') XCG
-  WRITE(UNIT=ILUOUT0,FMT='("PDG=",E13.6)') XDG
-  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
-  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
-  WRITE(UNIT=ILUOUT0,FMT='("PFVELOS=",E13.6)') XFVELOS
-  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MAX=",E13.6)') &
-                                                    XDRYLBDAG_MAX
-  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAS_MAX=",E13.6)') &
-                                                    XDRYLBDAS_MAX
-  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MIN=",E13.6)') &
-                                                    XDRYLBDAG_MIN
-  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAS_MIN=",E13.6)') &
-                                                    XDRYLBDAS_MIN
-  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_SDRYG) ) THEN")')
-  DO J1 = 1 , NDRYLBDAG
-    DO J2 = 1 , NDRYLBDAS
-    WRITE(UNIT=ILUOUT0,FMT='("PKER_SDRYG(",I3,",",I3,") = ",E13.6)') &
-                        J1,J2,XKER_SDRYG(J1,J2)
-    END DO
-  END DO
-  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SDRYG KERNELS ****")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAG=",I3)') NDRYLBDAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAS=",I3)') NDRYLBDAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAG=",E13.6)') XALPHAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUG=",E13.6)') XNUG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PEGS=",E13.6)') ZEGS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PCG=",E13.6)') XCG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDG=",E13.6)') XDG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PFVELOS=",E13.6)') XFVELOS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MAX=",E13.6)') &
+!!$                                                    XDRYLBDAG_MAX
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAS_MAX=",E13.6)') &
+!!$                                                    XDRYLBDAS_MAX
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MIN=",E13.6)') &
+!!$                                                    XDRYLBDAG_MIN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAS_MIN=",E13.6)') &
+!!$                                                    XDRYLBDAS_MIN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_SDRYG) ) THEN")')
+!!$  DO J1 = 1 , NDRYLBDAG
+!!$    DO J2 = 1 , NDRYLBDAS
+!!$    WRITE(UNIT=ILUOUT0,FMT='("PKER_SDRYG(",I3,",",I3,") = ",E13.6)') &
+!!$                        J1,J2,XKER_SDRYG(J1,J2)
+!!$    END DO
+!!$  END DO
+!!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
   CALL LIMA_READ_XKER_SDRYG (KDRYLBDAG,KDRYLBDAS,KND,                                    &
                              PALPHAG,PNUG,PALPHAS,PNUS,PEGS,PBS,PCG,PDG,PCS,PDS,PFVELOS, &
                              PDRYLBDAG_MAX,PDRYLBDAS_MAX,PDRYLBDAG_MIN,PDRYLBDAS_MIN,    &
                              PFDINFTY,XKER_SDRYG                                         )
-  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_SDRYG")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_SDRYG")')
 END IF
 !
 !
@@ -1435,15 +1435,15 @@ ALLOCATE( XKER_RDRYG(NDRYLBDAG,NDRYLBDAR) )
                ZEGR, XCG, XDG, 0., XCR, XDR, 0.,                            & 
                XDRYLBDAG_MAX, XDRYLBDAR_MAX, XDRYLBDAG_MIN, XDRYLBDAR_MIN, &
                ZFDINFTY, XKER_N_RDRYG                                      )
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RDRYG) ) THEN")')          
-  DO J1 = 1 , NDRYLBDAG                                                    
-    DO J2 = 1 , NDRYLBDAR                                                  
-    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_RDRYG(",I3,",",I3,") = ",E13.6)') &
-                      J1,J2,XKER_N_RDRYG(J1,J2)                          
-    END DO                                                                
-  END DO                                                                   
-  WRITE(UNIT=ILUOUT0,FMT='("!")') 
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RDRYG) ) THEN")')          
+!!$  DO J1 = 1 , NDRYLBDAG                                                    
+!!$    DO J2 = 1 , NDRYLBDAR                                                  
+!!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_RDRYG(",I3,",",I3,") = ",E13.6)') &
+!!$                      J1,J2,XKER_N_RDRYG(J1,J2)                          
+!!$    END DO                                                                
+!!$  END DO                                                                   
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")') 
 !end if
 !
 CALL LIMA_READ_XKER_RDRYG (KDRYLBDAG,KDRYLBDAR,KND,                                 &
@@ -1462,47 +1462,47 @@ IF( (KDRYLBDAG/=NDRYLBDAG) .OR. (KDRYLBDAR/=NDRYLBDAR) .OR. (KND/=IND) .OR. &
                 ZEGR, XBR, XCG, XDG, 0., XCR, XDR, 0.,                      &
                 XDRYLBDAG_MAX, XDRYLBDAR_MAX, XDRYLBDAG_MIN, XDRYLBDAR_MIN, &
                 ZFDINFTY, XKER_RDRYG                                        )
-  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
-  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF RDRYG KERNELS ****")')
-  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAG=",I3)') NDRYLBDAG
-  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAR=",I3)') NDRYLBDAR
-  WRITE(UNIT=ILUOUT0,FMT='("PALPHAG=",E13.6)') XALPHAG
-  WRITE(UNIT=ILUOUT0,FMT='("PNUG=",E13.6)') XNUG
-  WRITE(UNIT=ILUOUT0,FMT='("PALPHAR=",E13.6)') XALPHAR
-  WRITE(UNIT=ILUOUT0,FMT='("PNUR=",E13.6)') XNUR
-  WRITE(UNIT=ILUOUT0,FMT='("PEGR=",E13.6)') ZEGR
-  WRITE(UNIT=ILUOUT0,FMT='("PBR=",E13.6)') XBR
-  WRITE(UNIT=ILUOUT0,FMT='("PCG=",E13.6)') XCG
-  WRITE(UNIT=ILUOUT0,FMT='("PDG=",E13.6)') XDG
-  WRITE(UNIT=ILUOUT0,FMT='("PCR=",E13.6)') XCR
-  WRITE(UNIT=ILUOUT0,FMT='("PDR=",E13.6)') XDR
-  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MAX=",E13.6)') &
-                                                    XDRYLBDAG_MAX
-  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAR_MAX=",E13.6)') &
-                                                    XDRYLBDAR_MAX
-  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MIN=",E13.6)') &
-                                                    XDRYLBDAG_MIN
-  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAR_MIN=",E13.6)') &
-                                                    XDRYLBDAR_MIN
-  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_RDRYG) ) THEN")')
-  DO J1 = 1 , NDRYLBDAG
-    DO J2 = 1 , NDRYLBDAR
-    WRITE(UNIT=ILUOUT0,FMT='("PKER_RDRYG(",I3,",",I3,") = ",E13.6)') &
-                        J1,J2,XKER_RDRYG(J1,J2)
-    END DO
-  END DO
-  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF RDRYG KERNELS ****")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAG=",I3)') NDRYLBDAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAR=",I3)') NDRYLBDAR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAG=",E13.6)') XALPHAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUG=",E13.6)') XNUG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAR=",E13.6)') XALPHAR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUR=",E13.6)') XNUR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PEGR=",E13.6)') ZEGR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PBR=",E13.6)') XBR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PCG=",E13.6)') XCG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDG=",E13.6)') XDG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PCR=",E13.6)') XCR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDR=",E13.6)') XDR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MAX=",E13.6)') &
+!!$                                                    XDRYLBDAG_MAX
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAR_MAX=",E13.6)') &
+!!$                                                    XDRYLBDAR_MAX
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MIN=",E13.6)') &
+!!$                                                    XDRYLBDAG_MIN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAR_MIN=",E13.6)') &
+!!$                                                    XDRYLBDAR_MIN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_RDRYG) ) THEN")')
+!!$  DO J1 = 1 , NDRYLBDAG
+!!$    DO J2 = 1 , NDRYLBDAR
+!!$    WRITE(UNIT=ILUOUT0,FMT='("PKER_RDRYG(",I3,",",I3,") = ",E13.6)') &
+!!$                        J1,J2,XKER_RDRYG(J1,J2)
+!!$    END DO
+!!$  END DO
+!!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
   CALL LIMA_READ_XKER_RDRYG (KDRYLBDAG,KDRYLBDAR,KND,                                 &
                              PALPHAG,PNUG,PALPHAR,PNUR,PEGR,PBR,PCG,PDG,PCR,PDR,      &
                              PDRYLBDAG_MAX,PDRYLBDAR_MAX,PDRYLBDAG_MIN,PDRYLBDAR_MIN, &
                              PFDINFTY,XKER_RDRYG                                      )
-  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_RDRYG")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_RDRYG")')
 END IF
 !  
 !-------------------------------------------------------------------------------
@@ -1575,15 +1575,15 @@ ZFDINFTY = 20.0  ! computing the kernels XKER_SWETH
               ZEHS, XCH, XDH, 0., XCS, XDS, XFVELOS,                       &  ! 
               XWETLBDAH_MAX, XWETLBDAS_MAX, XWETLBDAH_MIN, XWETLBDAS_MIN, &  ! 
               ZFDINFTY, XKER_N_SWETH                                        )
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SWETH) ) THEN")')          
-  DO J1 = 1 , NWETLBDAH                                                    
-    DO J2 = 1 , NWETLBDAS                                                  
-    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SWETH(",I3,",",I3,") = ",E13.6)') &
-                      J1,J2,XKER_N_SWETH(J1,J2)                          
-    END DO                                                                
-  END DO                                                                   
-  WRITE(UNIT=ILUOUT0,FMT='("!")') 
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SWETH) ) THEN")')          
+!!$  DO J1 = 1 , NWETLBDAH                                                    
+!!$    DO J2 = 1 , NWETLBDAS                                                  
+!!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SWETH(",I3,",",I3,") = ",E13.6)') &
+!!$                      J1,J2,XKER_N_SWETH(J1,J2)                          
+!!$    END DO                                                                
+!!$  END DO                                                                   
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")') 
 !end  if
 IF( .NOT.ALLOCATED(XKER_SWETH) ) ALLOCATE( XKER_SWETH(NWETLBDAH,NWETLBDAS) )
 !
@@ -1603,48 +1603,48 @@ IF( (KWETLBDAH/=NWETLBDAH) .OR. (KWETLBDAS/=NWETLBDAS) .OR. (KND/=IND) .OR. &
                 ZEHS, XBS, XCH, XDH, 0., XCS, XDS, XFVELOS,                 &
                 XWETLBDAH_MAX, XWETLBDAS_MAX, XWETLBDAH_MIN, XWETLBDAS_MIN, &
                 ZFDINFTY, XKER_SWETH                                        )
-  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
-  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SWETH KERNELS ****")')
-  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAH=",I3)') NWETLBDAH
-  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAS=",I3)') NWETLBDAS
-  WRITE(UNIT=ILUOUT0,FMT='("PALPHAH=",E13.6)') XALPHAH
-  WRITE(UNIT=ILUOUT0,FMT='("PNUH=",E13.6)') XNUH
-  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
-  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
-  WRITE(UNIT=ILUOUT0,FMT='("PEHS=",E13.6)') ZEHS
-  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
-  WRITE(UNIT=ILUOUT0,FMT='("PCH=",E13.6)') XCH
-  WRITE(UNIT=ILUOUT0,FMT='("PDH=",E13.6)') XDH
-  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
-  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
-  WRITE(UNIT=ILUOUT0,FMT='("PFVELOS=",E13.6)') XFVELOS
-  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MAX=",E13.6)') &
-                                                    XWETLBDAH_MAX
-  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAS_MAX=",E13.6)') &
-                                                    XWETLBDAS_MAX
-  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MIN=",E13.6)') &
-                                                    XWETLBDAH_MIN
-  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAS_MIN=",E13.6)') &
-                                                    XWETLBDAS_MIN
-  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_SWETH) ) THEN")')
-  DO J1 = 1 , NWETLBDAH
-    DO J2 = 1 , NWETLBDAS
-    WRITE(UNIT=ILUOUT0,FMT='("PKER_SWETH(",I3,",",I3,") = ",E13.6)') &
-                        J1,J2,XKER_SWETH(J1,J2)
-    END DO
-  END DO
-  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SWETH KERNELS ****")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAH=",I3)') NWETLBDAH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAS=",I3)') NWETLBDAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAH=",E13.6)') XALPHAH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUH=",E13.6)') XNUH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PEHS=",E13.6)') ZEHS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PCH=",E13.6)') XCH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDH=",E13.6)') XDH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PFVELOS=",E13.6)') XFVELOS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MAX=",E13.6)') &
+!!$                                                    XWETLBDAH_MAX
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAS_MAX=",E13.6)') &
+!!$                                                    XWETLBDAS_MAX
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MIN=",E13.6)') &
+!!$                                                    XWETLBDAH_MIN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAS_MIN=",E13.6)') &
+!!$                                                    XWETLBDAS_MIN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_SWETH) ) THEN")')
+!!$  DO J1 = 1 , NWETLBDAH
+!!$    DO J2 = 1 , NWETLBDAS
+!!$    WRITE(UNIT=ILUOUT0,FMT='("PKER_SWETH(",I3,",",I3,") = ",E13.6)') &
+!!$                        J1,J2,XKER_SWETH(J1,J2)
+!!$    END DO
+!!$  END DO
+!!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
   CALL LIMA_READ_XKER_SWETH (KWETLBDAH,KWETLBDAS,KND,                                    &
                              PALPHAH,PNUH,PALPHAS,PNUS,PEHS,PBS,PCH,PDH,PCS,PDS,PFVELOS, &
                              PWETLBDAH_MAX,PWETLBDAS_MAX,PWETLBDAH_MIN,PWETLBDAS_MIN,    &
                              PFDINFTY,XKER_SWETH                                         )
-  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_SWETH")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_SWETH")')
 END IF
 !
 !
@@ -1658,15 +1658,15 @@ ZFDINFTY = 20.0
               ZEHG, XCH, XDH, 0., XCG, XDG, 0.,                            & 
               XWETLBDAH_MAX, XWETLBDAG_MAX, XWETLBDAH_MIN, XWETLBDAG_MIN, & 
               ZFDINFTY, XKER_N_GWETH                                      )
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_GWETH) ) THEN")')          
-  DO J1 = 1 , NWETLBDAH                                                    
-    DO J2 = 1 , NWETLBDAG                                                  
-    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_GWETH(",I3,",",I3,") = ",E13.6)') &
-                      J1,J2,XKER_N_GWETH(J1,J2)                          
-    END DO                                                                
-  END DO                                                                   
-  WRITE(UNIT=ILUOUT0,FMT='("!")') 
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_GWETH) ) THEN")')          
+!!$  DO J1 = 1 , NWETLBDAH                                                    
+!!$    DO J2 = 1 , NWETLBDAG                                                  
+!!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_GWETH(",I3,",",I3,") = ",E13.6)') &
+!!$                      J1,J2,XKER_N_GWETH(J1,J2)                          
+!!$    END DO                                                                
+!!$  END DO                                                                   
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")') 
 !end if
 IF( .NOT.ALLOCATED(XKER_GWETH) ) ALLOCATE( XKER_GWETH(NWETLBDAH,NWETLBDAG) )
 !
@@ -1686,47 +1686,47 @@ IF( (KWETLBDAH/=NWETLBDAH) .OR. (KWETLBDAG/=NWETLBDAG) .OR. (KND/=IND) .OR. &
                 ZEHG, XBG, XCH, XDH, 0., XCG, XDG, 0.,                      &
                 XWETLBDAH_MAX, XWETLBDAG_MAX, XWETLBDAH_MIN, XWETLBDAG_MIN, &
                 ZFDINFTY, XKER_GWETH                                        )
-  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
-  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF GWETH KERNELS ****")')
-  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAH=",I3)') NWETLBDAH
-  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAG=",I3)') NWETLBDAG
-  WRITE(UNIT=ILUOUT0,FMT='("PALPHAH=",E13.6)') XALPHAH
-  WRITE(UNIT=ILUOUT0,FMT='("PNUH=",E13.6)') XNUH
-  WRITE(UNIT=ILUOUT0,FMT='("PALPHAG=",E13.6)') XALPHAG
-  WRITE(UNIT=ILUOUT0,FMT='("PNUG=",E13.6)') XNUG
-  WRITE(UNIT=ILUOUT0,FMT='("PEHG=",E13.6)') ZEHG
-  WRITE(UNIT=ILUOUT0,FMT='("PBG=",E13.6)') XBG
-  WRITE(UNIT=ILUOUT0,FMT='("PCH=",E13.6)') XCH
-  WRITE(UNIT=ILUOUT0,FMT='("PDH=",E13.6)') XDH
-  WRITE(UNIT=ILUOUT0,FMT='("PCG=",E13.6)') XCG
-  WRITE(UNIT=ILUOUT0,FMT='("PDG=",E13.6)') XDG
-  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MAX=",E13.6)') &
-                                                    XWETLBDAH_MAX
-  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAG_MAX=",E13.6)') &
-                                                    XWETLBDAG_MAX
-  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MIN=",E13.6)') &
-                                                    XWETLBDAH_MIN
-  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAG_MIN=",E13.6)') &
-                                                    XWETLBDAG_MIN
-  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
-  WRITE(UNIT=ILUOUT0,FMT='("!")')
-  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_GWETH) ) THEN")')
-  DO J1 = 1 , NWETLBDAH
-    DO J2 = 1 , NWETLBDAG
-    WRITE(UNIT=ILUOUT0,FMT='("PKER_GWETH(",I3,",",I3,") = ",E13.6)') &
-                        J1,J2,XKER_GWETH(J1,J2)
-    END DO
-  END DO
-  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF GWETH KERNELS ****")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAH=",I3)') NWETLBDAH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAG=",I3)') NWETLBDAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAH=",E13.6)') XALPHAH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUH=",E13.6)') XNUH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAG=",E13.6)') XALPHAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUG=",E13.6)') XNUG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PEHG=",E13.6)') ZEHG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PBG=",E13.6)') XBG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PCH=",E13.6)') XCH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDH=",E13.6)') XDH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PCG=",E13.6)') XCG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PDG=",E13.6)') XDG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MAX=",E13.6)') &
+!!$                                                    XWETLBDAH_MAX
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAG_MAX=",E13.6)') &
+!!$                                                    XWETLBDAG_MAX
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MIN=",E13.6)') &
+!!$                                                    XWETLBDAH_MIN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAG_MIN=",E13.6)') &
+!!$                                                    XWETLBDAG_MIN
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_GWETH) ) THEN")')
+!!$  DO J1 = 1 , NWETLBDAH
+!!$    DO J2 = 1 , NWETLBDAG
+!!$    WRITE(UNIT=ILUOUT0,FMT='("PKER_GWETH(",I3,",",I3,") = ",E13.6)') &
+!!$                        J1,J2,XKER_GWETH(J1,J2)
+!!$    END DO
+!!$  END DO
+!!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
   CALL LIMA_READ_XKER_GWETH (KWETLBDAH,KWETLBDAG,KND,                                 &
                              PALPHAH,PNUH,PALPHAG,PNUG,PEHG,PBG,PCH,PDH,PCG,PDG,      &
                              PWETLBDAH_MAX,PWETLBDAG_MAX,PWETLBDAH_MIN,PWETLBDAG_MIN, &
                              PFDINFTY,XKER_GWETH                                      )
-  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_GWETH")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_GWETH")')
 END IF
 !
 !
@@ -1748,35 +1748,35 @@ XFREFFI = 0.5 * ZGAMI(8) * (1.0/XLBI)**XLBEXI
 !   	        -----------------------
 !
 !
-GFLAG = .TRUE.
-IF (GFLAG) THEN
-  WRITE(UNIT=ILUOUT0,FMT='(" Summary of the ice particule characteristics")')
-  WRITE(UNIT=ILUOUT0,FMT='("      PRISTINE ICE")')
-  WRITE(UNIT=ILUOUT0,FMT='("                   masse: A=",E13.6," B=",E13.6)') &
-                                                      XAI,XBI
-  WRITE(UNIT=ILUOUT0,FMT='("                 vitesse: C=",E13.6," D=",E13.6)') &
-                                                      XC_I,XDI
-  WRITE(UNIT=ILUOUT0,FMT='("            distribution:AL=",E13.6,"NU=",E13.6)') &
-                                                      XALPHAI,XNUI
-  WRITE(UNIT=ILUOUT0,FMT='("              SNOW")')
-  WRITE(UNIT=ILUOUT0,FMT='("                   masse: A=",E13.6," B=",E13.6)') &
-                                                      XAS,XBS
-  WRITE(UNIT=ILUOUT0,FMT='("                 vitesse: C=",E13.6," D=",E13.6)') &
-                                                      XCS,XDS
-  WRITE(UNIT=ILUOUT0,FMT='("           concentration:CC=",E13.6," x=",E13.6)') &
-                                                      XCCS,XCXS
-  WRITE(UNIT=ILUOUT0,FMT='("            distribution:AL=",E13.6,"NU=",E13.6)') &
-                                                      XALPHAS,XNUS
-  WRITE(UNIT=ILUOUT0,FMT='("            GRAUPEL")')
-  WRITE(UNIT=ILUOUT0,FMT='("                   masse: A=",E13.6," B=",E13.6)') &
-                                                      XAG,XBG
-  WRITE(UNIT=ILUOUT0,FMT='("                 vitesse: C=",E13.6," D=",E13.6)') &
-                                                      XCG,XDG
-  WRITE(UNIT=ILUOUT0,FMT='("           concentration:CC=",E13.6," x=",E13.6)') &
-                                                      XCCG,XCXG
-  WRITE(UNIT=ILUOUT0,FMT='("            distribution:AL=",E13.6,"NU=",E13.6)') &
-                                                      XALPHAG,XNUG
-END IF
+!!$GFLAG = .TRUE.
+!!$IF (GFLAG) THEN
+!!$  WRITE(UNIT=ILUOUT0,FMT='(" Summary of the ice particule characteristics")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("      PRISTINE ICE")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("                   masse: A=",E13.6," B=",E13.6)') &
+!!$                                                      XAI,XBI
+!!$  WRITE(UNIT=ILUOUT0,FMT='("                 vitesse: C=",E13.6," D=",E13.6)') &
+!!$                                                      XC_I,XDI
+!!$  WRITE(UNIT=ILUOUT0,FMT='("            distribution:AL=",E13.6,"NU=",E13.6)') &
+!!$                                                      XALPHAI,XNUI
+!!$  WRITE(UNIT=ILUOUT0,FMT='("              SNOW")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("                   masse: A=",E13.6," B=",E13.6)') &
+!!$                                                      XAS,XBS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("                 vitesse: C=",E13.6," D=",E13.6)') &
+!!$                                                      XCS,XDS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("           concentration:CC=",E13.6," x=",E13.6)') &
+!!$                                                      XCCS,XCXS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("            distribution:AL=",E13.6,"NU=",E13.6)') &
+!!$                                                      XALPHAS,XNUS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("            GRAUPEL")')
+!!$  WRITE(UNIT=ILUOUT0,FMT='("                   masse: A=",E13.6," B=",E13.6)') &
+!!$                                                      XAG,XBG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("                 vitesse: C=",E13.6," D=",E13.6)') &
+!!$                                                      XCG,XDG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("           concentration:CC=",E13.6," x=",E13.6)') &
+!!$                                                      XCCG,XCXG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("            distribution:AL=",E13.6,"NU=",E13.6)') &
+!!$                                                      XALPHAG,XNUG
+!!$END IF
 !
 !------------------------------------------------------------------------------
 !
