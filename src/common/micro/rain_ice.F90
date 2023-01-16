@@ -292,8 +292,7 @@ INTEGER :: ISTIJ, ISTK
 !Arrays for nucleation call outisde of ODMICRO points
 REAL,    DIMENSION(D%NIJT, D%NKT) :: ZW ! work array
 REAL,    DIMENSION(D%NIJT, D%NKT) :: ZT ! Temperature
-REAL, DIMENSION(D%NIJT, D%NKT) :: ZZ_RVHENI_MR, & ! heterogeneous nucleation mixing ratio change
-                                & ZZ_RVHENI       ! heterogeneous nucleation
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZZ_RVHENI       ! heterogeneous nucleation
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZZ_LVFACT, ZZ_LSFACT, ZZ_DIFF
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRCT    ! Cloud water m.r. source at t
@@ -302,7 +301,6 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZRIT    ! Pristine ice m.r. source at t
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRST    ! Snow/aggregate m.r. source at t
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRGT    ! Graupel m.r. source at t
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRHT    ! Hail m.r. source at t
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZCITOUT ! Output value for CIT
 
 !
 LOGICAL :: GEXT_TEND
@@ -381,6 +379,9 @@ LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLW3D
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 0, ZHOOK_HANDLE)
 !
+!*       1.     GENERALITIES
+!               ------------
+!
 IKTB=D%NKTB
 IKTE=D%NKTE
 IKB=D%NKB
@@ -400,10 +401,6 @@ IF(KPROMA /= KSIZE) THEN
   ! Another solution would be to compute column by column?
   ! Another one would be to cut tendencies in 3 parts: before rainfr_vert, rainfr_vert, after rainfr_vert
 ENDIF
-!
-!*       1.     COMPUTE THE LOOP BOUNDS
-!               -----------------------
-!
 ZINV_TSTEP=1./PTSTEP
 GEXT_TEND=.TRUE.
 !
@@ -450,6 +447,12 @@ IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
   ENDIF
 ENDIF
 !
+!
+!-------------------------------------------------------------------------------
+!
+!*       3.     INITIAL VALUES SAVING
+!               ---------------------
+!
 
 DO JK = IKTB,IKTE
   !Backup of T variables
@@ -471,20 +474,51 @@ DO JK = IKTB,IKTE
   ENDIF
   PRAINFR(:,JK)=0.
 #ifdef REPRO55
-  ZCITOUT(:,JK)=PCIT(:,JK)
 #else
-  ZCITOUT(:,JK)=0. !We want 0 outside of IMICRO points
+  PCIT(:,JK)=0. !We want 0 outside of IMICRO points
 #endif
 ENDDO
-
+!
+!
+!*       4.     COMPUTES THE SLOW COLD PROCESS SOURCES OUTSIDE OF ODMICRO POINTS
+!               ----------------------------------------------------------------
+!
+LLW3D(:,:)=.FALSE.
+DO JK=IKTB,IKTE
+  DO JIJ=IIJB,IIJE
+    IF (.NOT. ODMICRO(JIJ, JK)) THEN
+      LLW3D(JIJ, JK)=.TRUE.
+      ZW3D(JIJ, JK)=ZZ_LSFACT(JIJ, JK)/PEXN(JIJ, JK)
+    ELSE
+      LLW3D(JIJ, JK)=.FALSE.
+    ENDIF
+  ENDDO
+ENDDO
+CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, D%NIJT*D%NKT, LLW3D(:,:), &
+                     PTHT(:, :), PPABST(:, :), PRHODREF(:, :), &                                       
+                     PEXN(:, :), ZW3D(:, :), ZT(:, :), &                                                           
+                     PRVT(:, :), &                                                                                 
+                     PCIT(:, :), ZZ_RVHENI(:, :))
+DO JK = IKTB, IKTE
+  DO JIJ=IIJB, IIJE
+    ZZ_RVHENI(JIJ,JK) = MIN(PRVS(JIJ,JK), ZZ_RVHENI(JIJ,JK)/PTSTEP)
+  ENDDO
+ENDDO
+!
+!
+!*       5.     TENDENCIES COMPUTATION
+!               ----------------------
+!
 IF(BUCONF%LBU_ENABLE) THEN
   DO JV=1, IBUNUM-IBUNUM_EXTRA
     ZBU_PACK(:, JV)=0.
     ZBU_SUM(:, JV)=0.
   ENDDO
 ENDIF
-
 !-------------------------------------------------------------------------------
+!
+!***       5.1 Point selection
+!
 !  optimization by looking for locations where
 !  the microphysical fields are larger than a minimal value only !!!
 !
@@ -502,12 +536,13 @@ IF (KSIZE > 0) THEN
     ZTSTEP=PTSTEP/INB_ITER_MAX
     INB_ITER_MAX=MAX(PARAMI%NMAXITER, INB_ITER_MAX) !For the case XMRSTEP/=0. at the same time
   ENDIF
-
-!===============================================================================================================
-! Cache-blocking loop :
-
   LLSIGMA_RC=(HSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM')
   LL_AUCV_ADJU=(HSUBG_AUCV_RC=='ADJU' .OR. HSUBG_AUCV_RI=='ADJU')
+
+  !-------------------------------------------------------------------------------
+  !
+  !***       5.2 Cache-blocking loop
+  !
 
   ! starting indexes :
   IC=0
@@ -517,9 +552,10 @@ IF (KSIZE > 0) THEN
   DO JMICRO=1,KSIZE,KPROMA
 
     IMICRO=MIN(KPROMA,KSIZE-JMICRO+1)
-!
-!*       3.     PACKING
-!               --------
+    !-------------------------------------------------------------------------------
+    !
+    !***       5.3 Packing
+    !
 
     ! Setup packing parameters
     OUTER_LOOP: DO JK = ISTK, IKTE
@@ -622,11 +658,11 @@ IF (KSIZE > 0) THEN
       ENDDO
     ENDIF
 
-!-------------------------------------------------------------------------------
-!
-!*       4.     LOOP
-!               ----
-!
+    !-------------------------------------------------------------------------------
+    !
+    !***       5.4 temporal loop
+    !
+    !
     IITER(1:IMICRO)=0
     ZTIME(1:IMICRO)=0. ! Current integration time (all points may have a different integration time)
 
@@ -660,23 +696,25 @@ IF (KSIZE > 0) THEN
           ZLSFACT(JL)=(CST%XLSTT+(CST%XCPV-CST%XCI)*(ZZT(JL)-CST%XTT)) / ZDEVIDE
           ZLVFACT(JL)=(CST%XLVTT+(CST%XCPV-CST%XCL)*(ZZT(JL)-CST%XTT)) / ZDEVIDE
         ENDDO
+        !-------------------------------------------------------------------------------
         !
-        !***       4.1 Tendencies computation
+        !***       5.5 Effective tendencies computation
+        !
         !
         ! Tendencies are *really* computed when LSOFT==.FALSE. and only adjusted otherwise
-    CALL ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, &
-                        &KPROMA, IMICRO, &
-                        &KRR, LSOFT, LLCOMPUTE, &
-                        &HSUBG_AUCV_RC, HSUBG_AUCV_RI, &
-                        &ZEXN, ZRHODREF, ZLVFACT, ZLSFACT, I1, I2, &
-                        &ZPRES, ZCF, ZSIGMA_RC, &
-                        &ZCIT, &
-                        &ZZT, ZVART, &
-                        &ZBU_INST, &
-                        &ZRS_TEND, ZRG_TEND, ZRH_TEND, ZSSI, &
-                        &ZA, ZB, &
-                        &ZHLC_HCF, ZHLC_LCF, ZHLC_HRC, ZHLC_LRC, &
-                        &ZHLI_HCF, ZHLI_LCF, ZHLI_HRI, ZHLI_LRI, PRAINFR)
+        CALL ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, &
+                            &KPROMA, IMICRO, &
+                            &KRR, LSOFT, LLCOMPUTE, &
+                            &HSUBG_AUCV_RC, HSUBG_AUCV_RI, &
+                            &ZEXN, ZRHODREF, ZLVFACT, ZLSFACT, I1, I2, &
+                            &ZPRES, ZCF, ZSIGMA_RC, &
+                            &ZCIT, &
+                            &ZZT, ZVART, &
+                            &ZBU_INST, &
+                            &ZRS_TEND, ZRG_TEND, ZRH_TEND, ZSSI, &
+                            &ZA, ZB, &
+                            &ZHLC_HCF, ZHLC_LCF, ZHLC_HRC, ZHLC_LRC, &
+                            &ZHLI_HCF, ZHLI_LCF, ZHLI_HRI, ZHLI_LRI, PRAINFR)
 
         ! External tendencies
         IF(GEXT_TEND) THEN
@@ -686,8 +724,10 @@ IF (KSIZE > 0) THEN
             ENDDO
           ENDDO
         ENDIF
+        !-------------------------------------------------------------------------------
         !
-        !***       4.2 Integration time
+        !***       5.6 Time integration
+        !
         !
         ! If we can, we shall use these tendencies until the end of the timestep
         DO JL=1, IMICRO
@@ -781,8 +821,10 @@ IF (KSIZE > 0) THEN
             ENDDO
           ENDIF ! LL_ANY_ITER
         ENDIF ! XMRSTEP/=0.
+        !-------------------------------------------------------------------------------
         !
-        !***       4.3 New values of variables for next iteration
+        !***       5.7 New values of variables for next iteration
+        !
         !
         DO JV=0, KRR
           DO JL=1, IMICRO
@@ -797,9 +839,9 @@ IF (KSIZE > 0) THEN
 #endif
           ZTIME(JL)=ZTIME(JL)+ZMAXTIME(JL)
         ENDDO
-
+        !-------------------------------------------------------------------------------
         !
-        !***       4.4 Mixing ratio change due to each process
+        !***       5.8 Mixing ratio change due to each process
         !
         IF(BUCONF%LBU_ENABLE) THEN
           !Mixing ratio change due to a tendency
@@ -824,12 +866,13 @@ IF (KSIZE > 0) THEN
             ENDDO
           ENDDO
         ENDIF
+        !-------------------------------------------------------------------------------
         !
-        !***       4.5 Next loop
+        !***       5.9 Next loop
         !
         LSOFT=.TRUE. ! We try to adjust tendencies (inner while loop)
-      ENDDO
-    ENDDO
+      ENDDO !Iterations on tendency computations (WHILE ANY(LLCOMPUTE))
+    ENDDO !Temporal loop
 
     IF(GEXT_TEND) THEN
       !Z..T variables contain the external tendency, we substract it
@@ -840,13 +883,13 @@ IF (KSIZE > 0) THEN
       ENDDO
     ENDIF
 
-!-------------------------------------------------------------------------------
-!
-!*       5.     UNPACKING DIAGNOSTICS
-!               ---------------------
-!
+    !-------------------------------------------------------------------------------
+    !
+    !***       5.10 Unpacking
+    !
+    !
     DO JL=1, IMICRO
-      ZCITOUT  (I1(JL),I2(JL))=ZCIT   (JL)
+      PCIT  (I1(JL),I2(JL))=ZCIT   (JL)
       IF(PARAMI%LWARM) THEN
         PEVAP3D(I1(JL),I2(JL))=ZBU_INST(JL, IRREVAV)
       ENDIF
@@ -871,48 +914,32 @@ IF (KSIZE > 0) THEN
 
   ENDDO ! JMICRO
 ENDIF ! KSIZE > 0
-PCIT(:,:)=ZCITOUT(:,:)
-
-!==========================================================================================================
-
-
+!-------------------------------------------------------------------------------
 !
-!*       6.     COMPUTES THE SLOW COLD PROCESS SOURCES OUTSIDE OF ODMICRO POINTS
-!               ----------------------------------------------------------------
+!***       5.11 Budgets
 !
-LLW3D(:,:)=.FALSE.
-DO JK=IKTB,IKTE
-  DO JIJ=IIJB,IIJE
-    IF (.NOT. ODMICRO(JIJ, JK)) THEN
-      LLW3D(JIJ, JK)=.TRUE.
-      ZW3D(JIJ, JK)=ZZ_LSFACT(JIJ, JK)/PEXN(JIJ, JK)
-    ELSE
-      LLW3D(JIJ, JK)=.FALSE.
-    ENDIF
-  ENDDO
-ENDDO
-CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, D%NIJT*D%NKT, LLW3D(:,:), &
-                     PTHT(:, :), PPABST(:, :), PRHODREF(:, :), &                                       
-                     PEXN(:, :), ZW3D(:, :), ZT(:, :), &                                                           
-                     PRVT(:, :), &                                                                                 
-                     PCIT(:, :), ZZ_RVHENI_MR(:, :))
+!
+IF(BUCONF%LBU_ENABLE) THEN
+  !Budgets for the different processes
+  CALL ICE4_BUDGETS(D, PARAMI, BUCONF, KSIZE, KPROMA, PTSTEP, KRR, I1TOT, I2TOT, &
+                    ZZ_LVFACT, ZZ_LSFACT, PRHODJ, PEXNREF, &
+                    ZZ_RVHENI, ZBU_PACK, &
+                    TBUDGETS, KBUDGETS)
+ENDIF
 !
 !-------------------------------------------------------------------------------
 !
-!*       7.     TOTAL TENDENCIES
+!*       6.     TOTAL TENDENCIES
 !               ----------------
 !
 !
-!***     7.1    total tendencies limited by available species
+!***     6.1    total tendencies limited by available species
 !
 DO JK = IKTB, IKTE
   DO CONCURRENT (JIJ=IIJB:IIJE)
     !LV/LS
     ZZ_LSFACT(JIJ,JK)=ZZ_LSFACT(JIJ,JK)/PEXNREF(JIJ,JK)
     ZZ_LVFACT(JIJ,JK)=ZZ_LVFACT(JIJ,JK)/PEXNREF(JIJ,JK)
-
-    !Tendency dure to nucleation on non ODMICRO points
-    ZZ_RVHENI(JIJ,JK) = MIN(PRVS(JIJ,JK), ZZ_RVHENI_MR(JIJ,JK)/PTSTEP)
 
     !Hydrometeor tendencies is the difference between old state and new state (can be negative)
     ZWR(JIJ,JK,IRV)=(ZWR(JIJ,JK,IRV)-PRVT(JIJ,JK))*ZINV_TSTEP
@@ -944,20 +971,20 @@ DO JK = IKTB, IKTE
     ENDIF
   ENDDO
 ENDDO
-
+!-------------------------------------------------------------------------------
 !
-!***     7.2    LBU_ENABLE case
+!***     6.2    Negative corrections
+!
+!NOTE:
+!  This call cannot be moved before the preeceding budget calls because,
+!  with AROME, the BUDGET_STORE_INIT does nothing. The equivalent is done only
+!  once before the physics call and copies of the S variables evolve automatically
+!  internally to the budget (DDH) machinery at each BUDGET_STORE_ADD and
+!  BUDGET_STORE_END calls. Thus, the difference between the DDH internal version
+!  of the S variables and the S variables used in the folowing BUDGET_STORE_END
+!  call must only be due to the correction of negativities.
 !
 IF(BUCONF%LBU_ENABLE) THEN
-  !Budgets for the different processes
-  !They have been put in a subroutine because they perform pack/unpack
-  CALL ICE4_BUDGETS(D, PARAMI, BUCONF, KSIZE, KPROMA, PTSTEP, KRR, I1TOT, I2TOT, &
-                    ZZ_LVFACT, ZZ_LSFACT, PRHODJ, &
-                    ZZ_RVHENI, ZBU_PACK, &
-                    TBUDGETS, KBUDGETS)
-  !
-  !***     7.3    Final tendencies
-  !
   IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'CORR', PTHS(:, :)*PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'CORR', PRVS(:, :)*PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RC) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'CORR', PRCS(:, :)*PRHODJ(:, :))
@@ -968,15 +995,6 @@ IF(BUCONF%LBU_ENABLE) THEN
   IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'CORR', PRHS(:, :)*PRHODJ(:, :))
 END IF
 
-!NOTE:
-!  This call cannot be moved before the preeceding budget calls because,
-!  with AROME, the BUDGET_STORE_INIT does nothing. The equivalent is done only
-!  once before the physics call and copies of the S variables evolve automatically
-!  internally to the budget (DDH) machinery at each BUDGET_STORE_ADD and
-!  BUDGET_STORE_END calls. Thus, the difference between the DDH internal version
-!  of the S variables and the S variables used in the folowing BUDGET_STORE_END
-!  call must only be due to the correction of negativities.
-!
 !We correct negativities with conservation
 CALL ICE4_CORRECT_NEGATIVITIES(D, ICED, KRR, PRVS, PRCS, PRRS, &
                               &PRIS, PRSS, PRGS, &
@@ -995,7 +1013,7 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
-!*       8.     COMPUTE THE SEDIMENTATION (RS) SOURCE
+!*       7.     COMPUTE THE SEDIMENTATION (RS) SOURCE
 !               -------------------------------------
 !
 IF(PARAMI%LSEDIM_AFTER) THEN
@@ -1031,7 +1049,7 @@ ENDIF
 !
 !-------------------------------------------------------------------------------
 !
-!*       9.     COMPUTE THE FOG DEPOSITION TERM 
+!*       8.     COMPUTE THE FOG DEPOSITION TERM 
 !               -------------------------------------
 !
 IF (PARAMI%LDEPOSC) THEN !cloud water deposition on vegetation
