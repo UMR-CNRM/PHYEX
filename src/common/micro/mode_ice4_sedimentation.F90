@@ -123,64 +123,34 @@ IF (BUCONF%LBUDGET_RG)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDG
 IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:, :) * PRHODJ(:, :))
 
 IF(PARAMI%CSEDIM=='STAT') THEN
-  IF (KRR==7) THEN
-    DO JK = IKTB,IKTE
-      DO JIJ = IIJB,IIJE
-        ZRCT(JIJ,JK)=PRCS(JIJ,JK)*PTSTEP
-        ZRRT(JIJ,JK)=PRRS(JIJ,JK)*PTSTEP
-        ZRIT(JIJ,JK)=PRIS(JIJ,JK)*PTSTEP
-        ZRST(JIJ,JK)=PRSS(JIJ,JK)*PTSTEP
-        ZRGT(JIJ,JK)=PRGS(JIJ,JK)*PTSTEP
-        ZRHT(JIJ,JK)=PRHS(JIJ,JK)*PTSTEP
-      ENDDO
+  DO JK = IKTB,IKTE
+    DO JIJ = IIJB,IIJE
+      ZRCT(JIJ,JK)=PRCS(JIJ,JK)*PTSTEP
+      ZRRT(JIJ,JK)=PRRS(JIJ,JK)*PTSTEP
+      ZRIT(JIJ,JK)=PRIS(JIJ,JK)*PTSTEP
+      ZRST(JIJ,JK)=PRSS(JIJ,JK)*PTSTEP
+      ZRGT(JIJ,JK)=PRGS(JIJ,JK)*PTSTEP
+      IF (KRR==7) ZRHT(JIJ,JK)=PRHS(JIJ,JK)*PTSTEP
     ENDDO
-    CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, PARAMI, &
-                                &PTSTEP, KRR, PDZZ, &
-                                &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
-                                &PRCS, ZRCT, PRRS, ZRRT, PRIS, ZRIT,&
-                                &PRSS, ZRST, PRGS, ZRGT,&
-                                &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
-                                &PSEA=PSEA, PTOWN=PTOWN, &
-                                &PINPRH=PINPRH, PRHT=ZRHT, PRHS=PRHS, PFPR=PFPR)
-  ELSE
-    DO JK = IKTB,IKTE
-      DO JIJ = IIJB,IIJE
-        ZRCT(JIJ,JK)=PRCS(JIJ,JK)*PTSTEP
-        ZRRT(JIJ,JK)=PRRS(JIJ,JK)*PTSTEP
-        ZRIT(JIJ,JK)=PRIS(JIJ,JK)*PTSTEP
-        ZRST(JIJ,JK)=PRSS(JIJ,JK)*PTSTEP
-        ZRGT(JIJ,JK)=PRGS(JIJ,JK)*PTSTEP
-      ENDDO
-    ENDDO
-    CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, PARAMI, &
-                                &PTSTEP, KRR, PDZZ, &
-                                &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
-                                &PRCS, ZRCT, PRRS, ZRRT, PRIS, ZRIT,&
-                                &PRSS, ZRST, PRGS, ZRGT,&
-                                &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
-                                &PSEA=PSEA, PTOWN=PTOWN, &
-                                &PFPR=PFPR)
-  ENDIF
+  ENDDO
+  CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, PARAMI, &
+                              &PTSTEP, KRR, PDZZ, &
+                              &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
+                              &PRCS, ZRCT, PRRS, ZRRT, PRIS, ZRIT,&
+                              &PRSS, ZRST, PRGS, ZRGT,&
+                              &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
+                              &PSEA=PSEA, PTOWN=PTOWN, &
+                              &PINPRH=PINPRH, PRHT=ZRHT, PRHS=PRHS, PFPR=PFPR)
   PINPRS(IIJB:IIJE) = PINPRS(IIJB:IIJE) + ZINPRI(IIJB:IIJE)
   !No negativity correction here as we apply sedimentation on PR.S*PTSTEP variables
 ELSEIF(PARAMI%CSEDIM=='SPLI') THEN
-  IF(KRR==7) THEN
-    CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
-                                 &PTSTEP, KRR, PDZZ, &
-                                 &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
-                                 &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                                 &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
-                                 &PSEA=PSEA, PTOWN=PTOWN, &
-                                 &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
-  ELSE
-    CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
-                                 &PTSTEP, KRR, PDZZ, &
-                                 &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
-                                 &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                                 &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
-                                 &PSEA=PSEA, PTOWN=PTOWN, &
-                                 &PFPR=PFPR)
-  ENDIF
+  CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
+                               &PTSTEP, KRR, PDZZ, &
+                               &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
+                               &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
+                               &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
+                               &PSEA=PSEA, PTOWN=PTOWN, &
+                               &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
   PINPRS(IIJB:IIJE) = PINPRS(IIJB:IIJE) + ZINPRI(IIJB:IIJE)
   !We correct negativities with conservation
   !SPLI algorith uses a time-splitting. Inside the loop a temporary m.r. is used.

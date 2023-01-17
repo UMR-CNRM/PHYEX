@@ -336,25 +336,14 @@ ENDDO
 !               -------------------------------------
 !
 IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
-  IF(KRR==7) THEN
-    CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, BUCONF, &
-                           &PTSTEP, KRR, PDZZ, &
-                           &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
-                           &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                           &PINPRC, PINPRR, PINPRS, PINPRG, &
-                           &TBUDGETS, KBUDGETS, &
-                           &PSEA=PSEA, PTOWN=PTOWN, &
-                           &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
-  ELSE
-    CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, BUCONF, &
-                           &PTSTEP, KRR, PDZZ, &
-                           &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
-                           &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                           &PINPRC, PINPRR, PINPRS, PINPRG, &
-                           &TBUDGETS, KBUDGETS, &
-                           &PSEA=PSEA, PTOWN=PTOWN, &
-                           &PFPR=PFPR)
-  ENDIF
+  CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, BUCONF, &
+                         &PTSTEP, KRR, PDZZ, &
+                         &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
+                         &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
+                         &PINPRC, PINPRR, PINPRS, PINPRG, &
+                         &TBUDGETS, KBUDGETS, &
+                         &PSEA=PSEA, PTOWN=PTOWN, &
+                         &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
 ENDIF
 !
 !
@@ -526,33 +515,32 @@ END IF
 !               -------------------------------------
 !
 IF(PARAMI%LSEDIM_AFTER) THEN
-  IF(KRR==7) THEN
-    CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, BUCONF, &
-                           &PTSTEP, KRR, PDZZ, &
-                           &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
-                           &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                           &PINPRC, PINPRR, PINPRS, PINPRG, &
-                           &TBUDGETS, KBUDGETS, &
-                           &PSEA=PSEA, PTOWN=PTOWN, &
-                           &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
-  ELSE
-    CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, BUCONF, &
-                           &PTSTEP, KRR, PDZZ, &
-                           &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
-                           &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
-                           &PINPRC, PINPRR, PINPRS, PINPRG, &
-                           &TBUDGETS, KBUDGETS, &
-                           &PSEA=PSEA, PTOWN=PTOWN, &
-                           &PFPR=PFPR)
-  ENDIF
+  CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, BUCONF, &
+                         &PTSTEP, KRR, PDZZ, &
+                         &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
+                         &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
+                         &PINPRC, PINPRR, PINPRS, PINPRG, &
+                         &TBUDGETS, KBUDGETS, &
+                         &PSEA=PSEA, PTOWN=PTOWN, &
+                         &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
 
   !"sedimentation" of rain fraction
+  DO JK = IKTB, IKTE
+    DO JIJ=IIJB,IIJE
+      ZWR(JIJ,JK,IRR)=PRRS(JIJ,JK)*PTSTEP
+      ZWR(JIJ,JK,IRS)=PRSS(JIJ,JK)*PTSTEP
+      ZWR(JIJ,JK,IRG)=PRGS(JIJ,JK)*PTSTEP
+      IF(KRR==7) THEN
+        ZWR(JIJ,JK,IRH)=PRHS(JIJ,JK)*PTSTEP
+      ENDIF
+    ENDDO
+  ENDDO
   IF (PRESENT(PRHS)) THEN
-    CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR, PRRS(:,:)*PTSTEP, &
-                       &PRSS(:,:)*PTSTEP, PRGS(:,:)*PTSTEP, PRHS(:,:)*PTSTEP)
+    CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR, ZWR(:,:,IRR), &
+                         &ZWR(:,:,IRS), ZWR(:,:,IRG), ZWR(:,:,IRH))
   ELSE
-    CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR, PRRS(:,:)*PTSTEP, &
-                       &PRSS(:,:)*PTSTEP, PRGS(:,:)*PTSTEP)
+    CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR, ZWR(:,:,IRR), &
+                         &ZWR(:,:,IRS), ZWR(:,:,IRG)) 
   ENDIF
 ENDIF
 !
