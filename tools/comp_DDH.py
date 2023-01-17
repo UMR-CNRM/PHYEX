@@ -46,8 +46,10 @@ def comp_DDH(filename1, filename2, output_fig, tol_ad=3E-7, tol_rd=1.E-6, verbos
     toplt = [fid for fid in toplt if fid is not None]
     pb_val = len(toplt) > 0
     if pb_val:
-        figure, ax = plt.subplots(ncols=len(toplt), figsize=(5 * len(toplt), 10), squeeze=False)
-        ax = ax[0, :]
+        ncols, nrows = min(10, len(toplt)), 1+(len(toplt)-1)//10
+        figure, ax = plt.subplots(ncols=ncols, nrows=nrows,
+                                  figsize=(5 * ncols, 10 * nrows), squeeze=False)
+        ax = ax.flatten()
         figure.suptitle(filename1 + ' ' + filename2)
         for ifid, fid in enumerate(toplt):
             v1 = r1.readfield(fid)
