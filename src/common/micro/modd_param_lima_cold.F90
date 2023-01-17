@@ -139,6 +139,14 @@ REAL,SAVE :: XCONCI_MAX                          ! Limitation of the pristine
                                    ! ice concentration (init and grid-nesting) 
 REAL,SAVE :: XFREFFI  ! Factor to compute the cloud ice effective radius
 !
+! For ICE4 nucleation
+REAL, SAVE :: XALPHA1
+REAL, SAVE :: XALPHA2
+REAL, SAVE :: XBETA1
+REAL, SAVE :: XBETA2
+REAL, SAVE :: XNU10
+REAL, SAVE :: XNU20
+!
 !-------------------------------------------------------------------------------
 !
 END MODULE MODD_PARAM_LIMA_COLD

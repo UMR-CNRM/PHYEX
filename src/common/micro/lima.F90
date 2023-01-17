@@ -674,7 +674,7 @@ PINPRH=0.
 if ( BUCONF%lbu_enable ) then
   if ( BUCONF%lbudget_th )                         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'SEDI', zths(:, :, :) * prhodj(:, :, :) )
   if ( BUCONF%lbudget_rc .and. nmom_c.ge.1 .and. lsedc ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', zrcs(:, :, :) * prhodj(:, :, :) )
-  if ( BUCONF%lbudget_rr .and. nomm_r.ge.1 ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'SEDI', zrrs(:, :, :) * prhodj(:, :, :) )
+  if ( BUCONF%lbudget_rr .and. nmom_r.ge.1 ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'SEDI', zrrs(:, :, :) * prhodj(:, :, :) )
   if ( BUCONF%lbudget_ri .and. nmom_i.ge.1 .and. lsedi ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'SEDI', zris(:, :, :) * prhodj(:, :, :) )
   if ( BUCONF%lbudget_rs .and. nmom_s.ge.1 ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', zrss(:, :, :) * prhodj(:, :, :) )
   if ( BUCONF%lbudget_rg .and. nmom_g.ge.1 ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', zrgs(:, :, :) * prhodj(:, :, :) )
@@ -697,27 +697,27 @@ end if
 
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
-IF (NMOM_C.GE.1 .AND. LSEDC) CALL LIMA_SEDIMENTATION(D, &
+IF (NMOM_C.GE.1 .AND. LSEDC) CALL LIMA_SEDIMENTATION(D, CST, &
      'L', 2, 2, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRCS, ZCCS, PINPRC)
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
-IF (NMOM_R.GE.1) CALL LIMA_SEDIMENTATION(D, &
+IF (NMOM_R.GE.1) CALL LIMA_SEDIMENTATION(D, CST, &
      'L', NMOM_R, 3, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRRS, ZCRS, PINPRR)
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
-IF (NMOM_I.GE.1 .AND. LSEDI) CALL LIMA_SEDIMENTATION(D, &
+IF (NMOM_I.GE.1 .AND. LSEDI) CALL LIMA_SEDIMENTATION(D, CST, &
      'I', NMOM_I, 4, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRIS, ZCIS, ZW2D)
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
-IF (NMOM_S.GE.1) CALL LIMA_SEDIMENTATION(D &
+IF (NMOM_S.GE.1) CALL LIMA_SEDIMENTATION(D, CST, &
      'I', NMOM_S, 5, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRSS, ZCSS, PINPRS)
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
-IF (NMOM_G.GE.1) CALL LIMA_SEDIMENTATION(D, &
+IF (NMOM_G.GE.1) CALL LIMA_SEDIMENTATION(D, CST, &
      'I', NMOM_G, 6, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRGS, ZCGS, PINPRG)
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
-IF (NMOM_H.GE.1) CALL LIMA_SEDIMENTATION(D, &
+IF (NMOM_H.GE.1) CALL LIMA_SEDIMENTATION(D, CST, &
      'I', NMOM_H, 7, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRHS, ZCHS, PINPRH)
 !
 ZTHS(:,:,:) = ZT(:,:,:) / ZEXN(:,:,:) * ZINV_TSTEP
@@ -839,9 +839,10 @@ CALL LIMA_COMPUTE_CLOUD_FRACTIONS (D,                                 &
 !*       2.     Nucleation processes
 !               --------------------
 !
-CALL LIMA_NUCLEATION_PROCS (PTSTEP, PRHODJ,                             &
+CALL LIMA_NUCLEATION_PROCS (D, CST, BUCONF, TBUDGETS, KBUDGETS,                 &
+                            PTSTEP, PRHODJ,                                     &
                             PRHODREF, ZEXN, PPABST, ZT, PDTHRAD, PW_NU,         &
-                            ZTHT, ZRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT,           &
+                            ZTHT, ZRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT, ZRHT,     &
                             ZCCT, ZCRT, ZCIT,                                   &
                             ZCCNFT, ZCCNAT, ZIFNFT, ZIFNNT, ZIMMNT, ZHOMFT,     &
                             PCLDFR, PICEFR, PPRCFR                              )
@@ -1230,7 +1231,7 @@ DO WHILE(ANY(ZTIME(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)<PTSTEP))
       ! We need to adjust tendencies when temperature reaches 0
       IF(LFEEDBACKT) THEN
          !Is ZB_TH enough to change temperature sign?
-         WHERE( ((ZTHT1D(:) - CST%XTT/ZEXN1D(:)) * (ZTHT1D(:) + ZB_TH(:) - XTT/ZEXN1D(:))) < 0. )
+         WHERE( ((ZTHT1D(:) - CST%XTT/ZEXN1D(:)) * (ZTHT1D(:) + ZB_TH(:) - CST%XTT/ZEXN1D(:))) < 0. )
             ZMAXTIME(:)=0.
          ENDWHERE
          !Can ZA_TH make temperature change of sign?
@@ -1452,7 +1453,7 @@ DO WHILE(ANY(ZTIME(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)<PTSTEP))
       !
       !***       4.4 Unpacking for budgets
       !
-      IF(LBU_ENABLE) THEN
+      IF(BUCONF%LBU_ENABLE) THEN
         ZTOT_RR_CVRC(:,:,:) = ZTOT_RR_CVRC(:,:,:) + Z_RR_CVRC(:,:,:)
         ZTOT_CR_CVRC(:,:,:) = ZTOT_CR_CVRC(:,:,:) + Z_CR_CVRC(:,:,:)
 

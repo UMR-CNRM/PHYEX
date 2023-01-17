@@ -1,7 +1,7 @@
 !     ######spl
       SUBROUTINE  ARO_LIMA(KKA,KKU,KKL,KLON,KLEV,KFDIA,KRR, KSV, KTCOUNT, KSPLITR, KSPLITG, &
                                   PTSTEP, PDZZ, PRHODJ, PRHODREF, PEXNREF,&
-                                  PPABSM, PW_NU, PTHT, PRT, PSVT, &
+                                  PPABSM, PW_NU, PDTHRAD, PTHT, PRT, PSVT, &
                                   PTHS, PRS, PSVS, PEVAP,  &
                                   PINPRR,PINPRS,                 &
                                   PINPRG,PINPRH,PFPR,     &
@@ -52,6 +52,7 @@ USE MODD_NSV
 !
 USE MODD_BUDGET
 USE MODE_BUDGET, ONLY: BUDGET_DDH
+USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX 
 !
 USE MODI_LIMA
 !
@@ -94,6 +95,7 @@ REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PEXNREF ! Reference Exner functi
 !
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PPABSM  ! abs. pressure at time t-dt
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PW_NU   ! w for CCN activation
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PDTHRAD ! radiative Theta tendency for CCN act.
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PTHT    ! Theta at time t
 REAL, DIMENSION(KLON,1,KLEV,KRR), INTENT(INOUT):: PRT   ! Moist variables at time t
 REAL, DIMENSION(KLON,1,KLEV,KSV), INTENT(INOUT):: PSVT   ! LIMA variables at time t
@@ -113,9 +115,9 @@ REAL, DIMENSION(KLON,1), INTENT(INOUT)     :: PINPRH! Hail instant precip
 REAL, DIMENSION(KLON,1,KLEV,KRR), INTENT(INOUT) :: PFPR ! upper-air precip
 !
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(INOUT)   :: PCLDFR ! ice cloud fraction
-TYPE(TYP_DDH), INTENT(INOUT) :: YDDDH
-TYPE(TLDDH), INTENT(IN) :: YDLDDH
-TYPE(TMDDH), INTENT(IN) :: YDMDDH
+TYPE(TYP_DDH), INTENT(INOUT), TARGET :: YDDDH
+TYPE(TLDDH), INTENT(IN), TARGET :: YDLDDH
+TYPE(TMDDH), INTENT(IN), TARGET :: YDMDDH
 !
 !
 !*       0.2   Declarations of local variables :
@@ -208,7 +210,7 @@ END DO
 !*       3.2    Correct negative values
 !
 ! Correction where rc<0
-     IF (LWARM_LIMA) THEN
+     IF (NMOM_C.GE.2) THEN
         WHERE (PRS(:,:,:,2) < 1.E-15 .OR. PSVS(:,:,:,NSV_LIMA_NC) < 1.E-15)
            PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,2)
            PTHS(:,:,:) = PTHS(:,:,:) - PRS(:,:,:,2) * ZLV(:,:,:) /  &
@@ -218,7 +220,7 @@ END DO
         END WHERE
      END IF
 ! Correction where rr<0
-     IF (LWARM_LIMA .AND. LRAIN_LIMA) THEN
+     IF (NMOM_R.GE.2) THEN
         WHERE (PRS(:,:,:,3) < 1.E-15 .OR. PSVS(:,:,:,NSV_LIMA_NR) < 1.E-15)
            PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,3)
            PTHS(:,:,:) = PTHS(:,:,:) - PRS(:,:,:,3) * ZLV(:,:,:) /  &
@@ -239,7 +241,7 @@ END DO
 !        ENDDO
 !     END IF
 ! Correction where ri<0
-     IF (LCOLD_LIMA) THEN
+     IF (NMOM_I.GE.2) THEN
         WHERE (PRS(:,:,:,4) < 1.E-15 .OR. PSVS(:,:,:,NSV_LIMA_NI) < 1.E-15)
            PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,4)
            PTHS(:,:,:) = PTHS(:,:,:) - PRS(:,:,:,4) * ZLS(:,:,:) /  &
@@ -300,12 +302,12 @@ ENDDO
 !
 !
 !
-CALL LIMA (YLDIMPHYEX, CST, TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
+CALL LIMA (D=YLDIMPHYEX, CST=CST, BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
            PTSTEP=2*PTSTEP,                  &
-           PRHODREF=PRHODREF, PEXNREF=PEXNREF, PZZ=PDZZ,                         &
+           PRHODREF=PRHODREF, PEXNREF=PEXNREF, PDZZ=PDZZ,                         &
            PRHODJ=PRHODJ, PPABST=PPABSM,                                 &
            NCCN=NMOD_CCN, NIFN=NMOD_IFN, NIMM=NMOD_IMM,                   &
-           PTHM=PTHT, PTHT=PTHT, PRT=PRT, PSVT=PSVT, PW_NU=PW_NU,                  &
+           PDTHRAD=PDTHRAD, PTHT=PTHT, PRT=PRT, PSVT=PSVT, PW_NU=PW_NU,                  &
            PTHS=PTHS, PRS=PRS, PSVS=PSVS,                                &
            PINPRC=ZINPRC, PINDEP=ZINDEP, PINPRR=PINPRR, PINPRI=ZINPRI, PINPRS=PINPRS, PINPRG=PINPRG, PINPRH=PINPRH, &
            PEVAP3D=PEVAP, PCLDFR=PCLDFR, PICEFR=ZICEFR, PPRCFR=ZPRCFR )

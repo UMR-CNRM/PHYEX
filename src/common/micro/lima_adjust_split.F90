@@ -79,7 +79,8 @@ END INTERFACE
 END MODULE MODI_LIMA_ADJUST_SPLIT
 !
 !     ###########################################################################
-      SUBROUTINE LIMA_ADJUST_SPLIT(D, KRR, KMI, HCONDENS, HLAMBDA3,        &
+SUBROUTINE LIMA_ADJUST_SPLIT(D, CST, BUCONF, TBUDGETS, KBUDGETS,                &
+                             KRR, KMI, HCONDENS, HLAMBDA3,                      &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS, PMFCONV,         &
                              PPABST, PPABSTT, PZZ, PDTHRAD, PW_NU,              &
@@ -159,7 +160,8 @@ END MODULE MODI_LIMA_ADJUST_SPLIT
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_t
+USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, &
+                         NBUDGET_RC, NBUDGET_RI, NBUDGET_RV, NBUDGET_SV1, NBUMOD        
 USE MODD_CST,            ONLY: CST_t
 USE MODD_CONF
 !use modd_field,            only: TFIELDDATA, TYPEREAL
@@ -181,9 +183,7 @@ use mode_budget,           only: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 use mode_msg
 use mode_tools,            only: Countjv
 !
-USE MODI_CONDENS
 USE MODI_CONDENSATION
-USE MODI_LIMA_FUNCTIONS
 USE MODI_LIMA_CCN_ACTIVATION
 !
 IMPLICIT NONE
@@ -320,7 +320,7 @@ integer :: idx
 integer :: JI, JJ, JK, jl
 INTEGER                           :: JMOD, JMOD_IFN, JMOD_IMM
 !
-TYPE(TFIELDMETADATA)     :: TZFIELD
+!!$TYPE(TFIELDMETADATA)     :: TZFIELD
 !
 !-------------------------------------------------------------------------------
 !
@@ -461,11 +461,11 @@ end if
 !*       2.1    remove negative non-precipitating negative water
 !               ------------------------------------------------
 !
-IF (ANY(PRVS(:,:,:)+PRCS(:,:,:)+PRIS(:,:,:) < 0.) .AND. NVERB>5) THEN
-  WRITE(ILUOUT,*) 'LIMA_ADJUST:  negative values of total water (reset to zero)'
-  WRITE(ILUOUT,*) '  location of minimum PRVS+PRCS+PRIS:',MINLOC(PRVS+PRCS+PRIS)
-  WRITE(ILUOUT,*) '  value of minimum    PRVS+PRCS+PRIS:',MINVAL(PRVS+PRCS+PRIS)
-END IF
+!IF (ANY(PRVS(:,:,:)+PRCS(:,:,:)+PRIS(:,:,:) < 0.) .AND. NVERB>5) THEN
+!  WRITE(ILUOUT,*) 'LIMA_ADJUST:  negative values of total water (reset to zero)'
+!  WRITE(ILUOUT,*) '  location of minimum PRVS+PRCS+PRIS:',MINLOC(PRVS+PRCS+PRIS)
+!  WRITE(ILUOUT,*) '  value of minimum    PRVS+PRCS+PRIS:',MINVAL(PRVS+PRCS+PRIS)
+!END IF
 !
 WHERE ( PRVS(:,:,:)+PRCS(:,:,:)+PRIS(:,:,:) < 0.)
   PRVS(:,:,:) = -  PRCS(:,:,:) - PRIS(:,:,:)

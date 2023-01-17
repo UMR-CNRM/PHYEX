@@ -57,8 +57,6 @@ USE MODD_PARAM_LIMA
 USE MODD_PARAM_LIMA_WARM
 USE MODD_PARAM_LIMA_COLD
 USE MODD_PARAM_LIMA_MIXED
-USE MODD_RAIN_ICE_PARAM,  ONLY: XALPHA1, XALPHA2, XBETA1, XBETA2, IMNU0=>XMNU0, XNU10, XNU20, &
-                                RAIN_ICE_PARAM_ASSOCIATE
 USE MODD_REF
 !
 use mode_msg
@@ -614,7 +612,7 @@ XNU20 = 1000.*ZFACT_NUCL
 XALPHA2 = 12.96
 XBETA2 = 0.639
 !
-IMNU0 = 6.88E-13
+!XMNU0 = 6.88E-13
 !-------------------------------------------------------------------------------
 !
 !
