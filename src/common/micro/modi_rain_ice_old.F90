@@ -3,25 +3,34 @@
 !      ####################
 !
 INTERFACE
-      SUBROUTINE RAIN_ICE_OLD (D, OSEDIC, OCND2, LKOGAN, LMODICEDEP, HSEDIM, HSUBG_AUCV_RC, OWARM, &
-                            KKA, KKU, KKL,                                        &
-                            KSPLITR, PTSTEP, KRR, KSIZE, GMICRO,                    &
-                            PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
-                            PICLDFR, PSSIO, PSSIU, PIFR,                 &
-                            PTHT, PRVT, PRCT, PRRT, PRIT, PRST, &
-                            PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS, &
-                            PINPRC, PINPRR, PEVAP3D,                    &
-                            PINPRS, PINPRG, PSIGS, PSEA, PTOWN,                   &
-                            YDDDH, YDLDDH, YDMDDH, &
-                            PICENU, PKGN_ACON, PKGN_SBGR, &
-                            PRHT, PRHS, PINPRH, PFPR)
+      SUBROUTINE RAIN_ICE_OLD (D, CST, PARAMI, ICEP, ICED, OSEDIC, OCND2, LKOGAN, LMODICEDEP, &
+                               HSEDIM, HSUBG_AUCV_RC, OWARM, &
+                               KKA, KKU, KKL,                                        &
+                               KSPLITR, PTSTEP, KRR, KSIZE, GMICRO,                    &
+                               PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
+                               PICLDFR, PSSIO, PSSIU, PIFR,                 &
+                               PTHT, PRVT, PRCT, PRRT, PRIT, PRST, &
+                               PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS, &
+                               PINPRC, PINPRR, PEVAP3D,                    &
+                               PINPRS, PINPRG, PSIGS, PSEA, PTOWN,                   &
+                               YDDDH, YDLDDH, YDMDDH, &
+                               PICENU, PKGN_ACON, PKGN_SBGR, &
+                               PRHT, PRHS, PINPRH, PFPR)
 !
 USE DDH_MIX, ONLY : TYP_DDH
 USE YOMLDDH, ONLY : TLDDH
 USE YOMMDDH, ONLY : TMDDH
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
+USE MODD_CST, ONLY: CST_T
+USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_T
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_T
 !
-TYPE(DIMPHYEX_T), INTENT(IN) :: D
+TYPE(DIMPHYEX_T), INTENT(IN)       :: D
+TYPE(CST_T), INTENT(IN)            :: CST 
+TYPE(PARAM_ICE_t),      INTENT(IN) :: PARAMI
+TYPE(RAIN_ICE_PARAM_T), INTENT(IN) :: ICEP
+TYPE(RAIN_ICE_DESCR_T), INTENT(IN) :: ICED
 
 LOGICAL,                  INTENT(IN)    :: OSEDIC ! Switch for droplet sedim.
 LOGICAL,                  INTENT(IN)    :: OCND2  ! Logical switch to separate liquid and ice

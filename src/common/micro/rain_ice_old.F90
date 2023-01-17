@@ -1,5 +1,6 @@
 !     ######spl
-      SUBROUTINE RAIN_ICE_OLD (D,  OSEDIC, OCND2, LKOGAN, LMODICEDEP,              &
+      SUBROUTINE RAIN_ICE_OLD (D, CST, PARAMI, ICEP, ICED,                         &
+                            OSEDIC, OCND2, LKOGAN, LMODICEDEP,                     &
                             HSEDIM, HSUBG_AUCV_RC, OWARM,                          &
                             KKA,KKU,KKL,                                           &
                             KSPLITR, PTSTEP, KRR, KSIZE, GMICRO,                   &
@@ -16,6 +17,10 @@
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
       USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
+      USE MODD_CST, ONLY: CST_T
+      USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
+      USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_T
+      USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_T
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -167,23 +172,21 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS
-USE MODD_CST
-USE MODD_CONF
-USE MODD_RAIN_ICE_DESCR
-USE MODD_RAIN_ICE_PARAM
-USE MODD_PARAM_ICE
-USE MODD_BUDGET
+USE MODD_PARAMETERS, ONLY: JPVEXT
+USE MODD_BUDGET, ONLY: LBU_ENABLE, LBUDGET_TH, LBUDGET_RG, LBUDGET_RR, LBUDGET_RC, &
+                                   LBUDGET_RI, LBUDGET_RS, LBUDGET_RH, LBUDGET_RV
 USE MODD_LES, ONLY: TLES
 USE MODE_BUDGET, ONLY: BUDGET_DDH
-USE MODI_GAMMA
-USE MODE_TIWMX
-USE MODE_ICECLOUD, ONLY : ICECLOUD
-USE MODE_TIWMX_TAB, ONLY : TIWMX_TAB
-USE DDH_MIX, ONLY  : TYP_DDH
-USE YOMLDDH, ONLY  : TLDDH
-USE YOMMDDH, ONLY  : TMDDH
+USE MODI_GAMMA, ONLY: GAMMA
+USE MODE_TIWMX, ONLY: ESATI, ESATW, AA2, BB3, AA2W, BB3W
+USE MODE_ICECLOUD, ONLY: ICECLOUD
+USE MODE_TIWMX_TAB, ONLY: TIWMX_TAB
+USE DDH_MIX, ONLY: TYP_DDH
+USE YOMLDDH, ONLY: TLDDH
+USE YOMMDDH, ONLY: TMDDH
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
+!
+USE MODE_RAIN_ICE_OLD_NUCLEATION, ONLY: RAIN_ICE_OLD_NUCLEATION
 !
 use iso_fortran_env, only: output_unit
 
@@ -193,7 +196,11 @@ IMPLICIT NONE
 !
 !
 !
-TYPE(DIMPHYEX_T), INTENT(IN) :: D
+TYPE(DIMPHYEX_T), INTENT(IN)       :: D
+TYPE(CST_T), INTENT(IN)            :: CST 
+TYPE(PARAM_ICE_t),      INTENT(IN) :: PARAMI
+TYPE(RAIN_ICE_PARAM_T), INTENT(IN) :: ICEP
+TYPE(RAIN_ICE_DESCR_t), INTENT(IN) :: ICED
 
 LOGICAL,                  INTENT(IN)    :: OSEDIC ! Switch for droplet sedim.
 LOGICAL,                  INTENT(IN)    :: OCND2  ! Logical switch to separate liquid and ice
@@ -205,7 +212,6 @@ CHARACTER(LEN=4),         INTENT(IN)    :: HSUBG_AUCV_RC ! Switch for rc->rr Sub
 LOGICAL,                  INTENT(IN)    :: OWARM   ! .TRUE. allows raindrops to
                                                    !   form by warm processes
                                                    !      (Kessler scheme)
-!
 INTEGER,                  INTENT(IN)    :: KKA   !near ground array index
 INTEGER,                  INTENT(IN)    :: KKU   !uppest atmosphere array index
 INTEGER,                  INTENT(IN)    :: KKL   !vert. levels type 1=MNH -1=ARO
@@ -446,7 +452,7 @@ REAL            :: ZRDEPSRED, ZRDEPGRED
 
      !internal fractions etc, finally saturation ratio over ice 'source' value
 
-REAL, DIMENSION(SIZE(XRTMIN))     :: ZRTMIN
+REAL, DIMENSION(SIZE(ICED%XRTMIN))     :: ZRTMIN
 ! XRTMIN = Minimum value for the mixing ratio
 ! ZRTMIN = Minimum value for the source (tendency)
 !
@@ -461,7 +467,6 @@ LOGICAL LTIW   ! Use TIW for graupel melting ( set by XFRMIN(18) ~ 1)
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
-integer :: i,j
 !-------------------------------------------------------------------------------
 !
 !*       1.1     COMPUTE THE LOOP BOUNDS
@@ -481,16 +486,17 @@ ZINVTSTEP=1./PTSTEP
 
 ZCITRED = 0.1     ! ratio of ice crystal concentration wet to dry
                   ! part of a gridbox
-ZDICRIT = XFRMIN(15)  ! Critical diameter of ice crystal to define what
+ZDICRIT = ICEP%XFRMIN(15)  ! Critical diameter of ice crystal to define what
                       ! is cloud ice and what is snow (m)
 
 ZCITRED23 = ZCITRED**0.667
 IF (LMODICEDEP) THEN
   ZCITRED = 1.
-  ZTIMESC = XFRMIN(14)
-  ZDICRIT = (700.*XPI/XAI/6.)**(1./XBI)*ZDICRIT**(3./XBI) ! from spherical diameter to maximum diameter
-  ZCITRED23 = ZCITRED**(1.+ XLBEXI)
-  ZKVO      = ((XALPHAI*XNUI + XBI -1.)/XALPHAI)**(1./XALPHAI)
+  ZTIMESC = ICEP%XFRMIN(14)
+  !from spherical diameter to max diameter
+  ZDICRIT = (700.*CST%XPI/ICED%XAI/6.)**(1./ICED%XBI)*ZDICRIT**(3./ICED%XBI) 
+  ZCITRED23 = ZCITRED**(1.+ ICED%XLBEXI)
+  ZKVO      = ((ICED%XALPHAI*ICED%XNUI + ICED%XBI -1.)/ICED%XALPHAI)**(1./ICED%XALPHAI)
   ZKVO =  ZKVO/ZDICRIT/ZTIMESC
   PIFR = 1.
 ENDIF
@@ -501,16 +507,16 @@ ZREDSN  = 1.      ! Tuning of the deposition of snow, 1. is ref. value
 
 IF(OCND2) THEN
    IF (.NOT. LMODICEDEP) THEN
-      ZREDGR  = XFRMIN(39)  ! Tuning factor, may be /= 1.
-      ZREDSN  = XFRMIN(40)  ! Tuning factor, may be /= 1.
+      ZREDGR  = ICEP%XFRMIN(39)  ! Tuning factor, may be /= 1.
+      ZREDSN  = ICEP%XFRMIN(40)  ! Tuning factor, may be /= 1.
    ENDIF
 ENDIF
 
 LTIW=.FALSE.
-IF (NINT(XFRMIN(18)) == 1) LTIW=.TRUE.
+IF (NINT(ICEP%XFRMIN(18)) == 1) LTIW=.TRUE.
 
-ZRDEPSRED = XRDEPSRED
-ZRDEPGRED = XRDEPGRED
+ZRDEPSRED = ICEP%XRDEPSRED
+ZRDEPGRED = ICEP%XRDEPGRED
 !
 !*       1.3    COMPUTE THE DROPLET NUMBER CONCENTRATION
 !   	        ----------------------------------------
@@ -520,32 +526,32 @@ IF (OSEDIC.OR.OCND2) THEN
    ZRAY(:,:)   = 0.
    ZZZZ(:,D%NKTE)   = PDZZ(:,D%NKTE)*0.5
    ZZZT(:,D%NKTE)   = PDZZ(:,D%NKTE)
-   IF (XFRMIN(26)>0.001) THEN ! Use alternative concentration given by (XFRMIN(26)
-      ZCONC_TMP(:) = XFRMIN(26)
+   IF (ICEP%XFRMIN(26)>0.001) THEN ! Use alternative concentration given by (XFRMIN(26)
+      ZCONC_TMP(:) = ICEP%XFRMIN(26)
       DO JK=D%NKTB,D%NKTE
-         ZLBC(:,JK)   = 0.5* (XLBC(2)+XLBC(1)) ! Assume "average" distr. func for simplicity
-         ZFSEDC(:,JK) = 0.5* (XFSEDC(2)+XFSEDC(1))
-         ZFSEDC(:,JK) = MAX(MIN(XFSEDC(1),XFSEDC(2)),ZFSEDC(:,JK))
-         ZCONC3D(:,JK)= ZCONC_TMP(:)*PPABST(:,JK)/XP00 ! Let it be diluted with decreasing pressure
-         ZRAY(:,JK)   = 0.5*( 0.5*GAMMA(XNUC+1.0/XALPHAC)/(GAMMA(XNUC)) + &
-           0.5*GAMMA(XNUC2+1.0/XALPHAC2)/(GAMMA(XNUC2)))
+         ZLBC(:,JK)   = 0.5* (ICED%XLBC(2)+ICED%XLBC(1)) ! Assume "average" distr. func for simplicity
+         ZFSEDC(:,JK) = 0.5* (ICEP%XFSEDC(2)+ICEP%XFSEDC(1))
+         ZFSEDC(:,JK) = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(:,JK))
+         ZCONC3D(:,JK)= ZCONC_TMP(:)*PPABST(:,JK)/CST%XP00 ! Let it be diluted with decreasing pressure
+         ZRAY(:,JK)   = 0.5*( 0.5*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) + &
+           0.5*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
       ENDDO
    ELSE
-     ZCONC_TMP(:)=PSEA(:)*XCONC_SEA+(1.-PSEA(:))*XCONC_LAND
+     ZCONC_TMP(:)=PSEA(:)*ICED%XCONC_SEA+(1.-PSEA(:))*ICED%XCONC_LAND
 
      DO JK=D%NKTB,D%NKTE
-        ZLBC(:,JK)   = PSEA(:)*XLBC(2)+(1.-PSEA(:))*XLBC(1)
-        ZFSEDC(:,JK) = (PSEA(:)*XFSEDC(2)+(1.-PSEA(:))*XFSEDC(1))
-        ZFSEDC(:,JK) = MAX(MIN(XFSEDC(1),XFSEDC(2)),ZFSEDC(:,JK))
-        ZCONC3D(:,JK)= (1.-PTOWN(:))*ZCONC_TMP(:)+PTOWN(:)*XCONC_URBAN
-        ZRAY(:,JK)   = 0.5*((1.-PSEA(:))*GAMMA(XNUC+1.0/XALPHAC)/(GAMMA(XNUC)) + &
-           PSEA(:)*GAMMA(XNUC2+1.0/XALPHAC2)/(GAMMA(XNUC2)))
+        ZLBC(:,JK)   = PSEA(:)*ICED%XLBC(2)+(1.-PSEA(:))*ICED%XLBC(1)
+        ZFSEDC(:,JK) = (PSEA(:)*ICEP%XFSEDC(2)+(1.-PSEA(:))*ICEP%XFSEDC(1))
+        ZFSEDC(:,JK) = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(:,JK))
+        ZCONC3D(:,JK)= (1.-PTOWN(:))*ZCONC_TMP(:)+PTOWN(:)*ICED%XCONC_URBAN
+        ZRAY(:,JK)   = 0.5*((1.-PSEA(:))*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) + &
+           PSEA(:)*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
      ENDDO
    ENDIF
 
-   ZCONC3D(:,D%NKTE)= ZCONC3D(:,D%NKTE)*MAX(0.001,XFRMIN(22))
+   ZCONC3D(:,D%NKTE)= ZCONC3D(:,D%NKTE)*MAX(0.001,ICEP%XFRMIN(22))
    ZRAY(:,:)      = MAX(1.,ZRAY(:,:))
-   ZLBC(:,:)      = MAX(MIN(XLBC(1),XLBC(2)),ZLBC(:,:))
+   ZLBC(:,:)      = MAX(MIN(ICED%XLBC(1),ICED%XLBC(2)),ZLBC(:,:))
 
    DO JK=D%NKTE-1,D%NKTB,-1
      ZZZT(:,JK) = ZZZT(:,JK+1) + PDZZ(:,JK)
@@ -553,7 +559,19 @@ IF (OSEDIC.OR.OCND2) THEN
    ENDDO
 ENDIF
 
-CALL RAIN_ICE_NUCLEATION
+ZT(:,:) = PTHT(:,:) * ( PPABST(:,:) / CST%XP00 ) ** (CST%XRD/CST%XCPD)
+
+CALL RAIN_ICE_OLD_NUCLEATION(D, CST, ICEP, COUNT(ZT(D%NIB:D%NIE,D%NKTB:D%NKTE)<CST%XTT), &
+                             OCND2, LMODICEDEP, KRR, PTSTEP, &
+                             PTHT, PPABST, PEXNREF, PICLDFR, PRHODJ, PRHODREF, &
+                             PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
+                             PTHS, PRVS, PRIS, PCIT, &
+                             PICENU, ZT, ZZZZ, &
+                             PRHT)
+
+IF (LBUDGET_TH) CALL BUDGET_DDH (PTHS(:,:)*PRHODJ(:,:),4,'HENU_BU_RTH',YDDDH, YDLDDH, YDMDDH)
+IF (LBUDGET_RV) CALL BUDGET_DDH (PRVS(:,:)*PRHODJ(:,:),6,'HENU_BU_RRV',YDDDH, YDLDDH, YDMDDH)
+IF (LBUDGET_RI) CALL BUDGET_DDH (PRIS(:,:)*PRHODJ(:,:),9,'HENU_BU_RRI',YDDDH, YDLDDH, YDMDDH)
 
 IMICRO = COUNTJV( GMICRO(:,:),I1(:),I2(:))
 
@@ -579,7 +597,7 @@ IF ( KSIZE >= 0 ) THEN
      IF (LMODICEDEP) THEN
         DO JL=1,KSIZE
            ZXW2D(JL) = PIFR(I1(JL),I2(JL))
-           ZXW2D13(JL)=ZXW2D(JL)**(-XLBEXI)
+           ZXW2D13(JL)=ZXW2D(JL)**(-ICED%XLBEXI)
         ENDDO
      ELSE
         DO JL=1,KSIZE
@@ -600,7 +618,7 @@ IF ( KSIZE >= 0 ) THEN
     IF ( KRR == 7 ) ZRHT(JL) = PRHT(I1(JL),I2(JL))
     ZCIT(JL) = PCIT(I1(JL),I2(JL))
     ZCF(JL) = PCLDFR(I1(JL),I2(JL))
-    IF ( HSUBG_AUCV_RC == 'PDF ' .AND. CSUBG_PR_PDF == 'SIGM' ) THEN
+    IF ( HSUBG_AUCV_RC == 'PDF ' .AND. PARAMI%CSUBG_PR_PDF == 'SIGM' ) THEN
       ZSIGMA_RC(JL) = PSIGS(I1(JL),I2(JL)) * 2.
     END IF
 
@@ -617,7 +635,7 @@ IF ( KSIZE >= 0 ) THEN
     ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL))
     ZZT(JL) = ZT(I1(JL),I2(JL))
     ZTHT(JL) = PTHT(I1(JL),I2(JL))
-    ZTHLT(JL) = ZTHT(JL) - XLVTT * ZTHT(JL) / XCPD / ZZT(JL) * ZRCT(JL)
+    ZTHLT(JL) = ZTHT(JL) - CST%XLVTT * ZTHT(JL) / CST%XCPD / ZZT(JL) * ZRCT(JL)
     ZPRES(JL) = PPABST(I1(JL),I2(JL))
     ZEXNREF(JL) = PEXNREF(I1(JL),I2(JL))
     ZCOLF(JL)=1. ! No change from orignal when  OCND2 = .FALSE.
@@ -642,7 +660,7 @@ IF ( KSIZE >= 0 ) THEN
        ZACRF(JL)=0.00001
        IF(ZRCT(JL)>1.0E-10)THEN
           ! mean cloud droplet radius in cm
-          ZRCW =  0.1*(0.75*ZRCT(JL)*ZRHODREF(JL)/(XPI*ZCONCM(JL)))**0.333
+          ZRCW =  0.1*(0.75*ZRCT(JL)*ZRHODREF(JL)/(CST%XPI*ZCONCM(JL)))**0.333
           ! fall speed for mean cloud droplet with cloud droplet radius in cm/s
           IF(ZRCW < 0.0065 )THEN
              ZVT   =  1.19E6*ZRCW**2
@@ -650,7 +668,7 @@ IF ( KSIZE >= 0 ) THEN
              ZVT   =  8000.*ZRCW
           ENDIF
           ZVT = MIN(10.,ZVT)
-          ZST = MAX(0.01,2.*(100.-ZVT)*ZVT/(XG*10.))
+          ZST = MAX(0.01,2.*(100.-ZVT)*ZVT/(CST%XG*10.))
           IF(ZST > 0.1) ZCOLF(JL) =  MAX(0.01,MIN(1.,0.939*ZST**2.657))
           IF( ZRRS(JL) > 1.0E-10 .AND. ZRCW >1.0E-5)THEN
             ZR20 = EXP(ZRCW*2000.)  ! This ZRCW is in cm . To convert to micro meter : x 10000
@@ -665,19 +683,19 @@ IF ( KSIZE >= 0 ) THEN
 
   ALLOCATE(ZZW(KSIZE))
 
-    ZZW(:)  = ZEXNREF(:)*( XCPD+XCPV*ZRVT(:)+XCL*(ZRCT(:)+ZRRT(:)) &
-                                    +XCI*(ZRIT(:)+ZRST(:)+ZRGT(:)) )
-    ZLSFACT(:) = (XLSTT+(XCPV-XCI)*(ZZT(:)-XTT))/ZZW(:) ! L_s/(Pi_ref*C_ph)
-    ZLVFACT(:) = (XLVTT+(XCPV-XCL)*(ZZT(:)-XTT))/ZZW(:) ! L_v/(Pi_ref*C_ph)
+    ZZW(:)  = ZEXNREF(:)*(CST%XCPD+CST%XCPV*ZRVT(:) + CST%XCL*(ZRCT(:)+ZRRT(:)) &
+                                    + CST%XCI*(ZRIT(:)+ZRST(:) + ZRGT(:)) )
+    ZLSFACT(:) = (CST%XLSTT + (CST%XCPV - CST%XCI)*(ZZT(:) - CST%XTT))/ZZW(:) ! L_s/(Pi_ref*C_ph)
+    ZLVFACT(:) = (CST%XLVTT + (CST%XCPV - CST%XCL)*(ZZT(:) - CST%XTT))/ZZW(:) ! L_v/(Pi_ref*C_ph)
 
   ALLOCATE(ZUSW(KSIZE))
   ALLOCATE(ZSSI(KSIZE))
 
     IF(OCND2)THEN
-      ZSSI(:) = ZRVT(:)*( ZPRES(:)-ZESI(:) ) / ( XEPSILO * ZESI(:) ) - 1.0
+      ZSSI(:) = ZRVT(:)*( ZPRES(:)-ZESI(:) ) / ( CST%XEPSILO * ZESI(:) ) - 1.0
     ELSE                                                  ! Supersaturation over ice
-      ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) )
-      ZSSI(:) = ZRVT(:)*( ZPRES(:)-ZZW(:) ) / ( XEPSILO * ZZW(:) ) - 1.0
+      ZZW(:) = EXP( CST%XALPI - CST%XBETAI/ZZT(:) - CST%XGAMI*ALOG(ZZT(:) ) )
+      ZSSI(:) = ZRVT(:)*( ZPRES(:)-ZZW(:) ) / ( CST%XEPSILO * ZZW(:) ) - 1.0
                                                       ! Supersaturation over ice
     ENDIF
 
@@ -689,7 +707,7 @@ IF ( KSIZE >= 0 ) THEN
 !
   !Cloud water split between high and low content part is done here
   !according to autoconversion option
-  ZRCRAUTC(:)   = XCRIAUTC/ZRHODREF(:) ! Autoconversion rc threshold
+  ZRCRAUTC(:)   = ICEP%XCRIAUTC/ZRHODREF(:) ! Autoconversion rc threshold
   IF (HSUBG_AUCV_RC == 'NONE') THEN
     !Cloud water is entirely in low or high part
     WHERE (ZRCT(:) > ZRCRAUTC(:))
@@ -698,7 +716,7 @@ IF ( KSIZE >= 0 ) THEN
       ZHLC_HRC(:) = ZRCT(:)
       ZHLC_LRC(:) = 0.0
       ZRF(:)      = 1.
-    ELSEWHERE (ZRCT(:) > XRTMIN(2))
+    ELSEWHERE (ZRCT(:) > ICED%XRTMIN(2))
       ZHLC_HCF(:) = 0.0
       ZHLC_LCF(:) = 1.
       ZHLC_HRC(:) = 0.0
@@ -721,7 +739,7 @@ IF ( KSIZE >= 0 ) THEN
         ZHLC_HRC(:) = ZRCT(:)
         ZHLC_LRC(:) = 0.0
         ZRF(:)      = ZCF(:)
-      ELSEWHERE (ZRCT(:) > XRTMIN(2))
+      ELSEWHERE (ZRCT(:) > ICED%XRTMIN(2))
         ZHLC_HCF(:) = 0.0
         ZHLC_LCF(:) = ZCF(:)
         ZHLC_HRC(:) = 0.0
@@ -750,7 +768,7 @@ IF ( KSIZE >= 0 ) THEN
     !    'HLCISOTRIPDF'  : isocele triangular PDF
     !    'SIGM'          : Redelsperger and Sommeria (1986)
 
-    IF ( CSUBG_PR_PDF == 'SIGM' ) THEN
+    IF ( PARAMI%CSUBG_PR_PDF == 'SIGM' ) THEN
       ! Redelsperger and Sommeria (1986) but organised according to Turner (2011, 2012)
       WHERE ( ZRCT(:) > ZRCRAUTC(:) + ZSIGMA_RC(:))
         ZHLC_HCF(:) = 1.
@@ -768,7 +786,7 @@ IF ( KSIZE >= 0 ) THEN
                      &(4.*ZSIGMA_RC(:))
         ZHLC_LRC(:) = MAX(0., ZRCT(:)-ZHLC_HRC(:))
         ZRF(:)      = ZHLC_HCF(:)
-      ELSEWHERE ( ZRCT(:)>XRTMIN(2) .AND. ZCF(:)>0. )
+      ELSEWHERE ( ZRCT(:)>ICED%XRTMIN(2) .AND. ZCF(:)>0. )
         ZHLC_HCF(:) = 0.0
         ZHLC_LCF(:) = ZCF(:)
         ZHLC_HRC(:) = 0.0
@@ -783,14 +801,14 @@ IF ( KSIZE >= 0 ) THEN
       END WHERE
 
     ! Turner (2011, 2012)
-    ELSEIF ( CSUBG_PR_PDF== 'HLCRECTPDF' .OR. CSUBG_PR_PDF == 'HLCISOTRIPDF' .OR. &
-           & CSUBG_PR_PDF == 'HLCTRIANGPDF' .OR. CSUBG_PR_PDF == 'HLCQUADRAPDF' ) THEN
+    ELSEIF ( PARAMI%CSUBG_PR_PDF== 'HLCRECTPDF' .OR. PARAMI%CSUBG_PR_PDF == 'HLCISOTRIPDF' .OR. &
+           & PARAMI%CSUBG_PR_PDF == 'HLCTRIANGPDF' .OR. PARAMI%CSUBG_PR_PDF == 'HLCQUADRAPDF' ) THEN
       ! Calculate maximum value r_cM from PDF forms
-      IF ( CSUBG_PR_PDF == 'HLCRECTPDF' .OR. CSUBG_PR_PDF == 'HLCISOTRIPDF' ) THEN
+      IF ( PARAMI%CSUBG_PR_PDF == 'HLCRECTPDF' .OR. PARAMI%CSUBG_PR_PDF == 'HLCISOTRIPDF' ) THEN
         ZCOEFFRCM = 2.0
-      ELSE IF ( CSUBG_PR_PDF == 'HLCTRIANGPDF' ) THEN
+      ELSE IF ( PARAMI%CSUBG_PR_PDF == 'HLCTRIANGPDF' ) THEN
         ZCOEFFRCM = 3.0
-      ELSE IF ( CSUBG_PR_PDF == 'HLCQUADRAPDF' ) THEN
+      ELSE IF ( PARAMI%CSUBG_PR_PDF == 'HLCQUADRAPDF' ) THEN
         ZCOEFFRCM = 4.0
       END IF
       WHERE (ZRCT(:).GT.0. .AND. ZCF(:).GT.0.)
@@ -799,18 +817,18 @@ IF ( KSIZE >= 0 ) THEN
 
       ! Split available water and cloud fraction in two parts
       ! Calculate local mean values int he low and high parts for the 3 PDF forms:
-      IF ( CSUBG_PR_PDF == 'HLCRECTPDF' ) THEN
+      IF ( PARAMI%CSUBG_PR_PDF == 'HLCRECTPDF' ) THEN
         WHERE (ZRCT(:).GT.0. .AND. ZCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:))
           ZHLC_LRCLOCAL(:) = 0.5*ZRCRAUTC(:)
           ZHLC_HRCLOCAL(:) = ( ZHLC_RCMAX(:) + ZRCRAUTC(:)) / 2.0
         END WHERE
-      ELSE IF ( CSUBG_PR_PDF == 'HLCTRIANGPDF' ) THEN
+      ELSE IF ( PARAMI%CSUBG_PR_PDF == 'HLCTRIANGPDF' ) THEN
         WHERE (ZRCT(:).GT.0. .AND. ZCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:))
           ZHLC_LRCLOCAL(:) = ( ZRCRAUTC(:) *(3.0 * ZHLC_RCMAX(:) - 2.0 * ZRCRAUTC(:) ) ) &
                           / (3.0 * (2.0 * ZHLC_RCMAX(:) - ZRCRAUTC(:)  ) )
           ZHLC_HRCLOCAL(:) = (ZHLC_RCMAX(:) + 2.0*ZRCRAUTC(:)) / 3.0
         END WHERE
-      ELSE IF ( CSUBG_PR_PDF == 'HLCQUADRAPDF' ) THEN
+      ELSE IF ( PARAMI%CSUBG_PR_PDF == 'HLCQUADRAPDF' ) THEN
         WHERE (ZRCT(:).GT.0. .AND. ZCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:))
           ZHLC_LRCLOCAL(:) = (3.0 *ZRCRAUTC(:)**3 - 8.0 *ZRCRAUTC(:)**2 * ZHLC_RCMAX(:) &
                           + 6.0*ZRCRAUTC(:) *ZHLC_RCMAX(:)**2 ) &
@@ -819,7 +837,7 @@ IF ( KSIZE >= 0 ) THEN
                           + 12.0 * ZHLC_RCMAX(:)**2 )
           ZHLC_HRCLOCAL(:) =  (ZHLC_RCMAX(:) + 3.0*ZRCRAUTC(:)) / 4.0
         END WHERE
-      ELSE IF ( CSUBG_PR_PDF == 'HLCISOTRIPDF' ) THEN
+      ELSE IF ( PARAMI%CSUBG_PR_PDF == 'HLCISOTRIPDF' ) THEN
         WHERE (ZRCT(:).GT.0. .AND. ZCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:))
           WHERE ( (ZRCT(:) / ZCF(:)).LE.ZRCRAUTC(:) )
             ZHLC_LRCLOCAL(:) = ( (ZHLC_RCMAX(:))**3 &
@@ -895,11 +913,11 @@ IF ( KSIZE >= 0 ) THEN
 !
   !ZLBDAR will be used when we consider rain diluted over the grid box
   WHERE( ZRRT(:)>0.0 )
-    ZLBDAR(:)  = XLBR*( ZRHODREF(:)*MAX( ZRRT(:),XRTMIN(3) ) )**XLBEXR
+    ZLBDAR(:)  = ICED%XLBR*( ZRHODREF(:)*MAX( ZRRT(:),ICED%XRTMIN(3) ) )**ICED%XLBEXR
   END WHERE
   !ZLBDAR_RF will be used when we consider rain concentrated in its fraction
   WHERE( ZRRT(:)>0.0 .AND. ZRF(:)>0.0 )
-    ZLBDAR_RF(:)  = XLBR*( ZRHODREF(:) *MAX( ZRRT(:)/ZRF(:)  , XRTMIN(3) ) )**XLBEXR
+    ZLBDAR_RF(:)  = ICED%XLBR*( ZRHODREF(:) *MAX( ZRRT(:)/ZRF(:), ICED%XRTMIN(3) ) )**ICED%XLBEXR
   ELSEWHERE
     ZLBDAR_RF(:)  = 0.
   END WHERE
@@ -955,7 +973,7 @@ IF ( KSIZE >= 0 ) THEN
     DO JL=1,KSIZE
       ZRSA=ZRIS(JL)+ZRSS(JL) +ZRGS(JL) ! total solid
       ZRSTS=ZRIT(JL)+ZRST(JL) +ZRGT(JL) ! total solid timestep t
-      IF(ZZT(JL)<XTT .AND. ABS(ZRSA*PTSTEP-ZRSTS)> 1.0E-12 .AND. &
+      IF(ZZT(JL)<CST%XTT .AND. ABS(ZRSA*PTSTEP-ZRSTS)> 1.0E-12 .AND. &
       &  ZESI(JL) < ZPRES(JL)*0.5 )THEN
         ZTSP = TIWMX_TAB(ZPRES(JL),ZZT(JL), ZRVS(JL)*PTSTEP,1._JPRB,ZRSP,ZRSI,0.1_JPRB)
         ZRVSOLD =ZRVS(JL)
@@ -1239,7 +1257,7 @@ IF ( KRR == 7 ) PINPRH(:) = 0.
 !  the precipitating fields are larger than a minimal value only !!!
 !  For optimization we consider each variable separately
 
-ZRTMIN(:)    = XRTMIN(:) * ZINVTSTEP
+ZRTMIN(:)    = ICED%XRTMIN(:) * ZINVTSTEP
 IF (OSEDIC) GSEDIMC(:,:) = .FALSE.
 GSEDIMR(:,:) = .FALSE.
 GSEDIMI(:,:) = .FALSE.
@@ -1359,15 +1377,15 @@ DO JN = 1 , KSPLITR
     END DO
        DO JJ = 1, ILISTLENC
           JL = ILISTC(JJ)
-          IF (ZRCS(JL) .GT. ZRTMIN(2) .AND. ZRCT(JL) .GT. XRTMIN(2)) THEN
+          IF (ZRCS(JL) .GT. ZRTMIN(2) .AND. ZRCT(JL) .GT. ICED%XRTMIN(2)) THEN
             ZWLBDC(JL) = ZWLBDC(JL) * ZCONC(JL) / (ZRHODREFC(JL) * ZRCT(JL))
-            ZWLBDC(JL) = ZWLBDC(JL)**XLBEXC
+            ZWLBDC(JL) = ZWLBDC(JL)**ICED%XLBEXC
             ZRAY1D(JL) = ZRAY1D(JL) / ZWLBDC(JL) !! ZRAY : mean diameter=M(1)/2
-            ZZT(JL)    = ZZT(JL) * (ZPRES(JL)/XP00)**(XRD/XCPD)
+            ZZT(JL)    = ZZT(JL) * (ZPRES(JL)/CST%XP00)**(CST%XRD/CST%XCPD)
             ZWLBDA(JL) = 6.6E-8*(101325./ZPRES(JL))*(ZZT(JL)/293.15)
-            ZCC(JL)    = XCC*(1.+1.26*ZWLBDA(JL)/ZRAY1D(JL)) !! XCC modified for cloud
-            ZWSED (IC1(JL),IC2(JL))= ZRHODREFC(JL)**(-XCEXVT +1 ) *   &
-              ZWLBDC(JL)**(-XDC)*ZCC(JL)*ZFSEDC1D(JL) * ZRCS(JL)
+            ZCC(JL)    = ICED%XCC*(1.+1.26*ZWLBDA(JL)/ZRAY1D(JL)) !! XCC modified for cloud
+            ZWSED (IC1(JL),IC2(JL))= ZRHODREFC(JL)**(-ICED%XCEXVT +1 ) *   &
+              ZWLBDC(JL)**(-ICED%XDC)*ZCC(JL)*ZFSEDC1D(JL) * ZRCS(JL)
           END IF
        END DO
   END IF
@@ -1379,7 +1397,7 @@ DO JN = 1 , KSPLITR
            PFPR(:,JK,2)=ZWSED(:,JK)
          ENDDO
        ENDIF
-      PINPRC(:) = PINPRC(:) + ZWSED(:,IKB) / XRHOLW / KSPLITR
+      PINPRC(:) = PINPRC(:) + ZWSED(:,IKB) / CST%XRHOLW / KSPLITR
       IF( JN==KSPLITR ) THEN
         PRCS(:,:) = PRCS(:,:) * ZINVTSTEP
       END IF
@@ -1413,8 +1431,8 @@ DO JN = 1 , KSPLITR
     END DO
        DO JJ = 1, ILISTLENR
           JL = ILISTR(JJ)
-           ZWSED (IR1(JL),IR2(JL))= XFSEDR  * ZRRS(JL)**XEXSEDR *   &
-                                        ZRHODREFR(JL)**(XEXSEDR-XCEXVT)
+           ZWSED (IR1(JL),IR2(JL))= ICEP%XFSEDR  * ZRRS(JL)**ICEP%XEXSEDR *   &
+                                        ZRHODREFR(JL)**(ICEP%XEXSEDR-ICED%XCEXVT)
        END DO
   END IF
        DO JK = D%NKTB , D%NKTE
@@ -1425,7 +1443,7 @@ DO JN = 1 , KSPLITR
            PFPR(:,JK,3)=ZWSED(:,JK)
          ENDDO
        ENDIF
-       PINPRR(:) = PINPRR(:) + ZWSED(:,IKB)/XRHOLW/KSPLITR
+       PINPRR(:) = PINPRR(:) + ZWSED(:,IKB)/CST%XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
         PRRS(:,:) = PRRS(:,:) * ZINVTSTEP
       END IF
@@ -1459,10 +1477,10 @@ DO JN = 1 , KSPLITR
     END DO
       DO JJ = 1, ILISTLENI
         JL = ILISTI(JJ)
-        ZWSED (II1(JL),II2(JL))= XFSEDI * ZRIS(JL) *  &
-                        ZRHODREFI(JL)**(1.0-XCEXVT) * & !    McF&H
+        ZWSED (II1(JL),II2(JL))= ICEP%XFSEDI * ZRIS(JL) *  &
+                        ZRHODREFI(JL)**(1.0-ICED%XCEXVT) * & !    McF&H
                         MAX( 0.05E6,-0.15319E6-0.021454E6* &
-                        ALOG(ZRHODREFI(JL)*ZRIS(JL)) )**XEXCSEDI
+                        ALOG(ZRHODREFI(JL)*ZRIS(JL)) )**ICEP%XEXCSEDI
        END DO
   END IF
 
@@ -1506,8 +1524,8 @@ DO JN = 1 , KSPLITR
     END DO
        DO JJ = 1, ILISTLENS
           JL = ILISTS(JJ)
-             ZWSED (IS1(JL),IS2(JL))= XFSEDS * ZRSS(JL)**XEXSEDS *  &
-                                        ZRHODREFS(JL)**(XEXSEDS-XCEXVT)
+             ZWSED (IS1(JL),IS2(JL))= ICEP%XFSEDS * ZRSS(JL)**ICEP%XEXSEDS *  &
+                                        ZRHODREFS(JL)**(ICEP%XEXSEDS-ICED%XCEXVT)
        END DO
   END IF
        DO JK = D%NKTB , D%NKTE
@@ -1518,7 +1536,7 @@ DO JN = 1 , KSPLITR
            PFPR(:,JK,5)=ZWSED(:,JK)
          ENDDO
        ENDIF
-      PINPRS(:) = PINPRS(:) + ZWSED(:,IKB)/XRHOLW/KSPLITR
+      PINPRS(:) = PINPRS(:) + ZWSED(:,IKB)/CST%XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
         PRSS(:,:) = PRSS(:,:) * ZINVTSTEP
       END IF
@@ -1551,8 +1569,8 @@ DO JN = 1 , KSPLITR
     END DO
        DO JJ = 1, ILISTLENG
           JL = ILISTG(JJ)
-             ZWSED (IG1(JL),IG2(JL))= XFSEDG  * ZRGS(JL)**XEXSEDG *   &
-                                        ZRHODREFG(JL)**(XEXSEDG-XCEXVT)
+             ZWSED (IG1(JL),IG2(JL))= ICEP%XFSEDG  * ZRGS(JL)**ICEP%XEXSEDG *   &
+                                        ZRHODREFG(JL)**(ICEP%XEXSEDG-ICED%XCEXVT)
        END DO
 END IF
        DO JK = D%NKTB , D%NKTE
@@ -1563,7 +1581,7 @@ END IF
            PFPR(:,JK,6)=ZWSED(:,JK)
          ENDDO
        ENDIF
-       PINPRG(:) = PINPRG(:) + ZWSED(:,IKB)/XRHOLW/KSPLITR
+       PINPRG(:) = PINPRG(:) + ZWSED(:,IKB)/CST%XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
         PRGS(:,:) = PRGS(:,:) * ZINVTSTEP
       END IF
@@ -1597,8 +1615,8 @@ END IF
     END DO
        DO JJ = 1, ILISTLENH
           JL = ILISTH(JJ)
-             ZWSED (IH1(JL),IH2(JL))= XFSEDH  * ZRHS(JL)**XEXSEDH *   &
-                                        ZRHODREFH(JL)**(XEXSEDH-XCEXVT)
+             ZWSED (IH1(JL),IH2(JL))= ICEP%XFSEDH  * ZRHS(JL)**ICEP%XEXSEDH *   &
+                                        ZRHODREFH(JL)**(ICEP%XEXSEDH-ICED%XCEXVT)
        END DO
   END IF
        DO JK = D%NKTB , D%NKTE
@@ -1609,7 +1627,7 @@ END IF
            PFPR(:,JK,7)=ZWSED(:,JK)
          ENDDO
        ENDIF
-       PINPRH(:) = PINPRH(:) + ZWSED(:,IKB)/XRHOLW/KSPLITR
+       PINPRH(:) = PINPRH(:) + ZWSED(:,IKB)/CST%XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
         PRHS(:,:) = PRHS(:,:) * ZINVTSTEP
       END IF
@@ -1674,7 +1692,7 @@ IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_SEDIMENTATION_STAT',0,ZHOOK_HANDL
 !
 
 
-ZRTMIN(:)    = XRTMIN(:) * ZINVTSTEP
+ZRTMIN(:)    = ICED%XRTMIN(:) * ZINVTSTEP
 !
 IF (OSEDIC) THEN
   ZPRCS(:,:) = 0.0
@@ -1731,18 +1749,18 @@ END DO
           IF(PRCS(JI,JK) > ZRTMIN(2) .AND. PRCT(JI,JK) > ZRTMIN(2)) THEN
             ZZWLBDA=6.6E-8*(101325./PPABST(JI,JK))*(PTHT(JI,JK)/293.15)
             ZZWLBDC=(ZLBC(JI,JK)*ZCONC3D(JI,JK)  &
-                  &/(PRHODREF(JI,JK)*PRCT(JI,JK)))**XLBEXC
-            ZZCC=XCC*(1.+1.26*ZZWLBDA*ZZWLBDC/ZRAY(JI,JK)) !! ZCC  : Fall speed
-            ZWSEDW1 (JI,JK)=PRHODREF(JI,JK)**(-XCEXVT ) *   &
-               &  ZZWLBDC**(-XDC)*ZZCC*ZFSEDC(JI,JK)
+                  &/(PRHODREF(JI,JK)*PRCT(JI,JK)))**ICED%XLBEXC
+            ZZCC=ICED%XCC*(1.+1.26*ZZWLBDA*ZZWLBDC/ZRAY(JI,JK)) !! ZCC  : Fall speed
+            ZWSEDW1 (JI,JK)=PRHODREF(JI,JK)**(-ICED%XCEXVT ) *   &
+               &  ZZWLBDC**(-ICED%XDC)*ZZCC*ZFSEDC(JI,JK)
           ENDIF
           IF ( ZQP(JI) > ZRTMIN(2) ) THEN
             ZZWLBDA=6.6E-8*(101325./PPABST(JI,JK))*(PTHT(JI,JK)/293.15)
             ZZWLBDC=(ZLBC(JI,JK)*ZCONC3D(JI,JK)  &
-                  &/(PRHODREF(JI,JK)*ZQP(JI)))**XLBEXC
-            ZZCC=XCC*(1.+1.26*ZZWLBDA*ZZWLBDC/ZRAY(JI,JK)) !! ZCC  : Fall speed
-            ZWSEDW2 (JI,JK)=PRHODREF(JI,JK)**(-XCEXVT ) *   &
-               &  ZZWLBDC**(-XDC)*ZZCC*ZFSEDC(JI,JK)
+                  &/(PRHODREF(JI,JK)*ZQP(JI)))**ICED%XLBEXC
+            ZZCC=ICED%XCC*(1.+1.26*ZZWLBDA*ZZWLBDC/ZRAY(JI,JK)) !! ZCC  : Fall speed
+            ZWSEDW2 (JI,JK)=PRHODREF(JI,JK)**(-ICED%XCEXVT ) *   &
+               &  ZZWLBDC**(-ICED%XDC)*ZZCC*ZFSEDC(JI,JK)
           ENDIF
         ENDDO
 
@@ -1771,7 +1789,7 @@ END DO
        ENDDO
      ENDIF
 
-     PINPRC(:) = ZWSED(:,IKB)/XRHOLW                        ! in m/s
+     PINPRC(:) = ZWSED(:,IKB)/CST%XRHOLW ! in m/s
      PRCS(:,:) = PRCS(:,:) * ZINVTSTEP
  ENDIF
 
@@ -1797,12 +1815,12 @@ END DO
       JI=I1(JL)
       !calculation of w
       IF ( PRRS(JI,JK) > ZRTMIN(3) ) THEN
-        ZWSEDW1 (JI,JK)= XFSEDR *PRRS(JI,JK)**(XEXSEDR-1)* &
-        PRHODREF(JI,JK)**(XEXSEDR-XCEXVT-1)
+        ZWSEDW1 (JI,JK)= ICEP%XFSEDR *PRRS(JI,JK)**(ICEP%XEXSEDR-1)* &
+        PRHODREF(JI,JK)**(ICEP%XEXSEDR-ICED%XCEXVT-1)
       ENDIF
       IF ( ZQP(JI) > ZRTMIN(3) ) THEN
-        ZWSEDW2 (JI,JK)= XFSEDR *(ZQP(JI))**(XEXSEDR-1)* &
-        PRHODREF(JI,JK)**(XEXSEDR-XCEXVT-1)
+        ZWSEDW2 (JI,JK)= ICEP%XFSEDR *(ZQP(JI))**(ICEP%XEXSEDR-1)* &
+        PRHODREF(JI,JK)**(ICEP%XEXSEDR-ICED%XCEXVT-1)
       ENDIF
     ENDDO
     DO JI = D%NIB, D%NIE
@@ -1830,7 +1848,7 @@ END DO
        PFPR(:,JK,3)=ZWSED(:,JK)
      ENDDO
    ENDIF
-   PINPRR(:) = ZWSED(:,IKB)/XRHOLW                        ! in m/s
+   PINPRR(:) = ZWSED(:,IKB)/CST%XRHOLW ! in m/s
    PRRS(:,:) = PRRS(:,:) * ZINVTSTEP
 
 !
@@ -1853,16 +1871,16 @@ END DO
       JI=I1(JL)
       !calculation of w
       IF ( PRIS(JI,JK) > MAX(ZRTMIN(4),1.0E-7 ) ) THEN
-        ZWSEDW1 (JI,JK)= XFSEDI *  &
-        &  PRHODREF(JI,JK)**(XCEXVT) * & !    McF&H
+        ZWSEDW1 (JI,JK)= ICEP%XFSEDI *  &
+        &  PRHODREF(JI,JK)**(ICED%XCEXVT) * & !    McF&H
         &  MAX( 0.05E6,-0.15319E6-0.021454E6* &
-        &  ALOG(PRHODREF(JI,JK)*PRIS(JI,JK)) )**XEXCSEDI
+        &  ALOG(PRHODREF(JI,JK)*PRIS(JI,JK)) )**ICEP%XEXCSEDI
       ENDIF
       IF ( ZQP(JI) > MAX(ZRTMIN(4),1.0E-7 ) ) THEN
-        ZWSEDW2 (JI,JK)= XFSEDI *  &
-        &  PRHODREF(JI,JK)**(XCEXVT) * & !    McF&H
+        ZWSEDW2 (JI,JK)= ICEP%XFSEDI *  &
+        &  PRHODREF(JI,JK)**(ICED%XCEXVT) * & !    McF&H
         &  MAX( 0.05E6,-0.15319E6-0.021454E6* &
-        &  ALOG(PRHODREF(JI,JK)*ZQP(JI)) )**XEXCSEDI
+        &  ALOG(PRHODREF(JI,JK)*ZQP(JI)) )**ICEP%XEXCSEDI
       ENDIF
     ENDDO
     DO JI = D%NIB, D%NIE
@@ -1892,7 +1910,7 @@ END DO
 
   PRIS(:,:) = PRIS(:,:) * ZINVTSTEP
 
-  PINPRS(:) = ZWSED(:,IKB)/XRHOLW
+  PINPRS(:) = ZWSED(:,IKB)/CST%XRHOLW
 
 !
 !*       2.4   for aggregates/snow
@@ -1914,12 +1932,12 @@ END DO
        JI=I1(JL)
        !calculation of w
        IF (PRSS(JI,JK) > ZRTMIN(5) ) THEN
-         ZWSEDW1(JI,JK)=XFSEDS*(PRSS(JI,JK))**(XEXSEDS-1)*&
-         PRHODREF(JI,JK)**(XEXSEDS-XCEXVT-1)
+         ZWSEDW1(JI,JK)=ICEP%XFSEDS*(PRSS(JI,JK))**(ICEP%XEXSEDS-1)*&
+         PRHODREF(JI,JK)**(ICEP%XEXSEDS-ICED%XCEXVT-1)
        ENDIF
        IF ( ZQP(JI) > ZRTMIN(5) ) THEN
-         ZWSEDW2(JI,JK)=XFSEDS*(ZQP(JI))**(XEXSEDS-1)*&
-         PRHODREF(JI,JK)**(XEXSEDS-XCEXVT-1)
+         ZWSEDW2(JI,JK)=ICEP%XFSEDS*(ZQP(JI))**(ICEP%XEXSEDS-1)*&
+         PRHODREF(JI,JK)**(ICEP%XEXSEDS-ICED%XCEXVT-1)
        ENDIF
      ENDDO
      DO JI = D%NIB, D%NIE
@@ -1946,7 +1964,7 @@ END DO
      ENDDO
    ENDIF
 
-   PINPRS(:) = ZWSED(:,IKB)/XRHOLW + PINPRS(:)    ! in m/s (add ice fall)
+   PINPRS(:) = ZWSED(:,IKB)/CST%XRHOLW + PINPRS(:)    ! in m/s (add ice fall)
 
    PRSS(:,:) = PRSS(:,:) * ZINVTSTEP
 
@@ -1971,12 +1989,12 @@ END DO
        JI=I1(JL)
        !calculation of w
        IF ( PRGS(JI,JK) > ZRTMIN(6) ) THEN
-         ZWSEDW1 (JI,JK)= XFSEDG*(PRGS(JI,JK))**(XEXSEDG-1) * &
-                                  PRHODREF(JI,JK)**(XEXSEDG-XCEXVT-1)
+         ZWSEDW1 (JI,JK)= ICEP%XFSEDG*(PRGS(JI,JK))**(ICEP%XEXSEDG-1) * &
+                                  PRHODREF(JI,JK)**(ICEP%XEXSEDG-ICED%XCEXVT-1)
        ENDIF
        IF ( ZQP(JI) > ZRTMIN(6) ) THEN
-         ZWSEDW2 (JI,JK)= XFSEDG*(ZQP(JI))**(XEXSEDG-1) * &
-                                  PRHODREF(JI,JK)**(XEXSEDG-XCEXVT-1)
+         ZWSEDW2 (JI,JK)= ICEP%XFSEDG*(ZQP(JI))**(ICEP%XEXSEDG-1) * &
+                                  PRHODREF(JI,JK)**(ICEP%XEXSEDG-ICED%XCEXVT-1)
        ENDIF
      ENDDO
      DO JI = D%NIB, D%NIE
@@ -2003,7 +2021,7 @@ END DO
      ENDDO
    ENDIF
 
-   PINPRG(:) = ZWSED(:,IKB)/XRHOLW                        ! in m/s
+   PINPRG(:) = ZWSED(:,IKB)/CST%XRHOLW                        ! in m/s
 
    PRGS(:,:) = PRGS(:,:) * ZINVTSTEP
 
@@ -2026,12 +2044,12 @@ END DO
          JI=I1(JL)
          !calculation of w
          IF ((PRHS(JI,JK)+ZQP(JI)) > ZRTMIN(7) ) THEN
-           ZWSEDW1 (JI,JK)= XFSEDH  * (PRHS(JI,JK))**(XEXSEDH-1) *   &
-                                    PRHODREF(JI,JK)**(XEXSEDH-XCEXVT-1)
+           ZWSEDW1 (JI,JK)= ICEP%XFSEDH  * (PRHS(JI,JK))**(ICEP%XEXSEDH-1) *   &
+                                    PRHODREF(JI,JK)**(ICEP%XEXSEDH-ICED%XCEXVT-1)
          ENDIF
          IF ( ZQP(JI) > ZRTMIN(7) ) THEN
-           ZWSEDW2 (JI,JK)= XFSEDH  * ZQP(JI)**(XEXSEDH-1) *   &
-                                    PRHODREF(JI,JK)**(XEXSEDH-XCEXVT-1)
+           ZWSEDW2 (JI,JK)= ICEP%XFSEDH  * ZQP(JI)**(ICEP%XEXSEDH-1) *   &
+                                    PRHODREF(JI,JK)**(ICEP%XEXSEDH-ICED%XCEXVT-1)
          ENDIF
        ENDDO
        DO JI = D%NIB, D%NIE
@@ -2058,7 +2076,7 @@ END DO
        ENDDO
      ENDIF
 
-     PINPRH(:) = ZWSED(:,IKB)/XRHOLW                        ! in m/s
+     PINPRH(:) = ZWSED(:,IKB)/CST%XRHOLW                        ! in m/s
 
      PRHS(:,:) = PRHS(:,:) * ZINVTSTEP
 
@@ -2084,176 +2102,6 @@ IF ( KRR == 7 .AND. LBUDGET_RH) &
 !
 
 !
-  SUBROUTINE RAIN_ICE_NUCLEATION
-!
-!*      0. DECLARATIONS
-!          ------------
-!
-IMPLICIT NONE
-!
-!*       0.2  declaration of local variables
-!
-INTEGER , DIMENSION(SIZE(GNEGT))  :: I1,I2 ! Used to replace the COUNT
-INTEGER                           :: JL       ! and PACK intrinsics
-!
-!-------------------------------------------------------------------------------
-!
-REAL, DIMENSION(:), ALLOCATABLE :: ZZZ    ! height of model layer (m)
-REAL, DIMENSION(:), ALLOCATABLE :: ZREDIN ! Reduction of IN concentration between 0 and -25 C
-!
-!  compute the temperature and the pressure
-!
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
-
-IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_NUCLEATION',0,ZHOOK_HANDLE)
-ZT(:,:) = PTHT(:,:) * ( PPABST(:,:) / XP00 ) ** (XRD/XCPD)
-!
-!  optimization by looking for locations where
-!  the temperature is negative only !!!
-!
-GNEGT(:,:) = .FALSE.
-GNEGT(D%NIB:D%NIE,D%NKTB:D%NKTE) = ZT(D%NIB:D%NIE,D%NKTB:D%NKTE)<XTT
-INEGT = COUNTJV( GNEGT(:,:),I1(:),I2(:))
-IF( INEGT >= 1 ) THEN
-  ALLOCATE(ZRVT(INEGT)) ;
-  ALLOCATE(ZCIT(INEGT)) ;
-  ALLOCATE(ZZT(INEGT))  ;
-  ALLOCATE(ZPRES(INEGT));
-  ALLOCATE(ZZICENU(INEGT));
-  IF (OCND2) THEN
-     ALLOCATE(ZZZ(INEGT))
-     ALLOCATE(ZSIFRC(INEGT))
-     ALLOCATE(ZAM3(INEGT))
-     ALLOCATE(ZREDIN(INEGT))
-     ALLOCATE(ZESI(INEGT))
-     ALLOCATE(ZESW(INEGT))
-  ENDIF
-  DO JL=1,INEGT
-    ZRVT(JL) = PRVT(I1(JL),I2(JL))
-    ZCIT(JL) = PCIT(I1(JL),I2(JL))
-    ZZT(JL) = ZT(I1(JL),I2(JL))
-    ZPRES(JL) = PPABST(I1(JL),I2(JL))
-    ZZICENU(JL) = PICENU(I1(JL))
-    IF (OCND2) THEN
-       ZZZ(JL) = ZZZZ(I1(JL),I2(JL))
-       ZESI(JL) = ESATI(ZZT(JL))
-       ZESW(JL) = ESATW(ZZT(JL))
-       ZAM3(JL) = AM3(MAX(XFRMIN(27),ZZT(JL))) ! Avoid too high IN for very low temp.
-       ZREDIN(JL) = REDIN(ZZT(JL))
-       ZSIFRC(JL) = PICLDFR(I1(JL),I2(JL))
-    ENDIF
-  ENDDO
-
-  ALLOCATE(ZZW(INEGT))
-  ALLOCATE(ZUSW(INEGT))
-  ALLOCATE(ZSSI(INEGT))
-  IF(OCND2)THEN ! try to do some optimazation :
-
-    ZZW(:) = MIN(ZPRES(:)/2., ZESI(:))             ! safety limitation  es_i
-    ZZW(:) = MIN(ZPRES(:)/2., ZZW(:))             ! safety limitation
-    ZSSI(:) = ZRVT(:)*( ZPRES(:)-ZZW(:) ) / ( XEPSILO * ZZW(:) ) - 1.0
-                                                      ! Supersaturation over ice
-    ZUSW(:) = MIN(ZPRES(:)/2.,ZESW(:))            ! safety limitation   es_w
-    ZUSW(:) = ( ZUSW(:)/ZZW(:) )*( (ZPRES(:)-ZZW(:))/(ZPRES(:)-ZUSW(:)) ) - 1.0
-                             ! Supersaturation of saturated water vapor over ice
-  ELSE
-    ZZW(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) )           ! es_i
-    ZZW(:) = MIN(ZPRES(:)/2., ZZW(:))             ! safety limitation
-    ZSSI(:) = ZRVT(:)*( ZPRES(:)-ZZW(:) ) / ( XEPSILO * ZZW(:) ) - 1.0
-                                                      ! Supersaturation over ice
-    ZUSW(:) = EXP( XALPW - XBETAW/ZZT(:) - XGAMW*ALOG(ZZT(:) ) )          ! es_w
-    ZUSW(:) = MIN(ZPRES(:)/2.,ZUSW(:))            ! safety limitation
-    ZUSW(:) = ( ZUSW(:)/ZZW(:) )*( (ZPRES(:)-ZZW(:))/(ZPRES(:)-ZUSW(:)) ) - 1.0
-                             ! Supersaturation of saturated water vapor over ice
-  ENDIF
-!
-!*       3.1     compute the heterogeneous nucleation source: RVHENI
-!
-!*       3.1.1   compute the cloud ice concentration
-!
-  ZZW(:) = 0.0
-
-  ZSSI(:) = MIN( ZSSI(:), ZUSW(:) ) ! limitation of SSi according to SSw=0
-
-
-  IF(OCND2)THEN
-
-     IF (LMODICEDEP) THEN
-       ZZW(:) = 5.*EXP(0.304*(XTT-ZZT(:)))
-       ZZW(:) = MIN(1.,MAX(ZSSI(:)*10.,0.01))*ZZW(:)
-     ELSE
-
-       ZZW(:) = ZREDIN(:)* MAX(0.1,((20000.- MIN(20000.,ZZZ(:)))/20000.)**4) &
-          &   *ZAM3(:)*(0.0001 + 0.9999*ZSIFRC(:))
-
-     ENDIF
-  ELSE
-     WHERE( (ZZT(:)<XTT-5.0) .AND. (ZSSI(:)>0.0) )
-        ZZW(:) = XNU20 * EXP( XALPHA2*ZSSI(:)-XBETA2 )
-     END WHERE
-
-     WHERE( (ZZT(:)<=XTT-2.0) .AND. (ZZT(:)>=XTT-5.0) .AND. (ZSSI(:)>0.0) )
-        ZZW(:) = MAX( XNU20 * EXP( -XBETA2 ),XNU10 * EXP( -XBETA1*(ZZT(:)-XTT) ) * &
-             ( ZSSI(:)/ZUSW(:) )**XALPHA1 )
-     END WHERE
-  ENDIF
-
-  ZZW(:) = ZZW(:)*ZZICENU(:) - ZCIT(:)
-
-  IF( MAXVAL(ZZW(:)) > 0.0 ) THEN
-!
-!*       3.1.2   update the r_i and r_v mixing ratios
-!
-
-    ZZW(:) = MIN( ZZW(:),50.E3 ) ! limitation provisoire a 50 l^-1
-
-    IF(.NOT.OCND2)THEN
-       ZW(:,:) = UNPACK( ZZW(:),MASK=GNEGT(:,:),FIELD=0.0 )
-       ZW(:,:) = MAX( ZW(:,:) ,0.0 ) *XMNU0/(PRHODREF(:,:)*PTSTEP)
-       PRIS(:,:) = PRIS(:,:) + ZW(:,:)
-       PRVS(:,:) = PRVS(:,:) - ZW(:,:)
-       IF ( KRR == 7 ) THEN
-          PTHS(:,:) = PTHS(:,:) + ZW(:,:)*(XLSTT+(XCPV-XCI)*(ZT(:,:)-XTT))   &
-               /( (XCPD + XCPV*PRVT(:,:) + XCL*(PRCT(:,:)+PRRT(:,:))   &
-               + XCI*(PRIT(:,:)+PRST(:,:)+PRGT(:,:)+PRHT(:,:)))*PEXNREF(:,:) )
-       ELSE IF( KRR == 6 ) THEN
-          PTHS(:,:) = PTHS(:,:) + ZW(:,:)*(XLSTT+(XCPV-XCI)*(ZT(:,:)-XTT))   &
-               /( (XCPD + XCPV*PRVT(:,:) + XCL*(PRCT(:,:)+PRRT(:,:))   &
-               + XCI*(PRIT(:,:)+PRST(:,:)+PRGT(:,:)))*PEXNREF(:,:) )
-       END IF
-    ENDIF
-                                 ! f(L_s*(RVHENI))
-    ZZW(:) = MAX( ZZW(:)+ZCIT(:),ZCIT(:) )
-
-    PCIT(:,:) = MAX( UNPACK( ZZW(:),MASK=GNEGT(:,:),FIELD=0.0 ) , PCIT(:,:) )
-  END IF
-
-  DEALLOCATE(ZSSI)
-  DEALLOCATE(ZUSW)
-  DEALLOCATE(ZZW)
-  DEALLOCATE(ZPRES)
-  DEALLOCATE(ZZT)
-  DEALLOCATE(ZCIT)
-  DEALLOCATE(ZRVT)
-  DEALLOCATE(ZZICENU)
-  IF (OCND2) THEN
-     DEALLOCATE(ZZZ)
-     DEALLOCATE(ZSIFRC)
-     DEALLOCATE(ZAM3)
-     DEALLOCATE(ZREDIN)
-     DEALLOCATE(ZESI)
-     DEALLOCATE(ZESW)
-  ENDIF
-END IF
-
-!*       3.1.3   budget storage
-
-IF (LBUDGET_TH) CALL BUDGET_DDH (PTHS(:,:)*PRHODJ(:,:),4,'HENU_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_RV) CALL BUDGET_DDH (PRVS(:,:)*PRHODJ(:,:),6,'HENU_BU_RRV',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_RI) CALL BUDGET_DDH (PRIS(:,:)*PRHODJ(:,:),9,'HENU_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-
-  IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_NUCLEATION',1,ZHOOK_HANDLE)
-  END SUBROUTINE RAIN_ICE_NUCLEATION
       REAL FUNCTION ICENUMBER2 (Q_ICE, T3D)
 
       IMPLICIT NONE
@@ -2352,9 +2200,9 @@ REAL, DIMENSION(KSIZE) :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_SLOW',0,ZHOOK_HANDLE)
   ZZW(:) = 0.0
 
-  WHERE( (ZZT(:)<XTT-35.0) .AND. (ZRCT(:)>XRTMIN(2)) .AND. (ZRCS(:)>0.) )
-    ZZW(:) = MIN( ZRCS(:),XHON*ZRHODREF(:)*ZRCT(:)       &
-                                 *EXP( XALPHA3*(ZZT(:)-XTT)-XBETA3 ) )
+  WHERE( (ZZT(:)<CST%XTT-35.0) .AND. (ZRCT(:)>ICED%XRTMIN(2)) .AND. (ZRCS(:)>0.) )
+    ZZW(:) = MIN( ZRCS(:),ICEP%XHON*ZRHODREF(:)*ZRCT(:)       &
+                                 *EXP( ICEP%XALPHA3*(ZZT(:)-CST%XTT)-ICEP%XBETA3 ) )
     ZRIS(:) = ZRIS(:) + ZZW(:)
     ZRCS(:) = ZRCS(:) - ZZW(:)
     ZTHS(:) = ZTHS(:) + ZZW(:)*(ZLSFACT(:)-ZLVFACT(:)) ! f(L_f*(RCHONI))
@@ -2370,7 +2218,7 @@ REAL, DIMENSION(KSIZE) :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
 !*       3.3     compute the spontaneous freezing source: RRHONG
 
   ZZW(:) = 0.0
-  WHERE( (ZZT(:)<XTT-35.0) .AND. (ZRRT(:)>XRTMIN(3)) .AND. (ZRRS(:)>0.) )
+  WHERE( (ZZT(:)<CST%XTT-35.0) .AND. (ZRRT(:)>ICED%XRTMIN(3)) .AND. (ZRRS(:)>0.) )
     ZZW(:) = MIN( ZRRS(:),ZRRT(:)* ZINVTSTEP )
     ZRGS(:) = ZRGS(:) + ZZW(:)
     ZRRS(:) = ZRRS(:) - ZZW(:)
@@ -2386,8 +2234,8 @@ REAL, DIMENSION(KSIZE) :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
 
 !*       3.4    compute the deposition, aggregation and autoconversion sources
 
-  ZKA(:) = 2.38E-2 + 0.0071E-2 * ( ZZT(:) - XTT )          ! k_a
-  ZDV(:) = 0.211E-4 * (ZZT(:)/XTT)**1.94 * (XP00/ZPRES(:)) ! D_v
+  ZKA(:) = 2.38E-2 + 0.0071E-2 * ( ZZT(:) - CST%XTT )              ! k_a
+  ZDV(:) = 0.211E-4 * (ZZT(:)/CST%XTT)**1.94 * (CST%XP00/ZPRES(:)) ! D_v
 !
 !*       3.4.1  compute the thermodynamical function A_i(T,P)
 !*              and the c^prime_j (in the ventilation factor)
@@ -2395,16 +2243,16 @@ REAL, DIMENSION(KSIZE) :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
   IF(OCND2)THEN
      ZAI(:) = ZAA2(:) + ZBB3(:)*ZPRES(:)
   ELSE
-     ZAI(:) = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) ) ! es_i
-     ZAI(:) = ( XLSTT + (XCPV-XCI)*(ZZT(:)-XTT) )**2 / (ZKA(:)*XRV*ZZT(:)**2) &
-                                 + ( XRV*ZZT(:) ) / (ZDV(:)*ZAI(:))
+     ZAI(:) = EXP( CST%XALPI - CST%XBETAI/ZZT(:) - CST%XGAMI*ALOG(ZZT(:) ) ) ! es_i
+     ZAI(:) = ( CST%XLSTT + (CST%XCPV-CST%XCI)*(ZZT(:)-CST%XTT) )**2 / (ZKA(:)*CST%XRV*ZZT(:)**2) &
+                                 + ( CST%XRV*ZZT(:) ) / (ZDV(:)*ZAI(:))
   ENDIF
-  ZCJ(:) = XSCFAC * ZRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZZT(:)-XTT) )
+  ZCJ(:) = ICEP%XSCFAC * ZRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZZT(:)-CST%XTT) )
 !
 !*       3.4.2  compute the riming-conversion of r_c for r_i production: RCAUTI
 !
 !  ZZW(:) = 0.0
-!  ZTIMAUTIC = SQRT( XTIMAUTI*XTIMAUTC )
+!  ZTIMAUTIC = SQRT XTIMAUTI*XTIMAUTC )
 !  WHERE ( (ZRCT(:)>0.0) .AND. (ZRIT(:)>0.0) .AND. (ZRCS(:)>0.0) )
 !    ZZW(:) = MIN( ZRCS(:),ZTIMAUTIC * MAX( SQRT( ZRIT(:)*ZRCT(:) ),0.0 ) )
 !    ZRIS(:) = ZRIS(:) + ZZW(:)
@@ -2415,15 +2263,15 @@ REAL, DIMENSION(KSIZE) :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
 !*       3.4.3  compute the deposition on r_s: RVDEPS
 !
   WHERE ( ZRST(:)>0.0 )
-    ZLBDAS(:)  = MIN( XLBDAS_MAX,                                           &
-                      XLBS*( ZRHODREF(:)*MAX( ZRST(:),XRTMIN(5) ) )**XLBEXS )
+    ZLBDAS(:)  = MIN( ICED%XLBDAS_MAX,                                           &
+                      ICED%XLBS*( ZRHODREF(:)*MAX( ZRST(:),ICED%XRTMIN(5) ) )**ICED%XLBEXS )
   END WHERE
   ZZW(:) = 0.0
 
   IF(OCND2)THEN
-     WHERE ( (ZRST(:)>XRTMIN(5)) .AND. (ZRSS(:)>0.0) )
+     WHERE ( (ZRST(:)>ICED%XRTMIN(5)) .AND. (ZRSS(:)>0.0) )
         ZZW(:) = ( ZSSI(:)/(ZRHODREF(:)*ZAI(:)) ) *  &
-             ( X0DEPS*ZLBDAS(:)**XEX0DEPS + X1DEPS*ZCJ(:)*ZLBDAS(:)**XEX1DEPS )
+             ( ICEP%X0DEPS*ZLBDAS(:)**ICEP%XEX0DEPS + ICEP%X1DEPS*ZCJ(:)*ZLBDAS(:)**ICEP%XEX1DEPS )
         ZZW(:) = MIN( ZRVS(:),MAX(-ZRSS(:),ZZW(:)))  ! Simpler
         ZZW(:) = ZZW(:)*ZREDSN ! Possible tuning by using ZREDSN /=  1
         ZRSS(:) = ZRSS(:) + ZZW(:)
@@ -2431,9 +2279,9 @@ REAL, DIMENSION(KSIZE) :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
         ZTHS(:) = ZTHS(:) + ZZW(:)*ZLSFACT(:)
      END WHERE
   ELSE
-     WHERE ( (ZRST(:)>XRTMIN(5)) .AND. (ZRSS(:)>0.0) )
+     WHERE ( (ZRST(:)>ICED%XRTMIN(5)) .AND. (ZRSS(:)>0.0) )
         ZZW(:) = ( ZSSI(:)/(ZRHODREF(:)*ZAI(:)) ) *          &
-             ( X0DEPS*ZLBDAS(:)**XEX0DEPS + X1DEPS*ZCJ(:)*ZLBDAS(:)**XEX1DEPS )
+             ( ICEP%X0DEPS*ZLBDAS(:)**ICEP%XEX0DEPS + ICEP%X1DEPS*ZCJ(:)*ZLBDAS(:)**ICEP%XEX1DEPS )
         ZZW(:) =         MIN( ZRVS(:),ZZW(:)      )*(0.5+SIGN(0.5,ZZW(:))) &
              - MIN( ZRSS(:),ABS(ZZW(:)) )*(0.5-SIGN(0.5,ZZW(:)))
         WHERE (ZZW(:) < 0.0 )
@@ -2455,11 +2303,11 @@ REAL, DIMENSION(KSIZE) :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
 !*       3.4.4  compute the aggregation on r_s: RIAGGS
 
   ZZW(:) = 0.0
-  WHERE ( (ZRIT(:)>XRTMIN(4)) .AND. (ZRST(:)>XRTMIN(5)) .AND. (ZRIS(:)>0.0) )
-    ZZW(:) = MIN( ZRIS(:),XFIAGGS * EXP( XCOLEXIS*(ZZT(:)-XTT) ) &
+  WHERE ( (ZRIT(:)>ICED%XRTMIN(4)) .AND. (ZRST(:)>ICED%XRTMIN(5)) .AND. (ZRIS(:)>0.0) )
+    ZZW(:) = MIN( ZRIS(:),ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(ZZT(:)-CST%XTT) ) &
                                   * ZRIT(:)                      &
-                                  * ZLBDAS(:)**XEXIAGGS          &
-                                  * ZRHODREF(:)**(-XCEXVT)       )
+                                  * ZLBDAS(:)**ICEP%XEXIAGGS     &
+                                  * ZRHODREF(:)**(-ICED%XCEXVT)       )
     ZRSS(:)  = ZRSS(:)  + ZZW(:)
     ZRIS(:)  = ZRIS(:)  - ZZW(:)
   END WHERE
@@ -2471,10 +2319,10 @@ REAL, DIMENSION(KSIZE) :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
 
 !*       3.4.5  compute the autoconversion of r_i for r_s production: RIAUTS
 
-  ZCRIAUTI(:)=MIN(XCRIAUTI,10**(XACRIAUTI*(ZZT(:)-XTT)+XBCRIAUTI))
+  ZCRIAUTI(:)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(ZZT(:)-CST%XTT)+ICEP%XBCRIAUTI))
   ZZW(:) = 0.0
-  WHERE ( (ZRIT(:)>XRTMIN(4)) .AND. (ZRIS(:)>0.0) )
-    ZZW(:) = MIN( ZRIS(:),XTIMAUTI * EXP( XTEXAUTI*(ZZT(:)-XTT) ) &
+  WHERE ( (ZRIT(:)>ICED%XRTMIN(4)) .AND. (ZRIS(:)>0.0) )
+    ZZW(:) = MIN( ZRIS(:),ICEP%XTIMAUTI * EXP( ICEP%XTEXAUTI*(ZZT(:)-CST%XTT) ) &
                             * MAX( ZRIT(:)-ZCRIAUTI(:),0.0 ) )
     ZRSS(:)  = ZRSS(:)  + ZZW(:)
     ZRIS(:)  = ZRIS(:)  - ZZW(:)
@@ -2503,8 +2351,9 @@ REAL, DIMENSION(KSIZE) :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
         MAX(ZCIT(JL),ICENUMBER2(ZRIS(JL)*PTSTEP,ZZT(JL))*ZRHODREF(JL))
      ENDDO
 
-     WHERE (  ZRIS(:)>XFRMIN(13) .AND.ZCIT(:) > 0. )
-           ZZW2(:) = MIN(1.E8,XLBI*( ZRHODREF(:)*ZRIS(:)* PTSTEP/ZZW2(:) )**XLBEXI) ! LAMBDA for ICE
+    WHERE (  ZRIS(:)>ICEP%XFRMIN(13) .AND.ZCIT(:) > 0. )
+           ! LAMBDA for ICE
+           ZZW2(:) = MIN(1.E8,ICED%XLBI*( ZRHODREF(:)*ZRIS(:)* PTSTEP/ZZW2(:) )**ICED%XLBEXI) 
            ZBFT(:) = 1. - 0.5**( ZKVO /ZZW2(:))
            ZBFT(:) = MIN(0.9*ZRIS(:)*PTSTEP, ZBFT(:)*ZRIS(:)*PTSTEP)
            ZRSS(:) =   ZRSS(:)  + ZBFT(:)
@@ -2521,18 +2370,18 @@ REAL, DIMENSION(KSIZE) :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
 !*       3.4.6  compute the deposition on r_g: RVDEPG
 
   ZZW2(:) = 0.0
-  IF (XFRMIN(5)> 1.0E-12 .AND. XFRMIN(6) > 0.01) &
-        &        ZZW2(:) = MAX(0., MIN(1., (XFRMIN(5) - ZRGS(:))/XFRMIN(5)))* &
-        & MAX(0.,MIN(1.,ZSSI(:)/XFRMIN(6)))
+  IF (ICEP%XFRMIN(5)> 1.0E-12 .AND. ICEP%XFRMIN(6) > 0.01) &
+        &        ZZW2(:) = MAX(0., MIN(1., (ICEP%XFRMIN(5) - ZRGS(:))/ICEP%XFRMIN(5)))* &
+        & MAX(0.,MIN(1.,ZSSI(:)/ICEP%XFRMIN(6)))
 
 
   WHERE ( ZRGT(:)>0.0 )
-    ZLBDAG(:)  = XLBG*( ZRHODREF(:)*MAX( ZRGT(:),XRTMIN(6) ) )**XLBEXG
+    ZLBDAG(:)  = ICED%XLBG*( ZRHODREF(:)*MAX( ZRGT(:),ICED%XRTMIN(6) ) )**ICED%XLBEXG
   END WHERE
   ZZW(:) = 0.0
-  WHERE ( (ZRGT(:)>XRTMIN(6)) .AND. (ZRGS(:)>0.0) )
+  WHERE ( (ZRGT(:)>ICED%XRTMIN(6)) .AND. (ZRGS(:)>0.0) )
     ZZW(:) = ( ZSSI(:)/(ZRHODREF(:)*ZAI(:)) ) *                               &
-             ( X0DEPG*ZLBDAG(:)**XEX0DEPG + X1DEPG*ZCJ(:)*ZLBDAG(:)**XEX1DEPG )
+             ( ICEP%X0DEPG*ZLBDAG(:)**ICEP%XEX0DEPG + ICEP%X1DEPG*ZCJ(:)*ZLBDAG(:)**ICEP%XEX1DEPG )
     ZZW(:) =         MIN( ZRVS(:),ZZW(:)      )*(0.5+SIGN(0.5,ZZW(:))) &
                    - MIN( ZRGS(:),ABS(ZZW(:)) )*(0.5-SIGN(0.5,ZZW(:)))
     ZZW(:)  = ZZW(:)*ZREDGR
@@ -2588,7 +2437,7 @@ IMPLICIT NONE
        END WHERE
     ELSE
        WHERE( ZRCS(:)>0.0 .AND. ZHLC_HCF(:).GT.0.0 )
-          ZZW(:) = XTIMAUTC*MAX( ZHLC_HRC(:)/ZHLC_HCF(:)  - XCRIAUTC/ZRHODREF(:),0.0)
+          ZZW(:) = ICEP%XTIMAUTC*MAX( ZHLC_HRC(:)/ZHLC_HCF(:)  - ICEP%XCRIAUTC/ZRHODREF(:),0.0)
           ZZW(:) = MIN( ZRCS(:),ZHLC_HCF(:)*ZZW(:))
           ZRCS(:) = ZRCS(:) - ZZW(:)
           ZRRS(:) = ZRRS(:) + ZZW(:)
@@ -2602,17 +2451,17 @@ IMPLICIT NONE
 
 !*       4.3    compute the accretion of r_c for r_r production: RCACCR
 
-    IF (CSUBG_RC_RR_ACCR=='NONE') THEN
+    IF (PARAMI%CSUBG_RC_RR_ACCR=='NONE') THEN
       !CLoud water and rain are diluted over the grid box
-      WHERE( ZRCT(:)>XRTMIN(2) .AND. ZRRT(:)>XRTMIN(3) .AND. ZRCS(:)>0.0 )
-        ZZW(:) = MIN( ZRCS(:), XFCACCR * ZRCT(:)*ZACRF(:)                &
-                 * ZLBDAR(:)**XEXCACCR    &
-                 * ZRHODREF(:)**(-XCEXVT) )
+      WHERE( ZRCT(:)>ICED%XRTMIN(2) .AND. ZRRT(:)>ICED%XRTMIN(3) .AND. ZRCS(:)>0.0 )
+        ZZW(:) = MIN( ZRCS(:), ICEP%XFCACCR * ZRCT(:)*ZACRF(:) &
+                 * ZLBDAR(:)**ICEP%XEXCACCR    &
+                 * ZRHODREF(:)**(-ICED%XCEXVT) )
         ZRCS(:) = ZRCS(:) - ZZW(:)
         ZRRS(:) = ZRRS(:) + ZZW(:)
       END WHERE
 
-    ELSEIF (CSUBG_RC_RR_ACCR=='PRFR') THEN
+    ELSEIF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR') THEN
       !Cloud water is concentrated over its fraction with possibly to parts with high and low content as set for autoconversion
       !Rain is concnetrated over its fraction
       !Rain in high content area fraction: ZHLC_HCF
@@ -2621,20 +2470,20 @@ IMPLICIT NONE
       ! if ZRF>ZCF (rain is falling in cloud and in clear sky): ZCF-ZHLC_HCF
       ! => min(ZCF, ZRF)-ZHLC_HCF
       ZZW(:) = 0.
-      WHERE( ZHLC_HRC(:)>XRTMIN(2) .AND. ZRRT(:)>XRTMIN(3) .AND. ZRCS(:)>0.0 &
+      WHERE( ZHLC_HRC(:)>ICED%XRTMIN(2) .AND. ZRRT(:)>ICED%XRTMIN(3) .AND. ZRCS(:)>0.0 &
             .AND. ZHLC_HCF(:)>0 )
         !Accretion due to rain falling in high cloud content
-        ZZW(:) = XFCACCR * ( ZHLC_HRC(:)/ZHLC_HCF(:) )     &
-               * ZLBDAR_RF(:)**XEXCACCR &
-               * ZRHODREF(:)**(-XCEXVT) &
+        ZZW(:) = ICEP%XFCACCR * ( ZHLC_HRC(:)/ZHLC_HCF(:) ) &
+               * ZLBDAR_RF(:)**ICEP%XEXCACCR &
+               * ZRHODREF(:)**(-ICED%XCEXVT) &
                * ZHLC_HCF
       END WHERE
-      WHERE( ZHLC_LRC(:)>XRTMIN(2) .AND. ZRRT(:)>XRTMIN(3) .AND. ZRCS(:)>0.0 &
+      WHERE( ZHLC_LRC(:)>ICED%XRTMIN(2) .AND. ZRRT(:)>ICED%XRTMIN(3) .AND. ZRCS(:)>0.0 &
             .AND. ZHLC_LCF(:)>0 )
         !We add acrretion due to rain falling in low cloud content
-        ZZW(:) = ZZW(:) + XFCACCR * ( ZHLC_LRC(:)/ZHLC_LCF(:) )     &
-                        * ZLBDAR_RF(:)**XEXCACCR &
-                        * ZRHODREF(:)**(-XCEXVT) &
+        ZZW(:) = ZZW(:) + ICEP%XFCACCR * ( ZHLC_LRC(:)/ZHLC_LCF(:) ) &
+                        * ZLBDAR_RF(:)**ICEP%XEXCACCR &
+                        * ZRHODREF(:)**(-ICED%XCEXVT) &
                         * (MIN(ZCF(:), ZRF(:))-ZHLC_HCF(:))
       END WHERE
       ZZW(:)=MIN(ZRCS(:), ZZW(:))
@@ -2656,39 +2505,39 @@ IMPLICIT NONE
 
     ZZW(:) = 0.0
 
-    IF (CSUBG_RR_EVAP=='NONE') THEN
+    IF (PARAMI%CSUBG_RR_EVAP=='NONE') THEN
       !Evaporation only when there's no cloud (RC must be 0)
        IF(OCND2)THEN
-          WHERE( (ZRRT(:)>XRTMIN(3)) .AND. (ZRCT(:)<=XRTMIN(2)) )
+          WHERE( (ZRRT(:)>ICED%XRTMIN(3)) .AND. (ZRCT(:)<=ICED%XRTMIN(2)) )
              ZZW(:) = ZAA2W(:) + ZBB3W(:)*ZPRES(:)
-             ZUSW(:) = 1.0 - ZRVT(:)*( ZPRES(:)-ZESW(:) ) / ( XEPSILO * ZESW(:) )
+             ZUSW(:) = 1.0 - ZRVT(:)*( ZPRES(:)-ZESW(:) ) / ( CST%XEPSILO * ZESW(:) )
                                                     ! Undersaturation over water
              ZZW(:) = MIN( ZRRS(:),( MAX( 0.0,ZUSW(:) )/(ZRHODREF(:)*ZZW(:)) ) *      &
-                  ( X0EVAR*ZLBDAR(:)**XEX0EVAR+X1EVAR*ZCJ(:)*ZLBDAR(:)**XEX1EVAR ) )
+                  ( ICEP%X0EVAR*ZLBDAR(:)**ICEP%XEX0EVAR+ICEP%X1EVAR*ZCJ(:)*ZLBDAR(:)**ICEP%XEX1EVAR))
              ZRRS(:) = ZRRS(:) - ZZW(:)
              ZRVS(:) = ZRVS(:) + ZZW(:)
              ZTHS(:) = ZTHS(:) - ZZW(:)*ZLVFACT(:)
           END WHERE
        ELSE
-          WHERE( (ZRRT(:)>XRTMIN(3)) .AND. (ZRCT(:)<=XRTMIN(2)) )
-             ZZW(:)  = EXP( XALPW - XBETAW/ZZT(:) - XGAMW*ALOG(ZZT(:) ) ) ! es_w
-             ZUSW(:) = 1.0 - ZRVT(:)*( ZPRES(:)-ZZW(:) ) / ( XEPSILO * ZZW(:) )
+          WHERE( (ZRRT(:)>ICED%XRTMIN(3)) .AND. (ZRCT(:)<=ICED%XRTMIN(2)) )
+             ZZW(:)  = EXP( CST%XALPW - CST%XBETAW/ZZT(:) - CST%XGAMW*ALOG(ZZT(:) ) ) ! es_w
+             ZUSW(:) = 1.0 - ZRVT(:)*( ZPRES(:)-ZZW(:) ) / ( CST%XEPSILO * ZZW(:) )
                                                         ! Undersaturation over water
-             ZZW(:) = ( XLVTT+(XCPV-XCL)*(ZZT(:)-XTT) )**2 / ( ZKA(:)*XRV*ZZT(:)**2 ) &
-               + ( XRV*ZZT(:) ) / ( ZDV(:)*ZZW(:) )
+             ZZW(:) = (CST%XLVTT+(CST%XCPV-CST%XCL)*(ZZT(:)-CST%XTT))**2 / (ZKA(:)*CST%XRV*ZZT(:)**2) &
+               + ( CST%XRV*ZZT(:) ) / ( ZDV(:)*ZZW(:) )
              ZZW(:) = MIN( ZRRS(:),( MAX( 0.0,ZUSW(:) )/(ZRHODREF(:)*ZZW(:)) ) *      &
-            ( X0EVAR*ZLBDAR(:)**XEX0EVAR+X1EVAR*ZCJ(:)*ZLBDAR(:)**XEX1EVAR ) )
+            ( ICEP%X0EVAR*ZLBDAR(:)**ICEP%XEX0EVAR+ICEP%X1EVAR*ZCJ(:)*ZLBDAR(:)**ICEP%XEX1EVAR))
              ZRRS(:) = ZRRS(:) - ZZW(:)
              ZRVS(:) = ZRVS(:) + ZZW(:)
             ZTHS(:) = ZTHS(:) - ZZW(:)*ZLVFACT(:)
           END WHERE
        ENDIF
-    ELSEIF (CSUBG_RR_EVAP=='CLFR' .OR. CSUBG_RR_EVAP=='PRFR') THEN
+    ELSEIF (PARAMI%CSUBG_RR_EVAP=='CLFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
       !Evaporation in clear sky part
       !With CLFR, rain is diluted over the grid box
       !With PRFR, rain is concentrated in its fraction
       !Use temperature and humidity in clear sky part like Bechtold et al. (1993)
-      IF (CSUBG_RR_EVAP=='CLFR') THEN
+      IF (PARAMI%CSUBG_RR_EVAP=='CLFR') THEN
         ZZW4(:)=1. !Precipitation fraction
         ZZW3(:)=ZLBDAR(:)
       ELSE
@@ -2704,7 +2553,7 @@ IMPLICIT NONE
 
       IF(OCND2.AND.LTEST) THEN
          DO JK= 1,KSIZE
-            IF((ZRRT(JK)>XRTMIN(3)) .AND. ( ZZW4(JK) > ZCF(JK)) )THEN
+            IF((ZRRT(JK)>ICED%XRTMIN(3)) .AND. ( ZZW4(JK) > ZCF(JK)) )THEN
               ! outside the cloud (environment) the use of T^u (unsaturated) instead of T
               ! Bechtold et al. 1993
               !
@@ -2714,13 +2563,14 @@ IMPLICIT NONE
                ZARTMP(JK)= ESATW(ZZW2(JK)) ! saturation pressure, water
             ENDIF
          ENDDO
-         WHERE(  (ZRRT(:)>XRTMIN(3)) .AND. ( ZZW4(:) > ZCF(:) ) )
+         WHERE(  (ZRRT(:)>ICED%XRTMIN(3)) .AND. ( ZZW4(:) > ZCF(:) ) )
 
           ! S, Undersaturation over water (with new theta^u)
-            ZUSW(:) = 1.0 - ZRVT(:)*( ZPRES(:)-ZARTMP(:) ) / ( XEPSILO * ZARTMP(:) )
-            ZARTMP(:) = XSCFAC * ZRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZZW2(:)-XTT) ) ! New ZCJ(:) for  T^u
+            ZUSW(:) = 1.0 - ZRVT(:)*( ZPRES(:)-ZARTMP(:) ) / ( CST%XEPSILO * ZARTMP(:) )
+          ! New ZCJ(:) for  T^u
+            ZARTMP(:) = ICEP%XSCFAC * ZRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZZW2(:)-CST%XTT) ) 
             ZZW(:) = MAX( 0.0,ZUSW(:) )/(ZRHODREF(:)*ZZW(:))  *      &
-               ( X0EVAR*ZZW3(:)**XEX0EVAR+X1EVAR*ZARTMP(:)*ZZW3(:)**XEX1EVAR )
+               ( ICEP%X0EVAR*ZZW3(:)**ICEP%XEX0EVAR+ICEP%X1EVAR*ZARTMP(:)*ZZW3(:)**ICEP%XEX1EVAR )
         !
             ZZW(:) = MIN( ZRRS(:),  ZZW(:) *( ZZW4(:) - ZCF(:) ) )
         !
@@ -2729,7 +2579,7 @@ IMPLICIT NONE
             ZTHS(:) = ZTHS(:) - ZZW(:)*ZLVFACT(:)
          END WHERE
       ELSE
-      WHERE(  (ZRRT(:)>XRTMIN(3)) .AND. ( ZZW4(:) > ZCF(:) ) )
+      WHERE(  (ZRRT(:)>ICED%XRTMIN(3)) .AND. ( ZZW4(:) > ZCF(:) ) )
         ! outside the cloud (environment) the use of T^u (unsaturated) instead of T
         ! Bechtold et al. 1993
         !
@@ -2737,16 +2587,16 @@ IMPLICIT NONE
         ZZW2(:) =  ZTHLT(:) * ZZT(:) / ZTHT(:)
         !
         ! es_w with new T^u
-        ZZW(:)  = EXP( XALPW - XBETAW/ZZW2(:) - XGAMW*ALOG(ZZW2(:) ) )
+        ZZW(:)  = EXP( CST%XALPW - CST%XBETAW/ZZW2(:) - CST%XGAMW*ALOG(ZZW2(:) ) )
         !
         ! S, Undersaturation over water (with new theta^u)
-        ZUSW(:) = 1.0 - ZRVT(:)*( ZPRES(:)-ZZW(:) ) / ( XEPSILO * ZZW(:) )
+        ZUSW(:) = 1.0 - ZRVT(:)*( ZPRES(:)-ZZW(:) ) / ( CST%XEPSILO * ZZW(:) )
         !
-        ZZW(:) = ( XLVTT+(XCPV-XCL)*(ZZW2(:)-XTT) )**2 / ( ZKA(:)*XRV*ZZW2(:)**2 ) &
-               + ( XRV*ZZW2(:) ) / ( ZDV(:)*ZZW(:) )
+        ZZW(:) = (CST%XLVTT+(CST%XCPV-CST%XCL)*(ZZW2(:)-CST%XTT))**2 / (ZKA(:)*CST%XRV*ZZW2(:)**2) &
+               + (CST%XRV*ZZW2(:)) / (ZDV(:)*ZZW(:))
         !
         ZZW(:) = MAX( 0.0,ZUSW(:) )/(ZRHODREF(:)*ZZW(:))  *      &
-               ( X0EVAR*ZZW3(:)**XEX0EVAR+X1EVAR*ZCJ(:)*ZZW3(:)**XEX1EVAR )
+               ( ICEP%X0EVAR*ZZW3(:)**ICEP%XEX0EVAR+ICEP%X1EVAR*ZCJ(:)*ZZW3(:)**ICEP%XEX1EVAR )
         !
         ZZW(:) = MIN( ZRRS(:),  ZZW(:) *( ZZW4(:) - ZCF(:) ) )
         !
@@ -2793,8 +2643,8 @@ IMPLICIT NONE
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RS',0,ZHOOK_HANDLE)
   ZZW1(:,:) = 0.0
 !
-  GRIM(:) = (ZRCT(:)>XRTMIN(2)) .AND. (ZRST(:)>XRTMIN(5)) .AND.            &
-                                (ZRCS(:)>0.0) .AND. (ZZT(:)<XTT)
+  GRIM(:) = (ZRCT(:)>ICED%XRTMIN(2)) .AND. (ZRST(:)>ICED%XRTMIN(5)) .AND.            &
+                                (ZRCS(:)>0.0) .AND. (ZZT(:)<CST%XTT)
   IGRIM = COUNT( GRIM(:) )
 !
   IF( IGRIM>0 ) THEN
@@ -2814,25 +2664,25 @@ IMPLICIT NONE
 !               set of Lbda_s used to tabulate some moments of the incomplete
 !               gamma function
 !
-    ZVEC2(1:IGRIM) = MAX( 1.00001, MIN( FLOAT(NGAMINC)-0.00001,           &
-                          XRIMINTP1 * LOG( ZVEC1(1:IGRIM) ) + XRIMINTP2 ) )
+    ZVEC2(1:IGRIM) = MAX( 1.00001, MIN( FLOAT(ICEP%NGAMINC)-0.00001,           &
+                          ICEP%XRIMINTP1 * LOG( ZVEC1(1:IGRIM) ) + ICEP%XRIMINTP2))
     IVEC2(1:IGRIM) = INT( ZVEC2(1:IGRIM) )
     ZVEC2(1:IGRIM) = ZVEC2(1:IGRIM) - FLOAT( IVEC2(1:IGRIM) )
 !
 !        5.1.3  perform the linear interpolation of the normalized
 !               "2+XDS"-moment of the incomplete gamma function
 !
-    ZVEC1(1:IGRIM) =   XGAMINC_RIM1( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
-                     - XGAMINC_RIM1( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
+    ZVEC1(1:IGRIM) =   ICEP%XGAMINC_RIM1( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
+                     - ICEP%XGAMINC_RIM1( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
     ZZW(:) = UNPACK( VECTOR=ZVEC1(:),MASK=GRIM,FIELD=0.0 )
 !
 !        5.1.4  riming of the small sized aggregates
 !
     WHERE ( GRIM(:) )
       ZZW1(:,1) = MIN( ZRCS(:),                                &
-                     XCRIMSS * ZZW(:) * ZRCT(:)*ZCOLF(:)       & ! RCRIMSS
-                                      *   ZLBDAS(:)**XEXCRIMSS &
-                                      * ZRHODREF(:)**(-XCEXVT) )
+                     ICEP%XCRIMSS * ZZW(:) * ZRCT(:)*ZCOLF(:)       & ! RCRIMSS
+                                      *   ZLBDAS(:)**ICEP%XEXCRIMSS &
+                                      * ZRHODREF(:)**(-ICED%XCEXVT) )
       ZRCS(:) = ZRCS(:) - ZZW1(:,1)
       ZRSS(:) = ZRSS(:) + ZZW1(:,1)
       ZTHS(:) = ZTHS(:) + ZZW1(:,1)*(ZLSFACT(:)-ZLVFACT(:)) ! f(L_f*(RCRIMSS))
@@ -2841,8 +2691,8 @@ IMPLICIT NONE
 !        5.1.5  perform the linear interpolation of the normalized
 !               "XBS"-moment of the incomplete gamma function
 !
-    ZVEC1(1:IGRIM) =  XGAMINC_RIM2( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
-                    - XGAMINC_RIM2( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
+    ZVEC1(1:IGRIM) =  ICEP%XGAMINC_RIM2( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
+                    - ICEP%XGAMINC_RIM2( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
     ZZW(:) = UNPACK( VECTOR=ZVEC1(:),MASK=GRIM,FIELD=0.0 )
 !
 !        5.1.6  riming-conversion of the large sized aggregates into graupeln
@@ -2850,12 +2700,12 @@ IMPLICIT NONE
 !
     WHERE ( GRIM(:) .AND. (ZRSS(:)>0.0) )
       ZZW1(:,2) = MIN( ZRCS(:),                     &
-                   XCRIMSG * ZRCT(:)*ZCOLF(:)       & ! RCRIMSG
-                           *  ZLBDAS(:)**XEXCRIMSG  &
-                           * ZRHODREF(:)**(-XCEXVT) &
+                   ICEP%XCRIMSG * ZRCT(:)*ZCOLF(:)       & ! RCRIMSG
+                           *  ZLBDAS(:)**ICEP%XEXCRIMSG  &
+                           * ZRHODREF(:)**(-ICED%XCEXVT) &
                            - ZZW1(:,1)              )
       ZZW1(:,3) = MIN( ZRSS(:),                         &
-                       XSRIMCG * ZLBDAS(:)**XEXSRIMCG   & ! RSRIMCG
+                       ICEP%XSRIMCG * ZLBDAS(:)**ICEP%XEXSRIMCG   & ! RSRIMCG
                                * (1.0 - ZZW(:) )/(PTSTEP*ZRHODREF(:)) )
       ZRCS(:) = ZRCS(:) - ZZW1(:,2)
       ZRSS(:) = ZRSS(:) - ZZW1(:,3)
@@ -2880,8 +2730,8 @@ IMPLICIT NONE
 !*       5.2    rain accretion onto the aggregates
 
   ZZW1(:,2:3) = 0.0
-  GACC(:) = (ZRRT(:)>XRTMIN(3)) .AND. (ZRST(:)>XRTMIN(5)) .AND.            &
-                            (ZRRS(:)>0.0) .AND. (ZZT(:)<XTT)
+  GACC(:) = (ZRRT(:)>ICED%XRTMIN(3)) .AND. (ZRST(:)>ICED%XRTMIN(5)) .AND.            &
+                            (ZRRS(:)>0.0) .AND. (ZZT(:)<CST%XTT)
   IGACC = COUNT( GACC(:) )
 !
   IF( IGACC>0 ) THEN
@@ -2903,13 +2753,13 @@ IMPLICIT NONE
 !               in the geometrical set of (Lbda_s,Lbda_r) couplet use to
 !               tabulate the RACCSS-kernel
 !
-    ZVEC1(1:IGACC) = MAX( 1.00001, MIN( FLOAT(NACCLBDAS)-0.00001,           &
-                          XACCINTP1S * LOG( ZVEC1(1:IGACC) ) + XACCINTP2S ) )
+    ZVEC1(1:IGACC) = MAX( 1.00001, MIN( FLOAT(ICEP%NACCLBDAS)-0.00001,           &
+                          ICEP%XACCINTP1S * LOG( ZVEC1(1:IGACC) ) + ICEP%XACCINTP2S ) )
     IVEC1(1:IGACC) = INT( ZVEC1(1:IGACC) )
     ZVEC1(1:IGACC) = ZVEC1(1:IGACC) - FLOAT( IVEC1(1:IGACC) )
 !
-    ZVEC2(1:IGACC) = MAX( 1.00001, MIN( FLOAT(NACCLBDAR)-0.00001,           &
-                          XACCINTP1R * LOG( ZVEC2(1:IGACC) ) + XACCINTP2R ) )
+    ZVEC2(1:IGACC) = MAX( 1.00001, MIN( FLOAT(ICEP%NACCLBDAR)-0.00001,           &
+                          ICEP%XACCINTP1R * LOG( ZVEC2(1:IGACC) ) + ICEP%XACCINTP2R ) )
     IVEC2(1:IGACC) = INT( ZVEC2(1:IGACC) )
     ZVEC2(1:IGACC) = ZVEC2(1:IGACC) - FLOAT( IVEC2(1:IGACC) )
 !
@@ -2917,11 +2767,11 @@ IMPLICIT NONE
 !               RACCSS-kernel
 !
     DO JJ = 1,IGACC
-      ZVEC3(JJ) =  (  XKER_RACCSS(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - XKER_RACCSS(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+      ZVEC3(JJ) =  (  ICEP%XKER_RACCSS(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    - ICEP%XKER_RACCSS(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                           * ZVEC1(JJ) &
-                 - (  XKER_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - XKER_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+                 - (  ICEP%XKER_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    - ICEP%XKER_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                           * (ZVEC1(JJ) - 1.0)
     END DO
     ZZW(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GACC,FIELD=0.0 )
@@ -2930,25 +2780,25 @@ IMPLICIT NONE
 !
     WHERE ( GACC(:) )
       ZZW1(:,2) =                                            & !! coef of RRACCS
-              XFRACCSS*( ZLBDAS(:)**XCXS )*( ZRHODREF(:)**(-XCEXVT-1.) ) &
-         *( XLBRACCS1/((ZLBDAS(:)**2)               ) +                  &
-            XLBRACCS2/( ZLBDAS(:)    * ZLBDAR(:)    ) +                  &
-            XLBRACCS3/(               (ZLBDAR(:)**2)) )/ZLBDAR(:)**4
+              ICEP%XFRACCSS*( ZLBDAS(:)**ICED%XCXS )*( ZRHODREF(:)**(-ICED%XCEXVT-1.) ) &
+         *( ICEP%XLBRACCS1/((ZLBDAS(:)**2)               ) +                  &
+            ICEP%XLBRACCS2/( ZLBDAS(:)    * ZLBDAR(:)    ) +                  &
+            ICEP%XLBRACCS3/(               (ZLBDAR(:)**2)) )/ZLBDAR(:)**4
       ZZW1(:,4) = MIN( ZRRS(:),ZZW1(:,2)*ZZW(:) )           ! RRACCSS
-      ZRRS(:) = ZRRS(:) - ZZW1(:,4)*XFRMIN(7)
-      ZRSS(:) = ZRSS(:) + ZZW1(:,4)*XFRMIN(7)
-      ZTHS(:) = ZTHS(:) + ZZW1(:,4)*(ZLSFACT(:)-ZLVFACT(:))*XFRMIN(7) ! f(L_f*(RRACCSS))
+      ZRRS(:) = ZRRS(:) - ZZW1(:,4)*ICEP%XFRMIN(7)
+      ZRSS(:) = ZRSS(:) + ZZW1(:,4)*ICEP%XFRMIN(7)
+      ZTHS(:) = ZTHS(:) + ZZW1(:,4)*(ZLSFACT(:)-ZLVFACT(:))*ICEP%XFRMIN(7) ! f(L_f*(RRACCSS))
     END WHERE
 !
 !        5.2.4b perform the bilinear interpolation of the normalized
 !               RACCS-kernel
 !
     DO JJ = 1,IGACC
-      ZVEC3(JJ) =  (   XKER_RACCS(IVEC2(JJ)+1,IVEC1(JJ)+1)* ZVEC1(JJ)          &
-                    -  XKER_RACCS(IVEC2(JJ)+1,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
+      ZVEC3(JJ) =  (   ICEP%XKER_RACCS(IVEC2(JJ)+1,IVEC1(JJ)+1)* ZVEC1(JJ)          &
+                    -  ICEP%XKER_RACCS(IVEC2(JJ)+1,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
                                                                    * ZVEC2(JJ) &
-                 - (   XKER_RACCS(IVEC2(JJ)  ,IVEC1(JJ)+1)* ZVEC1(JJ)          &
-                    -  XKER_RACCS(IVEC2(JJ)  ,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
+                 - (   ICEP%XKER_RACCS(IVEC2(JJ)  ,IVEC1(JJ)+1)* ZVEC1(JJ)          &
+                    -  ICEP%XKER_RACCS(IVEC2(JJ)  ,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
                                                            * (ZVEC2(JJ) - 1.0)
     END DO
     ZZW1(:,2) = ZZW1(:,2)*UNPACK( VECTOR=ZVEC3(:),MASK=GACC(:),FIELD=0.0 )
@@ -2957,11 +2807,11 @@ IMPLICIT NONE
 !               SACCRG-kernel
 !
     DO JJ = 1,IGACC
-      ZVEC3(JJ) =  (  XKER_SACCRG(IVEC2(JJ)+1,IVEC1(JJ)+1)* ZVEC1(JJ)          &
-                    - XKER_SACCRG(IVEC2(JJ)+1,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
+      ZVEC3(JJ) =  (  ICEP%XKER_SACCRG(IVEC2(JJ)+1,IVEC1(JJ)+1)* ZVEC1(JJ)          &
+                    - ICEP%XKER_SACCRG(IVEC2(JJ)+1,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
                                                           * ZVEC2(JJ) &
-                 - (  XKER_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)+1)* ZVEC1(JJ)          &
-                    - XKER_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
+                 - (  ICEP%XKER_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)+1)* ZVEC1(JJ)          &
+                    - ICEP%XKER_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
                                                           * (ZVEC2(JJ) - 1.0)
     END DO
     ZZW(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GACC,FIELD=0.0 )
@@ -2972,12 +2822,12 @@ IMPLICIT NONE
     WHERE ( GACC(:) .AND. (ZRSS(:)>0.0) )
       ZZW1(:,2) = MAX( MIN( ZRRS(:),ZZW1(:,2)-ZZW1(:,4) ),0.0 )       ! RRACCSG
     END WHERE
-    WHERE ( GACC(:) .AND. (ZRSS(:)>0.0) .AND. ZZW1(:,2)>0.0 .AND. ZRSS(:)>XFRMIN(1)/PTSTEP )
-      ZZW1(:,3) = MIN( ZRSS(:),XFSACCRG*ZZW(:)*                     & ! RSACCRG
-            ( ZLBDAS(:)**(XCXS-XBS) )*( ZRHODREF(:)**(-XCEXVT-1.) ) &
-           *( XLBSACCR1/((ZLBDAR(:)**2)               ) +           &
-              XLBSACCR2/( ZLBDAR(:)    * ZLBDAS(:)    ) +           &
-              XLBSACCR3/(               (ZLBDAS(:)**2)) )/ZLBDAR(:) )
+    WHERE ( GACC(:) .AND. (ZRSS(:)>0.0) .AND. ZZW1(:,2)>0.0 .AND. ZRSS(:)>ICEP%XFRMIN(1)/PTSTEP )
+      ZZW1(:,3) = MIN( ZRSS(:),ICEP%XFSACCRG*ZZW(:)*                     & ! RSACCRG
+            ( ZLBDAS(:)**(ICED%XCXS-ICED%XBS) )*( ZRHODREF(:)**(-ICED%XCEXVT-1.) ) &
+           *( ICEP%XLBSACCR1/((ZLBDAR(:)**2)               ) +           &
+              ICEP%XLBSACCR2/( ZLBDAR(:)    * ZLBDAS(:)    ) +           &
+              ICEP%XLBSACCR3/(               (ZLBDAS(:)**2)) )/ZLBDAR(:) )
       ZRRS(:) = ZRRS(:) - ZZW1(:,2)
       ZRSS(:) = ZRSS(:) - ZZW1(:,3)
       ZRGS(:) = ZRGS(:) + ZZW1(:,2)+ZZW1(:,3)
@@ -3007,22 +2857,22 @@ IMPLICIT NONE
 !*       5.3    Conversion-Melting of the aggregates
 
   ZZW(:) = 0.0
-  WHERE( (ZRST(:)>XRTMIN(5)) .AND. (ZRSS(:)>0.0) .AND. (ZZT(:)>XTT) )
-    ZZW(:) = ZRVT(:)*ZPRES(:)/(XEPSILO+ZRVT(:)) ! Vapor pressure
-    ZZW(:) =  ZKA(:)*(XTT-ZZT(:)) +                                 &
-               ( ZDV(:)*(XLVTT + ( XCPV - XCL ) * ( ZZT(:) - XTT )) &
-                           *(XESTT-ZZW(:))/(XRV*ZZT(:))             )
+  WHERE( (ZRST(:)>ICED%XRTMIN(5)) .AND. (ZRSS(:)>0.0) .AND. (ZZT(:)>CST%XTT) )
+    ZZW(:) = ZRVT(:)*ZPRES(:)/(CST%XEPSILO+ZRVT(:)) ! Vapor pressure
+    ZZW(:) =  ZKA(:)*(CST%XTT-ZZT(:)) +                                 &
+               ( ZDV(:)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZZT(:) - CST%XTT )) &
+                           *(CST%XESTT-ZZW(:))/(CST%XRV*ZZT(:))             )
 !
 ! compute RSMLT
 !
-    ZZW(:)  = MIN( ZRSS(:), XFSCVMG*MAX( 0.0,( -ZZW(:) *             &
-                           ( X0DEPS*       ZLBDAS(:)**XEX0DEPS +     &
-                             X1DEPS*ZCJ(:)*ZLBDAS(:)**XEX1DEPS ) -   &
+    ZZW(:)  = MIN( ZRSS(:), ICEP%XFSCVMG*MAX( 0.0,( -ZZW(:) *             &
+                           ( ICEP%X0DEPS*       ZLBDAS(:)**ICEP%XEX0DEPS + &
+                             ICEP%X1DEPS*ZCJ(:)*ZLBDAS(:)**ICEP%XEX1DEPS ) -   &
                                      ( ZZW1(:,1)+ZZW1(:,4) ) *       &
-                              ( ZRHODREF(:)*XCL*(XTT-ZZT(:))) ) /    &
-                                             ( ZRHODREF(:)*XLMTT ) ) )
+                              (ZRHODREF(:)*CST%XCL*(CST%XTT-ZZT(:)))) /    &
+                                             ( ZRHODREF(:)*CST%XLMTT ) ) )
 !
-! note that RSCVMG = RSMLT*XFSCVMG but no heat is exchanged (at the rate RSMLT)
+! note that RSCVMG = RSMLT*ICEP%XFSCVMG but no heat is exchanged (at the rate RSMLT)
 ! because the graupeln produced by this process are still icy!!!
 !
     ZRSS(:) = ZRSS(:) - ZZW(:)
@@ -3054,14 +2904,14 @@ IMPLICIT NONE
 !
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RG',0,ZHOOK_HANDLE)
   ZZW1(:,3:4) = 0.0
-  WHERE( (ZRIT(:)>XRTMIN(4) .AND. ZRIT(:)>XFRMIN(2)) .AND. (ZRRT(:)>XRTMIN(3)) .AND.  &
+  WHERE( (ZRIT(:)>ICED%XRTMIN(4) .AND. ZRIT(:)>ICEP%XFRMIN(2)) .AND. (ZRRT(:)>ICED%XRTMIN(3)) .AND. &
                              (ZRIS(:)>0.0) .AND. (ZRRS(:)>0.0) )
-    ZZW1(:,3) = MIN( ZRIS(:),XICFRR * ZRIT(:)                & ! RICFRRG
-                                    * ZLBDAR(:)**XEXICFRR    &
-                                    * ZRHODREF(:)**(-XCEXVT) )
-    ZZW1(:,4) = MIN( ZRRS(:),XRCFRI * ZCIT(:)                & ! RRCFRIG
-                                    * ZLBDAR(:)**XEXRCFRI    &
-                                    * ZRHODREF(:)**(-XCEXVT-1.) )
+    ZZW1(:,3) = MIN( ZRIS(:),ICEP%XICFRR * ZRIT(:)                & ! RICFRRG
+                                    * ZLBDAR(:)**ICEP%XEXICFRR    &
+                                    * ZRHODREF(:)**(-ICED%XCEXVT) )
+    ZZW1(:,4) = MIN( ZRRS(:),ICEP%XRCFRI * ZCIT(:)                & ! RRCFRIG
+                                    * ZLBDAR(:)**ICEP%XEXRCFRI    &
+                                    * ZRHODREF(:)**(-ICED%XCEXVT-1.) )
     ZRIS(:) = ZRIS(:) - ZZW1(:,3)
     ZRRS(:) = ZRRS(:) - ZZW1(:,4)
     ZRGS(:) = ZRGS(:) + ZZW1(:,3)+ZZW1(:,4)
@@ -3079,19 +2929,19 @@ IMPLICIT NONE
 !*       6.2    compute the Dry growth case
 
   ZZW1(:,:) = 0.0
-  WHERE( (ZRGT(:)>XRTMIN(6)) .AND. ((ZRCT(:)>XRTMIN(2) .AND. ZRCS(:)>0.0)) )
-    ZZW(:) = ZLBDAG(:)**(XCXG-XDG-2.0) * ZRHODREF(:)**(-XCEXVT)
-    ZZW1(:,1) = MIN( ZRCS(:),XFCDRYG * ZRCT(:) * ZZW(:) )             ! RCDRYG
+  WHERE( (ZRGT(:)>ICED%XRTMIN(6)) .AND. ((ZRCT(:)>ICED%XRTMIN(2) .AND. ZRCS(:)>0.0)) )
+    ZZW(:) = ZLBDAG(:)**(ICED%XCXG-ICED%XDG-2.0) * ZRHODREF(:)**(-ICED%XCEXVT)
+    ZZW1(:,1) = MIN( ZRCS(:),ICEP%XFCDRYG * ZRCT(:) * ZZW(:) )             ! RCDRYG
   END WHERE
-  WHERE( (ZRGT(:)>XRTMIN(6)) .AND. ((ZRIT(:)>XRTMIN(4) .AND. ZRIS(:)>0.0)) )
-    ZZW(:) = ZLBDAG(:)**(XCXG-XDG-2.0) * ZRHODREF(:)**(-XCEXVT)
-    ZZW1(:,2) = MIN( ZRIS(:),XFIDRYG * EXP( XCOLEXIG*(ZZT(:)-XTT) ) &
+  WHERE( (ZRGT(:)>ICED%XRTMIN(6)) .AND. ((ZRIT(:)>ICED%XRTMIN(4) .AND. ZRIS(:)>0.0)) )
+    ZZW(:) = ZLBDAG(:)**(ICED%XCXG-ICED%XDG-2.0) * ZRHODREF(:)**(-ICED%XCEXVT)
+    ZZW1(:,2) = MIN( ZRIS(:),ICEP%XFIDRYG * EXP( ICEP%XCOLEXIG*(ZZT(:)-CST%XTT) ) &
                                      * ZRIT(:) * ZZW(:) )             ! RIDRYG
   END WHERE
 !
 !*       6.2.1  accretion of aggregates on the graupeln
 !
-  GDRY(:) = (ZRST(:)>XRTMIN(5)) .AND. (ZRGT(:)>XRTMIN(6)) .AND. (ZRSS(:)>0.0)
+  GDRY(:) = (ZRST(:)>ICED%XRTMIN(5)) .AND. (ZRGT(:)>ICED%XRTMIN(6)) .AND. (ZRSS(:)>0.0)
   IGDRY = COUNT( GDRY(:) )
 !
   IF( IGDRY>0 ) THEN
@@ -3113,13 +2963,13 @@ IMPLICIT NONE
 !               in the geometrical set of (Lbda_g,Lbda_s) couplet use to
 !               tabulate the SDRYG-kernel
 !
-    ZVEC1(1:IGDRY) = MAX( 1.00001, MIN( FLOAT(NDRYLBDAG)-0.00001,           &
-                          XDRYINTP1G * LOG( ZVEC1(1:IGDRY) ) + XDRYINTP2G ) )
+    ZVEC1(1:IGDRY) = MAX( 1.00001, MIN( FLOAT(ICEP%NDRYLBDAG)-0.00001,           &
+                          ICEP%XDRYINTP1G * LOG( ZVEC1(1:IGDRY) ) + ICEP%XDRYINTP2G ) )
     IVEC1(1:IGDRY) = INT( ZVEC1(1:IGDRY) )
     ZVEC1(1:IGDRY) = ZVEC1(1:IGDRY) - FLOAT( IVEC1(1:IGDRY) )
 !
-    ZVEC2(1:IGDRY) = MAX( 1.00001, MIN( FLOAT(NDRYLBDAS)-0.00001,           &
-                          XDRYINTP1S * LOG( ZVEC2(1:IGDRY) ) + XDRYINTP2S ) )
+    ZVEC2(1:IGDRY) = MAX( 1.00001, MIN( FLOAT(ICEP%NDRYLBDAS)-0.00001,           &
+                          ICEP%XDRYINTP1S * LOG( ZVEC2(1:IGDRY) ) + ICEP%XDRYINTP2S ) )
     IVEC2(1:IGDRY) = INT( ZVEC2(1:IGDRY) )
     ZVEC2(1:IGDRY) = ZVEC2(1:IGDRY) - FLOAT( IVEC2(1:IGDRY) )
 !
@@ -3127,11 +2977,11 @@ IMPLICIT NONE
 !               SDRYG-kernel
 !
     DO JJ = 1,IGDRY
-      ZVEC3(JJ) =  (  XKER_SDRYG(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - XKER_SDRYG(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+      ZVEC3(JJ) =  (  ICEP%XKER_SDRYG(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    - ICEP%XKER_SDRYG(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                          * ZVEC1(JJ) &
-                 - (  XKER_SDRYG(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - XKER_SDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+                 - (  ICEP%XKER_SDRYG(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    - ICEP%XKER_SDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                          * (ZVEC1(JJ) - 1.0)
     END DO
     ZZW(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GDRY,FIELD=0.0 )
@@ -3140,13 +2990,13 @@ IMPLICIT NONE
       ZZW1(:,3) = 0.
     ELSE
       WHERE( GDRY(:) )
-        ZZW1(:,3) = MIN( ZRSS(:),XFSDRYG*ZZW(:)                         & ! RSDRYG
-                                        * EXP( XCOLEXSG*(ZZT(:)-XTT) )  &
-                      *( ZLBDAS(:)**(XCXS-XBS) )*( ZLBDAG(:)**XCXG )    &
-                      *( ZRHODREF(:)**(-XCEXVT-1.) )                    &
-                           *( XLBSDRYG1/( ZLBDAG(:)**2              ) + &
-                              XLBSDRYG2/( ZLBDAG(:)   * ZLBDAS(:)   ) + &
-                              XLBSDRYG3/(               ZLBDAS(:)**2) ) )
+        ZZW1(:,3) = MIN( ZRSS(:),ICEP%XFSDRYG*ZZW(:)                         & ! RSDRYG
+                                        * EXP( ICEP%XCOLEXSG*(ZZT(:)-CST%XTT) )  &
+                      *( ZLBDAS(:)**(ICED%XCXS-ICED%XBS) )*( ZLBDAG(:)**ICED%XCXG )    &
+                      *( ZRHODREF(:)**(-ICED%XCEXVT-1.) )                    &
+                           *( ICEP%XLBSDRYG1/( ZLBDAG(:)**2              ) + &
+                              ICEP%XLBSDRYG2/( ZLBDAG(:)   * ZLBDAS(:)   ) + &
+                              ICEP%XLBSDRYG3/(               ZLBDAS(:)**2) ) )
       END WHERE
     ENDIF
     DEALLOCATE(IVEC2)
@@ -3158,7 +3008,7 @@ IMPLICIT NONE
 !
 !*       6.2.6  accretion of raindrops on the graupeln
 !
-  GDRY(:) = (ZRRT(:)>XRTMIN(3)) .AND. (ZRGT(:)>XRTMIN(6)) .AND. (ZRRS(:)>0.0)
+  GDRY(:) = (ZRRT(:)>ICED%XRTMIN(3)) .AND. (ZRGT(:)>ICED%XRTMIN(6)) .AND. (ZRRS(:)>0.0)
   IGDRY = COUNT( GDRY(:) )
 !
   IF( IGDRY>0 ) THEN
@@ -3180,13 +3030,13 @@ IMPLICIT NONE
 !               in the geometrical set of (Lbda_g,Lbda_r) couplet use to
 !               tabulate the RDRYG-kernel
 !
-    ZVEC1(1:IGDRY) = MAX( 1.00001, MIN( FLOAT(NDRYLBDAG)-0.00001,           &
-                          XDRYINTP1G * LOG( ZVEC1(1:IGDRY) ) + XDRYINTP2G ) )
+    ZVEC1(1:IGDRY) = MAX( 1.00001, MIN( FLOAT(ICEP%NDRYLBDAG)-0.00001,           &
+                          ICEP%XDRYINTP1G * LOG( ZVEC1(1:IGDRY) ) + ICEP%XDRYINTP2G ) )
     IVEC1(1:IGDRY) = INT( ZVEC1(1:IGDRY) )
     ZVEC1(1:IGDRY) = ZVEC1(1:IGDRY) - FLOAT( IVEC1(1:IGDRY) )
 !
-    ZVEC2(1:IGDRY) = MAX( 1.00001, MIN( FLOAT(NDRYLBDAR)-0.00001,           &
-                          XDRYINTP1R * LOG( ZVEC2(1:IGDRY) ) + XDRYINTP2R ) )
+    ZVEC2(1:IGDRY) = MAX( 1.00001, MIN( FLOAT(ICEP%NDRYLBDAR)-0.00001,           &
+                          ICEP%XDRYINTP1R * LOG( ZVEC2(1:IGDRY) ) + ICEP%XDRYINTP2R ) )
     IVEC2(1:IGDRY) = INT( ZVEC2(1:IGDRY) )
     ZVEC2(1:IGDRY) = ZVEC2(1:IGDRY) - FLOAT( IVEC2(1:IGDRY) )
 !
@@ -3194,22 +3044,22 @@ IMPLICIT NONE
 !               RDRYG-kernel
 !
     DO JJ = 1,IGDRY
-      ZVEC3(JJ) =  (  XKER_RDRYG(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - XKER_RDRYG(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+      ZVEC3(JJ) =  (  ICEP%XKER_RDRYG(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    - ICEP%XKER_RDRYG(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                                   * ZVEC1(JJ) &
-                 - (  XKER_RDRYG(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                    - XKER_RDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+                 - (  ICEP%XKER_RDRYG(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                    - ICEP%XKER_RDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                          * (ZVEC1(JJ) - 1.0)
     END DO
     ZZW(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GDRY,FIELD=0.0 )
 !
     WHERE( GDRY(:) )
-      ZZW1(:,4) = MIN( ZRRS(:),XFRDRYG*ZZW(:)                    & ! RRDRYG
-                        *( ZLBDAR(:)**(-4) )*( ZLBDAG(:)**XCXG ) &
-                               *( ZRHODREF(:)**(-XCEXVT-1.) )   &
-                    *( XLBRDRYG1/( ZLBDAG(:)**2              ) + &
-                       XLBRDRYG2/( ZLBDAG(:)   * ZLBDAR(:)   ) + &
-                       XLBRDRYG3/(               ZLBDAR(:)**2) ) )
+      ZZW1(:,4) = MIN( ZRRS(:),ICEP%XFRDRYG*ZZW(:)                    & ! RRDRYG
+                        *( ZLBDAR(:)**(-4) )*( ZLBDAG(:)**ICED%XCXG ) &
+                               *( ZRHODREF(:)**(-ICED%XCEXVT-1.) )   &
+                    *( ICEP%XLBRDRYG1/( ZLBDAG(:)**2              ) + &
+                       ICEP%XLBRDRYG2/( ZLBDAG(:)   * ZLBDAR(:)   ) + &
+                       ICEP%XLBRDRYG3/(               ZLBDAR(:)**2) ) )
     END WHERE
     DEALLOCATE(IVEC2)
     DEALLOCATE(IVEC1)
@@ -3224,32 +3074,32 @@ IMPLICIT NONE
 !
   ZZW(:) = 0.0
   ZRWETG(:) = 0.0
-  WHERE( ZRGT(:)>XRTMIN(6) )
+  WHERE( ZRGT(:)>ICED%XRTMIN(6) )
     ZZW1(:,5) = MIN( ZRIS(:),                                    &
-                ZZW1(:,2) / (XCOLIG*EXP(XCOLEXIG*(ZZT(:)-XTT)) ) ) ! RIWETG
+                ZZW1(:,2) / (ICEP%XCOLIG*EXP(ICEP%XCOLEXIG*(ZZT(:)-CST%XTT)) ) ) ! RIWETG
     ZZW1(:,6) = MIN( ZRSS(:),                                    &
-                ZZW1(:,3) / (XCOLSG*EXP(XCOLEXSG*(ZZT(:)-XTT)) ) ) ! RSWETG
+                ZZW1(:,3) / (ICEP%XCOLSG*EXP(ICEP%XCOLEXSG*(ZZT(:)-CST%XTT)) ) ) ! RSWETG
 !
-    ZZW(:) = ZRVT(:)*ZPRES(:)/(XEPSILO+ZRVT(:)) ! Vapor pressure
-    ZZW(:) =   ZKA(:)*(XTT-ZZT(:)) +                              &
-             ( ZDV(:)*(XLVTT + ( XCPV - XCL ) * ( ZZT(:) - XTT )) &
-                           *(XESTT-ZZW(:))/(XRV*ZZT(:))           )
+    ZZW(:) = ZRVT(:)*ZPRES(:)/(CST%XEPSILO+ZRVT(:)) ! Vapor pressure
+    ZZW(:) =   ZKA(:)*(CST%XTT-ZZT(:)) +                              &
+             ( ZDV(:)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZZT(:) - CST%XTT )) &
+                           *(CST%XESTT-ZZW(:))/(CST%XRV*ZZT(:))           )
 !
 ! compute RWETG
 !
     ZRWETG(:)=MAX( 0.0,                                               &
-                 ( ZZW(:) * ( X0DEPG*       ZLBDAG(:)**XEX0DEPG +     &
-                              X1DEPG*ZCJ(:)*ZLBDAG(:)**XEX1DEPG ) +   &
+                 ( ZZW(:) * ( ICEP%X0DEPG*       ZLBDAG(:)**ICEP%XEX0DEPG + &
+                              ICEP%X1DEPG*ZCJ(:)*ZLBDAG(:)**ICEP%XEX1DEPG ) + &
                  ( ZZW1(:,5)+ZZW1(:,6) ) *                            &
-                 ( ZRHODREF(:)*(XLMTT+(XCI-XCL)*(XTT-ZZT(:)))   ) ) / &
-                            ( ZRHODREF(:)*(XLMTT-XCL*(XTT-ZZT(:))) )   )
+                 ( ZRHODREF(:)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-ZZT(:)))   ) ) / &
+                            ( ZRHODREF(:)*(CST%XLMTT-CST%XCL*(CST%XTT-ZZT(:))) )   )
   END WHERE
 !
 !*       6.4    Select Wet or Dry case
 !
    ZZW(:) = 0.0
   IF     ( KRR == 7 ) THEN
-   WHERE( ZRGT(:)>XRTMIN(6) .AND. ZZT(:)<XTT                            &
+   WHERE( ZRGT(:)>ICED%XRTMIN(6) .AND. ZZT(:)<CST%XTT                            &
                                         .AND.                          & ! Wet
                               ZRDRYG(:)>=ZRWETG(:) .AND. ZRWETG(:)>0.0 ) ! case
      ZZW(:) = ZRWETG(:) - ZZW1(:,5) - ZZW1(:,6) ! RCWETG+RRWETG
@@ -3278,8 +3128,8 @@ IMPLICIT NONE
                                                  ! f(L_f*(RCWETG+RRWETG))
    END WHERE
    ELSE IF( KRR == 6 ) THEN
-     WHERE( ZRGT(:)>XRTMIN(6) .AND. ZRGT(:)>XFRMIN(3) .AND.            &
-            ZRIS(:)*PTSTEP>XFRMIN(3) .AND. ZZT(:)<XTT                  &
+     WHERE( ZRGT(:)>ICED%XRTMIN(6) .AND. ZRGT(:)>ICEP%XFRMIN(3) .AND.            &
+            ZRIS(:)*PTSTEP>ICEP%XFRMIN(3) .AND. ZZT(:)<CST%XTT              &
                                         .AND.                          & ! Wet
                               ZRDRYG(:)>=ZRWETG(:) .AND. ZRWETG(:)>0.0 ) ! case
     ZZW(:)  = ZRWETG(:)
@@ -3311,8 +3161,8 @@ IMPLICIT NONE
   END IF
 
 
-  WHERE( ZRGT(:)>XRTMIN(6) .AND. ZRGT(:)>XFRMIN(4) .AND.               &
-         ZRIS(:)*PTSTEP>XFRMIN(4) .AND. ZZT(:)<XTT                     &
+  WHERE( ZRGT(:)>ICED%XRTMIN(6) .AND. ZRGT(:)>ICEP%XFRMIN(4) .AND.               &
+         ZRIS(:)*PTSTEP>ICEP%XFRMIN(4) .AND. ZZT(:)<CST%XTT                 &
                                         .AND.                          &
                                ZRDRYG(:)<ZRWETG(:) .AND. ZRDRYG(:)>0.0 ) ! Dry
     ZRCS(:) = ZRCS(:) - ZZW1(:,1)
@@ -3341,20 +3191,20 @@ IMPLICIT NONE
   ZZW(:) = 0.0
   IF (LTIW) THEN
 
-    WHERE( (ZRGT(:)>XRTMIN(6)) .AND. (ZRGS(:)>0.0) .AND. (ZTIW(:)>XTT) )
-      ZZW(:) = ZRVT(:)*ZPRES(:)/(XEPSILO+ZRVT(:)) ! Vapor pressure
-      ZZW(:) =  ZKA(:)*(XTT-ZTIW(:)) +                                 &
-                 ( ZDV(:)*(XLVTT + ( XCPV - XCL ) * ( ZTIW(:) - XTT )) &
-                             *(XESTT-ZZW(:))/(XRV*ZTIW(:))             )
+    WHERE( (ZRGT(:)>ICED%XRTMIN(6)) .AND. (ZRGS(:)>0.0) .AND. (ZTIW(:)>CST%XTT) )
+      ZZW(:) = ZRVT(:)*ZPRES(:)/(CST%XEPSILO+ZRVT(:)) ! Vapor pressure
+      ZZW(:) =  ZKA(:)*(CST%XTT-ZTIW(:)) +                                 &
+                 ( ZDV(:)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZTIW(:) - CST%XTT )) &
+                             *(CST%XESTT-ZZW(:))/(CST%XRV*ZTIW(:))             )
 !
 ! compute RGMLTR
 !
-      ZZW(:)  = XFRMIN(8)*MIN( ZRGS(:), MAX( 0.0,( -ZZW(:) *           &
-                             ( X0DEPG*       ZLBDAG(:)**XEX0DEPG +     &
-                               X1DEPG*ZCJ(:)*ZLBDAG(:)**XEX1DEPG ) -   &
+      ZZW(:)  = ICEP%XFRMIN(8)*MIN( ZRGS(:), MAX( 0.0,( -ZZW(:) *           &
+                             ( ICEP%X0DEPG*       ZLBDAG(:)**ICEP%XEX0DEPG + &
+                               ICEP%X1DEPG*ZCJ(:)*ZLBDAG(:)**ICEP%XEX1DEPG ) - &
                                        ( ZZW1(:,1)+ZZW1(:,4) ) *       &
-                                ( ZRHODREF(:)*XCL*(XTT-ZTIW(:))) ) /   &
-                                               ( ZRHODREF(:)*XLMTT ) ) )
+                                ( ZRHODREF(:)*CST%XCL*(CST%XTT-ZTIW(:))) ) /   &
+                                               ( ZRHODREF(:)*CST%XLMTT)))
 
 
       ZRRS(:) = ZRRS(:) + ZZW(:)
@@ -3363,20 +3213,20 @@ IMPLICIT NONE
     END WHERE
   ELSE
 
-    WHERE( (ZRGT(:)>XRTMIN(6)) .AND. (ZRGS(:)>0.0) .AND. (ZZT(:)>XTT) )
-      ZZW(:) = ZRVT(:)*ZPRES(:)/(XEPSILO+ZRVT(:)) ! Vapor pressure
-      ZZW(:) =  ZKA(:)*(XTT-ZZT(:)) +                                 &
-                 ( ZDV(:)*(XLVTT + ( XCPV - XCL ) * ( ZZT(:) - XTT )) &
-                             *(XESTT-ZZW(:))/(XRV*ZZT(:))             )
+    WHERE( (ZRGT(:)>ICED%XRTMIN(6)) .AND. (ZRGS(:)>0.0) .AND. (ZZT(:)>CST%XTT) )
+      ZZW(:) = ZRVT(:)*ZPRES(:)/(CST%XEPSILO+ZRVT(:)) ! Vapor pressure
+      ZZW(:) =  ZKA(:)*(CST%XTT-ZZT(:)) +                                 &
+                 ( ZDV(:)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZZT(:) - CST%XTT )) &
+                             *(CST%XESTT-ZZW(:))/(CST%XRV*ZZT(:)))
 !
 ! compute RGMLTR
 !
-      ZZW(:)  = XFRMIN(8)*MIN( ZRGS(:), MAX( 0.0,( -ZZW(:) *           &
-                             ( X0DEPG*       ZLBDAG(:)**XEX0DEPG +     &
-                               X1DEPG*ZCJ(:)*ZLBDAG(:)**XEX1DEPG ) -   &
+      ZZW(:)  = ICEP%XFRMIN(8)*MIN( ZRGS(:), MAX( 0.0,( -ZZW(:) *           &
+                             ( ICEP%X0DEPG*       ZLBDAG(:)**ICEP%XEX0DEPG +  &
+                               ICEP%X1DEPG*ZCJ(:)*ZLBDAG(:)**ICEP%XEX1DEPG ) - &
                                        ( ZZW1(:,1)+ZZW1(:,4) ) *       &
-                                ( ZRHODREF(:)*XCL*(XTT-ZZT(:))) ) /    &
-                                               ( ZRHODREF(:)*XLMTT ) ) )
+                                ( ZRHODREF(:)*CST%XCL*(CST%XTT-ZZT(:))) ) /    &
+                                               (ZRHODREF(:)*CST%XLMTT)))
       ZRRS(:) = ZRRS(:) + ZZW(:)
       ZRGS(:) = ZRGS(:) - ZZW(:)
       ZTHS(:) = ZTHS(:) - ZZW(:)*(ZLSFACT(:)-ZLVFACT(:)) ! f(L_f*(-RGMLTR))
@@ -3411,7 +3261,7 @@ IMPLICIT NONE
 !
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RH',0,ZHOOK_HANDLE)
 
-  GHAIL(:) = ZRHT(:)>XRTMIN(7)
+  GHAIL(:) = ZRHT(:)>ICED%XRTMIN(7)
   IHAIL = COUNT(GHAIL(:))
 !
   IF( IHAIL>0 ) THEN
@@ -3419,22 +3269,22 @@ IMPLICIT NONE
 !*       7.2    compute the Wet growth of hail
 !
     WHERE ( GHAIL(:) )
-      ZLBDAH(:)  = XLBH*( ZRHODREF(:)*MAX( ZRHT(:),XRTMIN(7) ) )**XLBEXH
+      ZLBDAH(:)  = ICED%XLBH*( ZRHODREF(:)*MAX( ZRHT(:),ICED%XRTMIN(7) ) )**ICED%XLBEXH
     END WHERE
 !
     ZZW1(:,:) = 0.0
-    WHERE( GHAIL(:) .AND. ((ZRCT(:)>XRTMIN(2) .AND. ZRCS(:)>0.0)) )
-      ZZW(:) = ZLBDAH(:)**(XCXH-XDH-2.0) * ZRHODREF(:)**(-XCEXVT)
-      ZZW1(:,1) = MIN( ZRCS(:),XFWETH * ZRCT(:) * ZZW(:) )             ! RCWETH
+    WHERE( GHAIL(:) .AND. ((ZRCT(:)>ICED%XRTMIN(2) .AND. ZRCS(:)>0.0)) )
+      ZZW(:) = ZLBDAH(:)**(ICED%XCXH-ICED%XDH-2.0) * ZRHODREF(:)**(-ICED%XCEXVT)
+      ZZW1(:,1) = MIN( ZRCS(:),ICEP%XFWETH * ZRCT(:) * ZZW(:) )             ! RCWETH
     END WHERE
-    WHERE( GHAIL(:) .AND. ((ZRIT(:)>XRTMIN(4) .AND. ZRIS(:)>0.0)) )
-      ZZW(:) = ZLBDAH(:)**(XCXH-XDH-2.0) * ZRHODREF(:)**(-XCEXVT)
-      ZZW1(:,2) = MIN( ZRIS(:),XFWETH * ZRIT(:) * ZZW(:) )             ! RIWETH
+    WHERE( GHAIL(:) .AND. ((ZRIT(:)>ICED%XRTMIN(4) .AND. ZRIS(:)>0.0)) )
+      ZZW(:) = ZLBDAH(:)**(ICED%XCXH-ICED%XDH-2.0) * ZRHODREF(:)**(-ICED%XCEXVT)
+      ZZW1(:,2) = MIN( ZRIS(:),ICEP%XFWETH * ZRIT(:) * ZZW(:) )             ! RIWETH
     END WHERE
 !
 !*       7.2.1  accretion of aggregates on the hailstones
 !
-    GWET(:) = GHAIL(:) .AND. (ZRST(:)>XRTMIN(5) .AND. ZRSS(:)>0.0)
+    GWET(:) = GHAIL(:) .AND. (ZRST(:)>ICED%XRTMIN(5) .AND. ZRSS(:)>0.0)
     IGWET = COUNT( GWET(:) )
 !
     IF( IGWET>0 ) THEN
@@ -3456,13 +3306,13 @@ IMPLICIT NONE
 !               in the geometrical set of (Lbda_h,Lbda_s) couplet use to
 !               tabulate the SWETH-kernel
 !
-      ZVEC1(1:IGWET) = MAX( 1.00001, MIN( FLOAT(NWETLBDAH)-0.00001,           &
-                            XWETINTP1H * LOG( ZVEC1(1:IGWET) ) + XWETINTP2H ) )
+      ZVEC1(1:IGWET) = MAX( 1.00001, MIN( FLOAT(ICEP%NWETLBDAH)-0.00001,           &
+                            ICEP%XWETINTP1H * LOG( ZVEC1(1:IGWET) ) + ICEP%XWETINTP2H ) )
       IVEC1(1:IGWET) = INT( ZVEC1(1:IGWET) )
       ZVEC1(1:IGWET) = ZVEC1(1:IGWET) - FLOAT( IVEC1(1:IGWET) )
 !
-      ZVEC2(1:IGWET) = MAX( 1.00001, MIN( FLOAT(NWETLBDAS)-0.00001,           &
-                            XWETINTP1S * LOG( ZVEC2(1:IGWET) ) + XWETINTP2S ) )
+      ZVEC2(1:IGWET) = MAX( 1.00001, MIN( FLOAT(ICEP%NWETLBDAS)-0.00001,           &
+                            ICEP%XWETINTP1S * LOG( ZVEC2(1:IGWET) ) + ICEP%XWETINTP2S ) )
       IVEC2(1:IGWET) = INT( ZVEC2(1:IGWET) )
       ZVEC2(1:IGWET) = ZVEC2(1:IGWET) - FLOAT( IVEC2(1:IGWET) )
 !
@@ -3470,22 +3320,22 @@ IMPLICIT NONE
 !               SWETH-kernel
 !
       DO JJ = 1,IGWET
-        ZVEC3(JJ) = (  XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                     - XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+        ZVEC3(JJ) = (  ICEP%XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                     - ICEP%XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                                    * ZVEC1(JJ) &
-                   - ( XKER_SWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                     - XKER_SWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+                   - ( ICEP%XKER_SWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                     - ICEP%XKER_SWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                           * (ZVEC1(JJ) - 1.0)
       END DO
       ZZW(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GWET,FIELD=0.0 )
 !
       WHERE( GWET(:) )
-        ZZW1(:,3) = MIN( ZRSS(:),XFSWETH*ZZW(:)                       & ! RSWETH
-                      *( ZLBDAS(:)**(XCXS-XBS) )*( ZLBDAH(:)**XCXH )  &
-                         *( ZRHODREF(:)**(-XCEXVT-1.) )               &
-                         *( XLBSWETH1/( ZLBDAH(:)**2              ) + &
-                            XLBSWETH2/( ZLBDAH(:)   * ZLBDAS(:)   ) + &
-                            XLBSWETH3/(               ZLBDAS(:)**2) ) )
+        ZZW1(:,3) = MIN( ZRSS(:),ICEP%XFSWETH*ZZW(:)                       & ! RSWETH
+                      *( ZLBDAS(:)**(ICED%XCXS-ICED%XBS) )*( ZLBDAH(:)**ICED%XCXH )  &
+                         *( ZRHODREF(:)**(-ICED%XCEXVT-1.) )               &
+                         *( ICEP%XLBSWETH1/( ZLBDAH(:)**2              ) + &
+                            ICEP%XLBSWETH2/( ZLBDAH(:)   * ZLBDAS(:)   ) + &
+                            ICEP%XLBSWETH3/(               ZLBDAS(:)**2) ) )
       END WHERE
       DEALLOCATE(IVEC2)
       DEALLOCATE(IVEC1)
@@ -3496,7 +3346,7 @@ IMPLICIT NONE
 !
 !*       7.2.6  accretion of graupeln on the hailstones
 !
-    GWET(:) = GHAIL(:) .AND. (ZRGT(:)>XRTMIN(6) .AND. ZRGS(:)>0.0)
+    GWET(:) = GHAIL(:) .AND. (ZRGT(:)>ICED%XRTMIN(6) .AND. ZRGS(:)>0.0)
     IGWET = COUNT( GWET(:) )
 !
     IF( IGWET>0 ) THEN
@@ -3518,13 +3368,13 @@ IMPLICIT NONE
 !               in the geometrical set of (Lbda_h,Lbda_g) couplet use to
 !               tabulate the GWETH-kernel
 !
-      ZVEC1(1:IGWET) = MAX( 1.00001, MIN( FLOAT(NWETLBDAG)-0.00001,           &
-                            XWETINTP1H * LOG( ZVEC1(1:IGWET) ) + XWETINTP2H ) )
+      ZVEC1(1:IGWET) = MAX( 1.00001, MIN( FLOAT(ICEP%NWETLBDAG)-0.00001,           &
+                            ICEP%XWETINTP1H * LOG( ZVEC1(1:IGWET) ) + ICEP%XWETINTP2H ) )
       IVEC1(1:IGWET) = INT( ZVEC1(1:IGWET) )
       ZVEC1(1:IGWET) = ZVEC1(1:IGWET) - FLOAT( IVEC1(1:IGWET) )
 !
-      ZVEC2(1:IGWET) = MAX( 1.00001, MIN( FLOAT(NWETLBDAG)-0.00001,           &
-                            XWETINTP1G * LOG( ZVEC2(1:IGWET) ) + XWETINTP2G ) )
+      ZVEC2(1:IGWET) = MAX( 1.00001, MIN( FLOAT(ICEP%NWETLBDAG)-0.00001,           &
+                            ICEP%XWETINTP1G * LOG( ZVEC2(1:IGWET) ) + ICEP%XWETINTP2G ) )
       IVEC2(1:IGWET) = INT( ZVEC2(1:IGWET) )
       ZVEC2(1:IGWET) = ZVEC2(1:IGWET) - FLOAT( IVEC2(1:IGWET) )
 !
@@ -3532,22 +3382,22 @@ IMPLICIT NONE
 !               GWETH-kernel
 !
       DO JJ = 1,IGWET
-        ZVEC3(JJ) = (  XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                     - XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+        ZVEC3(JJ) = (  ICEP%XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                     - ICEP%XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                                    * ZVEC1(JJ) &
-                  - (  XKER_GWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                     - XKER_GWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
+                  - (  ICEP%XKER_GWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
+                     - ICEP%XKER_GWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                           * (ZVEC1(JJ) - 1.0)
       END DO
       ZZW(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GWET,FIELD=0.0 )
 !
       WHERE( GWET(:) )
-        ZZW1(:,5) = MAX(MIN( ZRGS(:),XFGWETH*ZZW(:)                       & ! RGWETH
-                      *( ZLBDAG(:)**(XCXG-XBG) )*( ZLBDAH(:)**XCXH )  &
-                         *( ZRHODREF(:)**(-XCEXVT-1.) )               &
-                         *( XLBGWETH1/( ZLBDAH(:)**2              ) + &
-                            XLBGWETH2/( ZLBDAH(:)   * ZLBDAG(:)   ) + &
-                            XLBGWETH3/(               ZLBDAG(:)**2) ) ),0. )
+        ZZW1(:,5) = MAX(MIN( ZRGS(:),ICEP%XFGWETH*ZZW(:)                       & ! RGWETH
+                      *( ZLBDAG(:)**(ICED%XCXG-ICED%XBG) )*( ZLBDAH(:)**ICED%XCXH )  &
+                         *( ZRHODREF(:)**(-ICED%XCEXVT-1.) )               &
+                         *( ICEP%XLBGWETH1/( ZLBDAH(:)**2              ) + &
+                            ICEP%XLBGWETH2/( ZLBDAH(:)   * ZLBDAG(:)   ) + &
+                            ICEP%XLBGWETH3/(               ZLBDAG(:)**2) ) ),0. )
       END WHERE
       DEALLOCATE(IVEC2)
       DEALLOCATE(IVEC1)
@@ -3559,23 +3409,23 @@ IMPLICIT NONE
 !*       7.3    compute the Wet growth of hail
 !
     ZZW(:) = 0.0
-    WHERE( GHAIL(:) .AND. ZZT(:)<XTT )
-      ZZW(:) = ZRVT(:)*ZPRES(:)/(XEPSILO+ZRVT(:)) ! Vapor pressure
-      ZZW(:) = ZKA(:)*(XTT-ZZT(:)) +                                 &
-                ( ZDV(:)*(XLVTT + ( XCPV - XCL ) * ( ZZT(:) - XTT )) &
-                            *(XESTT-ZZW(:))/(XRV*ZZT(:))             )
+    WHERE( GHAIL(:) .AND. ZZT(:)<CST%XTT )
+      ZZW(:) = ZRVT(:)*ZPRES(:)/(CST%XEPSILO+ZRVT(:)) ! Vapor pressure
+      ZZW(:) = ZKA(:)*(CST%XTT-ZZT(:)) +                                 &
+                ( ZDV(:)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZZT(:) - CST%XTT )) &
+                            *(CST%XESTT-ZZW(:))/(CST%XRV*ZZT(:)))
 !
 ! compute RWETH
 !
-      ZZW(:)  =  MAX(0.,  ( ZZW(:) * ( X0DEPH*       ZLBDAH(:)**XEX0DEPH +     &
-                                X1DEPH*ZCJ(:)*ZLBDAH(:)**XEX1DEPH ) +   &
+      ZZW(:)  =  MAX(0.,  ( ZZW(:) * ( ICEP%X0DEPH*       ZLBDAH(:)**ICEP%XEX0DEPH + &
+                                ICEP%X1DEPH*ZCJ(:)*ZLBDAH(:)**ICEP%XEX1DEPH ) + &
                    ( ZZW1(:,2)+ZZW1(:,3)+ZZW1(:,5) ) *                  &
-                   ( ZRHODREF(:)*(XLMTT+(XCI-XCL)*(XTT-ZZT(:)))   ) ) / &
-                         ( ZRHODREF(:)*(XLMTT-XCL*(XTT-ZZT(:))) ) )
+                   ( ZRHODREF(:)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-ZZT(:))))) / &
+                         ( ZRHODREF(:)*(CST%XLMTT-CST%XCL*(CST%XTT-ZZT(:))) ) )
 !
       ZZW1(:,6) = MAX( ZZW(:) - ZZW1(:,2) - ZZW1(:,3) - ZZW1(:,5),0.) ! RCWETH+RRWETH
     END WHERE
-    WHERE ( GHAIL(:) .AND. ZZT(:)<XTT  .AND. ZZW1(:,6)/=0.)
+    WHERE ( GHAIL(:) .AND. ZZT(:)<CST%XTT  .AND. ZZW1(:,6)/=0.)
 !
 ! limitation of the available rainwater mixing ratio (RRWETH < RRS !)
 !
@@ -3620,19 +3470,19 @@ IMPLICIT NONE
 !*       7.5    Melting of the hailstones
 !
     ZZW(:) = 0.0
-    WHERE( GHAIL(:) .AND. (ZRHS(:)>0.0) .AND. (ZZT(:)>XTT) )
-      ZZW(:) = ZRVT(:)*ZPRES(:)/(XEPSILO+ZRVT(:)) ! Vapor pressure
-      ZZW(:) = ZKA(:)*(XTT-ZZT(:)) +                              &
-             ( ZDV(:)*(XLVTT + ( XCPV - XCL ) * ( ZZT(:) - XTT )) &
-                             *(XESTT-ZZW(:))/(XRV*ZZT(:))         )
+    WHERE( GHAIL(:) .AND. (ZRHS(:)>0.0) .AND. (ZZT(:)>CST%XTT) )
+      ZZW(:) = ZRVT(:)*ZPRES(:)/(CST%XEPSILO+ZRVT(:)) ! Vapor pressure
+      ZZW(:) = ZKA(:)*(CST%XTT-ZZT(:)) +                              &
+             ( ZDV(:)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZZT(:) - CST%XTT )) &
+                             *(CST%XESTT-ZZW(:))/(CST%XRV*ZZT(:)))
 !
 ! compute RHMLTR
 !
       ZZW(:)  = MIN( ZRHS(:), MAX( 0.0,( -ZZW(:) *                     &
-                             ( X0DEPH*       ZLBDAH(:)**XEX0DEPH +     &
-                               X1DEPH*ZCJ(:)*ZLBDAH(:)**XEX1DEPH ) -   &
-                      ZZW1(:,6)*( ZRHODREF(:)*XCL*(XTT-ZZT(:))) ) /    &
-                                               ( ZRHODREF(:)*XLMTT ) ) )
+                             ( ICEP%X0DEPH*       ZLBDAH(:)**ICEP%XEX0DEPH +     &
+                               ICEP%X1DEPH*ZCJ(:)*ZLBDAH(:)**ICEP%XEX1DEPH ) -   &
+                      ZZW1(:,6)*( ZRHODREF(:)*CST%XCL*(CST%XTT-ZZT(:))) ) /    &
+                                               ( ZRHODREF(:)*CST%XLMTT)))
       ZRRS(:) = ZRRS(:) + ZZW(:)
       ZRHS(:) = ZRHS(:) - ZZW(:)
       ZTHS(:) = ZTHS(:) - ZZW(:)*(ZLSFACT(:)-ZLVFACT(:)) ! f(L_f*(-RHMLTR))
@@ -3667,7 +3517,7 @@ IMPLICIT NONE
 
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RI',0,ZHOOK_HANDLE)
   ZZW(:) = 0.0
-  WHERE( (ZRIS(:)>0.0) .AND. (ZZT(:)>XTT) )
+  WHERE( (ZRIS(:)>0.0) .AND. (ZZT(:)>CST%XTT) )
     ZZW(:)  = ZRIS(:)
     ZRCS(:) = ZRCS(:) + ZRIS(:)
     ZTHS(:) = ZTHS(:) - ZRIS(:)*(ZLSFACT(:)-ZLVFACT(:)) ! f(L_f*(-RIMLTC))
@@ -3699,8 +3549,8 @@ IMPLICIT NONE
        ENDDO
 
        WHERE( ZZW2(:)>0.0 .AND. ZESI(:) < ZPRES(:)*0.5)
-          ZZW(:)= X0DEPI/(XLBI*ZAI(:)) *(ZZW2(:)/ZRHODREF(:))**(1.+XLBEXI) * &
-             & (PTSTEP*MAX(XRTMIN(4)/PTSTEP,ZRIS(:))*ZW2D(:) )**(-XLBEXI)
+          ZZW(:)= ICEP%X0DEPI/(ICED%XLBI*ZAI(:)) *(ZZW2(:)/ZRHODREF(:))**(1.+ICED%XLBEXI) * &
+             & (PTSTEP*MAX(ICED%XRTMIN(4)/PTSTEP,ZRIS(:))*ZW2D(:) )**(-ICED%XLBEXI)
           ZZW(:)=  MAX(-ZRIS(:)*ZW2D(:)*(1.-ZSIFRC(:))+ZZW(:)*ZSSIO(:)* ZSIFRC(:)* ZXW2D13(:), &
         &  ZZW(:)* ( ZSSIO(:)* ZSIFRC(:)* ZXW2D13(:)  + ZCITRED23*ZSSIU(:)* (1.-ZSIFRC(:)) ))
 
@@ -3714,7 +3564,7 @@ IMPLICIT NONE
 
       DO JK=1,KSIZE
 
-        ZTC =  MAX(-18.,MIN(-1.,ZZT(JK)-XTT))
+        ZTC =  MAX(-18.,MIN(-1.,ZZT(JK)-CST%XTT))
         ZHU =  MIN(0.15,MAX(0.,ZSSI(JK)))
         ZCRYSHA(JK)=1.1+ 3.*ZHU*(1.+ SIN(0.64*ZTC -1.3))
 !       icedensity*4/3 *pi /8. =366.5 ; icedensity=700 kg/m3
@@ -3729,7 +3579,7 @@ IMPLICIT NONE
 
       WHERE( ZCIT(:)>0.0 .AND. ZESI(:) < ZPRES(:)*0.5)
         ZZWC(:)=ZCRYSHA(:)*0.878/ZAI(:)*(ZCIT(:)/ZRHODREF(:))**0.667 &
-             &*(MAX(XRTMIN(4)/PTSTEP,ZRIS(:))*PTSTEP*ZW2D(:))**0.333
+             &*(MAX(ICED%XRTMIN(4)/PTSTEP,ZRIS(:))*PTSTEP*ZW2D(:))**0.333
 !     Ice supersaturated part of grid box:
         WHERE( ZSSIO(:)>0. .AND. ZSIFRC(:) > 0.02_JPRB )
            ZZW(:)  = ZZWC(:)*ZXW2D13(:)*ZSSIO(:)
@@ -3752,10 +3602,10 @@ IMPLICIT NONE
 
   ELSE ! End OCND2
   WHERE( (ZRCS(:)>0.0) .AND. (ZSSI(:)>0.0) .AND. &
-         (ZRIT(:)>XRTMIN(4)) .AND. (ZCIT(:)>0.0)       )
-    ZZW(:) = MIN(1.E8,XLBI*( ZRHODREF(:)*ZRIT(:)/ZCIT(:) )**XLBEXI) ! Lbda_i
+         (ZRIT(:)>ICED%XRTMIN(4)) .AND. (ZCIT(:)>0.0)       )
+    ZZW(:) = MIN(1.E8,ICED%XLBI*( ZRHODREF(:)*ZRIT(:)/ZCIT(:) )**ICED%XLBEXI) ! Lbda_i
     ZZW(:) = MIN( ZRCS(:),( ZSSI(:) / (ZRHODREF(:)*ZAI(:)) ) * ZCIT(:) * &
-                  ( X0DEPI/ZZW(:) + X2DEPI*ZCJ(:)*ZCJ(:)/ZZW(:)**(XDI+2.0) ) )
+                  ( ICEP%X0DEPI/ZZW(:) + ICEP%X2DEPI*ZCJ(:)*ZCJ(:)/ZZW(:)**(ICED%XDI+2.0) ) )
     ZRCS(:) = ZRCS(:) - ZZW(:)
     ZRIS(:) = ZRIS(:) + ZZW(:)
     ZTHS(:) = ZTHS(:) + ZZW(:)*(ZLSFACT(:)-ZLVFACT(:))
@@ -3787,7 +3637,7 @@ IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAINFR_VERT',0,ZHOOK_HANDLE)
   DO JI = D%NIB,D%NIE
     ZPRFR(JI,IKE)=0.
     DO JK=IKE-KKL, IKB, -KKL
-       IF (ZRR(JI,JK) .GT. XRTMIN(3)) THEN
+       IF (ZRR(JI,JK) .GT. ICED%XRTMIN(3)) THEN
           ZPRFR(JI,JK)=MAX(ZPRFR(JI,JK),ZPRFR(JI,JK+KKL))
           IF (ZPRFR(JI,JK)==0) THEN
              ZPRFR(JI,JK)=1.
