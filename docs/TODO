@@ -48,9 +48,7 @@ Pb identifiés à corriger plus tard:
   - th_r_from_thl_rt appelée partout, il faudrait limiter à OTEST
   - La taille du buffer utilisé pour th_r_from_thl_rt doit être mise en module et
     utilisée pour déclarer le buffer dans les routines appelantes et dans th_r_from_thl_rt
-  - rain_ice:
-    - séparer l'avance temporelle du découpage en sous-blocs en créant une couche driver supplémentaire. Cette couche pourrait
-      avoir différentes implémentations (filtre LLMICRO seul, filtre LLMICRO + découpage en sous-blocs, filtre LLMICR
+  - rain_ice: coder d'autres implémentations de ice4_pack (filtre LLMICRO seul et/ou découpage en sous-blocs, rien)
   - shuman, turb, shuman_mf, apl_arome
     - peut-on remettre à jour la partie sous le sol des variables pronostiques avant d'entrer dans EDKFi dans Méso-NH? Si oui, on devrait pouvoir
       récrire les shuman_mf pour qu'ils produisent les mêmes résultats qu'aujourd'hui mais sans utiliser les valeurs sous le sol ou dans "l'espace infini"

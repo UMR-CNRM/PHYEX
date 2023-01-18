@@ -386,7 +386,7 @@ DO JK=IKTB,IKTE
       ZW3D(JIJ, JK)=ZZ_LSFACT(JIJ, JK)/PEXN(JIJ, JK)
 #ifdef REPRO55
 #else
-      PCIT(JIJ,JK)=0.
+      PCIT(JIJ,JK)=0. !ri=0 because where are in the not odmicro case
 #endif
  
     ELSE
