@@ -5,9 +5,8 @@
 !-----------------------------------------------------------------
 !     ######spl
       SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
-                            KPROMA, KSIZE,                                        &
-                            OCND2,HSUBG_AUCV_RC, HSUBG_AUCV_RI,  &
-                            PTSTEP, KRR, ODMICRO, PEXN,                           &
+                            KPROMA, OCND2, HSUBG_AUCV_RC, HSUBG_AUCV_RI,          &
+                            PTSTEP, KRR, PEXN,                                    &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
                             PTHT, PRVT, PRCT, PRRT, PRIT, PRST,                   &
@@ -220,13 +219,11 @@ TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KPROMA ! cache-blocking factor for microphysic loop
-INTEGER,                  INTENT(IN)    :: KSIZE
 LOGICAL                                 :: OCND2  ! Logical switch to separate liquid and ice
 CHARACTER(LEN=4),         INTENT(IN)    :: HSUBG_AUCV_RC ! Kind of Subgrid autoconversion method
 CHARACTER(LEN=80),        INTENT(IN)    :: HSUBG_AUCV_RI ! Kind of Subgrid autoconversion method
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
-LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: ODMICRO ! mask to limit computation
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXN    ! Exner function
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PDZZ    ! Layer thikness (m)
@@ -241,6 +238,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PHLC_HRC
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PHLC_HCF
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PHLI_HRI
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PHLI_HCF
+!
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PTHT    ! Theta at time t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRVT    ! Water vapor m.r. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRCT    ! Cloud water m.r. at t
@@ -265,6 +263,7 @@ REAL, DIMENSION(D%NIJT), INTENT(OUT)       :: PINPRG! Graupel instant precip
 REAL, DIMENSION(MERGE(D%NIJT, 0, PARAMI%LDEPOSC)), INTENT(OUT) :: PINDEP  ! Cloud instant deposition
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) :: PRAINFR !Precipitation fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
+!
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 REAL, DIMENSION(D%NIJT), OPTIONAL, INTENT(IN)        :: PSEA ! Sea Mask
@@ -282,7 +281,8 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 INTEGER :: JIJ, JK
 INTEGER :: IKTB, IKTE, IKB, IIJB, IIJE
 !
-!Arrays for nucleation call outisde of ODMICRO points
+LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLMICRO ! mask to limit computation
+!Arrays for nucleation call outisde of LLMICRO points
 REAL,    DIMENSION(D%NIJT, D%NKT) :: ZT ! Temperature
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZZ_RVHENI       ! heterogeneous nucleation
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZZ_LVFACT, ZZ_LSFACT
@@ -295,6 +295,8 @@ REAL :: ZDEVIDE, ZRICE
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZW3D
 LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLW3D
+REAL, DIMENSION(KRR) :: ZRSMIN
+INTEGER :: ISIZE, IPROMA, IGPBLKS
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 0, ZHOOK_HANDLE)
@@ -314,9 +316,13 @@ IF(OCND2) THEN
 END IF
 ZINV_TSTEP=1./PTSTEP
 !
-! LSFACT and LVFACT without exner
+! LSFACT and LVFACT without exner, and LLMICRO
+! LLMICRO is a mask with a True value on points where microphysics is active
+ZRSMIN(1:KRR) = ICED%XRTMIN(1:KRR) * ZINV_TSTEP
+LLMICRO(:,:)=.FALSE.
 DO JK = IKTB,IKTE
   DO JIJ = IIJB,IIJE
+    !LSFACT and LVFACT
     IF (KRR==7) THEN
       ZRICE=PRIT(JIJ,JK)+PRST(JIJ,JK)+PRGT(JIJ,JK)+PRHT(JIJ,JK)
     ELSE
@@ -326,8 +332,42 @@ DO JK = IKTB,IKTE
     ZT(JIJ,JK) = PTHT(JIJ,JK) * PEXN(JIJ,JK)
     ZZ_LSFACT(JIJ,JK)=(CST%XLSTT+(CST%XCPV-CST%XCI)*(ZT(JIJ,JK)-CST%XTT)) / ZDEVIDE
     ZZ_LVFACT(JIJ,JK)=(CST%XLVTT+(CST%XCPV-CST%XCL)*(ZT(JIJ,JK)-CST%XTT)) / ZDEVIDE
+
+    !LLMICRO
+    IF (KRR==7) THEN
+      LLMICRO(JIJ,JK)=PRCT(JIJ,JK)>ICED%XRTMIN(2) .OR. &
+                      PRRT(JIJ,JK)>ICED%XRTMIN(3) .OR. &
+                      PRIT(JIJ,JK)>ICED%XRTMIN(4) .OR. &
+                      PRST(JIJ,JK)>ICED%XRTMIN(5) .OR. &
+                      PRGT(JIJ,JK)>ICED%XRTMIN(6) .OR. &
+                      PRHT(JIJ,JK)>ICED%XRTMIN(7)
+#ifdef REPRO55
+      LLMICRO(JIJ,JK)=LLMICRO(JIJ,JK) .OR. &
+                      PRCS(JIJ,JK)>ZRSMIN(2) .OR. &
+                      PRRS(JIJ,JK)>ZRSMIN(3) .OR. &
+                      PRIS(JIJ,JK)>ZRSMIN(4) .OR. &
+                      PRSS(JIJ,JK)>ZRSMIN(5) .OR. &
+                      PRGS(JIJ,JK)>ZRSMIN(6) .OR. &
+                      PRHS(JIJ,JK)>ZRSMIN(7)
+#endif
+    ELSE
+      LLMICRO(JIJ,JK)=PRCT(JIJ,JK)>ICED%XRTMIN(2) .OR. &
+                      PRRT(JIJ,JK)>ICED%XRTMIN(3) .OR. &
+                      PRIT(JIJ,JK)>ICED%XRTMIN(4) .OR. &
+                      PRST(JIJ,JK)>ICED%XRTMIN(5) .OR. &
+                      PRGT(JIJ,JK)>ICED%XRTMIN(6)
+#ifdef REPRO55
+      LLMICRO(JIJ,JK)=LLMICRO(JIJ,JK) .OR. &
+                      PRCS(JIJ,JK)>ZRSMIN(2) .OR. &
+                      PRRS(JIJ,JK)>ZRSMIN(3) .OR. &
+                      PRIS(JIJ,JK)>ZRSMIN(4) .OR. &
+                      PRSS(JIJ,JK)>ZRSMIN(5) .OR. &
+                      PRGS(JIJ,JK)>ZRSMIN(6)
+#endif
+    ENDIF
   ENDDO
 ENDDO
+ISIZE=COUNT(LLMICRO) ! Number of points with active microphysics
 !
 !
 !-------------------------------------------------------------------------------
@@ -375,13 +415,15 @@ DO JK = IKTB,IKTE
 ENDDO
 !
 !
-!*       4.     COMPUTES THE SLOW COLD PROCESS SOURCES OUTSIDE OF ODMICRO POINTS
-!               ----------------------------------------------------------------
+!*       4.     COMPUTES THE SLOW COLD PROCESS SOURCES OUTSIDE OF LLMICRO POINTS
+!               -----------------------------------------------------------------
 !
+!The nucelation must be call everywhere
+!This call is for points outside of the LLMICR mask, another call is coded in ice4_tendencies
 LLW3D(:,:)=.FALSE.
 DO JK=IKTB,IKTE
   DO JIJ=IIJB,IIJE
-    IF (.NOT. ODMICRO(JIJ, JK)) THEN
+    IF (.NOT. LLMICRO(JIJ, JK)) THEN
       LLW3D(JIJ, JK)=.TRUE.
       ZW3D(JIJ, JK)=ZZ_LSFACT(JIJ, JK)/PEXN(JIJ, JK)
 #ifdef REPRO55
@@ -409,11 +451,23 @@ ENDDO
 !*       5.     TENDENCIES COMPUTATION
 !               ----------------------
 !
+!KPROMA is the requested size for cache_blocking loop
+!IPROMA is the effective size
+!This parameter must be computed here because it is used for array dimensioning in ice4_pack
+IF (KPROMA > 0 .AND. ISIZE > 0) THEN
+  ! Cache-blocking is active
+  ! number of chunks :
+  IGPBLKS = (ISIZE-1)/MIN(KPROMA,ISIZE)+1
+  ! Adjust IPROMA to limit the number of small chunks
+  IPROMA=(ISIZE-1)/IGPBLKS+1
+ELSE
+  IPROMA=ISIZE ! no cache-blocking
+ENDIF
 !This part is put in another routine to separate pack/unpack operations from computations
 CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
-               KPROMA, KSIZE,                                        &
+               IPROMA, ISIZE,                                        &
                HSUBG_AUCV_RC, HSUBG_AUCV_RI,                         &
-               PTSTEP, KRR, ODMICRO, PEXN,                           &
+               PTSTEP, KRR, LLMICRO, PEXN,                           &
                PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
                PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
                PTHT, PRVT, PRCT, PRRT, PRIT, PRST,                   &

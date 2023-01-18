@@ -211,12 +211,8 @@ REAL  :: ZMASSPOS                   ! total mass  for one water category
                                     ! after removing the negative values
 REAL  :: ZRATIO                     ! ZMASSTOT / ZMASSCOR
 
-LOGICAL, DIMENSION(KLON, 1, KLEV) :: LLMICRO !mask to limit computation
-
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH) :: YLBUDGET !NBUDGET_RH is the one with the highest number
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
-!
-INTEGER :: IPROMA, ISIZE, IGPBLKS ! cache-blocking management
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 
@@ -239,20 +235,6 @@ IF ( KRR == 7 ) THEN
   IF (CMICRO /= 'ICE4' .AND. CMICRO /= 'OLD4') THEN
     CALL ABOR1('ARO_RAIN_ICE : KRR==7 NOT COMPATIBLE WITH CMICRO /= ICE4 OR OLD4')
   ENDIF
-  LLMICRO(:,:,:)=                          &
-                PRT(:,:,:,2)>RAIN_ICE_DESCR%XRTMIN(2) .OR. &
-                PRT(:,:,:,3)>RAIN_ICE_DESCR%XRTMIN(3) .OR. &
-                PRT(:,:,:,4)>RAIN_ICE_DESCR%XRTMIN(4) .OR. &
-                PRT(:,:,:,5)>RAIN_ICE_DESCR%XRTMIN(5) .OR. &
-                PRT(:,:,:,6)>RAIN_ICE_DESCR%XRTMIN(6) .OR. &
-                PRT(:,:,:,7)>RAIN_ICE_DESCR%XRTMIN(7)
-ELSE IF( KRR == 6 ) THEN
-  LLMICRO(:,:,:)=                          &
-                PRT(:,:,:,2)>RAIN_ICE_DESCR%XRTMIN(2) .OR. &
-                PRT(:,:,:,3)>RAIN_ICE_DESCR%XRTMIN(3) .OR. &
-                PRT(:,:,:,4)>RAIN_ICE_DESCR%XRTMIN(4) .OR. &
-                PRT(:,:,:,5)>RAIN_ICE_DESCR%XRTMIN(5) .OR. &
-                PRT(:,:,:,6)>RAIN_ICE_DESCR%XRTMIN(6)
 END IF
 
 
@@ -384,24 +366,14 @@ ENDDO
 !
 !
 !
-ISIZE=COUNT(LLMICRO)
-IF (KPROMA > 0 .AND. ISIZE > 0) THEN
-  ! Cache-blocking is active
-  ! number of chunks :
-  IGPBLKS = (ISIZE-1)/MIN(KPROMA,ISIZE)+1
-  ! Adjust IPROMA to limit the number of small chunks
-  IPROMA=(ISIZE-1)/IGPBLKS+1
-ELSE
-  IPROMA=ISIZE ! no cache-blocking
-ENDIF
 IF (CMICRO=='ICE4') THEN
     CALL RAIN_ICE(  YLDIMPHYEX, CST, PARAM_ICE, RAIN_ICE_PARAM, &
                  &  RAIN_ICE_DESCR, TBUCONF, &
-                 &  IPROMA, ISIZE, &
+                 &  KPROMA, &
                  &  OCND2=OCND2, &
                  &  HSUBG_AUCV_RC=CSUBG_AUCV_RC, HSUBG_AUCV_RI=CSUBG_AUCV_RI,&
                  &  PTSTEP=2*PTSTEP, &
-                 &  KRR=KRR, ODMICRO=LLMICRO, PEXN=PEXNREF,            &
+                 &  KRR=KRR, PEXN=PEXNREF,            &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF, PEXNREF=PEXNREF,&
                  &  PPABST=PPABSM, PCIT=PCIT, PCLDFR=PCLDFR,  &
                  &  PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, &
@@ -422,11 +394,11 @@ IF (CMICRO=='ICE4') THEN
 ELSEIF (CMICRO=='ICE3') THEN
     CALL RAIN_ICE(  YLDIMPHYEX, CST, PARAM_ICE, RAIN_ICE_PARAM, &
                  &  RAIN_ICE_DESCR, TBUCONF, &
-                 &  IPROMA, ISIZE, &
+                 &  KPROMA, &
                  &  OCND2=OCND2, &
                  &  HSUBG_AUCV_RC=CSUBG_AUCV_RC, HSUBG_AUCV_RI=CSUBG_AUCV_RI,&
                  &  PTSTEP=2*PTSTEP, &
-                 &  KRR=KRR, ODMICRO=LLMICRO, PEXN=PEXNREF,            &
+                 &  KRR=KRR, PEXN=PEXNREF,            &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF,PEXNREF=PEXNREF,&
                  &  PPABST=PPABSM, PCIT=PCIT, PCLDFR=PCLDFR,  &
                  &  PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, &

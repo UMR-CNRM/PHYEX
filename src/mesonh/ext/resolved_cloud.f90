@@ -477,12 +477,10 @@ REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZZZ
 !
 INTEGER                               :: ISVBEG ! first scalar index for microphysics
 INTEGER                               :: ISVEND ! last  scalar index for microphysics
-REAL, DIMENSION(:),       ALLOCATABLE :: ZRSMIN ! Minimum value for tendencies
 !UPG*PT
 REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: ZSVT   ! scalar variable for microphysics only
 !UPG*PT
 
-LOGICAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: LLMICRO ! mask to limit computation
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3), KRR) :: ZFPR
 !
 INTEGER                               :: JMOD, JMOD_IFN
@@ -579,10 +577,6 @@ END IF
 
 !UPG*PT
 !
-IF (HCLOUD(1:3)=='ICE' .AND. LRED) THEN
-  ALLOCATE(ZRSMIN(SIZE(XRTMIN)))
-  ZRSMIN(:) = XRTMIN(:) / PTSTEP
-END IF
 !
 !*       2.     TRANSFORMATION INTO PHYSICAL TENDENCIES
 !               ---------------------------------------
@@ -832,22 +826,9 @@ SELECT CASE ( HCLOUD )
                       PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                     )
     ENDIF
     IF (LRED) THEN
-      LLMICRO(:,:,:) = .FALSE.
-      LLMICRO(IIB:IIE,IJB:IJE,IKB:IKE)=PRT(IIB:IIE,IJB:IJE,IKB:IKE,2)>XRTMIN(2) .OR. &
-                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,3)>XRTMIN(3) .OR. &
-                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,4)>XRTMIN(4) .OR. &
-                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,5)>XRTMIN(5) .OR. &
-                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,6)>XRTMIN(6)
-      LLMICRO(IIB:IIE,IJB:IJE,IKB:IKE)=LLMICRO(IIB:IIE,IJB:IJE,IKB:IKE) .OR. &
-                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,2)>ZRSMIN(2) .OR. &
-                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,3)>ZRSMIN(3) .OR. &
-                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,4)>ZRSMIN(4) .OR. &
-                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,5)>ZRSMIN(5) .OR. &
-                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,6)>ZRSMIN(6)
       CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICE, RAIN_ICE_PARAM, RAIN_ICE_DESCR,TBUCONF,&
-                    COUNT(LLMICRO), COUNT(LLMICRO), &
-                    .FALSE., HSUBG_AUCV, CSUBG_AUCV_RI,&
-                    PTSTEP, KRR, LLMICRO, ZEXN,                          &
+                    0, .FALSE., HSUBG_AUCV, CSUBG_AUCV_RI,               &
+                    PTSTEP, KRR, ZEXN,                                   &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT,PCLDFR,&
                     PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,              &
                     PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                    &
@@ -937,26 +918,11 @@ SELECT CASE ( HCLOUD )
                        PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                    )
     ENDIF
     IF  (LRED) THEN
-      LLMICRO(:,:,:) = .FALSE.
-      LLMICRO(IIB:IIE,IJB:IJE,IKB:IKE)=PRT(IIB:IIE,IJB:IJE,IKB:IKE,2)>XRTMIN(2) .OR. &
-                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,3)>XRTMIN(3) .OR. &
-                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,4)>XRTMIN(4) .OR. &
-                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,5)>XRTMIN(5) .OR. &
-                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,6)>XRTMIN(6) .OR. &
-                   PRT(IIB:IIE,IJB:IJE,IKB:IKE,7)>XRTMIN(7)
-      LLMICRO(IIB:IIE,IJB:IJE,IKB:IKE)=LLMICRO(IIB:IIE,IJB:IJE,IKB:IKE) .OR. &
-                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,2)>ZRSMIN(2) .OR. &
-                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,3)>ZRSMIN(3) .OR. &
-                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,4)>ZRSMIN(4) .OR. &
-                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,5)>ZRSMIN(5) .OR. &
-                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,6)>ZRSMIN(6) .OR. &
-                   PRS(IIB:IIE,IJB:IJE,IKB:IKE,7)>ZRSMIN(7)
      CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICE, RAIN_ICE_PARAM, RAIN_ICE_DESCR,TBUCONF,&
-                    COUNT(LLMICRO), COUNT(LLMICRO), &
-                    .FALSE., HSUBG_AUCV, CSUBG_AUCV_RI,&
-                    PTSTEP, KRR, LLMICRO, ZEXN,             &
+                    0, .FALSE., HSUBG_AUCV, CSUBG_AUCV_RI,                &
+                    PTSTEP, KRR, ZEXN,                                    &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
-                    PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
+                    PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
                     PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                     &
                     PRT(:,:,:,3), PRT(:,:,:,4),                           &
                     PRT(:,:,:,5), PRT(:,:,:,6),                           &
