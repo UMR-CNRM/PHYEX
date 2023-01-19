@@ -8,7 +8,7 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &LDSIGMA_RC, LDAUCV_ADJU, LDEXT_TEND, &
-                        &KPROMA, KMICRO, PTSTEP, &
+                        &KPROMA, KMICRO, LDMICRO, PTSTEP, &
                         &KRR, &
                         &HSUBG_AUCV_RC, HSUBG_AUCV_RI, &
                         &PEXN, PRHODREF, K1, K2, &
@@ -66,6 +66,7 @@ LOGICAL,                  INTENT(IN)    :: LDAUCV_ADJU
 LOGICAL,                  INTENT(IN)    :: LDEXT_TEND
 INTEGER,                  INTENT(IN)    :: KPROMA ! cache-blocking factor for microphysic loop
 INTEGER,                  INTENT(IN)    :: KMICRO ! Case r_x>0 locations
+LOGICAL, DIMENSION(KPROMA), INTENT(IN)  :: LDMICRO
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 CHARACTER(LEN=4),         INTENT(IN)    :: HSUBG_AUCV_RC ! Kind of Subgrid autoconversion method
@@ -194,7 +195,13 @@ ENDIF
 !
 !
 IITER(1:KMICRO)=0
-ZTIME(1:KMICRO)=0. ! Current integration time (all points may have a different integration time)
+DO JL=1, KMICRO
+  IF(LDMICRO(JL)) THEN
+    ZTIME(JL)=0. ! Current integration time (all points may have a different integration time)
+  ELSE
+    ZTIME(JL)=PTSTEP ! Nothing to do on this point, it has already reached the end of the timestep
+  ENDIF
+ENDDO
 
 DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 
@@ -358,14 +365,16 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     !
     DO JV=0, KRR
       DO JL=1, KMICRO
-        PVART(JL, JV)=PVART(JL, JV)+ZA(JL, JV)*ZMAXTIME(JL)+ZB(JL, JV)
+        IF(LDMICRO(JL)) THEN
+          PVART(JL, JV)=PVART(JL, JV)+ZA(JL, JV)*ZMAXTIME(JL)+ZB(JL, JV)
+        ENDIF
       ENDDO
     ENDDO
     DO JL=1, KMICRO
 #ifdef REPRO55
       PCIT(JL)=PCIT(JL) * MAX(0., -SIGN(1., -PVART(JL,IRI)))
 #else
-      IF (PVART(JL,IRI)<=0.) PCIT(JL) = 0.
+      IF (PVART(JL,IRI)<=0. .AND. LDMICRO(JL)) PCIT(JL) = 0.
 #endif
       ZTIME(JL)=ZTIME(JL)+ZMAXTIME(JL)
     ENDDO
@@ -408,7 +417,9 @@ IF(LDEXT_TEND) THEN
   !Z..T variables contain the external tendency, we substract it
   DO JV=0, KRR
     DO JL=1, KMICRO
-      PVART(JL, JV) = PVART(JL, JV) - PEXTPK(JL, JV) * PTSTEP
+      IF(LDMICRO(JL)) THEN
+        PVART(JL, JV) = PVART(JL, JV) - PEXTPK(JL, JV) * PTSTEP
+      ENDIF
     ENDDO
   ENDDO
 ENDIF

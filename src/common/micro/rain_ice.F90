@@ -234,10 +234,10 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PPABST  ! absolute pressure at
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCLDFR  ! Cloud fraction
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PHLC_HRC
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PHLC_HCF
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PHLI_HRI
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PHLI_HCF
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLC_HRC
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLC_HCF
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLI_HRI
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLI_HCF
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PTHT    ! Theta at time t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRVT    ! Water vapor m.r. at t
@@ -296,7 +296,7 @@ REAL :: ZDEVIDE, ZRICE
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZW3D
 LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLW3D
 REAL, DIMENSION(KRR) :: ZRSMIN
-INTEGER :: ISIZE, IPROMA, IGPBLKS
+INTEGER :: ISIZE, IPROMA, IGPBLKS, ISIZE2
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 0, ZHOOK_HANDLE)
@@ -367,7 +367,6 @@ DO JK = IKTB,IKTE
     ENDIF
   ENDDO
 ENDDO
-ISIZE=COUNT(LLMICRO) ! Number of points with active microphysics
 !
 !
 !-------------------------------------------------------------------------------
@@ -394,7 +393,8 @@ ENDIF
 !
 
 DO JK = IKTB,IKTE
-  !Backup of T variables
+  !Copy of T variables to keep untouched the prognostic variables
+  ZWR(:,JK,ITH)=PTHT(:,JK)
   ZWR(:,JK,IRV)=PRVT(:,JK)
   ZWR(:,JK,IRC)=PRCT(:,JK)
   ZWR(:,JK,IRR)=PRRT(:,JK)
@@ -451,33 +451,40 @@ ENDDO
 !*       5.     TENDENCIES COMPUTATION
 !               ----------------------
 !
-!KPROMA is the requested size for cache_blocking loop
-!IPROMA is the effective size
-!This parameter must be computed here because it is used for array dimensioning in ice4_pack
-IF (KPROMA > 0 .AND. ISIZE > 0) THEN
-  ! Cache-blocking is active
-  ! number of chunks :
-  IGPBLKS = (ISIZE-1)/MIN(KPROMA,ISIZE)+1
-  ! Adjust IPROMA to limit the number of small chunks
-  IPROMA=(ISIZE-1)/IGPBLKS+1
+IF(PARAMI%LPACK_MICRO) THEN
+  ISIZE=COUNT(LLMICRO) ! Number of points with active microphysics
+  !KPROMA is the requested size for cache_blocking loop
+  !IPROMA is the effective size
+  !This parameter must be computed here because it is used for array dimensioning in ice4_pack
+  IF (KPROMA > 0 .AND. ISIZE > 0) THEN
+    ! Cache-blocking is active
+    ! number of chunks :
+    IGPBLKS = (ISIZE-1)/MIN(KPROMA,ISIZE)+1
+    ! Adjust IPROMA to limit the number of small chunks
+    IPROMA=(ISIZE-1)/IGPBLKS+1
+  ELSE
+    IPROMA=ISIZE ! no cache-blocking
+  ENDIF
+  ISIZE2=IPROMA
 ELSE
-  IPROMA=ISIZE ! no cache-blocking
+  ISIZE=D%NIJT*D%NKT
+  IPROMA=0
+  ISIZE2=ISIZE
 ENDIF
 !This part is put in another routine to separate pack/unpack operations from computations
 CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
-               IPROMA, ISIZE,                                        &
+               IPROMA, ISIZE, ISIZE2,                                &
                HSUBG_AUCV_RC, HSUBG_AUCV_RI,                         &
                PTSTEP, KRR, LLMICRO, PEXN,                           &
                PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
                PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
-               PTHT, PRVT, PRCT, PRRT, PRIT, PRST,                   &
-               PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,       &
+               PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,             &
                PEVAP3D,                                              &
                PRAINFR, PSIGS,                                       &
                ZZ_RVHENI, ZZ_LVFACT, ZZ_LSFACT,                      &
                ZWR,                                                  &
                TBUDGETS, KBUDGETS,                                   &
-               PRHT, PRHS                                            )
+               PRHS                                                  )
 !
 !-------------------------------------------------------------------------------
 !
@@ -493,7 +500,7 @@ DO JK = IKTB, IKTE
     ZZ_LSFACT(JIJ,JK)=ZZ_LSFACT(JIJ,JK)/PEXNREF(JIJ,JK)
     ZZ_LVFACT(JIJ,JK)=ZZ_LVFACT(JIJ,JK)/PEXNREF(JIJ,JK)
 
-    !Hydrometeor tendencies is the difference between old state and new state (can be negative)
+    !Hydrometeor tendencies is the difference between new state and old state (can be negative)
     ZWR(JIJ,JK,IRV)=(ZWR(JIJ,JK,IRV)-PRVT(JIJ,JK))*ZINV_TSTEP
     ZWR(JIJ,JK,IRC)=(ZWR(JIJ,JK,IRC)-PRCT(JIJ,JK))*ZINV_TSTEP
     ZWR(JIJ,JK,IRR)=(ZWR(JIJ,JK,IRR)-PRRT(JIJ,JK))*ZINV_TSTEP

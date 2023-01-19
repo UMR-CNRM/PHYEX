@@ -7,7 +7,7 @@
 MODULE MODE_ICE4_BUDGETS
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_BUDGETS(D, PARAMI, BUCONF, KSIZE, KPROMA, PTSTEP, KRR, K1, K2, &
+SUBROUTINE ICE4_BUDGETS(D, PARAMI, BUCONF, KSIZE, PTSTEP, KRR, K1, K2, &
                         PLVFACT, PLSFACT, PRHODJ, PEXNREF, &
                         PRVHENI, PBU_PACK, &
                         TBUDGETS, KBUDGETS)
@@ -38,11 +38,10 @@ TYPE(DIMPHYEX_t),                            INTENT(IN)    :: D
 TYPE(PARAM_ICE_t),                           INTENT(IN)    :: PARAMI
 TYPE(TBUDGETCONF_t),                         INTENT(IN)    :: BUCONF
 INTEGER,                                     INTENT(IN)    :: KSIZE
-INTEGER,                                     INTENT(IN)    :: KPROMA
 REAL,                                        INTENT(IN)    :: PTSTEP
 INTEGER,                                     INTENT(IN)    :: KRR
-INTEGER, DIMENSION(KPROMA),                  INTENT(IN)    :: K1
-INTEGER, DIMENSION(KPROMA),                  INTENT(IN)    :: K2
+INTEGER, DIMENSION(KSIZE),                   INTENT(IN)    :: K1
+INTEGER, DIMENSION(KSIZE),                   INTENT(IN)    :: K2
 REAL, DIMENSION(D%NIJT, D%NKT),              INTENT(IN)    :: PLVFACT
 REAL, DIMENSION(D%NIJT, D%NKT),              INTENT(IN)    :: PLSFACT
 REAL, DIMENSION(D%NIJT, D%NKT),              INTENT(IN)    :: PRHODJ

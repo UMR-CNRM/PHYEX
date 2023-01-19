@@ -881,6 +881,7 @@ IF (KMI == 1) THEN
   XVDEPOSC= 0.02 ! 2 cm/s
   LSNOW_T=.FALSE.
   LPACK_INTERP=.TRUE.
+  LPACK_MICRO=.TRUE. ! Meso-NH does not work with LPACK_MICRO=.FALSE.
 END IF
 !
 !-------------------------------------------------------------------------------
