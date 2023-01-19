@@ -323,7 +323,7 @@ IIJB=D%NIJB
 !
 IF (TURBN%LHARAT) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  ZKEFF(IIJB:IIJE,IKB:IKE) =  PLM(IIJB:IIJE,IKB:IKE) * SQRT(PTKEM(IIJB:IIJE,IKB:IKE))
+  ZKEFF(IIJB:IIJE,1:IKT) =  PLM(IIJB:IIJE,1:IKT) * SQRT(PTKEM(IIJB:IIJE,1:IKT))
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ELSE
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -351,16 +351,16 @@ DO JSV=1,KSV
 ! Preparation of the arguments for TRIDIAG
     IF (TURBN%LHARAT) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)  
-      ZA(IIJB:IIJE,IKB:IKE) = -PTSTEP * ZKEFF(IIJB:IIJE,IKB:IKE) * ZWORK1(IIJB:IIJE,IKB:IKE) &
-                                   / PDZZ(IIJB:IIJE,IKB:IKE)**2
+      ZA(IIJB:IIJE,1:IKT) = -PTSTEP * ZKEFF(IIJB:IIJE,1:IKT) * ZWORK1(IIJB:IIJE,1:IKT) &
+                                   / PDZZ(IIJB:IIJE,1:IKT)**2
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ELSE
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZA(IIJB:IIJE,IKB:IKE) = -PTSTEP*ZCSV*PPSI_SV(IIJB:IIJE,IKB:IKE,JSV) *   &
-                   ZKEFF(IIJB:IIJE,IKB:IKE) * ZWORK1(IIJB:IIJE,IKB:IKE) / PDZZ(IIJB:IIJE,IKB:IKE)**2
+      ZA(IIJB:IIJE,1:IKT) = -PTSTEP*ZCSV*PPSI_SV(IIJB:IIJE,1:IKT,JSV) *   &
+                   ZKEFF(IIJB:IIJE,1:IKT) * ZWORK1(IIJB:IIJE,1:IKT) / PDZZ(IIJB:IIJE,1:IKT)**2
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ENDIF
-  ZSOURCE(IIJB:IIJE,IKB:IKE) = 0.
+  ZSOURCE(IIJB:IIJE,1:IKT) = 0.
 !
 ! Compute the sources for the JSVth scalar variable
 
@@ -389,8 +389,8 @@ DO JSV=1,KSV
 !
 !  Compute the equivalent tendency for the JSV scalar variable
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  PRSVS(IIJB:IIJE,IKB:IKE,JSV)= PRSVS(IIJB:IIJE,IKB:IKE,JSV)+    &
-                    PRHODJ(IIJB:IIJE,IKB:IKE)*(ZRES(IIJB:IIJE,IKB:IKE)-PSVM(IIJB:IIJE,IKB:IKE,JSV))/PTSTEP
+  PRSVS(IIJB:IIJE,1:IKT,JSV)= PRSVS(IIJB:IIJE,1:IKT,JSV)+    &
+                    PRHODJ(IIJB:IIJE,1:IKT)*(ZRES(IIJB:IIJE,1:IKT)-PSVM(IIJB:IIJE,1:IKT,JSV))/PTSTEP
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
   IF ( (TURBN%LTURB_FLX .AND. TPFILE%LOPENED) .OR. TLES%LLES_CALL ) THEN
@@ -403,9 +403,9 @@ DO JSV=1,KSV
     CALL MZM_PHY(D,ZWORK1,ZWORK3)
     CALL DZM_PHY(D,ZWORK2,ZWORK4)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZFLXZ(IIJB:IIJE,IKB:IKE) = -ZCSV * PPSI_SV(IIJB:IIJE,IKB:IKE,JSV) * ZWORK3(IIJB:IIJE,IKB:IKE) & 
-                                    / PDZZ(IIJB:IIJE,IKB:IKE) * &
-                  ZWORK4(IIJB:IIJE,IKB:IKE)
+    ZFLXZ(IIJB:IIJE,1:IKT) = -ZCSV * PPSI_SV(IIJB:IIJE,1:IKT,JSV) * ZWORK3(IIJB:IIJE,1:IKT) & 
+                                    / PDZZ(IIJB:IIJE,1:IKT) * &
+                  ZWORK4(IIJB:IIJE,1:IKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ! surface flux
     !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
