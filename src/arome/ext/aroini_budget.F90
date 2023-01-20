@@ -86,7 +86,7 @@ LBUDGET_RI = LBU_ENABLE
 LBUDGET_RS = LBU_ENABLE                                                                                                               
 LBUDGET_RG = LBU_ENABLE                                                                                                               
 LBUDGET_RH = LBU_ENABLE                                                                                                               
-LBUDGET_SV = LBU_ENABLE 
+LBUDGET_SV = .FALSE. 
 !
 IF (LHOOK) CALL DR_HOOK('AROINI_BUDGET',1,ZHOOK_HANDLE)
 !

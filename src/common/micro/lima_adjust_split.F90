@@ -57,9 +57,9 @@ REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT       ! m.r. at t
 !
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS       ! m.r. source
 !
-REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(IN)    :: PSVT ! Concentrations at time t
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSVT ! Concentrations at time t
 !
-REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(INOUT) :: PSVS ! Concentration sources
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PSVS ! Concentration sources
 !
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS      ! Theta source
 !
@@ -225,9 +225,9 @@ REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT       ! m.r. at t
 !
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS       ! m.r. source
 !
-REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(IN)    :: PSVT ! Concentrations at time t
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSVT ! Concentrations at time t
 !
-REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(INOUT) :: PSVS ! Concentration sources
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PSVS ! Concentration sources
 !
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS      ! Theta source
 !
@@ -297,8 +297,8 @@ REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) &
                             ZRI, ZRI_IN,  &
                             Z_SIGS, Z_SRCS, &
                             ZW_MF, &
-                            ZCND, ZS, ZVEC1,ZDUM
-REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2)) :: ZSIGQSAT2D
+                            ZCND, ZS, ZVEC1
+REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,3)) :: ZSIGQSAT2D, ZDUM
 !
 INTEGER, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) :: IVEC1
 !

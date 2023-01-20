@@ -17,7 +17,7 @@ INTERFACE
                      PDTHRAD, PTHT, PRT, PSVT, PW_NU,                        &
                      PTHS, PRS, PSVS,                                        &
                      PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
-                     PEVAP3D, PCLDFR, PICEFR, PPRCFR                         )
+                     PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR                   )
 !
 USE MODD_IO,  ONLY: TFILEDATA
 USE MODD_NSV, only: NSV_LIMA_BEG
@@ -66,6 +66,7 @@ REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PEVAP3D    ! Rain evap profile
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCLDFR     ! Cloud fraction
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR     ! Cloud fraction
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PPRCFR     ! Cloud fraction
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PFPR       ! Precipitation fluxes in altitude
 !
 END SUBROUTINE LIMA
 END INTERFACE
@@ -81,7 +82,7 @@ END MODULE MODI_LIMA
                         PDTHRAD, PTHT, PRT, PSVT, PW_NU,                        &
                         PTHS, PRS, PSVS,                                        &
                         PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
-                        PEVAP3D, PCLDFR, PICEFR, PPRCFR                         )
+                        PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR                   )
 !     ######################################################################
 !
 !!    PURPOSE
@@ -186,6 +187,7 @@ REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PEVAP3D    ! Rain evap profile
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCLDFR     ! Cloud fraction
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR     ! Cloud fraction
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PPRCFR     ! Cloud fraction
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PFPR       ! Precipitation fluxes in altitude
 !
 !*       0.2   Declarations of local variables :
 !
@@ -698,27 +700,27 @@ end if
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
 IF (NMOM_C.GE.1 .AND. LSEDC) CALL LIMA_SEDIMENTATION(D, CST, &
-     'L', 2, 2, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRCS, ZCCS, PINPRC)
+     'L', 2, 2, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRCS, ZCCS, PINPRC, PFPR(:,:,:,2))
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
 IF (NMOM_R.GE.1) CALL LIMA_SEDIMENTATION(D, CST, &
-     'L', NMOM_R, 3, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRRS, ZCRS, PINPRR)
+     'L', NMOM_R, 3, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRRS, ZCRS, PINPRR, PFPR(:,:,:,3))
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
 IF (NMOM_I.GE.1 .AND. LSEDI) CALL LIMA_SEDIMENTATION(D, CST, &
-     'I', NMOM_I, 4, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRIS, ZCIS, ZW2D)
+     'I', NMOM_I, 4, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRIS, ZCIS, ZW2D, PFPR(:,:,:,4))
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
 IF (NMOM_S.GE.1) CALL LIMA_SEDIMENTATION(D, CST, &
-     'I', NMOM_S, 5, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRSS, ZCSS, PINPRS)
+     'I', NMOM_S, 5, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRSS, ZCSS, PINPRS, PFPR(:,:,:,5))
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
 IF (NMOM_G.GE.1) CALL LIMA_SEDIMENTATION(D, CST, &
-     'I', NMOM_G, 6, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRGS, ZCGS, PINPRG)
+     'I', NMOM_G, 6, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRGS, ZCGS, PINPRG, PFPR(:,:,:,6))
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
 IF (NMOM_H.GE.1) CALL LIMA_SEDIMENTATION(D, CST, &
-     'I', NMOM_H, 7, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRHS, ZCHS, PINPRH)
+     'I', NMOM_H, 7, 1, PTSTEP, PDZZ, PRHODREF, PPABST, ZT, ZRT_SUM, ZCPT, ZRHS, ZCHS, PINPRH, PFPR(:,:,:,7))
 !
 ZTHS(:,:,:) = ZT(:,:,:) / ZEXN(:,:,:) * ZINV_TSTEP
 !

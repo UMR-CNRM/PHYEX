@@ -10,7 +10,7 @@
 INTERFACE
       SUBROUTINE LIMA_SEDIMENTATION (D, CST, &
                                      HPHASE, KMOMENTS, KID, KSPLITG, PTSTEP, PDZZ, PRHODREF,       &
-                                     PPABST, PT, PRT_SUM, PCPT, PRS, PCS, PINPR )
+                                     PPABST, PT, PRT_SUM, PCPT, PRS, PCS, PINPR, PFPR )
 !
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
@@ -31,6 +31,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCPT      ! Cp
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRS       ! m.r. source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCS       ! C. source
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPR     ! Instant precip rate
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PFPR      ! Precip. fluxes in altitude
 !
 END SUBROUTINE LIMA_SEDIMENTATION
 END INTERFACE
@@ -40,7 +41,7 @@ END MODULE MODI_LIMA_SEDIMENTATION
 !     ######################################################################
       SUBROUTINE LIMA_SEDIMENTATION (D, CST, &
                                      HPHASE, KMOMENTS, KID, KSPLITG, PTSTEP, PDZZ, PRHODREF,       &
-                                     PPABST, PT, PRT_SUM, PCPT, PRS, PCS, PINPR )
+                                     PPABST, PT, PRT_SUM, PCPT, PRS, PCS, PINPR, PFPR )
 !     ######################################################################
 !
 !!    PURPOSE
@@ -110,6 +111,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCPT      ! Cp
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRS       ! m.r. source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCS       ! C. source
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPR     ! Instant precip rate
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PFPR      ! Precip. fluxes in altitude
 !
 !*       0.2   Declarations of local variables :
 !
@@ -153,6 +155,7 @@ ZTSPLITG= PTSTEP / REAL(NSPLITSED(KID))
 !
 ZWDT=0.
 PINPR(:,:) = 0.
+PFPR(:,:,:) = 0.
 !
 PRS(:,:,:) = PRS(:,:,:) * PTSTEP
 IF (KMOMENTS==2) PCS(:,:,:) = PCS(:,:,:) * PTSTEP
@@ -240,6 +243,7 @@ DO JN = 1 ,  NSPLITSED(KID)
       DO JK = D%NKTB , D%NKTE
          PRS(:,:,JK) = PRS(:,:,JK) + ZW(:,:,JK)*    &
               (ZWSEDR(:,:,JK+D%NKL)-ZWSEDR(:,:,JK))/PRHODREF(:,:,JK)
+         PFPR(:,:,JK) = ZWSEDR(:,:,JK)
          IF (KMOMENTS==2) PCS(:,:,JK) = PCS(:,:,JK) + ZW(:,:,JK)*    &
               (ZWSEDC(:,:,JK+D%NKL)-ZWSEDC(:,:,JK))/PRHODREF(:,:,JK)
          ! Heat transport
