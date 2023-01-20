@@ -9,7 +9,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 
   CONTAINS
 
-  SUBROUTINE RAIN_ICE_OLD_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, &
+  SUBROUTINE RAIN_ICE_OLD_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, KSIZE, &
                                               KRR, OSEDIC, PTSTEP, KKL, KSPLITR, &
                                               PDZZ, PRHODJ, PRHODREF, PPABST, &
                                               PTHT, PRCT, PRRT, PRST, PRGT, &
@@ -34,6 +34,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
     TYPE(RAIN_ICE_PARAM_T), INTENT(IN) :: ICEP
     TYPE(RAIN_ICE_DESCR_t), INTENT(IN) :: ICED
 
+    INTEGER, INTENT(IN) :: KSIZE
     INTEGER, INTENT(IN) :: KRR
     LOGICAL, INTENT(IN) :: OSEDIC ! Switch for droplet sedim.
 
@@ -79,51 +80,49 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
     REAL, DIMENSION(D%NIT, 0:D%NKT+1) :: ZWSED ! sedimentation fluxes
 
     LOGICAL, DIMENSION(D%NIT,D%NKT) :: GSEDIMR,GSEDIMC, GSEDIMI, GSEDIMS, GSEDIMG, GSEDIMH ! Test where to compute the SED processes
-    INTEGER , DIMENSION(SIZE(GSEDIMC)) :: IC1, IC2 ! Used to replace the COUNT
-    INTEGER , DIMENSION(SIZE(GSEDIMR)) :: IR1, IR2 ! Used to replace the COUNT
-    INTEGER , DIMENSION(SIZE(GSEDIMS)) :: IS1, IS2 ! Used to replace the COUNT
-    INTEGER , DIMENSION(SIZE(GSEDIMI)) :: II1, II2 ! Used to replace the COUNT
-    INTEGER , DIMENSION(SIZE(GSEDIMG)) :: IG1, IG2 ! Used to replace the COUNT
-    INTEGER , DIMENSION(SIZE(GSEDIMH)) :: IH1, IH2 ! Used to replace the COUNT
-    INTEGER   :: ILENALLOCC,ILENALLOCR,ILENALLOCI,ILENALLOCS,ILENALLOCG,ILENALLOCH
-    INTEGER   :: ILISTLENC,ILISTLENR,ILISTLENI,ILISTLENS,ILISTLENG,ILISTLENH
-    INTEGER, ALLOCATABLE :: ILISTR(:),ILISTC(:),ILISTI(:),ILISTS(:),ILISTG(:),ILISTH(:)
+    INTEGER, DIMENSION(D%NIT*D%NKT) :: IC1, IC2
+    INTEGER, DIMENSION(D%NIT*D%NKT) :: IR1, IR2
+    INTEGER, DIMENSION(D%NIT*D%NKT) :: IS1, IS2
+    INTEGER, DIMENSION(D%NIT*D%NKT) :: II1, II2
+    INTEGER, DIMENSION(D%NIT*D%NKT) :: IG1, IG2
+    INTEGER, DIMENSION(D%NIT*D%NKT) :: IH1, IH2
 
-    ! Optimization for NEC
-    INTEGER, SAVE :: IOLDALLOCC = 6000
-    INTEGER, SAVE :: IOLDALLOCR = 6000
-    INTEGER, SAVE :: IOLDALLOCI = 6000
-    INTEGER, SAVE :: IOLDALLOCS = 6000
-    INTEGER, SAVE :: IOLDALLOCG = 6000
-    INTEGER, SAVE :: IOLDALLOCH = 6000
+    INTEGER :: ILISTLENC, ILISTLENR, ILISTLENI, ILISTLENS, ILISTLENG, ILISTLENH
 
-    REAL, DIMENSION(:), ALLOCATABLE :: ZRCT    ! Cloud water m.r. at t
+    INTEGER, DIMENSION(KSIZE) :: ILISTR
+    INTEGER, DIMENSION(KSIZE) :: ILISTC
+    INTEGER, DIMENSION(KSIZE) :: ILISTI
+    INTEGER, DIMENSION(KSIZE) :: ILISTS
+    INTEGER, DIMENSION(KSIZE) :: ILISTG
+    INTEGER, DIMENSION(KSIZE) :: ILISTH
 
-    REAL, DIMENSION(:), ALLOCATABLE :: ZRCS    ! Cloud water m.r. source
-    REAL, DIMENSION(:), ALLOCATABLE :: ZRRS    ! Rain water m.r. source
-    REAL, DIMENSION(:), ALLOCATABLE :: ZRIS    ! Pristine ice m.r. source
-    REAL, DIMENSION(:), ALLOCATABLE :: ZRSS    ! Snow/aggregate m.r. source
-    REAL, DIMENSION(:), ALLOCATABLE :: ZRGS    ! Graupel m.r. source
-    REAL, DIMENSION(:), ALLOCATABLE :: ZRHS    ! Hail m.r. source
+    REAL, DIMENSION(KSIZE) :: ZRCT    ! Cloud water m.r. at t
 
-    REAL, DIMENSION(:), ALLOCATABLE :: ZRHODREFC ! RHO Dry REFerence
-    REAL, DIMENSION(:), ALLOCATABLE :: ZRHODREFR ! RHO Dry REFerence
-    REAL, DIMENSION(:), ALLOCATABLE :: ZRHODREFI ! RHO Dry REFerence
-    REAL, DIMENSION(:), ALLOCATABLE :: ZRHODREFS ! RHO Dry REFerence
-    REAL, DIMENSION(:), ALLOCATABLE :: ZRHODREFG ! RHO Dry REFerence
-    REAL, DIMENSION(:), ALLOCATABLE :: ZRHODREFH ! RHO Dry REFerence
+    REAL, DIMENSION(KSIZE) :: ZRCS    ! Cloud water m.r. source
+    REAL, DIMENSION(KSIZE) :: ZRRS    ! Rain water m.r. source
+    REAL, DIMENSION(KSIZE) :: ZRIS    ! Pristine ice m.r. source
+    REAL, DIMENSION(KSIZE) :: ZRSS    ! Snow/aggregate m.r. source
+    REAL, DIMENSION(KSIZE) :: ZRGS    ! Graupel m.r. source
+    REAL, DIMENSION(KSIZE) :: ZRHS    ! Hail m.r. source
 
-    REAL, DIMENSION(:), ALLOCATABLE :: ZCC       ! terminal velocity
-    REAL, DIMENSION(:), ALLOCATABLE :: ZFSEDC1D  ! For cloud sedimentation
-    REAL, DIMENSION(:), ALLOCATABLE :: ZCONC     ! Concentration des aerosols
-    REAL, DIMENSION(:), ALLOCATABLE :: ZRAY1D    ! Mean radius
-    REAL, DIMENSION(:), ALLOCATABLE :: ZWLBDA    ! Libre parcours moyen
+    REAL, DIMENSION(KSIZE) :: ZRHODREFC ! RHO Dry REFerence
+    REAL, DIMENSION(KSIZE) :: ZRHODREFR ! RHO Dry REFerence
+    REAL, DIMENSION(KSIZE) :: ZRHODREFI ! RHO Dry REFerence
+    REAL, DIMENSION(KSIZE) :: ZRHODREFS ! RHO Dry REFerence
+    REAL, DIMENSION(KSIZE) :: ZRHODREFG ! RHO Dry REFerence
+    REAL, DIMENSION(KSIZE) :: ZRHODREFH ! RHO Dry REFerence
+
+    REAL, DIMENSION(KSIZE) :: ZCC       ! terminal velocity
+    REAL, DIMENSION(KSIZE) :: ZFSEDC1D  ! For cloud sedimentation
+    REAL, DIMENSION(KSIZE) :: ZCONC     ! Concentration des aerosols
+    REAL, DIMENSION(KSIZE) :: ZRAY1D    ! Mean radius
+    REAL, DIMENSION(KSIZE) :: ZWLBDA    ! Libre parcours moyen
 
     REAL, DIMENSION(D%NIT,D%NKT) :: ZW ! work array
 
-    REAL, DIMENSION(:), ALLOCATABLE :: ZZT       ! Temperature
-    REAL, DIMENSION(:), ALLOCATABLE :: ZPRES     ! Pressure
-    REAL, DIMENSION(:), ALLOCATABLE :: ZWLBDC    ! Slope parameter of the droplet  distribution
+    REAL, DIMENSION(KSIZE) :: ZZT       ! Temperature
+    REAL, DIMENSION(KSIZE) :: ZPRES     ! Pressure
+    REAL, DIMENSION(KSIZE) :: ZWLBDC    ! Slope parameter of the droplet  distribution
 
     REAL, DIMENSION(SIZE(ICED%XRTMIN)) :: ZRTMIN
 
@@ -157,9 +156,9 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 !
 !*       2.    compute the fluxes
 !
-!  optimization by looking for locations where
-!  the precipitating fields are larger than a minimal value only !!!
-!  For optimization we consider each variable separately
+!   optimization by looking for locations where
+!   the precipitating fields are larger than a minimal value only !!!
+!   For optimization we consider each variable separately
 
     ZRTMIN(:)    = ICED%XRTMIN(:) * ZINVTSTEP
     IF (OSEDIC) GSEDIMC(:,:) = .FALSE.
@@ -169,13 +168,6 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
     GSEDIMG(:,:) = .FALSE.
     IF ( KRR == 7 ) GSEDIMH(:,:) = .FALSE.
 !
-    ILENALLOCR = 0
-    IF (OSEDIC) ILENALLOCC = 0
-    ILENALLOCI = 0
-    ILENALLOCS = 0
-    ILENALLOCG = 0
-    IF ( KRR == 7 ) ILENALLOCH = 0
-!
 ! ZPiS = Specie i source creating during the current time step
 ! PRiS = Source of the previous time step
 !
@@ -184,6 +176,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
       ZPRCS(:,:) = PRCS(:,:)-PRCT(:,:)* ZINVTSTEP
       PRCS(:,:)  = PRCT(:,:)* ZINVTSTEP
     END IF
+
     ZPRRS(:,:) = 0.0
     ZPRSS(:,:) = 0.0
     ZPRGS(:,:) = 0.0
@@ -201,7 +194,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 ! PRiS = Source of the previous time step + source created during the subtime
 ! step
 !
-    DO JN = 1 , KSPLITR
+    DO JN = 1, KSPLITR
       IF( JN==1 ) THEN
         IF (OSEDIC) PRCS(:,:) = PRCS(:,:) + ZPRCS(:,:)/KSPLITR
           PRRS(:,:) = PRRS(:,:) + ZPRRS(:,:)/KSPLITR
@@ -244,121 +237,104 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 !*       2.1   for cloud
 !
       IF (OSEDIC) THEN
+
         ZWSED(:,:) = 0.
         IF( JN==1 ) PRCS(:,:) = PRCS(:,:) * PTSTEP
 
         IF( ISEDIMC >= 1 ) THEN
-          IF ( ISEDIMC .GT. ILENALLOCC ) THEN
 
-            IF ( ILENALLOCC .GT. 0 ) THEN
-              DEALLOCATE (ZRCS, ZRHODREFC, ILISTC,ZWLBDC,ZCONC,ZRCT,  &
-                          ZZT,ZPRES,ZRAY1D,ZFSEDC1D,ZWLBDA,ZCC )
+          DO JL=1,ISEDIMC
+            ZRCS(JL) = PRCS(IC1(JL),IC2(JL))
+            ZRHODREFC(JL) =  PRHODREF(IC1(JL),IC2(JL))
+            ZWLBDC(JL) = ZLBC(IC1(JL),IC2(JL))
+            ZCONC(JL) = ZCONC3D(IC1(JL),IC2(JL))
+            ZRCT(JL) = PRCT(IC1(JL),IC2(JL))
+            ZZT(JL) = PTHT(IC1(JL),IC2(JL))
+            ZPRES(JL) = PPABST(IC1(JL),IC2(JL))
+            ZRAY1D(JL) = ZRAY(IC1(JL),IC2(JL))
+            ZFSEDC1D(JL) = ZFSEDC(IC1(JL),IC2(JL))
+          END DO
+
+          ILISTLENC = 0
+          DO JL=1,ISEDIMC
+            IF( ZRCS(JL) .GT. ZRTMIN(2) ) THEN
+              ILISTLENC = ILISTLENC + 1
+              ILISTC(ILISTLENC) = JL
             END IF
+          END DO
 
-            ILENALLOCC = MAX (IOLDALLOCC, 2*ISEDIMC )
-            IOLDALLOCC = ILENALLOCC
-            ALLOCATE(ZRCS(ILENALLOCC), ZRHODREFC(ILENALLOCC), ILISTC(ILENALLOCC), &
-              ZWLBDC(ILENALLOCC), ZCONC(ILENALLOCC), ZRCT(ILENALLOCC), ZZT(ILENALLOCC), &
-              ZPRES(ILENALLOCC), ZRAY1D(ILENALLOCC), ZFSEDC1D(ILENALLOCC), &
-              ZWLBDA(ILENALLOCC), ZCC(ILENALLOCC)  )
+          DO JJ = 1, ILISTLENC
+            JL = ILISTC(JJ)
+            IF (ZRCS(JL) .GT. ZRTMIN(2) .AND. ZRCT(JL) .GT. ICED%XRTMIN(2)) THEN
+              ZWLBDC(JL) = ZWLBDC(JL) * ZCONC(JL) / (ZRHODREFC(JL) * ZRCT(JL))
+              ZWLBDC(JL) = ZWLBDC(JL)**ICED%XLBEXC
+              ZRAY1D(JL) = ZRAY1D(JL) / ZWLBDC(JL) !! ZRAY : mean diameter=M(1)/2
+              ZZT(JL)    = ZZT(JL) * (ZPRES(JL)/CST%XP00)**(CST%XRD/CST%XCPD)
+              ZWLBDA(JL) = 6.6E-8*(101325./ZPRES(JL))*(ZZT(JL)/293.15)
+              ZCC(JL)    = ICED%XCC*(1.+1.26*ZWLBDA(JL)/ZRAY1D(JL)) !! XCC modified for cloud
+              ZWSED (IC1(JL),IC2(JL))= ZRHODREFC(JL)**(-ICED%XCEXVT +1 ) *   &
+              ZWLBDC(JL)**(-ICED%XDC)*ZCC(JL)*ZFSEDC1D(JL) * ZRCS(JL)
+            END IF
+          END DO
 
-          END IF
+        END IF
 
-        DO JL=1,ISEDIMC
-          ZRCS(JL) = PRCS(IC1(JL),IC2(JL))
-          ZRHODREFC(JL) =  PRHODREF(IC1(JL),IC2(JL))
-          ZWLBDC(JL) = ZLBC(IC1(JL),IC2(JL))
-          ZCONC(JL) = ZCONC3D(IC1(JL),IC2(JL))
-          ZRCT(JL) = PRCT(IC1(JL),IC2(JL))
-          ZZT(JL) = PTHT(IC1(JL),IC2(JL))
-          ZPRES(JL) = PPABST(IC1(JL),IC2(JL))
-          ZRAY1D(JL) = ZRAY(IC1(JL),IC2(JL))
-          ZFSEDC1D(JL) = ZFSEDC(IC1(JL),IC2(JL))
+        DO JK = D%NKTB , D%NKTE
+          PRCS(:,JK) = PRCS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
         END DO
 
-        ILISTLENC = 0
-        DO JL=1,ISEDIMC
-          IF( ZRCS(JL) .GT. ZRTMIN(2) ) THEN
-            ILISTLENC = ILISTLENC + 1
-            ILISTC(ILISTLENC) = JL
+        IF (PRESENT(PFPR)) THEN
+          DO JK = D%NKTB , D%NKTE
+            PFPR(:,JK,2)=ZWSED(:,JK)
+          ENDDO
+        ENDIF
+
+        PINPRC(:) = PINPRC(:) + ZWSED(:,IKB) / CST%XRHOLW / KSPLITR
+
+        IF( JN==KSPLITR ) THEN
+          PRCS(:,:) = PRCS(:,:) * ZINVTSTEP
+        END IF
+
+      END IF !OSEDIC
+!
+!*       2.2   for rain
+!
+      IF( JN==1 ) PRRS(:,:) = PRRS(:,:) * PTSTEP
+      ZWSED(:,:) = 0.
+
+      IF( ISEDIMR >= 1 ) THEN
+!
+        DO JL=1,ISEDIMR
+          ZRRS(JL) = PRRS(IR1(JL),IR2(JL))
+          ZRHODREFR(JL) =  PRHODREF(IR1(JL),IR2(JL))
+        END DO
+!
+        ILISTLENR = 0
+        DO JL=1,ISEDIMR
+          IF( ZRRS(JL) .GT. ZRTMIN(3) ) THEN
+            ILISTLENR = ILISTLENR + 1
+            ILISTR(ILISTLENR) = JL
           END IF
         END DO
 
-        DO JJ = 1, ILISTLENC
-          JL = ILISTC(JJ)
-          IF (ZRCS(JL) .GT. ZRTMIN(2) .AND. ZRCT(JL) .GT. ICED%XRTMIN(2)) THEN
-            ZWLBDC(JL) = ZWLBDC(JL) * ZCONC(JL) / (ZRHODREFC(JL) * ZRCT(JL))
-            ZWLBDC(JL) = ZWLBDC(JL)**ICED%XLBEXC
-            ZRAY1D(JL) = ZRAY1D(JL) / ZWLBDC(JL) !! ZRAY : mean diameter=M(1)/2
-            ZZT(JL)    = ZZT(JL) * (ZPRES(JL)/CST%XP00)**(CST%XRD/CST%XCPD)
-            ZWLBDA(JL) = 6.6E-8*(101325./ZPRES(JL))*(ZZT(JL)/293.15)
-            ZCC(JL)    = ICED%XCC*(1.+1.26*ZWLBDA(JL)/ZRAY1D(JL)) !! XCC modified for cloud
-            ZWSED (IC1(JL),IC2(JL))= ZRHODREFC(JL)**(-ICED%XCEXVT +1 ) *   &
-            ZWLBDC(JL)**(-ICED%XDC)*ZCC(JL)*ZFSEDC1D(JL) * ZRCS(JL)
-          END IF
+        DO JJ = 1, ILISTLENR
+          JL = ILISTR(JJ)
+          ZWSED (IR1(JL),IR2(JL))= ICEP%XFSEDR  * ZRRS(JL)**ICEP%XEXSEDR *   &
+                                   ZRHODREFR(JL)**(ICEP%XEXSEDR-ICED%XCEXVT)
         END DO
-
-      END IF
+      END IF ! ISEDIMR
 
       DO JK = D%NKTB , D%NKTE
-        PRCS(:,JK) = PRCS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
+        PRRS(:,JK) = PRRS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
       END DO
 
       IF (PRESENT(PFPR)) THEN
         DO JK = D%NKTB , D%NKTE
-          PFPR(:,JK,2)=ZWSED(:,JK)
+          PFPR(:,JK,3)=ZWSED(:,JK)
         ENDDO
       ENDIF
 
-      PINPRC(:) = PINPRC(:) + ZWSED(:,IKB) / CST%XRHOLW / KSPLITR
-
-      IF( JN==KSPLITR ) THEN
-        PRCS(:,:) = PRCS(:,:) * ZINVTSTEP
-      END IF
-
-    END IF
-!
-!*       2.2   for rain
-!
-  IF( JN==1 ) PRRS(:,:) = PRRS(:,:) * PTSTEP
-  ZWSED(:,:) = 0.
-  IF( ISEDIMR >= 1 ) THEN
-    IF ( ISEDIMR .GT. ILENALLOCR ) THEN
-      IF ( ILENALLOCR .GT. 0 ) THEN
-        DEALLOCATE (ZRRS, ZRHODREFR, ILISTR)
-      END IF
-      ILENALLOCR = MAX (IOLDALLOCR, 2*ISEDIMR )
-      IOLDALLOCR = ILENALLOCR
-      ALLOCATE(ZRRS(ILENALLOCR), ZRHODREFR(ILENALLOCR), ILISTR(ILENALLOCR))
-    END IF
-!
-    DO JL=1,ISEDIMR
-      ZRRS(JL) = PRRS(IR1(JL),IR2(JL))
-      ZRHODREFR(JL) =  PRHODREF(IR1(JL),IR2(JL))
-    END DO
-!
-    ILISTLENR = 0
-    DO JL=1,ISEDIMR
-     IF( ZRRS(JL) .GT. ZRTMIN(3) ) THEN
-       ILISTLENR = ILISTLENR + 1
-       ILISTR(ILISTLENR) = JL
-     END IF
-    END DO
-       DO JJ = 1, ILISTLENR
-          JL = ILISTR(JJ)
-           ZWSED (IR1(JL),IR2(JL))= ICEP%XFSEDR  * ZRRS(JL)**ICEP%XEXSEDR *   &
-                                        ZRHODREFR(JL)**(ICEP%XEXSEDR-ICED%XCEXVT)
-       END DO
-  END IF
-       DO JK = D%NKTB , D%NKTE
-         PRRS(:,JK) = PRRS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
-       END DO
-       IF (PRESENT(PFPR)) THEN
-         DO JK = D%NKTB , D%NKTE
-           PFPR(:,JK,3)=ZWSED(:,JK)
-         ENDDO
-       ENDIF
-       PINPRR(:) = PINPRR(:) + ZWSED(:,IKB)/CST%XRHOLW/KSPLITR
+      PINPRR(:) = PINPRR(:) + ZWSED(:,IKB)/CST%XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
         PRRS(:,:) = PRRS(:,:) * ZINVTSTEP
       END IF
@@ -366,91 +342,84 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 !*       2.3   for pristine ice
 !
 
-  IF( JN==1 ) PRIS(:,:) = PRIS(:,:) * PTSTEP
-  ZWSED(:,:) = 0.
-  IF( ISEDIMI >= 1 ) THEN
-    IF ( ISEDIMI .GT. ILENALLOCI ) THEN
-      IF ( ILENALLOCI .GT. 0 ) THEN
-        DEALLOCATE (ZRIS, ZRHODREFI, ILISTI)
-      END IF
-      ILENALLOCI = MAX (IOLDALLOCI, 2*ISEDIMI )
-      IOLDALLOCI = ILENALLOCI
-      ALLOCATE(ZRIS(ILENALLOCI), ZRHODREFI(ILENALLOCI), ILISTI(ILENALLOCI))
-    END IF
-!
-    DO JL=1,ISEDIMI
-      ZRIS(JL) = PRIS(II1(JL),II2(JL))
-      ZRHODREFI(JL) =  PRHODREF(II1(JL),II2(JL))
-    END DO
-!
-    ILISTLENI = 0
-    DO JL=1,ISEDIMI
-      IF( ZRIS(JL) .GT.  MAX(ZRTMIN(4),1.0E-7 )) THEN ! limitation of the McF&H formula
-        ILISTLENI = ILISTLENI + 1
-        ILISTI(ILISTLENI) = JL
-      END IF
-    END DO
-      DO JJ = 1, ILISTLENI
-        JL = ILISTI(JJ)
-        ZWSED (II1(JL),II2(JL))= ICEP%XFSEDI * ZRIS(JL) *  &
-                        ZRHODREFI(JL)**(1.0-ICED%XCEXVT) * & !    McF&H
-                        MAX( 0.05E6,-0.15319E6-0.021454E6* &
-                        ALOG(ZRHODREFI(JL)*ZRIS(JL)) )**ICEP%XEXCSEDI
-       END DO
-  END IF
+      IF( JN==1 ) PRIS(:,:) = PRIS(:,:) * PTSTEP
 
-  DO JK = D%NKTB , D%NKTE
-    PRIS(:,JK) = PRIS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
-  END DO
-  IF (PRESENT(PFPR)) THEN
-    DO JK = D%NKTB , D%NKTE
-      PFPR(:,JK,4)=ZWSED(:,JK)
-    ENDDO
-  ENDIF
-  IF( JN==KSPLITR ) THEN
-    PRIS(:,:) = PRIS(:,:) * ZINVTSTEP
-  END IF
+      ZWSED(:,:) = 0.
+      IF( ISEDIMI >= 1 ) THEN
+
+        DO JL=1,ISEDIMI
+          ZRIS(JL) = PRIS(II1(JL),II2(JL))
+          ZRHODREFI(JL) =  PRHODREF(II1(JL),II2(JL))
+        END DO
+
+        ILISTLENI = 0
+        DO JL=1,ISEDIMI
+          IF( ZRIS(JL) .GT.  MAX(ZRTMIN(4),1.0E-7 )) THEN ! limitation of the McF&H formula
+            ILISTLENI = ILISTLENI + 1
+            ILISTI(ILISTLENI) = JL
+          END IF
+        END DO
+
+        DO JJ = 1, ILISTLENI
+          JL = ILISTI(JJ)
+          ZWSED (II1(JL),II2(JL))= ICEP%XFSEDI * ZRIS(JL) *  &
+                          ZRHODREFI(JL)**(1.0-ICED%XCEXVT) * & !    McF&H
+                          MAX( 0.05E6,-0.15319E6-0.021454E6* &
+                          ALOG(ZRHODREFI(JL)*ZRIS(JL)) )**ICEP%XEXCSEDI
+        END DO
+      END IF !ISEDIMI
+
+      DO JK = D%NKTB , D%NKTE
+        PRIS(:,JK) = PRIS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
+      END DO
+
+      IF (PRESENT(PFPR)) THEN
+        DO JK = D%NKTB , D%NKTE
+          PFPR(:,JK,4)=ZWSED(:,JK)
+        ENDDO
+      ENDIF
+
+      IF( JN==KSPLITR ) THEN
+        PRIS(:,:) = PRIS(:,:) * ZINVTSTEP
+      END IF
 !
 !*       2.4   for aggregates/snow
 !
-  IF( JN==1 ) PRSS(:,:) = PRSS(:,:) * PTSTEP
-  ZWSED(:,:) = 0.
-  IF( ISEDIMS >= 1 ) THEN
-    IF ( ISEDIMS .GT. ILENALLOCS ) THEN
-      IF ( ILENALLOCS .GT. 0 ) THEN
-        DEALLOCATE (ZRSS, ZRHODREFS, ILISTS)
-      END IF
-      ILENALLOCS = MAX (IOLDALLOCS, 2*ISEDIMS )
-      IOLDALLOCS = ILENALLOCS
-      ALLOCATE(ZRSS(ILENALLOCS), ZRHODREFS(ILENALLOCS), ILISTS(ILENALLOCS))
-    END IF
+      IF( JN==1 ) PRSS(:,:) = PRSS(:,:) * PTSTEP
+
+      ZWSED(:,:) = 0.
+      IF( ISEDIMS >= 1 ) THEN
 !
-    DO JL=1,ISEDIMS
-      ZRSS(JL) = PRSS(IS1(JL),IS2(JL))
-      ZRHODREFS(JL) =  PRHODREF(IS1(JL),IS2(JL))
-    END DO
+        DO JL=1,ISEDIMS
+          ZRSS(JL) = PRSS(IS1(JL),IS2(JL))
+          ZRHODREFS(JL) =  PRHODREF(IS1(JL),IS2(JL))
+        END DO
 !
-    ILISTLENS = 0
-    DO JL=1,ISEDIMS
-     IF( ZRSS(JL) .GT. ZRTMIN(5) ) THEN
-       ILISTLENS = ILISTLENS + 1
-       ILISTS(ILISTLENS) = JL
-     END IF
-    END DO
-       DO JJ = 1, ILISTLENS
+        ILISTLENS = 0
+        DO JL=1,ISEDIMS
+          IF( ZRSS(JL) .GT. ZRTMIN(5) ) THEN
+            ILISTLENS = ILISTLENS + 1
+            ILISTS(ILISTLENS) = JL
+          END IF
+        END DO
+
+        DO JJ = 1, ILISTLENS
           JL = ILISTS(JJ)
-             ZWSED (IS1(JL),IS2(JL))= ICEP%XFSEDS * ZRSS(JL)**ICEP%XEXSEDS *  &
-                                        ZRHODREFS(JL)**(ICEP%XEXSEDS-ICED%XCEXVT)
-       END DO
-  END IF
-       DO JK = D%NKTB , D%NKTE
-         PRSS(:,JK) = PRSS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
-       END DO
-       IF (PRESENT(PFPR)) THEN
-         DO JK = D%NKTB , D%NKTE
-           PFPR(:,JK,5)=ZWSED(:,JK)
-         ENDDO
-       ENDIF
+          ZWSED (IS1(JL),IS2(JL))= ICEP%XFSEDS * ZRSS(JL)**ICEP%XEXSEDS *  &
+                                   ZRHODREFS(JL)**(ICEP%XEXSEDS-ICED%XCEXVT)
+        END DO
+      END IF !ISEDIMS
+
+      DO JK = D%NKTB , D%NKTE
+        PRSS(:,JK) = PRSS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
+      END DO
+
+      IF (PRESENT(PFPR)) THEN
+        DO JK = D%NKTB , D%NKTE
+          PFPR(:,JK,5)=ZWSED(:,JK)
+        ENDDO
+      ENDIF
+
       PINPRS(:) = PINPRS(:) + ZWSED(:,IKB)/CST%XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
         PRSS(:,:) = PRSS(:,:) * ZINVTSTEP
@@ -458,111 +427,95 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 !
 !*       2.5   for graupeln
 !
-  ZWSED(:,:) = 0.
-  IF( JN==1 ) PRGS(:,:) = PRGS(:,:) * PTSTEP
-  IF( ISEDIMG >= 1 ) THEN
-    IF ( ISEDIMG .GT. ILENALLOCG ) THEN
-      IF ( ILENALLOCG .GT. 0 ) THEN
-        DEALLOCATE (ZRGS, ZRHODREFG, ILISTG)
-      END IF
-      ILENALLOCG = MAX (IOLDALLOCG, 2*ISEDIMG )
-      IOLDALLOCG = ILENALLOCG
-      ALLOCATE(ZRGS(ILENALLOCG), ZRHODREFG(ILENALLOCG), ILISTG(ILENALLOCG))
-    END IF
+      ZWSED(:,:) = 0.
+      IF( JN==1 ) PRGS(:,:) = PRGS(:,:) * PTSTEP
+
+      IF( ISEDIMG >= 1 ) THEN
 !
-    DO JL=1,ISEDIMG
-      ZRGS(JL) = PRGS(IG1(JL),IG2(JL))
-      ZRHODREFG(JL) =  PRHODREF(IG1(JL),IG2(JL))
-    END DO
+        DO JL=1,ISEDIMG
+          ZRGS(JL) = PRGS(IG1(JL),IG2(JL))
+          ZRHODREFG(JL) =  PRHODREF(IG1(JL),IG2(JL))
+        END DO
 !
-    ILISTLENG = 0
-    DO JL=1,ISEDIMG
-     IF( ZRGS(JL) .GT. ZRTMIN(6) ) THEN
-       ILISTLENG = ILISTLENG + 1
-       ILISTG(ILISTLENG) = JL
-     END IF
-    END DO
-       DO JJ = 1, ILISTLENG
+        ILISTLENG = 0
+        DO JL=1,ISEDIMG
+          IF( ZRGS(JL) .GT. ZRTMIN(6) ) THEN
+            ILISTLENG = ILISTLENG + 1
+            ILISTG(ILISTLENG) = JL
+          END IF
+        END DO
+
+        DO JJ = 1, ILISTLENG
           JL = ILISTG(JJ)
-             ZWSED (IG1(JL),IG2(JL))= ICEP%XFSEDG  * ZRGS(JL)**ICEP%XEXSEDG *   &
-                                        ZRHODREFG(JL)**(ICEP%XEXSEDG-ICED%XCEXVT)
-       END DO
-END IF
-       DO JK = D%NKTB , D%NKTE
-         PRGS(:,JK) = PRGS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
-       END DO
-       IF (PRESENT(PFPR)) THEN
-         DO JK = D%NKTB , D%NKTE
-           PFPR(:,JK,6)=ZWSED(:,JK)
-         ENDDO
-       ENDIF
-       PINPRG(:) = PINPRG(:) + ZWSED(:,IKB)/CST%XRHOLW/KSPLITR
+          ZWSED (IG1(JL),IG2(JL)) = ICEP%XFSEDG  * ZRGS(JL)**ICEP%XEXSEDG *   &
+                                  ZRHODREFG(JL)**(ICEP%XEXSEDG-ICED%XCEXVT)
+        END DO
+      END IF !ISEDIMG
+
+      DO JK = D%NKTB , D%NKTE
+        PRGS(:,JK) = PRGS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
+      END DO
+
+      IF (PRESENT(PFPR)) THEN
+        DO JK = D%NKTB , D%NKTE
+          PFPR(:,JK,6)=ZWSED(:,JK)
+        ENDDO
+      ENDIF
+
+      PINPRG(:) = PINPRG(:) + ZWSED(:,IKB)/CST%XRHOLW/KSPLITR
       IF( JN==KSPLITR ) THEN
         PRGS(:,:) = PRGS(:,:) * ZINVTSTEP
       END IF
 !
 !*       2.6   for hail
 !
- IF ( KRR == 7 ) THEN
-  IF( JN==1 ) PRHS(:,:) = PRHS(:,:) * PTSTEP
-  ZWSED(:,:) = 0.
-  IF( ISEDIMH >= 1 ) THEN
-    IF ( ISEDIMH .GT. ILENALLOCH ) THEN
-      IF ( ILENALLOCH .GT. 0 ) THEN
-        DEALLOCATE (ZRHS, ZRHODREFH, ILISTH)
-      END IF
-      ILENALLOCH = MAX (IOLDALLOCH, 2*ISEDIMH )
-      IOLDALLOCH = ILENALLOCH
-      ALLOCATE(ZRHS(ILENALLOCH), ZRHODREFH(ILENALLOCH), ILISTH(ILENALLOCH))
-    END IF
-!
-    DO JL=1,ISEDIMH
-      ZRHS(JL) = PRHS(IH1(JL),IH2(JL))
-      ZRHODREFH(JL) =  PRHODREF(IH1(JL),IH2(JL))
-    END DO
-!
-    ILISTLENH = 0
-    DO JL=1,ISEDIMH
-     IF( ZRHS(JL) .GT. ZRTMIN(7) ) THEN
-       ILISTLENH = ILISTLENH + 1
-       ILISTH(ILISTLENH) = JL
-     END IF
-    END DO
-       DO JJ = 1, ILISTLENH
-          JL = ILISTH(JJ)
-             ZWSED (IH1(JL),IH2(JL))= ICEP%XFSEDH  * ZRHS(JL)**ICEP%XEXSEDH *   &
-                                        ZRHODREFH(JL)**(ICEP%XEXSEDH-ICED%XCEXVT)
-       END DO
-  END IF
-       DO JK = D%NKTB , D%NKTE
-         PRHS(:,JK) = PRHS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
-       END DO
-       IF (PRESENT(PFPR)) THEN
-         DO JK = D%NKTB , D%NKTE
-           PFPR(:,JK,7)=ZWSED(:,JK)
-         ENDDO
-       ENDIF
-       PINPRH(:) = PINPRH(:) + ZWSED(:,IKB)/CST%XRHOLW/KSPLITR
-      IF( JN==KSPLITR ) THEN
-        PRHS(:,:) = PRHS(:,:) * ZINVTSTEP
-      END IF
- END IF
-!
-END DO
-!
-IF (OSEDIC) THEN
-   IF (ILENALLOCC .GT. 0) DEALLOCATE (ZRCS, ZRHODREFC,  &
-  ILISTC,ZWLBDC,ZCONC,ZRCT, ZZT,ZPRES,ZRAY1D,ZFSEDC1D, ZWLBDA,ZCC)
-END IF
-IF (ILENALLOCR .GT. 0 ) DEALLOCATE(ZRHODREFR,ZRRS,ILISTR)
-IF (ILENALLOCI .GT. 0 ) DEALLOCATE(ZRHODREFI,ZRIS,ILISTI)
-IF (ILENALLOCS .GT. 0 ) DEALLOCATE(ZRHODREFS,ZRSS,ILISTS)
-IF (ILENALLOCG .GT. 0 ) DEALLOCATE(ZRHODREFG,ZRGS,ILISTG)
-IF (KRR == 7 .AND. (ILENALLOCH .GT. 0 )) DEALLOCATE(ZRHODREFH,ZRHS,ILISTH)
+      IF ( KRR == 7 ) THEN
+        IF( JN==1 ) PRHS(:,:) = PRHS(:,:) * PTSTEP
+        ZWSED(:,:) = 0.
 
-!*       2.3     budget storage
+        IF( ISEDIMH >= 1 ) THEN
 
-  IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_SEDIMENTATION_SPLIT',1,ZHOOK_HANDLE)
+          DO JL=1,ISEDIMH
+            ZRHS(JL) = PRHS(IH1(JL),IH2(JL))
+            ZRHODREFH(JL) =  PRHODREF(IH1(JL),IH2(JL))
+          END DO
+
+          ILISTLENH = 0
+          DO JL=1,ISEDIMH
+            IF( ZRHS(JL) .GT. ZRTMIN(7) ) THEN
+              ILISTLENH = ILISTLENH + 1
+              ILISTH(ILISTLENH) = JL
+            END IF
+          END DO
+
+          DO JJ = 1, ILISTLENH
+            JL = ILISTH(JJ)
+            ZWSED (IH1(JL),IH2(JL))= ICEP%XFSEDH  * ZRHS(JL)**ICEP%XEXSEDH *   &
+                                     ZRHODREFH(JL)**(ICEP%XEXSEDH-ICED%XCEXVT)
+          END DO
+
+        END IF !ISEDIMH
+
+        DO JK = D%NKTB , D%NKTE
+          PRHS(:,JK) = PRHS(:,JK) + ZW(:,JK)*(ZWSED(:,JK+KKL)-ZWSED(:,JK))
+        END DO
+
+        IF (PRESENT(PFPR)) THEN
+          DO JK = D%NKTB , D%NKTE
+            PFPR(:,JK,7)=ZWSED(:,JK)
+          ENDDO
+        ENDIF
+
+        PINPRH(:) = PINPRH(:) + ZWSED(:,IKB)/CST%XRHOLW/KSPLITR
+        IF( JN==KSPLITR ) THEN
+          PRHS(:,:) = PRHS(:,:) * ZINVTSTEP
+        END IF
+      END IF !KRR == 7
+
+    END DO !JN = 1, KSPLITR
+
+    IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_SEDIMENTATION_SPLIT',1,ZHOOK_HANDLE)
+
   END SUBROUTINE RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 
   SUBROUTINE COUNTJV(IC, LTAB, I1, I2)
