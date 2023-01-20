@@ -197,6 +197,7 @@ program main_rain_ice_old
                             picenu, pkgn_acon, pkgn_sbgr, &
                             pfpr, pfpr_out, llmicro, l_verbose)
 
+  
   write(output_unit, *) 'osedic:        ', osedic
   write(output_unit, *) 'ocnd2:         ', ocnd2
   write(output_unit, *) 'lkogan:        ', lkogan
@@ -227,6 +228,7 @@ program main_rain_ice_old
   D%nke  = 1
   D%nktb = 1
   D%nkte = n_levels
+  c_sedim = 'SPLI'
 
   call init_rain_ice_old(20)
 
@@ -276,6 +278,10 @@ program main_rain_ice_old
   call cpu_time(time_end_cpu)
   call system_clock(count=counter, count_rate=c_rate)
   time_end_real = real(counter,8)/c_rate
+
+  write(output_unit, *)
+
+  write(output_unit, *) 'Total time: ', time_end_real - time_start_real
 
   write(output_unit, *)
 
@@ -416,6 +422,7 @@ subroutine init_gmicro(D, krr, n_gp_blocks, odmicro, prt, pssio, ocnd2, prht)
   use modd_dimphyex, only: dimphyex_t
   use modd_rain_ice_descr, only: xrtmin
   use modd_rain_ice_param, only: xfrmin
+  use iso_fortran_env, only: output_unit
 
   implicit none
 
