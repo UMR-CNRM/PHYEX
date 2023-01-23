@@ -118,7 +118,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
     REAL, DIMENSION(KSIZE) :: ZRAY1D    ! Mean radius
     REAL, DIMENSION(KSIZE) :: ZWLBDA    ! Libre parcours moyen
 
-    REAL, DIMENSION(D%NIT,D%NKT) :: ZW ! work array
+    REAL, DIMENSION(D%NIT, D%NKT) :: ZW ! work array
 
     REAL, DIMENSION(KSIZE) :: ZZT       ! Temperature
     REAL, DIMENSION(KSIZE) :: ZPRES     ! Pressure
