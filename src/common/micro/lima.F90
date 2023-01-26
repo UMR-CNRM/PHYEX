@@ -20,7 +20,6 @@ INTERFACE
                      PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR                   )
 !
 USE MODD_IO,  ONLY: TFILEDATA
-USE MODD_NSV, only: NSV_LIMA_BEG
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
@@ -47,12 +46,12 @@ INTEGER,                  INTENT(IN)    :: NIMM       ! for array size declarati
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDTHRAD    ! dT/dt due to radiation
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT        ! Mixing ratios at time t
-REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(IN)    :: PSVT ! Concentrations at time t
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSVT       ! Concentrations at time t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU      ! w for CCN activation
 !
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS       ! Theta source
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS        ! Mixing ratios sources
-REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(INOUT) :: PSVS ! Concentration sources
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PSVS       ! Concentration sources
 !
 REAL, DIMENSION(:,:),     INTENT(OUT)   :: PINPRC     ! Cloud instant precip
 REAL, DIMENSION(:,:),     INTENT(OUT)   :: PINDEP     ! Cloud droplets deposition
@@ -120,8 +119,7 @@ USE MODD_BUDGET,          ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_
                                 NBUDGET_RI, NBUDGET_RR, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1
 USE MODD_CST,             ONLY: CST_t
 USE MODD_IO,              ONLY: TFILEDATA
-USE MODD_NSV,             ONLY: NSV_LIMA_BEG,                                                   &
-                                NSV_LIMA_NC, NSV_LIMA_NR, NSV_LIMA_CCN_FREE, NSV_LIMA_CCN_ACTI, &
+USE MODD_NSV,             ONLY: NSV_LIMA_NC, NSV_LIMA_NR, NSV_LIMA_CCN_FREE, NSV_LIMA_CCN_ACTI, &
                                 NSV_LIMA_NI, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,             &
                                 NSV_LIMA_IFN_FREE, NSV_LIMA_IFN_NUCL, NSV_LIMA_IMM_NUCL, NSV_LIMA_HOM_HAZE
 USE MODD_PARAMETERS,      ONLY: JPHEXT, JPVEXT
@@ -168,12 +166,12 @@ INTEGER,                  INTENT(IN)    :: NIMM       ! for array size declarati
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDTHRAD    ! dT/dt due to radiation
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT        ! Mixing ratios at time t
-REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(IN)    :: PSVT ! Concentrations at time t
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSVT       ! Concentrations at time t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU      ! w for CCN activation
 !
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS       ! Theta source
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS        ! Mixing ratios sources
-REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(INOUT) :: PSVS ! Concentration sources
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PSVS       ! Concentration sources
 !
 REAL, DIMENSION(:,:),     INTENT(OUT)   :: PINPRC     ! Cloud instant precip
 REAL, DIMENSION(:,:),     INTENT(OUT)   :: PINDEP     ! Cloud droplets deposition
