@@ -2,6 +2,7 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
 MODULE MODE_TKE_EPS_SOURCES
 IMPLICIT NONE
 CONTAINS
@@ -116,7 +117,6 @@ CONTAINS
 !!                     2012-02 Y. Seity,  add possibility to run with reversed 
 !!                                    vertical levels
 !!                     2014-11 Y. Seity,  add output terms for TKE DDHs budgets
-!! --------------------------------------------------------------------------
 !!                     2015-01 (J. Escobar) missing get_halo(ZRES) for JPHEXT<> 1 
 !!     J.Escobar : 15/09/2015 : WENO5 & JPHEXT <> 1 
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
@@ -127,29 +127,28 @@ CONTAINS
 !*       0.   DECLARATIONS
 !             ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE PARKIND1,   ONLY: JPRB
+USE SHUMAN_PHY, ONLY: MZM_PHY, MZF_PHY, DZF_PHY, DZM_PHY
+USE YOMHOOK,    ONLY: LHOOK, DR_HOOK
 !
 USE MODD_ARGSLIST_ll,    ONLY: LIST_ll
-USE MODD_BUDGET, ONLY: TBUDGETCONF_t, NBUDGET_TKE, NBUDGET_TH, TBUDGETDATA
-USE MODD_CST, ONLY: CST_t
-USE MODD_CTURB, ONLY: CSTURB_t
-USE MODD_TURB_n, ONLY: TURB_t
-USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-USE MODD_FIELD, ONLY: TFIELDDATA, TYPEREAL
-USE MODD_IO, ONLY: TFILEDATA
-USE MODD_LES, ONLY: TLES_t
-USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
+USE MODD_BUDGET,         ONLY: TBUDGETCONF_t, NBUDGET_TKE, NBUDGET_TH, TBUDGETDATA
+USE MODD_CST,            ONLY: CST_t
+USE MODD_CTURB,          ONLY: CSTURB_t
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
+USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
+USE MODD_IO,             ONLY: TFILEDATA
+USE MODD_LES,            ONLY: TLES_t
+USE MODD_PARAMETERS,     ONLY: JPVEXT_TURB
+USE MODD_TURB_n,         ONLY: TURB_t
 !
-USE MODE_BUDGET, ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_END_PHY, BUDGET_STORE_INIT_PHY
+USE MODE_BUDGET,         ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_END_PHY, BUDGET_STORE_INIT_PHY
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE_PHY
 USE MODE_ll
 !
-USE SHUMAN_PHY, ONLY: MZM_PHY, MZF_PHY, DZF_PHY, DZM_PHY
-!
 USE MODI_GET_HALO
 USE MODI_LES_MEAN_SUBGRID_PHY
-USE MODE_TRIDIAG_TKE, ONLY: TRIDIAG_TKE
+USE MODE_TRIDIAG_TKE,          ONLY: TRIDIAG_TKE
 !
 !
 IMPLICIT NONE
@@ -164,37 +163,35 @@ TYPE(CSTURB_t),          INTENT(IN)   :: CSTURB
 TYPE(TBUDGETCONF_t),     INTENT(IN)   :: BUCONF
 TYPE(TURB_t),            INTENT(IN)   :: TURBN
 TYPE(TLES_t),            INTENT(INOUT):: TLES
+CHARACTER(LEN=6),        INTENT(IN)   ::  HPROGRAM     ! CPROGRAM is the program currently running (modd_conf)
 INTEGER,                 INTENT(IN)   ::  KMI          ! model index number  
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PTKEM        ! TKE at t-deltat
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PLM          ! mixing length         
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PLEPS        ! dissipative length
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(INOUT)::  PDP          ! Dyn. prod. of TKE
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PTRH
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PRHODJ       ! density * grid volume
-REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PDXX,PDYY,PDZZ,PDZX,PDZY
-                                                       ! metric coefficients
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PDXX,PDYY,PDZZ,PDZX,PDZY ! metric coefficients
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PZZ          ! physical height w-pt
 REAL,                    INTENT(IN)   ::  PTSTEP       ! Time step 
 REAL,                    INTENT(IN)   ::  PEXPL        ! Coef. temporal. disc.
-CHARACTER(LEN=6),        INTENT(IN)   ::  HPROGRAM     ! CPROGRAM is the program currently running (modd_conf)
 TYPE(TFILEDATA),         INTENT(IN)   ::  TPFILE       ! Output file
 LOGICAL,                 INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate online diagnostics (mesonh)
-LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
-REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(INOUT)::  PDP          ! Dyn. prod. of TKE
-REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PTRH
+LOGICAL,                 INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
+REAL, DIMENSION(D%NIJT),        INTENT(IN)    :: PSFUM,PSFVM ! momentum sfc flux
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PTP          ! Ther. prod. of TKE
-REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(INOUT)::  PRTKES       ! RHOD * Jacobian *
-                                                       ! TKE at t+deltat
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(INOUT)::  PRTKES       ! RHOD * Jacobian * TKE at t+deltat
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(INOUT)::  PRTHLS       ! Source of Theta_l
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PCOEF_DISS   ! 1/(Cph*Exner)
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(OUT)  ::  PTDIFF       ! Diffusion TKE term
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(OUT)  ::  PTDISS       ! Dissipation TKE term
-REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  ::  PRTKEMS      ! Advection source
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PRTKEMS      ! Advection source
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
-INTEGER, INTENT(IN) :: KBUDGETS
-REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PTR          ! Transport prod. of TKE
-REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PDISS        ! Dissipation of TKE
-REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(OUT), OPTIONAL  ::  PEDR         ! EDR 
-REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(INOUT), OPTIONAL  ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
-REAL, DIMENSION(D%NIJT),   INTENT(IN)    :: PSFUM,PSFVM ! momentum sfc flux
+INTEGER,                        INTENT(IN)   :: KBUDGETS
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(OUT),   OPTIONAL ::  PEDR              ! EDR 
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(OUT),   OPTIONAL ::  PTR               ! Transport prod. of TKE
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(OUT),   OPTIONAL ::  PDISS             ! Dissipation of TKE
+REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(INOUT), OPTIONAL ::  PCURRENT_TKE_DISS ! if ODIAG_IN_RUN in mesonh
 !
 !
 !
@@ -220,7 +217,7 @@ INTEGER             :: IIJB,IIJE,IKB,IKE,IKT,IKA,IKL  ! Index value for the mass
 !
 TYPE(LIST_ll), POINTER :: TZFIELDDISS_ll ! list of fields to exchange
 INTEGER                :: IINFO_ll       ! return code of parallel routine
-TYPE(TFIELDDATA) :: TZFIELD
+TYPE(TFIELDMETADATA)   :: TZFIELD
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 INTEGER :: JIJ,JK
 !
@@ -476,58 +473,62 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
 !
 ! stores the dynamic production 
 !
-  TZFIELD%CMNHNAME   = 'DP'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'DP'
-  TZFIELD%CUNITS     = 'm2 s-3'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_DP'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(  &
+    CMNHNAME   = 'DP',       &
+    CSTDNAME   = '',         &
+    CLONGNAME  = 'DP',       &
+    CUNITS     = 'm2 s-3',   &
+    CDIR       = 'XY',       &
+    CCOMMENT   = 'X_Y_Z_DP', &
+    NGRID      = 1,          &
+    NTYPE      = TYPEREAL,   &
+    NDIMS      = 3,          &
+    LTIMEDEP   = .TRUE.      )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,PDP)
 !
 ! stores the thermal production 
 !
-  TZFIELD%CMNHNAME   = 'TP'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'TP'
-  TZFIELD%CUNITS     = 'm2 s-3'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_TP'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(  &
+    CMNHNAME   = 'TP',       &
+    CSTDNAME   = '',         &
+    CLONGNAME  = 'TP',       &
+    CUNITS     = 'm2 s-3',   &
+    CDIR       = 'XY',       &
+    CCOMMENT   = 'X_Y_Z_TP', &
+    NGRID      = 1,          &
+    NTYPE      = TYPEREAL,   &
+    NDIMS      = 3,          &
+    LTIMEDEP   = .TRUE.      )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,PTP)
 !
 ! stores the whole turbulent transport
 !
-  TZFIELD%CMNHNAME   = 'TR'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'TR'
-  TZFIELD%CUNITS     = 'm2 s-3'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_TR'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(  &
+    CMNHNAME   = 'TR',       &
+    CSTDNAME   = '',         &
+    CLONGNAME  = 'TR',       &
+    CUNITS     = 'm2 s-3',   &
+    CDIR       = 'XY',       &
+    CCOMMENT   = 'X_Y_Z_TR', &
+    NGRID      = 1,          &
+    NTYPE      = TYPEREAL,   &
+    NDIMS      = 3,          &
+    LTIMEDEP   = .TRUE.      )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZTR)
 !
 ! stores the dissipation of TKE 
 !
-  TZFIELD%CMNHNAME   = 'DISS'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'DISS'
-  TZFIELD%CUNITS     = 'm2 s-3'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_DISS'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(    &
+    CMNHNAME   = 'DISS',       &
+    CSTDNAME   = '',           &
+    CLONGNAME  = 'DISS',       &
+    CUNITS     = 'm2 s-3',     &
+    CDIR       = 'XY',         &
+    CCOMMENT   = 'X_Y_Z_DISS', &
+    NGRID      = 1,            &
+    NTYPE      = TYPEREAL,     &
+    NDIMS      = 3,            &
+    LTIMEDEP   = .TRUE.        )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,PDISS)
 END IF
 !

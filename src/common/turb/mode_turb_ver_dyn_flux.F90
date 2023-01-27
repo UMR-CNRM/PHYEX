@@ -204,31 +204,29 @@ SUBROUTINE TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,TLES,KSV,O2D,OFLAT, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
-!
-USE MODD_CST, ONLY: CST_t
-USE MODD_CTURB, ONLY: CSTURB_t
-USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
-USE MODD_IO,             ONLY: TFILEDATA
-USE MODD_LES, ONLY: TLES_t
-USE MODD_PARAMETERS, ONLY: JPVEXT_TURB,XUNDEF
-USE MODD_TURB_n, ONLY: TURB_t
-!
+USE PARKIND1,   ONLY: JPRB
 USE SHUMAN_PHY
+USE YOMHOOK,    ONLY: LHOOK, DR_HOOK
+!
+USE MODD_CST,            ONLY: CST_t
+USE MODD_CTURB,          ONLY: CSTURB_t
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
+USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
+USE MODD_IO,             ONLY: TFILEDATA
+USE MODD_LES,            ONLY: TLES_t
+USE MODD_PARAMETERS,     ONLY: JPVEXT_TURB, XUNDEF
+USE MODD_TURB_n,         ONLY: TURB_t
+!
 USE MODE_GRADIENT_U_PHY, ONLY : GZ_U_UW_PHY, GX_U_M_PHY
 USE MODE_GRADIENT_V_PHY, ONLY : GZ_V_VW_PHY, GY_V_M_PHY
 USE MODE_GRADIENT_W_PHY, ONLY : GX_W_UW_PHY, GY_W_VW_PHY, GZ_W_M_PHY
 USE MODE_GRADIENT_M_PHY, ONLY : GX_M_U_PHY, GY_M_V_PHY
-!
-USE MODI_SECOND_MNH
-!
-USE MODE_TRIDIAG_WIND, ONLY: TRIDIAG_WIND
-USE MODI_LES_MEAN_SUBGRID_PHY
-!
 USE MODE_IO_FIELD_WRITE, only: IO_FIELD_WRITE_PHY
 USE MODE_ll
+USE MODE_TRIDIAG_WIND,   ONLY: TRIDIAG_WIND
+!
+USE MODI_LES_MEAN_SUBGRID_PHY
+USE MODI_SECOND_MNH
 !
 IMPLICIT NONE
 !
@@ -334,7 +332,7 @@ REAL, DIMENSION(D%NIJT)   :: ZCOEFFLXU, &
                                     ! PVSLOPEM in local 3D arrays
 !
 REAL :: ZTIME1, ZTIME2, ZCMFS
-TYPE(TFIELDDATA) :: TZFIELD
+TYPE(TFIELDMETADATA) :: TZFIELD
 !----------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARIES
@@ -516,16 +514,17 @@ END IF
 !
 IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the U wind component vertical flux
-  TZFIELD%CMNHNAME   = 'UW_VFLX'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'UW_VFLX'
-  TZFIELD%CUNITS     = 'm2 s-2'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'U wind component vertical flux'
-  TZFIELD%NGRID      = 4
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(                        &
+    CMNHNAME   = 'UW_VFLX',                        &
+    CSTDNAME   = '',                               &
+    CLONGNAME  = 'UW_VFLX',                        &
+    CUNITS     = 'm2 s-2',                         &
+    CDIR       = 'XY',                             &
+    CCOMMENT   = 'U wind component vertical flux', &
+    NGRID      = 4,                                &
+    NTYPE      = TYPEREAL,                         &
+    NDIMS      = 3,                                &
+    LTIMEDEP   = .TRUE.                            )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ)
 END IF
 !
@@ -882,16 +881,17 @@ END IF
 !
 IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the V wind component vertical flux
-  TZFIELD%CMNHNAME   = 'VW_VFLX'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'VW_VFLX'
-  TZFIELD%CUNITS     = 'm2 s-2'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'V wind component vertical flux'
-  TZFIELD%NGRID      = 4
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(                        &
+    CMNHNAME   = 'VW_VFLX',                        &
+    CSTDNAME   = '',                               &
+    CLONGNAME  = 'VW_VFLX',                        &
+    CUNITS     = 'm2 s-2',                         &
+    CDIR       = 'XY',                             &
+    CCOMMENT   = 'V wind component vertical flux', &
+    NGRID      = 4,                                &
+    NTYPE      = TYPEREAL,                         &
+    NDIMS      = 3,                                &
+    LTIMEDEP   = .TRUE.                            )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ)
 END IF
 !
@@ -1119,16 +1119,17 @@ IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED .AND. TURBN%CTURBDIM == '1DIM') THEN
   ! to be tested &
   !   +XCMFB*(4./3.)*PLM(:,:,:)/SQRT(PTKEM(:,:,:))*PTP(:,:,:)
   ! stores the W variance
-  TZFIELD%CMNHNAME   = 'W_VVAR'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'W_VVAR'
-  TZFIELD%CUNITS     = 'm2 s-2'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_W_VVAR'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(      &
+    CMNHNAME   = 'W_VVAR',       &
+    CSTDNAME   = '',             &
+    CLONGNAME  = 'W_VVAR',       &
+    CUNITS     = 'm2 s-2',       &
+    CDIR       = 'XY',           &
+    CCOMMENT   = 'X_Y_Z_W_VVAR', &
+    NGRID      = 1,              &
+    NTYPE      = TYPEREAL,       &
+    NDIMS      = 3,              &
+    LTIMEDEP   = .TRUE.          )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ)
 END IF
 !

@@ -2,6 +2,7 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
 MODULE MODE_TURB_VER_THERMO_CORR
 IMPLICIT NONE
 CONTAINS      
@@ -203,23 +204,23 @@ SUBROUTINE TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,TLES,            &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
-USE MODD_CST, ONLY: CST_t
-USE MODD_CTURB, ONLY: CSTURB_t
-USE MODD_TURB_n, ONLY: TURB_t
-USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
-USE MODD_IO,             ONLY: TFILEDATA
-USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
-USE MODD_LES, ONLY: TLES_t
+USE PARKIND1,   ONLY: JPRB
+USE SHUMAN_PHY, ONLY: MZM_PHY, MZF_PHY, DZM_PHY
+USE YOMHOOK,    ONLY: LHOOK, DR_HOOK
 !
-USE MODI_LES_MEAN_SUBGRID_PHY
+USE MODD_CST,            ONLY: CST_t
+USE MODD_CTURB,          ONLY: CSTURB_t
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
+USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
+USE MODD_IO,             ONLY: TFILEDATA
+USE MODD_LES,            ONLY: TLES_t
+USE MODD_PARAMETERS,     ONLY: JPVEXT_TURB
+USE MODD_TURB_n,         ONLY: TURB_t
 !
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE_PHY
 USE MODE_PRANDTL
-USE SHUMAN_PHY, ONLY: MZM_PHY, MZF_PHY, DZM_PHY
 !
+USE MODI_LES_MEAN_SUBGRID_PHY
 USE MODI_SECOND_MNH
 !
 IMPLICIT NONE
@@ -248,7 +249,6 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of t
                                                       ! normal to the ground surface
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  MFMOIST      ! moist mass flux dual scheme
 
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual
                                                       ! Potential Temperature
@@ -299,6 +299,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFTHR        ! d(w'th'r')/dz (at
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PTHLP      ! guess of thl at t+ deltat
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRP        ! guess of r at t+ deltat
 !
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  MFMOIST      ! moist mass flux dual scheme
 REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC),&
                 MERGE(D%NKT,0,OCOMPUTE_SRC)),   INTENT(OUT)  ::  PSIGS     ! Vert. part of Sigma_s at t
 !
@@ -346,7 +347,7 @@ LOGICAL :: GFWTH    ! flag to use w'2th'
 LOGICAL :: GFR2     ! flag to use w'r'2
 LOGICAL :: GFWR     ! flag to use w'2r'
 LOGICAL :: GFTHR    ! flag to use w'th'r'
-TYPE(TFIELDDATA) :: TZFIELD
+TYPE(TFIELDMETADATA) :: TZFIELD
 !----------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARIES
@@ -614,16 +615,17 @@ END IF
   !
   ! stores <THl THl>
   IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
-    TZFIELD%CMNHNAME   = 'THL_VVAR'
-    TZFIELD%CSTDNAME   = ''
-    TZFIELD%CLONGNAME  = 'THL_VVAR'
-    TZFIELD%CUNITS     = 'K2'
-    TZFIELD%CDIR       = 'XY'
-    TZFIELD%CCOMMENT   = 'X_Y_Z_THL_VVAR'
-    TZFIELD%NGRID      = 1
-    TZFIELD%NTYPE      = TYPEREAL
-    TZFIELD%NDIMS      = 3
-    TZFIELD%LTIMEDEP   = .TRUE.
+    TZFIELD = TFIELDMETADATA(        &
+      CMNHNAME   = 'THL_VVAR',       &
+      CSTDNAME   = '',               &
+      CLONGNAME  = 'THL_VVAR',       &
+      CUNITS     = 'K2',             &
+      CDIR       = 'XY',             &
+      CCOMMENT   = 'X_Y_Z_THL_VVAR', &
+      NGRID      = 1,                &
+      NTYPE      = TYPEREAL,         &
+      NDIMS      = 3,                &
+      LTIMEDEP   = .TRUE.            )
     CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ)
   END IF
 !
@@ -927,16 +929,17 @@ END IF
     END IF
     ! stores <THl Rnp>
     IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
-      TZFIELD%CMNHNAME   = 'THLRCONS_VCOR'
-      TZFIELD%CSTDNAME   = ''
-      TZFIELD%CLONGNAME  = 'THLRCONS_VCOR'
-      TZFIELD%CUNITS     = 'K kg kg-1'
-      TZFIELD%CDIR       = 'XY'
-      TZFIELD%CCOMMENT   = 'X_Y_Z_THLRCONS_VCOR'
-      TZFIELD%NGRID      = 1
-      TZFIELD%NTYPE      = TYPEREAL
-      TZFIELD%NDIMS      = 3
-      TZFIELD%LTIMEDEP   = .TRUE.
+      TZFIELD = TFIELDMETADATA(             &
+        CMNHNAME   = 'THLRCONS_VCOR',       &
+        CSTDNAME   = '',                    &
+        CLONGNAME  = 'THLRCONS_VCOR',       &
+        CUNITS     = 'K kg kg-1',           &
+        CDIR       = 'XY',                  &
+        CCOMMENT   = 'X_Y_Z_THLRCONS_VCOR', &
+        NGRID      = 1,                     &
+        NTYPE      = TYPEREAL,              &
+        NDIMS      = 3,                     &
+        LTIMEDEP   = .TRUE.                 )
       CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ)
     END IF
 !
@@ -1192,16 +1195,17 @@ ENDIF
     END IF
     ! stores <Rnp Rnp>
     IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
-      TZFIELD%CMNHNAME   = 'RTOT_VVAR'
-      TZFIELD%CSTDNAME   = ''
-      TZFIELD%CLONGNAME  = 'RTOT_VVAR'
-      TZFIELD%CUNITS     = 'kg2 kg-2'
-      TZFIELD%CDIR       = 'XY'
-      TZFIELD%CCOMMENT   = 'X_Y_Z_RTOT_VVAR'
-      TZFIELD%NGRID      = 1
-      TZFIELD%NTYPE      = TYPEREAL
-      TZFIELD%NDIMS      = 3
-      TZFIELD%LTIMEDEP   = .TRUE.
+      TZFIELD = TFIELDMETADATA(         &
+        CMNHNAME   = 'RTOT_VVAR',       &
+        CSTDNAME   = '',                &
+        CLONGNAME  = 'RTOT_VVAR',       &
+        CUNITS     = 'kg2 kg-2',        &
+        CDIR       = 'XY',              &
+        CCOMMENT   = 'X_Y_Z_RTOT_VVAR', &
+        NGRID      = 1,                 &
+        NTYPE      = TYPEREAL,          &
+        NDIMS      = 3,                 &
+        LTIMEDEP   = .TRUE.             )
       CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ)
     END IF
     !

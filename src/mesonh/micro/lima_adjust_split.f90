@@ -158,7 +158,7 @@ use modd_budget,           only: lbu_enable, nbumod,                            
                                  tbudgets
 USE MODD_CONF
 USE MODD_CST
-use modd_field,            only: TFIELDDATA, TYPEREAL
+use modd_field,            only: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,               ONLY: TFILEDATA
 USE MODD_LUNIT_n,          ONLY: TLUOUT
 USE MODD_NSV
@@ -302,6 +302,7 @@ INTEGER                  :: JITER,ITERMAX  ! iterative loop for first order adju
 INTEGER                  :: ILUOUT     ! Logical unit of output listing 
 !
 INTEGER                           :: ISIZE
+LOGICAL                           :: G_SIGMAS, GUSERI
 REAL, DIMENSION(:), ALLOCATABLE   :: ZRTMIN
 REAL, DIMENSION(:), ALLOCATABLE   :: ZCTMIN
 !
@@ -309,8 +310,7 @@ integer :: idx
 integer :: JI, JJ, JK, jl
 INTEGER                           :: JMOD, JMOD_IFN, JMOD_IMM
 !
-TYPE(TFIELDDATA)  :: TZFIELD
-LOGICAL :: G_SIGMAS, GUSERI
+TYPE(TFIELDMETADATA)     :: TZFIELD
 !
 !-------------------------------------------------------------------------------
 !
@@ -683,16 +683,17 @@ ELSE
 END IF
 !
 IF ( tpfile%lopened ) THEN
-   TZFIELD%CMNHNAME   = 'NEB'
-   TZFIELD%CSTDNAME   = ''
-   TZFIELD%CLONGNAME  = 'NEB'
-   TZFIELD%CUNITS     = '1'
-   TZFIELD%CDIR       = 'XY'
-   TZFIELD%CCOMMENT   = 'X_Y_Z_NEB'
-   TZFIELD%NGRID      = 1
-   TZFIELD%NTYPE      = TYPEREAL
-   TZFIELD%NDIMS      = 3
-   TZFIELD%LTIMEDEP   = .TRUE.
+   TZFIELD = TFIELDMETADATA(   &
+     CMNHNAME   = 'NEB',       &
+     CSTDNAME   = '',          &
+     CLONGNAME  = 'NEB',       &
+     CUNITS     = '1',         &
+     CDIR       = 'XY',        &
+     CCOMMENT   = 'X_Y_Z_NEB', &
+     NGRID      = 1,           &
+     NTYPE      = TYPEREAL,    &
+     NDIMS      = 3,           &
+     LTIMEDEP   = .TRUE.       )
    CALL IO_Field_write(TPFILE,TZFIELD,PCLDFR)
 END IF
 !
@@ -737,16 +738,17 @@ IF ( tpfile%lopened ) THEN
    ZW1(:,:,:)= PPABSTT(:,:,:)
    ZW(:,:,:) = PRVT(:,:,:)*( ZW1(:,:,:)-ZW(:,:,:) ) / ( (XMV/XMD) * ZW(:,:,:) ) - 1.0
    
-   TZFIELD%CMNHNAME   = 'SSI'
-   TZFIELD%CSTDNAME   = ''
-   TZFIELD%CLONGNAME  = 'SSI'
-   TZFIELD%CUNITS     = ''
-   TZFIELD%CDIR       = 'XY'
-   TZFIELD%CCOMMENT   = 'X_Y_Z_SSI'
-   TZFIELD%NGRID      = 1
-   TZFIELD%NTYPE      = TYPEREAL
-   TZFIELD%NDIMS      = 3
-   TZFIELD%LTIMEDEP   = .TRUE.
+   TZFIELD = TFIELDMETADATA(   &
+     CMNHNAME   = 'SSI',       &
+     CSTDNAME   = '',          &
+     CLONGNAME  = 'SSI',       &
+     CUNITS     = '',          &
+     CDIR       = 'XY',        &
+     CCOMMENT   = 'X_Y_Z_SSI', &
+     NGRID      = 1,           &
+     NTYPE      = TYPEREAL,    &
+     NDIMS      = 3,           &
+     LTIMEDEP   = .TRUE.       )
    CALL IO_Field_write(TPFILE,TZFIELD,ZW)
 END IF
 !

@@ -108,7 +108,7 @@ END MODULE MODI_LIMA_WARM_NUCL
 !              ------------
 !
 USE MODD_CST
-use modd_field,           only: TFIELDDATA, TYPEREAL
+use modd_field,           only: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,              ONLY: TFILEDATA
 USE MODD_LUNIT_n,         ONLY: TLUOUT
 USE MODD_PARAMETERS,      ONLY : JPHEXT, JPVEXT
@@ -198,7 +198,7 @@ INTEGER :: JMOD
 INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE        ! Physical domain
 !
 INTEGER                  :: ILUOUT     ! Logical unit of output listing 
-TYPE(TFIELDDATA) :: TZFIELD   
+TYPE(TFIELDMETADATA) :: TZFIELD
 !-------------------------------------------------------------------------------
 !
 ILUOUT = TLUOUT%NLU
@@ -509,28 +509,30 @@ IF ( tpfile%lopened ) THEN
     ZW2(:,:,:) = 0.
   END IF
 
-  TZFIELD%CMNHNAME   ='SMAX'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)
-  TZFIELD%CUNITS     = ''
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_SMAX'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(    &
+    CMNHNAME   = 'SMAX',       &
+    CSTDNAME   = '',           &
+    CLONGNAME  = 'SMAX',       &
+    CUNITS     = '',           &
+    CDIR       = 'XY',         &
+    CCOMMENT   = 'X_Y_Z_SMAX', &
+    NGRID      = 1,            &
+    NTYPE      = TYPEREAL,     &
+    NDIMS      = 3,            &
+    LTIMEDEP   = .TRUE.        )
   CALL IO_Field_write(TPFILE,TZFIELD,ZW)
   !
-  TZFIELD%CMNHNAME   ='NACT'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)
-  TZFIELD%CUNITS     = 'kg-1'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_NACT'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(    &
+    CMNHNAME   = 'NACT',       &
+    CSTDNAME   = '',           &
+    CLONGNAME  = 'NACT',       &
+    CUNITS     = 'kg-1',       &
+    CDIR       = 'XY',         &
+    CCOMMENT   = 'X_Y_Z_NACT', &
+    NGRID      = 1,            &
+    NTYPE      = TYPEREAL,     &
+    NDIMS      = 3,            &
+    LTIMEDEP   = .TRUE.        )
   CALL IO_Field_write(TPFILE,TZFIELD,ZW2)
 END IF
 !

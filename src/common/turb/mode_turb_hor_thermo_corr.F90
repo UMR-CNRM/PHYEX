@@ -59,14 +59,14 @@ CONTAINS
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST, ONLY : CST_t
+USE MODD_CST,           ONLY : CST_t
 USE MODD_CTURB
-USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
-USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
+USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
-USE MODD_PARAMETERS
 USE MODD_LES, ONLY: TLES_t
+USE MODD_PARAMETERS
+USE MODD_TURB_n,         ONLY: TURB_t
 !
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE
 !
@@ -142,7 +142,7 @@ REAL, DIMENSION(SIZE(PDZZ,1),SIZE(PDZZ,2),1+JPVEXT:3+JPVEXT) :: ZCOEFF
                                     ! coefficients for the uncentred gradient 
                                     ! computation near the ground
 REAL :: ZTIME1, ZTIME2
-TYPE(TFIELDDATA) :: TZFIELD
+TYPE(TFIELDMETADATA) :: TZFIELD
 !
 ! ---------------------------------------------------------------------------
 !
@@ -211,16 +211,17 @@ IF ( ( KRRL > 0 .AND. TURBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPE
   !
   ! stores <THl THl>
   IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
-    TZFIELD%CMNHNAME   = 'THL_HVAR'
-    TZFIELD%CSTDNAME   = ''
-    TZFIELD%CLONGNAME  = 'THL_HVAR'
-    TZFIELD%CUNITS     = 'K2'
-    TZFIELD%CDIR       = 'XY'
-    TZFIELD%CCOMMENT   = 'X_Y_Z_THL_HVAR'
-    TZFIELD%NGRID      = 1
-    TZFIELD%NTYPE      = TYPEREAL
-    TZFIELD%NDIMS      = 3
-    TZFIELD%LTIMEDEP   = .TRUE.
+    TZFIELD = TFIELDMETADATA(        &
+      CMNHNAME   = 'THL_HVAR',       &
+      CSTDNAME   = '',               &
+      CLONGNAME  = 'THL_HVAR',       &
+      CUNITS     = 'K2',             &
+      CDIR       = 'XY',             &
+      CCOMMENT   = 'X_Y_Z_THL_HVAR', &
+      NGRID      = 1,                &
+      NTYPE      = TYPEREAL,         &
+      NDIMS      = 3,                &
+      LTIMEDEP   = .TRUE.            )
     CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
   END IF
 !
@@ -299,16 +300,17 @@ IF ( ( KRRL > 0 .AND. TURBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPE
     !
     ! stores <THl Rnp>
     IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
-      TZFIELD%CMNHNAME   = 'THLR_HCOR'
-      TZFIELD%CSTDNAME   = ''
-      TZFIELD%CLONGNAME  = 'THLR_HCOR'
-      TZFIELD%CUNITS     = 'K kg kg-1'
-      TZFIELD%CDIR       = 'XY'
-      TZFIELD%CCOMMENT   = 'X_Y_Z_THLR_HCOR'
-      TZFIELD%NGRID      = 1
-      TZFIELD%NTYPE      = TYPEREAL
-      TZFIELD%NDIMS      = 3
-      TZFIELD%LTIMEDEP   = .TRUE.
+      TZFIELD = TFIELDMETADATA(         &
+        CMNHNAME   = 'THLR_HCOR',       &
+        CSTDNAME   = '',                &
+        CLONGNAME  = 'THLR_HCOR',       &
+        CUNITS     = 'K kg kg-1',       &
+        CDIR       = 'XY',              &
+        CCOMMENT   = 'X_Y_Z_THLR_HCOR', &
+        NGRID      = 1,                 &
+        NTYPE      = TYPEREAL,          &
+        NDIMS      = 3,                 &
+        LTIMEDEP   = .TRUE.             )
       CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
     END IF
 !
@@ -367,16 +369,17 @@ IF ( ( KRRL > 0 .AND. TURBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPE
     !
     ! stores <Rnp Rnp>
     IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
-      TZFIELD%CMNHNAME   = 'R_HVAR'
-      TZFIELD%CSTDNAME   = ''
-      TZFIELD%CLONGNAME  = 'R_HVAR'
-      TZFIELD%CUNITS     = 'kg2 kg-2'
-      TZFIELD%CDIR       = 'XY'
-      TZFIELD%CCOMMENT   = 'X_Y_Z_R_HVAR'
-      TZFIELD%NGRID      = 1
-      TZFIELD%NTYPE      = TYPEREAL
-      TZFIELD%NDIMS      = 3
-      TZFIELD%LTIMEDEP   = .TRUE.
+      TZFIELD = TFIELDMETADATA(      &
+        CMNHNAME   = 'R_HVAR',       &
+        CSTDNAME   = '',             &
+        CLONGNAME  = 'R_HVAR',       &
+        CUNITS     = 'kg2 kg-2',     &
+        CDIR       = 'XY',           &
+        CCOMMENT   = 'X_Y_Z_R_HVAR', &
+        NGRID      = 1,              &
+        NTYPE      = TYPEREAL,       &
+        NDIMS      = 3,              &
+        LTIMEDEP   = .TRUE.          )
       CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
     END IF
     !

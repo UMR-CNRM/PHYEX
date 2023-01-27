@@ -1,13 +1,14 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2022 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
 MODULE MODE_TURB_VER_SV_FLUX
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,TLES,ONOMIXLG,       &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
-                      OBLOWSNOW,                                    &
+                      OBLOWSNOW,OFLYER,                             &
                       PEXPL,PTSTEP,TPFILE,PRSNOW,                   &
                       PDZZ,PDIRCOSZW,                               &
                       PRHODJ,PWM,                                   &
@@ -201,35 +202,34 @@ SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,TLES,ONOMIXLG,       &
 !!                                   to avoid unknwon values outside physical domain
 !!                                   and avoid negative values in sv tendencies
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
-!!      Modifications: June 2019 (Wim de Rooy) with energycascade, 50MF nog
-!!                                             longer necessary
+!  Wim de Rooy    06/2019: with energycascade, 50MF nog longer necessary
+!  P. Wautelet 30/11/2022: compute PWSV only when needed
 !!--------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE PARKIND1,   ONLY: JPRB
+USE SHUMAN_PHY, ONLY: DZM_PHY, MZM_PHY, MZF_PHY
+USE YOMHOOK,    ONLY: LHOOK, DR_HOOK
 !
-USE MODD_CST, ONLY: CST_t
-USE MODD_CTURB, ONLY: CSTURB_t
-USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-USE MODD_TURB_n, ONLY: TURB_t
-USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
-USE MODD_IO,             ONLY: TFILEDATA
-USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
-USE MODD_LES, ONLY: TLES_t
-USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE_PHY
+USE MODD_CST,              ONLY: CST_t
+USE MODD_CTURB,            ONLY: CSTURB_t
+USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
+USE MODD_FIELD,            ONLY: TFIELDMETADATA, TYPEREAL
+USE MODD_IO,               ONLY: TFILEDATA
+USE MODD_LES,              ONLY: TLES_t
+USE MODD_PARAMETERS,       ONLY: JPVEXT_TURB, NMNHNAMELGTMAX
+USE MODD_TURB_n,           ONLY: TURB_t
 !
-
-USE SHUMAN_PHY , ONLY : DZM_PHY, MZM_PHY, MZF_PHY
+USE MODE_EMOIST,         ONLY: EMOIST
+USE MODE_ETHETA,         ONLY: ETHETA
 USE MODE_GRADIENT_W_PHY, ONLY: GZ_W_M_PHY
 USE MODE_GRADIENT_M_PHY, ONLY: GZ_M_W_PHY
-USE MODE_TRIDIAG, ONLY: TRIDIAG
-USE MODE_EMOIST, ONLY: EMOIST
-USE MODE_ETHETA, ONLY: ETHETA
-USE MODI_LES_MEAN_SUBGRID_PHY
+USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE_PHY
+USE MODE_TRIDIAG,        ONLY: TRIDIAG
 !
+USE MODI_LES_MEAN_SUBGRID_PHY
 USE MODI_SECOND_MNH
 !
 IMPLICIT NONE
@@ -246,6 +246,7 @@ INTEGER,                INTENT(IN)   :: KSV, &
                                        KSV_LGBEG, KSV_LGEND ! number of scalar variables
 LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for lagrangian variables (modd_conf)
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
+LOGICAL,                INTENT(IN)   ::  OFLYER       ! MesoNH flyer diagnostic
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
@@ -302,13 +303,14 @@ REAL :: ZTIME1, ZTIME2
 REAL :: ZCSVP = 4.0  ! constant for scalar flux presso-correlation (RS81)
 REAL :: ZCSV          !constant for the scalar flux
 !
-TYPE(TFIELDDATA)  :: TZFIELD
+CHARACTER(LEN=NMNHNAMELGTMAX) :: YMNHNAME
+REAL(KIND=JPRB)               :: ZHOOK_HANDLE
+TYPE(TFIELDMETADATA)          :: TZFIELD
 !----------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARIES
 !             -------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_FLUX',0,ZHOOK_HANDLE)
 !
 IKT=D%NKT  
@@ -429,30 +431,35 @@ DO JSV=1,KSV
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZFLXZ(IIJB:IIJE,IKA) = ZFLXZ(IIJB:IIJE,IKB)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-    DO JK=IKTB+1,IKTE-1
+
+    IF ( OFLYER ) THEN
+      DO JK=IKTB+1,IKTE-1
+        !$mnh_expand_array(JIJ=IIJB:IIJE)
+        PWSV(IIJB:IIJE,JK,JSV)=0.5*(ZFLXZ(IIJB:IIJE,JK)+ZFLXZ(IIJB:IIJE,JK+IKL))
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+      END DO
       !$mnh_expand_array(JIJ=IIJB:IIJE)
-      PWSV(IIJB:IIJE,JK,JSV)=0.5*(ZFLXZ(IIJB:IIJE,JK)+ZFLXZ(IIJB:IIJE,JK+IKL))
+      PWSV(IIJB:IIJE,IKB,JSV)=0.5*(ZFLXZ(IIJB:IIJE,IKB)+ZFLXZ(IIJB:IIJE,IKB+IKL))
+      PWSV(IIJB:IIJE,IKE,JSV)=PWSV(IIJB:IIJE,IKE-IKL,JSV)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-    END DO
-    !$mnh_expand_array(JIJ=IIJB:IIJE)
-    PWSV(IIJB:IIJE,IKB,JSV)=0.5*(ZFLXZ(IIJB:IIJE,IKB)+ZFLXZ(IIJB:IIJE,IKB+IKL))
-    PWSV(IIJB:IIJE,IKE,JSV)=PWSV(IIJB:IIJE,IKE-IKL,JSV)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+    END IF
  END IF
   !
   IF (TURBN%LTURB_FLX .AND. TPFILE%LOPENED) THEN
     ! stores the JSVth vertical flux
-    WRITE(TZFIELD%CMNHNAME,'("WSV_FLX_",I3.3)') JSV
-    TZFIELD%CSTDNAME   = ''
-    TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)
+    WRITE(YMNHNAME,'("WSV_FLX_",I3.3)') JSV
+    TZFIELD = TFIELDMETADATA(                    &
+      CMNHNAME   = TRIM( YMNHNAME ),             &
+      CSTDNAME   = '',                           &
+      CLONGNAME  = TRIM( YMNHNAME ),             &
     !PW: TODO: use the correct units of the JSV variable (and multiply it by m s-1)
-    TZFIELD%CUNITS     = 'SVUNIT m s-1'
-    TZFIELD%CDIR       = 'XY'
-    TZFIELD%CCOMMENT   = 'X_Y_Z_'//TRIM(TZFIELD%CMNHNAME)
-    TZFIELD%NGRID      = 4
-    TZFIELD%NTYPE      = TYPEREAL
-    TZFIELD%NDIMS      = 3
-    TZFIELD%LTIMEDEP   = .TRUE.
+      CUNITS     = 'SVUNIT m s-1',               &
+      CDIR       = 'XY',                         &
+      CCOMMENT   = 'X_Y_Z_' // TRIM( YMNHNAME ), &
+      NGRID      = 4,                            &
+      NTYPE      = TYPEREAL,                     &
+      NDIMS      = 3,                            &
+      LTIMEDEP   = .TRUE.                        )
     !
     CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ)
   END IF

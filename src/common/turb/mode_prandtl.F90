@@ -144,16 +144,16 @@ CONTAINS
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
-USE MODD_CST, ONLY : CST_t
-USE MODD_CTURB, ONLY : CSTURB_t
-USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
+USE MODD_CST,            ONLY: CST_t
+USE MODD_CTURB,          ONLY: CSTURB_t
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
+USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
-USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
+USE MODD_PARAMETERS,     ONLY: JPVEXT_TURB
 !
+USE MODE_EMOIST,         ONLY: EMOIST
+USE MODE_ETHETA,         ONLY: ETHETA
 USE MODE_GRADIENT_M_PHY, ONLY: GX_M_M_PHY, GY_M_M_PHY
-USE MODE_EMOIST, ONLY : EMOIST
-USE MODE_ETHETA, ONLY : ETHETA
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE_PHY
 !
 IMPLICIT NONE
@@ -174,7 +174,7 @@ LOGICAL,                INTENT(IN)   ::  OTURB_DIAG   ! switch to write some
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  OHARAT
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and
-LOGICAL, INTENT(IN) :: O2D               ! Logical for 2D model version (modd_conf)
+LOGICAL,                INTENT(IN)   :: O2D           ! Logical for 2D model version (modd_conf)
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBDIM     ! Kind of turbulence param.
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
@@ -230,7 +230,7 @@ INTEGER :: IIJB,IIJE,IKT,IKA,IKL
 
 INTEGER :: JLOOP
 REAL    :: ZMINVAL
-TYPE(TFIELDDATA)  :: TZFIELD
+TYPE(TFIELDMETADATA) :: TZFIELD
 ! ---------------------------------------------------------------------------
 !
 !*      1.  DEFAULT VALUES,  1D REDELSPERGER NUMBERS 
@@ -656,68 +656,73 @@ END DO
 IF ( OTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   !
   ! stores the RED_TH1
-  TZFIELD%CMNHNAME   = 'RED_TH1'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'RED_TH1'
-  TZFIELD%CUNITS     = '1'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_RED_TH1'
-  TZFIELD%NGRID      = 4
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(       &
+    CMNHNAME   = 'RED_TH1',       &
+    CSTDNAME   = '',              &
+    CLONGNAME  = 'RED_TH1',       &
+    CUNITS     = '1',             &
+    CDIR       = 'XY',            &
+    CCOMMENT   = 'X_Y_Z_RED_TH1', &
+    NGRID      = 4,               &
+    NTYPE      = TYPEREAL,        &
+    NDIMS      = 3,               &
+    LTIMEDEP   = .TRUE.           )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,PREDTH1)
   !
   ! stores the RED_R1
-  TZFIELD%CMNHNAME   = 'RED_R1'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'RED_R1'
-  TZFIELD%CUNITS     = '1'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_RED_R1'
-  TZFIELD%NGRID      = 4
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(      &
+    CMNHNAME   = 'RED_R1',       &
+    CSTDNAME   = '',             &
+    CLONGNAME  = 'RED_R1',       &
+    CUNITS     = '1',            &
+    CDIR       = 'XY',           &
+    CCOMMENT   = 'X_Y_Z_RED_R1', &
+    NGRID      = 4,              &
+    NTYPE      = TYPEREAL,       &
+    NDIMS      = 3,              &
+    LTIMEDEP   = .TRUE.          )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,PREDR1)
   !
   ! stores the RED2_TH3
-  TZFIELD%CMNHNAME   = 'RED2_TH3'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'RED2_TH3'
-  TZFIELD%CUNITS     = '1'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_RED2_TH3'
-  TZFIELD%NGRID      = 4
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(        &
+    CMNHNAME   = 'RED2_TH3',       &
+    CSTDNAME   = '',               &
+    CLONGNAME  = 'RED2_TH3',       &
+    CUNITS     = '1',              &
+    CDIR       = 'XY',             &
+    CCOMMENT   = 'X_Y_Z_RED2_TH3', &
+    NGRID      = 4,                &
+    NTYPE      = TYPEREAL,         &
+    NDIMS      = 3,                &
+    LTIMEDEP   = .TRUE.            )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,PRED2TH3)
   !
   ! stores the RED2_R3
-  TZFIELD%CMNHNAME   = 'RED2_R3'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'RED2_R3'
-  TZFIELD%CUNITS     = '1'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_RED2_R3'
-  TZFIELD%NGRID      = 4
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(       &
+    CMNHNAME   = 'RED2_R3',       &
+    CSTDNAME   = '',              &
+    CLONGNAME  = 'RED2_R3',       &
+    CUNITS     = '1',             &
+    CDIR       = 'XY',            &
+    CCOMMENT   = 'X_Y_Z_RED2_R3', &
+    NGRID      = 4,               &
+    NTYPE      = TYPEREAL,        &
+    NDIMS      = 3,               &
+    LTIMEDEP   = .TRUE.           )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,PRED2R3)
   !
   ! stores the RED2_THR3
-  TZFIELD%CMNHNAME   = 'RED2_THR3'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'RED2_THR3'
-  TZFIELD%CUNITS     = '1'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_RED2_THR3'
-  TZFIELD%NGRID      = 4
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(         &
+    CMNHNAME   = 'RED2_THR3',       &
+    CSTDNAME   = '',                &
+    CLONGNAME  = 'RED2_THR3',       &
+    CUNITS     = '1',               &
+    CDIR       = 'XY',              &
+    CCOMMENT   = 'X_Y_Z_RED2_THR3', &
+    NGRID      = 4,                 &
+    NTYPE      = TYPEREAL,          &
+    NDIMS      = 3,                 &
+    LTIMEDEP   = .TRUE.             )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,PRED2THR3)
   !
 END IF

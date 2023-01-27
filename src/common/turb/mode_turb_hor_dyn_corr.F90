@@ -75,7 +75,7 @@ USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_ARGSLIST_ll,    ONLY: LIST_ll
 USE MODD_CST
 USE MODD_CTURB
-USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
+use modd_field,          only: tfieldmetadata, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_LES, ONLY: TLES_t
@@ -189,7 +189,7 @@ REAL :: ZTIME1, ZTIME2
 REAL, DIMENSION(SIZE(PDZZ,1),SIZE(PDZZ,2),1+JPVEXT:3+JPVEXT) :: ZCOEFF , ZDZZ
                                     ! coefficients for the uncentred gradient 
                                     ! computation near the ground
-TYPE(TFIELDDATA) :: TZFIELD
+TYPE(TFIELDMETADATA) :: TZFIELD
 ! --------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARY COMPUTATIONS
@@ -304,17 +304,18 @@ ZFLX(:,:,IKB-1) = 2. * ZFLX(:,:,IKB-1) -  ZFLX(:,:,IKB)
 CALL UPDATE_HALO_ll(TZFIELDS_ll, IINFO_ll)
 IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
   ! stores <U U>  
-  TZFIELD%CMNHNAME   = 'U_VAR'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'U_VAR'
-  TZFIELD%CUNITS     = 'm2 s-2'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_U_VAR'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
-  CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
+  TZFIELD = TFIELDMETADATA(     &
+    CMNHNAME   = 'U_VAR',       &
+    CSTDNAME   = '',            &
+    CLONGNAME  = 'U_VAR',       &
+    CUNITS     = 'm2 s-2',      &
+    CDIR       = 'XY',          &
+    CCOMMENT   = 'X_Y_Z_U_VAR', &
+    NGRID      = 1,             &
+    NTYPE      = TYPEREAL,      &
+    NDIMS      = 3,             &
+    LTIMEDEP   = .TRUE.         )
+  CALL IO_Field_write(TPFILE,TZFIELD,ZFLX)
 END IF
 !
 ! Complete the U tendency
@@ -399,17 +400,18 @@ CALL UPDATE_HALO_ll(TZFIELDS_ll, IINFO_ll)
 !
 IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
   ! stores <V V>  
-  TZFIELD%CMNHNAME   = 'V_VAR'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'V_VAR'
-  TZFIELD%CUNITS     = 'm2 s-2'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_V_VAR'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
-  CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
+  TZFIELD = TFIELDMETADATA(     &
+    CMNHNAME   = 'V_VAR',       &
+    CSTDNAME   = '',            &
+    CLONGNAME  = 'V_VAR',       &
+    CUNITS     = 'm2 s-2',      &
+    CDIR       = 'XY',          &
+    CCOMMENT   = 'X_Y_Z_V_VAR', &
+    NGRID      = 1,             &
+    NTYPE      = TYPEREAL,      &
+    NDIMS      = 3,             &
+    LTIMEDEP   = .TRUE.         )
+  CALL IO_Field_write(TPFILE,TZFIELD,ZFLX)
 END IF
 !
 ! Complete the V tendency
@@ -486,17 +488,18 @@ ZFLX(:,:,IKB-1) = 2. * ZFLX(:,:,IKB-1) - ZFLX(:,:,IKB)
 !
 IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
   ! stores <W W>  
-  TZFIELD%CMNHNAME   = 'W_VAR'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'W_VAR'
-  TZFIELD%CUNITS     = 'm2 s-2'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_W_VAR'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
-  CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
+  TZFIELD = TFIELDMETADATA(     &
+    CMNHNAME   = 'W_VAR',       &
+    CSTDNAME   = '',            &
+    CLONGNAME  = 'W_VAR',       &
+    CUNITS     = 'm2 s-2',      &
+    CDIR       = 'XY',          &
+    CCOMMENT   = 'X_Y_Z_W_VAR', &
+    NGRID      = 1,             &
+    NTYPE      = TYPEREAL,      &
+    NDIMS      = 3,             &
+    LTIMEDEP   = .TRUE.         )
+  CALL IO_Field_write(TPFILE,TZFIELD,ZFLX)
 END IF
 !
 ! Complete the W tendency

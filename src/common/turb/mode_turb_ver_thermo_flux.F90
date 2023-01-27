@@ -1,13 +1,14 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2022 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
 MODULE MODE_TURB_VER_THERMO_FLUX
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,TLES,            &
                       KRR,KRRL,KRRI,KSV,KGRADIENTS,                 &
-                      OOCEAN,ODEEPOC,                               &
+                      OOCEAN,ODEEPOC,OFLYER,                        &
                       OCOUPLES, OCOMPUTE_SRC,                       &
                       PEXPL,PTSTEP,HPROGRAM,                        &
                       TPFILE,                                       &
@@ -222,34 +223,32 @@ SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,TLES,            &
 !!                     June 2020 (B. Vie) Patch preventing negative rc and ri in 2.3 and 3.3
 !! JL Redelsperger  : 03/2021: Ocean and Autocoupling O-A LES Cases
 !!                             Sfc flux shape for LDEEPOC Case
+!  P. Wautelet 30/11/2022: compute PWTH and PWRC only when needed
 !!--------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE PARKIND1,   ONLY: JPRB
+USE SHUMAN_PHY, ONLY: DZF_PHY, DZM_PHY, MXF_PHY, MYF_PHY, MZF_PHY, MZM_PHY
+USE YOMHOOK,    ONLY: LHOOK, DR_HOOK
 !
-USE MODD_CST, ONLY: CST_t
-USE MODD_CTURB, ONLY: CSTURB_t
-USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
-USE MODD_IO,             ONLY: TFILEDATA
-USE MODD_PARAMETERS, ONLY: JPVEXT_TURB, JPHEXT
-USE MODD_TURB_n,         ONLY: TURB_t
-USE MODD_LES, ONLY: TLES_t
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_CST,              ONLY: CST_t
+USE MODD_CTURB,            ONLY: CSTURB_t
+USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
+USE MODD_FIELD,            ONLY: TFIELDMETADATA, TYPEREAL
+USE MODD_IO,               ONLY: TFILEDATA
+USE MODD_LES,              ONLY: TLES_t
+USE MODD_PARAMETERS,       ONLY: JPVEXT_TURB, JPHEXT, XUNDEF
+USE MODD_TURB_n,           ONLY: TURB_t
 !
-USE MODI_LES_MEAN_SUBGRID_PHY
-USE MODE_TRIDIAG_THERMO, ONLY: TRIDIAG_THERMO
-USE MODE_TM06_H, ONLY: TM06_H
-!
+USE MODE_GRADIENT_W_PHY, ONLY: GZ_W_M_PHY
 USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE_PHY
 USE MODE_PRANDTL
-USE SHUMAN_PHY, ONLY: MZM_PHY, MZF_PHY, DZM_PHY, DZF_PHY, &
-                      MXF_PHY,MYF_PHY
-USE MODE_GRADIENT_W_PHY, ONLY: GZ_W_M_PHY
+USE MODE_TM06_H,         ONLY: TM06_H
+USE MODE_TRIDIAG_THERMO, ONLY: TRIDIAG_THERMO
 !
+USE MODI_LES_MEAN_SUBGRID_PHY
 USE MODI_SECOND_MNH
 !
 IMPLICIT NONE
@@ -263,44 +262,36 @@ TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
 TYPE(TLES_t),           INTENT(INOUT):: TLES          ! modd_les structure
-INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
-INTEGER,                INTENT(IN)   :: KSV           ! number of scalar var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
+INTEGER,                INTENT(IN)   :: KSV           ! number of scalar var.
+INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
+LOGICAL,                INTENT(IN)   ::  OFLYER       ! MesoNH flyer diagnostic
+LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and
-CHARACTER(LEN=6), INTENT(IN) :: HPROGRAM ! CPROGRAM is the program currently running (modd_conf)
 REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
+CHARACTER(LEN=6),       INTENT(IN)   :: HPROGRAM      ! CPROGRAM is the program currently running (modd_conf)
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
-LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 !
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PDZZ, PDXX, PDYY, PDZX, PDZY
-                                                      ! Metric coefficients
-REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the
-                                                      ! normal to the ground surface
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PDZZ, PDXX, PDYY, PDZX, PDZY ! Metric coefficients
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PDIRCOSZW    ! Director Cosinus of the normal to the ground surface
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PZZ          ! altitudes
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PRHODJ       ! dry density * grid volum
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  MFMOIST      ! moist mass flux dual scheme
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual
-                                                      ! Potential Temperature
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHVREF      ! ref. state Virtual Potential Temperature
 !
-REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at time
-!                                                     ! t - deltat
-!
-REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTHP,PSFRP ! surface fluxes at time
-!                                                     ! t + deltat
+REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTS),INTENT(IN) :: PHGRAD  ! horizontal gradients
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PZS ! orography (for LEONARD terms)
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTHM,PSFRM ! surface fluxes at time t - deltat
+REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTHP,PSFRP ! surface fluxes at time t + deltat
 !
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PWM
-! Vertical wind
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHLM
-! potential temperature at t-Delta t
-REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) ::  PRM          ! Mixing ratios
-                                                      ! at t-Delta t
+REAL, DIMENSION(D%NIJT,D%NKT),     INTENT(IN) ::  PWM          ! Vertical wind
+REAL, DIMENSION(D%NIJT,D%NKT),     INTENT(IN) ::  PTHLM        ! potential temperature at t-Delta t
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) ::  PRM          ! Mixing ratios at t-Delta t
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVM         ! Mixing ratios
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTKEM        ! TKE at time t
@@ -335,13 +326,13 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFWR         ! d(w'2r'  )/dz (at
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFTH2        ! d(w'th'2 )/dz (at mass point)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFR2         ! d(w'r'2  )/dz (at mass point)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PFTHR        ! d(w'th'r')/dz (at mass point)
-REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTS),INTENT(IN) :: PHGRAD  ! horizontal gradients
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  MFMOIST      ! moist mass flux dual scheme
 REAL, DIMENSION(MERGE(D%NIT,0,TURBN%CTOM=='TM06'),&
                 MERGE(D%NJT,0,TURBN%CTOM=='TM06')),   INTENT(INOUT)::  PBL_DEPTH    ! BL depth
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PWTHV         ! buoyancy flux
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRTHLS     ! cumulated source for theta
-REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT) :: PRRS       ! cumulated source for rt
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT) :: PRRS     ! cumulated source for rt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: PTHLP      ! guess of thl at t+ deltat
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: PRP        ! guess of r at t+ deltat
 !
@@ -396,7 +387,7 @@ LOGICAL :: GFWTH    ! flag to use w'2th'
 LOGICAL :: GFR2     ! flag to use w'r'2
 LOGICAL :: GFWR     ! flag to use w'2r'
 LOGICAL :: GFTHR    ! flag to use w'th'r'
-TYPE(TFIELDDATA) :: TZFIELD
+TYPE(TFIELDMETADATA) :: TZFIELD
 !----------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARIES
@@ -672,42 +663,48 @@ ELSE
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END IF
 !
-DO JK=IKTB+1,IKTE-1
+IF ( OFLYER ) THEN
+  PWTH(:,:IKTB) = XUNDEF
+  PWTH(:,IKTE:) = XUNDEF
+  !
+  DO JK = IKTB + 1, IKTE - 1
+    !$mnh_expand_array(JIJ=IIJB:IIJE)
+    PWTH(IIJB:IIJE,JK)=0.5*(ZFLXZ(IIJB:IIJE,JK)+ZFLXZ(IIJB:IIJE,JK+IKL))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  END DO
+  !
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PWTH(IIJB:IIJE,JK)=0.5*(ZFLXZ(IIJB:IIJE,JK)+ZFLXZ(IIJB:IIJE,JK+IKL))
+  PWTH(IIJB:IIJE,IKB)=0.5*(ZFLXZ(IIJB:IIJE,IKB)+ZFLXZ(IIJB:IIJE,IKB+IKL)) 
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-END DO
-!
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-PWTH(IIJB:IIJE,IKB)=0.5*(ZFLXZ(IIJB:IIJE,IKB)+ZFLXZ(IIJB:IIJE,IKB+IKL)) 
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
-!
-IF (OOCEAN) THEN
-  !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PWTH(IIJB:IIJE,IKE)=0.5*(ZFLXZ(IIJB:IIJE,IKE)+ZFLXZ(IIJB:IIJE,IKE+IKL))
-  PWTH(IIJB:IIJE,IKA)=0.
-  PWTH(IIJB:IIJE,IKU)=PWTH(IIJB:IIJE,IKE)! not used
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-ELSE
-  !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PWTH(IIJB:IIJE,IKA)=0.5*(ZFLXZ(IIJB:IIJE,IKA)+ZFLXZ(IIJB:IIJE,IKA+IKL))
-  PWTH(IIJB:IIJE,IKE)=PWTH(IIJB:IIJE,IKE-IKL)
-  PWTH(IIJB:IIJE,IKU)=0.
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  !
+  IF (OOCEAN) THEN
+    !$mnh_expand_array(JIJ=IIJB:IIJE)
+    PWTH(IIJB:IIJE,IKE)=0.5*(ZFLXZ(IIJB:IIJE,IKE)+ZFLXZ(IIJB:IIJE,IKE+IKL))
+    PWTH(IIJB:IIJE,IKA)=0.
+    PWTH(IIJB:IIJE,IKU)=PWTH(IIJB:IIJE,IKE)! not used
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  ELSE
+    !$mnh_expand_array(JIJ=IIJB:IIJE)
+    PWTH(IIJB:IIJE,IKA)=0.5*(ZFLXZ(IIJB:IIJE,IKA)+ZFLXZ(IIJB:IIJE,IKA+IKL))
+    PWTH(IIJB:IIJE,IKE)=PWTH(IIJB:IIJE,IKE-IKL)
+    PWTH(IIJB:IIJE,IKU)=0.
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  END IF
 END IF
 !
 IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
   ! stores the conservative potential temperature vertical flux
-  TZFIELD%CMNHNAME   = 'THW_FLX'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'THW_FLX'
-  TZFIELD%CUNITS     = 'K m s-1'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'Conservative potential temperature vertical flux'
-  TZFIELD%NGRID      = 4
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(                                         &
+   CMNHNAME   = 'THW_FLX',                                          &
+   CSTDNAME   = '',                                                 &
+   CLONGNAME  = 'THW_FLX',                                          &
+   CUNITS     = 'K m s-1',                                          &
+   CDIR       = 'XY',                                               &
+   CCOMMENT   = 'Conservative potential temperature vertical flux', &
+   NGRID      = 4,                                                  &
+   NTYPE      = TYPEREAL,                                           &
+   NDIMS      = 3,                                                  &
+   LTIMEDEP   = .TRUE.                                              )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ)
 END IF
 !
@@ -1061,41 +1058,44 @@ IF (KRR /= 0) THEN
     ZFLXZ(IIJB:IIJE,IKU) = ZFLXZ(IIJB:IIJE,IKE)
   END IF
   !
-  DO JK=IKTB+1,IKTE-1
+  IF ( OFLYER ) THEN
+    DO JK=IKTB+1,IKTE-1
+      !$mnh_expand_array(JIJ=IIJB:IIJE)
+      PWRC(IIJB:IIJE,JK)=0.5*(ZFLXZ(IIJB:IIJE,JK)+ZFLXZ(IIJB:IIJE,JK+IKL))
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+    END DO
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    PWRC(IIJB:IIJE,JK)=0.5*(ZFLXZ(IIJB:IIJE,JK)+ZFLXZ(IIJB:IIJE,JK+IKL))
+    PWRC(IIJB:IIJE,IKB)=0.5*(ZFLXZ(IIJB:IIJE,IKB)+ZFLXZ(IIJB:IIJE,IKB+IKL))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-  END DO
-  !$mnh_expand_array(JIJ=IIJB:IIJE)
-  PWRC(IIJB:IIJE,IKB)=0.5*(ZFLXZ(IIJB:IIJE,IKB)+ZFLXZ(IIJB:IIJE,IKB+IKL))
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-  !
-  IF (OOCEAN) THEN
-    !$mnh_expand_array(JIJ=IIJB:IIJE)          
-    PWRC(IIJB:IIJE,IKE)=0.5*(ZFLXZ(IIJB:IIJE,IKE)+ZFLXZ(IIJB:IIJE,IKE+IKL))
-    PWRC(IIJB:IIJE,IKA)=0.
-    PWRC(IIJB:IIJE,IKE+1)=ZFLXZ(IIJB:IIJE,IKE+1)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE)    
-  ELSE
-    !$mnh_expand_array(JIJ=IIJB:IIJE)
-    PWRC(IIJB:IIJE,IKA)=0.5*(ZFLXZ(IIJB:IIJE,IKA)+ZFLXZ(IIJB:IIJE,IKA+IKL))
-    PWRC(IIJB:IIJE,IKE)=PWRC(IIJB:IIJE,IKE-IKL)
-    PWRC(IIJB:IIJE,IKU)=0.
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE)    
-  ENDIF
+    !
+    IF (OOCEAN) THEN
+      !$mnh_expand_array(JIJ=IIJB:IIJE)          
+      PWRC(IIJB:IIJE,IKE)=0.5*(ZFLXZ(IIJB:IIJE,IKE)+ZFLXZ(IIJB:IIJE,IKE+IKL))
+      PWRC(IIJB:IIJE,IKA)=0.
+      PWRC(IIJB:IIJE,IKE+1)=ZFLXZ(IIJB:IIJE,IKE+1)
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE)    
+    ELSE
+      !$mnh_expand_array(JIJ=IIJB:IIJE)
+      PWRC(IIJB:IIJE,IKA)=0.5*(ZFLXZ(IIJB:IIJE,IKA)+ZFLXZ(IIJB:IIJE,IKA+IKL))
+      PWRC(IIJB:IIJE,IKE)=PWRC(IIJB:IIJE,IKE-IKL)
+      PWRC(IIJB:IIJE,IKU)=0.
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE)    
+    END IF
+  END IF
   !
   IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
     ! stores the conservative mixing ratio vertical flux
-    TZFIELD%CMNHNAME   = 'RCONSW_FLX'
-    TZFIELD%CSTDNAME   = ''
-    TZFIELD%CLONGNAME  = 'RCONSW_FLX'
-    TZFIELD%CUNITS     = 'kg m s-1 kg-1'
-    TZFIELD%CDIR       = 'XY'
-    TZFIELD%CCOMMENT   = 'Conservative mixing ratio vertical flux'
-    TZFIELD%NGRID      = 4
-    TZFIELD%NTYPE      = TYPEREAL
-    TZFIELD%NDIMS      = 3
-    TZFIELD%LTIMEDEP   = .TRUE.
+    TZFIELD = TFIELDMETADATA(                                 &
+      CMNHNAME   = 'RCONSW_FLX',                              &
+      CSTDNAME   = '',                                        &
+      CLONGNAME  = 'RCONSW_FLX',                              &
+      CUNITS     = 'kg m s-1 kg-1',                           &
+      CDIR       = 'XY',                                      &
+      CCOMMENT   = 'Conservative mixing ratio vertical flux', &
+      NGRID      = 4,                                         &
+      NTYPE      = TYPEREAL,                                  &
+      NDIMS      = 3,                                         &
+      LTIMEDEP   = .TRUE.                                     )
     CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ)
   END IF
   !
@@ -1273,16 +1273,17 @@ IF ( ((TURBN%LTURB_FLX .AND. TPFILE%LOPENED) .OR. TLES%LLES_CALL) .AND. (KRRL > 
   !
   ! store the liquid water mixing ratio vertical flux
   IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) THEN
-    TZFIELD%CMNHNAME   = 'RCW_FLX'
-    TZFIELD%CSTDNAME   = ''
-    TZFIELD%CLONGNAME  = 'RCW_FLX'
-    TZFIELD%CUNITS     = 'kg m s-1 kg-1'
-    TZFIELD%CDIR       = 'XY'
-    TZFIELD%CCOMMENT   = 'Liquid water mixing ratio vertical flux'
-    TZFIELD%NGRID      = 4
-    TZFIELD%NTYPE      = TYPEREAL
-    TZFIELD%NDIMS      = 3
-    TZFIELD%LTIMEDEP   = .TRUE.
+    TZFIELD = TFIELDMETADATA(                                 &
+      CMNHNAME   = 'RCW_FLX',                                 &
+      CSTDNAME   = '',                                        &
+      CLONGNAME  = 'RCW_FLX',                                 &
+      CUNITS     = 'kg m s-1 kg-1',                           &
+      CDIR       = 'XY',                                      &
+      CCOMMENT   = 'Liquid water mixing ratio vertical flux', &
+      NGRID      = 4,                                         &
+      NTYPE      = TYPEREAL,                                  &
+      NDIMS      = 3,                                         &
+      LTIMEDEP   = .TRUE.                                     )
     CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ)
   END IF
   !

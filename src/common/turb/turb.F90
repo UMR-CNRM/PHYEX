@@ -7,7 +7,7 @@
               & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,KHALO,       &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
               & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
-              & O2D,ONOMIXLG,OFLAT,OCOUPLES,OBLOWSNOW,OIBM,           &
+              & O2D,ONOMIXLG,OFLAT,OCOUPLES,OBLOWSNOW,OIBM,OFLYER,    &
               & OCOMPUTE_SRC, PRSNOW,                                 &
               & OOCEAN,ODEEPOC,ODIAG_IN_RUN,                          &
               & HTURBLEN_CL,HCLOUD,                                   &
@@ -226,7 +226,7 @@
 !  P. Wautelet 05/2016-04/2018: new data structures and calls for I/O
 !  Q. Rodier      01/2018: introduction of RM17
 !  P. Wautelet 20/05/2019: add name argument to ADDnFIELD_ll + new ADD4DFIELD_ll subroutine
-!!                     June 2019 (Wim de Rooy)  update statistical cloud scheme
+!  Wim de Rooy    06/2019: update statistical cloud scheme
 !  P. Wautelet    02/2020: use the new data structures and subroutines for budgets
 !  B. Vie         03/2020: LIMA negativity checks after turbulence, advection and microphysics budgets
 !  P. Wautelet 11/06/2020: bugfix: correct PRSVS array indices
@@ -239,45 +239,44 @@
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE PARKIND1,   ONLY: JPRB
+USE SHUMAN_PHY, ONLY: MZF_PHY,MXF_PHY,MYF_PHY
+USE YOMHOOK ,   ONLY: LHOOK, DR_HOOK
 !
-USE MODD_PARAMETERS, ONLY: JPVEXT_TURB, XUNDEF
-USE MODD_CST, ONLY: CST_t
-USE MODD_CTURB, ONLY: CSTURB_t
-USE MODD_BUDGET, ONLY:      NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC,  &
+USE MODD_BUDGET,     ONLY:  NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC,  &
                             NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1, &
                             TBUDGETDATA, TBUDGETCONF_t
-USE MODD_FIELD, ONLY: TFIELDDATA,TYPEREAL
-USE MODD_IO, ONLY: TFILEDATA
-!
-USE MODD_LES, ONLY : TLES_t
+USE MODD_CST,        ONLY: CST_t
+USE MODD_CTURB,      ONLY: CSTURB_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_FIELD,      ONLY: TFIELDMETADATA, TYPEREAL
+USE MODD_IO,         ONLY: TFILEDATA
+USE MODD_LES,        ONLY: TLES_t
+USE MODD_PARAMETERS, ONLY: JPVEXT_TURB, XUNDEF
+USE MODD_TURB_n,     ONLY: TURB_t
 !
-USE MODE_BL89, ONLY: BL89
-USE MODE_TURB_VER, ONLY : TURB_VER
-USE MODE_ROTATE_WIND, ONLY: ROTATE_WIND, UPDATE_ROTATE_WIND
-USE MODE_TURB_HOR_SPLT, ONLY: TURB_HOR_SPLT
-USE MODE_TKE_EPS_SOURCES, ONLY: TKE_EPS_SOURCES
-USE MODE_RMC01, ONLY: RMC01
-USE MODE_TM06, ONLY: TM06
-USE MODE_UPDATE_LM, ONLY: UPDATE_LM
-USE MODE_BUDGET,         ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
-USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE_PHY
-USE MODE_SBL_PHY, ONLY: LMO
+USE MODE_BL89,                ONLY: BL89
+USE MODE_BUDGET,              ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
+USE MODE_EMOIST,              ONLY: EMOIST
+USE MODE_ETHETA,              ONLY: ETHETA
+USE MODE_GRADIENT_U_PHY,      ONLY: GZ_U_UW_PHY
+USE MODE_GRADIENT_V_PHY,      ONLY: GZ_V_VW_PHY
+USE MODE_GRADIENT_W_PHY,      ONLY: GZ_W_M_PHY
+USE MODE_GRADIENT_M_PHY,      ONLY: GZ_M_W_PHY
+USE MODE_IBM_MIXINGLENGTH,    ONLY: IBM_MIXINGLENGTH
+USE MODE_IO_FIELD_WRITE,      ONLY: IO_FIELD_WRITE_PHY
+USE MODE_RMC01,               ONLY: RMC01
+USE MODE_ROTATE_WIND,         ONLY: ROTATE_WIND, UPDATE_ROTATE_WIND
+USE MODE_SBL_PHY,             ONLY: LMO
 USE MODE_SOURCES_NEG_CORRECT, ONLY: SOURCES_NEG_CORRECT_PHY
-USE MODE_EMOIST, ONLY: EMOIST
-USE MODE_ETHETA, ONLY: ETHETA
-USE MODE_IBM_MIXINGLENGTH, ONLY: IBM_MIXINGLENGTH
+USE MODE_TM06,                ONLY: TM06
+USE MODE_TKE_EPS_SOURCES,     ONLY: TKE_EPS_SOURCES
+USE MODE_TURB_HOR_SPLT,       ONLY: TURB_HOR_SPLT
+USE MODE_TURB_VER,            ONLY: TURB_VER
+USE MODE_UPDATE_LM,           ONLY: UPDATE_LM
 !
 USE MODI_LES_MEAN_SUBGRID_PHY
 !
-USE SHUMAN_PHY, ONLY : MZF_PHY,MXF_PHY,MYF_PHY
-USE MODE_GRADIENT_U_PHY, ONLY : GZ_U_UW_PHY
-USE MODE_GRADIENT_V_PHY, ONLY : GZ_V_VW_PHY
-USE MODE_GRADIENT_W_PHY, ONLY : GZ_W_M_PHY
-USE MODE_GRADIENT_M_PHY, ONLY : GZ_M_W_PHY
 !
 IMPLICIT NONE
 !
@@ -305,6 +304,7 @@ INTEGER,                INTENT(IN)   :: KMODEL_CL     ! model number for cloud m
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
+LOGICAL,                INTENT(IN)   ::  OFLYER       ! MesoNH flyer diagnostic
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
@@ -500,7 +500,7 @@ REAL                :: ZALPHA       ! work coefficient :
 !                                   !   BL89 mixing length near the surface
 !
 REAL :: ZTIME1, ZTIME2
-TYPE(TFIELDDATA) :: TZFIELD
+TYPE(TFIELDMETADATA) :: TZFIELD
 !
 !*      1.PRELIMINARIES
 !         -------------
@@ -641,28 +641,30 @@ IF (KRRL >=1) THEN
 !
 !
   IF ( TPFILE%LOPENED .AND. TURBN%LTURB_DIAG ) THEN
-    TZFIELD%CMNHNAME   = 'ATHETA'
-    TZFIELD%CSTDNAME   = ''
-    TZFIELD%CLONGNAME  = 'ATHETA'
-    TZFIELD%CUNITS     = 'm'
-    TZFIELD%CDIR       = 'XY'
-    TZFIELD%CCOMMENT   = 'X_Y_Z_ATHETA'
-    TZFIELD%NGRID      = 1
-    TZFIELD%NTYPE      = TYPEREAL
-    TZFIELD%NDIMS      = 3
-    TZFIELD%LTIMEDEP   = .TRUE.
+    TZFIELD = TFIELDMETADATA(      &
+      CMNHNAME   = 'ATHETA',       &
+      CSTDNAME   = '',             &
+      CLONGNAME  = 'ATHETA',       &
+      CUNITS     = 'm',            &
+      CDIR       = 'XY',           &
+      CCOMMENT   = 'X_Y_Z_ATHETA', &
+      NGRID      = 1,              &
+      NTYPE      = TYPEREAL,       &
+      NDIMS      = 3,              &
+      LTIMEDEP   = .TRUE.          )
     CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZATHETA)
 !
-    TZFIELD%CMNHNAME   = 'AMOIST'
-    TZFIELD%CSTDNAME   = ''
-    TZFIELD%CLONGNAME  = 'AMOIST'
-    TZFIELD%CUNITS     = 'm'
-    TZFIELD%CDIR       = 'XY'
-    TZFIELD%CCOMMENT   = 'X_Y_Z_AMOIST'
-    TZFIELD%NGRID      = 1
-    TZFIELD%NTYPE      = TYPEREAL
-    TZFIELD%NDIMS      = 3
-    TZFIELD%LTIMEDEP   = .TRUE.
+    TZFIELD = TFIELDMETADATA(      &
+      CMNHNAME   = 'AMOIST',       &
+      CSTDNAME   = '',             &
+      CLONGNAME  = 'AMOIST',       &
+      CUNITS     = 'm',            &
+      CDIR       = 'XY',           &
+      CCOMMENT   = 'X_Y_Z_AMOIST', &
+      NGRID      = 1,              &
+      NTYPE      = TYPEREAL,       &
+      NDIMS      = 3,              &
+      LTIMEDEP   = .TRUE.          )
     CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZAMOIST)
   END IF
 !
@@ -1006,7 +1008,7 @@ CALL TURB_VER(D,CST,CSTURB,TURBN,TLES,                   &
           OOCEAN, ODEEPOC, OCOMPUTE_SRC,                 &
           KSV,KSV_LGBEG,KSV_LGEND,                       &
           ZEXPL,HPROGRAM, O2D, ONOMIXLG, OFLAT,          &
-          OCOUPLES,OBLOWSNOW, PRSNOW,                    &
+          OCOUPLES,OBLOWSNOW,OFLYER, PRSNOW,             &
           PTSTEP,TPFILE,                                 &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,        &
           PCOSSLOPE,PSINSLOPE,                           &
@@ -1239,46 +1241,49 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
 !
 ! stores the mixing length
 !
-  TZFIELD%CMNHNAME   = 'LM'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'LM'
-  TZFIELD%CUNITS     = 'm'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'Mixing length'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(       &
+    CMNHNAME   = 'LM',            &
+    CSTDNAME   = '',              &
+    CLONGNAME  = 'LM',            &
+    CUNITS     = 'm',             &
+    CDIR       = 'XY',            &
+    CCOMMENT   = 'Mixing length', &
+    NGRID      = 1,               &
+    NTYPE      = TYPEREAL,        &
+    NDIMS      = 3,               &
+    LTIMEDEP   = .TRUE.           )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZLM)
 !
   IF (KRR /= 0) THEN
 !
 ! stores the conservative potential temperature
 !
-    TZFIELD%CMNHNAME   = 'THLM'
-    TZFIELD%CSTDNAME   = ''
-    TZFIELD%CLONGNAME  = 'THLM'
-    TZFIELD%CUNITS     = 'K'
-    TZFIELD%CDIR       = 'XY'
-    TZFIELD%CCOMMENT   = 'Conservative potential temperature'
-    TZFIELD%NGRID      = 1
-    TZFIELD%NTYPE      = TYPEREAL
-    TZFIELD%NDIMS      = 3
-    TZFIELD%LTIMEDEP   = .TRUE.
+    TZFIELD = TFIELDMETADATA(                          &
+    CMNHNAME   = 'THLM',                               &
+    CSTDNAME   = '',                                   &
+    CLONGNAME  = 'THLM',                               &
+    CUNITS     = 'K',                                  &
+    CDIR       = 'XY',                                 &
+    CCOMMENT   = 'Conservative potential temperature', &
+    NGRID      = 1,                                    &
+    NTYPE      = TYPEREAL,                             &
+    NDIMS      = 3,                                    &
+    LTIMEDEP   = .TRUE.                                )
     CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,PTHLT)
 !
 ! stores the conservative mixing ratio
 !
-    TZFIELD%CMNHNAME   = 'RNPM'
-    TZFIELD%CSTDNAME   = ''
-    TZFIELD%CLONGNAME  = 'RNPM'
-    TZFIELD%CUNITS     = 'kg kg-1'
-    TZFIELD%CDIR       = 'XY'
-    TZFIELD%CCOMMENT   = 'Conservative mixing ratio'
-    TZFIELD%NGRID      = 1
-    TZFIELD%NTYPE      = TYPEREAL
-    TZFIELD%NDIMS      = 3
-    TZFIELD%LTIMEDEP   = .TRUE.
+    TZFIELD = TFIELDMETADATA(                &
+    CMNHNAME   = 'RNPM',                     &
+    CSTDNAME   = '',                         &
+    CLONGNAME  = 'RNPM',                     &
+    CUNITS     = 'kg kg-1',                  &
+    CDIR       = 'XY',                       &
+    CCOMMENT   = 'Conservative mixing ratio',&
+    NGRID      = 1,                          &
+    NTYPE      = TYPEREAL,                   &
+    NDIMS      = 3,                          &
+    LTIMEDEP   = .TRUE.                      )
     CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,PRT(:,:,1))
    END IF
 END IF
@@ -1973,16 +1978,17 @@ ENDIF
 !
 ! Impression before modification of the mixing length
 IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
-  TZFIELD%CMNHNAME   = 'LM_CLEAR_SKY'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'LM_CLEAR_SKY'
-  TZFIELD%CUNITS     = 'm'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_LM CLEAR SKY'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(            &
+    CMNHNAME   = 'LM_CLEAR_SKY',       &
+    CSTDNAME   = '',                   &
+    CLONGNAME  = 'LM_CLEAR_SKY',       &
+    CUNITS     = 'm',                  &
+    CDIR       = 'XY',                 &
+    CCOMMENT   = 'X_Y_Z_LM CLEAR SKY', &
+    NGRID      = 1,                    &
+    NTYPE      = TYPEREAL,             &
+    NDIMS      = 3,                    &
+    LTIMEDEP   = .TRUE.                )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZLM)
 ENDIF
 !
@@ -2007,27 +2013,30 @@ END WHERE
 !              ----------
 !
 IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
-  TZFIELD%CMNHNAME   = 'COEF_AMPL'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'COEF_AMPL'
-  TZFIELD%CUNITS     = '1'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_COEF AMPL'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(         &
+    CMNHNAME   = 'COEF_AMPL',       &
+    CSTDNAME   = '',                &
+    CLONGNAME  = 'COEF_AMPL',       &
+    CUNITS     = '1',               &
+    CDIR       = 'XY',              &
+    CCOMMENT   = 'X_Y_Z_COEF AMPL', &
+    NGRID      = 1,                 &
+    NTYPE      = TYPEREAL,          &
+    NDIMS      = 3,                 &
+    LTIMEDEP   = .TRUE.             )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZCOEF_AMPL)
   !
-  TZFIELD%CMNHNAME   = 'LM_CLOUD'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'LM_CLOUD'
-  TZFIELD%CUNITS     = 'm'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_LM CLOUD'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
+  TZFIELD = TFIELDMETADATA(        &
+    CMNHNAME   = 'LM_CLOUD',       &
+    CSTDNAME   = '',               &
+    CLONGNAME  = 'LM_CLOUD',       &
+    CUNITS     = 'm',              &
+    CDIR       = 'XY',             &
+    CCOMMENT   = 'X_Y_Z_LM CLOUD', &
+    NGRID      = 1,                &
+    NTYPE      = TYPEREAL,         &
+    NDIMS      = 3,                &
+    LTIMEDEP   = .TRUE.            )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZLM_CLOUD)
   !
 ENDIF

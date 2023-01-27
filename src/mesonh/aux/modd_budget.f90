@@ -35,7 +35,7 @@
 !  P. Wautelet 19/07/2019: parameters to identify budget number
 !  P. Wautelet 15/11/2019: remove unused CBURECORD variable
 !  P. Wautelet 17/01/2020: add new budget data types
-!  P. Wautelet 27/01/2020: use the tfield_metadata_base abstract datatype
+!  P. Wautelet 27/01/2020: use the tfieldmetadata_base abstract datatype
 !  P. Wautelet 28/01/2020: add trhodj in tbudgetdata datatype
 !  P. Wautelet 09/03/2020: add tburhodj variable
 !  P. Wautelet 17/04/2020: set default values for budgets switch values
@@ -53,7 +53,7 @@
 !*       0.   DECLARATIONS
 !             ------------
 
-use modd_field,      only: tfield_metadata_base
+use modd_field,      only: tfieldmetadata_base
 use modd_parameters, only: NBUNAMELGTMAX, NCOMMENTLGTMAX
 
 implicit none
@@ -102,7 +102,7 @@ character(len=*), dimension(NMAXLEVELS), parameter :: CNCGROUPNAMES = [ &
 integer :: nbudgets ! Number of budget categories
 
 
-type, extends( tfield_metadata_base ) :: tbusourcedata
+type, extends( tfieldmetadata_base ) :: tbusourcedata
   integer :: ngroup = 0 ! Number of the source term group in which storing the source term
                         !  (0: no store, 1: individual store, >1: number of the group)
   logical :: lavailable = .false. ! If true, the source is available in the run (conditions to access it are met),
@@ -114,16 +114,17 @@ type, extends( tfield_metadata_base ) :: tbusourcedata
                                   ! It may be true only if the source term is in a group not containing other sources
 end type tbusourcedata
 
-type, extends( tfield_metadata_base ) :: tbugroupdata
+type, extends( tfieldmetadata_base ) :: tbugroupdata
   integer :: nsources = 0 ! Number of source terms composing this group
   integer, dimension(:),     allocatable :: nsourcelist ! List of the source terms composing this group
   real,    dimension(:,:,:), allocatable :: xdata ! Array to store the budget data
 end type tbugroupdata
 
-type, extends( tfield_metadata_base ) :: tburhodata
+type, extends( tfieldmetadata_base ) :: tburhodata
   real, dimension(:,:,:), allocatable :: xdata ! Array to store the budget data
 end type tburhodata
 
+!PW: a commenter + renommer???
 type :: tbudiachrometadata
   character(len=NBUNAMELGTMAX),  dimension(NMAXLEVELS) :: clevels  = '' !Name of the different groups/levels in the netCDF file
   character(len=NCOMMENTLGTMAX), dimension(NMAXLEVELS) :: ccomments ='' !Comments for the different groups/levels in the netCDF file

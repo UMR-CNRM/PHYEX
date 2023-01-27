@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -72,6 +72,10 @@
 !*      0. DECLARATIONS
 !          ------------
 !
+USE PARKIND1,   ONLY: JPRB
+USE SHUMAN_PHY, ONLY: MXM_PHY, MYM_PHY
+USE YOMHOOK,    ONLY: LHOOK, DR_HOOK
+!
 USE MODD_BUDGET,          ONLY: TBUDGETCONF_t, TBUDGETDATA, NBUDGET_U,  NBUDGET_V, &
                                 NBUDGET_TH,  NBUDGET_RV, NBUDGET_SV1
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
@@ -82,18 +86,15 @@ USE MODD_TURB_n,          ONLY: TURB_t
 USE MODD_CTURB,           ONLY: CSTURB_t
 USE MODD_PARAMETERS,      ONLY: JPSVMAX
 !
-USE MODE_BUDGET,         ONLY: BUDGET_STORE_ADD_PHY
-USE MODE_THL_RT_FROM_TH_R_MF, ONLY: THL_RT_FROM_TH_R_MF
-USE MODE_COMPUTE_UPDRAFT, ONLY: COMPUTE_UPDRAFT
+USE MODE_BUDGET,                 ONLY: BUDGET_STORE_ADD_PHY
+USE MODE_COMPUTE_MF_CLOUD,       ONLY: COMPUTE_MF_CLOUD
+USE MODE_COMPUTE_UPDRAFT,        ONLY: COMPUTE_UPDRAFT
+USE MODE_COMPUTE_UPDRAFT_RAHA,   ONLY: COMPUTE_UPDRAFT_RAHA
 USE MODE_COMPUTE_UPDRAFT_RHCJ10, ONLY: COMPUTE_UPDRAFT_RHCJ10
-USE MODE_COMPUTE_UPDRAFT_RAHA, ONLY: COMPUTE_UPDRAFT_RAHA
-USE MODE_MF_TURB, ONLY: MF_TURB
-USE MODE_MF_TURB_EXPL, ONLY: MF_TURB_EXPL
-USE MODE_COMPUTE_MF_CLOUD, ONLY: COMPUTE_MF_CLOUD
-USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
-USE SHUMAN_PHY, ONLY: MXM_PHY, MYM_PHY
+USE MODE_MF_TURB,                ONLY: MF_TURB
+USE MODE_MF_TURB_EXPL,           ONLY: MF_TURB_EXPL
+USE MODE_MSG,                    ONLY: PRINT_MSG, NVERB_FATAL
+USE MODE_THL_RT_FROM_TH_R_MF,    ONLY: THL_RT_FROM_TH_R_MF
 !
 IMPLICIT NONE
 
@@ -120,16 +121,15 @@ REAL,                   INTENT(IN)   :: PTSTEP    ! Dynamical timestep
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PZZ         ! Height of flux point
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PDZZ        ! Metric coefficients
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PRHODJ      ! dry density * Grid size
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PRHODREF    ! dry density of the
-                                                     ! reference state
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PRHODREF    ! dry density of the reference state
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PPABSM      ! Pressure at time t-1
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PEXNM       ! Exner function at t-dt
 
-REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTH,PSFRV ! normal surface fluxes of theta and Rv 
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHM        ! Theta at t-dt
+REAL, DIMENSION(D%NIJT),           INTENT(IN) ::  PSFTH,PSFRV ! normal surface fluxes of theta and Rv
+REAL, DIMENSION(D%NIJT,D%NKT),     INTENT(IN) ::  PTHM        ! Theta at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) ::  PRM         ! water var. at t-dt
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PUM,PVM     ! wind components at t-dt
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PTKEM       ! tke at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT),     INTENT(IN) ::  PUM,PVM     ! wind components at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT),     INTENT(IN) ::  PTKEM       ! tke at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVM        ! scalar variable a t-dt
 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)::  PDUDT_MF     ! tendency of U   by massflux scheme
@@ -157,13 +157,13 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PFRAC_UP  ! updraft fraction
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PEMF      ! updraft mass flux
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) ::  PDETR     ! updraft detrainment
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) ::  PENTR     ! updraft entrainment
-INTEGER,DIMENSION(D%NIJT), INTENT(OUT) :: KKLCL,KKETL,KKCTL ! level of LCL,ETL and CTL
-REAL,                 INTENT(IN)  :: PDX, PDY
-REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN),OPTIONAL ::  PRSVS ! sources of sv (for Budgets with lagrangian tracer)
-TYPE(TBUDGETCONF_t),    INTENT(IN),OPTIONAL   :: BUCONF       ! budget structure
-INTEGER,                INTENT(IN)   :: KBUDGETS     ! option. because not used in arpifs
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT),OPTIONAL :: TBUDGETS 
-REAL,DIMENSION(JPSVMAX),INTENT(IN),OPTIONAL   :: PSVMIN       ! minimum value for SV variables (for Budgets)
+INTEGER,DIMENSION(D%NIJT),     INTENT(OUT) :: KKLCL,KKETL,KKCTL ! level of LCL,ETL and CTL
+REAL,                          INTENT(IN)  :: PDX, PDY
+REAL, DIMENSION(D%NIJT,D%NKT,KSV),      INTENT(IN),    OPTIONAL :: PRSVS ! sources of sv (for Budgets with lagrangian tracer)
+REAL,DIMENSION(JPSVMAX),                INTENT(IN),    OPTIONAL :: PSVMIN       ! minimum value for SV variables (for Budgets)
+TYPE(TBUDGETCONF_t),                    INTENT(IN),    OPTIONAL :: BUCONF       ! budget structure
+TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT), OPTIONAL :: TBUDGETS
+INTEGER,                                INTENT(IN)              :: KBUDGETS     ! option. because not used in arpifs
 
 !
 !                     0.2  Declaration of local variables

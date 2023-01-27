@@ -146,7 +146,7 @@ use modd_budget,         only: lbudget_th, lbudget_rv, lbudget_rc, lbudget_sv,  
                                tbudgets
 USE MODD_CONF
 USE MODD_CST
-USE MODD_FIELD,          only: tfielddata, TYPEREAL
+USE MODD_FIELD,          only: tfieldmetadata, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_LUNIT_n,        ONLY: TLUOUT
 USE MODD_NSV,            ONLY: NSV_C2R2BEG
@@ -195,10 +195,10 @@ REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) &
                             ZW1,ZW2,ZW3  ! Work arrays for intermediate
                                          ! fields
 !
-INTEGER             :: IRESP      ! Return code of FM routines
-INTEGER             :: JITER,ITERMAX  ! iterative loop for first order adjustment
-INTEGER             :: ILUOUT     ! Logical unit of output listing 
-TYPE(TFIELDDATA)    :: TZFIELD
+INTEGER              :: IRESP      ! Return code of FM routines
+INTEGER              :: JITER,ITERMAX  ! iterative loop for first order adjustment
+INTEGER              :: ILUOUT     ! Logical unit of output listing
+TYPE(TFIELDMETADATA) :: TZFIELD
 !-------------------------------------------------------------------------------
 !
 !*       1.     PRELIMINARIES
@@ -405,16 +405,17 @@ IF ( HRAD /= 'NONE' ) THEN
 END IF
 !
 IF ( tpfile%lopened ) THEN
-  TZFIELD%CMNHNAME   = 'NEB'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'NEB'
-  TZFIELD%CUNITS     = '1'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_NEB'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(   &
+    CMNHNAME   = 'NEB',       &
+    CSTDNAME   = '',          &
+    CLONGNAME  = 'NEB',       &
+    CUNITS     = '1',         &
+    CDIR       = 'XY',        &
+    CCOMMENT   = 'X_Y_Z_NEB', &
+    NGRID      = 1,           &
+    NTYPE      = TYPEREAL,    &
+    NDIMS      = 3,           &
+    LTIMEDEP   = .TRUE.       )
   CALL IO_Field_write(TPFILE,TZFIELD,ZW1)
 END IF
 !
