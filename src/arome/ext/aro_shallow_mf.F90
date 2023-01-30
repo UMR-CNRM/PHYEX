@@ -1,6 +1,7 @@
 !     ######spl
-      SUBROUTINE  ARO_SHALLOW_MF(KKL, KLON, KLEV, KFDIA, KRR, KRRL, KRRI,KSV,&
-                HMF_UPDRAFT, HMF_CLOUD, HFRAC_ICE, OMIXUV,            &
+      SUBROUTINE  ARO_SHALLOW_MF(PARAM_ICE,                           &
+                KKL, KLON, KLEV, KFDIA, KRR, KRRL, KRRI,KSV,&
+                HMF_UPDRAFT, HMF_CLOUD, OMIXUV,                       &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
                 KTCOUNT, PTSTEP, PDX, PDY,                            &
                 PZZ, PZZF, PDZZF,                                     &
@@ -72,6 +73,7 @@ USE MODD_TURB_n, ONLY: TURBN
 USE MODD_CTURB, ONLY: CSTURB
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALLN
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+USE MODD_PARAM_ICE, ONLY: PARAM_ICE_t
 !
 USE MODI_SHALLOW_MF
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
@@ -86,6 +88,7 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(PARAM_ICE_t),        INTENT(IN)   :: PARAM_ICE
 INTEGER,                  INTENT(IN)   :: KKL      ! +1 if grid goes from ground to
                                                    ! atmosphere top, -1 otherwise
 INTEGER,                  INTENT(IN)   :: KLON     !NPROMA under CPG
@@ -98,7 +101,6 @@ INTEGER,                  INTENT(IN)   :: KSV      ! Number of passive scalar va
 !
 CHARACTER (LEN=4), INTENT(IN)   :: HMF_UPDRAFT  ! Type of Mass Flux Scheme
 CHARACTER (LEN=4), INTENT(IN)   :: HMF_CLOUD    ! Type of statistical cloud scheme
-CHARACTER*1,       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                        INTENT(IN)   :: OMIXUV    ! True if mixing of momentum
 !
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
@@ -223,7 +225,8 @@ ENDDO
 TURBN%LSTATNW = .FALSE.
   CALL SHALLOW_MF(YLDIMPHYEX, CST, NEB, PARAM_MFSHALLN, TURBN, CSTURB,                    &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                             &
-     &HFRAC_ICE=HFRAC_ICE, ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,     &
+     &HFRAC_ICE=PARAM_ICE%CFRAC_ICE_SHALLOW_MF,                                           &
+     &ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,                          &
      &PIMPL_MF=ZIMPL, PTSTEP=PTSTEP,                                                      &
      &PDZZ=PDZZF,PZZ=PZZ,                                                                 &
      &PRHODJ=PRHODJ,PRHODREF=PRHODREF,                                                    &

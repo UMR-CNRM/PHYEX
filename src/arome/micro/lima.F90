@@ -97,7 +97,7 @@ END MODULE MODI_LIMA
 !*       0.    DECLARATIONS
 !              ------------
 USE MODD_PARAMETERS,     ONLY : JPHEXT, JPVEXT
-USE MODD_PARAM_ICE,      ONLY : NMAXITER, LFEEDBACKT,XMRSTEP, XTSTEP_TS
+USE MODD_PARAM_ICE,      ONLY : NMAXITER_MICRO, LFEEDBACKT,XMRSTEP, XTSTEP_TS
 USE MODD_PARAM_LIMA,     ONLY : LCOLD_LIMA, LRAIN_LIMA, LWARM_LIMA, NMOD_CCN, NMOD_IFN, NMOD_IMM, LHHONI_LIMA,      &
                                 XRTMIN, LACTIT_LIMA,       &
                                 LSEDC_LIMA, LSEDI_LIMA, XRTMIN, XCTMIN
@@ -724,11 +724,11 @@ ZZ_LVFACT(:,:,:)=(XLVTT+(XCPV-XCL)*(ZT(:,:,:)-XTT))   &
 !
 !
 ! Maximum number of iterations
-INB_ITER_MAX=NMAXITER
+INB_ITER_MAX=NMAXITER_MICRO
 IF(XTSTEP_TS/=0.)THEN
   INB_ITER_MAX=MAX(1, INT(PTSTEP/XTSTEP_TS)) !At least the number of iterations needed for the time-splitting
   ZTSTEP=PTSTEP/INB_ITER_MAX
-  INB_ITER_MAX=MAX(NMAXITER, INB_ITER_MAX) !Fot the case XMRSTEP/=0. at the same time
+  INB_ITER_MAX=MAX(NMAXITER_MICRO, INB_ITER_MAX) !Fot the case XMRSTEP/=0. at the same time
 ENDIF
 IITER(:,:,:)=0
 ZTIME(:,:,:)=0. ! Current integration time (all points may have a different integration time)

@@ -117,3 +117,8 @@ Pull requests concerning the physics continue to follow the same path as before 
 ## Contribution workflow for other developers
 
 Other developers must work with source code coming directly from the master branch. They issue pull requests directly on this branch as usual with git repositories.
+
+## Code documentation
+
+The description of each namelist key must be provided after the declaration of the type member.
+The comment must be readable by doxygen, it means that comment starts with !< and conitnuation lines start with !!.

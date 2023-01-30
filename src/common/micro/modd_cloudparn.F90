@@ -48,16 +48,16 @@ IMPLICIT NONE
 
 TYPE CLOUDPAR_t
 !
-  INTEGER :: NSPLITR      ! Number of required small time step integration
-                             ! for rain sedimentation computation
-  INTEGER :: NSPLITG      ! Number of required small time step integration
-                             ! for ice hydrometeor sedimentation computation
+  INTEGER :: NSPLITR      !< Number of required small time step integration
+                          !! for rain sedimentation computation
+  INTEGER :: NSPLITG      !< Number of required small time step integration
+                          !! for ice hydrometeor sedimentation computation
 !
 !
 END TYPE CLOUDPAR_t
 
 TYPE(CLOUDPAR_t), DIMENSION(JPMODELMAX), TARGET, SAVE :: CLOUDPAR_MODEL
-
+TYPE(CLOUDPAR_t), POINTER, SAVE :: CLOUDPARN => NULL()
 INTEGER, POINTER :: NSPLITR=>NULL()
 INTEGER, POINTER :: NSPLITG=>NULL()
 
@@ -65,6 +65,8 @@ CONTAINS
 
 SUBROUTINE CLOUDPAR_GOTO_MODEL(KFROM, KTO)
 INTEGER, INTENT(IN) :: KFROM, KTO
+!
+CLOUDPARN => CLOUDPAR_MODEL(KTO)
 !
 ! Save current state for allocated arrays
 !

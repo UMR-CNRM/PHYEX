@@ -5,12 +5,11 @@ USE GETDATA_RAIN_ICE_MOD
 USE COMPUTE_DIFF
 USE MODD_CONF
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODD_CST,        ONLY: CST_t, CST
-USE MODD_RAIN_ICE_DESCR, ONLY : RAIN_ICE_DESCR
-USE MODD_RAIN_ICE_PARAM, ONLY : RAIN_ICE_PARAM
-USE MODD_PARAM_ICE,      ONLY: PARAM_ICE
+USE MODD_CST,        ONLY: CST
+USE MODD_RAIN_ICE_DESCR, ONLY : RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM, ONLY : RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE,      ONLY : PARAM_ICE_t
 USE MODI_RAIN_ICE
-USE MODI_INI_CST
 USE MODD_BUDGET!, ONLY: TBUCONF_ASSOCIATE, TBUDGETDATA, NBUDGET_RH, TBUCONF
 USE STACK_MOD
 USE OMP_LIB
@@ -57,15 +56,13 @@ INTEGER :: NPROMA, NGPBLKS, NFLEVG
 INTEGER :: IBL, JLON, JLEV
 
 TYPE(DIMPHYEX_t)         :: D, D0
+TYPE(PARAM_ICE_t)        :: PARAMI
+TYPE(RAIN_ICE_PARAM_t)   :: ICEP
+TYPE(RAIN_ICE_DESCR_t)   :: ICED
 CHARACTER (LEN=4)   :: CSUBG_AUCV_RC
 CHARACTER (LEN=80)  :: CSUBG_AUCV_RI
-CHARACTER (LEN=4)   :: CSEDIM  
-CHARACTER (LEN=4)   :: CMICRO  
-REAL                :: PTSTEP 
-LOGICAL :: OWARM 
-LOGICAL :: OCND2 
-LOGICAL :: LCRIAUTI
-REAL :: ZCRIAUTI, ZT0CRIAUTI, ZCRIAUTC
+CHARACTER (LEN=4)   :: CMICRO
+REAL                :: PTSTEP
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH) :: YLBUDGET
 LOGICAL                  :: LLCHECK
 LOGICAL                  :: LLCHECKDIFF
@@ -75,8 +72,6 @@ INTEGER                  :: ISTSZ, JBLK1, JBLK2
 INTEGER                  :: NTID, ITID
 INTEGER                  :: JRR
 
-
-INTEGER :: IPROMA
 REAL, ALLOCATABLE :: PSTACK(:,:)
 TYPE (STACK) :: YLSTACK
 
@@ -130,24 +125,13 @@ IF (LLVERBOSE) PRINT *, " KLEV = ", KLEV, " KRR = ", KRR
 PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
 
 CMICRO='ICE3'
-
 PTSTEP = 25.0000000000000
 KRR = 6
-OCND2 = .FALSE.
-CSEDIM = 'STAT'
 CSUBG_AUCV_RC = 'PDF'
 CSUBG_AUCV_RI = 'NONE'
-OWARM = .TRUE.
 
-LCRIAUTI=.TRUE.
-ZCRIAUTI=0.2E-3
-ZT0CRIAUTI=-5.
-ZCRIAUTC=0.1E-2
-
-CALL INIT_PHYEX (20, OWARM, CMICRO, CSEDIM, &
-            & LCRIAUTI, ZCRIAUTI, ZT0CRIAUTI, ZCRIAUTC)
-
-PARAM_ICE%LSEDIC = .TRUE.
+CALL INIT_PHYEX (20, CMICRO, PTSTEP, &
+                 PARAMI, ICEP, ICED)
 
 DO JRR=1, NBUDGET_RH
   YLBUDGET(JRR)%NBUDGET=JRR
@@ -195,7 +179,7 @@ DO ITIME = 1, NTIME
   TSC = OMP_GET_WTIME ()
 
 #ifdef USE_OPENMP
-!$OMP PARALLEL PRIVATE (D, ITID, JBLK1, JBLK2, IPROMA, ISIZE)
+!$OMP PARALLEL PRIVATE (D, ITID, JBLK1, JBLK2, ISIZE)
 #endif
 
 #ifdef _OPENACC
@@ -240,11 +224,8 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%U = 0
 #endif
 
-IPROMA=COUNT(LLMICRO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE,IBL))
-CALL RAIN_ICE (D, CST, PARAM_ICE, RAIN_ICE_PARAM, &
-             & RAIN_ICE_DESCR, TBUCONF, &
-             & IPROMA, &
-             & OCND2=OCND2, &
+CALL RAIN_ICE (D, CST, PARAMI, ICEP, &
+             & ICED, TBUCONF, &
              & HSUBG_AUCV_RC=CSUBG_AUCV_RC, HSUBG_AUCV_RI=CSUBG_AUCV_RI,&
              & PTSTEP=2*PTSTEP, &
              & KRR=KRR, PEXN=PEXNREF(:,:,:,IBL),            &
@@ -333,35 +314,81 @@ STOP
 
 CONTAINS
 
-SUBROUTINE INIT_PHYEX(KULOUT,LDWARM,CMICRO,CCSEDIM,LDCRIAUTI,&
-                   PCRIAUTI,PT0CRIAUTI,PCRIAUTC)
+SUBROUTINE INIT_PHYEX(KULOUT,CMICRO,PTSTEP, &
+                      PARAM_ICE, RAIN_ICE_PARAM, RAIN_ICE_DESCR)
 
-USE MODD_RAIN_ICE_DESCR
-USE MODD_RAIN_ICE_PARAM
-USE MODD_PARAM_ICE
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE, ONLY: PARAM_ICE_t
 USE MODD_TURB_N, ONLY: TURB_GOTO_MODEL, CSUBG_MF_PDF
-
-USE MODI_INI_RAIN_ICE
+USE MODI_INI_PHYEX, ONLY: INI_PHYEX
+USE MODI_INI_CST, ONLY: INI_CST
 
 IMPLICIT NONE
+
 ! -----------------------------------------------------------------------
-!     DUMMY INTEGER SCALARS
+!     DUMMY VARIABLES
 INTEGER, INTENT (IN) :: KULOUT
-LOGICAL, INTENT (IN) :: LDWARM
 CHARACTER(4), INTENT (IN) :: CMICRO 
-CHARACTER(4), INTENT (IN) :: CCSEDIM
-LOGICAL, INTENT (IN) :: LDCRIAUTI
-REAL, INTENT (IN) :: PCRIAUTI
-REAL, INTENT (IN) :: PT0CRIAUTI
-REAL, INTENT (IN) :: PCRIAUTC
+REAL, INTENT(IN) :: PTSTEP
+TYPE(PARAM_ICE_t)     , INTENT(OUT) :: PARAM_ICE
+TYPE(RAIN_ICE_PARAM_t), INTENT(OUT) :: RAIN_ICE_PARAM
+TYPE(RAIN_ICE_DESCR_t), INTENT(OUT) :: RAIN_ICE_DESCR
+
 !-----------------------------------------------------------------------
 !    LOCAL VARIABLES
-REAL :: ZCRI0, ZTCRI0    
+REAL :: ZDZMIN
+CHARACTER(LEN=6) :: CPROGRAM
 ! -----------------------------------------------------------------------
 
 CALL INI_CST
+CPROGRAM='AROME'
+ZDZMIN=20.
+
+!Default values
+CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
+              &PTSTEP, ZDZMIN, &
+              &CMICRO, &
+              &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., LDPRINT=.FALSE., LDINIT=.FALSE., &
+              &PARAM_ICE_INOUT=PARAM_ICE, RAIN_ICE_DESCR_INOUT=RAIN_ICE_DESCR, RAIN_ICE_PARAM_INOUT=RAIN_ICE_PARAM)
+
+!Emulate the namelist reading
+PARAM_ICE%LCRIAUTI=.TRUE.
+PARAM_ICE%XCRIAUTI_NAM=0.2E-3
+PARAM_ICE%XT0CRIAUTI_NAM=-5.
+PARAM_ICE%XCRIAUTC_NAM=0.1E-2
+PARAM_ICE%LOCND2=.FALSE.
+PARAM_ICE%CSEDIM='STAT'
+PARAM_ICE%LWARM=.TRUE.
+PARAM_ICE%LSEDIC=.TRUE.
+PARAM_ICE%CFRAC_ICE_ADJUST='S' ! Ice/liquid partition rule to use in adjustment
+PARAM_ICE%CFRAC_ICE_SHALLOW_MF='S' ! Ice/liquid partition rule to use in shallow_mf
+PARAM_ICE%CSNOWRIMING='M90 '
+PARAM_ICE%XFRACM90=0.1 ! Fraction used for the Murakami 1990 formulation
+PARAM_ICE%LCONVHG=.TRUE. ! TRUE to allow the conversion from hail to graupel
+PARAM_ICE%LCRFLIMIT=.TRUE. !True to limit rain contact freezing to possible heat exchange
+PARAM_ICE%LFEEDBACKT=.TRUE. ! When .TRUE. feed back on temperature is taken into account
+PARAM_ICE%LEVLIMIT=.TRUE.   ! When .TRUE. water vapour pressure is limited by saturation
+PARAM_ICE%LNULLWETG=.TRUE.  ! When .TRUE. graupel wet growth is activated with null rate (to allow water shedding)
+PARAM_ICE%LWETGPOST=.TRUE.  ! When .TRUE. graupel wet growth is activated with positive temperature (to allow water shedding)
+PARAM_ICE%LNULLWETH=.TRUE.  ! Same as LNULLWETG but for hail
+PARAM_ICE%LWETHPOST=.TRUE.  ! Same as LWETGPOST but for hail
+PARAM_ICE%LSEDIM_AFTER=.FALSE. ! Sedimentation done after microphysics
+PARAM_ICE%XSPLIT_MAXCFL=0.8
+PARAM_ICE%LDEPOSC=.FALSE.  ! water deposition on vegetation
+PARAM_ICE%XVDEPOSC=0.02    ! deposition speed (2 cm.s-1)
+PARAM_ICE%CSUBG_RC_RR_ACCR='NONE'
+PARAM_ICE%CSUBG_RR_EVAP='NONE'
+PARAM_ICE%CSUBG_PR_PDF='SIGM'
+
+!Param initialisation
+CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
+              &PTSTEP, ZDZMIN, &
+              &CMICRO, &
+              &LDDEFAULTVAL=.FALSE., LDREADNAM=.FALSE., LDCHECK=.TRUE., LDPRINT=.TRUE., LDINIT=.TRUE., &
+              &PARAM_ICE_INOUT=PARAM_ICE, RAIN_ICE_DESCR_INOUT=RAIN_ICE_DESCR, RAIN_ICE_PARAM_INOUT=RAIN_ICE_PARAM)
+
 CALL TURB_GOTO_MODEL(1,1)
-CALL PARAM_ICE_ASSOCIATE
 CALL TBUCONF_ASSOCIATE
 LBU_ENABLE=.FALSE.                                                                                                       
 LBUDGET_U=.FALSE.
@@ -379,56 +406,7 @@ LBUDGET_RH=.FALSE.
 LBUDGET_SV=.FALSE.
 
 !        1. Set implicit default values for MODD_PARAM_ICE
-LWARM=LDWARM
-CPRISTINE_ICE='PLAT'
-CSEDIM=CCSEDIM
-CSUBG_AUCV_RC='PDF'
-CSUBG_AUCV_RI='NONE'
-CSUBG_RC_RR_ACCR='NONE'
-CSUBG_RR_EVAP='NONE'
-CSUBG_PR_PDF='SIGM'
 CSUBG_MF_PDF='TRIANGLE'
-! Snow riming                                                                                                                       
-CSNOWRIMING='M90 '
-XFRACM90=0.1 ! Fraction used for the Murakami 1990 formulation
-!                                                                                                                                   
-LFEEDBACKT=.TRUE. ! When .TRUE. feed back on temperature is taken into account
-LEVLIMIT=.TRUE.   ! When .TRUE. water vapour pressure is limited by saturation
-LNULLWETG=.TRUE.  ! When .TRUE. graupel wet growth is activated with null rate (to allow water shedding)
-LWETGPOST=.TRUE.  ! When .TRUE. graupel wet growth is activated with positive temperature (to allow water shedding)
-LNULLWETH=.TRUE.  ! Same as LNULLWETG but for hail
-LWETHPOST=.TRUE.  ! Same as LWETGPOST but for hail
-LCONVHG=.TRUE. ! TRUE to allow the conversion from hail to graupel
-LCRFLIMIT=.TRUE. !True to limit rain contact freezing to possible heat exchange
-CFRAC_ICE_ADJUST='S' ! Ice/liquid partition rule to use in adjustment
-CFRAC_ICE_SHALLOW_MF='S' ! Ice/liquid partition rule to use in shallow_mf
-LSEDIM_AFTER=.FALSE. ! Sedimentation done after microphysics
-XSPLIT_MAXCFL=0.8
-LDEPOSC=.FALSE.  ! water deposition on vegetation
-XVDEPOSC=0.02    ! deposition speed (2 cm.s-1)
-LPACK_INTERP=.TRUE.
-LPACK_MICRO=.TRUE.
-!
-!        2. Set implicit default values for MODD_RAIN_ICE_DESCR 
-!                     et MODD_RAIN_ICE_PARAM
-!
-CALL INI_RAIN_ICE (KULOUT, CMICRO)
-!update values from namparar
-IF (LDCRIAUTI) THEN
-
-  XCRIAUTI=PCRIAUTI
-  XCRIAUTC=PCRIAUTC
-  XT0CRIAUTI=PT0CRIAUTI
-  !second point to determine 10**(aT+b) law
-  ZTCRI0=-40.0
-  ZCRI0=1.25E-6
-  
-  XBCRIAUTI=-( LOG10(XCRIAUTI) - LOG10(ZCRI0)*PT0CRIAUTI/ZTCRI0 )&
-                   *ZTCRI0/(XT0CRIAUTI-ZTCRI0)
-  XACRIAUTI=(LOG10(ZCRI0)-XBCRIAUTI)/ZTCRI0
-  
-ENDIF
-! -----------------------------------------------------------------------
 
 END SUBROUTINE INIT_PHYEX
 

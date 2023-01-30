@@ -7,11 +7,10 @@ USE MODI_ICE_ADJUST
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_CST,        ONLY: CST
 USE MODD_NEB,        ONLY: NEB
-USE MODD_TURB_n,     ONLY: TURBN, TURB_GOTO_MODEL
-USE MODD_RAIN_ICE_PARAM, ONLY : RAIN_ICE_PARAM_t, RAIN_ICE_PARAM_ASSOCIATE
-USE MODI_INI_CST
+USE MODD_TURB_n,     ONLY: TURB_t
+USE MODD_RAIN_ICE_PARAM, ONLY : RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE,      ONLY : PARAM_ICE_t
 USE MODI_INI_NEB
-USE MODI_INI_RAIN_ICE
 USE MODD_BUDGET !, ONLY: TBUCONF_ASSOCIATE, TBUDGETDATA, NBUDGET_RI, TBUCONF
 USE STACK_MOD
 USE OMP_LIB
@@ -65,13 +64,14 @@ INTEGER :: NPROMA, NGPBLKS, NFLEVG
 INTEGER :: IBL, JLON, JLEV
 
 TYPE(DIMPHYEX_t)         :: D, D0
+TYPE(PARAM_ICE_t)        :: PARAMI
 TYPE(RAIN_ICE_PARAM_t)   :: ICEP
-CHARACTER(LEN=1)         :: HFRAC_ICE
+TYPE(TURB_t)             :: TURB
 CHARACTER(LEN=4)         :: HBUNAME  
-LOGICAL                  :: OCND2
 LOGICAL                  :: LHGT_QS
 LOGICAL                  :: LMFCONV
-REAL                     :: PTSTEP    
+CHARACTER (LEN=4)   :: CMICRO
+REAL                :: PTSTEP
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RI) :: YLBUDGET
 LOGICAL                  :: LLCHECK
 LOGICAL                  :: LLCHECKDIFF
@@ -132,52 +132,14 @@ IF (LLVERBOSE) PRINT *, " KLEV = ", KLEV, " KRR = ", KRR
 
 PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
 
-CALL RAIN_ICE_PARAM_ASSOCIATE
-CALL INI_CST
-CALL INI_NEB
-CALL TURB_GOTO_MODEL(1, 1)
-TURBN%LSTATNW=.FALSE.
-CALL TBUCONF_ASSOCIATE
-LBU_ENABLE=.FALSE.                                                                                                       
-LBUDGET_U=.FALSE.
-LBUDGET_V=.FALSE.
-LBUDGET_W=.FALSE.
-LBUDGET_TH=.FALSE.
-LBUDGET_TKE=.FALSE.
-LBUDGET_RV=.FALSE.
-LBUDGET_RC=.FALSE.
-LBUDGET_RR=.FALSE.
-LBUDGET_RI=.FALSE.
-LBUDGET_RS=.FALSE.
-LBUDGET_RG=.FALSE.
-LBUDGET_RH=.FALSE.
-LBUDGET_SV=.FALSE.
-
-! Taken from ini_rain_ice.F90; we only need these for ice_adjust.F90
-ICEP%XCRIAUTI  = 0.2E-4 
-ICEP%XCRIAUTC  = 0.5E-3
-ICEP%XACRIAUTI = 0.06
-ICEP%XBCRIAUTI = -3.5
-
-! As provided by S. Riette, AROME specific
-
-ICEP%XCRIAUTC  = 1.0000000000000000E-003
-ICEP%XCRIAUTI  = 2.0000000000000001E-004
-ICEP%XACRIAUTI = 6.2974856647312144E-002
-ICEP%XBCRIAUTI = -3.3840957210994582    
-
-
-HFRAC_ICE    = 'S'
-TURBN%CCONDENS     = 'CB02'
-TURBN%CLAMBDA3     = 'CB'
+CMICRO='ICE3'
+PTSTEP       = 50.000000000000000
 HBUNAME      = 'DEPI'
-TURBN%LSUBG_COND   = .TRUE.
-TURBN%LSIGMAS      = .TRUE.
-OCND2        = .FALSE.
-LHGT_QS      = .FALSE.
-TURBN%CSUBG_MF_PDF = 'TRIANGLE'
-PTSTEP       = 50.000000000000000    
 LMFCONV      = .TRUE.
+LHGT_QS      = .FALSE.
+CALL INIT_PHYEX (20, CMICRO, PTSTEP, &
+                 PARAMI, ICEP, TURB)
+
 DO JRR=1, NBUDGET_RI
   YLBUDGET(JRR)%NBUDGET=JRR
 ENDDO
@@ -215,7 +177,7 @@ DO ITIME = 1, NTIME
   TSD = OMP_GET_WTIME ()
 
 !$acc data &
-!$acc      & copyin  (D0, CST, ICEP, NEB, TURBN, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND, OSIGMAS, OCND2, LHGT_QS, HSUBG_MF_PDF, PTSTEP, LMFCONV, &
+!$acc      & copyin  (D0, CST, ICEP, NEB, TURB, KRR, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND, OSIGMAS, LHGT_QS, HSUBG_MF_PDF, PTSTEP, LMFCONV, &
 !$acc      &          ZSIGQSAT, PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, ZRS, ZICE_CLD_WGT) &
 !$acc      & copy    (PRS, PTHS), &
 !$acc      & copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &
@@ -269,8 +231,8 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%U = 0
 #endif
 
-    CALL ICE_ADJUST (D, CST, ICEP, NEB, TURBN, TBUCONF, KRR, HFRAC_ICE, HBUNAME,                                                &
-    & OCND2, LHGT_QS, PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL),                                               &
+    CALL ICE_ADJUST (D, CST, ICEP, NEB, TURB, TBUCONF, KRR, PARAMI%CFRAC_ICE_ADJUST, HBUNAME,                                &
+    & PARAMI%LOCND2, LHGT_QS, PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL),                                               &
     & PEXNREF=PEXNREF (:, :, :, IBL),                                                                                           &
     & PRHODREF=PRHODREF (:, :, :, IBL), PSIGS=PSIGS (:, :, :, IBL), LMFCONV=LMFCONV, PMFCONV=PMFCONV (:, :, :, IBL),            &
     & PPABST=PPABSM (:, :, :, IBL), PZZ=ZZZ (:, :, :, IBL), PEXN=PEXNREF (:, :, :, IBL), PCF_MF=PCF_MF (:, :, :, IBL),          &
@@ -346,4 +308,111 @@ ENDIF
 
 STOP
 
-END
+CONTAINS
+
+SUBROUTINE INIT_PHYEX(KULOUT,CMICRO,PTSTEP, &
+                      PARAM_ICE, RAIN_ICE_PARAM, TURB)
+
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE, ONLY: PARAM_ICE_t
+USE MODD_TURB_N, ONLY: TURB_GOTO_MODEL, TURB_t, TURBN
+USE MODI_INI_PHYEX, ONLY: INI_PHYEX
+USE MODI_INI_CST, ONLY: INI_CST
+
+IMPLICIT NONE
+
+! -----------------------------------------------------------------------
+!     DUMMY VARIABLES
+INTEGER, INTENT (IN) :: KULOUT
+CHARACTER(4), INTENT (IN) :: CMICRO 
+REAL, INTENT(IN) :: PTSTEP
+TYPE(PARAM_ICE_t)     , INTENT(OUT) :: PARAM_ICE
+TYPE(RAIN_ICE_PARAM_t), INTENT(OUT) :: RAIN_ICE_PARAM
+TYPE(TURB_t),           INTENT(OUT) :: TURB
+
+!-----------------------------------------------------------------------
+!    LOCAL VARIABLES
+REAL :: ZDZMIN
+CHARACTER(LEN=6) :: CPROGRAM
+! -----------------------------------------------------------------------
+
+CALL INI_CST
+CPROGRAM='AROME'
+ZDZMIN=20.
+
+!Default values
+CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
+              &PTSTEP, ZDZMIN, &
+              &CMICRO, &
+              &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., LDPRINT=.FALSE., LDINIT=.FALSE., &
+              &PARAM_ICE_INOUT=PARAM_ICE)
+
+!Emulate the namelist reading
+PARAM_ICE%LCRIAUTI=.TRUE.
+PARAM_ICE%XCRIAUTI_NAM=0.2E-3
+PARAM_ICE%XT0CRIAUTI_NAM=-5.
+PARAM_ICE%XCRIAUTC_NAM=0.1E-2
+PARAM_ICE%LOCND2=.FALSE.
+PARAM_ICE%CSEDIM='STAT'
+PARAM_ICE%LWARM=.TRUE.
+PARAM_ICE%LSEDIC=.TRUE.
+PARAM_ICE%CFRAC_ICE_ADJUST='S' ! Ice/liquid partition rule to use in adjustment
+PARAM_ICE%CFRAC_ICE_SHALLOW_MF='S' ! Ice/liquid partition rule to use in shallow_mf
+PARAM_ICE%CSNOWRIMING='M90 '
+PARAM_ICE%XFRACM90=0.1 ! Fraction used for the Murakami 1990 formulation
+PARAM_ICE%LCONVHG=.TRUE. ! TRUE to allow the conversion from hail to graupel
+PARAM_ICE%LCRFLIMIT=.TRUE. !True to limit rain contact freezing to possible heat exchange
+PARAM_ICE%LFEEDBACKT=.TRUE. ! When .TRUE. feed back on temperature is taken into account
+PARAM_ICE%LEVLIMIT=.TRUE.   ! When .TRUE. water vapour pressure is limited by saturation
+PARAM_ICE%LNULLWETG=.TRUE.  ! When .TRUE. graupel wet growth is activated with null rate (to allow water shedding)
+PARAM_ICE%LWETGPOST=.TRUE.  ! When .TRUE. graupel wet growth is activated with positive temperature (to allow water shedding)
+PARAM_ICE%LNULLWETH=.TRUE.  ! Same as LNULLWETG but for hail
+PARAM_ICE%LWETHPOST=.TRUE.  ! Same as LWETGPOST but for hail
+PARAM_ICE%LSEDIM_AFTER=.FALSE. ! Sedimentation done after microphysics
+PARAM_ICE%XSPLIT_MAXCFL=0.8
+PARAM_ICE%LDEPOSC=.FALSE.  ! water deposition on vegetation
+PARAM_ICE%XVDEPOSC=0.02    ! deposition speed (2 cm.s-1)
+PARAM_ICE%CSUBG_RC_RR_ACCR='NONE'
+PARAM_ICE%CSUBG_RR_EVAP='NONE'
+PARAM_ICE%CSUBG_PR_PDF='SIGM'
+
+!Param initialisation
+CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
+              &PTSTEP, ZDZMIN, &
+              &CMICRO, &
+              &LDDEFAULTVAL=.FALSE., LDREADNAM=.FALSE., LDCHECK=.TRUE., LDPRINT=.TRUE., LDINIT=.TRUE., &
+              &PARAM_ICE_INOUT=PARAM_ICE, RAIN_ICE_PARAM_INOUT=RAIN_ICE_PARAM)
+
+CALL TURB_GOTO_MODEL(1,1)
+TURBN%LSTATNW=.FALSE.
+TURBN%CSUBG_MF_PDF='TRIANGLE'
+TURBN%LSTATNW=.FALSE.
+TURBN%CCONDENS     = 'CB02'
+TURBN%CLAMBDA3     = 'CB'
+TURBN%LSUBG_COND   = .TRUE.
+TURBN%LSIGMAS      = .TRUE.
+TURBN%CSUBG_MF_PDF = 'TRIANGLE'
+TURB=TURBN
+CALL INI_NEB
+
+CALL TBUCONF_ASSOCIATE
+LBU_ENABLE=.FALSE.                                                                                                       
+LBUDGET_U=.FALSE.
+LBUDGET_V=.FALSE.
+LBUDGET_W=.FALSE.
+LBUDGET_TH=.FALSE.
+LBUDGET_TKE=.FALSE.
+LBUDGET_RV=.FALSE.
+LBUDGET_RC=.FALSE.
+LBUDGET_RR=.FALSE.
+LBUDGET_RI=.FALSE.
+LBUDGET_RS=.FALSE.
+LBUDGET_RG=.FALSE.
+LBUDGET_RH=.FALSE.
+LBUDGET_SV=.FALSE.
+
+END SUBROUTINE INIT_PHYEX
+
+END PROGRAM
+

@@ -1,6 +1,5 @@
 !     ######spl
-SUBROUTINE AROINI_MICRO_LIMA(KULOUT,KULNAM,PTSTEP,LDWARM,CMICRO,KSPLITR,KSPLITG,CCSEDIM,LDCRIAUTI,&
-              PCRIAUTI,PT0CRIAUTI,PCRIAUTC)
+SUBROUTINE AROINI_MICRO_LIMA(KULOUT,KULNAM,PTSTEP,CMICRO,KSPLITR,KSPLITG)
 
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
@@ -21,7 +20,6 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !        KULOUT : Logical unit for the output
 !        PTSTEP  : Time step
 !        KSPLITR : Number of small time step interation for rain sedimentation 
-!        LDWARM : value assigned to LWARM_LIMA       
 
 !        Implicit arguments :
 !        --------------------
@@ -65,15 +63,9 @@ IMPLICIT NONE
 INTEGER, INTENT (IN) :: KULOUT
 INTEGER, INTENT (IN) :: KULNAM
 REAL, INTENT (IN) :: PTSTEP
-LOGICAL, INTENT (IN) :: LDWARM
 CHARACTER(4), INTENT (IN) :: CMICRO 
-CHARACTER(4), INTENT (IN) :: CCSEDIM
 INTEGER, INTENT (OUT) :: KSPLITR
 INTEGER, INTENT (OUT) :: KSPLITG
-LOGICAL, INTENT (IN) :: LDCRIAUTI
-REAL, INTENT (IN) :: PCRIAUTI
-REAL, INTENT (IN) :: PT0CRIAUTI
-REAL, INTENT (IN) :: PCRIAUTC
 !-----------------------------------------------------------------------
 !    LOCAL VARIABLES
 REAL :: ZCRI0, ZTCRI0   

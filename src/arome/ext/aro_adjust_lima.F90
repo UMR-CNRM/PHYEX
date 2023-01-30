@@ -1,6 +1,6 @@
 !     ######spl
       SUBROUTINE  ARO_ADJUST_LIMA(KKA,KKU,KKL,KLON,KLEV,  KRR, KSV, KTCOUNT,  &
-                                  OSUBG_COND, OSIGMAS, OCND2, &
+                                  OSUBG_COND, OSIGMAS, &
                                   PTSTEP, PSIGQSAT, &
                                   PZZF, PRHODJ, PRHODREF, PEXNREF,&
                                   PPABSM, PTHT, PRT, PSVT, PSIGS, &
@@ -80,7 +80,6 @@
 USE MODD_CONF
 USE MODD_CST
 USE MODD_PARAMETERS
-USE MODD_RAIN_ICE_DESCR
 USE MODD_BUDGET
 !
 USE MODD_PARAM_LIMA
@@ -112,7 +111,6 @@ LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid Cond.
 LOGICAL,                  INTENT(IN)   :: OSIGMAS  ! Switch for Sigma_s:
                                         ! use values computed in CONDENSATION
                                         ! or that from turbulence scheme
-LOGICAL,                  INTENT(IN)   :: OCND2
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 REAL,                     INTENT(IN)   :: PSIGQSAT ! coeff applied to qsat variance contribution
 !

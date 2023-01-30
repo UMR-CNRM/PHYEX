@@ -1,6 +1,11 @@
 MODULE YOMPARAR
 
 USE PARKIND1  ,ONLY : JPIM     ,JPRB
+!
+USE MODD_PARAM_ICE, ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
+USE MODD_CLOUDPAR_N, ONLY: CLOUDPAR_t
 
 IMPLICIT NONE
 
@@ -13,10 +18,12 @@ TYPE TPARAR
 !     VARIABLES pour utiliser la PHYSIQUE de meso_NH :
 !     VARIABLES to use the MESO-NH physics:
 
-CHARACTER(LEN=4)   :: CMICRO      ! Microphysics scheme ('OLD3', 'OLD4', 'ICE3',
-                                  ! 'ICE4' or 'LIMA')
-CHARACTER(LEN=4)   :: CSEDIM      ! Microphysics sedimentation scheme
-                                  ! (SPLI or STAT)
+CHARACTER(LEN=4)   :: CMICRO      ! Microphysics scheme ('ICE3', 'ICE4' or 'LIMA')
+TYPE(PARAM_ICE_t)      :: PARAM_ICE
+TYPE(RAIN_ICE_DESCR_t) :: RAIN_ICE_DESCR
+TYPE(RAIN_ICE_PARAM_t) :: RAIN_ICE_PARAM
+TYPE(CLOUDPAR_t)       :: CLOUDPARN
+!
 INTEGER(KIND=JPIM) :: NSPLITR     ! Time splitting for Eulerian sedimentation
 INTEGER(KIND=JPIM) :: NSPLITG     ! Time splitting for Eulerian sedimentation
 INTEGER(KIND=JPIM) :: NRR, NRRL, NRRI   !number of microphysical species
@@ -49,14 +56,11 @@ INTEGER(KIND=JPIM) :: MCD         !pointer on drag coefficient
 REAL(KIND=JPRB), DIMENSION(:), ALLOCATABLE  :: XSW_BANDS  !SW spectral bands
 ! for ext. surface scheme
 LOGICAL :: LOSUBG_COND ! switch to activate subgrid condensation
-LOGICAL :: LOSEDIC     ! activate cloud sedimentation
-LOGICAL :: LOWARM      ! see OWARM in mesoNH
 LOGICAL :: LOSIGMAS    ! activate calculation of variance of departure to 
                        ! saturation in turb scheme (to be used in subgrid condensation)
 LOGICAL :: LOLSMC      ! Land/sea mask for cloud droplet number conc.
 LOGICAL :: LOTOWNC     ! Town mask for cloud droplet number conc.
 
-LOGICAL :: LOCND2      ! Separate solid and liquid phase
 LOGICAL :: LKOGAN      ! Use Kogan autocoversion of liquid
 LOGICAL :: LMODICEDEP  ! Logical switch for alternative dep/evap of ice
 LOGICAL :: LICERAD     ! Assume higher fraction of condensate for 
@@ -67,11 +71,6 @@ REAL(KIND=JPRB) :: RADSN  ! Tuning of ice for radiation, TO BE REMOVED
 
 REAL(KIND=JPRB) :: VSIGQSAT ! coeff applied to qsat variance contribution
                             ! for subgrid condensation
-
-! Constants / tuning parameters for possible modifying some processes related to
-! graupeln in RFRMIN(1:8),  IN - concentration in RFRMIN(9) and Kogan
-! autoconversion in RFRMIN(10:11).
-REAL(KIND=JPRB) :: RFRMIN(40)
 
 ! switches for MF scheme (Pergaud et al)
 CHARACTER (LEN=4)  :: CMF_UPDRAFT  ! Type of Mass Flux Scheme
@@ -156,52 +155,11 @@ LOGICAL :: LHARATU !  if true RACMO turbulence is used
 !* Subgrid precipitation scheme
 CHARACTER (LEN=4) :: CSUBG_AUCV_RC ! type of rc->rr autoconversion scheme
                                    ! 'CLFR', 'PDF' or 'NONE'
-CHARACTER(LEN=80) :: CSUBG_RC_RR_ACCR ! type of rc rc autoconversion
-                                   ! 'PRFR' or 'NONE'
-CHARACTER(LEN=80) :: CSUBG_RR_EVAP ! type of evaporation scheme
-                                   ! 'PRFR, 'CLFR' or 'NONE'
-CHARACTER(LEN=80) :: CSUBG_PR_PDF  ! PDF chosen for precipitation production
-                                   ! (NONE, SIGM, HLCRECTPD, HLCTRIANGPDF, HLCQUADRAPDF or HLCISOTRIPDF)
 CHARACTER(LEN=80) :: CSUBG_AUCV_RI ! type of ri->rs autoconversion scheme
                                    ! 'NONE', 'CLFR' or 'ADJU'
 CHARACTER(LEN=80) :: CSUBG_MF_PDF  ! PDF to use on MF cloud to retrieve low and high cloud parts
                                    ! 'NONE' or 'TRIANGLE'
 
-!* for autoconversion qi,qc
-REAL(KIND=JPRB) :: RCRIAUTI ! ice autoconversion threshold
-REAL(KIND=JPRB) :: RCRIAUTC ! cloud water autoconversion threshold
-REAL(KIND=JPRB) :: RT0CRIAUTI ! temperature threshold for ice autoconversion
-LOGICAL :: LCRIAUTI ! to activate use of namelists parameters for ice autoconversion
-REAL(KIND=JPRB) :: XTSTEP_TS ! Approximative time step for microphysics time-splitting (0 for no time-splitting)
-REAL(KIND=JPRB) :: XMRSTEP ! Maximum mixing ratio change before computing again microphysical tendencies
-INTEGER(KIND=JPIM) :: NMAXITER_MICRO ! Maximum number of iterations for mixing ratio or time splitting
-!* for the snow riming
-CHARACTER (LEN=4) :: CSNOWRIMING ! choice of the snow riming parameterisation
-                                 ! 'OLD' or 'M90' (Murakami 1990)
-REAL(KIND=JPRB) :: XFRACM90 ! Fraction used for the Murakami 1990 formulation
-!* for the graupel and the hail growth
-LOGICAL :: LNULLWETG  ! When .TRUE. graupel wet growth is activated with null rate (to allow water shedding)
-LOGICAL :: LWETGPOST  ! When .TRUE. graupel wet growth is activated with positive temperature (to allow water shedding)
-LOGICAL :: LNULLWETH  ! Same as LNULLWETG but for hail
-LOGICAL :: LWETHPOST  ! Same as LWETGPOST but for hail
-!
-LOGICAL :: LFEEDBACKT ! When .TRUE. feed back on temperature is taken into account
-LOGICAL :: LEVLIMIT   ! When .TRUE. water vapour pressure is limited by saturation
-LOGICAL :: LCONVHG ! TRUE to allow the conversion from hail to graupel
-!
-LOGICAL :: LCRFLIMIT !True to limit rain contact freezing to possible heat exchange
-LOGICAL :: LDEPOSC !True to switch on water deposition on vegetation (DEPO_ICE3)
-CHARACTER(LEN=1) :: CFRAC_ICE_ADJUST ! Rule to compute ice/liquid fraction in adjustments
-CHARACTER(LEN=1) :: CFRAC_ICE_SHALLOW_MF ! Rule to compute ice/liquid fraction in shallow_mf
-LOGICAL :: LSEDIM_AFTER !Sedimentation done after microphysics (.TRUE.) or before (.FALSE.)
-!
-REAL(KIND=JPRB) :: XSPLIT_MAXCFL ! Maximum CFL number allowed for SPLIT sedimentation scheme
-REAL(KIND=JPRB) :: XVDEPOSC ! Water deposition speed on vegetation (LDEPOSC) (DEPO_ICE3)
-!
-! for negative deposition (=sublimation) of qs,qg
- LOGICAL :: LDEPSG   ! activate namelist read of sublimation factors
-REAL(KIND=JPRB) :: RDEPSRED  ! tuning factor of sublimation of snow
-REAL(KIND=JPRB) :: RDEPGRED  ! tuning factor of sublimation of graupel
 !
 !* For total cumulative 3D prec flux for MOCAGE
 LOGICAL :: LFPREC3D ! Switch on total cumulative 3D prec flux output (for MOCAGE use)
@@ -210,8 +168,6 @@ REAL(KIND=JPRB) :: XCQVR ! reduction factor of water vapour used for radiation c
 REAL(KIND=JPRB) :: GQVPLIM ! pressure value over which qv is damped towards 0 for radiation.
 REAL(KIND=JPRB) :: GQVTOP ! qv value at the top of the atmopshere.
 LOGICAL :: LQVTOP ! to activate modification of qv in input to radiation.
-
-INTEGER(KIND=JPIM) :: NPROMICRO ! special cache-blocking factor for microphysics
 
 CHARACTER(LEN=80) :: CCONDENS !condensation formulation. 'GAUS' or 'CB02'
 CHARACTER(LEN=4) :: CLAMBDA3 !formulation for the lambda3 coeff used with s'r'. 'CB' or 'NONE'

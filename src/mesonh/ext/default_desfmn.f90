@@ -227,6 +227,7 @@ END MODULE MODI_DEFAULT_DESFM_n
 !*       0.    DECLARATIONS
 !              ------------
 USE MODD_PARAMETERS
+USE MODD_LUNIT_n,          ONLY: TLUOUT
 USE MODD_CONF             !        For INIT only DEFAULT_DESFM1
 USE MODD_CONFZ
 USE MODD_DYN
@@ -850,38 +851,8 @@ END IF
 !             ---------------------------------------
 !
 IF (KMI == 1) THEN
-  LRED    = .TRUE.
-  LWARM = .TRUE.
-  CPRISTINE_ICE = 'PLAT'
-  LSEDIC  = .TRUE.
-  LCONVHG = .FALSE.
-  CSEDIM  = 'SPLI'
-  LFEEDBACKT = .TRUE.
-  LEVLIMIT = .TRUE.
-  LNULLWETG = .TRUE.
-  LWETGPOST = .TRUE.
-  LNULLWETH = .TRUE.
-  LWETHPOST = .TRUE.
-  CSNOWRIMING = 'M90 '
-  CSUBG_RC_RR_ACCR = 'NONE'
-  CSUBG_RR_EVAP = 'NONE'
-  CSUBG_PR_PDF = 'SIGM'
-  XFRACM90 = 0.1
-  LCRFLIMIT = .TRUE.
-  NMAXITER = 5
-  XMRSTEP = 0.00005
-  XTSTEP_TS = 0.
-  LADJ_BEFORE = .TRUE.
-  LADJ_AFTER = .TRUE.
-  CFRAC_ICE_ADJUST = 'S'
-  XSPLIT_MAXCFL = 0.8
-  CFRAC_ICE_SHALLOW_MF = 'S'
-  LSEDIM_AFTER = .FALSE.
-  LDEPOSC = .FALSE.
-  XVDEPOSC= 0.02 ! 2 cm/s
-  LSNOW_T=.FALSE.
-  LPACK_INTERP=.TRUE.
-  LPACK_MICRO=.TRUE. ! Meso-NH does not work with LPACK_MICRO=.FALSE.
+  CALL PARAM_ICE_INIT(CPROGRAM, 0, .FALSE., TLUOUT%NLU, &                                                                  
+                     &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., LDPRINT=.FALSE.)
 END IF
 !
 !-------------------------------------------------------------------------------

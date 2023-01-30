@@ -827,7 +827,7 @@ SELECT CASE ( HCLOUD )
     ENDIF
     IF (LRED) THEN
       CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICE, RAIN_ICE_PARAM, RAIN_ICE_DESCR,TBUCONF,&
-                    0, .FALSE., HSUBG_AUCV, CSUBG_AUCV_RI,               &
+                    HSUBG_AUCV, CSUBG_AUCV_RI,                           &
                     PTSTEP, KRR, ZEXN,                                   &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT,PCLDFR,&
                     PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,              &
@@ -919,7 +919,7 @@ SELECT CASE ( HCLOUD )
     ENDIF
     IF  (LRED) THEN
      CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICE, RAIN_ICE_PARAM, RAIN_ICE_DESCR,TBUCONF,&
-                    0, .FALSE., HSUBG_AUCV, CSUBG_AUCV_RI,                &
+                    HSUBG_AUCV, CSUBG_AUCV_RI,                            &
                     PTSTEP, KRR, ZEXN,                                    &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                     PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &

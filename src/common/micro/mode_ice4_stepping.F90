@@ -153,11 +153,11 @@ ENDIF
 
 !Maximum number of iterations
 !We only count real iterations (those for which we *compute* tendencies)
-INB_ITER_MAX=PARAMI%NMAXITER
+INB_ITER_MAX=PARAMI%NMAXITER_MICRO
 IF(PARAMI%XTSTEP_TS/=0.)THEN
   INB_ITER_MAX=MAX(1, INT(PTSTEP/PARAMI%XTSTEP_TS)) !At least the number of iterations needed for the time-splitting
   ZTSTEP=PTSTEP/INB_ITER_MAX
-  INB_ITER_MAX=MAX(PARAMI%NMAXITER, INB_ITER_MAX) !For the case XMRSTEP/=0. at the same time
+  INB_ITER_MAX=MAX(PARAMI%NMAXITER_MICRO, INB_ITER_MAX) !For the case XMRSTEP/=0. at the same time
 ENDIF
 
 IF (LDEXT_TEND) THEN

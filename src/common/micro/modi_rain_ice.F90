@@ -4,7 +4,7 @@
 !
 INTERFACE
       SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
-                            KPROMA, OCND2, HSUBG_AUCV_RC, HSUBG_AUCV_RI,          &
+                            HSUBG_AUCV_RC, HSUBG_AUCV_RI,                         &
                             PTSTEP, KRR, PEXN,                                    &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
@@ -31,8 +31,6 @@ TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
-INTEGER,                  INTENT(IN)    :: KPROMA ! cache-blocking factor for microphysic loop
-LOGICAL                                 :: OCND2  ! Logical switch to separate liquid and ice
 CHARACTER(LEN=4),         INTENT(IN)    :: HSUBG_AUCV_RC ! Kind of Subgrid autoconversion method
 CHARACTER(LEN=80),        INTENT(IN)    :: HSUBG_AUCV_RI ! Kind of Subgrid autoconversion method
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)

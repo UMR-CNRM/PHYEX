@@ -4,7 +4,9 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ######spl
-      SUBROUTINE INI_RAIN_ICE ( KLUOUT, HCLOUD )
+MODULE MODE_INI_RAIN_ICE
+CONTAINS
+      SUBROUTINE INI_RAIN_ICE ( KLUOUT, PTSTEP, PDZMIN, KSPLITR, HCLOUD )
 !     ###########################################################
 !
 !!****  *INI_RAIN_ICE * - initialize the constants necessary for the warm and
@@ -79,6 +81,10 @@
 !!      S. Riette 2016-11: new ICE3/ICE4 options
 !!      P. Wautelet 22/01/2019 bug correction: incorrect write
 !  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
+!!      S. Riette 2022-03: use of RAIN_ICE_PARAM structure for some variables
+!!                         to reproduce results on belenos. The reason why
+!!                         those variables must have a specifi treatment was
+!!                         not understood
 !  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
 !
 !-------------------------------------------------------------------------------
@@ -113,6 +119,13 @@ IMPLICIT NONE
 !
 !
 INTEGER,                 INTENT(IN) :: KLUOUT   ! Logical unit number for prints
+INTEGER,                 INTENT(OUT):: KSPLITR   ! Number of small time step
+                                                 ! integration for  rain
+                                                 ! sedimendation
+!
+REAL,                    INTENT(IN) :: PTSTEP    ! Effective Time step
+!
+REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
 !
 CHARACTER (LEN=4), INTENT(IN)       :: HCLOUD    ! Indicator of the cloud scheme
 !
@@ -137,6 +150,8 @@ REAL :: ZEGS, ZEGR, ZEHS, &   ! Bulk collection efficiencies
 INTEGER :: IND                ! Number of interval to integrate the kernels
 REAL :: ZESR                  ! Mean efficiency of rain-aggregate collection
 REAL :: ZFDINFTY              ! Factor used to define the "infinite" diameter
+!
+REAL :: ZCRI0, ZTCRI0         ! Second point to determine 10**(aT+b) law of ri->rs autoconversion
 !
 !
 !
@@ -180,6 +195,29 @@ IF(.NOT.ASSOCIATED(XFSEDC)) CALL RAIN_ICE_PARAM_ASSOCIATE()
 !
 !
 !
+!        1.     COMPUTE KSPLTR FOR EACH MODEL
+!               ---------------------------------------------------------
+!
+!*       1.1    Set the hailstones maximum fall velocity
+!
+IF (CSEDIM == 'SPLI' .AND. .NOT. PARAM_ICE%LRED) THEN
+ IF (HCLOUD == 'ICE4' .OR. HCLOUD=='LIMA') THEN
+  ZVTRMAX = 40.
+ ELSE IF (HCLOUD == 'ICE3') THEN
+  ZVTRMAX = 10.
+ END IF
+END IF
+!
+!*       1.2    Compute the number of small time step integration
+!
+KSPLITR = 1
+IF (CSEDIM == 'SPLI' .AND. .NOT. PARAM_ICE%LRED) THEN
+ SPLIT : DO
+  ZT = PTSTEP / REAL(KSPLITR)
+  IF ( ZT * ZVTRMAX / PDZMIN .LT. 1.) EXIT SPLIT
+  KSPLITR = KSPLITR + 1
+ END DO SPLIT
+END IF
 !
 IF (ASSOCIATED(XRTMIN)) THEN       ! In case of nesting microphysics constants of
                                   ! MODD_RAIN_ICE_PARAM are computed only once,
@@ -188,7 +226,7 @@ IF (ASSOCIATED(XRTMIN)) THEN       ! In case of nesting microphysics constants o
   CALL RAIN_ICE_DESCR_DEALLOCATE()
 END IF
 !
-IF (HCLOUD == 'ICE4') THEN
+IF (HCLOUD == 'ICE4' .OR. HCLOUD=='LIMA') THEN
   CALL RAIN_ICE_DESCR_ALLOCATE(7)
 ELSE IF (HCLOUD == 'ICE3') THEN
   CALL RAIN_ICE_DESCR_ALLOCATE(6)
@@ -200,7 +238,7 @@ XRTMIN(3) = 1.0E-20
 XRTMIN(4) = 1.0E-20
 XRTMIN(5) = 1.0E-15
 XRTMIN(6) = 1.0E-15
-IF (HCLOUD == 'ICE4') XRTMIN(7) = 1.0E-15
+IF (HCLOUD == 'ICE4' .OR. HCLOUD=='LIMA') XRTMIN(7) = 1.0E-15
 !
 !-------------------------------------------------------------------------------
 !
@@ -475,7 +513,7 @@ XEXSEDS = (XBS+XDS-XCXS)/(XBS-XCXS)
 XFSEDS  = XCS*XAS*XCCS*MOMG(XALPHAS,XNUS,XBS+XDS)*                         &
           (XAS*XCCS*MOMG(XALPHAS,XNUS,XBS))**(-XEXSEDS)*(ZRHO00)**XCEXVT
 #else
-IF (HCLOUD == 'ICE3' .OR. HCLOUD == 'ICE4') THEN
+IF (PARAM_ICE%LRED) THEN
    XEXSEDS = -XDS-XBS
    XFSEDS  = XCS*MOMG(XALPHAS,XNUS,XBS+XDS)/(MOMG(XALPHAS,XNUS,XBS))    &
             *(ZRHO00)**XCEXVT
@@ -568,13 +606,13 @@ X1DEPS = XNS*(4.0*XPI)*XC1S*XF1S*SQRT(XCS)*MOMG(XALPHAS,XNUS,0.5*XDS+1.5)
 XEX0DEPS = -1.0
 XEX1DEPS = -0.5*(XDS+3.0)
 #endif
-XRDEPSRED = 1.0
+XRDEPSRED = XRDEPSRED_NAM
 !
 X0DEPG = (4.0*XPI)*XCCG*XC1G*XF0G*MOMG(XALPHAG,XNUG,1.)
 X1DEPG = (4.0*XPI)*XCCG*XC1G*XF1G*SQRT(XCG)*MOMG(XALPHAG,XNUG,0.5*XDG+1.5)
 XEX0DEPG = XCXG-1.0
 XEX1DEPG = XCXG-0.5*(XDG+3.0)
-XRDEPGRED = 1.0
+XRDEPGRED = XRDEPGRED_NAM
 !
 X0DEPH = (4.0*XPI)*XCCH*XC1H*XF0H*MOMG(XALPHAH,XNUH,1.)
 X1DEPH = (4.0*XPI)*XCCH*XC1H*XF1H*SQRT(XCH)*MOMG(XALPHAH,XNUH,0.5*XDH+1.5)
@@ -593,13 +631,20 @@ END IF
 !
 XTIMAUTI = 1.E-3  !  Time constant at T=T_t
 XTEXAUTI = 0.015  !  Temperature factor of the I+I collection efficiency
-!!XCRIAUTI = 0.25E-3 !  Critical ice content for the autoconversion to occur
-XCRIAUTI = 0.2E-4 !  Critical ice content for the autoconversion to occur
-                  !  Revised value by Chaboureau et al. (2001)
-XACRIAUTI=0.06
-XBCRIAUTI=-3.5
-XT0CRIAUTI=(LOG10(XCRIAUTI)-XBCRIAUTI)/0.06
-
+XCRIAUTI = XCRIAUTI_NAM
+IF(LCRIAUTI) THEN
+  XT0CRIAUTI = XT0CRIAUTI_NAM
+  !second point to determine 10**(aT+b) law
+  ZTCRI0=-40.0
+  ZCRI0=1.25E-6
+  XBCRIAUTI=-( LOG10(XCRIAUTI) - LOG10(ZCRI0)*XT0CRIAUTI/ZTCRI0 )&
+                   *ZTCRI0/(XT0CRIAUTI-ZTCRI0)
+  XACRIAUTI=(LOG10(ZCRI0)-XBCRIAUTI)/ZTCRI0
+ELSE
+  XACRIAUTI=XACRIAUTI_NAM
+  XBCRIAUTI=XBCRIAUTI_NAM
+  XT0CRIAUTI=(LOG10(XCRIAUTI)-XBCRIAUTI)/0.06
+ENDIF
 !
 GFLAG = .TRUE.
 IF (GFLAG) THEN
@@ -642,7 +687,7 @@ END IF
 !*       6.1    Constants for the cloud droplets autoconversion
 !
 XTIMAUTC = 1.E-3
-XCRIAUTC = 0.5E-3
+XCRIAUTC = XCRIAUTC_NAM
 !
 GFLAG = .TRUE.
 IF (GFLAG) THEN
@@ -704,24 +749,24 @@ IF (GFLAG) THEN
   WRITE(UNIT=KLUOUT,FMT='(" Coll. efficiency          XCOLCS=",E13.6)') XCOLCS
 END IF
 !
-NGAMINC = 80
-XGAMINC_BOUND_MIN = 1.0E-1 ! Minimal value of (Lbda * D_cs^lim)**alpha
-XGAMINC_BOUND_MAX = 1.0E7  ! Maximal value of (Lbda * D_cs^lim)**alpha
-ZRATE = EXP(LOG(XGAMINC_BOUND_MAX/XGAMINC_BOUND_MIN)/REAL(NGAMINC-1))
+RAIN_ICE_PARAM%NGAMINC = 80
+RAIN_ICE_PARAM%XGAMINC_BOUND_MIN = 1.0E-1 ! Minimal value of (Lbda * D_cs^lim)**alpha
+RAIN_ICE_PARAM%XGAMINC_BOUND_MAX = 1.0E7  ! Maximal value of (Lbda * D_cs^lim)**alpha
+ZRATE = EXP(LOG(RAIN_ICE_PARAM%XGAMINC_BOUND_MAX/RAIN_ICE_PARAM%XGAMINC_BOUND_MIN)/REAL(RAIN_ICE_PARAM%NGAMINC-1))
 !
-IF( .NOT.ASSOCIATED(XGAMINC_RIM1) ) CALL RAIN_ICE_PARAM_ALLOCATE('XGAMINC_RIM1', NGAMINC)
-IF( .NOT.ASSOCIATED(XGAMINC_RIM2) ) CALL RAIN_ICE_PARAM_ALLOCATE('XGAMINC_RIM2', NGAMINC)
-IF( .NOT.ASSOCIATED(XGAMINC_RIM4) ) CALL RAIN_ICE_PARAM_ALLOCATE('XGAMINC_RIM4', NGAMINC)
+IF( .NOT.ASSOCIATED(XGAMINC_RIM1) ) CALL RAIN_ICE_PARAM_ALLOCATE('XGAMINC_RIM1', RAIN_ICE_PARAM%NGAMINC)
+IF( .NOT.ASSOCIATED(XGAMINC_RIM2) ) CALL RAIN_ICE_PARAM_ALLOCATE('XGAMINC_RIM2', RAIN_ICE_PARAM%NGAMINC)
+IF( .NOT.ASSOCIATED(XGAMINC_RIM4) ) CALL RAIN_ICE_PARAM_ALLOCATE('XGAMINC_RIM4', RAIN_ICE_PARAM%NGAMINC)
 !
-DO J1=1,NGAMINC
-  ZBOUND = XGAMINC_BOUND_MIN*ZRATE**(J1-1)
+DO J1=1,RAIN_ICE_PARAM%NGAMINC
+  ZBOUND = RAIN_ICE_PARAM%XGAMINC_BOUND_MIN*ZRATE**(J1-1)
   XGAMINC_RIM1(J1) = GAMMA_INC(XNUS+(2.0+XDS)/XALPHAS,ZBOUND)
   XGAMINC_RIM2(J1) = GAMMA_INC(XNUS+XBS/XALPHAS      ,ZBOUND)
   XGAMINC_RIM4(J1) = GAMMA_INC(XNUS+XBG/XALPHAS      ,ZBOUND)
 END DO
 !
-XRIMINTP1 = XALPHAS / LOG(ZRATE)
-XRIMINTP2 = 1.0 + XRIMINTP1*LOG( XDCSLIM/(XGAMINC_BOUND_MIN)**(1.0/XALPHAS) )
+RAIN_ICE_PARAM%XRIMINTP1 = XALPHAS / LOG(ZRATE)
+RAIN_ICE_PARAM%XRIMINTP2 = 1.0 + RAIN_ICE_PARAM%XRIMINTP1*LOG( XDCSLIM/(RAIN_ICE_PARAM%XGAMINC_BOUND_MIN)**(1.0/XALPHAS) )
 !
 !*       7.2    Constants for the accretion of raindrops onto aggregates
 !
@@ -750,18 +795,18 @@ XLBSACCR3   =                          MOMG(XALPHAS,XNUS,XBS+2.)
 ! Notice: One magnitude of lambda discretized over 10 points for rain
 ! Notice: One magnitude of lambda discretized over 10 points for snow
 !
-NACCLBDAS = 40
-XACCLBDAS_MIN = 5.0E1 ! Minimal value of Lbda_s to tabulate XKER_RACCS
-XACCLBDAS_MAX = 5.0E5 ! Maximal value of Lbda_s to tabulate XKER_RACCS
-ZRATE = LOG(XACCLBDAS_MAX/XACCLBDAS_MIN)/REAL(NACCLBDAS-1)
-XACCINTP1S = 1.0 / ZRATE
-XACCINTP2S = 1.0 - LOG( XACCLBDAS_MIN ) / ZRATE
-NACCLBDAR = 40
-XACCLBDAR_MIN = 1.0E3 ! Minimal value of Lbda_r to tabulate XKER_RACCS
-XACCLBDAR_MAX = 1.0E7 ! Maximal value of Lbda_r to tabulate XKER_RACCS
-ZRATE = LOG(XACCLBDAR_MAX/XACCLBDAR_MIN)/REAL(NACCLBDAR-1)
-XACCINTP1R = 1.0 / ZRATE
-XACCINTP2R = 1.0 - LOG( XACCLBDAR_MIN ) / ZRATE
+RAIN_ICE_PARAM%NACCLBDAS = 40
+RAIN_ICE_PARAM%XACCLBDAS_MIN = 5.0E1 ! Minimal value of Lbda_s to tabulate XKER_RACCS
+RAIN_ICE_PARAM%XACCLBDAS_MAX = 5.0E5 ! Maximal value of Lbda_s to tabulate XKER_RACCS
+ZRATE = LOG(RAIN_ICE_PARAM%XACCLBDAS_MAX/RAIN_ICE_PARAM%XACCLBDAS_MIN)/REAL(RAIN_ICE_PARAM%NACCLBDAS-1)
+RAIN_ICE_PARAM%XACCINTP1S = 1.0 / ZRATE
+RAIN_ICE_PARAM%XACCINTP2S = 1.0 - LOG( RAIN_ICE_PARAM%XACCLBDAS_MIN ) / ZRATE
+RAIN_ICE_PARAM%NACCLBDAR = 40
+RAIN_ICE_PARAM%XACCLBDAR_MIN = 1.0E3 ! Minimal value of Lbda_r to tabulate XKER_RACCS
+RAIN_ICE_PARAM%XACCLBDAR_MAX = 1.0E7 ! Maximal value of Lbda_r to tabulate XKER_RACCS
+ZRATE = LOG(RAIN_ICE_PARAM%XACCLBDAR_MAX/RAIN_ICE_PARAM%XACCLBDAR_MIN)/REAL(RAIN_ICE_PARAM%NACCLBDAR-1)
+RAIN_ICE_PARAM%XACCINTP1R = 1.0 / ZRATE
+RAIN_ICE_PARAM%XACCINTP2R = 1.0 - LOG( RAIN_ICE_PARAM%XACCLBDAR_MIN ) / ZRATE
 !
 !*       7.2.2  Computations of the tabulated normalized kernels
 !
@@ -769,33 +814,36 @@ IND      = 50    ! Interval number, collection efficiency and infinite diameter
 ZESR     = 1.0   ! factor used to integrate the dimensional distributions when
 ZFDINFTY = 20.0  ! computing the kernels XKER_RACCSS, XKER_RACCS and XKER_SACCRG
 !
-IF( .NOT.ASSOCIATED(XKER_RACCSS) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RACCSS', NACCLBDAS,NACCLBDAR)
-IF( .NOT.ASSOCIATED(XKER_RACCS ) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RACCS', NACCLBDAS,NACCLBDAR)
-IF( .NOT.ASSOCIATED(XKER_SACCRG) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_SACCRG', NACCLBDAR,NACCLBDAS)
+IF( .NOT.ASSOCIATED(XKER_RACCSS) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RACCSS', RAIN_ICE_PARAM%NACCLBDAS,RAIN_ICE_PARAM%NACCLBDAR)
+IF( .NOT.ASSOCIATED(XKER_RACCS ) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RACCS', RAIN_ICE_PARAM%NACCLBDAS,RAIN_ICE_PARAM%NACCLBDAR)
+IF( .NOT.ASSOCIATED(XKER_SACCRG) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_SACCRG', RAIN_ICE_PARAM%NACCLBDAR,RAIN_ICE_PARAM%NACCLBDAS)
 !
 CALL READ_XKER_RACCS (KACCLBDAS,KACCLBDAR,KND,                                        &
                       PALPHAS,PNUS,PALPHAR,PNUR,PESR,PBS,PBR,PCS,PDS,PFVELOS,PCR,PDR, &
                       PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN,        &
                       PFDINFTY                                                        )
-IF( (KACCLBDAS/=NACCLBDAS) .OR. (KACCLBDAR/=NACCLBDAR) .OR. (KND/=IND) .OR. &
+IF( (KACCLBDAS/=RAIN_ICE_PARAM%NACCLBDAS) .OR. (KACCLBDAR/=RAIN_ICE_PARAM%NACCLBDAR) .OR. (KND/=IND) .OR. &
     (PALPHAS/=XALPHAS) .OR. (PNUS/=XNUS)                               .OR. &
     (PALPHAR/=XALPHAR) .OR. (PNUR/=XNUR)                               .OR. &
     (PESR/=ZESR) .OR. (PBS/=XBS) .OR. (PBR/=XBR)                       .OR. &
     (PCS/=XCS) .OR. (PDS/=XDS) .OR. (PFVELOS/=XFVELOS) .OR. (PCR/=XCR) .OR. (PDR/=XDR) .OR. &
-    (PACCLBDAS_MAX/=XACCLBDAS_MAX) .OR. (PACCLBDAR_MAX/=XACCLBDAR_MAX) .OR. &
-    (PACCLBDAS_MIN/=XACCLBDAS_MIN) .OR. (PACCLBDAR_MIN/=XACCLBDAR_MIN) .OR. &
+    (PACCLBDAS_MAX/=RAIN_ICE_PARAM%XACCLBDAS_MAX) .OR. (PACCLBDAR_MAX/=RAIN_ICE_PARAM%XACCLBDAR_MAX) .OR. &
+    (PACCLBDAS_MIN/=RAIN_ICE_PARAM%XACCLBDAS_MIN) .OR. (PACCLBDAR_MIN/=RAIN_ICE_PARAM%XACCLBDAR_MIN) .OR. &
     (PFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RRCOLSS ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
                  ZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR,                     &
-                 XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
+                 RAIN_ICE_PARAM%XACCLBDAS_MAX, RAIN_ICE_PARAM%XACCLBDAR_MAX, &
+                 RAIN_ICE_PARAM%XACCLBDAS_MIN, RAIN_ICE_PARAM%XACCLBDAR_MIN, &
                  ZFDINFTY, XKER_RACCSS, XAG, XBS, XAS                        )
   CALL RZCOLX  ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
                  ZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR, 0.,                 &
-                 XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
+                 RAIN_ICE_PARAM%XACCLBDAS_MAX, RAIN_ICE_PARAM%XACCLBDAR_MAX, &
+                 RAIN_ICE_PARAM%XACCLBDAS_MIN, RAIN_ICE_PARAM%XACCLBDAR_MIN, &
                  ZFDINFTY, XKER_RACCS                                        )
   CALL RSCOLRG ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-                 ZESR, XBS, XCS, XDS, XFVELOS, XCR, XDR,                     &
-                 XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
+                 ZESR, XBS, XCS, XDS, XFVELOS, XCR, XDR,                     & 
+                 RAIN_ICE_PARAM%XACCLBDAS_MAX, RAIN_ICE_PARAM%XACCLBDAR_MAX, &
+                 RAIN_ICE_PARAM%XACCLBDAS_MIN, RAIN_ICE_PARAM%XACCLBDAR_MIN, &
                  ZFDINFTY, XKER_SACCRG,  XAG, XBS, XAS                       )
   WRITE(UNIT=KLUOUT,FMT='("*****************************************")')
   WRITE(UNIT=KLUOUT,FMT='("**** UPDATE NEW SET OF RACSS KERNELS ****")')
@@ -804,8 +852,8 @@ IF( (KACCLBDAS/=NACCLBDAS) .OR. (KACCLBDAR/=NACCLBDAR) .OR. (KND/=IND) .OR. &
   WRITE(UNIT=KLUOUT,FMT='("*****************************************")')
   WRITE(UNIT=KLUOUT,FMT='("!")')
   WRITE(UNIT=KLUOUT,FMT='("KND=",I3)') IND
-  WRITE(UNIT=KLUOUT,FMT='("KACCLBDAS=",I3)') NACCLBDAS
-  WRITE(UNIT=KLUOUT,FMT='("KACCLBDAR=",I3)') NACCLBDAR
+  WRITE(UNIT=KLUOUT,FMT='("KACCLBDAS=",I3)') RAIN_ICE_PARAM%NACCLBDAS
+  WRITE(UNIT=KLUOUT,FMT='("KACCLBDAR=",I3)') RAIN_ICE_PARAM%NACCLBDAR
   WRITE(UNIT=KLUOUT,FMT='("PALPHAS=",E13.6)') XALPHAS
   WRITE(UNIT=KLUOUT,FMT='("PNUS=",E13.6)') XNUS
   WRITE(UNIT=KLUOUT,FMT='("PALPHAR=",E13.6)') XALPHAR
@@ -819,18 +867,18 @@ IF( (KACCLBDAS/=NACCLBDAS) .OR. (KACCLBDAR/=NACCLBDAR) .OR. (KND/=IND) .OR. &
   WRITE(UNIT=KLUOUT,FMT='("PCR=",E13.6)') XCR
   WRITE(UNIT=KLUOUT,FMT='("PDR=",E13.6)') XDR
   WRITE(UNIT=KLUOUT,FMT='("PACCLBDAS_MAX=",E13.6)') &
-                                                    XACCLBDAS_MAX
+                                                    RAIN_ICE_PARAM%XACCLBDAS_MAX
   WRITE(UNIT=KLUOUT,FMT='("PACCLBDAR_MAX=",E13.6)') &
-                                                    XACCLBDAR_MAX
+                                                    RAIN_ICE_PARAM%XACCLBDAR_MAX
   WRITE(UNIT=KLUOUT,FMT='("PACCLBDAS_MIN=",E13.6)') &
-                                                    XACCLBDAS_MIN
+                                                    RAIN_ICE_PARAM%XACCLBDAS_MIN
   WRITE(UNIT=KLUOUT,FMT='("PACCLBDAR_MIN=",E13.6)') &
-                                                    XACCLBDAR_MIN
+                                                    RAIN_ICE_PARAM%XACCLBDAR_MIN
   WRITE(UNIT=KLUOUT,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
   WRITE(UNIT=KLUOUT,FMT='("!")')
   WRITE(UNIT=KLUOUT,FMT='("IF( PRESENT(PKER_RACCSS) ) THEN")')
-  DO J1 = 1 , NACCLBDAS
-    DO J2 = 1 , NACCLBDAR
+  DO J1 = 1 , RAIN_ICE_PARAM%NACCLBDAS
+    DO J2 = 1 , RAIN_ICE_PARAM%NACCLBDAR
     WRITE(UNIT=KLUOUT,FMT='("  PKER_RACCSS(",I3,",",I3,") = ",E13.6)') &
                         J1,J2,XKER_RACCSS(J1,J2)
     END DO
@@ -838,8 +886,8 @@ IF( (KACCLBDAS/=NACCLBDAS) .OR. (KACCLBDAR/=NACCLBDAR) .OR. (KND/=IND) .OR. &
   WRITE(UNIT=KLUOUT,FMT='("END IF")')
   WRITE(UNIT=KLUOUT,FMT='("!")')
   WRITE(UNIT=KLUOUT,FMT='("IF( PRESENT(PKER_RACCS ) ) THEN")')
-  DO J1 = 1 , NACCLBDAS
-    DO J2 = 1 , NACCLBDAR
+  DO J1 = 1 , RAIN_ICE_PARAM%NACCLBDAS
+    DO J2 = 1 , RAIN_ICE_PARAM%NACCLBDAR
     WRITE(UNIT=KLUOUT,FMT='("  PKER_RACCS (",I3,",",I3,") = ",E13.6)') &
                         J1,J2,XKER_RACCS (J1,J2)
     END DO
@@ -847,8 +895,8 @@ IF( (KACCLBDAS/=NACCLBDAS) .OR. (KACCLBDAR/=NACCLBDAR) .OR. (KND/=IND) .OR. &
   WRITE(UNIT=KLUOUT,FMT='("END IF")')
   WRITE(UNIT=KLUOUT,FMT='("!")')
   WRITE(UNIT=KLUOUT,FMT='("IF( PRESENT(PKER_SACCRG) ) THEN")')
-  DO J1 = 1 , NACCLBDAR
-    DO J2 = 1 , NACCLBDAS
+  DO J1 = 1 , RAIN_ICE_PARAM%NACCLBDAR
+    DO J2 = 1 , RAIN_ICE_PARAM%NACCLBDAS
     WRITE(UNIT=KLUOUT,FMT='("  PKER_SACCRG(",I3,",",I3,") = ",E13.6)') &
                         J1,J2,XKER_SACCRG(J1,J2)
     END DO
@@ -959,24 +1007,24 @@ XLBRDRYG3   =                          MOMG(XALPHAR,XNUR,5.)
 !
 ! Notice: One magnitude of lambda discretized over 10 points
 !
-NDRYLBDAR = 40
-XDRYLBDAR_MIN = 1.0E3 ! Minimal value of Lbda_r to tabulate XKER_RDRYG
-XDRYLBDAR_MAX = 1.0E7 ! Maximal value of Lbda_r to tabulate XKER_RDRYG
-ZRATE = LOG(XDRYLBDAR_MAX/XDRYLBDAR_MIN)/REAL(NDRYLBDAR-1)
-XDRYINTP1R = 1.0 / ZRATE
-XDRYINTP2R = 1.0 - LOG( XDRYLBDAR_MIN ) / ZRATE
-NDRYLBDAS = 80
-XDRYLBDAS_MIN = 2.5E1 ! Minimal value of Lbda_s to tabulate XKER_SDRYG
-XDRYLBDAS_MAX = 2.5E9 ! Maximal value of Lbda_s to tabulate XKER_SDRYG
-ZRATE = LOG(XDRYLBDAS_MAX/XDRYLBDAS_MIN)/REAL(NDRYLBDAS-1)
-XDRYINTP1S = 1.0 / ZRATE
-XDRYINTP2S = 1.0 - LOG( XDRYLBDAS_MIN ) / ZRATE
-NDRYLBDAG = 40
-XDRYLBDAG_MIN = 1.0E3 ! Min value of Lbda_g to tabulate XKER_SDRYG,XKER_RDRYG
-XDRYLBDAG_MAX = 1.0E7 ! Max value of Lbda_g to tabulate XKER_SDRYG,XKER_RDRYG
-ZRATE = LOG(XDRYLBDAG_MAX/XDRYLBDAG_MIN)/REAL(NDRYLBDAG-1)
-XDRYINTP1G = 1.0 / ZRATE
-XDRYINTP2G = 1.0 - LOG( XDRYLBDAG_MIN ) / ZRATE
+RAIN_ICE_PARAM%NDRYLBDAR = 40
+RAIN_ICE_PARAM%XDRYLBDAR_MIN = 1.0E3 ! Minimal value of Lbda_r to tabulate XKER_RDRYG
+RAIN_ICE_PARAM%XDRYLBDAR_MAX = 1.0E7 ! Maximal value of Lbda_r to tabulate XKER_RDRYG
+ZRATE = LOG(RAIN_ICE_PARAM%XDRYLBDAR_MAX/RAIN_ICE_PARAM%XDRYLBDAR_MIN)/REAL(RAIN_ICE_PARAM%NDRYLBDAR-1)
+RAIN_ICE_PARAM%XDRYINTP1R = 1.0 / ZRATE
+RAIN_ICE_PARAM%XDRYINTP2R = 1.0 - LOG( RAIN_ICE_PARAM%XDRYLBDAR_MIN ) / ZRATE
+RAIN_ICE_PARAM%NDRYLBDAS = 80
+RAIN_ICE_PARAM%XDRYLBDAS_MIN = 2.5E1 ! Minimal value of Lbda_s to tabulate XKER_SDRYG
+RAIN_ICE_PARAM%XDRYLBDAS_MAX = 2.5E9 ! Maximal value of Lbda_s to tabulate XKER_SDRYG
+ZRATE = LOG(RAIN_ICE_PARAM%XDRYLBDAS_MAX/RAIN_ICE_PARAM%XDRYLBDAS_MIN)/REAL(RAIN_ICE_PARAM%NDRYLBDAS-1)
+RAIN_ICE_PARAM%XDRYINTP1S = 1.0 / ZRATE
+RAIN_ICE_PARAM%XDRYINTP2S = 1.0 - LOG( RAIN_ICE_PARAM%XDRYLBDAS_MIN ) / ZRATE
+RAIN_ICE_PARAM%NDRYLBDAG = 40
+RAIN_ICE_PARAM%XDRYLBDAG_MIN = 1.0E3 ! Min value of Lbda_g to tabulate XKER_SDRYG,XKER_RDRYG
+RAIN_ICE_PARAM%XDRYLBDAG_MAX = 1.0E7 ! Max value of Lbda_g to tabulate XKER_SDRYG,XKER_RDRYG
+ZRATE = LOG(RAIN_ICE_PARAM%XDRYLBDAG_MAX/RAIN_ICE_PARAM%XDRYLBDAG_MIN)/REAL(RAIN_ICE_PARAM%NDRYLBDAG-1)
+RAIN_ICE_PARAM%XDRYINTP1G = 1.0 / ZRATE
+RAIN_ICE_PARAM%XDRYINTP2G = 1.0 - LOG( RAIN_ICE_PARAM%XDRYLBDAG_MIN ) / ZRATE
 !
 !*       8.2.5  Computations of the tabulated normalized kernels
 !
@@ -984,31 +1032,32 @@ IND      = 50    ! Interval number, collection efficiency and infinite diameter
 ZEGS     = 1.0   ! factor used to integrate the dimensional distributions when
 ZFDINFTY = 20.0  ! computing the kernels XKER_SDRYG
 !
-IF( .NOT.ASSOCIATED(XKER_SDRYG) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_SDRYG', NDRYLBDAG,NDRYLBDAS)
+IF( .NOT.ASSOCIATED(XKER_SDRYG) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_SDRYG', RAIN_ICE_PARAM%NDRYLBDAG,RAIN_ICE_PARAM%NDRYLBDAS)
 !
 CALL READ_XKER_SDRYG (KDRYLBDAG,KDRYLBDAS,KND,                              &
                    PALPHAG,PNUG,PALPHAS,PNUS,PEGS,PBS,PCG,PDG,PCS,PDS,PFVELOS, &
                    PDRYLBDAG_MAX,PDRYLBDAS_MAX,PDRYLBDAG_MIN,PDRYLBDAS_MIN, &
                    PFDINFTY                                                 )
-IF( (KDRYLBDAG/=NDRYLBDAG) .OR. (KDRYLBDAS/=NDRYLBDAS) .OR. (KND/=IND) .OR. &
+IF( (KDRYLBDAG/=RAIN_ICE_PARAM%NDRYLBDAG) .OR. (KDRYLBDAS/=RAIN_ICE_PARAM%NDRYLBDAS) .OR. (KND/=IND) .OR. &
     (PALPHAG/=XALPHAG) .OR. (PNUG/=XNUG)                               .OR. &
     (PALPHAS/=XALPHAS) .OR. (PNUS/=XNUS)                               .OR. &
     (PEGS/=ZEGS) .OR. (PBS/=XBS)                                       .OR. &
     (PCG/=XCG) .OR. (PDG/=XDG) .OR. (PCS/=XCS) .OR. (PDS/=XDS) .OR. (PFVELOS/=XFVELOS) .OR. &
-    (PDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (PDRYLBDAS_MAX/=XDRYLBDAS_MAX) .OR. &
-    (PDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (PDRYLBDAS_MIN/=XDRYLBDAS_MIN) .OR. &
+    (PDRYLBDAG_MAX/=RAIN_ICE_PARAM%XDRYLBDAG_MAX) .OR. (PDRYLBDAS_MAX/=RAIN_ICE_PARAM%XDRYLBDAS_MAX) .OR. &
+    (PDRYLBDAG_MIN/=RAIN_ICE_PARAM%XDRYLBDAG_MIN) .OR. (PDRYLBDAS_MIN/=RAIN_ICE_PARAM%XDRYLBDAS_MIN) .OR. &
     (PFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAG, XNUG, XALPHAS, XNUS,                          &
                 ZEGS, XBS, XCG, XDG, 0., XCS, XDS, XFVELOS,                 &
-                XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, &
+                RAIN_ICE_PARAM%XDRYLBDAG_MAX, RAIN_ICE_PARAM%XDRYLBDAS_MAX, &
+                RAIN_ICE_PARAM%XDRYLBDAG_MIN, RAIN_ICE_PARAM%XDRYLBDAS_MIN, &
                 ZFDINFTY, XKER_SDRYG                                        )
   WRITE(UNIT=KLUOUT,FMT='("*****************************************")')
   WRITE(UNIT=KLUOUT,FMT='("**** UPDATE NEW SET OF SDRYG KERNELS ****")')
   WRITE(UNIT=KLUOUT,FMT='("*****************************************")')
   WRITE(UNIT=KLUOUT,FMT='("!")')
   WRITE(UNIT=KLUOUT,FMT='("KND=",I3)') IND
-  WRITE(UNIT=KLUOUT,FMT='("KDRYLBDAG=",I3)') NDRYLBDAG
-  WRITE(UNIT=KLUOUT,FMT='("KDRYLBDAS=",I3)') NDRYLBDAS
+  WRITE(UNIT=KLUOUT,FMT='("KDRYLBDAG=",I3)') RAIN_ICE_PARAM%NDRYLBDAG
+  WRITE(UNIT=KLUOUT,FMT='("KDRYLBDAS=",I3)') RAIN_ICE_PARAM%NDRYLBDAS
   WRITE(UNIT=KLUOUT,FMT='("PALPHAG=",E13.6)') XALPHAG
   WRITE(UNIT=KLUOUT,FMT='("PNUG=",E13.6)') XNUG
   WRITE(UNIT=KLUOUT,FMT='("PALPHAS=",E13.6)') XALPHAS
@@ -1021,18 +1070,18 @@ IF( (KDRYLBDAG/=NDRYLBDAG) .OR. (KDRYLBDAS/=NDRYLBDAS) .OR. (KND/=IND) .OR. &
   WRITE(UNIT=KLUOUT,FMT='("PDS=",E13.6)') XDS
   WRITE(UNIT=KLUOUT,FMT='("PFVELOS=",E13.6)') XFVELOS
   WRITE(UNIT=KLUOUT,FMT='("PDRYLBDAG_MAX=",E13.6)') &
-                                                    XDRYLBDAG_MAX
+                                                    RAIN_ICE_PARAM%XDRYLBDAG_MAX
   WRITE(UNIT=KLUOUT,FMT='("PDRYLBDAS_MAX=",E13.6)') &
-                                                    XDRYLBDAS_MAX
+                                                    RAIN_ICE_PARAM%XDRYLBDAS_MAX
   WRITE(UNIT=KLUOUT,FMT='("PDRYLBDAG_MIN=",E13.6)') &
-                                                    XDRYLBDAG_MIN
+                                                    RAIN_ICE_PARAM%XDRYLBDAG_MIN
   WRITE(UNIT=KLUOUT,FMT='("PDRYLBDAS_MIN=",E13.6)') &
-                                                    XDRYLBDAS_MIN
+                                                    RAIN_ICE_PARAM%XDRYLBDAS_MIN
   WRITE(UNIT=KLUOUT,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
   WRITE(UNIT=KLUOUT,FMT='("!")')
   WRITE(UNIT=KLUOUT,FMT='("IF( PRESENT(PKER_SDRYG) ) THEN")')
-  DO J1 = 1 , NDRYLBDAG
-    DO J2 = 1 , NDRYLBDAS
+  DO J1 = 1 , RAIN_ICE_PARAM%NDRYLBDAG
+    DO J2 = 1 , RAIN_ICE_PARAM%NDRYLBDAS
     WRITE(UNIT=KLUOUT,FMT='("PKER_SDRYG(",I3,",",I3,") = ",E13.6)') &
                         J1,J2,XKER_SDRYG(J1,J2)
     END DO
@@ -1051,31 +1100,32 @@ IND      = 50    ! Number of interval used to integrate the dimensional
 ZEGR     = 1.0   ! distributions when computing the kernel XKER_RDRYG
 ZFDINFTY = 20.0
 !
-IF( .NOT.ASSOCIATED(XKER_RDRYG) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RDRYG', NDRYLBDAG,NDRYLBDAR)
+IF( .NOT.ASSOCIATED(XKER_RDRYG) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RDRYG', RAIN_ICE_PARAM%NDRYLBDAG,RAIN_ICE_PARAM%NDRYLBDAR)
 !
 CALL READ_XKER_RDRYG (KDRYLBDAG,KDRYLBDAR,KND,                              &
                    PALPHAG,PNUG,PALPHAR,PNUR,PEGR,PBR,PCG,PDG,PCR,PDR,      &
                    PDRYLBDAG_MAX,PDRYLBDAR_MAX,PDRYLBDAG_MIN,PDRYLBDAR_MIN, &
                    PFDINFTY                                                 )
-IF( (KDRYLBDAG/=NDRYLBDAG) .OR. (KDRYLBDAR/=NDRYLBDAR) .OR. (KND/=IND) .OR. &
+IF( (KDRYLBDAG/=RAIN_ICE_PARAM%NDRYLBDAG) .OR. (KDRYLBDAR/=RAIN_ICE_PARAM%NDRYLBDAR) .OR. (KND/=IND) .OR. &
     (PALPHAG/=XALPHAG) .OR. (PNUG/=XNUG)                               .OR. &
     (PALPHAR/=XALPHAR) .OR. (PNUR/=XNUR)                               .OR. &
     (PEGR/=ZEGR) .OR. (PBR/=XBR)                                       .OR. &
     (PCG/=XCG) .OR. (PDG/=XDG) .OR. (PCR/=XCR) .OR. (PDR/=XDR)         .OR. &
-    (PDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (PDRYLBDAR_MAX/=XDRYLBDAR_MAX) .OR. &
-    (PDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (PDRYLBDAR_MIN/=XDRYLBDAR_MIN) .OR. &
+    (PDRYLBDAG_MAX/=RAIN_ICE_PARAM%XDRYLBDAG_MAX) .OR. (PDRYLBDAR_MAX/=RAIN_ICE_PARAM%XDRYLBDAR_MAX) .OR. &
+    (PDRYLBDAG_MIN/=RAIN_ICE_PARAM%XDRYLBDAG_MIN) .OR. (PDRYLBDAR_MIN/=RAIN_ICE_PARAM%XDRYLBDAR_MIN) .OR. &
     (PFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAG, XNUG, XALPHAR, XNUR,                          &
                 ZEGR, XBR, XCG, XDG, 0., XCR, XDR, 0.,                      &
-                XDRYLBDAG_MAX, XDRYLBDAR_MAX, XDRYLBDAG_MIN, XDRYLBDAR_MIN, &
+                RAIN_ICE_PARAM%XDRYLBDAG_MAX, RAIN_ICE_PARAM%XDRYLBDAR_MAX, &
+                RAIN_ICE_PARAM%XDRYLBDAG_MIN, RAIN_ICE_PARAM%XDRYLBDAR_MIN, &
                 ZFDINFTY, XKER_RDRYG                                        )
   WRITE(UNIT=KLUOUT,FMT='("*****************************************")')
   WRITE(UNIT=KLUOUT,FMT='("**** UPDATE NEW SET OF RDRYG KERNELS ****")')
   WRITE(UNIT=KLUOUT,FMT='("*****************************************")')
   WRITE(UNIT=KLUOUT,FMT='("!")')
   WRITE(UNIT=KLUOUT,FMT='("KND=",I3)') IND
-  WRITE(UNIT=KLUOUT,FMT='("KDRYLBDAG=",I3)') NDRYLBDAG
-  WRITE(UNIT=KLUOUT,FMT='("KDRYLBDAR=",I3)') NDRYLBDAR
+  WRITE(UNIT=KLUOUT,FMT='("KDRYLBDAG=",I3)') RAIN_ICE_PARAM%NDRYLBDAG
+  WRITE(UNIT=KLUOUT,FMT='("KDRYLBDAR=",I3)') RAIN_ICE_PARAM%NDRYLBDAR
   WRITE(UNIT=KLUOUT,FMT='("PALPHAG=",E13.6)') XALPHAG
   WRITE(UNIT=KLUOUT,FMT='("PNUG=",E13.6)') XNUG
   WRITE(UNIT=KLUOUT,FMT='("PALPHAR=",E13.6)') XALPHAR
@@ -1087,18 +1137,18 @@ IF( (KDRYLBDAG/=NDRYLBDAG) .OR. (KDRYLBDAR/=NDRYLBDAR) .OR. (KND/=IND) .OR. &
   WRITE(UNIT=KLUOUT,FMT='("PCR=",E13.6)') XCR
   WRITE(UNIT=KLUOUT,FMT='("PDR=",E13.6)') XDR
   WRITE(UNIT=KLUOUT,FMT='("PDRYLBDAG_MAX=",E13.6)') &
-                                                    XDRYLBDAG_MAX
+                                                    RAIN_ICE_PARAM%XDRYLBDAG_MAX
   WRITE(UNIT=KLUOUT,FMT='("PDRYLBDAR_MAX=",E13.6)') &
-                                                    XDRYLBDAR_MAX
+                                                    RAIN_ICE_PARAM%XDRYLBDAR_MAX
   WRITE(UNIT=KLUOUT,FMT='("PDRYLBDAG_MIN=",E13.6)') &
-                                                    XDRYLBDAG_MIN
+                                                    RAIN_ICE_PARAM%XDRYLBDAG_MIN
   WRITE(UNIT=KLUOUT,FMT='("PDRYLBDAR_MIN=",E13.6)') &
-                                                    XDRYLBDAR_MIN
+                                                    RAIN_ICE_PARAM%XDRYLBDAR_MIN
   WRITE(UNIT=KLUOUT,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
   WRITE(UNIT=KLUOUT,FMT='("!")')
   WRITE(UNIT=KLUOUT,FMT='("IF( PRESENT(PKER_RDRYG) ) THEN")')
-  DO J1 = 1 , NDRYLBDAG
-    DO J2 = 1 , NDRYLBDAR
+  DO J1 = 1 , RAIN_ICE_PARAM%NDRYLBDAG
+    DO J2 = 1 , RAIN_ICE_PARAM%NDRYLBDAR
     WRITE(UNIT=KLUOUT,FMT='("PKER_RDRYG(",I3,",",I3,") = ",E13.6)') &
                         J1,J2,XKER_RDRYG(J1,J2)
     END DO
@@ -1115,22 +1165,7 @@ END IF
 !          8.2.6 Constants for possible modifying some processes related to 
 !                graupeln in XFRMIN(1:8),  IN - concentration in XFRMIN(9) and Kogan 
 !                autoconversion in XFRMIN(10:11). May be used for e.g. ensemble spread
-  XFRMIN(1:6)=0.
-  XFRMIN(7:9)=1.
-  XFRMIN(10) =10.
-  XFRMIN(11) =1.
-  XFRMIN(12) =100. !0 in suparar
-  XFRMIN(13) =1.0E-15
-  XFRMIN(14) =120.
-  XFRMIN(15) =1.0E-4
-  XFRMIN(16:20)=0.
-  XFRMIN(21:22)=1.
-  XFRMIN(23)=0.5
-  XFRMIN(24)=1.5
-  XFRMIN(25)=30.
-  XFRMIN(26:38)=0.
-  XFRMIN(39)=0.25
-  XFRMIN(40)=0.15
+  XFRMIN=XFRMIN_NAM
 !
 !
 !-------------------------------------------------------------------------------
@@ -1182,30 +1217,30 @@ XLBRWETH3   =                          MOMG(XALPHAR,XNUR,XBR+2.)
 !
 ! Notice: One magnitude of lambda discretized over 10 points
 !
-NWETLBDAS = 80
-XWETLBDAS_MIN = 2.5E1 ! Minimal value of Lbda_s to tabulate XKER_SWETH
-XWETLBDAS_MAX = 2.5E9 ! Maximal value of Lbda_s to tabulate XKER_SWETH
-ZRATE = LOG(XWETLBDAS_MAX/XWETLBDAS_MIN)/REAL(NWETLBDAS-1)
-XWETINTP1S = 1.0 / ZRATE
-XWETINTP2S = 1.0 - LOG( XWETLBDAS_MIN ) / ZRATE
-NWETLBDAG = 40
-XWETLBDAG_MIN = 1.0E3 ! Min value of Lbda_g to tabulate XKER_GWETH
-XWETLBDAG_MAX = 1.0E7 ! Max value of Lbda_g to tabulate XKER_GWETH
-ZRATE = LOG(XWETLBDAG_MAX/XWETLBDAG_MIN)/REAL(NWETLBDAG-1)
-XWETINTP1G = 1.0 / ZRATE
-XWETINTP2G = 1.0 - LOG( XWETLBDAG_MIN ) / ZRATE
-NWETLBDAR = 40
-XWETLBDAR_MIN = 1.0E3 ! Minimal value of Lbda_r to tabulate XKER_RWETH
-XWETLBDAR_MAX = 1.0E7 ! Maximal value of Lbda_r to tabulate XKER_RWETH
-ZRATE = LOG(XWETLBDAR_MAX/XWETLBDAR_MIN)/REAL(NWETLBDAR-1)
-XWETINTP1R = 1.0 / ZRATE
-XWETINTP2R = 1.0 - LOG( XWETLBDAR_MIN ) / ZRATE
-NWETLBDAH = 40
-XWETLBDAH_MIN = 1.0E3 ! Min value of Lbda_h to tabulate XKER_SWETH,XKER_GWETH,XKER_RWETH
-XWETLBDAH_MAX = 1.0E7 ! Max value of Lbda_h to tabulate XKER_SWETH,XKER_GWETH,XKER_RWETH
-ZRATE = LOG(XWETLBDAH_MAX/XWETLBDAH_MIN)/REAL(NWETLBDAH-1)
-XWETINTP1H = 1.0 / ZRATE
-XWETINTP2H = 1.0 - LOG( XWETLBDAH_MIN ) / ZRATE
+RAIN_ICE_PARAM%NWETLBDAS = 80
+RAIN_ICE_PARAM%XWETLBDAS_MIN = 2.5E1 ! Minimal value of Lbda_s to tabulate XKER_SWETH
+RAIN_ICE_PARAM%XWETLBDAS_MAX = 2.5E9 ! Maximal value of Lbda_s to tabulate XKER_SWETH
+ZRATE = LOG(RAIN_ICE_PARAM%XWETLBDAS_MAX/RAIN_ICE_PARAM%XWETLBDAS_MIN)/REAL(RAIN_ICE_PARAM%NWETLBDAS-1)
+RAIN_ICE_PARAM%XWETINTP1S = 1.0 / ZRATE
+RAIN_ICE_PARAM%XWETINTP2S = 1.0 - LOG( RAIN_ICE_PARAM%XWETLBDAS_MIN ) / ZRATE
+RAIN_ICE_PARAM%NWETLBDAG = 40
+RAIN_ICE_PARAM%XWETLBDAG_MIN = 1.0E3 ! Min value of Lbda_g to tabulate XKER_GWETH
+RAIN_ICE_PARAM%XWETLBDAG_MAX = 1.0E7 ! Max value of Lbda_g to tabulate XKER_GWETH
+ZRATE = LOG(RAIN_ICE_PARAM%XWETLBDAG_MAX/RAIN_ICE_PARAM%XWETLBDAG_MIN)/REAL(RAIN_ICE_PARAM%NWETLBDAG-1)
+RAIN_ICE_PARAM%XWETINTP1G = 1.0 / ZRATE
+RAIN_ICE_PARAM%XWETINTP2G = 1.0 - LOG( RAIN_ICE_PARAM%XWETLBDAG_MIN ) / ZRATE
+RAIN_ICE_PARAM%NWETLBDAR = 40
+RAIN_ICE_PARAM%XWETLBDAR_MIN = 1.0E3 ! Minimal value of Lbda_r to tabulate XKER_RWETH
+RAIN_ICE_PARAM%XWETLBDAR_MAX = 1.0E7 ! Maximal value of Lbda_r to tabulate XKER_RWETH
+ZRATE = LOG(RAIN_ICE_PARAM%XWETLBDAR_MAX/RAIN_ICE_PARAM%XWETLBDAR_MIN)/REAL(RAIN_ICE_PARAM%NWETLBDAR-1)
+RAIN_ICE_PARAM%XWETINTP1R = 1.0 / ZRATE
+RAIN_ICE_PARAM%XWETINTP2R = 1.0 - LOG( RAIN_ICE_PARAM%XWETLBDAR_MIN ) / ZRATE
+RAIN_ICE_PARAM%NWETLBDAH = 40
+RAIN_ICE_PARAM%XWETLBDAH_MIN = 1.0E3 ! Min value of Lbda_h to tabulate XKER_SWETH,XKER_GWETH,XKER_RWETH
+RAIN_ICE_PARAM%XWETLBDAH_MAX = 1.0E7 ! Max value of Lbda_h to tabulate XKER_SWETH,XKER_GWETH,XKER_RWETH
+ZRATE = LOG(RAIN_ICE_PARAM%XWETLBDAH_MAX/RAIN_ICE_PARAM%XWETLBDAH_MIN)/REAL(RAIN_ICE_PARAM%NWETLBDAH-1)
+RAIN_ICE_PARAM%XWETINTP1H = 1.0 / ZRATE
+RAIN_ICE_PARAM%XWETINTP2H = 1.0 - LOG( RAIN_ICE_PARAM%XWETLBDAH_MIN ) / ZRATE
 !
 !*       9.2.4  Computations of the tabulated normalized kernels
 !
@@ -1213,31 +1248,32 @@ IND      = 50    ! Interval number, collection efficiency and infinite diameter
 ZEHS     = 1.0   ! factor used to integrate the dimensional distributions when
 ZFDINFTY = 20.0  ! computing the kernels XKER_SWETH
 !
-IF( .NOT.ASSOCIATED(XKER_SWETH) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_SWETH', NWETLBDAH,NWETLBDAS)
+IF( .NOT.ASSOCIATED(XKER_SWETH) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_SWETH', RAIN_ICE_PARAM%NWETLBDAH,RAIN_ICE_PARAM%NWETLBDAS)
 !
 CALL READ_XKER_SWETH (KWETLBDAH,KWETLBDAS,KND,                              &
                    PALPHAH,PNUH,PALPHAS,PNUS,PEHS,PBS,PCH,PDH,PCS,PDS,PFVELOS, &
                    PWETLBDAH_MAX,PWETLBDAS_MAX,PWETLBDAH_MIN,PWETLBDAS_MIN, &
                    PFDINFTY                                                 )
-IF( (KWETLBDAH/=NWETLBDAH) .OR. (KWETLBDAS/=NWETLBDAS) .OR. (KND/=IND) .OR. &
+IF( (KWETLBDAH/=RAIN_ICE_PARAM%NWETLBDAH) .OR. (KWETLBDAS/=RAIN_ICE_PARAM%NWETLBDAS) .OR. (KND/=IND) .OR. &
     (PALPHAH/=XALPHAH) .OR. (PNUH/=XNUH)                               .OR. &
     (PALPHAS/=XALPHAS) .OR. (PNUS/=XNUS)                               .OR. &
     (PEHS/=ZEHS) .OR. (PBS/=XBS)                                       .OR. &
     (PCH/=XCH) .OR. (PDH/=XDH) .OR. (PCS/=XCS) .OR. (PDS/=XDS) .OR. (PFVELOS/=XFVELOS) .OR. &
-    (PWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (PWETLBDAS_MAX/=XWETLBDAS_MAX) .OR. &
-    (PWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (PWETLBDAS_MIN/=XWETLBDAS_MIN) .OR. &
+    (PWETLBDAH_MAX/=RAIN_ICE_PARAM%XWETLBDAH_MAX) .OR. (PWETLBDAS_MAX/=RAIN_ICE_PARAM%XWETLBDAS_MAX) .OR. &
+    (PWETLBDAH_MIN/=RAIN_ICE_PARAM%XWETLBDAH_MIN) .OR. (PWETLBDAS_MIN/=RAIN_ICE_PARAM%XWETLBDAS_MIN) .OR. &
     (PFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAH, XNUH, XALPHAS, XNUS,                          &
                 ZEHS, XBS, XCH, XDH, 0., XCS, XDS, XFVELOS,                 &
-                XWETLBDAH_MAX, XWETLBDAS_MAX, XWETLBDAH_MIN, XWETLBDAS_MIN, &
+                RAIN_ICE_PARAM%XWETLBDAH_MAX, RAIN_ICE_PARAM%XWETLBDAS_MAX, &
+                RAIN_ICE_PARAM%XWETLBDAH_MIN, RAIN_ICE_PARAM%XWETLBDAS_MIN, &
                 ZFDINFTY, XKER_SWETH                                        )
   WRITE(UNIT=KLUOUT,FMT='("*****************************************")')
   WRITE(UNIT=KLUOUT,FMT='("**** UPDATE NEW SET OF SWETH KERNELS ****")')
   WRITE(UNIT=KLUOUT,FMT='("*****************************************")')
   WRITE(UNIT=KLUOUT,FMT='("!")')
   WRITE(UNIT=KLUOUT,FMT='("KND=",I3)') IND
-  WRITE(UNIT=KLUOUT,FMT='("KWETLBDAH=",I3)') NWETLBDAH
-  WRITE(UNIT=KLUOUT,FMT='("KWETLBDAS=",I3)') NWETLBDAS
+  WRITE(UNIT=KLUOUT,FMT='("KWETLBDAH=",I3)') RAIN_ICE_PARAM%NWETLBDAH
+  WRITE(UNIT=KLUOUT,FMT='("KWETLBDAS=",I3)') RAIN_ICE_PARAM%NWETLBDAS
   WRITE(UNIT=KLUOUT,FMT='("PALPHAH=",E13.6)') XALPHAH
   WRITE(UNIT=KLUOUT,FMT='("PNUH=",E13.6)') XNUH
   WRITE(UNIT=KLUOUT,FMT='("PALPHAS=",E13.6)') XALPHAS
@@ -1250,18 +1286,18 @@ IF( (KWETLBDAH/=NWETLBDAH) .OR. (KWETLBDAS/=NWETLBDAS) .OR. (KND/=IND) .OR. &
   WRITE(UNIT=KLUOUT,FMT='("PDS=",E13.6)') XDS
   WRITE(UNIT=KLUOUT,FMT='("PFVELOS=",E13.6)') XFVELOS
   WRITE(UNIT=KLUOUT,FMT='("PWETLBDAH_MAX=",E13.6)') &
-                                                    XWETLBDAH_MAX
+                                                    RAIN_ICE_PARAM%XWETLBDAH_MAX
   WRITE(UNIT=KLUOUT,FMT='("PWETLBDAS_MAX=",E13.6)') &
-                                                    XWETLBDAS_MAX
+                                                    RAIN_ICE_PARAM%XWETLBDAS_MAX
   WRITE(UNIT=KLUOUT,FMT='("PWETLBDAH_MIN=",E13.6)') &
-                                                    XWETLBDAH_MIN
+                                                    RAIN_ICE_PARAM%XWETLBDAH_MIN
   WRITE(UNIT=KLUOUT,FMT='("PWETLBDAS_MIN=",E13.6)') &
-                                                    XWETLBDAS_MIN
+                                                    RAIN_ICE_PARAM%XWETLBDAS_MIN
   WRITE(UNIT=KLUOUT,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
   WRITE(UNIT=KLUOUT,FMT='("!")')
   WRITE(UNIT=KLUOUT,FMT='("IF( PRESENT(PKER_SWETH) ) THEN")')
-  DO J1 = 1 , NWETLBDAH
-    DO J2 = 1 , NWETLBDAS
+  DO J1 = 1 , RAIN_ICE_PARAM%NWETLBDAH
+    DO J2 = 1 , RAIN_ICE_PARAM%NWETLBDAS
     WRITE(UNIT=KLUOUT,FMT='("PKER_SWETH(",I3,",",I3,") = ",E13.6)') &
                         J1,J2,XKER_SWETH(J1,J2)
     END DO
@@ -1280,31 +1316,32 @@ IND      = 50    ! Number of interval used to integrate the dimensional
 ZEHG     = 1.0   ! distributions when computing the kernel XKER_GWETH
 ZFDINFTY = 20.0
 !
-IF( .NOT.ASSOCIATED(XKER_GWETH) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_GWETH', NWETLBDAH,NWETLBDAG)
+IF( .NOT.ASSOCIATED(XKER_GWETH) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_GWETH', RAIN_ICE_PARAM%NWETLBDAH,RAIN_ICE_PARAM%NWETLBDAG)
 !
 CALL READ_XKER_GWETH (KWETLBDAH,KWETLBDAG,KND,                              &
                    PALPHAH,PNUH,PALPHAG,PNUG,PEHG,PBG,PCH,PDH,PCG,PDG,      &
                    PWETLBDAH_MAX,PWETLBDAG_MAX,PWETLBDAH_MIN,PWETLBDAG_MIN, &
                    PFDINFTY                                                 )
-IF( (KWETLBDAH/=NWETLBDAH) .OR. (KWETLBDAG/=NWETLBDAG) .OR. (KND/=IND) .OR. &
+IF( (KWETLBDAH/=RAIN_ICE_PARAM%NWETLBDAH) .OR. (KWETLBDAG/=RAIN_ICE_PARAM%NWETLBDAG) .OR. (KND/=IND) .OR. &
     (PALPHAH/=XALPHAH) .OR. (PNUH/=XNUH)                               .OR. &
     (PALPHAG/=XALPHAG) .OR. (PNUG/=XNUG)                               .OR. &
     (PEHG/=ZEHG) .OR. (PBG/=XBG)                                       .OR. &
     (PCH/=XCH) .OR. (PDH/=XDH) .OR. (PCG/=XCG) .OR. (PDG/=XDG)         .OR. &
-    (PWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (PWETLBDAG_MAX/=XWETLBDAG_MAX) .OR. &
-    (PWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (PWETLBDAG_MIN/=XWETLBDAG_MIN) .OR. &
+    (PWETLBDAH_MAX/=RAIN_ICE_PARAM%XWETLBDAH_MAX) .OR. (PWETLBDAG_MAX/=RAIN_ICE_PARAM%XWETLBDAG_MAX) .OR. &
+    (PWETLBDAH_MIN/=RAIN_ICE_PARAM%XWETLBDAH_MIN) .OR. (PWETLBDAG_MIN/=RAIN_ICE_PARAM%XWETLBDAG_MIN) .OR. &
     (PFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAH, XNUH, XALPHAG, XNUG,                          &
                 ZEHG, XBG, XCH, XDH, 0., XCG, XDG, 0.,                      &
-                XWETLBDAH_MAX, XWETLBDAG_MAX, XWETLBDAH_MIN, XWETLBDAG_MIN, &
+                RAIN_ICE_PARAM%XWETLBDAH_MAX, RAIN_ICE_PARAM%XWETLBDAG_MAX, &
+                RAIN_ICE_PARAM%XWETLBDAH_MIN, RAIN_ICE_PARAM%XWETLBDAG_MIN, &
                 ZFDINFTY, XKER_GWETH                                        )
   WRITE(UNIT=KLUOUT,FMT='("*****************************************")')
   WRITE(UNIT=KLUOUT,FMT='("**** UPDATE NEW SET OF GWETH KERNELS ****")')
   WRITE(UNIT=KLUOUT,FMT='("*****************************************")')
   WRITE(UNIT=KLUOUT,FMT='("!")')
   WRITE(UNIT=KLUOUT,FMT='("KND=",I3)') IND
-  WRITE(UNIT=KLUOUT,FMT='("KWETLBDAH=",I3)') NWETLBDAH
-  WRITE(UNIT=KLUOUT,FMT='("KWETLBDAG=",I3)') NWETLBDAG
+  WRITE(UNIT=KLUOUT,FMT='("KWETLBDAH=",I3)') RAIN_ICE_PARAM%NWETLBDAH
+  WRITE(UNIT=KLUOUT,FMT='("KWETLBDAG=",I3)') RAIN_ICE_PARAM%NWETLBDAG
   WRITE(UNIT=KLUOUT,FMT='("PALPHAH=",E13.6)') XALPHAH
   WRITE(UNIT=KLUOUT,FMT='("PNUH=",E13.6)') XNUH
   WRITE(UNIT=KLUOUT,FMT='("PALPHAG=",E13.6)') XALPHAG
@@ -1316,18 +1353,18 @@ IF( (KWETLBDAH/=NWETLBDAH) .OR. (KWETLBDAG/=NWETLBDAG) .OR. (KND/=IND) .OR. &
   WRITE(UNIT=KLUOUT,FMT='("PCG=",E13.6)') XCG
   WRITE(UNIT=KLUOUT,FMT='("PDG=",E13.6)') XDG
   WRITE(UNIT=KLUOUT,FMT='("PWETLBDAH_MAX=",E13.6)') &
-                                                    XWETLBDAH_MAX
+                                                    RAIN_ICE_PARAM%XWETLBDAH_MAX
   WRITE(UNIT=KLUOUT,FMT='("PWETLBDAG_MAX=",E13.6)') &
-                                                    XWETLBDAG_MAX
+                                                    RAIN_ICE_PARAM%XWETLBDAG_MAX
   WRITE(UNIT=KLUOUT,FMT='("PWETLBDAH_MIN=",E13.6)') &
-                                                    XWETLBDAH_MIN
+                                                    RAIN_ICE_PARAM%XWETLBDAH_MIN
   WRITE(UNIT=KLUOUT,FMT='("PWETLBDAG_MIN=",E13.6)') &
-                                                    XWETLBDAG_MIN
+                                                    RAIN_ICE_PARAM%XWETLBDAG_MIN
   WRITE(UNIT=KLUOUT,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
   WRITE(UNIT=KLUOUT,FMT='("!")')
   WRITE(UNIT=KLUOUT,FMT='("IF( PRESENT(PKER_GWETH) ) THEN")')
-  DO J1 = 1 , NWETLBDAH
-    DO J2 = 1 , NWETLBDAG
+  DO J1 = 1 , RAIN_ICE_PARAM%NWETLBDAH
+    DO J2 = 1 , RAIN_ICE_PARAM%NWETLBDAG
     WRITE(UNIT=KLUOUT,FMT='("PKER_GWETH(",I3,",",I3,") = ",E13.6)') &
                         J1,J2,XKER_GWETH(J1,J2)
     END DO
@@ -1346,31 +1383,32 @@ IND      = 50    ! Number of interval used to integrate the dimensional
 ZEHR     = 1.0   ! distributions when computing the kernel XKER_RWETH
 ZFDINFTY = 20.0
 !
-IF( .NOT.ASSOCIATED(XKER_RWETH) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RWETH', NWETLBDAH,NWETLBDAR)
+IF( .NOT.ASSOCIATED(XKER_RWETH) ) CALL RAIN_ICE_PARAM_ALLOCATE('XKER_RWETH', RAIN_ICE_PARAM%NWETLBDAH,RAIN_ICE_PARAM%NWETLBDAR)
 !
 CALL READ_XKER_RWETH (KWETLBDAH,KWETLBDAR,KND,                              &
                    PALPHAH,PNUH,PALPHAR,PNUR,PEHR,PBR,PCH,PDH,PCR,PDR,      &
                    PWETLBDAH_MAX,PWETLBDAR_MAX,PWETLBDAH_MIN,PWETLBDAR_MIN, &
                    PFDINFTY                                                 )
-IF( (KWETLBDAH/=NWETLBDAH) .OR. (KWETLBDAR/=NWETLBDAR) .OR. (KND/=IND) .OR. &
+IF( (KWETLBDAH/=RAIN_ICE_PARAM%NWETLBDAH) .OR. (KWETLBDAR/=RAIN_ICE_PARAM%NWETLBDAR) .OR. (KND/=IND) .OR. &
     (PALPHAH/=XALPHAH) .OR. (PNUH/=XNUH)                               .OR. &
     (PALPHAR/=XALPHAR) .OR. (PNUR/=XNUR)                               .OR. &
     (PEHR/=ZEHR) .OR. (PBR/=XBR)                                       .OR. &
     (PCH/=XCH) .OR. (PDH/=XDH) .OR. (PCR/=XCR) .OR. (PDR/=XDR)         .OR. &
-    (PWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (PWETLBDAR_MAX/=XWETLBDAR_MAX) .OR. &
-    (PWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (PWETLBDAR_MIN/=XWETLBDAR_MIN) .OR. &
+    (PWETLBDAH_MAX/=RAIN_ICE_PARAM%XWETLBDAH_MAX) .OR. (PWETLBDAR_MAX/=RAIN_ICE_PARAM%XWETLBDAR_MAX) .OR. &
+    (PWETLBDAH_MIN/=RAIN_ICE_PARAM%XWETLBDAH_MIN) .OR. (PWETLBDAR_MIN/=RAIN_ICE_PARAM%XWETLBDAR_MIN) .OR. &
     (PFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAH, XNUH, XALPHAR, XNUR,                          &
                 ZEHR, XBR, XCH, XDH, 0., XCR, XDR, 0.,                      &
-                XWETLBDAH_MAX, XWETLBDAR_MAX, XWETLBDAH_MIN, XWETLBDAR_MIN, &
+                RAIN_ICE_PARAM%XWETLBDAH_MAX, RAIN_ICE_PARAM%XWETLBDAR_MAX, &
+                RAIN_ICE_PARAM%XWETLBDAH_MIN, RAIN_ICE_PARAM%XWETLBDAR_MIN, &
                 ZFDINFTY, XKER_RWETH                                        )
   WRITE(UNIT=KLUOUT,FMT='("*****************************************")')
   WRITE(UNIT=KLUOUT,FMT='("**** UPDATE NEW SET OF RWETH KERNELS ****")')
   WRITE(UNIT=KLUOUT,FMT='("*****************************************")')
   WRITE(UNIT=KLUOUT,FMT='("!")')
   WRITE(UNIT=KLUOUT,FMT='("KND=",I3)') IND
-  WRITE(UNIT=KLUOUT,FMT='("KWETLBDAH=",I3)') NWETLBDAH
-  WRITE(UNIT=KLUOUT,FMT='("KWETLBDAR=",I3)') NWETLBDAR
+  WRITE(UNIT=KLUOUT,FMT='("KWETLBDAH=",I3)') RAIN_ICE_PARAM%NWETLBDAH
+  WRITE(UNIT=KLUOUT,FMT='("KWETLBDAR=",I3)') RAIN_ICE_PARAM%NWETLBDAR
   WRITE(UNIT=KLUOUT,FMT='("PALPHAH=",E13.6)') XALPHAH
   WRITE(UNIT=KLUOUT,FMT='("PNUH=",E13.6)') XNUH
   WRITE(UNIT=KLUOUT,FMT='("PALPHAR=",E13.6)') XALPHAR
@@ -1382,18 +1420,18 @@ IF( (KWETLBDAH/=NWETLBDAH) .OR. (KWETLBDAR/=NWETLBDAR) .OR. (KND/=IND) .OR. &
   WRITE(UNIT=KLUOUT,FMT='("PCR=",E13.6)') XCR
   WRITE(UNIT=KLUOUT,FMT='("PDR=",E13.6)') XDR
   WRITE(UNIT=KLUOUT,FMT='("PWETLBDAH_MAX=",E13.6)') &
-                                                    XWETLBDAH_MAX
+                                                    RAIN_ICE_PARAM%XWETLBDAH_MAX
   WRITE(UNIT=KLUOUT,FMT='("PWETLBDAR_MAX=",E13.6)') &
-                                                    XWETLBDAR_MAX
+                                                    RAIN_ICE_PARAM%XWETLBDAR_MAX
   WRITE(UNIT=KLUOUT,FMT='("PWETLBDAH_MIN=",E13.6)') &
-                                                    XWETLBDAH_MIN
+                                                    RAIN_ICE_PARAM%XWETLBDAH_MIN
   WRITE(UNIT=KLUOUT,FMT='("PWETLBDAR_MIN=",E13.6)') &
-                                                    XWETLBDAR_MIN
+                                                    RAIN_ICE_PARAM%XWETLBDAR_MIN
   WRITE(UNIT=KLUOUT,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
   WRITE(UNIT=KLUOUT,FMT='("!")')
   WRITE(UNIT=KLUOUT,FMT='("IF( PRESENT(PKER_RWETH) ) THEN")')
-  DO J1 = 1 , NWETLBDAH
-    DO J2 = 1 , NWETLBDAR
+  DO J1 = 1 , RAIN_ICE_PARAM%NWETLBDAH
+    DO J2 = 1 , RAIN_ICE_PARAM%NWETLBDAR
     WRITE(UNIT=KLUOUT,FMT='("PKER_RWETH(",I3,",",I3,") = ",E13.6)') &
                         J1,J2,XKER_RWETH(J1,J2)
     END DO
@@ -1482,3 +1520,4 @@ CONTAINS
 !
 !
 END SUBROUTINE INI_RAIN_ICE
+END MODULE MODE_INI_RAIN_ICE

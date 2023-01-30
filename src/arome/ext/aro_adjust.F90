@@ -1,7 +1,7 @@
 !     ######spl
-      SUBROUTINE  ARO_ADJUST(KLON,KIDIA,KFDIA,KLEV,  KRR,  &
-                                  HFRAC_ICE, HCONDENS, HLAMBDA3, OSUBG_COND, &
-                                  OSIGMAS, CMICRO, OCND2, LHGT_QS, HSUBG_MF_PDF, &
+      SUBROUTINE  ARO_ADJUST(PARAM_ICE, RAIN_ICE_PARAM, KLON,KIDIA,KFDIA,KLEV,  KRR,  &
+                                  HCONDENS, HLAMBDA3, OSUBG_COND, &
+                                  OSIGMAS, CMICRO, LHGT_QS, HSUBG_MF_PDF, &
                                   PTSTEP, PSIGQSAT, &
                                   PZZF, PRHODJ, PEXNREF, PRHODREF,&
                                   PPABSM, PTHT, PRT, PSIGS, &
@@ -86,12 +86,13 @@
 !              ------------
 !
 USE MODD_CST, ONLY: CST
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM
+USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 USE MODD_NEB, ONLY: NEB
 USE MODD_TURB_n, ONLY: TURBN
 USE MODD_BUDGET, ONLY: TBUDGETDATA, NBUDGET_RI, TBUCONF
 USE SPP_MOD_TYPE, ONLY : TSPP_CONFIG_TYPE, CLEAR_SPP_TYPE, APPLY_SPP
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+USE MODD_PARAM_ICE, ONLY: PARAM_ICE_t
 !
 USE MODI_ICE_ADJUST
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
@@ -108,12 +109,13 @@ IMPLICIT NONE
 !
 
 !
+TYPE(PARAM_ICE_t),  INTENT(IN) :: PARAM_ICE
+TYPE(RAIN_ICE_PARAM_t), INTENT(IN) :: RAIN_ICE_PARAM
 INTEGER,                  INTENT(IN)   :: KLON ! array length (NPROMA)
 INTEGER,                  INTENT(IN)   :: KIDIA    !start index (=1)
 INTEGER,                  INTENT(IN)   :: KFDIA    !end index (=KLON only if block is full)
 INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
-CHARACTER*1,              INTENT(IN)   :: HFRAC_ICE
 CHARACTER*80,             INTENT(IN)   :: HCONDENS
 CHARACTER*4,              INTENT(IN)   :: HLAMBDA3 ! formulation for lambda3 coeff
 LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid Cond.
@@ -121,7 +123,6 @@ LOGICAL,                  INTENT(IN)   :: OSIGMAS  ! Switch for Sigma_s:
                                         ! use values computed in CONDENSATION
                                         ! or that from turbulence scheme
 CHARACTER (LEN=4),        INTENT(IN)   :: CMICRO  ! Microphysics scheme
-LOGICAL,                  INTENT(IN)   :: OCND2
 LOGICAL,                  INTENT(IN)   :: LHGT_QS
 CHARACTER*80,             INTENT(IN)   :: HSUBG_MF_PDF
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
@@ -240,8 +241,7 @@ HBUNAME='DEPI'
 !*       3.1    Non local correction for precipitating species (Rood 87)
 !
 IF (CMICRO == 'KESS' .OR. CMICRO == 'ICE3' .OR. CMICRO == 'ICE2' &
-    .OR.  CMICRO == 'C2R2' .OR. CMICRO == 'C3R5'.OR. CMICRO == 'ICE4' &
-    .OR. CMICRO == 'OLD3' .OR. CMICRO == 'OLD4') THEN
+    .OR.  CMICRO == 'C2R2' .OR. CMICRO == 'C3R5'.OR. CMICRO == 'ICE4') THEN
 
   DO JRR = 3,KRR
     SELECT CASE (JRR)
@@ -280,7 +280,7 @@ ZTWOTSTEP=2.*PTSTEP
 SELECT CASE ( CMICRO )
 !
 !
-  CASE('ICE2','ICE3','ICE4', 'OLD3', 'OLD4')
+  CASE('ICE2','ICE3','ICE4')
 
   DO JLEV=1,KLEV
 
@@ -393,8 +393,8 @@ ZZZ(KIDIA:KFDIA,:,:) =  PZZF(KIDIA:KFDIA,:,:)
 !
 IF (KRR==6) THEN
   CALL ICE_ADJUST ( YLDIMPHYEX, CST=CST, ICEP=RAIN_ICE_PARAM, NEB=NEB, TURBN=TURBN, BUCONF=TBUCONF, KRR=KRR,&
-    & HFRAC_ICE=HFRAC_ICE, HBUNAME=HBUNAME, &
-    & OCND2=OCND2, LHGT_QS=LHGT_QS, &
+    & HFRAC_ICE=PARAM_ICE%CFRAC_ICE_ADJUST, HBUNAME=HBUNAME, &
+    & OCND2=PARAM_ICE%LOCND2, LHGT_QS=LHGT_QS, &
     & PTSTEP=ZTWOTSTEP,PSIGQSAT=ZSIGQSAT, &
     & PRHODJ=PRHODJ ,PEXNREF=PEXNREF, PRHODREF=PRHODREF,   &
     & PSIGS=PSIGS, LMFCONV=.TRUE., PMFCONV=PMFCONV, PPABST=PPABSM, PZZ=ZZZ,    &
@@ -414,8 +414,8 @@ IF (KRR==6) THEN
     & PHLI_HRI=PHLI_HRI(:,:,:), PHLI_HCF=PHLI_HCF(:,:,:))
 ELSE
   CALL ICE_ADJUST ( YLDIMPHYEX, CST=CST, ICEP=RAIN_ICE_PARAM, NEB=NEB, TURBN=TURBN, BUCONF=TBUCONF, KRR=KRR,&
-    & HFRAC_ICE=HFRAC_ICE, HBUNAME=HBUNAME,    &
-    & OCND2=OCND2, LHGT_QS=LHGT_QS, &
+    & HFRAC_ICE=PARAM_ICE%CFRAC_ICE_ADJUST, HBUNAME=HBUNAME,    &
+    & OCND2=PARAM_ICE%LOCND2, LHGT_QS=LHGT_QS, &
     & PTSTEP=ZTWOTSTEP,PSIGQSAT=ZSIGQSAT, &
     & PRHODJ=PRHODJ ,PEXNREF=PEXNREF, PRHODREF=PRHODREF,   &
     & PSIGS=PSIGS, LMFCONV=.TRUE., PMFCONV=PMFCONV, PPABST=PPABSM, PZZ=ZZZ,    &
