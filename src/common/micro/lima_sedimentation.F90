@@ -122,9 +122,10 @@ LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
                            :: GSEDIM      ! Test where to compute the SED processes
 REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
                            :: ZW,       & ! Work array
-                              ZWSEDR,   & ! Sedimentation of MMR
-                              ZWSEDC,   & ! Sedimentation of number conc.
                               ZWDT        ! Temperature change
+REAL,    DIMENSION(D%NIT,D%NJT,0:D%NKT+1) &
+                           :: ZWSEDR,   & ! Sedimentation of MMR
+                              ZWSEDC      ! Sedimentation of number conc.
 !
 REAL, DIMENSION(:), ALLOCATABLE         &
                            :: ZRS,      & ! m.r. source
@@ -155,7 +156,8 @@ ZTSPLITG= PTSTEP / REAL(NSPLITSED(KID))
 !
 ZWDT=0.
 PINPR(:,:) = 0.
-PFPR(:,:,:) = 0.
+ZWSEDR(:,:,:) = 0.
+ZWSEDC(:,:,:) = 0.
 !
 PRS(:,:,:) = PRS(:,:,:) * PTSTEP
 IF (KMOMENTS==2) PCS(:,:,:) = PCS(:,:,:) * PTSTEP
@@ -233,10 +235,10 @@ DO JN = 1 ,  NSPLITSED(KID)
          ZZX(:) = ZCC(:) * ZZX(:)
       END IF
 
-      ZWSEDR(:,:,:) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
+      ZWSEDR(:,:,1:D%NKT) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
       ZWSEDR(:,:,D%NKTB:D%NKTE) = MIN( ZWSEDR(:,:,D%NKTB:D%NKTE), PRS(:,:,D%NKTB:D%NKTE) * PRHODREF(:,:,D%NKTB:D%NKTE) / ZW(:,:,D%NKTB:D%NKTE) )
       IF (KMOMENTS==2) THEN
-         ZWSEDC(:,:,:) = UNPACK( ZZX(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
+         ZWSEDC(:,:,1:D%NKT) = UNPACK( ZZX(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
          ZWSEDC(:,:,D%NKTB:D%NKTE) = MIN( ZWSEDC(:,:,D%NKTB:D%NKTE), PCS(:,:,D%NKTB:D%NKTE) * PRHODREF(:,:,D%NKTB:D%NKTE) / ZW(:,:,D%NKTB:D%NKTE) )
       END IF
       

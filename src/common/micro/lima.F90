@@ -694,7 +694,7 @@ if ( BUCONF%lbu_enable ) then
       call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nh), 'SEDI', zchs(:, :, :) * prhodj(:, :, :) )
   end if
 end if
-
+PFPR(:,:,:,:)=0.
 ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
 IF (NMOM_C.GE.1 .AND. LSEDC) CALL LIMA_SEDIMENTATION(D, CST, &

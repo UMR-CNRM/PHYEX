@@ -501,12 +501,10 @@ DO JITER =1,ITERMAX
 !*       3.     FIRST ORDER SUBGRID CONDENSATION SCHEME
 !               ---------------------------------------
 !
-   ZRV=PRVS*PTSTEP
-   ZRC=PRCS*PTSTEP
+   ZRV_IN=PRVS*PTSTEP
    ZRV2=PRVT
+   ZRC_IN=PRCS*PTSTEP
    ZRC2=PRCT
-   ZRV_IN=ZRV
-   ZRC_IN=ZRC
    IF (NMOM_I.EQ.1) THEN
       ZRI_IN=PRIS*PTSTEP
       GUSERI=.TRUE.
