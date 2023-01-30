@@ -10,7 +10,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
   CONTAINS
 
   SUBROUTINE RAIN_ICE_OLD_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, KSIZE, &
-                                              KRR, OSEDIC, PTSTEP, KKL, KSPLITR, &
+                                              KRR, OSEDIC, PTSTEP, KKL, IKB, KSPLITR, &
                                               PDZZ, PRHODJ, PRHODREF, PPABST, &
                                               PTHT, PRCT, PRRT, PRST, PRGT, &
                                               PRCS, PRRS, PRIS, PRSS, PRGS, &
@@ -30,7 +30,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
     IMPLICIT NONE
 
     TYPE(DIMPHYEX_T),       INTENT(IN) :: D
-    TYPE(CST_T),            INTENT(IN) :: CST 
+    TYPE(CST_T),            INTENT(IN) :: CST
     TYPE(RAIN_ICE_PARAM_T), INTENT(IN) :: ICEP
     TYPE(RAIN_ICE_DESCR_t), INTENT(IN) :: ICED
 
@@ -40,6 +40,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 
     REAL,    INTENT(IN) :: PTSTEP  ! Double Time step
     INTEGER, INTENT(IN) :: KKL     !vert. levels type 1=MNH -1=ARO
+    INTEGER, INTENT(IN) :: IKB
     INTEGER, INTENT(IN) :: KSPLITR ! Number of small time step
 
     REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PDZZ     ! Layer thickness (m)
@@ -129,7 +130,6 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
     REAL    :: ZTSPLITR ! Small time step for rain sedimentation
     REAL    :: ZINVTSTEP
 
-    INTEGER :: IKB
     INTEGER :: JN, JL, JK, JI, JJ
 
     REAL(KIND=JPRB) :: ZHOOK_HANDLE
@@ -272,7 +272,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
               ZZT(JL)    = ZZT(JL) * (ZPRES(JL)/CST%XP00)**(CST%XRD/CST%XCPD)
               ZWLBDA(JL) = 6.6E-8*(101325./ZPRES(JL))*(ZZT(JL)/293.15)
               ZCC(JL)    = ICED%XCC*(1.+1.26*ZWLBDA(JL)/ZRAY1D(JL)) !! XCC modified for cloud
-              ZWSED (IC1(JL),IC2(JL))= ZRHODREFC(JL)**(-ICED%XCEXVT +1 ) *   &
+              ZWSED(IC1(JL),IC2(JL))= ZRHODREFC(JL)**(-ICED%XCEXVT +1 ) *   &
               ZWLBDC(JL)**(-ICED%XDC)*ZCC(JL)*ZFSEDC1D(JL) * ZRCS(JL)
             END IF
           END DO
@@ -319,7 +319,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 
         DO JJ = 1, ILISTLENR
           JL = ILISTR(JJ)
-          ZWSED (IR1(JL),IR2(JL))= ICEP%XFSEDR  * ZRRS(JL)**ICEP%XEXSEDR *   &
+          ZWSED(IR1(JL),IR2(JL))= ICEP%XFSEDR  * ZRRS(JL)**ICEP%XEXSEDR *   &
                                    ZRHODREFR(JL)**(ICEP%XEXSEDR-ICED%XCEXVT)
         END DO
       END IF ! ISEDIMR
@@ -362,7 +362,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 
         DO JJ = 1, ILISTLENI
           JL = ILISTI(JJ)
-          ZWSED (II1(JL),II2(JL))= ICEP%XFSEDI * ZRIS(JL) *  &
+          ZWSED(II1(JL),II2(JL))= ICEP%XFSEDI * ZRIS(JL) *  &
                           ZRHODREFI(JL)**(1.0-ICED%XCEXVT) * & !    McF&H
                           MAX( 0.05E6,-0.15319E6-0.021454E6* &
                           ALOG(ZRHODREFI(JL)*ZRIS(JL)) )**ICEP%XEXCSEDI
@@ -405,7 +405,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 
         DO JJ = 1, ILISTLENS
           JL = ILISTS(JJ)
-          ZWSED (IS1(JL),IS2(JL))= ICEP%XFSEDS * ZRSS(JL)**ICEP%XEXSEDS *  &
+          ZWSED(IS1(JL),IS2(JL))= ICEP%XFSEDS * ZRSS(JL)**ICEP%XEXSEDS *  &
                                    ZRHODREFS(JL)**(ICEP%XEXSEDS-ICED%XCEXVT)
         END DO
       END IF !ISEDIMS
@@ -447,7 +447,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 
         DO JJ = 1, ILISTLENG
           JL = ILISTG(JJ)
-          ZWSED (IG1(JL),IG2(JL)) = ICEP%XFSEDG  * ZRGS(JL)**ICEP%XEXSEDG *   &
+          ZWSED(IG1(JL),IG2(JL)) = ICEP%XFSEDG  * ZRGS(JL)**ICEP%XEXSEDG *   &
                                   ZRHODREFG(JL)**(ICEP%XEXSEDG-ICED%XCEXVT)
         END DO
       END IF !ISEDIMG
@@ -490,7 +490,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
 
           DO JJ = 1, ILISTLENH
             JL = ILISTH(JJ)
-            ZWSED (IH1(JL),IH2(JL))= ICEP%XFSEDH  * ZRHS(JL)**ICEP%XEXSEDH *   &
+            ZWSED(IH1(JL),IH2(JL))= ICEP%XFSEDH  * ZRHS(JL)**ICEP%XEXSEDH *   &
                                      ZRHODREFH(JL)**(ICEP%XEXSEDH-ICED%XCEXVT)
           END DO
 

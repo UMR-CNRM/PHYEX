@@ -228,7 +228,6 @@ program main_rain_ice_old
   D%nke  = 1
   D%nktb = 1
   D%nkte = n_levels
-  c_sedim = 'SPLI'
 
   call init_rain_ice_old(20)
 
