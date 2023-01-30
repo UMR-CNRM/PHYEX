@@ -672,13 +672,20 @@ PINPRS=0.
 PINPRG=0.
 PINPRH=0.
 if ( BUCONF%lbu_enable ) then
-  if ( BUCONF%lbudget_th )                         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'SEDI', zths(:, :, :) * prhodj(:, :, :) )
-  if ( BUCONF%lbudget_rc .and. nmom_c.ge.1 .and. lsedc ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', zrcs(:, :, :) * prhodj(:, :, :) )
-  if ( BUCONF%lbudget_rr .and. nmom_r.ge.1 ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'SEDI', zrrs(:, :, :) * prhodj(:, :, :) )
-  if ( BUCONF%lbudget_ri .and. nmom_i.ge.1 .and. lsedi ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'SEDI', zris(:, :, :) * prhodj(:, :, :) )
-  if ( BUCONF%lbudget_rs .and. nmom_s.ge.1 ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', zrss(:, :, :) * prhodj(:, :, :) )
-  if ( BUCONF%lbudget_rg .and. nmom_g.ge.1 ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', zrgs(:, :, :) * prhodj(:, :, :) )
-  if ( BUCONF%lbudget_rh .and. nmom_h.ge.1 ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', zrhs(:, :, :) * prhodj(:, :, :) )
+   if ( BUCONF%lbudget_th ) &
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'SEDI', zths(:, :, :) * prhodj(:, :, :) )
+   if ( BUCONF%lbudget_rc .and. nmom_c.ge.1 .and. lsedc ) &
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', zrcs(:, :, :) * prhodj(:, :, :) )
+   if ( BUCONF%lbudget_rr .and. nmom_r.ge.1 ) &
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'SEDI', zrrs(:, :, :) * prhodj(:, :, :) )
+   if ( BUCONF%lbudget_ri .and. nmom_i.ge.1 .and. lsedi ) &
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'SEDI', zris(:, :, :) * prhodj(:, :, :) )
+   if ( BUCONF%lbudget_rs .and. nmom_s.ge.1 ) &
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', zrss(:, :, :) * prhodj(:, :, :) )
+   if ( BUCONF%lbudget_rg .and. nmom_g.ge.1 ) &
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', zrgs(:, :, :) * prhodj(:, :, :) )
+   if ( BUCONF%lbudget_rh .and. nmom_h.ge.1 ) &
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', zrhs(:, :, :) * prhodj(:, :, :) )
   if ( BUCONF%lbudget_sv ) then
     if ( lsedc .and. nmom_c.ge.2) &
       call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'SEDI', zccs(:, :, :) * prhodj(:, :, :) )
@@ -725,13 +732,20 @@ ZTHS(:,:,:) = ZT(:,:,:) / ZEXN(:,:,:) * ZINV_TSTEP
 ! Call budgets
 !
 if ( BUCONF%lbu_enable ) then
-  if ( BUCONF%lbudget_th )                         call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'SEDI', zths(:, :, :) * prhodj(:, :, :) )
-  if ( BUCONF%lbudget_rc .and. nmom_c.ge.1 .and. lsedc ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', zrcs(:, :, :) * prhodj(:, :, :) )
-  if ( BUCONF%lbudget_rr .and. nmom_r.ge.2 ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'SEDI', zrrs(:, :, :) * prhodj(:, :, :) )
-  if ( BUCONF%lbudget_ri .and. nmom_i.ge.1 .and. lsedi ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'SEDI', zris(:, :, :) * prhodj(:, :, :) )
-  if ( BUCONF%lbudget_rs .and. nmom_s.ge.1 ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', zrss(:, :, :) * prhodj(:, :, :) )
-  if ( BUCONF%lbudget_rg .and. nmom_g.ge.1 ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', zrgs(:, :, :) * prhodj(:, :, :) )
-  if ( BUCONF%lbudget_rh .and. nmom_h.ge.1 ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', zrhs(:, :, :) * prhodj(:, :, :) )
+   if ( BUCONF%lbudget_th ) &
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'SEDI', zths(:, :, :) * prhodj(:, :, :) )
+   if ( BUCONF%lbudget_rc .and. nmom_c.ge.1 .and. lsedc ) &
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', zrcs(:, :, :) * prhodj(:, :, :) )
+   if ( BUCONF%lbudget_rr .and. nmom_r.ge.2 ) &
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'SEDI', zrrs(:, :, :) * prhodj(:, :, :) )
+   if ( BUCONF%lbudget_ri .and. nmom_i.ge.1 .and. lsedi ) &
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'SEDI', zris(:, :, :) * prhodj(:, :, :) )
+   if ( BUCONF%lbudget_rs .and. nmom_s.ge.1 ) &
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', zrss(:, :, :) * prhodj(:, :, :) )
+   if ( BUCONF%lbudget_rg .and. nmom_g.ge.1 ) &
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', zrgs(:, :, :) * prhodj(:, :, :) )
+   if ( BUCONF%lbudget_rh .and. nmom_h.ge.1 ) &
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', zrhs(:, :, :) * prhodj(:, :, :) )
   if ( BUCONF%lbudget_sv ) then
     if ( lsedc .and. nmom_c.ge.2 ) &
       call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'SEDI', zccs(:, :, :) * prhodj(:, :, :) )

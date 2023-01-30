@@ -236,10 +236,12 @@ DO JN = 1 ,  NSPLITSED(KID)
       END IF
 
       ZWSEDR(:,:,1:D%NKT) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
-      ZWSEDR(:,:,D%NKTB:D%NKTE) = MIN( ZWSEDR(:,:,D%NKTB:D%NKTE), PRS(:,:,D%NKTB:D%NKTE) * PRHODREF(:,:,D%NKTB:D%NKTE) / ZW(:,:,D%NKTB:D%NKTE) )
+      ZWSEDR(:,:,D%NKTB:D%NKTE) = MIN( ZWSEDR(:,:,D%NKTB:D%NKTE), PRS(:,:,D%NKTB:D%NKTE) &
+           * PRHODREF(:,:,D%NKTB:D%NKTE) / ZW(:,:,D%NKTB:D%NKTE) )
       IF (KMOMENTS==2) THEN
          ZWSEDC(:,:,1:D%NKT) = UNPACK( ZZX(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
-         ZWSEDC(:,:,D%NKTB:D%NKTE) = MIN( ZWSEDC(:,:,D%NKTB:D%NKTE), PCS(:,:,D%NKTB:D%NKTE) * PRHODREF(:,:,D%NKTB:D%NKTE) / ZW(:,:,D%NKTB:D%NKTE) )
+         ZWSEDC(:,:,D%NKTB:D%NKTE) = MIN( ZWSEDC(:,:,D%NKTB:D%NKTE), PCS(:,:,D%NKTB:D%NKTE) &
+              * PRHODREF(:,:,D%NKTB:D%NKTE) / ZW(:,:,D%NKTB:D%NKTE) )
       END IF
       
       DO JK = D%NKTB , D%NKTE

@@ -30,6 +30,7 @@
 !!       V. Vionnet     07/17   add blowing snow
 !  P. Wautelet 10/03/2021: add CSVNAMES and CSVNAMES_A to store the name of all the scalar variables
 !  B. Vie         06/2021: add prognostic supersaturation for LIMA
+!  A. Costes      12/2021: add Blaze fire model smoke
 !
 !-------------------------------------------------------------------------------
 !
@@ -145,6 +146,10 @@ INTEGER,DIMENSION(JPMODELMAX)::NSV_FF_A = 0    ! number of ForeFire scalar varia
 INTEGER,DIMENSION(JPMODELMAX)::NSV_FFBEG_A = 0 ! with indices in the range :
 INTEGER,DIMENSION(JPMODELMAX)::NSV_FFEND_A = 0 ! NSV_FFBEG_A...NSV_FFEND_A
 #endif
+! Blaze smoke indexes
+INTEGER,DIMENSION(JPMODELMAX)::NSV_FIRE_A = 0    ! number of Blaze smoke scalar variables
+INTEGER,DIMENSION(JPMODELMAX)::NSV_FIREBEG_A = 0 ! with indices in the range :
+INTEGER,DIMENSION(JPMODELMAX)::NSV_FIREEND_A = 0 ! NSV_FIREBEG_A...NSV_FIREEND_A
 !
 INTEGER,DIMENSION(JPMODELMAX)::NSV_SNW_A = 0    ! number of blowing snow scalar
 INTEGER,DIMENSION(JPMODELMAX)::NSV_SNWBEG_A = 0 ! with indices in the range :
@@ -251,6 +256,10 @@ INTEGER :: NSV_FF    = 0 ! number of ForeFire scalar variables
 INTEGER :: NSV_FFBEG = 0 ! with indices in the range :
 INTEGER :: NSV_FFEND = 0 ! NSV_FFBEG...NSV_FFEND
 #endif
+! Blaze smoke
+INTEGER :: NSV_FIRE    = 0 ! number of Blaze smoke scalar variables
+INTEGER :: NSV_FIREBEG = 0 ! with indices in the range :
+INTEGER :: NSV_FIREEND = 0 ! NSV_FIREBEG...NSV_FIREEND
 !
 INTEGER :: NSV_SNW     = 0 ! number of blowing snow scalar variables
 INTEGER :: NSV_SNWBEG  = 0 ! with indices in the range :
