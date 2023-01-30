@@ -278,13 +278,13 @@ USE MODD_ALLPROFILER_n
 USE MODD_ALLSTATION_n
 !
 !
-USE MODD_PARAM_LIMA, ONLY : LCOLD, LNUCL, LSEDI, LHHONI, LSNOW, LHAIL, LMEYERS,         &
+USE MODD_PARAM_LIMA, ONLY : LNUCL, LSEDI, LHHONI, LMEYERS,                              &
                             NMOM_I, NMOM_S, NMOM_G, NMOM_H,                             &
                             NMOD_IFN, XIFN_CONC, LIFN_HOM, CIFN_SPECIES,                &
                             CINT_MIXING, NMOD_IMM, NIND_SPECIE, LMURAKAMI,              &
                             YSNOW_T=>LSNOW_T, CPRISTINE_ICE_LIMA, CHEVRIMED_ICE_LIMA,   &
                             XFACTNUC_DEP, XFACTNUC_CON,                                 &
-                            OWARM=>LWARM, LACTI, ORAIN=>LRAIN, OSEDC=>LSEDC,            &
+                            LACTI, OSEDC=>LSEDC,                                        &
                             OACTIT=>LACTIT, LBOUND, LSPRO, LADJ, LKHKO, NMOM_C, NMOM_R, &
                             NMOD_CCN, XCCN_CONC, LKESSLERAC,                            &
                             LCCN_HOM, CCCN_MODES,                                       &
@@ -1009,9 +1009,7 @@ IF (KMI == 1) THEN
    YNUR    = 2.0
    YALPHAR = 1.0
 !
-   OWARM  = .TRUE.
    LACTI  = .TRUE.
-   ORAIN  = .TRUE.
    OSEDC  = .TRUE.
    OACTIT = .FALSE.
    LADJ   = .TRUE.
@@ -1049,11 +1047,8 @@ IF (KMI == 1) THEN
    XCCN_CONC(:)=300.
 !
    LHHONI = .FALSE.
-   LCOLD  = .TRUE.
    LNUCL  = .TRUE.
    LSEDI  = .TRUE.
-   LSNOW  = .TRUE.
-   LHAIL  = .FALSE.
    YSNOW_T = .FALSE.
    LMURAKAMI = .TRUE.
    CPRISTINE_ICE_LIMA = 'PLAT'

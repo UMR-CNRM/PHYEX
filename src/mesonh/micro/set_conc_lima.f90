@@ -163,7 +163,7 @@ IF (NRR.GE.3 .AND. NMOM_R.GE.2) THEN
    END IF
 END IF
 !
-IF NRR.GE.4 .AND. NMOM_I.GE.2) THEN
+IF (NRR.GE.4 .AND. NMOM_I.GE.2) THEN
 !
 ! ice crystals
 !

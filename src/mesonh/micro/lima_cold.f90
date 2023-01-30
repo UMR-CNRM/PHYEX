@@ -323,9 +323,9 @@ END IF
 !
 if ( lbu_enable ) then
   if ( lbudget_ri .and. osedi ) call Budget_store_init( tbudgets(NBUDGET_RI), 'SEDI', pris(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rs .and. lsnow ) call Budget_store_init( tbudgets(NBUDGET_RS), 'SEDI', prss(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rg .and. lsnow ) call Budget_store_init( tbudgets(NBUDGET_RG), 'SEDI', prgs(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rh .and. lhail ) call Budget_store_init( tbudgets(NBUDGET_RH), 'SEDI', prhs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rs ) call Budget_store_init( tbudgets(NBUDGET_RS), 'SEDI', prss(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rg ) call Budget_store_init( tbudgets(NBUDGET_RG), 'SEDI', prgs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rh ) call Budget_store_init( tbudgets(NBUDGET_RH), 'SEDI', prhs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv .and. osedi ) &
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'SEDI', pcis(:, :, :) * prhodj(:, :, :) )
   if (NMOM_S.GE.2) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ns), 'SEDI', pcss(:, :, :) * prhodj(:, :, :) )
@@ -341,9 +341,9 @@ CALL LIMA_COLD_SEDIMENTATION (OSEDI, KSPLITG, PTSTEP, KMI,     &
                               PCSS=PCSS, PCGS=PCGS, PCHS=PCHS    )
 if ( lbu_enable ) then
   if ( lbudget_ri .and. osedi ) call Budget_store_end( tbudgets(NBUDGET_RI), 'SEDI', pris(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rs .and. lsnow ) call Budget_store_end( tbudgets(NBUDGET_RS), 'SEDI', prss(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rg .and. lsnow ) call Budget_store_end( tbudgets(NBUDGET_RG), 'SEDI', prgs(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rh .and. lhail ) call Budget_store_end( tbudgets(NBUDGET_RH), 'SEDI', prhs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rs ) call Budget_store_end( tbudgets(NBUDGET_RS), 'SEDI', prss(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rg ) call Budget_store_end( tbudgets(NBUDGET_RG), 'SEDI', prgs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rh ) call Budget_store_end( tbudgets(NBUDGET_RH), 'SEDI', prhs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv .and. osedi ) &
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'SEDI', pcis(:, :, :) * prhodj(:, :, :) )
   if (NMOM_S.GE.2) call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ns), 'SEDI', pcss(:, :, :) * prhodj(:, :, :) )
