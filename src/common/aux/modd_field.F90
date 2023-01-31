@@ -4,7 +4,7 @@ MODULE MODD_FIELD
   INTEGER, PARAMETER :: NMNHMAXDIMS = 6 ! Cannot be less than 6
   INTEGER,PARAMETER :: TYPEUNDEF = -1, TYPEINT = 1, TYPELOG = 2, TYPEREAL = 3, TYPECHAR = 4, TYPEDATE = 5
 !
-TYPE TFIELDDATA
+TYPE TFIELDMETADATA
   CHARACTER(LEN=NMNHNAMELGTMAX) :: CMNHNAME  = '' !Name of the field (for MesoNH, non CF convention)
   CHARACTER(LEN=NSTDNAMELGTMAX) :: CSTDNAME  = '' !Standard name (CF convention)
   CHARACTER(LEN=32)  :: CLONGNAME = '' !Long name (CF convention)
@@ -24,6 +24,5 @@ TYPE TFIELDDATA
   CHARACTER(LEN=2)   :: CDIR      = '' !Type of the data field (XX,XY,--...)
   CHARACTER(LEN=4)   :: CLBTYPE   = 'NONE' !Type of the lateral boundary (LBX,LBY,LBXU,LBYV)
   LOGICAL            :: LTIMEDEP  = .FALSE. !Is the field time-dependent?
-END TYPE TFIELDDATA
-!
+END TYPE TFIELDMETADATA
 END MODULE MODD_FIELD
