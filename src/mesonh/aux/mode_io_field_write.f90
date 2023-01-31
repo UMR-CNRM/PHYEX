@@ -25,7 +25,8 @@
 
 MODULE MODE_IO_FIELD_WRITE
 
-  use modd_field,        only: tfielddata, tfieldlist, TYPECHAR, TYPEDATE, TYPEINT, TYPELOG, TYPEREAL
+  use modd_field,        only: tfieldlist, tfieldmetadata, tfieldmetadata_base, &
+                               TYPECHAR, TYPEDATE, TYPEINT, TYPELOG, TYPEREAL
   USE MODD_IO,         ONLY: TFILEDATA, TOUTBAK
   USE MODD_MPIF
   use modd_parameters, only: NMNHNAMELGTMAX
@@ -86,10 +87,10 @@ MODULE MODE_IO_FIELD_WRITE
 CONTAINS 
 
   SUBROUTINE IO_Field_metadata_check(TPFIELD,KTYPE,KDIMS,HCALLER)
-    TYPE(TFIELDDATA), INTENT(IN) :: TPFIELD ! Field to check
-    INTEGER,          INTENT(IN) :: KTYPE   ! Expected datatype
-    INTEGER,          INTENT(IN) :: KDIMS   ! Expected number of dimensions
-    CHARACTER(LEN=*), INTENT(IN) :: HCALLER ! name of the calling subroutine
+    CLASS(tfieldmetadata_base), INTENT(IN) :: TPFIELD ! Field to check
+    INTEGER,                    INTENT(IN) :: KTYPE   ! Expected datatype
+    INTEGER,                    INTENT(IN) :: KDIMS   ! Expected number of dimensions
+    CHARACTER(LEN=*),           INTENT(IN) :: HCALLER ! name of the calling subroutine
     !
     CHARACTER(LEN=2) :: YDIMOK,YDIMKO
     CHARACTER(LEN=8) :: YTYPEOK,YTYPEKO
@@ -182,13 +183,13 @@ CONTAINS
   subroutine IO_Field_write_error_check( tpfile, tpfield, hsubr, kresp_in, kresp_lfi, kresp_nc4, kresp_out )
     use modd_io, only: gsmonoproc
 
-    type(tfiledata),  intent(in)  :: tpfile
-    type(tfielddata), intent(in)  :: tpfield
-    character(len=*), intent(in)  :: hsubr
-    integer,          intent(in)  :: kresp_in
-    integer,          intent(in)  :: kresp_lfi
-    integer,          intent(in)  :: kresp_nc4
-    integer,          intent(out) :: kresp_out
+    type(tfiledata),            intent(in)  :: tpfile
+    class(tfieldmetadata_base), intent(in)  :: tpfield
+    character(len=*),           intent(in)  :: hsubr
+    integer,                    intent(in)  :: kresp_in
+    integer,                    intent(in)  :: kresp_lfi
+    integer,                    intent(in)  :: kresp_nc4
+    integer,                    intent(out) :: kresp_out
 
     character(len=:), allocatable :: ymsg
     character(len=6)              :: yresp
@@ -316,14 +317,14 @@ subroutine IO_Field_create( tpfile, tpfield )
   use modd_field
   use modd_io,            only: gsmonoproc, isp
 
-  type(tfiledata),  intent(in) :: tpfile
-  type(tfielddata), intent(in) :: tpfield
+  type(tfiledata),       intent(in) :: tpfile
+  class(tfieldmetadata), intent(in) :: tpfield
 
-  integer                  :: ik_file
-  integer                  :: iresp
-  logical                  :: glfi, gnc4
-  type(tfielddata)         :: tzfield
-  type(tfiledata), pointer :: tzfile
+  integer                            :: ik_file
+  integer                            :: iresp
+  logical                            :: glfi, gnc4
+  class(tfieldmetadata), allocatable :: tzfield
+  type(tfiledata),       pointer     :: tzfile
 
   call Print_msg( NVERB_DEBUG, 'IO', 'IO_Field_create', Trim( tpfile%cname ) // ': creating ' // Trim( tpfield%cmnhname ) )
 
@@ -345,7 +346,7 @@ subroutine IO_Field_create( tpfile, tpfield )
   end if
 
   if ( iresp == 0 ) then
-    tzfield = tpfield
+    Allocate( tzfield, source = tpfield )
 
     if ( All( tzfield%ntype /= [ TYPEINT, TYPELOG, TYPEREAL, TYPECHAR, TYPEDATE ] ) ) then
       call Print_msg( NVERB_ERROR, 'IO', 'IO_Field_create', Trim( tpfile%cname ) // ': ' &
@@ -448,8 +449,8 @@ subroutine IO_Ndimlist_reduce( tpfile, tpfield )
   use modd_io,            only: gsmonoproc, l1d, l2d, lpack
   use modd_parameters_ll, only: jphext
 
-  type(tfiledata),  intent(in)    :: tpfile
-  type(tfielddata), intent(inout) :: tpfield
+  type(tfiledata),            intent(in)    :: tpfile
+  class(tfieldmetadata_base), intent(inout) :: tpfield
 
   integer :: ihextot
   integer :: ji
@@ -534,7 +535,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),             INTENT(IN) :: TPFILE
-    TYPE(TFIELDDATA),            INTENT(IN) :: TPFIELD
+    CLASS(TFIELDMETADATA),       INTENT(IN) :: TPFIELD
     REAL,TARGET,                 INTENT(IN) :: PFIELD   ! array containing the data field
     INTEGER,OPTIONAL,            INTENT(OUT):: KRESP    ! return-code 
     !
@@ -633,7 +634,7 @@ end subroutine IO_Ndimlist_reduce
     !
     TYPE(DIMPHYEX_t),                     INTENT(IN)  :: D
     TYPE(TFILEDATA),                      INTENT(IN)  :: TPFILE
-    TYPE(TFIELDDATA),                     INTENT(IN)  :: TPFIELD
+    TYPE(TFIELDMETADATA),                 INTENT(IN)  :: TPFIELD
     REAL,DIMENSION(D%NIJT,D%NKT),TARGET,  INTENT(IN)  :: PFIELD   ! array containing the data field
     INTEGER,                    OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
     integer, dimension(3),      optional, intent(in)  :: koffset
@@ -651,7 +652,7 @@ end subroutine IO_Ndimlist_reduce
     !
     TYPE(DIMPHYEX_t),                     INTENT(IN)  :: D
     TYPE(TFILEDATA),                      INTENT(IN)  :: TPFILE
-    TYPE(TFIELDDATA),                     INTENT(IN)  :: TPFIELD
+    TYPE(TFIELDMETADATA),                 INTENT(IN)  :: TPFIELD
     REAL,DIMENSION(D%NIT,D%NJT,D%NKT),TARGET,  INTENT(IN)  :: PFIELD   ! array containing the data field
     INTEGER,                    OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
     integer, dimension(3),      optional, intent(in)  :: koffset
@@ -669,7 +670,7 @@ end subroutine IO_Ndimlist_reduce
     !
     TYPE(DIMPHYEX_t),                     INTENT(IN)  :: D
     TYPE(TFILEDATA),                      INTENT(IN)  :: TPFILE
-    TYPE(TFIELDDATA),                     INTENT(IN)  :: TPFIELD
+    TYPE(TFIELDMETADATA),                 INTENT(IN)  :: TPFIELD
     REAL,DIMENSION(D%NIJT),TARGET,  INTENT(IN)  :: PFIELD   ! array containing the data field
     INTEGER,                    OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
     integer, dimension(3),      optional, intent(in)  :: koffset
@@ -687,7 +688,7 @@ end subroutine IO_Ndimlist_reduce
     !
     TYPE(DIMPHYEX_t),                     INTENT(IN)  :: D
     TYPE(TFILEDATA),                      INTENT(IN)  :: TPFILE
-    TYPE(TFIELDDATA),                     INTENT(IN)  :: TPFIELD
+    TYPE(TFIELDMETADATA),                 INTENT(IN)  :: TPFIELD
     REAL,DIMENSION(D%NIT,D%NJT),TARGET,  INTENT(IN)  :: PFIELD   ! array containing the data field
     INTEGER,                    OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
     integer, dimension(3),      optional, intent(in)  :: koffset
@@ -708,7 +709,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),                      INTENT(IN)  :: TPFILE
-    TYPE(TFIELDDATA),                     INTENT(IN)  :: TPFIELD
+    CLASS(TFIELDMETADATA),                INTENT(IN)  :: TPFIELD
     REAL,DIMENSION(:),TARGET,             INTENT(IN)  :: PFIELD   ! array containing the data field
     INTEGER,                    OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
     integer, dimension(1),      optional, intent(in)  :: koffset
@@ -838,7 +839,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),                      INTENT(IN)  :: TPFILE
-    TYPE(TFIELDDATA),                     INTENT(IN)  :: TPFIELD
+    CLASS(TFIELDMETADATA),                INTENT(IN)  :: TPFIELD
     REAL,DIMENSION(:,:),TARGET,           INTENT(IN)  :: PFIELD   ! array containing the data field
     INTEGER,                    OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
     integer, dimension(2),      optional, intent(in)  :: koffset
@@ -866,7 +867,7 @@ end subroutine IO_Ndimlist_reduce
     INTEGER                                  :: IHEXTOT
     CHARACTER(LEN=:),ALLOCATABLE             :: YMSG
     CHARACTER(LEN=6)                         :: YRESP
-    type(tfielddata)                         :: tzfield
+    class(tfieldmetadata), allocatable       :: tzfield
     !
     YFILEM   = TPFILE%CNAME
     YRECFM   = TPFIELD%CMNHNAME
@@ -897,8 +898,8 @@ end subroutine IO_Ndimlist_reduce
       IF (GSMONOPROC) THEN ! sequential execution
          !    IF (LPACK .AND. L1D .AND. YDIR=='XY') THEN
         IF (LPACK .AND. L1D .AND. SIZE(PFIELD,1)==IHEXTOT .AND. SIZE(PFIELD,2)==IHEXTOT) THEN
+          Allocate( tzfield, source = tpfield )
           if ( tpfile%ldimreduced ) then
-            tzfield = tpfield
             tzfield%ndims = tzfield%ndims - 2
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(1)  = tzfield%ndimlist(3) !Necessary if time dimension
@@ -915,7 +916,6 @@ end subroutine IO_Ndimlist_reduce
               if ( gnc4 ) call IO_Field_write_nc4( tpfile, tzfield, zfieldp0d, iresp_nc4 )
             end if
           else
-            tzfield = tpfield
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(1:2) = NMNHDIM_ONE
             end if
@@ -930,8 +930,8 @@ end subroutine IO_Ndimlist_reduce
           endif
              !    ELSE IF (LPACK .AND. L2D .AND. YDIR=='XY') THEN
         ELSEIF (LPACK .AND. L2D .AND. SIZE(PFIELD,2)==IHEXTOT) THEN
+          Allocate( tzfield, source = tpfield )
           if ( tpfile%ldimreduced ) then
-            tzfield = tpfield
             tzfield%ndims = tzfield%ndims - 1
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(2)  = tzfield%ndimlist(3) !Necessary if time dimension
@@ -947,7 +947,6 @@ end subroutine IO_Ndimlist_reduce
               if ( gnc4 ) call IO_Field_write_nc4( tpfile, tzfield, zfieldp1d, iresp_nc4 )
             end if
           else
-            tzfield = tpfield
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(2)  = NMNHDIM_ONE
             end if
@@ -1097,7 +1096,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),TARGET,                 INTENT(IN)  :: TPFILE
-    TYPE(TFIELDDATA),                       INTENT(IN)  :: TPFIELD
+    CLASS(TFIELDMETADATA),                  INTENT(IN)  :: TPFIELD
     REAL,DIMENSION(:,:,:),TARGET,           INTENT(IN)  :: PFIELD   ! array containing the data field
     INTEGER,                      OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
     integer, dimension(3),        optional, intent(in)  :: koffset
@@ -1140,7 +1139,7 @@ end subroutine IO_Ndimlist_reduce
     INTEGER                                  :: IHEXTOT
     CHARACTER(LEN=:),ALLOCATABLE             :: YMSG
     CHARACTER(LEN=6)                         :: YRESP
-    type(tfielddata)                         :: tzfield
+    class(tfieldmetadata), allocatable       :: tzfield
     TYPE(TFILEDATA),POINTER                  :: TZFILE
     !
     TZFILE => NULL()
@@ -1178,8 +1177,8 @@ end subroutine IO_Ndimlist_reduce
       IF (GSMONOPROC .AND. TPFILE%NSUBFILES_IOZ==0 ) THEN ! sequential execution
           !    IF (LPACK .AND. L1D .AND. YDIR=='XY') THEN
         IF (LPACK .AND. L1D .AND. SIZE(PFIELD,1)==IHEXTOT .AND. SIZE(PFIELD,2)==IHEXTOT) THEN
+          Allocate( tzfield, source = tpfield )
           if ( tpfile%ldimreduced ) then
-            tzfield = tpfield
             tzfield%ndims = tzfield%ndims - 2
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(1)  = tzfield%ndimlist(3)
@@ -1196,7 +1195,6 @@ end subroutine IO_Ndimlist_reduce
               if ( gnc4 ) call IO_Field_write_nc4( tpfile, tzfield, zfieldp1d, iresp_nc4 )
             end if
           else
-            tzfield = tpfield
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(1:2) = NMNHDIM_ONE
             end if
@@ -1210,8 +1208,8 @@ end subroutine IO_Ndimlist_reduce
             end if
           endif
         ELSEIF (LPACK .AND. L2D .AND. SIZE(PFIELD,2)==IHEXTOT) THEN
+          Allocate( tzfield, source = tpfield )
           if ( tpfile%ldimreduced ) then
-            tzfield = tpfield
             tzfield%ndims = tzfield%ndims - 1
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(2)  = tzfield%ndimlist(3)
@@ -1229,7 +1227,6 @@ end subroutine IO_Ndimlist_reduce
               if ( gnc4 ) call IO_Field_write_nc4( tpfile, tzfield, zfieldp2d, iresp_nc4 )
             end if
           else
-            tzfield = tpfield
             if ( tzfield%ndimlist(2) /= NMNHDIM_UNKNOWN ) tzfield%ndimlist(2) = NMNHDIM_ONE
             zfieldp => pfield(:, jphext + 1 : jphext + 1, :)
             if ( Present ( koffset ) ) then
@@ -1503,7 +1500,7 @@ end subroutine IO_Ndimlist_reduce
 ! end of MNH_GA
 #endif
         !Not global reduction because a broadcast is done in IO_Field_write_error_check
-        call MPI_REDUCE( -Abs( [ iresp_lfi, iresp_nc4 ] ), iresps(:), 1, MNHINT_MPI, MPI_MIN, &
+        call MPI_REDUCE( -Abs( [ iresp_lfi, iresp_nc4 ] ), iresps(:), 2, MNHINT_MPI, MPI_MIN, &
                          tpfile%nmaster_rank - 1, tpfile%nmpicomm, ierr )
         iresp_lfi = iresps(1)
         iresp_nc4 = iresps(2)
@@ -1562,7 +1559,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),                          INTENT(IN)  :: TPFILE
-    TYPE(TFIELDDATA),                         INTENT(IN)  :: TPFIELD
+    CLASS(TFIELDMETADATA),                    INTENT(IN)  :: TPFIELD
     REAL,DIMENSION(:,:,:,:),TARGET,           INTENT(IN)  :: PFIELD   ! array containing the data field
     INTEGER,                        OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
     integer, dimension(4),          optional, intent(in)  :: koffset
@@ -1585,7 +1582,7 @@ end subroutine IO_Ndimlist_reduce
     INTEGER                                  :: IHEXTOT
     CHARACTER(LEN=:),ALLOCATABLE             :: YMSG
     CHARACTER(LEN=6)                         :: YRESP
-    type(tfielddata)                         :: tzfield
+    class(tfieldmetadata), allocatable       :: tzfield
     !
     YFILEM   = TPFILE%CNAME
     YRECFM   = TPFIELD%CMNHNAME
@@ -1615,8 +1612,8 @@ end subroutine IO_Ndimlist_reduce
       IF (GSMONOPROC) THEN ! sequential execution
         !    IF (LPACK .AND. L1D .AND. YDIR=='XY') THEN
         IF (LPACK .AND. L1D .AND. SIZE(PFIELD,1)==IHEXTOT .AND. SIZE(PFIELD,2)==IHEXTOT) THEN
+          Allocate( tzfield, source = tpfield )
           if ( tpfile%ldimreduced ) then
-            tzfield = tpfield
             tzfield%ndims = tzfield%ndims - 2
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(1)  = tzfield%ndimlist(3)
@@ -1635,7 +1632,6 @@ end subroutine IO_Ndimlist_reduce
               if ( gnc4 ) call IO_Field_write_nc4( tpfile, tzfield, zfieldp2d, iresp_nc4 )
             end if
           else
-            tzfield = tpfield
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(1:2) = NMNHDIM_ONE
             end if
@@ -1650,8 +1646,8 @@ end subroutine IO_Ndimlist_reduce
           endif
              !    ELSE IF (LPACK .AND. L2D .AND. YDIR=='XY') THEN
         ELSEIF (LPACK .AND. L2D .AND. SIZE(PFIELD,2)==IHEXTOT) THEN
+          Allocate( tzfield, source = tpfield )
           if ( tpfile%ldimreduced ) then
-            tzfield = tpfield
             tzfield%ndims = tzfield%ndims - 1
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(2)  = tzfield%ndimlist(3)
@@ -1671,7 +1667,6 @@ end subroutine IO_Ndimlist_reduce
               if ( gnc4 ) call IO_Field_write_nc4( tpfile, tzfield, zfieldp3d, iresp_nc4 )
             end if
           else
-            tzfield = tpfield
             if ( tzfield%ndimlist(2) /= NMNHDIM_UNKNOWN ) tzfield%ndimlist(2) = NMNHDIM_ONE
             zfieldp => pfield(:, jphext + 1 : jphext + 1, :, :)
             if ( Present( koffset ) ) then
@@ -1777,7 +1772,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),                 INTENT(IN) :: TPFILE
-    TYPE(TFIELDDATA),                INTENT(IN) :: TPFIELD
+    CLASS(TFIELDMETADATA),           INTENT(IN)  :: TPFIELD
     REAL,DIMENSION(:,:,:,:,:),TARGET,INTENT(IN) :: PFIELD   ! array containing the data field
     INTEGER,OPTIONAL,                INTENT(OUT):: KRESP    ! return-code 
     !
@@ -1797,7 +1792,7 @@ end subroutine IO_Ndimlist_reduce
     INTEGER                                  :: IHEXTOT
     CHARACTER(LEN=:),ALLOCATABLE             :: YMSG
     CHARACTER(LEN=6)                         :: YRESP
-    type(tfielddata)                         :: tzfield
+    class(tfieldmetadata), allocatable       :: tzfield
     !
     YFILEM   = TPFILE%CNAME
     YRECFM   = TPFIELD%CMNHNAME
@@ -1822,8 +1817,8 @@ end subroutine IO_Ndimlist_reduce
       IF (GSMONOPROC) THEN ! sequential execution
         !    IF (LPACK .AND. L1D .AND. YDIR=='XY') THEN
         IF (LPACK .AND. L1D .AND. SIZE(PFIELD,1)==IHEXTOT .AND. SIZE(PFIELD,2)==IHEXTOT) THEN
+          Allocate( tzfield, source = tpfield )
           if ( tpfile%ldimreduced ) then
-            tzfield = tpfield
             tzfield%ndims = tzfield%ndims - 2
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(1)  = tzfield%ndimlist(3)
@@ -1836,7 +1831,6 @@ end subroutine IO_Ndimlist_reduce
             if ( glfi ) call IO_Field_write_lfi( tpfile, tzfield, zfieldp3d, iresp_lfi )
             if ( gnc4 ) call IO_Field_write_nc4( tpfile, tzfield, zfieldp3d, iresp_nc4 )
           else
-            tzfield = tpfield
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(1:2) = NMNHDIM_ONE
             end if
@@ -1846,8 +1840,8 @@ end subroutine IO_Ndimlist_reduce
           endif
              !    ELSE IF (LPACK .AND. L2D .AND. YDIR=='XY') THEN
         ELSEIF (LPACK .AND. L2D .AND. SIZE(PFIELD,2)==IHEXTOT) THEN
+          Allocate( tzfield, source = tpfield )
           if ( tpfile%ldimreduced ) then
-            tzfield = tpfield
             tzfield%ndims = tzfield%ndims - 1
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(2)  = tzfield%ndimlist(3)
@@ -1860,7 +1854,6 @@ end subroutine IO_Ndimlist_reduce
             if ( glfi ) call IO_Field_write_lfi( tpfile, tzfield, zfieldp4d, iresp_lfi )
             if ( gnc4 ) call IO_Field_write_nc4( tpfile, tzfield, zfieldp4d, iresp_nc4 )
           else
-            tzfield = tpfield
             if ( tzfield%ndimlist(2) /= NMNHDIM_UNKNOWN ) tzfield%ndimlist(2) = NMNHDIM_ONE
             zfieldp => pfield(:, jphext + 1 : jphext + 1, :, :, :)
             if ( glfi ) call IO_Field_write_lfi( tpfile, tzfield, zfieldp, iresp_lfi )
@@ -1950,7 +1943,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),                   INTENT(IN) :: TPFILE
-    TYPE(TFIELDDATA),                  INTENT(IN) :: TPFIELD
+    CLASS(TFIELDMETADATA),             INTENT(IN)  :: TPFIELD
     REAL,DIMENSION(:,:,:,:,:,:),TARGET,INTENT(IN) :: PFIELD   ! array containing the data field
     INTEGER,OPTIONAL,                  INTENT(OUT):: KRESP    ! return-code 
     !
@@ -2061,7 +2054,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),             INTENT(IN) :: TPFILE
-    TYPE(TFIELDDATA),            INTENT(IN) :: TPFIELD
+    CLASS(TFIELDMETADATA),       INTENT(IN) :: TPFIELD
     INTEGER,                     INTENT(IN) :: KFIELD   ! array containing the data field
     INTEGER,OPTIONAL,            INTENT(OUT):: KRESP    ! return-code 
     !
@@ -2153,7 +2146,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),              INTENT(IN) :: TPFILE
-    TYPE(TFIELDDATA),             INTENT(IN) :: TPFIELD
+    CLASS(TFIELDMETADATA),        INTENT(IN)  :: TPFIELD
     INTEGER,DIMENSION(:),TARGET,  INTENT(IN) :: KFIELD   ! array containing the data field
     INTEGER,OPTIONAL,             INTENT(OUT):: KRESP    ! return-code 
     !
@@ -2265,7 +2258,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),              INTENT(IN) :: TPFILE
-    TYPE(TFIELDDATA),             INTENT(IN) :: TPFIELD
+    CLASS(TFIELDMETADATA),        INTENT(IN)  :: TPFIELD
     INTEGER,DIMENSION(:,:),TARGET,INTENT(IN) :: KFIELD   ! array containing the data field
     INTEGER,OPTIONAL,             INTENT(OUT):: KRESP    ! return-code 
     !
@@ -2288,7 +2281,7 @@ end subroutine IO_Ndimlist_reduce
     INTEGER                                  :: IHEXTOT
     CHARACTER(LEN=:),ALLOCATABLE             :: YMSG
     CHARACTER(LEN=6)                         :: YRESP
-    type(tfielddata)                         :: tzfield
+    class(tfieldmetadata), allocatable       :: tzfield
     !
     YFILEM   = TPFILE%CNAME
     YRECFM   = TPFIELD%CMNHNAME
@@ -2314,8 +2307,8 @@ end subroutine IO_Ndimlist_reduce
     IF (IRESP==0) THEN
       IF (GSMONOPROC) THEN ! sequential execution
         IF (LPACK .AND. L1D .AND. SIZE(KFIELD,1)==IHEXTOT .AND. SIZE(KFIELD,2)==IHEXTOT) THEN
+          Allocate( tzfield, source = tpfield )
           if ( tpfile%ldimreduced ) then
-            tzfield = tpfield
             tzfield%ndims = tzfield%ndims - 2
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(1)  = tzfield%ndimlist(3) !Necessary if time dimension
@@ -2325,7 +2318,6 @@ end subroutine IO_Ndimlist_reduce
             if ( glfi ) call IO_Field_write_lfi( tpfile, tzfield, ifieldp0d, iresp_lfi )
             if ( gnc4 ) call IO_Field_write_nc4( tpfile, tzfield, ifieldp0d, iresp_nc4 )
           else
-            tzfield = tpfield
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(1:2) = NMNHDIM_ONE
             end if
@@ -2335,8 +2327,8 @@ end subroutine IO_Ndimlist_reduce
           endif
              !    ELSE IF (LPACK .AND. L2D .AND. YDIR=='XY') THEN
         ELSEIF (LPACK .AND. L2D .AND. SIZE(KFIELD,2)==IHEXTOT) THEN
+          Allocate( tzfield, source = tpfield )
           if ( tpfile%ldimreduced ) then
-            tzfield = tpfield
             tzfield%ndims = tzfield%ndims - 1
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(2)  = tzfield%ndimlist(3) !Necessary if time dimension
@@ -2346,7 +2338,6 @@ end subroutine IO_Ndimlist_reduce
             if ( glfi ) call IO_Field_write_lfi( tpfile, tzfield, ifieldp1d, iresp_lfi )
             if ( gnc4 ) call IO_Field_write_nc4( tpfile, tzfield, ifieldp1d, iresp_nc4 )
           else
-            tzfield = tpfield
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(2)  = NMNHDIM_ONE
             end if
@@ -2446,7 +2437,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),                INTENT(IN) :: TPFILE
-    TYPE(TFIELDDATA),               INTENT(IN) :: TPFIELD
+    CLASS(TFIELDMETADATA),          INTENT(IN)  :: TPFIELD
     INTEGER,DIMENSION(:,:,:),TARGET,INTENT(IN) :: KFIELD   ! array containing the data field
     INTEGER,OPTIONAL,               INTENT(OUT):: KRESP    ! return-code 
     !
@@ -2468,7 +2459,7 @@ end subroutine IO_Ndimlist_reduce
     INTEGER                                  :: IHEXTOT
     CHARACTER(LEN=:),ALLOCATABLE             :: YMSG
     CHARACTER(LEN=6)                         :: YRESP
-    type(tfielddata)                         :: tzfield
+    class(tfieldmetadata), allocatable       :: tzfield
     !
     YFILEM   = TPFILE%CNAME
     YRECFM   = TPFIELD%CMNHNAME
@@ -2494,8 +2485,8 @@ end subroutine IO_Ndimlist_reduce
     IF (IRESP==0) THEN
       IF (GSMONOPROC) THEN ! sequential execution
         IF (LPACK .AND. L1D .AND. SIZE(KFIELD,1)==IHEXTOT .AND. SIZE(KFIELD,2)==IHEXTOT) THEN
+          Allocate( tzfield, source = tpfield )
           if ( tpfile%ldimreduced ) then
-            tzfield = tpfield
             tzfield%ndims = tzfield%ndims - 2
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(1)  = tzfield%ndimlist(3)
@@ -2506,7 +2497,6 @@ end subroutine IO_Ndimlist_reduce
             if ( glfi ) call IO_Field_write_lfi( tpfile, tzfield, ifieldp1d, iresp_lfi )
             if ( gnc4 ) call IO_Field_write_nc4( tpfile, tzfield, ifieldp1d, iresp_nc4 )
           else
-            tzfield = tpfield
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(1:2) = NMNHDIM_ONE
             end if
@@ -2516,8 +2506,8 @@ end subroutine IO_Ndimlist_reduce
           endif
              !    ELSE IF (LPACK .AND. L2D .AND. YDIR=='XY') THEN
         ELSEIF (LPACK .AND. L2D .AND. SIZE(KFIELD,2)==IHEXTOT) THEN
+          Allocate( tzfield, source = tpfield )
           if ( tpfile%ldimreduced ) then
-            tzfield = tpfield
             tzfield%ndims = tzfield%ndims - 1
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(2)  = tzfield%ndimlist(3)
@@ -2528,7 +2518,6 @@ end subroutine IO_Ndimlist_reduce
             if ( glfi ) call IO_Field_write_lfi( tpfile, tzfield, ifieldp2d, iresp_lfi )
             if ( gnc4 ) call IO_Field_write_nc4( tpfile, tzfield, ifieldp2d, iresp_nc4 )
           else
-            tzfield = tpfield
             if ( tzfield%ndimlist(2) /= NMNHDIM_UNKNOWN ) tzfield%ndimlist(2) = NMNHDIM_ONE
             ifieldp => kfield(:, jphext + 1 : jphext + 1, :)
             if ( glfi ) call IO_Field_write_lfi( tpfile, tzfield, ifieldp, iresp_lfi )
@@ -2624,7 +2613,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),                             INTENT(IN)  :: TPFILE
-    TYPE(TFIELDDATA),                            INTENT(IN)  :: TPFIELD
+    CLASS(TFIELDMETADATA),                       INTENT(IN)  :: TPFIELD
     INTEGER,DIMENSION(:,:,:,:),TARGET,           INTENT(IN)  :: KFIELD   ! array containing the data field
     INTEGER,                           OPTIONAL, INTENT(OUT) :: KRESP    ! return-code
     integer, dimension(4),             optional, intent(in)  :: koffset
@@ -2647,7 +2636,7 @@ end subroutine IO_Ndimlist_reduce
     INTEGER                                  :: IHEXTOT
     CHARACTER(LEN=:),ALLOCATABLE             :: YMSG
     CHARACTER(LEN=6)                         :: YRESP
-    type(tfielddata)                         :: tzfield
+    class(tfieldmetadata), allocatable       :: tzfield
     !
     YFILEM   = TPFILE%CNAME
     YRECFM   = TPFIELD%CMNHNAME
@@ -2677,8 +2666,8 @@ end subroutine IO_Ndimlist_reduce
       IF (GSMONOPROC) THEN ! sequential execution
         !    IF (LPACK .AND. L1D .AND. YDIR=='XY') THEN
         IF (LPACK .AND. L1D .AND. SIZE(KFIELD,1)==IHEXTOT .AND. SIZE(KFIELD,2)==IHEXTOT) THEN
+          Allocate( tzfield, source = tpfield )
           if ( tpfile%ldimreduced ) then
-            tzfield = tpfield
             tzfield%ndims = tzfield%ndims - 2
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(1)  = tzfield%ndimlist(3)
@@ -2697,7 +2686,6 @@ end subroutine IO_Ndimlist_reduce
               if ( gnc4 ) call IO_Field_write_nc4( tpfile, tzfield, ifieldp2d, iresp_nc4 )
             end if
           else
-            tzfield = tpfield
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(1:2) = NMNHDIM_ONE
             end if
@@ -2712,8 +2700,8 @@ end subroutine IO_Ndimlist_reduce
           endif
              !    ELSE IF (LPACK .AND. L2D .AND. YDIR=='XY') THEN
         ELSEIF (LPACK .AND. L2D .AND. SIZE(KFIELD,2)==IHEXTOT) THEN
+          Allocate( tzfield, source = tpfield )
           if ( tpfile%ldimreduced ) then
-            tzfield = tpfield
             tzfield%ndims = tzfield%ndims - 1
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(2)  = tzfield%ndimlist(3)
@@ -2733,7 +2721,6 @@ end subroutine IO_Ndimlist_reduce
               if ( gnc4 ) call IO_Field_write_nc4( tpfile, tzfield, ifieldp3d, iresp_nc4 )
             end if
           else
-            tzfield = tpfield
             if ( tzfield%ndimlist(2) /= NMNHDIM_UNKNOWN ) tzfield%ndimlist(2) = NMNHDIM_ONE
             ifieldp => kfield(:, jphext + 1 : jphext + 1, :, :)
             if ( Present( koffset ) ) then
@@ -2833,7 +2820,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),             INTENT(IN) :: TPFILE
-    TYPE(TFIELDDATA),            INTENT(IN) :: TPFIELD
+    CLASS(TFIELDMETADATA),       INTENT(IN)  :: TPFIELD
     LOGICAL,                     INTENT(IN) :: OFIELD   ! array containing the data field
     INTEGER,OPTIONAL,            INTENT(OUT):: KRESP    ! return-code 
     !
@@ -2925,7 +2912,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),              INTENT(IN) :: TPFILE
-    TYPE(TFIELDDATA),             INTENT(IN) :: TPFIELD
+    CLASS(TFIELDMETADATA),        INTENT(IN)  :: TPFIELD
     LOGICAL,DIMENSION(:),TARGET,  INTENT(IN) :: OFIELD   ! array containing the data field
     INTEGER,OPTIONAL,             INTENT(OUT):: KRESP    ! return-code 
     !
@@ -3032,7 +3019,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),             INTENT(IN) :: TPFILE
-    TYPE(TFIELDDATA),            INTENT(IN) :: TPFIELD
+    CLASS(TFIELDMETADATA),       INTENT(IN)  :: TPFIELD
     CHARACTER(LEN=*),            INTENT(IN) :: HFIELD   ! array containing the data field
     INTEGER,OPTIONAL,            INTENT(OUT):: KRESP    ! return-code 
     !
@@ -3112,7 +3099,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),              INTENT(IN) :: TPFILE
-    TYPE(TFIELDDATA),             INTENT(IN) :: TPFIELD
+    CLASS(TFIELDMETADATA),        INTENT(IN)  :: TPFIELD
     CHARACTER(LEN=*),DIMENSION(:),INTENT(IN) :: HFIELD   ! array containing the data field
     INTEGER,OPTIONAL,             INTENT(OUT):: KRESP    ! return-code 
     !
@@ -3216,7 +3203,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),             INTENT(IN) :: TPFILE
-    TYPE(TFIELDDATA),            INTENT(IN) :: TPFIELD
+    CLASS(TFIELDMETADATA),       INTENT(IN)  :: TPFIELD
     TYPE (DATE_TIME),            INTENT(IN) :: TFIELD   ! array containing the data field
     INTEGER,OPTIONAL,            INTENT(OUT):: KRESP    ! return-code 
     !
@@ -3293,7 +3280,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),               INTENT(IN) :: TPFILE
-    TYPE(TFIELDDATA),              INTENT(IN) :: TPFIELD
+    CLASS(TFIELDMETADATA),         INTENT(IN)  :: TPFIELD
     TYPE (DATE_TIME),DIMENSION(:), INTENT(IN) :: TFIELD   ! array containing the data field
     INTEGER,OPTIONAL,              INTENT(OUT):: KRESP    ! return-code
     !
@@ -3373,7 +3360,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),             INTENT(IN)    :: TPFILE
-    TYPE(TFIELDDATA),            INTENT(INOUT) :: TPFIELD
+    CLASS(TFIELDMETADATA),       INTENT(INOUT) :: TPFIELD
     INTEGER,                     INTENT(IN)    :: KL3D   ! size of the LB array in FM
     REAL,DIMENSION(:,:,:),TARGET,INTENT(IN)    :: PLB    ! array containing the LB field
     INTEGER,OPTIONAL,            INTENT(OUT)   :: KRESP  ! return-code 
@@ -3402,7 +3389,7 @@ end subroutine IO_Ndimlist_reduce
     TYPE(TX_3DP),ALLOCATABLE,DIMENSION(:)    :: T_TX3DP
     CHARACTER(LEN=:),ALLOCATABLE             :: YMSG
     CHARACTER(LEN=6)                         :: YRESP
-    type(tfielddata)                         :: tzfield
+    class(tfieldmetadata), allocatable       :: tzfield
     !
     YFILEM   = TPFILE%CNAME
     YRECFM   = TPFIELD%CMNHNAME
@@ -3437,8 +3424,8 @@ end subroutine IO_Ndimlist_reduce
     IF (IRESP==0) THEN
       IF (GSMONOPROC) THEN  ! sequential execution
         IF (LPACK .AND. L2D) THEN
+          Allocate( tzfield, source = tpfield )
           if ( tpfile%ldimreduced ) then
-            tzfield = tpfield
             tzfield%ndims = tzfield%ndims - 1
             if ( tzfield%ndimlist(1) /= NMNHDIM_UNKNOWN ) then
               tzfield%ndimlist(2)  = tzfield%ndimlist(3)
@@ -3449,7 +3436,6 @@ end subroutine IO_Ndimlist_reduce
             if ( glfi ) call IO_Field_write_lfi( tpfile, tzfield, ztx2dp, iresp_lfi )
             if ( gnc4 ) call IO_Field_write_nc4( tpfile, tzfield, ztx2dp, iresp_nc4 )
           else
-            tzfield = tpfield
             if ( tzfield%ndimlist(2) /= NMNHDIM_UNKNOWN ) tzfield%ndimlist(2) = NMNHDIM_ONE
             tx3dp => plb(:, jphext + 1 : jphext + 1, :)
             if ( glfi ) call IO_Field_write_lfi( tpfile, tzfield, tx3dp, iresp_lfi )
@@ -3533,7 +3519,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),                 INTENT(IN)  :: TPFILE
-    TYPE(TFIELDDATA),                INTENT(IN)  :: TPFIELD
+    CLASS(TFIELDMETADATA),           INTENT(IN)  :: TPFIELD
     CHARACTER(LEN=*),                INTENT(IN)  :: HBUDGET  ! 'BUDGET' (budget)  or 'OTHER' (MesoNH field)
     REAL,   DIMENSION(:,:), TARGET,  INTENT(IN)  :: PFIELD   ! array containing the data field
     INTEGER,                         INTENT(IN)  :: KXOBOX   !
@@ -3627,7 +3613,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),                 INTENT(IN)  :: TPFILE
-    TYPE(TFIELDDATA),                INTENT(IN)  :: TPFIELD
+    CLASS(TFIELDMETADATA),           INTENT(IN)  :: TPFIELD
     CHARACTER(LEN=*),                INTENT(IN)  :: HBUDGET  ! 'BUDGET' (budget)  or 'OTHER' (MesoNH field)
     REAL, DIMENSION(:,:,:), TARGET,  INTENT(IN)  :: PFIELD   ! array containing the data field
     INTEGER,                         INTENT(IN)  :: KXOBOX   !
@@ -3721,7 +3707,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),                    INTENT(IN)  :: TPFILE
-    TYPE(TFIELDDATA),                   INTENT(IN)  :: TPFIELD
+    CLASS(TFIELDMETADATA),              INTENT(IN)  :: TPFIELD
     CHARACTER(LEN=*),                   INTENT(IN)  :: HBUDGET  ! 'BUDGET' (budget)  or 'OTHER' (MesoNH field)
     REAL, DIMENSION(:,:,:,:), TARGET,   INTENT(IN)  :: PFIELD   ! array containing the data field
     INTEGER,                            INTENT(IN)  :: KXOBOX   !
@@ -3815,7 +3801,7 @@ end subroutine IO_Ndimlist_reduce
     !*      0.1   Declarations of arguments
     !
     TYPE(TFILEDATA),                 INTENT(IN) :: TPFILE
-    TYPE(TFIELDDATA),                INTENT(IN) :: TPFIELD
+    CLASS(TFIELDMETADATA),           INTENT(IN) :: TPFIELD
     CHARACTER(LEN=*),                INTENT(IN) :: HBUDGET  ! 'BUDGET' (budget)  or 'OTHER' (MesoNH field)
     REAL,DIMENSION(:,:,:,:,:),TARGET,INTENT(IN) :: PFIELD   ! array containing the data field
     INTEGER,                         INTENT(IN) :: KXOBOX   ! 
@@ -4325,7 +4311,7 @@ IMPLICIT NONE
 !
 TYPE(TOUTBAK),    INTENT(IN)  :: TPOUTPUT !Output structure
 !
-TYPE(TFIELDDATA) :: TZFIELD
+TYPE(TFIELDMETADATA) :: TZFIELD
 !
 #if 0
 INTEGER          :: IKB

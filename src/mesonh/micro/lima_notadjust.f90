@@ -83,7 +83,7 @@ use modd_budget,           only: lbu_enable, nbumod,                            
                                  tbudgets
 USE MODD_CONF
 USE MODD_CST
-USE MODD_FIELD,            ONLY: TFIELDDATA,TYPEREAL
+USE MODD_FIELD,            ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,               ONLY: TFILEDATA
 USE MODD_LUNIT_n,          ONLY: TLUOUT
 USE MODD_NSV
@@ -168,7 +168,7 @@ REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) ::&
                        ZSAT,ZCCS
 INTEGER           :: JK            ! For loop
 integer :: idx
-TYPE(TFIELDDATA)  :: TZFIELD
+TYPE(TFIELDMETADATA) :: TZFIELD
 REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: ZNFS     ! CCN C. available source
 REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: ZNAS     ! Cloud  C. nuclei C. source
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZZNFS     ! CCN C. available source
@@ -588,16 +588,17 @@ ENDWHERE
 !
 IF ( tpfile%lopened ) THEN
   ZW(:,:,:)=SUM(ZNAS,4)-ZW(:,:,:)
-  TZFIELD%CMNHNAME   = 'NACT'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'NACT'
-  TZFIELD%CUNITS     = ''
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_NACT'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(    &
+    CMNHNAME   = 'NACT',       &
+    CSTDNAME   = '',           &
+    CLONGNAME  = 'NACT',       &
+    CUNITS     = 'kg-1',       &
+    CDIR       = 'XY',         &
+    CCOMMENT   = 'X_Y_Z_NACT', &
+    NGRID      = 1,            &
+    NTYPE      = TYPEREAL,     &
+    NDIMS      = 3,            &
+    LTIMEDEP   = .TRUE.        )
   CALL IO_Field_write(TPFILE,TZFIELD,ZW)
 END IF
 !

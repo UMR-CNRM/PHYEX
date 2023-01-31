@@ -70,7 +70,7 @@ END MODULE MODI_LIMA_RAIN_ACCR_SNOW
 !              ------------
 !
 USE MODD_CST,              ONLY : XTT
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCEXVT
+USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, XCEXVT
 USE MODD_PARAM_LIMA_WARM,  ONLY : XBR
 USE MODD_PARAM_LIMA_COLD,  ONLY : XBS, XTRANS_MP_GAMMAS
 USE MODD_PARAM_LIMA_MIXED, ONLY : NACCLBDAS, XACCINTP1S, XACCINTP2S,             &
@@ -134,6 +134,12 @@ ZZW3(:) = 0.
 ZZW4(:) = 0.
 ZZW5(:) = 0.
 !
+ZZWC1(:) = 0.
+ZZWC2(:) = 0.
+ZZWC3(:) = 0.
+ZZWC4(:) = 0.
+ZZWC5(:) = 0.
+!
 IVEC1(:) = 0
 IVEC2(:) = 0
 ZVEC1(:) = 0.
@@ -145,7 +151,8 @@ ZVEC3(:) = 0.
 !
 !
 GACC(:) = .False.
-GACC(:) = (PRRT(:)>XRTMIN(3)) .AND. (PRST(:)>XRTMIN(5)) .AND. (PT(:)<XTT) .AND. LDCOMPUTE(:)
+GACC(:) = (PRRT(:)>XRTMIN(3)) .AND. (PRST(:)>XRTMIN(5)) .AND. (PT(:)<XTT) .AND. LDCOMPUTE(:) .AND. &
+          (PCRT(:)>XCTMIN(3)) .AND. (PCST(:)>XCTMIN(5))
 !
 WHERE( GACC )
 !
@@ -288,7 +295,7 @@ WHERE( GACC )
               XLBSACCR2/( PLBDR(:)    * PLBDS(:)    ) + &
               XLBSACCR3/(               PLBDS(:)**2 ) )
 !
-   ZZWC5(:)= XFNSACCRG * ZZW3(:) * PCRT(:) *             & ! RSACCRG
+   ZZWC5(:)= XFNSACCRG * ZZWC3(:) * PCRT(:) *            & ! RSACCRG
              PCST(:) * PRHODREF(:)**(1-XCEXVT) * &
             ( XLBNSACCR1/( PLBDR(:)**2               ) + &
               XLBNSACCR2/( PLBDR(:)    * PLBDS(:)    ) + &
@@ -302,7 +309,6 @@ WHERE( GACC )
    P_TH_ACC(:) = - P_RR_ACC(:) * (PLSFACT(:)-PLVFACT(:))
 !
 END WHERE
-!
 !
 !-------------------------------------------------------------------------------
 !

@@ -2,6 +2,7 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
 MODULE MODE_TURB_VER
 IMPLICIT NONE
 CONTAINS
@@ -9,7 +10,7 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,TLES,KRR,KRRL,KRRI,KGRADIENTS,&
                       OOCEAN,ODEEPOC,OCOMPUTE_SRC,                  &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
                       PEXPL, HPROGRAM, O2D, ONOMIXLG, OFLAT,        &
-                      OCOUPLES,OBLOWSNOW,PRSNOW,                    & 
+                      OCOUPLES,OBLOWSNOW,OFLYER,PRSNOW,             & 
                       PTSTEP, TPFILE,                               &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PCOSSLOPE,PSINSLOPE,                          &
@@ -209,29 +210,29 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,TLES,KRR,KRRL,KRRI,KGRADIENTS,&
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE PARKIND1, ONLY: JPRB
+USE YOMHOOK,  ONLY: LHOOK, DR_HOOK
 !
-USE MODD_CST, ONLY: CST_t
-USE MODD_CTURB, ONLY: CSTURB_t
-USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
+USE MODD_CST,            ONLY: CST_t
+USE MODD_CTURB,          ONLY: CSTURB_t
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
+USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
-USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
-USE MODD_LES, ONLY: TLES_t
-USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_PARAMETERS,     ONLY: JPVEXT_TURB
+USE MODD_LES,            ONLY: TLES_t
+USE MODD_TURB_n,         ONLY: TURB_t
 !
-USE MODE_EMOIST, ONLY: EMOIST
-USE MODE_ETHETA, ONLY: ETHETA
-USE MODE_GRADIENT_M_PHY, ONLY : GZ_M_W_PHY
-USE MODE_IO_FIELD_WRITE, ONLY: IO_FIELD_WRITE_PHY
-USE MODE_PRANDTL, ONLY: PSI_SV, PSI3, PHI3, PRANDTL
-USE MODE_SBL_DEPTH, ONLY: SBL_DEPTH
+USE MODE_EMOIST,               ONLY: EMOIST
+USE MODE_ETHETA,               ONLY: ETHETA
+USE MODE_GRADIENT_M_PHY,       ONLY: GZ_M_W_PHY
+USE MODE_IO_FIELD_WRITE,       ONLY: IO_FIELD_WRITE_PHY
+USE MODE_PRANDTL,              ONLY: PSI_SV, PSI3, PHI3, PRANDTL
+USE MODE_SBL_DEPTH,            ONLY: SBL_DEPTH
+USE MODE_TURB_VER_DYN_FLUX,    ONLY: TURB_VER_DYN_FLUX
+USE MODE_TURB_VER_SV_FLUX,     ONLY: TURB_VER_SV_FLUX
+USE MODE_TURB_VER_SV_CORR,     ONLY: TURB_VER_SV_CORR
 USE MODE_TURB_VER_THERMO_FLUX, ONLY: TURB_VER_THERMO_FLUX
 USE MODE_TURB_VER_THERMO_CORR, ONLY: TURB_VER_THERMO_CORR
-USE MODE_TURB_VER_DYN_FLUX, ONLY: TURB_VER_DYN_FLUX
-USE MODE_TURB_VER_SV_FLUX, ONLY: TURB_VER_SV_FLUX
-USE MODE_TURB_VER_SV_CORR, ONLY: TURB_VER_SV_CORR
 !
 USE MODI_LES_MEAN_SUBGRID_PHY
 USE MODI_SECOND_MNH
@@ -252,6 +253,7 @@ INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
 INTEGER,                INTENT(IN)   :: KSV, KSV_LGBEG, KSV_LGEND ! number of scalar variables
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
+LOGICAL,                INTENT(IN)   ::  OFLYER       ! MesoNH flyer diagnostic
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororography
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
@@ -386,8 +388,8 @@ INTEGER :: IKB,IKE,IIJE,IIJB,IKT   ! index value for the Beginning
 INTEGER :: JSV,JIJ,JK ! loop counter
 REAL    :: ZTIME1
 REAL    :: ZTIME2
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
-TYPE(TFIELDDATA) :: TZFIELD
+REAL(KIND=JPRB)      :: ZHOOK_HANDLE
+TYPE(TFIELDMETADATA) :: TZFIELD
 !----------------------------------------------------------------------------
 !----------------------------------------------------------------------------
 !
@@ -502,7 +504,7 @@ ENDIF
 !
   CALL  TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,TLES,                 &
                         KRR,KRRL,KRRI,KSV,KGRADIENTS,                 &
-                        OOCEAN,ODEEPOC,                               &
+                        OOCEAN,ODEEPOC,OFLYER,                        &
                         OCOUPLES,OCOMPUTE_SRC,                        &
                         PEXPL,PTSTEP,HPROGRAM,TPFILE,                 &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
@@ -575,7 +577,7 @@ IF (TURBN%LHARAT) ZLM(:,:)=PLENGTHH(:,:)
 IF (KSV>0)                                                          &
 CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,TLES,ONOMIXLG,            &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
-                      OBLOWSNOW,                                    &
+                      OBLOWSNOW,OFLYER,                             &
                       PEXPL,PTSTEP,TPFILE,PRSNOW,                   &
                       PDZZ,PDIRCOSZW,                               &
                       PRHODJ,PWM,                                   &
@@ -613,42 +615,46 @@ IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. TURBN%LHARAT) THEN
 !
 ! stores the Turbulent Prandtl number
 ! 
-  TZFIELD%CMNHNAME   = 'PHI3'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'PHI3'
-  TZFIELD%CUNITS     = '1'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'Turbulent Prandtl number'
-  TZFIELD%NGRID      = 4
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(                  &
+    CMNHNAME   = 'PHI3',                     &
+    CSTDNAME   = '',                         &
+    CLONGNAME  = 'PHI3',                     &
+    CUNITS     = '1',                        &
+    CDIR       = 'XY',                       &
+    CCOMMENT   = 'Turbulent Prandtl number', &
+    NGRID      = 4,                          &
+    NTYPE      = TYPEREAL,                   &
+    NDIMS      = 3,                          &
+    LTIMEDEP   = .TRUE.                      )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZPHI3)
 !
 ! stores the Turbulent Schmidt number
 ! 
-  TZFIELD%CMNHNAME   = 'PSI3'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'PSI3'
-  TZFIELD%CUNITS     = '1'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'Turbulent Schmidt number'
-  TZFIELD%NGRID      = 4
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(                  &
+    CMNHNAME   = 'PSI3',                     &
+    CSTDNAME   = '',                         &
+    CLONGNAME  = 'PSI3',                     &
+    CUNITS     = '1',                        &
+    CDIR       = 'XY',                       &
+    CCOMMENT   = 'Turbulent Schmidt number', &
+    NGRID      = 4,                          &
+    NTYPE      = TYPEREAL,                   &
+    NDIMS      = 3,                          &
+    LTIMEDEP   = .TRUE.                      )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZPSI3)
 !
 !
 ! stores the Turbulent Schmidt number for the scalar variables
 ! 
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CUNITS     = '1'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%NGRID      = 4
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(                    &
+    CMNHNAME   = 'generic for SV in turb_ver', & !Temporary name to ease identification
+    CSTDNAME   = '',                           &
+    CUNITS     = '1',                          &
+    CDIR       = 'XY',                         &
+    NGRID      = 4,                            &
+    NTYPE      = TYPEREAL,                     &
+    NDIMS      = 3,                            &
+    LTIMEDEP   = .TRUE.                        )
   DO JSV=1,KSV
     WRITE(TZFIELD%CMNHNAME, '("PSI_SV_",I3.3)') JSV
     TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)

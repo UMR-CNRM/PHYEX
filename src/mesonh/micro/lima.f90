@@ -419,6 +419,8 @@ ZHOMFT(:,:,:)   = 0.
 ZHOMFS(:,:,:)   = 0.
 
 if ( lbu_enable ) then
+  Z_RR_CVRC(:,:,:) = 0.
+  Z_CR_CVRC(:,:,:) = 0.
   allocate( ZTOT_CR_BRKU (size( ptht, 1), size( ptht, 2), size( ptht, 3) ) ); ZTOT_CR_BRKU(:,:,:) = 0.
   allocate( ZTOT_TH_HONR (size( ptht, 1), size( ptht, 2), size( ptht, 3) ) ); ZTOT_TH_HONR(:,:,:) = 0.
   allocate( ZTOT_RR_HONR (size( ptht, 1), size( ptht, 2), size( ptht, 3) ) ); ZTOT_RR_HONR(:,:,:) = 0.
@@ -679,6 +681,13 @@ ZT(:,:,:)   = ZTHT(:,:,:) * ZEXN(:,:,:)
 !               -------------
 !
 !
+PINPRC=0.
+PINDEP=0.
+PINPRR=0.
+PINPRI=0.
+PINPRS=0.
+PINPRG=0.
+PINPRH=0.
 if ( lbu_enable ) then
   if ( lbudget_th )                         call Budget_store_init( tbudgets(NBUDGET_TH), 'SEDI', zths(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_rc .and. lwarm .and. lsedc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'SEDI', zrcs(:, :, :) * prhodj(:, :, :) )
@@ -767,8 +776,6 @@ IF (LWARM .AND. LDEPOC) THEN
 END IF
 !
 !
-!!$Z_RR_CVRC(:,:,:) = 0.
-!!$Z_CR_CVRC(:,:,:) = 0.
 !!$IF (LWARM .AND. LRAIN) THEN
 !!$   if( lbu_enable ) then
 !!$    if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC),                    'R2C1', zrcs(:, :, :) * prhodj(:, :, :) )

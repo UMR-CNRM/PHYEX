@@ -63,7 +63,7 @@ USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODD_CST
 USE MODD_CTURB
-USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
+use modd_field,          only: tfieldmetadata, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_LES, ONLY: TLES_t
@@ -139,8 +139,9 @@ REAL, DIMENSION(SIZE(PDZZ,1),SIZE(PDZZ,2),1+JPVEXT:3+JPVEXT) :: ZCOEFF
                                     ! coefficients for the uncentred gradient 
                                     ! computation near the ground
 !
+CHARACTER(LEN=NMNHNAMELGTMAX) :: YMNHNAME
 INTEGER :: IKU
-TYPE(TFIELDDATA) :: TZFIELD
+TYPE(TFIELDMETADATA) :: TZFIELD
 REAL :: ZTIME1, ZTIME2
 ! ---------------------------------------------------------------------------
 !
@@ -202,17 +203,19 @@ DO JSV=1,ISV
   !
   ! stores  <U SVth>
   IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
-    WRITE(TZFIELD%CMNHNAME,'("USV_FLX_",I3.3)') JSV
-    TZFIELD%CSTDNAME   = ''
-    TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)
-    TZFIELD%CUNITS     = 'SVUNIT m s-1'
-    TZFIELD%CDIR       = 'XY'
-    TZFIELD%CCOMMENT   = 'X_Y_Z_'//TRIM(TZFIELD%CMNHNAME)
-    TZFIELD%NGRID      = 2
-    TZFIELD%NTYPE      = TYPEREAL
-    TZFIELD%NDIMS      = 3
-    TZFIELD%LTIMEDEP   = .TRUE.
-    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLXX)
+    WRITE(YMNHNAME,'("USV_FLX_",I3.3)') JSV
+    TZFIELD = TFIELDMETADATA(                    &
+      CMNHNAME   = TRIM( YMNHNAME ),             &
+      CSTDNAME   = '',                           &
+      CLONGNAME  = TRIM( YMNHNAME ),             &
+      CUNITS     = 'SVUNIT m s-1',               &
+      CDIR       = 'XY',                         &
+      CCOMMENT   = 'X_Y_Z_' // TRIM( YMNHNAME ), &
+      NGRID      = 2,                            &
+      NTYPE      = TYPEREAL,                     &
+      NDIMS      = 3,                            &
+      LTIMEDEP   = .TRUE.                        )
+    CALL IO_Field_write(TPFILE,TZFIELD,ZFLXX)
   END IF
 !
   IF (TLES%LLES_CALL .AND. KSPLT==1) THEN
@@ -253,17 +256,19 @@ DO JSV=1,ISV
   !
   ! stores  <V SVth>
     IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
-      WRITE(TZFIELD%CMNHNAME,'("VSV_FLX_",I3.3)') JSV
-      TZFIELD%CSTDNAME   = ''
-      TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)
-      TZFIELD%CUNITS     = 'SVUNIT m s-1'
-      TZFIELD%CDIR       = 'XY'
-      TZFIELD%CCOMMENT   = 'X_Y_Z_'//TRIM(TZFIELD%CMNHNAME)
-      TZFIELD%NGRID      = 3
-      TZFIELD%NTYPE      = TYPEREAL
-      TZFIELD%NDIMS      = 3
-      TZFIELD%LTIMEDEP   = .TRUE.
-      CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLXY)
+      WRITE(YMNHNAME,'("VSV_FLX_",I3.3)') JSV
+    TZFIELD = TFIELDMETADATA(                        &
+      CMNHNAME   = TRIM( YMNHNAME ),                 &
+      CSTDNAME   = '',                               &
+      CLONGNAME  = TRIM(TZFIELD%CMNHNAME),           &
+      CUNITS     = 'SVUNIT m s-1',                   &
+      CDIR       = 'XY',                             &
+      CCOMMENT   = 'X_Y_Z_'//TRIM(TZFIELD%CMNHNAME), &
+      NGRID      = 3,                                &
+      NTYPE      = TYPEREAL,                         &
+      NDIMS      = 3,                                &
+      LTIMEDEP   = .TRUE.                            )
+      CALL IO_Field_write(TPFILE,TZFIELD,ZFLXY)
     END IF
 !
   ELSE

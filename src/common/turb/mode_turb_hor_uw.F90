@@ -66,7 +66,7 @@ USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODD_CST
 USE MODD_CTURB
-USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
+USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_LES, ONLY: TLES_t
@@ -137,7 +137,7 @@ INTEGER             :: JSV          ! scalar loop counter
 REAL, DIMENSION(SIZE(PWM,1),SIZE(PWM,2),SIZE(PWM,3))  :: GX_W_UW_PWM
 !
 REAL :: ZTIME1, ZTIME2
-TYPE(TFIELDDATA) :: TZFIELD
+TYPE(TFIELDMETADATA) :: TZFIELD
 ! ---------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARY COMPUTATIONS
@@ -170,16 +170,17 @@ ZFLX(:,:,IKB-1)=2.*ZFLX(:,:,IKB)- ZFLX(:,:,IKB+1)
 !
 ! stores  <U W>
 IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
-  TZFIELD%CMNHNAME   = 'UW_HFLX'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'UW_HFLX'
-  TZFIELD%CUNITS     = 'm2 s-2'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_UW_HFLX'
-  TZFIELD%NGRID      = 6
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(     &
+  CMNHNAME   = 'UW_HFLX',       &
+  CSTDNAME   = '',              &
+  CLONGNAME  = 'UW_HFLX',       &
+  CUNITS     = 'm2 s-2',        &
+  CDIR       = 'XY',            &
+  CCOMMENT   = 'X_Y_Z_UW_HFLX', &
+  NGRID      = 6,               &
+  NTYPE      = TYPEREAL,        &
+  NDIMS      = 3,               &
+  LTIMEDEP   = .TRUE.           )
   CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
 END IF
 !

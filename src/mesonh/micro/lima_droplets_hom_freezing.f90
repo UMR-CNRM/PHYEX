@@ -98,7 +98,7 @@ P_TH_HONC(:) = 0.
 P_RC_HONC(:) = 0.
 P_CC_HONC(:) = 0.
 !
-WHERE ( (PT(:)<XTT-35.0) .AND. (PCCT(:)>XCTMIN(2)) .AND. (PRCT(:)>XRTMIN(2)) )
+WHERE ( PT(:)<XTT-35.0 .AND. PCCT(:)>XCTMIN(2) .AND. PRCT(:)>XRTMIN(2) )
    ZTCELSIUS(:) = PT(:)-XTT                                    ! T [°C]
    !
    ZZW(:) = 0.0

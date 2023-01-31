@@ -57,7 +57,8 @@ USE MODD_PARAM_LIMA
 USE MODD_PARAM_LIMA_WARM
 USE MODD_PARAM_LIMA_COLD
 USE MODD_PARAM_LIMA_MIXED
-use MODD_RAIN_ICE_PARAM,  only: XALPHA1, XALPHA2, XBETA1, XBETA2, IMNU0=>XMNU0, XNU10, XNU20
+USE MODD_RAIN_ICE_PARAM,  ONLY: XALPHA1, XALPHA2, XBETA1, XBETA2, IMNU0=>XMNU0, XNU10, XNU20, &
+                                RAIN_ICE_PARAM_ASSOCIATE
 USE MODD_REF
 !
 use mode_msg
@@ -155,6 +156,7 @@ ILUOUT0 = TLUOUT0%NLU
 !*       1.     CHARACTERISTICS OF THE SPECIES
 !   	        ------------------------------
 !
+CALL RAIN_ICE_PARAM_ASSOCIATE()
 !
 !*       1.2    Ice crystal characteristics
 !
@@ -341,8 +343,8 @@ IF (GFLAG) THEN
   WRITE(UNIT=ILUOUT0,FMT='(" XLBEXH =",E13.6," XLBH =",E13.6)') XLBEXH,XLBH
 END IF
 !
-XLBDAS_MAX = 500000. ! used only before transforming lambda for non MP PSD
-XLBDAS_MIN = 1000. *1.E-10
+XLBDAS_MAX = 1.E7 ! (eq to r~1E-7kg/kg) (for non MP PSD, use conversion XTRANS_MP_GAMMAS)
+XLBDAS_MIN = 1.   ! (eq to r~0.18kg/kg) (for non MP PSD, use conversion XTRANS_MP_GAMMAS)
 XLBDAG_MAX = 100000.0
 !
 ZCONC_MAX  = 1.E6 ! Maximal concentration for falling particules set to 1 per cc
