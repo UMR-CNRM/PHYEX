@@ -15,12 +15,11 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
                                GMICRO, PRHODJ, PTHS, PRVS,         &
                                ZRCT, ZRRT, ZRIT, ZRRS,             &
                                ZRGS, ZRST, ZRGT, ZCIT,             &
-                               ZRHODREF, ZRHODJ, ZZW2, ZLBDAS,     &
+                               ZRHODREF, ZRHODJ, ZLBDAS,           &
                                ZZT, ZLSFACT, ZLVFACT, ZPRES, ZSSI, &
                                ZRVS, ZRCS, ZRIS, ZRSS, ZTHS,       &
                                ZLBDAG, ZKA, ZDV,                   &
                                ZAI, ZCJ, ZAA2, ZBB3,               &
-                               ZRDEPSRED, ZRDEPGRED,               &
                                ZDICRIT, ZREDGR, ZKVO,              &
                                YDDDH, YDLDDH, YDMDDH)
 
@@ -73,7 +72,6 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRHODREF ! RHO Dry REFerence
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRHODJ   ! RHO times Jacobian
-    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: ZZW2     ! Work array
     REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZLBDAS   ! Slope parameter of the aggregate distribution
 
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZZT      ! Temperature
@@ -97,7 +95,6 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZAA2 ! Part of ZAI used for optimized code
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZBB3 ! Part of ZAI used for optimized code
 
-    REAL, INTENT(IN) :: ZRDEPSRED, ZRDEPGRED ! Tuning of sublimation (neg. sublimation)
     REAL, INTENT(IN) :: ZDICRIT, ZREDGR ! Possible reduction of the rate of graupel,snow growth
     REAL, INTENT(IN) :: ZKVO ! factor used for caluclate maximum mass in the ice distubution.
 
@@ -111,6 +108,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
                                    ! size of an snow/graupel particle (ZDICRIT)
     REAL, DIMENSION(KSIZE) :: ZCRIAUTI ! Snow-to-ice autoconversion thres.
     REAL, DIMENSION(KSIZE) :: ZZW      ! Work array
+    REAL, DIMENSION(KSIZE) :: ZZW2     ! Work array
 
     INTEGER :: JL
     REAL    :: ZINVTSTEP
@@ -186,28 +184,34 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
     ZZW(:) = 0.0
 
     IF(OCND2)THEN
-      WHERE ( (ZRST(:)>ICED%XRTMIN(5)) .AND. (ZRSS(:)>0.0) )
-        ZZW(:) = ( ZSSI(:)/(ZRHODREF(:)*ZAI(:)) ) *  &
-               ( ICEP%X0DEPS*ZLBDAS(:)**ICEP%XEX0DEPS + ICEP%X1DEPS*ZCJ(:)*ZLBDAS(:)**ICEP%XEX1DEPS )
-        ZZW(:) = MIN( ZRVS(:),MAX(-ZRSS(:),ZZW(:)))  ! Simpler
-        ZZW(:) = ZZW(:)*ZREDSN ! Possible tuning by using ZREDSN /=  1
-        ZRSS(:) = ZRSS(:) + ZZW(:)
-        ZRVS(:) = ZRVS(:) - ZZW(:)
-        ZTHS(:) = ZTHS(:) + ZZW(:)*ZLSFACT(:)
-      END WHERE
+      DO JL = 1, KSIZE
+        IF ((ZRST(JL)>ICED%XRTMIN(5)) .AND. (ZRSS(JL)>0.0)) THEN
+          ZZW(JL) = (ZSSI(JL)/(ZRHODREF(JL)*ZAI(JL))) *  &
+                    (ICEP%X0DEPS*ZLBDAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*ZCJ(JL)*ZLBDAS(JL)**ICEP%XEX1DEPS)
+          ZZW(JL) = MIN( ZRVS(JL),MAX(-ZRSS(JL),ZZW(JL)))  ! Simpler
+          ZZW(JL) = ZZW(JL)*ZREDSN ! Possible tuning by using ZREDSN /=  1
+          ZRSS(JL) = ZRSS(JL) + ZZW(JL)
+          ZRVS(JL) = ZRVS(JL) - ZZW(JL)
+          ZTHS(JL) = ZTHS(JL) + ZZW(JL)*ZLSFACT(JL)
+        END IF
+      END DO
     ELSE
-      WHERE ( (ZRST(:)>ICED%XRTMIN(5)) .AND. (ZRSS(:)>0.0) )
-        ZZW(:) = ( ZSSI(:)/(ZRHODREF(:)*ZAI(:)) ) *          &
-             ( ICEP%X0DEPS*ZLBDAS(:)**ICEP%XEX0DEPS + ICEP%X1DEPS*ZCJ(:)*ZLBDAS(:)**ICEP%XEX1DEPS )
-        ZZW(:) =         MIN( ZRVS(:),ZZW(:)      )*(0.5+SIGN(0.5,ZZW(:))) &
-             - MIN( ZRSS(:),ABS(ZZW(:)) )*(0.5-SIGN(0.5,ZZW(:)))
-        WHERE (ZZW(:) < 0.0 )
-          ZZW(:) = ZZW(:) * ZRDEPSRED
-        END WHERE
-        ZRSS(:) = ZRSS(:) + ZZW(:)
-        ZRVS(:) = ZRVS(:) - ZZW(:)
-        ZTHS(:) = ZTHS(:) + ZZW(:)*ZLSFACT(:)
-      END WHERE
+      DO JL = 1, KSIZE
+        IF ((ZRST(JL)>ICED%XRTMIN(5)) .AND. (ZRSS(JL)>0.0)) THEN
+          ZZW(JL) = ( ZSSI(JL)/(ZRHODREF(JL)*ZAI(JL)) ) *          &
+               ( ICEP%X0DEPS*ZLBDAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*ZCJ(JL)*ZLBDAS(JL)**ICEP%XEX1DEPS )
+          ZZW(JL) = MIN(ZRVS(JL),ZZW(JL)     )*(0.5+SIGN(0.5,ZZW(JL))) &
+                  - MIN(ZRSS(JL),ABS(ZZW(JL)))*(0.5-SIGN(0.5,ZZW(JL)))
+
+          IF (ZZW(JL) < 0.0) THEN
+            ZZW(JL) = ZZW(JL) * ICEP%XRDEPSRED
+          END IF
+
+          ZRSS(JL) = ZRSS(JL) + ZZW(JL)
+          ZRVS(JL) = ZRVS(JL) - ZZW(JL)
+          ZTHS(JL) = ZTHS(JL) + ZZW(JL)*ZLSFACT(JL)
+        END IF
+      END DO
     ENDIF
 
     IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),  &
@@ -220,14 +224,16 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 !*       3.4.4  compute the aggregation on r_s: RIAGGS
 
     ZZW(:) = 0.0
-    WHERE ( (ZRIT(:)>ICED%XRTMIN(4)) .AND. (ZRST(:)>ICED%XRTMIN(5)) .AND. (ZRIS(:)>0.0) )
-      ZZW(:) = MIN( ZRIS(:),ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(ZZT(:)-CST%XTT) ) &
-                                    * ZRIT(:)                      &
-                                    * ZLBDAS(:)**ICEP%XEXIAGGS     &
-                                    * ZRHODREF(:)**(-ICED%XCEXVT)       )
-      ZRSS(:)  = ZRSS(:)  + ZZW(:)
-      ZRIS(:)  = ZRIS(:)  - ZZW(:)
-    END WHERE
+    DO JL = 1, KSIZE
+      IF ((ZRIT(JL)>ICED%XRTMIN(4)) .AND. (ZRST(JL)>ICED%XRTMIN(5)) .AND. (ZRIS(JL)>0.0)) THEN
+        ZZW(JL) = MIN(ZRIS(JL),ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(ZZT(JL)-CST%XTT)) &
+                                            * ZRIT(JL)                              &
+                                            * ZLBDAS(JL)**ICEP%XEXIAGGS             &
+                                            * ZRHODREF(JL)**(-ICED%XCEXVT))
+        ZRSS(JL)  = ZRSS(JL)  + ZZW(JL)
+        ZRIS(JL)  = ZRIS(JL)  - ZZW(JL)
+      END IF
+    END DO
 
     IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      9,'AGGS_BU_RRI',YDDDH, YDLDDH, YDMDDH)
@@ -238,24 +244,28 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 
     ZCRIAUTI(:)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(ZZT(:)-CST%XTT)+ICEP%XBCRIAUTI))
     ZZW(:) = 0.0
-    WHERE ( (ZRIT(:)>ICED%XRTMIN(4)) .AND. (ZRIS(:)>0.0) )
-      ZZW(:) = MIN( ZRIS(:),ICEP%XTIMAUTI * EXP( ICEP%XTEXAUTI*(ZZT(:)-CST%XTT) ) &
-                              * MAX( ZRIT(:)-ZCRIAUTI(:),0.0 ) )
-      ZRSS(:)  = ZRSS(:)  + ZZW(:)
-      ZRIS(:)  = ZRIS(:)  - ZZW(:)
-    END WHERE
+    DO JL = 1, KSIZE
+      IF ((ZRIT(JL)>ICED%XRTMIN(4)) .AND. (ZRIS(JL)>0.0)) THEN
+        ZZW(JL) = MIN(ZRIS(JL),ICEP%XTIMAUTI * EXP(ICEP%XTEXAUTI*(ZZT(JL)-CST%XTT)) &
+                                             * MAX(ZRIT(JL)-ZCRIAUTI(JL),0.0 ))
+        ZRSS(JL) = ZRSS(JL) + ZZW(JL)
+        ZRIS(JL) = ZRIS(JL) - ZZW(JL)
+      END IF
+    END DO
 
     IF (OCND2 .AND. .NOT. LMODICEDEP) THEN ! 3.4.5 B:
 
       ! Turn ice crystals lagrer than a precribed size into snow:
       ! (For the moment sperical ice crystals are assumed)
 
-      WHERE (  (ZRIS(:)>0.0_JPRB) .AND.(ZSSI(:)>0.001_JPRB) )
-        ZBFT(:) =   0.5_JPRB*87.5_JPRB*(ZDICRIT)**2*ZAI(:)/ ZSSI(:)
-        ZBFT(:) =   PTSTEP/ MAX(PTSTEP,ZBFT(:)*2._JPRB)
-        ZRSS(:) =   ZRSS(:)  + ZBFT(:)*ZRIS(:)
-        ZRIS(:) =   ZRIS(:)  - ZBFT(:)*ZRIS(:)
-      END WHERE
+      DO JL = 1, KSIZE
+        IF ((ZRIS(JL)>0.0_JPRB) .AND. (ZSSI(JL)>0.001_JPRB)) THEN
+          ZBFT(JL) = 0.5_JPRB*87.5_JPRB*(ZDICRIT)**2*ZAI(JL)/ ZSSI(JL)
+          ZBFT(JL) = PTSTEP/ MAX(PTSTEP,ZBFT(JL)*2._JPRB)
+          ZRSS(JL) = ZRSS(JL) + ZBFT(JL)*ZRIS(JL)
+          ZRIS(JL) = ZRIS(JL) - ZBFT(JL)*ZRIS(JL)
+        END IF
+      END DO
     ENDIF
 
     IF (OCND2 .AND. LMODICEDEP) THEN ! 3.4.5 B:
@@ -270,14 +280,16 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
         MAX(ZCIT(JL),ICENUMBER2(ZRIS(JL)*PTSTEP,ZZT(JL))*ZRHODREF(JL))
       ENDDO
 
-      WHERE (  ZRIS(:)>ICEP%XFRMIN(13) .AND.ZCIT(:) > 0. )
-        ! LAMBDA for ICE
-        ZZW2(:) = MIN(1.E8,ICED%XLBI*( ZRHODREF(:)*ZRIS(:)* PTSTEP/ZZW2(:) )**ICED%XLBEXI)
-        ZBFT(:) = 1. - 0.5**( ZKVO /ZZW2(:))
-        ZBFT(:) = MIN(0.9*ZRIS(:)*PTSTEP, ZBFT(:)*ZRIS(:)*PTSTEP)
-        ZRSS(:) =   ZRSS(:)  + ZBFT(:)
-        ZRIS(:) =   ZRIS(:)  - ZBFT(:)
-      END WHERE
+      DO JL = 1, KSIZE
+        IF (ZRIS(JL)>ICEP%XFRMIN(13) .AND.ZCIT(JL) > 0.) THEN
+          ! LAMBDA for ICE
+          ZZW2(JL) = MIN(1.E8,ICED%XLBI*(ZRHODREF(JL)*ZRIS(JL)* PTSTEP/ZZW2(JL))**ICED%XLBEXI)
+          ZBFT(JL) = 1. - 0.5**(ZKVO /ZZW2(JL))
+          ZBFT(JL) = MIN(0.9*ZRIS(JL)*PTSTEP, ZBFT(JL)*ZRIS(JL)*PTSTEP)
+          ZRSS(JL) = ZRSS(JL) + ZBFT(JL)
+          ZRIS(JL) = ZRIS(JL) - ZBFT(JL)
+        END IF
+      END DO
     ENDIF
 
     IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
@@ -288,32 +300,45 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 !*       3.4.6  compute the deposition on r_g: RVDEPG
 
     ZZW2(:) = 0.0
-    IF (ICEP%XFRMIN(5)> 1.0E-12 .AND. ICEP%XFRMIN(6) > 0.01) &
-          &        ZZW2(:) = MAX(0., MIN(1., (ICEP%XFRMIN(5) - ZRGS(:))/ICEP%XFRMIN(5)))* &
-          & MAX(0.,MIN(1.,ZSSI(:)/ICEP%XFRMIN(6)))
+    IF (ICEP%XFRMIN(5)> 1.0E-12 .AND. ICEP%XFRMIN(6) > 0.01) THEN
+      ZZW2(:) = MAX(0., MIN(1., (ICEP%XFRMIN(5) - ZRGS(:))/ICEP%XFRMIN(5)))* &
+              & MAX(0., MIN(1., ZSSI(:)/ICEP%XFRMIN(6)))
+    ENDIF
 
 
-    WHERE ( ZRGT(:)>0.0 )
-      ZLBDAG(:)  = ICED%XLBG*( ZRHODREF(:)*MAX( ZRGT(:),ICED%XRTMIN(6) ) )**ICED%XLBEXG
-    END WHERE
+    DO JL = 1, KSIZE
+      IF (ZRGT(JL)>0.0) THEN
+        ZLBDAG(JL)  = ICED%XLBG*(ZRHODREF(JL)*MAX(ZRGT(JL), ICED%XRTMIN(6)))**ICED%XLBEXG
+      END IF
+    END DO
+
     ZZW(:) = 0.0
-    WHERE ( (ZRGT(:)>ICED%XRTMIN(6)) .AND. (ZRGS(:)>0.0) )
-      ZZW(:) = ( ZSSI(:)/(ZRHODREF(:)*ZAI(:)) ) *                               &
-               ( ICEP%X0DEPG*ZLBDAG(:)**ICEP%XEX0DEPG + ICEP%X1DEPG*ZCJ(:)*ZLBDAG(:)**ICEP%XEX1DEPG )
-      ZZW(:) =         MIN( ZRVS(:),ZZW(:)      )*(0.5+SIGN(0.5,ZZW(:))) &
-                     - MIN( ZRGS(:),ABS(ZZW(:)) )*(0.5-SIGN(0.5,ZZW(:)))
-      ZZW(:)  = ZZW(:)*ZREDGR
-      WHERE (ZZW(:) < 0.0 )
-        ZZW(:)  = ZZW(:) * ZRDEPGRED
-      END WHERE
-      ZRSS(:) = (ZZW(:) + ZRGS(:))* ZZW2(:) + ZRSS(:)
-      ZRGS(:) = (ZZW(:) + ZRGS(:))*(1. - ZZW2(:))
-      ZRVS(:) = ZRVS(:) - ZZW(:)
-      ZTHS(:) = ZTHS(:) + ZZW(:)*ZLSFACT(:)
-    END WHERE
-    WHERE (ZZW(:) < 0.0 )
-      ZZW(:)  = ZZW(:) * ZRDEPGRED
-    END WHERE
+    DO JL = 1, KSIZE
+      IF ((ZRGT(JL)>ICED%XRTMIN(6)) .AND. (ZRGS(JL)>0.0)) THEN
+        ZZW(JL) = (ZSSI(JL)/(ZRHODREF(JL)*ZAI(JL))) * &
+                  (ICEP%X0DEPG*ZLBDAG(JL)**ICEP%XEX0DEPG + &
+                   ICEP%X1DEPG*ZCJ(JL)*ZLBDAG(JL)**ICEP%XEX1DEPG)
+
+        ZZW(JL) = MIN(ZRVS(JL),ZZW(JL)      )*(0.5+SIGN(0.5,ZZW(JL))) &
+                - MIN(ZRGS(JL),ABS(ZZW(JL)) )*(0.5-SIGN(0.5,ZZW(JL)))
+        ZZW(JL) = ZZW(JL)*ZREDGR
+
+        IF (ZZW(JL) < 0.0 ) THEN
+          ZZW(JL)  = ZZW(JL) * ICEP%XRDEPGRED
+        END IF
+
+        ZRSS(JL) = (ZZW(JL) + ZRGS(JL))* ZZW2(JL) + ZRSS(JL)
+        ZRGS(JL) = (ZZW(JL) + ZRGS(JL))*(1. - ZZW2(JL))
+        ZRVS(JL) = ZRVS(JL) - ZZW(JL)
+        ZTHS(JL) = ZTHS(JL) + ZZW(JL)*ZLSFACT(JL)
+      END IF
+    END DO
+
+    DO JL = 1, KSIZE
+      IF (ZZW(JL) < 0.0) THEN
+        ZZW(JL)  = ZZW(JL) * ICEP%XRDEPGRED
+      END IF
+    END DO
 
     IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),   &
                                      4,'DEPG_BU_RTH',YDDDH, YDLDDH, YDMDDH)

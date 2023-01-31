@@ -64,7 +64,7 @@ program main_rain_ice_old
 
   type(dimphyex_t) :: D
 
-  integer :: counter, c_rate
+  integer(8) :: counter, c_rate
   logical :: l_verbose, checkdiff
 
   integer :: kka
@@ -90,8 +90,8 @@ program main_rain_ice_old
   type(tlddh)   :: ydlddh
   type(tmddh)   :: ydmddh
 
-  real(kind=jprb) :: time_start_real, time_end_real
-  real(kind=jprb) :: time_start_cpu, time_end_cpu
+  real(8) :: time_start_real, time_end_real
+  real(8) :: time_start_cpu, time_end_cpu
 
   interface
 
