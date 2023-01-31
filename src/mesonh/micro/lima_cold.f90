@@ -8,7 +8,7 @@
 !      #####################
 !
 INTERFACE
-      SUBROUTINE LIMA_COLD (OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,           &
+      SUBROUTINE LIMA_COLD (CST, OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,      &
                            KRR, PZZ, PRHODJ,                               &
                            PRHODREF, PEXNREF, PPABST, PW_NU,               &
                            PTHT, PRT, PSVT,                                &
@@ -16,6 +16,9 @@ INTERFACE
                            PINPRS, PINPRG, PINPRH)
 !
 USE MODD_NSV,   only: NSV_LIMA_BEG
+USE MODD_CST,            ONLY: CST_t
+!
+TYPE(CST_t),              INTENT(IN)    :: CST
 !
 LOGICAL,                  INTENT(IN)    :: OSEDI   ! switch to activate the
                                                    ! cloud ice sedimentation
@@ -52,7 +55,7 @@ END INTERFACE
 END MODULE MODI_LIMA_COLD
 !
 !     ######################################################################
-      SUBROUTINE LIMA_COLD (OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,           &
+      SUBROUTINE LIMA_COLD (CST, OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,      &
                            KRR, PZZ, PRHODJ,                               &
                            PRHODREF, PEXNREF, PPABST, PW_NU,               &
                            PTHT, PRT, PSVT,                                &
@@ -111,6 +114,7 @@ END MODULE MODI_LIMA_COLD
 !*       0.    DECLARATIONS
 !              ------------
 
+USE MODD_CST,            ONLY: CST_t
 use modd_budget,     only: lbu_enable,                                                  &
                            lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, lbudget_sv,  &
                            NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1, &
@@ -130,6 +134,8 @@ USE MODI_LIMA_PHILLIPS
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
+!
+TYPE(CST_t),              INTENT(IN)    :: CST
 !
 LOGICAL,                  INTENT(IN)    :: OSEDI   ! switch to activate the 
                                                    ! cloud ice sedimentation
@@ -367,7 +373,7 @@ IF (LNUCL) THEN
                         PTHS, PRVS, PRCS, PRIS,                         &
                         PCCS, PCIS, PINS )
    ELSE
-      CALL LIMA_PHILLIPS (OHHONI, PTSTEP, KMI,                      &
+      CALL LIMA_PHILLIPS (CST, OHHONI, PTSTEP, KMI,                 &
                           PZZ, PRHODJ, PRHODREF, PEXNREF, PPABST,   &
                           PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                           PTHS, PRVS, PRCS, PRIS,                   &
