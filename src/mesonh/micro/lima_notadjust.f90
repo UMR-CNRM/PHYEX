@@ -14,6 +14,7 @@ INTERFACE
                                 PTHT,PRT, PSVT, PTHS, PRS,PSVS, PCLDFR, PICEFR, PRAINFR, PSRCS )
 !
 USE MODD_IO, ONLY: TFILEDATA
+USE MODD_NSV,   only: NSV_LIMA_BEG
 !
 INTEGER,                  INTENT(IN)    :: KMI        ! Model index
 TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE   ! Output file
@@ -30,10 +31,10 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PZZ      ! Reference density
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT     ! Theta
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT      ! m.r. at t
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSVT     ! Concentrations source
+REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(IN)    :: PSVT     ! Concentrations at t
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS     ! Theta source
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS      ! m.r. source
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PSVS     ! Concentrations source
+REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(INOUT) :: PSVS     ! Concentrations source
 REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PSRCS   ! Second-order flux
                                                    ! s'rc'/2Sigma_s2 at time t+1
                                                    ! multiplied by Lambda_3
@@ -120,10 +121,10 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PZZ      ! Reference density
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT     ! Theta
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT      ! m.r. at t
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSVT     ! Concentrations source
+REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(IN)    :: PSVT     ! Concentrations at t
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS     ! Theta source
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS      ! m.r. source
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PSVS     ! Concentrations source
+REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(INOUT) :: PSVS     ! Concentrations source
 REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PSRCS   ! Second-order flux
                                                    ! s'rc'/2Sigma_s2 at time t+1
                                                    ! multiplied by Lambda_3
