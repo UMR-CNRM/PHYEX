@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2022 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -221,7 +221,8 @@ END MODULE MODI_DEFAULT_DESFM_n
 !  Q. Rodier      07/2021: modify XPOND=1
 !  A. Costes      12/2021: Blaze fire model
 !  C. Barthe      03/2022: add CIBU and RDSF options in LIMA
-!  Delbeke/Vie    03/2022 : KHKO option in LIMA
+!  Delbeke/Vie    03/2022: KHKO option in LIMA
+!  P. Wautelet 27/04/2022: add namelist for profilers
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -273,6 +274,7 @@ USE MODD_EOL_MAIN
 USE MODD_EOL_ADNR
 USE MODD_EOL_ALM
 USE MODD_EOL_SHARED_IO
+USE MODD_ALLPROFILER_n
 USE MODD_ALLSTATION_n
 !
 !
@@ -599,7 +601,21 @@ LTIPLOSSG         = .TRUE.
 LTECOUTPTS        = .FALSE.
 !
 !------------------------------------------------------------------------------
-!*      10.e   SET DEFAULT VALUES FOR MODD_ALLSTATION_n :
+!*      10.e   SET DEFAULT VALUES FOR MODD_ALLPROFILER_n :
+!             ----------------------------------
+!
+NNUMB_PROF    = 0
+XSTEP_PROF    = 60.0
+XX_PROF(:)    = XUNDEF
+XY_PROF(:)    = XUNDEF
+XZ_PROF(:)    = XUNDEF
+XLAT_PROF(:)  = XUNDEF
+XLON_PROF(:)  = XUNDEF
+CNAME_PROF(:) = ''
+CFILE_PROF    = 'NO_INPUT_CSV'
+! LDIAG_SURFRAD = .TRUE.
+!------------------------------------------------------------------------------
+!*      10.f   SET DEFAULT VALUES FOR MODD_ALLSTATION_n :
 !             ----------------------------------
 !
 NNUMB_STAT    = 0
@@ -610,7 +626,6 @@ XZ_STAT(:)    = XUNDEF
 XLAT_STAT(:)  = XUNDEF
 XLON_STAT(:)  = XUNDEF
 CNAME_STAT(:) = ''
-CTYPE_STAT(:) = ''
 CFILE_STAT    = 'NO_INPUT_CSV'
 LDIAG_SURFRAD = .TRUE.
 !
@@ -983,7 +998,7 @@ ENDIF
 !                ----------------------------------------
 !
 IF (KMI == 1) THEN
-   LPTSPLIT     = .FALSE.
+   LPTSPLIT     = .TRUE.
    L_LFEEDBACKT = .TRUE.
    L_NMAXITER   = 1
    L_XMRSTEP    = 0.
