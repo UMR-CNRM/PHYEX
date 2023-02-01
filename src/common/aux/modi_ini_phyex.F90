@@ -3,7 +3,7 @@ INTERFACE
 SUBROUTINE INI_PHYEX(HPROGRAM, KUNITNML, LDNEEDNAM, KLUOUT, KFROM, KTO, &
                     &PTSTEP, PDZMIN, &
                     &CMICRO, &
-                    &LDCHANGEMODEL, LDDEFAULTVAL, LDREADNAM, LDCHECK, LDPRINT, LDINIT, &
+                    &LDCHANGEMODEL, LDDEFAULTVAL, LDREADNAM, LDCHECK, KPRINT, LDINIT, &
                     &CST_INOUT, &
                     &PARAM_ICE_INOUT, RAIN_ICE_DESCR_INOUT, RAIN_ICE_PARAM_INOUT, CLOUDPARN_INOUT)
 !
@@ -26,7 +26,8 @@ LOGICAL, OPTIONAL, INTENT(IN) :: LDCHANGEMODEL!< Must we change the active model
 LOGICAL, OPTIONAL, INTENT(IN) :: LDDEFAULTVAL !< Must we initialize variables with default values (defaults to .TRUE.)
 LOGICAL, OPTIONAL, INTENT(IN) :: LDREADNAM    !< Must we read the namelist (defaults to .TRUE.)
 LOGICAL, OPTIONAL, INTENT(IN) :: LDCHECK      !< Must we perform some checks on values (defaults to .TRUE.)
-LOGICAL, OPTIONAL, INTENT(IN) :: LDPRINT      !< Must we print the effective values (defaults to .TRUE.)
+INTEGER, OPTIONAL, INTENT(IN) :: KPRINT       !< Print level (defaults to 0): 0 for no print, 1 to safely print namelist,
+                                              !! 2 to print informative messages
 LOGICAL, OPTIONAL, INTENT(IN) :: LDINIT       !< Must we call the init routines
 TYPE(CST_t),             OPTIONAL, INTENT(INOUT) :: CST_INOUT
 TYPE(PARAM_ICE_t),       OPTIONAL, INTENT(INOUT) :: PARAM_ICE_INOUT

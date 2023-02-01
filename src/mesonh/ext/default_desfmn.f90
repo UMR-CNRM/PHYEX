@@ -851,8 +851,8 @@ END IF
 !             ---------------------------------------
 !
 IF (KMI == 1) THEN
-  CALL PARAM_ICE_INIT(CPROGRAM, 0, .FALSE., TLUOUT%NLU, &                                                                  
-                     &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., LDPRINT=.FALSE.)
+  CALL PARAM_ICE_INIT(CPROGRAM, 0, .FALSE., TLUOUT%NLU, &
+                     &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0)
 END IF
 !
 !-------------------------------------------------------------------------------

@@ -219,7 +219,7 @@ END SUBROUTINE PARAM_ICE_ASSOCIATE
 
 
 SUBROUTINE PARAM_ICE_INIT(HPROGRAM, KUNITNML, LDNEEDNAM, KLUOUT, &
-                         &LDDEFAULTVAL, LDREADNAM, LDCHECK, LDPRINT)
+                         &LDDEFAULTVAL, LDREADNAM, LDCHECK, KPRINT)
 
 USE MODE_POSNAM_PHY, ONLY: POSNAM_PHY
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
@@ -234,18 +234,20 @@ INTEGER,           INTENT(IN) :: KLUOUT       !< Logical unit for outputs
 LOGICAL, OPTIONAL, INTENT(IN) :: LDDEFAULTVAL !< Must we initialize variables with default values (defaults to .TRUE.)
 LOGICAL, OPTIONAL, INTENT(IN) :: LDREADNAM    !< Must we read the namelist (defaults to .TRUE.)
 LOGICAL, OPTIONAL, INTENT(IN) :: LDCHECK      !< Must we perform some checks on values (defaults to .TRUE.)
-LOGICAL, OPTIONAL, INTENT(IN) :: LDPRINT      !< Must we print the effective values (defaults to .TRUE.)
+INTEGER, OPTIONAL, INTENT(IN) :: KPRINT       !< Print level (defaults to 0): 0 for no print, 1 to safely print namelist,
+                                              !! 2 to print informative messages
 
-LOGICAL :: LLDEFAULTVAL, LLREADNAM, LLCHECK, LLPRINT, LLFOUND
+LOGICAL :: LLDEFAULTVAL, LLREADNAM, LLCHECK, LLFOUND
+INTEGER :: IPRINT
 
 LLDEFAULTVAL=.TRUE.
 LLREADNAM=.TRUE.
 LLCHECK=.TRUE.
-LLPRINT=.TRUE.
+IPRINT=0
 IF(PRESENT(LDDEFAULTVAL)) LLDEFAULTVAL=LDDEFAULTVAL
 IF(PRESENT(LDREADNAM   )) LLREADNAM   =LDREADNAM
 IF(PRESENT(LDCHECK     )) LLCHECK     =LDCHECK
-IF(PRESENT(LDPRINT     )) LLPRINT     =LDPRINT
+IF(PRESENT(KPRINT      )) IPRINT      =KPRINT
 
 IF(LLDEFAULTVAL) THEN
   LWARM=.TRUE.
@@ -359,7 +361,7 @@ IF(LLCHECK) THEN
   ENDIF
 ENDIF                                                                                                                  
 
-IF(LLPRINT) THEN
+IF(IPRINT>=1) THEN
   WRITE(UNIT=KLUOUT,NML=NAM_PARAM_ICE)
 ENDIF
 
