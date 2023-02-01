@@ -212,3 +212,5 @@ phyex/micro/modi_ini_tiwmx.F90
 phyex/micro/ini_tiwmx.F90
 phyex/micro/modi_ini_snow.F90
 phyex/micro/ini_snow.F90
+phyex/aux/modi_ini_cst.F90
+phyex/aux/ini_cst.F90

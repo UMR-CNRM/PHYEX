@@ -3,6 +3,9 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !     ##################
+MODULE MODE_INI_CST
+IMPLICIT NONE
+CONTAINS
       SUBROUTINE INI_CST 
 !     ##################
 !
@@ -69,7 +72,7 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('INI_CST',0,ZHOOK_HANDLE)
 CALL CST_ASSOCIATE()
 !
-!*	 1.     FUNDAMENTAL CONSTANTS
+!*       1.     FUNDAMENTAL CONSTANTS
 !	        ---------------------
 !
 XPI         = 2.*ASIN(1.)
@@ -101,7 +104,7 @@ XG      = 9.80665
 !
 !-------------------------------------------------------------------------------
 !
-!*	 4.     REFERENCE PRESSURE
+!*       4.     REFERENCE PRESSURE
 !	        -------------------
 !
 ! Ocean model cst same as in 1D/CMO SURFEX
@@ -115,7 +118,7 @@ XP00 = 1.E5
 XTH00 = 300.
 !-------------------------------------------------------------------------------
 !
-!*	 5.     RADIATION CONSTANTS
+!*       5.     RADIATION CONSTANTS
 !	        -------------------
 !
 ! Original: XSTEFAN = 2.* XPI**5 * XBOLTZ**4 / (15.* XLIGHTSPEED**2 * XPLANCK**3)
@@ -127,7 +130,7 @@ XI0     = 1370.
 !
 !-------------------------------------------------------------------------------
 !
-!*	 6.     THERMODYNAMIC CONSTANTS
+!*       6.     THERMODYNAMIC CONSTANTS
 !	        -----------------------
 !
 XMD    = 28.9644E-3
@@ -159,14 +162,15 @@ XALPHAOC = 1.9E-4
 ! Coeff of Haline contraction coeff (S-1)
 XBETAOC= 7.7475E-4
 !
-!*	 7.     PRECOMPUTED CONSTANTS
+!*       7.     PRECOMPUTED CONSTANTS
 !	        ---------------------
 !
 RDSRV = XRD/XRV
 RDSCPD = XRD/XCPD
 RINVXP00 =  1./XP00
 !
-!   Some machine precision value depending of real4/8 use  
+!*       8.     MACHINE PRECISION VALUE DEPENDING of REAL4/8 USE
+!	        ---------------------
 !
 XMNH_EPSILON = EPSILON (XMNH_EPSILON )
 XMNH_HUGE    = HUGE    (XMNH_HUGE )
@@ -193,3 +197,5 @@ XMNH_TINY_12 = SQRT    (XMNH_TINY    )
 !
 IF (LHOOK) CALL DR_HOOK('INI_CST',1,ZHOOK_HANDLE)
 END SUBROUTINE INI_CST 
+
+END MODULE MODE_INI_CST

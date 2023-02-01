@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE  ARO_ADJUST(PARAM_ICE, RAIN_ICE_PARAM, KLON,KIDIA,KFDIA,KLEV,  KRR,  &
+      SUBROUTINE  ARO_ADJUST(CST, PARAM_ICE, RAIN_ICE_PARAM, KLON,KIDIA,KFDIA,KLEV,  KRR,  &
                                   HCONDENS, HLAMBDA3, OSUBG_COND, &
                                   OSIGMAS, CMICRO, LHGT_QS, HSUBG_MF_PDF, &
                                   PTSTEP, PSIGQSAT, &
@@ -85,7 +85,7 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST, ONLY: CST
+USE MODD_CST, ONLY: CST_t
 USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 USE MODD_NEB, ONLY: NEB
 USE MODD_TURB_n, ONLY: TURBN
@@ -109,8 +109,9 @@ IMPLICIT NONE
 !
 
 !
-TYPE(PARAM_ICE_t),  INTENT(IN) :: PARAM_ICE
-TYPE(RAIN_ICE_PARAM_t), INTENT(IN) :: RAIN_ICE_PARAM
+TYPE(CST_t),              INTENT(IN)   :: CST
+TYPE(PARAM_ICE_t),        INTENT(IN)   :: PARAM_ICE
+TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)   :: RAIN_ICE_PARAM
 INTEGER,                  INTENT(IN)   :: KLON ! array length (NPROMA)
 INTEGER,                  INTENT(IN)   :: KIDIA    !start index (=1)
 INTEGER,                  INTENT(IN)   :: KFDIA    !end index (=KLON only if block is full)

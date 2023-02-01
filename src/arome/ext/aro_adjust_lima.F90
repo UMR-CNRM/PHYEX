@@ -1,5 +1,6 @@
 !     ######spl
-      SUBROUTINE  ARO_ADJUST_LIMA(KKA,KKU,KKL,KLON,KLEV,  KRR, KSV, KTCOUNT,  &
+      SUBROUTINE  ARO_ADJUST_LIMA(CST, &
+                                  KKA,KKU,KKL,KLON,KLEV,  KRR, KSV, KTCOUNT,  &
                                   OSUBG_COND, OSIGMAS, &
                                   PTSTEP, PSIGQSAT, &
                                   PZZF, PRHODJ, PRHODREF, PEXNREF,&
@@ -78,7 +79,7 @@
 !              ------------
 !
 USE MODD_CONF
-USE MODD_CST
+USE MODD_CST, ONLY: CST_t
 USE MODD_PARAMETERS
 USE MODD_BUDGET
 !
@@ -99,6 +100,7 @@ IMPLICIT NONE
 !
 
 !
+TYPE(CST_t),              INTENT(IN)   :: CST
 INTEGER,                  INTENT(IN)   :: KKA    !near ground array index
 INTEGER,                  INTENT(IN)   :: KKU    !uppest atmosphere array index
 INTEGER,                  INTENT(IN)   :: KKL    !vert. levels type 1=MNH -1=ARO
@@ -199,9 +201,9 @@ KMI=1
 !                    computing time
 !
 ZT(:,:,:)= PTHT(:,:,:)*PEXNREF(:,:,:)
-ZLV(:,:,:)=XLVTT +(XCPV-XCL) *(ZT(:,:,:)-XTT)
-ZLS(:,:,:)=XLSTT +(XCPV-XCI) *(ZT(:,:,:)-XTT)
-ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
+ZLV(:,:,:)=CST%XLVTT +(CST%XCPV-CST%XCL) *(ZT(:,:,:)-CST%XTT)
+ZLS(:,:,:)=CST%XLSTT +(CST%XCPV-CST%XCI) *(ZT(:,:,:)-CST%XTT)
+ZCPH(:,:,:)=CST%XCPD +CST%XCPV*2.*PTSTEP*PRS(:,:,:,1)
 !
 !
 !*       3.     REMOVE NEGATIVE VALUES

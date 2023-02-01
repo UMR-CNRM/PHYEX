@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE  ARO_SHALLOW_MF(PARAM_ICE,                           &
+      SUBROUTINE  ARO_SHALLOW_MF(CST, PARAM_ICE,                      &
                 KKL, KLON, KLEV, KFDIA, KRR, KRRL, KRRI,KSV,&
                 HMF_UPDRAFT, HMF_CLOUD, OMIXUV,                       &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
@@ -67,7 +67,7 @@
 !
 USE MODD_PARAMETERS, ONLY: JPVEXT
 USE MODD_BUDGET, ONLY: NBUDGET_SV1, TBUDGETDATA, TBUCONF
-USE MODD_CST, ONLY: CST
+USE MODD_CST, ONLY: CST_t
 USE MODD_NEB, ONLY: NEB
 USE MODD_TURB_n, ONLY: TURBN
 USE MODD_CTURB, ONLY: CSTURB
@@ -88,6 +88,7 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(CST_t),              INTENT(IN)   :: CST
 TYPE(PARAM_ICE_t),        INTENT(IN)   :: PARAM_ICE
 INTEGER,                  INTENT(IN)   :: KKL      ! +1 if grid goes from ground to
                                                    ! atmosphere top, -1 otherwise

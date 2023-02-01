@@ -41,8 +41,6 @@ USE MODE_IO_FILE,          only: IO_File_close, IO_File_open
 USE MODE_IO_FIELD_READ,    only: IO_Field_read
 USE MODE_IO_MANAGE_STRUCT, only: IO_File_add2list
 !
-USE MODI_INI_CST
-!
 IMPLICIT NONE
 !
 !

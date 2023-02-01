@@ -1,5 +1,6 @@
 !     ######spl
-      SUBROUTINE  ARO_TURB_MNH( KKA,KKU,KKL,KLON,KLEV,KRR,KRRL,KRRI,KSV, &
+      SUBROUTINE  ARO_TURB_MNH(CST, &
+                KKA,KKU,KKL,KLON,KLEV,KRR,KRRL,KRRI,KSV,              &
                 KTCOUNT, KGRADIENTS, LDHARATU, CMICRO, PTSTEP,        &
                 PZZ, PZZF, PZZTOP,                                    &
                 PRHODJ, PTHVREF,HINST_SFU,                            &
@@ -69,7 +70,7 @@
 !              ------------
 !
 USE MODD_CONF
-USE MODD_CST, ONLY:CST
+USE MODD_CST, ONLY:CST_t
 USE MODD_CTURB, ONLY:CSTURB
 USE MODD_LES, ONLY:TLES
 USE MODD_PARAMETERS
@@ -93,6 +94,7 @@ IMPLICIT NONE
 !
 !
 !
+TYPE(CST_t),              INTENT(IN)   :: CST
 INTEGER,                  INTENT(IN)   :: KLON  !KFDIA under CPG
 INTEGER,                  INTENT(IN)   :: KLEV  !Number of vertical levels
 INTEGER,                  INTENT(IN)   :: KKA   !Index of point near ground

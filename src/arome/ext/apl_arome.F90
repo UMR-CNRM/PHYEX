@@ -878,6 +878,7 @@ ASSOCIATE(MINPRR=>YDPARAR%MINPRR, MINPRS=>YDPARAR%MINPRS, MVQS=>YDPARAR%MVQS, MI
 & XZSEPS=>YDMSE%XZSEPS, NDLUNG=>YDDIM%NDLUNG, NDGUNG=>YDDIM%NDGUNG, NPROMA=>YDDIM%NPROMA, NDLUXG=>YDDIM%NDLUXG,                       &
 & NDGUXG=>YDDIM%NDGUXG, NGFL_EXT=>YGFL%NGFL_EXT, YLRAD=>YGFL%YLRAD, YIRAD=>YGFL%YIRAD, NGFL_EZDIAG=>YGFL%NGFL_EZDIAG,                 &
 & NLIMA=>YGFL%NLIMA, CMICRO=>YDPARAR%CMICRO,                                                                                          &
+& CST=>YDPARAR%CST,                                                                                                               &
 & PARAM_ICE=>YDPARAR%PARAM_ICE, RAIN_ICE_DESCR=>YDPARAR%RAIN_ICE_DESCR, RAIN_ICE_PARAM=>YDPARAR%RAIN_ICE_PARAM,                   &
 & CLOUDPARN=>YDPARAR%CLOUDPARN,                                                                                                   &
 & YSD_VAD=>YDSURF%YSD_VAD, QCO2=>YDPHY3%QCO2, NRAY=>YDPHY%NRAY,                            &
@@ -1569,7 +1570,8 @@ IF (LMICRO) THEN
     ! for now a copy is needed (see below, inside). I don't like than :-( REK
     ZLIMAS_(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:YDCPG_OPTS%KFLEVG,1:NLIMA)=ZLIMASIN_(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:YDCPG_OPTS%KFLEVG,1:NLIMA)
 
-    CALL ARO_ADJUST_LIMA (RAIN_ICE_DESCR, YDCPG_OPTS%KFLEVG, IKU, IKL, YDCPG_BNDS%KFDIA, YDCPG_OPTS%KFLEVG, NRR,          &
+    CALL ARO_ADJUST_LIMA (CST, &
+    & YDCPG_OPTS%KFLEVG, IKU, IKL, YDCPG_BNDS%KFDIA, YDCPG_OPTS%KFLEVG, NRR,          &
     & NLIMA, YDCPG_OPTS%KSTEP+1, LOSUBG_COND, LOSIGMAS, ZDT, VSIGQSAT, ZZZ_F_, ZRHODJM__(:, 1:YDCPG_OPTS%KFLEVG), &
     & ZRHODREFM__(:, 1:YDCPG_OPTS%KFLEVG), ZEXNREFM_, ZPABSM__(:, 1:YDCPG_OPTS%KFLEVG), ZTHM__(:, 1:YDCPG_OPTS%KFLEVG),   &
     & ZRM_, ZLIMAM_, ZSIGM_, ZMFM_, ZRC_MF_, ZRI_MF_, ZCF_MF_, ZTHS__(:, 1:YDCPG_OPTS%KFLEVG), ZRS_,                      &
@@ -1577,8 +1579,8 @@ IF (LMICRO) THEN
     &                               )
   ELSE
 
-!    CALL ARO_ADJUST (KLON,KIDIA,KFDIA,KLEV,NRR,& !this is the target version
-    CALL ARO_ADJUST (PARAM_ICE, RAIN_ICE_PARAM, YDCPG_BNDS%KFDIA, YDCPG_BNDS%KIDIA, YDCPG_BNDS%KFDIA, YDCPG_OPTS%KFLEVG, NRR,                              &
+    CALL ARO_ADJUST (CST, PARAM_ICE, RAIN_ICE_PARAM, &
+    & YDCPG_BNDS%KFDIA, YDCPG_BNDS%KIDIA, YDCPG_BNDS%KFDIA, YDCPG_OPTS%KFLEVG, NRR, &
     & CCONDENS, CLAMBDA3, LOSUBG_COND,                                                                                          &
     & LOSIGMAS, CMICRO, LHGT_QS, CSUBG_MF_PDF,                                                                          &
     & ZDT, VSIGQSAT, ZZZ_F_, ZRHODJM__(:, 1:YDCPG_OPTS%KFLEVG),                                                                 &
@@ -2769,7 +2771,8 @@ IF (LMFSHAL) THEN
       ZARG_FLXZTHVMF_ => ZFLXZTHVMF_(:,1:YDCPG_OPTS%KFLEVG)
     ENDIF
 
-    CALL ARO_SHALLOW_MF (PARAM_ICE, KKL=IKL, KLON=YDCPG_BNDS%KFDIA, KLEV=YDCPG_OPTS%KFLEVG, KFDIA=YDCPG_BNDS%KFDIA, KRR=NRR, KRRL=NRRL,        &
+    CALL ARO_SHALLOW_MF (CST, PARAM_ICE,                                                                                          &
+    & KKL=IKL, KLON=YDCPG_BNDS%KFDIA, KLEV=YDCPG_OPTS%KFLEVG, KFDIA=YDCPG_BNDS%KFDIA, KRR=NRR, KRRL=NRRL,                         &
     & KRRI=NRRI, KSV=NGFL_EXT, HMF_UPDRAFT=CMF_UPDRAFT, HMF_CLOUD=CMF_CLOUD,                                                        &
     & OMIXUV=LMIXUV, ONOMIXLG=.FALSE., KSV_LGBEG=0, KSV_LGEND=0, KTCOUNT=YDCPG_OPTS%KSTEP+1, PTSTEP=ZDT,                            &
     & PDX=YDGEOMETRY%YREGEO%EDELX, PDY=YDGEOMETRY%YREGEO%EDELY,                                                                     &
@@ -2914,7 +2917,8 @@ IF (LTURB) THEN
 
 ! Appel avec les arguments modifiés pour variables LIMA :
 ! KSV_TURB, ZSFTURB, ZTURBM, ZTURBS, ZTENDSV_TURB
-  CALL ARO_TURB_MNH(KKA=IKA, KKU=IKU, KKL=IKL, KLON=YDCPG_BNDS%KFDIA, KLEV=YDCPG_OPTS%KFLEVG, KRR=NRR,               &
+  CALL ARO_TURB_MNH(CST, &
+  &KKA=IKA, KKU=IKU, KKL=IKL, KLON=YDCPG_BNDS%KFDIA, KLEV=YDCPG_OPTS%KFLEVG, KRR=NRR,                                &
   & KRRL=NRRL, KRRI= NRRI, KSV=NLIMA, KTCOUNT=YDCPG_OPTS%KSTEP+1, KGRADIENTS=NGRADIENTS, LDHARATU=LHARATU,           &
   & CMICRO=CMICRO,                                                                                                   &
   & PTSTEP=ZDT, PZZ=ZZZ_, PZZF=ZZZ_F_, PZZTOP=ZZTOP_, PRHODJ=ZRHODJM__, PTHVREF=ZTHVREFM__,                          &
@@ -3160,14 +3164,15 @@ IF (LMICRO) THEN
     ELSE
       ZPTRWNU_ => ZWM__(1:YDCPG_BNDS%KFDIA,1:YDCPG_OPTS%KFLEVG)
     ENDIF
-    CALL ARO_LIMA(YDCPG_OPTS%KFLEVG, IKU, IKL, YDCPG_BNDS%KFDIA, YDCPG_OPTS%KFLEVG, NRR, NLIMA, YDCPG_OPTS%KSTEP+1,       &
+    CALL ARO_LIMA(CST, &
+    & YDCPG_OPTS%KFLEVG, IKU, IKL, YDCPG_BNDS%KFDIA, YDCPG_OPTS%KFLEVG, NRR, NLIMA, YDCPG_OPTS%KSTEP+1,       &
     & NSPLITR, NSPLITG, ZDT, ZDZZ_, ZRHODJM__(:, 1:YDCPG_OPTS%KFLEVG), ZRHODREFM__(:, 1:YDCPG_OPTS%KFLEVG),               &
     & ZEXNREFM_, ZPABSM__(:, 1:YDCPG_OPTS%KFLEVG), ZPTRWNU_, ZTHM__(:, 1:YDCPG_OPTS%KFLEVG), ZRM_,                        &
     & ZLIMAM_, ZTHS__(:, 1:YDCPG_OPTS%KFLEVG), ZRS_, ZLIMAS_, ZEVAP_, ZINPRR_NOTINCR_,                                    &
     & ZINPRS_NOTINCR_, ZINPRG_NOTINCR_, ZINPRH_NOTINCR_, ZPFPR_, YDDDH, YDMODEL%YRML_DIAG%YRLDDH, YDMODEL%YRML_DIAG%YRMDDH&
     &              )
   ELSE
-    CALL ARO_RAIN_ICE (PARAM_ICE, RAIN_ICE_PARAM, RAIN_ICE_DESCR, CLOUDPARN,                                                    &
+    CALL ARO_RAIN_ICE (CST, PARAM_ICE, RAIN_ICE_PARAM, RAIN_ICE_DESCR, CLOUDPARN, &
     & YDCPG_OPTS%KFLEVG,IKU,IKL,YDCPG_BNDS%KFDIA,YDCPG_OPTS%KFLEVG,YDCPG_BNDS%KFDIA,NRR,YDCPG_OPTS%KSTEP+1,                     &
     & LOSUBG_COND, CSUBG_AUCV_RC, CSUBG_AUCV_RI,CMICRO, ZDT, ZDZZ_,                                  &
     & ZRHODJM__(:, 1:YDCPG_OPTS%KFLEVG), ZRHODREFM__(:, 1:YDCPG_OPTS%KFLEVG), ZEXNREFM_, ZPABSM__(:, 1:YDCPG_OPTS%KFLEVG),      &

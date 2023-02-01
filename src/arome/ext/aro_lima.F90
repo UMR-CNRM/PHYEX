@@ -1,5 +1,6 @@
 !     ######spl
-      SUBROUTINE  ARO_LIMA(KKA,KKU,KKL,KLON,KLEV,  KRR, KSV, KTCOUNT, KSPLITR, KSPLITG, &
+      SUBROUTINE  ARO_LIMA(CST, &
+                                  KKA,KKU,KKL,KLON,KLEV,  KRR, KSV, KTCOUNT, KSPLITR, KSPLITG, &
                                   PTSTEP, PDZZ, PRHODJ, PRHODREF, PEXNREF,&
                                   PPABSM, PW_NU, PTHT, PRT, PSVT, &
                                   PTHS, PRS, PSVS, PEVAP,  &
@@ -39,7 +40,7 @@
 !
 !
 USE MODD_CONF
-USE MODD_CST
+USE MODD_CST, ONLY: CST_t
 USE MODD_PARAMETERS
 !
 USE MODD_PARAM_LIMA
@@ -65,6 +66,7 @@ IMPLICIT NONE
 !
 
 !
+TYPE(CST_t),              INTENT(IN)   :: CST
 INTEGER,                  INTENT(IN)   :: KKA  !near ground array index
 INTEGER,                  INTENT(IN)   :: KKU  !uppest atmosphere array index
 INTEGER,                  INTENT(IN)   :: KKL  !vert. levels type 1=MNH -1=ARO
@@ -171,9 +173,9 @@ PINPRH=0.
 !                    computing time
 !
 ZT(:,:,:)= PTHT(:,:,:)*PEXNREF(:,:,:)
-ZLV(:,:,:)=XLVTT +(XCPV-XCL) *(ZT(:,:,:)-XTT)
-ZLS(:,:,:)=XLSTT +(XCPV-XCI) *(ZT(:,:,:)-XTT)
-ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
+ZLV(:,:,:)=CST%XLVTT +(CST%XCPV-CST%XCL) *(ZT(:,:,:)-CST%XTT)
+ZLS(:,:,:)=CST%XLSTT +(CST%XCPV-CST%XCI) *(ZT(:,:,:)-CST%XTT)
+ZCPH(:,:,:)=CST%XCPD +CST%XCPV*2.*PTSTEP*PRS(:,:,:,1)
 !
 
 !
