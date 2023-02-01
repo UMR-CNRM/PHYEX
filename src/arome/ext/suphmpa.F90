@@ -78,16 +78,13 @@ REAL(KIND=JPRB) :: ZTSTEP, ZDZMIN
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 CHARACTER(LEN=6) :: CPROGRAM
 
-LOGICAL :: LLNOTMAP
 !     ------------------------------------------------------------------
 
 #include "sucvmnh.intfb.h"
-#include "aroini_cstmnh.h"
 #include "aroini_budget.h"
 #include "aroini_turb.h"
 #include "abor1.intfb.h"
 #include "aroini_mfshal.h"
-
 #include "aroini_micro_lima.h"
 
 IF (LHOOK) CALL DR_HOOK('SUPHMPA',0,ZHOOK_HANDLE)
@@ -123,15 +120,7 @@ ASSOCIATE(XDETR_LUP=>YDPARAR%XDETR_LUP, XCMF=>YDPARAR%XCMF, &
 !     ------------------------------------------------------------------
 !     ------------------------------------------------------------------
 !       1. Initialisation of MesoNH constantes
-
-IF (LELAM) THEN
-  LLNOTMAP=.NOT.YDGEOMETRY%YREGEO%LMAP
-ELSE
-  LLNOTMAP=.TRUE.
-ENDIF
-CALL AROINI_CSTMNH (KULOUT,LTWOTL,LLNOTMAP)
-
-!       2. Initialisation for microphysics scheme
+!          Initialisation for microphysics scheme
 CPROGRAM='AROME'
 ZTSTEP=TSTEP
 ZDZMIN=20.

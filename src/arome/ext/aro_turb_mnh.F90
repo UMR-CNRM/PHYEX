@@ -1,7 +1,7 @@
 !     ######spl
       SUBROUTINE  ARO_TURB_MNH(CST, &
                 KKA,KKU,KKL,KLON,KLEV,KRR,KRRL,KRRI,KSV,              &
-                KTCOUNT, KGRADIENTS, LDHARATU, CMICRO, PTSTEP,        &
+                KTCOUNT, KGRADIENTS, LDHARATU, CMICRO, LDFLAT, PTSTEP,&
                 PZZ, PZZF, PZZTOP,                                    &
                 PRHODJ, PTHVREF,HINST_SFU,                            &
                 PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
@@ -108,6 +108,7 @@ INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
 INTEGER,                  INTENT(IN)   :: KGRADIENTS  ! Number of stored horizontal gradients
 LOGICAL,                  INTENT(IN)   :: LDHARATU ! HARATU scheme active
 CHARACTER (LEN=4),        INTENT(IN)   :: CMICRO  ! Microphysics scheme
+LOGICAL,                  INTENT(IN)   :: LDFLAT ! Logical for zero ororography
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 !
 !
@@ -211,7 +212,6 @@ LOGICAL       ::  OCOUPLES     ! switch for ocean-atm LES coupling
 LOGICAL       ::  OBLOWSNOW    ! switch for prognostic blow snow scheme
 LOGICAL       ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables 
 CHARACTER(LEN=6)   ::  HPROGRAM     ! Program (AROME or MESONH prog)
-LOGICAL   :: OFLAT        ! Logical for zero ororography
 LOGICAL   :: ONOMIXLG          ! to use turbulence for lagrangian variables (modd_conf)
 LOGICAL   :: O2D               ! Logical for 2D model version (modd_conf)
 INTEGER   :: KSV_LGBEG, KSV_LGEND ! number of scalar variables
@@ -283,8 +283,6 @@ ODEEPOC=.FALSE.
 
 HPROGRAM='AROME '
 
-! no orography for mesonh
-OFLAT=.FALSE.
 ! 2D version of turbulence
 O2D=.FALSE.
 ! Lagragian diag for mesonh
@@ -431,7 +429,7 @@ CALL TURB (CST,CSTURB,TBUCONF,TURBN, YLDIMPHYEX,TLES,&
    & IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, KGRADIENTS,1, &
    & ISPLIT,IMI, KSV, KSV_LGBEG, KSV_LGEND, HPROGRAM,&
    & NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,   &
-   & O2D, ONOMIXLG, OFLAT, OCOUPLES,OBLOWSNOW,& 
+   & O2D, ONOMIXLG, LDFLAT, OCOUPLES,OBLOWSNOW,& 
    & .FALSE., OCOMPUTE_SRC, 1.0, &
    & OOCEAN,ODEEPOC, .FALSE.,   &
    & 'NONE',CMICRO,           &

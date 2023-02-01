@@ -214,3 +214,5 @@ phyex/micro/modi_ini_snow.F90
 phyex/micro/ini_snow.F90
 phyex/aux/modi_ini_cst.F90
 phyex/aux/ini_cst.F90
+mpa/micro/externals/aroini_cstmnh.F90
+mpa/micro/interface/aroini_cstmnh.h
