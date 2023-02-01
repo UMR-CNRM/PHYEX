@@ -76,13 +76,13 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLSFACT  ! L_s/(Pi_ref*C_ph)
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLVFACT  ! L_v/(Pi_ref*C_ph)
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZCJ      ! Function to compute the ventilation coefficient
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZKA      ! Thermal conductivity of the air
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZDV      ! Diffusivity of water vapor in the air
-
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLBDAR   ! Slope parameter of the raindrop  distribution
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLBDAG   ! Slope parameter of the graupel   distribution
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLBDAS   ! Slope parameter of the aggregate distribution
+
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZCJ      ! Function to compute the ventilation coefficient
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZKA      ! Thermal conductivity of the air
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZDV      ! Diffusivity of water vapor in the air
 
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZTIW     ! Wet bulb temperature
 
