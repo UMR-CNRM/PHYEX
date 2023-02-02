@@ -72,7 +72,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRHODREF ! RHO Dry REFerence
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRHODJ   ! RHO times Jacobian
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZLBDAS   ! Slope parameter of the aggregate distribution
+    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: ZLBDAS   ! Slope parameter of the aggregate distribution
 
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZZT      ! Temperature
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLSFACT  ! L_s/(Pi_ref*C_ph)
@@ -86,7 +86,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
     REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRSS ! Snow/aggregate m.r. source
     REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZTHS ! Theta source
 
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZLBDAG ! Slope parameter of the graupel distribution
+    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: ZLBDAG ! Slope parameter of the graupel distribution
     REAL, DIMENSION(KSIZE), INTENT(OUT)   :: ZKA    ! Thermal conductivity of the air
     REAL, DIMENSION(KSIZE), INTENT(OUT)   :: ZDV    ! Diffusivity of water vapor in the air
 

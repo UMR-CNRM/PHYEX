@@ -193,7 +193,8 @@ USE MODE_RAIN_ICE_OLD_WARM,                ONLY: RAIN_ICE_OLD_WARM
 USE MODE_RAIN_ICE_OLD_FAST_RS,             ONLY: RAIN_ICE_OLD_FAST_RS
 USE MODE_RAIN_ICE_OLD_FAST_RG,             ONLY: RAIN_ICE_OLD_FAST_RG
 USE MODE_RAIN_ICE_OLD_FAST_RH,             ONLY: RAIN_ICE_OLD_FAST_RH
-!
+USE MODE_RAIN_ICE_OLD_FAST_RI,             ONLY: RAIN_ICE_OLD_FAST_RI
+
 use iso_fortran_env, only: output_unit
 
 IMPLICIT NONE
@@ -289,13 +290,7 @@ INTEGER :: IKB           !
 INTEGER :: IKE           !
 !
 INTEGER :: IMICRO ! Case number of sedimentation, T>0 (for HEN) and r_x>0 locations
-INTEGER :: IGRIM, IGACC, IGDRY ! Case number of riming, accretion and dry growth
-                               ! locations
-INTEGER :: IGWET, IHAIL   ! wet growth locations and case number
 LOGICAL, DIMENSION(D%NIT,D%NKT) :: GNEGT  ! Test where to compute the HEN process
-INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1,IVEC2       ! Vectors of indices for
-                                ! interpolations
-REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1,ZVEC2,ZVEC3 ! Work vectors for
                                 ! interpolations
 REAL, DIMENSION(D%NIT,D%NKT) :: ZW        ! work array
 REAL, DIMENSION(D%NIT)       :: ZCONC_TMP ! Weighted concentration
@@ -333,8 +328,6 @@ REAL, DIMENSION(KSIZE) :: ZTHLT   ! Liquid potential temperature
 REAL, DIMENSION(KSIZE) :: ZRHODREF  ! RHO Dry REFerence
 REAL, DIMENSION(KSIZE) :: ZRHODJ    ! RHO times Jacobian
 REAL, DIMENSION(KSIZE) :: ZEXNREF   ! EXNer Pressure REFerence
-REAL, DIMENSION(KSIZE) :: ZZWC      ! Work array
-REAL, DIMENSION(KSIZE) :: ZZW2      ! Work array
 REAL, DIMENSION(KSIZE) :: ZLSFACT   ! L_s/(Pi_ref*C_ph)
 REAL, DIMENSION(KSIZE) :: ZLVFACT   ! L_v/(Pi_ref*C_ph)
 REAL, DIMENSION(KSIZE) :: ZLBDAR    ! Slope parameter of the raindrop  distribution
@@ -359,8 +352,6 @@ REAL, DIMENSION(KSIZE) :: ZSSIU      ! Sub-saturation with respect to ice in the
 REAL, DIMENSION(KSIZE) :: ZW2D       ! Factor for subgridscale calculations
 REAL, DIMENSION(KSIZE) :: ZXW2D      ! Ratio cloud ice moist part to dry part
 REAL, DIMENSION(KSIZE) :: ZXW2D13    ! ZXW2D**0.333 or other expression for LMODICEDEP=T
-REAL, DIMENSION(KSIZE) :: ZCRYSHA    ! Ice crystal habit factor
-REAL, DIMENSION(KSIZE) :: ZCI2S      ! factor to turn cloud ice with few lagre crystals into snow
 REAL, DIMENSION(KSIZE) :: ZCOLF      ! collision factor cloud liquid to snow / graupel
 REAL, DIMENSION(KSIZE) :: ZACRF      ! collision factor cloud liquid to rain
 REAL, DIMENSION(KSIZE) :: ZCONCM     ! Same as ZCONC3D but GMICRO-array only and cm-3 instead of m-3
@@ -385,12 +376,10 @@ REAL, DIMENSION(KSIZE) :: ZBB3    ! Part of ZAI used for optimized code
 REAL, DIMENSION(KSIZE) :: ZAA2W   ! as ZAA2 but for liquid
 REAL, DIMENSION(KSIZE) :: ZBB3W   ! as ZBB3 but for liquid
 REAL, DIMENSION(KSIZE) :: ZTIW    ! Wet bulb temperature
-REAL, DIMENSION(KSIZE) :: ZARTMP  ! temporary work array
 
 REAL, DIMENSION(KSIZE) :: ZZT   ! Temperature
 REAL, DIMENSION(KSIZE) :: ZPRES ! Pressure
 REAL, DIMENSION(KSIZE) :: ZZW   ! Work array
-REAL, DIMENSION(KSIZE) :: ZUSW  ! Undersaturation over water
 REAL, DIMENSION(KSIZE) :: ZSSI  ! Supersaturation over ice
 
 !                          *******  used for logical switch OCND2 : *******
@@ -399,15 +388,11 @@ REAL, DIMENSION(KSIZE) :: ZESI   ! saturation pressure over ice
 REAL, DIMENSION(KSIZE) :: ZESW   ! saturation pressure over water
 !                          *******  end logical switch OCND2 *******
 
-REAL, DIMENSION(KSIZE, KRR) :: ZZW1 ! Work arrays
-REAL                        :: ZTIMAUTIC,XDUMMY6,XDUMMY7
-REAL                        :: ZINVTSTEP
-
 !    *******  used for logical switch OCND2 : *******
 REAL            :: ZRVSOLD, ZTSP
 REAL            :: ZRSP, ZRISOLD, ZRSSOLD, ZRGSOLD ! Function,old ice
 REAL            :: ZRISFRC, ZRSSFRC, ZRGSFRC, ZRFRAC, ZRSA, ZRSTS, ZRSB, ZRSDIF, ZR20
-REAL            :: ZRSI, ZRSW, ZTC, ZHU, ZQIMAX, ZDICRIT, ZCITRED23, ZCITRED, ZRCW, ZVT, ZST
+REAL            :: ZRSI, ZRSW, ZDICRIT, ZCITRED23, ZCITRED, ZRCW, ZVT, ZST
 REAL            :: ZREDGR, ZREDSN    ! Possible reduction of the rate of graupel,snow growth
 REAL            :: ZKVO  ! factor used for caluclate maximum mass in the ice
                          ! distubution.
@@ -418,12 +403,9 @@ REAL, DIMENSION(KSIZE) :: ZZKGN_ACON,ZZKGN_SBGR
 
      !internal fractions etc, finally saturation ratio over ice 'source' value
 
-INTEGER , DIMENSION(SIZE(GMICRO)) :: I1, I2 ! Used to replace the COUNT
-INTEGER                           :: JL       ! and PACK intrinsics
-CHARACTER (LEN=100) :: YCOMMENT   ! Comment string in LFIFM file
-CHARACTER (LEN=16)  :: YRECFM     ! Name of the desired field in LFIFM file
-REAL :: ZCOEFFRCM,ZMU
-LOGICAL :: LTEST ! Only for test !
+INTEGER, DIMENSION(D%NIT*D%NKT) :: I1, I2 ! Used to replace the COUNT
+INTEGER                         :: JL       ! and PACK intrinsics
+REAL :: ZCOEFFRCM
 LOGICAL :: LCHECKNOISE ! Noise check on/off
 LOGICAL :: LTIW   ! Use TIW for graupel melting ( set by XFRMIN(18) ~ 1)
 !
@@ -435,7 +417,6 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !               -----------------------
 !
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD',0,ZHOOK_HANDLE)
-LTEST=.FALSE.
 LCHECKNOISE=.TRUE.
 IKB=KKA+JPVEXT*KKL
 IKE=KKU-JPVEXT*KKL
@@ -443,8 +424,6 @@ IKE=KKU-JPVEXT*KKL
 !
 !*       1.2     COMPUTE SOME CONSTANT PARAMETERS
 !
-ZINVTSTEP=1./PTSTEP
-
 
 ZCITRED = 0.1     ! ratio of ice crystal concentration wet to dry
                   ! part of a gridbox
@@ -532,7 +511,16 @@ IF (LBUDGET_TH) CALL BUDGET_DDH (PTHS(:,:)*PRHODJ(:,:),4,'HENU_BU_RTH',YDDDH, YD
 IF (LBUDGET_RV) CALL BUDGET_DDH (PRVS(:,:)*PRHODJ(:,:),6,'HENU_BU_RRV',YDDDH, YDLDDH, YDMDDH)
 IF (LBUDGET_RI) CALL BUDGET_DDH (PRIS(:,:)*PRHODJ(:,:),9,'HENU_BU_RRI',YDDDH, YDLDDH, YDMDDH)
 
-CALL COUNTJV(IMICRO, GMICRO(:,:), I1(:), I2(:))
+IMICRO = 0
+DO JK = 1, D%NKT
+  DO JI = 1, D%NIT
+    IF(GMICRO(JI,JK)) THEN
+      IMICRO = IMICRO + 1
+      I1(IMICRO) = JI
+      I2(IMICRO) = JK
+    END IF
+  END DO
+END DO
 
 IF ( KSIZE >= 0 ) THEN
 
@@ -952,7 +940,20 @@ IF ( KSIZE >= 0 ) THEN
 !               -------------------------------------------------------------
 !
 
-  CALL RAIN_ICE_FAST_RI
+  CALL RAIN_ICE_OLD_FAST_RI(D, CST, ICEP, ICED, &
+                            PTSTEP, KSIZE, &
+                            OCND2, LMODICEDEP, GMICRO, &
+                            PRHODJ, PTHS, &
+                            ZRIT, ZCIT, &
+                            ZRVS, ZRCS, ZRIS, ZRSS, ZTHS, &
+                            ZRHODREF, ZRHODJ, &
+                            ZLSFACT, ZLVFACT, &
+                            ZAI, ZCJ, &
+                            ZSSIO, ZSSIU, ZW2D, ZXW2D13, &
+                            ZZT, ZPRES, ZSSI, &
+                            ZSIFRC, ZESI, &
+                            ZCITRED, ZCITRED23, ZDICRIT, &
+                            YDDDH, YDLDDH, YDMDDH)
 
   IF (OCND2.AND.LCHECKNOISE) THEN
 !*       8     This check is mainly for noise reduction:
@@ -1188,204 +1189,7 @@ CALL RAINFR_VERT(ZRAINFR, PRRS(:,:)*PTSTEP)
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD',1,ZHOOK_HANDLE)
 CONTAINS
 !
-!
 !-------------------------------------------------------------------------------
-!
-!
-      REAL FUNCTION ICENUMBER2 (Q_ICE, T3D)
-
-      IMPLICIT NONE
-      REAL, PARAMETER:: ICE_DENSITY = 890.0
-      REAL, PARAMETER:: PI = 3.1415926536
-      INTEGER IDX_REI
-      REAL CORR, REICE, DEICE, Q_ICE, T3D
-      DOUBLE PRECISION LAMBDA
-
-!+---+-----------------------------------------------------------------+
-!..Table of lookup values of radiative effective radius of ice crystals
-!.. as a function of Temperature from -94C to 0C.  Taken from WRF RRTMG
-!.. radiation code where it is attributed to Jon Egill Kristjansson
-!.. and coauthors.
-!+---+-----------------------------------------------------------------+
-
-      REAL RETAB(95)
-      DATA RETAB /                                                      &
-         5.92779, 6.26422, 6.61973, 6.99539, 7.39234,                   &
-         7.81177, 8.25496, 8.72323, 9.21800, 9.74075, 10.2930,          &
-         10.8765, 11.4929, 12.1440, 12.8317, 13.5581, 14.2319,          &
-         15.0351, 15.8799, 16.7674, 17.6986, 18.6744, 19.6955,          &
-         20.7623, 21.8757, 23.0364, 24.2452, 25.5034, 26.8125,          &
-         27.7895, 28.6450, 29.4167, 30.1088, 30.7306, 31.2943,          &
-         31.8151, 32.3077, 32.7870, 33.2657, 33.7540, 34.2601,          &
-         34.7892, 35.3442, 35.9255, 36.5316, 37.1602, 37.8078,          &
-         38.4720, 39.1508, 39.8442, 40.5552, 41.2912, 42.0635,          &
-         42.8876, 43.7863, 44.7853, 45.9170, 47.2165, 48.7221,          &
-         50.4710, 52.4980, 54.8315, 57.4898, 60.4785, 63.7898,          &
-         65.5604, 71.2885, 75.4113, 79.7368, 84.2351, 88.8833,          &
-         93.6658, 98.5739, 103.603, 108.752, 114.025, 119.424,          &
-         124.954, 130.630, 136.457, 142.446, 148.608, 154.956,          &
-         161.503, 168.262, 175.248, 182.473, 189.952, 197.699,          &
-         205.728, 214.055, 222.694, 231.661, 240.971, 250.639/
-
-!+---+-----------------------------------------------------------------+
-!..From the model 3D temperature field, subtract 179K for which
-!.. index value of retab as a start.  Value of corr is for
-!.. interpolating between neighboring values in the table.
-!+---+-----------------------------------------------------------------+
-
-      IDX_REI = INT(T3D-179.)
-      IDX_REI = MIN(MAX(IDX_REI,1),95)
-      CORR = T3D - INT(T3D)
-      REICE = RETAB(IDX_REI)*(1.-CORR) + RETAB(MIN(95,IDX_REI+1))*CORR
-      DEICE = 2.*REICE * 1.E-6
-
-!+---+-----------------------------------------------------------------+
-!..Now we have the final radiative effective size of ice (as function
-!.. of temperature only).  This size represents 3rd moment divided by
-!.. second moment of the ice size distribution, so we can compute a
-!.. number concentration from the mean size and mass mixing ratio.
-!.. The mean (radiative effective) diameter is 3./Slope for an inverse
-!.. exponential size distribution.  So, starting with slope, work
-!.. backwords to get number concentration.
-!+---+-----------------------------------------------------------------+
-
-      LAMBDA = 3.0 / DEICE
-      ICENUMBER2 = Q_ICE * LAMBDA*LAMBDA*LAMBDA / (PI*ICE_DENSITY)
-
-!+---+-----------------------------------------------------------------+
-!..Example1: Common ice size coming from Thompson scheme is about 30 microns.
-!.. An example ice mixing ratio could be 0.001 g/kg for a temperature of -50C.
-!.. Remember to convert both into MKS units.  This gives N_ice=357652 per kg.
-!..Example2: Lower in atmosphere at T=-10C matching ~162 microns in retab,
-!.. and assuming we have 0.1 g/kg mixing ratio, then N_ice=28122 per kg,
-!.. which is 28 crystals per liter of air if the air density is 1.0.
-!+---+-----------------------------------------------------------------+
-
-      RETURN
-      END
-!
-!-------------------------------------------------------------------------------
-!
-  SUBROUTINE RAIN_ICE_FAST_RI
-!
-!*      0. DECLARATIONS
-!          ------------
-!
-IMPLICIT NONE
-!
-!-------------------------------------------------------------------------------
-!
-!*       7.1    cloud ice melting
-!
-  REAL(KIND=JPRB) :: ZHOOK_HANDLE
-
-  IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RI',0,ZHOOK_HANDLE)
-  ZZW(:) = 0.0
-  WHERE( (ZRIS(:)>0.0) .AND. (ZZT(:)>CST%XTT) )
-    ZZW(:)  = ZRIS(:)
-    ZRCS(:) = ZRCS(:) + ZRIS(:)
-    ZTHS(:) = ZTHS(:) - ZRIS(:)*(ZLSFACT(:)-ZLVFACT(:)) ! f(L_f*(-RIMLTC))
-    ZRIS(:) = 0.0
-    ZCIT(:) = 0.0
-  END WHERE
-
-  IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),   &
-                                   4,'IMLT_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-  IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(ZRCS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
-                                   7,'IMLT_BU_RRC',YDDDH, YDLDDH, YDMDDH)
-  IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
-                                   9,'IMLT_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-
-!*       7.2    Bergeron-Findeisen effect: RCBERI
-
-  ZZW(:) = 0.0
-  IF(OCND2)THEN
-
-     ! Sub gridscale decomposition into a supersaturation part of the gridbox,
-     ! ZSIFRC with a superaturation ZSSIO and a subsaturated part (1.- ZSIFRC)
-     ! with a (negative) superaturation of ZSSIU
-
-     IF (LMODICEDEP) THEN
-
-       DO JL=1,KSIZE
-         ZZW2(JL) = MAX(ZCIT(JL),ICENUMBER2(ZRIS(JL)*PTSTEP,ZZT(JL))* &
-         ZRHODREF(JL))
-       ENDDO
-
-       WHERE( ZZW2(:)>0.0 .AND. ZESI(:) < ZPRES(:)*0.5)
-          ZZW(:)= ICEP%X0DEPI/(ICED%XLBI*ZAI(:)) *(ZZW2(:)/ZRHODREF(:))**(1.+ICED%XLBEXI) * &
-             & (PTSTEP*MAX(ICED%XRTMIN(4)/PTSTEP,ZRIS(:))*ZW2D(:) )**(-ICED%XLBEXI)
-          ZZW(:)=  MAX(-ZRIS(:)*ZW2D(:)*(1.-ZSIFRC(:))+ZZW(:)*ZSSIO(:)* ZSIFRC(:)* ZXW2D13(:), &
-        &  ZZW(:)* ( ZSSIO(:)* ZSIFRC(:)* ZXW2D13(:)  + ZCITRED23*ZSSIU(:)* (1.-ZSIFRC(:)) ))
-
-          ZRIS(:) = ZRIS(:) + ZZW(:)
-          ZRVS(:) = ZRVS(:) - ZZW(:)  ! Budget here: ! cloud ice + vapor = const
-          ZTHS(:) = ZTHS(:) + ZZW(:)*ZLSFACT(:) ! f(L_f*(RCBERI))
-
-       END WHERE
-
-     ELSE
-
-      DO JK=1,KSIZE
-
-        ZTC =  MAX(-18.,MIN(-1.,ZZT(JK)-CST%XTT))
-        ZHU =  MIN(0.15,MAX(0.,ZSSI(JK)))
-        ZCRYSHA(JK)=1.1+ 3.*ZHU*(1.+ SIN(0.64*ZTC -1.3))
-!       icedensity*4/3 *pi /8. =366.5 ; icedensity=700 kg/m3
-        ZQIMAX = 366.5 * ZDICRIT**3 * ZCIT(JK)*ZCITRED/ZRHODREF(JK)
-        ZCI2S(JK) = 0.
-        IF(ZRIS(JK)*PTSTEP > 1.0e-12)THEN
-            ZCI2S(JK)  =  ZRIS(JK)*(1. - MIN(1., 0.5*ZQIMAX /ZRIS(JK)/PTSTEP))* &
-                &  (1.-ZSIFRC(JK))*ZW2D(JK)
-        ENDIF
-
-      ENDDO
-
-      WHERE( ZCIT(:)>0.0 .AND. ZESI(:) < ZPRES(:)*0.5)
-        ZZWC(:)=ZCRYSHA(:)*0.878/ZAI(:)*(ZCIT(:)/ZRHODREF(:))**0.667 &
-             &*(MAX(ICED%XRTMIN(4)/PTSTEP,ZRIS(:))*PTSTEP*ZW2D(:))**0.333
-!     Ice supersaturated part of grid box:
-        WHERE( ZSSIO(:)>0. .AND. ZSIFRC(:) > 0.02_JPRB )
-           ZZW(:)  = ZZWC(:)*ZXW2D13(:)*ZSSIO(:)
-           ZRIS(:) = ZRIS(:) + ZZW(:)*ZSIFRC(:)
-           ZRVS(:) = ZRVS(:) - ZZW(:)*ZSIFRC(:)  ! Budget here: ! cloud ice + vapor = const
-           ZTHS(:) = ZTHS(:) + ZZW(:)*ZLSFACT(:)*ZSIFRC(:) ! f(L_f*(RCBERI))
-        END WHERE
-!    Ice subsaturated part of grid box:
-        WHERE(  ZSSIU(:)<0. .AND. ZSIFRC(:) <0.98_JPRB )
-           ZRIS(:) =ZRIS(:) - ZCI2S(:)
-           ZRSS(:) =ZRSS(:) + ZCI2S(:)
-           ZZW(:)  =ZZWC(:)*ZCITRED23*ZSSIU(:)
-           ZRIS(:) = ZRIS(:) + ZZW(:)*(1.-ZSIFRC(:))
-           ZRVS(:) = ZRVS(:) - ZZW(:)*(1.-ZSIFRC(:))
-           ZTHS(:) = ZTHS(:) + ZZW(:)*ZLSFACT(:)*(1.-ZSIFRC(:))
-        END WHERE
-      END WHERE
-
-     ENDIF
-
-  ELSE ! End OCND2
-  WHERE( (ZRCS(:)>0.0) .AND. (ZSSI(:)>0.0) .AND. &
-         (ZRIT(:)>ICED%XRTMIN(4)) .AND. (ZCIT(:)>0.0)       )
-    ZZW(:) = MIN(1.E8,ICED%XLBI*( ZRHODREF(:)*ZRIT(:)/ZCIT(:) )**ICED%XLBEXI) ! Lbda_i
-    ZZW(:) = MIN( ZRCS(:),( ZSSI(:) / (ZRHODREF(:)*ZAI(:)) ) * ZCIT(:) * &
-                  ( ICEP%X0DEPI/ZZW(:) + ICEP%X2DEPI*ZCJ(:)*ZCJ(:)/ZZW(:)**(ICED%XDI+2.0) ) )
-    ZRCS(:) = ZRCS(:) - ZZW(:)
-    ZRIS(:) = ZRIS(:) + ZZW(:)
-    ZTHS(:) = ZTHS(:) + ZZW(:)*(ZLSFACT(:)-ZLVFACT(:))
-  END WHERE
-  ENDIF
-
-  IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),   &
-                                   4,'BERFI_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-  IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(ZRCS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
-                                   7,'BERFI_BU_RRC',YDDDH, YDLDDH, YDMDDH)
-  IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
-                                   9,'BERFI_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-
-  IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RI',1,ZHOOK_HANDLE)
-
-  END SUBROUTINE RAIN_ICE_FAST_RI
 !
 SUBROUTINE RAINFR_VERT(ZPRFR, ZRR)
 
@@ -1416,66 +1220,5 @@ IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAINFR_VERT',1,ZHOOK_HANDLE)
 !
 END SUBROUTINE RAINFR_VERT
 !
-!
-!-------------------------------------------------------------------------------
-!
-!
-SUBROUTINE COUNTJV(IC, LTAB, I1, I2)
-
-IMPLICIT NONE
-
-INTEGER, INTENT(OUT) :: IC
-LOGICAL, DIMENSION(:,:), INTENT(IN) :: LTAB ! Mask
-INTEGER, DIMENSION(:), INTENT(OUT) :: I1,I2 ! Used to replace the COUNT and PACK
-INTEGER :: JI,JK
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
-
-IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:COUNTJV',0,ZHOOK_HANDLE)
-
-IC = 0
-DO JK = 1,SIZE(LTAB,2)
-  DO JI = 1,SIZE(LTAB,1)
-    IF(LTAB(JI,JK)) THEN
-      IC = IC +1
-      I1(IC) = JI
-      I2(IC) = JK
-    END IF
-  END DO
-END DO
-
-IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:COUNTJV',1,ZHOOK_HANDLE)
-
-END SUBROUTINE COUNTJV
-
-SUBROUTINE COUNTJV2(IC, LTAB, I1)
-!
-!*      0. DECLARATIONS
-!          ------------
-!
-IMPLICIT NONE
-!
-!*       0.2  declaration of local variables
-!
-!
-INTEGER, INTENT(OUT) :: IC
-LOGICAL, DIMENSION(:), INTENT(IN) :: LTAB ! Mask
-INTEGER, DIMENSION(:), INTENT(OUT) :: I1   ! Used to replace the COUNT and PACK
-INTEGER :: JI
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
-
-IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:COUNTJV2',0,ZHOOK_HANDLE)
-
-IC = 0
-DO JI = 1,SIZE(LTAB,1)
-  IF( LTAB(JI) ) THEN
-    IC = IC +1
-    I1(IC) = JI
-  END IF
-END DO
-!
-IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:COUNTJV2',1,ZHOOK_HANDLE)
-END SUBROUTINE COUNTJV2
-!
-!-------------------------------------------------------------------------------
 !
 END SUBROUTINE RAIN_ICE_OLD

@@ -73,7 +73,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
 
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLBDAS   ! Slope parameter of the aggregate distribution
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLBDAG   ! Slope parameter of the graupel   distribution
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZLBDAH   ! Slope parameter of the hail      distribution
+    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: ZLBDAH   ! Slope parameter of the hail      distribution
 
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZCJ      ! Function to compute the ventilation coefficient
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZKA      ! Thermal conductivity of the air
