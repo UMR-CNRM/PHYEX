@@ -113,112 +113,119 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RI
 !*       7.1    cloud ice melting
 !
 
-  IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RI',0,ZHOOK_HANDLE)
+    IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RI',0,ZHOOK_HANDLE)
 
-  ZZW(:) = 0.0
-  WHERE( (ZRIS(:)>0.0) .AND. (ZZT(:)>CST%XTT) )
-    ZZW(:)  = ZRIS(:)
-    ZRCS(:) = ZRCS(:) + ZRIS(:)
-    ZTHS(:) = ZTHS(:) - ZRIS(:)*(ZLSFACT(:)-ZLVFACT(:)) ! f(L_f*(-RIMLTC))
-    ZRIS(:) = 0.0
-    ZCIT(:) = 0.0
-  END WHERE
+    ZZW(:) = 0.0
+    DO JK = 1, KSIZE
+      IF ((ZRIS(JK)>0.0) .AND. (ZZT(JK)>CST%XTT)) THEN
+        ZZW(JK)  = ZRIS(JK)
+        ZRCS(JK) = ZRCS(JK) + ZRIS(JK)
+        ZTHS(JK) = ZTHS(JK) - ZRIS(JK)*(ZLSFACT(JK)-ZLVFACT(JK)) ! f(L_f*(-RIMLTC))
+        ZRIS(JK) = 0.0
+        ZCIT(JK) = 0.0
+      END IF
+    END DO
 
-  IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),   &
-                                   4,'IMLT_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-  IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(ZRCS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
-                                   7,'IMLT_BU_RRC',YDDDH, YDLDDH, YDMDDH)
-  IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
-                                   9,'IMLT_BU_RRI',YDDDH, YDLDDH, YDMDDH)
+    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),   &
+                                     4,'IMLT_BU_RTH',YDDDH, YDLDDH, YDMDDH)
+    IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(ZRCS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+                                     7,'IMLT_BU_RRC',YDDDH, YDLDDH, YDMDDH)
+    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+                                     9,'IMLT_BU_RRI',YDDDH, YDLDDH, YDMDDH)
 
 !*       7.2    Bergeron-Findeisen effect: RCBERI
 
-  ZZW(:) = 0.0
-  IF(OCND2)THEN
+    ZZW(:) = 0.0
+    IF(OCND2)THEN
 
-     ! Sub gridscale decomposition into a supersaturation part of the gridbox,
-     ! ZSIFRC with a superaturation ZSSIO and a subsaturated part (1.- ZSIFRC)
-     ! with a (negative) superaturation of ZSSIU
+      ! Sub gridscale decomposition into a supersaturation part of the gridbox,
+      ! ZSIFRC with a superaturation ZSSIO and a subsaturated part (1.- ZSIFRC)
+      ! with a (negative) superaturation of ZSSIU
 
-     IF (LMODICEDEP) THEN
+      IF (LMODICEDEP) THEN
 
-       DO JL=1,KSIZE
-         ZZW2(JL) = MAX(ZCIT(JL),ICENUMBER2(ZRIS(JL)*PTSTEP,ZZT(JL))* &
-         ZRHODREF(JL))
-       ENDDO
+        DO JL=1,KSIZE
+          ZZW2(JL) = MAX(ZCIT(JL),ICENUMBER2(ZRIS(JL)*PTSTEP,ZZT(JL))* &
+          ZRHODREF(JL))
+        ENDDO
 
-       WHERE( ZZW2(:)>0.0 .AND. ZESI(:) < ZPRES(:)*0.5)
-          ZZW(:)= ICEP%X0DEPI/(ICED%XLBI*ZAI(:)) *(ZZW2(:)/ZRHODREF(:))**(1.+ICED%XLBEXI) * &
-             & (PTSTEP*MAX(ICED%XRTMIN(4)/PTSTEP,ZRIS(:))*ZW2D(:) )**(-ICED%XLBEXI)
-          ZZW(:)=  MAX(-ZRIS(:)*ZW2D(:)*(1.-ZSIFRC(:))+ZZW(:)*ZSSIO(:)* ZSIFRC(:)* ZXW2D13(:), &
-        &  ZZW(:)* ( ZSSIO(:)* ZSIFRC(:)* ZXW2D13(:)  + ZCITRED23*ZSSIU(:)* (1.-ZSIFRC(:)) ))
+        DO JK = 1, KSIZE
+          IF (ZZW2(JK)>0.0 .AND. ZESI(JK) < ZPRES(JK)*0.5) THEN
+            ZZW(JK)= ICEP%X0DEPI/(ICED%XLBI*ZAI(JK)) *(ZZW2(JK)/ZRHODREF(JK))**(1.+ICED%XLBEXI) * &
+               & (PTSTEP*MAX(ICED%XRTMIN(4)/PTSTEP,ZRIS(JK))*ZW2D(JK) )**(-ICED%XLBEXI)
+            ZZW(JK)=  MAX(-ZRIS(JK)*ZW2D(JK)*(1.-ZSIFRC(JK))+ZZW(JK)*ZSSIO(JK)* ZSIFRC(JK)* ZXW2D13(JK), &
+          &  ZZW(JK)* ( ZSSIO(JK)* ZSIFRC(JK)* ZXW2D13(JK)  + ZCITRED23*ZSSIU(JK)* (1.-ZSIFRC(JK)) ))
 
-          ZRIS(:) = ZRIS(:) + ZZW(:)
-          ZRVS(:) = ZRVS(:) - ZZW(:)  ! Budget here: ! cloud ice + vapor = const
-          ZTHS(:) = ZTHS(:) + ZZW(:)*ZLSFACT(:) ! f(L_f*(RCBERI))
+            ZRIS(JK) = ZRIS(JK) + ZZW(JK)
+            ZRVS(JK) = ZRVS(JK) - ZZW(JK)  ! Budget here: ! cloud ice + vapor = const
+            ZTHS(JK) = ZTHS(JK) + ZZW(JK)*ZLSFACT(JK) ! f(L_f*(RCBERI))
+          END IF
+        END DO
+      ELSE
 
-       END WHERE
+        DO JK=1,KSIZE
 
-     ELSE
+          ZTC =  MAX(-18.,MIN(-1.,ZZT(JK)-CST%XTT))
+          ZHU =  MIN(0.15,MAX(0.,ZSSI(JK)))
+          ZCRYSHA(JK)=1.1+ 3.*ZHU*(1.+ SIN(0.64*ZTC -1.3))
+!         icedensity*4/3 *pi /8. =366.5 ; icedensity=700 kg/m3
+          ZQIMAX = 366.5 * ZDICRIT**3 * ZCIT(JK)*ZCITRED/ZRHODREF(JK)
+          ZCI2S(JK) = 0.
+          IF(ZRIS(JK)*PTSTEP > 1.0e-12)THEN
+              ZCI2S(JK)  =  ZRIS(JK)*(1. - MIN(1., 0.5*ZQIMAX /ZRIS(JK)/PTSTEP))* &
+                  &  (1.-ZSIFRC(JK))*ZW2D(JK)
+          ENDIF
+        ENDDO
 
-      DO JK=1,KSIZE
-
-        ZTC =  MAX(-18.,MIN(-1.,ZZT(JK)-CST%XTT))
-        ZHU =  MIN(0.15,MAX(0.,ZSSI(JK)))
-        ZCRYSHA(JK)=1.1+ 3.*ZHU*(1.+ SIN(0.64*ZTC -1.3))
-!       icedensity*4/3 *pi /8. =366.5 ; icedensity=700 kg/m3
-        ZQIMAX = 366.5 * ZDICRIT**3 * ZCIT(JK)*ZCITRED/ZRHODREF(JK)
-        ZCI2S(JK) = 0.
-        IF(ZRIS(JK)*PTSTEP > 1.0e-12)THEN
-            ZCI2S(JK)  =  ZRIS(JK)*(1. - MIN(1., 0.5*ZQIMAX /ZRIS(JK)/PTSTEP))* &
-                &  (1.-ZSIFRC(JK))*ZW2D(JK)
-        ENDIF
-
-      ENDDO
-
-      WHERE( ZCIT(:)>0.0 .AND. ZESI(:) < ZPRES(:)*0.5)
-        ZZWC(:)=ZCRYSHA(:)*0.878/ZAI(:)*(ZCIT(:)/ZRHODREF(:))**0.667 &
-             &*(MAX(ICED%XRTMIN(4)/PTSTEP,ZRIS(:))*PTSTEP*ZW2D(:))**0.333
+        DO JK = 1, KSIZE
+          IF (ZCIT(JK)>0.0 .AND. ZESI(JK) < ZPRES(JK)*0.5) THEN
+            ZZWC(JK)=ZCRYSHA(JK)*0.878/ZAI(JK)*(ZCIT(JK)/ZRHODREF(JK))**0.667 &
+                 &*(MAX(ICED%XRTMIN(4)/PTSTEP,ZRIS(JK))*PTSTEP*ZW2D(JK))**0.333
 !     Ice supersaturated part of grid box:
-        WHERE( ZSSIO(:)>0. .AND. ZSIFRC(:) > 0.02_JPRB )
-           ZZW(:)  = ZZWC(:)*ZXW2D13(:)*ZSSIO(:)
-           ZRIS(:) = ZRIS(:) + ZZW(:)*ZSIFRC(:)
-           ZRVS(:) = ZRVS(:) - ZZW(:)*ZSIFRC(:)  ! Budget here: ! cloud ice + vapor = const
-           ZTHS(:) = ZTHS(:) + ZZW(:)*ZLSFACT(:)*ZSIFRC(:) ! f(L_f*(RCBERI))
-        END WHERE
+            IF (ZSSIO(JK)>0. .AND. ZSIFRC(JK) > 0.02_JPRB) THEN
+              ZZW(JK)  = ZZWC(JK)*ZXW2D13(JK)*ZSSIO(JK)
+              ZRIS(JK) = ZRIS(JK) + ZZW(JK)*ZSIFRC(JK)
+              ZRVS(JK) = ZRVS(JK) - ZZW(JK)*ZSIFRC(JK)  ! Budget here: ! cloud ice + vapor = const
+              ZTHS(JK) = ZTHS(JK) + ZZW(JK)*ZLSFACT(JK)*ZSIFRC(JK) ! f(L_f*(RCBERI))
+            END IF
 !    Ice subsaturated part of grid box:
-        WHERE(  ZSSIU(:)<0. .AND. ZSIFRC(:) <0.98_JPRB )
-           ZRIS(:) = ZRIS(:) - ZCI2S(:)
-           ZRSS(:) = ZRSS(:) + ZCI2S(:)
-           ZZW(:)  = ZZWC(:)*ZCITRED23*ZSSIU(:)
-           ZRIS(:) = ZRIS(:) + ZZW(:)*(1.-ZSIFRC(:))
-           ZRVS(:) = ZRVS(:) - ZZW(:)*(1.-ZSIFRC(:))
-           ZTHS(:) = ZTHS(:) + ZZW(:)*ZLSFACT(:)*(1.-ZSIFRC(:))
-        END WHERE
-      END WHERE
+            IF (ZSSIU(JK)<0. .AND. ZSIFRC(JK) <0.98_JPRB) THEN
+              ZRIS(JK) = ZRIS(JK) - ZCI2S(JK)
+              ZRSS(JK) = ZRSS(JK) + ZCI2S(JK)
+              ZZW(JK)  = ZZWC(JK)*ZCITRED23*ZSSIU(JK)
+              ZRIS(JK) = ZRIS(JK) + ZZW(JK)*(1.-ZSIFRC(JK))
+              ZRVS(JK) = ZRVS(JK) - ZZW(JK)*(1.-ZSIFRC(JK))
+              ZTHS(JK) = ZTHS(JK) + ZZW(JK)*ZLSFACT(JK)*(1.-ZSIFRC(JK))
+            END IF
+          END IF
+        END DO
+      ENDIF
 
-     ENDIF
+    ELSE ! End OCND2
 
-  ELSE ! End OCND2
-  WHERE( (ZRCS(:)>0.0) .AND. (ZSSI(:)>0.0) .AND. &
-         (ZRIT(:)>ICED%XRTMIN(4)) .AND. (ZCIT(:)>0.0)       )
-    ZZW(:) = MIN(1.E8,ICED%XLBI*( ZRHODREF(:)*ZRIT(:)/ZCIT(:) )**ICED%XLBEXI) ! Lbda_i
-    ZZW(:) = MIN( ZRCS(:),( ZSSI(:) / (ZRHODREF(:)*ZAI(:)) ) * ZCIT(:) * &
-                  ( ICEP%X0DEPI/ZZW(:) + ICEP%X2DEPI*ZCJ(:)*ZCJ(:)/ZZW(:)**(ICED%XDI+2.0) ) )
-    ZRCS(:) = ZRCS(:) - ZZW(:)
-    ZRIS(:) = ZRIS(:) + ZZW(:)
-    ZTHS(:) = ZTHS(:) + ZZW(:)*(ZLSFACT(:)-ZLVFACT(:))
-  END WHERE
-  ENDIF
+      DO JK = 1, KSIZE
+        IF ((ZRCS(JK) > 0.0) .AND. &
+            (ZSSI(JK) > 0.0) .AND. &
+            (ZRIT(JK) > ICED%XRTMIN(4)) .AND. &
+            (ZCIT(JK) > 0.0)) THEN
+          ZZW(JK) = MIN(1.E8,ICED%XLBI*( ZRHODREF(JK)*ZRIT(JK)/ZCIT(JK) )**ICED%XLBEXI) ! Lbda_i
+          ZZW(JK) = MIN( ZRCS(JK),( ZSSI(JK) / (ZRHODREF(JK)*ZAI(JK)) ) * ZCIT(JK) * &
+                        ( ICEP%X0DEPI/ZZW(JK) + ICEP%X2DEPI*ZCJ(JK)*ZCJ(JK)/ZZW(JK)**(ICED%XDI+2.0) ) )
+          ZRCS(JK) = ZRCS(JK) - ZZW(JK)
+          ZRIS(JK) = ZRIS(JK) + ZZW(JK)
+          ZTHS(JK) = ZTHS(JK) + ZZW(JK)*(ZLSFACT(JK)-ZLVFACT(JK))
+        END IF
+      END DO
+    ENDIF
 
-  IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),   &
-                                   4,'BERFI_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-  IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(ZRCS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
-                                   7,'BERFI_BU_RRC',YDDDH, YDLDDH, YDMDDH)
-  IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
-                                   9,'BERFI_BU_RRI',YDDDH, YDLDDH, YDMDDH)
+    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),   &
+                                     4,'BERFI_BU_RTH',YDDDH, YDLDDH, YDMDDH)
+    IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(ZRCS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+                                     7,'BERFI_BU_RRC',YDDDH, YDLDDH, YDMDDH)
+    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+                                     9,'BERFI_BU_RRI',YDDDH, YDLDDH, YDMDDH)
 
-  IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RI',1,ZHOOK_HANDLE)
+    IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RI',1,ZHOOK_HANDLE)
 
   END SUBROUTINE RAIN_ICE_OLD_FAST_RI
 
