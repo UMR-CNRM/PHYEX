@@ -13,7 +13,7 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
                                      PTHT, PPABST, PEXNREF, PICLDFR, PRHODJ, PRHODREF, &
                                      PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                      PTHS, PRVS, PRIS, PCIT, &
-                                     PICENU, ZT, ZZZZ, &
+                                     PICENU, PT, PZZZ, &
                                      PRHT)
 !
     USE PARKIND1,             ONLY: JPRB
@@ -61,8 +61,8 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
 !
     REAL, DIMENSION(D%NIT), INTENT(IN) :: PICENU
 !
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: ZT   ! Temperature
-    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: ZZZZ ! Temperature
+    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PT   ! Temperature
+    REAL, DIMENSION(D%NIT, D%NKT), INTENT(IN) :: PZZZ ! Temperature
 
     REAL, DIMENSION(D%NIT, D%NKT), OPTIONAL, INTENT(IN) :: PRHT ! Hail m.r. at t
 !
@@ -105,7 +105,7 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
       JL = 0
       DO JK = 1, D%NKT
         DO JI = 1, D%NIT
-          IF (ZT(JI, JK) < CST%XTT) THEN
+          IF (PT(JI, JK) < CST%XTT) THEN
             JL = JL + 1
             I1(JL) = JI
             I2(JL) = JK
@@ -117,12 +117,12 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
       DO JL=1, KSIZE
         ZRVT(JL) = PRVT(I1(JL),I2(JL))
         ZCIT(JL) = PCIT(I1(JL),I2(JL))
-        ZZT(JL) = ZT(I1(JL),I2(JL))
+        ZZT(JL) = PT(I1(JL),I2(JL))
         ZPRES(JL) = PPABST(I1(JL),I2(JL))
         ZZICENU(JL) = PICENU(I1(JL))
 
         IF (OCND2) THEN
-          ZZZ(JL) = ZZZZ(I1(JL),I2(JL))
+          ZZZ(JL) = PZZZ(I1(JL),I2(JL))
           ZESI(JL) = ESATI(ZZT(JL))
           ZESW(JL) = ESATW(ZZT(JL))
           ZAM3(JL) = AM3(MAX(ICEP%XFRMIN(27),ZZT(JL))) ! Avoid too high IN for very low temp.
@@ -211,17 +211,17 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
         ZZW(:) = MIN( ZZW(:),50.E3 ) ! limitation provisoire a 50 l^-1
 
         IF(.NOT.OCND2)THEN
-          ZW(:,:) = UNPACK( ZZW(:),MASK=ZT(D%NIB:D%NIE,D%NKTB:D%NKTE) < CST%XTT, FIELD=0.0 )
+          ZW(:,:) = UNPACK( ZZW(:),MASK=PT(D%NIB:D%NIE,D%NKTB:D%NKTE) < CST%XTT, FIELD=0.0 )
           ZW(:,:) = MAX( ZW(:,:) ,0.0 ) *ICEP%XMNU0/(PRHODREF(:,:)*PTSTEP)
           PRIS(:,:) = PRIS(:,:) + ZW(:,:)
           PRVS(:,:) = PRVS(:,:) - ZW(:,:)
 
           IF ( KRR == 7 ) THEN
-            PTHS(:,:) = PTHS(:,:) + ZW(:,:)*(CST%XLSTT+(CST%XCPV-CST%XCI)*(ZT(:,:)-CST%XTT))   &
+            PTHS(:,:) = PTHS(:,:) + ZW(:,:)*(CST%XLSTT+(CST%XCPV-CST%XCI)*(PT(:,:)-CST%XTT))   &
                  /( (CST%XCPD + CST%XCPV*PRVT(:,:) + CST%XCL*(PRCT(:,:)+PRRT(:,:))   &
                  + CST%XCI*(PRIT(:,:)+PRST(:,:)+PRGT(:,:)+PRHT(:,:)))*PEXNREF(:,:) )
           ELSE IF( KRR == 6 ) THEN
-            PTHS(:,:) = PTHS(:,:) + ZW(:,:)*(CST%XLSTT+(CST%XCPV-CST%XCI)*(ZT(:,:)-CST%XTT))   &
+            PTHS(:,:) = PTHS(:,:) + ZW(:,:)*(CST%XLSTT+(CST%XCPV-CST%XCI)*(PT(:,:)-CST%XTT))   &
                  /( (CST%XCPD + CST%XCPV*PRVT(:,:) + CST%XCL*(PRCT(:,:)+PRRT(:,:))   &
                  + CST%XCI*(PRIT(:,:)+PRST(:,:)+PRGT(:,:)))*PEXNREF(:,:) )
           END IF
@@ -229,7 +229,7 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
                                  ! f(L_s*(RVHENI))
         ZZW(:) = MAX(ZZW(:)+ZCIT(:),ZCIT(:))
 
-        PCIT(:,:) = MAX(UNPACK(ZZW(:), MASK=ZT(D%NIB:D%NIE,D%NKTB:D%NKTE) < CST%XTT, FIELD=0.0), PCIT(:,:))
+        PCIT(:,:) = MAX(UNPACK(ZZW(:), MASK=PT(D%NIB:D%NIE,D%NKTB:D%NKTE) < CST%XTT, FIELD=0.0), PCIT(:,:))
       END IF
 
     END IF
