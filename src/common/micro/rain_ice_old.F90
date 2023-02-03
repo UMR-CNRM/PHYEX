@@ -822,7 +822,23 @@ IF ( KSIZE >= 0 ) THEN
   !Diagnostic of precipitation fraction
   ZW(:,:) = 0.
   ZRAINFR(:,:) = UNPACK( ZRF(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
-  CALL RAINFR_VERT(ZRAINFR(:,:), PRRT(:,:))
+
+  DO JI = D%NIB,D%NIE
+    ZRAINFR(JI,IKE)=0.
+    DO JK=IKE-KKL, IKB, -KKL
+      IF (PRRT(JI,JK) .GT. ICED%XRTMIN(3)) THEN
+
+        ZRAINFR(JI,JK)=MAX(ZRAINFR(JI,JK), ZRAINFR(JI,JK+KKL))
+
+        IF (ZRAINFR(JI,JK)==0) THEN
+          ZRAINFR(JI,JK)=1.
+        END IF
+      ELSE
+        ZRAINFR(JI,JK)=0.
+      END IF
+    END DO
+  END DO
+
   DO JL=1,KSIZE
     ZRF(JL)=ZRAINFR(I1(JL),I2(JL))
   END DO
@@ -1176,49 +1192,24 @@ ELSE
   CALL ABORT
   STOP
 END IF
-!sedimentation of rain fraction
-CALL RAINFR_VERT(ZRAINFR, PRRS(:,:)*PTSTEP)
 
-!
-!
-!-------------------------------------------------------------------------------
-!
-!-------------------------------------------------------------------------------
-!
-!
-IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD',1,ZHOOK_HANDLE)
-CONTAINS
-!
-!-------------------------------------------------------------------------------
-!
-SUBROUTINE RAINFR_VERT(ZPRFR, ZRR)
-
-IMPLICIT NONE
-REAL, DIMENSION(:,:), INTENT(OUT) :: ZPRFR !Precipitation fraction
-REAL, DIMENSION(:,:), INTENT(IN)  :: ZRR !Rain field
-!
-!-------------------------------------------------------------------------------
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
-INTEGER :: JI, JK
-IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAINFR_VERT',0,ZHOOK_HANDLE)
-!
+  !sedimentation of rain fraction
   DO JI = D%NIB,D%NIE
-    ZPRFR(JI,IKE)=0.
+    ZRAINFR(JI,IKE)=0.
     DO JK=IKE-KKL, IKB, -KKL
-       IF (ZRR(JI,JK) .GT. ICED%XRTMIN(3)) THEN
-          ZPRFR(JI,JK)=MAX(ZPRFR(JI,JK),ZPRFR(JI,JK+KKL))
-          IF (ZPRFR(JI,JK)==0) THEN
-             ZPRFR(JI,JK)=1.
-          END IF
-       ELSE
-          ZPRFR(JI,JK)=0.
-       END IF
+      IF (PRRS(JI,JK)*PTSTEP .GT. ICED%XRTMIN(3)) THEN
+
+        ZRAINFR(JI,JK)=MAX(ZRAINFR(JI,JK), ZRAINFR(JI,JK+KKL))
+
+        IF (ZRAINFR(JI,JK)==0) THEN
+          ZRAINFR(JI,JK)=1.
+        END IF
+      ELSE
+        ZRAINFR(JI,JK)=0.
+      END IF
     END DO
   END DO
-!
-IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAINFR_VERT',1,ZHOOK_HANDLE)
-!
-END SUBROUTINE RAINFR_VERT
-!
-!
+
+  IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD',1,ZHOOK_HANDLE)
+
 END SUBROUTINE RAIN_ICE_OLD
