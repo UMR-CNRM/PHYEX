@@ -13,12 +13,12 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
                                   KSIZE, KRR, &
                                   GMICRO, &
                                   PTHS, PRHODJ, &
-                                  ZRVT, ZRCT, ZRIT, ZRST, ZRGT, ZRHT, &
-                                  ZRIS, ZRRS, ZRCS, ZRSS, ZRGS, ZRHS, ZTHS, &
-                                  ZRHODREF, ZRHODJ, ZLSFACT, ZLVFACT, &
-                                  ZLBDAS, ZLBDAG, ZLBDAH, &
-                                  ZCJ, ZKA, ZDV, &
-                                  ZZT, ZPRES, &
+                                  PRVT, PRCT, PRIT, PRST, PRGT, PRHT, &
+                                  PRIS, PRRS, PRCS, PRSS, PRGS, PRHS, PZTHS, &
+                                  PRHODREF, PZRHODJ, PLSFACT, PLVFACT, &
+                                  PLBDAS, PLBDAG, PLBDAH, &
+                                  PCJ, PKA, PDV, &
+                                  PZT, PRES, &
                                   YDDDH, YDLDDH, YDMDDH)
 
     USE PARKIND1,            ONLY: JPRB
@@ -47,40 +47,40 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
 
     LOGICAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: GMICRO ! Layer thickness (m)
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
+    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODJ ! Dry density * Jacobian
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PTHS    ! Theta source
+    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PTHS   ! Theta source
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRVT     ! Water vapor m.r. at t
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRCT     ! Cloud water m.r. at t
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRIT     ! Pristine ice m.r. at t
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRST     ! Snow/aggregate m.r. at t
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRGT     ! Graupel m.r. at t
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRHT     ! Hail m.r. at t
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRVT     ! Water vapor m.r. at t
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRIT     ! Pristine ice m.r. at t
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRGT     ! Graupel m.r. at t
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRHT     ! Hail m.r. at t
 
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRIS     ! Pristine ice m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRRS     ! Rain water m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRCS     ! Cloud water m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRSS     ! Snow/aggregate m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRGS     ! Graupel m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRHS     ! Hail m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZTHS     ! Theta source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRIS     ! Pristine ice m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRRS     ! Rain water m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRCS     ! Cloud water m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRSS     ! Snow/aggregate m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRGS     ! Graupel m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRHS     ! Hail m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PZTHS    ! Theta source
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRHODREF ! RHO Dry REFerence
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRHODJ   ! RHO times Jacobian
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLSFACT  ! L_s/(Pi_ref*C_ph)
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLVFACT  ! L_v/(Pi_ref*C_ph)
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRHODREF ! RHO Dry REFerence
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PZRHODJ  ! RHO times Jacobian
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PLSFACT  ! L_s/(Pi_ref*C_ph)
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PLVFACT  ! L_v/(Pi_ref*C_ph)
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLBDAS   ! Slope parameter of the aggregate distribution
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLBDAG   ! Slope parameter of the graupel   distribution
-    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: ZLBDAH   ! Slope parameter of the hail      distribution
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PLBDAS   ! Slope parameter of the aggregate distribution
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PLBDAG   ! Slope parameter of the graupel   distribution
+    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: PLBDAH   ! Slope parameter of the hail      distribution
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZCJ      ! Function to compute the ventilation coefficient
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZKA      ! Thermal conductivity of the air
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZDV      ! Diffusivity of water vapor in the air
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PCJ      ! Function to compute the ventilation coefficient
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PKA      ! Thermal conductivity of the air
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PDV      ! Diffusivity of water vapor in the air
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZZT      ! Temperature
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZPRES    ! Pressure
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PZT      ! Temperature
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRES     ! Pressure
 
     TYPE(TYP_DDH),          INTENT(INOUT) :: YDDDH
     TYPE(TLDDH),            INTENT(IN)    :: YDLDDH
@@ -109,7 +109,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
 !
     IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RH',0,ZHOOK_HANDLE)
 
-    GHAIL(:) = ZRHT(:)>ICED%XRTMIN(7)
+    GHAIL(:) = PRHT(:)>ICED%XRTMIN(7)
     IHAIL = COUNT(GHAIL(:))
 !
     IF( IHAIL>0 ) THEN
@@ -118,37 +118,37 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
 !
       DO JK = 1, KSIZE
         IF (GHAIL(JK)) THEN
-          ZLBDAH(JK)  = ICED%XLBH*( ZRHODREF(JK)*MAX( ZRHT(JK),ICED%XRTMIN(7) ) )**ICED%XLBEXH
+          PLBDAH(JK)  = ICED%XLBH*( PRHODREF(JK)*MAX( PRHT(JK),ICED%XRTMIN(7) ) )**ICED%XLBEXH
         END IF
       END DO
 
       ZZW1(:,:) = 0.0
       DO JK = 1, KSIZE
-        IF (GHAIL(JK) .AND. ((ZRCT(JK)>ICED%XRTMIN(2) .AND. ZRCS(JK)>0.0))) THEN
-          ZZW(JK) = ZLBDAH(JK)**(ICED%XCXH-ICED%XDH-2.0) * ZRHODREF(JK)**(-ICED%XCEXVT)
-          ZZW1(JK,1) = MIN( ZRCS(JK),ICEP%XFWETH * ZRCT(JK) * ZZW(JK) )             ! RCWETH
+        IF (GHAIL(JK) .AND. ((PRCT(JK)>ICED%XRTMIN(2) .AND. PRCS(JK)>0.0))) THEN
+          ZZW(JK) = PLBDAH(JK)**(ICED%XCXH-ICED%XDH-2.0) * PRHODREF(JK)**(-ICED%XCEXVT)
+          ZZW1(JK,1) = MIN( PRCS(JK),ICEP%XFWETH * PRCT(JK) * ZZW(JK) )             ! RCWETH
         END IF
       END DO
       DO JK = 1, KSIZE
-        IF (GHAIL(JK) .AND. ((ZRIT(JK)>ICED%XRTMIN(4) .AND. ZRIS(JK)>0.0))) THEN
-          ZZW(JK) = ZLBDAH(JK)**(ICED%XCXH-ICED%XDH-2.0) * ZRHODREF(JK)**(-ICED%XCEXVT)
-          ZZW1(JK,2) = MIN( ZRIS(JK),ICEP%XFWETH * ZRIT(JK) * ZZW(JK) )             ! RIWETH
+        IF (GHAIL(JK) .AND. ((PRIT(JK)>ICED%XRTMIN(4) .AND. PRIS(JK)>0.0))) THEN
+          ZZW(JK) = PLBDAH(JK)**(ICED%XCXH-ICED%XDH-2.0) * PRHODREF(JK)**(-ICED%XCEXVT)
+          ZZW1(JK,2) = MIN( PRIS(JK),ICEP%XFWETH * PRIT(JK) * ZZW(JK) )             ! RIWETH
         END IF
       END DO
 !
 !*       7.2.1  accretion of aggregates on the hailstones
 !
-      GWET(:) = GHAIL(:) .AND. (ZRST(:)>ICED%XRTMIN(5) .AND. ZRSS(:)>0.0)
+      GWET(:) = GHAIL(:) .AND. (PRST(:)>ICED%XRTMIN(5) .AND. PRSS(:)>0.0)
       IGWET = COUNT( GWET(:) )
 !
       IF( IGWET>0 ) THEN
 !
-!*       7.2.3  select the (ZLBDAH,ZLBDAS) couplet
+!*       7.2.3  select the (PLBDAH,PLBDAS) couplet
 !
-        ZVEC1(:) = PACK( ZLBDAH(:),MASK=GWET(:) )
-        ZVEC2(:) = PACK( ZLBDAS(:),MASK=GWET(:) )
+        ZVEC1(:) = PACK( PLBDAH(:),MASK=GWET(:) )
+        ZVEC2(:) = PACK( PLBDAS(:),MASK=GWET(:) )
 !
-!*       7.2.4  find the next lower indice for the ZLBDAG and for the ZLBDAS
+!*       7.2.4  find the next lower indice for the PLBDAG and for the PLBDAS
 !               in the geometrical set of (Lbda_h,Lbda_s) couplet use to
 !               tabulate the SWETH-kernel
 !
@@ -177,29 +177,29 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
 
         DO JK = 1, KSIZE
           IF (GWET(JK)) THEN
-            ZZW1(JK,3) = MIN(ZRSS(JK),ICEP%XFSWETH*ZZW(JK)                       & ! RSWETH
-                          *(ZLBDAS(JK)**(ICED%XCXS-ICED%XBS) )*( ZLBDAH(JK)**ICED%XCXH )  &
-                          *(ZRHODREF(JK)**(-ICED%XCEXVT-1.) )               &
-                          *(ICEP%XLBSWETH1/( ZLBDAH(JK)**2              ) + &
-                            ICEP%XLBSWETH2/( ZLBDAH(JK)   * ZLBDAS(JK)   ) + &
-                            ICEP%XLBSWETH3/(               ZLBDAS(JK)**2)))
+            ZZW1(JK,3) = MIN(PRSS(JK),ICEP%XFSWETH*ZZW(JK)                       & ! RSWETH
+                          *(PLBDAS(JK)**(ICED%XCXS-ICED%XBS) )*( PLBDAH(JK)**ICED%XCXH )  &
+                          *(PRHODREF(JK)**(-ICED%XCEXVT-1.) )               &
+                          *(ICEP%XLBSWETH1/( PLBDAH(JK)**2              ) + &
+                            ICEP%XLBSWETH2/( PLBDAH(JK)   * PLBDAS(JK)   ) + &
+                            ICEP%XLBSWETH3/(               PLBDAS(JK)**2)))
           END IF
         END DO
       END IF
 !
 !*       7.2.6  accretion of graupeln on the hailstones
 !
-      GWET(:) = GHAIL(:) .AND. (ZRGT(:)>ICED%XRTMIN(6) .AND. ZRGS(:)>0.0)
+      GWET(:) = GHAIL(:) .AND. (PRGT(:)>ICED%XRTMIN(6) .AND. PRGS(:)>0.0)
       IGWET = COUNT( GWET(:) )
 !
       IF( IGWET>0 ) THEN
 !
-!*       7.2.8  select the (ZLBDAH,ZLBDAG) couplet
+!*       7.2.8  select the (PLBDAH,PLBDAG) couplet
 !
-        ZVEC1(:) = PACK( ZLBDAH(:),MASK=GWET(:) )
-        ZVEC2(:) = PACK( ZLBDAG(:),MASK=GWET(:) )
+        ZVEC1(:) = PACK( PLBDAH(:),MASK=GWET(:) )
+        ZVEC2(:) = PACK( PLBDAG(:),MASK=GWET(:) )
 !
-!*       7.2.9  find the next lower indice for the ZLBDAH and for the ZLBDAG
+!*       7.2.9  find the next lower indice for the PLBDAH and for the PLBDAG
 !               in the geometrical set of (Lbda_h,Lbda_g) couplet use to
 !               tabulate the GWETH-kernel
 !
@@ -228,12 +228,12 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
 
         DO JK = 1, KSIZE
           IF (GWET(JK)) THEN
-            ZZW1(JK,5) = MAX(MIN( ZRGS(JK),ICEP%XFGWETH*ZZW(JK)                       & ! RGWETH
-                          *( ZLBDAG(JK)**(ICED%XCXG-ICED%XBG) )*( ZLBDAH(JK)**ICED%XCXH )  &
-                             *( ZRHODREF(JK)**(-ICED%XCEXVT-1.) )               &
-                             *( ICEP%XLBGWETH1/( ZLBDAH(JK)**2              ) + &
-                                ICEP%XLBGWETH2/( ZLBDAH(JK)   * ZLBDAG(JK)   ) + &
-                                ICEP%XLBGWETH3/(               ZLBDAG(JK)**2) ) ),0. )
+            ZZW1(JK,5) = MAX(MIN( PRGS(JK),ICEP%XFGWETH*ZZW(JK)                       & ! RGWETH
+                          *( PLBDAG(JK)**(ICED%XCXG-ICED%XBG) )*( PLBDAH(JK)**ICED%XCXH )  &
+                             *( PRHODREF(JK)**(-ICED%XCEXVT-1.) )               &
+                             *( ICEP%XLBGWETH1/( PLBDAH(JK)**2              ) + &
+                                ICEP%XLBGWETH2/( PLBDAH(JK)   * PLBDAG(JK)   ) + &
+                                ICEP%XLBGWETH3/(               PLBDAG(JK)**2) ) ),0. )
           END IF
         END DO
       END IF
@@ -242,30 +242,30 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
 !
       ZZW(:) = 0.0
       DO JK = 1, KSIZE
-        IF (GHAIL(JK) .AND. ZZT(JK)<CST%XTT) THEN
-          ZZW(JK) = ZRVT(JK)*ZPRES(JK)/(CST%XEPSILO+ZRVT(JK)) ! Vapor pressure
-          ZZW(JK) = ZKA(JK)*(CST%XTT-ZZT(JK)) +                                 &
-                    ( ZDV(JK)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZZT(JK) - CST%XTT )) &
-                                *(CST%XESTT-ZZW(JK))/(CST%XRV*ZZT(JK)))
+        IF (GHAIL(JK) .AND. PZT(JK)<CST%XTT) THEN
+          ZZW(JK) = PRVT(JK)*PRES(JK)/(CST%XEPSILO+PRVT(JK)) ! Vapor pressure
+          ZZW(JK) = PKA(JK)*(CST%XTT-PZT(JK)) +                                 &
+                    ( PDV(JK)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( PZT(JK) - CST%XTT )) &
+                                *(CST%XESTT-ZZW(JK))/(CST%XRV*PZT(JK)))
 !
 !         compute RWETH
 !
-          ZZW(JK)  =  MAX(0.,  ( ZZW(JK) * ( ICEP%X0DEPH*       ZLBDAH(JK)**ICEP%XEX0DEPH + &
-                                    ICEP%X1DEPH*ZCJ(JK)*ZLBDAH(JK)**ICEP%XEX1DEPH ) + &
+          ZZW(JK)  =  MAX(0.,  ( ZZW(JK) * ( ICEP%X0DEPH*       PLBDAH(JK)**ICEP%XEX0DEPH + &
+                                    ICEP%X1DEPH*PCJ(JK)*PLBDAH(JK)**ICEP%XEX1DEPH ) + &
                        ( ZZW1(JK,2)+ZZW1(JK,3)+ZZW1(JK,5) ) *                  &
-                       ( ZRHODREF(JK)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-ZZT(JK))))) / &
-                             ( ZRHODREF(JK)*(CST%XLMTT-CST%XCL*(CST%XTT-ZZT(JK))) ) )
+                       ( PRHODREF(JK)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-PZT(JK))))) / &
+                             ( PRHODREF(JK)*(CST%XLMTT-CST%XCL*(CST%XTT-PZT(JK))) ) )
 !
           ZZW1(JK,6) = MAX(ZZW(JK) - ZZW1(JK,2) - ZZW1(JK,3) - ZZW1(JK,5), 0.) ! RCWETH+RRWETH
         END IF
       END DO
 
       DO JK = 1, KSIZE
-        IF (GHAIL(JK) .AND. ZZT(JK)<CST%XTT  .AND. ZZW1(JK,6)/=0.) THEN
+        IF (GHAIL(JK) .AND. PZT(JK)<CST%XTT  .AND. ZZW1(JK,6)/=0.) THEN
 !
 ! limitation of the available rainwater mixing ratio (RRWETH < RRS !)
 !
-          ZZW1(JK,4) = MAX( 0.0,MIN( ZZW1(JK,6),ZRRS(JK)+ZZW1(JK,1) ) )
+          ZZW1(JK,4) = MAX( 0.0,MIN( ZZW1(JK,6),PRRS(JK)+ZZW1(JK,1) ) )
           ZUSW(JK)   = ZZW1(JK,4) / ZZW1(JK,6)
           ZZW1(JK,2) = ZZW1(JK,2)*ZUSW(JK)
           ZZW1(JK,3) = ZZW1(JK,3)*ZUSW(JK)
@@ -274,31 +274,31 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
 !
 !*       7.1.6  integrate the Wet growth of hail
 !
-          ZRCS(JK) = ZRCS(JK) - ZZW1(JK,1)
-          ZRIS(JK) = ZRIS(JK) - ZZW1(JK,2)
-          ZRSS(JK) = ZRSS(JK) - ZZW1(JK,3)
-          ZRGS(JK) = ZRGS(JK) - ZZW1(JK,5)
-          ZRHS(JK) = ZRHS(JK) + ZZW(JK)
-          ZRRS(JK) = MAX( 0.0,ZRRS(JK) - ZZW1(JK,4) + ZZW1(JK,1) )
-          ZTHS(JK) = ZTHS(JK) + ZZW1(JK,4)*(ZLSFACT(JK)-ZLVFACT(JK))
+          PRCS(JK) = PRCS(JK) - ZZW1(JK,1)
+          PRIS(JK) = PRIS(JK) - ZZW1(JK,2)
+          PRSS(JK) = PRSS(JK) - ZZW1(JK,3)
+          PRGS(JK) = PRGS(JK) - ZZW1(JK,5)
+          PRHS(JK) = PRHS(JK) + ZZW(JK)
+          PRRS(JK) = MAX( 0.0,PRRS(JK) - ZZW1(JK,4) + ZZW1(JK,1) )
+          PZTHS(JK) = PZTHS(JK) + ZZW1(JK,4)*(PLSFACT(JK)-PLVFACT(JK))
                            ! f(L_f*(RCWETH+RRWETH))
         END IF
       END DO
     END IF
 
-    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:), &
+    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(PZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:), &
                                      4,'WETH_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(ZRCS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(PRCS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      7,'WETH_BU_RRC',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RR) CALL BUDGET_DDH(UNPACK(ZRRS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RR) CALL BUDGET_DDH(UNPACK(PRRS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      8,'WETH_BU_RRR',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(PRIS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      9,'WETH_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RS) CALL BUDGET_DDH(UNPACK(ZRSS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RS) CALL BUDGET_DDH(UNPACK(PRSS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                     10,'WETH_BU_RRS',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RG) CALL BUDGET_DDH(UNPACK(ZRGS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RG) CALL BUDGET_DDH(UNPACK(PRGS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                     11,'WETH_BU_RRG',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RH) CALL BUDGET_DDH(UNPACK(ZRHS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RH) CALL BUDGET_DDH(UNPACK(PRHS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                     12,'WETH_BU_RRH',YDDDH, YDLDDH, YDMDDH)
 
 !*       7.45   Conversion of the hailstones into graupel
@@ -309,31 +309,31 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
 !
       ZZW(:) = 0.0
       DO JK = 1, KSIZE
-        IF (GHAIL(JK) .AND. (ZRHS(JK)>0.0) .AND. (ZZT(JK)>CST%XTT)) THEN
-          ZZW(JK) = ZRVT(JK)*ZPRES(JK)/(CST%XEPSILO+ZRVT(JK)) ! Vapor pressure
-          ZZW(JK) = ZKA(JK)*(CST%XTT-ZZT(JK)) +                              &
-                 ( ZDV(JK)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( ZZT(JK) - CST%XTT )) &
-                                 *(CST%XESTT-ZZW(JK))/(CST%XRV*ZZT(JK)))
+        IF (GHAIL(JK) .AND. (PRHS(JK)>0.0) .AND. (PZT(JK)>CST%XTT)) THEN
+          ZZW(JK) = PRVT(JK)*PRES(JK)/(CST%XEPSILO+PRVT(JK)) ! Vapor pressure
+          ZZW(JK) = PKA(JK)*(CST%XTT-PZT(JK)) +                              &
+                 ( PDV(JK)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( PZT(JK) - CST%XTT )) &
+                                 *(CST%XESTT-ZZW(JK))/(CST%XRV*PZT(JK)))
 !
 ! compute RHMLTR
 !
-          ZZW(JK)  = MIN( ZRHS(JK), MAX( 0.0,( -ZZW(JK) *                     &
-                                 ( ICEP%X0DEPH*       ZLBDAH(JK)**ICEP%XEX0DEPH +     &
-                                   ICEP%X1DEPH*ZCJ(JK)*ZLBDAH(JK)**ICEP%XEX1DEPH ) -   &
-                          ZZW1(JK,6)*( ZRHODREF(JK)*CST%XCL*(CST%XTT-ZZT(JK))) ) /    &
-                                                   ( ZRHODREF(JK)*CST%XLMTT)))
-          ZRRS(JK) = ZRRS(JK) + ZZW(JK)
-          ZRHS(JK) = ZRHS(JK) - ZZW(JK)
-          ZTHS(JK) = ZTHS(JK) - ZZW(JK)*(ZLSFACT(JK)-ZLVFACT(JK)) ! f(L_f*(-RHMLTR))
+          ZZW(JK)  = MIN( PRHS(JK), MAX( 0.0,( -ZZW(JK) *                     &
+                                 ( ICEP%X0DEPH*       PLBDAH(JK)**ICEP%XEX0DEPH +     &
+                                   ICEP%X1DEPH*PCJ(JK)*PLBDAH(JK)**ICEP%XEX1DEPH ) -   &
+                          ZZW1(JK,6)*( PRHODREF(JK)*CST%XCL*(CST%XTT-PZT(JK))) ) /    &
+                                                   ( PRHODREF(JK)*CST%XLMTT)))
+          PRRS(JK) = PRRS(JK) + ZZW(JK)
+          PRHS(JK) = PRHS(JK) - ZZW(JK)
+          PZTHS(JK) = PZTHS(JK) - ZZW(JK)*(PLSFACT(JK)-PLVFACT(JK)) ! f(L_f*(-RHMLTR))
         END IF
       END DO
     END IF
 
-    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),&
+    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(PZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),&
                                      4,'HMLT_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RR) CALL BUDGET_DDH(UNPACK(ZRRS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0), &
+    IF (LBUDGET_RR) CALL BUDGET_DDH(UNPACK(PRRS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0), &
                                      8,'HMLT_BU_RRR',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RH) CALL BUDGET_DDH(UNPACK(ZRHS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0), &
+    IF (LBUDGET_RH) CALL BUDGET_DDH(UNPACK(PRHS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0), &
                                     12,'HMLT_BU_RRH',YDDDH, YDLDDH, YDMDDH)
 
     IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RH',1,ZHOOK_HANDLE)

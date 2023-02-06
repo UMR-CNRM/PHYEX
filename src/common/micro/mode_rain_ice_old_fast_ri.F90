@@ -13,15 +13,15 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RI
                                   PTSTEP, KSIZE,                &
                                   OCND2, LMODICEDEP, GMICRO,    &
                                   PRHODJ, PTHS,                 &
-                                  ZRIT, ZCIT,                   &
-                                  ZRVS, ZRCS, ZRIS, ZRSS, ZTHS, &
-                                  ZRHODREF, ZRHODJ,             &
-                                  ZLSFACT, ZLVFACT,             &
-                                  ZAI, ZCJ,                     &
-                                  ZSSIO, ZSSIU, ZW2D, ZXW2D13,  &
-                                  ZZT, ZPRES, ZSSI,             &
-                                  ZSIFRC, ZESI,                 &
-                                  ZCITRED, ZCITRED23, ZDICRIT,  &
+                                  PRIT, PCIT,                   &
+                                  PRVS, PRCS, PRIS, PRSS, PZTHS, &
+                                  PRHODREF, PZRHODJ,             &
+                                  PLSFACT, PLVFACT,             &
+                                  PAI, PCJ,                     &
+                                  PSSIO, PSSIU, PW2D, PXW2D13,  &
+                                  PZT, PRES, PSSI,             &
+                                  PSIFRC, PESI,                 &
+                                  PCITRED, PCITRED23, PDICRIT,  &
                                   YDDDH, YDLDDH, YDMDDH)
 
     USE PARKIND1,            ONLY: JPRB
@@ -54,43 +54,43 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RI
 
     LOGICAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: GMICRO ! Layer thickness (m)
 
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODJ  ! Dry density * Jacobian
-    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PTHS    ! Theta source
+    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PRHODJ ! Dry density * Jacobian
+    REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PTHS   ! Theta source
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRIT     ! Pristine ice m.r. at t
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZCIT     ! Pristine ice conc. at t
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRIT     ! Pristine ice m.r. at t
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PCIT     ! Pristine ice conc. at t
 
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRVS    ! Water vapor m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRCS     ! Cloud water m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRIS     ! Pristine ice m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRSS     ! Snow/aggregate m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZTHS     ! Theta source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRVS     ! Water vapor m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRCS     ! Cloud water m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRIS     ! Pristine ice m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRSS     ! Snow/aggregate m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PZTHS    ! Theta source
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRHODREF ! RHO Dry REFerence
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRHODJ   ! RHO times Jacobian
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLSFACT  ! L_s/(Pi_ref*C_ph)
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLVFACT  ! L_v/(Pi_ref*C_ph)
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRHODREF ! RHO Dry REFerence
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PZRHODJ  ! RHO times Jacobian
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PLSFACT  ! L_s/(Pi_ref*C_ph)
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PLVFACT  ! L_v/(Pi_ref*C_ph)
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZAI      ! Thermodynamical function
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZCJ      ! Function to compute the ventilation coefficient
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PAI      ! Thermodynamical function
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PCJ      ! Function to compute the ventilation coefficient
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZSSIO    ! Super-saturation with respect to ice in the
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PSSIO    ! Super-saturation with respect to ice in the
                                                       ! supersaturated fraction of gridbox
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZSSIU    ! Sub-saturation with respect to ice in the
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PSSIU    ! Sub-saturation with respect to ice in the
                                                       ! sub-saturated fraction of gridbox
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZW2D     ! Factor for subgridscale calculations
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZXW2D13  ! ZXW2D**0.333 or other expression for LMODICEDEP=T
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PW2D     ! Factor for subgridscale calculations
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PXW2D13  ! ZXW2D**0.333 or other expression for LMODICEDEP=T
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZZT      ! Temperature
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZPRES    ! Pressure
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZSSI     ! Supersaturation over ice
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PZT      ! Temperature
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRES     ! Pressure
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PSSI     ! Supersaturation over ice
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZSIFRC   ! subgridscale fraction with supersaturation with
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZESI     ! saturation pressure over ice
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PSIFRC   ! subgridscale fraction with supersaturation with
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PESI     ! saturation pressure over ice
 
-    REAL, INTENT(IN) :: ZCITRED
-    REAL, INTENT(IN) :: ZCITRED23
-    REAL, INTENT(IN) :: ZDICRIT
+    REAL, INTENT(IN) :: PCITRED
+    REAL, INTENT(IN) :: PCITRED23
+    REAL, INTENT(IN) :: PDICRIT
 
     TYPE(TYP_DDH), INTENT(INOUT) :: YDDDH
     TYPE(TLDDH),   INTENT(IN)    :: YDLDDH
@@ -117,20 +117,20 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RI
 
     ZZW(:) = 0.0
     DO JK = 1, KSIZE
-      IF ((ZRIS(JK)>0.0) .AND. (ZZT(JK)>CST%XTT)) THEN
-        ZZW(JK)  = ZRIS(JK)
-        ZRCS(JK) = ZRCS(JK) + ZRIS(JK)
-        ZTHS(JK) = ZTHS(JK) - ZRIS(JK)*(ZLSFACT(JK)-ZLVFACT(JK)) ! f(L_f*(-RIMLTC))
-        ZRIS(JK) = 0.0
-        ZCIT(JK) = 0.0
+      IF ((PRIS(JK)>0.0) .AND. (PZT(JK)>CST%XTT)) THEN
+        ZZW(JK)  = PRIS(JK)
+        PRCS(JK) = PRCS(JK) + PRIS(JK)
+        PZTHS(JK) = PZTHS(JK) - PRIS(JK)*(PLSFACT(JK)-PLVFACT(JK)) ! f(L_f*(-RIMLTC))
+        PRIS(JK) = 0.0
+        PCIT(JK) = 0.0
       END IF
     END DO
 
-    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),   &
+    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(PZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),   &
                                      4,'IMLT_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(ZRCS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(PRCS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      7,'IMLT_BU_RRC',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(PRIS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      9,'IMLT_BU_RRI',YDDDH, YDLDDH, YDMDDH)
 
 !*       7.2    Bergeron-Findeisen effect: RCBERI
@@ -139,63 +139,63 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RI
     IF(OCND2)THEN
 
       ! Sub gridscale decomposition into a supersaturation part of the gridbox,
-      ! ZSIFRC with a superaturation ZSSIO and a subsaturated part (1.- ZSIFRC)
-      ! with a (negative) superaturation of ZSSIU
+      ! PSIFRC with a superaturation PSSIO and a subsaturated part (1.- PSIFRC)
+      ! with a (negative) superaturation of PSSIU
 
       IF (LMODICEDEP) THEN
 
         DO JL=1,KSIZE
-          ZZW2(JL) = MAX(ZCIT(JL),ICENUMBER2(ZRIS(JL)*PTSTEP,ZZT(JL))* &
-          ZRHODREF(JL))
+          ZZW2(JL) = MAX(PCIT(JL),ICENUMBER2(PRIS(JL)*PTSTEP,PZT(JL))* &
+          PRHODREF(JL))
         ENDDO
 
         DO JK = 1, KSIZE
-          IF (ZZW2(JK)>0.0 .AND. ZESI(JK) < ZPRES(JK)*0.5) THEN
-            ZZW(JK)= ICEP%X0DEPI/(ICED%XLBI*ZAI(JK)) *(ZZW2(JK)/ZRHODREF(JK))**(1.+ICED%XLBEXI) * &
-               & (PTSTEP*MAX(ICED%XRTMIN(4)/PTSTEP,ZRIS(JK))*ZW2D(JK) )**(-ICED%XLBEXI)
-            ZZW(JK)=  MAX(-ZRIS(JK)*ZW2D(JK)*(1.-ZSIFRC(JK))+ZZW(JK)*ZSSIO(JK)* ZSIFRC(JK)* ZXW2D13(JK), &
-          &  ZZW(JK)* ( ZSSIO(JK)* ZSIFRC(JK)* ZXW2D13(JK)  + ZCITRED23*ZSSIU(JK)* (1.-ZSIFRC(JK)) ))
+          IF (ZZW2(JK)>0.0 .AND. PESI(JK) < PRES(JK)*0.5) THEN
+            ZZW(JK)= ICEP%X0DEPI/(ICED%XLBI*PAI(JK)) *(ZZW2(JK)/PRHODREF(JK))**(1.+ICED%XLBEXI) * &
+               & (PTSTEP*MAX(ICED%XRTMIN(4)/PTSTEP,PRIS(JK))*PW2D(JK) )**(-ICED%XLBEXI)
+            ZZW(JK)=  MAX(-PRIS(JK)*PW2D(JK)*(1.-PSIFRC(JK))+ZZW(JK)*PSSIO(JK)* PSIFRC(JK)* PXW2D13(JK), &
+          &  ZZW(JK)* ( PSSIO(JK)* PSIFRC(JK)* PXW2D13(JK)  + PCITRED23*PSSIU(JK)* (1.-PSIFRC(JK)) ))
 
-            ZRIS(JK) = ZRIS(JK) + ZZW(JK)
-            ZRVS(JK) = ZRVS(JK) - ZZW(JK)  ! Budget here: ! cloud ice + vapor = const
-            ZTHS(JK) = ZTHS(JK) + ZZW(JK)*ZLSFACT(JK) ! f(L_f*(RCBERI))
+            PRIS(JK) = PRIS(JK) + ZZW(JK)
+            PRVS(JK) = PRVS(JK) - ZZW(JK)  ! Budget here: ! cloud ice + vapor = const
+            PZTHS(JK) = PZTHS(JK) + ZZW(JK)*PLSFACT(JK) ! f(L_f*(RCBERI))
           END IF
         END DO
       ELSE
 
         DO JK=1,KSIZE
 
-          ZTC =  MAX(-18.,MIN(-1.,ZZT(JK)-CST%XTT))
-          ZHU =  MIN(0.15,MAX(0.,ZSSI(JK)))
+          ZTC =  MAX(-18.,MIN(-1.,PZT(JK)-CST%XTT))
+          ZHU =  MIN(0.15,MAX(0.,PSSI(JK)))
           ZCRYSHA(JK)=1.1+ 3.*ZHU*(1.+ SIN(0.64*ZTC -1.3))
 !         icedensity*4/3 *pi /8. =366.5 ; icedensity=700 kg/m3
-          ZQIMAX = 366.5 * ZDICRIT**3 * ZCIT(JK)*ZCITRED/ZRHODREF(JK)
+          ZQIMAX = 366.5 * PDICRIT**3 * PCIT(JK)*PCITRED/PRHODREF(JK)
           ZCI2S(JK) = 0.
-          IF(ZRIS(JK)*PTSTEP > 1.0e-12)THEN
-              ZCI2S(JK)  =  ZRIS(JK)*(1. - MIN(1., 0.5*ZQIMAX /ZRIS(JK)/PTSTEP))* &
-                  &  (1.-ZSIFRC(JK))*ZW2D(JK)
+          IF(PRIS(JK)*PTSTEP > 1.0e-12)THEN
+              ZCI2S(JK)  =  PRIS(JK)*(1. - MIN(1., 0.5*ZQIMAX /PRIS(JK)/PTSTEP))* &
+                  &  (1.-PSIFRC(JK))*PW2D(JK)
           ENDIF
         ENDDO
 
         DO JK = 1, KSIZE
-          IF (ZCIT(JK)>0.0 .AND. ZESI(JK) < ZPRES(JK)*0.5) THEN
-            ZZWC(JK)=ZCRYSHA(JK)*0.878/ZAI(JK)*(ZCIT(JK)/ZRHODREF(JK))**0.667 &
-                 &*(MAX(ICED%XRTMIN(4)/PTSTEP,ZRIS(JK))*PTSTEP*ZW2D(JK))**0.333
+          IF (PCIT(JK)>0.0 .AND. PESI(JK) < PRES(JK)*0.5) THEN
+            ZZWC(JK)=ZCRYSHA(JK)*0.878/PAI(JK)*(PCIT(JK)/PRHODREF(JK))**0.667 &
+                 &*(MAX(ICED%XRTMIN(4)/PTSTEP,PRIS(JK))*PTSTEP*PW2D(JK))**0.333
 !     Ice supersaturated part of grid box:
-            IF (ZSSIO(JK)>0. .AND. ZSIFRC(JK) > 0.02_JPRB) THEN
-              ZZW(JK)  = ZZWC(JK)*ZXW2D13(JK)*ZSSIO(JK)
-              ZRIS(JK) = ZRIS(JK) + ZZW(JK)*ZSIFRC(JK)
-              ZRVS(JK) = ZRVS(JK) - ZZW(JK)*ZSIFRC(JK)  ! Budget here: ! cloud ice + vapor = const
-              ZTHS(JK) = ZTHS(JK) + ZZW(JK)*ZLSFACT(JK)*ZSIFRC(JK) ! f(L_f*(RCBERI))
+            IF (PSSIO(JK)>0. .AND. PSIFRC(JK) > 0.02_JPRB) THEN
+              ZZW(JK)  = ZZWC(JK)*PXW2D13(JK)*PSSIO(JK)
+              PRIS(JK) = PRIS(JK) + ZZW(JK)*PSIFRC(JK)
+              PRVS(JK) = PRVS(JK) - ZZW(JK)*PSIFRC(JK)  ! Budget here: ! cloud ice + vapor = const
+              PZTHS(JK) = PZTHS(JK) + ZZW(JK)*PLSFACT(JK)*PSIFRC(JK) ! f(L_f*(RCBERI))
             END IF
 !    Ice subsaturated part of grid box:
-            IF (ZSSIU(JK)<0. .AND. ZSIFRC(JK) <0.98_JPRB) THEN
-              ZRIS(JK) = ZRIS(JK) - ZCI2S(JK)
-              ZRSS(JK) = ZRSS(JK) + ZCI2S(JK)
-              ZZW(JK)  = ZZWC(JK)*ZCITRED23*ZSSIU(JK)
-              ZRIS(JK) = ZRIS(JK) + ZZW(JK)*(1.-ZSIFRC(JK))
-              ZRVS(JK) = ZRVS(JK) - ZZW(JK)*(1.-ZSIFRC(JK))
-              ZTHS(JK) = ZTHS(JK) + ZZW(JK)*ZLSFACT(JK)*(1.-ZSIFRC(JK))
+            IF (PSSIU(JK)<0. .AND. PSIFRC(JK) <0.98_JPRB) THEN
+              PRIS(JK) = PRIS(JK) - ZCI2S(JK)
+              PRSS(JK) = PRSS(JK) + ZCI2S(JK)
+              ZZW(JK)  = ZZWC(JK)*PCITRED23*PSSIU(JK)
+              PRIS(JK) = PRIS(JK) + ZZW(JK)*(1.-PSIFRC(JK))
+              PRVS(JK) = PRVS(JK) - ZZW(JK)*(1.-PSIFRC(JK))
+              PZTHS(JK) = PZTHS(JK) + ZZW(JK)*PLSFACT(JK)*(1.-PSIFRC(JK))
             END IF
           END IF
         END DO
@@ -204,25 +204,25 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RI
     ELSE ! End OCND2
 
       DO JK = 1, KSIZE
-        IF ((ZRCS(JK) > 0.0) .AND. &
-            (ZSSI(JK) > 0.0) .AND. &
-            (ZRIT(JK) > ICED%XRTMIN(4)) .AND. &
-            (ZCIT(JK) > 0.0)) THEN
-          ZZW(JK) = MIN(1.E8,ICED%XLBI*( ZRHODREF(JK)*ZRIT(JK)/ZCIT(JK) )**ICED%XLBEXI) ! Lbda_i
-          ZZW(JK) = MIN( ZRCS(JK),( ZSSI(JK) / (ZRHODREF(JK)*ZAI(JK)) ) * ZCIT(JK) * &
-                        ( ICEP%X0DEPI/ZZW(JK) + ICEP%X2DEPI*ZCJ(JK)*ZCJ(JK)/ZZW(JK)**(ICED%XDI+2.0) ) )
-          ZRCS(JK) = ZRCS(JK) - ZZW(JK)
-          ZRIS(JK) = ZRIS(JK) + ZZW(JK)
-          ZTHS(JK) = ZTHS(JK) + ZZW(JK)*(ZLSFACT(JK)-ZLVFACT(JK))
+        IF ((PRCS(JK) > 0.0) .AND. &
+            (PSSI(JK) > 0.0) .AND. &
+            (PRIT(JK) > ICED%XRTMIN(4)) .AND. &
+            (PCIT(JK) > 0.0)) THEN
+          ZZW(JK) = MIN(1.E8,ICED%XLBI*( PRHODREF(JK)*PRIT(JK)/PCIT(JK) )**ICED%XLBEXI) ! Lbda_i
+          ZZW(JK) = MIN( PRCS(JK),( PSSI(JK) / (PRHODREF(JK)*PAI(JK)) ) * PCIT(JK) * &
+                        ( ICEP%X0DEPI/ZZW(JK) + ICEP%X2DEPI*PCJ(JK)*PCJ(JK)/ZZW(JK)**(ICED%XDI+2.0) ) )
+          PRCS(JK) = PRCS(JK) - ZZW(JK)
+          PRIS(JK) = PRIS(JK) + ZZW(JK)
+          PZTHS(JK) = PZTHS(JK) + ZZW(JK)*(PLSFACT(JK)-PLVFACT(JK))
         END IF
       END DO
     ENDIF
 
-    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),   &
+    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(PZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),   &
                                      4,'BERFI_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(ZRCS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(PRCS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      7,'BERFI_BU_RRC',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(PRIS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      9,'BERFI_BU_RRI',YDDDH, YDLDDH, YDMDDH)
 
     IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RI',1,ZHOOK_HANDLE)

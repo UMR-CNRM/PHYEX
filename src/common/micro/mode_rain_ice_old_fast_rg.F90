@@ -9,16 +9,16 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
 
   CONTAINS
 
-  SUBROUTINE RAIN_ICE_OLD_FAST_RG(D, CST, ICEP, ICED,                       &
-                                  PTSTEP, KSIZE, KRR,                       &
-                                  OCND2, LTIW, GMICRO,                      &
-                                  PRHODJ, PTHS,                             &
-                                  ZRVT, ZRCT, ZRIT, ZRRT, ZRST, ZRGT, ZCIT, &
-                                  ZRIS, ZRRS, ZRCS, ZRSS, ZRGS, ZRHS, ZTHS, &
-                                  ZRHODREF, ZRHODJ, ZLSFACT, ZLVFACT,       &
-                                  ZCJ, ZKA, ZDV,                            &
-                                  ZLBDAR, ZLBDAG, ZLBDAS,                   &
-                                  ZTIW, ZZT, ZPRES,                         &
+  SUBROUTINE RAIN_ICE_OLD_FAST_RG(D, CST, ICEP, ICED,                        &
+                                  PTSTEP, KSIZE, KRR,                        &
+                                  OCND2, LTIW, GMICRO,                       &
+                                  PRHODJ, PTHS,                              &
+                                  PRVT, PRCT, PRIT, PRRT, PRST, PRGT, PCIT,  &
+                                  PRIS, PRRS, PRCS, PRSS, PRGS, PRHS, PZTHS, &
+                                  PRHODREF, PZRHODJ, PLSFACT, PLVFACT,       &
+                                  PCJ, PKA, PDV,                             &
+                                  PLBDAR, PLBDAG, PLBDAS,                    &
+                                  PTIW, PZT, PRES,                          &
                                   YDDDH, YDLDDH, YDMDDH)
 
     USE PARKIND1,            ONLY: JPRB
@@ -55,39 +55,39 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
 
     REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN)    :: PTHS    ! Theta source
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRVT     ! Water vapor m.r. at t
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRCT     ! Cloud water m.r. at t
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRRT     ! Rain water m.r. at t
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRIT     ! Pristine ice m.r. at t
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRST     ! Snow/aggregate m.r. at t
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRGT     ! Graupel m.r. at t
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZCIT     ! Pristine ice conc. at t
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRVT     ! Water vapor m.r. at t
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRRT     ! Rain water m.r. at t
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRIT     ! Pristine ice m.r. at t
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRST     ! Snow/aggregate m.r. at t
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRGT     ! Graupel m.r. at t
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PCIT     ! Pristine ice conc. at t
 
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRIS     ! Pristine ice m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRRS     ! Rain water m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRCS     ! Cloud water m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRSS     ! Snow/aggregate m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRGS     ! Graupel m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRHS     ! Hail m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZTHS     ! Theta source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRIS     ! Pristine ice m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRRS     ! Rain water m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRCS     ! Cloud water m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRSS     ! Snow/aggregate m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRGS     ! Graupel m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRHS     ! Hail m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PZTHS     ! Theta source
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRHODREF ! RHO Dry REFerence
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZRHODJ   ! RHO times Jacobian
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLSFACT  ! L_s/(Pi_ref*C_ph)
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLVFACT  ! L_v/(Pi_ref*C_ph)
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRHODREF ! RHO Dry REFerence
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PZRHODJ   ! RHO times Jacobian
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PLSFACT  ! L_s/(Pi_ref*C_ph)
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PLVFACT  ! L_v/(Pi_ref*C_ph)
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLBDAR   ! Slope parameter of the raindrop  distribution
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLBDAG   ! Slope parameter of the graupel   distribution
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZLBDAS   ! Slope parameter of the aggregate distribution
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PLBDAR   ! Slope parameter of the raindrop  distribution
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PLBDAG   ! Slope parameter of the graupel   distribution
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PLBDAS   ! Slope parameter of the aggregate distribution
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZCJ      ! Function to compute the ventilation coefficient
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZKA      ! Thermal conductivity of the air
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZDV      ! Diffusivity of water vapor in the air
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PCJ      ! Function to compute the ventilation coefficient
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PKA      ! Thermal conductivity of the air
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PDV      ! Diffusivity of water vapor in the air
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZTIW     ! Wet bulb temperature
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PTIW     ! Wet bulb temperature
 
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZZT      ! Temperature
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZPRES    ! Pressure
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PZT      ! Temperature
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRES    ! Pressure
 
     TYPE(TYP_DDH),          INTENT(INOUT) :: YDDDH
     TYPE(TLDDH),            INTENT(IN)    :: YDLDDH
@@ -122,66 +122,66 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
 
     ZZW1(:,3:4) = 0.0
     DO JK = 1, KSIZE
-      IF ((ZRIT(JK) > ICED%XRTMIN(4) .AND. ZRIT(JK)>ICEP%XFRMIN(2)) .AND. &
-          (ZRRT(JK) > ICED%XRTMIN(3)) .AND. &
-          (ZRIS(JK) > 0.0) .AND. &
-          (ZRRS(JK) > 0.0)) THEN
-        ZZW1(JK,3) = MIN( ZRIS(JK),ICEP%XICFRR * ZRIT(JK)                & ! RICFRRG
-                                        * ZLBDAR(JK)**ICEP%XEXICFRR    &
-                                        * ZRHODREF(JK)**(-ICED%XCEXVT) )
-        ZZW1(JK,4) = MIN( ZRRS(JK),ICEP%XRCFRI * ZCIT(JK)                & ! RRCFRIG
-                                        * ZLBDAR(JK)**ICEP%XEXRCFRI    &
-                                        * ZRHODREF(JK)**(-ICED%XCEXVT-1.) )
-        ZRIS(JK) = ZRIS(JK) - ZZW1(JK,3)
-        ZRRS(JK) = ZRRS(JK) - ZZW1(JK,4)
-        ZRGS(JK) = ZRGS(JK) + ZZW1(JK,3)+ZZW1(JK,4)
-        ZTHS(JK) = ZTHS(JK) + ZZW1(JK,4)*(ZLSFACT(JK)-ZLVFACT(JK)) ! f(L_f*RRCFRIG)
+      IF ((PRIT(JK) > ICED%XRTMIN(4) .AND. PRIT(JK)>ICEP%XFRMIN(2)) .AND. &
+          (PRRT(JK) > ICED%XRTMIN(3)) .AND. &
+          (PRIS(JK) > 0.0) .AND. &
+          (PRRS(JK) > 0.0)) THEN
+        ZZW1(JK,3) = MIN( PRIS(JK),ICEP%XICFRR * PRIT(JK)                & ! RICFRRG
+                                        * PLBDAR(JK)**ICEP%XEXICFRR    &
+                                        * PRHODREF(JK)**(-ICED%XCEXVT) )
+        ZZW1(JK,4) = MIN( PRRS(JK),ICEP%XRCFRI * PCIT(JK)                & ! RRCFRIG
+                                        * PLBDAR(JK)**ICEP%XEXRCFRI    &
+                                        * PRHODREF(JK)**(-ICED%XCEXVT-1.) )
+        PRIS(JK) = PRIS(JK) - ZZW1(JK,3)
+        PRRS(JK) = PRRS(JK) - ZZW1(JK,4)
+        PRGS(JK) = PRGS(JK) + ZZW1(JK,3)+ZZW1(JK,4)
+        PZTHS(JK) = PZTHS(JK) + ZZW1(JK,4)*(PLSFACT(JK)-PLVFACT(JK)) ! f(L_f*RRCFRIG)
       END IF
     END DO
 
-    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:), &
+    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(PZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:), &
                                      4,'CFRZ_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RR) CALL BUDGET_DDH(UNPACK(ZRRS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0), &
+    IF (LBUDGET_RR) CALL BUDGET_DDH(UNPACK(PRRS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0), &
                                      8,'CFRZ_BU_RRR',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0), &
+    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(PRIS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0), &
                                      9,'CFRZ_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RG) CALL BUDGET_DDH(UNPACK(ZRGS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0), &
+    IF (LBUDGET_RG) CALL BUDGET_DDH(UNPACK(PRGS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0), &
                                     11,'CFRZ_BU_RRG',YDDDH, YDLDDH, YDMDDH)
 
 !*       6.2    compute the Dry growth case
 
     ZZW1(:,:) = 0.0
     DO JK = 1, KSIZE
-      IF ((ZRGT(JK) > ICED%XRTMIN(6)) .AND. &
-         ((ZRCT(JK) > ICED%XRTMIN(2)  .AND. ZRCS(JK) > 0.0))) THEN
-        ZZW(JK) = ZLBDAG(JK)**(ICED%XCXG-ICED%XDG-2.0) * ZRHODREF(JK)**(-ICED%XCEXVT)
-        ZZW1(JK,1) = MIN( ZRCS(JK),ICEP%XFCDRYG * ZRCT(JK) * ZZW(JK) )             ! RCDRYG
+      IF ((PRGT(JK) > ICED%XRTMIN(6)) .AND. &
+         ((PRCT(JK) > ICED%XRTMIN(2)  .AND. PRCS(JK) > 0.0))) THEN
+        ZZW(JK) = PLBDAG(JK)**(ICED%XCXG-ICED%XDG-2.0) * PRHODREF(JK)**(-ICED%XCEXVT)
+        ZZW1(JK,1) = MIN( PRCS(JK),ICEP%XFCDRYG * PRCT(JK) * ZZW(JK) )             ! RCDRYG
       END IF
     END DO
 
     DO JK = 1, KSIZE
-      IF ((ZRGT(JK) > ICED%XRTMIN(6)) .AND. &
-         ((ZRIT(JK) > ICED%XRTMIN(4)  .AND. ZRIS(JK)>0.0))) THEN
+      IF ((PRGT(JK) > ICED%XRTMIN(6)) .AND. &
+         ((PRIT(JK) > ICED%XRTMIN(4)  .AND. PRIS(JK)>0.0))) THEN
 
-        ZZW(JK) = ZLBDAG(JK)**(ICED%XCXG-ICED%XDG-2.0) * ZRHODREF(JK)**(-ICED%XCEXVT)
-        ZZW1(JK,2) = MIN(ZRIS(JK), ICEP%XFIDRYG * EXP(ICEP%XCOLEXIG*(ZZT(JK) - CST%XTT)) &
-                                                * ZRIT(JK) * ZZW(JK) )             ! RIDRYG
+        ZZW(JK) = PLBDAG(JK)**(ICED%XCXG-ICED%XDG-2.0) * PRHODREF(JK)**(-ICED%XCEXVT)
+        ZZW1(JK,2) = MIN(PRIS(JK), ICEP%XFIDRYG * EXP(ICEP%XCOLEXIG*(PZT(JK) - CST%XTT)) &
+                                                * PRIT(JK) * ZZW(JK) )             ! RIDRYG
       END IF
     END DO
 !
 !*       6.2.1  accretion of aggregates on the graupeln
 !
-    GDRY(:) = (ZRST(:)>ICED%XRTMIN(5)) .AND. (ZRGT(:)>ICED%XRTMIN(6)) .AND. (ZRSS(:)>0.0)
+    GDRY(:) = (PRST(:)>ICED%XRTMIN(5)) .AND. (PRGT(:)>ICED%XRTMIN(6)) .AND. (PRSS(:)>0.0)
     IGDRY = COUNT( GDRY(:) )
 !
     IF( IGDRY>0 ) THEN
 !
-!*       6.2.3  select the (ZLBDAG,ZLBDAS) couplet
+!*       6.2.3  select the (PLBDAG,PLBDAS) couplet
 !
-      ZVEC1(:) = PACK( ZLBDAG(:),MASK=GDRY(:) )
-      ZVEC2(:) = PACK( ZLBDAS(:),MASK=GDRY(:) )
+      ZVEC1(:) = PACK( PLBDAG(:),MASK=GDRY(:) )
+      ZVEC2(:) = PACK( PLBDAS(:),MASK=GDRY(:) )
 !
-!*       6.2.4  find the next lower indice for the ZLBDAG and for the ZLBDAS
+!*       6.2.4  find the next lower indice for the PLBDAG and for the PLBDAS
 !               in the geometrical set of (Lbda_g,Lbda_s) couplet use to
 !               tabulate the SDRYG-kernel
 !
@@ -213,14 +213,14 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
       ELSE
         DO JK = 1, KSIZE
           IF (GDRY(JK)) THEN
-            ZZW1(JK,3) = MIN(ZRSS(JK), ICEP%XFSDRYG*ZZW(JK)            & ! RSDRYG
-                               * EXP(ICEP%XCOLEXSG*(ZZT(JK)-CST%XTT))  &
-                               *(ZLBDAS(JK)**(ICED%XCXS-ICED%XBS))     &
-                               *(ZLBDAG(JK)**ICED%XCXG)                &
-                               *(ZRHODREF(JK)**(-ICED%XCEXVT-1.))      &
-                               *(ICEP%XLBSDRYG1/( ZLBDAG(JK)**2               ) + &
-                                 ICEP%XLBSDRYG2/( ZLBDAG(JK)   * ZLBDAS(JK)   ) + &
-                                 ICEP%XLBSDRYG3/(                ZLBDAS(JK)**2) ) )
+            ZZW1(JK,3) = MIN(PRSS(JK), ICEP%XFSDRYG*ZZW(JK)            & ! RSDRYG
+                               * EXP(ICEP%XCOLEXSG*(PZT(JK)-CST%XTT))  &
+                               *(PLBDAS(JK)**(ICED%XCXS-ICED%XBS))     &
+                               *(PLBDAG(JK)**ICED%XCXG)                &
+                               *(PRHODREF(JK)**(-ICED%XCEXVT-1.))      &
+                               *(ICEP%XLBSDRYG1/( PLBDAG(JK)**2               ) + &
+                                 ICEP%XLBSDRYG2/( PLBDAG(JK)   * PLBDAS(JK)   ) + &
+                                 ICEP%XLBSDRYG3/(                PLBDAS(JK)**2) ) )
           END IF
         END DO
       ENDIF
@@ -228,17 +228,17 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
 !
 !*       6.2.6  accretion of raindrops on the graupeln
 !
-    GDRY(:) = (ZRRT(:)>ICED%XRTMIN(3)) .AND. (ZRGT(:)>ICED%XRTMIN(6)) .AND. (ZRRS(:)>0.0)
+    GDRY(:) = (PRRT(:)>ICED%XRTMIN(3)) .AND. (PRGT(:)>ICED%XRTMIN(6)) .AND. (PRRS(:)>0.0)
     IGDRY = COUNT( GDRY(:) )
 !
     IF (IGDRY>0) THEN
 !
-!*       6.2.8  select the (ZLBDAG,ZLBDAR) couplet
+!*       6.2.8  select the (PLBDAG,PLBDAR) couplet
 !
-      ZVEC1(:) = PACK( ZLBDAG(:),MASK=GDRY(:) )
-      ZVEC2(:) = PACK( ZLBDAR(:),MASK=GDRY(:) )
+      ZVEC1(:) = PACK( PLBDAG(:),MASK=GDRY(:) )
+      ZVEC2(:) = PACK( PLBDAR(:),MASK=GDRY(:) )
 !
-!*       6.2.9  find the next lower indice for the ZLBDAG and for the ZLBDAR
+!*       6.2.9  find the next lower indice for the PLBDAG and for the PLBDAR
 !               in the geometrical set of (Lbda_g,Lbda_r) couplet use to
 !               tabulate the RDRYG-kernel
 !
@@ -267,12 +267,12 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
 
       DO JK = 1, KSIZE
         IF (GDRY(JK)) THEN
-          ZZW1(JK,4) = MIN(ZRRS(JK),ICEP%XFRDRYG*ZZW(JK)                     & ! RRDRYG
-                           *(ZLBDAR(JK)**(-4) )*(ZLBDAG(JK)**ICED%XCXG)      &
-                           *(ZRHODREF(JK)**(-ICED%XCEXVT-1.))                &
-                           *(ICEP%XLBRDRYG1/(ZLBDAG(JK)**2               ) + &
-                             ICEP%XLBRDRYG2/(ZLBDAG(JK)   * ZLBDAR(JK)   ) + &
-                             ICEP%XLBRDRYG3/(               ZLBDAR(JK)**2) ) )
+          ZZW1(JK,4) = MIN(PRRS(JK),ICEP%XFRDRYG*ZZW(JK)                     & ! RRDRYG
+                           *(PLBDAR(JK)**(-4) )*(PLBDAG(JK)**ICED%XCXG)      &
+                           *(PRHODREF(JK)**(-ICED%XCEXVT-1.))                &
+                           *(ICEP%XLBRDRYG1/(PLBDAG(JK)**2               ) + &
+                             ICEP%XLBRDRYG2/(PLBDAG(JK)   * PLBDAR(JK)   ) + &
+                             ICEP%XLBRDRYG3/(               PLBDAR(JK)**2) ) )
         END IF
       END DO
     END IF
@@ -285,25 +285,25 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
     ZRWETG(:) = 0.0
 
     DO JK = 1, JK
-      IF (ZRGT(JK)>ICED%XRTMIN(6)) THEN
-        ZZW1(JK,5) = MIN( ZRIS(JK),                                    &
-                    ZZW1(JK,2) / (ICEP%XCOLIG*EXP(ICEP%XCOLEXIG*(ZZT(JK)-CST%XTT)) ) ) ! RIWETG
-        ZZW1(JK,6) = MIN( ZRSS(JK),                                    &
-                    ZZW1(JK,3) / (ICEP%XCOLSG*EXP(ICEP%XCOLEXSG*(ZZT(JK)-CST%XTT)) ) ) ! RSWETG
+      IF (PRGT(JK)>ICED%XRTMIN(6)) THEN
+        ZZW1(JK,5) = MIN( PRIS(JK),                                    &
+                    ZZW1(JK,2) / (ICEP%XCOLIG*EXP(ICEP%XCOLEXIG*(PZT(JK)-CST%XTT)) ) ) ! RIWETG
+        ZZW1(JK,6) = MIN( PRSS(JK),                                    &
+                    ZZW1(JK,3) / (ICEP%XCOLSG*EXP(ICEP%XCOLEXSG*(PZT(JK)-CST%XTT)) ) ) ! RSWETG
 !
-        ZZW(JK) = ZRVT(JK)*ZPRES(JK)/(CST%XEPSILO+ZRVT(JK)) ! Vapor pressure
-        ZZW(JK) = ZKA(JK)*(CST%XTT-ZZT(JK)) +                              &
-                (ZDV(JK)*(CST%XLVTT + (CST%XCPV - CST%XCL) * (ZZT(JK) - CST%XTT)) &
-                       *(CST%XESTT-ZZW(JK))/(CST%XRV*ZZT(JK))           )
+        ZZW(JK) = PRVT(JK)*PRES(JK)/(CST%XEPSILO+PRVT(JK)) ! Vapor pressure
+        ZZW(JK) = PKA(JK)*(CST%XTT-PZT(JK)) +                              &
+                (PDV(JK)*(CST%XLVTT + (CST%XCPV - CST%XCL) * (PZT(JK) - CST%XTT)) &
+                       *(CST%XESTT-ZZW(JK))/(CST%XRV*PZT(JK))           )
 !
 ! compute RWETG
 !
         ZRWETG(JK)=MAX(0.0,                                               &
-                     (ZZW(JK) * ( ICEP%X0DEPG*       ZLBDAG(JK)**ICEP%XEX0DEPG  + &
-                                 ICEP%X1DEPG*ZCJ(JK)*ZLBDAG(JK)**ICEP%XEX1DEPG) + &
+                     (ZZW(JK) * ( ICEP%X0DEPG*       PLBDAG(JK)**ICEP%XEX0DEPG  + &
+                                 ICEP%X1DEPG*PCJ(JK)*PLBDAG(JK)**ICEP%XEX1DEPG) + &
                      (ZZW1(JK,5)+ZZW1(JK,6)) *                            &
-                     (ZRHODREF(JK)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-ZZT(JK))))) / &
-                               (ZRHODREF(JK)*(CST%XLMTT-CST%XCL*(CST%XTT-ZZT(JK)))))
+                     (PRHODREF(JK)*(CST%XLMTT+(CST%XCI-CST%XCL)*(CST%XTT-PZT(JK))))) / &
+                               (PRHODREF(JK)*(CST%XLMTT-CST%XCL*(CST%XTT-PZT(JK)))))
       END IF
     END DO
 !
@@ -312,8 +312,8 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
     ZZW(:) = 0.0
     IF (KRR == 7) THEN
       DO JK = 1, KSIZE
-        IF (ZRGT(JK) > ICED%XRTMIN(6) .AND. &
-            ZZT(JK) < CST%XTT .AND.         &
+        IF (PRGT(JK) > ICED%XRTMIN(6) .AND. &
+            PZT(JK) < CST%XTT .AND.         &
             ZRDRYG(JK) >= ZRWETG(JK) .AND.  &
             ZRWETG(JK) > 0.0) THEN
 
@@ -321,94 +321,94 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
 !
 ! limitation of the available rainwater mixing ratio (RRWETH < RRS !)
 !
-          ZZW1(JK,7) = MAX( 0.0,MIN( ZZW(JK),ZRRS(JK)+ZZW1(JK,1) ) )
+          ZZW1(JK,7) = MAX( 0.0,MIN( ZZW(JK),PRRS(JK)+ZZW1(JK,1) ) )
           ZUSW(JK)   = ZZW1(JK,7) / ZZW(JK)
           ZZW1(JK,5) = ZZW1(JK,5)*ZUSW(JK)
           ZZW1(JK,6) = ZZW1(JK,6)*ZUSW(JK)
           ZRWETG(JK) = ZZW1(JK,7) + ZZW1(JK,5) + ZZW1(JK,6)
 
-          ZRCS(JK) = ZRCS(JK) - ZZW1(JK,1)
-          ZRIS(JK) = ZRIS(JK) - ZZW1(JK,5)
-          ZRSS(JK) = ZRSS(JK) - ZZW1(JK,6)
+          PRCS(JK) = PRCS(JK) - ZZW1(JK,1)
+          PRIS(JK) = PRIS(JK) - ZZW1(JK,5)
+          PRSS(JK) = PRSS(JK) - ZZW1(JK,6)
 !
 ! assume a linear percent of conversion of graupel into hail
 !
-          ZRGS(JK) = ZRGS(JK) + ZRWETG(JK)                     !     Wet growth
-          ZZW(JK)  = ZRGS(JK)*ZRDRYG(JK)/(ZRWETG(JK)+ZRDRYG(JK)) !        and
-          ZRGS(JK) = ZRGS(JK) - ZZW(JK)                        !   partial conversion
-          ZRHS(JK) = ZRHS(JK) + ZZW(JK)                        ! of the graupel into hail
+          PRGS(JK) = PRGS(JK) + ZRWETG(JK)                     !     Wet growth
+          ZZW(JK)  = PRGS(JK)*ZRDRYG(JK)/(ZRWETG(JK)+ZRDRYG(JK)) !        and
+          PRGS(JK) = PRGS(JK) - ZZW(JK)                        !   partial conversion
+          PRHS(JK) = PRHS(JK) + ZZW(JK)                        ! of the graupel into hail
 !
-          ZRRS(JK) = MAX( 0.0,ZRRS(JK) - ZZW1(JK,7) + ZZW1(JK,1) )
-          ZTHS(JK) = ZTHS(JK) + ZZW1(JK,7)*(ZLSFACT(JK)-ZLVFACT(JK)) ! f(L_f*(RCWETG+RRWETG)
+          PRRS(JK) = MAX( 0.0,PRRS(JK) - ZZW1(JK,7) + ZZW1(JK,1) )
+          PZTHS(JK) = PZTHS(JK) + ZZW1(JK,7)*(PLSFACT(JK)-PLVFACT(JK)) ! f(L_f*(RCWETG+RRWETG)
         END IF
       END DO
 
     ELSE IF( KRR == 6 ) THEN
       DO JK = 1, KSIZE
-        IF (ZRGT(JK) > ICED%XRTMIN(6) .AND. &
-            ZRGT(JK) > ICEP%XFRMIN(3) .AND. &
-            ZRIS(JK)*PTSTEP > ICEP%XFRMIN(3) .AND. &
-            ZZT(JK) < CST%XTT .AND. &
+        IF (PRGT(JK) > ICED%XRTMIN(6) .AND. &
+            PRGT(JK) > ICEP%XFRMIN(3) .AND. &
+            PRIS(JK)*PTSTEP > ICEP%XFRMIN(3) .AND. &
+            PZT(JK) < CST%XTT .AND. &
             ZRDRYG(JK) >= ZRWETG(JK) .AND. &
             ZRWETG(JK) > 0.0) THEN
           ZZW(JK)  = ZRWETG(JK)
-          ZRCS(JK) = ZRCS(JK) - ZZW1(JK,1)
-          ZRIS(JK) = ZRIS(JK) - ZZW1(JK,5)
-          ZRSS(JK) = ZRSS(JK) - ZZW1(JK,6)
-          ZRGS(JK) = ZRGS(JK) + ZZW(JK)
+          PRCS(JK) = PRCS(JK) - ZZW1(JK,1)
+          PRIS(JK) = PRIS(JK) - ZZW1(JK,5)
+          PRSS(JK) = PRSS(JK) - ZZW1(JK,6)
+          PRGS(JK) = PRGS(JK) + ZZW(JK)
 
-          ZRRS(JK) = ZRRS(JK) - ZZW(JK) + ZZW1(JK,5) + ZZW1(JK,6) + ZZW1(JK,1)
-          ZTHS(JK) = ZTHS(JK) + (ZZW(JK)-ZZW1(JK,5)-ZZW1(JK,6))*(ZLSFACT(JK)-ZLVFACT(JK))
+          PRRS(JK) = PRRS(JK) - ZZW(JK) + ZZW1(JK,5) + ZZW1(JK,6) + ZZW1(JK,1)
+          PZTHS(JK) = PZTHS(JK) + (ZZW(JK)-ZZW1(JK,5)-ZZW1(JK,6))*(PLSFACT(JK)-PLVFACT(JK))
                                                  ! f(L_f*(RCWETG+RRWETG))
         END IF
       END DO
     END IF
 
-    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:), &
+    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(PZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:), &
                                      4,'WETG_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(ZRCS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(PRCS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      7,'WETG_BU_RRC',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RR) CALL BUDGET_DDH(UNPACK(ZRRS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RR) CALL BUDGET_DDH(UNPACK(PRRS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      8,'WETG_BU_RRR',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(PRIS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      9,'WETG_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RS) CALL BUDGET_DDH(UNPACK(ZRSS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RS) CALL BUDGET_DDH(UNPACK(PRSS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                     10,'WETG_BU_RRS',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RG) CALL BUDGET_DDH(UNPACK(ZRGS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RG) CALL BUDGET_DDH(UNPACK(PRGS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                     11,'WETG_BU_RRG',YDDDH, YDLDDH, YDMDDH)
     IF ( KRR == 7 ) THEN
-      IF (LBUDGET_RH) CALL BUDGET_DDH(UNPACK(ZRHS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+      IF (LBUDGET_RH) CALL BUDGET_DDH(UNPACK(PRHS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                       12,'WETG_BU_RRH',YDDDH, YDLDDH, YDMDDH)
     END IF
 
     DO JK = 1, KSIZE
-      IF (ZRGT(JK) > ICED%XRTMIN(6) .AND. &
-          ZRGT(JK) > ICEP%XFRMIN(4) .AND. &
-          ZRIS(JK)*PTSTEP > ICEP%XFRMIN(4) .AND. &
-          ZZT(JK) < CST%XTT .AND. &
+      IF (PRGT(JK) > ICED%XRTMIN(6) .AND. &
+          PRGT(JK) > ICEP%XFRMIN(4) .AND. &
+          PRIS(JK)*PTSTEP > ICEP%XFRMIN(4) .AND. &
+          PZT(JK) < CST%XTT .AND. &
           ZRDRYG(JK) < ZRWETG(JK) .AND. &
           ZRDRYG(JK) > 0.0) THEN
-        ZRCS(JK) = ZRCS(JK) - ZZW1(JK,1)
-        ZRIS(JK) = ZRIS(JK) - ZZW1(JK,2)
-        ZRSS(JK) = ZRSS(JK) - ZZW1(JK,3)
-        ZRRS(JK) = ZRRS(JK) - ZZW1(JK,4)
-        ZRGS(JK) = ZRGS(JK) + ZRDRYG(JK)
-        ZTHS(JK) = ZTHS(JK) + (ZZW1(JK,1)+ZZW1(JK,4))*(ZLSFACT(JK)-ZLVFACT(JK))
+        PRCS(JK) = PRCS(JK) - ZZW1(JK,1)
+        PRIS(JK) = PRIS(JK) - ZZW1(JK,2)
+        PRSS(JK) = PRSS(JK) - ZZW1(JK,3)
+        PRRS(JK) = PRRS(JK) - ZZW1(JK,4)
+        PRGS(JK) = PRGS(JK) + ZRDRYG(JK)
+        PZTHS(JK) = PZTHS(JK) + (ZZW1(JK,1)+ZZW1(JK,4))*(PLSFACT(JK)-PLVFACT(JK))
                           ! f(L_f*(RCDRYG+RRDRYG))
       END IF
     END DO
 
-    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),   &
+    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(PZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),   &
                                      4,'DRYG_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(ZRCS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(PRCS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      7,'DRYG_BU_RRC',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RR) CALL BUDGET_DDH(UNPACK(ZRRS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RR) CALL BUDGET_DDH(UNPACK(PRRS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      8,'DRYG_BU_RRR',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(PRIS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      9,'DRYG_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RS) CALL BUDGET_DDH(UNPACK(ZRSS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RS) CALL BUDGET_DDH(UNPACK(PRSS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                     10,'DRYG_BU_RRS',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RG) CALL BUDGET_DDH(UNPACK(ZRGS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RG) CALL BUDGET_DDH(UNPACK(PRGS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                     11,'DRYG_BU_RRG',YDDDH, YDLDDH, YDMDDH)
 
 !*       6.5    Melting of the graupeln
@@ -417,60 +417,60 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
     IF (LTIW) THEN
 
       DO JK = 1, KSIZE
-        IF ((ZRGT(JK) > ICED%XRTMIN(6)) .AND. &
-            (ZRGS(JK) > 0.0) .AND. &
-            (ZTIW(JK) > CST%XTT)) THEN
-          ZZW(JK) = ZRVT(JK)*ZPRES(JK)/(CST%XEPSILO+ZRVT(JK)) ! Vapor pressure
-          ZZW(JK) = ZKA(JK)*(CST%XTT-ZTIW(JK)) +                                 &
-                  (ZDV(JK)*(CST%XLVTT + (CST%XCPV - CST%XCL) * (ZTIW(JK) - CST%XTT)) &
-                         *(CST%XESTT-ZZW(JK))/(CST%XRV*ZTIW(JK))             )
+        IF ((PRGT(JK) > ICED%XRTMIN(6)) .AND. &
+            (PRGS(JK) > 0.0) .AND. &
+            (PTIW(JK) > CST%XTT)) THEN
+          ZZW(JK) = PRVT(JK)*PRES(JK)/(CST%XEPSILO+PRVT(JK)) ! Vapor pressure
+          ZZW(JK) = PKA(JK)*(CST%XTT-PTIW(JK)) +                                 &
+                  (PDV(JK)*(CST%XLVTT + (CST%XCPV - CST%XCL) * (PTIW(JK) - CST%XTT)) &
+                         *(CST%XESTT-ZZW(JK))/(CST%XRV*PTIW(JK))             )
 !
 ! compute RGMLTR
 !
-          ZZW(JK)  = ICEP%XFRMIN(8)*MIN( ZRGS(JK), MAX( 0.0,( -ZZW(JK) *           &
-                                 ( ICEP%X0DEPG*       ZLBDAG(JK)**ICEP%XEX0DEPG + &
-                                   ICEP%X1DEPG*ZCJ(JK)*ZLBDAG(JK)**ICEP%XEX1DEPG ) - &
+          ZZW(JK)  = ICEP%XFRMIN(8)*MIN( PRGS(JK), MAX( 0.0,( -ZZW(JK) *           &
+                                 ( ICEP%X0DEPG*       PLBDAG(JK)**ICEP%XEX0DEPG + &
+                                   ICEP%X1DEPG*PCJ(JK)*PLBDAG(JK)**ICEP%XEX1DEPG ) - &
                                            ( ZZW1(JK,1)+ZZW1(JK,4) ) *       &
-                                    ( ZRHODREF(JK)*CST%XCL*(CST%XTT-ZTIW(JK))) ) /   &
-                                                   ( ZRHODREF(JK)*CST%XLMTT)))
+                                    ( PRHODREF(JK)*CST%XCL*(CST%XTT-PTIW(JK))) ) /   &
+                                                   ( PRHODREF(JK)*CST%XLMTT)))
 
 
-          ZRRS(JK) = ZRRS(JK) + ZZW(JK)
-          ZRGS(JK) = ZRGS(JK) - ZZW(JK)
-          ZTHS(JK) = ZTHS(JK) - ZZW(JK)*(ZLSFACT(JK)-ZLVFACT(JK)) ! f(L_f*(-RGMLTR))
+          PRRS(JK) = PRRS(JK) + ZZW(JK)
+          PRGS(JK) = PRGS(JK) - ZZW(JK)
+          PZTHS(JK) = PZTHS(JK) - ZZW(JK)*(PLSFACT(JK)-PLVFACT(JK)) ! f(L_f*(-RGMLTR))
         END IF
       END DO
     ELSE
 
       DO JK = 1, KSIZE
-        IF ((ZRGT(JK)>ICED%XRTMIN(6)) .AND. &
-            (ZRGS(JK)>0.0) .AND. &
-            (ZZT(JK)>CST%XTT)) THEN
-          ZZW(JK) = ZRVT(JK)*ZPRES(JK)/(CST%XEPSILO+ZRVT(JK)) ! Vapor pressure
-          ZZW(JK) = ZKA(JK)*(CST%XTT-ZZT(JK)) +                                 &
-                  (ZDV(JK)*(CST%XLVTT + (CST%XCPV - CST%XCL) * (ZZT(JK) - CST%XTT)) &
-                         *(CST%XESTT-ZZW(JK))/(CST%XRV*ZZT(JK)))
+        IF ((PRGT(JK)>ICED%XRTMIN(6)) .AND. &
+            (PRGS(JK)>0.0) .AND. &
+            (PZT(JK)>CST%XTT)) THEN
+          ZZW(JK) = PRVT(JK)*PRES(JK)/(CST%XEPSILO+PRVT(JK)) ! Vapor pressure
+          ZZW(JK) = PKA(JK)*(CST%XTT-PZT(JK)) +                                 &
+                  (PDV(JK)*(CST%XLVTT + (CST%XCPV - CST%XCL) * (PZT(JK) - CST%XTT)) &
+                         *(CST%XESTT-ZZW(JK))/(CST%XRV*PZT(JK)))
 !
 ! compute RGMLTR
 !
-          ZZW(JK)  = ICEP%XFRMIN(8)*MIN(ZRGS(JK), MAX(0.0, (-ZZW(JK) *         &
-                             (ICEP%X0DEPG*       ZLBDAG(JK)**ICEP%XEX0DEPG +   &
-                              ICEP%X1DEPG*ZCJ(JK)*ZLBDAG(JK)**ICEP%XEX1DEPG) - &
+          ZZW(JK)  = ICEP%XFRMIN(8)*MIN(PRGS(JK), MAX(0.0, (-ZZW(JK) *         &
+                             (ICEP%X0DEPG*       PLBDAG(JK)**ICEP%XEX0DEPG +   &
+                              ICEP%X1DEPG*PCJ(JK)*PLBDAG(JK)**ICEP%XEX1DEPG) - &
                              (ZZW1(JK,1)+ZZW1(JK,4)) *                         &
-                                (ZRHODREF(JK)*CST%XCL*(CST%XTT-ZZT(JK)))) /    &
-                                               (ZRHODREF(JK)*CST%XLMTT)))
-          ZRRS(JK) = ZRRS(JK) + ZZW(JK)
-          ZRGS(JK) = ZRGS(JK) - ZZW(JK)
-          ZTHS(JK) = ZTHS(JK) - ZZW(JK)*(ZLSFACT(JK)-ZLVFACT(JK)) ! f(L_f*(-RGMLTR))
+                                (PRHODREF(JK)*CST%XCL*(CST%XTT-PZT(JK)))) /    &
+                                               (PRHODREF(JK)*CST%XLMTT)))
+          PRRS(JK) = PRRS(JK) + ZZW(JK)
+          PRGS(JK) = PRGS(JK) - ZZW(JK)
+          PZTHS(JK) = PZTHS(JK) - ZZW(JK)*(PLSFACT(JK)-PLVFACT(JK)) ! f(L_f*(-RGMLTR))
         END IF
       END DO
     ENDIF
 
-    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:), &
+    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(PZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:), &
                                      4,'GMLT_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RR) CALL BUDGET_DDH(UNPACK(ZRRS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RR) CALL BUDGET_DDH(UNPACK(PRRS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      8,'GMLT_BU_RRR',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RG) CALL BUDGET_DDH(UNPACK(ZRGS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RG) CALL BUDGET_DDH(UNPACK(PRGS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                     11,'GMLT_BU_RRG',YDDDH, YDLDDH, YDMDDH)
     IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_FAST_RG',1,ZHOOK_HANDLE)
 

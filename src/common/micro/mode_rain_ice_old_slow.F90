@@ -17,9 +17,9 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
                                PRGS, PRST, PRGT, PCIT,             &
                                PRHODREF, PZRHODJ, PLDBAS,           &
                                PZT, PLSFACT, PLVFACT, PPRES, PSSI, &
-                               PZRVS, ZRCS, ZRIS, ZRSS, ZTHS,       &
-                               ZLBDAG, ZKA, ZDV,                   &
-                               ZAI, ZCJ, ZAA2, ZBB3,               &
+                               PZRVS, PRCS, PRIS, PRSS, PZTHS,       &
+                               PLBDAG, PKA, PDV,                   &
+                               PAI, PCJ, PAA2, PBB3,               &
                                ZDICRIT, ZREDGR, ZKVO,              &
                                YDDDH, YDLDDH, YDMDDH)
 
@@ -81,19 +81,19 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PSSI     ! Supersaturation over ice
 
     REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PZRVS ! Water vapor m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRCS ! Cloud water m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRIS ! Pristine ice m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZRSS ! Snow/aggregate m.r. source
-    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: ZTHS ! Theta source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRCS ! Cloud water m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRIS ! Pristine ice m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PRSS ! Snow/aggregate m.r. source
+    REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PZTHS ! Theta source
 
-    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: ZLBDAG ! Slope parameter of the graupel distribution
-    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: ZKA    ! Thermal conductivity of the air
-    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: ZDV    ! Diffusivity of water vapor in the air
+    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: PLBDAG ! Slope parameter of the graupel distribution
+    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: PKA    ! Thermal conductivity of the air
+    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: PDV    ! Diffusivity of water vapor in the air
 
-    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: ZAI  ! Thermodynamical function
-    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: ZCJ  ! Function to compute the ventilation coefficient
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZAA2 ! Part of ZAI used for optimized code
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: ZBB3 ! Part of ZAI used for optimized code
+    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: PAI  ! Thermodynamical function
+    REAL, DIMENSION(KSIZE), INTENT(OUT)   :: PCJ  ! Function to compute the ventilation coefficient
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PAA2 ! Part of PAI used for optimized code
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PBB3 ! Part of PAI used for optimized code
 
     REAL, INTENT(IN) :: ZDICRIT, ZREDGR ! Possible reduction of the rate of graupel,snow growth
     REAL, INTENT(IN) :: ZKVO ! factor used for caluclate maximum mass in the ice distubution.
@@ -121,20 +121,20 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
     ZZW(:) = 0.0
 
     DO JL = 1, KSIZE
-      IF ((PZT(JL)<CST%XTT-35.0) .AND. (PRCT(JL)>ICED%XRTMIN(2)) .AND. (ZRCS(JL)>0.)) THEN
-        ZZW(JL) = MIN( ZRCS(JL),ICEP%XHON*PRHODREF(JL)*PRCT(JL)       &
+      IF ((PZT(JL)<CST%XTT-35.0) .AND. (PRCT(JL)>ICED%XRTMIN(2)) .AND. (PRCS(JL)>0.)) THEN
+        ZZW(JL) = MIN( PRCS(JL),ICEP%XHON*PRHODREF(JL)*PRCT(JL)       &
                                      *EXP(ICEP%XALPHA3*(PZT(JL)-CST%XTT)-ICEP%XBETA3))
-        ZRIS(JL) = ZRIS(JL) + ZZW(JL)
-        ZRCS(JL) = ZRCS(JL) - ZZW(JL)
-        ZTHS(JL) = ZTHS(JL) + ZZW(JL)*(PLSFACT(JL)-PLVFACT(JL)) ! f(L_f*(RCHONI))
+        PRIS(JL) = PRIS(JL) + ZZW(JL)
+        PRCS(JL) = PRCS(JL) - ZZW(JL)
+        PZTHS(JL) = PZTHS(JL) + ZZW(JL)*(PLSFACT(JL)-PLVFACT(JL)) ! f(L_f*(RCHONI))
       END IF
     END DO
 
-    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),  &
+    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(PZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),  &
                                      4,'HON_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(ZRCS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),   &
+    IF (LBUDGET_RC) CALL BUDGET_DDH(UNPACK(PRCS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),   &
                                      7,'HON_BU_RRC',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),   &
+    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(PRIS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),   &
                                      9,'HON_BU_RRI',YDDDH, YDLDDH, YDMDDH)
 
 !*       3.3     compute the spontaneous freezing source: RRHONG
@@ -145,11 +145,11 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
         ZZW(JL) = MIN( PRRS(JL),PRRT(JL)* ZINVTSTEP )
         PRGS(JL) = PRGS(JL) + ZZW(JL)
         PRRS(JL) = PRRS(JL) - ZZW(JL)
-        ZTHS(JL) = ZTHS(JL) + ZZW(JL)*(PLSFACT(JL)-PLVFACT(JL)) ! f(L_f*(RRHONG))
+        PZTHS(JL) = PZTHS(JL) + ZZW(JL)*(PLSFACT(JL)-PLVFACT(JL)) ! f(L_f*(RRHONG))
       END IF
     END DO
 
-    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),  &
+    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(PZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),  &
                                      4,'SFR_BU_RTH',YDDDH, YDLDDH, YDMDDH)
     IF (LBUDGET_RR) CALL BUDGET_DDH(UNPACK(PRRS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),   &
                                      8,'SFR_BU_RRR',YDDDH, YDLDDH, YDMDDH)
@@ -158,20 +158,20 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 
 !*       3.4    compute the deposition, aggregation and autoconversion sources
 
-    ZKA(:) = 2.38E-2 + 0.0071E-2 * ( PZT(:) - CST%XTT )              ! k_a
-    ZDV(:) = 0.211E-4 * (PZT(:)/CST%XTT)**1.94 * (CST%XP00/PPRES(:)) ! D_v
+    PKA(:) = 2.38E-2 + 0.0071E-2 * ( PZT(:) - CST%XTT )              ! k_a
+    PDV(:) = 0.211E-4 * (PZT(:)/CST%XTT)**1.94 * (CST%XP00/PPRES(:)) ! D_v
 !
 !*       3.4.1  compute the thermodynamical function A_i(T,P)
 !*              and the c^prime_j (in the ventilation factor)
 !
     IF(OCND2)THEN
-       ZAI(:) = ZAA2(:) + ZBB3(:)*PPRES(:)
+       PAI(:) = PAA2(:) + PBB3(:)*PPRES(:)
     ELSE
-       ZAI(:) = EXP( CST%XALPI - CST%XBETAI/PZT(:) - CST%XGAMI*ALOG(PZT(:) ) ) ! es_i
-       ZAI(:) = ( CST%XLSTT + (CST%XCPV-CST%XCI)*(PZT(:)-CST%XTT) )**2 / (ZKA(:)*CST%XRV*PZT(:)**2) &
-                                   + ( CST%XRV*PZT(:) ) / (ZDV(:)*ZAI(:))
+       PAI(:) = EXP( CST%XALPI - CST%XBETAI/PZT(:) - CST%XGAMI*ALOG(PZT(:) ) ) ! es_i
+       PAI(:) = ( CST%XLSTT + (CST%XCPV-CST%XCI)*(PZT(:)-CST%XTT) )**2 / (PKA(:)*CST%XRV*PZT(:)**2) &
+                                   + ( CST%XRV*PZT(:) ) / (PDV(:)*PAI(:))
     ENDIF
-    ZCJ(:) = ICEP%XSCFAC * PRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(PZT(:)-CST%XTT) )
+    PCJ(:) = ICEP%XSCFAC * PRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(PZT(:)-CST%XTT) )
 !
 !*       3.4.3  compute the deposition on r_s: RVDEPS
 !
@@ -185,59 +185,59 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 
     IF(OCND2)THEN
       DO JL = 1, KSIZE
-        IF ((PRST(JL)>ICED%XRTMIN(5)) .AND. (ZRSS(JL)>0.0)) THEN
-          ZZW(JL) = (PSSI(JL)/(PRHODREF(JL)*ZAI(JL))) *  &
-                    (ICEP%X0DEPS*PLDBAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*ZCJ(JL)*PLDBAS(JL)**ICEP%XEX1DEPS)
-          ZZW(JL) = MIN( PZRVS(JL),MAX(-ZRSS(JL),ZZW(JL)))  ! Simpler
+        IF ((PRST(JL)>ICED%XRTMIN(5)) .AND. (PRSS(JL)>0.0)) THEN
+          ZZW(JL) = (PSSI(JL)/(PRHODREF(JL)*PAI(JL))) *  &
+                    (ICEP%X0DEPS*PLDBAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*PCJ(JL)*PLDBAS(JL)**ICEP%XEX1DEPS)
+          ZZW(JL) = MIN( PZRVS(JL),MAX(-PRSS(JL),ZZW(JL)))  ! Simpler
           ZZW(JL) = ZZW(JL)*ZREDSN ! Possible tuning by using ZREDSN /=  1
-          ZRSS(JL) = ZRSS(JL) + ZZW(JL)
+          PRSS(JL) = PRSS(JL) + ZZW(JL)
           PZRVS(JL) = PZRVS(JL) - ZZW(JL)
-          ZTHS(JL) = ZTHS(JL) + ZZW(JL)*PLSFACT(JL)
+          PZTHS(JL) = PZTHS(JL) + ZZW(JL)*PLSFACT(JL)
         END IF
       END DO
     ELSE
       DO JL = 1, KSIZE
-        IF ((PRST(JL)>ICED%XRTMIN(5)) .AND. (ZRSS(JL)>0.0)) THEN
-          ZZW(JL) = ( PSSI(JL)/(PRHODREF(JL)*ZAI(JL)) ) *          &
-               ( ICEP%X0DEPS*PLDBAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*ZCJ(JL)*PLDBAS(JL)**ICEP%XEX1DEPS )
+        IF ((PRST(JL)>ICED%XRTMIN(5)) .AND. (PRSS(JL)>0.0)) THEN
+          ZZW(JL) = ( PSSI(JL)/(PRHODREF(JL)*PAI(JL)) ) *          &
+               ( ICEP%X0DEPS*PLDBAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*PCJ(JL)*PLDBAS(JL)**ICEP%XEX1DEPS )
           ZZW(JL) = MIN(PZRVS(JL),ZZW(JL)     )*(0.5+SIGN(0.5,ZZW(JL))) &
-                  - MIN(ZRSS(JL),ABS(ZZW(JL)))*(0.5-SIGN(0.5,ZZW(JL)))
+                  - MIN(PRSS(JL),ABS(ZZW(JL)))*(0.5-SIGN(0.5,ZZW(JL)))
 
           IF (ZZW(JL) < 0.0) THEN
             ZZW(JL) = ZZW(JL) * ICEP%XRDEPSRED
           END IF
 
-          ZRSS(JL) = ZRSS(JL) + ZZW(JL)
+          PRSS(JL) = PRSS(JL) + ZZW(JL)
           PZRVS(JL) = PZRVS(JL) - ZZW(JL)
-          ZTHS(JL) = ZTHS(JL) + ZZW(JL)*PLSFACT(JL)
+          PZTHS(JL) = PZTHS(JL) + ZZW(JL)*PLSFACT(JL)
         END IF
       END DO
     ENDIF
 
-    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),  &
+    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(PZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),  &
                                      4,'DEPS_BU_RTH',YDDDH, YDLDDH, YDMDDH)
     IF (LBUDGET_RV) CALL BUDGET_DDH(UNPACK(PZRVS(:),MASK=GMICRO(:,:),FIELD=PRVS)*PRHODJ(:,:),  &
                                      6,'DEPS_BU_RRV',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RS) CALL BUDGET_DDH(UNPACK(ZRSS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),   &
+    IF (LBUDGET_RS) CALL BUDGET_DDH(UNPACK(PRSS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),   &
                                     10,'DEPS_BU_RRS',YDDDH, YDLDDH, YDMDDH)
 
 !*       3.4.4  compute the aggregation on r_s: RIAGGS
 
     ZZW(:) = 0.0
     DO JL = 1, KSIZE
-      IF ((PRIT(JL)>ICED%XRTMIN(4)) .AND. (PRST(JL)>ICED%XRTMIN(5)) .AND. (ZRIS(JL)>0.0)) THEN
-        ZZW(JL) = MIN(ZRIS(JL),ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PZT(JL)-CST%XTT)) &
+      IF ((PRIT(JL)>ICED%XRTMIN(4)) .AND. (PRST(JL)>ICED%XRTMIN(5)) .AND. (PRIS(JL)>0.0)) THEN
+        ZZW(JL) = MIN(PRIS(JL),ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PZT(JL)-CST%XTT)) &
                                             * PRIT(JL)                              &
                                             * PLDBAS(JL)**ICEP%XEXIAGGS             &
                                             * PRHODREF(JL)**(-ICED%XCEXVT))
-        ZRSS(JL)  = ZRSS(JL)  + ZZW(JL)
-        ZRIS(JL)  = ZRIS(JL)  - ZZW(JL)
+        PRSS(JL)  = PRSS(JL)  + ZZW(JL)
+        PRIS(JL)  = PRIS(JL)  - ZZW(JL)
       END IF
     END DO
 
-    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(PRIS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      9,'AGGS_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RS) CALL BUDGET_DDH(UNPACK(ZRSS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RS) CALL BUDGET_DDH(UNPACK(PRSS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                     10,'AGGS_BU_RRS',YDDDH, YDLDDH, YDMDDH)
 
 !*       3.4.5  compute the autoconversion of r_i for r_s production: RIAUTS
@@ -245,11 +245,11 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
     ZCRIAUTI(:)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PZT(:)-CST%XTT)+ICEP%XBCRIAUTI))
     ZZW(:) = 0.0
     DO JL = 1, KSIZE
-      IF ((PRIT(JL)>ICED%XRTMIN(4)) .AND. (ZRIS(JL)>0.0)) THEN
-        ZZW(JL) = MIN(ZRIS(JL),ICEP%XTIMAUTI * EXP(ICEP%XTEXAUTI*(PZT(JL)-CST%XTT)) &
+      IF ((PRIT(JL)>ICED%XRTMIN(4)) .AND. (PRIS(JL)>0.0)) THEN
+        ZZW(JL) = MIN(PRIS(JL),ICEP%XTIMAUTI * EXP(ICEP%XTEXAUTI*(PZT(JL)-CST%XTT)) &
                                              * MAX(PRIT(JL)-ZCRIAUTI(JL),0.0 ))
-        ZRSS(JL) = ZRSS(JL) + ZZW(JL)
-        ZRIS(JL) = ZRIS(JL) - ZZW(JL)
+        PRSS(JL) = PRSS(JL) + ZZW(JL)
+        PRIS(JL) = PRIS(JL) - ZZW(JL)
       END IF
     END DO
 
@@ -259,11 +259,11 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
       ! (For the moment sperical ice crystals are assumed)
 
       DO JL = 1, KSIZE
-        IF ((ZRIS(JL)>0.0_JPRB) .AND. (PSSI(JL)>0.001_JPRB)) THEN
-          ZBFT(JL) = 0.5_JPRB*87.5_JPRB*(ZDICRIT)**2*ZAI(JL)/ PSSI(JL)
+        IF ((PRIS(JL)>0.0_JPRB) .AND. (PSSI(JL)>0.001_JPRB)) THEN
+          ZBFT(JL) = 0.5_JPRB*87.5_JPRB*(ZDICRIT)**2*PAI(JL)/ PSSI(JL)
           ZBFT(JL) = PTSTEP/ MAX(PTSTEP,ZBFT(JL)*2._JPRB)
-          ZRSS(JL) = ZRSS(JL) + ZBFT(JL)*ZRIS(JL)
-          ZRIS(JL) = ZRIS(JL) - ZBFT(JL)*ZRIS(JL)
+          PRSS(JL) = PRSS(JL) + ZBFT(JL)*PRIS(JL)
+          PRIS(JL) = PRIS(JL) - ZBFT(JL)*PRIS(JL)
         END IF
       END DO
     ENDIF
@@ -277,24 +277,24 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 
       DO JL=1,KSIZE
         ZZW2(JL) = &
-        MAX(PCIT(JL),ICENUMBER2(ZRIS(JL)*PTSTEP,PZT(JL))*PRHODREF(JL))
+        MAX(PCIT(JL),ICENUMBER2(PRIS(JL)*PTSTEP,PZT(JL))*PRHODREF(JL))
       ENDDO
 
       DO JL = 1, KSIZE
-        IF (ZRIS(JL)>ICEP%XFRMIN(13) .AND.PCIT(JL) > 0.) THEN
+        IF (PRIS(JL)>ICEP%XFRMIN(13) .AND.PCIT(JL) > 0.) THEN
           ! LAMBDA for ICE
-          ZZW2(JL) = MIN(1.E8,ICED%XLBI*(PRHODREF(JL)*ZRIS(JL)* PTSTEP/ZZW2(JL))**ICED%XLBEXI)
+          ZZW2(JL) = MIN(1.E8,ICED%XLBI*(PRHODREF(JL)*PRIS(JL)* PTSTEP/ZZW2(JL))**ICED%XLBEXI)
           ZBFT(JL) = 1. - 0.5**(ZKVO /ZZW2(JL))
-          ZBFT(JL) = MIN(0.9*ZRIS(JL)*PTSTEP, ZBFT(JL)*ZRIS(JL)*PTSTEP)
-          ZRSS(JL) = ZRSS(JL) + ZBFT(JL)
-          ZRIS(JL) = ZRIS(JL) - ZBFT(JL)
+          ZBFT(JL) = MIN(0.9*PRIS(JL)*PTSTEP, ZBFT(JL)*PRIS(JL)*PTSTEP)
+          PRSS(JL) = PRSS(JL) + ZBFT(JL)
+          PRIS(JL) = PRIS(JL) - ZBFT(JL)
         END IF
       END DO
     ENDIF
 
-    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(ZRIS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RI) CALL BUDGET_DDH(UNPACK(PRIS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                      9,'AUTS_BU_RRI',YDDDH, YDLDDH, YDMDDH)
-    IF (LBUDGET_RS) CALL BUDGET_DDH(UNPACK(ZRSS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
+    IF (LBUDGET_RS) CALL BUDGET_DDH(UNPACK(PRSS(:)*PZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0),    &
                                     10,'AUTS_BU_RRS',YDDDH, YDLDDH, YDMDDH)
 
 !*       3.4.6  compute the deposition on r_g: RVDEPG
@@ -308,16 +308,16 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
 
     DO JL = 1, KSIZE
       IF (PRGT(JL)>0.0) THEN
-        ZLBDAG(JL)  = ICED%XLBG*(PRHODREF(JL)*MAX(PRGT(JL), ICED%XRTMIN(6)))**ICED%XLBEXG
+        PLBDAG(JL)  = ICED%XLBG*(PRHODREF(JL)*MAX(PRGT(JL), ICED%XRTMIN(6)))**ICED%XLBEXG
       END IF
     END DO
 
     ZZW(:) = 0.0
     DO JL = 1, KSIZE
       IF ((PRGT(JL)>ICED%XRTMIN(6)) .AND. (PRGS(JL)>0.0)) THEN
-        ZZW(JL) = (PSSI(JL)/(PRHODREF(JL)*ZAI(JL))) * &
-                  (ICEP%X0DEPG*ZLBDAG(JL)**ICEP%XEX0DEPG + &
-                   ICEP%X1DEPG*ZCJ(JL)*ZLBDAG(JL)**ICEP%XEX1DEPG)
+        ZZW(JL) = (PSSI(JL)/(PRHODREF(JL)*PAI(JL))) * &
+                  (ICEP%X0DEPG*PLBDAG(JL)**ICEP%XEX0DEPG + &
+                   ICEP%X1DEPG*PCJ(JL)*PLBDAG(JL)**ICEP%XEX1DEPG)
 
         ZZW(JL) = MIN(PZRVS(JL),ZZW(JL)      )*(0.5+SIGN(0.5,ZZW(JL))) &
                 - MIN(PRGS(JL),ABS(ZZW(JL)) )*(0.5-SIGN(0.5,ZZW(JL)))
@@ -327,10 +327,10 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
           ZZW(JL)  = ZZW(JL) * ICEP%XRDEPGRED
         END IF
 
-        ZRSS(JL) = (ZZW(JL) + PRGS(JL))* ZZW2(JL) + ZRSS(JL)
+        PRSS(JL) = (ZZW(JL) + PRGS(JL))* ZZW2(JL) + PRSS(JL)
         PRGS(JL) = (ZZW(JL) + PRGS(JL))*(1. - ZZW2(JL))
         PZRVS(JL) = PZRVS(JL) - ZZW(JL)
-        ZTHS(JL) = ZTHS(JL) + ZZW(JL)*PLSFACT(JL)
+        PZTHS(JL) = PZTHS(JL) + ZZW(JL)*PLSFACT(JL)
       END IF
     END DO
 
@@ -340,7 +340,7 @@ MODULE MODE_RAIN_ICE_OLD_SLOW
       END IF
     END DO
 
-    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),   &
+    IF (LBUDGET_TH) CALL BUDGET_DDH(UNPACK(PZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:),   &
                                      4,'DEPG_BU_RTH',YDDDH, YDLDDH, YDMDDH)
     IF (LBUDGET_RV) CALL BUDGET_DDH(UNPACK(PZRVS(:),MASK=GMICRO(:,:),FIELD=PRVS)*PRHODJ(:,:),   &
                                      6,'DEPG_BU_RRV',YDDDH, YDLDDH, YDMDDH)
