@@ -28,30 +28,35 @@
 !!       Pialat/Tulet  15/02/12 add ForeFire
 !!      Modification    01/2016  (JP Pinty) Add LIMA
 !!       V. Vionnet     07/17   add blowing snow
-!  P. Wautelet 10/03/2021: add CSVNAMES and CSVNAMES_A to store the name of all the scalar variables
 !  B. Vie         06/2021: add prognostic supersaturation for LIMA
+!  P. Wautelet 26/11/2021: add TSVLIST and TSVLIST_A to store the metadata of all the scalar variables
 !  A. Costes      12/2021: add Blaze fire model smoke
-!
+!  P. Wautelet 14/01/2022: add CSV_CHEM_LIST(_A) to store the list of all chemical variables
+!                          + NSV_CHEM_LIST(_A) the size of the list
 !-------------------------------------------------------------------------------
 !
 !*       0.   DECLARATIONS
 !             ------------
 !
-USE MODD_PARAMETERS, ONLY : JPMODELMAX, &  ! Maximum allowed number of nested models
-                            JPSVMAX,    &  ! Maximum number of scalar variables
-                            JPSVNAMELGTMAX ! Maximum length of a scalar variable name
+USE MODD_FIELD,      ONLY: tfieldmetadata
+USE MODD_PARAMETERS, ONLY: JPMODELMAX, &     ! Maximum allowed number of nested models
+                           JPSVMAX,    &     ! Maximum number of scalar variables
+                           JPSVNAMELGTMAX, & ! Maximum length of a scalar variable name
+                           NMNHNAMELGTMAX
 !
 IMPLICIT NONE
 SAVE
 !
 REAL,DIMENSION(JPSVMAX) :: XSVMIN ! minimum value for SV variables
 !
-LOGICAL :: LINI_NSV = .FALSE. ! becomes True when routine INI_NSV is called
+LOGICAL :: LINI_NSV(JPMODELMAX) = .FALSE. ! becomes True when routine INI_NSV is called
 !
-CHARACTER(LEN=JPSVNAMELGTMAX), DIMENSION(:,:), ALLOCATABLE, TARGET :: CSVNAMES_A !Names of all the scalar variables
+CHARACTER(LEN=NMNHNAMELGTMAX), DIMENSION(:,:), ALLOCATABLE, TARGET :: CSV_CHEM_LIST_A !Names of all the chemical variables
+TYPE(tfieldmetadata), DIMENSION(:,:), ALLOCATABLE, TARGET :: TSVLIST_A !Metadata of all the scalar variables
 
 INTEGER,DIMENSION(JPMODELMAX)::NSV_A = 0 ! total number of scalar variables
                                          ! NSV_A = NSV_USER_A+NSV_C2R2_A+NSV_CHEM_A+..
+INTEGER,DIMENSION(JPMODELMAX)::NSV_CHEM_LIST_A = 0 ! total number of chemical variables (including dust, salt...)
 INTEGER,DIMENSION(JPMODELMAX)::NSV_USER_A = 0  ! number of user scalar variables with 
                                                ! indices in the range : 1...NSV_USER_A
 !
@@ -90,7 +95,7 @@ INTEGER,DIMENSION(JPMODELMAX)::NSV_LGEND_A = 0 ! NSV_LGBEG_A...NSV_LGEND_A
 !
 INTEGER,DIMENSION(JPMODELMAX)::NSV_LNOX_A = 0    ! number of lightning NOx
 INTEGER,DIMENSION(JPMODELMAX)::NSV_LNOXBEG_A = 0 ! with indices in the range :
-INTEGER,DIMENSION(JPMODELMAX)::NSV_LNOXEND_A = 0 ! NSV_LNOXBEG_A...NSV_LNOXEND_A                !                                 
+INTEGER,DIMENSION(JPMODELMAX)::NSV_LNOXEND_A = 0 ! NSV_LNOXBEG_A...NSV_LNOXEND_A
 INTEGER,DIMENSION(JPMODELMAX)::NSV_DST_A = 0    ! number of dust scalar
 INTEGER,DIMENSION(JPMODELMAX)::NSV_DSTBEG_A = 0 ! with indices in the range :
 INTEGER,DIMENSION(JPMODELMAX)::NSV_DSTEND_A = 0 ! NSV_DSTBEG_A...NSV_DSTEND_A
@@ -145,6 +150,7 @@ INTEGER,DIMENSION(JPMODELMAX)::NSV_LIMA_SPRO_A = 0     ! Supersaturation
 INTEGER,DIMENSION(JPMODELMAX)::NSV_FF_A = 0    ! number of ForeFire scalar variables
 INTEGER,DIMENSION(JPMODELMAX)::NSV_FFBEG_A = 0 ! with indices in the range :
 INTEGER,DIMENSION(JPMODELMAX)::NSV_FFEND_A = 0 ! NSV_FFBEG_A...NSV_FFEND_A
+!
 #endif
 ! Blaze smoke indexes
 INTEGER,DIMENSION(JPMODELMAX)::NSV_FIRE_A = 0    ! number of Blaze smoke scalar variables
@@ -159,9 +165,14 @@ INTEGER,DIMENSION(JPMODELMAX)::NSV_SNWEND_A = 0 ! NSV_SNWBEG_A...NSV_SNWEND_A
 !
 ! variables updated for the current model
 !
-CHARACTER(LEN=JPSVNAMELGTMAX), DIMENSION(:), POINTER :: CSVNAMES !Names of all the scalar variables
+CHARACTER(LEN=NMNHNAMELGTMAX), DIMENSION(:), POINTER :: CSV_CHEM_LIST !Names of all the chemical variables
+TYPE(tfieldmetadata), DIMENSION(:), POINTER :: TSVLIST !Metadata of all the scalar variables
+
 CHARACTER(LEN=6), DIMENSION(:), ALLOCATABLE :: CSV ! name of the scalar variables
+
 INTEGER :: NSV         = 0 ! total number of user scalar variables
+!
+INTEGER :: NSV_CHEM_LIST = 0 ! total number of chemical variables (including dust, salt...)
 !
 INTEGER :: NSV_USER    = 0 ! number of user scalar variables with indices
                            ! in the range : 1...NSV_USER
@@ -255,6 +266,7 @@ INTEGER :: NSV_LIMA_SPRO     !
 INTEGER :: NSV_FF    = 0 ! number of ForeFire scalar variables
 INTEGER :: NSV_FFBEG = 0 ! with indices in the range :
 INTEGER :: NSV_FFEND = 0 ! NSV_FFBEG...NSV_FFEND
+!
 #endif
 ! Blaze smoke
 INTEGER :: NSV_FIRE    = 0 ! number of Blaze smoke scalar variables

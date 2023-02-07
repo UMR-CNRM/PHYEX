@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -9,10 +9,15 @@
 !
 INTERFACE
 !
-       SUBROUTINE MODEL_n(KTCOUNT,OEXIT)
+       SUBROUTINE MODEL_n( KTCOUNT, TPBAKFILE, TPDTMODELN, OEXIT )
 !
-INTEGER, INTENT(IN)   :: KTCOUNT  ! temporal loop index of model KMODEL
-LOGICAL, INTENT(INOUT):: OEXIT    ! switch for the end of the temporal loop
+USE MODD_IO,        ONLY: TFILEDATA
+USE MODD_TYPE_DATE, ONLY: DATE_TIME
+!
+INTEGER,                  INTENT(IN)    :: KTCOUNT    ! Temporal loop index of model KMODEL
+TYPE(TFILEDATA), POINTER, INTENT(OUT)   :: TPBAKFILE  ! Pointer for backup file
+TYPE(DATE_TIME),          INTENT(OUT)   :: TPDTMODELN ! Time of current model computation
+LOGICAL,                  INTENT(INOUT) :: OEXIT      ! Switch for the end of the temporal loop
 !
 END SUBROUTINE MODEL_n
 !
@@ -21,7 +26,7 @@ END INTERFACE
 END MODULE MODI_MODEL_n
 
 !     ################################### 
-      SUBROUTINE MODEL_n(KTCOUNT, OEXIT) 
+      SUBROUTINE MODEL_n( KTCOUNT, TPBAKFILE, TPDTMODELN, OEXIT )
 !     ###################################
 !
 !!****  *MODEL_n * -monitor of the model version _n 
@@ -274,6 +279,9 @@ END MODULE MODI_MODEL_n
 !  J.L. Redelsperger 03/2021: add Call NHOA_COUPLN (coupling O & A LES version)
 !  A. Costes      12/2021: add Blaze fire model
 !  C. Barthe   07/04/2022: deallocation of ZSEA
+!  P. Wautelet 08/12/2022: bugfix if no TDADFILE
+!  P. Wautelet 13/01/2023: manage close of backup files outside of MODEL_n
+!                          (useful to close them in reverse model order (child before parent, needed by WRITE_BALLOON_n)
 !!-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS
@@ -363,8 +371,10 @@ USE MODD_TIME_n
 USE MODD_TIMEZ
 USE MODD_TURB_CLOUD,     ONLY: NMODEL_CLOUD,CTURBLEN_CLOUD,XCEI
 USE MODD_TURB_n
+USE MODD_TYPE_DATE,      ONLY: DATE_TIME
 USE MODD_VISCOSITY
 !
+USE MODE_AIRCRAFT_BALLOON
 use mode_budget,           only: Budget_store_init, Budget_store_end
 USE MODE_DATETIME
 USE MODE_ELEC_ll
@@ -382,9 +392,11 @@ USE MODE_MODELN_HANDLER
 USE MODE_MPPDB
 USE MODE_MSG
 USE MODE_ONE_WAY_n
+USE MODE_WRITE_AIRCRAFT_BALLOON
 use mode_write_les_n,               only: Write_les_n
 use mode_write_lfifmn_fordiachro_n, only: WRITE_LFIFMN_FORDIACHRO_n
 USE MODE_WRITE_PROFILER_n,          ONLY: WRITE_PROFILER_n
+USE MODE_WRITE_STATION_n,           ONLY: WRITE_STATION_n
 !
 USE MODI_ADDFLUCTUATIONS
 USE MODI_ADVECTION_METSV
@@ -392,7 +404,6 @@ USE MODI_ADVECTION_UVW
 USE MODI_ADVECTION_UVW_CEN
 USE MODI_ADV_FORCING_n
 USE MODI_AER_MONITOR_n
-USE MODI_AIRCRAFT_BALLOON
 USE MODI_BLOWSNOW
 USE MODI_BOUNDARIES
 USE MODI_BUDGET_FLAGS
@@ -447,12 +458,10 @@ USE MODI_TURB_CLOUD_INDEX
 USE MODI_TWO_WAY
 USE MODI_UPDATE_NSV
 USE MODI_VISCOSITY
-USE MODI_WRITE_AIRCRAFT_BALLOON
 USE MODI_WRITE_DESFM_n
 USE MODI_WRITE_DIAG_SURF_ATM_N
 USE MODI_WRITE_LFIFM_n
 USE MODI_WRITE_SERIES_n
-USE MODI_WRITE_STATION_n
 USE MODI_WRITE_SURF_ATM_N
 !
 USE MODD_FIRE
@@ -462,8 +471,10 @@ IMPLICIT NONE
 !
 !
 !
-INTEGER, INTENT(IN)   :: KTCOUNT
-LOGICAL, INTENT(INOUT):: OEXIT
+INTEGER,                  INTENT(IN)    :: KTCOUNT    ! Temporal loop index of model KMODEL
+TYPE(TFILEDATA), POINTER, INTENT(OUT)   :: TPBAKFILE  ! Pointer for backup file
+TYPE(DATE_TIME),          INTENT(OUT)   :: TPDTMODELN ! Time of current model computation
+LOGICAL,                  INTENT(INOUT) :: OEXIT      ! Switch for the end of the temporal loop
 !
 !*       0.2   declarations of local variables
 !
@@ -482,6 +493,7 @@ REAL(kind=MNHTIME), DIMENSION(2) :: ZTIME_STEP,ZTIME_STEP_PTS
 CHARACTER                 :: YMI
 INTEGER                   :: IPOINTS
 CHARACTER(len=16)         :: YTCOUNT,YPOINTS
+CHARACTER(LEN=:), ALLOCATABLE :: YDADNAME
 !
 INTEGER :: ISYNCHRO          ! model synchronic index relative to its father
                              ! = 1  for the first time step in phase with DAD
@@ -552,15 +564,15 @@ LOGICAL :: GCLD                     ! conditionnal call for dust wet deposition
 LOGICAL :: GCLOUD_ONLY              ! conditionnal radiation computations for
                                 !      the only cloudy columns
 REAL, DIMENSION(SIZE(XRSVS,1), SIZE(XRSVS,2), SIZE(XRSVS,3), NSV_AER)  :: ZWETDEPAER
-
-
 !
-TYPE(TFILEDATA),POINTER :: TZBAKFILE, TZOUTFILE
+TYPE(TFILEDATA),POINTER :: TZOUTFILE
 ! TYPE(TFILEDATA),SAVE    :: TZDIACFILE
 !-------------------------------------------------------------------------------
 !
-TZBAKFILE=> NULL()
+TPBAKFILE=> NULL()
 TZOUTFILE=> NULL()
+!
+TPDTMODELN = TDTCUR
 !
 !*       0.    MICROPHYSICAL SCHEME
 !              ------------------- 
@@ -997,18 +1009,24 @@ IF ( nfile_backup_current < NBAK_NUMB ) THEN
   IF ( KTCOUNT == TBACKUPN(nfile_backup_current + 1)%NSTEP ) THEN
     nfile_backup_current = nfile_backup_current + 1
     !
-    TZBAKFILE => TBACKUPN(nfile_backup_current)%TFILE
-    IVERB    = TZBAKFILE%NLFIVERB
+    TPBAKFILE => TBACKUPN(nfile_backup_current)%TFILE
+    IVERB    = TPBAKFILE%NLFIVERB
     !
-    CALL IO_File_open(TZBAKFILE)
+    CALL IO_File_open(TPBAKFILE)
     !
-    CALL WRITE_DESFM_n(IMI,TZBAKFILE)
+    CALL WRITE_DESFM_n(IMI,TPBAKFILE)
     CALL IO_Header_write( TBACKUPN(nfile_backup_current)%TFILE )
-    CALL WRITE_LFIFM_n( TBACKUPN(nfile_backup_current)%TFILE, TBACKUPN(nfile_backup_current)%TFILE%TDADFILE%CNAME )
-    TOUTDATAFILE => TZBAKFILE
-    CALL MNHWRITE_ZS_DUMMY_n(TZBAKFILE)
+    IF ( ASSOCIATED( TBACKUPN(nfile_backup_current)%TFILE%TDADFILE ) ) THEN
+      YDADNAME = TBACKUPN(nfile_backup_current)%TFILE%TDADFILE%CNAME
+    ELSE
+      ! Set a dummy name for the dad file. Its non-zero size will allow the writing of some data in the backup file
+      YDADNAME = 'DUMMY'
+    END IF
+    CALL WRITE_LFIFM_n( TBACKUPN(nfile_backup_current)%TFILE, TRIM( YDADNAME ) )
+    TOUTDATAFILE => TPBAKFILE
+    CALL MNHWRITE_ZS_DUMMY_n(TPBAKFILE)
     IF (CSURF=='EXTE') THEN
-      TFILE_SURFEX => TZBAKFILE
+      TFILE_SURFEX => TPBAKFILE
       CALL GOTO_SURFEX(IMI)
       CALL WRITE_SURF_ATM_n(YSURF_CUR,'MESONH','ALL',.FALSE.)
       IF ( KTCOUNT > 1) THEN
@@ -1020,10 +1038,10 @@ IF ( nfile_backup_current < NBAK_NUMB ) THEN
     !
     ! Reinitialize Lagragian variables at every model backup
     IF (LLG .AND. LINIT_LG .AND. CINIT_LG=='FMOUT') THEN
-      CALL INI_LG(XXHAT,XYHAT,XZZ,XSVT,XLBXSVM,XLBYSVM)
+      CALL INI_LG( XXHATM, XYHATM, XZZ, XSVT, XLBXSVM, XLBYSVM )
       IF (IVERB>=5) THEN
         WRITE(UNIT=ILUOUT,FMT=*) '************************************'
-        WRITE(UNIT=ILUOUT,FMT=*) '*** Lagrangian variables refreshed after ',TRIM(TZBAKFILE%CNAME),' backup'
+        WRITE(UNIT=ILUOUT,FMT=*) '*** Lagrangian variables refreshed after ',TRIM(TPBAKFILE%CNAME),' backup'
         WRITE(UNIT=ILUOUT,FMT=*) '************************************'
       END IF
     END IF
@@ -1034,11 +1052,11 @@ IF ( nfile_backup_current < NBAK_NUMB ) THEN
 !
   ELSE
     !Necessary to have a 'valid' CNAME when calling some subroutines
-    TZBAKFILE => TFILE_DUMMY
+    TPBAKFILE => TFILE_DUMMY
   END IF
 ELSE
   !Necessary to have a 'valid' CNAME when calling some subroutines
-  TZBAKFILE => TFILE_DUMMY
+  TPBAKFILE => TFILE_DUMMY
 END IF
 !
 IF ( nfile_output_current < NOUT_NUMB ) THEN
@@ -1235,8 +1253,9 @@ IF (LCARTESIAN) THEN
   CALL SM_GRIDCART(XXHAT,XYHAT,XZHAT,XZS,LSLEVE,XLEN1,XLEN2,XZSMT,XDXHAT,XDYHAT,XZZ,ZJ)
   XMAP=1.
 ELSE
-  CALL SM_GRIDPROJ(XXHAT,XYHAT,XZHAT,XZS,LSLEVE,XLEN1,XLEN2,XZSMT,XLATORI,XLONORI, &
-                   XMAP,XLAT,XLON,XDXHAT,XDYHAT,XZZ,ZJ)
+  CALL SM_GRIDPROJ( XXHAT, XYHAT, XZHAT, XXHATM, XYHATM, XZS,      &
+                    LSLEVE, XLEN1, XLEN2, XZSMT, XLATORI, XLONORI, &
+                    XMAP, XLAT, XLON, XDXHAT, XDYHAT, XZZ, ZJ      )
 END IF
 !
 IF ( LFORCING ) THEN
@@ -1460,7 +1479,7 @@ XT_RELAX = XT_RELAX + ZTIME2 - ZTIME1 &
 !
 ZTIME1 = ZTIME2
 !
-CALL PHYS_PARAM_n( KTCOUNT, TZBAKFILE,                            &
+CALL PHYS_PARAM_n( KTCOUNT, TPBAKFILE,                            &
                    XT_RAD,  XT_SHADOWS, XT_DCONV, XT_GROUND,      &
                    XT_MAFL, XT_DRAG, XT_EOL, XT_TURB,  XT_TRACER, &
                    ZTIME, ZWETDEPAER, GMASKkids, GCLOUD_ONLY      )
@@ -1640,7 +1659,7 @@ XTIME_LES_BU_PROCESS = 0.
 !
 CALL MPPDB_CHECK3DM("before ADVEC_METSV:XU/V/W/TH/TKE/T,XRHODJ",PRECISION,&
                    &  XUT, XVT, XWT, XTHT, XTKET,XRHODJ)
- CALL ADVECTION_METSV ( TZBAKFILE, CUVW_ADV_SCHEME,                    &
+ CALL ADVECTION_METSV ( TPBAKFILE, CUVW_ADV_SCHEME,                    &
                  CMET_ADV_SCHEME, CSV_ADV_SCHEME, CCLOUD, NSPLIT,      &
                  LSPLIT_CFL, XSPLIT_CFL, LCFL_WRIT,                    &
                  CLBCX, CLBCY, NRR, NSV, TDTCUR, XTSTEP,               &
@@ -1742,7 +1761,7 @@ XT_ADVUVW = XT_ADVUVW + ZTIME2 - ZTIME1 - XTIME_LES_BU_PROCESS - XTIME_BU_PROCES
 !-------------------------------------------------------------------------------
 !
 IF (NMODEL_CLOUD==IMI .AND. CTURBLEN_CLOUD/='NONE') THEN
-  CALL TURB_CLOUD_INDEX( XTSTEP, TZBAKFILE,                               &
+  CALL TURB_CLOUD_INDEX( XTSTEP, TPBAKFILE,                               &
                          LTURB_DIAG, NRRI,                                &
                          XRRS, XRT, XRHODJ, XDXX, XDYY, XDZZ, XDZX, XDZY, &
                          XCEI                                             )
@@ -1929,7 +1948,7 @@ IF (CCLOUD /= 'NONE' .AND. CELEC == 'NONE') THEN
     CALL MNHGET_SURF_PARAM_n (PSEA=ZSEA(:,:),PTOWN=ZTOWN(:,:))
     CALL RESOLVED_CLOUD ( CCLOUD, CACTCCN, CSCONV, CMF_CLOUD, NRR, NSPLITR,    &
                           NSPLITG, IMI, KTCOUNT,                               &
-                          CLBCX,CLBCY,TZBAKFILE, CRAD, CTURBDIM,               &
+                          CLBCX,CLBCY,TPBAKFILE, CRAD, CTURBDIM,               &
                           LSUBG_COND,LSIGMAS,CSUBG_AUCV,XTSTEP,                &
                           XZZ, XRHODJ, XRHODREF, XEXNREF,                      &
                           ZPABST, XTHT,XRT,XSIGS,VSIGQSAT,XMFCONV,XTHM,XRCM,   &
@@ -1949,7 +1968,7 @@ IF (CCLOUD /= 'NONE' .AND. CELEC == 'NONE') THEN
   ELSE
     CALL RESOLVED_CLOUD ( CCLOUD, CACTCCN, CSCONV, CMF_CLOUD, NRR, NSPLITR,    &
                           NSPLITG, IMI, KTCOUNT,                               &
-                          CLBCX,CLBCY,TZBAKFILE, CRAD, CTURBDIM,               &
+                          CLBCX,CLBCY,TPBAKFILE, CRAD, CTURBDIM,               &
                           LSUBG_COND,LSIGMAS,CSUBG_AUCV,                       &
                           XTSTEP,XZZ, XRHODJ, XRHODREF, XEXNREF,               &
                           ZPABST, XTHT,XRT,XSIGS,VSIGQSAT,XMFCONV,XTHM,XRCM,   &
@@ -2151,16 +2170,14 @@ IF (LFLYER) THEN
     ALLOCATE(ZSEA(IIU,IJU))
     ZSEA(:,:) = 0.
     CALL MNHGET_SURF_PARAM_n (PSEA=ZSEA(:,:))
-    CALL AIRCRAFT_BALLOON(XTSTEP,                                             &
-                      XXHAT, XYHAT, XZZ, XMAP, XLONORI, XLATORI,              &
-                      XUT, XVT, XWT, XPABST, XTHT, XRT, XSVT, XTKET, XTSRAD,  &
-                      XRHODREF,XCIT,PSEA=ZSEA(:,:))
+    CALL AIRCRAFT_BALLOON( XTSTEP, XZZ, XMAP, XLONORI, XLATORI,                   &
+                           XUT, XVT, XWT, XPABST, XTHT, XRT, XSVT, XTKET, XTSRAD, &
+                           XRHODREF, XCIT, PSEA = ZSEA(:,:)                       )
     DEALLOCATE(ZSEA)
   ELSE
-    CALL AIRCRAFT_BALLOON(XTSTEP,                                             &
-                      XXHAT, XYHAT, XZZ, XMAP, XLONORI, XLATORI,              &
-                      XUT, XVT, XWT, XPABST, XTHT, XRT, XSVT, XTKET, XTSRAD,  &
-                      XRHODREF,XCIT)
+    CALL AIRCRAFT_BALLOON( XTSTEP, XZZ, XMAP, XLONORI, XLATORI,                   &
+                           XUT, XVT, XWT, XPABST, XTHT, XRT, XSVT, XTKET, XTSRAD, &
+                           XRHODREF, XCIT                                         )
   END IF
 END IF
 
@@ -2169,10 +2186,8 @@ END IF
 !*       24.2    STATION (observation diagnostic)
 !               --------------------------------
 !
-IF (LSTATION)                                                            &
-  CALL STATION_n(XTSTEP,                                                 &
-                 XXHAT, XYHAT, XZZ,                                      &
-                 XUT, XVT, XWT, XTHT, XRT, XSVT, XTKET, XTSRAD, XPABST   )
+IF ( LSTATION ) &
+  CALL STATION_n( XZZ, XUT, XVT, XWT, XTHT, XRT, XSVT, XTKET, XTSRAD, XPABST )
 !
 !---------------------------------------------------------
 !
@@ -2184,16 +2199,14 @@ IF (LPROFILER)  THEN
     ALLOCATE(ZSEA(IIU,IJU))
     ZSEA(:,:) = 0.
     CALL MNHGET_SURF_PARAM_n (PSEA=ZSEA(:,:))
-    CALL PROFILER_n(XTSTEP,                                              &
-                  XXHAT, XYHAT, XZZ,XRHODREF,                            &
-                  XUT, XVT, XWT, XTHT, XRT, XSVT, XTKET, XTSRAD, XPABST, &
-                  XAER, MAX(XCLDFR,XICEFR), XCIT,PSEA=ZSEA(:,:))
+    CALL PROFILER_n( XZZ, XRHODREF,                             &
+                     XUT, XVT, XWT, XTHT, XRT, XSVT, XTKET,     &
+                     XTSRAD, XPABST, XAER, XCIT, PSEA=ZSEA(:,:) )
     DEALLOCATE(ZSEA)
   ELSE
-    CALL PROFILER_n(XTSTEP,                                              &
-                  XXHAT, XYHAT, XZZ,XRHODREF,                            &
-                  XUT, XVT, XWT, XTHT, XRT, XSVT, XTKET, XTSRAD, XPABST, &
-                  XAER, MAX(XCLDFR,XICEFR), XCIT)
+    CALL PROFILER_n( XZZ, XRHODREF,                         &
+                     XUT, XVT, XWT, XTHT, XRT, XSVT, XTKET, &
+                     XTSRAD, XPABST, XAER, XCIT             )
   END IF
 END IF
 !
@@ -2230,15 +2243,6 @@ XT_STEP_BUD = XT_STEP_BUD + ZTIME2 - ZTIME1 + XTIME_BU
 !
 !-------------------------------------------------------------------------------
 !
-!*       26.    FM FILE CLOSURE
-!               ---------------
-!
-IF ( tzbakfile%lopened ) THEN
-  CALL IO_File_close(TZBAKFILE)
-END IF
-!
-!-------------------------------------------------------------------------------
-!
 !*       27.    CURRENT TIME REFRESH
 !               --------------------
 !
@@ -2270,6 +2274,8 @@ IF (OEXIT) THEN
     CALL MENU_DIACHRO(TDIAFILE,'END')
 #endif
     CALL IO_File_close(TDIAFILE)
+    ! Free memory of flyer that is not present on the master process of the file (was allocated in WRITE_AIRCRAFT_BALLOON)
+    CALL AIRCRAFT_BALLOON_FREE_NONLOCAL( TDIAFILE )
   END IF
   !
   CALL IO_File_close(TINIFILE)

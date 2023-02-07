@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2022 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -26,7 +26,7 @@ use modd_budget, only: nbudgets, tbudgets,                                      
                        NBUDGET_U, NBUDGET_V, NBUDGET_W, NBUDGET_TH, NBUDGET_TKE,   &
                        NBUDGET_RV, NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, &
                        NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1
-use modd_nsv,    only: csvnames, nsv
+use modd_nsv,    only: nsv, tsvlist
 
 integer          :: ibudget
 integer          :: jsv
@@ -91,8 +91,8 @@ tbudgets(NBUDGET_RH)%nid      = NBUDGET_RH
 
 do jsv = 1, nsv
   ibudget = NBUDGET_SV1 - 1 + jsv
-  tbudgets(ibudget)%cname    = Trim( csvnames(jsv) )
-  tbudgets(ibudget)%ccomment = 'Budget for scalar variable ' // Trim( csvnames(jsv) )
+  tbudgets(ibudget)%cname    = Trim( tsvlist(jsv)%cmnhname )
+  tbudgets(ibudget)%ccomment = 'Budget for scalar variable ' // Trim( tsvlist(jsv)%cmnhname )
   tbudgets(ibudget)%nid      = ibudget
 end do
 
@@ -228,8 +228,8 @@ use modd_dyn,           only: lcorio, xseglen
 use modd_dyn_n,         only: xtstep, locean
 use modd_elec_descr,    only: linductive, lrelax2fw_ion
 use modd_field,         only: TYPEREAL
-use modd_nsv,           only: csvnames,                                                                            &
-                              nsv_aerbeg, nsv_aerend, nsv_aerdepbeg, nsv_aerdepend, nsv_c2r2beg, nsv_c2r2end,      &
+use modd_fire,          only: lblaze
+use modd_nsv,           only: nsv_aerbeg, nsv_aerend, nsv_aerdepbeg, nsv_aerdepend, nsv_c2r2beg, nsv_c2r2end,      &
                               nsv_chembeg, nsv_chemend, nsv_chicbeg, nsv_chicend, nsv_csbeg, nsv_csend,            &
                               nsv_dstbeg, nsv_dstend, nsv_dstdepbeg, nsv_dstdepend, nsv_elecbeg, nsv_elecend,      &
 #ifdef MNH_FOREFIRE
@@ -238,11 +238,11 @@ use modd_nsv,           only: csvnames,                                         
                               nsv_lgbeg, nsv_lgend,                                                                &
                               nsv_lima_beg, nsv_lima_end, nsv_lima_ccn_acti, nsv_lima_ccn_free, nsv_lima_hom_haze, &
                               nsv_lima_ifn_free, nsv_lima_ifn_nucl, nsv_lima_imm_nucl,                             &
-                              nsv_lima_nc, nsv_lima_nr, nsv_lima_ni, nsv_lima_scavmass, nsv_lima_spro,             &
-                              nsv_lima_ns, nsv_lima_ng, nsv_lima_nh,                                               &
+                              nsv_lima_nc, nsv_lima_nr, nsv_lima_ni, nsv_lima_ns, nsv_lima_ng, nsv_lima_nh,        &
+                              nsv_lima_scavmass, nsv_lima_spro,                                                    &
                               nsv_lnoxbeg, nsv_lnoxend, nsv_ppbeg, nsv_ppend,                                      &
                               nsv_sltbeg, nsv_sltend, nsv_sltdepbeg, nsv_sltdepend, nsv_snwbeg, nsv_snwend,        &
-                              nsv_user
+                              nsv_user, tsvlist
 use modd_parameters,   only: jphext
 use modd_param_c2r2,   only: ldepoc_c2r2 => ldepoc, lrain_c2r2 => lrain, lsedc_c2r2 => lsedc, lsupsat_c2r2 => lsupsat
 use modd_param_ice,    only: ladj_after, ladj_before, ldeposc_ice => ldeposc, lred, lsedic_ice => lsedic, lwarm_ice => lwarm
@@ -1029,6 +1029,12 @@ if ( lbu_rth ) then
   tzsource%cmnhname   = 'DCONV'
   tzsource%clongname  = 'KAFR convection'
   tzsource%lavailable = hdconv == 'KAFR' .OR. hsconv == 'KAFR'
+
+  call Budget_source_add( tbudgets(NBUDGET_TH), tzsource )
+
+  tzsource%cmnhname   = 'BLAZE'
+  tzsource%clongname  = 'blaze fire model contribution'
+  tzsource%lavailable = lblaze
   call Budget_source_add( tbudgets(NBUDGET_TH), tzsource )
 
   tzsource%cmnhname   = 'VTURB'
@@ -1454,6 +1460,11 @@ if ( tbudgets(NBUDGET_RV)%lenabled ) then
   tzsource%cmnhname   = 'DCONV'
   tzsource%clongname  = 'KAFR convection'
   tzsource%lavailable = hdconv == 'KAFR' .OR. hsconv == 'KAFR'
+  call Budget_source_add( tbudgets(NBUDGET_RV), tzsource )
+
+  tzsource%cmnhname   = 'BLAZE'
+  tzsource%clongname  = 'blaze fire model contribution'
+  tzsource%lavailable = lblaze
   call Budget_source_add( tbudgets(NBUDGET_RV), tzsource )
 
   tzsource%cmnhname   = 'VTURB'
@@ -2945,7 +2956,7 @@ SV_BUDGETS: do jsv = 1, ksv
 
     tbudgets(ibudget)%tsources(:)%ngroup = 0
 
-    tzsource%ccomment = 'Budget of scalar variable ' // csvnames(jsv)
+    tzsource%ccomment = 'Budget of scalar variable ' // tsvlist(jsv)%cmnhname
     tzsource%ngrid    = 1
 
     tzsource%cunits   = '1'
@@ -4326,7 +4337,7 @@ end subroutine Budget_source_add
 subroutine Ini_budget_groups( tpbudgets, kbudim1, kbudim2, kbudim3 )
   use modd_budget,     only: tbudgetdata
   use modd_field,      only: TYPEINT, TYPEREAL
-  use modd_parameters, only: NMNHNAMELGTMAX, NSTDNAMELGTMAX
+  use modd_parameters, only: NMNHNAMELGTMAX, NSTDNAMELGTMAX, NLONGNAMELGTMAX, NUNITLGTMAX, NCOMMENTLGTMAX
 
   use mode_tools,  only: Quicksort
 
@@ -4337,9 +4348,9 @@ subroutine Ini_budget_groups( tpbudgets, kbudim1, kbudim2, kbudim3 )
 
   character(len=NMNHNAMELGTMAX)      :: ymnhname
   character(len=NSTDNAMELGTMAX)      :: ystdname
-  character(len=32)                  :: ylongname
-  character(len=40)                  :: yunits
-  character(len=100)                 :: ycomment
+  character(len=NLONGNAMELGTMAX)     :: ylongname
+  character(len=NUNITLGTMAX)         :: yunits
+  character(len=NCOMMENTLGTMAX)      :: ycomment
   integer                            :: ji, jj, jk
   integer                            :: isources ! Number of source terms in a budget
   integer                            :: inbgroups ! Number of budget groups

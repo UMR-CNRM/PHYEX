@@ -199,6 +199,7 @@ USE MODD_PARAMETERS
 USE MODD_PARAM_LIMA, ONLY : NMOD_CCN, NMOD_IFN, LBOUND
 USE MODD_PARAM_n,    ONLY : CELEC,CCLOUD
 USE MODD_PASPOL,      ONLY : LPASPOL
+USE MODD_PRECISION,   ONLY: MNHREAL32
 USE MODD_REF_n
 USE MODD_SALT,        ONLY : LSALT
 
@@ -420,6 +421,24 @@ ELSE
 !
 END IF
 !
+!     ============================================================    
+!
+!  Reproductibility for RSTART -> truncate ZLB to real(knd=4) to have reproductible result
+!
+ZLBXVT(:,:,:)  = real(ZLBXVT(:,:,:),kind=MNHREAL32)
+ZLBXWT(:,:,:)  = real(ZLBXWT(:,:,:),kind=MNHREAL32)
+ZLBXTHT(:,:,:) = real(ZLBXTHT(:,:,:),kind=MNHREAL32)
+IF ( SIZE(PTKET,1) /= 0 ) THEN
+   ZLBXTKET(:,:,:) = real(ZLBXTKET(:,:,:),kind=MNHREAL32)
+END IF
+IF ( KRR > 0) THEN
+   ZLBXRT(:,:,:,:) = real(ZLBXRT(:,:,:,:),kind=MNHREAL32)
+END IF
+IF ( KSV > 0) THEN
+   ZLBXSVT(:,:,:,:) = real(ZLBXSVT(:,:,:,:),kind=MNHREAL32)
+END IF
+!     ============================================================ 
+!
 IF ( SIZE(PLBYTHS,1) /= 0 .AND.                       &
      (    HLBCY(1)=='OPEN' .OR. HLBCY(2)=='OPEN'    ))  THEN          
   ZLBYUT(:,:,:) = PLBYUM(:,:,:) + ZTSTEP * PLBYUS(:,:,:)
@@ -452,6 +471,24 @@ ELSE
 !
 END IF
 !
+!
+!     ============================================================    
+!
+!  Reproductibility for RSTART -> truncate ZLB to real(knd=4) to have reproductible result
+!
+ZLBYUT(:,:,:)  = real(ZLBYUT(:,:,:),kind=MNHREAL32)
+ZLBYWT(:,:,:)  = real(ZLBYWT(:,:,:),kind=MNHREAL32)
+ZLBYTHT(:,:,:) = real(ZLBYTHT(:,:,:),kind=MNHREAL32)
+IF ( SIZE(PTKET,1) /= 0 ) THEN
+   ZLBYTKET(:,:,:) = real(ZLBYTKET(:,:,:),kind=MNHREAL32)
+END IF
+IF ( KRR > 0) THEN
+   ZLBYRT(:,:,:,:) = real(ZLBYRT(:,:,:,:),kind=MNHREAL32)
+END IF
+IF ( KSV > 0) THEN
+   ZLBYSVT(:,:,:,:) = real(ZLBYSVT(:,:,:,:),kind=MNHREAL32)
+END IF
+!     ============================================================ 
 !
 !-------------------------------------------------------------------------------
 ! PONDERATION COEFF for  Non-Normal velocities and pot temperature

@@ -168,10 +168,16 @@ if [ $compilation -eq 1 ]; then
 #  tar xfz MNH-V5-5-0_PHYEX.tar.gz 
 #  rm MNH-V5-5-0_PHYEX.tar.gz
 #  mv MNH-V5-5-0 $name
-  cp $TARGZDIR/MNH-V5-5-1-1abfa259.tar.gz .
-  tar xfz MNH-V5-5-1-1abfa259.tar.gz 
-  rm MNH-V5-5-1-1abfa259.tar.gz 
-  mv MNH-V5-5-1-1abfa259 $name
+#  cp $TARGZDIR/MNH-V5-5-1-1abfa259.tar.gz .
+#  tar xfz MNH-V5-5-1-1abfa259.tar.gz 
+#  rm MNH-V5-5-1-1abfa259.tar.gz 
+#  mv MNH-V5-5-1-1abfa259 $name
+
+  cp $TARGZDIR/MNH-V5-5-1-4458a1e70.tar.gz .
+  tar xfz MNH-V5-5-1-4458a1e70.tar.gz
+  rm MNH-V5-5-1-4458a1e70.tar.gz
+  mv MNH-V5-5-1-4458a1e70 $name
+
 
   cd $name/src
   rm -rf PHYEX

@@ -154,7 +154,7 @@ REAL :: ZRHOIW ! ice density
 !*       1.     CHARACTERISTICS OF THE SPECIES
 !   	        ------------------------------
 !
-CALL RAIN_ICE_PARAM_ASSOCIATE()
+!CALL RAIN_ICE_PARAM_ASSOCIATE()
 !
 !*       1.2    Ice crystal characteristics
 !
