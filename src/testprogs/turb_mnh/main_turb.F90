@@ -456,28 +456,30 @@ IMPLICIT NONE
 ! -----------------------------------------------------------------------
 !     DUMMY VARIABLES
 INTEGER, INTENT (IN) :: KULOUT
-CHARACTER(4), INTENT (IN) :: CMICRO
+CHARACTER(LEN=4), INTENT (IN) :: CMICRO
 REAL, INTENT(IN) :: PTSTEP
 TYPE(CST_t),            INTENT(OUT) :: CST
 !-----------------------------------------------------------------------
 !    LOCAL VARIABLES
 REAL :: ZDZMIN
 CHARACTER(LEN=6) :: CPROGRAM
+CHARACTER(LEN=4) :: CSCONV
 ! -----------------------------------------------------------------------
 
 CPROGRAM='AROME'
 ZDZMIN=999.
+CSCONV='NONE'
 
 !Default values
 CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &PTSTEP, ZDZMIN, &
-              &CMICRO, &
+              &CMICRO, CSCONV, &
               &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0, LDINIT=.FALSE.)
 
 !Param initialisation
 CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &PTSTEP, ZDZMIN, &
-              &CMICRO, &
+              &CMICRO, CSCONV, &
               &LDDEFAULTVAL=.FALSE., LDREADNAM=.FALSE., LDCHECK=.TRUE., KPRINT=2, LDINIT=.TRUE., &
               &CST_INOUT=CST)
 

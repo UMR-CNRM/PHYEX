@@ -878,38 +878,8 @@ NENSM         = 0
 !*      18.   SET DEFAULT VALUES FOR MODD_PARAM_MFSHALL_n :
 !             --------------------------------------------
 !
-XIMPL_MF    = 1.
-CMF_UPDRAFT = 'EDKF'
-CMF_CLOUD   = 'DIRE'
-LMIXUV      = .TRUE. 
-LMF_FLX     = .FALSE.
-!
-XALP_PERT   = 0.3  
-XABUO       = 1.     
-XBENTR      = 1.   
-XBDETR      = 0.   
-XCMF        = 0.065 
-XENTR_MF    = 0.035
-XCRAD_MF    = 50.  
-XENTR_DRY   = 0.55 
-XDETR_DRY   = 10.  
-XDETR_LUP   = 1.  
-XKCF_MF     = 2.75
-XKRC_MF     = 1.   
-XTAUSIGMF   = 600.  
-XPRES_UV    = 0.5  
-XFRAC_UP_MAX= 0.33
-XALPHA_MF = 2.     
-XSIGMA_MF = 20.  
-!
-XA1    =  2./3.  
-XB     =  0.002       
-XC     =  0.012     
-XBETA1 =  0.9 
-XR     =  2.
-XLAMBDA_MF=  0.
-LGZ    =  .FALSE.
-XGZ    =  1.83 ! between 1.83 and 1.33
+CALL PARAM_MFSHALLN_INIT(CPROGRAM, 0, .FALSE., TLUOUT%NLU, &
+                        &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0)
 !
 !-------------------------------------------------------------------------------
 !

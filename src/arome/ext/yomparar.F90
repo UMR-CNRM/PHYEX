@@ -7,6 +7,7 @@ USE MODD_PARAM_ICE, ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 USE MODD_CLOUDPAR_N, ONLY: CLOUDPAR_t
+USE MODD_PARAM_MFSHALL_N, ONLY: PARAM_MFSHALL_t
 
 IMPLICIT NONE
 
@@ -25,6 +26,7 @@ TYPE(PARAM_ICE_t)      :: PARAM_ICE
 TYPE(RAIN_ICE_DESCR_t) :: RAIN_ICE_DESCR
 TYPE(RAIN_ICE_PARAM_t) :: RAIN_ICE_PARAM
 TYPE(CLOUDPAR_t)       :: CLOUDPARN
+TYPE(PARAM_MFSHALL_t)  :: PARAM_MFSHALLN
 !
 INTEGER(KIND=JPIM) :: NSPLITR     ! Time splitting for Eulerian sedimentation
 INTEGER(KIND=JPIM) :: NSPLITG     ! Time splitting for Eulerian sedimentation
@@ -74,13 +76,6 @@ REAL(KIND=JPRB) :: RADSN  ! Tuning of ice for radiation, TO BE REMOVED
 REAL(KIND=JPRB) :: VSIGQSAT ! coeff applied to qsat variance contribution
                             ! for subgrid condensation
 
-! switches for MF scheme (Pergaud et al)
-CHARACTER (LEN=4)  :: CMF_UPDRAFT  ! Type of Mass Flux Scheme
-                                     ! 'NONE','DUAL', 'EDKF', 'RHCJ' or 'RAHA' 
-CHARACTER (LEN=4)  :: CMF_CLOUD  ! type of cloud scheme associated with MF Scheme
-                                     ! 'NONE', 'DIRE' or 'STAT'
-LOGICAL            :: LMIXUV    ! True if mixing of momentum
-
 LOGICAL            :: LLCRIT    ! True if temperature dependent 
                                 ! critical condensation in EDMFm 
 LOGICAL            :: LTOTPREC  ! True if precipitation tendencies
@@ -88,45 +83,6 @@ LOGICAL            :: LTOTPREC  ! True if precipitation tendencies
                                 ! added to the total precip tendencies.
 LOGICAL            :: LTOTPRECL ! As LTOTPREC but updraft fraction untouched
 LOGICAL            :: LHGT_QS   ! Switch for height dependent VQSIGSAT
-
-! Tuning variables for MF scheme 
-
-REAL(KIND=JPRB) :: XALP_PERT    ! coefficient for the perturbation of
-                                ! theta_l and r_t at the first level of
-                                ! the updraft
-REAL(KIND=JPRB) :: XABUO        ! coefficient of the buoyancy term in the w_up equation
-REAL(KIND=JPRB) :: XBENTR       ! coefficient of the entrainment term in the w_up equation
-REAL(KIND=JPRB) :: XBDETR       ! coefficient of the detrainment term in the w_up equation
-REAL(KIND=JPRB) :: XCMF         ! coefficient for the mass flux at the first level
-                                ! of the updraft (closure)
-REAL(KIND=JPRB) :: XENTR_MF     ! entrainment constant (m/Pa) = 0.2 (m)
-REAL(KIND=JPRB) :: XCRAD_MF     ! cloud radius in cloudy part
-REAL(KIND=JPRB) :: XENTR_DRY    ! coefficient for entrainment in dry part
-REAL(KIND=JPRB) :: XDETR_DRY    ! coefficient for detrainment in dry part
-REAL(KIND=JPRB) :: XDETR_LUP    ! coefficient for detrainment in dry part
-REAL(KIND=JPRB) :: XKCF_MF      ! coefficient for cloud fraction
-REAL(KIND=JPRB) :: XKRC_MF      ! coefficient for convective rc
-REAL(KIND=JPRB) :: XTAUSIGMF    ! typical eddy turnover time for the STAT cloud scheme of EDMF
-REAL(KIND=JPRB) :: XPRES_UV     ! coefficient for pressure term in wind mixing
-REAL(KIND=JPRB) :: XFRAC_UP_MAX ! maximum Updraft fraction
-REAL(KIND=JPRB) :: XALPHA_MF    ! coefficient for updraft fraction in STA2 cloud scheme
-REAL(KIND=JPRB) :: XSIGMA_MF    ! coefficient for sigma in STA2 cloud scheme
-
-! Tuning variables for RHCJ10 updraft :
-
-REAL(KIND=JPRB) :: XA1  ! Tuning variables for RHCJ10 updraft 
-REAL(KIND=JPRB) :: XB   ! Tuning variables for RHCJ10 updraft 
-REAL(KIND=JPRB) :: XC   ! Tuning variables for RHCJ10 updraft 
-REAL(KIND=JPRB) :: XBETA1 ! Tuning variables for RHCJ10 updraft 
-
-!  Tuning parameter for Hourdin et al closure
-
-REAL(KIND=JPRB) :: XR !  Tuning parameter for Hourdin et al closure
-
-! Thermodynamic constant to compute thetas from thetal
-
-REAL(KIND=JPRB) :: XLAMBDA  ! Thermodynamic constant to compute thetas from thetal
-LOGICAL :: LTHETAS  ! TRUE to use Thetas, FALSE to use Thetal
 
 ! * for the squall line case:
 LOGICAL :: LSQUALL ! use for the squall line case

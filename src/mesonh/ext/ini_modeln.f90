@@ -443,6 +443,7 @@ USE MODI_INI_LES_N
 USE MODI_INI_LG
 USE MODI_INI_LW_SETUP
 USE MODI_INI_MICRO_n
+USE MODE_INI_MFSHALL, ONLY: INI_MFSHALL
 USE MODI_INI_POSPROFILER_n
 USE MODI_INI_RADIATIONS
 USE MODI_INI_RADIATIONS_ECMWF
@@ -2729,6 +2730,12 @@ IF (CDCONV /= 'NONE' .OR. CSCONV == 'KAFR') THEN
                            XIC_TOTAL_NUMBER, XCG_TOTAL_NUMBER                )
 
 END IF
+!
+!
+!
+IF (CSCONV == 'EDKF') THEN
+  CALL INI_MFSHALL()
+ENDIF
 !
 !-------------------------------------------------------------------------------
 !

@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE  ARO_SHALLOW_MF(CST, PARAM_ICE,                      &
+      SUBROUTINE  ARO_SHALLOW_MF(CST, PARAM_ICE, PARAM_MFSHALLN,      &
                 KKL, KLON, KLEV, KFDIA, KRR, KRRL, KRRI,KSV,&
                 HMF_UPDRAFT, HMF_CLOUD, OMIXUV,                       &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
@@ -71,9 +71,9 @@ USE MODD_CST, ONLY: CST_t
 USE MODD_NEB, ONLY: NEB
 USE MODD_TURB_n, ONLY: TURBN
 USE MODD_CTURB, ONLY: CSTURB
-USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALLN
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_PARAM_ICE, ONLY: PARAM_ICE_t
+USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
 USE MODI_SHALLOW_MF
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
@@ -90,6 +90,7 @@ IMPLICIT NONE
 !
 TYPE(CST_t),              INTENT(IN)   :: CST
 TYPE(PARAM_ICE_t),        INTENT(IN)   :: PARAM_ICE
+TYPE(PARAM_MFSHALL_t),    INTENT(IN)   :: PARAM_MFSHALLN
 INTEGER,                  INTENT(IN)   :: KKL      ! +1 if grid goes from ground to
                                                    ! atmosphere top, -1 otherwise
 INTEGER,                  INTENT(IN)   :: KLON     !NPROMA under CPG

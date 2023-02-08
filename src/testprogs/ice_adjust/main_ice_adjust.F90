@@ -71,7 +71,6 @@ TYPE(TURB_t)             :: TURB
 CHARACTER(LEN=4)         :: HBUNAME  
 LOGICAL                  :: LHGT_QS
 LOGICAL                  :: LMFCONV
-CHARACTER (LEN=4)   :: CMICRO
 REAL                :: PTSTEP
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RI) :: YLBUDGET
 LOGICAL                  :: LLCHECK
@@ -133,12 +132,11 @@ IF (LLVERBOSE) PRINT *, " KLEV = ", KLEV, " KRR = ", KRR
 
 PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
 
-CMICRO='ICE3'
 PTSTEP       = 50.000000000000000
 HBUNAME      = 'DEPI'
 LMFCONV      = .TRUE.
 LHGT_QS      = .FALSE.
-CALL INIT_PHYEX (20, CMICRO, PTSTEP, &
+CALL INIT_PHYEX (20, PTSTEP, &
                  CST, &
                  PARAMI, ICEP, TURB)
 
@@ -312,7 +310,7 @@ STOP
 
 CONTAINS
 
-SUBROUTINE INIT_PHYEX(KULOUT,CMICRO,PTSTEP, &
+SUBROUTINE INIT_PHYEX(KULOUT, PTSTEP, &
                       CST, &
                       PARAM_ICE, RAIN_ICE_PARAM, TURB)
 
@@ -328,7 +326,6 @@ IMPLICIT NONE
 ! -----------------------------------------------------------------------
 !     DUMMY VARIABLES
 INTEGER, INTENT (IN) :: KULOUT
-CHARACTER(4), INTENT (IN) :: CMICRO 
 REAL, INTENT(IN) :: PTSTEP
 TYPE(CST_t),            INTENT(OUT) :: CST
 TYPE(PARAM_ICE_t)     , INTENT(OUT) :: PARAM_ICE
@@ -339,15 +336,18 @@ TYPE(TURB_t),           INTENT(OUT) :: TURB
 !    LOCAL VARIABLES
 REAL :: ZDZMIN
 CHARACTER(LEN=6) :: CPROGRAM
+CHARACTER(LEN=4) :: CMICRO, CSCONV
 ! -----------------------------------------------------------------------
 
 CPROGRAM='AROME'
 ZDZMIN=20.
+CMICRO='ICE3'
+CSCONV='NONE'
 
 !Default values
 CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &PTSTEP, ZDZMIN, &
-              &CMICRO, &
+              &CMICRO, CSCONV, &
               &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0, LDINIT=.FALSE., &
               &PARAM_ICE_INOUT=PARAM_ICE)
 
@@ -383,7 +383,7 @@ PARAM_ICE%CSUBG_PR_PDF='SIGM'
 !Param initialisation
 CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &PTSTEP, ZDZMIN, &
-              &CMICRO, &
+              &CMICRO, CSCONV, &
               &LDDEFAULTVAL=.FALSE., LDREADNAM=.FALSE., LDCHECK=.TRUE., KPRINT=2, LDINIT=.TRUE., &
               &CST_INOUT=CST, &
               &PARAM_ICE_INOUT=PARAM_ICE, RAIN_ICE_PARAM_INOUT=RAIN_ICE_PARAM)
