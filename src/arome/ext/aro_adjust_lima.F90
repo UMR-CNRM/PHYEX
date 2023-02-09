@@ -6,8 +6,8 @@
                                   PPABSM, PTHT, PRT, PSVT, PSIGS, &
                                   PW_NU, PDTHRAD, &
                                   PMFCONV, PRC_MF, PRI_MF, PCF_MF, &
-                                  PTHS, PRS,  PSVS, PSRCS, PCLDFR, &
-                                  YDDDH, YDLDDH, YDMDDH)
+                                  PTHS, PRS,  PSVS, PSRCS, PCLDFR, PICEFR, PPRCFR, &
+                                  YDDDH, YDLDDH, YDMDDH, LLIMAINIT )
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ##########################################################################
@@ -88,6 +88,8 @@ USE MODD_PARAM_LIMA
 USE MODD_NSV
 !
 USE MODI_LIMA_ADJUST_SPLIT
+USE MODE_SET_CONC_LIMA
+USE MODE_SET_CONC_LIMA_LBC
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 !USE MODE_BUDGET, ONLY: BUDGET_DDH
 !
@@ -152,11 +154,15 @@ REAL, DIMENSION(KLON,1,KLEV),   INTENT(OUT)   :: PSRCS ! Second-order flux
                                                  ! s'rc'/2Sigma_s2 at time t+1
                                                  ! multiplied by Lambda_3
 REAL, DIMENSION(KLON,1,KLEV), INTENT(INOUT)   :: PCLDFR! Cloud fraction
+REAL, DIMENSION(KLON,1,KLEV), INTENT(INOUT)   :: PICEFR! Cloud fraction
+REAL, DIMENSION(KLON,1,KLEV), INTENT(INOUT)   :: PPRCFR! Cloud fraction
 !
 !
 TYPE(TYP_DDH), INTENT(INOUT), TARGET :: YDDDH
 TYPE(TLDDH), INTENT(IN), TARGET :: YDLDDH
 TYPE(TMDDH), INTENT(IN), TARGET :: YDMDDH
+!
+LOGICAL,                  INTENT(IN)    :: LLIMAINIT
 !
 !*       0.2   Declarations of local variables :
 
@@ -178,7 +184,6 @@ REAL, DIMENSION(SIZE(PZZF,1),SIZE(PZZF,2),SIZE(PZZF,3)):: ZCOR
                                     ! for the correction of negative rv
 REAL, DIMENSION(SIZE(PZZF,1),SIZE(PZZF,2),SIZE(PZZF,3)):: ZZZ
                                     ! model layer height
-REAL, DIMENSION(KLON,1,KLEV):: ZICEFR
 REAL  :: ZMASSTOT                   ! total mass  for one water category
                                     ! including the negative values
 REAL  :: ZMASSPOS                   ! total mass  for one water category
@@ -218,7 +223,21 @@ ZT(:,:,:)= PTHT(:,:,:)*PEXNREF(:,:,:)
 ZLV(:,:,:)=XLVTT +(XCPV-XCL) *(ZT(:,:,:)-XTT)
 ZLS(:,:,:)=XLSTT +(XCPV-XCI) *(ZT(:,:,:)-XTT)
 ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
-!
+
+!set concentration for LIMA
+PRS = PRS * PTSTEP
+PSVS = PSVS * PTSTEP
+IF (LLIMAINIT) THEN
+   CALL SET_CONC_LIMA (1,'ICE3',PRHODREF,PRT,PSVT)
+   CALL SET_CONC_LIMA (1,'ICE3',PRHODREF,PRS,PSVS)
+ELSE
+   CALL SET_CONC_LIMA_LBC (1,'ICE3',PRHODREF,PRT,PSVT)
+   CALL SET_CONC_LIMA_LBC (1,'ICE3',PRHODREF,PRS,PSVS)
+END IF
+PRS = PRS / PTSTEP
+PSVS = PSVS / PTSTEP
+
+!print *, "aro_adjust_lima 2"
 !
 !*       3.     REMOVE NEGATIVE VALUES
 !               ----------------------
@@ -339,7 +358,7 @@ ENDDO
          PRHODREF=PRHODREF, PRHODJ=PRHODJ, PEXNREF=PEXNREF, PSIGS=PSIGS, PMFCONV=PMFCONV, &
          PPABST=PPABSM, PPABSTT=PPABSM, PZZ=ZZZ, PDTHRAD=PDTHRAD, PW_NU=PW_NU, &
          PRT=PRT, PRS=PRS, PSVT=PSVT, PSVS=PSVS, &
-         PTHS=PTHS, PSRCS=PSRCS, PCLDFR=PCLDFR, PICEFR=ZICEFR, PRC_MF=PRC_MF, PRI_MF=PRI_MF, PCF_MF=PCF_MF )
+         PTHS=PTHS, PSRCS=PSRCS, PCLDFR=PCLDFR, PICEFR=PICEFR, PRC_MF=PRC_MF, PRI_MF=PRI_MF, PCF_MF=PCF_MF )
 !
 !-------------------------------------------------------------------------------
 !

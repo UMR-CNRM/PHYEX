@@ -81,8 +81,6 @@ USE MODD_NSV,             ONLY : NSV_LIMA_BEG_A, NSV_LIMA_NC_A, NSV_LIMA_NR_A, N
                                  NSV_LIMA_NI_A, NSV_LIMA_NS_A, NSV_LIMA_NG_A, NSV_LIMA_NH_A, NSV_LIMA_IFN_NUCL_A
 USE MODD_CST,             ONLY : XPI, XRHOLW, XRHOLI
 USE MODD_CONF,            ONLY : NVERB
-USE MODD_CONF_n,          ONLY : NRR
-USE MODD_LUNIT_n,         ONLY : TLUOUT
 !
 IMPLICIT NONE
 !
@@ -99,20 +97,17 @@ REAL,  DIMENSION(:,:,:,NSV_LIMA_BEG_A(kmi):), INTENT(INOUT):: PSVT     ! microph
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER    :: IRESP   ! Return code of FM routines
-INTEGER    :: ILUOUT  ! Logical unit number of output-listing
 REAL       :: ZCONC
 !
 !-------------------------------------------------------------------------------
 !*       1.    RETRIEVE LOGICAL UNIT NUMBER
 !              ----------------------------
 !
-ILUOUT = TLUOUT%NLU
 !
 !*       2.    INITIALIZATION
 !              --------------
 !
-IF (NRR.GE.2 .AND. NMOM_C.GE.2) THEN
+IF (NMOM_C.GE.2) THEN
 !
 !  droplets
 !
@@ -134,13 +129,9 @@ IF (NRR.GE.2 .AND. NMOM_C.GE.2) THEN
       END WHERE
    END IF
    
-!   IF( NVERB >= 5 ) THEN
-!      WRITE (UNIT=ILUOUT,FMT=*) "!INI_MODEL$n: The droplet concentration has "
-!      WRITE (UNIT=ILUOUT,FMT=*) "been roughly initialised"
-!   END IF
 END IF
 !
-IF (NRR.GE.3 .AND. NMOM_R.GE.2) THEN
+IF (NMOM_R.GE.2) THEN
 !
 !  drops
 !
@@ -156,14 +147,10 @@ IF (NRR.GE.3 .AND. NMOM_R.GE.2) THEN
          PRT(:,:,:,3)  = 0.0
          PSVT(:,:,:,NSV_LIMA_NR_A(kmi)) = 0.0
       END WHERE
-!      IF( NVERB >= 5 ) THEN
-!         WRITE (UNIT=ILUOUT,FMT=*) "!INI_MODEL$n: The raindrop concentration has "
-!         WRITE (UNIT=ILUOUT,FMT=*) "been roughly initialised"
-!      END IF
    END IF
 END IF
 !
-IF (NRR.GE.4 .AND. NMOM_I.GE.2) THEN
+IF (NMOM_I.GE.2) THEN
 !
 ! ice crystals
 !
@@ -190,11 +177,6 @@ IF (NRR.GE.4 .AND. NMOM_I.GE.2) THEN
       END WHERE
    END IF
 
-!   IF( NVERB >= 5 ) THEN
-!      WRITE (UNIT=ILUOUT,FMT=*) "!INI_MODEL$n: The cloud ice concentration has "
-!      WRITE (UNIT=ILUOUT,FMT=*) "been roughly initialised"
-!   END IF
-!
 END IF
 !
 IF (NSV_LIMA_NS_A(KMI).GE.1) THEN

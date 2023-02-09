@@ -5,7 +5,7 @@
                                   PTHS, PRS, PSVS, PEVAP,  &
                                   PINPRR,PINPRS,                 &
                                   PINPRG,PINPRH,PFPR,     &
-                                  PCLDFR,         &
+                                  PCLDFR,PICEFR,PPRCFR,         &
                                   YDDDH, YDLDDH, YDMDDH    )
 
       USE PARKIND1, ONLY : JPRB
@@ -114,7 +114,10 @@ REAL, DIMENSION(KLON,1), INTENT(INOUT)     :: PINPRG! Graupel instant precip
 REAL, DIMENSION(KLON,1), INTENT(INOUT)     :: PINPRH! Hail instant precip
 REAL, DIMENSION(KLON,1,KLEV,KRR), INTENT(INOUT) :: PFPR ! upper-air precip
 !
-REAL, DIMENSION(KLON,1,KLEV),   INTENT(INOUT)   :: PCLDFR ! ice cloud fraction
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(INOUT)   :: PCLDFR ! liquid cloud fraction
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(INOUT)   :: PICEFR ! ice cloud fraction
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(INOUT)   :: PPRCFR ! precipitation fraction
+!
 TYPE(TYP_DDH), INTENT(INOUT), TARGET :: YDDDH
 TYPE(TLDDH), INTENT(IN), TARGET :: YDLDDH
 TYPE(TMDDH), INTENT(IN), TARGET :: YDMDDH
@@ -139,7 +142,6 @@ REAL, DIMENSION(KLON,1,KLEV):: &
 REAL, DIMENSION(KLON,1):: ZINPRC    ! surf cloud sedimentation
                                     ! for the correction of negative rv
 REAL, DIMENSION(KLON,1):: ZINPRI, ZINDEP    ! surf cloud ice sedimentation
-REAL, DIMENSION(KLON,1,KLEV):: ZICEFR, ZPRCFR
 REAL  :: ZMASSTOT                   ! total mass  for one water category
                                     ! including the negative values
 REAL  :: ZMASSPOS                   ! total mass  for one water category
@@ -310,7 +312,7 @@ CALL LIMA (D=YLDIMPHYEX, CST=CST, BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SI
            PDTHRAD=PDTHRAD, PTHT=PTHT, PRT=PRT, PSVT=PSVT, PW_NU=PW_NU,                  &
            PTHS=PTHS, PRS=PRS, PSVS=PSVS,                                &
            PINPRC=ZINPRC, PINDEP=ZINDEP, PINPRR=PINPRR, PINPRI=ZINPRI, PINPRS=PINPRS, PINPRG=PINPRG, PINPRH=PINPRH, &
-           PEVAP3D=PEVAP, PCLDFR=PCLDFR, PICEFR=ZICEFR, PPRCFR=ZPRCFR, PFPR=PFPR )
+           PEVAP3D=PEVAP, PCLDFR=PCLDFR, PICEFR=PICEFR, PPRCFR=PPRCFR, PFPR=PFPR )
 !add ZINPRC in PINPRR
 PINPRR=PINPRR+ZINPRC
 !-------------------------------------------------------------------------------
