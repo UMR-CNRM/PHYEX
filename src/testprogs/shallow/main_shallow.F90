@@ -110,7 +110,7 @@ INTEGER :: IBL, JLON, JLEV
 
 TYPE(DIMPHYEX_t)         :: D, D0
 TYPE(CST_t)              :: CST
-TYPE(TURB_t)             :: TURB
+TYPE(TURB_t)             :: TURBN
 TYPE(PARAM_MFSHALL_t)    :: PARAM_MFSHALLN
 CHARACTER (LEN=1)        :: HFRAC_ICE
 LOGICAL                  :: ONOMIXLG, OSTATNW
@@ -205,7 +205,7 @@ OSTATNW=.FALSE.
 PTSTEP = 25.0000000000000
 
 CALL INIT_PHYEX (20, &
-                 CST, PARAM_MFSHALLN, TURB)
+                 CST, PARAM_MFSHALLN, TURBN)
 
 D0%NIT  = NPROMA
 D0%NIB  = 1
@@ -300,7 +300,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%U = 0
 #endif
 
-  CALL SHALLOW_MF(D, CST, NEB, PARAM_MFSHALLN, TURB, CSTURB,                    &
+  CALL SHALLOW_MF(D, CST, NEB, PARAM_MFSHALLN, TURBN, CSTURB,                    &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                             &
      &HFRAC_ICE=HFRAC_ICE,ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,      &
      &PIMPL_MF=ZIMPL, PTSTEP=PTSTEP,                                                      &
@@ -403,10 +403,10 @@ STOP
 CONTAINS
 
 SUBROUTINE INIT_PHYEX(KULOUT,&
-                      CST, PARAM_MFSHALLN, TURB)
+                      CST, PARAM_MFSHALLN, TURBN)
 
 USE MODD_CST, ONLY: CST_t
-USE MODD_TURB_N, ONLY: TURB_GOTO_MODEL, TURBN
+USE MODD_TURB_N, ONLY: TURB_t
 USE MODI_INI_PHYEX, ONLY: INI_PHYEX
 IMPLICIT NONE
 
@@ -415,13 +415,13 @@ IMPLICIT NONE
 INTEGER, INTENT (IN) :: KULOUT
 TYPE(CST_t),            INTENT(OUT) :: CST
 TYPE(PARAM_MFSHALL_t), INTENT(OUT) :: PARAM_MFSHALLN
-TYPE(TURB_t),           INTENT(OUT) :: TURB
+TYPE(TURB_t),           INTENT(OUT) :: TURBN
 
 !-----------------------------------------------------------------------
 !    LOCAL VARIABLES
 REAL :: ZDZMIN, ZTSTEP
 CHARACTER(LEN=6) :: CPROGRAM
-CHARACTER(LEN=4) :: CMICRO, CSCONV
+CHARACTER(LEN=4) :: CMICRO, CSCONV, CTURB
 ! -----------------------------------------------------------------------
 
 CPROGRAM='AROME'
@@ -429,26 +429,27 @@ ZDZMIN=999.
 ZTSTEP=999
 CMICRO='NONE'
 CSCONV='EDKF'
+CTURB='TKEL'
 
 !Default values
 CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &ZTSTEP, ZDZMIN, &
-              &CMICRO, CSCONV, &
+              &CMICRO, CSCONV, CTURB, &
               &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0, LDINIT=.FALSE., &
-              &PARAM_MFSHALLN_INOUT=PARAM_MFSHALLN)
+              &TURBN_OUT=TURBN)
 
 !Emulate the namelist reading
+TURBN%LSUBG_COND=.TRUE.
 
 !Param initialisation
 CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &ZTSTEP, ZDZMIN, &
-              &CMICRO, CSCONV, &
+              &CMICRO, CSCONV, CTURB, &
               &LDDEFAULTVAL=.FALSE., LDREADNAM=.FALSE., LDCHECK=.TRUE., KPRINT=2, LDINIT=.TRUE., &
-              &CST_INOUT=CST, PARAM_MFSHALLN_INOUT=PARAM_MFSHALLN)
+              &CST_OUT=CST, PARAM_MFSHALLN_OUT=PARAM_MFSHALLN,&
+              &TURBN_IN=TURBN, TURBN_OUT=TURBN)
 
 CALL INI_NEB
-CALL TURB_GOTO_MODEL(1,1)
-CALL CTURB_ASSOCIATE()
 !CALL TBUCONF_ASSOCIATE
 !LBU_ENABLE=.FALSE.                                                                                                       
 !LBUDGET_U=.FALSE.
@@ -464,56 +465,6 @@ CALL CTURB_ASSOCIATE()
 !LBUDGET_RG=.FALSE.
 !LBUDGET_RH=.FALSE.
 !LBUDGET_SV=.FALSE.
-
-TURBN%LHARAT=.FALSE.
-TURBN%CTURBDIM = '1DIM'
-TURBN%XIMPL=1.
-TURBN%CTURBLEN='BL89'
-TURBN%LSTATNW=.FALSE.
-TURBN%LTURB_DIAG=.FALSE.
-TURBN%LTURB_FLX=.FALSE.
-TURBN%LSUBG_COND=.TRUE.
-TURBN%LRMC01=.FALSE.
-TURBN%CTOM='NONE'
-TURBN%LLEONARD=.FALSE.
-
-XCED  = 0.85
-XCEP  = 2.11 
-XA0   = 0.6
-XA2   = 1.
-XA3   = 0.
-XCTD  = 1.2
-IF (TURBN%LSTATNW) THEN
-    XCTP  = 4.0
-  ELSE
-    XCTP  = 4.65
-ENDIF
-XA5   = 1./3.
-XCET  = 0.40
-XALPSBL = 4.63
-XRM17 = 0.5  ! Rodier et al 2017
-XCMFS= 2./3./XCEP*(1.-XA0)   !Constant for the momentum flux due to shear (RS)
-XCSHF= 2./3./XCTP            !Constant for the sensible heat flux(RS)
-XCHF= XCSHF                  !Constant for the humidity flux(RS)
-XCTV= 2./3./XCTP/XCTD        !Constant for the temperature variance(RS)
-XCHV=  XCTV                  !Constant for the humidity variance(RS)
-XCHT1= XCTV/2.      !Constants for the temperature-humidity correlation(RS)
-XCHT2= XCTV/2.
-XCPR1= XCTV         !Constants for the turbulent Prandtl and Schmidt numbers
-XCPR2= XCHT1
-XCPR3= XCPR2        ! used only for the Schmidt number for scalar variables
-XCPR4= XCPR2
-XCPR5= XCPR2
-XTKEMIN=1.E-6
-!XLINI=10.   ! BL mixing length
-XLINI=0.1   ! BL mixing length
-XLINF=1.E-10! to prevent division by zero
-XPHI_LIM = 3.
-XCDP  =  1.46
-XCDD  =  1.83
-XCDT  =  0.42
-XSBL_O_BL     = 0.05 ! SBL height / BL height ratio
-XFTOP_O_FSURF = 0.05 ! Fraction of surface (heat or momentum) flux used to define top of BL
 
 !
 END SUBROUTINE INIT_PHYEX

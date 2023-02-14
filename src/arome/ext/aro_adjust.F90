@@ -1,8 +1,8 @@
 !     ######spl
-      SUBROUTINE  ARO_ADJUST(CST, PARAM_ICE, RAIN_ICE_PARAM, KLON,KIDIA,KFDIA,KLEV,  KRR,  &
-                                  HCONDENS, HLAMBDA3, OSUBG_COND, &
-                                  OSIGMAS, CMICRO, LHGT_QS, HSUBG_MF_PDF, &
-                                  PTSTEP, PSIGQSAT, &
+      SUBROUTINE  ARO_ADJUST(CST, PARAM_ICE, RAIN_ICE_PARAM, TURBN, &
+                                  KLON,KIDIA,KFDIA,KLEV,  KRR,  &
+                                  CMICRO, LHGT_QS, &
+                                  PTSTEP, &
                                   PZZF, PRHODJ, PEXNREF, PRHODREF,&
                                   PPABSM, PTHT, PRT, PSIGS, &
                                   PMFCONV, PRC_MF, PRI_MF, PCF_MF, &
@@ -88,11 +88,11 @@
 USE MODD_CST, ONLY: CST_t
 USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 USE MODD_NEB, ONLY: NEB
-USE MODD_TURB_n, ONLY: TURBN
 USE MODD_BUDGET, ONLY: TBUDGETDATA, NBUDGET_RI, TBUCONF
 USE SPP_MOD_TYPE, ONLY : TSPP_CONFIG_TYPE, CLEAR_SPP_TYPE, APPLY_SPP
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_PARAM_ICE, ONLY: PARAM_ICE_t
+USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODI_ICE_ADJUST
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
@@ -112,22 +112,15 @@ IMPLICIT NONE
 TYPE(CST_t),              INTENT(IN)   :: CST
 TYPE(PARAM_ICE_t),        INTENT(IN)   :: PARAM_ICE
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)   :: RAIN_ICE_PARAM
+TYPE(TURB_t),             INTENT(IN)   :: TURBN
 INTEGER,                  INTENT(IN)   :: KLON ! array length (NPROMA)
 INTEGER,                  INTENT(IN)   :: KIDIA    !start index (=1)
 INTEGER,                  INTENT(IN)   :: KFDIA    !end index (=KLON only if block is full)
 INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
-CHARACTER*80,             INTENT(IN)   :: HCONDENS
-CHARACTER*4,              INTENT(IN)   :: HLAMBDA3 ! formulation for lambda3 coeff
-LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid Cond.
-LOGICAL,                  INTENT(IN)   :: OSIGMAS  ! Switch for Sigma_s:
-                                        ! use values computed in CONDENSATION
-                                        ! or that from turbulence scheme
 CHARACTER (LEN=4),        INTENT(IN)   :: CMICRO  ! Microphysics scheme
 LOGICAL,                  INTENT(IN)   :: LHGT_QS
-CHARACTER*80,             INTENT(IN)   :: HSUBG_MF_PDF
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
-REAL,                     INTENT(IN)   :: PSIGQSAT ! coeff applied to qsat variance contribution
 !
 !
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PZZF     ! Height (z)
@@ -211,9 +204,9 @@ CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, 0, KFDIA)
 !
 
 IF (YSPP_PSIGQSAT%LPERT) THEN
- CALL APPLY_SPP(YSPP_PSIGQSAT,KLON,1,KLON,PSIGQSAT,ZSIGQSAT)
+ CALL APPLY_SPP(YSPP_PSIGQSAT,KLON,1,KLON,TURBN%VSIGQSAT,ZSIGQSAT)
 ELSE
- ZSIGQSAT(:,:) = PSIGQSAT
+ ZSIGQSAT(:,:) = TURBN%VSIGQSAT
 ENDIF
 
 IF (YSPP_ICE_CLD_WGT%LPERT) THEN

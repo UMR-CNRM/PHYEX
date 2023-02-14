@@ -5,9 +5,9 @@ USE GETDATA_TURB_MOD
 USE COMPUTE_DIFF
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_CST,        ONLY: CST_t
-USE MODD_CTURB
+USE MODD_CTURB,      ONLY: CSTURB_t
 USE MODD_LES,        ONLY: TLES
-USE MODD_TURB_n,     ONLY: TURBN
+USE MODD_TURB_n,     ONLY: TURB_t
 USE MODD_IO,         ONLY: TFILEDATA
 USE MODI_TURB
 USE MODD_BUDGET!, ONLY: TBUCONF_ASSOCIATE, TBUDGETDATA, NBUDGET_RH, TBUCONF
@@ -119,6 +119,8 @@ INTEGER :: IBL, JLON, JLEV
 
 TYPE(DIMPHYEX_t)         :: D, D0
 TYPE(CST_t)              :: CST
+TYPE(TURB_t)             :: TURBN
+TYPE(CSTURB_t)           :: CSTURB
 INTEGER                  :: IMI, ISPLIT, KSV_LGBEG, KSV_LGEND, KGRADIENTS
 INTEGER                  :: KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH
 CHARACTER(LEN=4),DIMENSION(2)  :: HLBCX, HLBCY
@@ -242,7 +244,7 @@ TLES%LLES=.FALSE.
 PTSTEP = 25.0000000000000
 
 CALL INIT_PHYEX (20, CMICRO, PTSTEP, &
-                 CST)
+                 CST, CSTURB, TURBN)
 
 DO JRR=1, NBUDGET_RH
   YLBUDGET(JRR)%NBUDGET=JRR
@@ -340,7 +342,6 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%L = 0
     YLSTACK%U = 0
 #endif
-
 CALL TURB (CST,CSTURB,TBUCONF,TURBN, D, TLES,&
    & IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, KGRADIENTS, 1,&
    & ISPLIT,IMI, KSV, KSV_LGBEG, KSV_LGEND, &
@@ -446,10 +447,11 @@ STOP
 CONTAINS
 
 SUBROUTINE INIT_PHYEX(KULOUT,CMICRO,PTSTEP, &
-                      CST)
+                      CST, CSTURB, TURBN)
 
 USE MODD_CST, ONLY: CST_t
-USE MODD_TURB_N, ONLY: TURB_GOTO_MODEL
+USE MODD_TURB_N, ONLY: TURB_t
+USE MODD_CTURB,      ONLY: CSTURB_t
 USE MODI_INI_PHYEX, ONLY: INI_PHYEX
 IMPLICIT NONE
 
@@ -459,35 +461,40 @@ INTEGER, INTENT (IN) :: KULOUT
 CHARACTER(LEN=4), INTENT (IN) :: CMICRO
 REAL, INTENT(IN) :: PTSTEP
 TYPE(CST_t),            INTENT(OUT) :: CST
+TYPE(CSTURB_t),         INTENT(OUT) :: CSTURB
+TYPE(TURB_t),           INTENT(OUT) :: TURBN
 !-----------------------------------------------------------------------
 !    LOCAL VARIABLES
 REAL :: ZDZMIN
 CHARACTER(LEN=6) :: CPROGRAM
 CHARACTER(LEN=4) :: CSCONV
+CHARACTER(LEN=4) :: CTURB
 ! -----------------------------------------------------------------------
 
 CPROGRAM='AROME'
 ZDZMIN=999.
 CSCONV='NONE'
+CTURB='TKEL'
 
 !Default values
 CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &PTSTEP, ZDZMIN, &
-              &CMICRO, CSCONV, &
-              &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0, LDINIT=.FALSE.)
+              &CMICRO, CSCONV, CTURB, &
+              &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0, LDINIT=.FALSE., &
+              &TURBN_OUT=TURBN)
+
+!Emulate the namelist reading
+TURBN%LSUBG_COND=.TRUE.
+TURBN%XLINI=0.1 !This line should not exist to reproduce operational setup but the testprogs reference run
+                !was done (erroneously) with XLINI=0.1
 
 !Param initialisation
 CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &PTSTEP, ZDZMIN, &
-              &CMICRO, CSCONV, &
+              &CMICRO, CSCONV, CTURB, &
               &LDDEFAULTVAL=.FALSE., LDREADNAM=.FALSE., LDCHECK=.TRUE., KPRINT=2, LDINIT=.TRUE., &
-              &CST_INOUT=CST)
-
-
-
+              &CST_OUT=CST, CSTURB_OUT=CSTURB, TURBN_IN=TURBN, TURBN_OUT=TURBN)
 !
-CALL TURB_GOTO_MODEL(1,1)
-CALL CTURB_ASSOCIATE()
 CALL TBUCONF_ASSOCIATE
 LBU_ENABLE=.FALSE.                                                                                                       
 LBUDGET_U=.FALSE.
@@ -503,57 +510,6 @@ LBUDGET_RS=.FALSE.
 LBUDGET_RG=.FALSE.
 LBUDGET_RH=.FALSE.
 LBUDGET_SV=.FALSE.
-
-TURBN%LHARAT=.FALSE.
-TURBN%CTURBDIM = '1DIM'
-TURBN%XIMPL=1.
-TURBN%CTURBLEN='BL89'
-TURBN%LSTATNW=.FALSE.
-TURBN%LTURB_DIAG=.FALSE.
-TURBN%LTURB_FLX=.FALSE.
-TURBN%LSUBG_COND=.TRUE.
-TURBN%LRMC01=.FALSE.
-TURBN%CTOM='NONE'
-TURBN%LLEONARD=.FALSE.
-
-XCED  = 0.85
-XCEP  = 2.11 
-XA0   = 0.6
-XA2   = 1.
-XA3   = 0.
-XCTD  = 1.2
-IF (TURBN%LSTATNW) THEN
-    XCTP  = 4.0
-  ELSE
-    XCTP  = 4.65
-ENDIF
-XA5   = 1./3.
-XCET  = 0.40
-XALPSBL = 4.63
-XRM17 = 0.5  ! Rodier et al 2017
-XCMFS= 2./3./XCEP*(1.-XA0)   !Constant for the momentum flux due to shear (RS)
-XCSHF= 2./3./XCTP            !Constant for the sensible heat flux(RS)
-XCHF= XCSHF                  !Constant for the humidity flux(RS)
-XCTV= 2./3./XCTP/XCTD        !Constant for the temperature variance(RS)
-XCHV=  XCTV                  !Constant for the humidity variance(RS)
-XCHT1= XCTV/2.      !Constants for the temperature-humidity correlation(RS)
-XCHT2= XCTV/2.
-XCPR1= XCTV         !Constants for the turbulent Prandtl and Schmidt numbers
-XCPR2= XCHT1
-XCPR3= XCPR2        ! used only for the Schmidt number for scalar variables
-XCPR4= XCPR2
-XCPR5= XCPR2
-XTKEMIN=1.E-6
-!XLINI=10.   ! BL mixing length
-XLINI=0.1   ! BL mixing length
-XLINF=1.E-10! to prevent division by zero
-XPHI_LIM = 3.
-XCDP  =  1.46
-XCDD  =  1.83
-XCDT  =  0.42
-XSBL_O_BL     = 0.05 ! SBL height / BL height ratio
-XFTOP_O_FSURF = 0.05 ! Fraction of surface (heat or momentum) flux used to define top of BL
-
 !
 END SUBROUTINE INIT_PHYEX
 

@@ -1,14 +1,14 @@
 !     ######spl
       SUBROUTINE  ARO_TURB_MNH(CST, &
                 KKA,KKU,KKL,KLON,KLEV,KRR,KRRL,KRRI,KSV,              &
-                KTCOUNT, KGRADIENTS, LDHARATU, CMICRO, LDFLAT, PTSTEP,&
+                KTCOUNT, KGRADIENTS, CMICRO, LDFLAT, PTSTEP,          &
                 PZZ, PZZF, PZZTOP,                                    &
                 PRHODJ, PTHVREF,HINST_SFU,                            &
                 PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
                 PPABSM,PUM,PVM,PWM,PTKEM,PEPSM,PSVM,PSRCM,            &
                 PTHM,PRM,                                &
                 PRUS,PRVS,PRWS,PRTHS,PRRS,PRSVSIN,PRSVS,PRTKES,PRTKES_OUT,PREPSS, &
-                PHGRAD,PSIGS,OSUBG_COND,                                     &
+                PHGRAD,PSIGS,                                         &
                 PFLXZTHVMF,PLENGTHM,PLENGTHH,MFMOIST,                 &
                 PDRUS_TURB,PDRVS_TURB,                                &
                 PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,                 &
@@ -106,7 +106,6 @@ INTEGER,                  INTENT(IN)   :: KRRI      ! Number of ice variables
 INTEGER,                  INTENT(IN)   :: KSV     ! Number of passive scalar
 INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
 INTEGER,                  INTENT(IN)   :: KGRADIENTS  ! Number of stored horizontal gradients
-LOGICAL,                  INTENT(IN)   :: LDHARATU ! HARATU scheme active
 CHARACTER (LEN=4),        INTENT(IN)   :: CMICRO  ! Microphysics scheme
 LOGICAL,                  INTENT(IN)   :: LDFLAT ! Logical for zero ororography
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
@@ -172,8 +171,6 @@ REAL, DIMENSION(KLON,1,KLEV,KSV), INTENT(OUT)   ::  PDRSVS_TURB  ! evolution of 
 REAL, DIMENSION(KLON,1,KLEV+2), INTENT(INOUT)      ::  PFLXZTHVMF
 REAL, DIMENSION(KLON,1,KLEV+2),   INTENT(OUT) ::  PEDR       ! EDR
 !
-LOGICAL , INTENT(IN)                            ::  OSUBG_COND   ! switch
-!                                                !for SUBGrid CONDensation
 REAL, DIMENSION(KLON,1,KLEV+2),  INTENT(OUT)   :: PDP, PTP, PTPMF, PTDIFF, PTDISS
 !                                                !for TKE DDH budgets
 !
@@ -395,7 +392,7 @@ PSRCM(:,:,1)=0.
 PSRCM(:,:,KLEV+2)=0.
 CALL VERTICAL_EXTEND(PTHM)
 CALL VERTICAL_EXTEND(PFLXZTHVMF)
-IF (LDHARATU) THEN
+IF (TURBN%LHARAT) THEN
   CALL VERTICAL_EXTEND(PLENGTHM)
   CALL VERTICAL_EXTEND(PLENGTHH)
 ENDIF

@@ -1,7 +1,7 @@
 !     ######spl
-      SUBROUTINE  ARO_RAIN_ICE(CST, PARAM_ICE, RAIN_ICE_PARAM, RAIN_ICE_DESCR, CLOUDPARN, &
+      SUBROUTINE  ARO_RAIN_ICE(CST, PARAM_ICE, RAIN_ICE_PARAM, RAIN_ICE_DESCR, CLOUDPARN, TURBN, &
                                   KKA,KKU,KKL,KLON,KLEV, KFDIA, KRR, KTCOUNT,&
-                                  OSUBG_COND, CSUBG_AUCV_RC, CSUBG_AUCV_RI, CMICRO, &
+                                  CMICRO, &
                                   PTSTEP, PDZZ, PRHODJ, PRHODREF, PEXNREF,&
                                   PPABSM, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PTHT, PRT, PSIGS,PCLDFR, &
                                   PTHS, PRS, PEVAP,  &
@@ -93,6 +93,7 @@ USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
 USE MODD_CLOUDPAR_N,     ONLY: CLOUDPAR_t
+USE MODD_TURB_n,         ONLY: TURB_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODD_BUDGET, ONLY: TBUDGETDATA, NBUDGET_RH, TBUCONF
@@ -121,6 +122,7 @@ TYPE(PARAM_ICE_t),      INTENT(IN) :: PARAM_ICE
 TYPE(RAIN_ICE_PARAM_t), INTENT(IN) :: RAIN_ICE_PARAM
 TYPE(RAIN_ICE_DESCR_t), INTENT(IN) :: RAIN_ICE_DESCR
 TYPE(CLOUDPAR_t),       INTENT(IN) :: CLOUDPARN
+TYPE(TURB_t),           INTENT(IN) :: TURBN
 INTEGER,                  INTENT(IN)   :: KKA  !near ground array index
 INTEGER,                  INTENT(IN)   :: KKU  !uppest atmosphere array index
 INTEGER,                  INTENT(IN)   :: KKL  !vert. levels type 1=MNH -1=ARO
@@ -129,11 +131,6 @@ INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels
 INTEGER,                  INTENT(IN)   :: KFDIA
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
-LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid Cond.
-CHARACTER (LEN=4),        INTENT(IN)   :: CSUBG_AUCV_RC
-                                        ! type of subgrid rc->rr autoconvertion scheme
-CHARACTER (LEN=80),       INTENT(IN)   :: CSUBG_AUCV_RI
-                                        ! type of subgrid ri->rs autoconvertion scheme
 CHARACTER (LEN=4),        INTENT(IN)   :: CMICRO  ! Microphysics scheme
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 !
@@ -364,8 +361,7 @@ ENDDO
 !
 IF (CMICRO=='ICE4' .AND. PARAM_ICE%LRED) THEN
     CALL RAIN_ICE(  YLDIMPHYEX, CST, PARAM_ICE, RAIN_ICE_PARAM, &
-                 &  RAIN_ICE_DESCR, TBUCONF, &
-                 &  HSUBG_AUCV_RC=CSUBG_AUCV_RC, HSUBG_AUCV_RI=CSUBG_AUCV_RI,&
+                 &  RAIN_ICE_DESCR, TURBN, TBUCONF, &
                  &  PTSTEP=2*PTSTEP, &
                  &  KRR=KRR, PEXN=PEXNREF,            &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF, PEXNREF=PEXNREF,&
@@ -387,8 +383,7 @@ IF (CMICRO=='ICE4' .AND. PARAM_ICE%LRED) THEN
                  &  PRHT=PRT(:,:,:,7), PRHS=PRS(:,:,:,7), PINPRH=PINPRH, PFPR=PFPR)
 ELSEIF (CMICRO=='ICE3' .AND. PARAM_ICE%LRED) THEN
     CALL RAIN_ICE(  YLDIMPHYEX, CST, PARAM_ICE, RAIN_ICE_PARAM, &
-                 &  RAIN_ICE_DESCR, TBUCONF, &
-                 &  HSUBG_AUCV_RC=CSUBG_AUCV_RC, HSUBG_AUCV_RI=CSUBG_AUCV_RI,&
+                 &  RAIN_ICE_DESCR, TURBN, TBUCONF, &
                  &  PTSTEP=2*PTSTEP, &
                  &  KRR=KRR, PEXN=PEXNREF,            &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF,PEXNREF=PEXNREF,&
@@ -426,7 +421,7 @@ ELSEIF (CMICRO=='ICE4' .AND. .NOT. PARAM_ICE%LRED) THEN
      ZKGN_SBGR(:,:) = RAIN_ICE_PARAM%XFRMIN(11)
     ENDIF
     CALL RAIN_ICE_OLD( OSEDIC=PARAM_ICE%LSEDIC, OCND2=PARAM_ICE%LOCND2, LKOGAN=LKOGAN, LMODICEDEP=LMODICEDEP, &
-                 &  HSEDIM=PARAM_ICE%CSEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC, &
+                 &  HSEDIM=PARAM_ICE%CSEDIM, HSUBG_AUCV_RC=TURBN%CSUBG_AUCV_RC, &
                  &  OWARM=PARAM_ICE%LWARM,KKA=KKA,KKU=KKU,KKL=KKL,KSPLITR=CLOUDPARN%NSPLITR, &
                  &  PTSTEP=2*PTSTEP, KRR=KRR,                              &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF, PEXNREF=PEXNREF,&
@@ -468,7 +463,7 @@ ELSE
      ZKGN_SBGR(:,:) = RAIN_ICE_PARAM%XFRMIN(11)
     ENDIF
     CALL RAIN_ICE_OLD( OSEDIC=PARAM_ICE%LSEDIC, OCND2=PARAM_ICE%LOCND2, LKOGAN=LKOGAN, LMODICEDEP=LMODICEDEP, &
-                 &  HSEDIM=PARAM_ICE%CSEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC, &
+                 &  HSEDIM=PARAM_ICE%CSEDIM, HSUBG_AUCV_RC=TURBN%CSUBG_AUCV_RC, &
                  &  OWARM=PARAM_ICE%LWARM,KKA=KKA,KKU=KKU,KKL=KKL,KSPLITR=CLOUDPARN%NSPLITR, &
                  &  PTSTEP=2*PTSTEP, KRR=KRR,                              &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF, PEXNREF=PEXNREF,&

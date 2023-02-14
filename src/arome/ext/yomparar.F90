@@ -8,6 +8,8 @@ USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
 USE MODD_CLOUDPAR_N, ONLY: CLOUDPAR_t
 USE MODD_PARAM_MFSHALL_N, ONLY: PARAM_MFSHALL_t
+USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_CTURB, ONLY: CSTURB_t
 
 IMPLICIT NONE
 
@@ -20,13 +22,16 @@ TYPE TPARAR
 !     VARIABLES pour utiliser la PHYSIQUE de meso_NH :
 !     VARIABLES to use the MESO-NH physics:
 
-CHARACTER(LEN=4)   :: CMICRO      ! Microphysics scheme ('ICE3', 'ICE4' or 'LIMA')
+CHARACTER(LEN=4)   :: CMICRO      !< Microphysics scheme ('ICE3', 'ICE4' or 'LIMA')
+CHARACTER(LEN=4)   :: CTURB       !< Turbulence scheme ('TKEL', 'NONE')
 TYPE(CST_t)            :: CST
 TYPE(PARAM_ICE_t)      :: PARAM_ICE
 TYPE(RAIN_ICE_DESCR_t) :: RAIN_ICE_DESCR
 TYPE(RAIN_ICE_PARAM_t) :: RAIN_ICE_PARAM
 TYPE(CLOUDPAR_t)       :: CLOUDPARN
 TYPE(PARAM_MFSHALL_t)  :: PARAM_MFSHALLN
+TYPE(CSTURB_t)         :: CSTURB
+TYPE(TURB_t)           :: TURBN
 !
 INTEGER(KIND=JPIM) :: NSPLITR     ! Time splitting for Eulerian sedimentation
 INTEGER(KIND=JPIM) :: NSPLITG     ! Time splitting for Eulerian sedimentation
@@ -59,9 +64,6 @@ INTEGER(KIND=JPIM) :: MCD         !pointer on drag coefficient
 
 REAL(KIND=JPRB), DIMENSION(:), ALLOCATABLE  :: XSW_BANDS  !SW spectral bands
 ! for ext. surface scheme
-LOGICAL :: LOSUBG_COND ! switch to activate subgrid condensation
-LOGICAL :: LOSIGMAS    ! activate calculation of variance of departure to 
-                       ! saturation in turb scheme (to be used in subgrid condensation)
 LOGICAL :: LOLSMC      ! Land/sea mask for cloud droplet number conc.
 LOGICAL :: LOTOWNC     ! Town mask for cloud droplet number conc.
 
@@ -72,9 +74,6 @@ LOGICAL :: LICERAD     ! Assume higher fraction of condensate for
                        ! radiation
 REAL(KIND=JPRB) :: RADGR  ! Tuning of ice for radiation, TO BE REMOVED
 REAL(KIND=JPRB) :: RADSN  ! Tuning of ice for radiation, TO BE REMOVED
-
-REAL(KIND=JPRB) :: VSIGQSAT ! coeff applied to qsat variance contribution
-                            ! for subgrid condensation
 
 LOGICAL            :: LLCRIT    ! True if temperature dependent 
                                 ! critical condensation in EDMFm 
@@ -104,20 +103,6 @@ INTEGER(KIND=JPIM) :: NDIAGWMAX ! frequency of preceding prints (in time step)
 INTEGER(KIND=JPIM) :: NDTCHEM ! time step factor for chemical scheme
 !* for MNH budget anlysis
 LOGICAL :: LAROBU_ENABLE ! for MNH budget anlysis
-!* for turbulence scheme
-REAL(KIND=JPRB) :: XLINI ! minimum bl89 mixing length
-LOGICAL :: LSTATNW !  updated full statistical cloud scheme
-                   !  (yet only to be used in combination with EDMFm convection (DUAL))
-LOGICAL :: LHARATU !  if true RACMO turbulence is used
-                   !  (yet only to be used in combination with EDMFm convection (DUAL))
-!* Subgrid precipitation scheme
-CHARACTER (LEN=4) :: CSUBG_AUCV_RC ! type of rc->rr autoconversion scheme
-                                   ! 'CLFR', 'PDF' or 'NONE'
-CHARACTER(LEN=80) :: CSUBG_AUCV_RI ! type of ri->rs autoconversion scheme
-                                   ! 'NONE', 'CLFR' or 'ADJU'
-CHARACTER(LEN=80) :: CSUBG_MF_PDF  ! PDF to use on MF cloud to retrieve low and high cloud parts
-                                   ! 'NONE' or 'TRIANGLE'
-
 !
 !* For total cumulative 3D prec flux for MOCAGE
 LOGICAL :: LFPREC3D ! Switch on total cumulative 3D prec flux output (for MOCAGE use)
@@ -126,9 +111,6 @@ REAL(KIND=JPRB) :: XCQVR ! reduction factor of water vapour used for radiation c
 REAL(KIND=JPRB) :: GQVPLIM ! pressure value over which qv is damped towards 0 for radiation.
 REAL(KIND=JPRB) :: GQVTOP ! qv value at the top of the atmopshere.
 LOGICAL :: LQVTOP ! to activate modification of qv in input to radiation.
-
-CHARACTER(LEN=80) :: CCONDENS !condensation formulation. 'GAUS' or 'CB02'
-CHARACTER(LEN=4) :: CLAMBDA3 !formulation for the lambda3 coeff used with s'r'. 'CB' or 'NONE'
 
 END TYPE TPARAR
 

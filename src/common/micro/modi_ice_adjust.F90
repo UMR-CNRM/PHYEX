@@ -5,8 +5,7 @@
 INTERFACE
 !
       SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEB, TURBN, BUCONF, KRR,            &
-                            &HFRAC_ICE,                                        &
-                            &HBUNAME, OCND2, LHGT_QS,                          &
+                            &HFRAC_ICE, HBUNAME, OCND2, LHGT_QS,               &
                             &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
                             &PPABST, PZZ,                                      &

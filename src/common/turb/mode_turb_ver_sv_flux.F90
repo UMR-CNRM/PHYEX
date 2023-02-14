@@ -334,9 +334,9 @@ ENDIF
 !
 IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
-   ZCSV=CSTURB%XCHF/PRSNOW
+   ZCSV=TURBN%XCHF/PRSNOW
 ELSE
-   ZCSV=CSTURB%XCHF
+   ZCSV=TURBN%XCHF
 ENDIF
 !----------------------------------------------------------------------------
 !

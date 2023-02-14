@@ -155,9 +155,9 @@ ISV = SIZE(PSVM,4)
 !
 IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables              
-   ZCSV= XCHF/PRSNOW
+   ZCSV= TURBN%XCHF/PRSNOW
 ELSE
-   ZCSV= XCHF
+   ZCSV= TURBN%XCHF
 ENDIF
 !
 !  compute the coefficients for the uncentred gradient computation near the 

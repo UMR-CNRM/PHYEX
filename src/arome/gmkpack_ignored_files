@@ -220,3 +220,7 @@ phyex/turb/ini_cmfshall.F90
 phyex/turb/modi_ini_cmfshall.F90
 mpa/turb/externals/aroini_mfshal.F90
 mpa/turb/interface/aroini_mfshal.h
+mpa/turb/externals/aroini_turb.F90
+mpa/turb/interface/aroini_turb.h
+phyex/turb/ini_cturb.F90
+phyex/turb/modi_ini_cturb.F90

@@ -1930,7 +1930,7 @@ IF (CCLOUD /= 'NONE' .AND. CELEC == 'NONE') THEN
     CALL RESOLVED_CLOUD ( CCLOUD, CACTCCN, CSCONV, CMF_CLOUD, NRR, NSPLITR,    &
                           NSPLITG, IMI, KTCOUNT,                               &
                           CLBCX,CLBCY,TZBAKFILE, CRAD, CTURBDIM,               &
-                          LSUBG_COND,LSIGMAS,CSUBG_AUCV,XTSTEP,                &
+                          LSUBG_COND,LSIGMAS,CSUBG_AUCV_RC,XTSTEP,             &
                           XZZ, XRHODJ, XRHODREF, XEXNREF,                      &
                           ZPABST, XTHT,XRT,XSIGS,VSIGQSAT,XMFCONV,XTHM,XRCM,   &
                           XPABST, XWT_ACT_NUC,XDTHRAD, XRTHS, XRRS,            &
@@ -1950,7 +1950,7 @@ IF (CCLOUD /= 'NONE' .AND. CELEC == 'NONE') THEN
     CALL RESOLVED_CLOUD ( CCLOUD, CACTCCN, CSCONV, CMF_CLOUD, NRR, NSPLITR,    &
                           NSPLITG, IMI, KTCOUNT,                               &
                           CLBCX,CLBCY,TZBAKFILE, CRAD, CTURBDIM,               &
-                          LSUBG_COND,LSIGMAS,CSUBG_AUCV,                       &
+                          LSUBG_COND,LSIGMAS,CSUBG_AUCV_RC,                    &
                           XTSTEP,XZZ, XRHODJ, XRHODREF, XEXNREF,               &
                           ZPABST, XTHT,XRT,XSIGS,VSIGQSAT,XMFCONV,XTHM,XRCM,   &
                           XPABST, XWT_ACT_NUC,XDTHRAD, XRTHS, XRRS,            &
@@ -2028,7 +2028,7 @@ IF (CELEC /= 'NONE' .AND. (CCLOUD(1:3) == 'ICE')) THEN
     CALL RESOLVED_ELEC_n (CCLOUD, CSCONV, CMF_CLOUD,                     &
                           NRR, NSPLITR, IMI, KTCOUNT, OEXIT,             &
                           CLBCX, CLBCY, CRAD, CTURBDIM,                  &
-                          LSUBG_COND, LSIGMAS,VSIGQSAT,CSUBG_AUCV,       &
+                          LSUBG_COND, LSIGMAS,VSIGQSAT,CSUBG_AUCV_RC,    &
                           XTSTEP, XZZ, XRHODJ, XRHODREF, XEXNREF,        &
                           ZPABST, XTHT, XRTHS, XWT,  XRT, XRRS,          &
                           XSVT, XRSVS, XCIT,                             &
@@ -2043,7 +2043,7 @@ IF (CELEC /= 'NONE' .AND. (CCLOUD(1:3) == 'ICE')) THEN
     CALL RESOLVED_ELEC_n (CCLOUD, CSCONV, CMF_CLOUD,                     &
                           NRR, NSPLITR, IMI, KTCOUNT, OEXIT,             &
                           CLBCX, CLBCY, CRAD, CTURBDIM,                  &
-                          LSUBG_COND, LSIGMAS,VSIGQSAT, CSUBG_AUCV,      &
+                          LSUBG_COND, LSIGMAS,VSIGQSAT, CSUBG_AUCV_RC,   &
                           XTSTEP, XZZ, XRHODJ, XRHODREF, XEXNREF,        &
                           ZPABST, XTHT, XRTHS, XWT,                      &
                           XRT, XRRS, XSVT, XRSVS, XCIT,                  &

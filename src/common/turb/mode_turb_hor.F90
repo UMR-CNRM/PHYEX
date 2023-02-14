@@ -367,7 +367,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
                       PRSVS                                          )
 !
       IF (KSPLT==1 .AND. TLES%LLES_CALL)                             &
-      CALL      TURB_HOR_SV_CORR(D,CST,CSTURB,TLES,                  &
+      CALL      TURB_HOR_SV_CORR(D,CST,CSTURB,TURBN,TLES,            &
                       KSV,KSV_LGBEG,KSV_LGEND,                       &
                       KRR,KRRL,KRRI,OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,   &
                       ONOMIXLG,O2D,                                  &

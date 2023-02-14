@@ -150,7 +150,7 @@ use modd_budget,     only: lbudget_th, lbudget_tke, lbudget_rv, lbudget_rc,     
                            NBUDGET_RR, NBUDGET_RI,  NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1, &
                            tbudgets
 USE MODD_CST
-USE MODD_CTURB,          ONLY: XTKEMIN
+USE MODD_TURB_n,         ONLY: XTKEMIN
 USE MODD_CONF,           ONLY: LNEUTRAL,NHALO,L1D, L2D
 use modd_field,          only: tfielddata, TYPEREAL
 USE MODD_IBM_PARAM_n,    ONLY: LIBM,XIBM_LS,XIBM_EPSI

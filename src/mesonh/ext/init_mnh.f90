@@ -92,7 +92,6 @@ USE MODE_MODELN_HANDLER
 USE MODE_SPLITTINGZ_ll
 !
 USE MODE_INI_CST, ONLY: INI_CST
-USE MODI_INI_CTURB
 USE MODI_INI_MODEL_n
 USE MODI_INI_SEG_n
 USE MODI_INI_SIZE_n
@@ -149,7 +148,7 @@ CALL INI_CST
 !
 !*       1.3    initialize constants for the turbulence scheme                      
 !
-CALL INI_CTURB                      
+!Now done in ini_modeln
 !
 !
 !*       1.4    initialize constants for nebulosity computation                            

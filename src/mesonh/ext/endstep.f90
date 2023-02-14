@@ -207,7 +207,7 @@ use modd_budget,     only: lbudget_u,  lbudget_v,  lbudget_w,  lbudget_th, lbudg
                            nbustep, tbudgets
 USE MODD_CH_AEROSOL, ONLY: LORILAM
 USE MODD_CONF
-USE MODD_CTURB
+USE MODD_TURB_n,     ONLY: XTKEMIN
 USE MODD_DUST,       ONLY: LDUST
 USE MODD_SALT,       ONLY: LSALT
 USE MODD_DYN

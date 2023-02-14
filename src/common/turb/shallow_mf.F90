@@ -3,7 +3,7 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-!     ################################################################
+!     #################################################################
       SUBROUTINE SHALLOW_MF(D, CST, NEB, PARAMMF, TURBN, CSTURB,      &
                 KRR, KRRL, KRRI, KSV,                                 &
                 HFRAC_ICE,ONOMIXLG,KSV_LGBEG,KSV_LGEND,               &
@@ -22,7 +22,6 @@
                 PFRAC_UP,PEMF,PDETR,PENTR,                            &
                 KKLCL,KKETL,KKCTL,PDX,PDY,PRSVS,PSVMIN,               &
                 BUCONF, TBUDGETS, KBUDGETS                            )
-
 !     #################################################################
 !!
 !!****  *SHALLOW_MF* - 
@@ -125,8 +124,8 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PRHODREF    ! dry density of the
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PPABSM      ! Pressure at time t-1
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PEXNM       ! Exner function at t-dt
 
-REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTH,PSFRV ! normal surface fluxes of theta and Rv 
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PTHM        ! Theta at t-dt
+REAL, DIMENSION(D%NIJT),         INTENT(IN) ::  PSFTH,PSFRV ! normal surface fluxes of theta and Rv 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PTHM        ! Theta at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN) ::  PRM         ! water var. at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PUM,PVM     ! wind components at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PTKEM       ! tke at t-dt
@@ -157,12 +156,12 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PFRAC_UP  ! updraft fraction
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) ::  PEMF      ! updraft mass flux
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) ::  PDETR     ! updraft detrainment
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) ::  PENTR     ! updraft entrainment
-INTEGER,DIMENSION(D%NIJT), INTENT(OUT) :: KKLCL,KKETL,KKCTL ! level of LCL,ETL and CTL
-REAL,                 INTENT(IN)  :: PDX, PDY
+INTEGER,DIMENSION(D%NIJT),     INTENT(OUT) :: KKLCL,KKETL,KKCTL ! level of LCL,ETL and CTL
+REAL,                          INTENT(IN)  :: PDX, PDY
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN),OPTIONAL ::  PRSVS ! sources of sv (for Budgets with lagrangian tracer)
 TYPE(TBUDGETCONF_t),    INTENT(IN),OPTIONAL   :: BUCONF       ! budget structure
 INTEGER,                INTENT(IN)   :: KBUDGETS     ! option. because not used in arpifs
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT),OPTIONAL :: TBUDGETS 
+TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT),OPTIONAL :: TBUDGETS
 REAL,DIMENSION(JPSVMAX),INTENT(IN),OPTIONAL   :: PSVMIN       ! minimum value for SV variables (for Budgets)
 
 !
@@ -288,7 +287,7 @@ ENDIF
 !!! 5. Compute diagnostic convective cloud fraction and content
 !!!    --------------------------------------------------------
 !
-CALL COMPUTE_MF_CLOUD(D,CST,CSTURB,PARAMMF,TURBN%LSTATNW,&
+CALL COMPUTE_MF_CLOUD(D,CST,TURBN,PARAMMF,TURBN%LSTATNW,&
                       KRR, KRRL, KRRI,                  &
                       ZFRAC_ICE,                        &
                       PRC_UP,PRI_UP,PEMF,               &

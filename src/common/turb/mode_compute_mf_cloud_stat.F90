@@ -9,7 +9,7 @@
 IMPLICIT NONE
 CONTAINS
 !     ######spl
-      SUBROUTINE COMPUTE_MF_CLOUD_STAT(D, CST, CSTURB, PARAMMF, &
+      SUBROUTINE COMPUTE_MF_CLOUD_STAT(D, CST, TURBN, PARAMMF, &
                             &KRR, KRRL, KRRI, OSTATNW,     &
                             &PFRAC_ICE,&
                             &PTHLM, PRTM, PPABSM, PRM,&
@@ -58,7 +58,7 @@ CONTAINS
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY: CST_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
-USE MODD_CTURB,           ONLY: CSTURB_t
+USE MODD_TURB_n,          ONLY: TURB_t
 
 !
 USE MODI_SHUMAN_MF, ONLY: MZF_MF, MZM_MF, GZ_M_W_MF
@@ -73,7 +73,7 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
-TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
+TYPE(TURB_t),           INTENT(IN)   :: TURBN
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 LOGICAL,                INTENT(IN)   :: OSTATNW      ! cloud scheme inclues convect. covar. contrib
 INTEGER,                INTENT(IN)   :: KRR                     ! number of moist var.
@@ -131,7 +131,7 @@ IF (KRRL > 0)  THEN
     CALL GZ_M_W_MF(D, PTHLM(:,:), PDZZ(:,:), ZWK(:,:))
     IF (OSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZFLXZ(IIJB:IIJE,1:IKT) = -2 * CSTURB%XCTV* PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
+      ZFLXZ(IIJB:IIJE,1:IKT) = -2 * TURBN%XCTV* PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
                            & (PTHL_UP(IIJB:IIJE,1:IKT)-ZFLXZ(IIJB:IIJE,1:IKT)) * ZWK(IIJB:IIJE,1:IKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ELSE
@@ -163,7 +163,7 @@ IF (KRRL > 0)  THEN
     CALL GZ_M_W_MF(D, PRTM(:,:), PDZZ(:,:), ZWK2(:,:))
     IF (OSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZFLXZ2(IIJB:IIJE,1:IKT) = -2 * CSTURB%XCTV * PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
+      ZFLXZ2(IIJB:IIJE,1:IKT) = -2 * TURBN%XCTV * PARAMMF%XTAUSIGMF * PEMF(IIJB:IIJE,1:IKT)* &
                            & (PRT_UP(IIJB:IIJE,1:IKT)-ZFLXZ2(IIJB:IIJE,1:IKT)) * ZWK2(IIJB:IIJE,1:IKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ELSE
@@ -187,7 +187,7 @@ IF (KRRL > 0)  THEN
       !
       !       1.2.2 contribution from <Rnp Thl>
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZFLXZ3(IIJB:IIJE,1:IKT) = - CSTURB%XCTV * PARAMMF%XTAUSIGMF * &
+      ZFLXZ3(IIJB:IIJE,1:IKT) = - TURBN%XCTV * PARAMMF%XTAUSIGMF * &
                     (PEMF(IIJB:IIJE,1:IKT)*(PRT_UP(IIJB:IIJE,1:IKT)-ZFLXZ2(IIJB:IIJE,1:IKT)) * &
                                    ZWK(IIJB:IIJE,1:IKT) + &
                                    PEMF(IIJB:IIJE,1:IKT)*(PTHL_UP(IIJB:IIJE,1:IKT)-ZFLXZ(IIJB:IIJE,1:IKT)) * &
