@@ -290,7 +290,8 @@ REAL, DIMENSION(D%NIJT,D%NKT)  ::  &
        ZSOURCE,  & ! source of evolution for the treated variable
        ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
        ZWORK1,ZWORK2,&
-       ZWORK3,ZWORK4! working var. for shuman operators (array syntax)
+       ZWORK3,ZWORK4,&! working var. for shuman operators (array syntax)
+       ZMZMRHODJ
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IIJB,IIJE,IKB,IKE,IKA ! index value for the mass points of the domain 
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
@@ -345,7 +346,7 @@ ENDIF
 !*       8.   SOURCES OF PASSIVE SCALAR VARIABLES
 !             -----------------------------------
 !
-CALL MZM_PHY(D,PRHODJ,ZWORK1)
+CALL MZM_PHY(D,PRHODJ,ZMZMRHODJ)
 DO JSV=1,KSV
 !
   IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
@@ -353,13 +354,13 @@ DO JSV=1,KSV
 ! Preparation of the arguments for TRIDIAG
     IF (TURBN%LHARAT) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)  
-      ZA(IIJB:IIJE,1:IKT) = -PTSTEP * ZKEFF(IIJB:IIJE,1:IKT) * ZWORK1(IIJB:IIJE,1:IKT) &
+      ZA(IIJB:IIJE,1:IKT) = -PTSTEP * ZKEFF(IIJB:IIJE,1:IKT) * ZMZMRHODJ(IIJB:IIJE,1:IKT) &
                                    / PDZZ(IIJB:IIJE,1:IKT)**2
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ELSE
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ZA(IIJB:IIJE,1:IKT) = -PTSTEP*ZCSV*PPSI_SV(IIJB:IIJE,1:IKT,JSV) *   &
-                   ZKEFF(IIJB:IIJE,1:IKT) * ZWORK1(IIJB:IIJE,1:IKT) / PDZZ(IIJB:IIJE,1:IKT)**2
+           ZKEFF(IIJB:IIJE,1:IKT) * ZMZMRHODJ(IIJB:IIJE,1:IKT) / PDZZ(IIJB:IIJE,1:IKT)**2
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ENDIF
   ZSOURCE(IIJB:IIJE,1:IKT) = 0.
