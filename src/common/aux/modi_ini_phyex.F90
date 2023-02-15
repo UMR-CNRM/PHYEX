@@ -39,22 +39,28 @@ LOGICAL, OPTIONAL, INTENT(IN) :: LDCHECK      !< Must we perform some checks on 
 INTEGER, OPTIONAL, INTENT(IN) :: KPRINT       !< Print level (defaults to 0): 0 for no print, 1 to safely print namelist,
                                               !! 2 to print informative messages
 LOGICAL, OPTIONAL, INTENT(IN) :: LDINIT       !< Must we call the init routines
-TYPE(CST_t),             OPTIONAL, INTENT(IN)  :: CST_IN
-TYPE(CST_t),             OPTIONAL, INTENT(OUT) :: CST_OUT
-TYPE(PARAM_ICE_t),       OPTIONAL, INTENT(IN)  :: PARAM_ICE_IN
-TYPE(PARAM_ICE_t),       OPTIONAL, INTENT(OUT) :: PARAM_ICE_OUT
-TYPE(RAIN_ICE_DESCR_t) , OPTIONAL, INTENT(IN)  :: RAIN_ICE_DESCR_IN
-TYPE(RAIN_ICE_DESCR_t) , OPTIONAL, INTENT(OUT) :: RAIN_ICE_DESCR_OUT
-TYPE(RAIN_ICE_PARAM_t) , OPTIONAL, INTENT(IN)  :: RAIN_ICE_PARAM_IN
-TYPE(RAIN_ICE_PARAM_t) , OPTIONAL, INTENT(OUT) :: RAIN_ICE_PARAM_OUT
-TYPE(CLOUDPAR_t),        OPTIONAL, INTENT(IN)  :: CLOUDPARN_IN
-TYPE(CLOUDPAR_t),        OPTIONAL, INTENT(OUT) :: CLOUDPARN_OUT
-TYPE(PARAM_MFSHALL_t),   OPTIONAL, INTENT(IN)  :: PARAM_MFSHALLN_IN
-TYPE(PARAM_MFSHALL_t),   OPTIONAL, INTENT(OUT) :: PARAM_MFSHALLN_OUT
-TYPE(TURB_t),            OPTIONAL, INTENT(IN)  :: TURBN_IN
-TYPE(TURB_t),            OPTIONAL, INTENT(OUT) :: TURBN_OUT
-TYPE(CSTURB_t),          OPTIONAL, INTENT(IN)  :: CSTURB_IN
-TYPE(CSTURB_t),          OPTIONAL, INTENT(OUT) :: CSTURB_OUT
+TYPE(CST_t),             OPTIONAL, INTENT(IN)  :: CST_IN               !< Structure for constants (IN)
+TYPE(CST_t),             OPTIONAL, INTENT(INOUT) :: CST_OUT            !< Structure for constants (OUT)
+TYPE(PARAM_ICE_t),       OPTIONAL, INTENT(IN)  :: PARAM_ICE_IN         !< Structure for controling ICE3/ICE4 (IN)
+TYPE(PARAM_ICE_t),       OPTIONAL, INTENT(INOUT) :: PARAM_ICE_OUT      !< Structure for controling ICE3/ICE4 (OUT)
+TYPE(RAIN_ICE_DESCR_t) , OPTIONAL, INTENT(IN)  :: RAIN_ICE_DESCR_IN    !< Structure for describing hydrometeors (IN)
+TYPE(RAIN_ICE_DESCR_t) , OPTIONAL, INTENT(INOUT) :: RAIN_ICE_DESCR_OUT !< Structure for describing hydrometeors (OUT)
+TYPE(RAIN_ICE_PARAM_t) , OPTIONAL, INTENT(IN)  :: RAIN_ICE_PARAM_IN    !< Structure for ICE3/ICE4 precomputed values (IN)
+TYPE(RAIN_ICE_PARAM_t) , OPTIONAL, INTENT(INOUT) :: RAIN_ICE_PARAM_OUT !< Structure for ICE3/ICE4 precomputed values (OUT)
+TYPE(CLOUDPAR_t),        OPTIONAL, INTENT(IN)  :: CLOUDPARN_IN         !< Structure for model dependant microphysics variables (IN)
+TYPE(CLOUDPAR_t),        OPTIONAL, INTENT(INOUT) :: CLOUDPARN_OUT      !< Structure for model dependant microphysics variables (IN
+TYPE(PARAM_MFSHALL_t),   OPTIONAL, INTENT(IN)  :: PARAM_MFSHALLN_IN    !< Structure for controling shallow convection scheme (IN)
+TYPE(PARAM_MFSHALL_t),   OPTIONAL, INTENT(INOUT) :: PARAM_MFSHALLN_OUT !< Structure for controling shallow convection scheme (OUT)
+TYPE(TURB_t),            OPTIONAL, INTENT(IN)  :: TURBN_IN             !< Structure for controling the turbulence scheme (IN)
+TYPE(TURB_t),            OPTIONAL, INTENT(INOUT) :: TURBN_OUT          !< Structure for controling the turbulence scheme (IN)
+TYPE(CSTURB_t),          OPTIONAL, INTENT(IN)  :: CSTURB_IN            !< Structure for the turbulence scheme constants (IN)
+TYPE(CSTURB_t),          OPTIONAL, INTENT(INOUT) :: CSTURB_OUT         !< Structure for the turbulence scheme constants (IN)
+
+!IMPORTANT NOTE on *_OUT arguments.
+!Logically those arguments should be declared with INTENT(OUT) but in this case ifort (at least) breaks the
+!execution when same the structure is given for the _IN and the _OUT argument.
+!When INITENT(INOUT) is used, execution is OK on ifort.
+
 
 
 

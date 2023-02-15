@@ -1,15 +1,52 @@
 MODULE MODE_CHECK_NAM_VAL
+!> @file
+!!      *MODE_CHECK_NAM_VAL" - Module containing the routines to control the different kind of variables
+!!                             read from namelist
+!!
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 CONTAINS
 SUBROUTINE CHECK_NAM_VAL_CHAR(KLUOUT, HNAME, HVAR, HVALUE1, HVALUE2, HVALUE3, HVALUE4, HVALUE5, &
                              &HVALUE6, HVALUE7, HVALUE8, HVALUE9, HVALUE10, HVALUE11, HVALUE12)
+!!
+!!      *CHECK_NAM_VAL* - Control of CHARACTER variables
+!!
+!!    PURPOSE
+!!    -------
+!!      The purpose of this routine is to control the validity of CHARACTER variables
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!     S. Riette
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!
+!!    -  Original      Feb 2023, from Méso-NH code
+!!
+!-------------------------------------------------------------------------------
+!
+!**       DECLARATIONS
+!
 IMPLICIT NONE
 INTEGER,          INTENT(IN)           :: KLUOUT   !< output listing logical unit
 CHARACTER(LEN=*), INTENT(IN)           :: HNAME    !< name of the variable to test
 CHARACTER(LEN=*), INTENT(IN)           :: HVAR     !< variable to test
-CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: HVALUE1, HVALUE2, HVALUE3, HVALUE4, HVALUE5, HVALUE6,   & !< Possible value
-                                        & HVALUE7, HVALUE8, HVALUE9, HVALUE10, HVALUE11, HVALUE12   !! list
-
+CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: HVALUE1  !< Authorised value 1
+CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: HVALUE2  !< Authorised value 2
+CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: HVALUE3  !< Authorised value 3
+CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: HVALUE4  !< Authorised value 4
+CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: HVALUE5  !< Authorised value 5
+CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: HVALUE6  !< Authorised value 6
+CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: HVALUE7  !< Authorised value 7
+CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: HVALUE8  !< Authorised value 8
+CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: HVALUE9  !< Authorised value 9
+CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: HVALUE10 !< Authorised value 10
+CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: HVALUE11 !< Authorised value 11
+CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: HVALUE12 !< Authorised value 12
+!
+!**       CONTROLS
+!
 IF ( PRESENT (HVALUE1) ) THEN
   IF ( HVAR==HVALUE1 ) RETURN
 END IF
@@ -58,8 +95,7 @@ IF ( PRESENT (HVALUE12) ) THEN
   IF ( HVAR==HVALUE12 ) RETURN
 END IF
 !
-!
-!-------------------------------------------------------------------------------
+!** PRINTS AND ABORT
 !
 WRITE (KLUOUT,*) ' '
 WRITE (KLUOUT,*) 'FATAL ERROR:'
@@ -87,6 +123,27 @@ CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'CHECK_NAM_VAL_CHAR', TRIM(HVAR) // ' is not 
 END SUBROUTINE CHECK_NAM_VAL_CHAR
 
 SUBROUTINE CHECK_NAM_VAL_REAL(KLUOUT, HNAME, PVALUE, CDSIGN1, PVAL1, CDSIGN2, PVAL2)
+!!
+!!      *CHECK_NAM_VAL* - Control of CHARACTER variables
+!!
+!!    PURPOSE
+!!    -------
+!!      The purpose of this routine is to control the validity of REAL variables
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!     S. Riette
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!
+!!    -  Original      Feb 2023
+!!
+!-------------------------------------------------------------------------------
+!
+!**       DECLARATIONS
+!
 IMPLICIT NONE
 INTEGER,          INTENT(IN)           :: KLUOUT   !< output listing logical unit
 CHARACTER(LEN=*), INTENT(IN)           :: HNAME    !< name of the variable to test
@@ -101,6 +158,9 @@ REAL :: ZVAL
 CHARACTER(LEN=2) :: CSIGN
 LOGICAL :: LOK
 CHARACTER(LEN=10) :: CHAR_VAL
+!
+!**       CONTROLS
+!
 LOK=.TRUE.
 INUM=1
 IF(PRESENT(CDSIGN2)) INUM=2
@@ -128,6 +188,8 @@ DO II=1, INUM
   END SELECT
 ENDDO
 !
+!** PRINTS AND ABORT
+!
 IF(.NOT. LOK) THEN
   WRITE(KLUOUT,*) ' '
   WRITE(KLUOUT,*) 'FATAL ERROR:'
@@ -147,6 +209,27 @@ ENDIF
 END SUBROUTINE CHECK_NAM_VAL_REAL
 
 SUBROUTINE CHECK_NAM_VAL_INT(KLUOUT, HNAME, KVALUE, CDSIGN1, KVAL1, CDSIGN2, KVAL2)
+!!
+!!      *CHECK_NAM_VAL* - Control of CHARACTER variables
+!!
+!!    PURPOSE
+!!    -------
+!!      The purpose of this routine is to control the validity of REAL variables
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!     S. Riette
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!
+!!    -  Original      Feb 2023
+!!
+!-------------------------------------------------------------------------------
+!
+!**       DECLARATIONS
+!
 IMPLICIT NONE
 INTEGER,          INTENT(IN)           :: KLUOUT   !< output listing logical unit
 CHARACTER(LEN=*), INTENT(IN)           :: HNAME    !< name of the variable to test
@@ -161,6 +244,9 @@ INTEGER :: IVAL
 CHARACTER(LEN=2) :: CSIGN
 LOGICAL :: LOK
 CHARACTER(LEN=10) :: CHAR_VAL
+!
+!**       CONTROLS
+!
 LOK=.TRUE.
 INUM=1
 IF(PRESENT(CDSIGN2)) INUM=2
@@ -187,6 +273,8 @@ DO II=1, INUM
        CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'CHECK_NAM_VAL_REAL', TRIM(CSIGN) // ' is not allowed as comparator')
   END SELECT
 ENDDO
+!
+!** PRINTS AND ABORT
 !
 IF(.NOT. LOK) THEN
   WRITE(KLUOUT,*) ' '

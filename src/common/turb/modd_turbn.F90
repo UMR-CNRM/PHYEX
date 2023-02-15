@@ -175,6 +175,9 @@ NAMELIST/NAM_TURBn/XIMPL,CTURBLEN,CTURBDIM,LTURB_FLX,LTURB_DIAG,  &
 CONTAINS
 
 SUBROUTINE TURB_GOTO_MODEL(KFROM, KTO)
+!! This subroutine associate all the pointers to the right component of
+!! the right strucuture. A value can be accessed through the structure TURBN
+!! or through the strucuture TURB_MODEL(KTO) or directly through these pointers.
 INTEGER, INTENT(IN) :: KFROM, KTO
 !
 IF(.NOT. ASSOCIATED(TURBN, TURB_MODEL(KTO))) THEN
@@ -253,15 +256,45 @@ END SUBROUTINE TURB_GOTO_MODEL
 
 SUBROUTINE TURBN_INIT(HPROGRAM, KUNITNML, LDNEEDNAM, KLUOUT, &
                      &LDDEFAULTVAL, LDREADNAM, LDCHECK, KPRINT)
-
+!!*** *TURBN_INIT* - Code needed to initialize the MODD_TURB_n module
+!!
+!!*   PURPOSE
+!!    -------
+!!    Sets the default values, reads the namelist, performs the checks and prints
+!!
+!!*   METHOD
+!!    ------
+!!    0. Declarations
+!!       1. Declaration of arguments
+!!       2. Declaration of local variables
+!!    1. Default values
+!!    2. Namelist
+!!    3. Checks
+!!    4. Prints
+!!
+!!    AUTHOR
+!!    ------
+!!    S. Riette
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    Feb 2023
+!-------------------------------------------------------------------------------
+!
+!*      0. DECLARATIONS
+!       ---------------
+!
 USE MODE_POSNAM_PHY, ONLY: POSNAM_PHY
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 USE MODE_CHECK_NAM_VAL, ONLY: CHECK_NAM_VAL_CHAR, CHECK_NAM_VAL_REAL, CHECK_NAM_VAL_INT
 USE MODD_PARAMETERS, ONLY: XUNDEF
-
+!
 IMPLICIT NONE
-
-CHARACTER(LEN=6),  INTENT(IN) :: HPROGRAM
+!
+!* 0.1. Declaration of arguments
+!       ------------------------
+!
+CHARACTER(LEN=6),  INTENT(IN) :: HPROGRAM     !< Name of the calling program
 INTEGER,           INTENT(IN) :: KUNITNML     !< Logical unit to access the namelist
 LOGICAL,           INTENT(IN) :: LDNEEDNAM    !< True to abort if namelist is absent
 INTEGER,           INTENT(IN) :: KLUOUT       !< Logical unit for outputs
@@ -270,7 +303,10 @@ LOGICAL, OPTIONAL, INTENT(IN) :: LDREADNAM    !< Must we read the namelist (defa
 LOGICAL, OPTIONAL, INTENT(IN) :: LDCHECK      !< Must we perform some checks on values (defaults to .TRUE.)
 INTEGER, OPTIONAL, INTENT(IN) :: KPRINT       !< Print level (defaults to 0): 0 for no print, 1 to safely print namelist,
                                               !! 2 to print informative messages
-
+!
+!* 0.2 Declaration of local variables
+!      ------------------------------
+!
 LOGICAL :: LLDEFAULTVAL, LLREADNAM, LLCHECK, LLFOUND
 INTEGER :: IPRINT
 
@@ -282,7 +318,10 @@ IF(PRESENT(LDDEFAULTVAL)) LLDEFAULTVAL=LDDEFAULTVAL
 IF(PRESENT(LDREADNAM   )) LLREADNAM   =LDREADNAM
 IF(PRESENT(LDCHECK     )) LLCHECK     =LDCHECK
 IF(PRESENT(KPRINT      )) IPRINT      =KPRINT
-
+!
+!*      1. DEFAULT VALUES
+!       -----------------
+!
 IF(LLDEFAULTVAL) THEN
   XIMPL     = 1.
   XTKEMIN   = 0.01
@@ -320,13 +359,19 @@ IF(LLDEFAULTVAL) THEN
     LSIGMAS=.FALSE.
     VSIGQSAT=0.
   ENDIF
-ENDIF 
- 
-IF(LLREADNAM) THEN 
+ENDIF
+!
+!*      2. NAMELIST
+!       -----------
+!
+IF(LLREADNAM) THEN
   CALL POSNAM_PHY(KUNITNML, 'NAM_TURBN', LDNEEDNAM, LLFOUND, KLUOUT) 
   IF(LLFOUND) READ(UNIT=KUNITNML, NML=NAM_TURBn) 
-ENDIF 
- 
+ENDIF
+!
+!*      3. CHECKS
+!       ---------
+!
 IF(LLCHECK) THEN
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CTURBDIM', CTURBDIM, '1DIM', '3DIM')
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CTURBLEN', CTURBLEN, 'DELT', 'BL89', 'RM17', 'DEAR', 'BLKR', 'ADAP')
@@ -344,12 +389,15 @@ IF(LLCHECK) THEN
     CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'TURBN_INIT', &
                   &'LSTATNW only tested in combination with HARATU and EDMFm!')
   ENDIF
-ENDIF 
- 
-IF(IPRINT>=1) THEN 
+ENDIF
+!
+!*      3. PRINTS
+!       ---------
+!
+IF(IPRINT>=1) THEN
   WRITE(UNIT=KLUOUT,NML=NAM_TURBn) 
-ENDIF 
- 
+ENDIF
+!
 END SUBROUTINE TURBN_INIT
-
+!
 END MODULE MODD_TURB_n

@@ -120,5 +120,5 @@ Other developers must work with source code coming directly from the master bran
 
 ## Code documentation
 
-The description of each namelist key must be provided after the declaration of the type member.
-The comment must be readable by doxygen, it means that comment starts with !< and conitnuation lines start with !!.
+The code must contain comments.
+The documentation rules to folllow are described in the [CodingNorms](./CodingNorms.md) document.

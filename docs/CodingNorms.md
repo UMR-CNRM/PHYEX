@@ -93,3 +93,101 @@ Valid:
 computation of delta tempo_s
 budget_store_add(delta tempo_s)
 ```
+
+## Comments
+The code must contain comments to help futur developers.
+
+In addition, those comments can be used by external tools, so they must be formatted correctly.
+At least two tools can be applied on the PHYEX source code.
+
+Firstly, doxygen is used to build html pages documenting the source code. Unfortunately doxygen has
+limitations and only few comments can be reported on the html pages without rewritting the existing code
+(doxygen waits for comment before the subroutine and not inside):
+
+  - in a module file, the general documentation (just after the module statement) must begin by "!> @file" on the first line and following lines must begin with a double exclamation mark "!!";
+  - dummy arguments must be declared each one on a separate line followed by a comment strarting with "!<".
+
+Secondly an home-made tool can extract comments on some variables to document the namelist keys.
+This tool waits for comment formatted as described for doxygen (one dummy argument by line followed by "!<").
+
+Here is an example with a complete template for a module containing a subroutine:
+```
+!MNH_LIC Copyright 1995-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence                                       
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt                                           
+!MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
+MODULE MODE_FOO
+!> @file
+!!These comments will be visible in doxygen and will be
+!!associated to the file containing this module
+!
+IMPLICIT NONE
+!
+TYPE FOO_t
+  REAL :: X1 !< Documentation for X1, needed by doxygen and the tool used to ocument namelists
+END TYPE FOO_t
+!
+CONTAINS
+!
+SUBROUTINE FOO(K)
+!!*** *FOO* - short comment
+!!
+!!*   PURPOSE
+!!    -------
+!!    What the surbroutines does
+!!
+!!*   METHOD
+!!    ------
+!!    0. Declarations
+!!       1. Declaration of arguments
+!!       2. Declaration of local variables
+!!    1. Computation
+!!
+!!*   EXTERNAL
+!!    --------
+!!    subroutine XXX : to ...
+!!    subroutine YYY : to ...
+!!    module MODI_BAR : interface for the BAR subroutine
+!!
+!!*   IMPLICIT ARGUMENTS
+!!    ------------------
+!!    List of the different modules used
+!!
+!!*   REFERENCE
+!!    ---------
+!!    Reference paper, book...
+!!
+!!    AUTHOR
+!!    ------
+!!    Name of the author
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    Month Year
+!!                  Month Year (contributor): descrption of the contribution
+!-------------------------------------------------------------------------------
+!
+!*      0. DECLARATIONS
+!       ---------------
+!
+USE MODI_BAR
+!
+!* 0.1. Declaration of arguments
+!       ------------------------
+!
+INTEGER, INTENT(IN) :: K !< Documentation for K
+!
+!* 0.2 Declaration of local variables
+!      ------------------------------
+!
+INTEGER :: II
+!
+!*      1. COMPUTATION
+!       --------------
+!
+II=K
+END SUBROUTINE FOO
+!
+END MODULE MODE_FOO
+```
