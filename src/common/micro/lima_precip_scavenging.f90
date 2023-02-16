@@ -3,42 +3,10 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-!      ##################################
-       MODULE MODI_LIMA_PRECIP_SCAVENGING
-!      ##################################
-!
-INTERFACE
-   SUBROUTINE LIMA_PRECIP_SCAVENGING (HCLOUD, KLUOUT, KTCOUNT, PTSTEP,        &
-                                      PRRT, PRHODREF, PRHODJ, PZZ,            & 
-                                      PPABST, PTHT, PSVT, PRSVS, PINPAP )
-
-use modd_nsv, only: nsv_lima_beg
-
-CHARACTER(LEN=4),       INTENT(IN)    :: HCLOUD   ! cloud paramerization
-INTEGER,                INTENT(IN)    :: KLUOUT   ! unit for output listing
-INTEGER,                INTENT(IN)    :: KTCOUNT  ! iteration count
-REAL,                   INTENT(IN)    :: PTSTEP   ! Double timestep except 
-                                                  ! for the first time step
-!
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PRRT     ! Rain mixing ratio at t
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PRHODREF ! Air Density [kg/m**3]
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PRHODJ   ! Dry Density [kg]
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PZZ      ! Altitude
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PPABST   ! Absolute pressure at t
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PTHT     ! Theta at time t 
-!
-REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(IN)    :: PSVT   ! Particle Concentration [kg-1]
-REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(INOUT) :: PRSVS  ! Total Number Scavenging Rate
-!
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PINPAP
-!
-END SUBROUTINE LIMA_PRECIP_SCAVENGING
-END INTERFACE
-END MODULE MODI_LIMA_PRECIP_SCAVENGING
-!
 !########################################################################
-   SUBROUTINE LIMA_PRECIP_SCAVENGING (HCLOUD, KLUOUT, KTCOUNT, PTSTEP,        &
-                                      PRRT, PRHODREF, PRHODJ, PZZ,            &
+   SUBROUTINE LIMA_PRECIP_SCAVENGING (D, CST, BUCONF, TBUDGETS, KBUDGETS, &
+                                      HCLOUD, KLUOUT, KTCOUNT, PTSTEP,    &
+                                      PRRT, PRHODREF, PRHODJ, PZZ,        &
                                       PPABST, PTHT, PSVT, PRSVS, PINPAP )
 !########################################################################x
 !
@@ -109,8 +77,9 @@ END MODULE MODI_LIMA_PRECIP_SCAVENGING
 !*                  0.DECLARATIONS          
 !                   --------------
 !
-use modd_budget,          only: lbudget_sv, NBUDGET_SV1, tbudgets
-USE MODD_CST
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+use modd_budget,          only: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_SV1
+USE MODD_CST,             ONLY: CST_t
 USE MODD_NSV
 USE MODD_PARAMETERS
 USE MODD_PARAM_LIMA,      ONLY: NMOD_IFN, NSPECIE, XFRAC,                         &
@@ -122,16 +91,22 @@ USE MODD_PARAM_LIMA,      ONLY: NMOD_IFN, NSPECIE, XFRAC,                       
                                 XRTMIN, XCTMIN
 USE MODD_PARAM_LIMA_WARM, ONLY: XCR, XDR
 
-use mode_budget,          only: Budget_store_init, Budget_store_end
+use mode_budget,          only: Budget_store_init_phy, Budget_store_end_phy
 use mode_tools,           only: Countjv
 
 USE MODI_GAMMA
 USE MODI_INI_NSV
-USE MODI_LIMA_FUNCTIONS
+USE MODE_LIMA_FUNCTIONS, ONLY: GAUHER, GAULAG
 
 IMPLICIT NONE
 !
 !*                 0.1 declarations of dummy arguments :
+!
+TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
+TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
+INTEGER,                  INTENT(IN)    :: KBUDGETS
 !
 CHARACTER(LEN=4),       INTENT(IN)    :: HCLOUD   ! cloud paramerization
 INTEGER,                INTENT(IN)    :: KLUOUT   ! unit for output listing
@@ -146,8 +121,8 @@ REAL, DIMENSION(:,:,:), INTENT(IN)    :: PZZ      ! Altitude
 REAL, DIMENSION(:,:,:), INTENT(IN)    :: PPABST   ! Absolute pressure at t
 REAL, DIMENSION(:,:,:), INTENT(IN)    :: PTHT     ! Theta at time t 
 !
-REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(IN)    :: PSVT   ! Particle Concentration [/m**3]
-REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(INOUT) :: PRSVS  ! Total Number Scavenging Rate
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSVT   ! Particle Concentration [/m**3]
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRSVS  ! Total Number Scavenging Rate
 !
 REAL, DIMENSION(:,:),   INTENT(INOUT) :: PINPAP
 !
@@ -252,21 +227,24 @@ REAL :: XSIGMAP
 REAL :: XRHOP   
 REAL :: XFRACP
 !
-!
+INTEGER :: ISV_LIMA_NR
+INTEGER :: ISV_LIMA_SCAVMASS
 !
 !------------------------------------------------------------------------------
+ISV_LIMA_NR       = NSV_LIMA_NR       - NSV_LIMA_BEG + 1
+ISV_LIMA_SCAVMASS = NSV_LIMA_SCAVMASS - NSV_LIMA_BEG + 1
 
-if ( lbudget_sv ) then
+if ( BUCONF%lbudget_sv ) then
   do jl = 1, nmod_ccn
     idx = nsv_lima_ccn_free - 1 + jl
-    call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
+    call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
   end do
   do jl = 1, nmod_ifn
     idx = nsv_lima_ifn_free - 1 + jl
-    call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
+    call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
   end do
   if ( laero_mass ) then
-    call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'SCAV', prsvs(:, :, :, nsv_lima_scavmass) )
+    call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'SCAV', prsvs(:, :, :, nsv_lima_scavmass) )
   end if
 end if
 !
@@ -282,7 +260,7 @@ IKB=1+JPVEXT
 IKE=SIZE(PRHODREF,3) - JPVEXT
 !
 ! PCRT
-PCRT(:,:,:)=PSVT(:,:,:,NSV_LIMA_NR)
+PCRT(:,:,:)=PSVT(:,:,:,ISV_LIMA_NR)
 !
 ! Rain mask 
 GRAIN(:,:,:) = .FALSE.
@@ -313,19 +291,19 @@ ZSHAPE_FACTOR = GAMMA_X0D(XNUR+3./XALPHAR)/GAMMA_X0D(XNUR)
 !
 WHERE ( GRAIN(:,:,:) )
    !
-   ZT_3D(:,:,:)      = PTHT(:,:,:) * ( PPABST(:,:,:)/XP00 )**(XRD/XCPD)
+   ZT_3D(:,:,:)      = PTHT(:,:,:) * ( PPABST(:,:,:)/CST%XP00 )**(CST%XRD/CST%XCPD)
    ZCONCR_3D(:,:,:)  = PCRT(:,:,:) * PRHODREF(:,:,:)                    ![/m3]
    ! Sutherland law for viscosity of air
    ZVISCA_3D(:,:,:)  = XMUA0*(ZT_3D(:,:,:)/XTREF)**1.5*(XTREF+XT_SUTH_A) &
                                                         /(XT_SUTH_A+ZT_3D(:,:,:))
    ! Air mean free path
-   ZMFPA_3D(:,:,:)   = XMFPA0*(XP00*ZT_3D(:,:,:))/(PPABST(:,:,:)*XT0SCAV)           
+   ZMFPA_3D(:,:,:)   = XMFPA0*(CST%XP00*ZT_3D(:,:,:))/(PPABST(:,:,:)*XT0SCAV)           
    ! Viscosity ratio
    ZVISC_RATIO_3D(:,:,:) = ZVISCA_3D(:,:,:)/XVISCW   !!!!! inversé par rapport à orig. !
    ! Rain drops parameters
-   ZLAMBDAR_3D(:,:,:) = ( ((XPI/6.)*ZSHAPE_FACTOR*XRHOLW*ZCONCR_3D(:,:,:))  &
+   ZLAMBDAR_3D(:,:,:) = ( ((CST%XPI/6.)*ZSHAPE_FACTOR*CST%XRHOLW*ZCONCR_3D(:,:,:))  &
                           /(PRHODREF(:,:,:)*PRRT(:,:,:)) )**(1./3.)         ![/m]
-   FACTOR_3D(:,:,:) = XPI*0.25*ZCONCR_3D(:,:,:)*XCR*(XRHO00/PRHODREF(:,:,:))**(0.4)
+   FACTOR_3D(:,:,:) = CST%XPI*0.25*ZCONCR_3D(:,:,:)*XCR*(XRHO00/PRHODREF(:,:,:))**(0.4)
    !
 END WHERE
 !
@@ -361,11 +339,11 @@ DO JSV = 1, NMOD_CCN+NMOD_IFN
 !
    IF (JSV .LE. NMOD_CCN) THEN
       JMOD = JSV
-      SV_VAR = NSV_LIMA_CCN_FREE -1 + JMOD ! Variable number in PSVT
+      SV_VAR = NSV_LIMA_CCN_FREE - NSV_LIMA_BEG + JMOD ! Variable number in PSVT
       NM = 1                               ! Number of species (for IFN int. mixing)
    ELSE
       JMOD = JSV - NMOD_CCN
-      SV_VAR = NSV_LIMA_IFN_FREE -1 + JMOD
+      SV_VAR = NSV_LIMA_IFN_FREE - NSV_LIMA_BEG + JMOD
       NM = NSPECIE
    END IF
 !
@@ -469,7 +447,7 @@ DO JSV = 1, NMOD_CCN+NMOD_IFN
             ZKNUDSEN(:) = MIN( 20.,ZVOLDP(J1)/ZMFPA(:) )
             ZCUNSLIP(:,J1) = 1.0+2.0/ZKNUDSEN(:)*(1.257+0.4*EXP(-0.55*ZKNUDSEN(:)))
             ! Diffusion coefficient
-            ZDIFF(:,J1) = XBOLTZ*ZT(:)*ZCUNSLIP(:,J1)/(3.*XPI*ZVISCA(:)*ZVOLDP(J1))
+            ZDIFF(:,J1) = CST%XBOLTZ*ZT(:)*ZCUNSLIP(:,J1)/(3.*CST%XPI*ZVISCA(:)*ZVOLDP(J1))
             ! Schmidt number
             ZSC(:,J1)       = ZVISCA(:)/(ZRHODREF(:)*ZDIFF(:,J1))  
             ZSC_INV(:,J1)   = 1./ZSC(:,J1)
@@ -478,7 +456,7 @@ DO JSV = 1, NMOD_CCN+NMOD_IFN
             ! Characteristic Time Required for reaching terminal velocity 
             ZRELT(:,J1) = (ZVOLDP(J1)**2)*ZCUNSLIP(:,J1)*XRHOP/(18.*ZVISCA(:))
             ! Density number
-            ZDENS_RATIO = XRHOP/XRHOLW
+            ZDENS_RATIO = XRHOP/CST%XRHOLW
             ZDENS_RATIO_SQRT = SQRT(ZDENS_RATIO)
             ! Initialisation
             ZBC_SCAV_COEF(:,J1)=0.
@@ -487,7 +465,7 @@ DO JSV = 1, NMOD_CCN+NMOD_IFN
          !
             DO J2=1,NDIAMR
                ! Stokes number
-               ZST(:,J1,J2) = 2.*ZRELT(:,J1)*(ZFVELR(:,J2)-ZRELT(1,J1)*XG)          &
+               ZST(:,J1,J2) = 2.*ZRELT(:,J1)*(ZFVELR(:,J2)-ZRELT(1,J1)*CST%XG)          &
                                             *ZVOLDR_INV(:,J2)
                ! Size Ratio
                ZSIZE_RATIO(:,J1,J2) = ZVOLDP(J1)*ZVOLDR_INV(:,J2)
@@ -508,7 +486,7 @@ DO JSV = 1, NMOD_CCN+NMOD_IFN
             ! Total MASS Scavenging Rate of aerosol [kg.m**-3.s**-1]
             ZTOT_MASS_RATE(:) = ZTOT_MASS_RATE(:) +                                 &
                                 ZWEIGHTP(J1)*XFRACP*ZCONCP(:)*ZBC_SCAV_COEF(:,J1)   &
-                                *XPI/6.*XRHOP*(ZVOLDP(J1)**3)  
+                                *CST%XPI/6.*XRHOP*(ZVOLDP(J1)**3)  
          END DO
       ! End of the loop over the drops diameters
       !--------------------------------------------------------------------------
@@ -524,9 +502,9 @@ DO JSV = 1, NMOD_CCN+NMOD_IFN
             PTOT_MASS_RATE(:,:,:) = PTOT_MASS_RATE(:,:,:) +                         &
                  UNPACK(ZTOT_MASS_RATE(:), MASK=GSCAV(:,:,:), FIELD=0.0)
             CALL SCAV_MASS_SEDIMENTATION( HCLOUD, PTSTEP, KTCOUNT, PZZ, PRHODJ,     &
-                                      PRHODREF, PRRT, PSVT(:,:,:,NSV_LIMA_SCAVMASS),&
-                                      PRSVS(:,:,:,NSV_LIMA_SCAVMASS), PINPAP        )
-            PRSVS(:,:,:,NSV_LIMA_SCAVMASS)=PRSVS(:,:,:,NSV_LIMA_SCAVMASS) +         &
+                                      PRHODREF, PRRT, PSVT(:,:,:,ISV_LIMA_SCAVMASS),&
+                                      PRSVS(:,:,:,ISV_LIMA_SCAVMASS), PINPAP        )
+            PRSVS(:,:,:,ISV_LIMA_SCAVMASS)=PRSVS(:,:,:,ISV_LIMA_SCAVMASS) +         &
                              PTOT_MASS_RATE(:,:,:)*PRHODJ(:,:,:)/PRHODREF(:,:,:)
          END IF
       ENDDO
@@ -575,17 +553,17 @@ DO JSV = 1, NMOD_CCN+NMOD_IFN
    ENDIF
 ENDDO
 !
-if ( lbudget_sv ) then
+if ( BUCONF%lbudget_sv ) then
   do jl = 1, nmod_ccn
     idx = nsv_lima_ccn_free - 1 + jl
-    call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
+    call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
   end do
   do jl = 1, nmod_ifn
     idx = nsv_lima_ifn_free - 1 + jl
-    call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
+    call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
   end do
   if ( laero_mass ) then
-    call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'SCAV', prsvs(:, :, :, nsv_lima_scavmass) )
+    call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'SCAV', prsvs(:, :, :, nsv_lima_scavmass) )
   end if
 end if
 !------------------------------------------------------------------------------

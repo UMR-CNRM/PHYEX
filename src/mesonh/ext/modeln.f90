@@ -298,7 +298,7 @@ USE MODD_BLOWSNOW
 USE MODD_BLOWSNOW_n
 use modd_budget,          only: cbutype, lbu_ru, lbu_rv, lbu_rw, lbudget_u, lbudget_v, lbudget_w, lbudget_sv, lbu_enable, &
                                 NBUDGET_U, NBUDGET_V, NBUDGET_W, NBUDGET_SV1, nbumod, nbutime,                            &
-                                tbudgets, tburhodj,                                                                       &
+                                tbudgets, tbuconf, tburhodj,                                                                       &
                                 xtime_bu, xtime_bu_process
 USE MODD_CH_AERO_n,      ONLY: XSOLORG, XMI
 USE MODD_CH_MNHC_n,      ONLY: LUSECHEM,LCH_CONV_LINOX,LUSECHAQ,LUSECHIC, &
@@ -307,9 +307,11 @@ USE MODD_CLOUD_MF_n
 USE MODD_CLOUDPAR_n
 USE MODD_CONF
 USE MODD_CONF_n
+USE MODD_CST,            ONLY: CST
 USE MODD_CURVCOR_n
 USE MODD_DEEP_CONVECTION_n
 USE MODD_DIM_n
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_DRAG_n
 USE MODD_DUST,           ONLY: LDUST
 USE MODD_DYN
@@ -567,6 +569,7 @@ REAL, DIMENSION(SIZE(XRSVS,1), SIZE(XRSVS,2), SIZE(XRSVS,3), NSV_AER)  :: ZWETDE
 !
 TYPE(TFILEDATA),POINTER :: TZOUTFILE
 ! TYPE(TFILEDATA),SAVE    :: TZDIACFILE
+TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !-------------------------------------------------------------------------------
 !
 TPBAKFILE=> NULL()
@@ -2005,10 +2008,11 @@ IF (CCLOUD /= 'NONE' .AND. CELEC == 'NONE') THEN
 ! Lessivage des CCN et IFN nucléables par Slinn
 !
     IF (LSCAV .AND. (CCLOUD == 'LIMA')) THEN
-      CALL LIMA_PRECIP_SCAVENGING(CCLOUD, ILUOUT, KTCOUNT,XTSTEP,XRT(:,:,:,3), &
-                              XRHODREF, XRHODJ, XZZ, XPABST, XTHT,             &
-                              XSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),           &
-                              XRSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), XINPAP   )
+       CALL LIMA_PRECIP_SCAVENGING( YLDIMPHYEX,CST,TBUCONF,TBUDGETS,SIZE(TBUDGETS), &
+                                    CCLOUD, ILUOUT, KTCOUNT,XTSTEP,XRT(:,:,:,3),    &
+                                    XRHODREF, XRHODJ, XZZ, XPABST, XTHT,            &
+                                    XSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),          &
+                                    XRSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), XINPAP  )
 !
       XACPAP(:,:) = XACPAP(:,:) + XINPAP(:,:) * XTSTEP
     END IF

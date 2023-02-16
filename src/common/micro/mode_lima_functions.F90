@@ -12,132 +12,97 @@
 MODULE MODE_LIMA_FUNCTIONS
   IMPLICIT NONE
 CONTAINS
-!###########################################
-FUNCTION MOMG (PALPHA,PNU,PP) RESULT (PMOMG)
-!###########################################
-!
-! auxiliary routine used to compute the Pth moment order of the generalized
-! gamma law
-!
-  USE MODI_GAMMA
-!
-  IMPLICIT NONE
-!
-  REAL     :: PALPHA ! first shape parameter of the dimensionnal distribution
-  REAL     :: PNU    ! second shape parameter of the dimensionnal distribution
-  REAL     :: PP     ! order of the moment
-  REAL     :: PMOMG  ! result: moment of order ZP
-!
-  PMOMG = GAMMA_X0D(PNU+PP/PALPHA)/GAMMA_X0D(PNU)
-!
-END FUNCTION MOMG
 !
 !------------------------------------------------------------------------------
 !
-!#############################################
-FUNCTION RECT(PA,PB,PX,PX1,PX2)  RESULT(PRECT)
-!#############################################
+  FUNCTION MOMG (PALPHA,PNU,PP) RESULT (PMOMG)
+! Pth moment order of the generalized gamma law
+    USE MODI_GAMMA
+    IMPLICIT NONE
+    REAL     :: PALPHA ! first shape parameter of the dimensionnal distribution
+    REAL     :: PNU    ! second shape parameter of the dimensionnal distribution
+    REAL     :: PP     ! order of the moment
+    REAL     :: PMOMG  ! result: moment of order ZP
+    PMOMG = GAMMA_X0D(PNU+PP/PALPHA)/GAMMA_X0D(PNU)
+  END FUNCTION MOMG
 !
+!------------------------------------------------------------------------------
+!
+  FUNCTION RECT(PA,PB,PX,PX1,PX2)  RESULT(PRECT)
 !     PRECT takes the value PA if PX1<=PX<PX2, and PB outside the [PX1;PX2[ interval
-!
-  IMPLICIT NONE
-!
-  REAL,                        INTENT(IN)           :: PA
-  REAL,                        INTENT(IN)           :: PB
-  REAL, DIMENSION(:),          INTENT(IN)           :: PX
-  REAL,                        INTENT(IN)           :: PX1
-  REAL,                        INTENT(IN)           :: PX2
-  REAL, DIMENSION(SIZE(PX,1))                       :: PRECT
-!
-  PRECT(:) = PB
-  WHERE (PX(:).GE.PX1 .AND. PX(:).LT.PX2)
-     PRECT(:) = PA
-  END WHERE
-  RETURN
-!
-END FUNCTION RECT
+    IMPLICIT NONE
+    REAL,                        INTENT(IN) :: PA
+    REAL,                        INTENT(IN) :: PB
+    REAL, DIMENSION(:),          INTENT(IN) :: PX
+    REAL,                        INTENT(IN) :: PX1
+    REAL,                        INTENT(IN) :: PX2
+    REAL, DIMENSION(SIZE(PX,1))             :: PRECT
+    PRECT(:) = PB
+    WHERE (PX(:).GE.PX1 .AND. PX(:).LT.PX2)
+       PRECT(:) = PA
+    END WHERE
+    RETURN
+  END FUNCTION RECT
 !
 !-------------------------------------------------------------------------------
 !
-!###############################################
-FUNCTION DELTA(PA,PB,PX,PX1,PX2)  RESULT(PDELTA)
-!###############################################
-!
+  FUNCTION DELTA(PA,PB,PX,PX1,PX2)  RESULT(PDELTA)
 !     PDELTA takes the value PA if PX<PX1, and PB if PX>=PX2
 !     PDELTA is a cubic interpolation between PA and PB for PX between PX1 and PX2 
+    IMPLICIT NONE
+    REAL,                        INTENT(IN) :: PA
+    REAL,                        INTENT(IN) :: PB
+    REAL, DIMENSION(:),          INTENT(IN) :: PX
+    REAL,                        INTENT(IN) :: PX1
+    REAL,                        INTENT(IN) :: PX2
+    REAL, DIMENSION(SIZE(PX,1))             :: PDELTA
+    REAL                                    :: ZA
+    ZA = 6.0*(PA-PB)/(PX2-PX1)**3
+    WHERE     (PX(:).LT.PX1)
+       PDELTA(:) = PA
+    ELSEWHERE (PX(:).GE.PX2)
+       PDELTA(:) = PB
+    ELSEWHERE
+       PDELTA(:) =   PA + ZA*PX1**2*(PX1/6.0 - 0.5*PX2)              &
+            + ZA*PX1*PX2*                          (PX(:))    &
+            - (0.5*ZA*(PX1+PX2))*                  (PX(:)**2) & 
+            + (ZA/3.0)*                            (PX(:)**3)
+    END WHERE
+    RETURN
 !
-  IMPLICIT NONE
-!
-  REAL,                        INTENT(IN)           :: PA
-  REAL,                        INTENT(IN)           :: PB
-  REAL, DIMENSION(:),          INTENT(IN)           :: PX
-  REAL,                        INTENT(IN)           :: PX1
-  REAL,                        INTENT(IN)           :: PX2
-  REAL, DIMENSION(SIZE(PX,1))                       :: PDELTA
-!
-!*       local variable
-!
-  REAL                                              :: ZA
-!
-  ZA = 6.0*(PA-PB)/(PX2-PX1)**3
-  WHERE     (PX(:).LT.PX1)
-     PDELTA(:) = PA
-  ELSEWHERE (PX(:).GE.PX2)
-     PDELTA(:) = PB
-  ELSEWHERE
-     PDELTA(:) =   PA + ZA*PX1**2*(PX1/6.0 - 0.5*PX2)              &
-          + ZA*PX1*PX2*                          (PX(:))    &
-          - (0.5*ZA*(PX1+PX2))*                  (PX(:)**2) & 
-          + (ZA/3.0)*                            (PX(:)**3)
-  END WHERE
-  RETURN
-!
-END FUNCTION DELTA
+  END FUNCTION DELTA
 !
 !-------------------------------------------------------------------------------
 !
-!#######################################################
-FUNCTION DELTA_VEC(PA,PB,PX,PX1,PX2)  RESULT(PDELTA_VEC)
-!#######################################################
-!
+  FUNCTION DELTA_VEC(PA,PB,PX,PX1,PX2)  RESULT(PDELTA_VEC)
 !    Same as DELTA for vectorized PX1 and PX2 arguments
-!
-  IMPLICIT NONE
-!
-  REAL,                        INTENT(IN)           :: PA
-  REAL,                        INTENT(IN)           :: PB
-  REAL, DIMENSION(:),          INTENT(IN)           :: PX
-  REAL, DIMENSION(:),          INTENT(IN)           :: PX1
-  REAL, DIMENSION(:),          INTENT(IN)           :: PX2
-  REAL, DIMENSION(SIZE(PX,1))                       :: PDELTA_VEC
-!
-!*       local variable
-!
-  REAL, DIMENSION(SIZE(PX,1))                       :: ZA
-!
-  ZA(:) = 0.0
-  wHERE     (PX(:)<=PX1(:))
-     PDELTA_VEC(:) = PA
-  ELSEWHERE (PX(:)>=PX2(:))
-     PDELTA_VEC(:) = PB
-  ELSEWHERE
-     ZA(:)         = 6.0*(PA-PB)/(PX2(:)-PX1(:))**3
-     PDELTA_VEC(:) =   PA + ZA(:)*PX1(:)**2*(PX1(:)/6.0 - 0.5*PX2(:))           &
-          + ZA(:)*PX1(:)*PX2(:)*                          (PX(:))    &
-          - (0.5*ZA(:)*(PX1(:)+PX2(:)))*                  (PX(:)**2) & 
-          + (ZA(:)/3.0)*                                  (PX(:)**3)
-  END WHERE
-  RETURN
-!
-END FUNCTION DELTA_VEC
+    IMPLICIT NONE
+    REAL,                        INTENT(IN) :: PA
+    REAL,                        INTENT(IN) :: PB
+    REAL, DIMENSION(:),          INTENT(IN) :: PX
+    REAL, DIMENSION(:),          INTENT(IN) :: PX1
+    REAL, DIMENSION(:),          INTENT(IN) :: PX2
+    REAL, DIMENSION(SIZE(PX,1))             :: PDELTA_VEC
+    REAL, DIMENSION(SIZE(PX,1))             :: ZA
+    ZA(:) = 0.0
+    wHERE     (PX(:)<=PX1(:))
+       PDELTA_VEC(:) = PA
+    ELSEWHERE (PX(:)>=PX2(:))
+       PDELTA_VEC(:) = PB
+    ELSEWHERE
+       ZA(:)         = 6.0*(PA-PB)/(PX2(:)-PX1(:))**3
+       PDELTA_VEC(:) =   PA + ZA(:)*PX1(:)**2*(PX1(:)/6.0 - 0.5*PX2(:))           &
+            + ZA(:)*PX1(:)*PX2(:)*                          (PX(:))    &
+            - (0.5*ZA(:)*(PX1(:)+PX2(:)))*                  (PX(:)**2) & 
+            + (ZA(:)/3.0)*                                  (PX(:)**3)
+    END WHERE
+    RETURN
+  END FUNCTION DELTA_VEC
 !
 !-------------------------------------------------------------------------------
 !
-!###########################
 SUBROUTINE gaulag(x,w,n,alf)
-!###########################
   use modd_precision, only: MNHREAL64
-
   INTEGER n,MAXIT
   REAL alf,w(n),x(n)
   REAL(kind=MNHREAL64) :: EPS
@@ -174,9 +139,7 @@ SUBROUTINE gaulag(x,w,n,alf)
 1    x(i)=z
      w(i)=-exp(gammln(alf+n)-gammln(real(n)))/(pp*n*p2)
 13 continue
-!
 ! NORMALISATION
-!
   SUMW = 0.0
   DO 14 I=1,N
      SUMW = SUMW + W(I)
@@ -190,11 +153,8 @@ END SUBROUTINE gaulag
 !
 !------------------------------------------------------------------------------
 !
-!##########################################
 SUBROUTINE gauher(x,w,n)
-!##########################################
   use modd_precision, only: MNHREAL64
-
   INTEGER n,MAXIT
   REAL w(n),x(n)
   REAL(kind=MNHREAL64) :: EPS,PIM4
@@ -236,9 +196,7 @@ SUBROUTINE gauher(x,w,n)
      w(i)=2.0/(pp*pp)
      w(n+1-i)=w(i)
 13 continue
-!
 ! NORMALISATION
-!
   SUMW = 0.0
   DO 14 I=1,N
      SUMW = SUMW + W(I)
@@ -251,4 +209,36 @@ SUBROUTINE gauher(x,w,n)
 END SUBROUTINE gauher
 !
 !------------------------------------------------------------------------------
+!
+FUNCTION ARTH(FIRST,INCREMENT,N)
+  REAL,INTENT(IN) :: FIRST,INCREMENT
+  INTEGER,INTENT(IN) :: N
+  REAL,DIMENSION(N) :: ARTH
+  INTEGER :: K
+  DO K=1,N
+     ARTH(K)=FIRST+INCREMENT*(K-1)
+  END DO
+END FUNCTION ARTH
+!
+!------------------------------------------------------------------------------
+!
+FUNCTION gammln(xx)
+  IMPLICIT NONE
+  REAL, INTENT(IN) :: xx
+  REAL :: gammln
+  REAL :: tmp,x
+  REAL :: stp = 2.5066282746310005
+  REAL, DIMENSION(6) :: coef = (/76.18009172947146,& 
+       -86.50532032941677,24.01409824083091,& 
+       -1.231739572450155,0.1208650973866179e-2,&
+       -0.5395239384953e-5/)
+  x=xx
+  tmp=x+5.5
+  tmp=(x+0.5)*log(tmp)-tmp
+  gammln=tmp+log(stp*(1.000000000190015+&
+       sum(coef(:)/arth(x+1.,1.,size(coef))))/x)
+END FUNCTION gammln
+!
+!------------------------------------------------------------------------------
+!
 END MODULE MODE_LIMA_FUNCTIONS
