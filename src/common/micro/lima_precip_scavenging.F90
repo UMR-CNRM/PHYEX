@@ -95,7 +95,6 @@ use mode_budget,          only: Budget_store_init_phy, Budget_store_end_phy
 use mode_tools,           only: Countjv
 
 USE MODI_GAMMA
-USE MODI_INI_NSV
 USE MODE_LIMA_FUNCTIONS, ONLY: GAUHER, GAULAG
 
 IMPLICIT NONE
