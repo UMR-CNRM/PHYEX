@@ -311,7 +311,7 @@ USE MODD_IBM_LSF
 #ifdef MNH_FOREFIRE
 USE MODD_FOREFIRE
 #endif
-USE MODD_FIRE
+USE MODD_FIRE_n
 !
 IMPLICIT NONE
 !
@@ -1426,68 +1426,66 @@ ENDIF
   XARECYCLS  = 0.
   XDRECYCLE  = 0.
   XARECYCLE  = 0.
-  XTMOY      = 0.
-  XTMOYCOUNT = 0.
-  XNUMBELT   = 28.
+  NTMOY      = 0
+  NTMOYCOUNT = 0
+  NNUMBELT   = 28
   XRCOEFF    = 0.2
   XTBVTOP    = 500.
   XTBVBOT    = 300.
 !
 !-------------------------------------------------------------------------------
 !
-!*      33.   SET DEFAULT VALUES FOR MODD_FIRE
-!             --------------------------------
+!*      33.   SET DEFAULT VALUES FOR MODD_FIRE_n
+!             ----------------------------------
 !
 ! Blaze fire model namelist
 !
-IF (KMI == 1) THEN
-  LBLAZE = .FALSE.	            ! Flag for Fire model use, default FALSE
-  !
-  CPROPAG_MODEL = 'SANTONI2011' ! Fire propagation model (default SANTONI2011)
-  !
-  CHEAT_FLUX_MODEL   = 'EXS'	  ! Sensible heat flux injection model (default EXS)
-  CLATENT_FLUX_MODEL = 'EXP'	  ! latent heat flux injection model (default EXP)
-  XFERR = 0.8                   ! Energy released in flamming stage (only for EXP)
-  !
-  CFIRE_CPL_MODE = '2WAYCPL'    ! Coupling mode (default 2way coupled)
-  CBMAPFILE = CINIFILE          ! File name of BMAP for FIR2ATM mode
-  LINTERPWIND = .TRUE.          ! Horizontal interpolation of wind
-  LSGBAWEIGHT = .FALSE.         ! Flag for use of weighted average method for SubGrid Burning Area computation
-  !
-  NFIRE_WENO_ORDER = 3	        ! Weno order (1,3,5)
-  NFIRE_RK_ORDER = 3	          ! Runge Kutta order (1,2,3,4)
-  !
-  NREFINX = 1	                  ! Refinement ratio X
-  NREFINY	= 1                   ! Refinement ratio Y
-  !
-  XCFLMAXFIRE = 0.8             ! Max CFL on fire mesh
-  XLSDIFFUSION = 0.1            ! Numerical diffusion of LevelSet
-  XROSDIFFUSION = 0.05          ! Numerical diffusion of ROS
-  !
-  XFLUXZEXT = 3.                ! Flux distribution on vertical caracteristic length
-  XFLUXZMAX = 4. * XFLUXZEXT    ! Flux distribution on vertical max injetion height
-  !
-  XFLXCOEFTMP = 1.              ! Flux multiplicator. For testing
-  !
-  LWINDFILTER = .FALSE.         ! Fire wind filtering flag
-  CWINDFILTER = 'EWAM'	        ! Wind filter method (EWAM or WLIM)
-  XEWAMTAU    = 20.             ! Time averaging constant for EWAM method (s)
-  XWLIMUTH    = 8.              ! Thresehold wind value for WLIM method (m/s)
-  XWLIMUTMAX  = 9.              ! Maximum wind value for WLIM method (m/s) (needs to be >= XWLIMUTH )
-  !
-  NNBSMOKETRACER = 1            ! Nb of smoke tracers
-  !
-  NWINDSLOPECPLMODE = 0         ! Flag for use of wind/slope in ROS (0 = wind + slope, 1 = wind only, 2 = slope only (U0=0))
-  !
-  !
-  !
-  !! DO NOT CHANGE BELOW PARAMETERS
-  XFIREMESHSIZE(:) = 0.         ! Fire mesh size (dxf,dyf)
-  LRESTA_ASE = .FALSE.          ! Flag for using ASE in RESTA file
-  LRESTA_AWC = .FALSE.          ! Flag for using AWC in RESTA file
-  LRESTA_EWAM = .FALSE.         ! Flag for using EWAM in RESTA file
-  LRESTA_WLIM = .FALSE.         ! Flag for using WLIM in RESTA file
-ENDIF
+LBLAZE = .FALSE.              ! Flag for Fire model use, default FALSE
+!
+CPROPAG_MODEL = 'SANTONI2011' ! Fire propagation model (default SANTONI2011)
+!
+CHEAT_FLUX_MODEL   = 'EXS'    ! Sensible heat flux injection model (default EXS)
+CLATENT_FLUX_MODEL = 'EXP'    ! latent heat flux injection model (default EXP)
+XFERR = 0.8                   ! Energy released in flamming stage (only for EXP)
+!
+CFIRE_CPL_MODE = '2WAYCPL'    ! Coupling mode (default 2way coupled)
+CBMAPFILE = CINIFILE          ! File name of BMAP for FIR2ATM mode
+LINTERPWIND = .TRUE.          ! Horizontal interpolation of wind
+LSGBAWEIGHT = .FALSE.         ! Flag for use of weighted average method for SubGrid Burning Area computation
+!
+NFIRE_WENO_ORDER = 3          ! Weno order (1,3,5)
+NFIRE_RK_ORDER = 3            ! Runge Kutta order (1,2,3,4)
+!
+NREFINX = 1                   ! Refinement ratio X
+NREFINY = 1                   ! Refinement ratio Y
+!
+XCFLMAXFIRE = 0.8             ! Max CFL on fire mesh
+XLSDIFFUSION = 0.1            ! Numerical diffusion of LevelSet
+XROSDIFFUSION = 0.05          ! Numerical diffusion of ROS
+!
+XFLUXZEXT = 3.                ! Flux distribution on vertical caracteristic length
+XFLUXZMAX = 4. * XFLUXZEXT    ! Flux distribution on vertical max injetion height
+!
+XFLXCOEFTMP = 1.              ! Flux multiplicator. For testing
+!
+LWINDFILTER = .FALSE.         ! Fire wind filtering flag
+CWINDFILTER = 'EWAM'          ! Wind filter method (EWAM or WLIM)
+XEWAMTAU    = 20.             ! Time averaging constant for EWAM method (s)
+XWLIMUTH    = 8.              ! Thresehold wind value for WLIM method (m/s)
+XWLIMUTMAX  = 9.              ! Maximum wind value for WLIM method (m/s) (needs to be >= XWLIMUTH )
+!
+NNBSMOKETRACER = 1            ! Nb of smoke tracers
+!
+NWINDSLOPECPLMODE = 0         ! Flag for use of wind/slope in ROS (0 = wind + slope, 1 = wind only, 2 = slope only (U0=0))
+!
+!
+!
+!! DO NOT CHANGE BELOW PARAMETERS
+XFIREMESHSIZE(:) = 0.         ! Fire mesh size (dxf,dyf)
+LRESTA_ASE = .FALSE.          ! Flag for using ASE in RESTA file
+LRESTA_AWC = .FALSE.          ! Flag for using AWC in RESTA file
+LRESTA_EWAM = .FALSE.         ! Flag for using EWAM in RESTA file
+LRESTA_WLIM = .FALSE.         ! Flag for using WLIM in RESTA file
 
 !-------------------------------------------------------------------------------
 END SUBROUTINE DEFAULT_DESFM_n

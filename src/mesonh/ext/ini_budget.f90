@@ -228,7 +228,7 @@ use modd_dyn,           only: lcorio, xseglen
 use modd_dyn_n,         only: xtstep, locean
 use modd_elec_descr,    only: linductive, lrelax2fw_ion
 use modd_field,         only: TYPEREAL
-use modd_fire,          only: lblaze
+use modd_fire_n,        only: lblaze
 use modd_nsv,           only: nsv_aerbeg, nsv_aerend, nsv_aerdepbeg, nsv_aerdepend, nsv_c2r2beg, nsv_c2r2end,      &
                               nsv_chembeg, nsv_chemend, nsv_chicbeg, nsv_chicend, nsv_csbeg, nsv_csend,            &
                               nsv_dstbeg, nsv_dstend, nsv_dstdepbeg, nsv_dstdepend, nsv_elecbeg, nsv_elecend,      &
@@ -526,6 +526,7 @@ if ( lbu_rth .or. lbu_rtke .or. lbu_rrv .or. lbu_rrc .or. lbu_rrr .or. &
   allocate( tburhodj%xdata(ibudim1, ibudim2, ibudim3) )
   tburhodj%xdata(:, :, :) = 0.
 end if
+
 
 tzsource%ntype    = TYPEREAL
 tzsource%ndims    = 3
