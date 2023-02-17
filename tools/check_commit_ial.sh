@@ -360,6 +360,7 @@ if [ $packcreation -eq 1 ]; then
     #Move manually files outside of mpa (a find on the whole repository would take too much a long time)
     [ -f $EXT/yomparar.F90 ] && mv $EXT/yomparar.F90 ../arpifs/module/
     [ -f $EXT/namparar.nam.h ] && mv $EXT/namparar.nam.h ../arpifs/namelist
+    [ -f $EXT/namlima.nam.h ] && mv $EXT/namlima.nam.h ../arpifs/namelist
     [ -f $EXT/suparar.F90 ] && mv $EXT/suparar.F90 ../arpifs/phys_dmn/
     [ -f $EXT/apl_arome.F90 ] && mv $EXT/apl_arome.F90 ../arpifs/phys_dmn/
     [ -f $EXT/suphmpa.F90 ] && mv $EXT/suphmpa.F90 ../arpifs/phys_dmn/

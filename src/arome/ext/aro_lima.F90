@@ -1,10 +1,11 @@
 !     ######spl
-      SUBROUTINE  ARO_LIMA(KKA,KKU,KKL,KLON,KLEV,  KRR, KSV, KTCOUNT, KSPLITR, KSPLITG, &
+      SUBROUTINE  ARO_LIMA(KKA,KKU,KKL,KLON,KLEV,KFDIA,KRR, KSV, KTCOUNT, KSPLITR, KSPLITG, &
                                   PTSTEP, PDZZ, PRHODJ, PRHODREF, PEXNREF,&
-                                  PPABSM, PW_NU, PTHT, PRT, PSVT, &
+                                  PPABSM, PW_NU, PDTHRAD, PTHT, PRT, PSVT, &
                                   PTHS, PRS, PSVS, PEVAP,  &
                                   PINPRR,PINPRS,                 &
                                   PINPRG,PINPRH,PFPR,     &
+                                  PCLDFR,PICEFR,PPRCFR,         &
                                   YDDDH, YDLDDH, YDMDDH    )
 
       USE PARKIND1, ONLY : JPRB
@@ -38,6 +39,8 @@
 !              ------------
 !
 !
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+!
 USE MODD_CONF
 USE MODD_CST
 USE MODD_PARAMETERS
@@ -49,6 +52,7 @@ USE MODD_NSV
 !
 USE MODD_BUDGET
 USE MODE_BUDGET, ONLY: BUDGET_DDH
+USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX 
 !
 USE MODI_LIMA
 !
@@ -72,6 +76,7 @@ INTEGER,                  INTENT(IN)   :: KKU  !uppest atmosphere array index
 INTEGER,                  INTENT(IN)   :: KKL  !vert. levels type 1=MNH -1=ARO
 INTEGER,                  INTENT(IN)   :: KLON     !NPROMA under CPG
 INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels
+INTEGER,                  INTENT(IN)   :: KFDIA    !
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KSV      ! Number of LIMA variables
 INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
@@ -90,6 +95,7 @@ REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PEXNREF ! Reference Exner functi
 !
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PPABSM  ! abs. pressure at time t-dt
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PW_NU   ! w for CCN activation
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PDTHRAD ! radiative Theta tendency for CCN act.
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PTHT    ! Theta at time t
 REAL, DIMENSION(KLON,1,KLEV,KRR), INTENT(INOUT):: PRT   ! Moist variables at time t
 REAL, DIMENSION(KLON,1,KLEV,KSV), INTENT(INOUT):: PSVT   ! LIMA variables at time t
@@ -108,9 +114,13 @@ REAL, DIMENSION(KLON,1), INTENT(INOUT)     :: PINPRG! Graupel instant precip
 REAL, DIMENSION(KLON,1), INTENT(INOUT)     :: PINPRH! Hail instant precip
 REAL, DIMENSION(KLON,1,KLEV,KRR), INTENT(INOUT) :: PFPR ! upper-air precip
 !
-TYPE(TYP_DDH), INTENT(INOUT) :: YDDDH
-TYPE(TLDDH), INTENT(IN) :: YDLDDH
-TYPE(TMDDH), INTENT(IN) :: YDMDDH
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(INOUT)   :: PCLDFR ! liquid cloud fraction
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(INOUT)   :: PICEFR ! ice cloud fraction
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(INOUT)   :: PPRCFR ! precipitation fraction
+!
+TYPE(TYP_DDH), INTENT(INOUT), TARGET :: YDDDH
+TYPE(TLDDH), INTENT(IN), TARGET :: YDLDDH
+TYPE(TMDDH), INTENT(IN), TARGET :: YDMDDH
 !
 !
 !*       0.2   Declarations of local variables :
@@ -131,7 +141,7 @@ REAL, DIMENSION(KLON,1,KLEV):: &
    & ZRAINFR, ZHLC_HCF, ZHLC_LCF, ZHLC_HRC, ZHLC_LRC
 REAL, DIMENSION(KLON,1):: ZINPRC    ! surf cloud sedimentation
                                     ! for the correction of negative rv
-REAL, DIMENSION(KLON,1):: ZINPRI    ! surf cloud ice sedimentation
+REAL, DIMENSION(KLON,1):: ZINPRI, ZINDEP    ! surf cloud ice sedimentation
 REAL  :: ZMASSTOT                   ! total mass  for one water category
                                     ! including the negative values
 REAL  :: ZMASSPOS                   ! total mass  for one water category
@@ -140,6 +150,8 @@ REAL  :: ZRATIO                     ! ZMASSTOT / ZMASSCOR
 
 LOGICAL :: LL_RRR_BUDGET
 !
+TYPE(TBUDGETDATA), DIMENSION(NBUDGET_SV1+NSV_LIMA-1) :: YLBUDGET
+TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !
 !------------------------------------------------------------------------------
 !
@@ -148,6 +160,9 @@ LOGICAL :: LL_RRR_BUDGET
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('ARO_LIMA',0,ZHOOK_HANDLE)
+
+!Dimensions
+CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, 0, KFDIA)
 
 HCLOUD='LIMA'
 KMI=1
@@ -197,7 +212,7 @@ END DO
 !*       3.2    Correct negative values
 !
 ! Correction where rc<0
-     IF (LWARM_LIMA) THEN
+     IF (NMOM_C.GE.2) THEN
         WHERE (PRS(:,:,:,2) < 1.E-15 .OR. PSVS(:,:,:,NSV_LIMA_NC) < 1.E-15)
            PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,2)
            PTHS(:,:,:) = PTHS(:,:,:) - PRS(:,:,:,2) * ZLV(:,:,:) /  &
@@ -207,7 +222,7 @@ END DO
         END WHERE
      END IF
 ! Correction where rr<0
-     IF (LWARM_LIMA .AND. LRAIN_LIMA) THEN
+     IF (NMOM_R.GE.2) THEN
         WHERE (PRS(:,:,:,3) < 1.E-15 .OR. PSVS(:,:,:,NSV_LIMA_NR) < 1.E-15)
            PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,3)
            PTHS(:,:,:) = PTHS(:,:,:) - PRS(:,:,:,3) * ZLV(:,:,:) /  &
@@ -228,7 +243,7 @@ END DO
 !        ENDDO
 !     END IF
 ! Correction where ri<0
-     IF (LCOLD_LIMA) THEN
+     IF (NMOM_I.GE.2) THEN
         WHERE (PRS(:,:,:,4) < 1.E-15 .OR. PSVS(:,:,:,NSV_LIMA_NI) < 1.E-15)
            PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,4)
            PTHS(:,:,:) = PTHS(:,:,:) - PRS(:,:,:,4) * ZLS(:,:,:) /  &
@@ -244,16 +259,16 @@ END DO
 !*       3.3  STORE THE BUDGET TERMS
 !            ----------------------
 
-LL_RRR_BUDGET = (LBUDGET_RV).OR.(LBUDGET_RC).OR.(LBUDGET_RR).OR.(LBUDGET_RI) &
-             & .OR.(LBUDGET_RS).OR.(LBUDGET_RG).OR.(LBUDGET_RH)       
+LL_RRR_BUDGET = (TBUCONF%LBUDGET_RV).OR.(TBUCONF%LBUDGET_RC).OR.(TBUCONF%LBUDGET_RR).OR.(TBUCONF%LBUDGET_RI) &
+             & .OR.(TBUCONF%LBUDGET_RS).OR.(TBUCONF%LBUDGET_RG).OR.(TBUCONF%LBUDGET_RH)       
 
 IF (LL_RRR_BUDGET) THEN      
   DO JRR=1,KRR
      CALL BUDGET_DDH (PRS(:,:,:,JRR) * PRHODJ(:,:,:), JRR+5,'NEGA_BU_RRR',YDDDH,YDLDDH, YDMDDH)
   END DO 
 END IF
-IF (LBUDGET_TH) CALL BUDGET_DDH (PTHS(:,:,:)  * PRHODJ(:,:,:),4,'NEGA_BU_RTH',YDDDH, YDLDDH, YDMDDH)
-IF (LBUDGET_SV) THEN
+IF (TBUCONF%LBUDGET_TH) CALL BUDGET_DDH (PTHS(:,:,:)  * PRHODJ(:,:,:),4,'NEGA_BU_RTH',YDDDH, YDLDDH, YDMDDH)
+IF (TBUCONF%LBUDGET_SV) THEN
    CALL BUDGET_DDH (PSVS(:,:,:,NSV_LIMA_NC)*PRHODJ(:,:,:),12+NSV_LIMA_NC,'NEGA_BU_RSV',YDDDH, YDLDDH, YDMDDH)
    CALL BUDGET_DDH (PSVS(:,:,:,NSV_LIMA_NR)*PRHODJ(:,:,:),12+NSV_LIMA_NR,'NEGA_BU_RSV',YDDDH, YDLDDH, YDMDDH)
    CALL BUDGET_DDH (PSVS(:,:,:,NSV_LIMA_NI)*PRHODJ(:,:,:),12+NSV_LIMA_NI,'NEGA_BU_RSV',YDDDH, YDLDDH, YDMDDH)
@@ -271,7 +286,12 @@ IF (LBUDGET_SV) THEN
    END IF
 END IF
 
-
+DO JRR=1, NBUDGET_SV1+NSV_LIMA-1
+   YLBUDGET(JRR)%NBUDGET=JRR
+   YLBUDGET(JRR)%YDDDH=>YDDDH
+   YLBUDGET(JRR)%YDLDDH=>YDLDDH
+   YLBUDGET(JRR)%YDMDDH=>YDMDDH
+ENDDO
 !
 !
 !-------------------------------------------------------------------------------
@@ -284,40 +304,15 @@ END IF
 !
 !
 !
-IF (LPTSPLIT) THEN
-   CALL LIMA (PTSTEP=2*PTSTEP, HFMFILE='DUMMY', OCLOSE_OUT=.FALSE.,                    &
-              PRHODREF=PRHODREF, PEXNREF=PEXNREF, PZZ=PDZZ,                         &
-              PRHODJ=PRHODJ, PPABST=PPABSM,                                 &
-              NCCN=NMOD_CCN, NIFN=NMOD_IFN, NIMM=NMOD_IMM,                   &
-              PTHM=PTHT, PTHT=PTHT, PRT=PRT, PSVT=PSVT, PW_NU=PW_NU,                  &
-              PTHS=PTHS, PRS=PRS, PSVS=PSVS,                                &
-              PINPRC=ZINPRC, PINPRR=PINPRR, PINPRI=ZINPRI, PINPRS=PINPRS, PINPRG=PINPRG, PINPRH=PINPRH, &
-              PEVAP3D=PEVAP, KSPLITR=KSPLITR, KSPLITG=KSPLITG, YDDDH=YDDDH, YDLDDH=YDLDDH, YDMDDH=YDMDDH                                   )
-ELSE
-   IF (LWARM_LIMA) CALL LIMA_WARM(OACTIT=LACTIT_LIMA, OSEDC=LSEDC_LIMA, ORAIN=LRAIN_LIMA, KSPLITR=KSPLITR, PTSTEP=2*PTSTEP, KMI=KMI, &
-                             HFMFILE='DUMMY', HLUOUT='DUMMY', OCLOSE_OUT=.FALSE., KRR=KRR, PZZ=PDZZ, PRHODJ=PRHODJ,     &
-                             PRHODREF=PRHODREF, PEXNREF=PEXNREF, PW_NU=PW_NU, PPABSM=PPABSM, PPABST=PPABSM,         &
-                             PTHM=PTHT, PRCM=PRT(:,:,:,2),                  &
-                             PTHT=PTHT, PRT=PRT, PSVT=PSVT,                                   &
-                             PTHS=PTHS, PRS=PRS, PSVS=PSVS,                                   &
-                             PINPRC=ZINPRC,PINPRR=PINPRR, PINPRR3D=ZDUM3DR, PEVAP3D=PEVAP,YDDDH=YDDDH, YDLDDH=YDLDDH, YDMDDH=YDMDDH         )
-   !
-   IF (LCOLD_LIMA) CALL LIMA_COLD(OSEDI=LSEDI_LIMA, OHHONI=LHHONI_LIMA, KSPLITG=KSPLITG, PTSTEP=2*PTSTEP, KMI=KMI,               &
-                             HFMFILE='DUMMY', HLUOUT='DUMMY', OCLOSE_OUT=.FALSE., KRR=KRR, PZZ=PDZZ, PRHODJ=PRHODJ,     &
-                             PRHODREF=PRHODREF, PEXNREF=PEXNREF, PPABST=PPABSM, PW_NU=PW_NU,                 &
-                             PTHM=PTHT, PPABSM=PPABSM,                                      &
-                             PTHT=PTHT, PRT=PRT, PSVT=PSVT,                                   &
-                             PTHS=PTHS, PRS=PRS, PSVS=PSVS,                                   &
-                             PINPRS=PINPRS, PINPRG=PINPRG, PINPRH=PINPRH, YDDDH=YDDDH, YDLDDH=YDLDDH, YDMDDH=YDMDDH)
-   !
-   IF (LWARM_LIMA .AND. LCOLD_LIMA) CALL LIMA_MIXED(OSEDI=LSEDI_LIMA, OHHONI=LHHONI_LIMA, KSPLITG=KSPLITG, PTSTEP=2*PTSTEP, KMI=KMI,     &
-                                          HFMFILE='DUMMY', HLUOUT='DUMMY', OCLOSE_OUT=.FALSE., KRR=KRR, PZZ=PDZZ, PRHODJ=PRHODJ, &
-                                          PRHODREF=PRHODREF, PEXNREF=PEXNREF, PPABST=PPABSM, PW_NU=PW_NU,             &
-                                          PTHM=PTHT, PPABSM=PPABSM,                                  &
-                                          PTHT=PTHT, PRT=PRT, PSVT=PSVT,                               &
-                                          PTHS=PTHS, PRS=PRS, PSVS=PSVS,YDDDH=YDDDH, YDLDDH=YDLDDH, YDMDDH=YDMDDH                                )
-   
-ENDIF
+CALL LIMA (D=YLDIMPHYEX, CST=CST, BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
+           PTSTEP=2*PTSTEP,                  &
+           PRHODREF=PRHODREF, PEXNREF=PEXNREF, PDZZ=PDZZ,                         &
+           PRHODJ=PRHODJ, PPABST=PPABSM,                                 &
+           NCCN=NMOD_CCN, NIFN=NMOD_IFN, NIMM=NMOD_IMM,                   &
+           PDTHRAD=PDTHRAD, PTHT=PTHT, PRT=PRT, PSVT=PSVT, PW_NU=PW_NU,                  &
+           PTHS=PTHS, PRS=PRS, PSVS=PSVS,                                &
+           PINPRC=ZINPRC, PINDEP=ZINDEP, PINPRR=PINPRR, PINPRI=ZINPRI, PINPRS=PINPRS, PINPRG=PINPRG, PINPRH=PINPRH, &
+           PEVAP3D=PEVAP, PCLDFR=PCLDFR, PICEFR=PICEFR, PPRCFR=PPRCFR, PFPR=PFPR )
 !add ZINPRC in PINPRR
 PINPRR=PINPRR+ZINPRC
 !-------------------------------------------------------------------------------
