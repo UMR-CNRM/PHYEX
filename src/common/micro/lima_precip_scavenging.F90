@@ -91,7 +91,7 @@ USE MODD_PARAM_LIMA,      ONLY: NMOD_IFN, NSPECIE, XFRAC,                       
                                 XRTMIN, XCTMIN
 USE MODD_PARAM_LIMA_WARM, ONLY: XCR, XDR
 
-use mode_budget,          only: Budget_store_init_phy, Budget_store_end_phy
+USE MODE_BUDGET_PHY,      ONLY: Budget_store_init_phy, Budget_store_end_phy
 use mode_tools,           only: Countjv
 
 USE MODI_GAMMA

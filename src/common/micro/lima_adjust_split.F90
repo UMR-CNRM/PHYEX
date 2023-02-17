@@ -103,7 +103,7 @@ USE MODD_NEB,              ONLY: NEB
 USE MODD_TURB_n,           ONLY: TURBN
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 !
-use mode_budget,           only: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
+USE MODE_BUDGET_PHY,       ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 !USE MODE_IO_FIELD_WRITE,   only: IO_Field_write
 use mode_msg
 use mode_tools,            only: Countjv
