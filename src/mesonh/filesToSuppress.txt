@@ -15,6 +15,7 @@ aux/modi_shuman.f90
 aux/modi_second_mnh.f90
 aux/second_mnh.f90
 aux/modi_gradient_m.f90
+aux/mode_io_field_write.f90
 
 #To be un-commented when the PHYEX version will be merged into the Meso-NH code
 #aux/mode_thermo.f90
