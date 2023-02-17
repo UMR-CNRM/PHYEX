@@ -27,9 +27,9 @@ SUBROUTINE RAIN_ICE_FAST_RI(OMICRO, PRHODREF, PRIT, PRHODJ, PZT, PSSI, PLSFACT, 
 use modd_budget,         only: lbudget_th, lbudget_rc, lbudget_ri, &
                                NBUDGET_TH, NBUDGET_RC, NBUDGET_RI, &
                                tbudgets
-use MODD_CST,            only: XTT
-use MODD_RAIN_ICE_DESCR, only: XDI, XLBEXI, XLBI, XRTMIN
-use MODD_RAIN_ICE_PARAM, only: X0DEPI, X2DEPI
+USE MODD_CST,            only: XTT
+USE MODD_RAIN_ICE_DESCR_n, only: XDI, XLBEXI, XLBI, XRTMIN
+USE MODD_RAIN_ICE_PARAM_n, only: X0DEPI, X2DEPI
 
 use mode_budget,         only: Budget_store_add, Budget_store_end, Budget_store_init
 

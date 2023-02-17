@@ -8,8 +8,8 @@ USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_CST,        ONLY: CST_t
 USE MODD_NEB,        ONLY: NEB
 USE MODD_TURB_n,     ONLY: TURB_t
-USE MODD_RAIN_ICE_PARAM, ONLY : RAIN_ICE_PARAM_t
-USE MODD_PARAM_ICE,      ONLY : PARAM_ICE_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY : RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE_n,      ONLY : PARAM_ICE_t
 USE MODI_INI_NEB
 USE MODD_BUDGET !, ONLY: TBUCONF_ASSOCIATE, TBUDGETDATA, NBUDGET_RI, TBUCONF
 USE STACK_MOD
@@ -312,12 +312,12 @@ CONTAINS
 
 SUBROUTINE INIT_PHYEX(KULOUT, PTSTEP, &
                       CST, &
-                      PARAM_ICE, RAIN_ICE_PARAM, TURBN)
+                      PARAM_ICEN, RAIN_ICE_PARAMN, TURBN)
 
 USE MODD_CST, ONLY: CST_t
-USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
-USE MODD_PARAM_ICE, ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE_n, ONLY: PARAM_ICE_t
 USE MODD_TURB_N, ONLY: TURB_t
 USE MODI_INI_PHYEX, ONLY: INI_PHYEX
 
@@ -328,8 +328,8 @@ IMPLICIT NONE
 INTEGER, INTENT (IN) :: KULOUT
 REAL, INTENT(IN) :: PTSTEP
 TYPE(CST_t),            INTENT(OUT) :: CST
-TYPE(PARAM_ICE_t)     , INTENT(OUT) :: PARAM_ICE
-TYPE(RAIN_ICE_PARAM_t), INTENT(OUT) :: RAIN_ICE_PARAM
+TYPE(PARAM_ICE_t)     , INTENT(OUT) :: PARAM_ICEN
+TYPE(RAIN_ICE_PARAM_t), INTENT(OUT) :: RAIN_ICE_PARAMN
 TYPE(TURB_t),           INTENT(OUT) :: TURBN
 
 !-----------------------------------------------------------------------
@@ -350,36 +350,36 @@ CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &PTSTEP, ZDZMIN, &
               &CMICRO, CSCONV, CTURB, &
               &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0, LDINIT=.FALSE., &
-              &PARAM_ICE_OUT=PARAM_ICE, TURBN_OUT=TURBN)
+              &PARAM_ICEN_OUT=PARAM_ICEN, TURBN_OUT=TURBN)
 
 !Emulate the namelist reading
-PARAM_ICE%LCRIAUTI=.TRUE.
-PARAM_ICE%XCRIAUTI_NAM=0.2E-3
-PARAM_ICE%XT0CRIAUTI_NAM=-5.
-PARAM_ICE%XCRIAUTC_NAM=0.1E-2
-PARAM_ICE%LOCND2=.FALSE.
-PARAM_ICE%CSEDIM='STAT'
-PARAM_ICE%LWARM=.TRUE.
-PARAM_ICE%LSEDIC=.TRUE.
-PARAM_ICE%CFRAC_ICE_ADJUST='S' ! Ice/liquid partition rule to use in adjustment
-PARAM_ICE%CFRAC_ICE_SHALLOW_MF='S' ! Ice/liquid partition rule to use in shallow_mf
-PARAM_ICE%CSNOWRIMING='M90 '
-PARAM_ICE%XFRACM90=0.1 ! Fraction used for the Murakami 1990 formulation
-PARAM_ICE%LCONVHG=.TRUE. ! TRUE to allow the conversion from hail to graupel
-PARAM_ICE%LCRFLIMIT=.TRUE. !True to limit rain contact freezing to possible heat exchange
-PARAM_ICE%LFEEDBACKT=.TRUE. ! When .TRUE. feed back on temperature is taken into account
-PARAM_ICE%LEVLIMIT=.TRUE.   ! When .TRUE. water vapour pressure is limited by saturation
-PARAM_ICE%LNULLWETG=.TRUE.  ! When .TRUE. graupel wet growth is activated with null rate (to allow water shedding)
-PARAM_ICE%LWETGPOST=.TRUE.  ! When .TRUE. graupel wet growth is activated with positive temperature (to allow water shedding)
-PARAM_ICE%LNULLWETH=.TRUE.  ! Same as LNULLWETG but for hail
-PARAM_ICE%LWETHPOST=.TRUE.  ! Same as LWETGPOST but for hail
-PARAM_ICE%LSEDIM_AFTER=.FALSE. ! Sedimentation done after microphysics
-PARAM_ICE%XSPLIT_MAXCFL=0.8
-PARAM_ICE%LDEPOSC=.FALSE.  ! water deposition on vegetation
-PARAM_ICE%XVDEPOSC=0.02    ! deposition speed (2 cm.s-1)
-PARAM_ICE%CSUBG_RC_RR_ACCR='NONE'
-PARAM_ICE%CSUBG_RR_EVAP='NONE'
-PARAM_ICE%CSUBG_PR_PDF='SIGM'
+PARAM_ICEN%LCRIAUTI=.TRUE.
+PARAM_ICEN%XCRIAUTI_NAM=0.2E-3
+PARAM_ICEN%XT0CRIAUTI_NAM=-5.
+PARAM_ICEN%XCRIAUTC_NAM=0.1E-2
+PARAM_ICEN%LOCND2=.FALSE.
+PARAM_ICEN%CSEDIM='STAT'
+PARAM_ICEN%LWARM=.TRUE.
+PARAM_ICEN%LSEDIC=.TRUE.
+PARAM_ICEN%CFRAC_ICE_ADJUST='S' ! Ice/liquid partition rule to use in adjustment
+PARAM_ICEN%CFRAC_ICE_SHALLOW_MF='S' ! Ice/liquid partition rule to use in shallow_mf
+PARAM_ICEN%CSNOWRIMING='M90 '
+PARAM_ICEN%XFRACM90=0.1 ! Fraction used for the Murakami 1990 formulation
+PARAM_ICEN%LCONVHG=.TRUE. ! TRUE to allow the conversion from hail to graupel
+PARAM_ICEN%LCRFLIMIT=.TRUE. !True to limit rain contact freezing to possible heat exchange
+PARAM_ICEN%LFEEDBACKT=.TRUE. ! When .TRUE. feed back on temperature is taken into account
+PARAM_ICEN%LEVLIMIT=.TRUE.   ! When .TRUE. water vapour pressure is limited by saturation
+PARAM_ICEN%LNULLWETG=.TRUE.  ! When .TRUE. graupel wet growth is activated with null rate (to allow water shedding)
+PARAM_ICEN%LWETGPOST=.TRUE.  ! When .TRUE. graupel wet growth is activated with positive temperature (to allow water shedding)
+PARAM_ICEN%LNULLWETH=.TRUE.  ! Same as LNULLWETG but for hail
+PARAM_ICEN%LWETHPOST=.TRUE.  ! Same as LWETGPOST but for hail
+PARAM_ICEN%LSEDIM_AFTER=.FALSE. ! Sedimentation done after microphysics
+PARAM_ICEN%XSPLIT_MAXCFL=0.8
+PARAM_ICEN%LDEPOSC=.FALSE.  ! water deposition on vegetation
+PARAM_ICEN%XVDEPOSC=0.02    ! deposition speed (2 cm.s-1)
+PARAM_ICEN%CSUBG_RC_RR_ACCR='NONE'
+PARAM_ICEN%CSUBG_RR_EVAP='NONE'
+PARAM_ICEN%CSUBG_PR_PDF='SIGM'
 TURBN%LSUBG_COND   = .TRUE.
 TURBN%LSIGMAS = .TRUE.
 
@@ -389,8 +389,8 @@ CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &CMICRO, CSCONV, CTURB, &
               &LDDEFAULTVAL=.FALSE., LDREADNAM=.FALSE., LDCHECK=.TRUE., KPRINT=2, LDINIT=.TRUE., &
               &CST_OUT=CST, &
-              &PARAM_ICE_IN=PARAM_ICE, PARAM_ICE_OUT=PARAM_ICE, &
-              &RAIN_ICE_PARAM_IN=RAIN_ICE_PARAM, RAIN_ICE_PARAM_OUT=RAIN_ICE_PARAM, &
+              &PARAM_ICEN_IN=PARAM_ICEN, PARAM_ICEN_OUT=PARAM_ICEN, &
+              &RAIN_ICE_PARAMN_IN=RAIN_ICE_PARAMN, RAIN_ICE_PARAMN_OUT=RAIN_ICE_PARAMN, &
               &TURBN_IN=TURBN, TURBN_OUT=TURBN)
 
 CALL INI_NEB

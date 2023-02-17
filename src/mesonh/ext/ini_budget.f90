@@ -245,7 +245,7 @@ use modd_nsv,           only: csvnames,                                         
                               nsv_user
 use modd_parameters,   only: jphext
 use modd_param_c2r2,   only: ldepoc_c2r2 => ldepoc, lrain_c2r2 => lrain, lsedc_c2r2 => lsedc, lsupsat_c2r2 => lsupsat
-use modd_param_ice,    only: ladj_after, ladj_before, ldeposc_ice => ldeposc, lred, lsedic_ice => lsedic, lwarm_ice => lwarm
+use modd_param_ice_n,  only: ladj_after, ladj_before, ldeposc_ice => ldeposc, lred, lsedic_ice => lsedic, lwarm_ice => lwarm
 use modd_param_n,      only: cactccn, celec
 use modd_param_lima,   only: laero_mass_lima => laero_mass, lacti_lima => lacti, lcold_lima => lcold, ldepoc_lima => ldepoc, &
                              lhail_lima => lhail, lhhoni_lima => lhhoni, lmeyers_lima => lmeyers, lnucl_lima => lnucl,       &

@@ -89,7 +89,7 @@ use modd_les
 use modd_les_n
 use modd_param_n,    only: ccloud
 use modd_param_c2r2, only: ldepoc
-use modd_param_ice,  only: ldeposc
+USE MODD_PARAM_ICE_n,  only: ldeposc
 use modd_parameters, only: XUNDEF
 
 use mode_les_spec_n,            only: Les_spec_n

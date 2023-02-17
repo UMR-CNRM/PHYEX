@@ -114,9 +114,9 @@ USE MODD_PARAMETERS,      ONLY : JPHEXT,    &! number of horizontal External poi
                                  JPVEXT      ! number of vertical External points
 USE MODD_CST,             ONLY : XP00, XRD, XRV, XCPD, XTT, XLMTT, XLVTT, XCPV, &
                                  XCL, XCI, XESTT, XMV, XMD
-USE MODD_RAIN_ICE_DESCR,  ONLY : XLBR, XLBEXR, XCEXVT, XLBDAS_MAX, XLBS, XLBEXS, &
+USE MODD_RAIN_ICE_DESCR_n,  ONLY : XLBR, XLBEXR, XCEXVT, XLBDAS_MAX, XLBS, XLBEXS, &
                                  XLBG, XLBEXG, XCXS, XCXG, XDG, XBS
-USE MODD_RAIN_ICE_PARAM,  ONLY : XTIMAUTC, XCRIAUTC, XFCACCR, XEXCACCR, &
+USE MODD_RAIN_ICE_PARAM_n,  ONLY : XTIMAUTC, XCRIAUTC, XFCACCR, XEXCACCR, &
                                  XRIMINTP1, XRIMINTP2, XCRIMSS, XCRIMSG,&
                                  XEXCRIMSS, XEXCRIMSG, NGAMINC, XGAMINC_RIM1, &
                                  XFRACCSS, XLBRACCS1, XLBRACCS2, XLBRACCS3,    &

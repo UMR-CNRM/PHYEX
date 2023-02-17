@@ -30,11 +30,11 @@ SUBROUTINE RAIN_ICE_SEDIMENTATION_SPLIT(KIB, KIE, KJB, KJE, KKB, KKE, KKTB, KKTE
 use modd_budget,         only: lbudget_rc, lbudget_rr, lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, &
                                NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, &
                                tbudgets
-use MODD_CST,            only: XCPD, XP00, XRD, XRHOLW
-use MODD_PARAM_ICE,      only: XVDEPOSC
-use MODD_RAIN_ICE_DESCR, only: XCC, XCONC_LAND, xconc_sea, xconc_urban, XDC, XCEXVT, &
+USE MODD_CST,            only: XCPD, XP00, XRD, XRHOLW
+USE MODD_PARAM_ICE_n,      only: XVDEPOSC
+USE MODD_RAIN_ICE_DESCR_n, only: XCC, XCONC_LAND, xconc_sea, xconc_urban, XDC, XCEXVT, &
                                XALPHAC, XNUC, XALPHAC2, XNUC2, XLBEXC, XRTMIN, XLBEXC, XLBC
-use MODD_RAIN_ICE_PARAM, only: XEXSEDG, XEXSEDH, XEXCSEDI, XEXSEDR, XEXSEDS, &
+USE MODD_RAIN_ICE_PARAM_n, only: XEXSEDG, XEXSEDH, XEXCSEDI, XEXSEDR, XEXSEDS, &
                                XFSEDG, XFSEDH, XFSEDI, XFSEDR, XFSEDS, XFSEDC
 
 use mode_budget,         only: Budget_store_init, Budget_store_end

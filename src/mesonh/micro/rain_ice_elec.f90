@@ -219,9 +219,9 @@ USE MODD_LES
 USE MODE_ll
 USE MODD_NSV,             ONLY: NSV_ELECBEG, NSV_ELECEND ! Scalar variables for budgets
 USE MODD_PARAMETERS
-USE MODD_PARAM_ICE
-USE MODD_RAIN_ICE_DESCR
-USE MODD_RAIN_ICE_PARAM
+USE MODD_PARAM_ICE_n
+USE MODD_RAIN_ICE_DESCR_n
+USE MODD_RAIN_ICE_PARAM_n
 USE MODD_REF,             ONLY: XTHVREFZ
 
 use mode_budget,          only: Budget_store_add, Budget_store_init, Budget_store_end

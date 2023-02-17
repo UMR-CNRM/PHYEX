@@ -224,3 +224,4 @@ mpa/turb/externals/aroini_turb.F90
 mpa/turb/interface/aroini_turb.h
 phyex/turb/ini_cturb.F90
 phyex/turb/modi_ini_cturb.F90
+phyex/micro/modd_rain_ice_param.F90

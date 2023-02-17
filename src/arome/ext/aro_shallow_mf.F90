@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE  ARO_SHALLOW_MF(CST, PARAM_ICE, PARAM_MFSHALLN,      &
+      SUBROUTINE  ARO_SHALLOW_MF(CST, PARAM_ICEN, PARAM_MFSHALLN,      &
                 KKL, KLON, KLEV, KFDIA, KRR, KRRL, KRRI,KSV,&
                 HMF_UPDRAFT, HMF_CLOUD, OMIXUV,                       &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
@@ -72,7 +72,7 @@ USE MODD_NEB, ONLY: NEB
 USE MODD_TURB_n, ONLY: TURBN
 USE MODD_CTURB, ONLY: CSTURB
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODD_PARAM_ICE, ONLY: PARAM_ICE_t
+USE MODD_PARAM_ICE_n, ONLY: PARAM_ICE_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
 USE MODI_SHALLOW_MF
@@ -89,7 +89,7 @@ IMPLICIT NONE
 !
 !
 TYPE(CST_t),              INTENT(IN)   :: CST
-TYPE(PARAM_ICE_t),        INTENT(IN)   :: PARAM_ICE
+TYPE(PARAM_ICE_t),        INTENT(IN)   :: PARAM_ICEN
 TYPE(PARAM_MFSHALL_t),    INTENT(IN)   :: PARAM_MFSHALLN
 INTEGER,                  INTENT(IN)   :: KKL      ! +1 if grid goes from ground to
                                                    ! atmosphere top, -1 otherwise
@@ -227,7 +227,7 @@ ENDDO
 TURBN%LSTATNW = .FALSE.
   CALL SHALLOW_MF(YLDIMPHYEX, CST, NEB, PARAM_MFSHALLN, TURBN, CSTURB,                    &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                             &
-     &HFRAC_ICE=PARAM_ICE%CFRAC_ICE_SHALLOW_MF,                                           &
+     &HFRAC_ICE=PARAM_ICEN%CFRAC_ICE_SHALLOW_MF,                                           &
      &ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,                          &
      &PIMPL_MF=ZIMPL, PTSTEP=PTSTEP,                                                      &
      &PDZZ=PDZZF,PZZ=PZZ,                                                                 &

@@ -99,8 +99,8 @@ USE MODD_RAIN_C2R2_DESCR, ONLY : XLBEXC, XLBEXR, &
                                  XRTMIN, XCTMIN
 USE MODD_PARAM_C2R2,      ONLY : YALPHAC=>XALPHAC,YNUC=>XNUC, &
                                  YALPHAR=>XALPHAR,YNUR=>XNUR
-USE MODD_PARAM_ICE,        ONLY: WSNOW_T=>LSNOW_T
-USE MODD_RAIN_ICE_DESCR,  ONLY : XCCR, WLBEXR=>XLBEXR, XLBR, &
+USE MODD_PARAM_ICE_n,        ONLY: WSNOW_T=>LSNOW_T
+USE MODD_RAIN_ICE_DESCR_n,  ONLY : XCCR, WLBEXR=>XLBEXR, XLBR, &
                                  XCCS, XCXS,   XLBEXS, XLBS, XNS, &
                                  XCCG, XCXG,   XLBEXG, XLBG, &
                                  XCCH, XCXH,   XLBEXH, XLBH, &

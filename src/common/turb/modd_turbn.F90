@@ -116,6 +116,7 @@ END TYPE TURB_t
 
 TYPE(TURB_t), DIMENSION(JPMODELMAX), TARGET, SAVE :: TURB_MODEL
 TYPE(TURB_t), POINTER, SAVE :: TURBN => NULL()
+!
 REAL, POINTER :: XIMPL=>NULL()
 REAL, POINTER :: XTKEMIN=>NULL()
 REAL, POINTER :: XCED=>NULL()
@@ -178,6 +179,7 @@ SUBROUTINE TURB_GOTO_MODEL(KFROM, KTO)
 !! This subroutine associate all the pointers to the right component of
 !! the right strucuture. A value can be accessed through the structure TURBN
 !! or through the strucuture TURB_MODEL(KTO) or directly through these pointers.
+IMPLICIT NONE
 INTEGER, INTENT(IN) :: KFROM, KTO
 !
 IF(.NOT. ASSOCIATED(TURBN, TURB_MODEL(KTO))) THEN

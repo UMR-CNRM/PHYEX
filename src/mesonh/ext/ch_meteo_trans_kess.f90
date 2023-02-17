@@ -117,7 +117,7 @@ USE MODD_CST,         ONLY: XP00,          & ! Surface pressure
 !!
 USE MODD_CONF,        ONLY: LCARTESIAN     ! Logical for cartesian geometry
 !!
-USE MODD_RAIN_ICE_DESCR,  ONLY: XNUC, XALPHAC,  & !Cloud droplets distrib. param.
+USE MODD_RAIN_ICE_DESCR_n,  ONLY: XNUC, XALPHAC,  & !Cloud droplets distrib. param.
                                 XRTMIN,         & ! min values of the water m. r.
                                 XLBC,  XLBEXC,  & !shape param. of the cloud droplets
                                 XLBR,  XLBEXR,  & !shape param. of the raindrops
