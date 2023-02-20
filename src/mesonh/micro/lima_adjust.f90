@@ -168,8 +168,8 @@ use mode_tools,            only: Countjv
 !
 USE MODI_CONDENS
 USE MODI_CONDENSATION
-USE MODI_LIMA_FUNCTIONS
-USE MODI_LIMA_CCN_ACTIVATION
+USE MODE_LIMA_FUNCTIONS
+USE MODE_LIMA_CCN_ACTIVATION, ONLY: LIMA_CCN_ACTIVATION
 !
 IMPLICIT NONE
 !
@@ -357,22 +357,22 @@ PCIT(:,:,:) = 0.
 PCCS(:,:,:) = 0.
 PCIS(:,:,:) = 0.
 !
-IF ( LWARM ) PCCT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NC)
-IF ( LCOLD ) PCIT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NI)
+IF ( NMOM_C.GE.2 ) PCCT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NC)
+IF ( NMOM_I.GE.2 ) PCIT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NI)
 !
-IF ( LWARM ) PCCS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NC)
-IF ( LCOLD ) PCIS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NI)
+IF ( NMOM_C.GE.2 ) PCCS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NC)
+IF ( NMOM_I.GE.2 ) PCIS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NI)
 !
 IF ( LSCAV .AND. LAERO_MASS ) PMAS(:,:,:) = PSVS(:,:,:,NSV_LIMA_SCAVMASS)
 ! 
-IF ( LWARM .AND. NMOD_CCN.GE.1 ) THEN
+IF ( NMOM_C.GE.2 .AND. NMOD_CCN.GE.1 ) THEN
    ALLOCATE( PNFS(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3),NMOD_CCN) )
    ALLOCATE( PNAS(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3),NMOD_CCN) )
    PNFS(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_CCN_FREE:NSV_LIMA_CCN_FREE+NMOD_CCN-1)
    PNAS(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_CCN_ACTI:NSV_LIMA_CCN_ACTI+NMOD_CCN-1)
 END IF
 !
-IF ( LCOLD .AND. NMOD_IFN .GE. 1 ) THEN
+IF ( NMOM_I.GE.2 .AND. NMOD_IFN.GE.1 ) THEN
    ALLOCATE( PIFS(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3),NMOD_IFN) )
    ALLOCATE( PINS(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3),NMOD_IFN) )
    PIFS(:,:,:,:) = PSVS(:,:,:,NSV_LIMA_IFN_FREE:NSV_LIMA_IFN_FREE+NMOD_IFN-1)
@@ -390,13 +390,13 @@ if ( nbumod == kmi .and. lbu_enable ) then
   if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'CEDS', prcs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'CEDS', pris(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv ) then
-    if ( lwarm .and. nmom_c.ge.2) &
+    if ( nmom_c.ge.2) &
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc),       'CEDS', pccs(:, :, :) * prhodj(:, :, :) )
-    if ( lcold .and. nmom_i.ge.2) &
+    if ( nmom_i.ge.2) &
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni),       'CEDS', pcis(:, :, :) * prhodj(:, :, :) )
     if ( lscav .and. laero_mass ) &
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', pmas(:, :, :) * prhodj(:, :, :) )
-    if ( lwarm ) then
+    if ( nmom_c.ge.2 ) then
       do jl = 1, nmod_ccn
         idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + jl
         call Budget_store_init( tbudgets(idx), 'CEDS', pnfs(:, :, :, jl) * prhodj(:, :, :) )
@@ -404,7 +404,7 @@ if ( nbumod == kmi .and. lbu_enable ) then
         call Budget_store_init( tbudgets(idx), 'CEDS', pnas(:, :, :, jl) * prhodj(:, :, :) )
       end do
     end if
-    if ( lcold ) then
+    if ( nmom_i.ge.2 ) then
       do jl = 1, nmod_ifn
         idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_free - 1 + jl
         call Budget_store_init( tbudgets(idx), 'CEDS', pifs(:, :, :, jl) * prhodj(:, :, :) )
@@ -1096,7 +1096,7 @@ WHERE (PRIS(:,:,:) <= ZRTMIN(4) .OR. PCIS(:,:,:) <= ZCTMIN(4))
    PCIS(:,:,:) = 0.0
 END WHERE
 !
-IF (LCOLD .AND. (NMOD_IFN .GE. 1 .OR. NMOD_IMM .GE. 1)) THEN
+IF (NMOM_I.GE.2 .AND. (NMOD_IFN .GE. 1 .OR. NMOD_IMM .GE. 1)) THEN
    ZW1(:,:,:) = 0.
    IF (NMOD_IFN .GE. 1) ZW1(:,:,:) = ZW1(:,:,:) + SUM(PINS,DIM=4)
    IF (NMOD_IMM .GE. 1) ZW1(:,:,:) = ZW1(:,:,:) + SUM(PNIS,DIM=4)
@@ -1108,7 +1108,7 @@ IF (LCOLD .AND. (NMOD_IFN .GE. 1 .OR. NMOD_IMM .GE. 1)) THEN
    ENDWHERE
 END IF
 !
-IF (LCOLD .AND. NMOD_IFN.GE.1) THEN
+IF (NMOM_I.GE.2 .AND. NMOD_IFN.GE.1) THEN
    DO JMOD_IFN = 1, NMOD_IFN
       PIFS(:,:,:,JMOD_IFN) = PIFS(:,:,:,JMOD_IFN) +                    &
            ZMASK(:,:,:) * PINS(:,:,:,JMOD_IFN) * ZW2(:,:,:)
@@ -1118,7 +1118,7 @@ IF (LCOLD .AND. NMOD_IFN.GE.1) THEN
    ENDDO
 END IF
 !
-IF (LCOLD .AND. NMOD_IMM.GE.1) THEN
+IF (NMOM_I.GE.2 .AND. NMOD_IMM.GE.1) THEN
    JMOD_IMM = 0
    DO JMOD = 1, NMOD_CCN
       IF (NIMM(JMOD) == 1) THEN 
@@ -1145,7 +1145,7 @@ WHERE (PRCS(:,:,:) <= ZRTMIN(2) .OR. PCCS(:,:,:) <= ZCTMIN(2))
 END WHERE
 !
 ZW1(:,:,:) = 0.
-IF (LWARM .AND. NMOD_CCN.GE.1) ZW1(:,:,:) = SUM(PNAS,DIM=4)
+IF (NMOM_C.GE.2 .AND. NMOD_CCN.GE.1) ZW1(:,:,:) = SUM(PNAS,DIM=4)
 ZW (:,:,:) = MIN( ZW(:,:,:), ZW1(:,:,:) )
 ZW2(:,:,:) = 0.
 WHERE ( ZW(:,:,:) > 0. )
@@ -1153,7 +1153,7 @@ WHERE ( ZW(:,:,:) > 0. )
    ZW2(:,:,:) = ZW(:,:,:) / ZW1(:,:,:)
 ENDWHERE
 !
-IF (LWARM .AND. NMOD_CCN.GE.1) THEN
+IF (NMOM_C.GE.2 .AND. NMOD_CCN.GE.1) THEN
    DO JMOD = 1, NMOD_CCN
       PNFS(:,:,:,JMOD) = PNFS(:,:,:,JMOD) +                           &
            ZMASK(:,:,:) * PNAS(:,:,:,JMOD) * ZW2(:,:,:)
@@ -1230,22 +1230,22 @@ IF ( KRR .GE. 6 ) PRS(:,:,:,6) = PRGS(:,:,:)
 !
 ! Prepare 3D number concentrations
 !
-IF ( LWARM ) PSVS(:,:,:,NSV_LIMA_NC) = PCCS(:,:,:)
-IF ( LCOLD ) PSVS(:,:,:,NSV_LIMA_NI) = PCIS(:,:,:)
+IF ( NMOM_C.GE.2 ) PSVS(:,:,:,NSV_LIMA_NC) = PCCS(:,:,:)
+IF ( NMOM_I.GE.2 ) PSVS(:,:,:,NSV_LIMA_NI) = PCIS(:,:,:)
 !
 IF ( LSCAV .AND. LAERO_MASS ) PSVS(:,:,:,NSV_LIMA_SCAVMASS) = PMAS(:,:,:)
 ! 
-IF ( LWARM .AND. NMOD_CCN .GE. 1 ) THEN
+IF ( NMOM_C.GE.2 .AND. NMOD_CCN.GE.1 ) THEN
    PSVS(:,:,:,NSV_LIMA_CCN_FREE:NSV_LIMA_CCN_FREE+NMOD_CCN-1) = PNFS(:,:,:,:)
    PSVS(:,:,:,NSV_LIMA_CCN_ACTI:NSV_LIMA_CCN_ACTI+NMOD_CCN-1) = PNAS(:,:,:,:)
 END IF
 !
-IF ( LCOLD .AND. NMOD_IFN .GE. 1 ) THEN
+IF ( NMOM_I.GE.2 .AND. NMOD_IFN.GE.1 ) THEN
    PSVS(:,:,:,NSV_LIMA_IFN_FREE:NSV_LIMA_IFN_FREE+NMOD_IFN-1) = PIFS(:,:,:,:)
    PSVS(:,:,:,NSV_LIMA_IFN_NUCL:NSV_LIMA_IFN_NUCL+NMOD_IFN-1) = PINS(:,:,:,:)
 END IF
 !
-IF ( LCOLD .AND. NMOD_IMM .GE. 1 ) THEN
+IF ( NMOM_I.GE.2 .AND. NMOD_IMM.GE.1 ) THEN
    PSVS(:,:,:,NSV_LIMA_IMM_NUCL:NSV_LIMA_IMM_NUCL+NMOD_IMM-1) = PNIS(:,:,:,:)
 END IF
 !
@@ -1281,13 +1281,13 @@ if ( nbumod == kmi .and. lbu_enable ) then
   if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'CEDS', prcs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_ri ) call Budget_store_end( tbudgets(NBUDGET_RI), 'CEDS', pris(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv ) then
-    if ( lwarm .and. nmom_c.ge.2) &
+    if ( nmom_c.ge.2) &
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc),       'CEDS', pccs(:, :, :) * prhodj(:, :, :) )
-    if ( lcold .and. nmom_i.ge.2) &
+    if ( nmom_i.ge.2) &
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni),       'CEDS', pcis(:, :, :) * prhodj(:, :, :) )
     if ( lscav .and. laero_mass ) &
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', pmas(:, :, :) * prhodj(:, :, :) )
-    if ( lwarm ) then
+    if ( nmom_c.ge.2 ) then
       do jl = 1, nmod_ccn
         idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + jl
         call Budget_store_end( tbudgets(idx), 'CEDS', pnfs(:, :, :, jl) * prhodj(:, :, :) )
@@ -1295,7 +1295,7 @@ if ( nbumod == kmi .and. lbu_enable ) then
         call Budget_store_end( tbudgets(idx), 'CEDS', pnas(:, :, :, jl) * prhodj(:, :, :) )
       end do
     end if
-    if ( lcold ) then
+    if ( nmom_i.ge.2 ) then
       do jl = 1, nmod_ifn
         idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_free - 1 + jl
         call Budget_store_end( tbudgets(idx), 'CEDS', pifs(:, :, :, jl) * prhodj(:, :, :) )

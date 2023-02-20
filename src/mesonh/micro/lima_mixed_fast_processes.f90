@@ -309,13 +309,13 @@ LOGICAL :: M2_ICE
 !-------------------------------------------------------------------------------
 !
 M2_ICE = NMOM_S.GE.2 .AND. NMOM_G.GE.2
-IF (LHAIL) M2_ICE = M2_ICE .AND. NMOM_H.GE.2
+IF (NMOM_H.GE.1) M2_ICE = M2_ICE .AND. NMOM_H.GE.2
 !
 !                         #################
 !                         FAST RS PROCESSES
 !                         #################
 !
-SNOW: IF (LSNOW) THEN
+SNOW: IF (NMOM_S.GE.1) THEN
 !
 !
 !*       1.1  Cloud droplet riming of the aggregates  
@@ -832,7 +832,7 @@ ZZW1(:,2:3) = 0.0
 GACC(:) = (PRRT1D(:)>XRTMIN(3)) .AND. (PRST1D(:)>XRTMIN(5)) .AND. (PRRS1D(:)>XRTMIN(3)/PTSTEP) .AND. (PZT(:)<XTT)
 IGACC = COUNT( GACC(:) )
 !
-IF( IGACC>0 .AND. LRAIN) THEN
+IF( IGACC>0 .AND. NMOM_R.GE.2) THEN
   ! Budget storage
   if ( nbumod == kmi .and. lbu_enable ) then
     if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'ACC', &
@@ -1269,7 +1269,7 @@ if ( nbumod == kmi .and. lbu_enable ) then
                                          Unpack( pcss1d(:), mask = gmicro(:, :, :), field = pcss(:, :, :) ) * prhodj(:, :, :) )
                   call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ng), 'WETG', &
                                          Unpack( pcgs1d(:), mask = gmicro(:, :, :), field = pcgs(:, :, :) ) * prhodj(:, :, :) )
-                  if (LHAIL) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nh), 'WETG', &
+                  if (NMOM_H.GE.2) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nh), 'WETG', &
                                          Unpack( pchs1d(:), mask = gmicro(:, :, :), field = pchs(:, :, :) ) * prhodj(:, :, :) )
        end if
   end if
@@ -1506,7 +1506,7 @@ END WHERE
 !
 ZZW(:) = 0.0
 NHAIL = 0.
-IF (LHAIL) NHAIL = 1.
+IF (NMOM_H.GE.1) NHAIL = 1.
 DO JJ=1, SIZE(PRGT1D)
    IF ( PRGT1D(JJ)>XRTMIN(6) .AND. PZT(JJ)<XTT .AND. &
         (ZRDRYG(JJ)-ZZW1(JJ,2)-ZZW1(JJ,3))>(ZRWETG(JJ)-ZZW1(JJ,5)-ZZW1(JJ,6)) .AND. (ZRWETG(JJ)-ZZW1(JJ,5)-ZZW1(JJ,6))>0.0 ) THEN
@@ -1576,7 +1576,7 @@ if ( nbumod == kmi .and. lbu_enable ) then
                                          Unpack( pcss1d(:), mask = gmicro(:, :, :), field = pcss(:, :, :) ) * prhodj(:, :, :) )
                   call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ng), 'WETG', &
                                          Unpack( pcgs1d(:), mask = gmicro(:, :, :), field = pcgs(:, :, :) ) * prhodj(:, :, :) )
-                  if (LHAIL) call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nh), 'WETG', &
+                  if (NMOM_H.GE.2) call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nh), 'WETG', &
                                          Unpack( pchs1d(:), mask = gmicro(:, :, :), field = pchs(:, :, :) ) * prhodj(:, :, :) )
        end if
   end if
@@ -1767,7 +1767,7 @@ end if
 !                         #################
 !
 !
-HAIL: IF (LHAIL) THEN
+HAIL: IF (NMOM_H.GE.1) THEN
 !
 GHAIL(:) = PRHT1D(:)>XRTMIN(7)
 IHAIL = COUNT(GHAIL(:))

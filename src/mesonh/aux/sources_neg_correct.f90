@@ -53,7 +53,7 @@ use modd_budget,     only: lbudget_th, lbudget_rv, lbudget_rc, lbudget_rr, lbudg
 use modd_cst,        only: xci, xcl, xcpd, xcpv, xlstt, xlvtt, xp00, xrd, xtt
 use modd_nsv,        only: nsv_c2r2beg, nsv_c2r2end, nsv_lima_beg, nsv_lima_end, nsv_lima_nc, nsv_lima_nr,&
                            nsv_lima_ni, nsv_lima_ns, nsv_lima_ng, nsv_lima_nh
-use modd_param_lima, only: lcold_lima => lcold, lrain_lima => lrain, lspro_lima => lspro, lwarm_lima => lwarm, &
+use modd_param_lima, only: lspro_lima => lspro, &
                            xctmin_lima => xctmin, xrtmin_lima => xrtmin
 
 use mode_budget,         only: Budget_store_init, Budget_store_end
