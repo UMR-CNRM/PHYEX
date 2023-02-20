@@ -3,10 +3,10 @@
 #set -x
 set -e
 
-# Repertoire où Mesonh MNH-V5-5-0 officiel est installe
-#REFDIR=$HOME
-# Repertoire où MNH-V5-5-0_PHYEX.tar.gz modifie pour accueillir PHYEX se trouve
-#TARGZDIR=$HOME
+#The folowing environment variables can be defined:
+# REFDIR: directory in which the reference compilation directory can be found
+# TARGZDIR: directory where tar.gz files are searched for
+# MNHPACK: directory where tests are build
 
 availTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, 007_16janvier/008_run2_lredf, COLD_BUBBLE/002_mesonh, 
             ARMLES/RUN, COLD_BUBBLE_3D/002_mesonh,OCEAN_LES/004_run2"
@@ -14,6 +14,7 @@ defaultTest="007_16janvier/008_run2"
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- seprator must be in sync with prep_code.sh separator
 
+#Notes for v5.5.0
 #For the OCEAN_LES/004_run2 case, results obtained are different from those obtained with the original version
 #of Meso-NH because of new developments and bug correction. The reference version is given by commit e053c59.
 #In this commit two modifications must be done in turb/mode_tke_eps_sources.f90 to change twice LOCEAN into OOCEAN.
@@ -83,7 +84,7 @@ done
 
 MNHPACK=${MNHPACK:=$HOME/MesoNH/PHYEX}
 REFDIR=${REFDIR:=$PHYEXTOOLSDIR/pack/}
-TARGZDIR=${TARGZDIR:=/home/rodierq}
+TARGZDIR=${TARGZDIR:=$PHYEXTOOLSDIR/pack/}
 if [ -z "${tests-}" ]; then
   tests=$defaultTest
 elif [ $tests == 'ALL' ]; then
@@ -103,26 +104,43 @@ if [ -z "${commit-}" ]; then
   exit 2
 fi
 
+#Name, directory and reference for compiling and executing user pack
+if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
+  fromdir=$commit
+  content_mesonh_version=$(scp $commit/src/mesonh/mesonh_version.json /dev/stdout 2>/dev/null || echo "")
+else
+  fromdir=''
+  if [[ $commit == mesonh${separator}* ]]; then
+    mesonh_version_file="mesonh_version.json"
+  else
+    mesonh_version_file="src/mesonh/mesonh_version.json"
+  fi
+  if echo $commit | grep '^tags/' > /dev/null; then
+    urlcommit=$(echo $commit | cut -d / -f 2-)
+  else
+    urlcommit=$commit
+  fi
+  content_mesonh_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$mesonh_version_file -O - 2>/dev/null || echo "")
+fi
+refversion=$(content_mesonh_version=$content_mesonh_version python3 -c "import json, os; v=os.environ['content_mesonh_version']; print(json.loads(v if len(v)!=0 else '{}').get('refversion', 'MNH-V5-5-0'))")
+if [ $refversion == "MNH-V5-5-0" ]; then
+  targzsuffix="_PHYEX"
+else
+  targzsuffix=""
+fi
+tag=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
+name=${refversion}-$tag
+[ $suppress -eq 1 -a -d $MNHPACK/$name ] && rm -rf $MNHPACK/$name
+
 #Two possibilities are supported for the simulations
 # - they can be done in the the pack we are currently checking
 # - they can be done in the reference pack
 #They are done in the current pack except if the reference pack
 #already contains a tested simulation
 #To check this, we use the case 007_16janvier/008_run2_turb3D
-run_in_ref=$(ls -d $REFDIR/MNH-V5-5-0/MY_RUN/KTEST/007_16janvier/008_run2_turb3D_* 2> /dev/null | tail -1 |wc -l)
-
-#Name and directory for compiling and executing user pack
-fromdir=''
-if echo $commit | grep '/' > /dev/null; then
-  fromdir=$commit
-  tag=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
-else
-  tag=$commit
-fi
-name=MNH-V5-5-1-$tag
-[ $suppress -eq 1 -a -d $MNHPACK/$name ] && rm -rf $MNHPACK/$name
+run_in_ref=$(ls -d $REFDIR/${refversion}/MY_RUN/KTEST/007_16janvier/008_run2_turb3D_* 2> /dev/null | tail -1 |wc -l)
 if [ $run_in_ref -eq 1 ]; then
-  path_user_beg=$REFDIR/MNH-V5-5-1 #pack directory containing the simulation
+  path_user_beg=$REFDIR/${refversion} #pack directory containing the simulation
   path_user_end=_$tag #to be appended to the 'run' simulation directory
 else
   path_user_beg=$MNHPACK/$name #pack directory containing the simulation
@@ -137,9 +155,9 @@ if echo $reference | grep '/' > /dev/null; then
 else
   reftag=$reference
 fi
-refname=MNH-V5-5-1-$reftag
+refname=${refversion}-$reftag
 if [ $run_in_ref -eq 1 ]; then
-  path_ref_beg=$REFDIR/MNH-V5-5-1
+  path_ref_beg=$REFDIR/${refversion}
   if [ "$reference" == "" ]; then
     path_ref_end=
   else
@@ -148,9 +166,9 @@ if [ $run_in_ref -eq 1 ]; then
 else
   path_ref_end=
   if [ "$reference" == "" ]; then
-    path_ref_beg=$REFDIR/MNH-V5-5-1
+    path_ref_beg=$REFDIR/${refversion}
   else
-    path_ref_beg=$MNHPACK/MNH-V5-5-1-$reftag
+    path_ref_beg=$MNHPACK/${refversion}-$reftag
   fi
 fi
 
@@ -164,21 +182,10 @@ if [ $compilation -eq 1 ]; then
 
   # Prepare the pack
   cd $MNHPACK
-#  cp $TARGZDIR/MNH-V5-5-0_PHYEX.tar.gz .
-#  tar xfz MNH-V5-5-0_PHYEX.tar.gz 
-#  rm MNH-V5-5-0_PHYEX.tar.gz
-#  mv MNH-V5-5-0 $name
-#  cp $TARGZDIR/MNH-V5-5-1-1abfa259.tar.gz .
-#  tar xfz MNH-V5-5-1-1abfa259.tar.gz 
-#  rm MNH-V5-5-1-1abfa259.tar.gz 
-#  mv MNH-V5-5-1-1abfa259 $name
-
-  cp $TARGZDIR/MNH-V5-5-1-4458a1e70.tar.gz .
-  tar xfz MNH-V5-5-1-4458a1e70.tar.gz
-  rm MNH-V5-5-1-4458a1e70.tar.gz
-  mv MNH-V5-5-1-4458a1e70 $name
-
-
+  cp $TARGZDIR/${refversion}${targzsuffix}.tar.gz .
+  tar xfz ${refversion}${targzsuffix}.tar.gz 
+  rm ${refversion}${targzsuffix}.tar.gz
+  mv ${refversion} $name
   cd $name/src
   rm -rf PHYEX
 
@@ -215,7 +222,7 @@ if [ $compilation -eq 1 ]; then
   fi
 
   cd $MNHPACK/$name/src/PHYEX/turb
-  # Delete files of MNH-V5-5-0/src/MNH and MNH/src/LIB/SURCOUCHE/src with same name
+  # Delete files of ${refversion}/src/MNH and MNH/src/LIB/SURCOUCHE/src with same name
   for rep in turb micro conv aux ; do
     cd ../$rep
     for f in *.f90; do
@@ -226,7 +233,7 @@ if [ $compilation -eq 1 ]; then
   done
   cd ..
   
-  # Delete old files of MNH-V5-5-0/src/MNH that is now called by mode_... NO /aux NEEDED!
+  # Delete old files of ${refversion}/src/MNH that is now called by mode_... NO /aux NEEDED!
   find turb micro conv -name 'mode_*' > remove_non_mode.sh
   sed -i 's/turb\/mode_/rm -f MNH\//g' remove_non_mode.sh
   sed -i 's/micro\/mode_/rm -f MNH\//g' remove_non_mode.sh
@@ -270,13 +277,13 @@ if [ $run -ge 1 ]; then
     case=$(echo $t | cut -d / -f 1)
     exedir=$(echo $t | cut -d / -f 2)
     if [ $run_in_ref -eq 1 ]; then
-      cd $REFDIR/MNH-V5-5-1/MY_RUN/KTEST/$case/
+      cd $REFDIR/${refversion}/MY_RUN/KTEST/$case/
       [ ! -d ${exedir}_$commit ] && cp -R ${exedir} ${exedir}_$commit
-      cd $REFDIR/MNH-V5-5-1/MY_RUN/KTEST/$case/${exedir}_$commit
+      cd $REFDIR/${refversion}/MY_RUN/KTEST/$case/${exedir}_$commit
     else
       #If the test case didn't exist in the tar.gz, we copy it from from the reference version
       rep=$MNHPACK/$name/MY_RUN/KTEST/$case
-      [ ! -d $rep ] && cp -r $REFDIR/MNH-V5-5-1/MY_RUN/KTEST/$case $rep
+      [ ! -d $rep ] && cp -r $REFDIR/${refversion}/MY_RUN/KTEST/$case $rep
       cd $rep
 
       #Loop on the directories
@@ -287,18 +294,18 @@ if [ $run -ge 1 ]; then
             if [ $rep == ${exedir} ]; then
               #this is the case we want to run
               rm -rf $rep
-              cp -r $REFDIR/MNH-V5-5-1/MY_RUN/KTEST/$case/$rep .
+              cp -r $REFDIR/${refversion}/MY_RUN/KTEST/$case/$rep .
             fi
           else
             #This directory might be neede to run the test case, we take the reference version
             rm -rf $rep
-            ln -s $REFDIR/MNH-V5-5-1/MY_RUN/KTEST/$case/$rep 
+            ln -s $REFDIR/${refversion}/MY_RUN/KTEST/$case/$rep 
           fi
         fi
       done
 
       #In case subcase does not exist we create it
-      [ ! -d ${exedir} ] && cp -r $REFDIR/MNH-V5-5-1/MY_RUN/KTEST/$case/${exedir} .
+      [ ! -d ${exedir} ] && cp -r $REFDIR/${refversion}/MY_RUN/KTEST/$case/${exedir} .
       cd ${exedir}
     fi
 
