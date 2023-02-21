@@ -469,6 +469,7 @@ CHARACTER (LEN=*),  INTENT(IN) :: HINIFILEPGD ! name of PGD file
 !
 !*       0.2   declarations of local variables
 !
+CHARACTER(LEN=3) :: YMODEL
 INTEGER :: ILUSEG,ILUOUT ! logical unit numbers of EXSEG file and outputlisting
 INTEGER :: JS,JCI,JI,JSV       ! Loop indexes 
 LOGICAL :: GRELAX              
@@ -964,6 +965,16 @@ END IF
 ! Blaze
 CALL UPDATE_NAM_FIREn
 IF (LBLAZE) THEN
+  ! Blaze is only allowed on finer model(s)
+  DO JI = 1, NMODEL
+    IF ( JI /= KMI .AND. NDAD(JI) == KMI ) THEN
+      WRITE( YMODEL, '( I3 )' ) JI
+      CMNHMSG(1) = 'Blaze fire model only allowed on finer model'
+      CMNHMSG(2) = '=> disabled on model ' // YMODEL
+      CALL PRINT_MSG( NVERB_WARNING, 'GEN', 'READ_EXSEG_n' )
+      LBLAZE = .FALSE.
+    END IF
+  END DO
   CALL TEST_NAM_VAR(ILUOUT,'CPROPAG_MODEL',CPROPAG_MODEL,'SANTONI2011')
   CALL TEST_NAM_VAR(ILUOUT,'CHEAT_FLUX_MODEL',CHEAT_FLUX_MODEL,'CST','EXP','EXS')
   CALL TEST_NAM_VAR(ILUOUT,'CLATENT_FLUX_MODEL',CLATENT_FLUX_MODEL,'CST','EXP')
