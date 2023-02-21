@@ -296,7 +296,7 @@ ZSOURCE(IIJB:IIJE,1:IKT) = ( PRTKES(IIJB:IIJE,1:IKT) +  PRTKEMS(IIJB:IIJE,1:IKT)
 IF (OOCEAN) THEN
   !for ocean:wave breaking  simple/very rough param wE = 100 Ustar**3 where ustar is the Tau_atmi/rhocea  
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-/bin/bash: line 1: q: command not found
+  ZSOURCE(IIJB:IIJE,IKE)=ZSOURCE(IIJB:IIJE,IKE)-1.E2*((PSFUM(IIJB:IIJE)**2 + PSFVM(IIJB:IIJE)**2)**1.5) /PDZZ(IIJB:IIJE,IKE)  
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)  
 END IF
 ! Compute the vector giving the elements just under the diagonal for the 
