@@ -341,29 +341,12 @@ DO JK = IKTB,IKTE
                       PRST(JIJ,JK)>ICED%XRTMIN(5) .OR. &
                       PRGT(JIJ,JK)>ICED%XRTMIN(6) .OR. &
                       PRHT(JIJ,JK)>ICED%XRTMIN(7)
-#ifdef REPRO55
-      LLMICRO(JIJ,JK)=LLMICRO(JIJ,JK) .OR. &
-                      PRCS(JIJ,JK)>ZRSMIN(2) .OR. &
-                      PRRS(JIJ,JK)>ZRSMIN(3) .OR. &
-                      PRIS(JIJ,JK)>ZRSMIN(4) .OR. &
-                      PRSS(JIJ,JK)>ZRSMIN(5) .OR. &
-                      PRGS(JIJ,JK)>ZRSMIN(6) .OR. &
-                      PRHS(JIJ,JK)>ZRSMIN(7)
-#endif
     ELSE
       LLMICRO(JIJ,JK)=PRCT(JIJ,JK)>ICED%XRTMIN(2) .OR. &
                       PRRT(JIJ,JK)>ICED%XRTMIN(3) .OR. &
                       PRIT(JIJ,JK)>ICED%XRTMIN(4) .OR. &
                       PRST(JIJ,JK)>ICED%XRTMIN(5) .OR. &
                       PRGT(JIJ,JK)>ICED%XRTMIN(6)
-#ifdef REPRO55
-      LLMICRO(JIJ,JK)=LLMICRO(JIJ,JK) .OR. &
-                      PRCS(JIJ,JK)>ZRSMIN(2) .OR. &
-                      PRRS(JIJ,JK)>ZRSMIN(3) .OR. &
-                      PRIS(JIJ,JK)>ZRSMIN(4) .OR. &
-                      PRSS(JIJ,JK)>ZRSMIN(5) .OR. &
-                      PRGS(JIJ,JK)>ZRSMIN(6)
-#endif
     ENDIF
   ENDDO
 ENDDO
@@ -426,11 +409,7 @@ DO JK=IKTB,IKTE
     IF (.NOT. LLMICRO(JIJ, JK)) THEN
       LLW3D(JIJ, JK)=.TRUE.
       ZW3D(JIJ, JK)=ZZ_LSFACT(JIJ, JK)/PEXN(JIJ, JK)
-#ifdef REPRO55
-#else
       PCIT(JIJ,JK)=0. !ri=0 because where are in the not odmicro case
-#endif
- 
     ELSE
       LLW3D(JIJ, JK)=.FALSE.
     ENDIF

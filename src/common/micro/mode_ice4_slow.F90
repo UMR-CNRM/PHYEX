@@ -113,7 +113,7 @@ ENDDO
 DO JL=1, KSIZE
   IF(PRVT(JL)>ICED%XRTMIN(1) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
       PRVDEPS(JL) = ( PSSI(JL)/(PRHODREF(JL)*PAI(JL)) ) *                               &
                  ( ICEP%X0DEPS*PLBDAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS )
 #else
@@ -135,7 +135,7 @@ DO JL=1, KSIZE
     IF(.NOT. LDSOFT) THEN
       PRIAGGS(JL) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JL)-CST%XTT) ) &
                          * PRIT(JL)                      &
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
                          * PLBDAS(JL)**ICEP%XEXIAGGS          &
                          * PRHODREF(JL)**(-ICED%XCEXVT)
 #else

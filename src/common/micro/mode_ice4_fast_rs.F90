@@ -111,7 +111,7 @@ DO JL=1, KSIZE
       PRS_TEND(JL, IFREEZ1)=PKA(JL)*(CST%XTT-PT(JL)) +                              &
                            &(PDV(JL)*(CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(JL)-CST%XTT)) &
                            &*(CST%XESTT-PRS_TEND(JL, IFREEZ1))/(CST%XRV*PT(JL))           )
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
       PRS_TEND(JL, IFREEZ1)=PRS_TEND(JL, IFREEZ1)* (ICEP%X0DEPS*       PLBDAS(JL)**ICEP%XEX0DEPS +     &
                            &                        ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS )/ &
 #else
@@ -139,7 +139,7 @@ ENDDO
 !
 DO JL=1, KSIZE
   IF (PRCT(JL)>ICED%XRTMIN(2) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
     ZZW(JL) = PLBDAS(JL)
 #else
     ZZW(JL) = (PLBDAS(JL)**ICED%XALPHAS + ICED%XFVELOS**ICED%XALPHAS)**(1./ICED%XALPHAS)
@@ -166,7 +166,7 @@ IF(.NOT. LDSOFT) THEN
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE (GRIM(1:KSIZE))
       PRS_TEND(1:KSIZE, IRCRIMSS) = ICEP%XCRIMSS * ZZW1(1:KSIZE) * PRCT(1:KSIZE) & ! RCRIMSS
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
                                       * PLBDAS(1:KSIZE)**ICEP%XEXCRIMSS &
                                       * PRHODREF(1:KSIZE)**(-ICED%XCEXVT)
 #else
@@ -184,7 +184,7 @@ IF(.NOT. LDSOFT) THEN
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GRIM(1:KSIZE))
       PRS_TEND(1:KSIZE, IRCRIMS)=ICEP%XCRIMSG * PRCT(1:KSIZE)               & ! RCRIMS
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
                                    * PLBDAS(1:KSIZE)**ICEP%XEXCRIMSG  &
                                    * PRHODREF(1:KSIZE)**(-ICED%XCEXVT)
 #else
@@ -201,7 +201,7 @@ IF(.NOT. LDSOFT) THEN
       !$mnh_expand_where(JL=1:KSIZE)
       WHERE(GRIM(1:KSIZE))
         ZZW(1:KSIZE) = PRS_TEND(1:KSIZE, IRCRIMS) - PRS_TEND(1:KSIZE, IRCRIMSS) ! RCRIMSG
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
         PRS_TEND(1:KSIZE, IRSRIMCG)=ICEP%XSRIMCG * PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG*(1.0-ZZW2(1:KSIZE))
 #else
         PRS_TEND(1:KSIZE, IRSRIMCG)=ICEP%XSRIMCG * PRST(1:KSIZE)*PRHODREF(1:KSIZE) &
@@ -209,7 +209,7 @@ IF(.NOT. LDSOFT) THEN
 #endif
         PRS_TEND(1:KSIZE, IRSRIMCG)=ZZW(1:KSIZE)*PRS_TEND(1:KSIZE, IRSRIMCG)/ &
                        MAX(1.E-20, &
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
                            ICEP%XSRIMCG3*ICEP%XSRIMCG2*PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG2*(1.-ZZW3(1:KSIZE)) - &
 #else
                            ICEP%XSRIMCG3*ICEP%XSRIMCG2*PRST(1:KSIZE)*PRHODREF(1:KSIZE) &
@@ -270,7 +270,7 @@ IF(.NOT. LDSOFT) THEN
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GACC(1:KSIZE))
       ZZW(1:KSIZE) =                                                        & !! coef of RRACCS
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
             ICEP%XFRACCSS*( PLBDAS(1:KSIZE)**ICED%XCXS )*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) ) &
 #else
             ICEP%XFRACCSS*( PRST(1:KSIZE)*PLBDAS(1:KSIZE)**ICED%XBS )*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT) ) &
@@ -294,7 +294,7 @@ IF(.NOT. LDSOFT) THEN
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GACC(1:KSIZE))
       PRS_TEND(1:KSIZE, IRSACCRG) = ICEP%XFSACCRG*ZZW3(1:KSIZE)*                    & ! RSACCRG
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
           ( PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS) )*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) ) &
 #else
           ( PRST(1:KSIZE))*( PRHODREF(1:KSIZE)**(-ICED%XCEXVT) ) &
@@ -343,7 +343,7 @@ DO JL=1, KSIZE
       ! compute RSMLT
       !
       PRSMLTG(JL)  = ICEP%XFSCVMG*MAX(0., (-PRSMLTG(JL) * &
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
                  (ICEP%X0DEPS*       PLBDAS(JL)**ICEP%XEX0DEPS +     &
                  ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS)    &
 #else

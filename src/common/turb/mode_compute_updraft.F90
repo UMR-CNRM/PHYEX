@@ -1021,11 +1021,7 @@ DO JIJ=IIJB,IIJE
                (PRTM(JIJ,KK)-ZDZ*(PRTM(JIJ,KK)-PRTM(JIJ,JKLIM))/PDZZ(JIJ,KK)) + &
                (1. - ZKIC_INIT)*PRT_UP(JIJ)
   ELSE
-#ifdef REPRO55
-    ZMIXTHL(JIJ) = 0.1
-#else
     ZMIXTHL(JIJ) = 300.
-#endif
     ZMIXRT(JIJ) = 0.1
   ENDIF
 ENDDO

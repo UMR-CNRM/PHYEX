@@ -339,7 +339,7 @@ IF(KRR==7) THEN
   IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RH), 'WETH', (ZW1(:, :)+ZW2(:, :)+ZW3(:, :)+ &
                                                                         &ZW4(:, :)+ZW5(:, : ))  *PRHODJ(:, :))
 
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
   ZW1(:,:) = 0.
   DO JL=1, KSIZE
     ZW1(K1(JL), K2(JL)) = PBU_PACK(JL, IRGWETH) * ZINV_TSTEP
@@ -348,10 +348,7 @@ IF(KRR==7) THEN
 #ifdef REPRO48
   IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'HGCV', (-ZW5(:, :)-ZW1(:, :))*PRHODJ(:, :))
 #endif
-#ifdef REPRO55
-  IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'HGCV', -ZW1(:, :)*PRHODJ(:, :))
-#endif
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
   IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RH), 'HGCV',  ZW1(:, :)*PRHODJ(:, :))
 #endif
 
@@ -376,7 +373,7 @@ IF(KRR==7) THEN
     ZW5(K1(JL), K2(JL)) = PBU_PACK(JL, IRGDRYH) * ZINV_TSTEP
   END DO
   ZW6(:,:) = 0.
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
   !ZW6 must be removed when REPRO* will be suppressed
   DO JL=1, KSIZE
     ZW6(K1(JL), K2(JL)) = PBU_PACK(JL, IRDRYHG) * ZINV_TSTEP
@@ -393,10 +390,10 @@ IF(KRR==7) THEN
                                                                       &ZW4(:, :)+ZW5(:, :)-ZW6(:, :)) &
                                                                       &                             *PRHODJ(:, :))
 
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
 #else
   !When REPRO48 will be suppressed, ZW6 must be removed
-  ZW(:,:) = 0.
+  ZW1(:,:) = 0.
   DO JL=1, KSIZE
     ZW1(K1(JL), K2(JL)) = PBU_PACK(JL, IRDRYHG) * ZINV_TSTEP
   END DO

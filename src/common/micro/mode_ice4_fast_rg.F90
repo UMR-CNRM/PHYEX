@@ -191,7 +191,7 @@ IF(.NOT. LDSOFT) THEN
     WHERE(GDRY(1:KSIZE))
       PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
                                     / ICEP%XCOLSG &
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
                   *(PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
                   *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.))                    &
 #else

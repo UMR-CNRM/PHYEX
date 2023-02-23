@@ -234,18 +234,7 @@ ZCLDINI = -1. ! Dummy Initialized cloud input to icecloud routine
 PIFR = 10. ! ratio of cloud ice water mixing ratio wet to dry
            ! part of a gridbox
 ZDZREF = ICEP%XFRMIN(25) ! Thickness for unchanged vqsigsat (only used for LHGT_QS)
-! Init of the HALO (should be on HALO points only)
-#ifdef REPRO55
-PRC_OUT = PRC_IN
-PRV_OUT = PRV_IN
-PRI_OUT = PRI_IN
-IF(PRESENT(PHLC_HRC)) THEN
- PHLC_HRC = 0.
- PHLC_HCF = 0.
- PHLI_HRI = 0.
- PHLI_HCF = 0.
-END IF
-#endif
+!
 IF(OCND2)ZPRIFACT = 0.
 !
 !
@@ -277,7 +266,7 @@ ELSE
   DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE
       ZCPD(JIJ,JK) = CST%XCPD + CST%XCPV*PRV_IN(JIJ,JK) + CST%XCL*PRC_IN(JIJ,JK) + CST%XCI*PRI_IN(JIJ,JK) + &
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
 #else
                                   CST%XCL*PRR(JIJ,JK) +  &
 #endif

@@ -371,11 +371,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
       ENDDO
     ENDDO
     DO JL=1, KMICRO
-#ifdef REPRO55
-      PCIT(JL)=PCIT(JL) * MAX(0., -SIGN(1., -PVART(JL,IRI)))
-#else
       IF (PVART(JL,IRI)<=0. .AND. LDMICRO(JL)) PCIT(JL) = 0.
-#endif
       ZTIME(JL)=ZTIME(JL)+ZMAXTIME(JL)
     ENDDO
     !-------------------------------------------------------------------------------

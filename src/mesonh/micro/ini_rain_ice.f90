@@ -424,7 +424,7 @@ XLBR   = ( XAR*XCCR*MOMG(XALPHAR,XNUR,XBR) )**(-XLBEXR)
 XLBEXI = 1.0/(-XBI)
 XLBI   = ( XAI*MOMG(XALPHAI,XNUI,XBI) )**(-XLBEXI)
 !
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
 #else
 XNS   = 1.0/(XAS*MOMG(XALPHAS,XNUS,XBS))
 #endif
@@ -443,7 +443,7 @@ XLBDAS_MAX = 100000.0
 !
 ZCONC_MAX  = 1.E6 ! Maximal concentration for falling particules set to 1 per cc
 IF(XCCS>0. .AND. XCXS>0. )XLBDAS_MAX = ( ZCONC_MAX/XCCS )**(1./XCXS)
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
 #else
 IF (LSNOW_T) XLBDAS_MAX = 1.E6
 XLBDAS_MIN = 1.E-10
@@ -500,7 +500,7 @@ XEXCSEDI =-0.9324*3.0
 WRITE (KLUOUT,FMT=*)' PRISTINE ICE SEDIMENTATION for columns XFSEDI =',XFSEDI
 !
 !
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
 XEXSEDS = (XBS+XDS-XCXS)/(XBS-XCXS)
 XFSEDS  = XCS*XAS*XCCS*MOMG(XALPHAS,XNUS,XBS+XDS)*                         &
          (XAS*XCCS*MOMG(XALPHAS,XNUS,XBS))**(-XEXSEDS)*(ZRHO00)**XCEXVT
@@ -587,7 +587,7 @@ XSCFAC = (0.63**(1./3.))*SQRT((ZRHO00)**XCEXVT) ! One assumes Sc=0.63
 X0DEPI = (4.0*XPI)*XC1I*XF0I*MOMG(XALPHAI,XNUI,1.)
 X2DEPI = (4.0*XPI)*XC1I*XF2I*XC_I*MOMG(XALPHAI,XNUI,XDI+2.0)
 !
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
 X0DEPS = (4.0*XPI)*XCCS*XC1S*XF0S*MOMG(XALPHAS,XNUS,1.)
 X1DEPS = (4.0*XPI)*XCCS*XC1S*XF1S*SQRT(XCS)*MOMG(XALPHAS,XNUS,0.5*XDS+1.5)
 XEX0DEPS = XCXS-1.0
@@ -647,7 +647,7 @@ END IF
 !
 XCOLIS   = 0.25 ! Collection efficiency of I+S
 XCOLEXIS = 0.05 ! Temperature factor of the I+S collection efficiency
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
 XFIAGGS  = (XPI/4.0)*XCOLIS*XCCS*XCS*(ZRHO00**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
 XEXIAGGS = XCXS-XDS-2.0
 #else
@@ -704,7 +704,7 @@ XEX1EVAR = -1.0-0.5*(XDR+3.0)
 !
 XDCSLIM  = 0.007 ! D_cs^lim = 7 mm as suggested by Farley et al. (1989)
 XCOLCS   = 1.0
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
 XEXCRIMSS= XCXS-XDS-2.0
 XCRIMSS  = (XPI/4.0)*XCOLCS*XCCS*XCS*(ZRHO00**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0)
 #else
@@ -713,7 +713,7 @@ XCRIMSS  = XNS * (XPI/4.0)*XCOLCS*XCS*(ZRHO00**XCEXVT)*MOMG(XALPHAS,XNUS,XDS+2.0
 #endif
 XEXCRIMSG= XEXCRIMSS
 XCRIMSG  = XCRIMSS
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
 XSRIMCG  = XCCS*XAS*MOMG(XALPHAS,XNUS,XBS)
 XEXSRIMCG= XCXS-XBS
 XSRIMCG2 = XCCS*XAG*MOMG(XALPHAS,XNUS,XBG)
@@ -755,7 +755,7 @@ XRIMINTP2 = 1.0 + XRIMINTP1*LOG( XDCSLIM/(XGAMINC_BOUND_MIN)**(1.0/XALPHAS) )
 !
 !*       7.2    Constants for the accretion of raindrops onto aggregates
 !
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
 XFRACCSS = ((XPI**2)/24.0)*XCCS*XCCR*XRHOLW*(ZRHO00**XCEXVT)
 #else
 XFRACCSS = XNS*((XPI**2)/24.0)*XCCR*XRHOLW*(ZRHO00**XCEXVT)
@@ -765,7 +765,7 @@ XLBRACCS1   =    MOMG(XALPHAS,XNUS,2.)*MOMG(XALPHAR,XNUR,3.)
 XLBRACCS2   = 2.*MOMG(XALPHAS,XNUS,1.)*MOMG(XALPHAR,XNUR,4.)
 XLBRACCS3   =                          MOMG(XALPHAR,XNUR,5.)
 !
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
 XFSACCRG = (XPI/4.0)*XAS*XCCS*XCCR*(ZRHO00**XCEXVT)
 #else
 XFSACCRG = XNS*(XPI/4.0)*XAS*XCCR*(ZRHO00**XCEXVT)
@@ -962,7 +962,7 @@ XCOLSG   = 0.01 ! Collection efficiency of S+G
 XCOLEXSG = 0.1  ! Temperature factor of the S+G collection efficiency
 WRITE (KLUOUT, FMT=*) ' NEW Constants for the aggregate collection by the graupeln'
 WRITE (KLUOUT, FMT=*) ' XCOLSG, XCOLEXSG  = ',XCOLSG,XCOLEXSG
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
 XFSDRYG = (XPI/4.0)*XCOLSG*XCCG*XCCS*XAS*(ZRHO00**XCEXVT)
 #else
 XFSDRYG = XNS*(XPI/4.0)*XCOLSG*XCCG*XAS*(ZRHO00**XCEXVT)
@@ -1182,7 +1182,7 @@ XFWETH = (XPI/4.0)*XCCH*XCH*(ZRHO00**XCEXVT)*MOMG(XALPHAH,XNUH,XDH+2.0)
 !
 XCOLSH   = 0.01 ! Collection efficiency of S+H
 XCOLEXSH = 0.1  ! Temperature factor of the S+H collection efficiency
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
 XFSWETH = (XPI/4.0)*XCCH*XCCS*XAS*(ZRHO00**XCEXVT)
 #else
 XFSWETH = XNS*(XPI/4.0)*XCCH*XAS*(ZRHO00**XCEXVT) ! Wurtz

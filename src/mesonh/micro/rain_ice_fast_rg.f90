@@ -204,7 +204,7 @@ REAL,    DIMENSION(size(PRHODREF),7) :: ZZW1              ! Work arrays
       JL = I1(JJ)
       ZZW1(JL,3) = MIN( PRSS(JL),XFSDRYG*ZVEC3(JJ)                         & ! RSDRYG
                                       * EXP( XCOLEXSG*(PZT(JL)-XTT) )  &
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
                     *( ZVECLBDAS(JJ)**(XCXS-XBS) )*( ZVECLBDAG(JJ)**XCXG )    &
                     *( PRHODREF(JL)**(-XCEXVT-1.) )                    &
 #else

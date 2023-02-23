@@ -136,7 +136,7 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZZW1, ZZW2, ZZW3, ZZW4 ! Work arrays
     DO JJ = 1, IGRIM
       JL = I1(JJ)
       ZZW1(JJ) = MIN( PRCS(JL),                                &
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
                      XCRIMSS * ZVEC1(JJ) * PRCT(JL)                & ! RCRIMSS
                                        *   ZVECLBDAS(JJ)**XEXCRIMSS &
                                        * PRHODREF(JL)**(-XCEXVT) )
@@ -163,7 +163,7 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZZW1, ZZW2, ZZW3, ZZW4 ! Work arrays
       JL = I1(JJ)
       IF ( PRSS(JL) > 0.0 ) THEN
         ZZW2(JJ) = MIN( PRCS(JL),                     &
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
                     XCRIMSG * PRCT(JL)                & ! RCRIMSG
                             *  ZVECLBDAS(JJ)**XEXCRIMSG  &
                             * PRHODREF(JL)**(-XCEXVT) &
@@ -275,7 +275,7 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZZW1, ZZW2, ZZW3, ZZW4 ! Work arrays
     DO JJ = 1, IGACC
       JL = I1(JJ)
       ZZW2(JJ) =                                            & !! coef of RRACCS
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
               XFRACCSS*( ZVECLBDAS(JJ)**XCXS )*( PRHODREF(JL)**(-XCEXVT-1.) ) &
 #else
               XFRACCSS*( PRST(JL)*ZVECLBDAS(JJ)**XBS )*( PRHODREF(JL)**(-XCEXVT) ) &
@@ -325,7 +325,7 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZZW1, ZZW2, ZZW3, ZZW4 ! Work arrays
         ZZW2(JJ) = MAX( MIN( PRRS(JL),ZZW2(JJ)-ZZW4(JJ) ),0.0 )       ! RRACCSG
         IF ( ZZW2(JJ) > 0.0 ) THEN
           ZZW3(JJ) = MIN( PRSS(JL),XFSACCRG*ZVEC3(JJ)*                     & ! RSACCRG
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
                 ( ZVECLBDAS(JJ)**(XCXS-XBS) )*( PRHODREF(JL)**(-XCEXVT-1.) ) &
 #else
                 PRST(JL)*( PRHODREF(JL)**(-XCEXVT) ) &
@@ -376,7 +376,7 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZZW1, ZZW2, ZZW3, ZZW4 ! Work arrays
 !
 ! compute RSMLT
 !
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
     ZZW(:)  = MIN( PRSS(:), XFSCVMG*MAX( 0.0,( -ZZW(:) *             &
                            ( X0DEPS*       PLBDAS(:)**XEX0DEPS +     &
                              X1DEPS*PCJ(:)*PLBDAS(:)**XEX1DEPS ) ) / &
