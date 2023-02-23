@@ -403,11 +403,11 @@ IF( INUCT >= 1 ) THEN
    !
    !* update the concentration of activated CCN = Na
    !
-      PNAT(:,:,:,JMOD) = PNAT(:,:,:,JMOD) + PCLDFR(:,:,:) * UNPACK( ZZW1(:), MASK=GNUCT(:,:,:), FIELD=0.0 )
+      PNAT(:,:,:,JMOD) = PNAT(:,:,:,JMOD) + ZCLDFR(:,:,:) * UNPACK( ZZW1(:), MASK=GNUCT(:,:,:), FIELD=0.0 )
    !
    !* update the concentration of free CCN = Nf
    !
-      PNFT(:,:,:,JMOD) = PNFT(:,:,:,JMOD) - PCLDFR(:,:,:) * UNPACK( ZZW1(:), MASK=GNUCT(:,:,:), FIELD=0.0 )
+      PNFT(:,:,:,JMOD) = PNFT(:,:,:,JMOD) - ZCLDFR(:,:,:) * UNPACK( ZZW1(:), MASK=GNUCT(:,:,:), FIELD=0.0 )
    !
    !* prepare to update the cloud water concentration 
    !
@@ -429,12 +429,12 @@ IF( INUCT >= 1 ) THEN
       PRCT(:,:,:) = PRCT(:,:,:) + ZW(:,:,:) 
       PCCT(:,:,:) = PCCT(:,:,:) + UNPACK( ZZW6(:),MASK=GNUCT(:,:,:),FIELD=0. ) 
    ELSE
-      ZW(:,:,:) = MIN( PCLDFR(:,:,:) * UNPACK( ZZW1(:),MASK=GNUCT(:,:,:),FIELD=0.0 ),PRVT(:,:,:) )
-      PCCT(:,:,:) = PCCT(:,:,:) + PCLDFR(:,:,:) * UNPACK( ZZW6(:),MASK=GNUCT(:,:,:),FIELD=0. ) 
+      ZW(:,:,:) = MIN( ZCLDFR(:,:,:) * UNPACK( ZZW1(:),MASK=GNUCT(:,:,:),FIELD=0.0 ),PRVT(:,:,:) )
+      PCCT(:,:,:) = PCCT(:,:,:) + ZCLDFR(:,:,:) * UNPACK( ZZW6(:),MASK=GNUCT(:,:,:),FIELD=0. ) 
    END IF
 !
    ZW(:,:,:)   = UNPACK( 100.0*ZSMAX(:),MASK=GNUCT(:,:,:),FIELD=0.0 )
-   ZW2(:,:,:)  = PCLDFR(:,:,:) * UNPACK( ZZW6(:),MASK=GNUCT(:,:,:),FIELD=0.0 )
+   ZW2(:,:,:)  = ZCLDFR(:,:,:) * UNPACK( ZZW6(:),MASK=GNUCT(:,:,:),FIELD=0.0 )
 !
 !
 !-------------------------------------------------------------------------------
