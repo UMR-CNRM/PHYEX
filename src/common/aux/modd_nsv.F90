@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2001-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2001-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -52,6 +52,7 @@ REAL,DIMENSION(JPSVMAX) :: XSVMIN ! minimum value for SV variables
 LOGICAL :: LINI_NSV(JPMODELMAX) = .FALSE. ! becomes True when routine INI_NSV is called
 !
 CHARACTER(LEN=NMNHNAMELGTMAX), DIMENSION(:,:), ALLOCATABLE, TARGET :: CSV_CHEM_LIST_A !Names of all the chemical variables
+CHARACTER(LEN=6),              DIMENSION(:,:), ALLOCATABLE, TARGET :: CSV_A           !Names of the scalar variables
 TYPE(tfieldmetadata), DIMENSION(:,:), ALLOCATABLE, TARGET :: TSVLIST_A !Metadata of all the scalar variables
 
 INTEGER,DIMENSION(JPMODELMAX)::NSV_A = 0 ! total number of scalar variables
@@ -166,9 +167,9 @@ INTEGER,DIMENSION(JPMODELMAX)::NSV_SNWEND_A = 0 ! NSV_SNWBEG_A...NSV_SNWEND_A
 ! variables updated for the current model
 !
 CHARACTER(LEN=NMNHNAMELGTMAX), DIMENSION(:), POINTER :: CSV_CHEM_LIST !Names of all the chemical variables
-TYPE(tfieldmetadata), DIMENSION(:), POINTER :: TSVLIST !Metadata of all the scalar variables
+CHARACTER(LEN=6),              DIMENSION(:), POINTER :: CSV           !Names of the scalar variables
 
-CHARACTER(LEN=6), DIMENSION(:), ALLOCATABLE :: CSV ! name of the scalar variables
+TYPE(tfieldmetadata), DIMENSION(:), POINTER :: TSVLIST !Metadata of all the scalar variables
 
 INTEGER :: NSV         = 0 ! total number of user scalar variables
 !
