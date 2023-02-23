@@ -366,7 +366,7 @@ CONTAINS
     ! ******* for snow
     DO JIJ = IIJB, IIJE
       ZQP=ZSED(JIJ,IKPLUS,JRR)*ZTSORHODZ(JIJ)
-      IF ((PRXT(JIJ) > ICED%XRTMIN(JRR)) .OR. (ZQP > ICED%XRTMIN(JRR))) THEN
+      IF ((PRXT(JIJ) > ICED%XRTMIN(JRR)) ) THEN
         !Compute lambda_snow parameter
         IF (PARAMI%LSNOW_T) THEN 
           IF(PT(JIJ,JK)>CST%XTT-10.0) THEN
