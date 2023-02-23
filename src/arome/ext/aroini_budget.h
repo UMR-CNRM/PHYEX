@@ -1,8 +1,0 @@
-INTERFACE
-SUBROUTINE AROINI_BUDGET(LDBU_ENABLE)
-!     ##########################################################################
-USE PARKIND1  ,ONLY : JPIM     ,JPRB
-LOGICAL :: LDBU_ENABLE
-
-END SUBROUTINE AROINI_BUDGET
-END INTERFACE
