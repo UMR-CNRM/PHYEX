@@ -1731,7 +1731,7 @@ IF ( TURBN%CTURBDIM /= '1DIM' ) THEN
 END IF
 ! 1D turbulence scheme
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
-PLM(:,:) = PZZ(:,IKTB+IKL:IKTE+IKL) - PZZ(:,:)
+PLM(:,IKTB:IKTE) = PZZ(:,IKTB+IKL:IKTE+IKL) - PZZ(:,IKTB:IKTE)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 PLM(:,IKU) = PLM(:,IKE)
