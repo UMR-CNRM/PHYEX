@@ -105,7 +105,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PPRCFR     ! Precipitation fraction
 !-------------------------------------------------------------------------------
 !
 REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2),SIZE(PT,3))          :: Z_TH_HIND, Z_RI_HIND, Z_CI_HIND, Z_TH_HINC, Z_RC_HINC, Z_CC_HINC
-REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2),SIZE(PT,3))          :: ZCIT, ZLSFACT, ZRVHENIMR
+REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2),SIZE(PT,3))          :: ZLSFACT, ZRVHENIMR
 !
 integer :: idx, jl
 INTEGER :: JI,JJ
@@ -292,16 +292,22 @@ IF (LNUCL .AND. NMOM_I.EQ.1) THEN
         CALL LIMA_ICE4_NUCLEATION(CST, SIZE(PTHT,3), &
              PTHT(JI,JJ,:), PPABST(JI,JJ,:), PRHODREF(JI,JJ,:), PEXNREF(JI,JJ,:), ZLSFACT(JI,JJ,:), PT(JI,JJ,:), &
              PRVT(JI,JJ,:), &
-             ZCIT(JI,JJ,:), ZRVHENIMR(JI,JJ,:) )
+             PCIT(JI,JJ,:), ZRVHENIMR(JI,JJ,:) )
      END DO
   END DO
   !
-!  Z_TH_HIND=ZTHS*PTSTEP-PTHT
-!  Z_RI_HIND=ZRIS*PTSTEP-PRIT
-!  Z_CI_HIND=ZCIT-PCIT
   PRIT(:,:,:)=PRIT(:,:,:)+ZRVHENIMR(:,:,:)
   PTHT(:,:,:)=PTHT(:,:,:)+ZRVHENIMR(:,:,:)*ZLSFACT(:,:,:)
   PRVT(:,:,:)=PRVT(:,:,:)-ZRVHENIMR(:,:,:)
+  !
+  if ( BUCONF%lbu_enable ) then
+     if ( BUCONF%lbudget_th ) &
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HIND',  ZRVHENIMR(:,:,:)*ZLSFACT(:,:,:) * prhodj(:, :, :) / ptstep )
+     if ( BUCONF%lbudget_rv ) &
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HIND', -ZRVHENIMR(:, :, :) * prhodj(:, :, :) / ptstep )
+     if ( BUCONF%lbudget_ri ) &
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIND',  ZRVHENIMR(:, :, :) * prhodj(:, :, :) / ptstep )
+  end if
 !  Z_TH_HINC=0.
 !  Z_RC_HINC=0.
 !  Z_CC_HINC=0.
