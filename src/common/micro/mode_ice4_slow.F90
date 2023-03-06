@@ -113,14 +113,14 @@ ENDDO
 DO JL=1, KSIZE
   IF(PRVT(JL)>ICED%XRTMIN(1) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
       PRVDEPS(JL) = ( PSSI(JL)/(PRHODREF(JL)*PAI(JL)) ) *                               &
                  ( ICEP%X0DEPS*PLBDAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS )
 #else
   PRVDEPS(JL) = ( PRST(JL)*(PSSI(JL)/PAI(JL)) ) *                               &
                  ( ICEP%X0DEPS*PLBDAS(JL)**(ICED%XBS+ICEP%XEX0DEPS) + ICEP%X1DEPS*PCJ(JL) * &
-                 (1+0.5*(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICED%XEX1DEPS/ICED%XALPHAS) &
-                  *(PLBDAS(JL))**(ICED%XBS+ICED%XEX1DEPS) )
+                 (1+0.5*(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEX1DEPS/ICED%XALPHAS) &
+                  *(PLBDAS(JL))**(ICED%XBS+ICEP%XEX1DEPS) )
 #endif
     ENDIF
   ELSE
@@ -135,7 +135,7 @@ DO JL=1, KSIZE
     IF(.NOT. LDSOFT) THEN
       PRIAGGS(JL) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JL)-CST%XTT) ) &
                          * PRIT(JL)                      &
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
                          * PLBDAS(JL)**ICEP%XEXIAGGS          &
                          * PRHODREF(JL)**(-ICED%XCEXVT)
 #else

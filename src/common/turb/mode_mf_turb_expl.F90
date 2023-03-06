@@ -7,9 +7,8 @@
 !    ######################
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE MF_TURB_EXPL(D, PARAMMF, OMIXUV,                     &
-                PRHODJ,                                               &
-                PTHLM,PTHVM,PRTM,PUM,PVM,                             &
+      SUBROUTINE MF_TURB_EXPL(D, PARAMMF,                             &
+                PRHODJ,PTHLM,PTHVM,PRTM,PUM,PVM,                      &
                 PTHLDT,PRTDT,PUDT,PVDT,                               &
                 PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,              &
                 PFLXZTHLMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF)
@@ -66,7 +65,6 @@ IMPLICIT NONE
 
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
-LOGICAL,                INTENT(IN)   :: OMIXUV      ! True if mixing of momentum
 
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PRHODJ      ! dry density * Grid size
 
@@ -157,7 +155,7 @@ PFLXZTHVMF(IIJB:IIJE,1:IKT)  = PEMF(IIJB:IIJE,1:IKT)*(PTHV_UP(IIJB:IIJE,1:IKT)-P
 ZFLXZTHSMF(IIJB:IIJE,1:IKT)  = PEMF(IIJB:IIJE,1:IKT)*(ZTHS_UP(IIJB:IIJE,1:IKT)-ZTHSM(IIJB:IIJE,1:IKT))    ! Theta S flux
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
-IF (OMIXUV) THEN
+IF (PARAMMF%LMIXUV) THEN
   CALL MZM_MF(D, PUM(:,:), PFLXZUMF(:,:))
   CALL MZM_MF(D, PVM(:,:), PFLXZVMF(:,:))
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -186,7 +184,7 @@ DO JK=IKB,IKE-IKL,IKL
   ENDDO
 END DO
 
-IF (OMIXUV) THEN
+IF (PARAMMF%LMIXUV) THEN
   DO JK=IKB,IKE-IKL,IKL
     DO JIJ=IIJB,IIJE
       PUDT(JIJ,JK) = (PFLXZUMF(JIJ,JK) - PFLXZUMF(JIJ,JK+IKL)) / PRHODJ(JIJ,JK)

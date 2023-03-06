@@ -62,7 +62,7 @@ USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODD_CST
 USE MODD_CTURB
-USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
+USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_LES, ONLY: TLES_t
@@ -146,7 +146,7 @@ REAL, DIMENSION(SIZE(PUM,1),SIZE(PUM,2),SIZE(PUM,3))  :: GY_U_UV_PUM
 REAL, DIMENSION(SIZE(PVM,1),SIZE(PVM,2),SIZE(PVM,3))  :: GX_V_UV_PVM
 !
 REAL :: ZTIME1, ZTIME2
-TYPE(TFIELDDATA) :: TZFIELD
+TYPE(TFIELDMETADATA) :: TZFIELD
 ! ---------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARY COMPUTATIONS
@@ -208,16 +208,17 @@ ZFLX(:,:,IKB-1:IKB-1) = 2. * MXM( MYM( ZFLX(:,:,IKB-1:IKB-1) ) )  &
 !     
 ! stores  <U V>
 IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
-  TZFIELD%CMNHNAME   = 'UV_FLX'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'UV_FLX'
-  TZFIELD%CUNITS     = 'm2 s-2'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_UV_FLX'
-  TZFIELD%NGRID      = 5
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(      &
+    CMNHNAME   = 'UV_FLX',       &
+    CSTDNAME   = '',             &
+    CLONGNAME  = 'UV_FLX',       &
+    CUNITS     = 'm2 s-2',       &
+    CDIR       = 'XY',           &
+    CCOMMENT   = 'X_Y_Z_UV_FLX', &
+    NGRID      = 5,              &
+    NTYPE      = TYPEREAL,       &
+    NDIMS      = 3,              &
+    LTIMEDEP   = .TRUE.          )
   CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
 END IF
 !

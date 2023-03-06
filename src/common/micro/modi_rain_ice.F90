@@ -4,10 +4,8 @@
 !
 INTERFACE
       SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
-                            KPROMA, KSIZE,                                        &
-                            OSEDIC, OCND2, HSEDIM, HSUBG_AUCV_RC, HSUBG_AUCV_RI,  &
-                            OWARM,                                                & 
-                            PTSTEP, KRR, ODMICRO, PEXN,             &
+                            KPROMA, OCND2, HSUBG_AUCV_RC, HSUBG_AUCV_RI,          &
+                            PTSTEP, KRR, PEXN,                                    &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
                             PTHT, PRVT, PRCT, PRRT, PRIT, PRST,                   &
@@ -34,22 +32,11 @@ TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KPROMA ! cache-blocking factor for microphysic loop
-INTEGER,                  INTENT(IN)    :: KSIZE
-LOGICAL,                  INTENT(IN)    :: OSEDIC ! Switch for droplet sedim.
 LOGICAL                                 :: OCND2  ! Logical switch to separate liquid and ice
-CHARACTER(LEN=4),         INTENT(IN)    :: HSEDIM ! Sedimentation scheme
-CHARACTER(LEN=4),         INTENT(IN)    :: HSUBG_AUCV_RC ! Switch for rc->rr Subgrid autoconversion
-                                        ! Kind of Subgrid autoconversion method
-CHARACTER(LEN=80),        INTENT(IN)    :: HSUBG_AUCV_RI ! Switch for ri->rs Subgrid autoconversion
-                                        ! Kind of Subgrid autoconversion method
-LOGICAL,                  INTENT(IN)    :: OWARM   ! .TRUE. allows raindrops to
-                                                   !   form by warm processes
-                                                   !      (Kessler scheme)
-!
-REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step
-                                                   ! (single if cold start)
+CHARACTER(LEN=4),         INTENT(IN)    :: HSUBG_AUCV_RC ! Kind of Subgrid autoconversion method
+CHARACTER(LEN=80),        INTENT(IN)    :: HSUBG_AUCV_RI ! Kind of Subgrid autoconversion method
+REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
-LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: ODMICRO ! mask to limit computation
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXN    ! Exner function
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PDZZ    ! Layer thikness (m)
@@ -60,10 +47,10 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PPABST  ! absolute pressure at
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Pristine ice n.c. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCLDFR  ! Cloud fraction
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PHLC_HRC
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PHLC_HCF
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PHLI_HRI
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PHLI_HCF
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLC_HRC
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLC_HCF
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLI_HRI
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PHLI_HCF
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PTHT    ! Theta at time t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRVT    ! Water vapor m.r. at t

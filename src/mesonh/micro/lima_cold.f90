@@ -8,7 +8,7 @@
 !      #####################
 !
 INTERFACE
-      SUBROUTINE LIMA_COLD (OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,           &
+      SUBROUTINE LIMA_COLD (CST, OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,      &
                            KRR, PZZ, PRHODJ,                               &
                            PRHODREF, PEXNREF, PPABST, PW_NU,               &
                            PTHT, PRT, PSVT,                                &
@@ -16,6 +16,9 @@ INTERFACE
                            PINPRS, PINPRG, PINPRH)
 !
 USE MODD_NSV,   only: NSV_LIMA_BEG
+USE MODD_CST,            ONLY: CST_t
+!
+TYPE(CST_t),              INTENT(IN)    :: CST
 !
 LOGICAL,                  INTENT(IN)    :: OSEDI   ! switch to activate the
                                                    ! cloud ice sedimentation
@@ -52,7 +55,7 @@ END INTERFACE
 END MODULE MODI_LIMA_COLD
 !
 !     ######################################################################
-      SUBROUTINE LIMA_COLD (OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,           &
+      SUBROUTINE LIMA_COLD (CST, OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,      &
                            KRR, PZZ, PRHODJ,                               &
                            PRHODREF, PEXNREF, PPABST, PW_NU,               &
                            PTHT, PRT, PSVT,                                &
@@ -111,6 +114,7 @@ END MODULE MODI_LIMA_COLD
 !*       0.    DECLARATIONS
 !              ------------
 
+USE MODD_CST,            ONLY: CST_t
 use modd_budget,     only: lbu_enable,                                                  &
                            lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, lbudget_sv,  &
                            NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1, &
@@ -130,6 +134,8 @@ USE MODI_LIMA_PHILLIPS
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
+!
+TYPE(CST_t),              INTENT(IN)    :: CST
 !
 LOGICAL,                  INTENT(IN)    :: OSEDI   ! switch to activate the 
                                                    ! cloud ice sedimentation
@@ -261,16 +267,16 @@ PCSS(:,:,:) = 0.
 PCGS(:,:,:) = 0.  
 PCHS(:,:,:) = 0.
 !
-IF ( LWARM ) PCCT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NC)
-IF ( LWARM .AND. LRAIN ) PCRT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NR)
-IF ( LCOLD ) PCIT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NI)
+IF ( NMOM_C.GE.2 ) PCCT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NC)
+IF ( NMOM_R.GE.2 ) PCRT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NR)
+IF ( NMOM_I.GE.2 ) PCIT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NI)
 IF ( NMOM_S.GE.2 ) PCST(:,:,:) = PSVT(:,:,:,NSV_LIMA_NS)        
 IF ( NMOM_G.GE.2 ) PCGT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NG)        
 IF ( NMOM_H.GE.2 ) PCHT(:,:,:) = PSVT(:,:,:,NSV_LIMA_NH)        
 !
-IF ( LWARM ) PCCS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NC)
-IF ( LWARM .AND. LRAIN ) PCRS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NR)
-IF ( LCOLD ) PCIS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NI)
+IF ( NMOM_C.GE.2 ) PCCS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NC)
+IF ( NMOM_R.GE.2 ) PCRS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NR)
+IF ( NMOM_I.GE.2 ) PCIS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NI)
 IF ( NMOM_S.GE.2 ) PCSS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NS)       
 IF ( NMOM_G.GE.2 ) PCGS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NG)        
 IF ( NMOM_H.GE.2 ) PCHS(:,:,:) = PSVS(:,:,:,NSV_LIMA_NH)       
@@ -323,9 +329,9 @@ END IF
 !
 if ( lbu_enable ) then
   if ( lbudget_ri .and. osedi ) call Budget_store_init( tbudgets(NBUDGET_RI), 'SEDI', pris(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rs .and. lsnow ) call Budget_store_init( tbudgets(NBUDGET_RS), 'SEDI', prss(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rg .and. lsnow ) call Budget_store_init( tbudgets(NBUDGET_RG), 'SEDI', prgs(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rh .and. lhail ) call Budget_store_init( tbudgets(NBUDGET_RH), 'SEDI', prhs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rs ) call Budget_store_init( tbudgets(NBUDGET_RS), 'SEDI', prss(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rg ) call Budget_store_init( tbudgets(NBUDGET_RG), 'SEDI', prgs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rh ) call Budget_store_init( tbudgets(NBUDGET_RH), 'SEDI', prhs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv .and. osedi ) &
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'SEDI', pcis(:, :, :) * prhodj(:, :, :) )
   if (NMOM_S.GE.2) call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ns), 'SEDI', pcss(:, :, :) * prhodj(:, :, :) )
@@ -341,9 +347,9 @@ CALL LIMA_COLD_SEDIMENTATION (OSEDI, KSPLITG, PTSTEP, KMI,     &
                               PCSS=PCSS, PCGS=PCGS, PCHS=PCHS    )
 if ( lbu_enable ) then
   if ( lbudget_ri .and. osedi ) call Budget_store_end( tbudgets(NBUDGET_RI), 'SEDI', pris(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rs .and. lsnow ) call Budget_store_end( tbudgets(NBUDGET_RS), 'SEDI', prss(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rg .and. lsnow ) call Budget_store_end( tbudgets(NBUDGET_RG), 'SEDI', prgs(:, :, :) * prhodj(:, :, :) )
-  if ( lbudget_rh .and. lhail ) call Budget_store_end( tbudgets(NBUDGET_RH), 'SEDI', prhs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rs ) call Budget_store_end( tbudgets(NBUDGET_RS), 'SEDI', prss(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rg ) call Budget_store_end( tbudgets(NBUDGET_RG), 'SEDI', prgs(:, :, :) * prhodj(:, :, :) )
+  if ( lbudget_rh ) call Budget_store_end( tbudgets(NBUDGET_RH), 'SEDI', prhs(:, :, :) * prhodj(:, :, :) )
   if ( lbudget_sv .and. osedi ) &
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'SEDI', pcis(:, :, :) * prhodj(:, :, :) )
   if (NMOM_S.GE.2) call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ns), 'SEDI', pcss(:, :, :) * prhodj(:, :, :) )
@@ -367,7 +373,7 @@ IF (LNUCL) THEN
                         PTHS, PRVS, PRCS, PRIS,                         &
                         PCCS, PCIS, PINS )
    ELSE
-      CALL LIMA_PHILLIPS (OHHONI, PTSTEP, KMI,                      &
+      CALL LIMA_PHILLIPS (CST, OHHONI, PTSTEP, KMI,                 &
                           PZZ, PRHODJ, PRHODREF, PEXNREF, PPABST,   &
                           PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                           PTHS, PRVS, PRCS, PRIS,                   &
@@ -375,7 +381,7 @@ IF (LNUCL) THEN
                           PNAS, PIFS, PINS, PNIS   )
    END IF
 !
-   IF (LWARM .OR. (LHHONI .AND. NMOD_CCN.GE.1)) THEN
+   IF (NMOM_C.GE.1 .OR. (LHHONI .AND. NMOD_CCN.GE.1)) THEN
       CALL LIMA_COLD_HOM_NUCL (OHHONI, PTSTEP, KMI,                         &
                                PZZ, PRHODJ,                                 &
                                PRHODREF, PEXNREF, PPABST, PW_NU,            &
@@ -393,7 +399,7 @@ END IF
 !*       4.    SLOW PROCESSES: depositions, aggregation
 !              ----------------------------------------
 !
-IF (LSNOW) THEN
+IF (NMOM_S.GE.1) THEN
 !
    IF(NMOM_S.GE.2) THEN
       CALL LIMA_COLD_SLOW_PROCESSES(PTSTEP, KMI, PZZ, PRHODJ,                 &
@@ -449,9 +455,9 @@ IF ( KRR .GE. 7 ) PRS(:,:,:,7) = PRHS(:,:,:)
 !
 ! Prepare 3D number concentrations
 !
-IF ( LWARM ) PSVS(:,:,:,NSV_LIMA_NC) = PCCS(:,:,:)
-IF ( LWARM .AND. LRAIN ) PSVS(:,:,:,NSV_LIMA_NR) = PCRS(:,:,:)
-IF ( LCOLD ) PSVS(:,:,:,NSV_LIMA_NI) = PCIS(:,:,:)
+IF ( NMOM_C.GE.2 ) PSVS(:,:,:,NSV_LIMA_NC) = PCCS(:,:,:)
+IF ( NMOM_R.GE.2 ) PSVS(:,:,:,NSV_LIMA_NR) = PCRS(:,:,:)
+IF ( NMOM_I.GE.2 ) PSVS(:,:,:,NSV_LIMA_NI) = PCIS(:,:,:)
 IF ( NMOM_S.GE.2 ) PSVS(:,:,:,NSV_LIMA_NS) = PCSS(:,:,:) 
 IF ( NMOM_G.GE.2 ) PSVS(:,:,:,NSV_LIMA_NG) = PCGS(:,:,:) 
 IF ( NMOM_H.GE.2 ) PSVS(:,:,:,NSV_LIMA_NH) = PCHS(:,:,:) 

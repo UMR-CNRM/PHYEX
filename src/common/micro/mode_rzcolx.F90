@@ -215,7 +215,7 @@ DO JLBDAX = 1,SIZE(PRZCOLX(:,:),1)
 !*       1.7     Compute the scaled fall speed difference by integration over
 !                the dimensional spectrum of specy Z
 !
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
         ZCOLLZ = ZCOLLZ + ZFUNC                                               &
                         * PEXZ * ABS(PFALLX*ZDX**PEXFALLX-PFALLZ*ZDZ**PEXFALLZ)
 #else

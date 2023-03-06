@@ -238,7 +238,7 @@ DO JLBDAR = 1,SIZE(PRSCOLRG(:,:),1)
             ZDR = ZDDCOLLR * REAL(JDR) + ZDRMIN
             ZCOLLR = ZCOLLR + (ZDS+ZDR)**2                                     &
                        * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDR)                &
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
                          * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDR**PEXFALLR)
 #else
                          * PESR * ABS(PFALLS*ZDS**PEXFALLS*EXP(-(ZDS*PFALLEXPS)**PALPHAS)-PFALLR*ZDR**PEXFALLR)
@@ -247,7 +247,7 @@ DO JLBDAR = 1,SIZE(PRSCOLRG(:,:),1)
           IF( ZDRMIN>0.0 ) THEN
             ZCOLLDRMIN = (ZDS+ZDRMIN)**2                                       &
                       * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDRMIN)              &
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
                       * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDRMIN**PEXFALLR)
 #else
                       * PESR * ABS(PFALLS*ZDS**PEXFALLS*EXP(-(ZDS*PFALLEXPS)**PALPHAS)-PFALLR*ZDRMIN**PEXFALLR)

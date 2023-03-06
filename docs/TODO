@@ -33,7 +33,7 @@ Merge pb:
         src/mesonh/micro/ice_adjust_elec.f90 et src/mesonh/micro/lima_adjust_split.f90
         mais non testés
   - arp_shallow_mf non phasé
-  - LIMA à faire
+  - LIMA à faire dans AROME (récupérer code dans mesonh)
   - KFB ?
 
 Pb identifiés à corriger plus tard:
@@ -46,18 +46,9 @@ Pb identifiés à corriger plus tard:
   - seules quelques options sont testées avec les cas test (par exemple, il faudrait tester RMC01 mais
     l'option n'est pas remontée en namelist)
   - th_r_from_thl_rt appelée partout, il faudrait limiter à OTEST
-  - sedimentation momentum non branchée
-  - si possible, modifier ice4_sedimentation_split* dans le même esprit que stat
-  - il faudrait nettoyer les interfaces pour supprimer les clés passées directement
-    alors qu'elles sont également disponibles dans les structures (ex: HMF_UPDRAFT)
-  - il faudrait harmoniser l'utilisation des variables D% (cad faire IKT=D%NKT en haut ou utiliser directement D%NKT)
   - La taille du buffer utilisé pour th_r_from_thl_rt doit être mise en module et
     utilisée pour déclarer le buffer dans les routines appelantes et dans th_r_from_thl_rt
-  - shallow_mf_pack devrait être récrit pour appeler directement shallow_mf sans recopier les tableaux pour les changer de forme
-  - rain_ice:
-    - séparer l'avance temporelle du découpage en sous-blocs en créant une couche driver supplémentaire. Cette couche pourrait
-      avoir différentes implémentations (filtre LLMICRO seul, filtre LLMICRO + découpage en sous-blocs, filtre LLMICR
-    - mettre le code des interpolations linéaires et bi-linéaires dans des routines avec deux implémentations: avec et sans packing
+  - l'option LPACK_MICRO=FALSE ne fonctionne pas dans Méso-NH (commentaire dans default_desfmn)
   - shuman, turb, shuman_mf, apl_arome
     - peut-on remettre à jour la partie sous le sol des variables pronostiques avant d'entrer dans EDKFi dans Méso-NH? Si oui, on devrait pouvoir
       récrire les shuman_mf pour qu'ils produisent les mêmes résultats qu'aujourd'hui mais sans utiliser les valeurs sous le sol ou dans "l'espace infini"

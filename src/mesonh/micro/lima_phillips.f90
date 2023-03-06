@@ -8,12 +8,15 @@
 !      #########################
 !
 INTERFACE
-      SUBROUTINE LIMA_PHILLIPS (OHHONI, PTSTEP, KMI,                      &
+      SUBROUTINE LIMA_PHILLIPS (CST, OHHONI, PTSTEP, KMI,                 &
                                 PZZ, PRHODJ, PRHODREF, PEXNREF, PPABST,   &
                                 PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                 PTHS, PRVS, PRCS, PRIS,                   &
                                 PCIT, PCCS, PCIS,                         &
                                 PNAS, PIFS, PINS, PNIS   )
+!
+USE MODD_CST,            ONLY: CST_t
+TYPE(CST_t),              INTENT(IN)    :: CST
 !
 LOGICAL,                  INTENT(IN)    :: OHHONI  ! enable haze freezing
 REAL,                     INTENT(IN)    :: PTSTEP  ! Time step          
@@ -59,7 +62,7 @@ END INTERFACE
 END MODULE MODI_LIMA_PHILLIPS
 !
 !     #####################################################################
-      SUBROUTINE LIMA_PHILLIPS (OHHONI, PTSTEP, KMI,                      &
+      SUBROUTINE LIMA_PHILLIPS (CST, OHHONI, PTSTEP, KMI,                 &
                                 PZZ, PRHODJ, PRHODREF, PEXNREF, PPABST,   &
                                 PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                 PTHS, PRVS, PRCS, PRIS,                   &
@@ -128,9 +131,7 @@ use modd_budget,          only: lbu_enable, nbumod,                             
                                 lbudget_th, lbudget_rv, lbudget_rc, lbudget_ri, lbudget_sv,  &
                                 NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RI, NBUDGET_SV1, &
                                 tbudgets
-USE MODD_CST,             ONLY : XP00, XRD, XMV, XMD, XCPD, XCPV, XCL, XCI,        &
-                                 XTT, XLSTT, XLVTT, XALPI, XBETAI, XGAMI,          &
-                                 XALPW, XBETAW, XGAMW, XPI
+USE MODD_CST,             ONLY : CST_t
 USE MODD_NSV, ONLY : NSV_LIMA_NC, NSV_LIMA_NI, NSV_LIMA_CCN_ACTI, NSV_LIMA_IFN_FREE, NSV_LIMA_IFN_NUCL, NSV_LIMA_IMM_NUCL
 USE MODD_PARAMETERS,      ONLY : JPHEXT, JPVEXT
 USE MODD_PARAM_LIMA,      ONLY : NMOD_IFN, NSPECIE, XFRAC,                         &
@@ -141,12 +142,14 @@ USE MODD_PARAM_LIMA_COLD, ONLY : XMNU0
 use mode_budget,          only: Budget_store_init, Budget_store_end
 use mode_tools,           only: Countjv
 
-USE MODI_LIMA_PHILLIPS_INTEG
-USE MODI_LIMA_PHILLIPS_REF_SPECTRUM
+USE MODE_LIMA_PHILLIPS_INTEG, ONLY: LIMA_PHILLIPS_INTEG
+USE MODE_LIMA_PHILLIPS_REF_SPECTRUM, ONLY: LIMA_PHILLIPS_REF_SPECTRUM
 
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
+!
+TYPE(CST_t),              INTENT(IN)    :: CST
 !
 LOGICAL,                  INTENT(IN)    :: OHHONI  ! enable haze freezing
 REAL,                     INTENT(IN)    :: PTSTEP  ! Time step          
@@ -273,12 +276,12 @@ ZCTMIN(:) = XCTMIN(:) / PTSTEP
 !
 ! Temperature
 !
-ZT(:,:,:)  = PTHT(:,:,:) * ( PPABST(:,:,:)/XP00 ) ** (XRD/XCPD)
+ZT(:,:,:)  = PTHT(:,:,:) * ( PPABST(:,:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
 !
 ! Saturation over ice
 !
-ZW(:,:,:) = EXP( XALPI - XBETAI/ZT(:,:,:) - XGAMI*ALOG(ZT(:,:,:) ) )
-ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (XMV/XMD) * ZW(:,:,:) )
+ZW(:,:,:) = EXP( CST%XALPI - CST%XBETAI/ZT(:,:,:) - CST%XGAMI*ALOG(ZT(:,:,:) ) )
+ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:,:,:) )
 !
 !
 !-------------------------------------------------------------------------------
@@ -289,7 +292,7 @@ ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (XMV/XMD) * ZW(:,:,:) )
 !
 !
 GNEGT(:,:,:) = .FALSE.
-GNEGT(IIB:IIE,IJB:IJE,IKB:IKE) = ZT(IIB:IIE,IJB:IJE,IKB:IKE)<XTT-2.0 .AND. &
+GNEGT(IIB:IIE,IJB:IJE,IKB:IKE) = ZT(IIB:IIE,IJB:IJE,IKB:IKE)<CST%XTT-2.0 .AND. &
                                  ZW(IIB:IIE,IJB:IJE,IKB:IKE)>0.95
 INEGT = COUNTJV( GNEGT(:,:,:),I1(:),I2(:),I3(:))
 !
@@ -384,17 +387,17 @@ ALLOCATE( ZZY (INEGT) ) ; ZZY(:) = 0.0
 !	        -----------------------------------------
 !
 !
-ZTCELSIUS(:) = ZZT(:)-XTT                                    ! T [°C]
-ZZW(:)  = ZEXNREF(:)*( XCPD+XCPV*ZRVT(:)+XCL*(ZRCT(:)+ZRRT(:)) &
-     +XCI*(ZRIT(:)+ZRST(:)+ZRGT(:)) )
-ZLSFACT(:) = (XLSTT+(XCPV-XCI)*ZTCELSIUS(:))/ZZW(:)          ! L_s/(Pi_ref*C_ph)
-ZLVFACT(:) = (XLVTT+(XCPV-XCL)*ZTCELSIUS(:))/ZZW(:)          ! L_v/(Pi_ref*C_ph)
+ZTCELSIUS(:) = ZZT(:)-CST%XTT                                    ! T [°C]
+ZZW(:)  = ZEXNREF(:)*( CST%XCPD+CST%XCPV*ZRVT(:)+CST%XCL*(ZRCT(:)+ZRRT(:)) &
+     +CST%XCI*(ZRIT(:)+ZRST(:)+ZRGT(:)) )
+ZLSFACT(:) = (CST%XLSTT+(CST%XCPV-CST%XCI)*ZTCELSIUS(:))/ZZW(:)          ! L_s/(Pi_ref*C_ph)
+ZLVFACT(:) = (CST%XLVTT+(CST%XCPV-CST%XCL)*ZTCELSIUS(:))/ZZW(:)          ! L_v/(Pi_ref*C_ph)
 !
-ZZW(:)  = EXP( XALPI - XBETAI/ZZT(:) - XGAMI*ALOG(ZZT(:) ) ) ! es_i
-ZSI(:)  = ZRVT(:)*(ZPRES(:)-ZZW(:))/((XMV/XMD)*ZZW(:))       ! Saturation over ice
+ZZW(:)  = EXP( CST%XALPI - CST%XBETAI/ZZT(:) - CST%XGAMI*ALOG(ZZT(:) ) ) ! es_i
+ZSI(:)  = ZRVT(:)*(ZPRES(:)-ZZW(:))/((CST%XMV/CST%XMD)*ZZW(:))       ! Saturation over ice
 !
-ZZY(:)  = EXP( XALPW - XBETAW/ZZT(:) - XGAMW*ALOG(ZZT(:) ) ) ! es_w
-ZSW(:)  = ZRVT(:)*(ZPRES(:)-ZZY(:))/((XMV/XMD)*ZZY(:))       ! Saturation over water
+ZZY(:)  = EXP( CST%XALPW - CST%XBETAW/ZZT(:) - CST%XGAMW*ALOG(ZZT(:) ) ) ! es_w
+ZSW(:)  = ZRVT(:)*(ZPRES(:)-ZZY(:))/((CST%XMV/CST%XMD)*ZZY(:))       ! Saturation over water
 !
 ZSI_W(:)= ZZY(:)/ZZW(:)     ! Saturation over ice at water saturation: es_w/es_i
 !
@@ -423,12 +426,12 @@ END IF
 !
 ! Computation of the reference activity spectrum ( ZZY = N_{IN,1,*} )
 !
-CALL LIMA_PHILLIPS_REF_SPECTRUM(ZZT, ZSI, ZSI_W, ZZY)
+CALL LIMA_PHILLIPS_REF_SPECTRUM(CST, ZZT, ZSI, ZSI_W, ZZY)
 !
 ! For each aerosol species (DM1, DM2, BC, O), compute the fraction that may be activated
 ! Z_FRAC_ACT(INEGT,NSPECIE) = fraction of each species that may be activated
 !
-CALL LIMA_PHILLIPS_INTEG(ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
+CALL LIMA_PHILLIPS_INTEG(CST, ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
 !
 !
 !-------------------------------------------------------------------------------

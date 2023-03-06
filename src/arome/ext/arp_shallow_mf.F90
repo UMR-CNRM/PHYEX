@@ -393,9 +393,7 @@ ZDRTDT_MF(:,:)  = 0.
 !         ---------------------------------
 OSTATNW = .FALSE.
   CALL SHALLOW_MF(YLDIMPHYEX, CST, NEB, PARAM_MFSHALLN, TURBN, CSTURB,   &
-       KRR=IKR,KRRL=IKRL,KRRI=IKRI, KSV=1,                             &
-       HMF_UPDRAFT=HMF_UPDRAFT, HMF_CLOUD=HMF_CLOUD,HFRAC_ICE='N',OMIXUV=LLOMIXUV,     &
-       OSTATNW=OSTATNW,                                                  &
+       KRR=IKR,KRRL=IKRL,KRRI=IKRI, KSV=1,HFRAC_ICE='N',                 &
        ONOMIXLG=LLONOMIXLG,KSV_LGBEG=ISV_LGBEG,KSV_LGEND=ISV_LGEND,      &
       PIMPL_MF=PIMPL, PTSTEP=ZDT,                                        &
       PDZZ=ZDZZ,PZZ=ZZZ,                                                 &
@@ -413,7 +411,7 @@ OSTATNW = .FALSE.
       PFRAC_UP=ZFRAC_UP,PEMF=ZEMF,PDETR=ZDETR,PENTR=ZENTR,                      &
       KKLCL=IKLCL,KKETL=IKETL,KKCTL=IKCTL,                                      &
 !
-      PDX=0., PDY=0.)
+      PDX=0., PDY=0., KBUDGETS=0)
 
 
 !  Conversion des tendances de theta en tendance de cpT

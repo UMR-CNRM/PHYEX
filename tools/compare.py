@@ -14,8 +14,11 @@ avail_groups=['Stations/sta1',
 'LES_budgets/BU_RT2/Cartesian/Not_time_averaged/Not_normalized/cart/',
 'LES_budgets/BU_WRT/Cartesian/Not_time_averaged/Not_normalized/cart/',
 'LES_budgets/BU_THLR/Cartesian/Not_time_averaged/Not_normalized/cart/',
-]
+'Budgets/TH','Budgets/UU','Budgets/WW',
+'Budgets/RV','Budgets/RI','Budgets/RC',
+'Budgets/RG','Budgets/RS','Budgets/RH','Budgets/TK']
 
+tol_ad=1E-12 # Error max for budgets
 
 def compareBACKUPFiles(file_user, file_ref):
   status = 0
@@ -62,6 +65,7 @@ def compareTSERIESFiles(file_user, file_ref):
   da = xr.open_dataset(file_user)
   da2 = xr.open_dataset(file_ref)
   variables = list(da.keys())
+  JPVEXT=1
   try: 
     nk=len(da['level_les'])
   except:
@@ -78,12 +82,12 @@ def compareTSERIESFiles(file_user, file_ref):
       pass
   # Groups comparison
   for grp in avail_groups:
-    try:
+    try: # LES or Stations variables in 1D/2D
       da = xr.open_dataset(file_user, group=grp)
       da2 = xr.open_dataset(file_ref, group=grp)
       variables = list(da.keys())
       for var in variables:
-        try:
+        try: #LES variables in 2D
           ecart_min = float(da2[var][:,:nk-JPVEXT].min())-float(da[var][:,:nk-JPVEXT].min())
           ecart_moy = float(da2[var][:,:nk-JPVEXT].mean())-float(da[var][:,:nk-JPVEXT].mean())
           ecart_max = float(da2[var][:,:nk-JPVEXT].max())-float(da[var][:,:nk-JPVEXT].max())
@@ -91,7 +95,16 @@ def compareTSERIESFiles(file_user, file_ref):
             status += 1
             print(var, ecart_min, ecart_moy, ecart_max)
         except:
-          pass
+          try: # Sations or Budgets variables (Budget box without HALO points)
+            ecart_min = float(da2[var][:].min())-float(da[var][:].min())
+            ecart_moy = float(da2[var][:].mean())-float(da[var][:].mean())
+            ecart_max = float(da2[var][:].max())-float(da[var][:].max())
+            if (abs(ecart_min) >=tol_ad or abs(ecart_moy) >=tol_ad or abs(ecart_max) >=tol_ad):
+              status += 1
+              print(grp, var, ecart_min, ecart_moy, ecart_max)
+          except:
+            pass
+
     except:
       pass
   return status

@@ -201,7 +201,7 @@ GMICRO(IIB:IIE,IJB:IJE,IKB:IKE) =                  &
 !
 IMICRO = COUNTJV( GMICRO(:,:,:),I1(:),I2(:),I3(:))
 !
-IF( IMICRO >= 1 ) THEN
+IF( IMICRO >= 0 ) THEN
    ALLOCATE(ZRCT(IMICRO))
    ALLOCATE(ZRRT(IMICRO))
    ALLOCATE(ZCCT(IMICRO))
@@ -244,7 +244,7 @@ IF( IMICRO >= 1 ) THEN
 !
 !-------------------------------------------------------------------------------
 !
-IF (LRAIN) THEN
+IF (NMOM_R.GE.2) THEN
 !
 !*       2. Self-collection of cloud droplets    
 !   	 ------------------------------------
@@ -254,7 +254,7 @@ IF (LRAIN) THEN
 
    GSELF(:) = ZCCT(:)>XCTMIN(2)
    ISELF = COUNT(GSELF(:))
-   IF( ISELF>0 .AND. .NOT.LKHKO) THEN
+   IF( ISELF>=0 .AND. .NOT.LKHKO) THEN
       ZZW1(:) = XSELFC*(ZCCT(:)/ZLBDC3(:))**2 * ZRHODREF(:) ! analytical integration
       WHERE( GSELF(:) )
          ZCCS(:) = ZCCS(:) - MIN( ZCCS(:),ZZW1(:) )
@@ -336,7 +336,7 @@ IF (LRAIN) THEN
 !
    GACCR(:) = ZRRT(:)>XRTMIN(3) .AND. ZCRT(:)>XCTMIN(3)
    IACCR = COUNT(GACCR(:))
-   IF( IACCR>0 ) THEN
+   IF( IACCR >= 0 ) THEN
       ALLOCATE(ZZW4(IMICRO)); ZZW4(:) = XACCR1/ZLBDR(:)
       ALLOCATE(GENABLE_ACCR_SCBU(IMICRO))
       GENABLE_ACCR_SCBU(:) = ZRRT(:)>1.2*ZZW2(:)/ZRHODREF(:) .OR.           &
@@ -345,7 +345,7 @@ IF (LRAIN) THEN
    END IF
 !
    IACCR = COUNT(GACCR(:))
-   IF( IACCR>0 ) THEN
+   IF( IACCR >= 0 ) THEN
     if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'ACCR', &
                                               Unpack( zrcs(:), mask = gmicro(:, :, :), field = prcs(:, :, :) ) * prhodj(:, :, :) )
     if ( lbudget_rr ) call Budget_store_init( tbudgets(NBUDGET_RR), 'ACCR', &
@@ -406,7 +406,7 @@ IF (LRAIN) THEN
 !   	 -----------------------------------------
 !
 !
-   IF( IACCR>0 ) THEN
+   IF( IACCR >= 0 ) THEN
       GSCBU(:) = ZCRT(:)>XCTMIN(3) .AND. GENABLE_ACCR_SCBU(:)
       ISCBU = COUNT(GSCBU(:))
    ELSE
@@ -445,7 +445,7 @@ IF (LRAIN) THEN
     if ( lbudget_sv ) call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nr), 'SCBU', &
                                              Unpack( zcrs(:), mask = gmicro(:, :, :), field = pcrs(:, :, :) ) * prhodj(:, :, :) )
    END IF
-END IF ! LRAIN
+END IF
 !
 !
 !-------------------------------------------------------------------------------

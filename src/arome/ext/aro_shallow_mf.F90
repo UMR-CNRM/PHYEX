@@ -1,9 +1,9 @@
 !     ######spl
-      SUBROUTINE  ARO_SHALLOW_MF(KKL, KLON, KLEV, KFDIA, KRR, KRRL, KRRI,KSV,     &
+      SUBROUTINE  ARO_SHALLOW_MF(KKL, KLON, KLEV, KFDIA, KRR, KRRL, KRRI,KSV,&
                 HMF_UPDRAFT, HMF_CLOUD, HFRAC_ICE, OMIXUV,            &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
                 KTCOUNT, PTSTEP, PDX, PDY,                            &
-                PZZ, PZZF, PDZZF,                                            &
+                PZZ, PZZF, PDZZF,                                     &
                 PRHODJ, PRHODREF,                                     &
                 PPABSM, PEXNM,                                        &
                 PSFTH,PSFRV,                                          &
@@ -11,9 +11,10 @@
                 PUM,PVM,PTKEM,PSVM,                                   &
                 PDUDT_MF,PDVDT_MF,                                    &
                 PDTHLDT_MF,PDRTDT_MF,PDSVDT_MF,                       &
-                PSIGMF,PRC_MF,PRI_MF,PCF_MF,PFLXZTHVMF,                      &
+                PSIGMF,PRC_MF,PRI_MF,PCF_MF,PFLXZTHVMF,               &
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
-                PU_UP, PV_UP, PTHV_UP, PW_UP, PFRAC_UP, PEMF)
+                PU_UP, PV_UP, PTHV_UP, PW_UP, PFRAC_UP, PEMF,         &
+                YDDDH,YDLDDH,YDMDDH                                   )
 
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
@@ -64,6 +65,7 @@
 !              ------------
 !
 USE MODD_PARAMETERS, ONLY: JPVEXT
+USE MODD_BUDGET, ONLY: NBUDGET_SV1, TBUDGETDATA, TBUCONF
 USE MODD_CST, ONLY: CST
 USE MODD_NEB, ONLY: NEB
 USE MODD_TURB_n, ONLY: TURBN
@@ -73,6 +75,10 @@ USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODI_SHALLOW_MF
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
+!
+USE DDH_MIX, ONLY  : TYP_DDH
+USE YOMLDDH, ONLY  : TLDDH
+USE YOMMDDH, ONLY  : TMDDH
 !
 IMPLICIT NONE
 !
@@ -145,16 +151,22 @@ REAL, DIMENSION(KLON,KLEV), INTENT(INOUT) ::  PW_UP     ! vertical speed updraft
 REAL, DIMENSION(KLON,KLEV), INTENT(INOUT) ::  PFRAC_UP  ! updraft fraction
 REAL, DIMENSION(KLON,KLEV), INTENT(INOUT) ::  PEMF      ! updraft mass flux
 !
-LOGICAL :: OSTATNW
+TYPE(TYP_DDH), INTENT(INOUT), TARGET   :: YDDDH
+TYPE(TLDDH),   INTENT(IN), TARGET      :: YDLDDH
+TYPE(TMDDH),   INTENT(IN), TARGET      :: YDMDDH
+!
 !
 !*       0.2   Declarations of local variables :
 !
+LOGICAL :: OSTATNW
+TYPE(TBUDGETDATA), DIMENSION(NBUDGET_SV1) :: YLBUDGET !NBUDGET_SV1 is the one with the highest number needed for shallow_mf
 INTEGER, DIMENSION(size(PRHODJ,1)) :: IKLCL,IKETL,IKCTL
 REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZFLXZTHMF,ZFLXZRMF,ZFLXZUMF,ZFLXZVMF
 REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZDETR,ZENTR
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 REAL          ::  ZIMPL        ! degree of implicitness
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
+INTEGER :: JBU ! Loop index for budgets
 !
 !
 !
@@ -193,25 +205,25 @@ ZIMPL=1.
 !------------------------------------------------------------------------------
 !
 !
-!*       3.   MULTIPLICATION PAR RHODJ
-!             POUR OBTENIR LES TERMES SOURCES DE MESONH
-!
-!         -----------------------------------------------
-
+! Budgets
+DO JBU=1, NBUDGET_SV1
+  YLBUDGET(JBU)%NBUDGET=JBU
+  YLBUDGET(JBU)%YDDDH=>YDDDH
+  YLBUDGET(JBU)%YDLDDH=>YDLDDH
+  YLBUDGET(JBU)%YDMDDH=>YDMDDH
+ENDDO
 !
 !------------------------------------------------------------------------------
 !
 !
-!*       4.   APPEL DE LA TURBULENCE MESONH
+!*       4.   APPEL DE LA CONVECTION PEU PROFONDE MESONH
 !
 !         ---------------------------------
 !
-OSTATNW = .FALSE.
+TURBN%LSTATNW = .FALSE.
   CALL SHALLOW_MF(YLDIMPHYEX, CST, NEB, PARAM_MFSHALLN, TURBN, CSTURB,                    &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                             &
-     &HMF_UPDRAFT=HMF_UPDRAFT, HMF_CLOUD=HMF_CLOUD,HFRAC_ICE=HFRAC_ICE,OMIXUV=OMIXUV,     &
-     &OSTATNW=OSTATNW,                                                                    &
-     &ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,                          &
+     &HFRAC_ICE=HFRAC_ICE, ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,     &
      &PIMPL_MF=ZIMPL, PTSTEP=PTSTEP,                                                      &
      &PDZZ=PDZZF,PZZ=PZZ,                                                                 &
      &PRHODJ=PRHODJ,PRHODREF=PRHODREF,                                                    &
@@ -225,7 +237,8 @@ OSTATNW = .FALSE.
      &PTHL_UP=PTHL_UP,PRT_UP=PRT_UP,PRV_UP=PRV_UP,PRC_UP=PRC_UP,PRI_UP=PRI_UP,            &
      &PU_UP=PU_UP, PV_UP=PV_UP, PTHV_UP=PTHV_UP, PW_UP=PW_UP,                             &
      &PFRAC_UP=PFRAC_UP,PEMF=PEMF,PDETR=ZDETR,PENTR=ZENTR,                                &
-     &KKLCL=IKLCL,KKETL=IKETL,KKCTL=IKCTL,PDX=PDX,PDY=PDY                                 )
+     &KKLCL=IKLCL,KKETL=IKETL,KKCTL=IKCTL,PDX=PDX,PDY=PDY,                                &
+     &BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET)                          )
 !
 !
 !------------------------------------------------------------------------------

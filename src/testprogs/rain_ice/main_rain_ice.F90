@@ -59,7 +59,6 @@ INTEGER :: IBL, JLON, JLEV
 TYPE(DIMPHYEX_t)         :: D, D0
 CHARACTER (LEN=4)   :: CSUBG_AUCV_RC
 CHARACTER (LEN=80)  :: CSUBG_AUCV_RI
-LOGICAL             :: OSEDIC 
 CHARACTER (LEN=4)   :: CSEDIM  
 CHARACTER (LEN=4)   :: CMICRO  
 REAL                :: PTSTEP 
@@ -134,7 +133,6 @@ CMICRO='ICE3'
 
 PTSTEP = 25.0000000000000
 KRR = 6
-OSEDIC = .TRUE.
 OCND2 = .FALSE.
 CSEDIM = 'STAT'
 CSUBG_AUCV_RC = 'PDF'
@@ -148,6 +146,9 @@ ZCRIAUTC=0.1E-2
 
 CALL INIT_PHYEX (20, OWARM, CMICRO, CSEDIM, &
             & LCRIAUTI, ZCRIAUTI, ZT0CRIAUTI, ZCRIAUTC)
+
+PARAM_ICE%LSEDIC = .TRUE.
+
 DO JRR=1, NBUDGET_RH
   YLBUDGET(JRR)%NBUDGET=JRR
 ENDDO
@@ -240,15 +241,13 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
 #endif
 
 IPROMA=COUNT(LLMICRO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE,IBL))
-ISIZE=IPROMA
 CALL RAIN_ICE (D, CST, PARAM_ICE, RAIN_ICE_PARAM, &
              & RAIN_ICE_DESCR, TBUCONF, &
-             & IPROMA, ISIZE, &
-             & OSEDIC=OSEDIC, OCND2=OCND2, HSEDIM=CSEDIM, &
+             & IPROMA, &
+             & OCND2=OCND2, &
              & HSUBG_AUCV_RC=CSUBG_AUCV_RC, HSUBG_AUCV_RI=CSUBG_AUCV_RI,&
-             & OWARM=OWARM, &
              & PTSTEP=2*PTSTEP, &
-             & KRR=KRR, ODMICRO=LLMICRO(:,:,:,IBL), PEXN=PEXNREF(:,:,:,IBL),            &
+             & KRR=KRR, PEXN=PEXNREF(:,:,:,IBL),            &
              & PDZZ=PDZZ(:,:,:,IBL), PRHODJ=PRHODJ(:,:,:,IBL), PRHODREF=PRHODREF(:,:,:,IBL),PEXNREF=PEXNREF2(:,:,:,IBL),&
              & PPABST=PPABSM(:,:,:,IBL), PCIT=PCIT(:,:,:,IBL), PCLDFR=PCLDFR(:,:,:,IBL),  &
              & PHLC_HRC=PHLC_HRC(:,:,:,IBL), PHLC_HCF=PHLC_HCF(:,:,:,IBL), &
@@ -407,6 +406,8 @@ LSEDIM_AFTER=.FALSE. ! Sedimentation done after microphysics
 XSPLIT_MAXCFL=0.8
 LDEPOSC=.FALSE.  ! water deposition on vegetation
 XVDEPOSC=0.02    ! deposition speed (2 cm.s-1)
+LPACK_INTERP=.TRUE.
+LPACK_MICRO=.TRUE.
 !
 !        2. Set implicit default values for MODD_RAIN_ICE_DESCR 
 !                     et MODD_RAIN_ICE_PARAM

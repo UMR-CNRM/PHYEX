@@ -1,12 +1,13 @@
 !     ######spl
-      SUBROUTINE  ARO_ADJUST_LIMA(KKA,KKU,KKL,KLON,KLEV,  KRR, KSV, KTCOUNT,  &
-                                  OSUBG_COND, OSIGMAS, OCND2, &
+      SUBROUTINE  ARO_ADJUST_LIMA(KKA,KKU,KKL,KLON,KLEV,KFDIA,  KRR, KSV, KTCOUNT,  &
+                                  OSUBG_COND, OSIGMAS, OCND2, HCONDENS, HLAMBDA3, &
                                   PTSTEP, PSIGQSAT, &
                                   PZZF, PRHODJ, PRHODREF, PEXNREF,&
                                   PPABSM, PTHT, PRT, PSVT, PSIGS, &
+                                  PW_NU, PDTHRAD, &
                                   PMFCONV, PRC_MF, PRI_MF, PCF_MF, &
-                                  PTHS, PRS,  PSVS, PSRCS, PCLDFR, &
-                            YDDDH, YDLDDH, YDMDDH)
+                                  PTHS, PRS,  PSVS, PSRCS, PCLDFR, PICEFR, PPRCFR, &
+                                  YDDDH, YDLDDH, YDMDDH, LLIMAINIT )
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ##########################################################################
@@ -81,17 +82,22 @@ USE MODD_CONF
 USE MODD_CST
 USE MODD_PARAMETERS
 USE MODD_RAIN_ICE_DESCR
-USE MODD_BUDGET
+USE MODD_BUDGET, ONLY: TBUDGETDATA, NBUDGET_SV1, TBUCONF
 !
 USE MODD_PARAM_LIMA
 USE MODD_NSV
 !
-USE MODI_LIMA_ADJUST
-!USE MODE_BUDGET, ONLY: BUDGET_DDH
+USE MODI_LIMA_ADJUST_SPLIT
+USE MODE_SET_CONC_LIMA
+USE MODE_SET_CONC_LIMA_LBC
+USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
+!USE MODE_BUDGET_PHY, ONLY: BUDGET_DDH
 !
 USE DDH_MIX, ONLY  : TYP_DDH
 USE YOMLDDH, ONLY  : TLDDH
 USE YOMMDDH, ONLY  : TMDDH
+!
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 IMPLICIT NONE
 !
@@ -105,6 +111,7 @@ INTEGER,                  INTENT(IN)   :: KKU    !uppest atmosphere array index
 INTEGER,                  INTENT(IN)   :: KKL    !vert. levels type 1=MNH -1=ARO
 INTEGER,                  INTENT(IN)   :: KLON     !NPROMA under CPG
 INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels
+INTEGER,                  INTENT(IN)   :: KFDIA    !
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KSV      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
@@ -113,6 +120,8 @@ LOGICAL,                  INTENT(IN)   :: OSIGMAS  ! Switch for Sigma_s:
                                         ! use values computed in CONDENSATION
                                         ! or that from turbulence scheme
 LOGICAL,                  INTENT(IN)   :: OCND2
+CHARACTER*80,             INTENT(IN)   :: HCONDENS
+CHARACTER*4,              INTENT(IN)   :: HLAMBDA3 ! formulation for lambda3 coeff
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 REAL,                     INTENT(IN)   :: PSIGQSAT ! coeff applied to qsat variance contribution
 !
@@ -128,6 +137,10 @@ REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PTHT    ! Theta at time t
 REAL, DIMENSION(KLON,1,KLEV,KRR), INTENT(INOUT) :: PRT     ! Moist variables at time t
 REAL, DIMENSION(KLON,1,KLEV,KSV), INTENT(INOUT) :: PSVT     ! Moist variables at time t
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PSIGS   ! Sigma_s at time t
+!
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PW_NU   ! w for CCN activation
+REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PDTHRAD ! rad theta tendency for CCN activation
+!
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PMFCONV ! convective mass flux
 REAL, DIMENSION(KLON,1,KLEV),   INTENT(IN)   :: PRC_MF, PRI_MF, PCF_MF
 !
@@ -141,11 +154,15 @@ REAL, DIMENSION(KLON,1,KLEV),   INTENT(OUT)   :: PSRCS ! Second-order flux
                                                  ! s'rc'/2Sigma_s2 at time t+1
                                                  ! multiplied by Lambda_3
 REAL, DIMENSION(KLON,1,KLEV), INTENT(INOUT)   :: PCLDFR! Cloud fraction
+REAL, DIMENSION(KLON,1,KLEV), INTENT(INOUT)   :: PICEFR! Cloud fraction
+REAL, DIMENSION(KLON,1,KLEV), INTENT(INOUT)   :: PPRCFR! Cloud fraction
 !
 !
-TYPE(TYP_DDH), INTENT(INOUT) :: YDDDH
-TYPE(TLDDH), INTENT(IN) :: YDLDDH
-TYPE(TMDDH), INTENT(IN) :: YDMDDH
+TYPE(TYP_DDH), INTENT(INOUT), TARGET :: YDDDH
+TYPE(TLDDH), INTENT(IN), TARGET :: YDLDDH
+TYPE(TMDDH), INTENT(IN), TARGET :: YDMDDH
+!
+LOGICAL,                  INTENT(IN)    :: LLIMAINIT
 !
 !*       0.2   Declarations of local variables :
 
@@ -173,6 +190,8 @@ REAL  :: ZMASSPOS                   ! total mass  for one water category
                                     ! after removing the negative values
 REAL  :: ZRATIO                     ! ZMASSTOT / ZMASSCOR
 !
+TYPE(TBUDGETDATA), DIMENSION(NBUDGET_SV1+NSV_LIMA-1) :: YLBUDGET
+TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !
 !------------------------------------------------------------------------------
 !
@@ -189,7 +208,7 @@ HRAD='NONE'
 HTURBDIM='1DIM'
 KMI=1
 
-
+CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, 0, KFDIA)
 
 !
 !*       2.     TRANSFORMATION INTO PHYSICAL TENDENCIES
@@ -204,18 +223,32 @@ ZT(:,:,:)= PTHT(:,:,:)*PEXNREF(:,:,:)
 ZLV(:,:,:)=XLVTT +(XCPV-XCL) *(ZT(:,:,:)-XTT)
 ZLS(:,:,:)=XLSTT +(XCPV-XCI) *(ZT(:,:,:)-XTT)
 ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
-!
+
+!set concentration for LIMA
+PRS = PRS * 2.*PTSTEP
+PSVS = PSVS * 2.*PTSTEP
+IF (LLIMAINIT) THEN
+   CALL SET_CONC_LIMA (1,'ICE3',PRHODREF,PRT,PSVT)
+   CALL SET_CONC_LIMA (1,'ICE3',PRHODREF,PRS,PSVS)
+ELSE
+   CALL SET_CONC_LIMA_LBC (1,'ICE3',PRHODREF,PRT,PSVT)
+   CALL SET_CONC_LIMA_LBC (1,'ICE3',PRHODREF,PRS,PSVS)
+END IF
+PRS = PRS / (2.*PTSTEP)
+PSVS = PSVS / (2.*PTSTEP)
+
+!print *, "aro_adjust_lima 2"
 !
 !*       3.     REMOVE NEGATIVE VALUES
 !               ----------------------
 !
 !*       3.1    Non local correction for precipitating species (Rood 87)
 !
-  DO JRR = 3,KRR
-    SELECT CASE (JRR)
-      CASE(3,5,6,7) ! rain, snow, graupel and hail
+DO JRR = 3,KRR
+   SELECT CASE (JRR)
+   CASE(3,5,6,7) ! rain, snow, graupel and hail
 
-        IF ( MINVAL( PRS(:,:,:,JRR)) < 0.0 ) THEN
+      IF ( MINVAL( PRS(:,:,:,JRR)) < 0.0 ) THEN
 ! For AROME, we cannot use MAX_ll so that according to JPP's advises
 !  we only correct negative values but not the total mass
 ! compute the total water mass computation
@@ -224,7 +257,7 @@ ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
 !
 ! remove the negative values
 !
-          PRS(:,:,:,JRR) = MAX( 0., PRS(:,:,:,JRR) )
+         PRS(:,:,:,JRR) = MAX( 0., PRS(:,:,:,JRR) )
 !
 ! compute the new total mass
 !
@@ -235,34 +268,34 @@ ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
 !          ZRATIO = ZMASSTOT / ZMASSPOS
 !          PRS(:,:,:,JRR) = PRS(:,:,:,JRR) * ZRATIO
 
-        END IF
-    END SELECT
-  END DO
+      END IF
+   END SELECT
+END DO
 !
 !*       3.2    Correct negative values
 !
 ! Correction where rc<0
-     IF (LWARM_LIMA) THEN
+IF (NMOM_C.GE.1) THEN
 !        WHERE (PRS(:,:,:,2) < 0. .OR. PSVS(:,:,:,NSV_LIMA_NC) < 0.)
-        WHERE (PRS(:,:,:,2) < 0.)
-           PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,2)
-           PTHS(:,:,:) = PTHS(:,:,:) - PRS(:,:,:,2) * ZLV(:,:,:) /  &
-                ZCPH(:,:,:) / PEXNREF(:,:,:)
-           PRS(:,:,:,2)  = 0.0
-           PSVS(:,:,:,NSV_LIMA_NC) = 0.0
-        END WHERE
-     END IF
+   WHERE (PRS(:,:,:,2) < 0.)
+      PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,2)
+      PTHS(:,:,:) = PTHS(:,:,:) - PRS(:,:,:,2) * ZLV(:,:,:) /  &
+           ZCPH(:,:,:) / PEXNREF(:,:,:)
+      PRS(:,:,:,2)  = 0.0
+      PSVS(:,:,:,NSV_LIMA_NC) = 0.0
+   END WHERE
+END IF
 ! Correction where rr<0
-     IF (LWARM_LIMA .AND. LRAIN_LIMA) THEN
+IF (NMOM_R.GE.1) THEN
 !        WHERE (PRS(:,:,:,3) < 0. .OR. PSVS(:,:,:,NSV_LIMA_NR) < 0.)
-        WHERE (PRS(:,:,:,3) < 0.)
-           PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,3)
-           PTHS(:,:,:) = PTHS(:,:,:) - PRS(:,:,:,3) * ZLV(:,:,:) /  &
-                ZCPH(:,:,:) / PEXNREF(:,:,:)
-           PRS(:,:,:,3)  = 0.0
-           PSVS(:,:,:,NSV_LIMA_NR) = 0.0
-        END WHERE
-     END IF
+   WHERE (PRS(:,:,:,3) < 0.)
+      PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,3)
+      PTHS(:,:,:) = PTHS(:,:,:) - PRS(:,:,:,3) * ZLV(:,:,:) /  &
+           ZCPH(:,:,:) / PEXNREF(:,:,:)
+      PRS(:,:,:,3)  = 0.0
+      PSVS(:,:,:,NSV_LIMA_NR) = 0.0
+   END WHERE
+END IF
 ! Correction of IFN concentrations where ri<0 or Ni<0
 !     IF (LCOLD_LIMA) THEN
 !        DO JMOD = 1, NMOD_IFN 
@@ -275,18 +308,18 @@ ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
 !        ENDDO
 !     END IF
 ! Correction where ri<0
-     IF (LCOLD_LIMA) THEN
+IF (NMOM_I.GE.1) THEN
 !        WHERE (PRS(:,:,:,4) < 0. .OR. PSVS(:,:,:,NSV_LIMA_NI) < 0.)
-        WHERE (PRS(:,:,:,4) < 0.)
-           PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,4)
-           PTHS(:,:,:) = PTHS(:,:,:) - PRS(:,:,:,4) * ZLS(:,:,:) /  &
-                ZCPH(:,:,:) / PEXNREF(:,:,:)
-           PRS(:,:,:,4)  = 0.0
-           PSVS(:,:,:,NSV_LIMA_NI) = 0.0
-        END WHERE
-     END IF
+   WHERE (PRS(:,:,:,4) < 0.)
+      PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,4)
+      PTHS(:,:,:) = PTHS(:,:,:) - PRS(:,:,:,4) * ZLS(:,:,:) /  &
+           ZCPH(:,:,:) / PEXNREF(:,:,:)
+      PRS(:,:,:,4)  = 0.0
+      PSVS(:,:,:,NSV_LIMA_NI) = 0.0
+   END WHERE
+END IF
 !
-     PSVS(:,:,:,:) = MAX( 0.0,PSVS(:,:,:,:) )
+PSVS(:,:,:,:) = MAX( 0.0,PSVS(:,:,:,:) )
 !
 !
 !*       3.3  STORE THE BUDGET TERMS
@@ -301,7 +334,12 @@ ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
 !IF (LBUDGET_RH) CALL BUDGET (PRS(:,:,:,7) * PRHODJ(:,:,:),12,'NEGA_BU_RRH')
 !IF (LBUDGET_TH) CALL BUDGET (PTHS(:,:,:)  * PRHODJ(:,:,:), 4,'NEGA_BU_RTH')
 
-
+DO JRR = 1, NBUDGET_SV1+NSV_LIMA-1
+   YLBUDGET(JRR)%NBUDGET=JRR
+   YLBUDGET(JRR)%YDDDH=>YDDDH
+   YLBUDGET(JRR)%YDLDDH=>YDLDDH
+   YLBUDGET(JRR)%YDMDDH=>YDMDDH
+ENDDO
 !
 !-------------------------------------------------------------------------------
 !
@@ -314,13 +352,13 @@ ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
 !
     ZZZ =  PZZF
 
-    CALL LIMA_ADJUST(KRR=KRR, KMI=KMI, HFMFILE='DUMMY', HLUOUT='DUMMY', HRAD='DUMMY',                  &
-                     HTURBDIM=HTURBDIM, OCLOSE_OUT=.FALSE., OSUBG_COND=.FALSE., PTSTEP=2*PTSTEP,         &
-                     PRHODREF=PRHODREF, PRHODJ=PRHODJ, PEXNREF=PEXNREF, PPABSM=PPABSM, PSIGS=PSIGS, PPABST=PPABSM, &
-                     PRT=PRT, PRS=PRS, PSVT=PSVT, PSVS=PSVS,                             &
-                     PTHS=PTHS, PSRCS=PSRCS, PCLDFR=PCLDFR, &
-                     YDDDH=YDDDH, YDLDDH=YDLDDH, YDMDDH=YDMDDH                              )
-
+    CALL LIMA_ADJUST_SPLIT(D=YLDIMPHYEX, CST=CST, BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
+         KRR=KRR, KMI=KMI, HCONDENS=HCONDENS, HLAMBDA3=HLAMBDA3, &
+         OSUBG_COND=OSUBG_COND, OSIGMAS=OSIGMAS, PTSTEP=2*PTSTEP, PSIGQSAT=PSIGQSAT, &
+         PRHODREF=PRHODREF, PRHODJ=PRHODJ, PEXNREF=PEXNREF, PSIGS=PSIGS, PMFCONV=PMFCONV, &
+         PPABST=PPABSM, PPABSTT=PPABSM, PZZ=ZZZ, PDTHRAD=PDTHRAD, PW_NU=PW_NU, &
+         PRT=PRT, PRS=PRS, PSVT=PSVT, PSVS=PSVS, &
+         PTHS=PTHS, PSRCS=PSRCS, PCLDFR=PCLDFR, PICEFR=PICEFR, PRC_MF=PRC_MF, PRI_MF=PRI_MF, PCF_MF=PCF_MF )
 !
 !-------------------------------------------------------------------------------
 !

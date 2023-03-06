@@ -303,9 +303,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
 
   CALL SHALLOW_MF(D, CST, NEB, PARAM_MFSHALLN, TURBN, CSTURB,                    &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                             &
-     &HMF_UPDRAFT=HMF_UPDRAFT, HMF_CLOUD=HMF_CLOUD,HFRAC_ICE=HFRAC_ICE,OMIXUV=OMIXUV,     &
-     &OSTATNW=OSTATNW,                                                                    &
-     &ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,                          &
+     &HFRAC_ICE=HFRAC_ICE,ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,      &
      &PIMPL_MF=ZIMPL, PTSTEP=PTSTEP,                                                      &
      &PDZZ=PDZZF(:,:,:,IBL),PZZ=PZZ(:,:,:,IBL),                                                                 &
      &PRHODJ=PRHODJ(:,:,:,IBL),PRHODREF=PRHODREF(:,:,:,IBL),                                                    &
@@ -322,7 +320,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
      &PRC_UP=PRC_UP(:,:,:,IBL),PRI_UP=PRI_UP(:,:,:,IBL),            &
      &PU_UP=PU_UP(:,:,:,IBL), PV_UP=PV_UP(:,:,:,IBL), PTHV_UP=PTHV_UP(:,:,:,IBL), PW_UP=PW_UP(:,:,:,IBL),                        &
      &PFRAC_UP=PFRAC_UP(:,:,:,IBL),PEMF=PEMF(:,:,:,IBL),PDETR=ZDETR(:,:,:,IBL),PENTR=ZENTR(:,:,:,IBL),                           &
-     &KKLCL=IKLCL(:,:,IBL),KKETL=IKETL(:,:,IBL),KKCTL=IKCTL(:,:,IBL),PDX=0.,PDY=0.                                   )
+     &KKLCL=IKLCL(:,:,IBL),KKETL=IKETL(:,:,IBL),KKCTL=IKCTL(:,:,IBL),PDX=0.,PDY=0.,KBUDGETS=0                                  )
 
 #ifdef _OPENACC
     ENDDO
@@ -454,7 +452,9 @@ PARAM_MFSHALLN%XR     =  2.
 PARAM_MFSHALLN%XLAMBDA_MF  = 0.
 PARAM_MFSHALLN%LGZ = .FALSE.
 PARAM_MFSHALLN%XGZ=1.
-
+PARAM_MFSHALLN%CMF_UPDRAFT=HMF_UPDRAFT
+PARAM_MFSHALLN%CMF_CLOUD=HMF_CLOUD
+PARAM_MFSHALLN%LMIXUV=OMIXUV
 TURBN%LHARAT=.FALSE.
 TURBN%CTURBDIM = '1DIM'
 TURBN%XIMPL=1.

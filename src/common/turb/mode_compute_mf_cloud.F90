@@ -12,7 +12,7 @@ CONTAINS
 !
 !     ######spl
       SUBROUTINE COMPUTE_MF_CLOUD(D, CST, CSTURB, PARAMMF, OSTATNW,         &
-                                  KRR, KRRL, KRRI, HMF_CLOUD,               &
+                                  KRR, KRRL, KRRI,                          &
                                   PFRAC_ICE,                                &
                                   PRC_UP,PRI_UP,PEMF,                       &
                                   PTHL_UP, PRT_UP, PFRAC_UP,                &
@@ -88,7 +88,6 @@ TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   ::  KRRL         ! number of liquid water var.
 INTEGER,                INTENT(IN)   ::  KRRI         ! number of ice water var.
-CHARACTER (LEN=4),      INTENT(IN)   ::  HMF_CLOUD    ! Type of statistical cloud scheme
 LOGICAL,                INTENT(IN)   :: OSTATNW      ! cloud scheme inclues convect. covar. contrib
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PFRAC_ICE    ! liquid/ice fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PRC_UP,PRI_UP,PEMF! updraft characteritics
@@ -124,13 +123,13 @@ PRI_MF = 0.
 PCF_MF = 0.
 PSIGMF = 0.
 
-IF (HMF_CLOUD == 'DIRE') THEN
+IF (PARAMMF%CMF_CLOUD == 'DIRE') THEN
   !Direct cloud scheme
   CALL COMPUTE_MF_CLOUD_DIRECT(D, PARAMMF, &
                               &KKLCL(:), PFRAC_UP(:,:), PRC_UP(:,:), PRI_UP(:,:),&
                               &PRC_MF(:,:), PRI_MF(:,:), PCF_MF(:,:))
   !
-ELSEIF (HMF_CLOUD == 'STAT') THEN
+ELSEIF (PARAMMF%CMF_CLOUD == 'STAT') THEN
   !Statistical scheme using the PDF proposed by Bougeault (81, 82) and
   !Bechtold et al (95).
   CALL COMPUTE_MF_CLOUD_STAT(D, CST, CSTURB, PARAMMF, &
@@ -140,7 +139,7 @@ ELSEIF (HMF_CLOUD == 'STAT') THEN
                             &PDZZ, PTHM, PEXNM,&
                             &PEMF, PTHL_UP, PRT_UP,&
                             &PSIGMF)
-ELSEIF (HMF_CLOUD == 'BIGA') THEN
+ELSEIF (PARAMMF%CMF_CLOUD == 'BIGA') THEN
   !Statistical scheme using the bi-gaussian PDF proposed by E. Perraud.
   CALL COMPUTE_MF_CLOUD_BIGAUS(D, CST, PARAMMF,&
                               &PEMF, PDEPTH,&
@@ -149,11 +148,12 @@ ELSEIF (HMF_CLOUD == 'BIGA') THEN
                               &PDZZ, PZZ, PRHODREF,&
                               &PRC_MF, PRI_MF, PCF_MF)
   !
-ELSEIF  (HMF_CLOUD == 'NONE') THEN
+ELSEIF  (PARAMMF%CMF_CLOUD == 'NONE') THEN
   ! No CONVECTIVE CLOUD SCHEME
   ! Nothing to do: PRC_MF, PRI_MF, PCF_MF, PSIGMF are already filled with zero
 ELSE
-  CALL PRINT_MSG(NVERB_FATAL,'GEN','COMPUTE_MF_CLOUD','Shallow convection cloud scheme not valid: HMF_CLOUD='//TRIM(HMF_CLOUD))
+  CALL PRINT_MSG(NVERB_FATAL, &
+'GEN','COMPUTE_MF_CLOUD','Shallow convection cloud scheme not valid: PARAMMF%CMF_CLOUD='//TRIM(PARAMMF%CMF_CLOUD))
 ENDIF
 
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD',1,ZHOOK_HANDLE)

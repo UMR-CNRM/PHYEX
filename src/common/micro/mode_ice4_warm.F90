@@ -92,13 +92,9 @@ IF (LHOOK) CALL DR_HOOK('ICE4_WARM', 0, ZHOOK_HANDLE)
 !*       4.2    compute the autoconversion of r_c for r_r production: RCAUTR
 !
 DO JL=1, KSIZE
-#ifdef REPRO55
-  IF(PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>1.E-20 .AND. LDCOMPUTE(JL)) THEN
-#else
   IF(PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>0. .AND. LDCOMPUTE(JL)) THEN
-#endif
     IF(.NOT. LDSOFT) THEN
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
       PRCAUTR(JL) = ICEP%XTIMAUTC*MAX(PHLC_HRC(JL)/PHLC_HCF(JL) - ICEP%XCRIAUTC/PRHODREF(JL), 0.0)
       PRCAUTR(JL) = PHLC_HCF(JL)*PRCAUTR(JL)
 #else
@@ -138,11 +134,7 @@ ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
   ! => min(PCF, PRF)-PHLC_HCF
   DO JL=1, KSIZE
     LMASK = PRCT(JL)>ICED%XRTMIN(2) .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)
-#ifdef REPRO55
-    LMASK1 = LMASK .AND. PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>1.E-20
-#else
     LMASK1 = LMASK .AND. PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>0.
-#endif
 #ifdef REPRO48
     LMASK2 = LMASK .AND. PHLC_LRC(JL)>ICED%XRTMIN(2) .AND. PHLC_LCF(JL)>0.
 #else
@@ -152,7 +144,7 @@ ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
       IF(.NOT. LDSOFT) THEN
         IF(LMASK1) THEN
           !Accretion due to rain falling in high cloud content
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
           PRCACCR(JL) = ICEP%XFCACCR * ( PHLC_HRC(JL)/PHLC_HCF(JL) )     &
                       &*PLBDAR_RF(JL)**ICEP%XEXCACCR &
                       &*PRHODREF(JL)**(-ICED%XCEXVT) &

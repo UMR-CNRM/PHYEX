@@ -33,8 +33,8 @@ export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 # Total number of MPI tasks:
 MPI_TASKS=$SLURM_NTASKS
 # Number of tasks reserved for the I/O server : 2 (hyperthreaded) nodes
-NTASKS_IO=$(($(grep processor /proc/cpuinfo | wc -l)/1/$OMP_NUM_THREADS))
-
+#NTASKS_IO=$(($(grep processor /proc/cpuinfo | wc -l)/1/$OMP_NUM_THREADS))
+NTASKS_IO=0
 echo NNODES=$NNODES
 echo MPITASKS_PER_NODE=$MPITASKS_PER_NODE
 echo

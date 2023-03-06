@@ -14,6 +14,7 @@ INTERFACE
                                 PTHT,PRT, PSVT, PTHS, PRS,PSVS, PCLDFR, PICEFR, PRAINFR, PSRCS )
 !
 USE MODD_IO, ONLY: TFILEDATA
+USE MODD_NSV,   only: NSV_LIMA_BEG
 !
 INTEGER,                  INTENT(IN)    :: KMI        ! Model index
 TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE   ! Output file
@@ -30,10 +31,10 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PZZ      ! Reference density
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT     ! Theta
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT      ! m.r. at t
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSVT     ! Concentrations source
+REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(IN)    :: PSVT     ! Concentrations at t
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS     ! Theta source
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS      ! m.r. source
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PSVS     ! Concentrations source
+REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(INOUT) :: PSVS     ! Concentrations source
 REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PSRCS   ! Second-order flux
                                                    ! s'rc'/2Sigma_s2 at time t+1
                                                    ! multiplied by Lambda_3
@@ -83,7 +84,7 @@ use modd_budget,           only: lbu_enable, nbumod,                            
                                  tbudgets
 USE MODD_CONF
 USE MODD_CST
-USE MODD_FIELD,            ONLY: TFIELDDATA,TYPEREAL
+USE MODD_FIELD,            ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,               ONLY: TFILEDATA
 USE MODD_LUNIT_n,          ONLY: TLUOUT
 USE MODD_NSV
@@ -120,10 +121,10 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PZZ      ! Reference density
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT     ! Theta
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT      ! m.r. at t
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSVT     ! Concentrations source
+REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(IN)    :: PSVT     ! Concentrations at t
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS     ! Theta source
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS      ! m.r. source
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PSVS     ! Concentrations source
+REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(INOUT) :: PSVS     ! Concentrations source
 REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PSRCS   ! Second-order flux
                                                    ! s'rc'/2Sigma_s2 at time t+1
                                                    ! multiplied by Lambda_3
@@ -168,7 +169,7 @@ REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) ::&
                        ZSAT,ZCCS
 INTEGER           :: JK            ! For loop
 integer :: idx
-TYPE(TFIELDDATA)  :: TZFIELD
+TYPE(TFIELDMETADATA) :: TZFIELD
 REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: ZNFS     ! CCN C. available source
 REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: ZNAS     ! Cloud  C. nuclei C. source
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZZNFS     ! CCN C. available source
@@ -192,7 +193,7 @@ if ( nbumod == kmi .and. lbu_enable ) then
   if ( lbudget_rc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'CEDS', prs(:, :, :, 2) * prhodj(:, :, :) )
   if ( lbudget_ri ) call Budget_store_init( tbudgets(NBUDGET_RI), 'CEDS', prs(:, :, :, 4) * prhodj(:, :, :) )
   if ( lbudget_sv ) then
-    if ( lwarm .and. nmom_c.ge.2) then
+    if ( nmom_c.ge.2) then
       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CEDS', psvs(:, :, :, nsv_lima_nc) * prhodj(:, :, :) )
       do jl = nsv_lima_ccn_free, nsv_lima_ccn_free + nmod_ccn - 1
         idx = NBUDGET_SV1 - 1 + jl
@@ -206,7 +207,7 @@ if ( nbumod == kmi .and. lbu_enable ) then
 !     if ( lscav .and. laero_mass ) &
 !       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', psvs(:, :, :, nsv_lima_scavmass) &
 !                                                                                     * prhodj(:, :, :) )
-!     if ( lcold ) then
+!     if ( nmom_i.ge.2 ) then
 !       call Budget_store_init( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'CEDS', psvs(:, :, :, nsv_lima_ni) * prhodj(:, :, :) )
 !       do jl = 1, nsv_lima_ifn_free, nsv_lima_ifn_free + nmod_ifn - 1
 !         idx = NBUDGET_SV1 - 1 + jl
@@ -588,16 +589,17 @@ ENDWHERE
 !
 IF ( tpfile%lopened ) THEN
   ZW(:,:,:)=SUM(ZNAS,4)-ZW(:,:,:)
-  TZFIELD%CMNHNAME   = 'NACT'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'NACT'
-  TZFIELD%CUNITS     = ''
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_NACT'
-  TZFIELD%NGRID      = 1
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(    &
+    CMNHNAME   = 'NACT',       &
+    CSTDNAME   = '',           &
+    CLONGNAME  = 'NACT',       &
+    CUNITS     = 'kg-1',       &
+    CDIR       = 'XY',         &
+    CCOMMENT   = 'X_Y_Z_NACT', &
+    NGRID      = 1,            &
+    NTYPE      = TYPEREAL,     &
+    NDIMS      = 3,            &
+    LTIMEDEP   = .TRUE.        )
   CALL IO_Field_write(TPFILE,TZFIELD,ZW)
 END IF
 !
@@ -610,7 +612,7 @@ if ( nbumod == kmi .and. lbu_enable ) then
   if ( lbudget_rc ) call Budget_store_end( tbudgets(NBUDGET_RC), 'CEDS', prs(:, :, :, 2) * prhodj(:, :, :) )
   if ( lbudget_ri ) call Budget_store_end( tbudgets(NBUDGET_RI), 'CEDS', prs(:, :, :, 4) * prhodj(:, :, :) )
   if ( lbudget_sv ) then
-    if ( lwarm .and. nmom_c.ge.2) then
+    if (nmom_c.ge.2) then
       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CEDS', psvs(:, :, :, nsv_lima_nc) * prhodj(:, :, :) )
       do jl = nsv_lima_ccn_free, nsv_lima_ccn_free + nmod_ccn - 1
         idx = NBUDGET_SV1 - 1 + jl
@@ -624,7 +626,7 @@ if ( nbumod == kmi .and. lbu_enable ) then
 !     if ( lscav .and. laero_mass ) &
 !       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', psvs(:, :, :, nsv_lima_scavmass) &
 !                                                                                     * prhodj(:, :, :) )
-!     if ( lcold ) then
+!     if ( nmom_i.ge.2 ) then
 !       call Budget_store_end( tbudgets(NBUDGET_SV1 - 1 + nsv_lima_ni), 'CEDS', psvs(:, :, :, nsv_lima_ni) * prhodj(:, :, :) )
 !       do jl = 1, nsv_lima_ifn_free, nsv_lima_ifn_free + nmod_ifn - 1
 !         idx = NBUDGET_SV1 - 1 + jl

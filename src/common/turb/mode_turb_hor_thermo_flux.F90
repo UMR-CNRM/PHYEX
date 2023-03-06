@@ -65,7 +65,7 @@ USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODD_CST
 USE MODD_CTURB
-USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
+USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_LES, ONLY: TLES_t
@@ -149,7 +149,7 @@ REAL, DIMENSION(SIZE(PDZZ,1),SIZE(PDZZ,2),1+JPVEXT:3+JPVEXT) :: ZCOEFF
                                     ! computation near the ground
 !
 REAL :: ZTIME1, ZTIME2
-TYPE(TFIELDDATA) :: TZFIELD
+TYPE(TFIELDMETADATA) :: TZFIELD
 ! ---------------------------------------------------------------------------
 !
 !*       1.   PRELIMINARY COMPUTATIONS
@@ -246,16 +246,17 @@ END IF
 !
 ! stores the horizontal  <U THl>
 IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
-  TZFIELD%CMNHNAME   = 'UTHL_FLX'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'UTHL_FLX'
-  TZFIELD%CUNITS     = 'K m s-1'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_UTHL_FLX'
-  TZFIELD%NGRID      = 2
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(        &
+    CMNHNAME   = 'UTHL_FLX',       &
+    CSTDNAME   = '',               &
+    CLONGNAME  = 'UTHL_FLX',       &
+    CUNITS     = 'K m s-1',        &
+    CDIR       = 'XY',             &
+    CCOMMENT   = 'X_Y_Z_UTHL_FLX', &
+    NGRID      = 2,                &
+    NTYPE      = TYPEREAL,         &
+    NDIMS      = 3,                &
+    LTIMEDEP   = .TRUE.            )
   CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
 END IF
 !
@@ -349,16 +350,17 @@ IF (KRR/=0) THEN
   !
   ! stores the horizontal  <U Rnp>
   IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
-    TZFIELD%CMNHNAME   = 'UR_FLX'
-    TZFIELD%CSTDNAME   = ''
-    TZFIELD%CLONGNAME  = 'UR_FLX'
-    TZFIELD%CUNITS     = 'kg kg-1 m s-1'
-    TZFIELD%CDIR       = 'XY'
-    TZFIELD%CCOMMENT   = 'X_Y_Z_UR_FLX'
-    TZFIELD%NGRID      = 2
-    TZFIELD%NTYPE      = TYPEREAL
-    TZFIELD%NDIMS      = 3
-    TZFIELD%LTIMEDEP   = .TRUE.
+    TZFIELD = TFIELDMETADATA(       &
+      CMNHNAME   = 'UR_FLX',        &
+      CSTDNAME   = '',              &
+      CLONGNAME  = 'UR_FLX',        &
+      CUNITS     = 'kg kg-1 m s-1', &
+      CDIR       = 'XY',            &
+      CCOMMENT   = 'X_Y_Z_UR_FLX',  &
+      NGRID      = 2,               &
+      NTYPE      = TYPEREAL,        &
+      NDIMS      = 3,               &
+      LTIMEDEP   = .TRUE.           )
     CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
   END IF
   !
@@ -398,16 +400,17 @@ END IF
 !!  !
 !!  ! stores the horizontal  <U VPT>
 !!  IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
-!!    TZFIELD%CMNHNAME   = 'UVPT_FLX'
-!!    TZFIELD%CSTDNAME   = ''
-!!    TZFIELD%CLONGNAME  = 'UVPT_FLX'
-!!    TZFIELD%CUNITS     = 'K m s-1'
-!!    TZFIELD%CDIR       = 'XY'
-!!    TZFIELD%CCOMMENT   = 'X_Y_Z_UVPT_FLX'
-!!    TZFIELD%NGRID      = 2
-!!    TZFIELD%NTYPE      = TYPEREAL
-!!    TZFIELD%NDIMS      = 3
-!!    TZFIELD%LTIMEDEP   = .TRUE.
+!!    TZFIELD = TFIELDMETADATA(        &
+!!      CMNHNAME   = 'UVPT_FLX',       &
+!!      CSTDNAME   = '',               &
+!!      CLONGNAME  = 'UVPT_FLX',       &
+!!      CUNITS     = 'K m s-1',        &
+!!      CDIR       = 'XY',             &
+!!      CCOMMENT   = 'X_Y_Z_UVPT_FLX', &
+!!      NGRID      = 2,                &
+!!      NTYPE      = TYPEREAL,         &
+!!      NDIMS      = 3,                &
+!!      LTIMEDEP   = .TRUE.            )
 !!    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZVPTU)
 !!  END IF
 !!!
@@ -501,16 +504,17 @@ END IF
 !
 ! stores the horizontal  <V THl>
 IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
-  TZFIELD%CMNHNAME   = 'VTHL_FLX'
-  TZFIELD%CSTDNAME   = ''
-  TZFIELD%CLONGNAME  = 'VTHL_FLX'
-  TZFIELD%CUNITS     = 'K m s-1'
-  TZFIELD%CDIR       = 'XY'
-  TZFIELD%CCOMMENT   = 'X_Y_Z_VTHL_FLX'
-  TZFIELD%NGRID      = 3
-  TZFIELD%NTYPE      = TYPEREAL
-  TZFIELD%NDIMS      = 3
-  TZFIELD%LTIMEDEP   = .TRUE.
+  TZFIELD = TFIELDMETADATA(        &
+    CMNHNAME   = 'VTHL_FLX',       &
+    CSTDNAME   = '',               &
+    CLONGNAME  = 'VTHL_FLX',       &
+    CUNITS     = 'K m s-1',        &
+    CDIR       = 'XY',             &
+    CCOMMENT   = 'X_Y_Z_VTHL_FLX', &
+    NGRID      = 3,                &
+    NTYPE      = TYPEREAL,         &
+    NDIMS      = 3,                &
+    LTIMEDEP   = .TRUE.            )
   CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
 END IF
 !
@@ -613,16 +617,17 @@ IF (KRR/=0) THEN
   !
   ! stores the horizontal  <V Rnp>
   IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
-    TZFIELD%CMNHNAME   = 'VR_FLX'
-    TZFIELD%CSTDNAME   = ''
-    TZFIELD%CLONGNAME  = 'VR_FLX'
-    TZFIELD%CUNITS     = 'kg kg-1 m s-1'
-    TZFIELD%CDIR       = 'XY'
-    TZFIELD%CCOMMENT   = 'X_Y_Z_VR_FLX'
-    TZFIELD%NGRID      = 3
-    TZFIELD%NTYPE      = TYPEREAL
-    TZFIELD%NDIMS      = 3
-    TZFIELD%LTIMEDEP   = .TRUE.
+    TZFIELD = TFIELDMETADATA(       &
+      CMNHNAME   = 'VR_FLX',        &
+      CSTDNAME   = '',              &
+      CLONGNAME  = 'VR_FLX',        &
+      CUNITS     = 'kg kg-1 m s-1', &
+      CDIR       = 'XY',            &
+      CCOMMENT   = 'X_Y_Z_VR_FLX',  &
+      NGRID      = 3,               &
+      NTYPE      = TYPEREAL,        &
+      NDIMS      = 3,               &
+      LTIMEDEP   = .TRUE.           )
     CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZFLX)
   END IF
   !
@@ -666,16 +671,17 @@ END IF
 !!  !
 !!  ! stores the horizontal  <V VPT>
 !!  IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
-!!    TZFIELD%CMNHNAME   = 'VVPT_FLX'
-!!    TZFIELD%CSTDNAME   = ''
-!!    TZFIELD%CLONGNAME  = 'VVPT_FLX'
-!!    TZFIELD%CUNITS     = 'K m s-1'
-!!    TZFIELD%CDIR       = 'XY'
-!!    TZFIELD%CCOMMENT   = 'X_Y_Z_VVPT_FLX'
-!!    TZFIELD%NGRID      = 3
-!!    TZFIELD%NTYPE      = TYPEREAL
-!!    TZFIELD%NDIMS      = 3
-!!    TZFIELD%LTIMEDEP   = .TRUE.
+!!    TZFIELD = TFIELDMETADATA(        &
+!!      CMNHNAME   = 'VVPT_FLX',       &
+!!      CSTDNAME   = '',               &
+!!      CLONGNAME  = 'VVPT_FLX',       &
+!!      CUNITS     = 'K m s-1',        &
+!!      CDIR       = 'XY',             &
+!!      CCOMMENT   = 'X_Y_Z_VVPT_FLX', &
+!!      NGRID      = 3,                &
+!!      NTYPE      = TYPEREAL,         &
+!!      NDIMS      = 3,                &
+!!      LTIMEDEP   = .TRUE.            )
 !!    CALL IO_FIELD_WRITE(TPFILE,TZFIELD,ZVPTV)
 !!  END IF
 !!!

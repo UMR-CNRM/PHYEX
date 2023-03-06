@@ -186,7 +186,7 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
       DO JJ = 1, IGWET
         JL = I1W(JJ)
         ZZW1(JL,3) = MIN( PRSS(JL),XFSWETH*ZVEC3(JJ)                       & ! RSWETH
-#if defined(REPRO48) || defined(REPRO55)
+#if defined(REPRO48) 
                       *( ZVECLBDAS(JJ)**(XCXS-XBS) )*( ZVECLBDAH(JJ)**XCXH )  &
                          *( PRHODREF(JL)**(-XCEXVT-1.) )               &
 #else
