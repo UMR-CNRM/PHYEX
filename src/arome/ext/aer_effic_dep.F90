@@ -45,7 +45,6 @@ USE MODD_WET_DEP_PARAM
 USE MODD_WET_DEP_DESCR
 USE MODD_CST,         ONLY : XPI, XRHOLW, XP00, XRD
 USE MODD_PARAMETERS_DEP , ONLY : JPVEXT
-USE MODD_REF,         ONLY : XTHVREFZ
 !
 IMPLICIT NONE
 !
@@ -66,7 +65,6 @@ REAL, INTENT(IN)                    :: PDENSITY_AER
 !
 INTEGER :: IKB                ! Coordinates of the first physical 
                               ! points along z
-REAL :: ZRHO00                ! Surface reference air density
 !viscosity ratio, Reynolds number
 REAL, DIMENSION(SIZE(PRG,1)) :: ZOMG, ZREY
 !rain radius, m, and rain fall speed, m/s; aerosol radius (m),
@@ -95,7 +93,6 @@ INTEGER :: JI,JK
 !-----------------------------------------------------------------
 ZRRS(:)=PRRS(:)
 IKB = 1 + JPVEXT
-ZRHO00 = XP00/(XRD*XTHVREFZ(IKB))                                        
 ZRG(:,:)=PRG(:,:)*1.E-6 !change units to meters
 !
 !Fall Speed calculations
