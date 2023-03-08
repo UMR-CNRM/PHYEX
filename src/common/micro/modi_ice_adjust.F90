@@ -4,7 +4,7 @@
 !
 INTERFACE
 !
-      SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEB, TURBN, BUCONF, KRR,            &
+      SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, BUCONF, KRR,           &
                             &HFRAC_ICE, HBUNAME, OCND2, LHGT_QS,               &
                             &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
@@ -21,7 +21,7 @@ INTERFACE
 USE MODD_BUDGET,         ONLY: TBUDGETDATA, TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
-USE MODD_NEB,            ONLY: NEB_t
+USE MODD_NEB_n,          ONLY: NEB_t
 USE MODD_TURB_n,         ONLY: TURB_t
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 IMPLICIT NONE
@@ -33,7 +33,7 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
-TYPE(NEB_t),              INTENT(IN)    :: NEB
+TYPE(NEB_t),              INTENT(IN)    :: NEBN
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KRR      ! Number of moist variables

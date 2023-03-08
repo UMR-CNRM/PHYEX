@@ -1,0 +1,168 @@
+!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC for details. version 1.
+!     ######spl
+      MODULE MODD_NEB_n
+!     #############################
+!> @file
+!!****  *MODD_NEB_n* - Declaration of nebulosity constants
+!!
+!!    PURPOSE
+!!    -------
+!!      The purpose of this declarative module is to declare some
+!!      constants for nebulosity calculation
+!
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      None
+!!
+!!    REFERENCE
+!!    ---------
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!       S. Riette (Meteo France)
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    24 Aug 2011
+!-------------------------------------------------------------------------------
+!
+!*       0.   DECLARATIONS
+!             ------------
+!
+USE MODD_PARAMETERS, ONLY: JPMODELMAX
+IMPLICIT NONE
+!
+TYPE NEB_t
+  REAL          :: XTMINMIX   !< minimum temperature of mixed phase
+  REAL          :: XTMAXMIX   !< maximum temperature of mixed phase
+END TYPE NEB_t
+
+TYPE(NEB_t), DIMENSION(JPMODELMAX), SAVE, TARGET :: NEB_MODEL
+TYPE(NEB_t), POINTER, SAVE :: NEBN => NULL()
+
+REAL, POINTER :: XTMINMIX=>NULL(), &
+                 XTMAXMIX=>NULL()
+!
+NAMELIST/NAM_NEBn/XTMINMIX, XTMAXMIX
+!
+!-------------------------------------------------------------------------------
+!
+CONTAINS
+SUBROUTINE NEB_GOTO_MODEL(KFROM, KTO)
+!! This subroutine associate all the pointers to the right component of
+!! the right strucuture. A value can be accessed through the structure NEBN
+!! or through the strucuture NEB_MODEL(KTO) or directly through these pointers.
+IMPLICIT NONE
+INTEGER, INTENT(IN) :: KFROM, KTO
+!
+IF(.NOT. ASSOCIATED(NEBN, NEB_MODEL(KTO))) THEN
+  !
+  NEBN => NEB_MODEL(KTO)
+  !
+  XTMINMIX => NEBN%XTMINMIX
+  XTMAXMIX => NEBN%XTMAXMIX
+ENDIF
+END SUBROUTINE NEB_GOTO_MODEL
+!
+SUBROUTINE NEBN_INIT(HPROGRAM, KUNITNML, LDNEEDNAM, KLUOUT, &
+                    &LDDEFAULTVAL, LDREADNAM, LDCHECK, KPRINT)
+!!*** *NEBN_INIT* - Code needed to initialize the MODD_NEB_n module
+!!
+!!*   PURPOSE
+!!    -------
+!!    Sets the default values, reads the namelist, performs the checks and prints
+!!
+!!*   METHOD
+!!    ------
+!!    0. Declarations
+!!       1. Declaration of arguments
+!!       2. Declaration of local variables
+!!    1. Default values
+!!    2. Namelist
+!!    3. Checks
+!!    4. Prints
+!!
+!!    AUTHOR
+!!    ------
+!!    S. Riette
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    Mar 2023
+!-------------------------------------------------------------------------------
+!
+!*      0. DECLARATIONS
+!       ---------------
+!
+USE MODE_POSNAM_PHY, ONLY: POSNAM_PHY
+USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
+USE MODE_CHECK_NAM_VAL, ONLY: CHECK_NAM_VAL_CHAR, CHECK_NAM_VAL_REAL, CHECK_NAM_VAL_INT
+!
+IMPLICIT NONE
+!
+!* 0.1. Declaration of arguments
+!       ------------------------
+!
+CHARACTER(LEN=6),  INTENT(IN) :: HPROGRAM     !< Name of the calling program
+INTEGER,           INTENT(IN) :: KUNITNML     !< Logical unit to access the namelist
+LOGICAL,           INTENT(IN) :: LDNEEDNAM    !< True to abort if namelist is absent
+INTEGER,           INTENT(IN) :: KLUOUT       !< Logical unit for outputs
+LOGICAL, OPTIONAL, INTENT(IN) :: LDDEFAULTVAL !< Must we initialize variables with default values (defaults to .TRUE.)
+LOGICAL, OPTIONAL, INTENT(IN) :: LDREADNAM    !< Must we read the namelist (defaults to .TRUE.)
+LOGICAL, OPTIONAL, INTENT(IN) :: LDCHECK      !< Must we perform some checks on values (defaults to .TRUE.)
+INTEGER, OPTIONAL, INTENT(IN) :: KPRINT       !< Print level (defaults to 0): 0 for no print, 1 to safely print namelist,
+                                              !! 2 to print informative messages
+!
+!* 0.2 Declaration of local variables
+!      ------------------------------
+!
+LOGICAL :: LLDEFAULTVAL, LLREADNAM, LLCHECK, LLFOUND
+INTEGER :: IPRINT
+
+LLDEFAULTVAL=.TRUE.
+LLREADNAM=.TRUE.
+LLCHECK=.TRUE.
+IPRINT=0
+IF(PRESENT(LDDEFAULTVAL)) LLDEFAULTVAL=LDDEFAULTVAL
+IF(PRESENT(LDREADNAM   )) LLREADNAM   =LDREADNAM
+IF(PRESENT(LDCHECK     )) LLCHECK     =LDCHECK
+IF(PRESENT(KPRINT      )) IPRINT      =KPRINT
+!
+!*      1. DEFAULT VALUES
+!       -----------------
+!
+IF(LLDEFAULTVAL) THEN
+  !Freezing between 0 and -20. Other possibilities are 0/-40 or -5/-25
+  XTMAXMIX    = 273.16
+  XTMINMIX    = 253.16
+ENDIF
+!
+!*      2. NAMELIST
+!       -----------
+!
+IF(LLREADNAM) THEN
+  CALL POSNAM_PHY(KUNITNML, 'NAM_NEBN', LDNEEDNAM, LLFOUND, KLUOUT)
+  IF(LLFOUND) READ(UNIT=KUNITNML, NML=NAM_NEBn)
+ENDIF
+!
+!*      3. CHECKS
+!       ---------
+!
+IF(LLCHECK) THEN
+ENDIF
+!
+!*      3. PRINTS
+!       ---------
+!
+IF(IPRINT>=1) THEN
+  WRITE(UNIT=KLUOUT,NML=NAM_NEBn)
+ENDIF
+!
+END SUBROUTINE NEBN_INIT
+!
+END MODULE MODD_NEB_n

@@ -295,7 +295,7 @@ USE MODD_CST,            ONLY: CST
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_DUST ,          ONLY: LDUST
 USE MODD_IO,             ONLY: TFILEDATA
-USE MODD_NEB,            ONLY: NEB
+USE MODD_NEB_n,          ONLY: NEBN
 USE MODD_NSV,            ONLY: NSV, NSV_C1R3END, NSV_C2R2BEG, NSV_C2R2END,                       &
                                NSV_LIMA_BEG, NSV_LIMA_END, NSV_LIMA_CCN_FREE, NSV_LIMA_IFN_FREE, &
                                NSV_LIMA_NC, NSV_LIMA_NI, NSV_LIMA_NR, NSV_AEREND,NSV_DSTEND,NSV_SLTEND
@@ -805,7 +805,7 @@ SELECT CASE ( HCLOUD )
     ENDDO
     ZZZ = MZF( PZZ )
     IF(LRED .AND. LADJ_BEFORE) THEN
-      CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEB, TURBN, TBUCONF, KRR, &
+      CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEBN, TURBN, TBUCONF, KRR, &
                       CFRAC_ICE_ADJUST,                                        &
                       'ADJU', .FALSE., .FALSE.,                                &
                       PTSTEP, ZSIGQSAT2D,                                      &
@@ -858,7 +858,7 @@ SELECT CASE ( HCLOUD )
 !
 !
     IF (.NOT. LRED .OR. (LRED .AND. LADJ_AFTER) ) THEN
-      CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEB, TURBN, TBUCONF, KRR,       &
+      CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEBN, TURBN, TBUCONF, KRR,       &
                        CFRAC_ICE_ADJUST,                                       &
                        'DEPI', .FALSE., .FALSE.,                               &
                        PTSTEP, ZSIGQSAT2D,                                     &
@@ -896,7 +896,7 @@ SELECT CASE ( HCLOUD )
     ENDDO
     ZZZ = MZF( PZZ )
     IF(LRED .AND. LADJ_BEFORE) THEN
-      CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEB, TURBN, TBUCONF, KRR,        &
+      CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEBN, TURBN, TBUCONF, KRR,        &
                        CFRAC_ICE_ADJUST,                                       &
                        'ADJU', .FALSE., .FALSE.,                               &
                        PTSTEP, ZSIGQSAT2D,                                     &
@@ -952,7 +952,7 @@ SELECT CASE ( HCLOUD )
 !*       10.2   Perform the saturation adjustment over cloud ice and cloud water
 !
     IF (.NOT. LRED .OR. (LRED .AND. LADJ_AFTER) ) THEN
-     CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEB, TURBN, TBUCONF, KRR,      &
+     CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEBN, TURBN, TBUCONF, KRR,      &
                      CFRAC_ICE_ADJUST,                                       &
                      'DEPI', .FALSE., .FALSE.,                               &
                      PTSTEP, ZSIGQSAT2D,                                     &

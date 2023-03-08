@@ -84,7 +84,6 @@ CHARACTER(LEN=4) :: CSCONV
 
 #include "sucvmnh.intfb.h"
 #include "aroini_budget.h"
-#include "aroini_turb.h"
 #include "abor1.intfb.h"
 #include "aroini_micro_lima.h"
 
@@ -104,7 +103,8 @@ ASSOCIATE(NSPLITR=>YDPARAR%NSPLITR, NSPLITG=>YDPARAR%NSPLITG, &
  & RADGR=>YDPARAR%RADGR, RADSN=>YDPARAR%RADSN,&
  & CST=>YDPARAR%CST, PARAM_ICEN=>YDPARAR%PARAM_ICEN, RAIN_ICE_DESCRN=>YDPARAR%RAIN_ICE_DESCRN, &
  & RAIN_ICE_PARAMN=>YDPARAR%RAIN_ICE_PARAMN, CLOUDPARN=>YDPARAR%CLOUDPARN, &
- & PARAM_MFSHALLN=>YDPARAR%PARAM_MFSHALLN, TURBN=>YDPARAR%TURBN, CSTURB=>YDPARAR%CSTURB)
+ & PARAM_MFSHALLN=>YDPARAR%PARAM_MFSHALLN, TURBN=>YDPARAR%TURBN, CSTURB=>YDPARAR%CSTURB, &
+ & NEBN=>YDPARAR%NEBN)
 !     ------------------------------------------------------------------
 !     ------------------------------------------------------------------
 !       1. Initialisation of MesoNH constantes
@@ -126,7 +126,8 @@ CALL INI_PHYEX(CPROGRAM, NULNAM, .TRUE., KULOUT, 0, 1, &
                CST_OUT=CST, &
                PARAM_ICEN_OUT=PARAM_ICEN, RAIN_ICE_DESCRN_OUT=RAIN_ICE_DESCRN, &
                RAIN_ICE_PARAMN_OUT=RAIN_ICE_PARAMN, CLOUDPARN_OUT=CLOUDPARN, &
-               PARAM_MFSHALLN_OUT=PARAM_MFSHALLN, TURBN_OUT=TURBN, CSTURB_OUT=CSTURB)
+               PARAM_MFSHALLN_OUT=PARAM_MFSHALLN, TURBN_OUT=TURBN, CSTURB_OUT=CSTURB, &
+               NEBN_OUT=NEBN)
 
 ! Ensure consistency
 IF (.NOT. PARAM_ICEN%LOCND2) THEN
@@ -167,10 +168,6 @@ ENDIF
 IF(LKFBCONV.OR.LCVPPKF) THEN
   CALL SUCVMNH(YDML_PHY_MF,KULOUT)
 ENDIF
-
-!       7. Initialisation of nebulosity computation
-
-CALL AROINI_NEB
 
 !       8. Initialisation of The Horizontal Gradient on Z levels for 3D turbulence 
 !       Quand il y aura des initialisations 

@@ -225,3 +225,7 @@ mpa/turb/interface/aroini_turb.h
 phyex/turb/ini_cturb.F90
 phyex/turb/modi_ini_cturb.F90
 phyex/micro/modd_rain_ice_param.F90
+phyex/micro/ini_neb.F90
+phyex/micro/modi_ini_neb.F90
+mpa/micro/externals/aroini_neb.F90
+mpa/micro/interface/aroini_neb.h

@@ -4,7 +4,7 @@
 !
 INTERFACE
 !
-    SUBROUTINE CONDENSATION(D, CST, ICEP, NEB, TURBN, &
+    SUBROUTINE CONDENSATION(D, CST, ICEP, NEBN, TURBN, &
                            &HFRAC_ICE, HCONDENS, HLAMBDA3,                                                  &
                            &PPABS, PZZ, PRHODREF, PT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT,    &
                            &PRR, PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, PSIGRC, OUSERI,                 &
@@ -16,14 +16,14 @@ INTERFACE
 !
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_CST,        ONLY: CST_t
-USE MODD_NEB,        ONLY: NEB_t
+USE MODD_NEB_n,      ONLY: NEB_t
 USE MODD_TURB_n,     ONLY: TURB_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 !
 TYPE(DIMPHYEX_t),             INTENT(IN)    :: D
 TYPE(CST_t),                  INTENT(IN)    :: CST
 TYPE(RAIN_ICE_PARAM_t),       INTENT(IN)    :: ICEP
-TYPE(NEB_t),                  INTENT(IN)    :: NEB
+TYPE(NEB_t),                  INTENT(IN)    :: NEBN
 TYPE(TURB_t),                 INTENT(IN)    :: TURBN
 CHARACTER(LEN=1),             INTENT(IN)    :: HFRAC_ICE
 CHARACTER(LEN=4),             INTENT(IN)    :: HCONDENS

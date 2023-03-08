@@ -4,7 +4,7 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     #################################################################
-      SUBROUTINE SHALLOW_MF(D, CST, NEB, PARAMMF, TURBN, CSTURB,      &
+      SUBROUTINE SHALLOW_MF(D, CST, NEBN, PARAMMF, TURBN, CSTURB,     &
                 KRR, KRRL, KRRI, KSV,                                 &
                 HFRAC_ICE,ONOMIXLG,KSV_LGBEG,KSV_LGEND,               &
                 PIMPL_MF, PTSTEP,                                     &
@@ -75,7 +75,7 @@ USE MODD_BUDGET,          ONLY: TBUDGETCONF_t, TBUDGETDATA, NBUDGET_U,  NBUDGET_
                                 NBUDGET_TH,  NBUDGET_RV, NBUDGET_SV1
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY: CST_t
-USE MODD_NEB,             ONLY: NEB_t
+USE MODD_NEB_n,           ONLY: NEB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_n,          ONLY: TURB_t
 USE MODD_CTURB,           ONLY: CSTURB_t
@@ -102,7 +102,7 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D            ! PHYEX variables dimensions structure
 TYPE(CST_t),            INTENT(IN)   :: CST          ! modd_cst general constant structure
-TYPE(NEB_t),            INTENT(IN)   :: NEB
+TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 TYPE(TURB_t),           INTENT(IN)   :: TURBN        ! modn_turbn (turb namelist) structure
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB       ! modd_csturb turb constant structure
@@ -220,7 +220,7 @@ ENDIF
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ZWK(IIJB:IIJE,1:IKT)=PTHM(IIJB:IIJE,1:IKT)*PEXNM(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-CALL COMPUTE_FRAC_ICE(HFRAC_ICE,NEB,ZFRAC_ICE(:,:),ZWK(:,:), IERR(:,:))
+CALL COMPUTE_FRAC_ICE(HFRAC_ICE,NEBN,ZFRAC_ICE(:,:),ZWK(:,:), IERR(:,:))
 
 ! Conservative variables at t-dt
 CALL THL_RT_FROM_TH_R_MF(D, CST, KRR,KRRL,KRRI,    &
@@ -238,7 +238,7 @@ ZTHVM(IIJB:IIJE,1:IKT) = PTHM(IIJB:IIJE,1:IKT)*&
 !
 IF (PARAMMF%CMF_UPDRAFT == 'EDKF') THEN
   GENTR_DETR = .TRUE.
-  CALL COMPUTE_UPDRAFT(D, CST, NEB, PARAMMF, TURBN, CSTURB,      &
+  CALL COMPUTE_UPDRAFT(D, CST, NEBN, PARAMMF, TURBN, CSTURB,     &
                        KSV, HFRAC_ICE, GENTR_DETR,               &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
@@ -252,7 +252,7 @@ IF (PARAMMF%CMF_UPDRAFT == 'EDKF') THEN
                        PDX,PDY)
 ELSEIF (PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
   GENTR_DETR = .TRUE.
-  CALL COMPUTE_UPDRAFT_RHCJ10(D, CST, NEB, PARAMMF, TURBN, CSTURB,&
+  CALL COMPUTE_UPDRAFT_RHCJ10(D, CST, NEBN, PARAMMF, TURBN, CSTURB,&
                        KSV, HFRAC_ICE, GENTR_DETR,               &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
@@ -264,7 +264,7 @@ ELSEIF (PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PEMF,PDETR,&
                        PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH )
 ELSEIF (PARAMMF%CMF_UPDRAFT == 'RAHA') THEN
-   CALL COMPUTE_UPDRAFT_RAHA(D, CST, NEB, PARAMMF,               &
+   CALL COMPUTE_UPDRAFT_RAHA(D, CST, NEBN, PARAMMF,              &
                        KSV, HFRAC_ICE, GENTR_DETR,               &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &

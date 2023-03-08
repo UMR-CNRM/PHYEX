@@ -4,7 +4,7 @@
 !
 INTERFACE
 !     #################################################################
-      SUBROUTINE SHALLOW_MF(D, CST, NEB, PARAMMF, TURBN, CSTURB,      &
+      SUBROUTINE SHALLOW_MF(D, CST, NEBN, PARAMMF, TURBN, CSTURB,     &
                 KRR, KRRL, KRRI, KSV,                                 &
                 HFRAC_ICE,ONOMIXLG,KSV_LGBEG,KSV_LGEND,               &
                 PIMPL_MF, PTSTEP,                                     &
@@ -27,7 +27,7 @@ INTERFACE
 USE MODD_BUDGET,          ONLY: TBUDGETCONF_t, TBUDGETDATA
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY: CST_t
-USE MODD_NEB,             ONLY: NEB_t
+USE MODD_NEB_n,           ONLY: NEB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_n,          ONLY: TURB_t
 USE MODD_CTURB,           ONLY: CSTURB_t
@@ -38,7 +38,7 @@ USE MODD_PARAMETERS,      ONLY: JPSVMAX
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D            ! PHYEX variables dimensions structure
 TYPE(CST_t),            INTENT(IN)   :: CST          ! modd_cst general constant structure
-TYPE(NEB_t),            INTENT(IN)   :: NEB
+TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 TYPE(TURB_t),           INTENT(IN)   :: TURBN        ! modn_turbn (turb namelist) structure
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB       ! modd_csturb turb constant structure

@@ -5,12 +5,11 @@ USE GETDATA_SHALLOW_MOD
 USE COMPUTE_DIFF
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_CST,        ONLY: CST_t
-USE MODD_NEB,        ONLY: NEB
+USE MODD_NEB_n,      ONLY: NEB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 USE MODD_CTURB
 USE MODD_TURB_n,     ONLY: TURB_t
 USE MODI_SHALLOW_MF
-USE MODI_INI_NEB
 USE STACK_MOD
 USE OMP_LIB
 USE YOMHOOK, ONLY : LHOOK, DR_HOOK
@@ -111,6 +110,7 @@ INTEGER :: IBL, JLON, JLEV
 TYPE(DIMPHYEX_t)         :: D, D0
 TYPE(CST_t)              :: CST
 TYPE(TURB_t)             :: TURBN
+TYPE(NEB_t)              :: NEBN
 TYPE(PARAM_MFSHALL_t)    :: PARAM_MFSHALLN
 CHARACTER (LEN=1)        :: HFRAC_ICE
 LOGICAL                  :: ONOMIXLG, OSTATNW
@@ -205,7 +205,7 @@ OSTATNW=.FALSE.
 PTSTEP = 25.0000000000000
 
 CALL INIT_PHYEX (20, &
-                 CST, PARAM_MFSHALLN, TURBN)
+                 CST, PARAM_MFSHALLN, TURBN, NEBN)
 
 D0%NIT  = NPROMA
 D0%NIB  = 1
@@ -244,7 +244,7 @@ DO ITIME = 1, NTIME
   TSD = OMP_GET_WTIME ()
 
 !!!              !directives pas a jour !$acc data &
-!!!              !directives pas a jour !$acc      & copyin  (D0, CST, ICEP, NEB, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND, OSIGMAS, OCND2, HSUBG_MF_PDF, PTSTEP, LMFCONV, &
+!!!              !directives pas a jour !$acc      & copyin  (D0, CST, ICEP, NEBN, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND, OSIGMAS, OCND2, HSUBG_MF_PDF, PTSTEP, LMFCONV, &
 !!!              !directives pas a jour !$acc      &          ZSIGQSAT, PTHM, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, ZRS, ZICE_CLD_WGT) &
 !!!              !directives pas a jour !$acc      & copy    (PRS, PTHS), &
 !!!              !directives pas a jour !$acc      & copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &
@@ -300,7 +300,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%U = 0
 #endif
 
-  CALL SHALLOW_MF(D, CST, NEB, PARAM_MFSHALLN, TURBN, CSTURB,                    &
+  CALL SHALLOW_MF(D, CST, NEBN, PARAM_MFSHALLN, TURBN, CSTURB,                    &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                             &
      &HFRAC_ICE=HFRAC_ICE,ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,      &
      &PIMPL_MF=ZIMPL, PTSTEP=PTSTEP,                                                      &
@@ -403,10 +403,11 @@ STOP
 CONTAINS
 
 SUBROUTINE INIT_PHYEX(KULOUT,&
-                      CST, PARAM_MFSHALLN, TURBN)
+                      CST, PARAM_MFSHALLN, TURBN, NEBN)
 
 USE MODD_CST, ONLY: CST_t
 USE MODD_TURB_N, ONLY: TURB_t
+USE MODD_NEB_N, ONLY: NEB_t
 USE MODI_INI_PHYEX, ONLY: INI_PHYEX
 IMPLICIT NONE
 
@@ -414,8 +415,9 @@ IMPLICIT NONE
 !     DUMMY VARIABLES
 INTEGER, INTENT (IN) :: KULOUT
 TYPE(CST_t),            INTENT(OUT) :: CST
-TYPE(PARAM_MFSHALL_t), INTENT(OUT) :: PARAM_MFSHALLN
+TYPE(PARAM_MFSHALL_t),  INTENT(OUT) :: PARAM_MFSHALLN
 TYPE(TURB_t),           INTENT(OUT) :: TURBN
+TYPE(NEB_t),            INTENT(OUT) :: NEBN
 
 !-----------------------------------------------------------------------
 !    LOCAL VARIABLES
@@ -447,9 +449,9 @@ CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &CMICRO, CSCONV, CTURB, &
               &LDDEFAULTVAL=.FALSE., LDREADNAM=.FALSE., LDCHECK=.TRUE., KPRINT=2, LDINIT=.TRUE., &
               &CST_OUT=CST, PARAM_MFSHALLN_OUT=PARAM_MFSHALLN,&
-              &TURBN_IN=TURBN, TURBN_OUT=TURBN)
+              &TURBN_IN=TURBN, TURBN_OUT=TURBN, &
+              &NEBN_OUT=NEBN)
 
-CALL INI_NEB
 !CALL TBUCONF_ASSOCIATE
 !LBU_ENABLE=.FALSE.                                                                                                       
 !LBUDGET_U=.FALSE.

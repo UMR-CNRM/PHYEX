@@ -4,7 +4,7 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ##########################################################################
-      SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEB, TURBN, BUCONF, KRR,            &
+      SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, BUCONF, KRR,           &
                             &HFRAC_ICE, HBUNAME, OCND2, LHGT_QS,               &
                             &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
@@ -113,7 +113,7 @@ USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_CST,        ONLY: CST_t
-USE MODD_NEB,        ONLY: NEB_t
+USE MODD_NEB_n,      ONLY: NEB_t
 USE MODD_TURB_n,         ONLY: TURB_t
 USE MODD_BUDGET,     ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RI
 USE MODD_RAIN_ICE_PARAM_n, ONLY : RAIN_ICE_PARAM_t
@@ -131,7 +131,7 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
-TYPE(NEB_t),              INTENT(IN)    :: NEB
+TYPE(NEB_t),              INTENT(IN)    :: NEBN
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KRR      ! Number of moist variables
@@ -473,7 +473,7 @@ IF ( TURBN%LSUBG_COND ) THEN
   !
   !   PSRC= s'rci'/Sigma_s^2
   !   ZT is INOUT
-  CALL CONDENSATION(D, CST, ICEP, NEB, TURBN, &
+  CALL CONDENSATION(D, CST, ICEP, NEBN, TURBN, &
        HFRAC_ICE,TURBN%CCONDENS, TURBN%CLAMBDA3,                             &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
        PRR, PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, &
@@ -492,7 +492,7 @@ ELSE
   ZSIGQSAT(:)=0.
   !We use ZSRCS because in Méso-NH, PSRCS can be a zero-length array in this case
   !ZT is INOUT
-  CALL CONDENSATION(D, CST, ICEP, NEB, TURBN, &
+  CALL CONDENSATION(D, CST, ICEP, NEBN, TURBN, &
        HFRAC_ICE,TURBN%CCONDENS, TURBN%CLAMBDA3,                             &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
        PRR, PRS, PRG, ZSIGS, LMFCONV, PMFCONV, PCLDFR, &

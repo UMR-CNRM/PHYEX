@@ -10,6 +10,7 @@ USE MODD_CLOUDPAR_N, ONLY: CLOUDPAR_t
 USE MODD_PARAM_MFSHALL_N, ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_NEB_n, ONLY: NEB_t
 
 IMPLICIT NONE
 
@@ -32,6 +33,7 @@ TYPE(CLOUDPAR_t)       :: CLOUDPARN
 TYPE(PARAM_MFSHALL_t)  :: PARAM_MFSHALLN
 TYPE(CSTURB_t)         :: CSTURB
 TYPE(TURB_t)           :: TURBN
+TYPE(NEB_t)            :: NEBN
 !
 INTEGER(KIND=JPIM) :: NSPLITR     ! Time splitting for Eulerian sedimentation
 INTEGER(KIND=JPIM) :: NSPLITG     ! Time splitting for Eulerian sedimentation

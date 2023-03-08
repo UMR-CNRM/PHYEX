@@ -66,7 +66,7 @@ END MODULE MODI_ICE_ADJUST_BIS
 !          ------------
 !
 USE MODD_CST, ONLY : XCPD, XRD, XP00, CST
-USE MODD_NEB, ONLY : NEB
+USE MODD_NEB_n, ONLY : NEBN
 !
 USE MODI_COMPUTE_FUNCTION_THERMO
 USE MODI_THLRT_FROM_THRVRCRI
@@ -128,7 +128,7 @@ CALL COMPUTE_FUNCTION_THERMO( IRR,                                &
 CALL THLRT_FROM_THRVRCRI( IRR, PTH, PR, ZLVOCPEXN, ZLSOCPEXN,&
                           ZTHL, ZRW                          )
 !
-CALL TH_R_FROM_THL_RT(CST, NEB, SIZE(ZFRAC_ICE), YFRAC_ICE,ZFRAC_ICE(:,:,:),PP(:,:,:), &
+CALL TH_R_FROM_THL_RT(CST, NEBN, SIZE(ZFRAC_ICE), YFRAC_ICE,ZFRAC_ICE(:,:,:),PP(:,:,:), &
                          ZTHL(:,:,:), ZRW(:,:,:), PTH(:,:,:),  &
                          ZRV(:,:,:), ZRC(:,:,:), ZRI(:,:,:),   &
                          ZRSATW(:,:,:), ZRSATI(:,:,:),OOCEAN=.FALSE.,&

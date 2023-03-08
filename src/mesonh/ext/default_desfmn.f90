@@ -243,6 +243,7 @@ USE MODD_PARAM_n          !      For SPAWNING DEFAULT_DESFM2 is also used
 USE MODD_LBC_n
 USE MODD_OUT_n
 USE MODD_TURB_n, ONLY: TURBN_INIT
+USE MODD_NEB_n, ONLY: NEBN_INIT
 USE MODD_BUDGET
 USE MODD_LES
 USE MODD_PARAM_RAD_n
@@ -535,7 +536,13 @@ XTNUDGING = 21600.
 !
 CALL TURBN_INIT(CPROGRAM, 0, .FALSE., TLUOUT%NLU, &
                &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0)
-
+!-------------------------------------------------------------------------------
+!
+!*      10a.   SET DEFAULT VALUES FOR MODD_NEB_n :
+!             ----------------------------------
+!
+CALL NEBN_INIT(CPROGRAM, 0, .FALSE., TLUOUT%NLU, &
+              &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0)
 !-------------------------------------------------------------------------------
 !
 !*      10b.   SET DEFAULT VALUES FOR MODD_DRAGTREE :

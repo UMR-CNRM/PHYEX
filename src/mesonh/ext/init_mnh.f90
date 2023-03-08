@@ -151,10 +151,6 @@ CALL INI_CST
 !Now done in ini_modeln
 !
 !
-!*       1.4    initialize constants for nebulosity computation                            
-!
-CALL INI_NEB
-!
 !-------------------------------------------------------------------------------
 !
 !*       2.    READ AND UPDATE DESCRIPTOR FILES

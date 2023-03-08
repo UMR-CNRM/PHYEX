@@ -6,11 +6,10 @@ USE COMPUTE_DIFF
 USE MODI_ICE_ADJUST
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_CST,        ONLY: CST_t
-USE MODD_NEB,        ONLY: NEB
+USE MODD_NEB_n,      ONLY: NEB_t
 USE MODD_TURB_n,     ONLY: TURB_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY : RAIN_ICE_PARAM_t
 USE MODD_PARAM_ICE_n,      ONLY : PARAM_ICE_t
-USE MODI_INI_NEB
 USE MODD_BUDGET !, ONLY: TBUCONF_ASSOCIATE, TBUDGETDATA, NBUDGET_RI, TBUCONF
 USE STACK_MOD
 USE OMP_LIB
@@ -68,6 +67,7 @@ TYPE(CST_t)              :: CST
 TYPE(PARAM_ICE_t)        :: PARAMI
 TYPE(RAIN_ICE_PARAM_t)   :: ICEP
 TYPE(TURB_t)             :: TURBN
+TYPE(NEB_t)              :: NEBN
 CHARACTER(LEN=4)         :: HBUNAME  
 LOGICAL                  :: LHGT_QS
 LOGICAL                  :: LMFCONV
@@ -138,7 +138,7 @@ LMFCONV      = .TRUE.
 LHGT_QS      = .FALSE.
 CALL INIT_PHYEX (20, PTSTEP, &
                  CST, &
-                 PARAMI, ICEP, TURBN)
+                 PARAMI, ICEP, TURBN, NEBN)
 
 DO JRR=1, NBUDGET_RI
   YLBUDGET(JRR)%NBUDGET=JRR
@@ -177,7 +177,7 @@ DO ITIME = 1, NTIME
   TSD = OMP_GET_WTIME ()
 
 !$acc data &
-!$acc      & copyin  (D0, CST, ICEP, NEB, TURBN, KRR, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND, OSIGMAS, LHGT_QS, HSUBG_MF_PDF, PTSTEP, LMFCONV, &
+!$acc      & copyin  (D0, CST, ICEP, NEBN, TURBN, KRR, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND, OSIGMAS, LHGT_QS, HSUBG_MF_PDF, PTSTEP, LMFCONV, &
 !$acc      &          ZSIGQSAT, PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, ZRS, ZICE_CLD_WGT) &
 !$acc      & copy    (PRS, PTHS), &
 !$acc      & copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &
@@ -231,7 +231,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%U = 0
 #endif
 
-    CALL ICE_ADJUST (D, CST, ICEP, NEB, TURBN, TBUCONF, KRR, PARAMI%CFRAC_ICE_ADJUST, HBUNAME,                                &
+    CALL ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, TBUCONF, KRR, PARAMI%CFRAC_ICE_ADJUST, HBUNAME,                                &
     & PARAMI%LOCND2, LHGT_QS, PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL),                                               &
     & PEXNREF=PEXNREF (:, :, :, IBL),                                                                                           &
     & PRHODREF=PRHODREF (:, :, :, IBL), PSIGS=PSIGS (:, :, :, IBL), LMFCONV=LMFCONV, PMFCONV=PMFCONV (:, :, :, IBL),            &
@@ -312,13 +312,14 @@ CONTAINS
 
 SUBROUTINE INIT_PHYEX(KULOUT, PTSTEP, &
                       CST, &
-                      PARAM_ICEN, RAIN_ICE_PARAMN, TURBN)
+                      PARAM_ICEN, RAIN_ICE_PARAMN, TURBN, NEBN)
 
 USE MODD_CST, ONLY: CST_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_PARAM_ICE_n, ONLY: PARAM_ICE_t
 USE MODD_TURB_N, ONLY: TURB_t
+USE MODD_NEB_N, ONLY: NEB_t
 USE MODI_INI_PHYEX, ONLY: INI_PHYEX
 
 IMPLICIT NONE
@@ -331,6 +332,7 @@ TYPE(CST_t),            INTENT(OUT) :: CST
 TYPE(PARAM_ICE_t)     , INTENT(OUT) :: PARAM_ICEN
 TYPE(RAIN_ICE_PARAM_t), INTENT(OUT) :: RAIN_ICE_PARAMN
 TYPE(TURB_t),           INTENT(OUT) :: TURBN
+TYPE(NEB_t),            INTENT(OUT) :: NEBN
 
 !-----------------------------------------------------------------------
 !    LOCAL VARIABLES
@@ -391,9 +393,8 @@ CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &CST_OUT=CST, &
               &PARAM_ICEN_IN=PARAM_ICEN, PARAM_ICEN_OUT=PARAM_ICEN, &
               &RAIN_ICE_PARAMN_IN=RAIN_ICE_PARAMN, RAIN_ICE_PARAMN_OUT=RAIN_ICE_PARAMN, &
-              &TURBN_IN=TURBN, TURBN_OUT=TURBN)
-
-CALL INI_NEB
+              &TURBN_IN=TURBN, TURBN_OUT=TURBN, &
+              &NEBN_OUT=NEBN)
 
 CALL TBUCONF_ASSOCIATE
 LBU_ENABLE=.FALSE.                                                                                                       

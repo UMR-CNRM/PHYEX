@@ -9,7 +9,8 @@ SUBROUTINE INI_PHYEX(HPROGRAM, KUNITNML, LDNEEDNAM, KLUOUT, KFROM, KTO, &
                     &RAIN_ICE_DESCRN_IN, RAIN_ICE_DESCRN_OUT, RAIN_ICE_PARAMN_IN, RAIN_ICE_PARAMN_OUT, &
                     &CLOUDPARN_IN, CLOUDPARN_OUT, &
                     &PARAM_MFSHALLN_IN, PARAM_MFSHALLN_OUT, &
-                    &TURBN_IN, TURBN_OUT, CSTURB_IN, CSTURB_OUT)
+                    &TURBN_IN, TURBN_OUT, CSTURB_IN, CSTURB_OUT, &
+                    &NEBN_IN, NEBN_OUT)
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_PARAM_ICE_n, ONLY: PARAM_ICE_t
@@ -19,6 +20,7 @@ USE MODD_CLOUDPAR_N,     ONLY: CLOUDPAR_t
 USE MODD_PARAM_MFSHALL_N,ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_N,         ONLY: TURB_t
 USE MODD_CTURB,          ONLY: CSTURB_t
+USE MODD_NEB_N,          ONLY: NEB_t
 !
 IMPLICIT NONE
 
@@ -56,10 +58,12 @@ TYPE(TURB_t),            OPTIONAL, INTENT(IN)    :: TURBN_IN            !< Struc
 TYPE(TURB_t),            OPTIONAL, INTENT(INOUT) :: TURBN_OUT           !< Structure for controling the turbulence scheme (IN)
 TYPE(CSTURB_t),          OPTIONAL, INTENT(IN)    :: CSTURB_IN           !< Structure for the turbulence scheme constants (IN)
 TYPE(CSTURB_t),          OPTIONAL, INTENT(INOUT) :: CSTURB_OUT          !< Structure for the turbulence scheme constants (IN)
+TYPE(NEB_t),             OPTIONAL, INTENT(IN)    :: NEBN_IN             !< Structure for the cloud scheme variables (IN)
+TYPE(NEB_t),             OPTIONAL, INTENT(INOUT) :: NEBN_OUT            !< Structure for the cloud scheme variables (OUT)
 
 !IMPORTANT NOTE on *_OUT arguments.
 !Logically those arguments should be declared with INTENT(OUT) but in this case ifort (at least) breaks the
-!execution when same the structure is given for the _IN and the _OUT argument.
+!execution when the same structure is given for the _IN and the _OUT argument.
 !When INITENT(INOUT) is used, execution is OK on ifort.
 
 
