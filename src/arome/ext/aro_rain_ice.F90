@@ -213,6 +213,8 @@ REAL  :: ZRATIO                     ! ZMASSTOT / ZMASSCOR
 
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH) :: YLBUDGET !NBUDGET_RH is the one with the highest number
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
+LOGICAL, DIMENSION(KLON,1,KLEV) :: LLMICRO
+INTEGER :: ISIZE
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 
@@ -433,13 +435,22 @@ ELSEIF (CMICRO=='OLD4') THEN
     ELSE
      ZKGN_SBGR(:,:) = RAIN_ICE_PARAM%XFRMIN(11)
     ENDIF
-    CALL RAIN_ICE_OLD( OSEDIC=OSEDIC, OCND2=OCND2, LKOGAN=LKOGAN, LMODICEDEP=LMODICEDEP, &
+    LLMICRO(:,:,:)=PRT(:,:,:,2)>RAIN_ICE_DESCR%XRTMIN(2) .OR. &
+                   PRT(:,:,:,3)>RAIN_ICE_DESCR%XRTMIN(3) .OR. &
+                   PRT(:,:,:,4)>RAIN_ICE_DESCR%XRTMIN(4) .OR. &
+                   PRT(:,:,:,5)>RAIN_ICE_DESCR%XRTMIN(5) .OR. &
+                   PRT(:,:,:,6)>RAIN_ICE_DESCR%XRTMIN(6) .OR. &
+                   PRT(:,:,:,7)>RAIN_ICE_DESCR%XRTMIN(7)
+    ISIZE=COUNT(LLMICRO)
+    CALL RAIN_ICE_OLD(YLDIMPHYEX, CST, PARAM_ICE, RAIN_ICE_PARAM, &
+                 &  RAIN_ICE_DESCR, TBUCONF, &
+                 &  OSEDIC=OSEDIC, OCND2=OCND2, LKOGAN=LKOGAN, LMODICEDEP=LMODICEDEP, &
                  &  HSEDIM=CSEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC, &
                  &  OWARM=OWARM,KKA=KKA,KKU=KKU,KKL=KKL,KSPLITR=KSPLITR, &
-                 &  PTSTEP=2*PTSTEP, KRR=KRR,                              &
+                 &  PTSTEP=2*PTSTEP, KRR=KRR, KSIZE=ISIZE, GMICRO=LLMICRO, &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF, PEXNREF=PEXNREF,&
                  &  PPABST=PPABSM, PCIT=PCIT, PCLDFR=PCLDFR,  &
-                 &  PICLDFR=PICLDFR, PWCLDFR=PWCLDFR, &
+                 &  PICLDFR=PICLDFR, & !PWCLDFR=PWCLDFR, &
                  &  PSSIO=PSSIO, PSSIU=PSSIU, PIFR=PIFR, &
                  &  PTHT=PTHT,PRVT= PRT(:,:,:,1),PRCT= PRT(:,:,:,2), &
                  &  PRRT=PRT(:,:,:,3), &
@@ -451,7 +462,7 @@ ELSEIF (CMICRO=='OLD4') THEN
                  &  PINPRC=ZINPRC,PINPRR=PINPRR,PEVAP3D=PEVAP,&
                  &  PINPRS=PINPRS, PINPRG=PINPRG, &
                  &  PSIGS=PSIGS, PSEA=PSEA, PTOWN=PTOWN, &
-                 &  YDDDH=YDDDH,YDLDDH=YDLDDH,YDMDDH=YDMDDH, &
+                 &  TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
                  &  PRHT=PRT(:,:,:,7),&
                  &  PRHS=PRS(:,:,:,7), PINPRH=PINPRH, PFPR=PFPR, &
                  &  PICENU=ZICENU, &
@@ -475,13 +486,21 @@ ELSE
     ELSE
      ZKGN_SBGR(:,:) = RAIN_ICE_PARAM%XFRMIN(11)
     ENDIF
-    CALL RAIN_ICE_OLD( OSEDIC=OSEDIC, OCND2=OCND2, LKOGAN=LKOGAN, LMODICEDEP=LMODICEDEP, &
+    LLMICRO(:,:,:)=PRT(:,:,:,2)>RAIN_ICE_DESCR%XRTMIN(2) .OR. &                                                                     
+                   PRT(:,:,:,3)>RAIN_ICE_DESCR%XRTMIN(3) .OR. &                                                                     
+                   PRT(:,:,:,4)>RAIN_ICE_DESCR%XRTMIN(4) .OR. &                                                                     
+                   PRT(:,:,:,5)>RAIN_ICE_DESCR%XRTMIN(5) .OR. &                                                                     
+                   PRT(:,:,:,6)>RAIN_ICE_DESCR%XRTMIN(6)
+    ISIZE=COUNT(LLMICRO)
+    CALL RAIN_ICE_OLD(YLDIMPHYEX, CST, PARAM_ICE, RAIN_ICE_PARAM, &
+                 &  RAIN_ICE_DESCR, TBUCONF, &
+                 &  OSEDIC=OSEDIC, OCND2=OCND2, LKOGAN=LKOGAN, LMODICEDEP=LMODICEDEP, &
                  &  HSEDIM=CSEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC, &
                  &  OWARM=OWARM,KKA=KKA,KKU=KKU,KKL=KKL,KSPLITR=KSPLITR, &
-                 &  PTSTEP=2*PTSTEP, KRR=KRR,                              &
+                 &  PTSTEP=2*PTSTEP, KRR=KRR, KSIZE=ISIZE, GMICRO=LLMICRO, &
                  &  PDZZ=PDZZ, PRHODJ=PRHODJ, PRHODREF=PRHODREF, PEXNREF=PEXNREF,&
                  &  PPABST=PPABSM, PCIT=PCIT, PCLDFR=PCLDFR,  &
-                 &  PICLDFR=PICLDFR, PWCLDFR=PWCLDFR, &
+                 &  PICLDFR=PICLDFR, & !PWCLDFR=PWCLDFR, &
                  &  PSSIO=PSSIO, PSSIU=PSSIU, PIFR=PIFR, &
                  &  PTHT=PTHT,PRVT= PRT(:,:,:,1),PRCT= PRT(:,:,:,2), &
                  &  PRRT=PRT(:,:,:,3), &
@@ -493,7 +512,7 @@ ELSE
                  &  PINPRC=ZINPRC,PINPRR=PINPRR,PEVAP3D=PEVAP,&
                  &  PINPRS=PINPRS, PINPRG=PINPRG, &
                  &  PSIGS=PSIGS, PSEA=PSEA, PTOWN=PTOWN, &
-                 &  YDDDH=YDDDH,YDLDDH=YDLDDH,YDMDDH=YDMDDH, &
+                 &  TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
                  &  PFPR=PFPR, &
                  &  PICENU=ZICENU, &
                  &  PKGN_ACON=ZKGN_ACON, &

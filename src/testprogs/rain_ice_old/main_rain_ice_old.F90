@@ -8,15 +8,12 @@ program main_rain_ice_old
   use yomhook, only: lhook, dr_hook
   use parkind1, only: jprb, jpim
 
-  use ddh_mix, only: typ_ddh
-  use yomlddh, only: tlddh
-  use yommddh, only: tmddh
-
   use modd_dimphyex, only: dimphyex_t
   use modd_cst, only: cst
   use modd_rain_ice_param, only: rain_ice_param
   use modd_rain_ice_descr, only: rain_ice_descr
   use modd_param_ice,      only: param_ice
+  use modd_budget
 
   use iso_fortran_env, only: output_unit
 
@@ -81,14 +78,11 @@ program main_rain_ice_old
   character(len=4) :: c_micro
   character(len=4) :: csubg_aucv_rc
   logical :: owarm
+  TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH) :: YLBUDGET
 
   real    :: ptstep
 
-  integer :: i,j
-
-  type(typ_ddh) :: ydddh
-  type(tlddh)   :: ydlddh
-  type(tmddh)   :: ydmddh
+  integer :: i, j, jrr
 
   real(8) :: time_start_real, time_end_real
   real(8) :: time_start_cpu, time_end_cpu
@@ -161,6 +155,10 @@ program main_rain_ice_old
 
   c_sedim = 'STAT'
   csubg_aucv_rc = 'PDF'
+
+DO JRR=1, NBUDGET_RH
+  YLBUDGET(JRR)%NBUDGET=JRR
+ENDDO
 
   ptstep = 25.0000000000000
 
@@ -244,7 +242,7 @@ program main_rain_ice_old
     if (isize .gt. 0) then
 
       call rain_ice_old(D=D, cst=cst, parami=param_ice,                                    &
-                        icep=rain_ice_param, iced=rain_ice_descr,                          &
+                        icep=rain_ice_param, iced=rain_ice_descr, buconf=tbuconf,          &
                         osedic=osedic, ocnd2=ocnd2,                                        &
                         lkogan=lkogan, lmodicedep=lmodicedep,                              &
                         hsedim=c_sedim, hsubg_aucv_rc=csubg_aucv_rc, owarm=owarm,          &
@@ -265,7 +263,7 @@ program main_rain_ice_old
                         pinprc=zinprc(:,i), pinprr=pinprr(:,i), pevap3d=pevap(:,:,i),      &
                         pinprs=pinprs(:,i), pinprg=pinprg(:,i), psigs=psigs(:,:,i),        &
                         psea=psea(:,i), ptown=ptown(:,i),                                  &
-                        ydddh=ydddh, ydlddh=ydlddh, ydmddh=ydmddh,                         &
+                        TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET),                        &
                         picenu=picenu(:,i),                                                &
                         pkgn_acon=pkgn_acon(:,i), pkgn_sbgr=pkgn_sbgr(:,i),                &
                         pfpr=pfpr(:,:,:,i))

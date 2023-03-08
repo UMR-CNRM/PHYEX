@@ -339,6 +339,14 @@ if [ $packcreation -eq 1 ]; then
   for rep in turb micro conv aux; do
     [ -d PHYEX/$rep ] && mv PHYEX/$rep .
   done
+  #modd_nsv.F90 has been moved and gmkpack is lost in case a different version exists in main/.../micro
+  if [ -f ../../main/phyex/micro/modd_nsv.F90 -a -f aux/modd_nsv.F90 ]; then
+    mv aux/modd_nsv.F90 micro/
+    if [ -f PHYEX/gmkpack_ignored_files ]; then
+      grep -v micro/modd_nsv.F90 PHYEX/gmkpack_ignored_files > PHYEX/gmkpack_ignored_files_new
+      mv PHYEX/gmkpack_ignored_files_new PHYEX/gmkpack_ignored_files
+    fi
+  fi
   if [ -f PHYEX/gmkpack_ignored_files ]; then
     #gmkpack_ignored_files contains a list of file, present in the reference pack, that is not used anymore
     #and must be excluded from compilation (in case of a full comilation) or from re-compilation (in case of a non-full
