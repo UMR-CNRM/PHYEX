@@ -44,7 +44,6 @@ END MODULE MODI_INIT_AEROSOL_PROPERTIES
 !*       0.    DECLARATIONS
 !              ------------
 !
-!USE MODD_LUNIT,           ONLY : TLUOUT0
 USE MODD_PARAM_LIMA,      ONLY : NMOD_CCN, HINI_CCN, HTYPE_CCN,        &
                                  XR_MEAN_CCN, XLOGSIG_CCN, XRHO_CCN,                 &
                                  XKHEN_MULTI, XMUHEN_MULTI, XBETAHEN_MULTI,          &
@@ -90,8 +89,6 @@ REAL, DIMENSION(3) :: RHOCCN
 !
 INTEGER            :: I,J,JMOD
 !
-!INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
-!INTEGER  :: IRESP   ! Return code of FM-routines
 !
 REAL :: X1, X2, X3, X4, X5
 ! REAL, DIMENSION(7) :: diameters=(/ 0.01E-6, 0.05E-6, 0.1E-6, 0.2E-6, 0.5E-6, 1.E-6, 2.E-6 /)
@@ -103,7 +100,6 @@ INTEGER :: II, IJ, IK
 !
 !-------------------------------------------------------------------------------
 !
-!ILUOUT0 = TLUOUT0%NLU
 !
 !!!!!!!!!!!!!!!!
 ! CCN properties
@@ -410,10 +406,10 @@ IF (LORILAM) THEN
   XMDIAM_IFN(3)   = 2 * XINIRADIUSI * 1E-6
   XMDIAM_IFN(4)   = 2 * XINIRADIUSI * 1E-6
   END IF
-  XSIGMA_IFN(3) = LOG(XINISIGJ)
-  XSIGMA_IFN(4) = LOG(XINISIGJ)
   XRHO_IFN(3)    = XRHOI(JP_AER_BC) 
   XRHO_IFN(4)    = XRHOI(JP_AER_OC)
+  XSIGMA_IFN(3)  = XINISIGI
+  XSIGMA_IFN(4)  = XINISIGI
 END IF
 
 IF (LDUST) THEN
@@ -424,7 +420,7 @@ IF (LDUST) THEN
   ELSE
     XMDIAM_IFN(JMOD) = 2 * XINIRADIUS(JPDUSTORDER(JMOD)) * 1E-6 
   END IF
-  XSIGMA_IFN(JMOD) = LOG(XINISIG(JPDUSTORDER(JMOD)))
+  XSIGMA_IFN(JMOD) = XINISIG(JPDUSTORDER(JMOD))
   XRHO_IFN(JMOD) = XDENSITY_DUST
   ENDDO
 END IF
