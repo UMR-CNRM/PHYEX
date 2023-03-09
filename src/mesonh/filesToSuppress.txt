@@ -20,6 +20,18 @@ aux/modi_gradient_v.f90
 aux/modi_gradient_w.f90
 aux/mode_io_field_write.f90
 
+micro/mode_rain_ice_old_fast_rg.F90
+micro/mode_rain_ice_old_fast_rh.F90
+micro/mode_rain_ice_old_fast_ri.F90
+micro/mode_rain_ice_old_fast_rs.F90
+micro/mode_rain_ice_old_icenumber2.F90
+micro/mode_rain_ice_old_nucleation.F90
+micro/mode_rain_ice_old_sedimentation_split.F90
+micro/mode_rain_ice_old_sedimentation_stat.F90
+micro/mode_rain_ice_old_slow.F90
+micro/mode_rain_ice_old_warm.F90
+micro/modi_rain_ice_old.F90
+
 #To be un-commented when the PHYEX version will be merged into the Meso-NH code
 #aux/mode_thermo.f90
 #aux/shuman.f90
