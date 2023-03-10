@@ -5,7 +5,7 @@
 !-----------------------------------------------------------------
 !     ##########################################################################
       SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, BUCONF, KRR,           &
-                            &HFRAC_ICE, HBUNAME, OCND2,                        &
+                            &HBUNAME, OCND2,                                   &
                             &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
                             &PPABST, PZZ,                                      &
@@ -135,7 +135,6 @@ TYPE(NEB_t),              INTENT(IN)    :: NEBN
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KRR      ! Number of moist variables
-CHARACTER(LEN=1),         INTENT(IN)    :: HFRAC_ICE
 CHARACTER(LEN=4),         INTENT(IN)    :: HBUNAME  ! Name of the budget
 LOGICAL,                  INTENT(IN)    :: OCND2    ! logical switch to separate liquid
                                                     ! and ice
@@ -473,7 +472,7 @@ IF ( TURBN%LSUBG_COND ) THEN
   !   PSRC= s'rci'/Sigma_s^2
   !   ZT is INOUT
   CALL CONDENSATION(D, CST, ICEP, NEBN, TURBN, &
-       HFRAC_ICE,TURBN%CCONDENS, TURBN%CLAMBDA3,                             &
+       NEBN%CFRAC_ICE_ADJUST,TURBN%CCONDENS, TURBN%CLAMBDA3,                             &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
        PRR, PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, &
        PSRCS, .TRUE., TURBN%LSIGMAS,OCND2,                               &
@@ -492,7 +491,7 @@ ELSE
   !We use ZSRCS because in Méso-NH, PSRCS can be a zero-length array in this case
   !ZT is INOUT
   CALL CONDENSATION(D, CST, ICEP, NEBN, TURBN, &
-       HFRAC_ICE,TURBN%CCONDENS, TURBN%CLAMBDA3,                             &
+       NEBN%CFRAC_ICE_ADJUST,TURBN%CCONDENS, TURBN%CLAMBDA3,                             &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
        PRR, PRS, PRG, ZSIGS, LMFCONV, PMFCONV, PCLDFR, &
        ZSRCS, .TRUE., .TRUE., OCND2,                                     &

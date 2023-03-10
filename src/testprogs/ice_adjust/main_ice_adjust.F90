@@ -229,8 +229,8 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%U = 0
 #endif
 
-    CALL ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, TBUCONF, KRR, PARAMI%CFRAC_ICE_ADJUST, HBUNAME,                                &
-    & PARAMI%LOCND2, PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL),                                               &
+    CALL ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, TBUCONF, KRR, HBUNAME,                                                          &
+    & PARAMI%LOCND2, PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL),                                                &
     & PEXNREF=PEXNREF (:, :, :, IBL),                                                                                           &
     & PRHODREF=PRHODREF (:, :, :, IBL), PSIGS=PSIGS (:, :, :, IBL), LMFCONV=LMFCONV, PMFCONV=PMFCONV (:, :, :, IBL),            &
     & PPABST=PPABSM (:, :, :, IBL), PZZ=ZZZ (:, :, :, IBL), PEXN=PEXNREF (:, :, :, IBL), PCF_MF=PCF_MF (:, :, :, IBL),          &
@@ -350,7 +350,7 @@ CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &PTSTEP, ZDZMIN, &
               &CMICRO, CSCONV, CTURB, &
               &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0, LDINIT=.FALSE., &
-              &PARAM_ICEN_OUT=PARAM_ICEN, TURBN_OUT=TURBN)
+              &PARAM_ICEN_OUT=PARAM_ICEN, TURBN_OUT=TURBN, NEBN_OUT=NEBN)
 
 !Emulate the namelist reading
 PARAM_ICEN%LCRIAUTI=.TRUE.
@@ -361,8 +361,6 @@ PARAM_ICEN%LOCND2=.FALSE.
 PARAM_ICEN%CSEDIM='STAT'
 PARAM_ICEN%LWARM=.TRUE.
 PARAM_ICEN%LSEDIC=.TRUE.
-PARAM_ICEN%CFRAC_ICE_ADJUST='S' ! Ice/liquid partition rule to use in adjustment
-PARAM_ICEN%CFRAC_ICE_SHALLOW_MF='S' ! Ice/liquid partition rule to use in shallow_mf
 PARAM_ICEN%CSNOWRIMING='M90 '
 PARAM_ICEN%XFRACM90=0.1 ! Fraction used for the Murakami 1990 formulation
 PARAM_ICEN%LCONVHG=.TRUE. ! TRUE to allow the conversion from hail to graupel
@@ -382,6 +380,8 @@ PARAM_ICEN%CSUBG_RR_EVAP='NONE'
 PARAM_ICEN%CSUBG_PR_PDF='SIGM'
 TURBN%LSUBG_COND   = .TRUE.
 TURBN%LSIGMAS = .TRUE.
+NEBN%CFRAC_ICE_ADJUST='S' ! Ice/liquid partition rule to use in adjustment
+NEBN%CFRAC_ICE_SHALLOW_MF='S' ! Ice/liquid partition rule to use in shallow_mf
 
 !Param initialisation
 CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
@@ -392,7 +392,7 @@ CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &PARAM_ICEN_IN=PARAM_ICEN, PARAM_ICEN_OUT=PARAM_ICEN, &
               &RAIN_ICE_PARAMN_IN=RAIN_ICE_PARAMN, RAIN_ICE_PARAMN_OUT=RAIN_ICE_PARAMN, &
               &TURBN_IN=TURBN, TURBN_OUT=TURBN, &
-              &NEBN_OUT=NEBN)
+              &NEBN_IN=NEBN, NEBN_OUT=NEBN)
 
 CALL TBUCONF_ASSOCIATE
 LBU_ENABLE=.FALSE.                                                                                                       

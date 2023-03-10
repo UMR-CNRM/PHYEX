@@ -5,7 +5,7 @@
 INTERFACE
 !
       SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, BUCONF, KRR,           &
-                            &HFRAC_ICE, HBUNAME, OCND2,                        &
+                            &HBUNAME, OCND2,                                   &
                             &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
                             &PPABST, PZZ,                                      &
@@ -37,7 +37,6 @@ TYPE(NEB_t),              INTENT(IN)    :: NEBN
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KRR      ! Number of moist variables
-CHARACTER(LEN=1),         INTENT(IN)    :: HFRAC_ICE
 CHARACTER(LEN=4),         INTENT(IN)    :: HBUNAME  ! Name of the budget
 LOGICAL,                  INTENT(IN)    :: OCND2    ! logical switch to separate liquid
                                                     ! and ice

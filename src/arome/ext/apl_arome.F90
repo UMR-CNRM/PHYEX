@@ -2775,7 +2775,7 @@ IF (LMFSHAL) THEN
       ZARG_FLXZTHVMF_ => ZFLXZTHVMF_(:,1:YDCPG_OPTS%KFLEVG)
     ENDIF
 
-    CALL ARO_SHALLOW_MF (CST, PARAM_ICEN, PARAM_MFSHALLN, NEBN,                                                                   &
+    CALL ARO_SHALLOW_MF (CST, PARAM_MFSHALLN, NEBN,                                                                   &
     & KKL=IKL, KLON=YDCPG_BNDS%KFDIA, KLEV=YDCPG_OPTS%KFLEVG, KFDIA=YDCPG_BNDS%KFDIA, KRR=NRR, KRRL=NRRL,                         &
     & KRRI=NRRI, KSV=NGFL_EXT, HMF_UPDRAFT=PARAM_MFSHALLN%CMF_UPDRAFT, HMF_CLOUD=PARAM_MFSHALLN%CMF_CLOUD,                                                        &
     & OMIXUV=PARAM_MFSHALLN%LMIXUV, ONOMIXLG=.FALSE., KSV_LGBEG=0, KSV_LGEND=0, KTCOUNT=YDCPG_OPTS%KSTEP+1, PTSTEP=ZDT,                            &

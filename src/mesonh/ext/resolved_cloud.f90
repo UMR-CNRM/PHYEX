@@ -301,7 +301,7 @@ USE MODD_NSV,            ONLY: NSV, NSV_C1R3END, NSV_C2R2BEG, NSV_C2R2END,      
                                NSV_LIMA_NC, NSV_LIMA_NI, NSV_LIMA_NR, NSV_AEREND,NSV_DSTEND,NSV_SLTEND
 USE MODD_PARAM_C2R2,     ONLY: LSUPSAT
 USE MODD_PARAMETERS,     ONLY: JPHEXT, JPVEXT
-USE MODD_PARAM_ICE_n,    ONLY: CSEDIM, LADJ_BEFORE, LADJ_AFTER, CFRAC_ICE_ADJUST, LRED, PARAM_ICEN
+USE MODD_PARAM_ICE_n,    ONLY: CSEDIM, LADJ_BEFORE, LADJ_AFTER, LRED, PARAM_ICEN
 USE MODD_PARAM_LIMA,     ONLY: LADJ, LCOLD, LPTSPLIT, LSPRO, NMOD_CCN, NMOD_IFN, NMOD_IMM
 USE MODD_RAIN_ICE_DESCR_n, ONLY: XRTMIN, RAIN_ICE_DESCRN
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAMN
@@ -806,7 +806,6 @@ SELECT CASE ( HCLOUD )
     ZZZ = MZF( PZZ )
     IF(LRED .AND. LADJ_BEFORE) THEN
       CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEBN, TURBN, TBUCONF, KRR, &
-                      CFRAC_ICE_ADJUST,                                        &
                       'ADJU', .FALSE.,                                         &
                       PTSTEP, ZSIGQSAT2D,                                      &
                       PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV,PMFCONV, PPABST, ZZZ,  &
@@ -859,7 +858,6 @@ SELECT CASE ( HCLOUD )
 !
     IF (.NOT. LRED .OR. (LRED .AND. LADJ_AFTER) ) THEN
       CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEBN, TURBN, TBUCONF, KRR,       &
-                       CFRAC_ICE_ADJUST,                                       &
                        'DEPI', .FALSE.,                                        &
                        PTSTEP, ZSIGQSAT2D,                                     &
                        PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,PPABST, ZZZ, &
@@ -897,7 +895,6 @@ SELECT CASE ( HCLOUD )
     ZZZ = MZF( PZZ )
     IF(LRED .AND. LADJ_BEFORE) THEN
       CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEBN, TURBN, TBUCONF, KRR,        &
-                       CFRAC_ICE_ADJUST,                                       &
                        'ADJU', .FALSE.,                                        &
                        PTSTEP, ZSIGQSAT2D,                                     &
                        PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV,PMFCONV, PPABST, ZZZ, &
@@ -953,7 +950,6 @@ SELECT CASE ( HCLOUD )
 !
     IF (.NOT. LRED .OR. (LRED .AND. LADJ_AFTER) ) THEN
      CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEBN, TURBN, TBUCONF, KRR,      &
-                     CFRAC_ICE_ADJUST,                                       &
                      'DEPI', .FALSE.,                                        &
                      PTSTEP, ZSIGQSAT2D,                                     &
                      PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,PPABST, ZZZ, &
