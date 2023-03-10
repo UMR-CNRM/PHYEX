@@ -508,7 +508,7 @@ subroutine print_diff_1(array, ref)
     absval = max(abs(array(i)), abs(ref(i)))
     if (absval .gt. 0.) then
       if (abs(array(i) - ref(i))/absval .gt. threshold) then
-        write(output_unit, '(2i4, 4e16.6)') i, array(i), ref(i), abs(array(i) - ref(i)), abs(array(i) - ref(i))/absval 
+        write(output_unit, '(1i4, 4e16.6)') i, array(i), ref(i), abs(array(i) - ref(i)), abs(array(i) - ref(i))/absval 
       endif
     endif
   enddo

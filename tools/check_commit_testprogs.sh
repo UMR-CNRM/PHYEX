@@ -263,8 +263,8 @@ if [ $check -eq 1 ]; then
     fi
     if [ $te -eq 0 ]; then
       set +e
-      mess=$(cmp <(cat $file1 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g') \
-                 <(cat $file2 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g') 246 246 2>&1)
+      mess=$(cmp <(cat $file1 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g' | grep -v 'Total time: ') \
+                 <(cat $file2 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g' | grep -v 'Total time: ') 246 246 2>&1)
       te=$?
       set -e
       #The use of "<()" bash syntax replaces the actual file name seen by cmp
