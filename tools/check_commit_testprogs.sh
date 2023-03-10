@@ -12,9 +12,18 @@ set -e
 #ref is commit 855b8f8 for ice_adjust, rain_ice
 #ref is commit 4171c53 for turb
 #ref is commit 7e44ab1 for shallow
+#ref is commit e070d16 for rain_ice_old
 
-#Commit 7e44ab1 can be used for shallow (ref commit for this testprogs), and for
-#turb, rain_ice and ice_adjust (as it gives the same results for these test cases).
+#Commit e070d16 can be used for rain_ice_old (ref commit for this testprogs), and for
+#turb, shallow, rain_ice and ice_adjust (as it gives the same results for these test cases).
+
+#Data generation:
+# - The last commit of the testprogs_data branch (based on 46t1) is able to produce the data
+#   for the turb, shallow, rain_ice and ice_adjust testprogs. The code is present but must be
+#   activated in the corresponding aro_* routine (as only one set of data can be produced during
+#   a single execution).
+# - The last commit of the testprogs_data2 branch (based on 48t3) is able to produce the data
+#   for the rain_ice_old testprog.
 
 specialName="ref"
 availTests="ice_adjust,rain_ice,rain_ice_old,turb,shallow"
