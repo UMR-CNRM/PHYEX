@@ -12,6 +12,8 @@
                                   YSPP_ICENU,YSPP_KGN_ACON,YSPP_KGN_SBGR)
       USE PARKIND1, ONLY : JPRB
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMMP0, ONLY : MYPROC
+USE OML_MOD, ONLY : OML_MY_THREAD
 !     ##########################################################################
 !
 !!****  * -  compute the  resolved clouds and precipitation
@@ -194,6 +196,9 @@ TYPE(TSPP_CONFIG_TYPE), INTENT(INOUT) :: YSPP_ICENU,YSPP_KGN_ACON,YSPP_KGN_SBGR
 !
 !
 !*       0.2   Declarations of local variables :
+CHARACTER(LEN=20) :: CLOFILE
+INTEGER           :: IFILE
+LOGICAL           :: LFILEEXISTS
 INTEGER :: JRR           ! Loop index for the moist and scalar variables
 !
 !
@@ -505,6 +510,88 @@ ELSE
     ELSE
      ZKGN_SBGR(:,:) = RAIN_ICE_PARAM%XFRMIN(11)
     ENDIF
+  IF(.FALSE.) THEN ! .FALSE. to activate the writing, .TRUE. to not activate the writing
+    LFILEEXISTS=.FALSE.
+  ELSE
+    IFILE=0
+    LFILEEXISTS=.TRUE.
+    DO WHILE(LFILEEXISTS)
+      IFILE=IFILE+1
+      WRITE(CLOFILE, '(I4.4,"_",I2.2,"_",I8.8,".dat")') MYPROC, OML_MY_THREAD(), IFILE
+      INQUIRE(FILE=CLOFILE, EXIST=LFILEEXISTS)
+    ENDDO
+    IF(IFILE==10)THEN
+      PRINT*
+      PRINT*, 'csedim:           ', CSEDIM
+      PRINT*, 'csubg_aucv_rc:    ', CSUBG_AUCV_RC
+      PRINT*, 'csubg_rc_rr_accr: ', PARAM_ICE%CSUBG_RC_RR_ACCR
+      PRINT*, 'csubg_rr_evap:    ', PARAM_ICE%CSUBG_RR_EVAP
+      PRINT*, 'csubg_pr_pdf:     ', PARAM_ICE%CSUBG_PR_PDF
+      PRINT*, 'cpristine_ice:    ', PARAM_ICE%CPRISTINE_ICE
+    ENDIF
+    LFILEEXISTS=IFILE<500
+    IF(LFILEEXISTS) THEN
+      IFILE=7+OML_MY_THREAD()
+      OPEN(IFILE, FILE=CLOFILE, FORM='unformatted') !,access='stream')
+      WRITE(IFILE) KLON
+      WRITE(IFILE) KLEV
+      WRITE(IFILE) KRR
+      
+      WRITE(IFILE) KKA
+      WRITE(IFILE) KKU
+      WRITE(IFILE) KKL
+      WRITE(IFILE) KSPLITR
+      
+      WRITE(IFILE) OSEDIC
+      WRITE(IFILE) OCND2
+      WRITE(IFILE) LKOGAN
+      WRITE(IFILE) LMODICEDEP
+      WRITE(IFILE) OWARM
+      
+      WRITE(IFILE) CSEDIM
+      WRITE(IFILE) CSUBG_AUCV_RC
+      
+      WRITE(IFILE) PTSTEP
+      
+      WRITE(IFILE) PDZZ
+      WRITE(IFILE) PRHODJ
+      WRITE(IFILE) PRHODREF
+      WRITE(IFILE) PEXNREF
+      WRITE(IFILE) PPABSM
+      WRITE(IFILE) PCIT
+      WRITE(IFILE) PCLDFR
+      
+      WRITE(IFILE) PICLDFR
+      WRITE(IFILE) PSSIO
+      WRITE(IFILE) PSSIU
+      WRITE(IFILE) PIFR
+      
+      WRITE(IFILE) PTHT
+      WRITE(IFILE) PRT
+      WRITE(IFILE) PTHS
+      WRITE(IFILE) PRS
+      
+      WRITE(IFILE) PSIGS
+      WRITE(IFILE) PSEA
+      WRITE(IFILE) PTOWN
+      
+      WRITE(IFILE) YSPP_ICENU%LPERT
+      IF (YSPP_ICENU%LPERT) THEN
+         WRITE(IFILE) YSPP_ICENU%PTRNDIAG
+      ENDIF
+      
+      WRITE(IFILE) YSPP_KGN_ACON%LPERT
+      IF (YSPP_KGN_ACON%LPERT) THEN
+         WRITE(IFILE) YSPP_KGN_ACON%PTRNDIAG
+      ENDIF
+      
+      WRITE(IFILE) YSPP_KGN_SBGR%LPERT
+      IF (YSPP_KGN_SBGR%LPERT) THEN
+         WRITE(IFILE) YSPP_KGN_SBGR%PTRNDIAG
+      ENDIF
+    ENDIF
+  ENDIF
+
     CALL RAIN_ICE_OLD( OSEDIC=OSEDIC, OCND2=OCND2, LKOGAN=LKOGAN, LMODICEDEP=LMODICEDEP, &
                  &  HSEDIM=CSEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC, &
                  &  OWARM=OWARM,KKA=KKA,KKU=KKU,KKL=KKL,KSPLITR=KSPLITR, &
@@ -528,6 +615,23 @@ ELSE
                  &  PICENU=ZICENU, &
                  &  PKGN_ACON=ZKGN_ACON, &
                  &  PKGN_SBGR=ZKGN_SBGR)
+  IF(LFILEEXISTS) THEN
+    WRITE(IFILE) PCIT
+    WRITE(IFILE) PTHS
+    WRITE(IFILE) PRS
+    WRITE(IFILE) ZINPRC
+    WRITE(IFILE) PINPRR
+    WRITE(IFILE) PEVAP
+    WRITE(IFILE) PINPRS
+    WRITE(IFILE) PINPRG
+    
+    WRITE(IFILE) PFPR
+    
+    IF (KRR .EQ. 7) THEN
+       WRITE(IFILE) PINPRH
+    ENDIF
+    CLOSE(IFILE)
+  ENDIF
 ENDIF
 !add ZINPRC in PINPRR
 PINPRR=PINPRR+ZINPRC
