@@ -8,7 +8,7 @@ INTERFACE
                            &HFRAC_ICE, HCONDENS, HLAMBDA3,                                                  &
                            &PPABS, PZZ, PRHODREF, PT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT,    &
                            &PRR, PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, PSIGRC, OUSERI,                 &
-                           &OSIGMAS, OCND2, LHGT_QS,                                                        &
+                           &OSIGMAS, OCND2,                                                                 &
                            &PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, PSIGQSAT,                                 &
                            &PLV, PLS, PCPH,                                                                 &
                            &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                                         &
@@ -55,7 +55,6 @@ LOGICAL, INTENT(IN)                         :: OSIGMAS! use present global Sigma
                                                       ! or that from turbulence scheme
 LOGICAL, INTENT(IN)                         :: OCND2  ! logical switch to sparate liquid and ice
                                                       ! more rigid (DEFALT value : .FALSE.)
-LOGICAL, INTENT(IN)                         :: LHGT_QS! logical switch for height dependent VQSIGSAT
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PICLDFR  ! ice cloud fraction
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PWCLDFR  ! water or mixed-phase cloud fraction
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PSSIO    ! Super-saturation with respect to ice in the  

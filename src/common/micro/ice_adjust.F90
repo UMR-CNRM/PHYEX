@@ -5,7 +5,7 @@
 !-----------------------------------------------------------------
 !     ##########################################################################
       SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, BUCONF, KRR,           &
-                            &HFRAC_ICE, HBUNAME, OCND2, LHGT_QS,               &
+                            &HFRAC_ICE, HBUNAME, OCND2,                        &
                             &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
                             &PPABST, PZZ,                                      &
@@ -140,7 +140,6 @@ CHARACTER(LEN=4),         INTENT(IN)    :: HBUNAME  ! Name of the budget
 LOGICAL,                  INTENT(IN)    :: OCND2    ! logical switch to separate liquid
                                                     ! and ice
                                                     ! more rigid (DEFAULT value : .FALSE.)
-LOGICAL,                  INTENT(IN)   :: LHGT_QS   ! logical switch for height dependent VQSIGSAT
 REAL,                     INTENT(IN)   :: PTSTEP    ! Double Time step
                                                     ! (single if cold start)
 REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PSIGQSAT  ! coeff applied to qsat variance contribution
@@ -477,7 +476,7 @@ IF ( TURBN%LSUBG_COND ) THEN
        HFRAC_ICE,TURBN%CCONDENS, TURBN%CLAMBDA3,                             &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
        PRR, PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, &
-       PSRCS, .TRUE., TURBN%LSIGMAS,OCND2, LHGT_QS,                      &
+       PSRCS, .TRUE., TURBN%LSIGMAS,OCND2,                               &
        PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, PSIGQSAT,                   &
        PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                                      &
        PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,&
@@ -496,7 +495,7 @@ ELSE
        HFRAC_ICE,TURBN%CCONDENS, TURBN%CLAMBDA3,                             &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
        PRR, PRS, PRG, ZSIGS, LMFCONV, PMFCONV, PCLDFR, &
-       ZSRCS, .TRUE., .TRUE., OCND2, LHGT_QS,                            &
+       ZSRCS, .TRUE., .TRUE., OCND2,                                     &
        PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, ZSIGQSAT,                   &
        PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                                      &
        PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,&

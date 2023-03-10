@@ -389,7 +389,7 @@ DO JITER = 1, ITERMAX
                      &'T', 'CB02', 'CB',                                                  &
                      &PPABST, PZZ, ZW4, ZT, ZW3_IN, ZW3, ZW1_IN, ZW1, ZW2_IN, ZW2,    &
                      &PRRS*PTSTEP, PRSS*PTSTEP, PRGS*PTSTEP, PSIGS, .FALSE., PMFCONV, PCLDFR, PSRCS, .FALSE.,                 &
-                     &OSIGMAS, .FALSE., .FALSE.,                                                        &
+                     &OSIGMAS, .FALSE.,                                                                 &
                      &ZDUM, ZDUM, ZDUM, ZDUM, ZDUM, ZSIGQSAT2D, &
                      &ZLV, ZLS, ZCPH)
 !

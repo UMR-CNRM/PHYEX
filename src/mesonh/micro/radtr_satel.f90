@@ -501,7 +501,7 @@ IF( SIZE(PRT(:,:,:,:),4) >= 2 ) THEN
                      &'T', 'CB02', 'CB',                                                  &                                         
                      &PPABST, PZZ, ZRHO, ZTEMP, ZRV_IN, ZRV_OUT, ZRC_IN, ZRC_OUT, ZRI_IN, ZRI_OUT,    &                                             
                      &PRT(:,:,:,2), PRT(:,:,:,5), PRT(:,:,:,6), PSIGS, .FALSE., PMFCONV, ZNCLD, ZSIGRC, .FALSE.,                 &     
-                     &OSIGMAS, .FALSE., .FALSE.,                                                        &                           
+                     &OSIGMAS, .FALSE.,                                                                 &                           
                      &ZDUM, ZDUM, ZDUM, ZDUM, ZDUM, ZSIGQSAT2D)
     DEALLOCATE(ZTEMP,ZSIGRC)
     DEALLOCATE(ZRV_OUT)

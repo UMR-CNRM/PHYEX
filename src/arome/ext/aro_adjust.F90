@@ -1,7 +1,7 @@
 !     ######spl
       SUBROUTINE  ARO_ADJUST(CST, PARAM_ICEN, RAIN_ICE_PARAMN, TURBN, NEBN, &
                                   KLON,KIDIA,KFDIA,KLEV,  KRR,  &
-                                  CMICRO, LHGT_QS, &
+                                  CMICRO, &
                                   PTSTEP, &
                                   PZZF, PRHODJ, PEXNREF, PRHODREF,&
                                   PPABSM, PTHT, PRT, PSIGS, &
@@ -120,7 +120,6 @@ INTEGER,                  INTENT(IN)   :: KFDIA    !end index (=KLON only if blo
 INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 CHARACTER (LEN=4),        INTENT(IN)   :: CMICRO  ! Microphysics scheme
-LOGICAL,                  INTENT(IN)   :: LHGT_QS
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 !
 !
@@ -389,7 +388,7 @@ ZZZ(KIDIA:KFDIA,:,:) =  PZZF(KIDIA:KFDIA,:,:)
 IF (KRR==6) THEN
   CALL ICE_ADJUST ( YLDIMPHYEX, CST=CST, ICEP=RAIN_ICE_PARAMN, NEBN=NEBN, TURBN=TURBN, BUCONF=TBUCONF, KRR=KRR,&
     & HFRAC_ICE=PARAM_ICEN%CFRAC_ICE_ADJUST, HBUNAME=HBUNAME, &
-    & OCND2=PARAM_ICEN%LOCND2, LHGT_QS=LHGT_QS, &
+    & OCND2=PARAM_ICEN%LOCND2, &
     & PTSTEP=ZTWOTSTEP,PSIGQSAT=ZSIGQSAT, &
     & PRHODJ=PRHODJ ,PEXNREF=PEXNREF, PRHODREF=PRHODREF,   &
     & PSIGS=PSIGS, LMFCONV=.TRUE., PMFCONV=PMFCONV, PPABST=PPABSM, PZZ=ZZZ,    &
@@ -410,7 +409,7 @@ IF (KRR==6) THEN
 ELSE
   CALL ICE_ADJUST ( YLDIMPHYEX, CST=CST, ICEP=RAIN_ICE_PARAMN, NEBN=NEBN, TURBN=TURBN, BUCONF=TBUCONF, KRR=KRR,&
     & HFRAC_ICE=PARAM_ICEN%CFRAC_ICE_ADJUST, HBUNAME=HBUNAME,    &
-    & OCND2=PARAM_ICEN%LOCND2, LHGT_QS=LHGT_QS, &
+    & OCND2=PARAM_ICEN%LOCND2, &
     & PTSTEP=ZTWOTSTEP,PSIGQSAT=ZSIGQSAT, &
     & PRHODJ=PRHODJ ,PEXNREF=PEXNREF, PRHODREF=PRHODREF,   &
     & PSIGS=PSIGS, LMFCONV=.TRUE., PMFCONV=PMFCONV, PPABST=PPABSM, PZZ=ZZZ,    &

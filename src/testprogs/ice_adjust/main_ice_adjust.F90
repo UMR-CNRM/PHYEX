@@ -69,7 +69,6 @@ TYPE(RAIN_ICE_PARAM_t)   :: ICEP
 TYPE(TURB_t)             :: TURBN
 TYPE(NEB_t)              :: NEBN
 CHARACTER(LEN=4)         :: HBUNAME  
-LOGICAL                  :: LHGT_QS
 LOGICAL                  :: LMFCONV
 REAL                :: PTSTEP
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RI) :: YLBUDGET
@@ -135,7 +134,6 @@ PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
 PTSTEP       = 50.000000000000000
 HBUNAME      = 'DEPI'
 LMFCONV      = .TRUE.
-LHGT_QS      = .FALSE.
 CALL INIT_PHYEX (20, PTSTEP, &
                  CST, &
                  PARAMI, ICEP, TURBN, NEBN)
@@ -177,7 +175,7 @@ DO ITIME = 1, NTIME
   TSD = OMP_GET_WTIME ()
 
 !$acc data &
-!$acc      & copyin  (D0, CST, ICEP, NEBN, TURBN, KRR, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND, OSIGMAS, LHGT_QS, HSUBG_MF_PDF, PTSTEP, LMFCONV, &
+!$acc      & copyin  (D0, CST, ICEP, NEBN, TURBN, KRR, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND, OSIGMAS, HSUBG_MF_PDF, PTSTEP, LMFCONV, &
 !$acc      &          ZSIGQSAT, PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, ZRS, ZICE_CLD_WGT) &
 !$acc      & copy    (PRS, PTHS), &
 !$acc      & copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &
@@ -232,7 +230,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
 #endif
 
     CALL ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, TBUCONF, KRR, PARAMI%CFRAC_ICE_ADJUST, HBUNAME,                                &
-    & PARAMI%LOCND2, LHGT_QS, PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL),                                               &
+    & PARAMI%LOCND2, PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL),                                               &
     & PEXNREF=PEXNREF (:, :, :, IBL),                                                                                           &
     & PRHODREF=PRHODREF (:, :, :, IBL), PSIGS=PSIGS (:, :, :, IBL), LMFCONV=LMFCONV, PMFCONV=PMFCONV (:, :, :, IBL),            &
     & PPABST=PPABSM (:, :, :, IBL), PZZ=ZZZ (:, :, :, IBL), PEXN=PEXNREF (:, :, :, IBL), PCF_MF=PCF_MF (:, :, :, IBL),          &

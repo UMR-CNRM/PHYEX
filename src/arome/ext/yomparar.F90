@@ -83,7 +83,6 @@ LOGICAL            :: LTOTPREC  ! True if precipitation tendencies
                                 ! from the sub-grid scheme are
                                 ! added to the total precip tendencies.
 LOGICAL            :: LTOTPRECL ! As LTOTPREC but updraft fraction untouched
-LOGICAL            :: LHGT_QS   ! Switch for height dependent VQSIGSAT
 
 ! * for the squall line case:
 LOGICAL :: LSQUALL ! use for the squall line case

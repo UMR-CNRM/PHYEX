@@ -5,7 +5,7 @@
 INTERFACE
 !
       SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, BUCONF, KRR,           &
-                            &HFRAC_ICE, HBUNAME, OCND2, LHGT_QS,               &
+                            &HFRAC_ICE, HBUNAME, OCND2,                        &
                             &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
                             &PPABST, PZZ,                                      &
@@ -42,7 +42,6 @@ CHARACTER(LEN=4),         INTENT(IN)    :: HBUNAME  ! Name of the budget
 LOGICAL,                  INTENT(IN)    :: OCND2    ! logical switch to separate liquid
                                                     ! and ice
                                                     ! more rigid (DEFAULT value : .FALSE.)
-LOGICAL,                  INTENT(IN)   :: LHGT_QS   ! logical switch for height dependent VQSIGSAT
 REAL,                     INTENT(IN)   :: PTSTEP    ! Double Time step
                                                     ! (single if cold start)
 REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PSIGQSAT  ! coeff applied to qsat variance contribution

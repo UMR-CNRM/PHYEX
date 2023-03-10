@@ -40,6 +40,7 @@ IMPLICIT NONE
 TYPE NEB_t
   REAL          :: XTMINMIX   !< minimum temperature of mixed phase
   REAL          :: XTMAXMIX   !< maximum temperature of mixed phase
+  LOGICAL       :: LHGT_QS    !< Switch for height dependent VQSIGSAT
 END TYPE NEB_t
 
 TYPE(NEB_t), DIMENSION(JPMODELMAX), SAVE, TARGET :: NEB_MODEL
@@ -47,6 +48,7 @@ TYPE(NEB_t), POINTER, SAVE :: NEBN => NULL()
 
 REAL, POINTER :: XTMINMIX=>NULL(), &
                  XTMAXMIX=>NULL()
+LOGICAL, POINTER :: LHGT_QS=>NULL()
 !
 NAMELIST/NAM_NEBn/XTMINMIX, XTMAXMIX
 !
@@ -66,6 +68,7 @@ IF(.NOT. ASSOCIATED(NEBN, NEB_MODEL(KTO))) THEN
   !
   XTMINMIX => NEBN%XTMINMIX
   XTMAXMIX => NEBN%XTMAXMIX
+  LHGT_QS => NEBN%LHGT_QS
 ENDIF
 END SUBROUTINE NEB_GOTO_MODEL
 !
@@ -140,6 +143,7 @@ IF(LLDEFAULTVAL) THEN
   !Freezing between 0 and -20. Other possibilities are 0/-40 or -5/-25
   XTMAXMIX    = 273.16
   XTMINMIX    = 253.16
+  LHGT_QS     = .FALSE.
 ENDIF
 !
 !*      2. NAMELIST
