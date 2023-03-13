@@ -229,7 +229,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%U = 0
 #endif
 
-    CALL ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, TBUCONF, KRR, HBUNAME,                                                          &
+    CALL ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, PARAMI, TBUCONF, KRR, HBUNAME,                                                  &
     & PARAMI%LOCND2, PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL),                                                &
     & PEXNREF=PEXNREF (:, :, :, IBL),                                                                                           &
     & PRHODREF=PRHODREF (:, :, :, IBL), PSIGS=PSIGS (:, :, :, IBL), LMFCONV=LMFCONV, PMFCONV=PMFCONV (:, :, :, IBL),            &

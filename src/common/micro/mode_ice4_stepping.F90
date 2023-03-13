@@ -10,7 +10,6 @@ SUBROUTINE ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &LDSIGMA_RC, LDAUCV_ADJU, LDEXT_TEND, &
                         &KPROMA, KMICRO, LDMICRO, PTSTEP, &
                         &KRR, &
-                        &HSUBG_AUCV_RC, HSUBG_AUCV_RI, &
                         &PEXN, PRHODREF, K1, K2, &
                         &PPRES, PCF, PSIGMA_RC, &
                         &PCIT, &
@@ -69,8 +68,6 @@ INTEGER,                  INTENT(IN)    :: KMICRO ! Case r_x>0 locations
 LOGICAL, DIMENSION(KPROMA), INTENT(IN)  :: LDMICRO
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
-CHARACTER(LEN=4),         INTENT(IN)    :: HSUBG_AUCV_RC ! Kind of Subgrid autoconversion method
-CHARACTER(LEN=80),        INTENT(IN)    :: HSUBG_AUCV_RI ! Kind of Subgrid autoconversion method
 !
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PEXN    ! Exner function
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PRHODREF! Reference density
@@ -242,7 +239,6 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     CALL ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &KPROMA, KMICRO, &
                         &KRR, LSOFT, LLCOMPUTE, &
-                        &HSUBG_AUCV_RC, HSUBG_AUCV_RI, &
                         &PEXN, PRHODREF, ZLVFACT, ZLSFACT, K1, K2, &
                         &PPRES, PCF, PSIGMA_RC, &
                         &PCIT, &

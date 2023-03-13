@@ -4,7 +4,7 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ##########################################################################
-      SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, BUCONF, KRR,           &
+      SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, PARAMI, BUCONF, KRR,   &
                             &HBUNAME, OCND2,                                   &
                             &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
@@ -115,6 +115,7 @@ USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_CST,        ONLY: CST_t
 USE MODD_NEB_n,      ONLY: NEB_t
 USE MODD_TURB_n,         ONLY: TURB_t
+USE MODD_PARAM_ICE_n,    ONLY: PARAM_ICE_t
 USE MODD_BUDGET,     ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RI
 USE MODD_RAIN_ICE_PARAM_n, ONLY : RAIN_ICE_PARAM_t
 !
@@ -133,6 +134,7 @@ TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(NEB_t),              INTENT(IN)    :: NEBN
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
+TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KRR      ! Number of moist variables
 CHARACTER(LEN=4),         INTENT(IN)    :: HBUNAME  ! Name of the budget
@@ -338,12 +340,12 @@ DO JK=IKTB,IKTE
       !
       IF(PRESENT(PHLC_HRC) .AND. PRESENT(PHLC_HCF)) THEN
         ZCRIAUT=ICEP%XCRIAUTC/PRHODREF(JIJ,JK)
-        IF(TURBN%CSUBG_MF_PDF=='NONE')THEN
+        IF(PARAMI%CSUBG_MF_PDF=='NONE')THEN
           IF(ZW1*PTSTEP>PCF_MF(JIJ,JK) * ZCRIAUT) THEN
             PHLC_HRC(JIJ,JK)=PHLC_HRC(JIJ,JK)+ZW1*PTSTEP
             PHLC_HCF(JIJ,JK)=MIN(1.,PHLC_HCF(JIJ,JK)+PCF_MF(JIJ,JK))
           ENDIF
-        ELSEIF(TURBN%CSUBG_MF_PDF=='TRIANGLE')THEN
+        ELSEIF(PARAMI%CSUBG_MF_PDF=='TRIANGLE')THEN
           !ZHCF is the precipitating part of the *cloud* and not of the grid cell
           IF(ZW1*PTSTEP>PCF_MF(JIJ,JK)*ZCRIAUT) THEN
             ZHCF=1.-.5*(ZCRIAUT*PCF_MF(JIJ,JK) / MAX(1.E-20, ZW1*PTSTEP))**2
@@ -366,12 +368,12 @@ DO JK=IKTB,IKTE
       ENDIF
       IF(PRESENT(PHLI_HRI) .AND. PRESENT(PHLI_HCF)) THEN
         ZCRIAUT=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(ZT(JIJ,JK)-CST%XTT)+ICEP%XBCRIAUTI))
-        IF(TURBN%CSUBG_MF_PDF=='NONE')THEN
+        IF(PARAMI%CSUBG_MF_PDF=='NONE')THEN
           IF(ZW2*PTSTEP>PCF_MF(JIJ,JK) * ZCRIAUT) THEN
             PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)+ZW2*PTSTEP
             PHLI_HCF(JIJ,JK)=MIN(1.,PHLI_HCF(JIJ,JK)+PCF_MF(JIJ,JK))
           ENDIF
-        ELSEIF(TURBN%CSUBG_MF_PDF=='TRIANGLE')THEN
+        ELSEIF(PARAMI%CSUBG_MF_PDF=='TRIANGLE')THEN
           !ZHCF is the precipitating part of the *cloud* and not of the grid cell
           IF(ZW2*PTSTEP>PCF_MF(JIJ,JK)*ZCRIAUT) THEN
             ZHCF=1.-.5*(ZCRIAUT*PCF_MF(JIJ,JK) / (ZW2*PTSTEP))**2

@@ -8,7 +8,6 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, KPROMA, KSIZE, &
                           &KRR, ODSOFT, LDCOMPUTE, &
-                          &HSUBG_AUCV_RC, HSUBG_AUCV_RI,  &
                           &PEXN, PRHODREF, PLVFACT, PLSFACT, K1, K2, &
                           &PPRES, PCF, PSIGMA_RC, &
                           &PCIT, &
@@ -77,8 +76,6 @@ INTEGER,                      INTENT(IN)    :: KPROMA, KSIZE
 INTEGER,                      INTENT(IN)    :: KRR
 LOGICAL,                      INTENT(IN)    :: ODSOFT
 LOGICAL, DIMENSION(KPROMA),   INTENT(IN)    :: LDCOMPUTE
-CHARACTER(LEN=4),             INTENT(IN)    :: HSUBG_AUCV_RC
-CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_AUCV_RI
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PEXN
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRHODREF
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLVFACT
@@ -240,7 +237,7 @@ ELSE
 ENDIF ! ODSOFT
 !
 !Cloud water split between high and low content part is done here
-CALL ICE4_COMPUTE_PDF(CST, ICEP, ICED, KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF,&
+CALL ICE4_COMPUTE_PDF(CST, ICEP, ICED, KSIZE, PARAMI%CSUBG_AUCV_RC, PARAMI%CSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF,&
                       PRHODREF, ZVART(:,IRC), ZVART(:,IRI), PCF, ZT, PSIGMA_RC, &
                       PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
                       PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, ZRAINFR)

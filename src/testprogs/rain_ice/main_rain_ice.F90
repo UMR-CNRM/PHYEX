@@ -61,7 +61,6 @@ TYPE(CST_t)              :: CST
 TYPE(PARAM_ICE_t)        :: PARAMI
 TYPE(RAIN_ICE_PARAM_t)   :: ICEP
 TYPE(RAIN_ICE_DESCR_t)   :: ICED
-TYPE(TURB_t)             :: TURBN
 CHARACTER (LEN=4)   :: CMICRO
 REAL                :: PTSTEP
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH) :: YLBUDGET
@@ -131,8 +130,7 @@ KRR = 6
 
 CALL INIT_PHYEX (20, CMICRO, PTSTEP, &
                  CST, &
-                 PARAMI, ICEP, ICED, &
-                 TURBN)
+                 PARAMI, ICEP, ICED)
 
 DO JRR=1, NBUDGET_RH
   YLBUDGET(JRR)%NBUDGET=JRR
@@ -171,7 +169,7 @@ DO ITIME = 1, NTIME
   TSD = OMP_GET_WTIME ()
 
 !directives pas a jour !$acc data &
-!directives pas a jour !$acc      & copyin  (D0, CST, ICEP, NEB, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND, OSIGMAS, OCND2, HSUBG_MF_PDF, PTSTEP, LMFCONV, &
+!directives pas a jour !$acc      & copyin  (D0, CST, ICEP, NEB, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSIGMAS, OCND2, PTSTEP, LMFCONV, &
 !directives pas a jour !$acc      &          ZSIGQSAT, PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, ZRS, ZICE_CLD_WGT) &
 !directives pas a jour !$acc      & copy    (PRS, PTHS), &
 !directives pas a jour !$acc      & copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &
@@ -226,7 +224,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
 #endif
 
 CALL RAIN_ICE (D, CST, PARAMI, ICEP, &
-             & ICED, TURBN, TBUCONF, &
+             & ICED, TBUCONF, &
              & PTSTEP=2*PTSTEP, &
              & KRR=KRR, PEXN=PEXNREF(:,:,:,IBL),            &
              & PDZZ=PDZZ(:,:,:,IBL), PRHODJ=PRHODJ(:,:,:,IBL), PRHODREF=PRHODREF(:,:,:,IBL),PEXNREF=PEXNREF2(:,:,:,IBL),&
@@ -316,8 +314,7 @@ CONTAINS
 
 SUBROUTINE INIT_PHYEX(KULOUT,CMICRO,PTSTEP, &
                       CST, &
-                      PARAM_ICEN, RAIN_ICE_PARAMN, RAIN_ICE_DESCRN,&
-                      TURBN)
+                      PARAM_ICEN, RAIN_ICE_PARAMN, RAIN_ICE_DESCRN)
 
 USE MODD_CST, ONLY: CST_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
@@ -337,7 +334,6 @@ TYPE(CST_t),            INTENT(OUT) :: CST
 TYPE(PARAM_ICE_t)     , INTENT(OUT) :: PARAM_ICEN
 TYPE(RAIN_ICE_PARAM_t), INTENT(OUT) :: RAIN_ICE_PARAMN
 TYPE(RAIN_ICE_DESCR_t), INTENT(OUT) :: RAIN_ICE_DESCRN
-TYPE(TURB_t),           INTENT(OUT) :: TURBN
 
 !-----------------------------------------------------------------------
 !    LOCAL VARIABLES
@@ -392,8 +388,7 @@ CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &LDDEFAULTVAL=.FALSE., LDREADNAM=.FALSE., LDCHECK=.TRUE., KPRINT=2, LDINIT=.TRUE., &
               &CST_OUT=CST, &
               &PARAM_ICEN_IN=PARAM_ICEN, PARAM_ICEN_OUT=PARAM_ICEN, &
-              &RAIN_ICE_DESCRN_OUT=RAIN_ICE_DESCRN, RAIN_ICE_PARAMN_OUT=RAIN_ICE_PARAMN, &
-              &TURBN_OUT=TURBN)
+              &RAIN_ICE_DESCRN_OUT=RAIN_ICE_DESCRN, RAIN_ICE_PARAMN_OUT=RAIN_ICE_PARAMN)
 
 CALL TBUCONF_ASSOCIATE
 LBU_ENABLE=.FALSE.                                                                                                       

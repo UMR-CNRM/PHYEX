@@ -4,7 +4,7 @@
 !
 INTERFACE
 !
-      SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, BUCONF, KRR,           &
+      SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, PARAMI, BUCONF, KRR,   &
                             &HBUNAME, OCND2,                                   &
                             &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
@@ -23,6 +23,7 @@ USE MODD_CST,            ONLY: CST_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_NEB_n,          ONLY: NEB_t
 USE MODD_TURB_n,         ONLY: TURB_t
+USE MODD_PARAM_ICE_n,    ONLY: PARAM_ICE_t
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 IMPLICIT NONE
 !
@@ -35,6 +36,7 @@ TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(NEB_t),              INTENT(IN)    :: NEBN
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
+TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KRR      ! Number of moist variables
 CHARACTER(LEN=4),         INTENT(IN)    :: HBUNAME  ! Name of the budget

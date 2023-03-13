@@ -244,7 +244,7 @@ DO ITIME = 1, NTIME
   TSD = OMP_GET_WTIME ()
 
 !!!              !directives pas a jour !$acc data &
-!!!              !directives pas a jour !$acc      & copyin  (D0, CST, ICEP, NEBN, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND, OSIGMAS, OCND2, HSUBG_MF_PDF, PTSTEP, LMFCONV, &
+!!!              !directives pas a jour !$acc      & copyin  (D0, CST, ICEP, NEBN, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSIGMAS, OCND2, PTSTEP, LMFCONV, &
 !!!              !directives pas a jour !$acc      &          ZSIGQSAT, PTHM, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, ZRS, ZICE_CLD_WGT) &
 !!!              !directives pas a jour !$acc      & copy    (PRS, PTHS), &
 !!!              !directives pas a jour !$acc      & copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &

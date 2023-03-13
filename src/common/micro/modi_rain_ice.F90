@@ -3,7 +3,7 @@
 !      ####################
 !
 INTERFACE
-      SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, TURBN, BUCONF,            &
+      SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
                             PTSTEP, KRR, PEXN,                                    &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
@@ -30,7 +30,6 @@ TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
-TYPE(TURB_t),             INTENT(IN)    :: TURBN
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
