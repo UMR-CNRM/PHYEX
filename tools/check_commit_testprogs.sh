@@ -17,7 +17,7 @@ set -e
 #turb, rain_ice and ice_adjust (as it gives the same results for these test cases).
 
 specialName="ref"
-availTests="ice_adjust,rain_ice,turb,shallow"
+availTests="ice_adjust,rain_ice,rain_ice_old,turb,shallow"
 defaultTest='ALL'
 separator='_' #- seprator must be in sync with prep_code.sh separator
 
@@ -187,7 +187,7 @@ if [ $compilation -eq 1 ]; then
   else
     expand_options=""
   fi
-  subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s support"
+  subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s support"
   prep_code=$PHYEXTOOLSDIR/prep_code.sh
 
   if [ "$fromdir" == '' ]; then
@@ -263,8 +263,8 @@ if [ $check -eq 1 ]; then
     fi
     if [ $te -eq 0 ]; then
       set +e
-      mess=$(cmp <(cat $file1 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g') \
-                 <(cat $file2 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g') 246 246 2>&1)
+      mess=$(cmp <(cat $file1 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g' | grep -v 'Total time: ') \
+                 <(cat $file2 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g' | grep -v 'Total time: ') 246 246 2>&1)
       te=$?
       set -e
       #The use of "<()" bash syntax replaces the actual file name seen by cmp
