@@ -5,7 +5,7 @@
 !-----------------------------------------------------------------
 !     ##########################################################################
       SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, PARAMI, BUCONF, KRR,   &
-                            &HBUNAME, OCND2,                                   &
+                            &HBUNAME,                                          &
                             &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
                             &PPABST, PZZ,                                      &
@@ -138,9 +138,6 @@ TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KRR      ! Number of moist variables
 CHARACTER(LEN=4),         INTENT(IN)    :: HBUNAME  ! Name of the budget
-LOGICAL,                  INTENT(IN)    :: OCND2    ! logical switch to separate liquid
-                                                    ! and ice
-                                                    ! more rigid (DEFAULT value : .FALSE.)
 REAL,                     INTENT(IN)   :: PTSTEP    ! Double Time step
                                                     ! (single if cold start)
 REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PSIGQSAT  ! coeff applied to qsat variance contribution
@@ -477,7 +474,7 @@ IF ( NEBN%LSUBG_COND ) THEN
        NEBN%CFRAC_ICE_ADJUST,NEBN%CCONDENS, NEBN%CLAMBDA3,                             &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
        PRR, PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, &
-       PSRCS, .TRUE., NEBN%LSIGMAS,OCND2,                               &
+       PSRCS, .TRUE., NEBN%LSIGMAS, PARAMI%LOCND2,                       &
        PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, PSIGQSAT,                   &
        PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                                      &
        PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,&
@@ -496,7 +493,7 @@ ELSE
        NEBN%CFRAC_ICE_ADJUST,NEBN%CCONDENS, NEBN%CLAMBDA3,                             &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
        PRR, PRS, PRG, ZSIGS, LMFCONV, PMFCONV, PCLDFR, &
-       ZSRCS, .TRUE., .TRUE., OCND2,                                     &
+       ZSRCS, .TRUE., .TRUE., PARAMI%LOCND2,                             &
        PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, ZSIGQSAT,                   &
        PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                                      &
        PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,&

@@ -1,7 +1,7 @@
 !     ######spl
       SUBROUTINE  ARO_SHALLOW_MF(CST, PARAM_MFSHALLN, NEBN, TURBN, CSTURB,&
                 KKL, KLON, KLEV, KFDIA, KRR, KRRL, KRRI,KSV,&
-                OMIXUV, ONOMIXLG,KSV_LGBEG,KSV_LGEND,                 &
+                ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
                 PTSTEP, PDX, PDY,                                     &
                 PZZ, PZZF, PDZZF,                                     &
                 PRHODJ, PRHODREF,                                     &
@@ -101,8 +101,6 @@ INTEGER,                  INTENT(IN)   :: KRRL     ! Number of liquide water var
 INTEGER,                  INTENT(IN)   :: KRRI     ! Number of ice variables
 INTEGER,                  INTENT(IN)   :: KSV      ! Number of passive scalar variables
 !
-LOGICAL,                        INTENT(IN)   :: OMIXUV    ! True if mixing of momentum
-!
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
 INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
@@ -164,7 +162,6 @@ INTEGER, DIMENSION(size(PRHODJ,1)) :: IKLCL,IKETL,IKCTL
 REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZFLXZTHMF,ZFLXZRMF,ZFLXZUMF,ZFLXZVMF
 REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZDETR,ZENTR
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
-REAL          ::  ZIMPL        ! degree of implicitness
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 INTEGER :: JBU ! Loop index for budgets
 !
@@ -188,8 +185,6 @@ CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, JPVEXT, KFDIA)
 !             ---------------
 
 
-ZIMPL=1.
-!ZIMPL=0.
 ! tableau a recalculer a chaque pas de temps
 ! attention, ZDZZ est l'altitude entre deux niveaux (et pas l'�paisseur de la couche)
 
@@ -222,9 +217,8 @@ ENDDO
 !
   CALL SHALLOW_MF(YLDIMPHYEX, CST, NEBN, PARAM_MFSHALLN, TURBN, CSTURB,                    &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                             &
-     &HFRAC_ICE=NEBN%CFRAC_ICE_SHALLOW_MF,                                           &
      &ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,                          &
-     &PIMPL_MF=ZIMPL, PTSTEP=PTSTEP,                                                      &
+     &PTSTEP=PTSTEP,                                                                      &
      &PDZZ=PDZZF,PZZ=PZZ,                                                                 &
      &PRHODJ=PRHODJ,PRHODREF=PRHODREF,                                                    &
      &PPABSM=PPABSM,PEXNM=PEXNM,                                                          &

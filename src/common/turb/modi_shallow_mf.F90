@@ -6,8 +6,8 @@ INTERFACE
 !     #################################################################
       SUBROUTINE SHALLOW_MF(D, CST, NEBN, PARAMMF, TURBN, CSTURB,     &
                 KRR, KRRL, KRRI, KSV,                                 &
-                HFRAC_ICE,ONOMIXLG,KSV_LGBEG,KSV_LGEND,               &
-                PIMPL_MF, PTSTEP,                                     &
+                ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
+                PTSTEP,                                               &
                 PDZZ, PZZ,                                            &
                 PRHODJ, PRHODREF,                                     &
                 PPABSM, PEXNM,                                        &
@@ -46,11 +46,9 @@ INTEGER,                INTENT(IN)   :: KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL         ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI         ! number of ice water var.
 INTEGER,                INTENT(IN)   :: KSV          ! number of scalar var.
-CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
 INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
-REAL,                   INTENT(IN)   :: PIMPL_MF     ! degre of implicitness
 REAL,                   INTENT(IN)   :: PTSTEP    ! Dynamical timestep 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PZZ         ! Height of flux point
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PDZZ        ! Metric coefficients

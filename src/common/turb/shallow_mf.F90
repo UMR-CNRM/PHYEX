@@ -6,8 +6,8 @@
 !     #################################################################
       SUBROUTINE SHALLOW_MF(D, CST, NEBN, PARAMMF, TURBN, CSTURB,     &
                 KRR, KRRL, KRRI, KSV,                                 &
-                HFRAC_ICE,ONOMIXLG,KSV_LGBEG,KSV_LGEND,               &
-                PIMPL_MF, PTSTEP,                                     &
+                ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
+                PTSTEP,                                               &
                 PDZZ, PZZ,                                            &
                 PRHODJ, PRHODREF,                                     &
                 PPABSM, PEXNM,                                        &
@@ -110,11 +110,9 @@ INTEGER,                INTENT(IN)   :: KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL         ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI         ! number of ice water var.
 INTEGER,                INTENT(IN)   :: KSV          ! number of scalar var.
-CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
 INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
-REAL,                   INTENT(IN)   :: PIMPL_MF     ! degre of implicitness
 REAL,                   INTENT(IN)   :: PTSTEP    ! Dynamical timestep 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PZZ         ! Height of flux point
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PDZZ        ! Metric coefficients
@@ -220,7 +218,7 @@ ENDIF
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ZWK(IIJB:IIJE,1:IKT)=PTHM(IIJB:IIJE,1:IKT)*PEXNM(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-CALL COMPUTE_FRAC_ICE(HFRAC_ICE,NEBN,ZFRAC_ICE(:,:),ZWK(:,:), IERR(:,:))
+CALL COMPUTE_FRAC_ICE(NEBN%CFRAC_ICE_SHALLOW_MF,NEBN,ZFRAC_ICE(:,:),ZWK(:,:), IERR(:,:))
 
 ! Conservative variables at t-dt
 CALL THL_RT_FROM_TH_R_MF(D, CST, KRR,KRRL,KRRI,    &
@@ -239,7 +237,7 @@ ZTHVM(IIJB:IIJE,1:IKT) = PTHM(IIJB:IIJE,1:IKT)*&
 IF (PARAMMF%CMF_UPDRAFT == 'EDKF') THEN
   GENTR_DETR = .TRUE.
   CALL COMPUTE_UPDRAFT(D, CST, NEBN, PARAMMF, TURBN, CSTURB,     &
-                       KSV, HFRAC_ICE, GENTR_DETR,               &
+                       KSV, GENTR_DETR,                          &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
                        PSFTH,PSFRV,PPABSM,PRHODREF,              &
@@ -253,7 +251,7 @@ IF (PARAMMF%CMF_UPDRAFT == 'EDKF') THEN
 ELSEIF (PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
   GENTR_DETR = .TRUE.
   CALL COMPUTE_UPDRAFT_RHCJ10(D, CST, NEBN, PARAMMF, TURBN, CSTURB,&
-                       KSV, HFRAC_ICE, GENTR_DETR,               &
+                       KSV, GENTR_DETR,                          &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
                        PSFTH,PSFRV,PPABSM,PRHODREF,              &
@@ -265,7 +263,7 @@ ELSEIF (PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
                        PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH )
 ELSEIF (PARAMMF%CMF_UPDRAFT == 'RAHA') THEN
    CALL COMPUTE_UPDRAFT_RAHA(D, CST, NEBN, PARAMMF,              &
-                       KSV, HFRAC_ICE, GENTR_DETR,               &
+                       KSV, GENTR_DETR,                          &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
                        PSFTH,PSFRV,                              &
@@ -307,10 +305,10 @@ CALL COMPUTE_MF_CLOUD(D,CST,TURBN,PARAMMF,NEBN%LSTATNW, &
 ZEMF_O_RHODREF(IIJB:IIJE,1:IKT)=PEMF(IIJB:IIJE,1:IKT)/PRHODREF(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
-IF ( PIMPL_MF > 1.E-10 ) THEN  
+IF ( PARAMMF%XIMPL_MF > 1.E-10 ) THEN  
   CALL MF_TURB(D, KSV, PARAMMF%LMIXUV,                                &
              ONOMIXLG,KSV_LGBEG,KSV_LGEND,                            &
-             PIMPL_MF, PTSTEP,                                        &
+             PARAMMF%XIMPL_MF, PTSTEP,                                &
              PDZZ,                                                    &
              PRHODJ,                                                  &
              ZTHLM,ZTHVM,ZRTM,PUM,PVM,PSVM,                           &

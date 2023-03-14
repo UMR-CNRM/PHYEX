@@ -299,7 +299,7 @@ USE MODD_PARAMETERS
 USE MODD_PARAM_ICE_n,        ONLY : LSEDIC
 USE MODD_PARAM_KAFR_n
 USE MODD_PARAM_LIMA,       ONLY : MSEDC => LSEDC, XRTMIN_LIMA=>XRTMIN
-USE MODD_PARAM_MFSHALL_n
+USE MODD_PARAM_MFSHALL_n,  ONLY: CMF_CLOUD
 USE MODD_PARAM_n
 USE MODD_PARAM_RAD_n
 USE MODD_PASPOL
@@ -1633,8 +1633,8 @@ IF (CSCONV == 'EDKF') THEN
      CALL MPPDB_CHECK3D(ZEXN,"physparam.7::ZEXN",PRECISION)
  !    
      CALL SHALLOW_MF_PACK(NRR,NRRL,NRRI,                                  &
-                   LMF_FLX,TPFILE,ZTIME_LES_MF,                           &
-                   XIMPL_MF, XTSTEP,                                      &
+                   TPFILE,ZTIME_LES_MF,                                   &
+                   XTSTEP,                                                &
                    XDZZ, XZZ,XDXHAT(1),XDYHAT(1),                         &
                    XRHODJ, XRHODREF, XPABST, ZEXN, ZSFTH, ZSFRV,          &
                    XTHT,XRT,XUT,XVT,XTKET,XSVT,                           &

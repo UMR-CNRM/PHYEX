@@ -112,9 +112,7 @@ TYPE(CST_t)              :: CST
 TYPE(TURB_t)             :: TURBN
 TYPE(NEB_t)              :: NEBN
 TYPE(PARAM_MFSHALL_t)    :: PARAM_MFSHALLN
-CHARACTER (LEN=1)        :: HFRAC_ICE
-LOGICAL                  :: ONOMIXLG, OSTATNW
-REAL                     :: ZIMPL
+LOGICAL                  :: ONOMIXLG
 INTEGER                  :: KSV_LGBEG, KSV_LGEND
 REAL                     :: PTSTEP 
 LOGICAL                  :: LLCHECK
@@ -197,10 +195,7 @@ PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
 
 KSV_LGBEG = 0
 KSV_LGEND = 0
-HFRAC_ICE='S'
 ONOMIXLG=.FALSE.
-ZIMPL=1.
-OSTATNW=.FALSE.
 !
 PTSTEP = 25.0000000000000
 
@@ -244,7 +239,7 @@ DO ITIME = 1, NTIME
   TSD = OMP_GET_WTIME ()
 
 !!!              !directives pas a jour !$acc data &
-!!!              !directives pas a jour !$acc      & copyin  (D0, CST, ICEP, NEBN, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSIGMAS, OCND2, PTSTEP, LMFCONV, &
+!!!              !directives pas a jour !$acc      & copyin  (D0, CST, ICEP, NEBN, KRR, HCONDENS, HLAMBDA3, HBUNAME, OSIGMAS, OCND2, PTSTEP, LMFCONV, &
 !!!              !directives pas a jour !$acc      &          ZSIGQSAT, PTHM, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, ZRS, ZICE_CLD_WGT) &
 !!!              !directives pas a jour !$acc      & copy    (PRS, PTHS), &
 !!!              !directives pas a jour !$acc      & copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &
@@ -302,8 +297,8 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
 
   CALL SHALLOW_MF(D, CST, NEBN, PARAM_MFSHALLN, TURBN, CSTURB,                    &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                             &
-     &HFRAC_ICE=HFRAC_ICE,ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,      &
-     &PIMPL_MF=ZIMPL, PTSTEP=PTSTEP,                                                      &
+     &ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,      &
+     &PTSTEP=PTSTEP, &
      &PDZZ=PDZZF(:,:,:,IBL),PZZ=PZZ(:,:,:,IBL),                                                                 &
      &PRHODJ=PRHODJ(:,:,:,IBL),PRHODREF=PRHODREF(:,:,:,IBL),                                                    &
      &PPABSM=PPABSM(:,:,:,IBL),PEXNM=PEXNM(:,:,:,IBL),                                                          &
@@ -442,6 +437,7 @@ CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
 
 !Emulate the namelist reading
 NEBN%LSUBG_COND=.TRUE.
+NEBN%CFRAC_ICE_SHALLOW_MF='S'
 
 !Param initialisation
 CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &

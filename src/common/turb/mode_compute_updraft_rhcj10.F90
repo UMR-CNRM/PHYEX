@@ -11,7 +11,7 @@ IMPLICIT NONE
 CONTAINS
 !
 SUBROUTINE COMPUTE_UPDRAFT_RHCJ10(D,CST,NEBN,PARAMMF,TURBN,CSTURB,&
-                                 KSV, HFRAC_ICE,                  &
+                                 KSV,                             &
                                  OENTR_DETR,                      &
                                  ONOMIXLG,KSV_LGBEG,KSV_LGEND,    &
                                  PZZ,PDZZ,                        &
@@ -87,7 +87,6 @@ TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 INTEGER,                INTENT(IN)   :: KSV
-CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                INTENT(IN)   :: OENTR_DETR! flag to recompute entrainment, detrainment and mass flux
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
@@ -327,7 +326,7 @@ ZW_UP2(IIJB:IIJE,IKB) = MAX(0.0001,(2./3.)*ZTKEM_F(IIJB:IIJE,IKB))
 PRC_UP(IIJB:IIJE,IKB)=0.
 PRI_UP(IIJB:IIJE,IKB)=0.
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-CALL TH_R_FROM_THL_RT(CST,NEBN,D%NIJT,HFRAC_ICE,PFRAC_ICE_UP(:,IKB),ZPRES_F(:,IKB), &
+CALL TH_R_FROM_THL_RT(CST,NEBN,D%NIJT,NEBN%CFRAC_ICE_SHALLOW_MF,PFRAC_ICE_UP(:,IKB),ZPRES_F(:,IKB), &
              PTHL_UP(:,IKB),PRT_UP(:,IKB),ZTH_UP(:,IKB), &
              PRV_UP(:,IKB),PRC_UP(:,IKB),PRI_UP(:,IKB),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
              PBUF=ZBUF, KB=D%NIJB, KE=D%NIJE)
@@ -446,7 +445,7 @@ DO JK=IKB,IKE-IKL,IKL
     ZRI_UP(IIJB:IIJE)   =PRI_UP(IIJB:IIJE,JK) ! guess 
     ZRV_UP(IIJB:IIJE)   =PRV_UP(IIJB:IIJE,JK)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-    CALL TH_R_FROM_THL_RT(CST,NEBN, D%NIJT, HFRAC_ICE,PFRAC_ICE_UP(:,JK),&
+    CALL TH_R_FROM_THL_RT(CST,NEBN, D%NIJT, NEBN%CFRAC_ICE_SHALLOW_MF,PFRAC_ICE_UP(:,JK),&
                PPABSM(:,JK),PTHL_UP(:,JK),PRT_UP(:,JK),&
                ZTH_UP(:,JK),ZRV_UP,ZRC_UP,ZRI_UP,ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
                PBUF=ZBUF, KB=D%NIJB, KE=D%NIJE)
@@ -549,7 +548,7 @@ DO JK=IKB,IKE-IKL,IKL
   ZRI_UP(IIJB:IIJE)=PRI_UP(IIJB:IIJE,JK) ! guess = level just below
   ZRV_UP(IIJB:IIJE)=PRV_UP(IIJB:IIJE,JK)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-  CALL TH_R_FROM_THL_RT(CST,NEBN, D%NIJT, HFRAC_ICE,PFRAC_ICE_UP(:,JK+IKL),ZPRES_F(:,JK+IKL), &
+  CALL TH_R_FROM_THL_RT(CST,NEBN, D%NIJT, NEBN%CFRAC_ICE_SHALLOW_MF,PFRAC_ICE_UP(:,JK+IKL),ZPRES_F(:,JK+IKL), &
           PTHL_UP(:,JK+IKL),PRT_UP(:,JK+IKL),ZTH_UP(:,JK+IKL),              &
           ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
           PBUF=ZBUF, KB=D%NIJB, KE=D%NIJE)

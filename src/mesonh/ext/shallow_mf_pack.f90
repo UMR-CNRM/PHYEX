@@ -10,8 +10,8 @@
 INTERFACE
 !     #################################################################
       SUBROUTINE SHALLOW_MF_PACK(KRR,KRRL,KRRI,                       &
-                OMF_FLX,TPFILE,PTIME_LES,                             &
-                PIMPL_MF, PTSTEP,                                     &
+                TPFILE,PTIME_LES,                                     &
+                PTSTEP,                                               &
                 PDZZ, PZZ, PDX,PDY,                                   &
                 PRHODJ, PRHODREF,                                     &
                 PPABSM, PEXN,                                         &
@@ -30,11 +30,8 @@ use modd_precision, only: MNHTIME
 INTEGER,                INTENT(IN)   :: KRR        ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL       ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI       ! number of ice water var.
-LOGICAL,                INTENT(IN)   :: OMF_FLX    ! switch to write the
-                                                   ! MF fluxes in the synchronous FM-file
 TYPE(TFILEDATA),        INTENT(IN)   :: TPFILE     ! Output file
 REAL(kind=MNHTIME),DIMENSION(2), INTENT(OUT)  :: PTIME_LES  ! time spent in LES computations
-REAL,                   INTENT(IN)   :: PIMPL_MF   ! degre of implicitness
 REAL,                   INTENT(IN)   :: PTSTEP     ! Dynamical timestep 
 
 REAL, DIMENSION(:,:,:), INTENT(IN) ::  PZZ         ! Height of flux point
@@ -68,8 +65,8 @@ END MODULE MODI_SHALLOW_MF_PACK
 
 !     #################################################################
       SUBROUTINE SHALLOW_MF_PACK(KRR,KRRL,KRRI,                       &
-                OMF_FLX,TPFILE,PTIME_LES,                             &
-                PIMPL_MF, PTSTEP,                                     &
+                TPFILE,PTIME_LES,                                     &
+                PTSTEP,                                               &
                 PDZZ, PZZ, PDX,PDY,                                   &
                 PRHODJ, PRHODREF,                                     &
                 PPABSM, PEXN,                                         &
@@ -120,7 +117,7 @@ USE MODD_CST, ONLY: CST
 USE MODD_NEB_n, ONLY: NEBN
 USE MODD_TURB_n, ONLY: TURBN
 USE MODD_CTURB,  ONLY: CSTURB
-USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALLN
+USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALLN, LMF_FLX
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
@@ -131,7 +128,6 @@ USE MODD_IO,              ONLY: TFILEDATA
 USE modd_field,           ONLY: tfielddata, TYPEREAL
 USE MODD_NSV,             ONLY: XSVMIN, NSV_LGBEG, NSV_LGEND
 USE MODD_PARAMETERS
-USE MODD_NEB_n,           ONLY: CFRAC_ICE_SHALLOW_MF
 USE MODD_PARAM_MFSHALL_n
 USE modd_precision,       ONLY: MNHTIME
 
@@ -151,11 +147,8 @@ IMPLICIT NONE
 INTEGER,                INTENT(IN)   :: KRR        ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL       ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI       ! number of ice water var.
-LOGICAL,                INTENT(IN)   :: OMF_FLX    ! switch to write the
-                                                   ! MF fluxes in the synchronous FM-file
 TYPE(TFILEDATA),        INTENT(IN)   :: TPFILE     ! Output file
 REAL(kind=MNHTIME),DIMENSION(2), INTENT(OUT)  :: PTIME_LES  ! time spent in LES computations
-REAL,                   INTENT(IN)   :: PIMPL_MF   ! degre of implicitness
 REAL,                   INTENT(IN)   :: PTSTEP     ! Dynamical timestep 
 
 REAL, DIMENSION(:,:,:), INTENT(IN) ::  PZZ         ! Height of flux point
@@ -248,8 +241,8 @@ ZVMM=MYF(PVM)
 !
 CALL SHALLOW_MF(YLDIMPHYEXPACK, CST, NEBN, PARAM_MFSHALLN, TURBN, CSTURB,&
                 KRR,KRRL,KRRI,ISV,                                    &
-                CFRAC_ICE_SHALLOW_MF,LNOMIXLG,NSV_LGBEG,NSV_LGEND,    &
-                PIMPL_MF, PTSTEP,                                     &
+                LNOMIXLG,NSV_LGBEG,NSV_LGEND,                         &
+                PTSTEP,                                               &
                 PDZZ, PZZ,                                            &
                 PRHODJ,PRHODREF,                                      &
                 PPABSM, PEXN,                                         &
@@ -295,7 +288,7 @@ END DO
 !
 !!! 4. Prints the fluxes in output file
 !
-IF ( OMF_FLX .AND. tpfile%lopened ) THEN
+IF ( LMF_FLX .AND. tpfile%lopened ) THEN
   ! stores the conservative potential temperature vertical flux
   TZFIELD%CMNHNAME   = 'MF_THW_FLX'
   TZFIELD%CSTDNAME   = ''

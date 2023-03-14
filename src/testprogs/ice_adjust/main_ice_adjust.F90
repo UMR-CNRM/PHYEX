@@ -230,7 +230,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
 #endif
 
     CALL ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, PARAMI, TBUCONF, KRR, HBUNAME,                                                  &
-    & PARAMI%LOCND2, PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL),                                                &
+    & PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL),                                                               &
     & PEXNREF=PEXNREF (:, :, :, IBL),                                                                                           &
     & PRHODREF=PRHODREF (:, :, :, IBL), PSIGS=PSIGS (:, :, :, IBL), LMFCONV=LMFCONV, PMFCONV=PMFCONV (:, :, :, IBL),            &
     & PPABST=PPABSM (:, :, :, IBL), PZZ=ZZZ (:, :, :, IBL), PEXN=PEXNREF (:, :, :, IBL), PCF_MF=PCF_MF (:, :, :, IBL),          &

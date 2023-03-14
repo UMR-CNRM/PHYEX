@@ -5,7 +5,7 @@
 INTERFACE
 !
       SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, PARAMI, BUCONF, KRR,   &
-                            &HBUNAME, OCND2,                                   &
+                            &HBUNAME,                                          &
                             &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
                             &PPABST, PZZ,                                      &
@@ -40,9 +40,6 @@ TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KRR      ! Number of moist variables
 CHARACTER(LEN=4),         INTENT(IN)    :: HBUNAME  ! Name of the budget
-LOGICAL,                  INTENT(IN)    :: OCND2    ! logical switch to separate liquid
-                                                    ! and ice
-                                                    ! more rigid (DEFAULT value : .FALSE.)
 REAL,                     INTENT(IN)   :: PTSTEP    ! Double Time step
                                                     ! (single if cold start)
 REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PSIGQSAT  ! coeff applied to qsat variance contribution

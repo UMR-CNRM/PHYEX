@@ -10,7 +10,7 @@
 IMPLICIT NONE
 CONTAINS
       SUBROUTINE COMPUTE_UPDRAFT(D,CST,NEBN,PARAMMF,TURBN,CSTURB, &
-                                 KSV, HFRAC_ICE,                  &
+                                 KSV,                             &
                                  OENTR_DETR,                      &
                                  ONOMIXLG,KSV_LGBEG,KSV_LGEND,    &
                                  PZZ,PDZZ,                        &
@@ -94,7 +94,6 @@ TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 INTEGER,                INTENT(IN)   :: KSV
-CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                INTENT(IN) :: OENTR_DETR! flag to recompute entrainment, detrainment and mass flux
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
@@ -354,7 +353,7 @@ IF (OENTR_DETR) THEN
   PRC_UP(:,IKB)=0.
   PRI_UP(:,IKB)=0.
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-  CALL TH_R_FROM_THL_RT(CST, NEBN, D%NIJT, HFRAC_ICE,PFRAC_ICE_UP(:,IKB),ZPRES_F(:,IKB), &
+  CALL TH_R_FROM_THL_RT(CST, NEBN, D%NIJT, NEBN%CFRAC_ICE_SHALLOW_MF,PFRAC_ICE_UP(:,IKB),ZPRES_F(:,IKB), &
              PTHL_UP(:,IKB),PRT_UP(:,IKB),ZTH_UP(:,IKB), &
              PRV_UP(:,IKB),PRC_UP(:,IKB),PRI_UP(:,IKB),ZRSATW(:),ZRSATI(:), OOCEAN=.FALSE., &
              PBUF=ZBUF(:,:), KB=D%NIJB, KE=D%NIJE)
@@ -472,7 +471,7 @@ DO JK=IKB,IKE-IKL,IKL
       ZRI_MIX(IIJB:IIJE,JK) = ZRI_MIX(IIJB:IIJE,JK-IKL) ! guess of Ri of mixture
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     ENDIF
-    CALL COMPUTE_ENTR_DETR(D, CST, NEBN, PARAMMF, JK,IKB,IKE,IKL,GTEST,GTESTLCL,HFRAC_ICE,PFRAC_ICE_UP(:,JK),&
+    CALL COMPUTE_ENTR_DETR(D, CST, NEBN, PARAMMF, JK,IKB,IKE,IKL,GTEST,GTESTLCL,PFRAC_ICE_UP(:,JK),&
                            PRHODREF(:,JK),ZPRES_F(:,JK),ZPRES_F(:,JK+IKL),&
                            PZZ(:,:),PDZZ(:,:),ZTHVM(:,:),  &
                            PTHLM(:,:),PRTM(:,:),ZW_UP2(:,:),ZTH_UP(:,JK),   &
@@ -584,7 +583,7 @@ DO JK=IKB,IKE-IKL,IKL
     ZRC_UP(IIJB:IIJE)=PRC_UP(IIJB:IIJE,JK) ! guess = level just below
     ZRI_UP(IIJB:IIJE)=PRI_UP(IIJB:IIJE,JK) ! guess = level just below
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-    CALL TH_R_FROM_THL_RT(CST, NEBN, D%NIJT, HFRAC_ICE,PFRAC_ICE_UP(:,JK+IKL),ZPRES_F(:,JK+IKL), &
+    CALL TH_R_FROM_THL_RT(CST, NEBN, D%NIJT, NEBN%CFRAC_ICE_SHALLOW_MF,PFRAC_ICE_UP(:,JK+IKL),ZPRES_F(:,JK+IKL), &
             PTHL_UP(:,JK+IKL),PRT_UP(:,JK+IKL),ZTH_UP(:,JK+IKL),              &
             ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:), OOCEAN=.FALSE., &
             PBUF=ZBUF(:,:), KB=D%NIJB, KE=D%NIJE)
@@ -705,7 +704,7 @@ INCLUDE "th_r_from_thl_rt.func.h"
 INCLUDE "compute_frac_ice.func.h"
           SUBROUTINE COMPUTE_ENTR_DETR(D, CST, NEBN, PARAMMF,&
                             KK,KKB,KKE,KKL,OTEST,OTESTLCL,&
-                            HFRAC_ICE,PFRAC_ICE,PRHODREF,&
+                            PFRAC_ICE,PRHODREF,&
                             PPRE_MINUS_HALF,&
                             PPRE_PLUS_HALF,PZZ,PDZZ,&
                             PTHVM,PTHLM,PRTM,PW_UP2,PTH_UP,&
@@ -790,9 +789,6 @@ INTEGER,                INTENT(IN)   :: KKE          ! uppest atmosphere physica
 INTEGER,                INTENT(IN)   :: KKL          ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 LOGICAL,DIMENSION(D%NIJT),   INTENT(IN)   :: OTEST ! test to see if updraft is running
 LOGICAL,DIMENSION(D%NIJT),   INTENT(IN)   :: OTESTLCL !test of condensation 
-CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE ! frac_ice can be compute using
-                                              ! Temperature (T) or prescribed
-                                              ! (Y)
 REAL, DIMENSION(D%NIJT), INTENT(IN)  :: PFRAC_ICE ! fraction of ice
 !
 !    prognostic variables at t- deltat
@@ -949,7 +945,7 @@ ENDDO
 ZRCMIX(IIJB:IIJE)=PRC_UP(IIJB:IIJE)
 ZRIMIX(IIJB:IIJE)=PRI_UP(IIJB:IIJE)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-CALL TH_R_FROM_THL_RT(CST,NEBN,D%NIJT,HFRAC_ICE,ZFRAC_ICE,&
+CALL TH_R_FROM_THL_RT(CST,NEBN,D%NIJT,NEBN%CFRAC_ICE_SHALLOW_MF,ZFRAC_ICE,&
              PPRE_PLUS_HALF,PTHL_UP,PRT_UP,&
              ZTHMIX,ZRVMIX,ZRCMIX,ZRIMIX,&
              ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
@@ -1029,7 +1025,7 @@ DO JIJ=IIJB,IIJE
     ZMIXRT(JIJ) = 0.1
   ENDIF
 ENDDO
-CALL TH_R_FROM_THL_RT(CST,NEBN,D%NIJT,HFRAC_ICE,ZFRAC_ICE,&
+CALL TH_R_FROM_THL_RT(CST,NEBN,D%NIJT,NEBN%CFRAC_ICE_SHALLOW_MF,ZFRAC_ICE,&
              ZPRE,ZMIXTHL,ZMIXRT,&
              ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
              ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
@@ -1043,7 +1039,7 @@ ZMIXTHL(IIJB:IIJE) = ZKIC_INIT * 0.5*(PTHLM(IIJB:IIJE,KK)+PTHLM(IIJB:IIJE,KK+KKL
 ZMIXRT(IIJB:IIJE)  = ZKIC_INIT * 0.5*(PRTM(IIJB:IIJE,KK)+PRTM(IIJB:IIJE,KK+KKL))+&
                        & (1. - ZKIC_INIT)*PRT_UP(IIJB:IIJE)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-CALL TH_R_FROM_THL_RT(CST,NEBN,D%NIJT,HFRAC_ICE,ZFRAC_ICE,&
+CALL TH_R_FROM_THL_RT(CST,NEBN,D%NIJT,NEBN%CFRAC_ICE_SHALLOW_MF,ZFRAC_ICE,&
              PPRE_PLUS_HALF,ZMIXTHL,ZMIXRT,&
              ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
              ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
