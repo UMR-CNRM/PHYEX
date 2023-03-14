@@ -51,8 +51,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PRHODJ  ! Dry density * Jacobia
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PEXNREF ! Reference Exner function
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PRHODREF
 !
-REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LSUBG_COND),&
-                MERGE(D%NKT,0,TURBN%LSUBG_COND)),           INTENT(IN)    ::  PSIGS   ! Sigma_s at time t
+REAL, DIMENSION(MERGE(D%NIJT,0,NEBN%LSUBG_COND),&
+                MERGE(D%NKT,0,NEBN%LSUBG_COND)),           INTENT(IN)    ::  PSIGS   ! Sigma_s at time t
 LOGICAL,                                              INTENT(IN)    ::  LMFCONV ! =SIZE(PMFCONV)!=0
 REAL, DIMENSION(MERGE(D%NIJT,0,LMFCONV),&
                 MERGE(D%NKT,0,LMFCONV)),              INTENT(IN)   ::  PMFCONV ! convective mass flux

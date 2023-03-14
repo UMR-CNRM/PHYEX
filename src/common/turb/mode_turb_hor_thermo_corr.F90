@@ -6,7 +6,7 @@
 MODULE MODE_TURB_HOR_THERMO_CORR
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_THERMO_CORR(D,CST,TURBN,TLES,              &
+      SUBROUTINE TURB_HOR_THERMO_CORR(D,CST,TURBN,NEBN,TLES,         &
                       KRR, KRRL, KRRI,                               &
                       OOCEAN,OCOMPUTE_SRC,O2D,                       &
                       TPFILE,                                        &
@@ -64,6 +64,7 @@ USE MODD_CTURB
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_NEB_n, ONLY: NEB_t
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS
 USE MODD_LES, ONLY: TLES_t
@@ -92,6 +93,7 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
+TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(TLES_t),           INTENT(INOUT):: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
@@ -169,7 +171,7 @@ ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2)+2.*PDZZ(:,:,IKB+1)) /      &
 !
 !
 !
-IF ( ( KRRL > 0 .AND. TURBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) &
+IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) &
                                   .OR. ( TLES%LLES_CALL )                  ) THEN
 !
 !*       8.1  <THl THl>

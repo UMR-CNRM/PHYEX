@@ -5,7 +5,7 @@
 MODULE MODE_TURB_VER_THERMO_CORR
 IMPLICIT NONE
 CONTAINS      
-SUBROUTINE TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,TLES,            &
+SUBROUTINE TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,NEBN,TLES,       &
                       KRR,KRRL,KRRI,KSV,                            &
                       OCOMPUTE_SRC,OCOUPLES,                        &
                       PEXPL,TPFILE,                                 &
@@ -208,6 +208,7 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_NEB_n, ONLY: NEB_t
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_FIELD,          ONLY: TFIELDDATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
@@ -232,6 +233,7 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
+TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(TLES_t),           INTENT(INOUT):: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KSV           ! number of scalar var.
@@ -381,7 +383,7 @@ ZCOEFF(IIJB:IIJE,IKB)= - (PDZZ(IIJB:IIJE,IKB+2*IKL)+2.*PDZZ(IIJB:IIJE,IKB+IKL)) 
 IF (TURBN%LHARAT) THEN
   CALL MZF_PHY(D,PLM,PLMF)
   !wc Part of the new statistical cloud scheme set up
-  IF (TURBN%LSTATNW) THEN
+  IF (NEBN%LSTATNW) THEN
     CALL MZF_PHY(D,PLEPS,PLEPSF)
   ELSE
     PLEPSF(:,:)=PLMF(:,:)
@@ -434,7 +436,7 @@ END IF
     ZWORK1(IIJB:IIJE,1:IKT)=PDTH_DZ(IIJB:IIJE,1:IKT)**2
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MZF_PHY(D,ZWORK1,ZWORK2)
-    IF (TURBN%LSTATNW) THEN
+    IF (NEBN%LSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ZF(IIJB:IIJE,1:IKT) = TURBN%XCTV * & 
                               PLMF(IIJB:IIJE,1:IKT)*PLEPSF(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT)
@@ -566,11 +568,11 @@ END IF
       +ZCOEFF(IIJB:IIJE,IKB      )*PTHLP(IIJB:IIJE,IKB  )   )**2          &
     ) 
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-    IF (TURBN%LSTATNW) THEN
+    IF (NEBN%LSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE)
       ZFLXZ(IIJB:IIJE,IKB) = TURBN%XCTV * ZFLXZ(IIJB:IIJE,IKB)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-     END IF
+    END IF
   ELSE
      !$mnh_expand_array(JIJ=IIJB:IIJE)
      ZFLXZ(IIJB:IIJE,IKB) = TURBN%XCTV * PPHI3(IIJB:IIJE,IKB+IKL) * PLM(IIJB:IIJE,IKB)   &
@@ -591,7 +593,7 @@ END IF
   ZFLXZ(IIJB:IIJE,IKA) = ZFLXZ(IIJB:IIJE,IKB)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   !
-  IF (TURBN%LSTATNW) THEN
+  IF (NEBN%LSTATNW) THEN
     !wc  The variance from the budget eq should be multiplied by 2 here
     !    thl'2=2*L*LEPS*(dthl/dz**2)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -672,7 +674,7 @@ END IF
     ZWORK1(IIJB:IIJE,1:IKT) = PDTH_DZ(IIJB:IIJE,1:IKT)*PDR_DZ(IIJB:IIJE,1:IKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL MZF_PHY(D,ZWORK1,ZWORK2)
-    IF (TURBN%LSTATNW) THEN
+    IF (NEBN%LSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ZF(IIJB:IIJE,1:IKT) = TURBN%XCTV * &
                               PLMF(IIJB:IIJE,1:IKT)*PLEPSF(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT)
@@ -819,7 +821,7 @@ END IF
         + TURBN%XIMPL * ZDFDDTDZ(IIJB:IIJE,1:IKT) * ZWORK7(IIJB:IIJE,1:IKT) &
         + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:IKT) * ZWORK8(IIJB:IIJE,1:IKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      IF (TURBN%LSTATNW) THEN    
+      IF (NEBN%LSTATNW) THEN    
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
         ZFLXZ(IIJB:IIJE,1:IKT)   = TURBN%XCTV * ZFLXZ(IIJB:IIJE,1:IKT)
         !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -872,7 +874,7 @@ END IF
           +ZCOEFF(IIJB:IIJE,IKB      )*PRP(IIJB:IIJE,IKB        ))                &
        )
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-    IF (TURBN%LSTATNW) THEN
+    IF (NEBN%LSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE)
       ZFLXZ(IIJB:IIJE,IKB) = (TURBN%XCHT1 + TURBN%XCHT2) * ZFLXZ(IIJB:IIJE,IKB)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
@@ -903,7 +905,7 @@ END IF
     ZFLXZ(IIJB:IIJE,IKA) = ZFLXZ(IIJB:IIJE,IKB)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     !
-    IF (TURBN%LSTATNW) THEN
+    IF (NEBN%LSTATNW) THEN
       !wc  The variance from the budget eq should be multiplied by 2 here
       !    e.g. thl'2=2*L*LEPS*(cab)^-1 *(dthl/dz**2)
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -911,7 +913,7 @@ END IF
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ENDIF
     IF ( KRRL > 0 ) THEN
-      IF (TURBN%LSTATNW) THEN
+      IF (NEBN%LSTATNW) THEN
         !wc Part of the new statistical cloud scheme set up. Normal notation so - sign
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
         PSIGS(IIJB:IIJE,1:IKT) = PSIGS(IIJB:IIJE,1:IKT) -     &
@@ -998,7 +1000,7 @@ IF (TURBN%LHARAT) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZF(IIJB:IIJE,1:IKT) = PLMF(IIJB:IIJE,1:IKT)*PLEPSF(IIJB:IIJE,1:IKT)*ZWORK2(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  IF (TURBN%LSTATNW) THEN
+  IF (NEBN%LSTATNW) THEN
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZF(IIJB:IIJE,1:IKT) = TURBN%XCTV * ZF(IIJB:IIJE,1:IKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -1111,7 +1113,7 @@ ENDIF
             * ZWORK4(IIJB:IIJE,1:IKT) &
           + TURBN%XIMPL * ZDFDDRDZ(IIJB:IIJE,1:IKT) * ZWORK6(IIJB:IIJE,1:IKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    IF (TURBN%LSTATNW) THEN
+    IF (NEBN%LSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ZFLXZ(IIJB:IIJE,1:IKT) = TURBN%XCTV * ZFLXZ(IIJB:IIJE,1:IKT)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT) 
@@ -1152,7 +1154,7 @@ ENDIF
         +ZCOEFF(IIJB:IIJE,IKB      )*PRP(IIJB:IIJE,IKB      ))**2           &
     )
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-    IF (TURBN%LSTATNW) THEN
+    IF (NEBN%LSTATNW) THEN
       !$mnh_expand_array(JIJ=IIJB:IIJE)
       ZFLXZ(IIJB:IIJE,IKB) = TURBN%XCHV * ZFLXZ(IIJB:IIJE,IKB)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
@@ -1176,7 +1178,7 @@ ENDIF
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZFLXZ(IIJB:IIJE,IKA) = ZFLXZ(IIJB:IIJE,IKB)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-    IF (TURBN%LSTATNW) THEN
+    IF (NEBN%LSTATNW) THEN
       !wc  The variance from the budget eq should be multiplied by 2 here
       !    thl'2=2*L*LEPS*(dthl/dz**2)
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)

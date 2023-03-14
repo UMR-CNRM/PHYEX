@@ -220,9 +220,6 @@ INTEGER :: IIU, IJU, IKU, IKB, IKE, IRR, ISV
 INTEGER :: JK,JRR,JSV                          ! Loop counters
 
 
-LOGICAL :: LSTATNW  !  switch for HARMONIE-AROME turb physics option
-                    ! TODO: linked with modd_turbn + init at default_desfmn 
-
 TYPE(TFIELDDATA) :: TZFIELD
 TYPE(DIMPHYEX_t) :: YLDIMPHYEXPACK
 !------------------------------------------------------------------------
@@ -248,7 +245,6 @@ ZVMM=MYF(PVM)
 !
 !!! 2. Call of the physical parameterization of massflux vertical transport
 !
-LSTATNW = .FALSE.
 !
 CALL SHALLOW_MF(YLDIMPHYEXPACK, CST, NEBN, PARAM_MFSHALLN, TURBN, CSTURB,&
                 KRR,KRRL,KRRI,ISV,                                    &

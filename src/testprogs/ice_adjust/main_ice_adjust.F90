@@ -378,8 +378,8 @@ PARAM_ICEN%XVDEPOSC=0.02    ! deposition speed (2 cm.s-1)
 PARAM_ICEN%CSUBG_RC_RR_ACCR='NONE'
 PARAM_ICEN%CSUBG_RR_EVAP='NONE'
 PARAM_ICEN%CSUBG_PR_PDF='SIGM'
-TURBN%LSUBG_COND   = .TRUE.
-TURBN%LSIGMAS = .TRUE.
+NEBN%LSUBG_COND   = .TRUE.
+NEBN%LSIGMAS = .TRUE.
 NEBN%CFRAC_ICE_ADJUST='S' ! Ice/liquid partition rule to use in adjustment
 NEBN%CFRAC_ICE_SHALLOW_MF='S' ! Ice/liquid partition rule to use in shallow_mf
 

@@ -130,7 +130,7 @@ USE MODD_PARAM_LIMA,      ONLY: LCOLD, LRAIN, LWARM, NMOD_CCN, NMOD_IFN, NMOD_IM
                                 NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
 USE MODD_PARAM_LIMA_COLD, ONLY: XAI, XBI
 USE MODD_PARAM_LIMA_WARM, ONLY: XLBC, XLBEXC, XAC, XBC, XAR, XBR
-USE MODD_TURB_n,          ONLY: LSUBG_COND
+USE MODD_NEB_n,           ONLY: LSUBG_COND
 
 use mode_budget,          only: Budget_store_add, Budget_store_init, Budget_store_end
 use mode_tools,           only: Countjv

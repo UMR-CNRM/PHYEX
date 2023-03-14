@@ -8,6 +8,7 @@ USE MODD_CST,        ONLY: CST_t
 USE MODD_CTURB,      ONLY: CSTURB_t
 USE MODD_LES,        ONLY: TLES
 USE MODD_TURB_n,     ONLY: TURB_t
+USE MODD_NEB_n,      ONLY: NEB_t
 USE MODD_IO,         ONLY: TFILEDATA
 USE MODI_TURB
 USE MODD_BUDGET!, ONLY: TBUCONF_ASSOCIATE, TBUDGETDATA, NBUDGET_RH, TBUCONF
@@ -120,6 +121,7 @@ INTEGER :: IBL, JLON, JLEV
 TYPE(DIMPHYEX_t)         :: D, D0
 TYPE(CST_t)              :: CST
 TYPE(TURB_t)             :: TURBN
+TYPE(NEB_t)              :: NEBN
 TYPE(CSTURB_t)           :: CSTURB
 INTEGER                  :: IMI, ISPLIT, KSV_LGBEG, KSV_LGEND, KGRADIENTS
 INTEGER                  :: KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH
@@ -244,7 +246,7 @@ TLES%LLES=.FALSE.
 PTSTEP = 25.0000000000000
 
 CALL INIT_PHYEX (20, CMICRO, PTSTEP, &
-                 CST, CSTURB, TURBN)
+                 CST, CSTURB, TURBN, NEBN)
 
 DO JRR=1, NBUDGET_RH
   YLBUDGET(JRR)%NBUDGET=JRR
@@ -342,7 +344,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%L = 0
     YLSTACK%U = 0
 #endif
-CALL TURB (CST,CSTURB,TBUCONF,TURBN, D, TLES,&
+CALL TURB (CST,CSTURB,TBUCONF,TURBN, NEBN, D, TLES,&
    & IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, KGRADIENTS, 1,&
    & ISPLIT,IMI, KSV, KSV_LGBEG, KSV_LGEND, &
    & HPROGRAM, &
@@ -447,11 +449,12 @@ STOP
 CONTAINS
 
 SUBROUTINE INIT_PHYEX(KULOUT,CMICRO,PTSTEP, &
-                      CST, CSTURB, TURBN)
+                      CST, CSTURB, TURBN, NEBN)
 
 USE MODD_CST, ONLY: CST_t
 USE MODD_TURB_N, ONLY: TURB_t
 USE MODD_CTURB,      ONLY: CSTURB_t
+USE MODD_NEB_N, ONLY: NEB_t
 USE MODI_INI_PHYEX, ONLY: INI_PHYEX
 IMPLICIT NONE
 
@@ -463,6 +466,7 @@ REAL, INTENT(IN) :: PTSTEP
 TYPE(CST_t),            INTENT(OUT) :: CST
 TYPE(CSTURB_t),         INTENT(OUT) :: CSTURB
 TYPE(TURB_t),           INTENT(OUT) :: TURBN
+TYPE(NEB_t),            INTENT(OUT) :: NEBN
 !-----------------------------------------------------------------------
 !    LOCAL VARIABLES
 REAL :: ZDZMIN
@@ -481,10 +485,10 @@ CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &PTSTEP, ZDZMIN, &
               &CMICRO, CSCONV, CTURB, &
               &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0, LDINIT=.FALSE., &
-              &TURBN_OUT=TURBN)
+              &TURBN_OUT=TURBN, NEBN_OUT=NEBN)
 
 !Emulate the namelist reading
-TURBN%LSUBG_COND=.TRUE.
+NEBN%LSUBG_COND=.TRUE.
 TURBN%XLINI=0.1 !This line should not exist to reproduce operational setup but the testprogs reference run
                 !was done (erroneously) with XLINI=0.1
 
@@ -493,7 +497,8 @@ CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &PTSTEP, ZDZMIN, &
               &CMICRO, CSCONV, CTURB, &
               &LDDEFAULTVAL=.FALSE., LDREADNAM=.FALSE., LDCHECK=.TRUE., KPRINT=2, LDINIT=.TRUE., &
-              &CST_OUT=CST, CSTURB_OUT=CSTURB, TURBN_IN=TURBN, TURBN_OUT=TURBN)
+              &CST_OUT=CST, CSTURB_OUT=CSTURB, TURBN_IN=TURBN, TURBN_OUT=TURBN, &
+              &NEBN_IN=NEBN, NEBN_OUT=NEBN)
 !
 CALL TBUCONF_ASSOCIATE
 LBU_ENABLE=.FALSE.                                                                                                       

@@ -399,6 +399,7 @@ USE MODD_TIME
 USE MODD_TIME_n
 USE MODD_TURB_CLOUD,        only: NMODEL_CLOUD, CTURBLEN_CLOUD,XCEI
 USE MODD_TURB_n
+USE MODD_NEB_n,             only: LSUBG_COND, LSTATNW
 USE MODD_VAR_ll,            only: IP
 
 USE MODE_GATHER_ll
@@ -2168,6 +2169,9 @@ CALL SET_REF(KMI,TPINIFILE,                         &
 !*       10.1    INITIALIZE THE TURBULENCE VARIABLES
 !               -----------------------------------
 !
+IF(LSTATNW) THEN
+  CALL PRINT_MSG(NVERB_FATAL,'GEN','INI_MODEL_n','LSTATNW option not tested in Meso-NH')
+ENDIF
 CALL INI_TURB(CPROGRAM)
 IF ((CTURB == 'TKEL').AND.(CCONF=='START')) THEN
   CALL MPPDB_CHECK3D(XUT,"INI_MODEL_N-before ini_tke_eps::XUT",PRECISION)

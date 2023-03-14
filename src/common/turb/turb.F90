@@ -3,7 +3,7 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,D,TLES,                 &
+      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,NEBN,D,TLES,            &
               & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,KHALO,       &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
               & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
@@ -254,6 +254,7 @@ USE MODD_IO, ONLY: TFILEDATA
 USE MODD_LES, ONLY : TLES_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_NEB_n, ONLY: NEB_t
 !
 USE MODE_BL89, ONLY: BL89
 USE MODE_TURB_VER, ONLY : TURB_VER
@@ -291,6 +292,7 @@ TYPE(CST_t),            INTENT(IN)   :: CST           ! modd_cst general constan
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB        ! modd_csturb turb constant structure
 TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF        ! budget structure
 TYPE(TURB_t),           INTENT(IN)   :: TURBN         ! modn_turbn (turb namelist) structure
+TYPE(NEB_t),            INTENT(IN)   :: NEBN          ! modd_nebn structure
 TYPE(TLES_t),           INTENT(INOUT)   :: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
 INTEGER,                INTENT(IN)   :: KMI           ! model index number
@@ -332,6 +334,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PRHODJ    ! dry density * Gri
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
+REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTS),   INTENT(IN) ::  PHGRAD      ! horizontal gradients
 !
 REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of theta and Rv
@@ -339,7 +342,6 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of (u,v) parallel to the orography
 REAL, DIMENSION(D%NIJT,KSV), INTENT(IN)      ::  PSFSV
 ! normal surface fluxes of Scalar var.
-REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTS),   INTENT(IN) ::  PHGRAD      ! horizontal gradients
 !
 !    prognostic variables at t- deltat
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PPABST      ! Pressure at time t
@@ -599,7 +601,7 @@ IF (KRRL >=1) THEN
 !*       2.5 Lv/Cph/Exn
 !
   IF ( KRRI >= 1 ) THEN
-    IF (TURBN%LSTATNW) THEN
+    IF (NEBN%LSTATNW) THEN
     !wc call new functions depending on statnew
        CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
                                  ZLVOCPEXNM,ZAMOIST,ZATHETA)
@@ -629,7 +631,7 @@ IF (KRRL >=1) THEN
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ELSE
     !wc call new stat functions or not
-    IF (TURBN%LSTATNW) THEN
+    IF (NEBN%LSTATNW) THEN
       CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
                                  ZLOCPEXNM,ZAMOIST,ZATHETA)
     ELSE
@@ -1000,7 +1002,7 @@ IF( BUCONF%LBUDGET_SV ) THEN
   END DO
 END IF
 
-CALL TURB_VER(D,CST,CSTURB,TURBN,TLES,                   &
+CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
           KRR,KRRL,KRRI,KGRADIENTS,                      &
           OOCEAN, ODEEPOC, OCOMPUTE_SRC,                 &
           KSV,KSV_LGBEG,KSV_LGEND,                       &
@@ -1105,7 +1107,7 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
 !à supprimer une fois le précédent ifdef REPRO48 validé
 #ifdef REPRO48
 #else
-    CALL TURB_HOR_SPLT(D,CST,CSTURB, TURBN, TLES,              &
+    CALL TURB_HOR_SPLT(D,CST,CSTURB, TURBN, NEBN, TLES,        &
           KSPLIT, KRR, KRRL, KRRI, KSV,KSV_LGBEG,KSV_LGEND,    & 
           PTSTEP,HLBCX,HLBCY, OFLAT,O2D, ONOMIXLG,             & 
           OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,PRSNOW,                &

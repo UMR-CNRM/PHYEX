@@ -73,24 +73,18 @@ TYPE TURB_t
                                     !! '3DIM' for computations in the 3 directions
   LOGICAL            :: LTURB_FLX   !< logical switch for the storage of all the turbulent fluxes
   LOGICAL            :: LTURB_DIAG  !< logical switch for the storage of some turbulence related diagnostics
-  LOGICAL            :: LSUBG_COND  !< Switch for subgrid condensation 
-  LOGICAL            :: LSIGMAS     !< Switch for using Sigma_s from turbulence scheme
   LOGICAL            :: LSIG_CONV   !< Switch for computing Sigma_s due to convection
 !
   LOGICAL            :: LHARAT      !< if true RACMO turbulence is used
-  LOGICAL            :: LSTATNW     !< updated full statistical cloud scheme
   LOGICAL            :: LRMC01      !< Switch for computing separate mixing and dissipative length in the SBL
                                     !! according to Redelsperger, Mahe & Carlotti 2001
   CHARACTER(LEN=4)   :: CTOM        !< type of Third Order Moments:
                                     !! 'NONE' none;
                                     !! 'TM06' Tomas Masson 2006
-  CHARACTER(LEN=80)  :: CCONDENS      !< subrgrid condensation PDF
-  CHARACTER(LEN=4)   :: CLAMBDA3      !< lambda3 choice for subgrid cloud scheme
 
 !  REAL, DIMENSION(:,:), POINTER :: XBL_DEPTH=>NULL() ! BL depth for TOMS computations
 !  REAL, DIMENSION(:,:), POINTER :: XSBL_DEPTH=>NULL()! SurfaceBL depth for RMC01 computations
 !  REAL, DIMENSION(:,:,:), POINTER :: XWTHVMF=>NULL()! Mass Flux vert. transport of buoyancy
-  REAL               :: VSIGQSAT      !< coeff applied to qsat variance contribution
   REAL, DIMENSION(:,:,:), POINTER :: XDYP=>NULL()     !< Dynamical production of Kinetic energy
   REAL, DIMENSION(:,:,:), POINTER :: XTHP=>NULL()     !< Thermal production of Kinetic energy
   REAL, DIMENSION(:,:,:), POINTER :: XTR=>NULL()      !< Transport production of Kinetic energy
@@ -130,19 +124,13 @@ CHARACTER (LEN=4), POINTER :: CTURBLEN=>NULL()
 CHARACTER (LEN=4), POINTER :: CTURBDIM=>NULL()
 LOGICAL, POINTER :: LTURB_FLX=>NULL()
 LOGICAL, POINTER :: LTURB_DIAG=>NULL()
-LOGICAL, POINTER :: LSUBG_COND=>NULL()
-LOGICAL, POINTER :: LSIGMAS=>NULL()
 LOGICAL, POINTER :: LSIG_CONV=>NULL()
 LOGICAL, POINTER :: LRMC01=>NULL()
 LOGICAL, POINTER :: LHARAT=>NULL()
-LOGICAL, POINTER :: LSTATNW=>NULL()
 CHARACTER(LEN=4),POINTER :: CTOM=>NULL()
-CHARACTER(LEN=80),POINTER :: CCONDENS=>NULL()
-CHARACTER(LEN=4),POINTER :: CLAMBDA3=>NULL()
 REAL, DIMENSION(:,:), POINTER :: XBL_DEPTH=>NULL()
 REAL, DIMENSION(:,:), POINTER :: XSBL_DEPTH=>NULL()
 REAL, DIMENSION(:,:,:), POINTER :: XWTHVMF=>NULL()
-REAL, POINTER :: VSIGQSAT=>NULL()
 REAL, DIMENSION(:,:,:), POINTER :: XDYP=>NULL()
 REAL, DIMENSION(:,:,:), POINTER :: XTHP=>NULL()
 REAL, DIMENSION(:,:,:), POINTER :: XTR=>NULL()
@@ -160,10 +148,10 @@ REAL, POINTER :: XCLDTHOLD=>NULL()
 REAL, POINTER :: XLINI=>NULL()
 !
 NAMELIST/NAM_TURBn/XIMPL,CTURBLEN,CTURBDIM,LTURB_FLX,LTURB_DIAG,  &
-                   LSUBG_COND,LSIGMAS,LSIG_CONV,LRMC01,CTOM,&
-                   XTKEMIN,VSIGQSAT,XCED,XCTP,XCADAP,CCONDENS,&
-                   CLAMBDA3,LLEONARD,XCOEFHGRADTHL, XCOEFHGRADRM, &
-                   XALTHGRAD, XCLDTHOLD, XLINI, LSTATNW, LHARAT
+                   LSIG_CONV,LRMC01,CTOM,&
+                   XTKEMIN,XCED,XCTP,XCADAP,&
+                   LLEONARD,XCOEFHGRADTHL, XCOEFHGRADRM, &
+                   XALTHGRAD, XCLDTHOLD, XLINI,  LHARAT
 !
 !-------------------------------------------------------------------------------
 !
@@ -214,19 +202,13 @@ CTURBLEN=>TURB_MODEL(KTO)%CTURBLEN
 CTURBDIM=>TURB_MODEL(KTO)%CTURBDIM
 LTURB_FLX=>TURB_MODEL(KTO)%LTURB_FLX
 LHARAT=>TURB_MODEL(KTO)%LHARAT
-LSTATNW=>TURB_MODEL(KTO)%LSTATNW
 LTURB_DIAG=>TURB_MODEL(KTO)%LTURB_DIAG
-LSUBG_COND=>TURB_MODEL(KTO)%LSUBG_COND
-LSIGMAS=>TURB_MODEL(KTO)%LSIGMAS
 LSIG_CONV=>TURB_MODEL(KTO)%LSIG_CONV
 LRMC01=>TURB_MODEL(KTO)%LRMC01
 CTOM=>TURB_MODEL(KTO)%CTOM
-CCONDENS=>TURB_MODEL(KTO)%CCONDENS
-CLAMBDA3=>TURB_MODEL(KTO)%CLAMBDA3
 !XBL_DEPTH=>TURB_MODEL(KTO)%XBL_DEPTH !Done in FIELDLIST_GOTO_MODEL
 !XSBL_DEPTH=>TURB_MODEL(KTO)%XSBL_DEPTH !Done in FIELDLIST_GOTO_MODEL
 !XWTHVMF=>TURB_MODEL(KTO)%XWTHVMF !Done in FIELDLIST_GOTO_MODEL
-VSIGQSAT=>TURB_MODEL(KTO)%VSIGQSAT
 XDYP=>TURB_MODEL(KTO)%XDYP 
 XTHP=>TURB_MODEL(KTO)%XTHP 
 XTR=>TURB_MODEL(KTO)%XTR  
@@ -325,14 +307,9 @@ IF(LLDEFAULTVAL) THEN
   CTURBDIM  = '1DIM'
   LTURB_FLX =.FALSE.
   LTURB_DIAG=.FALSE.
-  LSUBG_COND=.FALSE.
-  LSIGMAS   =.TRUE.
   LSIG_CONV =.FALSE.
   LRMC01    =.FALSE.
   CTOM      ='NONE'
-  VSIGQSAT  = 0.02
-  CCONDENS='CB02'
-  CLAMBDA3='CB'
   LLEONARD =.FALSE.
   XCOEFHGRADTHL = 1.0
   XCOEFHGRADRM = 1.0
@@ -340,13 +317,10 @@ IF(LLDEFAULTVAL) THEN
   XCLDTHOLD = -1.0
   XLINI=0.1 !old value: 10.
   LHARAT=.FALSE.
-  LSTATNW=.FALSE.
 
   IF(HPROGRAM=='AROME') THEN
     XTKEMIN=1.E-6
     XLINI=0.
-    LSIGMAS=.FALSE.
-    VSIGQSAT=0.
   ENDIF
 ENDIF
 !
@@ -365,12 +339,6 @@ IF(LLCHECK) THEN
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CTURBDIM', CTURBDIM, '1DIM', '3DIM')
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CTURBLEN', CTURBLEN, 'DELT', 'BL89', 'RM17', 'DEAR', 'BLKR', 'ADAP')
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CTOM', CTOM, 'NONE', 'TM06')
-  CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CCONDENS', CCONDENS, 'CB02', 'GAUS')
-  CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CLAMBDA3', CLAMBDA3, 'CB', 'NONE')
-  IF (.NOT. LHARAT .AND. LSTATNW) THEN
-    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'TURBN_INIT', &
-                  &'LSTATNW only tested in combination with HARATU and EDMFm!')
-  ENDIF
 ENDIF
 !
 !*      3. PRINTS

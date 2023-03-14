@@ -161,7 +161,6 @@ TYPE(TMDDH),   INTENT(IN), TARGET      :: YDMDDH
 !
 !*       0.2   Declarations of local variables :
 !
-LOGICAL :: OSTATNW
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_SV1) :: YLBUDGET !NBUDGET_SV1 is the one with the highest number needed for shallow_mf
 INTEGER, DIMENSION(size(PRHODJ,1)) :: IKLCL,IKETL,IKCTL
 REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZFLXZTHMF,ZFLXZRMF,ZFLXZUMF,ZFLXZVMF
@@ -223,7 +222,6 @@ ENDDO
 !
 !         ---------------------------------
 !
-TURBN%LSTATNW = .FALSE.
   CALL SHALLOW_MF(YLDIMPHYEX, CST, NEBN, PARAM_MFSHALLN, TURBN, CSTURB,                    &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                             &
      &HFRAC_ICE=NEBN%CFRAC_ICE_SHALLOW_MF,                                           &

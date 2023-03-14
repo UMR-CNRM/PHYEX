@@ -438,10 +438,10 @@ CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &ZTSTEP, ZDZMIN, &
               &CMICRO, CSCONV, CTURB, &
               &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0, LDINIT=.FALSE., &
-              &TURBN_OUT=TURBN)
+              &NEBN_OUT=NEBN)
 
 !Emulate the namelist reading
-TURBN%LSUBG_COND=.TRUE.
+NEBN%LSUBG_COND=.TRUE.
 
 !Param initialisation
 CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
@@ -449,8 +449,8 @@ CALL INI_PHYEX(CPROGRAM, 0, .TRUE., KULOUT, 0, 1, &
               &CMICRO, CSCONV, CTURB, &
               &LDDEFAULTVAL=.FALSE., LDREADNAM=.FALSE., LDCHECK=.TRUE., KPRINT=2, LDINIT=.TRUE., &
               &CST_OUT=CST, PARAM_MFSHALLN_OUT=PARAM_MFSHALLN,&
-              &TURBN_IN=TURBN, TURBN_OUT=TURBN, &
-              &NEBN_OUT=NEBN)
+              &TURBN_OUT=TURBN, &
+              &NEBN_IN=NEBN, NEBN_OUT=NEBN)
 
 !CALL TBUCONF_ASSOCIATE
 !LBU_ENABLE=.FALSE.                                                                                                       

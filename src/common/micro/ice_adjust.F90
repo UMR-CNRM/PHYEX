@@ -149,8 +149,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PRHODJ  ! Dry density * Jacobia
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PEXNREF ! Reference Exner function
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PRHODREF
 !
-REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LSUBG_COND),&
-                MERGE(D%NKT,0,TURBN%LSUBG_COND)),           INTENT(IN)    ::  PSIGS   ! Sigma_s at time t
+REAL, DIMENSION(MERGE(D%NIJT,0,NEBN%LSUBG_COND),&
+                MERGE(D%NKT,0,NEBN%LSUBG_COND)),           INTENT(IN)    ::  PSIGS   ! Sigma_s at time t
 LOGICAL,                                              INTENT(IN)    ::  LMFCONV ! =SIZE(PMFCONV)!=0
 REAL, DIMENSION(MERGE(D%NIJT,0,LMFCONV),&
                 MERGE(D%NKT,0,LMFCONV)),              INTENT(IN)   ::  PMFCONV ! convective mass flux
@@ -311,7 +311,7 @@ DO JK=IKTB,IKTE
   !
   !*       5.2    compute the cloud fraction PCLDFR
   !
-  IF ( .NOT. TURBN%LSUBG_COND ) THEN
+  IF ( .NOT. NEBN%LSUBG_COND ) THEN
     DO JIJ=IIJB,IIJE
       IF (PRCS(JIJ,JK) + PRIS(JIJ,JK) > 1.E-12 / PTSTEP) THEN
         PCLDFR(JIJ,JK)  = 1.
@@ -322,7 +322,7 @@ DO JK=IKTB,IKTE
         PSRCS(JIJ,JK) = PCLDFR(JIJ,JK)
       END IF
     ENDDO
-  ELSE !TURBN%LSUBG_COND case
+  ELSE !NEBN%LSUBG_COND case
     DO JIJ=IIJB,IIJE
       !We limit PRC_MF+PRI_MF to PRVS*PTSTEP to avoid negative humidity
       ZW1=PRC_MF(JIJ,JK)/PTSTEP
@@ -409,7 +409,7 @@ DO JK=IKTB,IKTE
                     (ZW1 * ZLV(JIJ,JK) + ZW2 * ZLS(JIJ,JK)) / ZCPH(JIJ,JK)
       ENDDO
     ENDIF
-  ENDIF !TURBN%LSUBG_COND
+  ENDIF !NEBN%LSUBG_COND
 ENDDO
 !
 IF(PRESENT(POUT_RV)) POUT_RV=ZRV
@@ -466,7 +466,7 @@ DO JK=IKTB,IKTE
   ENDDO
 ENDDO
 !
-IF ( TURBN%LSUBG_COND ) THEN
+IF ( NEBN%LSUBG_COND ) THEN
   !
   !*       3.     SUBGRID CONDENSATION SCHEME
   !               ---------------------------
@@ -474,10 +474,10 @@ IF ( TURBN%LSUBG_COND ) THEN
   !   PSRC= s'rci'/Sigma_s^2
   !   ZT is INOUT
   CALL CONDENSATION(D, CST, ICEP, NEBN, TURBN, &
-       NEBN%CFRAC_ICE_ADJUST,TURBN%CCONDENS, TURBN%CLAMBDA3,                             &
+       NEBN%CFRAC_ICE_ADJUST,NEBN%CCONDENS, NEBN%CLAMBDA3,                             &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
        PRR, PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, &
-       PSRCS, .TRUE., TURBN%LSIGMAS,OCND2,                               &
+       PSRCS, .TRUE., NEBN%LSIGMAS,OCND2,                               &
        PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, PSIGQSAT,                   &
        PLV=ZLV, PLS=ZLS, PCPH=ZCPH,                                      &
        PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF, PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,&
@@ -493,7 +493,7 @@ ELSE
   !We use ZSRCS because in Méso-NH, PSRCS can be a zero-length array in this case
   !ZT is INOUT
   CALL CONDENSATION(D, CST, ICEP, NEBN, TURBN, &
-       NEBN%CFRAC_ICE_ADJUST,TURBN%CCONDENS, TURBN%CLAMBDA3,                             &
+       NEBN%CFRAC_ICE_ADJUST,NEBN%CCONDENS, NEBN%CLAMBDA3,                             &
        PPABST, PZZ, PRHODREF, ZT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT, &
        PRR, PRS, PRG, ZSIGS, LMFCONV, PMFCONV, PCLDFR, &
        ZSRCS, .TRUE., .TRUE., OCND2,                                     &

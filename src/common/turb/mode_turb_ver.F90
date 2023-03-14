@@ -5,7 +5,8 @@
 MODULE MODE_TURB_VER
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,TLES,KRR,KRRL,KRRI,KGRADIENTS,&
+SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
+                      KRR,KRRL,KRRI,KGRADIENTS,                     &
                       OOCEAN,ODEEPOC,OCOMPUTE_SRC,                  &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
                       PEXPL, HPROGRAM, O2D, ONOMIXLG, OFLAT,        &
@@ -220,6 +221,7 @@ USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
 USE MODD_LES, ONLY: TLES_t
 USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_NEB_n, ONLY: NEB_t
 !
 USE MODE_EMOIST, ONLY: EMOIST
 USE MODE_ETHETA, ONLY: ETHETA
@@ -244,6 +246,7 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
+TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(TLES_t),           INTENT(INOUT):: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
@@ -519,7 +522,7 @@ ENDIF
                         PRTHLS,PRRS,ZTHLP,ZRP,PTP,PWTH,PWRC,          &
                         PSSTFL, PSSTFL_C, PSSRFL_C                    )
 !
-  CALL  TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,TLES,                 &
+  CALL  TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,NEBN,TLES,            &
                         KRR,KRRL,KRRI,KSV,                            &
                         OCOMPUTE_SRC,                                 &
                         OCOUPLES,                                     &
