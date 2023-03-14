@@ -1210,7 +1210,7 @@ ELSE
 END IF
 !
 CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,TURBN,TLES,HPROGRAM,           &
-                   & KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,                      &
+                   & PTKET,ZLM,ZLEPS,PDP,ZTRH,                          &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,               &
                    & PTSTEP,ZEXPL,                                      &
                    & TPFILE,ODIAG_IN_RUN,OOCEAN,                        &

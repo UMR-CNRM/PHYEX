@@ -6,7 +6,7 @@ MODULE MODE_TKE_EPS_SOURCES
 IMPLICIT NONE
 CONTAINS
       SUBROUTINE TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,TURBN,TLES,       &
-                    & HPROGRAM, KMI,PTKEM,PLM,PLEPS,PDP,               &
+                    & HPROGRAM, PTKEM,PLM,PLEPS,PDP,                   &
                     & PTRH,PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,        &
                     & PTSTEP,PEXPL,                                    &
                     & TPFILE,ODIAG_IN_RUN,OOCEAN,                      &
@@ -164,7 +164,6 @@ TYPE(CSTURB_t),          INTENT(IN)   :: CSTURB
 TYPE(TBUDGETCONF_t),     INTENT(IN)   :: BUCONF
 TYPE(TURB_t),            INTENT(IN)   :: TURBN
 TYPE(TLES_t),            INTENT(INOUT):: TLES
-INTEGER,                 INTENT(IN)   ::  KMI          ! model index number  
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PTKEM        ! TKE at t-deltat
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PLM          ! mixing length         
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PLEPS        ! dissipative length
