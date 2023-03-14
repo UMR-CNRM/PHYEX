@@ -1,9 +1,9 @@
 !     ######spl
-      SUBROUTINE  ARO_TURB_MNH(CST, &
+      SUBROUTINE  ARO_TURB_MNH(CST, TURBN, CSTURB, NEBN, TLES, &
                 KKA,KKU,KKL,KLON,KLEV,KRR,KRRL,KRRI,KSV,              &
-                KTCOUNT, KGRADIENTS, CMICRO, LDFLAT, PTSTEP,          &
+                KGRADIENTS, CMICRO, LDFLAT, PTSTEP,                   &
                 PZZ, PZZF, PZZTOP,                                    &
-                PRHODJ, PTHVREF,HINST_SFU,                            &
+                PRHODJ, PTHVREF,                                      &
                 PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
                 PPABSM,PUM,PVM,PWM,PTKEM,PEPSM,PSVM,PSRCM,            &
                 PTHM,PRM,                                &
@@ -69,16 +69,15 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CONF
 USE MODD_CST, ONLY:CST_t
-USE MODD_CTURB, ONLY:CSTURB
-USE MODD_LES, ONLY:TLES
-USE MODD_PARAMETERS
+USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_LES, ONLY: TLES_t
+USE MODD_PARAMETERS,     ONLY: JPVEXT_TURB
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_BUDGET, ONLY: NBUDGET_RI, TBUDGETDATA, TBUCONF
-USE MODD_TURB_n, ONLY: TURBN
-USE MODD_NEB_n, ONLY: NEBN
+USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_NEB_n, ONLY: NEB_t
 !
 USE MODI_TURB
 !
@@ -96,6 +95,10 @@ IMPLICIT NONE
 !
 !
 TYPE(CST_t),              INTENT(IN)   :: CST
+TYPE(TURB_t),             INTENT(IN)   :: TURBN
+TYPE(CSTURB_t),           INTENT(IN)   :: CSTURB
+TYPE(NEB_t),              INTENT(IN)   :: NEBN
+TYPE(TLES_t),             INTENT(IN)   :: TLES
 INTEGER,                  INTENT(IN)   :: KLON  !KFDIA under CPG
 INTEGER,                  INTENT(IN)   :: KLEV  !Number of vertical levels
 INTEGER,                  INTENT(IN)   :: KKA   !Index of point near ground
@@ -105,7 +108,6 @@ INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KRRL      ! Number of liquide water variables
 INTEGER,                  INTENT(IN)   :: KRRI      ! Number of ice variables
 INTEGER,                  INTENT(IN)   :: KSV     ! Number of passive scalar
-INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
 INTEGER,                  INTENT(IN)   :: KGRADIENTS  ! Number of stored horizontal gradients
 CHARACTER (LEN=4),        INTENT(IN)   :: CMICRO  ! Microphysics scheme
 LOGICAL,                  INTENT(IN)   :: LDFLAT ! Logical for zero ororography
@@ -121,8 +123,6 @@ REAL, DIMENSION(KLON,1,KLEV+2),   INTENT(INOUT)   :: PRHODJ  !Dry density * Jaco
 REAL, DIMENSION(KLON,1,KLEV+2),   INTENT(INOUT)   :: MFMOIST  !Moist mass flux from Dual scheme
 REAL, DIMENSION(KLON,1,KLEV+2), INTENT(INOUT)     ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
-CHARACTER(LEN=1)           , INTENT(IN)   ::  HINST_SFU    ! temporal location of the
-                                                      ! surface friction flux
 !
 REAL, DIMENSION(KLON,1),   INTENT(INOUT)      ::  PSFTH,PSFRV
 ! normal surface fluxes of theta and Rv
@@ -185,15 +185,6 @@ TYPE(TFILEDATA) :: ZTFILE !I/O for MesoNH
 !*       0.2   Declarations of local variables :
 !
 INTEGER :: JRR,JSV       ! Loop index for the moist and scalar variables
-INTEGER :: IIB           !  Define the physical domain
-INTEGER :: IIE           !
-INTEGER :: IJB           !
-INTEGER :: IJE           !
-INTEGER :: IKB           !
-INTEGER :: IKE           !
-INTEGER :: IKTB          !
-INTEGER :: IKTE          !
-INTEGER :: IKT           !
 INTEGER :: JL, JK, JLON
 !
 INTEGER ::II
@@ -236,6 +227,7 @@ REAL,DIMENSION(KLON,1,KLEV+2,KGRADIENTS) :: PHGRAD    ! Horizontal Gradients
 REAL, DIMENSION(KLON,1), TARGET     ::  ZERO, ZONE
 !
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
+TYPE(TLES_t) :: YLTLES
 !
 !------------------------------------------------------------------------------
 !
@@ -244,16 +236,8 @@ TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('ARO_TURB_MNH',0,ZHOOK_HANDLE)
-IIB=1+JPHEXT
-IIE=SIZE(PZZ,1) - JPHEXT
-IJB=1+JPHEXT
-IJE=SIZE(PZZ,2) - JPHEXT
-IKTB=1+JPVEXT_TURB
-IKT=SIZE(PZZ,3)+2*JPVEXT_TURB
-IKTE=IKT - JPVEXT_TURB
-IKB=KKA+JPVEXT_TURB*KKL
-IKE=KKU-JPVEXT_TURB*KKL
 CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV+2, JPVEXT_TURB, KLON)
+YLTLES=TLES
 !
 !
 !
@@ -300,19 +284,19 @@ OCOUPLES=.FALSE.
 
 
 
-ZZZ(IIB:IIE,1,2:KLEV+1)=PZZ(IIB:IIE,1,1:KLEV)
-ZZZ(IIB:IIE,1,1) = PZZTOP(IIB:IIE)
-ZDZZ(IIB:IIE,1,KLEV+2)=-999.
+ZZZ(YLDIMPHYEX%NIB:YLDIMPHYEX%NIE,1,2:KLEV+1)=PZZ(YLDIMPHYEX%NIB:YLDIMPHYEX%NIE,1,1:KLEV)
+ZZZ(YLDIMPHYEX%NIB:YLDIMPHYEX%NIE,1,1) = PZZTOP(YLDIMPHYEX%NIB:YLDIMPHYEX%NIE)
+ZDZZ(YLDIMPHYEX%NIB:YLDIMPHYEX%NIE,1,KLEV+2)=-999.
 
 DO JK = 2 , KLEV
-  DO JL = IIB,IIE
+  DO JL = YLDIMPHYEX%NIB,YLDIMPHYEX%NIE
     ZDZZ(JL,1,JK)=PZZF(JL,1,JK-1)-PZZF(JL,1,JK)
   ENDDO
 ENDDO
 
-DO JL = IIB,IIE
+DO JL = YLDIMPHYEX%NIB,YLDIMPHYEX%NIE
   ZZZ(JL,1,KLEV+2) = 2*PZZ(JL,1,KLEV)-PZZ(JL,1,KLEV-1)
-  ZDZZ(JL,1,1)=ZZZ(JL,1,KKU)-ZZZ(JL,1,IKE)
+  ZDZZ(JL,1,1)=ZZZ(JL,1,KKU)-ZZZ(JL,1,YLDIMPHYEX%NKE)
   ZDZZ(JL,1,KLEV+1)=PZZF(JL,1,KLEV)-(1.5*ZZZ(JL,1,KLEV+1)-0.5*ZZZ(JL,1,KLEV))
 ENDDO
 
@@ -423,7 +407,7 @@ DO JRR=1, NBUDGET_RI
   YLBUDGET(JRR)%YDMDDH=>YDMDDH
 ENDDO
 OCOMPUTE_SRC=SIZE(PSIGS, 3)/=0
-CALL TURB (CST,CSTURB,TBUCONF,TURBN, NEBN, YLDIMPHYEX,TLES,&
+CALL TURB (CST,CSTURB,TBUCONF,TURBN, NEBN, YLDIMPHYEX,YLTLES,&
    & IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, KGRADIENTS,1, &
    & ISPLIT,IMI, KSV, KSV_LGBEG, KSV_LGEND, HPROGRAM,&
    & NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,   &

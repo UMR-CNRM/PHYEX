@@ -1,9 +1,8 @@
 !     ######spl
-      SUBROUTINE  ARO_SHALLOW_MF(CST, PARAM_MFSHALLN, NEBN,&
+      SUBROUTINE  ARO_SHALLOW_MF(CST, PARAM_MFSHALLN, NEBN, TURBN, CSTURB,&
                 KKL, KLON, KLEV, KFDIA, KRR, KRRL, KRRI,KSV,&
-                HMF_UPDRAFT, HMF_CLOUD, OMIXUV,                       &
-                ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
-                KTCOUNT, PTSTEP, PDX, PDY,                            &
+                OMIXUV, ONOMIXLG,KSV_LGBEG,KSV_LGEND,                 &
+                PTSTEP, PDX, PDY,                                     &
                 PZZ, PZZF, PDZZF,                                     &
                 PRHODJ, PRHODREF,                                     &
                 PPABSM, PEXNM,                                        &
@@ -69,8 +68,8 @@ USE MODD_PARAMETERS, ONLY: JPVEXT
 USE MODD_BUDGET, ONLY: NBUDGET_SV1, TBUDGETDATA, TBUCONF
 USE MODD_CST, ONLY: CST_t
 USE MODD_NEB_n, ONLY: NEB_t
-USE MODD_TURB_n, ONLY: TURBN
-USE MODD_CTURB, ONLY: CSTURB
+USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
@@ -90,6 +89,8 @@ IMPLICIT NONE
 TYPE(CST_t),              INTENT(IN)   :: CST
 TYPE(PARAM_MFSHALL_t),    INTENT(IN)   :: PARAM_MFSHALLN
 TYPE(NEB_t),              INTENT(IN)   :: NEBN
+TYPE(TURB_t),             INTENT(IN)   :: TURBN
+TYPE(CSTURB_t),           INTENT(IN)   :: CSTURB
 INTEGER,                  INTENT(IN)   :: KKL      ! +1 if grid goes from ground to
                                                    ! atmosphere top, -1 otherwise
 INTEGER,                  INTENT(IN)   :: KLON     !NPROMA under CPG
@@ -100,15 +101,12 @@ INTEGER,                  INTENT(IN)   :: KRRL     ! Number of liquide water var
 INTEGER,                  INTENT(IN)   :: KRRI     ! Number of ice variables
 INTEGER,                  INTENT(IN)   :: KSV      ! Number of passive scalar variables
 !
-CHARACTER (LEN=4), INTENT(IN)   :: HMF_UPDRAFT  ! Type of Mass Flux Scheme
-CHARACTER (LEN=4), INTENT(IN)   :: HMF_CLOUD    ! Type of statistical cloud scheme
 LOGICAL,                        INTENT(IN)   :: OMIXUV    ! True if mixing of momentum
 !
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
 INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
 
-INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 REAL,                     INTENT(IN)   :: PDX      ! grid size along x-axis
 REAL,                     INTENT(IN)   :: PDY      ! grid size along y-axis
