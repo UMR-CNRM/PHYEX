@@ -229,3 +229,4 @@ phyex/micro/ini_neb.F90
 phyex/micro/modi_ini_neb.F90
 mpa/micro/externals/aroini_neb.F90
 mpa/micro/interface/aroini_neb.h
+phyex/turb/modd_diag_in_run.F90
