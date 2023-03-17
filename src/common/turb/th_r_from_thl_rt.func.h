@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2006-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2006-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -43,6 +43,7 @@
 !!                             we use dQsat/dT to help convergence
 !!                             use of optional PRR, PRS, PRG, PRH
 !!      S. Riette Nov 2016: support for HFRAC_ICE='S'
+!!      P. Wautelet Mar 2023: bugfix: protect operations on optional dummy arguments
 !!
 !! --------------------------------------------------------------------------
 !
@@ -74,8 +75,8 @@ REAL, DIMENSION(KT), INTENT(INOUT):: PRI    ! vapor mixing ratio
 REAL, DIMENSION(KT), INTENT(OUT)  :: PRSATW ! estimated mixing ration at saturation over water
 REAL, DIMENSION(KT), INTENT(OUT)  :: PRSATI ! estimated mixing ration at saturation over ice
 REAL, DIMENSION(KT, 16), INTENT(OUT) :: PBUF ! buffer to replace automatic arrays
-INTEGER, OPTIONAL :: KB !first index to deal with (default is 1)
-INTEGER, OPTIONAL :: KE !last index to deal with (default if KT)
+INTEGER, OPTIONAL, INTENT(IN) :: KB !first index to deal with (default is 1)
+INTEGER, OPTIONAL, INTENT(IN) :: KE !last index to deal with (default if KT)
 !
 !-------------------------------------------------------------------------------
 !
@@ -95,8 +96,18 @@ REAL :: ZVAR1, ZVAR2, ZTPOW2, ZDELT
 !
 !
 !
-IB=MERGE(KB, 1, PRESENT(KB))
-IE=MERGE(KE, KT, PRESENT(KE))
+IF ( PRESENT(KB) ) THEN
+  IB = KB
+ELSE
+  IB = 1
+END IF
+
+IF ( PRESENT(KE) ) THEN
+  IE = KE
+ELSE
+  IE = KT
+END IF
+
 !Number of iterations
 JITER=2
 !
@@ -170,7 +181,7 @@ DO II=1,JITER
 
     !Computation of new PRL, PRI and PRV
     !Correction term applied to (PRV(J)-PBUF(J, IRVSAT)) is computed assuming that
-    !PBUF(J, ILVOCPEXN), PBUF(J, ILSOCPEXN) and PBUF(J, ICPH) don't vary to much with T. It takes into account
+    !PBUF(J, ILVOCPEXN), PBUF(J, ILSOCPEXN) and PBUF(J, ICPH) don't vary too much with T. It takes into account
     !the variation (estimated linear) of Qsat with T
     PBUF(J, IRLTEMP)=(PRV(J)-PBUF(J, IRVSAT))/ &
                   &(1 + PBUF(J, IDRSATODT)*PBUF(J, IEXN)* &
