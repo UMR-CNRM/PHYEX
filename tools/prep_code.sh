@@ -210,6 +210,7 @@ fi
 
 ##### Replace index in do loop and mnh_expand directives by :
 if [ $ilooprm -eq 1 ]; then
+  subs=$(\ls)
   for sub in $subs; do
     cd $sub
     files=$(\ls -A)

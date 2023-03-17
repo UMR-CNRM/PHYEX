@@ -9,7 +9,7 @@ set -e
 # MNHPACK: directory where tests are build
 
 availTests="007_16janvier/008_run2, 007_16janvier/008_run2_turb3D, 007_16janvier/008_run2_lredf, COLD_BUBBLE/002_mesonh, 
-            ARMLES/RUN, COLD_BUBBLE_3D/002_mesonh,OCEAN_LES/004_run2"
+            ARMLES/RUN, COLD_BUBBLE_3D/002_mesonh,OCEAN_LES/004_run2,014_LIMA/002_mesonh"
 defaultTest="007_16janvier/008_run2"
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- seprator must be in sync with prep_code.sh separator
@@ -202,15 +202,15 @@ if [ $compilation -eq 1 ]; then
   if [ "$fromdir" == '' ]; then
     echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
     if [[ $commit == mesonh${separator}* ]]; then
-      $prep_code --renameFf -c $commit PHYEX #This commit is ready for inclusion
+      $prep_code --renameFf --ilooprm -c $commit PHYEX #This commit is ready for inclusion
     else
-      $prep_code --renameFf -c $commit $expand_options $subs -m mesonh PHYEX
+      $prep_code --renameFf --ilooprm -c $commit $expand_options $subs -m mesonh PHYEX
     fi
   else
     echo "Copy $fromdir"
     mkdir PHYEX
     scp -q -r $fromdir/src PHYEX/
-    $prep_code --renameFf $expand_options $subs -m mesonh PHYEX
+    $prep_code --renameFf --ilooprm $expand_options $subs -m mesonh PHYEX
   fi
   rm -rf PHYEX/.git
   find PHYEX -type f -exec touch {} \; #to be sure a recompilation occurs
@@ -345,6 +345,9 @@ if [ $check -eq 1 ]; then
     elif   [ $t == OCEAN_LES/004_run2 ]; then
       path_user=$path_user_beg/MY_RUN/KTEST/OCEAN_LES/004_run2$path_user_end
       path_ref=$path_ref_beg/MY_RUN/KTEST/OCEAN_LES/004_run2$path_ref_end
+    elif   [ $t == 014_LIMA/002_mesonh ]; then
+      path_user=$path_user_beg/MY_RUN/KTEST/014_LIMA/002_mesonh$path_user_end
+      path_ref=$path_ref_beg/MY_RUN/KTEST/014_LIMA/002_mesonh$path_ref_end
     else
       echo "cas $t non reconnu"
     fi
@@ -484,6 +487,34 @@ if [ $check -eq 1 ]; then
       if [ -f $file1 -a -f $file2 ]; then
         set +e
         diff <(ncdump $file1 | head -c 62889) <(ncdump $file2 | head -c 62889)
+        t=$?
+        set -e
+        allt=$(($allt+$t))
+      else
+        [ ! -f $file1 ] && echo "  $file1 is missing"
+        [ ! -f $file2 ] && echo "  $file2 is missing"
+        allt=$(($allt+1))
+      fi
+    fi
+
+    if [ $case == 014_LIMA ]; then
+      echo "Compare with python..."
+      # Compare variable of both Synchronous and Diachronic files with printing difference
+      file1=$path_user/XPREF.1.SEG01.002.nc
+      file2=$path_ref/XPREF.1.SEG01.002.nc
+      file3=$path_user/XPREF.1.SEG01.000.nc
+      file4=$path_ref/XPREF.1.SEG01.000.nc
+      set +e
+      $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2 --f3 $file3 --f4 $file4
+      t=$?
+      set -e
+      allt=$(($allt+$t))
+
+      #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
+      echo "Compare with ncdump..."
+      if [ -f $file1 -a -f $file2 ]; then
+        set +e
+        diff <(ncdump $file1 | head -c 32200) <(ncdump $file2 | head -c 32200)
         t=$?
         set -e
         allt=$(($allt+$t))
