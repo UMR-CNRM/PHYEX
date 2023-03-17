@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE  ARO_ADJUST_LIMA(CST, &
+      SUBROUTINE  ARO_ADJUST_LIMA(PHYEX, &
                                   KKA,KKU,KKL,KLON,KLEV,  KRR, KSV, KTCOUNT,  &
                                   OSUBG_COND, OSIGMAS, &
                                   PTSTEP, PSIGQSAT, &
@@ -79,7 +79,7 @@
 !              ------------
 !
 USE MODD_CONF
-USE MODD_CST, ONLY: CST_t
+USE MODD_PHYEX, ONLY: PHYEX_t
 USE MODD_PARAMETERS
 USE MODD_BUDGET
 !
@@ -100,7 +100,7 @@ IMPLICIT NONE
 !
 
 !
-TYPE(CST_t),              INTENT(IN)   :: CST
+TYPE(PHYEX_t),            INTENT(IN)   :: PHYEX
 INTEGER,                  INTENT(IN)   :: KKA    !near ground array index
 INTEGER,                  INTENT(IN)   :: KKU    !uppest atmosphere array index
 INTEGER,                  INTENT(IN)   :: KKL    !vert. levels type 1=MNH -1=ARO
@@ -201,9 +201,9 @@ KMI=1
 !                    computing time
 !
 ZT(:,:,:)= PTHT(:,:,:)*PEXNREF(:,:,:)
-ZLV(:,:,:)=CST%XLVTT +(CST%XCPV-CST%XCL) *(ZT(:,:,:)-CST%XTT)
-ZLS(:,:,:)=CST%XLSTT +(CST%XCPV-CST%XCI) *(ZT(:,:,:)-CST%XTT)
-ZCPH(:,:,:)=CST%XCPD +CST%XCPV*2.*PTSTEP*PRS(:,:,:,1)
+ZLV(:,:,:)=PHYEX%CST%XLVTT +(PHYEX%CST%XCPV-PHYEX%CST%XCL) *(ZT(:,:,:)-PHYEX%CST%XTT)
+ZLS(:,:,:)=PHYEX%CST%XLSTT +(PHYEX%CST%XCPV-PHYEX%CST%XCI) *(ZT(:,:,:)-PHYEX%CST%XTT)
+ZCPH(:,:,:)=PHYEX%CST%XCPD +PHYEX%CST%XCPV*2.*PTSTEP*PRS(:,:,:,1)
 !
 !
 !*       3.     REMOVE NEGATIVE VALUES

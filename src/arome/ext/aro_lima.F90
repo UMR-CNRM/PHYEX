@@ -1,6 +1,6 @@
 !     ######spl
-      SUBROUTINE  ARO_LIMA(CST, &
-                                  KKA,KKU,KKL,KLON,KLEV,  KRR, KSV, KTCOUNT, KSPLITR, KSPLITG, &
+      SUBROUTINE  ARO_LIMA(PHYEX, &
+                                  KKA,KKU,KKL,KLON,KLEV,  KRR, KSV, KSPLITR, KSPLITG, &
                                   PTSTEP, PDZZ, PRHODJ, PRHODREF, PEXNREF,&
                                   PPABSM, PW_NU, PTHT, PRT, PSVT, &
                                   PTHS, PRS, PSVS, PEVAP,  &
@@ -40,7 +40,7 @@
 !
 !
 USE MODD_CONF
-USE MODD_CST, ONLY: CST_t
+USE MODD_PHYEX, ONLY: PHYEX_t
 USE MODD_PARAMETERS
 !
 USE MODD_PARAM_LIMA
@@ -66,7 +66,7 @@ IMPLICIT NONE
 !
 
 !
-TYPE(CST_t),              INTENT(IN)   :: CST
+TYPE(PHYEX_t),            INTENT(IN)   :: PHYEX
 INTEGER,                  INTENT(IN)   :: KKA  !near ground array index
 INTEGER,                  INTENT(IN)   :: KKU  !uppest atmosphere array index
 INTEGER,                  INTENT(IN)   :: KKL  !vert. levels type 1=MNH -1=ARO
@@ -74,7 +74,6 @@ INTEGER,                  INTENT(IN)   :: KLON     !NPROMA under CPG
 INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KSV      ! Number of LIMA variables
-INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
 INTEGER,                  INTENT(IN)   :: KSPLITR  ! Number of small time step
                                        ! integrations for  rain sedimendation
 INTEGER,                  INTENT(IN)   :: KSPLITG  ! Number of small time step
@@ -173,9 +172,9 @@ PINPRH=0.
 !                    computing time
 !
 ZT(:,:,:)= PTHT(:,:,:)*PEXNREF(:,:,:)
-ZLV(:,:,:)=CST%XLVTT +(CST%XCPV-CST%XCL) *(ZT(:,:,:)-CST%XTT)
-ZLS(:,:,:)=CST%XLSTT +(CST%XCPV-CST%XCI) *(ZT(:,:,:)-CST%XTT)
-ZCPH(:,:,:)=CST%XCPD +CST%XCPV*2.*PTSTEP*PRS(:,:,:,1)
+ZLV(:,:,:)=PHYEX%CST%XLVTT +(PHYEX%CST%XCPV-PHYEX%CST%XCL) *(ZT(:,:,:)-PHYEX%CST%XTT)
+ZLS(:,:,:)=PHYEX%CST%XLSTT +(PHYEX%CST%XCPV-PHYEX%CST%XCI) *(ZT(:,:,:)-PHYEX%CST%XTT)
+ZCPH(:,:,:)=PHYEX%CST%XCPD +PHYEX%CST%XCPV*2.*PTSTEP*PRS(:,:,:,1)
 !
 
 !

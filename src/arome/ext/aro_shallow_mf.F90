@@ -1,7 +1,7 @@
 !     ######spl
-      SUBROUTINE  ARO_SHALLOW_MF(CST, PARAM_MFSHALLN, NEBN, TURBN, CSTURB,&
+      SUBROUTINE  ARO_SHALLOW_MF(PHYEX,&
                 KKL, KLON, KLEV, KFDIA, KRR, KRRL, KRRI,KSV,&
-                ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
+                KSV_LGBEG,KSV_LGEND, &
                 PTSTEP, PDX, PDY,                                     &
                 PZZ, PZZF, PDZZF,                                     &
                 PRHODJ, PRHODREF,                                     &
@@ -65,13 +65,9 @@
 !              ------------
 !
 USE MODD_PARAMETERS, ONLY: JPVEXT
-USE MODD_BUDGET, ONLY: NBUDGET_SV1, TBUDGETDATA, TBUCONF
-USE MODD_CST, ONLY: CST_t
-USE MODD_NEB_n, ONLY: NEB_t
-USE MODD_TURB_n, ONLY: TURB_t
-USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_BUDGET, ONLY: NBUDGET_SV1, TBUDGETDATA
+USE MODD_PHYEX, ONLY: PHYEX_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
 USE MODI_SHALLOW_MF
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
@@ -86,11 +82,7 @@ IMPLICIT NONE
 !
 !
 !
-TYPE(CST_t),              INTENT(IN)   :: CST
-TYPE(PARAM_MFSHALL_t),    INTENT(IN)   :: PARAM_MFSHALLN
-TYPE(NEB_t),              INTENT(IN)   :: NEBN
-TYPE(TURB_t),             INTENT(IN)   :: TURBN
-TYPE(CSTURB_t),           INTENT(IN)   :: CSTURB
+TYPE(PHYEX_t),            INTENT(IN)   :: PHYEX
 INTEGER,                  INTENT(IN)   :: KKL      ! +1 if grid goes from ground to
                                                    ! atmosphere top, -1 otherwise
 INTEGER,                  INTENT(IN)   :: KLON     !NPROMA under CPG
@@ -101,7 +93,6 @@ INTEGER,                  INTENT(IN)   :: KRRL     ! Number of liquide water var
 INTEGER,                  INTENT(IN)   :: KRRI     ! Number of ice variables
 INTEGER,                  INTENT(IN)   :: KSV      ! Number of passive scalar variables
 !
-LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
 INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
 
@@ -215,9 +206,9 @@ ENDDO
 !
 !         ---------------------------------
 !
-  CALL SHALLOW_MF(YLDIMPHYEX, CST, NEBN, PARAM_MFSHALLN, TURBN, CSTURB,                    &
+  CALL SHALLOW_MF(YLDIMPHYEX, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB, &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                             &
-     &ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,                          &
+     &ONOMIXLG=PHYEX%MISC%ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND, &
      &PTSTEP=PTSTEP,                                                                      &
      &PDZZ=PDZZF,PZZ=PZZ,                                                                 &
      &PRHODJ=PRHODJ,PRHODREF=PRHODREF,                                                    &
@@ -232,7 +223,7 @@ ENDDO
      &PU_UP=PU_UP, PV_UP=PV_UP, PTHV_UP=PTHV_UP, PW_UP=PW_UP,                             &
      &PFRAC_UP=PFRAC_UP,PEMF=PEMF,PDETR=ZDETR,PENTR=ZENTR,                                &
      &KKLCL=IKLCL,KKETL=IKETL,KKCTL=IKCTL,PDX=PDX,PDY=PDY,                                &
-     &BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET)                          )
+     &BUCONF=PHYEX%MISC%TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET)               )
 !
 !
 !------------------------------------------------------------------------------

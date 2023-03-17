@@ -4,14 +4,9 @@ SUBROUTINE INI_PHYEX(HPROGRAM, KUNITNML, LDNEEDNAM, KLUOUT, KFROM, KTO, &
                     &PTSTEP, PDZMIN, &
                     &CMICRO, CSCONV, CTURB, &
                     &LDCHANGEMODEL, LDDEFAULTVAL, LDREADNAM, LDCHECK, KPRINT, LDINIT, &
-                    &CST_IN, CST_OUT, &
-                    &PARAM_ICEN_IN, PARAM_ICEN_OUT, &
-                    &RAIN_ICE_DESCRN_IN, RAIN_ICE_DESCRN_OUT, RAIN_ICE_PARAMN_IN, RAIN_ICE_PARAMN_OUT, &
-                    &CLOUDPARN_IN, CLOUDPARN_OUT, &
-                    &PARAM_MFSHALLN_IN, PARAM_MFSHALLN_OUT, &
-                    &TURBN_IN, TURBN_OUT, CSTURB_IN, CSTURB_OUT, &
-                    &NEBN_IN, NEBN_OUT)
+                    &PHYEX_IN, PHYEX_OUT)
 !
+USE MODD_PHYEX, ONLY: PHYEX_t
 USE MODD_CST, ONLY: CST_t
 USE MODD_PARAM_ICE_n, ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
@@ -42,28 +37,12 @@ LOGICAL, OPTIONAL, INTENT(IN) :: LDCHECK      !< Must we perform some checks on 
 INTEGER, OPTIONAL, INTENT(IN) :: KPRINT       !< Print level (defaults to 0): 0 for no print, 1 to safely print namelist,
                                               !! 2 to print informative messages
 LOGICAL, OPTIONAL, INTENT(IN) :: LDINIT       !< Must we call the init routines
-TYPE(CST_t),             OPTIONAL, INTENT(IN)    :: CST_IN              !< Structure for constants (IN)
-TYPE(CST_t),             OPTIONAL, INTENT(INOUT) :: CST_OUT             !< Structure for constants (OUT)
-TYPE(PARAM_ICE_t),       OPTIONAL, INTENT(IN)    :: PARAM_ICEN_IN       !< Structure for controling ICE3/ICE4 (IN)
-TYPE(PARAM_ICE_t),       OPTIONAL, INTENT(INOUT) :: PARAM_ICEN_OUT      !< Structure for controling ICE3/ICE4 (OUT)
-TYPE(RAIN_ICE_DESCR_t) , OPTIONAL, INTENT(IN)    :: RAIN_ICE_DESCRN_IN  !< Structure for describing hydrometeors (IN)
-TYPE(RAIN_ICE_DESCR_t) , OPTIONAL, INTENT(INOUT) :: RAIN_ICE_DESCRN_OUT !< Structure for describing hydrometeors (OUT)
-TYPE(RAIN_ICE_PARAM_t) , OPTIONAL, INTENT(IN)    :: RAIN_ICE_PARAMN_IN  !< Structure for ICE3/ICE4 precomputed values (IN)
-TYPE(RAIN_ICE_PARAM_t) , OPTIONAL, INTENT(INOUT) :: RAIN_ICE_PARAMN_OUT !< Structure for ICE3/ICE4 precomputed values (OUT)
-TYPE(CLOUDPAR_t),        OPTIONAL, INTENT(IN)    :: CLOUDPARN_IN        !< Structure for model dependant microphysics variables (IN)
-TYPE(CLOUDPAR_t),        OPTIONAL, INTENT(INOUT) :: CLOUDPARN_OUT       !< Structure for model dependant microphysics variables (IN
-TYPE(PARAM_MFSHALL_t),   OPTIONAL, INTENT(IN)    :: PARAM_MFSHALLN_IN   !< Structure for controling shallow convection scheme (IN)
-TYPE(PARAM_MFSHALL_t),   OPTIONAL, INTENT(INOUT) :: PARAM_MFSHALLN_OUT  !< Structure for controling shallow convection scheme (OUT)
-TYPE(TURB_t),            OPTIONAL, INTENT(IN)    :: TURBN_IN            !< Structure for controling the turbulence scheme (IN)
-TYPE(TURB_t),            OPTIONAL, INTENT(INOUT) :: TURBN_OUT           !< Structure for controling the turbulence scheme (IN)
-TYPE(CSTURB_t),          OPTIONAL, INTENT(IN)    :: CSTURB_IN           !< Structure for the turbulence scheme constants (IN)
-TYPE(CSTURB_t),          OPTIONAL, INTENT(INOUT) :: CSTURB_OUT          !< Structure for the turbulence scheme constants (IN)
-TYPE(NEB_t),             OPTIONAL, INTENT(IN)    :: NEBN_IN             !< Structure for the cloud scheme variables (IN)
-TYPE(NEB_t),             OPTIONAL, INTENT(INOUT) :: NEBN_OUT            !< Structure for the cloud scheme variables (OUT)
+TYPE(PHYEX_t), OPTIONAL, INTENT(IN)    :: PHYEX_IN    !< Structure for constants (IN)
+TYPE(PHYEX_t), OPTIONAL, INTENT(INOUT) :: PHYEX_OUT   !< Structure for constants (OUT)
 
-!IMPORTANT NOTE on *_OUT arguments.
-!Logically those arguments should be declared with INTENT(OUT) but in this case ifort (at least) breaks the
-!execution when the same structure is given for the _IN and the _OUT argument.
+!IMPORTANT NOTE on PHYEX_OUT arguments.
+!Logically this argument should be declared with INTENT(OUT) but in this case ifort (at least) breaks the
+!execution when the same structure is given for the PHYEX_IN and the PHYEX_OUT argument.
 !When INITENT(INOUT) is used, execution is OK on ifort.
 
 

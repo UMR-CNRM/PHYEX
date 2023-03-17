@@ -2,14 +2,9 @@ SUBROUTINE INI_PHYEX(HPROGRAM, KUNITNML, LDNEEDNAM, KLUOUT, KFROM, KTO, &
                     &PTSTEP, PDZMIN, &
                     &CMICRO, CSCONV, CTURB, &
                     &LDCHANGEMODEL, LDDEFAULTVAL, LDREADNAM, LDCHECK, KPRINT, LDINIT, &
-                    &CST_IN, CST_OUT, &
-                    &PARAM_ICEN_IN, PARAM_ICEN_OUT, &
-                    &RAIN_ICE_DESCRN_IN, RAIN_ICE_DESCRN_OUT, RAIN_ICE_PARAMN_IN, RAIN_ICE_PARAMN_OUT, &
-                    &CLOUDPARN_IN, CLOUDPARN_OUT, &
-                    &PARAM_MFSHALLN_IN, PARAM_MFSHALLN_OUT, &
-                    &TURBN_IN, TURBN_OUT, CSTURB_IN, CSTURB_OUT, &
-                    &NEBN_IN, NEBN_OUT)
+                    &PHYEX_IN, PHYEX_OUT)
 !
+USE MODD_PHYEX, ONLY: PHYEX_t
 USE MODD_CST, ONLY: CST, CST_t, PRINT_CST
 USE MODD_PARAM_ICE_n, ONLY: PARAM_ICE_GOTO_MODEL, PARAM_ICEN_INIT, PARAM_ICEN, PARAM_ICE_t, &
                           & CSUBG_AUCV_RC, CSUBG_AUCV_RI
@@ -72,28 +67,12 @@ LOGICAL, OPTIONAL, INTENT(IN) :: LDCHECK      !< Must we perform some checks on 
 INTEGER, OPTIONAL, INTENT(IN) :: KPRINT       !< Print level (defaults to 0): 0 for no print, 1 to safely print namelist,
                                               !! 2 to print informative messages
 LOGICAL, OPTIONAL, INTENT(IN) :: LDINIT       !< Must we call the init routines
-TYPE(CST_t),             OPTIONAL, INTENT(IN)    :: CST_IN              !< Structure for constants (IN)
-TYPE(CST_t),             OPTIONAL, INTENT(INOUT) :: CST_OUT             !< Structure for constants (OUT)
-TYPE(PARAM_ICE_t),       OPTIONAL, INTENT(IN)    :: PARAM_ICEN_IN       !< Structure for controling ICE3/ICE4 (IN)
-TYPE(PARAM_ICE_t),       OPTIONAL, INTENT(INOUT) :: PARAM_ICEN_OUT      !< Structure for controling ICE3/ICE4 (OUT)
-TYPE(RAIN_ICE_DESCR_t) , OPTIONAL, INTENT(IN)    :: RAIN_ICE_DESCRN_IN  !< Structure for describing hydrometeors (IN)
-TYPE(RAIN_ICE_DESCR_t) , OPTIONAL, INTENT(INOUT) :: RAIN_ICE_DESCRN_OUT !< Structure for describing hydrometeors (OUT)
-TYPE(RAIN_ICE_PARAM_t) , OPTIONAL, INTENT(IN)    :: RAIN_ICE_PARAMN_IN  !< Structure for ICE3/ICE4 precomputed values (IN)
-TYPE(RAIN_ICE_PARAM_t) , OPTIONAL, INTENT(INOUT) :: RAIN_ICE_PARAMN_OUT !< Structure for ICE3/ICE4 precomputed values (OUT)
-TYPE(CLOUDPAR_t),        OPTIONAL, INTENT(IN)    :: CLOUDPARN_IN        !< Structure for model dependant microphysics variables (IN)
-TYPE(CLOUDPAR_t),        OPTIONAL, INTENT(INOUT) :: CLOUDPARN_OUT       !< Structure for model dependant microphysics variables (IN
-TYPE(PARAM_MFSHALL_t),   OPTIONAL, INTENT(IN)    :: PARAM_MFSHALLN_IN   !< Structure for controling shallow convection scheme (IN)
-TYPE(PARAM_MFSHALL_t),   OPTIONAL, INTENT(INOUT) :: PARAM_MFSHALLN_OUT  !< Structure for controling shallow convection scheme (OUT)
-TYPE(TURB_t),            OPTIONAL, INTENT(IN)    :: TURBN_IN            !< Structure for controling the turbulence scheme (IN)
-TYPE(TURB_t),            OPTIONAL, INTENT(INOUT) :: TURBN_OUT           !< Structure for controling the turbulence scheme (IN)
-TYPE(CSTURB_t),          OPTIONAL, INTENT(IN)    :: CSTURB_IN           !< Structure for the turbulence scheme constants (IN)
-TYPE(CSTURB_t),          OPTIONAL, INTENT(INOUT) :: CSTURB_OUT          !< Structure for the turbulence scheme constants (IN)
-TYPE(NEB_t),             OPTIONAL, INTENT(IN)    :: NEBN_IN             !< Structure for the cloud scheme variables (IN)
-TYPE(NEB_t),             OPTIONAL, INTENT(INOUT) :: NEBN_OUT            !< Structure for the cloud scheme variables (OUT)
+TYPE(PHYEX_t), OPTIONAL, INTENT(IN)    :: PHYEX_IN    !< Structure for constants (IN)
+TYPE(PHYEX_t), OPTIONAL, INTENT(INOUT) :: PHYEX_OUT   !< Structure for constants (OUT)
 
-!IMPORTANT NOTE on *_OUT arguments.
-!Logically those arguments should be declared with INTENT(OUT) but in this case ifort (at least) breaks the
-!execution when the same structure is given for the _IN and the _OUT argument.
+!IMPORTANT NOTE on PHYEX_OUT arguments.
+!Logically this argument should be declared with INTENT(OUT) but in this case ifort (at least) breaks the
+!execution when the same structure is given for the PHYEX_IN and the PHYEX_OUT argument.
 !When INITENT(INOUT) is used, execution is OK on ifort.
 
 LOGICAL :: LLINIT, LLCHANGEMODEL, LLCHECK
@@ -114,10 +93,10 @@ IF(PRESENT(KPRINT)) IPRINT=KPRINT
 !
 IF(LLINIT) THEN
   IF(IPRINT==2) WRITE(UNIT=KLUOUT,FMT='('' MODD_CST '')')
-  IF(PRESENT(CST_IN)) CST=CST_IN
+  IF(PRESENT(PHYEX_IN)) CST=PHYEX_IN%CST
   CALL INI_CST()
   IF(IPRINT==2) CALL PRINT_CST(KLUOUT)
-  IF(PRESENT(CST_OUT)) CST_OUT=CST
+  IF(PRESENT(PHYEX_OUT)) PHYEX_OUT%CST=CST
 ENDIF
 !
 !**       MICROPHYSICS SCHEME
@@ -130,10 +109,12 @@ IF(CMICRO=='ICE3' .OR. CMICRO=='ICE4' .OR. CMICRO=='LIMA') THEN
     CALL RAIN_ICE_DESCR_GOTO_MODEL(KFROM, KTO)
     CALL RAIN_ICE_PARAM_GOTO_MODEL(KFROM, KTO)
   ENDIF
-  IF(PRESENT(PARAM_ICEN_IN)) PARAM_ICEN=PARAM_ICEN_IN
-  IF(PRESENT(RAIN_ICE_DESCRN_IN)) RAIN_ICE_DESCRN=RAIN_ICE_DESCRN_IN
-  IF(PRESENT(RAIN_ICE_PARAMN_IN)) RAIN_ICE_PARAMN=RAIN_ICE_PARAMN_IN
-  IF(PRESENT(CLOUDPARN_IN)) CLOUDPARN=CLOUDPARN_IN
+  IF(PRESENT(PHYEX_IN)) THEN
+    PARAM_ICEN=PHYEX_IN%PARAM_ICEN
+    RAIN_ICE_DESCRN=PHYEX_IN%RAIN_ICE_DESCRN
+    RAIN_ICE_PARAMN=PHYEX_IN%RAIN_ICE_PARAMN
+    CLOUDPARN=PHYEX_IN%CLOUDPARN
+  ENDIF
 
   CALL PARAM_ICEN_INIT(HPROGRAM, KUNITNML, LDNEEDNAM, KLUOUT, &
                       &LDDEFAULTVAL, LDREADNAM, LDCHECK, KPRINT)
@@ -146,10 +127,12 @@ IF(CMICRO=='ICE3' .OR. CMICRO=='ICE4' .OR. CMICRO=='LIMA') THEN
     ENDIF
   ENDIF
 
-  IF(PRESENT(PARAM_ICEN_OUT)) PARAM_ICEN_OUT=PARAM_ICEN
-  IF(PRESENT(RAIN_ICE_DESCRN_OUT)) RAIN_ICE_DESCRN_OUT=RAIN_ICE_DESCRN
-  IF(PRESENT(RAIN_ICE_PARAMN_OUT)) RAIN_ICE_PARAMN_OUT=RAIN_ICE_PARAMN
-  IF(PRESENT(CLOUDPARN_OUT)) CLOUDPARN_OUT=CLOUDPARN
+  IF(PRESENT(PHYEX_OUT)) THEN
+    PHYEX_OUT%PARAM_ICEN=PARAM_ICEN
+    PHYEX_OUT%RAIN_ICE_DESCRN=RAIN_ICE_DESCRN
+    PHYEX_OUT%RAIN_ICE_PARAMN=RAIN_ICE_PARAMN
+    PHYEX_OUT%CLOUDPARN=CLOUDPARN
+  ENDIF
 ENDIF
 !
 !**       SHALLOW CONVECTION SCHEME
@@ -157,7 +140,7 @@ ENDIF
 IF(CSCONV=='EDKF') THEN
   IF(IPRINT==2) WRITE(UNIT=KLUOUT,FMT='('' MODD_PARAM_MFSHALL_n '')')
   IF(LLCHANGEMODEL) CALL PARAM_MFSHALL_GOTO_MODEL(KFROM, KTO)
-  IF(PRESENT(PARAM_MFSHALLN_IN)) PARAM_MFSHALLN=PARAM_MFSHALLN_IN
+  IF(PRESENT(PHYEX_IN)) PARAM_MFSHALLN=PHYEX_IN%PARAM_MFSHALLN
 
   CALL PARAM_MFSHALLN_INIT(HPROGRAM, KUNITNML, LDNEEDNAM, KLUOUT, &
                           &LDDEFAULTVAL, LDREADNAM, LDCHECK, KPRINT)
@@ -165,7 +148,7 @@ IF(CSCONV=='EDKF') THEN
     CALL INI_MFSHALL()
   ENDIF
 
-  IF(PRESENT(PARAM_MFSHALLN_OUT)) PARAM_MFSHALLN_OUT=PARAM_MFSHALLN
+  IF(PRESENT(PHYEX_OUT)) PHYEX_OUT%PARAM_MFSHALLN=PARAM_MFSHALLN
 ENDIF
 !
 !**       CLOUD SCHEME
@@ -173,7 +156,7 @@ ENDIF
 IF(.TRUE.) THEN !Placeholder for configuration without cloud scheme or a different one
   IF(IPRINT==2) WRITE(UNIT=KLUOUT,FMT='('' MODD_NEB_n '')')
   IF(LLCHANGEMODEL) CALL NEB_GOTO_MODEL(KFROM, KTO)
-  IF(PRESENT(NEBN_IN)) NEBN=NEBN_IN
+  IF(PRESENT(PHYEX_IN)) NEBN=PHYEX_IN%NEBN
 
   CALL NEBN_INIT(HPROGRAM, KUNITNML, LDNEEDNAM, KLUOUT, &
                 &LDDEFAULTVAL, LDREADNAM, LDCHECK, KPRINT)
@@ -181,7 +164,7 @@ IF(.TRUE.) THEN !Placeholder for configuration without cloud scheme or a differe
     !Nothing to do, everything is read from namelist
   ENDIF
 
-  IF(PRESENT(NEBN_OUT)) NEBN_OUT=NEBN
+  IF(PRESENT(PHYEX_OUT)) PHYEX_OUT%NEBN=NEBN
 ENDIF
 !
 !**       TURBULENCE SCHEME
@@ -189,8 +172,10 @@ ENDIF
 IF(CTURB=='TKEL') THEN
   IF(IPRINT==2) WRITE(UNIT=KLUOUT,FMT='('' MODD_TURB_n MODD_CTURB '')')
   IF(LLCHANGEMODEL) CALL TURB_GOTO_MODEL(KFROM, KTO)
-  IF(PRESENT(TURBN_IN)) TURBN=TURBN_IN
-  IF(PRESENT(CSTURB_IN)) CSTURB=CSTURB_IN
+  IF(PRESENT(PHYEX_IN)) THEN
+    TURBN=PHYEX_IN%TURBN
+    CSTURB=PHYEX_IN%CSTURB
+  ENDIF
 
   CALL CTURB_ASSOCIATE()
   CALL TURBN_INIT(HPROGRAM, KUNITNML, LDNEEDNAM, KLUOUT, &
@@ -199,8 +184,10 @@ IF(CTURB=='TKEL') THEN
     CALL INI_TURB(HPROGRAM)
   ENDIF
 
-  IF(PRESENT(TURBN_OUT)) TURBN_OUT=TURBN
-  IF(PRESENT(CSTURB_OUT)) CSTURB_OUT=CSTURB
+  IF(PRESENT(PHYEX_OUT)) THEN
+    PHYEX_OUT%TURBN=TURBN
+    PHYEX_OUT%CSTURB=CSTURB
+  ENDIF
 ENDIF
 !
 !**       GLOBAL CONSISTENCY TESTS

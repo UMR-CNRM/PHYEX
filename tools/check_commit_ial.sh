@@ -376,6 +376,7 @@ if [ $packcreation -eq 1 ]; then
     [ -f $EXT/vdfhghtnhl.F90 ] && mv $EXT/vdfhghtnhl.F90 ../arpifs/phys_dmn/
     [ -f $EXT/cpg_opts_type_mod.fypp ] && mv $EXT/cpg_opts_type_mod.fypp ../arpifs/module/
     [ -f $EXT/aplpar.F90 ] && mv $EXT/aplpar.F90 ../arpifs/phys_dmn/
+    [ -f $EXT/su0yomb.F90 ] && mv $EXT/su0yomb.F90 ../arpifs/setup/
     #Special mpa case
     [ -f $EXT/modd_spp_type.F90 ] && mv $EXT/modd_spp_type.F90 ../mpa/micro/externals/
     [ -f $EXT/spp_mod_type.F90 ] && mv $EXT/spp_mod_type.F90 ../mpa/micro/externals/

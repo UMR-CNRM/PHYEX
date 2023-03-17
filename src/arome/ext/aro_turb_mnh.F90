@@ -1,7 +1,7 @@
 !     ######spl
-      SUBROUTINE  ARO_TURB_MNH(CST, TURBN, CSTURB, NEBN, TLES, &
+      SUBROUTINE  ARO_TURB_MNH(PHYEX, &
                 KKA,KKU,KKL,KLON,KLEV,KRR,KRRL,KRRI,KSV,              &
-                KGRADIENTS, CMICRO, LDFLAT, PTSTEP,                   &
+                KGRADIENTS, CMICRO, PTSTEP,                           &
                 PZZ, PZZF, PZZTOP,                                    &
                 PRHODJ, PTHVREF,                                      &
                 PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
@@ -69,15 +69,12 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST, ONLY:CST_t
-USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_PHYEX, ONLY: PHYEX_t
 USE MODD_LES, ONLY: TLES_t
 USE MODD_PARAMETERS,     ONLY: JPVEXT_TURB
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_BUDGET, ONLY: NBUDGET_RI, TBUDGETDATA, TBUCONF
-USE MODD_TURB_n, ONLY: TURB_t
-USE MODD_NEB_n, ONLY: NEB_t
 !
 USE MODI_TURB
 !
@@ -94,11 +91,7 @@ IMPLICIT NONE
 !
 !
 !
-TYPE(CST_t),              INTENT(IN)   :: CST
-TYPE(TURB_t),             INTENT(IN)   :: TURBN
-TYPE(CSTURB_t),           INTENT(IN)   :: CSTURB
-TYPE(NEB_t),              INTENT(IN)   :: NEBN
-TYPE(TLES_t),             INTENT(IN)   :: TLES
+TYPE(PHYEX_t),            INTENT(IN)   :: PHYEX
 INTEGER,                  INTENT(IN)   :: KLON  !KFDIA under CPG
 INTEGER,                  INTENT(IN)   :: KLEV  !Number of vertical levels
 INTEGER,                  INTENT(IN)   :: KKA   !Index of point near ground
@@ -110,7 +103,6 @@ INTEGER,                  INTENT(IN)   :: KRRI      ! Number of ice variables
 INTEGER,                  INTENT(IN)   :: KSV     ! Number of passive scalar
 INTEGER,                  INTENT(IN)   :: KGRADIENTS  ! Number of stored horizontal gradients
 CHARACTER (LEN=4),        INTENT(IN)   :: CMICRO  ! Microphysics scheme
-LOGICAL,                  INTENT(IN)   :: LDFLAT ! Logical for zero ororography
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 !
 !
@@ -190,19 +182,6 @@ INTEGER :: JL, JK, JLON
 INTEGER ::II
 !
 !
-INTEGER       :: IMI           ! model index number
-
-CHARACTER(LEN=4),DIMENSION(2)  :: HLBCX, HLBCY  ! X- and Y-direc LBC
-
-INTEGER       :: ISPLIT        ! number of time-splitting
-
-LOGICAL       ::  OOCEAN,ODEEPOC! switch for OCEAN version of turbulence scheme
-LOGICAL       ::  OCOUPLES     ! switch for ocean-atm LES coupling
-LOGICAL       ::  OBLOWSNOW    ! switch for prognostic blow snow scheme
-LOGICAL       ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables 
-CHARACTER(LEN=6)   ::  HPROGRAM     ! Program (AROME or MESONH prog)
-LOGICAL   :: ONOMIXLG          ! to use turbulence for lagrangian variables (modd_conf)
-LOGICAL   :: O2D               ! Logical for 2D model version (modd_conf)
 INTEGER   :: KSV_LGBEG, KSV_LGEND ! number of scalar variables
 !
 REAL, DIMENSION(KLON,1,KLEV+2)   :: ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY
@@ -215,7 +194,6 @@ REAL, POINTER    ::  ZCOSSLOPE(:,:)   ! cosinus of the anglebetween i and the sl
 REAL, POINTER    ::  ZSINSLOPE(:,:)   ! sinus of the angle between i and the slope vector
 
 REAL,DIMENSION(KLON,1,KLEV+2)         :: ZCEI
-REAL                                  :: ZCEI_MIN,ZCEI_MAX,ZCOEF_AMPL_SAT
 REAL, DIMENSION(KLON,1)               :: ZBL_DEPTH, ZSBL_DEPTH
 REAL,DIMENSION(KLON,1,KLEV+2)         :: ZWTH       ! heat flux
 REAL,DIMENSION(KLON,1,KLEV+2)         :: ZWRC       ! cloud water flux
@@ -225,6 +203,7 @@ REAL,DIMENSION(KLON,1,KLEV+2,KRR)     :: ZRM,ZRRS
 REAL,DIMENSION(KLON,1,KLEV+2,KGRADIENTS) :: PHGRAD    ! Horizontal Gradients
 !
 REAL, DIMENSION(KLON,1), TARGET     ::  ZERO, ZONE
+REAL :: ZTWOTSTEP
 !
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 TYPE(TLES_t) :: YLTLES
@@ -237,44 +216,23 @@ TYPE(TLES_t) :: YLTLES
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('ARO_TURB_MNH',0,ZHOOK_HANDLE)
 CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV+2, JPVEXT_TURB, KLON)
-YLTLES=TLES
+YLTLES%LLES=.FALSE.
+YLTLES%LLES_CALL=.FALSE.
+ZTWOTSTEP=2*PTSTEP
 !
 !
 !
 !------------------------------------------------------------------------------
 !
 !*       2.   INITIALISATION (CAS DU MODELE 1D)
-!
 !             ---------------------------------
-! Numero du modele si grid nestind, toujours egal a 1
-IMI=1
-
+!
 ! Fichier I/O pour MesoNH (non-utilise dans AROME)
 ZTFILE%LOPENED=.FALSE.
 
-! Type de condition � la limite. En 1D, sans importance. A etudier en 3D.
-HLBCX(:)='CYCL'
-HLBCY(:)='CYCL'
-
-! en dur a 1 dans MNH
-ISPLIT=1
-
-!Version Ocean du schema de turbulence
-OOCEAN=.FALSE.
-ODEEPOC=.FALSE.
-
-HPROGRAM='AROME '
-
 ! 2D version of turbulence
-O2D=.FALSE.
-! Lagragian diag for mesonh
-ONOMIXLG=.FALSE.
 KSV_LGBEG=0
 KSV_LGEND=0
-! blowsnow scheme with mesonh
-OBLOWSNOW=.FALSE.
-! ocean-atmo LES interactive coupling
-OCOUPLES=.FALSE.
 
 ! tableau a recalculer a chaque pas de temps
 ! attention, ZDZZ est l'altitude entre deux niveaux (et pas l'�paisseur de la couche)
@@ -377,7 +335,7 @@ PSRCM(:,:,1)=0.
 PSRCM(:,:,KLEV+2)=0.
 CALL VERTICAL_EXTEND(PTHM)
 CALL VERTICAL_EXTEND(PFLXZTHVMF)
-IF (TURBN%LHARAT) THEN
+IF (PHYEX%TURBN%LHARAT) THEN
   CALL VERTICAL_EXTEND(PLENGTHM)
   CALL VERTICAL_EXTEND(PLENGTHH)
 ENDIF
@@ -395,10 +353,7 @@ CALL VERTICAL_EXTEND(PRTKES_OUT)
 !
 !         ---------------------------------
 !pour AROME, on n'utilise pas les modifs de Mireille pour la turb au bord des nuages
-ZCEI_MAX=1.0
-ZCEI_MIN=0.0
 ZCEI=0.0
-ZCOEF_AMPL_SAT=0.0
 
 DO JRR=1, NBUDGET_RI
   YLBUDGET(JRR)%NBUDGET=JRR
@@ -406,16 +361,15 @@ DO JRR=1, NBUDGET_RI
   YLBUDGET(JRR)%YDLDDH=>YDLDDH
   YLBUDGET(JRR)%YDMDDH=>YDMDDH
 ENDDO
-OCOMPUTE_SRC=SIZE(PSIGS, 3)/=0
-CALL TURB (CST,CSTURB,TBUCONF,TURBN, NEBN, YLDIMPHYEX,YLTLES,&
-   & IMI, KRR, KRRL, KRRI, HLBCX, HLBCY, KGRADIENTS,1, &
-   & ISPLIT,IMI, KSV, KSV_LGBEG, KSV_LGEND, HPROGRAM,&
+CALL TURB (PHYEX%CST,PHYEX%CSTURB,TBUCONF,PHYEX%TURBN, PHYEX%NEBN, YLDIMPHYEX,YLTLES,&
+   & PHYEX%MISC%KMI, KRR, KRRL, KRRI, PHYEX%MISC%HLBCX, PHYEX%MISC%HLBCY, KGRADIENTS,1, &
+   & PHYEX%MISC%KSPLIT,PHYEX%MISC%KMI, KSV, KSV_LGBEG, KSV_LGEND, PHYEX%MISC%CPROGRAM,&
    & NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,   &
-   & O2D, ONOMIXLG, LDFLAT, OCOUPLES,OBLOWSNOW,& 
-   & .FALSE., OCOMPUTE_SRC, 1.0, &
-   & OOCEAN,ODEEPOC, .FALSE.,   &
-   & 'NONE',CMICRO,           &
-   & 2*PTSTEP,ZTFILE,                                      &
+   & PHYEX%MISC%O2D, PHYEX%MISC%ONOMIXLG, PHYEX%MISC%OFLAT, PHYEX%MISC%OCOUPLES, PHYEX%MISC%OBLOWSNOW,& 
+   & PHYEX%MISC%OIBM, PHYEX%MISC%OCOMPUTE_SRC, PHYEX%MISC%XRSNOW, &
+   & PHYEX%MISC%OOCEAN,PHYEX%MISC%ODEEPOC, PHYEX%MISC%ODIAG_IN_RUN,   &
+   & PHYEX%MISC%HTURBLEN_CL, CMICRO,           &
+   & ZTWOTSTEP,ZTFILE,                                      &
    & ZDXX,ZDYY,ZDZZ,ZDZX,ZDZY,ZZZ,          &
    & ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE,    &
    & PRHODJ,PTHVREF,PHGRAD,PZS,                            &
@@ -423,7 +377,7 @@ CALL TURB (CST,CSTURB,TBUCONF,TURBN, NEBN, YLDIMPHYEX,YLTLES,&
    & PPABSM,PUM,PVM,PWM,PTKEM,ZSVM,PSRCM,                  &
    & PLENGTHM,PLENGTHH,MFMOIST,                            &
    & ZBL_DEPTH,ZSBL_DEPTH,                                 &
-   & ZCEI,ZCEI_MIN,ZCEI_MAX,ZCOEF_AMPL_SAT,    &
+   & ZCEI, PHYEX%MISC%XCEI_MIN, PHYEX%MISC%XCEI_MAX, PHYEX%MISC%XCOEF_AMPL_SAT,    &
    & PTHM,ZRM, &
    & PRUS,PRVS,PRWS,PRTHS,ZRRS,ZRSVS,PRTKES_OUT,         &
    & PSIGS,                                         &
