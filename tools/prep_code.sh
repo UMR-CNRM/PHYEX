@@ -26,6 +26,7 @@ function usage {
   echo "-p                    push the result as a new branch"
   echo "-s SUB                subdiretory or file (under src) to consider when merging and applying mnh_expand"
   echo "--renameFf            rename .F90 into .f90"
+  echo "--ilooprm             replace indexes in do loop (and mnh_expand) by :"
   echo "--repo                use this repository instead of the one derived (if any) from the env variables"
   echo "                      PHYEXREPOuser (=$PHYEXREPOuser) and PHYEXREPOprotocol (=$PHYEXREPOprotocol)"
   echo "-v                    add verbosity (up to 3 -v)"
@@ -52,6 +53,8 @@ push=0
 subs=""
 renameFf=0
 verbose=0
+ilooprm=0
+
 if [ -z "${PHYEXREPOprotocol-}" ]; then
   repository=""
 else
@@ -73,6 +76,7 @@ while [ -n "$1" ]; do
     '-s') subs="$subs $2"; shift;;
     '-p') push=1;;
     '--renameFf') renameFf=1;;
+    '--ilooprm') ilooprm=1;;
     '--repo') repository=$2; shift;;
     '-v') verbose=$(($verbose+1));;
      *) directory="$1";;
@@ -201,6 +205,41 @@ if [ -n "${model-}" ]; then
     if [ -e "$file" -a "$file" != '.git' -a "$file" != '.git/' ]; then
       $rm -r "$file"
     fi
+  done
+fi
+
+##### Replace index in do loop and mnh_expand directives by :
+if [ $ilooprm -eq 1 ]; then
+  subs=$(\ls)
+  for sub in $subs; do
+    cd $sub
+    files=$(\ls -A)
+    for file in $files; do
+      if [[ "$file" != "gradient_m"* ]]; then
+        # Protection only for one line in turb.f90/.F90
+        if [[ "$file" == "turb"* ]]; then
+          sed -i 's/PLM(IIJB:IIJE,IKTB:IKTE) = PZZ(IIJB:IIJE,IKTB+IKL:IKTE+IKL) - PZZ(IIJB:IIJE,IKTB:IKTE)/PLM(IIJB:IIJE,IKTB : IKTE) = PZZ(IIJB:IIJE,IKTB+IKL:IKTE+IKL) - PZZ(IIJB:IIJE,IKTB : IKTE)/g' $file
+        fi
+        # Protection
+        sed -i 's/JK=IKTB:IKTE/transJKIKTB/g' $file
+        sed -i 's/JK=1:IKT/transIKT/g' $file
+        sed -i 's/JIJ=IIJB:IIJE/transJIJ/g' $file
+        sed -i 's/IKTB+1:IKTE/IKTB1IKTE/g' $file
+        # Apply transformation
+        sed -i 's/1:IKT/:/g' $file
+        sed -i 's/IKTB:IKTE/:/g' $file
+        sed -i 's/IIJB:IIJE/:/g' $file
+        # Supression protection
+        sed -i 's/transJKIKTB/JK=IKTB:IKTE/g' $file
+        sed -i 's/transIKT/JK=1:IKT/g' $file
+        sed -i 's/transJIJ/JIJ=IIJB:IIJE/g' $file
+        sed -i 's/IKTB1IKTE/IKTB+1:IKTE/g' $file
+        if [[ "$file" == "turb"* ]]; then
+          sed -i 's/IKTB : IKTE/IKTB:IKTE/g' $file
+        fi
+      fi
+    done
+    cd ..
   done
 fi
 

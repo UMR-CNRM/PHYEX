@@ -1,7 +1,8 @@
-!MNH_LIC Copyright 1994-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
+!-----------------------------------------------------------------
 MODULE MODE_ICE4_FAST_RS
 IMPLICIT NONE
 CONTAINS
@@ -349,7 +350,8 @@ DO JL=1, KSIZE
 #else
                  PRST(JL)*PRHODREF(JL) *    &
                  (ICEP%X0DEPS*       PLBDAS(JL)**(ICED%XBS+ICEP%XEX0DEPS) + &
-                 ICEP%X1DEPS*PCJ(JL)*(1+0.5*(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEX1DEPS/ICED%XALPHAS)*PLBDAS(JL)**(ICED%XBS+ICEP%XEX1DEPS)) &
+                 ICEP%X1DEPS*PCJ(JL)*(1+0.5*(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEX1DEPS/ICED%XALPHAS) &
+                 *PLBDAS(JL)**(ICED%XBS+ICEP%XEX1DEPS)) &
 #endif
                  -(PRS_TEND(JL, IRCRIMS) + PRS_TEND(JL, IRRACCS)) *       &
                  (PRHODREF(JL)*CST%XCL*(CST%XTT-PT(JL))) &

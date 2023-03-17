@@ -228,7 +228,10 @@ IIJE=D%NIJE
 !
 PCLDFR(:,:) = 0. ! Initialize values
 PSIGRC(:,:) = 0. ! Initialize values
-ZPRIFACT = 1.      ! Initialize value
+PRV_OUT(:,:)= 0. ! Initialize values
+PRC_OUT(:,:)= 0. ! Initialize values
+PRI_OUT(:,:)= 0. ! Initialize values
+ZPRIFACT = 1.    ! Initialize value
 ZARDUM2 = 0.  ! Initialize values
 ZCLDINI = -1. ! Dummy Initialized cloud input to icecloud routine
 PIFR = 10. ! ratio of cloud ice water mixing ratio wet to dry
