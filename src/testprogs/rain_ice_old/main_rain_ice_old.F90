@@ -10,9 +10,9 @@ program main_rain_ice_old
 
   use modd_dimphyex, only: dimphyex_t
   use modd_cst, only: cst
-  use modd_rain_ice_param, only: rain_ice_param
-  use modd_rain_ice_descr, only: rain_ice_descr
-  use modd_param_ice,      only: param_ice
+  use modd_rain_ice_param_n, only: rain_ice_paramn
+  use modd_rain_ice_descr_n, only: rain_ice_descrn
+  use modd_param_ice_n,      only: param_icen
   use modd_budget
 
   use iso_fortran_env, only: output_unit
@@ -100,8 +100,8 @@ program main_rain_ice_old
     subroutine init_gmicro(D, krr, n_gp_blocks, odmicro, prt, pssio, ocnd2, prht)
 
       use modd_dimphyex, only: dimphyex_t
-      use modd_rain_ice_descr, only: xrtmin
-      use modd_rain_ice_param, only: xfrmin
+      use modd_rain_ice_descr_n, only: xrtmin
+      use modd_rain_ice_param_n, only: xfrmin
 
       implicit none
 
@@ -241,8 +241,8 @@ ENDDO
 
     if (isize .gt. 0) then
 
-      call rain_ice_old(D=D, cst=cst, parami=param_ice,                                    &
-                        icep=rain_ice_param, iced=rain_ice_descr, buconf=tbuconf,          &
+      call rain_ice_old(D=D, cst=cst, parami=param_icen,                                   &
+                        icep=rain_ice_paramn, iced=rain_ice_descrn, buconf=tbuconf,        &
                         osedic=osedic, ocnd2=ocnd2,                                        &
                         lkogan=lkogan, lmodicedep=lmodicedep,                              &
                         hsedim=c_sedim, hsubg_aucv_rc=csubg_aucv_rc, owarm=owarm,          &
@@ -358,13 +358,16 @@ end program
 
 subroutine init_rain_ice_old(kulout)
 
-  use modd_rain_ice_param, only: rain_ice_param_associate
-  use modd_rain_ice_descr, only: rain_ice_descr_associate
-  use modd_param_ice
+  use modd_param_ice_n,      only: param_ice_goto_model
+  use modd_rain_ice_param_n, only: rain_ice_param_goto_model
+  use modd_rain_ice_descr_n, only: rain_ice_descr_goto_model
+  use modd_cloudpar_n,       only: cloudpar_goto_model
+  use modd_param_ice_n
 
-  use modi_ini_rain_ice
+  use mode_ini_rain_ice
 
-  use modi_ini_cst
+  use mode_ini_cst
+  use mode_ini_tiwmx
   use modd_budget
   use modd_les, only: tles
 
@@ -375,12 +378,19 @@ subroutine init_rain_ice_old(kulout)
   integer, intent (in) :: kulout
 
   character(len=4) :: c_micro
+  integer :: isplitr
 
   call ini_cst
 
   call ini_tiwmx
 
-  call param_ice_associate
+  call cloudpar_goto_model(1, 1)
+  call param_ice_goto_model(1, 1)
+  call rain_ice_descr_goto_model(1, 1)
+  call rain_ice_param_goto_model(1, 1)
+
+  call param_icen_init('AROME', 0, .false., kulout, &                                                                 
+                      &.true., .false., .false., 0)
 
   call tbuconf_associate
 
@@ -409,7 +419,7 @@ subroutine init_rain_ice_old(kulout)
 
   ! 2. set implicit default values for modd_rain_ice_descr and modd_rain_ice_param
 
-  call ini_rain_ice(kulout, c_micro)
+  call ini_rain_ice(kulout, 50., 20., isplitr, c_micro)
 
 end subroutine init_rain_ice_old
 
@@ -417,8 +427,8 @@ end subroutine init_rain_ice_old
 subroutine init_gmicro(D, krr, n_gp_blocks, odmicro, prt, pssio, ocnd2, prht)
 
   use modd_dimphyex, only: dimphyex_t
-  use modd_rain_ice_descr, only: xrtmin
-  use modd_rain_ice_param, only: xfrmin
+  use modd_rain_ice_descr_n, only: xrtmin
+  use modd_rain_ice_param_n, only: xfrmin
   use iso_fortran_env, only: output_unit
 
   implicit none

@@ -18,9 +18,9 @@
       USE YOMHOOK,             ONLY: LHOOK, DR_HOOK
       USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_T
       USE MODD_CST,            ONLY: CST_T
-      USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
-      USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_T
-      USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_T
+      USE MODD_PARAM_ICE_N,    ONLY: PARAM_ICE_t
+      USE MODD_RAIN_ICE_PARAM_N, ONLY: RAIN_ICE_PARAM_T
+      USE MODD_RAIN_ICE_DESCR_N, ONLY: RAIN_ICE_DESCR_T
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources

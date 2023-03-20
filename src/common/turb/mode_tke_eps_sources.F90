@@ -7,7 +7,7 @@ MODULE MODE_TKE_EPS_SOURCES
 IMPLICIT NONE
 CONTAINS
       SUBROUTINE TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,TURBN,TLES,       &
-                    & HPROGRAM, KMI,PTKEM,PLM,PLEPS,PDP,               &
+                    & HPROGRAM, PTKEM,PLM,PLEPS,PDP,                   &
                     & PTRH,PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,        &
                     & PTSTEP,PEXPL,                                    &
                     & TPFILE,ODIAG_IN_RUN,OOCEAN,                      &
@@ -60,10 +60,10 @@ CONTAINS
 !!      Module MODD_CTURB: contains the set of constants for
 !!                        the turbulence scheme
 !!
-!!           CSTURB%XCET,CSTURB%XCED  : transport and dissipation cts. for the TKE
+!!           CSTURB%XCET,TURBN%XCED  : transport and dissipation cts. for the TKE
 !!           XCDP,XCDD,XCDT: constants from the parameterization of
 !!                        the K-epsilon equation
-!!           CSTURB%XTKEMIN,XEPSMIN : minimum values for the TKE and its
+!!           TURBN%XTKEMIN,XEPSMIN : minimum values for the TKE and its
 !!                        dissipation
 !!
 !!      Module MODD_PARAMETERS: 
@@ -164,7 +164,6 @@ TYPE(TBUDGETCONF_t),     INTENT(IN)   :: BUCONF
 TYPE(TURB_t),            INTENT(IN)   :: TURBN
 TYPE(TLES_t),            INTENT(INOUT):: TLES
 CHARACTER(LEN=6),        INTENT(IN)   ::  HPROGRAM     ! CPROGRAM is the program currently running (modd_conf)
-INTEGER,                 INTENT(IN)   ::  KMI          ! model index number  
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PTKEM        ! TKE at t-deltat
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PLM          ! mixing length         
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)   ::  PLEPS        ! dissipative length
@@ -281,7 +280,7 @@ CALL MZM_PHY(D,ZKEFF,ZMWORK1)
 CALL MZM_PHY(D,PRHODJ,ZMWORK2)
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZFLX(IIJB:IIJE,1:IKT) = CSTURB%XCED * SQRT(PTKEM(IIJB:IIJE,1:IKT)) / PLEPS(IIJB:IIJE,1:IKT)
+ZFLX(IIJB:IIJE,1:IKT) = TURBN%XCED * SQRT(PTKEM(IIJB:IIJE,1:IKT)) / PLEPS(IIJB:IIJE,1:IKT)
 ZSOURCE(IIJB:IIJE,1:IKT) = ( PRTKES(IIJB:IIJE,1:IKT) +  PRTKEMS(IIJB:IIJE,1:IKT) ) &
                                      / PRHODJ(IIJB:IIJE,1:IKT) - PTKEM(IIJB:IIJE,1:IKT) / PTSTEP &
    + PDP(IIJB:IIJE,1:IKT) + PTP(IIJB:IIJE,1:IKT) + ZTR(IIJB:IIJE,1:IKT) & 
@@ -329,9 +328,9 @@ ENDIF
 ! CL : Now done at the end of the time step in ADVECTION_METSV for MesoNH
 IF(HPROGRAM/='MESONH') THEN
  !$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
- GTKENEG(IIJB:IIJE,1:IKT) =  ZRES(IIJB:IIJE,1:IKT) <= CSTURB%XTKEMIN
+ GTKENEG(IIJB:IIJE,1:IKT) =  ZRES(IIJB:IIJE,1:IKT) <= TURBN%XTKEMIN
  WHERE ( GTKENEG(IIJB:IIJE,1:IKT) ) 
-   ZRES(IIJB:IIJE,1:IKT) = CSTURB%XTKEMIN
+   ZRES(IIJB:IIJE,1:IKT) = TURBN%XTKEMIN
  END WHERE
  !$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
 END IF
@@ -399,7 +398,7 @@ IF (BUCONF%LBUDGET_TKE) THEN
   !
   ! Dissipation
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  ZMWORK1(IIJB:IIJE,1:IKT) = -CSTURB%XCED * SQRT(PTKEM(IIJB:IIJE,1:IKT))/PLEPS(IIJB:IIJE,1:IKT) * &
+  ZMWORK1(IIJB:IIJE,1:IKT) = -TURBN%XCED * SQRT(PTKEM(IIJB:IIJE,1:IKT))/PLEPS(IIJB:IIJE,1:IKT) * &
                 (PEXPL*PTKEM(IIJB:IIJE,1:IKT) + TURBN%XIMPL*ZRES(IIJB:IIJE,1:IKT))*PRHODJ(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT) 
   CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TKE), 'DISS',ZMWORK1)
@@ -414,13 +413,13 @@ END IF
 IF (BUCONF%LBUDGET_TKE) THEN
 PRTKES(IIJB:IIJE,1:IKT) = PRTKES(IIJB:IIJE,1:IKT) + PDP(IIJB:IIJE,1:IKT) * PRHODJ(IIJB:IIJE,1:IKT)
 PRTKES(IIJB:IIJE,1:IKT) = PRTKES(IIJB:IIJE,1:IKT) + PTP(IIJB:IIJE,1:IKT) * PRHODJ(IIJB:IIJE,1:IKT)
-PRTKES(IIJB:IIJE,1:IKT) = PRTKES(IIJB:IIJE,1:IKT) - CSTURB%XCED * SQRT(PTKEM(IIJB:IIJE,1:IKT)) / PLEPS(IIJB:IIJE,1:IKT) * &
+PRTKES(IIJB:IIJE,1:IKT) = PRTKES(IIJB:IIJE,1:IKT) - TURBN%XCED * SQRT(PTKEM(IIJB:IIJE,1:IKT)) / PLEPS(IIJB:IIJE,1:IKT) * &
                 (PEXPL*PTKEM(IIJB:IIJE,1:IKT) + TURBN%XIMPL*ZRES(IIJB:IIJE,1:IKT)) * PRHODJ(IIJB:IIJE,1:IKT)
 END IF
 #else
 PRTKES(IIJB:IIJE,1:IKT) = PRTKES(IIJB:IIJE,1:IKT) + PRHODJ(IIJB:IIJE,1:IKT) * &
                 ( PDP(IIJB:IIJE,1:IKT) + PTP(IIJB:IIJE,1:IKT)                           &
-                  - CSTURB%XCED * SQRT(PTKEM(IIJB:IIJE,1:IKT)) / PLEPS(IIJB:IIJE,1:IKT) &
+                  - TURBN%XCED * SQRT(PTKEM(IIJB:IIJE,1:IKT)) / PLEPS(IIJB:IIJE,1:IKT) &
                   * ( PEXPL*PTKEM(IIJB:IIJE,1:IKT) + TURBN%XIMPL*ZRES(IIJB:IIJE,1:IKT) ) )
 #endif
 !
@@ -447,7 +446,7 @@ IF (BUCONF%LBUDGET_TKE) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TKE), 'TR'
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 PRTHLS(IIJB:IIJE,1:IKT) = PRTHLS(IIJB:IIJE,1:IKT) + &
-                                    CSTURB%XCED * SQRT(PTKEM(IIJB:IIJE,1:IKT)) / PLEPS(IIJB:IIJE,1:IKT) * &
+                                    TURBN%XCED * SQRT(PTKEM(IIJB:IIJE,1:IKT)) / PLEPS(IIJB:IIJE,1:IKT) * &
                 (PEXPL*PTKEM(IIJB:IIJE,1:IKT) + TURBN%XIMPL*ZRES(IIJB:IIJE,1:IKT)) &
                 * PRHODJ(IIJB:IIJE,1:IKT) * PCOEF_DISS(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -459,13 +458,13 @@ PRTHLS(IIJB:IIJE,1:IKT) = PRTHLS(IIJB:IIJE,1:IKT) + &
 IF(PRESENT(PTR)) PTR=ZTR
 IF(PRESENT(PDISS)) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  PDISS(IIJB:IIJE,1:IKT) =  -CSTURB%XCED * (PTKEM(IIJB:IIJE,1:IKT)**1.5) / PLEPS(IIJB:IIJE,1:IKT)
+  PDISS(IIJB:IIJE,1:IKT) =  -TURBN%XCED * (PTKEM(IIJB:IIJE,1:IKT)**1.5) / PLEPS(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END IF
 !
 IF(PRESENT(PEDR)) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  PEDR(IIJB:IIJE,1:IKT) = CSTURB%XCED * (PTKEM(IIJB:IIJE,1:IKT)**1.5) / PLEPS(IIJB:IIJE,1:IKT)
+  PEDR(IIJB:IIJE,1:IKT) = TURBN%XCED * (PTKEM(IIJB:IIJE,1:IKT)**1.5) / PLEPS(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END IF
 !

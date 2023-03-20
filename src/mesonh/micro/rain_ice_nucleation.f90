@@ -29,9 +29,9 @@ SUBROUTINE RAIN_ICE_NUCLEATION(KIB, KIE, KJB, KJE, KKTB, KKTE,KRR,PTSTEP,&
 use modd_budget,          only: lbudget_th, lbudget_rv, lbudget_ri, &
                                 NBUDGET_TH, NBUDGET_RV, NBUDGET_RI, &
                                 tbudgets
-use MODD_CST,             only: XALPI, XALPW, XBETAI, XBETAW, XCI, XCL, XCPD, XCPV, XGAMI, XGAMW, &
+USE MODD_CST,             only: XALPI, XALPW, XBETAI, XBETAW, XCI, XCL, XCPD, XCPV, XGAMI, XGAMW, &
                                 XLSTT, XMD, XMV, XP00, XRD, XTT
-use MODD_RAIN_ICE_PARAM,  only: XALPHA1, XALPHA2, XBETA1, XBETA2, XMNU0, XNU10, XNU20
+USE MODD_RAIN_ICE_PARAM_n,  only: XALPHA1, XALPHA2, XBETA1, XBETA2, XMNU0, XNU10, XNU20
 
 use mode_budget,          only: Budget_store_init, Budget_store_end
 use mode_tools,           only: Countjv

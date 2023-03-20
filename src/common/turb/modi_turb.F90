@@ -4,7 +4,7 @@
 !
 INTERFACE
 !
-      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,D,TLES,                 &
+      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,NEBN,D,TLES,            &
               & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,KHALO,       &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
               & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
@@ -38,6 +38,7 @@ USE MODD_IO, ONLY : TFILEDATA
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_NEB_n, ONLY: NEB_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_LES, ONLY: TLES_t
 !
@@ -46,7 +47,8 @@ TYPE(CST_t),            INTENT(IN)   :: CST           ! modd_cst general constan
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB        ! modd_csturb turb constant structure
 TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF        ! budget structure
 TYPE(TURB_t),           INTENT(IN)   :: TURBN         ! modn_turbn (turb namelist) structure
-TYPE(TLES_t),           INTENT(IN)   :: TLES          ! modd_les structure
+TYPE(NEB_t),            INTENT(IN)   :: NEBN          ! modd_nebn structure
+TYPE(TLES_t),           INTENT(INOUT)   :: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
 INTEGER,                INTENT(IN)   :: KMI           ! model index number
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
@@ -178,8 +180,8 @@ REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSVFL_C  !
 REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSUFL   
 REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSVFL  !
 !
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN), OPTIONAL :: PIBM_XMUT ! IBM turbulent viscosity
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN), OPTIONAL :: PIBM_LS ! IBM Level-set function
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT), OPTIONAL :: PIBM_XMUT ! IBM turbulent viscosity
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN), OPTIONAL  :: PIBM_LS ! IBM Level-set function
 !
 !-------------------------------------------------------------------------------
 !
