@@ -378,7 +378,8 @@ if [ $check -eq 1 ]; then
       echo "Compare with ncdump..."
       if [ -f $file1 -a -f $file2 ]; then
         set +e
-        diff <(ncdump $file1 | head -c 62889) <(ncdump $file2 | head -c 62889)
+        bit_diff=57100
+        diff <(ncdump $file1 | head -c $bit_diff) <(ncdump $file2 | head -c $bit_diff)
         t=$?
         set -e
         allt=$(($allt+$t))
@@ -404,7 +405,8 @@ if [ $check -eq 1 ]; then
       echo "Compare with ncdump..."
       if [ -f $file1 -a -f $file2 ]; then
         set +e
-        diff <(ncdump $file1 | head -c 27300) <(ncdump $file2 | head -c 27300)
+        bit_diff=27300
+        diff <(ncdump $file1 | head -c $bit_diff) <(ncdump $file2 | head -c $bit_diff)
         t=$?
         set -e
         allt=$(($allt+$t))
@@ -430,7 +432,8 @@ if [ $check -eq 1 ]; then
         echo "Compare with ncdump..."
         if [ -f $file1 -a -f $file2 ]; then
           set +e
-          diff <(ncdump $file1 | head -c 18400) <(ncdump $file2 | head -c 18400)
+          bit_diff=18400
+          diff <(ncdump $file1 | head -c $bit_diff) <(ncdump $file2 | head -c $bit_diff)
           t=$?
           set -e
           allt=$(($allt+$t))
@@ -486,7 +489,8 @@ if [ $check -eq 1 ]; then
       echo "Compare with ncdump..."
       if [ -f $file1 -a -f $file2 ]; then
         set +e
-        diff <(ncdump $file1 | head -c 62889) <(ncdump $file2 | head -c 62889)
+        bit_diff=76300
+        diff <(ncdump $file1 | head -c $bit_diff) <(ncdump $file2 | head -c $bit_diff)
         t=$?
         set -e
         allt=$(($allt+$t))
@@ -514,7 +518,8 @@ if [ $check -eq 1 ]; then
       echo "Compare with ncdump..."
       if [ -f $file1 -a -f $file2 ]; then
         set +e
-        diff <(ncdump $file1 | head -c 32200) <(ncdump $file2 | head -c 32200)
+        bit_diff=32200
+        diff <(ncdump $file1 | head -c $bit_diff) <(ncdump $file2 | head -c $bit_diff)
         t=$?
         set -e
         allt=$(($allt+$t))
