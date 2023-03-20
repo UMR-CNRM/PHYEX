@@ -40,6 +40,7 @@ set -e
 
 #The small_3D_lima is not included in the list of available tests because it needs to be compared against a special commit.
 #                  Indeed, the lima version in arome has been changed.
+#                  The reference is the commit d095d11 (20 March 2023)
 
 #Special pack names:
 # - recompil: original source code (everything under mpa)
