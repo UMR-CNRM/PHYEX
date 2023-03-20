@@ -18,6 +18,7 @@ set -e
 #small_3D_alt8: CMF_UPDRAFT='RHCJ'
 #small_3D_alt9: CCLOUD='OLD3', OCND2=.T.
 #small_3D_alt10: LCRIAUTI=F
+#small_3D_lima: LIMA scheme
 
 #The small_3D_alt7 needed a correction in apl_arome which has been introduced in d37dd1f. But the reference pack has been modified
 #                  afterwards to enable this test case to be run (documented in INSTALL_pack_ial.md). In consequence, the reference
@@ -39,6 +40,9 @@ set -e
 #                  Between edc3f88 and d10ed48 only the reference change, physics source code is identical.
 
 #The small_3D_alt10 is not included in the list because it is not sufficiently different from other tests
+
+#The small_3D_lima is not included in the list of available tests because it needs to be compared against a special commit.
+#                  Indeed, the lima version in arome has been changed.
 
 #Special pack names:
 # - recompil: original source code (everything under mpa)
