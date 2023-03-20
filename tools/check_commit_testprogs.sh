@@ -10,7 +10,7 @@ set -e
 #ice_adjust: the ice adjust test case
 
 #ref is commit 855b8f8 for ice_adjust, rain_ice
-#ref is commit 4171c53 for turb
+#ref is commit ??????? for turb
 #ref is commit 7e44ab1 for shallow
 #ref is commit e070d16 for rain_ice_old
 

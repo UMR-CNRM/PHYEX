@@ -186,6 +186,16 @@ archfile :
 }
 
 function build_compilation_script() {
+srcdir=$1
+
+#fcm doesn't like if a source directory doesn't exist.
+#To be able to compile an old commit, we must filter the source directories
+TESTPROGS_DIR=""
+#support is not a testprog but is needed
+for testprog in ice_adjust rain_ice turb_mnh shallow rain_ice_old support; do
+  [ -d $srcdir/$testprog ] && TESTPROGS_DIR+="src/$testprog "
+done
+
 cat <<EOF > compilation.sh
 #!/bin/bash
 
@@ -214,6 +224,7 @@ echo "\\\$COMPIL_CFLAGS = \$COMPIL_CFLAGS" >> config.fcm
 echo "\\\$LD_FLAGS = \$LD_FLAGS" >> config.fcm
 echo "\\\$ENTRYPOINTS = \$ENTRYPOINTS" >> config.fcm
 echo "\\\$LIBS = \$LIBS" >> config.fcm
+echo "\\\$TESTPROGS_DIR=$TESTPROGS_DIR" >> config.fcm
 
 export PATH=$PWD/../fcm/bin/:\$PATH
 
@@ -276,7 +287,7 @@ PROGRAM DUMMYPROG
 END PROGRAM DUMMYPROG
 EOF
 cd ..
-build_compilation_script
+build_compilation_script src
 
 # Run the compilation
 ./compilation.sh
