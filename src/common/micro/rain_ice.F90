@@ -474,7 +474,7 @@ CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
 !***     6.1    total tendencies limited by available species
 !
 DO JK = IKTB, IKTE
-  DO CONCURRENT (JIJ=IIJB:IIJE)
+  DO JIJ=IIJB, IIJE
     !LV/LS
     ZZ_LSFACT(JIJ,JK)=ZZ_LSFACT(JIJ,JK)/PEXNREF(JIJ,JK)
     ZZ_LVFACT(JIJ,JK)=ZZ_LVFACT(JIJ,JK)/PEXNREF(JIJ,JK)
