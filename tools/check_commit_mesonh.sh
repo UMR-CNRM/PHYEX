@@ -260,8 +260,8 @@ if [ $compilation -eq 1 ]; then
   set +e #file ends with a test that can return false
   . ../conf/profile_mesonh-* #This lines modifies the list of loaded modules
   set -e
-  make -j 8 | tee ../Output_compilation
-  make installmaster | tee -a ../Output_compilation
+  make -j 8 2>&1 | tee ../Output_compilation
+  make installmaster 2>&1 | tee -a ../Output_compilation
   command -v module && module load $modulelist #restore loaded modules
 fi
 

@@ -172,9 +172,9 @@ USE MODD_CST
 USE MODD_ELEC_DESCR, ONLY : XRTMIN_ELEC, XQTMIN, XFC, XFI, XECHARGE
 USE MODD_NSV, ONLY : NSV_ELECBEG, NSV_ELECEND
 USE MODD_PARAMETERS
-USE MODD_RAIN_ICE_DESCR, ONLY : XRTMIN, XBI
-USE MODD_RAIN_ICE_PARAM,   ONLY: RAIN_ICE_PARAM
-USE MODD_NEB,              ONLY: NEB
+USE MODD_RAIN_ICE_DESCR_n, ONLY : XRTMIN, XBI
+USE MODD_RAIN_ICE_PARAM_n,   ONLY: RAIN_ICE_PARAMN
+USE MODD_NEB_n,            ONLY: NEBN
 USE MODD_TURB_n,           ONLY: TURBN
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 
@@ -385,11 +385,11 @@ DO JITER = 1, ITERMAX
     ZSIGQSAT2D(:,:)=PSIGQSAT
     ZW4 = 1. ! PRODREF is not used if HL variables are not present
 !
-    CALL CONDENSATION(D, CST, RAIN_ICE_PARAM, NEB, TURBN, &
+    CALL CONDENSATION(D, CST, RAIN_ICE_PARAMN, NEBN, TURBN, &
                      &'T', 'CB02', 'CB',                                                  &
                      &PPABST, PZZ, ZW4, ZT, ZW3_IN, ZW3, ZW1_IN, ZW1, ZW2_IN, ZW2,    &
                      &PRRS*PTSTEP, PRSS*PTSTEP, PRGS*PTSTEP, PSIGS, .FALSE., PMFCONV, PCLDFR, PSRCS, .FALSE.,                 &
-                     &OSIGMAS, .FALSE., .FALSE.,                                                        &
+                     &OSIGMAS, .FALSE.,                                                                 &
                      &ZDUM, ZDUM, ZDUM, ZDUM, ZDUM, ZSIGQSAT2D, &
                      &ZLV, ZLS, ZCPH)
 !

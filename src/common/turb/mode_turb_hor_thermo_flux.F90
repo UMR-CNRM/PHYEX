@@ -173,12 +173,12 @@ ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2)+2.*PDZZ(:,:,IKB+1)) /      &
 !             --------------
 !
 ! 
-ZFLX(:,:,:)     = -XCSHF * MXM( PK ) * GX_M_U(1,IKU,1,PTHLM,PDXX,PDZZ,PDZX)
+ZFLX(:,:,:)     = -TURBN%XCSHF * MXM( PK ) * GX_M_U(1,IKU,1,PTHLM,PDXX,PDZZ,PDZX)
 ZFLX(:,:,IKE+1) = ZFLX(:,:,IKE) 
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-ZFLX(:,:,IKB:IKB) = -XCSHF * MXM( PK(:,:,IKB:IKB) ) *          &
+ZFLX(:,:,IKB:IKB) = -TURBN%XCSHF * MXM( PK(:,:,IKB:IKB) ) *          &
   ( DXM(PTHLM(:,:,IKB:IKB)) * PINV_PDXX(:,:,IKB:IKB)           &
    -MXM( ZCOEFF(:,:,IKB+2:IKB+2)*PTHLM(:,:,IKB+2:IKB+2)        &
          +ZCOEFF(:,:,IKB+1:IKB+1)*PTHLM(:,:,IKB+1:IKB+1)       &
@@ -279,12 +279,12 @@ END IF
 !             -----------
 IF (KRR/=0) THEN
   !
-  ZFLX(:,:,:)     = -XCHF * MXM( PK ) * GX_M_U(1,IKU,1,PRM(:,:,:,1),PDXX,PDZZ,PDZX)
+  ZFLX(:,:,:)     = -TURBN%XCHF * MXM( PK ) * GX_M_U(1,IKU,1,PRM(:,:,:,1),PDXX,PDZZ,PDZX)
   ZFLX(:,:,IKE+1) = ZFLX(:,:,IKE) 
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-  ZFLX(:,:,IKB:IKB) = -XCHF * MXM( PK(:,:,IKB:IKB) ) *           &
+  ZFLX(:,:,IKB:IKB) = -TURBN%XCHF * MXM( PK(:,:,IKB:IKB) ) *           &
     ( DXM(PRM(:,:,IKB:IKB,1)) * PINV_PDXX(:,:,IKB:IKB)           &
      -MXM( ZCOEFF(:,:,IKB+2:IKB+2)*PRM(:,:,IKB+2:IKB+2,1)        &
            +ZCOEFF(:,:,IKB+1:IKB+1)*PRM(:,:,IKB+1:IKB+1,1)       &
@@ -424,7 +424,7 @@ END IF
 !
 !
 IF (.NOT. O2D) THEN
-  ZFLX(:,:,:)     = -XCSHF * MYM( PK ) * GY_M_V(1,IKU,1,PTHLM,PDYY,PDZZ,PDZY)
+  ZFLX(:,:,:)     = -TURBN%XCSHF * MYM( PK ) * GY_M_V(1,IKU,1,PTHLM,PDYY,PDZZ,PDZY)
   ZFLX(:,:,IKE+1) = ZFLX(:,:,IKE) 
 ELSE
   ZFLX(:,:,:)     = 0.
@@ -433,7 +433,7 @@ END IF
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-ZFLX(:,:,IKB:IKB) = -XCSHF * MYM( PK(:,:,IKB:IKB) ) *          &
+ZFLX(:,:,IKB:IKB) = -TURBN%XCSHF * MYM( PK(:,:,IKB:IKB) ) *          &
   ( DYM(PTHLM(:,:,IKB:IKB)) * PINV_PDYY(:,:,IKB:IKB)           &
    -MYM( ZCOEFF(:,:,IKB+2:IKB+2)*PTHLM(:,:,IKB+2:IKB+2)        &
          +ZCOEFF(:,:,IKB+1:IKB+1)*PTHLM(:,:,IKB+1:IKB+1)       &
@@ -540,7 +540,7 @@ END IF
 IF (KRR/=0) THEN
   !
   IF (.NOT. O2D) THEN
-    ZFLX(:,:,:)     = -XCHF * MYM( PK ) * GY_M_V(1,IKU,1,PRM(:,:,:,1),PDYY,PDZZ,PDZY)
+    ZFLX(:,:,:)     = -TURBN%XCHF * MYM( PK ) * GY_M_V(1,IKU,1,PRM(:,:,:,1),PDYY,PDZZ,PDZY)
     ZFLX(:,:,IKE+1) = ZFLX(:,:,IKE) 
   ELSE
     ZFLX(:,:,:)     = 0.
@@ -548,7 +548,7 @@ IF (KRR/=0) THEN
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-  ZFLX(:,:,IKB:IKB) = -XCHF * MYM( PK(:,:,IKB:IKB) ) *           &
+  ZFLX(:,:,IKB:IKB) = -TURBN%XCHF * MYM( PK(:,:,IKB:IKB) ) *           &
     ( DYM(PRM(:,:,IKB:IKB,1)) * PINV_PDYY(:,:,IKB:IKB)           &
      -MYM( ZCOEFF(:,:,IKB+2:IKB+2)*PRM(:,:,IKB+2:IKB+2,1)        &
            +ZCOEFF(:,:,IKB+1:IKB+1)*PRM(:,:,IKB+1:IKB+1,1)       &

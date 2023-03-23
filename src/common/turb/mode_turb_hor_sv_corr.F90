@@ -5,7 +5,7 @@
 MODULE MODE_TURB_HOR_SV_CORR
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_SV_CORR(D,CST,CSTURB,TLES,KSV,KSV_LGBEG,KSV_LGEND,&
+      SUBROUTINE TURB_HOR_SV_CORR(D,CST,CSTURB,TURBN,TLES,KSV,KSV_LGBEG,KSV_LGEND,&
                       KRR,KRRL,KRRI,OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,   &
                       ONOMIXLG,O2D,                                  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
@@ -51,6 +51,7 @@ CONTAINS
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY : CSTURB_t
+USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_PARAMETERS
 USE MODD_LES, ONLY: TLES_t
@@ -76,6 +77,7 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),         INTENT(IN)    ::  D
 TYPE(CST_t),              INTENT(IN)    ::  CST
 TYPE(CSTURB_t),           INTENT(IN)    ::  CSTURB
+TYPE(TURB_t),             INTENT(IN)    :: TURBN
 TYPE(TLES_t),             INTENT(INOUT) :: TLES          ! modd_les structure
 INTEGER,                  INTENT(IN)    ::  KRR          ! number of moist var.
 INTEGER,                  INTENT(IN)    ::  KRRL         ! number of liquid var.
@@ -127,9 +129,9 @@ CALL SECOND_MNH(ZTIME1)
 !
 IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables        
-   ZCSV= CSTURB%XCHF/PRSNOW 
+   ZCSV= TURBN%XCHF/PRSNOW 
 ELSE
-   ZCSV= CSTURB%XCHF
+   ZCSV= TURBN%XCHF
 ENDIF
 !
 DO JSV=1,KSV
@@ -160,11 +162,11 @@ DO JSV=1,KSV
       ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                          &
           *  (  GX_M_M(PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
               + GY_M_M(PTHLM,PDYY,PDZZ,PDZY) * GY_M_M(PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)  &
-             ) * (CSTURB%XCSHF+ZCSV) / (2.*ZCTSVD)
+             ) * (TURBN%XCSHF+ZCSV) / (2.*ZCTSVD)
     ELSE
       ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                          &
               * GX_M_M(PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
-              * (CSTURB%XCSHF+ZCSV) / (2.*ZCTSVD)
+              * (TURBN%XCSHF+ZCSV) / (2.*ZCTSVD)
     END IF
     CALL LES_MEAN_SUBGRID( ZA*ZFLX, TLES%X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
     CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLX, TLES%X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE. )
@@ -175,11 +177,11 @@ DO JSV=1,KSV
         ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                                 &
             *  (  GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX) * GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
                 + GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY) * GY_M_M(PSVM(:,:,:,JSV),PDYY,PDZZ,PDZY)  &
-               ) * (CSTURB%XCHF+ZCSV) / (2.*ZCQSVD)
+               ) * (TURBN%XCHF+ZCSV) / (2.*ZCQSVD)
       ELSE
         ZFLX(:,:,:)=  PLM(:,:,:) * PLEPS(:,:,:)                                                 &
                 * GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX) * GX_M_M(PSVM(:,:,:,JSV),PDXX,PDZZ,PDZX)  &
-                * (CSTURB%XCHF+ZCSV) / (2.*ZCQSVD)
+                * (TURBN%XCHF+ZCSV) / (2.*ZCQSVD)
       END IF
       CALL LES_MEAN_SUBGRID( ZA*ZFLX, TLES%X_LES_SUBGRID_SvThv(:,:,:,JSV) , .TRUE.)
       CALL LES_MEAN_SUBGRID( -CST%XG/PTHVREF/3.*ZA*ZFLX, TLES%X_LES_SUBGRID_SvPz(:,:,:,JSV), .TRUE. )

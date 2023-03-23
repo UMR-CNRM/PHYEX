@@ -1,6 +1,7 @@
 !     ######spl
-      SUBROUTINE  ARO_ADJUST_LIMA(KKA,KKU,KKL,KLON,KLEV,KFDIA,  KRR, KSV, KTCOUNT,  &
-                                  OSUBG_COND, OSIGMAS, OCND2, HCONDENS, HLAMBDA3, &
+      SUBROUTINE  ARO_ADJUST_LIMA(PHYEX, &
+                                  KKA,KKU,KKL,KLON,KLEV,KFDIA,  KRR, KSV, KTCOUNT,  &
+                                  OSUBG_COND, OSIGMAS, &
                                   PTSTEP, PSIGQSAT, &
                                   PZZF, PRHODJ, PRHODREF, PEXNREF,&
                                   PPABSM, PTHT, PRT, PSVT, PSIGS, &
@@ -79,9 +80,8 @@
 !              ------------
 !
 USE MODD_CONF
-USE MODD_CST
+USE MODD_PHYEX, ONLY: PHYEX_t
 USE MODD_PARAMETERS
-USE MODD_RAIN_ICE_DESCR
 USE MODD_BUDGET, ONLY: TBUDGETDATA, NBUDGET_SV1, TBUCONF
 !
 USE MODD_PARAM_LIMA
@@ -106,6 +106,7 @@ IMPLICIT NONE
 !
 
 !
+TYPE(PHYEX_t),            INTENT(IN)   :: PHYEX
 INTEGER,                  INTENT(IN)   :: KKA    !near ground array index
 INTEGER,                  INTENT(IN)   :: KKU    !uppest atmosphere array index
 INTEGER,                  INTENT(IN)   :: KKL    !vert. levels type 1=MNH -1=ARO
@@ -119,9 +120,6 @@ LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid Cond.
 LOGICAL,                  INTENT(IN)   :: OSIGMAS  ! Switch for Sigma_s:
                                         ! use values computed in CONDENSATION
                                         ! or that from turbulence scheme
-LOGICAL,                  INTENT(IN)   :: OCND2
-CHARACTER*80,             INTENT(IN)   :: HCONDENS
-CHARACTER*4,              INTENT(IN)   :: HLAMBDA3 ! formulation for lambda3 coeff
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 REAL,                     INTENT(IN)   :: PSIGQSAT ! coeff applied to qsat variance contribution
 !
@@ -220,9 +218,9 @@ CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, 0, KFDIA)
 !                    computing time
 !
 ZT(:,:,:)= PTHT(:,:,:)*PEXNREF(:,:,:)
-ZLV(:,:,:)=XLVTT +(XCPV-XCL) *(ZT(:,:,:)-XTT)
-ZLS(:,:,:)=XLSTT +(XCPV-XCI) *(ZT(:,:,:)-XTT)
-ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
+ZLV(:,:,:)=PHYEX%CST%XLVTT +(PHYEX%CST%XCPV-PHYEX%CST%XCL) *(ZT(:,:,:)-PHYEX%CST%XTT)
+ZLS(:,:,:)=PHYEX%CST%XLSTT +(PHYEX%CST%XCPV-PHYEX%CST%XCI) *(ZT(:,:,:)-PHYEX%CST%XTT)
+ZCPH(:,:,:)=PHYEX%CST%XCPD +PHYEX%CST%XCPV*2.*PTSTEP*PRS(:,:,:,1)
 
 !set concentration for LIMA
 PRS = PRS * 2.*PTSTEP
@@ -352,8 +350,8 @@ ENDDO
 !
     ZZZ =  PZZF
 
-    CALL LIMA_ADJUST_SPLIT(D=YLDIMPHYEX, CST=CST, BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
-         KRR=KRR, KMI=KMI, HCONDENS=HCONDENS, HLAMBDA3=HLAMBDA3, &
+    CALL LIMA_ADJUST_SPLIT(D=YLDIMPHYEX, CST=PHYEX%CST, BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
+         KRR=KRR, KMI=KMI, HCONDENS=PHYEX%NEBN%CCONDENS, HLAMBDA3=PHYEX%NEBN%CLAMBDA3, &
          OSUBG_COND=OSUBG_COND, OSIGMAS=OSIGMAS, PTSTEP=2*PTSTEP, PSIGQSAT=PSIGQSAT, &
          PRHODREF=PRHODREF, PRHODJ=PRHODJ, PEXNREF=PEXNREF, PSIGS=PSIGS, PMFCONV=PMFCONV, &
          PPABST=PPABSM, PPABSTT=PPABSM, PZZ=ZZZ, PDTHRAD=PDTHRAD, PW_NU=PW_NU, &

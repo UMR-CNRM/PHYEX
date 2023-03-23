@@ -215,7 +215,7 @@ LD_FLAGS="\$LD_FLAGS \$OMP_LD"
 
 LIBS="rt dl"
 
-ENTRYPOINTS="rain_ice.o shallow_mf.o turb.o ice_adjust.o ini_neb.o"
+ENTRYPOINTS="rain_ice.o shallow_mf.o turb.o ice_adjust.o"
 
 FCM_ARGS="$FCM_ARGS"
 

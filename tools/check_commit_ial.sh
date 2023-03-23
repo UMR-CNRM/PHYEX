@@ -17,6 +17,7 @@ set -e
 #small_3D_alt7: CMF_CLOUD='STAT', LOSIGMAS=.FALSE. #Needs 2 corrections in original cycle 48
 #small_3D_alt8: CMF_UPDRAFT='RHCJ'
 #small_3D_alt9: CCLOUD='OLD3', OCND2=.T.
+#small_3D_alt10: LCRIAUTI=F
 #small_3D_lima: LIMA scheme
 
 #The small_3D_alt7 needed a correction in apl_arome which has been introduced in d37dd1f. But the reference pack has been modified
@@ -38,9 +39,10 @@ set -e
 #                       the commit d10ed48 in 48t3 (29 september 2022) when running in 48t3
 #                  Between edc3f88 and d10ed48 only the reference change, physics source code is identical.
 
+#The small_3D_alt10 is not included in the list because it is not sufficiently different from other tests
+
 #The small_3D_lima is not included in the list of available tests because it needs to be compared against a special commit.
 #                  Indeed, the lima version in arome has been changed.
-#                  The reference is the commit d095d11 (20 March 2023)
 
 #Special pack names:
 # - recompil: original source code (everything under mpa)
@@ -202,8 +204,14 @@ function ial_version_content2cycle {
   # variable content_ial_version must contain the source code of ial_version.json
   content_ial_version=$content_ial_version python3 -c "import json; import os; print(json.loads(os.environ['content_ial_version'])['cycle'])"
 }
+function ial_version_content2scripttag {
+  # variable content_ial_version must contain the source code of ial_version.json
+  content_ial_version=$content_ial_version python3 -c "import json; import os; print(json.loads(os.environ['content_ial_version']).get('scripttag', ''))"
+}
+
 
 #Name is choosen such as it can be produced with a main pack: PHYEX/${cycle}_XXXXXXXXX.01.${gmkpack_l}.${gmkpack_o}
+scripttag=""
 fromdir=''
 if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
   fromdir=$commit
@@ -214,6 +222,7 @@ if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
       cycle=$(apl_arome_content2cycle)
     else
       cycle=$(ial_version_content2cycle)
+      scripttag=$(ial_version_content2scripttag)
     fi
   fi
   packBranch=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
@@ -378,6 +387,9 @@ if [ $packcreation -eq 1 ]; then
     [ -f $EXT/apl_arome.F90 ] && mv $EXT/apl_arome.F90 ../arpifs/phys_dmn/
     [ -f $EXT/suphmpa.F90 ] && mv $EXT/suphmpa.F90 ../arpifs/phys_dmn/
     [ -f $EXT/vdfhghtnhl.F90 ] && mv $EXT/vdfhghtnhl.F90 ../arpifs/phys_dmn/
+    [ -f $EXT/cpg_opts_type_mod.fypp ] && mv $EXT/cpg_opts_type_mod.fypp ../arpifs/module/
+    [ -f $EXT/aplpar.F90 ] && mv $EXT/aplpar.F90 ../arpifs/phys_dmn/
+    [ -f $EXT/su0yomb.F90 ] && mv $EXT/su0yomb.F90 ../arpifs/setup/
     #Special mpa case
     [ -f $EXT/modd_spp_type.F90 ] && mv $EXT/modd_spp_type.F90 ../mpa/micro/externals/
     [ -f $EXT/spp_mod_type.F90 ] && mv $EXT/spp_mod_type.F90 ../mpa/micro/externals/
@@ -450,7 +462,7 @@ if [ $run -ge 1 ]; then
     cd $HOMEPACK/$name
     mkdir -p conf_tests/$t
     cd conf_tests/$t
-    MYLIB=$name TESTDIR=$dirconf/$t exescript Output_run $dirconf/$t/aro${cycle}.sh
+    MYLIB=$name TESTDIR=$dirconf/$t exescript Output_run $dirconf/$t/aro${cycle}${scripttag}.sh
   done
 fi
 

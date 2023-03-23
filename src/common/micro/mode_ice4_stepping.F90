@@ -10,7 +10,6 @@ SUBROUTINE ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &LDSIGMA_RC, LDAUCV_ADJU, LDEXT_TEND, &
                         &KPROMA, KMICRO, LDMICRO, PTSTEP, &
                         &KRR, &
-                        &HSUBG_AUCV_RC, HSUBG_AUCV_RI, &
                         &PEXN, PRHODREF, K1, K2, &
                         &PPRES, PCF, PSIGMA_RC, &
                         &PCIT, &
@@ -30,9 +29,9 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_BUDGET,         ONLY: TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
-USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
-USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & ITH,     & ! Potential temperature
       & IRV,     & ! Water vapor
@@ -69,8 +68,6 @@ INTEGER,                  INTENT(IN)    :: KMICRO ! Case r_x>0 locations
 LOGICAL, DIMENSION(KPROMA), INTENT(IN)  :: LDMICRO
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
-CHARACTER(LEN=4),         INTENT(IN)    :: HSUBG_AUCV_RC ! Kind of Subgrid autoconversion method
-CHARACTER(LEN=80),        INTENT(IN)    :: HSUBG_AUCV_RI ! Kind of Subgrid autoconversion method
 !
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PEXN    ! Exner function
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PRHODREF! Reference density
@@ -153,11 +150,11 @@ ENDIF
 
 !Maximum number of iterations
 !We only count real iterations (those for which we *compute* tendencies)
-INB_ITER_MAX=PARAMI%NMAXITER
+INB_ITER_MAX=PARAMI%NMAXITER_MICRO
 IF(PARAMI%XTSTEP_TS/=0.)THEN
   INB_ITER_MAX=MAX(1, INT(PTSTEP/PARAMI%XTSTEP_TS)) !At least the number of iterations needed for the time-splitting
   ZTSTEP=PTSTEP/INB_ITER_MAX
-  INB_ITER_MAX=MAX(PARAMI%NMAXITER, INB_ITER_MAX) !For the case XMRSTEP/=0. at the same time
+  INB_ITER_MAX=MAX(PARAMI%NMAXITER_MICRO, INB_ITER_MAX) !For the case XMRSTEP/=0. at the same time
 ENDIF
 
 IF (LDEXT_TEND) THEN
@@ -242,7 +239,6 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     CALL ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &KPROMA, KMICRO, &
                         &KRR, LSOFT, LLCOMPUTE, &
-                        &HSUBG_AUCV_RC, HSUBG_AUCV_RI, &
                         &PEXN, PRHODREF, ZLVFACT, ZLSFACT, K1, K2, &
                         &PPRES, PCF, PSIGMA_RC, &
                         &PCIT, &

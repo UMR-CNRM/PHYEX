@@ -17,7 +17,7 @@ Intégration de PHYEX dans des cycles/versions officielles:
         - REPRO48 seule: la version de code qui sera retenue à la fin est celle de Méso-NH 5.5
         - REPRO55 seule: la version de code qui sera retenue à la fin est celle du cycle 48 d'AROME
         - defined(REPRO48) || defined(REPRO55): la version de code qui sera retenue à la fin est nouvelle
-  - Ces clés devront être supprimées
+  - Ces clés devront être supprimées (attention particulière sur lsnow_t avec rain_ice_old, ini_snow et lima)
 - Répertoires ext
   - Répertoire arome/ext et mesonh/ext contiennent les codes non PHYEX qu'il faut modifier dans le pack pour qu'il puisse être compilé.
   - Ce répertoire devra être vidé à la fin du phasage, les modifications nécessaires devront avoir été fournies par ailleurs
@@ -37,6 +37,7 @@ Merge pb:
   - KFB ?
 
 Pb identifiés à corriger plus tard:
+  - demander aux hirlamistes de supprimer ini_snow (en ajoutant une clé comme lsnow_t pour modifier les valeurs dans ini_rain_ice)
   - deposition devrait être déplacée dans ice4_tendencies
   - avec les optimisations de Ryad, les tableaux 3D de precip passés à ice4_tendencies
     lorsque HSUBG_RC_RR_ACCR=='PRFR' ne sont  pas utilisables puisque les K1, K2 et K3

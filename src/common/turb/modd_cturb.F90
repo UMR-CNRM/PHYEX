@@ -44,30 +44,20 @@ TYPE CSTURB_t
 !
 REAL :: XCMFS        ! constant for the momentum flux due to shear   
 REAL :: XCMFB        ! constant for the momentum flux due to buoyancy
-REAL :: XCSHF        ! constant for the sensible heat flux 
-REAL :: XCHF         ! constant for the humidity flux 
-REAL :: XCTV         ! constant for the temperature variance
-REAL :: XCHV         ! constant for the humidity variance
-REAL :: XCHT1        ! first ct. for the humidity-temperature correlation
-REAL :: XCHT2        ! second ct. for the humidity-temperature correlation
 !
-REAL :: XCPR1        ! first ct. for the turbulent Prandtl numbers
 REAL :: XCPR2        ! second ct. for the turbulent Prandtl numbers
 REAL :: XCPR3        ! third ct. for the turbulent Prandtl numbers
 REAL :: XCPR4        ! fourth ct. for the turbulent Prandtl numbers
 REAL :: XCPR5        ! fifth ct. for the turbulent Prandtl numbers
 !
 REAL :: XCET         ! constant into the transport term of the TKE eq.
-REAL :: XCED         ! constant into the dissipation term of the TKE eq.
 !
 REAL :: XCDP         ! ct. for the production term in the dissipation eq.
 REAL :: XCDD         ! ct. for the destruction term in the dissipation eq.
 REAL :: XCDT         ! ct. for the transport term in the dissipation eq.
 !
-REAL :: XTKEMIN      ! mimimum value for the TKE
 REAL :: XRM17        ! Rodier et al 2017 constant in shear term for mixing length
 !
-REAL :: XLINI        ! initial value for BL mixing length
 REAL :: XLINF        ! to prevent division by zero in the BL algorithm
 !
 REAL :: XALPSBL      ! constant linking TKE and friction velocity in the SBL
@@ -78,7 +68,6 @@ REAL :: XA2          ! Constant a2 for wind pressure-correlations
 REAL :: XA3          ! Constant a3 for wind pressure-correlations
 REAL :: XA5          ! Constant a5 for temperature pressure-correlations
 REAL :: XCTD         ! Constant for temperature and vapor dissipation
-REAL :: XCTP         ! Constant for temperature and vapor pressure-correlations
 !
 REAL :: XPHI_LIM     ! Threshold value for Phi3 and Psi3
 REAL :: XSBL_O_BL    ! SBL height / BL height ratio
@@ -90,30 +79,20 @@ TYPE(CSTURB_t), TARGET, SAVE :: CSTURB
 !
 REAL,POINTER :: XCMFS => NULL()
 REAL,POINTER :: XCMFB => NULL()
-REAL,POINTER :: XCSHF => NULL()
-REAL,POINTER :: XCHF => NULL()
-REAL,POINTER :: XCTV => NULL()
-REAL,POINTER :: XCHV => NULL()
-REAL,POINTER :: XCHT1 => NULL()
-REAL,POINTER :: XCHT2 => NULL()
 !
-REAL,POINTER :: XCPR1 => NULL()
 REAL,POINTER :: XCPR2 => NULL()
 REAL,POINTER :: XCPR3 => NULL()
 REAL,POINTER :: XCPR4 => NULL()
 REAL,POINTER :: XCPR5 => NULL()
 !
 REAL,POINTER :: XCET => NULL()
-REAL,POINTER :: XCED => NULL()
 !
 REAL,POINTER :: XCDP => NULL()
 REAL,POINTER :: XCDD => NULL()
 REAL,POINTER :: XCDT => NULL()
 !
-REAL,POINTER :: XTKEMIN => NULL()
 REAL,POINTER :: XRM17 => NULL()
 !
-REAL,POINTER :: XLINI => NULL()
 REAL,POINTER :: XLINF => NULL()
 !
 REAL,POINTER :: XALPSBL => NULL()
@@ -124,7 +103,6 @@ REAL,POINTER :: XA2 => NULL()
 REAL,POINTER :: XA3 => NULL()
 REAL,POINTER :: XA5 => NULL()
 REAL,POINTER :: XCTD => NULL()
-REAL,POINTER :: XCTP => NULL()
 !
 REAL,POINTER :: XPHI_LIM => NULL()
 REAL,POINTER :: XSBL_O_BL => NULL()
@@ -135,30 +113,20 @@ SUBROUTINE CTURB_ASSOCIATE()
 IMPLICIT NONE
   XCMFS=>CSTURB%XCMFS
   XCMFB=>CSTURB%XCMFB
-  XCSHF=>CSTURB%XCSHF
-  XCHF=>CSTURB%XCHF
-  XCTV=>CSTURB%XCTV
-  XCHV=>CSTURB%XCHV
-  XCHT1=>CSTURB%XCHT1
-  XCHT2=>CSTURB%XCHT2
   !
-  XCPR1=>CSTURB%XCPR1
   XCPR2=>CSTURB%XCPR2
   XCPR3=>CSTURB%XCPR3
   XCPR4=>CSTURB%XCPR4
   XCPR5=>CSTURB%XCPR5
   !
   XCET=>CSTURB%XCET
-  XCED=>CSTURB%XCED
   !
   XCDP=>CSTURB%XCDP
   XCDD=>CSTURB%XCDD
   XCDT=>CSTURB%XCDT
   !
-  XTKEMIN=>CSTURB%XTKEMIN
   XRM17=>CSTURB%XRM17
   !
-  XLINI=>CSTURB%XLINI
   XLINF=>CSTURB%XLINF
   !
   XALPSBL=>CSTURB%XALPSBL
@@ -169,7 +137,6 @@ IMPLICIT NONE
   XA3=>CSTURB%XA3
   XA5=>CSTURB%XA5
   XCTD=>CSTURB%XCTD
-  XCTP=>CSTURB%XCTP
   !
   XPHI_LIM=>CSTURB%XPHI_LIM
   XSBL_O_BL=>CSTURB%XSBL_O_BL
