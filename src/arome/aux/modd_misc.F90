@@ -16,6 +16,7 @@ TYPE MISC_t
   LOGICAL                        :: OCOMPUTE_SRC=.TRUE.  !< Compute s'r'
   INTEGER                        :: KMI=1                !< Model numer
   INTEGER                        :: KSPLIT=1             !< Number of small timestep for the turbulence scheme
+  INTEGER                        :: KHALO=1              !< Size of the halo for parallel distribution (used in turb)
   CHARACTER(LEN=6)               :: CPROGRAM='AROME'     !< Name of the model
   LOGICAL                        :: ONOMIXLG=.FALSE.     !< Turbulence for lagrangian variables
   LOGICAL                        :: OOCEAN=.FALSE.       !< Ocean version of the turbulence scheme
