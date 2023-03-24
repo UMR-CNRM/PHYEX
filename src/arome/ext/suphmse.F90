@@ -73,7 +73,7 @@ USE YOMNSV    ,ONLY : NSV_CHEMBEG, NSV_CHEMEND, NSV_DSTBEG, NSV_DSTEND,&
  &                    NSV_AERBEG, NSV_AEREND, NSV_CO2,NSV_DSTDEPBEG,&
  &                    NSV_DSTDEPEND
 USE YOMMP0    ,ONLY : MYPROC
-
+USE MODE_INI_CST, ONLY: INI_CST
 
 !     ------------------------------------------------------------------
 
@@ -126,7 +126,8 @@ ELSE
   LLNOTMAP=.TRUE.
 ENDIF
 IF (.NOT.LMPA) THEN
-  CALL AROINI_CSTMNH(KULOUT,LTWOTL,LLNOTMAP)
+  CALL INI_CST
+  CALL AROINI_CSTMNH(KULOUT,LTWOTL,LLNOTMAP) !Despite its name, the routine only deals with modd_conf
 ENDIF
 
 !     initialisation of chemistry, aerosols and dust scheme

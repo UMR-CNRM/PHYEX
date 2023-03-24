@@ -49,7 +49,7 @@ USE MODD_WET_DEP_DESCR
 USE MODD_WET_DEP_PARAM
 
 USE MODI_INI_WET_DEP
-USE MODI_INI_CST
+USE MODE_INI_CST, ONLY: INI_CST
 IMPLICIT NONE
 ! -----------------------------------------------------------------------
 !     DUMMY INTEGER SCALARS

@@ -78,9 +78,11 @@ REAL(KIND=JPRB) :: ZTSTEP, ZDZMIN
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 CHARACTER(LEN=4) :: CSCONV
 
+LOGICAL :: LLNOTMAP
 !     ------------------------------------------------------------------
 
 #include "sucvmnh.intfb.h"
+#include "aroini_cstmnh.h"
 #include "aroini_budget.h"
 #include "abor1.intfb.h"
 #include "aroini_micro_lima.h"
@@ -124,6 +126,12 @@ IF (.NOT. PHYEX%PARAM_ICEN%LOCND2) THEN
    RADGR=0._JPRB
    RADSN=0._JPRB
 ENDIF
+IF (LELAM) THEN
+  LLNOTMAP=.NOT.YDGEOMETRY%YREGEO%LMAP
+ELSE
+  LLNOTMAP=.TRUE.
+ENDIF
+CALL AROINI_CSTMNH (KULOUT,LTWOTL,LLNOTMAP)
 
 IF (CMICRO == 'LIMA') THEN
   CALL AROINI_MICRO_LIMA (KULOUT,NULNAM,ZTSTEP,CMICRO,NSPLITR,NSPLITG)

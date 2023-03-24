@@ -82,7 +82,6 @@ USE MODD_NSV,             ONLY : NSV_LIMA_BEG_A, NSV_LIMA_NC_A, NSV_LIMA_NR_A, N
                                  NSV_LIMA_BEG, NSV_LIMA_NC, NSV_LIMA_NR, NSV_LIMA_CCN_ACTI, &
                                  NSV_LIMA_NI, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH, NSV_LIMA_IFN_NUCL
 USE MODD_CST,             ONLY : XPI, XRHOLW, XRHOLI
-USE MODD_CONF,            ONLY : NVERB
 !
 IMPLICIT NONE
 !

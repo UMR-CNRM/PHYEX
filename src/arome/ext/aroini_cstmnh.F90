@@ -40,10 +40,7 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 
 
 USE MODD_PARAMETERS 
-USE MODD_CST
 USE MODD_CONF
-USE MODD_LUNIT
-USE MODI_INI_CST
 
 IMPLICIT NONE
 
@@ -62,7 +59,6 @@ LOGICAL, INTENT(IN) :: OCARTESIAN
 !        1.2 Set implicit default values for MODD_CST
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('AROINI_CSTMNH',0,ZHOOK_HANDLE)
-CALL INI_CST
 
 !        1.3 Set implicit default values for MODD_CONF
 IF (OWTOTL) THEN
@@ -93,35 +89,6 @@ WRITE(UNIT=KULOUT,FMT='('' LCARTESIAN = '',L2,'' CPROGRAM = '',A6,&
      &LCARTESIAN,CPROGRAM,CCONF,LFLAT,L1D,L2D
 
 WRITE(UNIT=KULOUT,FMT='('' COMMON MODD_CST Meso_NH '')')
-WRITE(UNIT=KULOUT,FMT='('' XPI = '',E10.4,'' XKARMAN = '',E10.4,&
-     &'' XLIGHTSPEED = '',E10.4 &
-     &,/,'' XPLANCK = '',E10.4 &
-     &,'' XBOLTZ = '',E10.4,'' XAVOGADRO = '',E10.4,/&
-     &,'' XDAY = '',E10.4 &
-     &,'' XSIYEA = '',E10.4,'' XSIDAY = '',E10.4,/&
-     &,'' XOMEGA = '',E10.4 &
-     &,'' XRADIUS = '',E10.4,'' XG = '',E10.4,/&
-     &,'' XP00 = '',E10.4 &
-     &,'' XT00 = '',E10.4,'' XSTEFAN = '',E10.4,/&
-     &,'' XIO = '',E10.4 &
-     &,'' XMD = '',E10.4,'' XMV = '',E10.4,/&
-     &,'' XRD = '',E10.4 &
-     &,'' XRV = '',E10.4,'' XCPD = '',E10.4,/&
-     &,'' XCPV = '',E10.4 &
-     &,'' XRHOLW = '',E10.4,'' XRHOLI = '',E10.4,/&
-     &,'' XCL = '',E10.4 &
-     &,'' XCI = '',E10.4,'' XTT = '',E10.4,/&
-     &,'' XLVTT = '',E10.4 &
-     &,'' XLSTT = '',E10.4,'' XLMTT = '',E10.4,/&
-     &,'' XESTT = '',E10.4 &
-     &,'' XGAMW = '',E10.4,'' XBETAW = '',E10.4,/&
-     &,'' XALPW = '',E10.4 &
-     &,'' XGAMI = '',E10.4,'' XBETAI = '',E10.4,/&
-     &,'' XALPI = '',E10.4)')&
- &XPI,XKARMAN,XLIGHTSPEED,XPLANCK,XBOLTZ,XAVOGADRO,XDAY,XSIYEA,&
- &XSIDAY,XOMEGA,XRADIUS,XG,XP00,XTH00,XSTEFAN,XI0,XMD,XMV,XRD,&
- &XRV,XCPD,XCPV,XRHOLW,XRHOLI,XCL,XCI,XTT,XLVTT,XLSTT,XLMTT,XESTT,&
- &XGAMW,XBETAW,XALPW,XGAMI,XBETAI,XALPI 
 
 !   ---------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('AROINI_CSTMNH',1,ZHOOK_HANDLE)
