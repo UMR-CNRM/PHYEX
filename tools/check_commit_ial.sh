@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#set -x
+set -x
 set -e
 
 #This script:
@@ -240,7 +240,7 @@ else
   if [ "$cycle" == "" ]; then
     if [[ $commit == arome${separator}* ]]; then
       apl_arome_file="ext/apl_arome.F90"
-      ial_version_file="ext/ial_version.json"
+      ial_version_file="ial_version.json"
     else
       apl_arome_file="src/arome/ext/apl_arome.F90"
       ial_version_file="src/arome/ial_version.json"
@@ -256,6 +256,7 @@ else
       cycle=$(apl_arome_content2cycle)
     else
       cycle=$(ial_version_content2cycle)
+      scripttag=$(ial_version_content2scripttag)
     fi
   fi
   name="PHYEX/${cycle}_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
