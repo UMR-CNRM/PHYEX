@@ -132,7 +132,7 @@ USE MODD_RAD_TRANSF,        ONLY: JPGEOST
 USE MODD_REF_n,             ONLY: XRHODREF
 USE MODD_SALT,              ONLY: LSALT
 USE MODD_TIME_n,            ONLY: TDTCUR
-USE MODD_TURB_n,            ONLY: LSIGMAS, LSUBG_COND, VSIGQSAT
+USE MODD_NEB_n,            ONLY: LSIGMAS, LSUBG_COND, VSIGQSAT
 
 use mode_field,             only: Find_field_id_from_mnhname
 USE MODE_IO_FIELD_WRITE,    only: IO_Field_write

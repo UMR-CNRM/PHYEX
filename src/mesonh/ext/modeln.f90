@@ -1974,8 +1974,6 @@ IF (CCLOUD /= 'NONE' .AND. CELEC == 'NONE') THEN
                           NSPLITG, IMI, KTCOUNT,                               &
                           CLBCX,CLBCY,TPBAKFILE, CRAD, CTURBDIM,               &
                           LSUBG_COND,LSIGMAS,CSUBG_AUCV_RC,                    &
-                          CLBCX,CLBCY,TPBAKFILE, CRAD, CTURBDIM,               &
-                          LSUBG_COND,LSIGMAS,CSUBG_AUCV,                       &
                           XTSTEP,XZZ, XRHODJ, XRHODREF, XEXNREF,               &
                           ZPABST, XTHT,XRT,XSIGS,VSIGQSAT,XMFCONV,XTHM,XRCM,   &
                           XPABST, XWT_ACT_NUC,XDTHRAD, XRTHS, XRRS,            &

@@ -925,7 +925,7 @@ USE MODD_DIAG_IN_RUN,      ONLY: LDIAG_IN_RUN, XCURRENT_TKE_DISS
 USE MODD_GRID,             ONLY: XBETA, XLON0, XRPK
 USE MODD_NSV,              ONLY: NSV_LIMA_NC, NSV_LIMA_NR, NSV_LIMA_NI
 USE MODD_PARAMETERS,       ONLY: JPVEXT
-USE MODD_PARAM_ICE,        ONLY: LSNOW_T_I => LSNOW_T
+USE MODD_PARAM_ICE_n,        ONLY: LSNOW_T_I => LSNOW_T
 USE MODD_PARAM_LIMA,       ONLY: LSNOW_T_L => LSNOW_T,                                                       &
                                  XALPHAR_L => XALPHAR, XNUR_L => XNUR, XALPHAS_L => XALPHAS, XNUS_L => XNUS, &
                                  XALPHAG_L => XALPHAG, XNUG_L => XNUG, XALPHAI_L => XALPHAI, XNUI_L => XNUI, &
@@ -937,7 +937,7 @@ USE MODD_PARAM_LIMA_COLD,  ONLY: XAI_L => XAI, XBI_L => XBI, XLBEXS_L => XLBEXS,
 USE MODD_PARAM_LIMA_MIXED, ONLY: XLBEXG_L => XLBEXG, XLBG_L => XLBG, XCCG_L => XCCG, XAG_L => XAG, XBG_L => XBG, XCXG_L => XCXG
 USE MODD_PARAM_LIMA_WARM,  ONLY: XAC_L => XAC, XAR_L => XAR, XBC_L => XBC, XBR_L => XBR
 USE MODD_PARAM_n,          ONLY: CCLOUD, CSURF
-USE MODD_RAIN_ICE_DESCR,   ONLY: XALPHAR_I => XALPHAR, XNUR_I => XNUR, XLBEXR_I => XLBEXR,                   &
+USE MODD_RAIN_ICE_DESCR_n,   ONLY: XALPHAR_I => XALPHAR, XNUR_I => XNUR, XLBEXR_I => XLBEXR,                   &
                                  XLBR_I => XLBR, XCCR_I => XCCR, XBR_I => XBR, XAR_I => XAR,                 &
                                  XALPHAC_I => XALPHAC, XNUC_I => XNUC, XBC_I => XBC, XAC_I => XAC,           &
                                  XALPHAC2_I => XALPHAC2, XNUC2_I => XNUC2,                                   &

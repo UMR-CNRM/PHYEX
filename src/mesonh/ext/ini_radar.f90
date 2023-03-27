@@ -82,7 +82,6 @@ CHARACTER (LEN=4), INTENT(IN)       :: HPRISTINE_ICE    ! Indicator of ice cryst
 !-------------------------------------------------------------------------------
 !
 !
-CALL RAIN_ICE_DESCR_ASSOCIATE()
 !
 !*      1.1    Raindrop characteristics
 !
