@@ -187,6 +187,11 @@ if [ $compilation -eq 1 ]; then
   rm ${refversion}${targzsuffix}.tar.gz
   mv ${refversion} $name
   cd $name/src
+  # Routine that changed names
+  set +e
+  mv -f PHYEX/turb/modd_diag_in_run.f90 MNH/. #To be removed once, this is done in MNH-git-lfs repo before inclusion of last version of PHYEX
+  set -e
+
   rm -rf PHYEX
 
   MNH_EXPAND_DIR=$PHYEXTOOLSDIR/mnh_expand
@@ -242,18 +247,16 @@ if [ $compilation -eq 1 ]; then
   mv remove_non_mode.sh ../.
   cd ../
   ./remove_non_mode.sh
-  # nettoyage, routines non appellees : 
-  rm -f MNH/mf_turb_greyzone.f90
-  rm -f MNH/compute_frac_ice.f90
-  rm -f MNH/rain_ice_red.f90
   # Supress some files if they are not used anymore
   ! grep -i MODI_COMPUTE_ENTR_DETR $(ls MNH/*compute_updraft* PHYEX/turb/*compute_updraft* 2>/dev/null) && rm -f MNH/compute_entr_detr.f90
   ! grep -i MODI_TH_R_FROM_THL_RT_ $(ls MNH/compute_entr_detr.f90 MNH/compute_entr_detr.f90 PHYEX/turb/mode_compute_updraft*.f90 MNH/ice_adjust_bis.f90 MNH/prep_ideal_case.f90 MNH/set_rsou.f90 2>/dev/null)  > /dev/null && rm -f MNH/th_r_from_thl_rt_1d.f90 MNH/th_r_from_thl_rt_2d.f90 MNH/th_r_from_thl_rt_3d.f90
-  # Routine that changed names (if mode_budget.f90 is present)
-  set +e
-  mv -f PHYEX/aux/mode_budget.f90 MNH/budget.f90
-  set -e
-
+ 
+  # Routine that changed names
+  #To be removed once, this is done in MNH-git-lfs repo before inclusion of last version of PHYEX
+  rm -f PHYEX/micro/ini_rain_ice.f90
+  rm -f PHYEX/micro/lima_nucleation_procs.f90
+  
+ 
   #Configure and compilation
   command -v module && modulelist=$(module -t list 2>&1 | tail -n +2) #save loaded modules
   ./configure
