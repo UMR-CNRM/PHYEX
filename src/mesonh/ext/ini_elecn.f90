@@ -58,7 +58,7 @@ END MODULE MODI_INI_ELEC_n
 !!      
 !!    AUTHOR
 !!    ------
-!!  	C. Barthe     * Laboratoire de l'Atmosphère et des Cyclones *
+!!      C. Barthe     * Laboratoire de l'AtmosphÃ¨re et des Cyclones *
 !!
 !!    MODIFICATIONS
 !!    -------------

@@ -55,7 +55,7 @@ LOGICAL, INTENT(IN) :: OCARTESIAN
 
 
 !        1.1 Set implicit default values for MODD_PARAMETERS
-!       les variables sont initialisées dans le module lui même 
+!       the variables are initialised in the module itself
 !        1.2 Set implicit default values for MODD_CST
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('AROINI_CSTMNH',0,ZHOOK_HANDLE)

@@ -152,7 +152,7 @@ REAL,    DIMENSION(SIZE(PSVT,1),SIZE(PSVT,2),SIZE(PSVT,3)) :: ZRRS
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZSVT  ! Tracer m.r. concentration
 !
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZVGG, ZDPG  !aerosol velocity [m/s], diffusivity [m2/s]
-REAL, DIMENSION(:,:), ALLOCATABLE :: ZRG    !Dust R[µm]
+REAL, DIMENSION(:,:), ALLOCATABLE :: ZRG    !Dust R[Âµm]
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZCOR   !Cunningham correction factor [unitless]
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZMASSMIN ! Aerosol mass minimum value
 !
@@ -427,7 +427,7 @@ ZFLUX(:) =  MAX(ZFLUX(:), 0.)
 
 IF (ALL(ZNT(:) == 0.)) THEN ! case one moments
 !Number concentration NT=No/lbda   p. 415 Jacobson
-!4/3 *pi *r³*NT*rho_eau(kg/m3) =rho(lwc)=rho(air)* qc(kg/kg)
+!4/3 *pi *r**3*NT*rho_eau(kg/m3) =rho(lwc)=rho(air)* qc(kg/kg)
 ZNT (:) = XCCR/(XLBR*( ZRHODREF(:)* ZRRT(:) )**XLBEXR)
 END IF
 
