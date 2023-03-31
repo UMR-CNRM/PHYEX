@@ -477,7 +477,6 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     CMNHNAME   = 'TKE_DP',   &
     CSTDNAME   = '',         &
     CLONGNAME  = 'Subgrid TKE dynamical production', &
-    CLONGNAME  = 'TKE_DP',   &
     CUNITS     = 'm2 s-3',   &
     CDIR       = 'XY',       &
     CCOMMENT   = 'Subgrid dynamical production of TKE', &
