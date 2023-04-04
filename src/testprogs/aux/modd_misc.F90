@@ -25,7 +25,7 @@ TYPE MISC_t
   LOGICAL                  :: ONOMIXLG
   INTEGER                  :: KSV_LGBEG, KSV_LGEND
   REAL                     :: PDX, PDY
-  INTEGER                  :: KMI, KSPLIT, KGRADIENTS
+  INTEGER                  :: KMI, KSPLIT, KGRADIENTS, KHALO
   CHARACTER(LEN=4),DIMENSION(2)  :: HLBCX, HLBCY
   CHARACTER(LEN=6)         :: CPROGRAM
   INTEGER                  :: KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#set -x
+set -x
 set -e
 
 #This script:
@@ -240,7 +240,7 @@ else
   if [ "$cycle" == "" ]; then
     if [[ $commit == arome${separator}* ]]; then
       apl_arome_file="ext/apl_arome.F90"
-      ial_version_file="ext/ial_version.json"
+      ial_version_file="ial_version.json"
     else
       apl_arome_file="src/arome/ext/apl_arome.F90"
       ial_version_file="src/arome/ial_version.json"
@@ -256,6 +256,7 @@ else
       cycle=$(apl_arome_content2cycle)
     else
       cycle=$(ial_version_content2cycle)
+      scripttag=$(ial_version_content2scripttag)
     fi
   fi
   name="PHYEX/${cycle}_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
@@ -299,7 +300,7 @@ if [ $packcreation -eq 1 ]; then
   else
     #Create main pack
     gmkpack -a -r ${cycle} -b ${packBranch} -n 01 -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb -h $HOMEPACK/PHYEX
-    #Populate (we keep everything from the official source code except internals and module subdirectories of mpa)
+    #Populate
     cd $HOMEPACK/$name/src/local/
     if [ $HPC -eq 1 ]; then
       ssh sxphynh.cnrm.meteo.fr "wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/${cycle}_main.01.tgz -O -" > ${cycle}_main.01.tgz
@@ -308,6 +309,26 @@ if [ $packcreation -eq 1 ]; then
     fi
     tar xf ${cycle}_main.01.tgz
     rm -f ${cycle}_main.01.tgz
+    #Cleaning and moving
+    if [ "$cycle" == '48t3' ]; then
+      #extracting budgets from micro
+      mkdir mpa/budgets
+      for file in mpa/micro/module/moddb_intbudget.F90 mpa/micro/externals/aro_suintbudget_omp.F90 \
+                  mpa/micro/interface/aro_convbu.h mpa/micro/externals/aro_convbu.F90 \
+                  mpa/micro/interface/aro_startbu.h mpa/micro/externals/aro_startbu.F90 \
+                  mpa/micro/externals/aro_suintbudget.F90 mpa/micro/externals/aro_suintbudget_omp.F90 \
+                  mpa/micro/interface/aroini_budget.h mpa/micro/externals/aroini_budget.F90; do
+        [ -f $file ] && mv $file mpa/budgets/
+      done 
+      mkdir mpa/aux
+      for file in mpa/micro/interface/aroini_frommpa.h mpa/micro/externals/aroini_frommpa.F90 \
+                  mpa/micro/externals/modd_spp_type.F90 mpa/micro/externals/spp_mod_type.F90 \
+                  mpa/micro/interface/aroini_cstmnh.h mpa/micro/externals/aroini_cstmnh.F90; do
+        [ -f $file ] && mv $file mpa/aux/
+      done
+      [ -f mpa/micro/externals/add_bounds.F90 ] && rm -f mpa/micro/externals/add_bounds.F90
+    fi
+    #we keep everything from the official source code except internals and module subdirectories of mpa
     for rep in turb micro conv; do
       mkdir -p phyex/$rep
       rm -rf mpa/$rep/internals mpa/$rep/module
@@ -373,6 +394,7 @@ if [ $packcreation -eq 1 ]; then
       for file in $(cat PHYEX/gmkpack_ignored_files); do
         [ -f $HOMEPACK/$name/src/local/$file ] && rm -f $HOMEPACK/$name/src/local/$file
       done
+      [ ! "$(ls -A $HOMEPACK/$name/src/local/mpa/dummy)" ] && rmdir $HOMEPACK/$name/src/local/mpa/dummy
     fi
   fi
 
@@ -386,13 +408,18 @@ if [ $packcreation -eq 1 ]; then
     [ -f $EXT/suparar.F90 ] && mv $EXT/suparar.F90 ../arpifs/phys_dmn/
     [ -f $EXT/apl_arome.F90 ] && mv $EXT/apl_arome.F90 ../arpifs/phys_dmn/
     [ -f $EXT/suphmpa.F90 ] && mv $EXT/suphmpa.F90 ../arpifs/phys_dmn/
+    [ -f $EXT/suphmse.F90 ] && mv $EXT/suphmse.F90 ../arpifs/phys_dmn/
     [ -f $EXT/vdfhghtnhl.F90 ] && mv $EXT/vdfhghtnhl.F90 ../arpifs/phys_dmn/
     [ -f $EXT/cpg_opts_type_mod.fypp ] && mv $EXT/cpg_opts_type_mod.fypp ../arpifs/module/
     [ -f $EXT/aplpar.F90 ] && mv $EXT/aplpar.F90 ../arpifs/phys_dmn/
     [ -f $EXT/su0yomb.F90 ] && mv $EXT/su0yomb.F90 ../arpifs/setup/
     #Special mpa case
-    [ -f $EXT/modd_spp_type.F90 ] && mv $EXT/modd_spp_type.F90 ../mpa/micro/externals/
-    [ -f $EXT/spp_mod_type.F90 ] && mv $EXT/spp_mod_type.F90 ../mpa/micro/externals/
+    for file in modd_spp_type.F90 spp_mod_type.F90; do
+      if [ -f $EXT/$file ]; then
+        [ ! -d ../mpa/aux ] && mkdir ../mpa/aux
+        mv $EXT/$file ../mpa/aux/
+      fi
+    done
     [ -d $EXT/dead_code ] && rm -rf $EXT/dead_code/
     if [ $EXT == "PHYEX/externals" ]; then
       mv $EXT .

@@ -105,7 +105,8 @@ IF (LLBIND) THEN
 ENDIF
 
 CALL GETDATA_ICE_ADJUST (NPROMA, NGPBLKS, NFLEVG, PRHODJ, PEXNREF, PRHODREF, PPABSM, PTHT, ZICE_CLD_WGT,     &
-& ZSIGQSAT, PSIGS, PMFCONV, PRC_MF, PRI_MF, PCF_MF, ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, PTHS, PRS, PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, &
+& ZSIGQSAT, PSIGS, PMFCONV, PRC_MF, PRI_MF, PCF_MF, ZDUM1, ZDUM2, ZDUM3, ZDUM4, ZDUM5, &
+& PTHS, PRS, PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, &
 & PHLI_HRI, PHLI_HCF, ZRS, ZZZ, PRS_OUT, PSRCS_OUT, PCLDFR_OUT, PHLC_HRC_OUT, PHLC_HCF_OUT,       &
 & PHLI_HRI_OUT, PHLI_HCF_OUT, LLVERBOSE)
 
@@ -205,19 +206,21 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%U = 0
 #endif
 
-    CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, PHYEX%PARAM_ICEN, PHYEX%MISC%TBUCONF, PHYEX%MISC%KRR, PHYEX%MISC%HBUNAME,     &
-    & PHYEX%MISC%PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL),                                                               &
+    CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, PHYEX%PARAM_ICEN, &
+    & PHYEX%MISC%TBUCONF, PHYEX%MISC%KRR, PHYEX%MISC%HBUNAME,     &
+    & PHYEX%MISC%PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL), &
     & PEXNREF=PEXNREF (:, :, :, IBL),                                                                                           &
-    & PRHODREF=PRHODREF (:, :, :, IBL), PSIGS=PSIGS (:, :, :, IBL), LMFCONV=PHYEX%MISC%LMFCONV, PMFCONV=PMFCONV (:, :, :, IBL),            &
+    & PRHODREF=PRHODREF (:, :, :, IBL), PSIGS=PSIGS (:, :, :, IBL), LMFCONV=PHYEX%MISC%LMFCONV, PMFCONV=PMFCONV (:, :, :, IBL), &
     & PPABST=PPABSM (:, :, :, IBL), PZZ=ZZZ (:, :, :, IBL), PEXN=PEXNREF (:, :, :, IBL), PCF_MF=PCF_MF (:, :, :, IBL),          &
     & PRC_MF=PRC_MF (:, :, :, IBL), PRI_MF=PRI_MF  (:, :, :, IBL),                                                              &
     & PICLDFR=ZDUM1(:, :, :, IBL), PWCLDFR=ZDUM2(:, :, :, IBL), PSSIO=ZDUM3(:, :, :, IBL),                                      &
     & PSSIU=ZDUM4(:, :, :, IBL), PIFR=ZDUM5(:, :, :, IBL),                                                                      &
     & PRV=ZRS(:, :, :, 1, IBL), PRC=ZRS(:, :, :, 2, IBL),                                                                       &
     & PRVS=PRS(:, :, :, 1, IBL), PRCS=PRS(:, :, :, 2, IBL), PTH=ZRS(:, :, :, 0, IBL), PTHS=PTHS (:, :, :, IBL),                 &
-    & OCOMPUTE_SRC=PHYEX%MISC%OCOMPUTE_SRC,                                                                                                      &
+    & OCOMPUTE_SRC=PHYEX%MISC%OCOMPUTE_SRC,                                                                                     &
     & PSRCS=PSRCS (:, :, :, IBL), PCLDFR=PCLDFR (:, :, :, IBL), PRR=ZRS(:, :, :, 3, IBL), PRI=ZRS(:, :, :, 4, IBL),             &
-    & PRIS=PRS(:, :, :, 4, IBL), PRS=ZRS(:, :, :, 5, IBL), PRG=ZRS(:, :, :, 6, IBL), TBUDGETS=PHYEX%MISC%YLBUDGET, KBUDGETS=PHYEX%MISC%NBUDGET,    &
+    & PRIS=PRS(:, :, :, 4, IBL), PRS=ZRS(:, :, :, 5, IBL), PRG=ZRS(:, :, :, 6, IBL), &
+    & TBUDGETS=PHYEX%MISC%YLBUDGET, KBUDGETS=PHYEX%MISC%NBUDGET,    &
     & PICE_CLD_WGT=ZICE_CLD_WGT(:, :, IBL),                                                                                     &
     & PHLC_HRC=PHLC_HRC(:, :, :, IBL), PHLC_HCF=PHLC_HCF(:, :, :, IBL),                                                         &
     & PHLI_HRI=PHLI_HRI(:, :, :, IBL), PHLI_HCF=PHLI_HCF(:, :, :, IBL)                                                          &
