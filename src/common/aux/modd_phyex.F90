@@ -28,6 +28,8 @@ USE MODD_PARAM_MFSHALL_N, ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_NEB_n, ONLY: NEB_t
+USE MODD_PARAM_LIMA, ONLY: PARAM_LIMA_t
+USE MODD_NSV, ONLY: NSV_t
 USE MODD_MISC, ONLY: MISC_t
 !
 IMPLICIT NONE
@@ -43,6 +45,8 @@ TYPE PHYEX_t
   TYPE(CSTURB_t)         :: CSTURB           !< Turbulence scheme constants
   TYPE(TURB_t)           :: TURBN            !< Turbulence scheme constants set by namelist
   TYPE(NEB_t)            :: NEBN             !< Cloud scheme constants
+  TYPE(PARAM_LIMA_t)     :: PARAM_LIMA       !< Control parameters for LIMA microphysics
+  TYPE(NSV_t)            :: TNSV             !< NSV indexes
   !
   ! Supplementary strucuture to hold model specific values
   TYPE(MISC_t)           :: MISC             !< Model specific values

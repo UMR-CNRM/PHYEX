@@ -45,15 +45,15 @@ USE MODD_PARAMETERS, ONLY: JPMODELMAX, &     ! Maximum allowed number of nested 
                            NMNHNAMELGTMAX
 !
 IMPLICIT NONE
-SAVE
+TYPE NSV_t
 !
 REAL,DIMENSION(JPSVMAX) :: XSVMIN ! minimum value for SV variables
 !
 LOGICAL :: LINI_NSV(JPMODELMAX) = .FALSE. ! becomes True when routine INI_NSV is called
 !
-CHARACTER(LEN=NMNHNAMELGTMAX), DIMENSION(:,:), ALLOCATABLE, TARGET :: CSV_CHEM_LIST_A !Names of all the chemical variables
-CHARACTER(LEN=6),              DIMENSION(:,:), ALLOCATABLE, TARGET :: CSV_A           !Names of the scalar variables
-TYPE(tfieldmetadata), DIMENSION(:,:), ALLOCATABLE, TARGET :: TSVLIST_A !Metadata of all the scalar variables
+CHARACTER(LEN=NMNHNAMELGTMAX), DIMENSION(:,:), ALLOCATABLE :: CSV_CHEM_LIST_A !Names of all the chemical variables
+CHARACTER(LEN=6),              DIMENSION(:,:), ALLOCATABLE :: CSV_A           !Names of the scalar variables
+TYPE(tfieldmetadata), DIMENSION(:,:), ALLOCATABLE :: TSVLIST_A !Metadata of all the scalar variables
 
 INTEGER,DIMENSION(JPMODELMAX)::NSV_A = 0 ! total number of scalar variables
                                          ! NSV_A = NSV_USER_A+NSV_C2R2_A+NSV_CHEM_A+..
@@ -279,5 +279,372 @@ INTEGER :: NSV_SNWBEG  = 0 ! with indices in the range :
 INTEGER :: NSV_SNWEND  = 0 ! NSV_SNWBEG...NSV_SNWEND
 !
 INTEGER :: NSV_CO2     = 0  ! index for CO2
+END TYPE NSV_t
+!
+TYPE(NSV_t), TARGET, SAVE :: TNSV
+!
+
+REAL, POINTER, DIMENSION(:) :: XSVMIN => NULL()
+
+LOGICAL, POINTER :: LINI_NSV(:) => NULL()
+!
+CHARACTER(LEN=NMNHNAMELGTMAX), DIMENSION(:,:), POINTER :: CSV_CHEM_LIST_A => NULL()
+CHARACTER(LEN=6),              DIMENSION(:,:), POINTER :: CSV_A => NULL()
+TYPE(tfieldmetadata), DIMENSION(:,:), POINTER :: TSVLIST_A => NULL()
+
+INTEGER, DIMENSION(:), POINTER ::NSV_A => NULL(), &
+                                 NSV_CHEM_LIST_A => NULL(), &
+                                 NSV_USER_A => NULL(), &
+                                 NSV_C2R2_A => NULL(), &
+                                 NSV_C2R2BEG_A => NULL(), &
+                                 NSV_C2R2END_A => NULL(), &
+                                 NSV_C1R3_A => NULL(), &
+                                 NSV_C1R3BEG_A => NULL(), &
+                                 NSV_C1R3END_A => NULL(), &
+                                 NSV_ELEC_A => NULL(), &
+                                 NSV_ELECBEG_A => NULL(), &
+                                 NSV_ELECEND_A => NULL(), &
+                                 NSV_CHEM_A => NULL(), &
+                                 NSV_CHEMBEG_A => NULL(), &
+                                 NSV_CHEMEND_A => NULL(), &
+                                 NSV_CHGS_A => NULL(), &
+                                 NSV_CHGSBEG_A => NULL(), &
+                                 NSV_CHGSEND_A => NULL(), &
+                                 NSV_CHAC_A => NULL(), &
+                                 NSV_CHACBEG_A => NULL(), &
+                                 NSV_CHACEND_A => NULL(), &
+                                 NSV_CHIC_A => NULL(), &
+                                 NSV_CHICBEG_A => NULL(), &
+                                 NSV_CHICEND_A => NULL(), &
+                                 NSV_LG_A => NULL(), &
+                                 NSV_LGBEG_A => NULL(), &
+                                 NSV_LGEND_A => NULL(), &
+                                 NSV_LNOX_A => NULL(), &
+                                 NSV_LNOXBEG_A => NULL(), &
+                                 NSV_LNOXEND_A => NULL(), &
+                                 NSV_DST_A => NULL(), &
+                                 NSV_DSTBEG_A => NULL(), &
+                                 NSV_DSTEND_A => NULL(), &
+                                 NSV_SLT_A => NULL(), &
+                                 NSV_SLTBEG_A => NULL(), &
+                                 NSV_SLTEND_A => NULL(), &
+                                 NSV_AER_A => NULL(), &
+                                 NSV_AERBEG_A => NULL(), &
+                                 NSV_AEREND_A => NULL(), &
+                                 NSV_DSTDEP_A    => NULL(), &
+                                 NSV_DSTDEPBEG_A => NULL(), &
+                                 NSV_DSTDEPEND_A => NULL(), &
+                                 NSV_AERDEP_A    => NULL(), &
+                                 NSV_AERDEPBEG_A => NULL(), &
+                                 NSV_AERDEPEND_A => NULL(), &
+                                 NSV_SLTDEP_A    => NULL(), &
+                                 NSV_SLTDEPBEG_A => NULL(), &
+                                 NSV_SLTDEPEND_A => NULL(), &
+                                 NSV_PP_A => NULL(), &
+                                 NSV_PPBEG_A => NULL(), &
+                                 NSV_PPEND_A => NULL(), &
+                                 NSV_CS_A => NULL(), &
+                                 NSV_CSBEG_A => NULL(), &
+                                 NSV_CSEND_A => NULL(), &
+                                 NSV_LIMA_A => NULL(), &
+                                 NSV_LIMA_BEG_A => NULL(), &
+                                 NSV_LIMA_END_A => NULL(), &
+                                 NSV_LIMA_NC_A => NULL(), &
+                                 NSV_LIMA_NR_A => NULL(), &
+                                 NSV_LIMA_CCN_FREE_A => NULL(), &
+                                 NSV_LIMA_CCN_ACTI_A => NULL(), &
+                                 NSV_LIMA_SCAVMASS_A => NULL(), &
+                                 NSV_LIMA_NI_A => NULL(), &
+                                 NSV_LIMA_NS_A => NULL(), &
+                                 NSV_LIMA_NG_A => NULL(), &
+                                 NSV_LIMA_NH_A => NULL(), &
+                                 NSV_LIMA_IFN_FREE_A => NULL(), &
+                                 NSV_LIMA_IFN_NUCL_A => NULL(), &
+                                 NSV_LIMA_IMM_NUCL_A => NULL(), &
+                                 NSV_LIMA_HOM_HAZE_A => NULL(), &
+                                 NSV_LIMA_SPRO_A => NULL(), &
+#ifdef MNH_FOREFIRE
+                                 NSV_FF_A => NULL(), &
+                                 NSV_FFBEG_A => NULL(), &
+                                 NSV_FFEND_A => NULL(), &
+#endif
+                                 NSV_FIRE_A => NULL(), &
+                                 NSV_FIREBEG_A => NULL(), &
+                                 NSV_FIREEND_A => NULL(), &
+                                 NSV_SNW_A => NULL(), &
+                                 NSV_SNWBEG_A => NULL(), &
+                                 NSV_SNWEND_A => NULL()
+
+CHARACTER(LEN=NMNHNAMELGTMAX), DIMENSION(:), POINTER :: CSV_CHEM_LIST => NULL()
+CHARACTER(LEN=6),              DIMENSION(:), POINTER :: CSV           => NULL()
+
+TYPE(tfieldmetadata), DIMENSION(:), POINTER :: TSVLIST => NULL()
+
+INTEGER, POINTER :: NSV         => NULL(), &
+                    NSV_CHEM_LIST => NULL(), &
+                    NSV_USER    => NULL(), &
+                    NSV_C2R2    => NULL(), &
+                    NSV_C2R2BEG => NULL(), &
+                    NSV_C2R2END => NULL(), &
+                    NSV_C1R3    => NULL(), &
+                    NSV_C1R3BEG => NULL(), &
+                    NSV_C1R3END => NULL(), &
+                    NSV_ELEC    => NULL(), &
+                    NSV_ELECBEG => NULL(), &
+                    NSV_ELECEND => NULL(), &
+                    NSV_CHEM    => NULL(), &
+                    NSV_CHEMBEG => NULL(), &
+                    NSV_CHEMEND => NULL(), &
+                    NSV_CHGS    => NULL(), &
+                    NSV_CHGSBEG => NULL(), &
+                    NSV_CHGSEND => NULL(), &
+                    NSV_CHAC    => NULL(), &
+                    NSV_CHACBEG => NULL(), &
+                    NSV_CHACEND => NULL(), &
+                    NSV_CHIC    => NULL(), &
+                    NSV_CHICBEG => NULL(), &
+                    NSV_CHICEND => NULL(), &
+                    NSV_LG    => NULL(), &
+                    NSV_LGBEG => NULL(), &
+                    NSV_LGEND => NULL(), &
+                    NSV_LNOX    => NULL(), &
+                    NSV_LNOXBEG => NULL(), &
+                    NSV_LNOXEND => NULL(), &
+                    NSV_DST     => NULL(), &
+                    NSV_DSTBEG  => NULL(), &
+                    NSV_DSTEND  => NULL(), &
+                    NSV_SLT     => NULL(), &
+                    NSV_SLTBEG  => NULL(), &
+                    NSV_SLTEND  => NULL(), &
+                    NSV_AER     => NULL(), &
+                    NSV_AERBEG  => NULL(), &
+                    NSV_AEREND  => NULL(), &
+                    NSV_DSTDEP  => NULL(), &
+                    NSV_DSTDEPBEG  => NULL(), &
+                    NSV_DSTDEPEND  => NULL(), &
+                    NSV_AERDEP  => NULL(), &
+                    NSV_AERDEPBEG  => NULL(), &
+                    NSV_AERDEPEND  => NULL(), &
+                    NSV_SLTDEP  => NULL(), &
+                    NSV_SLTDEPBEG  => NULL(), &
+                    NSV_SLTDEPEND  => NULL(), &
+                    NSV_PP    => NULL(), &
+                    NSV_PPBEG => NULL(), &
+                    NSV_PPEND => NULL(), &
+                    NSV_CS    => NULL(), &
+                    NSV_CSBEG => NULL(), &
+                    NSV_CSEND => NULL(), &
+                    NSV_LIMA  => NULL(), &
+                    NSV_LIMA_BEG => NULL(), &
+                    NSV_LIMA_END => NULL(), &
+                    NSV_LIMA_NC       => NULL(), &
+                    NSV_LIMA_NR       => NULL(), &
+                    NSV_LIMA_CCN_FREE => NULL(), &
+                    NSV_LIMA_CCN_ACTI => NULL(), &
+                    NSV_LIMA_SCAVMASS => NULL(), &
+                    NSV_LIMA_NI       => NULL(), &
+                    NSV_LIMA_NS       => NULL(), &
+                    NSV_LIMA_NG       => NULL(), &
+                    NSV_LIMA_NH       => NULL(), &
+                    NSV_LIMA_IFN_FREE => NULL(), &
+                    NSV_LIMA_IFN_NUCL => NULL(), &
+                    NSV_LIMA_IMM_NUCL => NULL(), &
+                    NSV_LIMA_HOM_HAZE => NULL(), &
+                    NSV_LIMA_SPRO     => NULL(), &
+#ifdef MNH_FOREFIRE
+                    NSV_FF    => NULL(), &
+                    NSV_FFBEG => NULL(), &
+                    NSV_FFEND => NULL(), &
+#endif
+                    NSV_FIRE    => NULL(), &
+                    NSV_FIREBEG => NULL(), &
+                    NSV_FIREEND => NULL(), &
+                    NSV_SNW     => NULL(), &
+                    NSV_SNWBEG  => NULL(), &
+                    NSV_SNWEND  => NULL(), &
+                    NSV_CO2     => NULL()
+!
+CONTAINS
+!
+SUBROUTINE NSV_ASSOCIATE()
+IMPLICIT NONE
+
+IF(.NOT. ASSOCIATED(NSV)) THEN
+  XSVMIN              =>  TNSV%XSVMIN                
+  LINI_NSV            =>  TNSV%LINI_NSV
+
+  NSV_A               =>  TNSV%NSV_A 
+  NSV_CHEM_LIST_A     =>  TNSV%NSV_CHEM_LIST_A 
+  NSV_USER_A          =>  TNSV%NSV_USER_A 
+  NSV_C2R2_A          =>  TNSV%NSV_C2R2_A 
+  NSV_C2R2BEG_A       =>  TNSV%NSV_C2R2BEG_A 
+  NSV_C2R2END_A       =>  TNSV%NSV_C2R2END_A 
+  NSV_C1R3_A          =>  TNSV%NSV_C1R3_A 
+  NSV_C1R3BEG_A       =>  TNSV%NSV_C1R3BEG_A 
+  NSV_C1R3END_A       =>  TNSV%NSV_C1R3END_A 
+  NSV_ELEC_A          =>  TNSV%NSV_ELEC_A 
+  NSV_ELECBEG_A       =>  TNSV%NSV_ELECBEG_A 
+  NSV_ELECEND_A       =>  TNSV%NSV_ELECEND_A 
+  NSV_CHEM_A          =>  TNSV%NSV_CHEM_A 
+  NSV_CHEMBEG_A       =>  TNSV%NSV_CHEMBEG_A 
+  NSV_CHEMEND_A       =>  TNSV%NSV_CHEMEND_A 
+  NSV_CHGS_A          =>  TNSV%NSV_CHGS_A 
+  NSV_CHGSBEG_A       =>  TNSV%NSV_CHGSBEG_A 
+  NSV_CHGSEND_A       =>  TNSV%NSV_CHGSEND_A 
+  NSV_CHAC_A          =>  TNSV%NSV_CHAC_A 
+  NSV_CHACBEG_A       =>  TNSV%NSV_CHACBEG_A 
+  NSV_CHACEND_A       =>  TNSV%NSV_CHACEND_A 
+  NSV_CHIC_A          =>  TNSV%NSV_CHIC_A 
+  NSV_CHICBEG_A       =>  TNSV%NSV_CHICBEG_A 
+  NSV_CHICEND_A       =>  TNSV%NSV_CHICEND_A 
+  NSV_LG_A            =>  TNSV%NSV_LG_A 
+  NSV_LGBEG_A         =>  TNSV%NSV_LGBEG_A 
+  NSV_LGEND_A         =>  TNSV%NSV_LGEND_A 
+  NSV_LNOX_A          =>  TNSV%NSV_LNOX_A 
+  NSV_LNOXBEG_A       =>  TNSV%NSV_LNOXBEG_A 
+  NSV_LNOXEND_A       =>  TNSV%NSV_LNOXEND_A 
+  NSV_DST_A           =>  TNSV%NSV_DST_A 
+  NSV_DSTBEG_A        =>  TNSV%NSV_DSTBEG_A 
+  NSV_DSTEND_A        =>  TNSV%NSV_DSTEND_A 
+  NSV_SLT_A           =>  TNSV%NSV_SLT_A 
+  NSV_SLTBEG_A        =>  TNSV%NSV_SLTBEG_A 
+  NSV_SLTEND_A        =>  TNSV%NSV_SLTEND_A 
+  NSV_AER_A           =>  TNSV%NSV_AER_A 
+  NSV_AERBEG_A        =>  TNSV%NSV_AERBEG_A 
+  NSV_AEREND_A        =>  TNSV%NSV_AEREND_A 
+  NSV_DSTDEP_A        =>  TNSV%NSV_DSTDEP_A    
+  NSV_DSTDEPBEG_A     =>  TNSV%NSV_DSTDEPBEG_A 
+  NSV_DSTDEPEND_A     =>  TNSV%NSV_DSTDEPEND_A 
+  NSV_AERDEP_A        =>  TNSV%NSV_AERDEP_A    
+  NSV_AERDEPBEG_A     =>  TNSV%NSV_AERDEPBEG_A 
+  NSV_AERDEPEND_A     =>  TNSV%NSV_AERDEPEND_A 
+  NSV_SLTDEP_A        =>  TNSV%NSV_SLTDEP_A    
+  NSV_SLTDEPBEG_A     =>  TNSV%NSV_SLTDEPBEG_A 
+  NSV_SLTDEPEND_A     =>  TNSV%NSV_SLTDEPEND_A 
+  NSV_PP_A            =>  TNSV%NSV_PP_A 
+  NSV_PPBEG_A         =>  TNSV%NSV_PPBEG_A 
+  NSV_PPEND_A         =>  TNSV%NSV_PPEND_A 
+  NSV_CS_A            =>  TNSV%NSV_CS_A 
+  NSV_CSBEG_A         =>  TNSV%NSV_CSBEG_A 
+  NSV_CSEND_A         =>  TNSV%NSV_CSEND_A 
+  NSV_LIMA_A          =>  TNSV%NSV_LIMA_A 
+  NSV_LIMA_BEG_A      =>  TNSV%NSV_LIMA_BEG_A 
+  NSV_LIMA_END_A      =>  TNSV%NSV_LIMA_END_A 
+  NSV_LIMA_NC_A       =>  TNSV%NSV_LIMA_NC_A 
+  NSV_LIMA_NR_A       =>  TNSV%NSV_LIMA_NR_A 
+  NSV_LIMA_CCN_FREE_A =>  TNSV%NSV_LIMA_CCN_FREE_A 
+  NSV_LIMA_CCN_ACTI_A =>  TNSV%NSV_LIMA_CCN_ACTI_A 
+  NSV_LIMA_SCAVMASS_A =>  TNSV%NSV_LIMA_SCAVMASS_A 
+  NSV_LIMA_NI_A       =>  TNSV%NSV_LIMA_NI_A 
+  NSV_LIMA_NS_A       =>  TNSV%NSV_LIMA_NS_A 
+  NSV_LIMA_NG_A       =>  TNSV%NSV_LIMA_NG_A 
+  NSV_LIMA_NH_A       =>  TNSV%NSV_LIMA_NH_A 
+  NSV_LIMA_IFN_FREE_A =>  TNSV%NSV_LIMA_IFN_FREE_A 
+  NSV_LIMA_IFN_NUCL_A =>  TNSV%NSV_LIMA_IFN_NUCL_A 
+  NSV_LIMA_IMM_NUCL_A =>  TNSV%NSV_LIMA_IMM_NUCL_A 
+  NSV_LIMA_HOM_HAZE_A =>  TNSV%NSV_LIMA_HOM_HAZE_A 
+  NSV_LIMA_SPRO_A     =>  TNSV%NSV_LIMA_SPRO_A 
+#ifdef MNH_FOREFIRE
+  NSV_FF_A            =>  TNSV%NSV_FF_A 
+  NSV_FFBEG_A         =>  TNSV%NSV_FFBEG_A 
+  NSV_FFEND_A         =>  TNSV%NSV_FFEND_A 
+#endif
+  NSV_FIRE_A          =>  TNSV%NSV_FIRE_A 
+  NSV_FIREBEG_A       =>  TNSV%NSV_FIREBEG_A 
+  NSV_FIREEND_A       =>  TNSV%NSV_FIREEND_A 
+  NSV_SNW_A           =>  TNSV%NSV_SNW_A 
+  NSV_SNWBEG_A        =>  TNSV%NSV_SNWBEG_A 
+  NSV_SNWEND_A        =>  TNSV%NSV_SNWEND_A 
+
+  CSV_CHEM_LIST       =>  TNSV%CSV_CHEM_LIST 
+  CSV                 =>  TNSV%CSV           
+  TSVLIST             =>  TNSV%TSVLIST 
+
+  NSV                 =>  TNSV%NSV         
+  NSV_CHEM_LIST       =>  TNSV%NSV_CHEM_LIST 
+  NSV_USER            =>  TNSV%NSV_USER    
+  NSV_C2R2            =>  TNSV%NSV_C2R2    
+  NSV_C2R2BEG         =>  TNSV%NSV_C2R2BEG 
+  NSV_C2R2END         =>  TNSV%NSV_C2R2END 
+  NSV_C1R3            =>  TNSV%NSV_C1R3    
+  NSV_C1R3BEG         =>  TNSV%NSV_C1R3BEG 
+  NSV_C1R3END         =>  TNSV%NSV_C1R3END 
+  NSV_ELEC            =>  TNSV%NSV_ELEC    
+  NSV_ELECBEG         =>  TNSV%NSV_ELECBEG 
+  NSV_ELECEND         =>  TNSV%NSV_ELECEND 
+  NSV_CHEM            =>  TNSV%NSV_CHEM    
+  NSV_CHEMBEG         =>  TNSV%NSV_CHEMBEG 
+  NSV_CHEMEND         =>  TNSV%NSV_CHEMEND 
+  NSV_CHGS            =>  TNSV%NSV_CHGS    
+  NSV_CHGSBEG         =>  TNSV%NSV_CHGSBEG 
+  NSV_CHGSEND         =>  TNSV%NSV_CHGSEND 
+  NSV_CHAC            =>  TNSV%NSV_CHAC    
+  NSV_CHACBEG         =>  TNSV%NSV_CHACBEG 
+  NSV_CHACEND         =>  TNSV%NSV_CHACEND 
+  NSV_CHIC            =>  TNSV%NSV_CHIC    
+  NSV_CHICBEG         =>  TNSV%NSV_CHICBEG 
+  NSV_CHICEND         =>  TNSV%NSV_CHICEND 
+  NSV_LG              =>  TNSV%NSV_LG    
+  NSV_LGBEG           =>  TNSV%NSV_LGBEG 
+  NSV_LGEND           =>  TNSV%NSV_LGEND 
+  NSV_LNOX            =>  TNSV%NSV_LNOX    
+  NSV_LNOXBEG         =>  TNSV%NSV_LNOXBEG 
+  NSV_LNOXEND         =>  TNSV%NSV_LNOXEND 
+  NSV_DST             =>  TNSV%NSV_DST     
+  NSV_DSTBEG          =>  TNSV%NSV_DSTBEG  
+  NSV_DSTEND          =>  TNSV%NSV_DSTEND  
+  NSV_SLT             =>  TNSV%NSV_SLT     
+  NSV_SLTBEG          =>  TNSV%NSV_SLTBEG  
+  NSV_SLTEND          =>  TNSV%NSV_SLTEND  
+  NSV_AER             =>  TNSV%NSV_AER     
+  NSV_AERBEG          =>  TNSV%NSV_AERBEG  
+  NSV_AEREND          =>  TNSV%NSV_AEREND  
+  NSV_DSTDEP          =>  TNSV%NSV_DSTDEP  
+  NSV_DSTDEPBEG       =>  TNSV%NSV_DSTDEPBEG  
+  NSV_DSTDEPEND       =>  TNSV%NSV_DSTDEPEND  
+  NSV_AERDEP          =>  TNSV%NSV_AERDEP  
+  NSV_AERDEPBEG       =>  TNSV%NSV_AERDEPBEG  
+  NSV_AERDEPEND       =>  TNSV%NSV_AERDEPEND  
+  NSV_SLTDEP          =>  TNSV%NSV_SLTDEP  
+  NSV_SLTDEPBEG       =>  TNSV%NSV_SLTDEPBEG  
+  NSV_SLTDEPEND       =>  TNSV%NSV_SLTDEPEND  
+  NSV_PP              =>  TNSV%NSV_PP    
+  NSV_PPBEG           =>  TNSV%NSV_PPBEG 
+  NSV_PPEND           =>  TNSV%NSV_PPEND 
+  NSV_CS              =>  TNSV%NSV_CS    
+  NSV_CSBEG           =>  TNSV%NSV_CSBEG 
+  NSV_CSEND           =>  TNSV%NSV_CSEND 
+  NSV_LIMA            =>  TNSV%NSV_LIMA  
+  NSV_LIMA_BEG        =>  TNSV%NSV_LIMA_BEG 
+  NSV_LIMA_END        =>  TNSV%NSV_LIMA_END 
+  NSV_LIMA_NC         =>  TNSV%NSV_LIMA_NC       
+  NSV_LIMA_NR         =>  TNSV%NSV_LIMA_NR       
+  NSV_LIMA_CCN_FREE   =>  TNSV%NSV_LIMA_CCN_FREE 
+  NSV_LIMA_CCN_ACTI   =>  TNSV%NSV_LIMA_CCN_ACTI 
+  NSV_LIMA_SCAVMASS   =>  TNSV%NSV_LIMA_SCAVMASS 
+  NSV_LIMA_NI         =>  TNSV%NSV_LIMA_NI       
+  NSV_LIMA_NS         =>  TNSV%NSV_LIMA_NS       
+  NSV_LIMA_NG         =>  TNSV%NSV_LIMA_NG       
+  NSV_LIMA_NH         =>  TNSV%NSV_LIMA_NH       
+  NSV_LIMA_IFN_FREE   =>  TNSV%NSV_LIMA_IFN_FREE 
+  NSV_LIMA_IFN_NUCL   =>  TNSV%NSV_LIMA_IFN_NUCL 
+  NSV_LIMA_IMM_NUCL   =>  TNSV%NSV_LIMA_IMM_NUCL 
+  NSV_LIMA_HOM_HAZE   =>  TNSV%NSV_LIMA_HOM_HAZE 
+  NSV_LIMA_SPRO       =>  TNSV%NSV_LIMA_SPRO     
+#ifdef MNH_FOREFIRE
+  NSV_FF              =>  TNSV%NSV_FF    
+  NSV_FFBEG           =>  TNSV%NSV_FFBEG 
+  NSV_FFEND           =>  TNSV%NSV_FFEND 
+#endif
+  NSV_FIRE            =>  TNSV%NSV_FIRE    
+  NSV_FIREBEG         =>  TNSV%NSV_FIREBEG 
+  NSV_FIREEND         =>  TNSV%NSV_FIREEND 
+  NSV_SNW             =>  TNSV%NSV_SNW     
+  NSV_SNWBEG          =>  TNSV%NSV_SNWBEG  
+  NSV_SNWEND          =>  TNSV%NSV_SNWEND  
+  NSV_CO2             =>  TNSV%NSV_CO2     
+ENDIF
+!
+END SUBROUTINE NSV_ASSOCIATE
 !
 END MODULE MODD_NSV

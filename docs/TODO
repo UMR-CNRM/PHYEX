@@ -33,7 +33,6 @@ Merge pb:
         src/mesonh/micro/ice_adjust_elec.f90 et src/mesonh/micro/lima_adjust_split.f90
         mais non testés
   - arp_shallow_mf non phasé
-  - LIMA à faire dans AROME (récupérer code dans mesonh)
   - KFB ?
 
 Pb identifiés à corriger plus tard:

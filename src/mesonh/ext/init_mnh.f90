@@ -83,6 +83,7 @@ USE MODD_LUNIT
 USE MODD_LUNIT_n
 USE MODD_MNH_SURFEX_n
 USE MODD_PARAMETERS
+USE MODD_NSV, ONLY: NSV_ASSOCIATE
 !
 use mode_field,            only: Alloc_field_scalars, Fieldlist_goto_model
 USE MODE_IO_FILE,          ONLY: IO_File_open
@@ -139,6 +140,8 @@ WRITE(UNIT=ILUOUT0,FMT="(50('*'),/,'*',48X,'*',/,                  &
                   & '*',48X,'*',/,                                 &
                   & 7('*'),12X,' CNRM - LA ',12X,8('*'),/,         &
                   & '*',48X,'*',/,  50('*'))")
+!
+CALL NSV_ASSOCIATE()
 !
 !
 !*      1.2   initialize physical constants

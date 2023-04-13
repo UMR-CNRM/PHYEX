@@ -19,8 +19,6 @@ CHARACTER(LEN=4)   :: CMICRO      !< Microphysics scheme ('ICE3', 'ICE4' or 'LIM
 CHARACTER(LEN=4)   :: CTURB       !< Turbulence scheme ('TKEL', 'NONE')
 TYPE(PHYEX_t)      :: PHYEX       !< PHYEX constants
 !
-INTEGER(KIND=JPIM) :: NSPLITR     ! Time splitting for Eulerian sedimentation
-INTEGER(KIND=JPIM) :: NSPLITG     ! Time splitting for Eulerian sedimentation
 INTEGER(KIND=JPIM) :: NRR, NRRL, NRRI   !number of microphysical species
 INTEGER(KIND=JPIM) :: NSV         !number of passiv variables in MesoNH,
                                   ! always 0 in AROME

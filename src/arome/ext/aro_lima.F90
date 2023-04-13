@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE  ARO_LIMA(PHYEX,KKA,KKU,KKL,KLON,KLEV,KFDIA,KRR, KSV, KSPLITR, KSPLITG, &
+      SUBROUTINE  ARO_LIMA(PHYEX,KKA,KKU,KKL,KLON,KLEV,KFDIA,KRR, KSV, &
                                   PTSTEP, PDZZ, PRHODJ, PRHODREF, PEXNREF,&
                                   PPABSM, PW_NU, PDTHRAD, PTHT, PRT, PSVT, &
                                   PTHS, PRS, PSVS, PEVAP,  &
@@ -74,10 +74,6 @@ INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels
 INTEGER,                  INTENT(IN)   :: KFDIA    !
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KSV      ! Number of LIMA variables
-INTEGER,                  INTENT(IN)   :: KSPLITR  ! Number of small time step
-                                       ! integrations for  rain sedimendation
-INTEGER,                  INTENT(IN)   :: KSPLITG  ! Number of small time step
-                                       ! integrations for  graupel/hail sedimendation
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 !
 !

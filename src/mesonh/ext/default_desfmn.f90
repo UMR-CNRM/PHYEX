@@ -257,6 +257,7 @@ USE MODD_RADIATIONS_n , ONLY : NSWB_MNH, NLWB_MNH
 USE MODD_BLANK_n
 USE MODD_FRC
 USE MODD_PARAM_ICE_n, ONLY: PARAM_ICEN_INIT
+USE MODD_PARAM_LIMA, ONLY: PARAM_LIMA_INIT
 USE MODD_PARAM_C2R2
 USE MODD_TURB_CLOUD
 USE MODD_PARAM_KAFR_n
@@ -278,28 +279,6 @@ USE MODD_EOL_ALM
 USE MODD_EOL_SHARED_IO
 USE MODD_ALLPROFILER_n
 USE MODD_ALLSTATION_n
-!
-!
-USE MODD_PARAM_LIMA, ONLY : LNUCL, LSEDI, LHHONI, LMEYERS,                              &
-                            NMOM_I, NMOM_S, NMOM_G, NMOM_H,                             &
-                            NMOD_IFN, XIFN_CONC, LIFN_HOM, CIFN_SPECIES,                &
-                            CINT_MIXING, NMOD_IMM, NIND_SPECIE, LMURAKAMI,              &
-                            YSNOW_T=>LSNOW_T, CPRISTINE_ICE_LIMA, CHEVRIMED_ICE_LIMA,   &
-                            XFACTNUC_DEP, XFACTNUC_CON,                                 &
-                            LACTI, OSEDC=>LSEDC,                                        &
-                            OACTIT=>LACTIT, LBOUND, LSPRO, LADJ, LKHKO, NMOM_C, NMOM_R, &
-                            NMOD_CCN, XCCN_CONC, LKESSLERAC,                            &
-                            LCCN_HOM, CCCN_MODES,                                       &
-                            YALPHAR=>XALPHAR, YNUR=>XNUR,                               &
-                            YALPHAC=>XALPHAC, YNUC=>XNUC, CINI_CCN=>HINI_CCN,           &
-                            CTYPE_CCN=>HTYPE_CCN, YFSOLUB_CCN=>XFSOLUB_CCN,             &
-                            YACTEMP_CCN=>XACTEMP_CCN, YAERDIFF=>XAERDIFF,               &
-                            YAERHEIGHT=>XAERHEIGHT,                                     &
-                            LSCAV, LAERO_MASS, NPHILLIPS,                               &
-                            LCIBU, XNDEBRIS_CIBU, LRDSF,                                &
-                            ODEPOC=>LDEPOC, OVDEPOC=>XVDEPOC, OACTTKE=>LACTTKE,         &
-                            LPTSPLIT, L_LFEEDBACKT=>LFEEDBACKT, L_NMAXITER=>NMAXITER,   &
-                            L_XMRSTEP=>XMRSTEP, L_XTSTEP_TS=>XTSTEP_TS
 !
 USE MODD_LATZ_EDFLX
 USE MODD_2D_FRC
@@ -922,79 +901,8 @@ ENDIF
 !                ----------------------------------------
 !
 IF (KMI == 1) THEN
-   LPTSPLIT     = .TRUE.
-   L_LFEEDBACKT = .TRUE.
-   L_NMAXITER   = 5
-   L_XMRSTEP    = 0.005
-   L_XTSTEP_TS  = 20.
-!
-   YNUC    = 1.0
-   YALPHAC = 3.0
-   YNUR    = 2.0
-   YALPHAR = 1.0
-!
-   LACTI  = .TRUE.
-   OSEDC  = .TRUE.
-   OACTIT = .FALSE.
-   LADJ   = .TRUE.
-   LSPRO  = .FALSE.
-   LKHKO  = .FALSE.
-   ODEPOC = .TRUE.
-   LBOUND = .FALSE.
-   OACTTKE = .TRUE.
-   LKESSLERAC = .FALSE.
-!
-   NMOM_C = 2
-   NMOM_R = 2
-!
-   OVDEPOC = 0.02 ! 2 cm/s
-!
-   CINI_CCN   = 'AER'
-   CTYPE_CCN(:) = 'M'
-!
-   YAERDIFF    = 0.0
-   YAERHEIGHT  = 2000.
-!  YR_MEAN_CCN = 0.0   ! In case of 'CCN' initialization
-!  YLOGSIG_CCN = 0.0
-   YFSOLUB_CCN = 1.0
-   YACTEMP_CCN = 280.
-!
-   NMOD_CCN = 1
-!
-!* AP Scavenging
-!
-   LSCAV      = .FALSE.
-   LAERO_MASS = .FALSE.
-!
-   LCCN_HOM = .TRUE.
-   CCCN_MODES = 'COPT'
-   XCCN_CONC(:)=300.
-!
-   LHHONI = .FALSE.
-   LNUCL  = .TRUE.
-   LSEDI  = .TRUE.
-   YSNOW_T = .FALSE.
-   LMURAKAMI = .TRUE.
-   CPRISTINE_ICE_LIMA = 'PLAT'
-   CHEVRIMED_ICE_LIMA = 'GRAU'
-   XFACTNUC_DEP = 1.0  
-   XFACTNUC_CON = 1.0
-   NMOM_I = 2
-   NMOM_S = 1
-   NMOM_G = 1
-   NMOM_H = 0
-   NMOD_IFN = 1
-   NIND_SPECIE = 1
-   LMEYERS = .FALSE.
-   LIFN_HOM = .TRUE.
-   CIFN_SPECIES = 'PHILLIPS'
-   CINT_MIXING = 'DM2'
-   XIFN_CONC(:) = 100.
-   NMOD_IMM = 0
-   NPHILLIPS=8
-   LCIBU = .FALSE.
-   XNDEBRIS_CIBU = 50.0
-   LRDSF = .FALSE.
+  CALL PARAM_LIMA_INIT(CPROGRAM, 0, .FALSE., TLUOUT%NLU, &
+                      &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0)
 ENDIF
 !
 !-------------------------------------------------------------------------------

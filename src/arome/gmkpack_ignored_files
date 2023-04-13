@@ -290,3 +290,9 @@ phyex/micro/modi_ini_neb.F90
 mpa/micro/externals/aroini_neb.F90
 mpa/micro/interface/aroini_neb.h
 phyex/turb/modd_diag_in_run.F90
+phyex/micro/modd_lima_precip_scavengingn.F90
+arpifs/namelist/namlima.nam.h
+mpa/micro/externals/aroini_micro_lima.F90
+mpa/micro/interface/aroini_micro_lima.h
+phyex/micro/ini_lima.F90
+phyex/micro/init_aerosol_properties.F90
