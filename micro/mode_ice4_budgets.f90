@@ -1,9 +1,11 @@
-!MNH_LIC Copyright 1995-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-!     ######spl
+! Modifications:
+!  P. Wautelet 14/04/2023: initialize ZZ_LSFACT and ZZ_LVFACT
+!-----------------------------------------------------------------
 MODULE MODE_ICE4_BUDGETS
 IMPLICIT NONE
 CONTAINS
@@ -73,7 +75,9 @@ IIJE=D%NIJE
 ZINV_TSTEP=1./PTSTEP
 !
 IF (BUCONF%LBUDGET_TH) THEN
-  ZZ_DIFF(:,:)=0.
+  ZZ_DIFF(:,:)   = 0.
+  ZZ_LSFACT(:,:) = 0.
+  ZZ_LVFACT(:,:) = 0.
   DO JK = IKTB, IKTE
     DO JIJ = IIJB, IIJE
       ZZ_LVFACT(JIJ, JK) = PLVFACT(JIJ, JK) / PEXNREF(JIJ, JK)
