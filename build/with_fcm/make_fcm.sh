@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+#set -x
 
 fcm_version=tags/2021.05.0
 fiat_version=1295120464c3905e5edcbb887e4921686653eab8
@@ -11,6 +12,8 @@ function parse_args() {
   ARCH=
   GMKFILE=
   MESONHPROFILE=
+  useexpand=1
+  commit=""
   # pass unrecognized arguments to fcm
   FCM_ARGS=""
   
@@ -25,6 +28,8 @@ $0 [options]
 --arch ARCH  	        build using arch files $ARCH_PATH/arch-ARCH.* [gnu]
 --gmkfile FILE        build using a gmkpack configuration file (--arch must be used to give a name to the build dir)
 --mesonhprofile FILE  build using Méso-NH profile and rules (--arch must be used to give a name to the build dir)
+--noexpand            do not use mnh_expand (code will be in array-syntax)"
+--commit              commit hash (or a directory) to test; do not use this option from within a repository
 
 Unrecognized options are passed to the fcm build command. Useful options include :
 --new                   clean build tree before building
@@ -44,6 +49,8 @@ EOF
         GMKFILE=$1 ; shift ;;
       "--mesonhprofile")
         MESONHPROFILE=$1 ; shift ;;
+      '--noexpand') useexpand=0;;
+      '--commit') commit=$1; shift;;
       *)
         FCM_ARGS="$FCM_ARGS $OPTION" ;;
     esac
@@ -250,7 +257,7 @@ check_install_fcm
 # Check the fiat installation
 check_install_fiat
 
-# Create the build directory and populate it
+# Create the build directory and set up the build system
 builddir=arch_$ARCH
 if [ -d $builddir ]; then
   echo "$builddir already exists. To rerun compilation, please enter this directory and use the compilation.sh script."
@@ -270,26 +277,52 @@ else
 fi
 cp fcm-make.cfg $builddir
 cd $builddir
-mkdir src
-cd src
-if [ -d ../../../../src/common ]; then
-  #We compile directly from a PHYEX repository
-  ln -s ../../../../src/common/* .
-  ln -s ../../../../src/testprogs/* .
+
+# Populate the source directory with (modified) PHYEX source code
+[ "$commit" == "" ] && commit=$PWD/../../.. #Current script run from within a PHYEX repository
+if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
+  # We get the source code directly from a directory
+  fromdir=$commit
 else
-  #We compile after an execution of prep_code
-  ln -s ../../../../src/* .
+  # We use a commit to checkout
+  fromdir=''
 fi
+#Expand options
+if [ $useexpand == 1 ]; then
+  expand_options="-D MNH_EXPAND -D MNH_EXPAND_LOOP"
+else
+  expand_options=""
+fi
+PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../../../tools #if run from within a PHYEX repository
+UPDATEDPATH=$PATH
+which prep_code.sh > /dev/null || export UPDATEDPATH=$PHYEXTOOLSDIR:$PATH
+subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s support"
+if [ "$fromdir" == '' ]; then
+  echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
+  if [[ $commit == testprogs${separator}* ]]; then
+    PATH=$UPDATEDPATH prep_code.sh -c $commit src #This commit is ready for inclusion
+  else
+    PATH=$UPDATEDPATH prep_code.sh -c $commit $expand_options $subs -m testprogs src
+  fi
+else
+  echo "Copy $fromdir"
+  mkdir src
+  scp -q -r $fromdir/src src/
+  PATH=$UPDATEDPATH prep_code.sh $expand_options $subs -m testprogs src
+fi
+
+# Add some code
+cd src
 ln -s ../../fiat/src fiat
 cat <<EOF > dummyprog.F90
 PROGRAM DUMMYPROG
   PRINT*, "CREATED TO FORCE FCM TO LINK SOMETHING"
 END PROGRAM DUMMYPROG
 EOF
+
+# Build the compilation script and run it
 cd ..
 build_compilation_script src
-
-# Run the compilation
 ./compilation.sh
 ln -s build/bin/libphyex.so .
 

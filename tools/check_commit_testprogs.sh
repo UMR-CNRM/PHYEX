@@ -78,7 +78,7 @@ commit=""
 reference=""
 tests=""
 suppress=0
-useexpand=1
+useexpand=""
 archfile=$defaultarchfile
 refarchfile=$defaultarchfile
 
@@ -90,7 +90,7 @@ while [ -n "$1" ]; do
     '-r') run=$(($run+1));;
     '-C') check=1;;
     '-t') tests="$2"; shift;;
-    '--noexpand') useexpand=0;;
+    '--noexpand') useexpand=$1;;
     '--repo-user') export PHYEXREPOuser=$2; shift;;
     '--repo-protocol') export PHYEXREPOprotocol=$2; shift;;
     '-a') archfile="$2"; shift;;
@@ -149,9 +149,7 @@ if [ $check -eq 1 -a -z "${reference-}" ]; then
   exit 3
 fi
 
-fromdir=''
 if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
-  fromdir=$commit
   name=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
   [ $suppress -eq 1 -a -d $TESTDIR/$name ] && rm -rf $TESTDIR/$name
 elif echo $specialName | grep -w $commit > /dev/null; then
@@ -187,36 +185,14 @@ if [ $compilation -eq 1 ]; then
   fi
   mkdir $TESTDIR/$name
   cd $TESTDIR/$name/
+  cp -r $PHYEXTOOLSDIR/../build . #We use the compilation system from the same commit as the current script
 
   MNH_EXPAND_DIR=$PHYEXTOOLSDIR/mnh_expand
-  export PATH=$MNH_EXPAND_DIR/filepp:$MNH_EXPAND_DIR/MNH_Expand_Array:$PATH
-
-  if [ $useexpand == 1 ]; then
-    expand_options="-D MNH_EXPAND -D MNH_EXPAND_LOOP"
-  else
-    expand_options=""
-  fi
-  subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s support"
-  prep_code=$PHYEXTOOLSDIR/prep_code.sh
-
-  if [ "$fromdir" == '' ]; then
-    echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
-    if [[ $commit == testprogs${separator}* ]]; then
-      $prep_code -c $commit src #This commit is ready for inclusion
-    else
-      $prep_code -c $commit $expand_options $subs -m testprogs src
-    fi
-  else
-    echo "Copy $fromdir"
-    mkdir src
-    scp -q -r $fromdir/src src/
-    $prep_code $expand_options $subs -m testprogs src
-  fi
-  cp -r $PHYEXTOOLSDIR/../build . #We use the compilation system from the same commit as the current script
+  export PATH=$PHYEXTOOLSDIR:$MNH_EXPAND_DIR/filepp:$MNH_EXPAND_DIR/MNH_Expand_Array:$PATH
 
   cd $TESTDIR/$name/build/with_fcm/
   rm -rf arch_*
-  ./make_fcm.sh --arch $archfile 2>&1 | tee Output_compilation
+  ./make_fcm.sh $useexpand --commit $commit --arch $archfile 2>&1 | tee Output_compilation
 fi
 
 if [ $run -ge 1 ]; then
