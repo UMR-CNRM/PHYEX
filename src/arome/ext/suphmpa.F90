@@ -82,7 +82,7 @@ LOGICAL :: LLNOTMAP
 !     ------------------------------------------------------------------
 
 #include "sucvmnh.intfb.h"
-#include "aroini_cstmnh.h"
+#include "aroini_conf.h"
 #include "aroini_budget.h"
 #include "abor1.intfb.h"
 
@@ -129,7 +129,8 @@ IF (LELAM) THEN
 ELSE
   LLNOTMAP=.TRUE.
 ENDIF
-CALL AROINI_CSTMNH (KULOUT,LTWOTL,LLNOTMAP)
+CALL AROINI_CONF (KULOUT,LTWOTL,LLNOTMAP) !only needed for LFLAT key used in turbulence
+                                          !call must be suppressed once turbulence source code will be updated
 
 !       3. Initialisation of Budget
 

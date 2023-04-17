@@ -101,6 +101,7 @@ REAL(KIND=JPRB) :: ZHOOK_HANDLE
 #include "suphmse_surface.h"
 #include "aroini_wet_dep.h"
 #include "aroini_frommpa.h"
+#include "aroini_conf.h"
 
 !     ------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('SUPHMSE',0,ZHOOK_HANDLE)
@@ -127,8 +128,8 @@ ELSE
 ENDIF
 IF (.NOT.LMPA) THEN
   CALL INI_CST
-  CALL AROINI_CSTMNH(KULOUT,LTWOTL,LLNOTMAP) !Despite its name, the routine only deals with modd_conf
 ENDIF
+CALL AROINI_CONF(KULOUT,LTWOTL,LLNOTMAP)
 
 !     initialisation of chemistry, aerosols and dust scheme
 ! ANNEE

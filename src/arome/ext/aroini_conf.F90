@@ -1,12 +1,12 @@
 !     ######spl
-SUBROUTINE AROINI_CSTMNH(KULOUT,OWTOTL,OCARTESIAN)
+SUBROUTINE AROINI_CONF(KULOUT,OWTOTL,OCARTESIAN)
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 
-!**** INI_CSTMNH *  - Initiallize MesoNH Physics constantes
+!**** INI_CSTMNH *  - Initiallize MesoNH Physics configuration module
 !**   Interface.
 !     ----------
-!        *CALL* *INI_CSTMNH(KULOUT)
+!        *CALL* *INI_CONF(KULOUT)
 
 !        Explicit arguments :
 !        --------------------
@@ -39,7 +39,6 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !     ------------------------------------------------------------------
 
 
-USE MODD_PARAMETERS 
 USE MODD_CONF
 
 IMPLICIT NONE
@@ -58,7 +57,7 @@ LOGICAL, INTENT(IN) :: OCARTESIAN
 !       the variables are initialised in the module itself
 !        1.2 Set implicit default values for MODD_CST
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
-IF (LHOOK) CALL DR_HOOK('AROINI_CSTMNH',0,ZHOOK_HANDLE)
+IF (LHOOK) CALL DR_HOOK('AROINI_CONF',0,ZHOOK_HANDLE)
 
 !        1.3 Set implicit default values for MODD_CONF
 IF (OWTOTL) THEN
@@ -88,9 +87,7 @@ WRITE(UNIT=KULOUT,FMT='('' LCARTESIAN = '',L2,'' CPROGRAM = '',A6,&
      &'' CCONF = '',A5,/, '' LFLAT = '',L2,'' L1D = '',L2, '' L2D = '',L2)')&
      &LCARTESIAN,CPROGRAM,CCONF,LFLAT,L1D,L2D
 
-WRITE(UNIT=KULOUT,FMT='('' COMMON MODD_CST Meso_NH '')')
-
 !   ---------------------------------------------------------------
-IF (LHOOK) CALL DR_HOOK('AROINI_CSTMNH',1,ZHOOK_HANDLE)
+IF (LHOOK) CALL DR_HOOK('AROINI_CONF',1,ZHOOK_HANDLE)
 RETURN
-END SUBROUTINE AROINI_CSTMNH 
+END SUBROUTINE AROINI_CONF 

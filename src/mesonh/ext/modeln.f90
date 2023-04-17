@@ -2010,7 +2010,7 @@ IF (CCLOUD /= 'NONE' .AND. CELEC == 'NONE') THEN
 !
     IF (LSCAV .AND. (CCLOUD == 'LIMA')) THEN
        CALL LIMA_PRECIP_SCAVENGING( YLDIMPHYEX,CST,TBUCONF,TBUDGETS,SIZE(TBUDGETS), &
-                                    CCLOUD, ILUOUT, KTCOUNT,XTSTEP,XRT(:,:,:,3),    &
+                                    CCLOUD, CCONF, ILUOUT, KTCOUNT,XTSTEP,XRT(:,:,:,3),    &
                                     XRHODREF, XRHODJ, XZZ, XPABST, XTHT,            &
                                     XSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),          &
                                     XRSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), XINPAP  )

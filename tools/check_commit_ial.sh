@@ -416,7 +416,7 @@ if [ $packcreation -eq 1 ]; then
     [ -f $EXT/aplpar.F90 ] && mv $EXT/aplpar.F90 ../arpifs/phys_dmn/
     [ -f $EXT/su0yomb.F90 ] && mv $EXT/su0yomb.F90 ../arpifs/setup/
     #Special mpa case
-    for file in modd_spp_type.F90 spp_mod_type.F90; do
+    for file in modd_spp_type.F90 spp_mod_type.F90 aroini_conf.h aroini_conf.F90; do
       if [ -f $EXT/$file ]; then
         [ ! -d ../mpa/aux ] && mkdir ../mpa/aux
         mv $EXT/$file ../mpa/aux/
