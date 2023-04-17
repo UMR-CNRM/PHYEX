@@ -4,20 +4,13 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !      ###############################
-       MODULE MODI_INI_LIMA_COLD_MIXED
+       MODULE MODE_INI_LIMA_COLD_MIXED
 !      ###############################
 !
-INTERFACE
-      SUBROUTINE INI_LIMA_COLD_MIXED (PTSTEP, PDZMIN)
+IMPLICIT NONE
 !
-REAL,                    INTENT(IN) :: PTSTEP    ! Effective Time step 
-REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
+CONTAINS
 !
-END SUBROUTINE INI_LIMA_COLD_MIXED
-!
-END INTERFACE
-!
-END MODULE MODI_INI_LIMA_COLD_MIXED
 !     ###############################################
       SUBROUTINE INI_LIMA_COLD_MIXED (PTSTEP, PDZMIN)
 !     ###############################################
@@ -1778,3 +1771,5 @@ XFREFFI = 0.5 * ZGAMI(8) * (1.0/XLBI)**XLBEXI
 !------------------------------------------------------------------------------
 !
 END SUBROUTINE INI_LIMA_COLD_MIXED
+!
+END MODULE MODE_INI_LIMA_COLD_MIXED

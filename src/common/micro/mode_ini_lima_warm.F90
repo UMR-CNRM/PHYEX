@@ -4,20 +4,12 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !      #########################
-       MODULE MODI_INI_LIMA_WARM
+       MODULE MODE_INI_LIMA_WARM
 !      #########################
 !
-INTERFACE
-      SUBROUTINE INI_LIMA_WARM (PTSTEP, PDZMIN)
+IMPLICIT NONE
 !
-REAL,                    INTENT(IN) :: PTSTEP    ! Effective Time step 
-REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
-!
-END SUBROUTINE INI_LIMA_WARM
-!
-END INTERFACE
-!
-END MODULE MODI_INI_LIMA_WARM
+CONTAINS
 !     #########################################
       SUBROUTINE INI_LIMA_WARM (PTSTEP, PDZMIN)
 !     #########################################
@@ -474,3 +466,5 @@ XCRER = 1.0/ (ZGAMR(6) * XAR**(2.0/3.0))
 !------------------------------------------------------------------------------
 !
 END SUBROUTINE INI_LIMA_WARM
+!
+END MODULE MODE_INI_LIMA_WARM
