@@ -2,6 +2,7 @@
 
 #set -x
 set -e
+set -o pipefail #abort if left command on a pipe fails
 
 #The folowing environment variables can be defined:
 # REFDIR: directory in which the reference compilation directory can be found
@@ -138,7 +139,11 @@ name=${refversion}-$tag
 #They are done in the current pack except if the reference pack
 #already contains a tested simulation
 #To check this, we use the case 007_16janvier/008_run2_turb3D
-run_in_ref=$(ls -d $REFDIR/${refversion}/MY_RUN/KTEST/007_16janvier/008_run2_turb3D_* 2> /dev/null | tail -1 |wc -l)
+if [ $(ls -d $REFDIR/${refversion}/MY_RUN/KTEST/007_16janvier/008_run2_turb3D_* 2> /dev/null | wc -l) -gt 0 ]; then
+  run_in_ref=1
+else
+  run_in_ref=0
+fi
 if [ $run_in_ref -eq 1 ]; then
   path_user_beg=$REFDIR/${refversion} #pack directory containing the simulation
   path_user_end=_$tag #to be appended to the 'run' simulation directory
@@ -188,9 +193,8 @@ if [ $compilation -eq 1 ]; then
   mv ${refversion} $name
   cd $name/src
   # Routine that changed names
-  set +e
-  mv -f PHYEX/turb/modd_diag_in_run.f90 MNH/. #To be removed once, this is done in MNH-git-lfs repo before inclusion of last version of PHYEX
-  set -e
+  
+  [ -f PHYEX/turb/modd_diag_in_run.f90 ] && mv -f PHYEX/turb/modd_diag_in_run.f90 MNH/. #To be removed once, this is done in MNH-git-lfs repo before inclusion of last version of PHYEX
 
   rm -rf PHYEX
 
@@ -263,6 +267,7 @@ if [ $compilation -eq 1 ]; then
   set +e #file ends with a test that can return false
   . ../conf/profile_mesonh-* #This lines modifies the list of loaded modules
   set -e
+  rm -f ../exe/* #Suppress old executables, if any
   make -j 8 2>&1 | tee ../Output_compilation
   make installmaster 2>&1 | tee -a ../Output_compilation
   command -v module && module load $modulelist #restore loaded modules
@@ -291,7 +296,7 @@ if [ $run -ge 1 ]; then
 
       #Loop on the directories
       for rep in *; do
-        if [ -d "$rep" ]; then
+        if [[ -d "$rep" || ( -L "$rep" && ! -e "$rep" ) ]]; then #directory (or a link to a directory) or a broken link
           if echo $availTests | grep ${case}/$rep > /dev/null; then
             #This directory is a test case
             if [ $rep == ${exedir} ]; then
@@ -316,7 +321,9 @@ if [ $run -ge 1 ]; then
     [ $compilation -eq 0 ] && . $MNHPACK/$name/conf/profile_mesonh-*
     set -e
     ./clean_mesonh_xyz
+    set +o pipefail #We want to go through all tests
     ./run_mesonh_xyz | tee Output_run
+    set -o pipefail
   done
 fi
 
@@ -365,21 +372,21 @@ if [ $check -eq 1 ]; then
     fi
 
     if [ $case == 007_16janvier ]; then
-      echo "Compare with python..."
       # Compare variable of both Synchronous and Diachronic files with printing difference
       file1=$path_user/16JAN.1.12B18.001.nc 
       file2=$path_ref/16JAN.1.12B18.001.nc
       file3=$path_user/16JAN.1.12B18.000.nc 
       file4=$path_ref/16JAN.1.12B18.000.nc
-      set +e
-      $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2 --f3 $file3 --f4 $file4
-      t=$?
-      set -e
-      allt=$(($allt+$t))
-      
-      #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
-      echo "Compare with ncdump..."
       if [ -f $file1 -a -f $file2 ]; then
+        echo "Compare with python..."
+        set +e
+        $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2 --f3 $file3 --f4 $file4
+        t=$?
+        set -e
+        allt=$(($allt+$t))
+        
+        #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
+        echo "Compare with ncdump..."
         set +e
         bit_diff=57100
         diff <(ncdump $file1 | head -c $bit_diff) <(ncdump $file2 | head -c $bit_diff)
@@ -394,19 +401,19 @@ if [ $check -eq 1 ]; then
     fi
 
     if [ $case == COLD_BUBBLE ]; then
-      echo "Compare with python..."
       # Compare variable of both Synchronous files with printing difference
       file1=$path_user/BUBBL.1.CEN4T.001.nc
       file2=$path_ref/BUBBL.1.CEN4T.001.nc
-      set +e
-      $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2
-      t=$?
-      set -e
-      allt=$(($allt+$t))
-      
-      #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
-      echo "Compare with ncdump..."
       if [ -f $file1 -a -f $file2 ]; then
+        echo "Compare with python..."
+        set +e
+        $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2
+        t=$?
+        set -e
+        allt=$(($allt+$t))
+        
+        #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
+        echo "Compare with ncdump..."
         set +e
         bit_diff=27300
         diff <(ncdump $file1 | head -c $bit_diff) <(ncdump $file2 | head -c $bit_diff)
@@ -421,19 +428,19 @@ if [ $check -eq 1 ]; then
     fi
 
    if [ $case == OCEAN_LES ]; then
-        echo "Compare with python..."
         # Compare variable of both Synchronous files with printing difference
         file1=$path_user/SPWAN.2.25m00.001.nc
         file2=$path_ref/SPWAN.2.25m00.001.nc
-        set +e
-        $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2
-        t=$?
-        set -e
-        allt=$(($allt+$t))
-  
-        #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
-        echo "Compare with ncdump..."
         if [ -f $file1 -a -f $file2 ]; then
+          echo "Compare with python..."
+          set +e
+          $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2
+          t=$?
+          set -e
+          allt=$(($allt+$t))
+  
+          #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
+          echo "Compare with ncdump..."
           set +e
           bit_diff=18400
           diff <(ncdump $file1 | head -c $bit_diff) <(ncdump $file2 | head -c $bit_diff)
@@ -448,21 +455,21 @@ if [ $check -eq 1 ]; then
       fi
 
     if [ $case == COLD_BUBBLE_3D ]; then
-      echo "Compare with python..."
       # Compare variable of both Synchronous and Diachronic files with printing difference
       file1=$path_user/BUBBL.1.CEN4T.001.nc
       file2=$path_ref/BUBBL.1.CEN4T.001.nc
       file3=$path_user/BUBBL.1.CEN4T.000.nc
       file4=$path_ref/BUBBL.1.CEN4T.000.nc
-      set +e
-      $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2 --f3 $file3 --f4 $file4
-      t=$?
-      set -e
-      allt=$(($allt+$t))
-
-      #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
-      echo "Compare with ncdump..."
       if [ -f $file1 -a -f $file2 ]; then
+        echo "Compare with python..."
+        set +e
+        $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2 --f3 $file3 --f4 $file4
+        t=$?
+        set -e
+        allt=$(($allt+$t))
+
+        #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
+        echo "Compare with ncdump..."
         set +e
         diff <(ncdump $file1 | head -c 27300) <(ncdump $file2 | head -c 27300)
         t=$?
@@ -476,21 +483,21 @@ if [ $check -eq 1 ]; then
     fi
 
     if [ $case == ARMLES ]; then
-      echo "Compare with python..."
       # Compare variable of both Synchronous and Diachronic files with printing difference
       file1=$path_user/ARM__.1.CEN4T.001.nc
       file2=$path_ref/ARM__.1.CEN4T.001.nc
       file3=$path_user/ARM__.1.CEN4T.000.nc
       file4=$path_ref/ARM__.1.CEN4T.000.nc
-      set +e
-      $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2 --f3 $file3 --f4 $file4
-      t=$?
-      set -e
-      allt=$(($allt+$t))
-
-      #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
-      echo "Compare with ncdump..."
       if [ -f $file1 -a -f $file2 ]; then
+        echo "Compare with python..."
+        set +e
+        $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2 --f3 $file3 --f4 $file4
+        t=$?
+        set -e
+        allt=$(($allt+$t))
+
+        #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
+        echo "Compare with ncdump..."
         set +e
         bit_diff=76300
         diff <(ncdump $file1 | head -c $bit_diff) <(ncdump $file2 | head -c $bit_diff)
@@ -505,21 +512,21 @@ if [ $check -eq 1 ]; then
     fi
 
     if [ $case == 014_LIMA ]; then
-      echo "Compare with python..."
       # Compare variable of both Synchronous and Diachronic files with printing difference
       file1=$path_user/XPREF.1.SEG01.002.nc
       file2=$path_ref/XPREF.1.SEG01.002.nc
       file3=$path_user/XPREF.1.SEG01.000.nc
       file4=$path_ref/XPREF.1.SEG01.000.nc
-      set +e
-      $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2 --f3 $file3 --f4 $file4
-      t=$?
-      set -e
-      allt=$(($allt+$t))
-
-      #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
-      echo "Compare with ncdump..."
       if [ -f $file1 -a -f $file2 ]; then
+        echo "Compare with python..."
+        set +e
+        $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2 --f3 $file3 --f4 $file4
+        t=$?
+        set -e
+        allt=$(($allt+$t))
+
+        #Check bit-repro before date of creation of Synchronous file from ncdump of all values (pb with direct .nc file checks)
+        echo "Compare with ncdump..."
         set +e
         bit_diff=32200
         diff <(ncdump $file1 | head -c $bit_diff) <(ncdump $file2 | head -c $bit_diff)

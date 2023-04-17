@@ -2,6 +2,7 @@
 
 #set -x
 set -e
+set -o pipefail #abort if left command on a pipe fails
 
 #This script:
 # - compiles the AROME model using a specific commit for the externalised physics
@@ -43,6 +44,7 @@ set -e
 
 #The small_3D_lima is not included in the list of available tests because it needs to be compared against a special commit.
 #                  Indeed, the lima version in arome has been changed.
+#                  The reference commit is d095d11 (20 March 2023)
 
 #Special pack names:
 # - recompil: original source code (everything under mpa)

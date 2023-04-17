@@ -2,6 +2,7 @@
 
 #set -x
 set -e
+set -o pipefail #abort if left command on a pipe fails
 
 #This script:
 # - compiles the PHYEX package using a specific commit
