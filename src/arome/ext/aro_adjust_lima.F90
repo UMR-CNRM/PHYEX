@@ -163,16 +163,6 @@ LOGICAL,                  INTENT(IN)    :: LLIMAINIT
 !
 !*       0.2   Declarations of local variables :
 
-CHARACTER(LEN=4)          :: HCLOUD   ! kind of cloud
-                                                   ! paramerization
-
-INTEGER                   :: KMI      ! Model index
-CHARACTER(LEN=4)          :: HFMFILE  ! Name of the output FM-file
-CHARACTER(LEN=4)          :: HLUOUT   ! Output-listing name for
-                                                   ! model n
-CHARACTER*4               :: HRAD     ! Radiation scheme name
-CHARACTER*4               :: HTURBDIM ! Dimensionality of the
-                                                   ! turbulence scheme
 !
 INTEGER :: JRR           ! Loop index for the moist and scalar variables
 !
@@ -197,13 +187,6 @@ TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('ARO_ADJUST_LIMA',0,ZHOOK_HANDLE)
-
-HCLOUD='LIMA'
-HFMFILE=' '
-HLUOUT= ' '
-HRAD='NONE'
-HTURBDIM='1DIM'
-KMI=1
 
 CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, 0, KFDIA)
 
@@ -350,7 +333,7 @@ ENDDO
     ZZZ =  PZZF
 
     CALL LIMA_ADJUST_SPLIT(D=YLDIMPHYEX, CST=PHYEX%CST, BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
-         KRR=KRR, KMI=KMI, HCONDENS=PHYEX%NEBN%CCONDENS, HLAMBDA3=PHYEX%NEBN%CLAMBDA3, &
+         KRR=KRR, KMI=PHYEX%MISC%KMI, HCONDENS=PHYEX%NEBN%CCONDENS, HLAMBDA3=PHYEX%NEBN%CLAMBDA3, &
          OSUBG_COND=OSUBG_COND, OSIGMAS=OSIGMAS, PTSTEP=2*PTSTEP, PSIGQSAT=PSIGQSAT, &
          PRHODREF=PRHODREF, PRHODJ=PRHODJ, PEXNREF=PEXNREF, PSIGS=PSIGS, PMFCONV=PMFCONV, &
          PPABST=PPABSM, PPABSTT=PPABSM, PZZ=ZZZ, PDTHRAD=PDTHRAD, PW_NU=PW_NU, &

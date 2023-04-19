@@ -83,6 +83,7 @@ REAL :: ZSMIN, ZSMAX          ! Minimal and maximal supersaturation used to
 !  
 !-------------------------------------------------------------------------------
 !
+CALL PARAM_LIMA_WARM_ASSOCIATE()
 !
 !*       1.     CHARACTERISTICS OF THE SPECIES
 !   	        ------------------------------
@@ -240,8 +241,8 @@ XCSTDCRIT = (XPI/6.)*XRHOLW*( (8.0*ZSURF_TEN )/( 3.0*XRV*XRHOLW ) )**3
 !               using a logarithmic scale for S
 !
 NHYP = 500 ! Number of points for the tabulation
-ALLOCATE (XHYPF12( NHYP, NMOD_CCN ))
-ALLOCATE (XHYPF32( NHYP, NMOD_CCN ))
+CALL PARAM_LIMA_WARM_ALLOCATE('XHYPF12', NHYP, NMOD_CCN)
+CALL PARAM_LIMA_WARM_ALLOCATE('XHYPF32', NHYP, NMOD_CCN)
 !
 ZSMIN = 1.0E-5  ! Minimum supersaturation set at 0.001 % 
 ZSMAX = 5.0E-2  ! Maximum supersaturation set at 5 %
@@ -276,11 +277,11 @@ XAHENINTP2 = 0.5*REAL(NAHEN-1) - XTT
 !            Lv
 !            G
 !
-ALLOCATE (XAHENG(NAHEN))
-ALLOCATE (XAHENG2(NAHEN))
-ALLOCATE (XAHENG3(NAHEN))
-ALLOCATE (XPSI1(NAHEN))
-ALLOCATE (XPSI3(NAHEN))
+CALL PARAM_LIMA_WARM_ALLOCATE('XAHENG', NAHEN)
+CALL PARAM_LIMA_WARM_ALLOCATE('XAHENG2', NAHEN)
+CALL PARAM_LIMA_WARM_ALLOCATE('XAHENG3', NAHEN)
+CALL PARAM_LIMA_WARM_ALLOCATE('XPSI1', NAHEN)
+CALL PARAM_LIMA_WARM_ALLOCATE('XPSI3', NAHEN)
 XCSTHEN = 1.0 / ( XRHOLW*2.0*XPI )
 DO J1 = 1,NAHEN
    ZTT = XTT + REAL(J1-(NAHEN-1)/2)                                          ! T

@@ -29,6 +29,9 @@ USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_NEB_n, ONLY: NEB_t
 USE MODD_PARAM_LIMA, ONLY: PARAM_LIMA_t
+USE MODD_PARAM_LIMA_WARM, ONLY: PARAM_LIMA_WARM_t
+USE MODD_PARAM_LIMA_COLD, ONLY: PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA_MIXED, ONLY: PARAM_LIMA_MIXED_t
 USE MODD_NSV, ONLY: NSV_t
 USE MODD_MISC, ONLY: MISC_t
 !
@@ -46,6 +49,9 @@ TYPE PHYEX_t
   TYPE(TURB_t)           :: TURBN            !< Turbulence scheme constants set by namelist
   TYPE(NEB_t)            :: NEBN             !< Cloud scheme constants
   TYPE(PARAM_LIMA_t)     :: PARAM_LIMA       !< Control parameters for LIMA microphysics
+  TYPE(PARAM_LIMA_WARM_t):: PARAM_LIMA_WARM  !< Microphysical factors for LIMA (warm processes)
+  TYPE(PARAM_LIMA_COLD_t):: PARAM_LIMA_COLD  !< Microphysical factors for LIMA (cold processes)
+  TYPE(PARAM_LIMA_MIXED_t):: PARAM_LIMA_MIXED !< Microphysical factors for LIMA (mixed processes)
   TYPE(NSV_t)            :: TNSV             !< NSV indexes
   !
   ! Supplementary strucuture to hold model specific values

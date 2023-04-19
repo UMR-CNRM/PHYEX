@@ -115,11 +115,6 @@ TYPE(TMDDH), INTENT(IN), TARGET :: YDMDDH
 !
 !*       0.2   Declarations of local variables :
 
-CHARACTER(LEN=4)            :: HCLOUD   ! kind of cloud
-                                                   ! paramerization
-
-INTEGER                   :: KMI      ! Model index
-
 !
 INTEGER :: JRR, JL           ! Loop index for the moist and scalar variables
 !
@@ -154,8 +149,6 @@ IF (LHOOK) CALL DR_HOOK('ARO_LIMA',0,ZHOOK_HANDLE)
 !Dimensions
 CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, 0, KFDIA)
 
-HCLOUD='LIMA'
-KMI=1
 ZINPRC=0.
 ZDUM3DC=0.
 ZDUM3DR=0.
