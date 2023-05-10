@@ -329,6 +329,8 @@ if [ $packcreation -eq 1 ]; then
         [ -f $file ] && mv $file mpa/aux/
       done
       [ -f mpa/micro/externals/add_bounds.F90 ] && rm -f mpa/micro/externals/add_bounds.F90
+      [ -f mpa/micro/externals/aroini_wet_dep.F90 ] && mv mpa/micro/externals/aroini_wet_dep.F90 mpa/chem/externals/aroini_wet_dep.F90
+      [ -f mpa/micro/interface/aroini_wet_dep.h ] && mv mpa/micro/interface/aroini_wet_dep.h mpa/chem/interface/aroini_wet_dep.h
     fi
     #we keep everything from the official source code except internals and module subdirectories of mpa
     for rep in turb micro conv; do

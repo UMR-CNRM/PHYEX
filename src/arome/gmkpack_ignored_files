@@ -298,6 +298,8 @@ phyex/micro/ini_lima.F90
 phyex/micro/init_aerosol_properties.F90
 mpa/micro/interface/aroini_cstmnh.h
 mpa/micro/externals/aroini_cstmnh.F90
+mpa/aux/aroini_cstmnh.h
+mpa/aux/aroini_cstmnh.F90
 phyex/micro/ini_lima_cold_mixed.F90
 phyex/micro/ini_lima_warm.F90
 
