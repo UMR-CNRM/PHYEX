@@ -7,12 +7,14 @@
        MODULE MODI_LIMA_MEYERS
 !      #######################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE LIMA_MEYERS   (OHHONI, PTSTEP, KMI,                            &
                                 PZZ, PRHODJ, PRHODREF, PEXNREF, PPABST,         &
                                 PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, PCCT, &
                                 PTHS, PRVS, PRCS, PRIS,                         &
                                 PCCS, PCIS, PINS )
+IMPLICIT NONE
 !
 LOGICAL,                  INTENT(IN)    :: OHHONI  ! enable haze freezing
 REAL,                     INTENT(IN)    :: PTSTEP  ! Time step          

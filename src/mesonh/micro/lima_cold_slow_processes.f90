@@ -7,12 +7,14 @@
        MODULE MODI_LIMA_COLD_SLOW_PROCESSES
 !      #####################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE LIMA_COLD_SLOW_PROCESSES (PTSTEP, KMI, PZZ, PRHODJ,                 &
                                            PRHODREF, PEXNREF, PPABST,                &
                                            PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                            PTHS, PRVS, PRIS, PRSS,                   &
                                            PCIT, PCIS, PCST, PCSS                    )
+IMPLICIT NONE
 !
 REAL,                     INTENT(IN)    :: PTSTEP  ! Time step          
 INTEGER,                  INTENT(IN)    :: KMI     ! Model index 

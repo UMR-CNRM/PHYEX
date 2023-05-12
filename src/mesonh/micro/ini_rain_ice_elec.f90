@@ -7,9 +7,11 @@
        MODULE MODI_INI_RAIN_ICE_ELEC
 !      #############################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE INI_RAIN_ICE_ELEC (KLUOUT, PTSTEP, PDZMIN, KSPLITR, HCLOUD, &
                                     KINTVL, PFDINFTY                         )
+IMPLICIT NONE
 !
 INTEGER,           INTENT(IN) :: KLUOUT    ! Logical unit number for prints
 INTEGER,           INTENT(OUT):: KSPLITR   ! Number of small time step

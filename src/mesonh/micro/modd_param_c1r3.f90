@@ -45,6 +45,7 @@
 !*       0.   DECLARATIONS
 !             ------------
 !
+IMPLICIT NONE
 REAL,SAVE :: XALPHAI,XNUI,            & ! Pristine ice   distribution parameters
 	     XALPHAS,XNUS,            & ! Snow/aggregate distribution parameters
 	     XALPHAG,XNUG               ! Graupel        distribution parameters

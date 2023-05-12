@@ -7,6 +7,7 @@
        MODULE MODI_LIMA_COLD
 !      #####################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE LIMA_COLD (CST, OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,      &
                            KRR, PZZ, PRHODJ,                               &
@@ -17,6 +18,7 @@ INTERFACE
 !
 USE MODD_NSV,   only: NSV_LIMA_BEG
 USE MODD_CST,            ONLY: CST_t
+IMPLICIT NONE
 !
 TYPE(CST_t),              INTENT(IN)    :: CST
 !

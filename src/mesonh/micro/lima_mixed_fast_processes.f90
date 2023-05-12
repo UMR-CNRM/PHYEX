@@ -7,6 +7,7 @@
        MODULE MODI_LIMA_MIXED_FAST_PROCESSES
 !      #####################################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE LIMA_MIXED_FAST_PROCESSES (PRHODREF, PZT, PPRES, PTSTEP,                   &
                                             PLSFACT, PLVFACT, PKA, PDV, PCJ,                &
@@ -18,6 +19,7 @@ INTERFACE
                                             PRHODJ1D, GMICRO, PRHODJ, KMI, PTHS,            &
                                             PRCS, PRRS, PRIS, PRSS, PRGS, PRHS,             &
                                             PCCS, PCRS, PCIS, PCSS, PCGS, PCHS              )
+IMPLICIT NONE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF  ! RHO Dry REFerence
 REAL, DIMENSION(:),   INTENT(IN)    :: PZT       ! Temperature

@@ -6,9 +6,11 @@
 !     ################################
       MODULE MODI_LIMA_MIXRAT_TO_NCONC
 !     ################################
+IMPLICIT NONE
 INTERFACE
 SUBROUTINE LIMA_MIXRAT_TO_NCONC(PPABST, PTHT, PRVT, PSVT)
 !
+IMPLICIT NONE
 REAL, DIMENSION(:,:,:),   INTENT(IN)      :: PPABST ! Absolute pressure
 REAL, DIMENSION(:,:,:),   INTENT(IN)      :: PTHT   ! Potential temperature
 REAL, DIMENSION(:,:,:),   INTENT(IN)      :: PRVT   ! Water Vapor mix. ratio

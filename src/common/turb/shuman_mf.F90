@@ -6,6 +6,7 @@
       MODULE MODI_SHUMAN_MF
 !     ##################
 !
+IMPLICIT NONE
 INTERFACE
 !
 SUBROUTINE DZF_MF(D, PA, PDZF)

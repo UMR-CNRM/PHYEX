@@ -2,6 +2,7 @@
       MODULE MODI_ICE_ADJUST
 !     ######################
 !
+IMPLICIT NONE
 INTERFACE
 !
       SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, PARAMI, BUCONF, KRR,   &

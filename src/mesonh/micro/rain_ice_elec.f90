@@ -7,6 +7,7 @@
        MODULE MODI_RAIN_ICE_ELEC
 !      #########################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE RAIN_ICE_ELEC (OSEDIC, HSUBG_AUCV, OWARM,                            &
                                 KSPLITR, PTSTEP, KMI, KRR,                            &
@@ -19,6 +20,7 @@ INTERFACE
                                 PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,           &
                                 PSEA, PTOWN,                                          &
                                 PRHT, PRHS, PINPRH, PQHT, PQHS                        )
+IMPLICIT NONE
 !
 !
 LOGICAL,                  INTENT(IN)    :: OSEDIC ! Switch for droplet sedim.

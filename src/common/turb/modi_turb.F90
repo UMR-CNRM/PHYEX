@@ -2,6 +2,7 @@
      MODULE MODI_TURB  
 !    ################ 
 !
+IMPLICIT NONE
 INTERFACE
 !
       SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,NEBN,D,TLES,            &
@@ -41,6 +42,7 @@ USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_NEB_n, ONLY: NEB_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_LES, ONLY: TLES_t
+IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D             ! PHYEX variables dimensions structure
 TYPE(CST_t),            INTENT(IN)   :: CST           ! modd_cst general constant structure

@@ -7,6 +7,7 @@
        MODULE MODI_LIMA_WARM
 !      #####################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE LIMA_WARM (OACTIT, OSEDC, ORAIN, KSPLITR, PTSTEP, KMI,   &
                             TPFILE, KRR, PZZ, PRHODJ,                     &
@@ -18,6 +19,7 @@ INTERFACE
 !
 USE MODD_IO,   ONLY: TFILEDATA
 USE MODD_NSV, only: NSV_LIMA_BEG
+IMPLICIT NONE
 !
 LOGICAL,                  INTENT(IN)    :: OACTIT     ! Switch to activate the
                                                       ! activation by radiative

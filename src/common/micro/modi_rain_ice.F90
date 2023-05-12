@@ -2,6 +2,7 @@
        MODULE MODI_RAIN_ICE
 !      ####################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
                             PTSTEP, KRR, PEXN,                                    &

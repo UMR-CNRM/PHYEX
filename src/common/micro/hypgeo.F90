@@ -7,9 +7,11 @@
 MODULE MODI_HYPGEO
 !####################
 !
+IMPLICIT NONE
 INTERFACE
 !
 FUNCTION HYPGEO(PA,PB,PC,PF,PX)  RESULT(PHYPGEO)
+IMPLICIT NONE
 REAL, INTENT(IN)                                  :: PA,PB,PC,PF
 REAL, INTENT(IN)                                  :: PX
 REAL                                              :: PHYPGEO

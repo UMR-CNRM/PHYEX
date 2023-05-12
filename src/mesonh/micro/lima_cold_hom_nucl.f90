@@ -7,6 +7,7 @@
        MODULE MODI_LIMA_COLD_HOM_NUCL
 !      ######################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE LIMA_COLD_HOM_NUCL (OHHONI, PTSTEP, KMI,             &
                            PZZ, PRHODJ,                               &
@@ -15,6 +16,7 @@ INTERFACE
                            PTHS, PRVS, PRCS, PRRS, PRIS, PRGS,        &
                            PCCT,                                      &
                            PCCS, PCRS, PNFS, PCIS, PNHS               )
+IMPLICIT NONE
 !
 LOGICAL,                  INTENT(IN)    :: OHHONI  ! enable haze freezing
 REAL,                     INTENT(IN)    :: PTSTEP  ! Time step          

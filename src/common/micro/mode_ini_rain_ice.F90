@@ -5,6 +5,7 @@
 !-----------------------------------------------------------------
 !     ######spl
 MODULE MODE_INI_RAIN_ICE
+IMPLICIT NONE
 CONTAINS
       SUBROUTINE INI_RAIN_ICE ( KLUOUT, PTSTEP, PDZMIN, KSPLITR, HCLOUD )
 !     ###########################################################

@@ -7,10 +7,12 @@
       MODULE MODI_GRADIENT_M
 !     ###################### 
 !
+IMPLICIT NONE
 INTERFACE
 !
 !
 FUNCTION GX_M_M(PA,PDXX,PDZZ,PDZX,KKA,KKU,KL)      RESULT(PGX_M_M)
+IMPLICIT NONE
 !
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the mass point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDXX    ! metric coefficient dxx
@@ -25,6 +27,7 @@ END FUNCTION GX_M_M
 !
 !
 FUNCTION GY_M_M(PA,PDYY,PDZZ,PDZY,KKA,KKU,KL)      RESULT(PGY_M_M)
+IMPLICIT NONE
 !
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the mass point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDYY    ! metric coefficient dyy
@@ -39,6 +42,7 @@ END FUNCTION GY_M_M
 !
 !
 FUNCTION GZ_M_M(PA,PDZZ,KKA,KKU,KL)      RESULT(PGZ_M_M)
+IMPLICIT NONE
 !
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the mass point
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz

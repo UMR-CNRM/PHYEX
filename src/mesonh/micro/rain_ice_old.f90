@@ -7,6 +7,7 @@
        MODULE MODI_RAIN_ICE_OLD
 !      ####################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE RAIN_ICE_OLD (D, OSEDIC,HSEDIM, HSUBG_AUCV, OWARM, KKA, KKU, KKL,      &
                             KSPLITR, PTSTEP, KRR,                            &
@@ -18,6 +19,7 @@ INTERFACE
                             PRHT, PRHS, PINPRH, PFPR                        )
 !
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 LOGICAL,                  INTENT(IN)    :: OSEDIC ! Switch for droplet sedim.

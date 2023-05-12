@@ -7,8 +7,10 @@
        MODULE MODI_INI_RAIN_C2R2 
 !      #########################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE INI_RAIN_C2R2 ( PTSTEP, PDZMIN, KSPLITR, HCLOUD )
+IMPLICIT NONE
 !
 INTEGER,                 INTENT(OUT):: KSPLITR   ! Number of small time step
                                                  ! integration for  rain

@@ -6,6 +6,7 @@
 !    #######################
      MODULE MODI_RADTR_SATEL 
 !    #######################
+IMPLICIT NONE
 INTERFACE
 !
      SUBROUTINE RADTR_SATEL(KYEARF, KMONTHF, KDAYF, PSECF,         &
@@ -13,6 +14,7 @@ INTERFACE
                 PTSRAD, PSTATM, PTHT, PRT, PPABST, PZZ,            &
                 PSIGS, PMFCONV, PCLDFR, OUSERI, OSIGMAS,           &
                 OSUBG_COND, ORAD_SUBG_COND, PIRBT, PWVBT, KGEO,PSIGQSAT )
+IMPLICIT NONE
 !
 INTEGER, INTENT(IN) :: KYEARF  ! year of Final date
 INTEGER, INTENT(IN) :: KMONTHF ! month of Final date

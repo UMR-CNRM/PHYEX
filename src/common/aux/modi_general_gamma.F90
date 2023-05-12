@@ -6,9 +6,11 @@
 MODULE MODI_GENERAL_GAMMA
 !########################
 !
+IMPLICIT NONE
 INTERFACE
 !
 FUNCTION GENERAL_GAMMA(PALPHA,PNU,PLBDA,PX)  RESULT(PGENERAL_GAMMA)
+IMPLICIT NONE
 REAL, INTENT(IN)                                  :: PALPHA
 REAL, INTENT(IN)                                  :: PNU
 REAL, INTENT(IN)                                  :: PLBDA

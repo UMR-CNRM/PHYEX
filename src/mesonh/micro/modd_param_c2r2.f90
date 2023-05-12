@@ -50,6 +50,7 @@
 !*       0.   DECLARATIONS
 !             ------------
 !
+IMPLICIT NONE
 REAL,SAVE :: XALPHAR,XNUR,           & ! Raindrop       distribution parameters
           XALPHAC,XNUC              ! Cloud droplet  distribution parameters
 !

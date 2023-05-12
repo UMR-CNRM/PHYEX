@@ -7,6 +7,7 @@
       MODULE MODI_LIMA_NOTADJUST
 !     ##########################
 !
+IMPLICIT NONE
 INTERFACE
 !
       SUBROUTINE LIMA_NOTADJUST(KMI, TPFILE, HRAD,                                       &
@@ -15,6 +16,7 @@ INTERFACE
 !
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_NSV,   only: NSV_LIMA_BEG
+IMPLICIT NONE
 !
 INTEGER,                  INTENT(IN)    :: KMI        ! Model index
 TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE   ! Output file

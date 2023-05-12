@@ -2,6 +2,7 @@
 MODULE MODI_LIMA_PRECIP_SCAVENGING
 !#################################
 !
+  IMPLICIT NONE
   INTERFACE
 !
      SUBROUTINE LIMA_PRECIP_SCAVENGING (D, CST, BUCONF, TBUDGETS, KBUDGETS, &
@@ -11,6 +12,7 @@ MODULE MODI_LIMA_PRECIP_SCAVENGING
        USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
        use modd_budget,          only: TBUDGETDATA,TBUDGETCONF_t
        USE MODD_CST,             ONLY: CST_t
+       IMPLICIT NONE
 !
        TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
        TYPE(CST_t),              INTENT(IN)    :: CST

@@ -7,10 +7,12 @@
       MODULE MODI_GRADIENT_V
 !     ######################
 !
+IMPLICIT NONE
 INTERFACE
 !
 !           
 FUNCTION GY_V_M(PA,PDYY,PDZZ,PDZY, KKA, KKU, KL)      RESULT(PGY_V_M)
+IMPLICIT NONE
 !
 INTEGER,              INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,              INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
@@ -24,6 +26,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGY_V_M ! result mass point
 END FUNCTION GY_V_M
 !           
 FUNCTION GX_V_UV(PA,PDXX,PDZZ,PDZX, KKA, KKU, KL)      RESULT(PGX_V_UV)
+IMPLICIT NONE
 !
 INTEGER,              INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,              INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
@@ -38,6 +41,7 @@ END FUNCTION GX_V_UV
 !
 !           
 FUNCTION GZ_V_VW(PA,PDZZ, KKA, KKU, KL)      RESULT(PGZ_V_VW)
+IMPLICIT NONE
 !
 INTEGER,              INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,              INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise

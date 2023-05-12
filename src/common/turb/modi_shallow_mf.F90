@@ -2,6 +2,7 @@
      MODULE MODI_SHALLOW_MF
 !    ######################
 !
+IMPLICIT NONE
 INTERFACE
 !     #################################################################
       SUBROUTINE SHALLOW_MF(D, CST, NEBN, PARAMMF, TURBN, CSTURB,     &
@@ -32,6 +33,7 @@ USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_n,          ONLY: TURB_t
 USE MODD_CTURB,           ONLY: CSTURB_t
 USE MODD_PARAMETERS,      ONLY: JPSVMAX
+IMPLICIT NONE
 !               
 !*               1.1  Declaration of Arguments
 !                

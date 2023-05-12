@@ -7,6 +7,7 @@
       MODULE MODI_ICE_ADJUST_ELEC
 !     ###########################
 !
+IMPLICIT NONE
 INTERFACE
 !
       SUBROUTINE ICE_ADJUST_ELEC (KRR, KMI, HRAD, HTURBDIM, HSCONV, HMF_CLOUD,    &
@@ -18,6 +19,7 @@ INTERFACE
                                   PQPIT, PQPIS, PQCT, PQCS,                       &
                                   PQRT, PQRS, PQIT, PQIS, PQST, PQSS, PQGT, PQGS, &
                                   PQNIT, PQNIS, PRHT, PRHS, PQHT, PQHS            )
+IMPLICIT NONE
 !
 INTEGER,                  INTENT(IN)    :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)    :: KMI      ! Model index 

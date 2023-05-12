@@ -41,6 +41,7 @@
 !-----------------------------------------------------------------------------
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+IMPLICIT NONE
 !
 !*       0.    DECLARATIONS
 !
@@ -486,7 +487,7 @@ SUBROUTINE USTAR_0D(PU,PV,PZ,PZ0,PLMO,USTAR0D)
   REAL, INTENT(IN)               :: PZ0
   REAL, INTENT(IN)               :: PLMO
   REAL, INTENT(OUT)              :: USTAR0D
-  REAL :: ZWORK, ZWORK2
+  REAL :: ZWORK1, ZWORK2
 !
 !* purely unstable case
   REAL(KIND=JPRB) :: ZHOOK_HANDLE

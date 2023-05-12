@@ -7,8 +7,10 @@
        MODULE MODI_INI_ICE_C1R3 
 !      ########################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE INI_ICE_C1R3 ( PTSTEP, PDZMIN, KSPLITG )
+IMPLICIT NONE
 !
 INTEGER,                 INTENT(OUT):: KSPLITG   ! Number of small time step
                                                  ! integration for  rain

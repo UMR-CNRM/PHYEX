@@ -7,6 +7,7 @@
        MODULE MODI_LIMA_NUCLEATION_PROCS
 !      ###############################
 !
+IMPLICIT NONE
 INTERFACE
    SUBROUTINE LIMA_NUCLEATION_PROCS (PTSTEP, TPFILE, PRHODJ,                       &
                                      PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,&
@@ -16,6 +17,7 @@ INTERFACE
                                      PCLDFR, PICEFR, PPRCFR                        )
 !
 USE MODD_IO, ONLY: TFILEDATA
+IMPLICIT NONE
 !
 REAL,                     INTENT(IN)    :: PTSTEP     ! Double Time step
 TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file

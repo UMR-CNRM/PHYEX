@@ -7,6 +7,7 @@
        MODULE MODI_LIMA_COLD_SEDIMENTATION
 !      ###################################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE LIMA_COLD_SEDIMENTATION (OSEDI, KSPLITG, PTSTEP, KMI,     &
                                           PZZ, PRHODJ, PRHODREF,           &
@@ -15,6 +16,7 @@ INTERFACE
                                           PINPRS, PINPRG, PINPRH,          &
                                           PCSS, PCGS, PCHS)
 !
+IMPLICIT NONE
 LOGICAL,                  INTENT(IN)    :: OSEDI      ! switch to activate the 
                                                       ! cloud ice sedimentation
 INTEGER,                  INTENT(IN)    :: KSPLITG    ! Number of small time step 

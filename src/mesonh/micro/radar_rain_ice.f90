@@ -7,9 +7,11 @@
        MODULE MODI_RADAR_RAIN_ICE 
 !      ##########################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE RADAR_RAIN_ICE(PRT,PCIT,PRHODREF,PTEMP,PRARE,PVDOP,PRZDR,PRKDP,&
                              PCRT,PCST,PCGT,PCHT)
+IMPLICIT NONE
 !
 REAL,  DIMENSION(:,:,:,:), INTENT(IN)  :: PRT  ! microphysical  mix. ratios at t
 REAL,  DIMENSION(:,:,:),   INTENT(IN)  :: PCIT ! pristine ice concentration at t
