@@ -147,11 +147,7 @@ real, dimension(size(plsfact))  :: zz_diff
   END WHERE
   ZZW(:) = 0.0
   WHERE ( (PRST(:)>XRTMIN(5)) .AND. (PRSS(:)>0.0) )
-#if defined(REPRO48) 
-    ZZW(:) = ( PSSI(:)/(PRHODREF(:)*PAI(:)) ) *                               &
-#else
     ZZW(:) = ( PRST(:) * PLBDAS(:)**XBS * PSSI(:)/PAI(:) ) *          &
-#endif
              ( X0DEPS*PLBDAS(:)**XEX0DEPS + X1DEPS*PCJ(:)*PLBDAS(:)**XEX1DEPS )
     ZZW(:) =         MIN( PRVS(:),ZZW(:)      )*(0.5+SIGN(0.5,ZZW(:))) &
                    - MIN( PRSS(:),ABS(ZZW(:)) )*(0.5-SIGN(0.5,ZZW(:)))
@@ -173,13 +169,8 @@ real, dimension(size(plsfact))  :: zz_diff
   WHERE ( (PRIT(:)>XRTMIN(4)) .AND. (PRST(:)>XRTMIN(5)) .AND. (PRIS(:)>0.0) )
     ZZW(:) = MIN( PRIS(:),XFIAGGS * EXP( XCOLEXIS*(PZT(:)-XTT) ) &
                                   * PRIT(:)                      &
-#if defined(REPRO48) 
-                                  * PLBDAS(:)**XEXIAGGS          &
-                                  * PRHODREF(:)**(-XCEXVT)       )
-#else
                                   * PRST(:) * PLBDAS(:)**(XBS+XEXIAGGS)    &
                                   * PRHODREF(:)**(-XCEXVT+1)       )
-#endif
     PRSS(:)  = PRSS(:)  + ZZW(:)
     PRIS(:)  = PRIS(:)  - ZZW(:)
   END WHERE

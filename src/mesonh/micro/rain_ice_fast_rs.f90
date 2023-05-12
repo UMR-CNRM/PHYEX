@@ -136,15 +136,9 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZZW1, ZZW2, ZZW3, ZZW4 ! Work arrays
     DO JJ = 1, IGRIM
       JL = I1(JJ)
       ZZW1(JJ) = MIN( PRCS(JL),                                &
-#if defined(REPRO48) 
-                     XCRIMSS * ZVEC1(JJ) * PRCT(JL)                & ! RCRIMSS
-                                       *   ZVECLBDAS(JJ)**XEXCRIMSS &
-                                       * PRHODREF(JL)**(-XCEXVT) )
-#else
                      XCRIMSS * ZVEC1(JJ) * PRCT(JL) * PRST(JL)      & ! RCRIMSS
                                        *   ZVECLBDAS(JJ)**(XBS+XEXCRIMSS) &
                                        * PRHODREF(JL)**(-XCEXVT+1) )
-#endif
       PRCS(JL) = PRCS(JL) - ZZW1(JJ)
       PRSS(JL) = PRSS(JL) + ZZW1(JJ)
       PTHS(JL) = PTHS(JL) + ZZW1(JJ)*(PLSFACT(JL)-PLVFACT(JL)) ! f(L_f*(RCRIMSS))
@@ -163,21 +157,12 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZZW1, ZZW2, ZZW3, ZZW4 ! Work arrays
       JL = I1(JJ)
       IF ( PRSS(JL) > 0.0 ) THEN
         ZZW2(JJ) = MIN( PRCS(JL),                     &
-#if defined(REPRO48) 
-                    XCRIMSG * PRCT(JL)                & ! RCRIMSG
-                            *  ZVECLBDAS(JJ)**XEXCRIMSG  &
-                            * PRHODREF(JL)**(-XCEXVT) &
-                            - ZZW1(JJ)              )
-        ZZW3(JJ) = MIN( PRSS(JL),                         &
-                        XSRIMCG * ZVECLBDAS(JJ)**XEXSRIMCG   & ! RSRIMCG
-#else
                     XCRIMSG * PRCT(JL) *PRST(JL)         & ! RCRIMSG
                             *  ZVECLBDAS(JJ)**(XBS+XEXCRIMSG)  &
                             * PRHODREF(JL)**(-XCEXVT+1) &
                             - ZZW1(JJ)              )
         ZZW3(JJ) = MIN( PRSS(JL),                         &
                         PRST(JL) * PRHODREF(JL) * XSRIMCG * ZVECLBDAS(JJ)**(XBS+XEXSRIMCG)   & ! RSRIMCG
-#endif
                                 * (1.0 - ZVEC1(JJ) )/(PTSTEP*PRHODREF(JL)) )
         PRCS(JL) = PRCS(JL) - ZZW2(JJ)
         PRSS(JL) = PRSS(JL) - ZZW3(JJ)
@@ -275,11 +260,7 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZZW1, ZZW2, ZZW3, ZZW4 ! Work arrays
     DO JJ = 1, IGACC
       JL = I1(JJ)
       ZZW2(JJ) =                                            & !! coef of RRACCS
-#if defined(REPRO48) 
-              XFRACCSS*( ZVECLBDAS(JJ)**XCXS )*( PRHODREF(JL)**(-XCEXVT-1.) ) &
-#else
               XFRACCSS*( PRST(JL)*ZVECLBDAS(JJ)**XBS )*( PRHODREF(JL)**(-XCEXVT) ) &
-#endif
          *( XLBRACCS1/((ZVECLBDAS(JJ)**2)               ) +                  &
             XLBRACCS2/( ZVECLBDAS(JJ)    * ZVECLBDAR(JJ)    ) +                  &
             XLBRACCS3/(               (ZVECLBDAR(JJ)**2)) )/ZVECLBDAR(JJ)**4
@@ -325,11 +306,7 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZZW1, ZZW2, ZZW3, ZZW4 ! Work arrays
         ZZW2(JJ) = MAX( MIN( PRRS(JL),ZZW2(JJ)-ZZW4(JJ) ),0.0 )       ! RRACCSG
         IF ( ZZW2(JJ) > 0.0 ) THEN
           ZZW3(JJ) = MIN( PRSS(JL),XFSACCRG*ZVEC3(JJ)*                     & ! RSACCRG
-#if defined(REPRO48) 
-                ( ZVECLBDAS(JJ)**(XCXS-XBS) )*( PRHODREF(JL)**(-XCEXVT-1.) ) &
-#else
                 PRST(JL)*( PRHODREF(JL)**(-XCEXVT) ) &
-#endif
               *( XLBSACCR1/((ZVECLBDAR(JJ)**2)               ) +           &
                   XLBSACCR2/( ZVECLBDAR(JJ)    * ZVECLBDAS(JJ)    ) +           &
                   XLBSACCR3/(               (ZVECLBDAS(JJ)**2)) )/ZVECLBDAR(JJ) )
@@ -376,15 +353,9 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZZW1, ZZW2, ZZW3, ZZW4 ! Work arrays
 !
 ! compute RSMLT
 !
-#if defined(REPRO48) 
-    ZZW(:)  = MIN( PRSS(:), XFSCVMG*MAX( 0.0,( -ZZW(:) *             &
-                           ( X0DEPS*       PLBDAS(:)**XEX0DEPS +     &
-                             X1DEPS*PCJ(:)*PLBDAS(:)**XEX1DEPS ) ) / &
-#else
     ZZW(:)  = MIN( PRSS(:), XFSCVMG*MAX( 0.0,( -ZZW(:) * PRST(:) * PRHODREF(:) * &
                            ( X0DEPS*       PLBDAS(:)**(XBS+XEX0DEPS) +     &
                              X1DEPS*PCJ(:)*PLBDAS(:)**(XBS+XEX1DEPS) ) ) / &
-#endif
                                              ( PRHODREF(:)*XLMTT ) ) )
 !
 ! note that RSCVMG = RSMLT*XFSCVMG but no heat is exchanged (at the rate RSMLT)
