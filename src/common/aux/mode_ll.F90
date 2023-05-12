@@ -16,8 +16,8 @@ CONTAINS
 
   SUBROUTINE UPDATE_HALO_ll(TPLIST, KINFO)
   USE MODD_ARGSLIST_ll, ONLY : LIST_ll  
-  TYPE(LIST_ll), POINTER :: TPLIST ! pointer to the list of fields to be updated
-  INTEGER                :: KINFO  ! return status
+  TYPE(LIST_ll), POINTER, INTENT(IN)  :: TPLIST ! pointer to the list of fields to be updated
+  INTEGER               , INTENT(OUT) :: KINFO  ! return status
   CALL ABORT
   END SUBROUTINE UPDATE_HALO_ll
 
@@ -44,15 +44,15 @@ END FUNCTION LSOUTH_ll
 !
 SUBROUTINE CLEANLIST_ll(TPLIST)
 IMPLICIT NONE
-    TYPE(LIST_ll),  POINTER :: TPLIST ! List of fields
+    TYPE(LIST_ll),  POINTER, INTENT(IN) :: TPLIST ! List of fields
     CALL ABORT
   END SUBROUTINE CLEANLIST_ll
 !
 SUBROUTINE ADD2DFIELD_ll(TPLIST, PFIELD, HNAME)
 IMPLICIT NONE
           
-    TYPE(LIST_ll), POINTER         :: TPLIST   ! list of fields
-    REAL, DIMENSION(:,:), TARGET :: PFIELD   ! field to be added to the list
+    TYPE(LIST_ll), POINTER, INTENT(INOUT)         :: TPLIST   ! list of fields
+    REAL, DIMENSION(:,:), TARGET, INTENT(IN) :: PFIELD   ! field to be added to the list
   !                                              of fields
     character(len=*), intent(in) :: HNAME ! Name of the field to be added
   !
@@ -62,8 +62,8 @@ END SUBROUTINE ADD2DFIELD_ll
 SUBROUTINE ADD3DFIELD_ll(TPLIST, PFIELD, HNAME)
 IMPLICIT NONE
           
-    TYPE(LIST_ll), POINTER         :: TPLIST   ! list of fields
-    REAL, DIMENSION(:,:,:), TARGET :: PFIELD   ! field to be added to the list
+    TYPE(LIST_ll), POINTER, INTENT(INOUT)         :: TPLIST   ! list of fields
+    REAL, DIMENSION(:,:,:), TARGET, INTENT(OUT)   :: PFIELD   ! field to be added to the list
   !                                              of fields
     character(len=*), intent(in) :: HNAME ! Name of the field to be added
   !
@@ -73,8 +73,8 @@ END SUBROUTINE ADD3DFIELD_ll
 SUBROUTINE ADD4DFIELD_ll(TPLIST, PFIELD, HNAME)
 IMPLICIT NONE
 
-    TYPE(LIST_ll), POINTER         :: TPLIST   ! list of fields
-    REAL, DIMENSION(:,:,:,:), TARGET :: PFIELD   ! field to be added to the list
+    TYPE(LIST_ll), POINTER, INTENT(INOUT)         :: TPLIST   ! list of fields
+    REAL, DIMENSION(:,:,:,:), TARGET, INTENT(IN) :: PFIELD   ! field to be added to the list
   !                                              of fields
     character(len=*), intent(in) :: HNAME ! Name of the field to be added
   !

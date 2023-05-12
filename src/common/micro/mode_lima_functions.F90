@@ -19,9 +19,9 @@ CONTAINS
 ! Pth moment order of the generalized gamma law
     USE MODI_GAMMA
     IMPLICIT NONE
-    REAL     :: PALPHA ! first shape parameter of the dimensionnal distribution
-    REAL     :: PNU    ! second shape parameter of the dimensionnal distribution
-    REAL     :: PP     ! order of the moment
+    REAL, INTENT(IN)     :: PALPHA ! first shape parameter of the dimensionnal distribution
+    REAL, INTENT(IN)     :: PNU    ! second shape parameter of the dimensionnal distribution
+    REAL, INTENT(IN)     :: PP     ! order of the moment
     REAL     :: PMOMG  ! result: moment of order ZP
     PMOMG = GAMMA_X0D(PNU+PP/PALPHA)/GAMMA_X0D(PNU)
   END FUNCTION MOMG
@@ -103,8 +103,10 @@ CONTAINS
 !
 SUBROUTINE gaulag(x,w,n,alf)
   use modd_precision, only: MNHREAL64
-  INTEGER n,MAXIT
-  REAL alf,w(n),x(n)
+  INTEGER, intent(in) :: n
+  INTEGER MAXIT
+  REAL, intent(IN)  :: alf
+  REAL, intent(out) :: w(n),x(n)
   REAL(kind=MNHREAL64) :: EPS
   PARAMETER (EPS=3.D-14,MAXIT=10)
   INTEGER i,its,j
@@ -155,8 +157,9 @@ END SUBROUTINE gaulag
 !
 SUBROUTINE gauher(x,w,n)
   use modd_precision, only: MNHREAL64
-  INTEGER n,MAXIT
-  REAL w(n),x(n)
+  INTEGER, intent(in) :: n
+  INTEGER MAXIT
+  REAL, intent(out) ::  w(n),x(n)
   REAL(kind=MNHREAL64) :: EPS,PIM4
   PARAMETER (EPS=3.D-14,PIM4=.7511255444649425D0,MAXIT=10)
   INTEGER i,its,j,m

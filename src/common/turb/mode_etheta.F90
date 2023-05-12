@@ -66,8 +66,8 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
-INTEGER                              :: KRR          ! number of moist var.
-INTEGER                              :: KRRI         ! number of ice var.
+INTEGER,                INTENT(IN)   :: KRR          ! number of moist var.
+INTEGER,                INTENT(IN)   :: KRRI         ! number of ice var.
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 !
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  ::   PTHLM     ! Conservative pot. temperature

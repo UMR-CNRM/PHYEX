@@ -397,11 +397,11 @@ END FUNCTION DSDD
 !
 !*       0.1 declarations of arguments and result
 !
-    integer M
-    integer N
-    real    X(N)
-    real    FVEC(M)
-    integer IFLAG
+    integer, intent(in) :: M
+    integer, intent(in) :: N
+    real, intent(in) ::    X(N)
+    real, intent(out) ::    FVEC(M)
+    integer, intent(inout) :: IFLAG
 !
 !*       0.2 declarations of local variables
 !

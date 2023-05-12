@@ -24,7 +24,7 @@ REAL, DIMENSION(:,:,:),        INTENT(INOUT):: PUT     ! x-component of wind
 REAL, DIMENSION(:,:,:),        INTENT(INOUT):: PVT     ! y-component of wind
 REAL, DIMENSION(:,:,:),        INTENT(INOUT):: PTHT    ! potential temperature
 REAL, DIMENSION(:,:,:),        INTENT(INOUT):: PTKET ! TKE fields 
-TYPE(LIST_ll), POINTER                      :: TPINITHALO3D_ll ! pointer for the list of fields
+TYPE(LIST_ll), POINTER,        INTENT(INOUT):: TPINITHALO3D_ll ! pointer for the list of fields
                                       !  which must be communicated in INIT
 !
 END SUBROUTINE INI_TKE_EPS
@@ -116,7 +116,7 @@ REAL, DIMENSION(:,:,:),        INTENT(INOUT):: PUT     ! x-component of wind
 REAL, DIMENSION(:,:,:),        INTENT(INOUT):: PVT     ! y-component of wind
 REAL, DIMENSION(:,:,:),        INTENT(INOUT):: PTHT    ! potential temperature
 REAL, DIMENSION(:,:,:),        INTENT(INOUT):: PTKET ! TKE field 
-TYPE(LIST_ll), POINTER                      :: TPINITHALO3D_ll ! pointer for the list of fields
+TYPE(LIST_ll), POINTER,        INTENT(INOUT):: TPINITHALO3D_ll ! pointer for the list of fields
                                       !  which must be communicated in INIT
 !
 !*       0.2    Declaration of local variables

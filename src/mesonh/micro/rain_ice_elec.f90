@@ -5134,9 +5134,9 @@ END SUBROUTINE ELEC_INI_NI_SAUNQ
 !
 IMPLICIT NONE
 !
-REAL, DIMENSION(IMICRO) :: ZEW
-REAL, DIMENSION(IMICRO) :: ZDQTAKA_AUX
-REAL, DIMENSION(NIND_LWC+1,NIND_TEMP+1) :: XTAKA_AUX  !XMANSELL or XTAKA_TM)
+REAL, DIMENSION(IMICRO), INTENT(IN) :: ZEW
+REAL, DIMENSION(IMICRO), INTENT(INOUT) :: ZDQTAKA_AUX
+REAL, DIMENSION(NIND_LWC+1,NIND_TEMP+1), INTENT(IN) :: XTAKA_AUX  !XMANSELL or XTAKA_TM)
 !
 !
   ALLOCATE ( IVEC1(IGTAKA) )
@@ -5826,9 +5826,9 @@ IMPLICIT NONE
 !
 !*	0.2	Declaration of local variables
 !
-INTEGER                          :: KN        ! Size of the result vector
-INTEGER,          DIMENSION(KN)  :: KI        ! Tabulated  coordinate
-INTEGER,          DIMENSION(KN)  :: KJ        ! Tabulated  coordinate
+INTEGER,          INTENT(IN)                  :: KN        ! Size of the result vector
+INTEGER,          INTENT(IN),  DIMENSION(KN)  :: KI        ! Tabulated  coordinate
+INTEGER,          INTENT(IN),  DIMENSION(KN)  :: KJ        ! Tabulated  coordinate
 REAL, INTENT(IN), DIMENSION(:,:) :: ZT        ! Tabulated data
 REAL, INTENT(IN), DIMENSION(KN)  :: PDX, PDY  ! 
 REAL,             DIMENSION(KN)  :: Y         ! Interpolated value

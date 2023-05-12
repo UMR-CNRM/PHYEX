@@ -30,7 +30,7 @@ CHARACTER(LEN=4),         INTENT(IN)    :: HMF_CLOUD! Type of statistical cloud
 CHARACTER(len=4),         INTENT(IN)    :: HRAD     ! Radiation scheme name
 LOGICAL,                  INTENT(IN)    :: OSUBG_COND ! Switch for Subgrid 
                                                     ! Condensation
-LOGICAL                                 :: OSIGMAS  ! Switch for Sigma_s: 
+LOGICAL,                  INTENT(IN)    :: OSIGMAS  ! Switch for Sigma_s: 
                                                     ! use values computed in CONDENSATION
                                                     ! or that from turbulence scheme
 REAL,                     INTENT(IN)   :: PTSTEP    ! Double Time step
@@ -201,7 +201,7 @@ CHARACTER(LEN=4),       INTENT(IN)    :: HMF_CLOUD! Type of statistical cloud
 CHARACTER(len=4),       INTENT(IN)    :: HRAD     ! Radiation scheme name
 LOGICAL,                INTENT(IN)    :: OSUBG_COND ! Switch for Subgrid 
                                                     ! Condensation
-LOGICAL                               :: OSIGMAS  ! Switch for Sigma_s: 
+LOGICAL,                INTENT(IN)    :: OSIGMAS  ! Switch for Sigma_s: 
                                                   ! use values computed in CONDENSATION
                                                   ! or that from turbulence scheme
 REAL,                   INTENT(IN)    :: PTSTEP   ! Double Time step

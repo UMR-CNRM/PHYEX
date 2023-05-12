@@ -430,8 +430,8 @@ PA_TH(:) = PA_TH(:) + P_TH_WETH(:)                + P_TH_HMLT(:)
 !
 CONTAINS
   FUNCTION GET_XKER_SWETH(GRAUPEL,SNOW) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: SNOW
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: SNOW
     REAL, DIMENSION(SIZE(SNOW)) :: RET
     !
     INTEGER I
@@ -444,8 +444,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_N_SWETH(GRAUPEL,SNOW) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: SNOW
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: SNOW
     REAL, DIMENSION(SIZE(SNOW)) :: RET
     !
     INTEGER I
@@ -458,8 +458,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_GWETH(GRAUPEL,SNOW) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: SNOW
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: SNOW
     REAL, DIMENSION(SIZE(SNOW)) :: RET
     !
     INTEGER I
@@ -472,8 +472,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_N_GWETH(GRAUPEL,SNOW) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: SNOW
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: SNOW
     REAL, DIMENSION(SIZE(SNOW)) :: RET
     !
     INTEGER I

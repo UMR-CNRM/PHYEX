@@ -780,8 +780,8 @@ IMPLICIT NONE
 !*        declaration of local variables
 !
 !
-LOGICAL, DIMENSION(:,:,:) :: LTAB ! Mask
-INTEGER, DIMENSION(:) :: I1,I2,I3 ! Used to replace the COUNT and PACK
+LOGICAL, INTENT(IN), DIMENSION(:,:,:) :: LTAB ! Mask
+INTEGER, INTENT(OUT), DIMENSION(:) :: I1,I2,I3 ! Used to replace the COUNT and PACK
 INTEGER :: JI,JJ,JK,IC
 !  
 !-------------------------------------------------------------------------------

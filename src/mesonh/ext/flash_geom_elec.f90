@@ -2752,7 +2752,7 @@ END SUBROUTINE N8INTERCHANGE_SORT
 
     use modd_precision, only: MNHINT32
 
-    REAL                         :: ZRANDOM
+    REAL, INTENT(OUT)            :: ZRANDOM
     INTEGER(kind=MNHINT32), SAVE :: NSEED_MNH = 26032012_MNHINT32
 
     ZRANDOM = real( r8_uniform_01( NSEED_MNH ), kind(ZRANDOM) )

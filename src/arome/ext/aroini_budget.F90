@@ -59,7 +59,7 @@ IMPLICIT NONE
 !*       0.1   declarations of argument
 !
 !
-LOGICAL :: LDBU_ENABLE
+LOGICAL, INTENT(IN) :: LDBU_ENABLE
 !
 !*       0.2   Declarations of local variables :
 !

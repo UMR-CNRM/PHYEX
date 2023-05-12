@@ -513,8 +513,8 @@ PA_TH(:) = PA_TH(:) + P_TH_WETG(:) + P_TH_DRYG(:)               + P_TH_GMLT(:)
 !
 CONTAINS
   FUNCTION GET_XKER_SDRYG(GRAUPEL,SNOW) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: SNOW
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: SNOW
     REAL, DIMENSION(SIZE(SNOW)) :: RET
     !
     INTEGER I
@@ -527,8 +527,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_N_SDRYG(GRAUPEL,SNOW) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: SNOW
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: SNOW
     REAL, DIMENSION(SIZE(SNOW)) :: RET
     !
     INTEGER I
@@ -541,8 +541,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_RDRYG(GRAUPEL,RAIN) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: RAIN
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: RAIN
     REAL, DIMENSION(SIZE(RAIN)) :: RET
     !
     INTEGER I
@@ -555,8 +555,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_N_RDRYG(GRAUPEL,RAIN) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: RAIN
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: RAIN
     REAL, DIMENSION(SIZE(RAIN)) :: RET
     !
     INTEGER I
