@@ -51,8 +51,9 @@ set -o pipefail #abort if left command on a pipe fails
 # - split_48t1: original 48t1 source code but with physics source code under phyex directory
 # - split_48t3: same as split_48t1 but for the 48t3 cycle
 # - split: symbolic link to split_48t1 (backward compatibility)
+# - split_49t0: same as split_48t1 but for the 49t0 cycle
 
-specialPack="ori split split_48t1 split_48t3 recompil"
+specialPack="ori split split_48t1 split_48t3 recompil split_49t0"
 availTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7"
 defaultTest="small_3D"
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
@@ -232,7 +233,9 @@ if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
   [ $suppress -eq 1 -a -d $HOMEPACK/$name ] && rm -rf $HOMEPACK/$name
 elif echo $specialPack | grep -w $commit > /dev/null; then
   name="PHYEX/$commit"
-  if [ $commit == split_48t3 ]; then
+  if [ $commit == split_49t0 ]; then
+    cycle=49t0
+  elif [ $commit == split_48t3 ]; then
     cycle=48t3
   else
     cycle=48t1
