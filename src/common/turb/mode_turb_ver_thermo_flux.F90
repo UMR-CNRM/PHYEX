@@ -239,7 +239,7 @@ USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 USE MODD_FIELD,            ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,               ONLY: TFILEDATA
 USE MODD_LES,              ONLY: TLES_t
-USE MODD_PARAMETERS,       ONLY: JPVEXT_TURB, JPHEXT, XUNDEF
+USE MODD_PARAMETERS,       ONLY: XUNDEF
 USE MODD_TURB_n,           ONLY: TURB_t
 !
 USE MODE_GRADIENT_W_PHY, ONLY: GZ_W_M_PHY
@@ -352,7 +352,6 @@ REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSRFL_C  ! O-A interface flu
 REAL, DIMENSION(D%NIJT,D%NKT)  ::  &
        ZA,       & ! work variable for wrc or LES computation
        ZFLXZ,    & ! vertical flux of the treated variable
-       ZSOURCE,  & ! source of evolution for the treated variable
        ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
        ZF,       & ! Flux in dTh/dt =-dF/dz (evaluated at t-1)(or rt instead of Th)
        ZDFDDTDZ, & ! dF/d(dTh/dz)
@@ -375,10 +374,6 @@ INTEGER             :: IIJB, IIJE
 INTEGER             :: IKL
 !
 REAL :: ZTIME1, ZTIME2
-REAL :: ZFLPROV
-INTEGER           :: JKM          ! vertical index loop
-INTEGER           :: JSW
-REAL :: ZSWA     ! index for time flux interpolation
 !
 INTEGER :: IIU, IJU
 LOGICAL :: GUSERV   ! flag to use water

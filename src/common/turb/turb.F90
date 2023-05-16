@@ -244,7 +244,7 @@ USE MODE_SHUMAN_PHY, ONLY: MZF_PHY,MXF_PHY,MYF_PHY
 USE YOMHOOK ,   ONLY: LHOOK, DR_HOOK
 !
 USE MODD_BUDGET,     ONLY:  NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC,  &
-                            NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1, &
+                             NBUDGET_RI, NBUDGET_SV1, &
                             TBUDGETDATA, TBUDGETCONF_t
 USE MODD_CST,        ONLY: CST_t
 USE MODD_CTURB,      ONLY: CSTURB_t
@@ -488,7 +488,6 @@ REAL                :: ZCOEF_AMPL_CEI_NUL! Ordonnate at the origin of the
                                          ! amplification straight line (for routine CLOUD_MODIF_LM)
 !
 INTEGER             :: IIJB,IIJE,IKB,IKE      ! index value for the
-INTEGER             :: IINFO_ll     ! return code of parallel routine
 ! Beginning and the End of the physical domain for the mass points
 INTEGER             :: IKT,IKA,IKU  ! array size in k direction
 INTEGER             :: IKL

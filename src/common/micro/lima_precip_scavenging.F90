@@ -86,7 +86,7 @@ USE MODD_PARAM_LIMA,      ONLY: NMOD_IFN, NSPECIE, XFRAC,                       
                                 XMDIAM_IFN, XSIGMA_IFN, XRHO_IFN,                 &
                                 NMOD_CCN, XR_MEAN_CCN, XLOGSIG_CCN, XRHO_CCN,     &
                                 XALPHAR, XNUR,                                    &
-                                LAERO_MASS, NDIAMR, NDIAMP, XT0SCAV, XTREF, XNDO, &
+                                LAERO_MASS, NDIAMR, NDIAMP, XT0SCAV, XTREF,       &
                                 XMUA0, XT_SUTH_A, XMFPA0, XVISCW, XRHO00,         &
                                 XRTMIN, XCTMIN
 USE MODD_PARAM_LIMA_WARM, ONLY: XCR, XDR
@@ -136,7 +136,7 @@ INTEGER :: IKB           !
 INTEGER :: IKE           !
 !
 INTEGER :: JSV               ! CCN or IFN mode 
-INTEGER :: J1, J2, IJ, JMOD
+INTEGER :: J1, J2, JMOD
 !
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
                                  :: GRAIN,  &! Test where rain is present
@@ -149,7 +149,6 @@ REAL                     :: ZDENS_RATIO, & !density ratio
                             ZNUM,        & !PNU-1.               
                             ZSHAPE_FACTOR
 !
-REAL,    DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3))  :: ZW     ! work array
 REAL,    DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3))  :: PCRT   ! cloud droplet conc.
 !
 REAL, DIMENSION(:), ALLOCATABLE :: ZLAMBDAR,      &  !slope parameter of the 
@@ -190,7 +189,6 @@ REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZCOL_EF,     &! Collision efficiency
                                        ZSIZE_RATIO, &! Size Ratio
                                        ZST           ! Stokes number
 !
-REAL, DIMENSION(SIZE(PRRT,1),SIZE(PRRT,2),SIZE(PRRT,3)) :: ZRRS          
 !
 REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
                                     :: PMEAN_SCAV_COEF, & !Mean Scavenging 
@@ -644,7 +642,7 @@ REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPAP
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER :: JJ, JK, JN, JRR                ! Loop indexes 
+INTEGER :: JK, JN                         ! Loop indexes 
 INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE   ! Physical domain
 !
 REAL    :: ZTSPLITR      ! Small time step for rain sedimentation

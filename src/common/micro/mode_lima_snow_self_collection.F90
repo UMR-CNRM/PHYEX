@@ -61,8 +61,8 @@ REAL, DIMENSION(SIZE(PCST)) :: &
                                            ZW2
 LOGICAL, DIMENSION(SIZE(PCST)) :: GSSC
 INTEGER :: IGSSC, JJ
-INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1,IVEC2        ! Vectors of indices
-REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1,ZVEC2, ZVEC3 ! Work vectors
+INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1        ! Vectors of indices
+REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1, ZVEC3 ! Work vectors
 !
 !-------------------------------------------------------------------------------
 !

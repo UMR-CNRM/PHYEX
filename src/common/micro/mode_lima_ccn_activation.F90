@@ -136,7 +136,7 @@ REAL, DIMENSION(:), ALLOCATABLE    :: ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6, &
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZTMP, ZCHEN_MULTI
 !
 REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))   &
-                                   :: ZTDT, ZDRC, ZRVSAT, ZW, ZW2, ZCLDFR  
+                                   :: ZTDT, ZRVSAT, ZW, ZW2, ZCLDFR  
 REAL, DIMENSION(SIZE(PNFT,1),SIZE(PNFT,2),SIZE(PNFT,3))               &
                                    :: ZCONC_TOT         ! total CCN C. available
 !

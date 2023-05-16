@@ -106,7 +106,6 @@ USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 USE MODE_BUDGET_PHY,       ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 !USE MODE_IO_FIELD_WRITE,   only: IO_Field_write
 use mode_msg
-use mode_tools,            only: Countjv
 !
 USE MODI_CONDENSATION
 USE MODE_LIMA_CCN_ACTIVATION, ONLY: LIMA_CCN_ACTIVATION
@@ -191,8 +190,7 @@ REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) &
                             PCIT,        & ! Cloud ice   conc. at t
 !
                             PCCS,        & ! Cloud water C. source
-                            PMAS,        & ! Mass of scavenged AP
-                            PCIS           ! Ice crystal C. source
+                            PMAS           ! Mass of scavenged AP
 !
 REAL, DIMENSION(:,:,:,:), ALLOCATABLE &
                          :: PNFS,        & ! Free      CCN C. source
@@ -228,11 +226,6 @@ REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2)) :: ZSIGQSAT2D
 INTEGER, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) :: IVEC1
 !
 !INTEGER                  :: IRESP      ! Return code of FM routines
-INTEGER                  :: IIU,IJU,IKU! dimensions of dummy arrays
-INTEGER                  :: IKB        ! K index value of the first inner mass point
-INTEGER                  :: IKE        ! K index value of the last inner mass point
-INTEGER                  :: IIB,IJB    ! Horz index values of the first inner mass points
-INTEGER                  :: IIE,IJE    ! Horz index values of the last inner mass points
 INTEGER                  :: JITER,ITERMAX  ! iterative loop for first order adjustment
 !INTEGER                  :: ILUOUT     ! Logical unit of output listing 
 !
@@ -243,7 +236,7 @@ REAL, DIMENSION(:), ALLOCATABLE   :: ZCTMIN
 !
 integer :: idx
 integer :: JI, JJ, JK, jl
-INTEGER                           :: JMOD, JMOD_IFN, JMOD_IMM
+INTEGER                           :: JMOD
 !
 !!$TYPE(TFIELDMETADATA)     :: TZFIELD
 !

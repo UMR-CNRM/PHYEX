@@ -38,14 +38,11 @@ CONTAINS
 USE MODD_CST,            ONLY: CST_t
 USE MODD_NSV
 USE MODD_PARAMETERS,      ONLY: JPHEXT, JPVEXT
-USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN, NMOD_IMM, XRTMIN, XCTMIN, XNUC
+USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN
 USE MODD_PARAM_LIMA_COLD, ONLY: XRCOEF_HONH, XCEXP_DIFVAP_HONH, XCOEF_DIFVAP_HONH,&
                                 XCRITSAT1_HONH, XCRITSAT2_HONH, XTMAX_HONH,       &
                                 XTMIN_HONH, XC1_HONH, XC2_HONH, XC3_HONH,         &
-                                XDLNJODT1_HONH, XDLNJODT2_HONH, XRHOI_HONH,       &
-                                XC_HONC, XTEXP1_HONC, XTEXP2_HONC, XTEXP3_HONC,   &
-                                XTEXP4_HONC, XTEXP5_HONC
-USE MODD_PARAM_LIMA_WARM, ONLY: XLBC
+                                XDLNJODT1_HONH, XDLNJODT2_HONH, XRHOI_HONH
 !
 use mode_tools,           only: Countjv
 !
@@ -99,11 +96,10 @@ REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))   &
                                   :: ZNHT  ! Nucleated Ice nuclei conc. source
                                            ! by Homogeneous freezing of haze
 REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))   &
-                                  :: ZW, ZT ! work arrays
+                                  :: ZT ! work arrays
 !
 REAL, DIMENSION(:), ALLOCATABLE &
                            :: ZRHODREF, & ! RHO Dry REFerence
-                              ZRHODJ,   & ! RHO times Jacobian
                               ZZT,      & ! Temperature
                               ZPRES,    & ! Pressure
                               ZEXNREF,  & ! EXNer Pressure REFerence
@@ -125,11 +121,11 @@ REAL, DIMENSION(:), ALLOCATABLE &
                               ZCCNFROZEN
 !
 INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE   ! Physical domain
-INTEGER :: JL, JMOD_CCN, JMOD_IMM         ! Loop index
+INTEGER :: JL, JMOD_CCN                   ! Loop index
 !
 INTEGER :: INEGT                          ! Case number of hom. nucleation
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
-			  :: GNEGT        ! Test where to compute the hom. nucleation
+        :: GNEGT        ! Test where to compute the hom. nucleation
 INTEGER , DIMENSION(SIZE(GNEGT)) :: I1,I2,I3 ! Used to replace the COUNT
 !
 REAL    :: ZEPS                           ! molar mass ratio

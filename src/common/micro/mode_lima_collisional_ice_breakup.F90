@@ -36,7 +36,7 @@ CONTAINS
 USE MODD_PARAM_LIMA,       ONLY : LCIBU, XRTMIN, XCTMIN, XCEXVT, XALPHAS, XNUS, XNDEBRIS_CIBU
 
 USE MODD_PARAM_LIMA_COLD,  ONLY : XBS, XCS, XDS, XFVELOS, XMNU0
-USE MODD_PARAM_LIMA_MIXED, ONLY : XCG, XDG, XCXG,                              &
+USE MODD_PARAM_LIMA_MIXED, ONLY : XCG, XDG,                                    &
                                   XCIBUINTP_S, XCIBUINTP1_S, XCIBUINTP2_S,     &
                                   XCIBUINTP_G, XCIBUINTP1_G,                   &
                                   XFACTOR_CIBU_NI, XFACTOR_CIBU_RI,            &

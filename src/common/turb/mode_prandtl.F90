@@ -151,7 +151,6 @@ USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_TURB_n,         ONLY: TURB_t
 USE MODD_IO,             ONLY: TFILEDATA
-USE MODD_PARAMETERS,     ONLY: JPVEXT_TURB
 !
 USE MODE_EMOIST,         ONLY: EMOIST
 USE MODE_ETHETA,         ONLY: ETHETA
@@ -220,9 +219,9 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PEMOIST ! coefficient E_moist
 !       0.2  declaration of local variables
 !
 REAL, DIMENSION(D%NIJT,D%NKT) ::  &
-                  ZW1, ZW2, ZW3, &
+                  ZW1, ZW2,  &
 !                                                 working variables
-                  ZWORK1,ZWORK2,ZWORK3,ZWORK4, ZWORK5, ZWORK6,ZWORK7, &
+                  ZWORK1,ZWORK2,ZWORK3,ZWORK4, &
                   ZGXMM_PTH,ZGYMM_PTH,ZGXMM_PRM,ZGYMM_PRM, ZGXMM_PSV,ZGYMM_PSV
 !                                                 working variables for explicit array
 !                                                     
@@ -231,7 +230,6 @@ INTEGER :: IKE      ! vertical index value for the last inner mass point
 INTEGER::  JSV,JIJ,JK ! loop index
 INTEGER :: IIJB,IIJE,IKT,IKA,IKL
 
-INTEGER :: JLOOP
 REAL    :: ZMINVAL
 TYPE(TFIELDMETADATA) :: TZFIELD
 ! ---------------------------------------------------------------------------

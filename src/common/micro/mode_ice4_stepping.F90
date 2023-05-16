@@ -44,8 +44,6 @@ USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & IRREVAV,      & ! Index for the evaporation tendency
       & IBUEXTRAIND     ! Index indirection
 
-USE MODE_MSG,            ONLY: PRINT_MSG, NVERB_FATAL
-
 USE MODE_ICE4_TENDENCIES, ONLY: ICE4_TENDENCIES
 !
 IMPLICIT NONE

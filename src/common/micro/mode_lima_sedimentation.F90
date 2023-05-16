@@ -47,12 +47,11 @@ CONTAINS
 !
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 USE MODD_CST,              ONLY: CST_t
-USE MODD_PARAMETERS,       ONLY: JPHEXT, JPVEXT
 USE MODD_PARAM_LIMA,       ONLY: XCEXVT, XRTMIN, XCTMIN, NSPLITSED,           &
                                  XLB, XLBEX, XD, XFSEDR, XFSEDC,              &
                                  XALPHAC, XNUC, XALPHAS, XNUS, LSNOW_T,       &
                                  NMOM_S
-USE MODD_PARAM_LIMA_COLD,  ONLY: XLBEXI, XLBI, XDI, XLBDAS_MAX, XBS, XEXSEDS, &
+USE MODD_PARAM_LIMA_COLD,  ONLY: XLBDAS_MAX, XBS, &
                                  XLBDAS_MIN, XTRANS_MP_GAMMAS, XFVELOS
 
 use mode_tools,            only: Countjv

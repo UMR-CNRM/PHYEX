@@ -45,8 +45,7 @@ CONTAINS
 USE MODD_PARAM_LIMA,      ONLY : NMOD_CCN, HINI_CCN, HTYPE_CCN,        &
                                  XR_MEAN_CCN, XLOGSIG_CCN, XRHO_CCN,                 &
                                  XKHEN_MULTI, XMUHEN_MULTI, XBETAHEN_MULTI,          &
-                                 XLIMIT_FACTOR, CCCN_MODES, LSCAV,                    &
-                                 XACTEMP_CCN, XFSOLUB_CCN,                           &
+                                 XLIMIT_FACTOR, CCCN_MODES,                     &
                                  NMOD_IFN, NSPECIE, CIFN_SPECIES,       &
                                  XMDIAM_IFN, XSIGMA_IFN, XRHO_IFN, XFRAC, XFRAC_REF, &
                                  CINT_MIXING, NPHILLIPS,           &
@@ -60,18 +59,6 @@ USE MODE_LIMA_INIT_CCN_ACTIVATION_SPECTRUM, ONLY: LIMA_INIT_CCN_ACTIVATION_SPECT
 !
 IMPLICIT NONE
 !
-REAL             ::  XKHEN0     
-REAL             ::  XLOGSIG0   
-REAL             ::  XALPHA1     
-REAL             ::  XMUHEN0    
-REAL             ::  XALPHA2   
-REAL             ::  XBETAHEN0  
-REAL             ::  XR_MEAN0  
-REAL             ::  XALPHA3    
-REAL             ::  XALPHA4     
-REAL             ::  XALPHA5      
-REAL             ::  XACTEMP0    
-REAL             ::  XALPHA6   
 !
 REAL, DIMENSION(6) :: XKHEN_TMP   = (/1.56, 1.56, 1.56, 1.56, 1.56, 1.56 /)
 REAL, DIMENSION(6) :: XMUHEN_TMP  = (/0.80, 0.80, 0.80, 0.80, 0.80, 0.80 /)
@@ -92,7 +79,6 @@ REAL :: X1, X2, X3, X4, X5
 ! CHARACTER(LEN=7), DIMENSION(3) :: types=(/ 'NH42SO4', 'NaCl   ', '       ' /)
 !REAL, DIMENSION(1) :: diameters=(/ 0.25E-6 /)
 !CHARACTER(LEN=7), DIMENSION(1) :: types=(/ '       ' /)
-INTEGER :: II, IJ, IK
 !
 !-------------------------------------------------------------------------------
 !

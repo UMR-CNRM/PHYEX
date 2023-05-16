@@ -52,7 +52,6 @@ REAL, DIMENSION(:),    INTENT(INOUT) :: PB_CR            ! Cumulated concentrati
 !*       0.2   Declarations of local variables :
 !
 REAL,    DIMENSION(SIZE(PCRT)) :: ZWLBDR,ZWLBDR3
-INTEGER :: JL
 !
 !-------------------------------------------------------------------------------
 !

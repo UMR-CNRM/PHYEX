@@ -230,10 +230,9 @@ REAL                    :: PZRIDDR
 !
 !
 INTEGER, PARAMETER      :: MAXIT=60
-REAL,    PARAMETER      :: UNUSED=0.0 !-1.11e30
 REAL                    :: fh,fl, fm,fnew
 REAL                    :: s,xh,xl,xm,xnew
-INTEGER                 :: j, JL
+INTEGER                 :: j
 !
 PZRIDDR= 999999.
 fl     = DSDD(PX1,XDDRY,XKAPPA,XT)
@@ -407,7 +406,7 @@ END FUNCTION DSDD
 !
     integer I
     real    C
-    real    ZW, ZW2
+    real    ZW
 !    
     ! print *, "X = ", X
     IF ( ANY(X .LT.0.) .OR. X(1).gt.2*X(2)) THEN

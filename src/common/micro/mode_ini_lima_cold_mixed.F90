@@ -80,13 +80,11 @@ REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
 character(len=13) :: yval     ! String for error message
 INTEGER :: IKB                ! Coordinates of the first  physical 
                               ! points along z
-INTEGER :: J1,J2              ! Internal loop indexes
+INTEGER :: J1                 ! Internal loop indexes
 !
 REAL, DIMENSION(8)  :: ZGAMI  ! parameters involving various moments
 REAL, DIMENSION(2)  :: ZGAMS  ! of the generalized gamma law
 !
-REAL :: ZT                    ! Work variable
-REAL :: ZVTRMAX               ! Raindrop maximal fall velocity
 REAL :: ZRHO00                ! Surface reference air density
 REAL :: ZRATE                 ! Geometrical growth of Lbda in the tabulated
                               ! functions and kernels
@@ -109,7 +107,7 @@ INTEGER  :: KND
 INTEGER  :: KACCLBDAS,KACCLBDAR,KDRYLBDAG,KDRYLBDAS,KDRYLBDAR
 REAL     :: PALPHAR,PALPHAS,PALPHAG,PALPHAH
 REAL     :: PNUR,PNUS,PNUG,PNUH
-REAL     :: PBR,PBS,PBG,PBH
+REAL     :: PBR,PBS,PBG
 REAL     :: PCR,PCS,PCG,PCH
 REAL     :: PDR,PDS,PFVELOS,PDG,PDH
 REAL     :: PESR,PEGS,PEGR,PEHS,PEHG
@@ -123,19 +121,14 @@ INTEGER  :: KWETLBDAS,KWETLBDAG,KWETLBDAH
 !
 REAL     :: ZFAC_ZRNIC ! Zrnic factor used to decrease Long Kernels
 !
-REAL :: ZBOUND_CIBU_SMIN    ! XDCSLIM*Lbda_s : lower & upper bound used
-REAL :: ZBOUND_CIBU_SMAX    !        in the tabulated function
-REAL :: ZBOUND_CIBU_GMIN    ! XDCGLIM*Lbda_g : lower & upper bound used
-REAL :: ZBOUND_CIBU_GMAX    !        in the tabulated function
+REAL :: ZBOUND_CIBU_SMIN    ! XDCSLIM*Lbda_s : lower bound used in the tabulated function
+REAL :: ZBOUND_CIBU_GMIN    ! XDCGLIM*Lbda_g : lower bound used in the tabulated function
 REAL :: ZRATE_S             ! Geometrical growth of Lbda_s in the tabulated function
 REAL :: ZRATE_G             ! Geometrical growth of Lbda_g in the tabulated function
 !
-REAL :: ZBOUND_RDSF_RMIN    ! XDCRLIM*Lbda_r : lower & upper bound used
-REAL :: ZBOUND_RDSF_RMAX    ! in the tabulated function
+REAL :: ZBOUND_RDSF_RMIN    ! XDCRLIM*Lbda_r : lower bound used in the tabulated function
 REAL :: ZRATE_R             ! Geometrical growth of Lbda_r in the tabulated function
 REAL :: ZKHI_LWM            ! Coefficient of Lawson et al. (2015)
-!
-REAL :: ZRHOIW ! ice density
 !
 !-------------------------------------------------------------------------------
 !

@@ -138,10 +138,6 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZPRES_F,ZTHVM_F               ! interpolated at
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZG_O_THVREF                   ! g*ThetaV ref
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZW_UP2                        ! w**2  of the updraft
 
-REAL, DIMENSION(D%NIJT,D%NKT,KSV) :: ZSVM_F ! scalar variables 
-                        
-
-                        
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZTH_UP                        ! updraft THETA 
 !REAL, DIMENSION(SIZE(PTHM,1))              :: ZT_UP                         ! updraft T
 !REAL, DIMENSION(SIZE(PTHM,1))              :: ZLVOCPEXN                     ! updraft L
@@ -160,7 +156,7 @@ REAL, DIMENSION(D%NIJT) :: ZMIX1,ZMIX2
 
 REAL, DIMENSION(D%NIJT) :: ZLUP         ! Upward Mixing length from the ground
 
-INTEGER  :: JK,JIJ,JSV          ! loop counters
+INTEGER  :: JK,JIJ          ! loop counters
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
 INTEGER :: IKT,IKB,IKE,IKL
 LOGICAL, DIMENSION(D%NIJT) ::  GTEST,GTESTLCL
@@ -169,8 +165,6 @@ LOGICAL                          ::  GLMIX
                                ! To choose upward or downward mixing length
 LOGICAL, DIMENSION(D%NIJT)              :: GWORK1
 LOGICAL, DIMENSION(D%NIJT,D%NKT) :: GWORK2
-
-INTEGER  :: ITEST
 
 REAL, DIMENSION(D%NIJT) :: ZRC_UP, ZRI_UP, ZRV_UP, ZRSATW, ZRSATI
 

@@ -311,14 +311,11 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OCOMPUTE_SRC),&
 !
 !
 REAL, DIMENSION(D%NIJT,D%NKT)  ::  &
-       ZA,       & ! work variable for wrc
        ZFLXZ,    & ! vertical flux of the treated variable
-       ZSOURCE,  & ! source of evolution for the treated variable
        ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
        ZF,       & ! Flux in dTh/dt =-dF/dz (evaluated at t-1)(or rt instead of Th)
        ZDFDDTDZ, & ! dF/d(dTh/dz)
        ZDFDDRDZ, & ! dF/d(dr/dz)
-       Z3RDMOMENT, & ! 3 order term in flux or variance equation
 ! Estimate of full level length and dissipation length scale in case TURBN%LHARATU
        PLMF,     & ! estimate full level length scale from half levels (sub optimal)
        PLEPSF,   & ! estimate full level diss length scale from half levels (sub optimal)

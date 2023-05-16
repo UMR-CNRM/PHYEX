@@ -122,18 +122,13 @@ REAL, DIMENSION(D%NIJT),     INTENT(OUT)   :: PDEPTH           ! Deepness of clo
 !
 !
 ! Mean environment variables at t-dt at flux point
-REAL, DIMENSION(D%NIJT,D%NKT) ::    ZTHM_F,ZRVM_F,ZRCM_F    ! Theta,rv of
-                                                                  ! updraft environnement
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZTHM_F,ZRVM_F                 ! Theta,rv of updraft environnement
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRTM_F, ZTHLM_F, ZTKEM_F      ! rt, thetal,TKE,pressure,
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZUM_F,ZVM_F,ZRHO_F            ! density,momentum
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZPRES_F,ZTHVM_F,ZTHVM         ! interpolated at the flux point
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZG_O_THVREF                   ! g*ThetaV ref
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZW_UP2                        ! w**2  of the updraft
 
-REAL, DIMENSION(D%NIJT,D%NKT,KSV) :: ZSVM_F ! scalar variables 
-                        
-
-                        
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZTH_UP                        ! updraft THETA 
 REAL, DIMENSION(D%NIJT)              :: ZT_UP                         ! updraft T
 REAL, DIMENSION(D%NIJT)              :: ZLVOCPEXN                     ! updraft L
@@ -143,35 +138,26 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZTHS_UP,ZTHSM
 
 REAL, DIMENSION(D%NIJT,D%NKT) ::  ZCOEF  ! diminution coefficient for too high clouds 
                         
-REAL, DIMENSION(D%NIJT)            ::  ZWTHVSURF  ! Surface w'thetav'
-
 REAL  :: ZRDORV       ! RD/RV
 REAL  :: ZRVORD       ! RV/RD
 
 
 REAL, DIMENSION(D%NIJT) :: ZMIX1,ZMIX2,ZMIX3
 
-REAL, DIMENSION(D%NIJT) :: ZLUP         ! Upward Mixing length from the ground
 
-REAL, DIMENSION(D%NIJT) :: ZDEPTH       ! Deepness limit for cloud
-
-INTEGER  :: JK,JIJ,JSV          ! loop counters
+INTEGER  :: JK,JIJ          ! loop counters
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
 INTEGEr :: IKT,IKB,IKE,IKL
 
 LOGICAL, DIMENSION(D%NIJT) ::  GTEST,GTESTLCL,GTESTETL
                                ! Test if the ascent continue, if LCL or ETL is reached
-LOGICAL                          ::  GLMIX 
-                               ! To choose upward or downward mixing length
 LOGICAL, DIMENSION(D%NIJT)              :: GWORK1
 LOGICAL, DIMENSION(D%NIJT,D%NKT) :: GWORK2
 
 
-INTEGER  :: ITEST
 
-REAL, DIMENSION(D%NIJT) :: ZRC_UP, ZRI_UP, ZRV_UP, ZWP2, ZRSATW, ZRSATI
+REAL, DIMENSION(D%NIJT) :: ZRC_UP, ZRI_UP, ZRV_UP, ZRSATW, ZRSATI
 
-LOGICAL, DIMENSION(D%NIJT) :: GTEST_FER
 REAL,    DIMENSION(D%NIJT) :: ZPHI,ZALIM_STAR_TOT
 REAL,    DIMENSION(D%NIJT,D%NKT) :: ZDTHETASDZ,ZALIM_STAR,ZZDZ,ZZZ
 INTEGER, DIMENSION(D%NIJT) :: IALIM
@@ -181,7 +167,7 @@ REAL, DIMENSION(D%NIJT)              ::  ZCOE,ZWCOE,ZBUCOE
 REAL, DIMENSION(D%NIJT)              ::  ZDETR_BUO, ZDETR_RT
 REAL, DIMENSION(D%NIJT)              ::  ZW_MAX               ! w**2  max of the updraft
 REAL, DIMENSION(D%NIJT)              ::  ZZTOP                ! Top of the updraft
-REAL, DIMENSION(D%NIJT)              ::  ZA,ZB,ZQTM,ZQT_UP
+REAL, DIMENSION(D%NIJT)              ::  ZQTM,ZQT_UP
 
 REAL  :: ZDEPTH_MAX1, ZDEPTH_MAX2 ! control auto-extinction process
 

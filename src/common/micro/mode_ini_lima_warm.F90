@@ -67,9 +67,7 @@ REAL, DIMENSION(6)  :: ZGAMC, ZGAMR ! parameters involving various moments of
 REAL :: ZTT                   ! Temperature in Celsius
 REAL :: ZLV                   ! Latent heat of vaporization
 REAL :: ZSS                   ! Supersaturation
-REAL :: ZPSI1, ZG             ! Psi1 and G functions
-REAL :: ZAHENR                ! r_star (FH92)
-REAL :: ZVTRMAX               ! Raindrop maximal fall velocity
+REAL :: ZG                    ! G function
 REAL :: ZRHO00                ! Surface reference air density
 REAL :: ZSURF_TEN             ! Water drop surface tension
 REAL :: ZSMIN, ZSMAX          ! Minimal and maximal supersaturation used to

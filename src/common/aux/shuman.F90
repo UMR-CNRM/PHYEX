@@ -66,7 +66,6 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMXF   ! result at mass
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JI             ! Loop index in x direction
 INTEGER :: IIU            ! upper bound in x direction of PA
 !
 !-------------------------------------------------------------------------------
@@ -159,7 +158,6 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMXM   ! result at flux loc
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JI             ! Loop index in x direction
 INTEGER :: IIU            ! Size of the array in the x direction
 !
 !-------------------------------------------------------------------------------
@@ -254,7 +252,6 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMYF   ! result at mass
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ             ! Loop index in y direction
 INTEGER :: IJU            ! upper bound in y direction of PA
 !
 !-------------------------------------------------------------------------------
@@ -346,7 +343,6 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMYM   ! result at flux loc
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ             ! Loop index in y direction
 INTEGER :: IJU            ! Size of the array in the y direction
 !
 !-------------------------------------------------------------------------------

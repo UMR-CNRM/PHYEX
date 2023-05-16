@@ -63,8 +63,6 @@ REAL     :: ZT      ! Work variable
 REAL, DIMENSION(7)  :: ZVTRMAX
 !
 INTEGER  :: JI
-INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
-INTEGER  :: IRESP   ! Return code of FM-routines
 !  
 !-------------------------------------------------------------------------------
 !

@@ -295,7 +295,6 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMYM   ! result at flux local
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ             ! Loop index in y direction
 INTEGER :: IJU            ! Size of the array in the y direction
 !
 !-------------------------------------------------------------------------------
@@ -565,7 +564,6 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMXM   ! result at flux local
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JI             ! Loop index in x direction
 INTEGER :: IIU            ! Size of the array in the x direction
 !
 !-------------------------------------------------------------------------------
