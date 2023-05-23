@@ -20,7 +20,8 @@ CONTAINS
       USE phys_state_var_mod, only : phys_state_var_init
       USE phyetat0_mod, only: phyetat0
       USE output_physiqex_mod, ONLY: output_physiqex
-
+      USE MODD_PHYEX,      ONLY: PHYEX_t
+      USE MODI_INI_PHYEX,  ONLY: INI_PHYEX
       IMPLICIT none
 !
 ! Routine argument:
@@ -54,6 +55,8 @@ CONTAINS
     REAL tabcntr0( length       )
     INTEGER, PARAMETER :: longcles=20
     REAL, SAVE :: clesphy0(longcles)
+    TYPE(PHYEX_t)            :: PHYEX
+
     !$OMP THREADPRIVATE(clesphy0)
 
 
@@ -88,6 +91,15 @@ print*,'Debut physiqex IN'
   ! compute zjulian for annee0=1979 and month=1 dayref=1 and hour=0.0
   !CALL ymds2ju(annee0, month, dayref, hour, zjulian)
   call ymds2ju(1979, 1, 1, 0.0, zjulian)
+
+! Initialize PHYEX
+CALL INI_PHYEX(HPROGRAM='AROME ', KUNITNML=0, LDNEEDNAM=.TRUE., &
+              &KLUOUT=20, KFROM=0, KTO=1, &
+              &PTSTEP=25.0, PDZMIN=999., &
+              &CMICRO='ICE3', CSCONV='EDKF', CTURB='TKEL', &
+              &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., &
+              &KPRINT=0, LDINIT=.FALSE., &
+              &PHYEX_OUT=PHYEX)
 
 #ifndef CPP_IOIPSL_NO_OUTPUT
   ! Initialize IOIPSL output file
