@@ -55,7 +55,14 @@ CONTAINS
     REAL tabcntr0( length       )
     INTEGER, PARAMETER :: longcles=20
     REAL, SAVE :: clesphy0(longcles)
-    TYPE(PHYEX_t)            :: PHYEX
+    TYPE(PHYEX_t), SAVE      :: PHYEX
+    real, dimension(klon, klev + 2) :: zrv, zrc, zri, zrr, zrs, zrg, zqt !mixing ratio and total specifiq content
+    real, dimension(klon, klev + 2) :: ztheta, zexn !theta and exner function
+    real, dimension(klon, klev + 2) :: zz_mass !altitude above ground of mass points
+    real, dimension(klon, klev + 2) :: zz_flux !altitude above ground of flux points
+    real, dimension(klon, klev + 2) :: zdzm !distance between two consecutive mass points (expressed on flux points)
+    real, dimension(klon, klev + 2) :: zdzf !distance between two consecutive flux points (expressed on mass points)
+    real, dimension(klon) :: zs !surface orography
 
     !$OMP THREADPRIVATE(clesphy0)
 
@@ -98,7 +105,7 @@ CALL INI_PHYEX(HPROGRAM='AROME ', KUNITNML=0, LDNEEDNAM=.TRUE., &
               &PTSTEP=25.0, PDZMIN=999., &
               &CMICRO='ICE3', CSCONV='EDKF', CTURB='TKEL', &
               &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., &
-              &KPRINT=0, LDINIT=.FALSE., &
+              &KPRINT=0, LDINIT=.TRUE., &
               &PHYEX_OUT=PHYEX)
 
 #ifndef CPP_IOIPSL_NO_OUTPUT
@@ -118,6 +125,57 @@ d_v(1:klon,1:klev)=0.
 d_t(1:klon,1:klev)=0.
 d_qx(1:klon,1:klev,1:nqtot)=0.
 d_ps(1:klon)=0.
+
+!------------------------------------------------------------
+! Conversions
+!------------------------------------------------------------
+
+!TODO check in Meso-NH how values are extrapolated outside of the physical domain
+zqt(:,2:klev+1) = qx(:,:,1) + qx(:,:,2) + qx(:,:,3) + qx(:,:,4) + qx(:,:,5)
+zrv(:,2:klev+1) = qx(:,:,1) / (1 - zqt(:,2:klev+1))
+zrc(:,2:klev+1) = qx(:,:,2) / (1 - zqt(:,2:klev+1))
+zri(:,2:klev+1) = qx(:,:,3) / (1 - zqt(:,2:klev+1))
+!zrr =
+!zrs =
+!zrg =
+zqt(:,1)=0.
+zqt(:,klev+2)=0.
+zrv(:,1)=0.
+zrv(:,klev+2)=0.
+zrc(:,1)=0.
+zrc(:,klev+2)=0.
+zri(:,1)=0.
+zri(:,klev+2)=0.
+
+zexn(:,2:klev+1) = (pplay / PHYEX%CST%XP00) ** (PHYEX%CST%XRD/PHYEX%CST%XCPD)
+ztheta(:,2:klev+1) = t / zexn(:,2:klev+1)
+zexn(:,1)=zexn(:,2)
+zexn(:,klev+2)=zexn(:,klev)
+ztheta(:,1)=ztheta(:,2)
+ztheta(:,klev+2)=ztheta(:,klev)
+
+!TODO check in Meso-NH how zz_mass and zz_flux are initialized outside of the physical domain
+zs = pphis/PHYEX%CST%XG
+zz_mass(:,2:klev+1) = pphi / PHYEX%CST%XG
+zz_mass(:,1) = 2*zs-zz_mass(:,2)
+zz_mass(:,klev+2)=2.*zz_mass(:,klev+1)-zz_mass(:,klev)
+
+do k=2, klev+2
+  zz_flux(:,k)=(zz_mass(:,k-1)+zz_mass(:,k))/2.
+enddo
+zz_flux(:,1)=2*zz_mass(:,1)-zz_flux(:,2)
+
+!zdzf is the distance between two consecutive flux points (expressed on mass points)
+do k=1,klev+1
+  zdzf(:,k)=zz_flux(:,k+1)-zz_flux(:,k)
+enddo
+zdzf(:,klev+2)=(zz_mass(:,klev+2)-zz_flux(:,klev+2))*2.
+
+!zdzm distance between two consecutive mass points (expressed on flux points)
+do k=2,klev+2
+  zdzm(:,k)=zz_mass(:,k)-zz_mass(:,k-1)
+enddo
+zdzm(:,1)=(zz_mass(:,1)-zz_flux(:,1))*2.
 
 !------------------------------------------------------------
 ! Calculs
