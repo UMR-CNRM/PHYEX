@@ -61,6 +61,10 @@ CONTAINS
       real,intent(out) :: d_ps(klon) ! physics tendency on surface pressure
 
 !    include "clesphys.h"
+     include "flux_arp.h"
+
+
+
     INTEGER        length
     PARAMETER    ( length = 100 )
     REAL tabcntr0( length       )
@@ -184,7 +188,7 @@ REAL, DIMENSION(klon)      :: ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE
 !
 REAL, DIMENSION(klon,klev+2) ::  ZRHOD !rho_dry
 !
-REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: psigs !variance of s
+REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PSIGS !variance of s
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PCF_MF, PRC_MF, PRI_MF !shallow convection cloud
 !
 ! Shallow specific variables 
@@ -254,7 +258,9 @@ if (debut) then ! Things to do only for the first call to physics
                 &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., &
                 &KPRINT=0, LDINIT=.TRUE., &
                 &PHYEX_OUT=PHYEX)
-  
+
+  PHYEX%NEBN%LSUBG_COND = .TRUE. 
+
   D%NIT  = klon
   D%NIB  = 1
   D%NIE  = klon
@@ -331,23 +337,23 @@ d_ps(1:klon)=0.
 !------------------------------------------------------------
 !TODO check in Meso-NH how values are extrapolated outside of the physical domain
 zqt(:,2:klev+1) = qx(:,:,1) + qx(:,:,2) + qx(:,:,3)
-ZRX(:,2:klev+1,1) = qx(:,:,1) / (1 - zqt(:,2:klev+1))
-ZRX(:,2:klev+1,2) = qx(:,:,2) / (1 - zqt(:,2:klev+1))
-ZRX(:,2:klev+1,4) = qx(:,:,3) / (1 - zqt(:,2:klev+1))
+zqt(:,1)=0.
+zqt(:,klev+2)=0.
+zqdm(:,:)=1.-zqt(:,:)
+ZRX(:,2:klev+1,1) = qx(:,:,1) / zqdm(:,2:klev+1)
+ZRX(:,2:klev+1,2) = qx(:,:,2) / zqdm(:,2:klev+1)
+ZRX(:,2:klev+1,4) = qx(:,:,3) / zqdm(:,2:klev+1)
 
 ZRX(:,:,5:KRR) = 0. ! TODO init of snow, graupel, hail
 ZRX(:,:,3) = 0. ! TODO init of rain
 !
 !TODO add hydrometeors
-zqt(:,1)=0.
-zqt(:,klev+2)=0.
 ZRX(:,1,1)=0.
 ZRX(:,klev+2,1)=0.
 ZRX(:,1,2)=0.
 ZRX(:,klev+2,2)=0.
 ZRX(:,1,4)=0.
 ZRX(:,klev+2,4)=0.
-zqdm(:,:)=1.-zqt(:,:)
 
 ZRXS(:,:,:) = ZRX(:,:,:)/pdtphys
 
@@ -398,6 +404,7 @@ CALL VERTICAL_EXTEND(ZRHOD,klev)
 !------------------------------------------------------------
 !
 ZRXS0(:,:,:) = ZRXS(:,:,:)
+ZSRC(:,:) = 0.
 ZTHETAS0=ZTHETAS
 ZSIGQSAT=PHYEX%NEBN%VSIGQSAT
 CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, PHYEX%PARAM_ICEN, TBUCONF, KRR,   &
@@ -418,22 +425,16 @@ d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + (ZRXS(:,2:klev+1,1)-ZRXS0(:,2:klev+1,1))*ZQD
 d_qx(:,1:klev,2)=d_qx(:,1:klev,2) + (ZRXS(:,2:klev+1,2)-ZRXS0(:,2:klev+1,2))*ZQDM(:,2:klev+1)
 d_qx(:,1:klev,3)=d_qx(:,1:klev,3) + (ZRXS(:,2:klev+1,4)-ZRXS0(:,2:klev+1,4))*ZQDM(:,2:klev+1)
 d_t(:,1:klev)=d_t(:,1:klev) + (zthetas(:,2:klev+1)-zthetas0(:,2:klev+1))*zexn(:,2:klev+1)
-!pour tester l'ajustement seul: commenter tendances de turb et activer cette ligne
-!d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + 0.00001/pdtphys
 !
-!------------------------------------------------------------
-! Calculs
-!------------------------------------------------------------
-
 ! compute tendencies to return to the dynamics:
 ! "friction" on the first layer
 d_u(1:klon,1)=-u(1:klon,1)/86400.
 d_v(1:klon,1)=-v(1:klon,1)/86400.
 ! newtonian relaxation towards temp_newton()
-do k=1,klev
-  temp_newton(1:klon,k)=280.+cos(latitude(1:klon))*40.-pphi(1:klon,k)/rg*6.e-3
-  d_t(1:klon,k)=d_t(1:klon,k) + (temp_newton(1:klon,k)-t(1:klon,k))/1.e5
-enddo
+!do k=1,klev
+!  temp_newton(1:klon,k)=280.+cos(latitude(1:klon))*40.-pphi(1:klon,k)/rg*6.e-3
+!  d_t(1:klon,k)=d_t(1:klon,k) + (temp_newton(1:klon,k)-t(1:klon,k))/1.e5
+!enddo
 
 
 KSV_LGBEG = 0
@@ -483,12 +484,16 @@ PHGRAD(:,:,:) = 0.
 ! Flux surface RICO
 PSFTH(:) = 5E-3 ! RICO
 PSFRV(:) = 6E-5 ! RICO
+
+! ARMCU
+!PSFTH(:) = -fsens/1000.
+!PSFRV(:) = -flat/(2.5e6)
+!
 PSFSV(:,:) = 0.
 PSFU(:) = 0.
 PSFV(:) = 0.
 !
 ZSVT(:,:,:) = 0.
-ZSRC(:,:) =0.
 PWT(:,:) = 0.
 ! needed only with LRMC01 key (correction in the surface boundary layer)
 ZBL_DEPTH(:) = 0.
@@ -507,6 +512,7 @@ DO JRR=1,KRR
   CALL VERTICAL_EXTEND(ZRX(:,:,JRR),klev)
 END DO 
 !
+!TODO PSIGMF option STAT
 !------------------------------------------------------------
 ! Shallow convection
 !------------------------------------------------------------
@@ -579,12 +585,13 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, TBUCONF, PHYEX%TURBN, PHYEX%NEBN, D, TLES,&
 d_u(:,1:klev) = d_u(:,1:klev) + ZRUS(:,2:klev+1)/PRHODJ(:,2:klev+1)
 d_v(:,1:klev) = d_v(:,1:klev) + ZRVS(:,2:klev+1)/PRHODJ(:,2:klev+1)
 d_t(:,1:klev) = d_t(:,1:klev) + ZRTHS(:,2:klev+1)*zexn(:,2:klev+1)/PRHODJ(:,2:klev+1)
+!
 d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + ZRRS(:,2:klev+1,1)/PRHODJ(:,2:klev+1)*zqdm(:,2:klev+1) !(ZRXS(:,2:klev+1,1)-ZRXS0(:,2:klev+1,1))*ZQDM(:,2:klev+1)
 d_qx(:,1:klev,2)=d_qx(:,1:klev,2) + ZRRS(:,2:klev+1,2)/PRHODJ(:,2:klev+1)*zqdm(:,2:klev+1) !(ZRXS(:,2:klev+1,2)-ZRXS0(:,2:klev+1,2))*ZQDM(:,2:klev+1)
 d_qx(:,1:klev,3)=d_qx(:,1:klev,3) + ZRRS(:,2:klev+1,4)/PRHODJ(:,2:klev+1)*zqdm(:,2:klev+1) !(ZRXS(:,2:klev+1,4)-ZRXS0(:,2:klev+1,4))*ZQDM(:,2:klev+1)
-
+!
 PTKEM(:,:) = PTKEM(:,:) + ZRTKES(:,:)/PRHODJ(:,:)*pdtphys
-
+!
 !------------------------------------------------------------
 ! Entrees sorties
 !------------------------------------------------------------
