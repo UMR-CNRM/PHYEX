@@ -138,8 +138,6 @@ REAL, DIMENSION(klon,0)      ::  PSFSV
 !    prognostic variables at t- deltat
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE ::  PTKEM       ! TKE
 REAL, DIMENSION(klon,klev+2,0) ::  ZSVT        ! passive scal. var.
-REAL, DIMENSION(klon,klev+2) ::  ZSRCT       ! Second-order flux
-                      ! s'rc'/2Sigma_s2 at time t-1 multiplied by Lambda_3
 REAL, DIMENSION(klon) :: ZBL_DEPTH  ! BL height for TOMS
 REAL, DIMENSION(klon) :: ZSBL_DEPTH ! SBL depth for RMC01
 !
@@ -165,7 +163,6 @@ REAL, DIMENSION(klon,klev+2,KRR) ::  ZRRS
 REAL, DIMENSION(klon,klev+2,0) ::  ZRSVS
 ! Sigma_s at time t+1 : square root of the variance of the deviation to the
 ! saturation
-REAL, DIMENSION(klon,klev+2)     ::  ZSIGS
 REAL, DIMENSION(klon,klev+2)     ::  ZFLXZTHVMF
 !                                           MF contribution for vert. turb. transport
 !                                           used in the buoy. prod. of TKE
@@ -421,7 +418,6 @@ d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + (ZRXS(:,2:klev+1,1)-ZRXS0(:,2:klev+1,1))*ZQD
 d_qx(:,1:klev,2)=d_qx(:,1:klev,2) + (ZRXS(:,2:klev+1,2)-ZRXS0(:,2:klev+1,2))*ZQDM(:,2:klev+1)
 d_qx(:,1:klev,3)=d_qx(:,1:klev,3) + (ZRXS(:,2:klev+1,4)-ZRXS0(:,2:klev+1,4))*ZQDM(:,2:klev+1)
 d_t(:,1:klev)=d_t(:,1:klev) + (zthetas(:,2:klev+1)-zthetas0(:,2:klev+1))*zexn(:,2:klev+1)
-
 !pour tester l'ajustement seul: commenter tendances de turb et activer cette ligne
 !d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + 0.00001/pdtphys
 !
@@ -492,7 +488,7 @@ PSFU(:) = 0.
 PSFV(:) = 0.
 !
 ZSVT(:,:,:) = 0.
-ZSRCT(:,:) =0.
+ZSRC(:,:) =0.
 PWT(:,:) = 0.
 ! needed only with LRMC01 key (correction in the surface boundary layer)
 ZBL_DEPTH(:) = 0.
@@ -542,7 +538,6 @@ d_v(:,1:klev) = d_v(:,1:klev) + PDVDT_MF(:,2:klev+1)
 d_t(:,1:klev) = d_t(:,1:klev) + PDTHLDT_MF(:,2:klev+1)*zexn(:,2:klev+1) !TODO Theta_l en theta ?
 d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + PDRTDT_MF(:,2:klev+1)*zqdm(:,2:klev+1)
 ! TODO add SV tendencies
-print*,"PDTHLDT_MF = ",PDTHLDT_MF
 !
 !------------------------------------------------------------
 ! Turbulence
@@ -570,13 +565,13 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, TBUCONF, PHYEX%TURBN, PHYEX%NEBN, D, TLES,&
    & ZDIRCOSXW(:),ZDIRCOSYW(:),ZDIRCOSZW(:),ZCOSSLOPE(:),ZSINSLOPE(:),    &
    & PRHODJ(:,:),PTHVREF(:,:), PHGRAD(:,:,:), zs(:),    &
    & PSFTH(:),PSFRV(:),PSFSV(:,:),PSFU(:),PSFV(:), &
-   & ZPABST(:,:),ZUT(:,:),ZVT(:,:),PWT(:,:),PTKEM(:,:),ZSVT(:,:,:),ZSRCT(:,:),&
+   & ZPABST(:,:),ZUT(:,:),ZVT(:,:),PWT(:,:),PTKEM(:,:),ZSVT(:,:,:),ZSRC(:,:),&
    & PLENGTHM(:,:),PLENGTHH(:,:),MFMOIST(:,:),                            &
    & ZBL_DEPTH(:),ZSBL_DEPTH(:),                                 &
    & ZCEI(:,:),ZCEI_MIN,ZCEI_MAX,ZCOEF_AMPL_SAT,    &
    & ztheta(:,:),ZRX(:,:,:), &
    & ZRUS(:,:),ZRVS(:,:),ZRWS(:,:),ZRTHS(:,:),ZRRS(:,:,:),ZRSVS(:,:,:),ZRTKES(:,:),         &
-   & ZSIGS(:,:),                                         &
+   & PSIGS(:,:),                                         &
    & ZFLXZTHVMF(:,:),ZWTH(:,:),ZWRC(:,:),ZWSV(:,:,:),ZDP(:,:),ZTP(:,:),ZTDIFF(:,:),ZTDISS(:,:),&
    & YLBUDGET, NBUDGET_RH)
 
@@ -584,9 +579,11 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, TBUCONF, PHYEX%TURBN, PHYEX%NEBN, D, TLES,&
 d_u(:,1:klev) = d_u(:,1:klev) + ZRUS(:,2:klev+1)/PRHODJ(:,2:klev+1)
 d_v(:,1:klev) = d_v(:,1:klev) + ZRVS(:,2:klev+1)/PRHODJ(:,2:klev+1)
 d_t(:,1:klev) = d_t(:,1:klev) + ZRTHS(:,2:klev+1)*zexn(:,2:klev+1)/PRHODJ(:,2:klev+1)
-DO JRR=1,3 !3 for qv, ql, qi
-  d_qx(:,1:klev,JRR)=d_qx(:,1:klev,JRR) + ZRRS(:,2:klev+1,JRR)/PRHODJ(:,2:klev+1)*zqdm(:,2:klev+1)
-END DO
+d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + ZRRS(:,2:klev+1,1)/PRHODJ(:,2:klev+1)*zqdm(:,2:klev+1) !(ZRXS(:,2:klev+1,1)-ZRXS0(:,2:klev+1,1))*ZQDM(:,2:klev+1)
+d_qx(:,1:klev,2)=d_qx(:,1:klev,2) + ZRRS(:,2:klev+1,2)/PRHODJ(:,2:klev+1)*zqdm(:,2:klev+1) !(ZRXS(:,2:klev+1,2)-ZRXS0(:,2:klev+1,2))*ZQDM(:,2:klev+1)
+d_qx(:,1:klev,3)=d_qx(:,1:klev,3) + ZRRS(:,2:klev+1,4)/PRHODJ(:,2:klev+1)*zqdm(:,2:klev+1) !(ZRXS(:,2:klev+1,4)-ZRXS0(:,2:klev+1,4))*ZQDM(:,2:klev+1)
+
+PTKEM(:,:) = PTKEM(:,:) + ZRTKES(:,:)/PRHODJ(:,:)*pdtphys
 
 !------------------------------------------------------------
 ! Entrees sorties
