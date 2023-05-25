@@ -32,6 +32,7 @@ CONTAINS
       USE MODD_LES,        ONLY: TLES_t
       USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
       USE MODI_TURB
+      USE MODI_SHALLOW_MF
       IMPLICIT none
 !
 ! Routine argument:
@@ -198,11 +199,10 @@ REAL, DIMENSION(klon,klev+2)::  PDRTDT_MF    ! tendency of rt  by massflux schem
 REAL, DIMENSION(klon,klev+2,KSV)::  PDSVDT_MF    ! tendency of Sv  by massflux scheme
 
 REAL, DIMENSION(klon,klev+2)     ::  PSIGMF
-REAL, DIMENSION(klon,klev+2)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
-REAL, DIMENSION(klon,klev+2)     ::  PFLXZTHMF
-REAL, DIMENSION(klon,klev+2)     ::  PFLXZRMF
-REAL, DIMENSION(klon,klev+2)     ::  PFLXZUMF
-REAL, DIMENSION(klon,klev+2)     ::  PFLXZVMF
+REAL, DIMENSION(klon,klev+2)     ::  ZFLXZTHMF
+REAL, DIMENSION(klon,klev+2)     ::  ZFLXZRMF
+REAL, DIMENSION(klon,klev+2)     ::  ZFLXZUMF
+REAL, DIMENSION(klon,klev+2)     ::  ZFLXZVMF
 REAL, DIMENSION(klon,klev+2) ::  PTHL_UP   ! Thl updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PRT_UP    ! Rt  updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PRV_UP    ! Vapor updraft characteristics
@@ -216,7 +216,7 @@ REAL, DIMENSION(klon,klev+2) ::  PFRAC_UP  ! updraft fraction
 REAL, DIMENSION(klon,klev+2) ::  PEMF      ! updraft mass flux
 REAL, DIMENSION(klon,klev+2) ::  PDETR     ! updraft detrainment
 REAL, DIMENSION(klon,klev+2) ::  PENTR     ! updraft entrainment
-INTEGER,DIMENSION(klon) :: KKLCL,KKETL,KKCTL ! level of LCL,ETL and CTL
+INTEGER,DIMENSION(klon) ::IKLCL,IKETL,IKCTL ! level of LCL,ETL and CTL
 !
 real :: temp_newton(klon,klev)
 integer :: k
@@ -336,8 +336,10 @@ d_ps(1:klon)=0.
 zqt(:,2:klev+1) = qx(:,:,1) + qx(:,:,2) + qx(:,:,3)
 ZRX(:,2:klev+1,1) = qx(:,:,1) / (1 - zqt(:,2:klev+1))
 ZRX(:,2:klev+1,2) = qx(:,:,2) / (1 - zqt(:,2:klev+1))
-ZRX(:,2:klev+1,3) = qx(:,:,3) / (1 - zqt(:,2:klev+1))
-ZRX(:,:,4:KRR) = 0. ! TODO init of rain, graupel, hail
+ZRX(:,2:klev+1,4) = qx(:,:,3) / (1 - zqt(:,2:klev+1))
+
+ZRX(:,:,5:KRR) = 0. ! TODO init of snow, graupel, hail
+ZRX(:,:,3) = 0. ! TODO init of rain
 !
 !TODO add hydrometeors
 zqt(:,1)=0.
@@ -346,21 +348,21 @@ ZRX(:,1,1)=0.
 ZRX(:,klev+2,1)=0.
 ZRX(:,1,2)=0.
 ZRX(:,klev+2,2)=0.
-ZRX(:,1,3)=0.
-ZRX(:,klev+2,3)=0.
-zqdm=1-zqt
+ZRX(:,1,4)=0.
+ZRX(:,klev+2,4)=0.
+zqdm(:,:)=1.-zqt(:,:)
 
 ZRXS(:,:,:) = ZRX(:,:,:)/pdtphys
 
-zexn(:,2:klev+1) = (pplay / PHYEX%CST%XP00) ** (PHYEX%CST%XRD/PHYEX%CST%XCPD)
-ztheta(:,2:klev+1) = t / zexn(:,2:klev+1)
+zexn(:,2:klev+1) = (pplay(:,:) / PHYEX%CST%XP00) ** (PHYEX%CST%XRD/PHYEX%CST%XCPD)
+ztheta(:,2:klev+1) = t(:,:) / zexn(:,2:klev+1)
 CALL VERTICAL_EXTEND(zexn,klev)
 CALL VERTICAL_EXTEND(ztheta,klev)
-zthetas=ztheta/pdtphys
+zthetas(:,:)=ztheta(:,:)/pdtphys
 
 !TODO check in Meso-NH how zz_mass and zz_flux are initialized outside of the physical domain
-zs = pphis/PHYEX%CST%XG
-zz_mass(:,2:klev+1) = pphi / PHYEX%CST%XG
+zs(:) = pphis(:)/PHYEX%CST%XG
+zz_mass(:,2:klev+1) = pphi(:,:) / PHYEX%CST%XG
 zz_mass(:,1) = 2*zs-zz_mass(:,2)
 zz_mass(:,klev+2)=2.*zz_mass(:,klev+1)-zz_mass(:,klev)
 
@@ -410,14 +412,14 @@ CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, P
                 &ZICLDFR, ZWCLDFR, ZSSIO, ZSSIU, ZIFR,             &
                 &ZRX(:,:,1), ZRX(:,:,2), ZRXS(:,:,1), ZRXS(:,:,2), ztheta, ZTHETAS,                  &
                 &.TRUE., ZSRC, ZCLDFR,                      &
-                &ZRX(:,:,4), ZRX(:,:,3), ZRXS(:,:,3), ZRX(:,:,5), ZRX(:,:,6), YLBUDGET, NBUDGET_RH,     &
+                &ZRX(:,:,3), ZRX(:,:,4), ZRXS(:,:,4), ZRX(:,:,5), ZRX(:,:,6), YLBUDGET, NBUDGET_RH,     &
                 &ZICE_CLD_WGT,                                     &
                 !&POUT_RV, POUT_RC, POUT_RI, POUT_TH,               &
                 &ZHLC_HRC, ZHLC_HCF, ZHLI_HRI, ZHLI_HCF)
 ! Tendencies, mixing ratio -> specific
 d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + (ZRXS(:,2:klev+1,1)-ZRXS0(:,2:klev+1,1))*ZQDM(:,2:klev+1)
 d_qx(:,1:klev,2)=d_qx(:,1:klev,2) + (ZRXS(:,2:klev+1,2)-ZRXS0(:,2:klev+1,2))*ZQDM(:,2:klev+1)
-d_qx(:,1:klev,3)=d_qx(:,1:klev,3) + (ZRXS(:,2:klev+1,3)-ZRXS0(:,2:klev+1,3))*ZQDM(:,2:klev+1)
+d_qx(:,1:klev,3)=d_qx(:,1:klev,3) + (ZRXS(:,2:klev+1,4)-ZRXS0(:,2:klev+1,4))*ZQDM(:,2:klev+1)
 d_t(:,1:klev)=d_t(:,1:klev) + (zthetas(:,2:klev+1)-zthetas0(:,2:klev+1))*zexn(:,2:klev+1)
 
 !pour tester l'ajustement seul: commenter tendances de turb et activer cette ligne
@@ -501,9 +503,6 @@ ZCEI(:,:) = 0.
 ZUT(:,2:klev+1) = u(:,:)
 ZVT(:,2:klev+1) = v(:,:)
 PTHVREF(:,:) = ztheta(:,:) ! profil de theta_v a calculer TODO 
-!ZFLXZTHVMF(:,2:klev+1) = flxmass_w(:,:) TODO : flxmass_w deja en klev+2 ???
-!ZFLXZTHVMF(:,:) = flxmass_w(:,:) ! TODO to uncomment once a mass-flux scheme is plugged
-ZFLXZTHVMF(:,:) = 0.
 !
 CALL VERTICAL_EXTEND(ZUT,klev)
 CALL VERTICAL_EXTEND(ZVT,klev)
@@ -516,27 +515,34 @@ END DO
 ! Shallow convection
 !------------------------------------------------------------
 !
-!  CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB,                    &
-!     &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,              &
-!     &ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,      &
-!     &PTSTEP=pdtphys, &
-!     &PDZZ=zdzms(:,:),PZZ=zz_mass(:,:),                                                                 &
-!     &PRHODJ=PRHODJ(:,:),PRHODREF=PRHODREF(:,:),                                                    &
-!     &PPABSM=pplay(:,:),PEXNM=zexn(:,:),                                                          &
-!     &PSFTH=PSFTH(:),PSFRV=PSFRV(:),                                                            &
-!     &PTHM=ztheta(:,:),PRM=ZRX(:,:,:),PUM=ZUT(:,:),PVM=ZVT(:,:),&
-!     &PTKEM=PTKEM(:,:),PSVM=ZSVT(:,:,:),                            &
-!     &PDUDT_MF=PDUDT_MF(:,:),PDVDT_MF=PDVDT_MF(:,:),                                                &
-!     &PDTHLDT_MF=PDTHLDT_MF(:,:),PDRTDT_MF=PDRTDT_MF(:,:),PDSVDT_MF=PDSVDT_MF(:,:,:),                      &
-!     &PSIGMF=PSIGMF(:,:),PRC_MF=PRC_MF(:,:),PRI_MF=PRI_MF(:,:),PCF_MF=PCF_MF(:,:),&
-!     &PFLXZTHVMF=PFLXZTHVMF(:,:),      &
-!     &PFLXZTHMF=ZFLXZTHMF(:,:),PFLXZRMF=ZFLXZRMF(:,:),PFLXZUMF=ZFLXZUMF(:,:),PFLXZVMF=ZFLXZVMF(:,:),     &
-!     &PTHL_UP=PTHL_UP(:,:),PRT_UP=PRT_UP(:,:),PRV_UP=PRV_UP(:,:),&
-!     &PRC_UP=PRC_UP(:,:),PRI_UP=PRI_UP(:,:),            &
-!     &PU_UP=PU_UP(:,:), PV_UP=PV_UP(:,:), PTHV_UP=PTHV_UP(:,:), PW_UP=PW_UP(:,:),                        &
-!     &PFRAC_UP=PFRAC_UP(:,:),PEMF=PEMF(:,:),PDETR=ZDETR(:,:),PENTR=ZENTR(:,:),                           &
-!     &KKLCL=IKLCL(:),KKETL=IKETL(:),KKCTL=IKCTL(:),PDX=1.0,PDY=1.0,KBUDGETS=NBUDGET_RH )
-!!
+  CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB,                    &
+     &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,              &
+     &ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,      &
+     &PTSTEP=pdtphys, &
+     &PDZZ=zdzm(:,:),PZZ=zz_mass(:,:),                                                                 &
+     &PRHODJ=PRHODJ(:,:),PRHODREF=PRHODREF(:,:),                                                    &
+     &PPABSM=ZPABST(:,:),PEXNM=zexn(:,:),                                                          &
+     &PSFTH=PSFTH(:),PSFRV=PSFRV(:),                                                            &
+     &PTHM=ztheta(:,:),PRM=ZRX(:,:,:),PUM=ZUT(:,:),PVM=ZVT(:,:),&
+     &PTKEM=PTKEM(:,:),PSVM=ZSVT(:,:,:),                            &
+     &PDUDT_MF=PDUDT_MF(:,:),PDVDT_MF=PDVDT_MF(:,:),                                                &
+     &PDTHLDT_MF=PDTHLDT_MF(:,:),PDRTDT_MF=PDRTDT_MF(:,:),PDSVDT_MF=PDSVDT_MF(:,:,:),                      &
+     &PSIGMF=PSIGMF(:,:),PRC_MF=PRC_MF(:,:),PRI_MF=PRI_MF(:,:),PCF_MF=PCF_MF(:,:),&
+     &PFLXZTHVMF=ZFLXZTHVMF(:,:),      &
+     &PFLXZTHMF=ZFLXZTHMF(:,:),PFLXZRMF=ZFLXZRMF(:,:),PFLXZUMF=ZFLXZUMF(:,:),PFLXZVMF=ZFLXZVMF(:,:),     &
+     &PTHL_UP=PTHL_UP(:,:),PRT_UP=PRT_UP(:,:),PRV_UP=PRV_UP(:,:),&
+     &PRC_UP=PRC_UP(:,:),PRI_UP=PRI_UP(:,:),            &
+     &PU_UP=PU_UP(:,:), PV_UP=PV_UP(:,:), PTHV_UP=PTHV_UP(:,:), PW_UP=PW_UP(:,:),                        &
+     &PFRAC_UP=PFRAC_UP(:,:),PEMF=PEMF(:,:),PDETR=PDETR(:,:),PENTR=PENTR(:,:),                           &
+     &KKLCL=IKLCL(:),KKETL=IKETL(:),KKCTL=IKCTL(:),PDX=1.0,PDY=1.0,KBUDGETS=NBUDGET_RH )
+
+! Add tendencies of shallow to total physics tendency
+d_u(:,1:klev) = d_u(:,1:klev) + PDUDT_MF(:,2:klev+1)
+d_v(:,1:klev) = d_v(:,1:klev) + PDVDT_MF(:,2:klev+1) 
+d_t(:,1:klev) = d_t(:,1:klev) + PDTHLDT_MF(:,2:klev+1)*zexn(:,2:klev+1) !TODO Theta_l en theta ?
+d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + PDRTDT_MF(:,2:klev+1)*zqdm(:,2:klev+1)
+! TODO add SV tendencies
+print*,"PDTHLDT_MF = ",PDTHLDT_MF
 !
 !------------------------------------------------------------
 ! Turbulence
