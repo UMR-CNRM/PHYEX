@@ -4,7 +4,7 @@ MODULE output_physiqex_mod
 
 CONTAINS 
 
-SUBROUTINE output_physiqex(debut,zjulian,pdtphys,presnivs,paprs,u,v,t,qx,cf)
+SUBROUTINE output_physiqex(debut,zjulian,pdtphys,presnivs,paprs,u,v,t,qx,cf,zqr,zqs,zqg)
 
       USE dimphy, only : klon,klev
       USE iophy, only : histbeg_phy,histwrite_phy
@@ -27,7 +27,10 @@ real,intent(in) :: v(klon,klev) ! northward meridional wind (m/s)
 real,intent(in) :: t(klon,klev) ! temperature (K)
 real,intent(in) :: paprs(klon,klev+1) ! interlayer pressure (Pa)
 real,intent(in) :: qx(klon,klev,nqtot) !tracers
-real,intent(in) :: cf(klon,klev)!cloud fraction
+real,intent(in) :: cf(klon,klev) !cloud fraction
+real,intent(in) :: zqr(klon,klev) !rain specifiq content
+real,intent(in) :: zqs(klon,klev) !snow specifiq content
+real,intent(in) :: zqg(klon,klev) !graupel specifiq content
 
 real :: t_ops ! frequency of the IOIPSL operations (eg average over...)
 real :: t_wrt ! frequency of the IOIPSL outputs
@@ -103,6 +106,15 @@ if(debut)then
        call histdef(nid_hist, 'CF', 'Cloud fraction', '0-1', &
                      nbp_lon,jj_nb,nhori,klev,1,klev,zvertid,32, &
                     'inst(X)',t_ops,t_wrt)
+       call histdef(nid_hist, 'qr', 'Rain specifiq content', 'kg/kg', &
+                     nbp_lon,jj_nb,nhori,klev,1,klev,zvertid,32, &
+                    'inst(X)',t_ops,t_wrt)
+       call histdef(nid_hist, 'qs', 'Snow specifiq content', 'kg/kg', &
+                     nbp_lon,jj_nb,nhori,klev,1,klev,zvertid,32, &
+                    'inst(X)',t_ops,t_wrt)
+       call histdef(nid_hist, 'qg', 'Graupel specifiq content', 'kg/kg', &
+                     nbp_lon,jj_nb,nhori,klev,1,klev,zvertid,32, &
+                    'inst(X)',t_ops,t_wrt)
 
        ! end definition sequence
        print*,'NNNNNNN OK2',nid_hist,t_ops,t_wrt
@@ -144,6 +156,9 @@ if (modulo(itau,iwrite_phys)==0) then
      call iophys_ecrit('qc',klev,'Cloud liquid water specifiq content', 'kg/kg', qx(:,:,2))
      call iophys_ecrit('qi',klev,'Cloud solid water specifiq content', 'kg/kg', qx(:,:,3))
      call iophys_ecrit('CF',klev,'Cloud fraction', '0-1', cf)
+     call iophys_ecrit('qr',klev,'Rain specifiq content', 'kg/kg', zqr)
+     call iophys_ecrit('qs',klev,'Snow specifiq content', 'kg/kg', zqs)
+     call iophys_ecrit('qg',klev,'Graupel specifiq content', 'kg/kg', zqg)
   else if ( ioex == 2 ) then
      call histwrite_phy(nid_hist,.false.,"Temp",itau,t)
      call histwrite_phy(nid_hist,.false.,"u",itau,u)
@@ -153,6 +168,9 @@ if (modulo(itau,iwrite_phys)==0) then
      call histwrite_phy(nid_hist,.false.,"qc",itau,qx(:,:,2))
      call histwrite_phy(nid_hist,.false.,"qi",itau,qx(:,:,3))
      call histwrite_phy(nid_hist,.false.,'CF',itau,cf)
+     call histwrite_phy(nid_hist,.false.,'qr',itau,zqr)
+     call histwrite_phy(nid_hist,.false.,'qs',itau,zqs)
+     call histwrite_phy(nid_hist,.false.,'qg',itau,zqg)
      !$OMP MASTER
      CALL histsync(nid_hist)
      !$OMP END MASTER
@@ -179,6 +197,9 @@ endif
        CALL histwrite_phy("qc",qx(:,:,2))
        CALL histwrite_phy("qi",qx(:,:,3))
        CALL histwrite_phy("CF",cf)
+       CALL histwrite_phy("qr",zqr)
+       CALL histwrite_phy("qs",zqs)
+       CALL histwrite_phy("qg",zqg)
 #endif
 
 

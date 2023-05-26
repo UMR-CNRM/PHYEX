@@ -23,6 +23,7 @@ CONTAINS
       USE MODD_PHYEX,      ONLY: PHYEX_t
       USE MODI_INI_PHYEX,  ONLY: INI_PHYEX
       USE MODI_ICE_ADJUST, ONLY: ICE_ADJUST
+      USE MODI_RAIN_ICE, ONLY: RAIN_ICE
       USE MODD_BUDGET, ONLY: TBUCONF_ASSOCIATE, NBUDGET_RH, TBUCONF, LBU_ENABLE, &
                            & LBUDGET_U, LBUDGET_V, LBUDGET_W, LBUDGET_TH, &
                            & LBUDGET_TKE, LBUDGET_RV, LBUDGET_RC, LBUDGET_RR, &
@@ -59,6 +60,7 @@ CONTAINS
       real,intent(out) :: d_t(klon,klev) ! physics tendency on t (K/s)
       real,intent(out) :: d_qx(klon,klev,nqtot) ! physics tendency on tracers
       real,intent(out) :: d_ps(klon) ! physics tendency on surface pressure
+      real :: d_qr(klon, klev), d_qs(klon, klev), d_qg(klon, klev) ! tendency for rain, snow, graupel
 
 !    include "clesphys.h"
      include "flux_arp.h"
@@ -86,9 +88,15 @@ CONTAINS
     real, dimension(klon) :: zsigqsat !coeff for the extra term for s variance
     real, dimension(0) :: zmfconv
     real, dimension(klon, klev+2) :: ZICLDFR, ZWCLDFR, ZSSIO, ZSSIU, ZIFR, ZICE_CLD_WGT !used only in HIRLAM config
+    real, dimension(klon, klev+2) :: ZCIT !ice concentration
+    real, dimension(klon) :: ZINPRC, ZINPRR, ZINPRS, ZINPRG !precipitation flux at ground
+    real, dimension(klon, klev+2) :: ZEVAP3D !evaporation (diag)
+    real, dimension(klon, klev+2) :: ZRAINFR
+    real, dimension(klon) :: ZINDEP !deposition flux, already contained in ZINPRC
     real, dimension(klon, klev+2) :: ZSRC ! bar(s'rc')
     real, dimension(klon, klev+2) :: ZCLDFR !cloud fraction
     real, dimension(klon, klev+2) :: ZHLC_HRC, ZHLC_HCF, ZHLI_HRI, ZHLI_HCF !subgrid autoconversion
+    real, dimension(klon)         :: ZSEA, ZTOWN !sea and town fractions in the frid cell
 
     TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH), SAVE :: YLBUDGET
 
@@ -190,6 +198,7 @@ REAL, DIMENSION(klon,klev+2) ::  ZRHOD !rho_dry
 !
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PSIGS !variance of s
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PCF_MF, PRC_MF, PRI_MF !shallow convection cloud
+REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: ZQR, ZQS, ZQG !rain, snow, graupel specifiq contents
 !
 ! Shallow specific variables 
 REAL, DIMENSION(klon,klev+2)      ::  PRHODREF    ! dry density reference profile
@@ -260,6 +269,7 @@ if (debut) then ! Things to do only for the first call to physics
                 &PHYEX_OUT=PHYEX)
 
   PHYEX%NEBN%LSUBG_COND = .TRUE. 
+  PHYEX%PARAM_ICEN%CSUBG_AUCV_RC='PDF'
 
   D%NIT  = klon
   D%NIB  = 1
@@ -319,6 +329,12 @@ PTKEM(:,:) = PHYEX%TURBN%XTKEMIN
   PCF_MF=0.
   PRC_MF=0.
   PRI_MF=0.
+  ALLOCATE(ZQR(klon, klev))
+  ALLOCATE(ZQS(klon, klev))
+  ALLOCATE(ZQG(klon, klev))
+  ZQR=0.
+  ZQS=0.
+  ZQG=0.
 endif ! of if (debut)
 
 !------------------------------------------------------------
@@ -330,6 +346,9 @@ d_u(1:klon,1:klev)=0.
 d_v(1:klon,1:klev)=0.
 d_t(1:klon,1:klev)=0.
 d_qx(1:klon,1:klev,1:nqtot)=0.
+d_qr(1:klon,1:klev)=0.
+d_qs(1:klon,1:klev)=0.
+d_qg(1:klon,1:klev)=0.
 d_ps(1:klon)=0.
 
 !------------------------------------------------------------
@@ -343,18 +362,12 @@ zqdm(:,:)=1.-zqt(:,:)
 ZRX(:,2:klev+1,1) = qx(:,:,1) / zqdm(:,2:klev+1)
 ZRX(:,2:klev+1,2) = qx(:,:,2) / zqdm(:,2:klev+1)
 ZRX(:,2:klev+1,4) = qx(:,:,3) / zqdm(:,2:klev+1)
-
-ZRX(:,:,5:KRR) = 0. ! TODO init of snow, graupel, hail
-ZRX(:,:,3) = 0. ! TODO init of rain
+ZRX(:,2:klev+1,3) = ZQR(:,:)
+ZRX(:,2:klev+1,5) = ZQS(:,:)
+ZRX(:,2:klev+1,6) = ZQG(:,:)
+ZRX(:,1,:)=0. !no hydrometeors under ground
+ZRX(:,klev+2,:)=0. !no hydrometeors out of atmosphere
 !
-!TODO add hydrometeors
-ZRX(:,1,1)=0.
-ZRX(:,klev+2,1)=0.
-ZRX(:,1,2)=0.
-ZRX(:,klev+2,2)=0.
-ZRX(:,1,4)=0.
-ZRX(:,klev+2,4)=0.
-
 ZRXS(:,:,:) = ZRX(:,:,:)/pdtphys
 
 zexn(:,2:klev+1) = (pplay(:,:) / PHYEX%CST%XP00) ** (PHYEX%CST%XRD/PHYEX%CST%XCPD)
@@ -591,12 +604,48 @@ d_qx(:,1:klev,2)=d_qx(:,1:klev,2) + ZRRS(:,2:klev+1,2)/PRHODJ(:,2:klev+1)*zqdm(:
 d_qx(:,1:klev,3)=d_qx(:,1:klev,3) + ZRRS(:,2:klev+1,4)/PRHODJ(:,2:klev+1)*zqdm(:,2:klev+1) !(ZRXS(:,2:klev+1,4)-ZRXS0(:,2:klev+1,4))*ZQDM(:,2:klev+1)
 !
 PTKEM(:,:) = PTKEM(:,:) + ZRTKES(:,:)/PRHODJ(:,:)*pdtphys
+!------------------------------------------------------------
+! Micrphysics
+!------------------------------------------------------------
+
+zthetas0=zthetas
+ZRXS0=ZRXS
+ZSEA=1.
+ZTOWN=0.
+ZCIT=0.
+CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, PHYEX%RAIN_ICE_DESCRN, TBUCONF,  &
+               pdtphys, KRR, ZEXN,                                    &
+               zdzf, PRHODJ, ZRHOD, ZEXN, ZPABST, ZCIT, ZCLDFR,&
+               ZHLC_HRC, ZHLC_HCF, ZHLI_HRI, ZHLI_HCF,               &
+               ztheta, ZRX(:,:,1), ZRX(:,:,2), ZRX(:,:,3), ZRX(:,:,4), ZRX(:,:,5),  &
+               ZRX(:,:,6), zthetas, ZRXS(:,:,1), ZRXS(:,:,2), ZRXS(:,:,3), ZRXS(:,:,4), ZRXS(:,:,5), ZRXS(:,:,6), &
+               ZINPRC, ZINPRR, ZEVAP3D,                              &
+               ZINPRS, ZINPRG, ZINDEP, ZRAINFR, PSIGS,               &
+               YLBUDGET, NBUDGET_RH, &
+               ZSEA, ZTOWN)
+! Tendencies, mixing ratio -> specific
+d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + (ZRXS(:,2:klev+1,1)-ZRXS0(:,2:klev+1,1))*ZQDM(:,2:klev+1)
+d_qx(:,1:klev,2)=d_qx(:,1:klev,2) + (ZRXS(:,2:klev+1,2)-ZRXS0(:,2:klev+1,2))*ZQDM(:,2:klev+1)
+d_qx(:,1:klev,3)=d_qx(:,1:klev,3) + (ZRXS(:,2:klev+1,4)-ZRXS0(:,2:klev+1,4))*ZQDM(:,2:klev+1)
+d_qr(:,1:klev)=d_qr(:,1:klev) + (ZRXS(:,2:klev+1,3)-ZRXS0(:,2:klev+1,3))*ZQDM(:,2:klev+1)
+d_qs(:,1:klev)=d_qs(:,1:klev) + (ZRXS(:,2:klev+1,5)-ZRXS0(:,2:klev+1,5))*ZQDM(:,2:klev+1)
+d_qg(:,1:klev)=d_qg(:,1:klev) + (ZRXS(:,2:klev+1,6)-ZRXS0(:,2:klev+1,6))*ZQDM(:,2:klev+1)
+
+d_t(:,1:klev)=d_t(:,1:klev) + (zthetas(:,2:klev+1)-zthetas0(:,2:klev+1))*zexn(:,2:klev+1)
+
+!------------------------------------------------------------
+! Time evolution (values for next time step)
+!------------------------------------------------------------
+ZQR(:,:)=ZQR(:,:)+d_qr(:,:)*pdtphys
+ZQS(:,:)=ZQS(:,:)+d_qs(:,:)*pdtphys
+ZQG(:,:)=ZQG(:,:)+d_qg(:,:)*pdtphys
+
 !
 !------------------------------------------------------------
 ! Entrees sorties
 !------------------------------------------------------------
 
-call output_physiqex(debut,zjulian,pdtphys,presnivs,paprs,u,v,t,qx,ZCLDFR)
+call output_physiqex(debut,zjulian,pdtphys,presnivs,paprs,u,v,t,qx,ZCLDFR,ZQR,ZQS,ZQG)
 
 ! if lastcall, then it is time to write "restartphy.nc" file
 if (lafin) then
