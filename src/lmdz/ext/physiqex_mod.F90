@@ -7,16 +7,23 @@ CONTAINS
 
 !TODO list pour un branchement plus propre
 ! * PHYEX considère toutes les espèces microphysiques et la tke comme pronostiques, des termes de tendances 
-!   sont calculés. L'avance temporelle est faite en fin de pas de temps.
-! * PHYEX a besoin de variables avec mémoire d'un pas de temps à l'autre (que ce soit les variables pronostiques
-!   décrites juste au dessus ou d'autres). Ce sont les tableaux ALLOCATABLE. Ces variables pourraient devenir
+!   sont calculés. L'avance temporelle est faite en fin de pas de temps mais pourrait être déplacée au dessus si
+!   les tendances de ces variables passaient par l'interface
+! * PHYEX a besoin de variables avec mémoire d'un pas de temps à l'autre (en plus des variables pronostiques
+!   décrites juste au dessus). Ce sont les tableaux ALLOCATABLE. Ces variables pourraient devenir
 !   des traceurs.
 ! * La variable ZDZMIN est ici calculée avec un MINVAL qui conduira à des résultats différents
 !   lorsque la distribution (noeuds/procs) sera différente. Cette variable est utile pour déterminer
 !   un critère CFL pour la sédimentation des précipitations. Il suffit donc d'avoir une valeur
 !   approchante.
+! * Certains allocatable sont en klev, d'autres en klev+2. Il est possible de changer ceci mais il faut gérer
+!   les recopies pour que les params voient des tableaux en klev+2 (en effectuant des recopies des
+!   niveaux extrêmes comme fait pour le vent par exemple)
 
-
+!TODO à faire avant d'historiser dans LMDZ:
+! * vérifier si rhodj ne devrait pas être calculé avec un rho humide ici (arome?)
+! * brancher le sigma du schéma STAT
+! * utiliser les variables ajustées
 
 
 
@@ -81,6 +88,7 @@ CONTAINS
       real,intent(out) :: d_qx(klon,klev,nqtot) ! physics tendency on tracers
       real,intent(out) :: d_ps(klon) ! physics tendency on surface pressure
       real :: d_qr(klon, klev), d_qs(klon, klev), d_qg(klon, klev) ! tendency for rain, snow, graupel
+      real :: d_tke(klon, klev)
 
 !    include "clesphys.h"
     include "flux_arp.h"
@@ -110,6 +118,10 @@ REAL, DIMENSION(klon,klev+2)     ::  ZRHOD    ! rho_dry
 REAL, DIMENSION(klon,klev+2,0)   ::  ZSVT     ! passive scal. var.
 REAL, DIMENSION(klon,klev+2)     :: PWT ! vertical wind velocity (used only for diagnostic)
 REAL, DIMENSION(klon,klev+2) ::  ZRUS,ZRVS,ZRWS,ZRTHS,ZRTKES ! sources of momentum, conservative potential temperature, Turb. Kin. Energy
+REAL, DIMENSION(KLON,KLEV+2) :: ZTHETAS !tendency
+REAL, DIMENSION(KLON,KLEV+2) :: ZTHETAS0
+REAL, DIMENSION(KLON,KLEV+2) :: ZTKES
+REAL, DIMENSION(KLON,KLEV+2) :: ZTKES0
 ! Source terms for all water kinds, PRRS(:,:,:,1) is used for the conservative ! mixing ratio
 REAL, DIMENSION(klon,klev+2,KRR) ::  ZRRS
 REAL, DIMENSION(klon,klev+2)   ::  PTHVREF  ! Virtual Potential Temperature of the reference state
@@ -117,8 +129,6 @@ REAL, DIMENSION(klon,klev+2)   ::  PTHVREF  ! Virtual Potential Temperature of t
 REAL, DIMENSION(KLON,KLEV+2) :: zqdm !1-qt=1/(1+rt)
 REAL, DIMENSION(KLON,KLEV+2) :: zqt !mixing ratio and total specifiq content
 REAL, DIMENSION(KLON,KLEV+2) :: ZTHETA, ZEXN !theta and exner function
-REAL, DIMENSION(KLON,KLEV+2) :: ZTHETAS !tendency
-REAL, DIMENSION(KLON,KLEV+2) :: ZTHETAS0
 REAL, DIMENSION(KLON,KLEV+2) :: zz_mass !altitude above ground of mass points
 REAL, DIMENSION(KLON,KLEV+2) :: zz_flux !altitude above ground of flux points
 REAL, DIMENSION(KLON,KLEV+2) :: zdzm !distance between two consecutive mass points (expressed on flux points)
@@ -230,7 +240,7 @@ if (debut) then ! Things to do only for the first call to physics
   PHYEX%PARAM_ICEN%CSUBG_AUCV_RC='PDF'
   !  
   ! Variables saved
-  ALLOCATE(PTKEM(klon,klev+2)) ! variables not advected yet (TODO)
+  ALLOCATE(PTKEM(klon,klev+2))
   ALLOCATE(PSIGS(klon,klev+2))
   ALLOCATE(PCF_MF(klon,klev+2))
   ALLOCATE(PRC_MF(klon,klev+2))
@@ -265,6 +275,7 @@ d_qr(1:klon,1:klev)=0.
 d_qs(1:klon,1:klev)=0.
 d_qg(1:klon,1:klev)=0.
 d_ps(1:klon)=0.
+d_tke(1:klon,1:klev)=0.
 !
 ZDXX(:,:) = 0.
 ZDYY(:,:) = 0.
@@ -301,13 +312,10 @@ ZRX(:,2:klev+1,6) = ZQG(:,:)
 ZRX(:,1,:)=0. !no hydrometeors under ground
 ZRX(:,klev+2,:)=0. !no hydrometeors out of atmosphere
 !
-ZRXS(:,:,:) = ZRX(:,:,:)/pdtphys
-!
 ZEXN(:,2:klev+1) = (pplay(:,:) / PHYEX%CST%XP00) ** (PHYEX%CST%XRD/PHYEX%CST%XCPD)
 ZTHETA(:,2:klev+1) = t(:,:) / ZEXN(:,2:klev+1)
 CALL VERTICAL_EXTEND(ZEXN,klev)
 CALL VERTICAL_EXTEND(ZTHETA,klev)
-ZTHETAS(:,:)=ZTHETA(:,:)/pdtphys
 
 !TODO check in Meso-NH how zz_mass and zz_flux are initialized outside of the physical domain
 zs(:) = pphis(:)/PHYEX%CST%XG
@@ -349,13 +357,28 @@ CALL VERTICAL_EXTEND(PTHVREF,klev)
 DO JRR=1,KRR
   CALL VERTICAL_EXTEND(ZRX(:,:,JRR),klev)
 END DO 
+
+!------------------------------------------------------------
+! Tendencies
+!------------------------------------------------------------
+!For Meso-NH, initialia values for the tendencies are filled with
+!a pseudo-tendecy computed by dividing the state variable by the time step
+!This mechanism enables the possibility for the different parametrisations
+!to guess the value at the end of the time step.
+!For the wind components, we could do the same way but it is not needed
+!as the parametrisations don't use the S varaible to guess the futur value of the wind.
+ZRXS(:,:,:) = ZRX(:,:,:)/pdtphys
+ZTHETAS(:,:)=ZTHETA(:,:)/pdtphys
+ZTKES(:,:)=PTKEM(:,:)/pdtphys
+!To compute the actual tendecy, we save the initial values of these variables
+ZRXS0(:,:,:) = ZRXS(:,:,:)
+ZTHETAS0=ZTHETAS
+ZTKES0(:,:)=ZTKES(:,:)
 !------------------------------------------------------------
 ! Adjustment
 !------------------------------------------------------------
 !
-ZRXS0(:,:,:) = ZRXS(:,:,:)
 ZSRC(:,:) = 0.
-ZTHETAS0=ZTHETAS
 ZSIGQSAT=PHYEX%NEBN%VSIGQSAT
 CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, PHYEX%PARAM_ICEN,    &
                 &PHYEX%MISC%TBUCONF, KRR,                                                           &
@@ -373,20 +396,14 @@ CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, P
                 !&POUT_RV, POUT_RC, POUT_RI, POUT_TH,               &
                 &ZHLC_HRC, ZHLC_HCF, ZHLI_HRI, ZHLI_HCF                                             )
 !
-! Tendencies, mixing ratio -> specific
-d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + (ZRXS(:,2:klev+1,1)-ZRXS0(:,2:klev+1,1))*ZQDM(:,2:klev+1)
-d_qx(:,1:klev,2)=d_qx(:,1:klev,2) + (ZRXS(:,2:klev+1,2)-ZRXS0(:,2:klev+1,2))*ZQDM(:,2:klev+1)
-d_qx(:,1:klev,3)=d_qx(:,1:klev,3) + (ZRXS(:,2:klev+1,4)-ZRXS0(:,2:klev+1,4))*ZQDM(:,2:klev+1)
-d_t(:,1:klev)=d_t(:,1:klev) + (ZTHETAS(:,2:klev+1)-ZTHETAS0(:,2:klev+1))*ZEXN(:,2:klev+1)
-!
 !------------------------------------------------------------
 ! Surface
 !------------------------------------------------------------
 !
 ! compute tendencies to return to the dynamics:
 ! "friction" on the first layer
-d_u(1:klon,1)=-u(1:klon,1)/86400.
-d_v(1:klon,1)=-v(1:klon,1)/86400.
+d_u(1:klon,1)=d_u(1:klon,1)-u(1:klon,1)/86400.
+d_v(1:klon,1)=d_v(1:klon,1)-v(1:klon,1)/86400.
 !
 ! Flux RICO
 PSFTH(:) = 5E-3 ! RICO
@@ -428,8 +445,8 @@ PSFV(:) = 0.
 ! Add tendencies of shallow to total physics tendency
 d_u(:,1:klev) = d_u(:,1:klev) + PDUDT_MF(:,2:klev+1)
 d_v(:,1:klev) = d_v(:,1:klev) + PDVDT_MF(:,2:klev+1) 
-d_t(:,1:klev) = d_t(:,1:klev) + PDTHLDT_MF(:,2:klev+1)*ZEXN(:,2:klev+1) !TODO Theta_l en theta ?
-d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + PDRTDT_MF(:,2:klev+1)*zqdm(:,2:klev+1)
+ZRXS(:,:,1)=ZRXS(:,:,1)+PDRTDT_MF(:,:)
+ZTHETAS(:,:)=ZTHETAS(:,:)+PDTHLDT_MF(:,:)
 ! TODO add SV tendencies
 !
 !------------------------------------------------------------
@@ -439,11 +456,12 @@ d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + PDRTDT_MF(:,2:klev+1)*zqdm(:,2:klev+1)
 ZRUS(:,:) = 0.
 ZRVS(:,:) = 0.
 ZRWS(:,:) = 0.
-ZRTHS(:,:) = 0.
-ZRRS(:,:,:) = 0.
 ZRSVS(:,:,:) = 0.
-!ZRTKES(:,:) =  PTKEM * PRHODJ/ pdtphys
-ZRTKES(:,:) = 0.
+ZRTKES(:,:) =  ZTKES(:,:) * PRHODJ(:,:)
+DO JRR=1, KRR
+  ZRRS(:,:,JRR) = ZRXS(:,:,JRR) * PRHODJ(:,:)
+ENDDO
+ZRTHS(:,:) = ZTHETAS(:,:) * PRHODJ(:,:)
 CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, D, PHYEX%MISC%TLES,               &
    & PHYEX%MISC%KMI, KRR, KRRL, KRRI, PHYEX%MISC%HLBCX, PHYEX%MISC%HLBCY, PHYEX%MISC%KGRADIENTS, PHYEX%MISC%KHALO,&
    & PHYEX%MISC%KSPLIT,PHYEX%MISC%KMI, KSV, PHYEX%MISC%KSV_LGBEG, PHYEX%MISC%KSV_LGEND,                           &
@@ -469,22 +487,17 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, 
    & PSIGS(:,:),                                                                                &
    & ZFLXZTHVMF(:,:),ZWTH(:,:),ZWRC(:,:),ZWSV(:,:,:),ZDP(:,:),ZTP(:,:),ZTDIFF(:,:),ZTDISS(:,:), &
    & PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET                                                    )
+DO JRR=1, KRR
+  ZRXS(:,:,JRR) = ZRRS(:,:,JRR) / PRHODJ(:,:)
+ENDDO
+ZTHETAS(:,:) = ZRTHS(:,:) / PRHODJ(:,:)
+ZTKES(:,:) = ZRTKES(:,:) / PRHODJ(:,:)
 ! Add tendencies of turb to total physics tendency
 d_u(:,1:klev) = d_u(:,1:klev) + ZRUS(:,2:klev+1)/PRHODJ(:,2:klev+1)
 d_v(:,1:klev) = d_v(:,1:klev) + ZRVS(:,2:klev+1)/PRHODJ(:,2:klev+1)
-d_t(:,1:klev) = d_t(:,1:klev) + ZRTHS(:,2:klev+1)*ZEXN(:,2:klev+1)/PRHODJ(:,2:klev+1)
-d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + ZRRS(:,2:klev+1,1)/PRHODJ(:,2:klev+1)*zqdm(:,2:klev+1) 
-d_qx(:,1:klev,2)=d_qx(:,1:klev,2) + ZRRS(:,2:klev+1,2)/PRHODJ(:,2:klev+1)*zqdm(:,2:klev+1) 
-d_qx(:,1:klev,3)=d_qx(:,1:klev,3) + ZRRS(:,2:klev+1,4)/PRHODJ(:,2:klev+1)*zqdm(:,2:klev+1) 
-!
-PTKEM(:,:) = PTKEM(:,:) +  ZRTKES(:,:)/PRHODJ(:,:)*pdtphys
-!PTKEM(:,:) =  ZRTKES(:,:)/PRHODJ(:,:)*pdtphys
 !------------------------------------------------------------
 ! Microphysics
 !------------------------------------------------------------
-
-zthetas0=zthetas
-ZRXS0=ZRXS
 ZSEA=1.
 ZTOWN=0.
 ZCIT=0.
@@ -498,6 +511,10 @@ CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, PHYEX%RAIN
                ZINPRS, ZINPRG, ZINDEP, ZRAINFR, PSIGS,                                                            &
                PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET,                                                           &
                ZSEA, ZTOWN                                                                                        )
+
+!------------------------------------------------------------
+! Tendencies and time evolution (values for next time step)
+!------------------------------------------------------------
 ! Tendencies, mixing ratio -> specific
 d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + (ZRXS(:,2:klev+1,1)-ZRXS0(:,2:klev+1,1))*ZQDM(:,2:klev+1)
 d_qx(:,1:klev,2)=d_qx(:,1:klev,2) + (ZRXS(:,2:klev+1,2)-ZRXS0(:,2:klev+1,2))*ZQDM(:,2:klev+1)
@@ -505,22 +522,22 @@ d_qx(:,1:klev,3)=d_qx(:,1:klev,3) + (ZRXS(:,2:klev+1,4)-ZRXS0(:,2:klev+1,4))*ZQD
 d_qr(:,1:klev)=d_qr(:,1:klev) + (ZRXS(:,2:klev+1,3)-ZRXS0(:,2:klev+1,3))*ZQDM(:,2:klev+1)
 d_qs(:,1:klev)=d_qs(:,1:klev) + (ZRXS(:,2:klev+1,5)-ZRXS0(:,2:klev+1,5))*ZQDM(:,2:klev+1)
 d_qg(:,1:klev)=d_qg(:,1:klev) + (ZRXS(:,2:klev+1,6)-ZRXS0(:,2:klev+1,6))*ZQDM(:,2:klev+1)
-
+! Tendency, theta -> T
 d_t(:,1:klev)=d_t(:,1:klev) + (zthetas(:,2:klev+1)-zthetas0(:,2:klev+1))*ZEXN(:,2:klev+1)
+! TKE
+d_tke(:,1:klev)=d_tke(:,1:klev) + (ZTKES(:,2:klev+1) - ZTKES0(:,2:klev+1))
 
-!------------------------------------------------------------
-! Time evolution (values for next time step)
-!------------------------------------------------------------
+!Time evolution
 ZQR(:,:)=ZQR(:,:)+d_qr(:,:)*pdtphys
 ZQS(:,:)=ZQS(:,:)+d_qs(:,:)*pdtphys
 ZQG(:,:)=ZQG(:,:)+d_qg(:,:)*pdtphys
-
+PTKEM(:,2:klev+1)=PTKEM(:,2:klev+1)+d_tke(:,:)*pdtphys
 !
 !------------------------------------------------------------
 ! Entrees sorties
 !------------------------------------------------------------
 
-call output_physiqex(debut,zjulian,pdtphys,presnivs,paprs,u,v,t,qx,ZCLDFR,ZQR,ZQS,ZQG)
+call output_physiqex(debut,zjulian,pdtphys,presnivs,paprs,u,v,t,qx,ZCLDFR,ZQR,ZQS,ZQG,PTKEM)
 
 ! if lastcall, then it is time to write "restartphy.nc" file
 if (lafin) then

@@ -4,7 +4,7 @@ MODULE output_physiqex_mod
 
 CONTAINS 
 
-SUBROUTINE output_physiqex(debut,zjulian,pdtphys,presnivs,paprs,u,v,t,qx,cf,zqr,zqs,zqg)
+SUBROUTINE output_physiqex(debut,zjulian,pdtphys,presnivs,paprs,u,v,t,qx,cf,zqr,zqs,zqg,ptke)
 
       USE dimphy, only : klon,klev
       USE iophy, only : histbeg_phy,histwrite_phy
@@ -31,6 +31,7 @@ real,intent(in) :: cf(klon,klev) !cloud fraction
 real,intent(in) :: zqr(klon,klev) !rain specifiq content
 real,intent(in) :: zqs(klon,klev) !snow specifiq content
 real,intent(in) :: zqg(klon,klev) !graupel specifiq content
+real,intent(in) :: ptke(klon,klev) !tke
 
 real :: t_ops ! frequency of the IOIPSL operations (eg average over...)
 real :: t_wrt ! frequency of the IOIPSL outputs
@@ -115,6 +116,9 @@ if(debut)then
        call histdef(nid_hist, 'qg', 'Graupel specifiq content', 'kg/kg', &
                      nbp_lon,jj_nb,nhori,klev,1,klev,zvertid,32, &
                     'inst(X)',t_ops,t_wrt)
+       call histdef(nid_hist, 'TKE', 'TKE', 'm2/s2', &
+                     nbp_lon,jj_nb,nhori,klev,1,klev,zvertid,32, &
+                    'inst(X)',t_ops,t_wrt)
 
        ! end definition sequence
        print*,'NNNNNNN OK2',nid_hist,t_ops,t_wrt
@@ -159,6 +163,7 @@ if (modulo(itau,iwrite_phys)==0) then
      call iophys_ecrit('qr',klev,'Rain specifiq content', 'kg/kg', zqr)
      call iophys_ecrit('qs',klev,'Snow specifiq content', 'kg/kg', zqs)
      call iophys_ecrit('qg',klev,'Graupel specifiq content', 'kg/kg', zqg)
+     call iophys_ecrit('TKE',klev,'TKE', 'm2/s2', ptke)
   else if ( ioex == 2 ) then
      call histwrite_phy(nid_hist,.false.,"Temp",itau,t)
      call histwrite_phy(nid_hist,.false.,"u",itau,u)
@@ -171,6 +176,7 @@ if (modulo(itau,iwrite_phys)==0) then
      call histwrite_phy(nid_hist,.false.,'qr',itau,zqr)
      call histwrite_phy(nid_hist,.false.,'qs',itau,zqs)
      call histwrite_phy(nid_hist,.false.,'qg',itau,zqg)
+     call histwrite_phy(nid_hist,.false.,'qg',itau,ptke)
      !$OMP MASTER
      CALL histsync(nid_hist)
      !$OMP END MASTER
@@ -200,6 +206,7 @@ endif
        CALL histwrite_phy("qr",zqr)
        CALL histwrite_phy("qs",zqs)
        CALL histwrite_phy("qg",zqg)
+       CALL histwrite_phy("TKE",ptke)
 #endif
 
 
