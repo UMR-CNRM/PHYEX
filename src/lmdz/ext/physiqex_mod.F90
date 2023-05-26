@@ -4,6 +4,33 @@ IMPLICIT NONE
 
 CONTAINS
 
+
+!TODO list pour un branchement plus propre
+! * PHYEX considère toutes les espèces microphysiques et la tke comme pronostiques, des termes de tendances 
+!   sont calculés. L'avance temporelle est faite en fin de pas de temps.
+! * PHYEX a besoin de variables avec mémoire d'un pas de temps à l'autre (que ce soit les variables pronostiques
+!   décrites juste au dessus ou d'autres). Ce sont les tableaux ALLOCATABLE. Ces variables pourraient devenir
+!   des traceurs.
+! * La variable ZDZMIN est ici calculée avec un MINVAL qui conduira à des résultats différents
+!   lorsque la distribution (noeuds/procs) sera différente. Cette variable est utile pour déterminer
+!   un critère CFL pour la sédimentation des précipitations. Il suffit donc d'avoir une valeur
+!   approchante.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       SUBROUTINE physiqex (nlon,nlev, &
      &            debut,lafin,pdtphys, &
      &            paprs,pplay,pphi,pphis,presnivs, &
@@ -20,19 +47,12 @@ CONTAINS
       USE phyetat0_mod, only: phyetat0
       USE output_physiqex_mod, ONLY: output_physiqex
       ! PHYEX internal modules
+      USE MODE_INIT_PHYEX, ONLY: INIT_PHYEX, FILL_DIMPHYEX
       USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
       USE MODD_PHYEX,      ONLY: PHYEX_t
       USE MODI_INI_PHYEX,  ONLY: INI_PHYEX
       USE MODI_ICE_ADJUST, ONLY: ICE_ADJUST
       USE MODI_RAIN_ICE, ONLY: RAIN_ICE
-      USE MODD_BUDGET, ONLY: TBUCONF_ASSOCIATE, NBUDGET_RH, TBUCONF, LBU_ENABLE, &
-                           & LBUDGET_U, LBUDGET_V, LBUDGET_W, LBUDGET_TH, &
-                           & LBUDGET_TKE, LBUDGET_RV, LBUDGET_RC, LBUDGET_RR, &
-                           & LBUDGET_RI, LBUDGET_RS, LBUDGET_RG, LBUDGET_RH, LBUDGET_SV, &
-                           & TBUDGETDATA
-      USE MODD_IO,         ONLY: TFILEDATA
-      USE MODD_LES,        ONLY: TLES_t
-      USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
       USE MODI_TURB
       USE MODI_SHALLOW_MF
       IMPLICIT none
@@ -73,7 +93,6 @@ CONTAINS
     !$OMP THREADPRIVATE(clesphy0)
 
 ! Saved variables
-TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH), SAVE :: YLBUDGET
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PSIGS !variance of s
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PCF_MF, PRC_MF, PRI_MF !shallow convection cloud
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: ZQR, ZQS, ZQG !rain, snow, graupel specifiq contents
@@ -81,26 +100,7 @@ REAL, DIMENSION(:,:), ALLOCATABLE, SAVE ::  PTKEM       ! TKE
 TYPE(DIMPHYEX_t),SAVE    :: D
 TYPE(PHYEX_t), SAVE      :: PHYEX
 !
-REAL                     :: PTSTEP
 INTEGER, PARAMETER       :: KRR=6, KRRL=2, KRRI=3, KSV=0
-CHARACTER(LEN=4)         :: HBUNAME
-LOGICAL                  :: LMFCONV
-LOGICAL                  :: OCOMPUTE_SRC
-LOGICAL                  :: ONOMIXLG
-INTEGER                  :: KSV_LGBEG, KSV_LGEND
-REAL                     :: PDX, PDY
-INTEGER                  :: KMI, KSPLIT, KGRADIENTS, KHALO
-CHARACTER(LEN=4),DIMENSION(2)  :: HLBCX, HLBCY
-CHARACTER(LEN=6)         :: CPROGRAM
-INTEGER                  :: KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH
-LOGICAL                  :: O2D, OFLAT, OCOUPLES, OBLOWSNOW, OOCEAN, ODEEPOC
-LOGICAL                  :: OIBM, OFLYER
-TYPE(TFILEDATA)          :: ZTFILE
-REAL                     :: ZCEI_MAX, ZCEI_MIN, ZCOEF_AMPL_SAT
-REAL                     :: PRSNOW
-LOGICAL                  :: ODIAG_IN_RUN
-CHARACTER(LEN=4)         :: HTURBLEN_CL
-CHARACTER(LEN=4)         :: CMICRO
 INTEGER                  :: JRR
 ! Time-State variables and Sources variables
 REAL, DIMENSION(klon,klev+2)     ::  ZUT, ZVT ! wind component on klev+2
@@ -116,7 +116,7 @@ REAL, DIMENSION(klon,klev+2)   ::  PTHVREF  ! Virtual Potential Temperature of t
 ! Adjustment variables
 REAL, DIMENSION(KLON,KLEV+2) :: zqdm !1-qt=1/(1+rt)
 REAL, DIMENSION(KLON,KLEV+2) :: zqt !mixing ratio and total specifiq content
-REAL, DIMENSION(KLON,KLEV+2) :: ZTHETA, zexn !theta and exner function
+REAL, DIMENSION(KLON,KLEV+2) :: ZTHETA, ZEXN !theta and exner function
 REAL, DIMENSION(KLON,KLEV+2) :: ZTHETAS !tendency
 REAL, DIMENSION(KLON,KLEV+2) :: ZTHETAS0
 REAL, DIMENSION(KLON,KLEV+2) :: zz_mass !altitude above ground of mass points
@@ -131,6 +131,7 @@ REAL, DIMENSION(KLON,KLEV+2) :: ZSRC ! bar(s'rc')
 REAL, DIMENSION(KLON,KLEV+2) :: ZCLDFR !cloud fraction
 REAL, DIMENSION(KLON,KLEV+2) :: ZHLC_HRC, ZHLC_HCF, ZHLI_HRI, ZHLI_HCF !subgrid autoconversion
 ! Rain_ice variables
+real :: ZDZMIN
 real, dimension(klon, klev+2) :: ZCIT !ice concentration
 real, dimension(klon) :: ZINPRC, ZINPRR, ZINPRS, ZINPRG !precipitation flux at ground
 real, dimension(klon, klev+2) :: ZEVAP3D !evaporation (diag)
@@ -138,7 +139,6 @@ real, dimension(klon, klev+2) :: ZRAINFR
 real, dimension(klon) :: ZINDEP !deposition flux, already contained in ZINPRC
 real, dimension(klon)         :: ZSEA, ZTOWN !sea and town fractions in the frid cell
 ! Turbulence variables
-TYPE(TLES_t)                  ::  TLES ! Type for LES diagnostics (not possible here) 
 REAL, DIMENSION(klon,klev+2)  ::  PDXX,PDYY,PDZX,PDZY ! metric coefficients
 REAL, DIMENSION(klon,klev+2)  ::  PZZ       !  physical distance between 2 succesive grid points along the K direction
 REAL, DIMENSION(klon)         ::  PDIRCOSXW, PDIRCOSYW, PDIRCOSZW ! Director Cosinus along x, y and z directions at surface w-point
@@ -221,59 +221,14 @@ if (debut) then ! Things to do only for the first call to physics
     !CALL ymds2ju(annee0, month, dayref, hour, zjulian)
     call ymds2ju(1979, 1, 1, 0.0, zjulian)
   
-  ! Initialize PHYEX
-  CALL INI_PHYEX(HPROGRAM='AROME ', KUNITNML=0, LDNEEDNAM=.TRUE., &
-                &KLUOUT=20, KFROM=0, KTO=1, &
-                &PTSTEP=pdtphys, PDZMIN=999., &
-                &CMICRO='ICE3', CSCONV='EDKF', CTURB='TKEL', &
-                &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., &
-                &KPRINT=2, LDINIT=.TRUE., &
-                &PHYEX_OUT=PHYEX)
+  ZDZMIN=MINVAL((pphi(:,2:) - pphi(:,1:klev-1))/9.81)
+  CALL INIT_PHYEX(pdtphys, ZDZMIN, PHYEX)
+  CALL FILL_DIMPHYEX(KLON, KLEV, D)
 
+  !Update default values
   PHYEX%NEBN%LSUBG_COND = .TRUE. 
   PHYEX%PARAM_ICEN%CSUBG_AUCV_RC='PDF'
-
-  D%NIT  = klon
-  D%NIB  = 1
-  D%NIE  = klon
-  D%NJT  = 1
-  D%NJB  = 1
-  D%NJE  = 1
-  D%NIJT = D%NIT * D%NJT
-  D%NIJB = 1
-  D%NIJE = 1
-  D%NKL  = 1
-  D%NKT  = klev+2
-  D%NKA  = 1
-  D%NKU  = klev+2
-  D%NKB  = 1+JPVEXT_TURB
-  D%NKE  = D%NKT - JPVEXT_TURB
-  D%NKTB = 1+JPVEXT_TURB
-  D%NKTE = D%NKT - JPVEXT_TURB
-  D%NIBC = 1
-  D%NJBC = 1
-  D%NIEC = D%NIE
-  D%NJEC = D%NJT
   !  
-  !Budgets
-  CALL TBUCONF_ASSOCIATE
-  DO K=1, NBUDGET_RH
-    YLBUDGET(K)%NBUDGET=K
-  ENDDO
-  LBU_ENABLE=.FALSE.
-  LBUDGET_U=.FALSE.
-  LBUDGET_V=.FALSE.
-  LBUDGET_W=.FALSE.
-  LBUDGET_TH=.FALSE.
-  LBUDGET_TKE=.FALSE.
-  LBUDGET_RV=.FALSE.
-  LBUDGET_RC=.FALSE.
-  LBUDGET_RR=.FALSE.
-  LBUDGET_RI=.FALSE.
-  LBUDGET_RS=.FALSE.
-  LBUDGET_RG=.FALSE.
-  LBUDGET_RH=.FALSE.
-  LBUDGET_SV=.FALSE.
   ! Variables saved
   ALLOCATE(PTKEM(klon,klev+2)) ! variables not advected yet (TODO)
   ALLOCATE(PSIGS(klon,klev+2))
@@ -311,38 +266,6 @@ d_qs(1:klon,1:klev)=0.
 d_qg(1:klon,1:klev)=0.
 d_ps(1:klon)=0.
 !
-KSV_LGBEG = 0
-KSV_LGEND = 0
-ONOMIXLG=.FALSE.
-KMI = 1
-KGRADIENTS =0
-HLBCX(:)=(/'CYCL','CYCL'/)
-HLBCY(:)=(/'CYCL','CYCL'/)
-KSPLIT = 1
-KHALO=1
-CPROGRAM='AROME '
-O2D=.FALSE.
-OFLAT=.FALSE.
-OCOUPLES=.FALSE.
-OBLOWSNOW=.FALSE.
-OCOMPUTE_SRC=.TRUE.
-OOCEAN=.FALSE.
-ODEEPOC=.FALSE.
-ZTFILE%LOPENED=.FALSE.
-ZCEI_MAX=1.0
-ZCEI_MIN=0.0
-ZCOEF_AMPL_SAT=0.0
-KSV_LIMA_NR=0
-KSV_LIMA_NS=0
-KSV_LIMA_NG=0
-KSV_LIMA_NH=0
-OIBM=.FALSE.
-OFLYER=.FALSE.
-PRSNOW=1.0
-ODIAG_IN_RUN=.FALSE.
-HTURBLEN_CL='NONE'
-CMICRO='ICE3'
-TLES%LLES=.FALSE.
 ZDXX(:,:) = 0.
 ZDYY(:,:) = 0.
 ZDZX(:,:) = 0.
@@ -380,9 +303,9 @@ ZRX(:,klev+2,:)=0. !no hydrometeors out of atmosphere
 !
 ZRXS(:,:,:) = ZRX(:,:,:)/pdtphys
 !
-zexn(:,2:klev+1) = (pplay(:,:) / PHYEX%CST%XP00) ** (PHYEX%CST%XRD/PHYEX%CST%XCPD)
-ZTHETA(:,2:klev+1) = t(:,:) / zexn(:,2:klev+1)
-CALL VERTICAL_EXTEND(zexn,klev)
+ZEXN(:,2:klev+1) = (pplay(:,:) / PHYEX%CST%XP00) ** (PHYEX%CST%XRD/PHYEX%CST%XCPD)
+ZTHETA(:,2:klev+1) = t(:,:) / ZEXN(:,2:klev+1)
+CALL VERTICAL_EXTEND(ZEXN,klev)
 CALL VERTICAL_EXTEND(ZTHETA,klev)
 ZTHETAS(:,:)=ZTHETA(:,:)/pdtphys
 
@@ -414,7 +337,8 @@ ZRHOD(:,2:klev+1)=ZPABST(:,2:klev+1)/(t*(PHYEX%CST%XRD+ZRX(:,2:klev+1,1)*PHYEX%C
 DO k=2,klev+1
   PRHODJ(:,k) = ZRHOD(:,k) * (zdzf(:,k)*cell_area(:))
 END DO
-PTHVREF(:,2:klev+1) = ZTHETA(:,2:klev+1) * (1.0 + qx(:,:,1) * (PHYEX%CST%XRV/PHYEX%CST%XRD - 1.0) - qx(:,:,2) - qx(:,:,3))
+PTHVREF(:,2:klev+1) = ZTHETA(:,2:klev+1) * (1.0 + qx(:,:,1) * (PHYEX%CST%XRV/PHYEX%CST%XRD - 1.0) - &
+                                           &qx(:,:,2) - qx(:,:,3))
 
 CALL VERTICAL_EXTEND(ZPABST,klev)
 CALL VERTICAL_EXTEND(PRHODJ,klev)
@@ -434,16 +358,17 @@ ZSRC(:,:) = 0.
 ZTHETAS0=ZTHETAS
 ZSIGQSAT=PHYEX%NEBN%VSIGQSAT
 CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, PHYEX%PARAM_ICEN,    &
-                &TBUCONF, KRR,                                                                      &
+                &PHYEX%MISC%TBUCONF, KRR,                                                           &
                 &'ADJU',                                                                            &
                 &pdtphys, ZSIGQSAT,                                                                 &
-                &PRHODJ, zexn, ZRHOD, PSIGS, .FALSE., zmfconv,                                      &
+                &PRHODJ, ZEXN, ZRHOD, PSIGS, .FALSE., zmfconv,                                      &
                 &ZPABST, ZZ_MASS,                                                                   &
-                &zexn, PCF_MF, PRC_MF, PRI_MF,                                                      &
+                &ZEXN, PCF_MF, PRC_MF, PRI_MF,                                                      &
                 &ZICLDFR, ZWCLDFR, ZSSIO, ZSSIU, ZIFR,                                              &
                 &ZRX(:,:,1), ZRX(:,:,2), ZRXS(:,:,1), ZRXS(:,:,2), ZTHETA, ZTHETAS,                 &
-                &.TRUE., ZSRC, ZCLDFR,                                                              &
-                &ZRX(:,:,3), ZRX(:,:,4), ZRXS(:,:,4), ZRX(:,:,5), ZRX(:,:,6), YLBUDGET, NBUDGET_RH, &
+                &PHYEX%MISC%COMPUTE_SRC, ZSRC, ZCLDFR,                                              &
+                &ZRX(:,:,3), ZRX(:,:,4), ZRXS(:,:,4), ZRX(:,:,5), ZRX(:,:,6),                       &
+                &PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET,                                           &
                 &ZICE_CLD_WGT,                                                                      &
                 !&POUT_RV, POUT_RC, POUT_RI, POUT_TH,               &
                 &ZHLC_HRC, ZHLC_HCF, ZHLI_HRI, ZHLI_HCF                                             )
@@ -452,7 +377,7 @@ CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, P
 d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + (ZRXS(:,2:klev+1,1)-ZRXS0(:,2:klev+1,1))*ZQDM(:,2:klev+1)
 d_qx(:,1:klev,2)=d_qx(:,1:klev,2) + (ZRXS(:,2:klev+1,2)-ZRXS0(:,2:klev+1,2))*ZQDM(:,2:klev+1)
 d_qx(:,1:klev,3)=d_qx(:,1:klev,3) + (ZRXS(:,2:klev+1,4)-ZRXS0(:,2:klev+1,4))*ZQDM(:,2:klev+1)
-d_t(:,1:klev)=d_t(:,1:klev) + (ZTHETAS(:,2:klev+1)-ZTHETAS0(:,2:klev+1))*zexn(:,2:klev+1)
+d_t(:,1:klev)=d_t(:,1:klev) + (ZTHETAS(:,2:klev+1)-ZTHETAS0(:,2:klev+1))*ZEXN(:,2:klev+1)
 !
 !------------------------------------------------------------
 ! Surface
@@ -481,11 +406,11 @@ PSFV(:) = 0.
 !
   CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB,         &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                                        &
-     &ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,                                     &
+     &ONOMIXLG=PHYEX%MISC%ONOMIXLG,KSV_LGBEG=PHYEX%MISC%KSV_LGBEG,KSV_LGEND=PHYEX%MISC%KSV_LGEND,    &
      &PTSTEP=pdtphys,                                                                                &
      &PDZZ=zdzm(:,:),PZZ=zz_mass(:,:),                                                               &
      &PRHODJ=PRHODJ(:,:),PRHODREF=ZRHOD(:,:),                                                        &
-     &PPABSM=ZPABST(:,:),PEXNM=zexn(:,:),                                                            &
+     &PPABSM=ZPABST(:,:),PEXNM=ZEXN(:,:),                                                            &
      &PSFTH=PSFTH(:),PSFRV=PSFRV(:),                                                                 &
      &PTHM=ZTHETA(:,:),PRM=ZRX(:,:,:),PUM=ZUT(:,:),PVM=ZVT(:,:),                                     &
      &PTKEM=PTKEM(:,:),PSVM=ZSVT(:,:,:),                                                             &
@@ -498,12 +423,12 @@ PSFV(:) = 0.
      &PRC_UP=PRC_UP(:,:),PRI_UP=PRI_UP(:,:),                                                         &
      &PU_UP=PU_UP(:,:), PV_UP=PV_UP(:,:), PTHV_UP=PTHV_UP(:,:), PW_UP=PW_UP(:,:),                    &
      &PFRAC_UP=PFRAC_UP(:,:),PEMF=PEMF(:,:),PDETR=PDETR(:,:),PENTR=PENTR(:,:),                       &
-     &KKLCL=IKLCL(:),KKETL=IKETL(:),KKCTL=IKCTL(:),PDX=1000.0,PDY=1000.0,KBUDGETS=NBUDGET_RH         )
+     &KKLCL=IKLCL(:),KKETL=IKETL(:),KKCTL=IKCTL(:),PDX=1000.0,PDY=1000.0,KBUDGETS=PHYEX%MISC%NBUDGET )
 
 ! Add tendencies of shallow to total physics tendency
 d_u(:,1:klev) = d_u(:,1:klev) + PDUDT_MF(:,2:klev+1)
 d_v(:,1:klev) = d_v(:,1:klev) + PDVDT_MF(:,2:klev+1) 
-d_t(:,1:klev) = d_t(:,1:klev) + PDTHLDT_MF(:,2:klev+1)*zexn(:,2:klev+1) !TODO Theta_l en theta ?
+d_t(:,1:klev) = d_t(:,1:klev) + PDTHLDT_MF(:,2:klev+1)*ZEXN(:,2:klev+1) !TODO Theta_l en theta ?
 d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + PDRTDT_MF(:,2:klev+1)*zqdm(:,2:klev+1)
 ! TODO add SV tendencies
 !
@@ -519,16 +444,17 @@ ZRRS(:,:,:) = 0.
 ZRSVS(:,:,:) = 0.
 !ZRTKES(:,:) =  PTKEM * PRHODJ/ pdtphys
 ZRTKES(:,:) = 0.
-CALL TURB(PHYEX%CST, PHYEX%CSTURB, TBUCONF, PHYEX%TURBN, PHYEX%NEBN, D, TLES,                   &
-   & KMI, KRR, KRRL, KRRI, HLBCX, HLBCY, KGRADIENTS, KHALO,                                     &
-   & KSPLIT,KMI, KSV, KSV_LGBEG, KSV_LGEND,                                                     &
-   & CPROGRAM,                                                                                  &
-   & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,                                        &
-   & O2D, ONOMIXLG, OFLAT, OCOUPLES, OBLOWSNOW,OIBM,                                            &
-   & OFLYER, OCOMPUTE_SRC, PRSNOW,                                                              &
-   & OOCEAN, ODEEPOC, ODIAG_IN_RUN,                                                             &
-   & HTURBLEN_CL,CMICRO,                                                                        &
-   & pdtphys,ZTFILE,                                                                            &
+CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, D, PHYEX%MISC%TLES,               &
+   & PHYEX%MISC%KMI, KRR, KRRL, KRRI, PHYEX%MISC%HLBCX, PHYEX%MISC%HLBCY, PHYEX%MISC%KGRADIENTS, PHYEX%MISC%KHALO,&
+   & PHYEX%MISC%KSPLIT,PHYEX%MISC%KMI, KSV, PHYEX%MISC%KSV_LGBEG, PHYEX%MISC%KSV_LGEND,                           &
+   & PHYEX%MISC%CPROGRAM,                                                                                         &
+   & PHYEX%MISC%KSV_LIMA_NR, PHYEX%MISC%KSV_LIMA_NS, PHYEX%MISC%KSV_LIMA_NG, PHYEX%MISC%KSV_LIMA_NH,              &
+   & PHYEX%MISC%O2D, PHYEX%MISC%ONOMIXLG, PHYEX%MISC%OFLAT, PHYEX%MISC%OCOUPLES,                                  &
+   &  PHYEX%MISC%OBLOWSNOW,PHYEX%MISC%OIBM,                                                                       &
+   & PHYEX%MISC%OFLYER, PHYEX%MISC%COMPUTE_SRC, PHYEX%MISC%PRSNOW,                                                &
+   & PHYEX%MISC%OOCEAN, PHYEX%MISC%ODEEPOC, PHYEX%MISC%ODIAG_IN_RUN,                                              &
+   & PHYEX%MISC%HTURBLEN_CL,PHYEX%MISC%CMICRO,                                                                    &
+   & pdtphys,PHYEX%MISC%ZTFILE,                                                                 &
    & ZDXX(:,:),ZDYY(:,:),zdzm(:,:),                                                             &
    & ZDZX(:,:),ZDZY(:,:),zz_flux(:,:),                                                          &
    & ZDIRCOSXW(:),ZDIRCOSYW(:),ZDIRCOSZW(:),ZCOSSLOPE(:),ZSINSLOPE(:),                          &
@@ -537,16 +463,16 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, TBUCONF, PHYEX%TURBN, PHYEX%NEBN, D, TLES,   
    & ZPABST(:,:),ZUT(:,:),ZVT(:,:),PWT(:,:),PTKEM(:,:),ZSVT(:,:,:),ZSRC(:,:),                   &
    & PLENGTHM(:,:),PLENGTHH(:,:),MFMOIST(:,:),                                                  &
    & ZBL_DEPTH(:),ZSBL_DEPTH(:),                                                                &
-   & ZCEI(:,:),ZCEI_MIN,ZCEI_MAX,ZCOEF_AMPL_SAT,                                                &
+   & ZCEI(:,:),PHYEX%MISC%ZCEI_MIN,PHYEX%MISC%ZCEI_MAX,PHYEX%MISC%ZCOEF_AMPL_SAT,               &
    & ZTHETA(:,:),ZRX(:,:,:),                                                                    &
    & ZRUS(:,:),ZRVS(:,:),ZRWS(:,:),ZRTHS(:,:),ZRRS(:,:,:),ZRSVS(:,:,:),ZRTKES(:,:),             &
    & PSIGS(:,:),                                                                                &
    & ZFLXZTHVMF(:,:),ZWTH(:,:),ZWRC(:,:),ZWSV(:,:,:),ZDP(:,:),ZTP(:,:),ZTDIFF(:,:),ZTDISS(:,:), &
-   & YLBUDGET, NBUDGET_RH                                                                       )
+   & PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET                                                    )
 ! Add tendencies of turb to total physics tendency
 d_u(:,1:klev) = d_u(:,1:klev) + ZRUS(:,2:klev+1)/PRHODJ(:,2:klev+1)
 d_v(:,1:klev) = d_v(:,1:klev) + ZRVS(:,2:klev+1)/PRHODJ(:,2:klev+1)
-d_t(:,1:klev) = d_t(:,1:klev) + ZRTHS(:,2:klev+1)*zexn(:,2:klev+1)/PRHODJ(:,2:klev+1)
+d_t(:,1:klev) = d_t(:,1:klev) + ZRTHS(:,2:klev+1)*ZEXN(:,2:klev+1)/PRHODJ(:,2:klev+1)
 d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + ZRRS(:,2:klev+1,1)/PRHODJ(:,2:klev+1)*zqdm(:,2:klev+1) 
 d_qx(:,1:klev,2)=d_qx(:,1:klev,2) + ZRRS(:,2:klev+1,2)/PRHODJ(:,2:klev+1)*zqdm(:,2:klev+1) 
 d_qx(:,1:klev,3)=d_qx(:,1:klev,3) + ZRRS(:,2:klev+1,4)/PRHODJ(:,2:klev+1)*zqdm(:,2:klev+1) 
@@ -562,7 +488,7 @@ ZRXS0=ZRXS
 ZSEA=1.
 ZTOWN=0.
 ZCIT=0.
-CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, PHYEX%RAIN_ICE_DESCRN, TBUCONF,             &
+CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, PHYEX%RAIN_ICE_DESCRN, PHYEX%MISC%TBUCONF,  &
                pdtphys, KRR, ZEXN,                                                                                &
                zdzf, PRHODJ, ZRHOD, ZEXN, ZPABST, ZCIT, ZCLDFR,                                                   &
                ZHLC_HRC, ZHLC_HCF, ZHLI_HRI, ZHLI_HCF,                                                            &
@@ -570,7 +496,7 @@ CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, PHYEX%RAIN
                ZRX(:,:,6), zthetas, ZRXS(:,:,1), ZRXS(:,:,2), ZRXS(:,:,3), ZRXS(:,:,4), ZRXS(:,:,5), ZRXS(:,:,6), &
                ZINPRC, ZINPRR, ZEVAP3D,                                                                           &
                ZINPRS, ZINPRG, ZINDEP, ZRAINFR, PSIGS,                                                            &
-               YLBUDGET, NBUDGET_RH,                                                                              &
+               PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET,                                                           &
                ZSEA, ZTOWN                                                                                        )
 ! Tendencies, mixing ratio -> specific
 d_qx(:,1:klev,1)=d_qx(:,1:klev,1) + (ZRXS(:,2:klev+1,1)-ZRXS0(:,2:klev+1,1))*ZQDM(:,2:klev+1)
@@ -580,7 +506,7 @@ d_qr(:,1:klev)=d_qr(:,1:klev) + (ZRXS(:,2:klev+1,3)-ZRXS0(:,2:klev+1,3))*ZQDM(:,
 d_qs(:,1:klev)=d_qs(:,1:klev) + (ZRXS(:,2:klev+1,5)-ZRXS0(:,2:klev+1,5))*ZQDM(:,2:klev+1)
 d_qg(:,1:klev)=d_qg(:,1:klev) + (ZRXS(:,2:klev+1,6)-ZRXS0(:,2:klev+1,6))*ZQDM(:,2:klev+1)
 
-d_t(:,1:klev)=d_t(:,1:klev) + (zthetas(:,2:klev+1)-zthetas0(:,2:klev+1))*zexn(:,2:klev+1)
+d_t(:,1:klev)=d_t(:,1:klev) + (zthetas(:,2:klev+1)-zthetas0(:,2:klev+1))*ZEXN(:,2:klev+1)
 
 !------------------------------------------------------------
 ! Time evolution (values for next time step)
