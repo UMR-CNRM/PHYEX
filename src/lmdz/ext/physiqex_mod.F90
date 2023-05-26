@@ -596,7 +596,7 @@ PTKEM(:,:) = PTKEM(:,:) + ZRTKES(:,:)/PRHODJ(:,:)*pdtphys
 ! Entrees sorties
 !------------------------------------------------------------
 
-call output_physiqex(debut,zjulian,pdtphys,presnivs,paprs,u,v,t,qx)
+call output_physiqex(debut,zjulian,pdtphys,presnivs,paprs,u,v,t,qx,ZCLDFR)
 
 ! if lastcall, then it is time to write "restartphy.nc" file
 if (lafin) then

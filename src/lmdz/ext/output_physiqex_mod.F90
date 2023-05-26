@@ -4,7 +4,7 @@ MODULE output_physiqex_mod
 
 CONTAINS 
 
-SUBROUTINE output_physiqex(debut,zjulian,pdtphys,presnivs,paprs,u,v,t,qx)
+SUBROUTINE output_physiqex(debut,zjulian,pdtphys,presnivs,paprs,u,v,t,qx,cf)
 
       USE dimphy, only : klon,klev
       USE iophy, only : histbeg_phy,histwrite_phy
@@ -27,6 +27,7 @@ real,intent(in) :: v(klon,klev) ! northward meridional wind (m/s)
 real,intent(in) :: t(klon,klev) ! temperature (K)
 real,intent(in) :: paprs(klon,klev+1) ! interlayer pressure (Pa)
 real,intent(in) :: qx(klon,klev,nqtot) !tracers
+real,intent(in) :: cf(klon,klev)!cloud fraction
 
 real :: t_ops ! frequency of the IOIPSL operations (eg average over...)
 real :: t_wrt ! frequency of the IOIPSL outputs
@@ -99,6 +100,9 @@ if(debut)then
        call histdef(nid_hist,'qi','Cloud solid water specifiq content', 'kg/kg', &
                     nbp_lon,jj_nb,nhori,klev,1,klev,zvertid,32, &
                     'inst(X)',t_ops,t_wrt)
+       call histdef(nid_hist, 'CF', 'Cloud fraction', '0-1', &
+                     nbp_lon,jj_nb,nhori,klev,1,klev,zvertid,32, &
+                    'inst(X)',t_ops,t_wrt)
 
        ! end definition sequence
        print*,'NNNNNNN OK2',nid_hist,t_ops,t_wrt
@@ -133,12 +137,13 @@ itau=itau+1
 if (modulo(itau,iwrite_phys)==0) then
   if ( ioex == 1 ) then
      call iophys_ecrit('temp',klev,'Temperature','K',t)
-     call iophys_ecrit('u',klev,'zonal wind','m/s',t)
-     call iophys_ecrit('v',klev,'meridinal wind','m/s',t)
+     call iophys_ecrit('u',klev,'zonal wind','m/s',u)
+     call iophys_ecrit('v',klev,'meridinal wind','m/s',v)
      call iophys_ecrit('ps',1,'Surface pressure','Pa',paprs(:,1))
      call iophys_ecrit('qv',klev,'Water vapor specifiq content', 'kg/kg', qx(:,:,1))
      call iophys_ecrit('qc',klev,'Cloud liquid water specifiq content', 'kg/kg', qx(:,:,2))
      call iophys_ecrit('qi',klev,'Cloud solid water specifiq content', 'kg/kg', qx(:,:,3))
+     call iophys_ecrit('CF',klev,'Cloud fraction', '0-1', cf)
   else if ( ioex == 2 ) then
      call histwrite_phy(nid_hist,.false.,"Temp",itau,t)
      call histwrite_phy(nid_hist,.false.,"u",itau,u)
@@ -147,6 +152,7 @@ if (modulo(itau,iwrite_phys)==0) then
      call histwrite_phy(nid_hist,.false.,"qv",itau,qx(:,:,1))
      call histwrite_phy(nid_hist,.false.,"qc",itau,qx(:,:,2))
      call histwrite_phy(nid_hist,.false.,"qi",itau,qx(:,:,3))
+     call histwrite_phy(nid_hist,.false.,'CF',itau,cf)
      !$OMP MASTER
      CALL histsync(nid_hist)
      !$OMP END MASTER
@@ -172,6 +178,7 @@ endif
        CALL histwrite_phy("qv",qx(:,:,1))
        CALL histwrite_phy("qc",qx(:,:,2))
        CALL histwrite_phy("qi",qx(:,:,3))
+       CALL histwrite_phy("CF",cf)
 #endif
 
 
