@@ -478,7 +478,6 @@ ZRTHS(:,:) = ZTHETAS(:,:) * PRHODJ(:,:)
 CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, D, PHYEX%MISC%TLES,               &
    & PHYEX%MISC%KMI, KRR, KRRL, KRRI, PHYEX%MISC%HLBCX, PHYEX%MISC%HLBCY, PHYEX%MISC%KGRADIENTS, PHYEX%MISC%KHALO,&
    & PHYEX%MISC%KSPLIT,PHYEX%MISC%KMI, KSV, PHYEX%MISC%KSV_LGBEG, PHYEX%MISC%KSV_LGEND,                           &
-   & PHYEX%MISC%CPROGRAM,                                                                                         &
    & PHYEX%MISC%KSV_LIMA_NR, PHYEX%MISC%KSV_LIMA_NS, PHYEX%MISC%KSV_LIMA_NG, PHYEX%MISC%KSV_LIMA_NH,              &
    & PHYEX%MISC%O2D, PHYEX%MISC%ONOMIXLG, PHYEX%MISC%OFLAT, PHYEX%MISC%OCOUPLES,                                  &
    &  PHYEX%MISC%OBLOWSNOW,PHYEX%MISC%OIBM,                                                                       &
