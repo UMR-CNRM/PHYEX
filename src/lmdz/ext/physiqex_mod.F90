@@ -19,18 +19,8 @@ CONTAINS
 ! * Certains allocatable sont en klev, d'autres en klev+2. Il est possible de changer ceci mais il faut gérer
 !   les recopies pour que les params voient des tableaux en klev+2 (en effectuant des recopies des
 !   niveaux extrêmes comme fait pour le vent par exemple)
-
-!TODO à faire avant d'historiser dans LMDZ:
-! * vérifier si rhodj ne devrait pas être calculé avec un rho humide ici (arome?)
-! * brancher le sigma du schéma STAT
-! * utiliser les variables ajustées
-
-
-
-
-
-
-
+! * L'eau tombée en surface (précipitations, sédimentation du nuage, terme de dépôt) se trouve dans
+!   les variables ZINPRC, ZINPRR, ZINPRS, ZINPRG
 
 
 
@@ -518,6 +508,9 @@ ZTKES(:,:) = ZRTKES(:,:) / PRHODJ(:,:)
 ! Add tendencies of turb to total physics tendency
 d_u(:,1:klev) = d_u(:,1:klev) + ZRUS(:,2:klev+1)/PRHODJ(:,2:klev+1)
 d_v(:,1:klev) = d_v(:,1:klev) + ZRVS(:,2:klev+1)/PRHODJ(:,2:klev+1)
+IF(PHYEX%PARAM_MFSHALLN%CMF_CLOUD=='STAT') THEN
+  PSIGS(:,:)=SQRT(PSIGS(:,:)**2 + PSIGMF(:,:)**2)
+ENDIF
 !------------------------------------------------------------
 ! Microphysics
 !------------------------------------------------------------
