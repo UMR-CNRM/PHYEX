@@ -165,6 +165,11 @@ IF(PRESENT(KPRINT      )) IPRINT      =KPRINT
 !       -----------------
 !
 IF(LLDEFAULTVAL) THEN
+  !NOTES ON GENERAL DEFAULTS AND MODEL-SPECIFIC DEFAULTS :
+  !- General default values *MUST* remain unchanged.
+  !- To change the default value for a given application,
+  !  an "IF(HPROGRAM=='...')" condition must be used.
+
   !Freezing between 0 and -20. Other possibilities are 0/-40 or -5/-25
   XTMAXMIX    = 273.16
   XTMINMIX    = 253.16

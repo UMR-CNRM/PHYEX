@@ -625,6 +625,11 @@ IF(PRESENT(KPRINT      )) IPRINT      =KPRINT
 !       ----------------- 
 ! 
 IF(LLDEFAULTVAL) THEN 
+  !NOTES ON GENERAL DEFAULTS AND MODEL-SPECIFIC DEFAULTS :
+  !- General default values *MUST* remain unchanged.
+  !- To change the default value for a given application,                                                 
+  !  an "IF(HPROGRAM=='...')" condition must be used.
+
   LNUCL=.TRUE.
   LSEDI=.TRUE.
   LHHONI = .FALSE.
