@@ -199,6 +199,9 @@ REAL, DIMENSION(klon,klev+2) ::  PEMF      ! updraft mass flux
 REAL, DIMENSION(klon,klev+2) ::  PDETR     ! updraft detrainment
 REAL, DIMENSION(klon,klev+2) ::  PENTR     ! updraft entrainment
 INTEGER,DIMENSION(klon) ::IKLCL,IKETL,IKCTL ! level of LCL,ETL and CTL
+! Values after saturation adjustement
+REAL, DIMENSION(klon,klev) :: t_adj ! Adjusted temperature
+REAL, DIMENSION(klon,klev) :: qv_adj, ql_adj, qi_adj, qr_adj, qs_adj, qg_adj !specific contents after adjustement
 !
 real :: temp_newton(klon,klev)
 integer :: k
@@ -390,8 +393,31 @@ CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, P
                 &ZRX(:,:,3), ZRX(:,:,4), ZRXS(:,:,4), ZRX(:,:,5), ZRX(:,:,6),                       &
                 &PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET,                                           &
                 &ZICE_CLD_WGT,                                                                      &
-                !&POUT_RV, POUT_RC, POUT_RI, POUT_TH,               &
                 &ZHLC_HRC, ZHLC_HCF, ZHLI_HRI, ZHLI_HCF                                             )
+!
+!Variables are updated with their adjusted values (to be used by the other parametrisations)
+ZTHETA(:,:)=ZTHETAS(:,:)*pdtphys
+ZRX(:,:,:)=ZRXS(:,:,:)*pdtphys
+t_adj=ZTHETA(:,2:klev+1)*ZEXN(:,2:klev+1)
+qv_adj=ZRX(:,2:klev+1,1)*zqdm(:,2:klev+1)
+ql_adj=ZRX(:,2:klev+1,2)*zqdm(:,2:klev+1)
+qi_adj=ZRX(:,2:klev+1,4)*zqdm(:,2:klev+1)
+qr_adj=ZRX(:,2:klev+1,3)*zqdm(:,2:klev+1)
+qs_adj=ZRX(:,2:klev+1,5)*zqdm(:,2:klev+1)
+qg_adj=ZRX(:,2:klev+1,6)*zqdm(:,2:klev+1)
+ZRHOD(:,2:klev+1)=ZPABST(:,2:klev+1)/(t*(PHYEX%CST%XRD+ZRX(:,2:klev+1,1)*PHYEX%CST%XRV))
+CALL VERTICAL_EXTEND(ZRHOD,klev)
+!
+!------------------------------------------------------------
+! Radiation
+!------------------------------------------------------------
+!
+
+
+!ECRAD can be plugged here and can use the adjusted values for temperature and hydrometeors
+!Cloud fraction is available in the ZCLDFR variable
+
+
 !
 !------------------------------------------------------------
 ! Surface
