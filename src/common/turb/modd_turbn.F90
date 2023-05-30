@@ -102,6 +102,9 @@ TYPE TURB_t
                                    !!  negative value to apply everywhere;
                                    !!  0.000001 applied only inside the clouds ri+rc > 10**-6 kg/kg
   REAL               :: XLINI      !< initial value for BL mixing length
+  LOGICAL            :: LROTATE_WIND !< .TRUE. to rotate wind components
+  LOGICAL            :: LTKEMINTURB  !< set a minimum value for the TKE in the turbulence scheme
+  LOGICAL            :: LPROJQITURB  !< project the rt tendency on rc/ri
 !  
 END TYPE TURB_t
 
@@ -146,12 +149,17 @@ REAL, POINTER :: XCOEFHGRADRM=>NULL()
 REAL, POINTER :: XALTHGRAD=>NULL()
 REAL, POINTER :: XCLDTHOLD=>NULL()
 REAL, POINTER :: XLINI=>NULL()
+LOGICAL, POINTER   :: LROTATE_WIND=>NULL()
+LOGICAL, POINTER   :: LTKEMINTURB=>NULL()
+LOGICAL, POINTER   :: LPROJQITURB=>NULL()
+
 !
 NAMELIST/NAM_TURBn/XIMPL,CTURBLEN,CTURBDIM,LTURB_FLX,LTURB_DIAG,  &
                    LSIG_CONV,LRMC01,CTOM,&
                    XTKEMIN,XCED,XCTP,XCADAP,&
                    LLEONARD,XCOEFHGRADTHL, XCOEFHGRADRM, &
-                   XALTHGRAD, XCLDTHOLD, XLINI,  LHARAT
+                   XALTHGRAD, XCLDTHOLD, XLINI, LHARAT, &
+                   LPROJQITURB
 !
 !-------------------------------------------------------------------------------
 !
@@ -224,6 +232,9 @@ XCOEFHGRADRM=>TURB_MODEL(KTO)%XCOEFHGRADRM
 XALTHGRAD=>TURB_MODEL(KTO)%XALTHGRAD
 XCLDTHOLD=>TURB_MODEL(KTO)%XCLDTHOLD
 XLINI=>TURB_MODEL(KTO)%XLINI
+LROTATE_WIND=>TURB_MODEL(KTO)%LROTATE_WIND
+LTKEMINTURB=>TURB_MODEL(KTO)%LTKEMINTURB
+LPROJQITURB=>TURB_MODEL(KTO)%LPROJQITURB
 !
 ENDIF
 !
@@ -321,10 +332,17 @@ IF(LLDEFAULTVAL) THEN
   XCLDTHOLD = -1.0
   XLINI=0.1 !old value: 10.
   LHARAT=.FALSE.
+  LROTATE_WIND=.FALSE.
+  LTKEMINTURB=.TRUE.
+  LPROJQITURB=.TRUE.
 
   IF(HPROGRAM=='AROME') THEN
     XTKEMIN=1.E-6
     XLINI=0.
+    LPROJQITURB=.FALSE.
+  ELSEIF(HPROGRAM=='MESONH') THEN
+    LROTATE_WIND=.TRUE.
+    LTKEMINTURB=.FALSE.
   ENDIF
 ENDIF
 !

@@ -10,7 +10,7 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
                       KRR,KRRL,KRRI,KGRADIENTS,                     &
                       OOCEAN,ODEEPOC,OCOMPUTE_SRC,                  &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
-                      PEXPL, HPROGRAM, O2D, ONOMIXLG, OFLAT,        &
+                      PEXPL, O2D, ONOMIXLG, OFLAT,                  &
                       OCOUPLES,OBLOWSNOW,OFLYER,PRSNOW,             & 
                       PTSTEP, TPFILE,                               &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
@@ -259,7 +259,6 @@ LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororogr
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
-CHARACTER(LEN=6),       INTENT(IN)   ::  HPROGRAM     ! HPROGRAM is the program currently running
 LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for lagrangian variables
 LOGICAL,                INTENT(IN)   ::  O2D          ! Logical for 2D model version
 REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
@@ -506,7 +505,7 @@ ENDIF
                         KRR,KRRL,KRRI,KSV,KGRADIENTS,                 &
                         OOCEAN,ODEEPOC,OFLYER,                        &
                         OCOUPLES,OCOMPUTE_SRC,                        &
-                        PEXPL,PTSTEP,HPROGRAM,TPFILE,                 &
+                        PEXPL,PTSTEP,TPFILE,                          &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                         PRHODJ,PTHVREF,PHGRAD,PZS,                    &
                         PSFTHM,PSFRM,PSFTHP,PSFRP,                    &

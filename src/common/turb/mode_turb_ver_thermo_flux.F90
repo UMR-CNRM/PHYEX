@@ -10,7 +10,7 @@ SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,TLES,            &
                       KRR,KRRL,KRRI,KSV,KGRADIENTS,                 &
                       OOCEAN,ODEEPOC,OFLYER,                        &
                       OCOUPLES, OCOMPUTE_SRC,                       &
-                      PEXPL,PTSTEP,HPROGRAM,                        &
+                      PEXPL,PTSTEP,                                 &
                       TPFILE,                                       &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                       PRHODJ,PTHVREF,PHGRAD,PZS,                    &
@@ -274,7 +274,6 @@ LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and
 REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
 REAL,                   INTENT(IN)   ::  PTSTEP       ! Double Time Step
-CHARACTER(LEN=6),       INTENT(IN)   :: HPROGRAM      ! CPROGRAM is the program currently running (modd_conf)
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PDZZ, PDXX, PDYY, PDZX, PDZY ! Metric coefficients
@@ -748,7 +747,7 @@ IF (OOCEAN) THEN
 END IF
 !*       2.3  Partial vertical divergence of the < Rc w > flux
 ! Correction for qc and qi negative in AROME
-IF(HPROGRAM/='AROME  ') THEN
+IF(TURBN%LPROJQITURB) THEN
  IF ( KRRL >= 1 ) THEN
    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
    ZWORK1(IIJB:IIJE,1:IKT) = ZFLXZ(IIJB:IIJE,1:IKT)/PDZZ(IIJB:IIJE,1:IKT)
@@ -1136,7 +1135,7 @@ IF (KRR /= 0) THEN
 !
 !*       3.3  Complete vertical divergence of the < Rc w > flux
 ! Correction of qc and qi negative for AROME
-IF(HPROGRAM/='AROME  ') THEN
+IF(TURBN%LPROJQITURB) THEN
    IF ( KRRL >= 1 ) THEN
        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
        ZWORK2(IIJB:IIJE,1:IKT) = ZFLXZ(IIJB:IIJE,1:IKT) / &

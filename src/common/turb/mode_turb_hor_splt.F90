@@ -9,7 +9,7 @@ CONTAINS
                       KSPLIT, KRR,KRRL,KRRI,KSV, KSV_LGBEG,KSV_LGEND,&
                       PTSTEP,HLBCX,HLBCY, OFLAT, O2D, ONOMIXLG,      &
                       OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,PRSNOW,          &
-                      TPFILE, HPROGRAM, KHALO,                       &
+                      TPFILE, KHALO,                                 &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
                       PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &
                       PCOSSLOPE,PSINSLOPE,                           &
@@ -199,7 +199,6 @@ LOGICAL,                INTENT(IN)   ::  O2D          ! Logical for 2D model ver
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
-CHARACTER(LEN=6), INTENT(IN) :: HPROGRAM ! HPROGRAM is the program currently running (modd_conf)
 INTEGER,                INTENT(IN)   ::  KHALO        ! Size of the halo for parallel distribution
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
@@ -316,7 +315,7 @@ NULLIFY(TZFIELDS_ll)
 !*       2.   SPLIT PROCESS LOOP
 !             ------------------
 !
-IF (KSPLIT>1 .AND. HPROGRAM=='MESONH') THEN
+IF (KSPLIT>1) THEN
 !
 !*       2.1  allocations
 !             -----------

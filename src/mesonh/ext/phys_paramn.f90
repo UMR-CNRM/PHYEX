@@ -1574,7 +1574,7 @@ END IF
    CALL TURB( CST,CSTURB, TBUCONF, TURBN, NEBN, YLDIMPHYEX,TLES, &
               IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, IGRADIENTS, NHALO,                 &
               1, NMODEL_CLOUD,                                                       &
-              NSV, NSV_LGBEG, NSV_LGEND,CPROGRAM,                                    &
+              NSV, NSV_LGBEG, NSV_LGEND,                                             &
               NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,                    &
               L2D, LNOMIXLG,LFLAT,                                                   &
               LCOUPLES, LBLOWSNOW, LIBM,LFLYER,                                      &
