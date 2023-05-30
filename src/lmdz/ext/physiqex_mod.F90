@@ -302,15 +302,16 @@ ZVT(:,2:klev+1) = v(:,:)
 zqt(:,2:klev+1) = qx(:,:,1) + qx(:,:,2) + qx(:,:,3)
 zqt(:,1)=0.
 zqt(:,klev+2)=0.
-zqdm(:,:)=1.-zqt(:,:)
+zqdm(:,:)=1.-zqt(:,:) !equal to 1/(1+rt)
 ZRX(:,2:klev+1,1) = qx(:,:,1) / zqdm(:,2:klev+1)
 ZRX(:,2:klev+1,2) = qx(:,:,2) / zqdm(:,2:klev+1)
 ZRX(:,2:klev+1,4) = qx(:,:,3) / zqdm(:,2:klev+1)
 ZRX(:,2:klev+1,3) = ZQR(:,:)
 ZRX(:,2:klev+1,5) = ZQS(:,:)
 ZRX(:,2:klev+1,6) = ZQG(:,:)
-ZRX(:,1,:)=0. !no hydrometeors under ground
-ZRX(:,klev+2,:)=0. !no hydrometeors out of atmosphere
+DO JRR=1,KRR
+  CALL VERTICAL_EXTEND(ZRX(:,:,JRR),klev)
+END DO
 !
 ZEXN(:,2:klev+1) = (pplay(:,:) / PHYEX%CST%XP00) ** (PHYEX%CST%XRD/PHYEX%CST%XCPD)
 ZTHETA(:,2:klev+1) = t(:,:) / ZEXN(:,2:klev+1)
@@ -345,18 +346,14 @@ ZRHOD(:,2:klev+1)=ZPABST(:,2:klev+1)/(t*(PHYEX%CST%XRD+ZRX(:,2:klev+1,1)*PHYEX%C
 DO k=2,klev+1
   PRHODJ(:,k) = ZRHOD(:,k) * (zdzf(:,k)*cell_area(:))
 END DO
-PTHVREF(:,2:klev+1) = ZTHETA(:,2:klev+1) * (1.0 + qx(:,:,1) * (PHYEX%CST%XRV/PHYEX%CST%XRD - 1.0) - &
-                                           &qx(:,:,2) - qx(:,:,3))
+PTHVREF(:,:) = ZTHETA(:,:) * (1. + PHYEX%CST%XRV/PHYEX%CST%XRD * ZRX(:,:,1)) * ZQDM(:,:)
 
 CALL VERTICAL_EXTEND(ZPABST,klev)
 CALL VERTICAL_EXTEND(PRHODJ,klev)
 CALL VERTICAL_EXTEND(ZRHOD,klev)
 CALL VERTICAL_EXTEND(ZUT,klev)
 CALL VERTICAL_EXTEND(ZVT,klev)
-CALL VERTICAL_EXTEND(PTHVREF,klev)
-DO JRR=1,KRR
-  CALL VERTICAL_EXTEND(ZRX(:,:,JRR),klev)
-END DO 
+ 
 
 !------------------------------------------------------------
 ! Tendencies
