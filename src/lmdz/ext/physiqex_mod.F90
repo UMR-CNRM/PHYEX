@@ -228,9 +228,6 @@ if (debut) then ! Things to do only for the first call to physics
   CALL INIT_PHYEX(pdtphys, ZDZMIN, PHYEX)
   CALL FILL_DIMPHYEX(KLON, KLEV, D)
 
-  !Update default values
-  PHYEX%NEBN%LSUBG_COND = .TRUE. 
-  PHYEX%PARAM_ICEN%CSUBG_AUCV_RC='PDF'
   !  
   ! Variables saved
   ALLOCATE(PTKEM(klon,klev+2))
@@ -360,9 +357,9 @@ CALL VERTICAL_EXTEND(ZVT,klev)
 ZRXS(:,:,:) = ZRX(:,:,:)/pdtphys
 ZTHETAS(:,:)=ZTHETA(:,:)/pdtphys
 ZTKES(:,:)=PTKEM(:,:)/pdtphys
-!To compute the actual tendecy, we save the initial values of these variables
+!To compute the actual tendency, we save the initial values of these variables
 ZRXS0(:,:,:) = ZRXS(:,:,:)
-ZTHETAS0=ZTHETAS
+ZTHETAS0(:,:)=ZTHETAS(:,:)
 ZTKES0(:,:)=ZTKES(:,:)
 !------------------------------------------------------------
 ! Adjustment
@@ -383,7 +380,7 @@ CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, P
                 &ZRX(:,:,3), ZRX(:,:,4), ZRXS(:,:,4), ZRX(:,:,5), ZRX(:,:,6),                       &
                 &PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET,                                           &
                 &ZICE_CLD_WGT,                                                                      &
-                &ZHLC_HRC, ZHLC_HCF, ZHLI_HRI, ZHLI_HCF                                             )
+                &PHLC_HRC=ZHLC_HRC, PHLC_HCF=ZHLC_HCF, PHLI_HRI=ZHLI_HRI, PHLI_HCF=ZHLI_HCF         )
 !
 !Variables are updated with their adjusted values (to be used by the other parametrisations)
 ZTHETA(:,:)=ZTHETAS(:,:)*pdtphys
@@ -419,22 +416,21 @@ d_u(1:klon,1)=d_u(1:klon,1)-u(1:klon,1)/86400.
 d_v(1:klon,1)=d_v(1:klon,1)-v(1:klon,1)/86400.
 !
 ! Flux RICO
-PSFTH(:) = 5E-3 ! RICO
-PSFRV(:) = 6E-5 ! RICO
+!PSFTH(:) = 5E-3 ! RICO
+!PSFRV(:) = 6E-5 ! RICO
 ! Flux ARMCU
-!PSFTH(:) = -fsens/1000.
-!PSFRV(:) = -flat/(2.5e6)
+PSFTH(:) = -fsens/1000.
+PSFRV(:) = -flat/(2.5e6)
 !
 PSFSV(:,:) = 0.
 PSFU(:) = 0.
 PSFV(:) = 0.
 !
-!TODO PSIGMF option STAT
 !------------------------------------------------------------
 ! Shallow convection
 !------------------------------------------------------------
 !
-  CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB,         &
+CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB,           &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                                        &
      &ONOMIXLG=PHYEX%MISC%ONOMIXLG,KSV_LGBEG=PHYEX%MISC%KSV_LGBEG,KSV_LGEND=PHYEX%MISC%KSV_LGEND,    &
      &PTSTEP=pdtphys,                                                                                &
@@ -480,7 +476,7 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, 
    & PHYEX%MISC%KSPLIT,PHYEX%MISC%KMI, KSV, PHYEX%MISC%KSV_LGBEG, PHYEX%MISC%KSV_LGEND,                           &
    & PHYEX%MISC%KSV_LIMA_NR, PHYEX%MISC%KSV_LIMA_NS, PHYEX%MISC%KSV_LIMA_NG, PHYEX%MISC%KSV_LIMA_NH,              &
    & PHYEX%MISC%O2D, PHYEX%MISC%ONOMIXLG, PHYEX%MISC%OFLAT, PHYEX%MISC%OCOUPLES,                                  &
-   &  PHYEX%MISC%OBLOWSNOW,PHYEX%MISC%OIBM,                                                                       &
+   & PHYEX%MISC%OBLOWSNOW,PHYEX%MISC%OIBM,                                                                        &
    & PHYEX%MISC%OFLYER, PHYEX%MISC%COMPUTE_SRC, PHYEX%MISC%PRSNOW,                                                &
    & PHYEX%MISC%OOCEAN, PHYEX%MISC%ODEEPOC, PHYEX%MISC%ODIAG_IN_RUN,                                              &
    & PHYEX%MISC%HTURBLEN_CL,PHYEX%MISC%CMICRO,                                                                    &
