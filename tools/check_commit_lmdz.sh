@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -x
 set -e
 set -o pipefail #abort if left command on a pipe fails
 
@@ -56,6 +55,7 @@ tests=""
 suppress=0
 useexpand=0
 version=""
+link=0 #Not yet put in command line argument becaus this option has not been tested here
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -164,6 +164,14 @@ if [ ! -z "${reference-}" ]; then
   fi
 fi
 
+lmdzdir=$LMDZPACK/$name/LMDZ
+phyexdir=$LMDZPACK/$name/PHYEX/
+main=lmdz1d
+L=79
+##-debug is the default value and there's a bug (in the current script) if we try to specify it here
+##compilecmd="./compile -L $L -rad $rad -cosp 0 -opt \"-debug \" -main $main"
+compilecmd="./compile -L $L -rad $rad -cosp 0 -main $main"
+
 if [ $packcreation -eq 1 ]; then
   echo "### Compilation of commit $commit"
 
@@ -178,64 +186,59 @@ if [ $packcreation -eq 1 ]; then
   fi
 
   #Create directory
-  cd $LMDZPACK
-  mkdir $name
-  cd $name
-  base=$PWD
-  wget https://lmdz.lmd.jussieu.fr/pub/install_lmdz.sh
-  bash install_lmdz.sh -v $version $install_arg -bench 0 -rad $rad -name LMDZ > Install.log
-  lmdzdir=$PWD/LMDZ
+  mkdir -p $LMDZPACK/$name
+  cd $LMDZPACK/$name
+  wget https://lmdz.lmd.jussieu.fr/pub/install_lmdz.sh -O install_lmdz.sh
+  bash install_lmdz.sh -v $version $install_arg -bench 0 -rad $rad -name LMDZ 2>&1 | tee Install.log
 
-  #Populate with test cases
+  #Populate with test cases (1D directory needed for compilation)
   cd $lmdzdir
   wget https://lmdz.lmd.jussieu.fr/pub/1D/1D.tar.gz
   tar xf 1D.tar.gz
-  cd 1D
-  rad=$(echo $rad) #to suppress spaces
-  sed -i'' -e 's:^listecas=.*$:listecas="arm_cu rico":' -e "s/^rad=.*$/rad='$rad'/" run.sh
+
+  #PHYEX code
+  if [ $link -eq 1 ]; then
+    #Special case when a PHYEX repository exist locally
+    #We can link the LMDZ source tree with the PHYEX repository
+    #This can be useful for debuging or developping
+    cd ${lmdzdir}/modipsl/modeles/LMDZ/libf/phylmd/
+    ln -s ~/PHYEX/src/common/*/* .
+    ln -sf ~/PHYEX/src/lmdz/*/* .
+  else
+    #Checkout PHYEX
+    cd $LMDZPACK/$name
+    MNH_EXPAND_DIR=$PHYEXTOOLSDIR/mnh_expand
+    export PATH=$MNH_EXPAND_DIR/filepp:$MNH_EXPAND_DIR/MNH_Expand_Array:$PATH
   
-  cd INPUT/PHYS
-  cp physiq.def_6A physiq.def_PHYLMD
-  echo "iflag_physiq=1" >> physiq.def_PHYLMD
-  sed -e "s/iflag_physiq=1/iflag_physiq=2/" physiq.def_PHYLMD > physiq.def_PHYEX
-
-  #Update compilation cript
-  phylmd=${lmdzdir}/modipsl/modeles/LMDZ/libf/phylmd/
-  if [ $fcm -eq 1 ]; then
-    sed -i "s/fcm=0/fcm=1/g" $lmdzdir/1D/bin/compile
-  fi
-
-  #Checkout PHYEX
-  cd $base
-  phyex=$base/PHYEX/
-  MNH_EXPAND_DIR=$PHYEXTOOLSDIR/mnh_expand
-  export PATH=$MNH_EXPAND_DIR/filepp:$MNH_EXPAND_DIR/MNH_Expand_Array:$PATH
-
-  if [ $useexpand == 1 ]; then
-    expand_options="-D MNH_EXPAND -D MNH_EXPAND_LOOP"
-  else
-    expand_options=""
-  fi
-  subs="-s turb -s micro -s aux -s ext"
-  prep_code=$PHYEXTOOLSDIR/prep_code.sh
-  if [ "$fromdir" == '' ]; then
-    echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
-    if [[ $commit == lmdz${separator}* ]]; then
-      $prep_code -c $commit PHYEX #This commit is ready for inclusion
+    if [ $useexpand == 1 ]; then
+      expand_options="-D MNH_EXPAND -D MNH_EXPAND_LOOP"
     else
-      $prep_code -c $commit $expand_options $subs -m arome PHYEX
+      expand_options=""
     fi
-  else
-    echo "Copy $fromdir"
-    mkdir PHYEX
-    scp -q -r $fromdir/src PHYEX/
-    $prep_code $expand_options $subs -m lmdz PHYEX
+    subs="-s turb -s micro -s aux -s ext"
+    prep_code=$PHYEXTOOLSDIR/prep_code.sh
+    if [ "$fromdir" == '' ]; then
+      echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
+      if [[ $commit == lmdz${separator}* ]]; then
+        $prep_code -c $commit PHYEX #This commit is ready for inclusion
+      else
+        $prep_code -c $commit $expand_options $subs -m lmdz PHYEX
+      fi
+    else
+      echo "Copy $fromdir"
+      mkdir PHYEX
+      scp -q -r $fromdir/src PHYEX/
+      $prep_code $expand_options $subs -m lmdz PHYEX
+    fi
+
+    #Put PHYEX source code in the LMDZ source tree
+    cd $lmdzdir/modipsl/modeles/LMDZ/libf/phylmd/
+    ln -sf $phyexdir/*/* .
   fi
 
   #Update code
-  cd $phylmd
+  cd $lmdzdir/modipsl/modeles/LMDZ/libf/phylmd/
   cp -r . ../phylmdorig
-  ln -sf $phyex/*/* .
   if [ $fcm -eq 0 ]; then
     mv modd_dimphyexn.F90 modd_dimphyex.F90
     for name in `grep -i 'END MODULE' modd*n.F90 | cut -d: -f1 | sed -e 's/n.F90//'` ; do mv ${name}n.F90 ${name}_n.F90 ; done
@@ -254,16 +257,69 @@ fi
 
 if [ $compilation -eq 1 ]; then
   echo "### Compilation of commit $commit"
-  cd $LMDZPACK/$name/LMDZ/1D
-  sed -i'' -e 's/^listedef=.*$/listedef="PHYLMD PHYEX"/' run.sh
-  ./run.sh > log.$$ 2>&1
+  cd $lmdzdir/1D/bin
+  if [ $fcm -eq 1 ]; then
+    sed -i "s/fcm=0/fcm=1/g" compile
+  fi
+  $compilecmd 2>&1 | tee $lmdzdir/compilation.log
+  if [ $fcm -eq 1 ]; then
+    echo "Using fcm, compilation exits with error even if everything is OK"
+  fi
 fi
 
 if [ $run -eq 1 ]; then
   echo "### Execution of commit $commit"
-  cd $LMDZPACK/$name/LMDZ/1D
-  ./run.sh -r > log.$$ 2>&1
-  wget https://www.lmd.jussieu.fr/~hourdin/phyex/compare.sh
-  bash compare.sh
+  cd $lmdzdir/1D/INPUT/PHYS
+  sed '1 i\iflag_physiq=1\n' physiq.def_6A > physiq.def_PHYLMD
+  sed '1 i\iflag_physiq=2\n' physiq.def_6A > physiq.def_PHYEX
+  for cas in $tests; do
+    for DEF in PHYEX PHYLMD; do
+      d=${lmdzdir}/1D/EXEC/${DEF}L$L/$cas
+      [ ! -d $d ] && mkdir -p $d
+      cd $d
+      ln -sf ${lmdzdir}/1D/OLDCASES/$cas/* .
+      cp -f ${lmdzdir}/1D/INPUT/DEF/*.def .
+      cp -f ${lmdzdir}/1D/INPUT/PHYS/physiq.def_$DEF physiq.def
+      if [ $rad = oldrad ] ; then
+        sed -i'' -e 's/iflag_rrtm=.*$/iflag_rrtm=0/' -e 's/NSW=.*$/NSW=2/' physiq.def
+      fi
+      if [ $rad = ecrad ] ; then
+        cp -f $lmdzdir/modipsl/modeles/LMDZ/DefLists/namelist_ecrad .
+        cp -rf $lmdzdir/modipsl/modeles/LMDZ/libf/phylmd/ecrad/data .
+        sed -e 's@iflag_rrtm=1@iflag_rrtm=2@' physiq.def > tmp
+        \mv tmp physiq.def
+      fi
+      cp -f ${lmdzdir}/1D/INPUT/VERT/L$L/* .
+      ln -sf L$L.def vert.def
+      set +e
+      cp -f $lmdzdir/1D/OLDCASES/$cas/*.d[ae]* .
+      set -e
+      cat <<......eod>| compile.sh
+       cd $lmdzdir/1D/bin
+       $compilecmd
+......eod
+      chmod +x compile.sh
+  
+      if [ $fcm -eq 0 ]; then
+        ln -sf $lmdzdir/1D/bin/${main}.e ${main}.e
+      else
+        ln -sf $lmdzdir/modipsl/modeles/LMDZ/bin/lmdz1d_${L}_phylmd_${rad}_seq.e ${main}.e
+      fi
+  
+      if [ $DEF == PHYEX ]; then
+        sed -i -e 's/day_step=144$/day_step=1440/' gcm1d.def
+      fi
+      ./lmdz1d.e 2>&1 | tee execution.log
+    done
+  done
+fi
+
+if [ $check -eq 1 ]; then
+  echo "### Check commit $commit against commit $reference"
+  echo "This functionnality is not yet implemented because:"
+  echo "  1) the PHYEX interface will evolve and bit-reproducibility is not guaranted"
+  echo "  2) there is no surface scheme plugged in LMZD-PHYEX, a recompilation"
+  echo "     must be done to change the surface fluxes"
+  exit 6
 fi
 
