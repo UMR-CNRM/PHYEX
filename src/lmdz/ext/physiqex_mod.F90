@@ -421,6 +421,7 @@ d_v(1:klon,1)=d_v(1:klon,1)-v(1:klon,1)/86400.
 ! Flux ARMCU
 PSFTH(:) = -fsens/1000.
 PSFRV(:) = -flat/(2.5e6)
+print*, "SRRRRflux", PSFTH(1), PSFRV(1)
 !
 PSFSV(:,:) = 0.
 PSFU(:) = 0.
@@ -548,7 +549,7 @@ PTKEM(:,2:klev+1)=PTKEM(:,2:klev+1)+d_tke(:,:)*pdtphys
 ! Entrees sorties
 !------------------------------------------------------------
 
-call output_physiqex(debut,zjulian,pdtphys,presnivs,paprs,u,v,t,qx,ZCLDFR,ZQR,ZQS,ZQG,PTKEM)
+call output_physiqex(debut,zjulian,pdtphys,presnivs,paprs,u,v,t,qx,ZCLDFR,ZQR,ZQS,ZQG,PTKEM,ZTHETA)
 
 ! if lastcall, then it is time to write "restartphy.nc" file
 if (lafin) then
