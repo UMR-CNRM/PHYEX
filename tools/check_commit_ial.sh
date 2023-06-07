@@ -63,17 +63,23 @@ PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 dirpack=$PHYEXTOOLSDIR/pack
 dirconf=$PHYEXTOOLSDIR/conf_tests
+declare -A gmkpack_l
+declare -A gmkpack_o
 if [ $(hostname | cut -c 1-7) == 'belenos' -o $(hostname | cut -c 1-7) == 'taranis' ]; then
   HPC=1
-  gmkpack_l=MIMPIIFC1805
-  gmkpack_o=2y
+  gmkpack_l[default]=MIMPIIFC1805
+  gmkpack_l[49t0]=IMPIIFC2018
+  gmkpack_o[default]=2y
+  gmkpack_o[49t0]=x
   defaultMainPackVersion=01
   defaultRef='split_${cycle}'
   availTests="${availTests},big_3D"
 else
   HPC=0
-  gmkpack_l=MPIGFORTRAN920DBL
-  gmkpack_o=xfftw
+  gmkpack_l[default]=MPIGFORTRAN920DBL
+  gmkpack_l[49t0]=OMPIGFORT920DBL
+  gmkpack_o[default]=xfftw
+  gmkpack_o[49t0]=x
   defaultMainPackVersion=01
   defaultRef='split_${cycle}'
 fi
@@ -95,6 +101,7 @@ function usage {
   echo "--noexpand      do not use mnh_expand (code will be in array-syntax)"
   echo "-f              full compilation (do not use pre-compiled pack)"
   echo "--cycle CYCLE   to force using CYCLE"
+  echo "--scripttag TAG script tag to use in case --cycle is provided"
   echo "--repo-user     user hosting the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
   echo "--repo-protocol protocol (https or ssh) to reach the PHYEX repository on github,"
@@ -124,6 +131,7 @@ suppress=0
 useexpand=1
 fullcompilation=0
 cycle=""
+scripttag=''
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -137,6 +145,7 @@ while [ -n "$1" ]; do
     '--noexpand') useexpand=0;;
     '-f') fullcompilation=1;;
     '--cycle') cycle="$2"; shift;;
+    '--scripttag') scripttag="$2"; shift;;
     '--repo-user') export PHYEXREPOuser=$2; shift;;
     '--repo-protocol') export PHYEXREPOprotocol=$2; shift;;
     #--) shift; break ;;
@@ -203,18 +212,14 @@ function apl_arome_content2cycle {
   fi
 }
 
-function ial_version_content2cycle {
+function ial_version_content2key {
   # variable content_ial_version must contain the source code of ial_version.json
-  content_ial_version=$content_ial_version python3 -c "import json; import os; print(json.loads(os.environ['content_ial_version'])['cycle'])"
+  # $1 must be the key name
+  # $2 is the default value
+  content_ial_version=$content_ial_version python3 -c "import json; import os; print(json.loads(os.environ['content_ial_version']).get('$1', '$2'))"
 }
-function ial_version_content2scripttag {
-  # variable content_ial_version must contain the source code of ial_version.json
-  content_ial_version=$content_ial_version python3 -c "import json; import os; print(json.loads(os.environ['content_ial_version']).get('scripttag', ''))"
-}
-
 
 #Name is choosen such as it can be produced with a main pack: PHYEX/${cycle}_XXXXXXXXX.01.${gmkpack_l}.${gmkpack_o}
-scripttag=""
 fromdir=''
 if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
   fromdir=$commit
@@ -224,9 +229,19 @@ if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
       content_apl_arome=$(scp $commit/src/arome/ext/apl_arome.F90 /dev/stdout)
       cycle=$(apl_arome_content2cycle)
     else
-      cycle=$(ial_version_content2cycle)
-      scripttag=$(ial_version_content2scripttag)
+      cycle=$(ial_version_content2key cycle '')
+      scripttag=$(ial_version_content2key scripttag '')
     fi
+  fi
+  if [[ ! -z "${gmkpack_o[$cycle]+unset}" ]]; then #the -v approach is valid only with bash > 4.3:  if [[ -v gmkpack_o[$cycle] ]]; then
+    gmkpack_o=${gmkpack_o[$cycle]}
+  else
+    gmkpack_o=${gmkpack_o[default]}
+  fi
+  if [[ ! -z "${gmkpack_l[$cycle]+unset}" ]]; then
+    gmkpack_l=${gmkpack_l[$cycle]}
+  else
+    gmkpack_l=${gmkpack_l[default]}
   fi
   packBranch=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
   name="PHYEX/${cycle}_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
@@ -260,9 +275,19 @@ else
       content_apl_arome=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$apl_arome_file -O - 2>/dev/null)
       cycle=$(apl_arome_content2cycle)
     else
-      cycle=$(ial_version_content2cycle)
-      scripttag=$(ial_version_content2scripttag)
+      cycle=$(ial_version_content2key cycle)
+      scripttag=$(ial_version_content2key scripttag)
     fi
+  fi
+  if [[ ! -z "${gmkpack_o[$cycle]+unset}" ]]; then #the -v approach is valid only with bash > 4.3:  if [[ -v gmkpack_o[$cycle] ]]; then
+    gmkpack_o=${gmkpack_o[$cycle]}
+  else
+    gmkpack_o=${gmkpack_o[default]}
+  fi
+  if [[ ! -z "${gmkpack_l[$cycle]+unset}" ]]; then
+    gmkpack_l=${gmkpack_l[$cycle]}
+  else
+    gmkpack_l=${gmkpack_l[default]}
   fi
   name="PHYEX/${cycle}_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
   [ $suppress -eq 1 -a -d $HOMEPACK/$name ] && rm -rf $HOMEPACK/$name
@@ -303,8 +328,24 @@ if [ $packcreation -eq 1 ]; then
             -u $name
     reftree='main'
   else
+    if [ $(echo $cycle | cut -c 1-2) -ne 48 ]; then
+      hub='-K'
+    else
+      hub=''
+    fi
     #Create main pack
-    gmkpack -a -r ${cycle} -b ${packBranch} -n 01 -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb -h $HOMEPACK/PHYEX
+    gmkpack -a $hub -r ${cycle} -b ${packBranch} -n 01 -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb -h $HOMEPACK/PHYEX
+    #Populate hub
+    if [ -d $HOMEPACK/$name/hub ]; then
+      cd $HOMEPACK/$name/hub/local/src
+      if [ $HPC -eq 1 ]; then
+        ssh sxphynh.cnrm.meteo.fr "wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/hub49.tgz -O -" > hub49.tgz
+      else
+        wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/hub49.tgz
+      fi
+      tar xf hub49.tgz
+      rm -f hub49.tgz
+    fi
     #Populate
     cd $HOMEPACK/$name/src/local/
     if [ $HPC -eq 1 ]; then
@@ -315,7 +356,7 @@ if [ $packcreation -eq 1 ]; then
     tar xf ${cycle}_main.01.tgz
     rm -f ${cycle}_main.01.tgz
     #Cleaning and moving
-    if [ "$cycle" == '48t3' ]; then
+    if [ "$cycle" == '48t3' -o "$cycle" == '49t0' ]; then
       #extracting budgets from micro
       mkdir mpa/budgets
       for file in mpa/micro/module/moddb_intbudget.F90 mpa/micro/externals/aro_suintbudget_omp.F90 \
@@ -335,18 +376,30 @@ if [ $packcreation -eq 1 ]; then
       [ -f mpa/micro/externals/aroini_wet_dep.F90 ] && mv mpa/micro/externals/aroini_wet_dep.F90 mpa/chem/externals/aroini_wet_dep.F90
       [ -f mpa/micro/interface/aroini_wet_dep.h ] && mv mpa/micro/interface/aroini_wet_dep.h mpa/chem/interface/aroini_wet_dep.h
     fi
+    if [ "$cycle" == '49t0' ]; then
+      rm -rf oopsifs
+    fi
     #we keep everything from the official source code except internals and module subdirectories of mpa
+    #and except some files of mpa/conv/module
+    for file in modi_shallow_convection.F90 modi_shallow_convection_part1.F90 \
+                modi_shallow_convection_part2.F90 modi_shallow_convection_part2_select.F90; do
+      if [ -f mpa/conv/module/$file ]; then
+        [ ! -d mpa/conv/module_save ] && mkdir mpa/conv/module_save
+        mv mpa/conv/module/$file mpa/conv/module_save/
+      fi
+    done
     for rep in turb micro conv; do
       mkdir -p phyex/$rep
       rm -rf mpa/$rep/internals mpa/$rep/module
     done
-    if [ -f /cnrm/algo/khatib/drhook.c_for_ubuntu.tar ]; then
+    [ -d mpa/conv/module_save ] && mv mpa/conv/module_save mpa/conv/module
+    if [ -f /cnrm/algo/khatib/drhook.c_for_ubuntu.tar -a $(echo $cycle | cut -c 1-2) -eq 48 ]; then
       #If file exists it means that we are running on a CTI computer, so we are using ubuntu
       tar xf /cnrm/algo/khatib/drhook.c_for_ubuntu.tar
     fi
     #Special modification of the compilation configuration file and script
     sed -i 's/-ftree-vectorize//' $HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
-    sed -i "/MACROS_FRT/s/$/ -DREPRO48/" $HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
+    sed -i "/^MACROS_FRT/s/$/ -DREPRO48/" $HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
     #sed -i "s/PHYEX\/${cycle}_$$.01.${gmkpack_l}.${gmkpack_o}/$(echo $name | sed 's/\//\\\//')/" $HOMEPACK/$name/ics_masterodb #this line could be used if pack was renamed before compilation but it does not work on belenos
 
     resetpack -f #Is it really useful?
@@ -418,8 +471,15 @@ if [ $packcreation -eq 1 ]; then
     [ -f $EXT/suphmse.F90 ] && mv $EXT/suphmse.F90 ../arpifs/phys_dmn/
     [ -f $EXT/vdfhghtnhl.F90 ] && mv $EXT/vdfhghtnhl.F90 ../arpifs/phys_dmn/
     [ -f $EXT/cpg_opts_type_mod.fypp ] && mv $EXT/cpg_opts_type_mod.fypp ../arpifs/module/
+    file=$EXT/cpg_pt_ulp_expl.fypp; [ -f $file ] && mv $file ../arpifs/adiab/
+    file=$EXT/field_variables_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
+    file=$EXT/cpg_type_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
+    file=$EXT/field_registry_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
+    file=$EXT/mf_phys_next_state_type_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
+    file=$EXT/yemlbc_model.F90; [ -f $file ] && mv $file ../arpifs/module/
     [ -f $EXT/aplpar.F90 ] && mv $EXT/aplpar.F90 ../arpifs/phys_dmn/
     [ -f $EXT/su0yomb.F90 ] && mv $EXT/su0yomb.F90 ../arpifs/setup/
+    [ -f $EXT/acvppkf.F90 ] && mv $EXT/acvppkf.F90 ../arpifs/phys_dmn/
     #Special mpa case
     for file in modd_spp_type.F90 spp_mod_type.F90 aroini_conf.h aroini_conf.F90; do
       if [ -f $EXT/$file ]; then
@@ -453,7 +513,9 @@ if [ $compilation -eq 1 ]; then
   cd $HOMEPACK/$name
   sed -i 's/GMK_THREADS=1$/GMK_THREADS=10/' ics_masterodb
   cleanpack -f
+  resetpack -f
 
+  [ -f ics_packages ] && exescript Output_compilation_hub ics_packages
   exescript Output_compilation ics_masterodb
   if [ $extraCompilationCheck -eq 1 -a \
        -f bin/MASTERODB \

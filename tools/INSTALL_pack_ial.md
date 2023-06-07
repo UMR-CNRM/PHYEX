@@ -169,7 +169,7 @@ into:
       CALL NEW_ADD_FIELD_3D(YDMODEL%YRML_DIAG%YRMDDH,ZTMP2(:,:),'FQTPRECISTN',YDDDH)
   ```
 
-If cycle is 48t3, edition of apl\_arome.F90 to:
+If cycle is 48t3 or 49t0, edition of apl\_arome.F90 to:
 
 add the folowing lines after the line 236 (YOMTRAJ use statement):
 
@@ -217,7 +217,19 @@ into:
 
 ### Apply some bug corrections specific for 49t0
 
-The following files are modified:
+Edition of arpifs/module/yemlbci\_model.F90 to change (line 550):
+
+  ```
+  LUNBC=>YDML_LBC%LSPTENC
+  ```
+
+into:
+
+  ```
+  LUNBC=>YDML_LBC%LUNBC
+  ```
+
+In addition, the following files are modified:
 - arpifs/adiab/cpg\_pt\_ulp\_expl.fypp
 - arpifs/module/cpg\_opts\_type\_mod.fypp
 - arpifs/module/field\_variables\_mod.fypp
