@@ -1,0 +1,178 @@
+#:set config_file = os.path.dirname(_THIS_FILE_) + '/field_config.yaml'
+#:set config = field_config.VariableConfiguration(config_file)
+#:set gfl = config.groups['GFL']
+SUBROUTINE CPG_PT_ULP_EXPL (YDMODEL, YDGEOMETRY, YDMF_PHYS_NEXT_STATE, YDCPG_SL1, YDVARS, YDCPG_BNDS, LDGET, YDA_GFLPT)
+
+! -----------------------------------------------------------------------------
+!     --------------------------------------------
+!**** *CPG_PT_ULP_EXPL*  physics tendencies written to or extracted from GFLPT
+!     --------------------------------------------
+
+!     Purpose.
+!     --------
+!       Copy the physics tendencies calculated (for ex in predictor)
+!       to GFLPT to be retrieved and used during corrector
+!       Designed for unlagged physics packages (LAGPHY=F).
+!       May be used for non advected GFL too.
+
+!       This routine is called for lpc_full=true only.
+
+!**   Interface.
+!     ----------
+!        CALL CPG_PT_ULP_EXPL(...)
+
+!     Input arguments
+!     ------------------
+!       YDCPG_BNDS%KIDIA  : start of horizontal loop
+!       YDCPG_BNDS%KFDIA   : end of horizontal loop
+!       LDGET   : T = get tendencies from buffers.
+!                 F = save tendencies in buffers.
+!       KFLDN,KFLDX: for second dimension of PTENDEXT.
+
+!     Input or Output according to LDGET
+!     ----------------------------------
+!       PTEND[X]: tendency of X variable from phy (advected variables).
+!       PGFLPT  : buffer for tendency of GFL variable from phy.
+!       PGFLT1  : tendency of X variable from phy (not advected variables).
+!       PGFL    : GFL variables.
+!       PGMV    : upper air GMV variables at time t.
+!       PGMVS   : surface GMV variables at time t.
+
+!     Implicit arguments
+!     --------------------
+
+!     Author.
+!     -------
+!      Martina Tudor + Karim Yessad
+!      Original : Jan 2011 (from CPG_PT)
+
+!     Modifications.
+!     --------------
+! -----------------------------------------------------------------------------
+
+USE GEOMETRY_MOD , ONLY : GEOMETRY
+USE PARKIND1     , ONLY : JPIM, JPRB
+USE YOMHOOK      , ONLY : LHOOK, JPHOOK, DR_HOOK
+USE CPG_OPTS_TYPE_MOD       , ONLY : CPG_BNDS_TYPE
+USE FIELD_VARIABLES_MOD     , ONLY : FIELD_VARIABLES
+USE CPG_TYPE_MOD            , ONLY : CPG_SL1_TYPE
+USE TYPE_MODEL              , ONLY : MODEL
+USE MF_PHYS_NEXT_STATE_TYPE_MOD &
+                            , ONLY : MF_PHYS_NEXT_STATE_TYPE
+USE ARRAY_FIELD_WRAPPER_MOD , ONLY : ARRAY_4D
+
+
+! -----------------------------------------------------------------------------
+
+IMPLICIT NONE
+
+TYPE(MODEL)                    ,INTENT(IN)     :: YDMODEL
+TYPE(GEOMETRY)                 ,INTENT(IN)     :: YDGEOMETRY
+TYPE (MF_PHYS_NEXT_STATE_TYPE), INTENT(INOUT)  :: YDMF_PHYS_NEXT_STATE
+TYPE(CPG_SL1_TYPE)             ,INTENT(INOUT)  :: YDCPG_SL1
+TYPE(FIELD_VARIABLES)          ,INTENT(INOUT)  :: YDVARS
+TYPE(CPG_BNDS_TYPE)            ,INTENT(IN)     :: YDCPG_BNDS
+LOGICAL                        ,INTENT(IN)     :: LDGET
+TYPE(ARRAY_4D)                 ,INTENT(INOUT)  :: YDA_GFLPT
+! -----------------------------------------------------------------------------
+
+INTEGER(KIND=JPIM) :: JGFL
+
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+
+! -----------------------------------------------------------------------------
+
+IF (LHOOK) CALL DR_HOOK('CPG_PT_ULP_EXPL',0,ZHOOK_HANDLE)
+ASSOCIATE(YDDIM=>YDGEOMETRY%YRDIM,YDDIMV=>YDGEOMETRY%YRDIMV,YGFL=>YDMODEL%YRML_GCONF%YGFL)
+ASSOCIATE(YCPF=>YDMODEL%YRML_GCONF%YGFL%YCPF,   NFLEVG=>YDDIMV%NFLEVG)
+
+! -----------------------------------------------------------------------------
+
+!*       1.  PREDICTOR FOR LPC_FULL.
+!        ---------------------------
+
+IF (.NOT.LDGET) THEN
+
+  ! * GMV:
+  YDVARS%CUPT%T9(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)=YDMF_PHYS_NEXT_STATE%U%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)
+  YDVARS%CVPT%T9(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)=YDMF_PHYS_NEXT_STATE%V%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)
+  YDVARS%CTPT%T9(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)=YDMF_PHYS_NEXT_STATE%T%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)
+  IF (YDMODEL%YRML_DYN%YRDYNA%LNHDYN) THEN
+    YDVARS%CSVDPT%T9(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)=YDMF_PHYS_NEXT_STATE%SVD%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)
+  ENDIF
+
+  ! * GMVS:
+  YDVARS%CSPPT%T9(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA)=YDCPG_SL1%SP9%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA)
+
+  ! * GFL:
+#:for v in gfl.variables
+#:if v.array == 1
+  IF (ALLOCATED (YDCPG_SL1%${v.name}$)) THEN
+    DO JGFL = 1, SIZE (YDCPG_SL1%${v.name}$)
+      IF (YGFL%Y${v.name}$(JGFL)%LT1 .AND. YGFL%Y${v.name}$(JGFL)%LPT) THEN
+        YDA_GFLPT%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG,YGFL%Y${v.name}$(JGFL)%MPPT) = YDMF_PHYS_NEXT_STATE%${v.name}$(JGFL)%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)
+      ENDIF
+    ENDDO
+  ENDIF
+
+#:else
+  IF (YGFL%Y${v.name}$%LT1 .AND. YGFL%Y${v.name}$%LPT) THEN
+    YDA_GFLPT%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG,YGFL%Y${v.name}$%MPPT) = YDMF_PHYS_NEXT_STATE%${v.name}$%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)
+  ENDIF
+
+#:endif
+#:endfor
+
+ENDIF
+
+! -----------------------------------------------------------------------------
+
+!*       2.  CORRECTOR FOR LPC_FULL.
+!        ---------------------------
+
+IF (LDGET) THEN
+
+  ! * GMV:
+  YDMF_PHYS_NEXT_STATE%U%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)=YDVARS%CUPT%T9(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)
+  YDMF_PHYS_NEXT_STATE%V%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)=YDVARS%CVPT%T9(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)
+  YDMF_PHYS_NEXT_STATE%T%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)=YDVARS%CTPT%T9(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)
+  IF (YDMODEL%YRML_DYN%YRDYNA%LNHDYN) THEN
+    YDMF_PHYS_NEXT_STATE%SVD%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)=YDVARS%CSVDPT%T9(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)
+  ENDIF
+
+  ! * GMVS:
+  YDCPG_SL1%SP9%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA)=YDVARS%CSPPT%T9(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA)
+
+  ! * GFL:
+#:for v in gfl.variables
+#:if v.array == 1
+  IF (ALLOCATED (YDCPG_SL1%${v.name}$)) THEN
+    DO JGFL = 1, SIZE (YDCPG_SL1%${v.name}$)
+      IF (YGFL%Y${v.name}$(JGFL)%LT1 .AND. YGFL%Y${v.name}$(JGFL)%LPT) THEN
+        YDMF_PHYS_NEXT_STATE%${v.name}$(JGFL)%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG) = YDA_GFLPT%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG,YGFL%Y${v.name}$(JGFL)%MPPT)
+      ENDIF
+    ENDDO
+  ENDIF
+
+#:else
+  IF (YGFL%Y${v.name}$%LT1 .AND. YGFL%Y${v.name}$%LPT) THEN
+    YDMF_PHYS_NEXT_STATE%${v.name}$%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG) = YDA_GFLPT%P(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG,YGFL%Y${v.name}$%MPPT)
+  ENDIF
+
+#:endif
+#:endfor
+
+  IF (YCPF%LACTIVE) THEN
+    YDVARS%CPF%T1(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)=YDVARS%CPF%T0(YDCPG_BNDS%KIDIA:YDCPG_BNDS%KFDIA,1:NFLEVG)
+  ENDIF
+
+ENDIF
+
+! -----------------------------------------------------------------------------
+
+END ASSOCIATE
+END ASSOCIATE
+
+IF (LHOOK) CALL DR_HOOK('CPG_PT_ULP_EXPL',1,ZHOOK_HANDLE)
+
+END SUBROUTINE CPG_PT_ULP_EXPL

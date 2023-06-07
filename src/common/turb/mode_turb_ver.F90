@@ -211,8 +211,7 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1, ONLY: JPRB
-USE YOMHOOK,  ONLY: LHOOK, DR_HOOK
+USE YOMHOOK,  ONLY: LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_CST,            ONLY: CST_t
 USE MODD_CTURB,          ONLY: CSTURB_t
@@ -387,7 +386,7 @@ INTEGER :: IKB,IKE,IIJE,IIJB,IKT   ! index value for the Beginning
 INTEGER :: JSV,JIJ,JK ! loop counter
 REAL    :: ZTIME1
 REAL    :: ZTIME2
-REAL(KIND=JPRB)      :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK)    :: ZHOOK_HANDLE
 TYPE(TFIELDMETADATA) :: TZFIELD
 !----------------------------------------------------------------------------
 !----------------------------------------------------------------------------

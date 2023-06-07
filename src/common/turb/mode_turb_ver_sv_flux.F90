@@ -209,9 +209,8 @@ SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,TLES,ONOMIXLG,       &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1,   ONLY: JPRB
 USE MODE_SHUMAN_PHY, ONLY: DZM_PHY, MZM_PHY, MZF_PHY
-USE YOMHOOK,    ONLY: LHOOK, DR_HOOK
+USE YOMHOOK,    ONLY: LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_CST,              ONLY: CST_t
 USE MODD_CTURB,            ONLY: CSTURB_t
@@ -303,7 +302,7 @@ REAL :: ZCSVP = 4.0  ! constant for scalar flux presso-correlation (RS81)
 REAL :: ZCSV          !constant for the scalar flux
 !
 CHARACTER(LEN=NMNHNAMELGTMAX) :: YMNHNAME
-REAL(KIND=JPRB)               :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK)             :: ZHOOK_HANDLE
 TYPE(TFIELDMETADATA)          :: TZFIELD
 !----------------------------------------------------------------------------
 !

@@ -32,8 +32,7 @@ SUBROUTINE ICE4_FAST_RI(ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, &
 !
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -57,7 +56,7 @@ REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRCBERI  ! Bergeron-Findeisen eff
 !
 !*       0.2  declaration of local variables
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER :: JL
 !
 !-------------------------------------------------------------------------------

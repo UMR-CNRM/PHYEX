@@ -23,8 +23,7 @@ MODULE MODE_RAIN_ICE_OLD_WARM
                                ZZT, ZPRES, ZESW,                             &
                                TBUDGETS, KBUDGETS)
 
-    USE PARKIND1,            ONLY: JPRB
-    USE YOMHOOK,             ONLY: LHOOK, DR_HOOK
+    USE YOMHOOK,             ONLY: LHOOK, DR_HOOK, JPHOOK
     USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_T
     USE MODD_CST,            ONLY: CST_T
     USE MODD_PARAM_ICE_n,    ONLY: PARAM_ICE_t
@@ -114,7 +113,7 @@ MODULE MODE_RAIN_ICE_OLD_WARM
 
     REAL, DIMENSION(D%NIT,D%NKT) :: ZW ! work array
 
-    REAL(KIND=JPRB) :: ZHOOK_HANDLE
+    REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
     INTEGER :: JK
     LOGICAL :: LTEST ! Only for test !

@@ -127,9 +127,8 @@ CONTAINS
 !*       0.   DECLARATIONS
 !             ------------
 !
-USE PARKIND1,   ONLY: JPRB
 USE MODE_SHUMAN_PHY, ONLY: MZM_PHY, MZF_PHY, DZF_PHY, DZM_PHY
-USE YOMHOOK,    ONLY: LHOOK, DR_HOOK
+USE YOMHOOK,    ONLY: LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_ARGSLIST_ll,    ONLY: LIST_ll
 USE MODD_BUDGET,         ONLY: TBUDGETCONF_t, NBUDGET_TKE, TBUDGETDATA
@@ -215,7 +214,7 @@ INTEGER             :: IIJB,IIJE,IKB,IKE,IKT,IKA,IKL  ! Index value for the mass
 TYPE(LIST_ll), POINTER :: TZFIELDDISS_ll ! list of fields to exchange
 INTEGER                :: IINFO_ll       ! return code of parallel routine
 TYPE(TFIELDMETADATA)   :: TZFIELD
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER :: JIJ,JK
 !
 !----------------------------------------------------------------------------

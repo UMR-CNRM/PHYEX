@@ -97,8 +97,7 @@ PGZ_V_VW(IIB:IIE,IJB:IJE,1:IKT)= PA_WORK(IIB:IIE,IJB:IJE,1:IKT) &
 !
 END SUBROUTINE GZ_V_VW_PHY
       SUBROUTINE GY_V_M_PHY(D,OFLAT,PA,PDYY,PDZZ,PDZY,PGY_V_M)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
 !!****  *GY_V_M* - Cartesian Gradient operator: 
@@ -178,7 +177,7 @@ INTEGER :: JI,JJ,JK
 !
 !*       0.2   declaration of local variables
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GY_V_M',0,ZHOOK_HANDLE)
 !
 IIE=D%NIEC

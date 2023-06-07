@@ -32,6 +32,7 @@ CONTAINS
 !!      Original             ??/??/13 
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !!  Philippe Wautelet: 22/01/2019: bugs correction: incorrect writes + unauthorized goto
+!!  R. El Khatib 23-Feb-2023 Portability fix for NEC Sx-Aurora : no goto out of its conditional block
 !  P. Wautelet 10/04/2019: replace ABORT and STOP calls by Print_msg
 !  P. Wautelet 30/03/2021: move NINDICE_CCN_IMM and NIMM initializations from init_aerosol_properties to ini_nsv
 !  B. Vié         06/2021: kappa-kohler CCN activation parameters
@@ -162,7 +163,7 @@ IF ( NMOD_CCN .GE. 1 ) THEN
 !* INPUT : XBETAHEN_TEST is in 'percent' and XBETAHEN_MULTI in 'no units', 
 !  XK... and XMU... are invariant
 !
-  IF (.NOT.(ASSOCIATED(XKHEN_MULTI)))    CALL PARAM_LIMA_ALLOCATE('XKHEN_MULTI', NMOD_CCN)  
+  IF (.NOT.(ASSOCIATED(XKHEN_MULTI)))    CALL PARAM_LIMA_ALLOCATE('XKHEN_MULTI', NMOD_CCN)
   IF (.NOT.(ASSOCIATED(XMUHEN_MULTI)))   CALL PARAM_LIMA_ALLOCATE('XMUHEN_MULTI', NMOD_CCN)
   IF (.NOT.(ASSOCIATED(XBETAHEN_MULTI))) CALL PARAM_LIMA_ALLOCATE('XBETAHEN_MULTI', NMOD_CCN)
   IF (.NOT.(ASSOCIATED(XLIMIT_FACTOR)))  CALL PARAM_LIMA_ALLOCATE('XLIMIT_FACTOR', NMOD_CCN)

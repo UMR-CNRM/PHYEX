@@ -2,8 +2,7 @@
 
 !     ###############################
       FUNCTION MXF(PA)  RESULT(PMXF)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MXF* -  Shuman operator : mean operator in x direction for a
@@ -73,7 +72,7 @@ INTEGER :: IIU            ! upper bound in x direction of PA
 !*       1.    DEFINITION OF MXF
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MXF',0,ZHOOK_HANDLE)
 IIU = SIZE(PA,1)
 !
@@ -96,8 +95,7 @@ END FUNCTION MXF
 !
 !     ###############################
       FUNCTION MXM(PA)  RESULT(PMXM)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MXM* -  Shuman operator : mean operator in x direction for a
@@ -165,7 +163,7 @@ INTEGER :: IIU            ! Size of the array in the x direction
 !*       1.    DEFINITION OF MXM
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MXM',0,ZHOOK_HANDLE)
 IIU = SIZE(PA,1)
 !
@@ -188,8 +186,7 @@ END FUNCTION MXM
 !
 !     ###############################
       FUNCTION MYF(PA)  RESULT(PMYF)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MYF* -  Shuman operator : mean operator in y direction for a
@@ -259,7 +256,7 @@ INTEGER :: IJU            ! upper bound in y direction of PA
 !*       1.    DEFINITION OF MYF
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MYF',0,ZHOOK_HANDLE)
 IJU = SIZE(PA,2)
 
@@ -281,8 +278,7 @@ END FUNCTION MYF
 !
 !     ###############################
       FUNCTION MYM(PA)  RESULT(PMYM)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MYM* -  Shuman operator : mean operator in y direction for a
@@ -350,7 +346,7 @@ INTEGER :: IJU            ! Size of the array in the y direction
 !*       1.    DEFINITION OF MYM
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MYM',0,ZHOOK_HANDLE)
 IJU=SIZE(PA,2)
 
@@ -373,8 +369,7 @@ END FUNCTION MYM
 !
 !     ###############################
       FUNCTION MZF(PA, KKA, KKU, KL)  RESULT(PMZF)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MZF* -  Shuman operator : mean operator in z direction for a
@@ -440,7 +435,7 @@ INTEGER :: IKT          ! upper bound in z direction of PA
 !*       1.    DEFINITION OF MZF
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MZF',0,ZHOOK_HANDLE)
 IKT = SIZE(PA,3)
 DO JK=2,IKT-1
@@ -457,8 +452,7 @@ END FUNCTION MZF
 !
 !     ###############################
       FUNCTION MZM(PA, KKA, KKU, KL)  RESULT(PMZM)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MZM* -  Shuman operator : mean operator in z direction for a
@@ -522,7 +516,7 @@ INTEGER :: JK             ! Loop index in z direction
 !*       1.    DEFINITION OF MZM
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MZM',0,ZHOOK_HANDLE)
 DO JK=2,SIZE(PA,3)-1
   PMZM(:,:,JK) = 0.5*( PA(:,:,JK)+PA(:,:,JK-KL) )
@@ -536,8 +530,7 @@ IF (LHOOK) CALL DR_HOOK('MZM',1,ZHOOK_HANDLE)
 END FUNCTION MZM
 !     ###############################
       FUNCTION DXF(PA)  RESULT(PDXF)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *DXF* -  Shuman operator : finite difference operator in x direction
@@ -608,7 +601,7 @@ INTEGER :: IIU            ! upper bound in x direction of PA
 !*       1.    DEFINITION OF DXF
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DXF',0,ZHOOK_HANDLE)
 IIU = SIZE(PA,1)
 !
@@ -626,8 +619,7 @@ END FUNCTION DXF
 !
 !     ###############################
       FUNCTION DXM(PA)  RESULT(PDXM)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *DXM* -  Shuman operator : finite difference operator in x direction
@@ -698,7 +690,7 @@ INTEGER :: IIU            ! Size of the array in the x direction
 !*       1.    DEFINITION OF DXM
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DXM',0,ZHOOK_HANDLE)
 IIU = SIZE(PA,1)
 !
@@ -717,8 +709,7 @@ END FUNCTION DXM
 !
 !     ###############################
       FUNCTION DYF(PA)  RESULT(PDYF)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *DYF* -  Shuman operator : finite difference operator in y direction
@@ -789,7 +780,7 @@ INTEGER :: IJU           ! upper bound in y direction of PA
 !*       1.    DEFINITION OF DYF
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DYF',0,ZHOOK_HANDLE)
 IJU = SIZE(PA,2)
 !
@@ -809,8 +800,7 @@ END FUNCTION DYF
 !
 !     ###############################
       FUNCTION DYM(PA)  RESULT(PDYM)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *DYM* -  Shuman operator : finite difference operator in y direction
@@ -881,7 +871,7 @@ INTEGER :: IJU            ! Size of the array in the y direction
 !*       1.    DEFINITION OF DYM
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DYM',0,ZHOOK_HANDLE)
 IJU=SIZE(PA,2)
 !
@@ -900,8 +890,7 @@ END FUNCTION DYM
 !
 !     ###############################
       FUNCTION DZF(PA, KKA, KKU, KL)  RESULT(PDZF)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *DZF* -  Shuman operator : finite difference operator in z direction
@@ -967,7 +956,7 @@ INTEGER :: IKT          ! upper bound in z direction of PA
 !*       1.    DEFINITION OF DZF
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DZF',0,ZHOOK_HANDLE)
 IKT = SIZE(PA,3)
 DO JK=2,IKT-1
@@ -984,8 +973,7 @@ END FUNCTION DZF
 !
 !     ###############################
       FUNCTION DZM(PA, KKA, KKU, KL)  RESULT(PDZM)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *DZM* -  Shuman operator : finite difference operator in z direction
@@ -1050,7 +1038,7 @@ INTEGER :: JK            ! Loop index in z direction
 !*       1.    DEFINITION OF DZM
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DZM',0,ZHOOK_HANDLE)
 DO JK=2,SIZE(PA,3)-1
   PDZM(:,:,JK)          = PA(:,:,JK) -  PA(:,:,JK-KL)

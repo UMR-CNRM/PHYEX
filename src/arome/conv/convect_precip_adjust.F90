@@ -6,8 +6,7 @@
                                         PPREF, PTPR, PMIXF, PDTEVR,        &
                                         KLFS, KDBL, KLCL, KCTL, KETL,      &
                                         PDTEVRF )
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ######################################################################
 !
 !!**** Adjust up- and downdraft mass fluxes to be consistent with the
@@ -114,7 +113,7 @@ REAL, DIMENSION(KLON)    :: ZWORK1, ZWORK2, ZWORK3,     &
 !        0.3   Set loop bounds
 !              ---------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_PRECIP_ADJUST',0,ZHOOK_HANDLE)
 IKB  = 1 + JCVEXB
 IKE  = KLEV - JCVEXT

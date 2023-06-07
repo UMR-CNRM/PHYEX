@@ -7,8 +7,7 @@ SUBROUTINE AER_EFFIC(PRG,PVGG,      & !aerosol radius/fall speed (m/s)
                 KMODE,              & ! Number of aerosol modes
                 PTEMP, PCOR,        & ! air temp, cunningham corr factor
                 PDENSITY_AER )        ! aerosol density
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !!   #######################################
 !!**********AER_EFFIC********** 
 !!   PURPOSE
@@ -93,7 +92,7 @@ REAL, DIMENSION(SIZE(PRG,1),KMODE) :: ZT3, ZT4
 INTEGER :: JI,JK
 !
 !-----------------------------------------------------------------
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('AER_EFFIC',0,ZHOOK_HANDLE)
 ZRRS(:)=PRRS(:)
 IKB = 1 + JPVEXT

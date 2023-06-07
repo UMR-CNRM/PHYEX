@@ -7,8 +7,7 @@
                                    PDMF, PDER, PDDR, PDTHL, PDRW,             &
                                    PMIXF, PDTEVR, KLFS, KDBL, KML,            &
                                    PDTEVRF )
-     USE PARKIND1, ONLY : JPRB
-     USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+     USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !    ##########################################################################
 !
 !!**** Compute downdraft properties from LFS to DBL.
@@ -146,7 +145,7 @@ LOGICAL, DIMENSION(KLON) :: GWORK1                         ! work array
 !        0.3    Set loop bounds
 !               ---------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_DOWNDRAFT',0,ZHOOK_HANDLE)
 IIE = KLON
 IKB = 1 + JCVEXB

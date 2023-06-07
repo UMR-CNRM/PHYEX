@@ -1,7 +1,6 @@
 !     ######spl
 SUBROUTINE AROINI_CONF(KULOUT,OWTOTL,OCARTESIAN)
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 
 !**** INI_CSTMNH *  - Initiallize MesoNH Physics configuration module
 !**   Interface.
@@ -56,7 +55,7 @@ LOGICAL, INTENT(IN) :: OCARTESIAN
 !        1.1 Set implicit default values for MODD_PARAMETERS
 !       the variables are initialised in the module itself
 !        1.2 Set implicit default values for MODD_CST
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('AROINI_CONF',0,ZHOOK_HANDLE)
 
 !        1.3 Set implicit default values for MODD_CONF

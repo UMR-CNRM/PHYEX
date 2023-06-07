@@ -5,8 +5,7 @@
                             PPABST, PRGAER, PEVAP3D, KMODE,       &
                             PDENSITY_AER, PMASSMIN, PSEA, PTOWN,  &
                             PCCT, PCRT )
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################################################
 !
 !!****  * -  compute the explicit microphysical processes involved in the
@@ -188,7 +187,7 @@ INTEGER :: IKE, IJE, IIE, IKB
 !             ---------------------
 !
 ! Compute Effective cloud radius 
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('AER_WET_DEP_KMT_WARM',0,ZHOOK_HANDLE)
 ZRAY(:,:,:)   = 0.
 ZLBC(:,:,:)   = 0.
@@ -274,7 +273,7 @@ INTEGER                           :: JKAQ     ! counter for chemistry
 !
 !  1 Mass transfer Aerosol to cloud (Tost et al., 2006)
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('AER_WET_DEP_KMT_WARM:AER_WET_MASS_TRANSFER',0,ZHOOK_HANDLE)
 GCLOUD(:,:,:) = .FALSE.
 GCLOUD(:,:,:) =  PRCS(:,:,:)>XRTMIN(2)
@@ -493,7 +492,7 @@ INTEGER                           :: JKAQ     ! counter for acquous aerosols
 !-------------------------------------------------------------------------------
 !
 !*         Time splitting initialization
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('AER_WET_DEP_KMT_WARM:AER_WET_DEP_KMT_WARM_SEDIMENT',0,ZHOOK_HANDLE)
 ZTSPLITR = PTSTEP / FLOAT(KSPLITR)
 !
@@ -577,7 +576,7 @@ IMPLICIT NONE
 !
 !*       1.    compute the autoconversion of r_c for r_r production: RCAUTR
 !    
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('AER_WET_DEP_KMT_WARM:AER_WET_DEP_KMT_ICE_WARM',0,ZHOOK_HANDLE)
 ZZW4(:,:,:)=0.0
 ! to be sure no division by zero in case of ZZRCT = 0.
@@ -655,7 +654,7 @@ INTEGER    :: JKAQ     ! counter for aerosols
 !half of the evaporation rate of water
 !
 ! Rain water evaporated during PTSTEP in kg/kg
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('AER_WET_DEP_KMT_WARM:AER_WET_DEP_KMT_EVAP',0,ZHOOK_HANDLE)
 ZZEVAP(:,:,:) = PEVAP3D(:,:,:) * PTSTEP  
 ! Fraction of rain water evaporated 
@@ -718,7 +717,7 @@ IMPLICIT NONE
 !*       1.1   compute gravitational velocities
 !   
 !initialize
- REAL(KIND=JPRB) :: ZHOOK_HANDLE
+ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
  IF (LHOOK) CALL DR_HOOK('AER_WET_DEP_KMT_WARM:AER_WET_DEP_KMT_EFFIC',0,ZHOOK_HANDLE)
  ZTEMP(:)=ZTHT(:)*(ZPABST(:)/XP00)**(XRD/XCPD)
  ZTEMP(:)=MAX(ZTEMP(:),1.e-12)
@@ -786,7 +785,7 @@ INTEGER :: JI,JJ,JK,IC
 !  
 !-------------------------------------------------------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('AER_WET_DEP_KMT_WARM:COUNTJV',0,ZHOOK_HANDLE)
 I1(:)=0 
 I2(:)=0 

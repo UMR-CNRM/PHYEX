@@ -2,8 +2,7 @@
       SUBROUTINE CONVECT_TSTEP_PREF( KLON, KLEV,                           &
                                      PU, PV, PPRES, PZ, PDXDY, KLCL, KCTL, &
                                      PTIMEA, PPREF )
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ######################################################################
 !
 !!**** Routine to compute convective advection time step and precipitation
@@ -90,7 +89,7 @@ REAL, DIMENSION(KLON)     :: ZWORK1, ZWORK2, ZWORK3  ! work arrays
 !        0.3   Set loop bounds
 !              ---------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_TSTEP_PREF',0,ZHOOK_HANDLE)
 IIE = KLON
 IKB = 1 + JCVEXB

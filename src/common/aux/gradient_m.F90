@@ -4,8 +4,7 @@
 !MNH_LIC for details. version 1.
 !     ######spl
       FUNCTION GX_M_M(PA,PDXX,PDZZ,PDZX,KKA,KKU,KL)      RESULT(PGX_M_M)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
 !!****  *GX_M_M* - Cartesian Gradient operator: 
@@ -90,7 +89,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGX_M_M ! result mass point
 !*       1.    DEFINITION of GX_M_M
 !              --------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GX_M_M',0,ZHOOK_HANDLE)
 IF (.NOT. LFLAT) THEN 
   PGX_M_M(:,:,:)= (DXF(MXM(PA(:,:,:)))   -                     &
@@ -108,8 +107,7 @@ END FUNCTION GX_M_M
 !
 !     #######################################################
       FUNCTION GX_M_U(KKA, KKU, KL,PY,PDXX,PDZZ,PDZX) RESULT(PGX_M_U)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##################################################
 !
 !!****  *GX_M_U * - Compute the gradient along x for a variable localized at
@@ -201,7 +199,7 @@ INTEGER :: JI_1JK, JIJK_1, JI_1JK_1, JIJKP1, JI_1JKP1
 !*       1.    COMPUTE THE GRADIENT ALONG X
 !              -----------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GX_M_U',0,ZHOOK_HANDLE)
 IIU=SIZE(PY,1)
 IJU=SIZE(PY,2)
@@ -265,8 +263,7 @@ IF (LHOOK) CALL DR_HOOK('GX_M_U',1,ZHOOK_HANDLE)
 END FUNCTION GX_M_U
 !     ######spl
       FUNCTION GY_M_M(PA,PDYY,PDZZ,PDZY, KKA, KKU, KL)      RESULT(PGY_M_M)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
 !!****  *GY_M_M* - Cartesian Gradient operator: 
@@ -350,7 +347,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGY_M_M ! result mass point
 !              --------------------
 !
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GY_M_M',0,ZHOOK_HANDLE)
 IF (.NOT. LFLAT) THEN 
   PGY_M_M(:,:,:)= (DYF(MYM(PA))-MZF(MYF(PDZY)*DZM(PA, KKA, KKU, KL)&
@@ -365,8 +362,7 @@ IF (LHOOK) CALL DR_HOOK('GY_M_M',1,ZHOOK_HANDLE)
 END FUNCTION GY_M_M
 !     ######spl
       FUNCTION GY_M_V(KKA,KKU,KL,PY,PDYY,PDZZ,PDZY) RESULT(PGY_M_V)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##################################################
 !
 !!****  *GY_M_V * - Compute the gradient along y for a variable localized at
@@ -454,7 +450,7 @@ INTEGER  IJU,IKU,JJ,JK
 !*       1.    COMPUTE THE GRADIENT ALONG Y
 !              ----------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GY_M_V',0,ZHOOK_HANDLE)
 IJU=SIZE(PY,2)
 IKU=SIZE(PY,3)
@@ -494,8 +490,7 @@ IF (LHOOK) CALL DR_HOOK('GY_M_V',1,ZHOOK_HANDLE)
 END FUNCTION GY_M_V
 !     ######spl
       FUNCTION GZ_M_M(PA,PDZZ, KKA, KKU, KL)      RESULT(PGZ_M_M)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
 !!****  *GZ_M_M* - Cartesian Gradient operator: 
@@ -571,7 +566,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGZ_M_M ! result mass point
 !*       1.    DEFINITION of GZ_M_M
 !              --------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GZ_M_M',0,ZHOOK_HANDLE)
 PGZ_M_M(:,:,:)= MZF(DZM(PA(:,:,:), KKA, KKU, KL)/PDZZ(:,:,:), KKA, KKU, KL)
 !
@@ -581,8 +576,7 @@ IF (LHOOK) CALL DR_HOOK('GZ_M_M',1,ZHOOK_HANDLE)
 END FUNCTION GZ_M_M
 !     ######spl
       FUNCTION GZ_M_W(KKA, KKU, KL,PY,PDZZ) RESULT(PGZ_M_W)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #########################################
 !
 !!****  *GZ_M_W * - Compute the gradient along z direction for a
@@ -657,7 +651,7 @@ INTEGER :: IKT,IKTB,IKTE
 !*       1.    COMPUTE THE GRADIENT ALONG Z
 !              -----------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GZ_M_W',0,ZHOOK_HANDLE)
 IKT=SIZE(PY,3)
 IKTB=1+JPVEXT_TURB

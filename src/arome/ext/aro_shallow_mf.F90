@@ -16,8 +16,7 @@
                 PU_UP, PV_UP, PTHV_UP, PW_UP, PFRAC_UP, PEMF,         &
                 YDDDH,YDLDDH,YDMDDH                                   )
 
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##########################################################################
 !
 !!****  * -  interface to call SHALLOW_MF :
@@ -153,7 +152,7 @@ INTEGER, DIMENSION(size(PRHODJ,1)) :: IKLCL,IKETL,IKCTL
 REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZFLXZTHMF,ZFLXZRMF,ZFLXZUMF,ZFLXZVMF
 REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZDETR,ZENTR
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER :: JBU ! Loop index for budgets
 !
 !

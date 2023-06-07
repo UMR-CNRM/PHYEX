@@ -12,8 +12,7 @@
 !
 !     ######################################
       FUNCTION GAMMA_X0D(PX)  RESULT(PGAMMA)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ######################################
 !
 !
@@ -66,7 +65,7 @@ INTEGER                              :: JJ ! Loop index
 REAL                                 :: ZSER,ZSTP,ZTMP,ZX,ZY,ZCOEF(6)
 REAL                                 :: ZPI
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GAMMA_X0D',0,ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------
 !
@@ -121,8 +120,7 @@ END FUNCTION GAMMA_X0D
 !
 !     ######################################
       FUNCTION GAMMA_X1D(PX)  RESULT(PGAMMA)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ######################################
 !
 !
@@ -177,7 +175,7 @@ INTEGER                              :: JI ! Loop index
 REAL                                 :: ZSER, ZSTP, ZTMP, ZX, ZY, ZCOEF(6)
 REAL                                 :: ZPI
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GAMMA_X1D',0,ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------
 !

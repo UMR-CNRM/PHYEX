@@ -9,7 +9,7 @@
                                   YDDDH, YDLDDH, YDMDDH    )
 
       USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##########################################################################
 !
 !!****  * -  compute the  resolved clouds and precipitation
@@ -143,7 +143,7 @@ TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !*       1.     PRELIMINARY COMPUTATIONS
 !               ------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('ARO_LIMA',0,ZHOOK_HANDLE)
 
 !Dimensions

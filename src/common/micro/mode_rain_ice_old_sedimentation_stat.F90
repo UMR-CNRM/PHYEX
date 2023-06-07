@@ -18,12 +18,11 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
                                              ZRAY, ZLBC, ZFSEDC, ZCONC3D,        &
                                              PRHT, PRHS, PINPRH, PFPR)
 
-    USE PARKIND1,             ONLY: JPRB
     USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
     USE MODD_CST,             ONLY: CST_T
     USE MODD_RAIN_ICE_PARAM_n,  ONLY: RAIN_ICE_PARAM_T
     USE MODD_RAIN_ICE_DESCR_n,  ONLY: RAIN_ICE_DESCR_T
-    USE YOMHOOK,              ONLY: LHOOK, DR_HOOK
+    USE YOMHOOK,              ONLY: LHOOK, DR_HOOK, JPHOOK
 
 !*      0. DECLARATIONS
 !          ------------
@@ -93,7 +92,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
 
     REAL :: ZINVTSTEP
 
-    REAL(KIND=JPRB) :: ZHOOK_HANDLE
+    REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !

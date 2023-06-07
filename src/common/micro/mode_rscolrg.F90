@@ -13,8 +13,7 @@ CONTAINS
                          PESR, PEXMASSS, PFALLS, PEXFALLS, PFALLEXPS, PFALLR, PEXFALLR, &
                          PLBDASMAX, PLBDARMAX, PLBDASMIN, PLBDARMIN,         &
                          PDINFTY, PRSCOLRG,PAG, PBS, PAS                     )
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ########################################################################
 !
 !
@@ -174,7 +173,7 @@ REAL :: ZCST1
 !
 !*       1.0     Initialization
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('RSCOLRG',0,ZHOOK_HANDLE)
 PRSCOLRG(:,:) = 0.0
 ZCST1  = (3.0/XPI)/XRHOLW

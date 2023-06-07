@@ -225,6 +225,7 @@ if [ $compilation -eq 1 ]; then
   find PHYEX -type f -exec touch {} \; #to be sure a recompilation occurs
 
   # Move manually ext/ files in src/MNH
+  [ -f PHYEX/ext/yomhook.f90 ] && mv PHYEX/ext/yomhook.f90 PHYEX/ext/yomhook.F90
   if [ -d PHYEX/ext ]; then
     mv -f PHYEX/ext/* MNH/
     rmdir PHYEX/ext

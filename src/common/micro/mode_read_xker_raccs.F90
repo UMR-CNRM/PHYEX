@@ -12,8 +12,7 @@ CONTAINS
                       PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN, &
                       PFDINFTY,PKER_RACCSS,PKER_RACCS,PKER_SACCRG              )
 !DEC$ OPTIMIZE:0
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##########################################################################
 !
 !!****  * * - initialize the kernels for the rain-snow accretion process
@@ -85,7 +84,7 @@ REAL, DIMENSION(:,:), INTENT(OUT), OPTIONAL :: PKER_SACCRG
 ! #INSERT HERE THE OUTPUT OF INI_RAIN_ICE IF THE KERNELS ARE UPDATED#
 ! ###################################################################
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('READ_XKER_RACCS',0,ZHOOK_HANDLE)
 KND= 50
 KACCLBDAS= 40

@@ -21,8 +21,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
                                   PTIW, PZT, PRES,                          &
                                   TBUDGETS, KBUDGETS)
 
-    USE PARKIND1,            ONLY: JPRB
-    USE YOMHOOK,             ONLY: LHOOK, DR_HOOK
+    USE YOMHOOK,             ONLY: LHOOK, DR_HOOK, JPHOOK
     USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_T
     USE MODD_CST,            ONLY: CST_T
     USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_T
@@ -110,7 +109,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
     INTEGER :: IGDRY
     INTEGER :: JJ, JK
 
-    REAL(KIND=JPRB) :: ZHOOK_HANDLE
+    REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
 !*       6.1    rain contact freezing

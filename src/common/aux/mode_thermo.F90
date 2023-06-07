@@ -41,8 +41,7 @@
 !
 !-------------------------------------------------------------------------------
 USE MODE_MSG
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 IMPLICIT NONE
 
 PRIVATE
@@ -161,7 +160,7 @@ REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2),SIZE(PT,3)) :: PFOES  ! saturation vapor
 !*       1.    COMPUTE SATURATION VAPOR PRESSURE
 !              ---------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:SM_FOES_3D',0,ZHOOK_HANDLE)
 PFOES(:,:,:) = EXP( XALPW - XBETAW/PT(:,:,:) - XGAMW*LOG(PT(:,:,:))  )
 !-------------------------------------------------------------------------------
@@ -243,7 +242,7 @@ REAL, DIMENSION(SIZE(PT)) :: PFOES  ! saturation vapor
 !*       1.    COMPUTE SATURATION VAPOR PRESSURE
 !              ---------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:SM_FOES_1D',0,ZHOOK_HANDLE)
 PFOES(:) = EXP( XALPW - XBETAW/PT(:) - XGAMW*LOG(PT(:))  )
 !-------------------------------------------------------------------------------
@@ -357,7 +356,7 @@ INTEGER                                           :: JRR     ! loop counter
 !*       1.    COMPUTE VAPOR MIXING RATIO
 !              --------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:SM_PMR_HU_3D',0,ZHOOK_HANDLE)
 ITERMAX = 10
 IF (PRESENT(KITERMAX)) ITERMAX=KITERMAX
@@ -501,7 +500,7 @@ INTEGER                                           :: ILUOUT,IRESP
 !*       1.    COMPUTE VAPOR MIXING RATIO
 !              --------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:SM_PMR_HU_1D',0,ZHOOK_HANDLE)
 ITERMAX = 10
 IF (PRESENT(KITERMAX)) ITERMAX=KITERMAX
@@ -618,7 +617,7 @@ REAL                                   :: PFOES  ! saturation vapor
 !*       1.    COMPUTE SATURATION VAPOR PRESSURE
 !              ---------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:SM_FOES_0D',0,ZHOOK_HANDLE)
 PFOES = EXP( XALPW - XBETAW/PT - XGAMW*LOG(PT)  )
 !-------------------------------------------------------------------------------
@@ -703,7 +702,7 @@ REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2)) :: PFOES  ! saturation vapor
 !*       1.    COMPUTE SATURATION VAPOR PRESSURE
 !              ---------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:SM_FOES_2D',0,ZHOOK_HANDLE)
 PFOES(:,:) = EXP( XALPW - XBETAW/PT(:,:) - XGAMW*LOG(PT(:,:))  )
 !-------------------------------------------------------------------------------
@@ -790,7 +789,7 @@ REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2)) :: PFOES  ! saturation vapor
 !*       1.    COMPUTE SATURATION VAPOR PRESSURE
 !              ---------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:SM_FOES_2D_MASK',0,ZHOOK_HANDLE)
 WHERE (OMASK(:,:))
   PFOES(:,:) = EXP( XALPW - XBETAW/PT(:,:) - XGAMW*LOG(PT(:,:))  )
@@ -888,7 +887,7 @@ REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2),SIZE(PT,3)) :: ZFOES  ! saturation vapor
 !*       1.    COMPUTE SATURATION VAPOR PRESSURE
 !              ---------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:QSATW_3D',0,ZHOOK_HANDLE)
 ZFOES(:,:,:) = MIN(EXP( XALPW - XBETAW/PT(:,:,:) - XGAMW*LOG(PT(:,:,:))  ), 0.99*PP(:,:,:))
 !
@@ -990,7 +989,7 @@ REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2))          :: ZFOES  ! saturation vapor
 !*       1.    COMPUTE SATURATION VAPOR PRESSURE
 !              ---------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:QSATW_2D',0,ZHOOK_HANDLE)
 ZFOES(:,:) = MIN(EXP( XALPW - XBETAW/PT(:,:) - XGAMW*LOG(PT(:,:))  ), 0.99*PP(:,:))
 !
@@ -1090,7 +1089,7 @@ REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2))          :: ZFOES  ! saturation vapor
 !
 !-------------------------------------------------------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:QSATW_2D_MASK',0,ZHOOK_HANDLE)
 WHERE (OMASK(:,:))
 !
@@ -1204,7 +1203,7 @@ REAL, DIMENSION(SIZE(PT,1))                   :: ZFOES  ! saturation vapor
 !*       1.    COMPUTE SATURATION VAPOR PRESSURE
 !              ---------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:QSATW_1D',0,ZHOOK_HANDLE)
 ZFOES(:) = MIN(EXP( XALPW - XBETAW/PT(:) - XGAMW*LOG(PT(:))  ), 0.99*PP(:))
 !
@@ -1306,7 +1305,7 @@ REAL                            :: ZFOES  ! saturation vapor
 !*       1.    COMPUTE SATURATION VAPOR PRESSURE
 !              ---------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:QSATW_0D',0,ZHOOK_HANDLE)
 ZFOES = MIN(EXP( XALPW - XBETAW/PT - XGAMW*LOG(PT)  ), 0.99*PP)
 !
@@ -1412,7 +1411,7 @@ REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2))          :: ZFOES  ! saturation vapor
 !
 !-------------------------------------------------------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:DQSATW_O_DT_2D_MASK',0,ZHOOK_HANDLE)
 WHERE (OMASK(:,:))
 !
@@ -1533,7 +1532,7 @@ REAL, DIMENSION(SIZE(PT))                       :: ZFOES  ! saturation vapor
 !*       1.    COMPUTE SATURATION VAPOR PRESSURE
 !              ---------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:DQSATW_O_DT_1D',0,ZHOOK_HANDLE)
 ZFOES(:) = PP(:) / (1.+XRD/XRV*(1./PQSAT(:)-1.))
 !
@@ -1749,7 +1748,7 @@ REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2))          :: ZFOES  ! saturation vapor
 !
 !-------------------------------------------------------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:DQSATI_O_DT_2D_MASK',0,ZHOOK_HANDLE)
 WHERE (OMASK(:,:))
 !
@@ -1871,7 +1870,7 @@ REAL, DIMENSION(SIZE(PT))                       :: ZFOES  ! saturation vapor
 !*       1.    COMPUTE SATURATION VAPOR PRESSURE
 !              ---------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:DQSATI_O_DT_1D',0,ZHOOK_HANDLE)
 ZFOES(:) = PP(:) / (1.+XRD/XRV*(1./PQSAT(:)-1.))
 !
@@ -2083,7 +2082,7 @@ REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2),SIZE(PT,3)) :: ZFOES  ! saturation vapor
 !*       1.    COMPUTE SATURATION VAPOR PRESSURE
 !              ---------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:QSATI_3D',0,ZHOOK_HANDLE)
 ZFOES(:,:,:) = MIN(EXP( XALPI - XBETAI/PT(:,:,:) - XGAMI*LOG(PT(:,:,:))  ), 0.99*PP(:,:,:))
 !
@@ -2185,7 +2184,7 @@ REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2))          :: ZFOES  ! saturation vapor
 !*       1.    COMPUTE SATURATION VAPOR PRESSURE
 !              ---------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:QSATI_2D',0,ZHOOK_HANDLE)
 ZFOES(:,:) = MIN(EXP( XALPI - XBETAI/PT(:,:) - XGAMI*LOG(PT(:,:))  ), 0.99*PP(:,:))
 !
@@ -2285,7 +2284,7 @@ REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2))          :: ZFOES  ! saturation vapor
 !
 !-------------------------------------------------------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:QSATI_2D_MASK',0,ZHOOK_HANDLE)
 WHERE (OMASK(:,:))
 !
@@ -2399,7 +2398,7 @@ REAL, DIMENSION(SIZE(PT,1))                   :: ZFOES  ! saturation vapor
 !*       1.    COMPUTE SATURATION VAPOR PRESSURE
 !              ---------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:QSATI_1D',0,ZHOOK_HANDLE)
 ZFOES(:) = MIN(EXP( XALPI - XBETAI/PT(:) - XGAMI*LOG(PT(:))  ), 0.99*PP(:))
 !
@@ -2501,7 +2500,7 @@ REAL                            :: ZFOES  ! saturation vapor
 !*       1.    COMPUTE SATURATION VAPOR PRESSURE
 !              ---------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MODE_THERMO:QSATI_0D',0,ZHOOK_HANDLE)
 ZFOES = MIN(EXP( XALPI - XBETAI/PT - XGAMI*LOG(PT)  ), 0.99*PP)
 !

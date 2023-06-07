@@ -15,7 +15,7 @@
                                PRHT, PRHS, PINPRH, PFPR)
 
       USE PARKIND1,            ONLY: JPRB
-      USE YOMHOOK,             ONLY: LHOOK, DR_HOOK
+      USE YOMHOOK,             ONLY: LHOOK, DR_HOOK, JPHOOK
       USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_T
       USE MODD_CST,            ONLY: CST_T
       USE MODD_PARAM_ICE_N,    ONLY: PARAM_ICE_t
@@ -403,7 +403,7 @@ LOGICAL :: LCHECKNOISE ! Noise check on/off
 LOGICAL :: LTIW   ! Use TIW for graupel melting ( set by XFRMIN(18) ~ 1)
 !
 REAL, DIMENSION(D%NIT,D%NKT) :: ZBU0
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !

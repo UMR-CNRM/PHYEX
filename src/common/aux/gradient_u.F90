@@ -1,7 +1,6 @@
 !     ######spl
       FUNCTION GX_U_M(PA,PDXX,PDZZ,PDZX, KKA, KKU, KL)      RESULT(PGX_U_M)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
 !!****  *GX_U_M* - Cartesian Gradient operator: 
@@ -85,7 +84,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGX_U_M ! result mass point
 !*       1.    DEFINITION of GX_U_M
 !              --------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GX_U_M',0,ZHOOK_HANDLE)
 IF (.NOT. LFLAT) THEN
   PGX_U_M(:,:,:)= ( DXF(PA)        -                 &
@@ -101,8 +100,7 @@ IF (LHOOK) CALL DR_HOOK('GX_U_M',1,ZHOOK_HANDLE)
 END FUNCTION GX_U_M
 !     ######spl
       FUNCTION GY_U_UV(PA,PDYY,PDZZ,PDZY, KKA, KKU, KL)      RESULT(PGY_U_UV)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #########################################################
 !
 !!****  *GY_U_UV* - Cartesian Gradient operator: 
@@ -187,7 +185,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGY_U_UV ! result UV point
 !*       1.    DEFINITION of GY_U_UV
 !              ---------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GY_U_UV',0,ZHOOK_HANDLE)
 IF (.NOT. LFLAT) THEN
   PGY_U_UV(:,:,:)=  (DYM(PA)- MZF(MYM(DZM(PA, KKA, KKU, KL)/&
@@ -202,8 +200,7 @@ IF (LHOOK) CALL DR_HOOK('GY_U_UV',1,ZHOOK_HANDLE)
 END FUNCTION GY_U_UV
 !     ######spl
       FUNCTION GZ_U_UW(PA,PDZZ, KKA, KKU, KL)      RESULT(PGZ_U_UW)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
 !!****  *GZ_U_UW - Cartesian Gradient operator: 
@@ -278,7 +275,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGZ_U_UW ! result UW point
 !*       1.    DEFINITION of GZ_U_UW
 !              ---------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GZ_U_UW',0,ZHOOK_HANDLE)
 PGZ_U_UW(:,:,:)= DZM(PA, KKA, KKU, KL) / MXM(PDZZ)    
 !

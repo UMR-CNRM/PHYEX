@@ -5,8 +5,7 @@ CONTAINS
       SUBROUTINE COMPUTE_BL89_ML(D, CST, CSTURB,PDZZ2D, &
              PTKEM_DEP,PG_O_THVREF,PVPT,KK,OUPORDN,OFLUX,PSHEAR,PLWORK)
 
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###################################################################
 !!
 !!     COMPUTE_BL89_ML routine to:
@@ -88,7 +87,7 @@ REAL    :: ZTEST,ZTEST0,ZTESTM  !test for vectorization
 !
 !*       1.    INITIALISATION
 !              --------------
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('COMPUTE_BL89_ML',0,ZHOOK_HANDLE)
 !
 IIJE=D%NIJE

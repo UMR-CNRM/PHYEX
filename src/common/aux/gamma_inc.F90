@@ -3,8 +3,7 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
       FUNCTION GAMMA_INC(PA,PX)  RESULT(PGAMMA_INC)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #############################################
 !
 !
@@ -72,7 +71,7 @@ REAL                                 :: ZFPMIN=1.E-30
 REAL                                 :: ZAP,ZDEL,ZSUM
 REAL                                 :: ZAN,ZB,ZC,ZD,ZH
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GAMMA_INC',0,ZHOOK_HANDLE)
 IF(PX<0.0 .OR. PA<=0.0) THEN
   CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'GAMMA_INC', 'invalid arguments: PX<0.0 .OR. PA<=0.0')

@@ -38,8 +38,7 @@ SUBROUTINE INI_MFSHALL()
 !              ------------
 !
 USE MODD_PARAM_MFSHALL_n, ONLY: LTHETAS_MF, XLAMBDA_MF
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -50,7 +49,7 @@ IMPLICIT NONE
 !
 !*       0.2   Declarations of local variables :
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('INI_MFSHALL',0,ZHOOK_HANDLE)
 !
