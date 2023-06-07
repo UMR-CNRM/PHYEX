@@ -2,8 +2,7 @@ MODULE MODE_GRADIENT_W_PHY
 IMPLICIT NONE
 CONTAINS
       SUBROUTINE GX_W_UW_PHY(D,OFLAT,PA,PDXX,PDZZ,PDZX,PGX_W_UW)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #########################################################
 !
 !!****  *GX_W_UW* - Cartesian Gradient operator: 
@@ -80,7 +79,7 @@ INTEGER :: JI,JJ,JK
 !*       1.    DEFINITION of GX_W_UW
 !              ---------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GX_W_UW',0,ZHOOK_HANDLE)
 IIE=D%NIEC
 IIB=D%NIBC
@@ -114,8 +113,7 @@ IF (LHOOK) CALL DR_HOOK('GX_W_UW',1,ZHOOK_HANDLE)
 END SUBROUTINE GX_W_UW_PHY
 !
       SUBROUTINE GY_W_VW_PHY(D,OFLAT,PA,PDYY,PDZZ,PDZY,PGY_W_VW)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #########################################################
 !
 !!****  *GY_W_VW* - Cartesian Gradient operator: 
@@ -191,7 +189,7 @@ INTEGER :: JI,JJ,JK
 !*       1.    DEFINITION of GY_W_VW
 !              ---------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GY_W_VW',0,ZHOOK_HANDLE)
 !IF (.NOT. LFLAT) THEN
 !  PGY_W_VW(:,:,:)= DYM(PA(:,:,:))/(MZM(PDYY(:,:,:), KKA, KKU, KL))    &
@@ -233,8 +231,7 @@ IF (LHOOK) CALL DR_HOOK('GY_W_VW',1,ZHOOK_HANDLE)
 END SUBROUTINE GY_W_VW_PHY
 !
       SUBROUTINE GZ_W_M_PHY(D,PA,PDZZ,PGZ_W_M)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
 !!****  *GZ_W_M* - Cartesian Gradient operator: 
@@ -307,7 +304,7 @@ INTEGER :: JI,JJ,JK
 !*       1.    DEFINITION of GZ_W_M
 !              --------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GZ_W_M',0,ZHOOK_HANDLE)
 IIE=D%NIEC
 IIB=D%NIBC

@@ -7,8 +7,7 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE TRIDIAG(D,PVARM,PA,PTSTEP,PEXPL,PIMPL, &
                                   PRHODJ,PSOURCE,PVARP )
-       USE PARKIND1, ONLY : JPRB
-       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !      #################################################
 !
 !
@@ -149,7 +148,7 @@ INTEGER                              :: IIJB, IIJE    ! start, end of ij loops i
 !*      1.  COMPUTE THE RIGHT HAND SIDE
 !           ---------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TRIDIAG',0,ZHOOK_HANDLE)
 !
 IKT=D%NKT

@@ -7,8 +7,7 @@ IMPLICIT NONE
 CONTAINS
 !     ######spl
       SUBROUTINE BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,PTHLM,KRR,PRM,PTKEM,PSHEAR,PLM,OOCEAN,HPROGRAM)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #########################################################
 !
 !!****  *BL89* -
@@ -117,7 +116,7 @@ REAL    :: ZTEST,ZTEST0,ZTESTM ! test for vectorization
 REAL    :: Z2SQRT2,ZUSRBL89,ZBL89EXP
 !-------------------------------------------------------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('BL89',0,ZHOOK_HANDLE)
 Z2SQRT2=2.*SQRT(2.)
 !

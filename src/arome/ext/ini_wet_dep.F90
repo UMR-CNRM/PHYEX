@@ -1,7 +1,7 @@
 !     ######spl
       SUBROUTINE INI_WET_DEP
       USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###########################################################
 !
 !!****  *INI_RAIN_ICE * - initialize the constants necessary for the warm and
@@ -132,7 +132,7 @@ REAL     :: ZTHVREFZ
 !*       1.1    Set the hailstones maximum fall velocity
 !
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('INI_WET_DEP',0,ZHOOK_HANDLE)
 IF (ALLOCATED(XRTMIN)) THEN       ! In case of nesting microphysics constants of
                                   ! MODD_RAIN_ICE_PARAM are computed only once,

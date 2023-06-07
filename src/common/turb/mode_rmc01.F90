@@ -6,8 +6,7 @@ MODULE MODE_RMC01
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE RMC01(D,CST,CSTURB,TURBN,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,PLMO,PLK,PLEPS)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##############################################################
 !
 !!****  *RMC01* -
@@ -104,7 +103,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZDH  ! hor. grid mesh
 !         ---------------
 !
 ! horizontal boundaries
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('RMC01',0,ZHOOK_HANDLE)
 IKTB=D%NKTB          
 IKTE=D%NKTE

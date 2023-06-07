@@ -1,7 +1,6 @@
 !     ######spl
       FUNCTION GX_V_UV(PA,PDXX,PDZZ,PDZX, KKA, KKU, KL)      RESULT(PGX_V_UV)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #########################################################
 !
 !!****  *GX_V_UV* - Cartesian Gradient operator: 
@@ -85,7 +84,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGX_V_UV ! result UV point
 !*       1.    DEFINITION of GX_V_UV
 !              ---------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GX_V_UV',0,ZHOOK_HANDLE)
 IF (.NOT. LFLAT) THEN
   PGX_V_UV(:,:,:)= ( DXM(PA)- MZF(MXM(DZM(PA, KKA, KKU, KL)/&
@@ -100,8 +99,7 @@ IF (LHOOK) CALL DR_HOOK('GX_V_UV',1,ZHOOK_HANDLE)
 END FUNCTION GX_V_UV
 !     ######spl
       FUNCTION GY_V_M(PA,PDYY,PDZZ,PDZY, KKA, KKU, KL)      RESULT(PGY_V_M)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
 !!****  *GY_V_M* - Cartesian Gradient operator: 
@@ -184,7 +182,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGY_V_M ! result mass point
 !*       1.    DEFINITION of GY_V_M
 !              --------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GY_V_M',0,ZHOOK_HANDLE)
 IF (.NOT. LFLAT) THEN
   PGY_V_M(:,:,:)= (DYF(PA)        -                      &
@@ -200,8 +198,7 @@ IF (LHOOK) CALL DR_HOOK('GY_V_M',1,ZHOOK_HANDLE)
 END FUNCTION GY_V_M
 !     ######spl
       FUNCTION GZ_V_VW(PA,PDZZ, KKA, KKU, KL)      RESULT(PGZ_V_VW)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
 !!****  *GZ_V_VW - Cartesian Gradient operator: 
@@ -277,7 +274,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGZ_V_VW ! result VW point
 !*       1.    DEFINITION of GZ_V_VW
 !              ---------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GZ_V_VW',0,ZHOOK_HANDLE)
 PGZ_V_VW(:,:,:)= DZM(PA, KKA, KKU, KL) / MYM(PDZZ)     
 !

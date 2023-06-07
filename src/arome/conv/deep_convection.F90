@@ -10,8 +10,7 @@
                                 OCH1CONV, KCH1, PCH1, PCH1TEN,                 &
                                 OUSECHEM, OCH_CONV_SCAV, OCH_CONV_LINOX,       &
                                 ODUST, OSALT, PRHODREF, PIC_RATE, PCG_RATE     )
-    USE PARKIND1, ONLY : JPRB
-    USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+    USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !   ############################################################################
 !
 !!**** Monitor routine to compute all convective tendencies by calls
@@ -325,7 +324,7 @@ REAL, DIMENSION(:),ALLOCATABLE     :: ZIC_RATE,ZCG_RATE
 !*       0.3    Compute loop bounds
 !               -------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DEEP_CONVECTION',0,ZHOOK_HANDLE)
 IIB = KIDIA
 IIE = KFDIA

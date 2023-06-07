@@ -3,8 +3,7 @@ MODULE MODE_INI_SNOW
 IMPLICIT NONE
 CONTAINS
       SUBROUTINE INI_SNOW ( KLUOUT )
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###########################################################
 !
 !!****  *INI_SNOW * - re-initialize the constants based on snow-size distubutio
@@ -79,7 +78,7 @@ REAL :: ZRHO00                ! Surface reference air density
 REAL :: ZCONC_MAX ! Maximal concentration for snow
 
 
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('INI_RAIN_ICE',0,ZHOOK_HANDLE)
 
 

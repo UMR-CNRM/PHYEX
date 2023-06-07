@@ -1,7 +1,6 @@
 !     ######spl
       SUBROUTINE INI_CONVPAR_E1
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #########################
 !
 !!****  *INI_CONVPAR * - routine to initialize the convective constants modules 
@@ -54,7 +53,7 @@ IMPLICIT NONE
 !              ---------------------------------------------------
 !
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('INI_CONVPAR_E1',0,ZHOOK_HANDLE)
 XA25     = 625.E6    ! 25 km x 25 km reference grid area
 !

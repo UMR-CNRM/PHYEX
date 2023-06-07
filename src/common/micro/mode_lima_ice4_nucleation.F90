@@ -29,8 +29,7 @@ SUBROUTINE LIMA_ICE4_NUCLEATION(CST, KSIZE, &
 !          ------------
 !
 USE MODD_CST,            ONLY: CST_t
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_PARAM_LIMA_COLD, ONLY : XALPHA1, XBETA1, XALPHA2, XBETA2, XNU10, XNU20, XMNU0
 USE MODD_PARAM_LIMA, ONLY: LFEEDBACKT, XRTMIN
 !
@@ -53,7 +52,7 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: PRVHENI_MR ! Mixing ratio change due 
 !*       0.2  declaration of local variables
 !
 REAL, DIMENSION(KSIZE) :: ZW ! work array
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 LOGICAL, DIMENSION(KSIZE) :: GNEGT  ! Test where to compute the HEN process
 REAL, DIMENSION(KSIZE)  :: ZZW,      & ! Work array
                            ZUSW,     & ! Undersaturation over water

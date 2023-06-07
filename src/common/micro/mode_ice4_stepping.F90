@@ -23,8 +23,7 @@ SUBROUTINE ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_BUDGET,         ONLY: TBUDGETCONF_t
@@ -87,7 +86,7 @@ REAL,    DIMENSION(KPROMA),                     INTENT(OUT)   :: PRREVAV
 !
 !*       0.2   Declarations of local variables :
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 LOGICAL :: LSOFT ! Must we really compute tendencies or only adjust them to new T variables
 INTEGER :: INB_ITER_MAX ! Maximum number of iterations (with real tendencies computation)

@@ -10,7 +10,7 @@
                                   PTHS, PRS,  PSVS, PSRCS, PCLDFR, PICEFR, PPRCFR, &
                                   YDDDH, YDLDDH, YDMDDH, LLIMAINIT )
       USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##########################################################################
 !
 !!****  * -  compute the  resolved clouds and precipitation
@@ -185,7 +185,7 @@ TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !*       1.     PRELIMINARY COMPUTATIONS
 !               ------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('ARO_ADJUST_LIMA',0,ZHOOK_HANDLE)
 
 CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, 0, KFDIA)

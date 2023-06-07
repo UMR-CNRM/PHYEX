@@ -19,8 +19,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
                                   ZLBDAR, ZLBDAS, ZCOLF, ZPRES, ZZT,  &
                                   TBUDGETS, KBUDGETS)
 
-    USE PARKIND1,            ONLY: JPRB
-    USE YOMHOOK,             ONLY: LHOOK, DR_HOOK
+    USE YOMHOOK,             ONLY: LHOOK, DR_HOOK, JPHOOK
     USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_T
     USE MODD_CST,            ONLY: CST_T
     USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_T
@@ -93,7 +92,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
     INTEGER :: IGRIM, IGACC
     INTEGER :: JJ, JK
 
-    REAL(KIND=JPRB) :: ZHOOK_HANDLE
+    REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
 !*       5.1    cloud droplet riming of the aggregates

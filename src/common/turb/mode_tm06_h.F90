@@ -6,8 +6,7 @@ MODULE MODE_TM06_H
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE TM06_H(D,PTSTEP,PZZ,PFLXZ,PBL_DEPTH)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #################################################################
 !
 !
@@ -73,7 +72,7 @@ REAL                                     :: ZGROWTH  ! maximum BL growth rate
 !----------------------------------------------------------------------------
 !
 !* mixed boundary layer cannot grow more rapidly than 1800m/h
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TM06_H',0,ZHOOK_HANDLE)
 ZGROWTH = 2.0 ! (m/s)
 !

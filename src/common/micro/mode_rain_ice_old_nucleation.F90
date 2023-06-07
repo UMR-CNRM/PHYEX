@@ -16,8 +16,7 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
                                      PICENU, PT, PZZZ, &
                                      PRHT)
 !
-    USE PARKIND1,             ONLY: JPRB
-    USE YOMHOOK ,             ONLY: LHOOK, DR_HOOK
+    USE YOMHOOK ,             ONLY: LHOOK, DR_HOOK, JPHOOK
     USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
     USE MODD_CST,             ONLY: CST_T
     USE MODE_TIWMX,           ONLY: ESATI, ESATW, AM3, REDIN
@@ -93,7 +92,7 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
 !
 !   compute the temperature and the pressure
 !
-    REAL(KIND=JPRB) :: ZHOOK_HANDLE
+    REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
     IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_OLD_NUCLEATION',0,ZHOOK_HANDLE)
 

@@ -11,8 +11,7 @@
                                   PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,&
                                   YDDDH,YDLDDH,YDMDDH,&
                                   YSPP_PSIGQSAT,YSPP_ICE_CLD_WGT)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##########################################################################
 !
 !!****  * -  compute the  resolved clouds and precipitation
@@ -180,7 +179,7 @@ TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RI) :: YLBUDGET !NBUDGET_RI is the one with
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !------------------------------------------------------------------------------
 !
 !*       1.     PRELIMINARY COMPUTATIONS

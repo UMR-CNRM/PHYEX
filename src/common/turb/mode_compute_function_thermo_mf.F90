@@ -53,8 +53,7 @@ CONTAINS
 !
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY: CST_t
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -95,7 +94,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) ::      &
 INTEGER             :: JRR, JIJ, JK
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
 INTEGER :: IKTB,IKTE
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !

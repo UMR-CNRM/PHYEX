@@ -11,8 +11,7 @@
                                   PINPRR,PINPRS,PINPRG,PINPRH,PFPR,     &
                                   YDDDH, YDLDDH, YDMDDH, &
                                   YSPP_ICENU,YSPP_KGN_ACON,YSPP_KGN_SBGR)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##########################################################################
 !
 !!****  * -  compute the  resolved clouds and precipitation
@@ -200,7 +199,7 @@ TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 LOGICAL, DIMENSION(KLON,1,KLEV) :: LLMICRO
 INTEGER :: ISIZE
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
 #include "abor1.intfb.h"
 !------------------------------------------------------------------------------

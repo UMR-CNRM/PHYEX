@@ -12,8 +12,7 @@ CONTAINS
                     PWETLBDAH_MAX,PWETLBDAR_MAX,PWETLBDAH_MIN,PWETLBDAR_MIN, &
                     PFDINFTY,PKER_RWETH                                      )
 !DEC$ OPTIMIZE:0
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ########################################################################
 !
 !!****  * * - initialize the kernels for the rain-hail wet growth process
@@ -80,7 +79,7 @@ REAL, DIMENSION(:,:), INTENT(OUT), OPTIONAL :: PKER_RWETH
 ! #INSERT HERE THE OUTPUT OF INI_RAIN_ICE IF THE KERNELS ARE UPDATED#
 ! ###################################################################
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('READ_XKER_RWETH',0,ZHOOK_HANDLE)
 KND= 50
 KWETLBDAH= 40

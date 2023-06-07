@@ -53,8 +53,7 @@ SUBROUTINE TURB_VER_SV_CORR(D,CST,CSTURB,TURBN,TLES,KRR,KRRL,KRRI,OOCEAN, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
@@ -132,7 +131,7 @@ REAL :: ZCTSVD = 2.4  ! constant for temperature - scalar covariance dissipation
 REAL :: ZCQSVD = 2.4  ! constant for humidity - scalar covariance dissipation
 !----------------------------------------------------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER_SV_CORR',0,ZHOOK_HANDLE)
 !
 IIJE=D%NIJE

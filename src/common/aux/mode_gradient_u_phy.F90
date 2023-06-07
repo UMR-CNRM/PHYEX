@@ -100,8 +100,7 @@ PGZ_U_UW(IIB:IIE,IJB:IJE,1:IKT)= PA_WORK(IIB:IIE,IJB:IJE,1:IKT) &
 END SUBROUTINE GZ_U_UW_PHY
 !
       SUBROUTINE GX_U_M_PHY(D,OFLAT,PA,PDXX,PDZZ,PDZX,PGX_U_M)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
 !!****  *GX_U_M* - Cartesian Gradient operator: 
@@ -189,7 +188,7 @@ INTEGER :: JI,JJ,JK
 !*       1.    DEFINITION of GX_U_M
 !              --------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GX_U_M',0,ZHOOK_HANDLE)
 !
 IIE=D%NIEC

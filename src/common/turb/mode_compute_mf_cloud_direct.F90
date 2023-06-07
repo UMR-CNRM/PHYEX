@@ -55,8 +55,7 @@ CONTAINS
 !          ------------
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_PARAM_MFSHALL_n, ONLY : PARAM_MFSHALL_t
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -72,8 +71,8 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PCF_MF         ! and cloud frac
 !
 !*                    0.1  Declaration of local variables
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER  :: JI,JK, JK0, IKB,IKE,IKL,IIJB,IIJE
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !*                    0.2 Initialisation
 !

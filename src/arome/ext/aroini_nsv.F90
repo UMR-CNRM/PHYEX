@@ -3,7 +3,7 @@
                             KSV_DSTBEG, KSV_DSTEND,KSV_DSTDEPBEG, KSV_DSTDEPEND,&
                             KSV_CO2)
       USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !!    ##############################
 !!
 !!*** *AROINI_MNHC*
@@ -48,7 +48,7 @@ INTEGER :: JN, ICO2
 !
 ! Initialize NSV
 ! 
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('AROINI_NSV',0,ZHOOK_HANDLE)
 NSV=KSV  ! for LIMA case
 IF (LUSECHEM) THEN

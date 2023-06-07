@@ -33,8 +33,7 @@ SUBROUTINE ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CST, ONLY: CST_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
@@ -106,7 +105,7 @@ REAL, DIMENSION(D%NIJT, D%NKT)                                      :: ZCONC3D, 
                                                                      & ZRST, &
                                                                      & ZRGT, &
                                                                      & ZRHT
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT', 0, ZHOOK_HANDLE)
@@ -323,7 +322,7 @@ REAL, DIMENSION(SIZE(ICED%XRTMIN))   :: ZRSMIN
 REAL, DIMENSION(D%NIJT)       :: ZREMAINT   ! Remaining time until the timestep end
 REAL, DIMENSION(D%NIJT, 0:D%NKT+1) :: ZWSED   ! Sedimentation fluxes
 INTEGER :: IKTB, IKTE, IKB, IKL, IIJE, IIJB
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT', 0, ZHOOK_HANDLE)
 !
 IKTB=D%NKTB

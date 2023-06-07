@@ -7,8 +7,7 @@ IMPLICIT NONE
 CONTAINS
 !     ######spl
       SUBROUTINE SBL_DEPTH(D,CSTURB,PZZ,PFLXU,PFLXV,PWTHV,PLMO,PSBL_DEPTH)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #################################################################
 !
 !
@@ -86,7 +85,7 @@ REAL, DIMENSION(D%NIJT) :: ZA       ! ponderation coefficient
 !* initialisations
 !
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('SBL_DEPTH',0,ZHOOK_HANDLE)
 !
 IKB=D%NKTB

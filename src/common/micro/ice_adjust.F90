@@ -109,8 +109,7 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_CST,        ONLY: CST_t
 USE MODD_NEB_n,      ONLY: NEB_t
@@ -217,7 +216,7 @@ INTEGER :: IKTB, IKTE, IIJB, IIJE
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZSIGS, ZSRCS
 REAL, DIMENSION(D%NIJT) :: ZSIGQSAT
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !

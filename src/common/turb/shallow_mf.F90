@@ -71,9 +71,8 @@
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1,   ONLY: JPRB
 USE MODE_SHUMAN_PHY, ONLY: MXM_PHY, MYM_PHY
-USE YOMHOOK,    ONLY: LHOOK, DR_HOOK
+USE YOMHOOK,    ONLY: LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_BUDGET,          ONLY: TBUDGETCONF_t, TBUDGETDATA, NBUDGET_U,  NBUDGET_V, &
                                 NBUDGET_TH,  NBUDGET_RV, NBUDGET_SV1
@@ -188,7 +187,7 @@ INTEGER :: JIJ, JK, JSV
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
 INTEGER :: IKT
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !------------------------------------------------------------------------
 
 !!! 1. Initialisation
