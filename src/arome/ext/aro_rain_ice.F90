@@ -435,12 +435,22 @@ ELSEIF (CMICRO=='OLD4') THEN
     ELSE
      ZKGN_SBGR(:,:) = RAIN_ICE_PARAM%XFRMIN(11)
     ENDIF
-    LLMICRO(:,:,:)=PRT(:,:,:,2)>RAIN_ICE_DESCR%XRTMIN(2) .OR. &
-                   PRT(:,:,:,3)>RAIN_ICE_DESCR%XRTMIN(3) .OR. &
-                   PRT(:,:,:,4)>RAIN_ICE_DESCR%XRTMIN(4) .OR. &
-                   PRT(:,:,:,5)>RAIN_ICE_DESCR%XRTMIN(5) .OR. &
-                   PRT(:,:,:,6)>RAIN_ICE_DESCR%XRTMIN(6) .OR. &
-                   PRT(:,:,:,7)>RAIN_ICE_DESCR%XRTMIN(7)
+    IF(OCND2) THEN
+      LLMICRO(:,:,:)=PSSIO(:,:,:)>RAIN_ICE_PARAM%XFRMIN(12) .OR. &
+                     PRT(:,:,:,2)>RAIN_ICE_PARAM%XFRMIN(13) .OR. &
+                     PRT(:,:,:,3)>RAIN_ICE_PARAM%XFRMIN(13) .OR. &
+                     PRT(:,:,:,4)>RAIN_ICE_PARAM%XFRMIN(13) .OR. &
+                     PRT(:,:,:,5)>RAIN_ICE_PARAM%XFRMIN(13) .OR. &
+                     PRT(:,:,:,6)>RAIN_ICE_PARAM%XFRMIN(13) .OR. &
+                     PRT(:,:,:,7)>RAIN_ICE_PARAM%XFRMIN(13)
+    ELSE
+      LLMICRO(:,:,:)=PRT(:,:,:,2)>RAIN_ICE_DESCR%XRTMIN(2) .OR. &
+                     PRT(:,:,:,3)>RAIN_ICE_DESCR%XRTMIN(3) .OR. &
+                     PRT(:,:,:,4)>RAIN_ICE_DESCR%XRTMIN(4) .OR. &
+                     PRT(:,:,:,5)>RAIN_ICE_DESCR%XRTMIN(5) .OR. &
+                     PRT(:,:,:,6)>RAIN_ICE_DESCR%XRTMIN(6) .OR. &
+                     PRT(:,:,:,7)>RAIN_ICE_DESCR%XRTMIN(7)
+    ENDIF
     ISIZE=COUNT(LLMICRO)
     CALL RAIN_ICE_OLD(YLDIMPHYEX, CST, PARAM_ICE, RAIN_ICE_PARAM, &
                  &  RAIN_ICE_DESCR, TBUCONF, &
@@ -486,11 +496,20 @@ ELSE
     ELSE
      ZKGN_SBGR(:,:) = RAIN_ICE_PARAM%XFRMIN(11)
     ENDIF
-    LLMICRO(:,:,:)=PRT(:,:,:,2)>RAIN_ICE_DESCR%XRTMIN(2) .OR. &                                                                     
-                   PRT(:,:,:,3)>RAIN_ICE_DESCR%XRTMIN(3) .OR. &                                                                     
-                   PRT(:,:,:,4)>RAIN_ICE_DESCR%XRTMIN(4) .OR. &                                                                     
-                   PRT(:,:,:,5)>RAIN_ICE_DESCR%XRTMIN(5) .OR. &                                                                     
-                   PRT(:,:,:,6)>RAIN_ICE_DESCR%XRTMIN(6)
+    IF(OCND2) THEN
+      LLMICRO(:,:,:)=PSSIO(:,:,:)>RAIN_ICE_PARAM%XFRMIN(12) .OR. &
+                     PRT(:,:,:,2)>RAIN_ICE_PARAM%XFRMIN(13) .OR. &
+                     PRT(:,:,:,3)>RAIN_ICE_PARAM%XFRMIN(13) .OR. &
+                     PRT(:,:,:,4)>RAIN_ICE_PARAM%XFRMIN(13) .OR. &
+                     PRT(:,:,:,5)>RAIN_ICE_PARAM%XFRMIN(13) .OR. &
+                     PRT(:,:,:,6)>RAIN_ICE_PARAM%XFRMIN(13)
+    ELSE
+      LLMICRO(:,:,:)=PRT(:,:,:,2)>RAIN_ICE_DESCR%XRTMIN(2) .OR. &                                                                     
+                     PRT(:,:,:,3)>RAIN_ICE_DESCR%XRTMIN(3) .OR. &                                                                     
+                     PRT(:,:,:,4)>RAIN_ICE_DESCR%XRTMIN(4) .OR. &                                                                     
+                     PRT(:,:,:,5)>RAIN_ICE_DESCR%XRTMIN(5) .OR. &                                                                     
+                     PRT(:,:,:,6)>RAIN_ICE_DESCR%XRTMIN(6)
+    ENDIF
     ISIZE=COUNT(LLMICRO)
     CALL RAIN_ICE_OLD(YLDIMPHYEX, CST, PARAM_ICE, RAIN_ICE_PARAM, &
                  &  RAIN_ICE_DESCR, TBUCONF, &
