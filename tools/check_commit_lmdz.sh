@@ -251,7 +251,9 @@ if [ $packcreation -eq 1 ]; then
 
   #Missing files in case ecrad is not used
   if [ "$rad" != "ecrad" ] ; then
-    ln -s ecrad/yom* ecrad/abor1.F90 ecrad/abor1.intfb.h ecrad/parkind1.F90 .
+    for file in ecrad/yom* ecrad/abor1.F90 ecrad/abor1.intfb.h ecrad/parkind1.F90; do
+      [ ! -f $(basename $file) ] && ln -s $file .
+    done
   fi
 fi
 
