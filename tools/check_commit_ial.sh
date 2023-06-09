@@ -20,6 +20,8 @@ set -o pipefail #abort if left command on a pipe fails
 #small_3D_alt9: CCLOUD='OLD3', OCND2=.T.
 #small_3D_alt10: LCRIAUTI=F
 #small_3D_lima: LIMA scheme
+#small_3D_alt11: same as small_3D but with a different value for NPROMICRO (must give exactly the same results)
+#small_3D_alt12: same as small_3D but with LPACK_MICRO=.F. (must give exactly the same results)
 
 #The small_3D_alt7 needed a correction in apl_arome which has been introduced in d37dd1f. But the reference pack has been modified
 #                  afterwards to enable this test case to be run (documented in INSTALL_pack_ial.md). In consequence, the reference
@@ -45,6 +47,8 @@ set -o pipefail #abort if left command on a pipe fails
 #The small_3D_lima is not included in the list of available tests because it needs to be compared against a special commit.
 #                  Indeed, the lima version in arome has been changed.
 #                  The reference commit is d095d11 (20 March 2023)
+
+#The small_3D_alt11 and The small_3D_alt12 are not included in the list because they are runnable only after the commit that added these options.
 
 #Special pack names:
 # - recompil: original source code (everything under mpa)

@@ -18,6 +18,24 @@ SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
                      PWR,                                                  &
                      TBUDGETS, KBUDGETS,                                   &
                      PRHS                                                  )
+!     ######################################################################
+!
+!!****  * -  compute the explicit microphysical sources
+!!
+!!    PURPOSE
+!!    -------
+!!      The purpose of this routine is to pack arrays to compute
+!!      the microphysics tendencies
+!!
+!!
+!!    METHOD
+!!    ------
+!!      Pack arrays by chuncks
+!!
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!     R. El Khatib 28-Apr-2023 Fix (and re-enable) the cache-blocking mechanism on top of phyex
 !  -----------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -175,10 +193,10 @@ LLSIGMA_RC=(PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM')
 LL_AUCV_ADJU=(PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU')
 !
 IF(PARAMI%LPACK_MICRO) THEN
-  IF(KPROMA /= KSIZE) THEN
+  IF(KPROMA /= KSIZE .AND. (PARAMI%CSUBG_RR_EVAP=='PRFR' .OR. PARAMI%CSUBG_RC_RR_ACCR=='PRFR')) THEN
     CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'For now, KPROMA must be equal to KSIZE, see comments in code for explanation')
     ! Microphyscs was optimized by introducing chunks of KPROMA size
-    ! Thus, in ice4_tendencies, the 1D array represent only a fraction of the points where microphisical species are present
+    ! Thus, in ice4_tendencies, the 1D array represent only a fraction of the points where microphysical species are present
     ! We cannot rebuild the entire 3D arrays in the subroutine, so we cannot call ice4_rainfr_vert in it
     ! A solution would be to suppress optimisation in this case by setting KPROMA=KSIZE in rain_ice
     ! Another solution would be to compute column by column?
@@ -268,8 +286,10 @@ IF(PARAMI%LPACK_MICRO) THEN
               ! Save indices for later usages:
               I1(IC) = JIJ
               I2(IC) = JK
-              I1TOT(JMICRO+IC-1)=JIJ
-              I2TOT(JMICRO+IC-1)=JK
+              IF(BUCONF%LBU_ENABLE) THEN
+                I1TOT(JMICRO+IC-1)=JIJ
+                I2TOT(JMICRO+IC-1)=JK
+              ENDIF
               IF (IC==IMICRO) THEN
                 ! the end of the chunk has been reached, then reset the starting index :
                 ISTIJ=JIJ+1
@@ -277,6 +297,7 @@ IF(PARAMI%LPACK_MICRO) THEN
                   ISTK=JK
                 ELSE
                   ! end of line, restart from 1 and increment upper loop
+                  ISTIJ=D%NIJB
                   ISTK=JK+1
                   IF (ISTK > IKTE) THEN
                     ! end of line, restart from 1

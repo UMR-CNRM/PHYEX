@@ -17,7 +17,24 @@ SUBROUTINE ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &PHLC_HCF, PHLC_HRC, &
                         &PHLI_HCF, PHLI_HRI, PRAINFR, &
                         &PEXTPK, PBU_SUM, PRREVAV)
-
+!     ######################################################################
+!
+!!****  * -  compute the explicit microphysical sources
+!!
+!!    PURPOSE
+!!    -------
+!!      The purpose of this routine is to pack arrays to compute
+!!      the microphysics tendencies
+!!
+!!
+!!    METHOD
+!!    ------
+!!      Pack arrays by chuncks
+!!
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!     R. El Khatib 03-May-2023 Replace OMP SIMD loops by explicit loops : more portable and even slightly faster
 !  -----------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -217,9 +234,11 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
   LSOFT=.FALSE. ! We *really* compute the tendencies
 
   DO WHILE(ANY(LLCOMPUTE(1:KMICRO))) ! Loop to adjust tendencies when we cross the 0°C or when a species disappears
-!$OMP SIMD
-    DO JL=1, KMICRO
-      ZSUM2(JL)=SUM(PVART(JL,IRI:KRR))
+    ZSUM2(1:KMICRO)=PVART(1:KMICRO, IRI)
+    DO JV=IRI+1,KRR
+      DO JL=1, KMICRO
+        ZSUM2(JL)=ZSUM2(JL)+PVART(JL, JV)
+      ENDDO
     ENDDO
     DO JL=1, KMICRO
       ZDEVIDE=(CST%XCPD + CST%XCPV*PVART(JL, IRV) + CST%XCL*(PVART(JL, IRC)+PVART(JL, IRR)) + CST%XCI*ZSUM2(JL)) * PEXN(JL)
@@ -321,7 +340,9 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
         ! because when mixing ratio has evolved more than a threshold, we must re-compute tendencies
         ! Thus, at first iteration (ie when LLCPZ0RT=.TRUE.) we copy PVART into Z0RT
         DO JV=1,KRR
-          IF (LLCPZ0RT) Z0RT(1:KMICRO, JV)=PVART(1:KMICRO, JV)
+          IF (LLCPZ0RT) THEN
+            Z0RT(1:KMICRO, JV)=PVART(1:KMICRO, JV)
+          ENDIF
           DO JL=1, KMICRO
             IF (IITER(JL)<INB_ITER_MAX .AND. ABS(ZA(JL,JV))>1.E-20) THEN
               ZTIME_THRESHOLD1D(JL)=(SIGN(1., ZA(JL, JV))*PARAMI%XMRSTEP+ &
@@ -337,12 +358,17 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
               LLCOMPUTE(JL)=.FALSE.
             ENDIF
           ENDDO
+          IF (JV == 1) THEN
+            DO JL=1, KMICRO
+              ZMAXB(JL)=ABS(ZB(JL, JV))
+            ENDDO
+          ELSE
+            DO JL=1, KMICRO
+              ZMAXB(JL)=MAX(ZMAXB(JL), ABS(ZB(JL, JV)))
+            ENDDO
+          ENDIF
         ENDDO
         LLCPZ0RT=.FALSE.
-!$OMP SIMD
-        DO JL=1,KMICRO
-          ZMAXB(JL)=MAXVAL(ABS(ZB(JL,1:KRR)))
-        ENDDO
         DO JL=1, KMICRO
           IF (IITER(JL)<INB_ITER_MAX .AND. ZMAXB(JL)>PARAMI%XMRSTEP) THEN
             ZMAXTIME(JL)=0.
