@@ -8,7 +8,6 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
                      KPROMA, KSIZE, KSIZE2,                                &
-                     HSUBG_AUCV_RC, HSUBG_AUCV_RI,                         &
                      PTSTEP, KRR, ODMICRO, PEXN,                           &
                      PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
                      PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
@@ -30,9 +29,9 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_BUDGET,         ONLY: TBUDGETDATA, TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
-USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
-USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & ITH,     & ! Potential temperature
       & IRV,     & ! Water vapor
@@ -82,8 +81,6 @@ TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KPROMA ! cache-blocking factor for microphysic loop
 INTEGER,                  INTENT(IN)    :: KSIZE
 INTEGER,                  INTENT(IN)    :: KSIZE2
-CHARACTER(LEN=4),         INTENT(IN)    :: HSUBG_AUCV_RC ! Kind of Subgrid autoconversion method
-CHARACTER(LEN=80),        INTENT(IN)    :: HSUBG_AUCV_RI ! Kind of Subgrid autoconversion method
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: ODMICRO ! mask to limit computation
@@ -175,8 +172,8 @@ IKTE=D%NKTE
 IIJB=D%NIJB
 IIJE=D%NIJE
 GEXT_TEND=.TRUE.
-LLSIGMA_RC=(HSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM')
-LL_AUCV_ADJU=(HSUBG_AUCV_RC=='ADJU' .OR. HSUBG_AUCV_RI=='ADJU')
+LLSIGMA_RC=(PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM')
+LL_AUCV_ADJU=(PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU')
 !
 IF(PARAMI%LPACK_MICRO) THEN
   IF(KPROMA /= KSIZE) THEN
@@ -305,7 +302,6 @@ IF(PARAMI%LPACK_MICRO) THEN
                         &LLSIGMA_RC, LL_AUCV_ADJU, GEXT_TEND, &
                         &KPROMA, IMICRO, LLMICRO, PTSTEP, &
                         &KRR, &
-                        &HSUBG_AUCV_RC, HSUBG_AUCV_RI, &
                         &ZEXN, ZRHODREF, I1, I2, &
                         &ZPRES, ZCF, ZSIGMA_RC, &
                         &ZCIT, &
@@ -381,7 +377,6 @@ ELSE ! PARAMI%LPACK_MICRO
                     &LLSIGMA_RC, LL_AUCV_ADJU, GEXT_TEND, &
                     &KSIZE, KSIZE, ODMICRO, PTSTEP, &
                     &KRR, &
-                    &HSUBG_AUCV_RC, HSUBG_AUCV_RI, &
                     &PEXN, PRHODREF, I1TOT, I2TOT, &
                     &PPABST, PCLDFR, ZSIGMA_RC, &
                     &PCIT, &

@@ -7,6 +7,7 @@
        MODULE MODI_LIMA_WARM_NUCL
 !      ##########################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE LIMA_WARM_NUCL( OACTIT, PTSTEP, KMI, TPFILE,               &
                                  PRHODREF, PEXNREF, PPABST, PT, PTM, PW_NU, &
@@ -14,6 +15,7 @@ INTERFACE
                                  PTHS, PRVS, PRCS, PCCS, PNFS, PNAS         )
 !
 USE MODD_IO,   ONLY: TFILEDATA
+IMPLICIT NONE
 !
 LOGICAL,                  INTENT(IN)    :: OACTIT     ! Switch to activate the
                                                       ! activation by radiative

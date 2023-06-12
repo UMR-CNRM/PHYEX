@@ -7,12 +7,14 @@
        MODULE MODI_LIMA_WARM_COAL
 !      ##########################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE LIMA_WARM_COAL (PTSTEP, KMI,                                &
                                  PRHODREF, ZWLBDC3, ZWLBDC, ZWLBDR3, ZWLBDR, &
                                  PRCT, PRRT, PCCT, PCRT,                     &
                                  PRCS, PRRS, PCCS, PCRS,                     &
                                  PRHODJ                              )
+IMPLICIT NONE
 !
 REAL,                     INTENT(IN)    :: PTSTEP     ! Double Time step
                                                       ! (single if cold start)

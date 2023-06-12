@@ -9,8 +9,8 @@
 !
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE COMPUTE_UPDRAFT_RAHA(D, CST, NEB, PARAMMF,          &
-                                 KSV, HFRAC_ICE, OENTR_DETR,         &
+      SUBROUTINE COMPUTE_UPDRAFT_RAHA(D, CST, NEBN, PARAMMF,         &
+                                 KSV, OENTR_DETR,                    &
                                  ONOMIXLG,KSV_LGBEG,KSV_LGEND,       &
                                  PZZ,PDZZ,                           &
                                  PSFTH,PSFRV,                        &
@@ -60,7 +60,7 @@ CONTAINS
 !          ------------
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY: CST_t
-USE MODD_NEB,             ONLY: NEB_t
+USE MODD_NEB_n,           ONLY: NEB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
 USE MODI_SHUMAN_MF, ONLY: MZM_MF
@@ -76,10 +76,9 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
-TYPE(NEB_t),            INTENT(IN)   :: NEB
+TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 INTEGER,                INTENT(IN)   :: KSV
-CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                INTENT(IN) :: OENTR_DETR! flag to recompute entrainment, detrainment and mass flux
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
@@ -123,18 +122,13 @@ REAL, DIMENSION(D%NIJT),     INTENT(OUT)   :: PDEPTH           ! Deepness of clo
 !
 !
 ! Mean environment variables at t-dt at flux point
-REAL, DIMENSION(D%NIJT,D%NKT) ::    ZTHM_F,ZRVM_F,ZRCM_F    ! Theta,rv of
-                                                                  ! updraft environnement
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZTHM_F,ZRVM_F                 ! Theta,rv of updraft environnement
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRTM_F, ZTHLM_F, ZTKEM_F      ! rt, thetal,TKE,pressure,
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZUM_F,ZVM_F,ZRHO_F            ! density,momentum
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZPRES_F,ZTHVM_F,ZTHVM         ! interpolated at the flux point
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZG_O_THVREF                   ! g*ThetaV ref
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZW_UP2                        ! w**2  of the updraft
 
-REAL, DIMENSION(D%NIJT,D%NKT,KSV) :: ZSVM_F ! scalar variables 
-                        
-
-                        
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZTH_UP                        ! updraft THETA 
 REAL, DIMENSION(D%NIJT)              :: ZT_UP                         ! updraft T
 REAL, DIMENSION(D%NIJT)              :: ZLVOCPEXN                     ! updraft L
@@ -144,35 +138,26 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZTHS_UP,ZTHSM
 
 REAL, DIMENSION(D%NIJT,D%NKT) ::  ZCOEF  ! diminution coefficient for too high clouds 
                         
-REAL, DIMENSION(D%NIJT)            ::  ZWTHVSURF  ! Surface w'thetav'
-
 REAL  :: ZRDORV       ! RD/RV
 REAL  :: ZRVORD       ! RV/RD
 
 
 REAL, DIMENSION(D%NIJT) :: ZMIX1,ZMIX2,ZMIX3
 
-REAL, DIMENSION(D%NIJT) :: ZLUP         ! Upward Mixing length from the ground
 
-REAL, DIMENSION(D%NIJT) :: ZDEPTH       ! Deepness limit for cloud
-
-INTEGER  :: JK,JIJ,JSV          ! loop counters
+INTEGER  :: JK,JIJ          ! loop counters
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
 INTEGEr :: IKT,IKB,IKE,IKL
 
 LOGICAL, DIMENSION(D%NIJT) ::  GTEST,GTESTLCL,GTESTETL
                                ! Test if the ascent continue, if LCL or ETL is reached
-LOGICAL                          ::  GLMIX 
-                               ! To choose upward or downward mixing length
 LOGICAL, DIMENSION(D%NIJT)              :: GWORK1
 LOGICAL, DIMENSION(D%NIJT,D%NKT) :: GWORK2
 
 
-INTEGER  :: ITEST
 
-REAL, DIMENSION(D%NIJT) :: ZRC_UP, ZRI_UP, ZRV_UP, ZWP2, ZRSATW, ZRSATI
+REAL, DIMENSION(D%NIJT) :: ZRC_UP, ZRI_UP, ZRV_UP, ZRSATW, ZRSATI
 
-LOGICAL, DIMENSION(D%NIJT) :: GTEST_FER
 REAL,    DIMENSION(D%NIJT) :: ZPHI,ZALIM_STAR_TOT
 REAL,    DIMENSION(D%NIJT,D%NKT) :: ZDTHETASDZ,ZALIM_STAR,ZZDZ,ZZZ
 INTEGER, DIMENSION(D%NIJT) :: IALIM
@@ -182,7 +167,7 @@ REAL, DIMENSION(D%NIJT)              ::  ZCOE,ZWCOE,ZBUCOE
 REAL, DIMENSION(D%NIJT)              ::  ZDETR_BUO, ZDETR_RT
 REAL, DIMENSION(D%NIJT)              ::  ZW_MAX               ! w**2  max of the updraft
 REAL, DIMENSION(D%NIJT)              ::  ZZTOP                ! Top of the updraft
-REAL, DIMENSION(D%NIJT)              ::  ZA,ZB,ZQTM,ZQT_UP
+REAL, DIMENSION(D%NIJT)              ::  ZQTM,ZQT_UP
 
 REAL  :: ZDEPTH_MAX1, ZDEPTH_MAX2 ! control auto-extinction process
 
@@ -316,7 +301,7 @@ PRC_UP(IIJB:IIJE,IKB)=0.
 PRI_UP(IIJB:IIJE,IKB)=0.
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
-CALL TH_R_FROM_THL_RT(CST, NEB, D%NIJT, HFRAC_ICE,PFRAC_ICE_UP(:,IKB),ZPRES_F(:,IKB), &
+CALL TH_R_FROM_THL_RT(CST, NEBN, D%NIJT, NEBN%CFRAC_ICE_SHALLOW_MF,PFRAC_ICE_UP(:,IKB),ZPRES_F(:,IKB), &
              PTHL_UP(:,IKB),PRT_UP(:,IKB),ZTH_UP(:,IKB), &
              PRV_UP(:,IKB),PRC_UP(:,IKB),PRI_UP(:,IKB),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
              PBUF=ZBUF, KB=D%NIJB, KE=D%NIJE)
@@ -512,7 +497,7 @@ DO JK=IKB,IKE-IKL,IKL
   ZRI_UP(IIJB:IIJE)=PRI_UP(IIJB:IIJE,JK) ! guess = level just below
   ZRV_UP(IIJB:IIJE)=PRV_UP(IIJB:IIJE,JK)
   !$mnh_end_expand_where(JIJ=IIJB:IIJE)
-  CALL TH_R_FROM_THL_RT(CST,NEB, D%NIJT, HFRAC_ICE,PFRAC_ICE_UP(:,JK+IKL),ZPRES_F(:,JK+IKL), &
+  CALL TH_R_FROM_THL_RT(CST,NEBN, D%NIJT, NEBN%CFRAC_ICE_SHALLOW_MF,PFRAC_ICE_UP(:,JK+IKL),ZPRES_F(:,JK+IKL), &
           PTHL_UP(:,JK+IKL),PRT_UP(:,JK+IKL),ZTH_UP(:,JK+IKL),              &
           ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:),OOCEAN=.FALSE.,&
           PBUF=ZBUF, KB=D%NIJB, KE=D%NIJE)

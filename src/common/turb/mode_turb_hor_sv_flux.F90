@@ -75,7 +75,6 @@ USE MODI_GRADIENT_U
 USE MODI_GRADIENT_V
 USE MODI_GRADIENT_W
 USE MODI_SHUMAN 
-USE MODE_COEFJ, ONLY: COEFJ
 USE MODI_LES_MEAN_SUBGRID
 !
 USE MODI_SECOND_MNH
@@ -156,9 +155,9 @@ ISV = SIZE(PSVM,4)
 !
 IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables              
-   ZCSV= XCHF/PRSNOW
+   ZCSV= TURBN%XCHF/PRSNOW
 ELSE
-   ZCSV= XCHF
+   ZCSV= TURBN%XCHF
 ENDIF
 !
 !  compute the coefficients for the uncentred gradient computation near the 

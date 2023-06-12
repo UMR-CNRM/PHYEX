@@ -18,9 +18,9 @@
       USE YOMHOOK,             ONLY: LHOOK, DR_HOOK
       USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_T
       USE MODD_CST,            ONLY: CST_T
-      USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
-      USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_T
-      USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_T
+      USE MODD_PARAM_ICE_N,    ONLY: PARAM_ICE_t
+      USE MODD_RAIN_ICE_PARAM_N, ONLY: RAIN_ICE_PARAM_T
+      USE MODD_RAIN_ICE_DESCR_N, ONLY: RAIN_ICE_DESCR_T
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -180,7 +180,6 @@ USE MODD_LES,        ONLY: TLES
 USE MODE_BUDGET_PHY, ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 USE MODI_GAMMA,      ONLY: GAMMA
 USE MODE_TIWMX,      ONLY: ESATI, ESATW, AA2, BB3, AA2W, BB3W
-USE MODE_ICECLOUD,   ONLY: ICECLOUD
 USE MODE_TIWMX_TAB,  ONLY: TIWMX_TAB
 !
 USE MODE_RAIN_ICE_OLD_NUCLEATION,          ONLY: RAIN_ICE_OLD_NUCLEATION
@@ -193,7 +192,6 @@ USE MODE_RAIN_ICE_OLD_FAST_RG,             ONLY: RAIN_ICE_OLD_FAST_RG
 USE MODE_RAIN_ICE_OLD_FAST_RH,             ONLY: RAIN_ICE_OLD_FAST_RH
 USE MODE_RAIN_ICE_OLD_FAST_RI,             ONLY: RAIN_ICE_OLD_FAST_RI
 
-use iso_fortran_env, only: output_unit
 
 IMPLICIT NONE
 !
@@ -282,14 +280,11 @@ REAL, DIMENSION(D%NIT,D%NKT,KRR), OPTIONAL, INTENT(OUT) :: PFPR    ! upper-air p
 !*       0.2   Declarations of local variables :
 !
 INTEGER :: JK            ! Vertical loop index for the rain sedimentation
-INTEGER :: JJ            ! Loop index for the interpolation
 INTEGER :: JI            ! Loop index for the interpolation
 INTEGER :: IKB           !
 INTEGER :: IKE           !
 !
 INTEGER :: IMICRO ! Case number of sedimentation, T>0 (for HEN) and r_x>0 locations
-LOGICAL, DIMENSION(D%NIT,D%NKT) :: GNEGT  ! Test where to compute the HEN process
-                                ! interpolations
 REAL, DIMENSION(D%NIT,D%NKT) :: ZW        ! work array
 REAL, DIMENSION(D%NIT)       :: ZCONC_TMP ! Weighted concentration
 REAL, DIMENSION(D%NIT,D%NKT) :: ZT        ! Temperature

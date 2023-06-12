@@ -7,9 +7,11 @@
 MODULE MODI_HYPGEO
 !####################
 !
+IMPLICIT NONE
 INTERFACE
 !
 FUNCTION HYPGEO(PA,PB,PC,PF,PX)  RESULT(PHYPGEO)
+IMPLICIT NONE
 REAL, INTENT(IN)                                  :: PA,PB,PC,PF
 REAL, INTENT(IN)                                  :: PX
 REAL                                              :: PHYPGEO
@@ -82,12 +84,9 @@ REAL                                 :: PHYPGEO
 !*       0.2 declarations of local variables
 !
 !
-INTEGER                              :: JN
-INTEGER                              :: ITMAX=100
 REAL                                 :: ZEPS,ZTEMP
-REAL                                 :: ZFPMIN=1.E-30
 REAL                                 :: ZXH
-REAL                                 :: ZX0,ZX1,ZZA,ZZB,ZZC,ZZD,Y(2)
+REAL                                 :: ZX0,ZX1
 !
 !------------------------------------------------------------------------------
 !

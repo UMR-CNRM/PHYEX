@@ -5,7 +5,7 @@
 MODULE MODE_TURB_HOR  
 IMPLICIT NONE
 CONTAINS
-             SUBROUTINE TURB_HOR(D,CST,CSTURB,TURBN,TLES,            &
+             SUBROUTINE TURB_HOR(D,CST,CSTURB,TURBN,NEBN,TLES,       &
                       KSPLT, KRR, KRRL, KRRI, PTSTEP,                &
                       KSV, KSV_LGBEG, KSV_LGEND, OFLAT,O2D,ONOMIXLG, &                      
                       OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,                 &
@@ -141,6 +141,7 @@ CONTAINS
 USE MODD_CST, ONLY : CST_t
 USE MODD_CTURB, ONLY : CSTURB_t
 USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_NEB_n, ONLY: NEB_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_PARAMETERS
@@ -165,6 +166,7 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
+TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(TLES_t),           INTENT(INOUT):: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KSPLT         ! current split index
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
@@ -277,7 +279,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !*       8.   TURBULENT CORRELATIONS : <THl THl>, <THl Rnp>, <Rnp Rnp>, Sigma_s
 !
       IF (KSPLT==1)                                                  &
-      CALL      TURB_HOR_THERMO_CORR(D,CST,TURBN,TLES,               &
+      CALL      TURB_HOR_THERMO_CORR(D,CST,TURBN,NEBN,TLES,          &
                       KRR, KRRL, KRRI,                               &
                       OOCEAN,OCOMPUTE_SRC,O2D,                       &
                       TPFILE,                                        &
@@ -367,7 +369,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
                       PRSVS                                          )
 !
       IF (KSPLT==1 .AND. TLES%LLES_CALL)                             &
-      CALL      TURB_HOR_SV_CORR(D,CST,CSTURB,TLES,                  &
+      CALL      TURB_HOR_SV_CORR(D,CST,CSTURB,TURBN,TLES,            &
                       KSV,KSV_LGBEG,KSV_LGEND,                       &
                       KRR,KRRL,KRRI,OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,   &
                       ONOMIXLG,O2D,                                  &

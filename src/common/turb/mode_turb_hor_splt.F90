@@ -5,11 +5,11 @@
 MODULE MODE_TURB_HOR_SPLT
 IMPLICIT NONE
 CONTAINS
-           SUBROUTINE TURB_HOR_SPLT(D,CST,CSTURB,TURBN,TLES,         &
+           SUBROUTINE TURB_HOR_SPLT(D,CST,CSTURB,TURBN,NEBN,TLES,    &
                       KSPLIT, KRR,KRRL,KRRI,KSV, KSV_LGBEG,KSV_LGEND,&
                       PTSTEP,HLBCX,HLBCY, OFLAT, O2D, ONOMIXLG,      &
                       OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,PRSNOW,          &
-                      TPFILE, HPROGRAM, KHALO,                       &
+                      TPFILE, KHALO,                                 &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                  &
                       PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                 &
                       PCOSSLOPE,PSINSLOPE,                           &
@@ -162,6 +162,7 @@ USE MODD_CTURB, ONLY: CSTURB_t
 USE MODD_DIMPHYEX, ONLY : DIMPHYEX_t
 USE MODD_LES, ONLY: TLES_t
 USE MODD_TURB_n, ONLY: TURB_t
+USE MODD_NEB_n, ONLY: NEB_t
 !
 USE MODD_IO, ONLY: TFILEDATA
 USE MODD_PARAMETERS
@@ -183,6 +184,7 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
+TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(TLES_t),           INTENT(INOUT):: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time splitting
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
@@ -197,7 +199,6 @@ LOGICAL,                INTENT(IN)   ::  O2D          ! Logical for 2D model ver
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
-CHARACTER(LEN=6), INTENT(IN) :: HPROGRAM ! HPROGRAM is the program currently running (modd_conf)
 INTEGER,                INTENT(IN)   ::  KHALO        ! Size of the halo for parallel distribution
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 TYPE(TFILEDATA),          INTENT(IN)    ::  TPFILE       ! Output file
@@ -314,7 +315,7 @@ NULLIFY(TZFIELDS_ll)
 !*       2.   SPLIT PROCESS LOOP
 !             ------------------
 !
-IF (KSPLIT>1 .AND. HPROGRAM=='MESONH') THEN
+IF (KSPLIT>1) THEN
 !
 !*       2.1  allocations
 !             -----------
@@ -372,7 +373,7 @@ IF (KSPLIT>1 .AND. HPROGRAM=='MESONH') THEN
   DO JSPLT=1,KSPLIT
 !
 ! compute the turbulent tendencies for the small time step
-    CALL TURB_HOR(D,CST,CSTURB,TURBN,TLES,                        &
+    CALL TURB_HOR(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
                    JSPLT, KRR, KRRL, KRRI, PTSTEP,                &
                    KSV, KSV_LGBEG, KSV_LGEND, OFLAT,O2D, ONOMIXLG,&
                    OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,                 &
@@ -515,7 +516,7 @@ IF (KSPLIT>1 .AND. HPROGRAM=='MESONH') THEN
 !
 ELSE
 !
-  CALL TURB_HOR(D,CST,CSTURB,TURBN,TLES,                       &
+  CALL TURB_HOR(D,CST,CSTURB,TURBN,NEBN,TLES,                  &
                 1, KRR, KRRL, KRRI,  PTSTEP,                   &
                 KSV, KSV_LGBEG, KSV_LGEND, OFLAT,O2D, ONOMIXLG,&                
                 OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,                 &

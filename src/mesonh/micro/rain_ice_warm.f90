@@ -29,10 +29,10 @@ SUBROUTINE RAIN_ICE_WARM(OMICRO, KMICRO, K1, K2, K3,                            
 use modd_budget,         only: lbudget_th, lbudget_rv, lbudget_rc, lbudget_rr, &
                                NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RR, &
                                tbudgets
-use MODD_CST,            only: XALPW, XBETAW, XCL, XCPV, XGAMW, XLVTT, XMD, XMV, XRV, XTT
-use MODD_PARAM_ICE,      only: CSUBG_RC_RR_ACCR, CSUBG_RR_EVAP
-use MODD_RAIN_ICE_DESCR, only: XCEXVT, XRTMIN
-use MODD_RAIN_ICE_PARAM, only: X0EVAR, X1EVAR, XCRIAUTC, XEX0EVAR, XEX1EVAR, XEXCACCR, XFCACCR, XTIMAUTC
+USE MODD_CST,            only: XALPW, XBETAW, XCL, XCPV, XGAMW, XLVTT, XMD, XMV, XRV, XTT
+USE MODD_PARAM_ICE_n,      only: CSUBG_RC_RR_ACCR, CSUBG_RR_EVAP
+USE MODD_RAIN_ICE_DESCR_n, only: XCEXVT, XRTMIN
+USE MODD_RAIN_ICE_PARAM_n, only: X0EVAR, X1EVAR, XCRIAUTC, XEX0EVAR, XEX1EVAR, XEXCACCR, XFCACCR, XTIMAUTC
 
 use mode_budget,         only: Budget_store_add
 use MODE_MSG

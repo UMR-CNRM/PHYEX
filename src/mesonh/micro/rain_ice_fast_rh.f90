@@ -30,9 +30,9 @@ SUBROUTINE RAIN_ICE_FAST_RH(OMICRO, PRHODREF, PRVT, PRCT, PRIT, PRST, PRGT, PRHT
 use modd_budget,         only: lbudget_th, lbudget_rc, lbudget_rr, lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, &
                                NBUDGET_TH, NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, &
                                tbudgets
-use MODD_CST,            only: XCI, XCL, XCPV, XESTT, XLMTT, XLVTT, XMD, XMV, XRV, XTT
-use MODD_RAIN_ICE_DESCR, only: XBG, XBS, XCEXVT, XCXG, XCXH, XCXS, XDH, XLBEXH, XLBH, XRTMIN
-use MODD_RAIN_ICE_PARAM, only: NWETLBDAG, NWETLBDAH, NWETLBDAS, X0DEPH, X1DEPH, &
+USE MODD_CST,            only: XCI, XCL, XCPV, XESTT, XLMTT, XLVTT, XMD, XMV, XRV, XTT
+USE MODD_RAIN_ICE_DESCR_n, only: XBG, XBS, XCEXVT, XCXG, XCXH, XCXS, XDH, XLBEXH, XLBH, XRTMIN
+USE MODD_RAIN_ICE_PARAM_n, only: NWETLBDAG, NWETLBDAH, NWETLBDAS, X0DEPH, X1DEPH, &
                                XEX0DEPH, XEX1DEPH, XFGWETH, XFSWETH, XFWETH, XKER_GWETH, XKER_SWETH, &
                                XLBGWETH1, XLBGWETH2, XLBGWETH3, XLBSWETH1, XLBSWETH2, XLBSWETH3,     &
                                XWETINTP1G, XWETINTP1H, XWETINTP1S, XWETINTP2G, XWETINTP2H, XWETINTP2S
@@ -186,13 +186,8 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
       DO JJ = 1, IGWET
         JL = I1W(JJ)
         ZZW1(JL,3) = MIN( PRSS(JL),XFSWETH*ZVEC3(JJ)                       & ! RSWETH
-#if defined(REPRO48) 
-                      *( ZVECLBDAS(JJ)**(XCXS-XBS) )*( ZVECLBDAH(JJ)**XCXH )  &
-                         *( PRHODREF(JL)**(-XCEXVT-1.) )               &
-#else
                       *PRST(JL)*( ZVECLBDAH(JJ)**XCXH )  &
                          *( PRHODREF(JL)**(-XCEXVT) )               &
-#endif
                          *( XLBSWETH1/( ZVECLBDAH(JJ)**2              ) + &
                             XLBSWETH2/( ZVECLBDAH(JJ)   * ZVECLBDAS(JJ)   ) + &
                             XLBSWETH3/(               ZVECLBDAS(JJ)**2) ) )

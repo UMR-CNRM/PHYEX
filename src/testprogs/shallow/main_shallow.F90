@@ -3,20 +3,13 @@ PROGRAM MAIN_SHALLOW
 USE XRD_GETOPTIONS
 USE GETDATA_SHALLOW_MOD
 USE COMPUTE_DIFF
-USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODD_CST,        ONLY: CST
-USE MODD_NEB,        ONLY: NEB
-USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALLN, PARAM_MFSHALL_GOTO_MODEL
-USE MODD_CTURB
-USE MODD_TURB_n,     ONLY: TURBN
 USE MODI_SHALLOW_MF
-USE MODI_INI_CST
-USE MODI_INI_NEB
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+USE MODD_PHYEX,      ONLY: PHYEX_t
 USE STACK_MOD
 USE OMP_LIB
 USE YOMHOOK, ONLY : LHOOK, DR_HOOK
 USE PARKIND1, ONLY : JPRB, JPIM
-
 
 IMPLICIT NONE
 
@@ -110,19 +103,13 @@ INTEGER :: NPROMA, NGPBLKS, NFLEVG
 INTEGER :: IBL, JLON, JLEV
 
 TYPE(DIMPHYEX_t)         :: D, D0
-CHARACTER (LEN=4)        :: HMF_CLOUD, HMF_UPDRAFT
-CHARACTER (LEN=1)        :: HFRAC_ICE
-LOGICAL                  :: OMIXUV, ONOMIXLG, OSTATNW
-REAL                     :: ZIMPL
-INTEGER                  :: KSV_LGBEG, KSV_LGEND
-REAL                     :: PTSTEP 
+TYPE(PHYEX_t)            :: PHYEX
 LOGICAL                  :: LLCHECK
 LOGICAL                  :: LLCHECKDIFF
 LOGICAL                  :: LLDIFF
 INTEGER                  :: IBLOCK1, IBLOCK2
 INTEGER                  :: ISTSZ, JBLK1, JBLK2
 INTEGER                  :: NTID, ITID
-
 
 REAL, ALLOCATABLE :: PSTACK(:,:)
 TYPE (STACK) :: YLSTACK
@@ -194,19 +181,7 @@ IF (LLVERBOSE) PRINT *, " KLEV = ", KLEV, " KRR = ", KRR
 
 PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
 
-KSV_LGBEG = 0
-KSV_LGEND = 0
-HMF_CLOUD='DIRE'
-HMF_UPDRAFT='EDKF'
-HFRAC_ICE='S'
-OMIXUV=.TRUE.
-ONOMIXLG=.FALSE.
-ZIMPL=1.
-OSTATNW=.FALSE.
-!
-PTSTEP = 25.0000000000000
-
-CALL INIT_PHYEX ()
+CALL INIT_PHYEX(KRR, KRRL, KRRI, KSV, PHYEX)
 
 D0%NIT  = NPROMA
 D0%NIB  = 1
@@ -245,7 +220,7 @@ DO ITIME = 1, NTIME
   TSD = OMP_GET_WTIME ()
 
 !!!              !directives pas a jour !$acc data &
-!!!              !directives pas a jour !$acc      & copyin  (D0, CST, ICEP, NEB, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND, OSIGMAS, OCND2, HSUBG_MF_PDF, PTSTEP, LMFCONV, &
+!!!              !directives pas a jour !$acc      & copyin  (D0, CST, ICEP, NEBN, KRR, HCONDENS, HLAMBDA3, HBUNAME, OSIGMAS, OCND2, PTSTEP, LMFCONV, &
 !!!              !directives pas a jour !$acc      &          ZSIGQSAT, PTHM, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, ZRS, ZICE_CLD_WGT) &
 !!!              !directives pas a jour !$acc      & copy    (PRS, PTHS), &
 !!!              !directives pas a jour !$acc      & copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &
@@ -301,10 +276,10 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%U = 0
 #endif
 
-  CALL SHALLOW_MF(D, CST, NEB, PARAM_MFSHALLN, TURBN, CSTURB,                    &
-     &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                             &
-     &HFRAC_ICE=HFRAC_ICE,ONOMIXLG=ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND,      &
-     &PIMPL_MF=ZIMPL, PTSTEP=PTSTEP,                                                      &
+  CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB,                    &
+     &KRR=PHYEX%MISC%KRR, KRRL=PHYEX%MISC%KRRL, KRRI=PHYEX%MISC%KRRI, KSV=PHYEX%MISC%KSV,                                             &
+     &ONOMIXLG=PHYEX%MISC%ONOMIXLG,KSV_LGBEG=PHYEX%MISC%KSV_LGBEG,KSV_LGEND=PHYEX%MISC%KSV_LGEND,      &
+     &PTSTEP=PHYEX%MISC%PTSTEP, &
      &PDZZ=PDZZF(:,:,:,IBL),PZZ=PZZ(:,:,:,IBL),                                                                 &
      &PRHODJ=PRHODJ(:,:,:,IBL),PRHODREF=PRHODREF(:,:,:,IBL),                                                    &
      &PPABSM=PPABSM(:,:,:,IBL),PEXNM=PEXNM(:,:,:,IBL),                                                          &
@@ -320,7 +295,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
      &PRC_UP=PRC_UP(:,:,:,IBL),PRI_UP=PRI_UP(:,:,:,IBL),            &
      &PU_UP=PU_UP(:,:,:,IBL), PV_UP=PV_UP(:,:,:,IBL), PTHV_UP=PTHV_UP(:,:,:,IBL), PW_UP=PW_UP(:,:,:,IBL),                        &
      &PFRAC_UP=PFRAC_UP(:,:,:,IBL),PEMF=PEMF(:,:,:,IBL),PDETR=ZDETR(:,:,:,IBL),PENTR=ZENTR(:,:,:,IBL),                           &
-     &KKLCL=IKLCL(:,:,IBL),KKETL=IKETL(:,:,IBL),KKCTL=IKCTL(:,:,IBL),PDX=0.,PDY=0.,KBUDGETS=0                                  )
+     &KKLCL=IKLCL(:,:,IBL),KKETL=IKETL(:,:,IBL),KKCTL=IKCTL(:,:,IBL),PDX=PHYEX%MISC%PDX,PDY=PHYEX%MISC%PDY,KBUDGETS=PHYEX%MISC%NBUDGET )
 
 #ifdef _OPENACC
     ENDDO
@@ -402,110 +377,87 @@ STOP
 
 CONTAINS
 
-SUBROUTINE INIT_PHYEX()
-USE MODD_TURB_N, ONLY: TURB_GOTO_MODEL
+SUBROUTINE INIT_PHYEX(KRR, KRRL, KRRI, KSV, PHYEX)
+
+USE MODD_BUDGET, ONLY: TBUCONF_ASSOCIATE, NBUDGET_RI, TBUCONF, LBU_ENABLE, LBUDGET_U, LBUDGET_V, LBUDGET_W, LBUDGET_TH, &
+                       LBUDGET_TKE, LBUDGET_RV, LBUDGET_RC, LBUDGET_RR, LBUDGET_RI, LBUDGET_RS, LBUDGET_RG, LBUDGET_RH, LBUDGET_SV
+USE MODD_PHYEX, ONLY: PHYEX_t
+USE MODI_INI_PHYEX, ONLY: INI_PHYEX
+
 IMPLICIT NONE
-!
-CALL INI_CST
-CALL INI_NEB
-CALL TURB_GOTO_MODEL(1,1)
-CALL CTURB_ASSOCIATE()
-!CALL TBUCONF_ASSOCIATE
-CALL PARAM_MFSHALL_GOTO_MODEL(1,1)
-!LBU_ENABLE=.FALSE.                                                                                                       
-!LBUDGET_U=.FALSE.
-!LBUDGET_V=.FALSE.
-!LBUDGET_W=.FALSE.
-!LBUDGET_TH=.FALSE.
-!LBUDGET_TKE=.FALSE.
-!LBUDGET_RV=.FALSE.
-!LBUDGET_RC=.FALSE.
-!LBUDGET_RR=.FALSE.
-!LBUDGET_RI=.FALSE.
-!LBUDGET_RS=.FALSE.
-!LBUDGET_RG=.FALSE.
-!LBUDGET_RH=.FALSE.
-!LBUDGET_SV=.FALSE.
 
-PARAM_MFSHALLN%XALP_PERT   = 0.3
-PARAM_MFSHALLN%XABUO       = 1.
-PARAM_MFSHALLN%XBENTR      = 1.
-PARAM_MFSHALLN%XBDETR      = 0.
-PARAM_MFSHALLN%XCMF        = 0.065
-PARAM_MFSHALLN%XENTR_MF    = 0.035
-PARAM_MFSHALLN%XCRAD_MF    = 50.
-PARAM_MFSHALLN%XENTR_DRY   = 0.55
-PARAM_MFSHALLN%XDETR_DRY   = 10.
-PARAM_MFSHALLN%XDETR_LUP   = 1.
-PARAM_MFSHALLN%XKCF_MF     = 2.75
-PARAM_MFSHALLN%XKRC_MF     = 1.
-PARAM_MFSHALLN%XTAUSIGMF   = 600.
-PARAM_MFSHALLN%XPRES_UV    = 0.5
-PARAM_MFSHALLN%XFRAC_UP_MAX= 0.33
-PARAM_MFSHALLN%XALPHA_MF = 2.
-PARAM_MFSHALLN%XSIGMA_MF = 20.
-PARAM_MFSHALLN%XA1    =  2.
-PARAM_MFSHALLN%XB     =  0.002
-PARAM_MFSHALLN%XC     =  0.012
-PARAM_MFSHALLN%XBETA1 =  0.9
-PARAM_MFSHALLN%XR     =  2.
-PARAM_MFSHALLN%XLAMBDA_MF  = 0.
-PARAM_MFSHALLN%LGZ = .FALSE.
-PARAM_MFSHALLN%XGZ=1.
-PARAM_MFSHALLN%CMF_UPDRAFT=HMF_UPDRAFT
-PARAM_MFSHALLN%CMF_CLOUD=HMF_CLOUD
-PARAM_MFSHALLN%LMIXUV=OMIXUV
-TURBN%LHARAT=.FALSE.
-TURBN%CTURBDIM = '1DIM'
-TURBN%XIMPL=1.
-TURBN%CTURBLEN='BL89'
-TURBN%LSTATNW=.FALSE.
-TURBN%LTURB_DIAG=.FALSE.
-TURBN%LTURB_FLX=.FALSE.
-TURBN%LSUBG_COND=.TRUE.
-TURBN%LRMC01=.FALSE.
-TURBN%CTOM='NONE'
-TURBN%LLEONARD=.FALSE.
+! -----------------------------------------------------------------------
+!     DUMMY VARIABLES
+INTEGER,          INTENT(IN)  :: KRR, KRRL, KRRI, KSV
+TYPE(PHYEX_t),    INTENT(OUT) :: PHYEX
 
-XCED  = 0.85
-XCEP  = 2.11 
-XA0   = 0.6
-XA2   = 1.
-XA3   = 0.
-XCTD  = 1.2
-IF (TURBN%LSTATNW) THEN
-    XCTP  = 4.0
-  ELSE
-    XCTP  = 4.65
-ENDIF
-XA5   = 1./3.
-XCET  = 0.40
-XALPSBL = 4.63
-XRM17 = 0.5  ! Rodier et al 2017
-XCMFS= 2./3./XCEP*(1.-XA0)   !Constant for the momentum flux due to shear (RS)
-XCSHF= 2./3./XCTP            !Constant for the sensible heat flux(RS)
-XCHF= XCSHF                  !Constant for the humidity flux(RS)
-XCTV= 2./3./XCTP/XCTD        !Constant for the temperature variance(RS)
-XCHV=  XCTV                  !Constant for the humidity variance(RS)
-XCHT1= XCTV/2.      !Constants for the temperature-humidity correlation(RS)
-XCHT2= XCTV/2.
-XCPR1= XCTV         !Constants for the turbulent Prandtl and Schmidt numbers
-XCPR2= XCHT1
-XCPR3= XCPR2        ! used only for the Schmidt number for scalar variables
-XCPR4= XCPR2
-XCPR5= XCPR2
-XTKEMIN=1.E-6
-!XLINI=10.   ! BL mixing length
-XLINI=0.1   ! BL mixing length
-XLINF=1.E-10! to prevent division by zero
-XPHI_LIM = 3.
-XCDP  =  1.46
-XCDD  =  1.83
-XCDT  =  0.42
-XSBL_O_BL     = 0.05 ! SBL height / BL height ratio
-XFTOP_O_FSURF = 0.05 ! Fraction of surface (heat or momentum) flux used to define top of BL
+!-----------------------------------------------------------------------
+!    LOCAL VARIABLES
+INTEGER :: IULOUT, JRR
+REAL :: ZDZMIN
+CHARACTER(LEN=6) :: CPROGRAM
+CHARACTER(LEN=4) :: CMICRO, CSCONV, CTURB
+REAL             :: PTSTEP
+! -----------------------------------------------------------------------
 
-!
+IULOUT=20
+CPROGRAM='AROME'
+ZDZMIN=999.
+CMICRO='NONE'
+CSCONV='EDKF'
+CTURB='TKEL'
+PTSTEP = 25.0000000000000
+
+!Default values
+CALL INI_PHYEX(CPROGRAM, 0, .TRUE., IULOUT, 0, 1, &
+              &PTSTEP, ZDZMIN, &
+              &CMICRO, CSCONV, CTURB, &
+              &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0, LDINIT=.FALSE., &
+              &PHYEX_OUT=PHYEX)
+
+!Control parameters
+PHYEX%MISC%PTSTEP       = PTSTEP
+PHYEX%MISC%KSV_LGBEG = 0
+PHYEX%MISC%KSV_LGEND = 0
+PHYEX%MISC%ONOMIXLG=.FALSE.
+PHYEX%MISC%KRR          = KRR
+PHYEX%MISC%KRRL         = KRRL
+PHYEX%MISC%KRRI         = KRRI
+PHYEX%MISC%KSV          = KSV
+
+!Emulate the namelist reading
+PHYEX%NEBN%LSUBG_COND=.TRUE.
+PHYEX%NEBN%CFRAC_ICE_SHALLOW_MF='S'
+
+!Param initialisation
+CALL INI_PHYEX(CPROGRAM, 0, .TRUE., IULOUT, 0, 1, &
+              &PTSTEP, ZDZMIN, &
+              &CMICRO, CSCONV, CTURB, &
+              &LDDEFAULTVAL=.FALSE., LDREADNAM=.FALSE., LDCHECK=.TRUE., KPRINT=2, LDINIT=.TRUE., &
+              &PHYEX_IN=PHYEX, PHYEX_OUT=PHYEX)
+
+!Budgets
+CALL TBUCONF_ASSOCIATE
+PHYEX%MISC%NBUDGET=0
+DO JRR=1, PHYEX%MISC%NBUDGET
+  PHYEX%MISC%YLBUDGET(JRR)%NBUDGET=JRR
+ENDDO
+LBU_ENABLE=.FALSE.                                                                                                       
+LBUDGET_U=.FALSE.
+LBUDGET_V=.FALSE.
+LBUDGET_W=.FALSE.
+LBUDGET_TH=.FALSE.
+LBUDGET_TKE=.FALSE.
+LBUDGET_RV=.FALSE.
+LBUDGET_RC=.FALSE.
+LBUDGET_RR=.FALSE.
+LBUDGET_RI=.FALSE.
+LBUDGET_RS=.FALSE.
+LBUDGET_RG=.FALSE.
+LBUDGET_RH=.FALSE.
+LBUDGET_SV=.FALSE.
+PHYEX%MISC%TBUCONF=TBUCONF
+
 END SUBROUTINE INIT_PHYEX
 
 END PROGRAM

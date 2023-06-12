@@ -281,8 +281,8 @@ END WHERE
 !
 CONTAINS
   FUNCTION GET_XKER_RACCSS(I1,I2) RESULT(RET)
-    INTEGER, DIMENSION(:) :: I1
-    INTEGER, DIMENSION(:) :: I2
+    INTEGER, DIMENSION(:), INTENT(IN) :: I1
+    INTEGER, DIMENSION(:), INTENT(IN) :: I2
     REAL, DIMENSION(SIZE(I1)) :: RET
     !
     INTEGER I
@@ -295,8 +295,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_N_RACCSS(I1,I2) RESULT(RET)
-    INTEGER, DIMENSION(:) :: I1
-    INTEGER, DIMENSION(:) :: I2
+    INTEGER, DIMENSION(:), INTENT(IN) :: I1
+    INTEGER, DIMENSION(:), INTENT(IN) :: I2
     REAL, DIMENSION(SIZE(I1)) :: RET
     !
     INTEGER I
@@ -309,8 +309,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_RACCS(I1,I2) RESULT(RET)
-    INTEGER, DIMENSION(:) :: I1
-    INTEGER, DIMENSION(:) :: I2
+    INTEGER, DIMENSION(:), INTENT(IN) :: I1
+    INTEGER, DIMENSION(:), INTENT(IN) :: I2
     REAL, DIMENSION(SIZE(I1)) :: RET
     !
     INTEGER I
@@ -323,8 +323,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_N_RACCS(I1,I2) RESULT(RET)
-    INTEGER, DIMENSION(:) :: I1
-    INTEGER, DIMENSION(:) :: I2
+    INTEGER, DIMENSION(:), INTENT(IN) :: I1
+    INTEGER, DIMENSION(:), INTENT(IN) :: I2
     REAL, DIMENSION(SIZE(I1)) :: RET
     !
     INTEGER I
@@ -337,8 +337,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_SACCRG(I1,I2) RESULT(RET)
-    INTEGER, DIMENSION(:) :: I1
-    INTEGER, DIMENSION(:) :: I2
+    INTEGER, DIMENSION(:), INTENT(IN) :: I1
+    INTEGER, DIMENSION(:), INTENT(IN) :: I2
     REAL, DIMENSION(SIZE(I1)) :: RET
     !
     INTEGER I
@@ -351,8 +351,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_N_SACCRG(I1,I2) RESULT(RET)
-    INTEGER, DIMENSION(:) :: I1
-    INTEGER, DIMENSION(:) :: I2
+    INTEGER, DIMENSION(:), INTENT(IN) :: I1
+    INTEGER, DIMENSION(:), INTENT(IN) :: I2
     REAL, DIMENSION(SIZE(I1)) :: RET
     !
     INTEGER I

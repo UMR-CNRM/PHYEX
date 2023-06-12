@@ -170,7 +170,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDYY    ! metric coefficient
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZY    ! metric coefficient dzy
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: PGY_V_M ! result mass point
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PGY_V_M ! result mass point
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4
 INTEGER :: IIB,IJB,IIE,IJE,IKT

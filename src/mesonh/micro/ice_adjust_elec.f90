@@ -7,6 +7,7 @@
       MODULE MODI_ICE_ADJUST_ELEC
 !     ###########################
 !
+IMPLICIT NONE
 INTERFACE
 !
       SUBROUTINE ICE_ADJUST_ELEC (KRR, KMI, HRAD, HTURBDIM, HSCONV, HMF_CLOUD,    &
@@ -18,6 +19,7 @@ INTERFACE
                                   PQPIT, PQPIS, PQCT, PQCS,                       &
                                   PQRT, PQRS, PQIT, PQIS, PQST, PQSS, PQGT, PQGS, &
                                   PQNIT, PQNIS, PRHT, PRHS, PQHT, PQHS            )
+IMPLICIT NONE
 !
 INTEGER,                  INTENT(IN)    :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)    :: KMI      ! Model index 
@@ -28,7 +30,7 @@ CHARACTER(LEN=4),         INTENT(IN)    :: HMF_CLOUD! Type of statistical cloud
 CHARACTER(len=4),         INTENT(IN)    :: HRAD     ! Radiation scheme name
 LOGICAL,                  INTENT(IN)    :: OSUBG_COND ! Switch for Subgrid 
                                                     ! Condensation
-LOGICAL                                 :: OSIGMAS  ! Switch for Sigma_s: 
+LOGICAL,                  INTENT(IN)    :: OSIGMAS  ! Switch for Sigma_s: 
                                                     ! use values computed in CONDENSATION
                                                     ! or that from turbulence scheme
 REAL,                     INTENT(IN)   :: PTSTEP    ! Double Time step
@@ -172,9 +174,9 @@ USE MODD_CST
 USE MODD_ELEC_DESCR, ONLY : XRTMIN_ELEC, XQTMIN, XFC, XFI, XECHARGE
 USE MODD_NSV, ONLY : NSV_ELECBEG, NSV_ELECEND
 USE MODD_PARAMETERS
-USE MODD_RAIN_ICE_DESCR, ONLY : XRTMIN, XBI
-USE MODD_RAIN_ICE_PARAM,   ONLY: RAIN_ICE_PARAM
-USE MODD_NEB,              ONLY: NEB
+USE MODD_RAIN_ICE_DESCR_n, ONLY : XRTMIN, XBI
+USE MODD_RAIN_ICE_PARAM_n,   ONLY: RAIN_ICE_PARAMN
+USE MODD_NEB_n,            ONLY: NEBN
 USE MODD_TURB_n,           ONLY: TURBN
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 
@@ -199,7 +201,7 @@ CHARACTER(LEN=4),       INTENT(IN)    :: HMF_CLOUD! Type of statistical cloud
 CHARACTER(len=4),       INTENT(IN)    :: HRAD     ! Radiation scheme name
 LOGICAL,                INTENT(IN)    :: OSUBG_COND ! Switch for Subgrid 
                                                     ! Condensation
-LOGICAL                               :: OSIGMAS  ! Switch for Sigma_s: 
+LOGICAL,                INTENT(IN)    :: OSIGMAS  ! Switch for Sigma_s: 
                                                   ! use values computed in CONDENSATION
                                                   ! or that from turbulence scheme
 REAL,                   INTENT(IN)    :: PTSTEP   ! Double Time step
@@ -385,11 +387,11 @@ DO JITER = 1, ITERMAX
     ZSIGQSAT2D(:,:)=PSIGQSAT
     ZW4 = 1. ! PRODREF is not used if HL variables are not present
 !
-    CALL CONDENSATION(D, CST, RAIN_ICE_PARAM, NEB, TURBN, &
+    CALL CONDENSATION(D, CST, RAIN_ICE_PARAMN, NEBN, TURBN, &
                      &'T', 'CB02', 'CB',                                                  &
                      &PPABST, PZZ, ZW4, ZT, ZW3_IN, ZW3, ZW1_IN, ZW1, ZW2_IN, ZW2,    &
                      &PRRS*PTSTEP, PRSS*PTSTEP, PRGS*PTSTEP, PSIGS, .FALSE., PMFCONV, PCLDFR, PSRCS, .FALSE.,                 &
-                     &OSIGMAS, .FALSE., .FALSE.,                                                        &
+                     &OSIGMAS, .FALSE.,                                                                 &
                      &ZDUM, ZDUM, ZDUM, ZDUM, ZDUM, ZSIGQSAT2D, &
                      &ZLV, ZLS, ZCPH)
 !

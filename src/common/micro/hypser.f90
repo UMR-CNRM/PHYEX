@@ -7,9 +7,11 @@
 MODULE MODI_HYPSER
 !####################
 !
+IMPLICIT NONE
 INTERFACE
 !
 SUBROUTINE HYPSER(PA,PB,PC,PX,PHYP)  
+IMPLICIT NONE
 REAL, INTENT(IN)                                  :: PA,PB,PC
 REAL, INTENT(IN)                                  :: PX
 REAL, INTENT(INOUT)                               :: PHYP

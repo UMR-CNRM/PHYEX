@@ -31,8 +31,8 @@ SUBROUTINE ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, PRHODREF
 !          ------------
 !
 USE MODD_CST,            ONLY: CST_t
-USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
+USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
@@ -71,7 +71,6 @@ REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRVDEPG  ! Deposition on r_g
 !*       0.2  declaration of local variables
 !
 REAL, DIMENSION(KPROMA) :: ZCRIAUTI
-REAL                    :: ZTIMAUTIC
 INTEGER                 :: JL
 REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------

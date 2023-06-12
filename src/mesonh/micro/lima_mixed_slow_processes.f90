@@ -7,6 +7,7 @@
        MODULE MODI_LIMA_MIXED_SLOW_PROCESSES
 !      #####################################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE LIMA_MIXED_SLOW_PROCESSES(ZRHODREF, ZZT, ZSSI, PTSTEP,        &
                                            ZLSFACT, ZLVFACT, ZAI, ZCJ,         &
@@ -17,6 +18,7 @@ INTERFACE
                                            PRHODJ1D, GMICRO, PRHODJ, KMI,      &
                                            PTHS, PRVS, PRCS, PRIS, PRGS, PRHS, &
                                            PCCS, PCIS                    )
+IMPLICIT NONE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: ZRHODREF  ! RHO Dry REFerence
 REAL, DIMENSION(:),   INTENT(IN)    :: ZZT       ! Temperature

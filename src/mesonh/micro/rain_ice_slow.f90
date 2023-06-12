@@ -29,9 +29,9 @@ SUBROUTINE RAIN_ICE_SLOW(OMICRO, PINVTSTEP, PRHODREF,                           
 use modd_budget,         only: lbudget_th, lbudget_rv, lbudget_rc, lbudget_rr, lbudget_ri, lbudget_rs, lbudget_rg, &
                                NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, &
                                tbudgets
-use MODD_CST,            only: XALPI, XBETAI, XCI, XCPV, XGAMI, XLSTT, XMNH_HUGE_12_LOG, XP00, XRV, XTT
-use MODD_RAIN_ICE_DESCR, only: XCEXVT, XLBDAS_MAX, XLBEXG, XLBEXS, XLBG, XLBS, XRTMIN, XBS
-use MODD_RAIN_ICE_PARAM, only: X0DEPG, X0DEPS, X1DEPG, X1DEPS, XACRIAUTI, XALPHA3, XBCRIAUTI, XBETA3, XCOLEXIS, XCRIAUTI, &
+USE MODD_CST,            only: XALPI, XBETAI, XCI, XCPV, XGAMI, XLSTT, XMNH_HUGE_12_LOG, XP00, XRV, XTT
+USE MODD_RAIN_ICE_DESCR_n, only: XCEXVT, XLBDAS_MAX, XLBEXG, XLBEXS, XLBG, XLBS, XRTMIN, XBS
+USE MODD_RAIN_ICE_PARAM_n, only: X0DEPG, X0DEPS, X1DEPG, X1DEPS, XACRIAUTI, XALPHA3, XBCRIAUTI, XBETA3, XCOLEXIS, XCRIAUTI, &
                                XEX0DEPG, XEX0DEPS, XEX1DEPG, XEX1DEPS, XEXIAGGS, XFIAGGS, XHON, XSCFAC, XTEXAUTI, XTIMAUTI
 
 use mode_budget,         only: Budget_store_add
@@ -147,11 +147,7 @@ real, dimension(size(plsfact))  :: zz_diff
   END WHERE
   ZZW(:) = 0.0
   WHERE ( (PRST(:)>XRTMIN(5)) .AND. (PRSS(:)>0.0) )
-#if defined(REPRO48) 
-    ZZW(:) = ( PSSI(:)/(PRHODREF(:)*PAI(:)) ) *                               &
-#else
     ZZW(:) = ( PRST(:) * PLBDAS(:)**XBS * PSSI(:)/PAI(:) ) *          &
-#endif
              ( X0DEPS*PLBDAS(:)**XEX0DEPS + X1DEPS*PCJ(:)*PLBDAS(:)**XEX1DEPS )
     ZZW(:) =         MIN( PRVS(:),ZZW(:)      )*(0.5+SIGN(0.5,ZZW(:))) &
                    - MIN( PRSS(:),ABS(ZZW(:)) )*(0.5-SIGN(0.5,ZZW(:)))
@@ -173,13 +169,8 @@ real, dimension(size(plsfact))  :: zz_diff
   WHERE ( (PRIT(:)>XRTMIN(4)) .AND. (PRST(:)>XRTMIN(5)) .AND. (PRIS(:)>0.0) )
     ZZW(:) = MIN( PRIS(:),XFIAGGS * EXP( XCOLEXIS*(PZT(:)-XTT) ) &
                                   * PRIT(:)                      &
-#if defined(REPRO48) 
-                                  * PLBDAS(:)**XEXIAGGS          &
-                                  * PRHODREF(:)**(-XCEXVT)       )
-#else
                                   * PRST(:) * PLBDAS(:)**(XBS+XEXIAGGS)    &
                                   * PRHODREF(:)**(-XCEXVT+1)       )
-#endif
     PRSS(:)  = PRSS(:)  + ZZW(:)
     PRIS(:)  = PRIS(:)  - ZZW(:)
   END WHERE

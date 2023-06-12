@@ -7,6 +7,7 @@
        MODULE MODI_RAIN_C2R2_KHKO
 !      ######################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE RAIN_C2R2_KHKO(HCLOUD,OACTIT, OSEDC, ORAIN, KSPLITR, PTSTEP,   &
                             KMI,TPFILE,                                         &
@@ -21,6 +22,7 @@ INTERFACE
                             PINDEP, PSUPSAT, PNACT                      )
 !
 USE MODD_IO, ONLY: TFILEDATA
+IMPLICIT NONE
 !
 CHARACTER(LEN=*),         INTENT(IN)    :: HCLOUD   !  kind of cloud
 

@@ -552,7 +552,7 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)                :: PA     ! variable at mass
                                                             ! localization
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: PDZM   ! result at flux
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDZM   ! result at flux
                                                             ! side
 !
 !*       0.2   Declarations of local variables

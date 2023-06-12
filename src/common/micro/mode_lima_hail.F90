@@ -44,7 +44,7 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,              ONLY : XTT, XMD, XMV, XRD, XRV, XLVTT, XLMTT, XESTT, XCL, XCI, XCPV
+USE MODD_CST,              ONLY : XTT, XMD, XMV, XRV, XLVTT, XLMTT, XESTT, XCL, XCI, XCPV
 USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, XCEXVT
 USE MODD_PARAM_LIMA_MIXED, ONLY : NWETLBDAG, XWETINTP1G, XWETINTP2G, &
                                   NWETLBDAH, X0DEPH, X1DEPH, XDH, XEX0DEPH, XEX1DEPH, &
@@ -56,7 +56,6 @@ USE MODD_PARAM_LIMA_MIXED, ONLY : NWETLBDAG, XWETINTP1G, XWETINTP2G, &
                                   XFGWETH, XLBGWETH1, XLBGWETH2, XLBGWETH3, &
                                   XFNGWETH, XLBNGWETH1, XLBNGWETH2, XLBNGWETH3
 
-USE MODD_PARAM_LIMA_COLD,  ONLY : XMNU0, XCXS, XBS
 !
 IMPLICIT NONE
 !
@@ -134,17 +133,15 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CH
 !*       0.2   Declarations of local variables :
 !
 LOGICAL, DIMENSION(SIZE(PRCT))  :: GWET
-INTEGER                         :: JJ
 !
 REAL,    DIMENSION(SIZE(PRCT))  :: Z1, Z2, Z3, Z4
-REAL,    DIMENSION(SIZE(PRCT))  :: ZZX, ZZW, ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6
-REAL,    DIMENSION(SIZE(PRCT))  :: ZZW3N, ZZW4N, ZZW6N 
+REAL,    DIMENSION(SIZE(PRCT))  :: ZZW, ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6
+REAL,    DIMENSION(SIZE(PRCT))  :: ZZW3N, ZZW4N
 REAL,    DIMENSION(SIZE(PRCT))  :: ZRWETH
 !
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC1,IVEC2        ! Vectors of indices
 REAL,    DIMENSION(SIZE(PRCT))  :: ZVEC1,ZVEC2, ZVEC3 ! Work vectors
 !
-INTEGER                         :: NHAIL
 REAL                            :: ZTHRH, ZTHRC
 !
 !-------------------------------------------------------------------------------
@@ -430,8 +427,8 @@ PA_TH(:) = PA_TH(:) + P_TH_WETH(:)                + P_TH_HMLT(:)
 !
 CONTAINS
   FUNCTION GET_XKER_SWETH(GRAUPEL,SNOW) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: SNOW
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: SNOW
     REAL, DIMENSION(SIZE(SNOW)) :: RET
     !
     INTEGER I
@@ -444,8 +441,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_N_SWETH(GRAUPEL,SNOW) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: SNOW
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: SNOW
     REAL, DIMENSION(SIZE(SNOW)) :: RET
     !
     INTEGER I
@@ -458,8 +455,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_GWETH(GRAUPEL,SNOW) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: SNOW
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: SNOW
     REAL, DIMENSION(SIZE(SNOW)) :: RET
     !
     INTEGER I
@@ -472,8 +469,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_N_GWETH(GRAUPEL,SNOW) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: SNOW
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: SNOW
     REAL, DIMENSION(SIZE(SNOW)) :: RET
     !
     INTEGER I

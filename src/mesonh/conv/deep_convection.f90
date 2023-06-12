@@ -52,7 +52,7 @@ REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PWT      ! grid scale vertical
                                                    ! velocity (m/s)
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PPABST   ! grid scale pressure at t
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PZZ      ! height of model layer (m) 
-REAL, DIMENSION(KLON),      INTENT(IN) :: PDXDY    ! horizontal grid area (m-a2)
+REAL, DIMENSION(KLON),      INTENT(IN) :: PDXDY    ! horizontal grid area (m**2)
 REAL, DIMENSION(KLON),      INTENT(IN) :: PTIMEC   ! value of convective adjustment
                                                    ! time if OSETTADJ=.TRUE.
 !   
@@ -261,7 +261,7 @@ REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PWT      ! grid scale vertical
                                                    ! velocity (m/s)
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PPABST   ! grid scale pressure at t
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PZZ      ! height of model layer (m) 
-REAL, DIMENSION(KLON),      INTENT(IN) :: PDXDY    ! horizontal grid area (m-a2)
+REAL, DIMENSION(KLON),      INTENT(IN) :: PDXDY    ! horizontal grid area (**2)
 REAL, DIMENSION(KLON),      INTENT(IN) :: PTIMEC   ! value of convective adjustment
                                                    ! time if OSETTADJ=.TRUE.
 !   
@@ -667,7 +667,7 @@ ALLOCATE( ILCL(ICONV) )
 ALLOCATE( ICTL(ICONV) )
 ALLOCATE( IETL(ICONV) )
 !
-	 ! grid scale variables
+     ! grid scale variables
 !
 ALLOCATE( ZZ(ICONV,IKS) )     ;   ZZ  = 0.0
 ALLOCATE( ZPRES(ICONV,IKS) )  ;   ZPRES = 0.0

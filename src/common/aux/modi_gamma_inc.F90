@@ -6,9 +6,11 @@
 MODULE MODI_GAMMA_INC
 !####################
 !
+IMPLICIT NONE
 INTERFACE
 !
 FUNCTION GAMMA_INC(PA,PX)  RESULT(PGAMMA_INC)
+IMPLICIT NONE
 REAL, INTENT(IN)                                  :: PA
 REAL, INTENT(IN)                                  :: PX
 REAL                                              :: PGAMMA_INC

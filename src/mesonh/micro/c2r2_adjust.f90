@@ -7,6 +7,7 @@
       MODULE MODI_C2R2_ADJUST
 !     #######################
 !
+IMPLICIT NONE
 INTERFACE
 !
       SUBROUTINE C2R2_ADJUST(KRR, TPFILE, HRAD,                           &
@@ -16,6 +17,7 @@ INTERFACE
                              PCCS, PSRCS, PCLDFR, PRRS )
 !
 USE MODD_IO, ONLY: TFILEDATA
+IMPLICIT NONE
 !
 INTEGER,                          INTENT(IN)    :: KRR        ! Number of moist variables
 TYPE(TFILEDATA),                  INTENT(IN)    :: TPFILE     ! Output file

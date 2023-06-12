@@ -189,9 +189,9 @@ REAL, DIMENSION(:,:,:), INTENT(IN)                :: PY       ! variable at mass
                                                               ! localization
 REAL, DIMENSION(SIZE(PY,1),SIZE(PY,2),SIZE(PY,3)) :: PGX_M_U  ! result at flux
                                                               ! side
-INTEGER  IIU,IKU,JI,JK
+INTEGER  IIU,IKU,JI
 !
-INTEGER :: JJK,IJU
+INTEGER :: IJU
 INTEGER :: JIJK,JIJKOR,JIJKEND
 INTEGER :: JI_1JK, JIJK_1, JI_1JK_1, JIJKP1, JI_1JKP1
 !
@@ -322,7 +322,7 @@ END FUNCTION GX_M_U
 !*       0.    DECLARATIONS
 !
 !
-USE MODD_CONF
+USE MODD_CONF, ONLY: LFLAT
 USE MODI_SHUMAN, ONLY: DYF, MZF, DZM, MYF, MYM
 !
 IMPLICIT NONE
@@ -428,7 +428,7 @@ END FUNCTION GY_M_M
 !              ------------
 !
 USE MODI_SHUMAN
-USE MODD_CONF
+USE MODD_CONF, ONLY: LFLAT
 USE MODD_PARAMETERS
 !
 IMPLICIT NONE

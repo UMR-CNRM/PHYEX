@@ -3,9 +3,9 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,D,TLES,                 &
+      SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,NEBN,D,TLES,            &
               & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,KHALO,       &
-              & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,HPROGRAM,    &
+              & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,             &
               & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
               & O2D,ONOMIXLG,OFLAT,OCOUPLES,OBLOWSNOW,OIBM,OFLYER,    &
               & OCOMPUTE_SRC, PRSNOW,                                 &
@@ -244,7 +244,7 @@ USE MODE_SHUMAN_PHY, ONLY: MZF_PHY,MXF_PHY,MYF_PHY
 USE YOMHOOK ,   ONLY: LHOOK, DR_HOOK
 !
 USE MODD_BUDGET,     ONLY:  NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC,  &
-                            NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1, &
+                             NBUDGET_RI, NBUDGET_SV1, &
                             TBUDGETDATA, TBUDGETCONF_t
 USE MODD_CST,        ONLY: CST_t
 USE MODD_CTURB,      ONLY: CSTURB_t
@@ -254,6 +254,7 @@ USE MODD_IO,         ONLY: TFILEDATA
 USE MODD_LES,        ONLY: TLES_t
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB, XUNDEF
 USE MODD_TURB_n,     ONLY: TURB_t
+USE MODD_NEB_n,      ONLY: NEB_t
 !
 USE MODE_BL89,                ONLY: BL89
 USE MODE_BUDGET_PHY,              ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
@@ -290,6 +291,7 @@ TYPE(CST_t),            INTENT(IN)   :: CST           ! modd_cst general constan
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB        ! modd_csturb turb constant structure
 TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF        ! budget structure
 TYPE(TURB_t),           INTENT(IN)   :: TURBN         ! modn_turbn (turb namelist) structure
+TYPE(NEB_t),            INTENT(IN)   :: NEBN          ! modd_nebn structure
 TYPE(TLES_t),           INTENT(INOUT)   :: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
 INTEGER,                INTENT(IN)   :: KMI           ! model index number
@@ -301,6 +303,7 @@ INTEGER,                INTENT(IN)   :: KSV_LIMA_NR,KSV_LIMA_NS,KSV_LIMA_NG,KSV_
 CHARACTER(LEN=4),DIMENSION(2),INTENT(IN):: HLBCX, HLBCY  ! X- and Y-direc LBC
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time-splitting
 INTEGER,                INTENT(IN)   :: KMODEL_CL     ! model number for cloud mixing length
+INTEGER,                INTENT(IN)   ::  KHALO        ! Size of the halo for parallel distribution
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 LOGICAL,                INTENT(IN)   ::  ODEEPOC      ! activates sfc forcing for ideal ocean deep conv
@@ -312,8 +315,6 @@ LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate onlin
 LOGICAL,                INTENT(IN)   ::  OIBM         ! switch to modity mixing length near building with IBM
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
-INTEGER,                INTENT(IN)   ::  KHALO        ! Size of the halo for parallel distribution
-
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
@@ -333,6 +334,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PRHODJ    ! dry density * Gri
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
+REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTS),   INTENT(IN) ::  PHGRAD      ! horizontal gradients
 !
 REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of theta and Rv
@@ -340,7 +342,6 @@ REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of (u,v) parallel to the orography
 REAL, DIMENSION(D%NIJT,KSV), INTENT(IN)      ::  PSFSV
 ! normal surface fluxes of Scalar var.
-REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTS),   INTENT(IN) ::  PHGRAD      ! horizontal gradients
 !
 !    prognostic variables at t- deltat
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PPABST      ! Pressure at time t
@@ -403,7 +404,6 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  :: PTDISS     ! Dissipation TKE term
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 !
-CHARACTER(LEN=6), INTENT(IN) :: HPROGRAM ! CPROGRAM is the program currently running (modd_conf)
 LOGICAL, INTENT(IN) :: ONOMIXLG          ! to use turbulence for lagrangian variables (modd_conf)
 LOGICAL, INTENT(IN) :: O2D               ! Logical for 2D model version (modd_conf)
 !
@@ -487,7 +487,6 @@ REAL                :: ZCOEF_AMPL_CEI_NUL! Ordonnate at the origin of the
                                          ! amplification straight line (for routine CLOUD_MODIF_LM)
 !
 INTEGER             :: IIJB,IIJE,IKB,IKE      ! index value for the
-INTEGER             :: IINFO_ll     ! return code of parallel routine
 ! Beginning and the End of the physical domain for the mass points
 INTEGER             :: IKT,IKA,IKU  ! array size in k direction
 INTEGER             :: IKL
@@ -600,7 +599,7 @@ IF (KRRL >=1) THEN
 !*       2.5 Lv/Cph/Exn
 !
   IF ( KRRI >= 1 ) THEN
-    IF (TURBN%LSTATNW) THEN
+    IF (NEBN%LSTATNW) THEN
     !wc call new functions depending on statnew
        CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
                                  ZLVOCPEXNM,ZAMOIST,ZATHETA)
@@ -630,7 +629,7 @@ IF (KRRL >=1) THEN
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ELSE
     !wc call new stat functions or not
-    IF (TURBN%LSTATNW) THEN
+    IF (NEBN%LSTATNW) THEN
       CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
                                  ZLOCPEXNM,ZAMOIST,ZATHETA)
     ELSE
@@ -727,7 +726,7 @@ SELECT CASE (TURBN%CTURBLEN)
 
   CASE ('BL89')
     ZSHEAR(:,:)=0.
-    CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
+    CALL BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN)
 !
 !*      3.2 RM17 mixing length
 !           ------------------
@@ -745,7 +744,7 @@ SELECT CASE (TURBN%CTURBLEN)
     ZSHEAR(IIJB:IIJE,1:IKT) = SQRT(ZDUDZ(IIJB:IIJE,1:IKT)*ZDUDZ(IIJB:IIJE,1:IKT) &
                                     + ZDVDZ(IIJB:IIJE,1:IKT)*ZDVDZ(IIJB:IIJE,1:IKT))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
+    CALL BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN)
 !
 !*      3.3 Grey-zone combined RM17 & Deardorff mixing lengths
 !           --------------------------------------------------
@@ -763,7 +762,7 @@ SELECT CASE (TURBN%CTURBLEN)
     ZSHEAR(IIJB:IIJE,1:IKT) = SQRT(ZDUDZ(IIJB:IIJE,1:IKT)*ZDUDZ(IIJB:IIJE,1:IKT) &
                                     + ZDVDZ(IIJB:IIJE,1:IKT)*ZDVDZ(IIJB:IIJE,1:IKT))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN,HPROGRAM)
+    CALL BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN)
 
     CALL DELT(ZLMW,ODZ=.FALSE.)
     ! The minimum mixing length is chosen between Horizontal grid mesh (not taking into account the vertical grid mesh) and RM17.
@@ -850,7 +849,7 @@ IF (TURBN%LRMC01) THEN
     ZSFRV(:)=0.
     CALL LMO(D,CST,ZUSTAR,ZTHLM(:,IKB),ZRVM,PSFTH,ZSFRV,ZLMO)
   END IF
-  CALL RMC01(D,CST,CSTURB,TURBN%CTURBLEN,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,ZLMO,ZLM,ZLEPS)
+  CALL RMC01(D,CST,CSTURB,TURBN,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,ZLMO,ZLM,ZLEPS)
 END IF
 !
 !RMC01 is only applied on RM17 in HM21
@@ -883,7 +882,7 @@ ENDIF
 !
 !
 !
-IF (HPROGRAM/='AROME ') THEN
+IF (TURBN%LROTATE_WIND) THEN
   CALL ROTATE_WIND(D,PUT,PVT,PWT,                       &
                      PDIRCOSXW, PDIRCOSYW, PDIRCOSZW,   &
                      PCOSSLOPE,PSINSLOPE,               &
@@ -1003,11 +1002,11 @@ IF( BUCONF%LBUDGET_SV ) THEN
   END DO
 END IF
 
-CALL TURB_VER(D,CST,CSTURB,TURBN,TLES,                   &
+CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
           KRR,KRRL,KRRI,KGRADIENTS,                      &
           OOCEAN, ODEEPOC, OCOMPUTE_SRC,                 &
           KSV,KSV_LGBEG,KSV_LGEND,                       &
-          ZEXPL,HPROGRAM, O2D, ONOMIXLG, OFLAT,          &
+          ZEXPL, O2D, ONOMIXLG, OFLAT,                   &
           OCOUPLES,OBLOWSNOW,OFLYER, PRSNOW,             &
           PTSTEP,TPFILE,                                 &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,        &
@@ -1108,11 +1107,11 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
 !à supprimer une fois le précédent ifdef REPRO48 validé
 #ifdef REPRO48
 #else
-    CALL TURB_HOR_SPLT(D,CST,CSTURB, TURBN, TLES,              &
+    CALL TURB_HOR_SPLT(D,CST,CSTURB, TURBN, NEBN, TLES,        &
           KSPLIT, KRR, KRRL, KRRI, KSV,KSV_LGBEG,KSV_LGEND,    & 
           PTSTEP,HLBCX,HLBCY, OFLAT,O2D, ONOMIXLG,             & 
           OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,PRSNOW,                &
-          TPFILE, HPROGRAM, KHALO,                             &
+          TPFILE, KHALO,                                       &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                        &
           PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                       &
           PCOSSLOPE,PSINSLOPE,                                 &
@@ -1210,8 +1209,8 @@ ELSE
   ZRTKEMS(:,:)=0.
 END IF
 !
-CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,TURBN,TLES,HPROGRAM,           &
-                   & KMI,PTKET,ZLM,ZLEPS,PDP,ZTRH,                      &
+CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,TURBN,TLES,                    &
+                   & PTKET,ZLM,ZLEPS,PDP,ZTRH,                          &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,               &
                    & PTSTEP,ZEXPL,                                      &
                    & TPFILE,ODIAG_IN_RUN,OOCEAN,                        &
@@ -1731,7 +1730,7 @@ IF ( TURBN%CTURBDIM /= '1DIM' ) THEN
 END IF
 ! 1D turbulence scheme
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
-PLM(IIJB:IIJE,IKTB:IKTE) = PZZ(IIJB:IIJE,IKL+IKTB:IKTE+IKL) - PZZ(IIJB:IIJE,IKTB:IKTE)
+PLM(IIJB:IIJE,IKTB:IKTE) = PZZ(IIJB:IIJE,IKTB+IKL:IKTE+IKL) - PZZ(IIJB:IIJE,IKTB:IKTE)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=IKTB:IKTE)
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 PLM(IIJB:IIJE,IKU) = PLM(IIJB:IIJE,IKE)
@@ -1958,7 +1957,7 @@ ELSE
 !           ------------------
   CASE ('BL89','RM17','HM21')
     ZSHEAR(:,:)=0.
-    CALL BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD,OOCEAN,HPROGRAM)
+    CALL BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD,OOCEAN)
 !
 !*         3.2 Delta mixing length
 !           -------------------

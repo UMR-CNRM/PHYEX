@@ -1,0 +1,3 @@
+# Ignore the content of doxygen directory but not the directory itself
+doxygen/**
+!doxygen/.gitkeep

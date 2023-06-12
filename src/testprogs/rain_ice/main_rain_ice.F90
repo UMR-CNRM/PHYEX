@@ -3,20 +3,13 @@ PROGRAM MAIN_RAIN_ICE
 USE XRD_GETOPTIONS
 USE GETDATA_RAIN_ICE_MOD
 USE COMPUTE_DIFF
-USE MODD_CONF
-USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODD_CST,        ONLY: CST_t, CST
-USE MODD_RAIN_ICE_DESCR, ONLY : RAIN_ICE_DESCR
-USE MODD_RAIN_ICE_PARAM, ONLY : RAIN_ICE_PARAM
-USE MODD_PARAM_ICE,      ONLY: PARAM_ICE
 USE MODI_RAIN_ICE
-USE MODI_INI_CST
-USE MODD_BUDGET!, ONLY: TBUCONF_ASSOCIATE, TBUDGETDATA, NBUDGET_RH, TBUCONF
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+USE MODD_PHYEX,      ONLY: PHYEX_t
 USE STACK_MOD
 USE OMP_LIB
 USE YOMHOOK, ONLY : LHOOK, DR_HOOK
 USE PARKIND1, ONLY : JPRB, JPIM
-
 
 IMPLICIT NONE
 
@@ -57,16 +50,7 @@ INTEGER :: NPROMA, NGPBLKS, NFLEVG
 INTEGER :: IBL, JLON, JLEV
 
 TYPE(DIMPHYEX_t)         :: D, D0
-CHARACTER (LEN=4)   :: CSUBG_AUCV_RC
-CHARACTER (LEN=80)  :: CSUBG_AUCV_RI
-CHARACTER (LEN=4)   :: CSEDIM  
-CHARACTER (LEN=4)   :: CMICRO  
-REAL                :: PTSTEP 
-LOGICAL :: OWARM 
-LOGICAL :: OCND2 
-LOGICAL :: LCRIAUTI
-REAL :: ZCRIAUTI, ZT0CRIAUTI, ZCRIAUTC
-TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH) :: YLBUDGET
+TYPE(PHYEX_t)            :: PHYEX
 LOGICAL                  :: LLCHECK
 LOGICAL                  :: LLCHECKDIFF
 LOGICAL                  :: LLDIFF
@@ -75,8 +59,6 @@ INTEGER                  :: ISTSZ, JBLK1, JBLK2
 INTEGER                  :: NTID, ITID
 INTEGER                  :: JRR
 
-
-INTEGER :: IPROMA
 REAL, ALLOCATABLE :: PSTACK(:,:)
 TYPE (STACK) :: YLSTACK
 
@@ -129,29 +111,7 @@ IF (LLVERBOSE) PRINT *, " KLEV = ", KLEV, " KRR = ", KRR
 
 PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
 
-CMICRO='ICE3'
-
-PTSTEP = 25.0000000000000
-KRR = 6
-OCND2 = .FALSE.
-CSEDIM = 'STAT'
-CSUBG_AUCV_RC = 'PDF'
-CSUBG_AUCV_RI = 'NONE'
-OWARM = .TRUE.
-
-LCRIAUTI=.TRUE.
-ZCRIAUTI=0.2E-3
-ZT0CRIAUTI=-5.
-ZCRIAUTC=0.1E-2
-
-CALL INIT_PHYEX (20, OWARM, CMICRO, CSEDIM, &
-            & LCRIAUTI, ZCRIAUTI, ZT0CRIAUTI, ZCRIAUTC)
-
-PARAM_ICE%LSEDIC = .TRUE.
-
-DO JRR=1, NBUDGET_RH
-  YLBUDGET(JRR)%NBUDGET=JRR
-ENDDO
+CALL INIT_PHYEX(KRR, PHYEX)
 
 D0%NIT  = NPROMA
 D0%NIB  = 1
@@ -186,7 +146,7 @@ DO ITIME = 1, NTIME
   TSD = OMP_GET_WTIME ()
 
 !directives pas a jour !$acc data &
-!directives pas a jour !$acc      & copyin  (D0, CST, ICEP, NEB, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSUBG_COND, OSIGMAS, OCND2, HSUBG_MF_PDF, PTSTEP, LMFCONV, &
+!directives pas a jour !$acc      & copyin  (D0, PHYEX, OSIGMAS, &
 !directives pas a jour !$acc      &          ZSIGQSAT, PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, ZRS, ZICE_CLD_WGT) &
 !directives pas a jour !$acc      & copy    (PRS, PTHS), &
 !directives pas a jour !$acc      & copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &
@@ -195,7 +155,7 @@ DO ITIME = 1, NTIME
   TSC = OMP_GET_WTIME ()
 
 #ifdef USE_OPENMP
-!$OMP PARALLEL PRIVATE (D, ITID, JBLK1, JBLK2, IPROMA, ISIZE)
+!$OMP PARALLEL PRIVATE (D, ITID, JBLK1, JBLK2, ISIZE)
 #endif
 
 #ifdef _OPENACC
@@ -240,14 +200,10 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%U = 0
 #endif
 
-IPROMA=COUNT(LLMICRO(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE,IBL))
-CALL RAIN_ICE (D, CST, PARAM_ICE, RAIN_ICE_PARAM, &
-             & RAIN_ICE_DESCR, TBUCONF, &
-             & IPROMA, &
-             & OCND2=OCND2, &
-             & HSUBG_AUCV_RC=CSUBG_AUCV_RC, HSUBG_AUCV_RI=CSUBG_AUCV_RI,&
-             & PTSTEP=2*PTSTEP, &
-             & KRR=KRR, PEXN=PEXNREF(:,:,:,IBL),            &
+CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, &
+             & PHYEX%RAIN_ICE_DESCRN, PHYEX%MISC%TBUCONF, &
+             & PTSTEP=PHYEX%MISC%PTSTEP, &
+             & KRR=PHYEX%MISC%KRR, PEXN=PEXNREF(:,:,:,IBL),            &
              & PDZZ=PDZZ(:,:,:,IBL), PRHODJ=PRHODJ(:,:,:,IBL), PRHODREF=PRHODREF(:,:,:,IBL),PEXNREF=PEXNREF2(:,:,:,IBL),&
              & PPABST=PPABSM(:,:,:,IBL), PCIT=PCIT(:,:,:,IBL), PCLDFR=PCLDFR(:,:,:,IBL),  &
              & PHLC_HRC=PHLC_HRC(:,:,:,IBL), PHLC_HCF=PHLC_HCF(:,:,:,IBL), &
@@ -262,7 +218,7 @@ CALL RAIN_ICE (D, CST, PARAM_ICE, RAIN_ICE_PARAM, &
              & PINPRC=ZINPRC(:,:,IBL),PINPRR=PINPRR(:,:,IBL),PEVAP3D=PEVAP(:,:,:,IBL),&
              & PINPRS=PINPRS(:,:,IBL), PINPRG=PINPRG(:,:,IBL), PINDEP=ZINDEP(:,:,IBL), PRAINFR=ZRAINFR(:,:,:,IBL), &
              & PSIGS=PSIGS(:,:,:,IBL), &
-             & TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
+             & TBUDGETS=PHYEX%MISC%YLBUDGET, KBUDGETS=PHYEX%MISC%NBUDGET, &
              & PSEA=PSEA, PTOWN=PTOWN, PFPR=PFPR(:,:,:,:,IBL))
 
 #ifdef _OPENACC
@@ -298,16 +254,15 @@ WRITE (*,'(A,F8.4,A)') '          i.e. ',1000.*(TE-TS)/(NPROMA*NGPBLKS)/NTIME,' 
 PRINT *, " ZTD = ", ZTD, ZTD / REAL (NPROMA*NGPBLKS*NTIME)
 PRINT *, " ZTC = ", ZTC, ZTC / REAL (NPROMA*NGPBLKS*NTIME)
 
-
 IF (LLCHECK .OR. LLSTAT .OR. LLCHECKDIFF) THEN
   DO IBL = IBLOCK1, IBLOCK2
     PRINT *, " IBL = ", IBL
     DO JRR=1, KRR
       WRITE (CLTEXT, '("PRS JRR=",I3.3)') JRR
-      CALL DIFF3 (CLTEXT,      PRS_OUT       (:,:,:,JRR,IBL), PRS      (:,:,:,JRR,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+      CALL DIFF3 (CLTEXT,   PRS_OUT       (:,:,:,JRR,IBL), PRS      (:,:,:,JRR,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
       IF(JRR>=2) THEN
         WRITE (CLTEXT, '("PFPR JRR=",I3.3)') JRR
-        CALL DIFF3 (CLTEXT,     PFPR_OUT      (:,:,:,JRR,IBL), PFPR     (:,:,:,JRR,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+        CALL DIFF3 (CLTEXT, PFPR_OUT      (:,:,:,JRR,IBL), PFPR     (:,:,:,JRR,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
       ENDIF
     ENDDO
     CALL DIFF3 ("PCIT",     PCIT_OUT      (:,:,:,IBL), PCIT     (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
@@ -333,36 +288,88 @@ STOP
 
 CONTAINS
 
-SUBROUTINE INIT_PHYEX(KULOUT,LDWARM,CMICRO,CCSEDIM,LDCRIAUTI,&
-                   PCRIAUTI,PT0CRIAUTI,PCRIAUTC)
+SUBROUTINE INIT_PHYEX(KRR, PHYEX)
 
-USE MODD_RAIN_ICE_DESCR
-USE MODD_RAIN_ICE_PARAM
-USE MODD_PARAM_ICE
-USE MODD_TURB_N, ONLY: TURB_GOTO_MODEL, CSUBG_MF_PDF
-
-USE MODI_INI_RAIN_ICE
+USE MODD_BUDGET, ONLY: TBUCONF_ASSOCIATE, NBUDGET_RH, TBUCONF, LBU_ENABLE, LBUDGET_U, LBUDGET_V, LBUDGET_W, LBUDGET_TH, &
+                       LBUDGET_TKE, LBUDGET_RV, LBUDGET_RC, LBUDGET_RR, LBUDGET_RI, LBUDGET_RS, LBUDGET_RG, LBUDGET_RH, LBUDGET_SV
+USE MODD_PHYEX, ONLY: PHYEX_t
+USE MODI_INI_PHYEX, ONLY: INI_PHYEX
 
 IMPLICIT NONE
+
 ! -----------------------------------------------------------------------
-!     DUMMY INTEGER SCALARS
-INTEGER, INTENT (IN) :: KULOUT
-LOGICAL, INTENT (IN) :: LDWARM
-CHARACTER(4), INTENT (IN) :: CMICRO 
-CHARACTER(4), INTENT (IN) :: CCSEDIM
-LOGICAL, INTENT (IN) :: LDCRIAUTI
-REAL, INTENT (IN) :: PCRIAUTI
-REAL, INTENT (IN) :: PT0CRIAUTI
-REAL, INTENT (IN) :: PCRIAUTC
+!     DUMMY VARIABLES
+INTEGER,          INTENT(IN)  :: KRR
+TYPE(PHYEX_t),    INTENT(OUT) :: PHYEX
+
 !-----------------------------------------------------------------------
 !    LOCAL VARIABLES
-REAL :: ZCRI0, ZTCRI0    
+INTEGER :: IULOUT, JRR
+REAL :: ZDZMIN
+CHARACTER(LEN=6) :: CPROGRAM
+CHARACTER(LEN=4) :: CMICRO, CSCONV, CTURB
+REAL             :: PTSTEP
 ! -----------------------------------------------------------------------
 
-CALL INI_CST
-CALL TURB_GOTO_MODEL(1,1)
-CALL PARAM_ICE_ASSOCIATE
+IULOUT=20
+CPROGRAM='AROME'
+ZDZMIN=20.
+CMICRO='ICE3'
+CSCONV='NONE'
+CTURB='TKEL'
+PTSTEP = 25.0000000000000
+
+!Default values
+CALL INI_PHYEX(CPROGRAM, 0, .TRUE., IULOUT, 0, 1, &
+              &PTSTEP, ZDZMIN, &
+              &CMICRO, CSCONV, CTURB, &
+              &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0, LDINIT=.FALSE., &
+              &PHYEX_OUT=PHYEX)
+
+!Control parameters
+PHYEX%MISC%PTSTEP       = 2*PTSTEP
+PHYEX%MISC%KRR          = KRR
+
+!Emulate the namelist reading
+PHYEX%PARAM_ICEN%LCRIAUTI=.TRUE.
+PHYEX%PARAM_ICEN%XCRIAUTI_NAM=0.2E-3
+PHYEX%PARAM_ICEN%XT0CRIAUTI_NAM=-5.
+PHYEX%PARAM_ICEN%XCRIAUTC_NAM=0.1E-2
+PHYEX%PARAM_ICEN%LOCND2=.FALSE.
+PHYEX%PARAM_ICEN%CSEDIM='STAT'
+PHYEX%PARAM_ICEN%LWARM=.TRUE.
+PHYEX%PARAM_ICEN%LSEDIC=.TRUE.
+PHYEX%PARAM_ICEN%CSNOWRIMING='M90 '
+PHYEX%PARAM_ICEN%XFRACM90=0.1 ! Fraction used for the Murakami 1990 formulation
+PHYEX%PARAM_ICEN%LCONVHG=.TRUE. ! TRUE to allow the conversion from hail to graupel
+PHYEX%PARAM_ICEN%LCRFLIMIT=.TRUE. !True to limit rain contact freezing to possible heat exchange
+PHYEX%PARAM_ICEN%LFEEDBACKT=.TRUE. ! When .TRUE. feed back on temperature is taken into account
+PHYEX%PARAM_ICEN%LEVLIMIT=.TRUE.   ! When .TRUE. water vapour pressure is limited by saturation
+PHYEX%PARAM_ICEN%LNULLWETG=.TRUE.  ! When .TRUE. graupel wet growth is activated with null rate (to allow water shedding)
+PHYEX%PARAM_ICEN%LWETGPOST=.TRUE.  ! When .TRUE. graupel wet growth is activated with positive temperature (to allow water shedding)
+PHYEX%PARAM_ICEN%LNULLWETH=.TRUE.  ! Same as LNULLWETG but for hail
+PHYEX%PARAM_ICEN%LWETHPOST=.TRUE.  ! Same as LWETGPOST but for hail
+PHYEX%PARAM_ICEN%LSEDIM_AFTER=.FALSE. ! Sedimentation done after microphysics
+PHYEX%PARAM_ICEN%XSPLIT_MAXCFL=0.8
+PHYEX%PARAM_ICEN%LDEPOSC=.FALSE.  ! water deposition on vegetation
+PHYEX%PARAM_ICEN%XVDEPOSC=0.02    ! deposition speed (2 cm.s-1)
+PHYEX%PARAM_ICEN%CSUBG_RC_RR_ACCR='NONE'
+PHYEX%PARAM_ICEN%CSUBG_RR_EVAP='NONE'
+PHYEX%PARAM_ICEN%CSUBG_PR_PDF='SIGM'
+
+!Param initialisation
+CALL INI_PHYEX(CPROGRAM, 0, .TRUE., IULOUT, 0, 1, &
+              &PTSTEP, ZDZMIN, &
+              &CMICRO, CSCONV, CTURB, &
+              &LDDEFAULTVAL=.FALSE., LDREADNAM=.FALSE., LDCHECK=.TRUE., KPRINT=2, LDINIT=.TRUE., &
+              &PHYEX_IN=PHYEX, PHYEX_OUT=PHYEX)
+
+!Budgets
 CALL TBUCONF_ASSOCIATE
+PHYEX%MISC%NBUDGET=NBUDGET_RH
+DO JRR=1, PHYEX%MISC%NBUDGET
+  PHYEX%MISC%YLBUDGET(JRR)%NBUDGET=JRR
+ENDDO
 LBU_ENABLE=.FALSE.                                                                                                       
 LBUDGET_U=.FALSE.
 LBUDGET_V=.FALSE.
@@ -377,58 +384,7 @@ LBUDGET_RS=.FALSE.
 LBUDGET_RG=.FALSE.
 LBUDGET_RH=.FALSE.
 LBUDGET_SV=.FALSE.
-
-!        1. Set implicit default values for MODD_PARAM_ICE
-LWARM=LDWARM
-CPRISTINE_ICE='PLAT'
-CSEDIM=CCSEDIM
-CSUBG_AUCV_RC='PDF'
-CSUBG_AUCV_RI='NONE'
-CSUBG_RC_RR_ACCR='NONE'
-CSUBG_RR_EVAP='NONE'
-CSUBG_PR_PDF='SIGM'
-CSUBG_MF_PDF='TRIANGLE'
-! Snow riming                                                                                                                       
-CSNOWRIMING='M90 '
-XFRACM90=0.1 ! Fraction used for the Murakami 1990 formulation
-!                                                                                                                                   
-LFEEDBACKT=.TRUE. ! When .TRUE. feed back on temperature is taken into account
-LEVLIMIT=.TRUE.   ! When .TRUE. water vapour pressure is limited by saturation
-LNULLWETG=.TRUE.  ! When .TRUE. graupel wet growth is activated with null rate (to allow water shedding)
-LWETGPOST=.TRUE.  ! When .TRUE. graupel wet growth is activated with positive temperature (to allow water shedding)
-LNULLWETH=.TRUE.  ! Same as LNULLWETG but for hail
-LWETHPOST=.TRUE.  ! Same as LWETGPOST but for hail
-LCONVHG=.TRUE. ! TRUE to allow the conversion from hail to graupel
-LCRFLIMIT=.TRUE. !True to limit rain contact freezing to possible heat exchange
-CFRAC_ICE_ADJUST='S' ! Ice/liquid partition rule to use in adjustment
-CFRAC_ICE_SHALLOW_MF='S' ! Ice/liquid partition rule to use in shallow_mf
-LSEDIM_AFTER=.FALSE. ! Sedimentation done after microphysics
-XSPLIT_MAXCFL=0.8
-LDEPOSC=.FALSE.  ! water deposition on vegetation
-XVDEPOSC=0.02    ! deposition speed (2 cm.s-1)
-LPACK_INTERP=.TRUE.
-LPACK_MICRO=.TRUE.
-!
-!        2. Set implicit default values for MODD_RAIN_ICE_DESCR 
-!                     et MODD_RAIN_ICE_PARAM
-!
-CALL INI_RAIN_ICE (KULOUT, CMICRO)
-!update values from namparar
-IF (LDCRIAUTI) THEN
-
-  XCRIAUTI=PCRIAUTI
-  XCRIAUTC=PCRIAUTC
-  XT0CRIAUTI=PT0CRIAUTI
-  !second point to determine 10**(aT+b) law
-  ZTCRI0=-40.0
-  ZCRI0=1.25E-6
-  
-  XBCRIAUTI=-( LOG10(XCRIAUTI) - LOG10(ZCRI0)*PT0CRIAUTI/ZTCRI0 )&
-                   *ZTCRI0/(XT0CRIAUTI-ZTCRI0)
-  XACRIAUTI=(LOG10(ZCRI0)-XBCRIAUTI)/ZTCRI0
-  
-ENDIF
-! -----------------------------------------------------------------------
+PHYEX%MISC%TBUCONF=TBUCONF
 
 END SUBROUTINE INIT_PHYEX
 

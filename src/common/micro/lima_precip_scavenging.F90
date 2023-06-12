@@ -5,7 +5,7 @@
 !-----------------------------------------------------------------
 !########################################################################
    SUBROUTINE LIMA_PRECIP_SCAVENGING (D, CST, BUCONF, TBUDGETS, KBUDGETS, &
-                                      HCLOUD, KLUOUT, KTCOUNT, PTSTEP,    &
+                                      HCLOUD, CDCONF, KLUOUT, KTCOUNT, PTSTEP,    &
                                       PRRT, PRHODREF, PRHODJ, PZZ,        &
                                       PPABST, PTHT, PSVT, PRSVS, PINPAP )
 !########################################################################x
@@ -86,7 +86,7 @@ USE MODD_PARAM_LIMA,      ONLY: NMOD_IFN, NSPECIE, XFRAC,                       
                                 XMDIAM_IFN, XSIGMA_IFN, XRHO_IFN,                 &
                                 NMOD_CCN, XR_MEAN_CCN, XLOGSIG_CCN, XRHO_CCN,     &
                                 XALPHAR, XNUR,                                    &
-                                LAERO_MASS, NDIAMR, NDIAMP, XT0SCAV, XTREF, XNDO, &
+                                LAERO_MASS, NDIAMR, NDIAMP, XT0SCAV, XTREF,       &
                                 XMUA0, XT_SUTH_A, XMFPA0, XVISCW, XRHO00,         &
                                 XRTMIN, XCTMIN
 USE MODD_PARAM_LIMA_WARM, ONLY: XCR, XDR
@@ -108,6 +108,7 @@ TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER,                  INTENT(IN)    :: KBUDGETS
 !
 CHARACTER(LEN=4),       INTENT(IN)    :: HCLOUD   ! cloud paramerization
+CHARACTER(LEN=5),       INTENT(IN)    :: CDCONF   ! CCONF from MODD_CONF
 INTEGER,                INTENT(IN)    :: KLUOUT   ! unit for output listing
 INTEGER,                INTENT(IN)    :: KTCOUNT  ! iteration count
 REAL,                   INTENT(IN)    :: PTSTEP   ! Double timestep except 
@@ -135,7 +136,7 @@ INTEGER :: IKB           !
 INTEGER :: IKE           !
 !
 INTEGER :: JSV               ! CCN or IFN mode 
-INTEGER :: J1, J2, IJ, JMOD
+INTEGER :: J1, J2, JMOD
 !
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
                                  :: GRAIN,  &! Test where rain is present
@@ -148,7 +149,6 @@ REAL                     :: ZDENS_RATIO, & !density ratio
                             ZNUM,        & !PNU-1.               
                             ZSHAPE_FACTOR
 !
-REAL,    DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3))  :: ZW     ! work array
 REAL,    DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3))  :: PCRT   ! cloud droplet conc.
 !
 REAL, DIMENSION(:), ALLOCATABLE :: ZLAMBDAR,      &  !slope parameter of the 
@@ -189,7 +189,6 @@ REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZCOL_EF,     &! Collision efficiency
                                        ZSIZE_RATIO, &! Size Ratio
                                        ZST           ! Stokes number
 !
-REAL, DIMENSION(SIZE(PRRT,1),SIZE(PRRT,2),SIZE(PRRT,3)) :: ZRRS          
 !
 REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
                                     :: PMEAN_SCAV_COEF, & !Mean Scavenging 
@@ -500,7 +499,7 @@ DO JSV = 1, NMOD_CCN+NMOD_IFN
          IF (LAERO_MASS)THEN
             PTOT_MASS_RATE(:,:,:) = PTOT_MASS_RATE(:,:,:) +                         &
                  UNPACK(ZTOT_MASS_RATE(:), MASK=GSCAV(:,:,:), FIELD=0.0)
-            CALL SCAV_MASS_SEDIMENTATION( HCLOUD, PTSTEP, KTCOUNT, PZZ, PRHODJ,     &
+            CALL SCAV_MASS_SEDIMENTATION( HCLOUD, CDCONF, PTSTEP, KTCOUNT, PZZ, PRHODJ,     &
                                       PRHODREF, PRRT, PSVT(:,:,:,ISV_LIMA_SCAVMASS),&
                                       PRSVS(:,:,:,ISV_LIMA_SCAVMASS), PINPAP        )
             PRSVS(:,:,:,ISV_LIMA_SCAVMASS)=PRSVS(:,:,:,ISV_LIMA_SCAVMASS) +         &
@@ -576,7 +575,7 @@ CONTAINS
 !
 !------------------------------------------------------------------------------
 !     ##########################################################################
-      SUBROUTINE SCAV_MASS_SEDIMENTATION( HCLOUD, PTSTEP, KTCOUNT, PZZ, PRHODJ,&
+      SUBROUTINE SCAV_MASS_SEDIMENTATION( HCLOUD, CDCONF, PTSTEP, KTCOUNT, PZZ, PRHODJ,&
                                 PRHODREF, PRAIN, PSVT_MASS, PRSVS_MASS, PINPAP )
 !     ##########################################################################
 !
@@ -599,8 +598,6 @@ CONTAINS
 !!      Module MODD_PARAMETERS
 !!          JPHEXT       : Horizontal external points number
 !!          JPVEXT       : Vertical external points number
-!!      Module MODD_CONF :
-!!          CCONF configuration of the model for the first time step
 !!
 !!    REFERENCE
 !!    ---------
@@ -620,7 +617,6 @@ CONTAINS
 !              ------------
 !
 USE MODD_PARAMETERS
-USE MODD_CONF
 !
 USE MODD_PARAM_LIMA,      ONLY : XCEXVT, XRTMIN
 USE MODD_PARAM_LIMA_WARM, ONLY : XBR, XDR, XFSEDRR
@@ -631,6 +627,7 @@ IMPLICIT NONE
 !
 !
 CHARACTER (LEN=4),        INTENT(IN)    :: HCLOUD  ! Cloud parameterization
+CHARACTER(LEN=5),         INTENT(IN)    :: CDCONF
 REAL,                     INTENT(IN)    :: PTSTEP  ! Time step  
 INTEGER,                  INTENT(IN)    :: KTCOUNT ! Current time step number
 !
@@ -645,7 +642,7 @@ REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPAP
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER :: JJ, JK, JN, JRR                ! Loop indexes 
+INTEGER :: JK, JN                         ! Loop indexes 
 INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE   ! Physical domain
 !
 REAL    :: ZTSPLITR      ! Small time step for rain sedimentation
@@ -712,7 +709,7 @@ END IF firstcall
 !
 !*       2.2    time splitting loop initialization        
 !
-IF( (KTCOUNT==1) .AND. (CCONF=='START') ) THEN
+IF( (KTCOUNT==1) .AND. (CDCONF=='START') ) THEN
   ZTSPLITR = PTSTEP / REAL(ISPLITR)       ! Small time step
   ZTSTEP   = PTSTEP                        ! Large time step
   ELSE

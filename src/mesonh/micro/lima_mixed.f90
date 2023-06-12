@@ -7,6 +7,7 @@
        MODULE MODI_LIMA_MIXED
 !      ######################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE LIMA_MIXED (OSEDI, OHHONI, KSPLITG, PTSTEP, KMI, &
                              KRR, PZZ, PRHODJ,                    &
@@ -15,6 +16,7 @@ INTERFACE
                              PTHS, PRS, PSVS)
 !
 USE MODD_NSV,   only: NSV_LIMA_BEG
+IMPLICIT NONE
 !
 LOGICAL,                  INTENT(IN)    :: OSEDI   ! switch to activate the
                                                    ! cloud ice sedimentation

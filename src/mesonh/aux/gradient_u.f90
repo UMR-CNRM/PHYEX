@@ -7,10 +7,12 @@
       MODULE MODI_GRADIENT_U
 !     ######################
 !
+IMPLICIT NONE
 INTERFACE
 !
 !     
 FUNCTION GX_U_M(PA,PDXX,PDZZ,PDZX, KKA, KKU, KL)      RESULT(PGX_U_M)
+IMPLICIT NONE
 INTEGER,              INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,              INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 REAL, DIMENSION(:,:,:),  INTENT(IN)  :: PA      ! variable at the U point
@@ -24,6 +26,7 @@ END FUNCTION GX_U_M
 !
 !     
 FUNCTION GY_U_UV(PA,PDYY,PDZZ,PDZY, KKA, KKU, KL)      RESULT(PGY_U_UV)
+IMPLICIT NONE
 !
 INTEGER,              INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,              INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise
@@ -38,6 +41,7 @@ END FUNCTION GY_U_UV
 !
 !     
 FUNCTION GZ_U_UW(PA,PDZZ, KKA, KKU, KL)      RESULT(PGZ_U_UW)
+IMPLICIT NONE
 !
 INTEGER,              INTENT(IN),OPTIONAL     :: KKA, KKU ! near ground and uppest atmosphere array indexes
 INTEGER,              INTENT(IN),OPTIONAL     :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise

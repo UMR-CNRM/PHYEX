@@ -7,8 +7,10 @@
        MODULE MODI_INI_ICE_C1R3 
 !      ########################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE INI_ICE_C1R3 ( PTSTEP, PDZMIN, KSPLITG )
+IMPLICIT NONE
 !
 INTEGER,                 INTENT(OUT):: KSPLITG   ! Number of small time step
                                                  ! integration for  rain
@@ -110,7 +112,7 @@ USE MODD_REF
 !
 use mode_msg
 !
-USE MODD_RAIN_ICE_DESCR, ONLY : XFVELOS
+USE MODD_RAIN_ICE_DESCR_n, ONLY : XFVELOS
 !
 USE MODI_GAMMA
 USE MODI_GAMMA_INC
@@ -1113,9 +1115,9 @@ CONTAINS
 !
   IMPLICIT NONE
 !
-  REAL     :: PALPHA ! first shape parameter of the dimensionnal distribution
-  REAL     :: PNU    ! second shape parameter of the dimensionnal distribution
-  REAL     :: PP     ! order of the moment
+  REAL, INTENT(IN)     :: PALPHA ! first shape parameter of the dimensionnal distribution
+  REAL, INTENT(IN)     :: PNU    ! second shape parameter of the dimensionnal distribution
+  REAL, INTENT(IN)     :: PP     ! order of the moment
   REAL     :: PMOMG  ! result: moment of order ZP
 !
 !------------------------------------------------------------------------------

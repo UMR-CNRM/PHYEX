@@ -2,6 +2,7 @@
 
 #set -x
 set -e
+set -o pipefail #abort if left command on a pipe fails
 
 #This script:
 # - compiles the PHYEX package using a specific commit
@@ -10,11 +11,20 @@ set -e
 #ice_adjust: the ice adjust test case
 
 #ref is commit 855b8f8 for ice_adjust, rain_ice
-#ref is commit 4171c53 for turb
+#ref is commit ??????? for turb
 #ref is commit 7e44ab1 for shallow
+#ref is commit e070d16 for rain_ice_old
 
-#Commit 7e44ab1 can be used for shallow (ref commit for this testprogs), and for
-#turb, rain_ice and ice_adjust (as it gives the same results for these test cases).
+#Commit e070d16 can be used for rain_ice_old (ref commit for this testprogs), and for
+#turb, shallow, rain_ice and ice_adjust (as it gives the same results for these test cases).
+
+#Data generation:
+# - The last commit of the testprogs_data branch (based on 46t1) is able to produce the data
+#   for the turb, shallow, rain_ice and ice_adjust testprogs. The code is present but must be
+#   activated in the corresponding aro_* routine (as only one set of data can be produced during
+#   a single execution).
+# - The last commit of the testprogs_data2 branch (based on 48t3) is able to produce the data
+#   for the rain_ice_old testprog.
 
 specialName="ref"
 availTests="ice_adjust,rain_ice,rain_ice_old,turb,shallow"
@@ -69,7 +79,7 @@ commit=""
 reference=""
 tests=""
 suppress=0
-useexpand=1
+useexpand=""
 archfile=$defaultarchfile
 refarchfile=$defaultarchfile
 
@@ -81,7 +91,7 @@ while [ -n "$1" ]; do
     '-r') run=$(($run+1));;
     '-C') check=1;;
     '-t') tests="$2"; shift;;
-    '--noexpand') useexpand=0;;
+    '--noexpand') useexpand=$1;;
     '--repo-user') export PHYEXREPOuser=$2; shift;;
     '--repo-protocol') export PHYEXREPOprotocol=$2; shift;;
     '-a') archfile="$2"; shift;;
@@ -140,9 +150,7 @@ if [ $check -eq 1 -a -z "${reference-}" ]; then
   exit 3
 fi
 
-fromdir=''
 if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
-  fromdir=$commit
   name=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
   [ $suppress -eq 1 -a -d $TESTDIR/$name ] && rm -rf $TESTDIR/$name
 elif echo $specialName | grep -w $commit > /dev/null; then
@@ -178,36 +186,14 @@ if [ $compilation -eq 1 ]; then
   fi
   mkdir $TESTDIR/$name
   cd $TESTDIR/$name/
+  cp -r $PHYEXTOOLSDIR/../build . #We use the compilation system from the same commit as the current script
 
   MNH_EXPAND_DIR=$PHYEXTOOLSDIR/mnh_expand
-  export PATH=$MNH_EXPAND_DIR/filepp:$MNH_EXPAND_DIR/MNH_Expand_Array:$PATH
-
-  if [ $useexpand == 1 ]; then
-    expand_options="-D MNH_EXPAND -D MNH_EXPAND_LOOP"
-  else
-    expand_options=""
-  fi
-  subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s support"
-  prep_code=$PHYEXTOOLSDIR/prep_code.sh
-
-  if [ "$fromdir" == '' ]; then
-    echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
-    if [[ $commit == testprogs${separator}* ]]; then
-      $prep_code -c $commit src #This commit is ready for inclusion
-    else
-      $prep_code -c $commit $expand_options $subs -m testprogs src
-    fi
-  else
-    echo "Copy $fromdir"
-    mkdir src
-    scp -q -r $fromdir/src src/
-    $prep_code $expand_options $subs -m testprogs src
-  fi
-  cp -r $PHYEXTOOLSDIR/../build . #We use the compilation system from the same commit as the current script
+  export PATH=$PHYEXTOOLSDIR:$MNH_EXPAND_DIR/filepp:$MNH_EXPAND_DIR/MNH_Expand_Array:$PATH
 
   cd $TESTDIR/$name/build/with_fcm/
   rm -rf arch_*
-  ./make_fcm.sh --arch $archfile 2>&1 | tee Output_compilation
+  ./make_fcm.sh $useexpand --commit $commit --arch $archfile 2>&1 | tee Output_compilation
 fi
 
 if [ $run -ge 1 ]; then
@@ -263,8 +249,8 @@ if [ $check -eq 1 ]; then
     fi
     if [ $te -eq 0 ]; then
       set +e
-      mess=$(cmp <(cat $file1 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g') \
-                 <(cat $file2 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g') 246 246 2>&1)
+      mess=$(cmp <(cat $file1 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g' | grep -v 'Total time: ' | sed 's/-0.00000E+00|/ 0.00000E+00|/g' | sed 's/-0.00000E+00 / 0.00000E+00 /g' | sed 's/-0.00000E+00-/ 0.00000E+00-/g') \
+                 <(cat $file2 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g' | grep -v 'Total time: ' | sed 's/-0.00000E+00|/ 0.00000E+00|/g' | sed 's/-0.00000E+00 / 0.00000E+00 /g' | sed 's/-0.00000E+00-/ 0.00000E+00-/g') 246 246 2>&1)
       te=$?
       set -e
       #The use of "<()" bash syntax replaces the actual file name seen by cmp

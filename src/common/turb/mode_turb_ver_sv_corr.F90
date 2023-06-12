@@ -5,7 +5,7 @@
 MODULE MODE_TURB_VER_SV_CORR
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER_SV_CORR(D,CST,CSTURB,TLES,KRR,KRRL,KRRI,OOCEAN, &
+SUBROUTINE TURB_VER_SV_CORR(D,CST,CSTURB,TURBN,TLES,KRR,KRRL,KRRI,OOCEAN, &
                       PDZZ,KSV,KSV_LGBEG,KSV_LGEND,ONOMIXLG,        &
                       OBLOWSNOW,OCOMPUTE_SRC,PRSNOW,                &
                       PTHLM,PRM,PTHVREF,                            &
@@ -58,8 +58,8 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
 USE MODD_LES, ONLY: TLES_t
 !
 USE MODE_SHUMAN_PHY, ONLY:  MZF_PHY
@@ -79,6 +79,7 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),       INTENT(IN)   ::  D
 TYPE(CST_t),            INTENT(IN)   ::  CST
 TYPE(CSTURB_t),         INTENT(IN)   ::  CSTURB
+TYPE(TURB_t),           INTENT(IN)   ::  TURBN
 TYPE(TLES_t),           INTENT(INOUT)::  TLES         ! modd_les structure
 INTEGER,                INTENT(IN)   ::  KSV, KSV_LGBEG, KSV_LGEND ! number of scalar variables
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
@@ -142,9 +143,9 @@ CALL SECOND_MNH(ZTIME1)
 !
 IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables          
-   ZCSV= CSTURB%XCHF/PRSNOW
+   ZCSV= TURBN%XCHF/PRSNOW
 ELSE
-   ZCSV= CSTURB%XCHF
+   ZCSV= TURBN%XCHF
 ENDIF
 !
 DO JSV=1,KSV
@@ -178,7 +179,7 @@ DO JSV=1,KSV
     CALL GZ_M_W_PHY(D,PSVM(:,:,JSV),PDZZ,ZWORK2)
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZFLXZ(IIJB:IIJE,1:IKT)= ( CSTURB%XCSHF * PPHI3(IIJB:IIJE,1:IKT) + ZCSV * PPSI_SV(IIJB:IIJE,1:IKT,JSV) ) &
+    ZFLXZ(IIJB:IIJE,1:IKT)= ( TURBN%XCSHF * PPHI3(IIJB:IIJE,1:IKT) + ZCSV * PPSI_SV(IIJB:IIJE,1:IKT,JSV) ) &
                   *  ZWORK1(IIJB:IIJE,1:IKT) *  ZWORK2(IIJB:IIJE,1:IKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     !

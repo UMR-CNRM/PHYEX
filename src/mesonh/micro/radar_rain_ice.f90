@@ -7,9 +7,11 @@
        MODULE MODI_RADAR_RAIN_ICE 
 !      ##########################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE RADAR_RAIN_ICE(PRT,PCIT,PRHODREF,PTEMP,PRARE,PVDOP,PRZDR,PRKDP,&
                              PCRT,PCST,PCGT,PCHT)
+IMPLICIT NONE
 !
 REAL,  DIMENSION(:,:,:,:), INTENT(IN)  :: PRT  ! microphysical  mix. ratios at t
 REAL,  DIMENSION(:,:,:),   INTENT(IN)  :: PCIT ! pristine ice concentration at t
@@ -98,8 +100,8 @@ END MODULE MODI_RADAR_RAIN_ICE
 !
 USE MODD_CST
 USE MODD_REF
-USE MODD_PARAM_ICE,      ONLY: LSNOW_T_I=>LSNOW_T
-USE MODD_RAIN_ICE_DESCR, ONLY: XALPHAR_I=>XALPHAR,XNUR_I=>XNUR,XLBEXR_I=>XLBEXR,&
+USE MODD_PARAM_ICE_n,      ONLY: LSNOW_T_I=>LSNOW_T
+USE MODD_RAIN_ICE_DESCR_n, ONLY: XALPHAR_I=>XALPHAR,XNUR_I=>XNUR,XLBEXR_I=>XLBEXR,&
                                XLBR_I=>XLBR,XCCR_I=>XCCR,XBR_I=>XBR,XAR_I=>XAR,&
                                XALPHAC_I=>XALPHAC,XNUC_I=>XNUC,&
                                XLBC_I=>XLBC,XBC_I=>XBC,XAC_I=>XAC,&
@@ -554,9 +556,9 @@ CONTAINS
 !
   IMPLICIT NONE
 !
-  REAL     :: PALPHA ! first shape parameter of the dimensionnal distribution
-  REAL     :: PNU    ! second shape parameter of the dimensionnal distribution
-  REAL     :: PP     ! order of the moment
+  REAL, INTENT(IN)     :: PALPHA ! first shape parameter of the dimensionnal distribution
+  REAL, INTENT(IN)     :: PNU    ! second shape parameter of the dimensionnal distribution
+  REAL, INTENT(IN)     :: PP     ! order of the moment
   REAL     :: PMOMG  ! result: moment of order ZP
 !
 !------------------------------------------------------------------------------

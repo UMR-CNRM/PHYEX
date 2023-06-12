@@ -7,6 +7,7 @@
        MODULE MODI_RAIN_ICE_OLD
 !      ####################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE RAIN_ICE_OLD (D, OSEDIC,HSEDIM, HSUBG_AUCV, OWARM, KKA, KKU, KKL,      &
                             KSPLITR, PTSTEP, KRR,                            &
@@ -18,6 +19,7 @@ INTERFACE
                             PRHT, PRHS, PINPRH, PFPR                        )
 !
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 LOGICAL,                  INTENT(IN)    :: OSEDIC ! Switch for droplet sedim.
@@ -224,29 +226,29 @@ END MODULE MODI_RAIN_ICE_OLD
 !*       0.    DECLARATIONS
 !              ------------
 !
-use modd_budget,         only: lbu_enable
-use MODD_CONF,           only: LCHECK
-use MODD_CST,            only: XCI, XCL, XCPD, XCPV, XLSTT, XLVTT, XTT, &
+USE modd_budget,         only: lbu_enable
+USE MODD_CONF,           only: LCHECK
+USE MODD_CST,            only: XCI, XCL, XCPD, XCPV, XLSTT, XLVTT, XTT, &
                                XALPI, XBETAI, XGAMI, XMD, XMV, XTT
-use MODD_LES,            only: LLES_CALL
-use MODD_PARAMETERS,     only: JPVEXT
-use MODD_PARAM_ICE,      only: CSUBG_PR_PDF, LDEPOSC
-use MODD_RAIN_ICE_DESCR, only: RAIN_ICE_DESCR, XLBEXR, XLBR, XRTMIN
-use MODD_RAIN_ICE_PARAM, only: XCRIAUTC
+USE MODD_LES,            only: LLES_CALL
+USE MODD_PARAMETERS,     only: JPVEXT
+USE MODD_PARAM_ICE_n,      only: CSUBG_PR_PDF, LDEPOSC
+USE MODD_RAIN_ICE_DESCR_n, only: RAIN_ICE_DESCRN, XLBEXR, XLBR, XRTMIN
+USE MODD_RAIN_ICE_PARAM_n, only: XCRIAUTC
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 
-use MODE_MSG
-use MODE_RAIN_ICE_FAST_RG,             only: RAIN_ICE_FAST_RG
-use MODE_RAIN_ICE_FAST_RH,             only: RAIN_ICE_FAST_RH
-use MODE_RAIN_ICE_FAST_RI,             only: RAIN_ICE_FAST_RI
-use MODE_RAIN_ICE_FAST_RS,             only: RAIN_ICE_FAST_RS
-use MODE_RAIN_ICE_NUCLEATION,          only: RAIN_ICE_NUCLEATION
-use MODE_RAIN_ICE_SEDIMENTATION_SPLIT, only: RAIN_ICE_SEDIMENTATION_SPLIT
-use MODE_RAIN_ICE_SEDIMENTATION_STAT,  only: RAIN_ICE_SEDIMENTATION_STAT
-use MODE_RAIN_ICE_SLOW,                only: RAIN_ICE_SLOW
-use MODE_RAIN_ICE_WARM,                only: RAIN_ICE_WARM
-use mode_tools,                        only: Countjv
-use mode_tools_ll,                     only: GET_INDICE_ll
+USE MODE_MSG
+USE MODE_RAIN_ICE_FAST_RG,             only: RAIN_ICE_FAST_RG
+USE MODE_RAIN_ICE_FAST_RH,             only: RAIN_ICE_FAST_RH
+USE MODE_RAIN_ICE_FAST_RI,             only: RAIN_ICE_FAST_RI
+USE MODE_RAIN_ICE_FAST_RS,             only: RAIN_ICE_FAST_RS
+USE MODE_RAIN_ICE_NUCLEATION,          only: RAIN_ICE_NUCLEATION
+USE MODE_RAIN_ICE_SEDIMENTATION_SPLIT, only: RAIN_ICE_SEDIMENTATION_SPLIT
+USE MODE_RAIN_ICE_SEDIMENTATION_STAT,  only: RAIN_ICE_SEDIMENTATION_STAT
+USE MODE_RAIN_ICE_SLOW,                only: RAIN_ICE_SLOW
+USE MODE_RAIN_ICE_WARM,                only: RAIN_ICE_WARM
+USE mode_tools,                        only: Countjv
+USE mode_tools_ll,                     only: GET_INDICE_ll
 
 USE MODE_ICE4_RAINFR_VERT
 !
@@ -756,7 +758,7 @@ IF( IMICRO >= 0 ) THEN
   DO JL=1,IMICRO
     PRAINFR(I1(JL),I2(JL),I3(JL)) = ZRF(JL)
   END DO
-  CALL ICE4_RAINFR_VERT(D, RAIN_ICE_DESCR, PRAINFR, PRRT(:,:,:),      &
+  CALL ICE4_RAINFR_VERT(D, RAIN_ICE_DESCRN, PRAINFR, PRRT(:,:,:),      &
                          RESHAPE( SOURCE = [ ( 0., JL = 1, SIZE( PRSS ) ) ], SHAPE = SHAPE( PRSS ) ), &
                          RESHAPE( SOURCE = [ ( 0., JL = 1, SIZE( PRGS ) ) ], SHAPE = SHAPE( PRGS ) )  )
   DO JL=1,IMICRO
@@ -942,7 +944,7 @@ ELSE
   call Print_msg( NVERB_FATAL, 'GEN', 'RAIN_ICE_OLD', 'no sedimentation scheme for HSEDIM='//HSEDIM )
 END IF
 !sedimentation of rain fraction
-CALL ICE4_RAINFR_VERT(D, RAIN_ICE_DESCR, PRAINFR, PRRS(:,:,:)*PTSTEP,  &
+CALL ICE4_RAINFR_VERT(D, RAIN_ICE_DESCRN, PRAINFR, PRRS(:,:,:)*PTSTEP,  &
                       PRSS(:,:,:)*PTSTEP, PRGS(:,:,:)*PTSTEP)
 !
 !-------------------------------------------------------------------------------

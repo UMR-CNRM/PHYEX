@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE  ARO_LIMA(KKA,KKU,KKL,KLON,KLEV,KFDIA,KRR, KSV, KTCOUNT, KSPLITR, KSPLITG, &
+      SUBROUTINE  ARO_LIMA(PHYEX,KKA,KKU,KKL,KLON,KLEV,KFDIA,KRR, KSV, &
                                   PTSTEP, PDZZ, PRHODJ, PRHODREF, PEXNREF,&
                                   PPABSM, PW_NU, PDTHRAD, PTHT, PRT, PSVT, &
                                   PTHS, PRS, PSVS, PEVAP,  &
@@ -41,12 +41,10 @@
 !
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
-USE MODD_CONF
-USE MODD_CST
+!USE MODD_CONF
+USE MODD_PHYEX, ONLY: PHYEX_t
 USE MODD_PARAMETERS
-USE MODD_RAIN_ICE_DESCR
 !
-USE MODD_PARAM_ICE
 USE MODD_PARAM_LIMA
 USE MODD_NSV
 !
@@ -67,6 +65,7 @@ IMPLICIT NONE
 !
 
 !
+TYPE(PHYEX_t),            INTENT(IN)   :: PHYEX
 INTEGER,                  INTENT(IN)   :: KKA  !near ground array index
 INTEGER,                  INTENT(IN)   :: KKU  !uppest atmosphere array index
 INTEGER,                  INTENT(IN)   :: KKL  !vert. levels type 1=MNH -1=ARO
@@ -75,11 +74,6 @@ INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels
 INTEGER,                  INTENT(IN)   :: KFDIA    !
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KSV      ! Number of LIMA variables
-INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
-INTEGER,                  INTENT(IN)   :: KSPLITR  ! Number of small time step
-                                       ! integrations for  rain sedimendation
-INTEGER,                  INTENT(IN)   :: KSPLITG  ! Number of small time step
-                                       ! integrations for  graupel/hail sedimendation
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 !
 !
@@ -121,11 +115,6 @@ TYPE(TMDDH), INTENT(IN), TARGET :: YDMDDH
 !
 !*       0.2   Declarations of local variables :
 
-CHARACTER(LEN=4)            :: HCLOUD   ! kind of cloud
-                                                   ! paramerization
-
-INTEGER                   :: KMI      ! Model index
-
 !
 INTEGER :: JRR, JL           ! Loop index for the moist and scalar variables
 !
@@ -160,8 +149,6 @@ IF (LHOOK) CALL DR_HOOK('ARO_LIMA',0,ZHOOK_HANDLE)
 !Dimensions
 CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, 0, KFDIA)
 
-HCLOUD='LIMA'
-KMI=1
 ZINPRC=0.
 ZDUM3DC=0.
 ZDUM3DR=0.
@@ -184,9 +171,9 @@ PINPRH=0.
 !                    computing time
 !
 ZT(:,:,:)= PTHT(:,:,:)*PEXNREF(:,:,:)
-ZLV(:,:,:)=XLVTT +(XCPV-XCL) *(ZT(:,:,:)-XTT)
-ZLS(:,:,:)=XLSTT +(XCPV-XCI) *(ZT(:,:,:)-XTT)
-ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
+ZLV(:,:,:)=PHYEX%CST%XLVTT +(PHYEX%CST%XCPV-PHYEX%CST%XCL) *(ZT(:,:,:)-PHYEX%CST%XTT)
+ZLS(:,:,:)=PHYEX%CST%XLSTT +(PHYEX%CST%XCPV-PHYEX%CST%XCI) *(ZT(:,:,:)-PHYEX%CST%XTT)
+ZCPH(:,:,:)=PHYEX%CST%XCPD +PHYEX%CST%XCPV*2.*PTSTEP*PRS(:,:,:,1)
 !
 
 !
@@ -300,7 +287,7 @@ ENDDO
 !
 !
 !
-CALL LIMA (D=YLDIMPHYEX, CST=CST, BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
+CALL LIMA (D=YLDIMPHYEX, CST=PHYEX%CST, BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
            PTSTEP=2*PTSTEP,                  &
            PRHODREF=PRHODREF, PEXNREF=PEXNREF, PDZZ=PDZZ,                         &
            PRHODJ=PRHODJ, PPABST=PPABSM,                                 &

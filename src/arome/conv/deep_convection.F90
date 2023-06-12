@@ -146,7 +146,7 @@ REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PWT      ! grid scale vertical
                                                    ! velocity (m/s)
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PPABST   ! grid scale pressure at t
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PZZ      ! height of model layer (m)
-REAL, DIMENSION(KLON),      INTENT(IN) :: PDXDY    ! horizontal grid area (m-a2)
+REAL, DIMENSION(KLON),      INTENT(IN) :: PDXDY    ! horizontal grid area (m**2)
 REAL, DIMENSION(KLON),      INTENT(IN) :: PTIMEC   ! value of convective adjustment
                                                    ! time if OSETTADJ=.TRUE.
 !

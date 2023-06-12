@@ -43,8 +43,8 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_RAIN_ICE_PARAM
-USE MODD_RAIN_ICE_DESCR
+USE MODD_RAIN_ICE_PARAM_n
+USE MODD_RAIN_ICE_DESCR_n
 USE MODD_CST,         ONLY : XPI, XRHOLW, XP00, XRD
 USE MODD_PARAMETERS , ONLY : JPVEXT
 !
@@ -112,7 +112,7 @@ ZLBDA(:)  = XLBR*( PRHODREF(:)* ZRRS(:) )**XLBEXR
 ZNT (:) = XCCR/ZLBDA (:)  
 !rain  lwc (kg/m3) =  rain m.r.(kg/kg) * rho_air(kg/m3)
 RLWC(:)=ZRRS(:)*PRHODREF(:)
-!4/3 *pi *r³*NT*rho_eau(kg/m3) =rho(lwc)=rho(air)* qc(kg/kg)
+!4/3 *pi *r**3*NT*rho_eau(kg/m3) =rho(lwc)=rho(air)* qc(kg/kg)
 ZRR(:) =  (RLWC(:)/(XRHOLW*ZNT(:)*4./3.*XPI))**(1./3.)
 !
 !Fall speed cannot be faster than 7 m/s

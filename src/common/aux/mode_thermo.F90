@@ -315,7 +315,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of arguments and results
 !
 !
-CHARACTER(LEN=*)                                 :: HLUOUT ! name for output-
+CHARACTER(LEN=*), INTENT(IN)                     :: HLUOUT ! name for output-
                                                            ! listing
 REAL, DIMENSION(:,:,:), INTENT(IN)               :: PP     ! Pressure
                                                            ! (Pa)
@@ -462,7 +462,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of arguments and results
 !
 !
-CHARACTER(LEN=*)                             :: HLUOUT ! name for output-
+CHARACTER(LEN=*), INTENT(IN)                 :: HLUOUT ! name for output-
                                                        ! listing
 REAL, DIMENSION(:), INTENT(IN)               :: PP     ! Pressure
                                                        ! (Pa)

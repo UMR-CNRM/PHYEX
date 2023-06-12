@@ -37,9 +37,9 @@ USE PARKIND1, ONLY : JPRB
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CST, ONLY: CST_t
-USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
-USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 !
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !
@@ -88,7 +88,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-ai
 !
 !
 INTEGER                                                             :: JIJ, JK
-INTEGER :: IKTB, IKTE, IKB, IKL, IIJE, IIJB
+INTEGER :: IKTB, IKTE, IIJE, IIJB
 INTEGER                                                             :: IRR !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
 LOGICAL                                                             :: GSEDIC !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
 LOGICAL                                                             :: GPRESENT_PFPR, GPRESENT_PSEA
@@ -279,9 +279,9 @@ SUBROUTINE INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, KRR, &
 !          ------------
 !
 USE MODD_CST,            ONLY: CST_t
-USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
-USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 !
 IMPLICIT NONE
 !
@@ -311,7 +311,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT), OPTIONAL :: PFPR    ! upper-ai
 !*       0.2  declaration of local variables
 !
 CHARACTER(LEN=10) :: YSPE ! String for error message
-INTEGER                         :: JIJ, JK, JL
+INTEGER                         :: JIJ, JK
 LOGICAL                         :: GPRESENT_PFPR
 REAL                            :: ZINVTSTEP
 REAL                            :: ZZWLBDC, ZRAY, ZZT, ZZWLBDA, ZZCC

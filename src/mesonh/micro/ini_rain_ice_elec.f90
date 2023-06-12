@@ -7,9 +7,11 @@
        MODULE MODI_INI_RAIN_ICE_ELEC
 !      #############################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE INI_RAIN_ICE_ELEC (KLUOUT, PTSTEP, PDZMIN, KSPLITR, HCLOUD, &
                                     KINTVL, PFDINFTY                         )
+IMPLICIT NONE
 !
 INTEGER,           INTENT(IN) :: KLUOUT    ! Logical unit number for prints
 INTEGER,           INTENT(OUT):: KSPLITR   ! Number of small time step
@@ -96,9 +98,9 @@ END MODULE MODI_INI_RAIN_ICE_ELEC
 USE MODD_CST
 USE MODD_LUNIT
 USE MODD_PARAMETERS
-USE MODD_PARAM_ICE
-USE MODD_RAIN_ICE_DESCR
-USE MODD_RAIN_ICE_PARAM
+USE MODD_PARAM_ICE_n
+USE MODD_RAIN_ICE_DESCR_n
+USE MODD_RAIN_ICE_PARAM_n
 USE MODD_REF
 USE MODD_ELEC_PARAM, ONLY : XGAMINC_RIM3, XFCI
 USE MODD_ELEC_DESCR, ONLY : XFS
@@ -172,8 +174,6 @@ REAL     :: PDRYLBDAR_MAX, PDRYLBDAR_MIN
 REAL     :: PWETLBDAS_MAX, PWETLBDAG_MAX, PWETLBDAS_MIN, PWETLBDAG_MIN
 REAL     :: PWETLBDAH_MAX, PWETLBDAH_MIN
 !
-IF(.NOT.ASSOCIATED(XCEXVT)) CALL RAIN_ICE_DESCR_ASSOCIATE()                                
-IF(.NOT.ASSOCIATED(XFSEDC)) CALL RAIN_ICE_PARAM_ASSOCIATE()
 !
 !-------------------------------------------------------------------------------
 !
@@ -206,13 +206,6 @@ IF (CSEDIM == 'SPLI') THEN
     IF (ZT * ZVTRMAX / PDZMIN .LT. 1.) EXIT SPLIT
     KSPLITR = KSPLITR + 1
   END DO SPLIT
-END IF
-!
-IF (ASSOCIATED(XRTMIN)) THEN       ! In case of nesting microphysics constants of
-                                  ! MODD_RAIN_ICE_PARAM are computed only once,
-                                  ! but if INI_RAIN_ICE has been called already
-                                  ! one must change the XRTMIN size.
-  CALL RAIN_ICE_DESCR_DEALLOCATE()
 END IF
 !
 IF (HCLOUD == 'ICE4') THEN
