@@ -151,7 +151,7 @@ IF(.NOT. LDSOFT) THEN
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GWET(1:KSIZE))
       PRH_TEND(1:KSIZE, IRSWETH)=ICEP%XFSWETH*ZZW(1:KSIZE)                       & ! RSWETH
-#if defined(REPRO48) 
+#ifndef PHYEXMERGE
                     *( PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS) )*( PLBDAH(1:KSIZE)**ICED%XCXH )  &
                        *( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) )               &
 #else
@@ -277,7 +277,7 @@ DO JL=1, KSIZE
     ENDIF
 
     !Dry case
-#ifdef REPRO48
+#ifndef PHYEXMERGE
     LLDRYH(JL)=PT(JL)<CST%XTT .AND. ZRDRYH_INIT(JL)>0. .AND. &
 #else
     LLDRYH(JL)=PT(JL)<CST%XTT .AND. ZRDRYH_INIT(JL)>1.E-20 .AND. &

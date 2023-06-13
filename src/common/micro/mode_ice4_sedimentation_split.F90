@@ -386,7 +386,7 @@ DO WHILE (ANY(ZREMAINT>0.))
         ENDIF
       ENDDO
     ENDDO
-#if defined(REPRO48) 
+#ifndef PHYEXMERGE
 #else
   ELSEIF(KSPE==5) THEN
     ! ******* for snow
@@ -417,7 +417,7 @@ DO WHILE (ANY(ZREMAINT>0.))
       CASE(3)
         ZFSED=ICEP%XFSEDR
         ZEXSED=ICEP%XEXSEDR
-#if defined(REPRO48) 
+#ifndef PHYEXMERGE
       CASE(5)
         ZFSED=ICEP%XFSEDS
         ZEXSED=ICEP%XEXSEDS

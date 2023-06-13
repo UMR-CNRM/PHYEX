@@ -1253,7 +1253,7 @@ ENDIF
     PSIGS(IIJB:IIJE,IKU) = PSIGS(IIJB:IIJE,IKE)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-#ifdef REPRO48
+#ifndef PHYEXMERGE
     PSIGS(IIJB:IIJE,1:IKT) =  MAX (PSIGS(IIJB:IIJE,1:IKT) , 0.)
     PSIGS(IIJB:IIJE,1:IKT) =  SQRT(PSIGS(IIJB:IIJE,1:IKT))
 #else

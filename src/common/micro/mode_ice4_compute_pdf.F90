@@ -318,7 +318,7 @@ ELSE
 ENDIF
 !
 !$mnh_expand_where(JI=1:KSIZE)
-#ifdef REPRO48
+#ifndef PHYEXMERGE
   PRF(:)=PHLC_HCF(:)
 #else
   PRF(:)=MAX(PHLC_HCF(:),PHLI_HCF(:))

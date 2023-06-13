@@ -267,7 +267,7 @@ ELSE
   DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE
       ZCPD(JIJ,JK) = CST%XCPD + CST%XCPV*PRV_IN(JIJ,JK) + CST%XCL*PRC_IN(JIJ,JK) + CST%XCI*PRI_IN(JIJ,JK) + &
-#if defined(REPRO48) 
+#ifndef PHYEXMERGE
 #else
                                   CST%XCL*PRR(JIJ,JK) +  &
 #endif
@@ -285,7 +285,7 @@ IF ( .NOT. OSIGMAS ) THEN
     END DO
   END DO
   ! Determine tropopause/inversion  height from minimum temperature
-#ifdef REPRO48
+#ifndef PHYEXMERGE
   ITPL(:)  = IIJB+1
   !I (Sébastien Riette) don't understand why tropopause level is set
   !with the index of the second physical point on the horizontal (i.e. 2+JPHEXT)!!!

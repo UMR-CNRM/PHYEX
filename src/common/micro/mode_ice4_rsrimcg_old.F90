@@ -86,7 +86,7 @@ IF(.NOT. LDSOFT) THEN
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GRIM(1:KSIZE))
       PRSRIMCG_MR(1:KSIZE) = ICEP%XSRIMCG * PLBDAS(1:KSIZE)**ICEP%XEXSRIMCG   & ! RSRIMCG
-#if defined(REPRO48) 
+#ifndef PHYEXMERGE
                                * (1.0 - ZZW(1:KSIZE) )/PRHODREF(1:KSIZE)
 #else
                                * (1.0 - ZZW(1:KSIZE) )*PRST(1:KSIZE)
