@@ -32,23 +32,32 @@ set -o pipefail #abort if left command on a pipe fails
 #                  The reference is
 #                       the commit 907e906 when running in 48t1
 #                       the commit d10ed48 when running in 48t3
+#                       the commit 7e55649 when running in 49t0
 #                  Indeed, it was checked that edc3f88 (last commit in 48t1) is identical to 907e906.
+#                                     and that 9164c67 (last commit in 48t3) is identical to d10ed48
 #                  Between edc3f88 and d10ed48 only the reference change, physics source code is identical.
+#                  The same applies between 9164c67 and 7e55649.
 
 #The small_3D_alt9 is not included in the list of available tests because it needs to be compared against a special commit.
-#                  Indeed, some pieces are missing in the reference pack. Theses pieces have been added in commit edc3f88 during phasing with 48t3.
+#                  Indeed, some pieces are missing in the reference pack.
+#                  Theses pieces have been added in commit edc3f88 during phasing with 48t3.
 #                  The reference is
 #                       the commit edc3f88 (21 September 2022) when running in 48t1
 #                       the commit d10ed48 in 48t3 (29 september 2022) when running in 48t3
-#                  Between edc3f88 and d10ed48 only the reference change, physics source code is identical.
+#                       the commit 110a5aa in 49t0 (13 June 2023) when running in 49t0
+#                  Indeed, it was checked that bd44ba7 (patch on the last commint in 48t3) is identical to d10ed48
+#                  Between bd44ba7 and 110a5aa only the reference change, physics source code is identical.
 
 #The small_3D_alt10 is not included in the list because it is not sufficiently different from other tests
+#                  Be careful that namelists were wrong before commit 3c01df4 (8 June 2023)
 
 #The small_3D_lima is not included in the list of available tests because it needs to be compared against a special commit.
 #                  Indeed, the lima version in arome has been changed.
-#                  The reference commit is d095d11 (20 March 2023)
-
-#The small_3D_alt11 and The small_3D_alt12 are not included in the list because they are runnable only after the commit that added these options.
+#                  The reference commit is
+#                       the commit d095d11 (20 March 2023) when running in 48t3
+#                       the commit 7e55649 when running in 49t0
+#                  Indeed, it was checked that 9164c67 (last commit in 48t3) is identical to d095d11.
+#                  Between 9164c67 and 7e55649 only the reference change, physics source code is identical.
 
 #Special pack names:
 # - recompil: original source code (everything under mpa)
@@ -528,14 +537,16 @@ if [ $compilation -eq 1 ]; then
             grep -v "'Error" | \
             grep -v "'CPLNG: Error" | \
             grep -v '"Error' | \
-            grep -v "'*** Error" | wc -l) -ne 0 ]; then
+            grep -v "'*** Error" | \
+            grep -v "-- Up-to-date:" | wc -l) -ne 0 ]; then
       echo "MASTERODB was produced but errors occured during compilation:"
       grep Error Output_compilation | \
             grep -v TestErrorHandler | \
             grep -v "'Error" | \
             grep -v "'CPLNG: Error" | \
             grep -v '"Error' | \
-            grep -v "'*** Error"
+            grep -v "'*** Error" | \
+            grep -v "-- Up-to-date:"
       echo "MASTERODB suppressed!"
       rm -f bin/MASTERODB
   fi
