@@ -1,6 +1,0 @@
-belenos$ uget.py pull data var.sat.misc_rtcoef.31.tgz@davai
-tar xf var.sat.misc_rtcoef.31.tgz
-cd var.sat.misc_rtcoef.31/
-mv rtcoef_meteosat_10_seviri.H5 rtcoef_meteosat_9_seviri.H5 sccldcoef_meteosat_9_seviri.dat ../
-cd ..
-rm -rf var.sat.misc_rtcoef.31/ var.sat.misc_rtcoef.31.tgz
