@@ -210,8 +210,8 @@ ELSEIF(HSUBG_AUCV_RC=='PDF ') THEN
       END WHERE
     ELSE IF(HSUBG_PR_PDF=='HLCISOTRIPDF') THEN
     DO JI=1,KSIZE  
-     IF(PRCT(JI).GT.0. .AND. PCF(JI).GT.0. .AND. ZHLC_RCMAX(JI).GT.ZRCRAUTC(JI))
-        IF((PRCT(JI) / PCF(JI)).LE.ZRCRAUTC(JI))
+     IF(PRCT(JI).GT.0. .AND. PCF(JI).GT.0. .AND. ZHLC_RCMAX(JI).GT.ZRCRAUTC(JI)) THEN
+        IF((PRCT(JI) / PCF(JI)).LE.ZRCRAUTC(JI)) THEN
           ZHLC_LRCLOCAL(JI)=( (ZHLC_RCMAX(JI))**3 &
                           -(12.0 * (ZHLC_RCMAX(JI))*(ZRCRAUTC(JI))**2) &
                           +(8.0 * ZRCRAUTC(JI)**3) ) &
@@ -225,6 +225,7 @@ ELSEIF(HSUBG_AUCV_RC=='PDF ') THEN
                           / (6.0 * ZHLC_RCMAX(JI)**2 - 12.0*ZRCRAUTC(JI)**2)
         END IF
       END IF
+    END DO
     END IF
     ! Compare r_cM  to r_cR to know if cloud water content is high enough to split in two parts or not
     WHERE (PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:))
