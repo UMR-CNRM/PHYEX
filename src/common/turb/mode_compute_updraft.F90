@@ -596,21 +596,23 @@ DO JK=IKB,IKE-IKL,IKL
     ENDWHERE
 
     ! Compute the updraft theta_v, buoyancy and w**2 for level JK+KKL
-    WHERE(GTEST(IIJB:IIJE))
-      PTHV_UP(IIJB:IIJE,JK+IKL) = ZTH_UP(IIJB:IIJE,JK+IKL)* &
-                                    & ((1+ZRVORD*PRV_UP(IIJB:IIJE,JK+IKL))/(1+PRT_UP(IIJB:IIJE,JK+IKL)))
-      WHERE (ZBUO_INTEG_DRY(IIJB:IIJE,JK)>0.)
-        ZW_UP2(IIJB:IIJE,JK+IKL)  = ZW_UP2(IIJB:IIJE,JK) + 2.*(PARAMMF%XABUO-PARAMMF%XBENTR*PARAMMF%XENTR_DRY)* &
-                                                                &ZBUO_INTEG_DRY(IIJB:IIJE,JK)
-      ELSEWHERE
-        ZW_UP2(IIJB:IIJE,JK+IKL)  = ZW_UP2(IIJB:IIJE,JK) + 2.*PARAMMF%XABUO* ZBUO_INTEG_DRY(IIJB:IIJE,JK)
-      ENDWHERE
-      ZW_UP2(IIJB:IIJE,JK+IKL)  = ZW_UP2(IIJB:IIJE,JK+IKL)*(1.-(PARAMMF%XBDETR*ZMIX3_CLD(IIJB:IIJE)+ &
-                                                                       &PARAMMF%XBENTR*ZMIX2_CLD(IIJB:IIJE)))&
-              /(1.+(PARAMMF%XBDETR*ZMIX3_CLD(IIJB:IIJE)+PARAMMF%XBENTR*ZMIX2_CLD(IIJB:IIJE))) &
-              +2.*(PARAMMF%XABUO)*ZBUO_INTEG_CLD(IIJB:IIJE,JK)/ &
-              &(1.+(PARAMMF%XBDETR*ZMIX3_CLD(IIJB:IIJE)+PARAMMF%XBENTR*ZMIX2_CLD(IIJB:IIJE)))
-    ENDWHERE
+  DO JIJ=IIJB,IIJE
+    IF(GTEST(JIJ)) THEN
+      PTHV_UP(JIJ,JK+IKL) = ZTH_UP(JIJ,JK+IKL)* &
+                                    & ((1+ZRVORD*PRV_UP(JIJ,JK+IKL))/(1+PRT_UP(JIJ,JK+IKL)))
+      IF (ZBUO_INTEG_DRY(JIJ,JK)>0.) THEN
+        ZW_UP2(JIJ,JK+IKL)  = ZW_UP2(JIJ,JK) + 2.*(PARAMMF%XABUO-PARAMMF%XBENTR*PARAMMF%XENTR_DRY)* &
+                                                                &ZBUO_INTEG_DRY(JIJ,JK)
+      ELSE
+        ZW_UP2(JIJ,JK+IKL)  = ZW_UP2(JIJ,JK) + 2.*PARAMMF%XABUO* ZBUO_INTEG_DRY(JIJ,JK)
+      END IF
+      ZW_UP2(JIJ,JK+IKL)  = ZW_UP2(JIJ,JK+IKL)*(1.-(PARAMMF%XBDETR*ZMIX3_CLD(JIJ)+ &
+                                                                       &PARAMMF%XBENTR*ZMIX2_CLD(JIJ)))&
+              /(1.+(PARAMMF%XBDETR*ZMIX3_CLD(JIJ)+PARAMMF%XBENTR*ZMIX2_CLD(JIJ))) &
+              +2.*(PARAMMF%XABUO)*ZBUO_INTEG_CLD(JIJ,JK)/ &
+              &(1.+(PARAMMF%XBDETR*ZMIX3_CLD(JIJ)+PARAMMF%XBENTR*ZMIX2_CLD(JIJ)))
+    END IF
+  END DO
 
     ! Test if the updraft has reach the ETL
     WHERE (GTEST(IIJB:IIJE).AND.(PBUO_INTEG(IIJB:IIJE,JK)<=0.))

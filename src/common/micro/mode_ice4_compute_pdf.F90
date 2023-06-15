@@ -209,21 +209,22 @@ ELSEIF(HSUBG_AUCV_RC=='PDF ') THEN
         ZHLC_HRCLOCAL(:)=(ZHLC_RCMAX(:) + 3.0*ZRCRAUTC(:))/4.0
       END WHERE
     ELSE IF(HSUBG_PR_PDF=='HLCISOTRIPDF') THEN
-      WHERE(PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:))
-        WHERE((PRCT(:) / PCF(:)).LE.ZRCRAUTC(:))
-          ZHLC_LRCLOCAL(:)=( (ZHLC_RCMAX(:))**3 &
-                          -(12.0 * (ZHLC_RCMAX(:))*(ZRCRAUTC(:))**2) &
-                          +(8.0 * ZRCRAUTC(:)**3) ) &
-                          /( (6.0 * (ZHLC_RCMAX(:))**2) &
-                          -(24.0 * (ZHLC_RCMAX(:)) * ZRCRAUTC(:)) &
-                          +(12.0 * ZRCRAUTC(:)**2) )
-          ZHLC_HRCLOCAL(:)=( ZHLC_RCMAX(:) + 2.0 * ZRCRAUTC(:) )/3.0
-        ELSEWHERE
-          ZHLC_LRCLOCAL(:)=(2.0/3.0) * ZRCRAUTC(:)
-          ZHLC_HRCLOCAL(:)=(3.0*ZHLC_RCMAX(:)**3 - 8.0*ZRCRAUTC(:)**3) &
-                          / (6.0 * ZHLC_RCMAX(:)**2 - 12.0*ZRCRAUTC(:)**2)
-        END WHERE
-      END WHERE
+    DO JI=1,KSIZE  
+     IF(PRCT(JI).GT.0. .AND. PCF(JI).GT.0. .AND. ZHLC_RCMAX(JI).GT.ZRCRAUTC(JI))
+        IF((PRCT(JI) / PCF(JI)).LE.ZRCRAUTC(JI))
+          ZHLC_LRCLOCAL(JI)=( (ZHLC_RCMAX(JI))**3 &
+                          -(12.0 * (ZHLC_RCMAX(JI))*(ZRCRAUTC(JI))**2) &
+                          +(8.0 * ZRCRAUTC(JI)**3) ) &
+                          /( (6.0 * (ZHLC_RCMAX(JI))**2) &
+                          -(24.0 * (ZHLC_RCMAX(JI)) * ZRCRAUTC(JI)) &
+                          +(12.0 * ZRCRAUTC(JI)**2) )
+          ZHLC_HRCLOCAL(JI)=( ZHLC_RCMAX(JI) + 2.0 * ZRCRAUTC(JI) )/3.0
+        ELSE
+          ZHLC_LRCLOCAL(JI)=(2.0/3.0) * ZRCRAUTC(JI)
+          ZHLC_HRCLOCAL(JI)=(3.0*ZHLC_RCMAX(JI)**3 - 8.0*ZRCRAUTC(JI)**3) &
+                          / (6.0 * ZHLC_RCMAX(JI)**2 - 12.0*ZRCRAUTC(JI)**2)
+        END IF
+      END IF
     END IF
     ! Compare r_cM  to r_cR to know if cloud water content is high enough to split in two parts or not
     WHERE (PRCT(:).GT.0. .AND. PCF(:).GT.0. .AND. ZHLC_RCMAX(:).GT.ZRCRAUTC(:))
