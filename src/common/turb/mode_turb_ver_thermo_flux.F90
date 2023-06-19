@@ -584,7 +584,7 @@ ELSE ! atmosp bottom
   END IF
 !
     ! atmos top
-#ifndef PHYEXMERGE
+#ifdef REPRO48
 #else
       ZF(IIJB:IIJE,IKE+1)=0.
 #endif
@@ -988,7 +988,7 @@ IF (KRR /= 0) THEN
       !$mnh_end_expand_array(JIJ=IIJB:IIJE) 
     END IF
       ! atmos top
-#ifndef PHYEXMERGE
+#ifdef REPRO48
 #else
       ZF(IIJB:IIJE,IKE+1)=0.
 #endif

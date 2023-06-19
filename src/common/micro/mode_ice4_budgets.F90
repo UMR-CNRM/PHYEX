@@ -91,7 +91,7 @@ DO JK = IKTB, IKTE
     ZW1(JIJ,JK)=ZW1(JIJ,JK)+PRVHENI(JIJ,JK)
   ENDDO
 ENDDO
-#ifndef PHYEXMERGE
+#ifdef REPRO48
 IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HENU',  ZW1(:, :)*ZZ_LSFACT(:, :)*PRHODJ(:, :))
 IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HENU', -ZW1(:, :)                *PRHODJ(:, :))
 IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HENU',  ZW1(:, :)                *PRHODJ(:, :))
@@ -331,23 +331,23 @@ IF(KRR==7) THEN
   IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'WETH', -ZW2(:, :)    *PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RI) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'WETH', -ZW3(:, :)    *PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RS) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'WETH', -ZW4(:, :)    *PRHODJ(:, :))
-#ifndef PHYEXMERGE
+#ifdef REPRO48
 #else
   IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'WETH', -ZW5(:, :)    *PRHODJ(:, :))
 #endif
   IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RH), 'WETH', (ZW1(:, :)+ZW2(:, :)+ZW3(:, :)+ &
                                                                         &ZW4(:, :)+ZW5(:, : ))  *PRHODJ(:, :))
 
-#ifndef PHYEXMERGE
+#ifdef REPRO48
   ZW1(:,:) = 0.
   DO JL=1, KSIZE
     ZW1(K1(JL), K2(JL)) = PBU_PACK(JL, IRGWETH) * ZINV_TSTEP
   END DO
 #endif 
-#ifndef PHYEXMERGE
+#ifdef REPRO48
   IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'HGCV', (-ZW5(:, :)-ZW1(:, :))*PRHODJ(:, :))
 #endif
-#ifndef PHYEXMERGE
+#ifdef REPRO48
   IF (BUCONF%LBUDGET_RH) CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RH), 'HGCV',  ZW1(:, :)*PRHODJ(:, :))
 #endif
 
@@ -372,7 +372,7 @@ IF(KRR==7) THEN
     ZW5(K1(JL), K2(JL)) = PBU_PACK(JL, IRGDRYH) * ZINV_TSTEP
   END DO
   ZW6(:,:) = 0.
-#ifndef PHYEXMERGE
+#ifdef REPRO48
   !ZW6 must be removed when REPRO* will be suppressed
   DO JL=1, KSIZE
     ZW6(K1(JL), K2(JL)) = PBU_PACK(JL, IRDRYHG) * ZINV_TSTEP
@@ -389,7 +389,7 @@ IF(KRR==7) THEN
                                                                       &ZW4(:, :)+ZW5(:, :)-ZW6(:, :)) &
                                                                       &                             *PRHODJ(:, :))
 
-#ifndef PHYEXMERGE
+#ifdef REPRO48
 #else
   !When PHYEXMERGE will be suppressed, ZW6 must be removed
   ZW1(:,:) = 0.

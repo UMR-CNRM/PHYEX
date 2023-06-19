@@ -903,7 +903,7 @@ END IF
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZCDUEFF(IIJB:IIJE) =-SQRT ( (PSFU(IIJB:IIJE)**2 + PSFV(IIJB:IIJE)**2) /               &
-#ifndef PHYEXMERGE
+#ifdef REPRO48
                     (1.E-60 + ZUSLOPE(IIJB:IIJE)**2 + ZVSLOPE(IIJB:IIJE)**2 ) )
 #else
                     (CST%XMNH_TINY + ZUSLOPE(IIJB:IIJE)**2 + ZVSLOPE(IIJB:IIJE)**2 ) )
@@ -1066,7 +1066,7 @@ END IF
 !
 !Les budgets des termes horizontaux de la turb sont présents dans AROME
 ! alors que ces termes ne sont pas calculés
-#ifndef PHYEXMERGE
+#ifdef REPRO48
 #else
 IF( TURBN%CTURBDIM == '3DIM' ) THEN
 #endif
@@ -1104,7 +1104,7 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
     END DO
   END IF
 !à supprimer une fois le précédent ifndef PHYEXMERGE validé
-#ifndef PHYEXMERGE
+#ifdef REPRO48
 #else
     CALL TURB_HOR_SPLT(D,CST,CSTURB, TURBN, NEBN, TLES,        &
           KSPLIT, KRR, KRRL, KRRI, KSV,KSV_LGBEG,KSV_LGEND,    & 
@@ -1165,7 +1165,7 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
       CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:,:, JSV) )
     END DO
   END IF
-#ifndef PHYEXMERGE
+#ifdef REPRO48
 #else
 END IF
 #endif

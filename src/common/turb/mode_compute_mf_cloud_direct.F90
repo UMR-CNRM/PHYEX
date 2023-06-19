@@ -94,7 +94,7 @@ PRI_MF(:,:)=0.
 PCF_MF(:,:)=0.
 
 DO JI=IIJB,IIJE
-#ifndef PHYEXMERGE
+#ifdef REPRO48
   JK0=KKLCL(JI)-IKL ! first mass level with cloud
   JK0=MAX(JK0, MIN(IKB,IKE)) !protection if KKL=1
   JK0=MIN(JK0, MAX(IKB,IKE)) !protection if KKL=-1

@@ -363,7 +363,7 @@ IF(LLDEFAULTVAL) THEN
   XFRMIN_NAM(26:38)=0.
   XFRMIN_NAM(39)=0.25
   XFRMIN_NAM(40)=0.15
-#ifndef PHYEXMERGE
+#ifdef REPRO48
   !In the original version, this array was filled in suparar. suparar is in a part of the model compiled without
   !defining implicit kind for reals whereas the current module is in phyex where the compilation options
   !sets implicit kind for reals to 8 bytes.

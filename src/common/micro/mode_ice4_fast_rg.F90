@@ -190,7 +190,7 @@ IF(.NOT. LDSOFT) THEN
     WHERE(GDRY(1:KSIZE))
       PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
                                     / ICEP%XCOLSG &
-#ifndef PHYEXMERGE
+#ifdef REPRO48
                   *(PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
                   *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.))                    &
 #else
@@ -277,7 +277,7 @@ DO JL=1, KSIZE
       LDWETG(JL) = LDWETG(JL) .AND. PT(JL)<CST%XTT
     ENDIF
 
-#ifndef PHYEXMERGE
+#ifdef REPRO48
     LLDRYG(JL)=PT(JL)<CST%XTT .AND. ZRDRYG_INIT(JL)>0. .AND. &
 #else
     LLDRYG(JL)=PT(JL)<CST%XTT .AND. ZRDRYG_INIT(JL)>1.E-20 .AND. &

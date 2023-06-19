@@ -111,7 +111,7 @@ ENDDO
 DO JL=1, KSIZE
   IF(PRVT(JL)>ICED%XRTMIN(1) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
-#ifndef PHYEXMERGE
+#ifdef REPRO48
       PRVDEPS(JL) = ( PSSI(JL)/(PRHODREF(JL)*PAI(JL)) ) *                               &
                  ( ICEP%X0DEPS*PLBDAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS )
 #else
@@ -133,7 +133,7 @@ DO JL=1, KSIZE
     IF(.NOT. LDSOFT) THEN
       PRIAGGS(JL) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JL)-CST%XTT) ) &
                          * PRIT(JL)                      &
-#ifndef PHYEXMERGE
+#ifdef REPRO48
                          * PLBDAS(JL)**ICEP%XEXIAGGS          &
                          * PRHODREF(JL)**(-ICED%XCEXVT)
 #else
@@ -151,7 +151,7 @@ ENDDO
 !*       3.4.5  compute the autoconversion of r_i for r_s production: RIAUTS
 !
 DO JL=1, KSIZE
-#ifndef PHYEXMERGE
+#ifdef REPRO48
   !This was wrong because, with this formulation and in the LDSOFT case, PRIAUTS
   !was not set to 0 when ri is inferior to the autoconversion threshold
   IF(PRIT(JL)>ICED%XRTMIN(4) .AND. LDCOMPUTE(JL)) THEN
