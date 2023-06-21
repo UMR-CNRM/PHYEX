@@ -11,6 +11,7 @@ USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !* modification 08/2010  V. Masson  smoothing of the discontinuity in functions 
 !                                   used for implicitation of exchange coefficients
 !               05/2020   V. Masson and C. Lac : bug in D_PHI3DTDZ2_O_DDTDZ
+!               06/2023   S. Riette add the LSMOOTH_PRANDTL key
 !
 USE MODD_CTURB,      ONLY : CSTURB_t
 USE MODD_TURB_n,     ONLY : TURB_t
@@ -753,12 +754,14 @@ IIJE=D%NIJE
 IIJB=D%NIJB
 IKT=D%NKT
 !
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)    
-ZCOEF(IIJB:IIJE,1:IKT) = MAX(MIN((  10.*(1.-PPHI3(IIJB:IIJE,1:IKT)/CSTURB%XPHI_LIM)) ,1.), 0.) 
-!
-PF(IIJB:IIJE,1:IKT) =     ZCOEF(IIJB:IIJE,1:IKT)   * PF(IIJB:IIJE,1:IKT)    &
-          + (1.-ZCOEF(IIJB:IIJE,1:IKT))  * PF_LIM(IIJB:IIJE,1:IKT)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)    
+IF(TURBN%LSMOOTH_PRANDTL) THEN
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)    
+  ZCOEF(IIJB:IIJE,1:IKT) = MAX(MIN((  10.*(1.-PPHI3(IIJB:IIJE,1:IKT)/CSTURB%XPHI_LIM)) ,1.), 0.) 
+  !
+  PF(IIJB:IIJE,1:IKT) =     ZCOEF(IIJB:IIJE,1:IKT)   * PF(IIJB:IIJE,1:IKT)    &
+            + (1.-ZCOEF(IIJB:IIJE,1:IKT))  * PF_LIM(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)    
+ENDIF
 !
 END SUBROUTINE SMOOTH_TURB_FUNCT
 !----------------------------------------------------------------------------
@@ -974,11 +977,8 @@ DO JK=1,IKT
 ENDDO
 END IF
 !
-#ifdef REPRO48
-#else
 !* smoothing
 CALL SMOOTH_TURB_FUNCT(D,CSTURB,TURBN,PPHI3,PPHI3,PD_PHI3DTDZ_O_DDTDZ)
-#endif
 !
 PD_PHI3DTDZ_O_DDTDZ(IIJB:IIJE,IKB-1)=PD_PHI3DTDZ_O_DDTDZ(IIJB:IIJE,IKB)
 PD_PHI3DTDZ_O_DDTDZ(IIJB:IIJE,IKE+1)=PD_PHI3DTDZ_O_DDTDZ(IIJB:IIJE,IKE)
@@ -1052,11 +1052,8 @@ ELSE
   !$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)    
 END IF
 !
-#ifdef REPRO48
-#else
 !* smoothing
 CALL SMOOTH_TURB_FUNCT(D,CSTURB,TURBN,PPHI3,PPHI3,PD_PHI3DRDZ_O_DDRDZ)
-#endif
 !
 PD_PHI3DRDZ_O_DDRDZ(IIJB:IIJE,IKB-1)=PD_PHI3DRDZ_O_DDRDZ(IIJB:IIJE,IKB)
 PD_PHI3DRDZ_O_DDRDZ(IIJB:IIJE,IKE+1)=PD_PHI3DRDZ_O_DDRDZ(IIJB:IIJE,IKE)
@@ -1112,11 +1109,8 @@ ELSE
     !$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)    
 END IF
 !
-#ifdef REPRO48
-#else
 !* smoothing
 CALL SMOOTH_TURB_FUNCT(D,CSTURB,TURBN,PPHI3,PPHI3*2.*PDTDZ,PD_PHI3DTDZ2_O_DDTDZ)
-#endif
 !
 !
 PD_PHI3DTDZ2_O_DDTDZ(IIJB:IIJE,IKB-1)=PD_PHI3DTDZ2_O_DDTDZ(IIJB:IIJE,IKB)
