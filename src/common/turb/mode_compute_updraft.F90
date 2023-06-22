@@ -390,29 +390,28 @@ IF (OENTR_DETR) THEN
     ZSHEAR = 0. !no shear in bl89 mixing length
   END IF
   !
-#ifdef REPRO48
   CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ,ZTKEM_F(:,IKB),&
                       &ZG_O_THVREF(:,IKB),ZTHVM,IKB,GLMIX,.TRUE.,ZSHEAR,ZLUP)
-#else
-  CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ,ZTKEM_F(:,IKB),&
-                      &ZG_O_THVREF(:,IKB),ZTHVM,IKB,GLMIX,.FALSE.,ZSHEAR,ZLUP)
-#endif
-  !$mnh_expand_where(JIJ=IIJB:IIJE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZLUP(IIJB:IIJE)=MAX(ZLUP(IIJB:IIJE),1.E-10)
 
   ! Compute Buoyancy flux at the ground
   ZWTHVSURF(IIJB:IIJE) = (ZTHVM_F(IIJB:IIJE,IKB)/ZTHM_F(IIJB:IIJE,IKB))*PSFTH(IIJB:IIJE)+     &
                 (0.61*ZTHM_F(IIJB:IIJE,IKB))*PSFRV(IIJB:IIJE)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
   ! Mass flux at KKB level (updraft triggered if PSFTH>0.)
   IF (PARAMMF%LGZ) THEN
     IF(PDX==0. .OR. PDY==0.) THEN                                                                                                   
       CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'COMPUTE_UPDRAFT', 'PDX or PDY is NULL with option LGZ!')                                  
     ENDIF
+    !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZSURF(IIJB:IIJE)=TANH(PARAMMF%XGZ*SQRT(PDX*PDY)/ZLUP(IIJB:IIJE))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   ELSE
     ZSURF(IIJB:IIJE)=1.
   END IF
+  !$mnh_expand_where(JIJ=IIJB:IIJE)
   WHERE (ZWTHVSURF(IIJB:IIJE)>0.)
     PEMF(IIJB:IIJE,IKB) = PARAMMF%XCMF * ZSURF(IIJB:IIJE) * ZRHO_F(IIJB:IIJE,IKB) *  &
             ((ZG_O_THVREF(IIJB:IIJE,IKB))*ZWTHVSURF(IIJB:IIJE)*ZLUP(IIJB:IIJE))**(1./3.)
@@ -518,15 +517,10 @@ DO JK=IKB,IKE-IKL,IKL
       ZMIX2(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*PENTR(JIJ,JK) !&
       ZMIX3_CLD(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1.-ZPART_DRY(JIJ))*ZDETR_CLD(JIJ,JK) !&                   
       ZMIX2_CLD(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1.-ZPART_DRY(JIJ))*ZENTR_CLD(JIJ,JK)
-#ifdef REPRO48
       PTHL_UP(JIJ,JK+IKL)=(PTHL_UP(JIJ,JK)*(1.-0.5*ZMIX2(JIJ)) + PTHLM(JIJ,JK)*ZMIX2(JIJ)) &
                             /(1.+0.5*ZMIX2(JIJ))   
       PRT_UP(JIJ,JK+IKL) =(PRT_UP (JIJ,JK)*(1.-0.5*ZMIX2(JIJ)) + PRTM(JIJ,JK)*ZMIX2(JIJ))  &
                             /(1.+0.5*ZMIX2(JIJ))
-#else
-      PTHL_UP(JIJ,JK+IKL)=PTHL_UP(JIJ,JK)*EXP(-ZMIX2(JIJ)) + PTHLM(JIJ,JK)*(1-EXP(-ZMIX2(JIJ)))
-      PRT_UP(JIJ,JK+IKL) =PRT_UP (JIJ,JK)*EXP(-ZMIX2(JIJ)) +  PRTM(JIJ,JK)*(1-EXP(-ZMIX2(JIJ)))
-#endif
     ENDIF
   ENDDO
   
