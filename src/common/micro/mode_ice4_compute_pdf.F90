@@ -79,7 +79,7 @@ REAL, DIMENSION(KSIZE) :: ZRCRAUTC,      & !RC value to begin rain formation =XC
                           ZSUMRC, ZSUMRI
 REAL :: ZCOEFFRCM
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-INTEGER :: JI
+INTEGER :: JL
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 0, ZHOOK_HANDLE)!
@@ -88,7 +88,7 @@ IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 0, ZHOOK_HANDLE)!
 ZRCRAUTC(:)=ICEP%XCRIAUTC/PRHODREF(:) ! Autoconversion rc threshold
 IF(HSUBG_AUCV_RC=='NONE') THEN
   !Cloud water is entirely in low or high part
- !$mnh_expand_where(JI=1:KSIZE)
+ !$mnh_expand_where(JL=1:KSIZE)
   WHERE(PRCT(:)>ZRCRAUTC(:))
     PHLC_HCF(:)=1.
     PHLC_LCF(:)=0.
@@ -105,11 +105,11 @@ IF(HSUBG_AUCV_RC=='NONE') THEN
     PHLC_HRC(:)=0.
     PHLC_LRC(:)=0.
   END WHERE
- !$mnh_end_expand_where(JI=1:KSIZE)
+ !$mnh_end_expand_where(JL=1:KSIZE)
 
 ELSEIF(HSUBG_AUCV_RC=='CLFR') THEN
   !Cloud water is only in the cloudy part and entirely in low or high part
- !$mnh_expand_where(JI=1:KSIZE)
+ !$mnh_expand_where(JL=1:KSIZE)
   WHERE(PCF(:)>0. .AND. PRCT(:)>ZRCRAUTC(:)*PCF(:))
     PHLC_HCF(:)=PCF(:)
     PHLC_LCF(:)=0.
@@ -126,9 +126,9 @@ ELSEIF(HSUBG_AUCV_RC=='CLFR') THEN
     PHLC_HRC(:)=0.
     PHLC_LRC(:)=0.
   END WHERE
- !$mnh_end_expand_where(JI=1:KSIZE)
+ !$mnh_end_expand_where(JL=1:KSIZE)
 ELSEIF(HSUBG_AUCV_RC=='ADJU') THEN
- !$mnh_expand_where(JI=1:KSIZE)
+ !$mnh_expand_where(JL=1:KSIZE)
   ZSUMRC(:)=PHLC_LRC(:)+PHLC_HRC(:)
   WHERE(ZSUMRC(:) .GT. 0.)
     PHLC_LRC(:)=PHLC_LRC(:)*PRCT(:)/ZSUMRC(:)
@@ -137,7 +137,7 @@ ELSEIF(HSUBG_AUCV_RC=='ADJU') THEN
     PHLC_LRC(:)=0.
     PHLC_HRC(:)=0.
   ENDWHERE
- !$mnh_end_expand_where(JI=1:KSIZE)
+ !$mnh_end_expand_where(JL=1:KSIZE)
 ELSEIF(HSUBG_AUCV_RC=='PDF ') THEN
   !Cloud water is split between high and low part according to a PDF
   !    'HLCRECTPDF'    : rectangular PDF form
@@ -147,7 +147,7 @@ ELSEIF(HSUBG_AUCV_RC=='PDF ') THEN
   !    'SIGM'          : Redelsperger and Sommeria (1986)
   IF(HSUBG_PR_PDF=='SIGM') THEN
     ! Redelsperger and Sommeria (1986) but organised according to Turner (2011, 2012)
-   !$mnh_expand_where(JI=1:KSIZE)
+   !$mnh_expand_where(JL=1:KSIZE)
     WHERE (PRCT(:)>ZRCRAUTC(:)+PSIGMA_RC(:))
       PHLC_HCF(:)=1.
       PHLC_LCF(:)=0.
@@ -172,7 +172,7 @@ ELSEIF(HSUBG_AUCV_RC=='PDF ') THEN
       PHLC_HRC(:)=0.
       PHLC_LRC(:)=0.
     END WHERE
-   !$mnh_end_expand_where(JI=1:KSIZE)
+   !$mnh_end_expand_where(JL=1:KSIZE)
   ELSEIF(HSUBG_PR_PDF=='HLCRECTPDF' .OR. HSUBG_PR_PDF=='HLCISOTRIPDF' .OR. &
          &HSUBG_PR_PDF=='HLCTRIANGPDF' .OR. HSUBG_PR_PDF=='HLCQUADRAPDF') THEN
     ! Turner (2011, 2012)
@@ -184,7 +184,7 @@ ELSEIF(HSUBG_AUCV_RC=='PDF ') THEN
     ELSE IF(HSUBG_PR_PDF=='HLCQUADRAPDF') THEN
       ZCOEFFRCM=4.
     END IF
-   !$mnh_expand_where(JI=1:KSIZE)
+   !$mnh_expand_where(JL=1:KSIZE)
     WHERE(PRCT(:).GT.0. .AND. PCF(:).GT.0.)
       ZHLC_RCMAX(:)=ZCOEFFRCM*PRCT(:)/PCF(:)
     END WHERE
@@ -211,20 +211,20 @@ ELSEIF(HSUBG_AUCV_RC=='PDF ') THEN
         ZHLC_HRCLOCAL(:)=(ZHLC_RCMAX(:) + 3.0*ZRCRAUTC(:))/4.0
       END WHERE
     ELSE IF(HSUBG_PR_PDF=='HLCISOTRIPDF') THEN
-    DO JI=1,KSIZE  
-     IF(PRCT(JI).GT.0. .AND. PCF(JI).GT.0. .AND. ZHLC_RCMAX(JI).GT.ZRCRAUTC(JI)) THEN
-        IF((PRCT(JI) / PCF(JI)).LE.ZRCRAUTC(JI)) THEN
-          ZHLC_LRCLOCAL(JI)=( (ZHLC_RCMAX(JI))**3 &
-                          -(12.0 * (ZHLC_RCMAX(JI))*(ZRCRAUTC(JI))**2) &
-                          +(8.0 * ZRCRAUTC(JI)**3) ) &
-                          /( (6.0 * (ZHLC_RCMAX(JI))**2) &
-                          -(24.0 * (ZHLC_RCMAX(JI)) * ZRCRAUTC(JI)) &
-                          +(12.0 * ZRCRAUTC(JI)**2) )
-          ZHLC_HRCLOCAL(JI)=( ZHLC_RCMAX(JI) + 2.0 * ZRCRAUTC(JI) )/3.0
+    DO JL=1,KSIZE  
+     IF(PRCT(JL).GT.0. .AND. PCF(JL).GT.0. .AND. ZHLC_RCMAX(JL).GT.ZRCRAUTC(JL)) THEN
+        IF((PRCT(JL) / PCF(JL)).LE.ZRCRAUTC(JL)) THEN
+          ZHLC_LRCLOCAL(JL)=( (ZHLC_RCMAX(JL))**3 &
+                          -(12.0 * (ZHLC_RCMAX(JL))*(ZRCRAUTC(JL))**2) &
+                          +(8.0 * ZRCRAUTC(JL)**3) ) &
+                          /( (6.0 * (ZHLC_RCMAX(JL))**2) &
+                          -(24.0 * (ZHLC_RCMAX(JL)) * ZRCRAUTC(JL)) &
+                          +(12.0 * ZRCRAUTC(JL)**2) )
+          ZHLC_HRCLOCAL(JL)=( ZHLC_RCMAX(JL) + 2.0 * ZRCRAUTC(JL) )/3.0
         ELSE
-          ZHLC_LRCLOCAL(JI)=(2.0/3.0) * ZRCRAUTC(JI)
-          ZHLC_HRCLOCAL(JI)=(3.0*ZHLC_RCMAX(JI)**3 - 8.0*ZRCRAUTC(JI)**3) &
-                          / (6.0 * ZHLC_RCMAX(JI)**2 - 12.0*ZRCRAUTC(JI)**2)
+          ZHLC_LRCLOCAL(JL)=(2.0/3.0) * ZRCRAUTC(JL)
+          ZHLC_HRCLOCAL(JL)=(3.0*ZHLC_RCMAX(JL)**3 - 8.0*ZRCRAUTC(JL)**3) &
+                          / (6.0 * ZHLC_RCMAX(JL)**2 - 12.0*ZRCRAUTC(JL)**2)
         END IF
       END IF
     END DO
@@ -253,7 +253,7 @@ ELSEIF(HSUBG_AUCV_RC=='PDF ') THEN
       PHLC_LRC(:)=0.
       PHLC_HRC(:)=0.
     END WHERE
-   !$mnh_end_expand_where(JI=1:KSIZE)
+   !$mnh_end_expand_where(JL=1:KSIZE)
   ELSE
     CALL PRINT_MSG(NVERB_FATAL,'GEN','ICE4_COMPUTE_PDF','wrong HSUBG_PR_PDF case')
   ENDIF
@@ -262,11 +262,11 @@ ELSE
 ENDIF
 !
 !Ice water split between high and low content part is done according to autoconversion option
-!$mnh_expand_where(JI=1:KSIZE)
+!$mnh_expand_where(JL=1:KSIZE)
   ZCRIAUTI(:)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(:)-CST%XTT)+ICEP%XBCRIAUTI)) ! Autoconversion ri threshold
-!$mnh_end_expand_where(JI=1:KSIZE)
+!$mnh_end_expand_where(JL=1:KSIZE)
 IF(HSUBG_AUCV_RI=='NONE') THEN
- !$mnh_expand_where(JI=1:KSIZE)
+ !$mnh_expand_where(JL=1:KSIZE)
   !Cloud water is entirely in low or high part
   WHERE(PRIT(:)>ZCRIAUTI(:))
     PHLI_HCF(:)=1.
@@ -284,10 +284,10 @@ IF(HSUBG_AUCV_RI=='NONE') THEN
     PHLI_HRI(:)=0.
     PHLI_LRI(:)=0.
   END WHERE
- !$mnh_end_expand_where(JI=1:KSIZE)
+ !$mnh_end_expand_where(JL=1:KSIZE)
 ELSEIF(HSUBG_AUCV_RI=='CLFR') THEN
   !Cloud water is only in the cloudy part and entirely in low or high part
- !$mnh_expand_where(JI=1:KSIZE)
+ !$mnh_expand_where(JL=1:KSIZE)
   WHERE(PCF(:)>0. .AND. PRIT(:)>ZCRIAUTI(:)*PCF(:))
     PHLI_HCF(:)=PCF(:)
     PHLI_LCF(:)=0.
@@ -304,9 +304,9 @@ ELSEIF(HSUBG_AUCV_RI=='CLFR') THEN
     PHLI_HRI(:)=0.
     PHLI_LRI(:)=0.
   END WHERE
- !$mnh_end_expand_where(JI=1:KSIZE)
+ !$mnh_end_expand_where(JL=1:KSIZE)
 ELSEIF(HSUBG_AUCV_RI=='ADJU') THEN
- !$mnh_expand_where(JI=1:KSIZE)
+ !$mnh_expand_where(JL=1:KSIZE)
   ZSUMRI(:)=PHLI_LRI(:)+PHLI_HRI(:)
   WHERE(ZSUMRI(:) .GT. 0.)
     PHLI_LRI(:)=PHLI_LRI(:)*PRIT(:)/ZSUMRI(:)
@@ -315,7 +315,7 @@ ELSEIF(HSUBG_AUCV_RI=='ADJU') THEN
     PHLI_LRI(:)=0.
     PHLI_HRI(:)=0.
   ENDWHERE
- !$mnh_end_expand_where(JI=1:KSIZE)
+ !$mnh_end_expand_where(JL=1:KSIZE)
 ELSE
   !wrong HSUBG_AUCV_RI case
   CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'ICE4_COMPUTE_PDF', 'wrong HSUBG_AUCV_RI case' )

@@ -64,31 +64,31 @@ LOGICAL, DIMENSION(KSIZE) :: GNEGT  ! Test where to compute the HEN process
 REAL, DIMENSION(KSIZE)  :: ZZW,      & ! Work array
                            ZUSW,     & ! Undersaturation over water
                            ZSSI        ! Supersaturation over ice
-INTEGER :: JI
+INTEGER :: JL
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_NUCLEATION', 0, ZHOOK_HANDLE)!
 !
-!$mnh_expand_where(JI=1:KSIZE)
+!$mnh_expand_where(JL=1:KSIZE)
 WHERE(ODCOMPUTE(:))
   GNEGT(:)=PT(:)<CST%XTT .AND. PRVT(:)>ICED%XRTMIN(1)
 ELSEWHERE
   GNEGT(:)=.FALSE.
 ENDWHERE
-!$mnh_end_expand_where(JI=1:KSIZE)
+!$mnh_end_expand_where(JL=1:KSIZE)
 
 ZUSW(:)=0.
 ZZW(:)=0.
-!$mnh_expand_where(JI=1:KSIZE)
+!$mnh_expand_where(JL=1:KSIZE)
 WHERE(GNEGT(:))
   ZZW(:)=ALOG(PT(:))
   ZUSW(:)=EXP(CST%XALPW - CST%XBETAW/PT(:) - CST%XGAMW*ZZW(:))          ! es_w
   ZZW(:)=EXP(CST%XALPI - CST%XBETAI/PT(:) - CST%XGAMI*ZZW(:))           ! es_i
 END WHERE
-!$mnh_end_expand_where(JI=1:KSIZE)
+!$mnh_end_expand_where(JL=1:KSIZE)
 
 ZSSI(:)=0.
-!$mnh_expand_where(JI=1:KSIZE)
+!$mnh_expand_where(JL=1:KSIZE)
 WHERE(GNEGT(:))
   ZZW(:)=MIN(PPABST(:)/2., ZZW(:))             ! safety limitation
   ZSSI(:)=PRVT(:)*(PPABST(:)-ZZW(:)) / (CST%XEPSILO*ZZW(:)) - 1.0
@@ -103,28 +103,28 @@ WHERE(GNEGT(:))
   !
   ZSSI(:)=MIN(ZSSI(:), ZUSW(:)) ! limitation of SSi according to SSw=0
 END WHERE
-!$mnh_end_expand_where(JI=1:KSIZE)
+!$mnh_end_expand_where(JL=1:KSIZE)
 
 ZZW(:)=0.
-DO JI=1,KSIZE
-  IF(GNEGT(JI)) THEN
-    IF(PT(JI)<CST%XTT-5.0 .AND. ZSSI(JI)>0.0) THEN
-      ZZW(JI)=ICEP%XNU20*EXP(ICEP%XALPHA2*ZSSI(JI)-ICEP%XBETA2)
-    ELSEIF(PT(JI)<=CST%XTT-2.0 .AND. PT(JI)>=CST%XTT-5.0 .AND. ZSSI(JI)>0.0) THEN
-      ZZW(JI)=MAX(ICEP%XNU20*EXP(-ICEP%XBETA2 ), &                                                                                       
-                  ICEP%XNU10*EXP(-ICEP%XBETA1*(PT(JI)-CST%XTT))*(ZSSI(JI)/ZUSW(JI))**ICEP%XALPHA1)
+DO JL=1,KSIZE
+  IF(GNEGT(JL)) THEN
+    IF(PT(JL)<CST%XTT-5.0 .AND. ZSSI(JL)>0.0) THEN
+      ZZW(JL)=ICEP%XNU20*EXP(ICEP%XALPHA2*ZSSI(JL)-ICEP%XBETA2)
+    ELSEIF(PT(JL)<=CST%XTT-2.0 .AND. PT(JL)>=CST%XTT-5.0 .AND. ZSSI(JL)>0.0) THEN
+      ZZW(JL)=MAX(ICEP%XNU20*EXP(-ICEP%XBETA2 ), &                                                                                       
+                  ICEP%XNU10*EXP(-ICEP%XBETA1*(PT(JL)-CST%XTT))*(ZSSI(JL)/ZUSW(JL))**ICEP%XALPHA1)
     ENDIF
   ENDIF
 ENDDO
-!$mnh_expand_where(JI=1:KSIZE)
+!$mnh_expand_where(JL=1:KSIZE)
 WHERE(GNEGT(:))
   ZZW(:)=ZZW(:)-PCIT(:)
   ZZW(:)=MIN(ZZW(:), 50.E3) ! limitation provisoire a 50 l^-1
 END WHERE
-!$mnh_end_expand_where(JI=1:KSIZE)
+!$mnh_end_expand_where(JL=1:KSIZE)
 
 PRVHENI_MR(:)=0.
-!$mnh_expand_where(JI=1:KSIZE)
+!$mnh_expand_where(JL=1:KSIZE)
 WHERE(GNEGT(:))
   !
   !*       3.1.2   update the r_i and r_v mixing ratios
@@ -132,11 +132,11 @@ WHERE(GNEGT(:))
   PRVHENI_MR(:)=MAX(ZZW(:), 0.0)*ICEP%XMNU0/PRHODREF(:)
   PRVHENI_MR(:)=MIN(PRVT(:), PRVHENI_MR(:))
 END WHERE
-!$mnh_end_expand_where(JI=1:KSIZE)
+!$mnh_end_expand_where(JL=1:KSIZE)
 !Limitation due to 0 crossing of temperature
 IF(PARAMI%LFEEDBACKT) THEN
   ZW(:)=0.
-  !$mnh_expand_where(JI=1:KSIZE)
+  !$mnh_expand_where(JL=1:KSIZE)
   WHERE(GNEGT(:))
     ZW(:)=MIN(PRVHENI_MR(:), &
               MAX(0., (CST%XTT/PEXN(:)-PTHT(:))/PLSFACT(:))) / &
@@ -144,13 +144,13 @@ IF(PARAMI%LFEEDBACKT) THEN
   END WHERE
   PRVHENI_MR(:)=PRVHENI_MR(:)*ZW(:)
   ZZW(:)=ZZW(:)*ZW(:)
-  !$mnh_end_expand_where(JI=1:KSIZE)
+  !$mnh_end_expand_where(JL=1:KSIZE)
 ENDIF
-!$mnh_expand_where(JI=1:KSIZE)
+!$mnh_expand_where(JL=1:KSIZE)
 WHERE(GNEGT(:))
   PCIT(:)=MAX(ZZW(:)+PCIT(:), PCIT(:))
 END WHERE
-!$mnh_end_expand_where(JI=1:KSIZE)
+!$mnh_end_expand_where(JL=1:KSIZE)
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_NUCLEATION', 1, ZHOOK_HANDLE)
 END SUBROUTINE ICE4_NUCLEATION
