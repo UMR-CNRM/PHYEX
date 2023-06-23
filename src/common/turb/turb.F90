@@ -903,11 +903,7 @@ END IF
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZCDUEFF(IIJB:IIJE) =-SQRT ( (PSFU(IIJB:IIJE)**2 + PSFV(IIJB:IIJE)**2) /               &
-#ifdef REPRO48
-                    (1.E-60 + ZUSLOPE(IIJB:IIJE)**2 + ZVSLOPE(IIJB:IIJE)**2 ) )
-#else
                     (CST%XMNH_TINY + ZUSLOPE(IIJB:IIJE)**2 + ZVSLOPE(IIJB:IIJE)**2 ) )
-#endif
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 !
 !*       4.6 compute the surface tangential fluxes
