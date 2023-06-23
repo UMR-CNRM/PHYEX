@@ -84,7 +84,7 @@ BL_DEPTH_DIAG3D(:) = 0.
 !
 
 DO JIJ=IIJB,IIJE
-    IF (PSURF(JIJ)==0.) CYCLE
+    IF (PSURF(JIJ)/=0.) THEN
     DO JK=IKB,IKE,IKL
       IF (PZZ(JIJ,JK-IKL)<=PZS(JIJ)) CYCLE
       ZFLX = PSURF(JIJ) * PFTOP_O_FSURF
@@ -96,6 +96,7 @@ DO JIJ=IIJB,IIJE
         EXIT
       END IF
     END DO
+  END IF
 END DO
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE)

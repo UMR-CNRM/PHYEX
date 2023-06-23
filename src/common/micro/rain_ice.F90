@@ -409,7 +409,7 @@ DO JK=IKTB,IKTE
     ENDIF
   ENDDO
 ENDDO
-CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, D%NIJT*D%NKT, LLW3D(:,:), &
+CALL ICE4_NUCLEATION(D, CST, PARAMI, ICEP, ICED, D%NIJT*D%NKT, LLW3D(:,:), &
                      PTHT(:, :), PPABST(:, :), PRHODREF(:, :), &                                       
                      PEXN(:, :), ZW3D(:, :), ZT(:, :), &                                                           
                      PRVT(:, :), &                                                                                 
