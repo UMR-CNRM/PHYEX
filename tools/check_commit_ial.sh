@@ -23,6 +23,9 @@ set -o pipefail #abort if left command on a pipe fails
 #small_3D_alt11: same as small_3D but with a different value for NPROMICRO (must give exactly the same results)
 #small_3D_alt12: same as small_3D but with LPACK_MICRO=.F. (must give exactly the same results)
 
+#When running in 49t0 after the f065e64 commit (23 June 2023) all configurations must be compared to this same commit.
+#79fe47e (previous commit) is identical to the different references for all the test cases.
+
 #The small_3D_alt7 needed a correction in apl_arome which has been introduced in d37dd1f. But the reference pack has been modified
 #                  afterwards to enable this test case to be run (documented in INSTALL_pack_ial.md). In consequence, the reference
 #                  to use is the same as for the other test cases and this case cannot be run for commit before d37dd1f (20 April 2022).
@@ -31,12 +34,8 @@ set -o pipefail #abort if left command on a pipe fails
 #                  Indeed, on 3 February 2022 (commit 907e906) the mesonh version of compute_updraft_rhcj.F90 has been put in the common directory.
 #                  The reference is
 #                       the commit 907e906 when running in 48t1
-#                       the commit d10ed48 when running in 48t3
-#                       the commit 7e55649 when running in 49t0
-#                  Indeed, it was checked that edc3f88 (last commit in 48t1) is identical to 907e906.
-#                                     and that 9164c67 (last commit in 48t3) is identical to d10ed48
-#                  Between edc3f88 and d10ed48 only the reference change, physics source code is identical.
-#                  The same applies between 9164c67 and 7e55649.
+#                       the commit d10ed48 when running in 48t3 (edc3f88 (last commit in 48t1) is identical to 907e906)
+#                       the commit 7e55649 when running in 49t0 (9164c67 (last commit in 48t3) is identical to d10ed48)
 
 #The small_3D_alt9 is not included in the list of available tests because it needs to be compared against a special commit.
 #                  Indeed, some pieces are missing in the reference pack.
@@ -44,9 +43,7 @@ set -o pipefail #abort if left command on a pipe fails
 #                  The reference is
 #                       the commit edc3f88 (21 September 2022) when running in 48t1
 #                       the commit d10ed48 in 48t3 (29 september 2022) when running in 48t3
-#                       the commit 110a5aa in 49t0 (13 June 2023) when running in 49t0
-#                  Indeed, it was checked that bd44ba7 (patch on the last commint in 48t3) is identical to d10ed48
-#                  Between bd44ba7 and 110a5aa only the reference change, physics source code is identical.
+#                       the commit 110a5aa in 49t0 (13 June 2023) when running in 49t0 (bd44ba7 (patch on the last commint in 48t3) is identical to d10ed48)
 
 #The small_3D_alt10 is not included in the list because it is not sufficiently different from other tests
 #                  Be careful that namelists were wrong before commit 3c01df4 (8 June 2023)
@@ -55,9 +52,7 @@ set -o pipefail #abort if left command on a pipe fails
 #                  Indeed, the lima version in arome has been changed.
 #                  The reference commit is
 #                       the commit d095d11 (20 March 2023) when running in 48t3
-#                       the commit 7e55649 when running in 49t0
-#                  Indeed, it was checked that 9164c67 (last commit in 48t3) is identical to d095d11.
-#                  Between 9164c67 and 7e55649 only the reference change, physics source code is identical.
+#                       the commit 7e55649 when running in 49t0 (9164c67 (last commit in 48t3) is identical to d095d11)
 
 #Special pack names:
 # - recompil: original source code (everything under mpa)
