@@ -1000,11 +1000,11 @@ IF (HTURBDIM=='3DIM') THEN
   IF (OUSERV) THEN
     DO JK=1,IKT 
       DO JIJ=IIJB,IIJE     
-#ifdef REPRO48
+!!#ifdef REPRO48
         IF (PPHI3(JIJ,JK)/=CSTURB%XPHI_LIM)THEN
-#else
-        IF (PPHI3(JIJ,JK)<=CSTURB%XPHI_LIM)THEN
-#endif
+!!#else
+!!        IF (PPHI3(JIJ,JK)<=CSTURB%XPHI_LIM)THEN
+!!#endif
           PD_PHI3DTDZ_O_DDTDZ(JIJ,JK) = PPHI3(JIJ,JK)                       &
           * (1. - PREDTH1(JIJ,JK) * (3./2.+PREDTH1(JIJ,JK)+PREDR1(JIJ,JK))   &
           /((1.+PREDTH1(JIJ,JK)+PREDR1(JIJ,JK)) &
@@ -1026,11 +1026,11 @@ IF (HTURBDIM=='3DIM') THEN
   ELSE
     DO JK=1,IKT 
       DO JIJ=IIJB,IIJE     
-#ifdef REPRO48
+!!#ifdef REPRO48
         IF (PPHI3(JIJ,JK)/=CSTURB%XPHI_LIM)THEN
-#else
-        IF (PPHI3(JIJ,JK)<=CSTURB%XPHI_LIM)THEN
-#endif
+!!#else
+!!        IF (PPHI3(JIJ,JK)<=CSTURB%XPHI_LIM)THEN
+!!#endif
           PD_PHI3DTDZ_O_DDTDZ(JIJ,JK) = PPHI3(JIJ,JK)             &
           * (1. - PREDTH1(JIJ,JK) * (3./2.+PREDTH1(JIJ,JK))      &
           /((1.+PREDTH1(JIJ,JK))*(1.+1./2.*PREDTH1(JIJ,JK))))        &
@@ -1096,11 +1096,11 @@ IF (HTURBDIM=='3DIM') THEN
   IF (OUSERV) THEN
     DO JK=1,IKT 
       DO JIJ=IIJB,IIJE     
-#ifdef REPRO48
+!!#ifdef REPRO48
         IF (PPHI3(JIJ,JK)/=CSTURB%XPHI_LIM)THEN
-#else
-        IF (PPHI3(JIJ,JK)<=CSTURB%XPHI_LIM)THEN
-#endif
+!!#else
+!!        IF (PPHI3(JIJ,JK)<=CSTURB%XPHI_LIM)THEN
+!!#endif
           PD_PHI3DRDZ_O_DDRDZ(JIJ,JK) = PPHI3(JIJ,JK) &
           * (1.-PREDR1(JIJ,JK)*(3./2.+PREDTH1(JIJ,JK)+PREDR1(JIJ,JK)) &
           / ((1.+PREDTH1(JIJ,JK)+PREDR1(JIJ,JK)) & 
@@ -1124,11 +1124,11 @@ ELSE
         !* 1DIM case
   DO JK=1,IKT 
     DO JIJ=IIJB,IIJE     
-#ifdef REPRO48
+!!#ifdef REPRO48
       IF (PPHI3(JIJ,JK)/=CSTURB%XPHI_LIM)THEN
-#else
-      IF (PPHI3(JIJ,JK)<=CSTURB%XPHI_LIM)THEN
-#endif
+!!#else
+!!      IF (PPHI3(JIJ,JK)<=CSTURB%XPHI_LIM)THEN
+!!#endif
         PD_PHI3DRDZ_O_DDRDZ(JIJ,JK) = PPHI3(JIJ,JK)                           &
         * (1. - PREDR1(JIJ,JK)*PPHI3(JIJ,JK))
       ELSE
@@ -1185,11 +1185,11 @@ ELSE
         !* 1DIM case
   DO JK=1,IKT 
     DO JIJ=IIJB,IIJE     
-#ifdef REPRO48
+!!#ifdef REPRO48
       IF (PPHI3(JIJ,JK)/=CSTURB%XPHI_LIM)THEN
-#else
-      IF (PPHI3(JIJ,JK)<=CSTURB%XPHI_LIM)THEN
-#endif
+!!#else
+!!      IF (PPHI3(JIJ,JK)<=CSTURB%XPHI_LIM)THEN
+!!#endif
         PD_PHI3DTDZ2_O_DDTDZ(JIJ,JK) = PPHI3(JIJ,JK)*PDTDZ(JIJ,JK)             &
         * (2. - PREDTH1(JIJ,JK)*PPHI3(JIJ,JK))
       ELSE

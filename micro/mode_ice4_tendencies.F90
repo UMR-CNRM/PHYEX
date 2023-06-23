@@ -260,11 +260,11 @@ IF (LLRFR) THEN
   DO JL=1,KSIZE
     PRAINFR(K1(JL), K2(JL)) = ZRAINFR(JL)
     ZRRT3D (K1(JL), K2(JL)) = ZVART(JL,IRR)
-#ifdef REPRO48
-#else
-    ZRST3D (K1(JL), K2(JL)) = ZVART(JL,IRS)
-    ZRGT3D (K1(JL), K2(JL)) = ZVART(JL,IRG)
-#endif
+!!#ifdef REPRO48
+!!#else
+!!    ZRST3D (K1(JL), K2(JL)) = ZVART(JL,IRS)
+!!    ZRGT3D (K1(JL), K2(JL)) = ZVART(JL,IRG)
+!!#endif
   END DO
   IF (KRR==7) THEN
     DO JL=1,KSIZE

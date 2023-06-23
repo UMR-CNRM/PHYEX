@@ -386,43 +386,43 @@ DO WHILE (ANY(ZREMAINT>0.))
         ENDIF
       ENDDO
     ENDDO
-#ifdef REPRO48
-#else
-  ELSEIF(KSPE==5) THEN
-    ! ******* for snow
-    ZWSED(:,:) = 0.
-    DO JK = IKTB,IKTE
-      DO JIJ = IIJB,IIJE
-        IF(PRXT(JIJ,JK)> ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
-           IF (PARAMI%LSNOW_T .AND. PT(JIJ,JK)>263.15) THEN
-              ZLBDA = MAX(MIN(ICED%XLBDAS_MAX, 10**(14.554-0.0423*PT(JIJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
-           ELSE IF (PARAMI%LSNOW_T) THEN
-              ZLBDA = MAX(MIN(ICED%XLBDAS_MAX, 10**(6.226 -0.0106*PT(JIJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
-           ELSE
-              ZLBDA=MAX(MIN(ICED%XLBDAS_MAX, ICED%XLBS * ( PRHODREF(JIJ,JK) * PRXT(JIJ,JK) )**ICED%XLBEXS),ICED%XLBDAS_MIN)
-           END IF
-           ZWSED(JIJ, JK) = ICEP%XFSEDS *  &
-                & PRXT(JIJ,JK)* &
-                & PRHODREF(JIJ,JK)**(1-ICED%XCEXVT) * &
-                & (1 + (ICED%XFVELOS/ZLBDA)**ICED%XALPHAS)** (-ICED%XNUS+ICEP%XEXSEDS/ICED%XALPHAS) * &
-                & ZLBDA ** (ICED%XBS+ICEP%XEXSEDS)
-
-        ENDIF
-      ENDDO
-    ENDDO
-#endif
+!!#ifdef REPRO48
+!!#else
+!!  ELSEIF(KSPE==5) THEN
+!!    ! ******* for snow
+!!    ZWSED(:,:) = 0.
+!!    DO JK = IKTB,IKTE
+!!      DO JIJ = IIJB,IIJE
+!!        IF(PRXT(JIJ,JK)> ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
+!!           IF (PARAMI%LSNOW_T .AND. PT(JIJ,JK)>263.15) THEN
+!!              ZLBDA = MAX(MIN(ICED%XLBDAS_MAX, 10**(14.554-0.0423*PT(JIJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
+!!           ELSE IF (PARAMI%LSNOW_T) THEN
+!!              ZLBDA = MAX(MIN(ICED%XLBDAS_MAX, 10**(6.226 -0.0106*PT(JIJ,JK))),ICED%XLBDAS_MIN)*ICED%XTRANS_MP_GAMMAS
+!!           ELSE
+!!              ZLBDA=MAX(MIN(ICED%XLBDAS_MAX, ICED%XLBS * ( PRHODREF(JIJ,JK) * PRXT(JIJ,JK) )**ICED%XLBEXS),ICED%XLBDAS_MIN)
+!!           END IF
+!!           ZWSED(JIJ, JK) = ICEP%XFSEDS *  &
+!!                & PRXT(JIJ,JK)* &
+!!                & PRHODREF(JIJ,JK)**(1-ICED%XCEXVT) * &
+!!                & (1 + (ICED%XFVELOS/ZLBDA)**ICED%XALPHAS)** (-ICED%XNUS+ICEP%XEXSEDS/ICED%XALPHAS) * &
+!!                & ZLBDA ** (ICED%XBS+ICEP%XEXSEDS)
+!!
+!!        ENDIF
+!!      ENDDO
+!!    ENDDO
+!!#endif
   ELSE
     ! ******* for other species
     SELECT CASE(KSPE)
       CASE(3)
         ZFSED=ICEP%XFSEDR
         ZEXSED=ICEP%XEXSEDR
-#ifdef REPRO48
+!!#ifdef REPRO48
       CASE(5)
         ZFSED=ICEP%XFSEDS
         ZEXSED=ICEP%XEXSEDS
-#else
-#endif
+!!#else
+!!#endif
       CASE(6)
         ZFSED=ICEP%XFSEDG
         ZEXSED=ICEP%XEXSEDG

@@ -243,19 +243,19 @@ DO JLBDAS = 1,SIZE(PRRCOLSS(:,:),1)
           DO JDR = 1,INR-1
             ZDR = ZDDCOLLR * REAL(JDR)
             ZCOLLR = ZCOLLR + (ZDS+ZDR)**2 * ZDR**PEXMASSR                     &
-#ifdef REPRO48
+!!#ifdef REPRO48
                        * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDR**PEXFALLR) &
-#else
-                       * PESR * ABS(PFALLS*ZDS**PEXFALLS * EXP(-(PFALLEXPS*ZDS)**PALPHAS)-PFALLR*ZDR**PEXFALLR) &
-#endif
+!!#else
+!!                       * PESR * ABS(PFALLS*ZDS**PEXFALLS * EXP(-(PFALLEXPS*ZDS)**PALPHAS)-PFALLR*ZDR**PEXFALLR) &
+!!#endif
                                       * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDR)
           END DO
           ZCOLLDRMAX = (ZDS+ZDRMAX)**2 * ZDRMAX**PEXMASSR                      &
-#ifdef REPRO48
+!!#ifdef REPRO48
                     * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDRMAX**PEXFALLR) &
-#else
-                    * PESR * ABS(PFALLS*ZDS**PEXFALLS* EXP(-(PFALLEXPS*ZDS)**PALPHAS)-PFALLR*ZDRMAX**PEXFALLR) &
-#endif
+!!#else
+!!                    * PESR * ABS(PFALLS*ZDS**PEXFALLS* EXP(-(PFALLEXPS*ZDS)**PALPHAS)-PFALLR*ZDRMAX**PEXFALLR) &
+!!#endif
                                    * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDRMAX)
           ZCOLLR = (ZCOLLR + 0.5*ZCOLLDRMAX)*(ZDDCOLLR/ZDDSCALR)
 !

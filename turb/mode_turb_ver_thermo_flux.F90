@@ -608,10 +608,10 @@ ELSE ! atmosp bottom
   END IF
 !
     ! atmos top
-#ifdef REPRO48
-#else
-      ZF(IIJB:IIJE,IKE+1)=0.
-#endif
+!!#ifdef REPRO48
+!!#else
+!!      ZF(IIJB:IIJE,IKE+1)=0.
+!!#endif
 END IF
 !
 ! Compute the split conservative potential temperature at t+deltat
@@ -1072,10 +1072,10 @@ IF (KRR /= 0) THEN
       ENDDO 
     END IF
       ! atmos top
-#ifdef REPRO48
-#else
-      ZF(IIJB:IIJE,IKE+1)=0.
-#endif
+!!#ifdef REPRO48
+!!#else
+!!      ZF(IIJB:IIJE,IKE+1)=0.
+!!#endif
     END IF
   ! Compute the split conservative potential temperature at t+deltat
   CALL TRIDIAG_THERMO(D,PRM(:,:,1),ZF,ZDFDDRDZ,PTSTEP,TURBN%XIMPL,&

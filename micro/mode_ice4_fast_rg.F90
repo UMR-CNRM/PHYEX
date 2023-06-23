@@ -190,13 +190,13 @@ IF(.NOT. LDSOFT) THEN
         IF(GDRY(JL))THEN
           PRG_TEND(JL,IRSWETG)=ICEP%XFSDRYG*ZZW(JL)                         & ! RSDRYG
           / ICEP%XCOLSG &
-#ifdef REPRO48
+!!#ifdef REPRO48
           *(PLBDAS(JL)**(ICED%XCXS-ICED%XBS))*( PLBDAG(JL)**ICED%XCXG )    &
           *(PRHODREF(JL)**(-ICED%XCEXVT-1.))                    &
-#else
-          *(PRST(JL))*( PLBDAG(JL)**ICED%XCXG )    &
-          *(PRHODREF(JL)**(-ICED%XCEXVT))                    &
-#endif
+!!#else
+!!          *(PRST(JL))*( PLBDAG(JL)**ICED%XCXG )    &
+!!          *(PRHODREF(JL)**(-ICED%XCEXVT))                    &
+!!#endif
           *( ICEP%XLBSDRYG1/( PLBDAG(JL)**2              ) + &
           ICEP%XLBSDRYG2/( PLBDAG(JL)   * PLBDAS(JL)   ) + &
           ICEP%XLBSDRYG3/(               PLBDAS(JL)**2))

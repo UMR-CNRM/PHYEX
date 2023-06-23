@@ -251,11 +251,11 @@ DO JK=IKTB,IKTE
           + sqrt(abs( (CSTURB%XRM17*PSHEAR(JIJ,JKK)*ZSQRT_TKE(JIJ,JK) &
           + ( -ZG_O_THVREF(JIJ,JK) * (ZVPT(JIJ,JKK) - ZVPT(JIJ,JK)) ))**2.0 + &
           2. * ZINTE(JIJ) * &
-#ifdef REPRO48
+!!#ifdef REPRO48
           ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK)/ PDZZ(JIJ,JKK)))) / &
-#else
-          (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK)/ PDZZ(JIJ,JKK))))) / &
-#endif
+!!#else
+!!          (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK)/ PDZZ(JIJ,JKK))))) / &
+!!#endif
           (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK) / PDZZ(JIJ,JKK))
         ZLWORK(JIJ)=ZLWORK(JIJ)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
         ZINTE(JIJ) = ZINTE(JIJ) - ZPOTE
@@ -300,11 +300,11 @@ DO JK=IKTB,IKTE
           (CSTURB%XRM17*PSHEAR(JIJ,JKK)*ZSQRT_TKE(JIJ,JK)   &
             + ( ZG_O_THVREF(JIJ,JK) * (ZVPT(JIJ,JKK-IKL) - ZVPT(JIJ,JK))) )**2    &
             + 2. * ZINTE(JIJ) * &
-#ifdef REPRO48
+!!#ifdef REPRO48
              ZG_O_THVREF(JIJ,JK)* ZDELTVPT(JIJ,JKK)/PDZZ(JIJ,JKK)))) / &
-#else
-            (ZG_O_THVREF(JIJ,JK)* ZDELTVPT(JIJ,JKK)/PDZZ(JIJ,JKK))))) / &
-#endif
+!!#else
+!!            (ZG_O_THVREF(JIJ,JK)* ZDELTVPT(JIJ,JKK)/PDZZ(JIJ,JKK))))) / &
+!!#endif
             (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK) / PDZZ(JIJ,JKK))
         ZLWORK(JIJ)=ZLWORK(JIJ)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
         ZINTE(JIJ) = ZINTE(JIJ) - ZPOTE

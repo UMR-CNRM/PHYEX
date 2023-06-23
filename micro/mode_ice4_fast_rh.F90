@@ -151,13 +151,13 @@ IF(.NOT. LDSOFT) THEN
       DO JL=1,KSIZE 
         IF(GWET(JL))THEN
           PRH_TEND(JL,IRSWETH)=ICEP%XFSWETH*ZZW(JL)                       & ! RSWETH
-#ifdef REPRO48
+!!#ifdef REPRO48
           *( PLBDAS(JL)**(ICED%XCXS-ICED%XBS) )*( PLBDAH(JL)**ICED%XCXH )  &
           *( PRHODREF(JL)**(-ICED%XCEXVT-1.) )               &
-#else
-          *( PRST(JL))*( PLBDAH(JL)**ICED%XCXH )  &
-          *( PRHODREF(JL)**(-ICED%XCEXVT) )               &
-#endif
+!!#else
+!!          *( PRST(JL))*( PLBDAH(JL)**ICED%XCXH )  &
+!!          *( PRHODREF(JL)**(-ICED%XCEXVT) )               &
+!!#endif
           *( ICEP%XLBSWETH1/( PLBDAH(JL)**2              ) + &
           ICEP%XLBSWETH2/( PLBDAH(JL)   * PLBDAS(JL)   ) + &
           ICEP%XLBSWETH3/(               PLBDAS(JL)**2) )

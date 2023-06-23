@@ -298,22 +298,22 @@ SELECT CASE ( CMICRO )
     DO JLON=KIDIA,KFDIA
       LL(JLON) = (PRS(JLON,1,JLEV,1) <0.) .AND. (PRS(JLON,1,JLEV,2)> 0.) 
       IF (LL(JLON)) THEN
-#ifdef REPRO48
+!!#ifdef REPRO48
         ZCOR(JLON)=PRS(JLON,1,JLEV,2)
-#else
-        ZCOR(JLON)=MIN(-PRS(JLON,1,JLEV,1),PRS(JLON,1,JLEV,2))
-#endif
+!!#else
+!!        ZCOR(JLON)=MIN(-PRS(JLON,1,JLEV,1),PRS(JLON,1,JLEV,2))
+!!#endif
       ENDIF
     ENDDO
     DO JLON=KIDIA,KFDIA
       IF (LL(JLON)) THEN
         PRS(JLON,1,JLEV,1) = PRS(JLON,1,JLEV,1) + ZCOR(JLON)
         PTHS(JLON,1,JLEV)  = PTHS(JLON,1,JLEV)  - ZCOR(JLON) * ZLV(JLON) / ZCPH(JLON) / PEXNREF(JLON,1,JLEV)
-#ifdef REPRO48
+!!#ifdef REPRO48
         PRS(JLON,1,JLEV,2) = 0.
-#else
-        PRS(JLON,1,JLEV,2) = PRS(JLON,1,JLEV,2) - ZCOR(JLON)
-#endif
+!!#else
+!!        PRS(JLON,1,JLEV,2) = PRS(JLON,1,JLEV,2) - ZCOR(JLON)
+!!#endif
       ENDIF
     ENDDO
 
