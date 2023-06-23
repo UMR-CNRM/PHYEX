@@ -77,7 +77,6 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZDELTVPT,ZHLVPT
                       !Virtual Potential Temp at Half level and DeltaThv between
                       !2 mass levels
 
-INTEGER :: J1D                  !horizontal loop counter
 INTEGER :: JKK                  !loop counters
 INTEGER :: JIJ, JK
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
@@ -132,32 +131,32 @@ IF (OUPORDN.EQV..TRUE.) THEN
    ZVPT_DEP(IIJB:IIJE)=ZHLVPT(IIJB:IIJE,KK) ! departure point is on flux level
    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
    !We must compute what happens between flux level KK and mass level KK
-   DO J1D=IIJB,IIJE
-     ZTEST0=0.5+SIGN(0.5,ZINTE(J1D)) ! test if there's energy to consume
+   DO JIJ=IIJB,IIJE
+     ZTEST0=0.5+SIGN(0.5,ZINTE(JIJ)) ! test if there's energy to consume
      ! Energy consumed if parcel cross the entire layer
-     ZPOTE(J1D) = ZTEST0*(PG_O_THVREF(J1D)      *      &
-         (0.5*(ZHLVPT(J1D,KK)+ PVPT(J1D,KK)) - ZVPT_DEP(J1D)) + &
-         CSTURB%XRM17*PSHEAR(J1D,KK)*SQRT(ABS(PTKEM_DEP(J1D))))  * &
-         PDZZ2D(J1D,KK)*0.5
+     ZPOTE(JIJ) = ZTEST0*(PG_O_THVREF(JIJ)      *      &
+         (0.5*(ZHLVPT(JIJ,KK)+ PVPT(JIJ,KK)) - ZVPT_DEP(JIJ)) + &
+         CSTURB%XRM17*PSHEAR(JIJ,KK)*SQRT(ABS(PTKEM_DEP(JIJ))))  * &
+         PDZZ2D(JIJ,KK)*0.5
      ! Test if it rests some energy to consume
-     ZTEST =0.5+SIGN(0.5,ZINTE(J1D)-ZPOTE(J1D))
+     ZTEST =0.5+SIGN(0.5,ZINTE(JIJ)-ZPOTE(JIJ))
      ! Length travelled by parcel if it rests energy to consume
-     ZLWORK1(J1D)=PDZZ2D(J1D,KK)*0.5
+     ZLWORK1(JIJ)=PDZZ2D(JIJ,KK)*0.5
      ! Lenght travelled by parcel to nullify energy
-     ZLWORK2(J1D)=        ( - PG_O_THVREF(J1D) *                     &
-            (  ZHLVPT(J1D,KK) - ZVPT_DEP(J1D) )                              &
-            - CSTURB%XRM17*PSHEAR(J1D,KK)*SQRT(ABS(PTKEM_DEP(J1D))) &
+     ZLWORK2(JIJ)=        ( - PG_O_THVREF(JIJ) *                     &
+            (  ZHLVPT(JIJ,KK) - ZVPT_DEP(JIJ) )                              &
+            - CSTURB%XRM17*PSHEAR(JIJ,KK)*SQRT(ABS(PTKEM_DEP(JIJ))) &
           + SQRT (ABS(                                                       &
-            (CSTURB%XRM17*PSHEAR(J1D,KK)*SQRT(ABS(PTKEM_DEP(J1D))) +  &
-             PG_O_THVREF(J1D) * (ZHLVPT(J1D,KK) - ZVPT_DEP(J1D)) )**2  &
-            + 2. * ZINTE(J1D) * PG_O_THVREF(J1D)                        &
-                 * ZDELTVPT(J1D,KK) / PDZZ2D(J1D,KK) ))    ) /             &
-        ( PG_O_THVREF(J1D) * ZDELTVPT(J1D,KK) / PDZZ2D(J1D,KK) ) 
+            (CSTURB%XRM17*PSHEAR(JIJ,KK)*SQRT(ABS(PTKEM_DEP(JIJ))) +  &
+             PG_O_THVREF(JIJ) * (ZHLVPT(JIJ,KK) - ZVPT_DEP(JIJ)) )**2  &
+            + 2. * ZINTE(JIJ) * PG_O_THVREF(JIJ)                        &
+                 * ZDELTVPT(JIJ,KK) / PDZZ2D(JIJ,KK) ))    ) /             &
+        ( PG_O_THVREF(JIJ) * ZDELTVPT(JIJ,KK) / PDZZ2D(JIJ,KK) ) 
       ! Effective length travelled by parcel
-      PLWORK(J1D)=PLWORK(J1D)+ZTEST0*(ZTEST*ZLWORK1(J1D)+  &
-                                    (1-ZTEST)*ZLWORK2(J1D))
+      PLWORK(JIJ)=PLWORK(JIJ)+ZTEST0*(ZTEST*ZLWORK1(JIJ)+  &
+                                    (1-ZTEST)*ZLWORK2(JIJ))
       ! Rest of energy to consume
-      ZINTE(J1D) = ZINTE(J1D) - ZPOTE(J1D)
+      ZINTE(JIJ) = ZINTE(JIJ) - ZPOTE(JIJ)
    ENDDO
  ELSE
    !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -168,28 +167,28 @@ IF (OUPORDN.EQV..TRUE.) THEN
  DO JKK=KK+IKL,IKE,IKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0
-      DO J1D=IIJB,IIJE
-        ZTEST0=0.5+SIGN(0.5,ZINTE(J1D))
-        ZPOTE(J1D) = ZTEST0*(PG_O_THVREF(J1D)      *      &
-            (ZHLVPT(J1D,JKK) - ZVPT_DEP(J1D))   &
-           + CSTURB%XRM17*PSHEAR(J1D,JKK)*SQRT(ABS(PTKEM_DEP(J1D))))* PDZZ2D(J1D,JKK) 
-        ZTEST =0.5+SIGN(0.5,ZINTE(J1D)-ZPOTE(J1D))
+      DO JIJ=IIJB,IIJE
+        ZTEST0=0.5+SIGN(0.5,ZINTE(JIJ))
+        ZPOTE(JIJ) = ZTEST0*(PG_O_THVREF(JIJ)      *      &
+            (ZHLVPT(JIJ,JKK) - ZVPT_DEP(JIJ))   &
+           + CSTURB%XRM17*PSHEAR(JIJ,JKK)*SQRT(ABS(PTKEM_DEP(JIJ))))* PDZZ2D(JIJ,JKK) 
+        ZTEST =0.5+SIGN(0.5,ZINTE(JIJ)-ZPOTE(JIJ))
         ZTESTM=ZTESTM+ZTEST0
-        ZLWORK1(J1D)=PDZZ2D(J1D,JKK)
+        ZLWORK1(JIJ)=PDZZ2D(JIJ,JKK)
         !ZLWORK2 jump of the last reached level
-        ZLWORK2(J1D)=        ( - PG_O_THVREF(J1D) *                     &
-            (  PVPT(J1D,JKK-IKL) - ZVPT_DEP(J1D) )                              &
-            - CSTURB%XRM17*PSHEAR(J1D,JKK)*sqrt(abs(PTKEM_DEP(J1D))) &
+        ZLWORK2(JIJ)=        ( - PG_O_THVREF(JIJ) *                     &
+            (  PVPT(JIJ,JKK-IKL) - ZVPT_DEP(JIJ) )                              &
+            - CSTURB%XRM17*PSHEAR(JIJ,JKK)*sqrt(abs(PTKEM_DEP(JIJ))) &
           + SQRT (ABS(                                                   &
-            (CSTURB%XRM17*PSHEAR(J1D,JKK)*sqrt(abs(PTKEM_DEP(J1D))) +  &
-             PG_O_THVREF(J1D) * (PVPT(J1D,JKK-IKL) - ZVPT_DEP(J1D)) )**2  &
-            + 2. * ZINTE(J1D) * PG_O_THVREF(J1D)                        &
-                 * ZDELTVPT(J1D,JKK) / PDZZ2D(J1D,JKK) ))    ) /             &
-        ( PG_O_THVREF(J1D) * ZDELTVPT(J1D,JKK) / PDZZ2D(J1D,JKK) ) 
+            (CSTURB%XRM17*PSHEAR(JIJ,JKK)*sqrt(abs(PTKEM_DEP(JIJ))) +  &
+             PG_O_THVREF(JIJ) * (PVPT(JIJ,JKK-IKL) - ZVPT_DEP(JIJ)) )**2  &
+            + 2. * ZINTE(JIJ) * PG_O_THVREF(JIJ)                        &
+                 * ZDELTVPT(JIJ,JKK) / PDZZ2D(JIJ,JKK) ))    ) /             &
+        ( PG_O_THVREF(JIJ) * ZDELTVPT(JIJ,JKK) / PDZZ2D(JIJ,JKK) ) 
       !
-        PLWORK(J1D)=PLWORK(J1D)+ZTEST0*(ZTEST*ZLWORK1(J1D)+  &
-                                    (1-ZTEST)*ZLWORK2(J1D))
-        ZINTE(J1D) = ZINTE(J1D) - ZPOTE(J1D)
+        PLWORK(JIJ)=PLWORK(JIJ)+ZTEST0*(ZTEST*ZLWORK1(JIJ)+  &
+                                    (1-ZTEST)*ZLWORK2(JIJ))
+        ZINTE(JIJ) = ZINTE(JIJ) - ZPOTE(JIJ)
       END DO 
     ENDIF
   END DO 
@@ -209,27 +208,27 @@ IF (OUPORDN.EQV..FALSE.) THEN
  DO JKK=KK,IKB,-IKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0
-      DO J1D=IIJB,IIJE
-        ZTEST0=0.5+SIGN(0.5,ZINTE(J1D))
-         ZPOTE(J1D) = ZTEST0*(-PG_O_THVREF(J1D)      *      &
-            (ZHLVPT(J1D,JKK) - PVPT(J1D,KK)) &
-         + CSTURB%XRM17*PSHEAR(J1D,JKK)*SQRT(ABS(PTKEM_DEP(J1D))))* PDZZ2D(J1D,JKK) 
-        ZTEST =0.5+SIGN(0.5,ZINTE(J1D)-ZPOTE(J1D))
+      DO JIJ=IIJB,IIJE
+        ZTEST0=0.5+SIGN(0.5,ZINTE(JIJ))
+         ZPOTE(JIJ) = ZTEST0*(-PG_O_THVREF(JIJ)      *      &
+            (ZHLVPT(JIJ,JKK) - PVPT(JIJ,KK)) &
+         + CSTURB%XRM17*PSHEAR(JIJ,JKK)*SQRT(ABS(PTKEM_DEP(JIJ))))* PDZZ2D(JIJ,JKK) 
+        ZTEST =0.5+SIGN(0.5,ZINTE(JIJ)-ZPOTE(JIJ))
         ZTESTM=ZTESTM+ZTEST0
-        ZLWORK1(J1D)=PDZZ2D(J1D,JKK)
-        ZLWORK2(J1D)=        ( + PG_O_THVREF(J1D) *                     &
-            (  PVPT(J1D,JKK) - PVPT(J1D,KK) )                              &
-             -CSTURB%XRM17*PSHEAR(J1D,JKK)*sqrt(abs(PTKEM_DEP(J1D))) &
+        ZLWORK1(JIJ)=PDZZ2D(JIJ,JKK)
+        ZLWORK2(JIJ)=        ( + PG_O_THVREF(JIJ) *                     &
+            (  PVPT(JIJ,JKK) - PVPT(JIJ,KK) )                              &
+             -CSTURB%XRM17*PSHEAR(JIJ,JKK)*sqrt(abs(PTKEM_DEP(JIJ))) &
           + SQRT (ABS(                                                       &
-            (CSTURB%XRM17*PSHEAR(J1D,JKK)*sqrt(abs(PTKEM_DEP(J1D))) - &
-             PG_O_THVREF(J1D) * (PVPT(J1D,JKK) - PVPT(J1D,KK)) )**2  &
-            + 2. * ZINTE(J1D) * PG_O_THVREF(J1D)                        &
-                 * ZDELTVPT(J1D,JKK) / PDZZ2D(J1D,JKK) ))    ) /             &
-        ( PG_O_THVREF(J1D) * ZDELTVPT(J1D,JKK) / PDZZ2D(J1D,JKK) ) 
+            (CSTURB%XRM17*PSHEAR(JIJ,JKK)*sqrt(abs(PTKEM_DEP(JIJ))) - &
+             PG_O_THVREF(JIJ) * (PVPT(JIJ,JKK) - PVPT(JIJ,KK)) )**2  &
+            + 2. * ZINTE(JIJ) * PG_O_THVREF(JIJ)                        &
+                 * ZDELTVPT(JIJ,JKK) / PDZZ2D(JIJ,JKK) ))    ) /             &
+        ( PG_O_THVREF(JIJ) * ZDELTVPT(JIJ,JKK) / PDZZ2D(JIJ,JKK) ) 
       !
-        PLWORK(J1D)=PLWORK(J1D)+ZTEST0*(ZTEST*ZLWORK1(J1D)+  &
-                                    (1-ZTEST)*ZLWORK2(J1D)) 
-        ZINTE(J1D) = ZINTE(J1D) - ZPOTE(J1D)
+        PLWORK(JIJ)=PLWORK(JIJ)+ZTEST0*(ZTEST*ZLWORK1(JIJ)+  &
+                                    (1-ZTEST)*ZLWORK2(JIJ)) 
+        ZINTE(JIJ) = ZINTE(JIJ) - ZPOTE(JIJ)
       END DO 
     ENDIF
   END DO 
