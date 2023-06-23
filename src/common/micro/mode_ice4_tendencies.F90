@@ -138,7 +138,7 @@ ELSE
   !
   !*       2.     COMPUTES THE SLOW COLD PROCESS SOURCES
   !               --------------------------------------
-  CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, KSIZE, LDCOMPUTE(:), &
+  CALL ICE4_NUCLEATION(D,CST, PARAMI, ICEP, ICED, KSIZE, LDCOMPUTE(:), &
                    ZVART(:,ITH), PPRES(:), PRHODREF(:), PEXN(:), PLSFACT(:), ZT(:), &
                    ZVART(:,IRV), &
                    PCIT(:), PBU_INST(:, IRVHENI_MR))
@@ -245,7 +245,7 @@ ELSE
 ENDIF ! ODSOFT
 !
 !Cloud water split between high and low content part is done here
-CALL ICE4_COMPUTE_PDF(CST, ICEP, ICED, KSIZE, PARAMI%CSUBG_AUCV_RC, PARAMI%CSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF,&
+CALL ICE4_COMPUTE_PDF(D, CST, ICEP, ICED, KSIZE, PARAMI%CSUBG_AUCV_RC, PARAMI%CSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF,&
                       PRHODREF, ZVART(:,IRC), ZVART(:,IRI), PCF, ZT, PSIGMA_RC, &
                       PHLC_HCF, PHLC_LCF, PHLC_HRC, PHLC_LRC, &
                       PHLI_HCF, PHLI_LCF, PHLI_HRI, PHLI_LRI, ZRAINFR)
