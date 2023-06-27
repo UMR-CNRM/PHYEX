@@ -318,11 +318,7 @@ ELSE
 ENDIF
 !
 !$mnh_expand_where(JI=1:KSIZE)
-#ifdef REPRO48
-  PRF(:)=PHLC_HCF(:)
-#else
   PRF(:)=MAX(PHLC_HCF(:),PHLI_HCF(:))
-#endif
 !$mnh_end_expand_where(JI=1:KSIZE)
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 1, ZHOOK_HANDLE)
