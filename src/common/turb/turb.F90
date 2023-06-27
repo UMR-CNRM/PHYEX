@@ -1060,12 +1060,7 @@ IF( BUCONF%LBUDGET_SV )  THEN
   END DO
 END IF
 !
-!Les budgets des termes horizontaux de la turb sont présents dans AROME
-! alors que ces termes ne sont pas calculés
-#ifdef REPRO48
-#else
 IF( TURBN%CTURBDIM == '3DIM' ) THEN
-#endif
   IF( BUCONF%LBUDGET_U  ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_U ), 'HTURB', PRUS  (:,:) )
   IF( BUCONF%LBUDGET_V  ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_V ), 'HTURB', PRVS  (:,:) )
   IF( BUCONF%LBUDGET_W  ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_W ), 'HTURB', PRWS  (:,:) )
@@ -1099,9 +1094,6 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
       CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:,:, JSV) )
     END DO
   END IF
-!à supprimer une fois le précédent ifndef PHYEXMERGE validé
-#ifdef REPRO48
-#else
     CALL TURB_HOR_SPLT(D,CST,CSTURB, TURBN, NEBN, TLES,        &
           KSPLIT, KRR, KRRL, KRRI, KSV,KSV_LGBEG,KSV_LGEND,    & 
           PTSTEP,HLBCX,HLBCY, OFLAT,O2D, ONOMIXLG,             & 
@@ -1119,7 +1111,6 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
           PDP,PTP,PSIGS,                                       &
           ZTRH,                                                &
           PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS                     )
-#endif
   !
 !  IF (HCLOUD == 'LIMA') THEN
 !     IF (KSV_LIMA_NR.GT.0) PRSVS(:,:,KSV_LIMA_NR) = ZRSVS(:,:,KSV_LIMA_NR) 
@@ -1161,10 +1152,7 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
       CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:,:, JSV) )
     END DO
   END IF
-#ifdef REPRO48
-#else
 END IF
-#endif
 !----------------------------------------------------------------------------
 !
 !*      6. EVOLUTION OF THE TKE AND ITS DISSIPATION
