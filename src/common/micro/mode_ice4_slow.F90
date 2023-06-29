@@ -131,12 +131,14 @@ ENDDO
 DO JL=1, KSIZE
   IF(PRIT(JL)>ICED%XRTMIN(4) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
+#ifdef REPRO48
       PRIAGGS(JL) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JL)-CST%XTT) ) &
                          * PRIT(JL)                      &
-#ifdef REPRO48
                          * PLBDAS(JL)**ICEP%XEXIAGGS          &
                          * PRHODREF(JL)**(-ICED%XCEXVT)
 #else
+      PRIAGGS(JL) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JL)-CST%XTT) ) &
+                         * PRIT(JL)                      &
                          * PRST(JL) * (1+(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**&
                          (-ICED%XNUS+ICEP%XEXIAGGS/ICED%XALPHAS) &
                          * PRHODREF(JL)**(-ICED%XCEXVT+1.) &

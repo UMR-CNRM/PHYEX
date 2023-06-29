@@ -25,6 +25,7 @@ set -o pipefail #abort if left command on a pipe fails
 
 #When running in 49t0 after the f065e64 commit (23 June 2023) all configurations must be compared to this same commit.
 #79fe47e (previous commit) is identical to the different references for all the test cases.
+#When running in 49t0 after the 00148b1 commit (27 June 2023) all configurations must be compared to this same commit.
 
 #The small_3D_alt7 needed a correction in apl_arome which has been introduced in d37dd1f. But the reference pack has been modified
 #                  afterwards to enable this test case to be run (documented in INSTALL_pack_ial.md). In consequence, the reference
