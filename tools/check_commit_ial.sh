@@ -23,6 +23,9 @@ set -o pipefail #abort if left command on a pipe fails
 #small_3D_alt11: same as small_3D but with a different value for NPROMICRO (must give exactly the same results)
 #small_3D_alt12: same as small_3D but with LPACK_MICRO=.F. (must give exactly the same results)
 
+#When running in 49t0 after the f065e64 commit (23 June 2023) all configurations must be compared to this same commit.
+#79fe47e (previous commit) is identical to the different references for all the test cases.
+#When running in 49t0 after the 00148b1 commit (27 June 2023) all configurations must be compared to this same commit.
 #The small_3D_alt7 needed a correction in apl_arome which has been introduced in d37dd1f. But the reference pack has been modified
 #                  afterwards to enable this test case to be run (documented in INSTALL_pack_ial.md). In consequence, the reference
 #                  to use is the same as for the other test cases and this case cannot be run for commit before d37dd1f (20 April 2022).

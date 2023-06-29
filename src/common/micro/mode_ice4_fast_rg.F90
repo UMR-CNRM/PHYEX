@@ -188,18 +188,23 @@ IF(.NOT. LDSOFT) THEN
   IF(IGDRY>0)THEN
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GDRY(1:KSIZE))
+#ifndef PHYEXMERGE
       PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
                                     / ICEP%XCOLSG &
-#ifndef PHYEXMERGE
                   *(PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
                   *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.))                    &
-#else
-                  *(PRST(1:KSIZE))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
-                  *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT))                    &
-#endif
                        *( ICEP%XLBSDRYG1/( PLBDAG(1:KSIZE)**2              ) + &
                           ICEP%XLBSDRYG2/( PLBDAG(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
                           ICEP%XLBSDRYG3/(               PLBDAS(1:KSIZE)**2))
+#else
+      PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
+                                    / ICEP%XCOLSG &
+                  *(PRST(1:KSIZE))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
+                  *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT))                    &
+                       *( ICEP%XLBSDRYG1/( PLBDAG(1:KSIZE)**2              ) + &
+                          ICEP%XLBSDRYG2/( PLBDAG(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
+                          ICEP%XLBSDRYG3/(               PLBDAS(1:KSIZE)**2))
+#endif
       PRG_TEND(1:KSIZE, IRSDRYG)=PRG_TEND(1:KSIZE, IRSWETG)*ICEP%XCOLSG*EXP(ICEP%XCOLEXSG*(PT(1:KSIZE)-CST%XTT))
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
