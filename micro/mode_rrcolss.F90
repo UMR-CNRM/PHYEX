@@ -242,25 +242,25 @@ DO JLBDAS = 1,SIZE(PRRCOLSS(:,:),1)
           END IF
           DO JDR = 1,INR-1
             ZDR = ZDDCOLLR * REAL(JDR)
-#ifdef REPRO48
+!!#ifdef REPRO48
             ZCOLLR = ZCOLLR + (ZDS+ZDR)**2 * ZDR**PEXMASSR                     &
                        * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDR**PEXFALLR) &
                                       * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDR)
-#else
-            ZCOLLR = ZCOLLR + (ZDS+ZDR)**2 * ZDR**PEXMASSR                     &
-                       * PESR * ABS(PFALLS*ZDS**PEXFALLS * EXP(-(PFALLEXPS*ZDS)**PALPHAS)-PFALLR*ZDR**PEXFALLR) &
-                                      * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDR)
-#endif
+!!#else
+!!            ZCOLLR = ZCOLLR + (ZDS+ZDR)**2 * ZDR**PEXMASSR                     &
+!!                       * PESR * ABS(PFALLS*ZDS**PEXFALLS * EXP(-(PFALLEXPS*ZDS)**PALPHAS)-PFALLR*ZDR**PEXFALLR) &
+!!                                      * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDR)
+!!#endif
           END DO
-#ifdef REPRO48
+!!#ifdef REPRO48
           ZCOLLDRMAX = (ZDS+ZDRMAX)**2 * ZDRMAX**PEXMASSR                      &
                     * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDRMAX**PEXFALLR) &
                                    * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDRMAX)
-#else
-          ZCOLLDRMAX = (ZDS+ZDRMAX)**2 * ZDRMAX**PEXMASSR                      &
-                    * PESR * ABS(PFALLS*ZDS**PEXFALLS* EXP(-(PFALLEXPS*ZDS)**PALPHAS)-PFALLR*ZDRMAX**PEXFALLR) &
-                                   * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDRMAX)
-#endif
+!!#else
+!!          ZCOLLDRMAX = (ZDS+ZDRMAX)**2 * ZDRMAX**PEXMASSR                      &
+!!                    * PESR * ABS(PFALLS*ZDS**PEXFALLS* EXP(-(PFALLEXPS*ZDS)**PALPHAS)-PFALLR*ZDRMAX**PEXFALLR) &
+!!                                   * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDRMAX)
+!!#endif
           ZCOLLR = (ZCOLLR + 0.5*ZCOLLDRMAX)*(ZDDCOLLR/ZDDSCALR)
 !
 !*       1.9     Compute the normalization factor by integration over the

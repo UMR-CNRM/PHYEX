@@ -188,7 +188,7 @@ IF(.NOT. LDSOFT) THEN
   IF(IGDRY>0)THEN
       DO JL=1,KSIZE 
         IF(GDRY(JL))THEN
-#ifdef REPRO48
+!!#ifdef REPRO48
           PRG_TEND(JL,IRSWETG)=ICEP%XFSDRYG*ZZW(JL)                         & ! RSDRYG
           / ICEP%XCOLSG &
           *(PLBDAS(JL)**(ICED%XCXS-ICED%XBS))*( PLBDAG(JL)**ICED%XCXG )    &
@@ -196,15 +196,15 @@ IF(.NOT. LDSOFT) THEN
           *( ICEP%XLBSDRYG1/( PLBDAG(JL)**2              ) + &
           ICEP%XLBSDRYG2/( PLBDAG(JL)   * PLBDAS(JL)   ) + &
           ICEP%XLBSDRYG3/(               PLBDAS(JL)**2))
-#else
-          PRG_TEND(JL,IRSWETG)=ICEP%XFSDRYG*ZZW(JL)                         & ! RSDRYG
-          / ICEP%XCOLSG &
-          *(PRST(JL))*( PLBDAG(JL)**ICED%XCXG )    &
-          *(PRHODREF(JL)**(-ICED%XCEXVT))                    &
-          *( ICEP%XLBSDRYG1/( PLBDAG(JL)**2              ) + &
-          ICEP%XLBSDRYG2/( PLBDAG(JL)   * PLBDAS(JL)   ) + &
-          ICEP%XLBSDRYG3/(               PLBDAS(JL)**2))
-#endif
+!!#else
+!!          PRG_TEND(JL,IRSWETG)=ICEP%XFSDRYG*ZZW(JL)                         & ! RSDRYG
+!!          / ICEP%XCOLSG &
+!!          *(PRST(JL))*( PLBDAG(JL)**ICED%XCXG )    &
+!!          *(PRHODREF(JL)**(-ICED%XCEXVT))                    &
+!!          *( ICEP%XLBSDRYG1/( PLBDAG(JL)**2              ) + &
+!!          ICEP%XLBSDRYG2/( PLBDAG(JL)   * PLBDAS(JL)   ) + &
+!!          ICEP%XLBSDRYG3/(               PLBDAS(JL)**2))
+!!#endif
           PRG_TEND(JL,IRSDRYG)=PRG_TEND(JL,IRSWETG)*ICEP%XCOLSG*EXP(ICEP%XCOLEXSG*(PT(JL)-CST%XTT))
         ENDIF
       ENDDO

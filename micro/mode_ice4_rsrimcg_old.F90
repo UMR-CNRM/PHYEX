@@ -85,13 +85,13 @@ IF(.NOT. LDSOFT) THEN
   IF(IGRIM>0) THEN
     DO JL=1,KSIZE 
       IF(GRIM(JL))THEN
-#ifdef REPRO48
+!!#ifdef REPRO48
         PRSRIMCG_MR(JL) = ICEP%XSRIMCG * PLBDAS(JL)**ICEP%XEXSRIMCG   & ! RSRIMCG
         * (1.0 - ZZW(JL) )/PRHODREF(JL)
-#else
-        PRSRIMCG_MR(JL) = ICEP%XSRIMCG * PLBDAS(JL)**ICEP%XEXSRIMCG   & ! RSRIMCG
-        * (1.0 - ZZW(JL) )*PRST(JL)
-#endif
+!!#else
+!!        PRSRIMCG_MR(JL) = ICEP%XSRIMCG * PLBDAS(JL)**ICEP%XEXSRIMCG   & ! RSRIMCG
+!!        * (1.0 - ZZW(JL) )*PRST(JL)
+!!#endif
         PRSRIMCG_MR(JL)=MIN(PRST(JL), PRSRIMCG_MR(JL))
       ENDIF
     ENDDO

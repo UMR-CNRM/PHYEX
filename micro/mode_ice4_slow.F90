@@ -111,15 +111,15 @@ ENDDO
 DO JL=1, KSIZE
   IF(PRVT(JL)>ICED%XRTMIN(1) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
-#ifdef REPRO48
+!!#ifdef REPRO48
       PRVDEPS(JL) = ( PSSI(JL)/(PRHODREF(JL)*PAI(JL)) ) *                               &
                  ( ICEP%X0DEPS*PLBDAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS )
-#else
-  PRVDEPS(JL) = ( PRST(JL)*(PSSI(JL)/PAI(JL)) ) *                               &
-                 ( ICEP%X0DEPS*PLBDAS(JL)**(ICED%XBS+ICEP%XEX0DEPS) + ICEP%X1DEPS*PCJ(JL) * &
-                 (1+0.5*(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEX1DEPS/ICED%XALPHAS) &
-                  *(PLBDAS(JL))**(ICED%XBS+ICEP%XEX1DEPS) )
-#endif
+!!#else
+!!  PRVDEPS(JL) = ( PRST(JL)*(PSSI(JL)/PAI(JL)) ) *                               &
+!!                 ( ICEP%X0DEPS*PLBDAS(JL)**(ICED%XBS+ICEP%XEX0DEPS) + ICEP%X1DEPS*PCJ(JL) * &
+!!                 (1+0.5*(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEX1DEPS/ICED%XALPHAS) &
+!!                  *(PLBDAS(JL))**(ICED%XBS+ICEP%XEX1DEPS) )
+!!#endif
     ENDIF
   ELSE
     PRVDEPS(JL) = 0.
@@ -131,19 +131,19 @@ ENDDO
 DO JL=1, KSIZE
   IF(PRIT(JL)>ICED%XRTMIN(4) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
-#ifdef REPRO48
+!!#ifdef REPRO48
       PRIAGGS(JL) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JL)-CST%XTT) ) &
                          * PRIT(JL)                      &
                          * PLBDAS(JL)**ICEP%XEXIAGGS          &
                          * PRHODREF(JL)**(-ICED%XCEXVT)
-#else
-      PRIAGGS(JL) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JL)-CST%XTT) ) &
-                         * PRIT(JL)                      &
-                         * PRST(JL) * (1+(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**&
-                         (-ICED%XNUS+ICEP%XEXIAGGS/ICED%XALPHAS) &
-                         * PRHODREF(JL)**(-ICED%XCEXVT+1.) &
-                         * ((PLBDAS(JL))**(ICED%XBS+ICEP%XEXIAGGS))
-#endif
+!!#else
+!!      PRIAGGS(JL) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JL)-CST%XTT) ) &
+!!                         * PRIT(JL)                      &
+!!                         * PRST(JL) * (1+(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**&
+!!                         (-ICED%XNUS+ICEP%XEXIAGGS/ICED%XALPHAS) &
+!!                         * PRHODREF(JL)**(-ICED%XCEXVT+1.) &
+!!                         * ((PLBDAS(JL))**(ICED%XBS+ICEP%XEXIAGGS))
+!!#endif
     ENDIF
   ELSE
     PRIAGGS(JL) = 0.

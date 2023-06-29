@@ -150,21 +150,21 @@ IF(.NOT. LDSOFT) THEN
   IF(IGWET>0)THEN
       DO JL=1,KSIZE 
         IF(GWET(JL))THEN
-#ifdef REPRO48
+!!#ifdef REPRO48
           PRH_TEND(JL,IRSWETH)=ICEP%XFSWETH*ZZW(JL)                       & ! RSWETH
           *( PLBDAS(JL)**(ICED%XCXS-ICED%XBS) )*( PLBDAH(JL)**ICED%XCXH )  &
           *( PRHODREF(JL)**(-ICED%XCEXVT-1.) )               &
           *( ICEP%XLBSWETH1/( PLBDAH(JL)**2              ) + &                                  
           ICEP%XLBSWETH2/( PLBDAH(JL)   * PLBDAS(JL)   ) + &
           ICEP%XLBSWETH3/(               PLBDAS(JL)**2) )
-#else
-          PRH_TEND(JL,IRSWETH)=ICEP%XFSWETH*ZZW(JL)                       & ! RSWETH
-          *( PRST(JL))*( PLBDAH(JL)**ICED%XCXH )  &
-          *( PRHODREF(JL)**(-ICED%XCEXVT) )               &
-          *( ICEP%XLBSWETH1/( PLBDAH(JL)**2              ) + &                                  
-          ICEP%XLBSWETH2/( PLBDAH(JL)   * PLBDAS(JL)   ) + &
-          ICEP%XLBSWETH3/(               PLBDAS(JL)**2) )
-#endif
+!!#else
+!!          PRH_TEND(JL,IRSWETH)=ICEP%XFSWETH*ZZW(JL)                       & ! RSWETH
+!!          *( PRST(JL))*( PLBDAH(JL)**ICED%XCXH )  &
+!!          *( PRHODREF(JL)**(-ICED%XCEXVT) )               &
+!!          *( ICEP%XLBSWETH1/( PLBDAH(JL)**2              ) + &                                  
+!!          ICEP%XLBSWETH2/( PLBDAH(JL)   * PLBDAS(JL)   ) + &
+!!          ICEP%XLBSWETH3/(               PLBDAS(JL)**2) )
+!!#endif
           PRH_TEND(JL,IRSDRYH)=PRH_TEND(JL,IRSWETH)*(ICEP%XCOLSH*EXP(ICEP%XCOLEXSH*(PT(JL)-CST%XTT)))
         ENDIF
       ENDDO
