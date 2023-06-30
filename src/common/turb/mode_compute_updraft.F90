@@ -446,7 +446,10 @@ GTESTETL(:)=.FALSE.
 DO JK=IKB,IKE-IKL,IKL
 
   ! IF the updraft top is reached for all column, stop the loop on levels
-  ITEST=COUNT(GTEST(IIJB:IIJE))
+  ITEST=0
+  DO JIJ=IIJB,IIJE
+    IF(GTEST(JIJ)) ITEST = ITEST + 1
+  END DO
   IF (ITEST==0) CYCLE
 
   !       Computation of entrainment and detrainment with KF90
