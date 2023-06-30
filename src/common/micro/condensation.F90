@@ -345,7 +345,7 @@ DO JK=IKTB,IKTE
       ENDIF
     END DO
     DO JIJ=IIJB,IIJE
-      CALL COMPUTE_FRAC_ICE(HFRAC_ICE, NEBN, ZFRAC(JIJ), PT(JIJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
+      CALL COMPUTE_FRAC_ICE(CST, HFRAC_ICE, NEBN, ZFRAC(JIJ), PT(JIJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
     ENDDO
   ENDIF
   DO JIJ=IIJB,IIJE
