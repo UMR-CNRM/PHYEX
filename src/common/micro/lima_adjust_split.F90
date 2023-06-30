@@ -460,13 +460,13 @@ DO JITER =1,ITERMAX
    END IF
 
    IF (LADJ) THEN
-      CALL CONDENSATION(D, CST, RAIN_ICE_PARAMN, NEBN, TURBN,                    &
-          'S', HCONDENS, HLAMBDA3,                                             &
-           PPABST, PZZ, PRHODREF, ZT, ZRV_IN, ZRV, ZRC_IN, ZRC, ZRI_IN, ZRI,   &
-           PRRS*PTSTEP,PRSS*PTSTEP, PRGS*PTSTEP, &
-           Z_SIGS, .FALSE., PMFCONV, PCLDFR, Z_SRCS, GUSERI, G_SIGMAS, .FALSE., &
-           ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,              &
-           ZSIGQSAT2D, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
+      !CALL CONDENSATION(D, CST, RAIN_ICE_PARAMN, NEBN, TURBN,                    &
+      !    'S', HCONDENS, HLAMBDA3,                                             &
+      !     PPABST, PZZ, PRHODREF, ZT, ZRV_IN, ZRV, ZRC_IN, ZRC, ZRI_IN, ZRI,   &
+      !     PRRS*PTSTEP,PRSS*PTSTEP, PRGS*PTSTEP, &
+      !     Z_SIGS, .FALSE., PMFCONV, PCLDFR, Z_SRCS, GUSERI, G_SIGMAS, .FALSE., &
+      !     ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,              &
+      !     ZSIGQSAT2D, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
    END IF
    IF (OSUBG_COND .AND. NMOM_C.GE.2 .AND. LACTI) THEN
       PSRCS=Z_SRCS
