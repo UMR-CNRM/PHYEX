@@ -18,6 +18,8 @@ set -o pipefail #abort if left command on a pipe fails
 #Commit e070d16 can be used for rain_ice_old (ref commit for this testprogs), and for
 #turb, shallow, rain_ice and ice_adjust (as it gives the same results for these test cases).
 
+#Some modifications have been introduced and new reference commit is 00148b1
+
 #Data generation:
 # - The last commit of the testprogs_data branch (based on 46t1) is able to produce the data
 #   for the turb, shallow, rain_ice and ice_adjust testprogs. The code is present but must be
