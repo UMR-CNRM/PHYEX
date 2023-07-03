@@ -265,7 +265,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
 #endif
 
 #ifdef USE_OPENMP
-    D = D0
+!    D = D0
 #endif
 
 #ifdef USE_STACK
