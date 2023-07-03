@@ -17,7 +17,7 @@ separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allerg
               #- seprator must be in sync with prep_code.sh separator
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-c] [-C] [-r] [-s] [--expand] [-t test] [--version VERSION] [--repo-user] [--repo-protocol] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-c] [-C] [-r] [-s] [--expand] [-t test] [--version VERSION] [--repo-user] [--repo-protocol] [--remove] commit [reference]"
   echo "commit          commit hash (or a directory, or among $specialPack) to test"
   echo "reference       commit hash (or a directory, or among $specialPack) REF to use as a reference"
   echo "-s              suppress compilation pack"
@@ -34,12 +34,17 @@ function usage {
   echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
   echo "--repo-protocol protocol (https or ssh) to reach the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREOprotocol (=$PHYEXREOprotocol)"
+  echo "--remove        removes the pack"
   echo ""
-  echo "If nothing is asked (pack creation, compilation, running, check) everything is done"
+  echo "If nothing is asked (pack creation, compilation, running, check, removing) everything"
+  echo "except the removing is done"
+  echo
   echo "If no test is aked for, the default one ($defaultTest) is executed"
   echo
   echo "With the special reference REF commit, a suitable reference is guessed"
+  echo
   echo "The directory (for commit only, not ref) can take the form server:directory"
+  echo
   echo "If using a directory (for commit or reference) it must contain at least one '/'"
   echo "The commit can be a tag, written with syntagx tags/<TAG>"
 }
@@ -56,6 +61,7 @@ suppress=0
 useexpand=0
 version=""
 link=0 #Not yet put in command line argument becaus this option has not been tested here
+remove=0
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -71,6 +77,7 @@ while [ -n "$1" ]; do
     '--version') version="$2"; shift;;
     '--repo-user') export PHYEXREPOuser=$2; shift;;
     '--repo-protocol') export PHYEXREPOprotocol=$2; shift;;
+    '--remove') remove=1;;
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
           commit=$1
@@ -95,7 +102,8 @@ fi
 if [ $packcreation -eq 0 -a \
      $compilation -eq 0 -a \
      $run -eq 0 -a \
-     $check -eq 0 ]; then
+     $check -eq 0 -a \
+     $remove -eq 0 ]; then
   packcreation=1
   compilation=1
   run=1
@@ -325,3 +333,7 @@ if [ $check -eq 1 ]; then
   exit 6
 fi
 
+if [ $remove -eq 1 ]; then
+  echo "### Remove model directory for commit $commit"
+  [ -d $LMDZPACK/$name ] && rm -rf $LMDZPACK/$name
+fi

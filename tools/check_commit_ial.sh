@@ -65,6 +65,7 @@ set -o pipefail #abort if left command on a pipe fails
 specialPack="ori split split_48t1 split_48t3 recompil split_49t0"
 availTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7"
 defaultTest="small_3D"
+allowedTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7,small_3D_alt8,small_3D_alt9,small_3D_alt10,small_3D_alt11,small_3D_alt12,small_3D_lima"
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- seprator must be in sync with prep_code.sh separator
 
@@ -83,6 +84,7 @@ if [ $(hostname | cut -c 1-7) == 'belenos' -o $(hostname | cut -c 1-7) == 'taran
   defaultMainPackVersion=01
   defaultRef='split_${cycle}'
   availTests="${availTests},big_3D"
+  allowedTests="${allowedTests},big_3D"
 else
   HPC=0
   gmkpack_l[default]=MPIGFORTRAN920DBL
@@ -97,7 +99,7 @@ mainPackVersion=${mainPackVersion:-${defaultMainPackVersion}}
 extraCompilationCheck=1
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t test] [--cycle CYCLE] [--repo-user] [--repo-protocol] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t test] [--cycle CYCLE] [--repo-user] [--repo-protocol] [--remove] commit [reference]"
   echo "commit          commit hash (or a directory, or among $specialPack) to test"
   echo "reference       commit hash (or a directory, or among $specialPack) REF to use as a reference"
   echo "-s              suppress compilation pack"
@@ -115,12 +117,17 @@ function usage {
   echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
   echo "--repo-protocol protocol (https or ssh) to reach the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREOprotocol (=$PHYEXREOprotocol)"
+  echo "--remove        removes the pack"
   echo ""
-  echo "If nothing is asked (pack creation, compilation, running, check) everything is done"
+  echo "If nothing is asked (pack creation, compilation, running, check, removing) everything"
+  echo "except the removing is done"
+  echo
   echo "If no test is aked for, the default one ($defaultTest) is executed"
   echo
   echo "With the special reference REF commit, a suitable reference is guessed"
+  echo
   echo "The directory (for commit only, not ref) can take the form server:directory"
+  echo
   echo "If using a directory (for commit or reference) it must contain at least one '/'"
   echo "The commit can be a tag, written with syntagx tags/<TAG>"
   echo
@@ -141,6 +148,7 @@ useexpand=1
 fullcompilation=0
 cycle=""
 scripttag=''
+remove=0
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -157,6 +165,7 @@ while [ -n "$1" ]; do
     '--scripttag') scripttag="$2"; shift;;
     '--repo-user') export PHYEXREPOuser=$2; shift;;
     '--repo-protocol') export PHYEXREPOprotocol=$2; shift;;
+    '--remove') remove=1;;
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
           commit=$1
@@ -195,7 +204,8 @@ fi
 if [ $packcreation -eq 0 -a \
      $compilation -eq 0 -a \
      $run -eq 0 -a \
-     $check -eq 0 ]; then
+     $check -eq 0 -a \
+     $remove -eq 0 ]; then
   packcreation=1
   compilation=1
   run=1
@@ -534,17 +544,18 @@ if [ $compilation -eq 1 ]; then
             grep -v "'CPLNG: Error" | \
             grep -v '"Error' | \
             grep -v "'*** Error" | \
-            grep -v "-- Up-to-date:" | wc -l) -ne 0 ]; then
-      echo "MASTERODB was produced but errors occured during compilation:"
-      grep Error Output_compilation | \
-            grep -v TestErrorHandler | \
-            grep -v "'Error" | \
-            grep -v "'CPLNG: Error" | \
-            grep -v '"Error' | \
-            grep -v "'*** Error" | \
-            grep -v "-- Up-to-date:"
-      echo "MASTERODB suppressed!"
-      rm -f bin/MASTERODB
+            grep -v "\-\- Up-to-date:" | wc -l) -ne 0 ]; then
+    echo "MASTERODB was produced but errors occured during compilation:"
+    grep Error Output_compilation | \
+          grep -v TestErrorHandler | \
+          grep -v "'Error" | \
+          grep -v "'CPLNG: Error" | \
+          grep -v '"Error' | \
+          grep -v "'*** Error" | \
+          grep -v "\-\- Up-to-date:"
+    echo "MASTERODB suppressed!"
+    rm -f bin/MASTERODB
+    exit 12
   fi
 fi
 
@@ -566,10 +577,14 @@ if [ $run -ge 1 ]; then
 
   #Run the tests one after the other
   for t in $(echo $tests | sed 's/,/ /g'); do
-    cd $HOMEPACK/$name
-    mkdir -p conf_tests/$t
-    cd conf_tests/$t
-    MYLIB=$name TESTDIR=$dirconf/$t exescript Output_run $dirconf/$t/aro${cycle}${scripttag}.sh
+    if echo $allowedTests | grep -w $t; then
+      cd $HOMEPACK/$name
+      mkdir -p conf_tests/$t
+      cd conf_tests/$t
+      MYLIB=$name TESTDIR=$dirconf/$t exescript Output_run $dirconf/$t/aro${cycle}${scripttag}.sh
+    else
+      echo "The test $t is not allowed"
+    fi
   done
 fi
 
@@ -580,10 +595,14 @@ if [ $check -eq 1 ]; then
   message=""
   filestocheck=""
   for t in $(echo $tests | sed 's/,/ /g'); do
-    if echo $t | grep 'small' > /dev/null; then
-      filestocheck="$filestocheck ${t},conf_tests/$t/ICMSHFPOS+0002:00 ${t},conf_tests/$t/DHFDLFPOS+0002"
+    if echo $allowedTests | grep -w $t; then
+      if echo $t | grep 'small' > /dev/null; then
+        filestocheck="$filestocheck ${t},conf_tests/$t/ICMSHFPOS+0002:00 ${t},conf_tests/$t/DHFDLFPOS+0002"
+      else
+        filestocheck="$filestocheck ${t},conf_tests/$t/NODE.001_01"
+      fi
     else
-      filestocheck="$filestocheck ${t},conf_tests/$t/NODE.001_01"
+      echo "The test $t is not allowed"
     fi
   done
   for tag_file in $filestocheck; do
@@ -656,5 +675,13 @@ if [ $check -eq 1 ]; then
   else
     echo "*************** Files are different *******************"
     echo -e "$message"
+    cmpstatus=50
   fi
 fi
+
+if [ $remove -eq 1 ]; then
+  echo "### Remove model directory for commit $commit"
+  [ -d $HOMEPACK/$name ] && rm -rf $HOMEPACK/$name
+fi
+
+exit $cmpstatus
