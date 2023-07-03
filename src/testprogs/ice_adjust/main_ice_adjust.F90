@@ -208,7 +208,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
 
     CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, PHYEX%PARAM_ICEN, &
     & PHYEX%MISC%TBUCONF, PHYEX%MISC%KRR, PHYEX%MISC%HBUNAME,     &
-    & PHYEX%MISC%PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL), &
+    & PHYEX%MISC%PTSTEP, ZSIGQSAT (JLON,1, IBL), PRHODJ=PRHODJ (:, :, :, IBL), &
     & PEXNREF=PEXNREF (:, :, :, IBL),                                                                                           &
     & PRHODREF=PRHODREF (:, :, :, IBL), PSIGS=PSIGS (:, :, :, IBL), LMFCONV=PHYEX%MISC%LMFCONV, PMFCONV=PMFCONV (:, :, :, IBL), &
     & PPABST=PPABSM (:, :, :, IBL), PZZ=ZZZ (:, :, :, IBL), PEXN=PEXNREF (:, :, :, IBL), PCF_MF=PCF_MF (:, :, :, IBL),          &
@@ -221,7 +221,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     & PSRCS=PSRCS (:, :, :, IBL), PCLDFR=PCLDFR (:, :, :, IBL), PRR=ZRS(:, :, :, 3, IBL), PRI=ZRS(:, :, :, 4, IBL),             &
     & PRIS=PRS(:, :, :, 4, IBL), PRS=ZRS(:, :, :, 5, IBL), PRG=ZRS(:, :, :, 6, IBL), &
     & TBUDGETS=PHYEX%MISC%YLBUDGET, KBUDGETS=PHYEX%MISC%NBUDGET,    &
-    & PICE_CLD_WGT=ZICE_CLD_WGT(:, :, IBL),                                                                                     &
+    & PICE_CLD_WGT=ZICE_CLD_WGT(JLON,1, IBL),                                                                                     &
     & PHLC_HRC=PHLC_HRC(:, :, :, IBL), PHLC_HCF=PHLC_HCF(:, :, :, IBL),                                                         &
     & PHLI_HRI=PHLI_HRI(:, :, :, IBL), PHLI_HCF=PHLI_HCF(:, :, :, IBL)                                                          &
 #ifdef USE_STACK

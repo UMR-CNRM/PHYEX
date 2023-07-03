@@ -275,7 +275,6 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%L = 0
     YLSTACK%U = 0
 #endif
-
   CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB,                    &
      &KRR=PHYEX%MISC%KRR, KRRL=PHYEX%MISC%KRRL, KRRI=PHYEX%MISC%KRRI, KSV=PHYEX%MISC%KSV,                                             &
      &ONOMIXLG=PHYEX%MISC%ONOMIXLG,KSV_LGBEG=PHYEX%MISC%KSV_LGBEG,KSV_LGEND=PHYEX%MISC%KSV_LGEND,      &
@@ -283,7 +282,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
      &PDZZ=PDZZF(:,:,:,IBL),PZZ=PZZ(:,:,:,IBL),                                                                 &
      &PRHODJ=PRHODJ(:,:,:,IBL),PRHODREF=PRHODREF(:,:,:,IBL),                                                    &
      &PPABSM=PPABSM(:,:,:,IBL),PEXNM=PEXNM(:,:,:,IBL),                                                          &
-     &PSFTH=PSFTH(:,:,IBL),PSFRV=PSFRV(:,:,IBL),                                                            &
+     &PSFTH=PSFTH(JLON,1,IBL),PSFRV=PSFRV(JLON,1,IBL),                                                            &
      &PTHM=PTHM(:,:,:,IBL),PRM=PRM(:,:,:,:,IBL),PUM=PUM(:,:,:,IBL),PVM=PVM(:,:,:,IBL),&
      &PTKEM=PTKEM(:,:,:,IBL),PSVM=PSVM(:,:,:,:,IBL),                            &
      &PDUDT_MF=PDUDT_MF(:,:,:,IBL),PDVDT_MF=PDVDT_MF(:,:,:,IBL),                                                &
@@ -295,7 +294,7 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
      &PRC_UP=PRC_UP(:,:,:,IBL),PRI_UP=PRI_UP(:,:,:,IBL),            &
      &PU_UP=PU_UP(:,:,:,IBL), PV_UP=PV_UP(:,:,:,IBL), PTHV_UP=PTHV_UP(:,:,:,IBL), PW_UP=PW_UP(:,:,:,IBL),                        &
      &PFRAC_UP=PFRAC_UP(:,:,:,IBL),PEMF=PEMF(:,:,:,IBL),PDETR=ZDETR(:,:,:,IBL),PENTR=ZENTR(:,:,:,IBL),                           &
-     &KKLCL=IKLCL(:,:,IBL),KKETL=IKETL(:,:,IBL),KKCTL=IKCTL(:,:,IBL),PDX=PHYEX%MISC%PDX,PDY=PHYEX%MISC%PDY,KBUDGETS=PHYEX%MISC%NBUDGET )
+     &KKLCL=IKLCL(JLON,1,IBL),KKETL=IKETL(JLON,1,IBL),KKCTL=IKCTL(JLON,1,IBL),PDX=PHYEX%MISC%PDX,PDY=PHYEX%MISC%PDY,KBUDGETS=PHYEX%MISC%NBUDGET )
 
 #ifdef _OPENACC
     ENDDO

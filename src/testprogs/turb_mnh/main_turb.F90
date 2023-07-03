@@ -302,12 +302,12 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, 
    & PHYEX%MISC%HTURBLEN_CL,PHYEX%MISC%CMICRO,           &
    & PHYEX%MISC%PTSTEP,PHYEX%MISC%ZTFILE,                                      &
    & ZDXX(:,:,:,IBL),ZDYY(:,:,:,IBL),ZDZZ(:,:,:,IBL),ZDZX(:,:,:,IBL),ZDZY(:,:,:,IBL),ZZZ(:,:,:,IBL),          &
-   & ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE,    &
-   & PRHODJ(:,:,:,IBL),PTHVREF(:,:,:,IBL), PHGRAD, PZS,                             &
-   & PSFTH(:,:,IBL),PSFRV(:,:,IBL),PSFSV(:,:,:,IBL),PSFU(:,:,IBL),PSFV(:,:,IBL),                          &
+   & ZDIRCOSXW(JLON,1,IBL),ZDIRCOSYW(JLON,1,IBL),ZDIRCOSZW(JLON,1,IBL),ZCOSSLOPE(JLON,1,IBL),ZSINSLOPE(JLON,1,IBL),    &
+   & PRHODJ(:,:,:,IBL),PTHVREF(:,:,:,IBL), PHGRAD, PZS(JLON,1,IBL),                             &
+   & PSFTH(JLON,1,IBL),PSFRV(JLON,1,IBL),PSFSV(:,:,:,IBL),PSFU(JLON,1,IBL),PSFV(JLON,1,IBL),                          &
    & PPABSM(:,:,:,IBL),PUM(:,:,:,IBL),PVM(:,:,:,IBL),PWM(:,:,:,IBL),PTKEM(:,:,:,IBL),ZSVM(:,:,:,:,IBL),PSRCM(:,:,:,IBL),                  &
    & PLENGTHM(:,:,:,IBL),PLENGTHH(:,:,:,IBL),MFMOIST(:,:,:,IBL),                            &
-   & ZBL_DEPTH(:,:,IBL),ZSBL_DEPTH(:,:,IBL),                                 &
+   & ZBL_DEPTH(JLON,1,IBL),ZSBL_DEPTH(JLON,1,IBL),                                 &
    & ZCEI(:,:,:,IBL),PHYEX%MISC%ZCEI_MIN,PHYEX%MISC%ZCEI_MAX,PHYEX%MISC%ZCOEF_AMPL_SAT,    &
    & PTHM(:,:,:,IBL),ZRM(:,:,:,:,IBL), &
    & PRUS(:,:,:,IBL),PRVS(:,:,:,IBL),PRWS(:,:,:,IBL),PRTHS(:,:,:,IBL),ZRRS(:,:,:,:,IBL),ZRSVS(:,:,:,:,IBL),PRTKES_OUT(:,:,:,IBL),         &
