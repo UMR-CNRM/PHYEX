@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -x
 set -e
 set -o pipefail #abort if left command on a pipe fails
 
@@ -17,18 +18,20 @@ function usage {
   echo "--no-exec       do not execute (only usefull after a first execution with --no-update)"
   echo "--no-comp       do not compare (only usefull after a first execution with --no-update)"
   echo "--no-remove     do not remove compilation directory"
-  echo "--force         perform the test even if github commit comment already exists"
+  echo "--force         perform the test even if github commit status already exists"
   echo "--commit SHA    use the commit with sha SHA instead of the last one"
   echo "--ref REF       ref to use (defaults to refs/heads/master)"
   echo "--only-model MODEL"
   echo "                performs the test only using model MODEL (option can be provided several times)"
+  echo "--no-enable-gh-pages"
+  echo "                dont't try to enable the project pages on github"
   echo "MAIL            comma-separated list of e-mail addresses (no spaces); if not provided, mail is not sent"
   echo ""
   echo "This script provides functionality for automated tests."
   echo "It can be run with cron to periodically test the last commit on the PHYEX repository"
   echo "(eg '00 22 * * * bash -l -c \"SHELL=/bin/bash PHYEXWORKDIR=~/PHYEXTESTING ~/PHYEXTESTING/PHYEX/tools/testing.sh \\"
   echo "                             --repo-user UMR-CNRM --repo-protocol ssh --repo-repo PHYEX user@domain\"')"
-  echo "The repository must be hosted on github as it relies on github commit comments functionnality."
+  echo "The repository must be hosted on github as it relies on github project pages and github statuses."
   echo "A github token must be set in the .netrc file."
   echo ""
   echo "All the work is done within the \${PHYEXWORKDIR} directory (it defaults to ~/PHYEXTESTING)."
@@ -54,6 +57,7 @@ commit=""
 SHA=0
 force=0
 models=""
+enableghpages=1
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -70,6 +74,7 @@ while [ -n "$1" ]; do
     '--commit') SHA=$2; shift;;
     '--ref') REF=$2; shift;;
     '--only-model') models="${models} $2"; shift;;
+    '--no-enable-gh-pages') enableghpages=0;;
     #--) shift; break ;;
      *) if [ -z "${MAIL-}" ]; then
           MAIL="$1"
@@ -88,8 +93,8 @@ done
 logfile="${WORKDIR}/logfile"
 exec > "${logfile}" 2>&1
 
-#Title used to identify comments added by this script
-title="__ PHYEX TESTING V1.0 ${HOSTNAME} __"
+#context for statuses
+context="continuous-integration/${HOSTNAME}"
 
 #Interactions with github
 if [ "${PHYEXREPOprotocol}" == 'ssh' ]; then
@@ -97,31 +102,61 @@ if [ "${PHYEXREPOprotocol}" == 'ssh' ]; then
 else
   PHYEXREPOgiturl="https://github.com/${PHYEXREPOuser}/${PHYEXREPOrepo}.git"
 fi
+TOKEN=$(python3 -c "import netrc, socket; print(netrc.netrc().authenticators('github.com')[2])")
+
 function get_last_commit {
   git ls-remote "${PHYEXREPOgiturl}" "${REF}" | cut -f1
 }
 
-function get_comments {
-  SHA="$1"
-  curl -L --netrc \
-    -H "Accept: application/vnd.github+json" \
-    -H "X-GitHub-Api-Version: 2022-11-28" \
-    "https://api.github.com/repos/${PHYEXREPOuser}/${PHYEXREPOrepo}/commits/${SHA}/comments"
+function enable_gh_pages {
+  result=$(curl -L --netrc \
+                -H "Authorization: Bearer $TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "https://api.github.com/repos/${PHYEXREPOuser}/${PHYEXREPOrepo}/pages")
+  if [ $(echo $result | grep 'Not Found' | wc -l) -eq 1 ]; then
+    log 1 "Github project pages not yet enabled"
+    #Pages are not yet activated
+    curl -L --netrc \
+         -X POST \
+         -H "Authorization: Bearer $TOKEN" \
+         -H "Accept: application/vnd.github+json" \
+         -H "X-GitHub-Api-Version: 2022-11-28" \
+         "https://api.github.com/repos/${PHYEXREPOuser}/${PHYEXREPOrepo}/pages" \
+         -d '{"source":{"branch":"master","path":"/docs"}}'
+  fi
 }
 
-function add_comment {
-  SHA="$1"
-  comment="$2"
-
-  #The --netrc option does not seem to be enough, we manually read token from the .netrc file
-  TOKEN=$(python3 -c "import netrc, socket; print(netrc.netrc().authenticators('github.com')[2])")
+function get_statuses {
   curl -L --netrc \
-    -X POST \
-    -H "Authorization: Bearer $TOKEN"\
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
-    "https://api.github.com/repos/${PHYEXREPOuser}/${PHYEXREPOrepo}/commits/${SHA}/comments" \
-    -d "{\"body\":\"${comment}\"}"
+    "https://api.github.com/repos/${PHYEXREPOuser}/${PHYEXREPOrepo}/commits/${SHA}/statuses"
+}
+
+function add_status {
+  error=$1
+  ret=$2
+  SHA="$3"
+  comment="$4"
+  if [ $ret -eq 0 ]; then
+    state="success"
+  else
+    if [ $error -eq 1 ]; then
+      state="error"
+    else
+      state="failure"
+    fi
+  fi
+  url="https://${PHYEXREPOuser}.github.io/${PHYEXREPOrepo}/displayparam.html?"
+  url=${url}$(content=$(echo -e "$comment") python3 -c "import urllib.parse, os; print(urllib.parse.quote('<pre>' + os.environ['content'] + '</pre>', safe=':/'))")
+  curl -L \
+    -X POST \
+    -H "Accept: application/vnd.github+json" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    "https://api.github.com/repos/${PHYEXREPOuser}/${PHYEXREPOrepo}/statuses/${SHA}" \
+    -d '{"state":"'${state}'","target_url":"'${url}'","context":"'${context}'"}'
 }
 
 function get_cases {
@@ -139,16 +174,17 @@ function get_cases {
 function send_mail {
   message="$1"
   if [ "$MAIL" != "" ]; then
-    mail -s "$title" "$MAIL" <<EOF
+    mail -s "$context" "$MAIL" <<EOF
 $(echo -e ${message})
 EOF
   fi
 }
 
-header="${title}\n\n$(date)"
+header="${context}\n\n$(date)"
 message=""
 function report {
-  ret=$1
+  error=$1
+  ret=$2
   if [ ${ret} -eq 0 ]; then
     error_msg=""
   else
@@ -160,7 +196,7 @@ function report {
     send_mail "${message}"
   fi
   if [ "${SHA}" != 0 ]; then
-    add_comment "${SHA}" "${message}"
+    add_status $error $ret "${SHA}" "${message}"
   fi
 }
 
@@ -170,7 +206,7 @@ function exit_error {
   if [ ${ret} -ne 0 ]; then
     message="__ ABNORMAL EXIT ${ret} __\n${log_message}\n${message}"
     message="${message}\n\nMore information can be found in ${HOSTNAME}:${logfile}"
-    report ${ret}
+    report 1 ${ret}
   fi
 }
 trap 'exit_error $?' EXIT
@@ -190,21 +226,10 @@ if [ "${SHA}" -eq 0 ]; then
   SHA=$(get_last_commit)
   log 1 "Commit hash is ${SHA}"
 fi
-if [ ${force} -eq 1 -o $(get_comments "${SHA}" | grep "${title}" | wc -l) -eq 0 ]; then
+if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 0 ]; then
   log 1 "This commit has not been tested (or --force id provided)"
   ret=0
   
-  export TESTPROGSDIR="${WORKDIR}/TESTPROGS"
-  export HOMEPACK="${WORKDIR}/pack"
-  export MNHPACK="${WORKDIR}/MesoNH"
-  export LMDZPACK="${WORKDIR}/LMDZ"
-  for d in "${TESTPROGSDIR}" "${HOMEPACK}" "${MNHPACK}" "${LMDZPACK}"; do
-    if [ ! -d "${d}" ]; then
-      log 1 "Creating directory ${d}"
-      mkdir -p "${d}"
-    fi
-  done
-
   #Checkout tools, set PATH and use the last version of the testing script
   currentdir="${PWD}"
   if [ ${update} -eq 1 ]; then
@@ -239,6 +264,23 @@ if [ ${force} -eq 1 -o $(get_comments "${SHA}" | grep "${title}" | wc -l) -eq 0 
       fi
     fi
   fi
+
+  #Enable the gihub project pages
+  if [ $enableghpages -eq 1 ]; then
+    log 1 "Test if github project pages are enabled"
+    enable_gh_pages
+  fi
+
+  export TESTPROGSDIR="${WORKDIR}/TESTPROGS"
+  export HOMEPACK="${WORKDIR}/pack"
+  export MNHPACK="${WORKDIR}/MesoNH"
+  export LMDZPACK="${WORKDIR}/LMDZ"
+  for d in "${TESTPROGSDIR}" "${HOMEPACK}" "${MNHPACK}" "${LMDZPACK}"; do
+    if [ ! -d "${d}" ]; then
+      log 1 "Creating directory ${d}"
+      mkdir -p "${d}"
+    fi
+  done
 
   for model in $models; do
     log 1 "Starting tests for model ${model}"
@@ -350,5 +392,5 @@ if [ ${force} -eq 1 -o $(get_comments "${SHA}" | grep "${title}" | wc -l) -eq 0 
   done
 
   #Report result
-  report ${ret}
+  report 0 ${ret}
 fi
