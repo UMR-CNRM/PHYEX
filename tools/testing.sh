@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+#set -x
 set -e
 set -o pipefail #abort if left command on a pipe fails
 
@@ -149,7 +149,7 @@ function add_status {
     fi
   fi
   url="https://${PHYEXREPOuser}.github.io/${PHYEXREPOrepo}/displayparam.html?"
-  url=${url}$(content=$(echo -e "$comment") python3 -c "import urllib.parse, os; print(urllib.parse.quote('<pre>' + os.environ['content'] + '</pre>', safe=':/'))")
+  url=${url}$(content=$(echo -e "$comment") python3 -c "import urllib.parse, os; print(urllib.parse.quote('<pre>' + os.environ['content'] + '</pre>', safe=':/='))")
   curl -L \
     -X POST \
     -H "Accept: application/vnd.github+json" \
@@ -283,7 +283,8 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
   done
 
   for model in $models; do
-    log 1 "Starting tests for model ${model}"
+    retmodel=0
+    log 0 "Tests for model ${model}"
     #Model specific configuration
     if [ "${model}" == 'ial' ]; then
       compilation='-p -c'
@@ -315,10 +316,10 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
       result=$?
       set -e
       if [ ${result} -ne 0 ]; then
-        ret=1
-        log 0 "${model} compilation: error"
+        retmodel=1
+        log 0 "  ${model} compilation: error"
       else
-        log 0 "${model} compilation: OK"
+        log 0 "  ${model} compilation: OK"
       fi
     fi
 
@@ -351,7 +352,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
           result=$?
           set -e
           if [ ${result} -ne 0 ]; then
-            ret=1
+            retmodel=1
             log 0 "  ${model} ${casedescr}: execution error"
           else
             log 0 "  ${model} ${casedescr}: execution OK (but status not reliable)"
@@ -365,7 +366,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
           result=$?
           set -e
           if [ ${result} -ne 0 ]; then
-            ret=1
+            retmodel=1
             log 0 "  ${model} ${casedescr}: comparison error"
           else
             log 0 "  ${model} ${casedescr}: comparison OK"
@@ -382,12 +383,18 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
         result=$?
         set -e
         if [ ${result} -ne 0 ]; then
-          ret=1
+          retmodel=1
           log 0 "  ${model}: cleaning error"
         else
           log 0 "  ${model}: cleaning OK"
         fi
       fi
+    fi
+    if [ $retmodel -eq 0 ]; then
+      log 0 "..... global result for model $model: OK"
+    else
+      ret=1
+      log 0 "XXXXX global result for model $model: ERROR"
     fi
   done
 
