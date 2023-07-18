@@ -600,5 +600,5 @@ ENDIF
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 1, ZHOOK_HANDLE)
 !
 CONTAINS
-INCLUDE "ice4_nucleation.h"        
+INCLUDE "ice4_nucleation.func.h"
 END SUBROUTINE RAIN_ICE
