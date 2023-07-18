@@ -94,20 +94,19 @@ REAL :: ZQP, ZINVTSTEP, ZGAC, ZGC, ZGAC2, ZGC2, ZRAYDEFO, ZLBDAS
 REAL, DIMENSION(D%NIJT) :: ZWSEDW1, ZWSEDW2 ! sedimentation speed
 REAL, DIMENSION(D%NIJT) :: ZTSORHODZ        ! TimeStep Over (Rhodref times delta Z)
 REAL, DIMENSION(D%NIJT,0:1,2:KRR) :: ZSED   ! sedimentation flux array for each species and for above and current levels
+<<<<<<< HEAD
 REAL :: FWSED1, FWSED2, PWSEDW, PWSEDWSUP, PINVTSTEP, PTSTEP1, PDZZ1, PRHODREF1, PRXT1
 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
-#ifndef PHYEXMERGE
-! 5 multiplications + 1 division => cost = 7X
-FWSED1(PWSEDW,PTSTEP1,PDZZ1,PRHODREF1,PRXT1,PINVTSTEP)=MIN(1.,PWSEDW*PTSTEP1/PDZZ1 )*PRHODREF1*PDZZ1*PRXT1*PINVTSTEP
-#else
-! 5 multiplications only => cost = 5X
-FWSED1(PWSEDW,PTSTEP1,PDZZ1,PRHODREF1,PRXT1,PINVTSTEP)=MIN(PRHODREF1*PDZZ1*PRXT1*PINVTSTEP,PWSEDW*PRHODREF1*PRXT1)
-#endif
-
-FWSED2(PWSEDW,PTSTEP1,PDZZ1,PWSEDWSUP)=MAX(0.,1.-PDZZ1/(PTSTEP1*PWSEDW))*PWSEDWSUP
-
+REAL :: ZLBC    ! XLBC weighted by sea fraction
+REAL :: ZFSEDC
+REAL :: ZCONC3D ! droplet condensation
+REAL :: ZRAY    ! Cloud Mean radius
+REAL :: ZZWLBDA, ZZWLBDC, ZZCC
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+!
+>>>>>>> 574aa1d (FWSED one-line function are converted to elemental function. These one-line functions are painful : they must be placed after classic variables declarations but fxtran does not tag it as part of T-decl-stmt. Keeping one-line function would complexify adding init of D%NIJT in removeIJLoops)
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_STAT',0,ZHOOK_HANDLE)
 !
@@ -461,5 +460,23 @@ CONTAINS
     ISHIFT=1-ISHIFT
 
   END SUBROUTINE SHIFT
+!
 END SUBROUTINE ICE4_SEDIMENTATION_STAT
+!
+ELEMENTAL FUNCTION FWSED1(PWSEDW,PTSTEP1,PDZZ1,PRHODREF1,PRXT1,PINVTSTEP) RESULT(PVAR)
+  REAL, INTENT(IN) :: PWSEDW,PTSTEP1,PDZZ1,PRHODREF1,PRXT1,PINVTSTEP
+  REAL :: PVAR
+#ifndef PHYEXMERGE
+! 5 multiplications + 1 division => cost = 7X
+  PVAR = MIN(1.,PWSEDW*PTSTEP1/PDZZ1 )*PRHODREF1*PDZZ1*PRXT1*PINVTSTEP
+#else
+! 5 multiplications only => cost = 5X
+  PVAR = MIN(PRHODREF1*PDZZ1*PRXT1*PINVTSTEP,PWSEDW*PRHODREF1*PRXT1)
+#endif
+!
+ELEMENTAL FUNCTION FWSED2(PWSEDW,PTSTEP1,PDZZ1,PWSEDWSUP) RESULT(PVAR)
+  REAL, INTENT(IN) :: PWSEDW,PTSTEP1,PDZZ1,PWSEDWSUP
+  REAL :: PVAR
+  PVAR = MAX(0.,1.-PDZZ1/(PTSTEP1*PWSEDW))*PWSEDWSUP
+END FUNCTION FWSED2
 END MODULE MODE_ICE4_SEDIMENTATION_STAT
