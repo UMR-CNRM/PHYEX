@@ -489,8 +489,8 @@ CALL D1D_TO_3D(D,ZGX_M_U,PGX_M_U)
   END DO
 ELSE
 !  PGX_M_U = DXM(PY) / PDXX
-  PGX_M_U(1+1:IIU,:,:) = ( ZY(1+1:IIU,:,:)-ZY(1:IIU-1,:,:) ) &
-                             / ZDXX(1+1:IIU,:,:)
+  PGX_M_U(2:IIU,:,:) = ( ZY(2:IIU,:,:)-ZY(1:IIU-1,:,:) ) &
+                             / ZDXX(2:IIU,:,:)
 !
 ENDIF
 DO JI=1,JPHEXT
@@ -621,8 +621,8 @@ IF (.NOT. OFLAT) THEN
 !
 ELSE
 !  PGY_M_V = DYM(PY)/PDYY
-  PGY_M_V(:,1+1:IJU,:) = ( PY(:,1+1:IJU,:)-PY(:,1:IJU-1,:) ) &
-                               / PDYY(:,1+1:IJU,:)
+  PGY_M_V(:,2:IJU,:) = ( PY(:,2:IJU,:)-PY(:,1:IJU-1,:) ) &
+                               / PDYY(:,2:IJU,:)
 !
 ENDIF
 DO JJ=1,JPHEXT
