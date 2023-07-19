@@ -240,7 +240,7 @@ IF(PARAMI%LPACK_MICRO) THEN
   
       ! Setup packing parameters
       OUTER_LOOP: DO JK = ISTK, IKTE
-        IF (ANY(ODMICRO(:,JK))) THEN
+        IF (ANY(ODMICRO(IIJB:IIJE,JK))) THEN
           DO JIJ = ISTIJ, IIJE
             IF (ODMICRO(JIJ,JK)) THEN
               IC=IC+1

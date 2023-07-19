@@ -424,7 +424,12 @@ ENDDO
 !               ----------------------
 !
 IF(PARAMI%LPACK_MICRO) THEN
-  ISIZE=COUNT(LLMICRO) ! Number of points with active microphysics
+  ISIZE=0
+  DO JK=1,D%NKT
+    DO JIJ=1,D%NIJT
+      IF(LLMICRO(JIJ,JK)) ISIZE=ISIZE+1 ! Number of points with active microphysics
+    END DO
+  END DO
   !PARAMI%NPROMICRO is the requested size for cache_blocking loop
   !IPROMA is the effective size
   !This parameter must be computed here because it is used for array dimensioning in ice4_pack
