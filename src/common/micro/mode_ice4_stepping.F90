@@ -95,7 +95,7 @@ REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PHLC_HRC
 REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PHLC_HCF
 REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PHLI_HRI
 REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PHLI_HCF
-REAL,    DIMENSION(KPROMA),                     INTENT(OUT)   :: PRAINFR
+REAL,    DIMENSION(D%NIJT,D%NKT),               INTENT(OUT)   :: PRAINFR
 REAL,    DIMENSION(KPROMA,0:7),                 INTENT(INOUT) :: PEXTPK !To take into acount external tendencies inside the splitting
 REAL,    DIMENSION(KPROMA, IBUNUM-IBUNUM_EXTRA),INTENT(OUT)   :: PBU_SUM
 REAL,    DIMENSION(KPROMA),                     INTENT(OUT)   :: PRREVAV
