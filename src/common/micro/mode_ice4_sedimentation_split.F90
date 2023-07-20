@@ -313,13 +313,14 @@ CHARACTER(LEN=10) :: YSPE ! String for error message
 INTEGER                         :: JIJ, JK
 LOGICAL                         :: GPRESENT_PFPR
 REAL                            :: ZINVTSTEP
-REAL                            :: ZZWLBDC, ZRAY, ZZT, ZZWLBDA, ZZCC
+REAL                            :: ZZWLBDC, ZZRAY, ZZT, ZZWLBDA, ZZCC
 REAL                            :: ZLBDA
 REAL                            :: ZFSED, ZEXSED
 REAL                                :: ZMRCHANGE
 REAL, DIMENSION(D%NIJT)       :: ZMAX_TSTEP ! Maximum CFL in column
 REAL, DIMENSION(SIZE(ICED%XRTMIN))   :: ZRSMIN
 REAL, DIMENSION(D%NIJT)       :: ZREMAINT   ! Remaining time until the timestep end
+LOGICAL :: ZANYREMAINT
 REAL, DIMENSION(D%NIJT, 0:D%NKT+1) :: ZWSED   ! Sedimentation fluxes
 INTEGER :: IKTB, IKTE, IKB, IKL, IIJE, IIJB
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
@@ -346,7 +347,8 @@ ZRSMIN = ICED%XRTMIN * ZINVTSTEP
 ZREMAINT(:) = 0.
 ZREMAINT(IIJB:IIJE) = PTSTEP
 !
-DO WHILE (ANY(ZREMAINT>0.))
+ZANYREMAINT = .TRUE.
+DO WHILE (ZANYREMAINT)
   !
   !
   !*       1. Parameters for cloud sedimentation
@@ -364,10 +366,10 @@ DO WHILE (ANY(ZREMAINT>0.))
           ZZWLBDC = PLBC(JIJ,JK) * PCONC3D(JIJ,JK) / &
                    &(PRHODREF(JIJ,JK) * PRXT(JIJ,JK))
           ZZWLBDC = ZZWLBDC**ICED%XLBEXC
-          ZRAY = PRAY(JIJ,JK) / ZZWLBDC
+          ZZRAY = PRAY(JIJ,JK) / ZZWLBDC
           ZZT = PTHT(JIJ,JK) * (PPABST(JIJ,JK)/CST%XP00)**(CST%XRD/CST%XCPD)
           ZZWLBDA = 6.6E-8*(101325./PPABST(JIJ,JK))*(ZZT/293.15)
-          ZZCC = ICED%XCC*(1.+1.26*ZZWLBDA/ZRAY)
+          ZZCC = ICED%XCC*(1.+1.26*ZZWLBDA/ZZRAY)
           ZWSED(JIJ, JK) = PRHODREF(JIJ,JK)**(-ICED%XCEXVT +1 ) *   &
                              &ZZWLBDC**(-ICED%XDC)*ZZCC*PFSEDC(JIJ,JK) * PRXT(JIJ,JK)
         ENDIF
@@ -469,7 +471,13 @@ DO WHILE (ANY(ZREMAINT>0.))
       ENDIF
     ENDDO
   ENDDO
-!
+  !
+  ZANYREMAINT = .FALSE.
+  DO JIJ=IIJB,IIJE
+    IF(ZREMAINT(JIJ)>0.) THEN
+      ZANYREMAINT = .TRUE.
+    END IF
+  END DO
 END DO
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT', 1, ZHOOK_HANDLE)
