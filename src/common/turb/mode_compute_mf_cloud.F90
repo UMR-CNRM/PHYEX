@@ -117,10 +117,10 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD',0,ZHOOK_HANDLE)
 !
 !                     2.1 Internal domain
-PRC_MF = 0.
-PRI_MF = 0.
-PCF_MF = 0.
-PSIGMF = 0.
+PRC_MF(:,:) = 0.
+PRI_MF(:,:) = 0.
+PCF_MF(:,:) = 0.
+PSIGMF(:,:) = 0.
 
 IF (PARAMMF%CMF_CLOUD == 'DIRE') THEN
   !Direct cloud scheme
