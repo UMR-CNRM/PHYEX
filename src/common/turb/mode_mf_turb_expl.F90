@@ -115,15 +115,15 @@ IKB=D%NKB
 IKE=D%NKE
 IKL=D%NKL
 !
-PFLXZRMF   = 0.
-PFLXZTHVMF = 0.
-PFLXZTHLMF = 0.
-PFLXZUMF   = 0.
-PFLXZVMF   = 0.
-PTHLDT = 0.
-PRTDT  = 0.
-PUDT   = 0.
-PVDT   = 0.
+PFLXZRMF(:,:)   = 0.
+PFLXZTHVMF(:,:) = 0.
+PFLXZTHLMF(:,:) = 0.
+PFLXZUMF(:,:)   = 0.
+PFLXZVMF(:,:)   = 0.
+PTHLDT(:,:) = 0.
+PRTDT(:,:)  = 0.
+PUDT(:,:)   = 0.
+PVDT(:,:)   = 0.
 
 !
 !----------------------------------------------------------------------------
