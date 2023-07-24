@@ -243,19 +243,27 @@ DO JK=IKTB,IKTE
         ZLWORK1=PDZZ(JIJ,JKK)
 
         !--------- SHEAR + STABILITY ----------- 
+#ifndef PHYEXMERGE
         ZLWORK2 = (ZG_O_THVREF(JIJ,JK) *(ZVPT(JIJ,JKK) - ZVPT(JIJ,JK))  & 
           -CSTURB%XRM17*PSHEAR(JIJ,JKK)*ZSQRT_TKE(JIJ,JK) &
           + sqrt(abs( (CSTURB%XRM17*PSHEAR(JIJ,JKK)*ZSQRT_TKE(JIJ,JK) &
           + ( -ZG_O_THVREF(JIJ,JK) * (ZVPT(JIJ,JKK) - ZVPT(JIJ,JK)) ))**2.0 + &
           2. * ZINTE(JIJ) * &
-#ifndef PHYEXMERGE
           ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK)/ PDZZ(JIJ,JKK)))) / &
-#else
-          (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK)/ PDZZ(JIJ,JKK))))) / &
-#endif
           (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK) / PDZZ(JIJ,JKK))
         ZLWORK(JIJ)=ZLWORK(JIJ)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
         ZINTE(JIJ) = ZINTE(JIJ) - ZPOTE
+#else
+        ZLWORK2 = (ZG_O_THVREF(JIJ,JK) *(ZVPT(JIJ,JKK) - ZVPT(JIJ,JK))  & 
+          -CSTURB%XRM17*PSHEAR(JIJ,JKK)*ZSQRT_TKE(JIJ,JK) &
+          + sqrt(abs( (CSTURB%XRM17*PSHEAR(JIJ,JKK)*ZSQRT_TKE(JIJ,JK) &
+          + ( -ZG_O_THVREF(JIJ,JK) * (ZVPT(JIJ,JKK) - ZVPT(JIJ,JK)) ))**2.0 + &
+          2. * ZINTE(JIJ) * &
+          (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK)/ PDZZ(JIJ,JKK))))) / &
+          (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK) / PDZZ(JIJ,JKK))
+        ZLWORK(JIJ)=ZLWORK(JIJ)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
+        ZINTE(JIJ) = ZINTE(JIJ) - ZPOTE
+#endif
       END DO
     ENDIF
   END DO
@@ -291,20 +299,29 @@ DO JK=IKTB,IKTE
         ZTESTM=ZTESTM+ZTEST0
         ZLWORK1=PDZZ(JIJ,JKK)
         !--------- SHEAR + STABILITY ----------- 
+#ifndef PHYEXMERGE
         ZLWORK2= ( - ZG_O_THVREF(JIJ,JK) *(ZVPT(JIJ,JKK-IKL) - ZVPT(JIJ,JK) )  &
                    - CSTURB%XRM17*PSHEAR(JIJ,JKK)*ZSQRT_TKE(JIJ,JK)  &
           + SQRT (ABS(                                                       &
           (CSTURB%XRM17*PSHEAR(JIJ,JKK)*ZSQRT_TKE(JIJ,JK)   &
             + ( ZG_O_THVREF(JIJ,JK) * (ZVPT(JIJ,JKK-IKL) - ZVPT(JIJ,JK))) )**2    &
             + 2. * ZINTE(JIJ) * &
-#ifndef PHYEXMERGE
              ZG_O_THVREF(JIJ,JK)* ZDELTVPT(JIJ,JKK)/PDZZ(JIJ,JKK)))) / &
-#else
-            (ZG_O_THVREF(JIJ,JK)* ZDELTVPT(JIJ,JKK)/PDZZ(JIJ,JKK))))) / &
-#endif
             (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK) / PDZZ(JIJ,JKK))
         ZLWORK(JIJ)=ZLWORK(JIJ)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
         ZINTE(JIJ) = ZINTE(JIJ) - ZPOTE
+#else
+        ZLWORK2= ( - ZG_O_THVREF(JIJ,JK) *(ZVPT(JIJ,JKK-IKL) - ZVPT(JIJ,JK) )  &
+                   - CSTURB%XRM17*PSHEAR(JIJ,JKK)*ZSQRT_TKE(JIJ,JK)  &
+          + SQRT (ABS(                                                       &
+          (CSTURB%XRM17*PSHEAR(JIJ,JKK)*ZSQRT_TKE(JIJ,JK)   &
+            + ( ZG_O_THVREF(JIJ,JK) * (ZVPT(JIJ,JKK-IKL) - ZVPT(JIJ,JK))) )**2    &
+            + 2. * ZINTE(JIJ) * &
+            (ZG_O_THVREF(JIJ,JK)* ZDELTVPT(JIJ,JKK)/PDZZ(JIJ,JKK))))) / &
+            (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK) / PDZZ(JIJ,JKK))
+        ZLWORK(JIJ)=ZLWORK(JIJ)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
+        ZINTE(JIJ) = ZINTE(JIJ) - ZPOTE
+#endif
       END DO
     ENDIF
   END DO

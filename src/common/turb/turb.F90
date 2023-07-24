@@ -902,10 +902,11 @@ END IF
 !*      4.2 compute the proportionality coefficient between wind and stress
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE)
-ZCDUEFF(IIJB:IIJE) =-SQRT ( (PSFU(IIJB:IIJE)**2 + PSFV(IIJB:IIJE)**2) /               &
 #ifndef PHYEXMERGE
+ZCDUEFF(IIJB:IIJE) =-SQRT ( (PSFU(IIJB:IIJE)**2 + PSFV(IIJB:IIJE)**2) /               &
                     (1.E-60 + ZUSLOPE(IIJB:IIJE)**2 + ZVSLOPE(IIJB:IIJE)**2 ) )
 #else
+ZCDUEFF(IIJB:IIJE) =-SQRT ( (PSFU(IIJB:IIJE)**2 + PSFV(IIJB:IIJE)**2) /               &
                     (CST%XMNH_TINY + ZUSLOPE(IIJB:IIJE)**2 + ZVSLOPE(IIJB:IIJE)**2 ) )
 #endif
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)

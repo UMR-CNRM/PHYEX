@@ -99,9 +99,6 @@ DO JI=IIJB,IIJE
   JK0=MAX(JK0, MIN(IKB,IKE)) !protection if KKL=1
   JK0=MIN(JK0, MAX(IKB,IKE)) !protection if KKL=-1
   DO JK=JK0,IKE-IKL,IKL
-#else
-  DO JK=KKLCL(JI),IKE-IKL,IKL
-#endif
     PCF_MF(JI,JK ) = MAX( 0., MIN(1.,PARAMMF%XKCF_MF *0.5* (       &
                 &    PFRAC_UP(JI,JK) +  PFRAC_UP(JI,JK+IKL) ) ))
     PRC_MF(JI,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JI,JK)*PRC_UP(JI,JK)  &
@@ -109,6 +106,16 @@ DO JI=IIJB,IIJE
     PRI_MF(JI,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JI,JK)*PRI_UP(JI,JK)  &
                          + PFRAC_UP(JI,JK+IKL)*PRI_UP(JI,JK+IKL) )
   END DO
+#else
+  DO JK=KKLCL(JI),IKE-IKL,IKL
+    PCF_MF(JI,JK ) = MAX( 0., MIN(1.,PARAMMF%XKCF_MF *0.5* (       &
+                &    PFRAC_UP(JI,JK) +  PFRAC_UP(JI,JK+IKL) ) ))
+    PRC_MF(JI,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JI,JK)*PRC_UP(JI,JK)  &
+                         + PFRAC_UP(JI,JK+IKL)*PRC_UP(JI,JK+IKL) )
+    PRI_MF(JI,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JI,JK)*PRI_UP(JI,JK)  &
+                         + PFRAC_UP(JI,JK+IKL)*PRI_UP(JI,JK+IKL) )
+  END DO
+#endif
 END DO
 
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_DIRECT',1,ZHOOK_HANDLE)

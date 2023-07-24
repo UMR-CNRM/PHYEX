@@ -157,10 +157,7 @@ DO JL=1, KSIZE
   !This was wrong because, with this formulation and in the LDSOFT case, PRIAUTS
   !was not set to 0 when ri is inferior to the autoconversion threshold
   IF(PRIT(JL)>ICED%XRTMIN(4) .AND. LDCOMPUTE(JL)) THEN
-#else
-  IF(PHLI_HRI(JL)>ICED%XRTMIN(4) .AND. LDCOMPUTE(JL)) THEN
-#endif
-    IF(.NOT. LDSOFT) THEN
+              IF(.NOT. LDSOFT) THEN
       !ZCRIAUTI(:)=MIN(ICEP%XCRIAUTI,10**(0.06*(PT(:)-CST%XTT)-3.5))
       ZCRIAUTI(JL)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(JL)-CST%XTT)+ICEP%XBCRIAUTI))
       PRIAUTS(JL) = ICEP%XTIMAUTI * EXP( ICEP%XTEXAUTI*(PT(JL)-CST%XTT) ) &
@@ -169,6 +166,18 @@ DO JL=1, KSIZE
   ELSE
     PRIAUTS(JL) = 0.
   ENDIF
+#else
+  IF(PHLI_HRI(JL)>ICED%XRTMIN(4) .AND. LDCOMPUTE(JL)) THEN
+              IF(.NOT. LDSOFT) THEN
+      !ZCRIAUTI(:)=MIN(ICEP%XCRIAUTI,10**(0.06*(PT(:)-CST%XTT)-3.5))
+      ZCRIAUTI(JL)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(JL)-CST%XTT)+ICEP%XBCRIAUTI))
+      PRIAUTS(JL) = ICEP%XTIMAUTI * EXP( ICEP%XTEXAUTI*(PT(JL)-CST%XTT) ) &
+                                  * MAX(PHLI_HRI(JL)-ZCRIAUTI(JL)*PHLI_HCF(JL), 0.)
+    ENDIF
+  ELSE
+    PRIAUTS(JL) = 0.
+  ENDIF
+#endif
 ENDDO
 !
 !*       3.4.6  compute the deposition on r_g: RVDEPG

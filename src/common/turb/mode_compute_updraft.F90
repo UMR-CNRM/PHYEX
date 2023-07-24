@@ -231,6 +231,9 @@ REAL                   :: ZDZ                  ! Delta Z used in computations
 INTEGER :: JKLIM
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
 INTEGER :: IKT,IKB,IKE,IKL
+INTEGER, PARAMETER :: IEXN=1, IRVSAT=2, ICPH=3, IRLTEMP=4, ICPH2=5, IT=6, ILVOCPEXN=7, ILSOCPEXN=8, &
+                    & IDRSATODT=9, IDRSATODTW=10, IDRSATODTI=11, IFOESW=12, IFOESI=13, &
+                    & ILOGT=14, I99PP=15, I1PRT=16
 !
 IF (LHOOK) CALL DR_HOOK('COMPUTE_UPDRAFT',0,ZHOOK_HANDLE)
 !

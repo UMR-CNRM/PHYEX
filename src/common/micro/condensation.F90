@@ -266,12 +266,14 @@ IF(PRESENT(PCPH)) THEN
 ELSE
   DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE
-      ZCPD(JIJ,JK) = CST%XCPD + CST%XCPV*PRV_IN(JIJ,JK) + CST%XCL*PRC_IN(JIJ,JK) + CST%XCI*PRI_IN(JIJ,JK) + &
 #ifndef PHYEXMERGE
-#else
-                                  CST%XCL*PRR(JIJ,JK) +  &
-#endif
+      ZCPD(JIJ,JK) = CST%XCPD + CST%XCPV*PRV_IN(JIJ,JK) + CST%XCL*PRC_IN(JIJ,JK) + CST%XCI*PRI_IN(JIJ,JK) + &
                                   CST%XCI*(PRS(JIJ,JK) + PRG(JIJ,JK) )
+#else
+      ZCPD(JIJ,JK) = CST%XCPD + CST%XCPV*PRV_IN(JIJ,JK) + CST%XCL*PRC_IN(JIJ,JK) + CST%XCI*PRI_IN(JIJ,JK) + &
+                                  CST%XCL*PRR(JIJ,JK) +  &
+                                  CST%XCI*(PRS(JIJ,JK) + PRG(JIJ,JK) )
+#endif
     ENDDO
   ENDDO
 ENDIF

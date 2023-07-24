@@ -207,7 +207,7 @@ CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, &
              & PPABST=PPABSM(:,:,:,IBL), PCIT=PCIT(:,:,:,IBL), PCLDFR=PCLDFR(:,:,:,IBL),  &
              & PHLC_HRC=PHLC_HRC(:,:,:,IBL), PHLC_HCF=PHLC_HCF(:,:,:,IBL), &
              & PHLI_HRI=PHLI_HRI(:,:,:,IBL), PHLI_HCF=PHLI_HCF(:,:,:,IBL), &
-             & PTHT(:,:,:,1,IBL)=PTHT,PRVT=PRT(:,:,:,1,IBL),PRCT=PRT(:,:,:,2,IBL), &
+             & PTHT=PTHT(:,:,:,IBL),PRVT=PRT(:,:,:,1,IBL),PRCT=PRT(:,:,:,2,IBL), &
              & PRRT=PRT(:,:,:,3,IBL), &
              & PRIT=PRT(:,:,:,4,IBL), PRST=PRT(:,:,:,5,IBL), &
              & PRGT=PRT(:,:,:,6,IBL),       &
