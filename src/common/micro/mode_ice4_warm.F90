@@ -150,7 +150,7 @@ ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
                       &*PHLC_HCF(JL)
 #else
           !HCF*accretion(HRC/HCF) with simplification
-          PRCACCR(:) = ICEP%XFCACCR * PHLC_HRC(JL)     &
+          PRCACCR(JL) = ICEP%XFCACCR * PHLC_HRC(JL)     &
                       &*PLBDAR_RF(JL)**ICEP%XEXCACCR &
                       &*PRHODREF(JL)**(-ICED%XCEXVT)
 #endif
