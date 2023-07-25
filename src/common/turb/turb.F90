@@ -1068,9 +1068,6 @@ END IF
 !Les budgets des termes horizontaux de la turb sont présents dans AROME
 ! alors que ces termes ne sont pas calculés
 #ifndef PHYEXMERGE
-#else
-IF( TURBN%CTURBDIM == '3DIM' ) THEN
-#endif
   IF( BUCONF%LBUDGET_U  ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_U ), 'HTURB', PRUS  (:,:) )
   IF( BUCONF%LBUDGET_V  ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_V ), 'HTURB', PRVS  (:,:) )
   IF( BUCONF%LBUDGET_W  ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_W ), 'HTURB', PRWS  (:,:) )
@@ -1104,28 +1101,8 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
       CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:,:, JSV) )
     END DO
   END IF
-!à supprimer une fois le précédent ifndef PHYEXMERGE validé
-#ifndef PHYEXMERGE
-#else
-    CALL TURB_HOR_SPLT(D,CST,CSTURB, TURBN, NEBN, TLES,        &
-          KSPLIT, KRR, KRRL, KRRI, KSV,KSV_LGBEG,KSV_LGEND,    & 
-          PTSTEP,HLBCX,HLBCY, OFLAT,O2D, ONOMIXLG,             & 
-          OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,PRSNOW,                &
-          TPFILE, KHALO,                                       &
-          PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                        &
-          PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                       &
-          PCOSSLOPE,PSINSLOPE,                                 &
-          PRHODJ,PTHVREF,                                      &
-          PSFTH,PSFRV,PSFSV,                                   &
-          ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU22M,ZTAU33M,             &
-          PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,PSVT,          &
-          PTKET,ZLM,ZLEPS,                                     &
-          ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,           &
-          PDP,PTP,PSIGS,                                       &
-          ZTRH,                                                &
-          PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS                     )
-#endif
-  !
+
+ !
 !  IF (HCLOUD == 'LIMA') THEN
 !     IF (KSV_LIMA_NR.GT.0) PRSVS(:,:,KSV_LIMA_NR) = ZRSVS(:,:,KSV_LIMA_NR) 
 !     IF (KSV_LIMA_NS.GT.0) PRSVS(:,:,KSV_LIMA_NS) = ZRSVS(:,:,KSV_LIMA_NS)
@@ -1166,8 +1143,99 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
       CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:,:, JSV) )
     END DO
   END IF
-#ifndef PHYEXMERGE
 #else
+IF( TURBN%CTURBDIM == '3DIM' ) THEN
+  IF( BUCONF%LBUDGET_U  ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_U ), 'HTURB', PRUS  (:,:) )
+  IF( BUCONF%LBUDGET_V  ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_V ), 'HTURB', PRVS  (:,:) )
+  IF( BUCONF%LBUDGET_W  ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_W ), 'HTURB', PRWS  (:,:) )
+
+  IF(BUCONF%LBUDGET_TH)  THEN
+    IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:,:) + ZLVOCPEXNM(:,:) * PRRS(:,:, 2) &
+                                                                             + ZLSOCPEXNM(:,:) * PRRS(:,:, 4) )
+    ELSE IF( KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:,:) + ZLOCPEXNM(:,:) * PRRS(:,:, 2) )
+    ELSE
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:,:) )
+    END IF
+  END IF
+
+  IF( BUCONF%LBUDGET_RV ) THEN
+    IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:,:, 1) - PRRS(:,:, 2) - PRRS(:,:, 4) )
+    ELSE IF( KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:,:, 1) - PRRS(:,:, 2) )
+    ELSE
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:,:, 1) )
+    END IF
+  END IF
+
+  IF( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'HTURB', PRRS(:,:, 2) )
+  IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'HTURB', PRRS(:,:, 4) )
+
+  IF( BUCONF%LBUDGET_SV )  THEN
+    DO JSV = 1, KSV
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:,:, JSV) )
+    END DO
+  END IF
+    CALL TURB_HOR_SPLT(D,CST,CSTURB, TURBN, NEBN, TLES,        &
+          KSPLIT, KRR, KRRL, KRRI, KSV,KSV_LGBEG,KSV_LGEND,    & 
+          PTSTEP,HLBCX,HLBCY, OFLAT,O2D, ONOMIXLG,             & 
+          OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,PRSNOW,                &
+          TPFILE, KHALO,                                       &
+          PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                        &
+          PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                       &
+          PCOSSLOPE,PSINSLOPE,                                 &
+          PRHODJ,PTHVREF,                                      &
+          PSFTH,PSFRV,PSFSV,                                   &
+          ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU22M,ZTAU33M,             &
+          PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,PSVT,          &
+          PTKET,ZLM,ZLEPS,                                     &
+          ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,           &
+          PDP,PTP,PSIGS,                                       &
+          ZTRH,                                                &
+          PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS                     )
+ !
+!  IF (HCLOUD == 'LIMA') THEN
+!     IF (KSV_LIMA_NR.GT.0) PRSVS(:,:,KSV_LIMA_NR) = ZRSVS(:,:,KSV_LIMA_NR) 
+!     IF (KSV_LIMA_NS.GT.0) PRSVS(:,:,KSV_LIMA_NS) = ZRSVS(:,:,KSV_LIMA_NS)
+!     IF (KSV_LIMA_NG.GT.0) PRSVS(:,:,KSV_LIMA_NG) = ZRSVS(:,:,KSV_LIMA_NG) 
+!     IF (KSV_LIMA_NH.GT.0) PRSVS(:,:,KSV_LIMA_NH) = ZRSVS(:,:,KSV_LIMA_NH)
+!  END IF
+  !
+  IF( BUCONF%LBUDGET_U ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_U), 'HTURB', PRUS(:,:) )
+  IF( BUCONF%LBUDGET_V ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_V), 'HTURB', PRVS(:,:) )
+  IF( BUCONF%LBUDGET_W ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_W), 'HTURB', PRWS(:,:) )
+
+  IF( BUCONF%LBUDGET_TH ) THEN
+    IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:,:) + ZLVOCPEXNM(:,:) * PRRS(:,:, 2) &
+                                                                            + ZLSOCPEXNM(:,:) * PRRS(:,:, 4) )
+    ELSE IF( KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:,:) + ZLOCPEXNM(:,:) * PRRS(:,:, 2) )
+    ELSE
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'HTURB', PRTHLS(:,:) )
+    END IF
+  END IF
+
+  IF( BUCONF%LBUDGET_RV ) THEN
+    IF( KRRI >= 1 .AND. KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:,:, 1) - PRRS(:,:, 2) - PRRS(:,:, 4) )
+    ELSE IF( KRRL >= 1 ) THEN
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:,:, 1) - PRRS(:,:, 2) )
+    ELSE
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'HTURB', PRRS(:,:, 1) )
+    END IF
+  END IF
+
+  IF( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'HTURB', PRRS(:,:, 2) )
+  IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'HTURB', PRRS(:,:, 4) )
+
+  IF( BUCONF%LBUDGET_SV )  THEN
+    DO JSV = 1, KSV
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:,:, JSV) )
+    END DO
+  END IF
 END IF
 #endif
 !----------------------------------------------------------------------------
