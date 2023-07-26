@@ -18,6 +18,8 @@ set -o pipefail #abort if left command on a pipe fails
 #Commit e070d16 can be used for rain_ice_old (ref commit for this testprogs), and for
 #turb, shallow, rain_ice and ice_adjust (as it gives the same results for these test cases).
 
+#Some modifications have been introduced and new reference commit is 00148b1
+
 #Data generation:
 # - The last commit of the testprogs_data branch (based on 46t1) is able to produce the data
 #   for the turb, shallow, rain_ice and ice_adjust testprogs. The code is present but must be
@@ -44,7 +46,7 @@ fi
 defaultRef=ref
 
 function usage {
-  echo "Usage: $0 [-h] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t test] [--repo-user user] [--repo-protocol protocol] [-a arch] [-A arch] commit [reference]"
+  echo "Usage: $0 [-h] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t test] [--repo-user user] [--repo-protocol protocol] [-a arch] [-A arch] [--remove] commit [reference]"
   echo "commit          commit hash (or a directory, or among $specialName) to test"
   echo "reference       commit hash (or a directory, or among $specialName) REF to use as a reference"
   echo "-s              suppress compilation directory"
@@ -58,18 +60,21 @@ function usage {
   echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
   echo "--repo-protocol protocol (https or ssh) to reach the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREOprotocol (=$PHYEXREOprotocol)"
+  echo "--remove        removes the pack"
   echo "-a arch         architecture name to use to build and run the commit (=$defaultarchfile)"
   echo "-A arch         architecture name to use for the reference simulation (=$defaultarchfile)"
   echo ""
-  echo "If nothing is asked (compilation, running, check) everything is done"
-  echo
-  echo "With the special reference REF commit, a suitable reference is guessed"
+  echo "If nothing is asked (compilation, running, check, removing) everything"
+  echo "except the removing is done"
   echo
   echo "If no test is aked for, the default one ($defaultTest) is executed"
+  echo
+  echo "With the special reference REF commit, a suitable reference is guessed"
   echo
   echo "The directory (for commit only, not ref) can take the form server:directory"
   echo
   echo "If using a directory (for commit or reference) it must contain at least one '/'"
+  echo "The commit can be a tag, written with syntagx tags/<TAG>"
 }
 
 compilation=0
@@ -82,6 +87,7 @@ suppress=0
 useexpand=""
 archfile=$defaultarchfile
 refarchfile=$defaultarchfile
+remove=0
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -94,6 +100,7 @@ while [ -n "$1" ]; do
     '--noexpand') useexpand=$1;;
     '--repo-user') export PHYEXREPOuser=$2; shift;;
     '--repo-protocol') export PHYEXREPOprotocol=$2; shift;;
+    '--remove') remove=1;;
     '-a') archfile="$2"; shift;;
     '-A') refarchfile="$2"; shift;;
     #--) shift; break ;;
@@ -134,7 +141,8 @@ fi
 
 if [ $compilation -eq 0 -a \
      $run -eq 0 -a \
-     $check -eq 0 ]; then
+     $check -eq 0 -a \
+     $remove -eq 0 ]; then
   compilation=1
   run=1
   check=1
@@ -265,5 +273,13 @@ if [ $check -eq 1 ]; then
   else
     echo "*************** Files are different *******************"
     echo -e "$message"
+    cmpstatus=50
   fi
 fi
+
+if [ $remove -eq 1 ]; then
+  echo "### Remove model directory for commit $commit"
+  [ -d $TESTDIR/$name ] && rm -rf $TESTDIR/$name
+fi
+
+exit $cmpstatus

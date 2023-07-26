@@ -41,6 +41,7 @@
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !!      D. Ricard     May 2021      add the switches for Leonard terms
 !!    JL Redelsperger  03/2021   Add O-A flux for auto-coupled LES case
+!!      S. Riette June 2023: add LSMOOTH_PRANDTL, XMINSIGS and XBL89EXP/XUSRBL89
 !!
 !-------------------------------------------------------------------------------
 !
@@ -105,6 +106,9 @@ TYPE TURB_t
   LOGICAL            :: LROTATE_WIND !< .TRUE. to rotate wind components
   LOGICAL            :: LTKEMINTURB  !< set a minimum value for the TKE in the turbulence scheme
   LOGICAL            :: LPROJQITURB  !< project the rt tendency on rc/ri
+  LOGICAL            :: LSMOOTH_PRANDTL !< .TRUE. to smooth prandtl functions
+  REAL               :: XMINSIGS     !< minimum value for SIGS computed by the turbulence scheme
+  REAL               :: XBL89EXP, XUSRBL89 !< exponent on final BL89 length
 !  
 END TYPE TURB_t
 
@@ -152,14 +156,16 @@ REAL, POINTER :: XLINI=>NULL()
 LOGICAL, POINTER   :: LROTATE_WIND=>NULL()
 LOGICAL, POINTER   :: LTKEMINTURB=>NULL()
 LOGICAL, POINTER   :: LPROJQITURB=>NULL()
-
+LOGICAL, POINTER   :: LSMOOTH_PRANDTL=>NULL()
+REAL, POINTER :: XMINSIGS=>NULL()
+REAL, POINTER :: XBL89EXP=>NULL(), XUSRBL89=>NULL()
 !
 NAMELIST/NAM_TURBn/XIMPL,CTURBLEN,CTURBDIM,LTURB_FLX,LTURB_DIAG,  &
                    LSIG_CONV,LRMC01,CTOM,&
                    XTKEMIN,XCED,XCTP,XCADAP,&
                    LLEONARD,XCOEFHGRADTHL, XCOEFHGRADRM, &
                    XALTHGRAD, XCLDTHOLD, XLINI, LHARAT, &
-                   LPROJQITURB
+                   LPROJQITURB, LSMOOTH_PRANDTL, XMINSIGS
 !
 !-------------------------------------------------------------------------------
 !
@@ -235,6 +241,10 @@ XLINI=>TURB_MODEL(KTO)%XLINI
 LROTATE_WIND=>TURB_MODEL(KTO)%LROTATE_WIND
 LTKEMINTURB=>TURB_MODEL(KTO)%LTKEMINTURB
 LPROJQITURB=>TURB_MODEL(KTO)%LPROJQITURB
+LSMOOTH_PRANDTL=>TURB_MODEL(KTO)%LSMOOTH_PRANDTL
+XMINSIGS=>TURB_MODEL(KTO)%XMINSIGS
+XBL89EXP=>TURB_MODEL(KTO)%XBL89EXP
+XUSRBL89=>TURB_MODEL(KTO)%XUSRBL89
 !
 ENDIF
 !
@@ -335,14 +345,18 @@ IF(LLDEFAULTVAL) THEN
   LROTATE_WIND=.FALSE.
   LTKEMINTURB=.TRUE.
   LPROJQITURB=.TRUE.
+  LSMOOTH_PRANDTL=.TRUE.
+  XMINSIGS=0.
 
   IF(HPROGRAM=='AROME') THEN
     XTKEMIN=1.E-6
     XLINI=0.
     LPROJQITURB=.FALSE.
+    LSMOOTH_PRANDTL=.FALSE.
   ELSEIF(HPROGRAM=='MESONH') THEN
     LROTATE_WIND=.TRUE.
     LTKEMINTURB=.FALSE.
+    XMINSIGS=1.E-12
   ELSEIF(HPROGRAM=='LMDZ') THEN
     XTKEMIN=1.E-6
     XLINI=0.

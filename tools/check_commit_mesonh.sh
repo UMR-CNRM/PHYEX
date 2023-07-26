@@ -22,7 +22,7 @@ separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allerg
 
 PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 function usage {
-  echo "Usage: $0 [-h] [-c] [-r] [-C] [-s] [--expand]  [-t test] commit reference"
+  echo "Usage: $0 [-h] [-c] [-r] [-C] [-s] [--expand] [-t test] [--remove] commit [reference]"
   echo "commit          commit hash (or a directory)"
   echo "reference       commit hash or a directory or nothing for ref"
   echo "-s              suppress compilation pack"
@@ -36,14 +36,19 @@ function usage {
   echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
   echo "--repo-protocol protocol (https or ssh) to reach the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREOprotocol (=$PHYEXREOprotocol)"
+  echo "--remove        removes the pack"
   echo ""
-  echo "If nothing is asked (compilation, running, check) everything is done"
-  echo 
-  echo "If no test is aked for, the default on ($defaultTest) is executed"
+  echo "If nothing is asked (compilation, running, check, removing) everything"
+  echo "except the removing is done"
+  echo
+  echo "If no test is aked for, the default one ($defaultTest) is executed"
+  echo
+  echo "With the special reference REF commit, a suitable reference is guessed"
   echo
   echo "The directory (for commit only, not ref) can take the form server:directory"
   echo
   echo "If using a directory (for commit or reference) it must contain at least one '/'"
+  echo "The commit can be a tag, written with syntagx tags/<TAG>"
 }
 
 compilation=0
@@ -54,6 +59,7 @@ reference=""
 tests=""
 suppress=0
 useexpand=0
+remove=0
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -66,6 +72,7 @@ while [ -n "$1" ]; do
     '--expand') useexpand=1;;
     '--repo-user') export PHYEXREPOuser=$2; shift;;
     '--repo-protocol') export PHYEXREPOprotocol=$2; shift;;
+    '--remove') remove=1;;
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
           commit=$1
@@ -94,7 +101,8 @@ fi
 
 if [ $compilation -eq 0 -a \
      $run -eq 0 -a \
-     $check -eq 0 ]; then
+     $check -eq 0 -a \
+     $remove -eq 0 ]; then
   compilation=1
   run=1
   check=1
@@ -546,6 +554,14 @@ if [ $check -eq 1 ]; then
     status="OK"
   else
     status="Files are different"
+    cmpstatus=50
   fi
   echo "...comparison done: $status"
 fi
+
+if [ $remove -eq 1 ]; then
+  echo "### Remove model directory for commit $commit"
+  [ -d $MNHPACK/$name ] && rm -rf $MNHPACK/$name
+fi
+
+exit $cmpstatus

@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -p normal256
-#SBATCH --export=MYLIB,HOMEPACK,TESTDIR
+#SBATCH --export=MYLIB,HOMEPACK,TESTDIR,BIG3DDATADIR
 #SBATCH -n 1280
 #SBATCH -c 4
 #SBATCH -N 40
@@ -113,7 +113,7 @@ OUTPUTDIR=${OUTPUTDIR:-$PWD} #No cd command have been done before this line
 
 
 
-export DATADIR=/scratch/work/khatib/data/cy49.forecast_arome_e700
+export DATADIR=${BIG3DDATADIR:=/scratch/work/khatib/data/cy49.forecast_arome_e700}
 #export REFDIR=/home/gmap/mrpm/khatib/benchmarks/apps/modules/cy47.forecast_arome_e700/References
 export TOOLSDIR=/home/gmap/mrpm/khatib/benchmarks/tools
 #export ROOTDIR_ODB=/home/gmap/mrpm/khatib/odbpools/36t1_bench/cy47.forecast_arome_e700

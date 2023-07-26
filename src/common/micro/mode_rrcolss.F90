@@ -242,7 +242,7 @@ DO JLBDAS = 1,SIZE(PRRCOLSS(:,:),1)
           END IF
           DO JDR = 1,INR-1
             ZDR = ZDDCOLLR * REAL(JDR)
-#ifndef PHYEXMERGE
+#ifdef REPRO48
             ZCOLLR = ZCOLLR + (ZDS+ZDR)**2 * ZDR**PEXMASSR                     &
                        * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDR**PEXFALLR) &
                                       * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDR)
@@ -252,7 +252,7 @@ DO JLBDAS = 1,SIZE(PRRCOLSS(:,:),1)
                                       * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDR)
 #endif
           END DO
-#ifndef PHYEXMERGE
+#ifdef REPRO48
           ZCOLLDRMAX = (ZDS+ZDRMAX)**2 * ZDRMAX**PEXMASSR                      &
                     * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDRMAX**PEXFALLR) &
                                    * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDRMAX)

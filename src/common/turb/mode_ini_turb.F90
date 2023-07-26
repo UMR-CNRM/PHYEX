@@ -52,7 +52,8 @@ CONTAINS
 !            ------------
 !
 USE MODD_CST
-USE MODD_TURB_n, ONLY : XCTP, XCED, XCSHF, XCHF, XCTV, XCHV, XCHT1, XCHT2, XCPR1, CTURBLEN
+USE MODD_TURB_n, ONLY : XCTP, XCED, XCSHF, XCHF, XCTV, XCHV, XCHT1, XCHT2, XCPR1, CTURBLEN, &
+                      & XBL89EXP,  XUSRBL89
 USE MODD_NEB_n, ONLY: LSTATNW
 USE MODD_CTURB ! For true constants (not tunable)
 USE MODD_PARAMETERS, ONLY : XUNDEF
@@ -253,6 +254,12 @@ XCDT  =  0.42
 !
 XSBL_O_BL     = 0.05 ! SBL height / BL height ratio
 XFTOP_O_FSURF = 0.05 ! Fraction of surface (heat or momentum) flux used to define top of BL
+!
+!
+!         7. Constants for BL89 computation
+!
+XBL89EXP=LOG(16.)/(4.*LOG(XKARMAN)+LOG(XCED)-3.*LOG(XCMFS))
+XUSRBL89=1./XBL89EXP
 !
 !
 IF (LHOOK) CALL DR_HOOK('INI_TURB',1,ZHOOK_HANDLE)

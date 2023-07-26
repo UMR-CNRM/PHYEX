@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import xarray as xr
+import sys
 
 avail_groups=['Stations/sta1',
 'LES_budgets/Miscellaneous/Cartesian/Not_time_averaged/Not_normalized/cart/',
@@ -119,9 +120,12 @@ if __name__ == "__main__":
    parser.add_argument('--f3', metavar='file3', type=str, help=".000 file1 user ")
    parser.add_argument('--f4', metavar='file4', type=str, help=".000 file2 reference")
    args = parser.parse_args()
+   totalstatus=0
    status1=compareBACKUPFiles(args.f1, args.f2)
+   totalstatus += status1
    print('status1 = ' + str(status1))
    if args.f3:
      status2=compareTSERIESFiles(args.f3, args.f4)
+     totalstatus += status2
      print('status2 = ' + str(status2))
-
+   sys.exit(totalstatus)

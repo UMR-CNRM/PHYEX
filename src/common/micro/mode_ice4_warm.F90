@@ -93,13 +93,8 @@ IF (LHOOK) CALL DR_HOOK('ICE4_WARM', 0, ZHOOK_HANDLE)
 DO JL=1, KSIZE
   IF(PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>0. .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
-#ifndef PHYEXMERGE
-      PRCAUTR(JL) = ICEP%XTIMAUTC*MAX(PHLC_HRC(JL)/PHLC_HCF(JL) - ICEP%XCRIAUTC/PRHODREF(JL), 0.0)
-      PRCAUTR(JL) = PHLC_HCF(JL)*PRCAUTR(JL)
-#else
       !HCF*autoconv(HRC/HCF) with simplification
       PRCAUTR(JL) = ICEP%XTIMAUTC*MAX(PHLC_HRC(JL) - PHLC_HCF(JL)*ICEP%XCRIAUTC/PRHODREF(JL), 0.0)
-#endif
     ENDIF
   ELSE
     PRCAUTR(JL) = 0.
@@ -134,26 +129,15 @@ ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
   DO JL=1, KSIZE
     LMASK = PRCT(JL)>ICED%XRTMIN(2) .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)
     LMASK1 = LMASK .AND. PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>0.
-#ifndef PHYEXMERGE
-    LMASK2 = LMASK .AND. PHLC_LRC(JL)>ICED%XRTMIN(2) .AND. PHLC_LCF(JL)>0.
-#else
     LMASK2 = LMASK .AND. PHLC_LRC(JL)>ICED%XRTMIN(2) .AND. PHLC_LCF(JL)>1.E-20
-#endif
     IF(LMASK1 .OR. LMASK2) THEN
       IF(.NOT. LDSOFT) THEN
         IF(LMASK1) THEN
           !Accretion due to rain falling in high cloud content
-#ifndef PHYEXMERGE
-          PRCACCR(JL) = ICEP%XFCACCR * ( PHLC_HRC(JL)/PHLC_HCF(JL) )     &
-                      &*PLBDAR_RF(JL)**ICEP%XEXCACCR &
-                      &*PRHODREF(JL)**(-ICED%XCEXVT) &
-                      &*PHLC_HCF(JL)
-#else
           !HCF*accretion(HRC/HCF) with simplification
           PRCACCR(JL) = ICEP%XFCACCR * PHLC_HRC(JL)     &
                       &*PLBDAR_RF(JL)**ICEP%XEXCACCR &
                       &*PRHODREF(JL)**(-ICED%XCEXVT)
-#endif
         ELSE
           PRCACCR(JL)=0.
         ENDIF

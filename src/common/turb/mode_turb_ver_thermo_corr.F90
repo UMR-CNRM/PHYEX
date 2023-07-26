@@ -199,6 +199,7 @@ SUBROUTINE TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,NEBN,TLES,       &
 !!      Modifications  July 2015 (Wim de Rooy) TURBN%LHARAT switch
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !!      Modifications  June 2019 (Wim de Rooy) New set up cloud scheme
+!!      Modifications: June 2023 (S. Riette) tunable value for SIGS minimum value
 !!--------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -1253,12 +1254,7 @@ ENDIF
     PSIGS(IIJB:IIJE,IKU) = PSIGS(IIJB:IIJE,IKE)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-#ifndef PHYEXMERGE
-    PSIGS(IIJB:IIJE,1:IKT) =  MAX (PSIGS(IIJB:IIJE,1:IKT) , 0.)
-    PSIGS(IIJB:IIJE,1:IKT) =  SQRT(PSIGS(IIJB:IIJE,1:IKT))
-#else
-    PSIGS(IIJB:IIJE,1:IKT) =  SQRT( MAX (PSIGS(IIJB:IIJE,1:IKT) , 1.E-12) )
-#endif
+    PSIGS(IIJB:IIJE,1:IKT) =  SQRT( MAX (PSIGS(IIJB:IIJE,1:IKT) , TURBN%XMINSIGS) )
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   END IF
 

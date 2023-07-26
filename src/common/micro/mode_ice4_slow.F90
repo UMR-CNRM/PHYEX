@@ -111,7 +111,7 @@ ENDDO
 DO JL=1, KSIZE
   IF(PRVT(JL)>ICED%XRTMIN(1) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
-#ifndef PHYEXMERGE
+#ifdef REPRO48
       PRVDEPS(JL) = ( PSSI(JL)/(PRHODREF(JL)*PAI(JL)) ) *                               &
                  ( ICEP%X0DEPS*PLBDAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS )
 #else
@@ -131,7 +131,7 @@ ENDDO
 DO JL=1, KSIZE
   IF(PRIT(JL)>ICED%XRTMIN(4) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
-#ifndef PHYEXMERGE
+#ifdef REPRO48
       PRIAGGS(JL) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JL)-CST%XTT) ) &
                          * PRIT(JL)                      &
                          * PLBDAS(JL)**ICEP%XEXIAGGS          &
@@ -153,20 +153,6 @@ ENDDO
 !*       3.4.5  compute the autoconversion of r_i for r_s production: RIAUTS
 !
 DO JL=1, KSIZE
-#ifndef PHYEXMERGE
-  !This was wrong because, with this formulation and in the LDSOFT case, PRIAUTS
-  !was not set to 0 when ri is inferior to the autoconversion threshold
-  IF(PRIT(JL)>ICED%XRTMIN(4) .AND. LDCOMPUTE(JL)) THEN
-              IF(.NOT. LDSOFT) THEN
-      !ZCRIAUTI(:)=MIN(ICEP%XCRIAUTI,10**(0.06*(PT(:)-CST%XTT)-3.5))
-      ZCRIAUTI(JL)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(JL)-CST%XTT)+ICEP%XBCRIAUTI))
-      PRIAUTS(JL) = ICEP%XTIMAUTI * EXP( ICEP%XTEXAUTI*(PT(JL)-CST%XTT) ) &
-                                  * MAX(PHLI_HRI(JL)-ZCRIAUTI(JL)*PHLI_HCF(JL), 0.)
-    ENDIF
-  ELSE
-    PRIAUTS(JL) = 0.
-  ENDIF
-#else
   IF(PHLI_HRI(JL)>ICED%XRTMIN(4) .AND. LDCOMPUTE(JL)) THEN
               IF(.NOT. LDSOFT) THEN
       !ZCRIAUTI(:)=MIN(ICEP%XCRIAUTI,10**(0.06*(PT(:)-CST%XTT)-3.5))
@@ -177,7 +163,6 @@ DO JL=1, KSIZE
   ELSE
     PRIAUTS(JL) = 0.
   ENDIF
-#endif
 ENDDO
 !
 !*       3.4.6  compute the deposition on r_g: RVDEPG
