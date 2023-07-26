@@ -105,16 +105,6 @@ DO JI=IIJB,IIJE
     PRI_MF(JI,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JI,JK)*PRI_UP(JI,JK)  &
                          + PFRAC_UP(JI,JK+IKL)*PRI_UP(JI,JK+IKL) )
   END DO
-#else
-  DO JK=KKLCL(JI),IKE-IKL,IKL
-    PCF_MF(JI,JK ) = MAX( 0., MIN(1.,PARAMMF%XKCF_MF *0.5* (       &
-                &    PFRAC_UP(JI,JK) +  PFRAC_UP(JI,JK+IKL) ) ))
-    PRC_MF(JI,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JI,JK)*PRC_UP(JI,JK)  &
-                         + PFRAC_UP(JI,JK+IKL)*PRC_UP(JI,JK+IKL) )
-    PRI_MF(JI,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JI,JK)*PRI_UP(JI,JK)  &
-                         + PFRAC_UP(JI,JK+IKL)*PRI_UP(JI,JK+IKL) )
-  END DO
-#endif
 END DO
 
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_DIRECT',1,ZHOOK_HANDLE)

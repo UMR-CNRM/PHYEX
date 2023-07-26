@@ -1117,7 +1117,6 @@ END IF
       CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:,:, JSV) )
     END DO
   END IF
-END IF
 !----------------------------------------------------------------------------
 !
 !*      6. EVOLUTION OF THE TKE AND ITS DISSIPATION
