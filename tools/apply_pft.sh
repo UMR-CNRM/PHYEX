@@ -22,6 +22,9 @@ do
 	all=${all//$file/}
 done
 
+rm -f subroutines_wth_stack.txt
+touch subroutines_wth_stack.txt
+
 for file in $all
 do
 	echo $file
@@ -36,4 +39,10 @@ do
 	pft.py $file $file --reDimKlonArrayToScalar
 	#pft.py $file $file --addStack "{kind}, DIMENSION({doubledotshape}), ALLOCATABLE :: {name}#ALLOCATE({name}({shape}))" "MESONH"
 	pft.py $file $file --addStack "temp ({kind}, {name}, ({shape}))#alloc ({name})" "AROME"
+done
+
+for file in $all
+do
+	echo $file
+	pft.py $file $file --checkStackArginCall
 done
