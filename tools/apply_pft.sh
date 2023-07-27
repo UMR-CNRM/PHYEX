@@ -36,3 +36,4 @@ do
 	pft.py $file $file --reDimKlonArrayToScalar
 	#pft.py $file $file --addStack "{kind}, DIMENSION({doubledotshape}), ALLOCATABLE :: {name}#ALLOCATE({name}({shape}))" "MESONH"
 	pft.py $file $file --addStack "temp ({kind}, {name}, ({shape}))#alloc ({name})" "AROME"
+done
