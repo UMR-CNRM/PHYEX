@@ -454,7 +454,6 @@ DO JSV=1,KSV
       CMNHNAME   = TRIM( YMNHNAME ),             &
       CSTDNAME   = '',                           &
       CLONGNAME  = TRIM( YMNHNAME ),             &
-    !PW: TODO: use the correct units of the JSV variable (and multiply it by m s-1)
       CUNITS     = 'SVUNIT m s-1',               &
       CDIR       = 'XY',                         &
       CCOMMENT   = 'X_Y_Z_' // TRIM( YMNHNAME ), &
