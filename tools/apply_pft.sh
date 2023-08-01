@@ -1,30 +1,37 @@
 #!/bin/bash
 
 #This script apply pft.py transformations to arrange the code for GPU testing
-#To use this script : 
-# link it in PHYEX/src/common
-# link all .h files in src/common
+PATH_SRC=$(pwd)/../src/common/
+
 
 #List of files to apply transformations
-turb_hor=$(find turb -name '*turb_hor*')
-lima=$(find micro -name '*lima*')
-rain_ice_old=$(find micro -name '*rain_ice_old*')
-other_micro=$(find micro -name '*xker*')
-other_turb="turb/mode_ibm_mixinglength.F90 turb/mode_tridiag_w.F90 turb/mode_sbl.F90 turb/mode_coefj.F90 turb/mode_rotate_wind.F90"
-other_aux="aux/mode_thermo.F90 aux/shuman.F90 aux/gradient_u.F90 aux/gradient_v.F90 aux/gradient_w.F90 aux/gradient_m.F90 aux/mode_msg.F90"
-micro_rrcol="micro/mode_nrcolss.F90 micro/mode_rrcolss.F90 micro/mode_rscolrg.F90 micro/mode_nscolrg.F90"
-black_list="$turb_hor $lima $rain_ice_old $other_micro $other_turb $other_aux $micro_rrcol micro/mode_ice4_rsrimcg_old.F90"
-turb=$(find turb -name \*90)
-micro=$(find micro -name \*90)
-all="$turb $micro aux/shuman_phy.F90 aux/mode_gradient_m_phy.F90 aux/mode_gradient_u_phy.F90 aux/mode_gradient_v_phy.F90 aux/mode_gradient_w_phy.F90"
+turb_hor=$(find $PATH_SRC/turb -name '*turb_hor*')
+lima=$(find $PATH_SRC/micro -name '*lima*')
+rain_ice_old=$(find $PATH_SRC/micro -name '*rain_ice_old*')
+other_micro=$(find $PATH_SRC/micro -name '*xker*')
+other_turb="$PATH_SRC/turb/mode_ibm_mixinglength.F90 $PATH_SRC/turb/mode_tridiag_w.F90 $PATH_SRC/turb/mode_sbl.F90 $PATH_SRC/turb/mode_coefj.F90 $PATH_SRC/turb/mode_rotate_wind.F90"
+micro_rrcol="$PATH_SRC/micro/mode_nrcolss.F90 $PATH_SRC/micro/mode_rrcolss.F90 $PATH_SRC/micro/mode_rscolrg.F90 $PATH_SRC/micro/mode_nscolrg.F90"
+black_list="$turb_hor $lima $rain_ice_old $other_micro $other_turb $micro_rrcol $PATH_SRC/micro/mode_ice4_rsrimcg_old.F90"
+turb=$(find $PATH_SRC/turb -name \*90)
+micro=$(find $PATH_SRC/micro -name \*90)
+all="$turb $micro $PATH_SRC/aux/shuman_phy.F90 $PATH_SRC/aux/mode_gradient_m_phy.F90 $PATH_SRC/aux/mode_gradient_u_phy.F90 $PATH_SRC/aux/mode_gradient_v_phy.F90 $PATH_SRC/aux/mode_gradient_w_phy.F90"
 for file in $black_list
 do
 	all=${all//$file/}
 done
 
+echo $all
+# Link all .h files localy for --addIncludes transformation
+includes=$(find $PATH_SRC -name \*.h)
+for file in $includes
+do
+	ln -sf $file .
+done
+# (Temporary) Use of temp file to save where STACK must be written (--addStack writes then --checkStackArginCall reads it)
 rm -f subroutines_wth_stack.txt
 touch subroutines_wth_stack.txt
 
+# Apply transformations
 for file in $all
 do
 	echo $file
@@ -41,8 +48,15 @@ do
 	pft.py $file $file --addStack "temp ({kind}, {name}, ({shape}))#alloc ({name})" "AROME"
 done
 
-for file in $all
+
+# Add stack (for AROME)
+# Recursive checks (maximum found at PHYEX 0.5.0 is 2 mode_prandtl>psi3 then mode_turb_ver_>psi3
+for i in {1..3}
 do
-	echo $file
-	pft.py $file $file --checkStackArginCall
+	for file in $all
+	do
+		echo $file
+		pft.py $file $file --checkStackArginCall
+	done
+
 done
