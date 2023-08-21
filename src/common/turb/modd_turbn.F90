@@ -109,6 +109,20 @@ TYPE TURB_t
   LOGICAL            :: LSMOOTH_PRANDTL !< .TRUE. to smooth prandtl functions
   REAL               :: XMINSIGS     !< minimum value for SIGS computed by the turbulence scheme
   REAL               :: XBL89EXP, XUSRBL89 !< exponent on final BL89 length
+  INTEGER           ::  NTURBSPLIT !<number of time-splitting for turb_hor
+  LOGICAL            :: LCLOUDMODIFLM !< .TRUE. to activate modification of mixing length in clouds
+  CHARACTER(LEN=4)  :: CTURBLEN_CLOUD  !< type of length in the clouds
+                                     ! 'DEAR' Deardorff mixing length
+                                     ! 'BL89' Bougeault and Lacarrere scheme
+                                     ! 'DELT' length = ( volum) ** 1/3
+REAL               :: XCOEF_AMPL_SAT  !< saturation of the amplification coefficient
+REAL               :: XCEI_MIN  !< minimum threshold for the instability index CEI
+                                     !(beginning of the amplification)
+REAL               :: XCEI_MAX  !< maximum threshold for the instability index CEI
+                                     !(beginning of the saturation of the amplification)
+REAL, DIMENSION(:,:,:), POINTER  :: XCEI !< Cloud Entrainment instability index to emphasize localy 
+                                         ! turbulent fluxes
+
 !  
 END TYPE TURB_t
 
@@ -159,13 +173,22 @@ LOGICAL, POINTER   :: LPROJQITURB=>NULL()
 LOGICAL, POINTER   :: LSMOOTH_PRANDTL=>NULL()
 REAL, POINTER :: XMINSIGS=>NULL()
 REAL, POINTER :: XBL89EXP=>NULL(), XUSRBL89=>NULL()
+INTEGER, POINTER :: NTURBSPLIT=>NULL()
+LOGICAL, POINTER :: LCLOUDMODIFLM=>NULL()
+CHARACTER(LEN=4), POINTER  :: CTURBLEN_CLOUD=>NULL()
+REAL, POINTER :: XCOEF_AMPL_SAT=>NULL()
+REAL, POINTER :: XCEI_MIN=>NULL()
+REAL, POINTER :: XCEI_MAX =>NULL()
+REAL, DIMENSION(:,:,:), POINTER  :: XCEI=>NULL()
 !
 NAMELIST/NAM_TURBn/XIMPL,CTURBLEN,CTURBDIM,LTURB_FLX,LTURB_DIAG,  &
                    LSIG_CONV,LRMC01,CTOM,&
                    XTKEMIN,XCED,XCTP,XCADAP,&
                    LLEONARD,XCOEFHGRADTHL, XCOEFHGRADRM, &
                    XALTHGRAD, XCLDTHOLD, XLINI, LHARAT, &
-                   LPROJQITURB, LSMOOTH_PRANDTL, XMINSIGS
+                   LPROJQITURB, LSMOOTH_PRANDTL, XMINSIGS, NTURBSPLIT, &
+                   LCLOUDMODIFLM, CTURBLEN_CLOUD, &
+                   XCOEF_AMPL_SAT, XCEI_MIN, XCEI_MAX, XCEI
 !
 !-------------------------------------------------------------------------------
 !
@@ -197,6 +220,7 @@ IF(KFROM>0 .AND. KFROM<=JPMODELMAX) THEN
   TURB_MODEL(KFROM)%XSSVFL_C=>XSSVFL_C
   TURB_MODEL(KFROM)%XSSTFL_C=>XSSTFL_C
   TURB_MODEL(KFROM)%XSSRFL_C=>XSSRFL_C
+  TURB_MODEL(KFROM)%XCEI=>XCEI
 ENDIF
 !
 ! Current model is set to model KTO
@@ -245,6 +269,13 @@ LSMOOTH_PRANDTL=>TURB_MODEL(KTO)%LSMOOTH_PRANDTL
 XMINSIGS=>TURB_MODEL(KTO)%XMINSIGS
 XBL89EXP=>TURB_MODEL(KTO)%XBL89EXP
 XUSRBL89=>TURB_MODEL(KTO)%XUSRBL89
+NTURBSPLIT=>TURB_MODEL(KTO)%NTURBSPLIT
+LCLOUDMODIFLM=>TURB_MODEL(KTO)%LCLOUDMODIFLM
+CTURBLEN_CLOUD=>TURB_MODEL(KTO)%CTURBLEN_CLOUD
+XCOEF_AMPL_SAT=>TURB_MODEL(KTO)%XCOEF_AMPL_SAT
+XCEI_MIN=>TURB_MODEL(KTO)%XCEI_MIN
+XCEI_MAX =>TURB_MODEL(KTO)%XCEI_MAX
+XCEI=>TURB_MODEL(KTO)%XCEI
 !
 ENDIF
 !
@@ -347,7 +378,13 @@ IF(LLDEFAULTVAL) THEN
   LPROJQITURB=.TRUE.
   LSMOOTH_PRANDTL=.TRUE.
   XMINSIGS=0.
-
+  NTURBSPLIT=1
+  LCLOUDMODIFLM = .FALSE.
+  CTURBLEN_CLOUD = 'DELT'
+  XCOEF_AMPL_SAT = 5.
+  XCEI_MIN = 0.001E-06
+  XCEI_MAX = 0.01E-06
+  !
   IF(HPROGRAM=='AROME') THEN
     XTKEMIN=1.E-6
     XLINI=0.
@@ -378,12 +415,14 @@ IF(LLCHECK) THEN
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CTURBDIM', CTURBDIM, '1DIM', '3DIM')
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CTURBLEN', CTURBLEN, 'DELT', 'BL89', 'RM17', 'DEAR', 'BLKR', 'ADAP')
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CTOM', CTOM, 'NONE', 'TM06')
+  CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CTURBLEN_CLOUD', CTURBLEN_CLOUD, 'DELT', 'BL89', 'RM17', 'DEAR', 'BLKR', 'ADAP')
+
 ENDIF
 !
 !*      3. PRINTS
 !       ---------
 !
-IF(IPRINT>=1) THEN
+IF(IPRINT>=3) THEN
   WRITE(UNIT=KLUOUT,NML=NAM_TURBn) 
 ENDIF
 !

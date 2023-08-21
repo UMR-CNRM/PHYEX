@@ -259,7 +259,6 @@ USE MODD_FRC
 USE MODD_PARAM_ICE_n, ONLY: PARAM_ICEN_INIT
 USE MODD_PARAM_LIMA, ONLY: PARAM_LIMA_INIT
 USE MODD_PARAM_C2R2
-USE MODD_TURB_CLOUD
 USE MODD_PARAM_KAFR_n
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALLN_INIT
 USE MODD_CH_MNHC_n
@@ -964,18 +963,6 @@ NJSLICEH(:) = 1 !+ 2*JPHEXT
 NFREQSERIES  = INT(XSEGLEN /(100.*XTSTEP) )
 NFREQSERIES  = MAX(NFREQSERIES,1)
 !
-!-------------------------------------------------------------------------------
-!
-!*      22.   SET DEFAULT VALUES FOR MODD_TURB_CLOUD
-!             --------------------------------------
-!
-IF (KMI == 1) THEN
-  NMODEL_CLOUD = NUNDEF
-  CTURBLEN_CLOUD = 'DELT'
-  XCOEF_AMPL_SAT = 5.
-  XCEI_MIN = 0.001E-06
-  XCEI_MAX = 0.01E-06
-ENDIF
 !-------------------------------------------------------------------------------
 !
 !*      22.   SET DEFAULT VALUES FOR MODD_MEAN_FIELD

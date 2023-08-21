@@ -371,7 +371,6 @@ USE MODD_SUB_MODEL_n
 USE MODD_TIME
 USE MODD_TIME_n 
 USE MODD_TIMEZ
-USE MODD_TURB_CLOUD,     ONLY: NMODEL_CLOUD,CTURBLEN_CLOUD,XCEI
 USE MODD_TURB_n
 USE MODD_NEB_n,          ONLY: VSIGQSAT, LSIGMAS, LSUBG_COND
 USE MODD_TYPE_DATE,      ONLY: DATE_TIME
@@ -1764,7 +1763,7 @@ XT_ADVUVW = XT_ADVUVW + ZTIME2 - ZTIME1 - XTIME_LES_BU_PROCESS - XTIME_BU_PROCES
 !
 !-------------------------------------------------------------------------------
 !
-IF (NMODEL_CLOUD==IMI .AND. CTURBLEN_CLOUD/='NONE') THEN
+IF (LCLOUDMODIFLM) THEN
   CALL TURB_CLOUD_INDEX( XTSTEP, TPBAKFILE,                               &
                          LTURB_DIAG, NRRI,                                &
                          XRRS, XRT, XRHODJ, XDXX, XDYY, XDZZ, XDZX, XDZY, &

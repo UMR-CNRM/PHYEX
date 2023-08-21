@@ -6,8 +6,8 @@ IMPLICIT NONE
 INTERFACE
 !
       SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,NEBN,D,TLES,            &
-              & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,KHALO,       &
-              & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,             &
+              & KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,KHALO,           &
+              & KSPLIT,OCLOUDMODIFLM,KSV,KSV_LGBEG,KSV_LGEND,         &
               & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
               & O2D,ONOMIXLG,OFLAT,OCOUPLES,OBLOWSNOW,OIBM,OFLYER,    &
               & OCOMPUTE_SRC, PRSNOW,                                 &
@@ -52,7 +52,6 @@ TYPE(TURB_t),           INTENT(IN)   :: TURBN         ! modn_turbn (turb namelis
 TYPE(NEB_t),            INTENT(IN)   :: NEBN          ! modd_nebn structure
 TYPE(TLES_t),           INTENT(INOUT)   :: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
-INTEGER,                INTENT(IN)   :: KMI           ! model index number
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI          ! number of ice water var.
@@ -60,7 +59,7 @@ INTEGER,                INTENT(IN)   :: KSV, KSV_LGBEG, KSV_LGEND ! number of sc
 INTEGER,                INTENT(IN)   :: KSV_LIMA_NR,KSV_LIMA_NS,KSV_LIMA_NG,KSV_LIMA_NH
 CHARACTER(LEN=4),DIMENSION(2),INTENT(IN):: HLBCX, HLBCY  ! X- and Y-direc LBC
 INTEGER,                INTENT(IN)   :: KSPLIT        ! number of time-splitting
-INTEGER,                INTENT(IN)   :: KMODEL_CL     ! model number for cloud mixing length
+LOGICAL,                INTENT(IN)   :: OCLOUDMODIFLM ! cloud mixing length modifs
 INTEGER,                INTENT(IN)   ::  KHALO        ! Size of the halo for parallel distribution
 LOGICAL,                INTENT(IN)   ::  OCOMPUTE_SRC ! flag to define dimensions of SIGS and SRCT variables
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
@@ -113,8 +112,8 @@ REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%CTOM=='TM06')),INTENT(INOUT) :: PBL_DEPTH  
 REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LRMC01)),INTENT(INOUT) :: PSBL_DEPTH ! SBL depth for RMC01
 !
 !    variables for cloud mixing length
-REAL, DIMENSION(MERGE(D%NIJT,0,KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE'),&
-                MERGE(D%NKT,0,KMODEL_CL==KMI .AND. HTURBLEN_CL/='NONE')),INTENT(IN)      ::  PCEI
+REAL, DIMENSION(MERGE(D%NIJT,0,OCLOUDMODIFLM),&
+                MERGE(D%NKT,0,OCLOUDMODIFLM)),INTENT(IN)      ::  PCEI
                                                  ! Cloud Entrainment instability
                                                  ! index to emphasize localy
                                                  ! turbulent fluxes

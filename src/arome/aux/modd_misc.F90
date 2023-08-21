@@ -14,8 +14,6 @@ TYPE MISC_t
   !These values are not (yet) tuneable in arome.
   LOGICAL                        :: LMFCONV=.TRUE.       !< Use convective mass flux in the condensation scheme
   LOGICAL                        :: OCOMPUTE_SRC=.TRUE.  !< Compute s'r'
-  INTEGER                        :: KMI=1                !< Model numer
-  INTEGER                        :: KSPLIT=1             !< Number of small timestep for the turbulence scheme
   INTEGER                        :: KHALO=1              !< Size of the halo for parallel distribution (used in turb)
   CHARACTER(LEN=6)               :: CPROGRAM='AROME'     !< Name of the model
   LOGICAL                        :: ONOMIXLG=.FALSE.     !< Turbulence for lagrangian variables
@@ -28,11 +26,7 @@ TYPE MISC_t
   CHARACTER(LEN=4), DIMENSION(2) :: HLBCY='CYCL'         !< Boundary condition
   LOGICAL                        :: OIBM=.FALSE.         !< Run with IBM
   LOGICAL                        :: OFLYER=.FALSE.       !< MesoNH flyer diagnostic
-  REAL                           :: XCEI_MAX=1.          !< Turbulence at cloud edges
-  REAL                           :: XCEI_MIN=0           !< Turbulence at cloud edges.
-  REAL                           :: XCOEF_AMPL_SAT=0     !< Turbulence at cloud edges.
   LOGICAL                        :: ODIAG_IN_RUN=.FALSE. !< LES diagnostics
-  CHARACTER(LEN=4)               :: HTURBLEN_CL='NONE'   !< Turbulence length in clouds
   LOGICAL                        :: O2D=.FALSE.          !< 2D version of the turbulence
 
   !These values are computed from the model setup

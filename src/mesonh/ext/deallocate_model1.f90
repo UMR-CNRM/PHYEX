@@ -696,6 +696,7 @@ IF ( KCALL==3 ) THEN
   IF (ASSOCIATED(XTR)) DEALLOCATE(XTR)
   IF (ASSOCIATED(XDISS)) DEALLOCATE(XDISS)
   IF (ASSOCIATED(XLEM)) DEALLOCATE(XLEM)
+  IF (ASSOCIATED(XCEI)) DEALLOCATE(XCEI)
 END IF
 !-------------------------------------------------------------------------------
 !

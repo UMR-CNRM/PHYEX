@@ -25,17 +25,15 @@ TYPE MISC_t
   LOGICAL                  :: ONOMIXLG
   INTEGER                  :: KSV_LGBEG, KSV_LGEND
   REAL                     :: PDX, PDY
-  INTEGER                  :: KMI, KSPLIT, KGRADIENTS, KHALO
+  INTEGER                  :: KGRADIENTS, KHALO
   CHARACTER(LEN=4),DIMENSION(2)  :: HLBCX, HLBCY
   CHARACTER(LEN=6)         :: CPROGRAM
   INTEGER                  :: KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH
   LOGICAL                  :: O2D, OFLAT, OCOUPLES, OBLOWSNOW, OOCEAN, ODEEPOC
   LOGICAL                  :: OIBM, OFLYER
   TYPE(TFILEDATA)          :: ZTFILE
-  REAL                     :: ZCEI_MAX, ZCEI_MIN, ZCOEF_AMPL_SAT
   REAL                     :: PRSNOW
   LOGICAL                  :: ODIAG_IN_RUN
-  CHARACTER(LEN=4)         :: HTURBLEN_CL
   CHARACTER(LEN=4) :: CMICRO
 END TYPE MISC_t
 END MODULE MODD_MISC

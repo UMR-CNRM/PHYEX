@@ -320,8 +320,6 @@ USE MODD_SUB_PHYS_PARAM_n
 USE MODD_TIME_n
 USE MODD_TIME_n
 USE MODD_TIME, ONLY : TDTEXP  ! Ajout PP
-USE MODD_TURB_CLOUD, ONLY : CTURBLEN_CLOUD,NMODEL_CLOUD, &
-                            XCEI,XCEI_MIN,XCEI_MAX,XCOEF_AMPL_SAT
 USE MODD_TURB_FLUX_AIRCRAFT_BALLOON, ONLY : XTHW_FLUX, XRCW_FLUX, XSVW_FLUX
 USE MODD_TURB_n
 USE MODD_NEB_n, ONLY: NEBN
@@ -1572,9 +1570,8 @@ IF(LLEONARD) THEN
   ZHGRAD(:,:,:,6) = GY_M_M(XRT(:,:,:,1), XDXX,XDZZ,XDZX,1,IKU,1)
 END IF
    CALL TURB( CST,CSTURB, TBUCONF, TURBN, NEBN, YLDIMPHYEX,TLES, &
-              IMI, NRR, NRRL, NRRI, CLBCX, CLBCY, IGRADIENTS, NHALO,                 &
-              1, NMODEL_CLOUD,                                                       &
-              NSV, NSV_LGBEG, NSV_LGEND,                                             &
+              NRR, NRRL, NRRI, CLBCX, CLBCY, IGRADIENTS, NHALO, NTURBSPLIT,          &
+              LCLOUDMODIFLM, NSV, NSV_LGBEG, NSV_LGEND,                              &
               NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,                    &
               L2D, LNOMIXLG,LFLAT,                                                   &
               LCOUPLES, LBLOWSNOW, LIBM,LFLYER,                                      &
