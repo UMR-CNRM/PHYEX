@@ -4,6 +4,34 @@ SUBROUTINE INI_PHYEX(HPROGRAM, KUNITNML, LDNEEDNAM, KLUOUT, KFROM, KTO, &
                     &LDCHANGEMODEL, LDDEFAULTVAL, LDREADNAM, LDCHECK, KPRINT, LDINIT, &
                     &PHYEX_IN, PHYEX_OUT)
 !
+!IMPORTANT NOTE ON HOW TO DEAL WITH KEYS USED IN THE PHYSICS *AND* IN THE HOST MODEL
+!
+!When this situation occurs:
+!For example, if a physics option (eg logical switch) has an impact on the model setup, this
+!option must be accessible in the host model *and* in the physics.
+!
+!The prefered solution (when it is possible):
+!The option is implemented in a module and in a namelist of PHYEX. And, after the initialisation
+!is done, the option is available in the PHYEX_OUT structure (in addition to the PHYEX module) for use
+!by the host model.
+!
+!When the physics option is needed in the host model before the PHYEX initialisation, or if the physics
+!option must be computed from other options known by the host model, there are several solutions:
+!
+!  If this situation is specific to only one host model:
+!  The option is declared (module) and initialised (namelist) twice: once in the host model, once in PHYEX;
+!  and a consistency check is added after the physics initialisation.
+!  This solution is preferred to overwriting the variable stored in the PHYEX module, because between
+!  initialization and overwriting, the variable may have been used to initialize a parameterization.
+!
+!  If this issue is common to all the host models:
+!  The option is declared and initialised in the host model. Then, the value is given, through INI_PHYEX, to
+!  the parametrisation INIT subroutine (eg TURBN_INIT). In the INIT subroutine the value is assigned
+!  to a module variable specific to PHYEX (in order to be accessible from inside the parametrisations).
+!  In this case the variable *must not* be added in a PHYEX namelist.
+!  An alternative to this solution is not to copy the variable inside a PHYEX module but add it directly
+!  to the parametrisation call arguments.
+!
 USE MODD_PHYEX, ONLY: PHYEX_t
 USE MODD_CST, ONLY: CST, PRINT_CST
 USE MODD_PARAM_ICE_n, ONLY: PARAM_ICE_GOTO_MODEL, PARAM_ICEN_INIT, PARAM_ICEN, &
