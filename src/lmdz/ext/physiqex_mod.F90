@@ -473,14 +473,14 @@ DO JRR=1, KRR
 ENDDO
 ZRTHS(:,:) = ZTHETAS(:,:) * PRHODJ(:,:)
 CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, D, PHYEX%MISC%TLES,               &
-   & PHYEX%MISC%KMI, KRR, KRRL, KRRI, PHYEX%MISC%HLBCX, PHYEX%MISC%HLBCY, PHYEX%MISC%KGRADIENTS, PHYEX%MISC%KHALO,&
-   & PHYEX%MISC%KSPLIT,PHYEX%MISC%KMI, KSV, PHYEX%MISC%KSV_LGBEG, PHYEX%MISC%KSV_LGEND,                           &
+   & KRR, KRRL, KRRI, PHYEX%MISC%HLBCX, PHYEX%MISC%HLBCY, PHYEX%MISC%KGRADIENTS, PHYEX%MISC%KHALO,                &
+   & PHYEX%TURBN%NTURBSPLIT, PHYEX%TURBN%LCLOUDMODIFLM, KSV, PHYEX%MISC%KSV_LGBEG, PHYEX%MISC%KSV_LGEND,          &
    & PHYEX%MISC%KSV_LIMA_NR, PHYEX%MISC%KSV_LIMA_NS, PHYEX%MISC%KSV_LIMA_NG, PHYEX%MISC%KSV_LIMA_NH,              &
    & PHYEX%MISC%O2D, PHYEX%MISC%ONOMIXLG, PHYEX%MISC%OFLAT, PHYEX%MISC%OCOUPLES,                                  &
    & PHYEX%MISC%OBLOWSNOW,PHYEX%MISC%OIBM,                                                                        &
    & PHYEX%MISC%OFLYER, PHYEX%MISC%COMPUTE_SRC, PHYEX%MISC%PRSNOW,                                                &
    & PHYEX%MISC%OOCEAN, PHYEX%MISC%ODEEPOC, PHYEX%MISC%ODIAG_IN_RUN,                                              &
-   & PHYEX%MISC%HTURBLEN_CL,PHYEX%MISC%CMICRO,                                                                    &
+   & PHYEX%TURBN%CTURBLEN_CLOUD, PHYEX%MISC%CMICRO,                                                               &
    & pdtphys,PHYEX%MISC%ZTFILE,                                                                 &
    & ZDXX(:,:),ZDYY(:,:),zdzm(:,:),                                                             &
    & ZDZX(:,:),ZDZY(:,:),zz_flux(:,:),                                                          &
@@ -490,7 +490,7 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, 
    & ZPABST(:,:),ZUT(:,:),ZVT(:,:),PWT(:,:),PTKEM(:,:),ZSVT(:,:,:),ZSRC(:,:),                   &
    & PLENGTHM(:,:),PLENGTHH(:,:),MFMOIST(:,:),                                                  &
    & ZBL_DEPTH(:),ZSBL_DEPTH(:),                                                                &
-   & ZCEI(:,:),PHYEX%MISC%ZCEI_MIN,PHYEX%MISC%ZCEI_MAX,PHYEX%MISC%ZCOEF_AMPL_SAT,               &
+   & ZCEI(:,:), PHYEX%TURBN%XCEI_MIN, PHYEX%TURBN%XCEI_MAX, PHYEX%TURBN%XCOEF_AMPL_SAT,         &
    & ZTHETA(:,:),ZRX(:,:,:),                                                                    &
    & ZRUS(:,:),ZRVS(:,:),ZRWS(:,:),ZRTHS(:,:),ZRRS(:,:,:),ZRSVS(:,:,:),ZRTKES(:,:),             &
    & PSIGS(:,:),                                                                                &
