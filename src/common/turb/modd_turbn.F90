@@ -188,7 +188,7 @@ NAMELIST/NAM_TURBn/XIMPL,CTURBLEN,CTURBDIM,LTURB_FLX,LTURB_DIAG,  &
                    XALTHGRAD, XCLDTHOLD, XLINI, LHARAT, &
                    LPROJQITURB, LSMOOTH_PRANDTL, XMINSIGS, NTURBSPLIT, &
                    LCLOUDMODIFLM, CTURBLEN_CLOUD, &
-                   XCOEF_AMPL_SAT, XCEI_MIN, XCEI_MAX, XCEI
+                   XCOEF_AMPL_SAT, XCEI_MIN, XCEI_MAX
 !
 !-------------------------------------------------------------------------------
 !
@@ -422,7 +422,7 @@ ENDIF
 !*      3. PRINTS
 !       ---------
 !
-IF(IPRINT>=3) THEN
+IF(IPRINT>=1) THEN
   WRITE(UNIT=KLUOUT,NML=NAM_TURBn) 
 ENDIF
 !
