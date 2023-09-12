@@ -82,6 +82,7 @@ REAL          :: XGZ         !< Tuning of the surface initialisation for Grey Zo
 !
 LOGICAL       :: LTHETAS_MF      !< .TRUE. to use ThetaS1 instead of ThetaL
 REAL          :: XLAMBDA_MF      !< Thermodynamic parameter: Lambda to compute ThetaS1 from ThetaL
+LOGICAL       :: LVERLIMUP      !< .TRUE. to use correction on vertical limitation of updraft (issue #38 PHYEX)
 
 END TYPE PARAM_MFSHALL_t
 
@@ -119,13 +120,15 @@ REAL, POINTER          :: XR=>NULL()
 LOGICAL, POINTER       :: LTHETAS_MF=>NULL()
 REAL, POINTER          :: XLAMBDA_MF=>NULL() 
 LOGICAL, POINTER       :: LGZ=>NULL() 
-REAL, POINTER          :: XGZ=>NULL() 
+REAL, POINTER          :: XGZ=>NULL()
+LOGICAL, POINTER       :: LVERLIMUP=>NULL() 
 !
 NAMELIST/NAM_PARAM_MFSHALLn/XIMPL_MF,CMF_UPDRAFT,CMF_CLOUD,LMIXUV,LMF_FLX,&
                             XALP_PERT,XABUO,XBENTR,XBDETR,XCMF,XENTR_MF,&
                             XCRAD_MF,XENTR_DRY,XDETR_DRY,XDETR_LUP,XKCF_MF,&
                             XKRC_MF,XTAUSIGMF,XPRES_UV,XALPHA_MF,XSIGMA_MF,&
-                            XFRAC_UP_MAX,XA1,XB,XC,XBETA1,XR,LTHETAS_MF,LGZ,XGZ
+                            XFRAC_UP_MAX,XA1,XB,XC,XBETA1,XR,LTHETAS_MF,LGZ,XGZ,&
+                            LVERLIMUP
 !
 !-------------------------------------------------------------------------------
 !
@@ -176,6 +179,7 @@ LTHETAS_MF=>PARAM_MFSHALL_MODEL(KTO)%LTHETAS_MF
 XLAMBDA_MF=>PARAM_MFSHALL_MODEL(KTO)%XLAMBDA_MF
 LGZ=>PARAM_MFSHALL_MODEL(KTO)%LGZ
 XGZ=>PARAM_MFSHALL_MODEL(KTO)%XGZ
+LVERLIMUP=>PARAM_MFSHALL_MODEL(KTO)%LVERLIMUP
 !
 ENDIF
 !
@@ -285,6 +289,8 @@ IF(LLDEFAULTVAL) THEN
   XLAMBDA_MF=0.
   LGZ=.FALSE.
   XGZ=1.83 ! between 1.83 and 1.33
+  LVERLIMUP=.FALSE.
+  IF(HPROGRAM=='MESONH') LVERLIMUP=.TRUE.
 ENDIF
 !
 !*      2. NAMELIST
