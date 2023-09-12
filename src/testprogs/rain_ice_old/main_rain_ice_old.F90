@@ -389,7 +389,7 @@ subroutine init_rain_ice_old(kulout)
   call rain_ice_descr_goto_model(1, 1)
   call rain_ice_param_goto_model(1, 1)
 
-  call param_icen_init('AROME', 0, .false., kulout, &                                                                 
+  call param_icen_init('AROME ', 0, .false., kulout, &                                                                 
                       &.true., .false., .false., 0)
 
   call tbuconf_associate

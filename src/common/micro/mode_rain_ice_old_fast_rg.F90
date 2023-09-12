@@ -185,8 +185,8 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
 !
 !*       6.2.3  select the (PLBDAG,PLBDAS) couplet
 !
-      ZVEC1(:) = PACK( PLBDAG(:),MASK=GDRY(:) )
-      ZVEC2(:) = PACK( PLBDAS(:),MASK=GDRY(:) )
+      ZVEC1(1:IGDRY) = PACK( PLBDAG(:),MASK=GDRY(:) )
+      ZVEC2(1:IGDRY) = PACK( PLBDAS(:),MASK=GDRY(:) )
 !
 !*       6.2.4  find the next lower indice for the PLBDAG and for the PLBDAS
 !               in the geometrical set of (Lbda_g,Lbda_s) couplet use to
@@ -213,7 +213,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
                       - ICEP%XKER_SDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                            * (ZVEC1(JJ) - 1.0)
       END DO
-      ZZW(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GDRY,FIELD=0.0 )
+      ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGDRY),MASK=GDRY,FIELD=0.0 )
 !
       IF (OCND2) THEN
         ZZW1(:,3) = 0.
@@ -242,8 +242,8 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
 !
 !*       6.2.8  select the (PLBDAG,PLBDAR) couplet
 !
-      ZVEC1(:) = PACK( PLBDAG(:),MASK=GDRY(:) )
-      ZVEC2(:) = PACK( PLBDAR(:),MASK=GDRY(:) )
+      ZVEC1(1:IGDRY) = PACK( PLBDAG(:),MASK=GDRY(:) )
+      ZVEC2(1:IGDRY) = PACK( PLBDAR(:),MASK=GDRY(:) )
 !
 !*       6.2.9  find the next lower indice for the PLBDAG and for the PLBDAR
 !               in the geometrical set of (Lbda_g,Lbda_r) couplet use to
@@ -270,7 +270,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
                       - ICEP%XKER_RDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0)) &
                                                                 *(ZVEC1(JJ) - 1.0)
       END DO
-      ZZW(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GDRY,FIELD=0.0 )
+      ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGDRY),MASK=GDRY,FIELD=0.0 )
 
       DO JK = 1, KSIZE
         IF (GDRY(JK)) THEN

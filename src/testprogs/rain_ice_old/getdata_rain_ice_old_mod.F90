@@ -540,12 +540,17 @@ PURE SUBROUTINE NPROMIZE3(P_IN, P_OUT)
     DO K_OUT = 1, NBLOCKS
       DO J = 1, SIZE(P_OUT, 2)
 
-        ZLEV = 1.0 + REAL(J-1)*REAL(SIZE(P_IN,2))/REAL(SIZE(P_OUT,2))
-        JLEVB = MIN(CEILING(ZLEV), SIZE(P_OUT,2))
+        ZLEV = 1.0 + REAL(J-1)*REAL(SIZE(P_IN,2)-1)/REAL(SIZE(P_OUT,2)-1)
+        JLEVB = MIN(CEILING(ZLEV), SIZE(P_IN,2))
         JLEVA = MAX(FLOOR(ZLEV), 1)
 
-        ZWA = REAL(JLEVB) - ZLEV
-        ZWB = ZLEV - REAL(JLEVA)
+        IF (JLEVB == JLEVA) THEN
+          ZWA = 1.
+          ZWB = 0.
+        ELSE
+          ZWA = REAL(JLEVB) - ZLEV
+          ZWB = ZLEV - REAL(JLEVA)
+        ENDIF
 
         DO I_OUT = 1, NPROMA
   
@@ -616,12 +621,17 @@ PURE SUBROUTINE NPROMIZE4(P_IN, P_OUT)
       DO J2 = 1, SIZE(P_OUT, 3)
         DO J1 = 1, SIZE(P_OUT, 2)
 
-          ZLEV = 1.0 + REAL(J1-1)*REAL(SIZE(P_IN,2))/REAL(SIZE(P_OUT,2))
-          JLEVB = MIN(CEILING(ZLEV), SIZE(P_OUT,2))
+          ZLEV = 1.0 + REAL(J1-1)*REAL(SIZE(P_IN,2)-1)/REAL(SIZE(P_OUT,2)-1)
+          JLEVB = MIN(CEILING(ZLEV), SIZE(P_IN,2))
           JLEVA = MAX(FLOOR(ZLEV), 1)
 
-          ZWA = REAL(JLEVB) - ZLEV
-          ZWB = ZLEV - REAL(JLEVA)
+          IF (JLEVB == JLEVA) THEN
+            ZWA = 1.
+            ZWB = 0.
+          ELSE
+            ZWA = REAL(JLEVB) - ZLEV
+            ZWB = ZLEV - REAL(JLEVA)
+          ENDIF
 
           DO I_OUT = 1, NPROMA
   

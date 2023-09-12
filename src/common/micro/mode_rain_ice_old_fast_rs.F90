@@ -114,7 +114,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
 !
 !        5.1.1  select the ZLBDAS
 !
-      ZVEC1(:) = PACK( ZLBDAS(:),MASK=GMASK(:) )
+      ZVEC1(1:IGRIM) = PACK( ZLBDAS(:),MASK=GMASK(:) )
 !
 !        5.1.2  find the next lower indice for the ZLBDAS in the geometrical
 !               set of Lbda_s used to tabulate some moments of the incomplete
@@ -130,7 +130,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
 !
       ZVEC1(1:IGRIM) = ICEP%XGAMINC_RIM1(IVEC2(1:IGRIM)+1)* ZVEC2(1:IGRIM)      &
                    - ICEP%XGAMINC_RIM1(IVEC2(1:IGRIM)  )*(ZVEC2(1:IGRIM) - 1.0)
-      ZZW(:) = UNPACK(VECTOR=ZVEC1(:), MASK=GMASK, FIELD=0.0)
+      ZZW(:) = UNPACK(VECTOR=ZVEC1(1:IGRIM), MASK=GMASK, FIELD=0.0)
 !
 !        5.1.4  riming of the small sized aggregates
 !
@@ -151,7 +151,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
 !
       ZVEC1(1:IGRIM) = ICEP%XGAMINC_RIM2( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
                      - ICEP%XGAMINC_RIM2( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
-      ZZW(:) = UNPACK( VECTOR=ZVEC1(:),MASK=GMASK,FIELD=0.0 )
+      ZZW(:) = UNPACK( VECTOR=ZVEC1(1:IGRIM),MASK=GMASK,FIELD=0.0 )
 !
 !        5.1.6  riming-conversion of the large sized aggregates into graupeln
 !
@@ -200,8 +200,8 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
 !
 !        5.2.1  select the (ZLBDAS,ZLBDAR) couplet
 !
-      ZVEC1(:) = PACK( ZLBDAS(:),MASK=GMASK(:) )
-      ZVEC2(:) = PACK( ZLBDAR(:),MASK=GMASK(:) )
+      ZVEC1(1:IGACC) = PACK( ZLBDAS(:),MASK=GMASK(:) )
+      ZVEC2(1:IGACC) = PACK( ZLBDAR(:),MASK=GMASK(:) )
 !
 !        5.2.2  find the next lower indice for the ZLBDAS and for the ZLBDAR
 !               in the geometrical set of (Lbda_s,Lbda_r) couplet use to
@@ -228,7 +228,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
                     - ICEP%XKER_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0)) &
                                                                *(ZVEC1(JJ) - 1.0)
       END DO
-      ZZW(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GMASK,FIELD=0.0 )
+      ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGACC),MASK=GMASK,FIELD=0.0 )
 !
 !        5.2.4  raindrop accretion on the small sized aggregates
 !
@@ -257,7 +257,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
                    -  ICEP%XKER_RACCS(IVEC2(JJ)  ,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
                                                               *(ZVEC2(JJ) - 1.0)
       END DO
-      ZZW1(:,2) = ZZW1(:,2)*UNPACK( VECTOR=ZVEC3(:),MASK=GMASK(:),FIELD=0.0 )
+      ZZW1(:,2) = ZZW1(:,2)*UNPACK( VECTOR=ZVEC3(1:IGACC),MASK=GMASK(:),FIELD=0.0 )
                                                                        !! RRACCS!
 !        5.2.5  perform the bilinear interpolation of the normalized
 !               SACCRG-kernel
@@ -270,7 +270,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
                       - ICEP%XKER_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
                                                           * (ZVEC2(JJ) - 1.0)
       END DO
-      ZZW(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GMASK,FIELD=0.0 )
+      ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGACC),MASK=GMASK,FIELD=0.0 )
 !
 !        5.2.6  raindrop accretion-conversion of the large sized aggregates
 !               into graupeln
