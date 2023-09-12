@@ -577,7 +577,7 @@ if [ $run -ge 1 ]; then
 
   #Run the tests one after the other
   for t in $(echo $tests | sed 's/,/ /g'); do
-    if echo $allowedTests | grep -w $t; then
+    if echo $allowedTests | grep -w $t > /dev/null; then
       cd $HOMEPACK/$name
       mkdir -p conf_tests/$t
       cd conf_tests/$t
@@ -595,7 +595,7 @@ if [ $check -eq 1 ]; then
   message=""
   filestocheck=""
   for t in $(echo $tests | sed 's/,/ /g'); do
-    if echo $allowedTests | grep -w $t; then
+    if echo $allowedTests | grep -w $t > /dev/null; then
       if echo $t | grep 'small' > /dev/null; then
         filestocheck="$filestocheck ${t},conf_tests/$t/ICMSHFPOS+0002:00 ${t},conf_tests/$t/DHFDLFPOS+0002"
       else
