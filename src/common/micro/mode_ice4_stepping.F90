@@ -98,7 +98,7 @@ REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PHLI_HCF
 REAL,    DIMENSION(KPROMA),                     INTENT(OUT)   :: PRAINFR
 REAL,    DIMENSION(KPROMA,0:7),                 INTENT(INOUT) :: PEXTPK !To take into acount external tendencies inside the splitting
 REAL,    DIMENSION(KPROMA, IBUNUM-IBUNUM_EXTRA),INTENT(OUT)   :: PBU_SUM
-REAL,    DIMENSION(KPROMA),                     INTENT(OUT)   :: PRREVAV
+REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PRREVAV
 !
 !
 !*       0.2   Declarations of local variables :

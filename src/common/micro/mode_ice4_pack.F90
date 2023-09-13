@@ -123,13 +123,13 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRIS    ! Pristine ice m.r. so
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRSS    ! Snow/aggregate m.r. source
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRGS    ! Graupel m.r. source
 !
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: PEVAP3D! Rain evap profile
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: PRAINFR !Precipitation fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PEVAP3D! Rain evap profile
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRAINFR !Precipitation fraction
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRVHENI ! heterogeneous nucleation
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PLVFACT
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PLSFACT
-REAL, DIMENSION(D%NIJT,D%NKT,0:7), INTENT(OUT) :: PWR
+REAL, DIMENSION(D%NIJT,D%NKT,0:7), INTENT(INOUT) :: PWR
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,  INTENT(INOUT) :: PRHS    ! Hail m.r. source
@@ -140,7 +140,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,  INTENT(INOUT) :: PRHS    ! Hail m.r. s
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 INTEGER :: JIJ, JK
-INTEGER :: IKTB, IKTE, IIJB, IIJE
+INTEGER :: IKT, IKTB, IKTE, IIJT, IIJB, IIJE
 INTEGER :: ISTIJ, ISTK
 !
 LOGICAL :: GEXT_TEND
@@ -184,8 +184,10 @@ IF (LHOOK) CALL DR_HOOK('ICE4_PACK', 0, ZHOOK_HANDLE)
 !*       1.     GENERALITIES
 !               ------------
 !
+IKT=D%NKT
 IKTB=D%NKTB
 IKTE=D%NKTE
+IIJT=D%NIJT
 IIJB=D%NIJB
 IIJE=D%NIJE
 GEXT_TEND=.TRUE.
@@ -361,13 +363,20 @@ IF(PARAMI%LPACK_MICRO) THEN
   ENDIF ! KSIZE > 0
 
 ELSE ! PARAMI%LPACK_MICRO
+  !We assume, here, that points outside the physical domain of the model (extral levels,
+  !horizontal points in the halo) contain valid values, sufficiently valid to be used in tests
+  !such as "PTHT(JL)>ZTHRESHOLD .AND. LLMICRO(JL)". In these tests, LLMICRO(JL) will be evaluated
+  !to .FALSE. on these kind of points but valid values for PTHT are needed to prevent crash.
+  !
   IF (KSIZE /= D%NIJT*D%NKT) THEN
       CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'ICE4_PACK', 'ICE4_PACK : KSIZE /= NIJT*NKT')
   ENDIF
 
+  !Some arrays must be copied. In order not to waste memory, we re-use temporary arrays
+  !declared for the pack case.
   IC=0
-  DO JK = IKTB, IKTE
-    DO JIJ = IIJB, IIJE
+  DO JK = 1, IKT
+    DO JIJ = 1, IIJT
       IC=IC+1
       I1TOT(IC)=JIJ
       I2TOT(IC)=JK
@@ -383,12 +392,39 @@ ELSE ! PARAMI%LPACK_MICRO
         IF (KRR==7) THEN
           ZEXTPK(IC, IRH)=PRHS(JIJ, JK)
         ENDIF
-        IF(LLSIGMA_RC) THEN
-          ZSIGMA_RC(IC)=PSIGS(JIJ, JK)
-        ENDIF
+      ENDIF
+      IF(LLSIGMA_RC) THEN
+        !Copy needed because sigma is modified in ice4_stepping
+        ZSIGMA_RC(IC)=PSIGS(JIJ, JK)
       ENDIF
     ENDDO
   ENDDO
+  !
+  !When PARAMI%LPACK_MICRO=T, values on the extra levels are not given to ice4_stepping,
+  !so there was not filled in rain_ice.
+  !When PARAMI%LPACK_MICRO=F, we need to complement the work done in rain_ice to provide
+  !valid values on these levels.
+  !The same applies for the first points and last points on the horizontal dimension.
+  IF (IKTB /= 1) THEN
+    DO JK=1, IKTB-1
+      PWR(:, JK, :)=PWR(:, IKTB, :)
+    ENDDO
+  ENDIF
+  IF (IKTE /= IKT) THEN
+    DO JK=IKTE+1, IKT
+      PWR(:, JK, :)=PWR(:, IKTE, :)
+    ENDDO
+  ENDIF
+  IF (IIJB /= 1) THEN
+    DO JIJ=1, IIJB-1
+      PWR(JIJ, :, :)=PWR(IIJB, :, :)
+    ENDDO
+  ENDIF
+  IF (IIJE /= IIJT) THEN
+    DO JIJ=IIJE+1, IIJT
+      PWR(JIJ, :, :)=PWR(IIJE, :, :) 
+    ENDDO
+  ENDIF
   !
   !*       5bis.  TENDENCIES COMPUTATION
   !               ----------------------
