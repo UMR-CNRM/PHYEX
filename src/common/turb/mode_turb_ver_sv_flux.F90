@@ -210,9 +210,8 @@ SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,TLES,ONOMIXLG,       &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1,   ONLY: JPRB
 USE MODE_SHUMAN_PHY, ONLY: DZM_PHY, MZM_PHY, MZF_PHY
-USE YOMHOOK,    ONLY: LHOOK, DR_HOOK
+USE YOMHOOK,    ONLY: LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_CST,              ONLY: CST_t
 USE MODD_CTURB,            ONLY: CSTURB_t
@@ -220,11 +219,9 @@ USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 USE MODD_FIELD,            ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,               ONLY: TFILEDATA
 USE MODD_LES,              ONLY: TLES_t
-USE MODD_PARAMETERS,       ONLY: JPVEXT_TURB, NMNHNAMELGTMAX
+USE MODD_PARAMETERS,       ONLY: NMNHNAMELGTMAX
 USE MODD_TURB_n,           ONLY: TURB_t
 !
-USE MODE_EMOIST,         ONLY: EMOIST
-USE MODE_ETHETA,         ONLY: ETHETA
 USE MODE_GRADIENT_W_PHY, ONLY: GZ_W_M_PHY
 USE MODE_GRADIENT_M_PHY, ONLY: GZ_M_W_PHY
 USE MODE_IO_FIELD_WRITE_PHY, ONLY: IO_FIELD_WRITE_PHY
@@ -306,7 +303,7 @@ REAL :: ZCSVP = 4.0  ! constant for scalar flux presso-correlation (RS81)
 REAL :: ZCSV          !constant for the scalar flux
 !
 CHARACTER(LEN=NMNHNAMELGTMAX) :: YMNHNAME
-REAL(KIND=JPRB)               :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK)             :: ZHOOK_HANDLE
 TYPE(TFIELDMETADATA)          :: TZFIELD
 !----------------------------------------------------------------------------
 !
@@ -338,9 +335,9 @@ ENDIF
 !
 IF(OBLOWSNOW) THEN
 ! See Vionnet (PhD, 2012) for a complete discussion around the value of the Schmidt number for blowing snow variables
-   ZCSV=CSTURB%XCHF/PRSNOW
+   ZCSV=TURBN%XCHF/PRSNOW
 ELSE
-   ZCSV=CSTURB%XCHF
+   ZCSV=TURBN%XCHF
 ENDIF
 !----------------------------------------------------------------------------
 !

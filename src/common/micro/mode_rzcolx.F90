@@ -14,8 +14,7 @@ CONTAINS
                          PFALLZ, PEXFALLZ, PFALLEXPZ,                        &
 		         PLBDAXMAX, PLBDAZMAX, PLBDAXMIN, PLBDAZMIN,         &
                          PDINFTY, PRZCOLX                                    )
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ########################################################################
 !
 !
@@ -173,7 +172,7 @@ REAL    :: ZFUNC   ! Ancillary function
 !
 !*       1.1     Compute the growth rate of the slope factors LAMBDA
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('RZCOLX',0,ZHOOK_HANDLE)
 ZDLBDAX = EXP( LOG(PLBDAXMAX/PLBDAXMIN)/REAL(SIZE(PRZCOLX(:,:),1)-1) )
 ZDLBDAZ = EXP( LOG(PLBDAZMAX/PLBDAZMIN)/REAL(SIZE(PRZCOLX(:,:),2)-1) )
@@ -215,7 +214,7 @@ DO JLBDAX = 1,SIZE(PRZCOLX(:,:),1)
 !*       1.7     Compute the scaled fall speed difference by integration over
 !                the dimensional spectrum of specy Z
 !
-#if defined(REPRO48) 
+#ifdef REPRO48
         ZCOLLZ = ZCOLLZ + ZFUNC                                               &
                         * PEXZ * ABS(PFALLX*ZDX**PEXFALLX-PFALLZ*ZDZ**PEXFALLZ)
 #else

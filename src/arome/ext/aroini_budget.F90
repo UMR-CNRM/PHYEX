@@ -47,7 +47,7 @@ SUBROUTINE AROINI_BUDGET(LDBU_ENABLE)
 !              ------------ 
 !
 USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_BUDGET, ONLY : LBU_ENABLE, LBUDGET_U, LBUDGET_V, LBUDGET_W, LBUDGET_SV, &
                       & LBUDGET_TH, LBUDGET_TKE, &
@@ -59,12 +59,12 @@ IMPLICIT NONE
 !*       0.1   declarations of argument
 !
 !
-LOGICAL :: LDBU_ENABLE
+LOGICAL, INTENT(IN) :: LDBU_ENABLE
 !
 !*       0.2   Declarations of local variables :
 !
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !

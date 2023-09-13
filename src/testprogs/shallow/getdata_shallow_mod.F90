@@ -28,7 +28,7 @@ SUBROUTINE GETDATA_SHALLOW (NPROMA, NGPBLKS, NFLEVG, KRR, KRRL, KRRI, KSV, KLEV,
                         &ZFLXZUMF_OUT_B, ZFLXZVMF_OUT_B, PTHL_UP_OUT_B, PRT_UP_OUT_B, PRV_UP_OUT_B, PRC_UP_OUT_B, PRI_UP_OUT_B, &
                         &PU_UP_OUT_B, PV_UP_OUT_B, &
                         &PTHV_UP_OUT_B, PW_UP_OUT_B, &
-                        &PFRAC_UP_OUT_B, PEMF_OUT_B, ZDETR_OUT_B, ZENTR_OUT_B, IKLCL_OUT_B, IKETL_OUT_B, IKCTL_OUT_B)
+                        &PFRAC_UP_OUT_B, PEMF_OUT_B, ZDETR_OUT_B, ZENTR_OUT_B, IKLCL_OUT_B, IKETL_OUT_B, IKCTL_OUT_B, LDVERBOSE)
 
 IMPLICIT NONE
 
@@ -37,93 +37,93 @@ INTEGER, PARAMETER :: IFILE = 77
 INTEGER      :: KLON 
 INTEGER      :: KIDIA  
 INTEGER      :: KFDIA  
-INTEGER      :: KLEV  
-INTEGER      :: KRR, KRRL, KRRI
-INTEGER      :: KSV
+INTEGER, INTENT(OUT)      :: KLEV  
+INTEGER, INTENT(OUT)      :: KRR, KRRL, KRRI
+INTEGER, INTENT(OUT)      :: KSV
 INTEGER      :: KDUM
 
-LOGICAL :: LDVERBOSE
+LOGICAL, INTENT(IN) :: LDVERBOSE
 
 !IN and INOUTS
-REAL, ALLOCATABLE   :: PDZZF_B             (:,:,:,:)
-REAL, ALLOCATABLE   :: PZZ_B             (:,:,:,:)
-REAL, ALLOCATABLE   :: PRHODJ_B            (:,:,:,:)
-REAL, ALLOCATABLE   :: PRHODREF_B             (:,:,:,:)
-REAL, ALLOCATABLE   :: PPABSM_B             (:,:,:,:)
-REAL, ALLOCATABLE   :: PEXNM_B             (:,:,:,:)
-REAL, ALLOCATABLE   :: PSFTH_B        (:,:,:)
-REAL, ALLOCATABLE   :: PSFRV_B        (:,:,:)
-REAL, ALLOCATABLE   :: PTHM_B           (:,:,:,:)
-REAL, ALLOCATABLE   :: PRM_B            (:,:,:,:,:) !(KLON, 1, KLEV, KRR)
-REAL, ALLOCATABLE   :: PUM_B              (:,:,:,:)
-REAL, ALLOCATABLE   :: PVM_B              (:,:,:,:)
-REAL, ALLOCATABLE   :: PTKEM_B            (:,:,:,:)
-REAL, ALLOCATABLE   :: PSVM_B             (:,:,:,:,:) !(KLON,1,KLEV,KSV)
-REAL, ALLOCATABLE   :: PTHL_UP_B            (:,:,:,:)
-REAL, ALLOCATABLE   :: PRT_UP_B         (:,:,:,:)
-REAL, ALLOCATABLE   :: PRV_UP_B         (:,:,:,:)
-REAL, ALLOCATABLE   :: PRC_UP_B          (:,:,:,:)
-REAL, ALLOCATABLE   :: PRI_UP_B             (:,:,:,:)
-REAL, ALLOCATABLE   :: PU_UP_B             (:,:,:,:)
-REAL, ALLOCATABLE   :: PV_UP_B             (:,:,:,:)
-REAL, ALLOCATABLE   :: PTHV_UP_B             (:,:,:,:)
-REAL, ALLOCATABLE   :: PW_UP_B             (:,:,:,:)
-REAL, ALLOCATABLE   :: PFRAC_UP_B            (:,:,:,:)
-REAL, ALLOCATABLE   :: PEMF_B       (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PDZZF_B             (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PZZ_B             (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRHODJ_B            (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRHODREF_B             (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PPABSM_B             (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PEXNM_B             (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PSFTH_B        (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PSFRV_B        (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PTHM_B           (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRM_B            (:,:,:,:,:) !(KLON, 1, KLEV, KRR)
+REAL, INTENT(OUT), ALLOCATABLE   :: PUM_B              (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PVM_B              (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PTKEM_B            (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PSVM_B             (:,:,:,:,:) !(KLON,1,KLEV,KSV)
+REAL, INTENT(OUT), ALLOCATABLE   :: PTHL_UP_B            (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRT_UP_B         (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRV_UP_B         (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRC_UP_B          (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRI_UP_B             (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PU_UP_B             (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PV_UP_B             (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PTHV_UP_B             (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PW_UP_B             (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PFRAC_UP_B            (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PEMF_B       (:,:,:,:)
 
 !OUT
-REAL, ALLOCATABLE   :: PDUDT_MF_B            (:,:,:,:)
-REAL, ALLOCATABLE   :: PDVDT_MF_B             (:,:,:,:)
-REAL, ALLOCATABLE   :: PDTHLDT_MF_B             (:,:,:,:)
-REAL, ALLOCATABLE   :: PDRTDT_MF_B           (:,:,:,:)
-REAL, ALLOCATABLE   :: PDSVDT_MF_B             (:,:,:,:,:) !(KLON,1,KLEV,KSV)
-REAL, ALLOCATABLE   :: PSIGMF_B              (:,:,:,:)
-REAL, ALLOCATABLE   :: PRC_MF_B              (:,:,:,:)
-REAL, ALLOCATABLE   :: PRI_MF_B           (:,:,:,:)
-REAL, ALLOCATABLE   :: PCF_MF_B           (:,:,:,:)
-REAL, ALLOCATABLE   :: PFLXZTHVMF_B             (:,:,:,:)
-REAL, ALLOCATABLE   :: ZFLXZTHMF_B            (:,:,:,:)
-REAL, ALLOCATABLE   :: ZFLXZRMF_B       (:,:,:,:)
-REAL, ALLOCATABLE   :: ZFLXZUMF_B       (:,:,:,:)
-REAL, ALLOCATABLE   :: ZFLXZVMF_B     (:,:,:,:)
-REAL, ALLOCATABLE   :: ZDETR_B      (:,:,:,:)
-REAL, ALLOCATABLE   :: ZENTR_B      (:,:,:,:)
-INTEGER, ALLOCATABLE:: IKLCL_B  (:,:,:)
-INTEGER, ALLOCATABLE:: IKETL_B  (:,:,:)
-INTEGER, ALLOCATABLE:: IKCTL_B (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PDUDT_MF_B            (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PDVDT_MF_B             (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PDTHLDT_MF_B             (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PDRTDT_MF_B           (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PDSVDT_MF_B             (:,:,:,:,:) !(KLON,1,KLEV,KSV)
+REAL, INTENT(OUT), ALLOCATABLE   :: PSIGMF_B              (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRC_MF_B              (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRI_MF_B           (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PCF_MF_B           (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PFLXZTHVMF_B             (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZFLXZTHMF_B            (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZFLXZRMF_B       (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZFLXZUMF_B       (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZFLXZVMF_B     (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZDETR_B      (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZENTR_B      (:,:,:,:)
+INTEGER, INTENT(OUT), ALLOCATABLE:: IKLCL_B  (:,:,:)
+INTEGER, INTENT(OUT), ALLOCATABLE:: IKETL_B  (:,:,:)
+INTEGER, INTENT(OUT), ALLOCATABLE:: IKCTL_B (:,:,:)
 
 
 !Expected values
-REAL, ALLOCATABLE   :: PDUDT_MF_OUT_B    (:,:,:,:)
-REAL, ALLOCATABLE   :: PDVDT_MF_OUT_B   (:,:,:,:)
-REAL, ALLOCATABLE   :: PDTHLDT_MF_OUT_B         (:,:,:,:)
-REAL, ALLOCATABLE   :: PDRTDT_MF_OUT_B          (:,:,:,:)
-REAL, ALLOCATABLE   :: PDSVDT_MF_OUT_B         (:,:,:,:,:) !(KLON,1,KLEV,KSV)
-REAL, ALLOCATABLE   :: PSIGMF_OUT_B         (:,:,:,:)
-REAL, ALLOCATABLE   :: PRC_MF_OUT_B         (:,:,:,:)
-REAL, ALLOCATABLE   :: PRI_MF_OUT_B        (:,:,:,:)
-REAL, ALLOCATABLE   :: PCF_MF_OUT_B         (:,:,:,:)
-REAL, ALLOCATABLE   :: PFLXZTHVMF_OUT_B        (:,:,:,:)
-REAL, ALLOCATABLE   :: ZFLXZTHMF_OUT_B   (:,:,:,:)
-REAL, ALLOCATABLE   :: ZFLXZRMF_OUT_B        (:,:,:,:)
-REAL, ALLOCATABLE   :: ZFLXZUMF_OUT_B         (:,:,:,:)
-REAL, ALLOCATABLE   :: ZFLXZVMF_OUT_B         (:,:,:,:)
-REAL, ALLOCATABLE   :: PTHL_UP_OUT_B         (:,:,:,:)
-REAL, ALLOCATABLE   :: PRT_UP_OUT_B          (:,:,:,:)
-REAL, ALLOCATABLE   :: PRV_UP_OUT_B          (:,:,:,:)
-REAL, ALLOCATABLE   :: PRC_UP_OUT_B       (:,:,:,:)
-REAL, ALLOCATABLE   :: PRI_UP_OUT_B       (:,:,:,:)
-REAL, ALLOCATABLE   :: PU_UP_OUT_B         (:,:,:,:)
-REAL, ALLOCATABLE   :: PV_UP_OUT_B        (:,:,:,:)
-REAL, ALLOCATABLE   :: PTHV_UP_OUT_B   (:,:,:,:)
-REAL, ALLOCATABLE   :: PW_UP_OUT_B   (:,:,:,:)
-REAL, ALLOCATABLE   :: PFRAC_UP_OUT_B (:,:,:,:)
-REAL, ALLOCATABLE   :: PEMF_OUT_B  (:,:,:,:)
-REAL, ALLOCATABLE   :: ZDETR_OUT_B  (:,:,:,:)
-REAL, ALLOCATABLE   :: ZENTR_OUT_B  (:,:,:,:)
-INTEGER, ALLOCATABLE:: IKLCL_OUT_B  (:,:,:)
-INTEGER, ALLOCATABLE:: IKETL_OUT_B  (:,:,:)
-INTEGER, ALLOCATABLE:: IKCTL_OUT_B (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PDUDT_MF_OUT_B    (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PDVDT_MF_OUT_B   (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PDTHLDT_MF_OUT_B         (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PDRTDT_MF_OUT_B          (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PDSVDT_MF_OUT_B         (:,:,:,:,:) !(KLON,1,KLEV,KSV)
+REAL, INTENT(OUT), ALLOCATABLE   :: PSIGMF_OUT_B         (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRC_MF_OUT_B         (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRI_MF_OUT_B        (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PCF_MF_OUT_B         (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PFLXZTHVMF_OUT_B        (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZFLXZTHMF_OUT_B   (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZFLXZRMF_OUT_B        (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZFLXZUMF_OUT_B         (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZFLXZVMF_OUT_B         (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PTHL_UP_OUT_B         (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRT_UP_OUT_B          (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRV_UP_OUT_B          (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRC_UP_OUT_B       (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRI_UP_OUT_B       (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PU_UP_OUT_B         (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PV_UP_OUT_B        (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PTHV_UP_OUT_B   (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PW_UP_OUT_B   (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PFRAC_UP_OUT_B (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PEMF_OUT_B  (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZDETR_OUT_B  (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZENTR_OUT_B  (:,:,:,:)
+INTEGER, INTENT(OUT), ALLOCATABLE:: IKLCL_OUT_B  (:,:,:)
+INTEGER, INTENT(OUT), ALLOCATABLE:: IKETL_OUT_B  (:,:,:)
+INTEGER, INTENT(OUT), ALLOCATABLE:: IKCTL_OUT_B (:,:,:)
 
 !Inputs to read
 REAL, ALLOCATABLE   :: PDZZF               (:,:,:,:)
@@ -183,7 +183,9 @@ INTEGER, ALLOCATABLE:: IKLCL_OUT  (:,:,:)
 INTEGER, ALLOCATABLE:: IKETL_OUT  (:,:,:)
 INTEGER, ALLOCATABLE:: IKCTL_OUT (:,:,:)
 
-INTEGER :: NGPTOT, NPROMA, NGPBLKS, NFLEVG
+INTEGER, INTENT(IN) :: NPROMA, NGPBLKS
+INTEGER :: NGPTOT
+INTEGER, INTENT(INOUT) :: NFLEVG
 INTEGER :: IOFF, IBL
 LOGICAL :: LLEXIST
 CHARACTER(LEN=32) :: CLFILE

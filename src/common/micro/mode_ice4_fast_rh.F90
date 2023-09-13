@@ -35,12 +35,11 @@ SUBROUTINE ICE4_FAST_RH(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUT
 !          ------------
 !
 USE MODD_CST,            ONLY: CST_t
-USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
-USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -98,8 +97,8 @@ INTEGER, DIMENSION(KPROMA) :: IBUF1, IBUF2, IBUF3
 REAL, DIMENSION(KPROMA) :: ZZW, &
                            ZRDRYH_INIT, ZRWETH_INIT, &
                            ZRDRYHG
-INTEGER :: JJ, JL
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+INTEGER :: JL
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 LOGICAL, DIMENSION(KPROMA) :: LLWETH, LLDRYH
 !
 !-------------------------------------------------------------------------------
@@ -151,17 +150,21 @@ IF(.NOT. LDSOFT) THEN
   IF(IGWET>0)THEN
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GWET(1:KSIZE))
+#ifdef REPRO48
       PRH_TEND(1:KSIZE, IRSWETH)=ICEP%XFSWETH*ZZW(1:KSIZE)                       & ! RSWETH
-#if defined(REPRO48) 
                     *( PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS) )*( PLBDAH(1:KSIZE)**ICED%XCXH )  &
                        *( PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.) )               &
-#else
-                    *( PRST(1:KSIZE))*( PLBDAH(1:KSIZE)**ICED%XCXH )  &
-                       *( PRHODREF(1:KSIZE)**(-ICED%XCEXVT) )               &
-#endif
-                       *( ICEP%XLBSWETH1/( PLBDAH(1:KSIZE)**2              ) + &
+                       *( ICEP%XLBSWETH1/( PLBDAH(1:KSIZE)**2              ) + &                                  
                           ICEP%XLBSWETH2/( PLBDAH(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
                           ICEP%XLBSWETH3/(               PLBDAS(1:KSIZE)**2) )
+#else
+      PRH_TEND(1:KSIZE, IRSWETH)=ICEP%XFSWETH*ZZW(1:KSIZE)                       & ! RSWETH
+                    *( PRST(1:KSIZE))*( PLBDAH(1:KSIZE)**ICED%XCXH )  &
+                       *( PRHODREF(1:KSIZE)**(-ICED%XCEXVT) )               &
+                       *( ICEP%XLBSWETH1/( PLBDAH(1:KSIZE)**2              ) + &                                  
+                          ICEP%XLBSWETH2/( PLBDAH(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
+                          ICEP%XLBSWETH3/(               PLBDAS(1:KSIZE)**2) )
+#endif
       PRH_TEND(1:KSIZE, IRSDRYH)=PRH_TEND(1:KSIZE, IRSWETH)*(ICEP%XCOLSH*EXP(ICEP%XCOLEXSH*(PT(1:KSIZE)-CST%XTT)))
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
@@ -278,11 +281,7 @@ DO JL=1, KSIZE
     ENDIF
 
     !Dry case
-#ifdef REPRO48
-    LLDRYH(JL)=PT(JL)<CST%XTT .AND. ZRDRYH_INIT(JL)>0. .AND. &
-#else
     LLDRYH(JL)=PT(JL)<CST%XTT .AND. ZRDRYH_INIT(JL)>1.E-20 .AND. &
-#endif
               &MAX(0., ZRWETH_INIT(JL)-PRH_TEND(JL, IRIWETH)-PRH_TEND(JL, IRSWETH))>&
               &MAX(0., ZRDRYH_INIT(JL)-PRH_TEND(JL, IRIDRYH)-PRH_TEND(JL, IRSDRYH))
 

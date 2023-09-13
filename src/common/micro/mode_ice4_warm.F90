@@ -32,12 +32,11 @@ SUBROUTINE ICE4_WARM(CST, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, HSUBG_RC
 !          ------------
 !
 USE MODD_CST,            ONLY: CST_t
-USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
+USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 !
 USE MODE_MSG
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -79,7 +78,7 @@ REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRREVAV  ! Evaporation of r_r
 REAL :: ZZW2, ZZW3, ZZW4
 REAL, DIMENSION(KPROMA) :: ZUSW ! Undersaturation over water
 REAL, DIMENSION(KPROMA) :: ZTHLT    ! Liquid potential temperature
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER :: JL
 LOGICAL :: LMASK, LMASK1, LMASK2
 !-------------------------------------------------------------------------------
@@ -94,13 +93,8 @@ IF (LHOOK) CALL DR_HOOK('ICE4_WARM', 0, ZHOOK_HANDLE)
 DO JL=1, KSIZE
   IF(PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>0. .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
-#if defined(REPRO48) 
-      PRCAUTR(JL) = ICEP%XTIMAUTC*MAX(PHLC_HRC(JL)/PHLC_HCF(JL) - ICEP%XCRIAUTC/PRHODREF(JL), 0.0)
-      PRCAUTR(JL) = PHLC_HCF(JL)*PRCAUTR(JL)
-#else
       !HCF*autoconv(HRC/HCF) with simplification
       PRCAUTR(JL) = ICEP%XTIMAUTC*MAX(PHLC_HRC(JL) - PHLC_HCF(JL)*ICEP%XCRIAUTC/PRHODREF(JL), 0.0)
-#endif
     ENDIF
   ELSE
     PRCAUTR(JL) = 0.
@@ -135,26 +129,15 @@ ELSEIF (HSUBG_RC_RR_ACCR=='PRFR') THEN
   DO JL=1, KSIZE
     LMASK = PRCT(JL)>ICED%XRTMIN(2) .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)
     LMASK1 = LMASK .AND. PHLC_HRC(JL)>ICED%XRTMIN(2) .AND. PHLC_HCF(JL)>0.
-#ifdef REPRO48
-    LMASK2 = LMASK .AND. PHLC_LRC(JL)>ICED%XRTMIN(2) .AND. PHLC_LCF(JL)>0.
-#else
     LMASK2 = LMASK .AND. PHLC_LRC(JL)>ICED%XRTMIN(2) .AND. PHLC_LCF(JL)>1.E-20
-#endif
     IF(LMASK1 .OR. LMASK2) THEN
       IF(.NOT. LDSOFT) THEN
         IF(LMASK1) THEN
           !Accretion due to rain falling in high cloud content
-#if defined(REPRO48) 
-          PRCACCR(JL) = ICEP%XFCACCR * ( PHLC_HRC(JL)/PHLC_HCF(JL) )     &
-                      &*PLBDAR_RF(JL)**ICEP%XEXCACCR &
-                      &*PRHODREF(JL)**(-ICED%XCEXVT) &
-                      &*PHLC_HCF(JL)
-#else
           !HCF*accretion(HRC/HCF) with simplification
           PRCACCR(:) = ICEP%XFCACCR * PHLC_HRC(JL)     &
                       &*PLBDAR_RF(JL)**ICEP%XEXCACCR &
                       &*PRHODREF(JL)**(-ICED%XCEXVT)
-#endif
         ELSE
           PRCACCR(JL)=0.
         ENDIF

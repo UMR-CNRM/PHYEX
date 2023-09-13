@@ -2,7 +2,7 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-      SUBROUTINE TH_R_FROM_THL_RT(CST, NEB, KT, HFRAC_ICE,PFRAC_ICE,PP, &
+      SUBROUTINE TH_R_FROM_THL_RT(CST, NEBN, KT, HFRAC_ICE,PFRAC_ICE,PP, &
                                   PTHL, PRT, PTH, PRV, PRL, PRI,           &
                                   PRSATW, PRSATI, PRR, PRS, PRG, PRH, OOCEAN,&
                                   PBUF, KB, KE)
@@ -51,7 +51,7 @@
 !          ------------
 !
 USE MODD_CST, ONLY : CST_t
-USE MODD_NEB, ONLY : NEB_t
+USE MODD_NEB_n, ONLY : NEB_t
 !
 IMPLICIT NONE
 !
@@ -59,7 +59,7 @@ IMPLICIT NONE
 !*      0.1  declarations of arguments
 !
 TYPE(CST_t),        INTENT(IN) :: CST
-TYPE(NEB_t),        INTENT(IN) :: NEB
+TYPE(NEB_t),        INTENT(IN) :: NEBN
 INTEGER,            INTENT(IN) :: KT
 CHARACTER(LEN=1),   INTENT(IN) :: HFRAC_ICE
 LOGICAL,            INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
@@ -150,7 +150,7 @@ DO II=1,JITER
       PFRAC_ICE(J) = PRI(J) / (PRL(J)+PRI(J))
     ENDIF
   ENDDO
-  CALL COMPUTE_FRAC_ICE(HFRAC_ICE,NEB,PFRAC_ICE(IB:IE),PBUF(IB:IE, IT))
+  CALL COMPUTE_FRAC_ICE(HFRAC_ICE,NEBN,PFRAC_ICE(IB:IE),PBUF(IB:IE, IT))
 
   !Computation of Rvsat and dRsat/dT
   !In this version QSAT, QSATI, DQSAT and DQASATI functions are not used

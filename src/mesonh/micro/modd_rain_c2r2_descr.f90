@@ -46,6 +46,7 @@
 !!
 !-------------------------------------------------------------------------------
 USE MODD_PARAMETERS, ONLY: JPSVNAMELGTMAX
+IMPLICIT NONE
 !
 !*       0.   DECLARATIONS
 !             ------------

@@ -74,7 +74,7 @@ USE MODD_PARAM_LIMA,      ONLY: LADJ, LACTIT, NMOD_CCN, XCTMIN, XKHEN_MULTI, XRT
 USE MODD_PARAM_LIMA_WARM, ONLY: XWMIN, NAHEN, NHYP, XAHENINTP1, XAHENINTP2, XCSTDCRIT, XHYPF12,      &
                                 XHYPINTP1, XHYPINTP2, XTMIN, XHYPF32, XPSI3, XAHENG, XAHENG2, XPSI1, &
                                 XLBC, XLBEXC
-USE MODD_TURB_n,          ONLY: LSUBG_COND
+USE MODD_NEB_n,           ONLY: LSUBG_COND
 
 !USE MODE_IO_FIELD_WRITE,  only: IO_Field_write
 use mode_tools,           only: Countjv
@@ -136,7 +136,7 @@ REAL, DIMENSION(:), ALLOCATABLE    :: ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6, &
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZTMP, ZCHEN_MULTI
 !
 REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))   &
-                                   :: ZTDT, ZDRC, ZRVSAT, ZW, ZW2, ZCLDFR  
+                                   :: ZTDT, ZRVSAT, ZW, ZW2, ZCLDFR  
 REAL, DIMENSION(SIZE(PNFT,1),SIZE(PNFT,2),SIZE(PNFT,3))               &
                                    :: ZCONC_TOT         ! total CCN C. available
 !

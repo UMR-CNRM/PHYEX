@@ -5,8 +5,7 @@
                                         PPRMELT, PZPRMELT, PDTEVR, PZDTEVR,    &
                                         PTPR, PZTPR,                           &
                                         PPRLFLX, PZPRLFL, PPRSFLX, PZPRSFL     )
-     USE PARKIND1, ONLY : JPRB
-     USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+     USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !    ###########################################################################
 !
 !!**** Uses closure adjustment factor to adjust mass flux and to modify
@@ -103,7 +102,7 @@ INTEGER :: JK                       ! vertical loop index
 !*       0.3   Compute loop bounds
 !              -------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_CLOSURE_ADJUST',0,ZHOOK_HANDLE)
 IKB  = 1 + JCVEXB
 IKE  = KLEV - JCVEXT

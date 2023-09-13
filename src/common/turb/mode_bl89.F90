@@ -6,9 +6,8 @@ MODULE MODE_BL89
 IMPLICIT NONE
 CONTAINS
 !     ######spl
-      SUBROUTINE BL89(D,CST,CSTURB,PZZ,PDZZ,PTHVREF,PTHLM,KRR,PRM,PTKEM,PSHEAR,PLM,OOCEAN,HPROGRAM)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      SUBROUTINE BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,PTHLM,KRR,PRM,PTKEM,PSHEAR,PLM,OOCEAN)
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #########################################################
 !
 !!****  *BL89* -
@@ -58,8 +57,8 @@ CONTAINS
 !
 USE MODD_CST, ONLY: CST_t
 USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_TURB_n, ONLY: TURB_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODD_PARAMETERS, ONLY: JPVEXT_TURB
 USE MODD_PRECISION, ONLY: MNHREAL
 !
 !
@@ -71,6 +70,7 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),         INTENT(IN)  :: D
 TYPE(CST_t),              INTENT(IN)  :: CST
 TYPE(CSTURB_t),           INTENT(IN)  :: CSTURB
+TYPE(TURB_t),             INTENT(IN)  :: TURBN
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN),TARGET  :: PZZ
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN),TARGET  :: PDZZ
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN),TARGET  :: PTHVREF
@@ -81,7 +81,6 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN),TARGET  :: PTKEM     ! TKE
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN),TARGET  :: PSHEAR
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT),TARGET :: PLM       ! Mixing length
 LOGICAL,                  INTENT(IN)  ::  OOCEAN       ! switch for Ocean model version
-CHARACTER(LEN=6),         INTENT(IN)  ::  HPROGRAM     ! CPROGRAM is the program currently running (modd_conf)
 !   thermodynamical variables PTHLM=Theta at the begining
 !
 !*       0.2   Declaration of local variables
@@ -113,10 +112,10 @@ INTEGER :: JRR        ! moist loop counter
 REAL    :: ZRVORD     ! Rv/Rd
 REAL    :: ZPOTE,ZLWORK1,ZLWORK2
 REAL    :: ZTEST,ZTEST0,ZTESTM ! test for vectorization
-REAL    :: Z2SQRT2,ZUSRBL89,ZBL89EXP
+REAL    :: Z2SQRT2
 !-------------------------------------------------------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('BL89',0,ZHOOK_HANDLE)
 Z2SQRT2=2.*SQRT(2.)
 !
@@ -158,9 +157,6 @@ END IF
 ZSQRT_TKE(IIJB:IIJE,1:IKT) = SQRT(PTKEM(IIJB:IIJE,1:IKT))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
-!ZBL89EXP is defined here because (and not in ini_cturb) because CSTURB%XCED is defined in read_exseg (depending on BL89/RM17)
-ZBL89EXP = LOG(16.)/(4.*LOG(CST%XKARMAN)+LOG(CSTURB%XCED)-3.*LOG(CSTURB%XCMFS))
-ZUSRBL89 = 1./ZBL89EXP
 !-------------------------------------------------------------------------------
 !
 !*       2.    Virtual potential temperature on the model grid
@@ -249,11 +245,7 @@ DO JK=IKTB,IKTE
           + sqrt(abs( (CSTURB%XRM17*PSHEAR(JIJ,JKK)*ZSQRT_TKE(JIJ,JK) &
           + ( -ZG_O_THVREF(JIJ,JK) * (ZVPT(JIJ,JKK) - ZVPT(JIJ,JK)) ))**2.0 + &
           2. * ZINTE(JIJ) * &
-#ifdef REPRO48
-          ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK)/ PDZZ(JIJ,JKK)))) / &
-#else
           (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK)/ PDZZ(JIJ,JKK))))) / &
-#endif
           (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK) / PDZZ(JIJ,JKK))
         ZLWORK(JIJ)=ZLWORK(JIJ)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
         ZINTE(JIJ) = ZINTE(JIJ) - ZPOTE
@@ -298,11 +290,7 @@ DO JK=IKTB,IKTE
           (CSTURB%XRM17*PSHEAR(JIJ,JKK)*ZSQRT_TKE(JIJ,JK)   &
             + ( ZG_O_THVREF(JIJ,JK) * (ZVPT(JIJ,JKK-IKL) - ZVPT(JIJ,JK))) )**2    &
             + 2. * ZINTE(JIJ) * &
-#ifdef REPRO48
-             ZG_O_THVREF(JIJ,JK)* ZDELTVPT(JIJ,JKK)/PDZZ(JIJ,JKK)))) / &
-#else
             (ZG_O_THVREF(JIJ,JK)* ZDELTVPT(JIJ,JKK)/PDZZ(JIJ,JKK))))) / &
-#endif
             (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK) / PDZZ(JIJ,JKK))
         ZLWORK(JIJ)=ZLWORK(JIJ)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
         ZINTE(JIJ) = ZINTE(JIJ) - ZPOTE
@@ -318,14 +306,9 @@ DO JK=IKTB,IKTE
     ZLWORK1=MAX(PLMDN(JIJ,JK),1.E-10_MNHREAL)
     ZLWORK2=MAX(ZLWORK(JIJ),1.E-10_MNHREAL)
     ZPOTE = ZLWORK1 / ZLWORK2
-#ifdef REPRO48
-    ZLWORK2=1.d0 + ZPOTE**(2./3.)
-    PLM(JIJ,JK) = Z2SQRT2*ZLWORK1/(ZLWORK2*SQRT(ZLWORK2))
-#else
-    ZLWORK2=1.d0 + ZPOTE**ZBL89EXP
-    PLM(JIJ,JK) = ZLWORK1*(2./ZLWORK2)**ZUSRBL89
-#endif
-    PLM(JIJ,JK)=MAX(PLM(JIJ,JK),CSTURB%XLINI)
+    ZLWORK2=1.d0 + ZPOTE**TURBN%XBL89EXP
+    PLM(JIJ,JK) = ZLWORK1*(2./ZLWORK2)**TURBN%XUSRBL89
+    PLM(JIJ,JK)=MAX(PLM(JIJ,JK),TURBN%XLINI)
   END DO
 
 

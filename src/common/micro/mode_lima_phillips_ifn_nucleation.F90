@@ -75,7 +75,7 @@ USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAMETERS,      ONLY : JPHEXT, JPVEXT
 USE MODD_PARAM_LIMA,      ONLY : NMOD_IFN, NSPECIE, XFRAC,                         &
                                  NMOD_CCN, NMOD_IMM, NIND_SPECIE, NINDICE_CCN_IMM,  &
-                                 XDSI0, XRTMIN, XCTMIN, NPHILLIPS
+                                 XDSI0, NPHILLIPS
 USE MODD_PARAM_LIMA_COLD, ONLY : XMNU0
 
 use mode_tools,           only: Countjv
@@ -149,7 +149,6 @@ REAL, DIMENSION(:,:), ALLOCATABLE :: ZNIT    ! Nucleated Ice nuclei conc. source
 !
 REAL, DIMENSION(:), ALLOCATABLE &
                            :: ZRHODREF, & ! RHO Dry REFerence
-                              ZRHODJ,   & ! RHO times Jacobian
                               ZZT,      & ! Temperature
                               ZPRES,    & ! Pressure
                               ZEXNREF,  & ! EXNer Pressure REFerence

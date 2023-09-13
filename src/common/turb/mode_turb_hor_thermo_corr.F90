@@ -6,7 +6,7 @@
 MODULE MODE_TURB_HOR_THERMO_CORR
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_THERMO_CORR(D,CST,TURBN,TLES,              &
+      SUBROUTINE TURB_HOR_THERMO_CORR(D,CST,TURBN,NEBN,TLES,         &
                       KRR, KRRL, KRRI,                               &
                       OOCEAN,OCOMPUTE_SRC,O2D,                       &
                       TPFILE,                                        &
@@ -63,6 +63,7 @@ USE MODD_CST,           ONLY : CST_t
 USE MODD_CTURB
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
+USE MODD_NEB_n,          ONLY: NEB_t
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_LES, ONLY: TLES_t
 USE MODD_PARAMETERS
@@ -92,6 +93,7 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
+TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(TLES_t),           INTENT(INOUT):: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
@@ -169,24 +171,24 @@ ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2)+2.*PDZZ(:,:,IKB+1)) /      &
 !
 !
 !
-IF ( ( KRRL > 0 .AND. TURBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) &
+IF ( ( KRRL > 0 .AND. NEBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED ) &
                                   .OR. ( TLES%LLES_CALL )                  ) THEN
 !
 !*       8.1  <THl THl>
 !
   ! Computes the horizontal variance <THl THl>
   IF (.NOT. O2D) THEN
-    ZFLX(:,:,:) = XCTV * PLM(:,:,:) * PLEPS(:,:,:) *                           &
+    ZFLX(:,:,:) = TURBN%XCTV * PLM(:,:,:) * PLEPS(:,:,:) *                           &
        ( GX_M_M(PTHLM,PDXX,PDZZ,PDZX)**2 + GY_M_M(PTHLM,PDYY,PDZZ,PDZY)**2 )
   ELSE
-    ZFLX(:,:,:) = XCTV * PLM(:,:,:) * PLEPS(:,:,:) *                           &
+    ZFLX(:,:,:) = TURBN%XCTV * PLM(:,:,:) * PLEPS(:,:,:) *                           &
          GX_M_M(PTHLM,PDXX,PDZZ,PDZX)**2
   END IF
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
 !
-  ZFLX(:,:,IKB:IKB) = XCTV * PLM(:,:,IKB:IKB)                  &
+  ZFLX(:,:,IKB:IKB) = TURBN%XCTV * PLM(:,:,IKB:IKB)                  &
   * PLEPS(:,:,IKB:IKB) *  (                                    &
   ( MXF(DXM(PTHLM(:,:,IKB:IKB)) * PINV_PDXX(:,:,IKB:IKB))      &
    - ( ZCOEFF(:,:,IKB+2:IKB+2)*PTHLM(:,:,IKB+2:IKB+2)          &
@@ -249,18 +251,18 @@ IF ( ( KRRL > 0 .AND. TURBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPE
             PLM(:,:,:) * PLEPS(:,:,:) *                                          &
             (GX_M_M(PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX)  &
            + GY_M_M(PTHLM,PDYY,PDZZ,PDZY) * GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY)  &
-            ) * (XCHT1+XCHT2)
+            ) * (TURBN%XCHT1+TURBN%XCHT2)
     ELSE
       ZFLX(:,:,:)=                                                               &
             PLM(:,:,:) * PLEPS(:,:,:) *                                          &
             (GX_M_M(PTHLM,PDXX,PDZZ,PDZX) * GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX)  &
-            ) * (XCHT1+XCHT2)
+            ) * (TURBN%XCHT1+TURBN%XCHT2)
 
     END IF
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-    ZFLX(:,:,IKB:IKB) = (XCHT1+XCHT2) * PLM(:,:,IKB:IKB)         &
+    ZFLX(:,:,IKB:IKB) = (TURBN%XCHT1+TURBN%XCHT2) * PLM(:,:,IKB:IKB)         &
     * PLEPS(:,:,IKB:IKB)  *  (                                   &
     ( MXF(DXM(PTHLM(:,:,IKB:IKB)) * PINV_PDXX(:,:,IKB:IKB))      &
      - ( ZCOEFF(:,:,IKB+2:IKB+2)*PTHLM(:,:,IKB+2:IKB+2)          &
@@ -334,17 +336,17 @@ IF ( ( KRRL > 0 .AND. TURBN%LSUBG_COND) .OR. ( TURBN%LTURB_FLX .AND. TPFILE%LOPE
 !
     ! Computes the horizontal variance <Rnp Rnp>
     IF (.NOT. O2D) THEN
-      ZFLX(:,:,:) = XCHV * PLM(:,:,:) * PLEPS(:,:,:) *                      &
+      ZFLX(:,:,:) = TURBN%XCHV * PLM(:,:,:) * PLEPS(:,:,:) *                      &
            ( GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX)**2 +                       &
              GY_M_M(PRM(:,:,:,1),PDYY,PDZZ,PDZY)**2 )
     ELSE
-      ZFLX(:,:,:) = XCHV * PLM(:,:,:) * PLEPS(:,:,:) *                      &
+      ZFLX(:,:,:) = TURBN%XCHV * PLM(:,:,:) * PLEPS(:,:,:) *                      &
            ( GX_M_M(PRM(:,:,:,1),PDXX,PDZZ,PDZX)**2  )
     END IF
 !
 ! Compute the flux at the first inner U-point with an uncentred vertical  
 ! gradient
-    ZFLX(:,:,IKB:IKB) = XCHV * PLM(:,:,IKB:IKB)                  &
+    ZFLX(:,:,IKB:IKB) = TURBN%XCHV * PLM(:,:,IKB:IKB)                  &
     * PLEPS(:,:,IKB:IKB) *  (                                    &
     ( MXF(DXM(PRM(:,:,IKB:IKB,1)) * PINV_PDXX(:,:,IKB:IKB))      &
      - ( ZCOEFF(:,:,IKB+2:IKB+2)*PRM(:,:,IKB+2:IKB+2,1)          &

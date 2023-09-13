@@ -7,6 +7,7 @@
        MODULE MODI_RAIN_ICE_ELEC
 !      #########################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE RAIN_ICE_ELEC (OSEDIC, HSUBG_AUCV, OWARM,                            &
                                 KSPLITR, PTSTEP, KMI, KRR,                            &
@@ -19,6 +20,7 @@ INTERFACE
                                 PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,           &
                                 PSEA, PTOWN,                                          &
                                 PRHT, PRHS, PINPRH, PQHT, PQHS                        )
+IMPLICIT NONE
 !
 !
 LOGICAL,                  INTENT(IN)    :: OSEDIC ! Switch for droplet sedim.
@@ -219,9 +221,9 @@ USE MODD_LES
 USE MODE_ll
 USE MODD_NSV,             ONLY: NSV_ELECBEG, NSV_ELECEND ! Scalar variables for budgets
 USE MODD_PARAMETERS
-USE MODD_PARAM_ICE
-USE MODD_RAIN_ICE_DESCR
-USE MODD_RAIN_ICE_PARAM
+USE MODD_PARAM_ICE_n
+USE MODD_RAIN_ICE_DESCR_n
+USE MODD_RAIN_ICE_PARAM_n
 USE MODD_REF,             ONLY: XTHVREFZ
 
 use mode_budget,          only: Budget_store_add, Budget_store_init, Budget_store_end
@@ -5132,9 +5134,9 @@ END SUBROUTINE ELEC_INI_NI_SAUNQ
 !
 IMPLICIT NONE
 !
-REAL, DIMENSION(IMICRO) :: ZEW
-REAL, DIMENSION(IMICRO) :: ZDQTAKA_AUX
-REAL, DIMENSION(NIND_LWC+1,NIND_TEMP+1) :: XTAKA_AUX  !XMANSELL or XTAKA_TM)
+REAL, DIMENSION(IMICRO), INTENT(IN) :: ZEW
+REAL, DIMENSION(IMICRO), INTENT(INOUT) :: ZDQTAKA_AUX
+REAL, DIMENSION(NIND_LWC+1,NIND_TEMP+1), INTENT(IN) :: XTAKA_AUX  !XMANSELL or XTAKA_TM)
 !
 !
   ALLOCATE ( IVEC1(IGTAKA) )
@@ -5824,9 +5826,9 @@ IMPLICIT NONE
 !
 !*	0.2	Declaration of local variables
 !
-INTEGER                          :: KN        ! Size of the result vector
-INTEGER,          DIMENSION(KN)  :: KI        ! Tabulated  coordinate
-INTEGER,          DIMENSION(KN)  :: KJ        ! Tabulated  coordinate
+INTEGER,          INTENT(IN)                  :: KN        ! Size of the result vector
+INTEGER,          INTENT(IN),  DIMENSION(KN)  :: KI        ! Tabulated  coordinate
+INTEGER,          INTENT(IN),  DIMENSION(KN)  :: KJ        ! Tabulated  coordinate
 REAL, INTENT(IN), DIMENSION(:,:) :: ZT        ! Tabulated data
 REAL, INTENT(IN), DIMENSION(KN)  :: PDX, PDY  ! 
 REAL,             DIMENSION(KN)  :: Y         ! Interpolated value

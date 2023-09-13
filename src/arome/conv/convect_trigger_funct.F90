@@ -5,8 +5,7 @@
                                         PTHLCL, PTLCL, PRVLCL, PWLCL, PZLCL,  &
                                         PTHVELCL, KLCL, KDPL, KPBL, OTRIG,    &
                                         PCAPE )
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #########################################################################
 !
 !!**** Determine convective columns as well as the cloudy values of theta,
@@ -139,7 +138,7 @@ LOGICAL, DIMENSION(KLON) :: GWORK1                 ! work array
 !*       0.3    Compute array bounds
 !               --------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_TRIGGER_FUNCT',0,ZHOOK_HANDLE)
 IIE = KLON
 IKB = 1 + JCVEXB

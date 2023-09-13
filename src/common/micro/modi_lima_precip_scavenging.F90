@@ -2,15 +2,17 @@
 MODULE MODI_LIMA_PRECIP_SCAVENGING
 !#################################
 !
+  IMPLICIT NONE
   INTERFACE
 !
      SUBROUTINE LIMA_PRECIP_SCAVENGING (D, CST, BUCONF, TBUDGETS, KBUDGETS, &
-                                        HCLOUD, KLUOUT, KTCOUNT, PTSTEP,    &
+                                        HCLOUD, CDCONF, KLUOUT, KTCOUNT, PTSTEP,    &
                                         PRRT, PRHODREF, PRHODJ, PZZ,        &
                                         PPABST, PTHT, PSVT, PRSVS, PINPAP )
        USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
        use modd_budget,          only: TBUDGETDATA,TBUDGETCONF_t
        USE MODD_CST,             ONLY: CST_t
+       IMPLICIT NONE
 !
        TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
        TYPE(CST_t),              INTENT(IN)    :: CST
@@ -19,6 +21,7 @@ MODULE MODI_LIMA_PRECIP_SCAVENGING
        INTEGER,                  INTENT(IN)    :: KBUDGETS
 !
        CHARACTER(LEN=4),       INTENT(IN)      :: HCLOUD   ! cloud paramerization
+       CHARACTER(LEN=5),       INTENT(IN)      :: CDCONF   ! CCONF from MODD_CONF
        INTEGER,                INTENT(IN)      :: KLUOUT   ! unit for output listing
        INTEGER,                INTENT(IN)      :: KTCOUNT  ! iteration count
        REAL,                   INTENT(IN)      :: PTSTEP   ! Double timestep except 

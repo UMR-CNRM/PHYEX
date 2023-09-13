@@ -69,7 +69,6 @@ REAL, DIMENSION(:,:,:),INTENT(INOUT) :: PPRCFR        !
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER :: JI, JJ, JK
 !
 !-------------------------------------------------------------------------------
 !

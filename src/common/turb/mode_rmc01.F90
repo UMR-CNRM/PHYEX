@@ -5,9 +5,8 @@
 MODULE MODE_RMC01
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE RMC01(D,CST,CSTURB,HTURBLEN,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,PLMO,PLK,PLEPS)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+SUBROUTINE RMC01(D,CST,CSTURB,TURBN,PZZ,PDXX,PDYY,PDZZ,PDIRCOSZW,PSBL_DEPTH,PLMO,PLK,PLEPS)
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##############################################################
 !
 !!****  *RMC01* -
@@ -49,6 +48,7 @@ USE MODD_PARAMETERS, ONLY: XUNDEF
 USE MODD_CST, ONLY : CST_t
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CTURB, ONLY: CSTURB_t
+USE MODD_TURB_n, ONLY: TURB_t
 !
 USE MODE_UPDATE_IIJU_PHY, ONLY: UPDATE_IIJU_PHY
 USE MODE_SBL_PHY, ONLY: BUSINGER_PHIM, BUSINGER_PHIE
@@ -63,7 +63,7 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),         INTENT(IN)   :: D
 TYPE(CST_t),              INTENT(IN)   :: CST
 TYPE(CSTURB_t),           INTENT(IN)   :: CSTURB
-CHARACTER(LEN=4),         INTENT(IN)   :: HTURBLEN ! type of mixing length
+TYPE(TURB_t),             INTENT(IN)   :: TURBN
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PZZ   ! altitude of flux points
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PDXX  ! width of grid mesh (X dir)
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PDYY  ! width of grid mesh (Y dir)
@@ -103,7 +103,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZDH  ! hor. grid mesh
 !         ---------------
 !
 ! horizontal boundaries
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('RMC01',0,ZHOOK_HANDLE)
 IKTB=D%NKTB          
 IKTE=D%NKTE
@@ -157,7 +157,7 @@ CALL BUSINGER_PHIM(D,ZZ_O_LMO,ZPHIM)
 CALL BUSINGER_PHIE(D,CSTURB,ZZ_O_LMO,ZPHIE)
 !
 !-------------------------------------------------------------------------------
-SELECT CASE (HTURBLEN)
+SELECT CASE (TURBN%CTURBLEN)
 !-------------------------------------------------------------------------------
 !
 !*     3. altitude where turbulence is isotropic inside a layer of given width (3D case)
@@ -269,7 +269,7 @@ PLK(IIJB:IIJE,IKU) = PLK(IIJB:IIJE,IKE)
 !         --------------------------------------
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZL(IIJB:IIJE,1:IKT) = ZL(IIJB:IIJE,1:IKT) * (CSTURB%XALPSBL**(3./2.)*CST%XKARMAN*CSTURB%XCED) &
+ZL(IIJB:IIJE,1:IKT) = ZL(IIJB:IIJE,1:IKT) * (CSTURB%XALPSBL**(3./2.)*CST%XKARMAN*TURBN%XCED) &
         / (CST%XKARMAN/SQRT(CSTURB%XALPSBL)/CSTURB%XCMFS)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !

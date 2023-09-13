@@ -11,7 +11,7 @@ IMPLICIT NONE
 CONTAINS
 !
 !     ######spl
-      SUBROUTINE COMPUTE_MF_CLOUD(D, CST, CSTURB, PARAMMF, OSTATNW,         &
+      SUBROUTINE COMPUTE_MF_CLOUD(D, CST, TURBN, PARAMMF, OSTATNW,         &
                                   KRR, KRRL, KRRI,                          &
                                   PFRAC_ICE,                                &
                                   PRC_UP,PRI_UP,PEMF,                       &
@@ -63,7 +63,7 @@ CONTAINS
 !
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY: CST_t
-USE MODD_CTURB,           ONLY: CSTURB_t
+USE MODD_TURB_n,          ONLY: TURB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
 USE MODE_MSG
@@ -72,8 +72,7 @@ USE MODE_COMPUTE_MF_CLOUD_DIRECT, ONLY: COMPUTE_MF_CLOUD_DIRECT
 USE MODE_COMPUTE_MF_CLOUD_STAT, ONLY: COMPUTE_MF_CLOUD_STAT
 USE MODE_COMPUTE_MF_CLOUD_BIGAUS, ONLY: COMPUTE_MF_CLOUD_BIGAUS
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 
 IMPLICIT NONE
 
@@ -83,7 +82,7 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
-TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
+TYPE(TURB_t),           INTENT(IN)   :: TURBN
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   ::  KRRL         ! number of liquid water var.
@@ -110,7 +109,7 @@ REAL, DIMENSION(D%NIJT),     INTENT(IN)   ::  PDEPTH            ! Deepness of cl
 !
 !                       1.2  Declaration of local variables
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !------------------------------------------------------------------------
 
 !                     1. INITIALISATION
@@ -132,7 +131,7 @@ IF (PARAMMF%CMF_CLOUD == 'DIRE') THEN
 ELSEIF (PARAMMF%CMF_CLOUD == 'STAT') THEN
   !Statistical scheme using the PDF proposed by Bougeault (81, 82) and
   !Bechtold et al (95).
-  CALL COMPUTE_MF_CLOUD_STAT(D, CST, CSTURB, PARAMMF, &
+  CALL COMPUTE_MF_CLOUD_STAT(D, CST, TURBN, PARAMMF, &
                             &KRR, KRRL, KRRI, OSTATNW, &
                             &PFRAC_ICE,&
                             &PTHLM, PRTM, PPABSM, PRM,&

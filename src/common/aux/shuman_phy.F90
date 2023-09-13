@@ -3,8 +3,7 @@ IMPLICIT NONE
 CONTAINS
 !     ###############################
       SUBROUTINE MYF_PHY(D,PA,PMYF)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MYF* -  Shuman operator : mean operator in y direction for a
@@ -68,7 +67,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMYF   ! result at flux local
 ! 1.    DEFINITION OF MYF
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MYF',0,ZHOOK_HANDLE)
 
 !POUR AROME
@@ -80,8 +79,7 @@ END SUBROUTINE MYF_PHY
 !
 !     ###############################
       SUBROUTINE MYF2D_PHY(D,PA,PMYF)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MYF* -  Shuman operator : mean operator in y direction for a
@@ -145,7 +143,7 @@ REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PMYF   ! result at flux localizatio
 ! 1.    DEFINITION OF MYF
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MYF',0,ZHOOK_HANDLE)
 
 !POUR AROME
@@ -157,8 +155,7 @@ END SUBROUTINE MYF2D_PHY
 !
 !     ###############################
       SUBROUTINE MYM2D_PHY(D,PA,PMYM)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MYM* -  Shuman operator : mean operator in y direction for a
@@ -218,7 +215,7 @@ TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
 REAL, DIMENSION(D%NIT,D%NJT), INTENT(IN)  :: PA     ! variable at mass localization
 REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PMYM   ! result at flux localization 
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MYM',0,ZHOOK_HANDLE)
 
 !POUR AROME
@@ -231,8 +228,7 @@ IF (LHOOK) CALL DR_HOOK('MYM',1,ZHOOK_HANDLE)
 END SUBROUTINE MYM2D_PHY
 !     ###############################
       SUBROUTINE MYM_PHY(D,PA,PMYM)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MYM* -  Shuman operator : mean operator in y direction for a
@@ -295,7 +291,6 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMYM   ! result at flux local
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ             ! Loop index in y direction
 INTEGER :: IJU            ! Size of the array in the y direction
 !
 !-------------------------------------------------------------------------------
@@ -303,7 +298,7 @@ INTEGER :: IJU            ! Size of the array in the y direction
 !*       1.    DEFINITION OF MYM
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MYM',0,ZHOOK_HANDLE)
 IJU=SIZE(PA,2)
 
@@ -318,8 +313,7 @@ END SUBROUTINE MYM_PHY
 !     ###############################
       SUBROUTINE MZM_PHY(D,PA,PMZM)
 !     ###############################
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MZM* -  Shuman operator : mean operator in z direction for a
@@ -385,7 +379,7 @@ INTEGER :: IKL,IKA,IKU
 !*       1.    DEFINITION OF MZM
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MZM',0,ZHOOK_HANDLE)
 IIJB = D%NIJB
 IIJE = D%NIJE
@@ -410,8 +404,7 @@ IF (LHOOK) CALL DR_HOOK('MZM',1,ZHOOK_HANDLE)
 END SUBROUTINE MZM_PHY
 !     ###############################
       SUBROUTINE DZM_PHY(D,PA,PDZM)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *DZM* -  Shuman operator : finite difference operator in z direction
@@ -477,7 +470,7 @@ INTEGER :: IKL, IKA, IKU
 !*       1.    DEFINITION OF DZM
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DZM',0,ZHOOK_HANDLE)
 IIJB = D%NIJB
 IIJE = D%NIJE
@@ -502,8 +495,7 @@ END SUBROUTINE DZM_PHY
 
 !     ###############################
       SUBROUTINE MXM_PHY(D,PA,PMXM)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MXM* -  Shuman operator : mean operator in x direction for a
@@ -565,7 +557,6 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMXM   ! result at flux local
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JI             ! Loop index in x direction
 INTEGER :: IIU            ! Size of the array in the x direction
 !
 !-------------------------------------------------------------------------------
@@ -573,7 +564,7 @@ INTEGER :: IIU            ! Size of the array in the x direction
 !*       1.    DEFINITION OF MXM
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MXM',0,ZHOOK_HANDLE)
 IIU = SIZE(PA,1)
 !
@@ -595,8 +586,7 @@ END SUBROUTINE MXM_PHY
 !
 !     ###############################
       SUBROUTINE MXM2D_PHY(D,PA,PMXM)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MXM* -  Shuman operator : mean operator in x direction for a
@@ -660,7 +650,7 @@ REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PMXM   ! result at flux localizatio
 !*       1.    DEFINITION OF MXM
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MXM',0,ZHOOK_HANDLE)
 
 !POUR AROME
@@ -671,8 +661,7 @@ IF (LHOOK) CALL DR_HOOK('MXM',1,ZHOOK_HANDLE)
 END SUBROUTINE MXM2D_PHY
 !     ###############################
       SUBROUTINE MXF_PHY(D,PA,PMXF)      
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MXF* -  Shuman operator : mean operator in x direction for a
@@ -733,7 +722,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PMXF   ! result at flux local
 !*       1.    DEFINITION OF MXF
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MXF',0,ZHOOK_HANDLE)
 !POUR AROME
 !
@@ -743,8 +732,7 @@ IF (LHOOK) CALL DR_HOOK('MXF',1,ZHOOK_HANDLE)
 END SUBROUTINE MXF_PHY
 !     ###############################
       SUBROUTINE MXF2D_PHY(D,PA,PMXF)      
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MXF* -  Shuman operator : mean operator in x direction for a
@@ -805,7 +793,7 @@ REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PMXF   ! result at flux localizatio
 !*       1.    DEFINITION OF MXF
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MXF',0,ZHOOK_HANDLE)
 !POUR AROME
 !
@@ -815,8 +803,7 @@ IF (LHOOK) CALL DR_HOOK('MXF',1,ZHOOK_HANDLE)
 END SUBROUTINE MXF2D_PHY
 !     ###############################
       SUBROUTINE MZF_PHY(D,PA,PMZF)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *MZF* -  Shuman operator : mean operator in z direction for a
@@ -881,7 +868,7 @@ INTEGER :: IKL, IKA, IKU
 !*       1.    DEFINITION OF MZF
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MZF',0,ZHOOK_HANDLE)
 IIJB = D%NIJB
 IIJE = D%NIJE
@@ -905,8 +892,7 @@ IF (LHOOK) CALL DR_HOOK('MZF',1,ZHOOK_HANDLE)
 END SUBROUTINE MZF_PHY
 !     ###############################
       SUBROUTINE DZF_PHY(D,PA,PDZF)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *DZF* -  Shuman operator : finite difference operator in z direction
@@ -971,7 +957,7 @@ INTEGER :: IKL, IKA, IKU
 !*       1.    DEFINITION OF DZF
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DZF',0,ZHOOK_HANDLE)
 IIJB = D%NIJB
 IIJE = D%NIJE
@@ -996,8 +982,7 @@ END SUBROUTINE DZF_PHY
 !
 !     ###############################
       SUBROUTINE DYM_PHY(D,PA,PDYM)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *DYM* -  Shuman operator : finite difference operator in y direction
@@ -1071,7 +1056,7 @@ INTEGER :: IJU            ! Size of the array in the y direction
 !*       1.    DEFINITION OF DYM
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DYM',0,ZHOOK_HANDLE)
 IJU=SIZE(PA,2)
 !
@@ -1089,8 +1074,7 @@ END SUBROUTINE DYM_PHY
 !
 !     ###############################
       SUBROUTINE DXM_PHY(D,PA,PDXM)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *DXM* -  Shuman operator : finite difference operator in x direction
@@ -1163,7 +1147,7 @@ INTEGER :: IIU            ! Size of the array in the x direction
 !*       1.    DEFINITION OF DXM
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DXM',0,ZHOOK_HANDLE)
 IIU = SIZE(PA,1)
 !
@@ -1180,8 +1164,7 @@ IF (LHOOK) CALL DR_HOOK('DXM',1,ZHOOK_HANDLE)
 END SUBROUTINE DXM_PHY
 !     ###############################
       SUBROUTINE DXF_PHY(D,PA,PDXF)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *DXF* -  Shuman operator : finite difference operator in x direction
@@ -1243,7 +1226,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDXF   ! result at mass
                                                           ! localization
 !
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DXF',0,ZHOOK_HANDLE)
 !
 CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE
@@ -1255,8 +1238,7 @@ END SUBROUTINE DXF_PHY
 !
 !     ###############################
       SUBROUTINE DYF_PHY(D,PA,PDYF)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###############################
 !
 !!****  *DYF* -  Shuman operator : finite difference operator in y direction
@@ -1321,7 +1303,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT) :: PDYF   ! result at mass
 !*       1.    DEFINITION OF DYF
 !              ------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('DYF',0,ZHOOK_HANDLE)
 !
 CALL ABORT ! AROME SHOULD NOT CALLED HORIZONTAL FINITE DIFFERENCE

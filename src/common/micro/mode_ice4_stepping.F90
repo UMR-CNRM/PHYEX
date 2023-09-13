@@ -10,7 +10,6 @@ SUBROUTINE ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &LDSIGMA_RC, LDAUCV_ADJU, LDEXT_TEND, &
                         &KPROMA, KMICRO, LDMICRO, PTSTEP, &
                         &KRR, &
-                        &HSUBG_AUCV_RC, HSUBG_AUCV_RI, &
                         &PEXN, PRHODREF, K1, K2, &
                         &PPRES, PCF, PSIGMA_RC, &
                         &PCIT, &
@@ -18,21 +17,37 @@ SUBROUTINE ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &PHLC_HCF, PHLC_HRC, &
                         &PHLI_HCF, PHLI_HRI, PRAINFR, &
                         &PEXTPK, PBU_SUM, PRREVAV)
-
+!     ######################################################################
+!
+!!****  * -  compute the explicit microphysical sources
+!!
+!!    PURPOSE
+!!    -------
+!!      The purpose of this routine is to pack arrays to compute
+!!      the microphysics tendencies
+!!
+!!
+!!    METHOD
+!!    ------
+!!      Pack arrays by chuncks
+!!
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!     R. El Khatib 03-May-2023 Replace OMP SIMD loops by explicit loops : more portable and even slightly faster
 !  -----------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_BUDGET,         ONLY: TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
-USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
-USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & ITH,     & ! Potential temperature
       & IRV,     & ! Water vapor
@@ -44,8 +59,6 @@ USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & IBUNUM_EXTRA, & ! Number of extra tendency terms
       & IRREVAV,      & ! Index for the evaporation tendency
       & IBUEXTRAIND     ! Index indirection
-
-USE MODE_MSG,            ONLY: PRINT_MSG, NVERB_FATAL
 
 USE MODE_ICE4_TENDENCIES, ONLY: ICE4_TENDENCIES
 !
@@ -69,8 +82,6 @@ INTEGER,                  INTENT(IN)    :: KMICRO ! Case r_x>0 locations
 LOGICAL, DIMENSION(KPROMA), INTENT(IN)  :: LDMICRO
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
-CHARACTER(LEN=4),         INTENT(IN)    :: HSUBG_AUCV_RC ! Kind of Subgrid autoconversion method
-CHARACTER(LEN=80),        INTENT(IN)    :: HSUBG_AUCV_RI ! Kind of Subgrid autoconversion method
 !
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PEXN    ! Exner function
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PRHODREF! Reference density
@@ -92,7 +103,7 @@ REAL,    DIMENSION(KPROMA),                     INTENT(OUT)   :: PRREVAV
 !
 !*       0.2   Declarations of local variables :
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 LOGICAL :: LSOFT ! Must we really compute tendencies or only adjust them to new T variables
 INTEGER :: INB_ITER_MAX ! Maximum number of iterations (with real tendencies computation)
@@ -153,11 +164,11 @@ ENDIF
 
 !Maximum number of iterations
 !We only count real iterations (those for which we *compute* tendencies)
-INB_ITER_MAX=PARAMI%NMAXITER
+INB_ITER_MAX=PARAMI%NMAXITER_MICRO
 IF(PARAMI%XTSTEP_TS/=0.)THEN
   INB_ITER_MAX=MAX(1, INT(PTSTEP/PARAMI%XTSTEP_TS)) !At least the number of iterations needed for the time-splitting
   ZTSTEP=PTSTEP/INB_ITER_MAX
-  INB_ITER_MAX=MAX(PARAMI%NMAXITER, INB_ITER_MAX) !For the case XMRSTEP/=0. at the same time
+  INB_ITER_MAX=MAX(PARAMI%NMAXITER_MICRO, INB_ITER_MAX) !For the case XMRSTEP/=0. at the same time
 ENDIF
 
 IF (LDEXT_TEND) THEN
@@ -223,9 +234,11 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
   LSOFT=.FALSE. ! We *really* compute the tendencies
 
   DO WHILE(ANY(LLCOMPUTE(1:KMICRO))) ! Loop to adjust tendencies when we cross the 0°C or when a species disappears
-!$OMP SIMD
-    DO JL=1, KMICRO
-      ZSUM2(JL)=SUM(PVART(JL,IRI:KRR))
+    ZSUM2(1:KMICRO)=PVART(1:KMICRO, IRI)
+    DO JV=IRI+1,KRR
+      DO JL=1, KMICRO
+        ZSUM2(JL)=ZSUM2(JL)+PVART(JL, JV)
+      ENDDO
     ENDDO
     DO JL=1, KMICRO
       ZDEVIDE=(CST%XCPD + CST%XCPV*PVART(JL, IRV) + CST%XCL*(PVART(JL, IRC)+PVART(JL, IRR)) + CST%XCI*ZSUM2(JL)) * PEXN(JL)
@@ -242,7 +255,6 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     CALL ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &KPROMA, KMICRO, &
                         &KRR, LSOFT, LLCOMPUTE, &
-                        &HSUBG_AUCV_RC, HSUBG_AUCV_RI, &
                         &PEXN, PRHODREF, ZLVFACT, ZLSFACT, K1, K2, &
                         &PPRES, PCF, PSIGMA_RC, &
                         &PCIT, &
@@ -328,7 +340,9 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
         ! because when mixing ratio has evolved more than a threshold, we must re-compute tendencies
         ! Thus, at first iteration (ie when LLCPZ0RT=.TRUE.) we copy PVART into Z0RT
         DO JV=1,KRR
-          IF (LLCPZ0RT) Z0RT(1:KMICRO, JV)=PVART(1:KMICRO, JV)
+          IF (LLCPZ0RT) THEN
+            Z0RT(1:KMICRO, JV)=PVART(1:KMICRO, JV)
+          ENDIF
           DO JL=1, KMICRO
             IF (IITER(JL)<INB_ITER_MAX .AND. ABS(ZA(JL,JV))>1.E-20) THEN
               ZTIME_THRESHOLD1D(JL)=(SIGN(1., ZA(JL, JV))*PARAMI%XMRSTEP+ &
@@ -344,12 +358,17 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
               LLCOMPUTE(JL)=.FALSE.
             ENDIF
           ENDDO
+          IF (JV == 1) THEN
+            DO JL=1, KMICRO
+              ZMAXB(JL)=ABS(ZB(JL, JV))
+            ENDDO
+          ELSE
+            DO JL=1, KMICRO
+              ZMAXB(JL)=MAX(ZMAXB(JL), ABS(ZB(JL, JV)))
+            ENDDO
+          ENDIF
         ENDDO
         LLCPZ0RT=.FALSE.
-!$OMP SIMD
-        DO JL=1,KMICRO
-          ZMAXB(JL)=MAXVAL(ABS(ZB(JL,1:KRR)))
-        ENDDO
         DO JL=1, KMICRO
           IF (IITER(JL)<INB_ITER_MAX .AND. ZMAXB(JL)>PARAMI%XMRSTEP) THEN
             ZMAXTIME(JL)=0.

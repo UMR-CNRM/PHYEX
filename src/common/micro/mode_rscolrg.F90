@@ -13,8 +13,7 @@ CONTAINS
                          PESR, PEXMASSS, PFALLS, PEXFALLS, PFALLEXPS, PFALLR, PEXFALLR, &
                          PLBDASMAX, PLBDARMAX, PLBDASMIN, PLBDARMIN,         &
                          PDINFTY, PRSCOLRG,PAG, PBS, PAS                     )
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ########################################################################
 !
 !
@@ -91,7 +90,7 @@ CONTAINS
 USE MODI_GENERAL_GAMMA
 !
 USE MODD_CST
-USE MODD_RAIN_ICE_DESCR
+USE MODD_RAIN_ICE_DESCR_n
 !
 IMPLICIT NONE
 !
@@ -174,7 +173,7 @@ REAL :: ZCST1
 !
 !*       1.0     Initialization
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('RSCOLRG',0,ZHOOK_HANDLE)
 PRSCOLRG(:,:) = 0.0
 ZCST1  = (3.0/XPI)/XRHOLW
@@ -236,20 +235,24 @@ DO JLBDAR = 1,SIZE(PRSCOLRG(:,:),1)
           ZDDCOLLR = (ZDRMAX-ZDRMIN) / REAL(INR)
           DO JDR = 1,INR-1
             ZDR = ZDDCOLLR * REAL(JDR) + ZDRMIN
+#ifdef REPRO48
             ZCOLLR = ZCOLLR + (ZDS+ZDR)**2                                     &
                        * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDR)                &
-#if defined(REPRO48) 
                          * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDR**PEXFALLR)
 #else
+            ZCOLLR = ZCOLLR + (ZDS+ZDR)**2                                     &
+                       * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDR)                &
                          * PESR * ABS(PFALLS*ZDS**PEXFALLS*EXP(-(ZDS*PFALLEXPS)**PALPHAS)-PFALLR*ZDR**PEXFALLR)
 #endif
           END DO
           IF( ZDRMIN>0.0 ) THEN
+#ifdef REPRO48
             ZCOLLDRMIN = (ZDS+ZDRMIN)**2                                       &
                       * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDRMIN)              &
-#if defined(REPRO48) 
                       * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDRMIN**PEXFALLR)
 #else
+            ZCOLLDRMIN = (ZDS+ZDRMIN)**2                                       &
+                      * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDRMIN)              &
                       * PESR * ABS(PFALLS*ZDS**PEXFALLS*EXP(-(ZDS*PFALLEXPS)**PALPHAS)-PFALLR*ZDRMIN**PEXFALLR)
 #endif
             ELSE

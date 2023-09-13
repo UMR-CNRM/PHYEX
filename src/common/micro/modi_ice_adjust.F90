@@ -2,11 +2,11 @@
       MODULE MODI_ICE_ADJUST
 !     ######################
 !
+IMPLICIT NONE
 INTERFACE
 !
-      SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEB, TURBN, BUCONF, KRR,            &
-                            &HFRAC_ICE,                                        &
-                            &HBUNAME, OCND2, LHGT_QS,                          &
+      SUBROUTINE ICE_ADJUST (D, CST, ICEP, NEBN, TURBN, PARAMI, BUCONF, KRR,   &
+                            &HBUNAME,                                          &
                             &PTSTEP, PSIGQSAT,                                 &
                             &PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,&
                             &PPABST, PZZ,                                      &
@@ -21,9 +21,10 @@ INTERFACE
                             &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF)
 USE MODD_BUDGET,         ONLY: TBUDGETDATA, TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
-USE MODD_NEB,            ONLY: NEB_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+USE MODD_NEB_n,          ONLY: NEB_t
 USE MODD_TURB_n,         ONLY: TURB_t
+USE MODD_PARAM_ICE_n,    ONLY: PARAM_ICE_t
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 IMPLICIT NONE
 !
@@ -34,16 +35,12 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
-TYPE(NEB_t),              INTENT(IN)    :: NEB
+TYPE(NEB_t),              INTENT(IN)    :: NEBN
 TYPE(TURB_t),             INTENT(IN)    :: TURBN
+TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 INTEGER,                  INTENT(IN)    :: KRR      ! Number of moist variables
-CHARACTER(LEN=1),         INTENT(IN)    :: HFRAC_ICE
 CHARACTER(LEN=4),         INTENT(IN)    :: HBUNAME  ! Name of the budget
-LOGICAL,                  INTENT(IN)    :: OCND2    ! logical switch to separate liquid
-                                                    ! and ice
-                                                    ! more rigid (DEFAULT value : .FALSE.)
-LOGICAL,                  INTENT(IN)   :: LHGT_QS   ! logical switch for height dependent VQSIGSAT
 REAL,                     INTENT(IN)   :: PTSTEP    ! Double Time step
                                                     ! (single if cold start)
 REAL, DIMENSION(D%NIJT),       INTENT(IN)    :: PSIGQSAT  ! coeff applied to qsat variance contribution
@@ -52,8 +49,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PRHODJ  ! Dry density * Jacobia
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PEXNREF ! Reference Exner function
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    ::  PRHODREF
 !
-REAL, DIMENSION(MERGE(D%NIJT,0,TURBN%LSUBG_COND),&
-                MERGE(D%NKT,0,TURBN%LSUBG_COND)),           INTENT(IN)    ::  PSIGS   ! Sigma_s at time t
+REAL, DIMENSION(MERGE(D%NIJT,0,NEBN%LSUBG_COND),&
+                MERGE(D%NKT,0,NEBN%LSUBG_COND)),           INTENT(IN)    ::  PSIGS   ! Sigma_s at time t
 LOGICAL,                                              INTENT(IN)    ::  LMFCONV ! =SIZE(PMFCONV)!=0
 REAL, DIMENSION(MERGE(D%NIJT,0,LMFCONV),&
                 MERGE(D%NKT,0,LMFCONV)),              INTENT(IN)   ::  PMFCONV ! convective mass flux

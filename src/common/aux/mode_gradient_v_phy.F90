@@ -97,8 +97,7 @@ PGZ_V_VW(IIB:IIE,IJB:IJE,1:IKT)= PA_WORK(IIB:IIE,IJB:IJE,1:IKT) &
 !
 END SUBROUTINE GZ_V_VW_PHY
       SUBROUTINE GY_V_M_PHY(D,OFLAT,PA,PDYY,PDZZ,PDZY,PGY_V_M)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
 !!****  *GY_V_M* - Cartesian Gradient operator: 
@@ -170,7 +169,7 @@ REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDYY    ! metric coefficient
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZZ    ! metric coefficient dzz
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT),  INTENT(IN)  :: PDZY    ! metric coefficient dzy
 !
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT) :: PGY_V_M ! result mass point
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(OUT)  :: PGY_V_M ! result mass point
 !
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT)  :: ZWORK1, ZWORK2, ZWORK3, ZWORK4
 INTEGER :: IIB,IJB,IIE,IJE,IKT
@@ -178,7 +177,7 @@ INTEGER :: JI,JJ,JK
 !
 !*       0.2   declaration of local variables
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GY_V_M',0,ZHOOK_HANDLE)
 !
 IIE=D%NIEC

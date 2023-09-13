@@ -7,8 +7,10 @@
        MODULE MODI_INI_RAIN_C2R2 
 !      #########################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE INI_RAIN_C2R2 ( PTSTEP, PDZMIN, KSPLITR, HCLOUD )
+IMPLICIT NONE
 !
 INTEGER,                 INTENT(OUT):: KSPLITR   ! Number of small time step
                                                  ! integration for  rain
@@ -619,9 +621,9 @@ CONTAINS
 !
   IMPLICIT NONE
 !
-  REAL     :: PALPHA ! first shape parameter of the dimensionnal distribution
-  REAL     :: PNU    ! second shape parameter of the dimensionnal distribution
-  REAL     :: PP     ! order of the moment
+  REAL, INTENT(IN)     :: PALPHA ! first shape parameter of the dimensionnal distribution
+  REAL, INTENT(IN)     :: PNU    ! second shape parameter of the dimensionnal distribution
+  REAL, INTENT(IN)     :: PP     ! order of the moment
   REAL     :: PMOMG  ! result: moment of order ZP
 !
 !------------------------------------------------------------------------------

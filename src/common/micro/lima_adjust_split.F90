@@ -88,7 +88,7 @@ SUBROUTINE LIMA_ADJUST_SPLIT(D, CST, BUCONF, TBUDGETS, KBUDGETS,                
 USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, &
                          NBUDGET_RC, NBUDGET_RI, NBUDGET_RV, NBUDGET_SV1, NBUMOD        
 USE MODD_CST,            ONLY: CST_t
-USE MODD_CONF
+!USE MODD_CONF
 !use modd_field,            only: TFIELDDATA, TYPEREAL
 !USE MODD_IO,               ONLY: TFILEDATA
 !USE MODD_LUNIT_n,          ONLY: TLUOUT
@@ -98,15 +98,14 @@ USE MODD_PARAM_LIMA
 USE MODD_PARAM_LIMA_COLD
 USE MODD_PARAM_LIMA_MIXED
 USE MODD_PARAM_LIMA_WARM
-USE MODD_RAIN_ICE_PARAM,   ONLY: RAIN_ICE_PARAM
-USE MODD_NEB,              ONLY: NEB
+USE MODD_RAIN_ICE_PARAM_n,   ONLY: RAIN_ICE_PARAMN
+USE MODD_NEB_n,            ONLY: NEBN
 USE MODD_TURB_n,           ONLY: TURBN
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 !
 USE MODE_BUDGET_PHY,       ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 !USE MODE_IO_FIELD_WRITE,   only: IO_Field_write
 use mode_msg
-use mode_tools,            only: Countjv
 !
 USE MODI_CONDENSATION
 USE MODE_LIMA_CCN_ACTIVATION, ONLY: LIMA_CCN_ACTIVATION
@@ -191,8 +190,7 @@ REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) &
                             PCIT,        & ! Cloud ice   conc. at t
 !
                             PCCS,        & ! Cloud water C. source
-                            PMAS,        & ! Mass of scavenged AP
-                            PCIS           ! Ice crystal C. source
+                            PMAS           ! Mass of scavenged AP
 !
 REAL, DIMENSION(:,:,:,:), ALLOCATABLE &
                          :: PNFS,        & ! Free      CCN C. source
@@ -228,11 +226,6 @@ REAL, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2)) :: ZSIGQSAT2D
 INTEGER, DIMENSION(SIZE(PRHODJ,1),SIZE(PRHODJ,2),SIZE(PRHODJ,3)) :: IVEC1
 !
 !INTEGER                  :: IRESP      ! Return code of FM routines
-INTEGER                  :: IIU,IJU,IKU! dimensions of dummy arrays
-INTEGER                  :: IKB        ! K index value of the first inner mass point
-INTEGER                  :: IKE        ! K index value of the last inner mass point
-INTEGER                  :: IIB,IJB    ! Horz index values of the first inner mass points
-INTEGER                  :: IIE,IJE    ! Horz index values of the last inner mass points
 INTEGER                  :: JITER,ITERMAX  ! iterative loop for first order adjustment
 !INTEGER                  :: ILUOUT     ! Logical unit of output listing 
 !
@@ -243,7 +236,7 @@ REAL, DIMENSION(:), ALLOCATABLE   :: ZCTMIN
 !
 integer :: idx
 integer :: JI, JJ, JK, jl
-INTEGER                           :: JMOD, JMOD_IFN, JMOD_IMM
+INTEGER                           :: JMOD
 !
 !!$TYPE(TFIELDMETADATA)     :: TZFIELD
 !
@@ -467,11 +460,11 @@ DO JITER =1,ITERMAX
    END IF
 
    IF (LADJ) THEN
-      CALL CONDENSATION(D, CST, RAIN_ICE_PARAM, NEB, TURBN,                    &
+      CALL CONDENSATION(D, CST, RAIN_ICE_PARAMN, NEBN, TURBN,                    &
           'S', HCONDENS, HLAMBDA3,                                             &
            PPABST, PZZ, PRHODREF, ZT, ZRV_IN, ZRV, ZRC_IN, ZRC, ZRI_IN, ZRI,   &
            PRRS*PTSTEP,PRSS*PTSTEP, PRGS*PTSTEP, &
-           Z_SIGS, .FALSE., PMFCONV, PCLDFR, Z_SRCS, GUSERI, G_SIGMAS, .FALSE., .FALSE.,&
+           Z_SIGS, .FALSE., PMFCONV, PCLDFR, Z_SRCS, GUSERI, G_SIGMAS, .FALSE., &
            ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,              &
            ZSIGQSAT2D, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
    END IF

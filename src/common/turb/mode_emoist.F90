@@ -6,8 +6,7 @@ MODULE MODE_EMOIST
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE EMOIST(D,CST,KRR,KRRI,PTHLM,PRM,PLOCPEXNM,PAMOIST,PSRCM,OOCEAN,PEMOIST)
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !   ############################################################################
 !
 !      PURPOSE
@@ -68,8 +67,8 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
-INTEGER                              :: KRR        ! number of moist var.
-INTEGER                              :: KRRI       ! number of ice var.
+INTEGER,                INTENT(IN)   :: KRR        ! number of moist var.
+INTEGER,                INTENT(IN)   :: KRRI       ! number of ice var.
 LOGICAL,                INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
 !
 REAL, DIMENSION(D%NIJT,D%NKT),  INTENT(IN)  ::   PTHLM    ! Conservative pot. temperature
@@ -98,7 +97,7 @@ INTEGER                               :: IIJB,IIJE,IKT
 !*       1. COMPUTE EMOIST
 !           --------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('EMOIST',0,ZHOOK_HANDLE)
 !
 IIJB=D%NIJB

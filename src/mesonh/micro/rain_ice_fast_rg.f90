@@ -33,9 +33,9 @@ SUBROUTINE RAIN_ICE_FAST_RG(KRR, OMICRO, PRHODREF, PRVT, PRCT, PRRT, PRIT, PRST,
 use modd_budget,         only: lbudget_th, lbudget_rc, lbudget_rr, lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, &
                                NBUDGET_TH, NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, &
                                tbudgets
-use MODD_CST,            only: XCI, XCL, XCPV, XESTT, XLMTT, XLVTT, XMD, XMV, XRV, XTT
-use MODD_RAIN_ICE_DESCR, only: XBS, XCEXVT, XCXG, XCXS, XDG, XRTMIN
-use MODD_RAIN_ICE_PARAM, only: NDRYLBDAG, NDRYLBDAR, NDRYLBDAS, X0DEPG, X1DEPG, XCOLEXIG, XCOLEXSG, XCOLIG, XCOLSG, XDRYINTP1G, &
+USE MODD_CST,            only: XCI, XCL, XCPV, XESTT, XLMTT, XLVTT, XMD, XMV, XRV, XTT
+USE MODD_RAIN_ICE_DESCR_n, only: XBS, XCEXVT, XCXG, XCXS, XDG, XRTMIN
+USE MODD_RAIN_ICE_PARAM_n, only: NDRYLBDAG, NDRYLBDAR, NDRYLBDAS, X0DEPG, X1DEPG, XCOLEXIG, XCOLEXSG, XCOLIG, XCOLSG, XDRYINTP1G, &
                                XDRYINTP1R, XDRYINTP1S, XDRYINTP2G, XDRYINTP2R, XDRYINTP2S, XEX0DEPG, XEX1DEPG, XEXICFRR,        &
                                XEXRCFRI, XFCDRYG, XFIDRYG, XFRDRYG, XFSDRYG, XICFRR, XKER_RDRYG, XKER_SDRYG, XLBRDRYG1,         &
                                XLBRDRYG2, XLBRDRYG3, XLBSDRYG1, XLBSDRYG2, XLBSDRYG3, XRCFRI
@@ -204,13 +204,8 @@ REAL,    DIMENSION(size(PRHODREF),7) :: ZZW1              ! Work arrays
       JL = I1(JJ)
       ZZW1(JL,3) = MIN( PRSS(JL),XFSDRYG*ZVEC3(JJ)                         & ! RSDRYG
                                       * EXP( XCOLEXSG*(PZT(JL)-XTT) )  &
-#if defined(REPRO48) 
-                    *( ZVECLBDAS(JJ)**(XCXS-XBS) )*( ZVECLBDAG(JJ)**XCXG )    &
-                    *( PRHODREF(JL)**(-XCEXVT-1.) )                    &
-#else
                     *PRST(JL)*( ZVECLBDAG(JJ)**XCXG )    &
                     *( PRHODREF(JL)**(-XCEXVT) )                    &
-#endif
                          *( XLBSDRYG1/( ZVECLBDAG(JJ)**2              ) + &
                             XLBSDRYG2/( ZVECLBDAG(JJ)   * ZVECLBDAS(JJ)   ) + &
                             XLBSDRYG3/(               ZVECLBDAS(JJ)**2) ) )

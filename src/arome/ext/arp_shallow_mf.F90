@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE ARP_SHALLOW_MF(KIDIA,KFDIA,KLON,KTDIA,KLEV,PIMPL,TSPHY,PZZ,PZZF,PR,PCP, &
+      SUBROUTINE ARP_SHALLOW_MF(KIDIA,KFDIA,KLON,KTDIA,KLEV,TSPHY,PZZ,PZZF,PR,PCP, &
                                & CMF_UPDRAFT,CMF_CLOUD,LMIXUV, &
                                & PU, PV, PT,PQV,PQL,PQI,PQR,PQS,PTKE,PAPRSF, &
                                & PDELP,PDIFTQ,PDIFTS,PSTRTU,PSTRTV,PSFTH,PSFRV,&
@@ -57,7 +57,7 @@ USE YOMCST   , ONLY : RG, RATM, RKAPPA, RD, RCPD, RCPV
 !USE MODD_PARAMETERS
 !
 USE MODD_CST, ONLY: CST
-USE MODD_NEB, ONLY: NEB
+USE MODD_NEB_n, ONLY: NEBN
 USE MODD_TURB_n, ONLY: TURBN
 USE MODD_CTURB, ONLY: CSTURB
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALLN
@@ -81,7 +81,6 @@ INTEGER,                  INTENT(IN)   :: KLON     !NPROMA under CPG
 INTEGER,                  INTENT(IN)   :: KLEV     !Number of vertical levels (bottom of atmosphere in ARP)
 INTEGER,                  INTENT(IN)   :: KTDIA    !Top of atmosphere in ARPEGE
 REAL,                     INTENT(IN)   :: TSPHY   ! Time step
-REAL,                     INTENT(IN)   :: PIMPL
 
 CHARACTER (LEN=4), INTENT(IN)   :: CMF_UPDRAFT  ! Type of Mass Flux Scheme
 CHARACTER (LEN=4), INTENT(IN)   :: CMF_CLOUD    ! Type of statistical cloud scheme
@@ -191,7 +190,6 @@ REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZU
 REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZV
 REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZZZF
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
-LOGICAL :: OSTATNW
 #include "abor1.intfb.h"
 
 !------------------------------------------------------------------------------
@@ -391,11 +389,10 @@ ZDRTDT_MF(:,:)  = 0.
 !*       4.   APPEL DE LA TURBULENCE MESONH
 !
 !         ---------------------------------
-OSTATNW = .FALSE.
-  CALL SHALLOW_MF(YLDIMPHYEX, CST, NEB, PARAM_MFSHALLN, TURBN, CSTURB,   &
-       KRR=IKR,KRRL=IKRL,KRRI=IKRI, KSV=1,HFRAC_ICE='N',                 &
+  CALL SHALLOW_MF(YLDIMPHYEX, CST, NEBN, PARAM_MFSHALLN, TURBN, CSTURB,   &
+       KRR=IKR,KRRL=IKRL,KRRI=IKRI, KSV=1,                               &
        ONOMIXLG=LLONOMIXLG,KSV_LGBEG=ISV_LGBEG,KSV_LGEND=ISV_LGEND,      &
-      PIMPL_MF=PIMPL, PTSTEP=ZDT,                                        &
+      PTSTEP=ZDT,                                                        &
       PDZZ=ZDZZ,PZZ=ZZZ,                                                 &
       PRHODJ=ZHRODJ,PRHODREF=ZHRODREF,                                   &
       PPABSM=ZAPRSF,PEXNM=ZEXNER,                                        &

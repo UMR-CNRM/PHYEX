@@ -7,6 +7,7 @@
        MODULE MODI_LIMA_WARM_EVAP
 !      ##########################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE LIMA_WARM_EVAP (PTSTEP, KMI,                                &
                                  PRHODREF, PEXNREF, PPABST, ZT,              &
@@ -14,6 +15,7 @@ INTERFACE
                                  PRVT, PRCT, PRRT, PCRT,                     &
                                  PRVS, PRCS, PRRS, PCCS, PCRS, PTHS,         &
                                  PEVAP3D)
+IMPLICIT NONE
 !
 REAL,                     INTENT(IN)    :: PTSTEP     ! Double Time step
                                                       ! (single if cold start)

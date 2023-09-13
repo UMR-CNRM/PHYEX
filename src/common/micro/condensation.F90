@@ -4,11 +4,11 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ######spl
-    SUBROUTINE CONDENSATION(D, CST, ICEP, NEB, TURBN, &
+    SUBROUTINE CONDENSATION(D, CST, ICEP, NEBN, TURBN, &
                            &HFRAC_ICE, HCONDENS, HLAMBDA3,                                                  &
                            &PPABS, PZZ, PRHODREF, PT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT,    &
                            &PRR, PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, PSIGRC, OUSERI,                 &
-                           &OSIGMAS, OCND2, LHGT_QS,                                                        &
+                           &OSIGMAS, OCND2,                                                                 &
                            &PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, PSIGQSAT,                                 &
                            &PLV, PLS, PCPH,                                                                 &
                            &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                                         &
@@ -86,12 +86,11 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
-USE MODD_NEB,            ONLY: NEB_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+USE MODD_NEB_n,          ONLY: NEB_t
 USE MODD_TURB_n,     ONLY: TURB_t
 USE MODE_TIWMX,          ONLY : ESATW, ESATI
 USE MODE_ICECLOUD,       ONLY : ICECLOUD
@@ -104,7 +103,7 @@ IMPLICIT NONE
 TYPE(DIMPHYEX_t),             INTENT(IN)    :: D
 TYPE(CST_t),                  INTENT(IN)    :: CST
 TYPE(RAIN_ICE_PARAM_t),       INTENT(IN)    :: ICEP
-TYPE(NEB_t),                  INTENT(IN)    :: NEB
+TYPE(NEB_t),                  INTENT(IN)    :: NEBN
 TYPE(TURB_t),                 INTENT(IN)    :: TURBN
 CHARACTER(LEN=1),             INTENT(IN)    :: HFRAC_ICE
 CHARACTER(LEN=4),             INTENT(IN)    :: HCONDENS
@@ -136,7 +135,6 @@ LOGICAL, INTENT(IN)                         :: OSIGMAS! use present global Sigma
                                                       ! or that from turbulence scheme
 LOGICAL, INTENT(IN)                         :: OCND2  ! logical switch to sparate liquid and ice
                                                       ! more rigid (DEFALT value : .FALSE.)
-LOGICAL, INTENT(IN)                         :: LHGT_QS! logical switch for height dependent VQSIGSAT
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PICLDFR  ! ice cloud fraction
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PWCLDFR  ! water or mixed-phase cloud fraction
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PSSIO    ! Super-saturation with respect to ice in the  
@@ -189,7 +187,7 @@ REAL, DIMENSION(D%NIJT) :: ZDZ, ZARDUM, ZARDUM2, ZCLDINI
 REAL :: ZDZFACT,ZDZREF
 ! LHGT_QS END
 
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER :: IERR
 !
 !
@@ -269,10 +267,7 @@ ELSE
   DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE
       ZCPD(JIJ,JK) = CST%XCPD + CST%XCPV*PRV_IN(JIJ,JK) + CST%XCL*PRC_IN(JIJ,JK) + CST%XCI*PRI_IN(JIJ,JK) + &
-#if defined(REPRO48) 
-#else
                                   CST%XCL*PRR(JIJ,JK) +  &
-#endif
                                   CST%XCI*(PRS(JIJ,JK) + PRG(JIJ,JK) )
     ENDDO
   ENDDO
@@ -287,14 +282,7 @@ IF ( .NOT. OSIGMAS ) THEN
     END DO
   END DO
   ! Determine tropopause/inversion  height from minimum temperature
-#ifdef REPRO48
-  ITPL(:)  = IIJB+1
-  !I (Sébastien Riette) don't understand why tropopause level is set
-  !with the index of the second physical point on the horizontal (i.e. 2+JPHEXT)!!!
-  !I assume it is a bug...
-#else
   ITPL(:)  = IKB+IKL
-#endif
   ZTMIN(:) = 400.
   DO JK = IKTB+1,IKTE-1
     DO JIJ=IIJB,IIJE
@@ -357,7 +345,7 @@ DO JK=IKTB,IKTE
       ENDIF
     END DO
     DO JIJ=IIJB,IIJE
-      CALL COMPUTE_FRAC_ICE(HFRAC_ICE, NEB, ZFRAC(JIJ), PT(JIJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
+      CALL COMPUTE_FRAC_ICE(HFRAC_ICE, NEBN, ZFRAC(JIJ), PT(JIJ,JK), IERR) !error code IERR cannot be checked here to not break vectorization
     ENDDO
   ENDIF
   DO JIJ=IIJB,IIJE
@@ -382,18 +370,18 @@ DO JK=IKTB,IKTE
     DO JIJ=IIJB,IIJE
       IF (PSIGQSAT(JIJ)/=0.) THEN
         ZDZFACT = 1.
-        IF(LHGT_QS .AND. JK+1 <= IKTE)THEN
+        IF(NEBN%LHGT_QS .AND. JK+1 <= IKTE)THEN
            ZDZFACT= MAX(ICEP%XFRMIN(23),MIN(ICEP%XFRMIN(24),(PZZ(JIJ,JK) - PZZ(JIJ,JK+1))/ZDZREF))
-        ELSEIF(LHGT_QS)THEN
+        ELSEIF(NEBN%LHGT_QS)THEN
            ZDZFACT= MAX(ICEP%XFRMIN(23),MIN(ICEP%XFRMIN(24),((PZZ(JIJ,JK-1) - PZZ(JIJ,JK)))*0.8/ZDZREF))
         ENDIF
-        IF (TURBN%LSTATNW) THEN
+        IF (NEBN%LSTATNW) THEN
           ZSIGMA(JIJ) = SQRT((PSIGS(JIJ,JK))**2 + (PSIGQSAT(JIJ)*ZDZFACT*ZQSL(JIJ)*ZA(JIJ))**2)
         ELSE
           ZSIGMA(JIJ) = SQRT((2*PSIGS(JIJ,JK))**2 + (PSIGQSAT(JIJ)*ZQSL(JIJ)*ZA(JIJ))**2)
         ENDIF
       ELSE
-        IF (TURBN%LSTATNW) THEN
+        IF (NEBN%LSTATNW) THEN
           ZSIGMA(JIJ) = PSIGS(JIJ,JK)
         ELSE
           ZSIGMA(JIJ) = 2*PSIGS(JIJ,JK)

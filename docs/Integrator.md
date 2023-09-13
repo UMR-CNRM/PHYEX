@@ -102,3 +102,8 @@ The preprocessed versions of the source code are put in branches named \<model\>
 
 The preprocessing tools are described in the [Tools documentation](./Tools.md).
 
+## Code validation
+
+The testing.h script can be automatically run to help for validation. This script is described
+in the [Tools documentation](./Tools.md).
+

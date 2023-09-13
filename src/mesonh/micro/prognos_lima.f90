@@ -7,9 +7,11 @@
       MODULE MODI_PROGNOS_LIMA
 !     #######################
 !
+IMPLICIT NONE
 INTERFACE
 !
 SUBROUTINE PROGNOS_LIMA(PTSTEP,PDZ,PLV,PCPH,PPRES,PRHOD,PRR,PTT,PRV,PRC,PS0,PNAS,PCCS,PNFS)
+IMPLICIT NONE
 !
 REAL,                     INTENT(IN)    :: PTSTEP
 REAL, DIMENSION(:),       INTENT(IN)    :: PPRES
@@ -382,9 +384,9 @@ CONTAINS
 FUNCTION MOMG (PALPHA,PNU,PP) RESULT (PMOMG)
 USE MODI_GAMMA
 IMPLICIT NONE
-REAL     :: PALPHA ! first shape parameter of the DIMENSIONnal distribution
-REAL     :: PNU    ! second shape parameter of the DIMENSIONnal distribution
-REAL     :: PP     ! order of the moment
+REAL, INTENT(IN)     :: PALPHA ! first shape parameter of the DIMENSIONnal distribution
+REAL, INTENT(IN)     :: PNU    ! second shape parameter of the DIMENSIONnal distribution
+REAL, INTENT(IN)     :: PP     ! order of the moment
 REAL     :: PMOMG  ! result: moment of order ZP
 PMOMG = GAMMA(PNU+PP/PALPHA)/GAMMA(PNU)
 !

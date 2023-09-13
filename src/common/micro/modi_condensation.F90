@@ -2,13 +2,14 @@
       MODULE MODI_CONDENSATION
 !     ########################
 !
+IMPLICIT NONE
 INTERFACE
 !
-    SUBROUTINE CONDENSATION(D, CST, ICEP, NEB, TURBN, &
+    SUBROUTINE CONDENSATION(D, CST, ICEP, NEBN, TURBN, &
                            &HFRAC_ICE, HCONDENS, HLAMBDA3,                                                  &
                            &PPABS, PZZ, PRHODREF, PT, PRV_IN, PRV_OUT, PRC_IN, PRC_OUT, PRI_IN, PRI_OUT,    &
                            &PRR, PRS, PRG, PSIGS, LMFCONV, PMFCONV, PCLDFR, PSIGRC, OUSERI,                 &
-                           &OSIGMAS, OCND2, LHGT_QS,                                                        &
+                           &OSIGMAS, OCND2,                                                                 &
                            &PICLDFR, PWCLDFR, PSSIO, PSSIU, PIFR, PSIGQSAT,                                 &
                            &PLV, PLS, PCPH,                                                                 &
                            &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                                         &
@@ -16,14 +17,15 @@ INTERFACE
 !
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_CST,        ONLY: CST_t
-USE MODD_NEB,        ONLY: NEB_t
+USE MODD_NEB_n,      ONLY: NEB_t
 USE MODD_TURB_n,     ONLY: TURB_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),             INTENT(IN)    :: D
 TYPE(CST_t),                  INTENT(IN)    :: CST
 TYPE(RAIN_ICE_PARAM_t),       INTENT(IN)    :: ICEP
-TYPE(NEB_t),                  INTENT(IN)    :: NEB
+TYPE(NEB_t),                  INTENT(IN)    :: NEBN
 TYPE(TURB_t),                 INTENT(IN)    :: TURBN
 CHARACTER(LEN=1),             INTENT(IN)    :: HFRAC_ICE
 CHARACTER(LEN=4),             INTENT(IN)    :: HCONDENS
@@ -55,7 +57,6 @@ LOGICAL, INTENT(IN)                         :: OSIGMAS! use present global Sigma
                                                       ! or that from turbulence scheme
 LOGICAL, INTENT(IN)                         :: OCND2  ! logical switch to sparate liquid and ice
                                                       ! more rigid (DEFALT value : .FALSE.)
-LOGICAL, INTENT(IN)                         :: LHGT_QS! logical switch for height dependent VQSIGSAT
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PICLDFR  ! ice cloud fraction
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PWCLDFR  ! water or mixed-phase cloud fraction
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PSSIO    ! Super-saturation with respect to ice in the  

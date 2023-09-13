@@ -6,8 +6,7 @@
                               PUMF, PUER, PUDR, PUTHL, PUTHV, PURW,            &
                               PURC, PURI, PURR, PURS, PUPR,                    &
                               PUTPR, PCAPE, KCTL, KETL, PUTT )
-  USE PARKIND1, ONLY : JPRB
-  USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+  USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##########################################################################
 !
 !!**** Compute updraft properties from DPL to CTL.
@@ -167,7 +166,7 @@ LOGICAL, DIMENSION(KLON,KLEV) :: GWORK6     ! work array
 !        0.3   Set loop bounds
 !              ---------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_UPDRAFT',0,ZHOOK_HANDLE)
 IKB = 1 + JCVEXB
 IKE = KLEV - JCVEXT

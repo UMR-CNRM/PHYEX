@@ -55,8 +55,7 @@ CONTAINS
 !          ------------
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_PARAM_MFSHALL_n, ONLY : PARAM_MFSHALL_t
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -72,8 +71,8 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PCF_MF         ! and cloud frac
 !
 !*                    0.1  Declaration of local variables
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER  :: JI,JK, JK0, IKB,IKE,IKL,IIJB,IIJE
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
 !
 !*                    0.2 Initialisation
 !
@@ -95,14 +94,10 @@ PRI_MF(:,:)=0.
 PCF_MF(:,:)=0.
 
 DO JI=IIJB,IIJE
-#ifdef REPRO48
   JK0=KKLCL(JI)-IKL ! first mass level with cloud
   JK0=MAX(JK0, MIN(IKB,IKE)) !protection if KKL=1
   JK0=MIN(JK0, MAX(IKB,IKE)) !protection if KKL=-1
   DO JK=JK0,IKE-IKL,IKL
-#else
-  DO JK=KKLCL(JI),IKE-IKL,IKL
-#endif
     PCF_MF(JI,JK ) = MAX( 0., MIN(1.,PARAMMF%XKCF_MF *0.5* (       &
                 &    PFRAC_UP(JI,JK) +  PFRAC_UP(JI,JK+IKL) ) ))
     PRC_MF(JI,JK)  = 0.5* PARAMMF%XKCF_MF * ( PFRAC_UP(JI,JK)*PRC_UP(JI,JK)  &

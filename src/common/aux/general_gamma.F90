@@ -3,8 +3,7 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
       FUNCTION GENERAL_GAMMA(PALPHA,PNU,PLBDA,PX)  RESULT(PGENERAL_GAMMA)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###################################################################
 !
 !
@@ -60,7 +59,7 @@ REAL                                 :: PGENERAL_GAMMA
 !
 REAL                                 :: ZARG,ZPOWER
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GENERAL_GAMMA',0,ZHOOK_HANDLE)
 ZARG   = PLBDA*PX
 ZPOWER = PALPHA*PNU - 1.0

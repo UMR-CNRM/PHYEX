@@ -13,8 +13,7 @@ CONTAINS
                          PESR, PEXMASSR, PFALLS, PEXFALLS, PFALLEXPS, PFALLR, PEXFALLR, &
                          PLBDASMAX, PLBDARMAX, PLBDASMIN, PLBDARMIN,         &
                          PDINFTY, PRRCOLSS, PAG, PBS, PAS                    )
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ########################################################################
 !
 !
@@ -92,7 +91,7 @@ CONTAINS
 USE MODI_GENERAL_GAMMA
 !
 USE MODD_CST
-USE MODD_RAIN_ICE_DESCR
+USE MODD_RAIN_ICE_DESCR_n
 !
 IMPLICIT NONE
 !
@@ -177,7 +176,7 @@ REAL :: ZCST1
 !
 !*       1.0     Initialization
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('RRCOLSS',0,ZHOOK_HANDLE)
 PRRCOLSS(:,:) = 0.0
 ZCST1 = (3.0/XPI)/XRHOLW
@@ -243,21 +242,25 @@ DO JLBDAS = 1,SIZE(PRRCOLSS(:,:),1)
           END IF
           DO JDR = 1,INR-1
             ZDR = ZDDCOLLR * REAL(JDR)
+#ifdef REPRO48
             ZCOLLR = ZCOLLR + (ZDS+ZDR)**2 * ZDR**PEXMASSR                     &
-#if defined(REPRO48) 
                        * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDR**PEXFALLR) &
-#else
-                       * PESR * ABS(PFALLS*ZDS**PEXFALLS * EXP(-(PFALLEXPS*ZDS)**PALPHAS)-PFALLR*ZDR**PEXFALLR) &
-#endif
                                       * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDR)
-          END DO
-          ZCOLLDRMAX = (ZDS+ZDRMAX)**2 * ZDRMAX**PEXMASSR                      &
-#if defined(REPRO48) 
-                    * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDRMAX**PEXFALLR) &
 #else
-                    * PESR * ABS(PFALLS*ZDS**PEXFALLS* EXP(-(PFALLEXPS*ZDS)**PALPHAS)-PFALLR*ZDRMAX**PEXFALLR) &
+            ZCOLLR = ZCOLLR + (ZDS+ZDR)**2 * ZDR**PEXMASSR                     &
+                       * PESR * ABS(PFALLS*ZDS**PEXFALLS * EXP(-(PFALLEXPS*ZDS)**PALPHAS)-PFALLR*ZDR**PEXFALLR) &
+                                      * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDR)
 #endif
+          END DO
+#ifdef REPRO48
+          ZCOLLDRMAX = (ZDS+ZDRMAX)**2 * ZDRMAX**PEXMASSR                      &
+                    * PESR * ABS(PFALLS*ZDS**PEXFALLS-PFALLR*ZDRMAX**PEXFALLR) &
                                    * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDRMAX)
+#else
+          ZCOLLDRMAX = (ZDS+ZDRMAX)**2 * ZDRMAX**PEXMASSR                      &
+                    * PESR * ABS(PFALLS*ZDS**PEXFALLS* EXP(-(PFALLEXPS*ZDS)**PALPHAS)-PFALLR*ZDRMAX**PEXFALLR) &
+                                   * GENERAL_GAMMA(PALPHAR,PNUR,ZLBDAR,ZDRMAX)
+#endif
           ZCOLLR = (ZCOLLR + 0.5*ZCOLLDRMAX)*(ZDDCOLLR/ZDDSCALR)
 !
 !*       1.9     Compute the normalization factor by integration over the

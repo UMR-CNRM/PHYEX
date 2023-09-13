@@ -35,8 +35,7 @@ SUBROUTINE FILL_DIMPHYEX(YDDIMPHYEX, KIT, KJT, KKT, KVEXT, KIE)
 !             ------------
 !
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -50,7 +49,7 @@ INTEGER, INTENT(IN) :: KIE ! Index of the last horizontal point to consider
 !
 !*       0.2  declaration of local variables
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('FILL_DIMPHYEX', 0, ZHOOK_HANDLE)

@@ -1,7 +1,6 @@
 !     ######spl
       FUNCTION GX_W_UW(PA,PDXX,PDZZ,PDZX, KKA, KKU, KL)      RESULT(PGX_W_UW)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #########################################################
 !
 !!****  *GX_W_UW* - Cartesian Gradient operator: 
@@ -49,7 +48,7 @@
 !
 !
 USE MODI_SHUMAN, ONLY: DXM, MZM, DZM, MZF, MZM, MXM
-USE MODD_CONF
+USE MODD_CONF, ONLY: LFLAT
 !
 IMPLICIT NONE
 !
@@ -75,7 +74,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGX_W_UW ! result UW point
 !*       1.    DEFINITION of GX_W_UW
 !              ---------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GX_W_UW',0,ZHOOK_HANDLE)
 IF (.NOT. LFLAT) THEN
   PGX_W_UW(:,:,:)= DXM(PA(:,:,:))/(MZM(PDXX(:,:,:), KKA, KKU, KL))    &
@@ -91,8 +90,7 @@ IF (LHOOK) CALL DR_HOOK('GX_W_UW',1,ZHOOK_HANDLE)
 END FUNCTION GX_W_UW
 !     ######spl
       FUNCTION GY_W_VW(PA,PDYY,PDZZ,PDZY, KKA, KKU, KL)      RESULT(PGY_W_VW)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #########################################################
 !
 !!****  *GY_W_VW* - Cartesian Gradient operator: 
@@ -140,7 +138,7 @@ END FUNCTION GX_W_UW
 !
 !
 USE MODI_SHUMAN, ONLY: DYM, MZM, DZM, MZF, MYM
-USE MODD_CONF
+USE MODD_CONF, ONLY: LFLAT
 !
 IMPLICIT NONE
 !
@@ -166,7 +164,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGY_W_VW ! result VW point
 !*       1.    DEFINITION of GY_W_VW
 !              ---------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GY_W_VW',0,ZHOOK_HANDLE)
 IF (.NOT. LFLAT) THEN
   PGY_W_VW(:,:,:)= DYM(PA(:,:,:))/(MZM(PDYY(:,:,:), KKA, KKU, KL))    &
@@ -182,8 +180,7 @@ IF (LHOOK) CALL DR_HOOK('GY_W_VW',1,ZHOOK_HANDLE)
 END FUNCTION GY_W_VW
 !     ######spl
       FUNCTION GZ_W_M(PA,PDZZ, KKA, KKU, KL)      RESULT(PGZ_W_M)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
 !!****  *GZ_W_M* - Cartesian Gradient operator: 
@@ -253,7 +250,7 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGZ_W_M ! result mass point
 !*       1.    DEFINITION of GZ_W_M
 !              --------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GZ_W_M',0,ZHOOK_HANDLE)
 PGZ_W_M(:,:,:)= DZF(PA(:,:,:), KKA, KKU, KL)/(MZF(PDZZ(:,:,:), KKA, KKU, KL))    
 !

@@ -17,49 +17,49 @@ INTEGER      :: KLON
 INTEGER      :: KIDIA  
 INTEGER      :: KFDIA  
 INTEGER      :: KLEV  
-INTEGER      :: KRR  
+INTEGER      :: KRR
 INTEGER      :: KDUM
 
-LOGICAL :: LDVERBOSE
+LOGICAL, INTENT(IN) :: LDVERBOSE
 
-LOGICAL, ALLOCATABLE:: LLMICRO_B      (:,:,:,:)
-REAL, ALLOCATABLE   :: PEXNREF_B      (:,:,:,:)
-REAL, ALLOCATABLE   :: PDZZ_B         (:,:,:,:)
-REAL, ALLOCATABLE   :: PRHODJ_B       (:,:,:,:)   
-REAL, ALLOCATABLE   :: PRHODREF_B     (:,:,:,:)   
-REAL, ALLOCATABLE   :: PEXNREF2_B     (:,:,:,:)
-REAL, ALLOCATABLE   :: PPABSM_B       (:,:,:,:)
-REAL, ALLOCATABLE   :: PCIT_B         (:,:,:,:)
-REAL, ALLOCATABLE   :: PCLDFR_B       (:,:,:,:)
-REAL, ALLOCATABLE   :: PHLC_HRC_B     (:,:,:,:)
-REAL, ALLOCATABLE   :: PHLC_HCF_B     (:,:,:,:)
-REAL, ALLOCATABLE   :: PHLI_HRI_B     (:,:,:,:)
-REAL, ALLOCATABLE   :: PHLI_HCF_B     (:,:,:,:)
-REAL, ALLOCATABLE   :: PTHT_B         (:,:,:,:)
-REAL, ALLOCATABLE   :: PRT_B          (:,:,:,:,:)
-REAL, ALLOCATABLE   :: PTHS_B         (:,:,:,:)
-REAL, ALLOCATABLE   :: PRS_B          (:,:,:,:,:)
-REAL, ALLOCATABLE   :: PSIGS_B        (:,:,:,:)
-REAL, ALLOCATABLE   :: PSEA_B         (:,:,:)
-REAL, ALLOCATABLE   :: PTOWN_B        (:,:,:)
-REAL, ALLOCATABLE   :: PCIT_OUT_B     (:,:,:,:)
-REAL, ALLOCATABLE   :: PRS_OUT_B      (:,:,:,:,:)
-REAL, ALLOCATABLE   :: ZINPRC_B       (:,:,:)
-REAL, ALLOCATABLE   :: ZINPRC_OUT_B   (:,:,:)
-REAL, ALLOCATABLE   :: PINPRR_B       (:,:,:)
-REAL, ALLOCATABLE   :: PINPRR_OUT_B   (:,:,:)
-REAL, ALLOCATABLE   :: PEVAP_B        (:,:,:,:)
-REAL, ALLOCATABLE   :: PEVAP_OUT_B    (:,:,:,:)
-REAL, ALLOCATABLE   :: PINPRS_B       (:,:,:)
-REAL, ALLOCATABLE   :: PINPRS_OUT_B   (:,:,:)
-REAL, ALLOCATABLE   :: PINPRG_B       (:,:,:)
-REAL, ALLOCATABLE   :: PINPRG_OUT_B   (:,:,:)
-REAL, ALLOCATABLE   :: ZINDEP_B       (:,:,:)
-REAL, ALLOCATABLE   :: ZINDEP_OUT_B   (:,:,:)
-REAL, ALLOCATABLE   :: ZRAINFR_B      (:,:,:,:)
-REAL, ALLOCATABLE   :: ZRAINFR_OUT_B  (:,:,:,:)
-REAL, ALLOCATABLE   :: PFPR_B         (:,:,:,:,:)
-REAL, ALLOCATABLE   :: PFPR_OUT_B     (:,:,:,:,:)
+LOGICAL, INTENT(OUT), ALLOCATABLE:: LLMICRO_B      (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PEXNREF_B      (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PDZZ_B         (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRHODJ_B       (:,:,:,:)   
+REAL, INTENT(OUT), ALLOCATABLE   :: PRHODREF_B     (:,:,:,:)   
+REAL, INTENT(OUT), ALLOCATABLE   :: PEXNREF2_B     (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PPABSM_B       (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PCIT_B         (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PCLDFR_B       (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PHLC_HRC_B     (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PHLC_HCF_B     (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PHLI_HRI_B     (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PHLI_HCF_B     (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PTHT_B         (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRT_B          (:,:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PTHS_B         (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRS_B          (:,:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PSIGS_B        (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PSEA_B         (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PTOWN_B        (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PCIT_OUT_B     (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PRS_OUT_B      (:,:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZINPRC_B       (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZINPRC_OUT_B   (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PINPRR_B       (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PINPRR_OUT_B   (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PEVAP_B        (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PEVAP_OUT_B    (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PINPRS_B       (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PINPRS_OUT_B   (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PINPRG_B       (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PINPRG_OUT_B   (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZINDEP_B       (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZINDEP_OUT_B   (:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZRAINFR_B      (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: ZRAINFR_OUT_B  (:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PFPR_B         (:,:,:,:,:)
+REAL, INTENT(OUT), ALLOCATABLE   :: PFPR_OUT_B     (:,:,:,:,:)
 
 LOGICAL, ALLOCATABLE   :: LLMICRO        (:,:,:,:)
 REAL, ALLOCATABLE   :: PEXNREF        (:,:,:,:)
@@ -94,7 +94,9 @@ REAL, ALLOCATABLE   :: PFPR_OUT       (:,:,:,:,:)
 
 
 INTEGER :: IPROMA, ISIZE
-INTEGER :: NGPTOT, NPROMA, NGPBLKS, NFLEVG
+INTEGER, INTENT(IN) :: NPROMA, NGPBLKS
+INTEGER :: NGPTOT
+INTEGER, INTENT(INOUT) :: NFLEVG
 INTEGER :: IOFF, IBL
 LOGICAL :: LLEXIST
 CHARACTER(LEN=32) :: CLFILE

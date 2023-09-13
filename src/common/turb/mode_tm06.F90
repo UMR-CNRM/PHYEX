@@ -6,8 +6,7 @@ MODULE MODE_TM06
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE TM06(D,CST,PTHVREF,PBL_DEPTH,PZZ,PSFTH,PMWTH,PMTH2)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #################################################################
 !
 !
@@ -47,7 +46,7 @@ SUBROUTINE TM06(D,CST,PTHVREF,PBL_DEPTH,PZZ,PSFTH,PMWTH,PMTH2)
 !
 USE MODD_CST,        ONLY: CST_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODD_PARAMETERS, ONLY: XUNDEF,JPVEXT_TURB
+USE MODD_PARAMETERS, ONLY: XUNDEF
 !
 !
 IMPLICIT NONE
@@ -77,7 +76,7 @@ INTEGER                                             :: IIJE,IIJB
 INTEGER                                             :: IKTB,IKTE,IKB,IKE,IKT,IKU ! vertical levels
 !----------------------------------------------------------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TM06',0,ZHOOK_HANDLE)
 IKTB=D%NKTB          
 IKTE=D%NKTE

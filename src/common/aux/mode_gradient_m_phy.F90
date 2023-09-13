@@ -106,8 +106,7 @@ PGZ_M_W(IIB:IIE,IJB:IJE,IKA)= PGZ_M_W(IIB:IIE,IJB:IJE,IKU) ! -999.
 END SUBROUTINE GZ_M_W_PHY
 !
 SUBROUTINE GX_M_M_PHY(D,OFLAT,PA,PDXX,PDZZ,PDZX,PGX_M_M)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
 !!****  *GX_M_M* - Cartesian Gradient operator: 
@@ -195,7 +194,7 @@ INTEGER :: JI,JJ,JK
 !*       1.    DEFINITION of GX_M_M
 !              --------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GX_M_M',0,ZHOOK_HANDLE)
 !
 IIE=D%NIEC
@@ -232,8 +231,7 @@ IF (LHOOK) CALL DR_HOOK('GX_M_M',1,ZHOOK_HANDLE)
 END SUBROUTINE GX_M_M_PHY
 !
       SUBROUTINE GY_M_M_PHY(D,OFLAT,PA,PDYY,PDZZ,PDZY,PGY_M_M)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     #######################################################
 !
 !!****  *GY_M_M* - Cartesian Gradient operator: 
@@ -312,7 +310,7 @@ INTEGER :: JI,JJ,JK
 !
 !*       0.2   declaration of local variables
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GY_M_M',0,ZHOOK_HANDLE)
 !
 IIE=D%NIEC
@@ -356,8 +354,7 @@ END SUBROUTINE GY_M_M_PHY
 !
 !     #######################################################
       SUBROUTINE GX_M_U_PHY(D,OFLAT,PY,PDXX,PDZZ,PDZX,PGX_M_U)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##################################################
 !
 !!****  *GX_M_U * - Compute the gradient along x for a variable localized at
@@ -439,7 +436,7 @@ REAL, DIMENSION(D%NIT*D%NJT*D%NKT) :: ZGX_M_U
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZY, ZDXX
 INTEGER  IIU,IKU,JI,JK,IKL, IKA
 !
-INTEGER :: JJK,IJU
+INTEGER :: IJU
 INTEGER :: JIJK,JIJKOR,JIJKEND
 INTEGER :: JI_1JK, JIJK_1, JI_1JK_1, JIJKP1, JI_1JKP1
 !
@@ -449,7 +446,7 @@ INTEGER :: JI_1JK, JIJK_1, JI_1JK_1, JIJKP1, JI_1JKP1
 !*       1.    COMPUTE THE GRADIENT ALONG X
 !              -----------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GX_M_U',0,ZHOOK_HANDLE)
 IIU=D%NIT
 IJU=D%NJT
@@ -506,8 +503,7 @@ IF (LHOOK) CALL DR_HOOK('GX_M_U',1,ZHOOK_HANDLE)
 END SUBROUTINE GX_M_U_PHY
 !
       SUBROUTINE GY_M_V_PHY(D,OFLAT,PY,PDYY,PDZZ,PDZY,PGY_M_V)
-      USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##################################################
 !
 !!****  *GY_M_V * - Compute the gradient along y for a variable localized at
@@ -595,7 +591,7 @@ INTEGER  IJU,IKU,JI,JJ,JK,IKL, IKA
 !*       1.    COMPUTE THE GRADIENT ALONG Y
 !              ----------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('GY_M_V',0,ZHOOK_HANDLE)
 IJU=D%NJT
 IKU=D%NKT

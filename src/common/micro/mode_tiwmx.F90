@@ -29,7 +29,7 @@
 IMPLICIT NONE
 
 REAL, PARAMETER :: XNDEGR = 100.0
-INTEGER, PARAMETER :: NSTART = 10000
+INTEGER, PARAMETER :: NSTART = 13200 ! A too small value may result into a FPE in single precision mode. REK.
 INTEGER, PARAMETER :: NSTOP = 37316
 
 ! Saturation tables and derivatives

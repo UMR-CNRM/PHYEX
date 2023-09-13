@@ -53,8 +53,7 @@ CONTAINS
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODI_SHUMAN_MF, ONLY: MZM_MF
 
 IMPLICIT NONE
@@ -100,7 +99,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZTHLM_F,ZRTM_F
 INTEGER                              :: JK, JIJ            ! loop counter
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
 INTEGER :: IKT,IKB,IKE,IKL
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
 !----------------------------------------------------------------------------
 !

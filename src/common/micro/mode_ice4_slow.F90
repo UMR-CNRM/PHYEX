@@ -31,10 +31,9 @@ SUBROUTINE ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, PRHODREF
 !          ------------
 !
 USE MODD_CST,            ONLY: CST_t
-USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -71,9 +70,8 @@ REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRVDEPG  ! Deposition on r_g
 !*       0.2  declaration of local variables
 !
 REAL, DIMENSION(KPROMA) :: ZCRIAUTI
-REAL                    :: ZTIMAUTIC
 INTEGER                 :: JL
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SLOW', 0, ZHOOK_HANDLE)
@@ -113,7 +111,7 @@ ENDDO
 DO JL=1, KSIZE
   IF(PRVT(JL)>ICED%XRTMIN(1) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
-#if defined(REPRO48) 
+#ifdef REPRO48
       PRVDEPS(JL) = ( PSSI(JL)/(PRHODREF(JL)*PAI(JL)) ) *                               &
                  ( ICEP%X0DEPS*PLBDAS(JL)**ICEP%XEX0DEPS + ICEP%X1DEPS*PCJ(JL)*PLBDAS(JL)**ICEP%XEX1DEPS )
 #else
@@ -133,12 +131,14 @@ ENDDO
 DO JL=1, KSIZE
   IF(PRIT(JL)>ICED%XRTMIN(4) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
+#ifdef REPRO48
       PRIAGGS(JL) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JL)-CST%XTT) ) &
                          * PRIT(JL)                      &
-#if defined(REPRO48) 
                          * PLBDAS(JL)**ICEP%XEXIAGGS          &
                          * PRHODREF(JL)**(-ICED%XCEXVT)
 #else
+      PRIAGGS(JL) = ICEP%XFIAGGS * EXP( ICEP%XCOLEXIS*(PT(JL)-CST%XTT) ) &
+                         * PRIT(JL)                      &
                          * PRST(JL) * (1+(ICED%XFVELOS/PLBDAS(JL))**ICED%XALPHAS)**&
                          (-ICED%XNUS+ICEP%XEXIAGGS/ICED%XALPHAS) &
                          * PRHODREF(JL)**(-ICED%XCEXVT+1.) &
@@ -153,13 +153,7 @@ ENDDO
 !*       3.4.5  compute the autoconversion of r_i for r_s production: RIAUTS
 !
 DO JL=1, KSIZE
-#ifdef REPRO48
-  !This was wrong because, with this formulation and in the LDSOFT case, PRIAUTS
-  !was not set to 0 when ri is inferior to the autoconversion threshold
-  IF(PRIT(JL)>ICED%XRTMIN(4) .AND. LDCOMPUTE(JL)) THEN
-#else
   IF(PHLI_HRI(JL)>ICED%XRTMIN(4) .AND. LDCOMPUTE(JL)) THEN
-#endif
     IF(.NOT. LDSOFT) THEN
       !ZCRIAUTI(:)=MIN(ICEP%XCRIAUTI,10**(0.06*(PT(:)-CST%XTT)-3.5))
       ZCRIAUTI(JL)=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(JL)-CST%XTT)+ICEP%XBCRIAUTI))

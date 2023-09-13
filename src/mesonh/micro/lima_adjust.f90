@@ -7,6 +7,7 @@
       MODULE MODI_LIMA_ADJUST
 !     #######################
 !
+IMPLICIT NONE
 INTERFACE
 !
       SUBROUTINE LIMA_ADJUST(KRR, KMI, TPFILE,                    &
@@ -18,6 +19,7 @@ INTERFACE
 !
 USE MODD_IO,  ONLY: TFILEDATA
 USE MODD_NSV, only: NSV_LIMA_BEG
+IMPLICIT NONE
 !
 INTEGER,                  INTENT(IN)   :: KRR        ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KMI        ! Model index 

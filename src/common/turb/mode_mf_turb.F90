@@ -67,8 +67,7 @@ USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODI_SHUMAN_MF, ONLY: MZM_MF
 USE MODE_TRIDIAG_MASSFLUX, ONLY: TRIDIAG_MASSFLUX
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -131,7 +130,7 @@ INTEGER :: JSV          !number of scalar variables and Loop counter
 INTEGER :: JIJ, JK
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
 INTEGER :: IKT
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !----------------------------------------------------------------------------
 !

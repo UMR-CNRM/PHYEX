@@ -3,11 +3,11 @@
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
-!     ################################################################
-      SUBROUTINE SHALLOW_MF(D, CST, NEB, PARAMMF, TURBN, CSTURB,      &
+!     #################################################################
+      SUBROUTINE SHALLOW_MF(D, CST, NEBN, PARAMMF, TURBN, CSTURB,     &
                 KRR, KRRL, KRRI, KSV,                                 &
-                HFRAC_ICE,ONOMIXLG,KSV_LGBEG,KSV_LGEND,               &
-                PIMPL_MF, PTSTEP,                                     &
+                ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
+                PTSTEP,                                               &
                 PDZZ, PZZ,                                            &
                 PRHODJ, PRHODREF,                                     &
                 PPABSM, PEXNM,                                        &
@@ -22,7 +22,6 @@
                 PFRAC_UP,PEMF,PDETR,PENTR,                            &
                 KKLCL,KKETL,KKCTL,PDX,PDY,PRSVS,PSVMIN,               &
                 BUCONF, TBUDGETS, KBUDGETS                            )
-
 !     #################################################################
 !!
 !!****  *SHALLOW_MF* - 
@@ -72,15 +71,14 @@
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1,   ONLY: JPRB
 USE MODE_SHUMAN_PHY, ONLY: MXM_PHY, MYM_PHY
-USE YOMHOOK,    ONLY: LHOOK, DR_HOOK
+USE YOMHOOK,    ONLY: LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_BUDGET,          ONLY: TBUDGETCONF_t, TBUDGETDATA, NBUDGET_U,  NBUDGET_V, &
                                 NBUDGET_TH,  NBUDGET_RV, NBUDGET_SV1
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY: CST_t
-USE MODD_NEB,             ONLY: NEB_t
+USE MODD_NEB_n,           ONLY: NEB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_n,          ONLY: TURB_t
 USE MODD_CTURB,           ONLY: CSTURB_t
@@ -104,7 +102,7 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D            ! PHYEX variables dimensions structure
 TYPE(CST_t),            INTENT(IN)   :: CST          ! modd_cst general constant structure
-TYPE(NEB_t),            INTENT(IN)   :: NEB
+TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 TYPE(TURB_t),           INTENT(IN)   :: TURBN        ! modn_turbn (turb namelist) structure
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB       ! modd_csturb turb constant structure
@@ -112,11 +110,9 @@ INTEGER,                INTENT(IN)   :: KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL         ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI         ! number of ice water var.
 INTEGER,                INTENT(IN)   :: KSV          ! number of scalar var.
-CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
 INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
-REAL,                   INTENT(IN)   :: PIMPL_MF     ! degre of implicitness
 REAL,                   INTENT(IN)   :: PTSTEP    ! Dynamical timestep 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PZZ         ! Height of flux point
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PDZZ        ! Metric coefficients
@@ -191,7 +187,7 @@ INTEGER :: JIJ, JK, JSV
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
 INTEGER :: IKT
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !------------------------------------------------------------------------
 
 !!! 1. Initialisation
@@ -221,7 +217,7 @@ ENDIF
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ZWK(IIJB:IIJE,1:IKT)=PTHM(IIJB:IIJE,1:IKT)*PEXNM(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-CALL COMPUTE_FRAC_ICE(HFRAC_ICE,NEB,ZFRAC_ICE(:,:),ZWK(:,:), IERR(:,:))
+CALL COMPUTE_FRAC_ICE(NEBN%CFRAC_ICE_SHALLOW_MF,NEBN,ZFRAC_ICE(:,:),ZWK(:,:), IERR(:,:))
 
 ! Conservative variables at t-dt
 CALL THL_RT_FROM_TH_R_MF(D, CST, KRR,KRRL,KRRI,    &
@@ -239,8 +235,8 @@ ZTHVM(IIJB:IIJE,1:IKT) = PTHM(IIJB:IIJE,1:IKT)*&
 !
 IF (PARAMMF%CMF_UPDRAFT == 'EDKF') THEN
   GENTR_DETR = .TRUE.
-  CALL COMPUTE_UPDRAFT(D, CST, NEB, PARAMMF, TURBN, CSTURB,      &
-                       KSV, HFRAC_ICE, GENTR_DETR,               &
+  CALL COMPUTE_UPDRAFT(D, CST, NEBN, PARAMMF, TURBN, CSTURB,     &
+                       KSV, GENTR_DETR,                          &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
                        PSFTH,PSFRV,PPABSM,PRHODREF,              &
@@ -253,8 +249,8 @@ IF (PARAMMF%CMF_UPDRAFT == 'EDKF') THEN
                        PDX,PDY)
 ELSEIF (PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
   GENTR_DETR = .TRUE.
-  CALL COMPUTE_UPDRAFT_RHCJ10(D, CST, NEB, PARAMMF, TURBN, CSTURB,&
-                       KSV, HFRAC_ICE, GENTR_DETR,               &
+  CALL COMPUTE_UPDRAFT_RHCJ10(D, CST, NEBN, PARAMMF, TURBN, CSTURB,&
+                       KSV, GENTR_DETR,                          &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
                        PSFTH,PSFRV,PPABSM,PRHODREF,              &
@@ -265,8 +261,8 @@ ELSEIF (PARAMMF%CMF_UPDRAFT == 'RHCJ') THEN
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PEMF,PDETR,&
                        PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH )
 ELSEIF (PARAMMF%CMF_UPDRAFT == 'RAHA') THEN
-   CALL COMPUTE_UPDRAFT_RAHA(D, CST, NEB, PARAMMF,               &
-                       KSV, HFRAC_ICE, GENTR_DETR,               &
+   CALL COMPUTE_UPDRAFT_RAHA(D, CST, NEBN, PARAMMF,              &
+                       KSV, GENTR_DETR,                          &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
                        PSFTH,PSFRV,                              &
@@ -288,7 +284,7 @@ ENDIF
 !!! 5. Compute diagnostic convective cloud fraction and content
 !!!    --------------------------------------------------------
 !
-CALL COMPUTE_MF_CLOUD(D,CST,CSTURB,PARAMMF,TURBN%LSTATNW,&
+CALL COMPUTE_MF_CLOUD(D,CST,TURBN,PARAMMF,NEBN%LSTATNW, &
                       KRR, KRRL, KRRI,                  &
                       ZFRAC_ICE,                        &
                       PRC_UP,PRI_UP,PEMF,               &
@@ -308,10 +304,10 @@ CALL COMPUTE_MF_CLOUD(D,CST,CSTURB,PARAMMF,TURBN%LSTATNW,&
 ZEMF_O_RHODREF(IIJB:IIJE,1:IKT)=PEMF(IIJB:IIJE,1:IKT)/PRHODREF(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
-IF ( PIMPL_MF > 1.E-10 ) THEN  
+IF ( PARAMMF%XIMPL_MF > 1.E-10 ) THEN  
   CALL MF_TURB(D, KSV, PARAMMF%LMIXUV,                                &
              ONOMIXLG,KSV_LGBEG,KSV_LGEND,                            &
-             PIMPL_MF, PTSTEP,                                        &
+             PARAMMF%XIMPL_MF, PTSTEP,                                &
              PDZZ,                                                    &
              PRHODJ,                                                  &
              ZTHLM,ZTHVM,ZRTM,PUM,PVM,PSVM,                           &
@@ -337,8 +333,6 @@ IF( PARAMMF%CMF_UPDRAFT == 'DUAL') THEN
 !  PDVDT_MF=0.
 ENDIF
 !
-#ifdef REPRO48
-#else
 IF(PRESENT(BUCONF)) THEN
  IF( BUCONF%LBUDGET_U ) THEN
    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -387,7 +381,6 @@ IF(PRESENT(BUCONF)) THEN
    END DO
  END IF
 END IF
-#endif
 !
 IF (LHOOK) CALL DR_HOOK('SHALLOW_MF',1,ZHOOK_HANDLE)
 !

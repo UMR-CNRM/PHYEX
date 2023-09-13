@@ -29,10 +29,9 @@ SUBROUTINE ICE4_COMPUTE_PDF(CST, ICEP, ICED, KSIZE, HSUBG_AUCV_RC, HSUBG_AUCV_RI
 !
 !
 USE MODD_CST,            ONLY: CST_t
-USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 USE MODE_MSG
 !
@@ -77,7 +76,7 @@ REAL, DIMENSION(KSIZE) :: ZRCRAUTC,      & !RC value to begin rain formation =XC
                                                     !                     = PHLC_HRC/HCF+ PHLC_LRC/LCF
                           ZSUMRC, ZSUMRI
 REAL :: ZCOEFFRCM
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER :: JI
 !-------------------------------------------------------------------------------
 !
@@ -319,11 +318,7 @@ ELSE
 ENDIF
 !
 !$mnh_expand_where(JI=1:KSIZE)
-#ifdef REPRO48
-  PRF(:)=PHLC_HCF(:)
-#else
   PRF(:)=MAX(PHLC_HCF(:),PHLI_HCF(:))
-#endif
 !$mnh_end_expand_where(JI=1:KSIZE)
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 1, ZHOOK_HANDLE)

@@ -6,10 +6,11 @@
 MODULE MODE_TURB_VER
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,TLES,KRR,KRRL,KRRI,KGRADIENTS,&
+SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
+                      KRR,KRRL,KRRI,KGRADIENTS,                     &
                       OOCEAN,ODEEPOC,OCOMPUTE_SRC,                  &
                       KSV,KSV_LGBEG,KSV_LGEND,                      &
-                      PEXPL, HPROGRAM, O2D, ONOMIXLG, OFLAT,        &
+                      PEXPL, O2D, ONOMIXLG, OFLAT,                  &
                       OCOUPLES,OBLOWSNOW,OFLYER,PRSNOW,             & 
                       PTSTEP, TPFILE,                               &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
@@ -210,20 +211,17 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,TLES,KRR,KRRL,KRRI,KGRADIENTS,&
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1, ONLY: JPRB
-USE YOMHOOK,  ONLY: LHOOK, DR_HOOK
+USE YOMHOOK,  ONLY: LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_CST,            ONLY: CST_t
 USE MODD_CTURB,          ONLY: CSTURB_t
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
-USE MODD_PARAMETERS,     ONLY: JPVEXT_TURB
 USE MODD_LES,            ONLY: TLES_t
 USE MODD_TURB_n,         ONLY: TURB_t
+USE MODD_NEB_n,          ONLY: NEB_t
 !
-USE MODE_EMOIST,               ONLY: EMOIST
-USE MODE_ETHETA,               ONLY: ETHETA
 USE MODE_GRADIENT_M_PHY,       ONLY: GZ_M_W_PHY
 USE MODE_IO_FIELD_WRITE_PHY,       ONLY: IO_FIELD_WRITE_PHY
 USE MODE_PRANDTL,              ONLY: PSI_SV, PSI3, PHI3, PRANDTL
@@ -245,6 +243,7 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
+TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(TLES_t),           INTENT(INOUT):: TLES          ! modd_les structure
 INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
@@ -259,7 +258,6 @@ LOGICAL,                INTENT(IN)   ::  OFLAT        ! Logical for zero ororogr
 LOGICAL,                INTENT(IN)   ::  OCOUPLES     ! switch to activate atmos-ocean LES version 
 LOGICAL,                INTENT(IN)   ::  OBLOWSNOW    ! switch to activate pronostic blowing snow
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
-CHARACTER(LEN=6),       INTENT(IN)   ::  HPROGRAM     ! HPROGRAM is the program currently running
 LOGICAL,                INTENT(IN)   ::  ONOMIXLG     ! to use turbulence for lagrangian variables
 LOGICAL,                INTENT(IN)   ::  O2D          ! Logical for 2D model version
 REAL,                   INTENT(IN)   ::  PEXPL        ! Coef. for temporal disc.
@@ -388,7 +386,7 @@ INTEGER :: IKB,IKE,IIJE,IIJB,IKT   ! index value for the Beginning
 INTEGER :: JSV,JIJ,JK ! loop counter
 REAL    :: ZTIME1
 REAL    :: ZTIME2
-REAL(KIND=JPRB)      :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK)    :: ZHOOK_HANDLE
 TYPE(TFIELDMETADATA) :: TZFIELD
 !----------------------------------------------------------------------------
 !----------------------------------------------------------------------------
@@ -408,7 +406,7 @@ IIJB=D%NIJB
 ! 3D Redelsperger numbers
 !
 !
-CALL PRANDTL(D,CST,CSTURB,KRR,KSV,KRRI,TURBN%LTURB_FLX,  &
+CALL PRANDTL(D,CST,CSTURB,TURBN, KRR,KSV,KRRI,TURBN%LTURB_FLX,  &
              TURBN%CTURBDIM,OOCEAN,TURBN%LHARAT,O2D,OCOMPUTE_SRC,&
              TPFILE, OFLAT,                        &
              PDXX,PDYY,PDZZ,PDZX,PDZY,             &
@@ -462,13 +460,13 @@ ENDIF
 !
 GUSERV = KRR/=0
 !
-CALL PHI3(D,CSTURB,ZREDTH1,ZREDR1,ZRED2TH3,ZRED2R3,ZRED2THR3,TURBN%CTURBDIM,GUSERV,ZPHI3)
+CALL PHI3(D,CSTURB,TURBN,ZREDTH1,ZREDR1,ZRED2TH3,ZRED2R3,ZRED2THR3,TURBN%CTURBDIM,GUSERV,ZPHI3)
 IF(KRR/=0) &
-CALL PSI3(D,CSTURB,ZREDR1,ZREDTH1,ZRED2R3,ZRED2TH3,ZRED2THR3,TURBN%CTURBDIM,GUSERV,ZPSI3)
+CALL PSI3(D,CSTURB,TURBN,ZREDR1,ZREDTH1,ZRED2R3,ZRED2TH3,ZRED2THR3,TURBN%CTURBDIM,GUSERV,ZPSI3)
 !
 ! Prandtl numbers for scalars
 !
-CALL PSI_SV(D,CSTURB,KSV,ZREDTH1,ZREDR1,ZREDS1,ZRED2THS,ZRED2RS,ZPHI3,ZPSI3,ZPSI_SV)
+CALL PSI_SV(D,CSTURB,TURBN,KSV,ZREDTH1,ZREDR1,ZREDS1,ZRED2THS,ZRED2RS,ZPHI3,ZPSI3,ZPSI_SV)
 !
 ! LES diagnostics
 !
@@ -506,7 +504,7 @@ ENDIF
                         KRR,KRRL,KRRI,KSV,KGRADIENTS,                 &
                         OOCEAN,ODEEPOC,OFLYER,                        &
                         OCOUPLES,OCOMPUTE_SRC,                        &
-                        PEXPL,PTSTEP,HPROGRAM,TPFILE,                 &
+                        PEXPL,PTSTEP,TPFILE,                          &
                         PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,       &
                         PRHODJ,PTHVREF,PHGRAD,PZS,                    &
                         PSFTHM,PSFRM,PSFTHP,PSFRP,                    &
@@ -521,7 +519,7 @@ ENDIF
                         PRTHLS,PRRS,ZTHLP,ZRP,PTP,PWTH,PWRC,          &
                         PSSTFL, PSSTFL_C, PSSRFL_C                    )
 !
-  CALL  TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,TLES,                 &
+  CALL  TURB_VER_THERMO_CORR(D,CST,CSTURB,TURBN,NEBN,TLES,            &
                         KRR,KRRL,KRRI,KSV,                            &
                         OCOMPUTE_SRC,                                 &
                         OCOUPLES,                                     &
@@ -588,7 +586,7 @@ CALL  TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,TLES,ONOMIXLG,            &
 !
 !
 IF (KSV>0 .AND. TLES%LLES_CALL)                                          &
-CALL  TURB_VER_SV_CORR(D,CST,CSTURB,TLES,KRR,KRRL,KRRI,OOCEAN,      &
+CALL  TURB_VER_SV_CORR(D,CST,CSTURB,TURBN,TLES,KRR,KRRL,KRRI,OOCEAN,&
                       PDZZ,KSV,KSV_LGBEG,KSV_LGEND,ONOMIXLG,        &
                       OBLOWSNOW,OCOMPUTE_SRC,PRSNOW,                &
                       PTHLM,PRM,PTHVREF,                            &

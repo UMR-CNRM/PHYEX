@@ -10,12 +10,14 @@ full_command="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_S
 
 function usage {
   echo "Usage: $0 [-h] [--phyex-repo-user PHYEXREPOuser] [--phyex-repo-protocol PHYEXREPOprotocol]"
+  echo "       [--noexpand]"
   echo "       IALDIRECTORY:IALVERSION PHYEXVERSION BRANCH"
   echo
   echo "--phyex-repo-user PHYEXREPOuser         user hosting the PHYEX repository on github,"
   echo "                                        defaults to the env variable PHYEXREOuser (=$PHYEXREPOuser)"
   echo "--phyex-repo-protocol PHYEXREPOprotocol protocol (https or ssh) to reach the PHYEX repository on github,"
   echo "                                        defaults to the env variable PHYEXREOprotocol (=$PHYEXREPOprotocol)"
+  echo "--noexpand                              do not use mnh_expand (code will be in array-syntax)"
   echo "IALDIRECTORY                            local directory containing the IAL repository"
   echo "IALVERSION                              version to checkout in the IAL repository"
   echo "PHYEXVERSION                            commit, tag (as tags/<tag>) of PHYEX to use"
@@ -30,6 +32,7 @@ IALDIRECTORY=''
 IALVERSION=''
 PHYEXVERSION=''
 BRANCH=''
+EXPAND=''
 
 positional=0
 while [ -n "$1" ]; do
@@ -37,6 +40,7 @@ while [ -n "$1" ]; do
     '-h') usage; exit;;
     '--phyex-repo-user') export PHYEXREPOuser="$2"; shift;;
     '--phyex-repo-protocol') export PHYEXREPOprotocol="$2"; shift;;
+    '--noexpand') EXPAND='--noexpand';;
     *) positional=$(($positional + 1))
        case $positional in
          1) if echo "$1" | grep ':'; then
@@ -70,7 +74,7 @@ trap "echo Removing now temporary directory $TMP_LOC ; \rm -rf $TMP_LOC" EXIT
 # Creates a pack using check_commit_ial.sh script
 echo "Creating pack in $TMP_LOC using $PHYEXVERSION PHYEX version with"
 echo "PHYEXREPOuser=$PHYEXREPOuser and PHYEXREPOprotocol=$PHYEXREPOprotocol"
-HOMEPACK=$TMP_LOC check_commit_ial.sh -p -f "${PHYEXVERSION}"
+HOMEPACK=$TMP_LOC check_commit_ial.sh -p -f $EXPAND "${PHYEXVERSION}"
 
 #########################################
 #Create branch in IAL, fill it and commit

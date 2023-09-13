@@ -5,7 +5,6 @@
 !-----------------------------------------------------------------
 !     ######spl
       SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
-                            KPROMA, OCND2, HSUBG_AUCV_RC, HSUBG_AUCV_RI,          &
                             PTSTEP, KRR, PEXN,                                    &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
@@ -177,16 +176,15 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_BUDGET,         ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, &
                                NBUDGET_RI, NBUDGET_RR, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH
 USE MODD_CST,            ONLY: CST_t
-USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
-USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & ITH,     & ! Potential temperature
       & IRV,     & ! Water vapor
@@ -197,10 +195,10 @@ USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
       & IRG,     & ! Graupel
       & IRH        ! Hail
 
-USE MODE_BUDGET_PHY,         ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
-USE MODE_MSG,            ONLY: PRINT_MSG, NVERB_FATAL
+USE MODE_BUDGET_PHY,         ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
+USE MODE_MSG,                ONLY: PRINT_MSG, NVERB_FATAL
 
-USE MODE_ICE4_RAINFR_VERT, ONLY: ICE4_RAINFR_VERT
+USE MODE_ICE4_RAINFR_VERT,   ONLY: ICE4_RAINFR_VERT
 USE MODE_ICE4_SEDIMENTATION, ONLY: ICE4_SEDIMENTATION
 USE MODE_ICE4_PACK, ONLY: ICE4_PACK
 USE MODE_ICE4_NUCLEATION, ONLY: ICE4_NUCLEATION
@@ -218,10 +216,6 @@ TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
-INTEGER,                  INTENT(IN)    :: KPROMA ! cache-blocking factor for microphysic loop
-LOGICAL                                 :: OCND2  ! Logical switch to separate liquid and ice
-CHARACTER(LEN=4),         INTENT(IN)    :: HSUBG_AUCV_RC ! Kind of Subgrid autoconversion method
-CHARACTER(LEN=80),        INTENT(IN)    :: HSUBG_AUCV_RI ! Kind of Subgrid autoconversion method
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 !
@@ -276,7 +270,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)  :: PFPR ! upper-air pr
 !
 !*       0.2   Declarations of local variables :
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 INTEGER :: JIJ, JK
 INTEGER :: IKTB, IKTE, IKB, IIJB, IIJE
@@ -311,8 +305,8 @@ IIJB=D%NIJB
 IIJE=D%NIJE
 !-------------------------------------------------------------------------------
 !
-IF(OCND2) THEN
-  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'OCND2 OPTION NOT CODED IN THIS RAIN_ICE VERSION')
+IF(PARAMI%LOCND2) THEN
+  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'LOCND2 OPTION NOT CODED IN THIS RAIN_ICE VERSION')
 END IF
 ZINV_TSTEP=1./PTSTEP
 !
@@ -432,13 +426,13 @@ ENDDO
 !
 IF(PARAMI%LPACK_MICRO) THEN
   ISIZE=COUNT(LLMICRO) ! Number of points with active microphysics
-  !KPROMA is the requested size for cache_blocking loop
+  !PARAMI%NPROMICRO is the requested size for cache_blocking loop
   !IPROMA is the effective size
   !This parameter must be computed here because it is used for array dimensioning in ice4_pack
-  IF (KPROMA > 0 .AND. ISIZE > 0) THEN
+  IF (PARAMI%NPROMICRO > 0 .AND. ISIZE > 0) THEN
     ! Cache-blocking is active
     ! number of chunks :
-    IGPBLKS = (ISIZE-1)/MIN(KPROMA,ISIZE)+1
+    IGPBLKS = (ISIZE-1)/MIN(PARAMI%NPROMICRO,ISIZE)+1
     ! Adjust IPROMA to limit the number of small chunks
     IPROMA=(ISIZE-1)/IGPBLKS+1
   ELSE
@@ -453,7 +447,6 @@ ENDIF
 !This part is put in another routine to separate pack/unpack operations from computations
 CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
                IPROMA, ISIZE, ISIZE2,                                &
-               HSUBG_AUCV_RC, HSUBG_AUCV_RI,                         &
                PTSTEP, KRR, LLMICRO, PEXN,                           &
                PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
                PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
@@ -474,7 +467,7 @@ CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
 !***     6.1    total tendencies limited by available species
 !
 DO JK = IKTB, IKTE
-  DO CONCURRENT (JIJ=IIJB:IIJE)
+  DO JIJ=IIJB, IIJE
     !LV/LS
     ZZ_LSFACT(JIJ,JK)=ZZ_LSFACT(JIJ,JK)/PEXNREF(JIJ,JK)
     ZZ_LVFACT(JIJ,JK)=ZZ_LVFACT(JIJ,JK)/PEXNREF(JIJ,JK)

@@ -6,6 +6,7 @@
 !    #######################
      MODULE MODI_RADTR_SATEL 
 !    #######################
+IMPLICIT NONE
 INTERFACE
 !
      SUBROUTINE RADTR_SATEL(KYEARF, KMONTHF, KDAYF, PSECF,         &
@@ -13,6 +14,7 @@ INTERFACE
                 PTSRAD, PSTATM, PTHT, PRT, PPABST, PZZ,            &
                 PSIGS, PMFCONV, PCLDFR, OUSERI, OSIGMAS,           &
                 OSUBG_COND, ORAD_SUBG_COND, PIRBT, PWVBT, KGEO,PSIGQSAT )
+IMPLICIT NONE
 !
 INTEGER, INTENT(IN) :: KYEARF  ! year of Final date
 INTEGER, INTENT(IN) :: KMONTHF ! month of Final date
@@ -111,8 +113,8 @@ END MODULE MODI_RADTR_SATEL
 USE MODD_CST
 USE MODD_PARAMETERS
 USE MODD_GRID_n
-USE MODD_RAIN_ICE_PARAM,   ONLY: RAIN_ICE_PARAM
-USE MODD_NEB,              ONLY: NEB
+USE MODD_RAIN_ICE_PARAM_n,   ONLY: RAIN_ICE_PARAMN
+USE MODD_NEB_n,            ONLY: NEBN
 USE MODD_TURB_n,           ONLY: TURBN
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 !
@@ -497,11 +499,11 @@ IF( SIZE(PRT(:,:,:,:),4) >= 2 ) THEN
     !     PRT(:,:,:,2), PRT(:,:,:,5), PRT(:,:,:,6), PSIGS, PMFCONV, ZNCLD, &
     !     ZSIGRC, OUSERI, OSIGMAS, .FALSE., .FALSE., &
     !     ZDUM, ZDUM, ZDUM, ZDUM, ZDUM, ZSIGQSAT2D )
-    CALL CONDENSATION(D, CST, RAIN_ICE_PARAM, NEB, TURBN, &                                                                         
+    CALL CONDENSATION(D, CST, RAIN_ICE_PARAMN, NEBN, TURBN, &                                                                         
                      &'T', 'CB02', 'CB',                                                  &                                         
                      &PPABST, PZZ, ZRHO, ZTEMP, ZRV_IN, ZRV_OUT, ZRC_IN, ZRC_OUT, ZRI_IN, ZRI_OUT,    &                                             
                      &PRT(:,:,:,2), PRT(:,:,:,5), PRT(:,:,:,6), PSIGS, .FALSE., PMFCONV, ZNCLD, ZSIGRC, .FALSE.,                 &     
-                     &OSIGMAS, .FALSE., .FALSE.,                                                        &                           
+                     &OSIGMAS, .FALSE.,                                                                 &                           
                      &ZDUM, ZDUM, ZDUM, ZDUM, ZDUM, ZSIGQSAT2D)
     DEALLOCATE(ZTEMP,ZSIGRC)
     DEALLOCATE(ZRV_OUT)

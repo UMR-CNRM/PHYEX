@@ -61,6 +61,12 @@ script with the 'REF' argument), the reference simulation directory (under $TEST
 This script is used by the different check\_commit\_\* scripts and can be used directly to pre-process the source code.
  The installation is described in the [tools/INSTALL\_mnh\_expand.md file](../tools/INSTALL_mnh_expand.md)
 
+### testing.sh
+
+This script is designed to be run periodically by cron. It searches for the last commit on a github repository,
+use the different check\_commit\_\* scripts to run the test cases and add a comments attached to the gihub commit
+to report success or unsecess of these tests. In case of an error, the script can also send an email.
+
 ### others
 
 Other scripts are:

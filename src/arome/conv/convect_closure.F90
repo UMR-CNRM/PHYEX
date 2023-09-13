@@ -11,8 +11,7 @@
                                  PCAPE, PTIMEC,                              &
                                  KFTSTEPS,                                   &
                                  PDTEVRF, PPRLFLX, PPRSFLX                   )
-     USE PARKIND1, ONLY : JPRB
-     USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+     USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !    #########################################################################
 !
 !!**** Uses modified Fritsch-Chappell closure
@@ -211,7 +210,7 @@ LOGICAL, DIMENSION(KLON,KLEV) :: GWORK4    ! work array
 !               ----------------------------
 !
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_CLOSURE',0,ZHOOK_HANDLE)
 PSPR(:)   = 0.
 ZTIMC(:,:) = 0.

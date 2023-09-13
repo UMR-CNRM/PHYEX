@@ -9,8 +9,8 @@
 !
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE COMPUTE_UPDRAFT(D,CST,NEB,PARAMMF,TURBN,CSTURB,  &
-                                 KSV, HFRAC_ICE,                  &
+      SUBROUTINE COMPUTE_UPDRAFT(D,CST,NEBN,PARAMMF,TURBN,CSTURB, &
+                                 KSV,                             &
                                  OENTR_DETR,                      &
                                  ONOMIXLG,KSV_LGBEG,KSV_LGEND,    &
                                  PZZ,PDZZ,                        &
@@ -69,7 +69,7 @@ CONTAINS
 !
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY: CST_t
-USE MODD_NEB,             ONLY: NEB_t
+USE MODD_NEB_n,           ONLY: NEB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_n,          ONLY: TURB_t
 USE MODD_CTURB,           ONLY: CSTURB_t
@@ -78,8 +78,7 @@ USE MODI_SHUMAN_MF, ONLY: MZM_MF, MZF_MF, GZ_M_W_MF
 
 USE MODE_COMPUTE_BL89_ML, ONLY: COMPUTE_BL89_ML
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 
 IMPLICIT NONE
 
@@ -89,12 +88,11 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
-TYPE(NEB_t),            INTENT(IN)   :: NEB
+TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB
 INTEGER,                INTENT(IN)   :: KSV
-CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE    ! partition liquid/ice scheme
 LOGICAL,                INTENT(IN) :: OENTR_DETR! flag to recompute entrainment, detrainment and mass flux
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
@@ -195,7 +193,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZSHEAR,ZDUDZ,ZDVDZ ! vertical wind shear
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZWK
 REAL, DIMENSION(D%NIJT,16) :: ZBUF
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !                       1.3  Declaration of additional local variables for compute_entr_detr
 !
@@ -354,7 +352,7 @@ IF (OENTR_DETR) THEN
   PRC_UP(:,IKB)=0.
   PRI_UP(:,IKB)=0.
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-  CALL TH_R_FROM_THL_RT(CST, NEB, D%NIJT, HFRAC_ICE,PFRAC_ICE_UP(:,IKB),ZPRES_F(:,IKB), &
+  CALL TH_R_FROM_THL_RT(CST, NEBN, D%NIJT, NEBN%CFRAC_ICE_SHALLOW_MF,PFRAC_ICE_UP(:,IKB),ZPRES_F(:,IKB), &
              PTHL_UP(:,IKB),PRT_UP(:,IKB),ZTH_UP(:,IKB), &
              PRV_UP(:,IKB),PRC_UP(:,IKB),PRI_UP(:,IKB),ZRSATW(:),ZRSATI(:), OOCEAN=.FALSE., &
              PBUF=ZBUF(:,:), KB=D%NIJB, KE=D%NIJE)
@@ -392,29 +390,28 @@ IF (OENTR_DETR) THEN
     ZSHEAR = 0. !no shear in bl89 mixing length
   END IF
   !
-#ifdef REPRO48
   CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ,ZTKEM_F(:,IKB),&
                       &ZG_O_THVREF(:,IKB),ZTHVM,IKB,GLMIX,.TRUE.,ZSHEAR,ZLUP)
-#else
-  CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ,ZTKEM_F(:,IKB),&
-                      &ZG_O_THVREF(:,IKB),ZTHVM,IKB,GLMIX,.FALSE.,ZSHEAR,ZLUP)
-#endif
-  !$mnh_expand_where(JIJ=IIJB:IIJE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZLUP(IIJB:IIJE)=MAX(ZLUP(IIJB:IIJE),1.E-10)
 
   ! Compute Buoyancy flux at the ground
   ZWTHVSURF(IIJB:IIJE) = (ZTHVM_F(IIJB:IIJE,IKB)/ZTHM_F(IIJB:IIJE,IKB))*PSFTH(IIJB:IIJE)+     &
                 (0.61*ZTHM_F(IIJB:IIJE,IKB))*PSFRV(IIJB:IIJE)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
   ! Mass flux at KKB level (updraft triggered if PSFTH>0.)
   IF (PARAMMF%LGZ) THEN
     IF(PDX==0. .OR. PDY==0.) THEN                                                                                                   
       CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'COMPUTE_UPDRAFT', 'PDX or PDY is NULL with option LGZ!')                                  
     ENDIF
+    !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZSURF(IIJB:IIJE)=TANH(PARAMMF%XGZ*SQRT(PDX*PDY)/ZLUP(IIJB:IIJE))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   ELSE
     ZSURF(IIJB:IIJE)=1.
   END IF
+  !$mnh_expand_where(JIJ=IIJB:IIJE)
   WHERE (ZWTHVSURF(IIJB:IIJE)>0.)
     PEMF(IIJB:IIJE,IKB) = PARAMMF%XCMF * ZSURF(IIJB:IIJE) * ZRHO_F(IIJB:IIJE,IKB) *  &
             ((ZG_O_THVREF(IIJB:IIJE,IKB))*ZWTHVSURF(IIJB:IIJE)*ZLUP(IIJB:IIJE))**(1./3.)
@@ -472,7 +469,7 @@ DO JK=IKB,IKE-IKL,IKL
       ZRI_MIX(IIJB:IIJE,JK) = ZRI_MIX(IIJB:IIJE,JK-IKL) ! guess of Ri of mixture
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     ENDIF
-    CALL COMPUTE_ENTR_DETR(D, CST, NEB, PARAMMF, JK,IKB,IKE,IKL,GTEST,GTESTLCL,HFRAC_ICE,PFRAC_ICE_UP(:,JK),&
+    CALL COMPUTE_ENTR_DETR(D, CST, NEBN, PARAMMF, JK,IKB,IKE,IKL,GTEST,GTESTLCL,PFRAC_ICE_UP(:,JK),&
                            PRHODREF(:,JK),ZPRES_F(:,JK),ZPRES_F(:,JK+IKL),&
                            PZZ(:,:),PDZZ(:,:),ZTHVM(:,:),  &
                            PTHLM(:,:),PRTM(:,:),ZW_UP2(:,:),ZTH_UP(:,JK),   &
@@ -520,15 +517,10 @@ DO JK=IKB,IKE-IKL,IKL
       ZMIX2(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*PENTR(JIJ,JK) !&
       ZMIX3_CLD(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1.-ZPART_DRY(JIJ))*ZDETR_CLD(JIJ,JK) !&                   
       ZMIX2_CLD(JIJ) = (PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1.-ZPART_DRY(JIJ))*ZENTR_CLD(JIJ,JK)
-#ifdef REPRO48                  
       PTHL_UP(JIJ,JK+IKL)=(PTHL_UP(JIJ,JK)*(1.-0.5*ZMIX2(JIJ)) + PTHLM(JIJ,JK)*ZMIX2(JIJ)) &
                             /(1.+0.5*ZMIX2(JIJ))   
       PRT_UP(JIJ,JK+IKL) =(PRT_UP (JIJ,JK)*(1.-0.5*ZMIX2(JIJ)) + PRTM(JIJ,JK)*ZMIX2(JIJ))  &
                             /(1.+0.5*ZMIX2(JIJ))
-#else
-      PTHL_UP(JIJ,JK+IKL)=PTHL_UP(JIJ,JK)*EXP(-ZMIX2(JIJ)) + PTHLM(JIJ,JK)*(1-EXP(-ZMIX2(JIJ)))
-      PRT_UP(JIJ,JK+IKL) =PRT_UP (JIJ,JK)*EXP(-ZMIX2(JIJ)) +  PRTM(JIJ,JK)*(1-EXP(-ZMIX2(JIJ)))
-#endif
     ENDIF
   ENDDO
   
@@ -584,7 +576,7 @@ DO JK=IKB,IKE-IKL,IKL
     ZRC_UP(IIJB:IIJE)=PRC_UP(IIJB:IIJE,JK) ! guess = level just below
     ZRI_UP(IIJB:IIJE)=PRI_UP(IIJB:IIJE,JK) ! guess = level just below
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-    CALL TH_R_FROM_THL_RT(CST, NEB, D%NIJT, HFRAC_ICE,PFRAC_ICE_UP(:,JK+IKL),ZPRES_F(:,JK+IKL), &
+    CALL TH_R_FROM_THL_RT(CST, NEBN, D%NIJT, NEBN%CFRAC_ICE_SHALLOW_MF,PFRAC_ICE_UP(:,JK+IKL),ZPRES_F(:,JK+IKL), &
             PTHL_UP(:,JK+IKL),PRT_UP(:,JK+IKL),ZTH_UP(:,JK+IKL),              &
             ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:), OOCEAN=.FALSE., &
             PBUF=ZBUF(:,:), KB=D%NIJB, KE=D%NIJE)
@@ -703,9 +695,9 @@ IF (LHOOK) CALL DR_HOOK('COMPUTE_UPDRAFT',1,ZHOOK_HANDLE)
 CONTAINS
 INCLUDE "th_r_from_thl_rt.func.h"
 INCLUDE "compute_frac_ice.func.h"
-          SUBROUTINE COMPUTE_ENTR_DETR(D, CST, NEB, PARAMMF,&
+          SUBROUTINE COMPUTE_ENTR_DETR(D, CST, NEBN, PARAMMF,&
                             KK,KKB,KKE,KKL,OTEST,OTESTLCL,&
-                            HFRAC_ICE,PFRAC_ICE,PRHODREF,&
+                            PFRAC_ICE,PRHODREF,&
                             PPRE_MINUS_HALF,&
                             PPRE_PLUS_HALF,PZZ,PDZZ,&
                             PTHVM,PTHLM,PRTM,PW_UP2,PTH_UP,&
@@ -770,7 +762,7 @@ INCLUDE "compute_frac_ice.func.h"
 !
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY: CST_t
-USE MODD_NEB,             ONLY: NEB_t
+USE MODD_NEB_n,           ONLY: NEB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
 IMPLICIT NONE
@@ -781,7 +773,7 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
-TYPE(NEB_t),            INTENT(IN)   :: NEB
+TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 !
 INTEGER,                INTENT(IN)   :: KK
@@ -790,9 +782,6 @@ INTEGER,                INTENT(IN)   :: KKE          ! uppest atmosphere physica
 INTEGER,                INTENT(IN)   :: KKL          ! +1 if grid goes from ground to atmosphere top, -1 otherwise
 LOGICAL,DIMENSION(D%NIJT),   INTENT(IN)   :: OTEST ! test to see if updraft is running
 LOGICAL,DIMENSION(D%NIJT),   INTENT(IN)   :: OTESTLCL !test of condensation 
-CHARACTER(LEN=1),       INTENT(IN)   :: HFRAC_ICE ! frac_ice can be compute using
-                                              ! Temperature (T) or prescribed
-                                              ! (Y)
 REAL, DIMENSION(D%NIJT), INTENT(IN)  :: PFRAC_ICE ! fraction of ice
 !
 !    prognostic variables at t- deltat
@@ -949,7 +938,7 @@ ENDDO
 ZRCMIX(IIJB:IIJE)=PRC_UP(IIJB:IIJE)
 ZRIMIX(IIJB:IIJE)=PRI_UP(IIJB:IIJE)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-CALL TH_R_FROM_THL_RT(CST,NEB,D%NIJT,HFRAC_ICE,ZFRAC_ICE,&
+CALL TH_R_FROM_THL_RT(CST,NEBN,D%NIJT,NEBN%CFRAC_ICE_SHALLOW_MF,ZFRAC_ICE,&
              PPRE_PLUS_HALF,PTHL_UP,PRT_UP,&
              ZTHMIX,ZRVMIX,ZRCMIX,ZRIMIX,&
              ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
@@ -1025,7 +1014,7 @@ DO JIJ=IIJB,IIJE
     ZMIXRT(JIJ) = 0.1
   ENDIF
 ENDDO
-CALL TH_R_FROM_THL_RT(CST,NEB,D%NIJT,HFRAC_ICE,ZFRAC_ICE,&
+CALL TH_R_FROM_THL_RT(CST,NEBN,D%NIJT,NEBN%CFRAC_ICE_SHALLOW_MF,ZFRAC_ICE,&
              ZPRE,ZMIXTHL,ZMIXRT,&
              ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
              ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
@@ -1039,7 +1028,7 @@ ZMIXTHL(IIJB:IIJE) = ZKIC_INIT * 0.5*(PTHLM(IIJB:IIJE,KK)+PTHLM(IIJB:IIJE,KK+KKL
 ZMIXRT(IIJB:IIJE)  = ZKIC_INIT * 0.5*(PRTM(IIJB:IIJE,KK)+PRTM(IIJB:IIJE,KK+KKL))+&
                        & (1. - ZKIC_INIT)*PRT_UP(IIJB:IIJE)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-CALL TH_R_FROM_THL_RT(CST,NEB,D%NIJT,HFRAC_ICE,ZFRAC_ICE,&
+CALL TH_R_FROM_THL_RT(CST,NEBN,D%NIJT,NEBN%CFRAC_ICE_SHALLOW_MF,ZFRAC_ICE,&
              PPRE_PLUS_HALF,ZMIXTHL,ZMIXRT,&
              ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
              ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&

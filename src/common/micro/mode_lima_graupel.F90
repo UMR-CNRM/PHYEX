@@ -46,9 +46,9 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,              ONLY : XTT, XMD, XMV, XRD, XRV, XLVTT, XLMTT, XESTT, XCL, XCI, XCPV
+USE MODD_CST,              ONLY : XTT, XMD, XMV, XRV, XLVTT, XLMTT, XESTT, XCL, XCI, XCPV
 USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, XCEXVT, NMOM_H
-USE MODD_PARAM_LIMA_MIXED, ONLY : XCXG, XDG, X0DEPG, X1DEPG, NGAMINC,                             &
+USE MODD_PARAM_LIMA_MIXED, ONLY : XDG, X0DEPG, X1DEPG, NGAMINC,                                   &
                                   XFCDRYG, XFIDRYG, XCOLIG, XCOLSG, XCOLEXIG, XCOLEXSG,           &
                                   XFSDRYG, XLBSDRYG1, XLBSDRYG2, XLBSDRYG3, XKER_SDRYG,           &
                                   XFNSDRYG, XLBNSDRYG1, XLBNSDRYG2, XLBNSDRYG3, XKER_N_SDRYG,     &
@@ -59,7 +59,7 @@ USE MODD_PARAM_LIMA_MIXED, ONLY : XCXG, XDG, X0DEPG, X1DEPG, NGAMINC,           
                                   XDRYINTP1R, XDRYINTP1S, XDRYINTP1G,                             &
                                   XDRYINTP2R, XDRYINTP2S, XDRYINTP2G,                             &
                                   NDRYLBDAR, NDRYLBDAS, NDRYLBDAG
-USE MODD_PARAM_LIMA_COLD,  ONLY : XMNU0, XCXS, XBS
+USE MODD_PARAM_LIMA_COLD,  ONLY : XMNU0
 !
 IMPLICIT NONE
 !
@@ -146,8 +146,6 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CH
 !*       0.2   Declarations of local variables :
 !
 LOGICAL, DIMENSION(SIZE(PRCT))  :: GDRY
-INTEGER                         :: IGDRY
-INTEGER                         :: JJ
 !
 REAL,    DIMENSION(SIZE(PRCT))  :: Z1, Z2, Z3, Z4
 REAL,    DIMENSION(SIZE(PRCT))  :: ZZX, ZZW, ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6, ZZW7
@@ -513,8 +511,8 @@ PA_TH(:) = PA_TH(:) + P_TH_WETG(:) + P_TH_DRYG(:)               + P_TH_GMLT(:)
 !
 CONTAINS
   FUNCTION GET_XKER_SDRYG(GRAUPEL,SNOW) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: SNOW
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: SNOW
     REAL, DIMENSION(SIZE(SNOW)) :: RET
     !
     INTEGER I
@@ -527,8 +525,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_N_SDRYG(GRAUPEL,SNOW) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: SNOW
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: SNOW
     REAL, DIMENSION(SIZE(SNOW)) :: RET
     !
     INTEGER I
@@ -541,8 +539,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_RDRYG(GRAUPEL,RAIN) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: RAIN
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: RAIN
     REAL, DIMENSION(SIZE(RAIN)) :: RET
     !
     INTEGER I
@@ -555,8 +553,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION GET_XKER_N_RDRYG(GRAUPEL,RAIN) RESULT(RET)
-    INTEGER, DIMENSION(:) :: GRAUPEL
-    INTEGER, DIMENSION(:) :: RAIN
+    INTEGER, DIMENSION(:), INTENT(IN) :: GRAUPEL
+    INTEGER, DIMENSION(:), INTENT(IN) :: RAIN
     REAL, DIMENSION(SIZE(RAIN)) :: RET
     !
     INTEGER I

@@ -7,6 +7,7 @@
        MODULE MODI_LIMA_PHILLIPS
 !      #########################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE LIMA_PHILLIPS (CST, OHHONI, PTSTEP, KMI,                 &
                                 PZZ, PRHODJ, PRHODREF, PEXNREF, PPABST,   &
@@ -16,6 +17,7 @@ INTERFACE
                                 PNAS, PIFS, PINS, PNIS   )
 !
 USE MODD_CST,            ONLY: CST_t
+IMPLICIT NONE
 TYPE(CST_t),              INTENT(IN)    :: CST
 !
 LOGICAL,                  INTENT(IN)    :: OHHONI  ! enable haze freezing

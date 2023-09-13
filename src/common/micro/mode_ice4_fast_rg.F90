@@ -37,11 +37,10 @@ SUBROUTINE ICE4_FAST_RG(CST, PARAMI, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUT
 !          ------------
 !
 USE MODD_CST,            ONLY: CST_t
-USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
-USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -106,7 +105,7 @@ REAL, DIMENSION(KPROMA) :: ZZW, &
 REAL :: ZZW0D
 INTEGER :: JL
 
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RG', 0, ZHOOK_HANDLE)
@@ -189,18 +188,23 @@ IF(.NOT. LDSOFT) THEN
   IF(IGDRY>0)THEN
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GDRY(1:KSIZE))
+#ifdef REPRO48
       PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
                                     / ICEP%XCOLSG &
-#if defined(REPRO48) 
                   *(PLBDAS(1:KSIZE)**(ICED%XCXS-ICED%XBS))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
                   *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT-1.))                    &
-#else
-                  *(PRST(1:KSIZE))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
-                  *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT))                    &
-#endif
                        *( ICEP%XLBSDRYG1/( PLBDAG(1:KSIZE)**2              ) + &
                           ICEP%XLBSDRYG2/( PLBDAG(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
                           ICEP%XLBSDRYG3/(               PLBDAS(1:KSIZE)**2))
+#else
+      PRG_TEND(1:KSIZE, IRSWETG)=ICEP%XFSDRYG*ZZW(1:KSIZE)                         & ! RSDRYG
+                                    / ICEP%XCOLSG &
+                  *(PRST(1:KSIZE))*( PLBDAG(1:KSIZE)**ICED%XCXG )    &
+                  *(PRHODREF(1:KSIZE)**(-ICED%XCEXVT))                    &
+                       *( ICEP%XLBSDRYG1/( PLBDAG(1:KSIZE)**2              ) + &
+                          ICEP%XLBSDRYG2/( PLBDAG(1:KSIZE)   * PLBDAS(1:KSIZE)   ) + &
+                          ICEP%XLBSDRYG3/(               PLBDAS(1:KSIZE)**2))
+#endif
       PRG_TEND(1:KSIZE, IRSDRYG)=PRG_TEND(1:KSIZE, IRSWETG)*ICEP%XCOLSG*EXP(ICEP%XCOLEXSG*(PT(1:KSIZE)-CST%XTT))
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
@@ -278,11 +282,7 @@ DO JL=1, KSIZE
       LDWETG(JL) = LDWETG(JL) .AND. PT(JL)<CST%XTT
     ENDIF
 
-#ifdef REPRO48
-    LLDRYG(JL)=PT(JL)<CST%XTT .AND. ZRDRYG_INIT(JL)>0. .AND. &
-#else
     LLDRYG(JL)=PT(JL)<CST%XTT .AND. ZRDRYG_INIT(JL)>1.E-20 .AND. &
-#endif
               &MAX(0., ZRWETG_INIT(JL)-PRG_TEND(JL, IRIWETG)-PRG_TEND(JL, IRSWETG))>&
               &MAX(0., ZRDRYG_INIT(JL)-PRG_TEND(JL, IRIDRYG)-PRG_TEND(JL, IRSDRYG))
   ELSE

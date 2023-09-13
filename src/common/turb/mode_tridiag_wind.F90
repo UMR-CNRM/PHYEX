@@ -7,8 +7,7 @@ IMPLICIT NONE
 CONTAINS       
 SUBROUTINE TRIDIAG_WIND(D,PVARM,PA,PCOEFS,PTSTEP,PEXPL,PIMPL, &
                                              PRHODJA,PSOURCE,PVARP )
-       USE PARKIND1, ONLY : JPRB
-       USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !      #############################################################
 !
 !
@@ -155,7 +154,7 @@ INTEGER             :: IKL
 !*      1.  COMPUTE THE RIGHT HAND SIDE
 !           ---------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TRIDIAG_WIND',0,ZHOOK_HANDLE)
 !
 IKT=D%NKT

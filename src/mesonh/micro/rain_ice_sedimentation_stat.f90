@@ -30,11 +30,11 @@ SUBROUTINE RAIN_ICE_SEDIMENTATION_STAT( KIB, KIE, KJB, KJE, KKB, KKE, KKTB, KKTE
 use modd_budget,         only: lbudget_rc, lbudget_rr, lbudget_ri, lbudget_rs, lbudget_rg, lbudget_rh, &
                                NBUDGET_RC, NBUDGET_RR, NBUDGET_RI, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, &
                                tbudgets
-use MODD_CST,            only: XRHOLW
-use MODD_PARAM_ICE,      only: LDEPOSC, XVDEPOSC
-use MODD_RAIN_ICE_PARAM, only: XEXSEDG, XEXSEDH, XEXCSEDI, XEXSEDR, XEXSEDS, &
+USE MODD_CST,            only: XRHOLW
+USE MODD_PARAM_ICE_n,      only: LDEPOSC, XVDEPOSC
+USE MODD_RAIN_ICE_PARAM_n, only: XEXSEDG, XEXSEDH, XEXCSEDI, XEXSEDR, XEXSEDS, &
                                XFSEDC, XFSEDG, XFSEDH, XFSEDI, XFSEDR, XFSEDS
-use MODD_RAIN_ICE_DESCR, only: XALPHAC, XALPHAC2, XCC, XCEXVT, XCONC_LAND, XCONC_SEA, XCONC_URBAN, &
+USE MODD_RAIN_ICE_DESCR_n, only: XALPHAC, XALPHAC2, XCC, XCEXVT, XCONC_LAND, XCONC_SEA, XCONC_URBAN, &
                                XDC, XLBC, XLBEXC, XNUC, XNUC2, XRTMIN
 
 use mode_budget,         only: Budget_store_init, Budget_store_end

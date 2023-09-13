@@ -33,13 +33,12 @@ SUBROUTINE ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1, ONLY : JPRB
-USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CST, ONLY: CST_t
-USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
-USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 !
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !
@@ -88,7 +87,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-ai
 !
 !
 INTEGER                                                             :: JIJ, JK
-INTEGER :: IKTB, IKTE, IKB, IKL, IIJE, IIJB
+INTEGER :: IKTB, IKTE, IIJE, IIJB
 INTEGER                                                             :: IRR !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
 LOGICAL                                                             :: GSEDIC !Workaround of PGI bug with OpenACC (at least up to 18.10 version)
 LOGICAL                                                             :: GPRESENT_PFPR, GPRESENT_PSEA
@@ -106,7 +105,7 @@ REAL, DIMENSION(D%NIJT, D%NKT)                                      :: ZCONC3D, 
                                                                      & ZRST, &
                                                                      & ZRGT, &
                                                                      & ZRHT
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT', 0, ZHOOK_HANDLE)
@@ -279,9 +278,9 @@ SUBROUTINE INTERNAL_SEDIM_SPLI(D, CST, ICEP, ICED, PARAMI, KRR, &
 !          ------------
 !
 USE MODD_CST,            ONLY: CST_t
-USE MODD_RAIN_ICE_DESCR, ONLY: RAIN_ICE_DESCR_t
-USE MODD_RAIN_ICE_PARAM, ONLY: RAIN_ICE_PARAM_t
-USE MODD_PARAM_ICE,      ONLY: PARAM_ICE_t
+USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 !
 IMPLICIT NONE
 !
@@ -311,7 +310,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT), OPTIONAL :: PFPR    ! upper-ai
 !*       0.2  declaration of local variables
 !
 CHARACTER(LEN=10) :: YSPE ! String for error message
-INTEGER                         :: JIJ, JK, JL
+INTEGER                         :: JIJ, JK
 LOGICAL                         :: GPRESENT_PFPR
 REAL                            :: ZINVTSTEP
 REAL                            :: ZZWLBDC, ZRAY, ZZT, ZZWLBDA, ZZCC
@@ -323,7 +322,7 @@ REAL, DIMENSION(SIZE(ICED%XRTMIN))   :: ZRSMIN
 REAL, DIMENSION(D%NIJT)       :: ZREMAINT   ! Remaining time until the timestep end
 REAL, DIMENSION(D%NIJT, 0:D%NKT+1) :: ZWSED   ! Sedimentation fluxes
 INTEGER :: IKTB, IKTE, IKB, IKL, IIJE, IIJB
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT', 0, ZHOOK_HANDLE)
 !
 IKTB=D%NKTB
@@ -387,7 +386,7 @@ DO WHILE (ANY(ZREMAINT>0.))
         ENDIF
       ENDDO
     ENDDO
-#if defined(REPRO48) 
+#ifdef REPRO48
 #else
   ELSEIF(KSPE==5) THEN
     ! ******* for snow
@@ -418,7 +417,7 @@ DO WHILE (ANY(ZREMAINT>0.))
       CASE(3)
         ZFSED=ICEP%XFSEDR
         ZEXSED=ICEP%XEXSEDR
-#if defined(REPRO48) 
+#ifdef REPRO48
       CASE(5)
         ZFSED=ICEP%XFSEDS
         ZEXSED=ICEP%XEXSEDS

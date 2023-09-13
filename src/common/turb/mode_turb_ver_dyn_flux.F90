@@ -204,9 +204,8 @@ SUBROUTINE TURB_VER_DYN_FLUX(D,CST,CSTURB,TURBN,TLES,KSV,O2D,OFLAT, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE PARKIND1,   ONLY: JPRB
 USE MODE_SHUMAN_PHY
-USE YOMHOOK,    ONLY: LHOOK, DR_HOOK
+USE YOMHOOK,    ONLY: LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_CST,            ONLY: CST_t
 USE MODD_CTURB,          ONLY: CSTURB_t
@@ -214,7 +213,7 @@ USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_FIELD,          ONLY: TFIELDMETADATA, TYPEREAL
 USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_LES,            ONLY: TLES_t
-USE MODD_PARAMETERS,     ONLY: JPVEXT_TURB, XUNDEF
+USE MODD_PARAMETERS,     ONLY: XUNDEF
 USE MODD_TURB_n,         ONLY: TURB_t
 !
 USE MODE_GRADIENT_U_PHY, ONLY : GZ_U_UW_PHY, GX_U_M_PHY
@@ -317,7 +316,7 @@ REAL, DIMENSION(D%NIJT,D%NKT)  ::  &
        ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
        ZWORK1,ZWORK2,&
        ZWORK3,ZWORK4,&
-       ZWORK5,ZWORK6! working var. for shuman operators (array syntax)
+       ZWORK5        ! working var. for shuman operators (array syntax)
 !
 INTEGER             :: IIJE,IIJB,IKB,IKE,IKA,IKU ! index value for the mass points of the domain 
 INTEGER             :: IKT          ! array size in k direction
@@ -337,7 +336,7 @@ TYPE(TFIELDMETADATA) :: TZFIELD
 !
 !*       1.   PRELIMINARIES
 !             -------------
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TURB_VER_DYN_FLUX',0,ZHOOK_HANDLE)
 !
 ZA(:,:)=XUNDEF

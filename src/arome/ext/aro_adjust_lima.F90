@@ -1,6 +1,7 @@
 !     ######spl
-      SUBROUTINE  ARO_ADJUST_LIMA(KKA,KKU,KKL,KLON,KLEV,KFDIA,  KRR, KSV, KTCOUNT,  &
-                                  OSUBG_COND, OSIGMAS, OCND2, HCONDENS, HLAMBDA3, &
+      SUBROUTINE  ARO_ADJUST_LIMA(PHYEX, &
+                                  KKA,KKU,KKL,KLON,KLEV,KFDIA,  KRR, KSV, KTCOUNT,  &
+                                  OSUBG_COND, OSIGMAS, &
                                   PTSTEP, PSIGQSAT, &
                                   PZZF, PRHODJ, PRHODREF, PEXNREF,&
                                   PPABSM, PTHT, PRT, PSVT, PSIGS, &
@@ -9,7 +10,7 @@
                                   PTHS, PRS,  PSVS, PSRCS, PCLDFR, PICEFR, PPRCFR, &
                                   YDDDH, YDLDDH, YDMDDH, LLIMAINIT )
       USE PARKIND1, ONLY : JPRB
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK
+      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ##########################################################################
 !
 !!****  * -  compute the  resolved clouds and precipitation
@@ -78,10 +79,9 @@
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CONF
-USE MODD_CST
+!USE MODD_CONF
+USE MODD_PHYEX, ONLY: PHYEX_t
 USE MODD_PARAMETERS
-USE MODD_RAIN_ICE_DESCR
 USE MODD_BUDGET, ONLY: TBUDGETDATA, NBUDGET_SV1, TBUCONF
 !
 USE MODD_PARAM_LIMA
@@ -89,7 +89,6 @@ USE MODD_NSV
 !
 USE MODI_LIMA_ADJUST_SPLIT
 USE MODE_SET_CONC_LIMA
-USE MODE_SET_CONC_LIMA_LBC
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 !USE MODE_BUDGET_PHY, ONLY: BUDGET_DDH
 !
@@ -106,6 +105,7 @@ IMPLICIT NONE
 !
 
 !
+TYPE(PHYEX_t),            INTENT(IN)   :: PHYEX
 INTEGER,                  INTENT(IN)   :: KKA    !near ground array index
 INTEGER,                  INTENT(IN)   :: KKU    !uppest atmosphere array index
 INTEGER,                  INTENT(IN)   :: KKL    !vert. levels type 1=MNH -1=ARO
@@ -119,9 +119,6 @@ LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid Cond.
 LOGICAL,                  INTENT(IN)   :: OSIGMAS  ! Switch for Sigma_s:
                                         ! use values computed in CONDENSATION
                                         ! or that from turbulence scheme
-LOGICAL,                  INTENT(IN)   :: OCND2
-CHARACTER*80,             INTENT(IN)   :: HCONDENS
-CHARACTER*4,              INTENT(IN)   :: HLAMBDA3 ! formulation for lambda3 coeff
 REAL,                     INTENT(IN)   :: PTSTEP   ! Time step
 REAL,                     INTENT(IN)   :: PSIGQSAT ! coeff applied to qsat variance contribution
 !
@@ -166,16 +163,6 @@ LOGICAL,                  INTENT(IN)    :: LLIMAINIT
 !
 !*       0.2   Declarations of local variables :
 
-CHARACTER(LEN=4)          :: HCLOUD   ! kind of cloud
-                                                   ! paramerization
-
-INTEGER                   :: KMI      ! Model index
-CHARACTER(LEN=4)          :: HFMFILE  ! Name of the output FM-file
-CHARACTER(LEN=4)          :: HLUOUT   ! Output-listing name for
-                                                   ! model n
-CHARACTER*4               :: HRAD     ! Radiation scheme name
-CHARACTER*4               :: HTURBDIM ! Dimensionality of the
-                                                   ! turbulence scheme
 !
 INTEGER :: JRR           ! Loop index for the moist and scalar variables
 !
@@ -198,15 +185,8 @@ TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !*       1.     PRELIMINARY COMPUTATIONS
 !               ------------------------
 !
-REAL(KIND=JPRB) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('ARO_ADJUST_LIMA',0,ZHOOK_HANDLE)
-
-HCLOUD='LIMA'
-HFMFILE=' '
-HLUOUT= ' '
-HRAD='NONE'
-HTURBDIM='1DIM'
-KMI=1
 
 CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, 0, KFDIA)
 
@@ -220,9 +200,9 @@ CALL FILL_DIMPHYEX(YLDIMPHYEX, KLON, 1, KLEV, 0, KFDIA)
 !                    computing time
 !
 ZT(:,:,:)= PTHT(:,:,:)*PEXNREF(:,:,:)
-ZLV(:,:,:)=XLVTT +(XCPV-XCL) *(ZT(:,:,:)-XTT)
-ZLS(:,:,:)=XLSTT +(XCPV-XCI) *(ZT(:,:,:)-XTT)
-ZCPH(:,:,:)=XCPD +XCPV*2.*PTSTEP*PRS(:,:,:,1)
+ZLV(:,:,:)=PHYEX%CST%XLVTT +(PHYEX%CST%XCPV-PHYEX%CST%XCL) *(ZT(:,:,:)-PHYEX%CST%XTT)
+ZLS(:,:,:)=PHYEX%CST%XLSTT +(PHYEX%CST%XCPV-PHYEX%CST%XCI) *(ZT(:,:,:)-PHYEX%CST%XTT)
+ZCPH(:,:,:)=PHYEX%CST%XCPD +PHYEX%CST%XCPV*2.*PTSTEP*PRS(:,:,:,1)
 
 !set concentration for LIMA
 PRS = PRS * 2.*PTSTEP
@@ -231,8 +211,8 @@ IF (LLIMAINIT) THEN
    CALL SET_CONC_LIMA (1,'ICE3',PRHODREF,PRT,PSVT)
    CALL SET_CONC_LIMA (1,'ICE3',PRHODREF,PRS,PSVS)
 ELSE
-   CALL SET_CONC_LIMA_LBC (1,'ICE3',PRHODREF,PRT,PSVT)
-   CALL SET_CONC_LIMA_LBC (1,'ICE3',PRHODREF,PRS,PSVS)
+   CALL SET_CONC_LIMA (1,'ICE3',PRHODREF,PRT,PSVT, .TRUE.)
+   CALL SET_CONC_LIMA (1,'ICE3',PRHODREF,PRS,PSVS, .TRUE.)
 END IF
 PRS = PRS / (2.*PTSTEP)
 PSVS = PSVS / (2.*PTSTEP)
@@ -352,8 +332,8 @@ ENDDO
 !
     ZZZ =  PZZF
 
-    CALL LIMA_ADJUST_SPLIT(D=YLDIMPHYEX, CST=CST, BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
-         KRR=KRR, KMI=KMI, HCONDENS=HCONDENS, HLAMBDA3=HLAMBDA3, &
+    CALL LIMA_ADJUST_SPLIT(D=YLDIMPHYEX, CST=PHYEX%CST, BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
+         KRR=KRR, KMI=1, HCONDENS=PHYEX%NEBN%CCONDENS, HLAMBDA3=PHYEX%NEBN%CLAMBDA3, &
          OSUBG_COND=OSUBG_COND, OSIGMAS=OSIGMAS, PTSTEP=2*PTSTEP, PSIGQSAT=PSIGQSAT, &
          PRHODREF=PRHODREF, PRHODJ=PRHODJ, PEXNREF=PEXNREF, PSIGS=PSIGS, PMFCONV=PMFCONV, &
          PPABST=PPABSM, PPABSTT=PPABSM, PZZ=ZZZ, PDTHRAD=PDTHRAD, PW_NU=PW_NU, &

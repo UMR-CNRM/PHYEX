@@ -7,6 +7,7 @@
        MODULE MODI_LIMA_WARM_SEDIMENTATION
 !      ###################################
 !
+IMPLICIT NONE
 INTERFACE
       SUBROUTINE LIMA_WARM_SEDIMENTATION (OSEDC, KSPLITR, PTSTEP, KMI,  &
                                           PZZ, PRHODREF, PPABST, ZT,    &
@@ -14,6 +15,7 @@ INTERFACE
                                           PRCT, PRRT, PCCT, PCRT,       &
                                           PRCS, PRRS, PCCS, PCRS,       &
                                           PINPRC, PINPRR, PINPRR3D )
+IMPLICIT NONE
 !
 LOGICAL,                  INTENT(IN)    :: OSEDC      ! switch to activate the 
                                                       ! cloud droplet sedimentation

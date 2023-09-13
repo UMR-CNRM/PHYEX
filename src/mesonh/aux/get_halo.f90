@@ -10,24 +10,28 @@
       MODULE MODI_GET_HALO
 !     ####################
 !
+IMPLICIT NONE
 INTERFACE
 !
 SUBROUTINE GET_HALO2(PSRC,TP_PSRC_HALO2_ll)
 !
 USE MODD_ARGSLIST_ll, ONLY : HALO2LIST_ll
+IMPLICIT NONE
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PSRC    ! variable at t
-TYPE(HALO2LIST_ll), POINTER         :: TP_PSRC_HALO2_ll          ! halo2 for SRC
+TYPE(HALO2LIST_ll), POINTER, INTENT(INOUT)         :: TP_PSRC_HALO2_ll          ! halo2 for SRC
 !
 END SUBROUTINE GET_HALO2
 !
 SUBROUTINE GET_HALO(PSRC)
 !
+IMPLICIT NONE
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PSRC    ! variable at t
 !
 END SUBROUTINE GET_HALO
 !
 SUBROUTINE GET_HALO_PHY(D,PSRC)
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),        INTENT(IN)   :: D
 REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)  :: PSRC    ! variable at t
@@ -37,7 +41,8 @@ END SUBROUTINE GET_HALO_PHY
 SUBROUTINE DEL_HALO2_ll(TPHALO2LIST)
 !
 USE MODD_ARGSLIST_ll, ONLY : HALO2LIST_ll
-TYPE(HALO2LIST_ll), POINTER :: TPHALO2LIST ! list of HALO2_lls
+IMPLICIT NONE
+TYPE(HALO2LIST_ll), POINTER, INTENT(INOUT) :: TPHALO2LIST ! list of HALO2_lls
 !
 END SUBROUTINE DEL_HALO2_ll
 !
@@ -55,7 +60,7 @@ USE MODD_ARGSLIST_ll, ONLY : LIST_ll, HALO2LIST_ll
 IMPLICIT NONE
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)  :: PSRC    ! variable at t
-TYPE(HALO2LIST_ll), POINTER         :: TP_PSRC_HALO2_ll          ! halo2 for SRC
+TYPE(HALO2LIST_ll), POINTER, INTENT(INOUT)         :: TP_PSRC_HALO2_ll          ! halo2 for SRC
 !
 INTEGER                          :: IIU,IJU,IKU            ! domain sizes
 TYPE(LIST_ll)     , POINTER      :: TZ_PSRC_ll               ! halo
@@ -167,7 +172,7 @@ END SUBROUTINE GET_HALO_PHY
 !
 !*       0.1   Declarations of dummy arguments :
 !
-  TYPE(HALO2LIST_ll), POINTER :: TPHALO2LIST ! list of HALO2_lls
+  TYPE(HALO2LIST_ll), POINTER, INTENT(INOUT) :: TPHALO2LIST ! list of HALO2_lls
 !
 !
 !*       0.2   Declarations of local variables :
