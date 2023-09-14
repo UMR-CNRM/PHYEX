@@ -50,7 +50,7 @@ MODULE MODE_ARGSLIST_ll_PHY
 !
   TYPE(DIMPHYEX_t),        INTENT(IN)   :: D
   TYPE(LIST_ll), POINTER         :: TPLIST   ! list of fields
-  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN) :: PFIELD   ! field which is unpaked here
+  REAL, DIMENSION(D%NIT,D%NJT,D%NKT), TARGET :: PFIELD   ! field which is unpaked here
 !                                              of fields
   CHARACTER(LEN=*), INTENT(IN) :: HNAME ! Name of the field to be added
 
