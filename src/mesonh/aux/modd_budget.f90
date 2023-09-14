@@ -124,7 +124,6 @@ type, extends( tfieldmetadata_base ) :: tburhodata
   real, dimension(:,:,:), allocatable :: xdata ! Array to store the budget data
 end type tburhodata
 
-!PW: a commenter + renommer???
 type :: tbudiachrometadata
   character(len=NBUNAMELGTMAX),  dimension(NMAXLEVELS) :: clevels  = '' !Name of the different groups/levels in the netCDF file
   character(len=NCOMMENTLGTMAX), dimension(NMAXLEVELS) :: ccomments ='' !Comments for the different groups/levels in the netCDF file

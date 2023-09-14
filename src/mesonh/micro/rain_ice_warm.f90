@@ -72,7 +72,6 @@ REAL,     DIMENSION(:),     INTENT(INOUT) :: PRVS     ! Water vapor m.r. source
 REAL,     DIMENSION(:),     INTENT(INOUT) :: PRCS     ! Cloud water m.r. source
 REAL,     DIMENSION(:),     INTENT(INOUT) :: PRRS     ! Rain water m.r. source
 REAL,     DIMENSION(:),     INTENT(INOUT) :: PTHS     ! Theta source
-!PW: PUSW could be a purely local variable?
 REAL,     DIMENSION(:),     INTENT(INOUT) :: PUSW     ! Undersaturation over water
 REAL,     DIMENSION(:,:,:), INTENT(INOUT) :: PEVAP3D  ! Rain evap profile
 !

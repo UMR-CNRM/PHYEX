@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -143,6 +143,7 @@ USE MODD_TURB_n,         ONLY: TURB_t
 USE MODE_BUDGET_PHY,         ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_END_PHY, BUDGET_STORE_INIT_PHY
 USE MODE_IO_FIELD_WRITE_PHY, ONLY: IO_FIELD_WRITE_PHY
 USE MODE_ll
+USE MODE_ARGSLIST_ll_PHY, ONLY: ADD3DFIELD_ll_PHY
 !
 USE MODI_GET_HALO
 USE MODI_LES_MEAN_SUBGRID_PHY
@@ -316,7 +317,7 @@ IF (ODIAG_IN_RUN) THEN
                                   *(PEXPL*PTKEM(IIJB:IIJE,1:IKT) + TURBN%XIMPL*ZRES(IIJB:IIJE,1:IKT))
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
-  CALL ADD2DFIELD_ll(TZFIELDDISS_ll, PCURRENT_TKE_DISS, 'TKE_EPS_SOURCES::PCURRENT_TKE_DISS' )
+  CALL ADD3DFIELD_ll_PHY(D, TZFIELDDISS_ll, PCURRENT_TKE_DISS, 'TKE_EPS_SOURCES::PCURRENT_TKE_DISS' )
   CALL UPDATE_HALO_ll(TZFIELDDISS_ll,IINFO_ll)
   CALL CLEANLIST_ll(TZFIELDDISS_ll)
 ENDIF
@@ -461,12 +462,12 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
 ! stores the dynamic production 
 !
   TZFIELD = TFIELDMETADATA(  &
-    CMNHNAME   = 'DP',       &
+    CMNHNAME   = 'TKE_DP',   &
     CSTDNAME   = '',         &
-    CLONGNAME  = 'DP',       &
+    CLONGNAME  = 'Subgrid TKE dynamical production', &
     CUNITS     = 'm2 s-3',   &
     CDIR       = 'XY',       &
-    CCOMMENT   = 'X_Y_Z_DP', &
+    CCOMMENT   = 'Subgrid dynamical production of TKE', &
     NGRID      = 1,          &
     NTYPE      = TYPEREAL,   &
     NDIMS      = 3,          &
@@ -476,12 +477,12 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
 ! stores the thermal production 
 !
   TZFIELD = TFIELDMETADATA(  &
-    CMNHNAME   = 'TP',       &
+    CMNHNAME   = 'TKE_TP',   &
     CSTDNAME   = '',         &
-    CLONGNAME  = 'TP',       &
+    CLONGNAME  = 'Subgrid TKE thermal production', &
     CUNITS     = 'm2 s-3',   &
     CDIR       = 'XY',       &
-    CCOMMENT   = 'X_Y_Z_TP', &
+    CCOMMENT   = 'Subgrid thermal production of TKE', &
     NGRID      = 1,          &
     NTYPE      = TYPEREAL,   &
     NDIMS      = 3,          &
@@ -491,12 +492,12 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
 ! stores the whole turbulent transport
 !
   TZFIELD = TFIELDMETADATA(  &
-    CMNHNAME   = 'TR',       &
+    CMNHNAME   = 'TKE_TR',   &
     CSTDNAME   = '',         &
-    CLONGNAME  = 'TR',       &
+    CLONGNAME  = 'Subgrid TKE turbulent transport', &
     CUNITS     = 'm2 s-3',   &
     CDIR       = 'XY',       &
-    CCOMMENT   = 'X_Y_Z_TR', &
+    CCOMMENT   = 'Subgrid total turbulent transport of TKE', &
     NGRID      = 1,          &
     NTYPE      = TYPEREAL,   &
     NDIMS      = 3,          &
@@ -506,12 +507,12 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
 ! stores the dissipation of TKE 
 !
   TZFIELD = TFIELDMETADATA(    &
-    CMNHNAME   = 'DISS',       &
+    CMNHNAME   = 'TKE_DISS',   &
     CSTDNAME   = '',           &
-    CLONGNAME  = 'DISS',       &
+    CLONGNAME  = 'Subgrid TKE dissipation', &
     CUNITS     = 'm2 s-3',     &
     CDIR       = 'XY',         &
-    CCOMMENT   = 'X_Y_Z_DISS', &
+    CCOMMENT   = 'Subgrid dissipation of TKE', &
     NGRID      = 1,            &
     NTYPE      = TYPEREAL,     &
     NDIMS      = 3,            &

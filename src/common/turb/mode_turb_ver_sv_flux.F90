@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -204,6 +204,7 @@ SUBROUTINE TURB_VER_SV_FLUX(D,CST,CSTURB,TURBN,TLES,ONOMIXLG,       &
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !  Wim de Rooy    06/2019: with energycascade, 50MF nog longer necessary
 !  P. Wautelet 30/11/2022: compute PWSV only when needed
+!  P. Wautelet 01/06/2023: fix for PWSV
 !!--------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -393,7 +394,7 @@ DO JSV=1,KSV
                     PRHODJ(IIJB:IIJE,1:IKT)*(ZRES(IIJB:IIJE,1:IKT)-PSVM(IIJB:IIJE,1:IKT,JSV))/PTSTEP
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
-  IF ( (TURBN%LTURB_FLX .AND. TPFILE%LOPENED) .OR. TLES%LLES_CALL ) THEN
+  IF ( (TURBN%LTURB_FLX .AND. TPFILE%LOPENED) .OR. TLES%LLES_CALL .OR. OFLYER ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -441,7 +442,7 @@ DO JSV=1,KSV
       PWSV(IIJB:IIJE,IKE,JSV)=PWSV(IIJB:IIJE,IKE-IKL,JSV)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     END IF
- END IF
+  END IF
   !
   IF (TURBN%LTURB_FLX .AND. TPFILE%LOPENED) THEN
     ! stores the JSVth vertical flux
@@ -450,7 +451,6 @@ DO JSV=1,KSV
       CMNHNAME   = TRIM( YMNHNAME ),             &
       CSTDNAME   = '',                           &
       CLONGNAME  = TRIM( YMNHNAME ),             &
-    !PW: TODO: use the correct units of the JSV variable (and multiply it by m s-1)
       CUNITS     = 'SVUNIT m s-1',               &
       CDIR       = 'XY',                         &
       CCOMMENT   = 'X_Y_Z_' // TRIM( YMNHNAME ), &

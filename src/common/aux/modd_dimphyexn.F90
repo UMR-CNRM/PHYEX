@@ -76,6 +76,7 @@ TYPE DIMPHYEX_t
   INTEGER :: NIJE  ! Last horizontal inner mass point index
   !
   INTEGER :: NLESMASK ! Number of LES masks
+  INTEGER :: NLES_TIMES ! Number of LES time data storage
 !
 END TYPE DIMPHYEX_t
 !
