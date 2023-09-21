@@ -277,11 +277,13 @@ END MODULE MODI_MODEL_n
 !  T. Nagel    01/02/2021: add turbulence recycling
 !  P. Wautelet 19/02/2021: add NEGA2 term for SV budgets
 !  J.L. Redelsperger 03/2021: add Call NHOA_COUPLN (coupling O & A LES version)
+!  R. Schoetter    12/2021  multi-level coupling between MesoNH and SURFEX  
 !  A. Costes      12/2021: add Blaze fire model
 !  C. Barthe   07/04/2022: deallocation of ZSEA
 !  P. Wautelet 08/12/2022: bugfix if no TDADFILE
 !  P. Wautelet 13/01/2023: manage close of backup files outside of MODEL_n
 !                          (useful to close them in reverse model order (child before parent, needed by WRITE_BALLOON_n)
+!  J. Wurtz    01/2023   : correction for mean in SURFEX outputs
 !!-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS
@@ -321,6 +323,7 @@ USE MODD_DYNZD_n
 USE MODD_ELEC_DESCR
 USE MODD_EOL_MAIN
 USE MODD_FIELD_n
+USE MODD_FIRE_n
 USE MODD_FRC
 USE MODD_FRC_n
 USE MODD_GET_n
@@ -397,8 +400,7 @@ USE MODE_ONE_WAY_n
 USE MODE_WRITE_AIRCRAFT_BALLOON
 use mode_write_les_n,               only: Write_les_n
 use mode_write_lfifmn_fordiachro_n, only: WRITE_LFIFMN_FORDIACHRO_n
-USE MODE_WRITE_PROFILER_n,          ONLY: WRITE_PROFILER_n
-USE MODE_WRITE_STATION_n,           ONLY: WRITE_STATION_n
+USE MODE_WRITE_STATPROF_n,          ONLY: WRITE_STATPROF_n
 !
 USE MODI_ADDFLUCTUATIONS
 USE MODI_ADVECTION_METSV
@@ -466,7 +468,6 @@ USE MODI_WRITE_LFIFM_n
 USE MODI_WRITE_SERIES_n
 USE MODI_WRITE_SURF_ATM_N
 !
-USE MODD_FIRE_n
 IMPLICIT NONE
 !
 !*       0.1   declarations of arguments
@@ -1031,10 +1032,10 @@ IF ( nfile_backup_current < NBAK_NUMB ) THEN
     IF (CSURF=='EXTE') THEN
       TFILE_SURFEX => TPBAKFILE
       CALL GOTO_SURFEX(IMI)
-      CALL WRITE_SURF_ATM_n(YSURF_CUR,'MESONH','ALL',.FALSE.)
+      CALL WRITE_SURF_ATM_n(YSURF_CUR,'MESONH','ALL')
       IF ( KTCOUNT > 1) THEN
         CALL DIAG_SURF_ATM_n(YSURF_CUR,'MESONH')
-        CALL WRITE_DIAG_SURF_ATM_n(YSURF_CUR,'MESONH','ALL')
+        CALL WRITE_DIAG_SURF_ATM_n(YSURF_CUR,'MESONH','ALL', KTCOUNT/nfile_backup_current)
       END IF
       NULLIFY(TFILE_SURFEX)
     END IF
@@ -2113,7 +2114,7 @@ XT_SPECTRA = XT_SPECTRA + ZTIME2 - ZTIME1 + XTIME_LES_BU + XTIME_LES
 !               --------------------
 !
 IF (LMEAN_FIELD) THEN
-   CALL MEAN_FIELD(XUT, XVT, XWT, XTHT, XTKET, XPABST, XSVT(:,:,:,1))
+   CALL MEAN_FIELD(XUT, XVT, XWT, XTHT, XTKET, XPABST, XRT(:,:,:,1), XSVT(:,:,:,1))
 END IF
 !
 !-------------------------------------------------------------------------------
@@ -2191,7 +2192,7 @@ END IF
 !               --------------------------------
 !
 IF ( LSTATION ) &
-  CALL STATION_n( XZZ, XUT, XVT, XWT, XTHT, XRT, XSVT, XTKET, XTSRAD, XPABST )
+  CALL STATION_n( XZZ, XRHODREF, XUT, XVT, XWT, XTHT, XRT, XSVT, XTKET, XTSRAD, XPABST )
 !
 !---------------------------------------------------------
 !
@@ -2271,8 +2272,8 @@ IF (OEXIT) THEN
   IF ( .NOT. LIO_NO_WRITE ) THEN
     IF (LSERIES) CALL WRITE_SERIES_n(TDIAFILE)
     CALL WRITE_AIRCRAFT_BALLOON(TDIAFILE)
-    CALL WRITE_STATION_n(TDIAFILE)
-    CALL WRITE_PROFILER_n(TDIAFILE)
+    CALL WRITE_STATPROF_n( TDIAFILE, TSTATIONS )
+    CALL WRITE_STATPROF_n( TDIAFILE, TPROFILERS )
     call Write_les_n( tdiafile )
 #ifdef MNH_IOLFI
     CALL MENU_DIACHRO(TDIAFILE,'END')

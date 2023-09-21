@@ -106,7 +106,7 @@ end subroutine Budget_preallocate
       OHORELAX_UVWTH,OHORELAX_RV,OHORELAX_RC,OHORELAX_RR,             &
       OHORELAX_RI,OHORELAX_RS, OHORELAX_RG, OHORELAX_RH,OHORELAX_TKE, &
       OHORELAX_SV, OVE_RELAX, ove_relax_grd, OCHTRANS,                &
-      ONUDGING,ODRAGTREE,ODEPOTREE, OAERO_EOL,                        &
+      ONUDGING,ODRAGTREE,ODEPOTREE, ODRAGBLDG, OAERO_EOL,             &
       HRAD,HDCONV,HSCONV,HTURB,HTURBDIM,HCLOUD                        )
 !     #################################################################
 !
@@ -208,6 +208,7 @@ end subroutine Budget_preallocate
 !  P. Wautelet 02/03/2021: budgets: add terms for blowing snow
 !  P. Wautelet 04/03/2021: budgets: add terms for drag due to buildings
 !  P. Wautelet 17/03/2021: choose source terms for budgets with character strings instead of multiple integer variables
+! R. Schoetter    12/2021  multi-level coupling between MesoNH and SURFEX  
 !  C. Barthe   14/03/2022: budgets: add terms for CIBU and RDSF in LIMA
 !  M. Taufour  01/07/2022: budgets: add concentration for snow, graupel, hail
 !-------------------------------------------------------------------------------
@@ -302,6 +303,7 @@ LOGICAL, INTENT(IN) :: OCHTRANS         ! switch to activate convective
 LOGICAL, INTENT(IN) :: ONUDGING         ! switch to activate nudging
 LOGICAL, INTENT(IN) :: ODRAGTREE        ! switch to activate vegetation drag
 LOGICAL, INTENT(IN) :: ODEPOTREE        ! switch to activate droplet deposition on tree
+LOGICAL, INTENT(IN) :: ODRAGBLDG        ! switch to activate building drag
 LOGICAL, INTENT(IN) :: OAERO_EOL        ! switch to activate wind turbine wake
 CHARACTER (LEN=*), INTENT(IN) :: HRAD   ! type of the radiation scheme
 CHARACTER (LEN=*), INTENT(IN) :: HDCONV ! type of the deep convection scheme
@@ -1038,6 +1040,11 @@ if ( lbu_rth ) then
   tzsource%lavailable = lblaze
   call Budget_source_add( tbudgets(NBUDGET_TH), tzsource )
 
+  tzsource%cmnhname   = 'DRAGB'
+  tzsource%clongname  = 'heat released by buildings'
+  tzsource%lavailable = ldragbldg
+  call Budget_source_add( tbudgets(NBUDGET_TH), tzsource )
+
   tzsource%cmnhname   = 'VTURB'
   tzsource%clongname  = 'vertical turbulent diffusion'
   tzsource%lavailable = hturb == 'TKEL'
@@ -1463,6 +1470,11 @@ if ( tbudgets(NBUDGET_RV)%lenabled ) then
   tzsource%lavailable = hdconv == 'KAFR' .OR. hsconv == 'KAFR'
   call Budget_source_add( tbudgets(NBUDGET_RV), tzsource )
 
+  tzsource%cmnhname   = 'DRAGB'
+  tzsource%clongname  = 'vapor released by buildings'
+  tzsource%lavailable = ldragbldg
+  call Budget_source_add( tbudgets(NBUDGET_RV), tzsource )
+  
   tzsource%cmnhname   = 'BLAZE'
   tzsource%clongname  = 'blaze fire model contribution'
   tzsource%lavailable = lblaze

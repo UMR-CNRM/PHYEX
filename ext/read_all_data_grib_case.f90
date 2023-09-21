@@ -713,6 +713,10 @@ DEALLOCATE (ZLNPS_G)
 !
 WRITE (ILUOUT0,'(A)') ' | Reading T and Q fields'
 !
+IF (IMODEL==11) THEN
+  CALL SEARCH_FIELD(IGRIB,INUM,KPARAM=130,KLEV1=1000) !look for air temperature at pressure level 1000hPa
+  IF (INUM < 0) IMODEL = 0 ! This change is for handling IFS model level grib file obtained by python API
+END IF
 IF (IMODEL/=10.AND.IMODEL/=11) THEN
   SELECT CASE (IMODEL)
     CASE(0) ! ECMWF

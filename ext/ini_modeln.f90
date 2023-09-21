@@ -292,8 +292,10 @@ END MODULE MODI_INI_MODEL_n
 !  S. Riette      04/2020: XHL* fields
 !  F. Auguste     02/2021: add IBM
 !  T.Nigel        02/2021: add turbulence recycling
-! J.L.Redelsperger 06/2011: OCEAN case
-! A. Costes       12/2021: Blaze fire model
+!  J.L.Redelsperger 06/2011: OCEAN case
+!  R. Schoetter    12/2021  multi-level coupling between MesoNH and SURFEX  
+!  R. Schoetter    12/2021  adds humidity and other mean diagnostics
+! A. Costes        12/2021: Blaze fire model
 !---------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -334,6 +336,7 @@ USE MODD_DIAG_FLAG,         only: LCHEMDIAG, CSPEC_BU_DIAG
 USE MODD_DIM_n
 USE MODD_DRAG_n
 USE MODD_DRAGTREE_n
+USE MODD_DRAGBLDG_n
 USE MODD_DUST
 use MODD_DUST_OPT_LKT,      only: NMAX_RADIUS_LKT_DUST=>NMAX_RADIUS_LKT, NMAX_SIGMA_LKT_DUST=>NMAX_SIGMA_LKT,               &
                                   NMAX_WVL_SW_DUST=>NMAX_WVL_SW,                                                            &
@@ -525,9 +528,6 @@ INTEGER :: IIU_B,IJU_B
 INTEGER :: IIU_SXP2_YP1_Z_ll,IJU_SXP2_YP1_Z_ll,IKU_SXP2_YP1_Z_ll
 !
 REAL, DIMENSION(:,:),   ALLOCATABLE :: ZCO2   ! CO2 concentration near the surface
-REAL, DIMENSION(:,:),   ALLOCATABLE :: ZSEA   ! sea fraction
-REAL, DIMENSION(:,:),   ALLOCATABLE :: ZTOWN  ! town fraction
-REAL, DIMENSION(:,:),   ALLOCATABLE :: ZBARE  ! bare soil fraction
 !
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZDIR_ALB ! direct albedo
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZSCA_ALB ! diffuse albedo
@@ -778,6 +778,17 @@ IF (LMEAN_FIELD) THEN
     ALLOCATE(XTKEM_MEAN(0,0,0))
   END IF
   ALLOCATE(XPABSM_MEAN(IIU,IJU,IKU))   ; XPABSM_MEAN = 0.0
+  ALLOCATE(XQ_MEAN(IIU,IJU,IKU))       ; XQ_MEAN = 0.0
+  ALLOCATE(XRH_W_MEAN(IIU,IJU,IKU))    ; XRH_W_MEAN = 0.0
+  ALLOCATE(XRH_I_MEAN(IIU,IJU,IKU))    ; XRH_I_MEAN = 0.0
+  ALLOCATE(XRH_P_MEAN(IIU,IJU,IKU))    ; XRH_P_MEAN = 0.0
+  ALLOCATE(XRH_W_MAXCOL_MEAN(IIU,IJU)) ; XRH_W_MAXCOL_MEAN = 0.0
+  ALLOCATE(XRH_I_MAXCOL_MEAN(IIU,IJU)) ; XRH_I_MAXCOL_MEAN = 0.0
+  ALLOCATE(XRH_P_MAXCOL_MEAN(IIU,IJU)) ; XRH_P_MAXCOL_MEAN = 0.0
+  ALLOCATE(XWIFF_MEAN(IIU,IJU,IKU))    ; XWIFF_MEAN = 0.0
+  ALLOCATE(XWIDD_MEAN(IIU,IJU,IKU))    ; XWIDD_MEAN = 0.0
+  ALLOCATE(XWIFF_MAX (IIU,IJU,IKU))    ; XWIFF_MAX  = 0.0
+  ALLOCATE(XWIDD_MAX (IIU,IJU,IKU))    ; XWIDD_MAX  = 0.0
 !
   ALLOCATE(XU2_M2(IIU,IJU,IKU))      ; XU2_M2  = 0.0
 !
@@ -1832,7 +1843,7 @@ IF ( CBUTYPE /= "NONE" .AND. NBUMOD == KMI ) THEN
              LHORELAX_UVWTH,LHORELAX_RV, LHORELAX_RC,LHORELAX_RR,             &
              LHORELAX_RI,LHORELAX_RS,LHORELAX_RG, LHORELAX_RH,LHORELAX_TKE,   &
              LHORELAX_SV, LVE_RELAX, LVE_RELAX_GRD,                           &
-             LCHTRANS,LNUDGING,LDRAGTREE,LDEPOTREE,LMAIN_EOL,                 &
+             LCHTRANS,LNUDGING,LDRAGTREE,LDEPOTREE,LDRAGBLDG,LMAIN_EOL,       &
              CRAD,CDCONV,CSCONV,CTURB,CTURBDIM,CCLOUD                         )
 END IF
 !
@@ -2642,17 +2653,6 @@ IF (CRAD   == 'ECMW') THEN
 !* get cover mask for aerosols
 !
   IF (CPROGRAM=='MESONH' .OR. CPROGRAM=='DIAG  ') THEN
-    ALLOCATE(ZSEA(IIU,IJU))
-    ALLOCATE(ZTOWN(IIU,IJU))
-    ALLOCATE(ZBARE(IIU,IJU))
-    IF (CSURF=='EXTE') THEN
-      CALL GOTO_SURFEX(KMI)
-      CALL MNHGET_SURF_PARAM_n(PSEA=ZSEA,PTOWN=ZTOWN,PBARE=ZBARE)
-    ELSE
-      ZSEA (:,:) = 1.
-      ZTOWN(:,:) = 0.
-      ZBARE(:,:) = 0.
-    END IF
 !
     IF ( CAOP=='EXPL' .AND. LDUST .AND. KMI==1) THEN
       ALLOCATE( XEXT_COEFF_WVL_LKT_DUST( NMAX_RADIUS_LKT_DUST, NMAX_SIGMA_LKT_DUST, NMAX_WVL_SW_DUST ) )
@@ -2670,9 +2670,8 @@ IF (CRAD   == 'ECMW') THEN
 !
     CALL INI_RADIATIONS_ECMWF (XZHAT,XPABST,XTHT,XTSRAD,XLAT,XLON,TDTCUR,TDTEXP,       &
                                CLW,NDLON,NFLEV,NFLUX,NRAD,NSWB_OLD,CAER,NAER,NSTATM,   &
-                               XSTATM,ZSEA,ZTOWN,ZBARE,XOZON, XAER,XDST_WL, LSUBG_COND )
+                               XSTATM, XOZON, XAER,XDST_WL, LSUBG_COND                 )
 !
-    DEALLOCATE(ZSEA,ZTOWN,ZBARE)
     ALLOCATE (XAER_CLIM(SIZE(XAER,1),SIZE(XAER,2),SIZE(XAER,3),SIZE(XAER,4)))
     XAER_CLIM(:,:,:,:) =XAER(:,:,:,:)
 !
@@ -2683,23 +2682,11 @@ ELSE IF (CRAD   == 'ECRA') THEN
 !* get cover mask for aerosols
 !
   IF (CPROGRAM=='MESONH' .OR. CPROGRAM=='DIAG  ') THEN
-    ALLOCATE(ZSEA(IIU,IJU))
-    ALLOCATE(ZTOWN(IIU,IJU))
-    ALLOCATE(ZBARE(IIU,IJU))
-    IF (CSURF=='EXTE') THEN
-      CALL GOTO_SURFEX(KMI)
-      CALL MNHGET_SURF_PARAM_n(PSEA=ZSEA,PTOWN=ZTOWN,PBARE=ZBARE)
-    ELSE
-      ZSEA (:,:) = 1.
-      ZTOWN(:,:) = 0.
-      ZBARE(:,:) = 0.
-    END IF
 !
     CALL INI_RADIATIONS_ECRAD (XZHAT,XPABST,XTHT,XTSRAD,XLAT,XLON,TDTCUR,TDTEXP,       &
                                CLW,NDLON,NFLEV,NFLUX,NRAD,NSWB_OLD,CAER,NAER,NSTATM,   &
-                               XSTATM,ZSEA,ZTOWN,ZBARE,XOZON, XAER,XDST_WL, LSUBG_COND )
+                               XSTATM, XOZON, XAER,XDST_WL, LSUBG_COND                 )
 
-    DEALLOCATE(ZSEA,ZTOWN,ZBARE)
     ALLOCATE (XAER_CLIM(SIZE(XAER,1),SIZE(XAER,2),SIZE(XAER,3),SIZE(XAER,4)))
     XAER_CLIM(:,:,:,:) = XAER(:,:,:,:)
 !
