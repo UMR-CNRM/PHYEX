@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -147,16 +147,14 @@ CALL IO_File_add2list(TZNMLFILE,'LATLON2XY1.nam','NML','READ')
 CALL IO_File_open(TZNMLFILE)
 INAM=TZNMLFILE%NLU
 !
-CALL POSNAM(INAM,'NAM_INIFILE',GFOUND)
+CALL POSNAM( TZNMLFILE, 'NAM_INIFILE', GFOUND )
 IF (GFOUND) THEN
   READ(UNIT=INAM,NML=NAM_INIFILE)
-  PRINT*, '  namelist NAM_INIFILE read'
 END IF
 !
-CALL POSNAM(INAM,'NAM_CONFIO',GFOUND)
+CALL POSNAM( TZNMLFILE, 'NAM_CONFIO', GFOUND )
 IF (GFOUND) THEN
   READ(UNIT=INAM,NML=NAM_CONFIO)
-  PRINT*, '  namelist NAM_CONFIO read'
 END IF
 !
 CALL IO_Config_set()

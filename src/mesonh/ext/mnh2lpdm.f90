@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2002-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2002-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -113,7 +113,7 @@ READ(UNIT=IFNML,NML=NAM_TURB)
 READ(UNIT=IFNML,NML=NAM_FIC)
 print *,'Lecture de NAM_FIC OK.'
 
-CALL POSNAM(IFNML,'NAM_CONFIO',GFOUND)
+CALL POSNAM( TZNMLFILE, 'NAM_CONFIO', GFOUND )
 IF (GFOUND) THEN
   READ(UNIT=IFNML,NML=NAM_CONFIO)
 END IF
