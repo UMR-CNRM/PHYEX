@@ -197,16 +197,6 @@ LLSIGMA_RC=(PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM')
 LL_AUCV_ADJU=(PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU')
 !
 IF(PARAMI%LPACK_MICRO) THEN
-  IF(KPROMA /= KSIZE .AND. (PARAMI%CSUBG_RR_EVAP=='PRFR' .OR. PARAMI%CSUBG_RC_RR_ACCR=='PRFR')) THEN
-    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'For now, KPROMA must be equal to KSIZE, see comments in code for explanation')
-    ! Microphyscs was optimized by introducing chunks of KPROMA size
-    ! Thus, in ice4_tendencies, the 1D array represent only a fraction of the points where microphysical species are present
-    ! We cannot rebuild the entire 3D arrays in the subroutine, so we cannot call ice4_rainfr_vert in it
-    ! A solution would be to suppress optimisation in this case by setting KPROMA=KSIZE in rain_ice
-    ! Another solution would be to compute column by column?
-    ! Another one would be to cut tendencies in 3 parts: before rainfr_vert, rainfr_vert, after rainfr_vert
-  ENDIF
-  !
   IF(BUCONF%LBU_ENABLE) THEN
     DO JV=1, IBUNUM-IBUNUM_EXTRA
       ZBU_PACK(:, JV)=0.
