@@ -20,6 +20,7 @@ SUBROUTINE ICE4_RAINFR_VERT(D, ICED, PPRFR, PRR, PRS, PRG, PRH)
 !!    -------------
 !!
 !  P. Wautelet 13/02/2019: bugfix: intent of PPRFR OUT->INOUT
+!  S. Riette 21/9/23: collapse JI/JJ
 !
 !
 !*      0. DECLARATIONS
@@ -33,19 +34,19 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(DIMPHYEX_t),             INTENT(IN)    :: D
-TYPE(RAIN_ICE_DESCR_t),       INTENT(IN)    :: ICED
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(INOUT) :: PPRFR !Precipitation fraction
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRR !Rain field
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRS !Snow field
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), INTENT(IN)    :: PRG !Graupel field
-REAL, DIMENSION(D%NIT,D%NJT,D%NKT), OPTIONAL, INTENT(IN)    :: PRH !Hail field
+TYPE(DIMPHYEX_t),              INTENT(IN)    :: D
+TYPE(RAIN_ICE_DESCR_t),        INTENT(IN)    :: ICED
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PPRFR !Precipitation fraction
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRR !Rain field
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRS !Snow field
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRG !Graupel field
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)    :: PRH !Hail field
 !
-INTEGER :: IKB, IKE, IKL, IIE, IIB, IJB, IJE
+INTEGER :: IKB, IKE, IKL, IIJB, IIJE
 !*       0.2  declaration of local variables
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-INTEGER :: JI, JJ, JK
+INTEGER :: JIJ, JK
 LOGICAL :: MASK
 !
 !-------------------------------------------------------------------------------
@@ -54,32 +55,28 @@ IF (LHOOK) CALL DR_HOOK('ICE4_RAINFR_VERT',0,ZHOOK_HANDLE)
 IKB=D%NKB
 IKE=D%NKE
 IKL=D%NKL
-IIB=D%NIB
-IIE=D%NIE
-IJB=D%NJB
-IJE=D%NJE
+IIJB=D%NIJB
+IIJE=D%NIJE
 !
 !-------------------------------------------------------------------------------
-DO JI = IIB,IIE
-   DO JJ = IJB, IJE
-      PPRFR(JI,JJ,IKE)=0.
-      DO JK=IKE-IKL, IKB, -IKL
-         IF(PRESENT(PRH)) THEN
-            MASK=PRR(JI,JJ,JK) .GT. ICED%XRTMIN(3) .OR. PRS(JI,JJ,JK) .GT. ICED%XRTMIN(5) &
-            .OR. PRG(JI,JJ,JK) .GT. ICED%XRTMIN(6) .OR. PRH(JI,JJ,JK) .GT. ICED%XRTMIN(7)
-         ELSE
-            MASK=PRR(JI,JJ,JK) .GT. ICED%XRTMIN(3) .OR. PRS(JI,JJ,JK) .GT. ICED%XRTMIN(5) &
-            .OR. PRG(JI,JJ,JK) .GT. ICED%XRTMIN(6) 
+DO JIJ = IIJB,IIJE
+   PPRFR(JIJ,IKE)=0.
+   DO JK=IKE-IKL, IKB, -IKL
+      IF(PRESENT(PRH)) THEN
+         MASK=PRR(JIJ,JK) .GT. ICED%XRTMIN(3) .OR. PRS(JIJ,JK) .GT. ICED%XRTMIN(5) &
+         .OR. PRG(JIJ,JK) .GT. ICED%XRTMIN(6) .OR. PRH(JIJ,JK) .GT. ICED%XRTMIN(7)
+      ELSE
+         MASK=PRR(JIJ,JK) .GT. ICED%XRTMIN(3) .OR. PRS(JIJ,JK) .GT. ICED%XRTMIN(5) &
+         .OR. PRG(JIJ,JK) .GT. ICED%XRTMIN(6) 
+      END IF
+      IF (MASK) THEN
+         PPRFR(JIJ,JK)=MAX(PPRFR(JIJ,JK),PPRFR(JIJ,JK+IKL))
+         IF (PPRFR(JIJ,JK)==0.) THEN
+            PPRFR(JIJ,JK)=1.
          END IF
-         IF (MASK) THEN
-            PPRFR(JI,JJ,JK)=MAX(PPRFR(JI,JJ,JK),PPRFR(JI,JJ,JK+IKL))
-            IF (PPRFR(JI,JJ,JK)==0) THEN
-               PPRFR(JI,JJ,JK)=1.
-            END IF
-         ELSE
-            PPRFR(JI,JJ,JK)=0.
-         END IF
-      END DO
+      ELSE
+         PPRFR(JIJ,JK)=0.
+      END IF
    END DO
 END DO
 !

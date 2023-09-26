@@ -36,6 +36,7 @@ SUBROUTINE ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
 !!    MODIFICATIONS
 !!    -------------
 !!     R. El Khatib 28-Apr-2023 Fix (and re-enable) the cache-blocking mechanism on top of phyex
+!!     S. Riette Sept 23: all 3D arrays are suppressed from ice4_stepping
 !  -----------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -161,6 +162,7 @@ REAL, DIMENSION(KPROMA) :: &
                         & ZHLC_HRC, & ! HLCLOUDS : LWC that is High LWC in grid
                         & ZHLI_HCF, &
                         & ZHLI_HRI, &
+                        & ZRAINFR,  &
                         & ZRREVAV
 REAL, DIMENSION(KSIZE2) :: ZSIGMA_RC ! Standard deviation of rc at time t
 LOGICAL, DIMENSION(KPROMA) :: LLMICRO
@@ -285,6 +287,7 @@ IF(PARAMI%LPACK_MICRO) THEN
                 ZHLI_HCF(IC) = PHLI_HCF(JIJ, JK)
                 ZHLI_HRI(IC) = PHLI_HRI(JIJ, JK)
               ENDIF
+              ZRAINFR(IC)=PRAINFR(JIJ, JK)
               ! Save indices for later usages:
               I1(IC) = JIJ
               I2(IC) = JK
@@ -320,7 +323,7 @@ IF(PARAMI%LPACK_MICRO) THEN
       !*       5.     TENDENCIES COMPUTATION
       !               ----------------------
       !
-      CALL ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
+      CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
                         &LLSIGMA_RC, LL_AUCV_ADJU, GEXT_TEND, &
                         &KPROMA, IMICRO, LLMICRO, PTSTEP, &
                         &KRR, &
@@ -329,7 +332,7 @@ IF(PARAMI%LPACK_MICRO) THEN
                         &ZCIT, &
                         &ZVART, &
                         &ZHLC_HCF, ZHLC_HRC, &
-                        &ZHLI_HCF, ZHLI_HRI, PRAINFR, &
+                        &ZHLI_HCF, ZHLI_HRI, ZRAINFR, &
                         &ZEXTPK, ZBU_SUM, ZRREVAV)
       !
       !*       6.     UNPACKING
@@ -349,6 +352,7 @@ IF(PARAMI%LPACK_MICRO) THEN
         IF (KRR==7) THEN
           PWR(I1(JL),I2(JL),IRH)=ZVART(JL, IRH)
         ENDIF
+        PRAINFR(I1(JL),I2(JL))=ZRAINFR(JL)
       ENDDO
       IF(BUCONF%LBU_ENABLE) THEN
         DO JV=1, IBUNUM-IBUNUM_EXTRA
@@ -429,7 +433,7 @@ ELSE ! PARAMI%LPACK_MICRO
   !*       5bis.  TENDENCIES COMPUTATION
   !               ----------------------
   !
-  CALL ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
+  CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
                     &LLSIGMA_RC, LL_AUCV_ADJU, GEXT_TEND, &
                     &KSIZE, KSIZE, ODMICRO, PTSTEP, &
                     &KRR, &

@@ -163,14 +163,15 @@
 !!      (C. Abiven, Y. Léauté, V. Seigner, S. Riette) Phasing of Turner rain subgrid param
 !!      (S. Riette) Source code split into several files
 !!                  02/2019 C.Lac add rain fraction as an output field
-!  P. Wautelet 10/04/2019: replace ABORT and STOP calls by Print_msg
-!  P. Wautelet 28/05/2019: move COUNTJV function to tools.f90
-!  P. Wautelet 29/05/2019: remove PACK/UNPACK intrinsics (to get more performance and better OpenACC support)
-!  P. Wautelet 17/01/2020: move Quicksort to tools.f90
-!  P. Wautelet    02/2020: use the new data structures and subroutines for budgets
-!  P. Wautelet 25/02/2020: bugfix: add missing budget: WETH_BU_RRG
+!!  P. Wautelet 10/04/2019: replace ABORT and STOP calls by Print_msg
+!!  P. Wautelet 28/05/2019: move COUNTJV function to tools.f90
+!!  P. Wautelet 29/05/2019: remove PACK/UNPACK intrinsics (to get more performance and better OpenACC support)
+!!  P. Wautelet 17/01/2020: move Quicksort to tools.f90
+!!  P. Wautelet    02/2020: use the new data structures and subroutines for budgets
+!!  P. Wautelet 25/02/2020: bugfix: add missing budget: WETH_BU_RRG
 !!     R. El Khatib 24-Aug-2021 Optimizations
-!  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
+!! J. Wurtz       03/2022: New snow characteristics with LSNOW_T
+!! S. Riette Sept 23: e from ice4_tendencies
 !-----------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -199,6 +200,7 @@ USE MODE_BUDGET_PHY,         ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 USE MODE_MSG,                ONLY: PRINT_MSG, NVERB_FATAL
 
 USE MODE_ICE4_RAINFR_VERT,   ONLY: ICE4_RAINFR_VERT
+USE MODE_ICE4_COMPUTE_PDF,   ONLY: ICE4_COMPUTE_PDF
 USE MODE_ICE4_SEDIMENTATION, ONLY: ICE4_SEDIMENTATION
 USE MODE_ICE4_PACK, ONLY: ICE4_PACK
 USE MODE_ICE4_NUCLEATION, ONLY: ICE4_NUCLEATION
@@ -273,13 +275,18 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)  :: PFPR ! upper-air pr
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 INTEGER :: JIJ, JK
-INTEGER :: IKTB, IKTE, IKB, IIJB, IIJE
+INTEGER :: IKTB, IKTE, IKB, IKT, IIJB, IIJE, IIJT
 !
 LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLMICRO ! mask to limit computation
 !Arrays for nucleation call outisde of LLMICRO points
 REAL,    DIMENSION(D%NIJT, D%NKT) :: ZT ! Temperature
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZZ_RVHENI       ! heterogeneous nucleation
 REAL, DIMENSION(D%NIJT, D%NKT) :: ZZ_LVFACT, ZZ_LSFACT
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZSIGMA_RC
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_LCF
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLC_LRC
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LCF
+REAL, DIMENSION(D%NIJT, D%NKT) :: ZHLI_LRI
 !
 REAL :: ZINV_TSTEP ! Inverse ov PTSTEP
 !For total tendencies computation
@@ -301,8 +308,10 @@ IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 0, ZHOOK_HANDLE)
 IKTB=D%NKTB
 IKTE=D%NKTE
 IKB=D%NKB
+IKT=D%NKT
 IIJB=D%NIJB
 IIJE=D%NIJE
+IIJT=D%NIJT
 !-------------------------------------------------------------------------------
 !
 IF(PARAMI%LOCND2) THEN
@@ -392,7 +401,7 @@ DO JK = IKTB,IKTE
 ENDDO
 !
 !
-!*       4.     COMPUTES THE SLOW COLD PROCESS SOURCES OUTSIDE OF LLMICRO POINTS
+!*       4.1    COMPUTES THE SLOW COLD PROCESS SOURCES OUTSIDE OF LLMICRO POINTS
 !               -----------------------------------------------------------------
 !
 !The nucelation must be call everywhere
@@ -419,6 +428,66 @@ DO JK = IKTB, IKTE
     ZZ_RVHENI(JIJ,JK) = MIN(PRVS(JIJ,JK), ZZ_RVHENI(JIJ,JK)/PTSTEP)
   ENDDO
 ENDDO
+!
+!
+!*       4.2    COMPUTES PRECIPITATION FRACTION
+!               -------------------------------
+!
+!The ICE4_RAINFR_VERT call was previously in ice4_tendencies to be computed again at each iteration.
+!The computation has been moved here to separate (for GPUs) the part of the code
+!where column computation can occur (here, alongside with the sedimentation) and
+!other routines where computation are only 0D (point by point).
+!This is not completly exact but we can think that the precipitation fraction
+!diagnostic does not evolve too much during a time-step.
+!ICE4_RAINFR_VERT needs the output of ICE4_COMPUTE_PDF; thus this routine
+!is called here but it's still called from within ice4_tendencies.
+IF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR' .OR. PARAMI%CSUBG_RR_EVAP=='PRFR') THEN
+  IF (PARAMI%CSUBG_AUCV_RC=='PDF ' .AND. PARAMI%CSUBG_PR_PDF=='SIGM') THEN
+    DO JK = IKTB, IKTE                                                                                                                  
+      DO JIJ=IIJB, IIJE
+        ZSIGMA_RC(JIJ, JK)=PSIGS(JIJ, JK)**2
+      ENDDO
+    ENDDO
+  ENDIF
+  IF (PARAMI%CSUBG_AUCV_RC=='ADJU' .OR. PARAMI%CSUBG_AUCV_RI=='ADJU') THEN
+    DO JK = IKTB, IKTE                                                                                                                
+      DO JIJ=IIJB, IIJE
+        ZHLC_LRC(JIJ, JK) = ZWR(JIJ, JK, IRC) - PHLC_HRC(JIJ, JK)
+        ZHLI_LRI(JIJ, JK) = ZWR(JIJ, JK, IRI) - PHLI_HRI(JIJ, JK)
+        IF(ZWR(JIJ, JK, IRC)>0.) THEN
+          ZHLC_LCF(JIJ, JK) = PCLDFR(JIJ, JK)- PHLC_HCF(JIJ, JK)
+        ELSE
+          ZHLC_LCF(JIJ, JK)=0.
+        ENDIF
+        IF(ZWR(JIJ, JK, IRI)>0.) THEN
+          ZHLI_LCF(JIJ, JK) = PCLDFR(JIJ, JK)- PHLI_HCF(JIJ, JK)
+        ELSE
+          ZHLI_LCF(JIJ, JK)=0.
+        ENDIF
+      ENDDO
+    ENDDO
+  ENDIF
+  !We cannot use ZWR(:,IKTB:IKTE,IRC) which is not contiguous
+  CALL ICE4_COMPUTE_PDF(CST, ICEP, ICED, IIJT*(IKTE-IKTB+1), PARAMI%CSUBG_AUCV_RC, PARAMI%CSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF,&
+                        LLMICRO(:,IKTB:IKTE), PRHODREF(:,IKTB:IKTE), PRCT(:,IKTB:IKTE), PRIT(:,IKTB:IKTE), &
+                        PCLDFR(:,IKTB:IKTE), ZT(:,IKTB:IKTE), ZSIGMA_RC(:,IKTB:IKTE), &
+                        PHLC_HCF(:,IKTB:IKTE), ZHLC_LCF(:,IKTB:IKTE), PHLC_HRC(:,IKTB:IKTE), ZHLC_LRC(:,IKTB:IKTE), &
+                        PHLI_HCF(:,IKTB:IKTE), ZHLI_LCF(:,IKTB:IKTE), PHLI_HRI(:,IKTB:IKTE), ZHLI_LRI(:,IKTB:IKTE), &
+                        PRAINFR(:,IKTB:IKTE))
+!CALL ICE4_COMPUTE_PDF2D(D, CST, ICEP, ICED, PARAMI%CSUBG_AUCV_RC, PARAMI%CSUBG_AUCV_RI, PARAMI%CSUBG_PR_PDF, &
+!                        LLMICRO, PRHODREF, ZWR(:,:,IRC), ZWR(:,:,IRI), PCLDFR, ZT, ZSIGMA_RC,&
+!                            PHLC_HCF, ZHLC_LCF, PHLC_HRC, ZHLC_LRC, &
+!                            PHLI_HCF, ZHLI_LCF, PHLI_HRI, ZHLI_LRI, PRAINFR)
+  IF (PRESENT(PRHS)) THEN
+    CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR, ZWR(:,:,IRR), &
+                         &ZWR(:,:,IRS), ZWR(:,:,IRG), ZWR(:,:,IRH))
+  ELSE
+    CALL ICE4_RAINFR_VERT(D, ICED, PRAINFR, ZWR(:,:,IRR), &
+                         &ZWR(:,:,IRS), ZWR(:,:,IRG)) 
+  ENDIF
+ELSE
+  PRAINFR(:,:)=1.
+ENDIF
 !
 !
 !*       5.     TENDENCIES COMPUTATION
