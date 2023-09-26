@@ -55,21 +55,35 @@ set -o pipefail #abort if left command on a pipe fails
 #                       the commit d095d11 (20 March 2023) when running in 48t3
 #                       the commit 7e55649 when running in 49t0 (9164c67 (last commit in 48t3) is identical to d095d11)
 
+#######################
+#### CONFIGURATION ####
+#######################
+
 #Special pack names:
 # - recompil: original source code (everything under mpa)
 # - split_48t1: original 48t1 source code but with physics source code under phyex directory
 # - split_48t3: same as split_48t1 but for the 48t3 cycle
 # - split: symbolic link to split_48t1 (backward compatibility)
 # - split_49t0: same as split_48t1 but for the 49t0 cycle
-
 specialPack="ori split split_48t1 split_48t3 recompil split_49t0"
-availTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7"
+
+#About the tests:
+# - ALLTests is a list of tests to be done when '-t ALL' is used. This list is filled here
+#   in case there is no ial_version.json file containig a 'testing' section. If this 'testing'
+#   section exists, this list is overridden.
+# - allowedTests is the list of allowed tests which can depend on platform, if we ask to perform an action
+#   with a test not in the allowedTests list, the action is ignored
+# - defaultTest is the list of tests to perform when no '-t' option is provided on the command line.
+ALLTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7"
 defaultTest="small_3D"
 allowedTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7,small_3D_alt8,small_3D_alt9,small_3D_alt10,small_3D_alt11,small_3D_alt12,small_3D_lima"
+
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- seprator must be in sync with prep_code.sh separator
 
 PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+HOMEPACK=${HOMEPACK:=$HOME/pack}
 
 dirpack=$PHYEXTOOLSDIR/pack
 dirconf=$PHYEXTOOLSDIR/conf_tests
@@ -83,7 +97,7 @@ if [ $(hostname | cut -c 1-7) == 'belenos' -o $(hostname | cut -c 1-7) == 'taran
   gmkpack_o[49t0]=x
   defaultMainPackVersion=01
   defaultRef='split_${cycle}'
-  availTests="${availTests},big_3D"
+  ALLTests="${ALLTests},big_3D"
   allowedTests="${allowedTests},big_3D"
 else
   HPC=0
@@ -96,7 +110,9 @@ else
 fi
 mainPackVersion=${mainPackVersion:-${defaultMainPackVersion}}
 
-extraCompilationCheck=1
+################################
+#### COMMAND LINE ARGUMENTS ####
+################################
 
 function usage {
   echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t test] [--cycle CYCLE] [--repo-user] [--repo-protocol] [--remove] commit [reference]"
@@ -181,26 +197,6 @@ while [ -n "$1" ]; do
   shift
 done
 
-HOMEPACK=${HOMEPACK:=$HOME/pack}
-
-function exescript () {
-  #usage: exescript <output file> <script> [arg [arg ...]]
-  output=$1
-  shift
-  if [ $HPC -eq 1 ]; then
-    sbatch --wait -o $output $@
-    cat $output
-  else
-    $@ 2>&1 | tee $output
-  fi
-}
-
-if [ -z "${tests-}" ]; then
-  tests=$defaultTest
-elif [ $tests == 'ALL' ]; then
-  tests=$availTests
-fi
-
 if [ $packcreation -eq 0 -a \
      $compilation -eq 0 -a \
      $run -eq 0 -a \
@@ -222,6 +218,22 @@ if [ $check -eq 1 -a -z "${reference-}" ]; then
   exit 3
 fi
 
+##############################
+#### FUNCTION DEFINITIONS ####
+##############################
+
+function exescript () {
+  #usage: exescript <output file> <script> [arg [arg ...]]
+  output=$1
+  shift
+  if [ $HPC -eq 1 ]; then
+    sbatch --wait -o $output $@
+    cat $output
+  else
+    $@ 2>&1 | tee $output
+  fi
+}
+
 function apl_arome_content2cycle {
   # variable content_apl_arome must contain the source code of apl_arome.F90
   if grep CPG_DYN_TYPE <(echo $content_apl_arome) > /dev/null; then
@@ -231,52 +243,40 @@ function apl_arome_content2cycle {
   fi
 }
 
-function ial_version_content2key {
-  # variable content_ial_version must contain the source code of ial_version.json
-  # $1 must be the key name
-  # $2 is the default value
-  content_ial_version=$content_ial_version python3 -c "import json; import os; print(json.loads(os.environ['content_ial_version']).get('$1', '$2'))"
+function json_dictkey2value {
+  # $1 must contain the json string
+  # $2 must be the key name
+  # $3 is the default value
+  json_content="$1" python3 -c "import json; import os; result=json.loads(os.environ['json_content']).get('$2', '$3'); print(json.dumps(result) if isinstance(result, dict) else result)"
 }
 
-#Name is choosen such as it can be produced with a main pack: PHYEX/${cycle}_XXXXXXXXX.01.${gmkpack_l}.${gmkpack_o}
-fromdir=''
+#################################
+#### CYCLE/COMMIT ADAPTATION ####
+#################################
+
+is_directory=0
+is_special=0
+is_commit=0
 if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
-  fromdir=$commit
-  if [ "$cycle" == "" ]; then
-    content_ial_version=$(scp $commit/src/arome/ial_version.json /dev/stdout 2>/dev/null || echo "")
-    if [ "$content_ial_version" == "" ]; then
-      content_apl_arome=$(scp $commit/src/arome/ext/apl_arome.F90 /dev/stdout)
-      cycle=$(apl_arome_content2cycle)
-    else
-      cycle=$(ial_version_content2key cycle '')
-      scripttag=$(ial_version_content2key scripttag '')
-    fi
-  fi
-  if [[ ! -z "${gmkpack_o[$cycle]+unset}" ]]; then #the -v approach is valid only with bash > 4.3:  if [[ -v gmkpack_o[$cycle] ]]; then
-    gmkpack_o=${gmkpack_o[$cycle]}
-  else
-    gmkpack_o=${gmkpack_o[default]}
-  fi
-  if [[ ! -z "${gmkpack_l[$cycle]+unset}" ]]; then
-    gmkpack_l=${gmkpack_l[$cycle]}
-  else
-    gmkpack_l=${gmkpack_l[default]}
-  fi
-  packBranch=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
-  name="PHYEX/${cycle}_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
-  [ $suppress -eq 1 -a -d $HOMEPACK/$name ] && rm -rf $HOMEPACK/$name
+  is_directory=1
 elif echo $specialPack | grep -w $commit > /dev/null; then
-  name="PHYEX/$commit"
-  if [ $commit == split_49t0 ]; then
-    cycle=49t0
-  elif [ $commit == split_48t3 ]; then
-    cycle=48t3
-  else
-    cycle=48t1
-  fi
+  is_special=1
 else
-  packBranch="COMMIT$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')"
-  if [ "$cycle" == "" ]; then
+  is_commit=1
+fi
+
+#Name is choosen such as it can be produced with a main pack: PHYEX/${cycle}_XXXXXXXXX.01.${gmkpack_l}.${gmkpack_o}
+declare -A refByTest
+fromdir=''
+if [ $is_directory -eq 1 -o $is_commit -eq 1 ]; then
+  if [ $is_directory -eq 1 ]; then
+    #The git repository is a directory
+    fromdir=$commit
+    content_ial_version=$(scp $commit/src/arome/ial_version.json /dev/stdout 2>/dev/null || echo "")
+    cmd_apl_arome="scp $commit/src/arome/ext/apl_arome.F90 /dev/stdout"
+    packBranch=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
+  else
+    #The git repository is on github
     if [[ $commit == arome${separator}* ]]; then
       apl_arome_file="ext/apl_arome.F90"
       ial_version_file="ial_version.json"
@@ -290,12 +290,30 @@ else
       urlcommit=$commit
     fi
     content_ial_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$ial_version_file -O - 2>/dev/null || echo "")
+    cmd_apl_arome="wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$apl_arome_file -O - 2>/dev/null"
+    packBranch="COMMIT$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')"
+  fi
+  if [ ! "$content_ial_version" == "" ]; then
+    testing=$(json_dictkey2value "$content_ial_version" 'testing' '')
+    if [ ! "$testing" == "" ]; then
+      ALLTests='' #We reset the list of tests
+      for t in $(echo $allowedTests | sed 's/,/ /g'); do
+        ref=$(json_dictkey2value "$testing" "$t" '')
+        if [ ! "$ref" == "" ]; then
+          ALLTests="${ALLTests},$t"
+          refByTest[$t]=$ref
+        fi
+      done
+      ALLTests="${ALLTests:1}" #Remove first character (',')
+    fi
+  fi
+  if [ "$cycle" == "" ]; then
     if [ "$content_ial_version" == "" ]; then
-      content_apl_arome=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$apl_arome_file -O - 2>/dev/null)
+      content_apl_arome=$($cmd_apl_arome)
       cycle=$(apl_arome_content2cycle)
     else
-      cycle=$(ial_version_content2key cycle)
-      scripttag=$(ial_version_content2key scripttag)
+      cycle=$(json_dictkey2value "$content_ial_version" 'cycle' '')
+      scripttag=$(json_dictkey2value "$content_ial_version" 'scripttag' '')
     fi
   fi
   if [[ ! -z "${gmkpack_o[$cycle]+unset}" ]]; then #the -v approach is valid only with bash > 4.3:  if [[ -v gmkpack_o[$cycle] ]]; then
@@ -310,19 +328,55 @@ else
   fi
   name="PHYEX/${cycle}_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
   [ $suppress -eq 1 -a -d $HOMEPACK/$name ] && rm -rf $HOMEPACK/$name
-fi
-if [ ! -z "${reference-}" ]; then
-  [ $reference == 'REF' ] && reference=$(eval echo $defaultRef) #echo to replace ${cycle} by value
-  reffromdir=''
-  if echo $reference | grep '/' > /dev/null; then
-    reffromdir=$reference
-    refname="PHYEX/*_$(echo $reference | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g').01.${gmkpack_l}.${gmkpack_o}"
-  elif echo $specialPack | grep -w $reference > /dev/null; then
-    refname="PHYEX/$reference"
+elif [ $is_special -eq 1 ]; then
+  name="PHYEX/$commit"
+  if [ $commit == split_49t0 ]; then
+    cycle=49t0
+  elif [ $commit == split_48t3 ]; then
+    cycle=48t3
   else
-    refname="PHYEX/*_COMMIT${reference}.01.${gmkpack_l}.${gmkpack_o}"
+    cycle=48t1
   fi
 fi
+if [ ! -z "${reference-}" ]; then
+  declare -A refnameByTest
+  #Reference to use for each test
+  for t in $(echo $ALLTests | sed 's/,/ /g'); do
+    #Name of the reference
+    if [ "$reference" == 'REF' ]; then
+      if [[ ! -z "${refByTest[$t]+unset}" ]]; then #the -v approach is valid only with bash > 4.3:  if [[ -v gmkpack_o[$cycle] ]]; then
+        #The json file contained the references to use on a per test case basis
+        caseref=${refByTest[$t]}
+      else
+        #No json file, we use the global default reference
+        caseref=$(eval echo $defaultRef) #echo to replace ${cycle} by value
+      fi
+    else
+      #The exact reference to use was given on the command line
+      caseref=$reference
+    fi
+    refByTest[$t]=$caseref
+    #Conversion into directory name
+    if echo $caseref | grep '/' > /dev/null; then
+      refname="PHYEX/*_$(echo $caseref | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g').01.${gmkpack_l}.${gmkpack_o}"
+    elif echo $specialPack | grep -w $caseref > /dev/null; then
+      refname="PHYEX/$caseref"
+    else
+      refname="PHYEX/*_COMMIT${caseref}.01.${gmkpack_l}.${gmkpack_o}"
+    fi
+    refnameByTest[$t]=$refname
+  done
+fi
+
+if [ -z "${tests-}" ]; then
+  tests=$defaultTest
+elif echo "$tests" | grep -w 'ALL' > /dev/null; then
+  tests=$(echo "$tests" | sed "s/\bALL\b/$ALLTests/g")
+fi
+
+#######################
+#### PACK CREATION ####
+#######################
 
 if [ $packcreation -eq 1 ]; then
   echo "### Compilation of commit $commit"
@@ -526,6 +580,10 @@ if [ $packcreation -eq 1 ]; then
   rm -rf PHYEX
 fi
 
+#####################
+#### COMPILATION ####
+#####################
+
 if [ $compilation -eq 1 ]; then
   echo "### Compilation of commit $commit"
 
@@ -536,8 +594,7 @@ if [ $compilation -eq 1 ]; then
 
   [ -f ics_packages ] && exescript Output_compilation_hub ics_packages
   exescript Output_compilation ics_masterodb
-  if [ $extraCompilationCheck -eq 1 -a \
-       -f bin/MASTERODB \
+  if [ -f bin/MASTERODB \
        -a $(grep Error Output_compilation | \
             grep -v TestErrorHandler | \
             grep -v "'Error" | \
@@ -588,6 +645,10 @@ if [ $run -ge 1 ]; then
   done
 fi
 
+####################
+#### COMPARISON ####
+####################
+
 if [ $check -eq 1 ]; then
   echo "### Check commit $commit against commit $reference"
 
@@ -608,6 +669,8 @@ if [ $check -eq 1 ]; then
   for tag_file in $filestocheck; do
       tag=$(echo $tag_file | cut -d, -f1)
       file=$(echo $tag_file | cut -d, -f2)
+      refname=${refnameByTest[$tag]}
+      ref=${refByTest[$tag]}
       file1=$HOMEPACK/$name/$file
       file2=$(echo $HOMEPACK/$refname/$file) #echo to enable shell substitution
 
@@ -618,7 +681,7 @@ if [ $check -eq 1 ]; then
         t=1
       fi
       if [ ! -f "$file2" ]; then
-        mess2="Result ($file2) for commit $reference does not exist, please run the simulation"
+        mess2="Reference result ($file2) for commit $ref does not exist, please run the simulation"
         t=1
         if [ "$mess" = "" ]; then
           mess=$mess2
@@ -678,6 +741,10 @@ if [ $check -eq 1 ]; then
     cmpstatus=50
   fi
 fi
+
+##################
+#### CLEANING ####
+##################
 
 if [ $remove -eq 1 ]; then
   echo "### Remove model directory for commit $commit"
