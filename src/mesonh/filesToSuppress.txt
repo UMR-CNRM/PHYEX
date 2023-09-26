@@ -20,6 +20,8 @@ aux/modi_gradient_u.f90
 aux/modi_gradient_v.f90
 aux/modi_gradient_w.f90
 aux/mode_io_field_write.f90
+aux/ini_phyex.f90
+aux/modi_ini_phyex.f90
 
 #old version of rain_ice
 micro/mode_rain_ice_old_fast_rg.f90
