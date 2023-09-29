@@ -289,16 +289,19 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
     if [ "${model}" == 'ial' ]; then
       compilation='-p -c'
       execution='-r'
+      comparison='-C --computeRefIfNeeded'
       jsonfile="src/arome/ial_version.json"
       docmp=1
     elif [ "${model}" == 'lmdz' ]; then
       compilation='-p -c --nofcm'
       execution='-r --nofcm'
+      comparison='-C'
       jsonfile="src/${model}/${model}_version.json"
       docmp=0
     else
       compilation='-c'
       execution='-r'
+      comparison='-C'
       jsonfile="src/${model}/${model}_version.json"
       docmp=1
     fi
@@ -359,7 +362,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
           fi
         fi
         if [ ${result} -eq 0 -a ${docmp} -eq 1 -a ${comp} -eq 1 ]; then
-          compcmd="$cmd -C ${casearg} ${refarg}"
+          compcmd="$cmd ${comparison} ${casearg} ${refarg}"
           log 1 "Comparison with ${compcmd}"
           set +e
           ${compcmd}

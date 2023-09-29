@@ -55,21 +55,35 @@ set -o pipefail #abort if left command on a pipe fails
 #                       the commit d095d11 (20 March 2023) when running in 48t3
 #                       the commit 7e55649 when running in 49t0 (9164c67 (last commit in 48t3) is identical to d095d11)
 
+#######################
+#### CONFIGURATION ####
+#######################
+
 #Special pack names:
 # - recompil: original source code (everything under mpa)
 # - split_48t1: original 48t1 source code but with physics source code under phyex directory
 # - split_48t3: same as split_48t1 but for the 48t3 cycle
 # - split: symbolic link to split_48t1 (backward compatibility)
 # - split_49t0: same as split_48t1 but for the 49t0 cycle
-
 specialPack="ori split split_48t1 split_48t3 recompil split_49t0"
-availTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7"
+
+#About the tests:
+# - ALLTests is a list of tests to be done when '-t ALL' is used. This list is filled here
+#   in case there is no ial_version.json file containig a 'testing' section. If this 'testing'
+#   section exists, this list is overridden.
+# - allowedTests is the list of allowed tests which can depend on platform, if we ask to perform an action
+#   with a test not in the allowedTests list, the action is ignored
+# - defaultTest is the list of tests to perform when no '-t' option is provided on the command line.
+ALLTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7"
 defaultTest="small_3D"
 allowedTests="small_3D,small_3D_np2,small_3D_alt1,small_3D_alt2,small_3D_alt3,small_3D_alt4,small_3D_alt5,small_3D_alt6,small_3D_alt7,small_3D_alt8,small_3D_alt9,small_3D_alt10,small_3D_alt11,small_3D_alt12,small_3D_lima"
+
 separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allergies (':', '.', '@')
               #- seprator must be in sync with prep_code.sh separator
 
 PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+HOMEPACK=${HOMEPACK:=$HOME/pack}
 
 dirpack=$PHYEXTOOLSDIR/pack
 dirconf=$PHYEXTOOLSDIR/conf_tests
@@ -83,7 +97,7 @@ if [ $(hostname | cut -c 1-7) == 'belenos' -o $(hostname | cut -c 1-7) == 'taran
   gmkpack_o[49t0]=x
   defaultMainPackVersion=01
   defaultRef='split_${cycle}'
-  availTests="${availTests},big_3D"
+  ALLTests="${ALLTests},big_3D"
   allowedTests="${allowedTests},big_3D"
 else
   HPC=0
@@ -96,10 +110,12 @@ else
 fi
 mainPackVersion=${mainPackVersion:-${defaultMainPackVersion}}
 
-extraCompilationCheck=1
+################################
+#### COMMAND LINE ARGUMENTS ####
+################################
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t test] [--cycle CYCLE] [--repo-user] [--repo-protocol] [--remove] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t test] [--cycle CYCLE] [--scripttag TAG] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] commit [reference]"
   echo "commit          commit hash (or a directory, or among $specialPack) to test"
   echo "reference       commit hash (or a directory, or among $specialPack) REF to use as a reference"
   echo "-s              suppress compilation pack"
@@ -113,11 +129,17 @@ function usage {
   echo "-f              full compilation (do not use pre-compiled pack)"
   echo "--cycle CYCLE   to force using CYCLE"
   echo "--scripttag TAG script tag to use in case --cycle is provided"
-  echo "--repo-user     user hosting the PHYEX repository on github,"
+  echo "--repo-user USER"
+  echo "                user hosting the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
-  echo "--repo-protocol protocol (https or ssh) to reach the PHYEX repository on github,"
+  echo "--repo-protocol PROTOCOL"
+  echo "                protocol (https or ssh) to reach the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREOprotocol (=$PHYEXREOprotocol)"
   echo "--remove        removes the pack"
+  echo "--onlyIfNeeded  performs the pack creation and/or the compilation and/or the execution"
+  echo "                only if the step has not already been done"
+  echo "--computeRefIfNeeded"
+  echo "                computes the missing references"
   echo ""
   echo "If nothing is asked (pack creation, compilation, running, check, removing) everything"
   echo "except the removing is done"
@@ -149,6 +171,8 @@ fullcompilation=0
 cycle=""
 scripttag=''
 remove=0
+onlyIfNeeded=0
+computeRefIfNeeded=0
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -166,6 +190,9 @@ while [ -n "$1" ]; do
     '--repo-user') export PHYEXREPOuser=$2; shift;;
     '--repo-protocol') export PHYEXREPOprotocol=$2; shift;;
     '--remove') remove=1;;
+    '--onlyIfNeeded') onlyIfNeeded=1;;
+    '--computeRefIfNeeded') computeRefIfNeeded=1;;
+
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
           commit=$1
@@ -180,26 +207,6 @@ while [ -n "$1" ]; do
   esac
   shift
 done
-
-HOMEPACK=${HOMEPACK:=$HOME/pack}
-
-function exescript () {
-  #usage: exescript <output file> <script> [arg [arg ...]]
-  output=$1
-  shift
-  if [ $HPC -eq 1 ]; then
-    sbatch --wait -o $output $@
-    cat $output
-  else
-    $@ 2>&1 | tee $output
-  fi
-}
-
-if [ -z "${tests-}" ]; then
-  tests=$defaultTest
-elif [ $tests == 'ALL' ]; then
-  tests=$availTests
-fi
 
 if [ $packcreation -eq 0 -a \
      $compilation -eq 0 -a \
@@ -222,6 +229,22 @@ if [ $check -eq 1 -a -z "${reference-}" ]; then
   exit 3
 fi
 
+##############################
+#### FUNCTION DEFINITIONS ####
+##############################
+
+function exescript () {
+  #usage: exescript <output file> <script> [arg [arg ...]]
+  output=$1
+  shift
+  if [ $HPC -eq 1 ]; then
+    sbatch --wait -o $output $@
+    cat $output
+  else
+    $@ 2>&1 | tee $output
+  fi
+}
+
 function apl_arome_content2cycle {
   # variable content_apl_arome must contain the source code of apl_arome.F90
   if grep CPG_DYN_TYPE <(echo $content_apl_arome) > /dev/null; then
@@ -231,52 +254,40 @@ function apl_arome_content2cycle {
   fi
 }
 
-function ial_version_content2key {
-  # variable content_ial_version must contain the source code of ial_version.json
-  # $1 must be the key name
-  # $2 is the default value
-  content_ial_version=$content_ial_version python3 -c "import json; import os; print(json.loads(os.environ['content_ial_version']).get('$1', '$2'))"
+function json_dictkey2value {
+  # $1 must contain the json string
+  # $2 must be the key name
+  # $3 is the default value
+  json_content="$1" python3 -c "import json; import os; result=json.loads(os.environ['json_content']).get('$2', '$3'); print(json.dumps(result) if isinstance(result, dict) else result)"
 }
 
-#Name is choosen such as it can be produced with a main pack: PHYEX/${cycle}_XXXXXXXXX.01.${gmkpack_l}.${gmkpack_o}
-fromdir=''
+#################################
+#### CYCLE/COMMIT ADAPTATION ####
+#################################
+
+is_directory=0
+is_special=0
+is_commit=0
 if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
-  fromdir=$commit
-  if [ "$cycle" == "" ]; then
-    content_ial_version=$(scp $commit/src/arome/ial_version.json /dev/stdout 2>/dev/null || echo "")
-    if [ "$content_ial_version" == "" ]; then
-      content_apl_arome=$(scp $commit/src/arome/ext/apl_arome.F90 /dev/stdout)
-      cycle=$(apl_arome_content2cycle)
-    else
-      cycle=$(ial_version_content2key cycle '')
-      scripttag=$(ial_version_content2key scripttag '')
-    fi
-  fi
-  if [[ ! -z "${gmkpack_o[$cycle]+unset}" ]]; then #the -v approach is valid only with bash > 4.3:  if [[ -v gmkpack_o[$cycle] ]]; then
-    gmkpack_o=${gmkpack_o[$cycle]}
-  else
-    gmkpack_o=${gmkpack_o[default]}
-  fi
-  if [[ ! -z "${gmkpack_l[$cycle]+unset}" ]]; then
-    gmkpack_l=${gmkpack_l[$cycle]}
-  else
-    gmkpack_l=${gmkpack_l[default]}
-  fi
-  packBranch=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
-  name="PHYEX/${cycle}_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
-  [ $suppress -eq 1 -a -d $HOMEPACK/$name ] && rm -rf $HOMEPACK/$name
+  is_directory=1
 elif echo $specialPack | grep -w $commit > /dev/null; then
-  name="PHYEX/$commit"
-  if [ $commit == split_49t0 ]; then
-    cycle=49t0
-  elif [ $commit == split_48t3 ]; then
-    cycle=48t3
-  else
-    cycle=48t1
-  fi
+  is_special=1
 else
-  packBranch="COMMIT$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')"
-  if [ "$cycle" == "" ]; then
+  is_commit=1
+fi
+
+#Name is choosen such as it can be produced with a main pack: PHYEX/${cycle}_XXXXXXXXX.01.${gmkpack_l}.${gmkpack_o}
+declare -A refByTest
+fromdir=''
+if [ $is_directory -eq 1 -o $is_commit -eq 1 ]; then
+  if [ $is_directory -eq 1 ]; then
+    #The git repository is a directory
+    fromdir=$commit
+    content_ial_version=$(scp $commit/src/arome/ial_version.json /dev/stdout 2>/dev/null || echo "")
+    cmd_apl_arome="scp $commit/src/arome/ext/apl_arome.F90 /dev/stdout"
+    packBranch=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
+  else
+    #The git repository is on github
     if [[ $commit == arome${separator}* ]]; then
       apl_arome_file="ext/apl_arome.F90"
       ial_version_file="ial_version.json"
@@ -290,12 +301,30 @@ else
       urlcommit=$commit
     fi
     content_ial_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$ial_version_file -O - 2>/dev/null || echo "")
+    cmd_apl_arome="wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$apl_arome_file -O - 2>/dev/null"
+    packBranch="COMMIT$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')"
+  fi
+  if [ ! "$content_ial_version" == "" ]; then
+    testing=$(json_dictkey2value "$content_ial_version" 'testing' '')
+    if [ ! "$testing" == "" ]; then
+      ALLTests='' #We reset the list of tests
+      for t in $(echo $allowedTests | sed 's/,/ /g'); do
+        ref=$(json_dictkey2value "$testing" "$t" '')
+        if [ ! "$ref" == "" ]; then
+          ALLTests="${ALLTests},$t"
+          refByTest[$t]=$ref
+        fi
+      done
+      ALLTests="${ALLTests:1}" #Remove first character (',')
+    fi
+  fi
+  if [ "$cycle" == "" ]; then
     if [ "$content_ial_version" == "" ]; then
-      content_apl_arome=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$apl_arome_file -O - 2>/dev/null)
+      content_apl_arome=$($cmd_apl_arome)
       cycle=$(apl_arome_content2cycle)
     else
-      cycle=$(ial_version_content2key cycle)
-      scripttag=$(ial_version_content2key scripttag)
+      cycle=$(json_dictkey2value "$content_ial_version" 'cycle' '')
+      scripttag=$(json_dictkey2value "$content_ial_version" 'scripttag' '')
     fi
   fi
   if [[ ! -z "${gmkpack_o[$cycle]+unset}" ]]; then #the -v approach is valid only with bash > 4.3:  if [[ -v gmkpack_o[$cycle] ]]; then
@@ -310,283 +339,338 @@ else
   fi
   name="PHYEX/${cycle}_${packBranch}.01.${gmkpack_l}.${gmkpack_o}"
   [ $suppress -eq 1 -a -d $HOMEPACK/$name ] && rm -rf $HOMEPACK/$name
+elif [ $is_special -eq 1 ]; then
+  name="PHYEX/$commit"
+  if [ $commit == split_49t0 ]; then
+    cycle=49t0
+  elif [ $commit == split_48t3 ]; then
+    cycle=48t3
+  else
+    cycle=48t1
+  fi
 fi
 if [ ! -z "${reference-}" ]; then
-  [ $reference == 'REF' ] && reference=$(eval echo $defaultRef) #echo to replace ${cycle} by value
-  reffromdir=''
-  if echo $reference | grep '/' > /dev/null; then
-    reffromdir=$reference
-    refname="PHYEX/*_$(echo $reference | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g').01.${gmkpack_l}.${gmkpack_o}"
-  elif echo $specialPack | grep -w $reference > /dev/null; then
-    refname="PHYEX/$reference"
-  else
-    refname="PHYEX/*_COMMIT${reference}.01.${gmkpack_l}.${gmkpack_o}"
-  fi
+  declare -A refnameByTest
+  #Reference to use for each test
+  for t in $(echo $ALLTests | sed 's/,/ /g'); do
+    #Name of the reference
+    if [ "$reference" == 'REF' ]; then
+      if [[ ! -z "${refByTest[$t]+unset}" ]]; then #the -v approach is valid only with bash > 4.3:  if [[ -v gmkpack_o[$cycle] ]]; then
+        #The json file contained the references to use on a per test case basis
+        caseref=${refByTest[$t]}
+      else
+        #No json file, we use the global default reference
+        caseref=$(eval echo $defaultRef) #echo to replace ${cycle} by value
+      fi
+    else
+      #The exact reference to use was given on the command line
+      caseref=$reference
+    fi
+    refByTest[$t]=$caseref
+    #Conversion into directory name
+    if echo $caseref | grep '/' > /dev/null; then
+      refname="PHYEX/*_$(echo $caseref | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g').01.${gmkpack_l}.${gmkpack_o}"
+    elif echo $specialPack | grep -w $caseref > /dev/null; then
+      refname="PHYEX/$caseref"
+    else
+      refname="PHYEX/*_COMMIT${caseref}.01.${gmkpack_l}.${gmkpack_o}"
+    fi
+    refnameByTest[$t]=$refname
+  done
 fi
+
+if [ -z "${tests-}" ]; then
+  tests=$defaultTest
+elif echo "$tests" | grep -w 'ALL' > /dev/null; then
+  tests=$(echo "$tests" | sed "s/\bALL\b/$ALLTests/g")
+fi
+
+#######################
+#### PACK CREATION ####
+#######################
 
 if [ $packcreation -eq 1 ]; then
-  echo "### Compilation of commit $commit"
-
-  if echo $specialPack | grep -w $commit > /dev/null; then
-    echo "Special commit '$commit' cannot be compiled with this script"
-    exit 4
-  fi
-
   if [ -d $HOMEPACK/$name ]; then
-    echo "Pack already exists ($HOMEPACK/$name), suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
-    exit 5
-  fi
-
-  export GMKTMP=/dev/shm
-
-  if [ $fullcompilation == 0 ]; then
-    basepack=${cycle}_main.01.${gmkpack_l}.${gmkpack_o}
-    #[ $HPC -eq 0 -a ! -d $ROOTPACK/$basepack ] &&  getpack $basepack
-    gmkpack -r ${cycle} -b phyex -v $mainPackVersion -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb \
-            -f $dirpack/ \
-            -u $name
-    reftree='main'
-  else
-    if [ $(echo $cycle | cut -c 1-2) -ne 48 ]; then
-      hub='-K'
-    else
-      hub=''
-    fi
-    #Create main pack
-    gmkpack -a $hub -r ${cycle} -b ${packBranch} -n 01 -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb -h $HOMEPACK/PHYEX
-    #Populate hub
-    if [ -d $HOMEPACK/$name/hub ]; then
-      cd $HOMEPACK/$name/hub/local/src
-      if [ $HPC -eq 1 ]; then
-        ssh sxphynh.cnrm.meteo.fr "wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/hub49.tgz -O -" > hub49.tgz
-      else
-        wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/hub49.tgz
-      fi
-      tar xf hub49.tgz
-      rm -f hub49.tgz
-    fi
-    #Populate
-    cd $HOMEPACK/$name/src/local/
-    if [ $HPC -eq 1 ]; then
-      ssh sxphynh.cnrm.meteo.fr "wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/${cycle}_main.01.tgz -O -" > ${cycle}_main.01.tgz
-    else
-      wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/${cycle}_main.01.tgz
-    fi
-    tar xf ${cycle}_main.01.tgz
-    rm -f ${cycle}_main.01.tgz
-    #Cleaning and moving
-    if [ "$cycle" == '48t3' -o "$cycle" == '49t0' ]; then
-      #extracting budgets from micro
-      mkdir mpa/budgets
-      for file in mpa/micro/module/moddb_intbudget.F90 mpa/micro/externals/aro_suintbudget_omp.F90 \
-                  mpa/micro/interface/aro_convbu.h mpa/micro/externals/aro_convbu.F90 \
-                  mpa/micro/interface/aro_startbu.h mpa/micro/externals/aro_startbu.F90 \
-                  mpa/micro/externals/aro_suintbudget.F90 mpa/micro/externals/aro_suintbudget_omp.F90 \
-                  mpa/micro/interface/aroini_budget.h mpa/micro/externals/aroini_budget.F90; do
-        [ -f $file ] && mv $file mpa/budgets/
-      done 
-      mkdir mpa/aux
-      for file in mpa/micro/interface/aroini_frommpa.h mpa/micro/externals/aroini_frommpa.F90 \
-                  mpa/micro/externals/modd_spp_type.F90 mpa/micro/externals/spp_mod_type.F90 \
-                  mpa/micro/interface/aroini_cstmnh.h mpa/micro/externals/aroini_cstmnh.F90; do
-        [ -f $file ] && mv $file mpa/aux/
-      done
-      [ -f mpa/micro/externals/add_bounds.F90 ] && rm -f mpa/micro/externals/add_bounds.F90
-      [ -f mpa/micro/externals/aroini_wet_dep.F90 ] && mv mpa/micro/externals/aroini_wet_dep.F90 mpa/chem/externals/aroini_wet_dep.F90
-      [ -f mpa/micro/interface/aroini_wet_dep.h ] && mv mpa/micro/interface/aroini_wet_dep.h mpa/chem/interface/aroini_wet_dep.h
-    fi
-    if [ "$cycle" == '49t0' ]; then
-      rm -rf oopsifs
-    fi
-    #we keep everything from the official source code except internals and module subdirectories of mpa
-    #and except some files of mpa/conv/module
-    for file in modi_shallow_convection.F90 modi_shallow_convection_part1.F90 \
-                modi_shallow_convection_part2.F90 modi_shallow_convection_part2_select.F90; do
-      if [ -f mpa/conv/module/$file ]; then
-        [ ! -d mpa/conv/module_save ] && mkdir mpa/conv/module_save
-        mv mpa/conv/module/$file mpa/conv/module_save/
-      fi
-    done
-    for rep in turb micro conv; do
-      mkdir -p phyex/$rep
-      rm -rf mpa/$rep/internals mpa/$rep/module
-    done
-    [ -d mpa/conv/module_save ] && mv mpa/conv/module_save mpa/conv/module
-    if [ -f /cnrm/algo/khatib/drhook.c_for_ubuntu.tar -a $(echo $cycle | cut -c 1-2) -eq 48 ]; then
-      #If file exists it means that we are running on a CTI computer, so we are using ubuntu
-      tar xf /cnrm/algo/khatib/drhook.c_for_ubuntu.tar
-    fi
-    #Special modification of the compilation configuration file and script
-    sed -i 's/-ftree-vectorize//' $HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
-    sed -i "/^MACROS_FRT/s/$/ -DREPRO48/" $HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
-    #sed -i "s/PHYEX\/${cycle}_$$.01.${gmkpack_l}.${gmkpack_o}/$(echo $name | sed 's/\//\\\//')/" $HOMEPACK/$name/ics_masterodb #this line could be used if pack was renamed before compilation but it does not work on belenos
-
-    resetpack -f #Is it really useful?
-    reftree='local'
-  fi
-  cd $HOMEPACK/$name/src/local/phyex
-
-  MNH_EXPAND_DIR=$PHYEXTOOLSDIR/mnh_expand
-  export PATH=$MNH_EXPAND_DIR/filepp:$MNH_EXPAND_DIR/MNH_Expand_Array:$PATH
-
-  if [ $useexpand == 1 ]; then
-    expand_options="-D MNH_EXPAND -D MNH_EXPAND_LOOP"
-  else
-    expand_options=""
-  fi
-  subs="-s gmkpack_ignored_files -s turb -s micro -s aux -s ext -s conv -s externals" #externals is the old name for aux/ext
-  prep_code=$PHYEXTOOLSDIR/prep_code.sh
-  if [ "$fromdir" == '' ]; then
-    echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
-    if [[ $commit == arome${separator}* ]]; then
-      $prep_code -c $commit PHYEX #This commit is ready for inclusion
-    else
-      $prep_code -c $commit $expand_options $subs -m arome PHYEX
+    if [ $onlyIfNeeded -eq 0 ]; then
+      echo "Pack already exists ($HOMEPACK/$name), suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
+      exit 5
     fi
   else
-    echo "Copy $fromdir"
-    mkdir PHYEX
-    scp -q -r $fromdir/src PHYEX/
-    $prep_code $expand_options $subs -m arome PHYEX
-  fi
-  find PHYEX -type f -exec touch {} \; #to be sure a recompilation occurs
-  for rep in turb micro conv aux; do
-    [ -d PHYEX/$rep ] && mv PHYEX/$rep .
-  done
-  #modd_nsv.F90 has been moved and gmkpack is lost in case a different version exists in main/.../micro
-  if [ -f ../../main/phyex/micro/modd_nsv.F90 -a -f aux/modd_nsv.F90 ]; then
-    mv aux/modd_nsv.F90 micro/
-    if [ -f PHYEX/gmkpack_ignored_files ]; then
-      grep -v micro/modd_nsv.F90 PHYEX/gmkpack_ignored_files > PHYEX/gmkpack_ignored_files_new
-      mv PHYEX/gmkpack_ignored_files_new PHYEX/gmkpack_ignored_files
+    echo "### Pack creation for commit $commit"
+
+    if echo $specialPack | grep -w $commit > /dev/null; then
+      echo "Special commit '$commit' cannot be compiled with this script"
+      exit 4
     fi
-  fi
-  if [ -f PHYEX/gmkpack_ignored_files ]; then
-    #gmkpack_ignored_files contains a list of file, present in the reference pack, that is not used anymore
-    #and must be excluded from compilation (in case of a full comilation) or from re-compilation (in case of a non-full
-    #compilation).
+
+    export GMKTMP=/dev/shm
+
     if [ $fullcompilation == 0 ]; then
-      #Content is added in the ics_masterodb script
-      sed -i "/^end_of_ignored_files/i $(first=1; for line in $(cat PHYEX/gmkpack_ignored_files); do echo -n $(test $first -ne 1 && echo \\n)${line}; first=0; done)" $HOMEPACK/$name/ics_masterodb
+      basepack=${cycle}_main.01.${gmkpack_l}.${gmkpack_o}
+      #[ $HPC -eq 0 -a ! -d $ROOTPACK/$basepack ] &&  getpack $basepack
+      gmkpack -r ${cycle} -b phyex -v $mainPackVersion -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb \
+              -f $dirpack/ \
+              -u $name
+      reftree='main'
     else
-      #Files must be suppressed (non phyex files)
-      for file in $(cat PHYEX/gmkpack_ignored_files); do
-        [ -f $HOMEPACK/$name/src/local/$file ] && rm -f $HOMEPACK/$name/src/local/$file
-      done
-      [ ! "$(ls -A $HOMEPACK/$name/src/local/mpa/dummy)" ] && rmdir $HOMEPACK/$name/src/local/mpa/dummy
-    fi
-  fi
-
-  EXT=PHYEX/ext
-  [ ! -d $EXT ] && EXT=PHYEX/externals #old name for ext/aux
-  if [ -d $EXT ]; then
-    #Move manually files outside of mpa (a find on the whole repository would take too much a long time)
-    [ -f $EXT/yomparar.F90 ] && mv $EXT/yomparar.F90 ../arpifs/module/
-    [ -f $EXT/namparar.nam.h ] && mv $EXT/namparar.nam.h ../arpifs/namelist
-    [ -f $EXT/namlima.nam.h ] && mv $EXT/namlima.nam.h ../arpifs/namelist
-    [ -f $EXT/suparar.F90 ] && mv $EXT/suparar.F90 ../arpifs/phys_dmn/
-    [ -f $EXT/apl_arome.F90 ] && mv $EXT/apl_arome.F90 ../arpifs/phys_dmn/
-    [ -f $EXT/suphmpa.F90 ] && mv $EXT/suphmpa.F90 ../arpifs/phys_dmn/
-    [ -f $EXT/suphmse.F90 ] && mv $EXT/suphmse.F90 ../arpifs/phys_dmn/
-    [ -f $EXT/vdfhghtnhl.F90 ] && mv $EXT/vdfhghtnhl.F90 ../arpifs/phys_dmn/
-    [ -f $EXT/cpg_opts_type_mod.fypp ] && mv $EXT/cpg_opts_type_mod.fypp ../arpifs/module/
-    file=$EXT/cpg_pt_ulp_expl.fypp; [ -f $file ] && mv $file ../arpifs/adiab/
-    file=$EXT/field_variables_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
-    file=$EXT/cpg_type_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
-    file=$EXT/field_registry_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
-    file=$EXT/mf_phys_next_state_type_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
-    file=$EXT/yemlbc_model.F90; [ -f $file ] && mv $file ../arpifs/module/
-    [ -f $EXT/aplpar.F90 ] && mv $EXT/aplpar.F90 ../arpifs/phys_dmn/
-    [ -f $EXT/su0yomb.F90 ] && mv $EXT/su0yomb.F90 ../arpifs/setup/
-    [ -f $EXT/acvppkf.F90 ] && mv $EXT/acvppkf.F90 ../arpifs/phys_dmn/
-    #Special mpa case
-    for file in modd_spp_type.F90 spp_mod_type.F90 aroini_conf.h aroini_conf.F90; do
-      if [ -f $EXT/$file ]; then
-        [ ! -d ../mpa/aux ] && mkdir ../mpa/aux
-        mv $EXT/$file ../mpa/aux/
+      if [ $(echo $cycle | cut -c 1-2) -ne 48 ]; then
+        hub='-K'
+      else
+        hub=''
       fi
-    done
-    [ -d $EXT/dead_code ] && rm -rf $EXT/dead_code/
-    if [ $EXT == "PHYEX/externals" ]; then
-      mv $EXT .
-    else
-      #Move automatically all codes under mpa
-      for file in $EXT/*; do
-        extname=`basename $file`
-        loc=`find ../../$reftree/mpa/ -name $extname | sed "s/\/$reftree\//\/local\//g"`
-        nb=`echo $loc | wc -w`
-        if [ $nb -ne 1 ]; then
-          echo "Don't know where $file must be moved, none or several places found!"
-          exit 9
+      #Create main pack
+      gmkpack -a $hub -r ${cycle} -b ${packBranch} -n 01 -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb -h $HOMEPACK/PHYEX
+      #Populate hub
+      if [ -d $HOMEPACK/$name/hub ]; then
+        cd $HOMEPACK/$name/hub/local/src
+        if [ $HPC -eq 1 ]; then
+          ssh sxphynh.cnrm.meteo.fr "wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/hub49.tgz -O -" > hub49.tgz
+        else
+          wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/hub49.tgz
         fi
-        mv $file $loc
+        tar xf hub49.tgz
+        rm -f hub49.tgz
+      fi
+      #Populate
+      cd $HOMEPACK/$name/src/local/
+      if [ $HPC -eq 1 ]; then
+        ssh sxphynh.cnrm.meteo.fr "wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/${cycle}_main.01.tgz -O -" > ${cycle}_main.01.tgz
+      else
+        wget http://anonymous:mto@webdav.cnrm.meteo.fr/public/algo/khatib/src/${cycle}_main.01.tgz
+      fi
+      tar xf ${cycle}_main.01.tgz
+      rm -f ${cycle}_main.01.tgz
+      #Cleaning and moving
+      if [ "$cycle" == '48t3' -o "$cycle" == '49t0' ]; then
+        #extracting budgets from micro
+        mkdir mpa/budgets
+        for file in mpa/micro/module/moddb_intbudget.F90 mpa/micro/externals/aro_suintbudget_omp.F90 \
+                    mpa/micro/interface/aro_convbu.h mpa/micro/externals/aro_convbu.F90 \
+                    mpa/micro/interface/aro_startbu.h mpa/micro/externals/aro_startbu.F90 \
+                    mpa/micro/externals/aro_suintbudget.F90 mpa/micro/externals/aro_suintbudget_omp.F90 \
+                    mpa/micro/interface/aroini_budget.h mpa/micro/externals/aroini_budget.F90; do
+          [ -f $file ] && mv $file mpa/budgets/
+        done 
+        mkdir mpa/aux
+        for file in mpa/micro/interface/aroini_frommpa.h mpa/micro/externals/aroini_frommpa.F90 \
+                    mpa/micro/externals/modd_spp_type.F90 mpa/micro/externals/spp_mod_type.F90 \
+                    mpa/micro/interface/aroini_cstmnh.h mpa/micro/externals/aroini_cstmnh.F90; do
+          [ -f $file ] && mv $file mpa/aux/
+        done
+        [ -f mpa/micro/externals/add_bounds.F90 ] && rm -f mpa/micro/externals/add_bounds.F90
+        [ -f mpa/micro/externals/aroini_wet_dep.F90 ] && mv mpa/micro/externals/aroini_wet_dep.F90 mpa/chem/externals/aroini_wet_dep.F90
+        [ -f mpa/micro/interface/aroini_wet_dep.h ] && mv mpa/micro/interface/aroini_wet_dep.h mpa/chem/interface/aroini_wet_dep.h
+      fi
+      if [ "$cycle" == '49t0' ]; then
+        rm -rf oopsifs
+      fi
+      #we keep everything from the official source code except internals and module subdirectories of mpa
+      #and except some files of mpa/conv/module
+      for file in modi_shallow_convection.F90 modi_shallow_convection_part1.F90 \
+                  modi_shallow_convection_part2.F90 modi_shallow_convection_part2_select.F90; do
+        if [ -f mpa/conv/module/$file ]; then
+          [ ! -d mpa/conv/module_save ] && mkdir mpa/conv/module_save
+          mv mpa/conv/module/$file mpa/conv/module_save/
+        fi
       done
+      for rep in turb micro conv; do
+        mkdir -p phyex/$rep
+        rm -rf mpa/$rep/internals mpa/$rep/module
+      done
+      [ -d mpa/conv/module_save ] && mv mpa/conv/module_save mpa/conv/module
+      if [ -f /cnrm/algo/khatib/drhook.c_for_ubuntu.tar -a $(echo $cycle | cut -c 1-2) -eq 48 ]; then
+        #If file exists it means that we are running on a CTI computer, so we are using ubuntu
+        tar xf /cnrm/algo/khatib/drhook.c_for_ubuntu.tar
+      fi
+      #Special modification of the compilation configuration file and script
+      sed -i 's/-ftree-vectorize//' $HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
+      sed -i "/^MACROS_FRT/s/$/ -DREPRO48/" $HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
+      #sed -i "s/PHYEX\/${cycle}_$$.01.${gmkpack_l}.${gmkpack_o}/$(echo $name | sed 's/\//\\\//')/" $HOMEPACK/$name/ics_masterodb #this line could be used if pack was renamed before compilation but it does not work on belenos
+
+      resetpack -f #Is it really useful?
+      reftree='local'
     fi
+    cd $HOMEPACK/$name/src/local/phyex
+
+    MNH_EXPAND_DIR=$PHYEXTOOLSDIR/mnh_expand
+    export PATH=$MNH_EXPAND_DIR/filepp:$MNH_EXPAND_DIR/MNH_Expand_Array:$PATH
+
+    if [ $useexpand == 1 ]; then
+      expand_options="-D MNH_EXPAND -D MNH_EXPAND_LOOP"
+    else
+      expand_options=""
+    fi
+    subs="-s gmkpack_ignored_files -s turb -s micro -s aux -s ext -s conv -s externals" #externals is the old name for aux/ext
+    prep_code=$PHYEXTOOLSDIR/prep_code.sh
+    if [ "$fromdir" == '' ]; then
+      echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
+      if [[ $commit == arome${separator}* ]]; then
+        $prep_code -c $commit PHYEX #This commit is ready for inclusion
+      else
+        $prep_code -c $commit $expand_options $subs -m arome PHYEX
+      fi
+    else
+      echo "Copy $fromdir"
+      mkdir PHYEX
+      scp -q -r $fromdir/src PHYEX/
+      $prep_code $expand_options $subs -m arome PHYEX
+    fi
+    find PHYEX -type f -exec touch {} \; #to be sure a recompilation occurs
+    for rep in turb micro conv aux; do
+      [ -d PHYEX/$rep ] && mv PHYEX/$rep .
+    done
+    #modd_nsv.F90 has been moved and gmkpack is lost in case a different version exists in main/.../micro
+    if [ -f ../../main/phyex/micro/modd_nsv.F90 -a -f aux/modd_nsv.F90 ]; then
+      mv aux/modd_nsv.F90 micro/
+      if [ -f PHYEX/gmkpack_ignored_files ]; then
+        grep -v micro/modd_nsv.F90 PHYEX/gmkpack_ignored_files > PHYEX/gmkpack_ignored_files_new
+        mv PHYEX/gmkpack_ignored_files_new PHYEX/gmkpack_ignored_files
+      fi
+    fi
+    if [ -f PHYEX/gmkpack_ignored_files ]; then
+      #gmkpack_ignored_files contains a list of file, present in the reference pack, that is not used anymore
+      #and must be excluded from compilation (in case of a full comilation) or from re-compilation (in case of a non-full
+      #compilation).
+      if [ $fullcompilation == 0 ]; then
+        #Content is added in the ics_masterodb script
+        sed -i "/^end_of_ignored_files/i $(first=1; for line in $(cat PHYEX/gmkpack_ignored_files); do echo -n $(test $first -ne 1 && echo \\n)${line}; first=0; done)" $HOMEPACK/$name/ics_masterodb
+      else
+        #Files must be suppressed (non phyex files)
+        for file in $(cat PHYEX/gmkpack_ignored_files); do
+          [ -f $HOMEPACK/$name/src/local/$file ] && rm -f $HOMEPACK/$name/src/local/$file
+        done
+        [ ! "$(ls -A $HOMEPACK/$name/src/local/mpa/dummy)" ] && rmdir $HOMEPACK/$name/src/local/mpa/dummy
+      fi
+    fi
+
+    EXT=PHYEX/ext
+    [ ! -d $EXT ] && EXT=PHYEX/externals #old name for ext/aux
+    if [ -d $EXT ]; then
+      #Move manually files outside of mpa (a find on the whole repository would take too much a long time)
+      [ -f $EXT/yomparar.F90 ] && mv $EXT/yomparar.F90 ../arpifs/module/
+      [ -f $EXT/namparar.nam.h ] && mv $EXT/namparar.nam.h ../arpifs/namelist
+      [ -f $EXT/namlima.nam.h ] && mv $EXT/namlima.nam.h ../arpifs/namelist
+      [ -f $EXT/suparar.F90 ] && mv $EXT/suparar.F90 ../arpifs/phys_dmn/
+      [ -f $EXT/apl_arome.F90 ] && mv $EXT/apl_arome.F90 ../arpifs/phys_dmn/
+      [ -f $EXT/suphmpa.F90 ] && mv $EXT/suphmpa.F90 ../arpifs/phys_dmn/
+      [ -f $EXT/suphmse.F90 ] && mv $EXT/suphmse.F90 ../arpifs/phys_dmn/
+      [ -f $EXT/vdfhghtnhl.F90 ] && mv $EXT/vdfhghtnhl.F90 ../arpifs/phys_dmn/
+      [ -f $EXT/cpg_opts_type_mod.fypp ] && mv $EXT/cpg_opts_type_mod.fypp ../arpifs/module/
+      file=$EXT/cpg_pt_ulp_expl.fypp; [ -f $file ] && mv $file ../arpifs/adiab/
+      file=$EXT/field_variables_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
+      file=$EXT/cpg_type_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
+      file=$EXT/field_registry_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
+      file=$EXT/mf_phys_next_state_type_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
+      file=$EXT/yemlbc_model.F90; [ -f $file ] && mv $file ../arpifs/module/
+      [ -f $EXT/aplpar.F90 ] && mv $EXT/aplpar.F90 ../arpifs/phys_dmn/
+      [ -f $EXT/su0yomb.F90 ] && mv $EXT/su0yomb.F90 ../arpifs/setup/
+      [ -f $EXT/acvppkf.F90 ] && mv $EXT/acvppkf.F90 ../arpifs/phys_dmn/
+      #Special mpa case
+      for file in modd_spp_type.F90 spp_mod_type.F90 aroini_conf.h aroini_conf.F90; do
+        if [ -f $EXT/$file ]; then
+          [ ! -d ../mpa/aux ] && mkdir ../mpa/aux
+          mv $EXT/$file ../mpa/aux/
+        fi
+      done
+      [ -d $EXT/dead_code ] && rm -rf $EXT/dead_code/
+      if [ $EXT == "PHYEX/externals" ]; then
+        mv $EXT .
+      else
+        #Move automatically all codes under mpa
+        for file in $EXT/*; do
+          extname=`basename $file`
+          loc=`find ../../$reftree/mpa/ -name $extname | sed "s/\/$reftree\//\/local\//g"`
+          nb=`echo $loc | wc -w`
+          if [ $nb -ne 1 ]; then
+            echo "Don't know where $file must be moved, none or several places found!"
+            exit 9
+          fi
+          mv $file $loc
+        done
+      fi
+    fi
+    rm -rf PHYEX
   fi
-  rm -rf PHYEX
 fi
 
+#####################
+#### COMPILATION ####
+#####################
+
 if [ $compilation -eq 1 ]; then
-  echo "### Compilation of commit $commit"
+  if [ $onlyIfNeeded -eq 0 -o ! -f $HOMEPACK/$name/bin/MASTERODB ]; then
+    echo "### Compilation of commit $commit"
 
-  cd $HOMEPACK/$name
-  sed -i 's/GMK_THREADS=1$/GMK_THREADS=10/' ics_masterodb
-  cleanpack -f
-  resetpack -f
-
-  [ -f ics_packages ] && exescript Output_compilation_hub ics_packages
-  exescript Output_compilation ics_masterodb
-  if [ $extraCompilationCheck -eq 1 -a \
-       -f bin/MASTERODB \
-       -a $(grep Error Output_compilation | \
+    cd $HOMEPACK/$name
+    sed -i 's/GMK_THREADS=1$/GMK_THREADS=10/' ics_masterodb
+    cleanpack -f
+    resetpack -f
+  
+    [ -f ics_packages ] && exescript Output_compilation_hub ics_packages
+    exescript Output_compilation ics_masterodb
+    if [ -f bin/MASTERODB \
+         -a $(grep Error Output_compilation | \
+              grep -v TestErrorHandler | \
+              grep -v "'Error" | \
+              grep -v "'CPLNG: Error" | \
+              grep -v '"Error' | \
+              grep -v "'*** Error" | \
+              grep -v "\-\- Up-to-date:" | wc -l) -ne 0 ]; then
+      echo "MASTERODB was produced but errors occured during compilation:"
+      grep Error Output_compilation | \
             grep -v TestErrorHandler | \
             grep -v "'Error" | \
             grep -v "'CPLNG: Error" | \
             grep -v '"Error' | \
             grep -v "'*** Error" | \
-            grep -v "\-\- Up-to-date:" | wc -l) -ne 0 ]; then
-    echo "MASTERODB was produced but errors occured during compilation:"
-    grep Error Output_compilation | \
-          grep -v TestErrorHandler | \
-          grep -v "'Error" | \
-          grep -v "'CPLNG: Error" | \
-          grep -v '"Error' | \
-          grep -v "'*** Error" | \
-          grep -v "\-\- Up-to-date:"
-    echo "MASTERODB suppressed!"
-    rm -f bin/MASTERODB
-    exit 12
+            grep -v "\-\- Up-to-date:"
+      echo "MASTERODB suppressed!"
+      rm -f bin/MASTERODB
+      exit 12
+    fi
   fi
 fi
 
 if [ $run -ge 1 ]; then
-  echo "### Running of commit $commit"
-
-  if [ ! -f $HOMEPACK/$name/bin/MASTERODB ]; then
-    echo "Pack does not exist ($HOMEPACK/$name) or compilation has failed, please check"
-    exit 6
+  #Cleaning to suppress old results that may be confusing in case of a crash during the run
+  if [ $onlyIfNeeded -eq 0 ]; then
+    for t in $(echo $tests | sed 's/,/ /g'); do
+      cd $HOMEPACK/$name
+      if [ -d conf_tests/$t ]; then
+        rm -rf conf_tests/$t
+      fi
+    done
   fi
 
-  #Cleaning to suppress old results that may be confusing in case of a crash during the run
-  for t in $(echo $tests | sed 's/,/ /g'); do
-    cd $HOMEPACK/$name
-    if [ -d conf_tests/$t ]; then
-      rm -rf conf_tests/$t
-    fi
-  done
-
   #Run the tests one after the other
-  for t in $(echo $tests | sed 's/,/ /g'); do
-    if echo $allowedTests | grep -w $t > /dev/null; then
+  firstrun=1
+  for t in $(echo $tests | sed 's/,/ /g'); do #loop on tests
+    if echo $allowedTests | grep -w $t > /dev/null; then #test is allowed on this plateform
       cd $HOMEPACK/$name
-      mkdir -p conf_tests/$t
-      cd conf_tests/$t
-      MYLIB=$name TESTDIR=$dirconf/$t exescript Output_run $dirconf/$t/aro${cycle}${scripttag}.sh
+      if [ ! -d conf_tests/$t ]; then #We do not enter systematically this part if onlyIfNeeded=1
+        if [ $firstrun -eq 1 ]; then
+          echo "### Running of commit $commit"
+          firstrun=0
+        fi
+
+        if [ ! -f $HOMEPACK/$name/bin/MASTERODB ]; then
+          echo "Pack does not exist ($HOMEPACK/$name) or compilation has failed, please check"
+          exit 6
+        fi
+
+        mkdir -p conf_tests/$t
+        cd conf_tests/$t
+        MYLIB=$name TESTDIR=$dirconf/$t exescript Output_run $dirconf/$t/aro${cycle}${scripttag}.sh
+      fi
     else
       echo "The test $t is not allowed"
     fi
   done
 fi
+
+####################
+#### COMPARISON ####
+####################
 
 if [ $check -eq 1 ]; then
   echo "### Check commit $commit against commit $reference"
@@ -596,6 +680,12 @@ if [ $check -eq 1 ]; then
   filestocheck=""
   for t in $(echo $tests | sed 's/,/ /g'); do
     if echo $allowedTests | grep -w $t > /dev/null; then
+      #Run the reference if needed
+      if [ $computeRefIfNeeded -eq 1 ]; then
+        $0 -p -c -r -t $t --onlyIfNeeded ${refByTest[$t]}
+      fi
+
+      #Files to compare
       if echo $t | grep 'small' > /dev/null; then
         filestocheck="$filestocheck ${t},conf_tests/$t/ICMSHFPOS+0002:00 ${t},conf_tests/$t/DHFDLFPOS+0002"
       else
@@ -605,9 +695,12 @@ if [ $check -eq 1 ]; then
       echo "The test $t is not allowed"
     fi
   done
+
   for tag_file in $filestocheck; do
       tag=$(echo $tag_file | cut -d, -f1)
       file=$(echo $tag_file | cut -d, -f2)
+      refname=${refnameByTest[$tag]}
+      ref=${refByTest[$tag]}
       file1=$HOMEPACK/$name/$file
       file2=$(echo $HOMEPACK/$refname/$file) #echo to enable shell substitution
 
@@ -618,7 +711,7 @@ if [ $check -eq 1 ]; then
         t=1
       fi
       if [ ! -f "$file2" ]; then
-        mess2="Result ($file2) for commit $reference does not exist, please run the simulation"
+        mess2="Reference result ($file2) for commit $ref does not exist, please run the simulation"
         t=1
         if [ "$mess" = "" ]; then
           mess=$mess2
@@ -678,6 +771,10 @@ if [ $check -eq 1 ]; then
     cmpstatus=50
   fi
 fi
+
+##################
+#### CLEANING ####
+##################
 
 if [ $remove -eq 1 ]; then
   echo "### Remove model directory for commit $commit"
