@@ -299,9 +299,9 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
       jsonfile="src/${model}/${model}_version.json"
       docmp=0
     else
-      compilation='-c'
+      compilation='-p -c'
       execution='-r'
-      comparison='-C'
+      comparison='-C --computeRefIfNeeded'
       jsonfile="src/${model}/${model}_version.json"
       docmp=1
     fi

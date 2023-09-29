@@ -631,6 +631,10 @@ if [ $compilation -eq 1 ]; then
   fi
 fi
 
+###################
+#### EXECUTION ####
+###################
+
 if [ $run -ge 1 ]; then
   #Cleaning to suppress old results that may be confusing in case of a crash during the run
   if [ $onlyIfNeeded -eq 0 ]; then
