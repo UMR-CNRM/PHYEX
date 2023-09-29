@@ -84,18 +84,18 @@ BL_DEPTH_DIAG3D(:) = 0.
 !
 
 DO JIJ=IIJB,IIJE
-    IF (PSURF(JIJ)==0.) CYCLE
+    IF (PSURF(JIJ)/=0.) THEN
     DO JK=IKB,IKE,IKL
-      IF (PZZ(JIJ,JK-IKL)<=PZS(JIJ)) CYCLE
+      IF (PZZ(JIJ,JK-IKL)>PZS(JIJ)) THEN
       ZFLX = PSURF(JIJ) * PFTOP_O_FSURF
       IF ( (PFLUX(JIJ,JK)-ZFLX)*(PFLUX(JIJ,JK-IKL)-ZFLX) <= 0. ) THEN
         BL_DEPTH_DIAG3D(JIJ) = (PZZ  (JIJ,JK-IKL) - PZS(JIJ))     &
                          + (PZZ  (JIJ,JK) - PZZ  (JIJ,JK-IKL))    &
                          * (ZFLX          - PFLUX(JIJ,JK-IKL)  )  &
                          / (PFLUX(JIJ,JK) - PFLUX(JIJ,JK-IKL)   )
-        EXIT
       END IF
     END DO
+  END IF
 END DO
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE)
