@@ -581,11 +581,8 @@ PEMF(IIJB:IIJE,IKB+IKL) = ZRHO_F(IIJB:IIJE,IKB+IKL)*PFRAC_UP(IIJB:IIJE,IKB+IKL)*
 !$mnh_end_expand_where(JIJ=IIJB:IIJE)
 
 DO JK=IKB+IKL,IKE-IKL,IKL !  Vertical loop
-  !$mnh_expand_where(JIJ=IIJB:IIJE)
-     
-  GTEST(IIJB:IIJE) = (ZW_UP2(IIJB:IIJE,JK) > ZEPS)  
-
   DO JIJ=IIJB,IIJE
+    GTEST(JIJ) = (ZW_UP2(JIJ,JK) > ZEPS)  
     IF(GTEST(JIJ)) THEN
       IF(JK<IALIM(JIJ)) THEN
       PEMF(JIJ,JK+IKL) = MAX(0.,PEMF(JIJ,JK) + ZPHI(JIJ)*ZZDZ(JIJ,JK)* &
@@ -603,7 +600,6 @@ DO JK=IKB+IKL,IKE-IKL,IKL !  Vertical loop
                                  & SQRT(ZW_UP2(JIJ,JK+IKL))
   END IF
  END DO
-  !$mnh_end_expand_where(JIJ=IIJB:IIJE)
 ENDDO
 
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
