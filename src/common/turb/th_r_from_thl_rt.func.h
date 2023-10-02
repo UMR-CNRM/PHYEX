@@ -180,13 +180,8 @@ DO II=1,JITER
               & PBUF(JIJ, IDRSATODTI)*PFRAC_ICE(JIJ))
 
     !Computation of new PRL, PRI and PRV
-<<<<<<< HEAD
-    !Correction term applied to (PRV(J)-PBUF(J, IRVSAT)) is computed assuming that
-    !PBUF(J, ILVOCPEXN), PBUF(J, ILSOCPEXN) and PBUF(J, ICPH) don't vary too much with T. It takes into account
-=======
     !Correction term applied to (PRV(JIJ)-PBUF(JIJ, IRVSAT)) is computed assuming that
-    !PBUF(JIJ, ILVOCPEXN), PBUF(JIJ, ILSOCPEXN) and PBUF(JIJ, ICPH) don't vary to much with T. It takes into account
->>>>>>> 1322004e (Normalize use of J, IE and IB to JIJ, IIJE, IIJB in include .h file)
+    !PBUF(JIJ, ILVOCPEXN), PBUF(JIJ, ILSOCPEXN) and PBUF(JIJ, ICPH) don't vary too much with T. It takes into account
     !the variation (estimated linear) of Qsat with T
     PBUF(JIJ, IRLTEMP)=(PRV(JIJ)-PBUF(JIJ, IRVSAT))/ &
                   &(1 + PBUF(JIJ, IDRSATODT)*PBUF(JIJ, IEXN)* &
