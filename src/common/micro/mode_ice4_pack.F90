@@ -313,7 +313,7 @@ IF(PARAMI%LPACK_MICRO) THEN
       !*       5.     TENDENCIES COMPUTATION
       !               ----------------------
       !
-      CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
+      CALL ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &LLSIGMA_RC, LL_AUCV_ADJU, GEXT_TEND, &
                         &KPROMA, IMICRO, LLMICRO, PTSTEP, &
                         &KRR, &
@@ -423,7 +423,7 @@ ELSE ! PARAMI%LPACK_MICRO
   !*       5bis.  TENDENCIES COMPUTATION
   !               ----------------------
   !
-  CALL ICE4_STEPPING(CST, PARAMI, ICEP, ICED, BUCONF, &
+  CALL ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                     &LLSIGMA_RC, LL_AUCV_ADJU, GEXT_TEND, &
                     &KSIZE, KSIZE, ODMICRO, PTSTEP, &
                     &KRR, &
