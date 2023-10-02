@@ -42,7 +42,7 @@ TARGZDIR=${TARGZDIR:=$PHYEXTOOLSDIR/pack/}
 ################################
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [--expand] [-t test] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [--expand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] commit [reference]"
   echo "commit          commit hash (or a directory) to test"
   echo "reference       commit hash or a directory or nothing for ref"
   echo "-s              suppress compilation pack"
@@ -50,7 +50,7 @@ function usage {
   echo "-c              performs compilation"
   echo "-r              runs the tests"
   echo "-C              checks the result against the reference"
-  echo "-t              comma separated list of tests to execute"
+  echo "-t TEST         comma separated list of tests to execute"
   echo "                or ALL to execute all tests"
   echo "--expand        use mnh_expand (code will use do loops)"
   echo "--repo-user USER"
@@ -65,7 +65,7 @@ function usage {
   echo "--computeRefIfNeeded"
   echo "                computes the missing references"
   echo ""
-  echo "If nothing is asked (compilation, running, check, removing) everything"
+  echo "If nothing is asked (pack creation, compilation, running, check, removing) everything"
   echo "except the removing is done"
   echo
   echo "If no test is aked for, the default one ($defaultTest) is executed"
