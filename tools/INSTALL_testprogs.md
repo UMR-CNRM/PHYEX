@@ -7,11 +7,10 @@ These programs need data. This document describes how to generate the data, the 
 
 This document is written using the markdown language. With pandoc, it can be converted to HTML (pandoc -s \<filename\>.md -o \<filename\>.html) or PDF (pandoc -s \<filename\>.md -o \<filename\>.pdf). 
 
+## DATA
 
-## DATA GENERATION
+There are two options.
 
-Please, refer to the [Offline](../docs/Offline.md) documentation.
+On one hand, the data can be generated (please, refer to the [Offline](../docs/Offline.md) documentation) and, once produced, be put in the corresponding directories under tools/testprogs\_data.
 
-## DATA INSTALLATION
-
-Once produced, the data must be put in the corresponding directories under tools/testprogs\_data.
+On the other hand, a reduced dataset can be automatically dowloaded and installed using the INSTALL.sh script.
