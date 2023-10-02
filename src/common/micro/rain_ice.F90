@@ -203,7 +203,6 @@ USE MODE_ICE4_RAINFR_VERT,   ONLY: ICE4_RAINFR_VERT
 USE MODE_ICE4_COMPUTE_PDF,   ONLY: ICE4_COMPUTE_PDF
 USE MODE_ICE4_SEDIMENTATION, ONLY: ICE4_SEDIMENTATION
 USE MODE_ICE4_PACK, ONLY: ICE4_PACK
-USE MODE_ICE4_NUCLEATION, ONLY: ICE4_NUCLEATION
 USE MODE_ICE4_CORRECT_NEGATIVITIES, ONLY: ICE4_CORRECT_NEGATIVITIES
 !
 IMPLICIT NONE
@@ -418,7 +417,7 @@ DO JK=IKTB,IKTE
     ENDIF
   ENDDO
 ENDDO
-CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, D%NIJT*D%NKT, LLW3D(:,:), &
+CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LLW3D(:,:), &
                      PTHT(:, :), PPABST(:, :), PRHODREF(:, :), &                                       
                      PEXN(:, :), ZW3D(:, :), ZT(:, :), &                                                           
                      PRVT(:, :), &                                                                                 
@@ -669,4 +668,6 @@ ENDIF
 
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 1, ZHOOK_HANDLE)
 !
+CONTAINS
+INCLUDE "ice4_nucleation.func.h"
 END SUBROUTINE RAIN_ICE
