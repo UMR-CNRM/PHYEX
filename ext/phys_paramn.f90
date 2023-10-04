@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -499,7 +499,7 @@ IKB = 1 + JPVEXT
 IKE = IKU - JPVEXT
 !
 CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
-CALL FILL_DIMPHYEX(YLDIMPHYEX, SIZE(XTHT,1), SIZE(XTHT,2), SIZE(XTHT,3),.TRUE.,NLES_TIMES)
+CALL FILL_DIMPHYEX( YLDIMPHYEX, SIZE(XTHT,1), SIZE(XTHT,2), SIZE(XTHT,3), LTURB=.TRUE., KLES_TIMES=NLES_TIMES, KLES_K=NLES_K )
 !
 ZTIME1 = 0.0_MNHTIME
 ZTIME2 = 0.0_MNHTIME
