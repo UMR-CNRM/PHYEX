@@ -343,6 +343,7 @@ fi
 #### COMPILATION ####
 #####################
 
+profile_sourced=0
 if [ $compilation -eq 1 ]; then
   if [ $onlyIfNeeded -eq 0 -o ! -f $MNHPACK/$name/exe/MESONH* ]; then
     echo "### Compilation of commit $commit"
@@ -353,6 +354,7 @@ if [ $compilation -eq 1 ]; then
     set +e #file ends with a test that can return false
     . ../conf/profile_mesonh-* #This lines modifies the list of loaded modules
     set -e
+    profile_sourced=1
     rm -f ../exe/* #Suppress old executables, if any
     make -j 8 2>&1 | tee ../Output_compilation
     make installmaster 2>&1 | tee -a ../Output_compilation
@@ -424,9 +426,12 @@ if [ $run -ge 1 ]; then
 
         #execution
         cd ${case2}
-        set +e #file ends with a test that can return false
-        [ $compilation -eq 0 ] && . $MNHPACK/$name/conf/profile_mesonh-*
-        set -e
+        if [ $profile_sourced -eq 0 ]; then
+          set +e #file ends with a test that can return false
+          . $MNHPACK/$name/conf/profile_mesonh-*
+          set -e
+          profile_sourced=1
+        fi
         ./clean_mesonh_xyz
         set +o pipefail #We want to go through all tests
         ./run_mesonh_xyz | tee Output_run
