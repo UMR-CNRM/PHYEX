@@ -115,7 +115,7 @@ mainPackVersion=${mainPackVersion:-${defaultMainPackVersion}}
 ################################
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t test] [--cycle CYCLE] [--scripttag TAG] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t TEST] [--cycle CYCLE] [--scripttag TAG] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] commit [reference]"
   echo "commit          commit hash (or a directory, or among $specialPack) to test"
   echo "reference       commit hash (or a directory, or among $specialPack) REF to use as a reference"
   echo "-s              suppress compilation pack"
@@ -123,7 +123,7 @@ function usage {
   echo "-c              performs compilation"
   echo "-r              runs the tests"
   echo "-C              checks the result against the reference"
-  echo "-t              comma separated list of tests to execute"
+  echo "-t TEST         comma separated list of tests to execute"
   echo "                or ALL to execute all tests"
   echo "--noexpand      do not use mnh_expand (code will be in array-syntax)"
   echo "-f              full compilation (do not use pre-compiled pack)"
@@ -630,6 +630,10 @@ if [ $compilation -eq 1 ]; then
     fi
   fi
 fi
+
+###################
+#### EXECUTION ####
+###################
 
 if [ $run -ge 1 ]; then
   #Cleaning to suppress old results that may be confusing in case of a crash during the run

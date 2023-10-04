@@ -14,6 +14,8 @@ function parse_args() {
   MESONHPROFILE=
   useexpand=1
   commit=""
+  packcreation=0
+  compilation=0
   # pass unrecognized arguments to fcm
   FCM_ARGS=""
   
@@ -30,6 +32,8 @@ $0 [options]
 --mesonhprofile FILE  build using Méso-NH profile and rules (--arch must be used to give a name to the build dir)
 --noexpand            do not use mnh_expand (code will be in array-syntax)"
 --commit              commit hash (or a directory) to test; do not use this option from within a repository
+-p                    creates 'pack' (compilation directory)
+-c                    performs compilation
 
 Unrecognized options are passed to the fcm build command. Useful options include :
 --new                   clean build tree before building
@@ -39,6 +43,8 @@ Unrecognized options are passed to the fcm build command. Useful options include
 For details on FCM, see 
     http://metomi.github.io/fcm/doc/user_guide/build.html
     http://metomi.github.io/fcm/doc/user_guide/command_ref.html#fcm-build
+
+If neither creation nor execution is requested, both steps are performed.
 EOF
         exit;;
       "--arch")
@@ -51,6 +57,8 @@ EOF
         MESONHPROFILE=$1 ; shift ;;
       '--noexpand') useexpand=0;;
       '--commit') commit=$1; shift;;
+      '-p') packcreation=1;;
+      '-c') compilation=1;;
       *)
         FCM_ARGS="$FCM_ARGS $OPTION" ;;
     esac
@@ -63,6 +71,11 @@ EOF
   if [ "$MESONHPROFILE" != "" -a "$ARCH" == "" ]; then
     echo "--arch option is mandatory if --mesonhprofile option is used"
     exit 3
+  fi
+  if [ $packcreation -eq 0 -a \
+       $compilation -eq 0 ]; then
+    packcreation=1
+    compilation=1
   fi
 }
 
@@ -248,85 +261,89 @@ chmod +x compilation.sh
 # Parse command line arguments
 parse_args $*
 
-# Change current working dir
-cd -P $(dirname $0)
-
-# Check the fcm installation
-check_install_fcm
-
-# Check the fiat installation
-check_install_fiat
-
-# Create the build directory and set up the build system
-builddir=arch_$ARCH
-if [ -d $builddir ]; then
-  echo "$builddir already exists. To rerun compilation, please enter this directory and use the compilation.sh script."
-  echo "Otherwise, you can remove the $builddir directory and execute again this script."
-  exit 1
-fi
-mkdir $builddir
-if [ "$GMKFILE" != "" ]; then
-  touch $builddir/arch.env
-  gmkfile2arch $GMKFILE $builddir/arch.fcm
-elif [ "$MESONHPROFILE" != "" ]; then
-  touch $builddir/arch.env
-  mesonhprofile2archenv $MESONHPROFILE $builddir/arch.fcm $builddir/arch.env
-else
-  cp ${ARCH_PATH}/arch-${ARCH}.env $builddir/arch.env
-  cp ${ARCH_PATH}/arch-${ARCH}.fcm $builddir/arch.fcm 
-fi
-cp fcm-make.cfg $builddir
-cd $builddir
-
-# Populate the source directory with (modified) PHYEX source code
-[ "$commit" == "" ] && commit=$PWD/../../.. #Current script run from within a PHYEX repository
-if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
-  # We get the source code directly from a directory
-  fromdir=$commit
-else
-  # We use a commit to checkout
-  fromdir=''
-fi
-#Expand options
-if [ $useexpand == 1 ]; then
-  expand_options="-D MNH_EXPAND -D MNH_EXPAND_LOOP"
-else
-  expand_options=""
-fi
-PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../../../tools #if run from within a PHYEX repository
-UPDATEDPATH=$PATH
-which prep_code.sh > /dev/null || export UPDATEDPATH=$PHYEXTOOLSDIR:$PATH
-subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s support"
-if [ "$fromdir" == '' ]; then
-  echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
-  if [[ $commit == testprogs${separator}* ]]; then
-    PATH=$UPDATEDPATH prep_code.sh -c $commit src #This commit is ready for inclusion
-  else
-    PATH=$UPDATEDPATH prep_code.sh -c $commit $expand_options $subs -m testprogs src
+if [ $packcreation -eq 1 ]; then
+  # Change current working dir
+  cd -P $(dirname $0)
+  
+  # Check the fcm installation
+  check_install_fcm
+  
+  # Check the fiat installation
+  check_install_fiat
+  
+  # Create the build directory and set up the build system
+  builddir=arch_$ARCH
+  if [ -d $builddir ]; then
+    echo "$builddir already exists. To rerun compilation, please enter this directory and use the compilation.sh script."
+    echo "Otherwise, you can remove the $builddir directory and execute again this script."
+    exit 1
   fi
-else
-  echo "Copy $fromdir"
-  mkdir src
-  scp -q -r $fromdir/src src/
-  PATH=$UPDATEDPATH prep_code.sh $expand_options $subs -m testprogs src
+  mkdir $builddir
+  if [ "$GMKFILE" != "" ]; then
+    touch $builddir/arch.env
+    gmkfile2arch $GMKFILE $builddir/arch.fcm
+  elif [ "$MESONHPROFILE" != "" ]; then
+    touch $builddir/arch.env
+    mesonhprofile2archenv $MESONHPROFILE $builddir/arch.fcm $builddir/arch.env
+  else
+    cp ${ARCH_PATH}/arch-${ARCH}.env $builddir/arch.env
+    cp ${ARCH_PATH}/arch-${ARCH}.fcm $builddir/arch.fcm 
+  fi
+  cp fcm-make.cfg $builddir
+  cd $builddir
+  
+  # Populate the source directory with (modified) PHYEX source code
+  [ "$commit" == "" ] && commit=$PWD/../../.. #Current script run from within a PHYEX repository
+  if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
+    # We get the source code directly from a directory
+    fromdir=$commit
+  else
+    # We use a commit to checkout
+    fromdir=''
+  fi
+  #Expand options
+  if [ $useexpand == 1 ]; then
+    expand_options="-D MNH_EXPAND -D MNH_EXPAND_LOOP"
+  else
+    expand_options=""
+  fi
+  PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../../../tools #if run from within a PHYEX repository
+  UPDATEDPATH=$PATH
+  which prep_code.sh > /dev/null || export UPDATEDPATH=$PHYEXTOOLSDIR:$PATH
+  subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s support"
+  if [ "$fromdir" == '' ]; then
+    echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
+    if [[ $commit == testprogs${separator}* ]]; then
+      PATH=$UPDATEDPATH prep_code.sh -c $commit src #This commit is ready for inclusion
+    else
+      PATH=$UPDATEDPATH prep_code.sh -c $commit $expand_options $subs -m testprogs src
+    fi
+  else
+    echo "Copy $fromdir"
+    mkdir src
+    scp -q -r $fromdir/src src/
+    PATH=$UPDATEDPATH prep_code.sh $expand_options $subs -m testprogs src
+  fi
+  
+  # Add some code
+  cd src
+  ln -s ../../fiat/src fiat
+  cat <<..EOF > dummyprog.F90
+  PROGRAM DUMMYPROG
+    PRINT*, "CREATED TO FORCE FCM TO LINK SOMETHING"
+  END PROGRAM DUMMYPROG
+..EOF
 fi
-
-# Add some code
-cd src
-ln -s ../../fiat/src fiat
-cat <<EOF > dummyprog.F90
-PROGRAM DUMMYPROG
-  PRINT*, "CREATED TO FORCE FCM TO LINK SOMETHING"
-END PROGRAM DUMMYPROG
-EOF
 
 # Build the compilation script and run it
-cd ..
-build_compilation_script src
-./compilation.sh
-ln -s build/bin/libphyex.so .
-
-# Check if python can open the resulting shared lib
-python3 -c "from ctypes import cdll; cdll.LoadLibrary('./libphyex.so')"
-
-# ldd -r ./libphyex.so should also give interesting results
+if [ $compilation -eq 1 ]; then
+  cd -P $(dirname $0)/arch_$ARCH
+  build_compilation_script src
+  ./compilation.sh
+  ln -s build/bin/libphyex.so .
+  
+  # Check if python can open the resulting shared lib
+  python3 -c "from ctypes import cdll; cdll.LoadLibrary('./libphyex.so')"
+  
+  # ldd -r ./libphyex.so should also give interesting results
+fi

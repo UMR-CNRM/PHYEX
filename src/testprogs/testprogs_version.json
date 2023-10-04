@@ -1,5 +1,9 @@
 {
 "testing": {
-            "ALL":"41c6be7"
+            "ice_adjust":"41c6be7",
+            "rain_ice":"41c6be7",
+            "rain_ice_old":"41c6be7",
+            "turb":"41c6be7",
+            "shallow":"41c6be7"
            }
 }
