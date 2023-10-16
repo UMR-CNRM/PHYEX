@@ -82,7 +82,7 @@ IF(XCED == XUNDEF) THEN
   !       Schmidt-Schumann      (1989) = 0.845
   !       Cheng-Canuto-Howard   (2002) = 0.845
   !       Rodier, Masson, Couvreux, Paci (2017) = 0.34
-  IF(CTURBLEN=='RM17' .OR. CTURBLEN=='ADAP') THEN
+  IF(CTURBLEN=='RM17' .OR. CTURBLEN=='HM21') THEN
     XCED=0.34
   ELSE
     IF(HPROGRAM=='AROME') THEN
