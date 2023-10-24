@@ -4,7 +4,8 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ######spl
-      SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
+      SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
+                            KPROMA, OCND2, OELEC, OSEDIM_BEARD,                   &
                             PTSTEP, KRR, PEXN,                                    &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
@@ -13,9 +14,12 @@
                             PINPRC, PINPRR, PEVAP3D,                              &
                             PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,               &
                             TBUDGETS, KBUDGETS,                                   &
+                            PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,           &
+                            PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,           &                            
+                            PEFIELDW, PLATHAM_IAGGS,                              &
                             PSEA, PTOWN,                                          &
-                            PRHT, PRHS, PINPRH, PFPR                              )
-!     ######################################################################
+                            PRHT, PRHS, PINPRH, PFPR, PQHT, PQHS                  )
+!     #############################################################################
 !
 !!****  * -  compute the explicit microphysical sources
 !!
@@ -171,6 +175,9 @@
 !  P. Wautelet 25/02/2020: bugfix: add missing budget: WETH_BU_RRG
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
+!  C. Barthe      03/2023: Add call to cloud electrification
+!  C. Barthe      06/2023: Add retroaction of electric field on IAGGS
+!  C. Barthe      07/2023: use new data structures for electricity
 !-----------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -185,15 +192,47 @@ USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
-USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
-      & ITH,     & ! Potential temperature
-      & IRV,     & ! Water vapor
-      & IRC,     & ! Cloud water
-      & IRR,     & ! Rain water
-      & IRI,     & ! Pristine ice
-      & IRS,     & ! Snow/aggregate
-      & IRG,     & ! Graupel
-      & IRH        ! Hail
+USE MODD_ELEC_PARAM,     ONLY: ELEC_PARAM_t
+USE MODD_ELEC_DESCR,     ONLY: ELEC_DESCR_t
+USE MODD_FIELDS_ADDRESS
+!USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
+!      & ITH,     & ! Potential temperature
+!      & IRV,     & ! Water vapor
+!      & IRC,     & ! Cloud water
+!      & IRR,     & ! Rain water
+!      & IRI,     & ! Pristine ice
+!      & IRS,     & ! Snow/aggregate
+!      & IRG,     & ! Graupel
+!      & IRH,     & ! Hail
+!      & IBUNUM,       & ! Number of tendency terms
+!      & IBUNUM_EXTRA, & ! Number of extra tendency terms
+!      & IRCHONI,    & ! Homogeneous nucleation
+!      & IRVDEPS,    & ! Deposition on r_s,
+!      & IRIAGGS,    & ! Aggregation on r_s
+!      & IRIAUTS,    & ! Autoconversion of r_i for r_s production
+!      & IRVDEPG,    & ! Deposition on r_g
+!      & IRCAUTR,    & ! Autoconversion of r_c for r_r production
+!      & IRCACCR,    & ! Accretion of r_c for r_r production
+!      & IRREVAV,    & ! Evaporation of r_r
+!      & IRCBERI,    & ! Bergeron-Findeisen effect
+!      & IRHMLTR,    & ! Melting of the hailstones
+!      & IRSMLTG,    & ! Conversion-Melting of the aggregates
+!      & IRCMLTSR,   & ! Cloud droplet collection onto aggregates by positive temperature
+!      & IRRACCSS, IRRACCSG, IRSACCRG, & ! Rain accretion onto the aggregates
+!      & IRCRIMSS, IRCRIMSG, IRSRIMCG, & ! Cloud droplet riming of the aggregates
+!      & IRICFRRG, IRRCFRIG, IRICFRR,  & ! Rain contact freezing
+!      & IRCWETG,  IRIWETG,  IRRWETG,  IRSWETG, &  ! Graupel wet growth
+!      & IRCDRYG,  IRIDRYG,  IRRDRYG,  IRSDRYG, &  ! Graupel dry growth
+!      & IRWETGH,    & ! Conversion of graupel into hail
+!      & IRGMLTR,    & ! Melting of the graupel
+!      & IRCWETH,  IRIWETH,  IRSWETH,  IRGWETH,  IRRWETH, & ! Dry growth of hailstone
+!      & IRCDRYH,  IRIDRYH,  IRSDRYH,  IRRDRYH,  IRGDRYH, & ! Wet growth of hailstone
+!      & IRDRYHG,    &
+!      & IRVHENI_MR, & ! heterogeneous nucleation mixing ratio change
+!      & IRRHONG_MR, & ! Spontaneous freezing mixing ratio change
+!      & IRIMLTC_MR, & ! Cloud ice melting mixing ratio change
+!      & IRSRIMCG_MR,& ! Cloud droplet riming of the aggregates
+!      & IRWETGH_MR
 
 USE MODE_BUDGET_PHY,         ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 USE MODE_MSG,                ONLY: PRINT_MSG, NVERB_FATAL
@@ -203,6 +242,8 @@ USE MODE_ICE4_SEDIMENTATION, ONLY: ICE4_SEDIMENTATION
 USE MODE_ICE4_PACK, ONLY: ICE4_PACK
 USE MODE_ICE4_NUCLEATION, ONLY: ICE4_NUCLEATION
 USE MODE_ICE4_CORRECT_NEGATIVITIES, ONLY: ICE4_CORRECT_NEGATIVITIES
+!
+USE MODI_ELEC_TENDENCIES
 !
 IMPLICIT NONE
 !
@@ -215,7 +256,13 @@ TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(PARAM_ICE_t),        INTENT(IN)    :: PARAMI
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
+TYPE(ELEC_PARAM_t),       INTENT(IN)    :: ELECP   ! electrical parameters
+TYPE(ELEC_DESCR_t),       INTENT(IN)    :: ELECD   ! electrical descriptive csts
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+INTEGER,                  INTENT(IN)    :: KPROMA ! cache-blocking factor for microphysic loop
+LOGICAL                                 :: OCND2  ! Logical switch to separate liquid and ice
+LOGICAL,                  INTENT(IN)    :: OELEC  ! Switch for cloud electricity
+LOGICAL,                  INTENT(IN)    :: OSEDIM_BEARD  ! Switch for effect of electrical forces on sedim.
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
 !
@@ -260,12 +307,37 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSIGS   ! Sigma_s at t
 !
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
-REAL, DIMENSION(D%NIJT), OPTIONAL, INTENT(IN)        :: PSEA ! Sea Mask
-REAL, DIMENSION(D%NIJT), OPTIONAL, INTENT(IN)        :: PTOWN! Fraction that is town
-REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,  INTENT(IN)    :: PRHT    ! Hail m.r. at t
-REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL,  INTENT(INOUT) :: PRHS    ! Hail m.r. source
-REAL, DIMENSION(D%NIJT), OPTIONAL, INTENT(OUT)      :: PINPRH! Hail instant precip
-REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)  :: PFPR ! upper-air precipitation fluxes
+!
+! scalar variables for cloud electricity
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(IN)    :: PQPIT  ! Positive ion  -
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQCT   ! Cloud droplet | 
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQRT   ! Rain          | electric
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQIT   ! Ice crystals  |  charge 
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQST   ! Snow          |   at t
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQGT   ! Graupel       |
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(IN)    :: PQNIT  ! Negative ion  -
+!
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQPIS  ! Positive ion  -
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQCS   ! Cloud droplet | 
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQRS   ! Rain          | electric
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQIS   ! Ice crystals  |  charge 
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQSS   ! Snow          |  source
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQGS   ! Graupel       |
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQNIS  ! Negative ion  -
+!
+REAL, DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(D%NKT,0,OSEDIM_BEARD)), INTENT(IN) :: PEFIELDW ! vertical electric field
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(IN)    :: PLATHAM_IAGGS ! E Function to simulate
+                                                                                            ! enhancement of IAGGS
+!
+! optional variables
+REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(IN)    :: PSEA    ! Sea Mask
+REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(IN)    :: PTOWN   ! Fraction that is town
+REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
+REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip
+REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-air precipitation fluxes
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQHT ! Hail electric charge at t
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQHS ! Hail electric charge source
 !
 !
 !*       0.2   Declarations of local variables :
@@ -291,6 +363,13 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZW3D
 LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLW3D
 REAL, DIMENSION(KRR) :: ZRSMIN
 INTEGER :: ISIZE, IPROMA, IGPBLKS, ISIZE2
+!
+LOGICAL :: LSAVE_MICRO ! if true, microphysical tendencies are saved for cloud electricity
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC),MERGE(IBUNUM-IBUNUM_EXTRA,0,OELEC)) :: &
+           ZMICRO_TEND ! Total mixing ratio change, used for electric charge tendencies
+LOGICAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)) :: GMASK_ELEC
+INTEGER :: IELEC ! nb of points where microphysical tendencies are not null
+INTEGER :: JI    ! loop index
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 0, ZHOOK_HANDLE)
@@ -352,14 +431,16 @@ ENDDO
 !               -------------------------------------
 !
 IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
-  CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, BUCONF, &
-                         &PTSTEP, KRR, PDZZ, &
+  CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, BUCONF, &
+                         &OELEC, OSEDIM_BEARD, PTSTEP, KRR, PDZZ, &
                          &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                          &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                          &PINPRC, PINPRR, PINPRS, PINPRG, &
+                         &PQCT, PQRT, PQIT, PQST, PQGT, PQCS, PQRS, PQIS, PQSS, PQGS, PEFIELDW, &
                          &TBUDGETS, KBUDGETS, &
                          &PSEA=PSEA, PTOWN=PTOWN, &
-                         &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
+                         &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR, &
+                         &PQHT=PQHT, PQHS=PQHS)
 ENDIF
 !
 !
@@ -395,7 +476,7 @@ ENDDO
 !*       4.     COMPUTES THE SLOW COLD PROCESS SOURCES OUTSIDE OF LLMICRO POINTS
 !               -----------------------------------------------------------------
 !
-!The nucelation must be call everywhere
+!The nucleation must be called everywhere
 !This call is for points outside of the LLMICR mask, another call is coded in ice4_tendencies
 LLW3D(:,:)=.FALSE.
 DO JK=IKTB,IKTE
@@ -444,10 +525,17 @@ ELSE
   IPROMA=0
   ISIZE2=ISIZE
 ENDIF
+!
+!Microphysical tendencies must be saved for some physical parameterizations
+IF (OELEC) THEN
+  LSAVE_MICRO = .TRUE.
+  ZMICRO_TEND(:,:,:) = 0.
+END IF
+!
 !This part is put in another routine to separate pack/unpack operations from computations
 CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
                IPROMA, ISIZE, ISIZE2,                                &
-               PTSTEP, KRR, LLMICRO, PEXN,                           &
+               PTSTEP, KRR, LSAVE_MICRO, LLMICRO, OELEC, PEXN,       &
                PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
                PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
                PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,             &
@@ -456,15 +544,105 @@ CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
                ZZ_RVHENI, ZZ_LVFACT, ZZ_LSFACT,                      &
                ZWR,                                                  &
                TBUDGETS, KBUDGETS,                                   &
-               PRHS                                                  )
+               ZMICRO_TEND, PLATHAM_IAGGS, PRHS                      )
+!
 !
 !-------------------------------------------------------------------------------
 !
-!*       6.     TOTAL TENDENCIES
+!*       7.     CALL TO PHYSICAL PARAMETERIZATIONS CLOSELY LINKED TO MICROPHYSICS
+!               -----------------------------------------------------------------
+!
+! Cloud electrification, water isotopes and aqueous chemistry need the mixing ratio tendencies
+! to compute the evolution of electric charges, water isotopes and ...
+!
+!*       7.1    Cloud electrification
+!
+IF (OELEC) THEN
+  DO JK = IKTB, IKTE
+    DO JIJ = IIJB, IIJE
+      DO JI = 1, IBUNUM-IBUNUM_EXTRA
+        ZMICRO_TEND(JIJ,JK,JI) = ZMICRO_TEND(JIJ,JK,JI) * ZINV_TSTEP
+        !
+        ! transfer of electric charges occurs only where transfer of mass is non null
+        GMASK_ELEC(JIJ,JK) = GMASK_ELEC(JIJ,JK) .OR. (ZMICRO_TEND(JIJ,JK,JI) .NE. 0.)
+      END DO
+    END DO
+  END DO
+  !
+  IELEC = COUNT(GMASK_ELEC)
+  ! 
+  ! RVHENI : ajout de prvheni ?
+  ! traitement des deux termes extra ? irwetgh_mr et irsrimcg_mr ?
+  IF (KRR == 7) THEN
+    CALL ELEC_TENDENCIES(D, KRR, IELEC, PTSTEP, GMASK_ELEC,                                   &
+                         PRHODREF, PRHODJ, ZT, PCIT,                                          &
+                         PRVT, PRCT, PRRT, PRIT, PRST, PRGT,                                  &
+                         PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,                          &
+                         PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,                          &
+                         ZMICRO_TEND(:,:,IRVHENI_MR), ZMICRO_TEND(:,:,IRRHONG_MR),            &
+                         ZMICRO_TEND(:,:,IRIMLTC_MR), ZMICRO_TEND(:,:,IRCHONI),               &
+                         ZMICRO_TEND(:,:,IRVDEPS), ZMICRO_TEND(:,:,IRIAGGS),                  &
+                         ZMICRO_TEND(:,:,IRIAUTS), ZMICRO_TEND(:,:,IRVDEPG),                  &
+                         ZMICRO_TEND(:,:,IRCAUTR), ZMICRO_TEND(:,:,IRCACCR),                  &
+                         ZMICRO_TEND(:,:,IRREVAV), ZMICRO_TEND(:,:,IRCRIMSS),                 &
+                         ZMICRO_TEND(:,:,IRCRIMSG), ZMICRO_TEND(:,:,IRSRIMCG),                &
+                         ZMICRO_TEND(:,:,IRRACCSS), ZMICRO_TEND(:,:,IRRACCSG),                &
+                         ZMICRO_TEND(:,:,IRSACCRG), ZMICRO_TEND(:,:,IRSMLTG),                 &
+                         ZMICRO_TEND(:,:,IRICFRRG), ZMICRO_TEND(:,:,IRRCFRIG),                &
+                         ZMICRO_TEND(:,:,IRCWETG), ZMICRO_TEND(:,:,IRIWETG),                  &
+                         ZMICRO_TEND(:,:,IRRWETG), ZMICRO_TEND(:,:,IRSWETG),                  &
+                         ZMICRO_TEND(:,:,IRCDRYG), ZMICRO_TEND(:,:,IRIDRYG),                  &
+                         ZMICRO_TEND(:,:,IRRDRYG), ZMICRO_TEND(:,:,IRSDRYG),                  &
+                         ZMICRO_TEND(:,:,IRGMLTR), ZMICRO_TEND(:,:,IRCBERI),                  &
+                         PRCMLTSR=ZMICRO_TEND(:,:,IRCMLTSR), PRICFRR=ZMICRO_TEND(:,:,IRICFRR),&
+                         PRWETGH=ZMICRO_TEND(:,:,IRWETGH),                                    &
+                         PRCWETH=ZMICRO_TEND(:,:,IRCWETH), PRIWETH=ZMICRO_TEND(:,:,IRIWETH),  &
+                         PRSWETH=ZMICRO_TEND(:,:,IRSWETH),                                    &
+                         PRGWETH=ZMICRO_TEND(:,:,IRGWETH), PRRWETH=ZMICRO_TEND(:,:,IRRWETH),  &
+                         PRCDRYH=ZMICRO_TEND(:,:,IRCDRYH), PRIDRYH=ZMICRO_TEND(:,:,IRIDRYH),  &
+                         PRSDRYH=ZMICRO_TEND(:,:,IRSDRYH),                                    &
+                         PRRDRYH=ZMICRO_TEND(:,:,IRRDRYH), PRGDRYH=ZMICRO_TEND(:,:,IRGDRYH),  &
+                         PRDRYHG=ZMICRO_TEND(:,:,IRDRYHG), PRHMLTR=ZMICRO_TEND(:,:,IRHMLTR),  &
+                         PRHT=PRHT, PRHS=PRHS, PQHT=PQHT, PQHS=PQHS                       )
+  ELSE
+    CALL ELEC_TENDENCIES(D, KRR, ISIZE, PTSTEP, LLMICRO,                                     &
+                         PRHODREF, PRHODJ, ZT, PCIT,                                         &
+                         PRVT, PRCT, PRRT, PRIT, PRST, PRGT,                                 &
+                         PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,                         &
+                         PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,                         &
+                         ZMICRO_TEND(:,:,IRVHENI_MR), ZMICRO_TEND(:,:,IRRHONG_MR),           &
+                         ZMICRO_TEND(:,:,IRIMLTC_MR), ZMICRO_TEND(:,:,IRCHONI),              &
+                         ZMICRO_TEND(:,:,IRVDEPS), ZMICRO_TEND(:,:,IRIAGGS),                 &
+                         ZMICRO_TEND(:,:,IRIAUTS), ZMICRO_TEND(:,:,IRVDEPG),                 &
+                         ZMICRO_TEND(:,:,IRCAUTR), ZMICRO_TEND(:,:,IRCACCR),                 &
+                         ZMICRO_TEND(:,:,IRREVAV), ZMICRO_TEND(:,:,IRCRIMSS),                &
+                         ZMICRO_TEND(:,:,IRCRIMSG), ZMICRO_TEND(:,:,IRSRIMCG),               &
+                         ZMICRO_TEND(:,:,IRRACCSS), ZMICRO_TEND(:,:,IRRACCSG),               &
+                         ZMICRO_TEND(:,:,IRSACCRG), ZMICRO_TEND(:,:,IRSMLTG),                &
+                         ZMICRO_TEND(:,:,IRICFRRG), ZMICRO_TEND(:,:,IRRCFRIG),               &
+                         ZMICRO_TEND(:,:,IRCWETG), ZMICRO_TEND(:,:,IRIWETG),                 &
+                         ZMICRO_TEND(:,:,IRRWETG), ZMICRO_TEND(:,:,IRSWETG),                 &
+                         ZMICRO_TEND(:,:,IRCDRYG), ZMICRO_TEND(:,:,IRIDRYG),                 &
+                         ZMICRO_TEND(:,:,IRRDRYG), ZMICRO_TEND(:,:,IRSDRYG),                 &
+                         ZMICRO_TEND(:,:,IRGMLTR), ZMICRO_TEND(:,:,IRCBERI),                 &
+                         PRCMLTSR=ZMICRO_TEND(:,:,IRCMLTSR), PRICFRR=ZMICRO_TEND(:,:,IRICFRR))
+  END IF
+END IF
+!
+!
+!*       7.2    Water isotopologues
+!
+!
+!*       7.3    Aqueous chemistry
+!
+!
+!-------------------------------------------------------------------------------
+!
+!*       8.     TOTAL TENDENCIES
 !               ----------------
 !
 !
-!***     6.1    total tendencies limited by available species
+!***     8.1    total tendencies limited by available species
 !
 DO JK = IKTB, IKTE
   DO JIJ=IIJB, IIJE
@@ -504,7 +682,7 @@ DO JK = IKTB, IKTE
 ENDDO
 !-------------------------------------------------------------------------------
 !
-!***     6.2    Negative corrections
+!***     8.2    Negative corrections
 !
 !NOTE:
 !  This call cannot be moved before the preeceding budget calls because,
@@ -525,11 +703,16 @@ IF(BUCONF%LBU_ENABLE) THEN
   IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'CORR', PRGS(:, :)*PRHODJ(:, :))
   IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'CORR', PRHS(:, :)*PRHODJ(:, :))
 END IF
+!++cb-- ajouter les bilans pour l'elec !!!
 
 !We correct negativities with conservation
 CALL ICE4_CORRECT_NEGATIVITIES(D, ICED, KRR, PRVS, PRCS, PRRS, &
                               &PRIS, PRSS, PRGS, &
                               &PTHS, ZZ_LVFACT, ZZ_LSFACT, PRHS)
+!CALL ICE4_CORRECT_NEGATIVITIES(D, ICED, KRR, OELEC, PRVS, PRCS, PRRS, &
+!                              &PRIS, PRSS, PRGS, &
+!                              &PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS, &                              
+!                              &PTHS, ZZ_LVFACT, ZZ_LSFACT, PRHS, PQHS)
 
 IF (BUCONF%LBU_ENABLE) THEN
   IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'CORR', PTHS(:, :)*PRHODJ(:, :))
@@ -544,19 +727,21 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
-!*       7.     COMPUTE THE SEDIMENTATION (RS) SOURCE
+!*       9.     COMPUTE THE SEDIMENTATION (RS) SOURCE
 !               -------------------------------------
 !
 IF(PARAMI%LSEDIM_AFTER) THEN
-  CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, BUCONF, &
-                         &PTSTEP, KRR, PDZZ, &
+  CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, BUCONF, &
+                         &OELEC, OSEDIM_BEARD, PTSTEP, KRR, PDZZ, &
                          &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                          &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                          &PINPRC, PINPRR, PINPRS, PINPRG, &
+                         &PQCT, PQRT, PQIT, PQST, PQGT, PQCS, PQRS, PQIS, PQSS, PQGS, PEFIELDW, &
                          &TBUDGETS, KBUDGETS, &
                          &PSEA=PSEA, PTOWN=PTOWN, &
-                         &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
-
+                         &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR, &
+                         &PQHT=PQHT, PQHS=PQHS)
+        
   !"sedimentation" of rain fraction
   DO JK = IKTB, IKTE
     DO JIJ=IIJB,IIJE
@@ -579,7 +764,7 @@ ENDIF
 !
 !-------------------------------------------------------------------------------
 !
-!*       8.     COMPUTE THE FOG DEPOSITION TERM 
+!*       10.    COMPUTE THE FOG DEPOSITION TERM 
 !               -------------------------------------
 !
 IF (PARAMI%LDEPOSC) THEN !cloud water deposition on vegetation

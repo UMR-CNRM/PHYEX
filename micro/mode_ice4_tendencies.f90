@@ -8,10 +8,13 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, KPROMA, KSIZE, &
                           &KRR, ODSOFT, LDCOMPUTE, &
+                          &HSUBG_AUCV_RC, HSUBG_AUCV_RI,  &
+                          &OSAVE_MICRO, OELEC, &
                           &PEXN, PRHODREF, PLVFACT, PLSFACT, K1, K2, &
                           &PPRES, PCF, PSIGMA_RC, &
                           &PCIT, &
                           &PT, PVART, &
+                          &PLATHAM_IAGGS, &
                           &PBU_INST, &
                           &PRS_TEND, PRG_TEND, PRH_TEND, PSSI, &
                           &PA, PB, &
@@ -32,6 +35,7 @@ SUBROUTINE ICE4_TENDENCIES(D, CST, PARAMI, ICEP, ICED, BUCONF, KPROMA, KSIZE, &
 !!
 !  P. Wautelet 29/05/2019: remove PACK/UNPACK intrinsics (to get more performance and better OpenACC support)
 !!     R. El Khatib 24-Aug-2021 Optimizations
+!!     C. Barthe    06/2023: Add retroaction of electric field on IAGGS
 !
 !
 !*      0. DECLARATIONS
@@ -74,6 +78,10 @@ INTEGER,                      INTENT(IN)    :: KPROMA, KSIZE
 INTEGER,                      INTENT(IN)    :: KRR
 LOGICAL,                      INTENT(IN)    :: ODSOFT
 LOGICAL, DIMENSION(KPROMA),   INTENT(IN)    :: LDCOMPUTE
+CHARACTER(LEN=4),             INTENT(IN)    :: HSUBG_AUCV_RC
+CHARACTER(LEN=80),            INTENT(IN)    :: HSUBG_AUCV_RI
+LOGICAL,                      INTENT(IN)    :: OSAVE_MICRO
+LOGICAL,                      INTENT(IN)    :: OELEC
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PEXN
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PRHODREF
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PLVFACT
@@ -86,6 +94,7 @@ REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PSIGMA_RC
 REAL, DIMENSION(KPROMA),       INTENT(INOUT) :: PCIT
 REAL, DIMENSION(KPROMA),       INTENT(IN)    :: PT
 REAL, DIMENSION(KPROMA,0:KRR), INTENT(IN)    :: PVART
+REAL, DIMENSION(MERGE(KPROMA,0,OELEC)), INTENT(IN) :: PLATHAM_IAGGS
 REAL, DIMENSION(KPROMA, IBUNUM),INTENT(INOUT):: PBU_INST
 REAL, DIMENSION(KPROMA, 8),    INTENT(INOUT) :: PRS_TEND
 REAL, DIMENSION(KPROMA, 8),    INTENT(INOUT) :: PRG_TEND
@@ -330,11 +339,12 @@ DO JL=1, KSIZE
 ENDDO
 !
 !
-CALL ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, LDCOMPUTE, PRHODREF, ZT, &
+CALL ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, ODSOFT, OELEC, LDCOMPUTE, PRHODREF, ZT, &
               &PSSI, PLVFACT, PLSFACT, &
               &ZVART(:,IRV), ZVART(:,IRC), ZVART(:,IRI), ZVART(:,IRS), ZVART(:,IRG), &
               &ZLBDAS, ZLBDAG, &
               &ZAI, ZCJ, PHLI_HCF, PHLI_HRI, &
+              &PLATHAM_IAGGS, &
               &PBU_INST(:, IRCHONI), PBU_INST(:, IRVDEPS), PBU_INST(:, IRIAGGS), PBU_INST(:, IRIAUTS), PBU_INST(:, IRVDEPG))
 !
 !-------------------------------------------------------------------------------
@@ -417,7 +427,7 @@ IF (KRR==7) THEN
                    &PBU_INST(:, IRCDRYH), PBU_INST(:, IRIDRYH), PBU_INST(:, IRSDRYH), PBU_INST(:, IRRDRYH), &
                    &PBU_INST(:, IRGDRYH), PBU_INST(:, IRDRYHG), PBU_INST(:, IRHMLTR), &
                    &PRH_TEND)
-ELSEIF (BUCONF%LBU_ENABLE) THEN
+ELSEIF (BUCONF%LBU_ENABLE .OR. OSAVE_MICRO) THEN
   PBU_INST(:, IRCWETH)=0.
   PBU_INST(:, IRIWETH)=0.
   PBU_INST(:, IRSWETH)=0.

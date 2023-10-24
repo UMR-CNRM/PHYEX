@@ -295,7 +295,8 @@ END MODULE MODI_INI_MODEL_n
 !  J.L.Redelsperger 06/2011: OCEAN case
 !  R. Schoetter    12/2021  multi-level coupling between MesoNH and SURFEX  
 !  R. Schoetter    12/2021  adds humidity and other mean diagnostics
-! A. Costes        12/2021: Blaze fire model
+!  A. Costes       12/2021: Blaze fire model
+!  C. Barthe      03/2023: if cloud electricity is activated, both ini_micron and ini_elecn are called
 !---------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -2220,15 +2221,14 @@ END IF
 !*       12.    INITIALIZE THE MICROPHYSICS
 !               ----------------------------
 !
-IF (CELEC == 'NONE') THEN
-  CALL INI_MICRO_n(TPINIFILE,ILUOUT)
+CALL INI_MICRO_n(TPINIFILE,ILUOUT)
 !
 !-------------------------------------------------------------------------------
 !
 !*       13.    INITIALIZE THE ATMOSPHERIC ELECTRICITY
 !               --------------------------------------
 !
-ELSE
+IF (CELEC /= 'NONE') THEN
   CALL INI_ELEC_n(ILUOUT, CELEC, CCLOUD, TPINIFILE, &
                   XTSTEP, XZZ,                      &
                   XDXX, XDYY, XDZZ, XDZX, XDZY      )
@@ -2237,16 +2237,16 @@ ELSE
   FMT='(/,"ELECTRIC VARIABLES ARE BETWEEN INDEX",I2," AND ",I2)')&
   NSV_ELECBEG, NSV_ELECEND
 !
-    IF( CGETSVT(NSV_ELECBEG)=='INIT' ) THEN
-      XSVT(:,:,:,NSV_ELECBEG) = XCION_POS_FW(:,:,:)                  ! Nb/kg
-      XSVT(:,:,:,NSV_ELECEND) = XCION_NEG_FW(:,:,:)
+  IF( CGETSVT(NSV_ELECBEG)=='INIT' ) THEN
+    XSVT(:,:,:,NSV_ELECBEG) = XCION_POS_FW(:,:,:)                  ! Nb/kg
+    XSVT(:,:,:,NSV_ELECEND) = XCION_NEG_FW(:,:,:)
 !
-      XSVT(:,:,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
-    ELSE  ! Convert elec_variables per m3 into elec_variables per kg of air
-      DO JSV = NSV_ELECBEG, NSV_ELECEND
-         XSVT(:,:,:,JSV) = XSVT(:,:,:,JSV) / XRHODREF(:,:,:)
-      ENDDO
-    END IF
+    XSVT(:,:,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
+  ELSE  ! Convert elec_variables per m3 into elec_variables per kg of air
+    DO JSV = NSV_ELECBEG, NSV_ELECEND
+       XSVT(:,:,:,JSV) = XSVT(:,:,:,JSV) / XRHODREF(:,:,:)
+    ENDDO
+  END IF
 END IF
 !
 !-------------------------------------------------------------------------------

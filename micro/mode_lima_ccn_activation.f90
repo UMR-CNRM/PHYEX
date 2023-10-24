@@ -10,7 +10,7 @@ CONTAINS
     SUBROUTINE LIMA_CCN_ACTIVATION (CST,                                           &
                                     PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU, &
                                     PTHT, PRVT, PRCT, PCCT, PRRT, PNFT, PNAT,      &
-                                    PCLDFR                                         )
+                                    PCLDFR, PTOT_RV_HENU                           )
 !     ##############################################################################
 !
 !!
@@ -59,6 +59,7 @@ CONTAINS
 !  P. Wautelet 10/04/2019: replace ABORT and STOP calls by Print_msg
 !  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
 !  P. Wautelet 28/05/2019: move COUNTJV function to tools.f90
+!  C. Barthe      06/2022: save mixing ratio change for cloud electrification
 !
 !-------------------------------------------------------------------------------
 !
@@ -106,6 +107,8 @@ REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PNFT       ! CCN C. available at t
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PNAT       ! CCN C. activated at t
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCLDFR     ! Precipitation fraction
+!
+REAL, DIMENSION(:,:,:), OPTIONAL, INTENT(INOUT) :: PTOT_RV_HENU  ! Mixing ratio change due to HENU
 !
 !*       0.1   Declarations of local variables :
 !
@@ -421,8 +424,10 @@ IF( INUCT >= 1 ) THEN
       ZZW1(:) = MIN(XCSTDCRIT*ZZW6(:)/(((ZZT(:)*ZSMAX(:))**3)*ZRHODREF(:)),1.E-5)
    END WHERE
 !
+   PTOT_RV_HENU(:,:,:) = 0.
    IF (.NOT.LSUBG_COND) THEN
       ZW(:,:,:) = MIN( UNPACK( ZZW1(:),MASK=GNUCT(:,:,:),FIELD=0.0 ),PRVT(:,:,:) )
+      PTOT_RV_HENU(:,:,:) = ZW(:,:,:)
       PTHT(:,:,:) = PTHT(:,:,:) + ZW(:,:,:) * (CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(:,:,:)-CST%XTT))/                &
             (PEXNREF(:,:,:)*(CST%XCPD+CST%XCPV*PRVT(:,:,:)+CST%XCL*(PRCT(:,:,:)+PRRT(:,:,:))))
       PRVT(:,:,:) = PRVT(:,:,:) - ZW(:,:,:) 
@@ -433,6 +438,8 @@ IF( INUCT >= 1 ) THEN
       PCCT(:,:,:) = PCCT(:,:,:) + ZCLDFR(:,:,:) * UNPACK( ZZW6(:),MASK=GNUCT(:,:,:),FIELD=0. ) 
    END IF
 !
+!++cb-- A quoi servent ces 2 dernieres lignes ? variables locales, non sauvees, et ne servent pas 
+! a calculer quoi que ce soit (fin de la routine)
    ZW(:,:,:)   = UNPACK( 100.0*ZSMAX(:),MASK=GNUCT(:,:,:),FIELD=0.0 )
    ZW2(:,:,:)  = ZCLDFR(:,:,:) * UNPACK( ZZW6(:),MASK=GNUCT(:,:,:),FIELD=0.0 )
 !

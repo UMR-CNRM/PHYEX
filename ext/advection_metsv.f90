@@ -9,8 +9,8 @@
 !
 INTERFACE
       SUBROUTINE ADVECTION_METSV (TPFILE, HUVW_ADV_SCHEME,                     &
-                            HMET_ADV_SCHEME,HSV_ADV_SCHEME, HCLOUD, KSPLIT,    &
-                            OSPLIT_CFL, PSPLIT_CFL, OCFL_WRIT,                 &
+                            HMET_ADV_SCHEME,HSV_ADV_SCHEME, HCLOUD, HELEC,     &
+                            KSPLIT, OSPLIT_CFL, PSPLIT_CFL, OCFL_WRIT,         &
                             HLBCX, HLBCY, KRR, KSV, TPDTCUR, PTSTEP,           &
                             PUT, PVT, PWT, PTHT, PRT, PTKET, PSVT, PPABST,     &
                             PTHVREF, PRHODJ, PDXX, PDYY, PDZZ, PDZX, PDZY,     &
@@ -25,6 +25,7 @@ CHARACTER(LEN=6),       INTENT(IN)   :: HMET_ADV_SCHEME, & ! Control of the
                                         HSV_ADV_SCHEME, &  ! scheme applied 
                                         HUVW_ADV_SCHEME
 CHARACTER (LEN=4),      INTENT(IN)   :: HCLOUD      ! Kind of cloud parameterization                                
+CHARACTER (LEN=4),      INTENT(IN)   :: HELEC       ! Kind of cloud electricity parameterization
 !
 INTEGER,                INTENT(INOUT):: KSPLIT       ! Number of time splitting
                                                      ! for PPM advection
@@ -64,8 +65,8 @@ END INTERFACE
 END MODULE MODI_ADVECTION_METSV
 !     ##########################################################################
       SUBROUTINE ADVECTION_METSV (TPFILE, HUVW_ADV_SCHEME,                     &
-                            HMET_ADV_SCHEME,HSV_ADV_SCHEME, HCLOUD, KSPLIT,    &
-                            OSPLIT_CFL, PSPLIT_CFL, OCFL_WRIT,                 &
+                            HMET_ADV_SCHEME,HSV_ADV_SCHEME, HCLOUD, HELEC,     &
+                            KSPLIT, OSPLIT_CFL, PSPLIT_CFL, OCFL_WRIT,         &
                             HLBCX, HLBCY, KRR, KSV, TPDTCUR, PTSTEP,           &
                             PUT, PVT, PWT, PTHT, PRT, PTKET, PSVT, PPABST,     &
                             PTHVREF, PRHODJ, PDXX, PDYY, PDZZ, PDZX, PDZY,     &
@@ -140,6 +141,7 @@ END MODULE MODI_ADVECTION_METSV
 !  P. Wautelet 11/06/2020: bugfix: correct PRSVS array indices
 !  P. Wautelet + Benoît Vié 06/2020: improve removal of negative scalar variables + adapt the corresponding budgets
 !  P. Wautelet 30/06/2020: move removal of negative scalar variables to Sources_neg_correct
+!  C. Barthe   08/02/2022: add HELEC in arguments of Sources_neg_correct
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -191,6 +193,7 @@ CHARACTER(LEN=6),       INTENT(IN)   :: HMET_ADV_SCHEME, & ! Control of the
                                         HSV_ADV_SCHEME, &  ! scheme applied 
                                         HUVW_ADV_SCHEME
 CHARACTER (LEN=4),      INTENT(IN)   :: HCLOUD      ! Kind of cloud parameterization                                
+CHARACTER (LEN=4),      INTENT(IN)   :: HELEC       ! Kind of cloud electricity parameterization
 !
 INTEGER,                INTENT(INOUT):: KSPLIT       ! Number of time splitting
                                                      ! for PPM advection
@@ -712,7 +715,7 @@ if ( lbudget_sv) then
 end if
 
 ! Remove non-physical negative values (unnecessary in a perfect world) + corresponding budgets
-call Sources_neg_correct( hcloud, 'NEADV', krr, ptstep, ppabst, ptht, prt, prths, prrs, prsvs )
+call Sources_neg_correct( hcloud, helec, 'NEADV', krr, ptstep, ppabst, ptht, prt, prths, prrs, prsvs )
 
 !-------------------------------------------------------------------------------
 !

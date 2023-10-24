@@ -4,14 +4,15 @@ IMPLICIT NONE
 INTERFACE
 !
    SUBROUTINE LIMA ( D, CST, BUCONF, TBUDGETS, KBUDGETS,                     &
-                     PTSTEP,                                                 &
+                     PTSTEP, OELEC,                                          &
                      PRHODREF, PEXNREF, PDZZ,                                &
                      PRHODJ, PPABST,                                         &
                      NCCN, NIFN, NIMM,                                       &
                      PDTHRAD, PTHT, PRT, PSVT, PW_NU,                        &
                      PTHS, PRS, PSVS,                                        &
                      PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
-                     PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR                   )
+                     PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR,                  &
+                     PLATHAM_IAGGS, PEFIELDW, PSV_ELEC_T, PSV_ELEC_S         )
 !
 USE MODD_IO,  ONLY: TFILEDATA
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
@@ -26,6 +27,8 @@ TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 !
 REAL,                     INTENT(IN)    :: PTSTEP     ! Time step
+!
+LOGICAL,                  INTENT(IN)    :: OELEC      ! if true, cloud electrification is activated
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF   ! Reference density
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
@@ -61,6 +64,11 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCLDFR     ! Cloud fraction
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR     ! Cloud fraction
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PPRCFR     ! Cloud fraction
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PFPR       ! Precipitation fluxes in altitude
+!
+REAL, DIMENSION(:,:,:),             INTENT(IN)    :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
+REAL, DIMENSION(:,:,:),   OPTIONAL, INTENT(IN)    :: PEFIELDW   ! Vertical component of the electric field
+REAL, DIMENSION(:,:,:,:), OPTIONAL, INTENT(IN)    :: PSV_ELEC_T ! Charge density at time t
+REAL, DIMENSION(:,:,:,:), OPTIONAL, INTENT(INOUT) :: PSV_ELEC_S ! Charge density sources
 !
 END SUBROUTINE LIMA
 END INTERFACE

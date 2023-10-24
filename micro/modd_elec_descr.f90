@@ -31,6 +31,8 @@
 !!                               Helsdon-Farley (JGR, 1987, 5661-5675)
 !!                               Add "Beard" effect via sedimentation process
 !!        J.-P. Pinty   25/10/13 Add "Latham" effect via aggregation process
+!!        C. Barthe     05/07/23 New data structures for PHYEX - for sedimentation in ICE3
+!!                               + Remove unused variables
 !!
 !-------------------------------------------------------------------------------
 !
@@ -90,29 +92,11 @@ REAL, DIMENSION(:), SAVE, ALLOCATABLE :: XQTMIN ! Min values allowed for the
                                                 ! volumetric charge
 REAL, DIMENSION(:) ,      ALLOCATABLE :: XRTMIN_ELEC    ! Limit value of R where charge is available
 !
-REAL, SAVE :: XCXR            ! Exponent in the concentration-slope
 REAL       :: XEPSILON        ! Dielectric permittivity of air (F/m)
 REAL       :: XECHARGE        ! Elementary charge (C)
 !
-! charge-diameter relationship : e_x and f_x in q_x=e_xD^f_x
-!
-REAL, DIMENSION(:), SAVE, ALLOCATABLE :: XEC, XER, XEI, XES, XEG, XEH ! e_x 
-REAL,               SAVE              :: XFC, XFR, XFI, XFS, XFG, XFH ! f_x
-!
 !
 ! parameters relative to electrification
-!
-REAL :: XESR, &      ! Mean collection efficiency for rain-aggregate,
-        XEGR, &      !                                graupel_rain,
-        XEGS         !                                graupel_snow
-REAL :: XDELTATMIN   ! Minimum temperature gap between ZTT(:) and XQTC
-!
-REAL :: XQINDIV_C_CST,   &    !
-        XQINDIV_R_CST,   &    ! 
-        XQINDIV_I_CST,   &    ! Constants for the individual charge
-        XQINDIV_I_EXP,   &    ! calculation
-        XQINDIV_S_CST,   &    ! 
-        XQINDIV_G_CST         !
 !
 REAL, SAVE :: XLBDAR_MAXE, &  ! Max values allowed for the shape
               XLBDAS_MAXE, &  ! when computation of charge separation
@@ -174,5 +158,35 @@ LOGICAL :: LSEDIM_BEARD=.FALSE.    ! .T.: to enable ELEC=>MICROPHYS via
 !                                  ! particule sedimentation rate
 LOGICAL :: LIAGGS_LATHAM=.FALSE.   ! .T.: to enable ELEC=>MICROPHYS via
 !                                  ! ice aggregation rate
+!
+! The following variables must be declared with a derived type to match with PHYEX requirements
+TYPE ELEC_DESCR_t
+  REAL :: XFC, XFR, XFI, XFS, XFG, XFH ! f_x in q_x = e_x D^f_x
+  REAL :: XCXR            ! Exponent in the concentration-slope
+END TYPE ELEC_DESCR_t
+!
+TYPE(ELEC_DESCR_t), SAVE, TARGET :: ELEC_DESCR
+!
+REAL, POINTER :: XFC => NULL(), &
+                 XFR => NULL(), &
+                 XFI => NULL(), &
+                 XFS => NULL(), &
+                 XFG => NULL(), &
+                 XFH => NULL(), &
+                 XCXR => NULL()
+!
+CONTAINS
+!
+SUBROUTINE ELEC_DESCR_ASSOCIATE()
+  IMPLICIT NONE
+  !
+  XFC => ELEC_DESCR%XFC
+  XFR => ELEC_DESCR%XFR
+  XFI => ELEC_DESCR%XFI
+  XFS => ELEC_DESCR%XFS
+  XFG => ELEC_DESCR%XFG
+  XFH => ELEC_DESCR%XFH
+  XCXR => ELEC_DESCR%XCXR
+END SUBROUTINE ELEC_DESCR_ASSOCIATE
 !
 END MODULE MODD_ELEC_DESCR

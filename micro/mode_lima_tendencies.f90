@@ -25,9 +25,13 @@ CONTAINS
                               P_RI_AGGS, P_CI_AGGS,                                             & 
                               P_TH_DEPG, P_RG_DEPG,                                             & 
                               P_TH_BERFI, P_RC_BERFI,                                           & 
-                              P_TH_RIM, P_RC_RIM, P_CC_RIM, P_RS_RIM, P_CS_RIM, P_RG_RIM,       & 
+!++cb++
+!                              P_TH_RIM, P_RC_RIM, P_CC_RIM, P_RS_RIM, P_CS_RIM, P_RG_RIM,       & 
+                              P_TH_RIM, P_CC_RIM, P_CS_RIM, P_RC_RIMSS, P_RC_RIMSG, P_RS_RIMCG, &
                               P_RI_HMS, P_CI_HMS, P_RS_HMS,                                     & 
-                              P_TH_ACC, P_RR_ACC, P_CR_ACC, P_RS_ACC, P_CS_ACC, P_RG_ACC,       & 
+!                              P_TH_ACC, P_RR_ACC, P_CR_ACC, P_RS_ACC, P_CS_ACC, P_RG_ACC,       & 
+                              P_TH_ACC, P_CR_ACC, P_CS_ACC, P_RR_ACCSS, P_RR_ACCSG, P_RS_ACCRG, &
+!--cb--
                               P_RS_CMEL, P_CS_CMEL,                                             & 
                               P_TH_CFRZ, P_RR_CFRZ, P_CR_CFRZ, P_RI_CFRZ, P_CI_CFRZ,            & 
                               P_RI_CIBU, P_CI_CIBU,                                             & 
@@ -46,7 +50,8 @@ CONTAINS
                               PA_TH, PA_RV, PA_RC, PA_CC, PA_RR, PA_CR,                         &
                               PA_RI, PA_CI, PA_RS, PA_CS, PA_RG, PA_CG, PA_RH, PA_CH,           &
                               PEVAP3D,                                                          &
-                              PCF1D, PIF1D, PPF1D                                               )
+                              PCF1D, PIF1D, PPF1D,                                              &
+                              PLATHAM_IAGGS                                                     )
 !     ######################################################################
 !!
 !!    PURPOSE
@@ -65,6 +70,8 @@ CONTAINS
 !       Delbeke/Vie     03/2022 : KHKO option
 !       J. Wurtz        03/2022 : new snow characteristics
 !       B. Vie          03/2022: Add option for 1-moment pristine ice
+!       C. Barthe       06/2022: change some mass transfer rates to be consistent with ICE3, for cloud electrification
+!       C. Barthe       06/2023: add Latham effet for IAGGS
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -171,23 +178,33 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_DEPG  ! deposition of vapor on graup
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_BERFI
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_BERFI ! Bergeron (BERFI) : rc, ri=-rc, th
 !
+!++cb++
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_RIM
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_RIM
+!REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_RIM
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CC_RIM
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_RIM
+!REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_RIM
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CS_RIM
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_RIM   ! cloud droplet riming (RIM) : rc, Nc, rs, rg, th
+!REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_RIM   ! cloud droplet riming (RIM) : rc, Nc, rs, rg, th
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_RIMSS
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_RIMSG
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_RIMCG   ! cloud droplet riming (RIM) : rc, Nc, rs, rg, th
+!--cb--
 !
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_HMS
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_HMS
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_HMS   ! hallett mossop snow (HMS) : ri, Ni, rs
 !
+!++cb++
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_ACC
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_ACC
+!REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_ACC
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_ACC
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_ACC
+!REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_ACC
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CS_ACC
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_ACC   ! rain accretion on aggregates (ACC) : rr, Nr, rs, Ns, rg, Ng=-Ns, th
+!REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_ACC   ! rain accretion on aggregates (ACC) : rr, Nr, rs, Ns, rg, Ng=-Ns, th
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_ACCSS
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_ACCSG
+REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_ACCRG ! rain accretion on aggregates (ACC) : rr, Nr, rs, rg, th
+!--cb--
 !
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_CMEL
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CS_CMEL  ! conversion-melting (CMEL) : rs, Ns, rg=-rs, Ng=-Ns
@@ -281,6 +298,8 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: PEVAP3D
 REAL, DIMENSION(:),   INTENT(IN)    :: PCF1D
 REAL, DIMENSION(:),   INTENT(IN)    :: PIF1D
 REAL, DIMENSION(:),   INTENT(IN)    :: PPF1D
+!
+REAL, DIMENSION(:),   INTENT(IN)    :: PLATHAM_IAGGS ! factor to account for the effect of Efield on IAGGS
 !
 !*       0.2   Declarations of local variables :
 !
@@ -647,6 +666,7 @@ IF (NMOM_I.GE.1 .AND. NMOM_S.GE.1) THEN
    CALL LIMA_ICE_AGGREGATION_SNOW (LDCOMPUTE,                                                    & ! depends on IF, PF
                                    ZT, PRHODREF,                                                 &
                                    ZRIT/ZIF1D, ZRST/ZPF1D, PCIT/ZIF1D, PCST/ZPF1D, ZLBDI, ZLBDS, &
+                                   PLATHAM_IAGGS,                                                &
                                    P_RI_AGGS, P_CI_AGGS                                          )
    P_CI_AGGS(:) = P_CI_AGGS(:) * ZIF1D(:)
    P_RI_AGGS(:) = P_RI_AGGS(:) * ZIF1D(:)
@@ -686,53 +706,71 @@ IF (NMOM_C.GE.1 .AND. NMOM_S.GE.1) THEN
      ! Graupel production as tendency (or should be tendency + instant to stick to the previous version ?)
      ! Includes the Hallett Mossop process for riming of droplets by snow (HMS)
      !
+!++cb++
    CALL LIMA_DROPLETS_RIMING_SNOW (PTSTEP, LDCOMPUTE,                                & ! depends on CF
                                    PRHODREF, ZT,                                     &
                                    ZRCT/ZCF1D, PCCT/ZCF1D, ZRST/ZPF1D, PCST/ZPF1D, ZLBDC, ZLBDS, ZLVFACT, ZLSFACT, &
-                                   P_TH_RIM, P_RC_RIM, P_CC_RIM, P_RS_RIM, P_CS_RIM, P_RG_RIM, &
+!                                   P_TH_RIM, P_RC_RIM, P_CC_RIM, P_RS_RIM, P_CS_RIM, P_RG_RIM, &
+                                   P_TH_RIM, P_CC_RIM, P_CS_RIM, P_RC_RIMSS, P_RC_RIMSG, P_RS_RIMCG, &
                                    P_RI_HMS, P_CI_HMS, P_RS_HMS                      )
-   P_RC_RIM(:) = P_RC_RIM(:) * ZCF1D(:)
+!   P_RC_RIM(:) = P_RC_RIM(:) * ZCF1D(:)
    P_CC_RIM(:) = P_CC_RIM(:) * ZCF1D(:)
-   P_RS_RIM(:) = P_RS_RIM(:) * ZCF1D(:)
+!   P_RS_RIM(:) = P_RS_RIM(:) * ZCF1D(:)
    P_CS_RIM(:) = P_CS_RIM(:) * ZCF1D(:)
-   P_RG_RIM(:) = P_RG_RIM(:) * ZCF1D(:)
-   P_TH_RIM(:) = - P_RC_RIM(:) * (ZLSFACT(:)-ZLVFACT(:))
+!   P_RG_RIM(:) = P_RG_RIM(:) * ZCF1D(:)
+   P_RC_RIMSS(:) = P_RC_RIMSS(:) * ZCF1D(:)
+   P_RC_RIMSG(:) = P_RC_RIMSG(:) * ZCF1D(:)
+   P_RS_RIMCG(:) = P_RS_RIMCG(:) * ZCF1D(:)
+!   P_TH_RIM(:) = - P_RC_RIM(:) * (ZLSFACT(:)-ZLVFACT(:))
+   P_TH_RIM(:) = - (P_RC_RIMSS(:) + P_RC_RIMSG(:)) * (ZLSFACT(:)-ZLVFACT(:))
    P_RI_HMS(:) = P_RI_HMS(:) * ZCF1D(:)
    P_CI_HMS(:) = P_CI_HMS(:) * ZCF1D(:)
    P_RS_HMS(:) = P_RS_HMS(:) * ZCF1D(:)
    !
-   PA_RC(:) = PA_RC(:) + P_RC_RIM(:) 
+!   PA_RC(:) = PA_RC(:) + P_RC_RIM(:)
+   PA_RC(:) = PA_RC(:) + P_RC_RIMSS(:) + P_RC_RIMSG(:) ! RCRIMSS < 0 and RCRIMSG < 0 (both loss for rc)
    IF (NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_RIM(:) 
    PA_RI(:) = PA_RI(:)               + P_RI_HMS(:)
    IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:)               + P_CI_HMS(:)
-   PA_RS(:) = PA_RS(:) + P_RS_RIM(:) + P_RS_HMS(:)
+!   PA_RS(:) = PA_RS(:) + P_RS_RIM(:) + P_RS_HMS(:)
+   PA_RS(:) = PA_RS(:) - P_RC_RIMSS(:) - P_RS_RIMCG(:) ! RCRIMSS < 0 (gain for rs), RSRIMCG > 0 (loss for rs)
    IF (NMOM_S.GE.2) PA_CS(:) = PA_CS(:) + P_CS_RIM(:)
-   PA_RG(:) = PA_RG(:) + P_RG_RIM(:) 
+!   PA_RG(:) = PA_RG(:) + P_RG_RIM(:)
+   PA_RG(:) = PA_RG(:) - P_RC_RIMSG(:) + P_RS_RIMCG(:) ! RCRIMSG < 0 (gain for rg), RSRIMCG > 0 (gain for rg)
    IF (NMOM_G.GE.2) PA_CG(:) = PA_CG(:) - P_CS_RIM(:)
    PA_TH(:) = PA_TH(:) + P_TH_RIM(:)
-
+!--cb--
 END IF
 !
 IF (NMOM_R.GE.1 .AND. NMOM_S.GE.1) THEN
+!++cb++
    CALL LIMA_RAIN_ACCR_SNOW (PTSTEP, LDCOMPUTE,                                & ! depends on PF
                              PRHODREF, ZT,                                     &
                              ZRRT/ZPF1D, PCRT/ZPF1D, ZRST/ZPF1D, PCST/ZPF1D, ZLBDR, ZLBDS, ZLVFACT, ZLSFACT, &
-                             P_TH_ACC, P_RR_ACC, P_CR_ACC, P_RS_ACC, P_CS_ACC, P_RG_ACC )
-   P_RR_ACC(:) = P_RR_ACC(:) * ZPF1D(:)
+!                             P_TH_ACC, P_RR_ACC, P_CR_ACC, P_RS_ACC, P_CS_ACC, P_RG_ACC )
+                             P_TH_ACC, P_CR_ACC, P_CS_ACC, P_RR_ACCSS, P_RR_ACCSG, P_RS_ACCRG )
+!   P_RR_ACC(:) = P_RR_ACC(:) * ZPF1D(:)
    P_CR_ACC(:) = P_CR_ACC(:) * ZPF1D(:)
-   P_RS_ACC(:) = P_RS_ACC(:) * ZPF1D(:)
+!   P_RS_ACC(:) = P_RS_ACC(:) * ZPF1D(:)
    P_CS_ACC(:) = P_CS_ACC(:) * ZPF1D(:)
-   P_RG_ACC(:) = P_RG_ACC(:) * ZPF1D(:)
-   P_TH_ACC(:) = - P_RR_ACC(:) * (ZLSFACT(:)-ZLVFACT(:))
+!   P_RG_ACC(:) = P_RG_ACC(:) * ZPF1D(:)
+!   P_TH_ACC(:) = - P_RR_ACC(:) * (ZLSFACT(:)-ZLVFACT(:))
+   P_RR_ACCSS(:) = P_RR_ACCSS(:) * ZPF1D(:)
+   P_RR_ACCSG(:) = P_RR_ACCSG(:) * ZPF1D(:)
+   P_RS_ACCRG(:) = P_RS_ACCRG(:) * ZPF1D(:)
+   P_TH_ACC(:)   = (P_RR_ACCSS(:) + P_RR_ACCSG(:)) * (ZLSFACT(:)-ZLVFACT(:))
    !
-   PA_RR(:) = PA_RR(:) + P_RR_ACC(:)
+!   PA_RR(:) = PA_RR(:) + P_RR_ACC(:)
+   PA_RR(:) = PA_RR(:) - P_RR_ACCSS(:) - P_RR_ACCSG(:)
    IF (NMOM_R.GE.2) PA_CR(:) = PA_CR(:) + P_CR_ACC(:)
-   PA_RS(:) = PA_RS(:) + P_RS_ACC(:)
+!   PA_RS(:) = PA_RS(:) + P_RS_ACC(:)
+   PA_RS(:) = PA_RS(:) + P_RR_ACCSS(:) - P_RS_ACCRG(:)
    IF (NMOM_S.GE.2) PA_CS(:) = PA_CS(:) + P_CS_ACC(:)
-   PA_RG(:) = PA_RG(:) + P_RG_ACC(:)
+!   PA_RG(:) = PA_RG(:) + P_RG_ACC(:)
+   PA_RG(:) = PA_RG(:) + P_RR_ACCSG(:) + P_RS_ACCRG(:)
    IF (NMOM_G.GE.2) PA_CG(:) = PA_CG(:) - P_CS_ACC(:)
    PA_TH(:) = PA_TH(:) + P_TH_ACC(:)
-
+!--cb--
 END IF
 !
 IF (NMOM_S.GE.1) THEN

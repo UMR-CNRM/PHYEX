@@ -73,6 +73,9 @@ END MODULE MODI_INI_NSV
 !  A. Costes      12/2021: smoke tracer for fire model
 !  P. Wautelet 14/01/2022: add CSV_CHEM_LIST(_A) to store the list of all chemical variables
 !                          + NSV_CHEM_LIST(_A) the size of the list
+!  C. Barthe      09/2022: enable CELLS to be used with LIMA
+!  C. Barthe      09/2023: move CELLS variables initialization after aerosols initialization to avoid
+!                          problems when using LIMA+ORILAM+CELLS in resolved_cloud
 !-------------------------------------------------------------------------------
 !
 !*       0.   DECLARATIONS
@@ -229,39 +232,6 @@ IF (CCLOUD == 'LIMA' ) THEN
     END IF
   END IF
 END IF ! CCLOUD = LIMA
-!
-!
-!  Add one scalar for negative ion
-!   First variable: positive ion (NSV_ELECBEG_A index number)
-!   Last  --------: negative ion (NSV_ELECEND_A index number)
-! Correspondence for ICE3:
-! Relative index    1       2        3       4      5      6       7
-! Charge for     ion+     cloud    rain     ice   snow  graupel  ion-
-!
-! Correspondence for ICE4:
-! Relative index    1       2        3       4      5      6       7       8
-! Charge for     ion+     cloud    rain     ice   snow  graupel   hail   ion-
-!
-IF (CELEC /= 'NONE') THEN
-  IF (CCLOUD == 'ICE3') THEN
-    NSV_ELEC_A(KMI)   = 7 
-    NSV_ELECBEG_A(KMI)= ISV+1
-    NSV_ELECEND_A(KMI)= ISV+NSV_ELEC_A(KMI)
-    ISV               = NSV_ELECEND_A(KMI)
-    CELECNAMES(7) = CELECNAMES(8) 
-  ELSE IF (CCLOUD == 'ICE4') THEN
-    NSV_ELEC_A(KMI)   = 8 
-    NSV_ELECBEG_A(KMI)= ISV+1
-    NSV_ELECEND_A(KMI)= ISV+NSV_ELEC_A(KMI)
-    ISV               = NSV_ELECEND_A(KMI)
-  END IF
-ELSE
-  NSV_ELEC_A(KMI)    = 0
-! force First index to be superior to last index
-! in order to create a null section
-  NSV_ELECBEG_A(KMI) = 1
-  NSV_ELECEND_A(KMI) = 0
-END IF
 !
 ! scalar variables used as lagragian variables
 !
@@ -525,6 +495,40 @@ ELSE
   NSV_SLTDEPEND_A(KMI)= 0       
 ! force First index to be superior to last index
 ! in order to create a null section
+END IF
+!
+! scalar variables used in the electrical scheme
+!
+!  Add one scalar for negative ion
+!   First variable: positive ion (NSV_ELECBEG_A index number)
+!   Last  --------: negative ion (NSV_ELECEND_A index number)
+! Correspondence for ICE3:
+! Relative index    1       2        3       4      5      6       7
+! Charge for     ion+     cloud    rain     ice   snow  graupel  ion-
+!
+! Correspondence for ICE4:
+! Relative index    1       2        3       4      5      6       7       8
+! Charge for     ion+     cloud    rain     ice   snow  graupel   hail   ion-
+!
+IF (CELEC /= 'NONE') THEN
+  IF (CCLOUD == 'ICE3' .OR. (CCLOUD == 'LIMA' .AND. (NMOM_H .LT. 1))) THEN
+    NSV_ELEC_A(KMI)   = 7 
+    NSV_ELECBEG_A(KMI)= ISV+1
+    NSV_ELECEND_A(KMI)= ISV+NSV_ELEC_A(KMI)
+    ISV               = NSV_ELECEND_A(KMI)
+    CELECNAMES(7) = CELECNAMES(8) 
+  ELSE IF (CCLOUD == 'ICE4' .OR. (CCLOUD == 'LIMA' .AND. (NMOM_H .GE. 1))) THEN
+    NSV_ELEC_A(KMI)   = 8 
+    NSV_ELECBEG_A(KMI)= ISV+1
+    NSV_ELECEND_A(KMI)= ISV+NSV_ELEC_A(KMI)
+    ISV               = NSV_ELECEND_A(KMI)
+  END IF
+ELSE
+  NSV_ELEC_A(KMI)    = 0
+! force First index to be superior to last index
+! in order to create a null section
+  NSV_ELECBEG_A(KMI) = 1
+  NSV_ELECEND_A(KMI) = 0
 END IF
 !
 ! scalar variables used in blowing snow model

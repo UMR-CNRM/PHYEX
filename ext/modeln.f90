@@ -284,6 +284,7 @@ END MODULE MODI_MODEL_n
 !  P. Wautelet 13/01/2023: manage close of backup files outside of MODEL_n
 !                          (useful to close them in reverse model order (child before parent, needed by WRITE_BALLOON_n)
 !  J. Wurtz    01/2023   : correction for mean in SURFEX outputs
+!  C. Barthe   03/02/2022: cloud electrification is now called from resolved_cloud to avoid duplicated routines
 !!-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS
@@ -351,10 +352,10 @@ USE MODD_PARAM_C1R3,     ONLY: NSEDI => LSEDI, NHHONI => LHHONI
 USE MODD_PARAM_C2R2,     ONLY: NSEDC => LSEDC, NRAIN => LRAIN, NACTIT => LACTIT,LACTTKE,LDEPOC
 USE MODD_PARAMETERS
 USE MODD_PARAM_ICE_n,    ONLY: LWARM,LSEDIC,LCONVHG,LDEPOSC, CSUBG_AUCV_RC
-USE MODD_PARAM_LIMA,     ONLY: MSEDC => LSEDC, NMOM_C, NMOM_R, &
-                               MACTIT => LACTIT, LSCAV, NMOM_I,                 &
-                               MSEDI => LSEDI, MHHONI => LHHONI, NMOM_H,        &
-                               XRTMIN_LIMA=>XRTMIN, MACTTKE=>LACTTKE
+USE MODD_PARAM_LIMA,     ONLY: MSEDC => LSEDC, NMOM_C, NMOM_R,                           &
+                               MACTIT => LACTIT, LSCAV, NMOM_I,                          &
+                               MSEDI => LSEDI, MHHONI => LHHONI, NMOM_S, NMOM_G, NMOM_H, &
+                               XRTMIN_LIMA=>XRTMIN, MACTTKE=>LACTTKE, LPTSPLIT
 USE MODD_PARAM_MFSHALL_n
 USE MODD_PARAM_n
 USE MODD_PAST_FIELD_n
@@ -1469,7 +1470,7 @@ END IF
 IF (CELEC.NE.'NONE' .AND. LRELAX2FW_ION) THEN
    CALL RELAX2FW_ION (KTCOUNT, IMI, XTSTEP, XRHODJ, XSVT, NALBOT,      &
                       XALK, LMASK_RELAX, XKWRELAX, XRSVS )   
-END IF                      
+END IF
 !
 CALL SECOND_MNH2(ZTIME2)
 !
@@ -1664,8 +1665,8 @@ XTIME_LES_BU_PROCESS = 0.
 CALL MPPDB_CHECK3DM("before ADVEC_METSV:XU/V/W/TH/TKE/T,XRHODJ",PRECISION,&
                    &  XUT, XVT, XWT, XTHT, XTKET,XRHODJ)
  CALL ADVECTION_METSV ( TPBAKFILE, CUVW_ADV_SCHEME,                    &
-                 CMET_ADV_SCHEME, CSV_ADV_SCHEME, CCLOUD, NSPLIT,      &
-                 LSPLIT_CFL, XSPLIT_CFL, LCFL_WRIT,                    &
+                 CMET_ADV_SCHEME, CSV_ADV_SCHEME, CCLOUD, CELEC,       &
+                 NSPLIT, LSPLIT_CFL, XSPLIT_CFL, LCFL_WRIT,            &
                  CLBCX, CLBCY, NRR, NSV, TDTCUR, XTSTEP,               &
                  XUT, XVT, XWT, XTHT, XRT, XTKET, XSVT, XPABST,        &
                  XTHVREF, XRHODJ, XDXX, XDYY, XDZZ, XDZX, XDZY,        &
@@ -1921,7 +1922,7 @@ ZTIME1 = ZTIME2
 XTIME_BU_PROCESS = 0.
 XTIME_LES_BU_PROCESS = 0.
 !
-IF (CCLOUD /= 'NONE' .AND. CELEC == 'NONE') THEN
+IF (CCLOUD /= 'NONE') THEN
 !
   IF (CCLOUD == 'C2R2' .OR. CCLOUD == 'KHKO' .OR. CCLOUD == 'C3R5' &
                                              .OR. CCLOUD == "LIMA" ) THEN
@@ -1950,42 +1951,42 @@ IF (CCLOUD /= 'NONE' .AND. CELEC == 'NONE') THEN
     ZSEA(:,:) = 0.
     ZTOWN(:,:)= 0.
     CALL MNHGET_SURF_PARAM_n (PSEA=ZSEA(:,:),PTOWN=ZTOWN(:,:))
-    CALL RESOLVED_CLOUD ( CCLOUD, CACTCCN, CSCONV, CMF_CLOUD, NRR, NSPLITR,    &
-                          NSPLITG, IMI, KTCOUNT,                               &
-                          CLBCX,CLBCY,TPBAKFILE, CRAD, CTURBDIM,               &
-                          LSUBG_COND,LSIGMAS,CSUBG_AUCV_RC,XTSTEP,             &
-                          XZZ, XRHODJ, XRHODREF, XEXNREF,                      &
-                          ZPABST, XTHT,XRT,XSIGS,VSIGQSAT,XMFCONV,XTHM,XRCM,   &
-                          XPABST, XWT_ACT_NUC,XDTHRAD, XRTHS, XRRS,            &
-                          XSVT, XRSVS,                                         &
-                          XSRCT, XCLDFR,XICEFR, XCIT,                          &
-                          LSEDIC,KACTIT, KSEDC, KSEDI, KRAIN, KWARM, KHHONI,   &
-                          LCONVHG, XCF_MF,XRC_MF, XRI_MF,                      &
-                          XINPRC,ZINPRC3D,XINPRR, XINPRR3D, XEVAP3D,           &
-                          XINPRS,ZINPRS3D, XINPRG,ZINPRG3D, XINPRH,ZINPRH3D,   &
+    CALL RESOLVED_CLOUD ( CCLOUD, CELEC, CACTCCN, CSCONV, CMF_CLOUD, NRR, NSPLITR,  &
+                          NSPLITG, IMI, KTCOUNT,                                    &
+                          CLBCX,CLBCY,TPBAKFILE, CRAD, CTURBDIM,                    &
+                          LSUBG_COND,LSIGMAS,CSUBG_AUCV,XTSTEP,                     &
+                          XZZ, XRHODJ, XRHODREF, XEXNREF,                           &
+                          ZPABST, XTHT,XRT,XSIGS,VSIGQSAT,XMFCONV,XTHM,XRCM,        &
+                          XPABST, XWT_ACT_NUC,XDTHRAD, XRTHS, XRRS,                 &
+                          XSVT, XRSVS,                                              &
+                          XSRCT, XCLDFR,XICEFR, XCIT,                               &
+                          LSEDIC,KACTIT, KSEDC, KSEDI, KRAIN, KWARM, KHHONI,        &
+                          LCONVHG, XCF_MF,XRC_MF, XRI_MF,                           &
+                          XINPRC,ZINPRC3D,XINPRR, XINPRR3D, XEVAP3D,                &
+                          XINPRS,ZINPRS3D, XINPRG,ZINPRG3D, XINPRH,ZINPRH3D,        &
                           XSOLORG, XMI,ZSPEEDC, ZSPEEDR, ZSPEEDS, ZSPEEDG, ZSPEEDH, &
-                          XINDEP, XSUPSAT, XNACT, XNPRO,XSSPRO, XRAINFR,       &
-                          XHLC_HRC, XHLC_HCF, XHLI_HRI, XHLI_HCF,              &
-                          ZSEA, ZTOWN                                          )
-    DEALLOCATE(ZTOWN)
-    DEALLOCATE(ZSEA)
+                          XINDEP, XSUPSAT, XNACT, XNPRO,XSSPRO, XRAINFR,            &
+                          XHLC_HRC, XHLC_HCF, XHLI_HRI, XHLI_HCF,                   &
+                          ZSEA, ZTOWN                                               )
+    IF (CELEC == 'NONE') DEALLOCATE(ZTOWN)
+    IF (CELEC == 'NONE') DEALLOCATE(ZSEA)
   ELSE
-    CALL RESOLVED_CLOUD ( CCLOUD, CACTCCN, CSCONV, CMF_CLOUD, NRR, NSPLITR,    &
-                          NSPLITG, IMI, KTCOUNT,                               &
-                          CLBCX,CLBCY,TPBAKFILE, CRAD, CTURBDIM,               &
-                          LSUBG_COND,LSIGMAS,CSUBG_AUCV_RC,                    &
-                          XTSTEP,XZZ, XRHODJ, XRHODREF, XEXNREF,               &
-                          ZPABST, XTHT,XRT,XSIGS,VSIGQSAT,XMFCONV,XTHM,XRCM,   &
-                          XPABST, XWT_ACT_NUC,XDTHRAD, XRTHS, XRRS,            &
-                          XSVT, XRSVS,                                         &
-                          XSRCT, XCLDFR, XICEFR, XCIT,                         &
-                          LSEDIC,KACTIT, KSEDC, KSEDI, KRAIN, KWARM, KHHONI,   &
-                          LCONVHG, XCF_MF,XRC_MF, XRI_MF,                      &
-                          XINPRC,ZINPRC3D,XINPRR, XINPRR3D, XEVAP3D,           &
-                          XINPRS,ZINPRS3D, XINPRG,ZINPRG3D, XINPRH,ZINPRH3D,   &
+    CALL RESOLVED_CLOUD ( CCLOUD, CELEC, CACTCCN, CSCONV, CMF_CLOUD, NRR, NSPLITR,  &
+                          NSPLITG, IMI, KTCOUNT,                                    &
+                          CLBCX,CLBCY,TPBAKFILE, CRAD, CTURBDIM,                    &
+                          LSUBG_COND,LSIGMAS,CSUBG_AUCV,                            &
+                          XTSTEP,XZZ, XRHODJ, XRHODREF, XEXNREF,                    &
+                          ZPABST, XTHT,XRT,XSIGS,VSIGQSAT,XMFCONV,XTHM,XRCM,        &
+                          XPABST, XWT_ACT_NUC,XDTHRAD, XRTHS, XRRS,                 &
+                          XSVT, XRSVS,                                              &
+                          XSRCT, XCLDFR, XICEFR, XCIT,                              &
+                          LSEDIC,KACTIT, KSEDC, KSEDI, KRAIN, KWARM, KHHONI,        &
+                          LCONVHG, XCF_MF,XRC_MF, XRI_MF,                           &
+                          XINPRC,ZINPRC3D,XINPRR, XINPRR3D, XEVAP3D,                &
+                          XINPRS,ZINPRS3D, XINPRG,ZINPRG3D, XINPRH,ZINPRH3D,        &
                           XSOLORG, XMI,ZSPEEDC, ZSPEEDR, ZSPEEDS, ZSPEEDG, ZSPEEDH, &
-                          XINDEP, XSUPSAT, XNACT, XNPRO,XSSPRO, XRAINFR,       &
-                          XHLC_HRC, XHLC_HCF, XHLI_HRI, XHLI_HCF               )
+                          XINDEP, XSUPSAT, XNACT, XNPRO,XSSPRO, XRAINFR,            &
+                          XHLC_HRC, XHLC_HCF, XHLI_HRI, XHLI_HCF                    )
   END IF
   XRTHS_CLD  = XRTHS - XRTHS_CLD
   XRRS_CLD   = XRRS  - XRRS_CLD
@@ -2033,60 +2034,131 @@ XT_CLOUD = XT_CLOUD + ZTIME2 - ZTIME1 &
 !*       21.    CLOUD ELECTRIFICATION AND LIGHTNING FLASHES
 !               -------------------------------------------
 !
+! Cloud electrification is now called directly from resolved_cloud
+! It avoids duplicating microphysics routines.
+! Resolved_elec solves the ion recombination and attachement, and
+! lightning flash triggering and propagation
+!
 ZTIME1 = ZTIME2
 XTIME_BU_PROCESS = 0.
 XTIME_LES_BU_PROCESS = 0.
 !
-IF (CELEC /= 'NONE' .AND. (CCLOUD(1:3) == 'ICE')) THEN
-  XWT_ACT_NUC(:,:,:) = 0.
-!
-  XRTHS_CLD = XRTHS
-  XRRS_CLD  = XRRS
-  XRSVS_CLD = XRSVS
-  IF (CSURF=='EXTE') THEN
-    ALLOCATE (ZSEA(SIZE(XRHODJ,1),SIZE(XRHODJ,2)))
-    ALLOCATE (ZTOWN(SIZE(XRHODJ,1),SIZE(XRHODJ,2)))
-    ZSEA(:,:) = 0.
-    ZTOWN(:,:)= 0.
-    CALL MNHGET_SURF_PARAM_n (PSEA=ZSEA(:,:),PTOWN=ZTOWN(:,:))
-    CALL RESOLVED_ELEC_n (CCLOUD, CSCONV, CMF_CLOUD,                     &
-                          NRR, NSPLITR, IMI, KTCOUNT, OEXIT,             &
-                          CLBCX, CLBCY, CRAD, CTURBDIM,                  &
-                          LSUBG_COND, LSIGMAS,VSIGQSAT,CSUBG_AUCV_RC,    &
-                          XTSTEP, XZZ, XRHODJ, XRHODREF, XEXNREF,        &
-                          ZPABST, XTHT, XRTHS, XWT,  XRT, XRRS,          &
-                          XSVT, XRSVS, XCIT,                             &
-                          XSIGS, XSRCT, XCLDFR, XMFCONV, XCF_MF, XRC_MF, &
-                          XRI_MF, LSEDIC, LWARM,                         &
-                          XINPRC, XINPRR, XINPRR3D, XEVAP3D,             &
-                          XINPRS, XINPRG, XINPRH,                        &
-                          ZSEA, ZTOWN                                    )
-    DEALLOCATE(ZTOWN)
-    DEALLOCATE(ZSEA)
-  ELSE
-    CALL RESOLVED_ELEC_n (CCLOUD, CSCONV, CMF_CLOUD,                     &
-                          NRR, NSPLITR, IMI, KTCOUNT, OEXIT,             &
-                          CLBCX, CLBCY, CRAD, CTURBDIM,                  &
-                          LSUBG_COND, LSIGMAS,VSIGQSAT, CSUBG_AUCV_RC,   &
-                          XTSTEP, XZZ, XRHODJ, XRHODREF, XEXNREF,        &
-                          ZPABST, XTHT, XRTHS, XWT,                      &
-                          XRT, XRRS, XSVT, XRSVS, XCIT,                  &
-                          XSIGS, XSRCT, XCLDFR, XMFCONV, XCF_MF, XRC_MF, &
-                          XRI_MF, LSEDIC, LWARM,                         &
-                          XINPRC, XINPRR, XINPRR3D, XEVAP3D,             &
-                          XINPRS, XINPRG, XINPRH                         )
-  END IF
-  XRTHS_CLD = XRTHS - XRTHS_CLD
-  XRRS_CLD  = XRRS  - XRRS_CLD
-  XRSVS_CLD = XRSVS - XRSVS_CLD
-!
-  XACPRR = XACPRR + XINPRR * XTSTEP
-  IF ((CCLOUD(1:3) == 'ICE' .AND. LSEDIC)) & 
-       XACPRC = XACPRC + XINPRC * XTSTEP
+IF (CELEC /= 'NONE') THEN  !++cb-- ATTENTION : le cas rain_ice_elec n'est pas traite !!!
   IF (CCLOUD(1:3) == 'ICE') THEN
-    XACPRS = XACPRS + XINPRS * XTSTEP
-    XACPRG = XACPRG + XINPRG * XTSTEP
-    IF (CCLOUD == 'ICE4') XACPRH = XACPRH + XINPRH * XTSTEP          
+    IF (CSURF == 'EXTE') THEN
+      IF (LLNOX_EXPLICIT) THEN
+        CALL RESOLVED_ELEC_n (CCLOUD, NRR, IMI, KTCOUNT, OEXIT,       &
+                              XTSTEP, XZZ, XRHODJ, XRHODREF, XEXNREF, &
+                              ZPABST, XTHT, XWT, XRT, XRRS,           &
+                              XSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND),    &
+                              XRSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND),   &
+                              XCIT, XINPRR,                           &
+                              PSEA=ZSEA, PTOWN=ZTOWN,                 &
+                              PSVS_LNOX=XRSVS(:,:,:,NSV_LNOXBEG)      )
+      ELSE
+        CALL RESOLVED_ELEC_n (CCLOUD, NRR, IMI, KTCOUNT, OEXIT,       &
+                              XTSTEP, XZZ, XRHODJ, XRHODREF, XEXNREF, &
+                              ZPABST, XTHT, XWT, XRT, XRRS,           &
+                              XSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND),    &
+                              XRSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND),   &
+                              XCIT, XINPRR,                           &
+                              PSEA=ZSEA, PTOWN=ZTOWN                  )
+      END IF
+      DEALLOCATE(ZSEA)
+      DEALLOCATE(ZTOWN)
+    ELSE
+      IF (LLNOX_EXPLICIT) THEN
+        CALL RESOLVED_ELEC_n (CCLOUD, NRR, IMI, KTCOUNT, OEXIT,       &
+                              XTSTEP, XZZ, XRHODJ, XRHODREF, XEXNREF, &
+                              ZPABST, XTHT, XWT, XRT, XRRS,           &
+                              XSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND),    &
+                              XRSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND),   &
+                              XCIT, XINPRR,                           &
+                              PSVS_LNOX=XRSVS(:,:,:,NSV_LNOXBEG)      )
+      ELSE
+        CALL RESOLVED_ELEC_n (CCLOUD, NRR, IMI, KTCOUNT, OEXIT,       &
+                              XTSTEP, XZZ, XRHODJ, XRHODREF, XEXNREF, &
+                              ZPABST, XTHT, XWT, XRT, XRRS,           &
+                              XSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND),    &
+                              XRSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND),   &
+                              XCIT, XINPRR                            )
+      END IF
+    END IF
+  ELSE IF (CCLOUD == 'LIMA' .AND. LPTSPLIT) THEN
+    IF (LLNOX_EXPLICIT) THEN
+      IF ((NRR == 6 .AND. NMOM_S == 1 .AND. NMOM_G == 1) .OR. &
+          (NRR == 7 .AND. NMOM_S == 1 .AND. NMOM_G == 1 .AND. NMOM_H == 1)) THEN
+        CALL RESOLVED_ELEC_n (CCLOUD, NRR, IMI, KTCOUNT, OEXIT,       &
+                              XTSTEP, XZZ, XRHODJ, XRHODREF, XEXNREF, &
+                              ZPABST, XTHT, XWT, XRT, XRRS,           &
+                              XSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND),    &
+                              XRSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND),   &
+                              XRSVS(:,:,:,NSV_LIMA_NI), XINPRR,       &
+                              PCCS=XRSVS(:,:,:,NSV_LIMA_NC),          &
+                              PCRS=XRSVS(:,:,:,NSV_LIMA_NR),          &
+                              PSVS_LNOX=XRSVS(:,:,:,NSV_LNOXBEG)      )
+      ELSE IF (NRR == 6 .AND. NMOM_S == 2 .AND. NMOM_G == 2) THEN
+        CALL RESOLVED_ELEC_n (CCLOUD, NRR, IMI, KTCOUNT, OEXIT,       &
+                              XTSTEP, XZZ, XRHODJ, XRHODREF, XEXNREF, &
+                              ZPABST, XTHT, XWT, XRT, XRRS,           &
+                              XSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND),    &
+                              XRSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND),   &
+                              XRSVS(:,:,:,NSV_LIMA_NI), XINPRR,       &
+                              PCCS=XRSVS(:,:,:,NSV_LIMA_NC),          &
+                              PCRS=XRSVS(:,:,:,NSV_LIMA_NR),          &
+                              PCSS=XRSVS(:,:,:,NSV_LIMA_NS),          &
+                              PCGS=XRSVS(:,:,:,NSV_LIMA_NG),          &
+                              PSVS_LNOX=XRSVS(:,:,:,NSV_LNOXBEG)      )
+      ELSE IF (NRR == 7 .AND. NMOM_S == 2 .AND. NMOM_G == 2 .AND. NMOM_H == 2) THEN
+        CALL RESOLVED_ELEC_n (CCLOUD, NRR, IMI, KTCOUNT, OEXIT,       &
+                              XTSTEP, XZZ, XRHODJ, XRHODREF, XEXNREF, &
+                              ZPABST, XTHT, XWT, XRT, XRRS,           &
+                              XSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND),    &
+                              XRSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND),   &
+                              XRSVS(:,:,:,NSV_LIMA_NI), XINPRR,       &
+                              PCCS=XRSVS(:,:,:,NSV_LIMA_NC),          &
+                              PCRS=XRSVS(:,:,:,NSV_LIMA_NR),          &
+                              PCSS=XRSVS(:,:,:,NSV_LIMA_NS),          &
+                              PCGS=XRSVS(:,:,:,NSV_LIMA_NG),          &
+                              PCHS=XRSVS(:,:,:,NSV_LIMA_NH),          &
+                              PSVS_LNOX=XRSVS(:,:,:,NSV_LNOXBEG)      )
+      END IF
+    ELSE
+      IF ((NRR == 6 .AND. NMOM_S == 1 .AND. NMOM_G == 1) .OR. &
+          (NRR == 7 .AND. NMOM_S == 1 .AND. NMOM_G == 1 .AND. NMOM_H == 1)) THEN
+        CALL RESOLVED_ELEC_n (CCLOUD, NRR, IMI, KTCOUNT, OEXIT,       &
+                              XTSTEP, XZZ, XRHODJ, XRHODREF, XEXNREF, &
+                              ZPABST, XTHT, XWT, XRT, XRRS,           &
+                              XSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND),    &
+                              XRSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND),   &
+                              XRSVS(:,:,:,NSV_LIMA_NI), XINPRR,       &
+                              PCCS=XRSVS(:,:,:,NSV_LIMA_NC),          &
+                              PCRS=XRSVS(:,:,:,NSV_LIMA_NR))
+      ELSE IF (NRR == 6 .AND. NMOM_S == 2 .AND. NMOM_G == 2) THEN
+        CALL RESOLVED_ELEC_n (CCLOUD, NRR, IMI, KTCOUNT, OEXIT,       &
+                              XTSTEP, XZZ, XRHODJ, XRHODREF, XEXNREF, &
+                              ZPABST, XTHT, XWT, XRT, XRRS,           &
+                              XSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND),    &
+                              XRSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND),   &
+                              XRSVS(:,:,:,NSV_LIMA_NI), XINPRR,       &
+                              PCCS=XRSVS(:,:,:,NSV_LIMA_NC),          &
+                              PCRS=XRSVS(:,:,:,NSV_LIMA_NR),          &
+                              PCSS=XRSVS(:,:,:,NSV_LIMA_NS),          &
+                              PCGS=XRSVS(:,:,:,NSV_LIMA_NG))
+      ELSE IF (NRR == 7 .AND. NMOM_S == 2 .AND. NMOM_G == 2 .AND. NMOM_H == 2) THEN
+        CALL RESOLVED_ELEC_n (CCLOUD, NRR, IMI, KTCOUNT, OEXIT,       &
+                              XTSTEP, XZZ, XRHODJ, XRHODREF, XEXNREF, &
+                              ZPABST, XTHT, XWT, XRT, XRRS,           &
+                              XSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND),    &
+                              XRSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND),   &
+                              XRSVS(:,:,:,NSV_LIMA_NI), XINPRR,       &
+                              PCCS=XRSVS(:,:,:,NSV_LIMA_NC),          &
+                              PCRS=XRSVS(:,:,:,NSV_LIMA_NR),          &
+                              PCSS=XRSVS(:,:,:,NSV_LIMA_NS),          &
+                              PCGS=XRSVS(:,:,:,NSV_LIMA_NG),          &
+                              PCHS=XRSVS(:,:,:,NSV_LIMA_NH))
+      END IF
+    END IF
   END IF
 END IF
 !

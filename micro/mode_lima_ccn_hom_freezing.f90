@@ -10,7 +10,7 @@ CONTAINS
   SUBROUTINE LIMA_CCN_HOM_FREEZING (CST, PRHODREF, PEXNREF, PPABST, PW_NU,    &
                                     PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                     PCCT, PCRT, PCIT, PNFT, PNHT ,            &
-                                    PICEFR                                    )
+                                    PICEFR, PTOT_RV_HONH                      )
 !     ##########################################################################
 !
 !!    PURPOSE
@@ -29,6 +29,7 @@ CONTAINS
 !!    -------------
 !!      Original             15/03/2018 
 !  P. Wautelet 28/05/2019: move COUNTJV function to tools.f90
+!  C. Barthe   07/06/2022: save mixing ratio change for cloud electrification
 !
 !-------------------------------------------------------------------------------
 !
@@ -73,6 +74,8 @@ REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PNFT    ! Free CCN conc.
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PNHT    ! haze homogeneous freezing
 !
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR  ! Ice fraction
+!
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTOT_RV_HONH ! Mixing ratio change due to HONH
 !
 !*       0.2   Declarations of local variables :
 !
@@ -299,6 +302,8 @@ IF (INEGT.GT.0) THEN
          END WHERE
          PNFT(:,:,:,JMOD_CCN) = PNFT(:,:,:,JMOD_CCN) - UNPACK( ZCCNFROZEN(:), MASK=GNEGT(:,:,:),FIELD=0.)
       END DO
+!
+      PTOT_RV_HONH(:,:,:) = UNPACK( ZZW(:), MASK=GNEGT(:,:,:),FIELD=0.)
 !
       PTHT(:,:,:) = PTHT(:,:,:) + UNPACK( ZZW(:)*(ZLSFACT(:)-ZLVFACT(:)), MASK=GNEGT(:,:,:),FIELD=0.)
       PRVT(:,:,:) = PRVT(:,:,:) - UNPACK( ZZW(:), MASK=GNEGT(:,:,:),FIELD=0.)

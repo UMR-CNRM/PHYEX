@@ -6,14 +6,16 @@
 MODULE MODE_ICE4_SEDIMENTATION
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, BUCONF, &
-                             &PTSTEP, KRR, PDZZ, &
+SUBROUTINE ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, BUCONF, &
+                             &OELEC, OSEDIM_BEARD, PTSTEP, KRR, PDZZ, &
                              &PLVFACT, PLSFACT, PRHODREF, PPABST, PTHT, PT, PRHODJ, &
                              &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                              &PINPRC, PINPRR, PINPRS, PINPRG, &
+                             &PQCT, PQRT, PQIT, PQST, PQGT, PQCS, PQRS, PQIS, PQSS, PQGS, PEFIELDW, &
                              &TBUDGETS, KBUDGETS, &
                              &PSEA, PTOWN,  &
-                             &PINPRH, PRHT, PRHS, PFPR)
+                             &PINPRH, PRHT, PRHS, PFPR, &
+                             &PQHT, PQHS)
 !!
 !!**  PURPOSE
 !!    -------
@@ -33,12 +35,15 @@ SUBROUTINE ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, BUCONF, &
 !
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-USE MODD_BUDGET,         ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_RC, &
+USE MODD_BUDGET,         ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_RC, NBUDGET_SV1, &
                                NBUDGET_RI, NBUDGET_RR, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH
 USE MODD_CST, ONLY: CST_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
+USE MODD_ELEC_DESCR,     ONLY: ELEC_DESCR_t
+USE MODD_ELEC_PARAM,     ONLY: ELEC_PARAM_t
+USE MODD_NSV,            ONLY: NSV_ELECBEG
 !
 USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 USE MODE_BUDGET_PHY,         ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
@@ -57,7 +62,11 @@ TYPE(CST_t),                                 INTENT(IN)    :: CST
 TYPE(RAIN_ICE_PARAM_t),                      INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),                      INTENT(IN)    :: ICED
 TYPE(PARAM_ICE_t),                           INTENT(IN)    :: PARAMI
+TYPE(ELEC_PARAM_t),                          INTENT(IN)    :: ELECP   ! electrical parameters
+TYPE(ELEC_DESCR_t),                          INTENT(IN)    :: ELECD   ! electrical descriptive csts
 TYPE(TBUDGETCONF_t),                         INTENT(IN)    :: BUCONF
+LOGICAL,                                     INTENT(IN)    :: OELEC   ! switch to activate cloud electrification
+LOGICAL,                                     INTENT(IN)    :: OSEDIM_BEARD  ! Switch for effect of electrical forces on sedim.
 REAL,                                        INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                                     INTENT(IN)    :: KRR     ! Number of moist variable
 REAL, DIMENSION(D%NIJT,D%NKT),               INTENT(IN)    :: PDZZ    ! Layer thikness (m)
@@ -86,12 +95,33 @@ REAL, DIMENSION(D%NIJT),                     INTENT(OUT)   :: PINPRS  ! Snow ins
 REAL, DIMENSION(D%NIJT),                     INTENT(OUT)   :: PINPRG  ! Graupel instant precip
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS),      INTENT(INOUT) :: TBUDGETS                                                                   
 INTEGER,                                     INTENT(IN)    :: KBUDGETS
+!
+! variables for cloud electricity
+!
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(IN) :: PQCT   ! Cloud droplet | 
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(IN) :: PQRT   ! Rain          | electric
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(IN) :: PQIT   ! Ice crystals  |  charge 
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(IN) :: PQST   ! Snow          |   at t
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(IN) :: PQGT   ! Graupel       |
+!
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQCS   ! Cloud droplet | 
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQRS   ! Rain          | electric
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQIS   ! Ice crystals  |  charge 
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQSS   ! Snow          |  source
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), INTENT(INOUT) :: PQGS   ! Graupel       |
+!
+REAL, DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(D%NKT,0,OSEDIM_BEARD)), INTENT(IN) :: PEFIELDW ! vert. E field
+!
+! optional variables
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(IN)    :: PSEA    ! Sea Mask
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(IN)    :: PTOWN   ! Fraction that is town
 REAL, DIMENSION(D%NIJT),           OPTIONAL, INTENT(OUT)   :: PINPRH  ! Hail instant precip
 REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(IN)    :: PRHT    ! Hail m.r. at t
 REAL, DIMENSION(D%NIJT,D%NKT),     OPTIONAL, INTENT(INOUT) :: PRHS    ! Hail m.r. source
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-air precipitation fluxes
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(IN)    :: PQHT ! Hail electric charge at t
+REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)), OPTIONAL, INTENT(INOUT) :: PQHS ! Hail electric charge source
+!
 !
 !*       0.2  declaration of local variables
 !
@@ -120,7 +150,17 @@ IF (BUCONF%LBUDGET_RI)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDG
 IF (BUCONF%LBUDGET_RS)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', PRSS(:, :) * PRHODJ(:, :))
 IF (BUCONF%LBUDGET_RG)              CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', PRGS(:, :) * PRHODJ(:, :))
 IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:, :) * PRHODJ(:, :))
-
+!
+! budget of electric charges
+IF (BUCONF%LBUDGET_SV .AND. OELEC) THEN
+  IF (PARAMI%LSEDIC) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1-1+NSV_ELECBEG+1), 'SEDI', PQCS(:, :) * PRHODJ(:, :))
+  CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1-1+NSV_ELECBEG+2), 'SEDI', PQRS(:, :) * PRHODJ(:, :))
+  CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1-1+NSV_ELECBEG+3), 'SEDI', PQIS(:, :) * PRHODJ(:, :))
+  CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1-1+NSV_ELECBEG+4), 'SEDI', PQSS(:, :) * PRHODJ(:, :))
+  CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1-1+NSV_ELECBEG+5), 'SEDI', PQGS(:, :) * PRHODJ(:, :))
+  IF (KRR == 7)      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1-1+NSV_ELECBEG+6), 'SEDI', PQHS(:, :) * PRHODJ(:, :))
+END IF
+!
 IF(PARAMI%CSEDIM=='STAT') THEN
   DO JK = IKTB,IKTE
     DO JIJ = IIJB,IIJE
@@ -143,13 +183,16 @@ IF(PARAMI%CSEDIM=='STAT') THEN
   PINPRS(:) = PINPRS(:) + ZINPRI(:)
   !No negativity correction here as we apply sedimentation on PR.S*PTSTEP variables
 ELSEIF(PARAMI%CSEDIM=='SPLI') THEN
-  CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, &
-                               &PTSTEP, KRR, PDZZ, &
+  CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, &
+                               &OELEC, OSEDIM_BEARD, PTSTEP, KRR, PDZZ, &
                                &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
                                &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
+                               &PQCT, PQRT, PQIT, PQST, PQGT, PQCS, PQRS, PQIS, PQSS, PQGS, &
+                               &PEFIELDW, &
                                &PSEA=PSEA, PTOWN=PTOWN, &
-                               &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR)
+                               &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR, &
+                               &PQHT=PQHT, PQHS=PQHS)
   PINPRS(:) = PINPRS(:) + ZINPRI(:)
   !We correct negativities with conservation
   !SPLI algorith uses a time-splitting. Inside the loop a temporary m.r. is used.
@@ -161,9 +204,15 @@ ELSEIF(PARAMI%CSEDIM=='SPLI') THEN
   !   will be still active and will lead to negative values.
   !   We could prevent the algorithm to not consume too much a species, instead we apply
   !   a correction here.
+!++cb-- il faudrait faire la correction correspondante sur les charges electriques pour eviter de se retrouver
+! avec des points ou il y a de la charge mais pas de masse !
   CALL ICE4_CORRECT_NEGATIVITIES(D, ICED, KRR, PRVS, PRCS, PRRS, &
                                 &PRIS, PRSS, PRGS, &
                                 &PTHS, PLVFACT, PLSFACT, PRHS)
+!  CALL ICE4_CORRECT_NEGATIVITIES(D, ICED, KRR, PRVS, PRCS, PRRS, &
+!                               &PRIS, PRSS, PRGS, &
+!                                &PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS, &
+!                                &PTHS, PLVFACT, PLSFACT, PRHS, PQHS)
 ELSEIF(PARAMI%CSEDIM=='NONE') THEN
 ELSE
   CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'no sedimentation scheme for PARAMI%CSEDIM='//PARAMI%CSEDIM)
@@ -176,6 +225,16 @@ IF (BUCONF%LBUDGET_RI)              CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGE
 IF (BUCONF%LBUDGET_RS)              CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'SEDI', PRSS(:, :) * PRHODJ(:, :))
 IF (BUCONF%LBUDGET_RG)              CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RG), 'SEDI', PRGS(:, :) * PRHODJ(:, :))
 IF (BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:, :) * PRHODJ(:, :))
+!
+! Budget for electric charges
+IF (BUCONF%LBUDGET_SV .AND. OELEC) THEN
+  IF (PARAMI%LSEDIC) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1-1+NSV_ELECBEG+1), 'SEDI', PQCS(:, :) * PRHODJ(:, :))
+  CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1-1+NSV_ELECBEG+2), 'SEDI', PQRS(:, :) * PRHODJ(:, :))
+  CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1-1+NSV_ELECBEG+3), 'SEDI', PQIS(:, :) * PRHODJ(:, :))
+  CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1-1+NSV_ELECBEG+4), 'SEDI', PQSS(:, :) * PRHODJ(:, :))
+  CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1-1+NSV_ELECBEG+5), 'SEDI', PQGS(:, :) * PRHODJ(:, :))
+  IF (KRR == 7)      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1-1+NSV_ELECBEG+6), 'SEDI', PQHS(:, :) * PRHODJ(:, :))
+END IF
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_SEDIMENTATION', 1, ZHOOK_HANDLE)
 !
