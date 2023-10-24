@@ -60,6 +60,7 @@ INTEGER                  :: IBLOCK1, IBLOCK2
 INTEGER                  :: ISTSZ, JBLK1, JBLK2
 INTEGER                  :: NTID, ITID
 INTEGER                  :: JRR
+REAL                     :: ZTHVREFZIKB! for electricity use only
 
 REAL, ALLOCATABLE :: PSTACK(:,:)
 TYPE (STACK) :: YLSTACK
@@ -132,7 +133,6 @@ D0%NKB  = KLEV
 D0%NKE  = 1
 D0%NKTB = 1
 D0%NKTE = KLEV
-
 ISTSZ = NPROMA * 20 * KLEV
 ALLOCATE (PSTACK (ISTSZ, NGPBLKS))
 
@@ -140,6 +140,11 @@ TS = OMP_GET_WTIME ()
 
 ZTD = 0.
 ZTC = 0.
+IF (PHYEX%MISC%CELEC /='NONE') THEN
+CALL ABORT ! The following value of ZTHVREFZIKB must be removed from the electricity scheme or computed correctly here
+ELSE
+  ZTHVREFZIKB = 0. ! for electricity use only
+END IF
 
 IF (LHOOK) CALL DR_HOOK ('MAIN',0,ZHOOK_HANDLE)
 
@@ -201,10 +206,13 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     YLSTACK%L = 0
     YLSTACK%U = 0
 #endif
-
+print*,"PHYEX%MISC%OELEC = ",PHYEX%MISC%OELEC
+print*,"PHYEX%MISC%OSEDIM_BEARD = ",PHYEX%MISC%OSEDIM_BEARD
+print*,"ZTHVREFZIKB = ",ZTHVREFZIKB
 CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, &
-             & PHYEX%RAIN_ICE_DESCRN, PHYEX%MISC%TBUCONF, &
-             & PTSTEP=PHYEX%MISC%PTSTEP, &
+             & PHYEX%RAIN_ICE_DESCRN, PHYEX%ELEC_PARAM, PHYEX%ELEC_DESCR, &
+             & PHYEX%MISC%TBUCONF, OELEC=PHYEX%MISC%OELEC, OSEDIM_BEARD=PHYEX%MISC%OSEDIM_BEARD, &
+             & PTHVREFZIKB=ZTHVREFZIKB, HCLOUD='ICE3 ', PTSTEP=PHYEX%MISC%PTSTEP, &
              & KRR=PHYEX%MISC%KRR, PEXN=PEXNREF(:,:,:,IBL),            &
              & PDZZ=PDZZ(:,:,:,IBL), PRHODJ=PRHODJ(:,:,:,IBL), PRHODREF=PRHODREF(:,:,:,IBL),PEXNREF=PEXNREF2(:,:,:,IBL),&
              & PPABST=PPABSM(:,:,:,IBL), PCIT=PCIT(:,:,:,IBL), PCLDFR=PCLDFR(:,:,:,IBL),  &

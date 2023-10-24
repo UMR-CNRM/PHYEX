@@ -314,14 +314,4 @@ IF (CCLOUD == 'LIMA') THEN
 END IF
 !
 !
-!*       5.    INITIALIZE ATMOSPHERIC ELECTRICITY
-!              ----------------------------------
-!
-!
-!IF (CELEC /= 'NONE') THEN
-!  CALL INI_ELEC(IMI,TPINIFILE,XTSTEP,ZDZMIN,NSPLITR, &
-!                XDXX,XDYY,XDZZ,XDZX,XDZY            )
-!END IF
-!
-!
 END SUBROUTINE INI_MICRO_n

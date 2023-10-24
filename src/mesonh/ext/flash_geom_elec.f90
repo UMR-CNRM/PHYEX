@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2010-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2010-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -8,24 +8,25 @@
 !     #############################
 !
 INTERFACE
-    SUBROUTINE FLASH_GEOM_ELEC_n (KTCOUNT, KMI, KRR, PTSTEP, OEXIT,                      &
+    SUBROUTINE FLASH_GEOM_ELEC_n (KTCOUNT, KMI, KRR, HCLOUD, PTSTEP, OEXIT,              &
                                   PRHODJ, PRHODREF, PRT, PCIT, PRSVS, PRS, PTHT, PPABST, &
-                                  PEFIELDU, PEFIELDV, PEFIELDW, PZZ, PSVS_LINOX,         &
+                                  PEFIELDU, PEFIELDV, PEFIELDW, PZZ,                     &
                                   TPFILE_FGEOM_DIAG, TPFILE_FGEOM_COORD, TPFILE_LMA,     &
-                                  PTOWN, PSEA                                            )
+                                  PTOWN, PSEA, PSVS_LNOX, PCCS, PCRS, PCSS, PCGS, PCHS   )
 !
 USE MODD_IO, ONLY: TFILEDATA
 !
 INTEGER,                  INTENT(IN)    :: KTCOUNT  ! Temporal loop counter
 INTEGER,                  INTENT(IN)    :: KMI      ! current model index
 INTEGER,                  INTENT(IN)    :: KRR      ! number of moist variables
+CHARACTER(LEN=4),         INTENT(IN)    :: HCLOUD   ! kind of cloud paramerization
 REAL,                     INTENT(IN)    :: PTSTEP   ! Double time step except for
                                                     ! cold start
 LOGICAL,                  INTENT(IN)    :: OEXIT    ! switch for the end of the temporal loop
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF ! Reference dry air density
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODJ   ! Dry density * Jacobian
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT      ! Moist variables at time t
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIT     ! Pristine ice n.c. at t
+REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCIT     ! Pristine ice n.c. at t
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRSVS    ! Scalar variables source term
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PEFIELDU ! x-component of the electric field
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PEFIELDV ! y-component of the electric field
@@ -34,12 +35,18 @@ REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS      ! Moist variables vol. sourc
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT     ! Theta (K) at time t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST   ! Absolute pressure at t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PZZ      ! height
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PSVS_LINOX ! NOx source term
 TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE_FGEOM_DIAG
 TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE_FGEOM_COORD
 TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE_LMA
-REAL, DIMENSION(:,:), OPTIONAL, INTENT(IN) :: PTOWN ! town fraction
-REAL, DIMENSION(:,:), OPTIONAL, INTENT(IN) :: PSEA  ! Land-sea mask
+!
+REAL, DIMENSION(:,:),   OPTIONAL, INTENT(IN)    :: PTOWN     ! town fraction
+REAL, DIMENSION(:,:),   OPTIONAL, INTENT(IN)    :: PSEA      ! Land-sea mask
+REAL, DIMENSION(:,:,:), OPTIONAL, INTENT(INOUT) :: PSVS_LNOX ! NOx source term
+REAL, DIMENSION(:,:,:), OPTIONAL, INTENT(IN)    :: PCCS      ! Nc source term
+REAL, DIMENSION(:,:,:), OPTIONAL, INTENT(IN)    :: PCRS      ! Nr source term
+REAL, DIMENSION(:,:,:), OPTIONAL, INTENT(IN)    :: PCSS      ! Ns source term
+REAL, DIMENSION(:,:,:), OPTIONAL, INTENT(IN)    :: PCGS      ! Ng source term
+REAL, DIMENSION(:,:,:), OPTIONAL, INTENT(IN)    :: PCHS      ! Nh source term
 !
 END SUBROUTINE FLASH_GEOM_ELEC_n
 END INTERFACE
@@ -47,11 +54,11 @@ END MODULE MODI_FLASH_GEOM_ELEC_n
 !
 !
 !   ######################################################################################
-    SUBROUTINE FLASH_GEOM_ELEC_n (KTCOUNT, KMI, KRR, PTSTEP, OEXIT,                      &
+    SUBROUTINE FLASH_GEOM_ELEC_n (KTCOUNT, KMI, KRR, HCLOUD, PTSTEP, OEXIT,              &
                                   PRHODJ, PRHODREF, PRT, PCIT, PRSVS, PRS, PTHT, PPABST, &
-                                  PEFIELDU, PEFIELDV, PEFIELDW, PZZ, PSVS_LINOX,         &
+                                  PEFIELDU, PEFIELDV, PEFIELDW, PZZ,                     &
                                   TPFILE_FGEOM_DIAG, TPFILE_FGEOM_COORD, TPFILE_LMA,     &
-                                  PTOWN, PSEA                                            )
+                                  PTOWN, PSEA, PSVS_LNOX, PCCS, PCRS, PCSS, PCGS, PCHS   )
 !   ######################################################################################
 !
 !!****  * -
@@ -102,37 +109,43 @@ END MODULE MODI_FLASH_GEOM_ELEC_n
 !  P. Wautelet 20/05/2019: add name argument to ADDnFIELD_ll + new ADD4DFIELD_ll subroutine
 !  P. Wautelet 18/09/2019: correct support of 64bit integers (MNH_INT=8)
 !  P. Wautelet 31/08/2022: remove ZXMASS and ZYMASS (use XXHATM and XYHATM instead)
+!  C. Barthe   07/09/2022: enable using CELLS with LIMA
+!  C. Barthe   11/09/2023: enable using CELLS with LIMA2
 !-------------------------------------------------------------------------------
 !
 !*      0.      DECLARATIONS
 !               ------------
 !
-USE MODD_ARGSLIST_ll,    ONLY: LIST_ll
-USE MODD_CONF,           ONLY: CEXP, LCARTESIAN
-USE MODD_CST,            ONLY: XAVOGADRO, XMD
-USE MODD_DYN_n,          ONLY: XDXHATM, XDYHATM, NSTOP
+USE MODD_ARGSLIST_ll,      ONLY: LIST_ll
+USE MODD_CONF,             ONLY: CEXP, LCARTESIAN
+USE MODD_CST,              ONLY: XAVOGADRO, XMD
+USE MODD_DYN_n,            ONLY: XDXHATM, XDYHATM, NSTOP
 USE MODD_ELEC_DESCR
 USE MODD_ELEC_FLASH
-USE MODD_ELEC_PARAM,     ONLY: XFQLIGHTR, XEXQLIGHTR, &
-                               XFQLIGHTI, XEXQLIGHTI, &
-                               XFQLIGHTS, XEXQLIGHTS, &
-                               XFQLIGHTG, XEXQLIGHTG, &
-                               XFQLIGHTH, XEXQLIGHTH, &
-                               XFQLIGHTC
-USE MODD_GRID,           ONLY: XLATORI,XLONORI
-USE MODD_GRID_n,         ONLY: XXHATM, XYHATM, XZHAT
-USE MODD_IO,             ONLY: TFILEDATA
+USE MODD_ELEC_PARAM,       ONLY: XFQLIGHTR, XEXQLIGHTR, &
+                                 XFQLIGHTI, XEXQLIGHTI, &
+                                 XFQLIGHTS, XEXQLIGHTS, &
+                                 XFQLIGHTG, XEXQLIGHTG, &
+                                 XFQLIGHTH, XEXQLIGHTH, &
+                                 XFQLIGHTC
+USE MODD_GRID,             ONLY: XLATORI,XLONORI
+USE MODD_GRID_n,           ONLY: XXHATM, XYHATM, XZHAT
+USE MODD_IO,               ONLY: TFILEDATA
 USE MODD_LMA_SIMULATOR
-USE MODD_METRICS_n,      ONLY: XDXX, XDYY, XDZZ ! in linox_production
-USE MODD_NSV,            ONLY: NSV_ELECBEG, NSV_ELECEND, NSV_ELEC
-USE MODD_PARAMETERS,     ONLY: JPHEXT, JPVEXT
-use MODD_PRECISION,      only: MNHINT_MPI, MNHLOG_MPI, MNHREAL_MPI
-USE MODD_RAIN_ICE_DESCR_n, ONLY: XLBR, XLBEXR, XLBS, XLBEXS, &
-                               XLBG, XLBEXG, XLBH, XLBEXH, &
-                               XRTMIN
+USE MODD_METRICS_n,        ONLY: XDXX, XDYY, XDZZ ! in linox_production
+USE MODD_NSV,              ONLY: NSV_ELECBEG, NSV_ELECEND, NSV_ELEC
+USE MODD_PARAM_LIMA,       ONLY: XRTMIN_L=>XRTMIN
+USE MODD_PARAM_LIMA_COLD,  ONLY: XLBS_L=>XLBS, XLBEXS_L=>XLBEXS
+USE MODD_PARAM_LIMA_MIXED, ONLY: XLBG_L=>XLBG, XLBEXG_L=>XLBEXG, XLBH_L=>XLBH, XLBEXH_L=>XLBEXH
+USE MODD_PARAM_LIMA_WARM,  ONLY: XLBC, XLBEXC, XLBR_L=>XLBR, XLBEXR_L=>XLBEXR
+USE MODD_PARAMETERS,       ONLY: JPHEXT, JPVEXT
+use MODD_PRECISION,        ONLY: MNHINT_MPI, MNHLOG_MPI, MNHREAL_MPI
+USE MODD_RAIN_ICE_DESCR_n, ONLY: XLBR_I=>XLBR, XLBEXR_I=>XLBEXR, XLBS_I=>XLBS, XLBEXS_I=>XLBEXS, &
+                                 XLBG_I=>XLBG, XLBEXG_I=>XLBEXG, XLBH_I=>XLBH, XLBEXH_I=>XLBEXH, &
+                                 XRTMIN_I=>XRTMIN
 USE MODD_SUB_ELEC_n
 USE MODD_TIME_n
-USE MODD_VAR_ll,         ONLY: NPROC,NMNH_COMM_WORLD
+USE MODD_VAR_ll,           ONLY: NPROC,NMNH_COMM_WORLD
 !
 USE MODE_ELEC_ll
 USE MODE_GRIDPROJ
@@ -142,6 +155,7 @@ USE MODE_MPPDB
 USE MODE_PACK_PGI
 #endif
 !
+USE MODI_COMPUTE_LAMBDA_3D
 USE MODI_ION_ATTACH_ELEC
 USE MODI_SHUMAN
 USE MODI_TO_ELEC_FIELD_n
@@ -154,13 +168,14 @@ IMPLICIT NONE
 INTEGER,                  INTENT(IN)    :: KTCOUNT  ! Temporal loop counter
 INTEGER,                  INTENT(IN)    :: KMI      ! current model index
 INTEGER,                  INTENT(IN)    :: KRR      ! number of moist variables
+CHARACTER(LEN=4),         INTENT(IN)    :: HCLOUD   ! kind of cloud paramerization
 REAL,                     INTENT(IN)    :: PTSTEP   ! Double time step except for
                                                     ! cold start
 LOGICAL,                  INTENT(IN)    :: OEXIT    ! switch for the end of the temporal loop
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF ! Reference dry air density
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODJ   ! Dry density * Jacobian
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT      ! Moist variables at time t
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIT     ! Pristine ice n.c. at t
+REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCIT     ! Pristine ice n.c. at t
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRSVS    ! Scalar variables source term
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PEFIELDU ! x-component of the electric field
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PEFIELDV ! y-component of the electric field
@@ -169,12 +184,18 @@ REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS      ! Moist variables vol. sourc
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT     ! Theta (K) at time t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST   ! Absolute pressure at t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PZZ      ! height
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PSVS_LINOX ! NOx source term
 TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE_FGEOM_DIAG
 TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE_FGEOM_COORD
 TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE_LMA
-REAL, DIMENSION(:,:), OPTIONAL, INTENT(IN) :: PTOWN ! town fraction
-REAL, DIMENSION(:,:), OPTIONAL, INTENT(IN) :: PSEA  ! Land-sea mask
+!
+REAL, DIMENSION(:,:),   OPTIONAL, INTENT(IN)    :: PTOWN     ! town fraction
+REAL, DIMENSION(:,:),   OPTIONAL, INTENT(IN)    :: PSEA      ! Land-sea mask
+REAL, DIMENSION(:,:,:), OPTIONAL, INTENT(INOUT) :: PSVS_LNOX ! NOx source term
+REAL, DIMENSION(:,:,:), OPTIONAL, INTENT(IN)    :: PCCS      ! Nc source term
+REAL, DIMENSION(:,:,:), OPTIONAL, INTENT(IN)    :: PCRS      ! Nr source term
+REAL, DIMENSION(:,:,:), OPTIONAL, INTENT(IN)    :: PCSS      ! Ns source term
+REAL, DIMENSION(:,:,:), OPTIONAL, INTENT(IN)    :: PCGS      ! Ng source term
+REAL, DIMENSION(:,:,:), OPTIONAL, INTENT(IN)    :: PCHS      ! Nh source term
 !
 !
 !       0.2     Declaration of local variables
@@ -276,7 +297,9 @@ REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: ZSIGMA ! efficient cross section of hyd
 REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: ZDQDT  ! charge to neutralize at each pt (C/kg)
 REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: ZFLASH ! = 1 if the flash leader reaches this pt
                                                 ! = 2 if the flash branch is concerned
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLBDAC   ! Lambda for cloud droplets
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLBDAR   ! Lambda for rain
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLBDAI   ! Lambda for ice crystals
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLBDAS   ! Lambda for snow
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLBDAG   ! Lambda for graupel
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLBDAH   ! Lambda for hail
@@ -323,6 +346,13 @@ REAL,DIMENSION(SIZE(PRT,1),SIZE(PRT,2)) :: ZCELL_NEW
 !
 INTEGER :: ILJ
 INTEGER :: NIMAX_ll, NJMAX_ll,IIU_ll,IJU_ll    ! dimensions of global domain
+!
+!  variables used to select between common parameters between ICEx and LIMA
+REAL :: ZLBR, ZLBEXR, ZLBS, ZLBEXS, &
+        ZLBG, ZLBEXG, ZLBH, ZLBEXH
+REAL, DIMENSION(:), ALLOCATABLE :: ZRTMIN
+INTEGER :: IMOMC, IMOMR, IMOMI, IMOMS, IMOMG, IMOMH  ! nb of moments for hydrometeors
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZCCT, ZCRT, ZCIT, ZCST, ZCGT, ZCHT  ! Nb conc. at t
 !
 !-------------------------------------------------------------------------------
 !
@@ -391,7 +421,6 @@ ALLOCATE (ZCLOUD(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3)))
 ALLOCATE (GPOSS(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3)))
 ALLOCATE (ZEMODULE(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3)))
 ALLOCATE (ZCELL(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3),NMAX_CELL))
-
 !
 ZQMT(:,:,:,:) = 0.
 ZQMTOT(:,:,:) = 0.
@@ -400,6 +429,30 @@ GPOSS(:,:,:) = .FALSE.
 GPOSS(IIB:IIE,IJB:IJE,IKB:IKE) = .TRUE.
 ZEMODULE(:,:,:) = 0.
 ZCELL(:,:,:,:) = 0.
+!
+! select parameters between ICEx and LIMA
+ALLOCATE(ZRTMIN(KRR))
+IF (HCLOUD(1:3) == 'ICE') THEN
+  ZRTMIN(1:KRR) = XRTMIN_I(1:KRR)
+  ZLBR   = XLBR_I
+  ZLBEXR = XLBEXR_I
+  ZLBS   = XLBS_I
+  ZLBEXS = XLBEXS_I
+  ZLBG   = XLBG_I
+  ZLBEXG = XLBEXG_I
+  ZLBH   = XLBH_I 
+  ZLBEXH = XLBEXH_I
+ELSE IF (HCLOUD == 'LIMA') THEN
+  ZRTMIN(1:KRR) = XRTMIN_L(1:KRR)
+  ZLBR   = XLBR_L
+  ZLBEXR = XLBEXR_L
+  ZLBS   = XLBS_L
+  ZLBEXS = XLBEXS_L
+  ZLBG   = XLBG_L
+  ZLBEXG = XLBEXG_L
+  ZLBH   = XLBH_L 
+  ZLBEXH = XLBEXH_L
+END IF
 !
 !
 !*      1.3     point discharge (Corona)
@@ -430,6 +483,36 @@ END DO
 !
 ZCLOUDLIM = 1.E-5 
 ZSIGMIN   = 1.E-12
+!
+!
+!*      1.6     moments of the microphysics scheme
+!
+IMOMI = 2
+IF (HCLOUD(1:3) == 'ICE') THEN
+  IMOMC = 1
+  IMOMR = 1
+  IMOMS = 1
+  IMOMG = 1
+  IF (KRR == 7) IMOMH = 1
+ELSE IF (HCLOUD == 'LIMA') THEN
+  IMOMC = 2
+  IMOMR = 2
+  IF (PRESENT(PCSS)) THEN
+    IMOMS = 2
+  ELSE 
+    IMOMS = 1
+  END IF
+  IF (PRESENT(PCGS)) THEN
+    IMOMG = 2
+  ELSE
+    IMOMG = 1
+  END IF
+  IF (PRESENT(PCHS)) THEN
+    IMOMH = 2
+  ELSE
+    IMOMH = 1
+  END IF
+END IF
 !
 !
 !-------------------------------------------------------------------------------
@@ -627,7 +710,9 @@ IF (INB_CELL .GE. 1) THEN
   ALLOCATE (INBSEG_LEADER(INB_CELL))
   ALLOCATE (ZDQDT(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3),SIZE(PRT,4)+1))
   ALLOCATE (ZSIGMA(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3),SIZE(PRT,4)-1))
+  ALLOCATE (ZLBDAC(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3)))
   ALLOCATE (ZLBDAR(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3)))
+  ALLOCATE (ZLBDAI(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3)))
   ALLOCATE (ZLBDAS(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3)))
   ALLOCATE (ZLBDAG(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3)))
   IF (KRR == 7) ALLOCATE (ZLBDAH(SIZE(PRT,1),SIZE(PRT,2),SIZE(PRT,3)))
@@ -642,7 +727,9 @@ IF (INB_CELL .GE. 1) THEN
   ZCOORD_SEG(:,:) = 0.
   ZDQDT(:,:,:,:) = 0.
   ZSIGMA(:,:,:,:) = 0.
+  ZLBDAC(:,:,:) = 0.
   ZLBDAR(:,:,:) = 0.
+  ZLBDAI(:,:,:) = 0.
   ZLBDAS(:,:,:) = 0.
   ZLBDAG(:,:,:) = 0. 
   ZSIGLOB(:,:,:) = 0.
@@ -664,73 +751,127 @@ IF (INB_CELL .GE. 1) THEN
 !*      3.      COMPUTE THE EFFICIENT CROSS SECTIONS OF HYDROMETEORS
 !               ----------------------------------------------------
 !
+  ALLOCATE(ZCCT(SIZE(PRSVS,1),SIZE(PRSVS,2),SIZE(PRSVS,3)))
+  ALLOCATE(ZCRT(SIZE(PRSVS,1),SIZE(PRSVS,2),SIZE(PRSVS,3)))
+  ALLOCATE(ZCIT(SIZE(PRSVS,1),SIZE(PRSVS,2),SIZE(PRSVS,3)))
+  ALLOCATE(ZCST(SIZE(PRSVS,1),SIZE(PRSVS,2),SIZE(PRSVS,3)))
+  ALLOCATE(ZCGT(SIZE(PRSVS,1),SIZE(PRSVS,2),SIZE(PRSVS,3)))
+  ALLOCATE(ZCHT(SIZE(PRSVS,1),SIZE(PRSVS,2),SIZE(PRSVS,3)))
+!
 !*      3.1     for cloud droplets
 !
-  WHERE (PRT(:,:,:,2) > ZCLOUDLIM)
-    ZSIGMA(:,:,:,1) = XFQLIGHTC * PRHODREF(:,:,:) * PRT(:,:,:,2)
-  ENDWHERE
+  IF (HCLOUD == 'LIMA') THEN
+    ZCCT(:,:,:) =  PCCS(:,:,:) * PTSTEP / PRHODJ(:,:,:)
+    CALL COMPUTE_LAMBDA_3D(2, IMOMC, PRHODREF, ZRTMIN(2), PRT(:,:,:,2), ZCCT, ZLBDAC)
+    WHERE (PRT(:,:,:,2) > ZCLOUDLIM .AND. ZCCT(:,:,:) > 0. .AND. &
+           ZLBDAC(:,:,:) > 0.)
+      ZSIGMA(:,:,:,1) = XFQLIGHTC * ZLBDAC(:,:,:)**(-2.) * ZCCT(:,:,:)
+    END WHERE
+  ELSE IF (HCLOUD(1:3) == 'ICE') THEN
+    WHERE (PRT(:,:,:,2) > ZCLOUDLIM)
+      ZSIGMA(:,:,:,1) = XFQLIGHTC * PRHODREF(:,:,:) * PRT(:,:,:,2)
+    END WHERE
+  END IF
 !
 !
 !*      3.2     for raindrops
 !
-  WHERE (PRT(:,:,:,3) > 0.0)
-    ZLBDAR(:,:,:) = XLBR * (PRHODREF(:,:,:) * &
-                            MAX(PRT(:,:,:,3),XRTMIN(3)))**XLBEXR
-  END WHERE
-!
-  WHERE (PRT(:,:,:,3) > ZCLOUDLIM .AND. ZLBDAR(:,:,:) < XLBDAR_MAXE .AND. &
-                                        ZLBDAR(:,:,:) > 0.)
-    ZSIGMA(:,:,:,2) = XFQLIGHTR * ZLBDAR(:,:,:)**XEXQLIGHTR
-  END WHERE
+  IF (HCLOUD == 'LIMA') THEN ! 2-moment: N is pronostic
+    ZCRT(:,:,:) = PCRS(:,:,:) * PTSTEP / PRHODJ(:,:,:)
+    CALL COMPUTE_LAMBDA_3D(3, IMOMR, PRHODREF, ZRTMIN(3), PRT(:,:,:,3), ZCRT, ZLBDAR)
+    WHERE (PRT(:,:,:,3) > ZCLOUDLIM .AND. ZLBDAR(:,:,:) < XLBDAR_MAXE .AND. &
+                                          ZLBDAR(:,:,:) > 0.)
+      ZSIGMA(:,:,:,2) = XFQLIGHTR * ZLBDAR(:,:,:)**XEXQLIGHTR * ZCRT(:,:,:)
+    END WHERE
+  ELSE IF (HCLOUD(1:3) == 'ICE') THEN ! 1-moment: N=C*lambda^x
+    CALL COMPUTE_LAMBDA_3D(3, IMOMR, PRHODREF, ZRTMIN(3), PRT(:,:,:,3), ZCRT, ZLBDAR)
+    !
+    WHERE (PRT(:,:,:,3) > ZCLOUDLIM .AND. ZLBDAR(:,:,:) < XLBDAR_MAXE .AND. &
+                                          ZLBDAR(:,:,:) > 0.)
+      ZSIGMA(:,:,:,2) = XFQLIGHTR * ZLBDAR(:,:,:)**XEXQLIGHTR
+    END WHERE
+  END IF
 !
 !
 !*      3.3     for ice crystals
 !
-  WHERE (PRT(:,:,:,4) > ZCLOUDLIM .AND. PCIT(:,:,:) > 1.E4)
-    ZSIGMA(:,:,:,3) = XFQLIGHTI * PCIT(:,:,:)**(1.-XEXQLIGHTI) * &
+  IF (HCLOUD == 'LIMA') THEN
+    ! with LIMA, pcit is pcis
+    ZCIT(:,:,:) = PCIT(:,:,:) * PTSTEP / PRHODJ(:,:,:)
+  ELSE IF (HCLOUD(1:3) == 'ICE') THEN
+    ! with ICEx, pcit is really pcit
+    ZCIT(:,:,:) = PCIT(:,:,:)
+  END IF
+  CALL COMPUTE_LAMBDA_3D(4, IMOMI, PRHODREF, ZRTMIN(4), PRT(:,:,:,4), ZCIT, ZLBDAI)
+  WHERE (PRT(:,:,:,4) > ZCLOUDLIM .AND. ZCIT(:,:,:) > 1.E4)
+    ZSIGMA(:,:,:,3) = XFQLIGHTI * ZCIT(:,:,:)**(1.-XEXQLIGHTI) * &
                      ((PRHODREF(:,:,:) * PRT(:,:,:,4))**XEXQLIGHTI)
   ENDWHERE
 !
 !
 !*      3.4     for snow
 !
-  WHERE (PRT(:,:,:,5) > 0.0)
-    ZLBDAS(:,:,:) = MIN(XLBDAS_MAXE,               &
-                        XLBS * (PRHODREF(:,:,:) *  &
-                        MAX(PRT(:,:,:,5),XRTMIN(5)))**XLBEXS)
-  END WHERE
-!
-  WHERE (PRT(:,:,:,5) > ZCLOUDLIM .AND. ZLBDAS(:,:,:) < XLBDAS_MAXE .AND. &
-                                        ZLBDAS(:,:,:) > 0.)
-    ZSIGMA(:,:,:,4) = XFQLIGHTS * ZLBDAS(:,:,:)**XEXQLIGHTS
-  ENDWHERE
+  IF (IMOMS == 2) THEN
+    ZCST(:,:,:) = PCSS(:,:,:) * PTSTEP / PRHODJ(:,:,:)
+    CALL COMPUTE_LAMBDA_3D(5, IMOMS, PRHODREF, ZRTMIN(5), PRT(:,:,:,5), ZCST, ZLBDAS)
+    WHERE (PRT(:,:,:,5) > ZCLOUDLIM .AND. ZLBDAS(:,:,:) < XLBDAS_MAXE .AND. &
+                                          ZLBDAS(:,:,:) > 0.)
+      ZSIGMA(:,:,:,4) = XFQLIGHTS * ZLBDAS(:,:,:)**XEXQLIGHTS * ZCST(:,:,:)
+    END WHERE
+  ELSE IF (IMOMS == 1) THEN
+    CALL COMPUTE_LAMBDA_3D(5, IMOMS, PRHODREF, ZRTMIN(5), PRT(:,:,:,5), ZCST, ZLBDAS)
+    WHERE (PRT(:,:,:,5) > ZCLOUDLIM .AND. ZLBDAS(:,:,:) < XLBDAS_MAXE .AND. &
+                                          ZLBDAS(:,:,:) > 0.)
+      ZSIGMA(:,:,:,4) = XFQLIGHTS * ZLBDAS(:,:,:)**XEXQLIGHTS
+    END WHERE
+  END IF
 !
 !
 !*      3.5     for graupel
 !
-  WHERE (PRT(:,:,:,6) > 0.0)
-    ZLBDAG(:,:,:) = XLBG * (PRHODREF(:,:,:) * MAX(PRT(:,:,:,6),XRTMIN(6)))**XLBEXG
-  END WHERE
-!
-  WHERE (PRT(:,:,:,6) > ZCLOUDLIM .AND. ZLBDAG(:,:,:) < XLBDAG_MAXE .AND. &
-                                        ZLBDAG(:,:,:) > 0.)
-    ZSIGMA(:,:,:,5) = XFQLIGHTG * ZLBDAG(:,:,:)**XEXQLIGHTG
-  ENDWHERE
+  IF (IMOMG == 2) THEN
+    ZCGT(:,:,:) = PCGS(:,:,:) * PTSTEP / PRHODJ(:,:,:)
+    CALL COMPUTE_LAMBDA_3D(6, IMOMG, PRHODREF, ZRTMIN(6), PRT(:,:,:,6), ZCGT, ZLBDAG)
+    WHERE (PRT(:,:,:,6) > ZCLOUDLIM .AND. ZLBDAG(:,:,:) < XLBDAG_MAXE .AND. &
+                                          ZLBDAG(:,:,:) > 0.)
+      ZSIGMA(:,:,:,5) = XFQLIGHTG * ZLBDAG(:,:,:)**XEXQLIGHTG * ZCGT(:,:,:)
+    END WHERE
+  ELSE IF (IMOMG == 1) THEN
+    CALL COMPUTE_LAMBDA_3D(6, IMOMG, PRHODREF, ZRTMIN(6), PRT(:,:,:,6), ZCGT, ZLBDAG)
+    !
+    WHERE (PRT(:,:,:,6) > ZCLOUDLIM .AND. ZLBDAG(:,:,:) < XLBDAG_MAXE .AND. &
+                                          ZLBDAG(:,:,:) > 0.)
+      ZSIGMA(:,:,:,5) = XFQLIGHTG * ZLBDAG(:,:,:)**XEXQLIGHTG
+    END WHERE
+  END IF
 !
 !
 !*      3.6     for hail
 !
   IF (KRR == 7) THEN
-    WHERE (PRT(:,:,:,7) > 0.0)
-      ZLBDAH(:,:,:) = XLBH * (PRHODREF(:,:,:) * &
-                      MAX(PRT(:,:,:,7), XRTMIN(7)))**XLBEXH
-    END WHERE
-!
-    WHERE (PRT(:,:,:,7) > ZCLOUDLIM .AND. ZLBDAH(:,:,:) < XLBDAH_MAXE .AND. &
-                                          ZLBDAH(:,:,:) > 0.)
-      ZSIGMA(:,:,:,6) = XFQLIGHTH * ZLBDAH(:,:,:)**XEXQLIGHTH
-    ENDWHERE
+    IF (IMOMH == 2) THEN
+      ZCHT(:,:,:) = PCHS(:,:,:) * PTSTEP / PRHODJ(:,:,:)
+      CALL COMPUTE_LAMBDA_3D(7, IMOMH, PRHODREF, ZRTMIN(7), PRT(:,:,:,7), ZCHT, ZLBDAH)
+      WHERE (PRT(:,:,:,7) > ZCLOUDLIM .AND. ZLBDAH(:,:,:) < XLBDAH_MAXE .AND. &
+                                            ZLBDAH(:,:,:) > 0.)
+        ZSIGMA(:,:,:,6) = XFQLIGHTH * ZLBDAH(:,:,:)**XEXQLIGHTH * ZCHT(:,:,:)
+      END WHERE
+    ELSE IF (IMOMH == 1) THEN
+      CALL COMPUTE_LAMBDA_3D(7, IMOMH, PRHODREF, ZRTMIN(7), PRT(:,:,:,7), ZCHT, ZLBDAH)
+      !
+      WHERE (PRT(:,:,:,7) > ZCLOUDLIM .AND. ZLBDAH(:,:,:) < XLBDAH_MAXE .AND. &
+                                            ZLBDAH(:,:,:) > 0.)
+        ZSIGMA(:,:,:,6) = XFQLIGHTH * ZLBDAH(:,:,:)**XEXQLIGHTH
+      END WHERE
+    END IF
   END IF
+!
+  DEALLOCATE(ZCCT)
+  DEALLOCATE(ZCRT)
+  DEALLOCATE(ZCIT)
+  DEALLOCATE(ZCST)
+  DEALLOCATE(ZCGT)
+  IF (ALLOCATED(ZCHT)) DEALLOCATE(ZCHT)
 !
 !
 !*      3.7     sum of the efficient cross sections
@@ -1045,7 +1186,6 @@ ENDIF
         INB_NEUT = COUNT(ZSIGLOB(IIB:IIE,IJB:IJE,IKB:IKE) .GE. ZSIGMIN .AND. &
                          ZQFLASH(IIB:IIE,IJB:IJE,IKB:IKE) .NE. 0.)
         CALL SUM_ELEC_ll(INB_NEUT)
-
 !
 !
 !*      9.3     ensure total charge conservation for IC
@@ -1378,16 +1518,42 @@ ENDIF
 !
     IF (INB_NEUT_OK .NE. 0) THEN
 
-       CALL MPPDB_CHECK3DM("flash:: PRSVS",PRECISION,&
-            PRSVS(:,:,:,1),PRSVS(:,:,:,2),PRSVS(:,:,:,3),PRSVS(:,:,:,4),&
-            PRSVS(:,:,:,5),PRSVS(:,:,:,6),PRSVS(:,:,:,7))
+      CALL MPPDB_CHECK3DM("flash:: PRSVS",PRECISION,&
+           PRSVS(:,:,:,1),PRSVS(:,:,:,2),PRSVS(:,:,:,3),PRSVS(:,:,:,4),&
+           PRSVS(:,:,:,5),PRSVS(:,:,:,6),PRSVS(:,:,:,7))
 
       PRSVS(:,:,:,1) = PRSVS(:,:,:,1) / XECHARGE
       PRSVS(:,:,:,NSV_ELEC) = - PRSVS(:,:,:,NSV_ELEC) / XECHARGE
 !
-      CALL ION_ATTACH_ELEC(KTCOUNT, KRR, PTSTEP, PRHODREF,                   &
-                           PRHODJ, PRSVS, PRS, PTHT, PCIT, PPABST, PEFIELDU, &
-                           PEFIELDV, PEFIELDW, GATTACH, PTOWN, PSEA          )
+      IF (HCLOUD(1:3) == 'ICE') THEN
+        IF (PRESENT(PTOWN) .AND. PRESENT(PSEA)) THEN
+          CALL ION_ATTACH_ELEC(KTCOUNT, KRR, HCLOUD, PTSTEP, PRHODREF,           &
+                               PRHODJ, PRSVS, PRS, PTHT, PCIT, PPABST, PEFIELDU, &
+                               PEFIELDV, PEFIELDW, GATTACH,                      &
+                               PTOWN=PTOWN, PSEA=PSEA                            )
+        ELSE
+          CALL ION_ATTACH_ELEC(KTCOUNT, KRR, HCLOUD, PTSTEP, PRHODREF,           &
+                               PRHODJ, PRSVS, PRS, PTHT, PCIT, PPABST, PEFIELDU, &
+                               PEFIELDV, PEFIELDW, GATTACH                       )
+        END IF
+      ELSE IF (HCLOUD == 'LIMA') THEN
+        IF (IMOMS == 1 .AND. IMOMG == 1) THEN
+          CALL ION_ATTACH_ELEC(KTCOUNT, KRR, HCLOUD, PTSTEP, PRHODREF,           &
+                               PRHODJ, PRSVS, PRS, PTHT, PCIT, PPABST, PEFIELDU, &
+                               PEFIELDV, PEFIELDW, GATTACH,                      &
+                               PCCS=PCCS, PCRS=PCRS                              )
+        ELSE IF (KRR == 6 .AND. IMOMS == 2 .AND. IMOMG == 2) THEN
+          CALL ION_ATTACH_ELEC(KTCOUNT, KRR, HCLOUD, PTSTEP, PRHODREF,           &
+                               PRHODJ, PRSVS, PRS, PTHT, PCIT, PPABST, PEFIELDU, &
+                               PEFIELDV, PEFIELDW, GATTACH,                      &
+                               PCCS=PCCS, PCRS=PCRS, PCSS=PCSS, PCGS=PCGS        )
+        ELSE IF (KRR == 7 .AND. IMOMS == 2 .AND. IMOMG == 2 .AND. IMOMH == 2) THEN
+          CALL ION_ATTACH_ELEC(KTCOUNT, KRR, HCLOUD, PTSTEP, PRHODREF,           &
+                               PRHODJ, PRSVS, PRS, PTHT, PCIT, PPABST, PEFIELDU, &
+                               PEFIELDV, PEFIELDW, GATTACH,                      &
+                               PCCS=PCCS, PCRS=PCRS, PCSS=PCSS, PCGS=PCGS, PCHS=PCHS )
+        END IF
+      END IF
 !
       PRSVS(:,:,:,1) = PRSVS(:,:,:,1) * XECHARGE
       PRSVS(:,:,:,NSV_ELEC) = - PRSVS(:,:,:,NSV_ELEC) * XECHARGE
@@ -1467,8 +1633,8 @@ ENDIF
       XLNOX_ECLAIR = 0.
       IF (IFLASH_COUNT .NE. 0) THEN
         XLNOX_ECLAIR = SUM(ZLNOX(:,:,:))
-        PSVS_LINOX(:,:,:) = PSVS_LINOX(:,:,:) + ZLNOX(:,:,:) * ZCOEF ! PRHODJ is
-                                                                     ! implicit
+        PSVS_LNOX(:,:,:) = PSVS_LNOX(:,:,:) + ZLNOX(:,:,:) * ZCOEF ! PRHODJ is
+                                                                   ! implicit
       END IF
       CALL SUM_ELEC_ll (XLNOX_ECLAIR)
       XLNOX_ECLAIR = XLNOX_ECLAIR / (XAVOGADRO * REAL(IFLASH_COUNT_GLOB))
@@ -1479,7 +1645,9 @@ ENDIF
   DEALLOCATE (ZNEUT_POS)
   DEALLOCATE (ZNEUT_NEG)
   DEALLOCATE (ZSIGMA)
+  DEALLOCATE (ZLBDAC)
   DEALLOCATE (ZLBDAR)
+  DEALLOCATE (ZLBDAI)
   DEALLOCATE (ZLBDAS)
   DEALLOCATE (ZLBDAG)
   IF (KRR == 7) DEALLOCATE (ZLBDAH)
@@ -2164,7 +2332,6 @@ DO WHILE (IM .LE. IDELTA_IND .AND. ISTOP .NE. 1)
                     IF (IMASKQ_DIST(JI,JJ,JK) .EQ. IM) THEN
                        JIL = JIL + 1
                        I8VECT(JIL) = IJU_ll*IIU_ll*(JK-1) + IIU_ll*(JJ-1 +IYOR-1) + (JI +IXOR-1)
-                       !print*,"IN  => I8VECT(JIL    )=",I8VECT(JIL),JI,JJ,JK,JIL
                     END IF
                  END DO
               END DO
@@ -2196,7 +2363,6 @@ DO WHILE (IM .LE. IDELTA_IND .AND. ISTOP .NE. 1)
                     JK = 1 +     (I8VECT_LL(ICHOICE)-1) / ( IJU_ll*IIU_ll ) 
                     JJ = 1 + (   (I8VECT_LL(ICHOICE)-1) - IJU_ll*IIU_ll*(JK-1) ) / IIU_ll  - IYOR +1
                     JI = 1 + MOD((I8VECT_LL(ICHOICE)-1)                          , int(IIU_ll,kind(I8VECT_LL(1)))) - IXOR +1
-                    !print*,"OUT => I8VECT_LL(ICHOICE)=",I8VECT_ll(ICHOICE),JI,JJ,JK,ICHOICE
                     ZFLASH(JI,JJ,JK,IL) = 2.
                  END IF
                  I8VECT_LL(ICHOICE) = 0

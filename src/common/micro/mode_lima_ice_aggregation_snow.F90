@@ -10,6 +10,7 @@ CONTAINS
   SUBROUTINE LIMA_ICE_AGGREGATION_SNOW (LDCOMPUTE,                            &
                                         PT, PRHODREF,                         &
                                         PRIT, PRST, PCIT, PCST, PLBDI, PLBDS, &
+                                        PLATHAM_IAGGS,                        &
                                         P_RI_AGGS, P_CI_AGGS                  )
 !     #######################################################################
 !
@@ -30,6 +31,7 @@ CONTAINS
 !  J. Wurtz       03/2022: new snow characteristics
 !  B. Vie         03/2022: Add option for 1-moment pristine ice
 !  M. Taufour     07/2022: add concentration for snow, graupel, hail        
+!  C. Barthe       06/2023: add Latham effect (Efield) for IAGGS
 !
 !-------------------------------------------------------------------------------
 !
@@ -56,6 +58,7 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PCIT
 REAL, DIMENSION(:),   INTENT(IN)    :: PCST
 REAL, DIMENSION(:),   INTENT(IN)    :: PLBDI 
 REAL, DIMENSION(:),   INTENT(IN)    :: PLBDS 
+REAL, DIMENSION(:),   INTENT(IN)    :: PLATHAM_IAGGS
 !
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_AGGS
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_AGGS
@@ -81,6 +84,7 @@ P_CI_AGGS(:) = 0.
 IF (NMOM_I.EQ.1) THEN
    WHERE ( PRIT(:)>XRTMIN(4) .AND. PRST(:)>XRTMIN(5) .AND. LDCOMPUTE(:) )
       ZZW1(:) = XFIAGGS * EXP( XCOLEXIS*(PT(:)-XTT) ) &
+                        * PLATHAM_IAGGS(:)            &
                         * PRIT(:)                     &
                         * PCST(:) * (1+(XFVELOS/PLBDS(:))**XALPHAS)**(-XNUS+XEXIAGGS/XALPHAS) &
                         * PRHODREF(:)**(-XCEXVT+1.) &

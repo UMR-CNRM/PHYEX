@@ -10,7 +10,7 @@
               & O2D,ONOMIXLG,OFLAT,OCOUPLES,OBLOWSNOW,OIBM,OFLYER,    &
               & OCOMPUTE_SRC, PRSNOW,                                 &
               & OOCEAN,ODEEPOC,ODIAG_IN_RUN,                          &
-              & HTURBLEN_CL,HCLOUD,                                   &
+              & HTURBLEN_CL,HCLOUD,HELEC,                             &
               & PTSTEP,TPFILE,                                        &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
@@ -234,6 +234,7 @@
 !  P. Wautelet 30/06/2020: move removal of negative scalar variables to Sources_neg_correct
 !  R. Honnert/V. Masson 02/2021: new mixing length in the grey zone
 !  J.L. Redelsperger 03/2021: add Ocean LES case
+!  C. Barthe   08/02/2022: add helec in arguments of Sources_neg_correct
 ! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -313,6 +314,8 @@ LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate onlin
 LOGICAL,                INTENT(IN)   ::  OIBM         ! switch to modity mixing length near building with IBM
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
+CHARACTER (LEN=4),      INTENT(IN)   ::  HELEC        ! Kind of cloud electricity scheme
+
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
@@ -1314,7 +1317,7 @@ IF ( KRRL >= 1 ) THEN
 END IF
 
 ! Remove non-physical negative values (unnecessary in a perfect world) + corresponding budgets
-CALL SOURCES_NEG_CORRECT_PHY(D,KSV,HCLOUD, 'NETUR',KRR,PTSTEP,PPABST,PTHLT,PRT,PRTHLS,PRRS,PRSVS)
+CALL SOURCES_NEG_CORRECT_PHY(D,KSV,HCLOUD,HELEC,'NETUR',KRR,PTSTEP,PPABST,PTHLT,PRT,PRTHLS,PRRS,PRSVS)
 !----------------------------------------------------------------------------
 !
 !*      9. LES averaged surface fluxes
