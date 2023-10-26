@@ -530,6 +530,8 @@ ENDIF
 IF (OELEC) THEN
   LSAVE_MICRO = .TRUE.
   ZMICRO_TEND(:,:,:) = 0.
+ELSE
+  LSAVE_MICRO = .FALSE.
 END IF
 !
 !This part is put in another routine to separate pack/unpack operations from computations
