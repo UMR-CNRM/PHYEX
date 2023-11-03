@@ -1150,14 +1150,12 @@ if ( nspectra_k > 0 ) then
     call Les_diachro_2pt_write( tpdiafile, XCORRi_WRi,   XCORRj_WRi,   'WRI',  'W*ri    2 points correlations', 'm kg s-1 kg-1' )
   end if
 
-!PW: TODO: ameliorer le ygroup (tenir compte de ce qu'est la variable scalaire et pas juste son jsv!)
   do jsv = 1, nsv
     Write( ygroup, fmt = "( a2, i3.3 )" ) "SS", jsv
     call Les_diachro_2pt_write( tpdiafile, XCORRi_SvSv(:,:,:,JSV), XCORRj_SvSv(:,:,:,JSV), ygroup, &
                                 'Sv*Sv   2 points correlations','kg2 kg-2' )
   end do
 
-!PW: TODO: ameliorer le ygroup (tenir compte de ce qu'est la variable scalaire et pas juste son jsv!)
   do jsv = 1, nsv
     Write( ygroup, fmt = "( a2, i3.3 )" ) "WS", jsv
     call Les_diachro_2pt_write( tpdiafile, XCORRi_WSv(:,:,:,JSV), XCORRj_WSv(:,:,:,JSV), ygroup, &

@@ -59,6 +59,7 @@ use modd_precision, only: LFIINT
 !
 USE MODE_FINALIZE_MNH,     only: FINALIZE_MNH
 USE MODE_POS
+USE MODE_INI_CST,          ONLY: INI_CST
 USE MODE_IO,               only: IO_Config_set, IO_Init
 USE MODE_IO_FIELD_READ,    only: IO_Field_read
 USE MODE_IO_FIELD_WRITE,   only: IO_Field_write, IO_Header_write
@@ -82,7 +83,6 @@ USE MODI_WRITE_PGD_SURF_ATM_N
 USE MODD_MNH_SURFEX_n
 !
 USE MODN_CONFIO, ONLY : NAM_CONFIO
-USE MODE_INI_CST, ONLY: INI_CST
 !
 IMPLICIT NONE
 !

@@ -277,13 +277,13 @@ END MODULE MODI_MODEL_n
 !  T. Nagel    01/02/2021: add turbulence recycling
 !  P. Wautelet 19/02/2021: add NEGA2 term for SV budgets
 !  J.L. Redelsperger 03/2021: add Call NHOA_COUPLN (coupling O & A LES version)
-!  R. Schoetter    12/2021  multi-level coupling between MesoNH and SURFEX  
+!  R. Schoetter   12/2021:  multi-level coupling between MesoNH and SURFEX
 !  A. Costes      12/2021: add Blaze fire model
 !  C. Barthe   07/04/2022: deallocation of ZSEA
 !  P. Wautelet 08/12/2022: bugfix if no TDADFILE
 !  P. Wautelet 13/01/2023: manage close of backup files outside of MODEL_n
 !                          (useful to close them in reverse model order (child before parent, needed by WRITE_BALLOON_n)
-!  J. Wurtz    01/2023   : correction for mean in SURFEX outputs
+!  J. Wurtz       01/2023: correction for mean in SURFEX outputs
 !  C. Barthe   03/02/2022: cloud electrification is now called from resolved_cloud to avoid duplicated routines
 !!-------------------------------------------------------------------------------
 !
@@ -344,6 +344,7 @@ USE MODD_MEAN_FIELD
 USE MODD_MEAN_FIELD_n
 USE MODD_METRICS_n
 USE MODD_MNH_SURFEX_n
+USE MODD_NEB_n,          ONLY: LSIGMAS, LSUBG_COND, VSIGQSAT
 USE MODD_NESTING
 USE MODD_NSV
 USE MODD_NUDGING_n
@@ -376,7 +377,6 @@ USE MODD_TIME
 USE MODD_TIME_n 
 USE MODD_TIMEZ
 USE MODD_TURB_n
-USE MODD_NEB_n,          ONLY: VSIGQSAT, LSIGMAS, LSUBG_COND
 USE MODD_TYPE_DATE,      ONLY: DATE_TIME
 USE MODD_VISCOSITY
 !
