@@ -121,16 +121,16 @@ END MODULE MODI_AER_WET_DEP_KMT_WARM
 !              ------------
 !
 USE MODD_CST
-USE MODD_RAIN_ICE_PARAM_n, ONLY : YEXCACCR=>XEXCACCR, XFSEDC, XFCACCR,&
-                                XEXSEDR, XCRIAUTC, XFSEDR, XTIMAUTC,&
-                                YFCACCR => XFCACCR
+USE MODD_RAIN_ICE_PARAM_n, ONLY: YEXCACCR=>XEXCACCR, XFSEDC, XFCACCR, &
+                                 XEXSEDR, XCRIAUTC, XFSEDR, XTIMAUTC, &
+                                 YFCACCR => XFCACCR
 !++th++ 10/05/17
-USE MODD_RAIN_ICE_DESCR_n, ONLY : YRTMIN => XRTMIN, YCEXVT => XCEXVT, &
-                                XCONC_LAND, XCONC_SEA, XCONC_URBAN, &
-                                XNUC2, XALPHAC2, XNUC, XALPHAC,     &
-                                YLBC => XLBC, XLBEXC,               &
-                                XCCR,                               &
-                                YLBR => XLBR, YLBEXR => XLBEXR
+USE MODD_RAIN_ICE_DESCR_n, ONLY: YRTMIN => XRTMIN, YCEXVT => XCEXVT, &
+                                 XCONC_LAND, XCONC_SEA, XCONC_URBAN, &
+                                 XNUC2, XALPHAC2, XNUC, XALPHAC,     &
+                                 YLBC => XLBC, XLBEXC,               &
+                                 XCCR,                               &
+                                 YLBR => XLBR, YLBEXR => XLBEXR
 !--th--
 USE MODD_PRECIP_n
 USE MODI_AER_VELGRAV

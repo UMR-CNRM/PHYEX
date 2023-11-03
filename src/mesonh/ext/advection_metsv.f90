@@ -153,7 +153,6 @@ use modd_budget,     only: lbudget_th, lbudget_tke, lbudget_rv, lbudget_rc,     
                            NBUDGET_RR, NBUDGET_RI,  NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1, &
                            tbudgets
 USE MODD_CST
-USE MODD_TURB_n,         ONLY: XTKEMIN
 USE MODD_CONF,           ONLY: LNEUTRAL,NHALO,L1D, L2D
 use modd_field,          only: tfieldmetadata, TYPEREAL
 USE MODD_IBM_PARAM_n,    ONLY: LIBM,XIBM_LS,XIBM_EPSI
@@ -167,6 +166,7 @@ USE MODD_BLOWSNOW
 USE MODD_BLOWSNOW_n
 USE MODD_PARAMETERS
 USE MODD_REF_n,          ONLY: XRHODJ,XRHODREF
+USE MODD_TURB_n,         ONLY: XTKEMIN
 !
 use mode_budget,         only: Budget_store_init, Budget_store_end
 USE MODE_IO_FIELD_WRITE, only: IO_Field_write

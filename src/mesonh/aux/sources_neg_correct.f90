@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2020-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2020-2022 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -53,12 +53,12 @@ use modd_budget,     only: lbudget_th, lbudget_rv, lbudget_rc, lbudget_rr, lbudg
                            NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1,            &
                            tbudgets
 use modd_cst,        only: xci, xcl, xcpd, xcpv, xlstt, xlvtt, xp00, xrd, xtt
-use modd_nsv,        only: nsv_c2r2beg, nsv_c2r2end, nsv_lima_beg, nsv_lima_end, nsv_lima_nc, nsv_lima_nr,&
-                           nsv_lima_ni, nsv_lima_ns, nsv_lima_ng, nsv_lima_nh, &
+use modd_elec_descr, only: xrtmin_elec, xecharge
+use modd_nsv,        only: nsv_c2r2beg, nsv_c2r2end, nsv_lima_beg, nsv_lima_end, nsv_lima_nc, nsv_lima_nr, &
+                           nsv_lima_ni, nsv_lima_ns, nsv_lima_ng, nsv_lima_nh,                             &
                            nsv_elecbeg, nsv_elecend
 use modd_param_lima, only: lspro_lima => lspro, &
                            xctmin_lima => xctmin, xrtmin_lima => xrtmin
-use modd_elec_descr, only: xrtmin_elec, xecharge                   
 
 use mode_budget,         only: Budget_store_init, Budget_store_end
 use mode_msg

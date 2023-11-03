@@ -96,6 +96,7 @@ USE MODD_SPAWN, ONLY : NDXRATIO,NDYRATIO,NXSIZE,NYSIZE,NXOR,NYOR
 !
 use mode_field,            only: Ini_field_list
 USE MODE_FINALIZE_MNH,     only: FINALIZE_MNH
+USE MODE_INI_CST,          ONLY: INI_CST
 USE MODE_IO,               only: IO_Config_set, IO_Init
 USE MODE_IO_FIELD_WRITE,   only: IO_Field_write, IO_Header_write
 USE MODE_IO_FILE,          only: IO_File_close, IO_File_open
@@ -125,7 +126,6 @@ USE MODE_MPPDB
 USE MODI_EXTEND_GRID_ON_HALO
 !
 USE MODN_CONFIO, ONLY : NAM_CONFIO
-USE MODE_INI_CST, ONLY: INI_CST
 !
 IMPLICIT NONE
 !

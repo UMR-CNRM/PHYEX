@@ -18,7 +18,7 @@
 !                  11/2019 C.Lac correction in the drag formula and application to building in addition to tree
 !  F. Auguste     02/21: add IBM
 !  T. Nagel       02/21: add turbulence recycling
-!  R. Schoetter    12/2021  multi-level coupling between MesoNH and SURFEX  
+!  R. Schoetter   12/2021: multi-level coupling between MesoNH and SURFEX
 !  P. Wautelet 27/04/2022: add namelist for profilers
 !  P. Wautelet 10/02/2023: add Blaze variables
 !-----------------------------------------------------------------
@@ -54,18 +54,14 @@ USE MODD_CH_PRODLOSSTOT_n
 USE MODD_CH_ROSENBROCK_n
 USE MODD_CH_SOLVER_n
 USE MODD_CLOUDPAR_n
-USE MODD_PARAM_ICE_n
-USE MODD_PARAM_LIMA, ONLY: PARAM_LIMA_ASSOCIATE !not yet a '_n' module
-USE MODD_RAIN_ICE_PARAM_n
-USE MODD_RAIN_ICE_DESCR_n
 USE MODD_CLOUD_MF_n
 USE MODD_CONF_n
+USE MODD_COUPLING_LEVELS_n
 USE MODD_CURVCOR_n
 USE MODD_DIM_n
 USE MODD_DRAG_n
 USE MODD_DRAGTREE_n
 USE MODD_DRAGBLDG_n
-USE MODD_COUPLING_LEVELS_n
 USE MODD_DUMMY_GR_FIELD_n
 USE MODD_DYN_n
 USE MODD_DYNZD_n
@@ -87,11 +83,14 @@ USE MODD_LSFIELD_n
 USE MODD_LUNIT_n
 USE MODD_MEAN_FIELD_n
 USE MODD_METRICS_n
+USE MODD_NEB_n, ONLY: NEB_GOTO_MODEL
 USE MODD_NEST_PGD_n
 USE MODD_NUDGING_n
 USE MODD_OUT_n
 USE MODD_PACK_GR_FIELD_n
+USE MODD_PARAM_ICE_n
 USE MODD_PARAM_KAFR_n
+USE MODD_PARAM_LIMA, ONLY: PARAM_LIMA_ASSOCIATE !not yet a '_n' module
 USE MODD_PARAM_MFSHALL_n
 USE MODD_PARAM_n
 USE MODD_PARAM_RAD_n
@@ -101,6 +100,8 @@ USE MODD_PAST_FIELD_n
 USE MODD_PRECIP_n
 USE MODD_PROFILER_n
 USE MODD_RADIATIONS_n
+USE MODD_RAIN_ICE_DESCR_n
+USE MODD_RAIN_ICE_PARAM_n
 USE MODD_RBK90_Global_n
 USE MODD_RBK90_JacobianSP_n
 USE MODD_RBK90_Parameters_n
@@ -119,7 +120,6 @@ USE MODD_SUB_PASPOL_n
 USE MODD_SUB_PHYS_PARAM_n
 USE MODD_TIMEZ
 USE MODD_TURB_n
-USE MODD_NEB_n, ONLY: NEB_GOTO_MODEL
 !
 !
 use mode_field,             only: Fieldlist_goto_model
