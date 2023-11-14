@@ -254,8 +254,8 @@ IF (SIZE(PRT,4) >= 3) THEN
   Z3=7.8
 !
   ZLBDA(:,:,:) = 0.0
-  IF (CCLOUD == 'LIMA') THEN
-    GRAIN(:,:,:) =( (PRT(:,:,:,3).GT.XRTMIN_L(3)).AND.  PCRT(:,:,:).GT.0.0)     
+  IF (CCLOUD == 'LIMA' .AND. NMOM_R.GE.2) THEN
+    GRAIN(:,:,:) =( PRT(:,:,:,3).GT.XRTMIN_L(3) .AND. PCRT(:,:,:).GT.0.0)     
     ZLBEX=1.0/(-XBR_L)
     ZLB_L(:,:,:)=( XAR_L*PCRT(:,:,:)*PRHODREF(:,:,:)*MOMG(XALPHAR_L,XNUR_L,XBR_L) )**(-ZLBEX)
     WHERE( GRAIN(:,:,:) )
