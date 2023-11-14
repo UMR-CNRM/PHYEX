@@ -582,7 +582,7 @@ IF ((.NOT. LKHKO) .AND. NMOM_R.GE.2) THEN
    PA_CR(:) = PA_CR(:) + P_CR_SCBU(:)
 END IF
 !
-IF (NMOM_R.GE.2) THEN
+IF (NMOM_R.GE.1) THEN
    CALL LIMA_RAIN_EVAPORATION (PTSTEP, LDCOMPUTE,                               & ! depends on PF > CF 
                                PRHODREF, ZT, ZLV, ZLVFACT, ZEVSAT, ZRVSAT,      &
                                PRVT, ZRCT/ZPF1D, ZRRT/ZPF1D, PCRT/ZPF1D, ZLBDR, &
