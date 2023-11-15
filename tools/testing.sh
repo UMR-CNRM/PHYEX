@@ -109,7 +109,7 @@ function get_last_commit {
 }
 
 function enable_gh_pages {
-  result=$(curl -L --netrc \
+  result=$(curl -L --netrc --insecure \
                 -H "Authorization: Bearer $TOKEN" \
                 -H "Accept: application/vnd.github+json" \
                 -H "X-GitHub-Api-Version: 2022-11-28" \
@@ -117,7 +117,7 @@ function enable_gh_pages {
   if [ $(echo $result | grep 'Not Found' | wc -l) -eq 1 ]; then
     log 1 "Github project pages not yet enabled"
     #Pages are not yet activated
-    curl -L --netrc \
+    curl -L --netrc --insecure \
          -X POST \
          -H "Authorization: Bearer $TOKEN" \
          -H "Accept: application/vnd.github+json" \
@@ -128,7 +128,7 @@ function enable_gh_pages {
 }
 
 function get_statuses {
-  curl -L --netrc \
+  curl -L --netrc --insecure \
     -H "Accept: application/vnd.github+json" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
     "https://api.github.com/repos/${PHYEXREPOuser}/${PHYEXREPOrepo}/commits/${SHA}/statuses"
@@ -150,7 +150,7 @@ function add_status {
   fi
   url="https://${PHYEXREPOuser}.github.io/${PHYEXREPOrepo}/displayparam.html?"
   url=${url}$(content=$(echo -e "$comment") python3 -c "import urllib.parse, os; print(urllib.parse.quote('<pre>' + os.environ['content'] + '</pre>', safe=':/='))")
-  curl -L \
+  curl -L --insecure \
     -X POST \
     -H "Accept: application/vnd.github+json" \
     -H "Authorization: Bearer $TOKEN" \

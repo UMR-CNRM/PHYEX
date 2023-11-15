@@ -44,7 +44,7 @@ if [ $dataset -eq 1 ]; then
               https://github.com/UMR-CNRM/PHYEX/files/12783952/turb.tar.gz; do
     basefile=$(basename $file)
     if [ $clean -eq 1 ]; then
-      find $(basename $basefile .gz) -name \*.dat -type f -delete
+      find $(basename $basefile .tar.gz) -name \*.dat -type f -delete
     else
       wget --no-check-certificate $file -O $basefile
       tar xf $basefile
