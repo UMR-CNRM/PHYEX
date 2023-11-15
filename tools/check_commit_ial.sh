@@ -125,7 +125,7 @@ function usage {
   echo "-C              checks the result against the reference"
   echo "-t TEST         comma separated list of tests to execute"
   echo "                or ALL to execute all tests"
-  echo "--noexpand      do not use mnh_expand (code will be in array-syntax)"
+  echo "--noexpand      do not expand mnh_expand blocks (code will be in array-syntax)"
   echo "-f              full compilation (do not use pre-compiled pack)"
   echo "--cycle CYCLE   to force using CYCLE"
   echo "--scripttag TAG script tag to use in case --cycle is provided"
@@ -492,11 +492,8 @@ if [ $packcreation -eq 1 ]; then
     fi
     cd $HOMEPACK/$name/src/local/phyex
 
-    MNH_EXPAND_DIR=$PHYEXTOOLSDIR/mnh_expand
-    export PATH=$MNH_EXPAND_DIR/filepp:$MNH_EXPAND_DIR/MNH_Expand_Array:$PATH
-
     if [ $useexpand == 1 ]; then
-      expand_options="-D MNH_EXPAND -D MNH_EXPAND_LOOP"
+      expand_options="--mnhExpand"
     else
       expand_options=""
     fi

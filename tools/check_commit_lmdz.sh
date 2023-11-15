@@ -28,7 +28,7 @@ function usage {
   echo "-t              comma separated list of tests to execute"
   echo "                or ALL to execute all tests"
   echo "--nofcm         don't use fcm (be carreful, with fcm compilation exits with a (false) error"
-  echo "--expand        use mnh_expand (code will be in do loops)"
+  echo "--expand        expand mnh_expand blocks (code will be in do loops)"
   echo "--version VERSION   to force using lmdz VERSION"
   echo "--repo-user     user hosting the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
@@ -215,11 +215,9 @@ if [ $packcreation -eq 1 ]; then
   else
     #Checkout PHYEX
     cd $LMDZPACK/$name
-    MNH_EXPAND_DIR=$PHYEXTOOLSDIR/mnh_expand
-    export PATH=$MNH_EXPAND_DIR/filepp:$MNH_EXPAND_DIR/MNH_Expand_Array:$PATH
   
     if [ $useexpand == 1 ]; then
-      expand_options="-D MNH_EXPAND -D MNH_EXPAND_LOOP"
+      expand_options="--mnhExpand"
     else
       expand_options=""
     fi

@@ -258,12 +258,15 @@ chmod +x compilation.sh
 
 ####################################
 
+# Where we are
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # Parse command line arguments
 parse_args $*
 
 if [ $packcreation -eq 1 ]; then
   # Change current working dir
-  cd -P $(dirname $0)
+  cd -P $DIR
   
   # Check the fcm installation
   check_install_fcm
@@ -303,7 +306,7 @@ if [ $packcreation -eq 1 ]; then
   fi
   #Expand options
   if [ $useexpand == 1 ]; then
-    expand_options="-D MNH_EXPAND -D MNH_EXPAND_LOOP"
+    expand_options="--mnhExpand"
   else
     expand_options=""
   fi
@@ -337,7 +340,7 @@ fi
 
 # Build the compilation script and run it
 if [ $compilation -eq 1 ]; then
-  cd -P $(dirname $0)/arch_$ARCH
+  cd -P $DIR/arch_$ARCH
   build_compilation_script src
   ./compilation.sh
   ln -s build/bin/libphyex.so .

@@ -106,17 +106,17 @@ IKT=D%NKT
 !
 IF (OOCEAN) THEN
  IF ( KRR == 0 ) THEN                                ! Unsalted
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
    PEMOIST(IIJB:IIJE,:) = 0.
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
  ELSE
    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
    PEMOIST(IIJB:IIJE,:) = 1.                              ! Salted case
    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
  END IF
-!
+ !
 ELSE
-!
+ !
  IF ( KRR == 0 ) THEN                                ! dry case
    PEMOIST(IIJB:IIJE,:) = 0.
  ELSE IF ( KRR == 1 ) THEN                           ! only vapor
@@ -127,7 +127,7 @@ ELSE
  ELSE                                                ! liquid water & ice present
   ZDELTA = (CST%XRV/CST%XRD) - 1.
   ZRW(IIJB:IIJE,:) = PRM(IIJB:IIJE,:,1)
-!
+  !
   IF ( KRRI>0) THEN  ! rc and ri case
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZRW(IIJB:IIJE,:) = ZRW(IIJB:IIJE,:) + PRM(IIJB:IIJE,:,3)
@@ -142,12 +142,12 @@ ELSE
               (1.+ZDELTA) * (PRM(IIJB:IIJE,:,1) - PRM(IIJB:IIJE,:,2) - PRM(IIJB:IIJE,:,4)) &
               -ZRW(IIJB:IIJE,:)                                                &
                      )  /  (1. + ZRW(IIJB:IIJE,:)) 
-  !
-  !   Emoist = ZB + ZC * Amoist
-  !   ZB is computed from line 1 to line 2
-  !   ZC is computed from line 3 to line 5
-  !   Amoist* 2 * SRC is computed at line 6
-  !
+    !
+    !   Emoist = ZB + ZC * Amoist
+    !   ZB is computed from line 1 to line 2
+    !   ZC is computed from line 3 to line 5
+    !   Amoist* 2 * SRC is computed at line 6
+    !
     PEMOIST(IIJB:IIJE,:) = ZDELTA * (PTHLM(IIJB:IIJE,:) + PLOCPEXNM(IIJB:IIJE,:)*(           &
                                                     PRM(IIJB:IIJE,:,2)+PRM(IIJB:IIJE,:,4)))&
                             / (1. + ZRW(IIJB:IIJE,:))                                &
@@ -168,12 +168,12 @@ ELSE
               (1.+ZDELTA) * (PRM(IIJB:IIJE,:,1) - PRM(IIJB:IIJE,:,2)) &
               -ZRW(IIJB:IIJE,:)                                 &
                      )  /  (1. + ZRW(IIJB:IIJE,:)) 
-  !
-  !   Emoist = ZB + ZC * Amoist
-  !   ZB is computed from line 1 to line 2
-  !   ZC is computed from line 3 to line 5
-  !   Amoist* 2 * SRC is computed at line 6
-  !
+    !
+    !   Emoist = ZB + ZC * Amoist
+    !   ZB is computed from line 1 to line 2
+    !   ZC is computed from line 3 to line 5
+    !   Amoist* 2 * SRC is computed at line 6
+    !
     PEMOIST(IIJB:IIJE,:) = ZDELTA * (PTHLM(IIJB:IIJE,:) + PLOCPEXNM(IIJB:IIJE,:)* &
                                        PRM(IIJB:IIJE,:,2)) / (1. + ZRW(IIJB:IIJE,:))          &
         +( PLOCPEXNM(IIJB:IIJE,:) * ZA(IIJB:IIJE,:)                                        &
@@ -183,7 +183,7 @@ ELSE
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   END IF
  END IF
-!
+ !
 END IF
 !---------------------------------------------------------------------------
 !

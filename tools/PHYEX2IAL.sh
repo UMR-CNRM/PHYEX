@@ -17,7 +17,7 @@ function usage {
   echo "                                        defaults to the env variable PHYEXREOuser (=$PHYEXREPOuser)"
   echo "--phyex-repo-protocol PHYEXREPOprotocol protocol (https or ssh) to reach the PHYEX repository on github,"
   echo "                                        defaults to the env variable PHYEXREOprotocol (=$PHYEXREPOprotocol)"
-  echo "--noexpand                              do not use mnh_expand (code will be in array-syntax)"
+  echo "--noexpand                              do not expand mnh_expand blocks (code will be in array-syntax)"
   echo "IALDIRECTORY                            local directory containing the IAL repository"
   echo "IALVERSION                              version to checkout in the IAL repository"
   echo "PHYEXVERSION                            commit, tag (as tags/<tag>) of PHYEX to use"

@@ -79,7 +79,7 @@ function usage {
   echo "-C              checks the result against the reference"
   echo "-t TEST         comma separated list of tests to execute"
   echo "                or ALL to execute all tests"
-  echo "--noexpand      do not use mnh_expand (code will be in array-syntax)"
+  echo "--noexpand      do not expand mnh_expand blocks (code will be in array-syntax)"
   echo "--repo-user USER"
   echo "                user hosting the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
@@ -287,9 +287,6 @@ if [ $packcreation -eq 1 ]; then
     mkdir $TESTDIR/$name
     cd $TESTDIR/$name/
     cp -r $PHYEXTOOLSDIR/../build . #We use the compilation system from the same commit as the current script
-
-    MNH_EXPAND_DIR=$PHYEXTOOLSDIR/mnh_expand
-    export PATH=$PHYEXTOOLSDIR:$MNH_EXPAND_DIR/filepp:$MNH_EXPAND_DIR/MNH_Expand_Array:$PATH
 
     cd $TESTDIR/$name/build/with_fcm/
     rm -rf arch_*

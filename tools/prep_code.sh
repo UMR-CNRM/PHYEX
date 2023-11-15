@@ -6,7 +6,7 @@ set -e
 #This script can:
 # - extract a tag or a commit from the PHYEX repository
 # - merge code from common and model specific directories
-# - apply mnh_expand tool
+# - apply the pyft tool
 # - push the result in a new branch of the repository
 
 
@@ -21,10 +21,9 @@ function usage {
   echo "-c CHECKOUT_POINT     git object to checkout, can be a specific commit"
   echo "                      or a tag with the following syntax: tags/TAG where TAG is the tag name"
   echo "-m MODEL              merge the code under the common directory with the code specific to MODEL model"
-  echo "-D OPTION             option to use with mnh_expand"
-  echo "                      BE CARREFULL, a space between -D and the option is required here"
+  echo "--mnhExpand           option passed to the pyft tool"
   echo "-p                    push the result as a new branch"
-  echo "-s SUB                subdiretory or file (under src) to consider when merging and applying mnh_expand"
+  echo "-s SUB                subdiretory or file (under src) to consider when merging and applying pyft"
   echo "--renameFf            rename .F90 into .f90"
   echo "--ilooprm             replace indexes in do loop (and mnh_expand) by :"
   echo "--repo                use this repository instead of the one derived (if any) from the env variables"
@@ -34,11 +33,11 @@ function usage {
   echo "* If the -c option is not provided, DIRECTORY must already contain files and directory as if"
   echo "  it was the result of a git checkout"
   echo "* If the -m option is used, directory tree is modified, only relevant code is kept"
-  echo "* If no -D options are used, mnh_expand is not called at all"
+  echo "* If --mnhExpand is not used, pyft is not called at all"
   echo "* -s options are mandatory for -m, -D and -p options"
   echo "* -p option is allowed only if -c and -m options are provided"
   echo ""
-  echo "To use mnh_expand... it must be installed (alongside the filepp tool)"
+  echo "To use the pyft tool... it must be installed"
 }
 
 full_command="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}") $@"
@@ -47,7 +46,7 @@ separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allerg
 
 directory=""
 checkout_point=""
-mnh_expand_options=""
+pyft_options=""
 model=""
 push=0
 subs=""
@@ -72,7 +71,7 @@ while [ -n "$1" ]; do
     '-h') usage;;
     '-c') checkout_point="$2"; shift;;
     '-m') model="$2"; shift;;
-    '-D') mnh_expand_options="$mnh_expand_options -D$2"; shift;;
+    '--mnhExpand') pyft_options="$pyft_options $1";;
     '-s') subs="$subs $2"; shift;;
     '-p') push=1;;
     '--renameFf') renameFf=1;;
@@ -135,6 +134,7 @@ else
 fi
 
 ###### RENAME .F90 into .f90
+#This step could also be achieved by pyft_tool.py but it must be done *before* the call to pyft_tool
 if [ $renameFf -eq 1 ]; then
   #we use find/while/read in case the number of files is too big to be hold on a single shell line
   find . -type f  -name \*.F90 -print0 | \
@@ -243,27 +243,13 @@ if [ $ilooprm -eq 1 ]; then
   done
 fi
 
-###### MNH_EXPAND
-if [ -n "${mnh_expand_options-}" ]; then
-  [ $verbose -gt 0 ] && echo "Applying mnh_expand"
+###### PYFT
+if [ -n "${pyft_options-}" ]; then
+  [ $verbose -gt 0 ] && echo "Applying pyft_tool"
 
-  #Update PATH if needed
-  UPDATEDPATH=$PATH
-  which correct_indent.py > /dev/null || UPDATEDPATH=$PHYEXTOOLSDIR:$UPDATEDPATH
-  which mnh_expand  > /dev/null || UPDATEDPATH=$PHYEXTOOLSDIR/mnh_expand/MNH_Expand_Array:$UPDATEDPATH
-  which filepp > /dev/null || UPDATEDPATH=$PHYEXTOOLSDIR/mnh_expand/filepp:$UPDATEDPATH
+  #Update PATH and PYTHONPATH if needed
+  which pyft_tool.py > /dev/null || . $PHYEXTOOLSDIR/site/pyft/bin/env.sh
 
-  function apply_mnh_expand () {
-    if grep mnh_expand $1 > /dev/null 2>&1 ; then
-      [ $verbose -gt 1 ] && echo "Applying mnh_expand on $1"
-      PATH=$UPDATEDPATH correct_indent.py $1 "detect"
-      PATH=$UPDATEDPATH mnh_expand -DMNH_EXPAND_NOCPP $mnh_expand_options $1_EXPAND > tempo_mnh_expand
-      rm -f $1_EXPAND
-      PATH=$UPDATEDPATH correct_indent.py tempo_mnh_expand "indent"
-      mv tempo_mnh_expand_CORRECT_INDENT $1
-      rm -f tempo_mnh_expand
-    fi
-  }
   if [ -n "${model-}" ]; then
     reps=$subs
   else
@@ -274,9 +260,12 @@ if [ -n "${mnh_expand_options-}" ]; then
   fi
   for rep in $reps; do
     if [ -d $rep ]; then
-      #find $rep -type f | while read file; do
       find $rep -type f -not -name '.*.swp'  -not -name '.*.swo' | while read file; do
-        apply_mnh_expand "$file"
+        if [ "$(echo $file | grep '\.')" != '' -a $(echo $file | rev | cut -d. -f1 | rev) != 'fypp' ]; then
+          #Files without extension are certainly not source code files
+          #.fypp files cannot be read by pyft_tool.py
+          pyft_tool.py --wrapH $pyft_options "$file" #--wrapH allows to deal with h files
+        fi
       done
     fi
   done

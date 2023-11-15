@@ -552,27 +552,27 @@ ZCP(IIJB:IIJE,1:IKT)=CST%XCPD
 IF (KRR > 0) ZCP(IIJB:IIJE,1:IKT) = ZCP(IIJB:IIJE,1:IKT) + CST%XCPV * PRT(IIJB:IIJE,1:IKT,1)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 DO JRR = 2,1+KRRL                          ! loop on the liquid components
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)  
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)  
   ZCP(IIJB:IIJE,1:IKT)  = ZCP(IIJB:IIJE,1:IKT) + CST%XCL * PRT(IIJB:IIJE,1:IKT,JRR)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END DO
 !
 DO JRR = 2+KRRL,1+KRRL+KRRI                ! loop on the solid components   
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZCP(IIJB:IIJE,1:IKT)  = ZCP(IIJB:IIJE,1:IKT)  + CST%XCI * PRT(IIJB:IIJE,1:IKT,JRR)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END DO
 !
 !*      2.2 Exner function at t
 !
 IF (OOCEAN) THEN
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZEXN(IIJB:IIJE,1:IKT) = 1.
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ELSE
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZEXN(IIJB:IIJE,1:IKT) = (PPABST(IIJB:IIJE,1:IKT)/CST%XP00) ** (CST%XRD/CST%XCPD)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END IF
 !
 !*      2.3 dissipative heating coeff a t
@@ -587,18 +587,18 @@ ZATHETA(IIJB:IIJE,1:IKT) = 0.0
 ZAMOIST(IIJB:IIJE,1:IKT) = 0.0
 !
 IF (KRRL >=1) THEN
-!
-!*      2.4 Temperature at t
-!
+  !
+  !*      2.4 Temperature at t
+  !
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZT(IIJB:IIJE,1:IKT) =  PTHLT(IIJB:IIJE,1:IKT) * ZEXN(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!
-!*       2.5 Lv/Cph/Exn
-!
+  !
+  !*       2.5 Lv/Cph/Exn
+  !
   IF ( KRRI >= 1 ) THEN
     IF (NEBN%LSTATNW) THEN
-    !wc call new functions depending on statnew
+       !wc call new functions depending on statnew
        CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(CST%XALPW,CST%XBETAW,CST%XGAMW,CST%XLVTT,CST%XCL,ZT,ZEXN,ZCP, &
                                  ZLVOCPEXNM,ZAMOIST,ZATHETA)
        CALL COMPUTE_FUNCTION_THERMO_NEW_STAT(CST%XALPI,CST%XBETAI,CST%XGAMI,CST%XLSTT,CST%XCI,ZT,ZEXN,ZCP, &
@@ -609,14 +609,14 @@ IF (KRRL >=1) THEN
       CALL COMPUTE_FUNCTION_THERMO(CST%XALPI,CST%XBETAI,CST%XGAMI,CST%XLSTT,CST%XCI,ZT,ZEXN,ZCP, &
                                  ZLSOCPEXNM,ZAMOIST_ICE,ZATHETA_ICE)
     ENDIF
-!
+    !
     !$mnh_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
     WHERE(PRT(IIJB:IIJE,1:IKT,2)+PRT(IIJB:IIJE,1:IKT,4)>0.0)
       ZFRAC_ICE(IIJB:IIJE,1:IKT) = PRT(IIJB:IIJE,1:IKT,4) / ( PRT(IIJB:IIJE,1:IKT,2) &
                                           +PRT(IIJB:IIJE,1:IKT,4) )
     END WHERE
     !$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
-!
+    !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZLOCPEXNM(IIJB:IIJE,1:IKT) = (1.0-ZFRAC_ICE(IIJB:IIJE,1:IKT))*ZLVOCPEXNM(IIJB:IIJE,1:IKT) &
                            +ZFRAC_ICE(IIJB:IIJE,1:IKT) *ZLSOCPEXNM(IIJB:IIJE,1:IKT)
@@ -635,8 +635,8 @@ IF (KRRL >=1) THEN
                                    ZLOCPEXNM,ZAMOIST,ZATHETA)
     ENDIF
   END IF
-!
-!
+  !
+  !
   IF ( TPFILE%LOPENED .AND. TURBN%LTURB_DIAG ) THEN
     TZFIELD = TFIELDMETADATA(      &
       CMNHNAME   = 'ATHETA',       &
@@ -650,7 +650,7 @@ IF (KRRL >=1) THEN
       NDIMS      = 3,              &
       LTIMEDEP   = .TRUE.          )
     CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZATHETA)
-!
+    !
     TZFIELD = TFIELDMETADATA(      &
       CMNHNAME   = 'AMOIST',       &
       CSTDNAME   = '',             &
@@ -664,7 +664,7 @@ IF (KRRL >=1) THEN
       LTIMEDEP   = .TRUE.          )
     CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZAMOIST)
   END IF
-!
+  !
 ELSE
   ZLOCPEXNM(IIJB:IIJE,1:IKT)=0.
 END IF              ! loop end on KRRL >= 1
@@ -718,16 +718,16 @@ END IF
 IF (.NOT. TURBN%LHARAT) THEN
 
 SELECT CASE (TURBN%CTURBLEN)
-!
-!*      3.1 BL89 mixing length
-!           ------------------
+  !
+  !*      3.1 BL89 mixing length
+  !           ------------------
 
   CASE ('BL89')
     ZSHEAR(:,:)=0.
     CALL BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN)
-!
-!*      3.2 RM17 mixing length
-!           ------------------
+  !
+  !*      3.2 RM17 mixing length
+  !           ------------------
 
   CASE ('RM17')
     CALL GZ_U_UW_PHY(D,PUT,PDZZ,ZWORK1)
@@ -743,9 +743,9 @@ SELECT CASE (TURBN%CTURBLEN)
                                     + ZDVDZ(IIJB:IIJE,1:IKT)*ZDVDZ(IIJB:IIJE,1:IKT))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     CALL BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM,OOCEAN)
-!
-!*      3.3 Grey-zone combined RM17 & Deardorff mixing lengths
-!           --------------------------------------------------
+  !
+  !*      3.3 Grey-zone combined RM17 & Deardorff mixing lengths
+  !           --------------------------------------------------
 
   CASE ('HM21')
     CALL GZ_U_UW_PHY(D,PUT,PDZZ,ZWORK1)
@@ -772,22 +772,22 @@ SELECT CASE (TURBN%CTURBLEN)
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZLM(IIJB:IIJE,1:IKT) = MIN(ZLM(IIJB:IIJE,1:IKT),TURBN%XCADAP*ZLMW(IIJB:IIJE,1:IKT))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!
-!*      3.4 Delta mixing length
-!           -------------------
-!
+  !
+  !*      3.4 Delta mixing length
+  !           -------------------
+  !
   CASE ('DELT')
     CALL DELT(ZLM,ODZ=.TRUE.)
-!
-!*      3.5 Deardorff mixing length
-!           -----------------------
-!
+  !
+  !*      3.5 Deardorff mixing length
+  !           -----------------------
+  !
   CASE ('DEAR')
     CALL DEAR(ZLM)
-!
-!*      3.6 Blackadar mixing length
-!           -----------------------
-!
+  !
+  !*      3.6 Blackadar mixing length
+  !           -----------------------
+  !
   CASE ('BLKR')
    ZL0 = 100.
    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -803,14 +803,14 @@ SELECT CASE (TURBN%CTURBLEN)
      ZLM(IIJB:IIJE,JK) = ZALPHA  * ZLM(IIJB:IIJE,JK) * ZL0 / ( ZL0 + ZALPHA*ZLM(IIJB:IIJE,JK) )
      !$mnh_end_expand_array(JIJ=IIJB:IIJE)
    END DO
-!
+   !
    !$mnh_expand_array(JIJ=IIJB:IIJE)
    ZLM(IIJB:IIJE,IKTB-1) = ZLM(IIJB:IIJE,IKTB)
    ZLM(IIJB:IIJE,IKTE+1) = ZLM(IIJB:IIJE,IKTE)
    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-!
-!
-!
+   !
+   !
+   !
 END SELECT
 !
 !*      3.5 Mixing length modification for cloud
@@ -886,7 +886,7 @@ IF (TURBN%LROTATE_WIND) THEN
                      PCOSSLOPE,PSINSLOPE,               &
                      PDXX,PDYY,PDZZ,                    &
                      ZUSLOPE,ZVSLOPE                    )
-!
+  !
   CALL UPDATE_ROTATE_WIND(D,ZUSLOPE,ZVSLOPE,HLBCX,HLBCY)
 ELSE
   ZUSLOPE(IIJB:IIJE)=PUT(IIJB:IIJE,IKA)
@@ -934,14 +934,14 @@ ZMTHR(:,:) = 0.     ! w'th'r'
 !
 IF (TURBN%CTOM=='TM06') THEN
   CALL TM06(D,CST,PTHVREF,PBL_DEPTH,PZZ,PSFTH,ZMWTH,ZMTH2)
-!
-   CALL GZ_M_W_PHY(D,ZMWTH,PDZZ,ZWORK1)    ! -d(w'2th' )/dz
-   CALL GZ_W_M_PHY(D,ZMTH2,PDZZ,ZWORK2)    ! -d(w'th'2 )/dz
-   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-   ZFWTH(IIJB:IIJE,1:IKT) = -ZWORK1(IIJB:IIJE,1:IKT)
-   ZFTH2(IIJB:IIJE,1:IKT) = -ZWORK2(IIJB:IIJE,1:IKT)
-   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!
+  !
+  CALL GZ_M_W_PHY(D,ZMWTH,PDZZ,ZWORK1)    ! -d(w'2th' )/dz
+  CALL GZ_W_M_PHY(D,ZMTH2,PDZZ,ZWORK2)    ! -d(w'th'2 )/dz
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  ZFWTH(IIJB:IIJE,1:IKT) = -ZWORK1(IIJB:IIJE,1:IKT)
+  ZFTH2(IIJB:IIJE,1:IKT) = -ZWORK2(IIJB:IIJE,1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !
   ZFWTH(:,IKTE:) = 0.
   ZFWTH(:,:IKTB) = 0.
   ZFWR(:,:)  = 0.
@@ -1219,9 +1219,9 @@ ENDIF
 !          ---------------------------------------------------------
 !
 IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
-!
-! stores the mixing length
-!
+  !
+  ! stores the mixing length
+  !
   TZFIELD = TFIELDMETADATA(       &
     CMNHNAME   = 'LM',            &
     CSTDNAME   = '',              &
@@ -1234,11 +1234,11 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     NDIMS      = 3,               &
     LTIMEDEP   = .TRUE.           )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZLM)
-!
+  !
   IF (KRR /= 0) THEN
-!
-! stores the conservative potential temperature
-!
+    !
+    ! stores the conservative potential temperature
+    !
     TZFIELD = TFIELDMETADATA(                          &
     CMNHNAME   = 'THLM',                               &
     CSTDNAME   = '',                                   &
@@ -1251,9 +1251,9 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     NDIMS      = 3,                                    &
     LTIMEDEP   = .TRUE.                                )
     CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,PTHLT)
-!
-! stores the conservative mixing ratio
-!
+    !
+    ! stores the conservative mixing ratio
+    !
     TZFIELD = TFIELDMETADATA(                &
     CMNHNAME   = 'RNPM',                     &
     CSTDNAME   = '',                         &
@@ -1271,7 +1271,7 @@ END IF
 !
 !* stores value of conservative variables & wind before turbulence tendency (AROME only)
 IF(PRESENT(PDRUS_TURB)) THEN
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   PDRUS_TURB(IIJB:IIJE,1:IKT)   = PRUS(IIJB:IIJE,1:IKT) - PDRUS_TURB(IIJB:IIJE,1:IKT)
   PDRVS_TURB(IIJB:IIJE,1:IKT)   = PRVS(IIJB:IIJE,1:IKT) - PDRVS_TURB(IIJB:IIJE,1:IKT)
   PDRTHLS_TURB(IIJB:IIJE,1:IKT) = PRTHLS(IIJB:IIJE,1:IKT) - PDRTHLS_TURB(IIJB:IIJE,1:IKT)
@@ -1300,7 +1300,7 @@ IF ( KRRL >= 1 ) THEN
                                     * PRRS(IIJB:IIJE,1:IKT,2) &
                                     + ZLSOCPEXNM(IIJB:IIJE,1:IKT) * PRRS(IIJB:IIJE,1:IKT,4)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!
+    !
   ELSE
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     PRT(IIJB:IIJE,1:IKT,1)  = PRT(IIJB:IIJE,1:IKT,1)  - PRT(IIJB:IIJE,1:IKT,2)
@@ -1334,11 +1334,11 @@ IF (TLES%LLES_CALL) THEN
   ZWORK2D(IIJB:IIJE) = (PSFU(IIJB:IIJE)*PSFU(IIJB:IIJE)+PSFV(IIJB:IIJE)*PSFV(IIJB:IIJE))**0.25
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2D,TLES%X_LES_USTAR)
-!----------------------------------------------------------------------------
-!
-!*     10. LES for 3rd order moments
-!          -------------------------
-!
+  !----------------------------------------------------------------------------
+  !
+  !*     10. LES for 3rd order moments
+  !          -------------------------
+  !
   CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZMWTH,TLES%X_LES_SUBGRID_W2Thl)
   CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZMTH2,TLES%X_LES_SUBGRID_WThl2)
   IF (KRR>0) THEN
@@ -1346,12 +1346,12 @@ IF (TLES%LLES_CALL) THEN
     CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZMTHR,TLES%X_LES_SUBGRID_WThlRt)
     CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZMR2,TLES%X_LES_SUBGRID_WRt2)
   END IF
-!
-!----------------------------------------------------------------------------
-!
-!*     11. LES quantities depending on <w'2> in "1DIM" mode
-!          ------------------------------------------------
-!
+  !
+  !----------------------------------------------------------------------------
+  !
+  !*     11. LES quantities depending on <w'2> in "1DIM" mode
+  !          ------------------------------------------------
+  !
   IF (TURBN%CTURBDIM=="1DIM") THEN
     !
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -1386,19 +1386,19 @@ IF (TLES%LLES_CALL) THEN
     END DO
   END IF
 
-!----------------------------------------------------------------------------
-!
-!*     12. LES mixing end dissipative lengths, presso-correlations
-!          -------------------------------------------------------
-!
+  !----------------------------------------------------------------------------
+  !
+  !*     12. LES mixing end dissipative lengths, presso-correlations
+  !          -------------------------------------------------------
+  !
   CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZLM,TLES%X_LES_SUBGRID_LMix)
   CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZLEPS,TLES%X_LES_SUBGRID_LDiss)
-!
-!* presso-correlations for subgrid Tke are equal to zero.
-!
+  !
+  !* presso-correlations for subgrid Tke are equal to zero.
+  !
   ZLEPS(:,:) = 0. !ZLEPS is used as a work array (not used anymore)
   CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZLEPS,TLES%X_LES_SUBGRID_WP)
-!
+  !
   CALL SECOND_MNH(ZTIME2)
   TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 END IF
@@ -1444,33 +1444,33 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
 !
   IF (LHOOK) CALL DR_HOOK('TURB:COMPUTE_FUNCTION_THERMO',0,ZHOOK_HANDLE2)
   ZEPS = CST%XMV / CST%XMD
-!
-!*       1.1 Lv/Cph at  t
-!
+  !
+  !*       1.1 Lv/Cph at  t
+  !
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   PLOCPEXN(IIJB:IIJE,1:IKT) = ( PLTT + (CST%XCPV-PC) *  (PT(IIJB:IIJE,1:IKT)-CST%XTT) ) &
                                      / PCP(IIJB:IIJE,1:IKT)
-!
-!*      1.2 Saturation vapor pressure at t
-!
+  !
+  !*      1.2 Saturation vapor pressure at t
+  !
   ZRVSAT(IIJB:IIJE,1:IKT) =  EXP( PALP - PBETA/PT(IIJB:IIJE,1:IKT) - PGAM*ALOG( PT(IIJB:IIJE,1:IKT) ) )
-!
-!*      1.3 saturation  mixing ratio at t
-!
+  !
+  !*      1.3 saturation  mixing ratio at t
+  !
   ZRVSAT(IIJB:IIJE,1:IKT) =  ZRVSAT(IIJB:IIJE,1:IKT) &
                                     * ZEPS / ( PPABST(IIJB:IIJE,1:IKT) - ZRVSAT(IIJB:IIJE,1:IKT) )
-!
-!*      1.4 compute the saturation mixing ratio derivative (rvs')
-!
+  !
+  !*      1.4 compute the saturation mixing ratio derivative (rvs')
+  !
   ZDRVSATDT(IIJB:IIJE,1:IKT) = ( PBETA / PT(IIJB:IIJE,1:IKT)  - PGAM ) / PT(IIJB:IIJE,1:IKT)   &
                  * ZRVSAT(IIJB:IIJE,1:IKT) * ( 1. + ZRVSAT(IIJB:IIJE,1:IKT) / ZEPS )
-!
-!*      1.5 compute Amoist
-!
+  !
+  !*      1.5 compute Amoist
+  !
   PAMOIST(IIJB:IIJE,1:IKT)=  0.5 / ( 1.0 + ZDRVSATDT(IIJB:IIJE,1:IKT) * PLOCPEXN(IIJB:IIJE,1:IKT) )
-!
-!*      1.6 compute Atheta
-!
+  !
+  !*      1.6 compute Atheta
+  !
   PATHETA(IIJB:IIJE,1:IKT)= PAMOIST(IIJB:IIJE,1:IKT) * PEXN(IIJB:IIJE,1:IKT) *               &
         ( ( ZRVSAT(IIJB:IIJE,1:IKT) - PRT(IIJB:IIJE,1:IKT,1) ) * PLOCPEXN(IIJB:IIJE,1:IKT) / &
           ( 1. + ZDRVSATDT(IIJB:IIJE,1:IKT) * PLOCPEXN(IIJB:IIJE,1:IKT) )        *               &
@@ -1482,9 +1482,9 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
           )                                                                  &
          - ZDRVSATDT(IIJB:IIJE,1:IKT)                                                  &
         )
-!
-!*      1.7 Lv/Cph/Exner at t-1
-!
+  !
+  !*      1.7 Lv/Cph/Exner at t-1
+  !
   PLOCPEXN(IIJB:IIJE,1:IKT) = PLOCPEXN(IIJB:IIJE,1:IKT) / PEXN(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
@@ -1528,35 +1528,35 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
 !
   IF (LHOOK) CALL DR_HOOK('TURB:COMPUTE_FUNCTION_THERMO_NEW_STAT',0,ZHOOK_HANDLE2)
   ZEPS = CST%XMV / CST%XMD
-!
-!*       1.1 Lv/Cph at  t
-!
+  !
+  !*       1.1 Lv/Cph at  t
+  !
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   PLOCPEXN(IIJB:IIJE,1:IKT) = ( PLTT + (CST%XCPV-PC) *  (PT(IIJB:IIJE,1:IKT)-CST%XTT) ) / PCP(IIJB:IIJE,1:IKT)
-!
-!*      1.2 Saturation vapor pressure at t
-!
+  !
+  !*      1.2 Saturation vapor pressure at t
+  !
   ZRVSAT(IIJB:IIJE,1:IKT) =  EXP( PALP - PBETA/PT(IIJB:IIJE,1:IKT) - PGAM*ALOG( PT(IIJB:IIJE,1:IKT) ) )
-!
-!*      1.3 saturation  mixing ratio at t
-!
+  !
+  !*      1.3 saturation  mixing ratio at t
+  !
   ZRVSAT(IIJB:IIJE,1:IKT) =  ZRVSAT(IIJB:IIJE,1:IKT) * ZEPS / ( PPABST(IIJB:IIJE,1:IKT) - ZRVSAT(IIJB:IIJE,1:IKT) )
-!
-!*      1.4 compute the saturation mixing ratio derivative (rvs')
-!
+  !
+  !*      1.4 compute the saturation mixing ratio derivative (rvs')
+  !
   ZDRVSATDT(IIJB:IIJE,1:IKT) = ( PBETA / PT(IIJB:IIJE,1:IKT)  - PGAM ) / PT(IIJB:IIJE,1:IKT)   &
                  * ZRVSAT(IIJB:IIJE,1:IKT) * ( 1. + ZRVSAT(IIJB:IIJE,1:IKT) / ZEPS )
-!
-!*      1.5 compute Amoist
-!
+  !
+  !*      1.5 compute Amoist
+  !
   PAMOIST(IIJB:IIJE,1:IKT)=  1.0 / ( 1.0 + ZDRVSATDT(IIJB:IIJE,1:IKT) * PLOCPEXN(IIJB:IIJE,1:IKT) )
-!
-!*      1.6 compute Atheta
-!
+  !
+  !*      1.6 compute Atheta
+  !
   PATHETA(IIJB:IIJE,1:IKT)= PAMOIST(IIJB:IIJE,1:IKT) * PEXN(IIJB:IIJE,1:IKT) * ZDRVSATDT(IIJB:IIJE,1:IKT)
-!
-!*      1.7 Lv/Cph/Exner at t-1
-!
+  !
+  !*      1.7 Lv/Cph/Exner at t-1
+  !
   PLOCPEXN(IIJB:IIJE,1:IKT) = PLOCPEXN(IIJB:IIJE,1:IKT) / PEXN(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
@@ -1934,23 +1934,23 @@ IF (HTURBLEN_CL == TURBN%CTURBLEN) THEN
   ZLM_CLOUD(:,:) = ZLM(:,:)
 ELSE
   SELECT CASE (HTURBLEN_CL)
-!
-!*         3.1 BL89 mixing length
-!           ------------------
+  !
+  !*         3.1 BL89 mixing length
+  !           ------------------
   CASE ('BL89','RM17','HM21')
     ZSHEAR(:,:)=0.
     CALL BL89(D,CST,CSTURB,TURBN,PZZ,PDZZ,PTHVREF,ZTHLM,KRR,ZRM,PTKET,ZSHEAR,ZLM_CLOUD,OOCEAN)
-!
-!*         3.2 Delta mixing length
-!           -------------------
+  !
+  !*         3.2 Delta mixing length
+  !           -------------------
   CASE ('DELT')
     CALL DELT(ZLM_CLOUD,ODZ=.TRUE.)
-!
-!*         3.3 Deardorff mixing length
-!           -----------------------
+  !
+  !*         3.3 Deardorff mixing length
+  !           -----------------------
   CASE ('DEAR')
     CALL DEAR(ZLM_CLOUD)
-!
+  !
   END SELECT
 ENDIF
 !

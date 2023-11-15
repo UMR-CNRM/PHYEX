@@ -238,18 +238,8 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
       log 1 "Clonig PHYEX in ${WORKDIR}/PHYEX"
       git clone "${PHYEXREPOgiturl}" "${WORKDIR}/PHYEX"
   
-      log 1 "Installing filepp"
-      cd tools/mnh_expand
-      wget https://www-users.york.ac.uk/~dm26/filepp/filepp-1.8.0.tar.gz
-      tar xvf filepp-1.8.0.tar.gz
-      cd filepp-1.8.0
-      ./configure --prefix="${PWD}"
-      make install
-      cd ..
-      ln -s filepp-1.8.0 filepp
-  
-      log 1 "Installing MNH_Expand_Array"
-      git clone https://github.com/JuanEscobarMunoz/MNH_Expand_Array.git
+      log 1 "Installing PHYEX"
+      ./tools/INSTALL.sh --ALL
     fi
     log 1 "Checkout commit ${SHA}"
     cd "${WORKDIR}/PHYEX"

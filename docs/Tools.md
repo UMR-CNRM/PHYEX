@@ -59,7 +59,6 @@ script with the 'REF' argument), the reference simulation directory (under $TEST
 ### prep\_code.sh
 
 This script is used by the different check\_commit\_\* scripts and can be used directly to pre-process the source code.
- The installation is described in the [tools/INSTALL\_mnh\_expand.md file](../tools/INSTALL_mnh_expand.md)
 
 ### testing.sh
 
@@ -73,7 +72,5 @@ Other scripts are:
 
   - comp\_DDH.py: compare DDH outputs (used by check\_commit\_ial.sh)
   - compare.py: compare MESO-NH outputs (used by check\_commit\_mesonh.sh)
-  - correct\_indent.py: correct source code indentation in mnh\_expand blocs
   - diffNODE.001\_01: compare NODE.0001\_01 output files
-  - verify\_mnh\_expand.py: check syntax in mnh\_expand blocs
   - generate\_standalone\_doc.sh: to generate a standalone doc from the different md files

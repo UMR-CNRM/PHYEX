@@ -52,7 +52,7 @@ function usage {
   echo "-C              checks the result against the reference"
   echo "-t TEST         comma separated list of tests to execute"
   echo "                or ALL to execute all tests"
-  echo "--expand        use mnh_expand (code will use do loops)"
+  echo "--expand        expand mnh_expand blocks (code will use do loops)"
   echo "--repo-user USER"
   echo "                user hosting the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREOuser (=$PHYEXREOuser)"
@@ -263,11 +263,8 @@ if [ $packcreation -eq 1 ]; then
 
     rm -rf PHYEX
 
-    MNH_EXPAND_DIR=$PHYEXTOOLSDIR/mnh_expand
-    export PATH=$MNH_EXPAND_DIR/filepp:$MNH_EXPAND_DIR/MNH_Expand_Array:$PATH
-
     if [ $useexpand == 1 ]; then
-      expand_options="-D MNH_EXPAND -D MNH_EXPAND_LOOP"
+      expand_options="--mnhExpand"
     else
       expand_options=""
     fi

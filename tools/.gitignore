@@ -2,9 +2,9 @@
 pack/**
 !pack/.gitkeep
 
-# Ignore the content of mnh_expand directory but not the directory itself
-mnh_expand/**
-!mnh_expand/.gitkeep
+# Ignore the content of the site directory but not the directory itself
+site/**
+!site/.gitkeep
 
 # Ignore the content of testprogs_data but not the directory itself
 testprogs_data/ice_adjust/**

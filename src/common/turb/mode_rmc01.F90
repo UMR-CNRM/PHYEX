@@ -185,9 +185,9 @@ SELECT CASE (TURBN%CTURBLEN)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     END DO
     !
-!*     4. factor controling the transition between SBL and free isotropic turb. (3D case)
-!         --------------------------------------------------------------------
-!
+    !*     4. factor controling the transition between SBL and free isotropic turb. (3D case)
+    !         --------------------------------------------------------------------
+    !
     ZGAM(IIJB:IIJE,IKA) = 0.
     DO JK=IKTB,IKTE
       !$mnh_expand_array(JIJ=IIJB:IIJE)
@@ -208,15 +208,15 @@ SELECT CASE (TURBN%CTURBLEN)
       ZGAM(IIJB:IIJE,IKU) = 1.
     END WHERE
     !$mnh_end_expand_where(JIJ=IIJB:IIJE)
-!   
-!
-!-------------------------------------------------------------------------------
-!
-!*     5. factor controling the transition between SBL and free isotropic turb.(1D case)
-!         --------------------------------------------------------------------
-!
+  !   
+  !
+  !-------------------------------------------------------------------------------
+  !
+  !*     5. factor controling the transition between SBL and free isotropic turb.(1D case)
+  !         --------------------------------------------------------------------
+  !
   CASE DEFAULT
-!* SBL depth is used
+    !* SBL depth is used
     ZGAM(IIJB:IIJE,1:IKT) = 1.
     ZGAM(IIJB:IIJE,IKA) = 0.
     DO JK=IKTB,IKTE
@@ -235,14 +235,14 @@ SELECT CASE (TURBN%CTURBLEN)
     WHERE(PSBL_DEPTH(IIJB:IIJE)>0.)
       ZGAM(IIJB:IIJE,IKU) = TANH( (ZZZ(IIJB:IIJE,IKU)-ZZZ(IIJB:IIJE,IKB))/PSBL_DEPTH(IIJB:IIJE) )
     END WHERE
-   !$mnh_end_expand_where(JIJ=IIJB:IIJE)
-   !$mnh_expand_where(JIJ=IIJB:IIJE)
+    !$mnh_end_expand_where(JIJ=IIJB:IIJE)
+    !$mnh_expand_where(JIJ=IIJB:IIJE)
     WHERE (ZGAM(IIJB:IIJE,IKU-IKL)>0.99 ) 
       ZGAM(IIJB:IIJE,JK) = 1.
     END WHERE
     !$mnh_end_expand_where(JIJ=IIJB:IIJE)
-!
-!-------------------------------------------------------------------------------
+  !
+  !-------------------------------------------------------------------------------
 END SELECT
 !-------------------------------------------------------------------------------
 !
@@ -250,10 +250,10 @@ END SELECT
 !         ---------------------------------
 !
 DO JK=1,IKT
-!$mnh_expand_array(JIJ=IIJB:IIJE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZL(IIJB:IIJE,JK) =  CST%XKARMAN/SQRT(CSTURB%XALPSBL)/CSTURB%XCMFS                                      &
               * ZZZ(IIJB:IIJE,JK)*PDIRCOSZW(IIJB:IIJE)/(ZPHIM(IIJB:IIJE,JK)**2*SQRT(ZPHIE(IIJB:IIJE,JK)))
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
 !
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)

@@ -592,7 +592,7 @@ DO JK=IKB+IKL,IKE-IKL,IKL !  Vertical loop
       PEMF(JIJ,JK+IKL)=PEMF(JIJ,JK)*EXP(ZMIX1(JIJ))
     END IF
 
-! Updraft fraction must be smaller than XFRAC_UP_MAX
+    ! Updraft fraction must be smaller than XFRAC_UP_MAX
     PFRAC_UP(JIJ,JK+IKL)=PEMF(JIJ,JK+IKL)/&
                                     &(SQRT(ZW_UP2(JIJ,JK+IKL))*ZRHO_F(JIJ,JK+IKL))
     PFRAC_UP(JIJ,JK+IKL)=MIN(PARAMMF%XFRAC_UP_MAX,PFRAC_UP(JIJ,JK+IKL))
