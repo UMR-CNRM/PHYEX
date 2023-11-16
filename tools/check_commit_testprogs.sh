@@ -87,6 +87,10 @@ function usage {
   echo "                protocol (https or ssh) to reach the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREOprotocol (=$PHYEXREOprotocol)"
   echo "--remove        removes the pack"
+  echo "--onlyIfNeeded  do not rerun already run steps"
+  echo "--computeRefIfNeeded"
+  echo "                compute the reference if not already present"
+  echo "--no-perf       deactivate DR_HOOK"
   echo "-a arch ARCH    architecture name to use to build and run the commit (=$defaultarchfile)"
   echo "-A arch ARCH    architecture name to use for the reference simulation (=$defaultarchfile)"
   echo ""
@@ -117,6 +121,7 @@ refarchfile=$defaultarchfile
 remove=0
 onlyIfNeeded=0
 computeRefIfNeeded=0
+perf=1
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -135,6 +140,7 @@ while [ -n "$1" ]; do
     '-A') refarchfile="$2"; shift;;
     '--onlyIfNeeded') onlyIfNeeded=1;;
     '--computeRefIfNeeded') computeRefIfNeeded=1;;
+    '--no-perf') perf=0;;
 
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
@@ -284,7 +290,7 @@ if [ $packcreation -eq 1 ]; then
       exit 4
     fi
 
-    mkdir $TESTDIR/$name
+    mkdir -p $TESTDIR/$name
     cd $TESTDIR/$name/
     cp -r $PHYEXTOOLSDIR/../build . #We use the compilation system from the same commit as the current script
 
@@ -343,7 +349,28 @@ if [ $run -ge 1 ]; then
         mkdir -p tests/with_fcm/arch_${archfile}/$t
         cd tests/with_fcm/arch_${archfile}/$t
         ln -s $dirdata/$t data
-        $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe --check 2>&1 > Output_run
+        if [ $perf -eq 1 ]; then
+            export DR_HOOK_OPT=prof
+            export DR_HOOK=1
+        fi
+        $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe --check > Output_run 2> Stderr_run
+        if [ $perf -eq 1 ]; then
+            firstLine=$(grep -m 1 -n "^ *1" drhook.prof.0 | cut -d: -f1)
+            python3 -c "import numpy, pandas
+d = {'time': ('<f4', ('mean', )), 'self': ('<f4', ('mean', 'max', 'min', 'std', 'sum')),
+     'total': ('<f4', ('mean', 'max', 'min', 'std', 'sum')), 'calls': ('<i4', ('sum', )),
+     'self_per_call': ('<f4', ('mean', )), 'total_per_call': ('<f4', ('mean', )), 'routine': ('U256', '')}
+arraynp = numpy.loadtxt('drhook.prof.0', dtype=[(k, v[0]) for (k, v) in d.items()],
+                        converters={8: lambda s: s.split(b'@')[0].lstrip(b'*')},
+                        skiprows=$firstLine - 1, usecols=[1, 3, 4, 5, 6, 7, 8])
+df = pandas.DataFrame(arraynp).groupby('routine').agg(
+      **{k + '_' + agg:pandas.NamedAgg(column=k, aggfunc=agg)
+         for (k, agg) in [(k, agg) for k in d.keys() for agg in d[k][1]]
+         if k != 'routine'}).sort_values('self_sum', ascending=False)
+df.index.name += ' ordered by self_sum'
+with open('drhook.prof.agg', 'w') as f: f.write(df.to_string())
+"
+        fi
       fi
     fi
   done
