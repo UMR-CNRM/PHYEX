@@ -385,13 +385,9 @@ if [ $check -eq 1 ]; then
       fi
       if [ $te -eq 0 ]; then
         set +e
-        mess=$(cmp <(cat $file1 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g' | grep -v 'Total time: ' | sed 's/-0.00000E+00|/ 0.00000E+00|/g' | sed 's/-0.00000E+00 / 0.00000E+00 /g' | sed 's/-0.00000E+00-/ 0.00000E+00-/g') \
-                   <(cat $file2 | sed 's/\.\.//g' | sed 's/~=//g' | sed 's/!=//g' | grep -v 'Total time: ' | sed 's/-0.00000E+00|/ 0.00000E+00|/g' | sed 's/-0.00000E+00 / 0.00000E+00 /g' | sed 's/-0.00000E+00-/ 0.00000E+00-/g') 246 246 2>&1)
+        mess=$($PHYEXTOOLSDIR/compare.py --testprogs $file1 $file2)
         te=$?
         set -e
-        #The use of "<()" bash syntax replaces the actual file name seen by cmp
-        #We modify the cmp output to display the actual file names
-        mess=$(echo $mess | sed "s#^.*differ# $file1 $file2 differ#")
       fi
       [ $te -ne 0 ] && message="$message $mess \n"
       alltests=$(($alltests+$te))

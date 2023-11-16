@@ -721,10 +721,14 @@ if [ $check -eq 1 ]; then
         fi
       fi
       if [ $t -eq 0 ]; then
+        cmd="$PHYEXTOOLSDIR/compare.py"
+        if [ ! -x $cmd ]; then
+          echo "Command not found: \"$cmd\""
+          exit 10
+        fi
         if [ $(basename $file) == ICMSHFPOS+0002:00 ]; then
           #historic files
-          cmd="cmp $file1 $file2 256 256"
-          output='stderr'
+          cmd="$cmd --binary $file1 $file2 256"
         elif [ $(basename $file) == DHFDLFPOS+0002 ]; then
           #DDH files
           ddh_images="$HOMEPACK/$name/ddh_diff_${tag}.png"
@@ -732,32 +736,15 @@ if [ $check -eq 1 ]; then
             [ ! -d /d0/images/$USER ] && mkdir /d0/images/$USER
             ddh_images="$ddh_images /d0/images/$USER/ddh_diff_${tag}.png"
           fi
-          cmd="$PHYEXTOOLSDIR/comp_DDH.py"
-          if [ ! -x $cmd ]; then
-            echo "Command not found: \"$cmd\""
-            exit 10
-          fi
-          cmd="$cmd $file1 $file2 $ddh_images"
-          output='stdout'
+          cmd="$cmd --ddh $file1 $file2 --ddhplots $ddh_images"
         elif [ $(basename $file) == NODE.001_01 ]; then
           #Output listing
-          cmd="$PHYEXTOOLSDIR/diffNODE.001_01"
-          if [ ! -x $cmd ]; then
-            echo "Command not found: \"$cmd\""
-            exit 11
-          fi
-          cmd="$cmd $file1 $file2 --norm-max-diff=0."
-          output='stdout'
+          cmd="$cmd --node $file1 $file2"
         else
-          cmd="cmp $file1 $file2"
-          output='stderr'
+          cmd="$cmd --binary $file1 $file2 0"
         fi
         set +e
-        if [ $output == 'stderr' ]; then
-            mess=$($cmd 2>&1)
-        else
-            mess=$($cmd 2>/dev/null)
-        fi
+        mess=$($cmd 2>/dev/null)
         t=$?
         set -e
       fi

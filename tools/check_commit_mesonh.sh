@@ -518,26 +518,25 @@ if [ $check -eq 1 ]; then
       #Comparison
       if [ -f $file1 -a -f $file2 ]; then
         # Compare variable of both Synchronous and Diachronic files with printing difference
-        echo "Compare with python..."
+        echo "Comparison for case $t..."
         set +e
         if [ "$file3" == "" ]; then
-          $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2
-          t=$?
+          $PHYEXTOOLSDIR/compare.py --backup $file1 $file2
+          r=$?
         else
-          $PHYEXTOOLSDIR/compare.py --f1 $file1 --f2 $file2 --f3 $file3 --f4 $file4
-          t=$?
+          $PHYEXTOOLSDIR/compare.py --backup $file1 $file2 --diac $file3 $file4
+          r=$?
         fi
         set -e
-        allt=$(($allt+$t))
+        allt=$(($allt+$r))
 
         #Check bit-repro before date of creation of Synchronous file from ncdump of all values
         #(pb with direct .nc file checks)
-        echo "Compare with ncdump..."
         set +e
-        diff <(ncdump $file1 | head -c $bit_diff) <(ncdump $file2 | head -c $bit_diff)
-        t=$?
+        $PHYEXTOOLSDIR/compare.py --ncdump $file1 $file2 $bit_diff
+        r=$?
         set -e
-        allt=$(($allt+$t))
+        allt=$(($allt+$r))
       else
         [ ! -f $file1 ] && echo "  $file1 is missing"
         [ ! -f $file2 ] && echo "  $file2 is missing"
