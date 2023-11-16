@@ -352,6 +352,7 @@ if [ $run -ge 1 ]; then
         if [ $perf -eq 1 ]; then
             export DR_HOOK_OPT=prof
             export DR_HOOK=1
+            export DR_HOOK_IGNORE_SIGNALS=-1
         fi
         $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe --check > Output_run 2> Stderr_run
         if [ $perf -eq 1 ]; then
