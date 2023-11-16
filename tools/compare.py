@@ -5,10 +5,8 @@ matplotlib.use('Agg')
 import os
 os.environ['NUMEXPR_MAX_THREADS'] = '1'
 import shutil
-import epygram
 import numpy
 import matplotlib.pyplot as plt
-epygram.init_env()
 import xarray as xr
 import sys
 import subprocess
@@ -122,6 +120,9 @@ def compareTSERIESFiles(file_user, file_ref, tol_ad=1E-12):
   return status
 
 def comp_DDH(filename1, filename2, output_fig, tol_ad=3E-7, tol_rd=1.E-6, verbose=False):
+    import epygram
+    epygram.init_env()
+
     if filename1 != filename2:
         r1 = epygram.formats.resource(filename1, 'r')
         r2 = epygram.formats.resource(filename2, 'r')

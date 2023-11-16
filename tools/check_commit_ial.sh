@@ -744,7 +744,7 @@ if [ $check -eq 1 ]; then
           cmd="$cmd --binary $file1 $file2 0"
         fi
         set +e
-        mess=$($cmd 2>/dev/null)
+        mess=$($cmd)
         t=$?
         set -e
       fi

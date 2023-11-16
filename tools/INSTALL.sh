@@ -12,12 +12,14 @@ function usage {
   echo "  --dataset          Install or clean a reduced dataset for the test programs"
   echo "  --pyft             Install or clean the pyft tool"
   echo "  --clean            Clean instead of installing"
+  echo "  --test             Perform a test"
 }
 
 ALL=0
 dataset=0
 pyft=0
 clean=0
+dotest=0
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -25,7 +27,9 @@ while [ -n "$1" ]; do
     '--dataset') dataset=1;;
     '--pyft') pyft=1;;
     '--clean') clean=1;;
+    '--test') dotest=1;;
     '-h') usage;;
+    *) echo "Unknown option $1"; exit 1;;
   esac
   shift
 done
@@ -64,4 +68,10 @@ if [ $pyft -eq 1 ]; then
     echo "This file, among other things, source the previous displayed file."
   fi
 fi
-    
+
+if [ $dotest -eq 1 ]; then
+  . $PHYEXTOOLSDIR/env.sh
+  check_commit_testprogs.sh $(cd $PHYEXTOOLSDIR/.. && pwd) REF \
+                            --computeRefIfNeeded \
+                            --repo-user UMR-CNRM --repo-protocol ssh
+fi
