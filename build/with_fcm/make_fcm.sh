@@ -16,6 +16,9 @@ function parse_args() {
   commit=""
   packcreation=0
   compilation=0
+  inplaceClean=0
+  inplaceInstall=0
+  ssh=0
   # pass unrecognized arguments to fcm
   FCM_ARGS=""
   
@@ -34,6 +37,9 @@ $0 [options]
 --commit              commit hash (or a directory) to test; do not use this option from within a repository
 -p                    creates 'pack' (compilation directory)
 -c                    performs compilation
+--inplace-install     install, if needed, fiat and fcm in the directory where the current script is
+--inplace-clean       remove the fiat and fcm installation present in the directory where the current script is
+--ssh                 use the ssh protocol to clone the pyft and fxtran repositories instead of https"
 
 Unrecognized options are passed to the fcm build command. Useful options include :
 --new                   clean build tree before building
@@ -59,6 +65,9 @@ EOF
       '--commit') commit=$1; shift;;
       '-p') packcreation=1;;
       '-c') compilation=1;;
+      '--inplace-install') inplaceInstall=1;;
+      '--inplace-clean') inplaceClean=1;;
+      '--ssh') ssh=1;;
       *)
         FCM_ARGS="$FCM_ARGS $OPTION" ;;
     esac
@@ -72,7 +81,9 @@ EOF
     echo "--arch option is mandatory if --mesonhprofile option is used"
     exit 3
   fi
-  if [ $packcreation -eq 0 -a \
+  if [ $inplaceInstall -eq 0 -a \
+       $inplaceClean -eq 0 -a \
+       $packcreation -eq 0 -a \
        $compilation -eq 0 ]; then
     packcreation=1
     compilation=1
@@ -84,7 +95,11 @@ function check_install_fcm() {
     echo "Performing FCM installation..."
     cd fcm
     rm -f .gitkeep
-    git clone https://github.com/metomi/fcm.git .
+    if [ $ssh -eq 1 ]; then
+      git clone git@github.com:metomi/fcm.git
+    else
+      git clone https://github.com/metomi/fcm.git .
+    fi
     git checkout $fcm_version
     touch .gitkeep
     cd ..
@@ -97,7 +112,11 @@ function check_install_fiat() {
     echo "Performing fiat cloning..."
     cd fiat
     rm -f .gitkeep
-    git clone https://github.com/ecmwf-ifs/fiat.git .
+    if [ $ssh -eq 1 ]; then
+      git clone git@github.com:ecmwf-ifs/fiat.git
+    else
+      git clone https://github.com/ecmwf-ifs/fiat.git .
+    fi
     git checkout $fiat_version
     touch .gitkeep
     cd ..
@@ -263,6 +282,30 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Parse command line arguments
 parse_args $*
+
+if [ $inplaceClean -eq 1 ]; then
+  # Change current working dir
+  cd $DIR
+
+  # Restore fcm
+  rm -rf fcm
+  git restore fcm
+
+  # Restore fiat
+  rm -rf fiat
+  git restore fiat
+fi
+
+if [ $inplaceInstall -eq 1 ]; then
+  # Change current working dir
+  cd $DIR
+
+  # Check the fcm installation
+  check_install_fcm
+
+  # Check the fiat installation
+  check_install_fiat
+fi
 
 if [ $packcreation -eq 1 ]; then
   # Change current working dir

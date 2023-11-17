@@ -93,7 +93,7 @@ computeRefIfNeeded=0
 
 while [ -n "$1" ]; do
   case "$1" in
-    '-h') usage;;
+    '-h') usage; exit;;
     '-s') suppress=1;;
     '-p') packcreation=1;;
     '-c') compilation=1;;
