@@ -39,7 +39,7 @@ while [ -n "$1" ]; do
     '--fiatfcm') fiatfcm=1;;
     '--clean') clean=1;;
     '--test') dotest=1;;
-    '--sh') ssh=1;;
+    '--ssh') ssh=1;;
     '-h') usage; exit;;
     *) echo "Unknown option $1"; exit 1;;
   esac

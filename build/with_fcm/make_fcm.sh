@@ -96,7 +96,7 @@ function check_install_fcm() {
     cd fcm
     rm -f .gitkeep
     if [ $ssh -eq 1 ]; then
-      git clone git@github.com:metomi/fcm.git
+      git clone git@github.com:metomi/fcm.git .
     else
       git clone https://github.com/metomi/fcm.git .
     fi
@@ -113,7 +113,7 @@ function check_install_fiat() {
     cd fiat
     rm -f .gitkeep
     if [ $ssh -eq 1 ]; then
-      git clone git@github.com:ecmwf-ifs/fiat.git
+      git clone git@github.com:ecmwf-ifs/fiat.git .
     else
       git clone https://github.com/ecmwf-ifs/fiat.git .
     fi
