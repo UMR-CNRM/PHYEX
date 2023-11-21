@@ -5,8 +5,7 @@ program main_rain_ice_old
 
   use modi_rain_ice_old
 
-  use yomhook, only: lhook, dr_hook
-  use parkind1, only: jprb, jpim
+  use yomhook, only: lhook, dr_hook, jphook
 
   use modd_dimphyex, only: dimphyex_t
   use modd_cst, only: cst
@@ -83,6 +82,8 @@ program main_rain_ice_old
   real    :: ptstep
 
   integer :: i, j, jrr
+
+  real(kind=jphook) :: zhook_handle
 
   real(8) :: time_start_real, time_end_real
   real(8) :: time_start_cpu, time_end_cpu
@@ -235,6 +236,8 @@ ENDDO
   call system_clock(count=counter, count_rate=c_rate)
   time_start_real = real(counter,8)/c_rate
 
+  if(lhook) call dr_hook ('MAIN',0,zhook_handle)
+
   do i = 1, n_gp_blocks
 
     isize = count(llmicro(:,:,i))
@@ -271,6 +274,8 @@ ENDDO
     endif
 
   enddo
+
+  if(lhook) call dr_hook ('MAIN',1,zhook_handle)
 
   call cpu_time(time_end_cpu)
   call system_clock(count=counter, count_rate=c_rate)

@@ -312,6 +312,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
       DO JL=1, KMICRO
         IF (ZA(JL, JV) < -1.E-20 .AND. PVART(JL, JV) > ICED%XRTMIN(JV)) THEN
           ZMAXTIME(JL)=MIN(ZMAXTIME(JL), -(ZB(JL, JV)+PVART(JL, JV))/ZA(JL, JV))
+          ZMAXTIME(JL)=MAX(ZMAXTIME(JL), CST%XMNH_TINY) !to prevent rounding errors
         ENDIF
       ENDDO
     ENDDO
