@@ -277,9 +277,10 @@ fi
 #######################
 
 if [ $packcreation -eq 1 ]; then
-  if [ -d $TESTDIR/$name ]; then
+  if [ -d $TESTDIR/$name/build/with_fcm/arch_${archfile} ]; then
     if [ $onlyIfNeeded -eq 0 ]; then
-      echo "Directory already exists ($TESTDIR/$name), suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
+      echo "Directory already exists ($TESTDIR/$name/build/with_fcm/arch_${archfile}),"
+      echo "suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
       exit 5
     fi
   else
@@ -292,10 +293,13 @@ if [ $packcreation -eq 1 ]; then
 
     mkdir -p $TESTDIR/$name
     cd $TESTDIR/$name/
-    cp -r $PHYEXTOOLSDIR/../build . #We use the compilation system from the same commit as the current script
-
+    if [ ! -d build ]; then
+      cp -r $PHYEXTOOLSDIR/../build . #We use the compilation system from the same commit as the current script
+      rm -rf build/with_fcm/arch_*
+    else
+      echo "WARNING: the compilation system is already there, we use it but it could be outdated"
+    fi
     cd $TESTDIR/$name/build/with_fcm/
-    rm -rf arch_*
     ./make_fcm.sh -p $useexpand --commit $commit --arch $archfile 2>&1 | tee Output_compilation_step1
   fi
 fi
@@ -390,7 +394,7 @@ if [ $check -eq 1 ]; then
     if echo $allowedTests | grep -w $t > /dev/null; then
       #Run the reference if needed
       if [ $computeRefIfNeeded -eq 1 ]; then
-        $0 -p -c -r -t $t -a ${archfile} --onlyIfNeeded ${refByTest[$t]}
+        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded ${refByTest[$t]}
       fi
 
       #File comparison
