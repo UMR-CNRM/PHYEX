@@ -1,285 +1,341 @@
-program main_rain_ice_old
+PROGRAM MAIN_RAIN_ICE_OLD
 
-  use xrd_getoptions, only: initoptions, getoption
-  use getdata_rain_ice_old_mod, only: getdata_rain_ice_old
+USE XRD_GETOPTIONS,  ONLY: INITOPTIONS, GETOPTION, CHECKOPTIONS
+USE GETDATA_RAIN_ICE_OLD_MOD, ONLY: GETDATA_RAIN_ICE_OLD
 
-  use modi_rain_ice_old
+USE MODI_RAIN_ICE_OLD
+USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+USE MODD_PHYEX,      ONLY: PHYEX_t
+USE STACK_MOD
+USE OMP_LIB
+USE YOMHOOK, ONLY : LHOOK, DR_HOOK, JPHOOK
 
-  use yomhook, only: lhook, dr_hook, jphook
+use iso_fortran_env, only: output_unit
 
-  use modd_dimphyex, only: dimphyex_t
-  use modd_cst, only: cst
-  use modd_rain_ice_param_n, only: rain_ice_paramn
-  use modd_rain_ice_descr_n, only: rain_ice_descrn
-  use modd_param_ice_n,      only: param_icen
-  use modd_budget
+IMPLICIT NONE
 
-  use iso_fortran_env, only: output_unit
+INTEGER      :: KLEV
+INTEGER      :: KRR
 
-  implicit none
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PDZZ
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PRHODJ
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PRHODREF
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PEXNREF
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PPABSM
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PCIT, PCIT_OUT
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PCLDFR
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PTHT
+REAL, ALLOCATABLE, DIMENSION(:,:,:,:) :: PRT
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PTHS, PTHS_OUT
+REAL, ALLOCATABLE, DIMENSION(:,:,:,:) :: PRS, PRS_OUT
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PSIGS
+REAL, ALLOCATABLE, DIMENSION(:,:)     :: PSEA
+REAL, ALLOCATABLE, DIMENSION(:,:)     :: PTOWN
 
-  integer :: n_gp_blocks, &
-             n_proma, &
-             n_levels
+REAL, ALLOCATABLE, DIMENSION(:,:)     :: ZINPRC, ZINPRC_OUT
+REAL, ALLOCATABLE, DIMENSION(:,:)     :: PINPRR, PINPRR_OUT
+REAL, ALLOCATABLE, DIMENSION(:,:,:)   :: PEVAP, PEVAP_OUT
+REAL, ALLOCATABLE, DIMENSION(:,:)     :: PINPRS, PINPRS_OUT
+REAL, ALLOCATABLE, DIMENSION(:,:)     :: PINPRG, PINPRG_OUT
+REAL, ALLOCATABLE, DIMENSION(:,:,:,:) :: PFPR, PFPR_OUT
 
-  real, allocatable, dimension(:,:,:)   :: pdzz
-  real, allocatable, dimension(:,:,:)   :: prhodj
-  real, allocatable, dimension(:,:,:)   :: prhodref
-  real, allocatable, dimension(:,:,:)   :: pexnref
-  real, allocatable, dimension(:,:,:)   :: ppabsm
-  real, allocatable, dimension(:,:,:)   :: pcit, pcit_out
-  real, allocatable, dimension(:,:,:)   :: pcldfr
-  real, allocatable, dimension(:,:,:)   :: ptht
-  real, allocatable, dimension(:,:,:,:) :: prt
-  real, allocatable, dimension(:,:,:)   :: pths, pths_out
-  real, allocatable, dimension(:,:,:,:) :: prs, prs_out
-  real, allocatable, dimension(:,:,:)   :: psigs
-  real, allocatable, dimension(:,:)     :: psea
-  real, allocatable, dimension(:,:)     :: ptown
+REAL, ALLOCATABLE, DIMENSION(:,:)     :: PINPRH, PINPRH_OUT
 
-  real, allocatable, dimension(:,:)     :: zinprc, zinprc_out
-  real, allocatable, dimension(:,:)     :: pinprr, pinprr_out
-  real, allocatable, dimension(:,:,:)   :: pevap, pevap_out
-  real, allocatable, dimension(:,:)     :: pinprs, pinprs_out
-  real, allocatable, dimension(:,:)     :: pinprg, pinprg_out
-  real, allocatable, dimension(:,:,:,:) :: pfpr, pfpr_out
+!spp stuff
+REAL, ALLOCATABLE, dimension(:,:)   :: PICENU, PKGN_ACON, PKGN_SBGR
+!ocnd2 stuff
+REAL, ALLOCATABLE, DIMENSION(:,:,:) :: PICLDFR ! Ice cloud fraction
+REAL, ALLOCATABLE, DIMENSION(:,:,:) :: PIFR    ! Ratio cloud ice moist part to dry part
+REAL, ALLOCATABLE, DIMENSION(:,:,:) :: PSSIO   ! Super-saturation with respect to ice in the supersaturated fraction
+REAL, ALLOCATABLE, DIMENSION(:,:,:) :: PSSIU   ! Sub-saturation with respect to ice in the subsaturated fraction
 
-  real, allocatable, dimension(:,:)     :: pinprh, pinprh_out
+LOGICAL, ALLOCATABLE, DIMENSION(:,:,:) :: LLMICRO
 
-  !spp stuff
-  real, allocatable, dimension(:,:)   :: picenu, pkgn_acon, pkgn_sbgr
-  !ocnd2 stuff
-  real, allocatable, dimension(:,:,:) :: picldfr ! Ice cloud fraction
-  real, allocatable, dimension(:,:,:) :: pifr    ! Ratio cloud ice moist part to dry part
-  real, allocatable, dimension(:,:,:) :: pssio   ! Super-saturation with respect to ice in the supersaturated fraction
-  real, allocatable, dimension(:,:,:) :: pssiu   ! Sub-saturation with respect to ice in the subsaturated fraction
+INTEGER :: NPROMA, NGPBLKS, NFLEVG
+INTEGER :: IBL, JLON, JLEV
 
-  logical, allocatable, dimension(:,:,:) :: llmicro
+TYPE(DIMPHYEX_t)         :: D, D0
+TYPE(PHYEX_t)            :: PHYEX
+LOGICAL                  :: LLCHECK
+LOGICAL                  :: LLCHECKDIFF
+LOGICAL                  :: LLDIFF
+INTEGER                  :: IBLOCK1, IBLOCK2
+INTEGER                  :: ISTSZ, JBLK1, JBLK2
+INTEGER                  :: NTID, ITID
+INTEGER                  :: JRR
 
-  integer :: isize
+REAL, ALLOCATABLE :: PSTACK(:,:)
+TYPE (STACK) :: YLSTACK
 
-  type(dimphyex_t) :: D
+REAL(KIND=8) :: TS,TE
+REAL(KIND=8) :: TSC, TEC, TSD, TED, ZTC, ZTD 
+INTEGER(8) :: COUNTER, C_RATE
+REAL(8) :: TIME_START_REAL, TIME_END_REAL
+REAL(8) :: TIME_START_CPU, TIME_END_CPU
+INTEGER :: ITIME, NTIME
+INTEGER :: IRANK, ISIZE
+LOGICAL :: LLVERBOSE, LLSTAT, LLBIND
+REAL (KIND=JPHOOK) :: ZHOOK_HANDLE
 
-  integer(8) :: counter, c_rate
-  logical :: l_verbose, checkdiff
+INTEGER :: ISIZEMICRO
+INTEGER :: KKA
+INTEGER :: KKU
+INTEGER :: KKL
+INTEGER :: KSPLITR
+LOGICAL :: OSEDIC
+LOGICAL :: OCND2
+LOGICAL :: LKOGAN
+LOGICAL :: LMODICEDEP
+CHARACTER(LEN=4) :: C_SEDIM
+CHARACTER(LEN=4) :: CSUBG_AUCV_RC
+LOGICAL :: OWARM
+REAL    :: PTSTEP
 
-  integer :: kka
-  integer :: kku
-  integer :: kkl
-  integer :: krr
-  integer :: ksplitr
-
-  logical :: osedic
-  logical :: ocnd2
-  logical :: lkogan
-  logical :: lmodicedep
-  character(len=4) :: c_sedim
-  character(len=4) :: c_micro
-  character(len=4) :: csubg_aucv_rc
-  logical :: owarm
-  TYPE(TBUDGETDATA), DIMENSION(NBUDGET_RH) :: YLBUDGET
-
-  real    :: ptstep
-
-  integer :: i, j, jrr
-
-  real(kind=jphook) :: zhook_handle
-
-  real(8) :: time_start_real, time_end_real
-  real(8) :: time_start_cpu, time_end_cpu
-
-  interface
-
-    subroutine init_rain_ice_old(kulout)
-
-      implicit none
-
-      integer, intent (in)            :: kulout
-
-    end subroutine init_rain_ice_old
-
-    subroutine init_gmicro(D, krr, n_gp_blocks, odmicro, prt, pssio, ocnd2, prht)
-
-      use modd_dimphyex, only: dimphyex_t
-      use modd_rain_ice_descr_n, only: xrtmin
-      use modd_rain_ice_param_n, only: xfrmin
-
-      implicit none
-
-      type(dimphyex_t) :: D
-
-      integer, intent(in) :: krr, n_gp_blocks
-      logical, dimension(D%nit, D%nkt, n_gp_blocks), intent(inout) :: odmicro
-
-      real, dimension(D%nit, D%nkt, krr, n_gp_blocks), intent(in) :: prt
-      real, dimension(D%nit, D%nkt, n_gp_blocks), intent(in) :: pssio
-      real, dimension(D%nit, D%nkt, n_gp_blocks), optional, intent(in) :: prht
-
-      logical, intent(in) :: ocnd2
-
-    end subroutine init_gmicro
-
-    subroutine print_diff_1(array, ref)
-
-      implicit none
-
-      real, intent(in), dimension(:) :: array
-      real, intent(in), dimension(:) :: ref
-
-    end subroutine print_diff_1
-
-    subroutine print_diff_2(array, ref)
-
-      implicit none
-
-      real, intent(in), dimension(:,:) :: array
-      real, intent(in), dimension(:,:) :: ref
-
-    end subroutine print_diff_2
-
-  end interface
+  integer :: j
 
 
-  n_gp_blocks = 150
-  n_proma = 32
-  n_levels = 90
-  krr = 6
-  l_verbose = .false.
-  checkdiff = .false.
 
-  owarm = .true.
-
-  kka = 1
-  kku = n_levels
-  kkl = -1
-  ksplitr = 2
-
-  c_sedim = 'STAT'
-  csubg_aucv_rc = 'PDF'
-
-DO JRR=1, NBUDGET_RH
-  YLBUDGET(JRR)%NBUDGET=JRR
-ENDDO
-
-  ptstep = 25.0000000000000
-
-  call initoptions()
-
-  call getoption ("--blocks", n_gp_blocks)
-  call getoption ("--nproma", n_proma)
-  call getoption ("--nflevg", n_levels)
-  call getoption ("--verbose", l_verbose)
-
-  write(output_unit, *) 'n_gp_blocks: ', n_gp_blocks
-  write(output_unit, *) 'n_proma:     ', n_proma
-  write(output_unit, *) 'n_levels:    ', n_levels
-  write(output_unit, *) 'total:       ', n_levels*n_proma*n_gp_blocks
-
-  call getdata_rain_ice_old(n_proma, n_gp_blocks, n_levels, krr, &
-                            osedic, ocnd2, lkogan, lmodicedep, owarm, &
-                            kka, kku, kkl, ksplitr, &
-                            ptstep, c_sedim, csubg_aucv_rc, &
-                            pdzz, prhodj, prhodref, &
-                            pexnref, ppabsm, &
-                            pcit, pcit_out, &
-                            pcldfr, &
-                            picldfr, pssio, pssiu, pifr,  &
-                            ptht, prt, pths, pths_out, &
-                            prs, prs_out, &
-                            psigs, psea, ptown,     &
-                            zinprc, zinprc_out, &
-                            pinprr, pinprr_out, &
-                            pevap, pevap_out,        &
-                            pinprs, pinprs_out, &
-                            pinprg, pinprg_out,      &
-                            pinprh, pinprh_out,      &
-                            picenu, pkgn_acon, pkgn_sbgr, &
-                            pfpr, pfpr_out, llmicro, l_verbose)
 
   
-  write(output_unit, *) 'osedic:        ', osedic
-  write(output_unit, *) 'ocnd2:         ', ocnd2
-  write(output_unit, *) 'lkogan:        ', lkogan
-  write(output_unit, *) 'lmodicedep:    ', lmodicedep
-  write(output_unit, *) 'owarm:         ', owarm
-  write(output_unit, *) 'kka:           ', kka
-  write(output_unit, *) 'kku:           ', kku
-  write(output_unit, *) 'kkl:           ', kkl
-  write(output_unit, *) 'ksplitr:       ', ksplitr
-  write(output_unit, *) 'ptstep:        ', ptstep
-  write(output_unit, *) 'c_sedim:       ', c_sedim
-  write(output_unit, *) 'csubg_aucv_rc: ', csubg_aucv_rc
+  
+  
 
-  D%nit  = n_proma
-  D%nib  = 1
-  D%nie  = n_proma
-  D%njt  = 1
-  D%njb  = 1
-  D%nje  = 1
-  D%nijt = D%nit * D%njt
-  D%nijb = 1
-  D%nije = n_proma
-  D%nkl  = -1
-  D%nkt  = n_levels
-  D%nka  = n_levels
-  D%nku  = 1
-  D%nkb  = n_levels
-  D%nke  = 1
-  D%nktb = 1
-  D%nkte = n_levels
 
-  call init_rain_ice_old(20)
 
-  call init_gmicro(D, krr, n_gp_blocks, llmicro, prt, pssio, ocnd2)
 
-  call cpu_time(time_start_cpu)
-  call system_clock(count=counter, count_rate=c_rate)
-  time_start_real = real(counter,8)/c_rate
 
-  if(lhook) call dr_hook ('MAIN',0,zhook_handle)
+CALL INITOPTIONS()
+NGPBLKS = 150
+CALL GETOPTION ("--blocks", NGPBLKS)
+NPROMA = 32
+CALL GETOPTION ("--nproma", NPROMA)
+NFLEVG = 90
+CALL GETOPTION ("--nflevg", NFLEVG)
+CALL GETOPTION ("--check",  LLCHECK)
+CALL GETOPTION ("--checkdiff",  LLCHECKDIFF)
+IBLOCK1 = 1
+CALL GETOPTION ("--check-block-1", IBLOCK1)
+IBLOCK2 = NGPBLKS
+CALL GETOPTION ("--check-block-2", IBLOCK2)
+CALL GETOPTION ("--stat", LLSTAT)
+NTIME = 1
+CALL GETOPTION ("--times", NTIME)
+LLVERBOSE = .FALSE.
+CALL GETOPTION ("--verbose", LLVERBOSE)
+CALL GETOPTION ("--bind", LLBIND)
+CALL CHECKOPTIONS ()
 
-  do i = 1, n_gp_blocks
+LLDIFF = .FALSE.
 
-    isize = count(llmicro(:,:,i))
+IRANK = 0
+ISIZE = 1
+IF (LLBIND) THEN
+  CALL LINUX_BIND      (IRANK, ISIZE)
+  CALL LINUX_BIND_DUMP (IRANK, ISIZE)
+ENDIF
 
-    if (isize .gt. 0) then
+WRITE(OUTPUT_UNIT, *) 'n_gp_blocks: ', NGPBLKS
+WRITE(OUTPUT_UNIT, *) 'n_proma:     ', NPROMA
+WRITE(OUTPUT_UNIT, *) 'n_levels:    ', NFLEVG
+WRITE(OUTPUT_UNIT, *) 'total:       ', NFLEVG*NPROMA*NGPBLKS
 
-      call rain_ice_old(D=D, cst=cst, parami=param_icen,                                   &
-                        icep=rain_ice_paramn, iced=rain_ice_descrn, buconf=tbuconf,        &
-                        osedic=osedic, ocnd2=ocnd2,                                        &
-                        lkogan=lkogan, lmodicedep=lmodicedep,                              &
-                        hsedim=c_sedim, hsubg_aucv_rc=csubg_aucv_rc, owarm=owarm,          &
-                        kka=kka, kku=kku, kkl=kkl,                                         &
-                        ksplitr=ksplitr, ptstep=2*ptstep, krr=krr,                         &
-                        ksize=isize, gmicro=llmicro(:,:,i),                                &
-                        pdzz=pdzz(:,:,i), prhodj=prhodj(:,:,i), prhodref=prhodref(:,:,i),  &
-                        pexnref=pexnref(:,:,i), ppabst=ppabsm(:,:,i),                      &
-                        pcit=pcit(:,:,i), pcldfr=pcldfr(:,:,i),                            &
-                        picldfr=picldfr(:,:,i), pssio=pssio(:,:,i), pssiu=pssiu(:,:,i),    &
-                        pifr=pifr(:,:,i),                                                  &
-                        ptht=ptht(:,:,i),                                                  &
-                        prvt=prt(:,:,1,i), prct=prt(:,:,2,i), prrt=prt(:,:,3,i),           &
-                        prit=prt(:,:,4,i), prst=prt(:,:,5,i), prgt=prt(:,:,6,i),           &
-                        pths=pths(:,:,i),                                                  &
-                        prvs=prs(:,:,1,i), prcs=prs(:,:,2,i), prrs=prs(:,:,3,i),           &
-                        pris=prs(:,:,4,i), prss=prs(:,:,5,i), prgs=prs(:,:,6,i),           &
-                        pinprc=zinprc(:,i), pinprr=pinprr(:,i), pevap3d=pevap(:,:,i),      &
-                        pinprs=pinprs(:,i), pinprg=pinprg(:,i), psigs=psigs(:,:,i),        &
-                        psea=psea(:,i), ptown=ptown(:,i),                                  &
-                        TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET),                        &
-                        picenu=picenu(:,i),                                                &
-                        pkgn_acon=pkgn_acon(:,i), pkgn_sbgr=pkgn_sbgr(:,i),                &
-                        pfpr=pfpr(:,:,:,i))
+CALL GETDATA_RAIN_ICE_OLD(NPROMA, NGPBLKS, NFLEVG, KRR, &
+                          OSEDIC, OCND2, LKOGAN, LMODICEDEP, OWARM, &
+                          KKA, KKU, KKL, KSPLITR, &
+                          PTSTEP, C_SEDIM, CSUBG_AUCV_RC, &
+                          PDZZ, PRHODJ, PRHODREF, &
+                          PEXNREF, PPABSM, &
+                          PCIT, PCIT_OUT, &
+                          PCLDFR, &
+                          PICLDFR, PSSIO, PSSIU, PIFR,  &
+                          PTHT, PRT, PTHS, PTHS_OUT, &
+                          PRS, PRS_OUT, &
+                          PSIGS, PSEA, PTOWN,     &
+                          ZINPRC, ZINPRC_OUT, &
+                          PINPRR, PINPRR_OUT, &
+                          PEVAP, PEVAP_OUT,        &
+                          PINPRS, PINPRS_OUT, &
+                          PINPRG, PINPRG_OUT,      &
+                          PINPRH, PINPRH_OUT,      &
+                          PICENU, PKGN_ACON, PKGN_SBGR, &
+                          PFPR, PFPR_OUT, LLMICRO, LLVERBOSE)
+KLEV = SIZE (PRS, 2)
 
-    endif
+IF (LLVERBOSE) PRINT *, " KLEV = ", KLEV, " KRR = ", KRR
+  
+WRITE(OUTPUT_UNIT, *) 'osedic:        ', OSEDIC
+WRITE(OUTPUT_UNIT, *) 'ocnd2:         ', OCND2
+WRITE(OUTPUT_UNIT, *) 'lkogan:        ', LKOGAN
+WRITE(OUTPUT_UNIT, *) 'lmodicedep:    ', LMODICEDEP
+WRITE(OUTPUT_UNIT, *) 'owarm:         ', OWARM
+WRITE(OUTPUT_UNIT, *) 'kka:           ', KKA
+WRITE(OUTPUT_UNIT, *) 'kku:           ', KKU
+WRITE(OUTPUT_UNIT, *) 'kkl:           ', KKL
+WRITE(OUTPUT_UNIT, *) 'ksplitr:       ', KSPLITR
+WRITE(OUTPUT_UNIT, *) 'ptstep:        ', PTSTEP
+WRITE(OUTPUT_UNIT, *) 'c_sedim:       ', C_SEDIM
+WRITE(OUTPUT_UNIT, *) 'csubg_aucv_rc: ', CSUBG_AUCV_RC
 
-  enddo
+!PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
 
-  if(lhook) call dr_hook ('MAIN',1,zhook_handle)
+CALL INIT_PHYEX(KRR, PHYEX, OWARM, OSEDIC, OCND2, C_SEDIM, CSUBG_AUCV_RC, PTSTEP)
 
-  call cpu_time(time_end_cpu)
-  call system_clock(count=counter, count_rate=c_rate)
-  time_end_real = real(counter,8)/c_rate
+D0%NIT  = NPROMA
+D0%NIB  = 1
+D0%NIE  = NPROMA
+D0%NJT  = 1
+D0%NJB  = 1
+D0%NJE  = 1
+D0%NIJT = D0%NIT * D0%NJT
+D0%NIJB = 1
+D0%NIJE = NPROMA
+D0%NKL  = KKL
+D0%NKT  = KLEV
+D0%NKA  = KLEV
+D0%NKU  = 1
+D0%NKB  = KLEV 
+D0%NKE  = 1
+D0%NKTB = 1
+D0%NKTE = KLEV
+
+ISTSZ = NPROMA * 20 * KLEV
+ALLOCATE (PSTACK (ISTSZ, NGPBLKS))
+
+TS = OMP_GET_WTIME ()
+
+ZTD = 0.
+ZTC = 0.
+
+CALL INIT_GMICRO(D0, KRR, NGPBLKS, LLMICRO, PRT, PSSIO, OCND2)
+
+IF (LHOOK) CALL DR_HOOK ('MAIN',0,ZHOOK_HANDLE)
+
+CALL CPU_TIME(TIME_START_CPU)
+CALL SYSTEM_CLOCK(COUNT=COUNTER, COUNT_RATE=C_RATE)
+TIME_START_REAL = REAL(COUNTER,8)/C_RATE
+
+DO ITIME = 1, NTIME
+
+  TSD = OMP_GET_WTIME ()
+
+!openacc directives
+
+  TSC = OMP_GET_WTIME ()
+
+#ifdef USE_OPENMP
+!$OMP PARALLEL PRIVATE (D, ITID, JBLK1, JBLK2, ISIZE, ISIZEMICRO)
+#endif
+
+#ifdef _OPENACC
+JBLK1 = 1 
+JBLK2 = NGPBLKS
+#endif
+
+#ifdef USE_OPENMP
+NTID = OMP_GET_MAX_THREADS ()
+ITID = OMP_GET_THREAD_NUM ()
+JBLK1 = 1 +  (NGPBLKS * (ITID+0)) / NTID
+JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
+
+
+!PRINT *, ITID, JBLK1, JBLK2
+
+#endif
+
+!$acc parallel loop gang vector private (YLSTACK, IBL, JLON, D, ISIZEMICRO) collapse (2)
+
+  DO IBL = JBLK1, JBLK2
+
+
+#ifdef _OPENACC
+  DO JLON = 1, NPROMA
+    D = D0
+    D%NIB = JLON
+    D%NIE = JLON
+    D%NIJB = JLON
+    D%NIJE = JLON
+#endif
+
+#ifdef USE_OPENMP
+    D = D0
+#endif
+
+#ifdef USE_STACK
+    YLSTACK%L = LOC (PSTACK (1, IBL))
+    YLSTACK%U = YLSTACK%L + ISTSZ * KIND (PSTACK)
+#else
+    YLSTACK%L = 0
+    YLSTACK%U = 0
+#endif
+
+    ISIZEMICRO = COUNT(LLMICRO(:,:,IBL))
+
+    IF (ISIZEMICRO .GT. 0) THEN
+      CALL RAIN_ICE_OLD(D=D, CST=PHYEX%CST, PARAMI=PHYEX%PARAM_ICEN,                                   &
+                        ICEP=PHYEX%RAIN_ICE_PARAMN, ICED=PHYEX%RAIN_ICE_DESCRN, BUCONF=PHYEX%MISC%TBUCONF,        &
+                        OSEDIC=OSEDIC, OCND2=OCND2,                                        &
+                        LKOGAN=LKOGAN, LMODICEDEP=LMODICEDEP,                              &
+                        HSEDIM=C_SEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC, OWARM=OWARM,          &
+                        KKA=KKA, KKU=KKU, KKL=KKL,                                         &
+                        KSPLITR=KSPLITR, PTSTEP=2*PTSTEP, KRR=KRR,                         &
+                        KSIZE=ISIZEMICRO, GMICRO=LLMICRO(:,:,IBL),                                &
+                        PDZZ=PDZZ(:,:,IBL), PRHODJ=PRHODJ(:,:,IBL), PRHODREF=PRHODREF(:,:,IBL),  &
+                        PEXNREF=PEXNREF(:,:,IBL), PPABST=PPABSM(:,:,IBL),                      &
+                        PCIT=PCIT(:,:,IBL), PCLDFR=PCLDFR(:,:,IBL),                            &
+                        PICLDFR=PICLDFR(:,:,IBL), PSSIO=PSSIO(:,:,IBL), PSSIU=PSSIU(:,:,IBL),    &
+                        PIFR=PIFR(:,:,IBL),                                                  &
+                        PTHT=PTHT(:,:,IBL),                                                  &
+                        PRVT=PRT(:,:,1,IBL), PRCT=PRT(:,:,2,IBL), PRRT=PRT(:,:,3,IBL),           &
+                        PRIT=PRT(:,:,4,IBL), PRST=PRT(:,:,5,IBL), PRGT=PRT(:,:,6,IBL),           &
+                        PTHS=PTHS(:,:,IBL),                                                  &
+                        PRVS=PRS(:,:,1,IBL), PRCS=PRS(:,:,2,IBL), PRRS=PRS(:,:,3,IBL),           &
+                        PRIS=PRS(:,:,4,IBL), PRSS=PRS(:,:,5,IBL), PRGS=PRS(:,:,6,IBL),           &
+                        PINPRC=ZINPRC(:,IBL), PINPRR=PINPRR(:,IBL), PEVAP3D=PEVAP(:,:,IBL),      &
+                        PINPRS=PINPRS(:,IBL), PINPRG=PINPRG(:,IBL), PSIGS=PSIGS(:,:,IBL),        &
+                        PSEA=PSEA(:,IBL), PTOWN=PTOWN(:,IBL),                                  &
+                        TBUDGETS=PHYEX%MISC%YLBUDGET, KBUDGETS=PHYEX%MISC%NBUDGET,                        &
+                        PICENU=PICENU(:,IBL),                                                &
+                        PKGN_ACON=PKGN_ACON(:,IBL), PKGN_SBGR=PKGN_SBGR(:,IBL),                &
+                        PFPR=PFPR(:,:,:,IBL))
+    ENDIF
+
+#ifdef _OPENACC
+    ENDDO
+#endif
+
+  ENDDO
+
+#ifdef USE_OPENMP
+!$OMP END PARALLEL
+#endif
+
+!$acc end parallel loop
+
+  TEC = OMP_GET_WTIME ()
+
+!$acc end data
+
+  TED = OMP_GET_WTIME ()
+
+  ZTC = ZTC + (TEC - TSC)
+  ZTD = ZTD + (TED - TSD)
+
+ENDDO
+
+IF (LHOOK) CALL DR_HOOK ('MAIN',1,ZHOOK_HANDLE)
+
+TE = OMP_GET_WTIME()
+
+!WRITE (*,'(A,F8.2,A)') 'elapsed time : ',TE-TS,' s'
+!WRITE (*,'(A,F8.4,A)') '          i.e. ',1000.*(TE-TS)/(NPROMA*NGPBLKS)/NTIME,' ms/gp'
+!
+!PRINT *, " ZTD = ", ZTD, ZTD / REAL (NPROMA*NGPBLKS*NTIME)
+!PRINT *, " ZTC = ", ZTC, ZTC / REAL (NPROMA*NGPBLKS*NTIME)
+
+
+  CALL CPU_TIME(TIME_END_CPU)
+  CALL SYSTEM_CLOCK(COUNT=COUNTER, COUNT_RATE=C_RATE)
+  TIME_END_REAL = REAL(COUNTER,8)/C_RATE
 
   write(output_unit, *)
 
@@ -359,149 +415,163 @@ ENDDO
   call print_diff_2(pfpr(:,:,6,1), pfpr_out(:,:,6,1))
   write(output_unit, *)
 
-end program
+STOP
 
-subroutine init_rain_ice_old(kulout)
+CONTAINS
 
-  use modd_param_ice_n,      only: param_ice_goto_model
-  use modd_rain_ice_param_n, only: rain_ice_param_goto_model
-  use modd_rain_ice_descr_n, only: rain_ice_descr_goto_model
-  use modd_cloudpar_n,       only: cloudpar_goto_model
-  use modd_param_ice_n
+SUBROUTINE INIT_PHYEX(KRR, PHYEX, LDWARM, LDSEDIC, LDCND2, C_SEDIM, CSUBG_AUCV_RC, PTSTEP)
 
-  use mode_ini_rain_ice
+USE MODD_BUDGET, ONLY: TBUCONF_ASSOCIATE, NBUDGET_RH, TBUCONF, LBU_ENABLE, LBUDGET_U, LBUDGET_V, LBUDGET_W, LBUDGET_TH, &
+                       LBUDGET_TKE, LBUDGET_RV, LBUDGET_RC, LBUDGET_RR, LBUDGET_RI, LBUDGET_RS, LBUDGET_RG, LBUDGET_RH, LBUDGET_SV
+USE MODD_PHYEX, ONLY: PHYEX_t
+USE MODI_INI_PHYEX, ONLY: INI_PHYEX
 
-  use mode_ini_cst
-  use mode_ini_tiwmx
-  use modd_budget
-  use modd_les, only: tles
+IMPLICIT NONE
 
-  use iso_fortran_env, only: output_unit
+! -----------------------------------------------------------------------
+!     DUMMY VARIABLES
+INTEGER,          INTENT(IN)  :: KRR
+TYPE(PHYEX_t),    INTENT(OUT) :: PHYEX
+LOGICAL,          INTENT(IN)  :: LDWARM
+LOGICAL,          INTENT(IN)  :: LDSEDIC
+LOGICAL,          INTENT(IN)  :: LDCND2
+CHARACTER(LEN=4), INTENT(IN)  :: C_SEDIM
+CHARACTER(LEN=4), INTENT(IN)  :: CSUBG_AUCV_RC
+REAL,             INTENT(IN)  :: PTSTEP
 
-  implicit none
+!-----------------------------------------------------------------------
+!    LOCAL VARIABLES
+INTEGER :: IULOUT, JRR
+REAL :: ZDZMIN
+CHARACTER(LEN=6) :: CPROGRAM
+CHARACTER(LEN=4) :: CMICRO, CSCONV, CTURB
+! -----------------------------------------------------------------------
 
-  integer, intent (in) :: kulout
+IULOUT=20
+CPROGRAM='AROME'
+ZDZMIN=20.
+CMICRO='ICE3'
+CSCONV='NONE'
+CTURB='TKEL'
 
-  character(len=4) :: c_micro
-  integer :: isplitr
+!Default values
+CALL INI_PHYEX(CPROGRAM, 0, .TRUE., IULOUT, 0, 1, &
+              &PTSTEP, ZDZMIN, &
+              &CMICRO, CSCONV, CTURB, &
+              &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0, LDINIT=.FALSE., &
+              &PHYEX_OUT=PHYEX)
 
-  call ini_cst
+!Control parameters
+PHYEX%MISC%PTSTEP       = 2*PTSTEP
+PHYEX%MISC%KRR          = KRR
 
-  call ini_tiwmx
+!Emulate the namelist reading
+!PHYEX%PARAM_ICEN%LCRIAUTI=.TRUE.
+!PHYEX%PARAM_ICEN%XCRIAUTI_NAM=0.2E-3
+!PHYEX%PARAM_ICEN%XT0CRIAUTI_NAM=-5.
+!PHYEX%PARAM_ICEN%XCRIAUTC_NAM=0.1E-2
+PHYEX%PARAM_ICEN%LOCND2=LDCND2
+PHYEX%PARAM_ICEN%CSEDIM=C_SEDIM
+PHYEX%PARAM_ICEN%LWARM=LDWARM
+PHYEX%PARAM_ICEN%LSEDIC=LDSEDIC
+!PHYEX%PARAM_ICEN%CSNOWRIMING='M90 '
+!PHYEX%PARAM_ICEN%XFRACM90=0.1 ! Fraction used for the Murakami 1990 formulation
+!PHYEX%PARAM_ICEN%LCONVHG=.TRUE. ! TRUE to allow the conversion from hail to graupel
+!PHYEX%PARAM_ICEN%LCRFLIMIT=.TRUE. !True to limit rain contact freezing to possible heat exchange
+!PHYEX%PARAM_ICEN%LFEEDBACKT=.TRUE. ! When .TRUE. feed back on temperature is taken into account
+!PHYEX%PARAM_ICEN%LEVLIMIT=.TRUE.   ! When .TRUE. water vapour pressure is limited by saturation
+!PHYEX%PARAM_ICEN%LNULLWETG=.TRUE.  ! When .TRUE. graupel wet growth is activated with null rate (to allow water shedding)
+!PHYEX%PARAM_ICEN%LWETGPOST=.TRUE.  ! When .TRUE. graupel wet growth is activated with positive temperature (to allow water shedding)
+!PHYEX%PARAM_ICEN%LNULLWETH=.TRUE.  ! Same as LNULLWETG but for hail
+!PHYEX%PARAM_ICEN%LWETHPOST=.TRUE.  ! Same as LWETGPOST but for hail
+!PHYEX%PARAM_ICEN%LSEDIM_AFTER=.FALSE. ! Sedimentation done after microphysics
+!PHYEX%PARAM_ICEN%XSPLIT_MAXCFL=0.8
+!PHYEX%PARAM_ICEN%LDEPOSC=.FALSE.  ! water deposition on vegetation
+!PHYEX%PARAM_ICEN%XVDEPOSC=0.02    ! deposition speed (2 cm.s-1)
+!PHYEX%PARAM_ICEN%CSUBG_RC_RR_ACCR='NONE'
+!PHYEX%PARAM_ICEN%CSUBG_RR_EVAP='NONE'
+!PHYEX%PARAM_ICEN%CSUBG_PR_PDF='SIGM'
+PHYEX%PARAM_ICEN%CSUBG_AUCV_RC=CSUBG_AUCV_RC
 
-  call cloudpar_goto_model(1, 1)
-  call param_ice_goto_model(1, 1)
-  call rain_ice_descr_goto_model(1, 1)
-  call rain_ice_param_goto_model(1, 1)
+!Param initialisation
+CALL INI_PHYEX(CPROGRAM, 0, .TRUE., IULOUT, 0, 1, &
+              &PTSTEP, ZDZMIN, &
+              &CMICRO, CSCONV, CTURB, &
+              &LDDEFAULTVAL=.FALSE., LDREADNAM=.FALSE., LDCHECK=.TRUE., KPRINT=2, LDINIT=.TRUE., &
+              &PHYEX_IN=PHYEX, PHYEX_OUT=PHYEX)
 
-  call param_icen_init('AROME ', 0, .false., kulout, &                                                                 
-                      &.true., .false., .false., 0)
+!Budgets
+CALL TBUCONF_ASSOCIATE
+PHYEX%MISC%NBUDGET=NBUDGET_RH
+DO JRR=1, PHYEX%MISC%NBUDGET
+  PHYEX%MISC%YLBUDGET(JRR)%NBUDGET=JRR
+ENDDO
+LBU_ENABLE=.FALSE.                                                                                                       
+LBUDGET_U=.FALSE.
+LBUDGET_V=.FALSE.
+LBUDGET_W=.FALSE.
+LBUDGET_TH=.FALSE.
+LBUDGET_TKE=.FALSE.
+LBUDGET_RV=.FALSE.
+LBUDGET_RC=.FALSE.
+LBUDGET_RR=.FALSE.
+LBUDGET_RI=.FALSE.
+LBUDGET_RS=.FALSE.
+LBUDGET_RG=.FALSE.
+LBUDGET_RH=.FALSE.
+LBUDGET_SV=.FALSE.
+PHYEX%MISC%TBUCONF=TBUCONF
 
-  call tbuconf_associate
+END SUBROUTINE INIT_PHYEX
 
-  lbu_enable=.false.
-  lbudget_u=.false.
-  lbudget_v=.false.
-  lbudget_w=.false.
-  lbudget_th=.false.
-  lbudget_tke=.false.
-  lbudget_rv=.false.
-  lbudget_rc=.false.
-  lbudget_rr=.false.
-  lbudget_ri=.false.
-  lbudget_rs=.false.
-  lbudget_rg=.false.
-  lbudget_rh=.false.
-  lbudget_sv=.false.
-  tles%lles_call = .false.
+SUBROUTINE INIT_GMICRO(D, KRR, NGPBLKS, ODMICRO, PRT, PSSIO, OCND2)
 
-  ! 1. set implicit default values for modd_param_ice
-  cpristine_ice = 'PLAT'
-  csubg_rc_rr_accr = 'NONE'
-  csubg_rr_evap = 'NONE'
-  csubg_pr_pdf = 'SIGM'
-  c_micro = 'ICE3'
+  USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
+  USE MODD_RAIN_ICE_DESCR_N, ONLY: XRTMIN
+  USE MODD_RAIN_ICE_PARAM_N, ONLY: XFRMIN
+  USE ISO_FORTRAN_ENV, ONLY: OUTPUT_UNIT
 
-  ! 2. set implicit default values for modd_rain_ice_descr and modd_rain_ice_param
+  IMPLICIT NONE
 
-  call ini_rain_ice(kulout, 50., 20., isplitr, c_micro)
+  TYPE(DIMPHYEX_T) :: D
 
-end subroutine init_rain_ice_old
+  INTEGER, INTENT(IN) :: KRR, NGPBLKS
+  LOGICAL, DIMENSION(D%NIT, D%NKT, NGPBLKS), INTENT(INOUT) :: ODMICRO
 
+  REAL, DIMENSION(D%NIT, D%NKT, KRR, NGPBLKS), INTENT(IN) :: PRT
+  REAL, DIMENSION(D%NIT, D%NKT, NGPBLKS), INTENT(IN) :: PSSIO
 
-subroutine init_gmicro(D, krr, n_gp_blocks, odmicro, prt, pssio, ocnd2, prht)
+  LOGICAL, INTENT(IN) :: OCND2
 
-  use modd_dimphyex, only: dimphyex_t
-  use modd_rain_ice_descr_n, only: xrtmin
-  use modd_rain_ice_param_n, only: xfrmin
-  use iso_fortran_env, only: output_unit
+  INTEGER :: I, K, IKRR, IBLOCK
+  REAL    :: ZTHR
 
-  implicit none
+  DO IBLOCK = 1, NGPBLKS
 
-  type(dimphyex_t) :: D
+    IF (OCND2) THEN
+      DO K = 1, D%NKT
+        DO I = 1, D%NIT
+          ODMICRO(I, K, IBLOCK) = ODMICRO(I, K, IBLOCK) .OR. PSSIO(I, K, IBLOCK) > XFRMIN(12)
+        ENDDO
+      ENDDO
+    ENDIF
 
-  integer, intent(in) :: krr, n_gp_blocks
-  logical, dimension(D%nit, D%nkt, n_gp_blocks), intent(inout) :: odmicro
+    DO IKRR = 2, KRR
+      IF (OCND2) THEN
+        ZTHR = XFRMIN(13)
+      ELSE
+        ZTHR = XRTMIN(IKRR)
+      ENDIF
+      DO K = 1, D%NKT
+        DO I = 1, D%NIT
+          ODMICRO(I, K, IBLOCK) = ODMICRO(I, K, IBLOCK) .OR. PRT(I, K, IKRR, IBLOCK) > XFRMIN(13)
+        ENDDO
+      ENDDO
+    ENDDO
 
-  real, dimension(D%nit, D%nkt, krr, n_gp_blocks), intent(in) :: prt
-  real, dimension(D%nit, D%nkt, n_gp_blocks), intent(in) :: pssio
-  real, dimension(D%nit, D%nkt, n_gp_blocks), optional, intent(in) :: prht
+  ENDDO
 
-  logical, intent(in) :: ocnd2
-
-  integer :: i, k, ikrr, iblock
-
-  if (ocnd2) then
-
-    do iblock = 1, n_gp_blocks
-
-      do k = 1, D%nkt
-        do i = 1, D%nit
-          odmicro(i, k, iblock) = odmicro(i, k, iblock) .or. pssio(i, k, iblock) > xfrmin(12)
-        enddo
-      enddo
-
-      do ikrr = 2, 6
-        do k = 1, D%nkt
-          do i = 1, D%nit
-            odmicro(i, k, iblock) = odmicro(i, k, iblock) .or. prt(i, k, ikrr, iblock) > xfrmin(13)
-          enddo
-        enddo
-      enddo
-
-      if (krr == 7) then
-        do k = 1, D%nkt
-          do i = 1, D%nit
-            odmicro(i, k, iblock) = odmicro(i, k, iblock) .or. prht(i, k, iblock) > xfrmin(13)
-          enddo
-        enddo
-      endif
-
-    enddo
-
-  else
-
-    do iblock = 1, n_gp_blocks
-      do ikrr = 2, 6
-        do k = 1, D%nkt
-          do i = 1, D%nit
-            odmicro(i, k, iblock) = odmicro(i, k, iblock) .or. prt(i, k, ikrr, iblock) > xrtmin(ikrr)
-          enddo
-        enddo
-      enddo
-    enddo
-
-    if (krr == 7) then
-      do k = 1, D%nkt
-        do i = 1, D%nit
-          odmicro(i, k, iblock) = odmicro(i, k, iblock) .or. prht(i, k, iblock) > xrtmin(7)
-        enddo
-      enddo
-    endif
-
-  endif
-
-end subroutine init_gmicro
+END SUBROUTINE INIT_GMICRO
 
 
 subroutine print_diff_1(array, ref)
@@ -559,4 +629,5 @@ subroutine print_diff_2(array, ref)
 
 end subroutine print_diff_2
 
+END PROGRAM
 
