@@ -371,7 +371,9 @@ def comp_binary(f1, f2, offset):
 def comp_ncdump(f1, f2, nbytes):
     ncdumps = [subprocess.run(['ncdump', f], capture_output=True, encoding='UTF8').stdout[:int(nbytes)]
                for f in (f1, f2)]
-    print(''.join(difflib.unified_diff(*[ncdumps[i].splitlines(keepends=True) for i in (0, 1)])))
+    diff = ''.join(difflib.unified_diff(*[ncdumps[i].splitlines(keepends=True) for i in (0, 1)]))
+    if diff != '':
+        print(diff)
     return 0 if ncdumps[0] == ncdumps[1] else 1
 
 def comp_testprogs(f1, f2):

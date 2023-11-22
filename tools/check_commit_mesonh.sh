@@ -400,7 +400,7 @@ if [ $run -ge 1 ]; then
             newcase1=$(echo $newt | cut -d / -f 1)
             newcase2=$(echo $newt | cut -d / -f 2)
             if [ $case1 == $newcase1 ]; then
-              [ -d $casedir/$newcase2 ] rm -rf $casedir/$newcase2
+              [ -d $casedir/$newcase2 ] && rm -rf $casedir/$newcase2
             fi
           done
         fi
