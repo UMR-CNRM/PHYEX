@@ -64,6 +64,20 @@ else
 fi
 defaultRef=ref
 
+#Options to have longer simulations, tag is used to build the directory name of the result
+declare -A conf_extra_tag
+declare -A conf_extra_opts
+i=-1
+i=$((i+1)); conf_extra_tag[$i]=""
+            conf_extra_opts[$i]=""
+i=$((i+1)); conf_extra_tag[$i]="_Z120_NPRO32_BLK1024"
+            conf_extra_opts[$i]="--nflevg 120 --nproma 32 --blocks 1024"
+i=$((i+1)); conf_extra_tag[$i]="_Z120_NPRO32_BLK256_TIMES4"
+            conf_extra_opts[$i]="--nflevg 120 --nproma 32 --blocks 256 --times 4"
+i=$((i+1)); conf_extra_tag[$i]="_Z120_NPRO32_BLK64_TIMES16"
+            conf_extra_opts[$i]="--nflevg 120 --nproma 32 --blocks 64 --times 16"
+
+
 ################################
 #### COMMAND LINE ARGUMENTS ####
 ################################
@@ -93,6 +107,11 @@ function usage {
   echo "--no-perf       deactivate DR_HOOK"
   echo "-a arch ARCH    architecture name to use to build and run the commit (=$defaultarchfile)"
   echo "-A arch ARCH    architecture name to use for the reference simulation (=$defaultarchfile)"
+  echo "-e EXTRAPOLATION"
+  echo "                extrapolate data. EXTRAPOLATION corresponds to a configuration:"
+  for i in $(seq 1 $((${#conf_extra_tag[@]}-1))); do
+    echo "                  - '$i': ${conf_extra_opts[$i]} (${conf_extra_tag[$i]})"
+  done
   echo ""
   echo "If nothing is asked (pack creation compilation, running, check, removing) everything"
   echo "except the removing is done"
@@ -122,6 +141,7 @@ remove=0
 onlyIfNeeded=0
 computeRefIfNeeded=0
 perf=1
+extrapolation=0
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -141,6 +161,7 @@ while [ -n "$1" ]; do
     '--onlyIfNeeded') onlyIfNeeded=1;;
     '--computeRefIfNeeded') computeRefIfNeeded=1;;
     '--no-perf') perf=0;;
+    '-e') extrapolation=$2; shift;;
 
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
@@ -176,6 +197,17 @@ fi
 if [ $check -eq 1 -a -z "${reference-}" ]; then
   echo "To perform a comparison two commit hashes are mandatory on the command line"
   exit 3
+fi
+
+if [[ ! -z "${conf_extra_tag[$extrapolation]+unset}" ]]; then
+  extrapolation_tag=${conf_extra_tag[$extrapolation]}
+else
+  echo "The extrapolation option ($extrapolation) doesn't have associated tag"
+fi
+if [[ ! -z "${conf_extra_opts[$extrapolation]+unset}" ]]; then
+  extrapolation_opts=${conf_extra_opts[$extrapolation]}
+else
+  echo "The extrapolation option ($extrapolation) doesn't have associated options"
 fi
 
 ##############################
@@ -320,15 +352,14 @@ fi
 ###################
 #### EXECUTION ####
 ###################
-
 if [ $run -ge 1 ]; then
   cd $TESTDIR/$name
 
   #Cleaning to suppress old results that may be confusing in case of a crash during the run
   if [ $onlyIfNeeded -eq 0 ]; then
     for t in $(echo $tests | sed 's/,/ /g'); do
-      if [ -d tests/with_fcm/arch_${archfile}/$t ]; then
-        rm -rf tests/with_fcm/arch_${archfile}/$t
+      if [ -d tests/with_fcm/arch_${archfile}/${t}${extrapolation_tag} ]; then
+        rm -rf tests/with_fcm/arch_${archfile}/${t}${extrapolation_tag}
       fi
     done
   fi
@@ -337,7 +368,7 @@ if [ $run -ge 1 ]; then
   firstrun=1
   for t in $(echo $tests | sed 's/,/ /g'); do
     if echo $allowedTests | grep -w $t > /dev/null; then #test is allowed on this plateform
-      if  [ ! -d tests/with_fcm/arch_${archfile}/$t ]; then #We do not enter systematically this part if onlyIfNeeded=1
+      if  [ ! -d tests/with_fcm/arch_${archfile}/${t}${extrapolation_tag} ]; then #We do not enter systematically this part if onlyIfNeeded=1
         if [ $firstrun -eq 1 ]; then
           echo "### Running of commit $commit"
           firstrun=0
@@ -350,15 +381,22 @@ if [ $run -ge 1 ]; then
 
         #execution
         cd $TESTDIR/$name
-        mkdir -p tests/with_fcm/arch_${archfile}/$t
-        cd tests/with_fcm/arch_${archfile}/$t
+        mkdir -p tests/with_fcm/arch_${archfile}/${t}${extrapolation_tag}
+        cd tests/with_fcm/arch_${archfile}/${t}${extrapolation_tag}
         ln -s $dirdata/$t data
         if [ $perf -eq 1 ]; then
             export DR_HOOK_OPT=prof
             export DR_HOOK=1
             export DR_HOOK_IGNORE_SIGNALS=-1
         fi
-        $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe --check > Output_run 2> Stderr_run
+        set +e
+        $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe --check $extrapolation_opts > Output_run 2> Stderr_run
+        stat=$?
+        set -e
+        if [ $stat -ne 0 ]; then
+          cat Stderr_run
+          exit $stat
+        fi
         if [ $perf -eq 1 ]; then
             firstLine=$(grep -m 1 -n "^ *1" drhook.prof.0 | cut -d: -f1)
             python3 -c "import numpy, pandas
@@ -394,12 +432,12 @@ if [ $check -eq 1 ]; then
     if echo $allowedTests | grep -w $t > /dev/null; then
       #Run the reference if needed
       if [ $computeRefIfNeeded -eq 1 ]; then
-        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded ${refByTest[$t]}
+        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation ${refByTest[$t]}
       fi
 
       #File comparison
-      file1=$TESTDIR/$name/tests/with_fcm/arch_${archfile}/$t/Output_run
-      file2=$TESTDIR/${refnameByTest[$t]}/tests/with_fcm/arch_${refarchfile}/$t/Output_run
+      file1=$TESTDIR/$name/tests/with_fcm/arch_${archfile}/${t}${extrapolation_tag}/Output_run
+      file2=$TESTDIR/${refnameByTest[$t]}/tests/with_fcm/arch_${refarchfile}/${t}${extrapolation_tag}/Output_run
       mess=""
       te=0
       if [ ! -f "$file1" ]; then
