@@ -2,7 +2,7 @@ PROGRAM MAIN_RAIN_ICE_OLD
 
 USE XRD_GETOPTIONS,  ONLY: INITOPTIONS, GETOPTION, CHECKOPTIONS
 USE GETDATA_RAIN_ICE_OLD_MOD, ONLY: GETDATA_RAIN_ICE_OLD
-
+USE COMPUTE_DIFF,    ONLY: DIFF
 USE MODI_RAIN_ICE_OLD
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_PHYEX,      ONLY: PHYEX_t
@@ -10,7 +10,7 @@ USE STACK_MOD
 USE OMP_LIB
 USE YOMHOOK, ONLY : LHOOK, DR_HOOK, JPHOOK
 
-use iso_fortran_env, only: output_unit
+USE ISO_FORTRAN_ENV, ONLY: OUTPUT_UNIT
 
 IMPLICIT NONE
 
@@ -76,6 +76,7 @@ INTEGER :: ITIME, NTIME
 INTEGER :: IRANK, ISIZE
 LOGICAL :: LLVERBOSE, LLSTAT, LLBIND
 REAL (KIND=JPHOOK) :: ZHOOK_HANDLE
+CHARACTER(LEN=32) :: CLTEXT
 
 INTEGER :: ISIZEMICRO
 INTEGER :: KKA
@@ -90,19 +91,6 @@ CHARACTER(LEN=4) :: C_SEDIM
 CHARACTER(LEN=4) :: CSUBG_AUCV_RC
 LOGICAL :: OWARM
 REAL    :: PTSTEP
-
-  integer :: j
-
-
-
-
-  
-  
-  
-
-
-
-
 
 CALL INITOPTIONS()
 NGPBLKS = 150
@@ -134,10 +122,12 @@ IF (LLBIND) THEN
   CALL LINUX_BIND_DUMP (IRANK, ISIZE)
 ENDIF
 
-WRITE(OUTPUT_UNIT, *) 'n_gp_blocks: ', NGPBLKS
-WRITE(OUTPUT_UNIT, *) 'n_proma:     ', NPROMA
-WRITE(OUTPUT_UNIT, *) 'n_levels:    ', NFLEVG
-WRITE(OUTPUT_UNIT, *) 'total:       ', NFLEVG*NPROMA*NGPBLKS
+IF(LLVERBOSE) THEN
+  WRITE(OUTPUT_UNIT, *) 'N_GP_BLOCKS: ', NGPBLKS
+  WRITE(OUTPUT_UNIT, *) 'N_PROMA:     ', NPROMA
+  WRITE(OUTPUT_UNIT, *) 'N_LEVELS:    ', NFLEVG
+  WRITE(OUTPUT_UNIT, *) 'TOTAL:       ', NFLEVG*NPROMA*NGPBLKS
+ENDIF
 
 CALL GETDATA_RAIN_ICE_OLD(NPROMA, NGPBLKS, NFLEVG, KRR, &
                           OSEDIC, OCND2, LKOGAN, LMODICEDEP, OWARM, &
@@ -163,20 +153,22 @@ KLEV = SIZE (PRS, 2)
 
 IF (LLVERBOSE) PRINT *, " KLEV = ", KLEV, " KRR = ", KRR
   
-WRITE(OUTPUT_UNIT, *) 'osedic:        ', OSEDIC
-WRITE(OUTPUT_UNIT, *) 'ocnd2:         ', OCND2
-WRITE(OUTPUT_UNIT, *) 'lkogan:        ', LKOGAN
-WRITE(OUTPUT_UNIT, *) 'lmodicedep:    ', LMODICEDEP
-WRITE(OUTPUT_UNIT, *) 'owarm:         ', OWARM
-WRITE(OUTPUT_UNIT, *) 'kka:           ', KKA
-WRITE(OUTPUT_UNIT, *) 'kku:           ', KKU
-WRITE(OUTPUT_UNIT, *) 'kkl:           ', KKL
-WRITE(OUTPUT_UNIT, *) 'ksplitr:       ', KSPLITR
-WRITE(OUTPUT_UNIT, *) 'ptstep:        ', PTSTEP
-WRITE(OUTPUT_UNIT, *) 'c_sedim:       ', C_SEDIM
-WRITE(OUTPUT_UNIT, *) 'csubg_aucv_rc: ', CSUBG_AUCV_RC
+IF (LLVERBOSE) THEN
+  WRITE(OUTPUT_UNIT, *) 'OSEDIC:        ', OSEDIC
+  WRITE(OUTPUT_UNIT, *) 'OCND2:         ', OCND2
+  WRITE(OUTPUT_UNIT, *) 'LKOGAN:        ', LKOGAN
+  WRITE(OUTPUT_UNIT, *) 'LMODICEDEP:    ', LMODICEDEP
+  WRITE(OUTPUT_UNIT, *) 'OWARM:         ', OWARM
+  WRITE(OUTPUT_UNIT, *) 'KKA:           ', KKA
+  WRITE(OUTPUT_UNIT, *) 'KKU:           ', KKU
+  WRITE(OUTPUT_UNIT, *) 'KKL:           ', KKL
+  WRITE(OUTPUT_UNIT, *) 'KSPLITR:       ', KSPLITR
+  WRITE(OUTPUT_UNIT, *) 'PTSTEP:        ', PTSTEP
+  WRITE(OUTPUT_UNIT, *) 'C_SEDIM:       ', C_SEDIM
+  WRITE(OUTPUT_UNIT, *) 'CSUBG_AUCV_RC: ', CSUBG_AUCV_RC
+ENDIF
 
-!PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
+PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
 
 CALL INIT_PHYEX(KRR, PHYEX, OWARM, OSEDIC, OCND2, C_SEDIM, CSUBG_AUCV_RC, PTSTEP)
 
@@ -326,94 +318,50 @@ IF (LHOOK) CALL DR_HOOK ('MAIN',1,ZHOOK_HANDLE)
 
 TE = OMP_GET_WTIME()
 
-!WRITE (*,'(A,F8.2,A)') 'elapsed time : ',TE-TS,' s'
-!WRITE (*,'(A,F8.4,A)') '          i.e. ',1000.*(TE-TS)/(NPROMA*NGPBLKS)/NTIME,' ms/gp'
-!
-!PRINT *, " ZTD = ", ZTD, ZTD / REAL (NPROMA*NGPBLKS*NTIME)
-!PRINT *, " ZTC = ", ZTC, ZTC / REAL (NPROMA*NGPBLKS*NTIME)
+WRITE (*,'(A,F8.2,A)') 'elapsed time : ',TE-TS,' s'
+WRITE (*,'(A,F8.4,A)') '          i.e. ',1000.*(TE-TS)/(NPROMA*NGPBLKS)/NTIME,' ms/gp'
+
+PRINT *, " ZTD = ", ZTD, ZTD / REAL (NPROMA*NGPBLKS*NTIME)
+PRINT *, " ZTC = ", ZTC, ZTC / REAL (NPROMA*NGPBLKS*NTIME)
 
 
-  CALL CPU_TIME(TIME_END_CPU)
-  CALL SYSTEM_CLOCK(COUNT=COUNTER, COUNT_RATE=C_RATE)
-  TIME_END_REAL = REAL(COUNTER,8)/C_RATE
+CALL CPU_TIME(TIME_END_CPU)
+CALL SYSTEM_CLOCK(COUNT=COUNTER, COUNT_RATE=C_RATE)
+TIME_END_REAL = REAL(COUNTER,8)/C_RATE
 
-  write(output_unit, *)
+IF(LLVERBOSE) THEN
+  WRITE(OUTPUT_UNIT, *)
+  WRITE(OUTPUT_UNIT, *) 'TOTAL TIME: ', TIME_END_REAL - TIME_START_REAL
+ENDIF
 
-  write(output_unit, *) 'Total time: ', time_end_real - time_start_real
+IF (LLCHECK .OR. LLSTAT .OR. LLCHECKDIFF) THEN
+  DO IBL = IBLOCK1, IBLOCK2
+    PRINT *, " IBL = ", IBL
+    DO JRR=1, KRR
+      WRITE (CLTEXT, '("PRS JRR=",I3.3)') JRR
+      CALL DIFF (CLTEXT,   PRS_OUT       (:,:,JRR,IBL), PRS      (:,:,JRR,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+      IF(JRR>=2) THEN
+        WRITE (CLTEXT, '("PFPR JRR=",I3.3)') JRR
+        CALL DIFF (CLTEXT, PFPR_OUT      (:,:,JRR,IBL), PFPR     (:,:,JRR,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+      ENDIF
+    ENDDO
+    CALL DIFF ("PCIT",     PCIT_OUT      (:,:,IBL), PCIT     (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("ZINPRC",   ZINPRC_OUT    (:,IBL),   ZINPRC   (:,IBL)  , LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PINPRRRS", PINPRR_OUT    (:,IBL),   PINPRR   (:,IBL)  , LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PEVAP",    PEVAP_OUT     (:,:,IBL), PEVAP    (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PINPRS",   PINPRS_OUT    (:,IBL),   PINPRS   (:,IBL)  , LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PINPRG",   PINPRG_OUT    (:,IBL),   PINPRG   (:,IBL)  , LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PTHS",     PTHS_OUT      (:,:,IBL), PTHS     (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+  ENDDO
+ENDIF
 
-  write(output_unit, *)
-
-  write(output_unit, *) 'PEVAP'
-  call print_diff_2(pevap(:,:,1), pevap_out(:,:,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'ZINPRC'
-  call print_diff_1(zinprc(:,1), zinprc_out(:,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PINPRR'
-  call print_diff_1(pinprr(:,1), pinprr_out(:,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PINPRS'
-  call print_diff_1(pinprs(:,1), pinprs_out(:,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PINPRG'
-  call print_diff_1(pinprg(:,1), pinprg_out(:,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PTHS'
-  call print_diff_2(pths(:,:,1), pths_out(:,:,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PCIT'
-  call print_diff_2(pcit(:,:,1), pcit_out(:,:,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PRVS'
-  call print_diff_2(prs(:,:,1,1), prs_out(:,:,1,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PRCS'
-  call print_diff_2(prs(:,:,2,1), prs_out(:,:,2,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PRRS'
-  call print_diff_2(prs(:,:,3,1), prs_out(:,:,3,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PRIS'
-  call print_diff_2(prs(:,:,4,1), prs_out(:,:,4,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PRSS'
-  call print_diff_2(prs(:,:,5,1), prs_out(:,:,5,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PRGS'
-  call print_diff_2(prs(:,:,6,1), prs_out(:,:,6,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PFPR 2'
-  call print_diff_2(pfpr(:,:,2,1), pfpr_out(:,:,2,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PFPR 3'
-  call print_diff_2(pfpr(:,:,3,1), pfpr_out(:,:,3,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PFPR 4'
-  call print_diff_2(pfpr(:,:,4,1), pfpr_out(:,:,4,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PFPR 5'
-  call print_diff_2(pfpr(:,:,5,1), pfpr_out(:,:,5,1))
-  write(output_unit, *)
-
-  write(output_unit, *) 'PFPR 6'
-  call print_diff_2(pfpr(:,:,6,1), pfpr_out(:,:,6,1))
-  write(output_unit, *)
+IF (LLCHECKDIFF) THEN
+  IF (LLDIFF) THEN
+    PRINT*, "THERE ARE DIFF SOMEWHERE"
+  ELSE
+    PRINT*, "THERE IS NO DIFF AT ALL"
+  ENDIF
+ENDIF
 
 STOP
 
@@ -572,62 +520,6 @@ SUBROUTINE INIT_GMICRO(D, KRR, NGPBLKS, ODMICRO, PRT, PSSIO, OCND2)
   ENDDO
 
 END SUBROUTINE INIT_GMICRO
-
-
-subroutine print_diff_1(array, ref)
-
-  use iso_fortran_env, only: output_unit
-
-  implicit none
-
-  real, intent(in), dimension(:) :: array
-  real, intent(in), dimension(:) :: ref
-
-  real, parameter :: threshold = 1.0e-12
-
-  integer :: i
-
-  real :: absval
-
-  do i = 1, size(array, 1)
-    absval = max(abs(array(i)), abs(ref(i)))
-    if (absval .gt. 0.) then
-      if (abs(array(i) - ref(i))/absval .gt. threshold) then
-        write(output_unit, '(1i4, 4e16.6)') i, array(i), ref(i), abs(array(i) - ref(i)), abs(array(i) - ref(i))/absval 
-      endif
-    endif
-  enddo
-
-end subroutine print_diff_1
-
-
-subroutine print_diff_2(array, ref)
-
-  use iso_fortran_env, only: output_unit
-
-  implicit none
-
-  real, intent(in), dimension(:,:) :: array
-  real, intent(in), dimension(:,:) :: ref
-
-  real, parameter :: threshold = 1.0e-12
-
-  integer :: i, j
-
-  real :: absval
-
-  do j = 1, size(array, 2)
-    do i = 1, size(array, 1)
-      absval = max(abs(array(i,j)), abs(ref(i,j)))
-      if (absval .gt. 0.) then
-        if (abs(array(i,j) - ref(i,j))/absval .gt. threshold) then
-          write(output_unit, '(2i4, 4e22.14)') i, j, array(i,j), ref(i,j), abs(array(i,j) - ref(i,j)), abs(array(i,j) - ref(i,j))/absval 
-        endif
-      endif
-    enddo
- enddo
-
-end subroutine print_diff_2
 
 END PROGRAM
 

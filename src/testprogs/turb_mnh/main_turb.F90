@@ -18,94 +18,94 @@ INTEGER      :: KRR, KRRL, KRRI
 INTEGER      :: KSV
 
 !IN and INOUTS
-REAL, ALLOCATABLE   :: ZDXX               (:,:,:,:)
-REAL, ALLOCATABLE   :: ZDYY               (:,:,:,:)
-REAL, ALLOCATABLE   :: ZDZZ               (:,:,:,:)
-REAL, ALLOCATABLE   :: ZDZX               (:,:,:,:)
-REAL, ALLOCATABLE   :: ZDZY               (:,:,:,:)
-REAL, ALLOCATABLE   :: ZZZ                (:,:,:,:)
-REAL, ALLOCATABLE   :: ZDIRCOSXW          (:,:,:)
-REAL, ALLOCATABLE   :: ZDIRCOSYW          (:,:,:)
-REAL, ALLOCATABLE   :: ZDIRCOSZW          (:,:,:)
-REAL, ALLOCATABLE   :: ZCOSSLOPE          (:,:,:)
-REAL, ALLOCATABLE   :: ZSINSLOPE          (:,:,:)
-REAL, ALLOCATABLE   :: PRHODJ             (:,:,:,:)
-REAL, ALLOCATABLE   :: PTHVREF            (:,:,:,:)
-REAL, ALLOCATABLE   :: PSFTH              (:,:,:)
-REAL, ALLOCATABLE   :: PSFRV              (:,:,:)
-REAL, ALLOCATABLE   :: PSFU               (:,:,:)
-REAL, ALLOCATABLE   :: PSFV               (:,:,:)
-REAL, ALLOCATABLE   :: PSFSV              (:,:,:,:) !(KLON, 1, KSV)
-REAL, ALLOCATABLE   :: PPABSM             (:,:,:,:)
-REAL, ALLOCATABLE   :: PUM                (:,:,:,:)
-REAL, ALLOCATABLE   :: PVM                (:,:,:,:)
-REAL, ALLOCATABLE   :: PWM                (:,:,:,:)
-REAL, ALLOCATABLE   :: PTKEM              (:,:,:,:)
-REAL, ALLOCATABLE   :: ZSVM               (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
-REAL, ALLOCATABLE   :: PSRCM              (:,:,:,:)
-REAL, ALLOCATABLE   :: PLENGTHM           (:,:,:,:)
-REAL, ALLOCATABLE   :: PLENGTHH           (:,:,:,:)
-REAL, ALLOCATABLE   :: MFMOIST            (:,:,:,:)
-REAL, ALLOCATABLE   :: ZBL_DEPTH          (:,:,:)
-REAL, ALLOCATABLE   :: ZSBL_DEPTH         (:,:,:)
-REAL, ALLOCATABLE   :: ZCEI               (:,:,:,:)
-REAL, ALLOCATABLE   :: PTHM               (:,:,:,:)
-REAL, ALLOCATABLE   :: ZRM                (:,:,:,:,:) !(KLON,1,KLEV+2,KRR)
-REAL, ALLOCATABLE   :: PRUS               (:,:,:,:)
-REAL, ALLOCATABLE   :: PRVS               (:,:,:,:)
-REAL, ALLOCATABLE   :: PRWS               (:,:,:,:)
-REAL, ALLOCATABLE   :: PRTHS              (:,:,:,:)
-REAL, ALLOCATABLE   :: ZRRS               (:,:,:,:,:) !(KLON,1,KLEV+2,KRR)
-REAL, ALLOCATABLE   :: ZRSVS              (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
-REAL, ALLOCATABLE   :: PRTKES_OUT         (:,:,:,:)
-REAL, ALLOCATABLE   :: PFLXZTHVMF         (:,:,:,:)
-REAL, ALLOCATABLE   :: PHGRAD             (:,:,:,:,:) !(KLON,1,KLEV+2,KGRADIENTS)
-REAL, ALLOCATABLE   :: PZS                (:,:,:)
+REAL, ALLOCATABLE   :: ZDXX               (:,:,:)
+REAL, ALLOCATABLE   :: ZDYY               (:,:,:)
+REAL, ALLOCATABLE   :: ZDZZ               (:,:,:)
+REAL, ALLOCATABLE   :: ZDZX               (:,:,:)
+REAL, ALLOCATABLE   :: ZDZY               (:,:,:)
+REAL, ALLOCATABLE   :: ZZZ                (:,:,:)
+REAL, ALLOCATABLE   :: ZDIRCOSXW          (:,:)
+REAL, ALLOCATABLE   :: ZDIRCOSYW          (:,:)
+REAL, ALLOCATABLE   :: ZDIRCOSZW          (:,:)
+REAL, ALLOCATABLE   :: ZCOSSLOPE          (:,:)
+REAL, ALLOCATABLE   :: ZSINSLOPE          (:,:)
+REAL, ALLOCATABLE   :: PRHODJ             (:,:,:)
+REAL, ALLOCATABLE   :: PTHVREF            (:,:,:)
+REAL, ALLOCATABLE   :: PSFTH              (:,:)
+REAL, ALLOCATABLE   :: PSFRV              (:,:)
+REAL, ALLOCATABLE   :: PSFU               (:,:)
+REAL, ALLOCATABLE   :: PSFV               (:,:)
+REAL, ALLOCATABLE   :: PSFSV              (:,:,:) !(KLON, 1, KSV)
+REAL, ALLOCATABLE   :: PPABSM             (:,:,:)
+REAL, ALLOCATABLE   :: PUM                (:,:,:)
+REAL, ALLOCATABLE   :: PVM                (:,:,:)
+REAL, ALLOCATABLE   :: PWM                (:,:,:)
+REAL, ALLOCATABLE   :: PTKEM              (:,:,:)
+REAL, ALLOCATABLE   :: ZSVM               (:,:,:,:) !(KLON,1,KLEV+2,KSV)
+REAL, ALLOCATABLE   :: PSRCM              (:,:,:)
+REAL, ALLOCATABLE   :: PLENGTHM           (:,:,:)
+REAL, ALLOCATABLE   :: PLENGTHH           (:,:,:)
+REAL, ALLOCATABLE   :: MFMOIST            (:,:,:)
+REAL, ALLOCATABLE   :: ZBL_DEPTH          (:,:)
+REAL, ALLOCATABLE   :: ZSBL_DEPTH         (:,:)
+REAL, ALLOCATABLE   :: ZCEI               (:,:,:)
+REAL, ALLOCATABLE   :: PTHM               (:,:,:)
+REAL, ALLOCATABLE   :: ZRM                (:,:,:,:) !(KLON,1,KLEV+2,KRR)
+REAL, ALLOCATABLE   :: PRUS               (:,:,:)
+REAL, ALLOCATABLE   :: PRVS               (:,:,:)
+REAL, ALLOCATABLE   :: PRWS               (:,:,:)
+REAL, ALLOCATABLE   :: PRTHS              (:,:,:)
+REAL, ALLOCATABLE   :: ZRRS               (:,:,:,:) !(KLON,1,KLEV+2,KRR)
+REAL, ALLOCATABLE   :: ZRSVS              (:,:,:,:) !(KLON,1,KLEV+2,KSV)
+REAL, ALLOCATABLE   :: PRTKES_OUT         (:,:,:)
+REAL, ALLOCATABLE   :: PFLXZTHVMF         (:,:,:)
+REAL, ALLOCATABLE   :: PHGRAD             (:,:,:,:) !(KLON,1,KLEV+2,KGRADIENTS)
+REAL, ALLOCATABLE   :: PZS                (:,:)
 
 !OUT
-REAL, ALLOCATABLE   :: PSIGS              (:,:,:,:)
-REAL, ALLOCATABLE   :: ZWTH               (:,:,:,:)
-REAL, ALLOCATABLE   :: ZWRC               (:,:,:,:)
-REAL, ALLOCATABLE   :: ZWSV               (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
-REAL, ALLOCATABLE   :: PDP                (:,:,:,:)
-REAL, ALLOCATABLE   :: PTP                (:,:,:,:)
-REAL, ALLOCATABLE   :: PTDIFF             (:,:,:,:)
-REAL, ALLOCATABLE   :: PTDISS             (:,:,:,:)
-REAL, ALLOCATABLE   :: PEDR               (:,:,:,:)
-REAL, ALLOCATABLE   :: PTPMF              (:,:,:,:)
-REAL, ALLOCATABLE   :: PDRUS_TURB         (:,:,:,:)
-REAL, ALLOCATABLE   :: PDRVS_TURB         (:,:,:,:)
-REAL, ALLOCATABLE   :: PDRTHLS_TURB       (:,:,:,:)
-REAL, ALLOCATABLE   :: PDRRTS_TURB        (:,:,:,:)
-REAL, ALLOCATABLE   :: ZDRSVS_TURB        (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
+REAL, ALLOCATABLE   :: PSIGS              (:,:,:)
+REAL, ALLOCATABLE   :: ZWTH               (:,:,:)
+REAL, ALLOCATABLE   :: ZWRC               (:,:,:)
+REAL, ALLOCATABLE   :: ZWSV               (:,:,:,:) !(KLON,1,KLEV+2,KSV)
+REAL, ALLOCATABLE   :: PDP                (:,:,:)
+REAL, ALLOCATABLE   :: PTP                (:,:,:)
+REAL, ALLOCATABLE   :: PTDIFF             (:,:,:)
+REAL, ALLOCATABLE   :: PTDISS             (:,:,:)
+REAL, ALLOCATABLE   :: PEDR               (:,:,:)
+REAL, ALLOCATABLE   :: PTPMF              (:,:,:)
+REAL, ALLOCATABLE   :: PDRUS_TURB         (:,:,:)
+REAL, ALLOCATABLE   :: PDRVS_TURB         (:,:,:)
+REAL, ALLOCATABLE   :: PDRTHLS_TURB       (:,:,:)
+REAL, ALLOCATABLE   :: PDRRTS_TURB        (:,:,:)
+REAL, ALLOCATABLE   :: ZDRSVS_TURB        (:,:,:,:) !(KLON,1,KLEV+2,KSV)
 
 !Expected values
-REAL, ALLOCATABLE   :: ZBL_DEPTH_OUT      (:,:,:)
-REAL, ALLOCATABLE   :: ZSBL_DEPTH_OUT     (:,:,:)
-REAL, ALLOCATABLE   :: PTHM_OUT           (:,:,:,:)
-REAL, ALLOCATABLE   :: ZRM_OUT            (:,:,:,:,:) !(KLON,1,KLEV+2,KRR)
-REAL, ALLOCATABLE   :: PRUS_OUT           (:,:,:,:)
-REAL, ALLOCATABLE   :: PRVS_OUT           (:,:,:,:)
-REAL, ALLOCATABLE   :: PRWS_OUT           (:,:,:,:)
-REAL, ALLOCATABLE   :: PRTHS_OUT          (:,:,:,:)
-REAL, ALLOCATABLE   :: ZRRS_OUT           (:,:,:,:,:) !(KLON,1,KLEV+2,KRR)
-REAL, ALLOCATABLE   :: ZRSVS_OUT          (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
-REAL, ALLOCATABLE   :: PRTKES_OUT_OUT     (:,:,:,:)
-REAL, ALLOCATABLE   :: PSIGS_OUT          (:,:,:,:)
-REAL, ALLOCATABLE   :: ZWTH_OUT           (:,:,:,:)
-REAL, ALLOCATABLE   :: ZWRC_OUT           (:,:,:,:)
-REAL, ALLOCATABLE   :: ZWSV_OUT           (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
-REAL, ALLOCATABLE   :: PDP_OUT            (:,:,:,:)
-REAL, ALLOCATABLE   :: PTP_OUT            (:,:,:,:)
-REAL, ALLOCATABLE   :: PTDIFF_OUT         (:,:,:,:)
-REAL, ALLOCATABLE   :: PTDISS_OUT         (:,:,:,:)
-REAL, ALLOCATABLE   :: PEDR_OUT           (:,:,:,:)
-REAL, ALLOCATABLE   :: PTPMF_OUT          (:,:,:,:)
-REAL, ALLOCATABLE   :: PDRUS_TURB_OUT     (:,:,:,:)
-REAL, ALLOCATABLE   :: PDRVS_TURB_OUT     (:,:,:,:)
-REAL, ALLOCATABLE   :: PDRTHLS_TURB_OUT   (:,:,:,:)
-REAL, ALLOCATABLE   :: PDRRTS_TURB_OUT    (:,:,:,:)
-REAL, ALLOCATABLE   :: ZDRSVS_TURB_OUT    (:,:,:,:,:) !(KLON,1,KLEV+2,KSV)
+REAL, ALLOCATABLE   :: ZBL_DEPTH_OUT      (:,:)
+REAL, ALLOCATABLE   :: ZSBL_DEPTH_OUT     (:,:)
+REAL, ALLOCATABLE   :: PTHM_OUT           (:,:,:)
+REAL, ALLOCATABLE   :: ZRM_OUT            (:,:,:,:) !(KLON,1,KLEV+2,KRR)
+REAL, ALLOCATABLE   :: PRUS_OUT           (:,:,:)
+REAL, ALLOCATABLE   :: PRVS_OUT           (:,:,:)
+REAL, ALLOCATABLE   :: PRWS_OUT           (:,:,:)
+REAL, ALLOCATABLE   :: PRTHS_OUT          (:,:,:)
+REAL, ALLOCATABLE   :: ZRRS_OUT           (:,:,:,:) !(KLON,1,KLEV+2,KRR)
+REAL, ALLOCATABLE   :: ZRSVS_OUT          (:,:,:,:) !(KLON,1,KLEV+2,KSV)
+REAL, ALLOCATABLE   :: PRTKES_OUT_OUT     (:,:,:)
+REAL, ALLOCATABLE   :: PSIGS_OUT          (:,:,:)
+REAL, ALLOCATABLE   :: ZWTH_OUT           (:,:,:)
+REAL, ALLOCATABLE   :: ZWRC_OUT           (:,:,:)
+REAL, ALLOCATABLE   :: ZWSV_OUT           (:,:,:,:) !(KLON,1,KLEV+2,KSV)
+REAL, ALLOCATABLE   :: PDP_OUT            (:,:,:)
+REAL, ALLOCATABLE   :: PTP_OUT            (:,:,:)
+REAL, ALLOCATABLE   :: PTDIFF_OUT         (:,:,:)
+REAL, ALLOCATABLE   :: PTDISS_OUT         (:,:,:)
+REAL, ALLOCATABLE   :: PEDR_OUT           (:,:,:)
+REAL, ALLOCATABLE   :: PTPMF_OUT          (:,:,:)
+REAL, ALLOCATABLE   :: PDRUS_TURB_OUT     (:,:,:)
+REAL, ALLOCATABLE   :: PDRVS_TURB_OUT     (:,:,:)
+REAL, ALLOCATABLE   :: PDRTHLS_TURB_OUT   (:,:,:)
+REAL, ALLOCATABLE   :: PDRRTS_TURB_OUT    (:,:,:)
+REAL, ALLOCATABLE   :: ZDRSVS_TURB_OUT    (:,:,:,:) !(KLON,1,KLEV+2,KSV)
 
 INTEGER :: NPROMA, NGPBLKS, NFLEVG
 INTEGER :: IBL, JLON, JLEV
@@ -299,21 +299,21 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, 
    & PHYEX%MISC%OOCEAN, PHYEX%MISC%ODEEPOC, PHYEX%MISC%ODIAG_IN_RUN,   &
    & PHYEX%TURBN%CTURBLEN_CLOUD,PHYEX%MISC%CMICRO,           &
    & PHYEX%MISC%PTSTEP,PHYEX%MISC%ZTFILE,                                      &
-   & ZDXX(:,:,:,IBL),ZDYY(:,:,:,IBL),ZDZZ(:,:,:,IBL),ZDZX(:,:,:,IBL),ZDZY(:,:,:,IBL),ZZZ(:,:,:,IBL),          &
+   & ZDXX(:,:,IBL),ZDYY(:,:,IBL),ZDZZ(:,:,IBL),ZDZX(:,:,IBL),ZDZY(:,:,IBL),ZZZ(:,:,IBL),          &
    & ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE,    &
-   & PRHODJ(:,:,:,IBL),PTHVREF(:,:,:,IBL), PHGRAD, PZS,                             &
-   & PSFTH(:,:,IBL),PSFRV(:,:,IBL),PSFSV(:,:,:,IBL),PSFU(:,:,IBL),PSFV(:,:,IBL),                          &
-   & PPABSM(:,:,:,IBL),PUM(:,:,:,IBL),PVM(:,:,:,IBL),PWM(:,:,:,IBL),PTKEM(:,:,:,IBL),ZSVM(:,:,:,:,IBL),PSRCM(:,:,:,IBL),                  &
-   & PLENGTHM(:,:,:,IBL),PLENGTHH(:,:,:,IBL),MFMOIST(:,:,:,IBL),                            &
-   & ZBL_DEPTH(:,:,IBL),ZSBL_DEPTH(:,:,IBL),                                 &
-   & ZCEI(:,:,:,IBL),PHYEX%TURBN%XCEI_MIN,PHYEX%TURBN%XCEI_MAX,PHYEX%TURBN%XCOEF_AMPL_SAT,    &
-   & PTHM(:,:,:,IBL),ZRM(:,:,:,:,IBL), &
-   & PRUS(:,:,:,IBL),PRVS(:,:,:,IBL),PRWS(:,:,:,IBL),PRTHS(:,:,:,IBL),ZRRS(:,:,:,:,IBL),ZRSVS(:,:,:,:,IBL),PRTKES_OUT(:,:,:,IBL),         &
-   & PSIGS(:,:,:,IBL),                                         &
-   & PFLXZTHVMF(:,:,:,IBL),ZWTH(:,:,:,IBL),ZWRC(:,:,:,IBL),ZWSV(:,:,:,:,IBL),PDP(:,:,:,IBL),PTP(:,:,:,IBL),PTDIFF(:,:,:,IBL),PTDISS(:,:,:,IBL),&
-   & PHYEX%MISC%YLBUDGET, KBUDGETS=PHYEX%MISC%NBUDGET,PEDR=PEDR(:,:,:,IBL),PTPMF=PTPMF(:,:,:,IBL),&
-   & PDRUS_TURB=PDRUS_TURB(:,:,:,IBL),PDRVS_TURB=PDRVS_TURB(:,:,:,IBL),          &
-   & PDRTHLS_TURB=PDRTHLS_TURB(:,:,:,IBL),PDRRTS_TURB=PDRRTS_TURB(:,:,:,IBL),PDRSVS_TURB=ZDRSVS_TURB(:,:,:,:,IBL))
+   & PRHODJ(:,:,IBL),PTHVREF(:,:,IBL), PHGRAD, PZS,                             &
+   & PSFTH(:,IBL),PSFRV(:,IBL),PSFSV(:,:,IBL),PSFU(:,IBL),PSFV(:,IBL),                          &
+   & PPABSM(:,:,IBL),PUM(:,:,IBL),PVM(:,:,IBL),PWM(:,:,IBL),PTKEM(:,:,IBL),ZSVM(:,:,:,IBL),PSRCM(:,:,IBL),                  &
+   & PLENGTHM(:,:,IBL),PLENGTHH(:,:,IBL),MFMOIST(:,:,IBL),                            &
+   & ZBL_DEPTH(:,IBL),ZSBL_DEPTH(:,IBL),                                 &
+   & ZCEI(:,:,IBL),PHYEX%TURBN%XCEI_MIN,PHYEX%TURBN%XCEI_MAX,PHYEX%TURBN%XCOEF_AMPL_SAT,    &
+   & PTHM(:,:,IBL),ZRM(:,:,:,IBL), &
+   & PRUS(:,:,IBL),PRVS(:,:,IBL),PRWS(:,:,IBL),PRTHS(:,:,IBL),ZRRS(:,:,:,IBL),ZRSVS(:,:,:,IBL),PRTKES_OUT(:,:,IBL),         &
+   & PSIGS(:,:,IBL),                                         &
+   & PFLXZTHVMF(:,:,IBL),ZWTH(:,:,IBL),ZWRC(:,:,IBL),ZWSV(:,:,:,IBL),PDP(:,:,IBL),PTP(:,:,IBL),PTDIFF(:,:,IBL),PTDISS(:,:,IBL),&
+   & PHYEX%MISC%YLBUDGET, KBUDGETS=PHYEX%MISC%NBUDGET,PEDR=PEDR(:,:,IBL),PTPMF=PTPMF(:,:,IBL),&
+   & PDRUS_TURB=PDRUS_TURB(:,:,IBL),PDRVS_TURB=PDRVS_TURB(:,:,IBL),          &
+   & PDRTHLS_TURB=PDRTHLS_TURB(:,:,IBL),PDRRTS_TURB=PDRRTS_TURB(:,:,IBL),PDRSVS_TURB=ZDRSVS_TURB(:,:,:,IBL))
 
 #ifdef _OPENACC
     ENDDO
@@ -353,31 +353,31 @@ IF (LLCHECK .OR. LLSTAT .OR. LLCHECKDIFF) THEN
     PRINT *, " IBL = ", IBL
     DO JRR=1, KRR
       WRITE (CLTEXT, '("ZRM JRR=",I3.3)') JRR
-      CALL DIFF (CLTEXT,      ZRM_OUT       (:,:,:,JRR,IBL), ZRM      (:,:,:,JRR,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+      CALL DIFF (CLTEXT,      ZRM_OUT       (:,:,JRR,IBL), ZRM      (:,:,JRR,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
       WRITE (CLTEXT, '("ZRRS JRR=",I3.3)') JRR
-      CALL DIFF (CLTEXT,      ZRRS_OUT       (:,:,:,JRR,IBL), ZRRS      (:,:,:,JRR,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+      CALL DIFF (CLTEXT,      ZRRS_OUT       (:,:,JRR,IBL), ZRRS      (:,:,JRR,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
     ENDDO
-    CALL DIFF ("ZBL_DEPTH   ", ZBL_DEPTH_OUT    (:,:,IBL)  , ZBL_DEPTH   (:,:,IBL)  , LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("ZSBL_DEPTH  ", ZSBL_DEPTH_OUT   (:,:,IBL)  , ZSBL_DEPTH  (:,:,IBL)  , LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PTHM        ", PTHM_OUT         (:,:,:,IBL), PTHM        (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PRUS        ", PRUS_OUT         (:,:,:,IBL), PRUS        (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PRVS        ", PRVS_OUT         (:,:,:,IBL), PRVS        (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PRWS        ", PRWS_OUT         (:,:,:,IBL), PRWS        (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PRTHS       ", PRTHS_OUT        (:,:,:,IBL), PRTHS       (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PRTKES_OUT  ", PRTKES_OUT_OUT   (:,:,:,IBL), PRTKES_OUT  (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PSIGS       ", PSIGS_OUT        (:,:,:,IBL), PSIGS       (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("ZWTH        ", ZWTH_OUT         (:,:,:,IBL), ZWTH        (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("ZWRC        ", ZWRC_OUT         (:,:,:,IBL), ZWRC        (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PDP         ", PDP_OUT          (:,:,:,IBL), PDP         (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PTP         ", PTP_OUT          (:,:,:,IBL), PTP         (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PTDIFF      ", PTDIFF_OUT       (:,:,:,IBL), PTDIFF      (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PTDISS      ", PTDISS_OUT       (:,:,:,IBL), PTDISS      (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PEDR        ", PEDR_OUT         (:,:,:,IBL), PEDR        (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PTPMF       ", PTPMF_OUT        (:,:,:,IBL), PTPMF       (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PDRUS_TURB  ", PDRUS_TURB_OUT   (:,:,:,IBL), PDRUS_TURB  (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PDRVS_TURB  ", PDRVS_TURB_OUT   (:,:,:,IBL), PDRVS_TURB  (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PDRTHLS_TURB", PDRTHLS_TURB_OUT (:,:,:,IBL), PDRTHLS_TURB(:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PDRRTS_TURB ", PDRRTS_TURB_OUT  (:,:,:,IBL), PDRRTS_TURB (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("ZBL_DEPTH   ", ZBL_DEPTH_OUT    (:,IBL)  , ZBL_DEPTH   (:,IBL)  , LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("ZSBL_DEPTH  ", ZSBL_DEPTH_OUT   (:,IBL)  , ZSBL_DEPTH  (:,IBL)  , LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PTHM        ", PTHM_OUT         (:,:,IBL), PTHM        (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PRUS        ", PRUS_OUT         (:,:,IBL), PRUS        (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PRVS        ", PRVS_OUT         (:,:,IBL), PRVS        (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PRWS        ", PRWS_OUT         (:,:,IBL), PRWS        (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PRTHS       ", PRTHS_OUT        (:,:,IBL), PRTHS       (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PRTKES_OUT  ", PRTKES_OUT_OUT   (:,:,IBL), PRTKES_OUT  (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PSIGS       ", PSIGS_OUT        (:,:,IBL), PSIGS       (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("ZWTH        ", ZWTH_OUT         (:,:,IBL), ZWTH        (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("ZWRC        ", ZWRC_OUT         (:,:,IBL), ZWRC        (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PDP         ", PDP_OUT          (:,:,IBL), PDP         (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PTP         ", PTP_OUT          (:,:,IBL), PTP         (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PTDIFF      ", PTDIFF_OUT       (:,:,IBL), PTDIFF      (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PTDISS      ", PTDISS_OUT       (:,:,IBL), PTDISS      (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PEDR        ", PEDR_OUT         (:,:,IBL), PEDR        (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PTPMF       ", PTPMF_OUT        (:,:,IBL), PTPMF       (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PDRUS_TURB  ", PDRUS_TURB_OUT   (:,:,IBL), PDRUS_TURB  (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PDRVS_TURB  ", PDRVS_TURB_OUT   (:,:,IBL), PDRVS_TURB  (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PDRTHLS_TURB", PDRTHLS_TURB_OUT (:,:,IBL), PDRTHLS_TURB(:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PDRRTS_TURB ", PDRRTS_TURB_OUT  (:,:,IBL), PDRRTS_TURB (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
   ENDDO
 ENDIF
 

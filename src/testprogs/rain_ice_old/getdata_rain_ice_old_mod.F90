@@ -155,9 +155,11 @@ SUBROUTINE GETDATA_RAIN_ICE_OLD(NPROMA, NBLOCKS, NFLEVG, KRR,             &
 
   CLOSE (IFILE)
 
-  write(output_unit, *) 'klon:        ', klon
-  write(output_unit, *) 'klev:        ', klev
-  write(output_unit, *) 'krr:         ', krr
+  IF(LDVERBOSE) THEN
+    WRITE(OUTPUT_UNIT, *) 'KLON:        ', KLON
+    WRITE(OUTPUT_UNIT, *) 'KLEV:        ', KLEV
+    WRITE(OUTPUT_UNIT, *) 'KRR:         ', KRR
+  ENDIF
 
   IF (NFLEVG < 0) NFLEVG = KLEV
 

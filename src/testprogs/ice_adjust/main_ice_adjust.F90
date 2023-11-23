@@ -15,41 +15,41 @@ IMPLICIT NONE
 INTEGER      :: KLEV
 INTEGER      :: KRR
 
-REAL,    ALLOCATABLE   :: PRHODJ         (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PEXNREF        (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PRHODREF       (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PPABSM         (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PTHT           (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PSIGS          (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PMFCONV        (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PRC_MF         (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PRI_MF         (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PCF_MF         (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PTHS           (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PRS            (:,:,:,:,:) 
-REAL,    ALLOCATABLE   :: PSRCS          (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PCLDFR         (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PHLC_HRC       (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PHLC_HCF       (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PHLI_HRI       (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PHLI_HCF       (:,:,:,:)   
-REAL,    ALLOCATABLE   :: ZRS            (:,:,:,:,:) 
-REAL,    ALLOCATABLE   :: ZZZ            (:,:,:,:)   
-REAL,    ALLOCATABLE   :: ZSIGQSAT       (:,:,:)   
-REAL,    ALLOCATABLE   :: ZICE_CLD_WGT   (:,:,:)   
-REAL,    ALLOCATABLE   :: ZDUM1          (:,:,:,:)
-REAL,    ALLOCATABLE   :: ZDUM2          (:,:,:,:)
-REAL,    ALLOCATABLE   :: ZDUM3          (:,:,:,:)
-REAL,    ALLOCATABLE   :: ZDUM4          (:,:,:,:)
-REAL,    ALLOCATABLE   :: ZDUM5          (:,:,:,:)
+REAL,    ALLOCATABLE   :: PRHODJ         (:,:,:)   
+REAL,    ALLOCATABLE   :: PEXNREF        (:,:,:)   
+REAL,    ALLOCATABLE   :: PRHODREF       (:,:,:)   
+REAL,    ALLOCATABLE   :: PPABSM         (:,:,:)   
+REAL,    ALLOCATABLE   :: PTHT           (:,:,:)   
+REAL,    ALLOCATABLE   :: PSIGS          (:,:,:)   
+REAL,    ALLOCATABLE   :: PMFCONV        (:,:,:)   
+REAL,    ALLOCATABLE   :: PRC_MF         (:,:,:)   
+REAL,    ALLOCATABLE   :: PRI_MF         (:,:,:)   
+REAL,    ALLOCATABLE   :: PCF_MF         (:,:,:)   
+REAL,    ALLOCATABLE   :: PTHS           (:,:,:)   
+REAL,    ALLOCATABLE   :: PRS            (:,:,:,:) 
+REAL,    ALLOCATABLE   :: PSRCS          (:,:,:)   
+REAL,    ALLOCATABLE   :: PCLDFR         (:,:,:)   
+REAL,    ALLOCATABLE   :: PHLC_HRC       (:,:,:)   
+REAL,    ALLOCATABLE   :: PHLC_HCF       (:,:,:)   
+REAL,    ALLOCATABLE   :: PHLI_HRI       (:,:,:)   
+REAL,    ALLOCATABLE   :: PHLI_HCF       (:,:,:)   
+REAL,    ALLOCATABLE   :: ZRS            (:,:,:,:) 
+REAL,    ALLOCATABLE   :: ZZZ            (:,:,:)   
+REAL,    ALLOCATABLE   :: ZSIGQSAT       (:,:)   
+REAL,    ALLOCATABLE   :: ZICE_CLD_WGT   (:,:)   
+REAL,    ALLOCATABLE   :: ZDUM1          (:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM2          (:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM3          (:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM4          (:,:,:)
+REAL,    ALLOCATABLE   :: ZDUM5          (:,:,:)
 
-REAL,    ALLOCATABLE   :: PRS_OUT        (:,:,:,:,:) 
-REAL,    ALLOCATABLE   :: PSRCS_OUT      (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PCLDFR_OUT     (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PHLC_HRC_OUT   (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PHLC_HCF_OUT   (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PHLI_HRI_OUT   (:,:,:,:)   
-REAL,    ALLOCATABLE   :: PHLI_HCF_OUT   (:,:,:,:)   
+REAL,    ALLOCATABLE   :: PRS_OUT        (:,:,:,:) 
+REAL,    ALLOCATABLE   :: PSRCS_OUT      (:,:,:)   
+REAL,    ALLOCATABLE   :: PCLDFR_OUT     (:,:,:)   
+REAL,    ALLOCATABLE   :: PHLC_HRC_OUT   (:,:,:)   
+REAL,    ALLOCATABLE   :: PHLC_HCF_OUT   (:,:,:)   
+REAL,    ALLOCATABLE   :: PHLI_HRI_OUT   (:,:,:)   
+REAL,    ALLOCATABLE   :: PHLI_HCF_OUT   (:,:,:)   
 
 INTEGER :: NPROMA, NGPBLKS, NFLEVG
 INTEGER :: IBL, JLON, JLEV
@@ -108,8 +108,8 @@ CALL GETDATA_ICE_ADJUST (NPROMA, NGPBLKS, NFLEVG, PRHODJ, PEXNREF, PRHODREF, PPA
 & PHLI_HRI, PHLI_HCF, ZRS, ZZZ, PRS_OUT, PSRCS_OUT, PCLDFR_OUT, PHLC_HRC_OUT, PHLC_HCF_OUT,       &
 & PHLI_HRI_OUT, PHLI_HCF_OUT, LLVERBOSE)
 
-KLEV = SIZE (PRS, 3)
-KRR  = SIZE (PRS, 4)
+KLEV = SIZE (PRS, 2)
+KRR  = SIZE (PRS, 3)
 
 IF (LLVERBOSE) PRINT *, " KLEV = ", KLEV, " KRR = ", KRR
 
@@ -206,22 +206,22 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
 
     CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, PHYEX%PARAM_ICEN, &
     & PHYEX%MISC%TBUCONF, PHYEX%MISC%KRR, PHYEX%MISC%HBUNAME,     &
-    & PHYEX%MISC%PTSTEP, ZSIGQSAT (:, :, IBL), PRHODJ=PRHODJ (:, :, :, IBL), &
-    & PEXNREF=PEXNREF (:, :, :, IBL),                                                                                           &
-    & PRHODREF=PRHODREF (:, :, :, IBL), PSIGS=PSIGS (:, :, :, IBL), LMFCONV=PHYEX%MISC%LMFCONV, PMFCONV=PMFCONV (:, :, :, IBL), &
-    & PPABST=PPABSM (:, :, :, IBL), PZZ=ZZZ (:, :, :, IBL), PEXN=PEXNREF (:, :, :, IBL), PCF_MF=PCF_MF (:, :, :, IBL),          &
-    & PRC_MF=PRC_MF (:, :, :, IBL), PRI_MF=PRI_MF  (:, :, :, IBL),                                                              &
-    & PICLDFR=ZDUM1(:, :, :, IBL), PWCLDFR=ZDUM2(:, :, :, IBL), PSSIO=ZDUM3(:, :, :, IBL),                                      &
-    & PSSIU=ZDUM4(:, :, :, IBL), PIFR=ZDUM5(:, :, :, IBL),                                                                      &
-    & PRV=ZRS(:, :, :, 1, IBL), PRC=ZRS(:, :, :, 2, IBL),                                                                       &
-    & PRVS=PRS(:, :, :, 1, IBL), PRCS=PRS(:, :, :, 2, IBL), PTH=ZRS(:, :, :, 0, IBL), PTHS=PTHS (:, :, :, IBL),                 &
+    & PHYEX%MISC%PTSTEP, ZSIGQSAT (:, IBL), PRHODJ=PRHODJ (:, :, IBL), &
+    & PEXNREF=PEXNREF (:, :, IBL),                                                                                           &
+    & PRHODREF=PRHODREF (:, :, IBL), PSIGS=PSIGS (:, :, IBL), LMFCONV=PHYEX%MISC%LMFCONV, PMFCONV=PMFCONV (:, :, IBL), &
+    & PPABST=PPABSM (:, :, IBL), PZZ=ZZZ (:, :, IBL), PEXN=PEXNREF (:, :, IBL), PCF_MF=PCF_MF (:, :, IBL),          &
+    & PRC_MF=PRC_MF (:, :, IBL), PRI_MF=PRI_MF  (:, :, IBL),                                                              &
+    & PICLDFR=ZDUM1(:, :, IBL), PWCLDFR=ZDUM2(:, :, IBL), PSSIO=ZDUM3(:, :, IBL),                                      &
+    & PSSIU=ZDUM4(:, :, IBL), PIFR=ZDUM5(:, :, IBL),                                                                      &
+    & PRV=ZRS(:, :, 1, IBL), PRC=ZRS(:, :, 2, IBL),                                                                       &
+    & PRVS=PRS(:, :, 1, IBL), PRCS=PRS(:, :, 2, IBL), PTH=ZRS(:, :, 0, IBL), PTHS=PTHS (:, :, IBL),                 &
     & OCOMPUTE_SRC=PHYEX%MISC%OCOMPUTE_SRC,                                                                                     &
-    & PSRCS=PSRCS (:, :, :, IBL), PCLDFR=PCLDFR (:, :, :, IBL), PRR=ZRS(:, :, :, 3, IBL), PRI=ZRS(:, :, :, 4, IBL),             &
-    & PRIS=PRS(:, :, :, 4, IBL), PRS=ZRS(:, :, :, 5, IBL), PRG=ZRS(:, :, :, 6, IBL), &
+    & PSRCS=PSRCS (:, :, IBL), PCLDFR=PCLDFR (:, :, IBL), PRR=ZRS(:, :, 3, IBL), PRI=ZRS(:, :, 4, IBL),             &
+    & PRIS=PRS(:, :, 4, IBL), PRS=ZRS(:, :, 5, IBL), PRG=ZRS(:, :, 6, IBL), &
     & TBUDGETS=PHYEX%MISC%YLBUDGET, KBUDGETS=PHYEX%MISC%NBUDGET,    &
-    & PICE_CLD_WGT=ZICE_CLD_WGT(:, :, IBL),                                                                                     &
-    & PHLC_HRC=PHLC_HRC(:, :, :, IBL), PHLC_HCF=PHLC_HCF(:, :, :, IBL),                                                         &
-    & PHLI_HRI=PHLI_HRI(:, :, :, IBL), PHLI_HCF=PHLI_HCF(:, :, :, IBL)                                                          &
+    & PICE_CLD_WGT=ZICE_CLD_WGT(:, IBL),                                                                                     &
+    & PHLC_HRC=PHLC_HRC(:, :, IBL), PHLC_HCF=PHLC_HCF(:, :, IBL),                                                         &
+    & PHLI_HRI=PHLI_HRI(:, :, IBL), PHLI_HCF=PHLI_HCF(:, :, IBL)                                                          &
 #ifdef USE_STACK
     & , YDSTACK=YLSTACK &
 #endif
@@ -263,12 +263,12 @@ PRINT *, " ZTC = ", ZTC, ZTC / REAL (NPROMA*NGPBLKS*NTIME)
 IF (LLCHECK .OR. LLSTAT .OR. LLCHECKDIFF) THEN
   DO IBL = IBLOCK1, IBLOCK2
     PRINT *, " IBL = ", IBL
-    CALL DIFF ("PSRCS",    PSRCS_OUT    (:,:,:,IBL), PSRCS    (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PCLDFR",   PCLDFR_OUT   (:,:,:,IBL), PCLDFR   (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PHLC_HRC", PHLC_HRC_OUT (:,:,:,IBL), PHLC_HRC (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PHLC_HCF", PHLC_HCF_OUT (:,:,:,IBL), PHLC_HCF (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PHLI_HRI", PHLI_HRI_OUT (:,:,:,IBL), PHLI_HRI (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
-    CALL DIFF ("PHLI_HCF", PHLI_HCF_OUT (:,:,:,IBL), PHLI_HCF (:,:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PSRCS",    PSRCS_OUT    (:,:,IBL), PSRCS    (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PCLDFR",   PCLDFR_OUT   (:,:,IBL), PCLDFR   (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PHLC_HRC", PHLC_HRC_OUT (:,:,IBL), PHLC_HRC (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PHLC_HCF", PHLC_HCF_OUT (:,:,IBL), PHLC_HCF (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PHLI_HRI", PHLI_HRI_OUT (:,:,IBL), PHLI_HRI (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
+    CALL DIFF ("PHLI_HCF", PHLI_HCF_OUT (:,:,IBL), PHLI_HCF (:,:,IBL), LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)
   ENDDO
 ENDIF
 
