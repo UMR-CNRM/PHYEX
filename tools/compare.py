@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
 
-import matplotlib
-matplotlib.use('Agg')
 import os
 os.environ['NUMEXPR_MAX_THREADS'] = '1'
 import shutil
 import numpy
-import matplotlib.pyplot as plt
-import xarray as xr
 import sys
 import subprocess
 import difflib
@@ -31,6 +27,7 @@ avail_groups=['Stations/sta1',
               'Budgets/RG','Budgets/RS','Budgets/RH','Budgets/TK']
 
 def compareBACKUPFiles(file_user, file_ref):
+  import xarray as xr
   status = 0
   da = xr.open_dataset(file_user)
   da2 = xr.open_dataset(file_ref)
@@ -71,6 +68,7 @@ def compareBACKUPFiles(file_user, file_ref):
   return status
 
 def compareTSERIESFiles(file_user, file_ref, tol_ad=1E-12):
+  import xarray as xr
   status = 0
   da = xr.open_dataset(file_user)
   da2 = xr.open_dataset(file_ref)
@@ -120,6 +118,9 @@ def compareTSERIESFiles(file_user, file_ref, tol_ad=1E-12):
   return status
 
 def comp_DDH(filename1, filename2, output_fig, tol_ad=3E-7, tol_rd=1.E-6, verbose=False):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
     import epygram
     epygram.init_env()
 
