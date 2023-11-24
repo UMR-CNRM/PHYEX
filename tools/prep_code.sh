@@ -16,7 +16,7 @@ PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ###### COMMAND LINE ARGUMENTS
 function usage {
   echo "Usage: $0 [-h] [-c CHECKOUT_POINT] [-m MODEL] [-D OPTION [-D OPTION [...]]]] \\"
-  echo "          [-s SUBDIR [-s SUBDIR [...]]]  [-v [-v [-v]]] DIRECTORY"
+  echo "          [-s SUBDIR [-s SUBDIR [...]]]  [-v [-v [-v]]] DIRECTORY -- PYFT_OPTIONS"
   echo "DIRECTORY             directory containing the script result"
   echo "-c CHECKOUT_POINT     git object to checkout, can be a specific commit"
   echo "                      or a tag with the following syntax: tags/TAG where TAG is the tag name"
@@ -37,6 +37,8 @@ function usage {
   echo "* -s options are mandatory for -m, -D and -p options"
   echo "* -p option is allowed only if -c and -m options are provided"
   echo ""
+  echo "Everything after the '--' is passed to pyft for source-to-source transformation"
+  echo ""
   echo "To use the pyft tool... it must be installed"
 }
 
@@ -53,6 +55,7 @@ subs=""
 renameFf=0
 verbose=0
 ilooprm=0
+forpyft=0
 
 if [ -z "${PHYEXREPOprotocol-}" ]; then
   repository=""
@@ -78,7 +81,12 @@ while [ -n "$1" ]; do
     '--ilooprm') ilooprm=1;;
     '--repo') repository=$2; shift;;
     '-v') verbose=$(($verbose+1));;
-     *) directory="$1";;
+    '--') forpyft=1;;
+     *) if [ $forpyft -eq 0 ]; then
+          directory="$1"
+        else
+          pyft_options="$pyft_options $1"
+        fi;;
   esac
   shift
 done

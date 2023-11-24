@@ -13,8 +13,11 @@ This build system has two dependencies (installation is done automatically by th
   - [fcm](https://metomi.github.io/fcm/doc/user_guide/)
   - [fiat](https://github.com/ecmwf-ifs/fiat)
 
-The script build/with\_fcm/make\_fcm.sh uses a configuration file and build the library and test programs.
+The script build/with\_fcm/make\_fcm.sh uses configuration files and build the library and test programs.
 These executables can be found in the build/bin subdirectory in the architecture specific directory arch\_\<architecture name\>.
+
+Some configuration files are stored in build/with\_fcm/arch but other can be maintained by the end users in their
+${HOME}/.phyex/fcm\_arch.
 
 Some more details on the build system can be found in [build/with\_fcm/README.md file](../build/with_fcm/README.md).
 

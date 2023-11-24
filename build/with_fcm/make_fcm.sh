@@ -30,7 +30,8 @@ function parse_args() {
 $0 [options]
 --help -h   help
 --arch-path ARCH_PATH directory for architecture specific files (see below) [./arch]
---arch ARCH  	        build using arch files $ARCH_PATH/arch-ARCH.* [gnu]
+                      note that arch files are first looked for in ${HOME}/.phyex/fcm_arch
+--arch ARCH  	        build using arch file arch-ARCH.fcm [gnu]
 --gmkfile FILE        build using a gmkpack configuration file (--arch must be used to give a name to the build dir)
 --mesonhprofile FILE  build using Méso-NH profile and rules (--arch must be used to give a name to the build dir)
 --noexpand            do not use mnh_expand (code will be in array-syntax)"
@@ -332,11 +333,17 @@ if [ $packcreation -eq 1 ]; then
     touch $builddir/arch.env
     mesonhprofile2archenv $MESONHPROFILE $builddir/arch.fcm $builddir/arch.env
   else
-    cp ${ARCH_PATH}/arch-${ARCH}.env $builddir/arch.env
-    cp ${ARCH_PATH}/arch-${ARCH}.fcm $builddir/arch.fcm 
+    if [ -f ${HOME}/.phyex/fcm_arch/arch-${ARCH}.fcm ]; then
+      cp ${HOME}/.phyex/fcm_arch/arch-${ARCH}.env $builddir/arch.env
+      cp ${HOME}/.phyex/fcm_arch/arch-${ARCH}.fcm $builddir/arch.fcm
+    else 
+      cp ${ARCH_PATH}/arch-${ARCH}.env $builddir/arch.env
+      cp ${ARCH_PATH}/arch-${ARCH}.fcm $builddir/arch.fcm 
+    fi
   fi
   cp fcm-make.cfg $builddir
   cd $builddir
+  . arch.env
   
   # Populate the source directory with (modified) PHYEX source code
   [ "$commit" == "" ] && commit=$PWD/../../.. #Current script run from within a PHYEX repository
@@ -360,15 +367,15 @@ if [ $packcreation -eq 1 ]; then
   if [ "$fromdir" == '' ]; then
     echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
     if [[ $commit == testprogs${separator}* ]]; then
-      PATH=$UPDATEDPATH prep_code.sh -c $commit src #This commit is ready for inclusion
+      PATH=$UPDATEDPATH prep_code.sh -c $commit src -- $PYFT_OPTS #This commit is ready for inclusion
     else
-      PATH=$UPDATEDPATH prep_code.sh -c $commit $expand_options $subs -m testprogs src
+      PATH=$UPDATEDPATH prep_code.sh -c $commit $expand_options $subs -m testprogs src -- $PYFT_OPTS
     fi
   else
     echo "Copy $fromdir"
     mkdir src
     scp -q -r $fromdir/src src/
-    PATH=$UPDATEDPATH prep_code.sh $expand_options $subs -m testprogs src
+    PATH=$UPDATEDPATH prep_code.sh $expand_options $subs -m testprogs src -- $PYFT_OPTS
   fi
   
   # Add some code
