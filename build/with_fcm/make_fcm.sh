@@ -4,7 +4,7 @@ set -e
 #set -x
 
 fcm_version=tags/2021.05.0
-fiat_version=1295120464c3905e5edcbb887e4921686653eab8
+fiat_version=tags/1.2.0
 
 function parse_args() {
   # default values
@@ -361,7 +361,7 @@ if [ $packcreation -eq 1 ]; then
   else
     expand_options=""
   fi
-  PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/../../../tools #if run from within a PHYEX repository
+  PHYEXTOOLSDIR="$DIR/../../../tools" #if run from within a PHYEX repository
   UPDATEDPATH=$PATH
   which prep_code.sh > /dev/null || export UPDATEDPATH=$PHYEXTOOLSDIR:$PATH
   subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s support"
