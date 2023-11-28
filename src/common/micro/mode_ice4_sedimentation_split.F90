@@ -388,11 +388,22 @@ DO WHILE (ZANYREMAINT)
         ENDIF
       ENDDO
     ENDDO
-#ifdef REPRO48
-#else
   ELSEIF(KSPE==5) THEN
     ! ******* for snow
     ZWSED(:,:) = 0.
+#ifdef REPRO48
+    !The following lines must be kept equal to the computation in the general case ("for other species" case below)
+    ZFSED=ICEP%XFSEDS
+    ZEXSED=ICEP%XEXSEDS
+    DO JK = IKTB,IKTE
+      DO JIJ = IIJB,IIJE
+        IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
+          ZWSED(JIJ, JK) = ZFSED  * PRXT(JIJ, JK)**ZEXSED            &
+                         &        * PRHODREF(JIJ, JK)**(ZEXSED-ICED%XCEXVT)
+        ENDIF
+      ENDDO
+    ENDDO
+#else
     DO JK = IKTB,IKTE
       DO JIJ = IIJB,IIJE
         IF(PRXT(JIJ,JK)> ICED%XRTMIN(KSPE) .AND. ZREMAINT(JIJ)>0.) THEN
@@ -419,12 +430,6 @@ DO WHILE (ZANYREMAINT)
       CASE(3)
         ZFSED=ICEP%XFSEDR
         ZEXSED=ICEP%XEXSEDR
-#ifdef REPRO48
-      CASE(5)
-        ZFSED=ICEP%XFSEDS
-        ZEXSED=ICEP%XEXSEDS
-#else
-#endif
       CASE(6)
         ZFSED=ICEP%XFSEDG
         ZEXSED=ICEP%XEXSEDG
