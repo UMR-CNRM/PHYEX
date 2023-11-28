@@ -16,7 +16,8 @@ PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ###### COMMAND LINE ARGUMENTS
 function usage {
   echo "Usage: $0 [-h] [-c CHECKOUT_POINT] [-m MODEL] [-D OPTION [-D OPTION [...]]]] \\"
-  echo "          [-s SUBDIR [-s SUBDIR [...]]]  [-v [-v [-v]]] DIRECTORY -- PYFT_OPTIONS"
+  echo "          [-s SUBDIR [-s SUBDIR [...]]] [--pyft_opts_env VAR] [-v [-v [-v]]] \\"
+  echo "          DIRECTORY -- PYFT_OPTIONS"
   echo "DIRECTORY             directory containing the script result"
   echo "-c CHECKOUT_POINT     git object to checkout, can be a specific commit"
   echo "                      or a tag with the following syntax: tags/TAG where TAG is the tag name"
@@ -29,6 +30,10 @@ function usage {
   echo "--repo                use this repository instead of the one derived (if any) from the env variables"
   echo "                      PHYEXREPOuser (=$PHYEXREPOuser) and PHYEXREPOprotocol (=$PHYEXREPOprotocol)"
   echo "-v                    add verbosity (up to 3 -v)"
+  echo "--pyft_opts_env VAR   name of an environment variable containing options to use to call"
+  echo "                      the pyft_tool.py script"
+  echo "-- PYFT_OPTIONS       everything after '--' are used as options for pyft_tool.py"
+  echo "                      These options are used for all the files."
   echo ""
   echo "* If the -c option is not provided, DIRECTORY must already contain files and directory as if"
   echo "  it was the result of a git checkout"
@@ -40,6 +45,25 @@ function usage {
   echo "Everything after the '--' is passed to pyft for source-to-source transformation"
   echo ""
   echo "To use the pyft tool... it must be installed"
+  echo ""
+  echo "The variable name sent with --pyft_opts_env must correspond to an exported environement"
+  echo "variable. This variable can be a one-line string or a multi-line string. In case of a one-line"
+  echo "string, the string is added to the call to pyft_tool.py script for each file."
+  echo "If the environment variable is a multi-lines string, each line must take the form"
+  echo "FILE_DESCRIPTOR:OPTIONS"
+  echo "where FILE_DESCRIPTOR is regular expression to test against the filename. If there"
+  echo "is a match, the OPTIONS can be used for the file. The last matching FILE_DESCRIPTOR"
+  echo "is used. The regular expression is tested using 'grep -e'. If a line doesn't contain"
+  echo "the FILE_DESCRIPTOR part, it applies to all source code."
+  echo ""
+  echo "For example, to transform all source code in lower case:"
+  echo "export OPTS='--lowerCase'; $0 --pyft_opts_env OPTS ..."
+  echo ""
+  echo "To transform all source code in lower case, except routines in turb directory which must be"
+  echo "in upper case but keeping the turb.F90 in lower case:"
+  echo "export OPTS='--lowerCase"
+  echo "^turb/:--upperCase"
+  echo "^turb/turb\..90:--lowerCase'; $0 --pyft_opts_env OPTS ..."
 }
 
 full_command="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}") $@"
@@ -56,6 +80,7 @@ renameFf=0
 verbose=0
 ilooprm=0
 forpyft=0
+pyft_opts_env=""
 
 if [ -z "${PHYEXREPOprotocol-}" ]; then
   repository=""
@@ -71,7 +96,7 @@ fi
 
 while [ -n "$1" ]; do
   case "$1" in
-    '-h') usage;;
+    '-h') usage; exit;;
     '-c') checkout_point="$2"; shift;;
     '-m') model="$2"; shift;;
     '--mnhExpand') pyft_options="$pyft_options $1";;
@@ -81,6 +106,7 @@ while [ -n "$1" ]; do
     '--ilooprm') ilooprm=1;;
     '--repo') repository=$2; shift;;
     '-v') verbose=$(($verbose+1));;
+    '--pyft_opts_env') pyft_opts_env=$2; shift;;
     '--') forpyft=1;;
      *) if [ $forpyft -eq 0 ]; then
           directory="$1"
@@ -91,6 +117,11 @@ while [ -n "$1" ]; do
   shift
 done
 
+if [ "$pyft_opts_env" != "" ]; then
+  #pyft_opts_env contains the name of the environment variable to use
+  pyft_opts_env=${!pyft_opts_env}
+  #now, pyft_opts_env contains the configuration to use
+fi
 if [ $verbose -ge 3 ]; then
   set -x
 fi
@@ -252,7 +283,7 @@ if [ $ilooprm -eq 1 ]; then
 fi
 
 ###### PYFT
-if [ -n "${pyft_options-}" ]; then
+if [ "$pyft_opts_env" != "" -o -n "${pyft_options-}" ]; then
   [ $verbose -gt 0 ] && echo "Applying pyft_tool"
 
   #Update PATH and PYTHONPATH if needed
@@ -272,7 +303,25 @@ if [ -n "${pyft_options-}" ]; then
         if [ "$(echo $file | grep '\.')" != '' -a $(echo $file | rev | cut -d. -f1 | rev) != 'fypp' ]; then
           #Files without extension are certainly not source code files
           #.fypp files cannot be read by pyft_tool.py
-          pyft_tool.py --wrapH $pyft_options "$file" #--wrapH allows to deal with h files
+          extra_opts=""
+          if [ "$pyft_opts_env" != "" ]; then
+            while read line; do
+              if echo $line | grep ':' > /dev/null; then
+                #This line has the form FILE_DESCRIPTOR:OPTIONS
+                fd=$(echo $line | cut -d: -f1)
+                if echo $file | grep -e $fd > /dev/null; then
+                  extra_opts=$(echo $line | cut -d: -f2-)
+                fi
+              else
+                extra_opts=$line
+              fi
+            done < <(echo "$pyft_opts_env")
+          fi
+          if [ "$extra_opts" != "" -o -n "${pyft_options-}" ]; then
+            cmd="pyft_tool.py --wrapH $pyft_options $extra_opts" #--wrapH allows to deal with h files
+            [ $verbose -gt 1 ] && echo $cmd "$file"
+            $cmd "$file"
+          fi
         fi
       done
     fi

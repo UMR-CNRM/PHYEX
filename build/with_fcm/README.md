@@ -39,4 +39,21 @@ The env file is sourced juste before the compilation step (for loading modules f
 before populating the build directory with the source code.
 Indeed, during this second step, the source code is copied or cloned and transformed by the pyft\_tool.py script.
 The active transformations are controlled by the --noexpand/--expand options given to the
-different check\_commit\_\* scripts and by the PYFT\_OPTS that can be set in the env file.
+different check\_commit\_\* scripts and by the PYFT\_OPTS that can be set in the env file (only for testprogs).
+
+If the environment variable is a multi-lines string, each line must take the form
+> FILE\_DESCRIPTOR:OPTIONS
+where FILE\_DESCRIPTOR is regular expression to test against the filename. If there
+is a match, the OPTIONS can be used for the file. The last matching FILE\_DESCRIPTOR
+is used. The regular expression is tested using 'grep -e'. If a line doesn't contain
+the FILE\_DESCRIPTOR part, it applies to all source code.
+
+For example, to transform all source code in lower case:
+> export OPTS='--lowerCase'; $0 --pyft\_opts\_env OPTS ...
+
+To transform all source code in lower case, except routines in turb directory which must be
+in upper case but keeping the turb.F90 in lower case:
+> export OPTS='--lowerCase 
+> ^turb/:--upperCase 
+> ^turb/turb\..90:--lowerCase'; $0 --pyft\_opts\_env OPTS ...
+

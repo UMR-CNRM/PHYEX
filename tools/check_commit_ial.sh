@@ -115,7 +115,7 @@ mainPackVersion=${mainPackVersion:-${defaultMainPackVersion}}
 ################################
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t TEST] [--cycle CYCLE] [--scripttag TAG] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t TEST] [--cycle CYCLE] [--scripttag TAG] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--prep_code-opts 'OPTS'] commit [reference]"
   echo "commit          commit hash (or a directory, or among $specialPack) to test"
   echo "reference       commit hash (or a directory, or among $specialPack) REF to use as a reference"
   echo "-s              suppress compilation pack"
@@ -140,6 +140,10 @@ function usage {
   echo "                only if the step has not already been done"
   echo "--computeRefIfNeeded"
   echo "                computes the missing references"
+  echo "--prep_code-opts 'OPTS'"
+  echo "                OPTS is added to the call to prep_code (e.g. --prep_code_opts '--lowerCase'"
+  echo "                to transfor all source codes in lower case). Help on prep_code.sh options"
+  echo "                can be found with 'prep_code.sh -h'. Note: don't forget to enclose OPTS in ' or \""
   echo ""
   echo "If nothing is asked (pack creation, compilation, running, check, removing) everything"
   echo "except the removing is done"
@@ -173,6 +177,7 @@ scripttag=''
 remove=0
 onlyIfNeeded=0
 computeRefIfNeeded=0
+prepCodeOpts=""
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -192,7 +197,7 @@ while [ -n "$1" ]; do
     '--remove') remove=1;;
     '--onlyIfNeeded') onlyIfNeeded=1;;
     '--computeRefIfNeeded') computeRefIfNeeded=1;;
-
+    '--prep_code-opts') prepCodeOpts=$2; shift;;
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
           commit=$1
@@ -502,15 +507,15 @@ if [ $packcreation -eq 1 ]; then
     if [ "$fromdir" == '' ]; then
       echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
       if [[ $commit == arome${separator}* ]]; then
-        $prep_code -c $commit PHYEX #This commit is ready for inclusion
+        $prep_code $prepCodeOpts -c $commit PHYEX #This commit is ready for inclusion
       else
-        $prep_code -c $commit $expand_options $subs -m arome PHYEX
+        $prep_code $prepCodeOpts -c $commit $expand_options $subs -m arome PHYEX
       fi
     else
       echo "Copy $fromdir"
       mkdir PHYEX
       scp -q -r $fromdir/src PHYEX/
-      $prep_code $expand_options $subs -m arome PHYEX
+      $prep_code $prepCodeOpts $expand_options $subs -m arome PHYEX
     fi
     find PHYEX -type f -exec touch {} \; #to be sure a recompilation occurs
     for rep in turb micro conv aux; do
