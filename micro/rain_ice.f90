@@ -364,7 +364,7 @@ LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLW3D
 REAL, DIMENSION(KRR) :: ZRSMIN
 INTEGER :: ISIZE, IPROMA, IGPBLKS, ISIZE2
 !
-LOGICAL :: LSAVE_MICRO ! if true, microphysical tendencies are saved for cloud electricity
+LOGICAL :: LSAVE_MICRO = .FALSE. ! if true, microphysical tendencies are saved for cloud electricity
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC),MERGE(IBUNUM-IBUNUM_EXTRA,0,OELEC)) :: &
            ZMICRO_TEND ! Total mixing ratio change, used for electric charge tendencies
 LOGICAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)) :: GMASK_ELEC
@@ -530,8 +530,6 @@ ENDIF
 IF (OELEC) THEN
   LSAVE_MICRO = .TRUE.
   ZMICRO_TEND(:,:,:) = 0.
-ELSE
-  LSAVE_MICRO = .FALSE.
 END IF
 !
 !This part is put in another routine to separate pack/unpack operations from computations
