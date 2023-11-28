@@ -299,7 +299,7 @@ IF(PARAMI%LPACK_MICRO) THEN
               ! Save indices for later usages:
               I1(IC) = JIJ
               I2(IC) = JK
-              IF(BUCONF%LBU_ENABLE) THEN
+              IF(BUCONF%LBU_ENABLE .OR. OSAVE_MICRO) THEN
                 I1TOT(JMICRO+IC-1)=JIJ
                 I2TOT(JMICRO+IC-1)=JK
               ENDIF
