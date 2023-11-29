@@ -384,7 +384,8 @@ def comp_testprogs(f1, f2):
             for p in ('\.\.', '~=', '!='): s = re.sub(p, '', s)
             s = re.sub(r'\-0.00000E\+00([|\- ])', r' 0.00000E+00\1', s)  
             s = re.sub(r'\n\sTotal time:.*\n', '\n', s)
-        return s[247:]
+            s = re.sub(r'IBL =[ ]*', 'IBL = ', s)
+        return s[s.index('IBL'):]
     r = read(f1) == read(f2)
     if not r:
         print("{f1} {f2} differ".format(f1=f1, f2=f2))

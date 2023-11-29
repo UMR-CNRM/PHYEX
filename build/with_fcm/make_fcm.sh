@@ -273,7 +273,7 @@ COMPIL_CFLAGS="\\\$\${level}_CFLAGS"
 LD_FLAGS="\\\$BASE_LD"
 LD_FLAGS="\$LD_FLAGS \$OMP_LD"
 
-LIBS="rt dl"
+LIBS="${LIBS:-rt dl}"
 
 ENTRYPOINTS="rain_ice.o shallow_mf.o turb.o ice_adjust.o"
 
@@ -420,12 +420,20 @@ fi
 # Build the compilation script and run it
 if [ $compilation -eq 1 ]; then
   cd -P $DIR/arch_$ARCH
+  . arch.env
   build_compilation_script src
   ./compilation.sh
   ln -s build/bin/libphyex.so .
   
   # Check if python can open the resulting shared lib
+  set +e
+  #On NEC, the shared library cannot be loaded as other lib if it was compiled for the Vector Engine
   python3 -c "from ctypes import cdll; cdll.LoadLibrary('./libphyex.so')"
+  if [ $? -ne 0 ]; then
+    echo "On some systems (cross-compilation) it's normal to obtain an error here"
+    echo "when python tries to open the shared lib."
+  fi
+  set -e
   
   # ldd -r ./libphyex.so should also give interesting results
 fi

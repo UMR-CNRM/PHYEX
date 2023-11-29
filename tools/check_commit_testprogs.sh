@@ -389,6 +389,7 @@ if [ $run -ge 1 ]; then
             export DR_HOOK=1
             export DR_HOOK_IGNORE_SIGNALS=-1
         fi
+        . $TESTDIR/$name/build/with_fcm/arch_${archfile}/arch.env
         set +e
         $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe --check $extrapolation_opts > Output_run 2> Stderr_run
         stat=$?
