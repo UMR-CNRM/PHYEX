@@ -368,9 +368,9 @@ if [ $packcreation -eq 1 ]; then
   if [ "$fromdir" == '' ]; then
     echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
     if [[ $commit == testprogs${separator}* ]]; then
-      PATH=$UPDATEDPATH prep_code.sh -c --pyft_opts_env PYFT_OPTS $commit src #This commit is ready for inclusion
+      PATH=$UPDATEDPATH prep_code.sh --pyft_opts_env PYFT_OPTS -c $commit src #This commit is ready for inclusion
     else
-      PATH=$UPDATEDPATH prep_code.sh -c --pyft_opts_env PYFT_OPTS $commit $expand_options $subs -m testprogs src
+      PATH=$UPDATEDPATH prep_code.sh --pyft_opts_env PYFT_OPTS -c $commit $expand_options $subs -m testprogs src
     fi
   else
     echo "Copy $fromdir"
