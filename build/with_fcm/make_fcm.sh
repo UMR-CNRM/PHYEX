@@ -4,7 +4,8 @@ set -e
 #set -x
 
 fcm_version=tags/2021.05.0
-fiat_version=tags/1.2.0
+fiat_version=5eef5552c3002aa962caef56c6bdc88932739e77 #this specific version is needed for NEC
+fiat_gh_user=ACCORD-NWP #for official repo, use ecmwf-ifs
 
 function parse_args() {
   # default values
@@ -109,21 +110,40 @@ function check_install_fcm() {
 }
 
 function check_install_fiat() {
-  if [ ! -d fiat/src ]; then
+  if [ $ssh -eq 1 ]; then
+    repo=git@github.com:$fiat_gh_user/fiat.git
+    remote=ssh_$fiat_gh_user
+  else
+    repo=https://github.com/$fiat_gh_user/fiat.git
+    remote=https_$fiat_gh_user
+  fi
+  cd fiat
+  if [ ! -d src ]; then
     echo "Performing fiat cloning..."
-    cd fiat
     rm -f .gitkeep
-    if [ $ssh -eq 1 ]; then
-      git clone git@github.com:ecmwf-ifs/fiat.git .
-    else
-      git clone https://github.com/ecmwf-ifs/fiat.git .
-    fi
-    git checkout $fiat_version
+    git clone $repo .
+    git remote rename origin $remote
     touch .gitkeep
-    cd ..
     echo "...fiat cloning done"
   fi
-echo
+  if [ $(git remote -v | grep -e "^$remote\s" | wc -l) -eq 0 ]; then
+    #the repository and/or the protocol is new
+    git remote add $remote $repo
+  fi
+  #Checkout the right version
+  set +e
+  #try to directly checkout to reduce network need
+  git checkout $fiat_version 2> /dev/null
+  stat=$?
+  set -e
+  if [ $stat -ne 0 ]; then
+    echo "Performing fiat fetching..."
+    git fetch $remote
+    git checkout $fiat_version
+    echo "...fiat fetching done"
+  fi
+  cd ..
+  echo
 }
 
 function gmkfile2arch() {
@@ -386,6 +406,14 @@ if [ $packcreation -eq 1 ]; then
   PROGRAM DUMMYPROG
     PRINT*, "CREATED TO FORCE FCM TO LINK SOMETHING"
   END PROGRAM DUMMYPROG
+..EOF
+  #needed with commit 6b9b61b3d17228fcb5c0186e38d72aea987acd10 by P. Marguinaud
+  #due to a weakness of fcm
+  cat <<..EOF > nvtx_dummy.F90
+  MODULE NVTX
+    !Unused module but wrongly detected as dependency by fcm
+    !whereas it is within an ifdef directive
+  END MODULE NVTX
 ..EOF
 fi
 
