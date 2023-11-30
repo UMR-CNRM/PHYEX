@@ -1964,9 +1964,20 @@ if ( tbudgets(NBUDGET_RR)%lenabled ) then
   tzsource%lavailable = ohorelax_rr
   call Budget_source_add( tbudgets(NBUDGET_RR), tzsource )
 
+  tzsource%cmnhname   = 'VTURB'
+  tzsource%clongname  = 'vertical turbulent diffusion'
+  tzsource%lavailable = hturb == 'TKEL'
+  call Budget_source_add( tbudgets(NBUDGET_RR), tzsource )
+
+  tzsource%cmnhname   = 'HTURB'
+  tzsource%clongname  = 'horizontal turbulent diffusion'
+  tzsource%lavailable = hturb == 'TKEL' .and. HTURBDIM == '3DIM'
+  call Budget_source_add( tbudgets(NBUDGET_RR), tzsource )
+
   tzsource%cmnhname   = 'NETUR'
   tzsource%clongname  = 'negativity correction induced by turbulence'
-  tzsource%lavailable = hturb == 'TKEL' .and. ( hcloud == 'KHKO' .or. hcloud == 'C2R2' .or. hcloud == 'LIMA' )
+  tzsource%lavailable = hturb == 'TKEL' .and. (                            hcloud == 'ICE3' .or. hcloud == 'ICE4' &
+                                                .or. hcloud == 'KHKO' .or. hcloud == 'C2R2' .or. hcloud == 'LIMA' )
   call Budget_source_add( tbudgets(NBUDGET_RR), tzsource )
 
   tzsource%cmnhname   = 'VISC'
@@ -2451,11 +2462,20 @@ if ( tbudgets(NBUDGET_RS)%lenabled ) then
   tzsource%lavailable = ohorelax_rs
   call Budget_source_add( tbudgets(NBUDGET_RS), tzsource )
 
-!   tzsource%cmnhname   = 'NETUR'
-!   tzsource%clongname  = 'negativity correction induced by turbulence'
-!   tzsource%lavailable = hturb == 'TKEL' .and. (      hcloud == 'ICE3' .or. hcloud == 'ICE4' &
-!                                   .or. hcloud == 'KHKO' .or. hcloud == 'C2R2' .or. hcloud == 'LIMA' )
-!   call Budget_source_add( tbudgets(NBUDGET_RS), tzsource nneturrs )
+  tzsource%cmnhname   = 'VTURB'
+  tzsource%clongname  = 'vertical turbulent diffusion'
+  tzsource%lavailable = hturb == 'TKEL'
+  call Budget_source_add( tbudgets(NBUDGET_RS), tzsource )
+
+  tzsource%cmnhname   = 'HTURB'
+  tzsource%clongname  = 'horizontal turbulent diffusion'
+  tzsource%lavailable = hturb == 'TKEL' .and. HTURBDIM == '3DIM'
+  call Budget_source_add( tbudgets(NBUDGET_RS), tzsource )
+
+  tzsource%cmnhname   = 'NETUR'
+  tzsource%clongname  = 'negativity correction induced by turbulence'
+  tzsource%lavailable = hturb == 'TKEL' .and. ( hcloud == 'ICE3' .or. hcloud == 'ICE4' .or. hcloud == 'LIMA' )
+  call Budget_source_add( tbudgets(NBUDGET_RS), tzsource )
 
   tzsource%cmnhname   = 'VISC'
   tzsource%clongname  = 'viscosity'
@@ -2642,11 +2662,20 @@ if ( tbudgets(NBUDGET_RG)%lenabled ) then
   tzsource%lavailable = ohorelax_rg
   call Budget_source_add( tbudgets(NBUDGET_RG), tzsource )
 
-!   tzsource%cmnhname   = 'NETUR'
-!   tzsource%clongname  = 'negativity correction induced by turbulence'
-!   tzsource%lavailable = hturb == 'TKEL' .and. (      hcloud == 'ICE3' .or. hcloud == 'ICE4' &
-!                                   .or. hcloud == 'KHKO' .or. hcloud == 'C2R2' .or. hcloud == 'LIMA' )
-!   call Budget_source_add( tbudgets(NBUDGET_RG), tzsource nneturrg )
+  tzsource%cmnhname   = 'VTURB'
+  tzsource%clongname  = 'vertical turbulent diffusion'
+  tzsource%lavailable = hturb == 'TKEL'
+  call Budget_source_add( tbudgets(NBUDGET_RG), tzsource )
+
+  tzsource%cmnhname   = 'HTURB'
+  tzsource%clongname  = 'horizontal turbulent diffusion'
+  tzsource%lavailable = hturb == 'TKEL' .and. HTURBDIM == '3DIM'
+  call Budget_source_add( tbudgets(NBUDGET_RG), tzsource )
+
+  tzsource%cmnhname   = 'NETUR'
+  tzsource%clongname  = 'negativity correction induced by turbulence'
+  tzsource%lavailable = hturb == 'TKEL' .and. ( hcloud == 'ICE3' .or. hcloud == 'ICE4' .or. hcloud == 'LIMA' )
+  call Budget_source_add( tbudgets(NBUDGET_RG), tzsource )
 
   tzsource%cmnhname   = 'VISC'
   tzsource%clongname  = 'viscosity'
@@ -2851,11 +2880,20 @@ if ( tbudgets(NBUDGET_RH)%lenabled ) then
   tzsource%lavailable = ohorelax_rh
   call Budget_source_add( tbudgets(NBUDGET_RH), tzsource )
 
-!   tzsource%cmnhname   = 'NETUR'
-!   tzsource%clongname  = 'negativity correction induced by turbulence'
-!   tzsource%lavailable = hturb == 'TKEL' .and. (      hcloud == 'ICE3' .or. hcloud == 'ICE4' &
-!                                   .or. hcloud == 'KHKO' .or. hcloud == 'C2R2' .or. hcloud == 'LIMA' )
-!   call Budget_source_add( tbudgets(NBUDGET_RH), tzsource nneturrh )
+  tzsource%cmnhname   = 'VTURB'
+  tzsource%clongname  = 'vertical turbulent diffusion'
+  tzsource%lavailable = hturb == 'TKEL'
+  call Budget_source_add( tbudgets(NBUDGET_RH), tzsource )
+
+  tzsource%cmnhname   = 'HTURB'
+  tzsource%clongname  = 'horizontal turbulent diffusion'
+  tzsource%lavailable = hturb == 'TKEL' .and. HTURBDIM == '3DIM'
+  call Budget_source_add( tbudgets(NBUDGET_RH), tzsource )
+
+  tzsource%cmnhname   = 'NETUR'
+  tzsource%clongname  = 'negativity correction induced by turbulence'
+  tzsource%lavailable = hturb == 'TKEL' .and. ( hcloud == 'ICE3' .or. hcloud == 'ICE4' .or. hcloud == 'LIMA' )
+  call Budget_source_add( tbudgets(NBUDGET_RH), tzsource )
 
   tzsource%cmnhname   = 'VISC'
   tzsource%clongname  = 'viscosity'
