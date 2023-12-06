@@ -891,7 +891,7 @@ if ( BUCONF%lbu_enable ) then
        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'SEDI', zths(:, :, :) * prhodj(:, :, :) )
   if ( BUCONF%lbudget_rc .and. nmom_c.ge.1 .and. lsedc ) &
        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'SEDI', zrcs(:, :, :) * prhodj(:, :, :) )
-  if ( BUCONF%lbudget_rr .and. nmom_r.ge.2 ) &
+  if ( BUCONF%lbudget_rr .and. nmom_r.ge.1 ) &
        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'SEDI', zrrs(:, :, :) * prhodj(:, :, :) )
   if ( BUCONF%lbudget_ri .and. nmom_i.ge.1 .and. lsedi ) &
        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'SEDI', zris(:, :, :) * prhodj(:, :, :) )
