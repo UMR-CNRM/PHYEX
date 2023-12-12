@@ -417,11 +417,15 @@ DO JK=IKTB,IKTE
     ENDIF
   ENDDO
 ENDDO
-CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LLW3D(:,:), &
-                     PTHT(:, :), PPABST(:, :), PRHODREF(:, :), &                                       
-                     PEXN(:, :), ZW3D(:, :), ZT(:, :), &                                                           
-                     PRVT(:, :), &                                                                                 
-                     PCIT(:, :), ZZ_RVHENI(:, :))
+DO JK=IKTB,IKTE                                                                                                                     
+  DO JIJ=IIJB,IIJE
+    CALL ICE4_NUCLEATION(CST, PARAMI, ICEP, ICED, LLW3D(JIJ, JK), &
+                         PTHT(JIJ, JK), PPABST(JIJ, JK), PRHODREF(JIJ, JK), &                                       
+                         PEXN(JIJ, JK), ZW3D(JIJ, JK), ZT(JIJ, JK), &                                                           
+                         PRVT(JIJ, JK), &                                                                                 
+                         PCIT(JIJ, JK), ZZ_RVHENI(JIJ, JK))
+  ENDDO
+ENDDO
 DO JK = IKTB, IKTE
   DO JIJ=IIJB, IIJE
     ZZ_RVHENI(JIJ,JK) = MIN(PRVS(JIJ,JK), ZZ_RVHENI(JIJ,JK)/PTSTEP)
