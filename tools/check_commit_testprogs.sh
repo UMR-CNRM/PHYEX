@@ -76,6 +76,8 @@ i=$((i+1)); conf_extra_tag[$i]="_Z120_NPRO32_BLK256_TIMES4"
             conf_extra_opts[$i]="--nflevg 120 --nproma 32 --blocks 256 --times 4"
 i=$((i+1)); conf_extra_tag[$i]="_Z120_NPRO32_BLK64_TIMES16"
             conf_extra_opts[$i]="--nflevg 120 --nproma 32 --blocks 64 --times 16"
+i=$((i+1)); conf_extra_tag[$i]='_Z120_NPRO${NPROMA}_BLK${NBLOCKS}'
+            conf_extra_opts[$i]='--nflevg 120 --nproma ${NPROMA} --blocks ${NBLOCKS}'
 
 
 ################################
@@ -83,7 +85,7 @@ i=$((i+1)); conf_extra_tag[$i]="_Z120_NPRO32_BLK64_TIMES16"
 ################################
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [--noexpand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [-a ARCH] [-A ARCH] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [--noexpand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [-a ARCH] [-A ARCH] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--no-perf] [--no-check] [-e EXTRAPOLATION] commit [reference]"
   echo "commit          commit hash (or a directory, or among $specialName) to test"
   echo "reference       commit hash (or a directory, or among $specialName) REF to use as a reference"
   echo "-s              suppress compilation directory"
@@ -105,6 +107,9 @@ function usage {
   echo "--computeRefIfNeeded"
   echo "                compute the reference if not already present"
   echo "--no-perf       deactivate DR_HOOK"
+  echo "--no-check      suppress value printing (comparison will be impossible)"
+  echo "                this option can reduce drastically the running time but only allow"
+  echo "                to access performance statistics."
   echo "-a arch ARCH    architecture name to use to build and run the commit (=$defaultarchfile)"
   echo "-A arch ARCH    architecture name to use for the reference simulation (=$defaultarchfile)"
   echo "-e EXTRAPOLATION"
@@ -142,6 +147,7 @@ onlyIfNeeded=0
 computeRefIfNeeded=0
 perf=1
 extrapolation=0
+checkOpt="--check"
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -161,6 +167,7 @@ while [ -n "$1" ]; do
     '--onlyIfNeeded') onlyIfNeeded=1;;
     '--computeRefIfNeeded') computeRefIfNeeded=1;;
     '--no-perf') perf=0;;
+    '--no-check') checkOpt="";;
     '-e') extrapolation=$2; shift;;
 
     #--) shift; break ;;
@@ -200,12 +207,12 @@ if [ $check -eq 1 -a -z "${reference-}" ]; then
 fi
 
 if [[ ! -z "${conf_extra_tag[$extrapolation]+unset}" ]]; then
-  extrapolation_tag=${conf_extra_tag[$extrapolation]}
+  extrapolation_tag=$(eval echo ${conf_extra_tag[$extrapolation]})
 else
   echo "The extrapolation option ($extrapolation) doesn't have associated tag"
 fi
 if [[ ! -z "${conf_extra_opts[$extrapolation]+unset}" ]]; then
-  extrapolation_opts=${conf_extra_opts[$extrapolation]}
+  extrapolation_opts=$(eval echo ${conf_extra_opts[$extrapolation]})
 else
   echo "The extrapolation option ($extrapolation) doesn't have associated options"
 fi
@@ -391,7 +398,7 @@ if [ $run -ge 1 ]; then
         fi
         . $TESTDIR/$name/build/with_fcm/arch_${archfile}/arch.env
         set +e
-        $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe --check $extrapolation_opts > Output_run 2> Stderr_run
+        $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe $checkOpt $extrapolation_opts > Output_run 2> Stderr_run
         stat=$?
         set -e
         if [ $stat -ne 0 ]; then
