@@ -2,6 +2,7 @@ MODULE GETDATA_ICE_ADJUST_MOD
 
 USE OMP_LIB
 USE ARRAYS_MANIP, ONLY: SETUP, REPLICATE, NPROMIZE, INTERPOLATE, SET
+USE PARKIND1, ONLY: JPRD
 
 CONTAINS
 
@@ -58,27 +59,27 @@ REAL, INTENT(OUT), ALLOCATABLE   :: PHLI_HCF_OUT_B (:,:,:)
 REAL, INTENT(OUT), ALLOCATABLE   :: ZRS_B          (:,:,:,:) 
 REAL, INTENT(OUT), ALLOCATABLE   :: ZZZ_B          (:,:,:)   
 
-REAL, ALLOCATABLE   :: PRHODJ         (:,:,:)   
-REAL, ALLOCATABLE   :: PEXNREF        (:,:,:)   
-REAL, ALLOCATABLE   :: PRHODREF       (:,:,:)   
-REAL, ALLOCATABLE   :: PPABSM         (:,:,:)   
-REAL, ALLOCATABLE   :: PTHT           (:,:,:)   
-REAL, ALLOCATABLE   :: PSIGS          (:,:,:)   
-REAL, ALLOCATABLE   :: PMFCONV        (:,:,:)   
-REAL, ALLOCATABLE   :: PRC_MF         (:,:,:)   
-REAL, ALLOCATABLE   :: PRI_MF         (:,:,:)   
-REAL, ALLOCATABLE   :: PCF_MF         (:,:,:)   
-REAL, ALLOCATABLE   :: PTHS           (:,:,:)   
-REAL, ALLOCATABLE   :: PRS            (:,:,:,:) 
-REAL, ALLOCATABLE   :: PRS_OUT        (:,:,:,:) 
-REAL, ALLOCATABLE   :: PSRCS_OUT      (:,:,:)   
-REAL, ALLOCATABLE   :: PCLDFR_OUT     (:,:,:)   
-REAL, ALLOCATABLE   :: PHLC_HRC_OUT   (:,:,:)   
-REAL, ALLOCATABLE   :: PHLC_HCF_OUT   (:,:,:)   
-REAL, ALLOCATABLE   :: PHLI_HRI_OUT   (:,:,:)   
-REAL, ALLOCATABLE   :: PHLI_HCF_OUT   (:,:,:)   
-REAL, ALLOCATABLE   :: ZRS            (:,:,:,:) 
-REAL, ALLOCATABLE   :: ZZZ            (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PRHODJ         (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PEXNREF        (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PRHODREF       (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PPABSM         (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PTHT           (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PSIGS          (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PMFCONV        (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PRC_MF         (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PRI_MF         (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PCF_MF         (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PTHS           (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PRS            (:,:,:,:) 
+REAL(KIND=JPRD), ALLOCATABLE   :: PRS_OUT        (:,:,:,:) 
+REAL(KIND=JPRD), ALLOCATABLE   :: PSRCS_OUT      (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PCLDFR_OUT     (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PHLC_HRC_OUT   (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PHLC_HCF_OUT   (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PHLI_HRI_OUT   (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: PHLI_HCF_OUT   (:,:,:)   
+REAL(KIND=JPRD), ALLOCATABLE   :: ZRS            (:,:,:,:) 
+REAL(KIND=JPRD), ALLOCATABLE   :: ZZZ            (:,:,:)   
 
 INTEGER, INTENT(IN) :: NPROMA, NGPBLKS
 INTEGER :: NGPTOT
