@@ -90,17 +90,10 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), OPTIONAL, INTENT(OUT)   :: PFPR    ! upper-ai
 LOGICAL :: LLSEA_AND_TOWN
 INTEGER :: JRR, JIJ, JK, IKB, IKE,IKL, IIJB, IIJE, IKTB, IKTE
 INTEGER :: ISHIFT, IK, IKPLUS
-REAL :: ZQP, ZINVTSTEP, ZGAC, ZGC, ZGAC2, ZGC2, ZRAYDEFO, ZLBDAS
-REAL, DIMENSION(D%NIJT) :: ZWSEDW1, ZWSEDW2 ! sedimentation speed
+REAL :: ZINVTSTEP, ZGAC, ZGC, ZGAC2, ZGC2, ZRAYDEFO
 REAL, DIMENSION(D%NIJT) :: ZTSORHODZ        ! TimeStep Over (Rhodref times delta Z)
 REAL, DIMENSION(D%NIJT,0:1,2:KRR) :: ZSED   ! sedimentation flux array for each species and for above and current levels
-REAL :: PWSEDW, PWSEDWSUP, PINVTSTEP, PTSTEP1, PDZZ1, PRHODREF1, PRXT1
 !
-REAL :: ZLBC    ! XLBC weighted by sea fraction
-REAL :: ZFSEDC
-REAL :: ZCONC3D ! droplet condensation
-REAL :: ZRAY    ! Cloud Mean radius
-REAL :: ZZWLBDA, ZZWLBDC, ZZCC
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
@@ -246,6 +239,9 @@ CONTAINS
     REAL :: ZCONC3D ! droplet condensation
     REAL :: ZRAY    ! Cloud Mean radius
     REAL :: ZZWLBDA, ZZWLBDC, ZZCC
+    INTEGER :: JIJ
+    REAL :: ZQP
+    REAL :: ZWSEDW1, ZWSEDW2
 
     !!REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
@@ -272,28 +268,28 @@ CONTAINS
           ZZWLBDA=6.6E-8*(101325./PPABST(JIJ,JK))*(PTHT(JIJ,JK)/293.15)
           ZZWLBDC=(ZLBC*ZCONC3D/(PRHODREF(JIJ,JK)*PRXT(JIJ)))**ICED%XLBEXC
           ZZCC=ICED%XCC*(1.+1.26*ZZWLBDA*ZZWLBDC/ZRAY) !! ZCC  : Fall speed
-          ZWSEDW1(JIJ)=PRHODREF(JIJ,JK)**(-ICED%XCEXVT ) * ZZWLBDC**(-ICED%XDC)*ZZCC*ZFSEDC
+          ZWSEDW1=PRHODREF(JIJ,JK)**(-ICED%XCEXVT ) * ZZWLBDC**(-ICED%XDC)*ZZCC*ZFSEDC
         ELSE
-          ZWSEDW1(JIJ)=0.
+          ZWSEDW1=0.
         ENDIF
         IF ( ZQP > ICED%XRTMIN(JRR) ) THEN
           ZZWLBDA=6.6E-8*(101325./PPABST(JIJ,JK))*(PTHT(JIJ,JK)/293.15)
           ZZWLBDC=(ZLBC*ZCONC3D/(PRHODREF(JIJ,JK)*ZQP))**ICED%XLBEXC
           ZZCC=ICED%XCC*(1.+1.26*ZZWLBDA*ZZWLBDC/ZRAY) !! ZCC  : Fall speed
-          ZWSEDW2(JIJ)=PRHODREF(JIJ,JK)**(-ICED%XCEXVT ) * ZZWLBDC**(-ICED%XDC)*ZZCC*ZFSEDC
+          ZWSEDW2=PRHODREF(JIJ,JK)**(-ICED%XCEXVT ) * ZZWLBDC**(-ICED%XDC)*ZZCC*ZFSEDC
         ELSE
-          ZWSEDW2(JIJ)=0.
+          ZWSEDW2=0.
         ENDIF
       ELSE
-        ZWSEDW1(JIJ)=0.
-        ZWSEDW2(JIJ)=0.
+        ZWSEDW1=0.
+        ZWSEDW2=0.
       ENDIF
 !- duplicated code -------------------------------------------------------------------------
-      IF (ZWSEDW2(JIJ) /= 0.) THEN
-        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1(JIJ),PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP) &
-         & + FWSED2(ZWSEDW2(JIJ),PTSTEP,PDZZ(JIJ,JK),ZSED(JIJ,IKPLUS,JRR))
+      IF (ZWSEDW2 /= 0.) THEN
+        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1,PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP) &
+         & + FWSED2(ZWSEDW2,PTSTEP,PDZZ(JIJ,JK),ZSED(JIJ,IKPLUS,JRR))
       ELSE
-        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1(JIJ),PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP)
+        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1,PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP)
       ENDIF
 !-------------------------------------------------------------------------------------------
     ENDDO
@@ -305,6 +301,9 @@ CONTAINS
   SUBROUTINE PRISTINE_ICE(PRXT)
 
     REAL, INTENT(IN)    :: PRXT(D%NIJT) ! mr of specy X
+    INTEGER :: JIJ
+    REAL :: ZQP
+    REAL :: ZWSEDW1, ZWSEDW2
 
     !!REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
@@ -316,31 +315,31 @@ CONTAINS
       IF ((PRXT(JIJ) > ICED%XRTMIN(JRR)) .OR. (ZQP > ICED%XRTMIN(JRR))) THEN
         !calculation of w
         IF ( PRXT(JIJ) > MAX(ICED%XRTMIN(JRR),1.0E-7 ) ) THEN
-          ZWSEDW1(JIJ)= ICEP%XFSEDI *  &
+          ZWSEDW1= ICEP%XFSEDI *  &
                             & PRHODREF(JIJ,JK)**(-ICED%XCEXVT) * & !    McF&H
                             & MAX( 0.05E6,-0.15319E6-0.021454E6* &
                             &      ALOG(PRHODREF(JIJ,JK)*PRXT(JIJ)) )**ICEP%XEXCSEDI
         ELSE
-          ZWSEDW1(JIJ)=0.
+          ZWSEDW1=0.
         ENDIF
         IF ( ZQP > MAX(ICED%XRTMIN(JRR),1.0E-7 ) ) THEN
-          ZWSEDW2(JIJ)= ICEP%XFSEDI *  &
+          ZWSEDW2= ICEP%XFSEDI *  &
                             & PRHODREF(JIJ,JK)**(-ICED%XCEXVT) * & !    McF&H
                             & MAX( 0.05E6,-0.15319E6-0.021454E6* &
                             &      ALOG(PRHODREF(JIJ,JK)*ZQP) )**ICEP%XEXCSEDI
         ELSE
-          ZWSEDW2(JIJ)=0.
+          ZWSEDW2=0.
         ENDIF
       ELSE
-        ZWSEDW1(JIJ)=0.
-        ZWSEDW2(JIJ)=0.
+        ZWSEDW1=0.
+        ZWSEDW2=0.
       ENDIF
 !- duplicated code -------------------------------------------------------------------------
-      IF (ZWSEDW2(JIJ) /= 0.) THEN
-        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1(JIJ),PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP) &
-         & + FWSED2(ZWSEDW2(JIJ),PTSTEP,PDZZ(JIJ,JK),ZSED(JIJ,IKPLUS,JRR))
+      IF (ZWSEDW2 /= 0.) THEN
+        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1,PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP) &
+         & + FWSED2(ZWSEDW2,PTSTEP,PDZZ(JIJ,JK),ZSED(JIJ,IKPLUS,JRR))
       ELSE
-        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1(JIJ),PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP)
+        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1,PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP)
       ENDIF
 !-------------------------------------------------------------------------------------------
     ENDDO
@@ -352,6 +351,9 @@ CONTAINS
   SUBROUTINE SNOW(PRXT)
 
     REAL, INTENT(IN)    :: PRXT(D%NIJT) ! mr of specy X
+    INTEGER :: JIJ
+    REAL :: ZQP, ZLBDAS
+    REAL :: ZWSEDW1, ZWSEDW2
 
     !!REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
@@ -373,31 +375,31 @@ CONTAINS
         END IF
         !calculation of w
         IF ( PRXT(JIJ) > ICED%XRTMIN(JRR) ) THEN
-          ZWSEDW1(JIJ)= ICEP%XFSEDS *  &
+          ZWSEDW1= ICEP%XFSEDS *  &
                         & PRHODREF(JIJ,JK)**(-ICED%XCEXVT) * &
                         & (1+(ICED%XFVELOS/ZLBDAS)**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEXSEDS/ICED%XALPHAS)* &
                         & ZLBDAS**(ICED%XBS+ICEP%XEXSEDS) 
         ELSE
-          ZWSEDW1(JIJ)=0.
+          ZWSEDW1=0.
         ENDIF
         IF ( ZQP > ICED%XRTMIN(JRR) ) THEN
-          ZWSEDW2(JIJ)= ICEP%XFSEDS *  &
+          ZWSEDW2= ICEP%XFSEDS *  &
                         & PRHODREF(JIJ,JK)**(-ICED%XCEXVT) * &
                         & (1+(ICED%XFVELOS/ZLBDAS)**ICED%XALPHAS)**(-ICED%XNUS+ICEP%XEXSEDS/ICED%XALPHAS)* &
                         & ZLBDAS**(ICED%XBS+ICEP%XEXSEDS) 
         ELSE
-          ZWSEDW2(JIJ)=0.
+          ZWSEDW2=0.
         ENDIF
       ELSE
-        ZWSEDW1(JIJ)=0.
-        ZWSEDW2(JIJ)=0.
+        ZWSEDW1=0.
+        ZWSEDW2=0.
       ENDIF
 !- duplicated code -------------------------------------------------------------------------
-      IF (ZWSEDW2(JIJ) /= 0.) THEN
-        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1(JIJ),PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP) &
-         & + FWSED2(ZWSEDW2(JIJ),PTSTEP,PDZZ(JIJ,JK),ZSED(JIJ,IKPLUS,JRR))
+      IF (ZWSEDW2 /= 0.) THEN
+        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1,PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP) &
+         & + FWSED2(ZWSEDW2,PTSTEP,PDZZ(JIJ,JK),ZSED(JIJ,IKPLUS,JRR))
       ELSE
-        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1(JIJ),PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP)
+        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1,PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP)
       ENDIF
 !-------------------------------------------------------------------------------------------
     ENDDO
@@ -411,6 +413,9 @@ CONTAINS
     REAL, INTENT(IN)    :: PFSED
     REAL, INTENT(IN)    :: PEXSED
     REAL, INTENT(IN)    :: PRXT(D%NIJT) ! mr of specy X
+    INTEGER :: JIJ
+    REAL :: ZQP
+    REAL :: ZWSEDW1, ZWSEDW2
 
     !!REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
@@ -422,25 +427,25 @@ CONTAINS
       IF ((PRXT(JIJ) > ICED%XRTMIN(JRR)) .OR. (ZQP > ICED%XRTMIN(JRR))) THEN
         !calculation of w
         IF ( PRXT(JIJ) > ICED%XRTMIN(JRR) ) THEN
-          ZWSEDW1(JIJ)= PFSED *PRXT(JIJ)**(PEXSED-1)*PRHODREF(JIJ,JK)**(PEXSED-ICED%XCEXVT-1)
+          ZWSEDW1= PFSED *PRXT(JIJ)**(PEXSED-1)*PRHODREF(JIJ,JK)**(PEXSED-ICED%XCEXVT-1)
         ELSE
-          ZWSEDW1(JIJ)=0.
+          ZWSEDW1=0.
         ENDIF
         IF ( ZQP > ICED%XRTMIN(JRR) ) THEN
-          ZWSEDW2(JIJ)= PFSED *ZQP**(PEXSED-1)*PRHODREF(JIJ,JK)**(PEXSED-ICED%XCEXVT-1)
+          ZWSEDW2= PFSED *ZQP**(PEXSED-1)*PRHODREF(JIJ,JK)**(PEXSED-ICED%XCEXVT-1)
         ELSE
-          ZWSEDW2(JIJ)=0.
+          ZWSEDW2=0.
         ENDIF
       ELSE
-        ZWSEDW1(JIJ)=0.
-        ZWSEDW2(JIJ)=0.
+        ZWSEDW1=0.
+        ZWSEDW2=0.
       ENDIF
 !- duplicated code -------------------------------------------------------------------------
-      IF (ZWSEDW2(JIJ) /= 0.) THEN
-        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1(JIJ),PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP) &
-         & + FWSED2(ZWSEDW2(JIJ),PTSTEP,PDZZ(JIJ,JK),ZSED(JIJ,IKPLUS,JRR))
+      IF (ZWSEDW2 /= 0.) THEN
+        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1,PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP) &
+         & + FWSED2(ZWSEDW2,PTSTEP,PDZZ(JIJ,JK),ZSED(JIJ,IKPLUS,JRR))
       ELSE
-        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1(JIJ),PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP)
+        ZSED(JIJ,IK,JRR)=FWSED1(ZWSEDW1,PTSTEP,PDZZ(JIJ,JK),PRHODREF(JIJ,JK),PRXT(JIJ),ZINVTSTEP)
       ENDIF
 !-------------------------------------------------------------------------------------------
     ENDDO
