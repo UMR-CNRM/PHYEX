@@ -363,7 +363,7 @@ subroutine init_rain_ice_old(kulout)
   use modd_rain_ice_descr_n, only: rain_ice_descr_goto_model
   use modd_cloudpar_n,       only: cloudpar_goto_model
   use modd_param_ice_n
-
+  use modd_io,               only: tfiledata
   use mode_ini_rain_ice
 
   use mode_ini_cst
@@ -379,6 +379,7 @@ subroutine init_rain_ice_old(kulout)
 
   character(len=4) :: c_micro
   integer :: isplitr
+  type(tfiledata) :: tpfile
 
   call ini_cst
 
@@ -388,8 +389,8 @@ subroutine init_rain_ice_old(kulout)
   call param_ice_goto_model(1, 1)
   call rain_ice_descr_goto_model(1, 1)
   call rain_ice_param_goto_model(1, 1)
-
-  call param_icen_init('AROME ', 0, .false., kulout, &                                                                 
+  tpfile%nlu = 0
+  call param_icen_init('AROME ', tpfile, .false., kulout, &                                                                 
                       &.true., .false., .false., 0)
 
   call tbuconf_associate

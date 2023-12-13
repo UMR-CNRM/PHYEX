@@ -1,19 +1,20 @@
 MODULE MODE_POSNAM_PHY
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE POSNAM_PHY(KUNITNML, CDNAML, LDNEEDNAM, LDFOUND, KLUOUT)
+SUBROUTINE POSNAM_PHY(TFILENAM, CDNAML, LDNEEDNAM, LDFOUND)
 !Wrapper to call the AROME version of posnam
+
+USE MODD_IO, ONLY: TFILEDATA
 
 IMPLICIT NONE
 
-INTEGER,          INTENT(IN)    :: KUNITNML  !< Logical unit to access the namelist
+TYPE(TFILEDATA),  INTENT(IN)    :: TFILENAM  !< Namelist file
 CHARACTER(LEN=*), INTENT(IN)    :: CDNAML    !< Namelist name
 LOGICAL,          INTENT(IN)    :: LDNEEDNAM !< True to abort if namelist is absent
 LOGICAL,          INTENT(OUT)   :: LDFOUND   !< True if namelist has been found
-INTEGER,          INTENT(IN)    :: KLUOUT    !< Logical unit for output
 
 #include "posnam.intfb.h"
-CALL POSNAM(KUNITNML, CDNAML)
+CALL POSNAM(TFILENAM%NLU, CDNAML)
 LDFOUND=.TRUE. !Posnam aborts if not found
 
 END SUBROUTINE POSNAM_PHY
