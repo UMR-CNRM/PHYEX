@@ -1,7 +1,7 @@
 # Compilation
 $FCOMPILER     =      mpinfort
 $BASE_FFLAGS   =      -c -fopenmp -traceback=verbose -fdiag-vector=3 -fdiag-inline=2 -fpic -mstack-arrays  -fdefault-real=8
-$PROD_FFLAGS   =      -g -O3 -mno-vector-fma -mvector-floating-divide-instruction -mvector-sqrt-instruction -fcse-after-vectorization -mvector-advance-gather
+$PROD_FFLAGS   =      -g -O3 -mno-vector-fma -finline-functions -finline-max-depth=3 -mvector-floating-divide-instruction -mvector-sqrt-instruction -fcse-after-vectorization -mvector-advance-gather
 $DEV_FFLAGS    =      -g -O0
 $DEBUG_FFLAGS  =      -g -O0  -fbounds-check  -minit-stack=snan
 $CCOMPILER     =      mpincc
