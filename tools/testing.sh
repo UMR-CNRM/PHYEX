@@ -177,9 +177,16 @@ function get_cases {
 function send_mail {
   message="$1"
   if [ "$MAIL" != "" ]; then
-    mail -s "$context" "$MAIL" <<EOF
+    if command -v mail; then
+      mail -s "$context" "$MAIL" <<EOF
 $(echo -e ${message})
 EOF
+    else
+      sendmail "$MAIL" <<EOF
+Subject: $context
+$(echo -e ${message})
+EOF
+    fi
   fi
 }
 
