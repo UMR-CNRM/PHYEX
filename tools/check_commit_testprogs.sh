@@ -56,10 +56,10 @@ TESTDIR=${TESTPROGSDIR:=$HOME/TESTPROGS}
 
 dirdata=$PHYEXTOOLSDIR/testprogs_data
 if [ $(hostname | cut -c 1-7) == 'belenos' -o $(hostname | cut -c 1-7) == 'taranis' ]; then
-  HPC=1
   defaultarchfile=MIMPIIFC1805.EPONA
+elif [ $(hostname) == 'aurora01' ]; then
+  defaultarchfile=ECMWF_NEC440MPI225SP.AU.x
 else
-  HPC=0
   defaultarchfile=gnu
 fi
 defaultRef=ref

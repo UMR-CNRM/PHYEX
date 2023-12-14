@@ -91,6 +91,9 @@ done
 
 #stdout and stderr redirection
 logfile="${WORKDIR}/logfile"
+if [ -f "${logfile}" ]; then
+  mv "${logfile}" "${logfile}.old"
+fi
 exec > "${logfile}" 2>&1
 
 #context for statuses
