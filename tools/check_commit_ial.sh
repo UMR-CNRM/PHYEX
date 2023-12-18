@@ -115,7 +115,7 @@ mainPackVersion=${mainPackVersion:-${defaultMainPackVersion}}
 ################################
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t TEST] [--cycle CYCLE] [--scripttag TAG] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--prep_code-opts 'OPTS'] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t TEST] [--cycle CYCLE] [--scripttag TAG] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--prep_code-opts 'OPTS'] [--perf FILE] commit [reference]"
   echo "commit          commit hash (or a directory, or among $specialPack) to test"
   echo "reference       commit hash (or a directory, or among $specialPack) REF to use as a reference"
   echo "-s              suppress compilation pack"
@@ -144,6 +144,7 @@ function usage {
   echo "                OPTS is added to the call to prep_code (e.g. --prep_code_opts '--lowerCase'"
   echo "                to transfor all source codes in lower case). Help on prep_code.sh options"
   echo "                can be found with 'prep_code.sh -h'. Note: don't forget to enclose OPTS in ' or \""
+  echo "--perf FILE     add performance statistics in file FILE"
   echo ""
   echo "If nothing is asked (pack creation, compilation, running, check, removing) everything"
   echo "except the removing is done"
@@ -178,6 +179,7 @@ remove=0
 onlyIfNeeded=0
 computeRefIfNeeded=0
 prepCodeOpts=""
+perffile=""
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -198,6 +200,7 @@ while [ -n "$1" ]; do
     '--onlyIfNeeded') onlyIfNeeded=1;;
     '--computeRefIfNeeded') computeRefIfNeeded=1;;
     '--prep_code-opts') prepCodeOpts=$2; shift;;
+    '--perf') perffile="$(realpath $2)"; shift;;
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
           commit=$1
@@ -666,7 +669,13 @@ if [ $run -ge 1 ]; then
 
         mkdir -p conf_tests/$t
         cd conf_tests/$t
+        t1=$(($(date +%s%N)/1000)) #current time in milliseconds
         MYLIB=$name TESTDIR=$dirconf/$t exescript Output_run $dirconf/$t/aro${cycle}${scripttag}.sh
+        t2=$(($(date +%s%N)/1000))
+        if [ "$perffile" != "" ]; then
+          #The elapsed time is not relevant when the model runs with a queuing system (HPC)
+          echo "$commit ial $t $(($t2-$t1))" >> "$perffile"
+        fi
       fi
     else
       echo "The test $t is not allowed"

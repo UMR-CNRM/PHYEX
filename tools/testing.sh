@@ -5,14 +5,17 @@ set -e
 set -o pipefail #abort if left command on a pipe fails
 
 function usage {
-  echo "Usage: $0 [-h] [--repo-user] [--repo-protocol] [--repo-repo] [--no-update] [--no-compil]"
-  echo "               [--no-exec] [--no-comp] [--no-remove] [--commit SHA] [--ref REF] [--force] [MAIL]"
-  echo "--repo-user     user hosting the PHYEX repository on github,"
+  echo "Usage: $0 [-h] [--repo-user USER] [--repo-protocol PROTOCOL] [--repo-repo REPO] [--no-update] [--no-compil]"
+  echo "               [--no-exec] [--no-comp] [--no-remove] [--force] [--commit SHA] [--ref REF]"
+  echo "               [--only-model MODEL] [--no-enable-gh-pages] [--perf PERF] [MAIL]"
+  echo "--repo-user USER"
+  echo "                user hosting the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREPOuser (=$PHYEXREPOuser)"
-  echo "--repo-protocol protocol (https or ssh) to reach the PHYEX repository on github,"
+  echo "--repo-protocol PROTOCOL"
+  echo "                protocol (https or ssh) to reach the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREPOprotocol (=$PHYEXREPOprotocol)"
-  echo "--repo-repo     repository name"
-  echo "                defaults to the env variable PHYEXREPOrepo (=$PHYEXREPOrepo)"
+  echo "--repo-repo REPO"
+  echo "                repository name defaults to the env variable PHYEXREPOrepo (=$PHYEXREPOrepo)"
   echo "--no-update     do not update the tools"
   echo "--no-compil     do not compil (only usefull after a first execution with --no-update)"
   echo "--no-exec       do not execute (only usefull after a first execution with --no-update)"
@@ -25,6 +28,7 @@ function usage {
   echo "                performs the test only using model MODEL (option can be provided several times)"
   echo "--no-enable-gh-pages"
   echo "                dont't try to enable the project pages on github"
+  echo "--perf FILE     add performance statistics in file FILE"
   echo "MAIL            comma-separated list of e-mail addresses (no spaces); if not provided, mail is not sent"
   echo ""
   echo "This script provides functionality for automated tests."
@@ -58,6 +62,7 @@ SHA=0
 force=0
 models=""
 enableghpages=1
+perfopt=""
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -75,6 +80,7 @@ while [ -n "$1" ]; do
     '--ref') REF=$2; shift;;
     '--only-model') models="${models} $2"; shift;;
     '--no-enable-gh-pages') enableghpages=0;;
+    '--perf') perfopt="--perf $2"; shift;;
     #--) shift; break ;;
      *) if [ -z "${MAIL-}" ]; then
           MAIL="$1"
@@ -288,19 +294,19 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
     #Model specific configuration
     if [ "${model}" == 'ial' ]; then
       compilation='-p -c'
-      execution='-r'
+      execution="-r $perfopt"
       comparison='-C --computeRefIfNeeded'
       jsonfile="src/arome/ial_version.json"
       docmp=1
     elif [ "${model}" == 'lmdz' ]; then
       compilation='-p -c --nofcm'
-      execution='-r --nofcm'
+      execution="-r --nofcm $perfopt"
       comparison='-C'
       jsonfile="src/${model}/${model}_version.json"
       docmp=0
     else
       compilation='-p -c'
-      execution='-r'
+      execution="-r $perfopt"
       comparison='-C --computeRefIfNeeded'
       jsonfile="src/${model}/${model}_version.json"
       docmp=1

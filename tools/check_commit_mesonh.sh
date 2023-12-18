@@ -42,7 +42,7 @@ TARGZDIR=${TARGZDIR:=$PHYEXTOOLSDIR/pack/}
 ################################
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [--expand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--prep_code-opts 'OPTS'] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [--expand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--prep_code-opts 'OPTS'] [--per FILE] commit [reference]"
   echo "commit          commit hash (or a directory) to test"
   echo "reference       commit hash or a directory or nothing for ref"
   echo "-s              suppress compilation pack"
@@ -68,6 +68,7 @@ function usage {
   echo "                OPTS is added to the call to prep_code (e.g. --prep_code_opts '--lowerCase'"
   echo "                to transfor all source codes in lower case). Help on prep_code.sh options"
   echo "                can be found with 'prep_code.sh -h'. Note: don't forget to enclose OPTS in ' or \""
+  echo "--perf FILE     add performance statistics in file FILE"
   echo ""
   echo "If nothing is asked (pack creation, compilation, running, check, removing) everything"
   echo "except the removing is done"
@@ -95,6 +96,7 @@ remove=0
 onlyIfNeeded=0
 computeRefIfNeeded=0
 prepCodeOpts=""
+perffile=""
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -112,6 +114,7 @@ while [ -n "$1" ]; do
     '--onlyIfNeeded') onlyIfNeeded=1;;
     '--computeRefIfNeeded') computeRefIfNeeded=1;;
     '--prep_code-opts') prepCodeOpts=$2; shift;;
+    '--perf') perffile="$(realpath $2)"; shift;;
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
           commit=$1
@@ -436,8 +439,13 @@ if [ $run -ge 1 ]; then
         fi
         ./clean_mesonh_xyz
         set +o pipefail #We want to go through all tests
+        t1=$(($(date +%s%N)/1000)) #current time in milliseconds
         ./run_mesonh_xyz | tee Output_run
+        t2=$(($(date +%s%N)/1000))
         set -o pipefail
+        if [ "$perffile" != "" ]; then
+          echo "$commit mesonh $t $(($t2-$t1))" >> "$perffile"
+        fi
       fi
     fi
   done

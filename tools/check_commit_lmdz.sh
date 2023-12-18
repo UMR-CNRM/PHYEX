@@ -17,7 +17,7 @@ separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allerg
               #- seprator must be in sync with prep_code.sh separator
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-c] [-C] [-r] [-s] [--expand] [-t test] [--version VERSION] [--repo-user] [--repo-protocol] [--remove] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-c] [-C] [-r] [-s] [--expand] [-t test] [--version VERSION] [--repo-user] [--repo-protocol] [--remove] [--perf FILE] commit [reference]"
   echo "commit          commit hash (or a directory, or among $specialPack) to test"
   echo "reference       commit hash (or a directory, or among $specialPack) REF to use as a reference"
   echo "-s              suppress compilation pack"
@@ -35,6 +35,7 @@ function usage {
   echo "--repo-protocol protocol (https or ssh) to reach the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREOprotocol (=$PHYEXREOprotocol)"
   echo "--remove        removes the pack"
+  echo "--perf FILE     add performance statistics in file FILE"
   echo ""
   echo "If nothing is asked (pack creation, compilation, running, check, removing) everything"
   echo "except the removing is done"
@@ -62,6 +63,7 @@ useexpand=0
 version=""
 link=0 #Not yet put in command line argument becaus this option has not been tested here
 remove=0
+perffile=""
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -78,6 +80,7 @@ while [ -n "$1" ]; do
     '--repo-user') export PHYEXREPOuser=$2; shift;;
     '--repo-protocol') export PHYEXREPOprotocol=$2; shift;;
     '--remove') remove=1;;
+    '--perf') perffile="$(realpath $2)"; shift;;
     #--) shift; break ;;
      *) if [ -z "${commit-}" ]; then
           commit=$1
@@ -280,12 +283,12 @@ if [ $run -eq 1 ]; then
   cd $lmdzdir/1D/INPUT/PHYS
   sed '1 i\iflag_physiq=1\n' physiq.def_6A > physiq.def_PHYLMD
   sed '1 i\iflag_physiq=2\n' physiq.def_6A > physiq.def_PHYEX
-  for cas in $tests; do
+  for t in $tests; do
     for DEF in PHYEX PHYLMD; do
-      d=${lmdzdir}/1D/EXEC/${DEF}L$L/$cas
+      d=${lmdzdir}/1D/EXEC/${DEF}L$L/$t
       [ ! -d $d ] && mkdir -p $d
       cd $d
-      ln -sf ${lmdzdir}/1D/OLDCASES/$cas/* .
+      ln -sf ${lmdzdir}/1D/OLDCASES/$t/* .
       cp -f ${lmdzdir}/1D/INPUT/DEF/*.def .
       cp -f ${lmdzdir}/1D/INPUT/PHYS/physiq.def_$DEF physiq.def
       if [ $rad = oldrad ] ; then
@@ -300,7 +303,7 @@ if [ $run -eq 1 ]; then
       cp -f ${lmdzdir}/1D/INPUT/VERT/L$L/* .
       ln -sf L$L.def vert.def
       set +e
-      cp -f $lmdzdir/1D/OLDCASES/$cas/*.d[ae]* .
+      cp -f $lmdzdir/1D/OLDCASES/$t/*.d[ae]* .
       set -e
       cat <<......eod>| compile.sh
        cd $lmdzdir/1D/bin
@@ -317,7 +320,12 @@ if [ $run -eq 1 ]; then
       if [ $DEF == PHYEX ]; then
         sed -i -e 's/day_step=144$/day_step=1440/' gcm1d.def
       fi
+      t1=$(($(date +%s%N)/1000)) #current time in milliseconds
       ./lmdz1d.e 2>&1 | tee execution.log
+      t2=$(($(date +%s%N)/1000))
+      if [ "$perffile" != "" ]; then
+        echo "$commit lmdz $t $(($t2-$t1))" >> "$perffile"
+      fi
     done
   done
 fi

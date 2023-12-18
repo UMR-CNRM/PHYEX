@@ -76,6 +76,7 @@ i=$((i+1)); conf_extra_tag[$i]="_Z120_NPRO32_BLK256_TIMES4"
             conf_extra_opts[$i]="--nflevg 120 --nproma 32 --blocks 256 --times 4"
 i=$((i+1)); conf_extra_tag[$i]="_Z120_NPRO32_BLK64_TIMES16"
             conf_extra_opts[$i]="--nflevg 120 --nproma 32 --blocks 64 --times 16"
+#The following case is the one used for performance evaluation, it must remains the 4th one
 i=$((i+1)); conf_extra_tag[$i]='_Z120_NPRO${NPROMA}_BLK${NBLOCKS}'
             conf_extra_opts[$i]='--nflevg 120 --nproma ${NPROMA} --blocks ${NBLOCKS}'
 
@@ -85,7 +86,7 @@ i=$((i+1)); conf_extra_tag[$i]='_Z120_NPRO${NPROMA}_BLK${NBLOCKS}'
 ################################
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [--noexpand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [-a ARCH] [-A ARCH] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--no-perf] [--no-check] [-e EXTRAPOLATION] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [--noexpand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [-a ARCH] [-A ARCH] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--no-perf] [--no-check] [-e EXTRAPOLATION] [--perf FILE] commit [reference]"
   echo "commit          commit hash (or a directory, or among $specialName) to test"
   echo "reference       commit hash (or a directory, or among $specialName) REF to use as a reference"
   echo "-s              suppress compilation directory"
@@ -112,6 +113,7 @@ function usage {
   echo "                to access performance statistics."
   echo "-a arch ARCH    architecture name to use to build and run the commit (=$defaultarchfile)"
   echo "-A arch ARCH    architecture name to use for the reference simulation (=$defaultarchfile)"
+  echo "--perf FILE     add performance statistics in file FILE"
   echo "-e EXTRAPOLATION"
   echo "                extrapolate data. EXTRAPOLATION corresponds to a configuration:"
   for i in $(seq 1 $((${#conf_extra_tag[@]}-1))); do
@@ -148,6 +150,7 @@ computeRefIfNeeded=0
 perf=1
 extrapolation=0
 checkOpt="--check"
+perffile=""
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -168,6 +171,7 @@ while [ -n "$1" ]; do
     '--computeRefIfNeeded') computeRefIfNeeded=1;;
     '--no-perf') perf=0;;
     '--no-check') checkOpt="";;
+    '--perf') perffile="$(realpath $2)"; shift;;
     '-e') extrapolation=$2; shift;;
 
     #--) shift; break ;;
@@ -383,6 +387,7 @@ if [ $run -ge 1 ]; then
 
         if [ ! -f $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe ]; then
           echo "Directory does not exist ($TESTDIR/$name) or compilation has failed, please check"
+          echo "Run '$0 -p -c $commit' to compile."
           exit 6
         fi
 
@@ -425,6 +430,64 @@ with open('drhook.prof.agg', 'w') as f: f.write(df.to_string())
       fi
     fi
   done
+fi
+
+#####################
+#### PERFORMANCE ####
+#####################
+
+if [ $run -ge 1 -a "$perffile" != "" ]; then
+  echo "### Evaluate performance for commit $commit"
+
+  ZTD_sum=0
+  firstrun=1
+  for t in $(echo $tests | sed 's/,/ /g'); do
+    if echo $allowedTests | grep -w $t > /dev/null; then
+      if [ ! -f $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe ]; then
+        echo "Directory does not exist ($TESTDIR/$name) or compilation has failed, please check"
+        echo "Run '$0 -p -c $commit' to compile."
+        exit 7
+      fi
+
+      if [ $firstrun -eq 1 ]; then
+        firstrun=0
+        #Read prefered NPROMA for performance evaluation
+        . $TESTDIR/$name/build/with_fcm/arch_${archfile}/arch.env
+
+        #Experiement size 
+        NPOINTS=100000
+        NPROMA=${NPROMA_perf-32}
+        NBLOCKS=$(($NPOINTS/$NPROMA/8*8)) #must be divisible by 8
+        perf_extrapolation_tag=$(NPROMA=$NPROMA; NBLOCKS=$NBLOCKS; eval echo ${conf_extra_tag[4]})
+
+        #Cleaning to suppress old results that may be confusing in case of a crash during the run
+        if [ $onlyIfNeeded -eq 0 ]; then
+          for t in $(echo $tests | sed 's/,/ /g'); do
+            if [ -d tests/with_fcm/arch_${archfile}/${t}${perf_extrapolation_tag} ]; then
+              rm -rf tests/with_fcm/arch_${archfile}/${t}${perf_extrapolation_tag}
+            fi
+          done
+        fi
+      fi
+
+      NPROMA=$NPROMA NBLOCKS=$NBLOCKS OMP_NUM_THREADS=8 $0 -r -t $t -a ${archfile} -e 4 ${commit}
+      file=$TESTDIR/$name/tests/with_fcm/arch_${archfile}/${t}${perf_extrapolation_tag}/Output_run
+      if [ -f $file ]; then
+        ZTD=$(grep -m 1 "ZTD =" $file | awk '{print $4}')
+        if [ "$ZTD" != "" ]; then
+          ZTD_sum=$(python3 -c "print(${ZTD_sum} if ${ZTD_sum} < 0. else (${ZTD_sum} + ${ZTD}))")
+        else
+          ZTD=-999
+          ZTD_sum=-999
+        fi
+      else
+        ZTD=-999
+        ZTD_sum=-999
+      fi
+      echo "$commit testprogs $t $ZTD" >> "$perffile"
+    fi
+  done
+  echo "$commit testprogs ALL $ZTD_sum" >> "$perffile"
 fi
 
 ####################
