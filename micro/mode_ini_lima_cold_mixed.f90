@@ -130,6 +130,8 @@ REAL :: ZBOUND_RDSF_RMIN    ! XDCRLIM*Lbda_r : lower bound used in the tabulated
 REAL :: ZRATE_R             ! Geometrical growth of Lbda_r in the tabulated function
 REAL :: ZKHI_LWM            ! Coefficient of Lawson et al. (2015)
 !
+REAL :: ZRHOIW ! ice density
+!
 !-------------------------------------------------------------------------------
 !
 !
@@ -151,19 +153,73 @@ SELECT CASE (CPRISTINE_ICE_LIMA)
     XBI = 2.5       ! Plates 
     XC_I = 747.     ! Plates
     XDI = 1.0       ! Plates
+    XGAMMAI = 0.096
+    XDELTAI = 1.83    
     XC1I = 1./XPI   ! Plates
   CASE('COLU')
     XAI = 2.14E-3   ! Columns
     XBI = 1.7       ! Columns
     XC_I = 1.96E5   ! Columns
     XDI = 1.585     ! Columns
+    XGAMMAI = 0.659
+    XDELTAI = 2.0
     XC1I = 0.8      ! Columns 
   CASE('BURO')
     XAI = 44.0      ! Bullet rosettes
     XBI = 3.0       ! Bullet rosettes
     XC_I = 4.E5     ! Bullet rosettes
     XDI = 1.663     ! Bullet rosettes
+    XGAMMAI = 0.062
+    XDELTAI = 1.81    
     XC1I = 0.5      ! Bullet rosettes
+  CASE('YPLA')
+    XAI = 0.745      ! Plates_from Yang et al (2013)
+    XBI = 2.47       ! Plates_from Yang et al (2013)
+    XC_I = 63.     ! Plates_from Yang et al (2013)
+    XDI = 0.68       ! Plates_from Yang et al (2013)
+    XGAMMAI = 0.096
+    XDELTAI = 1.83    
+    XC1I = 1./XPI   ! Plates_from Yang et al (2013)
+  CASE('YCOL')
+    XAI = 261.102   ! Columns_from Yang et al (2013)
+    XBI = 2.99       ! Columns_from Yang et al (2013)
+    XC_I = 671   ! Columns_from Yang et al (2013)
+    XDI = 0.62     ! Columns_from Yang et al (2013)
+    XGAMMAI = 0.659
+    XDELTAI = 2.0    
+    XC1I = 0.8      ! Columns_from Yang et al (2013)
+  CASE('YBUR')
+    XAI = 1.268      ! Bullet rosettes_from Yang et al (2013)
+    XBI = 2.59       ! Bullet rosettes_from Yang et al (2013)
+    XC_I = 128     ! Bullet rosettes_from Yang et al (2013)
+    XDI = 0.72     ! Bullet rosettes_from Yang et al (2013)
+    XGAMMAI = 0.062
+    XDELTAI = 1.81    
+    XC1I = 0.5      ! Bullet rosettes_from Yang et al (2013)
+  CASE('YDRO')
+    XAI = 1.268      ! Droxtals_from Yang et al (2013)
+    XBI = 2.59       ! Droxtals_from Yang et al (2013)
+    XC_I = 128     ! Droxtals_from Yang et al (2013)
+    XDI = 0.72     ! Droxtals_from Yang et al (2013)
+    XGAMMAI = 0.673
+    XDELTAI = 2.0    
+    XC1I = 0.5      ! Droxtals_from Yang et al (2013)
+  CASE('YHCO')
+    XAI = 217.586   ! Hollow_Columns_from Yang et al (2013)
+    XBI = 2.99       ! Hollow_Columns_from Yang et al (2013)
+    XC_I = 641   ! Hollow_Columns_from Yang et al (2013)
+    XDI = 0.63     ! Hollow_Columns_from Yang et al (2013)
+    XGAMMAI = 0.659
+    XDELTAI = 2.0    
+    XC1I = 0.8      ! Hollow_Columns_from Yang et al (2013)
+  CASE('YHBU')
+    XAI = 1.258      ! Hollow_Bullet rosettes_from Yang et al (2013)
+    XBI = 2.61       ! Hollow_Bullet rosettes_from Yang et al (2013)
+    XC_I = 147     ! Hollow_Bullet rosettes_from Yang et al (2013)
+    XDI = 0.73     ! Hollow_Bullet rosettes_from Yang et al (2013)
+    XGAMMAI = 0.061
+    XDELTAI = 1.81    
+    XC1I = 0.5      ! Hollow_Bullet rosettes_from Yang et al (2013)    
 END SELECT
 !
 !  Note that XCCI=N_i (a locally predicted value) and XCXI=0.0, implicitly
@@ -337,6 +393,10 @@ ZCONC_MAX  = 1.E6 ! Maximal concentration for falling particules set to 1 per cc
 !XLBDAG_MAX = ( ZCONC_MAX/XCCG )**(1./XCXG) 
 !XLBDAH_MAX = ( ZCONC_MAX/XCCH )**(1./XCXH) 
 !  
+!    constante for ecRad effective radius
+ZRHOIW = 0.917
+XREFFI = (3*XAI/(2*ZRHOIW*10**3*XGAMMAI)*MOMG(XALPHAI,XNUI,XBI)/MOMG(XALPHAI,XNUI,XDELTAI))*1E6
+!
 !-------------------------------------------------------------------------------
 !
 !
