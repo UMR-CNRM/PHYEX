@@ -1,6 +1,6 @@
 #This file contains the source codes that must not be included
 #for the model compilation. These codes already exist in the Meso-NH model
-#and are used outside of the physics
+#and are used outside of the physics, or are not useful for Meso-NH (i.e. for testsprogs only)
 # must be written with lower case .f90 (because prep_code already transformed it)
 
 aux/mode_msg.f90
@@ -20,6 +20,8 @@ aux/modi_gradient_u.f90
 aux/modi_gradient_v.f90
 aux/modi_gradient_w.f90
 aux/mode_io_field_write.f90
+aux/modi_ini_phyex.f90
+aux/ini_phyex.f90
 
 #old version of rain_ice
 micro/mode_rain_ice_old_fast_rg.f90
