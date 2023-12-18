@@ -470,7 +470,7 @@ if [ $run -ge 1 -a "$perffile" != "" ]; then
         fi
       fi
 
-      NPROMA=$NPROMA NBLOCKS=$NBLOCKS OMP_NUM_THREADS=8 $0 -r -t $t -a ${archfile} -e 4 ${commit}
+      NPROMA=$NPROMA NBLOCKS=$NBLOCKS OMP_NUM_THREADS=8 $0 -r -t $t -a ${archfile} --no-check -e 4 ${commit}
       file=$TESTDIR/$name/tests/with_fcm/arch_${archfile}/${t}${perf_extrapolation_tag}/Output_run
       if [ -f $file ]; then
         ZTD=$(grep -m 1 "ZTD =" $file | awk '{print $4}')
