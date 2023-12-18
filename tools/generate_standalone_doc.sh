@@ -56,7 +56,7 @@ for file in $mdfiles $resources; do
   cp $PHYEXTOOLSDIR/../docs/$file $dir/
 done
 
-#Move to tep dir
+#Move to temp dir
 cd $dir
 
 #Create helper files
@@ -82,12 +82,38 @@ cat > rsvg-convert <<EOF
 #--keep-image-data
 #--no-keep-image-data
 
-#We expect to receive
-#-f pdf -a -o output_file input_file
+#We only deal with
+# -f: ignored because convert detect output format with the extension
+# -d, --dpi-x, -p, --dpi-y
+# -a: ignore ratio is always kept
+# -o
 
-if [ \$1 == '-f' -a \$2 == 'pdf' -a \$3 == '-a' -a \$4 == '-o' ]; then
-  convert \$6 \$5
+format=''
+preserveratio=0
+input=''
+output=''
+dpiX=''
+dpiY=''
+while [ -n "\$1" ]; do
+  case "\$1" in
+    '-f') format=\$2; shift;;
+    '-d') dpiX=\$2; shift;;
+    '--dpi-x') dpiX=\$2; shift;;
+    '-p') dpiY=\$2; shift;;
+    '--dpi-y') dpiY=\$2; shift;;
+    '-a') preserveratio=1;;
+    '-o') output="\$2"; shift;;
+    *) input="\$1";;
+  esac
+  shift
+done
+
+dpi=""
+if [ "\$dpiX" != "" -a "\$dpiY" != "" ]; then
+  dpi="-density \$dpiXx\$dpiY"
 fi
+
+convert \$dpi \$input \$output
 EOF
 chmod +x rsvg-convert
 
@@ -132,4 +158,5 @@ done
 pandoc --toc --toc-depth=2 --number-sections \
        --include-in-header titlesec.tex \
        -o $output \
+       --self-contained \
        title.md $mdfiles
