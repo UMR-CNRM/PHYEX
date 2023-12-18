@@ -710,7 +710,7 @@ ENDIF
 !
 IF(LLCHECK) THEN
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CPRISTINE_ICE_LIMA', CPRISTINE_ICE_LIMA, &
-                                                'PLAT', 'COLU', 'BURO')
+                                  'PLAT', 'COLU', 'BURO','YPLA','YCOL','YBUR','YDRO','YHCO','YHBU')
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CHEVRIMED_ICE_LIMA', CHEVRIMED_ICE_LIMA, &
                                                 'GRAU', 'HAIL')
 

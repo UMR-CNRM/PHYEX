@@ -53,12 +53,14 @@ REAL      :: XLBEXS,XLBS,XNS          ! Snow/agg.      distribution parameters
 !
 REAL      :: XAI,XBI,XC_I,XDI         ,XF0I,XF2I,XC1I ! Cloud ice      charact.
 REAL      ::                           XF0IS,XF1IS    ! (large Di vent. coef.)
+REAL      :: XDELTAI, XGAMMAI         ! cloud ice area-diameter parameters
 REAL      :: XAS,XBS,XCS,XDS,XCCS,XCXS,XF0S,XF1S,XC1S ! Snow/agg.      charact.
 !
 REAL      :: XLBDAS_MIN, XLBDAS_MAX   ! Max values allowed for the shape parameter of snow
 REAL      :: XFVELOS                  ! Wurtz - snow fall speed parameterizaed after Thompson 2008
 REAL      :: XTRANS_MP_GAMMAS         ! Wurtz - change between lambda value for MP and gen. gamma
 !
+REAL      :: XREFFI                   ! constante for ice crystal effective radius for ecRad
 !
 !-------------------------------------------------------------------------------
 !
@@ -146,6 +148,8 @@ REAL, POINTER :: XLBEXI => NULL(), &
                  XNS => NULL(), &
                  XAI => NULL(), &
                  XBI => NULL(), &
+                 XGAMMAI => NULL(), &
+                 XDELTAI => NULL(), &
                  XC_I => NULL(), &
                  XDI => NULL(), &
                  XF0I => NULL(), &
@@ -166,6 +170,7 @@ REAL, POINTER :: XLBEXI => NULL(), &
                  XLBDAS_MAX => NULL(), &
                  XFVELOS => NULL(), &
                  XTRANS_MP_GAMMAS => NULL(), &
+                 XREFFI => NULL(), &
                  XFSEDRI => NULL(), &
                  XFSEDCI => NULL(), &
                  XFSEDRS => NULL(), &
@@ -286,6 +291,8 @@ IF(.NOT. ASSOCIATED(XLBEXI)) THEN
   XNS                => PARAM_LIMA_COLD%XNS
   XAI                => PARAM_LIMA_COLD%XAI
   XBI                => PARAM_LIMA_COLD%XBI
+  XGAMMAI            => PARAM_LIMA_COLD%XGAMMAI
+  XDELTAI            => PARAM_LIMA_COLD%XDELTAI
   XC_I               => PARAM_LIMA_COLD%XC_I
   XDI                => PARAM_LIMA_COLD%XDI
   XF0I               => PARAM_LIMA_COLD%XF0I
@@ -306,6 +313,7 @@ IF(.NOT. ASSOCIATED(XLBEXI)) THEN
   XLBDAS_MAX         => PARAM_LIMA_COLD%XLBDAS_MAX
   XFVELOS            => PARAM_LIMA_COLD%XFVELOS
   XTRANS_MP_GAMMAS   => PARAM_LIMA_COLD%XTRANS_MP_GAMMAS
+  XREFFI             => PARAM_LIMA_COLD%XREFFI
   XFSEDRI            => PARAM_LIMA_COLD%XFSEDRI
   XFSEDCI            => PARAM_LIMA_COLD%XFSEDCI
   XFSEDRS            => PARAM_LIMA_COLD%XFSEDRS
