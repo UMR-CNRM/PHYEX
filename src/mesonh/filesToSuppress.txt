@@ -1,6 +1,6 @@
 #This file contains the source codes that must not be included
 #for the model compilation. These codes already exist in the Meso-NH model
-#and are used outside of the physics
+#and are used outside of the physics, or are not useful for Meso-NH (i.e. for testsprogs only)
 # must be written with lower case .f90 (because prep_code already transformed it)
 
 aux/mode_msg.f90

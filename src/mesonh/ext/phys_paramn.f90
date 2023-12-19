@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -237,15 +237,17 @@ END MODULE MODI_PHYS_PARAM_n
 !  C. Lac         11/2019: correction in the drag formula and application to building in addition to tree
 !  F. Auguste     02/2021: add IBM
 !  JL Redelsperger 03/2021: add the SW flux penetration for Ocean model case
+!  R. Schoetter    12/2021: multi-level coupling between MesoNH and SURFEX  
 !  P. Wautelet 30/11/2022: compute XTHW_FLUX, XRCW_FLUX and XSVW_FLUX only when needed
 !  A. Costes      12/2021: add Blaze fire model
 !  Q. Rodier      2022:    integration with PHYEX
+!  C. Barthe      03/2023: add CELEC in call to turbulence
 !!-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS
 !               ------------
 !
-USE MODD_ADV_n,       ONLY : XRTKEMS
+USE MODD_ADV_n,            ONLY : XRTKEMS
 USE MODD_AIRCRAFT_BALLOON, ONLY: LFLYER
 USE MODD_ARGSLIST_ll, ONLY : LIST_ll
 USE MODD_BLOWSNOW,    ONLY : LBLOWSNOW,XRSNOW
@@ -290,6 +292,7 @@ USE MODD_LSFIELD_n
 USE MODD_LUNIT_n
 USE MODD_METRICS_n
 USE MODD_MNH_SURFEX_n
+USE MODD_NEB_n,   ONLY: NEBN
 USE MODD_NESTING, ONLY : XWAY,NDAD, NDXRATIO_ALL, NDYRATIO_ALL
 USE MODD_NSV, ONLY : NSV, NSV_LGBEG, NSV_LGEND, &
                      NSV_SLTBEG,NSV_SLTEND,NSV_SLT,&
@@ -300,7 +303,7 @@ USE MODD_OCEANH
 USE MODD_OUT_n
 USE MODD_PARAM_C2R2,       ONLY : LSEDC
 USE MODD_PARAMETERS
-USE MODD_PARAM_ICE_n,        ONLY : LSEDIC
+USE MODD_PARAM_ICE_n,      ONLY : LSEDIC
 USE MODD_PARAM_KAFR_n
 USE MODD_PARAM_LIMA,       ONLY : MSEDC => LSEDC, XRTMIN_LIMA=>XRTMIN
 USE MODD_PARAM_MFSHALL_n,  ONLY: CMF_CLOUD
@@ -312,7 +315,7 @@ USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_PRECIP_n
 use modd_precision,        only: MNHTIME
 USE MODD_RADIATIONS_n
-USE MODD_RAIN_ICE_DESCR_n,   ONLY: XRTMIN
+USE MODD_RAIN_ICE_DESCR_n, ONLY: XRTMIN
 USE MODD_REF,              ONLY: LCOUPLES
 USE MODD_REF_n
 USE MODD_SALT
@@ -323,7 +326,6 @@ USE MODD_TIME_n
 USE MODD_TIME, ONLY : TDTEXP  ! Ajout PP
 USE MODD_TURB_FLUX_AIRCRAFT_BALLOON, ONLY : XTHW_FLUX, XRCW_FLUX, XSVW_FLUX
 USE MODD_TURB_n
-USE MODD_NEB_n, ONLY: NEBN
 
 USE MODE_AERO_PSD
 use mode_budget,            only: Budget_store_end, Budget_store_init
@@ -386,6 +388,12 @@ REAL, DIMENSION(:,:), ALLOCATABLE     :: ZSFTH ! surface flux of theta
 REAL, DIMENSION(:,:), ALLOCATABLE     :: ZSFRV ! surface flux of vapor
 REAL, DIMENSION(:,:,:), ALLOCATABLE   :: ZSFSV ! surface flux of scalars
 REAL, DIMENSION(:,:), ALLOCATABLE     :: ZSFCO2! surface flux of CO2
+!
+REAL, DIMENSION(:,:), ALLOCATABLE     :: ZSFTH_WALL
+REAL, DIMENSION(:,:), ALLOCATABLE     :: ZSFTH_ROOF
+REAL, DIMENSION(:,:), ALLOCATABLE     :: ZCD_ROOF
+REAL, DIMENSION(:,:), ALLOCATABLE     :: ZSFRV_WALL 
+REAL, DIMENSION(:,:), ALLOCATABLE     :: ZSFRV_ROOF
 !
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZDIR_ALB ! direct albedo
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZSCA_ALB ! diffuse albedo
@@ -492,7 +500,7 @@ IKB = 1 + JPVEXT
 IKE = IKU - JPVEXT
 !
 CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
-CALL FILL_DIMPHYEX(YLDIMPHYEX, SIZE(XTHT,1), SIZE(XTHT,2), SIZE(XTHT,3),.TRUE., NLES_TIMES)
+CALL FILL_DIMPHYEX( YLDIMPHYEX, SIZE(XTHT,1), SIZE(XTHT,2), SIZE(XTHT,3), LTURB=.TRUE., KLES_TIMES=NLES_TIMES, KLES_K=NLES_K )
 !
 ZTIME1 = 0.0_MNHTIME
 ZTIME2 = 0.0_MNHTIME
@@ -510,6 +518,12 @@ ALLOCATE(ZSFTH (IIU,IJU))
 ALLOCATE(ZSFRV (IIU,IJU))
 ALLOCATE(ZSFSV (IIU,IJU,NSV))
 ALLOCATE(ZSFCO2(IIU,IJU))
+!
+ALLOCATE(ZSFTH_WALL (IIU,IJU))
+ALLOCATE(ZSFTH_ROOF (IIU,IJU))
+ALLOCATE(ZCD_ROOF   (IIU,IJU))
+ALLOCATE(ZSFRV_WALL (IIU,IJU))
+ALLOCATE(ZSFRV_ROOF (IIU,IJU))
 !
 !* if XWAY(son)=2 save surface fields before radiation or convective scheme
 !  calls
@@ -1265,8 +1279,8 @@ IF (CSURF=='EXTE') THEN
     DEALLOCATE( ZSAVE_INPRC,ZSAVE_PRCONV,ZSAVE_PRSCONV)
     DEALLOCATE( ZSAVE_DIRFLASWD,ZSAVE_SCAFLASWD,ZSAVE_DIRSRFSWD)
  END IF
-  CALL GROUND_PARAM_n(YLDIMPHYEX,ZSFTH, ZSFRV, ZSFSV, ZSFCO2, ZSFU, ZSFV, &
-                      ZDIR_ALB, ZSCA_ALB, ZEMIS, ZTSRAD, KTCOUNT, TPFILE )
+   CALL GROUND_PARAM_n(YLDIMPHYEX,ZSFTH, ZSFTH_WALL, ZSFTH_ROOF, ZCD_ROOF, ZSFRV, ZSFRV_WALL, ZSFRV_ROOF, &
+                      ZSFSV, ZSFCO2, ZSFU, ZSFV, ZDIR_ALB, ZSCA_ALB, ZEMIS, ZTSRAD, KTCOUNT, TPFILE  )
   !
   IF (LIBM) THEN
     WHERE(XIBM_LS(:,:,IKB,1).GT.-XIBM_EPSI)
@@ -1303,6 +1317,11 @@ IF (CSURF=='EXTE') THEN
 ELSE ! case no SURFEX (CSURF logical)
   ZSFSV    = 0.
   ZSFCO2   = 0.
+  ZSFTH_WALL = 0.
+  ZSFTH_ROOF = 0.
+  ZCD_ROOF   = 0.
+  ZSFRV_WALL = 0.
+  ZSFRV_ROOF = 0.
   IF (.NOT.LOCEAN) THEN
     ZSFTH    = 0.
     ZSFRV    = 0.
@@ -1368,11 +1387,53 @@ ZTIME1 = ZTIME2
 XTIME_BU_PROCESS = 0.
 XTIME_LES_BU_PROCESS = 0.
 !
+CALL ADD2DFIELD_ll(TZFIELDS_ll,ZSFTH_WALL, 'PHYS_PARAM_n::ZSFTH_WALL')
+CALL ADD2DFIELD_ll(TZFIELDS_ll,ZSFTH_ROOF, 'PHYS_PARAM_n::ZSFTH_ROOF')
+CALL ADD2DFIELD_ll(TZFIELDS_ll,ZCD_ROOF,   'PHYS_PARAM_n::ZCD_ROOF')
+CALL ADD2DFIELD_ll(TZFIELDS_ll,ZSFRV_WALL, 'PHYS_PARAM_n::ZSFRV_WALL')
+CALL ADD2DFIELD_ll(TZFIELDS_ll,ZSFRV_ROOF, 'PHYS_PARAM_n::ZSFRV_ROOF')
+!
+IF ( CLBCX(1) /= "CYCL" .AND. LWEST_ll()) THEN
+   ZSFTH_WALL(IIB-1,:)=ZSFTH_WALL(IIB,:)
+   ZSFTH_ROOF(IIB-1,:)=ZSFTH_ROOF(IIB,:)
+   ZCD_ROOF  (IIB-1,:)=ZCD_ROOF(IIB,:)
+   ZSFRV_WALL(IIB-1,:)=ZSFRV_WALL(IIB,:)
+   ZSFRV_ROOF(IIB-1,:)=ZSFRV_ROOF(IIB,:)
+ENDIF
+!
+IF ( CLBCX(2) /= "CYCL" .AND. LEAST_ll()) THEN
+   ZSFTH_WALL(IIE+1,:)=ZSFTH_WALL(IIE,:)
+   ZSFTH_ROOF(IIE+1,:)=ZSFTH_ROOF(IIE,:)
+   ZCD_ROOF(IIE+1,:)  =ZCD_ROOF(IIE,:)
+   ZSFRV_WALL(IIE+1,:)=ZSFRV_WALL(IIE,:)
+   ZSFRV_ROOF(IIE+1,:)=ZSFRV_ROOF(IIE,:)
+ENDIF
+!
+IF ( CLBCY(1) /= "CYCL" .AND. LSOUTH_ll()) THEN
+   ZSFTH_WALL(:,IJB-1)=ZSFTH_WALL(:,IJB)
+   ZSFTH_ROOF(:,IJB-1)=ZSFTH_ROOF(:,IJB)
+   ZCD_ROOF(:,IJB-1)  =ZCD_ROOF(:,IJB)
+   ZSFRV_WALL(:,IJB-1)=ZSFRV_WALL(:,IJB)
+   ZSFRV_ROOF(:,IJB-1)=ZSFRV_ROOF(:,IJB)
+ENDIF
+!
+IF ( CLBCY(2) /= "CYCL" .AND. LNORTH_ll()) THEN
+   ZSFTH_WALL(:,IJE+1)=ZSFTH_WALL(:,IJE)
+   ZSFTH_ROOF(:,IJE+1)=ZSFTH_ROOF(:,IJE)
+   ZCD_ROOF(:,IJE+1)=ZCD_ROOF(:,IJE)
+   ZSFRV_WALL(:,IJE+1)=ZSFRV_WALL(:,IJE)
+   ZSFRV_ROOF(:,IJE+1)=ZSFRV_ROOF(:,IJE)
+ENDIF
+!
+!
 IF (LDRAGTREE) CALL DRAG_VEG( XTSTEP, XUT, XVT, XTKET, LDEPOTREE, XVDEPOTREE, &
                               CCLOUD, XPABST, XTHT, XRT, XSVT, XRHODJ, XZZ,   &
                               XRUS, XRVS, XRTKES, XRRS, XRSVS )
 !
-IF (LDRAGBLDG) CALL DRAG_BLD( XTSTEP, XUT, XVT, XTKET, XRHODJ, XZZ, XRUS, XRVS, XRTKES )
+IF (LDRAGBLDG) CALL DRAG_BLD ( XTSTEP, XUT, XVT, XTKET, XPABST, XTHT, XRT, XSVT, &
+                               XRHODJ, XZZ, XRUS, XRVS, XRTKES, XRTHS, XRRS,     &
+                               ZSFTH_WALL, ZSFTH_ROOF, ZCD_ROOF, ZSFRV_WALL,     &
+                               ZSFRV_ROOF       )
 !
 CALL SECOND_MNH2(ZTIME2)
 !
@@ -1570,7 +1631,7 @@ IF(LLEONARD) THEN
   ZHGRAD(:,:,:,5) = GX_M_M(XRT(:,:,:,1), XDXX,XDZZ,XDZX,1,IKU,1)
   ZHGRAD(:,:,:,6) = GY_M_M(XRT(:,:,:,1), XDXX,XDZZ,XDZX,1,IKU,1)
 END IF
-   CALL TURB( CST,CSTURB, TBUCONF, TURBN, NEBN, YLDIMPHYEX,TLES, &
+   CALL TURB( CST,CSTURB, TBUCONF, TURBN, NEBN, YLDIMPHYEX, TLES,                    &
               NRR, NRRL, NRRI, CLBCX, CLBCY, IGRADIENTS, NHALO, NTURBSPLIT,          &
               LCLOUDMODIFLM, NSV, NSV_LGBEG, NSV_LGEND,                              &
               NSV_LIMA_NR, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,                    &
@@ -1578,7 +1639,7 @@ END IF
               LCOUPLES, LBLOWSNOW, LIBM,LFLYER,                                      &
               GCOMPUTE_SRC, XRSNOW,                                                  &
               LOCEAN, LDEEPOC, LDIAG_IN_RUN,                                         &
-              CTURBLEN_CLOUD, CCLOUD,                                                &
+              CTURBLEN_CLOUD, CCLOUD, CELEC,                                         &
               XTSTEP, TPFILE,                                                        &
               XDXX, XDYY, XDZZ, XDZX, XDZY, XZZ,                                     &
               XDIRCOSXW, XDIRCOSYW, XDIRCOSZW, XCOSSLOPE, XSINSLOPE,                 &
@@ -1693,6 +1754,11 @@ DEALLOCATE(ZSFRV )
 DEALLOCATE(ZSFSV )
 DEALLOCATE(ZSFCO2)
 !
+DEALLOCATE(ZSFTH_WALL )
+DEALLOCATE(ZSFTH_ROOF )
+DEALLOCATE(ZCD_ROOF )
+DEALLOCATE(ZSFRV_WALL )
+DEALLOCATE(ZSFRV_ROOF )
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE PHYS_PARAM_n

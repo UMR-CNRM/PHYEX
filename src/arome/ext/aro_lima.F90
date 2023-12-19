@@ -132,7 +132,7 @@ REAL  :: ZMASSTOT                   ! total mass  for one water category
 REAL  :: ZMASSPOS                   ! total mass  for one water category
                                     ! after removing the negative values
 REAL  :: ZRATIO                     ! ZMASSTOT / ZMASSCOR
-
+REAL  :: ZTHVREFZIKB
 LOGICAL :: LL_RRR_BUDGET
 !
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_SV1+NSV_LIMA-1) :: YLBUDGET
@@ -156,7 +156,12 @@ ZDUM3DS=0.
 ZDUM3DG=0.
 ZDUM3DH=0.
 PINPRH=0.
-
+IF (PHYEX%MISC%CELEC /='NONE') THEN
+CALL ABOR1('ARO_LIMA : CELEC ELECTRICITY SCHEME NOT YET CORRECLY PLUGGED HERE')
+! The following value of ZTHVREFZIKB must be removed from the electricity scheme or computed correctly here
+ELSE
+  ZTHVREFZIKB = 0. ! for electricity use only
+END IF
 
 !
 !*       2.     TRANSFORMATION INTO PHYSICAL TENDENCIES
@@ -287,9 +292,11 @@ ENDDO
 !
 !
 !
-CALL LIMA (D=YLDIMPHYEX, CST=PHYEX%CST, BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
-           PTSTEP=2*PTSTEP,                  &
-           PRHODREF=PRHODREF, PEXNREF=PEXNREF, PDZZ=PDZZ,                         &
+CALL LIMA (D=YLDIMPHYEX, CST=PHYEX%CST, ICED=PHYEX%RAIN_ICE_DESCRN, ICEP=PHYEX%RAIN_ICE_PARAMN,   &
+           ELECD=PHYEX%ELEC_DESCR, ELECP=PHYEX%ELEC_PARAM, &
+           BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
+           PTSTEP=2*PTSTEP, OELEC=PHYEX%MISC%OELEC, HCLOUD= 'LIMA',                 &
+           PRHODREF=PRHODREF, PEXNREF=PEXNREF, PDZZ=PDZZ, PTHVREFZIKB=ZTHVREFZIKB,       &
            PRHODJ=PRHODJ, PPABST=PPABSM,                                 &
            NCCN=NMOD_CCN, NIFN=NMOD_IFN, NIMM=NMOD_IMM,                   &
            PDTHRAD=PDTHRAD, PTHT=PTHT, PRT=PRT, PSVT=PSVT, PW_NU=PW_NU,                  &

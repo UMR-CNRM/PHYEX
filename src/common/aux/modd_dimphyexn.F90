@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2022-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -53,7 +53,7 @@ TYPE DIMPHYEX_t
                   !  1: as for Méso-NH, levels are numbered from ground to space
                   ! -1: as for AROME, levels are numbered from space to ground
   INTEGER :: NKT  ! Array total dimension
-  INTEGER :: NKLES ! Total physical k dimension (for LES diag)
+  INTEGER :: NKLES ! Number of vertical levels for LES diagnostics
   INTEGER :: NKA  ! Near ground array index (is an unphysical level if JPVEXT!=0)
   INTEGER :: NKU  ! Uppest atmosphere array index (is an unphysical level if JPVEXT!=0)
   INTEGER :: NKB  ! Near ground physical array index (e.g. equal to 1+JPVEXT if NKL==1)

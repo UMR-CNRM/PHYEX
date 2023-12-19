@@ -8,15 +8,17 @@
 !
 INTERFACE
 !
-      SUBROUTINE INI_FLASH_GEOM_ELEC
+      SUBROUTINE INI_FLASH_GEOM_ELEC (HCLOUD)
+!
+CHARACTER(LEN=4), INTENT(IN) :: HCLOUD   ! microphysics scheme
 !
 END SUBROUTINE INI_FLASH_GEOM_ELEC
 END INTERFACE
 END MODULE MODI_INI_FLASH_GEOM_ELEC
 !
-!	##############################
-        SUBROUTINE INI_FLASH_GEOM_ELEC
-!	##############################
+!	#######################################
+        SUBROUTINE INI_FLASH_GEOM_ELEC (HCLOUD)
+!	#######################################
 !
 !!****  *INI_FLASH_GEOM_ELEC* - routine to initialize the lightning flashes
 !!
@@ -48,6 +50,8 @@ END MODULE MODI_INI_FLASH_GEOM_ELEC
 !!      Modifications
 !!        J.-P. Pinty  jan 2015 : add LMA simulator
 !!        J.Escobar 20/06/2018 : truly set NBRANCH_MAX = 5000 !
+!!        C. Barthe 30/11/2022 : add parameters for LIMA
+!!        C. Barthe 11/09/2023 : modify some parameters to use with LIMA2 
 !!
 !-------------------------------------------------------------------------------
 !
@@ -55,7 +59,18 @@ END MODULE MODI_INI_FLASH_GEOM_ELEC
 !		------------
 !
 USE MODD_CST, ONLY : XPI
-USE MODD_RAIN_ICE_DESCR_n
+USE MODD_RAIN_ICE_DESCR_n,ONLY : XALPHAR_I=>XALPHAR, XNUR_I=>XNUR, XCCR,                       &
+                                 XALPHAI_I=>XALPHAI, XNUI_I=>XNUI, XAI_I=>XAI, XBI_I=>XBI,     &
+                                 XALPHAS_I=>XALPHAS, XNUS_I=>XNUS, XCCS_I=>XCCS, XCXS_I=>XCXS, &
+                                 XALPHAG_I=>XALPHAG, XNUG_I=>XNUG, XCCG_I=>XCCG, XCXG_I=>XCXG, &
+                                 XALPHAH_I=>XALPHAH, XNUH_I=>XNUH, XCCH_I=>XCCH, XCXH_I=>XCXH
+USE MODD_PARAM_LIMA,      ONLY : XALPHAC, XNUC,                                                      &
+                                 XALPHAR_L=>XALPHAR, XNUR_L=>XNUR, XALPHAI_L=>XALPHAI, XNUI_L=>XNUI, & 
+                                 XALPHAS_L=>XALPHAS, XNUS_L=>XNUS, XALPHAG_L=>XALPHAG, XNUG_L=>XNUG, &
+                                 NMOM_S, NMOM_G, NMOM_H
+USE MODD_PARAM_LIMA_COLD, ONLY : XAI_L=>XAI, XBI_L=>XBI, XCCS_L=>XCCS, XCXS_L=>XCXS
+USE MODD_PARAM_LIMA_MIXED,ONLY : XCCG_L=>XCCG, XCXG_L=>XCXG, &
+                                 XCCH_L=>XCCH, XCXH_L=>XCXH, XALPHAH_L=>XALPHAH, XNUH_L=>XNUH
 USE MODD_ELEC_DESCR
 USE MODD_ELEC_PARAM
 USE MODD_DIM_n, ONLY : NKMAX
@@ -68,34 +83,132 @@ IMPLICIT NONE
 !
 !*	0.1	Declaration of dummy arguments
 !
+CHARACTER(LEN=4), INTENT(IN) :: HCLOUD   ! microphysics scheme
+!
 !
 !*	0.2	Declaration of local variables
 !
+! variables used to cope with the module variables common to icex and lima
+REAL :: ZALPHAR, ZNUR,             &
+        ZAI, ZBI, ZALPHAI, ZNUI,   &
+        ZCCS, ZCXS, ZALPHAS, ZNUS, &
+        ZCCG, ZCXG, ZALPHAG, ZNUG, &
+        ZCCH, ZCXH, ZALPHAH, ZNUH
 !
-!----------------------------------------------------------------------------
+!-------------------------------------------------------------------------------
 !
-!*      1.     SOME CONSTANTS FOR NEUTRALIZATION
+!*	1.	PRELIMINARIES
+!		-------------
+!
+!*      1.1     Address module variables common to ICEx and LIMA
+!
+IF (HCLOUD(1:3) == 'ICE') THEN
+  ZALPHAR = XALPHAR_I
+  ZNUR    = XNUR_I
+  !
+  ZAI     = XAI_I
+  ZBI     = XBI_I
+  ZALPHAI = XALPHAI_I
+  ZNUI    = XNUI_I
+  !
+  ZCCS    = XCCS_I
+  ZCXS    = XCXS_I
+  ZALPHAS = XALPHAS_I
+  ZNUS    = XNUS_I
+  !
+  ZCCG    = XCCG_I
+  ZCXG    = XCXG_I
+  ZALPHAG = XALPHAG_I
+  ZNUG    = XNUG_I
+  !
+  ZCCH    = XCCH_I
+  ZCXH    = XCXH_I
+  ZALPHAH = XALPHAH_I
+  ZNUH    = XNUH_I
+  !
+ELSE IF (HCLOUD == 'LIMA') THEN
+  ZALPHAR = XALPHAR_L
+  ZNUR    = XNUR_L
+  !
+  ZAI     = XAI_L
+  ZBI     = XBI_L
+  ZALPHAI = XALPHAI_L
+  ZNUI    = XNUI_L
+  !
+  ZCCS    = XCCS_L
+  ZCXS    = XCXS_L
+  ZALPHAS = XALPHAS_L
+  ZNUS    = XNUS_L
+  !
+  ZCCG    = XCCG_L
+  ZCXG    = XCXG_L
+  ZALPHAG = XALPHAG_L
+  ZNUG    = XNUG_L
+  !
+  ZCCH    = XCCH_L
+  ZCXH    = XCXH_L
+  ZALPHAH = XALPHAH_L
+  ZNUH    = XNUH_L
+END IF  
+!
+!-------------------------------------------------------------------------------
+!
+!*      2.     SOME CONSTANTS FOR NEUTRALIZATION
 !              ---------------------------------
 !
-XFQLIGHTC  = 660. * MOMG(3.,3.,2.) / MOMG(3.,3.,3.)   ! PI/A*lbda^(b-2) = 660.
+IF (HCLOUD(1:3) == 'ICE') THEN
+  XFQLIGHTC = 660. * MOMG(3.,3.,2.) / MOMG(3.,3.,3.)   ! PI/A*lbda^(b-2) = 660.
+ELSE IF (HCLOUD == 'LIMA') THEN
+  XFQLIGHTC = XPI * MOMG(XALPHAC,XNUC,2.)
+END IF
 !
-XFQLIGHTR  = XPI * XCCR * MOMG(XALPHAR,XNUR,2.)
-XEXQLIGHTR = XCXR - 2.
+IF (HCLOUD(1:3) == 'ICE') THEN
+  XFQLIGHTR  = XPI * XCCR * MOMG(ZALPHAR,ZNUR,2.)
+  XEXQLIGHTR = XCXR - 2.
+ELSE IF (HCLOUD == 'LIMA') THEN
+  XFQLIGHTR  = XPI * MOMG(ZALPHAR,ZNUR,2.)
+  XEXQLIGHTR = -2.
+END IF
 !
-XEXQLIGHTI = 2. / XBI
-XFQLIGHTI  = XPI / 4. * MOMG(XALPHAI,XNUI,2.) *                   &
-            (XAI * MOMG(XALPHAI,XNUI,XBI))**(-XEXQLIGHTI)
+XEXQLIGHTI = 2. / ZBI
+XFQLIGHTI  = XPI / 4. * MOMG(ZALPHAI,ZNUI,2.) * &
+            (ZAI * MOMG(ZALPHAI,ZNUI,ZBI))**(-XEXQLIGHTI)
 !
-XFQLIGHTS  = XPI * XCCS * MOMG(XALPHAS,XNUS,2.)
-XEXQLIGHTS = XCXS - 2.
+IF (HCLOUD(1:3) == 'ICE' .OR. &
+   (HCLOUD == 'LIMA' .AND. NMOM_S == 1)) THEN
+  XFQLIGHTS  = XPI * ZCCS * MOMG(ZALPHAS,ZNUS,2.)
+  XEXQLIGHTS = ZCXS - 2.
+ELSE IF (HCLOUD == 'LIMA' .AND. NMOM_S == 2) THEN
+  XFQLIGHTS  = XPI * MOMG(ZALPHAS,ZNUS,2.)
+  XEXQLIGHTS = -2.
+END IF
 !
-XFQLIGHTG  = XPI * XCCG * MOMG(XALPHAG,XNUG,2.)
-XEXQLIGHTG = XCXG - 2.
+IF (HCLOUD(1:3) == 'ICE' .OR. &
+   (HCLOUD == 'LIMA' .AND. NMOM_G == 1)) THEN
+  XFQLIGHTG  = XPI * ZCCG * MOMG(ZALPHAG,ZNUG,2.)
+  XEXQLIGHTG = ZCXG - 2.
+ELSE IF (HCLOUD == 'LIMA' .AND. NMOM_G == 2) THEN
+  XFQLIGHTG  = XPI * MOMG(ZALPHAG,ZNUG,2.)
+  XEXQLIGHTG = -2.
+END IF
 !
+IF (HCLOUD(1:3) == 'ICE' .OR. &
+   (HCLOUD == 'LIMA' .AND. NMOM_H == 1)) THEN
+  XFQLIGHTH  = XPI * ZCCH * MOMG(ZALPHAH,ZNUH,2.)
+  XEXQLIGHTH = ZCXH - 2.
+ELSE  IF (HCLOUD == 'LIMA' .AND. NMOM_H == 2) THEN
+  XFQLIGHTH  = XPI * MOMG(ZALPHAH,ZNUH,2.)
+  XEXQLIGHTH = -2.
+END IF
+!
+IF( .NOT.ALLOCATED(XNEUT_POS)) ALLOCATE( XNEUT_POS(NLGHTMAX) )
+IF( .NOT.ALLOCATED(XNEUT_NEG)) ALLOCATE( XNEUT_NEG(NLGHTMAX) )
+XNEUT_POS(:) = 0.
+XNEUT_NEG(:) = 0.
 !
 !----------------------------------------------------------------------------
 !
-!*      2.      INITIALIZE SOME THRESHOLDS
+!*      3.      INITIALIZE SOME THRESHOLDS
 !               --------------------------
 !
 ! electric field threshold for cell detection

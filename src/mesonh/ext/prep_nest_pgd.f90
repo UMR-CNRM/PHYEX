@@ -112,6 +112,7 @@ USE MODD_VAR_ll,           ONLY: NPROC, IP, NMNH_COMM_WORLD
 !
 use mode_field,            only: Ini_field_list
 USE MODE_FINALIZE_MNH,     only: FINALIZE_MNH
+USE MODE_INI_CST,          ONLY: INI_CST
 USE MODE_IO,               only: IO_Init, IO_Pack_set
 USE MODE_IO_FIELD_READ,    only: IO_Field_read
 USE MODE_IO_FIELD_WRITE,   only: IO_Field_write, IO_Header_write
@@ -134,7 +135,6 @@ USE MODI_READ_HGRID
 USE MODI_RETRIEVE1_NEST_INFO_n
 USE MODI_VERSION
 USE MODI_WRITE_PGD_SURF_ATM_N
-USE MODE_INI_CST, ONLY: INI_CST
 !
 IMPLICIT NONE
 !

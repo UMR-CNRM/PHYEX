@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1996-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1996-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -73,6 +73,8 @@ USE MODD_LUNIT
 !
 USE MODE_FIELD,            ONLY: INI_FIELD_LIST
 USE MODE_GRIDPROJ
+USE MODE_INI_CST,          ONLY: INI_CST
+USE MODE_INIT_ll,          only: SET_DIM_ll, SET_JP_ll
 USE MODE_IO,               only: IO_Config_set, IO_Init
 use MODE_IO_FIELD_READ,    only: IO_Field_read
 USE MODE_IO_FILE,          only: IO_File_close, IO_File_open
@@ -80,7 +82,6 @@ USE MODE_IO_MANAGE_STRUCT, only: IO_File_add2list
 USE MODE_MODELN_HANDLER,   ONLY: GOTO_MODEL
 use MODE_SPLITTINGZ_ll
 !
-USE MODE_INI_CST, ONLY: INI_CST
 USE MODI_READ_HGRID
 !
 USE MODN_CONFIO,           ONLY: NAM_CONFIO

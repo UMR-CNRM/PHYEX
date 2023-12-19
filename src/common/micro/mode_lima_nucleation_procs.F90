@@ -6,15 +6,17 @@
 MODULE MODE_LIMA_NUCLEATION_PROCS
   IMPLICIT NONE
 CONTAINS
-!     #############################################################################
+!     ###############################################################################
   SUBROUTINE LIMA_NUCLEATION_PROCS (D, CST, BUCONF, TBUDGETS, KBUDGETS,             &
                                     PTSTEP, PRHODJ,                                 &
                                     PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,  &
                                     PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, PRHT, &
                                     PCCT, PCRT, PCIT,                               &
                                     PNFT, PNAT, PIFT, PINT, PNIT, PNHT,             &
-                                    PCLDFR, PICEFR, PPRCFR                          )
-!     #############################################################################
+                                    PCLDFR, PICEFR, PPRCFR,                         &
+                                    PTOT_RV_HENU, PTOT_RC_HINC, PTOT_RI_HIND,       &
+                                    PTOT_RV_HONH                                    )
+!     ###############################################################################
 !
 !!    PURPOSE
 !!    -------
@@ -33,6 +35,7 @@ CONTAINS
 !  P. Wautelet    02/2020: use the new data structures and subroutines for budgets
 !  B. Vie      03/03/2020: use DTHRAD instead of dT/dt in Smax diagnostic computation
 !  B. Vie         03/2022: Add option for 1-moment pristine ice
+!  C. Barthe      06/2022: add dummy arguments (mass transfer rates) for cloud electrication 
 !-------------------------------------------------------------------------------
 !
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
@@ -100,10 +103,16 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCLDFR     ! Cloud fraction
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR     ! Ice fraction
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PPRCFR     ! Precipitation fraction
 !
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTOT_RV_HENU  ! Mixing ratio change due to HENU
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTOT_RC_HINC  ! Mixing ratio change due to HINC
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTOT_RI_HIND  ! Mixing ratio change due to HIND
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTOT_RV_HONH  ! Mixing ratio change due to HONH
+!
 !-------------------------------------------------------------------------------
 !
-REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2),SIZE(PT,3))          :: Z_TH_HIND, Z_RI_HIND, Z_CI_HIND, Z_TH_HINC, Z_RC_HINC, Z_CC_HINC
-REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2),SIZE(PT,3))          :: ZLSFACT, ZRVHENIMR
+!REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2),SIZE(PT,3)) :: Z_TH_HIND, Z_RI_HIND, Z_CI_HIND, Z_TH_HINC, Z_RC_HINC, Z_CC_HINC
+REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2),SIZE(PT,3)) :: Z_TH_HIND, Z_CI_HIND, Z_TH_HINC, Z_CC_HINC
+REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2),SIZE(PT,3)) :: ZLSFACT, ZRVHENIMR
 !
 integer :: idx, jl
 INTEGER :: JI,JJ
@@ -132,9 +141,11 @@ IF ( LACTI .AND. NMOD_CCN >=1 .AND. NMOM_C.GE.2) THEN
       end if
     end if
 
-    CALL LIMA_CCN_ACTIVATION( CST,                                      &
+    CALL LIMA_CCN_ACTIVATION( CST,                                              &
                               PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,    &
-                              PTHT, PRVT, PRCT, PCCT, PRRT, PNFT, PNAT, PCLDFR  )
+                              PTHT, PRVT, PRCT, PCCT, PRRT, PNFT, PNAT, PCLDFR, &
+                              PTOT_RV_HENU )
+
     if ( BUCONF%lbu_enable ) then
        if ( BUCONF%lbudget_th ) &
             call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'HENU', ptht(:, :, :) * prhodj(:, :, :) / ptstep )
@@ -186,18 +197,18 @@ IF ( LNUCL .AND. NMOM_I>=2 .AND. .NOT.LMEYERS .AND. NMOD_IFN >= 1 ) THEN
                                       PRHODREF, PEXNREF, PPABST,                        &
                                       PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,         &
                                       PCCT, PCIT, PNAT, PIFT, PINT, PNIT,               &
-                                      Z_TH_HIND, Z_RI_HIND, Z_CI_HIND,                  &
-                                      Z_TH_HINC, Z_RC_HINC, Z_CC_HINC,                  &
+                                      Z_TH_HIND, PTOT_RI_HIND, Z_CI_HIND,               &
+                                      Z_TH_HINC, PTOT_RC_HINC, Z_CC_HINC,               &
                                       PICEFR                                            )
   WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. PCIT(:,:,:)>XCTMIN(4)) PICEFR(:,:,:)=1.
 !
   if ( BUCONF%lbu_enable ) then
      if ( BUCONF%lbudget_th ) &
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HIND',  z_th_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HIND',     z_th_hind(:, :, :) * prhodj(:, :, :) / ptstep )
      if ( BUCONF%lbudget_rv ) &
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HIND', -z_ri_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HIND', -ptot_ri_hind(:, :, :) * prhodj(:, :, :) / ptstep )
      if ( BUCONF%lbudget_ri ) &
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIND',  z_ri_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIND',  ptot_ri_hind(:, :, :) * prhodj(:, :, :) / ptstep )
     if ( BUCONF%lbudget_sv ) then
       call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni), 'HIND', z_ci_hind(:, :, :) * prhodj(:, :, :) / ptstep )
       do jl = 1, nmod_ifn
@@ -209,11 +220,11 @@ IF ( LNUCL .AND. NMOM_I>=2 .AND. .NOT.LMEYERS .AND. NMOD_IFN >= 1 ) THEN
     end if
 
     if ( BUCONF%lbudget_th ) &
-         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HINC',  z_th_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HINC',     z_th_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
     if ( BUCONF%lbudget_rc ) &
-         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'HINC',  z_rc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'HINC',  ptot_rc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
     if ( BUCONF%lbudget_ri ) &
-         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HINC', -z_rc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HINC', -ptot_rc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
     if ( BUCONF%lbudget_sv ) then
        if (nmom_c.ge.2) then
           call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_nc), 'HINC',  z_cc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
@@ -238,18 +249,18 @@ IF (LNUCL .AND. NMOM_I>=2 .AND. LMEYERS) THEN
                                 PRHODREF, PEXNREF, PPABST,                  &
                                 PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,   &
                                 PCCT, PCIT, PINT,                           &
-                                Z_TH_HIND, Z_RI_HIND, Z_CI_HIND,            &
-                                Z_TH_HINC, Z_RC_HINC, Z_CC_HINC,            &
+                                Z_TH_HIND, PTOT_RI_HIND, Z_CI_HIND,         &
+                                Z_TH_HINC, PTOT_RC_HINC, Z_CC_HINC,         &
                                 PICEFR                                      )
   WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. PCIT(:,:,:)>XCTMIN(4)) PICEFR(:,:,:)=1.
   !
   if ( BUCONF%lbu_enable ) then
      if ( BUCONF%lbudget_th ) &
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HIND',  z_th_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HIND',     z_th_hind(:, :, :) * prhodj(:, :, :) / ptstep )
      if ( BUCONF%lbudget_rv ) &
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HIND', -z_ri_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HIND', -ptot_ri_hind(:, :, :) * prhodj(:, :, :) / ptstep )
      if ( BUCONF%lbudget_ri ) &
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIND',  z_ri_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIND',  ptot_ri_hind(:, :, :) * prhodj(:, :, :) / ptstep )
     if ( BUCONF%lbudget_sv ) then
       call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni), 'HIND', z_ci_hind(:, :, :) * prhodj(:, :, :) / ptstep )
       if (nmod_ifn > 0 ) &
@@ -258,11 +269,11 @@ IF (LNUCL .AND. NMOM_I>=2 .AND. LMEYERS) THEN
     end if
 
     if ( BUCONF%lbudget_th ) &
-         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HINC',  z_th_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HINC',     z_th_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
     if ( BUCONF%lbudget_rc ) &
-         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'HINC',  z_rc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'HINC',  ptot_rc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
     if ( BUCONF%lbudget_ri ) &
-         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HINC', -z_rc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HINC', -ptot_rc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
     if ( BUCONF%lbudget_sv ) then
        if (nmom_c.ge.2) then
           call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_nc), 'HINC',  z_cc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
@@ -277,6 +288,8 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
+!++cb-- pour l'instant, on ne recupere pas cette tendance
+! actuellement, les echanges vapeur-->glace/eau lies a la nucleation ne sont pas traites dans l'electrisation
 IF (LNUCL .AND. NMOM_I.EQ.1) THEN
   WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. PCIT(:,:,:)>XCTMIN(4)) PICEFR(:,:,:)=1.
   !
@@ -357,7 +370,7 @@ IF ( LNUCL .AND. LHHONI .AND. NMOD_CCN >= 1 .AND. NMOM_I.GE.2) THEN
   CALL LIMA_CCN_HOM_FREEZING (CST, PRHODREF, PEXNREF, PPABST, PW_NU,    &
                               PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                               PCCT, PCRT, PCIT, PNFT, PNHT,             &
-                              PICEFR                                    )
+                              PICEFR, PTOT_RV_HONH                      )
   WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. PCIT(:,:,:)>XCTMIN(4)) PICEFR(:,:,:)=1.
 !
   if ( BUCONF%lbu_enable ) then

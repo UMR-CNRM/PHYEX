@@ -1087,7 +1087,6 @@ IF (LLIMA_DIAG) THEN
   END IF
   !
   DO JSV = NSV_LIMA_BEG,NSV_LIMA_END
-!PW: bases sur CLIMA_*_CONC et pas CLIMA_*_NAMES !!!
     !
     TZFIELD%CUNITS     = 'cm-3'
     WRITE(TZFIELD%CCOMMENT,'(A6,A3,I3.3)')'X_Y_Z_','SVT',JSV
@@ -1194,7 +1193,6 @@ IF (LLIMA_DIAG) THEN
   END IF
 !
 END IF
-!PW: TODO: a documenter
 IF (LELECDIAG .AND. CELEC .NE. "NONE") THEN
   DO JSV = NSV_ELECBEG,NSV_ELECEND
     TZFIELD = TSVLIST(JSV)
@@ -1279,7 +1277,6 @@ IF (LPASPOL) THEN
 END IF
 ! Conditional sampling variables
 IF (LCONDSAMP) THEN
-!PW: TODO: a documenter!!!
   DO JSV = NSV_CSBEG, NSV_CSEND
     TZFIELD = TSVLIST(JSV)
     CALL IO_Field_write(TPFILE,TZFIELD,XSVT(:,:,:,JSV))
@@ -1319,7 +1316,6 @@ IF (LCHAQDIAG) THEN    !aqueous concentration in M
 
 
 
-!PW: TODO: LCHICDIAG n'existe pas => les variables correspondantes ne sont pas ecrites...
 
 !  ZWORK31(:,:,:)=0.
 !  DO JSV = NSV_CHICBEG,NSV_CHICEND   ! ice phase
@@ -1348,8 +1344,26 @@ IF ((LCHEMDIAG).AND.(LORILAM).AND.(LUSECHEM)) THEN
   IF (.NOT.(ASSOCIATED(XSIG3D))) &
     ALLOCATE(XSIG3D(SIZE(XSVT,1),SIZE(XSVT,2),SIZE(XSVT,3),JPMODE))
   !
-  CALL  PPP2AERO(XSVT(:,:,:,NSV_AERBEG:NSV_AEREND), XRHODREF, &
-                 PSIG3D=XSIG3D, PRG3D=XRG3D, PN3D=XN3D, PCTOTA=ZPTOTA)
+  IF (CRGUNIT=="MASS") THEN
+  XRG3D(:,:,:,1) = XINIRADIUSI * EXP(-3.*(LOG(XINISIGI))**2)
+  XRG3D(:,:,:,2) = XINIRADIUSJ * EXP(-3.*(LOG(XINISIGJ))**2)
+  ELSE
+  XRG3D(:,:,:,1) = XINIRADIUSI
+  XRG3D(:,:,:,2) = XINIRADIUSJ
+  END IF
+  XSIG3D(:,:,:,1) = XINISIGI
+  XSIG3D(:,:,:,2) = XINISIGJ
+  XN3D(:,:,:,1) = XN0IMIN
+  XN3D(:,:,:,2) = XN0JMIN
+  
+  ZPTOTA(:,:,:,:,:) = 0.
+
+  CALL  PPP2AERO(XSVT(IIB:IIE,IJB:IJE,IKB:IKE,NSV_AERBEG:NSV_AEREND),&
+                 XRHODREF(IIB:IIE,IJB:IJE,IKB:IKE), &
+                 PSIG3D=XSIG3D(IIB:IIE,IJB:IJE,IKB:IKE,:),&
+                 PRG3D=XRG3D(IIB:IIE,IJB:IJE,IKB:IKE,:),&
+                 PN3D=XN3D(IIB:IIE,IJB:IJE,IKB:IKE,:),& 
+                 PCTOTA=ZPTOTA(IIB:IIE,IJB:IJE,IKB:IKE,:,:))
 
   TZFIELD = TFIELDMETADATA(                   &
     CMNHNAME   = 'generic for aerosol modes', &
@@ -1868,7 +1882,6 @@ END IF
 !  Blowing snow variables
 !
 IF(LBLOWSNOW) THEN
-!PW:TODO?:variables scalaires XSVT pas ecrites ici. Voulu?
   TZFIELD = TFIELDMETADATA(                                             &
     CMNHNAME   = 'SNWSUBL3D',                                           &
     CSTDNAME   = '',                                                    &

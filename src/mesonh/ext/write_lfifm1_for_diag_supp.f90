@@ -91,6 +91,9 @@ END MODULE MODI_WRITE_LFIFM1_FOR_DIAG_SUPP
 !!      J.-P. Chaboureau 07/2018 bug fix on XEMIS when calling CALL_RTTOVxx
 !!      J.-P. Chaboureau 09/04/2021 add the call to RTTOV13
 !  P. Wautelet 04/02/2022: use TSVLIST to manage metadata of scalar variables
+!!      D. Ricard & Q.Rodier 08/2023 add some diagnostics on pressure levels 
+!!     (temperature, relative and specific humidity, vertical velocity, TKE)
+!!      D. Ricard 08/2023 add a diagnostic: maximum of cloud fraction on vertical levels
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -100,7 +103,7 @@ USE MODD_CH_AEROSOL,        ONLY: LORILAM
 USE MODD_CH_BUDGET_n,       ONLY: CNAMES_BUDGET, NEQ_BUDGET, XTCHEM
 USE MODD_CH_FLX_n,          ONLY: XCHFLX
 USE MODD_CH_PRODLOSSTOT_n,  ONLY: CNAMES_PRODLOSST, NEQ_PLT, XLOSS, XPROD
-USE MODD_CST,               ONLY: XCPD, XP00, XRD, XTT
+USE MODD_CST,               ONLY: XCPD, XP00, XRD, XTT, XMV, XMD, XALPI, XGAMI, XBETAI
 USE MODD_CURVCOR_n,         ONLY: XCORIOZ
 USE MODD_DIAG_IN_RUN,       ONLY: XCURRENT_ZON10M, XCURRENT_MER10M,           &
                                   XCURRENT_SFCO2, XCURRENT_SWD, XCURRENT_LWD, &
@@ -111,7 +114,7 @@ use modd_field,             only: NMNHDIM_NI, NMNHDIM_NJ, NMNHDIM_NOTLISTED, NMN
 use modd_field
 USE MODD_IO,                ONLY: TFILEDATA
 USE MODD_CONF,              ONLY: LCARTESIAN
-USE MODD_CONF_n,            ONLY: LUSERC, LUSERI, NRR
+USE MODD_CONF_n,            ONLY: LUSERC, LUSERI, LUSERV, NRR
 USE MODD_DEEP_CONVECTION_n, ONLY: NCLBASCONV, NCLTOPCONV, XCAPE, XDMFCONV, XDRCCONV, XDRICONV, XDRVCONV, &
                                   XDTHCONV, XDSVCONV, XMFCONV, XPRLFLXCONV, XPRSFLXCONV, XUMFCONV
 USE MODD_DIAG_FLAG,         ONLY: CRAD_SAT, LCHEMDIAG, LCLD_COV, LCOARSE, LISOAL, LISOPR, LISOTH, LRAD_SUBG_COND, &
@@ -119,11 +122,11 @@ USE MODD_DIAG_FLAG,         ONLY: CRAD_SAT, LCHEMDIAG, LCLD_COV, LCOARSE, LISOAL
 USE MODD_FIELD_n,           ONLY: XCLDFR, XICEFR, XPABST, XSIGS, XTHT, XTKET, XRT, XUT, XVT, XWT
 USE MODD_GRID_n,            ONLY: XZHAT, XZZ
 USE MODD_METRICS_n,         ONLY: XDXX, XDYY, XDZX, XDZY, XDZZ
-USE MODD_NEB_n, ONLY: LSIGMAS, LSUBG_COND, VSIGQSAT
+USE MODD_NEB_n,             ONLY: LSIGMAS, LSUBG_COND, VSIGQSAT
 USE MODD_NSV,               ONLY: NSV, NSV_CHEMBEG, NSV_CHEMEND, TSVLIST
 USE MODD_PARAMETERS,        ONLY: JPVEXT, NUNDEF, XUNDEF
 USE MODD_PARAM_KAFR_n,      ONLY: LCHTRANS
-USE MODD_PARAM_n,           ONLY: CRAD, CSURF
+USE MODD_PARAM_n,           ONLY: CRAD, CSURF, CCLOUD
 USE MODD_PARAM_RAD_n,       only: NRAD_COLNBR
 USE MODD_RADIATIONS_N,      ONLY: NCLEARCOL_TM1, NDLON, NFLEV, NSTATM,                                  &
                                   XAER, XAZIM, XCCO2, XDIR_ALB, XDIRFLASWD, XDIRSRFSWD, XDTHRAD, XEMIS, &
@@ -132,12 +135,12 @@ USE MODD_RAD_TRANSF,        ONLY: JPGEOST
 USE MODD_REF_n,             ONLY: XRHODREF
 USE MODD_SALT,              ONLY: LSALT
 USE MODD_TIME_n,            ONLY: TDTCUR
-USE MODD_NEB_n,            ONLY: LSIGMAS, LSUBG_COND, VSIGQSAT
 
 use mode_field,             only: Find_field_id_from_mnhname
 USE MODE_IO_FIELD_WRITE,    only: IO_Field_write
 USE MODE_MSG
 USE MODE_NEIGHBORAVG,       ONLY: BLOCKAVG, MOVINGAVG
+USE MODE_THERMO,            ONLY: SM_FOES
 USE MODE_TOOLS_LL,          ONLY: GET_INDICE_ll
 
 #ifdef MNH_RTTOV_8
@@ -172,7 +175,7 @@ TYPE(TFILEDATA),   INTENT(IN) :: TPFILE ! Output file
 INTEGER           :: IIU,IJU,IKU,IIB,IJB,IKB,IIE,IJE,IKE ! Arrays bounds
 INTEGER           :: IKRAD  
 ! 
-INTEGER           :: JI,JJ,JK,JSV   ! loop index
+INTEGER           :: JI,JJ,JK,JSV,JRR   ! loop index
 ! 
 ! variables for Diagnostic variables related to deep convection
 REAL,DIMENSION(:,:), ALLOCATABLE              :: ZWORK21,ZWORK22
@@ -198,7 +201,8 @@ INTEGER :: IPRES, ITH
 CHARACTER(LEN=4) :: YCAR4
 CHARACTER(LEN=4), DIMENSION(SIZE(XISOPR)) :: YPRES
 CHARACTER(LEN=4), DIMENSION(SIZE(XISOTH)) :: YTH
-REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZWORK32,ZWORK33,ZWORK34,ZWRES,ZPRES,ZWTH
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZWORK32,ZWORK33,ZWORK34,ZWRES,ZPRES,ZWTH, &
+                                       ZRT,ZQV,ZMRVP,ZWRES1,ZTEMPP
 REAL, DIMENSION(:), ALLOCATABLE :: ZTH
 REAL,DIMENSION(SIZE(XTHT,1),SIZE(XTHT,2),SIZE(XTHT,3))  :: ZPOVO
 REAL,DIMENSION(SIZE(XTHT,1),SIZE(XTHT,2),SIZE(XTHT,3))  :: ZVOX,ZVOY,ZVOZ
@@ -434,6 +438,22 @@ IF (LCLD_COV .AND. LUSERC) THEN
   CALL IO_Field_write(TPFILE,'CLDFR',XCLDFR)
   CALL IO_Field_write(TPFILE,'ICEFR',XICEFR)
 !
+  ZWORK21(:,:)=0.0
+  ZWORK21(IIB:IIE,IJB:IJE)=MAXVAL(XCLDFR(IIB:IIE,IJB:IJE,JPVEXT+1:IKE),DIM=3)
+ 
+  TZFIELD = TFIELDMETADATA(                   &
+    CMNHNAME   = 'CLDFRMAX',                  &
+    !Invalid CF convention standard name: CSTDNAME   = 'max_cloud_fraction', &
+    CLONGNAME  = 'CLDFRMAX',                  &
+    CUNITS     = '1',                         &
+    CDIR       = 'XY',                        &
+    CCOMMENT   = 'X_Y_MAx of CLoud fraction', &
+    NGRID      = 1,                           &
+    NTYPE      = TYPEREAL,                    &
+    NDIMS      = 2,                           &
+    LTIMEDEP   = .TRUE.                       )
+  CALL IO_Field_write(TPFILE,TZFIELD,ZWORK21)
+  !
 !  Visibility                                    
 !
   ZWORK31(:,:,:)= 1.E4                ! 10 km for clear sky
@@ -910,6 +930,7 @@ IF (CSURF=='EXTE') THEN
     CALL IO_Field_write(TPFILE,TZFIELD,XCURRENT_SFCO2)
   END IF
   !
+  IF ( CRAD /= 'NONE' ) THEN
   IF(ANY(XCURRENT_SWD/=XUNDEF))THEN
     TZFIELD = TFIELDMETADATA(                           &
       CMNHNAME   = 'SWD',                               &
@@ -969,6 +990,7 @@ IF (CSURF=='EXTE') THEN
       LTIMEDEP   = .TRUE.                               )
     CALL IO_Field_write(TPFILE,TZFIELD,XCURRENT_LWU)
   END IF
+  END IF ! CRAD/='NONE'
 END IF
 
 ! MODIF FP NOV 2012
@@ -996,6 +1018,7 @@ ALLOCATE(ZWORK34(IIU,IJU,IKU))
   END DO
 
   ALLOCATE(ZWRES(IIU,IJU,IPRES))
+  ALLOCATE(ZTEMPP(IIU,IJU,IPRES))
   ZWRES(:,:,:)=XUNDEF
   ALLOCATE(ZPRES(IIU,IJU,IPRES))
   IPRES=0
@@ -1031,6 +1054,17 @@ ALLOCATE(ZWORK34(IIU,IJU,IKU))
     CALL IO_Field_write(TPFILE,TZFIELD,ZWRES(:,:,JK))
   END DO
 ! *********************
+! Temperature
+! *********************
+  DO JK=1,IPRES
+    TZFIELD%CMNHNAME   = 'TEMP'//TRIM(YPRES(JK))//'HPA'
+    TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)
+    TZFIELD%CUNITS     = 'K'
+    TZFIELD%CCOMMENT   = 'X_Y_air temperature '//TRIM(YPRES(JK))//' hPa'
+    CALL IO_Field_write(TPFILE,TZFIELD,ZWRES(:,:,JK)*(ZPRES(:,:,JK)/XP00)**(XRD/XCPD))
+  END DO
+  ZTEMPP(:,:,:)=ZWRES(:,:,:)
+! *********************
 ! Wind
 ! *********************
   ZWORK31(:,:,:) = MXF(XUT(:,:,:))
@@ -1054,6 +1088,29 @@ ALLOCATE(ZWORK34(IIU,IJU,IKU))
     TZFIELD%CCOMMENT   = 'X_Y_V component of wind '//TRIM(YPRES(JK))//' hPa'
     CALL IO_Field_write(TPFILE,TZFIELD,ZWRES(:,:,JK))
   END DO
+  !
+  ZWORK31(:,:,:) = MZF(XWT(:,:,:))
+  CALL PINTER(ZWORK31, XPABST, XZZ, ZTEMP, ZWRES, ZPRES, &
+          IIU, IJU, IKU, IKB, IPRES, 'LOG', 'RHU.')
+  DO JK=1,IPRES
+    TZFIELD%CMNHNAME   = 'WT'//TRIM(YPRES(JK))//'HPA'
+    TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)
+    TZFIELD%CUNITS     = 'm s-1'
+    TZFIELD%CCOMMENT   = 'X_Y_V component of wind '//TRIM(YPRES(JK))//' hPa'
+    CALL IO_Field_write(TPFILE,TZFIELD,ZWRES(:,:,JK))
+  END DO
+! *********************
+! Turbulent kinetic energy
+! *********************
+  CALL PINTER(XTKET, XPABST, XZZ, ZTEMP, ZWRES, ZPRES, &
+         IIU, IJU, IKU, IKB, IPRES, 'LOG', 'RHU.')
+  DO JK=1,IPRES
+    TZFIELD%CMNHNAME   = 'TKET'//TRIM(YPRES(JK))//'HPA'
+    TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)
+    TZFIELD%CUNITS     = 'm 2 s-2'
+    TZFIELD%CCOMMENT   = 'X_Y_turbulent kinetic energy '//TRIM(YPRES(JK))//' hPa'
+    CALL IO_Field_write(TPFILE,TZFIELD,ZWRES(:,:,JK))
+  END DO
 ! *********************
 ! Water Vapour Mixing Ratio
 ! *********************
@@ -1066,6 +1123,55 @@ ALLOCATE(ZWORK34(IIU,IJU,IKU))
     TZFIELD%CCOMMENT   = 'X_Y_Vapor Mixing Ratio '//TRIM(YPRES(JK))//' hPa'
     CALL IO_Field_write(TPFILE,TZFIELD,ZWRES(:,:,JK)*1.E3)
   END DO
+!
+! *********************
+! Relative humidity
+! *********************
+  IF (LUSERV) THEN
+    ALLOCATE(ZWRES1(IIU,IJU,IPRES))
+    ALLOCATE(ZMRVP(IIU,IJU,IPRES))
+    ZMRVP(:,:,:)=ZWRES(:,:,:)
+    ZWRES1(:,:,:)=SM_FOES(ZTEMPP(:,:,:))
+    ZWRES1(:,:,:)=(XMV/XMD)*ZWRES1(:,:,:)/(ZPRES(:,:,:)-ZWRES1(:,:,:))
+    ZWRES(:,:,:)=100.*ZMRVP(:,:,:)/ZWRES1(:,:,:)
+    IF (CCLOUD(1:3) =='ICE' .OR. CCLOUD =='C3R5' .OR. CCLOUD == 'LIMA')  THEN
+      WHERE ( ZTEMPP(:,:,:)< XTT)
+        ZWRES1(:,:,:) = EXP( XALPI - XBETAI/ZTEMPP(:,:,:) &
+                       - XGAMI*ALOG(ZTEMPP(:,:,:)) ) !saturation over ice
+        ZWRES1(:,:,:)=(XMV/XMD)*ZWRES1(:,:,:)/(ZPRES(:,:,:)-ZWRES1(:,:,:))
+        ZWRES(:,:,:)=100.*ZMRVP(:,:,:)/ZWRES1(:,:,:)
+      END WHERE
+    END IF
+    DO JK=1,IPRES
+      TZFIELD%CMNHNAME   = 'REHU'//TRIM(YPRES(JK))//'HPA'
+      TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)
+      TZFIELD%CUNITS     = 'percent'
+      TZFIELD%CCOMMENT   = 'X_Y_Relative humidity '//TRIM(YPRES(JK))//' hPa'
+      CALL IO_Field_write(TPFILE,TZFIELD,ZWRES(:,:,JK))
+    END DO
+    DEALLOCATE(ZWRES1,ZMRVP,ZTEMPP)
+  END IF
+  !
+  ALLOCATE(ZRT(IIU,IJU,IKU))
+  ALLOCATE(ZQV(IIU,IJU,IKU))
+  ZRT(:,:,:)=0.
+  DO JRR=1,NRR
+    ZRT(:,:,:) = ZRT(:,:,:) + XRT(:,:,:,JRR)
+  END DO
+  ZQV(:,:,:) = XRT(:,:,:,1) / (1.0 + ZRT(:,:,:))
+  ! *********************
+  ! Water specific humidity
+  ! *********************
+  CALL PINTER(ZQV, XPABST, XZZ, ZTEMP, ZWRES, ZPRES, &
+         IIU, IJU, IKU, IKB, IPRES, 'LOG', 'RHU.')
+  DO JK=1,IPRES
+    TZFIELD%CMNHNAME   = 'QV'//TRIM(YPRES(JK))//'HPA'
+    TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)
+    TZFIELD%CUNITS     = 'kg kg-1'
+    TZFIELD%CCOMMENT   = 'X_Y_Vapor Specific humidity '//TRIM(YPRES(JK))//' hPa'
+    CALL IO_Field_write(TPFILE,TZFIELD,ZWRES(:,:,JK))
+  END DO
+  DEALLOCATE(ZRT,ZQV)
 ! *********************
 ! Geopotential in meters
 ! *********************

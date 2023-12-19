@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2005-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2005-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -59,6 +59,7 @@ use modd_precision, only: LFIINT
 !
 USE MODE_FINALIZE_MNH,     only: FINALIZE_MNH
 USE MODE_POS
+USE MODE_INI_CST,          ONLY: INI_CST
 USE MODE_IO,               only: IO_Config_set, IO_Init
 USE MODE_IO_FIELD_READ,    only: IO_Field_read
 USE MODE_IO_FIELD_WRITE,   only: IO_Field_write, IO_Header_write
@@ -82,7 +83,6 @@ USE MODI_WRITE_PGD_SURF_ATM_N
 USE MODD_MNH_SURFEX_n
 !
 USE MODN_CONFIO, ONLY : NAM_CONFIO
-USE MODE_INI_CST, ONLY: INI_CST
 !
 IMPLICIT NONE
 !
@@ -138,9 +138,9 @@ ILUNAM = TZNMLFILE%NLU
 CPGDFILE  = 'PGDFILE'                         ! name of the input file
 YZOOMFILE = ''
 YZOOMNBR  = '00'
-CALL POSNAM(ILUNAM,'NAM_PGDFILE',GFOUND,ILUOUT0)
+CALL POSNAM( TZNMLFILE, 'NAM_PGDFILE', GFOUND )
 IF (GFOUND) READ(UNIT=ILUNAM,NML=NAM_PGDFILE)
-CALL POSNAM(ILUNAM,'NAM_CONFIO',GFOUND,ILUOUT0)
+CALL POSNAM( TZNMLFILE, 'NAM_CONFIO', GFOUND )
 IF (GFOUND) READ(UNIT=ILUNAM,NML=NAM_CONFIO)
 CALL IO_Config_set()
 !
@@ -199,7 +199,6 @@ IF ( (LEN_TRIM(YZOOMFILE) == 0) .OR. (ADJUSTL(YZOOMFILE) == ADJUSTL(CPGDFILE)) )
 END IF
 !
 CALL IO_File_add2list(TZZOOMFILE,TRIM(YZOOMFILE),'PGD','WRITE',KLFINPRAR=INT(1,KIND=LFIINT),KLFITYPE=1,KLFIVERB=5)
-!PW: TODO: points to dad file (if existing) ! TZZOOMFILE%TDADFILE =>
 !
 CALL IO_File_open(TZZOOMFILE)
 CALL WRITE_HGRID(1,TZZOOMFILE)

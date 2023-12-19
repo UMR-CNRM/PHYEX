@@ -89,14 +89,14 @@ END MODULE MODI_CH_AQUEOUS_SEDIM1MOM
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAMETERS,      ONLY : JPHEXT, JPVEXT
+USE MODD_PARAMETERS,        ONLY: JPHEXT, JPVEXT
 USE MODD_CONF
-USE MODD_CST,             ONLY : XRHOLW
-USE MODD_CLOUDPAR,        ONLY : VCEXVT=>XCEXVT, XCRS, XCEXRS
-USE MODD_RAIN_ICE_DESCR_n,  ONLY : WCEXVT=>XCEXVT, WRTMIN=>XRTMIN
-USE MODD_RAIN_ICE_PARAM_n,  ONLY : XFSEDR, XEXSEDR, &
-                                 XFSEDS, XEXSEDS, &
-                                 XFSEDG, XEXSEDG
+USE MODD_CST,               ONLY: XRHOLW
+USE MODD_CLOUDPAR,          ONLY: VCEXVT=>XCEXVT, XCRS, XCEXRS
+USE MODD_RAIN_ICE_DESCR_n,  ONLY: WCEXVT=>XCEXVT, WRTMIN=>XRTMIN
+USE MODD_RAIN_ICE_PARAM_n,  ONLY: XFSEDR, XEXSEDR, &
+                                  XFSEDS, XEXSEDS, &
+                                  XFSEDG, XEXSEDG
 
 use mode_tools,           only: Countjv
 use mode_tools_ll,        only: GET_INDICE_ll

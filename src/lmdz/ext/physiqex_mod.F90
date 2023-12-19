@@ -162,6 +162,7 @@ REAL, DIMENSION(klon,klev+2)  ::  ZDP        ! Dynamic TKE production
 REAL, DIMENSION(klon,klev+2)  ::  ZTDIFF     ! Diffusion TKE term
 REAL, DIMENSION(klon,klev+2)  ::  ZTDISS     ! Dissipation TKE term
 REAL, DIMENSION(0,0)          ::  PLENGTHM, PLENGTHH ! length scale from vdfexcu (HARMONIE-AROME)
+REAL :: ZTHVREFZIKB ! for electricity scheme interface
 REAL, DIMENSION(klon,klev+2)  ::  ZDXX,ZDYY,ZDZX,ZDZY,ZZZ
 REAL, DIMENSION(klon)         ::  ZDIRCOSXW,ZDIRCOSYW,ZDIRCOSZW,ZCOSSLOPE,ZSINSLOPE
 ! Shallow variables 
@@ -480,7 +481,7 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, 
    & PHYEX%MISC%OBLOWSNOW,PHYEX%MISC%OIBM,                                                                        &
    & PHYEX%MISC%OFLYER, PHYEX%MISC%COMPUTE_SRC, PHYEX%MISC%PRSNOW,                                                &
    & PHYEX%MISC%OOCEAN, PHYEX%MISC%ODEEPOC, PHYEX%MISC%ODIAG_IN_RUN,                                              &
-   & PHYEX%TURBN%CTURBLEN_CLOUD, PHYEX%MISC%CMICRO,                                                               &
+   & PHYEX%TURBN%CTURBLEN_CLOUD, PHYEX%MISC%CMICRO, PHYEX%MISC%CELEC,                                             &
    & pdtphys,PHYEX%MISC%ZTFILE,                                                                 &
    & ZDXX(:,:),ZDYY(:,:),zdzm(:,:),                                                             &
    & ZDZX(:,:),ZDZY(:,:),zz_flux(:,:),                                                          &
@@ -513,7 +514,11 @@ ENDIF
 ZSEA=1.
 ZTOWN=0.
 ZCIT=0.
-CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, PHYEX%RAIN_ICE_DESCRN, PHYEX%MISC%TBUCONF,  &
+ZTHVREFZIKB=0
+CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, PHYEX%RAIN_ICE_DESCRN,                      &
+               PHYEX%ELEC_PARAM, PHYEX%ELEC_DESCR, PHYEX%MISC%TBUCONF,                                            &
+               OELEC=PHYEX%MISC%OELEC, OSEDIM_BEARD=PHYEX%MISC%OSEDIM_BEARD,                                      &
+               PTHVREFZIKB=ZTHVREFZIKB, HCLOUD='ICE3',                                                            &
                pdtphys, KRR, ZEXN,                                                                                &
                zdzf, PRHODJ, ZRHOD, ZEXN, ZPABST, ZCIT, ZCLDFR,                                                   &
                ZHLC_HRC, ZHLC_HCF, ZHLI_HRI, ZHLI_HCF,                                                            &

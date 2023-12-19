@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2000-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2000-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -72,6 +72,11 @@ USE MODD_PARAM_ICE_n, ONLY: LDEPOSC,LSEDIC
 USE MODD_PARAM_C2R2, ONLY: LDEPOC,LSEDC
 USE MODD_PARAM_LIMA, ONLY : MSEDC=>LSEDC
 !
+USE MODE_BL_DEPTH_DIAG
+USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
+USE MODE_ll
+USE MODE_MODELN_HANDLER
+!
 USE MODI_SHUMAN
 USE MODI_GRADIENT_M
 USE MODI_GRADIENT_U
@@ -84,11 +89,6 @@ USE MODI_THL_RT_FROM_TH_R
 USE MODI_LES_RES_TR
 USE MODI_BUDGET_FLAGS
 USE MODI_LES_BUDGET_TEND_n
-USE MODE_BL_DEPTH_DIAG
-!
-USE MODE_ll
-USE MODE_MODELN_HANDLER
-USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 !
 IMPLICIT NONE
 !
@@ -878,7 +878,9 @@ END DO
 !
 IF (NLES_CURRENT_TCOUNT==1) THEN
   ALLOCATE(ZZ_LES    (IIU,IJU,NLES_K))
+  !ZZ_LES = vertical position of the mass points where data is computed
   CALL LES_VER_INT( MZF(XZZ)  ,ZZ_LES   )
+  !XLES_Z = mean vertical altitude for each level (taking into account the mask)
   CALL LES_MEAN_ll ( ZZ_LES, LLES_CURRENT_CART_MASK, XLES_Z  )
   DEALLOCATE(ZZ_LES)
   CALL LES_MEAN_ll ( XZS,    LLES_CURRENT_CART_MASK(:,:,1), XLES_ZS )

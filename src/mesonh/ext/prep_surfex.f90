@@ -45,6 +45,7 @@ USE MODD_TIME_n,      ONLY : TDTCUR
 !
 use mode_field,            only: Ini_field_list, Ini_field_scalars
 USE MODE_FINALIZE_MNH,     only: FINALIZE_MNH
+USE MODE_INI_CST,          ONLY: INI_CST
 USE MODE_IO,               only: IO_Init
 USE MODE_IO_FIELD_READ,    only: IO_Field_read
 USE MODE_IO_FIELD_WRITE,   only: IO_Field_write, IO_Header_write
@@ -59,7 +60,6 @@ USE MODI_OPEN_PRC_FILES
 USE MODI_PREP_SURF_MNH
 USE MODI_READ_ALL_NAMELISTS
 USE MODI_VERSION
-USE MODE_INI_CST, ONLY: INI_CST
 !
 IMPLICIT NONE
 !

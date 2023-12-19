@@ -283,7 +283,6 @@ USE MODD_BLOWSNOW_n,      ONLY: XSNWCANO
 USE MODD_CONF,            ONLY: CCONF, CPROGRAM, L1D, LFORCING, NVERB
 USE MODD_CONF_n,          ONLY: IDX_RVT, IDX_RCT, IDX_RRT, IDX_RIT, IDX_RST, IDX_RGT, IDX_RHT
 USE MODD_CST,             ONLY: XALPW, XBETAW, XCPD, XGAMW, XMD, XMV, XP00, XRD
-USE MODD_TURB_n,          ONLY: XTKEMIN
 USE MODD_DYN_n,           ONLY: LOCEAN
 use modd_field,           only: tfieldmetadata, tfieldlist, NMNHDIM_NI, NMNHDIM_NJ, NMNHDIM_NOTLISTED, &
                                 TYPEDATE, TYPEREAL, TYPELOG, TYPEINT
@@ -305,6 +304,7 @@ USE MODD_PARAM_n,         ONLY: CSCONV
 USE MODD_RECYCL_PARAM_n,  ONLY: LRECYCLE, LRECYCLN, LRECYCLS, LRECYCLW, NR_COUNT
 USE MODD_REF,             ONLY: LCOUPLES
 USE MODD_TIME,            ONLY: DATE_TIME
+USE MODD_TURB_n,          ONLY: XTKEMIN
 !
 use mode_field,           only: Find_field_id_from_mnhname
 USE MODE_IO_FIELD_READ,   only: IO_Field_read

@@ -36,7 +36,7 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST ! ab. pressure at time t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCIT   ! Pristine ice number
                                                   ! concentration at time t
 TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE_SERIES_CLOUD_ELEC
-REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRR  ! Rain instant precip
+REAL, DIMENSION(:,:),     INTENT(IN)    :: PINPRR  ! Rain instant precip
 !
 END SUBROUTINE SERIES_CLOUD_ELEC
 END INTERFACE
@@ -83,6 +83,7 @@ END MODULE MODI_SERIES_CLOUD_ELEC
 !!      Philippe Wautelet: 22/01/2019: use standard FLUSH statement instead of non standard intrinsics
 !  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
 !  P. Wautelet 28/05/2019: move COUNTJV function to tools.f90
+!  C. Barthe   20/03/2023: PRINPRR passed as input argument only
 !
 !-------------------------------------------------------------------------------
 !
@@ -131,7 +132,7 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST ! ab. pressure at time t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCIT   ! Pristine ice number
                                                   ! concentration at time t
 TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE_SERIES_CLOUD_ELEC
-REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRR  ! Rain instant precip
+REAL, DIMENSION(:,:),     INTENT(IN)    :: PINPRR  ! Rain instant precip
 !
 !
 !*       0.2   Declarations of local variables :

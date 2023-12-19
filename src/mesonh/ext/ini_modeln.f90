@@ -292,8 +292,11 @@ END MODULE MODI_INI_MODEL_n
 !  S. Riette      04/2020: XHL* fields
 !  F. Auguste     02/2021: add IBM
 !  T.Nigel        02/2021: add turbulence recycling
-! J.L.Redelsperger 06/2011: OCEAN case
-! A. Costes       12/2021: Blaze fire model
+!  J.L.Redelsperger 06/2011: OCEAN case
+!  R. Schoetter    12/2021  multi-level coupling between MesoNH and SURFEX  
+!  R. Schoetter    12/2021  adds humidity and other mean diagnostics
+!  A. Costes       12/2021: Blaze fire model
+!  C. Barthe      03/2023: if cloud electricity is activated, both ini_micron and ini_elecn are called
 !---------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -332,6 +335,7 @@ USE MODD_DEF_EDDY_FLUX_n   ! for VT and WT fluxes
 USE MODD_DEF_EDDYUV_FLUX_n ! FOR UV
 USE MODD_DIAG_FLAG,         only: LCHEMDIAG, CSPEC_BU_DIAG
 USE MODD_DIM_n
+USE MODD_DRAGBLDG_n
 USE MODD_DRAG_n
 USE MODD_DRAGTREE_n
 USE MODD_DUST
@@ -367,6 +371,7 @@ USE MODD_MEAN_FIELD
 USE MODD_MEAN_FIELD_n
 USE MODD_METRICS_n
 USE MODD_MNH_SURFEX_n
+USE MODD_NEB_n,             only: LSUBG_COND, LSTATNW
 USE MODD_NESTING,           only: CDAD_NAME, NDAD, NDT_2_WAY, NDTRATIO, NDXRATIO_ALL, NDYRATIO_ALL
 USE MODD_NSV
 USE MODD_NSV
@@ -399,13 +404,15 @@ USE MODD_SURF_PAR,          only: XUNDEF_SFX => XUNDEF
 USE MODD_TIME
 USE MODD_TIME_n
 USE MODD_TURB_n
-USE MODD_NEB_n,             only: LSUBG_COND, LSTATNW
 USE MODD_VAR_ll,            only: IP
 
 USE MODE_GATHER_ll
 USE MODE_INI_AIRCRAFT_BALLOON, only: INI_AIRCRAFT_BALLOON
 use mode_ini_budget,        only: Budget_preallocate, Ini_budget
+USE MODE_INI_MFSHALL,       ONLY: INI_MFSHALL
 USE MODE_INI_ONE_WAY_n
+USE MODE_INIT_AEROSOL_PROPERTIES, ONLY: INIT_AEROSOL_PROPERTIES
+USE MODE_INI_TURB,          ONLY: INI_TURB
 USE MODE_IO
 USE MODE_IO_FIELD_READ,     only: IO_Field_read
 USE MODE_IO_FILE,           only: IO_File_open
@@ -444,8 +451,6 @@ USE MODI_INI_LES_N
 USE MODI_INI_LG
 USE MODI_INI_LW_SETUP
 USE MODI_INI_MICRO_n
-USE MODE_INI_TURB, ONLY: INI_TURB
-USE MODE_INI_MFSHALL, ONLY: INI_MFSHALL
 USE MODI_INI_POSPROFILER_n
 USE MODI_INI_RADIATIONS
 USE MODI_INI_RADIATIONS_ECMWF
@@ -455,7 +460,6 @@ USE MODI_INI_SPAWN_LS_n
 USE MODI_INI_SURF_RAD
 USE MODI_INI_SURFSTATION_n
 USE MODI_INI_SW_SETUP
-USE MODE_INIT_AEROSOL_PROPERTIES, ONLY: INIT_AEROSOL_PROPERTIES
 #ifdef MNH_FOREFIRE
 USE MODI_INIT_FOREFIRE_n
 #endif
@@ -525,9 +529,6 @@ INTEGER :: IIU_B,IJU_B
 INTEGER :: IIU_SXP2_YP1_Z_ll,IJU_SXP2_YP1_Z_ll,IKU_SXP2_YP1_Z_ll
 !
 REAL, DIMENSION(:,:),   ALLOCATABLE :: ZCO2   ! CO2 concentration near the surface
-REAL, DIMENSION(:,:),   ALLOCATABLE :: ZSEA   ! sea fraction
-REAL, DIMENSION(:,:),   ALLOCATABLE :: ZTOWN  ! town fraction
-REAL, DIMENSION(:,:),   ALLOCATABLE :: ZBARE  ! bare soil fraction
 !
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZDIR_ALB ! direct albedo
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZSCA_ALB ! diffuse albedo
@@ -778,6 +779,17 @@ IF (LMEAN_FIELD) THEN
     ALLOCATE(XTKEM_MEAN(0,0,0))
   END IF
   ALLOCATE(XPABSM_MEAN(IIU,IJU,IKU))   ; XPABSM_MEAN = 0.0
+  ALLOCATE(XQ_MEAN(IIU,IJU,IKU))       ; XQ_MEAN = 0.0
+  ALLOCATE(XRH_W_MEAN(IIU,IJU,IKU))    ; XRH_W_MEAN = 0.0
+  ALLOCATE(XRH_I_MEAN(IIU,IJU,IKU))    ; XRH_I_MEAN = 0.0
+  ALLOCATE(XRH_P_MEAN(IIU,IJU,IKU))    ; XRH_P_MEAN = 0.0
+  ALLOCATE(XRH_W_MAXCOL_MEAN(IIU,IJU)) ; XRH_W_MAXCOL_MEAN = 0.0
+  ALLOCATE(XRH_I_MAXCOL_MEAN(IIU,IJU)) ; XRH_I_MAXCOL_MEAN = 0.0
+  ALLOCATE(XRH_P_MAXCOL_MEAN(IIU,IJU)) ; XRH_P_MAXCOL_MEAN = 0.0
+  ALLOCATE(XWIFF_MEAN(IIU,IJU,IKU))    ; XWIFF_MEAN = 0.0
+  ALLOCATE(XWIDD_MEAN(IIU,IJU,IKU))    ; XWIDD_MEAN = 0.0
+  ALLOCATE(XWIFF_MAX (IIU,IJU,IKU))    ; XWIFF_MAX  = 0.0
+  ALLOCATE(XWIDD_MAX (IIU,IJU,IKU))    ; XWIDD_MAX  = 0.0
 !
   ALLOCATE(XU2_M2(IIU,IJU,IKU))      ; XU2_M2  = 0.0
 !
@@ -1832,7 +1844,7 @@ IF ( CBUTYPE /= "NONE" .AND. NBUMOD == KMI ) THEN
              LHORELAX_UVWTH,LHORELAX_RV, LHORELAX_RC,LHORELAX_RR,             &
              LHORELAX_RI,LHORELAX_RS,LHORELAX_RG, LHORELAX_RH,LHORELAX_TKE,   &
              LHORELAX_SV, LVE_RELAX, LVE_RELAX_GRD,                           &
-             LCHTRANS,LNUDGING,LDRAGTREE,LDEPOTREE,LMAIN_EOL,                 &
+             LCHTRANS,LNUDGING,LDRAGTREE,LDEPOTREE,LDRAGBLDG,LMAIN_EOL,       &
              CRAD,CDCONV,CSCONV,CTURB,CTURBDIM,CCLOUD                         )
 END IF
 !
@@ -2209,15 +2221,14 @@ END IF
 !*       12.    INITIALIZE THE MICROPHYSICS
 !               ----------------------------
 !
-IF (CELEC == 'NONE') THEN
-  CALL INI_MICRO_n(TPINIFILE,ILUOUT)
+CALL INI_MICRO_n(TPINIFILE,ILUOUT)
 !
 !-------------------------------------------------------------------------------
 !
 !*       13.    INITIALIZE THE ATMOSPHERIC ELECTRICITY
 !               --------------------------------------
 !
-ELSE
+IF (CELEC /= 'NONE') THEN
   CALL INI_ELEC_n(ILUOUT, CELEC, CCLOUD, TPINIFILE, &
                   XTSTEP, XZZ,                      &
                   XDXX, XDYY, XDZZ, XDZX, XDZY      )
@@ -2226,16 +2237,16 @@ ELSE
   FMT='(/,"ELECTRIC VARIABLES ARE BETWEEN INDEX",I2," AND ",I2)')&
   NSV_ELECBEG, NSV_ELECEND
 !
-    IF( CGETSVT(NSV_ELECBEG)=='INIT' ) THEN
-      XSVT(:,:,:,NSV_ELECBEG) = XCION_POS_FW(:,:,:)                  ! Nb/kg
-      XSVT(:,:,:,NSV_ELECEND) = XCION_NEG_FW(:,:,:)
+  IF( CGETSVT(NSV_ELECBEG)=='INIT' ) THEN
+    XSVT(:,:,:,NSV_ELECBEG) = XCION_POS_FW(:,:,:)                  ! Nb/kg
+    XSVT(:,:,:,NSV_ELECEND) = XCION_NEG_FW(:,:,:)
 !
-      XSVT(:,:,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
-    ELSE  ! Convert elec_variables per m3 into elec_variables per kg of air
-      DO JSV = NSV_ELECBEG, NSV_ELECEND
-         XSVT(:,:,:,JSV) = XSVT(:,:,:,JSV) / XRHODREF(:,:,:)
-      ENDDO
-    END IF
+    XSVT(:,:,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
+  ELSE  ! Convert elec_variables per m3 into elec_variables per kg of air
+    DO JSV = NSV_ELECBEG, NSV_ELECEND
+       XSVT(:,:,:,JSV) = XSVT(:,:,:,JSV) / XRHODREF(:,:,:)
+    ENDDO
+  END IF
 END IF
 !
 !-------------------------------------------------------------------------------
@@ -2642,17 +2653,6 @@ IF (CRAD   == 'ECMW') THEN
 !* get cover mask for aerosols
 !
   IF (CPROGRAM=='MESONH' .OR. CPROGRAM=='DIAG  ') THEN
-    ALLOCATE(ZSEA(IIU,IJU))
-    ALLOCATE(ZTOWN(IIU,IJU))
-    ALLOCATE(ZBARE(IIU,IJU))
-    IF (CSURF=='EXTE') THEN
-      CALL GOTO_SURFEX(KMI)
-      CALL MNHGET_SURF_PARAM_n(PSEA=ZSEA,PTOWN=ZTOWN,PBARE=ZBARE)
-    ELSE
-      ZSEA (:,:) = 1.
-      ZTOWN(:,:) = 0.
-      ZBARE(:,:) = 0.
-    END IF
 !
     IF ( CAOP=='EXPL' .AND. LDUST .AND. KMI==1) THEN
       ALLOCATE( XEXT_COEFF_WVL_LKT_DUST( NMAX_RADIUS_LKT_DUST, NMAX_SIGMA_LKT_DUST, NMAX_WVL_SW_DUST ) )
@@ -2670,9 +2670,8 @@ IF (CRAD   == 'ECMW') THEN
 !
     CALL INI_RADIATIONS_ECMWF (XZHAT,XPABST,XTHT,XTSRAD,XLAT,XLON,TDTCUR,TDTEXP,       &
                                CLW,NDLON,NFLEV,NFLUX,NRAD,NSWB_OLD,CAER,NAER,NSTATM,   &
-                               XSTATM,ZSEA,ZTOWN,ZBARE,XOZON, XAER,XDST_WL, LSUBG_COND )
+                               XSTATM, XOZON, XAER,XDST_WL, LSUBG_COND                 )
 !
-    DEALLOCATE(ZSEA,ZTOWN,ZBARE)
     ALLOCATE (XAER_CLIM(SIZE(XAER,1),SIZE(XAER,2),SIZE(XAER,3),SIZE(XAER,4)))
     XAER_CLIM(:,:,:,:) =XAER(:,:,:,:)
 !
@@ -2683,23 +2682,11 @@ ELSE IF (CRAD   == 'ECRA') THEN
 !* get cover mask for aerosols
 !
   IF (CPROGRAM=='MESONH' .OR. CPROGRAM=='DIAG  ') THEN
-    ALLOCATE(ZSEA(IIU,IJU))
-    ALLOCATE(ZTOWN(IIU,IJU))
-    ALLOCATE(ZBARE(IIU,IJU))
-    IF (CSURF=='EXTE') THEN
-      CALL GOTO_SURFEX(KMI)
-      CALL MNHGET_SURF_PARAM_n(PSEA=ZSEA,PTOWN=ZTOWN,PBARE=ZBARE)
-    ELSE
-      ZSEA (:,:) = 1.
-      ZTOWN(:,:) = 0.
-      ZBARE(:,:) = 0.
-    END IF
 !
     CALL INI_RADIATIONS_ECRAD (XZHAT,XPABST,XTHT,XTSRAD,XLAT,XLON,TDTCUR,TDTEXP,       &
                                CLW,NDLON,NFLEV,NFLUX,NRAD,NSWB_OLD,CAER,NAER,NSTATM,   &
-                               XSTATM,ZSEA,ZTOWN,ZBARE,XOZON, XAER,XDST_WL, LSUBG_COND )
+                               XSTATM, XOZON, XAER,XDST_WL, LSUBG_COND                 )
 
-    DEALLOCATE(ZSEA,ZTOWN,ZBARE)
     ALLOCATE (XAER_CLIM(SIZE(XAER,1),SIZE(XAER,2),SIZE(XAER,3),SIZE(XAER,4)))
     XAER_CLIM(:,:,:,:) = XAER(:,:,:,:)
 !

@@ -219,6 +219,7 @@ END MODULE MODI_DEFAULT_DESFM_n
 !  Q. Rodier      06/2021: modify default value to LGZ=F (grey-zone corr.), LSEDI and OSEDC=T (LIMA sedimentation)
 !  F. Couvreux    06/2021: add LRELAX_UVMEAN_FRC
 !  Q. Rodier      07/2021: modify XPOND=1
+!  R. Schoetter   12/2021: multi-level coupling between MesoNH and SURFEX
 !  A. Costes      12/2021: Blaze fire model
 !  C. Barthe      03/2022: add CIBU and RDSF options in LIMA
 !  Delbeke/Vie    03/2022: KHKO option in LIMA
@@ -272,6 +273,7 @@ USE MODD_CONDSAMP
 USE MODD_MEAN_FIELD
 USE MODD_DRAGTREE_n
 USE MODD_DRAGBLDG_n
+USE MODD_COUPLING_LEVELS_n
 USE MODD_EOL_MAIN
 USE MODD_EOL_ADNR
 USE MODD_EOL_ALM
@@ -292,6 +294,7 @@ USE MODD_IBM_LSF
 USE MODD_FOREFIRE
 #endif
 USE MODD_FIRE_n
+USE MODD_IO, ONLY: TFILEDATA
 !
 IMPLICIT NONE
 !
@@ -302,6 +305,7 @@ INTEGER,         INTENT(IN)  :: KMI       ! Model index
 !*       0.2   declaration of local variables
 !
 INTEGER             :: JM      ! loop index
+TYPE(TFILEDATA)    TFILENAM    ! Empty file to satisfy interface of PHYEX_init routines which may calls POSNAM (but do not)
 !
 !-------------------------------------------------------------------------------
 !
@@ -514,14 +518,14 @@ XTNUDGING = 21600.
 !*      10.   SET DEFAULT VALUES FOR MODD_TURB_n :
 !             ----------------------------------
 !
-CALL TURBN_INIT(CPROGRAM, 0, .FALSE., TLUOUT%NLU, &
+CALL TURBN_INIT(CPROGRAM, TFILENAM, .FALSE., TLUOUT%NLU, &
                &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0)
 !-------------------------------------------------------------------------------
 !
 !*      10a.   SET DEFAULT VALUES FOR MODD_NEB_n :
 !             ----------------------------------
 !
-CALL NEBN_INIT(CPROGRAM, 0, .FALSE., TLUOUT%NLU, &
+CALL NEBN_INIT(CPROGRAM, TFILENAM, .FALSE., TLUOUT%NLU, &
               &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0)
 !-------------------------------------------------------------------------------
 !
@@ -531,6 +535,19 @@ CALL NEBN_INIT(CPROGRAM, 0, .FALSE., TLUOUT%NLU, &
 LDRAGTREE = .FALSE.
 LDEPOTREE = .FALSE.
 XVDEPOTREE = 0.02 ! 2 cm/s 
+!------------------------------------------------------------------------------
+!
+!*      10b.   SET DEFAULT VALUES FOR MODD_DRAGBLDG_n :
+!             ----------------------------------
+!
+LDRAGBLDG   = .FALSE.
+LFLUXBLDG   = .FALSE.
+LDRAGURBVEG = .FALSE.
+!
+!*      10c.   SET DEFAULT VALUES FOR MODD_COUPLING_LEVELS_n :
+!             ----------------------------------
+!
+NLEV_COUPLE = 1
 !------------------------------------------------------------------------------
 !
 !*      10c.   SET DEFAULT VALUES FOR MODD_DRAGB
@@ -577,7 +594,7 @@ XLAT_PROF(:)  = XUNDEF
 XLON_PROF(:)  = XUNDEF
 CNAME_PROF(:) = ''
 CFILE_PROF    = 'NO_INPUT_CSV'
-! LDIAG_SURFRAD = .TRUE.
+LDIAG_SURFRAD_PROF = .TRUE.
 !------------------------------------------------------------------------------
 !*      10.f   SET DEFAULT VALUES FOR MODD_ALLSTATION_n :
 !             ----------------------------------
@@ -591,7 +608,7 @@ XLAT_STAT(:)  = XUNDEF
 XLON_STAT(:)  = XUNDEF
 CNAME_STAT(:) = ''
 CFILE_STAT    = 'NO_INPUT_CSV'
-LDIAG_SURFRAD = .TRUE.
+LDIAG_SURFRAD_STAT = .TRUE.
 !
 !-------------------------------------------------------------------------------
 !
@@ -828,7 +845,7 @@ END IF
 !*      16.   SET DEFAULT VALUES FOR MODD_PARAM_ICE :
 !             ---------------------------------------
 !
-CALL PARAM_ICEN_INIT(CPROGRAM, 0, .FALSE., TLUOUT%NLU, &
+CALL PARAM_ICEN_INIT(CPROGRAM, TFILENAM, .FALSE., TLUOUT%NLU, &
                     &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0)
 !
 !-------------------------------------------------------------------------------
@@ -854,7 +871,7 @@ NENSM         = 0
 !*      18.   SET DEFAULT VALUES FOR MODD_PARAM_MFSHALL_n :
 !             --------------------------------------------
 !
-CALL PARAM_MFSHALLN_INIT(CPROGRAM, 0, .FALSE., TLUOUT%NLU, &
+CALL PARAM_MFSHALLN_INIT(CPROGRAM, TFILENAM, .FALSE., TLUOUT%NLU, &
                         &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0)
 !
 !-------------------------------------------------------------------------------
@@ -900,7 +917,7 @@ ENDIF
 !                ----------------------------------------
 !
 IF (KMI == 1) THEN
-  CALL PARAM_LIMA_INIT(CPROGRAM, 0, .FALSE., TLUOUT%NLU, &
+  CALL PARAM_LIMA_INIT(CPROGRAM, TFILENAM, .FALSE., TLUOUT%NLU, &
                       &LDDEFAULTVAL=.TRUE., LDREADNAM=.FALSE., LDCHECK=.FALSE., KPRINT=0)
 ENDIF
 !
@@ -919,7 +936,7 @@ LCH_PH              = .FALSE.
 LCH_RET_ICE         = .FALSE.
 XCH_PHINIT          = 5.2
 XRTMIN_AQ           = 5.e-8
-CCHEM_INPUT_FILE    = 'EXSEG1.nam'
+CCHEM_INPUT_FILE    = 'MNHC.input'
 CCH_TDISCRETIZATION = 'SPLIT'
 NCH_SUBSTEPS        = 1
 LCH_TUV_ONLINE      = .FALSE.
@@ -987,8 +1004,8 @@ LHETEROSO4 = .FALSE.  ! switch to active sulfates heteronegeous
                       ! production
 LSEDIMAERO = .FALSE.  ! switch to active aerosol sedimentation
 LAERINIT   = .FALSE.  ! switch to initialize aerosol in arome
-CMINERAL      = "NONE"   ! mineral equilibrium scheme
-CORGANIC      = "NONE"   ! mineral equilibrium scheme
+CMINERAL      = "EQSAM"   ! mineral equilibrium scheme
+CORGANIC      = "MPMPO"   ! mineral equilibrium scheme
 CNUCLEATION   = "NONE" ! sulfates nucleation scheme
 LDEPOS_AER(:) = .FALSE.
 

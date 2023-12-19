@@ -12,7 +12,7 @@ INTERFACE
 !!
 SUBROUTINE AER_WET_DEP_KMT_WARM(KSPLITR, PTSTEP, PZZ, PRHODREF,       &
                                 PRCT, PRRT,                           &
-                                PRCS, PRRS,  PSVT, PTHT,              &
+                                PSVT, PTHT,                           &
                                 PPABST, PRGAER, PEVAP3D, KMODE,       &
                                 PDENSITY_AER, PMASSMIN, PSEA, PTOWN,  &
                                 PCCT, PCRT )
@@ -30,8 +30,6 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRCT    ! Cloud water m.r. at t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PSVT    ! Tracer m.r. at t
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRCS    ! Cloud water conc derived from source term
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRRS    ! Rain water conc derifed from source term
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEVAP3D ! Instantaneous 3D Rain Evaporation flux (KG/KG/S)
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT       !Potential temp
@@ -53,7 +51,7 @@ END MODULE MODI_AER_WET_DEP_KMT_WARM
 !     ###############################################################
       SUBROUTINE AER_WET_DEP_KMT_WARM (KSPLITR, PTSTEP, PZZ,      &
                             PRHODREF, PRCT, PRRT,                 &
-                            PRCS, PRRS,  PSVT, PTHT,              &
+                            PSVT, PTHT,                           &
                             PPABST, PRGAER, PEVAP3D, KMODE,       &
                             PDENSITY_AER, PMASSMIN, PSEA, PTOWN,  &
                             PCCT, PCRT )
@@ -123,14 +121,16 @@ END MODULE MODI_AER_WET_DEP_KMT_WARM
 !              ------------
 !
 USE MODD_CST
-USE MODD_RAIN_ICE_PARAM_n
+USE MODD_RAIN_ICE_PARAM_n, ONLY: YEXCACCR=>XEXCACCR, XFSEDC, XFCACCR, &
+                                 XEXSEDR, XCRIAUTC, XFSEDR, XTIMAUTC, &
+                                 YFCACCR => XFCACCR
 !++th++ 10/05/17
-USE MODD_RAIN_ICE_DESCR_n, ONLY : YRTMIN => XRTMIN, YCEXVT => XCEXVT, &
-                                XCONC_LAND, XCONC_SEA, XCONC_URBAN, &
-                                XNUC2, XALPHAC2, XNUC, XALPHAC,     &
-                                YLBC => XLBC, XLBEXC,               &
-                                XCCR,                               &
-                                YLBR => XLBR, YLBEXR => XLBEXR 
+USE MODD_RAIN_ICE_DESCR_n, ONLY: YRTMIN => XRTMIN, YCEXVT => XCEXVT, &
+                                 XCONC_LAND, XCONC_SEA, XCONC_URBAN, &
+                                 XNUC2, XALPHAC2, XNUC, XALPHAC,     &
+                                 YLBC => XLBC, XLBEXC,               &
+                                 XCCR,                               &
+                                 YLBR => XLBR, YLBEXR => XLBEXR
 !--th--
 USE MODD_PRECIP_n
 USE MODI_AER_VELGRAV
@@ -145,7 +145,8 @@ USE MODD_PARAM_LIMA_WARM, ONLY : WLBR => XLBR, WLBEXR => XLBEXR,          & ! fo
                                  WLBC => XLBC,                            &
                                  XACCR1, XACCR2, XACCR3, XACCR4, XACCR5,  & ! for
                                  XACCR_RLARGE1, XACCR_RLARGE2,            & ! accr.
-                                 XACCR_RSMALL1, XACCR_RSMALL2
+                                 XACCR_RSMALL1, XACCR_RSMALL2,            &
+                                 WEXCACCR=>XEXCACCR, WFCACCR=>XFCACCR
 USE MODD_PARAM_n,         ONLY: CCLOUD
 !--th--
 
@@ -165,8 +166,6 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRCT    ! Cloud water m.r. at t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PSVT    ! Tracer m.r. at t
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRCS    ! Cloud water m.r. from source term
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRRS    ! Rain water m.r. from source term 
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEVAP3D ! Instantaneous 3D Rain Evaporation flux (KG/KG/S) 
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT     ! Potential temp
@@ -263,7 +262,7 @@ INTEGER :: IKE
 REAL, DIMENSION(:), ALLOCATABLE :: KRTMIN 
 REAL :: KCEXVT, KLBR, KLBEXR, KLBC, ZLBEXC
 REAL, DIMENSION(2) :: ZXLBC
-REAL :: ZEXSEDR, ZDR
+REAL :: ZEXSEDR, ZDR, ZEXCACCR, ZFCACCR
 !  
 !-------------------------------------------------------------------------------
 !
@@ -282,6 +281,8 @@ CASE('ICE3')
   KLBEXR = YLBEXR
   ZXLBC(:) = YLBC(:)
   ZLBEXC = XLBEXC
+  ZEXCACCR = YEXCACCR
+  ZFCACCR = YFCACCR
 CASE('LIMA')
   ALLOCATE(KRTMIN(SIZE(WRTMIN)))
   KRTMIN = WRTMIN
@@ -291,6 +292,8 @@ CASE('LIMA')
   KLBC   = WLBC
   ZLBEXC = 1.0 / 3.0
   ZDR = 0.8
+  ZEXCACCR = WEXCACCR
+  ZFCACCR = WFCACCR
 END SELECT
 !--cb--
 !
@@ -361,9 +364,7 @@ CALL AER_WET_DEP_KMT_ICE_WARM
 !
 CALL AER_WET_DEP_KMT_EVAP   
 !
-!++cb++
 DEALLOCATE(KRTMIN)
-!--cb--
 !
 !-------------------------------------------------------------------------------
 !
@@ -396,12 +397,10 @@ INTEGER                           :: JKAQ     ! counter for chemistry
 GCLOUD(:,:,:) = .FALSE.
 !
 IF (PRESENT(PCCT)) THEN ! case KHKO, C2R2, C3R5, LIMA (2-moment schemes)
-  GCLOUD(:,:,:) = PRCS(:,:,:) > KRTMIN(2) .AND. PCCT(:,:,:) > XCTMIN(2)
+  GCLOUD(:,:,:) = PRCT(:,:,:) > KRTMIN(2) .AND. PCCT(:,:,:) > XCTMIN(2)
 ELSE                    ! Case ICE3, REVE, KESS, ... (1-moment schemes)
-  GCLOUD(:,:,:) = PRCS(:,:,:) > KRTMIN(2)
+  GCLOUD(:,:,:) = PRCT(:,:,:) > KRTMIN(2)
 END IF
-!--cb--
-!--th--
 
 ICLOUD = COUNTJV( GCLOUD(:,:,:),I1C(:),I2C(:),I3C(:))
 IF( ICLOUD >= 1 ) THEN   
@@ -437,7 +436,7 @@ IF( ICLOUD >= 1 ) THEN
     ZTHT(JL)           = PTHT(I1C(JL),I2C(JL),I3C(JL))
     ZRC(JL)            = ZRAY(I1C(JL),I2C(JL),I3C(JL))
     ZPABST(JL)         = PPABST(I1C(JL),I2C(JL),I3C(JL))
-    ZRCT(JL)           = PRCS(I1C(JL),I2C(JL),I3C(JL)) 
+    ZRCT(JL)           = PRCT(I1C(JL),I2C(JL),I3C(JL)) 
     ZRHODREF(JL)       = PRHODREF(I1C(JL),I2C(JL),I3C(JL))   
     ZMASSMIN(JL,:)     = PMASSMIN(I1C(JL),I2C(JL),I3C(JL),:)   
     ZWLBDC(JL)         = ZLBC(I1C(JL),I2C(JL),I3C(JL))
@@ -711,7 +710,7 @@ DO JN = 1 , KSPLITR
         ZSVT(JL,KMODE*2+JKAQ) = PSVT(IR1(JL),IR2(JL),IR3(JL),KMODE*2+JKAQ)
       END DO
 !
-      IF (PRESENT(PCRT)) ZCRT(JL) = PCRT(IR1(JL),IR2(JL),IR2(JL))
+      IF (PRESENT(PCRT)) ZCRT(JL) = PCRT(IR1(JL),IR2(JL),IR3(JL))
       ZRRT(JL)           = PRRT(IR1(JL),IR2(JL),IR3(JL))
       ZRHODREF(JL)       = PRHODREF(IR1(JL),IR2(JL),IR3(JL))
      ENDDO
@@ -803,10 +802,12 @@ ZZRCT(:,:,:) = MAX(ZZRCT(:,:,:), KRTMIN(2)/2.)
 IF (PRESENT(PCRT)) THEN  ! 2-moment schemes
 !
 ! from lima_warm_coal.f90 (AUTO)
-  ZLBDC3(:,:,:) = XMNH_HUGE
+  ZLBDC3(:,:,:) = 1E40
+  ! ZLBDC3(:,:,:) = XMNH_HUGE
   ZLBDC(:,:,:)  = 1.E15
   WHERE (ZZRCT(:,:,:) > KRTMIN(2) .AND. PCCT(:,:,:) > XCTMIN(2))
-    ZLBDC3(:,:,:) = KLBC * PCCT(:,:,:) / PRCT(:,:,:)
+    ZLBDC3(:,:,:) = KLBC * PCCT(:,:,:) / ZZRCT(:,:,:)
+    ! ZLBDC3(:,:,:) = KLBC * PCCT(:,:,:) / PRCT(:,:,:)
     ZLBDC(:,:,:)  = ZLBDC3(:,:,:)**ZLBEXC
   END WHERE
 !
@@ -814,14 +815,14 @@ IF (PRESENT(PCRT)) THEN  ! 2-moment schemes
   WHERE (ZZRCT(:,:,:) > KRTMIN(2))
     ZZW3(:,:,:) = MAX(0.0, XLAUTR*PRHODREF(:,:,:)*ZZRCT(:,:,:)*             &
                            (XAUTO1/ZLBDC3(:,:,:)**4-XLAUTR_THRESHOLD)) ! L 
-    ZZW4(:,:,:) = MIN(PRCS(:,:,:), MAX(0.0, XITAUTR*ZZW3(:,:,:)*ZZRCT(:,:,:)*  &
+    ZZW4(:,:,:) = MIN(PRCT(:,:,:), MAX(0.0, XITAUTR*ZZW3(:,:,:)*ZZRCT(:,:,:)*  &
                            (XAUTO2/ZLBDC3(:,:,:)-XITAUTR_THRESHOLD))) ! L/tau
   END WHERE
 !
 ELSE                     ! 1-moment scheme
 !
-  WHERE ((ZZRCT(:,:,:) > KRTMIN(2)) .AND. (PRCS(:,:,:) > 0.0)) 
-    ZZW4(:,:,:) = MIN(PRCS(:,:,:), XTIMAUTC* &
+  WHERE ((ZZRCT(:,:,:) > KRTMIN(2)) .AND. (PRCT(:,:,:) > 0.0)) 
+    ZZW4(:,:,:) = MIN(PRCT(:,:,:), XTIMAUTC* &
                     MAX((ZZRCT(:,:,:)-XCRIAUTC/PRHODREF(:,:,:)), 0.0))
   END WHERE
 !
@@ -853,12 +854,14 @@ IF (PRESENT(PCRT)) THEN ! 2-moment schemes
 ! from lima_warm_coal.f90 (ACCR)
   ZLBDR3(:,:,:) = 1.E30
   ZLBDR(:,:,:)  = 1.E10
+
+
   WHERE (PRRT(:,:,:) > KRTMIN(3) .AND. PCRT(:,:,:) > XCTMIN(3))
     ZLBDAR(:,:,:) = KLBR * (PRHODREF(:,:,:) * PRRT(:,:,:))**KLBEXR
     ZLBDR3(:,:,:) = KLBR * PCRT(:,:,:) / PRRT(:,:,:)
     ZLBDR(:,:,:)  = ZLBDR3(:,:,:)**KLBEXR
-    ZZW4(:,:,:) = MIN(PRCS(:,:,:), XFCACCR * ZZRCT(:,:,:)            &
-                                         * ZLBDAR(:,:,:)**XEXCACCR &
+    ZZW4(:,:,:) = MIN(PRCT(:,:,:), ZFCACCR * ZZRCT(:,:,:)            &
+                                         * ZLBDAR(:,:,:)**ZEXCACCR &
                                          * PRHODREF(:,:,:)**(-KCEXVT) )
     ZDIM(:,:,:) = XACCR1 / ZLBDAR(:,:,:)
   END WHERE
@@ -871,7 +874,7 @@ IF (PRESENT(PCRT)) THEN ! 2-moment schemes
     ZZW5(:,:,:) = ZLBDC3(:,:,:) / ZLBDR3(:,:,:)
     ZZW1(:,:,:) = (PCCT(:,:,:) * PCRT(:,:,:) / ZLBDC3(:,:,:)**2) * PRHODREF(:,:,:)
     ZZW4(:,:,:) = MIN(ZZW1(:,:,:)*(XACCR_RLARGE1+XACCR_RLARGE2*ZZW5(:,:,:)), &
-                      PRCS(:,:,:))
+                      PRCT(:,:,:))
   END WHERE
 ! Accretion for D < 100 10-6 m
   WHERE (PRRT(:,:,:) > KRTMIN(3)  .AND. PCRT(:,:,:) > XCTMIN(3) .AND. &
@@ -881,17 +884,17 @@ IF (PRESENT(PCRT)) THEN ! 2-moment schemes
     ZZW5(:,:,:) = (ZLBDC3(:,:,:) / ZLBDR3(:,:,:))**2
     ZZW1(:,:,:) = (PCCT(:,:,:) * PCRT(:,:,:) / ZLBDC3(:,:,:)**3) * PRHODREF(:,:,:)
     ZZW4(:,:,:) = MIN(ZZW1(:,:,:)*(XACCR_RSMALL1+XACCR_RSMALL2*ZZW5(:,:,:)), &
-                      PRCS(:,:,:))
+                      PRCT(:,:,:))
   END WHERE
 !
 ELSE                    ! 1-moment schemes
 !
   ZLBDR(:,:,:) = 0.0
   WHERE ((ZZRCT(:,:,:) > KRTMIN(2)) .AND. (PRRT(:,:,:) > KRTMIN(3)) &
-                                    .AND. (PRCS(:,:,:) > 0.0))      
+                                    .AND. (PRCT(:,:,:) > 0.0))      
     ZLBDR(:,:,:) = KLBR * (PRHODREF(:,:,:) * PRRT(:,:,:))**KLBEXR
-    ZZW4(:,:,:) = MIN(PRCS(:,:,:), XFCACCR * ZZRCT(:,:,:)            &
-                                           * ZLBDR(:,:,:)**XEXCACCR &
+    ZZW4(:,:,:) = MIN(PRCT(:,:,:), ZFCACCR * ZZRCT(:,:,:)            &
+                                           * ZLBDR(:,:,:)**ZEXCACCR &
                                            * PRHODREF(:,:,:)**(-KCEXVT) )
   END WHERE
 END IF
@@ -960,7 +963,7 @@ ZWEVAP(:,:,:) = MAX(ZWEVAP(:,:,:), 0.0)
 !              no partial cloud evaporation at this stage
 !
 ZMASK(:,:,:) = 0.
-WHERE(PRCS(:,:,:) .LT. KRTMIN(2))
+WHERE(PRCT(:,:,:) .LT. KRTMIN(2))
   ZMASK(:,:,:) = 1.
 END WHERE
 !

@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -82,17 +82,17 @@ USE MODD_LBC_n, ONLY: CLBCX,CLBCY   ! only for spawning purpose
 USE MODD_LUNIT
 USE MODD_LUNIT_n
 USE MODD_MNH_SURFEX_n
+USE MODD_NSV,          ONLY: NSV_ASSOCIATE
 USE MODD_PARAMETERS
-USE MODD_NSV, ONLY: NSV_ASSOCIATE
 !
 use mode_field,            only: Alloc_field_scalars, Fieldlist_goto_model
+USE MODE_INI_CST,          ONLY: INI_CST
 USE MODE_IO_FILE,          ONLY: IO_File_open
 USE MODE_IO_MANAGE_STRUCT, ONLY: IO_File_add2list
 USE MODE_ll
 USE MODE_MODELN_HANDLER
 USE MODE_SPLITTINGZ_ll
 !
-USE MODE_INI_CST, ONLY: INI_CST
 USE MODI_INI_MODEL_n
 USE MODI_INI_SEG_n
 USE MODI_INI_SIZE_n
