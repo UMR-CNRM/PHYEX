@@ -867,7 +867,7 @@ WARN_LOGFILE           =
 INPUT                  = ../../src/
 INPUT                 += mainpage.md
 INPUT                 += ..
-INPUT                 += ../../tools/INSTALL.md ../../tools/INSTALL_mnh_expand.md ../../tools/INSTALL_pack_ial.md ../../tools/INSTALL_pack_mesonh.md ../../tools/INSTALL_testprogs.md
+INPUT                 += ../../tools/INSTALL.md ../../tools/INSTALL_pack_ial.md ../../tools/INSTALL_pack_mesonh.md ../../tools/INSTALL_testprogs.md
 INPUT                 += ../../build/with_fcm/README.md
 
 # This tag can be used to specify the character encoding of the source files

@@ -7,7 +7,7 @@ set -o pipefail #abort if left command on a pipe fails
 function usage {
   echo "Usage: $0 [-h] [--repo-user USER] [--repo-protocol PROTOCOL] [--repo-repo REPO] [--no-update] [--no-compil]"
   echo "               [--no-exec] [--no-comp] [--no-remove] [--force] [--commit SHA] [--ref REF]"
-  echo "               [--only-model MODEL] [--no-enable-gh-pages] [--perf PERF] [MAIL]"
+  echo "               [--only-model MODEL] [--no-enable-gh-pages] [--perf PERF] [--no-doc-gen] [MAIL]"
   echo "--repo-user USER"
   echo "                user hosting the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREPOuser (=$PHYEXREPOuser)"
@@ -29,6 +29,7 @@ function usage {
   echo "--no-enable-gh-pages"
   echo "                dont't try to enable the project pages on github"
   echo "--perf FILE     add performance statistics in file FILE"
+  echo "--no-doc-gen    do not test the documentation generation"
   echo "MAIL            comma-separated list of e-mail addresses (no spaces); if not provided, mail is not sent"
   echo ""
   echo "This script provides functionality for automated tests."
@@ -43,7 +44,9 @@ function usage {
   echo "(for arome and/or mesonh) or with data (testprogs)."
   echo ""
   echo "The script compare the results against reference simulations. These reference simulations must"
-  echo "be available in the different subdirectories in \${WORKDIR}."
+  echo "be available in the different subdirectories in \${PHYEXWORKDIR}."
+  echo ""
+  echo "The documentation generation is also tested."
 }
 
 MAIL=""
@@ -63,6 +66,7 @@ force=0
 models=""
 enableghpages=1
 perfopt=""
+docgen=1
 
 while [ -n "$1" ]; do
   case "$1" in
@@ -81,6 +85,7 @@ while [ -n "$1" ]; do
     '--only-model') models="${models} $2"; shift;;
     '--no-enable-gh-pages') enableghpages=0;;
     '--perf') perfopt="--perf $2"; shift;;
+    '--no-doc-gen') docgen=0;;
     #--) shift; break ;;
      *) if [ -z "${MAIL-}" ]; then
           MAIL="$1"
@@ -243,7 +248,7 @@ if [ "${SHA}" -eq 0 ]; then
   log 1 "Commit hash is ${SHA}"
 fi
 if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 0 ]; then
-  log 1 "This commit has not been tested (or --force id provided)"
+  log 1 "This commit has not been tested (or --force is provided)"
   ret=0
   
   #Checkout tools, set PATH and use the last version of the testing script
@@ -262,7 +267,6 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
     git fetch "${PHYEXREPOgiturl}"
     git checkout "${SHA}"
     cd "${currentdir}"
-    . "${WORKDIR}/PHYEX/tools/env.sh"
     if [ -f "${WORKDIR}/PHYEX/tools/testing.sh" ]; then
       if [ "${currentMD5}" != $(md5sum "${WORKDIR}/PHYEX/tools/testing.sh" | cut -d\  -f1) ]; then
         log 1 "Script has changed, running the new version" #This log and the preivous ones are lost
@@ -270,6 +274,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
       fi
     fi
   fi
+  . "${WORKDIR}/PHYEX/tools/env.sh"
 
   #Enable the gihub project pages
   if [ $enableghpages -eq 1 ]; then
@@ -406,6 +411,47 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
       log 0 "XXXXX global result for model $model: ERROR"
     fi
   done
+
+  if [ $docgen -eq 1 ]; then
+    retdoc=0
+    log 0 "Test doc generation"
+
+    doccmd="generate_standalone_doc.sh ${WORKDIR}/documentation.html"
+    log 1 "Doc generation with ${doccmd}"
+    set +e
+    ${doccmd}
+    result=$?
+    set -e
+    if [ ${result} -ne 0 ]; then
+      retdoc=1
+      log 0 "  doc generarion with generate_standalone_doc.sh: error"
+    else
+      log 0 "  doc generarion with generate_standalone_doc.sh: OK"
+    fi
+
+    doccmd="doxygen doxygen_config"
+    log 1 "Doc generation with ${doccmd}"
+    cwd=$PWD
+    cd ${WORKDIR}/PHYEX/docs/doxygen
+    set +e
+    ${doccmd}
+    result=$?
+    set -e
+    cd $cwd
+    if [ ${result} -ne 0 ]; then
+      retdoc=1
+      log 0 "  doc generarion with doxygen: error"
+    else
+      log 0 "  doc generarion with doxygen: OK"
+    fi
+
+    if [ $retdoc -eq 0 ]; then
+      log 0 "..... global result for doc generation: OK"
+    else
+      ret=1
+      log 0 "XXXXX global result for doc generation: ERROR"
+    fi
+  fi
 
   #Report result
   report 0 ${ret}

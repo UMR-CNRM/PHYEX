@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -e
+set -o pipefail #abort if left command on a pipe fails
+
 function usage {
   echo "Usage: $0 [-h] output"
   echo "output         output file with .pdf or .html extension"

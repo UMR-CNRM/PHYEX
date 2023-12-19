@@ -7,6 +7,7 @@ This script plots the data contained in the performance files obtained with the 
 import matplotlib.pyplot as plt
 import numpy
 import pandas
+import re
 
 class Perf():
     def __init__(self, perffile):
@@ -15,6 +16,7 @@ class Perf():
         """
         self._df = df = pandas.read_csv(perffile, sep=' ',
                                         names=['commit', 'model', 'case', 'time'])
+
     def plotPerf(self, outfile, model=None, title=None, num=None):
         """
         :param outfile: output file
@@ -34,6 +36,7 @@ class Perf():
                 commits.append(commit)
         if num is not None:
             commits = commits[-num:]
+        shortCommits = [self.shortenCommit(c) for c in commits]
     
         df = self._df.groupby('model')
         for igrpM, grpM in enumerate(models):
@@ -44,7 +47,7 @@ class Perf():
                     ax[igrpM].set_title('Mean elapsed computational time for ' + grpM)
             else:
                 ax[igrpM].set_title(title.replace('%M', grpM))
-            ax[igrpM].set_ylabel('time (ms/gp)')
+            ax[igrpM].set_ylabel('time')
             ax[igrpM].set_yscale('log')
     
             dfp = df.get_group(grpM).groupby('case')
@@ -57,13 +60,21 @@ class Perf():
                     l = [numpy.nan if t < 0. else t for t in dfp.get_group(grp)[f]['time']]
                     time.append(numpy.nan if len(l) == 0 else numpy.ma.array(l).mean())
                 ax[igrpM].plot(range(len(commits)), numpy.ma.array(time), 'o-', label=grp)
-            if igrpM == len(df.groups) - 1:
+            if igrpM == len(models) - 1:
                 ax[igrpM].set_xlabel('PHYEX version')
                 ax[igrpM].set_xticks(range(len(commits)))
-                ax[igrpM].set_xticklabels(commits, rotation=45, ha='right')
+                ax[igrpM].set_xticklabels(shortCommits, rotation=45, ha='right')
             ax[igrpM].legend()
         fig.tight_layout()
         fig.savefig(outfile)
+
+    @staticmethod
+    def shortenCommit(commit):
+        """
+        :param commit: full commit SHA
+        :return: shorten version of commit SHA
+        """
+        return commit[:7] if re.match(r'^[0-9a-f]{40}$', commit) else commit
 
     def listModels(self):
         """
