@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -314,6 +314,7 @@ USE MODD_PARAM_ICE_n,      ONLY: CSEDIM, LADJ_BEFORE, LADJ_AFTER, LRED, PARAM_IC
 USE MODD_PARAM_LIMA,       ONLY: LADJ, LPTSPLIT, LSPRO, NMOD_CCN, NMOD_IFN, NMOD_IMM, NMOM_I
 USE MODD_RAIN_ICE_DESCR_n, ONLY: XRTMIN, RAIN_ICE_DESCRN
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAMN
+USE MODD_REF,              ONLY: XTHVREFZ
 USE MODD_SALT,             ONLY: LSALT
 USE MODD_TURB_n,           ONLY: TURBN
 !
@@ -501,16 +502,13 @@ LOGICAL                               :: GWEST,GEAST,GNORTH,GSOUTH
 LOGICAL                               :: LMFCONV ! =SIZE(PMFCONV)!=0
 ! BVIE work array waiting for PINPRI
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2)):: ZINPRI
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZICEFR
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZPRCFR
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZTM
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2)) :: ZSIGQSAT2D
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZDUM
 !
 ! variables for cloud electricity
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)) :: ZCND, ZDEP
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)) :: ZRCS_BEF, ZRIS_BEF
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZCND, ZDEP
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZRCS_BEF, ZRIS_BEF
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZQCT, ZQRT, ZQIT, ZQST, ZQGT, ZQHT, ZQPIT, ZQNIT
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZQCS, ZQRS, ZQIS, ZQSS, ZQGS, ZQHS, ZQPIS, ZQNIS
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLATHAM_IAGGS ! E Function to simulate
@@ -848,6 +846,13 @@ SELECT CASE ( HCLOUD )
 !
     allocate( zexn( size( pzz, 1 ), size( pzz, 2 ), size( pzz, 3 ) ) )
     ZEXN(:,:,:)= (PPABST(:,:,:)/CST%XP00)**(CST%XRD/CST%XCPD)
+
+    IF (HELEC == 'ELE4') THEN
+      ALLOCATE( ZCND    (SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3)) )
+      ALLOCATE( ZDEP    (SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3)) )
+      ALLOCATE( ZRCS_BEF(SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3)) )
+      ALLOCATE( ZRIS_BEF(SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3)) )
+    END IF
 !
 !*       9.1    Compute the explicit microphysical sources
 !
@@ -960,8 +965,8 @@ SELECT CASE ( HCLOUD )
       ALLOCATE(ZQHS(0,0,0))
       !
       CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICEN, RAIN_ICE_PARAMN, RAIN_ICE_DESCRN, &
-                    ELEC_PARAM, ELEC_DESCR, TBUCONF, 0, .FALSE.,                &
-                    GELEC, LSEDIM_BEARD,                                        &
+                    ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, LSEDIM_BEARD,       &
+                    XTHVREFZ(IKB), HCLOUD,                                      &
                     PTSTEP, KRR, ZEXN,                                          &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
                     PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                     &
@@ -1241,9 +1246,9 @@ SELECT CASE ( HCLOUD )
         ALLOCATE(ZEFIELDW(0,0,0))
       END IF
       !
-      CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICEN, RAIN_ICE_PARAMN, RAIN_ICE_DESCRN,  &
-                     ELEC_PARAM, ELEC_DESCR, TBUCONF, 0, .FALSE.,                &
-                     GELEC, LSEDIM_BEARD,                                        &
+      CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICEN, RAIN_ICE_PARAMN, RAIN_ICE_DESCRN, &
+                     ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, LSEDIM_BEARD,        &
+                     XTHVREFZ(IKB), HCLOUD,                                      &
                      PTSTEP, KRR, ZEXN,                                          &
                      ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
                      PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                     &
@@ -1382,9 +1387,11 @@ SELECT CASE ( HCLOUD )
     ZZZ = MZF( PZZ )
     IF (LPTSPLIT) THEN 
       IF (GELEC) THEN
-        CALL LIMA (YLDIMPHYEX,CST,TBUCONF,TBUDGETS,SIZE(TBUDGETS),         &
-                   PTSTEP, GELEC,                                          &
-                   PRHODREF, PEXNREF, ZDZZ,                                &
+        CALL LIMA (YLDIMPHYEX,CST, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
+                   ELEC_DESCR, ELEC_PARAM,                                 &
+                   TBUCONF,TBUDGETS,SIZE(TBUDGETS),                        &
+                   PTSTEP, GELEC, HCLOUD,                                  &
+                   PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
                    NMOD_CCN, NMOD_IFN, NMOD_IMM,                           &
                    PDTHRAD, PTHT, PRT,                                     &
@@ -1396,9 +1403,11 @@ SELECT CASE ( HCLOUD )
                    PSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND),                    &
                    PSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND)                     )
       ELSE
-        CALL LIMA (YLDIMPHYEX,CST,TBUCONF,TBUDGETS,SIZE(TBUDGETS),         &
-                   PTSTEP, GELEC,                                          &
-                   PRHODREF, PEXNREF, ZDZZ,                                &
+        CALL LIMA (YLDIMPHYEX,CST, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
+                   ELEC_DESCR, ELEC_PARAM,                                 &
+                   TBUCONF,TBUDGETS,SIZE(TBUDGETS),                        &
+                   PTSTEP, GELEC, HCLOUD,                                  &
+                   PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
                    NMOD_CCN, NMOD_IFN, NMOD_IMM,                           &
                    PDTHRAD, PTHT, PRT,                                     &
