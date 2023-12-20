@@ -122,6 +122,7 @@ REAL               :: XCEI_MAX  !< maximum threshold for the instability index C
                                      !(beginning of the saturation of the amplification)
 REAL, DIMENSION(:,:,:), POINTER  :: XCEI !< Cloud Entrainment instability index to emphasize localy 
                                          ! turbulent fluxes
+  LOGICAL            :: LTURB_PRECIP ! switch to apply turbulence to precipitating hydrometeor mixing ratios
 
 !  
 END TYPE TURB_t
@@ -180,6 +181,7 @@ REAL, POINTER :: XCOEF_AMPL_SAT=>NULL()
 REAL, POINTER :: XCEI_MIN=>NULL()
 REAL, POINTER :: XCEI_MAX =>NULL()
 REAL, DIMENSION(:,:,:), POINTER  :: XCEI=>NULL()
+LOGICAL, POINTER :: LTURB_PRECIP=>NULL()
 !
 NAMELIST/NAM_TURBn/XIMPL,CTURBLEN,CTURBDIM,LTURB_FLX,LTURB_DIAG,  &
                    LSIG_CONV,LRMC01,CTOM,&
@@ -188,7 +190,7 @@ NAMELIST/NAM_TURBn/XIMPL,CTURBLEN,CTURBDIM,LTURB_FLX,LTURB_DIAG,  &
                    XALTHGRAD, XCLDTHOLD, XLINI, LHARAT, &
                    LPROJQITURB, LSMOOTH_PRANDTL, XMINSIGS, NTURBSPLIT, &
                    LCLOUDMODIFLM, CTURBLEN_CLOUD, &
-                   XCOEF_AMPL_SAT, XCEI_MIN, XCEI_MAX
+                   XCOEF_AMPL_SAT, XCEI_MIN, XCEI_MAX, LTURB_PRECIP
 !
 !-------------------------------------------------------------------------------
 !
@@ -276,6 +278,7 @@ XCOEF_AMPL_SAT=>TURB_MODEL(KTO)%XCOEF_AMPL_SAT
 XCEI_MIN=>TURB_MODEL(KTO)%XCEI_MIN
 XCEI_MAX =>TURB_MODEL(KTO)%XCEI_MAX
 XCEI=>TURB_MODEL(KTO)%XCEI
+LTURB_PRECIP=>TURB_MODEL(KTO)%LTURB_PRECIP
 !
 ENDIF
 !
@@ -386,6 +389,7 @@ IF(LLDEFAULTVAL) THEN
   XCOEF_AMPL_SAT = 5.
   XCEI_MIN = 0.001E-06
   XCEI_MAX = 0.01E-06
+  LTURB_PRECIP =.FALSE.
   !
   IF(HPROGRAM=='AROME') THEN
     XTKEMIN=1.E-6
