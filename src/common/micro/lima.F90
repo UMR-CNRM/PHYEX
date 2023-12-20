@@ -132,7 +132,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR     ! Cloud fraction
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PPRCFR     ! Cloud fraction
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PFPR       ! Precipitation fluxes in altitude
 !
-REAL, DIMENSION(:,:,:),             INTENT(IN)    :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
+REAL, DIMENSION(:,:,:),   OPTIONAL, INTENT(IN)    :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
 REAL, DIMENSION(:,:,:),   OPTIONAL, INTENT(IN)    :: PEFIELDW   ! Vertical component of the electric field
 REAL, DIMENSION(:,:,:,:), OPTIONAL, INTENT(IN)    :: PSV_ELEC_T ! Charge density at time t
 REAL, DIMENSION(:,:,:,:), OPTIONAL, INTENT(INOUT) :: PSV_ELEC_S ! Charge density sources
