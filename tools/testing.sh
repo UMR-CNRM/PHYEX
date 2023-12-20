@@ -68,6 +68,7 @@ enableghpages=1
 perfopt=""
 docgen=1
 
+allargs="$@"
 while [ -n "$1" ]; do
   case "$1" in
     '-h') usage; exit;;
@@ -269,8 +270,8 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
     cd "${currentdir}"
     if [ -f "${WORKDIR}/PHYEX/tools/testing.sh" ]; then
       if [ "${currentMD5}" != $(md5sum "${WORKDIR}/PHYEX/tools/testing.sh" | cut -d\  -f1) ]; then
-        log 1 "Script has changed, running the new version" #This log and the preivous ones are lost
-        exec "${WORKDIR}/PHYEX/tools/testing.sh" $@
+        log 1 "Script has changed, running the new version" #This log and the previous ones are lost
+        exec "${WORKDIR}/PHYEX/tools/testing.sh" $allargs
       fi
     fi
   fi
