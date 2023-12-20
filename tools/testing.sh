@@ -7,7 +7,8 @@ set -o pipefail #abort if left command on a pipe fails
 function usage {
   echo "Usage: $0 [-h] [--repo-user USER] [--repo-protocol PROTOCOL] [--repo-repo REPO] [--no-update] [--no-compil]"
   echo "               [--no-exec] [--no-comp] [--no-remove] [--force] [--commit SHA] [--ref REF]"
-  echo "               [--only-model MODEL] [--no-enable-gh-pages] [--perf PERF] [--no-doc-gen] [MAIL]"
+  echo "               [--only-model MODEL] [--no-enable-gh-pages] [--perf PERF] [--no-doc-gen]"
+  echo "               [--hostname HOSTNAME] [MAIL]"
   echo "--repo-user USER"
   echo "                user hosting the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREPOuser (=$PHYEXREPOuser)"
@@ -30,6 +31,9 @@ function usage {
   echo "                dont't try to enable the project pages on github"
   echo "--perf FILE     add performance statistics in file FILE"
   echo "--no-doc-gen    do not test the documentation generation"
+  echo "--hostname HOSTNAME"
+  echo "                the context is built using the provided hostname instead of the real hostname"
+  echo "                This can be usefull when running on a cluster node which can vary from run to run"
   echo "MAIL            comma-separated list of e-mail addresses (no spaces); if not provided, mail is not sent"
   echo ""
   echo "This script provides functionality for automated tests."
@@ -67,6 +71,7 @@ models=""
 enableghpages=1
 perfopt=""
 docgen=1
+contextHostname=${HOSTNAME}
 
 allargs="$@"
 while [ -n "$1" ]; do
@@ -87,6 +92,7 @@ while [ -n "$1" ]; do
     '--no-enable-gh-pages') enableghpages=0;;
     '--perf') perfopt="--perf $2"; shift;;
     '--no-doc-gen') docgen=0;;
+    '--hostname') contextHostname=$2; shift;;
     #--) shift; break ;;
      *) if [ -z "${MAIL-}" ]; then
           MAIL="$1"
@@ -109,7 +115,7 @@ fi
 exec > "${logfile}" 2>&1
 
 #context for statuses
-context="continuous-integration/${HOSTNAME}"
+context="continuous-integration/${contextHostname}"
 
 #Interactions with github
 if [ "${PHYEXREPOprotocol}" == 'ssh' ]; then
