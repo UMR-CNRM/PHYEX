@@ -1346,11 +1346,13 @@ IF ( KRRL >= 1 ) THEN
 END IF!
 !
 PRSVS(:,:,:)=ZWORKS(:,:,1:KSV)
-IF (KRR.GE.3) PRRS(:,:,3)=ZWORKS(:,:,KSV+3)
-IF (KRR.GE.5) PRRS(:,:,5)=ZWORKS(:,:,KSV+5)
-IF (KRR.GE.6) PRRS(:,:,6)=ZWORKS(:,:,KSV+6)
-IF (KRR.GE.7) PRRS(:,:,7)=ZWORKS(:,:,KSV+7)
-IF (OFLYER)   PWSV(:,:,:)=ZWORKWSV(:,:,1:KSV)
+IF (TURBN%LTURB_PRECIP) THEN
+   IF (KRR.GE.3) PRRS(:,:,3)=ZWORKS(:,:,KSV+3)
+   IF (KRR.GE.5) PRRS(:,:,5)=ZWORKS(:,:,KSV+5)
+   IF (KRR.GE.6) PRRS(:,:,6)=ZWORKS(:,:,KSV+6)
+   IF (KRR.GE.7) PRRS(:,:,7)=ZWORKS(:,:,KSV+7)
+END IF
+   IF (OFLYER)   PWSV(:,:,:)=ZWORKWSV(:,:,1:KSV)
 !
 ! Remove non-physical negative values (unnecessary in a perfect world) + corresponding budgets
 CALL SOURCES_NEG_CORRECT_PHY(D,KSV,HCLOUD,HELEC,'NETUR',KRR,PTSTEP,PPABST,PTHLT,PRT,PRTHLS,PRRS,PRSVS)
