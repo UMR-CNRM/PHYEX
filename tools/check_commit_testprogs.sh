@@ -57,12 +57,18 @@ TESTDIR=${TESTPROGSDIR:=$HOME/TESTPROGS}
 dirdata=$PHYEXTOOLSDIR/testprogs_data
 if [ $(hostname | cut -c 1-7) == 'belenos' -o $(hostname | cut -c 1-7) == 'taranis' ]; then
   defaultarchfile=MIMPIIFC1805.EPONA
+  submit_method=slurm_belenos
 elif [ $(hostname) == 'aurora01' ]; then
   defaultarchfile=ECMWF_NEC440MPI225SP.AU.x
+  submit_method=''
 else
   defaultarchfile=gnu
+  submit_method=''
 fi
 defaultRef=ref
+
+#Comma separated list of variables that must be set if job is executed on other node
+varToExport="NPROMA,NBLOCKS,OMP_NUM_THREADS,DR_HOOK_OPT,DR_HOOK,DR_HOOK_IGNORE_SIGNALS"
 
 #Options to have longer simulations, tag is used to build the directory name of the result
 declare -A conf_extra_tag
@@ -230,6 +236,41 @@ function json_dictkey2value {
   # $2 must be the key name
   # $3 is the default value
   json_content="$1" python3 -c "import json; import os; result=json.loads(os.environ['json_content']).get('$2', '$3'); print(json.dumps(result) if isinstance(result, dict) else result)"
+}
+
+function submit {
+  #usage: submit <output file> <error file> <command> [arg [arg ...]]
+  output=$(realpath $1); shift
+  error=$(realpath $1); shift
+  if [ "$submit_method" == 'slurm_belenos' ]; then
+    myscript=$TMP/riette$$
+    cat - << EOF > $myscript
+#!/bin/bash
+#SBATCH -n 1
+#SBATCH -N 1
+#SBATCH --export=$varToExport
+
+cd $PWD
+$@
+EOF
+    chmod +x $myscript
+    outtmp=$(mktemp)
+    sbatch --wait -o $outtmp -e $error $myscript
+    #Move job accounting in Stderrr (if present)
+    str='#########################################'
+    num=$(grep -n -m 1 $str $outtmp)
+    if [ "$num" != "" ]; then
+      #Acounting is present in this run
+      num=$(echo $num | cut -d : -f 1)
+      tail -n +$((${num}-1)) $outtmp >> $error
+      head -n $((${num}-2)) $outtmp > $output
+    else
+      cp $outtmp $output
+    fi
+    rm -f $myscript $outtmp
+  else
+    $@ > $output 2> $error
+  fi
 }
 
 ###########################
@@ -403,7 +444,7 @@ if [ $run -ge 1 ]; then
         fi
         . $TESTDIR/$name/build/with_fcm/arch_${archfile}/arch.env
         set +e
-        $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe $checkOpt $extrapolation_opts > Output_run 2> Stderr_run
+        submit Output_run Stderr_run $TESTDIR/$name/build/with_fcm/arch_${archfile}/build/bin/main_${t}.exe $checkOpt $extrapolation_opts
         stat=$?
         set -e
         if [ $stat -ne 0 ]; then
