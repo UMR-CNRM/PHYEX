@@ -28,7 +28,9 @@ TYPE MISC_t
   LOGICAL                        :: OFLYER=.FALSE.       !< MesoNH flyer diagnostic
   LOGICAL                        :: ODIAG_IN_RUN=.FALSE. !< LES diagnostics
   LOGICAL                        :: O2D=.FALSE.          !< 2D version of the turbulence
-
+  CHARACTER(LEN=4)               :: CELEC='NONE'         !< Name of the electricity scheme
+  LOGICAL                        :: OELEC=.FALSE.        !< Lightning prognostic scheme
+  LOGICAL                        :: OSEDIM_BEARD=.FALSE. !< Switch for effect of electrical forces on sedim.
   !These values are computed from the model setup
   LOGICAL                        :: OFLAT                !< Flat configuration
 

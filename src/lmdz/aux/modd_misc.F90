@@ -29,6 +29,9 @@ TYPE MISC_t
   TYPE(TFILEDATA)    :: ZTFILE
   TYPE(TLES_t)       :: TLES
   CHARACTER(LEN=6)   :: CPROGRAM
+  CHARACTER(LEN=4)   :: CELEC='NONE'         !< Name of the electricity scheme
+  LOGICAL                        :: OELEC=.FALSE.        !< Lightning prognostic scheme
+  LOGICAL            :: OSEDIM_BEARD=.FALSE. !< Switch for effect of electrical forces on sedim.
   CHARACTER(LEN=4)   ::CMICRO
   CHARACTER(LEN=4)   ::CSCONV
   CHARACTER(LEN=4)   ::CTURB

@@ -1,7 +1,7 @@
 MODULE MODI_INI_PHYEX
 IMPLICIT NONE
 INTERFACE
-SUBROUTINE INI_PHYEX(HPROGRAM, KUNITNML, LDNEEDNAM, KLUOUT, KFROM, KTO, &
+SUBROUTINE INI_PHYEX(HPROGRAM, TPFILE, LDNEEDNAM, KLUOUT, KFROM, KTO, &
                     &PTSTEP, PDZMIN, &
                     &CMICRO, CSCONV, CTURB, &
                     &LDCHANGEMODEL, LDDEFAULTVAL, LDREADNAM, LDCHECK, KPRINT, LDINIT, &
@@ -17,11 +17,12 @@ USE MODD_PARAM_MFSHALL_N,ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_N,         ONLY: TURB_t
 USE MODD_CTURB,          ONLY: CSTURB_t
 USE MODD_NEB_N,          ONLY: NEB_t
+USE MODD_IO,             ONLY: TFILEDATA
 !
 IMPLICIT NONE
 
 CHARACTER(LEN=6),  INTENT(IN) :: HPROGRAM     !< Current program
-INTEGER,           INTENT(IN) :: KUNITNML     !< Logical unit to access the namelist
+TYPE(TFILEDATA),   INTENT(IN) :: TPFILE       !< Logical unit to access the namelist
 LOGICAL,           INTENT(IN) :: LDNEEDNAM    !< True to abort if namelist is absent
 INTEGER,           INTENT(IN) :: KLUOUT       !< Logical unit for outputs
 INTEGER,           INTENT(IN) :: KFROM        !< Old model number

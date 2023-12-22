@@ -10,7 +10,7 @@
               & O2D,ONOMIXLG,OFLAT,OCOUPLES,OBLOWSNOW,OIBM,OFLYER,    &
               & OCOMPUTE_SRC, PRSNOW,                                 &
               & OOCEAN,ODEEPOC,ODIAG_IN_RUN,                          &
-              & HTURBLEN_CL,HCLOUD,                                   &
+              & HTURBLEN_CL,HCLOUD,HELEC,                             &
               & PTSTEP,TPFILE,                                        &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
@@ -234,6 +234,7 @@
 !  P. Wautelet 30/06/2020: move removal of negative scalar variables to Sources_neg_correct
 !  R. Honnert/V. Masson 02/2021: new mixing length in the grey zone
 !  J.L. Redelsperger 03/2021: add Ocean LES case
+!  C. Barthe   08/02/2022: add helec in arguments of Sources_neg_correct
 ! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -243,7 +244,7 @@ USE MODE_SHUMAN_PHY, ONLY: MZF_PHY,MXF_PHY,MYF_PHY
 USE YOMHOOK ,   ONLY: LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_BUDGET,     ONLY:  NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUDGET_RV, NBUDGET_RC,  &
-                             NBUDGET_RI, NBUDGET_SV1, &
+                            NBUDGET_RI, NBUDGET_SV1, NBUDGET_RG, NBUDGET_RH, NBUDGET_RR, NBUDGET_RS, &
                             TBUDGETDATA, TBUDGETCONF_t
 USE MODD_CST,        ONLY: CST_t
 USE MODD_CTURB,      ONLY: CSTURB_t
@@ -313,6 +314,8 @@ LOGICAL,                INTENT(IN)   ::  ODIAG_IN_RUN ! switch to activate onlin
 LOGICAL,                INTENT(IN)   ::  OIBM         ! switch to modity mixing length near building with IBM
 CHARACTER(LEN=4),       INTENT(IN)   ::  HTURBLEN_CL  ! kind of cloud mixing length
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
+CHARACTER (LEN=4),      INTENT(IN)   ::  HELEC        ! Kind of cloud electricity scheme
+
 REAL,                   INTENT(IN)   ::  PRSNOW       ! Ratio for diffusion coeff. scalar (blowing snow)
 REAL,                   INTENT(IN)   ::  PTSTEP       ! timestep
 TYPE(TFILEDATA),        INTENT(IN)   ::  TPFILE       ! Output file
@@ -499,6 +502,11 @@ REAL                :: ZALPHA       ! work coefficient :
 REAL :: ZTIME1, ZTIME2
 TYPE(TFIELDMETADATA) :: TZFIELD
 !
+REAL, DIMENSION(D%NIJT,D%NKT,MERGE(KSV+KRR,KSV,TURBN%LTURB_PRECIP)) :: ZWORKT, ZWORKS
+REAL, DIMENSION(D%NIJT,      MERGE(KSV+KRR,KSV,TURBN%LTURB_PRECIP)) :: ZWORKSFSV
+REAL, DIMENSION(D%NIJT,D%NKT,MERGE(KSV+KRR,KSV,TURBN%LTURB_PRECIP)) :: ZWORKWSV
+INTEGER :: ISV
+!
 !*      1.PRELIMINARIES
 !         -------------
 !
@@ -538,6 +546,15 @@ END IF
 !Save LIMA scalar variables sources
 ZRSVS(IIJB:IIJE,1:IKT,1:KSV)=PRSVS(IIJB:IIJE,1:IKT,1:KSV)
 !
+ISV=KSV
+IF (TURBN%LTURB_PRECIP) ISV=KSV+KRR
+ZWORKT(:,:,1:KSV)=PSVT(:,:,:)
+ZWORKS(:,:,1:KSV)=PRSVS(:,:,:)
+IF (TURBN%LTURB_PRECIP) ZWORKT(:,:,KSV+1:KSV+KRR)=PRT(:,:,:)
+IF (TURBN%LTURB_PRECIP) ZWORKS(:,:,KSV+1:KSV+KRR)=PRRS(:,:,:)
+ZWORKSFSV(:,:)=0.
+ZWORKWSV(:,:,:)=0.
+ZWORKSFSV(:,1:KSV)=PSFSV(:,:)
 !
 !----------------------------------------------------------------------------
 !
@@ -992,29 +1009,29 @@ IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'VTU
 
 IF( BUCONF%LBUDGET_SV ) THEN
   DO JSV = 1, KSV
-    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'VTURB', PRSVS(:,:, JSV) )
+    CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'VTURB', ZWORKS(:,:, JSV) )
   END DO
 END IF
 
 CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
           KRR,KRRL,KRRI,KGRADIENTS,                      &
           OOCEAN, ODEEPOC, OCOMPUTE_SRC,                 &
-          KSV,KSV_LGBEG,KSV_LGEND,                       &
+          ISV,KSV_LGBEG,KSV_LGEND,                       &
           ZEXPL, O2D, ONOMIXLG, OFLAT,                   &
           OCOUPLES,OBLOWSNOW,OFLYER, PRSNOW,             &
           PTSTEP,TPFILE,                                 &
           PDXX,PDYY,PDZZ,PDZX,PDZY,PDIRCOSZW,PZZ,        &
           PCOSSLOPE,PSINSLOPE,                           &
           PRHODJ,PTHVREF,PSFU,PSFV,                      &
-          PSFTH,PSFRV,PSFSV,PSFTH,PSFRV,PSFSV,           &
+          PSFTH,PSFRV,ZWORKSFSV,PSFTH,PSFRV,ZWORKSFSV,   &
           ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU33M,               &
-          PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,PSVT,    &
+          PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,ZWORKT,  &
           PTKET,ZLM,PLENGTHM,PLENGTHH,ZLEPS,MFMOIST,     &
           ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,     &
           ZFWTH,ZFWR,ZFTH2,ZFR2,ZFTHR,PBL_DEPTH,         &
           PSBL_DEPTH,ZLMO,PHGRAD,PZS,                    &
-          PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,              &
-          PDP,PTP,PSIGS,PWTH,PWRC,PWSV,                  &
+          PRUS,PRVS,PRWS,PRTHLS,PRRS,ZWORKS,             &
+          PDP,PTP,PSIGS,PWTH,PWRC,ZWORKWSV,                  &
           PSSTFL, PSSTFL_C, PSSRFL_C,PSSUFL_C,PSSVFL_C,  &
           PSSUFL,PSSVFL                                  )
 
@@ -1024,6 +1041,21 @@ CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
 !   IF (KSV_LIMA_NG.GT.0) PRSVS(:,:,KSV_LIMA_NG) = ZRSVS(:,:,KSV_LIMA_NG) 
 !   IF (KSV_LIMA_NH.GT.0) PRSVS(:,:,KSV_LIMA_NH) = ZRSVS(:,:,KSV_LIMA_NH)
 !END IF
+
+IF (TURBN%LTURB_PRECIP) THEN
+  IF( BUCONF%LBUDGET_RR ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'VTURB', PRRS(:,:, 3) )
+  IF( BUCONF%LBUDGET_RS ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'VTURB', PRRS(:,:, 5) )
+  IF( BUCONF%LBUDGET_RG ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'VTURB', PRRS(:,:, 6) )
+  IF( BUCONF%LBUDGET_RH .AND. KRR ==7) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'VTURB', PRRS(:,:, 7) )
+  IF (KRR.GE.3) PRRS(:,:,3)=ZWORKS(:,:,KSV+3)
+  IF (KRR.GE.5) PRRS(:,:,5)=ZWORKS(:,:,KSV+5)
+  IF (KRR.GE.6) PRRS(:,:,6)=ZWORKS(:,:,KSV+6)
+  IF (KRR.GE.7) PRRS(:,:,7)=ZWORKS(:,:,KSV+7)
+  IF( BUCONF%LBUDGET_RR ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'VTURB', PRRS(:,:, 3) )
+  IF( BUCONF%LBUDGET_RS ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'VTURB', PRRS(:,:, 5) )
+  IF( BUCONF%LBUDGET_RG ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RG), 'VTURB', PRRS(:,:, 6) )
+  IF( BUCONF%LBUDGET_RH .AND. KRR ==7) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RH), 'VTURB', PRRS(:,:, 7) )
+END IF
 
 IF( BUCONF%LBUDGET_U ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_U), 'VTURB', PRUS(:,:) )
 IF( BUCONF%LBUDGET_V ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_V), 'VTURB', PRVS(:,:) )
@@ -1055,7 +1087,7 @@ IF( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'VTUR
 
 IF( BUCONF%LBUDGET_SV )  THEN
   DO JSV = 1, KSV
-    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'VTURB', PRSVS(:,:, JSV) )
+    CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'VTURB', ZWORKS(:,:, JSV) )
   END DO
 END IF
 !
@@ -1090,11 +1122,11 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
 
   IF( BUCONF%LBUDGET_SV )  THEN
     DO JSV = 1, KSV
-      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:,:, JSV) )
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', ZWORKS(:,:, JSV) )
     END DO
   END IF
     CALL TURB_HOR_SPLT(D,CST,CSTURB, TURBN, NEBN, TLES,        &
-          KSPLIT, KRR, KRRL, KRRI, KSV,KSV_LGBEG,KSV_LGEND,    & 
+          KSPLIT, KRR, KRRL, KRRI, ISV,KSV_LGBEG,KSV_LGEND,    & 
           PTSTEP,HLBCX,HLBCY, OFLAT,O2D, ONOMIXLG,             & 
           OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,PRSNOW,                &
           TPFILE, KHALO,                                       &
@@ -1102,14 +1134,14 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
           PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,                       &
           PCOSSLOPE,PSINSLOPE,                                 &
           PRHODJ,PTHVREF,                                      &
-          PSFTH,PSFRV,PSFSV,                                   &
+          PSFTH,PSFRV,ZWORKSFSV,                               &
           ZCDUEFF,ZTAU11M,ZTAU12M,ZTAU22M,ZTAU33M,             &
-          PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,PSVT,          &
+          PUT,PVT,PWT,ZUSLOPE,ZVSLOPE,PTHLT,PRT,ZWORKT,        &
           PTKET,ZLM,ZLEPS,                                     &
           ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,           &
           PDP,PTP,PSIGS,                                       &
           ZTRH,                                                &
-          PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS                     )
+          PRUS,PRVS,PRWS,PRTHLS,PRRS,ZWORKS                    )
   !
 !  IF (HCLOUD == 'LIMA') THEN
 !     IF (KSV_LIMA_NR.GT.0) PRSVS(:,:,KSV_LIMA_NR) = ZRSVS(:,:,KSV_LIMA_NR) 
@@ -1117,6 +1149,21 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
 !     IF (KSV_LIMA_NG.GT.0) PRSVS(:,:,KSV_LIMA_NG) = ZRSVS(:,:,KSV_LIMA_NG) 
 !     IF (KSV_LIMA_NH.GT.0) PRSVS(:,:,KSV_LIMA_NH) = ZRSVS(:,:,KSV_LIMA_NH)
 !  END IF
+  !
+  IF (TURBN%LTURB_PRECIP) THEN
+    IF( BUCONF%LBUDGET_RR ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RR), 'HTURB', PRRS(:,:, 3) )
+    IF( BUCONF%LBUDGET_RS ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RS), 'HTURB', PRRS(:,:, 5) )
+    IF( BUCONF%LBUDGET_RG ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'HTURB', PRRS(:,:, 6) )
+    IF( BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'HTURB', PRRS(:,:, 7) )
+    IF (KRR.GE.3) PRRS(:,:,3)=ZWORKS(:,:,KSV+3)
+    IF (KRR.GE.5) PRRS(:,:,5)=ZWORKS(:,:,KSV+5)
+    IF (KRR.GE.6) PRRS(:,:,6)=ZWORKS(:,:,KSV+6)
+    IF (KRR.GE.7) PRRS(:,:,7)=ZWORKS(:,:,KSV+7)
+    IF( BUCONF%LBUDGET_RR ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'HTURB', PRRS(:,:, 3) )
+    IF( BUCONF%LBUDGET_RS ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RS), 'HTURB', PRRS(:,:, 5) )
+    IF( BUCONF%LBUDGET_RG ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RG), 'HTURB', PRRS(:,:, 6) )
+    IF( BUCONF%LBUDGET_RH .AND. KRR==7) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RH), 'HTURB', PRRS(:,:, 7) )
+  END IF
   !
   IF( BUCONF%LBUDGET_U ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_U), 'HTURB', PRUS(:,:) )
   IF( BUCONF%LBUDGET_V ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_V), 'HTURB', PRVS(:,:) )
@@ -1148,7 +1195,7 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
 
   IF( BUCONF%LBUDGET_SV )  THEN
     DO JSV = 1, KSV
-      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', PRSVS(:,:, JSV) )
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + JSV), 'HTURB', ZWORKS(:,:, JSV) )
     END DO
   END IF
 END IF
@@ -1269,6 +1316,8 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
    END IF
 END IF
 !
+PRSVS(:,:,:)        = ZWORKS(:,:,1:KSV)
+IF (OFLYER)   PWSV(:,:,:)=ZWORKWSV(:,:,1:KSV)
 !* stores value of conservative variables & wind before turbulence tendency (AROME only)
 IF(PRESENT(PDRUS_TURB)) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -1311,10 +1360,11 @@ IF ( KRRL >= 1 ) THEN
                                     * PRRS(IIJB:IIJE,1:IKT,2)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   END IF
-END IF
-
+END IF!
+!
+!
 ! Remove non-physical negative values (unnecessary in a perfect world) + corresponding budgets
-CALL SOURCES_NEG_CORRECT_PHY(D,KSV,HCLOUD, 'NETUR',KRR,PTSTEP,PPABST,PTHLT,PRT,PRTHLS,PRRS,PRSVS)
+CALL SOURCES_NEG_CORRECT_PHY(D,KSV,HCLOUD,HELEC,'NETUR',KRR,PTSTEP,PPABST,PTHLT,PRT,PRTHLS,PRRS,PRSVS)
 !----------------------------------------------------------------------------
 !
 !*      9. LES averaged surface fluxes

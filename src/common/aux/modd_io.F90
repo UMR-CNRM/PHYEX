@@ -30,5 +30,6 @@ TYPE TFILEDATA
   INTEGER              :: NMODEL = 0              !Model number corresponding to the file (field not always set)
   INTEGER,DIMENSION(3) :: NMNHVERSION = (/0,0,0/) !MesoNH version used to create the file
   !
+  INTEGER :: NLU = -1 ! logical unit number
 END TYPE TFILEDATA
 ENDMODULE MODD_IO

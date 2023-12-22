@@ -255,28 +255,30 @@ if [ $ilooprm -eq 1 ]; then
     cd $sub
     files=$(\ls -A)
     for file in $files; do
-      if [[ "$file" != "gradient_m"* ]]; then
-        # Protection only for one line in turb.f90/.F90
-        if [[ "$file" == "turb"* ]]; then
-          sed -i 's/PLM(IIJB:IIJE,IKTB:IKTE) = PZZ(IIJB:IIJE,IKTB+IKL:IKTE+IKL) - PZZ(IIJB:IIJE,IKTB:IKTE)/PLM(IIJB:IIJE,IKTB : IKTE) = PZZ(IIJB:IIJE,IKTB+IKL:IKTE+IKL) - PZZ(IIJB:IIJE,IKTB : IKTE)/g' $file
-        fi
-        # Protection
-        sed -i 's/JK=IKTB:IKTE/transJKIKTB/g' $file
-        sed -i 's/JK=1:IKT/transIKT/g' $file
-        sed -i 's/JIJ=IIJB:IIJE/transJIJ/g' $file
-        sed -i 's/IKTB+1:IKTE/IKTB1IKTE/g' $file
-        # Apply transformation
-        sed -i 's/1:IKT/:/g' $file
-        sed -i 's/IKTB:IKTE/:/g' $file
-        sed -i 's/IIJB:IIJE/:/g' $file
-        # Supression protection
-        sed -i 's/transJKIKTB/JK=IKTB:IKTE/g' $file
-        sed -i 's/transIKT/JK=1:IKT/g' $file
-        sed -i 's/transJIJ/JIJ=IIJB:IIJE/g' $file
-        sed -i 's/IKTB1IKTE/IKTB+1:IKTE/g' $file
-        if [[ "$file" == "turb"* ]]; then
-          sed -i 's/IKTB : IKTE/IKTB:IKTE/g' $file
-        fi
+      if [[ "$file" != "minpack" ]]; then
+       if [[ "$file" != "gradient_m"* ]]; then
+         # Protection only for one line in turb.f90/.F90
+         if [[ "$file" == "turb"* ]]; then
+           sed -i 's/PLM(IIJB:IIJE,IKTB:IKTE) = PZZ(IIJB:IIJE,IKTB+IKL:IKTE+IKL) - PZZ(IIJB:IIJE,IKTB:IKTE)/PLM(IIJB:IIJE,IKTB : IKTE) = PZZ(IIJB:IIJE,IKTB+IKL:IKTE+IKL) - PZZ(IIJB:IIJE,IKTB : IKTE)/g' $file
+         fi
+         # Protection
+         sed -i 's/JK=IKTB:IKTE/transJKIKTB/g' $file
+         sed -i 's/JK=1:IKT/transIKT/g' $file
+         sed -i 's/JIJ=IIJB:IIJE/transJIJ/g' $file
+         sed -i 's/IKTB+1:IKTE/IKTB1IKTE/g' $file
+         # Apply transformation
+         sed -i 's/1:IKT/:/g' $file
+         sed -i 's/IKTB:IKTE/:/g' $file
+         sed -i 's/IIJB:IIJE/:/g' $file
+         # Supression protection
+         sed -i 's/transJKIKTB/JK=IKTB:IKTE/g' $file
+         sed -i 's/transIKT/JK=1:IKT/g' $file
+         sed -i 's/transJIJ/JIJ=IIJB:IIJE/g' $file
+         sed -i 's/IKTB1IKTE/IKTB+1:IKTE/g' $file
+         if [[ "$file" == "turb"* ]]; then
+           sed -i 's/IKTB : IKTE/IKTB:IKTE/g' $file
+         fi
+       fi
       fi
     done
     cd ..

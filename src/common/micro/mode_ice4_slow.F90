@@ -5,11 +5,12 @@
 MODULE MODE_ICE4_SLOW
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, PRHODREF, PT, &
+SUBROUTINE ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, LDSOFT, OELEC, LDCOMPUTE, PRHODREF, PT, &
                      &PSSI, PLVFACT, PLSFACT, &
                      &PRVT, PRCT, PRIT, PRST, PRGT, &
                      &PLBDAS, PLBDAG, &
                      &PAI, PCJ, PHLI_HCF, PHLI_HRI,&
+                     &PLATHAM_IAGGS, &
                      &PRCHONI, PRVDEPS, PRIAGGS, PRIAUTS, PRVDEPG)
 !!
 !!**  PURPOSE
@@ -25,6 +26,7 @@ SUBROUTINE ICE4_SLOW(CST, ICEP, ICED, KPROMA, KSIZE, LDSOFT, LDCOMPUTE, PRHODREF
 !!
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
+!  C. Barthe      06/2023: Add retroaction of electric field on IAGGS
 !
 !
 !*      0. DECLARATIONS
@@ -44,6 +46,7 @@ TYPE(RAIN_ICE_PARAM_t),       INTENT(IN)    :: ICEP
 TYPE(RAIN_ICE_DESCR_t),       INTENT(IN)    :: ICED
 INTEGER,                      INTENT(IN)    :: KPROMA, KSIZE
 LOGICAL,                      INTENT(IN)    :: LDSOFT
+LOGICAL,                      INTENT(IN)    :: OELEC
 LOGICAL, DIMENSION(KPROMA),   INTENT(IN)    :: LDCOMPUTE
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PRHODREF ! Reference density
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PT       ! Temperature
@@ -61,6 +64,7 @@ REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PAI      ! Thermodynamical functi
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PCJ      ! Function to compute the ventilation coefficient
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PHLI_HCF !
 REAL, DIMENSION(KPROMA),      INTENT(IN)    :: PHLI_HRI !
+REAL, DIMENSION(MERGE(KPROMA,0,OELEC)), INTENT(IN) :: PLATHAM_IAGGS ! enhancement factor of IAGGS due to Efield
 REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRCHONI  ! Homogeneous nucleation
 REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRVDEPS  ! Deposition on r_s
 REAL, DIMENSION(KPROMA),      INTENT(INOUT) :: PRIAGGS  ! Aggregation on r_s
@@ -144,6 +148,7 @@ DO JL=1, KSIZE
                          * PRHODREF(JL)**(-ICED%XCEXVT+1.) &
                          * ((PLBDAS(JL))**(ICED%XBS+ICEP%XEXIAGGS))
 #endif
+      IF (OELEC) PRIAGGS(JL) = PRIAGGS(JL) * PLATHAM_IAGGS(JL)
     ENDIF
   ELSE
     PRIAGGS(JL) = 0.

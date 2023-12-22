@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -7,7 +7,7 @@
       MODULE MODI_RESOLVED_CLOUD
 !     ##########################
 INTERFACE
-      SUBROUTINE RESOLVED_CLOUD ( HCLOUD, HACTCCN, HSCONV, HMF_CLOUD,                  &
+      SUBROUTINE RESOLVED_CLOUD ( HCLOUD, HELEC, HACTCCN, HSCONV, HMF_CLOUD,           &
                                   KRR, KSPLITR, KSPLITG, KMI, KTCOUNT,                 &
                                   HLBCX, HLBCY, TPFILE, HRAD, HTURBDIM,                &
                                   OSUBG_COND, OSIGMAS, HSUBG_AUCV,                     &
@@ -30,6 +30,7 @@ INTERFACE
 USE MODD_IO, ONLY: TFILEDATA
 !
 CHARACTER(LEN=4),         INTENT(IN)   :: HCLOUD   ! kind of cloud
+CHARACTER(LEN=4),         INTENT(IN)   :: HELEC    ! kind of electrical scheme
 CHARACTER(LEN=4),         INTENT(IN)   :: HACTCCN  ! kind of CCN activation scheme
                                                    ! paramerization
 CHARACTER(LEN=4),         INTENT(IN)   :: HSCONV   ! Shallow convection scheme
@@ -146,8 +147,8 @@ END SUBROUTINE RESOLVED_CLOUD
 END INTERFACE
 END MODULE MODI_RESOLVED_CLOUD
 !
-!     ##########################################################################
-      SUBROUTINE RESOLVED_CLOUD ( HCLOUD, HACTCCN, HSCONV, HMF_CLOUD,                  &
+!     ##################################################################################
+      SUBROUTINE RESOLVED_CLOUD ( HCLOUD, HELEC, HACTCCN, HSCONV, HMF_CLOUD,           &
                                   KRR, KSPLITR, KSPLITG, KMI, KTCOUNT,                 &
                                   HLBCX, HLBCY, TPFILE, HRAD, HTURBDIM,                &
                                   OSUBG_COND, OSIGMAS, HSUBG_AUCV,                     &
@@ -166,7 +167,7 @@ END MODULE MODI_RESOLVED_CLOUD
                                   PINDEP, PSUPSAT,  PNACT, PNPRO,PSSPRO, PRAINFR,      &
                                   PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,              &
                                   PSEA,PTOWN          )   
-!     ##########################################################################
+!     ##################################################################################
 !
 !!****  * -  compute the  resolved clouds and precipitation
 !!
@@ -284,38 +285,51 @@ END MODULE MODI_RESOLVED_CLOUD
 !  P. Wautelet 30/06/2020: move removal of negative scalar variables to Sources_neg_correct
 !  P. Wautelet 30/06/2020: remove non-local corrections
 !  B. Vie         06/2020: add prognostic supersaturation for LIMA
+!  C. Barthe   20/03/2023: to avoid duplicating sources, cloud electrification is integrated in the microphysics
+!                          CELLS can be used with rain_ice with LRED=T and with LIMA with LPTSPLIT=T
+!                          the adjustement for cloud electricity is also externalized
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
-USE MODD_BUDGET,         ONLY: TBUDGETS, TBUCONF
-USE MODD_CH_AEROSOL,     ONLY: LORILAM
-USE MODD_DUST,           ONLY: LDUST
-USE MODD_CST,            ONLY: CST
-USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
-USE MODD_DUST ,          ONLY: LDUST
-USE MODD_IO,             ONLY: TFILEDATA
-USE MODD_NEB_n,          ONLY: NEBN, CCONDENS, CLAMBDA3
-USE MODD_NSV,            ONLY: NSV, NSV_C1R3END, NSV_C2R2BEG, NSV_C2R2END,                       &
-                               NSV_LIMA_BEG, NSV_LIMA_END, NSV_LIMA_CCN_FREE, NSV_LIMA_IFN_FREE, &
-                               NSV_LIMA_NC, NSV_LIMA_NI, NSV_LIMA_NR, NSV_AEREND,NSV_DSTEND,NSV_SLTEND
-USE MODD_PARAM_C2R2,     ONLY: LSUPSAT
-USE MODD_PARAMETERS,     ONLY: JPHEXT, JPVEXT
-USE MODD_PARAM_ICE_n,    ONLY: CSEDIM, LADJ_BEFORE, LADJ_AFTER, LRED, PARAM_ICEN
-USE MODD_PARAM_LIMA,     ONLY: LADJ, LPTSPLIT, LSPRO, NMOD_CCN, NMOD_IFN, NMOD_IMM, NMOM_I
+USE MODD_BUDGET,           ONLY: TBUDGETS, TBUCONF
+USE MODD_CH_AEROSOL,       ONLY: LORILAM
+USE MODD_DUST,             ONLY: LDUST
+USE MODD_CST,              ONLY: CST
+USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
+USE MODD_DUST,             ONLY: LDUST
+USE MODD_ELEC_DESCR,       ONLY: ELEC_DESCR, LSEDIM_BEARD, LIAGGS_LATHAM
+USE MODD_ELEC_n,           ONLY: XEFIELDU, XEFIELDV, XEFIELDW
+USE MODD_ELEC_PARAM,       ONLY: ELEC_PARAM
+USE MODD_IO,               ONLY: TFILEDATA
+USE MODD_NEB_n,            ONLY: NEBN, CCONDENS, CLAMBDA3
+USE MODD_NSV,              ONLY: NSV, NSV_C1R3END, NSV_C2R2BEG, NSV_C2R2END,                       &
+                                 NSV_LIMA_BEG, NSV_LIMA_END, NSV_LIMA_CCN_FREE, NSV_LIMA_IFN_FREE, &
+                                 NSV_LIMA_NC, NSV_LIMA_NI, NSV_LIMA_NR,                            &
+                                 NSV_AEREND, NSV_DSTEND, NSV_SLTEND,                               &
+                                 NSV_ELECBEG, NSV_ELECEND
+USE MODD_PARAM_C2R2,       ONLY: LSUPSAT
+USE MODD_PARAMETERS,       ONLY: JPHEXT, JPVEXT
+USE MODD_PARAM_ICE_n,      ONLY: CSEDIM, LADJ_BEFORE, LADJ_AFTER, LRED, PARAM_ICEN
+USE MODD_PARAM_LIMA,       ONLY: LADJ, LPTSPLIT, LSPRO, NMOD_CCN, NMOD_IFN, NMOD_IMM, NMOM_I
 USE MODD_RAIN_ICE_DESCR_n, ONLY: XRTMIN, RAIN_ICE_DESCRN
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAMN
-USE MODD_SALT,           ONLY: LSALT
-USE MODD_TURB_n,         ONLY: TURBN
+USE MODD_REF,              ONLY: XTHVREFZ
+USE MODD_SALT,             ONLY: LSALT
+USE MODD_TURB_n,           ONLY: TURBN
 !
 USE MODE_ll
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
 use mode_sources_neg_correct, only: Sources_neg_correct
 !
+USE MODI_AER2LIMA
 USE MODI_C2R2_ADJUST
+USE MODI_ELEC_ADJUST
 USE MODI_FAST_TERMS
 USE MODI_GET_HALO
 USE MODI_ICE_ADJUST
+USE MODI_ICE_ADJUST_ELEC
+USE MODI_ION_SOURCE_ELEC
 USE MODI_KHKO_NOTADJUST
 USE MODI_LIMA
 USE MODI_LIMA_ADJUST
@@ -326,10 +340,10 @@ USE MODI_LIMA_NOTADJUST
 USE MODI_LIMA_WARM
 USE MODI_RAIN_C2R2_KHKO
 USE MODI_RAIN_ICE
+USE MODI_RAIN_ICE_ELEC
 USE MODI_RAIN_ICE_OLD
 USE MODI_SHUMAN
 USE MODI_SLOW_TERMS
-USE MODI_AER2LIMA
 !
 IMPLICIT NONE
 !
@@ -338,6 +352,7 @@ IMPLICIT NONE
 !
 !
 CHARACTER(LEN=4),         INTENT(IN)   :: HCLOUD   ! kind of cloud paramerization
+CHARACTER(LEN=4),         INTENT(IN)   :: HELEC    ! kind of electrical scheme
 CHARACTER(LEN=4),         INTENT(IN)   :: HACTCCN  ! kind of CCN activation scheme
 CHARACTER(LEN=4),         INTENT(IN)   :: HSCONV   ! Shallow convection scheme
 CHARACTER(LEN=4),         INTENT(IN)   :: HMF_CLOUD! Type of statistical cloud
@@ -487,12 +502,20 @@ LOGICAL                               :: GWEST,GEAST,GNORTH,GSOUTH
 LOGICAL                               :: LMFCONV ! =SIZE(PMFCONV)!=0
 ! BVIE work array waiting for PINPRI
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2)):: ZINPRI
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZICEFR
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZPRCFR
-REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZTM
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2)) :: ZSIGQSAT2D
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 REAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)):: ZDUM
+!
+! variables for cloud electricity
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZCND, ZDEP
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZRCS_BEF, ZRIS_BEF
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZQCT, ZQRT, ZQIT, ZQST, ZQGT, ZQHT, ZQPIT, ZQNIT
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZQCS, ZQRS, ZQIS, ZQSS, ZQGS, ZQHS, ZQPIS, ZQNIS
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLATHAM_IAGGS ! E Function to simulate
+                                                     ! enhancement of IAGGS
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZEFIELDW
+LOGICAL :: GELEC ! if true, cloud electrification is activated
+!
 ZSIGQSAT2D(:,:) = PSIGQSAT
 !
 !------------------------------------------------------------------------------
@@ -546,17 +569,17 @@ END IF
 !
 IF (HCLOUD == 'LIMA' .AND. ((LORILAM).OR.(LDUST).OR.(LSALT))) THEN
 ! ORILAM : tendance s --> variable instant t
-ALLOCATE(ZSVT(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3),NSV))
+  ALLOCATE(ZSVT(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3),NSV))
   DO JSV = 1, NSV
     ZSVT(:,:,:,JSV) = PSVS(:,:,:,JSV) * PTSTEP / PRHODJ(:,:,:)
   END DO
 
-CALL AER2LIMA(ZSVT(IIB:IIE,IJB:IJE,IKB:IKE,:),&
-              PRHODREF(IIB:IIE,IJB:IJE,IKB:IKE), &
-              PRT(IIB:IIE,IJB:IJE,IKB:IKE,1),&
-              PPABST(IIB:IIE,IJB:IJE,IKB:IKE),&
-              PTHT(IIB:IIE,IJB:IJE,IKB:IKE), &
-              PZZ(IIB:IIE,IJB:IJE,IKB:IKE))
+  CALL AER2LIMA(ZSVT(IIB:IIE,IJB:IJE,IKB:IKE,:),&
+                PRHODREF(IIB:IIE,IJB:IJE,IKB:IKE), &
+                PRT(IIB:IIE,IJB:IJE,IKB:IKE,1),&
+                PPABST(IIB:IIE,IJB:IJE,IKB:IKE),&
+                PTHT(IIB:IIE,IJB:IJE,IKB:IKE), &
+                PZZ(IIB:IIE,IJB:IJE,IKB:IKE))
 
 ! LIMA : variable instant t --> tendance s
   PSVS(:,:,:,NSV_LIMA_CCN_FREE)   = ZSVT(:,:,:,NSV_LIMA_CCN_FREE) * &
@@ -570,8 +593,8 @@ CALL AER2LIMA(ZSVT(IIB:IIE,IJB:IJE,IKB:IKE,:),&
                                     PRHODJ(:,:,:) / PTSTEP
   PSVS(:,:,:,NSV_LIMA_IFN_FREE+1) = ZSVT(:,:,:,NSV_LIMA_IFN_FREE+1) * &
                                     PRHODJ(:,:,:) / PTSTEP
-
-DEALLOCATE(ZSVT)
+  !
+  DEALLOCATE(ZSVT)
 END IF
 
 !UPG*PT
@@ -594,15 +617,15 @@ ENDIF
 !  complete the lateral boundaries to avoid possible problems
 !
 DO JI=1,JPHEXT
- PTHS(JI,:,:) = PTHS(IIB,:,:)
- PTHS(IIE+JI,:,:) = PTHS(IIE,:,:)
- PTHS(:,JI,:) = PTHS(:,IJB,:)
- PTHS(:,IJE+JI,:) = PTHS(:,IJE,:)
+  PTHS(JI,:,:) = PTHS(IIB,:,:)
+  PTHS(IIE+JI,:,:) = PTHS(IIE,:,:)
+  PTHS(:,JI,:) = PTHS(:,IJB,:)
+  PTHS(:,IJE+JI,:) = PTHS(:,IJE,:)
 !
- PRS(JI,:,:,:) = PRS(IIB,:,:,:)
- PRS(IIE+JI,:,:,:) = PRS(IIE,:,:,:)
- PRS(:,JI,:,:) = PRS(:,IJB,:,:)
- PRS(:,IJE+JI,:,:) = PRS(:,IJE,:,:)
+  PRS(JI,:,:,:) = PRS(IIB,:,:,:)
+  PRS(IIE+JI,:,:,:) = PRS(IIE,:,:,:)
+  PRS(:,JI,:,:) = PRS(:,IJB,:,:)
+  PRS(:,IJE+JI,:,:) = PRS(:,IJE,:,:)
 END DO
 !
 !  complete the physical boundaries to avoid some computations
@@ -647,62 +670,89 @@ IF (HCLOUD == 'C2R2' .OR. HCLOUD == 'C3R5' .OR. HCLOUD == 'KHKO' &
   PSVT(:,:,IKE+1,ISVBEG:ISVEND) = PSVT(:,:,IKE,ISVBEG:ISVEND)
 ENDIF
 !
+! Same thing for cloud electricity
+IF (HELEC(1:3) == 'ELE') THEN
+  ! Transformation into physical tendencies
+  DO JSV = NSV_ELECBEG, NSV_ELECEND
+    PSVS(:,:,:,JSV) = PSVS(:,:,:,JSV) / PRHODJ(:,:,:)
+  ENDDO
+  !
+  ! complete the lateral boundaries to avoid possible problems
+  DO JI = 1, JPHEXT
+    ! positive ion source
+    PSVS(JI,:,:,NSV_ELECBEG)     = PSVS(IIB,:,:,NSV_ELECBEG)
+    PSVS(IIE+JI,:,:,NSV_ELECBEG) = PSVS(IIE,:,:,NSV_ELECBEG)
+    PSVS(:,JI,:,NSV_ELECBEG)     = PSVS(:,IJB,:,NSV_ELECBEG)
+    PSVS(:,IJE+JI,:,NSV_ELECBEG) = PSVS(:,IJE,:,NSV_ELECBEG)
+    ! source of hydrometeor charge
+    PSVS(JI,:,:,NSV_ELECBEG+1:NSV_ELECEND-1)     = 0.0
+    PSVS(IIE+JI,:,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
+    PSVS(:,JI,:,NSV_ELECBEG+1:NSV_ELECEND-1)     = 0.0
+    PSVS(:,IJE+JI,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
+    ! negative ion source
+    PSVS(JI,:,:,NSV_ELECEND)     = PSVS(IIB,:,:,NSV_ELECEND)
+    PSVS(IIE+JI,:,:,NSV_ELECEND) = PSVS(IIE,:,:,NSV_ELECEND)
+    PSVS(:,JI,:,NSV_ELECEND)     = PSVS(:,IJB,:,NSV_ELECEND)
+    PSVS(:,IJE+JI,:,NSV_ELECEND) = PSVS(:,IJE,:,NSV_ELECEND)
+  END DO
+  !
+  ! complete the physical boundaries to avoid some computations
+  IF(GWEST  .AND. HLBCX(1) /= 'CYCL') PSVT(IIB-1,:,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
+  IF(GEAST  .AND. HLBCX(2) /= 'CYCL') PSVT(IIE+1,:,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
+  IF(GSOUTH .AND. HLBCY(1) /= 'CYCL') PSVT(:,IJB-1,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
+  IF(GNORTH .AND. HLBCY(2) /= 'CYCL') PSVT(:,IJE+1,:,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
+  !
+  ! complete the vertical boundaries
+  PSVS(:,:,IKB-1,NSV_ELECBEG) = PSVS(:,:,IKB,NSV_ELECBEG)    ! Positive ion
+  PSVT(:,:,IKB-1,NSV_ELECBEG) = PSVT(:,:,IKB,NSV_ELECBEG)
+  PSVS(:,:,IKB-1,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0          ! Hydrometeor charge
+  PSVS(:,:,IKE+1,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
+  PSVT(:,:,IKB-1,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
+  PSVT(:,:,IKE+1,NSV_ELECBEG+1:NSV_ELECEND-1) = 0.0
+  PSVS(:,:,IKB-1,NSV_ELECEND) = PSVS(:,:,IKB,NSV_ELECEND)    ! Negative ion
+  PSVT(:,:,IKB-1,NSV_ELECEND) = PSVT(:,:,IKB,NSV_ELECEND)
+END IF
+!
+!
+!-------------------------------------------------------------------------------
 !
 !*       3.     REMOVE NEGATIVE VALUES
 !               ----------------------
 !
-!*       3.1    Non local correction for precipitating species (Rood 87)
-!
-! IF (      HCLOUD == 'KESS'                       &
-!      .OR. HCLOUD == 'ICE3' .OR. HCLOUD == 'ICE4' &
-!      .OR. HCLOUD == 'C2R2' .OR. HCLOUD == 'C3R5' &
-!      .OR. HCLOUD == 'KHKO' .OR. HCLOUD == 'LIMA' ) THEN
-! !
-!   DO JRR = 3,KRR
-!     SELECT CASE (JRR)
-!       CASE(3,5,6,7) ! rain, snow, graupel and hail
-!
-!         IF ( MIN_ll( PRS(:,:,:,JRR), IINFO_ll) < 0.0 ) THEN
-! !
-! ! compute the total water mass computation
-! !
-!           ZMASSTOT = MAX( 0. , SUM3D_ll( PRS(:,:,:,JRR), IINFO_ll ) )
-! !
-! ! remove the negative values
-! !
-!           PRS(:,:,:,JRR) = MAX( 0., PRS(:,:,:,JRR) )
-! !
-! ! compute the new total mass
-! !
-!           ZMASSPOS = MAX(XMNH_TINY,SUM3D_ll( PRS(:,:,:,JRR), IINFO_ll ) )
-! !
-! ! correct again in such a way to conserve the total mass
-! !
-!           ZRATIO = ZMASSTOT / ZMASSPOS
-!           PRS(:,:,:,JRR) = PRS(:,:,:,JRR) * ZRATIO
-! !
-!         END IF
-!     END SELECT
-!   END DO
-! END IF
-!
-!*       3.2    Adjustement for liquid and solid cloud
-!
 ! Remove non-physical negative values (unnecessary in a perfect world) + corresponding budgets
-call Sources_neg_correct( hcloud, 'NEGA', krr, ptstep, ppabst, ptht, prt, pths, prs, psvs, prhodj )
+call Sources_neg_correct( hcloud, helec, 'NEGA', krr, ptstep, ppabst, ptht, prt, pths, prs, psvs, prhodj )
 !
-!*       3.4    Limitations of Na and Nc to the CCN max number concentration
 !
-! Commented by O.Thouron 03/2013
-!IF ((HCLOUD == 'C2R2' .OR. HCLOUD == 'C3R5' .OR. HCLOUD == 'KHKO') &
-!     .AND.(XCONC_CCN > 0)) THEN
-!  IF ((HACTCCN /= 'ABRK')) THEN
-!  ZSVT(:,:,:,1) = MIN( ZSVT(:,:,:,1),XCONC_CCN )
-!  ZSVT(:,:,:,2) = MIN( ZSVT(:,:,:,2),XCONC_CCN )
-!  ZSVS(:,:,:,1) = MIN( ZSVS(:,:,:,1),XCONC_CCN )
-!  ZSVS(:,:,:,2) = MIN( ZSVS(:,:,:,2),XCONC_CCN )
-!  END IF
-!END IF
+!-------------------------------------------------------------------------------
+!
+!*       4.     CLOUD ELECTRICITY
+!               -----------------
+!
+!++cb++ 01/06/23
+!IF (HELEC == 'ELE4') &
+IF (HELEC(1:3) == 'ELE') THEN 
+!--cb--
+!
+!*       4.1    Ion source from drift motion and cosmic rays
+!
+  CALL ION_SOURCE_ELEC (KTCOUNT, KRR, HLBCX, HLBCY,          &
+                        PRHODREF, PRHODJ, PRT,               &
+                        PSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND), &
+                        PSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND), &
+                        XEFIELDU, XEFIELDV, XEFIELDW         )
+!
+!*       4.2    Compute the coefficient that modifies the efficiency of IAGGS
+!
+  ALLOCATE(ZLATHAM_IAGGS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+  IF (LIAGGS_LATHAM) THEN
+    ZLATHAM_IAGGS(:,:,:) = 1.0 + 0.4E-10 * MIN( 2.25E10,                &
+                           XEFIELDU(:,:,:)**2+XEFIELDV(:,:,:)**2+XEFIELDW(:,:,:)**2 )
+  ELSE
+    ZLATHAM_IAGGS(:,:,:) = 1.0
+  END IF
+ELSE
+  ALLOCATE(ZLATHAM_IAGGS(0,0,0))
+END IF
 !
 !
 !-------------------------------------------------------------------------------
@@ -796,6 +846,13 @@ SELECT CASE ( HCLOUD )
 !
     allocate( zexn( size( pzz, 1 ), size( pzz, 2 ), size( pzz, 3 ) ) )
     ZEXN(:,:,:)= (PPABST(:,:,:)/CST%XP00)**(CST%XRD/CST%XCPD)
+
+    IF (HELEC == 'ELE4') THEN
+      ALLOCATE( ZCND    (SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3)) )
+      ALLOCATE( ZDEP    (SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3)) )
+      ALLOCATE( ZRCS_BEF(SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3)) )
+      ALLOCATE( ZRIS_BEF(SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3)) )
+    END IF
 !
 !*       9.1    Compute the explicit microphysical sources
 !
@@ -805,6 +862,13 @@ SELECT CASE ( HCLOUD )
     ENDDO
     ZZZ = MZF( PZZ )
     IF(LRED .AND. LADJ_BEFORE) THEN
+      IF (HELEC == 'ELE4') THEN
+        ! save the cloud droplets and ice crystals m.r. source before adjustement
+        ZRCS_BEF(:,:,:) = PRS(:,:,:,2)
+        ZRIS_BEF(:,:,:) = PRS(:,:,:,4)
+      END IF
+      !
+      ! Performe the saturation ajdustment
       CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEBN, TURBN,           &
                       PARAM_ICEN, TBUCONF, KRR,                                &
                       'ADJU',                                                  &
@@ -823,34 +887,171 @@ SELECT CASE ( HCLOUD )
                       TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),               &
                       PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                    &
                       PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                     )
+      !
+      IF (HELEC == 'ELE4') THEN
+        ! Compute the condensation and sublimation rates
+        ZCND(:,:,:) = PRS(:,:,:,2) - ZRCS_BEF(:,:,:)
+        ZDEP(:,:,:) = PRS(:,:,:,4) - ZRIS_BEF(:,:,:)
+        !
+        ! Compute the charge exchanged during evaporation of cloud droplets (negative ZCND) and
+        !                              during sublimation of ice crystals (negative ZDEP)
+        CALL ELEC_ADJUST (KRR, PRHODJ, HCLOUD, 'ADJU',                                   &
+                          PRC=ZRCS_BEF(:,:,:)*PTSTEP, PRI=ZRIS_BEF(:,:,:)*PTSTEP,        &
+                          PQC=PSVS(:,:,:,NSV_ELECBEG+1)*PTSTEP,                          &
+                          PQI=PSVS(:,:,:,NSV_ELECBEG+3)*PTSTEP,                          &
+                          PQCS=PSVS(:,:,:,NSV_ELECBEG+1), PQIS=PSVS(:,:,:,NSV_ELECBEG+3),&
+                          PQPIS=PSVS(:,:,:,NSV_ELECBEG), PQNIS=PSVS(:,:,:,NSV_ELECEND),  &
+                          PCND=ZCND, PDEP=ZDEP)
+      END IF
     ENDIF
     IF (LRED) THEN
-      CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICEN, RAIN_ICE_PARAMN,        &
-                    RAIN_ICE_DESCRN, TBUCONF,                            &
-                    PTSTEP, KRR, ZEXN,                                   &
-                    ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT,PCLDFR,&
-                    PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,              &
-                    PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                    &
-                    PRT(:,:,:,3), PRT(:,:,:,4),                          &
-                    PRT(:,:,:,5), PRT(:,:,:,6),                          &
-                    PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),      &
-                    PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),            &
-                    PINPRC,PINPRR, PEVAP3D,                    &
-                    PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,              &
-                    TBUDGETS,SIZE(TBUDGETS),           &
-                    PSEA,PTOWN, PFPR=ZFPR                                )
+      IF (HELEC == 'ELE4') THEN
+        ! to match with PHYEX, electric charge variables are no more optional, but their size
+        ! depends on the activation (or not) of the electrification scheme
+        GELEC = .TRUE.
+        ALLOCATE(ZQPIT(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQNIT(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQCT(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQRT(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQIT(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQST(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQGT(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQPIS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQNIS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQCS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQRS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQIS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQSS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQGS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ZQPIT(:,:,:) = PSVT(:,:,:,NSV_ELECBEG)
+        ZQCT(:,:,:)  = PSVT(:,:,:,NSV_ELECBEG+1)
+        ZQRT(:,:,:)  = PSVT(:,:,:,NSV_ELECBEG+2)
+        ZQIT(:,:,:)  = PSVT(:,:,:,NSV_ELECBEG+3)
+        ZQST(:,:,:)  = PSVT(:,:,:,NSV_ELECBEG+4)
+        ZQGT(:,:,:)  = PSVT(:,:,:,NSV_ELECBEG+5)
+        ZQNIT(:,:,:) = PSVT(:,:,:,NSV_ELECEND)
+        ZQPIS(:,:,:) = PSVS(:,:,:,NSV_ELECBEG)
+        ZQCS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+1)
+        ZQRS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+2)
+        ZQIS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+3)
+        ZQSS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+4)
+        ZQGS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+5)
+        ZQNIS(:,:,:) = PSVS(:,:,:,NSV_ELECEND)
+        IF (LSEDIM_BEARD) THEN
+          ALLOCATE(ZEFIELDW(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+          ZEFIELDW(:,:,:) = XEFIELDW(:,:,:)
+        ELSE
+          ALLOCATE(ZEFIELDW(0,0,0))
+        END IF
+      ELSE
+        GELEC = .FALSE.
+        ALLOCATE(ZQPIT(0,0,0))
+        ALLOCATE(ZQNIT(0,0,0))
+        ALLOCATE(ZQCT(0,0,0))
+        ALLOCATE(ZQRT(0,0,0))
+        ALLOCATE(ZQIT(0,0,0))
+        ALLOCATE(ZQST(0,0,0))
+        ALLOCATE(ZQGT(0,0,0))
+        ALLOCATE(ZQPIS(0,0,0))
+        ALLOCATE(ZQNIS(0,0,0))
+        ALLOCATE(ZQCS(0,0,0))
+        ALLOCATE(ZQRS(0,0,0))
+        ALLOCATE(ZQIS(0,0,0))
+        ALLOCATE(ZQSS(0,0,0))
+        ALLOCATE(ZQGS(0,0,0))
+        ALLOCATE(ZEFIELDW(0,0,0))
+      END IF
+      ALLOCATE(ZQHT(0,0,0))
+      ALLOCATE(ZQHS(0,0,0))
+      !
+      CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICEN, RAIN_ICE_PARAMN, RAIN_ICE_DESCRN, &
+                    ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, LSEDIM_BEARD,       &
+                    XTHVREFZ(IKB), HCLOUD,                                      &
+                    PTSTEP, KRR, ZEXN,                                          &
+                    ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
+                    PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                     &
+                    PTHT, PRT(:,:,:,1), PRT(:,:,:,2), PRT(:,:,:,3),             &
+                    PRT(:,:,:,4), PRT(:,:,:,5), PRT(:,:,:,6),                   &
+                    PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),             &
+                    PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),                   &
+                    PINPRC,PINPRR, PEVAP3D,                                     &
+                    PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,                     &
+                    TBUDGETS,SIZE(TBUDGETS),                                    &
+                    ZQPIT, ZQCT, ZQRT, ZQIT, ZQST, ZQGT, ZQNIT,                 &
+                    ZQPIS, ZQCS, ZQRS, ZQIS, ZQSS, ZQGS, ZQNIS,                 &
+                    ZEFIELDW, ZLATHAM_IAGGS,                                    &
+                    PSEA,PTOWN, PFPR=ZFPR                                       )
+      !
+      IF (HELEC == 'ELE4') THEN
+        PSVT(:,:,:,NSV_ELECBEG)   = ZQPIT(:,:,:)
+        PSVT(:,:,:,NSV_ELECBEG+1) = ZQCT(:,:,:)
+        PSVT(:,:,:,NSV_ELECBEG+2) = ZQRT(:,:,:)
+        PSVT(:,:,:,NSV_ELECBEG+3) = ZQIT(:,:,:)
+        PSVT(:,:,:,NSV_ELECBEG+4) = ZQST(:,:,:)
+        PSVT(:,:,:,NSV_ELECBEG+5) = ZQGT(:,:,:)
+        PSVT(:,:,:,NSV_ELECEND)   = ZQNIT(:,:,:)
+        PSVS(:,:,:,NSV_ELECBEG)   = ZQPIS(:,:,:)
+        PSVS(:,:,:,NSV_ELECBEG+1) = ZQCS(:,:,:)
+        PSVS(:,:,:,NSV_ELECBEG+2) = ZQRS(:,:,:)
+        PSVS(:,:,:,NSV_ELECBEG+3) = ZQIS(:,:,:)
+        PSVS(:,:,:,NSV_ELECBEG+4) = ZQSS(:,:,:)
+        PSVS(:,:,:,NSV_ELECBEG+5) = ZQGS(:,:,:)
+        PSVS(:,:,:,NSV_ELECEND)   = ZQNIS(:,:,:)
+      END IF
+      DEALLOCATE(ZQPIT)
+      DEALLOCATE(ZQNIT)
+      DEALLOCATE(ZQCT)
+      DEALLOCATE(ZQRT)
+      DEALLOCATE(ZQIT)
+      DEALLOCATE(ZQST)
+      DEALLOCATE(ZQGT)
+      DEALLOCATE(ZQHT)
+      DEALLOCATE(ZQPIS)
+      DEALLOCATE(ZQNIS)
+      DEALLOCATE(ZQCS)
+      DEALLOCATE(ZQRS)
+      DEALLOCATE(ZQIS)
+      DEALLOCATE(ZQSS)
+      DEALLOCATE(ZQGS)
+      DEALLOCATE(ZQHS)
+      DEALLOCATE(ZEFIELDW)
+      !
     ELSE 
-      CALL RAIN_ICE_OLD (YLDIMPHYEX, OSEDIC, CSEDIM, HSUBG_AUCV, OWARM, 1, IKU, 1,    &
-                    KSPLITR, PTSTEP, KRR,                                 &
-                    ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
-                    PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                     &
-                    PRT(:,:,:,3), PRT(:,:,:,4),                           &
-                    PRT(:,:,:,5), PRT(:,:,:,6),                           &
-                    PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),       &
-                    PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),             &
-                    PINPRC,PINPRR, PINPRR3D, PEVAP3D,                     &
-                    PINPRS, PINPRG, PSIGS,PINDEP, PRAINFR,                &
-                    PSEA, PTOWN, PFPR=ZFPR)
+      IF (HELEC == 'ELE3') THEN
+        ! --> old version of the electrification scheme
+        ! Should be removed in a future version of MNH once the new electrification scheme is fully validated
+        ! Compute the explicit microphysical sources and the explicit charging rates
+        CALL RAIN_ICE_ELEC (OSEDIC, HSUBG_AUCV, OWARM,                            &
+                            KSPLITR, PTSTEP, KMI, KRR,                            &
+                            PZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR, &
+                            PTHT, PRT(:,:,:,1), PRT(:,:,:,2), PRT(:,:,:,3),       &
+                            PRT(:,:,:,4), PRT(:,:,:,5), PRT(:,:,:,6),             &
+                            PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),       &
+                            PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),             &
+                            PINPRC, PINPRR, PINPRR3D, PEVAP3D,                    &
+                            PINPRS, PINPRG, PSIGS,                                &
+                            PSVT(:,:,:,NSV_ELECBEG),   PSVT(:,:,:,NSV_ELECBEG+1), &
+                            PSVT(:,:,:,NSV_ELECBEG+2), PSVT(:,:,:,NSV_ELECBEG+3), &
+                            PSVT(:,:,:,NSV_ELECBEG+4), PSVT(:,:,:,NSV_ELECBEG+5), &
+                            PSVT(:,:,:,NSV_ELECEND),                              &
+                            PSVS(:,:,:,NSV_ELECBEG),   PSVS(:,:,:,NSV_ELECBEG+1), &
+                            PSVS(:,:,:,NSV_ELECBEG+2), PSVS(:,:,:,NSV_ELECBEG+3), &
+                            PSVS(:,:,:,NSV_ELECBEG+4), PSVS(:,:,:,NSV_ELECBEG+5), &
+                            PSVS(:,:,:,NSV_ELECEND),                              &
+                            PSEA, PTOWN                                           )
+      ELSE
+        CALL RAIN_ICE_OLD (YLDIMPHYEX, OSEDIC, CSEDIM, HSUBG_AUCV, OWARM, 1, IKU, 1,&
+                      KSPLITR, PTSTEP, KRR,                                         &
+                      ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,        &
+                      PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                             &
+                      PRT(:,:,:,3), PRT(:,:,:,4),                                   &
+                      PRT(:,:,:,5), PRT(:,:,:,6),                                   &
+                      PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),               &
+                      PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),                     &
+                      PINPRC,PINPRR, PINPRR3D, PEVAP3D,                             &
+                      PINPRS, PINPRG, PSIGS,PINDEP, PRAINFR,                        &
+                      PSEA, PTOWN, PFPR=ZFPR                                        )
+      END IF
     END IF
 
 !
@@ -858,26 +1059,68 @@ SELECT CASE ( HCLOUD )
 !
 !
     IF (.NOT. LRED .OR. (LRED .AND. LADJ_AFTER) ) THEN
-      CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEBN, TURBN,           &
-                       PARAM_ICEN, TBUCONF, KRR,                               &
-                       'DEPI',                                                 &
-                       PTSTEP, ZSIGQSAT2D,                                     &
-                       PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,PPABST, ZZZ, &
-                       ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
-                       ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                           &
-                       PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
-                       PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                   &
-                       PTH=PTHS*PTSTEP, PTHS=PTHS,                             &
-                       OCOMPUTE_SRC=SIZE(PSRCS, 3)/=0, PSRCS=PSRCS, PCLDFR=PCLDFR, &
-                       PRR=PRS(:,:,:,3)*PTSTEP,                                &
-                       PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),             &
-                       PRS=PRS(:,:,:,5)*PTSTEP,                                &
-                       PRG=PRS(:,:,:,6)*PTSTEP,                                &
-                       TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),              &
-                       PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                   &
-                       PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                    )
+      IF (HELEC == 'ELE4') THEN
+        ! save the cloud droplets and ice crystals m.r. source before adjustement
+        ZRCS_BEF(:,:,:) = PRS(:,:,:,2)
+        ZRIS_BEF(:,:,:) = PRS(:,:,:,4)
+      END IF
+      !
+      ! Perform the saturation ajdustment
+      IF (HELEC == 'ELE3') THEN
+        ! --> old version of the electrification scheme
+        CALL ICE_ADJUST_ELEC (KRR, KMI, HRAD, HTURBDIM,                               &
+                              HSCONV, HMF_CLOUD,                                      &
+                              OSUBG_COND, OSIGMAS, PTSTEP,PSIGQSAT,                   &
+                              PRHODJ, PEXNREF, PSIGS, PPABST, ZZZ,                    &
+                              PMFCONV, PCF_MF, PRC_MF, PRI_MF,                        &
+                              PRT(:,:,:,1), PRT(:,:,:,2), PRS(:,:,:,1), PRS(:,:,:,2), &
+                              PTHS, PSRCS, PCLDFR,                                    &
+                              PRT(:,:,:,3), PRS(:,:,:,3), PRT(:,:,:,4), PRS(:,:,:,4), &
+                              PRT(:,:,:,5), PRS(:,:,:,5), PRT(:,:,:,6), PRS(:,:,:,6), &
+                              PSVT(:,:,:,NSV_ELECBEG),   PSVS(:,:,:,NSV_ELECBEG),     &
+                              PSVT(:,:,:,NSV_ELECBEG+1), PSVS(:,:,:,NSV_ELECBEG+1),   &
+                              PSVT(:,:,:,NSV_ELECBEG+2), PSVS(:,:,:,NSV_ELECBEG+2),   &
+                              PSVT(:,:,:,NSV_ELECBEG+3), PSVS(:,:,:,NSV_ELECBEG+3),   &
+                              PSVT(:,:,:,NSV_ELECBEG+4), PSVS(:,:,:,NSV_ELECBEG+4),   &
+                              PSVT(:,:,:,NSV_ELECBEG+5), PSVS(:,:,:,NSV_ELECBEG+5),   &
+                              PSVT(:,:,:,NSV_ELECEND),   PSVS(:,:,:,NSV_ELECEND)      )
+      ELSE
+        CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEBN, TURBN,                   & 
+                         PARAM_ICEN, TBUCONF, KRR, 'DEPI',                               &
+                         PTSTEP, ZSIGQSAT2D,                                             &
+                         PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,PPABST, ZZZ, &
+                         ZEXN, PCF_MF, PRC_MF, PRI_MF,                                   &
+                         ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                                   &
+                         PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,               &
+                         PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                           &
+                         PTH=PTHS*PTSTEP, PTHS=PTHS,                                     &
+                         OCOMPUTE_SRC=SIZE(PSRCS, 3)/=0, PSRCS=PSRCS, PCLDFR=PCLDFR,     &
+                         PRR=PRS(:,:,:,3)*PTSTEP,                                        &
+                         PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),                     &
+                         PRS=PRS(:,:,:,5)*PTSTEP,                                        &
+                         PRG=PRS(:,:,:,6)*PTSTEP,                                        &
+                         TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),                      &
+                         PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                           &
+                         PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                            )
+        !
+        IF (HELEC == 'ELE4') THEN
+          ! Compute the condensation and sublimation rates
+          ZCND(:,:,:) = PRS(:,:,:,2) - ZRCS_BEF(:,:,:)
+          ZDEP(:,:,:) = PRS(:,:,:,4) - ZRIS_BEF(:,:,:)
+          !
+          ! Compute the charge exchanged during evaporation of cloud droplets (negative ZCND) and
+          !                              during sublimation of ice crystals (negative ZDEP)
+          CALL ELEC_ADJUST (KRR, PRHODJ, HCLOUD, 'DEPI',                                   &
+                            PRC=ZRCS_BEF(:,:,:)*PTSTEP, PRI=ZRIS_BEF(:,:,:)*PTSTEP,        &
+                            PQC=PSVS(:,:,:,NSV_ELECBEG+1)*PTSTEP,                          &
+                            PQI=PSVS(:,:,:,NSV_ELECBEG+3)*PTSTEP,                          &
+                            PQCS=PSVS(:,:,:,NSV_ELECBEG+1), PQIS=PSVS(:,:,:,NSV_ELECBEG+3),&
+                            PQPIS=PSVS(:,:,:,NSV_ELECBEG), PQNIS=PSVS(:,:,:,NSV_ELECEND),  &
+                            PCND=ZCND, PDEP=ZDEP)
+        END IF
+      END IF
     END IF
-
+!
     deallocate( zexn )
 !
   CASE ('ICE4')
@@ -896,6 +1139,13 @@ SELECT CASE ( HCLOUD )
     ENDDO
     ZZZ = MZF( PZZ )
     IF(LRED .AND. LADJ_BEFORE) THEN
+      IF (HELEC == 'ELE4') THEN
+        ! save the cloud droplets and ice crystals m.r. source before adjustement
+        ZRCS_BEF(:,:,:) = PRS(:,:,:,2)
+        ZRIS_BEF(:,:,:) = PRS(:,:,:,4)
+      END IF
+      !
+      ! Perform the saturation ajdustment
       CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEBN, TURBN,           &
                        PARAM_ICEN, TBUCONF, KRR,                               &
                        'ADJU',                                                 &
@@ -915,23 +1165,143 @@ SELECT CASE ( HCLOUD )
                        PRH=PRS(:,:,:,7)*PTSTEP,                                &
                        PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                   &
                        PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                    )
+      !
+      IF (HELEC == 'ELE4') THEN
+        ! Compute the condensation and sublimation rates
+        ZCND(:,:,:) = PRS(:,:,:,2) - ZRCS_BEF(:,:,:)
+        ZDEP(:,:,:) = PRS(:,:,:,4) - ZRIS_BEF(:,:,:)
+        !
+        ! Compute the charge exchanged during evaporation of cloud droplets (negative ZCND) and
+        !                              during sublimation of ice crystals (negative ZDEP)
+        CALL ELEC_ADJUST (KRR, PRHODJ, HCLOUD, 'ADJU',                                   &
+                          PRC=ZRCS_BEF(:,:,:)*PTSTEP, PRI=ZRIS_BEF(:,:,:)*PTSTEP,        &
+                          PQC=PSVS(:,:,:,NSV_ELECBEG+1)*PTSTEP,                          &
+                          PQI=PSVS(:,:,:,NSV_ELECBEG+3)*PTSTEP,                          &
+                          PQCS=PSVS(:,:,:,NSV_ELECBEG+1), PQIS=PSVS(:,:,:,NSV_ELECBEG+3),&
+                          PQPIS=PSVS(:,:,:,NSV_ELECBEG), PQNIS=PSVS(:,:,:,NSV_ELECEND),  &
+                          PCND=ZCND, PDEP=ZDEP                                           )
+      END IF
     ENDIF
     IF  (LRED) THEN
-     CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICEN, RAIN_ICE_PARAMN,          &
-                    RAIN_ICE_DESCRN, TBUCONF,                             &
-                    PTSTEP, KRR, ZEXN,                                    &
-                    ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
-                    PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
-                    PTHT, PRT(:,:,:,1), PRT(:,:,:,2),                     &
-                    PRT(:,:,:,3), PRT(:,:,:,4),                           &
-                    PRT(:,:,:,5), PRT(:,:,:,6),                           &
-                    PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),       &
-                    PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),             &
-                    PINPRC, PINPRR, PEVAP3D,                    &
-                    PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,               &
-                    TBUDGETS,SIZE(TBUDGETS),                     &            
-                    PSEA, PTOWN,                                          &
-                    PRT(:,:,:,7), PRS(:,:,:,7), PINPRH, PFPR=ZFPR         )
+      IF (HELEC == 'ELE4') THEN
+        ! to match with PHYEX, electric charge variables are no more optional, but their size
+        ! depends on the activation (or not) of the electrification scheme
+        GELEC = .TRUE.
+        ALLOCATE(ZQPIT(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQNIT(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQCT(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQRT(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQIT(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQST(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQGT(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQHT(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQPIS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQNIS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQCS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQRS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQIS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQSS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQGS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ALLOCATE(ZQHS(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+        ZQPIT(:,:,:) = PSVT(:,:,:,NSV_ELECBEG)
+        ZQCT(:,:,:)  = PSVT(:,:,:,NSV_ELECBEG+1)
+        ZQRT(:,:,:)  = PSVT(:,:,:,NSV_ELECBEG+2)
+        ZQIT(:,:,:)  = PSVT(:,:,:,NSV_ELECBEG+3)
+        ZQST(:,:,:)  = PSVT(:,:,:,NSV_ELECBEG+4)
+        ZQGT(:,:,:)  = PSVT(:,:,:,NSV_ELECBEG+5)
+        ZQHT(:,:,:)  = PSVT(:,:,:,NSV_ELECBEG+6)
+        ZQNIT(:,:,:) = PSVT(:,:,:,NSV_ELECEND)
+        ZQPIS(:,:,:) = PSVS(:,:,:,NSV_ELECBEG)
+        ZQCS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+1)
+        ZQRS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+2)
+        ZQIS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+3)
+        ZQSS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+4)
+        ZQGS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+5)
+        ZQHS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+6)
+        ZQNIS(:,:,:) = PSVS(:,:,:,NSV_ELECEND)
+        IF (LSEDIM_BEARD) THEN
+          ALLOCATE(ZEFIELDW(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
+          ZEFIELDW(:,:,:) = XEFIELDW(:,:,:)
+        ELSE
+          ALLOCATE(ZEFIELDW(0,0,0))
+        END IF
+      ELSE
+        GELEC = .FALSE.
+        ALLOCATE(ZQPIT(0,0,0))
+        ALLOCATE(ZQNIT(0,0,0))
+        ALLOCATE(ZQCT(0,0,0))
+        ALLOCATE(ZQRT(0,0,0))
+        ALLOCATE(ZQIT(0,0,0))
+        ALLOCATE(ZQST(0,0,0))
+        ALLOCATE(ZQGT(0,0,0))
+        ALLOCATE(ZQHT(0,0,0))
+        ALLOCATE(ZQPIS(0,0,0))
+        ALLOCATE(ZQNIS(0,0,0))
+        ALLOCATE(ZQCS(0,0,0))
+        ALLOCATE(ZQRS(0,0,0))
+        ALLOCATE(ZQIS(0,0,0))
+        ALLOCATE(ZQSS(0,0,0))
+        ALLOCATE(ZQGS(0,0,0))
+        ALLOCATE(ZQHS(0,0,0))
+        ALLOCATE(ZEFIELDW(0,0,0))
+      END IF
+      !
+      CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICEN, RAIN_ICE_PARAMN, RAIN_ICE_DESCRN, &
+                     ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, LSEDIM_BEARD,        &
+                     XTHVREFZ(IKB), HCLOUD,                                      &
+                     PTSTEP, KRR, ZEXN,                                          &
+                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
+                     PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                     &
+                     PTHT, PRT(:,:,:,1), PRT(:,:,:,2), PRT(:,:,:,3),             &
+                     PRT(:,:,:,4), PRT(:,:,:,5), PRT(:,:,:,6),                   &
+                     PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),             &
+                     PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),                   &
+                     PINPRC, PINPRR, PEVAP3D,                                    &
+                     PINPRS, PINPRG, PINDEP, PRAINFR, PSIGS,                     &
+                     TBUDGETS,SIZE(TBUDGETS),                                    &
+                     ZQPIT, ZQCT, ZQRT, ZQIT, ZQST, ZQGT, ZQNIT,                 &
+                     ZQPIS, ZQCS, ZQRS, ZQIS, ZQSS, ZQGS, ZQNIS,                 &
+                     ZEFIELDW, ZLATHAM_IAGGS,                                    &
+                     PSEA, PTOWN,                                                &
+                     PRT(:,:,:,7), PRS(:,:,:,7), PINPRH, PFPR=ZFPR,              &
+                     PQHT=ZQHT, PQHS=ZQHS                                        )
+      !
+      IF (HELEC == 'ELE4') THEN
+        PSVT(:,:,:,NSV_ELECBEG)   = ZQPIT(:,:,:)
+        PSVT(:,:,:,NSV_ELECBEG+1) = ZQCT(:,:,:)
+        PSVT(:,:,:,NSV_ELECBEG+2) = ZQRT(:,:,:)
+        PSVT(:,:,:,NSV_ELECBEG+3) = ZQIT(:,:,:)
+        PSVT(:,:,:,NSV_ELECBEG+4) = ZQST(:,:,:)
+        PSVT(:,:,:,NSV_ELECBEG+5) = ZQGT(:,:,:)
+        PSVT(:,:,:,NSV_ELECBEG+6) = ZQHT(:,:,:)
+        PSVT(:,:,:,NSV_ELECEND)   = ZQNIT(:,:,:)
+        PSVS(:,:,:,NSV_ELECBEG)   = ZQPIS(:,:,:)
+        PSVS(:,:,:,NSV_ELECBEG+1) = ZQCS(:,:,:)
+        PSVS(:,:,:,NSV_ELECBEG+2) = ZQRS(:,:,:)
+        PSVS(:,:,:,NSV_ELECBEG+3) = ZQIS(:,:,:)
+        PSVS(:,:,:,NSV_ELECBEG+4) = ZQSS(:,:,:)
+        PSVS(:,:,:,NSV_ELECBEG+5) = ZQGS(:,:,:)
+        PSVS(:,:,:,NSV_ELECBEG+6) = ZQHS(:,:,:)
+        PSVS(:,:,:,NSV_ELECEND)   = ZQNIS(:,:,:)
+      END IF
+      DEALLOCATE(ZQPIT)
+      DEALLOCATE(ZQNIT)
+      DEALLOCATE(ZQCT)
+      DEALLOCATE(ZQRT)
+      DEALLOCATE(ZQIT)
+      DEALLOCATE(ZQST)
+      DEALLOCATE(ZQGT)
+      DEALLOCATE(ZQHT)
+      DEALLOCATE(ZQPIS)
+      DEALLOCATE(ZQNIS)
+      DEALLOCATE(ZQCS)
+      DEALLOCATE(ZQRS)
+      DEALLOCATE(ZQIS)
+      DEALLOCATE(ZQSS)
+      DEALLOCATE(ZQGS)
+      DEALLOCATE(ZQHS)
+      DEALLOCATE(ZEFIELDW)
+      !
     ELSE
       CALL RAIN_ICE_OLD (YLDIMPHYEX, OSEDIC, CSEDIM, HSUBG_AUCV, OWARM, 1, IKU, 1,    &
                     KSPLITR, PTSTEP, KRR,                                 &
@@ -941,36 +1311,57 @@ SELECT CASE ( HCLOUD )
                     PRT(:,:,:,5), PRT(:,:,:,6),                           &
                     PTHS, PRS(:,:,:,1), PRS(:,:,:,2), PRS(:,:,:,3),       &
                     PRS(:,:,:,4), PRS(:,:,:,5), PRS(:,:,:,6),             &
-                    PINPRC,PINPRR, PINPRR3D, PEVAP3D,                     &
+                    PINPRC, PINPRR, PINPRR3D, PEVAP3D,                    &
                     PINPRS, PINPRG, PSIGS,PINDEP, PRAINFR,                &
                     PSEA, PTOWN,                                          &
-                    PRT(:,:,:,7),  PRS(:,:,:,7), PINPRH, PFPR=ZFPR)
+                    PRT(:,:,:,7), PRS(:,:,:,7), PINPRH, PFPR=ZFPR         )
     END IF
-
-
+!
 !
 !*       10.2   Perform the saturation adjustment over cloud ice and cloud water
 !
     IF (.NOT. LRED .OR. (LRED .AND. LADJ_AFTER) ) THEN
-     CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEBN, TURBN,          &
-                     PARAM_ICEN, TBUCONF, KRR,                               &
-                     'DEPI',                                                 &
-                     PTSTEP, ZSIGQSAT2D,                                     &
-                     PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,PPABST, ZZZ, &
-                     ZEXN, PCF_MF, PRC_MF, PRI_MF,                           &
-                     ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                           &
-                     PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,       &
-                     PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                   &
-                     PTH=PTHS*PTSTEP, PTHS=PTHS,                             &
-                     OCOMPUTE_SRC=SIZE(PSRCS, 3)/=0, PSRCS=PSRCS, PCLDFR=PCLDFR, &
-                     PRR=PRS(:,:,:,3)*PTSTEP,                                &
-                     PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),             &
-                     PRS=PRS(:,:,:,5)*PTSTEP,                                &
-                     PRG=PRS(:,:,:,6)*PTSTEP,                                &
-                     TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),              &
-                     PRH=PRS(:,:,:,7)*PTSTEP,                                &
-                     PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                   &
-                     PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                    )
+      IF (HELEC == 'ELE4') THEN
+        ! save the cloud droplets and ice crystals m.r. source before adjustement
+        ZRCS_BEF(:,:,:) = PRS(:,:,:,2)
+        ZRIS_BEF(:,:,:) = PRS(:,:,:,4)
+      END IF
+      !
+      ! Perform the saturation ajdustment
+      CALL ICE_ADJUST (YLDIMPHYEX,CST, RAIN_ICE_PARAMN, NEBN, TURBN,                  & 
+                      PARAM_ICEN, TBUCONF, KRR, 'DEPI',                               &
+                      PTSTEP, ZSIGQSAT2D,                                             &
+                      PRHODJ, PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV,PPABST, ZZZ, &
+                      ZEXN, PCF_MF, PRC_MF, PRI_MF,                                   &
+                      ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,                                   &
+                      PRV=PRS(:,:,:,1)*PTSTEP, PRC=PRS(:,:,:,2)*PTSTEP,               &
+                      PRVS=PRS(:,:,:,1), PRCS=PRS(:,:,:,2),                           &
+                      PTH=PTHS*PTSTEP, PTHS=PTHS,                                     &
+                      OCOMPUTE_SRC=SIZE(PSRCS, 3)/=0, PSRCS=PSRCS, PCLDFR=PCLDFR,     &
+                      PRR=PRS(:,:,:,3)*PTSTEP,                                        &
+                      PRI=PRS(:,:,:,4)*PTSTEP, PRIS=PRS(:,:,:,4),                     &
+                      PRS=PRS(:,:,:,5)*PTSTEP,                                        &
+                      PRG=PRS(:,:,:,6)*PTSTEP,                                        &
+                      TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),                      &
+                      PRH=PRS(:,:,:,7)*PTSTEP,                                        &
+                      PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                           &
+                      PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                            )
+      !
+      IF (HELEC == 'ELE4') THEN
+        ! Compute the condensation and sublimation rates
+        ZCND(:,:,:) = PRS(:,:,:,2) - ZRCS_BEF(:,:,:)
+        ZDEP(:,:,:) = PRS(:,:,:,4) - ZRIS_BEF(:,:,:)
+        !
+        ! Compute the charge exchanged during evaporation of cloud droplets (negative ZCND) and
+        !                              during sublimation of ice crystals (negative ZDEP)
+        CALL ELEC_ADJUST (KRR, PRHODJ, HCLOUD, 'ADJU',                                   &
+                          PRC=ZRCS_BEF(:,:,:)*PTSTEP, PRI=ZRIS_BEF(:,:,:)*PTSTEP,        &
+                          PQC=PSVS(:,:,:,NSV_ELECBEG+1)*PTSTEP,                          &
+                          PQI=PSVS(:,:,:,NSV_ELECBEG+3)*PTSTEP,                          &
+                          PQCS=PSVS(:,:,:,NSV_ELECBEG+1), PQIS=PSVS(:,:,:,NSV_ELECBEG+3),&
+                          PQPIS=PSVS(:,:,:,NSV_ELECBEG), PQNIS=PSVS(:,:,:,NSV_ELECEND),  &
+                          PCND=ZCND, PDEP=ZDEP                                           )
+      END IF
     END IF
 
     deallocate( zexn )
@@ -983,73 +1374,122 @@ SELECT CASE ( HCLOUD )
 !*       12.1   Compute the explicit microphysical sources
 !
   CASE ('LIMA')
-     !
+    !
+    IF (HELEC == 'ELE4') THEN
+      GELEC = .TRUE.
+    ELSE
+      GELEC = .FALSE.
+    END IF
+    !
     DO JK=IKB,IKE
       ZDZZ(:,:,JK)=PZZ(:,:,JK+1)-PZZ(:,:,JK)    
     ENDDO
     ZZZ = MZF( PZZ )
-     IF (LPTSPLIT) THEN
-        CALL LIMA (YLDIMPHYEX,CST,TBUCONF,TBUDGETS,SIZE(TBUDGETS),         &
-                   PTSTEP,                                                 &
-                   PRHODREF, PEXNREF, ZDZZ,                                &
+    IF (LPTSPLIT) THEN 
+      IF (GELEC) THEN
+        CALL LIMA (YLDIMPHYEX,CST, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
+                   ELEC_DESCR, ELEC_PARAM,                                 &
+                   TBUCONF,TBUDGETS,SIZE(TBUDGETS),                        &
+                   PTSTEP, GELEC, HCLOUD,                                  &
+                   PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
                    NMOD_CCN, NMOD_IFN, NMOD_IMM,                           &
                    PDTHRAD, PTHT, PRT,                                     &
                    PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
                    PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),       &
                    PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, PINPRH, &
-                   PEVAP3D, PCLDFR, PICEFR, PRAINFR, ZFPR                 )
-     ELSE
-
-        IF (OWARM) CALL LIMA_WARM(OACTIT, OSEDC, ORAIN, KSPLITR, PTSTEP, KMI,       &
-                                  TPFILE, KRR, PZZ, PRHODJ,                         &
-                                  PRHODREF, PEXNREF, PW_ACT, PPABST,                &
-                                  PDTHRAD,                                          &
-                                  PTHT, PRT, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
-                                  PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
-                                  PINPRC, PINPRR, PINDEP, PINPRR3D, PEVAP3D         )
+                   PEVAP3D, PCLDFR, PICEFR, PRAINFR, ZFPR,                 &
+                   ZLATHAM_IAGGS, XEFIELDW,                                &
+                   PSVT(:,:,:,NSV_ELECBEG:NSV_ELECEND),                    &
+                   PSVS(:,:,:,NSV_ELECBEG:NSV_ELECEND)                     )
+      ELSE
+        CALL LIMA (YLDIMPHYEX,CST, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
+                   ELEC_DESCR, ELEC_PARAM,                                 &
+                   TBUCONF,TBUDGETS,SIZE(TBUDGETS),                        &
+                   PTSTEP, GELEC, HCLOUD,                                  &
+                   PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
+                   PRHODJ, PPABST,                                         &
+                   NMOD_CCN, NMOD_IFN, NMOD_IMM,                           &
+                   PDTHRAD, PTHT, PRT,                                     &
+                   PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
+                   PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),       &
+                   PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, PINPRH, &
+                   PEVAP3D, PCLDFR, PICEFR, PRAINFR, ZFPR,                 &
+                   ZLATHAM_IAGGS                                           )
+      END IF
+    ELSE
+      IF (OWARM) CALL LIMA_WARM(OACTIT, OSEDC, ORAIN, KSPLITR, PTSTEP, KMI,       &
+                                TPFILE, KRR, PZZ, PRHODJ,                         &
+                                PRHODREF, PEXNREF, PW_ACT, PPABST,                &
+                                PDTHRAD,                                          &
+                                PTHT, PRT, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
+                                PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
+                                PINPRC, PINPRR, PINDEP, PINPRR3D, PEVAP3D         )
 !
-        IF (NMOM_I.GE.1) CALL LIMA_COLD(CST, OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,    &
-                                  KRR, PZZ, PRHODJ,                                  &
-                                  PRHODREF, PEXNREF, PPABST, PW_ACT,                 &
-                                  PTHT, PRT, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),  &
-                                  PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),  &
-                                  PINPRS, PINPRG, PINPRH                             )
+      IF (NMOM_I.GE.1) CALL LIMA_COLD(CST, OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,         &
+                                      KRR, PZZ, PRHODJ,                                 &
+                                      PRHODREF, PEXNREF, PPABST, PW_ACT,                &
+                                      PTHT, PRT, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
+                                      PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
+                                      PINPRS, PINPRG, PINPRH                            )
 !
-        IF (OWARM .AND. NMOM_I.GE.1) CALL LIMA_MIXED(OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,              &
-                                               KRR, PZZ, PRHODJ,                                 &
-                                               PRHODREF, PEXNREF, PPABST, PW_ACT,                &
-                                               PTHT, PRT, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
-                                               PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END)  )
-     ENDIF
+      IF (OWARM .AND. NMOM_I.GE.1) CALL LIMA_MIXED(OSEDI, OHHONI, KSPLITG, PTSTEP, KMI,              &
+                                                   KRR, PZZ, PRHODJ,                                 &
+                                                   PRHODREF, PEXNREF, PPABST, PW_ACT,                &
+                                                   PTHT, PRT, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
+                                                   PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END)  )
+    ENDIF
 !
 !*       12.2   Perform the saturation adjustment
 !
-   IF (LSPRO) THEN
-    CALL LIMA_NOTADJUST (KMI, TPFILE, HRAD,                                      &
-                         PTSTEP, PRHODJ, PPABSTT, PPABST, PRHODREF, PEXNREF, PZZ, &
-                         PTHT,PRT, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),        &
-                         PTHS,PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),        &
-                         PCLDFR, PICEFR, PRAINFR, PSRCS                          )
-   ELSE IF (LPTSPLIT) THEN
-    CALL LIMA_ADJUST_SPLIT(YLDIMPHYEX,CST,TBUCONF,TBUDGETS,SIZE(TBUDGETS),           &
-                     KRR, KMI, CCONDENS, CLAMBDA3,                                   &
-                     OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,                          &
-                     PRHODREF, PRHODJ, PEXNREF, PSIGS, PMFCONV, PPABST, PPABSTT, ZZZ,&
-                     PDTHRAD, PW_ACT,                                                &
-                     PRT, PRS, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),                &
-                     PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),                          &
-                     PTHS, PSRCS, PCLDFR, PICEFR, PRC_MF, PRI_MF, PCF_MF             )
-   ELSE
-    CALL LIMA_ADJUST(KRR, KMI, TPFILE,                                &
-                     OSUBG_COND, PTSTEP,                              &
-                     PRHODREF, PRHODJ, PEXNREF, PPABST, PPABSTT,      &
-                     PRT, PRS, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
-                     PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),           &
-                     PTHS, PSRCS, PCLDFR, PICEFR, PRAINFR             )
-   ENDIF
+    IF (HELEC == 'ELE4') THEN
+      ! save the cloud droplets and ice crystals m.r. source before adjustement
+      ZRCS_BEF(:,:,:) = PRS(:,:,:,2)
+      ZRIS_BEF(:,:,:) = PRS(:,:,:,4)
+    END IF
+    !
+    IF (LSPRO) THEN
+      CALL LIMA_NOTADJUST (KMI, TPFILE, HRAD,                                       &
+                           PTSTEP, PRHODJ, PPABSTT, PPABST, PRHODREF, PEXNREF, PZZ, &
+                           PTHT,PRT, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),         &
+                           PTHS,PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),         &
+                           PCLDFR, PICEFR, PRAINFR, PSRCS                           )
+    ELSE IF (LPTSPLIT) THEN
+      CALL LIMA_ADJUST_SPLIT(YLDIMPHYEX, CST, TBUCONF,TBUDGETS,SIZE(TBUDGETS),           &
+                             KRR, KMI, CCONDENS, CLAMBDA3,                                   &
+                             OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,                          &
+                             PRHODREF, PRHODJ, PEXNREF, PSIGS, PMFCONV, PPABST, PPABSTT, ZZZ,&
+                             PDTHRAD, PW_ACT,                                                &
+                             PRT, PRS, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),                &
+                             PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),                          &
+                             PTHS, PSRCS, PCLDFR, PICEFR, PRC_MF, PRI_MF, PCF_MF             )
+    ELSE
+      CALL LIMA_ADJUST(KRR, KMI, TPFILE,                                &
+                       OSUBG_COND, PTSTEP,                              &
+                       PRHODREF, PRHODJ, PEXNREF, PPABST, PPABSTT,      &
+                       PRT, PRS, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), &
+                       PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),           &
+                       PTHS, PSRCS, PCLDFR, PICEFR, PRAINFR             )
+    ENDIF
+    !
+    IF (HELEC == 'ELE4') THEN
+      ! Compute the condensation and sublimation rates
+      ZCND(:,:,:) = PRS(:,:,:,2) - ZRCS_BEF(:,:,:)
+      ZDEP(:,:,:) = PRS(:,:,:,4) - ZRIS_BEF(:,:,:)
+      ! Compute the charge exchanged during evaporation of cloud droplets (negative ZCND) and
+      !                              during sublimation of ice crystals (negative ZDEP)
+      CALL ELEC_ADJUST (KRR, PRHODJ, HCLOUD, 'CEDS',                                   &
+                        PRC=ZRCS_BEF(:,:,:)*PTSTEP, PRI=ZRIS_BEF(:,:,:)*PTSTEP,        &
+                        PQC=PSVS(:,:,:,NSV_ELECBEG+1)*PTSTEP,                          &
+                        PQI=PSVS(:,:,:,NSV_ELECBEG+3)*PTSTEP,                          &
+                        PQCS=PSVS(:,:,:,NSV_ELECBEG+1), PQIS=PSVS(:,:,:,NSV_ELECBEG+3),&
+                        PQPIS=PSVS(:,:,:,NSV_ELECBEG), PQNIS=PSVS(:,:,:,NSV_ELECEND),  &
+                        PCND=ZCND, PDEP=ZDEP                                           )
+    END IF
 !
 END SELECT
+!
+IF (ALLOCATED(ZLATHAM_IAGGS)) DEALLOCATE(ZLATHAM_IAGGS)
 !
 IF(HCLOUD=='ICE3' .OR. HCLOUD=='ICE4' ) THEN
 ! TODO: code a generic routine to update vertical lower and upper levels to 0, a
@@ -1080,12 +1520,11 @@ IF(HCLOUD=='ICE3' .OR. HCLOUD=='ICE4' ) THEN
     ENDWHERE
   ENDIF
 ENDIF
-
-! Remove non-physical negative values (unnecessary in a perfect world) + corresponding budgets
-call Sources_neg_correct( hcloud, 'NECON', krr, ptstep, ppabst, ptht, prt, pths, prs, psvs, prhodj )
-
-!-------------------------------------------------------------------------------
 !
+! Remove non-physical negative values (unnecessary in a perfect world) + corresponding budgets
+call Sources_neg_correct( hcloud, helec, 'NECON', krr, ptstep, ppabst, ptht, prt, pths, prs, psvs, prhodj )
+!
+!-------------------------------------------------------------------------------
 !
 !*      13.     SWITCH BACK TO THE PROGNOSTIC VARIABLES
 !               ---------------------------------------
@@ -1101,7 +1540,22 @@ IF (HCLOUD=='C2R2' .OR. HCLOUD=='C3R5' .OR. HCLOUD=='KHKO' .OR. HCLOUD=='LIMA') 
     PSVS(:,:,:,JSV) = PSVS(:,:,:,JSV) * PRHODJ(:,:,:)
   ENDDO
 ENDIF
-
+!
+IF (HELEC /= 'NONE') THEN
+  DO JSV = NSV_ELECBEG, NSV_ELECEND
+    PSVS(:,:,:,JSV) = PSVS(:,:,:,JSV) * PRHODJ(:,:,:)
+  END DO
+!
+!++cb-- ce qui suit n'est plus present en version standard en 5-6 : pourquoi ?
+! Note that the LiNOx Conc. (in mol/mol) is PSVS (:,::,NSV_LNOXBEG)
+! but there is no need to *PRHODJ(:,:,:) as it is done implicitly
+! during unit conversion in flash_geom.
+!
+  PSVS(:,:,:,NSV_ELECBEG) = MAX(0., PSVS(:,:,:,NSV_ELECBEG))
+  PSVS(:,:,:,NSV_ELECEND) = MAX(0., PSVS(:,:,:,NSV_ELECEND))
+END IF
+!
+!
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE RESOLVED_CLOUD

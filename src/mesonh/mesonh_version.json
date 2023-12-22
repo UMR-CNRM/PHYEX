@@ -1,13 +1,13 @@
 {
-"refversion":"MNH-V5-6-0-INITNAM",
+"refversion":"MNH-V5-6-2-pre57-58715e8",
 "testing": {
-            "007_16janvier/008_run2":"79fe47e",
-            "007_16janvier/008_run2_turb3D":"79fe47e",
-            "007_16janvier/008_run2_lredf":"79fe47e",
-            "COLD_BUBBLE/002_mesonh":"71ab2d2",
-            "ARMLES/RUN":"c79e004",
-            "COLD_BUBBLE_3D/002_mesonh":"71ab2d2",
-            "OCEAN_LES/004_run2":"79fe47e",
-            "014_LIMA/002_mesonh":"79fe47e"
+            "007_16janvier/008_run2":"cd4ccdd8",
+            "007_16janvier/008_run2_turb3D":"cd4ccdd8",
+            "007_16janvier/008_run2_lredf":"cd4ccdd8",
+            "COLD_BUBBLE/002_mesonh":"cd4ccdd8",
+            "ARMLES/RUN":"cd4ccdd8",
+            "COLD_BUBBLE_3D/002_mesonh":"cd4ccdd8",
+            "OCEAN_LES/004_run2":"cd4ccdd8",
+            "014_LIMA/002_mesonh":"cd4ccdd8"
            }
 }

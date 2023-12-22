@@ -6,12 +6,16 @@
 MODULE MODE_LIMA_RAIN_ACCR_SNOW
   IMPLICIT NONE
 CONTAINS
-!     ###################################################################################
-  SUBROUTINE LIMA_RAIN_ACCR_SNOW (PTSTEP, LDCOMPUTE,                                         &
-                                  PRHODREF, PT,                                              &
-                                  PRRT, PCRT, PRST, PCST, PLBDR, PLBDS, PLVFACT, PLSFACT,    &
-                                  P_TH_ACC, P_RR_ACC, P_CR_ACC, P_RS_ACC, P_CS_ACC, P_RG_ACC )
-!     ###################################################################################
+!     ######################################################################################
+  SUBROUTINE LIMA_RAIN_ACCR_SNOW (PTSTEP, LDCOMPUTE,                                       &
+                                  PRHODREF, PT,                                            &
+                                  PRRT, PCRT, PRST, PCST, PLBDR, PLBDS, PLVFACT, PLSFACT,  &
+!++cb++
+!                                  P_TH_ACC, P_RR_ACC, P_CR_ACC, P_RS_ACC, P_CS_ACC, P_RG_ACC )
+                                   P_TH_ACC, P_CR_ACC, P_CS_ACC,                           &
+                                   P_RR_ACCSS, P_RR_ACCSG, P_RS_ACCRG                      )
+!--cb--
+!     ######################################################################################
 !
 !!    PURPOSE
 !!    -------
@@ -30,6 +34,9 @@ CONTAINS
 !!      Original             15/03/2018
 !  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
 !  J. Wurtz       03/2022: new snow characteristics
+!  C. Barthe   04/07/2022: modify the microphysics terms to save to simplify the merging
+!                          with the electrification scheme
+! QUESTION : ne fonctionne pas si NMOM_R=1 ???
 !
 !-------------------------------------------------------------------------------
 !
@@ -68,12 +75,17 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PLBDS   !
 REAL, DIMENSION(:),   INTENT(IN)    :: PLVFACT ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT ! 
 !
+!++cb++
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_ACC
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_ACC
+!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_ACC
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_ACC
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_ACC
+!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_ACC
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_ACC
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_ACC
+!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_ACC
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_ACCSS
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_ACCSG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_ACCRG
+!--cb--
 !
 !*       0.2   Declarations of local variables :
 !
@@ -85,15 +97,22 @@ REAL,    DIMENSION(SIZE(PRRT))  :: ZZWC1, ZZWC2, ZZWC3, ZZWC4, ZZWC5
 !
 INTEGER, DIMENSION(SIZE(PRRT))  :: IVEC1,IVEC2       ! Vectors of indices
 REAL,    DIMENSION(SIZE(PRRT))  :: ZVEC1,ZVEC2,ZVEC3 ! Work vectors
+REAL,    DIMENSION(SIZE(PRRT))  :: Z_RR_ACC  ! ++cb-- for elec
 !
 !-------------------------------------------------------------------------------
 !
-!
+!++cb++
 P_TH_ACC(:) = 0.
-P_RR_ACC(:) = 0.
+!P_RR_ACC(:) = 0.
 P_CR_ACC(:) = 0.
-P_RS_ACC(:) = 0.
-P_RG_ACC(:) = 0.
+P_CS_ACC(:) = 0.
+!P_RS_ACC(:) = 0.
+!P_RG_ACC(:) = 0.
+P_RR_ACCSS(:) = 0.
+P_RR_ACCSG(:) = 0.
+P_RS_ACCRG(:) = 0.
+Z_RR_ACC(:) = 0.
+!--cb--
 !
 ZZW1(:) = 0.
 ZZW2(:) = 0.
@@ -268,12 +287,19 @@ WHERE( GACC )
               XLBNSACCR2/( PLBDR(:)    * PLBDS(:)    ) + &
               XLBNSACCR3/(               PLBDS(:)**2 ) )
 !
-   P_RR_ACC(:) = - ZZW4(:) *  ZZW2(:)
+!++cb++
+   Z_RR_ACC(:) = - ZZW4(:) *  ZZW2(:) ! < 0
+!   P_RR_ACC(:) = - ZZW4(:) *  ZZW2(:)
    P_CR_ACC(:) = - ZZWC4(:) * ZZWC2(:)
-   P_RS_ACC(:) = ZZW4(:) *  ZZW1(:) - ZZW5(:)
+!   P_RS_ACC(:) = ZZW4(:) *  ZZW1(:) - ZZW5(:)
    P_CS_ACC(:) = - ZZWC5(:)
-   P_RG_ACC(:) = ZZW4(:) * ( ZZW2(:) - ZZW1(:) ) + ZZW5(:)
-   P_TH_ACC(:) = - P_RR_ACC(:) * (PLSFACT(:)-PLVFACT(:))
+!   P_RG_ACC(:) = ZZW4(:) * ( ZZW2(:) - ZZW1(:) ) + ZZW5(:)
+   P_RR_ACCSS(:) = ZZW4(:) *  ZZW1(:)  ! perte pour rr, > 0
+   P_RR_ACCSG(:) = ZZW4(:) * ( ZZW2(:) - ZZW1(:) )  ! rraccsg = rraccs - rraccss
+   P_RS_ACCRG(:) = ZZW5(:)             ! perte pour rs, > 0
+!   P_TH_ACC(:) = - P_RR_ACC(:) * (PLSFACT(:)-PLVFACT(:))
+   P_TH_ACC(:) = - Z_RR_ACC(:) * (PLSFACT(:)-PLVFACT(:))
+!--cb--
 !
 END WHERE
 !

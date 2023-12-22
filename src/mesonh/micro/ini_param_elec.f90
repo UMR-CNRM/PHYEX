@@ -10,18 +10,18 @@
 IMPLICIT NONE
 INTERFACE
 !
-        SUBROUTINE INI_PARAM_ELEC (TPINIFILE, HGETSVM, PRHO00,       &
-                                   KRR, KND, PFDINFTY, IIU, IJU, IKU )
+        SUBROUTINE INI_PARAM_ELEC (TPINIFILE, HGETSVT, HCLOUD, HELEC, &
+                                   PRHO00, KRR, IIU, IJU, IKU )
 !
 USE MODD_IO, ONLY : TFILEDATA
 IMPLICIT NONE
 !
-TYPE(TFILEDATA),   INTENT(IN) :: TPINIFILE ! Initial file
-CHARACTER (LEN=*), DIMENSION(:),INTENT(IN)  :: HGETSVM
-INTEGER, INTENT(IN) :: KND      ! Number of intervals to integrate kernels
+TYPE(TFILEDATA),                INTENT(IN) :: TPINIFILE ! Initial file
+CHARACTER (LEN=*), DIMENSION(:),INTENT(IN) :: HGETSVT
+CHARACTER (LEN=4),              INTENT(IN) :: HCLOUD   ! microphysics scheme
+CHARACTER (LEN=4),              INTENT(IN) :: HELEC    ! electrical scheme
 INTEGER, INTENT(IN) :: KRR      ! Number of moist variables
 REAL,    INTENT(IN) :: PRHO00   ! Pressure at ground level
-REAL,    INTENT(IN) :: PFDINFTY ! Factor used to define the "infinite" diameter
 INTEGER, INTENT(IN) :: IIU      ! Upper dimension in x direction (local)
 INTEGER, INTENT(IN) :: IJU      ! Upper dimension in y direction (local)
 INTEGER, INTENT(IN) :: IKU      ! Upper dimension in z direction
@@ -30,10 +30,10 @@ END SUBROUTINE INI_PARAM_ELEC
 END INTERFACE
 END MODULE MODI_INI_PARAM_ELEC
 !
-!       ##############################################################
-        SUBROUTINE INI_PARAM_ELEC (TPINIFILE, HGETSVM, PRHO00,       &
-                                   KRR, KND, PFDINFTY, IIU, IJU, IKU )
-!       ##############################################################
+!       ###############################################################
+        SUBROUTINE INI_PARAM_ELEC (TPINIFILE, HGETSVT, HCLOUD, HELEC, &
+                                   PRHO00, KRR, IIU, IJU, IKU)
+!       ###############################################################
 !
 !!****  *INI_PARAM_ELEC* -  initialize the constants necessary 
 !!                          for the electrical scheme.
@@ -88,6 +88,12 @@ END MODULE MODI_INI_PARAM_ELEC
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
 !  J. Wurtz       03/2022: new snow characteristics
+!!        C. Barthe  04/02/2022 Add XGAMINC_RIM3 (no more initialized in ini_rain_ice_elec)
+!!        C. Barthe  07/06/2022 Add parameters for charge sedimentation in LIMA
+!!        C. Barthe  30/11/2022 Remove the section about charge neutralization ; 
+!!                              already done in ini_flash_geom_elec
+!!        C. Barthe  28/03/2023 Add parameters for sedimentation of cloud droplets charge
+!!        C. Barthe  13/07/2023 Modify parameters that contain C_x and x_x for Ns, Ng and Nh
 !
 !-------------------------------------------------------------------------------
 !
@@ -102,12 +108,48 @@ USE MODD_IO,             ONLY: TFILEDATA
 USE MODD_NSV,            ONLY: NSV_ELECEND
 USE MODD_PARAMETERS
 USE MODD_PARAM_ICE_n
-USE MODD_RAIN_ICE_DESCR_n
-USE MODD_RAIN_ICE_PARAM_n
+USE MODD_PARAM_LIMA,      ONLY : XALPHAC_L=>XALPHAC, XNUC_L=>XNUC, XALPHAR_L=>XALPHAR, XNUR_L=>XNUR, &
+                                 XALPHAI_L=>XALPHAI, XNUI_L=>XNUI, XALPHAS_L=>XALPHAS, XNUS_L=>XNUS, &
+                                 XALPHAG_L=>XALPHAG, XNUG_L=>XNUG,                                   &
+                                 XCEXVT_L=>XCEXVT
+USE MODD_PARAM_LIMA_COLD, ONLY : XAI_L=>XAI, XBI_L=>XBI, XC_I_L=>XC_I, XDI_L=>XDI, &
+                                 XAS_L=>XAS, XBS_L=>XBS, XCS_L=>XCS, XDS_L=>XDS, XCCS_L=>XCCS, XCXS_L=>XCXS
+USE MODD_PARAM_LIMA_MIXED,ONLY : XAG_L=>XAG, XBG_L=>XBG, XCG_L=>XCG, XDG_L=>XDG, XCCG_L=>XCCG, XCXG_L=>XCXG,     &
+                                 XAH_L=>XAH, XBH_L=>XBH, XCH_L=>XCH, XDH_L=>XDH, XCCH_L=>XCCH, XCXH_L=>XCXH,     &
+                                 XALPHAH_L=>XALPHAH, XNUH_L=>XNUH,                                               &
+                                 XGAMINC_BOUND_MIN_L=>XGAMINC_BOUND_MIN, XGAMINC_BOUND_MAX_L=>XGAMINC_BOUND_MAX, &
+                                 NGAMINC_L=>NGAMINC, NACCLBDAR_L=>NACCLBDAR, NACCLBDAS_L=>NACCLBDAS,             &
+                                 XACCLBDAR_MIN_L=>XACCLBDAR_MIN, XACCLBDAR_MAX_L=>XACCLBDAR_MAX,                 &
+                                 XACCLBDAS_MIN_L=>XACCLBDAS_MIN, XACCLBDAS_MAX_L=>XACCLBDAS_MAX,                 &
+                                 NDRYLBDAR_L=>NDRYLBDAR, NDRYLBDAS_L=>NDRYLBDAS, NDRYLBDAG_L=>NDRYLBDAG,         &
+                                 XDRYLBDAR_MIN_L=>XDRYLBDAR_MIN, XDRYLBDAR_MAX_L=>XDRYLBDAR_MAX,                 &
+                                 XDRYLBDAS_MIN_L=>XDRYLBDAS_MIN, XDRYLBDAS_MAX_L=>XDRYLBDAS_MAX,                 &
+                                 XDRYLBDAG_MIN_L=>XDRYLBDAG_MIN, XDRYLBDAG_MAX_L=>XDRYLBDAG_MAX
+USE MODD_PARAM_LIMA_WARM, ONLY : XAR_L=>XAR, XBR_L=>XBR, XCR_L=>XCR, XDR_L=>XDR, &
+                                 XCC_L=>XCC, XDC_L=>XDC, XCCR_L=>XCCR
+USE MODD_RAIN_ICE_DESCR_n,ONLY : XALPHAC_I=>XALPHAC, XNUC_I=>XNUC, XALPHAR_I=>XALPHAR, XNUR_I=>XNUR,         &
+                                 XALPHAI_I=>XALPHAI, XNUI_I=>XNUI, XALPHAS_I=>XALPHAS, XNUS_I=>XNUS,         &
+                                 XALPHAG_I=>XALPHAG, XNUG_I=>XNUG, XALPHAH_I=>XALPHAH, XNUH_I=>XNUH,         &
+                                 XCC_I=>XCC, XDC_I=>XDC,                                                     &
+                                 XAR_I=>XAR, XBR_I=>XBR, XCR_I=>XCR, XDR_I=>XDR, XCCR_I=>XCCR,               &
+                                 XAI_I=>XAI, XBI_I=>XBI, XC_I_I=>XC_I, XDI_I=>XDI,                           &
+                                 XAS_I=>XAS, XBS_I=>XBS, XCS_I=>XCS, XDS_I=>XDS, XCCS_I=>XCCS, XCXS_I=>XCXS, &
+                                 XAG_I=>XAG, XBG_I=>XBG, XCG_I=>XCG, XDG_I=>XDG, XCCG_I=>XCCG, XCXG_I=>XCXG, &
+                                 XAH_I=>XAH, XBH_I=>XBH, XCH_I=>XCH, XDH_I=>XDH, XCCH_I=>XCCH, XCXH_I=>XCXH, &
+                                 XCEXVT_I=>XCEXVT
+USE MODD_RAIN_ICE_PARAM_n,ONLY : XGAMINC_BOUND_MIN_I=>XGAMINC_BOUND_MIN, XGAMINC_BOUND_MAX_I=>XGAMINC_BOUND_MAX, &
+                                 NGAMINC_I=>NGAMINC, NACCLBDAR_I=>NACCLBDAR, NACCLBDAS_I=>NACCLBDAS,             &
+                                 XACCLBDAR_MIN_I=>XACCLBDAR_MIN, XACCLBDAR_MAX_I=>XACCLBDAR_MAX,                 &
+                                 XACCLBDAS_MIN_I=>XACCLBDAS_MIN, XACCLBDAS_MAX_I=>XACCLBDAS_MAX,                 &
+                                 NDRYLBDAR_I=>NDRYLBDAR, NDRYLBDAS_I=>NDRYLBDAS, NDRYLBDAG_I=>NDRYLBDAG,         &
+                                 XDRYLBDAR_MIN_I=>XDRYLBDAR_MIN, XDRYLBDAR_MAX_I=>XDRYLBDAR_MAX,                 &
+                                 XDRYLBDAS_MIN_I=>XDRYLBDAS_MIN, XDRYLBDAS_MAX_I=>XDRYLBDAS_MAX,                 &
+                                 XDRYLBDAG_MIN_I=>XDRYLBDAG_MIN, XDRYLBDAG_MAX_I=>XDRYLBDAG_MAX
 USE MODD_VAR_ll
 !
 USE MODE_IO_FIELD_READ,  only: IO_Field_read
 !
+USE MODI_GAMMA_INC
 USE MODI_MOMG
 USE MODE_RRCOLSS, ONLY: RRCOLSS
 USE MODE_RSCOLRG, ONLY: RSCOLRG
@@ -118,37 +160,211 @@ IMPLICIT NONE
 !
 !*	0.1	 Declaration of dummy arguments
 !
-TYPE(TFILEDATA),   INTENT(IN) :: TPINIFILE ! Initial file
-CHARACTER (LEN=*), DIMENSION(:),INTENT(IN)  :: HGETSVM
-INTEGER, INTENT(IN) :: KND      ! Number of intervals to integrate kernels
+TYPE(TFILEDATA),                INTENT(IN) :: TPINIFILE ! Initial file
+CHARACTER (LEN=*), DIMENSION(:),INTENT(IN) :: HGETSVT
+CHARACTER (LEN=4),              INTENT(IN) :: HCLOUD   ! microphysics scheme
+CHARACTER (LEN=4),              INTENT(IN) :: HELEC    ! electrical scheme
 INTEGER, INTENT(IN) :: KRR      ! Number of moist variables
 REAL,    INTENT(IN) :: PRHO00   ! Pressure at ground level
-REAL,    INTENT(IN) :: PFDINFTY ! Factor used to define the "infinite" diameter
 INTEGER, INTENT(IN) :: IIU      ! Upper dimension in x direction (local)
 INTEGER, INTENT(IN) :: IJU      ! Upper dimension in y direction (local)
 INTEGER, INTENT(IN) :: IKU      ! Upper dimension in z direction
 !
 !*	0.2	 Declaration of local variables
 !
+INTEGER :: IND                ! Number of intervals to integrate kernels
+INTEGER :: J1, JLWC, JTEMP
+INTEGER :: IGAMINC, IACCLBDAR, IACCLBDAS, IDRYLBDAR, IDRYLBDAS, IDRYLBDAG
+!
+REAL    :: ZRATE              ! Geometrical growth of Lbda in the tabulated
+                              ! functions and kernels
+REAL    :: ZBOUND             ! XDCSLIM*Lbda_s: upper bound for the partial
+                              ! integration of the riming rate of the aggregates
+!
 REAL    :: ZESR               ! Mean efficiency of rain-aggregate collection
 REAL    :: ZEGS               !  
 REAL    :: ZEGR
+REAL    :: ZFDINFTY           ! Factor used to define the "infinite" diameter
+! variables used to cope with the module variables common to icex and lima
+REAL    :: ZCEXVT,                                                     &
+           ZCC, ZDC, ZALPHAC, ZNUC,                                    &
+           ZAR, ZBR, ZCR, ZDR, ZCCR, ZALPHAR, ZNUR,                    &
+           ZAI, ZBI, ZCI, ZDI, ZALPHAI, ZNUI,                          &
+           ZAS, ZBS, ZCS, ZDS, ZCCS, ZCXS, ZALPHAS, ZNUS,              &
+           ZAG, ZBG, ZCG, ZDG, ZCCG, ZCXG, ZALPHAG, ZNUG,              &
+           ZAH, ZBH, ZCH, ZDH, ZCCH, ZCXH, ZALPHAH, ZNUH,              &
+           ZGAMINC_BOUND_MIN, ZGAMINC_BOUND_MAX,                       &
+           ZACCLBDAR_MIN, ZACCLBDAR_MAX, ZACCLBDAS_MIN, ZACCLBDAS_MAX, &
+           ZDRYLBDAR_MIN, ZDRYLBDAR_MAX, ZDRYLBDAS_MIN, ZDRYLBDAS_MAX, &
+           ZDRYLBDAG_MIN, ZDRYLBDAG_MAX
+!
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZMANSELL1, ZMANSELL2 ! Used to initialize
                                                           ! XMANSELL array
 !
-INTEGER             :: JLWC, JTEMP
-REAL, DIMENSION(:), ALLOCATABLE :: ZT, ZLWCC, ZEW
+REAL, DIMENSION(:),   ALLOCATABLE :: ZT, ZLWCC, ZEW
 !
 !-------------------------------------------------------------------------------
-! constants for electricity
+!
+!*	1.	PRELIMINARIES
+!		-------------
+!
+!*      1.1     Constants for electricity
 !
 XEPSILON = 8.85E-12     ! Dielectric permittivity of the air
 XECHARGE = 1.6E-19      ! Elementary charge (C) 
 !
-!*	1.	SHAPE PARAMETERS
+!
+!*      1.2     Address module variables common to ICEx and LIMA
+!
+IF (HCLOUD(1:3) == 'ICE') THEN
+  ZCEXVT = XCEXVT_I
+  !
+  ZCC = XCC_I
+  ZDC = XDC_I
+  ZALPHAC = XALPHAC_I
+  ZNUC    = XNUC_I
+  !
+  ZAR     = XAR_I
+  ZBR     = XBR_I
+  ZCR     = XCR_I
+  ZDR     = XDR_I
+  ZCCR    = XCCR_I
+  ZALPHAR = XALPHAR_I
+  ZNUR    = XNUR_I
+  !
+  ZAI     = XAI_I
+  ZBI     = XBI_I
+  ZCI     = XC_I_I
+  ZDI     = XDI_I
+  ZALPHAI = XALPHAI_I
+  ZNUI    = XNUI_I
+  !
+  ZAS     = XAS_I
+  ZBS     = XBS_I
+  ZCS     = XCS_I
+  ZDS     = XDS_I
+  ZCCS    = XCCS_I
+  ZCXS    = XCXS_I
+  ZALPHAS = XALPHAS_I
+  ZNUS    = XNUS_I
+  !
+  ZAG     = XAG_I
+  ZBG     = XBG_I
+  ZCG     = XCG_I
+  ZDG     = XDG_I
+  ZCCG    = XCCG_I
+  ZCXG    = XCXG_I
+  ZALPHAG = XALPHAG_I
+  ZNUG    = XNUG_I
+  !
+  ZAH     = XAH_I
+  ZBH     = XBH_I
+  ZCH     = XCH_I
+  ZDH     = XDH_I
+  ZCCH    = XCCH_I
+  ZCXH    = XCXH_I
+  ZALPHAH = XALPHAH_I
+  ZNUH    = XNUH_I
+  !
+  IGAMINC = NGAMINC_I
+  ZGAMINC_BOUND_MIN = XGAMINC_BOUND_MIN_I
+  ZGAMINC_BOUND_MAX = XGAMINC_BOUND_MAX_I
+  !
+  IACCLBDAR = NACCLBDAR_I
+  IACCLBDAS = NACCLBDAS_I
+  ZACCLBDAR_MIN = XACCLBDAR_MIN_I
+  ZACCLBDAR_MAX = XACCLBDAR_MAX_I
+  ZACCLBDAS_MIN = XACCLBDAS_MIN_I
+  ZACCLBDAS_MAX = XACCLBDAS_MAX_I
+  !
+  IDRYLBDAR = NDRYLBDAR_I
+  IDRYLBDAS = NDRYLBDAS_I
+  IDRYLBDAG = NDRYLBDAG_I
+  ZDRYLBDAR_MIN = XDRYLBDAR_MIN_I
+  ZDRYLBDAR_MAX = XDRYLBDAR_MAX_I
+  ZDRYLBDAS_MIN = XDRYLBDAS_MIN_I
+  ZDRYLBDAS_MAX = XDRYLBDAS_MAX_I
+  ZDRYLBDAG_MIN = XDRYLBDAG_MIN_I
+  ZDRYLBDAG_MAX = XDRYLBDAG_MAX_I
+  !
+ELSE IF (HCLOUD == 'LIMA') THEN
+  ZCEXVT = XCEXVT_L
+  !
+  ZCC = XCC_L
+  ZDC = XDC_L
+  ZALPHAC = XALPHAC_L
+  ZNUC    = XNUC_L
+  !
+  ZAR     = XAR_L
+  ZBR     = XBR_L
+  ZCR     = XCR_L
+  ZDR     = XDR_L
+  ZCCR    = XCCR_L
+  ZALPHAR = XALPHAR_L
+  ZNUR    = XNUR_L
+  !
+  ZAI     = XAI_L
+  ZBI     = XBI_L
+  ZCI     = XC_I_L
+  ZDI     = XDI_L
+  ZALPHAI = XALPHAI_L
+  ZNUI    = XNUI_L
+  !
+  ZAS     = XAS_L
+  ZBS     = XBS_L
+  ZCS     = XCS_L
+  ZDS     = XDS_L
+  ZCCS    = XCCS_L
+  ZCXS    = XCXS_L
+  ZALPHAS = XALPHAS_L
+  ZNUS    = XNUS_L
+  !
+  ZAG     = XAG_L
+  ZBG     = XBG_L
+  ZCG     = XCG_L
+  ZDG     = XDG_L
+  ZCCG    = XCCG_L
+  ZCXG    = XCXG_L
+  ZALPHAG = XALPHAG_L
+  ZNUG    = XNUG_L
+  !
+  ZAH     = XAH_L
+  ZBH     = XBH_L
+  ZCH     = XCH_L
+  ZDH     = XDH_L
+  ZCCH    = XCCH_L
+  ZCXH    = XCXH_L
+  ZALPHAH = XALPHAH_L
+  ZNUH    = XNUH_L
+  !
+  IGAMINC = NGAMINC_L
+  ZGAMINC_BOUND_MIN = XGAMINC_BOUND_MIN_L
+  ZGAMINC_BOUND_MAX = XGAMINC_BOUND_MAX_L
+  !
+  IACCLBDAR = NACCLBDAR_L
+  IACCLBDAS = NACCLBDAS_L
+  ZACCLBDAR_MIN = XACCLBDAR_MIN_L
+  ZACCLBDAR_MAX = XACCLBDAR_MAX_L
+  ZACCLBDAS_MIN = XACCLBDAS_MIN_L
+  ZACCLBDAS_MAX = XACCLBDAS_MAX_L
+  !
+  IDRYLBDAR = NDRYLBDAR_L
+  IDRYLBDAS = NDRYLBDAS_L
+  IDRYLBDAG = NDRYLBDAG_L
+  ZDRYLBDAR_MIN = XDRYLBDAR_MIN_L
+  ZDRYLBDAR_MAX = XDRYLBDAR_MAX_L
+  ZDRYLBDAS_MIN = XDRYLBDAS_MIN_L
+  ZDRYLBDAS_MAX = XDRYLBDAS_MAX_L
+  ZDRYLBDAG_MIN = XDRYLBDAG_MIN_L
+  ZDRYLBDAG_MAX = XDRYLBDAG_MAX_L
+END IF  
+!
+!-------------------------------------------------------------------------------
+!
+!*	2.	SHAPE PARAMETERS
 !		----------------
 !
-XCXR = -1.0 ! Raindrop characteristic : XCXR (not declared in ini_rain_ice.f90)
+XCXR = -1.0 ! Raindrop characteristic : XCXR (not initialized in ini_rain_ice.f90)
 !
 ! Individual charge  q(d) = e_x * d ** f_x with f_x = XFx 
 !
@@ -205,7 +421,7 @@ XJCURR_FW = -2.7E-12
 !
 !-------------------------------------------------------------------------------
 !
-!*	2.	COEFFICIENTS FOR CHARGE TRANSFERS
+!*	3.	COEFFICIENTS FOR CHARGE TRANSFERS
 !		---------------------------------
 !
 ! proportionality coefficient between mass transfer and charge transfer rates
@@ -214,11 +430,11 @@ XJCURR_FW = -2.7E-12
 !
 XCOEF_RQ_V = 1
 XCOEF_RQ_C = XFC / 3.0  ! XBC=3
-XCOEF_RQ_R = XFR / XBR
-XCOEF_RQ_I = XFI / XBI
-XCOEF_RQ_S = XFS / XBS
-XCOEF_RQ_G = XFG / XBG
-XCOEF_RQ_H = XFH / XBH
+XCOEF_RQ_R = XFR / ZBR
+XCOEF_RQ_I = XFI / ZBI
+XCOEF_RQ_S = XFS / ZBS
+XCOEF_RQ_G = XFG / ZBG
+XCOEF_RQ_H = XFH / ZBH
 !
 !
 !-------------------------------------------------------------------------------
@@ -240,6 +456,7 @@ XQHON = XQHON / (XLBDACQ**XFC)
 !
 !*	4.	SEDIMENTATION
 !		-------------
+!
 IF (ALLOCATED(XQTMIN)) DEALLOCATE(XQTMIN)       
 IF (ALLOCATED(XRTMIN_ELEC)) DEALLOCATE(XRTMIN_ELEC)
 !
@@ -272,46 +489,78 @@ XLBDAS_MAXE = 2.E3 ! Less than 10000 particles in cube meter of cloud.
 XLBDAG_MAXE = 2.E3 !
 XLBDAH_MAXE = 2.E3 !
 !
-! Rain
+IF (HCLOUD(1:3) == 'ICE') THEN
+  !
+  ! Cloud droplets
+  !
+  ZCEXVT = 0.4
+  XEXQSEDC = XFC + ZDC
+  XFQSEDC = ZCC * MOMG(ZALPHAC,ZNUC,ZDC+XFC) * (PRHO00)**ZCEXVT
+  !
+  ! Rain
+  !
+  XEXQSEDR = (XCXR - XFR - ZDR) / (XCXR - ZBR)
+  XFQSEDR  = ZCR * (ZCCR**(1 - XEXQSEDR)) * MOMG(ZALPHAR,ZNUR,ZDR+XFR) * &
+           ((ZAR * MOMG(ZALPHAR,ZNUR,ZBR))**(-XEXQSEDR)) * (PRHO00)**ZCEXVT
+  !
+  ! Ice
+!!++cb++ 23/02/23 pour la microphysique, calcul fait pour des colonnes
+! => on fait pareil ici pour garder la coherence
+!XEXQSEDI = (ZDI + XFI) / ZBI
+!XFQSEDI  = ZCI * MOMG(ZALPHAI,ZNUI,ZDI+XFI) * (PRHO00**ZCEXVT) * &
+!           (ZAI * MOMG(ZALPHAI,ZNUI,ZBI))**(-XEXQSEDI)  
+  XEXQSEDI = (1.585 + XFI) / 1.7
+  XFQSEDI  = 2.1E5 * MOMG(ZALPHAI,ZNUI,1.585+XFI) * (PRHO00**ZCEXVT) * &
+             (2.14E-3 * MOMG(ZALPHAI,ZNUI,1.7))**(-XEXQSEDI)
+!--cb--
+  XFCI     = (4. * XPI * 900.)**(-1)
+  !
+  ! Snow
+  !
+  XEXQSEDS = (ZCXS - XFS - ZDS) / (ZCXS - ZBS)
+  XFQSEDS  = ZCS * (ZCCS**(1 - XEXQSEDS)) * MOMG(ZALPHAS,ZNUS,ZDS+XFS) * &
+           ((ZAS * MOMG(ZALPHAS,ZNUS,ZBS))**(-XEXQSEDS)) * (PRHO00)**ZCEXVT
+  !
+  ! Graupeln 
+  !
+  XEXQSEDG = (ZCXG - XFG - ZDG) / (ZCXG - ZBG)
+  XFQSEDG  = ZCG * (ZCCG**(1 - XEXQSEDG)) * MOMG(ZALPHAG,ZNUG,ZDG+XFG) * &
+           ((ZAG * MOMG(ZALPHAG,ZNUG,ZBG))**(-XEXQSEDG)) * (PRHO00)**ZCEXVT
+  !
+  ! Hail
+  !
+  XEXQSEDH = (ZCXH - XFH - ZDH) / (ZCXH - ZBH)
+  XFQSEDH  = ZCH * (ZCCH**(1 - XEXQSEDH)) * MOMG(ZALPHAH,ZNUH,ZDH+XFH) * &
+           ((ZAH * MOMG(ZALPHAH,ZNUH,ZBH))**(-XEXQSEDH)) * (PRHO00)**ZCEXVT
 !
-XCEXVT = 0.4
-XEXQSEDR = (XCXR - XFR - XDR) / (XCXR - XBR)
-XFQSEDR  = XCR * (XCCR**(1 - XEXQSEDR)) * MOMG(XALPHAR,XNUR,XDR+XFR) * &
-         ((XAR * MOMG(XALPHAR,XNUR,XBR))**(-XEXQSEDR)) * (PRHO00)**XCEXVT
-!
-! Ice
-!
-XEXQSEDI = (XDI + XFI) / XBI
-XFQSEDI  = XC_I * MOMG(XALPHAI,XNUI,XDI+XFI) * (PRHO00**XCEXVT) * &
-           (XAI * MOMG(XALPHAI,XNUI,XBI))**(-XEXQSEDI)  
-!
-! Snow
-!
-XEXQSEDS = (XCXS - XFS - XDS) / (XCXS - XBS)    
-XFQSEDS  = XCS * (XCCS**(1 - XEXQSEDS)) * MOMG(XALPHAS,XNUS,XDS+XFS) * &
-         ((XAS * MOMG(XALPHAS,XNUS,XBS))**(-XEXQSEDS)) * (PRHO00)**XCEXVT
-!
-! Graupeln 
-!
-XEXQSEDG = (XCXG - XFG - XDG) / (XCXG - XBG)    
-XFQSEDG  = XCG * (XCCG**(1 - XEXQSEDG)) * MOMG(XALPHAG,XNUG,XDG+XFG) * &
-         ((XAG * MOMG(XALPHAG,XNUG,XBG))**(-XEXQSEDG)) * (PRHO00)**XCEXVT
-!
-! Hail
-!
-XEXQSEDH = (XCXH - XFH - XDH) / (XCXH - XBH)    
-XFQSEDH  = XCH * (XCCH**(1 - XEXQSEDH)) * MOMG(XALPHAH,XNUH,XDH+XFH) * &
-         ((XAH * MOMG(XALPHAH,XNUH,XBH))**(-XEXQSEDH)) * (PRHO00)**XCEXVT
-!
+ELSE IF (HCLOUD == 'LIMA') THEN
+  ALLOCATE(XFQSED(KRR))
+  XFQSED(:) = 0.
+  XFQSED(2) = ZCC * MOMG(ZALPHAC,ZNUC,ZDC+XFC)
+  XFQSED(3) = ZCR * MOMG(ZALPHAR,ZNUR,ZDR+XFR)
+  XFQSED(4) = ZCI * MOMG(ZALPHAI,ZNUI,ZDI+XFI)
+  XFQSED(5) = ZCS * MOMG(ZALPHAS,ZNUS,ZDS+XFS)
+  XFQSED(6) = ZCG * MOMG(ZALPHAG,ZNUG,ZDG+XFG)
+  IF (KRR == 7) XFQSED(7) = ZCH * MOMG(ZALPHAH,ZNUH,ZDH+XFH)
+  !
+  ALLOCATE(XDQ(KRR))
+  XDQ(:) = 0.
+  XDQ(2) = ZDC + XFC
+  XDQ(3) = ZDR + XFR
+  XDQ(4) = ZDI + XFI
+  XDQ(5) = ZDS + XFS
+  XDQ(6) = ZDG + XFG
+  IF (KRR == 7) XDQ(7) = ZDH + XFH
+END IF
 !
 !-------------------------------------------------------------------------------
 !
 !*	5.	EVAPORATION OF RAINDROPS
 !		------------------------
 !
-XQREVAV1 = (2. / XPI) * MOMG(XALPHAR,XNUR,XFR) / MOMG(XALPHAR,XNUR,2.)
-XQREVAV2 = (XPI / XAR) * (MOMG(XALPHAR,XNUR,2.) / MOMG(XALPHAR,XNUR,XBR)) * &
-           (XCXR - 2.) / (XCXR - XBR)
+!XQREVAV1 = (2. / XPI) * MOMG(ZALPHAR,ZNUR,XFR) / MOMG(ZALPHAR,ZNUR,2.)
+!XQREVAV2 = (XPI / ZAR) * (MOMG(ZALPHAR,ZNUR,2.) / MOMG(ZALPHAR,ZNUR,ZBR)) * &
+!           (XCXR - 2.) / (XCXR - ZBR)
 !
 !
 !-------------------------------------------------------------------------------
@@ -319,11 +568,22 @@ XQREVAV2 = (XPI / XAR) * (MOMG(XALPHAR,XNUR,2.) / MOMG(XALPHAR,XNUR,XBR)) * &
 !*	6.	RIMING OF CLOUD DROPLETS ON SNOW
 !		--------------------------------
 !
-XEXQSRIMCG = XCXS - XFS
-XQSRIMCG   = XCCS * MOMG(XALPHAS,XNUS,XFS)
+IF (HELEC == 'ELE4') THEN
+  XEXQSRIMCG = -XFS
+  XQSRIMCG   = MOMG(ZALPHAS,ZNUS,XFS)
+ELSE
+  XEXQSRIMCG = ZCXS - XFS
+  XQSRIMCG   = ZCCS * MOMG(ZALPHAS,ZNUS,XFS)
+END IF
 !
 ! The array containing the tabulated function M(fs,D_cs^lim)/M(fs) 
-! is implemented in ini_rain_ice.f90
+! is no more implemented in ini_rain_ice.f90
+ZRATE = EXP(LOG(ZGAMINC_BOUND_MAX/ZGAMINC_BOUND_MIN)/REAL(IGAMINC-1))
+IF( .NOT.ALLOCATED(XGAMINC_RIM3) ) ALLOCATE( XGAMINC_RIM3(IGAMINC) )
+DO J1 = 1, IGAMINC
+  ZBOUND = ZGAMINC_BOUND_MIN * ZRATE**(J1-1)
+  XGAMINC_RIM3(J1) = GAMMA_INC(ZNUS+XFS/ZALPHAS,ZBOUND)
+END DO
 !
 !
 !-------------------------------------------------------------------------------
@@ -331,9 +591,15 @@ XQSRIMCG   = XCCS * MOMG(XALPHAS,XNUS,XFS)
 !*	7.	CONTACT FREEZING BETWEEN RAINDROPS AND PRISTINE ICE
 !		---------------------------------------------------
 !
-XEXQRCFRIG = XCXR - XDR - XFR - 2.0
-XQRCFRIG   = (XPI / 4.0) * XCR * XCCR * MOMG(XALPHAR,XNUR,XDR+XFR+2.) * &
-              PRHO00**XCEXVT
+IF (HELEC == 'ELE4') THEN
+  XEXQRCFRIG = - ZDR - XFR - 2.0
+  XQRCFRIG   = (XPI / 4.0) * ZCR * MOMG(ZALPHAR,ZNUR,ZDR+XFR+2.) * &
+                PRHO00**ZCEXVT
+ELSE
+  XEXQRCFRIG = XCXR - ZDR - XFR - 2.0
+  XQRCFRIG   = (XPI / 4.0) * ZCR * ZCCR * MOMG(ZALPHAR,ZNUR,ZDR+XFR+2.) * &
+                PRHO00**ZCEXVT
+END IF
 !
 !
 !-------------------------------------------------------------------------------
@@ -350,7 +616,7 @@ ALLOCATE( XIND_RATE(IIU, IJU, IKU) )
 ALLOCATE( XEW(IIU, IJU, IKU) )
 XEW(:,:,:) = 0.
 !
-SELECT CASE(HGETSVM(NSV_ELECEND))
+SELECT CASE(HGETSVT(NSV_ELECEND))
   CASE ('READ')
     CALL IO_Field_read(TPINIFILE,'NI_IAGGS',XNI_IAGGS)
     CALL IO_Field_read(TPINIFILE,'NI_IDRYG',XNI_IDRYG)
@@ -399,39 +665,39 @@ IF (CNI_CHARGING == 'SAUN1' .OR. CNI_CHARGING == 'SAUN2' .OR.  &
   XSKN = 24.
   XSKN_TAK = 2.0        ! for Takahashi
 !
-  XFQIAGGSP = XIKP * XCS**(1. + XINP) *                 &
-                MOMG(XALPHAS, XNUS, 2.+XDS*(1.+XINP)) * &
-                MOMG(XALPHAI, XNUI, XIMP)
-  XFQIAGGSN = XIKN * XCS**(1. + XINN) *                 &
-                MOMG(XALPHAS, XNUS, 2.+XDS*(1.+XINN)) * &
-                MOMG(XALPHAI, XNUI, XIMN)
+  XFQIAGGSP = XIKP * ZCS**(1. + XINP) *                 &
+                MOMG(ZALPHAS, ZNUS, 2.+ZDS*(1.+XINP)) * &
+                MOMG(ZALPHAI, ZNUI, XIMP)
+  XFQIAGGSN = XIKN * ZCS**(1. + XINN) *                 &
+                MOMG(ZALPHAS, ZNUS, 2.+ZDS*(1.+XINN)) * &
+                MOMG(ZALPHAI, ZNUI, XIMN)
 !
-  XFQIDRYGBSP = XIKP * XCG**(1. + XINP) *               &
-                MOMG(XALPHAG, XNUG, 2.+XDG*(1.+XINP)) * &
-                MOMG(XALPHAI, XNUI, XIMP)
-  XFQIDRYGBSN = XIKN * XCG**(1. + XINN) *               &
-                MOMG(XALPHAG, XNUG, 2.+XDG*(1.+XINN)) * &
-                MOMG(XALPHAI, XNUI, XIMN)
+  XFQIDRYGBSP = XIKP * ZCG**(1. + XINP) *               &
+                MOMG(ZALPHAG, ZNUG, 2.+ZDG*(1.+XINP)) * &
+                MOMG(ZALPHAI, ZNUI, XIMP)
+  XFQIDRYGBSN = XIKN * ZCG**(1. + XINN) *               &
+                MOMG(ZALPHAG, ZNUG, 2.+ZDG*(1.+XINN)) * &
+                MOMG(ZALPHAI, ZNUI, XIMN)
 !
   XFQIAGGSP_TAK = XFQIAGGSP * XIKP_TAK / XIKP
   XFQIAGGSN_TAK = XFQIAGGSN * XIKN_TAK / XIKN
   XFQIDRYGBSP_TAK = XFQIDRYGBSP * XIKP_TAK / XIKP
   XFQIDRYGBSN_TAK = XFQIDRYGBSN * XIKN_TAK / XIKN
 !
-  XAIGAMMABI      = XAI * MOMG(XALPHAI, XNUI, XBI)
+  XAIGAMMABI      = ZAI * MOMG(ZALPHAI, ZNUI, ZBI)
 !
-  XLBQSDRYGB1SP = MOMG(XALPHAG,XNUG,2.) * MOMG(XALPHAS, XNUS, XSMP)
-  XLBQSDRYGB1SN = MOMG(XALPHAG,XNUG,2.) * MOMG(XALPHAS, XNUS, XSMN)
-  XLBQSDRYGB2SP = 2. * MOMG(XALPHAG,XNUG,1.) * MOMG(XALPHAS, XNUS, 1.+XSMP)
-  XLBQSDRYGB2SN = 2. * MOMG(XALPHAG,XNUG,1.) * MOMG(XALPHAS, XNUS, 1.+XSMN)
-  XLBQSDRYGB3SP =                              MOMG(XALPHAS, XNUS, 2.+XSMP)
-  XLBQSDRYGB3SN =                              MOMG(XALPHAS, XNUS, 2.+XSMN)
+  XLBQSDRYGB1SP = MOMG(ZALPHAG,ZNUG,2.) * MOMG(ZALPHAS, ZNUS, XSMP)
+  XLBQSDRYGB1SN = MOMG(ZALPHAG,ZNUG,2.) * MOMG(ZALPHAS, ZNUS, XSMN)
+  XLBQSDRYGB2SP = 2. * MOMG(ZALPHAG,ZNUG,1.) * MOMG(ZALPHAS, ZNUS, 1.+XSMP)
+  XLBQSDRYGB2SN = 2. * MOMG(ZALPHAG,ZNUG,1.) * MOMG(ZALPHAS, ZNUS, 1.+XSMN)
+  XLBQSDRYGB3SP =                              MOMG(ZALPHAS, ZNUS, 2.+XSMP)
+  XLBQSDRYGB3SN =                              MOMG(ZALPHAS, ZNUS, 2.+XSMN)
 ENDIF
 !
 IF (CNI_CHARGING == 'SAP98' .OR. CNI_CHARGING == 'TERAR' .OR. &
     CNI_CHARGING == 'BSMP1' .OR. CNI_CHARGING == 'BSMP2') THEN
-  XVSCOEF = XCS * MOMG(XALPHAS, XNUS, XBS+XDS) / MOMG(XALPHAS, XNUS, XBS)
-  XVGCOEF = XCG * MOMG(XALPHAG, XNUG, XBG+XDG) / MOMG(XALPHAG, XNUG, XBG)
+  XVSCOEF = ZCS * MOMG(ZALPHAS, ZNUS, ZBS+ZDS) / MOMG(ZALPHAS, ZNUS, ZBS)
+  XVGCOEF = ZCG * MOMG(ZALPHAG, ZNUG, ZBG+ZDG) / MOMG(ZALPHAG, ZNUG, ZBG)
 END IF
 !
 !
@@ -568,7 +834,7 @@ IF (CNI_CHARGING == 'SAUN1' .OR. CNI_CHARGING == 'SAUN2' .OR.  &
   ALLOCATE(ZT(NIND_TEMP+1))    ! Kelvin
   ALLOCATE(ZLWCC(NIND_TEMP+1))
   DO JTEMP = 1, NIND_TEMP+1
-    ZT(JTEMP)=1.0-REAL(JTEMP)+XTT
+    ZT(JTEMP) = 1.0 - REAL(JTEMP) + XTT
   END DO
   ZLWCC(:) = MIN( MAX( -0.49 + 6.64E-2*(XTT-ZT(:)),0.22 ),1.1 )   ! (g m^-3)
   ALLOCATE(ZEW(NIND_LWC+1))
@@ -578,13 +844,13 @@ IF (CNI_CHARGING == 'SAUN1' .OR. CNI_CHARGING == 'SAUN2' .OR.  &
 !                                  0.10 to 0.90 every 0.10 (9 values)
 !                                  1.00 to 10.0 every 1.00 (10 values)
   DO JLWC = 1, 9
-    ZEW(JLWC)=0.01*REAL(JLWC)
+    ZEW(JLWC) = 0.01 * REAL(JLWC)
   END DO
   DO JLWC = 10, 18
-    ZEW(JLWC)=0.1 + 0.1*REAL(JLWC-10)
+    ZEW(JLWC) = 0.1 + 0.1 * REAL(JLWC-10)
   END DO
   DO JLWC = 19, NIND_LWC+1
-    ZEW(JLWC)=1.0 + REAL(JLWC-19)
+    ZEW(JLWC) = 1.0 + REAL(JLWC-19)
   END DO
 !
 !
@@ -806,24 +1072,38 @@ XFQIAGGSBH = 2.E-14  ! (C.) Constant for ice-snow charging process
 !
 !*      9.2     Gardiner et al. (1985) parameterization
 !
-XFQIAGGSBG = (XPI / 4.0) * XCCS * XCS**4. * PRHO00**(4. * XCEXVT) * &
-              MOMG(XALPHAS,XNUS,2.+4.*XDS) * 7.3 *          &
-              MOMG(XALPHAI,XNUI,4.)
+IF (HELEC == 'ELE4') THEN
+  XFQIAGGSBG = (XPI / 4.0) * ZCS**4. * PRHO00**(4. * ZCEXVT) * &
+                MOMG(ZALPHAS,ZNUS,2.+4.*ZDS) * 7.3 *          &
+                MOMG(ZALPHAI,ZNUI,4.)
+ELSE
+  XFQIAGGSBG = (XPI / 4.0) * ZCCS * ZCS**4. * PRHO00**(4. * ZCEXVT) * &
+                MOMG(ZALPHAS,ZNUS,2.+4.*ZDS) * 7.3 *          &
+                MOMG(ZALPHAI,ZNUI,4.)
+END IF
 !
 !
 !*      9.3     Saunders et al.(1991) parameterization
 !
-XFQIAGGSBS = (XPI / 4.0) * XCCS
+IF (HELEC == 'ELE4') THEN
+  XFQIAGGSBS = XPI / 4.0
+ELSE
+  XFQIAGGSBS = (XPI / 4.0) * ZCCS
+END IF
 !
 !
 !*      9.4     Takahashi (1978) parameterization
 !
 IF (CNI_CHARGING == 'TAKAH') THEN
-  XFQIAGGSBT1 = (XPI / 4.0) * XCCS * XCS
-  XFQIAGGSBT2 = 10 * MOMG(XALPHAS,XNUS,2.+XDS)
-  XFQIAGGSBT3 = 5. * XCS * MOMG(XALPHAI,XNUI,2.) *               &
-                MOMG(XALPHAS,XNUS,2.+2*XDS) / ((1.E-4)**2 * 8. * & 
-                (XAI * MOMG(XALPHAI,XNUI,XBI))**(2 / XBI))  
+  IF (HELEC == 'ELE4') THEN
+    XFQIAGGSBT1 = (XPI / 4.0) * ZCS
+  ELSE
+    XFQIAGGSBT1 = (XPI / 4.0) * ZCCS * ZCS
+  END IF
+  XFQIAGGSBT2 = 10. * MOMG(ZALPHAS,ZNUS,2.+ZDS)
+  XFQIAGGSBT3 = 5. * ZCS * MOMG(ZALPHAI,ZNUI,2.) *               &
+                MOMG(ZALPHAS,ZNUS,2.+2.*ZDS) / ((1.E-4)**2 * 8. * & 
+                (ZAI * MOMG(ZALPHAI,ZNUI,ZBI))**(2. / ZBI))  
 END IF
 !
 !
@@ -832,36 +1112,43 @@ END IF
 !*	10.	ACCRETION OF RAINDROPS ON SNOW
 !		------------------------------
 !
-IF( .NOT.ALLOCATED(XKER_Q_RACCSS)) ALLOCATE( XKER_Q_RACCSS(NACCLBDAS,NACCLBDAR) )
-IF( .NOT.ALLOCATED(XKER_Q_RACCS)) ALLOCATE( XKER_Q_RACCS (NACCLBDAS,NACCLBDAR) )
-IF( .NOT.ALLOCATED(XKER_Q_SACCRG)) ALLOCATE( XKER_Q_SACCRG(NACCLBDAR,NACCLBDAS) )
+IF( .NOT.ALLOCATED(XKER_Q_RACCSS)) ALLOCATE( XKER_Q_RACCSS(IACCLBDAS,IACCLBDAR) )
+IF( .NOT.ALLOCATED(XKER_Q_RACCS)) ALLOCATE( XKER_Q_RACCS (IACCLBDAS,IACCLBDAR) )
+IF( .NOT.ALLOCATED(XKER_Q_SACCRG)) ALLOCATE( XKER_Q_SACCRG(IACCLBDAR,IACCLBDAS) )
 !
-XFQRACCS = (XPI / 4.0) * XCCS * XCCR * (PRHO00**XCEXVT)
+IF (HELEC == 'ELE4') THEN
+  XFQRACCS = (XPI / 4.0) * PRHO00**ZCEXVT
+ELSE
+  XFQRACCS = (XPI / 4.0) * ZCCS * ZCCR * (PRHO00**ZCEXVT)
+END IF
 !
-XLBQRACCS1  =      MOMG(XALPHAR,XNUR,2.+XFR)
-XLBQRACCS2  = 2. * MOMG(XALPHAR,XNUR,1.+XFR) * MOMG(XALPHAS,XNUS,1.)
-XLBQRACCS3  =      MOMG(XALPHAR,XNUR,XFR)    * MOMG(XALPHAS,XNUS,2.)
+XLBQRACCS1  =      MOMG(ZALPHAR,ZNUR,2.+XFR)
+XLBQRACCS2  = 2. * MOMG(ZALPHAR,ZNUR,1.+XFR) * MOMG(ZALPHAS,ZNUS,1.)
+XLBQRACCS3  =      MOMG(ZALPHAR,ZNUR,XFR)    * MOMG(ZALPHAS,ZNUS,2.)
 !
-XLBQSACCRG1 =      MOMG(XALPHAS,XNUS,2.+XFS)
-XLBQSACCRG2 = 2. * MOMG(XALPHAS,XNUS,1.+XFS) * MOMG(XALPHAR,XNUR,1.)
-XLBQSACCRG3 =      MOMG(XALPHAS,XNUS,XFS)    * MOMG(XALPHAR,XNUR,2.)
+XLBQSACCRG1 =      MOMG(ZALPHAS,ZNUS,2.+XFS)
+XLBQSACCRG2 = 2. * MOMG(ZALPHAS,ZNUS,1.+XFS) * MOMG(ZALPHAR,ZNUR,1.)
+XLBQSACCRG3 =      MOMG(ZALPHAS,ZNUS,XFS)    * MOMG(ZALPHAR,ZNUR,2.)
 !
-ZESR = 1.0
+! These values are pasted from ini_rain_ice (7.2.2)
+IND      = 50   ! Interval number, collection efficiency and infinite diameter
+ZESR     = 1.0  ! factor used to integrate the dimensional distributions when
+ZFDINFTY = 20.0 ! computing the kernels XKER_RACCSS, XKER_RACCS and XKER_SACCRG
 !
-CALL RRCOLSS (KND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-              ZESR, XFR, XCS, XDS, 0., XCR, XDR,                          &
-              XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
-              PFDINFTY, XKER_Q_RACCSS, XAG, XBS, XAS                      )
+CALL RRCOLSS (IND, ZALPHAS, ZNUS, ZALPHAR, ZNUR,                          &
+              ZESR, XFR, ZCS, ZDS, 0., ZCR, ZDR,                          &
+              ZACCLBDAS_MAX, ZACCLBDAR_MAX, ZACCLBDAS_MIN, ZACCLBDAR_MIN, &
+              ZFDINFTY, XKER_Q_RACCSS, ZAG, ZBS, ZAS                      )
 !
-CALL RZCOLX  (KND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-              ZESR, XFR, XCS, XDS, 0., XCR, XDR, 0.,                      &
-              XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
-              PFDINFTY, XKER_Q_RACCS                                      )
+CALL RZCOLX  (IND, ZALPHAS, ZNUS, ZALPHAR, ZNUR,                          &
+              ZESR, XFR, ZCS, ZDS, 0., ZCR, ZDR, 0.,                      &
+              ZACCLBDAS_MAX, ZACCLBDAR_MAX, ZACCLBDAS_MIN, ZACCLBDAR_MIN, &
+              ZFDINFTY, XKER_Q_RACCS                                      )
 !
-CALL RSCOLRG (KND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-              ZESR, XFS, XCS, XDS, 0., XCR, XDR,                          &
-              XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
-              PFDINFTY, XKER_Q_SACCRG, XAG, XBS, XAS                      )
+CALL RSCOLRG (IND, ZALPHAS, ZNUS, ZALPHAR, ZNUR,                          &
+              ZESR, XFS, ZCS, ZDS, 0., ZCR, ZDR,                          &
+              ZACCLBDAS_MAX, ZACCLBDAR_MAX, ZACCLBDAS_MIN, ZACCLBDAR_MIN, &
+              ZFDINFTY, XKER_Q_SACCRG, ZAG, ZBS, ZAS                      )
 !
 !-------------------------------------------------------------------------------
 !
@@ -870,20 +1157,24 @@ CALL RSCOLRG (KND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
 !
 !*      11.1    charge transfer associated to mass transfer
 !
-IF( .NOT.ALLOCATED(XKER_Q_SDRYG)) ALLOCATE( XKER_Q_SDRYG(NDRYLBDAG,NDRYLBDAS) )
+IF( .NOT.ALLOCATED(XKER_Q_SDRYG)) ALLOCATE( XKER_Q_SDRYG(IDRYLBDAG,IDRYLBDAS) )
 !
-XFQSDRYG = (XPI / 4.0) * XCCS * XCCG * (PRHO00**XCEXVT)
+IF (HELEC == 'ELE4') THEN
+  XFQSDRYG = (XPI / 4.0) * (PRHO00**ZCEXVT)
+ELSE
+  XFQSDRYG = (XPI / 4.0) * ZCCS * ZCCG * (PRHO00**ZCEXVT)
+END IF
 !
-XLBQSDRYG1 =      MOMG(XALPHAS,XNUS,2.+XFS)
-XLBQSDRYG2 = 2. * MOMG(XALPHAS,XNUS,1.+XFS) * MOMG(XALPHAG,XNUG,1.)
-XLBQSDRYG3 =      MOMG(XALPHAS,XNUS,XFS)    * MOMG(XALPHAG,XNUG,2.)
+XLBQSDRYG1 =      MOMG(ZALPHAS,ZNUS,2.+XFS)
+XLBQSDRYG2 = 2. * MOMG(ZALPHAS,ZNUS,1.+XFS) * MOMG(ZALPHAG,ZNUG,1.)
+XLBQSDRYG3 =      MOMG(ZALPHAS,ZNUS,XFS)    * MOMG(ZALPHAG,ZNUG,2.)
 !
 ZEGS = 1. ! also initialized in ini_rain_ice_elec
 !
-CALL RZCOLX (KND, XALPHAG, XNUG, XALPHAS, XNUS,                          &
-             ZEGS, XFS, XCG, XDG, 0., XCS, XDS, 0.,                      &
-             XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, &
-             PFDINFTY, XKER_Q_SDRYG                                      )
+CALL RZCOLX (IND, ZALPHAG, ZNUG, ZALPHAS, ZNUS,                          &
+             ZEGS, XFS, ZCG, ZDG, 0., ZCS, ZDS, 0.,                      &
+             ZDRYLBDAG_MAX, ZDRYLBDAS_MAX, ZDRYLBDAG_MIN, ZDRYLBDAS_MIN, &
+             ZFDINFTY, XKER_Q_SDRYG                                      )
 !
 !
 !*      11.2    NI process: Heldson et Farley (1987) parameterization
@@ -892,39 +1183,46 @@ IF (CNI_CHARGING == 'HELFA') THEN
   XHIDRYG = 2.E-15   ! Charge exchanged per collision between ice and graupel
   XHSDRYG = 2.E-14
 !
-  XFQSDRYGBH   = (XPI / 4.0) * XCCG * XCCS * (PRHO00**(XCEXVT)) * XHSDRYG 
+  IF (HELEC == 'ELE4') THEN
+    XFQSDRYGBH   = (XPI / 4.0) * PRHO00**(ZCEXVT) * XHSDRYG 
+  ELSE
+    XFQSDRYGBH   = (XPI / 4.0) * ZCCG * ZCCS * (PRHO00**(ZCEXVT)) * XHSDRYG
+  END IF
 ! 
-  XLBQSDRYGB4H =      MOMG(XALPHAS,XNUS,2.)  
-  XLBQSDRYGB5H = 2. * MOMG(XALPHAS,XNUS,1.) * MOMG(XALPHAG,XNUG,1.) 
-  XLBQSDRYGB6H =      MOMG(XALPHAG,XNUG,2.) 
+  XLBQSDRYGB4H =      MOMG(ZALPHAS,ZNUS,2.)  
+  XLBQSDRYGB5H = 2. * MOMG(ZALPHAS,ZNUS,1.) * MOMG(ZALPHAG,ZNUG,1.) 
+  XLBQSDRYGB6H =      MOMG(ZALPHAG,ZNUG,2.) 
 !
-  IF( .NOT.ALLOCATED(XKER_Q_SDRYGB)) ALLOCATE( XKER_Q_SDRYGB(NDRYLBDAG,NDRYLBDAS) )
-  CALL RZCOLX (KND, XALPHAG, XNUG, XALPHAS, XNUS,                          &
-               ZEGS, 0., XCG, XDG, 0., XCS, XDS, 0.,                       &
-               XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, &
-               PFDINFTY, XKER_Q_SDRYGB                                     )
+  IF( .NOT.ALLOCATED(XKER_Q_SDRYGB)) ALLOCATE( XKER_Q_SDRYGB(IDRYLBDAG,IDRYLBDAS) )
+  CALL RZCOLX (IND, ZALPHAG, ZNUG, ZALPHAS, ZNUS,                          &
+               ZEGS, 0., ZCG, ZDG, 0., ZCS, ZDS, 0.,                       &
+               ZDRYLBDAG_MAX, ZDRYLBDAS_MAX, ZDRYLBDAG_MIN, ZDRYLBDAS_MIN, &
+               ZFDINFTY, XKER_Q_SDRYGB                                     )
 ! Delta vqb1_sg
 ENDIF
 !
 !
 !*      11.3    NI process: Gardiner et al. (1985) parameterization
 !
-IF (CNI_CHARGING == 'GARDI') THEN 
-  XFQIDRYGBG   = (XPI / 4.0) * XCCG * (PRHO00**(4. * XCEXVT)) * XCG**4. * &
-                  7.3
-  XLBQIDRYGBG  = MOMG(XALPHAI,XNUI,4.) * MOMG(XALPHAG,XNUG,2.+4.*XDG)
+IF (CNI_CHARGING == 'GARDI') THEN
+  IF (HELEC == 'ELE4') THEN
+    XFQIDRYGBG   = (XPI / 4.0) * PRHO00**(4.*ZCEXVT) * ZCG**4. * 7.3
+    XFQSDRYGBG   = (XPI / 4.0) * PRHO00**(4.*ZCEXVT) * 7.3
+  ELSE
+    XFQIDRYGBG   = (XPI / 4.0) * ZCCG * (PRHO00**(4.*ZCEXVT)) * ZCG**4. * 7.3
+    XFQSDRYGBG   = (XPI / 4.0) * ZCCS * ZCCG * (PRHO00**(4.*ZCEXVT)) * 7.3
+  END IF
+  XLBQIDRYGBG  = MOMG(ZALPHAI,ZNUI,4.) * MOMG(ZALPHAG,ZNUG,2.+4.*ZDG)
 !
-  XFQSDRYGBG   = (XPI / 4.0) * XCCS * XCCG * (PRHO00**(4. * XCEXVT)) *    &
-                  7.3
-  XLBQSDRYGB4G =      MOMG(XALPHAS,XNUS,4.) * MOMG(XALPHAG,XNUG,2.)
-  XLBQSDRYGB5G = 2. * MOMG(XALPHAS,XNUS,5.) * MOMG(XALPHAG,XNUG,1.)
-  XLBQSDRYGB6G =      MOMG(XALPHAS,XNUS,6.)    
+  XLBQSDRYGB4G =      MOMG(ZALPHAS,ZNUS,4.) * MOMG(ZALPHAG,ZNUG,2.)
+  XLBQSDRYGB5G = 2. * MOMG(ZALPHAS,ZNUS,5.) * MOMG(ZALPHAG,ZNUG,1.)
+  XLBQSDRYGB6G =      MOMG(ZALPHAS,ZNUS,6.)    
 !
-  IF( .NOT.ALLOCATED(XKER_Q_SDRYGB)) ALLOCATE( XKER_Q_SDRYGB(NDRYLBDAG,NDRYLBDAS) )
-  CALL VQZCOLX (KND, XALPHAG, XNUG, XALPHAS, XNUS,                          &
-                ZEGS, 4., XCG, XDG, XCS, XDS, 4.,                           &
-                XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, &
-                PFDINFTY, XKER_Q_SDRYGB                                     )
+  IF( .NOT.ALLOCATED(XKER_Q_SDRYGB)) ALLOCATE( XKER_Q_SDRYGB(IDRYLBDAG,IDRYLBDAS) )
+  CALL VQZCOLX (IND, ZALPHAG, ZNUG, ZALPHAS, ZNUS,                          &
+                ZEGS, 4., ZCG, ZDG, ZCS, ZDS, 4.,                           &
+                ZDRYLBDAG_MAX, ZDRYLBDAS_MAX, ZDRYLBDAG_MIN, ZDRYLBDAS_MIN, &
+                ZFDINFTY, XKER_Q_SDRYGB                                     )
 END IF
 !
 !
@@ -935,25 +1233,30 @@ IF (CNI_CHARGING == 'SAUN1' .OR. CNI_CHARGING == 'SAUN2' .OR. &
     CNI_CHARGING == 'SAP98' .OR.                              &
     CNI_CHARGING == 'BSMP1' .OR. CNI_CHARGING == 'BSMP2' .OR. &
     CNI_CHARGING == 'TEEWC' .OR. CNI_CHARGING == 'TERAR') THEN
-  XFQIDRYGBS   = (XPI / 4.0) * XCCG
-  XFQSDRYGBS   = (XPI / 4.0) * XCCS * XCCG
-  XLBQSDRYGB1S = MOMG(XALPHAG,XNUG,2.)
-  XLBQSDRYGB2S = 2. * MOMG(XALPHAG,XNUG,1.)
+  IF (HELEC == 'ELE4') THEN
+    XFQIDRYGBS   = XPI / 4.0
+    XFQSDRYGBS   = XPI / 4.0
+  ELSE
+    XFQIDRYGBS   = (XPI / 4.0) * ZCCG
+    XFQSDRYGBS   = (XPI / 4.0) * ZCCS * ZCCG
+  END IF
+  XLBQSDRYGB1S = MOMG(ZALPHAG,ZNUG,2.)
+  XLBQSDRYGB2S = 2. * MOMG(ZALPHAG,ZNUG,1.)
 !
-  IF( .NOT.ALLOCATED(XKER_Q_SDRYGB1)) ALLOCATE( XKER_Q_SDRYGB1(NDRYLBDAG,NDRYLBDAS) )
-  IF( .NOT.ALLOCATED(XKER_Q_SDRYGB2)) ALLOCATE( XKER_Q_SDRYGB2(NDRYLBDAG,NDRYLBDAS) )
+  IF( .NOT.ALLOCATED(XKER_Q_SDRYGB1)) ALLOCATE( XKER_Q_SDRYGB1(IDRYLBDAG,IDRYLBDAS) )
+  IF( .NOT.ALLOCATED(XKER_Q_SDRYGB2)) ALLOCATE( XKER_Q_SDRYGB2(IDRYLBDAG,IDRYLBDAS) )
 !
 ! Positive charging region
-  CALL VQZCOLX (KND, XALPHAG, XNUG, XALPHAS, XNUS,                          &
-                ZEGS, XSMP, XCG, XDG, XCS, XDS, (1.+XSNP),                  &
-                XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, &
-                PFDINFTY, XKER_Q_SDRYGB1                                    )
+  CALL VQZCOLX (IND, ZALPHAG, ZNUG, ZALPHAS, ZNUS,                          &
+                ZEGS, XSMP, ZCG, ZDG, ZCS, ZDS, (1.+XSNP),                  &
+                ZDRYLBDAG_MAX, ZDRYLBDAS_MAX, ZDRYLBDAG_MIN, ZDRYLBDAS_MIN, &
+                ZFDINFTY, XKER_Q_SDRYGB1                                    )
 !
 ! Negative charging region
-  CALL VQZCOLX (KND, XALPHAG, XNUG, XALPHAS, XNUS,                          &
-                ZEGS, XSMN, XCG, XDG, XCS, XDS, (1.+XSNN),                  &
-                XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, &
-                PFDINFTY, XKER_Q_SDRYGB2                                    )
+  CALL VQZCOLX (IND, ZALPHAG, ZNUG, ZALPHAS, ZNUS,                          &
+                ZEGS, XSMN, ZCG, ZDG, ZCS, ZDS, (1.+XSNN),                  &
+                ZDRYLBDAG_MAX, ZDRYLBDAS_MAX, ZDRYLBDAG_MIN, ZDRYLBDAS_MIN, &
+                ZFDINFTY, XKER_Q_SDRYGB2                                    )
 ENDIF
 !
 !
@@ -962,30 +1265,38 @@ ENDIF
 IF (CNI_CHARGING == 'TAKAH') THEN
 !
 ! IDRYG_boun
-  XFQIDRYGBT1 = (XPI / 4.0) * XCCG * XCG
-  XFQIDRYGBT2 = 10.0 * MOMG(XALPHAG,XNUG,2.+XDG) 
-  XFQIDRYGBT3 = 5.0 * XCG * MOMG(XALPHAI,XNUI,2.) *               &
-                MOMG(XALPHAG,XNUG,2.+2.*XDG) / ((2.E-4)**2 * 8. * & 
-               (XAI * MOMG(XALPHAI,XNUI,XBI))**(2 / XBI))  
+  IF (HELEC == 'ELE4') THEN
+    XFQIDRYGBT1 = (XPI / 4.0) * ZCG
+  ELSE
+    XFQIDRYGBT1 = (XPI / 4.0) * ZCCG * ZCG
+  END IF
+  XFQIDRYGBT2 = 10.0 * MOMG(ZALPHAG,ZNUG,2.+ZDG) 
+  XFQIDRYGBT3 = 5.0 * ZCG * MOMG(ZALPHAI,ZNUI,2.) *               &
+                MOMG(ZALPHAG,ZNUG,2.+2.*ZDG) / ((2.E-4)**2 * 8. * & 
+               (ZAI * MOMG(ZALPHAI,ZNUI,ZBI))**(2./ZBI))  
 !
 ! SDRYG_boun
-  XFQSDRYGBT1  = (XPI / 4.0) * XCCG * XCCS
-  XFQSDRYGBT2  = XCG * MOMG(XALPHAG,XNUG,XDG) * MOMG(XALPHAS,XNUS,2.)
-  XFQSDRYGBT3  = XCS * MOMG(XALPHAS,XNUS,2.+XDS)
-  XFQSDRYGBT4  = XCG * MOMG(XALPHAG,XNUG,2.+XDG)
-  XFQSDRYGBT5  = XCS * MOMG(XALPHAG,XNUG,2.) * MOMG(XALPHAS,XNUS,XDS)
-  XFQSDRYGBT6  = 2. * XCG * MOMG(XALPHAG,XNUG,1.+XDG) * MOMG(XALPHAS,XNUS,1.)
-  XFQSDRYGBT7  = 2. * XCS * MOMG(XALPHAG,XNUG,1.) * MOMG(XALPHAS,XNUS,1.+XDS)
+  IF (HELEC == 'ELE4') THEN
+    XFQSDRYGBT1  = XPI / 4.0
+  ELSE
+    XFQSDRYGBT1  = (XPI / 4.0) * ZCCG * ZCCS
+  END IF
+  XFQSDRYGBT2  = ZCG * MOMG(ZALPHAG,ZNUG,ZDG) * MOMG(ZALPHAS,ZNUS,2.)
+  XFQSDRYGBT3  = ZCS * MOMG(ZALPHAS,ZNUS,2.+ZDS)
+  XFQSDRYGBT4  = ZCG * MOMG(ZALPHAG,ZNUG,2.+ZDG)
+  XFQSDRYGBT5  = ZCS * MOMG(ZALPHAG,ZNUG,2.) * MOMG(ZALPHAS,ZNUS,ZDS)
+  XFQSDRYGBT6  = 2. * ZCG * MOMG(ZALPHAG,ZNUG,1.+ZDG) * MOMG(ZALPHAS,ZNUS,1.)
+  XFQSDRYGBT7  = 2. * ZCS * MOMG(ZALPHAG,ZNUG,1.) * MOMG(ZALPHAS,ZNUS,1.+ZDS)
   XFQSDRYGBT8  = 5. / ((1.E-4)**2 * 8.)
-  XFQSDRYGBT9  = MOMG(XALPHAG,XNUG,2.) * MOMG(XALPHAS,XNUS,2.)
-  XFQSDRYGBT10 = MOMG(XALPHAS,XNUS,4.)
-  XFQSDRYGBT11 = 2. * MOMG(XALPHAG,XNUG,1.) * MOMG(XALPHAS,XNUS,3.)
+  XFQSDRYGBT9  = MOMG(ZALPHAG,ZNUG,2.) * MOMG(ZALPHAS,ZNUS,2.)
+  XFQSDRYGBT10 = MOMG(ZALPHAS,ZNUS,4.)
+  XFQSDRYGBT11 = 2. * MOMG(ZALPHAG,ZNUG,1.) * MOMG(ZALPHAS,ZNUS,3.)
 !
-  IF( .NOT.ALLOCATED(XKER_Q_SDRYGB)) ALLOCATE( XKER_Q_SDRYGB(NDRYLBDAG,NDRYLBDAS) )
-  CALL VQZCOLX (KND, XALPHAG, XNUG, XALPHAS, XNUS,                          &
-                ZEGS, 2., XCG, XDG, XCS, XDS, 2.,                           &
-                XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, &
-                PFDINFTY, XKER_Q_SDRYGB                                     )
+  IF( .NOT.ALLOCATED(XKER_Q_SDRYGB)) ALLOCATE( XKER_Q_SDRYGB(IDRYLBDAG,IDRYLBDAS) )
+  CALL VQZCOLX (IND, ZALPHAG, ZNUG, ZALPHAS, ZNUS,                          &
+                ZEGS, 2., ZCG, ZDG, ZCS, ZDS, 2.,                           &
+                ZDRYLBDAG_MAX, ZDRYLBDAS_MAX, ZDRYLBDAG_MIN, ZDRYLBDAS_MIN, &
+                ZFDINFTY, XKER_Q_SDRYGB                                     )
 END IF
 !
 !
@@ -996,15 +1307,19 @@ IF (CNI_CHARGING == 'TAKAH' .OR. CNI_CHARGING == 'SAP98' .OR. &
     CNI_CHARGING == 'GARDI' .OR.                              &
     CNI_CHARGING == 'BSMP1' .OR. CNI_CHARGING == 'BSMP2' .OR. &
     CNI_CHARGING == 'TEEWC' .OR. CNI_CHARGING == 'TERAR') THEN
-  XAUX_LIM  = (XPI / 4.0) * XCCG * XCCS
-  XAUX_LIM1 =      MOMG(XALPHAS,XNUS,2.)  
-  XAUX_LIM2 = 2. * MOMG(XALPHAS,XNUS,1.) * MOMG(XALPHAG,XNUG,1.) 
-  XAUX_LIM3 =      MOMG(XALPHAG,XNUG,2.)
-  IF( .NOT.ALLOCATED(XKER_Q_LIMSG)) ALLOCATE( XKER_Q_LIMSG(NDRYLBDAG,NDRYLBDAS) )
-  CALL RZCOLX (KND, XALPHAG, XNUG, XALPHAS, XNUS,                          &
-               ZEGS, 0., XCG, XDG, 0., XCS, XDS, 0.,                       &
-               XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, &
-               PFDINFTY, XKER_Q_LIMSG)
+  IF (HELEC == 'ELE4') THEN
+    XAUX_LIM  = XPI / 4.0
+  ELSE
+    XAUX_LIM  = (XPI / 4.0) * ZCCG * ZCCS
+  END IF
+  XAUX_LIM1 =      MOMG(ZALPHAS,ZNUS,2.)  
+  XAUX_LIM2 = 2. * MOMG(ZALPHAS,ZNUS,1.) * MOMG(ZALPHAG,ZNUG,1.) 
+  XAUX_LIM3 =      MOMG(ZALPHAG,ZNUG,2.)
+  IF( .NOT.ALLOCATED(XKER_Q_LIMSG)) ALLOCATE( XKER_Q_LIMSG(IDRYLBDAG,IDRYLBDAS) )
+  CALL RZCOLX (IND, ZALPHAG, ZNUG, ZALPHAS, ZNUS,                          &
+               ZEGS, 0., ZCG, ZDG, 0., ZCS, ZDS, 0.,                       &
+               ZDRYLBDAG_MAX, ZDRYLBDAS_MAX, ZDRYLBDAG_MIN, ZDRYLBDAS_MIN, &
+               ZFDINFTY, XKER_Q_LIMSG)
 ENDIF
 !
 !
@@ -1013,20 +1328,24 @@ ENDIF
 !*	12.	DRY GROWTH OF GRAUPELN BY CAPTURE OF RAINDROP
 !		---------------------------------------------
 !
-IF( .NOT.ALLOCATED(XKER_Q_RDRYG)) ALLOCATE( XKER_Q_RDRYG(NDRYLBDAG,NDRYLBDAR) ) 
+IF( .NOT.ALLOCATED(XKER_Q_RDRYG)) ALLOCATE( XKER_Q_RDRYG(IDRYLBDAG,IDRYLBDAR) ) 
 !
-XFQRDRYG = (XPI / 4.0) * XCCG * XCCR * (PRHO00**XCEXVT)
+IF (HELEC == 'ELE4') THEN
+  XFQRDRYG = (XPI / 4.0) * PRHO00**ZCEXVT
+ELSE
+  XFQRDRYG = (XPI / 4.0) * ZCCG * ZCCR * (PRHO00**ZCEXVT)
+END IF
 !
-XLBQRDRYG1 =      MOMG(XALPHAR,XNUR,2.+XFR)
-XLBQRDRYG2 = 2. * MOMG(XALPHAR,XNUR,1.+XFR) * MOMG(XALPHAG,XNUG,1.)
-XLBQRDRYG3 =      MOMG(XALPHAR,XNUR,XFR)    * MOMG(XALPHAG,XNUG,2.)
+XLBQRDRYG1 =      MOMG(ZALPHAR,ZNUR,2.+XFR)
+XLBQRDRYG2 = 2. * MOMG(ZALPHAR,ZNUR,1.+XFR) * MOMG(ZALPHAG,ZNUG,1.)
+XLBQRDRYG3 =      MOMG(ZALPHAR,ZNUR,XFR)    * MOMG(ZALPHAG,ZNUG,2.)
 !
 ZEGR = 1.0 
 !
-CALL RZCOLX (KND, XALPHAG, XNUG, XALPHAR, XNUR,                            & 
-             ZEGR, XFR, XCG, XDG, 0., XCR, XDR, 0.,                        &
-             XDRYLBDAG_MAX, XDRYLBDAR_MAX, XDRYLBDAG_MIN, XDRYLBDAR_MIN,   &
-             PFDINFTY, XKER_Q_RDRYG                                        )
+CALL RZCOLX (IND, ZALPHAG, ZNUG, ZALPHAR, ZNUR,                            & 
+             ZEGR, XFR, ZCG, ZDG, 0., ZCR, ZDR, 0.,                        &
+             ZDRYLBDAG_MAX, ZDRYLBDAR_MAX, ZDRYLBDAG_MIN, ZDRYLBDAR_MIN,   &
+             ZFDINFTY, XKER_Q_RDRYG                                        )
 !
 !
 !-------------------------------------------------------------------------------
@@ -1034,15 +1353,17 @@ CALL RZCOLX (KND, XALPHAG, XNUG, XALPHAR, XNUR,                            &
 !*	13.	UPDATE THE Q=f(D) RELATION
 !		--------------------------
 !
-XFQUPDC   = 400.E6 * MOMG(XALPHACQ,XNUCQ,XFC) / XLBDACQ**XFC ! Nc~400E6 m-3 as 
+IF (HCLOUD(1:3) == 'ICE') THEN
+  XFQUPDC   = 400.E6 * MOMG(XALPHACQ,XNUCQ,XFC) / XLBDACQ**XFC ! Nc~400E6 m-3 as 
                                                           ! proposed for RCHONI
-!
-XFQUPDR   = XCCR * MOMG(XALPHAR,XNUR,XFR)
-XEXFQUPDI = (XFI/XBI)
-XFQUPDI   = MOMG(XALPHAI,XNUI,XFI) * (XAI*MOMG(XALPHAI,XNUI,XBI))**(-XEXFQUPDI)
-XFQUPDS   = XCCS * MOMG(XALPHAS,XNUS,XFS)
-XFQUPDG   = XCCG * MOMG(XALPHAG,XNUG,XFG)
-XFQUPDH   = XCCH * MOMG(XALPHAH,XNUH,XFH)
+  !
+  XFQUPDR   = ZCCR * MOMG(ZALPHAR,ZNUR,XFR)
+  XEXFQUPDI = XFI / ZBI
+  XFQUPDI   = MOMG(ZALPHAI,ZNUI,XFI) * (ZAI * MOMG(ZALPHAI,ZNUI,ZBI))**(-XEXFQUPDI)
+END IF
+XFQUPDS   = ZCCS * MOMG(ZALPHAS,ZNUS,XFS)
+XFQUPDG   = ZCCG * MOMG(ZALPHAG,ZNUG,XFG)
+XFQUPDH   = ZCCH * MOMG(ZALPHAH,ZNUH,XFH)
 !
 !
 !------------------------------------------------------------------------------
@@ -1057,39 +1378,17 @@ XEBOUND    = 0.1
 XALPHA_IND = 0.07    ! moderate inductive charging
 XCOS_THETA = 0.2  
 !
-XIND1 = (XPI**3 / 8.) * (15.E-6)**2 * &
-         XCG * 400.E6 * XCCG *        &
-        XCOLCG_IND * XEBOUND * XALPHA_IND
-XIND2 = XPI * XEPSILON * XCOS_THETA * MOMG(XALPHAG,XNUG,2.+XDG)
-XIND3 = MOMG(XALPHAG,XNUG,XDG+XFG) / 3.
-!
-!-------------------------------------------------------------------------------
-!
-!*	15.	LIGHTNING FLASHES
-!		-----------------
-! 
-XFQLIGHTC  = 660. * MOMG(3.,3.,2.) / MOMG(3.,3.,3.)   ! PI/A*lbda^(b-2) = 660.
-!
-XFQLIGHTR  = XPI * XCCR * MOMG(XALPHAR,XNUR,2.)
-XEXQLIGHTR = XCXR - 2.
-!
-XEXQLIGHTI = 2. / XBI
-XFQLIGHTI  = XPI / 4. * MOMG(XALPHAI,XNUI,2.) *                   &
-            (XAI * MOMG(XALPHAI,XNUI,XBI))**(-XEXQLIGHTI)
-!
-XFQLIGHTS  = XPI * XCCS * MOMG(XALPHAS,XNUS,2.)
-XEXQLIGHTS = XCXS - 2.
-!
-XFQLIGHTG  = XPI * XCCG * MOMG(XALPHAG,XNUG,2.)
-XEXQLIGHTG = XCXG - 2.
-!
-XFQLIGHTH  = XPI * XCCH * MOMG(XALPHAH,XNUH,2.)
-XEXQLIGHTH = XCXH - 2.
-!
-IF( .NOT.ALLOCATED(XNEUT_POS)) ALLOCATE( XNEUT_POS(NLGHTMAX) )
-IF( .NOT.ALLOCATED(XNEUT_NEG)) ALLOCATE( XNEUT_NEG(NLGHTMAX) )
-XNEUT_POS(:) = 0.
-XNEUT_NEG(:) = 0.
+IF (HELEC == 'ELE4') THEN
+  XIND1 = (XPI**3 / 8.) * (15.E-6)**2 * &
+           ZCG * 400.E6 *               &
+          XCOLCG_IND * XEBOUND * XALPHA_IND
+ELSE
+  XIND1 = (XPI**3 / 8.) * (15.E-6)**2 * &
+           ZCG * 400.E6 * ZCCG *        &
+           XCOLCG_IND * XEBOUND * XALPHA_IND
+END IF
+XIND2 = XPI * XEPSILON * XCOS_THETA * MOMG(ZALPHAG,ZNUG,2.+ZDG)
+XIND3 = MOMG(ZALPHAG,ZNUG,ZDG+XFG) / 3.
 !
 !-------------------------------------------------------------------------------
 !

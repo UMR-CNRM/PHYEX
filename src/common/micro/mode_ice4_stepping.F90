@@ -9,14 +9,15 @@ CONTAINS
 SUBROUTINE ICE4_STEPPING(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                         &LDSIGMA_RC, LDAUCV_ADJU, LDEXT_TEND, &
                         &KPROMA, KMICRO, LDMICRO, PTSTEP, &
-                        &KRR, &
+                        &KRR, OSAVE_MICRO, OELEC, &
                         &PEXN, PRHODREF, K1, K2, &
                         &PPRES, PCF, PSIGMA_RC, &
                         &PCIT, &
                         &PVART, &
                         &PHLC_HCF, PHLC_HRC, &
                         &PHLI_HCF, PHLI_HRI, PRAINFR, &
-                        &PEXTPK, PBU_SUM, PRREVAV)
+                        &PEXTPK, PBU_SUM, PRREVAV, &
+                        &PLATHAM_IAGGS)
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -83,6 +84,8 @@ INTEGER,                  INTENT(IN)    :: KMICRO ! Case r_x>0 locations
 LOGICAL, DIMENSION(KPROMA), INTENT(IN)  :: LDMICRO
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
+LOGICAL,                  INTENT(IN)    :: OSAVE_MICRO   ! if true, save the microphysical tendencies
+LOGICAL,                  INTENT(IN)    :: OELEC         ! if true, cloud electricity is activated
 !
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PEXN    ! Exner function
 REAL,    DIMENSION(KPROMA),                     INTENT(IN)    :: PRHODREF! Reference density
@@ -99,7 +102,9 @@ REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PHLI_HCF
 REAL,    DIMENSION(D%NIJT,D%NKT),               INTENT(INOUT) :: PRAINFR
 REAL,    DIMENSION(KPROMA,0:7),                 INTENT(INOUT) :: PEXTPK !To take into acount external tendencies inside the splitting
 REAL,    DIMENSION(KPROMA, IBUNUM-IBUNUM_EXTRA),INTENT(OUT)   :: PBU_SUM
-REAL,    DIMENSION(KPROMA),                     INTENT(INOUT) :: PRREVAV
+REAL,    DIMENSION(KPROMA),                     INTENT(OUT)   :: PRREVAV
+REAL,    DIMENSION(MERGE(KPROMA,0,OELEC)),      INTENT(IN)    :: PLATHAM_IAGGS ! E Function to simulate
+                                                                               ! enhancement of IAGGS
 !
 !
 !*       0.2   Declarations of local variables :
@@ -157,7 +162,7 @@ IF (LHOOK) CALL DR_HOOK('ICE4_STEPPING', 0, ZHOOK_HANDLE)
 !
 ZINV_TSTEP=1./PTSTEP
 !
-IF(BUCONF%LBU_ENABLE) THEN
+IF(BUCONF%LBU_ENABLE .OR. OSAVE_MICRO) THEN
   DO JV=1, IBUNUM-IBUNUM_EXTRA
     PBU_SUM(:, JV)=0.
   ENDDO
@@ -256,10 +261,12 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     CALL ICE4_TENDENCIES(CST, PARAMI, ICEP, ICED, BUCONF, &
                         &KPROMA, KMICRO, &
                         &KRR, LSOFT, LLCOMPUTE, &
+                        &OSAVE_MICRO, OELEC, &
                         &PEXN, PRHODREF, ZLVFACT, ZLSFACT, K1, K2, &
                         &PPRES, PCF, PSIGMA_RC, &
                         &PCIT, &
                         &ZZT, PVART, &
+                        &PLATHAM_IAGGS, &
                         &ZBU_INST, &
                         &ZRS_TEND, ZRG_TEND, ZRH_TEND, ZSSI, &
                         &ZA, ZB, &
@@ -399,7 +406,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     !
     !***       4.8 Mixing ratio change due to each process
     !
-    IF(BUCONF%LBU_ENABLE) THEN
+    IF(BUCONF%LBU_ENABLE .OR. OSAVE_MICRO) THEN
       !Mixing ratio change due to a tendency
       DO JV=1, IBUNUM-IBUNUM_MR-IBUNUM_EXTRA
         DO JL=1, KMICRO
