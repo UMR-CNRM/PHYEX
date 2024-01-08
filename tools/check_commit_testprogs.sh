@@ -503,9 +503,9 @@ if [ $run -ge 1 -a "$perffile" != "" ]; then
 
         #Cleaning to suppress old results that may be confusing in case of a crash during the run
         if [ $onlyIfNeeded -eq 0 ]; then
-          for t in $(echo $tests | sed 's/,/ /g'); do
-            if [ -d tests/with_fcm/arch_${archfile}/${t}${perf_extrapolation_tag} ]; then
-              rm -rf tests/with_fcm/arch_${archfile}/${t}${perf_extrapolation_tag}
+          for t2 in $(echo $tests | sed 's/,/ /g'); do
+            if [ -d tests/with_fcm/arch_${archfile}/${t2}${perf_extrapolation_tag} ]; then
+              rm -rf tests/with_fcm/arch_${archfile}/${t2}${perf_extrapolation_tag}
             fi
           done
         fi

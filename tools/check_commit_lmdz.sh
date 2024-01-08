@@ -253,6 +253,7 @@ if [ $packcreation -eq 1 ]; then
     for name in `grep -i 'END MODULE' modd*n.F90 | cut -d: -f1 | sed -e 's/n.F90//'` ; do mv ${name}n.F90 ${name}_n.F90 ; done
     mv hypgeo.F90 modi_hypgeo.F90
     mv hypser.f90 modi_hypser.F90
+    mv momg.F90 modi_momg.F90
     mv tools.F90 mode_tools.F90
     mv shuman_mf.F90 modi_shuman_mf.F90
     mv shuman_phy.F90 mode_shuman_phy.F90
