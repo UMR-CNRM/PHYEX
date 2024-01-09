@@ -676,6 +676,33 @@ if [ $run -ge 1 ]; then
           #The elapsed time is not relevant when the model runs with a queuing system (HPC)
           echo "$commit ial $t $(($t2-$t1))" >> "$perffile"
         fi
+
+        #Profiling
+        firstfile=1
+        for file in drhook.prof.*; do
+          if [ $firstfile -eq 1 ]; then
+            cp $file drhook.prof.concat
+            firstfile=0
+          else
+            #append only relevant lines
+            grep -e '^ *[0-9]' $file >> drhook.prof.concat
+          fi
+        done
+        firstLine=$(grep -m 1 -n "^ *1" drhook.prof.concat | cut -d: -f1)
+        python3 -c "import numpy, pandas
+d = {'time': ('<f4', ('mean', )), 'self': ('<f4', ('mean', 'max', 'min', 'std', 'sum')),
+     'total': ('<f4', ('mean', 'max', 'min', 'std', 'sum')), 'calls': ('<i4', ('sum', )),
+     'self_per_call': ('<f4', ('mean', )), 'total_per_call': ('<f4', ('mean', )), 'routine': ('U256', '')}
+arraynp = numpy.loadtxt('drhook.prof.concat', dtype=[(k, v[0]) for (k, v) in d.items()],
+                        converters={8: lambda s: s.split(b'@')[0].lstrip(b'*')},
+                        skiprows=$firstLine - 1, usecols=[1, 3, 4, 5, 6, 7, 8])
+df = pandas.DataFrame(arraynp).groupby('routine').agg(
+      **{k + '_' + agg:pandas.NamedAgg(column=k, aggfunc=agg)
+         for (k, agg) in [(k, agg) for k in d.keys() for agg in d[k][1]]
+         if k != 'routine'}).sort_values('self_sum', ascending=False)
+df.index.name += ' ordered by self_sum'
+with open('drhook.prof.agg', 'w') as f: f.write(df.to_string())
+"
       fi
     else
       echo "The test $t is not allowed"

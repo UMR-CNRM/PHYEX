@@ -157,7 +157,7 @@ export DATADIR
 # Software default environment variables :
 # --------------------------------------
 set -x
-export DR_HOOK=0
+export DR_HOOK=1
 export DR_HOOK_IGNORE_SIGNALS=-1
 export DR_HOOK_SILENT=1
 export DR_HOOK_SHOW_PROCESS_OPTIONS=0
@@ -617,6 +617,9 @@ if [ "$OUTPUT_LISTING" = "YES" ] ; then
   $TOOLSDIR/outsync.sh
   set +x
 fi
+
+#Save raw dr_hook files
+cp drhook.prof.* $OUTPUTDIR/
 
 if [ $FTRACE_JOB -gt 0 ] ; then
   set -x
