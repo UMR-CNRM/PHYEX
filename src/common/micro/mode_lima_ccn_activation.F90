@@ -424,10 +424,10 @@ IF( INUCT >= 1 ) THEN
       ZZW1(:) = MIN(XCSTDCRIT*ZZW6(:)/(((ZZT(:)*ZSMAX(:))**3)*ZRHODREF(:)),1.E-5)
    END WHERE
 !
-   PTOT_RV_HENU(:,:,:) = 0.
+   IF(PRESENT(PTOT_RV_HENU)) PTOT_RV_HENU(:,:,:) = 0.
    IF (.NOT.LSUBG_COND) THEN
       ZW(:,:,:) = MIN( UNPACK( ZZW1(:),MASK=GNUCT(:,:,:),FIELD=0.0 ),PRVT(:,:,:) )
-      PTOT_RV_HENU(:,:,:) = ZW(:,:,:)
+      IF(PRESENT(PTOT_RV_HENU)) PTOT_RV_HENU(:,:,:) = ZW(:,:,:)
       PTHT(:,:,:) = PTHT(:,:,:) + ZW(:,:,:) * (CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(:,:,:)-CST%XTT))/                &
             (PEXNREF(:,:,:)*(CST%XCPD+CST%XCPV*PRVT(:,:,:)+CST%XCL*(PRCT(:,:,:)+PRRT(:,:,:))))
       PRVT(:,:,:) = PRVT(:,:,:) - ZW(:,:,:) 
