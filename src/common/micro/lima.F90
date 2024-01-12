@@ -5,7 +5,7 @@
 !-----------------------------------------------------------------
 !     #####################################################################
 SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP,BUCONF, TBUDGETS, KBUDGETS,&
-                  PTSTEP, OELEC, HCLOUD,                                  &
+                  PTSTEP, OELEC,                                          &
                   PRHODREF, PEXNREF, PDZZ,PTHVREFZIKB,                    &
                   PRHODJ, PPABST,                                         &
                   NCCN, NIFN, NIMM,                                       &
@@ -90,7 +90,6 @@ TYPE(ELEC_PARAM_t),       INTENT(IN)    :: ELECP   ! electrical parameters
 TYPE(ELEC_DESCR_t),       INTENT(IN)    :: ELECD   ! electrical descriptive csts
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
-CHARACTER (LEN=4),        INTENT(IN)    :: HCLOUD       ! Kind of microphysical scheme
 INTEGER,                  INTENT(IN)    :: KBUDGETS
 !
 REAL,                     INTENT(IN)    :: PTSTEP     ! Time step
@@ -807,11 +806,11 @@ ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
 IF (NMOM_C.GE.1 .AND. LSEDC) THEN
   IF (OELEC) THEN
-    CALL LIMA_SEDIMENTATION(D, CST, ICED, HCLOUD, &
+    CALL LIMA_SEDIMENTATION(D, CST, ICED, &
                             'L', 2, 2, 1, PTSTEP, OELEC, PDZZ, PRHODREF, PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRCS, ZCCS, PINPRC, PFPR(:,:,:,2), PEFIELDW, ZQCS)
   ELSE
-    CALL LIMA_SEDIMENTATION(D, CST, ICED, HCLOUD, &
+    CALL LIMA_SEDIMENTATION(D, CST, ICED, &
                             'L', 2, 2, 1, PTSTEP, OELEC, PDZZ, PRHODREF, PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRCS, ZCCS, PINPRC, PFPR(:,:,:,2))
   END IF
@@ -822,11 +821,11 @@ ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
 IF (NMOM_R.GE.1) THEN
   IF (OELEC) THEN
-    CALL LIMA_SEDIMENTATION(D, CST, ICED, HCLOUD, &
+    CALL LIMA_SEDIMENTATION(D, CST, ICED, &
                             'L', NMOM_R, 3, 1, PTSTEP, OELEC, PDZZ, PRHODREF, PTHVREFZIKB,PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRRS, ZCRS, PINPRR, PFPR(:,:,:,3), PEFIELDW, ZQRS)
   ELSE
-    CALL LIMA_SEDIMENTATION(D, CST, ICED, HCLOUD, &
+    CALL LIMA_SEDIMENTATION(D, CST, ICED, &
                             'L', NMOM_R, 3, 1, PTSTEP, OELEC, PDZZ, PRHODREF,PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRRS, ZCRS, PINPRR, PFPR(:,:,:,3))
   END IF
@@ -837,11 +836,11 @@ ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
 IF (NMOM_I.GE.1 .AND. LSEDI) THEN
   IF (OELEC) THEN
-    CALL LIMA_SEDIMENTATION(D, CST, ICED, HCLOUD, &
+    CALL LIMA_SEDIMENTATION(D, CST, ICED, &
                             'I', NMOM_I, 4, 1, PTSTEP, OELEC, PDZZ, PRHODREF,PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRIS, ZCIS, ZW2D, PFPR(:,:,:,4), PEFIELDW, ZQIS)
   ELSE
-    CALL LIMA_SEDIMENTATION(D, CST, ICED, HCLOUD, &
+    CALL LIMA_SEDIMENTATION(D, CST, ICED, &
                             'I', NMOM_I, 4, 1, PTSTEP, OELEC, PDZZ, PRHODREF,PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRIS, ZCIS, ZW2D, PFPR(:,:,:,4))
   END IF
@@ -852,11 +851,11 @@ ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
 IF (NMOM_S.GE.1) THEN
   IF (OELEC) THEN
-    CALL LIMA_SEDIMENTATION(D, CST, ICED, HCLOUD, &
+    CALL LIMA_SEDIMENTATION(D, CST, ICED, &
                             'I', NMOM_S, 5, 1, PTSTEP, OELEC, PDZZ, PRHODREF, PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRSS, ZCSS, PINPRS, PFPR(:,:,:,5), PEFIELDW, ZQSS)
   ELSE
-    CALL LIMA_SEDIMENTATION(D, CST, ICED, HCLOUD, &
+    CALL LIMA_SEDIMENTATION(D, CST, ICED, &
                             'I', NMOM_S, 5, 1, PTSTEP, OELEC, PDZZ, PRHODREF, PTHVREFZIKB, PPABST,ZT, ZRT_SUM, ZCPT, &
                             ZRSS, ZCSS, PINPRS, PFPR(:,:,:,5))
   END IF
@@ -867,11 +866,11 @@ ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
 IF (NMOM_G.GE.1) THEN
   IF (OELEC) THEN
-    CALL LIMA_SEDIMENTATION(D, CST, ICED, HCLOUD, &
+    CALL LIMA_SEDIMENTATION(D, CST, ICED, &
                             'I', NMOM_G, 6, 1, PTSTEP, OELEC, PDZZ, PRHODREF, PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRGS, ZCGS, PINPRG, PFPR(:,:,:,6), PEFIELDW, ZQGS)
   ELSE
-    CALL LIMA_SEDIMENTATION(D, CST, ICED, HCLOUD, &
+    CALL LIMA_SEDIMENTATION(D, CST, ICED, &
                             'I', NMOM_G, 6, 1, PTSTEP, OELEC, PDZZ, PRHODREF, PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRGS, ZCGS, PINPRG, PFPR(:,:,:,6))
   END IF
@@ -882,11 +881,11 @@ ZRT_SUM = (ZRVS + ZRCS + ZRRS + ZRIS + ZRSS + ZRGS + ZRHS)*PTSTEP
 ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRIS + ZRSS + ZRGS + ZRHS))*PTSTEP
 IF (NMOM_H.GE.1) THEN
   IF (OELEC) THEN
-    CALL LIMA_SEDIMENTATION(D, CST, ICED, HCLOUD, &
+    CALL LIMA_SEDIMENTATION(D, CST, ICED, &
                             'I', NMOM_H, 7, 1, PTSTEP, OELEC, PDZZ, PRHODREF, PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRHS, ZCHS, PINPRH, PFPR(:,:,:,7), PEFIELDW, ZQHS)
   ELSE
-    CALL LIMA_SEDIMENTATION(D, CST, ICED, HCLOUD, &
+    CALL LIMA_SEDIMENTATION(D, CST, ICED, &
                             'I', NMOM_H, 7, 1, PTSTEP, OELEC, PDZZ, PRHODREF, PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRHS, ZCHS, PINPRH, PFPR(:,:,:,7))
   END IF
@@ -2079,7 +2078,7 @@ IF (OELEC) THEN
     CALL ELEC_TENDENCIES(D, CST, ICED, ICEP, ELECD, ELECP,                                              &
                          KRR, IELEC, PTSTEP, GMASK_ELEC,                                                &
                          BUCONF, TBUDGETS, KBUDGETS,                                                    &
-                         HCLOUD, PTHVREFZIKB,                                                           &
+                         'LIMA', PTHVREFZIKB,                                                           &
                          PRHODREF,  PRHODJ, ZT, ZCIT_ELEC,                                              &
                          ZRVT_ELEC, ZRCT_ELEC, ZRRT_ELEC, ZRIT_ELEC, ZRST_ELEC, ZRGT_ELEC,              &
                          ZQPIT, ZQCT, ZQRT, ZQIT, ZQST, ZQGT, ZQNIT,                                    &
@@ -2117,7 +2116,7 @@ IF (OELEC) THEN
     CALL ELEC_TENDENCIES(D, CST, ICED, ICEP, ELECD, ELECP,                                              &
                          KRR, IELEC, PTSTEP, GMASK_ELEC,                                                &
                          BUCONF, TBUDGETS, KBUDGETS,                                                    &
-                         HCLOUD, PTHVREFZIKB,                                                           &
+                         'LIMA', PTHVREFZIKB,                                                           &
                          PRHODREF, PRHODJ, ZT, ZCIT_ELEC,                                               &
                          ZRVT_ELEC, ZRCT_ELEC, ZRRT_ELEC, ZRIT_ELEC, ZRST_ELEC, ZRGT_ELEC,              &
                          ZQPIT, ZQCT, ZQRT, ZQIT, ZQST, ZQGT, ZQNIT,                                    &

@@ -38,5 +38,6 @@ TYPE MISC_t
   LOGICAL                  :: OELEC=.FALSE.        !< Lightning prognostic scheme
   CHARACTER(LEN=4)         :: CELEC='NONE'         !< Name of the electricity scheme
   LOGICAL                  :: OSEDIM_BEARD=.FALSE. !< Switch for effect of electrical forces on sedim.
+  TYPE(TFILEDATA)          :: TPFILE
 END TYPE MISC_t
 END MODULE MODD_MISC

@@ -4,7 +4,7 @@ IMPLICIT NONE
 INTERFACE
 !
    SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, KBUDGETS,&
-                     PTSTEP, OELEC, HCLOUD,                                  &
+                     PTSTEP, OELEC,                                          &
                      PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                      PRHODJ, PPABST,                                         &
                      NCCN, NIFN, NIMM,                                       &
@@ -37,7 +37,6 @@ INTEGER, INTENT(IN) :: KBUDGETS
 REAL,                     INTENT(IN)    :: PTSTEP     ! Time step
 !
 LOGICAL,                  INTENT(IN)    :: OELEC      ! if true, cloud electrification is activated
-CHARACTER (LEN=4),        INTENT(IN)    :: HCLOUD       ! Kind of microphysical scheme
 !
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF   ! Reference density
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF    ! Reference Exner function

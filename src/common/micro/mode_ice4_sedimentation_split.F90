@@ -7,7 +7,7 @@ MODULE MODE_ICE4_SEDIMENTATION_SPLIT
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, &
-                                   &OELEC, OSEDIM_BEARD, PTHVREFZIKB, HCLOUD,  &
+                                   &OELEC, OSEDIM_BEARD, PTHVREFZIKB, &
                                    &PTSTEP, KRR, PDZZ, &
                                    &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
                                    &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
@@ -63,7 +63,6 @@ TYPE(RAIN_ICE_DESCR_t),        INTENT(IN)              :: ICED
 TYPE(PARAM_ICE_t),             INTENT(IN)              :: PARAMI
 TYPE(ELEC_PARAM_t),            INTENT(IN)              :: ELECP   ! electrical parameters
 TYPE(ELEC_DESCR_t),            INTENT(IN)              :: ELECD   ! electrical descriptive csts
-CHARACTER (LEN=4),             INTENT(IN)              :: HCLOUD  ! Kind of microphysical scheme
 LOGICAL,                       INTENT(IN)              :: OELEC   ! if true, cloud electricity is activated
 LOGICAL,                       INTENT(IN)              :: OSEDIM_BEARD ! if true, effect of electrical forces on sedim.
 REAL,                          INTENT(IN)              :: PTSTEP  ! Double Time step (single if cold start)
@@ -135,6 +134,7 @@ REAL, DIMENSION(D%NIJT, D%NKT)        :: ZCONC3D, & !  droplet condensation
 REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)) :: &
                    ZQCT, ZQRT, ZQIT, ZQST, ZQGT, ZQHT, &      ! electric charge a t
                    ZPQCS, ZPQRS, ZPQIS, ZPQSS, ZPQGS, ZPQHS   ! electric charge created during the time step
+CHARACTER (LEN=4) :: HCLOUD  ! Kind of microphysical scheme
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
@@ -162,6 +162,12 @@ IF (PRESENT(PSEA)) THEN
 ELSE
   GPRESENT_PSEA = .FALSE.
 END IF
+!
+IF(KRR==7) THEN
+  HCLOUD='ICE4'
+ELSE
+  HCLOUD='ICE3'
+ENDIF
 !
 !        O. Initialization of for sedimentation
 !

@@ -5,7 +5,7 @@
 !-----------------------------------------------------------------
 !     ######spl
       SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
-                            OELEC, OSEDIM_BEARD, PTHVREFZIKB, HCLOUD,             &
+                            OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &
                             PTSTEP, KRR, PEXN,                                    &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
@@ -196,44 +196,6 @@ USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_ELEC_PARAM,     ONLY: ELEC_PARAM_t
 USE MODD_ELEC_DESCR,     ONLY: ELEC_DESCR_t
 USE MODD_FIELDS_ADDRESS
-!USE MODD_FIELDS_ADDRESS, ONLY : & ! common fields adress
-!      & ITH,     & ! Potential temperature
-!      & IRV,     & ! Water vapor
-!      & IRC,     & ! Cloud water
-!      & IRR,     & ! Rain water
-!      & IRI,     & ! Pristine ice
-!      & IRS,     & ! Snow/aggregate
-!      & IRG,     & ! Graupel
-!      & IRH,     & ! Hail
-!      & IBUNUM,       & ! Number of tendency terms
-!      & IBUNUM_EXTRA, & ! Number of extra tendency terms
-!      & IRCHONI,    & ! Homogeneous nucleation
-!      & IRVDEPS,    & ! Deposition on r_s,
-!      & IRIAGGS,    & ! Aggregation on r_s
-!      & IRIAUTS,    & ! Autoconversion of r_i for r_s production
-!      & IRVDEPG,    & ! Deposition on r_g
-!      & IRCAUTR,    & ! Autoconversion of r_c for r_r production
-!      & IRCACCR,    & ! Accretion of r_c for r_r production
-!      & IRREVAV,    & ! Evaporation of r_r
-!      & IRCBERI,    & ! Bergeron-Findeisen effect
-!      & IRHMLTR,    & ! Melting of the hailstones
-!      & IRSMLTG,    & ! Conversion-Melting of the aggregates
-!      & IRCMLTSR,   & ! Cloud droplet collection onto aggregates by positive temperature
-!      & IRRACCSS, IRRACCSG, IRSACCRG, & ! Rain accretion onto the aggregates
-!      & IRCRIMSS, IRCRIMSG, IRSRIMCG, & ! Cloud droplet riming of the aggregates
-!      & IRICFRRG, IRRCFRIG, IRICFRR,  & ! Rain contact freezing
-!      & IRCWETG,  IRIWETG,  IRRWETG,  IRSWETG, &  ! Graupel wet growth
-!      & IRCDRYG,  IRIDRYG,  IRRDRYG,  IRSDRYG, &  ! Graupel dry growth
-!      & IRWETGH,    & ! Conversion of graupel into hail
-!      & IRGMLTR,    & ! Melting of the graupel
-!      & IRCWETH,  IRIWETH,  IRSWETH,  IRGWETH,  IRRWETH, & ! Dry growth of hailstone
-!      & IRCDRYH,  IRIDRYH,  IRSDRYH,  IRRDRYH,  IRGDRYH, & ! Wet growth of hailstone
-!      & IRDRYHG,    &
-!      & IRVHENI_MR, & ! heterogeneous nucleation mixing ratio change
-!      & IRRHONG_MR, & ! Spontaneous freezing mixing ratio change
-!      & IRIMLTC_MR, & ! Cloud ice melting mixing ratio change
-!      & IRSRIMCG_MR,& ! Cloud droplet riming of the aggregates
-!      & IRWETGH_MR
 
 USE MODE_BUDGET_PHY,         ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 USE MODE_MSG,                ONLY: PRINT_MSG, NVERB_FATAL
@@ -264,7 +226,6 @@ LOGICAL,                  INTENT(IN)    :: OELEC  ! Switch for cloud electricity
 LOGICAL,                  INTENT(IN)    :: OSEDIM_BEARD  ! Switch for effect of electrical forces on sedim.
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
-CHARACTER (LEN=4),        INTENT(IN)    :: HCLOUD  ! Kind of microphysical scheme
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXN    ! Exner function
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PDZZ    ! Layer thikness (m)
@@ -394,6 +355,9 @@ IIJE=D%NIJE
 IIJT=D%NIJT
 !-------------------------------------------------------------------------------
 !
+IF(PARAMI%LOCND2) THEN
+  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', 'LOCND2 OPTION NOT CODED IN THIS RAIN_ICE VERSION')
+END IF
 ZINV_TSTEP=1./PTSTEP
 !
 ! LSFACT and LVFACT without exner, and LLMICRO
@@ -439,7 +403,7 @@ ENDDO
 !
 IF(.NOT. PARAMI%LSEDIM_AFTER) THEN
   CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, BUCONF, &
-                         &OELEC, OSEDIM_BEARD, HCLOUD, PTSTEP, KRR, PDZZ, PTHVREFZIKB, &
+                         &OELEC, OSEDIM_BEARD, PTSTEP, KRR, PDZZ, PTHVREFZIKB, &
                          &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                          &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                          &PINPRC, PINPRR, PINPRS, PINPRG, &
@@ -653,7 +617,7 @@ IF (OELEC) THEN
     CALL ELEC_TENDENCIES(D, CST, ICED, ICEP, ELECD, ELECP,                                    &
                          KRR, IELEC, PTSTEP, GMASK_ELEC,                                      &
                          BUCONF, TBUDGETS, KBUDGETS,                                          &
-                         HCLOUD, PTHVREFZIKB, PRHODREF, PRHODJ, ZT, PCIT,                     &
+                         'ICE4', PTHVREFZIKB, PRHODREF, PRHODJ, ZT, PCIT,                     &
                          PRVT, PRCT, PRRT, PRIT, PRST, PRGT,                                  &
                          PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,                          &
                          PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,                          &
@@ -686,7 +650,7 @@ IF (OELEC) THEN
     CALL ELEC_TENDENCIES(D, CST, ICED, ICEP, ELECD, ELECP,                                   &
                          KRR, ISIZE, PTSTEP, LLMICRO,                                        &
                          BUCONF, TBUDGETS, KBUDGETS,                                         &
-                         HCLOUD, PTHVREFZIKB, PRHODREF, PRHODJ, ZT, PCIT,                    &
+                         'ICE3', PTHVREFZIKB, PRHODREF, PRHODJ, ZT, PCIT,                    &
                          PRVT, PRCT, PRRT, PRIT, PRST, PRGT,                                 &
                          PQPIT, PQCT, PQRT, PQIT, PQST, PQGT, PQNIT,                         &
                          PQPIS, PQCS, PQRS, PQIS, PQSS, PQGS, PQNIS,                         &
@@ -812,7 +776,7 @@ END IF
 !
 IF(PARAMI%LSEDIM_AFTER) THEN
   CALL ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, BUCONF, &
-                         &OELEC, OSEDIM_BEARD, HCLOUD, PTSTEP, KRR, PDZZ, PTHVREFZIKB, &
+                         &OELEC, OSEDIM_BEARD, PTSTEP, KRR, PDZZ, PTHVREFZIKB, &
                          &ZZ_LVFACT, ZZ_LSFACT, PRHODREF, PPABST, PTHT, ZT, PRHODJ, &
                          &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                          &PINPRC, PINPRR, PINPRS, PINPRG, &

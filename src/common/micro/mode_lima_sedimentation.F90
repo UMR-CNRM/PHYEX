@@ -7,7 +7,7 @@ MODULE MODE_LIMA_SEDIMENTATION
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################
-  SUBROUTINE LIMA_SEDIMENTATION (D, CST, ICED, HCLOUD, &
+  SUBROUTINE LIMA_SEDIMENTATION (D, CST, ICED, &
                                  HPHASE, KMOMENTS, KID, KSPLITG, PTSTEP, OELEC, &
                                  PDZZ, PRHODREF, PTHVREFZIKB, &
                                  PPABST, PT, PRT_SUM, PCPT, PRS, PCS, PINPR, PFPR, &
@@ -93,7 +93,6 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCS       ! C. source
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPR     ! Instant precip rate
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PFPR      ! Precip. fluxes in altitude
 REAL, DIMENSION(:,:,:),   INTENT(IN),    OPTIONAL :: PEFIELDW  ! Vertical component of the electric field
-CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
 REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electricity
 REAL, DIMENSION(:,:,:),   INTENT(INOUT), OPTIONAL :: PQS ! Elec. charge density source
 !
@@ -247,7 +246,7 @@ DO JN = 1 ,  NSPLITSED(KID)
       IF (OELEC .AND. LSEDIM_BEARD) THEN
         ALLOCATE(ZLBDA3(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)))
         ZLBDA3(:,:,:) = UNPACK( ZLBDA(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
-        CALL ELEC_BEARD_EFFECT(D, CST, ICED, HCLOUD, KID, GSEDIM, PT, PRHODREF, PTHVREFZIKB, &
+        CALL ELEC_BEARD_EFFECT(D, CST, ICED, 'LIMA', KID, GSEDIM, PT, PRHODREF, PTHVREFZIKB, &
                                PRS, PQS, PEFIELDW, ZLBDA3, ZBEARDCOEFF)
         DEALLOCATE(ZLBDA3)
       END IF
@@ -267,10 +266,10 @@ DO JN = 1 ,  NSPLITSED(KID)
       IF (OELEC) THEN
         ! compute e of the q-D relationship
         IF (IMOMENTS == 2) THEN  ! 2-moment species
-          CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, HCLOUD, PTSTEP, ZRHODREF, XRTMIN(KID), &
+          CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, 'LIMA', PTSTEP, ZRHODREF, XRTMIN(KID), &
                                 ZRS, ZQS, ZES, PLBDX=ZLBDA, PCX=ZCS)
         ELSE                     ! 1-moment species
-          CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, HCLOUD, PTSTEP, ZRHODREF, XRTMIN(KID), &
+          CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, 'LIMA', PTSTEP, ZRHODREF, XRTMIN(KID), &
                                 ZRS, ZQS, ZES, PLBDX=ZLBDA)
         END IF
         !

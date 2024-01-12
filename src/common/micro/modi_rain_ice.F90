@@ -5,7 +5,7 @@
 IMPLICIT NONE
 INTERFACE
       SUBROUTINE RAIN_ICE ( D, CST, PARAMI, ICEP, ICED, ELECP, ELECD, BUCONF,     &
-                            OELEC, OSEDIM_BEARD, PTHVREFZIKB, HCLOUD,             &
+                            OELEC, OSEDIM_BEARD, PTHVREFZIKB,                     &
                             PTSTEP, KRR, PEXN,                                    &
                             PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,&
                             PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,               &
@@ -43,7 +43,6 @@ LOGICAL,                  INTENT(IN)    :: OELEC  ! Switch for cloud electricity
 LOGICAL,                  INTENT(IN)    :: OSEDIM_BEARD  ! Switch for effect of electrical forces on sedim.
 REAL,                     INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                  INTENT(IN)    :: KRR     ! Number of moist variable
-CHARACTER (LEN=4),        INTENT(IN)    :: HCLOUD  ! Kind of microphysical scheme
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXN    ! Exner function
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PDZZ    ! Layer thikness (m)

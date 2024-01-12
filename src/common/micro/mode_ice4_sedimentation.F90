@@ -7,7 +7,7 @@ MODULE MODE_ICE4_SEDIMENTATION
 IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICE4_SEDIMENTATION(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, BUCONF, &
-                             &OELEC, OSEDIM_BEARD, HCLOUD, PTSTEP, KRR, PDZZ, PTHVREFZIKB, &
+                             &OELEC, OSEDIM_BEARD, PTSTEP, KRR, PDZZ, PTHVREFZIKB, &
                              &PLVFACT, PLSFACT, PRHODREF, PPABST, PTHT, PT, PRHODJ, &
                              &PTHS, PRVS, PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                              &PINPRC, PINPRR, PINPRS, PINPRG, &
@@ -67,7 +67,6 @@ TYPE(ELEC_DESCR_t),                          INTENT(IN)    :: ELECD   ! electric
 TYPE(TBUDGETCONF_t),                         INTENT(IN)    :: BUCONF
 LOGICAL,                                     INTENT(IN)    :: OELEC   ! switch to activate cloud electrification
 LOGICAL,                                     INTENT(IN)    :: OSEDIM_BEARD  ! Switch for effect of electrical forces on sedim.
-CHARACTER (LEN=4),                           INTENT(IN)    :: HCLOUD  ! Kind of microphysical scheme
 REAL,                                        INTENT(IN)    :: PTSTEP  ! Double Time step (single if cold start)
 INTEGER,                                     INTENT(IN)    :: KRR     ! Number of moist variable
 REAL, DIMENSION(D%NIJT,D%NKT),               INTENT(IN)    :: PDZZ    ! Layer thikness (m)
@@ -164,6 +163,9 @@ IF (BUCONF%LBUDGET_SV .AND. OELEC) THEN
 END IF
 !
 IF(PARAMI%CSEDIM=='STAT') THEN
+  IF(OELEC) THEN
+    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE', "OELEC=.T. not allowed with CSEDIM='STAT'")
+  ENDIF
   DO JK = IKTB,IKTE
     DO JIJ = IIJB,IIJE
       ZRCT(JIJ,JK)=PRCS(JIJ,JK)*PTSTEP
@@ -186,7 +188,7 @@ IF(PARAMI%CSEDIM=='STAT') THEN
   !No negativity correction here as we apply sedimentation on PR.S*PTSTEP variables
 ELSEIF(PARAMI%CSEDIM=='SPLI') THEN
   CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, &
-                               &OELEC, OSEDIM_BEARD, PTHVREFZIKB, HCLOUD, PTSTEP, KRR, PDZZ, &
+                               &OELEC, OSEDIM_BEARD, PTHVREFZIKB, PTSTEP, KRR, PDZZ, &
                                &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
                                &PRCS, PRCT, PRRS, PRRT, PRIS, PRIT, PRSS, PRST, PRGS, PRGT,&
                                &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &

@@ -966,7 +966,7 @@ SELECT CASE ( HCLOUD )
       !
       CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICEN, RAIN_ICE_PARAMN, RAIN_ICE_DESCRN, &
                     ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, LSEDIM_BEARD,       &
-                    XTHVREFZ(IKB), HCLOUD,                                      &
+                    XTHVREFZ(IKB),                                              &
                     PTSTEP, KRR, ZEXN,                                          &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
                     PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                     &
@@ -1248,7 +1248,7 @@ SELECT CASE ( HCLOUD )
       !
       CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICEN, RAIN_ICE_PARAMN, RAIN_ICE_DESCRN, &
                      ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, LSEDIM_BEARD,        &
-                     XTHVREFZ(IKB), HCLOUD,                                      &
+                     XTHVREFZ(IKB),                                              &
                      PTSTEP, KRR, ZEXN,                                          &
                      ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
                      PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,                     &
@@ -1390,7 +1390,7 @@ SELECT CASE ( HCLOUD )
         CALL LIMA (YLDIMPHYEX,CST, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
                    ELEC_DESCR, ELEC_PARAM,                                 &
                    TBUCONF,TBUDGETS,SIZE(TBUDGETS),                        &
-                   PTSTEP, GELEC, HCLOUD,                                  &
+                   PTSTEP, GELEC,                                          &
                    PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
                    NMOD_CCN, NMOD_IFN, NMOD_IMM,                           &
@@ -1406,7 +1406,7 @@ SELECT CASE ( HCLOUD )
         CALL LIMA (YLDIMPHYEX,CST, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
                    ELEC_DESCR, ELEC_PARAM,                                 &
                    TBUCONF,TBUDGETS,SIZE(TBUDGETS),                        &
-                   PTSTEP, GELEC, HCLOUD,                                  &
+                   PTSTEP, GELEC,                                          &
                    PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
                    NMOD_CCN, NMOD_IFN, NMOD_IMM,                           &
