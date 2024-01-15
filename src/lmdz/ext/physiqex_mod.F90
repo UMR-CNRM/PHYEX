@@ -518,7 +518,7 @@ ZTHVREFZIKB=0
 CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, PHYEX%RAIN_ICE_DESCRN,                      &
                PHYEX%ELEC_PARAM, PHYEX%ELEC_DESCR, PHYEX%MISC%TBUCONF,                                            &
                PHYEX%MISC%OELEC, PHYEX%MISC%OSEDIM_BEARD,                                                         &
-               ZTHVREFZIKB, 'ICE3',                                                                               &
+               ZTHVREFZIKB,                                                                                       &
                pdtphys, KRR, ZEXN,                                                                                &
                zdzf, PRHODJ, ZRHOD, ZEXN, ZPABST, ZCIT, ZCLDFR,                                                   &
                ZHLC_HRC, ZHLC_HCF, ZHLI_HRI, ZHLI_HCF,                                                            &
