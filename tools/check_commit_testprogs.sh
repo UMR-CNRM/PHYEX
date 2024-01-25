@@ -92,11 +92,12 @@ i=$((i+1)); conf_extra_tag[$i]='_Z120_NPRO${NPROMA}_BLK${NBLOCKS}'
 ################################
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [--noexpand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [-a ARCH] [-A ARCH] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--no-perf] [--no-check] [-e EXTRAPOLATION] [--perf FILE] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-u] [-c] [-r] [-C] [-s] [--noexpand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [-a ARCH] [-A ARCH] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--no-perf] [--no-check] [-e EXTRAPOLATION] [--perf FILE] commit [reference]"
   echo "commit          commit hash (or a directory, or among $specialName) to test"
   echo "reference       commit hash (or a directory, or among $specialName) REF to use as a reference"
   echo "-s              suppress compilation directory"
   echo "-p              creates pack"
+  echo "-u              updates pack"
   echo "-c              performs compilation"
   echo "-r              runs the tests"
   echo "-C              checks the result against the reference"
@@ -140,6 +141,7 @@ function usage {
 }
 
 packcreation=0
+packupdate=0
 compilation=0
 run=0
 check=0
@@ -163,6 +165,7 @@ while [ -n "$1" ]; do
     '-h') usage; exit;;
     '-s') suppress=1;;
     '-p') packcreation=1;;
+    '-u') packupdate=1;;
     '-c') compilation=1;;
     '-r') run=$(($run+1));;
     '-C') check=1;;
@@ -196,6 +199,7 @@ while [ -n "$1" ]; do
 done
 
 if [ $packcreation -eq 0 -a \
+     $packupdate -eq 0 -a \
      $compilation -eq 0 -a \
      $run -eq 0 -a \
      $check -eq 0 -a \
@@ -383,8 +387,18 @@ if [ $packcreation -eq 1 ]; then
     else
       echo "WARNING: the compilation system is already there, we use it but it could be outdated"
     fi
+  fi
+fi
+if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
+  if [ ! -d $TESTDIR/$name/build/with_fcm/ ]; then
+    echo "Compilation directory must exist ($TESTDIR/$name/build/with_fcm)"
+    exit 9
+  else
     cd $TESTDIR/$name/build/with_fcm/
-    ./make_fcm.sh -p $useexpand --commit $commit --arch $archfile 2>&1 | tee Output_compilation_step1
+    packbuild=""
+    [ $packupdate -eq 1 ] && packbuild='-u'
+    [ $packcreation -eq 1 ] && packbuild="$packbuild -p"
+    ./make_fcm.sh $packbuild $useexpand --commit $commit --arch $archfile 2>&1 | tee Output_compilation_step1
   fi
 fi
 

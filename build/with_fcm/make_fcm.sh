@@ -16,6 +16,7 @@ function parse_args() {
   useexpand=1
   commit=""
   packcreation=0
+  packupdate=0
   compilation=0
   inplaceClean=0
   inplaceInstall=0
@@ -38,6 +39,7 @@ $0 [options]
 --noexpand            do not use mnh_expand (code will be in array-syntax)"
 --commit              commit hash (or a directory) to test; do not use this option from within a repository
 -p                    creates 'pack' (compilation directory)
+-u                    updates 'pack'
 -c                    performs compilation
 --inplace-install     install, if needed, fiat and fcm in the directory where the current script is
 --inplace-clean       remove the fiat and fcm installation present in the directory where the current script is
@@ -66,6 +68,7 @@ EOF
       '--noexpand') useexpand=0;;
       '--commit') commit=$1; shift;;
       '-p') packcreation=1;;
+      '-u') packupdate=1;;
       '-c') compilation=1;;
       '--inplace-install') inplaceInstall=1;;
       '--inplace-clean') inplaceClean=1;;
@@ -86,6 +89,7 @@ EOF
   if [ $inplaceInstall -eq 0 -a \
        $inplaceClean -eq 0 -a \
        $packcreation -eq 0 -a \
+       $packupdate -eq 0 -a \
        $compilation -eq 0 ]; then
     packcreation=1
     compilation=1
@@ -328,6 +332,7 @@ if [ $inplaceInstall -eq 1 ]; then
   check_install_fiat
 fi
 
+builddir=arch_$ARCH
 if [ $packcreation -eq 1 ]; then
   # Change current working dir
   cd -P $DIR
@@ -339,7 +344,6 @@ if [ $packcreation -eq 1 ]; then
   check_install_fiat
   
   # Create the build directory and set up the build system
-  builddir=arch_$ARCH
   if [ -d $builddir ]; then
     echo "$builddir already exists. To rerun compilation, please enter this directory and use the compilation.sh script."
     echo "Otherwise, you can remove the $builddir directory and execute again this script."
@@ -362,7 +366,16 @@ if [ $packcreation -eq 1 ]; then
     fi
   fi
   cp fcm-make.cfg $builddir
+fi
+if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
+  if [ ! -d $builddir ]; then
+    echo "$builddir doesn't exist"
+    exit 4
+  fi
   cd $builddir
+  if [ $packupdate -eq 1 ]; then
+    rm -rf src
+  fi
   . arch.env
   export PYFT_OPTS
   
@@ -423,7 +436,7 @@ if [ $compilation -eq 1 ]; then
   . arch.env
   build_compilation_script src
   ./compilation.sh
-  ln -s build/bin/libphyex.so .
+  [ ! -f libphyex.so ] && ln -s build/bin/libphyex.so .
   
   # Check if python can open the resulting shared lib
   set +e

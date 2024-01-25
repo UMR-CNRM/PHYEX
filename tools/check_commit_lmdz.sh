@@ -17,11 +17,13 @@ separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allerg
               #- seprator must be in sync with prep_code.sh separator
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-c] [-C] [-r] [-s] [--expand] [-t test] [--version VERSION] [--repo-user] [--repo-protocol] [--remove] [--perf FILE] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-u] [-c] [-C] [-r] [-s] [--expand] [-t test] [--version VERSION] [--repo-user] [--repo-protocol] [--remove] [--perf FILE] commit [reference]"
   echo "commit          commit hash (or a directory, or among $specialPack) to test"
   echo "reference       commit hash (or a directory, or among $specialPack) REF to use as a reference"
   echo "-s              suppress compilation pack"
   echo "-p              creates pack"
+  echo "-u              updates pack (experimental, only for 'small' updates where"
+  echo "                              the list of files does not change)"
   echo "-c              performs compilation"
   echo "-r              runs the tests"
   echo "-C              checks the result against the reference"
@@ -52,6 +54,7 @@ function usage {
 
 fcm=1
 packcreation=0
+packupdate=0
 compilation=0
 run=0
 check=0
@@ -61,7 +64,7 @@ tests=""
 suppress=0
 useexpand=0
 version=""
-link=0 #Not yet put in command line argument becaus this option has not been tested here
+link=0 #Not yet put in command line argument because this option has not been tested here
 remove=0
 perffile=""
 
@@ -70,6 +73,7 @@ while [ -n "$1" ]; do
     '-h') usage; exit;;
     '-s') suppress=1;;
     '-p') packcreation=1;;
+    '-u') packupdate=1;;
     '-c') compilation=1;;
     '-r') run=$(($run+1));;
     '-C') check=1;;
@@ -104,6 +108,7 @@ fi
 
 if [ $packcreation -eq 0 -a \
      $compilation -eq 0 -a \
+     $packupdate -eq 0 -a \
      $run -eq 0 -a \
      $check -eq 0 -a \
      $remove -eq 0 ]; then
@@ -127,6 +132,29 @@ function jsonarg {
   #$1 is the file containing the json dictionnary
   #$2 is the dictionnary key to return
   python3 -c "import json; print(json.load(open('$1', 'r'))['$2'])"
+}
+
+function mvdiff {
+  # $1 is the file to move
+  # $2 is the destination
+  if [ -d $2 ]; then
+    #$2 is a directory and file must be moved in this directory, keeping its name
+    dest=$2/$(basename $1)
+  else
+    dest=$2
+  fi
+  if [ $packupdate -eq 0 -o ! -f $dest ]; then
+    #When creating the pack or if destination file doesn't exist
+    mv $1 $2
+  else
+    #Destination file exists and we are in the update mode
+    #File is moved only if different
+    if ! cmp $1 $dest > /dev/null; then
+      mv $1 $2
+    else
+      rm $1
+    fi
+  fi
 }
 
 fromdir=''
@@ -206,9 +234,14 @@ if [ $packcreation -eq 1 ]; then
   cd $lmdzdir
   wget https://lmdz.lmd.jussieu.fr/pub/1D/1D.tar.gz
   tar xf 1D.tar.gz
-
+fi
+if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
   #PHYEX code
   if [ $link -eq 1 ]; then
+    if [ $packupdate -eq 1 ]; then
+      echo "link option not compatible with the update option"
+      exit 10
+    fi
     #Special case when a PHYEX repository exist locally
     #We can link the LMDZ source tree with the PHYEX repository
     #This can be useful for debuging or developping
@@ -217,7 +250,14 @@ if [ $packcreation -eq 1 ]; then
     ln -sf ~/PHYEX/src/lmdz/*/* .
   else
     #Checkout PHYEX
+    if [ ! -d $LMDZPACK/$name ]; then
+      echo "Pack directory doesn't exist ($LMDZPACK/$name)"
+      exit 9
+    fi
     cd $LMDZPACK/$name
+    if [ $packupdate -eq 1 ]; then
+      mv PHYEX PHYEXori
+    fi
   
     if [ $useexpand == 1 ]; then
       expand_options="--mnhExpand"
@@ -239,37 +279,56 @@ if [ $packcreation -eq 1 ]; then
       scp -q -r $fromdir/src PHYEX/
       $prep_code $expand_options $subs -m lmdz PHYEX
     fi
-
-    #Put PHYEX source code in the LMDZ source tree
-    cd $lmdzdir/modipsl/modeles/LMDZ/libf/phylmd/
-    ln -sf $phyexdir/*/* .
+    if [ $packupdate -eq 1 ]; then
+      #Update only modified files
+      cd PHYEX
+      for file in $(find turb micro aux ext -type f); do
+        mvdiff $file ../PHYEXori/$file
+      done
+      cd ..
+      rm -rf PHYEX
+      mv PHYEXori PHYEX
+    else
+      #Put PHYEX source code in the LMDZ source tree
+      cd $lmdzdir/modipsl/modeles/LMDZ/libf/phylmd/
+      ln -sf $phyexdir/*/* .
+    fi
   fi
 
   #Update code
   cd $lmdzdir/modipsl/modeles/LMDZ/libf/phylmd/
-  cp -r . ../phylmdorig
+  [ $packupdate -eq 0 ] && cp -r . ../phylmdorig
   if [ $fcm -eq 0 ]; then
-    mv modd_dimphyexn.F90 modd_dimphyex.F90
-    for name in `grep -i 'END MODULE' modd*n.F90 | cut -d: -f1 | sed -e 's/n.F90//'` ; do mv ${name}n.F90 ${name}_n.F90 ; done
-    mv hypgeo.F90 modi_hypgeo.F90
-    mv hypser.f90 modi_hypser.F90
-    mv momg.F90 modi_momg.F90
-    mv tools.F90 mode_tools.F90
-    mv shuman_mf.F90 modi_shuman_mf.F90
-    mv shuman_phy.F90 mode_shuman_phy.F90
+    mvdiff modd_dimphyexn.F90 modd_dimphyex.F90
+    for name in `grep -i 'END MODULE' modd*n.F90 | cut -d: -f1 | sed -e 's/n.F90//'` ; do
+      mvdiff ${name}n.F90 ${name}_n.F90
+    done
+    mvdiff hypgeo.F90 modi_hypgeo.F90
+    mvdiff hypser.f90 modi_hypser.F90
+    mvdiff momg.F90 modi_momg.F90
+    mvdiff tools.F90 mode_tools.F90
+    mvdiff shuman_mf.F90 modi_shuman_mf.F90
+    mvdiff shuman_phy.F90 mode_shuman_phy.F90
   fi
 
   #Missing files in case ecrad is not used
-  if [ "$rad" != "ecrad" ] ; then
-    for file in ecrad/yom* ecrad/abor1.F90 ecrad/abor1.intfb.h ecrad/parkind1.F90; do
-      [ ! -f $(basename $file) ] && ln -s $file .
-    done
+  if [ $packupdate -eq 0 ]; then
+    if [ "$rad" != "ecrad" ] ; then
+      for file in ecrad/yom* ecrad/abor1.F90 ecrad/abor1.intfb.h ecrad/parkind1.F90; do
+        [ ! -f $(basename $file) ] && ln -s $file .
+      done
+    fi
   fi
 fi
 
 if [ $compilation -eq 1 ]; then
   echo "### Compilation of commit $commit"
   cd $lmdzdir/1D/bin
+  if [ $fcm -eq 0 ]; then
+    rm -f $lmdzdir/1D/bin/${main}.e
+  else
+    rm -f $lmdzdir/modipsl/modeles/LMDZ/bin/lmdz1d_${L}_phylmd_${rad}_seq.e
+  fi
   if [ $fcm -eq 1 ]; then
     sed -i "s/fcm=0/fcm=1/g" compile
   fi

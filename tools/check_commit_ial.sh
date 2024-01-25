@@ -115,11 +115,13 @@ mainPackVersion=${mainPackVersion:-${defaultMainPackVersion}}
 ################################
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t TEST] [--cycle CYCLE] [--scripttag TAG] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--prep_code-opts 'OPTS'] [--perf FILE] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-u] [-c] [-r] [-C] [-s] [-f] [--noexpand] [-t TEST] [--cycle CYCLE] [--scripttag TAG] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--prep_code-opts 'OPTS'] [--perf FILE] commit [reference]"
   echo "commit          commit hash (or a directory, or among $specialPack) to test"
   echo "reference       commit hash (or a directory, or among $specialPack) REF to use as a reference"
   echo "-s              suppress compilation pack"
   echo "-p              creates pack"
+  echo "-u              updates pack (experimental, only for 'small' updates where"
+  echo "                              the list of files does not change)"
   echo "-c              performs compilation"
   echo "-r              runs the tests"
   echo "-C              checks the result against the reference"
@@ -164,6 +166,7 @@ function usage {
 }
 
 packcreation=0
+packupdate=0
 compilation=0
 run=0
 check=0
@@ -186,6 +189,7 @@ while [ -n "$1" ]; do
     '-h') usage; exit;;
     '-s') suppress=1;;
     '-p') packcreation=1;;
+    '-u') packupdate=1;;
     '-c') compilation=1;;
     '-r') run=$(($run+1));;
     '-C') check=1;;
@@ -217,6 +221,7 @@ while [ -n "$1" ]; do
 done
 
 if [ $packcreation -eq 0 -a \
+     $packupdate -eq 0 -a \
      $compilation -eq 0 -a \
      $run -eq 0 -a \
      $check -eq 0 -a \
@@ -267,6 +272,29 @@ function json_dictkey2value {
   # $2 must be the key name
   # $3 is the default value
   json_content="$1" python3 -c "import json; import os; result=json.loads(os.environ['json_content']).get('$2', '$3'); print(json.dumps(result) if isinstance(result, dict) else result)"
+}
+
+function mvdiff {
+  # $1 is the file to move
+  # $2 is the destination
+  if [ -d $2 ]; then
+    #$2 is a directory and file must be moved in this directory, keeping its name
+    dest=$2/$(basename $1)
+  else
+    dest=$2
+  fi
+  if [ $packupdate -eq 0 -o ! -f $dest ]; then
+    #When creating the pack or if destination file doesn't exist
+    mv $1 $2
+  else
+    #Destination file exists and we are in the update mode
+    #File is moved only if different
+    if ! cmp $1 $dest > /dev/null; then
+      mv $1 $2
+    else
+      rm $1
+    fi
+  fi
 }
 
 #################################
@@ -419,7 +447,6 @@ if [ $packcreation -eq 1 ]; then
       gmkpack -r ${cycle} -b phyex -v $mainPackVersion -l ${gmkpack_l} -o ${gmkpack_o} -p masterodb \
               -f $dirpack/ \
               -u $name
-      reftree='main'
     else
       if [ $(echo $cycle | cut -c 1-2) -ne 48 ]; then
         hub='-K'
@@ -495,9 +522,16 @@ if [ $packcreation -eq 1 ]; then
       sed -i "/^MACROS_FRT/s/$/ -DREPRO48/" $HOMEPACK/$name/.gmkfile/${gmkpack_l}.*
       #sed -i "s/PHYEX\/${cycle}_$$.01.${gmkpack_l}.${gmkpack_o}/$(echo $name | sed 's/\//\\\//')/" $HOMEPACK/$name/ics_masterodb #this line could be used if pack was renamed before compilation but it does not work on belenos
 
+      cleanpack -f #Is it really useful?
       resetpack -f #Is it really useful?
-      reftree='local'
     fi
+  fi
+fi
+if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
+  if [ ! -d $HOMEPACK/$name/src/local/phyex ]; then
+    echo "phyex directory doesn't exist in pack ($HOMEPACK/$name)"
+    exit 7
+  else
     cd $HOMEPACK/$name/src/local/phyex
 
     if [ $useexpand == 1 ]; then
@@ -521,12 +555,23 @@ if [ $packcreation -eq 1 ]; then
       $prep_code $prepCodeOpts $expand_options $subs -m arome PHYEX
     fi
     find PHYEX -type f -exec touch {} \; #to be sure a recompilation occurs
-    for rep in turb micro conv aux; do
-      [ -d PHYEX/$rep ] && mv PHYEX/$rep .
-    done
+    if [ $packupdate -eq 1 ]; then
+      #Update only modified files
+      cd PHYEX
+      for file in $(find turb micro conv aux -type f); do
+        mvdiff $file ../$file
+      done
+      cd ..
+      rm -rf PHYEX
+    else
+      #Move PHYEX source files
+      for rep in turb micro conv aux; do
+        [ -d PHYEX/$rep ] && mv PHYEX/$rep .
+      done
+    fi
     #modd_nsv.F90 has been moved and gmkpack is lost in case a different version exists in main/.../micro
     if [ -f ../../main/phyex/micro/modd_nsv.F90 -a -f aux/modd_nsv.F90 ]; then
-      mv aux/modd_nsv.F90 micro/
+      mvdiff aux/modd_nsv.F90 micro/
       if [ -f PHYEX/gmkpack_ignored_files ]; then
         grep -v micro/modd_nsv.F90 PHYEX/gmkpack_ignored_files > PHYEX/gmkpack_ignored_files_new
         mv PHYEX/gmkpack_ignored_files_new PHYEX/gmkpack_ignored_files
@@ -538,7 +583,9 @@ if [ $packcreation -eq 1 ]; then
       #compilation).
       if [ $fullcompilation == 0 ]; then
         #Content is added in the ics_masterodb script
-        sed -i "/^end_of_ignored_files/i $(first=1; for line in $(cat PHYEX/gmkpack_ignored_files); do echo -n $(test $first -ne 1 && echo \\n)${line}; first=0; done)" $HOMEPACK/$name/ics_masterodb
+        if [ $packupdate -eq 0 ]; then
+          sed -i "/^end_of_ignored_files/i $(first=1; for line in $(cat PHYEX/gmkpack_ignored_files); do echo -n $(test $first -ne 1 && echo \\n)${line}; first=0; done)" $HOMEPACK/$name/ics_masterodb
+        fi
       else
         #Files must be suppressed (non phyex files)
         for file in $(cat PHYEX/gmkpack_ignored_files); do
@@ -552,29 +599,29 @@ if [ $packcreation -eq 1 ]; then
     [ ! -d $EXT ] && EXT=PHYEX/externals #old name for ext/aux
     if [ -d $EXT ]; then
       #Move manually files outside of mpa (a find on the whole repository would take too much a long time)
-      [ -f $EXT/yomparar.F90 ] && mv $EXT/yomparar.F90 ../arpifs/module/
-      [ -f $EXT/namparar.nam.h ] && mv $EXT/namparar.nam.h ../arpifs/namelist
-      [ -f $EXT/namlima.nam.h ] && mv $EXT/namlima.nam.h ../arpifs/namelist
-      [ -f $EXT/suparar.F90 ] && mv $EXT/suparar.F90 ../arpifs/phys_dmn/
-      [ -f $EXT/apl_arome.F90 ] && mv $EXT/apl_arome.F90 ../arpifs/phys_dmn/
-      [ -f $EXT/suphmpa.F90 ] && mv $EXT/suphmpa.F90 ../arpifs/phys_dmn/
-      [ -f $EXT/suphmse.F90 ] && mv $EXT/suphmse.F90 ../arpifs/phys_dmn/
-      [ -f $EXT/vdfhghtnhl.F90 ] && mv $EXT/vdfhghtnhl.F90 ../arpifs/phys_dmn/
-      [ -f $EXT/cpg_opts_type_mod.fypp ] && mv $EXT/cpg_opts_type_mod.fypp ../arpifs/module/
-      file=$EXT/cpg_pt_ulp_expl.fypp; [ -f $file ] && mv $file ../arpifs/adiab/
-      file=$EXT/field_variables_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
-      file=$EXT/cpg_type_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
-      file=$EXT/field_registry_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
-      file=$EXT/mf_phys_next_state_type_mod.fypp; [ -f $file ] && mv $file ../arpifs/module/
-      file=$EXT/yemlbc_model.F90; [ -f $file ] && mv $file ../arpifs/module/
-      [ -f $EXT/aplpar.F90 ] && mv $EXT/aplpar.F90 ../arpifs/phys_dmn/
-      [ -f $EXT/su0yomb.F90 ] && mv $EXT/su0yomb.F90 ../arpifs/setup/
-      [ -f $EXT/acvppkf.F90 ] && mv $EXT/acvppkf.F90 ../arpifs/phys_dmn/
+      [ -f $EXT/yomparar.F90 ] && mvdiff $EXT/yomparar.F90 ../arpifs/module/
+      [ -f $EXT/namparar.nam.h ] && mvdiff $EXT/namparar.nam.h ../arpifs/namelist
+      [ -f $EXT/namlima.nam.h ] && mvdiff $EXT/namlima.nam.h ../arpifs/namelist
+      [ -f $EXT/suparar.F90 ] && mvdiff $EXT/suparar.F90 ../arpifs/phys_dmn/
+      [ -f $EXT/apl_arome.F90 ] && mvdiff $EXT/apl_arome.F90 ../arpifs/phys_dmn/
+      [ -f $EXT/suphmpa.F90 ] && mvdiff $EXT/suphmpa.F90 ../arpifs/phys_dmn/
+      [ -f $EXT/suphmse.F90 ] && mvdiff $EXT/suphmse.F90 ../arpifs/phys_dmn/
+      [ -f $EXT/vdfhghtnhl.F90 ] && mvdiff $EXT/vdfhghtnhl.F90 ../arpifs/phys_dmn/
+      [ -f $EXT/cpg_opts_type_mod.fypp ] && mvdiff $EXT/cpg_opts_type_mod.fypp ../arpifs/module/
+      file=$EXT/cpg_pt_ulp_expl.fypp; [ -f $file ] && mvdiff $file ../arpifs/adiab/
+      file=$EXT/field_variables_mod.fypp; [ -f $file ] && mvdiff $file ../arpifs/module/
+      file=$EXT/cpg_type_mod.fypp; [ -f $file ] && mvdiff $file ../arpifs/module/
+      file=$EXT/field_registry_mod.fypp; [ -f $file ] && mvdiff $file ../arpifs/module/
+      file=$EXT/mf_phys_next_state_type_mod.fypp; [ -f $file ] && mvdiff $file ../arpifs/module/
+      file=$EXT/yemlbc_model.F90; [ -f $file ] && mvdiff $file ../arpifs/module/
+      [ -f $EXT/aplpar.F90 ] && mvdiff $EXT/aplpar.F90 ../arpifs/phys_dmn/
+      [ -f $EXT/su0yomb.F90 ] && mvdiff $EXT/su0yomb.F90 ../arpifs/setup/
+      [ -f $EXT/acvppkf.F90 ] && mvdiff $EXT/acvppkf.F90 ../arpifs/phys_dmn/
       #Special mpa case
       for file in modd_spp_type.F90 spp_mod_type.F90 aroini_conf.h aroini_conf.F90; do
         if [ -f $EXT/$file ]; then
           [ ! -d ../mpa/aux ] && mkdir ../mpa/aux
-          mv $EXT/$file ../mpa/aux/
+          mvdiff $EXT/$file ../mpa/aux/
         fi
       done
       [ -d $EXT/dead_code ] && rm -rf $EXT/dead_code/
@@ -582,6 +629,12 @@ if [ $packcreation -eq 1 ]; then
         mv $EXT .
       else
         #Move automatically all codes under mpa
+        if [ -f $HOMEPACK/$name/src/main ]; then
+          #if main exists this is not a main pack (because it references a main pack)
+          reftree='local'
+        else
+          reftree='main'
+        fi
         for file in $EXT/*; do
           extname=`basename $file`
           loc=`find ../../$reftree/mpa/ -name $extname | sed "s/\/$reftree\//\/local\//g"`
@@ -590,7 +643,7 @@ if [ $packcreation -eq 1 ]; then
             echo "Don't know where $file must be moved, none or several places found!"
             exit 9
           fi
-          mv $file $loc
+          mvdiff $file $loc
         done
       fi
     fi
@@ -608,8 +661,6 @@ if [ $compilation -eq 1 ]; then
 
     cd $HOMEPACK/$name
     sed -i 's/GMK_THREADS=1$/GMK_THREADS=10/' ics_masterodb
-    cleanpack -f
-    resetpack -f
   
     [ -f ics_packages ] && exescript Output_compilation_hub ics_packages
     exescript Output_compilation ics_masterodb

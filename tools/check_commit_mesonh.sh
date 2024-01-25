@@ -42,11 +42,13 @@ TARGZDIR=${TARGZDIR:=$PHYEXTOOLSDIR/pack/}
 ################################
 
 function usage {
-  echo "Usage: $0 [-h] [-p] [-c] [-r] [-C] [-s] [--expand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--prep_code-opts 'OPTS'] [--per FILE] commit [reference]"
+  echo "Usage: $0 [-h] [-p] [-u] [-c] [-r] [-C] [-s] [--expand] [-t TEST] [--repo-user USER] [--repo-protocol PROTOCOL] [--remove] [--onlyIfNeeded] [--computeRefIfNeeded] [--prep_code-opts 'OPTS'] [--per FILE] commit [reference]"
   echo "commit          commit hash (or a directory) to test"
   echo "reference       commit hash or a directory or nothing for ref"
   echo "-s              suppress compilation pack"
   echo "-p              creates pack"
+  echo "-u              updates pack (experimental, only for 'small' updates where"
+  echo "                              the list of files does not change)"
   echo "-c              performs compilation"
   echo "-r              runs the tests"
   echo "-C              checks the result against the reference"
@@ -84,6 +86,7 @@ function usage {
 }
 
 packcreation=0
+packupdate=0
 compilation=0
 run=0
 check=0
@@ -103,6 +106,7 @@ while [ -n "$1" ]; do
     '-h') usage; exit;;
     '-s') suppress=1;;
     '-p') packcreation=1;;
+    '-u') packupdate=1;;
     '-c') compilation=1;;
     '-r') run=$(($run+1));;
     '-C') check=1;;
@@ -131,6 +135,7 @@ while [ -n "$1" ]; do
 done
 
 if [ $packcreation -eq 0 -a \
+     $packupdate -eq 0 -a \
      $compilation -eq 0 -a \
      $run -eq 0 -a \
      $check -eq 0 -a \
@@ -155,6 +160,29 @@ function json_dictkey2value {
   # $2 must be the key name
   # $3 is the default value
   json_content="$1" python3 -c "import json; import os; result=json.loads(os.environ['json_content']).get('$2', '$3'); print(json.dumps(result) if isinstance(result, dict) else result)"
+}
+
+function mvdiff {
+  # $1 is the file to move
+  # $2 is the destination
+  if [ -d $2 ]; then
+    #$2 is a directory and file must be moved in this directory, keeping its name
+    dest=$2/$(basename $1)
+  else
+    dest=$2
+  fi
+  if [ $packupdate -eq 0 -o ! -f $dest ]; then
+    #When creating the pack or if destination file doesn't exist
+    mv $1 $2
+  else
+    #Destination file exists and we are in the update mode
+    #File is moved only if different
+    if ! cmp $1 $dest > /dev/null; then
+      mv $1 $2
+    else
+      rm $1
+    fi
+  fi
 }
 
 ###################################
@@ -268,8 +296,19 @@ if [ $packcreation -eq 1 ]; then
 
     # Routine that changed names
     [ -f PHYEX/turb/modd_diag_in_run.f90 ] && mv -f PHYEX/turb/modd_diag_in_run.f90 MNH/. #To be removed once, this is done in MNH-git-lfs repo before inclusion of last version of PHYEX
-
-    rm -rf PHYEX
+  fi
+fi
+if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
+  if [ !  -d $MNHPACK/$name/src/PHYEX ]; then
+      echo "PHYEX directory doesn't exist in pack ($MNHPACK/$name)"
+      exit 9
+  else
+    cd $MNHPACK/$name/src
+    if [ $packupdate -eq 1 ]; then
+      mv PHYEX PHYEXori
+    else
+      rm -rf PHYEX
+    fi
 
     if [ $useexpand == 1 ]; then
       expand_options="--mnhExpand"
@@ -297,39 +336,62 @@ if [ $packcreation -eq 1 ]; then
     # Move manually ext/ files in src/MNH
     [ -f PHYEX/ext/yomhook.f90 ] && mv PHYEX/ext/yomhook.f90 PHYEX/ext/yomhook.F90
     if [ -d PHYEX/ext ]; then
-      mv -f PHYEX/ext/* MNH/
-      rmdir PHYEX/ext
+      for file in PHYEX/ext/*; do
+        mvdiff $file MNH/
+      done
+      if [ $packupdate -eq 1 ]; then
+        #Only modified files are moved
+        rm -rf PHYEX/ext
+      else
+        #All files must have been moved
+        rmdir PHYEX/ext
+      fi
     fi
 
-    cd $MNHPACK/$name/src/PHYEX/turb
-    # Delete files of ${refversion}/src/MNH and MNH/src/LIB/SURCOUCHE/src with same name
-    for rep in turb micro conv aux ; do
-      cd ../$rep
-      for f in *.f90; do
-        echo $f
-        rm -f ../../MNH/$f
-        rm -f ../../LIB/SURCOUCHE/src/$f
+    if [ $packupdate -eq 1 ]; then
+      #Update only modified files
+      cd PHYEX
+      for file in $(find turb micro conv aux -type f); do
+        if ! cmp $file ../PHYEXori/$file > /dev/null; then
+          mv $file ../PHYEXori/$file
+        fi
       done
-    done
-    cd ..
+      cd ..
+      rm -rf PHYEX
+      mv PHYEXori PHYEX
+    fi
+
+    if [ $packupdate -eq 0 ]; then
+      cd $MNHPACK/$name/src/PHYEX/turb
+      # Delete files of ${refversion}/src/MNH and MNH/src/LIB/SURCOUCHE/src with same name
+      for rep in turb micro conv aux ; do
+        cd ../$rep
+        for f in *.f90; do
+          echo $f
+          rm -f ../../MNH/$f
+          rm -f ../../LIB/SURCOUCHE/src/$f
+        done
+      done
+      cd ..
     
-    # Delete old files of ${refversion}/src/MNH that is now called by mode_... NO /aux NEEDED!
-    find turb micro conv -name 'mode_*' > remove_non_mode.sh
-    sed -i 's/turb\/mode_/rm -f MNH\//g' remove_non_mode.sh
-    sed -i 's/micro\/mode_/rm -f MNH\//g' remove_non_mode.sh
-    sed -i 's/conv\/mode_/rm -f MNH\//g' remove_non_mode.sh
-    chmod +x remove_non_mode.sh
-    mv remove_non_mode.sh ../.
-    cd ../
-    ./remove_non_mode.sh
-    # Supress some files if they are not used anymore
-    ! grep -i MODI_COMPUTE_ENTR_DETR $(ls MNH/*compute_updraft* PHYEX/turb/*compute_updraft* 2>/dev/null) && rm -f MNH/compute_entr_detr.f90
-    ! grep -i MODI_TH_R_FROM_THL_RT_ $(ls MNH/compute_entr_detr.f90 MNH/compute_entr_detr.f90 PHYEX/turb/mode_compute_updraft*.f90 MNH/ice_adjust_bis.f90 MNH/prep_ideal_case.f90 MNH/set_rsou.f90 2>/dev/null)  > /dev/null && rm -f MNH/th_r_from_thl_rt_1d.f90 MNH/th_r_from_thl_rt_2d.f90 MNH/th_r_from_thl_rt_3d.f90
+      # Delete old files of ${refversion}/src/MNH that is now called by mode_... NO /aux NEEDED!
+      find turb micro conv -name 'mode_*' > remove_non_mode.sh
+      sed -i 's/turb\/mode_/rm -f MNH\//g' remove_non_mode.sh
+      sed -i 's/micro\/mode_/rm -f MNH\//g' remove_non_mode.sh
+      sed -i 's/conv\/mode_/rm -f MNH\//g' remove_non_mode.sh
+      chmod +x remove_non_mode.sh
+      mv remove_non_mode.sh ../.
+      cd ../
+      ./remove_non_mode.sh
+      # Supress some files if they are not used anymore
+      ! grep -i MODI_COMPUTE_ENTR_DETR $(ls MNH/*compute_updraft* PHYEX/turb/*compute_updraft* 2>/dev/null) && rm -f MNH/compute_entr_detr.f90
+      ! grep -i MODI_TH_R_FROM_THL_RT_ $(ls MNH/compute_entr_detr.f90 MNH/compute_entr_detr.f90 PHYEX/turb/mode_compute_updraft*.f90 MNH/ice_adjust_bis.f90 MNH/prep_ideal_case.f90 MNH/set_rsou.f90 2>/dev/null)  > /dev/null && rm -f MNH/th_r_from_thl_rt_1d.f90 MNH/th_r_from_thl_rt_2d.f90 MNH/th_r_from_thl_rt_3d.f90
  
-    # Routine that changed names
-    #To be removed once, this is done in MNH-git-lfs repo before inclusion of last version of PHYEX
-    rm -f PHYEX/micro/ini_rain_ice.f90
-    rm -f PHYEX/micro/lima_nucleation_procs.f90
+      # Routine that changed names
+      #To be removed once, this is done in MNH-git-lfs repo before inclusion of last version of PHYEX
+      rm -f PHYEX/micro/ini_rain_ice.f90
+      rm -f PHYEX/micro/lima_nucleation_procs.f90
+    fi
 
     # Remove binaries
     rm -f $MNHPACK/$name/exe/*
