@@ -2,7 +2,7 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-      SUBROUTINE TH_R_FROM_THL_RT(CST, NEBN, KT, HFRAC_ICE,PFRAC_ICE,PP, &
+      SUBROUTINE TH_R_FROM_THL_RT(CST, NEBN, KSIZE, HFRAC_ICE,PFRAC_ICE,PP, &
                                   PTHL, PRT, PTH, PRV, PRL, PRI,           &
                                   PRSATW, PRSATI, PRR, PRS, PRG, PRH, OOCEAN,&
                                   PBUF, KB, KE)
@@ -60,23 +60,23 @@ IMPLICIT NONE
 !
 TYPE(CST_t),        INTENT(IN) :: CST
 TYPE(NEB_t),        INTENT(IN) :: NEBN
-INTEGER,            INTENT(IN) :: KT
+INTEGER,            INTENT(IN) :: KSIZE
 CHARACTER(LEN=1),   INTENT(IN) :: HFRAC_ICE
 LOGICAL,            INTENT(IN)   ::  OOCEAN       ! switch for Ocean model version
-REAL, DIMENSION(KT), INTENT(INOUT) :: PFRAC_ICE
-REAL, DIMENSION(KT), INTENT(IN) :: PP          ! Pressure
-REAL, DIMENSION(KT), INTENT(IN) :: PTHL    ! thetal to transform into th
-REAL, DIMENSION(KT),INTENT(IN)  :: PRT    ! Total mixing ratios to transform into rv,rc and ri
-REAL, DIMENSION(KT),OPTIONAL,INTENT(IN) :: PRR, PRS, PRG, PRH
-REAL, DIMENSION(KT), INTENT(OUT):: PTH    ! th
-REAL, DIMENSION(KT), INTENT(OUT):: PRV    ! vapor mixing ratio
-REAL, DIMENSION(KT), INTENT(INOUT):: PRL    ! vapor mixing ratio
-REAL, DIMENSION(KT), INTENT(INOUT):: PRI    ! vapor mixing ratio
-REAL, DIMENSION(KT), INTENT(OUT)  :: PRSATW ! estimated mixing ration at saturation over water
-REAL, DIMENSION(KT), INTENT(OUT)  :: PRSATI ! estimated mixing ration at saturation over ice
-REAL, DIMENSION(KT, 16), INTENT(OUT) :: PBUF ! buffer to replace automatic arrays
+REAL, DIMENSION(KSIZE), INTENT(INOUT) :: PFRAC_ICE
+REAL, DIMENSION(KSIZE), INTENT(IN) :: PP          ! Pressure
+REAL, DIMENSION(KSIZE), INTENT(IN) :: PTHL    ! thetal to transform into th
+REAL, DIMENSION(KSIZE),INTENT(IN)  :: PRT    ! Total mixing ratios to transform into rv,rc and ri
+REAL, DIMENSION(KSIZE),OPTIONAL,INTENT(IN) :: PRR, PRS, PRG, PRH
+REAL, DIMENSION(KSIZE), INTENT(OUT):: PTH    ! th
+REAL, DIMENSION(KSIZE), INTENT(OUT):: PRV    ! vapor mixing ratio
+REAL, DIMENSION(KSIZE), INTENT(INOUT):: PRL    ! vapor mixing ratio
+REAL, DIMENSION(KSIZE), INTENT(INOUT):: PRI    ! vapor mixing ratio
+REAL, DIMENSION(KSIZE), INTENT(OUT)  :: PRSATW ! estimated mixing ration at saturation over water
+REAL, DIMENSION(KSIZE), INTENT(OUT)  :: PRSATI ! estimated mixing ration at saturation over ice
+REAL, DIMENSION(KSIZE, 16), INTENT(OUT) :: PBUF ! buffer to replace automatic arrays
 INTEGER, OPTIONAL, INTENT(IN) :: KB !first index to deal with (default is 1)
-INTEGER, OPTIONAL, INTENT(IN) :: KE !last index to deal with (default if KT)
+INTEGER, OPTIONAL, INTENT(IN) :: KE !last index to deal with (default is KSIZE)
 !
 !-------------------------------------------------------------------------------
 !
@@ -105,7 +105,7 @@ END IF
 IF ( PRESENT(KE) ) THEN
   IIJE = KE
 ELSE
-  IIJE = KT
+  IIJE = KSIZE
 END IF
 
 !Number of iterations

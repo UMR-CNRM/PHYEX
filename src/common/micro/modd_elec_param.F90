@@ -51,7 +51,7 @@ REAL :: XCOEF_RQ_V, XCOEF_RQ_C, &   ! Constants for proportionality
         XCOEF_RQ_S, XCOEF_RQ_G, &   ! charge transfer
         XCOEF_RQ_H
 !
-REAL :: XQHON    ! Constant for spontaneous freezing of droplets if T<-35°
+REAL :: XQHON    ! Constant for spontaneous freezing of droplets if T<-35Â°
 !
 REAL, DIMENSION(:), ALLOCATABLE :: XFQSED  ! Constant for sedimentation of 
                                            ! electric charge in LIMA
