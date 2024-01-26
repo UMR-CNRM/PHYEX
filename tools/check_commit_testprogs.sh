@@ -364,13 +364,14 @@ fi
 #### PACK CREATION ####
 #######################
 
+if [ $packcreation -eq 1 -a -d $TESTDIR/$name/build/with_fcm/arch_${archfile} -a $onlyIfNeeded -eq 1 ]; then
+  packcreation=0
+fi
 if [ $packcreation -eq 1 ]; then
   if [ -d $TESTDIR/$name/build/with_fcm/arch_${archfile} ]; then
-    if [ $onlyIfNeeded -eq 0 ]; then
-      echo "Directory already exists ($TESTDIR/$name/build/with_fcm/arch_${archfile}),"
-      echo "suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
-      exit 5
-    fi
+    echo "Directory already exists ($TESTDIR/$name/build/with_fcm/arch_${archfile}),"
+    echo "suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
+    exit 5
   else
     echo "### Pack creation for commit $commit"
 

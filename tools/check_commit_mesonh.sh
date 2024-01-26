@@ -273,12 +273,13 @@ fi
 #### PACK CREATION ####
 #######################
 
+if [ $packcreation -eq 1 -a -d $MNHPACK/$name -a $onlyIfNeeded -eq 1 ]; then
+  packcreation=0
+fi
 if [ $packcreation -eq 1 ]; then
   if [ -d $MNHPACK/$name ]; then
-    if [ $onlyIfNeeded -eq 0 ]; then
-      echo "Pack already exists ($MNHPACK/$name), suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
-      exit 5
-    fi
+    echo "Pack already exists ($MNHPACK/$name), suppress it to be able to compile it again (or use the -s option to automatically suppress it)"
+    exit 5
   else
     echo "### Pack creation for commit $commit"
 
