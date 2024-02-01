@@ -1491,20 +1491,38 @@ DO WHILE(ANY(ZTIME(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)<PTSTEP))
       WHERE(ZA_RC(:)<-1.E-20 .AND. ZRCT1D(:)>XRTMIN(2))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RC(:)+ZRCT1D(:))/ZA_RC(:))
       END WHERE
+      WHERE(ZA_CC(:)<-1.E-20 .AND. ZCCT1D(:)>XCTMIN(2))
+         ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CC(:)+ZCCT1D(:))/ZA_CC(:))
+      END WHERE
       WHERE(ZA_RR(:)<-1.E-20 .AND. ZRRT1D(:)>XRTMIN(3))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RR(:)+ZRRT1D(:))/ZA_RR(:))
+      END WHERE
+      WHERE(ZA_CR(:)<-1.E-20 .AND. ZCRT1D(:)>XCTMIN(3))
+         ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CR(:)+ZCRT1D(:))/ZA_CR(:))
       END WHERE
       WHERE(ZA_RI(:)<-1.E-20 .AND. ZRIT1D(:)>XRTMIN(4))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RI(:)+ZRIT1D(:))/ZA_RI(:))
       END WHERE
+      WHERE(ZA_CI(:)<-1.E-20 .AND. ZCIT1D(:)>XCTMIN(4))
+         ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CI(:)+ZCIT1D(:))/ZA_CI(:))
+      END WHERE
       WHERE(ZA_RS(:)<-1.E-20 .AND. ZRST1D(:)>XRTMIN(5))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RS(:)+ZRST1D(:))/ZA_RS(:))
+      END WHERE
+      WHERE(ZA_CS(:)<-1.E-20 .AND. ZCST1D(:)>XCTMIN(5))
+         ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CS(:)+ZCST1D(:))/ZA_CS(:))
       END WHERE
       WHERE(ZA_RG(:)<-1.E-20 .AND. ZRGT1D(:)>XRTMIN(6))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RG(:)+ZRGT1D(:))/ZA_RG(:))
       END WHERE
+      WHERE(ZA_CG(:)<-1.E-20 .AND. ZCGT1D(:)>XCTMIN(6))
+         ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CG(:)+ZCGT1D(:))/ZA_CG(:))
+      END WHERE
       WHERE(ZA_RH(:)<-1.E-20 .AND. ZRHT1D(:)>XRTMIN(7))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RH(:)+ZRHT1D(:))/ZA_RH(:))
+      END WHERE
+      WHERE(ZA_CH(:)<-1.E-20 .AND. ZCHT1D(:)>XCTMIN(7))
+         ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CH(:)+ZCHT1D(:))/ZA_CH(:))
       END WHERE
 
       ! We stop when the end of the timestep is reached
@@ -2296,8 +2314,7 @@ if ( BUCONF%lbu_enable ) then
     call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'ACCR', -ztot_rc_accr(:, :, :) * zrhodjontstep(:, :, :) )
     call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'REVA',  ztot_rr_evap(:, :, :) * zrhodjontstep(:, :, :) )
     call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'HONR',  ztot_rr_honr(:, :, :) * zrhodjontstep(:, :, :) )
-!    call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'ACC',   ztot_rr_acc (:, :, :) * zrhodjontstep(:, :, :) )
-    call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'ACC',  (ztot_rc_rimss(:, :, :) + ztot_rc_rimsg(:, :, :)) &
+    call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'ACC',  (-ztot_rr_accss(:, :, :) - ztot_rr_accsg(:, :, :)) &
                                                           * zrhodjontstep(:, :, :) )
     call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'CFRZ',  ztot_rr_cfrz(:, :, :) * zrhodjontstep(:, :, :) )
     call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'WETG',  ztot_rr_wetg(:, :, :) * zrhodjontstep(:, :, :) )
