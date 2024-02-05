@@ -41,7 +41,7 @@ $0 [options]
 -p                    creates 'pack' (compilation directory)
 -u                    updates 'pack'
 -c                    performs compilation
---inplace-install     install, if needed, fiat and fcm in the directory where the current script is
+--inplace-install     install or update, if needed, fiat and fcm in the directory where the current script is
 --inplace-clean       remove the fiat and fcm installation present in the directory where the current script is
 --ssh                 use the ssh protocol to clone the pyft and fxtran repositories instead of https"
 
@@ -111,6 +111,17 @@ function check_install_fcm() {
     cd ..
     echo "...FCM installation done"
   fi
+  cd fcm
+  if [ $(git rev-parse HEAD^{commit}) != $(git rev-parse ${fcm_version}^{commit}) ]; then
+    echo "Updating FCM installation..."
+    cd ..
+    echo "Cleaning FCM installation..."
+    rm -rf fcm
+    check_install_fcm
+  else
+    cd ..
+  fi
+  
 }
 
 function check_install_fiat() {
@@ -314,11 +325,9 @@ if [ $inplaceClean -eq 1 ]; then
 
   # Restore fcm
   rm -rf fcm
-  git restore fcm
 
   # Restore fiat
   rm -rf fiat
-  git restore fiat
 fi
 
 if [ $inplaceInstall -eq 1 ]; then

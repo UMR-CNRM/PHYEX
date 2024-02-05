@@ -4,6 +4,8 @@
 set -e
 set -o pipefail #abort if left command on a pipe fails
 
+pyft_version=dda4c8fa627ed206e33b77ac0f6a7fcc95419242
+
 #This script installs PHYEX
 #Call the script with the -h option to get more information.
 
@@ -21,6 +23,9 @@ function usage {
   echo "  --test             Perform a test"
   echo "  --ssh              Use the ssh protocol to clone the pyft, fxtran, fiat and fcm"
   echo "                     repositories instead of https"
+  echo ""
+  echo "If the installation has already been done, calling again this script will update"
+  echo "the different tools."
 }
 
 ALL=0
@@ -68,7 +73,7 @@ if [ $dataset -eq 1 ]; then
     basefile=$(basename $file)
     if [ $clean -eq 1 ]; then
       find $(basename $basefile .tar.gz) -name \*.dat -type f -delete
-    else
+    elif [ ! -f $(basename $basefile .tar.gz)/00000000.dat ]; then
       wget --no-check-certificate $file -O $basefile
       tar xf $basefile
       rm -f $basefile
@@ -81,16 +86,29 @@ if [ $pyft -eq 1 ]; then
   if [ $clean -eq 1 ]; then
     rm -rf pyft
   else
+    if [ ! -d pyft ]; then
+      #Install
+      if [ $ssh -eq 1 ]; then
+        git clone git@github.com:UMR-CNRM/pyft.git
+      else
+        git clone https://github.com/UMR-CNRM/pyft.git
+      fi
+    else
+      #Update
+      cd pyft
+      if [ $(git rev-parse HEAD^{commit}) != $(git rev-parse ${pyft_version}^{commit}) ]; then
+        git checkout ${pyft_version}
+      fi
+      cd ..
+    fi
+    #Install/update
     if [ $ssh -eq 1 ]; then
-      git clone git@github.com:UMR-CNRM/pyft.git
       ./pyft/bin/INSTALL.sh --ssh
     else
-      git clone https://github.com/UMR-CNRM/pyft.git
       ./pyft/bin/INSTALL.sh
     fi
     echo ""
-    echo "Instead of sourcing the previous file, you can source $PHYEXTOOLSDIR/env.sh"
-    echo "This file, among other things, source the previous displayed file."
+    echo "To use PHYEX, you only need to source the file $PHYEXTOOLSDIR/env.sh"
   fi
 fi
 
@@ -98,6 +116,7 @@ if [ $fiatfcm -eq 1 ]; then
   if [ $clean -eq 1 ]; then
     $PHYEXTOOLSDIR/../build/with_fcm/make_fcm.sh --inplace-clean
   else
+    #Install/update
     if [ $ssh -eq 1 ]; then
       $PHYEXTOOLSDIR/../build/with_fcm/make_fcm.sh --inplace-install --ssh
     else
