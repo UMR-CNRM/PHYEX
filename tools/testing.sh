@@ -265,14 +265,15 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
     if [ ! -d "${WORKDIR}/PHYEX" ]; then
       log 1 "Clonig PHYEX in ${WORKDIR}/PHYEX"
       git clone "${PHYEXREPOgiturl}" "${WORKDIR}/PHYEX"
+    else
+      log 1 "Checkout commit ${SHA}"
+      cd "${WORKDIR}/PHYEX"
+      git fetch "${PHYEXREPOgiturl}"
+      git checkout "${SHA}"
+      cd "${currentdir}"
     fi
     log 1 "Installing/updating PHYEX"
-    ./tools/INSTALL.sh --ALL
-    log 1 "Checkout commit ${SHA}"
-    cd "${WORKDIR}/PHYEX"
-    git fetch "${PHYEXREPOgiturl}"
-    git checkout "${SHA}"
-    cd "${currentdir}"
+    ${WORKDIR}/PHYEX/tools/INSTALL.sh --ALL
     if [ -f "${WORKDIR}/PHYEX/tools/testing.sh" ]; then
       if [ "${currentMD5}" != $(md5sum "${WORKDIR}/PHYEX/tools/testing.sh" | cut -d\  -f1) ]; then
         log 1 "Script has changed, running the new version" #This log and the previous ones are lost
