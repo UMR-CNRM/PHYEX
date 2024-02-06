@@ -96,6 +96,13 @@ if [ $pyft -eq 1 ]; then
     else
       #Update
       cd pyft
+      if ! git rev-parse ${pyft_version}^{commit} > /dev/null 2>&1; then
+        if [ $ssh -eq 1 ]; then
+          git fetch git@github.com:UMR-CNRM/pyft.git
+        else
+          git fetch https://github.com/UMR-CNRM/pyft.git
+        fi
+      fi
       if [ $(git rev-parse HEAD^{commit}) != $(git rev-parse ${pyft_version}^{commit}) ]; then
         git checkout ${pyft_version}
       fi
