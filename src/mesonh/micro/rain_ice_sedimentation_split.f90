@@ -360,11 +360,13 @@ IF ( OSEDIC ) THEN
           ZRAY   (JI,JJ,JK) = ZTMP4_2D(JI,JJ)
       !$mnh_end_do()
   ELSE
+    ZTMP3 = MAX(1.,ZTMP1)    
+    !$mnh_expand_array(JI=1:IIU ,  JJ=1:IJU , JK=KKTB:KKTE)      
     ZLBC   (:,:,:) = XLBC(1)
     ZFSEDC (:,:,:) = XFSEDC(1)
     ZCONC3D(:,:,:) = XCONC_LAND
-    ZTMP3 = MAX(1.,ZTMP1)
     ZRAY   (:,:,:) = ZTMP3
+    !$mnh_end_expand_array()
   END IF
 END IF
 !
