@@ -71,6 +71,14 @@ TYPE(LIST_ll), POINTER :: TZLM_ll   ! list of fields to exchange
 INTEGER                :: IINFO_ll       ! return code of parallel routine
 !
 !-------------------------------------------------------------------------------
+
+!$acc data present_crm(PLM,PLEPS)
+
+if ( mppdb_initialized ) then
+  !Check all inout arrays
+  call Mppdb_check( plm,   "Update_lm beg:plm"   )
+  call Mppdb_check( pleps, "Update_lm beg:pleps" )
+end if
 !
 !*       1.    COMPUTE DIMENSIONS OF ARRAYS :
 !              ----------------------------
@@ -87,10 +95,12 @@ NULLIFY(TZLM_ll)
 !
 !
 !!$IF(NHALO == 1) THEN
+!$acc update_crm self(PLM,PLEPS)
   CALL ADD3DFIELD_ll( TZLM_ll, PLM,   'UPDATE_LM::PLM'   )
   CALL ADD3DFIELD_ll( TZLM_ll, PLEPS, 'UPDATE_LM::PLEPS' )
   CALL UPDATE_HALO_ll(TZLM_ll,IINFO_ll)
   CALL CLEANLIST_ll(TZLM_ll)
+!$acc update_crm device(PLM,PLEPS)
 !!$END IF
 !
 !-------------------------------------------------------------------------------
