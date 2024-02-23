@@ -155,7 +155,7 @@ LOGICAL :: GKRR_7,GSEDIC
 !
 ! IN variables
 !
-!$acc data present( PDZZ, PRHODREF, PPABST, PTHT, PRHODJ, PRCT, PRRT, PRIT, PRST, PRGT, &
+!$acc data present_crm( PDZZ, PRHODREF, PPABST, PTHT, PRHODJ, PRCT, PRRT, PRIT, PRST, PRGT, &
 !$acc &             PSEA, PTOWN, PRHT,                                                  &
 !
 ! INOUT variables
