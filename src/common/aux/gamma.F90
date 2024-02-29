@@ -62,7 +62,13 @@ REAL                                 :: PGAMMA
 !*       0.2 declarations of local variables
 !
 INTEGER                              :: JJ ! Loop index
-REAL                                 :: ZSER,ZSTP,ZTMP,ZX,ZY,ZCOEF(6)
+REAL                                 :: ZSER,ZSTP,ZTMP,ZX,ZY
+REAL, DIMENSION(6), PARAMETER        :: ZCOEF=(/76.18009172947146, &
+                                               &-86.50532032941677, &
+                                               & 24.01409824083091, &
+                                               & -1.231739572450155, &
+                                               &  0.1208650973866179E-2, &
+                                               & -0.5395239384953E-5/)
 REAL                                 :: ZPI
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
@@ -72,12 +78,6 @@ IF (LHOOK) CALL DR_HOOK('GAMMA_X0D',0,ZHOOK_HANDLE)
 !*       1. SOME CONSTANTS
 !           --------------
 !
-ZCOEF(1) = 76.18009172947146
-ZCOEF(2) =-86.50532032941677
-ZCOEF(3) = 24.01409824083091
-ZCOEF(4) = -1.231739572450155
-ZCOEF(5) =  0.1208650973866179E-2
-ZCOEF(6) = -0.5395239384953E-5
 ZSTP     =  2.5066282746310005
 !
 ZPI = 3.141592654
@@ -172,7 +172,13 @@ REAL, DIMENSION(SIZE(PX))            :: PGAMMA
 !
 INTEGER                              :: JJ ! Loop index
 INTEGER                              :: JI ! Loop index
-REAL                                 :: ZSER, ZSTP, ZTMP, ZX, ZY, ZCOEF(6)
+REAL                                 :: ZSER, ZSTP, ZTMP, ZX, ZY
+REAL, DIMENSION(6), PARAMETER        :: ZCOEF=(/76.18009172947146, &
+                                               &-86.50532032941677, &
+                                               & 24.01409824083091, &
+                                               & -1.231739572450155, &
+                                               &  0.1208650973866179E-2, &
+                                               & -0.5395239384953E-5/)
 REAL                                 :: ZPI
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
@@ -182,12 +188,6 @@ IF (LHOOK) CALL DR_HOOK('GAMMA_X1D',0,ZHOOK_HANDLE)
 !*       1. SOME CONSTANTS
 !           --------------
 !
-ZCOEF(1) = 76.18009172947146
-ZCOEF(2) =-86.50532032941677
-ZCOEF(3) = 24.01409824083091
-ZCOEF(4) = -1.231739572450155
-ZCOEF(5) =  0.1208650973866179E-2
-ZCOEF(6) = -0.5395239384953E-5
 ZSTP     =  2.5066282746310005
 !
 ZPI = 3.141592654

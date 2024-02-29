@@ -6,7 +6,8 @@ USE COMPUTE_DIFF,    ONLY: DIFF
 USE MODI_RAIN_ICE_OLD
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_PHYEX,      ONLY: PHYEX_t
-USE STACK_MOD
+USE STACK_MOD,       ONLY: STACK
+USE MODE_MNH_ZWORK,  ONLY: ZMNH_STACK, IMNH_BLOCK, YMNH_STACK, INUMPIN
 USE OMP_LIB
 USE YOMHOOK, ONLY : LHOOK, DR_HOOK, JPHOOK
 
@@ -52,7 +53,8 @@ REAL, ALLOCATABLE, DIMENSION(:,:,:) :: PSSIU   ! Sub-saturation with respect to 
 LOGICAL, ALLOCATABLE, DIMENSION(:,:,:) :: LLMICRO
 
 INTEGER :: NPROMA, NGPBLKS, NFLEVG
-INTEGER :: IBL, JLON, JLEV
+INTEGER :: JLON, JLEV
+INTEGER, TARGET :: IBL
 
 TYPE(DIMPHYEX_t)         :: D, D0
 TYPE(PHYEX_t)            :: PHYEX
@@ -64,8 +66,8 @@ INTEGER                  :: ISTSZ, JBLK1, JBLK2
 INTEGER                  :: NTID, ITID
 INTEGER                  :: JRR
 
-REAL, ALLOCATABLE :: PSTACK(:,:)
-TYPE (STACK) :: YLSTACK
+REAL, ALLOCATABLE, TARGET :: PSTACK(:,:)
+TYPE(STACK), TARGET :: YLSTACK
 
 REAL(KIND=8) :: TS,TE
 REAL(KIND=8) :: TSC, TEC, TSD, TED, ZTC, ZTD 
@@ -190,8 +192,9 @@ D0%NKE  = 1
 D0%NKTB = 1
 D0%NKTE = KLEV
 
-ISTSZ = NPROMA * 20 * KLEV
+ISTSZ = NPROMA * 100 * KLEV
 ALLOCATE (PSTACK (ISTSZ, NGPBLKS))
+ZMNH_STACK => PSTACK
 
 TS = OMP_GET_WTIME ()
 
@@ -215,7 +218,7 @@ DO ITIME = 1, NTIME
   TSC = OMP_GET_WTIME ()
 
 #ifdef USE_OPENMP
-!$OMP PARALLEL PRIVATE (D, ITID, JBLK1, JBLK2, ISIZE, ISIZEMICRO)
+!$OMP PARALLEL PRIVATE (D, YLSTACK, ITID, JBLK1, JBLK2, ISIZE, ISIZEMICRO)
 #endif
 
 #ifdef _OPENACC
@@ -253,11 +256,16 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
 #endif
 
 #ifdef USE_STACK
+    !Using cray pointers, AROME mechanism
     YLSTACK%L = LOC (PSTACK (1, IBL))
     YLSTACK%U = YLSTACK%L + ISTSZ * KIND (PSTACK)
 #else
-    YLSTACK%L = 0
-    YLSTACK%U = 0
+    !Using fortran indexing, Meso-NH mechanism
+    YLSTACK%L = 1
+    YLSTACK%U = ISTSZ
+    IMNH_BLOCK => IBL
+    YMNH_STACK => YLSTACK
+    INUMPIN = 0
 #endif
 
     ISIZEMICRO = COUNT(LLMICRO(:,:,IBL))
@@ -288,7 +296,11 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
                         TBUDGETS=PHYEX%MISC%YLBUDGET, KBUDGETS=PHYEX%MISC%NBUDGET,                        &
                         PICENU=PICENU(:,IBL),                                                &
                         PKGN_ACON=PKGN_ACON(:,IBL), PKGN_SBGR=PKGN_SBGR(:,IBL),                &
-                        PFPR=PFPR(:,:,:,IBL))
+                        PFPR=PFPR(:,:,:,IBL) &
+#ifdef USE_STACK                                                                                                                    
+                        , YDSTACK=YLSTACK &                                                                                                           
+#endif
+                        )
     ENDIF
 
 #ifdef _OPENACC

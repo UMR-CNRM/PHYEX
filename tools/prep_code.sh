@@ -50,7 +50,7 @@ function usage {
   echo "variable.  The variable can contain a multi-lines string."
   echo "The variable is read line by line and the last applicable line is used."
   echo "A line can take one of these two forms:"
-  echo "  - FILE_DESCRIPTOR:OPTIONS"
+  echo "  - FILE_DESCRIPTOR:=:OPTIONS"
   echo "    where FILE_DESCRIPTOR is a regular expression to test against the filename. If there"
   echo "    is a match, the OPTIONS can be used for the file. The regular expression is"
   echo "    tested using 'grep -e'."
@@ -63,8 +63,8 @@ function usage {
   echo "To transform all source code in lower case, except routines in turb directory which must be"
   echo "in upper case but keeping the turb.F90 in lower case:"
   echo "> export OPTS='--lowerCase "
-  echo "> ^turb/:--upperCase "
-  echo "> ^turb/turb\..90:--lowerCase'; $0 --pyft\_opts\_env OPTS ..."
+  echo "> ^turb/:=:--upperCase "
+  echo "> ^turb/turb\..90:=:--lowerCase'; $0 --pyft\_opts\_env OPTS ..."
 }
 
 full_command="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}") $@"
@@ -309,11 +309,11 @@ if [ "$pyft_opts_env" != "" -o -n "${pyft_options-}" ]; then
           extra_opts=""
           if [ "$pyft_opts_env" != "" ]; then
             while read line; do
-              if echo $line | grep ':' > /dev/null; then
+              if echo $line | grep ':=:' > /dev/null; then
                 #This line has the form FILE_DESCRIPTOR:OPTIONS
-                fd=$(echo $line | cut -d: -f1)
-                if echo $file | grep -e $fd > /dev/null; then
-                  extra_opts=$(echo $line | cut -d: -f2-)
+                fd="$(echo $line | awk -F :=: '{print $1}')"
+                if echo $file | grep -e "$fd" > /dev/null; then
+                  extra_opts=$(echo $line | awk -F :=: '{$1=""; print $0}') #equivalent to cut -d:=: -f2- (multi characters separator are forbiden with cut)
                 fi
               else
                 extra_opts=$line

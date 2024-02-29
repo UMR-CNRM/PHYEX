@@ -6,7 +6,8 @@ USE COMPUTE_DIFF,    ONLY: DIFF
 USE MODI_RAIN_ICE
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_PHYEX,      ONLY: PHYEX_t
-USE STACK_MOD
+USE STACK_MOD,       ONLY: STACK
+USE MODE_MNH_ZWORK,  ONLY: ZMNH_STACK, IMNH_BLOCK, YMNH_STACK, INUMPIN
 USE OMP_LIB
 USE YOMHOOK, ONLY : LHOOK, DR_HOOK, JPHOOK
 
@@ -45,7 +46,8 @@ REAL,    ALLOCATABLE, DIMENSION(:,:)     :: ZINPRC, ZINPRC_OUT
 LOGICAL, ALLOCATABLE, DIMENSION(:,:,:) :: LLMICRO 
 
 INTEGER :: NPROMA, NGPBLKS, NFLEVG
-INTEGER :: IBL, JLON, JLEV
+INTEGER :: JLON, JLEV
+INTEGER, TARGET :: IBL
 
 TYPE(DIMPHYEX_t)         :: D, D0
 TYPE(PHYEX_t)            :: PHYEX
@@ -58,8 +60,8 @@ INTEGER                  :: NTID, ITID
 INTEGER                  :: JRR
 REAL                     :: ZTHVREFZIKB! for electricity use only
 
-REAL, ALLOCATABLE :: PSTACK(:,:)
-TYPE (STACK) :: YLSTACK
+REAL, ALLOCATABLE, TARGET :: PSTACK(:,:)
+TYPE(STACK), TARGET :: YLSTACK
 
 REAL(KIND=8) :: TS,TE
 REAL(KIND=8) :: TSC, TEC, TSD, TED, ZTC, ZTD 
@@ -129,8 +131,10 @@ D0%NKB  = KLEV
 D0%NKE  = 1
 D0%NKTB = 1
 D0%NKTE = KLEV
-ISTSZ = NPROMA * 20 * KLEV
+
+ISTSZ = NPROMA * 200 * KLEV
 ALLOCATE (PSTACK (ISTSZ, NGPBLKS))
+ZMNH_STACK => PSTACK
 
 TS = OMP_GET_WTIME ()
 
@@ -158,7 +162,7 @@ DO ITIME = 1, NTIME
   TSC = OMP_GET_WTIME ()
 
 #ifdef USE_OPENMP
-!$OMP PARALLEL PRIVATE (D, ITID, JBLK1, JBLK2, ISIZE)
+!$OMP PARALLEL PRIVATE (D, YLSTACK, ITID, JBLK1, JBLK2)
 #endif
 
 #ifdef _OPENACC
@@ -196,11 +200,16 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
 #endif
 
 #ifdef USE_STACK
+    !Using cray pointers, AROME mechanism
     YLSTACK%L = LOC (PSTACK (1, IBL))
     YLSTACK%U = YLSTACK%L + ISTSZ * KIND (PSTACK)
 #else
-    YLSTACK%L = 0
-    YLSTACK%U = 0
+    !Using fortran indexing, Meso-NH mechanism
+    YLSTACK%L = 1
+    YLSTACK%U = ISTSZ
+    IMNH_BLOCK => IBL
+    YMNH_STACK => YLSTACK
+    INUMPIN = 0
 #endif
 CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, &
              & PHYEX%RAIN_ICE_DESCRN, PHYEX%ELEC_PARAM, PHYEX%ELEC_DESCR, &
@@ -222,7 +231,11 @@ CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, &
              & PINPRS=PINPRS(:,IBL), PINPRG=PINPRG(:,IBL), PINDEP=ZINDEP(:,IBL), PRAINFR=ZRAINFR(:,:,IBL), &
              & PSIGS=PSIGS(:,:,IBL), &
              & TBUDGETS=PHYEX%MISC%YLBUDGET, KBUDGETS=PHYEX%MISC%NBUDGET, &
-             & PSEA=PSEA(:,IBL), PTOWN=PTOWN(:,IBL), PFPR=PFPR(:,:,:,IBL))
+             & PSEA=PSEA(:,IBL), PTOWN=PTOWN(:,IBL), PFPR=PFPR(:,:,:,IBL) &
+#ifdef USE_STACK                                                                                                                    
+             & , YDSTACK=YLSTACK &                                                                                                           
+#endif
+             &)
 
 #ifdef _OPENACC
     ENDDO

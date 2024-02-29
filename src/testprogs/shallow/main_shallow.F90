@@ -6,7 +6,8 @@ USE COMPUTE_DIFF,    ONLY: DIFF
 USE MODI_SHALLOW_MF
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_PHYEX,      ONLY: PHYEX_t
-USE STACK_MOD
+USE STACK_MOD,       ONLY: STACK
+USE MODE_MNH_ZWORK,  ONLY: ZMNH_STACK, IMNH_BLOCK, YMNH_STACK, INUMPIN
 USE OMP_LIB
 USE YOMHOOK, ONLY : LHOOK, DR_HOOK, JPHOOK
 
@@ -98,7 +99,8 @@ INTEGER, ALLOCATABLE:: IKETL_OUT      (:,:)
 INTEGER, ALLOCATABLE:: IKCTL_OUT      (:,:)
 
 INTEGER :: NPROMA, NGPBLKS, NFLEVG
-INTEGER :: IBL, JLON, JLEV
+INTEGER :: JLON, JLEV
+INTEGER, TARGET :: IBL
 
 TYPE(DIMPHYEX_t)         :: D, D0
 TYPE(PHYEX_t)            :: PHYEX
@@ -109,8 +111,8 @@ INTEGER                  :: IBLOCK1, IBLOCK2
 INTEGER                  :: ISTSZ, JBLK1, JBLK2
 INTEGER                  :: NTID, ITID
 
-REAL, ALLOCATABLE :: PSTACK(:,:)
-TYPE (STACK) :: YLSTACK
+REAL, ALLOCATABLE, TARGET :: PSTACK(:,:)
+TYPE(STACK), TARGET :: YLSTACK
 
 REAL(KIND=8) :: TS,TE
 REAL(KIND=8) :: TSC, TEC, TSD, TED, ZTC, ZTD 
@@ -203,8 +205,9 @@ D0%NJBC = 1
 D0%NIEC = D0%NIE
 D0%NJEC = D0%NJT
 
-ISTSZ = NPROMA * 20 * KLEV
+ISTSZ = NPROMA * 100 * KLEV
 ALLOCATE (PSTACK (ISTSZ, NGPBLKS))
+ZMNH_STACK => PSTACK
 
 TS = OMP_GET_WTIME ()
 
@@ -227,7 +230,7 @@ DO ITIME = 1, NTIME
   TSC = OMP_GET_WTIME ()
 
 #ifdef USE_OPENMP
-!$OMP PARALLEL PRIVATE (D, ITID, JBLK1, JBLK2)
+!$OMP PARALLEL PRIVATE (D, YLSTACK, ITID, JBLK1, JBLK2)
 #endif
 
 #ifdef _OPENACC
@@ -267,11 +270,16 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
 #endif
 
 #ifdef USE_STACK
+    !Using cray pointers, AROME mechanism
     YLSTACK%L = LOC (PSTACK (1, IBL))
     YLSTACK%U = YLSTACK%L + ISTSZ * KIND (PSTACK)
 #else
-    YLSTACK%L = 0
-    YLSTACK%U = 0
+    !Using fortran indexing, Meso-NH mechanism
+    YLSTACK%L = 1
+    YLSTACK%U = ISTSZ
+    IMNH_BLOCK => IBL
+    YMNH_STACK => YLSTACK
+    INUMPIN = 0
 #endif
 
   CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB,                    &
@@ -293,7 +301,11 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
      &PRC_UP=PRC_UP(:,:,IBL),PRI_UP=PRI_UP(:,:,IBL),            &
      &PU_UP=PU_UP(:,:,IBL), PV_UP=PV_UP(:,:,IBL), PTHV_UP=PTHV_UP(:,:,IBL), PW_UP=PW_UP(:,:,IBL),                        &
      &PFRAC_UP=PFRAC_UP(:,:,IBL),PEMF=PEMF(:,:,IBL),PDETR=ZDETR(:,:,IBL),PENTR=ZENTR(:,:,IBL),                           &
-     &KKLCL=IKLCL(:,IBL),KKETL=IKETL(:,IBL),KKCTL=IKCTL(:,IBL),PDX=PHYEX%MISC%PDX,PDY=PHYEX%MISC%PDY,KBUDGETS=PHYEX%MISC%NBUDGET )
+     &KKLCL=IKLCL(:,IBL),KKETL=IKETL(:,IBL),KKCTL=IKCTL(:,IBL),PDX=PHYEX%MISC%PDX,PDY=PHYEX%MISC%PDY,KBUDGETS=PHYEX%MISC%NBUDGET &
+#ifdef USE_STACK                                                                                                                    
+     & , YDSTACK=YLSTACK &                                                                                                           
+#endif
+     & )
 
 #ifdef _OPENACC
     ENDDO

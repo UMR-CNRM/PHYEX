@@ -49,7 +49,7 @@ The env file is sourced several times:
 The PYFT\_OPTS environment variable can contain a multi-lines string.
 For each file, the PYFT\_OPTS is read line by line and the last applicable line is used.
 A line can take one of these two forms:
-  - FILE\_DESCRIPTOR:OPTIONS
+  - FILE\_DESCRIPTOR:=:OPTIONS
     where FILE\_DESCRIPTOR is a regular expression to test against the filename. If there
     is a match, the OPTIONS can be used for the file. The regular expression is
     tested using 'grep -e'.
@@ -62,5 +62,5 @@ For example, to transform all source code in lower case:
 To transform all source code in lower case, except routines in turb directory which must be
 in upper case but keeping the turb.F90 in lower case:
 > export OPTS='--lowerCase 
-> ^turb/:--upperCase 
-> ^turb/turb\..90:--lowerCase'; pyft\_tool.py --pyft\_opts\_env OPTS ...
+> ^turb/:=:--upperCase 
+> ^turb/turb\..90:=:--lowerCase'; pyft\_tool.py --pyft\_opts\_env OPTS ...
