@@ -129,7 +129,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
     REAL    :: ZTSPLITR ! Small time step for rain sedimentation
     REAL    :: ZINVTSTEP
 
-    INTEGER :: JN, JL, JK, JI, JJ
+    INTEGER :: JN, JL, JK, JI, JM
 
     REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
@@ -262,8 +262,8 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
             END IF
           END DO
 
-          DO JJ = 1, ILISTLENC
-            JL = ILISTC(JJ)
+          DO JM = 1, ILISTLENC
+            JL = ILISTC(JM)
             IF (ZRCS(JL) .GT. ZRTMIN(2) .AND. ZRCT(JL) .GT. ICED%XRTMIN(2)) THEN
               ZWLBDC(JL) = ZWLBDC(JL) * ZCONC(JL) / (ZRHODREFC(JL) * ZRCT(JL))
               ZWLBDC(JL) = ZWLBDC(JL)**ICED%XLBEXC
@@ -316,8 +316,8 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
           END IF
         END DO
 
-        DO JJ = 1, ILISTLENR
-          JL = ILISTR(JJ)
+        DO JM = 1, ILISTLENR
+          JL = ILISTR(JM)
           ZWSED(IR1(JL),IR2(JL))= ICEP%XFSEDR  * ZRRS(JL)**ICEP%XEXSEDR *   &
                                    ZRHODREFR(JL)**(ICEP%XEXSEDR-ICED%XCEXVT)
         END DO
@@ -359,8 +359,8 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
           END IF
         END DO
 
-        DO JJ = 1, ILISTLENI
-          JL = ILISTI(JJ)
+        DO JM = 1, ILISTLENI
+          JL = ILISTI(JM)
           ZWSED(II1(JL),II2(JL))= ICEP%XFSEDI * ZRIS(JL) *  &
                           ZRHODREFI(JL)**(1.0-ICED%XCEXVT) * & !    McF&H
                           MAX( 0.05E6,-0.15319E6-0.021454E6* &
@@ -402,8 +402,8 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
           END IF
         END DO
 
-        DO JJ = 1, ILISTLENS
-          JL = ILISTS(JJ)
+        DO JM = 1, ILISTLENS
+          JL = ILISTS(JM)
           ZWSED(IS1(JL),IS2(JL))= ICEP%XFSEDS * ZRSS(JL)**ICEP%XEXSEDS *  &
                                    ZRHODREFS(JL)**(ICEP%XEXSEDS-ICED%XCEXVT)
         END DO
@@ -444,8 +444,8 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
           END IF
         END DO
 
-        DO JJ = 1, ILISTLENG
-          JL = ILISTG(JJ)
+        DO JM = 1, ILISTLENG
+          JL = ILISTG(JM)
           ZWSED(IG1(JL),IG2(JL)) = ICEP%XFSEDG  * ZRGS(JL)**ICEP%XEXSEDG *   &
                                   ZRHODREFG(JL)**(ICEP%XEXSEDG-ICED%XCEXVT)
         END DO
@@ -487,8 +487,8 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_SPLIT
             END IF
           END DO
 
-          DO JJ = 1, ILISTLENH
-            JL = ILISTH(JJ)
+          DO JM = 1, ILISTLENH
+            JL = ILISTH(JM)
             ZWSED(IH1(JL),IH2(JL))= ICEP%XFSEDH  * ZRHS(JL)**ICEP%XEXSEDH *   &
                                      ZRHODREFH(JL)**(ICEP%XEXSEDH-ICED%XCEXVT)
           END DO

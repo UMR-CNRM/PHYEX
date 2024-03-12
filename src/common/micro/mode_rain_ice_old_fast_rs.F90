@@ -90,7 +90,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
     REAL, DIMENSION(KSIZE, KRR) :: ZZW1     ! Work array
 
     INTEGER :: IGRIM, IGACC
-    INTEGER :: JJ, JK
+    INTEGER :: JL, JK
 
     REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
@@ -220,13 +220,13 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
 !        5.2.3  perform the bilinear interpolation of the normalized
 !               RACCSS-kernel
 
-      DO JJ = 1,IGACC
-        ZVEC3(JJ) = ( ICEP%XKER_RACCSS(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)         &
-                    - ICEP%XKER_RACCSS(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0)) &
-                                                               * ZVEC1(JJ)         &
-                  - ( ICEP%XKER_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)         &
-                    - ICEP%XKER_RACCSS(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0)) &
-                                                               *(ZVEC1(JJ) - 1.0)
+      DO JL = 1,IGACC
+        ZVEC3(JL) = ( ICEP%XKER_RACCSS(IVEC1(JL)+1,IVEC2(JL)+1)* ZVEC2(JL)         &
+                    - ICEP%XKER_RACCSS(IVEC1(JL)+1,IVEC2(JL)  )*(ZVEC2(JL) - 1.0)) &
+                                                               * ZVEC1(JL)         &
+                  - ( ICEP%XKER_RACCSS(IVEC1(JL)  ,IVEC2(JL)+1)* ZVEC2(JL)         &
+                    - ICEP%XKER_RACCSS(IVEC1(JL)  ,IVEC2(JL)  )*(ZVEC2(JL) - 1.0)) &
+                                                               *(ZVEC1(JL) - 1.0)
       END DO
       ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGACC),MASK=GMASK,FIELD=0.0 )
 !
@@ -249,26 +249,26 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
 !        5.2.4b perform the bilinear interpolation of the normalized
 !               RACCS-kernel
 !
-      DO JJ = 1,IGACC
-        ZVEC3(JJ) =  (ICEP%XKER_RACCS(IVEC2(JJ)+1,IVEC1(JJ)+1)* ZVEC1(JJ)          &
-                    - ICEP%XKER_RACCS(IVEC2(JJ)+1,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
-                                                              * ZVEC2(JJ)          &
-                   - (ICEP%XKER_RACCS(IVEC2(JJ)  ,IVEC1(JJ)+1)* ZVEC1(JJ)          &
-                   -  ICEP%XKER_RACCS(IVEC2(JJ)  ,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
-                                                              *(ZVEC2(JJ) - 1.0)
+      DO JL = 1,IGACC
+        ZVEC3(JL) =  (ICEP%XKER_RACCS(IVEC2(JL)+1,IVEC1(JL)+1)* ZVEC1(JL)          &
+                    - ICEP%XKER_RACCS(IVEC2(JL)+1,IVEC1(JL)  )*(ZVEC1(JL) - 1.0) ) &
+                                                              * ZVEC2(JL)          &
+                   - (ICEP%XKER_RACCS(IVEC2(JL)  ,IVEC1(JL)+1)* ZVEC1(JL)          &
+                   -  ICEP%XKER_RACCS(IVEC2(JL)  ,IVEC1(JL)  )*(ZVEC1(JL) - 1.0) ) &
+                                                              *(ZVEC2(JL) - 1.0)
       END DO
       ZZW1(:,2) = ZZW1(:,2)*UNPACK( VECTOR=ZVEC3(1:IGACC),MASK=GMASK(:),FIELD=0.0 )
                                                                        !! RRACCS!
 !        5.2.5  perform the bilinear interpolation of the normalized
 !               SACCRG-kernel
 !
-      DO JJ = 1,IGACC
-        ZVEC3(JJ) =  (  ICEP%XKER_SACCRG(IVEC2(JJ)+1,IVEC1(JJ)+1)* ZVEC1(JJ)          &
-                      - ICEP%XKER_SACCRG(IVEC2(JJ)+1,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
-                                                            * ZVEC2(JJ) &
-                   - (  ICEP%XKER_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)+1)* ZVEC1(JJ)          &
-                      - ICEP%XKER_SACCRG(IVEC2(JJ)  ,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
-                                                          * (ZVEC2(JJ) - 1.0)
+      DO JL = 1,IGACC
+        ZVEC3(JL) =  (  ICEP%XKER_SACCRG(IVEC2(JL)+1,IVEC1(JL)+1)* ZVEC1(JL)          &
+                      - ICEP%XKER_SACCRG(IVEC2(JL)+1,IVEC1(JL)  )*(ZVEC1(JL) - 1.0) ) &
+                                                            * ZVEC2(JL) &
+                   - (  ICEP%XKER_SACCRG(IVEC2(JL)  ,IVEC1(JL)+1)* ZVEC1(JL)          &
+                      - ICEP%XKER_SACCRG(IVEC2(JL)  ,IVEC1(JL)  )*(ZVEC1(JL) - 1.0) ) &
+                                                          * (ZVEC2(JL) - 1.0)
       END DO
       ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGACC),MASK=GMASK,FIELD=0.0 )
 !

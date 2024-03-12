@@ -213,7 +213,7 @@ REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electr
 !
 !*      0.2   Declaration of local variables    
 !
-INTEGER :: II, JJ, JL     ! Loop indexes
+INTEGER :: II, JL         ! Loop indexes
 INTEGER :: IIB, IIE, &    ! Define the domain
            IJB, IJE, &    ! where the microphysical sources
            IKB, IKE       ! must be computed
@@ -1161,15 +1161,15 @@ IF (KMICRO >= 0) THEN
 !
   GMASK(:) = .FALSE.
   IGMASK = 0
-  DO JJ = 1, SIZE(GMASK)
-    IF (ZRSRIMCG(JJ) > 0. .AND. ZZT(JJ) < CST%XTT .AND. &
-        ZRCT(JJ) > XRTMIN_ELEC(2) .AND. ZRST(JJ) > XRTMIN_ELEC(5) .AND. &
-        ZLBDAS(JJ) > 0.) THEN  !++cb-- 12/07/23 condition ajoutee pour eviter log(0)
+  DO JL = 1, SIZE(GMASK)
+    IF (ZRSRIMCG(JL) > 0. .AND. ZZT(JL) < CST%XTT .AND. &
+        ZRCT(JL) > XRTMIN_ELEC(2) .AND. ZRST(JL) > XRTMIN_ELEC(5) .AND. &
+        ZLBDAS(JL) > 0.) THEN  !++cb-- 12/07/23 condition ajoutee pour eviter log(0)
       IGMASK = IGMASK + 1
-      I1(IGMASK) = JJ
-      GMASK(JJ) = .TRUE.
+      I1(IGMASK) = JL
+      GMASK(JL) = .TRUE.
     ELSE
-      GMASK(JJ) = .FALSE.
+      GMASK(JL) = .FALSE.
     END IF
   END DO
   !
@@ -1178,8 +1178,8 @@ IF (KMICRO >= 0) THEN
   ALLOCATE(IVEC2(IGMASK))
   !
   ! select the ZLBDAS
-  DO JJ = 1, IGMASK
-    ZVEC1(JJ) = ZLBDAS(I1(JJ))
+  DO JL = 1, IGMASK
+    ZVEC1(JL) = ZLBDAS(I1(JL))
   END DO
   ! find the next lower indice for the ZLBDAS in the geometrical set of Lbda_s 
   ! used to tabulate some moments of the incomplete gamma function
@@ -1194,8 +1194,8 @@ IF (KMICRO >= 0) THEN
                    - XGAMINC_RIM3( IVEC2(1:IGMASK)   ) * (ZVEC2(1:IGMASK) - 1.0)
   !
   ZWQ(:) = 0.
-  DO JJ = 1, IGMASK
-    ZWQ(I1(JJ)) = ZVEC1(JJ)
+  DO JL = 1, IGMASK
+    ZWQ(I1(JL)) = ZVEC1(JL)
   END DO
   !
   DEALLOCATE(ZVEC1)
@@ -1244,14 +1244,14 @@ IF (KMICRO >= 0) THEN
 !*      4.3   Raindrop accretion onto the aggregates
 !
   IGMASK = 0
-  DO JJ = 1, SIZE(GMASK)
-    IF (ZRRT(JJ) > ZRTMIN(3) .AND. ZLBDAR(JJ) > 0. .AND. &
-        ZRST(JJ) > ZRTMIN(5) .AND. ZLBDAS(JJ) > 0.) THEN
+  DO JL = 1, SIZE(GMASK)
+    IF (ZRRT(JL) > ZRTMIN(3) .AND. ZLBDAR(JL) > 0. .AND. &
+        ZRST(JL) > ZRTMIN(5) .AND. ZLBDAS(JL) > 0.) THEN
       IGMASK = IGMASK + 1
-      I1(IGMASK) = JJ
-      GMASK(JJ) = .TRUE.
+      I1(IGMASK) = JL
+      GMASK(JL) = .TRUE.
     ELSE
-      GMASK(JJ) = .FALSE.
+      GMASK(JL) = .FALSE.
     END IF
   END DO
   !
@@ -1265,9 +1265,9 @@ IF (KMICRO >= 0) THEN
     ALLOCATE(ZVECQ3(IGMASK))
     !
     ! select the (ZLBDAS,ZLBDAR) couplet
-    DO JJ = 1, IGMASK
-      ZVEC1(JJ) = ZLBDAS(I1(JJ))
-      ZVEC2(JJ) = ZLBDAR(I1(JJ))
+    DO JL = 1, IGMASK
+      ZVEC1(JL) = ZLBDAS(I1(JL))
+      ZVEC2(JL) = ZLBDAR(I1(JL))
     END DO
     !
     ! find the next lower indice for the ZLBDAS and for the ZLBDAR in the geometrical 
@@ -1289,10 +1289,10 @@ IF (KMICRO >= 0) THEN
     ZWQ1(:) = 0.
     ZWQ2(:) = 0.
     ZWQ3(:) = 0.
-    DO JJ = 1, IGMASK
-      ZWQ1(I1(JJ)) = ZVECQ1(JJ)
-      ZWQ2(I1(JJ)) = ZVECQ2(JJ)
-      ZWQ3(I1(JJ)) = ZVECQ3(JJ)
+    DO JL = 1, IGMASK
+      ZWQ1(I1(JL)) = ZVECQ1(JL)
+      ZWQ2(I1(JL)) = ZVECQ2(JL)
+      ZWQ3(I1(JL)) = ZVECQ3(JL)
     END DO
 !
     DEALLOCATE(ZVEC1)
@@ -1502,14 +1502,14 @@ IF (KMICRO >= 0) THEN
 !*      5.2.4 compute qsdryg
 !
   IGMASK = 0
-  DO JJ = 1, SIZE(GMASK)
-    IF (ZRST(JJ) > ZRTMIN(5) .AND. ZLBDAS(JJ) > 0. .AND. &
-        ZRGT(JJ) > ZRTMIN(6) .AND. ZLBDAG(JJ) > 0.) THEN
+  DO JL = 1, SIZE(GMASK)
+    IF (ZRST(JL) > ZRTMIN(5) .AND. ZLBDAS(JL) > 0. .AND. &
+        ZRGT(JL) > ZRTMIN(6) .AND. ZLBDAG(JL) > 0.) THEN
       IGMASK = IGMASK + 1
-      I1(IGMASK) = JJ
-      GMASK(JJ) = .TRUE.
+      I1(IGMASK) = JL
+      GMASK(JL) = .TRUE.
     ELSE
-      GMASK(JJ) = .FALSE.
+      GMASK(JL) = .FALSE.
     END IF
   END DO
   !
@@ -1525,9 +1525,9 @@ IF (KMICRO >= 0) THEN
     ALLOCATE(ZVECQ4(IGMASK))
   !
   ! select the (ZLBDAG,ZLBDAS) couplet
-    DO JJ = 1, IGMASK
-      ZVEC1(JJ) = ZLBDAG(I1(JJ))
-      ZVEC2(JJ) = ZLBDAS(I1(JJ))
+    DO JL = 1, IGMASK
+      ZVEC1(JL) = ZLBDAG(I1(JL))
+      ZVEC2(JL) = ZLBDAS(I1(JL))
     END DO
   !
   ! find the next lower indice for the ZLBDAG and for the ZLBDAS in the geometrical set 
@@ -1546,8 +1546,8 @@ IF (KMICRO >= 0) THEN
     ! normalized Q-SDRYG-kernel 
     ZVECQ1(:) = BI_LIN_INTP_V(XKER_Q_SDRYG, IVEC1, IVEC2, ZVEC1, ZVEC2, IGMASK)
     ZWQ5(:,3) = 0.  ! normalement pas utile
-    DO JJ = 1, IGMASK
-      ZWQ5(I1(JJ),3) = ZVECQ1(JJ)
+    DO JL = 1, IGMASK
+      ZWQ5(I1(JL),3) = ZVECQ1(JL)
     END DO    
     !
     ! normalized Q-???-kernel
@@ -1558,8 +1558,8 @@ IF (KMICRO >= 0) THEN
         CNI_CHARGING == 'TEEWC' .OR. CNI_CHARGING == 'TERAR') THEN
       ZVECQ2(:)  = BI_LIN_INTP_V(XKER_Q_LIMSG, IVEC1, IVEC2, ZVEC1, ZVEC2, IGMASK) 
       ZWQ5(:,4) = 0.  ! normalement pas utile
-      DO JJ = 1, IGMASK
-        ZWQ5(I1(JJ),4) = ZVECQ2(JJ)
+      DO JL = 1, IGMASK
+        ZWQ5(I1(JL),4) = ZVECQ2(JL)
       END DO
     END IF
     !
@@ -1568,16 +1568,16 @@ IF (KMICRO >= 0) THEN
         CNI_CHARGING == 'GARDI') THEN
       ZVECQ3(:)  = BI_LIN_INTP_V(XKER_Q_SDRYGB,IVEC1,IVEC2,ZVEC1,ZVEC2,IGMASK)
       ZWQ5(:,5) = 0.  ! normalement pas utile
-      DO JJ = 1, IGMASK
-        ZWQ5(I1(JJ),5) = ZVECQ3(JJ)
+      DO JL = 1, IGMASK
+        ZWQ5(I1(JL),5) = ZVECQ3(JL)
       END DO
     ELSE
       ZVECQ3(:) = BI_LIN_INTP_V(XKER_Q_SDRYGB1,IVEC1,IVEC2,ZVEC1,ZVEC2,IGMASK)
       ZVECQ4(:) = BI_LIN_INTP_V(XKER_Q_SDRYGB2,IVEC1,IVEC2,ZVEC1,ZVEC2,IGMASK)
       ZWQ5(:,6:7) = 0.  ! normalement pas utile
-      DO JJ = 1, IGMASK
-        ZWQ5(I1(JJ),6) = ZVECQ3(JJ) ! Dvqsgmn if charge>0
-        ZWQ5(I1(JJ),7) = ZVECQ4(JJ) ! Dvqsgmn if charge<0
+      DO JL = 1, IGMASK
+        ZWQ5(I1(JL),6) = ZVECQ3(JL) ! Dvqsgmn if charge>0
+        ZWQ5(I1(JL),7) = ZVECQ4(JL) ! Dvqsgmn if charge<0
       END DO
     ENDIF
     !
@@ -1636,14 +1636,14 @@ IF (KMICRO >= 0) THEN
 !
   IGMASK = 0
   GMASK(:) = .FALSE.
-  DO JJ = 1, SIZE(GMASK)
-    IF (ZRRT(JJ) > ZRTMIN(3) .AND. ZLBDAR(JJ) > 0. .AND. &
-        ZRGT(JJ) > ZRTMIN(6) .AND. ZLBDAG(JJ) > 0.) THEN
+  DO JL = 1, SIZE(GMASK)
+    IF (ZRRT(JL) > ZRTMIN(3) .AND. ZLBDAR(JL) > 0. .AND. &
+        ZRGT(JL) > ZRTMIN(6) .AND. ZLBDAG(JL) > 0.) THEN
       IGMASK = IGMASK + 1
-      I1(IGMASK) = JJ
-      GMASK(JJ) = .TRUE.
+      I1(IGMASK) = JL
+      GMASK(JL) = .TRUE.
     ELSE
-      GMASK(JJ) = .FALSE.
+      GMASK(JL) = .FALSE.
     END IF
   END DO
   !
@@ -1656,9 +1656,9 @@ IF (KMICRO >= 0) THEN
     ALLOCATE(ZVECQ1(IGMASK))
     !
     ! select the (ZLBDAG,ZLBDAR) couplet
-    DO JJ = 1, IGMASK
-      ZVEC1(JJ) = ZLBDAG(I1(JJ))
-      ZVEC2(JJ) = ZLBDAR(I1(JJ))
+    DO JL = 1, IGMASK
+      ZVEC1(JL) = ZLBDAG(I1(JL))
+      ZVEC2(JL) = ZLBDAR(I1(JL))
     END DO
     !
     ! find the next lower indice for the ZLBDAG and for the ZLBDAR in the geometrical set 
@@ -1676,8 +1676,8 @@ IF (KMICRO >= 0) THEN
     ! perform the bilinear interpolation of the normalized RDRYG-kernel
     ZVECQ1(:) = BI_LIN_INTP_V(XKER_Q_RDRYG, IVEC1, IVEC2, ZVEC1, ZVEC2, IGMASK)
     ZWQ5(:,4) = 0.
-    DO JJ = 1, IGMASK
-      ZWQ5(I1(JJ),4) = ZVECQ1(JJ)
+    DO JL = 1, IGMASK
+      ZWQ5(I1(JL),4) = ZVECQ1(JL)
     END DO
     !
     DEALLOCATE(ZVEC1)
@@ -3441,17 +3441,17 @@ REAL,                DIMENSION(KN)  :: PY         ! Interpolated value
 !
 !*	0.2	Declaration of local variables
 !
-INTEGER :: JJ        ! Loop index
+INTEGER :: JL        ! Loop index
 !
 !
 !*	1.	INTERPOLATION
 !		-------------
 !  
-DO JJ = 1, KN
-  PY(JJ) = (1.0 - PDX(JJ)) * (1.0 - PDY(JJ)) * ZT(KI(JJ),  KJ(JJ))   + &
-            PDX(JJ)        * (1.0 - PDY(JJ)) * ZT(KI(JJ)+1,KJ(JJ))   + &
-            PDX(JJ)        * PDY(JJ)         * ZT(KI(JJ)+1,KJ(JJ)+1) + &
-           (1.0 - PDX(JJ)) * PDY(JJ)         * ZT(KI(JJ)  ,KJ(JJ)+1)
+DO JL = 1, KN
+  PY(JL) = (1.0 - PDX(JL)) * (1.0 - PDY(JL)) * ZT(KI(JL),  KJ(JL))   + &
+            PDX(JL)        * (1.0 - PDY(JL)) * ZT(KI(JL)+1,KJ(JL))   + &
+            PDX(JL)        * PDY(JL)         * ZT(KI(JL)+1,KJ(JL)+1) + &
+           (1.0 - PDX(JL)) * PDY(JL)         * ZT(KI(JL)  ,KJ(JL)+1)
 ENDDO
 !
 END FUNCTION BI_LIN_INTP_V

@@ -248,30 +248,23 @@ DO ITIME = 1, NTIME
 
 #ifdef USE_OPENMP
 !$OMP PARALLEL PRIVATE (D, YLSTACK, ITID, JBLK1, JBLK2)
+
+  NTID = OMP_GET_MAX_THREADS ()
+  ITID = OMP_GET_THREAD_NUM ()
+  JBLK1 = 1 +  (NGPBLKS * (ITID+0)) / NTID
+  JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
+#else
+  JBLK1 = 1
+  JBLK2 = NGPBLKS
 #endif
 
-#ifdef _OPENACC
-JBLK1 = 1 
-JBLK2 = NGPBLKS
-#endif
-
-#ifdef USE_OPENMP
-NTID = OMP_GET_MAX_THREADS ()
-ITID = OMP_GET_THREAD_NUM ()
-JBLK1 = 1 +  (NGPBLKS * (ITID+0)) / NTID
-JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
-
-
-!PRINT *, ITID, JBLK1, JBLK2
-
-#endif
+  D = D0
 
 !$acc parallel loop gang vector private (YLSTACK, IBL, JLON, D) collapse (2)
 
   DO IBL = JBLK1, JBLK2
 
-
-#ifdef _OPENACC
+#ifdef USE_COLCALL
   DO JLON = 1, NPROMA
     D = D0
     D%NIB = JLON
@@ -280,10 +273,6 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     D%NIJE = JLON
     D%NIBC = JLON
     D%NIEC = JLON
-#endif
-
-#ifdef USE_OPENMP
-    D = D0
 #endif
 
 #ifdef USE_STACK
@@ -327,7 +316,7 @@ CALL TURB(PHYEX%CST, PHYEX%CSTURB, PHYEX%MISC%TBUCONF, PHYEX%TURBN, PHYEX%NEBN, 
 #endif
    &)
 
-#ifdef _OPENACC
+#ifdef USE_COLCALL
     ENDDO
 #endif
 

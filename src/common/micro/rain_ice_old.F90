@@ -522,6 +522,7 @@ DO JK = 1, D%NKT
   END DO
 END DO
 
+PEVAP3D(:,:)= 0.
 IF ( KSIZE >= 0 ) THEN
 
   IF (OCND2) THEN
@@ -878,7 +879,6 @@ IF ( KSIZE >= 0 ) THEN
 !
   IF( OWARM ) THEN    !  Check if the formation of the raindrops by the slow
                       !  warm processes is allowed
-    PEVAP3D(:,:)= 0.
     CALL RAIN_ICE_OLD_WARM(D, CST, PARAMI, ICEP, ICED, BUCONF, &
                            KSIZE, OCND2, LKOGAN, GMICRO, &
                            PRHODJ, PEVAP3D, PTHS, PRVS, &

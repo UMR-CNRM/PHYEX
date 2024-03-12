@@ -101,11 +101,9 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT), OPTIONAL :: PQS ! Elec. charge density 
 INTEGER :: JK, JL, JN                     ! Loop index
 INTEGER :: ISEDIM                         ! Case number of sedimentation
 !
-LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
-                           :: GSEDIM      ! Test where to compute the SED processes
-REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
-                           :: ZW,       & ! Work array
-                              ZWDT        ! Temperature change
+LOGICAL, DIMENSION(D%NIT, D%NJT, D%NKT) :: GSEDIM      ! Test where to compute the SED processes
+REAL,    DIMENSION(D%NIT, D%NJT, D%NKT) :: ZW,       & ! Work array
+                                           ZWDT        ! Temperature change
 REAL,    DIMENSION(D%NIT,D%NJT,0:D%NKT+1) &
                            :: ZWSEDR,   & ! Sedimentation of MMR
                               ZWSEDC      ! Sedimentation of number conc.
@@ -133,10 +131,11 @@ REAL :: ZCX, ZXX  ! C and x parameters for N-lambda relationship
 REAL, DIMENSION(:),     ALLOCATABLE :: ZQS, &    ! Electric charge density source
                                        ZZQ, &    ! Work array
                                        ZES       ! e in q-D relationship
-REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZWSEDQ    ! Sedimentation of electric charge density
-REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLBDA3
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) :: ZBEARDCOEFF ! effect of
-                                                 ! electrical forces on terminal fall speed
+REAL, DIMENSION(MERGE(D%NIT, 0, OELEC), &
+               &MERGE(D%NJT, 0, OELEC), &
+               &MERGE(D%NKT, 0, OELEC)) :: ZWSEDQ, &   ! Sedimentation of electric charge density
+                                         & ZLBDA3
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT):: ZBEARDCOEFF ! effect of electrical forces on terminal fall speed
 !
 !-------------------------------------------------------------------------------
 !
@@ -194,7 +193,7 @@ DO JN = 1 ,  NSPLITSED(KID)
       ALLOCATE(ZZY(ISEDIM))   ; ZZY(:) = 0.0
       !
       IF (OELEC) THEN
-        ALLOCATE(ZWSEDQ(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))) ; ZWSEDQ(:,:,:) = 0.
+        ZWSEDQ(:,:,:) = 0.
         ALLOCATE(ZES(ISEDIM)) ; ZES(:) = 0.0
         ALLOCATE(ZQS(ISEDIM)) ; ZQS(:) = 0.0
         ALLOCATE(ZZQ(ISEDIM)) ; ZZQ(:) = 0.0
@@ -244,11 +243,9 @@ DO JN = 1 ,  NSPLITSED(KID)
 ! If the electrical scheme is activated, the electric field can impact the sedimentation
       ZBEARDCOEFF(:,:,:) = 1.0
       IF (OELEC .AND. LSEDIM_BEARD) THEN
-        ALLOCATE(ZLBDA3(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)))
         ZLBDA3(:,:,:) = UNPACK( ZLBDA(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
         CALL ELEC_BEARD_EFFECT(D, CST, ICED, 'LIMA', KID, GSEDIM, PT, PRHODREF, PTHVREFZIKB, &
                                PRS, PQS, PEFIELDW, ZLBDA3, ZBEARDCOEFF)
-        DEALLOCATE(ZLBDA3)
       END IF
 !
       ZWSEDR(:,:,1:D%NKT) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
@@ -331,7 +328,6 @@ DO JN = 1 ,  NSPLITSED(KID)
       DEALLOCATE(ZZW)
       DEALLOCATE(ZZX)
       DEALLOCATE(ZZY)
-      IF (ALLOCATED(ZWSEDQ)) DEALLOCATE(ZWSEDQ)
       IF (ALLOCATED(ZQS))    DEALLOCATE(ZQS)
       IF (ALLOCATED(ZZQ))    DEALLOCATE(ZZQ)
       IF (ALLOCATED(ZES))    DEALLOCATE(ZES)      

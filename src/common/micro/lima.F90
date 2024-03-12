@@ -309,7 +309,7 @@ REAL, DIMENSION(:), ALLOCATABLE                      :: ZCF1D, ZIF1D, ZPF1D     
 ! domain size and levels (AROME compatibility)
 INTEGER :: KRR
 ! loops and packing
-INTEGER :: II, IPACK, JI
+INTEGER :: II, IPACK, JN
 integer :: idx
 INTEGER, DIMENSION(:), ALLOCATABLE :: I1, I2, I3
 ! Inverse ov PTSTEP
@@ -1704,8 +1704,8 @@ DO WHILE(ANY(ZTIME(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)<PTSTEP))
             ZTOT_TH_IMLT(I1(II),I2(II),I3(II)) =   ZTOT_TH_IMLT(I1(II),I2(II),I3(II))   + Z_TH_IMLT(II)
             ZTOT_RC_IMLT(I1(II),I2(II),I3(II)) =   ZTOT_RC_IMLT(I1(II),I2(II),I3(II))   + Z_RC_IMLT(II)
             ZTOT_CC_IMLT(I1(II),I2(II),I3(II)) =   ZTOT_CC_IMLT(I1(II),I2(II),I3(II))   + Z_CC_IMLT(II)
-            DO JI = 1, NMOD_IFN
-              ZTOT_IFNN_IMLT(I1(II),I2(II),I3(II),JI) = ZTOT_IFNN_IMLT(I1(II),I2(II),I3(II),JI) + ZB_IFNN(II,JI)
+            DO JN = 1, NMOD_IFN
+              ZTOT_IFNN_IMLT(I1(II),I2(II),I3(II),JN) = ZTOT_IFNN_IMLT(I1(II),I2(II),I3(II),JN) + ZB_IFNN(II,JN)
             END DO
 
             ! Tendencies

@@ -219,40 +219,32 @@ DO ITIME = 1, NTIME
 
 #ifdef USE_OPENMP
 !$OMP PARALLEL PRIVATE (D, YLSTACK, ITID, JBLK1, JBLK2, ISIZE, ISIZEMICRO)
+
+  NTID = OMP_GET_MAX_THREADS ()
+  ITID = OMP_GET_THREAD_NUM ()
+  JBLK1 = 1 +  (NGPBLKS * (ITID+0)) / NTID
+  JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
+#else
+  JBLK1 = 1
+  JBLK2 = NGPBLKS
 #endif
 
-#ifdef _OPENACC
-JBLK1 = 1 
-JBLK2 = NGPBLKS
-#endif
-
-#ifdef USE_OPENMP
-NTID = OMP_GET_MAX_THREADS ()
-ITID = OMP_GET_THREAD_NUM ()
-JBLK1 = 1 +  (NGPBLKS * (ITID+0)) / NTID
-JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
-
-
-!PRINT *, ITID, JBLK1, JBLK2
-
-#endif
+  D = D0
 
 !$acc parallel loop gang vector private (YLSTACK, IBL, JLON, D, ISIZEMICRO) collapse (2)
 
   DO IBL = JBLK1, JBLK2
 
-
-#ifdef _OPENACC
+#ifdef USE_COLCALL
   DO JLON = 1, NPROMA
     D = D0
     D%NIB = JLON
     D%NIE = JLON
     D%NIJB = JLON
     D%NIJE = JLON
-#endif
-
-#ifdef USE_OPENMP
-    D = D0
+    ISIZEMICRO = COUNT(LLMICRO(JLON,:,IBL))
+#else
+    ISIZEMICRO = COUNT(LLMICRO(:,:,IBL))
 #endif
 
 #ifdef USE_STACK
@@ -268,9 +260,6 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
     INUMPIN = 0
 #endif
 
-    ISIZEMICRO = COUNT(LLMICRO(:,:,IBL))
-
-    IF (ISIZEMICRO .GT. 0) THEN
       CALL RAIN_ICE_OLD(D=D, CST=PHYEX%CST, PARAMI=PHYEX%PARAM_ICEN,                                   &
                         ICEP=PHYEX%RAIN_ICE_PARAMN, ICED=PHYEX%RAIN_ICE_DESCRN, BUCONF=PHYEX%MISC%TBUCONF,        &
                         OSEDIC=OSEDIC, OCND2=OCND2,                                        &
@@ -301,9 +290,8 @@ JBLK2 =      (NGPBLKS * (ITID+1)) / NTID
                         , YDSTACK=YLSTACK &                                                                                                           
 #endif
                         )
-    ENDIF
 
-#ifdef _OPENACC
+#ifdef USE_COLCALL
     ENDDO
 #endif
 

@@ -81,10 +81,10 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
     REAL, DIMENSION(D%NIT, D%NKT)     :: ZW ! work array
 
     REAL :: ZP1,ZP2,ZH,ZZWLBDA,ZZWLBDC,ZZCC
-    REAL, DIMENSION(SIZE(PRHODREF,1)) :: ZQP
+    REAL, DIMENSION(D%NIT) :: ZQP
     INTEGER :: JI,JK
     INTEGER :: JCOUNT, JL
-    INTEGER, DIMENSION(SIZE(PRHODREF,1)*SIZE(PRHODREF,2)) :: I1
+    INTEGER, DIMENSION(D%NIT) :: I1
 
     REAL, DIMENSION(D%NIT,D%NKT) :: ZPRCS, ZPRRS, ZPRSS, ZPRGS, ZPRHS ! Mixing ratios created during the time step
 
@@ -148,7 +148,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
           ZQP(JI)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
         END DO
 
-        CALL COUNTJV2(JCOUNT, (PRCS(:,JK) > ZRTMIN(2) .AND. PRCT(:,JK) > ZRTMIN(2)) .OR. &
+        CALL COUNTJV2(D, JCOUNT, (PRCS(:,JK) > ZRTMIN(2) .AND. PRCT(:,JK) > ZRTMIN(2)) .OR. &
                       (ZQP(:) > ZRTMIN(2)),I1(:))
 
         DO JL=1, JCOUNT
@@ -217,7 +217,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
         ZQP(JI)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
       END DO
 
-      CALL COUNTJV2(JCOUNT, (PRRS(:,JK) > ZRTMIN(3)) .OR. &
+      CALL COUNTJV2(D, JCOUNT, (PRRS(:,JK) > ZRTMIN(3)) .OR. &
                        (ZQP(:) > ZRTMIN(3)),I1(:))
       DO JL=1, JCOUNT
         JI=I1(JL)
@@ -271,7 +271,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
         ZQP(JI)=ZWSED(JI,JK+KKL)*ZW(JI,JK)
       ENDDO
 
-      CALL COUNTJV2(JCOUNT, (PRIS(:,JK) > MAX(ZRTMIN(4),1.0E-7 )) .OR. &
+      CALL COUNTJV2(D, JCOUNT, (PRIS(:,JK) > MAX(ZRTMIN(4),1.0E-7 )) .OR. &
                        (ZQP(:) > MAX(ZRTMIN(4),1.0E-7 )),I1(:))
 
       DO JL=1, JCOUNT
@@ -333,7 +333,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
       !estimation of q' taking into account incomming ZWSED
       ZQP(:)=ZWSED(:,JK+KKL)*ZW(:,JK)
 
-      CALL COUNTJV2(JCOUNT, (PRSS(:,JK) > ZRTMIN(5)) .OR. &
+      CALL COUNTJV2(D, JCOUNT, (PRSS(:,JK) > ZRTMIN(5)) .OR. &
                        (ZQP(:) > ZRTMIN(5)),I1(:))
       DO JL=1, JCOUNT
         JI=I1(JL)
@@ -389,7 +389,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
       !estimation of q' taking into account incomming ZWSED
       ZQP(:)=ZWSED(:,JK+KKL)*ZW(:,JK)
 
-      CALL COUNTJV2(JCOUNT, (PRGS(:,JK) > ZRTMIN(6)) .OR. &
+      CALL COUNTJV2(D, JCOUNT, (PRGS(:,JK) > ZRTMIN(6)) .OR. &
                        (ZQP(:) > ZRTMIN(6)),I1(:))
 
       DO JL = 1,JCOUNT
@@ -446,7 +446,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
         !estimation of q' taking into account incomming ZWSED
         ZQP(:)=ZWSED(:,JK+KKL)*ZW(:,JK)
 
-        CALL COUNTJV2(JCOUNT, (PRHS(:,JK)+ZQP(:) > ZRTMIN(7)) .OR. &
+        CALL COUNTJV2(D, JCOUNT, (PRHS(:,JK)+ZQP(:) > ZRTMIN(7)) .OR. &
                         (ZQP(:) > ZRTMIN(7)),I1(:))
 
         DO JL=1, JCOUNT
@@ -497,17 +497,18 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
 
   END SUBROUTINE RAIN_ICE_OLD_SEDIMENTATION_STAT
 
-  SUBROUTINE COUNTJV2(IC, LTAB, I1)
-
+  SUBROUTINE COUNTJV2(D, IC, LTAB, I1)
+    USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
     IMPLICIT NONE
 
+    TYPE(DIMPHYEX_T),       INTENT(IN) :: D
     INTEGER, INTENT(OUT) :: IC
-    LOGICAL, DIMENSION(:), INTENT(IN)  :: LTAB ! Mask
-    INTEGER, DIMENSION(:), INTENT(OUT) :: I1   ! Used to replace the COUNT and PACK
+    LOGICAL, DIMENSION(D%NIT), INTENT(IN)  :: LTAB ! Mask
+    INTEGER, DIMENSION(D%NIT), INTENT(OUT) :: I1   ! Used to replace the COUNT and PACK
     INTEGER :: JI
 
     IC = 0
-    DO JI = 1,SIZE(LTAB,1)
+    DO JI = 1, D%NIT
       IF(LTAB(JI)) THEN
         IC = IC +1
         I1(IC) = JI

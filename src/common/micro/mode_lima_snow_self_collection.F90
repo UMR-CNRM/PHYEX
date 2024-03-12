@@ -60,7 +60,7 @@ REAL, DIMENSION(SIZE(PCST)) :: &
                                            ZW1, & ! work arrays
                                            ZW2
 LOGICAL, DIMENSION(SIZE(PCST)) :: GSSC
-INTEGER :: IGSSC, JJ
+INTEGER :: IGSSC, JL
 INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1        ! Vectors of indices
 REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1, ZVEC3 ! Work vectors
 !
@@ -103,13 +103,13 @@ IF( IGSSC>0 ) THEN
 !               SSCS-kernel
 !
    ALLOCATE(ZVEC3(IGSSC))
-   DO JJ = 1,IGSSC
-      ZVEC3(JJ) =  (   XKER_N_SSCS(IVEC1(JJ)+1,IVEC1(JJ)+1)* ZVEC1(JJ)          &
-                    -  XKER_N_SSCS(IVEC1(JJ)+1,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
-                                                                         * ZVEC1(JJ) &
-                 - (   XKER_N_SSCS(IVEC1(JJ)  ,IVEC1(JJ)+1)* ZVEC1(JJ)          &
-                    -  XKER_N_SSCS(IVEC1(JJ)  ,IVEC1(JJ)  )*(ZVEC1(JJ) - 1.0) ) &
-                                                           * (ZVEC1(JJ) - 1.0)
+   DO JL = 1,IGSSC
+      ZVEC3(JL) =  (   XKER_N_SSCS(IVEC1(JL)+1,IVEC1(JL)+1)* ZVEC1(JL)          &
+                    -  XKER_N_SSCS(IVEC1(JL)+1,IVEC1(JL)  )*(ZVEC1(JL) - 1.0) ) &
+                                                                         * ZVEC1(JL) &
+                 - (   XKER_N_SSCS(IVEC1(JL)  ,IVEC1(JL)+1)* ZVEC1(JL)          &
+                    -  XKER_N_SSCS(IVEC1(JL)  ,IVEC1(JL)  )*(ZVEC1(JL) - 1.0) ) &
+                                                           * (ZVEC1(JL) - 1.0)
    END DO
    ZW1(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GSSC(:),FIELD=0.0 ) !! NSACCS
    DEALLOCATE(ZVEC3)

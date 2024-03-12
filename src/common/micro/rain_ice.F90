@@ -338,7 +338,7 @@ REAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC),MERGE(IBUNUM-IBUNUM_E
            ZMICRO_TEND ! Total mixing ratio change, used for electric charge tendencies
 LOGICAL, DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT,0,OELEC)) :: GMASK_ELEC
 INTEGER :: IELEC ! nb of points where microphysical tendencies are not null
-INTEGER :: JI    ! loop index
+INTEGER :: JM    ! loop index
 !
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('RAIN_ICE', 0, ZHOOK_HANDLE)
@@ -468,7 +468,7 @@ DO JK=IKTB,IKTE
                        PTHT(IIJB:IIJE, JK), PPABST(IIJB:IIJE, JK), PRHODREF(IIJB:IIJE, JK), &
                        PEXN(IIJB:IIJE, JK), ZW3D(IIJB:IIJE, JK), ZT(IIJB:IIJE, JK), &
                        PRVT(IIJB:IIJE, JK), &
-                       PCIT(IIJB:IIJE, JK), ZZ_RVHENI(IIJB:IIJE, JK), ZBUF(:, :), LLBUF(IIJB:IIJE))
+                       PCIT(IIJB:IIJE, JK), ZZ_RVHENI(IIJB:IIJE, JK), ZBUF(IIJB:IIJE, :), LLBUF(IIJB:IIJE))
 ENDDO
 DO JK = IKTB, IKTE
   DO JIJ=IIJB, IIJE
@@ -600,11 +600,11 @@ CALL ICE4_PACK(D, CST, PARAMI, ICEP, ICED, BUCONF,                   &
 IF (OELEC) THEN
   DO JK = IKTB, IKTE
     DO JIJ = IIJB, IIJE
-      DO JI = 1, IBUNUM-IBUNUM_EXTRA
-        ZMICRO_TEND(JIJ,JK,JI) = ZMICRO_TEND(JIJ,JK,JI) * ZINV_TSTEP
+      DO JM = 1, IBUNUM-IBUNUM_EXTRA
+        ZMICRO_TEND(JIJ,JK,JM) = ZMICRO_TEND(JIJ,JK,JM) * ZINV_TSTEP
         !
         ! transfer of electric charges occurs only where transfer of mass is non null
-        GMASK_ELEC(JIJ,JK) = GMASK_ELEC(JIJ,JK) .OR. (ZMICRO_TEND(JIJ,JK,JI) .NE. 0.)
+        GMASK_ELEC(JIJ,JK) = GMASK_ELEC(JIJ,JK) .OR. (ZMICRO_TEND(JIJ,JK,JM) .NE. 0.)
       END DO
     END DO
   END DO

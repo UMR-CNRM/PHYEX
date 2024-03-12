@@ -98,7 +98,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
     REAL, DIMENSION(KSIZE, KRR) :: ZZW1 ! Work array
 
     INTEGER :: IGWET, IHAIL
-    INTEGER :: JJ, JK
+    INTEGER :: JL, JK
 
     REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
@@ -169,13 +169,13 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
 !*       7.2.5  perform the bilinear interpolation of the normalized
 !               SWETH-kernel
 !
-        DO JJ = 1,IGWET
-          ZVEC3(JJ) = (  ICEP%XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                       - ICEP%XKER_SWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                                 * ZVEC1(JJ) &
-                     - ( ICEP%XKER_SWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                       - ICEP%XKER_SWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                                * (ZVEC1(JJ) - 1.0)
+        DO JL = 1,IGWET
+          ZVEC3(JL) = (  ICEP%XKER_SWETH(IVEC1(JL)+1,IVEC2(JL)+1)* ZVEC2(JL)          &
+                       - ICEP%XKER_SWETH(IVEC1(JL)+1,IVEC2(JL)  )*(ZVEC2(JL) - 1.0) ) &
+                                                                 * ZVEC1(JL) &
+                     - ( ICEP%XKER_SWETH(IVEC1(JL)  ,IVEC2(JL)+1)* ZVEC2(JL)          &
+                       - ICEP%XKER_SWETH(IVEC1(JL)  ,IVEC2(JL)  )*(ZVEC2(JL) - 1.0) ) &
+                                                                * (ZVEC1(JL) - 1.0)
         END DO
         ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGWET),MASK=GWET,FIELD=0.0 )
 
@@ -220,13 +220,13 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
 !*       7.2.10 perform the bilinear interpolation of the normalized
 !               GWETH-kernel
 !
-        DO JJ = 1,IGWET
-          ZVEC3(JJ) = (  ICEP%XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                       - ICEP%XKER_GWETH(IVEC1(JJ)+1,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                                 * ZVEC1(JJ) &
-                    - (  ICEP%XKER_GWETH(IVEC1(JJ)  ,IVEC2(JJ)+1)* ZVEC2(JJ)          &
-                       - ICEP%XKER_GWETH(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
-                                                                * (ZVEC1(JJ) - 1.0)
+        DO JL = 1,IGWET
+          ZVEC3(JL) = (  ICEP%XKER_GWETH(IVEC1(JL)+1,IVEC2(JL)+1)* ZVEC2(JL)          &
+                       - ICEP%XKER_GWETH(IVEC1(JL)+1,IVEC2(JL)  )*(ZVEC2(JL) - 1.0) ) &
+                                                                 * ZVEC1(JL) &
+                    - (  ICEP%XKER_GWETH(IVEC1(JL)  ,IVEC2(JL)+1)* ZVEC2(JL)          &
+                       - ICEP%XKER_GWETH(IVEC1(JL)  ,IVEC2(JL)  )*(ZVEC2(JL) - 1.0) ) &
+                                                                * (ZVEC1(JL) - 1.0)
         END DO
         ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGWET),MASK=GWET,FIELD=0.0 )
 
