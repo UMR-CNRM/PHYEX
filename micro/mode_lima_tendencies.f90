@@ -587,7 +587,7 @@ IF (NMOM_R.GE.1) THEN
                                P_TH_EVAP, P_RR_EVAP, P_CR_EVAP,                 &
                                PEVAP3D                                          )
    P_RR_EVAP(:) = P_RR_EVAP(:) * MAX((ZPF1D(:) - ZCF1D(:)),0.)
-   P_CR_EVAP(:) = P_RR_EVAP(:) * MAX((ZPF1D(:) - ZCF1D(:)),0.)
+   P_CR_EVAP(:) = P_CR_EVAP(:) * MAX((ZPF1D(:) - ZCF1D(:)),0.)
    P_TH_EVAP(:) = P_RR_EVAP(:) * ZLVFACT(:)
    PEVAP3D(:) = - P_RR_EVAP(:)
    !
