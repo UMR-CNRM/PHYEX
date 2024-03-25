@@ -156,7 +156,7 @@ INTEGER             :: IKL
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('TRIDIAG_WIND',0,ZHOOK_HANDLE)
-!
+!$acc data present( ZY, ZGAM, ZBET )
 IKT=D%NKT
 IKTB=D%NKTB
 IKTE=D%NKTE
@@ -168,12 +168,15 @@ IKL=D%NKL
 IIJB=D%NIJB
 IIJE=D%NIJE
 !
+!$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZY(:,IKB) = PVARM(:,IKB)  + PTSTEP*PSOURCE(:,IKB) -   &
   PEXPL / PRHODJA(:,IKB) * PA(:,IKB+IKL) * &
   (PVARM(:,IKB+IKL) - PVARM(:,IKB))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-!
+!$acc end kernels
+
+!$acc kernels
 DO JK=IKTB+1,IKTE-1
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZY(:,JK)= PVARM(:,JK)  + PTSTEP*PSOURCE(:,JK) -               &
@@ -184,12 +187,16 @@ DO JK=IKTB+1,IKTE-1
                              ) 
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 END DO
-! 
+!$acc end kernels
+!
+!$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZY(:,IKE)= PVARM(:,IKE) + PTSTEP*PSOURCE(:,IKE) +               &
   PEXPL / PRHODJA(:,IKE) * PA(:,IKE) * (PVARM(:,IKE)-PVARM(:,IKE-IKL))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+!$acc end kernels
 !
+! acc wait
 !
 !*       2.  INVERSION OF THE TRIDIAGONAL SYSTEM
 !            -----------------------------------
@@ -199,12 +206,16 @@ IF ( PIMPL > 1.E-10 ) THEN
   !
   !  going up
   !
+  !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZBET(:) = 1. - PIMPL * (  PA(:,IKB+IKL) / PRHODJA(:,IKB) &  
                             + PCOEFS(:) *  PTSTEP        )   ! bet = b(ikb)
   PVARP(:,IKB) = ZY(:,IKB) / ZBET(:)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)               
+  !$acc end kernels
   !
+  !$acc parallel
+  !$acc loop seq
   DO JK = IKB+IKL,IKE-IKL,IKL
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZGAM(:,JK) = PIMPL * PA(:,JK) / PRHODJA(:,JK-IKL) / ZBET(:)  
@@ -219,6 +230,8 @@ IF ( PIMPL > 1.E-10 ) THEN
                                         ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   END DO
+  !$acc end parallel
+  !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ! special treatment for the last level
   ZGAM(:,IKE) = PIMPL * PA(:,IKE) / PRHODJA(:,IKE-IKL) / ZBET(:) 
@@ -230,23 +243,29 @@ IF ( PIMPL > 1.E-10 ) THEN
                                  * PVARP(:,IKE-IKL)                      &
                   ) / ZBET(:)
                                         ! res(k) = (y(k) -a(k)*res(k-1))/ bet 
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   !
+  !$acc end kernels
   !  going down
   !
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  !$acc parallel
+  !$acc loop seq
   DO JK = IKE-IKL,IKB,-1*IKL
   !$mnh_expand_array(JIJ=IIJB:IIJE)
     PVARP(:,JK) = PVARP(:,JK) - ZGAM(:,JK+IKL) * PVARP(:,JK+IKL) 
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   END DO
+  !$acc end parallel
 !
 ELSE
-! 
+!
+  !$acc kernels
   DO JK=IKTB,IKTE
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     PVARP(:,JK) = ZY(:,JK)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   END DO
+  !$acc end kernels
 !
 END IF 
 !
@@ -254,10 +273,14 @@ END IF
 !*       3.  FILL THE UPPER AND LOWER EXTERNAL VALUES
 !            ----------------------------------------
 !
+!$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 PVARP(:,IKA)=PVARP(:,IKB)
 PVARP(:,IKU)=PVARP(:,IKE)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+!$acc end kernels
+!
+!$acc end data
 !
 !-------------------------------------------------------------------------------
 !
