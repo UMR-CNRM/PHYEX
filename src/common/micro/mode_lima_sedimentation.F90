@@ -7,7 +7,7 @@ MODULE MODE_LIMA_SEDIMENTATION
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################
-  SUBROUTINE LIMA_SEDIMENTATION (D, CST, ICED, &
+  SUBROUTINE LIMA_SEDIMENTATION (D, CST, &
                                  HPHASE, KMOMENTS, KID, KSPLITG, PTSTEP, OELEC, &
                                  PDZZ, PRHODREF, PTHVREFZIKB, &
                                  PPABST, PT, PRT_SUM, PCPT, PRS, PCS, PINPR, PFPR, &
@@ -57,11 +57,12 @@ USE MODD_ELEC_PARAM,       ONLY: XFQSED, XDQ
 USE MODD_PARAM_LIMA,       ONLY: XCEXVT, XRTMIN, XCTMIN, NSPLITSED,           &
                                  XLB, XLBEX, XD, XFSEDR, XFSEDC,              &
                                  XALPHAC, XNUC, XALPHAS, XNUS, LSNOW_T,       &
-                                 NMOM_S
+                                 NMOM_S, PARAM_LIMA
 USE MODD_PARAM_LIMA_COLD,  ONLY: XLBEXI, XLBI, XDI, XLBDAS_MAX, XBS, XEXSEDS, &
                                  XLBDAS_MIN, XTRANS_MP_GAMMAS, XFVELOS,       &
-                                 XCCS, XCXS
-USE MODD_PARAM_LIMA_MIXED, ONLY: XCCG, XCXG, XCCH, XCXH
+                                 XCCS, XCXS, PARAM_LIMA_COLD
+USE MODD_PARAM_LIMA_MIXED, ONLY: XCCG, XCXG, XCCH, XCXH, PARAM_LIMA_MIXED
+USE MODD_PARAM_LIMA_WARM,  ONLY: PARAM_LIMA_WARM
 
 use mode_tools,            only: Countjv
 
@@ -75,7 +76,6 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
-TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 CHARACTER(1),             INTENT(IN)    :: HPHASE    ! Liquid or solid hydrometeors
 INTEGER,                  INTENT(IN)    :: KMOMENTS  ! Number of moments 
 INTEGER,                  INTENT(IN)    :: KID       ! Hydrometeor ID
@@ -244,8 +244,9 @@ DO JN = 1 ,  NSPLITSED(KID)
       ZBEARDCOEFF(:,:,:) = 1.0
       IF (OELEC .AND. LSEDIM_BEARD) THEN
         ZLBDA3(:,:,:) = UNPACK( ZLBDA(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
-        CALL ELEC_BEARD_EFFECT(D, CST, ICED, 'LIMA', KID, GSEDIM, PT, PRHODREF, PTHVREFZIKB, &
-                               PRS, PQS, PEFIELDW, ZLBDA3, ZBEARDCOEFF)
+        CALL ELEC_BEARD_EFFECT(D, CST, 'LIMA', KID, GSEDIM, PT, PRHODREF, PTHVREFZIKB, &
+                               PRS, PQS, PEFIELDW, ZLBDA3, ZBEARDCOEFF, &
+                               LIMAP=PARAM_LIMA, LIMAPC=PARAM_LIMA_COLD, LIMAPW=PARAM_LIMA_WARM, LIMAPM=PARAM_LIMA_MIXED)
       END IF
 !
       ZWSEDR(:,:,1:D%NKT) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )

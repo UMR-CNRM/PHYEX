@@ -10,8 +10,9 @@ IMPLICIT NONE
 CONTAINS
 !
 ! ###################################################################
-  SUBROUTINE ELEC_BEARD_EFFECT(D, CST, ICED, HCLOUD, KID, OSEDIM, PT, PRHODREF, PTHVREFZIKB, &
-                               PRX, PQX, PEFIELDW, PLBDA, PBEARDCOEF)
+  SUBROUTINE ELEC_BEARD_EFFECT(D, CST, HCLOUD, KID, OSEDIM, PT, PRHODREF, PTHVREFZIKB, &
+                               PRX, PQX, PEFIELDW, PLBDA, PBEARDCOEF, ICED, &
+                               LIMAP, LIMAPC, LIMAPW, LIMAPM)
 ! ####################################################################
 !
 !!    PURPOSE
@@ -47,19 +48,13 @@ USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 
 USE MODD_ELEC_DESCR,      ONLY: XRTMIN_ELEC
-USE MODD_PARAM_LIMA,      ONLY: XALPHAC_L=>XALPHAC, XNUC_L=>XNUC, XALPHAR_L=>XALPHAR, XNUR_L=>XNUR, &
-                                XALPHAI_L=>XALPHAI, XNUI_L=>XNUI, XALPHAS_L=>XALPHAS, XNUS_L=>XNUS, &
-                                XALPHAG_L=>XALPHAG, XNUG_L=>XNUG,                                   &
-                                XCEXVT_L=>XCEXVT
-USE MODD_PARAM_LIMA_COLD, ONLY: XBI_L=>XBI, XC_I_L=>XC_I, XDI_L=>XDI, &
-                                XBS_L=>XBS, XCS_L=>XCS, XDS_L=>XDS
-USE MODD_PARAM_LIMA_MIXED,ONLY: XBG_L=>XBG, XCG_L=>XCG, XDG_L=>XDG, &
-                                XBH_L=>XBH, XCH_L=>XCH, XDH_L=>XDH, &
-                                XALPHAH_L=>XALPHAH, XNUH_L=>XNUH
-USE MODD_PARAM_LIMA_WARM, ONLY: XBR_L=>XBR, XCR_L=>XCR, XDR_L=>XDR, &
-                                XBC_L=>XBC, XCC_L=>XCC, XDC_L=>XDC
+USE MODD_PARAM_LIMA,      ONLY: PARAM_LIMA_t
+USE MODD_PARAM_LIMA_COLD, ONLY: PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA_WARM, ONLY: PARAM_LIMA_WARM_t
+USE MODD_PARAM_LIMA_MIXED,ONLY: PARAM_LIMA_MIXED_t
 !
 USE MODI_MOMG
+USE MODE_MSG,             ONLY: PRINT_MSG, NVERB_FATAL
 !
 IMPLICIT NONE
 !
@@ -67,7 +62,6 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),                 INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
-TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 INTEGER,                          INTENT(IN)    :: KID         ! Hydrometeor ID
 LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: OSEDIM      ! if T, compute the sedim. proc.
 REAL,    DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODREF    ! Reference density
@@ -80,6 +74,11 @@ REAL,    DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PBEARDCOEF  ! Beard coefficie
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
 !
 REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electricity
+TYPE(RAIN_ICE_DESCR_t),   OPTIONAL, INTENT(IN)    :: ICED
+TYPE(PARAM_LIMA_t),       OPTIONAL, INTENT(IN)    :: LIMAP
+TYPE(PARAM_LIMA_COLD_t),  OPTIONAL, INTENT(IN)    :: LIMAPC
+TYPE(PARAM_LIMA_WARM_t),  OPTIONAL, INTENT(IN)    :: LIMAPW
+TYPE(PARAM_LIMA_MIXED_t), OPTIONAL, INTENT(IN)    :: LIMAPM
 !*       0.2   Declarations of local variables
 !
 INTEGER :: JIJ, JK ! loop indexes
@@ -98,18 +97,6 @@ real, dimension(D%NIJT,D%NKT) :: zreynolds
 !-------------------------------------------------------------------------------
 !
 
-ASSOCIATE(XALPHAC_I=>ICED%XALPHAC, XNUC_I=>ICED%XNUC, XALPHAR_I=>ICED%XALPHAR, XNUR_I=>ICED%XNUR, &
-                                XALPHAI_I=>ICED%XALPHAI, XNUI_I=>ICED%XNUI, XALPHAS_I=>ICED%XALPHAS, XNUS_I=>ICED%XNUS, &
-                                XALPHAG_I=>ICED%XALPHAG, XNUG_I=>ICED%XNUG, XALPHAH_I=>ICED%XALPHAH, XNUH_I=>ICED%XNUH, &
-                                XBC_I=>ICED%XBC, XCC_I=>ICED%XCC, XDC_I=>ICED%XDC,                                 &
-                                XBR_I=>ICED%XBR, XCR_I=>ICED%XCR, XDR_I=>ICED%XDR,                                 &
-                                XBI_I=>ICED%XBI, XC_I_I=>ICED%XC_I, XDI_I=>ICED%XDI,                               &
-                                XBS_I=>ICED%XBS, XCS_I=>ICED%XCS, XDS_I=>ICED%XDS,                                 &
-                                XBG_I=>ICED%XBG, XCG_I=>ICED%XCG, XDG_I=>ICED%XDG,                                 &
-                                XBH_I=>ICED%XBH, XCH_I=>ICED%XCH, XDH_I=>ICED%XDH,                                 &
-                                XCEXVT_I=>ICED%XCEXVT)
-
-
 !*       1.    COMPUTE USEFULL PARAMETERS
 !              --------------------------
 !
@@ -122,85 +109,101 @@ IIJE = D%NIJE
 !              --> depend on the microphysics scheme and the hydrometeor species
 !
 IF (HCLOUD(1:3) == 'ICE') THEN
-  ZCEXVT = XCEXVT_I
+  IF(.NOT. PRESENT(ICED)) THEN
+    CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'ELEC_BEARD_EFFECT', 'ICED mandatory with ICE3/ICE4')
+  ENDIF
+  ZCEXVT = ICED%XCEXVT
   !
   IF (KID == 2) THEN
-    ZBX     = XBC_I
-    ZCX     = XCC_I
-    ZDX     = XDC_I
-    ZALPHAX = XALPHAC_I
-    ZNUX    = XNUC_I
+    ZBX     = ICED%XBC
+    ZCX     = ICED%XCC
+    ZDX     = ICED%XDC
+    ZALPHAX = ICED%XALPHAC
+    ZNUX    = ICED%XNUC
   ELSE IF (KID == 3) THEN
-    ZBX     = XBR_I
-    ZCX     = XCR_I
-    ZDX     = XDR_I
-    ZALPHAX = XALPHAR_I
-    ZNUX    = XNUR_I
+    ZBX     = ICED%XBR
+    ZCX     = ICED%XCR
+    ZDX     = ICED%XDR
+    ZALPHAX = ICED%XALPHAR
+    ZNUX    = ICED%XNUR
   ELSE IF (KID == 4) THEN
     ! values for columns are used to be consistent with the McF&H formula
     ZBX     = 1.7
     ZCX     = 2.1E5
     ZDX     = 1.585
-    ZALPHAX = XALPHAI_I
-    ZNUX    = XNUI_I
+    ZALPHAX = ICED%XALPHAI
+    ZNUX    = ICED%XNUI
   ELSE IF (KID == 5) THEN
-    ZBX     = XBS_I
-    ZCX     = XCS_I
-    ZDX     = XDS_I
-    ZALPHAX = XALPHAS_I
-    ZNUX    = XNUS_I
+    ZBX     = ICED%XBS
+    ZCX     = ICED%XCS
+    ZDX     = ICED%XDS
+    ZALPHAX = ICED%XALPHAS
+    ZNUX    = ICED%XNUS
   ELSE IF (KID == 6) THEN
-    ZBX     = XBG_I
-    ZCX     = XCG_I
-    ZDX     = XDG_I
-    ZALPHAX = XALPHAG_I
-    ZNUX    = XNUG_I
+    ZBX     = ICED%XBG
+    ZCX     = ICED%XCG
+    ZDX     = ICED%XDG
+    ZALPHAX = ICED%XALPHAG
+    ZNUX    = ICED%XNUG
   ELSE IF (KID == 7) THEN
-    ZBX     = XBH_I
-    ZCX     = XCH_I
-    ZDX     = XDH_I
-    ZALPHAX = XALPHAH_I
-    ZNUX    = XNUH_I
+    ZBX     = ICED%XBH
+    ZCX     = ICED%XCH
+    ZDX     = ICED%XDH
+    ZALPHAX = ICED%XALPHAH
+    ZNUX    = ICED%XNUH
   END IF
 ELSE IF (HCLOUD == 'LIMA') THEN
-  ZCEXVT = XCEXVT_L
+  IF(.NOT. PRESENT(LIMAP)) THEN
+    CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'ELEC_BEARD_EFFECT', 'LIMAP mandatory with ICE3/ICE4')
+  ENDIF
+  IF(.NOT. PRESENT(LIMAPC)) THEN
+    CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'ELEC_BEARD_EFFECT', 'LIMAPC mandatory with ICE3/ICE4')
+  ENDIF
+  IF(.NOT. PRESENT(LIMAPW)) THEN
+    CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'ELEC_BEARD_EFFECT', 'LIMAPW mandatory with ICE3/ICE4')
+  ENDIF
+  IF(.NOT. PRESENT(LIMAPM)) THEN
+    CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'ELEC_BEARD_EFFECT', 'LIMAPM mandatory with ICE3/ICE4')
+  ENDIF
+
+  ZCEXVT = LIMAP%XCEXVT
   !
   IF (KID == 2) THEN
-    ZBX     = XBC_L
-    ZCX     = XCC_L
-    ZDX     = XDC_L
-    ZALPHAX = XALPHAC_L
-    ZNUX    = XNUC_L
+    ZBX     = LIMAPW%XBC
+    ZCX     = LIMAPW%XCC
+    ZDX     = LIMAPW%XDC
+    ZALPHAX = LIMAP%XALPHAC
+    ZNUX    = LIMAP%XNUC
   ELSE IF (KID == 3) THEN
-    ZBX     = XBR_L
-    ZCX     = XCR_L
-    ZDX     = XDR_L
-    ZALPHAX = XALPHAR_L
-    ZNUX    = XNUR_L
+    ZBX     = LIMAPW%XBR
+    ZCX     = LIMAPW%XCR
+    ZDX     = LIMAPW%XDR
+    ZALPHAX = LIMAP%XALPHAR
+    ZNUX    = LIMAP%XNUR
   ELSE IF (KID == 4) THEN
     ZBX     = 1.7
     ZCX     = 2.1E5
     ZDX     = 1.585
-    ZALPHAX = XALPHAI_L
-    ZNUX    = XNUI_L
+    ZALPHAX = LIMAP%XALPHAI
+    ZNUX    = LIMAP%XNUI
   ELSE IF (KID == 5) THEN
-    ZBX     = XBS_L
-    ZCX     = XCS_L
-    ZDX     = XDS_L
-    ZALPHAX = XALPHAS_L
-    ZNUX    = XNUS_L
+    ZBX     = LIMAPC%XBS
+    ZCX     = LIMAPC%XCS
+    ZDX     = LIMAPC%XDS
+    ZALPHAX = LIMAP%XALPHAS
+    ZNUX    = LIMAP%XNUS
   ELSE IF (KID == 6) THEN
-    ZBX     = XBG_L
-    ZCX     = XCG_L
-    ZDX     = XDG_L
-    ZALPHAX = XALPHAG_L
-    ZNUX    = XNUG_L
+    ZBX     = LIMAPM%XBG
+    ZCX     = LIMAPM%XCG
+    ZDX     = LIMAPM%XDG
+    ZALPHAX = LIMAP%XALPHAG
+    ZNUX    = LIMAP%XNUG
   ELSE IF (KID == 7) THEN
-    ZBX     = XBH_L
-    ZCX     = XCH_L
-    ZDX     = XDH_L
-    ZALPHAX = XALPHAH_L
-    ZNUX    = XNUH_L
+    ZBX     = LIMAPM%XBH
+    ZCX     = LIMAPM%XCH
+    ZDX     = LIMAPM%XDH
+    ZALPHAX = LIMAPM%XALPHAH
+    ZNUX    = LIMAPM%XNUH
   END IF
   !
 END IF  
@@ -274,7 +277,6 @@ DO JK = IKTB, IKTE
   END DO
 END DO
 !
-END ASSOCIATE
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE ELEC_BEARD_EFFECT
