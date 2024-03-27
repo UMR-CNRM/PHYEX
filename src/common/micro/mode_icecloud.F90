@@ -3,13 +3,14 @@ IMPLICIT NONE
 CONTAINS
 SUBROUTINE ICECLOUD  &
 !   Input :
-     & ( D,PP,PZ,PDZ,PT,PR,PTSTEP,PPBLH,PWCLD,XW2D, &
+     & ( D,CST,ICEP,PP,PZ,PDZ,PT,PR,PTSTEP,PPBLH,PWCLD,XW2D, &
 !   Output :
      &  SIFRC,SSIO,SSIU,W2D,RSI)
 
   USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
   USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
-  USE MODD_CST,ONLY : XCPD,XLVTT,XG,XRD,XEPSILO
+  USE MODD_CST,ONLY : CST_t
+  USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
   USE MODE_TIWMX, ONLY: ESATW, ESATI
   USE MODE_QSATMX_TAB, ONLY: QSATMX_TAB
   IMPLICIT NONE
@@ -52,6 +53,8 @@ SUBROUTINE ICECLOUD  &
 !     RSI       : Saturation mixing ratio over ice
 
 TYPE(DIMPHYEX_t), INTENT(IN)    :: D
+TYPE(CST_t),      INTENT(IN)    :: CST
+TYPE(RAIN_ICE_PARAM_t), INTENT(IN) :: ICEP
 REAL,  INTENT(IN)  ::      PP(D%NIJT)
 REAL,  INTENT(IN)  ::      PZ(D%NIJT)
 REAL,  INTENT(IN)  ::      PDZ(D%NIJT)
@@ -97,16 +100,16 @@ ZYDIST=ZXDIST          ! gridsize in  y axis (m)
 DO JIJ = IIJB, IIJE
    ZR = MAX(0.,PR(JIJ)*PTSTEP)
    SIFRC(JIJ) = 0.
-   ZA = ZR*PP(JIJ)/(XEPSILO + ZR)
-   ZRHW = ZA/ESATW(PT(JIJ))  
-   RSI(JIJ) = QSATMX_TAB(PP(JIJ),PT(JIJ),1.)
-   ZRHI = ZA/ESATI(PT(JIJ))
-   ZI2W =  ESATW(PT(JIJ))/ESATI(PT(JIJ))
+   ZA = ZR*PP(JIJ)/(CST%XEPSILO + ZR)
+   ZRHW = ZA/ESATW(ICEP, PT(JIJ))  
+   RSI(JIJ) = QSATMX_TAB(CST,ICEP,PP(JIJ),PT(JIJ),1.)
+   ZRHI = ZA/ESATI(ICEP, PT(JIJ))
+   ZI2W =  ESATW(ICEP, PT(JIJ))/ESATI(ICEP, PT(JIJ))
 
    SSIU(JIJ) = MIN(ZI2W,ZRHI)
    SSIO(JIJ) = SSIU(JIJ)
    W2D(JIJ) = 1.
-   IF (PT(JIJ)>273.1 .OR. ZR<=0. .OR. ESATI(PT(JIJ)) >= PP(JIJ)*0.5) THEN
+   IF (PT(JIJ)>273.1 .OR. ZR<=0. .OR. ESATI(ICEP, PT(JIJ)) >= PP(JIJ)*0.5) THEN
       SSIU(JIJ) = SSIU(JIJ) - 1.
       SSIO(JIJ) = SSIU(JIJ)
       IF(PWCLD(JIJ)>=0.) SIFRC(JIJ) = PWCLD(JIJ)
@@ -114,9 +117,9 @@ DO JIJ = IIJB, IIJE
 
    ZRHIN = MAX(0.05, MIN(1.,ZRHW))
 
-   ZDRHDZ=ZRHIN*XG /(PT(JIJ)*XRD)*  &
-        &     ( XEPSILO*XLVTT/(XCPD*PT(JIJ)) - 1.) ! correct
-!              &     ( ZEPSILO*XLSTT/(XCPD*PT) -1.)  ! incorrect 
+   ZDRHDZ=ZRHIN*CST%XG /(PT(JIJ)*CST%XRD)*  &
+        &     ( CST%XEPSILO*CST%XLVTT/(CST%XCPD*PT(JIJ)) - 1.) ! correct
+!              &     ( ZEPSILO*XLSTT/(CST%XCPD*PT) -1.)  ! incorrect 
 !          more exact
 !          assumed rh variation in the z axis (rh/m) in the pbl .
 !          Also possible to just use

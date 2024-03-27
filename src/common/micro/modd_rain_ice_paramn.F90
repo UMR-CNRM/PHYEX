@@ -39,6 +39,7 @@
 !             ------------
 !
 USE MODD_PARAMETERS, ONLY: JPMODELMAX
+USE MODD_TIWMX, ONLY: TIWMX_t
 IMPLICIT NONE
 !
 TYPE RAIN_ICE_PARAM_t
@@ -186,6 +187,8 @@ REAL,DIMENSION(:,:), ALLOCATABLE         &
                             XKER_GWETH,        & ! Normalized kernel for GWETH
                             XKER_RWETH           ! Normalized kernel for RWETH
 REAL, DIMENSION(40) :: XFRMIN                    ! Parmeters to modify melt and growth of graupels etc.
+!
+TYPE(TIWMX_t), POINTER :: TIWMX
 END TYPE RAIN_ICE_PARAM_t
 !
 TYPE(RAIN_ICE_PARAM_t), DIMENSION(JPMODELMAX), TARGET, SAVE :: RAIN_ICE_PARAM_MODEL

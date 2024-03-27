@@ -1,7 +1,7 @@
 MODULE MODE_TIWMX_TAB
 IMPLICIT NONE
 CONTAINS
-FUNCTION TIWMX_TAB(P,T,QR,FICE,QRSN,RS,EPS)
+FUNCTION TIWMX_TAB(CST, ICEP, P,T,QR,FICE,QRSN,RS,EPS)
 
 !     Purpose:  (*)
 !     The fuction tiwmx_tab returns the wet bulb temperature, but also the
@@ -47,8 +47,8 @@ FUNCTION TIWMX_TAB(P,T,QR,FICE,QRSN,RS,EPS)
 !     1. Declarations.
 !     ==================================================================
 !     1.1 MODULES USED
- 
-  USE MODD_CST, ONLY  : XEPSILO, XCPD, XLSTT, XLVTT
+  USE MODD_CST ,ONLY : CST_t
+  USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
   USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
   USE MODE_TIWMX, ONLY : ESATI, ESATW, DESDTI, DESDTW
   
@@ -58,6 +58,8 @@ FUNCTION TIWMX_TAB(P,T,QR,FICE,QRSN,RS,EPS)
   REAL :: TIWMX_TAB
 
 !  Input Arguments
+  TYPE(CST_t), INTENT(IN) :: CST
+  TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
   REAL, INTENT(IN) :: P,T,QR,FICE,EPS
 
 !  Output Arguments
@@ -73,19 +75,19 @@ FUNCTION TIWMX_TAB(P,T,QR,FICE,QRSN,RS,EPS)
 
   T2 = T
 
-  B = ( XLVTT*(1.-FICE) + FICE*XLSTT )/XCPD
+  B = ( CST%XLVTT*(1.-FICE) + FICE*CST%XLSTT )/CST%XCPD
 
   TIWMX_TAB = T2
   DO ITER=1,10
-     ZES = ESATI(T2)*FICE + ESATW(T2)*(1.-FICE)
-     ZDESDT= DESDTI(T2)*FICE + DESDTW(T2)*(1.-FICE)
+     ZES = ESATI(ICEP, T2)*FICE + ESATW(ICEP, T2)*(1.-FICE)
+     ZDESDT= DESDTI(ICEP, T2)*FICE + DESDTW(ICEP, T2)*(1.-FICE)
      IF(ZES >= P*0.61)THEN ! Do not to compute when condensation 
         QRSN = 1.          ! not possible and avoid mixing ratio > 1  
         TIWMX_TAB = T2
         IF (LHOOK) CALL DR_HOOK('TIWMX_TAB',1,ZHOOK_HANDLE)
         RETURN 
      ELSE
-        QSN = XEPSILO*ZES/(P-ZES)
+        QSN = CST%XEPSILO*ZES/(P-ZES)
         DQSDT = QSN*ZDESDT*( 1.0/ZES + 1.0/(P-ZES) )
      ENDIF
      IF ( ITER == 1 ) RS = QSN

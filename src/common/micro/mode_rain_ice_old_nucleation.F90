@@ -122,10 +122,10 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
 
         IF (OCND2) THEN
           ZZZ(JL) = PZZZ(I1(JL),I2(JL))
-          ZESI(JL) = ESATI(ZZT(JL))
-          ZESW(JL) = ESATW(ZZT(JL))
-          ZAM3(JL) = AM3(MAX(ICEP%XFRMIN(27),ZZT(JL))) ! Avoid too high IN for very low temp.
-          ZREDIN(JL) = REDIN(ZZT(JL))
+          ZESI(JL) = ESATI(ICEP, ZZT(JL))
+          ZESW(JL) = ESATW(ICEP, ZZT(JL))
+          ZAM3(JL) = AM3(ICEP, MAX(ICEP%XFRMIN(27),ZZT(JL))) ! Avoid too high IN for very low temp.
+          ZREDIN(JL) = REDIN(ICEP, ZZT(JL))
           ZSIFRC(JL) = PICLDFR(I1(JL),I2(JL))
         ENDIF
 
