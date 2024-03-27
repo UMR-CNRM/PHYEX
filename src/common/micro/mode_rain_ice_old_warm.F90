@@ -10,7 +10,7 @@ MODULE MODE_RAIN_ICE_OLD_WARM
   CONTAINS
 
   SUBROUTINE RAIN_ICE_OLD_WARM(D, CST, PARAMI, ICEP, ICED, BUCONF,           &
-                               KSIZE, OCND2, LKOGAN, GMICRO,                 &
+                               KSIZE, K1, K2, OCND2, LKOGAN, GMICRO,                 &
                                PRHODJ, PEVAP3D, PTHS, PRVS,                  &
                                ZRVT, ZRCT, ZRRT, ZRCS, ZRRS, ZTHS,           &
                                ZRVS, ZTHT, ZTHLT,                            &
@@ -47,6 +47,7 @@ MODULE MODE_RAIN_ICE_OLD_WARM
     TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 
     INTEGER, INTENT(IN) :: KSIZE
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: K1, K2
 
     LOGICAL, INTENT(IN) :: OCND2  ! Logical switch to separate liquid and ice
     LOGICAL, INTENT(IN) :: LKOGAN ! Logical switch for using Kogan autoconversion of liquid.
@@ -346,8 +347,9 @@ MODULE MODE_RAIN_ICE_OLD_WARM
     IF (BUCONF%LBUDGET_TH) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'REVA', UNPACK(ZTHS(:),MASK=GMICRO(:,:),FIELD=PTHS)*PRHODJ(:,:))
     IF (BUCONF%LBUDGET_RV) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'REVA', UNPACK(ZRVS(:),MASK=GMICRO(:,:),FIELD=PRVS)*PRHODJ(:,:))
     IF (BUCONF%LBUDGET_RR) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RR), 'REVA', UNPACK(ZRRS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0))
-    ZW(:,:) = PEVAP3D(:,:)
-    PEVAP3D(:,:) = UNPACK(ZZW(:), MASK=GMICRO(:,:), FIELD=ZW(:,:))
+    DO JK=1, KSIZE
+      PEVAP3D(K1(JK), K2(JK)) = ZZW(JK)
+    ENDDO
 !
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_WARM',1,ZHOOK_HANDLE)
   END SUBROUTINE RAIN_ICE_OLD_WARM

@@ -98,6 +98,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
     REAL, DIMENSION(KSIZE, KRR) :: ZZW1 ! Work array
 
     INTEGER :: IGWET, IHAIL
+    INTEGER, DIMENSION(KSIZE) :: I1
     INTEGER :: JL, JK
 
     REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
@@ -142,15 +143,21 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
 !
 !*       7.2.1  accretion of aggregates on the hailstones
 !
-      GWET(:) = GHAIL(:) .AND. (PRST(:)>ICED%XRTMIN(5) .AND. PRSS(:)>0.0)
-      IGWET = COUNT( GWET(:) )
-!
+      IGWET=0
+      DO JK=1, KSIZE
+        IF(GHAIL(JK) .AND. (PRST(JK)>ICED%XRTMIN(5) .AND. PRSS(JK)>0.0)) THEN
+          IGWET=IGWET+1
+          GWET(JK)=.TRUE.
+          ! 7.2.3  select the (PLBDAH,PLBDAS) couplet
+          I1(IGWET)=JK
+          ZVEC1(IGWET)=PLBDAH(JK)
+          ZVEC2(IGWET)=PLBDAS(JK)
+        ELSE
+          GWET(JK)=.FALSE.
+        ENDIF
+      ENDDO
+
       IF( IGWET>0 ) THEN
-!
-!*       7.2.3  select the (PLBDAH,PLBDAS) couplet
-!
-        ZVEC1(1:IGWET) = PACK( PLBDAH(:),MASK=GWET(:) )
-        ZVEC2(1:IGWET) = PACK( PLBDAS(:),MASK=GWET(:) )
 !
 !*       7.2.4  find the next lower indice for the PLBDAG and for the PLBDAS
 !               in the geometrical set of (Lbda_h,Lbda_s) couplet use to
@@ -177,7 +184,10 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
                        - ICEP%XKER_SWETH(IVEC1(JL)  ,IVEC2(JL)  )*(ZVEC2(JL) - 1.0) ) &
                                                                 * (ZVEC1(JL) - 1.0)
         END DO
-        ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGWET),MASK=GWET,FIELD=0.0 )
+        ZZW(:) = 0.
+        DO JK=1, IGWET
+          ZZW(I1(JK))=ZVEC3(JK)
+        ENDDO
 
         DO JK = 1, KSIZE
           IF (GWET(JK)) THEN
@@ -193,15 +203,21 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
 !
 !*       7.2.6  accretion of graupeln on the hailstones
 !
-      GWET(:) = GHAIL(:) .AND. (PRGT(:)>ICED%XRTMIN(6) .AND. PRGS(:)>0.0)
-      IGWET = COUNT( GWET(:) )
-!
+      IGWET=0
+      DO JK=1, KSIZE
+        IF(GHAIL(JK) .AND. (PRGT(JK)>ICED%XRTMIN(5) .AND. PRGS(JK)>0.0)) THEN
+          IGWET=IGWET+1
+          GWET(JK)=.TRUE.
+          ! 7.2.8  select the (PLBDAH,PLBDAG) couplet
+          I1(IGWET)=JK
+          ZVEC1(IGWET)=PLBDAH(JK)
+          ZVEC2(IGWET)=PLBDAG(JK)
+        ELSE
+          GWET(JK)=.FALSE.
+        ENDIF
+      ENDDO
+
       IF( IGWET>0 ) THEN
-!
-!*       7.2.8  select the (PLBDAH,PLBDAG) couplet
-!
-        ZVEC1(1:IGWET) = PACK( PLBDAH(:),MASK=GWET(:) )
-        ZVEC2(1:IGWET) = PACK( PLBDAG(:),MASK=GWET(:) )
 !
 !*       7.2.9  find the next lower indice for the PLBDAH and for the PLBDAG
 !               in the geometrical set of (Lbda_h,Lbda_g) couplet use to
@@ -228,7 +244,10 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RH
                        - ICEP%XKER_GWETH(IVEC1(JL)  ,IVEC2(JL)  )*(ZVEC2(JL) - 1.0) ) &
                                                                 * (ZVEC1(JL) - 1.0)
         END DO
-        ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGWET),MASK=GWET,FIELD=0.0 )
+        ZZW(:) = 0.
+        DO JK=1, IGWET
+          ZZW(I1(JK))=ZVEC3(JK)
+        ENDDO
 
         DO JK = 1, KSIZE
           IF (GWET(JK)) THEN

@@ -819,8 +819,10 @@ IF ( KSIZE >= 0 ) THEN
   ENDIF
 
   !Diagnostic of precipitation fraction
-  ZW(:,:) = 0.
-  ZRAINFR(:,:) = UNPACK( ZRF(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
+  ZRAINFR(:,:) = 0.
+  DO JL=1,KSIZE
+    ZRAINFR(I1(JL),I2(JL))=ZRF(JL)
+  ENDDO
 
   DO JI = D%NIB,D%NIE
     ZRAINFR(JI,IKE)=0.
@@ -878,7 +880,7 @@ IF ( KSIZE >= 0 ) THEN
   IF( OWARM ) THEN    !  Check if the formation of the raindrops by the slow
                       !  warm processes is allowed
     CALL RAIN_ICE_OLD_WARM(D, CST, PARAMI, ICEP, ICED, BUCONF, &
-                           KSIZE, OCND2, LKOGAN, GMICRO, &
+                           KSIZE, I1, I2, OCND2, LKOGAN, GMICRO, &
                            PRHODJ, PEVAP3D, PTHS, PRVS, &
                            ZRVT, ZRCT, ZRRT, ZRCS, ZRRS, ZTHS, &
                            ZRVS, ZTHT, ZTHLT, &
@@ -1023,30 +1025,18 @@ IF ( KSIZE >= 0 ) THEN
   ENDIF
 
 !-------------------------------------------------------------------------------
-
-  ZW(:,:) = PRVS(:,:)
-  PRVS(:,:) = UNPACK( ZRVS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
-  ZW(:,:) = PRCS(:,:)
-  PRCS(:,:) = UNPACK( ZRCS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
-  ZW(:,:) = PRRS(:,:)
-  PRRS(:,:) = UNPACK( ZRRS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
-  ZW(:,:) = PRIS(:,:)
-  PRIS(:,:) = UNPACK( ZRIS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
-  ZW(:,:) = PRSS(:,:)
-  PRSS(:,:) = UNPACK( ZRSS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
-  ZW(:,:) = PRGS(:,:)
-  PRGS(:,:) = UNPACK( ZRGS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
-  IF ( KRR == 7 ) THEN
-    ZW(:,:) = PRHS(:,:)
-    PRHS(:,:) = UNPACK( ZRHS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
-  END IF
-  ZW(:,:) = PTHS(:,:)
-  PTHS(:,:) = UNPACK( ZTHS(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
-  ZW(:,:) = PCIT(:,:)
-  PCIT(:,:) = UNPACK( ZCIT(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
-!
-  ZW(:,:) = ZRAINFR(:,:)
-  ZRAINFR(:,:) = UNPACK( ZRF(:),MASK=GMICRO(:,:),FIELD=ZW(:,:) )
+  DO JL=1,KSIZE
+    PRVS(I1(JL),I2(JL))=ZRVS(JL)
+    PRCS(I1(JL),I2(JL))=ZRCS(JL)
+    PRRS(I1(JL),I2(JL))=ZRRS(JL)
+    PRIS(I1(JL),I2(JL))=ZRIS(JL)
+    PRSS(I1(JL),I2(JL))=ZRSS(JL)
+    PRGS(I1(JL),I2(JL))=ZRGS(JL)
+    IF (KRR == 7) PRHS(I1(JL),I2(JL))=ZRHS(JL)
+    PTHS(I1(JL),I2(JL))=ZTHS(JL)
+    PCIT(I1(JL),I2(JL))=ZCIT(JL)
+    ZRAINFR(I1(JL),I2(JL))=ZRF(JL)
+  END DO
 !
   ELSE
 !

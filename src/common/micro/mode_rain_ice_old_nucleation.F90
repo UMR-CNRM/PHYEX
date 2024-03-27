@@ -210,7 +210,10 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
         ZZW(:) = MIN( ZZW(:),50.E3 ) ! limitation provisoire a 50 l^-1
 
         IF(.NOT.OCND2)THEN
-          ZW(:,:) = UNPACK( ZZW(:),MASK=PT(D%NIB:D%NIE,D%NKTB:D%NKTE) < CST%XTT, FIELD=0.0 )
+          ZW(:,:) = 0.
+          DO JL=1, KSIZE
+            ZW(I1(JL), I2(JL)) = ZZW(JL)
+          ENDDO
           ZW(:,:) = MAX( ZW(:,:) ,0.0 ) *ICEP%XMNU0/(PRHODREF(:,:)*PTSTEP)
           PRIS(:,:) = PRIS(:,:) + ZW(:,:)
           PRVS(:,:) = PRVS(:,:) - ZW(:,:)
@@ -228,7 +231,9 @@ MODULE MODE_RAIN_ICE_OLD_NUCLEATION
                                  ! f(L_s*(RVHENI))
         ZZW(:) = MAX(ZZW(:)+ZCIT(:),ZCIT(:))
 
-        PCIT(:,:) = MAX(UNPACK(ZZW(:), MASK=PT(D%NIB:D%NIE,D%NKTB:D%NKTE) < CST%XTT, FIELD=0.0), PCIT(:,:))
+        DO JL=1, KSIZE
+          PCIT(I1(JL), I2(JL)) = ZZW(JL)
+        ENDDO
       END IF
 
     END IF

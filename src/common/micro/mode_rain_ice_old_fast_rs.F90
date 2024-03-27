@@ -90,6 +90,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
     REAL, DIMENSION(KSIZE, KRR) :: ZZW1     ! Work array
 
     INTEGER :: IGRIM, IGACC
+    INTEGER, DIMENSION(KSIZE) :: I1
     INTEGER :: JL, JK
 
     REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
@@ -106,15 +107,21 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
 
     ZZW1(:,:) = 0.0
 !
-    GMASK(:) = (ZRCT(:)>ICED%XRTMIN(2)) .AND. (ZRST(:)>ICED%XRTMIN(5)) .AND. &
-                                  (ZRCS(:)>0.0) .AND. (ZZT(:)<CST%XTT)
-    IGRIM = COUNT( GMASK(:) )
-!
+    IGRIM=0
+    DO JK=1, KSIZE
+      IF((ZRCT(JK)>ICED%XRTMIN(2)) .AND. (ZRST(JK)>ICED%XRTMIN(5)) .AND. &
+                                  (ZRCS(JK)>0.0) .AND. (ZZT(JK)<CST%XTT)) THEN
+        IGRIM=IGRIM+1
+        GMASK(JK)=.TRUE.
+        ! 5.1.1  select the ZLBDAS
+        I1(IGRIM)=JK
+        ZVEC1(IGRIM)=ZLBDAS(JK)
+      ELSE
+        GMASK(JK)=.FALSE.
+      ENDIF
+    ENDDO
+
     IF( IGRIM>0 ) THEN
-!
-!        5.1.1  select the ZLBDAS
-!
-      ZVEC1(1:IGRIM) = PACK( ZLBDAS(:),MASK=GMASK(:) )
 !
 !        5.1.2  find the next lower indice for the ZLBDAS in the geometrical
 !               set of Lbda_s used to tabulate some moments of the incomplete
@@ -130,7 +137,10 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
 !
       ZVEC1(1:IGRIM) = ICEP%XGAMINC_RIM1(IVEC2(1:IGRIM)+1)* ZVEC2(1:IGRIM)      &
                    - ICEP%XGAMINC_RIM1(IVEC2(1:IGRIM)  )*(ZVEC2(1:IGRIM) - 1.0)
-      ZZW(:) = UNPACK(VECTOR=ZVEC1(1:IGRIM), MASK=GMASK, FIELD=0.0)
+      ZZW(:) = 0.
+      DO JK=1, IGRIM
+        ZZW(I1(JK))=ZVEC1(JK)
+      ENDDO
 !
 !        5.1.4  riming of the small sized aggregates
 !
@@ -151,7 +161,10 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
 !
       ZVEC1(1:IGRIM) = ICEP%XGAMINC_RIM2( IVEC2(1:IGRIM)+1 )* ZVEC2(1:IGRIM)      &
                      - ICEP%XGAMINC_RIM2( IVEC2(1:IGRIM)   )*(ZVEC2(1:IGRIM) - 1.0)
-      ZZW(:) = UNPACK( VECTOR=ZVEC1(1:IGRIM),MASK=GMASK,FIELD=0.0 )
+      ZZW(:) = 0.
+      DO JK=1, IGRIM
+        ZZW(I1(JK))=ZVEC1(JK)
+      ENDDO
 !
 !        5.1.6  riming-conversion of the large sized aggregates into graupeln
 !
@@ -189,19 +202,24 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
     IF (BUCONF%LBUDGET_RG) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RG), 'ACC', UNPACK(ZRGS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0))
 
     ZZW1(:,2:3) = 0.0
-    GMASK(:) = (ZRRT(:) > ICED%XRTMIN(3)) .AND. &
-              (ZRST(:) > ICED%XRTMIN(5)) .AND. &
-              (ZRRS(:) > 0.0)            .AND. &
-              (ZZT(:) < CST%XTT)
+    IGACC=0
+    DO JK=1, KSIZE
+      IF((ZRRT(JK) > ICED%XRTMIN(3)) .AND. &
+         (ZRST(JK) > ICED%XRTMIN(5)) .AND. &
+         (ZRRS(JK) > 0.0)            .AND. &
+         (ZZT(JK) < CST%XTT)) THEN
+        IGACC=IGACC+1
+        GMASK(JK)=.TRUE.
+        ! 5.1.1  select the (ZLBDAS,ZLBDAR) couplet
+        I1(IGACC)=JK
+        ZVEC1(IGACC)=ZLBDAS(JK)
+        ZVEC2(IGACC)=ZLBDAR(JK)
+      ELSE
+        GMASK(JK)=.FALSE.
+      ENDIF
+    ENDDO
 
-    IGACC = COUNT(GMASK(:))
-!
     IF( IGACC>0 ) THEN
-!
-!        5.2.1  select the (ZLBDAS,ZLBDAR) couplet
-!
-      ZVEC1(1:IGACC) = PACK( ZLBDAS(:),MASK=GMASK(:) )
-      ZVEC2(1:IGACC) = PACK( ZLBDAR(:),MASK=GMASK(:) )
 !
 !        5.2.2  find the next lower indice for the ZLBDAS and for the ZLBDAR
 !               in the geometrical set of (Lbda_s,Lbda_r) couplet use to
@@ -228,7 +246,10 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
                     - ICEP%XKER_RACCSS(IVEC1(JL)  ,IVEC2(JL)  )*(ZVEC2(JL) - 1.0)) &
                                                                *(ZVEC1(JL) - 1.0)
       END DO
-      ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGACC),MASK=GMASK,FIELD=0.0 )
+      ZZW(:) = 0.
+      DO JK=1, IGACC
+        ZZW(I1(JK))=ZVEC3(JK)
+      ENDDO
 !
 !        5.2.4  raindrop accretion on the small sized aggregates
 !
@@ -257,7 +278,12 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
                    -  ICEP%XKER_RACCS(IVEC2(JL)  ,IVEC1(JL)  )*(ZVEC1(JL) - 1.0) ) &
                                                               *(ZVEC2(JL) - 1.0)
       END DO
-      ZZW1(:,2) = ZZW1(:,2)*UNPACK( VECTOR=ZVEC3(1:IGACC),MASK=GMASK(:),FIELD=0.0 )
+      ZZW(:) = 0.
+      DO JK=1, IGACC
+        ZZW(I1(JK)) = ZVEC3(JK)
+      ENDDO
+      ZZW1(:,2) = ZZW1(:,2)*ZZW(:)
+
                                                                        !! RRACCS!
 !        5.2.5  perform the bilinear interpolation of the normalized
 !               SACCRG-kernel
@@ -270,7 +296,10 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RS
                       - ICEP%XKER_SACCRG(IVEC2(JL)  ,IVEC1(JL)  )*(ZVEC1(JL) - 1.0) ) &
                                                           * (ZVEC2(JL) - 1.0)
       END DO
-      ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGACC),MASK=GMASK,FIELD=0.0 )
+      ZZW(:) = 0.
+      DO JK=1, IGACC
+        ZZW(I1(JK)) = ZVEC3(JK)
+      ENDDO
 !
 !        5.2.6  raindrop accretion-conversion of the large sized aggregates
 !               into graupeln

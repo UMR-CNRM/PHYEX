@@ -107,6 +107,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
     REAL, DIMENSION(KSIZE, KRR) :: ZZW1 ! Work array
 
     INTEGER :: IGDRY
+    INTEGER, DIMENSION(KSIZE) :: I1
     INTEGER :: JL, JK
 
     REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
@@ -178,15 +179,21 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
 !
 !*       6.2.1  accretion of aggregates on the graupeln
 !
-    GDRY(:) = (PRST(:)>ICED%XRTMIN(5)) .AND. (PRGT(:)>ICED%XRTMIN(6)) .AND. (PRSS(:)>0.0)
-    IGDRY = COUNT( GDRY(:) )
-!
+    IGDRY=0
+    DO JK=1, KSIZE                                                                       
+      IF((PRST(JK)>ICED%XRTMIN(5)) .AND. (PRGT(JK)>ICED%XRTMIN(6)) .AND. (PRSS(JK)>0.0)) THEN
+        IGDRY=IGDRY+1                                                                
+        GDRY(JK)=.TRUE.                                                                   
+        ! 6.2.3  select the (PLBDAG,PLBDAS) couplet
+        I1(IGDRY)=JK                                 
+        ZVEC1(IGDRY)=PLBDAG(JK)
+        ZVEC2(IGDRY)=PLBDAS(JK)                                             
+      ELSE                                                              
+        GDRY(JK)=.FALSE.                                       
+      ENDIF
+    ENDDO
+
     IF( IGDRY>0 ) THEN
-!
-!*       6.2.3  select the (PLBDAG,PLBDAS) couplet
-!
-      ZVEC1(1:IGDRY) = PACK( PLBDAG(:),MASK=GDRY(:) )
-      ZVEC2(1:IGDRY) = PACK( PLBDAS(:),MASK=GDRY(:) )
 !
 !*       6.2.4  find the next lower indice for the PLBDAG and for the PLBDAS
 !               in the geometrical set of (Lbda_g,Lbda_s) couplet use to
@@ -213,7 +220,10 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
                       - ICEP%XKER_SDRYG(IVEC1(JL)  ,IVEC2(JL)  )*(ZVEC2(JL) - 1.0) ) &
                                                            * (ZVEC1(JL) - 1.0)
       END DO
-      ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGDRY),MASK=GDRY,FIELD=0.0 )
+      ZZW(:) = 0.
+      DO JK=1, IGDRY
+        ZZW(I1(JK))=ZVEC3(JK)
+      ENDDO
 !
       IF (OCND2) THEN
         ZZW1(:,3) = 0.
@@ -235,15 +245,21 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
 !
 !*       6.2.6  accretion of raindrops on the graupeln
 !
-    GDRY(:) = (PRRT(:)>ICED%XRTMIN(3)) .AND. (PRGT(:)>ICED%XRTMIN(6)) .AND. (PRRS(:)>0.0)
-    IGDRY = COUNT( GDRY(:) )
-!
+    IGDRY=0
+    DO JK=1, KSIZE
+      IF((PRRT(JK)>ICED%XRTMIN(3)) .AND. (PRGT(JK)>ICED%XRTMIN(6)) .AND. (PRRS(JK)>0.0)) THEN
+        IGDRY=IGDRY+1
+        GDRY(JK)=.TRUE.
+        ! 6.2.8  select the (PLBDAG,PLBDAR) couplet
+        I1(IGDRY)=JK
+        ZVEC1(IGDRY)=PLBDAG(JK)
+        ZVEC2(IGDRY)=PLBDAR(JK)
+      ELSE
+        GDRY(JK)=.FALSE.
+      ENDIF
+    ENDDO
+
     IF (IGDRY>0) THEN
-!
-!*       6.2.8  select the (PLBDAG,PLBDAR) couplet
-!
-      ZVEC1(1:IGDRY) = PACK( PLBDAG(:),MASK=GDRY(:) )
-      ZVEC2(1:IGDRY) = PACK( PLBDAR(:),MASK=GDRY(:) )
 !
 !*       6.2.9  find the next lower indice for the PLBDAG and for the PLBDAR
 !               in the geometrical set of (Lbda_g,Lbda_r) couplet use to
@@ -270,7 +286,10 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
                       - ICEP%XKER_RDRYG(IVEC1(JL)  ,IVEC2(JL)  )*(ZVEC2(JL) - 1.0)) &
                                                                 *(ZVEC1(JL) - 1.0)
       END DO
-      ZZW(:) = UNPACK( VECTOR=ZVEC3(1:IGDRY),MASK=GDRY,FIELD=0.0 )
+      ZZW(:) = 0.
+      DO JK=1, IGDRY
+        ZZW(I1(JK))=ZVEC3(JK)
+      ENDDO
 
       DO JK = 1, KSIZE
         IF (GDRY(JK)) THEN
