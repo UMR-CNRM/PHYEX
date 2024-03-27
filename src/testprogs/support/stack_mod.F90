@@ -19,7 +19,9 @@ CHARACTER (LEN=*), INTENT(IN) :: CDFILE
 INTEGER, INTENT(IN) :: KLINE
 
 PRINT *, 'AT ', CDFILE, ':', KLINE
+#ifndef _OPENACC
 CALL ABORT !to get traceback
+#endif
 STOP 1
 
 END SUBROUTINE

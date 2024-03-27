@@ -1,6 +1,7 @@
 MODULE MODE_ll
 USE MODD_ARGSLIST_ll, ONLY : LIST_ll
 USE MODE_TOOLS
+USE MODE_MSG,                    ONLY: PRINT_MSG, NVERB_FATAL
 IMPLICIT NONE
 CONTAINS
   SUBROUTINE GET_INDICE_ll(KXOR, KYOR, KXEND, KYEND, KSIZE1, KSIZE2)
@@ -18,7 +19,7 @@ CONTAINS
   USE MODD_ARGSLIST_ll, ONLY : LIST_ll  
   TYPE(LIST_ll), POINTER, INTENT(IN)  :: TPLIST ! pointer to the list of fields to be updated
   INTEGER               , INTENT(OUT) :: KINFO  ! return status
-  CALL ABORT
+  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'UPDATE_HALO_ll', 'SHOULD NOT BE CALLED')
   END SUBROUTINE UPDATE_HALO_ll
 
   SUBROUTINE GET_DIM_EXT_ll(CBORD,IIU,IJU)
@@ -45,7 +46,7 @@ END FUNCTION LSOUTH_ll
 SUBROUTINE CLEANLIST_ll(TPLIST)
 IMPLICIT NONE
     TYPE(LIST_ll),  POINTER, INTENT(IN) :: TPLIST ! List of fields
-    CALL ABORT
+    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'CLEANLIST_ll', 'SHOULD NOT BE CALLED')
   END SUBROUTINE CLEANLIST_ll
 !
 SUBROUTINE ADD2DFIELD_ll(TPLIST, PFIELD, HNAME)
@@ -56,7 +57,7 @@ IMPLICIT NONE
   !                                              of fields
     character(len=*), intent(in) :: HNAME ! Name of the field to be added
   !
-   CALL ABORT  
+   CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'ADD2DFIELD_ll', 'SHOULD NOT BE CALLED')
 END SUBROUTINE ADD2DFIELD_ll
 !
 SUBROUTINE ADD3DFIELD_ll(TPLIST, PFIELD, HNAME)
@@ -67,7 +68,7 @@ IMPLICIT NONE
   !                                              of fields
     character(len=*), intent(in) :: HNAME ! Name of the field to be added
   !
-   CALL ABORT  
+   CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'ADD3DFIELD_ll', 'SHOULD NOT BE CALLED')
 END SUBROUTINE ADD3DFIELD_ll
 !
 SUBROUTINE ADD4DFIELD_ll(TPLIST, PFIELD, HNAME)
@@ -78,7 +79,7 @@ IMPLICIT NONE
   !                                              of fields
     character(len=*), intent(in) :: HNAME ! Name of the field to be added
   !
-   CALL ABORT
+   CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'ADD4DFIELD_ll', 'SHOULD NOT BE CALLED')
 END SUBROUTINE ADD4DFIELD_ll
 
 END MODULE MODE_ll

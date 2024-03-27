@@ -22,6 +22,7 @@
       USE MODD_RAIN_ICE_PARAM_N, ONLY: RAIN_ICE_PARAM_T
       USE MODD_RAIN_ICE_DESCR_N, ONLY: RAIN_ICE_DESCR_T
       USE MODD_LES,              ONLY: TLES_T
+      USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -810,13 +811,11 @@ IF ( KSIZE >= 0 ) THEN
 
     ELSE
       !wrong CSUBG_PR_PDF case
-      CALL ABORT
-      STOP 'wrong CSUBG_PR_PDF case'
+      CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE_OLD', 'wrong CSUBG_PR_PDF case')
     ENDIF
   ELSE
     !wrong HSUBG_AUCV_RC case
-    CALL ABORT
-    STOP 'wrong HSUBG_AUCV_RC case'
+    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE_OLD', 'wrong HSUBG_AUCV_RC case')
   ENDIF
 
   !Diagnostic of precipitation fraction
@@ -1213,10 +1212,7 @@ ELSEIF (HSEDIM == 'SPLI') THEN
                     CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', PRHS(:,:)*PRHODJ(:,:))
   ENDIF
 ELSE
-  WRITE(*,*) ' STOP'
-  WRITE(*,*) ' NO SEDIMENTATION SCHEME FOR HSEDIM=',HSEDIM
-  CALL ABORT
-  STOP
+  CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'RAIN_ICE_OLD', 'NO SEDIMENTATION SCHEME FOR HSEDIM='//HSEDIM)
 END IF
 
   !sedimentation of rain fraction

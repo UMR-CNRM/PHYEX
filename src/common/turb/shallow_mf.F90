@@ -278,7 +278,7 @@ ELSEIF (PARAMMF%CMF_UPDRAFT == 'RAHA') THEN
 ELSEIF (PARAMMF%CMF_UPDRAFT == 'DUAL') THEN
   !Updraft characteristics are already computed and received by interface
 ELSE
-  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'SHALLOW_MF', 'no updraft model for EDKF: CMF_UPDRAFT='//TRIM(PARAMMF%CMF_UPDRAFT) )
+  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'SHALLOW_MF', 'no updraft model for EDKF: CMF_UPDRAFT='//PARAMMF%CMF_UPDRAFT)
 ENDIF
 
 !!! 5. Compute diagnostic convective cloud fraction and content

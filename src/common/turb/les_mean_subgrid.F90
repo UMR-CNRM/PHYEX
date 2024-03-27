@@ -46,6 +46,7 @@ END MODULE MODI_LES_MEAN_SUBGRID
       SUBROUTINE LES_MEAN_SUBGRID_3D(PA, PA_MEAN, OSUM)
 !     ##############################################
 !
+USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 IMPLICIT NONE
 !
 !
@@ -55,7 +56,7 @@ REAL,    DIMENSION(:,:,:), INTENT(IN)    :: PA
 REAL,    DIMENSION(:,:,:), INTENT(INOUT) :: PA_MEAN
 LOGICAL, OPTIONAL,         INTENT(IN)    :: OSUM
 !
-CALL ABORT ! AROME should not used this mesonh routine, if yes, check LLES_CALL
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'LES_MEAN_SUBGRID_3D', 'AROME should not used this mesonh routine, if yes, check LLES_CALL')
 !
 END SUBROUTINE LES_MEAN_SUBGRID_3D
 !
@@ -63,6 +64,7 @@ END SUBROUTINE LES_MEAN_SUBGRID_3D
       SUBROUTINE LES_MEAN_SUBGRID_SURF(PA, PA_MEAN, OSUM)
 !     ##############################################
 !
+USE MODE_MSG, ONLY: PRINT_MSG, NVERB_FATAL
 IMPLICIT NONE
 !
 !*      0.1  declarations of arguments
@@ -72,6 +74,6 @@ REAL,    DIMENSION(:),   INTENT(INOUT) :: PA_MEAN
 LOGICAL, OPTIONAL,       INTENT(IN)    :: OSUM
 !
 !
-CALL ABORT ! AROME should not used this mesonh routine, if yes, check LLES_CALL
+CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'LES_MEAN_SUBGRID_SURF', 'AROME should not used this mesonh routine, if yes, check LLES_CALL')
 !
 END SUBROUTINE LES_MEAN_SUBGRID_SURF
