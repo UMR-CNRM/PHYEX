@@ -216,7 +216,13 @@ DO ITIME = 1, NTIME
 
   TSD = OMP_GET_WTIME ()
 
-!openacc directives
+!$acc data &
+!$acc      & copyin  (D0, PHYEX, TLES, LKOGAN, LMODICEDEP, KKA, KKU, KKL, KSPLITR, PTSTEP, KRR, ISIZEMICRO, &
+!$acc      &          LLMICRO, PDZZ, PRHODJ, PRHODREF, PEXNREF, PPABSM, PCLDFR, PICLDFR, PSSIO, PSSIU, &
+!$acc      &          PTHT, PRT, PSIGS, PSEA, PTOWN, PICENU, PKGN_ACON, PKGN_SBGR) &
+!$acc      & copy    (PCIT, PIFR, PTHS, PRS) &
+!$acc      & copyout (ZINPRC, PINPRR, PEVAP, PINPRS, PINPRG, PFPR) &
+!$acc      & create  (PSTACK) 
 
   TSC = OMP_GET_WTIME ()
 
@@ -265,9 +271,9 @@ DO ITIME = 1, NTIME
 
       CALL RAIN_ICE_OLD(D=D, CST=PHYEX%CST, PARAMI=PHYEX%PARAM_ICEN,                                   &
                         ICEP=PHYEX%RAIN_ICE_PARAMN, ICED=PHYEX%RAIN_ICE_DESCRN, BUCONF=PHYEX%MISC%TBUCONF, TLES=TLES,       &
-                        OSEDIC=OSEDIC, OCND2=OCND2,                                        &
+                        OSEDIC=PHYEX%PARAM_ICEN%LSEDIC, OCND2=PHYEX%PARAM_ICEN%LOCND2,     &
                         LKOGAN=LKOGAN, LMODICEDEP=LMODICEDEP,                              &
-                        HSEDIM=C_SEDIM, HSUBG_AUCV_RC=CSUBG_AUCV_RC, OWARM=OWARM,          &
+                        HSEDIM=PHYEX%PARAM_ICEN%CSEDIM, HSUBG_AUCV_RC=PHYEX%PARAM_ICEN%CSUBG_AUCV_RC, OWARM=PHYEX%PARAM_ICEN%LWARM,&
                         KKA=KKA, KKU=KKU, KKL=KKL,                                         &
                         KSPLITR=KSPLITR, PTSTEP=2*PTSTEP, KRR=KRR,                         &
                         KSIZE=ISIZEMICRO, GMICRO=LLMICRO(:,:,IBL),                                &

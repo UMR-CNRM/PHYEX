@@ -237,12 +237,16 @@ DO ITIME = 1, NTIME
 
   TSD = OMP_GET_WTIME ()
 
-!!!              !directives pas a jour !$acc data &
-!!!              !directives pas a jour !$acc      & copyin  (D0, PHYEX, KRR, HFRAC_ICE, HCONDENS, HLAMBDA3, HBUNAME, OSIGMAS, OCND2, LMFCONV, &
-!!!              !directives pas a jour !$acc      &          ZSIGQSAT, PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, ZRS, ZICE_CLD_WGT) &
-!!!              !directives pas a jour !$acc      & copy    (PRS, PTHS), &
-!!!              !directives pas a jour !$acc      & copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &
-!!!              !directives pas a jour !$acc      & create  (PSTACK) 
+!$acc data &
+!$acc      & copyin  (D0, TLES, PHYEX, &
+!$acc      &          ZDXX, ZDYY, ZDZZ, ZDZX, ZDZY, ZZZ, ZDIRCOSXW, ZDIRCOSYW, ZDIRCOSZW, ZCOSSLOPE, ZSINSLOPE,  &
+!$acc      &          PRHODJ, PTHVREF, PHGRAD, PZS, PSFTH, PSFRV, PSFSV, PSFU, PSFV, &
+!$acc      &          PPABSM, PUM, PVM, PWM, PTKEM, ZSVM, PSRCM, PLENGTHM, PLENGTHH, MFMOIST, &
+!$acc      &          ZCEI, PFLXZTHVMF) &
+!$acc      & copy    (ZBL_DEPTH, ZSBL_DEPTH, PTHM, ZRM, PRUS, PRVS, PRWS, PRTHS, ZRRS, ZRSVS, PRTKES_OUT, &
+!$acc      &          ZWTH, ZWRC, ZWSV, PDP, PTP, PTDIFF, PTDISS) &
+!$acc      & copyout (PSIGS, PEDR, PTPMF, PDRUS_TURB, PDRVS_TURB, PDRTHLS_TURB, PDRRTS_TURB, ZDRSVS_TURB) &
+!$acc      & create  (PSTACK) 
 
   TSC = OMP_GET_WTIME ()
 

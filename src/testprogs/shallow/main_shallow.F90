@@ -220,12 +220,14 @@ DO ITIME = 1, NTIME
 
   TSD = OMP_GET_WTIME ()
 
-!!!              !directives pas a jour !$acc data &
-!!!              !directives pas a jour !$acc      & copyin  (D0, CST, ICEP, NEBN, KRR, HCONDENS, HLAMBDA3, HBUNAME, OSIGMAS, OCND2, PTSTEP, LMFCONV, &
-!!!              !directives pas a jour !$acc      &          ZSIGQSAT, PTHM, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, ZRS, ZICE_CLD_WGT) &
-!!!              !directives pas a jour !$acc      & copy    (PRS, PTHS), &
-!!!              !directives pas a jour !$acc      & copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &
-!!!              !directives pas a jour !$acc      & create  (PSTACK) 
+!$acc data &
+!$acc      & copyin  (D0, PHYEX, &
+!$acc      &          PDZZF, PZZ, PRHODJ, PRHODREF, PPABSM, PEXNM, PSFTH, PSFRV, PTHM, PRM, PUM, PVM, &
+!$acc      &          PTKEM, PSVM) & 
+!$acc      & copy    (PTHL_UP, PRT_UP, PRV_UP, PRC_UP, PRI_UP, PU_UP, PV_UP, PTHV_UP, PW_UP, PFRAC_UP, PEMF) &
+!$acc      & copyout (PDUDT_MF, PDVDT_MF, PDTHLDT_MF, PDRTDT_MF, PDSVDT_MF, PSIGMF, PRC_MF, PRI_MF, PCF_MF, &
+!$acc      &          PFLXZTHVMF, ZFLXZTHMF, ZFLXZRMF, ZFLXZUMF, ZFLXZVMF, ZDETR, ZENTR, IKLCL, IKETL, IKCTL) &
+!$acc      & create  (PSTACK) 
 
   TSC = OMP_GET_WTIME ()
 

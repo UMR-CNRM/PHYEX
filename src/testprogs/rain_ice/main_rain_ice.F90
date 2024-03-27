@@ -152,12 +152,13 @@ DO ITIME = 1, NTIME
 
   TSD = OMP_GET_WTIME ()
 
-!directives pas a jour !$acc data &
-!directives pas a jour !$acc      & copyin  (D0, PHYEX, OSIGMAS, &
-!directives pas a jour !$acc      &          ZSIGQSAT, PRHODJ, PEXNREF, PRHODREF, PSIGS, PMFCONV, PPABSM, ZZZ, PCF_MF, PRC_MF, PRI_MF, ZRS, ZICE_CLD_WGT) &
-!directives pas a jour !$acc      & copy    (PRS, PTHS), &
-!directives pas a jour !$acc      & copyout (PSRCS, PCLDFR, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) &
-!directives pas a jour !$acc      & create  (PSTACK) 
+!$acc data &
+!$acc      & copyin  (D0, PHYEX, &
+!$acc      &          ZTHVREFZIKB, PEXNREF, PDZZ, PRHODJ, PRHODREF, PEXNREF2, PPABSM, PCLDFR, &
+!$acc      &          PTHT, PRT, PSIGS, PSEA, PTOWN) &
+!$acc      & copy    (PCIT, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PTHS, PRS) &
+!$acc      & copyout (ZINPRC, PINPRR, PEVAP, PINPRS, PINPRG, ZINDEP, ZRAINFR, PFPR) &
+!$acc      & create  (PSTACK) 
 
   TSC = OMP_GET_WTIME ()
 
