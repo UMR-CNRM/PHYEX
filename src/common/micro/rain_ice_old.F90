@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE RAIN_ICE_OLD (D, CST, PARAMI, ICEP, ICED, BUCONF,                    &
+      SUBROUTINE RAIN_ICE_OLD (D, CST, PARAMI, ICEP, ICED, BUCONF, TLES,              &
                                OSEDIC, OCND2, LKOGAN, LMODICEDEP,                     &
                                HSEDIM, HSUBG_AUCV_RC, OWARM,                          &
                                KKA, KKU, KKL,                                         &
@@ -21,6 +21,7 @@
       USE MODD_PARAM_ICE_N,    ONLY: PARAM_ICE_t
       USE MODD_RAIN_ICE_PARAM_N, ONLY: RAIN_ICE_PARAM_T
       USE MODD_RAIN_ICE_DESCR_N, ONLY: RAIN_ICE_DESCR_T
+      USE MODD_LES,              ONLY: TLES_T
 !     ######################################################################
 !
 !!****  * -  compute the explicit microphysical sources
@@ -174,9 +175,7 @@
 !
 USE MODD_PARAMETERS, ONLY: JPVEXT
 USE MODD_BUDGET,     ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, &
-                           NBUDGET_RI, NBUDGET_RR, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, &
-                           LBU_ENABLE
-USE MODD_LES,        ONLY: TLES
+                           NBUDGET_RI, NBUDGET_RR, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH
 USE MODE_BUDGET_PHY, ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 USE MODI_GAMMA,      ONLY: GAMMA
 USE MODE_TIWMX,      ONLY: ESATI, ESATW, AA2, BB3, AA2W, BB3W
@@ -203,6 +202,7 @@ TYPE(PARAM_ICE_t),      INTENT(IN) :: PARAMI
 TYPE(RAIN_ICE_PARAM_t), INTENT(IN) :: ICEP
 TYPE(RAIN_ICE_DESCR_t), INTENT(IN) :: ICED
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+TYPE(TLES_t),           INTENT(INOUT)   :: TLES          ! modd_les structure
 
 LOGICAL,                  INTENT(IN)    :: OSEDIC ! Switch for droplet sedim.
 LOGICAL,                  INTENT(IN)    :: OCND2  ! Logical switch to separate liquid and ice
@@ -611,6 +611,10 @@ IF ( KSIZE >= 0 ) THEN
 
     ENDIF
 
+    IF (BUCONF%LBU_ENABLE .OR. TLES%LLES_CALL) THEN
+      ZRHODJ(JL) = PRHODJ(I1(JL),I2(JL))
+    ENDIF
+
   ENDDO
 
   ZZW(:)  = ZEXNREF(:)*(CST%XCPD+CST%XCPV*ZRVT(:) + CST%XCL*(ZRCT(:)+ZRRT(:)) &
@@ -626,11 +630,6 @@ IF ( KSIZE >= 0 ) THEN
                                                     ! Supersaturation over ice
   ENDIF
 
-  IF (LBU_ENABLE .OR. TLES%LLES_CALL) THEN
-
-    ZRHODJ(:) = PACK( PRHODJ(:,:),MASK=GMICRO(:,:) )
-
-  END IF
 !
   !Cloud water split between high and low content part is done here
   !according to autoconversion option

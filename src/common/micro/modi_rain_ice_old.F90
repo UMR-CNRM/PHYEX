@@ -4,7 +4,7 @@
 !
 IMPLICIT NONE
 INTERFACE
-      SUBROUTINE RAIN_ICE_OLD (D, CST, PARAMI, ICEP, ICED, BUCONF,                    &
+      SUBROUTINE RAIN_ICE_OLD (D, CST, PARAMI, ICEP, ICED, BUCONF, TLES,              &
                                OSEDIC, OCND2, LKOGAN, LMODICEDEP,                     &
                                HSEDIM, HSUBG_AUCV_RC, OWARM,                          &
                                KKA, KKU, KKL,                                         &
@@ -25,6 +25,7 @@ USE MODD_CST, ONLY: CST_T
 USE MODD_PARAM_ICE_n,    ONLY: PARAM_ICE_t
 USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_T
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_T
+USE MODD_LES,              ONLY: TLES_T
 IMPLICIT NONE
 !
 TYPE(DIMPHYEX_T),       INTENT(IN) :: D
@@ -33,6 +34,7 @@ TYPE(PARAM_ICE_t),      INTENT(IN) :: PARAMI
 TYPE(RAIN_ICE_PARAM_t), INTENT(IN) :: ICEP
 TYPE(RAIN_ICE_DESCR_t), INTENT(IN) :: ICED
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+TYPE(TLES_t),           INTENT(INOUT)   :: TLES          ! modd_les structure
 
 LOGICAL,                  INTENT(IN)    :: OSEDIC ! Switch for droplet sedim.
 LOGICAL,                  INTENT(IN)    :: OCND2  ! Logical switch to separate liquid and ice
