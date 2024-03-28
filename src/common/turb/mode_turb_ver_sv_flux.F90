@@ -272,7 +272,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PPSI_SV      ! Inv.Turb.Sch.fo
 !
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(INOUT) ::  PRSVS
                             ! cumulated sources for the prognostic variables
-REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT)  :: PWSV        ! scalar flux
+REAL, DIMENSION(MERGE(D%NIJT,0,OFLYER),MERGE(D%NKT,0,OFLYER),MERGE(KSV,0,OFLYER)), INTENT(OUT)  :: PWSV        ! scalar flux
 !
 !*       0.2  declaration of local variables
 !

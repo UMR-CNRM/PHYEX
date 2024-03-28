@@ -336,11 +336,11 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: PRP        ! guess of r at t+ 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: PTP       ! Dynamic and thermal
                                                      ! TKE production terms
 !
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: PWTH       ! heat flux
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: PWRC       ! cloud water flux
-REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSTFL    ! Time evol Flux of T at sea surface (LOCEAN and LCOUPLES)
-REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSTFL_C  ! O-A interface flux for theta(LOCEAN and LCOUPLES)
-REAL, DIMENSION(D%NIJT), INTENT(IN),OPTIONAL   ::  PSSRFL_C  ! O-A interface flux for vapor (LOCEAN and LCOUPLES) 
+REAL, DIMENSION(MERGE(D%NIJT,0,OFLYER),MERGE(D%NKT,0,OFLYER)), INTENT(OUT)  :: PWTH       ! heat flux
+REAL, DIMENSION(MERGE(D%NIJT,0,OFLYER),MERGE(D%NKT,0,OFLYER)),   INTENT(OUT)   :: PWRC       ! cloud water flux
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSTFL    ! Time evol Flux of T at sea surface (LOCEAN and LCOUPLES)
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSTFL_C  ! O-A interface flux for theta(LOCEAN and LCOUPLES)
+REAL, DIMENSION(MERGE(D%NIJT,0,OCOUPLES)), INTENT(IN),OPTIONAL   ::  PSSRFL_C  ! O-A interface flux for vapor (LOCEAN and LCOUPLES) 
 !
 !
 !*       0.2  declaration of local variables
