@@ -324,9 +324,9 @@ DO JK=IKTB,IKTE
      ! latent heats
      ! saturated water vapor mixing ratio over liquid water and ice
      DO JIJ=IIJB,IIJE
-       ESATW_T(JIJ)=ESATW(ICEP, PT(JIJ,JK))
+       ESATW_T(JIJ)=ESATW(ICEP%TIWMX, PT(JIJ,JK))
        ZPV(JIJ)  = MIN(ESATW_T(JIJ), .99*PPABS(JIJ,JK))
-       ZPIV(JIJ) = MIN(ESATI(ICEP, PT(JIJ,JK)), .99*PPABS(JIJ,JK))
+       ZPIV(JIJ) = MIN(ESATI(ICEP%TIWMX, PT(JIJ,JK)), .99*PPABS(JIJ,JK))
      END DO
   ELSE
      ! latent heats
@@ -519,7 +519,7 @@ DO JK=IKTB,IKTE
       !
 !     This check is mainly for noise reduction :
 !     -------------------------
-      IF(ABS(ZLWINC)>1.0E-12  .AND.  ESATW(ICEP, PT(JIJ,JK)) < PPABS(JIJ,JK)*0.5 )THEN
+      IF(ABS(ZLWINC)>1.0E-12  .AND.  ESATW(ICEP%TIWMX, PT(JIJ,JK)) < PPABS(JIJ,JK)*0.5 )THEN
          ZRCOLD = PRC_OUT(JIJ,JK)
          ZRFRAC = PRV_IN(JIJ,JK) - ZLWINC
          IF( PRV_IN(JIJ,JK) < ZRSW )THEN ! sub - saturation over water:

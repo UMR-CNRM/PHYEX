@@ -289,8 +289,8 @@ MODULE MODE_RAIN_ICE_OLD_WARM
             !
             ! T^u = T_l = theta_l * (T/theta)
             ZZW2(JK) =  ZTHLT(JK) * ZZT(JK) / ZTHT(JK) ! ZZW2 = Temperature
-            ZZW(JK) = AA2W(ICEP, ZZW2(JK)) + BB3W(ICEP, ZZW2(JK))*ZPRES(JK) ! ZZW = Droplet function
-            ZARTMP(JK)= ESATW(ICEP, ZZW2(JK)) ! saturation pressure, water
+            ZZW(JK) = AA2W(ICEP%TIWMX, ZZW2(JK)) + BB3W(ICEP%TIWMX, ZZW2(JK))*ZPRES(JK) ! ZZW = Droplet function
+            ZARTMP(JK)= ESATW(ICEP%TIWMX, ZZW2(JK)) ! saturation pressure, water
           ENDIF
         ENDDO
 

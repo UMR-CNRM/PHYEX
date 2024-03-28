@@ -933,8 +933,8 @@ DO JD = 3,KDRAFT  !moist updrafts only
          IF (ZPFLXTOT>0._JPRB) THEN
 
             !-- Saturation deficit of mean state T -
-            ZESW=ESATW(PTM1(JL,JK))
-            ZESI=ESATI(PTM1(JL,JK))
+            ZESW=ESATW(YDPARAR%PHYEX%RAIN_ICE_PARAMN%TIWMX, PTM1(JL,JK))
+            ZESI=ESATI(YDPARAR%PHYEX%RAIN_ICE_PARAMN%TIWMX, PTM1(JL,JK))
             ZFAC = ZUPFLXL(JL,JK,JD) / ZPFLXTOT
             ZES = ZESW*ZFAC + ZESI*(1._JPRB-ZFAC) ! Weigting according to precititation type
             ZQSAT = 0.62198_JPRB*ZES/(MAX(ZES,PAPM1(JL,JK))-0.37802_JPRB*ZES)
@@ -1128,8 +1128,8 @@ DO JL=KIDIA,KFDIA
          ZTHTLEH(JL,JK) = (ZTENH(JL,JK) / PEXNH(JL,JK)) -&
               & ZLAT2CP/ PEXNH(JL,JK)*&
               & ZQLENH(JL,JK)
-         ZESW=ESATW(ZTUH(JL,JK,3))
-         ZESI=ESATI(ZTUH(JL,JK,3))
+         ZESW=ESATW(YDPARAR%PHYEX%RAIN_ICE_PARAMN%TIWMX, ZTUH(JL,JK,3))
+         ZESI=ESATI(YDPARAR%PHYEX%RAIN_ICE_PARAMN%TIWMX, ZTUH(JL,JK,3))
          ZFAC = ZQIENH(JL,JK) / (ZQLENH(JL,JK) +ZQIENH(JL,JK) + 1.0E-20_JPRB) ! Weighting according to cloud condensate
          ZES = ZESI*ZFAC + ZESW*(1._JPRB-ZFAC)
          ZQSATU(JL,JK) = 0.62198_JPRB*ZES/(MAX(ZES,PAPHM1(JL,JK))-0.37802_JPRB*ZES)
@@ -1324,8 +1324,8 @@ IF (LHARATU) THEN
       JKM=MIN(JK,KLEV-1)
       DO JL=KIDIA,KFDIA
          !          dqsat/dT correction factor (1+L/cp*dqsat/dT) & alfa
-         ZESW = ESATW(PTM1(JL,JK))
-         ZESI = ESATI(PTM1(JL,JK))
+         ZESW = ESATW(YDPARAR%PHYEX%RAIN_ICE_PARAMN%TIWMX, PTM1(JL,JK))
+         ZESI = ESATI(YDPARAR%PHYEX%RAIN_ICE_PARAMN%TIWMX, PTM1(JL,JK))
          ZFAC = ZQIENH(JL,JKM) / (ZQLENH(JL,JKM) +ZQIENH(JL,JKM) + 1.0E-20_JPRB) ! Weighting according to cloudcondensate
          ZES = ZESI*ZFAC + ZESW*(1._JPRB-ZFAC)
          ZE2R = ZEI2R*ZFAC + ZEL2R*(1._JPRB-ZFAC)

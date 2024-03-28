@@ -1,7 +1,7 @@
 MODULE MODE_TIWMX_TAB
 IMPLICIT NONE
 CONTAINS
-FUNCTION TIWMX_TAB(CST, ICEP, P,T,QR,FICE,QRSN,RS,EPS)
+FUNCTION TIWMX_TAB(CST, TIWMX, P,T,QR,FICE,QRSN,RS,EPS)
 
 !     Purpose:  (*)
 !     The fuction tiwmx_tab returns the wet bulb temperature, but also the
@@ -48,7 +48,7 @@ FUNCTION TIWMX_TAB(CST, ICEP, P,T,QR,FICE,QRSN,RS,EPS)
 !     ==================================================================
 !     1.1 MODULES USED
   USE MODD_CST ,ONLY : CST_t
-  USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+  USE MODD_TIWMX, ONLY: TIWMX_t
   USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
   USE MODE_TIWMX, ONLY : ESATI, ESATW, DESDTI, DESDTW
   
@@ -59,7 +59,7 @@ FUNCTION TIWMX_TAB(CST, ICEP, P,T,QR,FICE,QRSN,RS,EPS)
 
 !  Input Arguments
   TYPE(CST_t), INTENT(IN) :: CST
-  TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
+  TYPE(TIWMX_t), INTENT(IN) :: TIWMX
   REAL, INTENT(IN) :: P,T,QR,FICE,EPS
 
 !  Output Arguments
@@ -79,8 +79,8 @@ FUNCTION TIWMX_TAB(CST, ICEP, P,T,QR,FICE,QRSN,RS,EPS)
 
   TIWMX_TAB = T2
   DO ITER=1,10
-     ZES = ESATI(ICEP, T2)*FICE + ESATW(ICEP, T2)*(1.-FICE)
-     ZDESDT= DESDTI(ICEP, T2)*FICE + DESDTW(ICEP, T2)*(1.-FICE)
+     ZES = ESATI(TIWMX, T2)*FICE + ESATW(TIWMX, T2)*(1.-FICE)
+     ZDESDT= DESDTI(TIWMX, T2)*FICE + DESDTW(TIWMX, T2)*(1.-FICE)
      IF(ZES >= P*0.61)THEN ! Do not to compute when condensation 
         QRSN = 1.          ! not possible and avoid mixing ratio > 1  
         TIWMX_TAB = T2

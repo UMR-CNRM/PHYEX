@@ -308,7 +308,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
     mvdiff momg.F90 modi_momg.F90
     mvdiff tools.F90 mode_tools.F90
     mvdiff shuman_mf.F90 modi_shuman_mf.F90
-    mvdiff shuman_phy.F90 mode_shuman_phy.F90
+    [ -f shuman_phy.F90 ] && mvdiff shuman_phy.F90 mode_shuman_phy.F90
   fi
 
   #Missing files in case ecrad is not used
@@ -324,11 +324,8 @@ fi
 if [ $compilation -eq 1 ]; then
   echo "### Compilation of commit $commit"
   cd $lmdzdir/1D/bin
-  if [ $fcm -eq 0 ]; then
-    rm -f $lmdzdir/1D/bin/${main}.e
-  else
-    rm -f $lmdzdir/modipsl/modeles/LMDZ/bin/lmdz1d_${L}_phylmd_${rad}_seq.e
-  fi
+  rm -f $lmdzdir/1D/bin/${main}.e
+  rm -f $lmdzdir/modipsl/modeles/LMDZ/bin/lmdz1d_${L}_phylmd_${rad}_seq.e
   if [ $fcm -eq 1 ]; then
     sed -i "s/fcm=0/fcm=1/g" compile
   fi
@@ -374,7 +371,12 @@ if [ $run -eq 1 ]; then
       if [ $fcm -eq 0 ]; then
         ln -sf $lmdzdir/1D/bin/${main}.e ${main}.e
       else
-        ln -sf $lmdzdir/modipsl/modeles/LMDZ/bin/lmdz1d_${L}_phylmd_${rad}_seq.e ${main}.e
+        execname=$lmdzdir/modipsl/modeles/LMDZ/bin/lmdz1d_${L}_phylmd_${rad}_seq.e
+        if [ -f $execname ]; then
+          ln -sf $execname ${main}.e
+        else
+          ln -sf $lmdzdir/modipsl/modeles/LMDZ/lmdz1d_${rad}_L${L}.e ${main}.e
+        fi
       fi
   
       if [ $DEF == PHYEX ]; then

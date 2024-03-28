@@ -1,22 +1,22 @@
 MODULE MODE_QSATMX_TAB
 IMPLICIT NONE
 CONTAINS
-FUNCTION QSATMX_TAB(CST, ICEP, P,T,FICE)
+FUNCTION QSATMX_TAB(CST, TIWMX, P,T,FICE)
 
   USE MODD_CST ,ONLY : CST_t
-  USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
+  USE MODD_TIWMX, ONLY: TIWMX_t
   USE MODE_TIWMX, ONLY : ESATI,ESATW
 
   IMPLICIT NONE
 
   REAL :: QSATMX_TAB
   TYPE(CST_t), INTENT(IN) :: CST
-  TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
+  TYPE(TIWMX_t),   INTENT(IN)    :: TIWMX
   REAL, INTENT(IN) :: P,T,FICE
 
   REAL :: ZES
 
-  ZES = ESATI(ICEP, T)*FICE + ESATW(ICEP, T)*(1.-FICE)
+  ZES = ESATI(TIWMX, T)*FICE + ESATW(TIWMX, T)*(1.-FICE)
   IF(ZES >= P)THEN ! temp > boiling point, condensation not possible.
                    ! Then this function lacks physical meaning, 
                    ! here set to one
