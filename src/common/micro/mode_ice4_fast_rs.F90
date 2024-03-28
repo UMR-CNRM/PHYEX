@@ -176,7 +176,7 @@ IF(.NOT. LDSOFT) THEN
                                         **(-ICED%XNUS+ICEP%XEXCRIMSS/ICED%XALPHAS) &
                                       * PRHODREF(1:KSIZE)**(-ICED%XCEXVT+1.) &
                                       * (PLBDAS(1:KSIZE)) ** (ICEP%XEXCRIMSS+ICED%XBS)
-#endif
+#endif    
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
     !
@@ -195,7 +195,7 @@ IF(.NOT. LDSOFT) THEN
                                      **(-ICED%XNUS+ICEP%XEXCRIMSG/ICED%XALPHAS) &
                                    * PRHODREF(1:KSIZE)**(-ICED%XCEXVT+1.) &
                                    * PLBDAS(1:KSIZE)**(ICED%XBS+ICEP%XEXCRIMSG)
-#endif
+#endif    
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
 
