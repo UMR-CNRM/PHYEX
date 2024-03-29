@@ -1,0 +1,25 @@
+var searchData=
+[
+  ['gamma_3087',['gamma',['../interfacemodi__gamma_1_1gamma.html',1,'modi_gamma']]],
+  ['gamma_5finc_3088',['GAMMA_INC',['../interfacemodi__gamma__inc_1_1GAMMA__INC.html',1,'modi_gamma_inc']]],
+  ['general_5fgamma_3089',['GENERAL_GAMMA',['../interfacemodi__general__gamma_1_1GENERAL__GAMMA.html',1,'modi_general_gamma']]],
+  ['get_5fhalo_3090',['GET_HALO',['../interfacemodi__get__halo_1_1GET__HALO.html',1,'modi_get_halo']]],
+  ['get_5fhalo_5fphy_3091',['GET_HALO_PHY',['../interfacemodi__get__halo_1_1GET__HALO__PHY.html',1,'modi_get_halo']]],
+  ['getoption_3092',['getoption',['../interfacexrd__getoptions_1_1getoption.html',1,'xrd_getoptions']]],
+  ['gx_5fm_5fm_3093',['GX_M_M',['../interfacemodi__gradient__m_1_1GX__M__M.html',1,'modi_gradient_m']]],
+  ['gx_5fm_5fu_3094',['GX_M_U',['../interfacemodi__gradient__m_1_1GX__M__U.html',1,'modi_gradient_m']]],
+  ['gx_5fu_5fm_3095',['GX_U_M',['../interfacemodi__gradient__u_1_1GX__U__M.html',1,'modi_gradient_u']]],
+  ['gx_5fv_5fuv_3096',['GX_V_UV',['../interfacemodi__gradient__v_1_1GX__V__UV.html',1,'modi_gradient_v']]],
+  ['gx_5fw_5fuw_3097',['GX_W_UW',['../interfacemodi__gradient__w_1_1GX__W__UW.html',1,'modi_gradient_w']]],
+  ['gy_5fm_5fm_3098',['GY_M_M',['../interfacemodi__gradient__m_1_1GY__M__M.html',1,'modi_gradient_m']]],
+  ['gy_5fm_5fv_3099',['GY_M_V',['../interfacemodi__gradient__m_1_1GY__M__V.html',1,'modi_gradient_m']]],
+  ['gy_5fu_5fuv_3100',['GY_U_UV',['../interfacemodi__gradient__u_1_1GY__U__UV.html',1,'modi_gradient_u']]],
+  ['gy_5fv_5fm_3101',['GY_V_M',['../interfacemodi__gradient__v_1_1GY__V__M.html',1,'modi_gradient_v']]],
+  ['gy_5fw_5fvw_3102',['GY_W_VW',['../interfacemodi__gradient__w_1_1GY__W__VW.html',1,'modi_gradient_w']]],
+  ['gz_5fm_5fm_3103',['GZ_M_M',['../interfacemodi__gradient__m_1_1GZ__M__M.html',1,'modi_gradient_m']]],
+  ['gz_5fm_5fw_3104',['GZ_M_W',['../interfacemodi__gradient__m_1_1GZ__M__W.html',1,'modi_gradient_m']]],
+  ['gz_5fm_5fw_5fmf_3105',['GZ_M_W_MF',['../interfacemodi__shuman__mf_1_1GZ__M__W__MF.html',1,'modi_shuman_mf']]],
+  ['gz_5fu_5fuw_3106',['GZ_U_UW',['../interfacemodi__gradient__u_1_1GZ__U__UW.html',1,'modi_gradient_u']]],
+  ['gz_5fv_5fvw_3107',['GZ_V_VW',['../interfacemodi__gradient__v_1_1GZ__V__VW.html',1,'modi_gradient_v']]],
+  ['gz_5fw_5fm_3108',['GZ_W_M',['../interfacemodi__gradient__w_1_1GZ__W__M.html',1,'modi_gradient_w']]]
+];
