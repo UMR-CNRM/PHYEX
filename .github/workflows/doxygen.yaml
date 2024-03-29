@@ -1,0 +1,33 @@
+name: Doxygen
+run-name: Updating online doc
+on:
+  push:
+    branches:
+      - master
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: "true"
+
+      - name: Install Doxygen
+        run: sudo apt-get install doxygen graphviz -y
+        shell: bash
+
+      - name: Generate Doxygen Documentation
+        run: cd docs/doxygen; rm .gitignore; doxygen doxygen_config
+        shell: bash
+
+      - name: Create .nojekyll (ensures pages with underscores work on gh pages)
+        run: touch docs/doxygen/html/.nojekyll
+        shell: bash
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: docs
+
