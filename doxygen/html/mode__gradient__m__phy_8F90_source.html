@@ -178,7 +178,7 @@ $(function() {
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;<span class="keyword">END SUBROUTINE </span><a class="code" href="namespacemode__gradient__m__phy.html#a8695c1fea02d92cf328468049763a95f">gz_m_w_phy</a></div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00108"></a><span class="lineno"><a class="line" href="namespacemode__gradient__m__phy.html#ab702f8b10244291b9fbbc33f58a0afbb">  108</a></span>&#160;<span class="keyword">SUBROUTINE </span><a class="code" href="namespacemode__gradient__m__phy.html#ab702f8b10244291b9fbbc33f58a0afbb">gx_m_m_phy</a>(D,OFLAT,PA,PDXX,PDZZ,PDZX,PGX_M_M)</div>
-<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;      <span class="keywordtype">USE </span><a class="code" href="namespaceyomhook.html">yomhook</a> , <span class="keywordtype">ONLY</span> : <a class="code" href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">lhook</a>, <a class="code" href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">dr_hook</a>, <a class="code" href="namespaceyomhook.html#a323161b5b69c34bd0195464a7c4dbce8">jphook</a></div>
+<div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;      <span class="keywordtype">USE </span>yomhook , <span class="keywordtype">ONLY</span> : lhook, dr_hook, jphook</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;<span class="comment">!     #######################################################</span></div>
 <div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;<span class="comment">!!****  *GX_M_M* - Cartesian Gradient operator: </span></div>
@@ -266,8 +266,8 @@ $(function() {
 <div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;<span class="comment">!*       1.    DEFINITION of GX_M_M</span></div>
 <div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;<span class="comment">!              --------------------</span></div>
 <div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;<span class="keywordtype">REAL</span>(KIND=<a class="code" href="namespaceyomhook.html#a323161b5b69c34bd0195464a7c4dbce8">jphook</a>) :: zhook_handle</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;<span class="keywordflow">IF</span> (<a class="code" href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">lhook</a>) <span class="keyword">CALL </span><a class="code" href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">dr_hook</a>(<span class="stringliteral">&#39;GX_M_M&#39;</span>,0,zhook_handle)</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;<span class="keywordtype">REAL</span>(KIND=jphook) :: zhook_handle</div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;GX_M_M&#39;</span>,0,zhook_handle)</div>
 <div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;iie=d%NIEC</div>
 <div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;iib=d%NIBC</div>
@@ -299,11 +299,11 @@ $(function() {
 <div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;<span class="comment">!----------------------------------------------------------------------------</span></div>
 <div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;<span class="keywordflow">IF</span> (<a class="code" href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">lhook</a>) <span class="keyword">CALL </span><a class="code" href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">dr_hook</a>(<span class="stringliteral">&#39;GX_M_M&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;GX_M_M&#39;</span>,1,zhook_handle)</div>
 <div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;<span class="keyword">END SUBROUTINE </span><a class="code" href="namespacemode__gradient__m__phy.html#ab702f8b10244291b9fbbc33f58a0afbb">gx_m_m_phy</a></div>
 <div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00233"></a><span class="lineno"><a class="line" href="namespacemode__gradient__m__phy.html#aa0fd0d0ada5b69133101c83f9d1ee8e7">  233</a></span>&#160;      <span class="keyword">SUBROUTINE </span><a class="code" href="namespacemode__gradient__m__phy.html#aa0fd0d0ada5b69133101c83f9d1ee8e7">gy_m_m_phy</a>(D,OFLAT,PA,PDYY,PDZZ,PDZY,PGY_M_M)</div>
-<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;      <span class="keywordtype">USE </span><a class="code" href="namespaceyomhook.html">yomhook</a> , <span class="keywordtype">ONLY</span> : <a class="code" href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">lhook</a>, <a class="code" href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">dr_hook</a>, <a class="code" href="namespaceyomhook.html#a323161b5b69c34bd0195464a7c4dbce8">jphook</a></div>
+<div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160;      <span class="keywordtype">USE </span>yomhook , <span class="keywordtype">ONLY</span> : lhook, dr_hook, jphook</div>
 <div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;<span class="comment">!     #######################################################</span></div>
 <div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;<span class="comment">!!****  *GY_M_M* - Cartesian Gradient operator: </span></div>
@@ -382,8 +382,8 @@ $(function() {
 <div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;<span class="comment">!*       0.2   declaration of local variables</span></div>
 <div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;<span class="keywordtype">REAL</span>(kind=<a class="code" href="namespaceyomhook.html#a323161b5b69c34bd0195464a7c4dbce8">jphook</a>) :: zhook_handle</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;<span class="keywordflow">IF</span> (<a class="code" href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">lhook</a>) <span class="keyword">CALL </span><a class="code" href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">dr_hook</a>(<span class="stringliteral">&#39;GY_M_M&#39;</span>,0,zhook_handle)</div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;<span class="keywordtype">REAL</span>(kind=jphook) :: zhook_handle</div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;GY_M_M&#39;</span>,0,zhook_handle)</div>
 <div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;iie=d%NIEC</div>
 <div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;iib=d%NIBC</div>
@@ -421,12 +421,12 @@ $(function() {
 <div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;<span class="comment">!----------------------------------------------------------------------------</span></div>
 <div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;<span class="keywordflow">IF</span> (<a class="code" href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">lhook</a>) <span class="keyword">CALL </span><a class="code" href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">dr_hook</a>(<span class="stringliteral">&#39;GY_M_M&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;GY_M_M&#39;</span>,1,zhook_handle)</div>
 <div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;<span class="keyword">END SUBROUTINE </span><a class="code" href="namespacemode__gradient__m__phy.html#aa0fd0d0ada5b69133101c83f9d1ee8e7">gy_m_m_phy</a></div>
 <div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;<span class="comment">!     #######################################################</span></div>
 <div class="line"><a name="l00356"></a><span class="lineno"><a class="line" href="namespacemode__gradient__m__phy.html#a8294d39d385eb92ff00a128e9aafb29f">  356</a></span>&#160;      <span class="keyword">SUBROUTINE </span><a class="code" href="namespacemode__gradient__m__phy.html#a8294d39d385eb92ff00a128e9aafb29f">gx_m_u_phy</a>(D,OFLAT,PY,PDXX,PDZZ,PDZX,PGX_M_U)</div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;      <span class="keywordtype">USE </span><a class="code" href="namespaceyomhook.html">yomhook</a> , <span class="keywordtype">ONLY</span> : <a class="code" href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">lhook</a>, <a class="code" href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">dr_hook</a>, <a class="code" href="namespaceyomhook.html#a323161b5b69c34bd0195464a7c4dbce8">jphook</a></div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;      <span class="keywordtype">USE </span>yomhook , <span class="keywordtype">ONLY</span> : lhook, dr_hook, jphook</div>
 <div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;<span class="comment">!     ##################################################</span></div>
 <div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;<span class="comment">!!****  *GX_M_U * - Compute the gradient along x for a variable localized at</span></div>
@@ -488,7 +488,7 @@ $(function() {
 <div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;<span class="comment">!              ------------</span></div>
 <div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;<span class="keywordtype">USE </span><a class="code" href="namespacemodd__dimphyex.html">modd_dimphyex</a>, <span class="keywordtype">ONLY</span>: <a class="code" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;<span class="keywordtype">USE </span><a class="code" href="namespacemodd__parameters.html">modd_parameters</a>, <span class="keywordtype">ONLY</span> : <a class="code" href="namespacemodd__parameters.html#a5147d5fc041bf4b38eb1fb7cf43cb4de">jphext</a>, <a class="code" href="namespacemodd__parameters.html#aa538c6d82ef3c7d666d391d2da37d447">jpvext_turb</a></div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;<span class="keywordtype">USE </span><a class="code" href="namespacemodd__parameters.html">modd_parameters</a>, <span class="keywordtype">ONLY</span> : <a class="code" href="namespacemodd__parameters.html#adbfa152f873e93b07c0773db26ee31d4">jphext</a>, <a class="code" href="namespacemodd__parameters.html#a436023c10ff12b77fea532a6c6194e3e">jpvext_turb</a></div>
 <div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;<span class="keywordtype">IMPLICIT NONE</span></div>
 <div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;<span class="comment">!</span></div>
@@ -518,8 +518,8 @@ $(function() {
 <div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;<span class="comment">!*       1.    COMPUTE THE GRADIENT ALONG X</span></div>
 <div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;<span class="comment">!              -----------------------------</span></div>
 <div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;<span class="keywordtype">REAL</span>(kind=<a class="code" href="namespaceyomhook.html#a323161b5b69c34bd0195464a7c4dbce8">jphook</a>) :: zhook_handle</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;<span class="keywordflow">IF</span> (<a class="code" href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">lhook</a>) <span class="keyword">CALL </span><a class="code" href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">dr_hook</a>(<span class="stringliteral">&#39;GX_M_U&#39;</span>,0,zhook_handle)</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;<span class="keywordtype">REAL</span>(kind=jphook) :: zhook_handle</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;GX_M_U&#39;</span>,0,zhook_handle)</div>
 <div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;iiu=d%NIT</div>
 <div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;iju=d%NJT</div>
 <div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;iku=d%NKT</div>
@@ -530,8 +530,8 @@ $(function() {
 <div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;<span class="keyword">CALL </span><a class="code" href="namespacemode__gradient__m__phy.html#a49e9ee281e5d8e2dd41b95585d643b44">d1d_to_3d</a>(d,py,zy)</div>
 <div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;<span class="keywordflow">IF</span> (.NOT. oflat) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;  jijkor  = 1 + <a class="code" href="namespacemodd__parameters.html#a5147d5fc041bf4b38eb1fb7cf43cb4de">jphext</a> + iiu*iju*(<a class="code" href="namespacemodd__parameters.html#aa538c6d82ef3c7d666d391d2da37d447">jpvext_turb</a>+1 - 1)</div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;  jijkend = iiu*iju*(iku-<a class="code" href="namespacemodd__parameters.html#aa538c6d82ef3c7d666d391d2da37d447">jpvext_turb</a>)</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;  jijkor  = 1 + <a class="code" href="namespacemodd__parameters.html#adbfa152f873e93b07c0773db26ee31d4">jphext</a> + iiu*iju*(<a class="code" href="namespacemodd__parameters.html#a436023c10ff12b77fea532a6c6194e3e">jpvext_turb</a>+1 - 1)</div>
+<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;  jijkend = iiu*iju*(iku-<a class="code" href="namespacemodd__parameters.html#a436023c10ff12b77fea532a6c6194e3e">jpvext_turb</a>)</div>
 <div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;<span class="comment">!CDIR NODEP</span></div>
 <div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;<span class="comment">!OCL NOVREC</span></div>
 <div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;  <span class="keywordflow">DO</span> jijk=jijkor , jijkend</div>
@@ -555,7 +555,7 @@ $(function() {
 <div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;<span class="keyword">CALL </span><a class="code" href="namespacemode__gradient__m__phy.html#a49e9ee281e5d8e2dd41b95585d643b44">d1d_to_3d</a>(d,zgx_m_u,pgx_m_u)</div>
 <div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;  <span class="keywordflow">DO</span> ji=1+<a class="code" href="namespacemodd__parameters.html#a5147d5fc041bf4b38eb1fb7cf43cb4de">jphext</a>,iiu</div>
+<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;  <span class="keywordflow">DO</span> ji=1+<a class="code" href="namespacemodd__parameters.html#adbfa152f873e93b07c0773db26ee31d4">jphext</a>,iiu</div>
 <div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;    pgx_m_u(ji,:,iku)=  ( zy(ji,:,iku)-zy(ji-1,:,iku)  )  / zdxx(ji,:,iku)</div>
 <div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;    pgx_m_u(ji,:,ika)=  -999.</div>
 <div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;<span class="keywordflow">  END DO</span></div>
@@ -565,17 +565,17 @@ $(function() {
 <div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;                             / zdxx(2:iiu,:,:)</div>
 <div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;<span class="keywordflow">ENDIF</span></div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;<span class="keywordflow">DO</span> ji=1,<a class="code" href="namespacemodd__parameters.html#a5147d5fc041bf4b38eb1fb7cf43cb4de">jphext</a></div>
-<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;  pgx_m_u(ji,:,:)=pgx_m_u(iiu-2*<a class="code" href="namespacemodd__parameters.html#a5147d5fc041bf4b38eb1fb7cf43cb4de">jphext</a>+ji,:,:) <span class="comment">! for reprod JPHEXT &lt;&gt; 1</span></div>
+<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;<span class="keywordflow">DO</span> ji=1,<a class="code" href="namespacemodd__parameters.html#adbfa152f873e93b07c0773db26ee31d4">jphext</a></div>
+<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;  pgx_m_u(ji,:,:)=pgx_m_u(iiu-2*<a class="code" href="namespacemodd__parameters.html#adbfa152f873e93b07c0773db26ee31d4">jphext</a>+ji,:,:) <span class="comment">! for reprod JPHEXT &lt;&gt; 1</span></div>
 <div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;<span class="keywordflow">END DO</span>  </div>
 <div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;<span class="comment">!-------------------------------------------------------------------------------</span></div>
 <div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;<span class="keywordflow">IF</span> (<a class="code" href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">lhook</a>) <span class="keyword">CALL </span><a class="code" href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">dr_hook</a>(<span class="stringliteral">&#39;GX_M_U&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;GX_M_U&#39;</span>,1,zhook_handle)</div>
 <div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;<span class="keyword">END SUBROUTINE </span><a class="code" href="namespacemode__gradient__m__phy.html#a8294d39d385eb92ff00a128e9aafb29f">gx_m_u_phy</a></div>
 <div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00505"></a><span class="lineno"><a class="line" href="namespacemode__gradient__m__phy.html#ac92424899d39a1211db095c664984502">  505</a></span>&#160;      <span class="keyword">SUBROUTINE </span><a class="code" href="namespacemode__gradient__m__phy.html#ac92424899d39a1211db095c664984502">gy_m_v_phy</a>(D,OFLAT,PY,PDYY,PDZZ,PDZY,PGY_M_V)</div>
-<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;      <span class="keywordtype">USE </span><a class="code" href="namespaceyomhook.html">yomhook</a> , <span class="keywordtype">ONLY</span> : <a class="code" href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">lhook</a>, <a class="code" href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">dr_hook</a>, <a class="code" href="namespaceyomhook.html#a323161b5b69c34bd0195464a7c4dbce8">jphook</a></div>
+<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;      <span class="keywordtype">USE </span>yomhook , <span class="keywordtype">ONLY</span> : lhook, dr_hook, jphook</div>
 <div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;<span class="comment">!     ##################################################</span></div>
 <div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;<span class="comment">!!****  *GY_M_V * - Compute the gradient along y for a variable localized at</span></div>
@@ -637,7 +637,7 @@ $(function() {
 <div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;<span class="comment">!              ------------</span></div>
 <div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;<span class="keywordtype">USE </span><a class="code" href="namespacemodd__dimphyex.html">modd_dimphyex</a>, <span class="keywordtype">ONLY</span>: <a class="code" href="structmodd__dimphyex_1_1dimphyex__t.html">dimphyex_t</a></div>
-<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;<span class="keywordtype">USE </span><a class="code" href="namespacemodd__parameters.html">modd_parameters</a>, <span class="keywordtype">ONLY</span> : <a class="code" href="namespacemodd__parameters.html#a5147d5fc041bf4b38eb1fb7cf43cb4de">jphext</a>, <a class="code" href="namespacemodd__parameters.html#aa538c6d82ef3c7d666d391d2da37d447">jpvext_turb</a></div>
+<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;<span class="keywordtype">USE </span><a class="code" href="namespacemodd__parameters.html">modd_parameters</a>, <span class="keywordtype">ONLY</span> : <a class="code" href="namespacemodd__parameters.html#adbfa152f873e93b07c0773db26ee31d4">jphext</a>, <a class="code" href="namespacemodd__parameters.html#a436023c10ff12b77fea532a6c6194e3e">jpvext_turb</a></div>
 <div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;<span class="keywordtype">IMPLICIT NONE</span></div>
 <div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;<span class="comment">!</span></div>
@@ -663,8 +663,8 @@ $(function() {
 <div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;<span class="comment">!*       1.    COMPUTE THE GRADIENT ALONG Y</span></div>
 <div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;<span class="comment">!              ----------------------------</span></div>
 <div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;<span class="keywordtype">REAL</span>(kind=<a class="code" href="namespaceyomhook.html#a323161b5b69c34bd0195464a7c4dbce8">jphook</a>) :: zhook_handle</div>
-<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;<span class="keywordflow">IF</span> (<a class="code" href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">lhook</a>) <span class="keyword">CALL </span><a class="code" href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">dr_hook</a>(<span class="stringliteral">&#39;GY_M_V&#39;</span>,0,zhook_handle)</div>
+<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;<span class="keywordtype">REAL</span>(kind=jphook) :: zhook_handle</div>
+<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;GY_M_V&#39;</span>,0,zhook_handle)</div>
 <div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;iju=d%NJT</div>
 <div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;iku=d%NKT</div>
 <div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;ikl=d%NKL</div>
@@ -672,8 +672,8 @@ $(function() {
 <div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;iku=d%NKU</div>
 <div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;<span class="keywordflow">IF</span> (.NOT. oflat) <span class="keywordflow">THEN</span></div>
 <div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;<span class="comment">!  PGY_M_V = (   DYM(PY)  -  MZF (   MYM(  DZM(PY) /PDZZ  ) * PDZY   )   )/PDYY</span></div>
-<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;  <span class="keywordflow">DO</span> jk=1+<a class="code" href="namespacemodd__parameters.html#aa538c6d82ef3c7d666d391d2da37d447">jpvext_turb</a>,iku-<a class="code" href="namespacemodd__parameters.html#aa538c6d82ef3c7d666d391d2da37d447">jpvext_turb</a></div>
-<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;    <span class="keywordflow">DO</span> jj=1+<a class="code" href="namespacemodd__parameters.html#a5147d5fc041bf4b38eb1fb7cf43cb4de">jphext</a>,iju</div>
+<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;  <span class="keywordflow">DO</span> jk=1+<a class="code" href="namespacemodd__parameters.html#a436023c10ff12b77fea532a6c6194e3e">jpvext_turb</a>,iku-<a class="code" href="namespacemodd__parameters.html#a436023c10ff12b77fea532a6c6194e3e">jpvext_turb</a></div>
+<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;    <span class="keywordflow">DO</span> jj=1+<a class="code" href="namespacemodd__parameters.html#adbfa152f873e93b07c0773db26ee31d4">jphext</a>,iju</div>
 <div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;        pgy_m_v(:,jj,jk)=                                                 &amp;</div>
 <div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;           (  py(:,jj,jk)-py(:,jj-1,jk)                                   &amp;</div>
 <div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;             -(  (py(:,jj,jk)-py(:,jj,jk-ikl))     / pdzz(:,jj,jk)          &amp;</div>
@@ -686,7 +686,7 @@ $(function() {
 <div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;<span class="keywordflow">    END DO</span></div>
 <div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;<span class="keywordflow">  END DO</span></div>
 <div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;  <span class="keywordflow">DO</span> jj=1+<a class="code" href="namespacemodd__parameters.html#a5147d5fc041bf4b38eb1fb7cf43cb4de">jphext</a>,iju</div>
+<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;  <span class="keywordflow">DO</span> jj=1+<a class="code" href="namespacemodd__parameters.html#adbfa152f873e93b07c0773db26ee31d4">jphext</a>,iju</div>
 <div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    pgy_m_v(:,jj,iku)=  ( py(:,jj,iku)-py(:,jj-1,iku)  )  / pdyy(:,jj,iku)</div>
 <div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    pgy_m_v(:,jj,ika)=  -999.</div>
 <div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;<span class="keywordflow">  END DO</span></div>
@@ -697,13 +697,13 @@ $(function() {
 <div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;                               / pdyy(:,2:iju,:)</div>
 <div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;<span class="keywordflow">ENDIF</span></div>
-<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;<span class="keywordflow">DO</span> jj=1,<a class="code" href="namespacemodd__parameters.html#a5147d5fc041bf4b38eb1fb7cf43cb4de">jphext</a></div>
-<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;  pgy_m_v(:,jj,:)=pgy_m_v(:,iju-2*<a class="code" href="namespacemodd__parameters.html#a5147d5fc041bf4b38eb1fb7cf43cb4de">jphext</a>+jj,:)</div>
+<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;<span class="keywordflow">DO</span> jj=1,<a class="code" href="namespacemodd__parameters.html#adbfa152f873e93b07c0773db26ee31d4">jphext</a></div>
+<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;  pgy_m_v(:,jj,:)=pgy_m_v(:,iju-2*<a class="code" href="namespacemodd__parameters.html#adbfa152f873e93b07c0773db26ee31d4">jphext</a>+jj,:)</div>
 <div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;<span class="keywordflow">END DO</span></div>
 <div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;<span class="comment">!-------------------------------------------------------------------------------</span></div>
 <div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;<span class="keywordflow">IF</span> (<a class="code" href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">lhook</a>) <span class="keyword">CALL </span><a class="code" href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">dr_hook</a>(<span class="stringliteral">&#39;GY_M_V&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;GY_M_V&#39;</span>,1,zhook_handle)</div>
 <div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;<span class="keyword">END SUBROUTINE </span><a class="code" href="namespacemode__gradient__m__phy.html#ac92424899d39a1211db095c664984502">gy_m_v_phy</a></div>
 <div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00637"></a><span class="lineno"><a class="line" href="namespacemode__gradient__m__phy.html#a49e9ee281e5d8e2dd41b95585d643b44">  637</a></span>&#160;<span class="keyword">SUBROUTINE </span><a class="code" href="namespacemode__gradient__m__phy.html#a49e9ee281e5d8e2dd41b95585d643b44">d1d_to_3d</a> (D,P1D,P3D)</div>
@@ -717,9 +717,9 @@ $(function() {
 <div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;<span class="keyword">END SUBROUTINE </span><a class="code" href="namespacemode__gradient__m__phy.html#a49e9ee281e5d8e2dd41b95585d643b44">d1d_to_3d</a></div>
 <div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;<span class="keyword">END MODULE </span><a class="code" href="namespacemode__gradient__m__phy.html">mode_gradient_m_phy</a></div>
 <div class="ttc" id="anamespacemodd__dimphyex_html"><div class="ttname"><a href="namespacemodd__dimphyex.html">modd_dimphyex</a></div><div class="ttdef"><b>Definition:</b> <a href="modd__dimphyexn_8F90_source.html#l00007">modd_dimphyexn.F90:7</a></div></div>
-<div class="ttc" id="anamespacemodd__parameters_html"><div class="ttname"><a href="namespacemodd__parameters.html">modd_parameters</a></div><div class="ttdef"><b>Definition:</b> <a href="common_2aux_2modd__parameters_8F90_source.html#l00007">modd_parameters.F90:7</a></div></div>
-<div class="ttc" id="anamespacemodd__parameters_html_a5147d5fc041bf4b38eb1fb7cf43cb4de"><div class="ttname"><a href="namespacemodd__parameters.html#a5147d5fc041bf4b38eb1fb7cf43cb4de">modd_parameters::jphext</a></div><div class="ttdeci">integer, parameter jphext</div><div class="ttdef"><b>Definition:</b> <a href="common_2aux_2modd__parameters_8F90_source.html#l00047">modd_parameters.F90:47</a></div></div>
-<div class="ttc" id="anamespacemodd__parameters_html_aa538c6d82ef3c7d666d391d2da37d447"><div class="ttname"><a href="namespacemodd__parameters.html#aa538c6d82ef3c7d666d391d2da37d447">modd_parameters::jpvext_turb</a></div><div class="ttdeci">integer, parameter jpvext_turb</div><div class="ttdef"><b>Definition:</b> <a href="common_2aux_2modd__parameters_8F90_source.html#l00049">modd_parameters.F90:49</a></div></div>
+<div class="ttc" id="anamespacemodd__parameters_html"><div class="ttname"><a href="namespacemodd__parameters.html">modd_parameters</a></div><div class="ttdef"><b>Definition:</b> <a href="modd__parameters_8F90_source.html#l00007">modd_parameters.F90:7</a></div></div>
+<div class="ttc" id="anamespacemodd__parameters_html_a436023c10ff12b77fea532a6c6194e3e"><div class="ttname"><a href="namespacemodd__parameters.html#a436023c10ff12b77fea532a6c6194e3e">modd_parameters::jpvext_turb</a></div><div class="ttdeci">integer, parameter jpvext_turb</div><div class="ttdef"><b>Definition:</b> <a href="modd__parameters_8F90_source.html#l00049">modd_parameters.F90:49</a></div></div>
+<div class="ttc" id="anamespacemodd__parameters_html_adbfa152f873e93b07c0773db26ee31d4"><div class="ttname"><a href="namespacemodd__parameters.html#adbfa152f873e93b07c0773db26ee31d4">modd_parameters::jphext</a></div><div class="ttdeci">integer, parameter jphext</div><div class="ttdef"><b>Definition:</b> <a href="modd__parameters_8F90_source.html#l00047">modd_parameters.F90:47</a></div></div>
 <div class="ttc" id="anamespacemode__gradient__m__phy_html"><div class="ttname"><a href="namespacemode__gradient__m__phy.html">mode_gradient_m_phy</a></div><div class="ttdef"><b>Definition:</b> <a href="mode__gradient__m__phy_8F90_source.html#l00001">mode_gradient_m_phy.F90:1</a></div></div>
 <div class="ttc" id="anamespacemode__gradient__m__phy_html_a49e9ee281e5d8e2dd41b95585d643b44"><div class="ttname"><a href="namespacemode__gradient__m__phy.html#a49e9ee281e5d8e2dd41b95585d643b44">mode_gradient_m_phy::d1d_to_3d</a></div><div class="ttdeci">subroutine d1d_to_3d(D, P1D, P3D)</div><div class="ttdef"><b>Definition:</b> <a href="mode__gradient__m__phy_8F90_source.html#l00637">mode_gradient_m_phy.F90:638</a></div></div>
 <div class="ttc" id="anamespacemode__gradient__m__phy_html_a8294d39d385eb92ff00a128e9aafb29f"><div class="ttname"><a href="namespacemode__gradient__m__phy.html#a8294d39d385eb92ff00a128e9aafb29f">mode_gradient_m_phy::gx_m_u_phy</a></div><div class="ttdeci">subroutine gx_m_u_phy(D, OFLAT, PY, PDXX, PDZZ, PDZX, PGX_M_U)</div><div class="ttdef"><b>Definition:</b> <a href="mode__gradient__m__phy_8F90_source.html#l00356">mode_gradient_m_phy.F90:357</a></div></div>
@@ -736,10 +736,6 @@ $(function() {
 <div class="ttc" id="anamespacemode__shuman__phy_html_abc3ca39a147d3c336e3bce91e47c93ff"><div class="ttname"><a href="namespacemode__shuman__phy.html#abc3ca39a147d3c336e3bce91e47c93ff">mode_shuman_phy::mxm_phy</a></div><div class="ttdeci">subroutine mxm_phy(D, PA, PMXM)</div><div class="ttdef"><b>Definition:</b> <a href="mode__shuman__phy_8F90_source.html#l00497">mode_shuman_phy.F90:498</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html_abef568c768d73d237ccee000ca9bac03"><div class="ttname"><a href="namespacemode__shuman__phy.html#abef568c768d73d237ccee000ca9bac03">mode_shuman_phy::mxf_phy</a></div><div class="ttdeci">subroutine mxf_phy(D, PA, PMXF)</div><div class="ttdef"><b>Definition:</b> <a href="mode__shuman__phy_8F90_source.html#l00663">mode_shuman_phy.F90:664</a></div></div>
 <div class="ttc" id="anamespacemode__shuman__phy_html_aede8feba6e5c3306373b8f4ef8918892"><div class="ttname"><a href="namespacemode__shuman__phy.html#aede8feba6e5c3306373b8f4ef8918892">mode_shuman_phy::dzm_phy</a></div><div class="ttdeci">subroutine dzm_phy(D, PA, PDZM)</div><div class="ttdef"><b>Definition:</b> <a href="mode__shuman__phy_8F90_source.html#l00406">mode_shuman_phy.F90:407</a></div></div>
-<div class="ttc" id="anamespaceyomhook_html"><div class="ttname"><a href="namespaceyomhook.html">yomhook</a></div><div class="ttdef"><b>Definition:</b> <a href="yomhook_8F90_source.html#l00014">yomhook.F90:14</a></div></div>
-<div class="ttc" id="anamespaceyomhook_html_a323161b5b69c34bd0195464a7c4dbce8"><div class="ttname"><a href="namespaceyomhook.html#a323161b5b69c34bd0195464a7c4dbce8">yomhook::jphook</a></div><div class="ttdeci">integer, parameter jphook</div><div class="ttdef"><b>Definition:</b> <a href="yomhook_8F90_source.html#l00024">yomhook.F90:24</a></div></div>
-<div class="ttc" id="anamespaceyomhook_html_a88d30ca62d9950b7b8559ac1c79d1caf"><div class="ttname"><a href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">yomhook::lhook</a></div><div class="ttdeci">logical lhook</div><div class="ttdef"><b>Definition:</b> <a href="yomhook_8F90_source.html#l00022">yomhook.F90:22</a></div></div>
-<div class="ttc" id="anamespaceyomhook_html_afc2832ab0d3ab62847f6021a66792015"><div class="ttname"><a href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">yomhook::dr_hook</a></div><div class="ttdeci">subroutine dr_hook(proc_name, iswitch, proc_key)</div><div class="ttdef"><b>Definition:</b> <a href="yomhook_8F90_source.html#l00028">yomhook.F90:29</a></div></div>
 <div class="ttc" id="astructmodd__dimphyex_1_1dimphyex__t_html"><div class="ttname"><a href="structmodd__dimphyex_1_1dimphyex__t.html">modd_dimphyex::dimphyex_t</a></div><div class="ttdef"><b>Definition:</b> <a href="modd__dimphyexn_8F90_source.html#l00038">modd_dimphyexn.F90:38</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->

@@ -81,7 +81,7 @@ $(function() {
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keywordtype">USE </span><a class="code" href="namespacestack__mod.html">stack_mod</a>,       <span class="keywordtype">ONLY</span>: <a class="code" href="structstack__mod_1_1stack.html">stack</a></div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keywordtype">USE </span><a class="code" href="namespacemode__mnh__zwork.html">mode_mnh_zwork</a>,  <span class="keywordtype">ONLY</span>: <a class="code" href="namespacemode__mnh__zwork.html#a1b5ddeee6673b7e837af8b60219a0010">zmnh_stack</a>, <a class="code" href="namespacemode__mnh__zwork.html#ab2d2cae5021c306448d3eb1266cb3546">imnh_block</a>, <a class="code" href="namespacemode__mnh__zwork.html#afeea983961d4672701fb6e9776baab69">ymnh_stack</a>, <a class="code" href="namespacemode__mnh__zwork.html#a97931885af69f5ee5a77a72e78c6ef2a">inumpin</a></div>
 <div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keywordtype">USE </span>omp_lib</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keywordtype">USE </span><a class="code" href="namespaceyomhook.html">yomhook</a>, <span class="keywordtype">ONLY</span> : <a class="code" href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">lhook</a>, <a class="code" href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">dr_hook</a>, <a class="code" href="namespaceyomhook.html#a323161b5b69c34bd0195464a7c4dbce8">jphook</a></div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;<span class="keywordtype">USE </span>yomhook, <span class="keywordtype">ONLY</span> : lhook, dr_hook, jphook</div>
 <div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
 <div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;<span class="keywordtype">IMPLICIT NONE</span></div>
 <div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160; </div>
@@ -145,7 +145,7 @@ $(function() {
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;<span class="keywordtype">INTEGER</span> :: itime, ntime</div>
 <div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;<span class="keywordtype">INTEGER</span> :: irank, isize</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;<span class="keywordtype">LOGICAL</span> :: llverbose, llstat, llbind</div>
-<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;real(kind=<a class="code" href="namespaceyomhook.html#a323161b5b69c34bd0195464a7c4dbce8">jphook</a>) :: zhook_handle</div>
+<div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;real(kind=jphook) :: zhook_handle</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160; </div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="keyword">CALL </span><a class="code" href="namespacexrd__getoptions.html#a8fa02869f3bffa275a97ed2adccb3028">initoptions</a> ()</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;ngpblks = 296</div>
@@ -218,7 +218,7 @@ $(function() {
 <div class="line"><a name="l00146"></a><span class="lineno">  146</span>&#160;ztd = 0.</div>
 <div class="line"><a name="l00147"></a><span class="lineno">  147</span>&#160;ztc = 0.</div>
 <div class="line"><a name="l00148"></a><span class="lineno">  148</span>&#160; </div>
-<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;<span class="keywordflow">IF</span> (<a class="code" href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">lhook</a>) <span class="keyword">CALL </span><a class="code" href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">dr_hook</a> (<span class="stringliteral">&#39;MAIN&#39;</span>,0,zhook_handle)</div>
+<div class="line"><a name="l00149"></a><span class="lineno">  149</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook (<span class="stringliteral">&#39;MAIN&#39;</span>,0,zhook_handle)</div>
 <div class="line"><a name="l00150"></a><span class="lineno">  150</span>&#160; </div>
 <div class="line"><a name="l00151"></a><span class="lineno">  151</span>&#160;<span class="keywordflow">DO</span> itime = 1, ntime</div>
 <div class="line"><a name="l00152"></a><span class="lineno">  152</span>&#160; </div>
@@ -320,7 +320,7 @@ $(function() {
 <div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160; </div>
 <div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160;<span class="keywordflow">ENDDO</span></div>
 <div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160; </div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;<span class="keywordflow">IF</span> (<a class="code" href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">lhook</a>) <span class="keyword">CALL </span><a class="code" href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">dr_hook</a> (<span class="stringliteral">&#39;MAIN&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook (<span class="stringliteral">&#39;MAIN&#39;</span>,1,zhook_handle)</div>
 <div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160; </div>
 <div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;te = omp_get_wtime()</div>
 <div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160; </div>
@@ -504,10 +504,6 @@ $(function() {
 <div class="ttc" id="anamespacexrd__getoptions_html"><div class="ttname"><a href="namespacexrd__getoptions.html">xrd_getoptions</a></div><div class="ttdef"><b>Definition:</b> <a href="xrd__getoptions_8F90_source.html#l00001">xrd_getoptions.F90:1</a></div></div>
 <div class="ttc" id="anamespacexrd__getoptions_html_a61e2d1792cf018efb939c3e02b916026"><div class="ttname"><a href="namespacexrd__getoptions.html#a61e2d1792cf018efb939c3e02b916026">xrd_getoptions::checkoptions</a></div><div class="ttdeci">subroutine, public checkoptions()</div><div class="ttdef"><b>Definition:</b> <a href="xrd__getoptions_8F90_source.html#l00274">xrd_getoptions.F90:275</a></div></div>
 <div class="ttc" id="anamespacexrd__getoptions_html_a8fa02869f3bffa275a97ed2adccb3028"><div class="ttname"><a href="namespacexrd__getoptions.html#a8fa02869f3bffa275a97ed2adccb3028">xrd_getoptions::initoptions</a></div><div class="ttdeci">subroutine, public initoptions(CDMESSAGE, KOPTMIN, KOPTMAX, CDARGS)</div><div class="ttdef"><b>Definition:</b> <a href="xrd__getoptions_8F90_source.html#l00219">xrd_getoptions.F90:220</a></div></div>
-<div class="ttc" id="anamespaceyomhook_html"><div class="ttname"><a href="namespaceyomhook.html">yomhook</a></div><div class="ttdef"><b>Definition:</b> <a href="yomhook_8F90_source.html#l00014">yomhook.F90:14</a></div></div>
-<div class="ttc" id="anamespaceyomhook_html_a323161b5b69c34bd0195464a7c4dbce8"><div class="ttname"><a href="namespaceyomhook.html#a323161b5b69c34bd0195464a7c4dbce8">yomhook::jphook</a></div><div class="ttdeci">integer, parameter jphook</div><div class="ttdef"><b>Definition:</b> <a href="yomhook_8F90_source.html#l00024">yomhook.F90:24</a></div></div>
-<div class="ttc" id="anamespaceyomhook_html_a88d30ca62d9950b7b8559ac1c79d1caf"><div class="ttname"><a href="namespaceyomhook.html#a88d30ca62d9950b7b8559ac1c79d1caf">yomhook::lhook</a></div><div class="ttdeci">logical lhook</div><div class="ttdef"><b>Definition:</b> <a href="yomhook_8F90_source.html#l00022">yomhook.F90:22</a></div></div>
-<div class="ttc" id="anamespaceyomhook_html_afc2832ab0d3ab62847f6021a66792015"><div class="ttname"><a href="namespaceyomhook.html#afc2832ab0d3ab62847f6021a66792015">yomhook::dr_hook</a></div><div class="ttdeci">subroutine dr_hook(proc_name, iswitch, proc_key)</div><div class="ttdef"><b>Definition:</b> <a href="yomhook_8F90_source.html#l00028">yomhook.F90:29</a></div></div>
 <div class="ttc" id="astructmodd__dimphyex_1_1dimphyex__t_html"><div class="ttname"><a href="structmodd__dimphyex_1_1dimphyex__t.html">modd_dimphyex::dimphyex_t</a></div><div class="ttdef"><b>Definition:</b> <a href="modd__dimphyexn_8F90_source.html#l00038">modd_dimphyexn.F90:38</a></div></div>
 <div class="ttc" id="astructmodd__phyex_1_1phyex__t_html"><div class="ttname"><a href="structmodd__phyex_1_1phyex__t.html">modd_phyex::phyex_t</a></div><div class="ttdef"><b>Definition:</b> <a href="modd__phyex_8F90_source.html#l00042">modd_phyex.F90:42</a></div></div>
 <div class="ttc" id="astructstack__mod_1_1stack_html"><div class="ttname"><a href="structstack__mod_1_1stack.html">stack_mod::stack</a></div><div class="ttdef"><b>Definition:</b> <a href="stack__mod_8F90_source.html#l00005">stack_mod.F90:5</a></div></div>

@@ -1,7 +1,6 @@
 <map id="modd_misc::misc_t" name="modd_misc::misc_t">
-<area shape="rect" id="node1" title=" " alt="" coords="324,81,472,108"/>
-<area shape="rect" id="node2" href="$structmodd__les_1_1tles__t.html" title=" " alt="" coords="45,5,175,32"/>
-<area shape="rect" id="node3" href="$structmodd__budget_1_1tbudgetdata.html" title=" " alt="" coords="11,56,209,83"/>
-<area shape="rect" id="node4" href="$structmodd__budget_1_1tbudgetconf__t.html" title=" " alt="" coords="5,107,215,133"/>
-<area shape="rect" id="node5" href="$structmodd__io_1_1tfiledata.html" title=" " alt="" coords="40,164,180,191"/>
+<area shape="rect" id="node1" title=" " alt="" coords="259,109,407,136"/>
+<area shape="rect" id="node2" href="$structmodd__budget_1_1tbudgetdata.html" title=" " alt="" coords="5,5,204,32"/>
+<area shape="rect" id="node3" href="$structmodd__budget_1_1tbudgetconf__t.html" title=" " alt="" coords="228,5,437,32"/>
+<area shape="rect" id="node4" href="$structmodd__io_1_1tfiledata.html" title=" " alt="" coords="461,5,601,32"/>
 </map>
