@@ -133,7 +133,6 @@ CONTAINS
 !
 USE MODD_PARAMETERS, ONLY : JPVEXT
 
-use mode_mppdb
 
 #ifndef MNH_OPENACC
 USE MODI_SHUMAN
@@ -182,15 +181,6 @@ INTEGER  :: JI,JJ
 ! ---------------------------------------------------------------------------
 
 !$acc data present_crm( PVARM, PF, PDFDDWDZ, PMZF_DZZ, PRHODJ, PVARP )
-
-if ( mppdb_initialized ) then
-  !Check all in arrays
-  call Mppdb_check( pvarm,    "Tridiag_w beg:pvarm"    )
-  call Mppdb_check( pf,       "Tridiag_w beg:pf"       )
-  call Mppdb_check( pdfddwdz, "Tridiag_w beg:pdfddwdz" )
-  call Mppdb_check( pmzf_dzz, "Tridiag_w beg:pmzf_dzz" )
-  call Mppdb_check( prhodj,   "Tridiag_w beg:prhodj"   )
-end if
 
 JIU =  size( pvarm, 1 )
 JJU =  size( pvarm, 2 )
@@ -418,11 +408,6 @@ END DO
    PVARP(JI,JJ,IKE+1)=0.
 !$mnh_end_do()
 !$acc end kernels
-
-if ( mppdb_initialized ) then
-  !Check all out arrays
-  call Mppdb_check( pvarp, "Tridiag_w end:pvarp" )
-end if
 
 !$acc end data
 

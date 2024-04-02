@@ -78,7 +78,12 @@ END MODULE MODI_LES_MEAN_SUBGRID
 !          ------------
 !
 USE MODD_LES
-!
+
+#ifdef MNH_OPENACC
+use mode_msg
+#endif
+
+USE MODI_LES_MEAN_1PROC
 USE MODI_LES_VER_INT
 USE MODI_LES_MEAN_1PROC
 !
@@ -107,6 +112,14 @@ INTEGER, DIMENSION(SIZE(PA_MEAN,1)) :: IUND_PTS
 INTEGER                             :: IMASK     ! mask counter
 INTEGER                             :: JI        ! loop control
 !-------------------------------------------------------------------------------
+IF (.NOT. LLES_CALL) RETURN
+
+!$acc data present( PA, PA_MEAN ) &
+!$acc &    create ( ZA_LES, ZA_MEAN, ZA_MEAN_OLD, GMASK, IAVG_PTS, IUND_PTS )
+
+#ifdef MNH_OPENACC
+call Print_msg( NVERB_WARNING, 'GEN', 'LES_MEAN_SUBGRID_3D', 'OpenACC: not yet tested' )
+#endif
 !
 IF (.NOT. LLES_CALL) RETURN
 !
@@ -280,6 +293,7 @@ IF (LLES_MY_MASK) THEN
  END DO
 END IF
 !
+!$acc end data
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE LES_MEAN_SUBGRID_3D
@@ -319,6 +333,10 @@ END SUBROUTINE LES_MEAN_SUBGRID_3D
 !
 USE MODD_LES
 !
+#ifdef MNH_OPENACC
+use mode_msg
+#endif
+
 USE MODI_LES_MEAN_1PROC
 !
 IMPLICIT NONE
@@ -345,6 +363,10 @@ INTEGER :: IUND_PTS
 !
 IF (.NOT. LLES_CALL) RETURN
 !
+!$acc data present( PA, PA_MEAN )
+#ifdef MNH_OPENACC
+call Print_msg( NVERB_WARNING, 'GEN', 'LES_MEAN_SUBGRID_SURF', 'OpenACC: not yet tested' )
+#endif
 ZA_MEAN_OLD = 0.
 IF (PRESENT(OSUM)) THEN
   IF (OSUM) ZA_MEAN_OLD = PA_MEAN(NLES_CURRENT_TCOUNT)
@@ -360,6 +382,10 @@ CALL LES_MEAN_1PROC(PA, LLES_CURRENT_CART_MASK(:,:,1), ZA_MEAN, IAVG_PTS, IUND_P
 !
 PA_MEAN(NLES_CURRENT_TCOUNT) = ZA_MEAN_OLD + ZA_MEAN
 !
+!$acc update device(PA_MEAN(NLES_CURRENT_TCOUNT))
+! !$acc end kernels
+
+!$acc end data
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE LES_MEAN_SUBGRID_SURF

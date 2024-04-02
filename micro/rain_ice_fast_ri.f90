@@ -32,6 +32,17 @@ USE MODD_RAIN_ICE_DESCR_n, only: XDI, XLBEXI, XLBI, XRTMIN
 USE MODD_RAIN_ICE_PARAM_n, only: X0DEPI, X2DEPI
 
 use mode_budget,         only: Budget_store_add, Budget_store_end, Budget_store_init
+#ifdef MNH_OPENACC
+USE MODE_MNH_ZWORK, ONLY: MNH_MEM_GET, MNH_MEM_POSITION_PIN, MNH_MEM_RELEASE
+#endif
+
+#if defined(MNH_BITREP) || defined(MNH_BITREP_OMP)
+USE MODI_BITREP
+#endif
+#ifdef MNH_COMPILER_CCE
+!$mnh_undef(LOOP)
+!$mnh_undef(OPENACC)
+#endif
 
 IMPLICIT NONE
 !
@@ -71,24 +82,6 @@ REAL, DIMENSION(size(PRHODREF)) :: ZZW  ! Work array
 !
 !NONE
 
-IF (MPPDB_INITIALIZED) THEN
-  !Check all IN arrays
-  CALL MPPDB_CHECK(OMICRO,"RAIN_ICE_FAST_RI beg:OMICRO")
-  CALL MPPDB_CHECK(PRHODREF,"RAIN_ICE_FAST_RI beg:PRHODREF")
-  CALL MPPDB_CHECK(PRIT,"RAIN_ICE_FAST_RI beg:PRIT")
-  CALL MPPDB_CHECK(PRHODJ,"RAIN_ICE_FAST_RI beg:PRHODJ")
-  CALL MPPDB_CHECK(PZT,"RAIN_ICE_FAST_RI beg:PZT")
-  CALL MPPDB_CHECK(PSSI,"RAIN_ICE_FAST_RI beg:PSSI")
-  CALL MPPDB_CHECK(PLSFACT,"RAIN_ICE_FAST_RI beg:PLSFACT")
-  CALL MPPDB_CHECK(PLVFACT,"RAIN_ICE_FAST_RI beg:PLVFACT")
-  CALL MPPDB_CHECK(PAI,"RAIN_ICE_FAST_RI beg:PAI")
-  CALL MPPDB_CHECK(PCJ,"RAIN_ICE_FAST_RI beg:PCJ")
-  !Check all INOUT arrays
-  CALL MPPDB_CHECK(PCIT,"RAIN_ICE_FAST_RI beg:PCIT")
-  CALL MPPDB_CHECK(PRCS,"RAIN_ICE_FAST_RI beg:PRCS")
-  CALL MPPDB_CHECK(PRIS,"RAIN_ICE_FAST_RI beg:PRIS")
-  CALL MPPDB_CHECK(PTHS,"RAIN_ICE_FAST_RI beg:PTHS")
-END IF
 !
 JLU = size(PRHODREF)
 !
@@ -149,6 +142,16 @@ CALL MNH_MEM_GET( ZLBEXI, SIZE(PRHODREF) )
                                                                                   mask = omicro(:,:,:), field = 0. ) )
   if ( lbudget_ri ) call Budget_store_add( tbudgets(NBUDGET_RI), 'BERFI', Unpack (  zzw(:) * prhodj(:), &
                                                                                   mask = omicro(:,:,:), field = 0. ) )
+
+!$acc end data
+
+#ifdef MNH_OPENACC
+!Release all memory allocated with MNH_MEM_GET calls since last call to MNH_MEM_POSITION_PIN
+CALL MNH_MEM_RELEASE( 'RAIN_ICE_FAST_RI' )
+#endif
+
+!$acc end data
+
 END SUBROUTINE RAIN_ICE_FAST_RI
 
 END MODULE MODE_RAIN_ICE_FAST_RI
