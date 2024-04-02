@@ -38,6 +38,19 @@ USE MODD_RAIN_ICE_PARAM_n, only: NWETLBDAG, NWETLBDAH, NWETLBDAS, X0DEPH, X1DEPH
                                XWETINTP1G, XWETINTP1H, XWETINTP1S, XWETINTP2G, XWETINTP2H, XWETINTP2S
 
 use mode_budget,         only: Budget_store_add, Budget_store_end, Budget_store_init
+#ifdef MNH_OPENACC
+USE MODE_MNH_ZWORK, ONLY: MNH_MEM_GET, MNH_MEM_POSITION_PIN, MNH_MEM_RELEASE
+#endif
+use mode_msg
+#ifndef MNH_OPENACC
+use mode_tools,                        only: Countjv
+#else
+use mode_tools,                        only: Countjv_device
+#endif
+
+#ifdef MNH_BITREP
+USE MODI_BITREP
+#endif
 
 IMPLICIT NONE
 !
@@ -84,13 +97,52 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
 !
 !-------------------------------------------------------------------------------
 !
-  IHAIL = 0
-  DO JJ = 1, SIZE(PRHT)
-    IF ( PRHT(JJ)>XRTMIN(7) ) THEN
-      IHAIL = IHAIL + 1
-      I1H(IHAIL) = JJ
-    END IF
-  END DO
+! IN variables
+!
+!$acc data present( OMICRO, PRHODREF, PRVT, PRCT, PRIT, PRST, PRGT, PRHT, &
+!$acc &             PRHODJ, PPRES, PZT, PLBDAS, PLBDAG, PLSFACT, PLVFACT, &
+!$acc &             PCJ, PKA, PDV,                                        &
+!
+! INOUT variables
+!
+!$acc &             PLBDAH, PRCS, PRRS, PRIS, PRSS, PRGS, PRHS, PTHS, PUSW )
+!
+! OUT variables
+!
+!NONE
+
+#ifdef MNH_OPENACC
+CALL PRINT_MSG(NVERB_WARNING,'GEN','RAIN_ICE_FAST_RH','OPENACC: not yet tested')
+#endif
+!
+!
+#ifndef MNH_OPENACC
+ALLOCATE( I1H  (size(PRHODREF)) )
+ALLOCATE( I1W  (size(PRHODREF)) )
+ALLOCATE( GWORK(size(PRHODREF)) )
+ALLOCATE( ZZW  (size(PRHODREF)) )
+ALLOCATE( ZZW1 (size(PRHODREF),7) )
+#else
+!Pin positions in the pools of MNH memory
+CALL MNH_MEM_POSITION_PIN( 'RAIN_ICE_FAST_RH 1' )
+
+CALL MNH_MEM_GET( I1H,   SIZE(PRHODREF) )
+CALL MNH_MEM_GET( I1W,   SIZE(PRHODREF) )
+CALL MNH_MEM_GET( GWORK, SIZE(PRHODREF) )
+CALL MNH_MEM_GET( ZZW,   SIZE(PRHODREF) )
+CALL MNH_MEM_GET( ZZW1,  SIZE(PRHODREF), 7 )
+
+!$acc data present( I1H, I1W, GWORK, ZZW, ZZW1 )
+#endif
+
+!$acc kernels present_cr(GWORK)
+  GWORK(:) = PRHT(:)>XRTMIN(7)
+!$acc end kernels
+#ifndef MNH_OPENACC
+  IHAIL = COUNTJV( GWORK(:), I1H(:) )
+#else
+  CALL COUNTJV_DEVICE( GWORK(:), I1H(:), IHAIL )
+#endif
 !
   IF( IHAIL>0 ) THEN
 !PW:used init/end instead of add because zzw1 is produced and used with different conditions
@@ -398,6 +450,16 @@ REAL,    DIMENSION(size(PRHODREF),6) :: ZZW1              ! Work arrays
                                               mask = omicro(:,:,:), field = 0. ) )
   END IF
 !
+
+!$acc end data
+
+#ifdef MNH_OPENACC
+!Release all memory allocated with MNH_MEM_GET calls since last call to MNH_MEM_POSITION_PIN
+CALL MNH_MEM_RELEASE( 'RAIN_ICE_FAST_RH 1' )
+#endif
+
+!$acc end data
+
 END SUBROUTINE RAIN_ICE_FAST_RH
 
 END MODULE MODE_RAIN_ICE_FAST_RH
