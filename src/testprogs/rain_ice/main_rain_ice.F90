@@ -10,6 +10,9 @@ USE STACK_MOD,       ONLY: STACK
 USE MODE_MNH_ZWORK,  ONLY: ZMNH_STACK, IMNH_BLOCK, YMNH_STACK, INUMPIN
 USE OMP_LIB
 USE YOMHOOK, ONLY : LHOOK, DR_HOOK, JPHOOK
+#ifdef _OPENACC
+USE MODD_UTIL_PHYEX_T, ONLY: COPY_PHYEX_T, WIPE_PHYEX_T
+#endif
 
 IMPLICIT NONE
 
@@ -132,7 +135,11 @@ D0%NKE  = 1
 D0%NKTB = 1
 D0%NKTE = KLEV
 
+#if defined(USE_COLCALL) && defined(_OPENACC)
+ISTSZ = NPROMA * 2000 * KLEV
+#else
 ISTSZ = NPROMA * 200 * KLEV
+#endif
 ALLOCATE (PSTACK (ISTSZ, NGPBLKS))
 ZMNH_STACK => PSTACK
 
@@ -152,8 +159,12 @@ DO ITIME = 1, NTIME
 
   TSD = OMP_GET_WTIME ()
 
+#ifdef _OPENACC
+  CALL COPY_PHYEX_T(PHYEX)
+#endif
+
 !$acc data &
-!$acc      & copyin  (D0, PHYEX, &
+!$acc      & copyin  (D0, &
 !$acc      &          ZTHVREFZIKB, PEXNREF, PDZZ, PRHODJ, PRHODREF, PEXNREF2, PPABSM, PCLDFR, &
 !$acc      &          PTHT, PRT, PSIGS, PSEA, PTOWN) &
 !$acc      & copy    (PCIT, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PTHS, PRS) &
@@ -176,7 +187,7 @@ DO ITIME = 1, NTIME
 
   D = D0
 
-!$acc parallel loop gang vector private (YLSTACK, IBL, JLON, D) collapse (2)
+!$acc parallel loop gang vector present (PHYEX) private (YLSTACK, IBL, JLON, D) collapse (2)
 
   DO IBL = JBLK1, JBLK2
 
@@ -191,8 +202,14 @@ DO ITIME = 1, NTIME
 
 #ifdef USE_STACK
     !Using cray pointers, AROME mechanism
+#if defined(USE_COLCALL) && defined(_OPENACC)
+    !Due to the collapse (2) directive, each point must have its own stack
+    YLSTACK%L = LOC (PSTACK (1, IBL)) + CEILING(ISTSZ * KIND (PSTACK) / NPROMA / 8.) * 8 * (JLON - 1)
+    YLSTACK%U = YLSTACK%L + CEILING(ISTSZ * KIND (PSTACK) / NPROMA / 8.) * 8
+#else
     YLSTACK%L = LOC (PSTACK (1, IBL))
     YLSTACK%U = YLSTACK%L + ISTSZ * KIND (PSTACK)
+#endif
 #else
     !Using fortran indexing, Meso-NH mechanism
     YLSTACK%L = 1
@@ -242,6 +259,10 @@ CALL RAIN_ICE (D, PHYEX%CST, PHYEX%PARAM_ICEN, PHYEX%RAIN_ICE_PARAMN, &
   TEC = OMP_GET_WTIME ()
 
 !$acc end data
+
+#ifdef _OPENACC
+  CALL WIPE_PHYEX_T(PHYEX)
+#endif
 
   TED = OMP_GET_WTIME ()
 
