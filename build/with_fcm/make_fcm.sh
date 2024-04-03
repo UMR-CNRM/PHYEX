@@ -437,6 +437,25 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
     !whereas it is within an ifdef directive
   END MODULE NVTX
 ..EOF
+  #needed with commit 6dc52c45fef39e1202a281eea21f7bdda047db28 due to the same weakness of fcm
+  if [ ! -f aux/modd_util_phyex_t.F90 ]; then
+    cat <<....EOF > aux/modd_util_phyex_t.F90
+    MODULE MODD_UTIL_PHYEX_T
+    !Unused module but wrongly detected as dependency by fcm
+    !whereas it is within an ifdef directive
+    USE MODD_PHYEX, ONLY: PHYEX_T
+    CONTAINS
+      SUBROUTINE COPY_PHYEX_T (YD, LDCREATED)
+        TYPE (PHYEX_T), INTENT(IN), TARGET :: YD
+        LOGICAL, OPTIONAL, INTENT(IN) :: LDCREATED
+      END SUBROUTINE COPY_PHYEX_T
+      SUBROUTINE WIPE_PHYEX_T (YD, LDDELETED)
+        TYPE (PHYEX_T), INTENT(IN), TARGET :: YD
+        LOGICAL, OPTIONAL, INTENT(IN) :: LDDELETED
+      END SUBROUTINE WIPE_PHYEX_T
+    END MODULE MODD_UTIL_PHYEX_T
+....EOF
+  fi
 fi
 
 # Build the compilation script and run it
