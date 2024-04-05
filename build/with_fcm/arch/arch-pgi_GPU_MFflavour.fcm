@@ -1,6 +1,6 @@
 # Compilation
 $FCOMPILER     =     nvfortran
-$BASE_FFLAGS   =     -g -c -byteswapio -Mlarge_arrays -r8 -fPIC -Mbackslash -Kieee -acc=gpu -gpu=nofma,cc70,lineinfo -Minfo=accel,all,ccff -cuda
+$BASE_FFLAGS   =     -g -c -byteswapio -Mlarge_arrays -r8 -fPIC -Mbackslash -Kieee -acc=gpu -gpu=nofma,lineinfo -Minfo=accel,all,ccff -cuda
 $PROD_FFLAGS   =     -O2 -fast
 $DEV_FFLAGS    =     -O1
 $DEBUG_FFLAGS  =     -O0 -Ktrap=fp -C
@@ -14,6 +14,7 @@ $OMP_FFLAGS    =
 # Preprocessor
 $FPP_FLAGS     =     LINUX LITTLE_ENDIAN LITTLE REPRO48 USE_STACK USE_COLCALL
 $CPP_FLAGS     =     LINUX LITTLE_ENDIAN LITTLE
+$FPP_FLAGS_TESTPROGS = WITHOUT_CXXDEMANGLE
 
 # Linker
 $LINK          =     mpif90

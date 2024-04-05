@@ -14,6 +14,7 @@ $OMP_FFLAGS    =     -qopenmp -qopenmp-threadprivate=compat
 # Preprocessor
 $FPP_FLAGS     =
 $CPP_FLAGS     =
+$FPP_FLAGS_TESTPROGS = WITHOUT_CXXDEMANGLE USE_OPENMP
 
 # Linker
 $LINK          =     mpiifort
