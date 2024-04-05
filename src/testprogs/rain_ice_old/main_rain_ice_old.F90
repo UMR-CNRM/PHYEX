@@ -273,7 +273,7 @@ DO ITIME = 1, NTIME
 #if defined(USE_COLCALL) && defined(_OPENACC)
     !Due to the collapse (2) directive, each point must have its own stack
     YLSTACK%L = LOC (PSTACK (1, IBL)) + CEILING(ISTSZ * KIND (PSTACK) / NPROMA / 8.) * 8 * (JLON - 1)
-    YLSTACK%U = YLSTACK%L + CEILING(ISTSZ * KIND (PSTACK) / NPROMA / 8.) * 8
+    YLSTACK%U = YLSTACK%L + FLOOR(ISTSZ * KIND (PSTACK) / NPROMA / 8.) * 8
 #else
     YLSTACK%L = LOC (PSTACK (1, IBL))
     YLSTACK%U = YLSTACK%L + ISTSZ * KIND (PSTACK)

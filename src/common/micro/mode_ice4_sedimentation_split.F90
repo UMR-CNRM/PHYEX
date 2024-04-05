@@ -393,7 +393,6 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT), OPTIONAL :: PFPR    ! upper-ai
 !
 !*       0.2  declaration of local variables
 !
-CHARACTER(LEN=10) :: YSPE ! String for error message
 INTEGER                         :: JIJ, JK
 LOGICAL                         :: GPRESENT_PFPR
 REAL                            :: ZINVTSTEP
@@ -640,8 +639,7 @@ DO WHILE (ZANYREMAINT)
         ZFSED=ICEP%XFSEDH
         ZEXSED=ICEP%XEXSEDH
       CASE DEFAULT
-        WRITE(YSPE, '( I10 )' ) KSPE
-        CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'ICE4_SEDIMENTATION_SPLIT', 'no sedimentation parameter for KSPE='//TRIM(YSPE) )
+        CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'ICE4_SEDIMENTATION_SPLIT', 'no sedimentation parameter for KSPE')
     END SELECT
     !
     IF (OELEC) THEN
@@ -677,8 +675,7 @@ DO WHILE (ZANYREMAINT)
           ZCXX = ICED%XCXH
           ZFX = ELECD%XFH
         CASE DEFAULT
-          write( yspe, '( I10 )' ) kspe
-          call Print_msg( NVERB_FATAL, 'GEN', 'ICE4_SEDIMENTATION_SPLIT', 'no sedimentation parameter for KSPE='//trim(yspe) )
+          CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'ICE4_SEDIMENTATION_SPLIT', 'no sedimentation parameter for KSPE')
       END SELECT
     END IF
     !
