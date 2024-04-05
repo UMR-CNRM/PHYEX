@@ -465,377 +465,374 @@ $(function() {
 <div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;<span class="comment">!</span></div>
 <div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;<span class="comment">!*       0.2  declaration of local variables</span></div>
 <div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;<span class="keywordtype">CHARACTER(LEN=10)</span> :: YSPE <span class="comment">! String for error message</span></div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;<span class="keywordtype">INTEGER</span>                         :: JIJ, JK</div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;<span class="keywordtype">LOGICAL</span>                         :: GPRESENT_PFPR</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;<span class="keywordtype">REAL</span>                            :: ZINVTSTEP</div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;<span class="keywordtype">REAL</span>                            :: ZZWLBDC, ZZRAY, ZZT, ZZWLBDA, ZZCC</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;<span class="keywordtype">REAL</span>                            :: ZLBDA</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;<span class="keywordtype">REAL</span>                            :: ZFSED, ZEXSED</div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;<span class="keywordtype">REAL</span>                            :: ZMRCHANGE</div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;<span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>       :: ZMAX_TSTEP <span class="comment">! Maximum CFL in column</span></div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;<span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(SIZE(ICED%XRTMIN))</span>   :: ZRSMIN</div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;<span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>       :: ZREMAINT   <span class="comment">! Remaining time until the timestep end</span></div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;<span class="keywordtype">LOGICAL</span> :: ZANYREMAINT</div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;<span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT, 0:D%NKT+1)</span> :: ZWSED   <span class="comment">! Sedimentation fluxes</span></div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;<span class="keywordtype">INTEGER</span> :: IKTB, IKTE, IKB, IKL, IIJE, IIJB</div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;<span class="keywordtype">REAL</span>(KIND=jphook) :: zhook_handle</div>
-<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;<span class="comment">! local variables for cloud electricity</span></div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;<span class="keywordtype">REAL</span> :: ZEXT   <span class="comment">! e_x coefficient of the q(D) relation</span></div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;<span class="keywordtype">REAL</span> :: ZNCI   <span class="comment">! N_ci for ice crystal sedimentation</span></div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;<span class="comment">!REAL,    DIMENSION(D%NIJT,0:D%NKT+1) :: ZWSEDQ ! Sedimentation fluxes for electric charges</span></div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;<span class="comment">!REAL,    DIMENSION(D%NIJT,0:D%NKT+1) :: ZBEARDCOEFF ! effect of electric forces on sedimentation</span></div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;<span class="comment">!REAL,    DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(0:D%NKT+1,0,OELEC)) :: &amp;</span></div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;<span class="comment">!++cb-- est-ce que cette declaration est correcte par rapport a ce qui est fait pour zwsed ?</span></div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;<span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT+2,0,OELEC))</span> :: &amp;</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;                                     ZWSEDQ      <span class="comment">! Sedimentation fluxes for electric charges</span></div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;<span class="comment">!REAL,    DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(0:D%NKT+1,0,OSEDIM_BEARD)) :: &amp;</span></div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;<span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(D%NKT,0,OSEDIM_BEARD))</span> :: &amp;</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;                                     ZBEARDCOEFF <span class="comment">! effect of electric forces on sedimentation</span></div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;<span class="comment">!REAL,    DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(0:D%NKT+1,0,OSEDIM_BEARD)) :: &amp;</span></div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;<span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(D%NKT,0,OSEDIM_BEARD))</span> :: &amp;</div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;                                     ZLBDA3      <span class="comment">! slope parameter of the distribution</span></div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;<span class="comment">!LOGICAL, DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(0:D%NKT+1,0,OSEDIM_BEARD)) :: GMASK</span></div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;<span class="keywordtype">LOGICAL</span>, <span class="keywordtype">DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(D%NKT,0,OSEDIM_BEARD))</span> :: GMASK</div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;<span class="keywordtype">REAL</span> :: ZQCHANGE</div>
-<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;<span class="keywordtype">REAL</span> :: ZFQSED, ZEXQSED</div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;<span class="keywordtype">REAL</span> :: ZEXMIN, ZEXMAX</div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;<span class="keywordtype">REAL</span> :: ZLBX, ZLBEXX</div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;<span class="keywordtype">REAL</span> :: ZFQUPDX</div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;<span class="keywordtype">REAL</span> :: ZCXX</div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;<span class="keywordtype">REAL</span> :: ZFX</div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;<span class="comment">! end - local variables for cloud electricity</span></div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT&#39;</span>, 0, zhook_handle)</div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;iktb=d%NKTB</div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;ikte=d%NKTE</div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;ikb=d%NKB</div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;ikl=d%NKL</div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;iijb=d%NIJB</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;iije=d%NIJE</div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;<span class="comment">!-------------------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;<span class="keywordflow">IF</span> (kspe&lt;2 .OR. kspe&gt;7) <span class="keyword">CALL </span><a class="code" href="interfacemode__msg_1_1print__msg.html">print_msg</a>(nverb_fatal,<span class="stringliteral">&#39;GEN&#39;</span>,<span class="stringliteral">&#39;INTERNAL_SEDIM_SPLIT&#39;</span>,<span class="stringliteral">&#39;invalid species (KSPE variable)&#39;</span>)</div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;<span class="keywordflow">IF</span> (<span class="keyword">PRESENT</span>(pfpr)) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;  gpresent_pfpr = .true.</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;<span class="keywordflow">ELSE</span></div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;  gpresent_pfpr = .false.</div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;<span class="keywordflow">END IF</span></div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;pinprx(:) = 0.</div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;zinvtstep=1./ptstep</div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;zrsmin = iced%XRTMIN * zinvtstep</div>
-<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;zremaint(:) = 0.</div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;zremaint(iijb:iije) = ptstep</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;zanyremaint = .true.</div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;<span class="keywordflow">DO</span> <span class="keywordflow">WHILE</span> (zanyremaint)</div>
-<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;  <span class="comment">!</span></div>
-<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;  <span class="comment">! Effect of electrical forces on sedimentation</span></div>
-<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;  <span class="keywordflow">IF</span> (oelec .AND. osedim_beard) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;    <span class="keywordflow">DO</span> jk = iktb, ikte</div>
-<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;      <span class="keywordflow">DO</span> jij = iijb, iije</div>
-<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;        <span class="keywordflow">IF</span> (prxt(jij,jk)&gt;iced%XRTMIN(kspe) .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;          gmask(jij,jk) = .true.</div>
-<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;        <span class="keywordflow">ELSE</span></div>
-<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;          gmask(jij,jk) = .false.</div>
-<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;<span class="keywordflow">        END IF</span></div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;<span class="keywordflow">      END DO</span></div>
-<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;<span class="keywordflow">    END DO</span></div>
-<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;<span class="keywordflow">  END IF</span></div>
-<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;  <span class="comment">!</span></div>
-<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;  <span class="comment">!*       1. Parameters for cloud sedimentation</span></div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;<span class="keywordtype">INTEGER</span>                         :: JIJ, JK</div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;<span class="keywordtype">LOGICAL</span>                         :: GPRESENT_PFPR</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;<span class="keywordtype">REAL</span>                            :: ZINVTSTEP</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;<span class="keywordtype">REAL</span>                            :: ZZWLBDC, ZZRAY, ZZT, ZZWLBDA, ZZCC</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;<span class="keywordtype">REAL</span>                            :: ZLBDA</div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;<span class="keywordtype">REAL</span>                            :: ZFSED, ZEXSED</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;<span class="keywordtype">REAL</span>                            :: ZMRCHANGE</div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;<span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>       :: ZMAX_TSTEP <span class="comment">! Maximum CFL in column</span></div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;<span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(SIZE(ICED%XRTMIN))</span>   :: ZRSMIN</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;<span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT)</span>       :: ZREMAINT   <span class="comment">! Remaining time until the timestep end</span></div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;<span class="keywordtype">LOGICAL</span> :: ZANYREMAINT</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;<span class="keywordtype">REAL</span>, <span class="keywordtype">DIMENSION(D%NIJT, 0:D%NKT+1)</span> :: ZWSED   <span class="comment">! Sedimentation fluxes</span></div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;<span class="keywordtype">INTEGER</span> :: IKTB, IKTE, IKB, IKL, IIJE, IIJB</div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;<span class="keywordtype">REAL</span>(KIND=jphook) :: zhook_handle</div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;<span class="comment">!</span></div>
+<div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160;<span class="comment">! local variables for cloud electricity</span></div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;<span class="keywordtype">REAL</span> :: ZEXT   <span class="comment">! e_x coefficient of the q(D) relation</span></div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;<span class="keywordtype">REAL</span> :: ZNCI   <span class="comment">! N_ci for ice crystal sedimentation</span></div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;<span class="comment">!REAL,    DIMENSION(D%NIJT,0:D%NKT+1) :: ZWSEDQ ! Sedimentation fluxes for electric charges</span></div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;<span class="comment">!REAL,    DIMENSION(D%NIJT,0:D%NKT+1) :: ZBEARDCOEFF ! effect of electric forces on sedimentation</span></div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;<span class="comment">!REAL,    DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(0:D%NKT+1,0,OELEC)) :: &amp;</span></div>
+<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;<span class="comment">!++cb-- est-ce que cette declaration est correcte par rapport a ce qui est fait pour zwsed ?</span></div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;<span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(MERGE(D%NIJT,0,OELEC),MERGE(D%NKT+2,0,OELEC))</span> :: &amp;</div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;                                     ZWSEDQ      <span class="comment">! Sedimentation fluxes for electric charges</span></div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;<span class="comment">!REAL,    DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(0:D%NKT+1,0,OSEDIM_BEARD)) :: &amp;</span></div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;<span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(D%NKT,0,OSEDIM_BEARD))</span> :: &amp;</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;                                     ZBEARDCOEFF <span class="comment">! effect of electric forces on sedimentation</span></div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;<span class="comment">!REAL,    DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(0:D%NKT+1,0,OSEDIM_BEARD)) :: &amp;</span></div>
+<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;<span class="keywordtype">REAL</span>,    <span class="keywordtype">DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(D%NKT,0,OSEDIM_BEARD))</span> :: &amp;</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;                                     ZLBDA3      <span class="comment">! slope parameter of the distribution</span></div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;<span class="comment">!LOGICAL, DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(0:D%NKT+1,0,OSEDIM_BEARD)) :: GMASK</span></div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;<span class="keywordtype">LOGICAL</span>, <span class="keywordtype">DIMENSION(MERGE(D%NIJT,0,OSEDIM_BEARD),MERGE(D%NKT,0,OSEDIM_BEARD))</span> :: GMASK</div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;<span class="keywordtype">REAL</span> :: ZQCHANGE</div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;<span class="keywordtype">REAL</span> :: ZFQSED, ZEXQSED</div>
+<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;<span class="keywordtype">REAL</span> :: ZEXMIN, ZEXMAX</div>
+<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;<span class="keywordtype">REAL</span> :: ZLBX, ZLBEXX</div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;<span class="keywordtype">REAL</span> :: ZFQUPDX</div>
+<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;<span class="keywordtype">REAL</span> :: ZCXX</div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;<span class="keywordtype">REAL</span> :: ZFX</div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;<span class="comment">! end - local variables for cloud electricity</span></div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;<span class="comment">!</span></div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT&#39;</span>, 0, zhook_handle)</div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;<span class="comment">!</span></div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;iktb=d%NKTB</div>
+<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;ikte=d%NKTE</div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;ikb=d%NKB</div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;ikl=d%NKL</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;iijb=d%NIJB</div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;iije=d%NIJE</div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;<span class="comment">!-------------------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;<span class="keywordflow">IF</span> (kspe&lt;2 .OR. kspe&gt;7) <span class="keyword">CALL </span><a class="code" href="interfacemode__msg_1_1print__msg.html">print_msg</a>(nverb_fatal,<span class="stringliteral">&#39;GEN&#39;</span>,<span class="stringliteral">&#39;INTERNAL_SEDIM_SPLIT&#39;</span>,<span class="stringliteral">&#39;invalid species (KSPE variable)&#39;</span>)</div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;<span class="comment">!</span></div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;<span class="keywordflow">IF</span> (<span class="keyword">PRESENT</span>(pfpr)) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;  gpresent_pfpr = .true.</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;<span class="keywordflow">ELSE</span></div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;  gpresent_pfpr = .false.</div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;<span class="keywordflow">END IF</span></div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;<span class="comment">!</span></div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;pinprx(:) = 0.</div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;zinvtstep=1./ptstep</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;zrsmin = iced%XRTMIN * zinvtstep</div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;zremaint(:) = 0.</div>
+<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;zremaint(iijb:iije) = ptstep</div>
+<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;<span class="comment">!</span></div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;zanyremaint = .true.</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;<span class="keywordflow">DO</span> <span class="keywordflow">WHILE</span> (zanyremaint)</div>
+<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;  <span class="comment">!</span></div>
+<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;  <span class="comment">! Effect of electrical forces on sedimentation</span></div>
+<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;  <span class="keywordflow">IF</span> (oelec .AND. osedim_beard) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;    <span class="keywordflow">DO</span> jk = iktb, ikte</div>
+<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;      <span class="keywordflow">DO</span> jij = iijb, iije</div>
+<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;        <span class="keywordflow">IF</span> (prxt(jij,jk)&gt;iced%XRTMIN(kspe) .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;          gmask(jij,jk) = .true.</div>
+<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;        <span class="keywordflow">ELSE</span></div>
+<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;          gmask(jij,jk) = .false.</div>
+<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;<span class="keywordflow">        END IF</span></div>
+<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;<span class="keywordflow">      END DO</span></div>
+<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;<span class="keywordflow">    END DO</span></div>
+<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;<span class="keywordflow">  END IF</span></div>
+<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;  <span class="comment">!</span></div>
+<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;  <span class="comment">!*       1. Parameters for cloud sedimentation</span></div>
+<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;  <span class="comment">!</span></div>
 <div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;  <span class="comment">!</span></div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;  <span class="comment">!</span></div>
-<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;  <span class="comment">!*       2.    compute the fluxes</span></div>
+<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;  <span class="comment">!*       2.    compute the fluxes</span></div>
+<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;  <span class="comment">!</span></div>
 <div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;  <span class="comment">!</span></div>
-<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;  <span class="comment">!</span></div>
-<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;  <span class="keywordflow">IF</span>(kspe==2) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;    <span class="comment">!******* for cloud</span></div>
-<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;    zwsed(:,:) = 0.</div>
-<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;    <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;      zwsedq(:,:) = 0.</div>
-<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;      zlbda3(:,:) = 0.</div>
-<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;<span class="keywordflow">    END IF</span></div>
-<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;    <span class="keywordflow">DO</span> jk = iktb,ikte</div>
-<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;      <span class="keywordflow">DO</span> jij = iijb,iije</div>
-<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;        <span class="keywordflow">IF</span>(prxt(jij,jk)&gt;iced%XRTMIN(kspe) .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;          zzwlbdc = plbc(jij,jk) * pconc3d(jij,jk) / &amp;</div>
-<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;                   &amp;(prhodref(jij,jk) * prxt(jij,jk))</div>
-<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;          zzwlbdc = zzwlbdc**iced%XLBEXC</div>
-<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;          zzray = pray(jij,jk) / zzwlbdc</div>
-<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;          zzt = ptht(jij,jk) * (ppabst(jij,jk)/cst%XP00)**(cst%XRD/cst%XCPD)</div>
-<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;          zzwlbda = 6.6e-8*(101325./ppabst(jij,jk))*(zzt/293.15)</div>
-<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;          zzcc = iced%XCC*(1.+1.26*zzwlbda/zzray)</div>
-<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;          zwsed(jij, jk) = prhodref(jij,jk)**(-iced%XCEXVT +1 ) *   &amp;</div>
-<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;                             &amp;zzwlbdc**(-iced%XDC)*zzcc*pfsedc(jij,jk) * prxt(jij,jk)</div>
-<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;<span class="comment">!++cb++ nouveau : traitement de la sedimentation des charges portees par les gouttelettes</span></div>
-<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;<span class="comment">! A TESTER</span></div>
-<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;          <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;            zext = pqxt(jij,jk) / elecp%XFQUPDC * prhodref(jij,jk)</div>
-<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;            <span class="keywordflow">IF</span> (abs(zext) .GT. elecp%XECMIN) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;              zwsedq(jij,jk) = elecp%XFQSEDC * zext * pconc3d(jij,jk) * &amp;</div>
-<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;                               prhodref(jij,jk)**(-iced%XCEXVT) *       &amp;</div>
-<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;                               zzcc * zzwlbdc**(-elecp%XEXQSEDC)</div>
-<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;              <span class="keywordflow">IF</span> (osedim_beard) zlbda3(jij,jk) = zzwlbdc</div>
-<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;<span class="keywordflow">            ENDIF</span></div>
-<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;<span class="keywordflow">          ENDIF</span></div>
-<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;<span class="keywordflow">        ENDIF</span></div>
-<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;<span class="comment">!--cb--</span></div>
-<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;<span class="keywordflow">      ENDDO</span></div>
-<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;<span class="keywordflow">    ENDDO</span></div>
-<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;    <span class="keywordflow">IF</span> (oelec .AND. osedim_beard) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;      <span class="keyword">CALL </span><a class="code" href="namespacemode__elec__beard__effect.html#a61df180fabad9c6f81cfa8139f3a634a">elec_beard_effect</a>(d, cst, hcloud, kspe, gmask, pt, prhodref, pthvrefzikb, &amp;</div>
-<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;                             prxt, pqxt, pefieldw, zlbda3, zbeardcoeff, iced=iced)</div>
-<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;      <span class="keywordflow">DO</span> jk = iktb,ikte</div>
-<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;        <span class="keywordflow">DO</span> jij = iijb,iije</div>
-<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;          zwsed(jij,jk)  = zwsed(jij,jk)  * zbeardcoeff(jij,jk)</div>
-<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;          zwsedq(jij,jk) = zwsedq(jij,jk) * zbeardcoeff(jij,jk)</div>
-<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;<span class="keywordflow">        END DO</span></div>
-<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;<span class="keywordflow">      END DO</span></div>
-<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;<span class="keywordflow">    END IF</span></div>
-<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;  <span class="keywordflow">ELSEIF</span>(kspe==4) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;    <span class="comment">! ******* for pristine ice</span></div>
-<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;    zwsed(:,:) = 0.</div>
-<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;    <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;      zwsedq(:,:) = 0.</div>
-<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;      zlbda3(:,:) = 0.</div>
-<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;<span class="keywordflow">    END IF</span></div>
-<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;    <span class="keywordflow">DO</span> jk = iktb,ikte</div>
-<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;      <span class="keywordflow">DO</span> jij = iijb,iije</div>
-<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;        <span class="keywordflow">IF</span>(prxt(jij, jk) .GT. max(iced%XRTMIN(4), 1.0e-7) .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;          zwsed(jij, jk) =  icep%XFSEDI * prxt(jij, jk) *  &amp;</div>
-<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;                              &amp; prhodref(jij,jk)**(1.-iced%XCEXVT) * &amp; <span class="comment">!    McF&amp;H</span></div>
-<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;                              &amp; max( 0.05e6,-0.15319e6-0.021454e6* &amp;</div>
-<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;                              &amp;      alog(prhodref(jij,jk)*prxt(jij,jk)) )**icep%XEXCSEDI</div>
-<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;          <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;            <span class="comment">! N_ci from McF&amp;H</span></div>
-<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;            znci = elecp%XFCI * prhodref(jij,jk) * prxt(jij,jk) * &amp;</div>
-<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;                          max(0.05e6,-0.15319e6-0.021454e6*alog(prhodref(jij,jk)*prxt(jij,jk)))**3.</div>
-<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;            <span class="comment">! compute e_i of the q - D relationship</span></div>
-<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;            zext = pqxt(jij,jk) / elecp%XFQUPDI *                         &amp;</div>
-<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;                  (prhodref(jij,jk) * prxt(jij,jk))**(-elecp%XEXFQUPDI) * &amp;</div>
-<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;                   znci**(elecp%XEXFQUPDI-1.)</div>
-<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;            <span class="keywordflow">IF</span> (abs(zext) .GT. elecp%XEIMIN) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;              zwsedq(jij,jk) = elecp%XFQSEDI * zext * prxt(jij,jk) * &amp;</div>
-<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;                               prhodref(jij,jk)**(1.-iced%XCEXVT) *  &amp;</div>
-<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;                               max( 0.05e6,-0.15319e6-0.021454e6*    &amp; <span class="comment">!    McF&amp;H</span></div>
-<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;                                    alog(prhodref(jij,jk)*prxt(jij,jk)) )**(3.*(1-elecp%XEXQSEDI))</div>
-<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;              <span class="keywordflow">IF</span> (osedim_beard) zlbda3(jij,jk) = (2.14e-3 * <a class="code" href="interfacemodi__momg_1_1momg.html">momg</a>(iced%XALPHAI,iced%XNUI,1.7) *     &amp;</div>
-<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;                                                  znci / (prhodref(jij,jk) * prxt(jij,jk)))**0.588235</div>
-<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;<span class="keywordflow">            ENDIF</span></div>
-<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;<span class="keywordflow">          ENDIF</span></div>
-<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;<span class="keywordflow">        ENDIF</span></div>
-<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;<span class="keywordflow">      ENDDO</span></div>
-<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;<span class="keywordflow">    ENDDO</span></div>
-<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;    <span class="keywordflow">IF</span> (oelec .AND. osedim_beard) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;      <span class="keyword">CALL </span><a class="code" href="namespacemode__elec__beard__effect.html#a61df180fabad9c6f81cfa8139f3a634a">elec_beard_effect</a>(d, cst, hcloud, kspe, gmask, pt, prhodref, pthvrefzikb, &amp;</div>
-<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;                             prxt, pqxt, pefieldw, zlbda3, zbeardcoeff, iced=iced)</div>
-<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;      <span class="keywordflow">DO</span> jk = iktb,ikte</div>
-<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;        <span class="keywordflow">DO</span> jij = iijb,iije</div>
-<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;          zwsed(jij,jk)  = zwsed(jij,jk)  * zbeardcoeff(jij,jk)</div>
-<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;          zwsedq(jij,jk) = zwsedq(jij,jk) * zbeardcoeff(jij,jk)</div>
-<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;<span class="keywordflow">        END DO</span></div>
-<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;<span class="keywordflow">      END DO</span></div>
-<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;<span class="keywordflow">    END IF</span></div>
-<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;  <span class="keywordflow">ELSEIF</span>(kspe==5) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;    <span class="comment">! ******* for snow</span></div>
-<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;    zwsed(:,:) = 0.</div>
-<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;    <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;      zwsedq(:,:) = 0.</div>
-<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;      zlbda3(:,:) = 0.</div>
-<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;<span class="keywordflow">    END IF</span></div>
-<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;<span class="preprocessor">#ifdef REPRO48</span></div>
-<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;<span class="preprocessor"></span>    <span class="comment">!The following lines must be kept equal to the computation in the general case (&quot;for other species&quot; case below)</span></div>
-<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;    zfsed=icep%XFSEDS</div>
-<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;    zexsed=icep%XEXSEDS</div>
-<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;    <span class="keywordflow">DO</span> jk = iktb,ikte</div>
-<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;      <span class="keywordflow">DO</span> jij = iijb,iije</div>
-<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;        <span class="keywordflow">IF</span>(prxt(jij,jk)&gt;iced%XRTMIN(kspe) .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;          zwsed(jij, jk) = zfsed  * prxt(jij, jk)**zexsed            &amp;</div>
-<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;                         &amp;        * prhodref(jij, jk)**(zexsed-iced%XCEXVT)</div>
-<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;<span class="keywordflow">        ENDIF</span></div>
-<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;<span class="keywordflow">      ENDDO</span></div>
-<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;<span class="keywordflow">    ENDDO</span></div>
-<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;<span class="preprocessor"></span>    <span class="keywordflow">DO</span> jk = iktb,ikte</div>
-<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;      <span class="keywordflow">DO</span> jij = iijb,iije</div>
-<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;        <span class="keywordflow">IF</span>(prxt(jij,jk)&gt; iced%XRTMIN(kspe) .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;          <span class="keywordflow">IF</span> (parami%LSNOW_T .AND. pt(jij,jk)&gt;263.15) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;            zlbda = max(min(iced%XLBDAS_MAX, 10**(14.554-0.0423*pt(jij,jk))),iced%XLBDAS_MIN)*iced%XTRANS_MP_GAMMAS</div>
-<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;          <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (parami%LSNOW_T) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;            zlbda = max(min(iced%XLBDAS_MAX, 10**(6.226 -0.0106*pt(jij,jk))),iced%XLBDAS_MIN)*iced%XTRANS_MP_GAMMAS</div>
-<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;          <span class="keywordflow">ELSE</span></div>
-<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;            zlbda=max(min(iced%XLBDAS_MAX, iced%XLBS * ( prhodref(jij,jk) * prxt(jij,jk) )**iced%XLBEXS),iced%XLBDAS_MIN)</div>
-<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;<span class="keywordflow">          END IF</span></div>
-<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;          zwsed(jij, jk) = icep%XFSEDS *  &amp;</div>
-<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;               &amp; prxt(jij,jk)* &amp;</div>
-<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;               &amp; prhodref(jij,jk)**(1-iced%XCEXVT) * &amp;</div>
-<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;               &amp; (1 + (iced%XFVELOS/zlbda)**iced%XALPHAS)** (-iced%XNUS+icep%XEXSEDS/iced%XALPHAS) * &amp;</div>
-<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;               &amp; zlbda ** (iced%XBS+icep%XEXSEDS)</div>
-<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;          <span class="keywordflow">IF</span> (oelec .AND. zlbda &gt; 0.) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;            <span class="comment">! compute the e_x coefficient of the q - D relationship</span></div>
-<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;            zext = prhodref(jij,jk) * pqxt(jij,jk) / (elecp%XFQUPDS * zlbda**(iced%XCXS-elecd%XFS))</div>
-<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;            zext = sign( min(abs(zext), elecp%XESMAX), zext)</div>
-<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;            <span class="keywordflow">IF</span> (abs(zext) &gt; elecp%XESMIN) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;              zwsedq(jij,jk) = elecp%XFQSEDS * zext * prxt(jij,jk)**elecp%XEXQSEDS &amp;</div>
-<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;                                       * prhodref(jij,jk)**(elecp%XEXQSEDS-iced%XCEXVT)</div>
-<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;              <span class="keywordflow">IF</span> (osedim_beard) zlbda3(jij,jk) = zlbda</div>
-<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;<span class="keywordflow">            ENDIF</span></div>
-<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;<span class="keywordflow">          ENDIF</span></div>
-<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;<span class="keywordflow">        ENDIF</span></div>
-<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;<span class="keywordflow">      ENDDO</span></div>
-<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;<span class="keywordflow">    ENDDO</span></div>
-<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;    <span class="keywordflow">IF</span> (oelec .AND. osedim_beard) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;      <span class="keyword">CALL </span><a class="code" href="namespacemode__elec__beard__effect.html#a61df180fabad9c6f81cfa8139f3a634a">elec_beard_effect</a>(d, cst, hcloud, kspe, gmask, pt, prhodref, pthvrefzikb,&amp;</div>
-<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;                             prxt, pqxt, pefieldw, zlbda3, zbeardcoeff, iced=iced)</div>
-<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;      <span class="keywordflow">DO</span> jk = iktb,ikte</div>
-<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;        <span class="keywordflow">DO</span> jij = iijb,iije</div>
-<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;          zwsed(jij,jk)  = zwsed(jij,jk)  * zbeardcoeff(jij,jk)</div>
-<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;          zwsedq(jij,jk) = zwsedq(jij,jk) * zbeardcoeff(jij,jk)</div>
-<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;<span class="keywordflow">        END DO</span></div>
-<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;<span class="keywordflow">      END DO</span></div>
-<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;<span class="keywordflow">    END IF</span></div>
-<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;<span class="preprocessor"></span>  <span class="keywordflow">ELSE</span></div>
-<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;    <span class="comment">! ******* for other species</span></div>
-<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;    <span class="keywordflow">SELECT CASE</span>(kspe)</div>
-<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;      <span class="keywordflow">CASE</span>(3)</div>
-<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;        zfsed=icep%XFSEDR</div>
-<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;        zexsed=icep%XEXSEDR</div>
-<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;      <span class="keywordflow">CASE</span>(6)</div>
-<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;        zfsed=icep%XFSEDG</div>
-<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;        zexsed=icep%XEXSEDG</div>
-<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;      <span class="keywordflow">CASE</span>(7)</div>
-<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;        zfsed=icep%XFSEDH</div>
-<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;        zexsed=icep%XEXSEDH</div>
-<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;<span class="keywordflow">      CASE DEFAULT</span></div>
-<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;        <span class="keyword">WRITE</span>(yspe, <span class="stringliteral">&#39;( I10 )&#39;</span> ) kspe</div>
-<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;        <span class="keyword">CALL </span><a class="code" href="interfacemode__msg_1_1print__msg.html">print_msg</a>(nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;ICE4_SEDIMENTATION_SPLIT&#39;</span>, <span class="stringliteral">&#39;no sedimentation parameter for KSPE=&#39;</span>//trim(yspe) )</div>
-<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;<span class="keywordflow">    END SELECT</span></div>
-<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;    <span class="comment">!</span></div>
-<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;    <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;      <span class="keywordflow">SELECT CASE</span>(kspe)</div>
-<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;        <span class="keywordflow">CASE</span>(3)</div>
-<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;          zfqsed = elecp%XFQSEDR</div>
-<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;          zexqsed = elecp%XEXQSEDR</div>
-<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;          zexmin = elecp%XERMIN</div>
-<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;          zexmax = elecp%XERMAX</div>
-<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;          zlbx = iced%XLBR</div>
-<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;          zlbexx = iced%XLBEXR</div>
-<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;          zfqupdx = elecp%XFQUPDR</div>
-<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;          zcxx = elecd%XCXR</div>
-<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;          zfx = elecd%XFR</div>
-<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;        <span class="keywordflow">CASE</span>(6)</div>
-<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;          zfqsed = elecp%XFQSEDG</div>
-<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;          zexqsed = elecp%XEXQSEDG</div>
-<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;          zexmin = elecp%XEGMIN</div>
-<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;          zexmax = elecp%XEGMAX</div>
-<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;          zlbx = iced%XLBG</div>
-<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;          zlbexx = iced%XLBEXG</div>
-<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;          zfqupdx = elecp%XFQUPDG</div>
-<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;          zcxx = iced%XCXG</div>
-<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;          zfx = elecd%XFG</div>
-<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;        <span class="keywordflow">CASE</span>(7)</div>
-<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;          zfqsed = elecp%XFQSEDH</div>
-<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;          zexqsed = elecp%XEXQSEDH</div>
-<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;          zexmin = elecp%XEHMIN</div>
-<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;          zexmax = elecp%XEHMAX</div>
-<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;          zlbx = iced%XLBH</div>
-<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;          zlbexx = iced%XLBEXH</div>
-<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;          zfqupdx = elecp%XFQUPDH</div>
-<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;          zcxx = iced%XCXH</div>
-<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;          zfx = elecd%XFH</div>
-<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;<span class="keywordflow">        CASE DEFAULT</span></div>
-<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;          <span class="keyword">write</span>( yspe, <span class="stringliteral">&#39;( I10 )&#39;</span> ) kspe</div>
-<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;          <span class="keyword">call </span><a class="code" href="interfacemode__msg_1_1print__msg.html">print_msg</a>( nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;ICE4_SEDIMENTATION_SPLIT&#39;</span>, <span class="stringliteral">&#39;no sedimentation parameter for KSPE=&#39;</span>//trim(yspe) )</div>
-<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;<span class="keywordflow">      END SELECT</span></div>
-<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;<span class="keywordflow">    END IF</span></div>
-<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;    <span class="comment">!</span></div>
-<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;    zwsed(:,:) = 0.</div>
-<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;    <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;      zwsedq(:,:) = 0.</div>
-<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;      zlbda3(:,:) = 0.</div>
-<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;<span class="keywordflow">    END IF</span></div>
-<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;    <span class="keywordflow">DO</span> jk = iktb,ikte</div>
-<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;      <span class="keywordflow">DO</span> jij = iijb,iije</div>
-<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;        <span class="keywordflow">IF</span>(prxt(jij,jk)&gt;iced%XRTMIN(kspe) .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;          zwsed(jij, jk) = zfsed  * prxt(jij, jk)**zexsed            &amp;</div>
-<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;                         &amp;        * prhodref(jij, jk)**(zexsed-iced%XCEXVT)</div>
-<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;          <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;            <span class="comment">! need lambda_x to compute e_x</span></div>
-<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;            zlbda = zlbx * (prhodref(jij,jk) * max(prxt(jij,jk), iced%XRTMIN(kspe)))**zlbexx</div>
-<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;            <span class="keywordflow">IF</span> (zlbda &gt; 0.) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;              <span class="comment">! compute the e_x coefficient of the q - D relationship</span></div>
-<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;              zext = prhodref(jij,jk) * pqxt(jij,jk) / (zfqupdx * zlbda**(zcxx-zfx))</div>
-<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;              zext = sign( min(abs(zext), zexmax), zext)</div>
-<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;<span class="keywordflow">            END IF</span></div>
-<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;            <span class="keywordflow">IF</span> (abs(zext) &gt; zexmin) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;              zwsedq(jij,jk) = zfqsed * zext * prxt(jij,jk)**zexqsed &amp;</div>
-<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;                                      * prhodref(jij,jk)**(zexqsed-iced%XCEXVT)</div>
-<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;              <span class="keywordflow">IF</span> (osedim_beard) zlbda3(jij,jk) = zlbda</div>
-<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;<span class="keywordflow">            END IF</span></div>
-<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;<span class="keywordflow">          ENDIF</span></div>
-<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;<span class="keywordflow">        ENDIF</span></div>
-<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;<span class="keywordflow">      ENDDO</span></div>
-<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;<span class="keywordflow">    ENDDO</span></div>
-<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;    <span class="keywordflow">IF</span> (oelec .AND. osedim_beard) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;      <span class="keyword">CALL </span><a class="code" href="namespacemode__elec__beard__effect.html#a61df180fabad9c6f81cfa8139f3a634a">elec_beard_effect</a>(d, cst, hcloud, kspe, gmask, pt, prhodref, pthvrefzikb, &amp;</div>
-<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;                             prxt, pqxt, pefieldw, zlbda3, zbeardcoeff, iced=iced)</div>
-<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;      <span class="keywordflow">DO</span> jk = iktb,ikte</div>
-<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;        <span class="keywordflow">DO</span> jij = iijb,iije</div>
-<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;          zwsed(jij,jk)  = zwsed(jij,jk)  * zbeardcoeff(jij,jk)</div>
-<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;          zwsedq(jij,jk) = zwsedq(jij,jk) * zbeardcoeff(jij,jk)</div>
-<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;<span class="keywordflow">        END DO</span></div>
-<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;<span class="keywordflow">      END DO</span></div>
-<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;<span class="keywordflow">    END IF</span></div>
-<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;<span class="keywordflow">  ENDIF</span></div>
-<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;  zmax_tstep(:) = zremaint(:)</div>
-<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;  <span class="keywordflow">DO</span> jk = iktb,ikte</div>
-<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;    <span class="keywordflow">DO</span> jij = iijb,iije</div>
-<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;      <span class="keywordflow">IF</span>(prxt(jij,jk)&gt;iced%XRTMIN(kspe) .AND. zwsed(jij, jk)&gt;1.e-20 .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;        zmax_tstep(jij) = min(zmax_tstep(jij), parami%XSPLIT_MAXCFL * prhodref(jij, jk) * &amp;</div>
-<div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;                        &amp; prxt(jij, jk) * pdzz(jij, jk) / zwsed(jij, jk))</div>
-<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160;<span class="keywordflow">      ENDIF</span></div>
-<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;<span class="keywordflow">    ENDDO</span></div>
-<div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;<span class="keywordflow">  ENDDO</span></div>
-<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160; </div>
-<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;  <span class="keywordflow">DO</span> jij = iijb, iije</div>
-<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160;      zremaint(jij) = zremaint(jij) - zmax_tstep(jij)</div>
-<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;      pinprx(jij) = pinprx(jij) + zwsed(jij,ikb) / cst%XRHOLW * (zmax_tstep(jij) * zinvtstep)</div>
-<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;<span class="keywordflow">  ENDDO</span></div>
-<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160; </div>
-<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;  <span class="keywordflow">DO</span> jk = iktb , ikte</div>
-<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;    <span class="keywordflow">DO</span> jij = iijb, iije</div>
-<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;      zmrchange = zmax_tstep(jij) * poorhodz(jij,jk)*(zwsed(jij,jk+ikl)-zwsed(jij,jk))</div>
-<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;      prxt(jij,jk) = prxt(jij,jk) + zmrchange + pprxs(jij,jk) * zmax_tstep(jij)</div>
-<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;      prxs(jij,jk) = prxs(jij,jk) + zmrchange * zinvtstep</div>
-<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;      <span class="keywordflow">IF</span> (gpresent_pfpr) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;        pfpr(jij,jk,kspe) = pfpr(jij,jk,kspe) + zwsed(jij,jk) * (zmax_tstep(jij) * zinvtstep)</div>
-<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;<span class="keywordflow">      ENDIF</span></div>
-<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;      <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;        zqchange = zmax_tstep(jij) * poorhodz(jij,jk) * (zwsedq(jij,jk+ikl) - zwsedq(jij,jk))</div>
-<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;        pqxt(jij,jk) = pqxt(jij,jk) + zqchange + ppqxs(jij,jk) * zmax_tstep(jij)</div>
-<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;        pqxs(jij,jk) = pqxs(jij,jk) + zqchange * zinvtstep</div>
-<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;<span class="keywordflow">      ENDIF</span></div>
-<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;<span class="keywordflow">    ENDDO</span></div>
-<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;<span class="keywordflow">  ENDDO</span></div>
-<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;  <span class="comment">!</span></div>
-<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;  zanyremaint = .false.</div>
-<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;  <span class="keywordflow">DO</span> jij=iijb,iije</div>
-<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;    <span class="keywordflow">IF</span>(zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;      zanyremaint = .true.</div>
-<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;<span class="keywordflow">    END IF</span></div>
-<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;<span class="keywordflow">  END DO</span></div>
-<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;<span class="keywordflow">END DO</span></div>
+<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;  <span class="keywordflow">IF</span>(kspe==2) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;    <span class="comment">!******* for cloud</span></div>
+<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;    zwsed(:,:) = 0.</div>
+<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;    <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160;      zwsedq(:,:) = 0.</div>
+<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;      zlbda3(:,:) = 0.</div>
+<div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160;<span class="keywordflow">    END IF</span></div>
+<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;    <span class="keywordflow">DO</span> jk = iktb,ikte</div>
+<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160;      <span class="keywordflow">DO</span> jij = iijb,iije</div>
+<div class="line"><a name="l00491"></a><span class="lineno">  491</span>&#160;        <span class="keywordflow">IF</span>(prxt(jij,jk)&gt;iced%XRTMIN(kspe) .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00492"></a><span class="lineno">  492</span>&#160;          zzwlbdc = plbc(jij,jk) * pconc3d(jij,jk) / &amp;</div>
+<div class="line"><a name="l00493"></a><span class="lineno">  493</span>&#160;                   &amp;(prhodref(jij,jk) * prxt(jij,jk))</div>
+<div class="line"><a name="l00494"></a><span class="lineno">  494</span>&#160;          zzwlbdc = zzwlbdc**iced%XLBEXC</div>
+<div class="line"><a name="l00495"></a><span class="lineno">  495</span>&#160;          zzray = pray(jij,jk) / zzwlbdc</div>
+<div class="line"><a name="l00496"></a><span class="lineno">  496</span>&#160;          zzt = ptht(jij,jk) * (ppabst(jij,jk)/cst%XP00)**(cst%XRD/cst%XCPD)</div>
+<div class="line"><a name="l00497"></a><span class="lineno">  497</span>&#160;          zzwlbda = 6.6e-8*(101325./ppabst(jij,jk))*(zzt/293.15)</div>
+<div class="line"><a name="l00498"></a><span class="lineno">  498</span>&#160;          zzcc = iced%XCC*(1.+1.26*zzwlbda/zzray)</div>
+<div class="line"><a name="l00499"></a><span class="lineno">  499</span>&#160;          zwsed(jij, jk) = prhodref(jij,jk)**(-iced%XCEXVT +1 ) *   &amp;</div>
+<div class="line"><a name="l00500"></a><span class="lineno">  500</span>&#160;                             &amp;zzwlbdc**(-iced%XDC)*zzcc*pfsedc(jij,jk) * prxt(jij,jk)</div>
+<div class="line"><a name="l00501"></a><span class="lineno">  501</span>&#160;<span class="comment">!++cb++ nouveau : traitement de la sedimentation des charges portees par les gouttelettes</span></div>
+<div class="line"><a name="l00502"></a><span class="lineno">  502</span>&#160;<span class="comment">! A TESTER</span></div>
+<div class="line"><a name="l00503"></a><span class="lineno">  503</span>&#160;          <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00504"></a><span class="lineno">  504</span>&#160;            zext = pqxt(jij,jk) / elecp%XFQUPDC * prhodref(jij,jk)</div>
+<div class="line"><a name="l00505"></a><span class="lineno">  505</span>&#160;            <span class="keywordflow">IF</span> (abs(zext) .GT. elecp%XECMIN) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00506"></a><span class="lineno">  506</span>&#160;              zwsedq(jij,jk) = elecp%XFQSEDC * zext * pconc3d(jij,jk) * &amp;</div>
+<div class="line"><a name="l00507"></a><span class="lineno">  507</span>&#160;                               prhodref(jij,jk)**(-iced%XCEXVT) *       &amp;</div>
+<div class="line"><a name="l00508"></a><span class="lineno">  508</span>&#160;                               zzcc * zzwlbdc**(-elecp%XEXQSEDC)</div>
+<div class="line"><a name="l00509"></a><span class="lineno">  509</span>&#160;              <span class="keywordflow">IF</span> (osedim_beard) zlbda3(jij,jk) = zzwlbdc</div>
+<div class="line"><a name="l00510"></a><span class="lineno">  510</span>&#160;<span class="keywordflow">            ENDIF</span></div>
+<div class="line"><a name="l00511"></a><span class="lineno">  511</span>&#160;<span class="keywordflow">          ENDIF</span></div>
+<div class="line"><a name="l00512"></a><span class="lineno">  512</span>&#160;<span class="keywordflow">        ENDIF</span></div>
+<div class="line"><a name="l00513"></a><span class="lineno">  513</span>&#160;<span class="comment">!--cb--</span></div>
+<div class="line"><a name="l00514"></a><span class="lineno">  514</span>&#160;<span class="keywordflow">      ENDDO</span></div>
+<div class="line"><a name="l00515"></a><span class="lineno">  515</span>&#160;<span class="keywordflow">    ENDDO</span></div>
+<div class="line"><a name="l00516"></a><span class="lineno">  516</span>&#160;    <span class="keywordflow">IF</span> (oelec .AND. osedim_beard) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00517"></a><span class="lineno">  517</span>&#160;      <span class="keyword">CALL </span><a class="code" href="namespacemode__elec__beard__effect.html#a61df180fabad9c6f81cfa8139f3a634a">elec_beard_effect</a>(d, cst, hcloud, kspe, gmask, pt, prhodref, pthvrefzikb, &amp;</div>
+<div class="line"><a name="l00518"></a><span class="lineno">  518</span>&#160;                             prxt, pqxt, pefieldw, zlbda3, zbeardcoeff, iced=iced)</div>
+<div class="line"><a name="l00519"></a><span class="lineno">  519</span>&#160;      <span class="keywordflow">DO</span> jk = iktb,ikte</div>
+<div class="line"><a name="l00520"></a><span class="lineno">  520</span>&#160;        <span class="keywordflow">DO</span> jij = iijb,iije</div>
+<div class="line"><a name="l00521"></a><span class="lineno">  521</span>&#160;          zwsed(jij,jk)  = zwsed(jij,jk)  * zbeardcoeff(jij,jk)</div>
+<div class="line"><a name="l00522"></a><span class="lineno">  522</span>&#160;          zwsedq(jij,jk) = zwsedq(jij,jk) * zbeardcoeff(jij,jk)</div>
+<div class="line"><a name="l00523"></a><span class="lineno">  523</span>&#160;<span class="keywordflow">        END DO</span></div>
+<div class="line"><a name="l00524"></a><span class="lineno">  524</span>&#160;<span class="keywordflow">      END DO</span></div>
+<div class="line"><a name="l00525"></a><span class="lineno">  525</span>&#160;<span class="keywordflow">    END IF</span></div>
+<div class="line"><a name="l00526"></a><span class="lineno">  526</span>&#160;  <span class="keywordflow">ELSEIF</span>(kspe==4) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00527"></a><span class="lineno">  527</span>&#160;    <span class="comment">! ******* for pristine ice</span></div>
+<div class="line"><a name="l00528"></a><span class="lineno">  528</span>&#160;    zwsed(:,:) = 0.</div>
+<div class="line"><a name="l00529"></a><span class="lineno">  529</span>&#160;    <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00530"></a><span class="lineno">  530</span>&#160;      zwsedq(:,:) = 0.</div>
+<div class="line"><a name="l00531"></a><span class="lineno">  531</span>&#160;      zlbda3(:,:) = 0.</div>
+<div class="line"><a name="l00532"></a><span class="lineno">  532</span>&#160;<span class="keywordflow">    END IF</span></div>
+<div class="line"><a name="l00533"></a><span class="lineno">  533</span>&#160;    <span class="keywordflow">DO</span> jk = iktb,ikte</div>
+<div class="line"><a name="l00534"></a><span class="lineno">  534</span>&#160;      <span class="keywordflow">DO</span> jij = iijb,iije</div>
+<div class="line"><a name="l00535"></a><span class="lineno">  535</span>&#160;        <span class="keywordflow">IF</span>(prxt(jij, jk) .GT. max(iced%XRTMIN(4), 1.0e-7) .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00536"></a><span class="lineno">  536</span>&#160;          zwsed(jij, jk) =  icep%XFSEDI * prxt(jij, jk) *  &amp;</div>
+<div class="line"><a name="l00537"></a><span class="lineno">  537</span>&#160;                              &amp; prhodref(jij,jk)**(1.-iced%XCEXVT) * &amp; <span class="comment">!    McF&amp;H</span></div>
+<div class="line"><a name="l00538"></a><span class="lineno">  538</span>&#160;                              &amp; max( 0.05e6,-0.15319e6-0.021454e6* &amp;</div>
+<div class="line"><a name="l00539"></a><span class="lineno">  539</span>&#160;                              &amp;      alog(prhodref(jij,jk)*prxt(jij,jk)) )**icep%XEXCSEDI</div>
+<div class="line"><a name="l00540"></a><span class="lineno">  540</span>&#160;          <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00541"></a><span class="lineno">  541</span>&#160;            <span class="comment">! N_ci from McF&amp;H</span></div>
+<div class="line"><a name="l00542"></a><span class="lineno">  542</span>&#160;            znci = elecp%XFCI * prhodref(jij,jk) * prxt(jij,jk) * &amp;</div>
+<div class="line"><a name="l00543"></a><span class="lineno">  543</span>&#160;                          max(0.05e6,-0.15319e6-0.021454e6*alog(prhodref(jij,jk)*prxt(jij,jk)))**3.</div>
+<div class="line"><a name="l00544"></a><span class="lineno">  544</span>&#160;            <span class="comment">! compute e_i of the q - D relationship</span></div>
+<div class="line"><a name="l00545"></a><span class="lineno">  545</span>&#160;            zext = pqxt(jij,jk) / elecp%XFQUPDI *                         &amp;</div>
+<div class="line"><a name="l00546"></a><span class="lineno">  546</span>&#160;                  (prhodref(jij,jk) * prxt(jij,jk))**(-elecp%XEXFQUPDI) * &amp;</div>
+<div class="line"><a name="l00547"></a><span class="lineno">  547</span>&#160;                   znci**(elecp%XEXFQUPDI-1.)</div>
+<div class="line"><a name="l00548"></a><span class="lineno">  548</span>&#160;            <span class="keywordflow">IF</span> (abs(zext) .GT. elecp%XEIMIN) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00549"></a><span class="lineno">  549</span>&#160;              zwsedq(jij,jk) = elecp%XFQSEDI * zext * prxt(jij,jk) * &amp;</div>
+<div class="line"><a name="l00550"></a><span class="lineno">  550</span>&#160;                               prhodref(jij,jk)**(1.-iced%XCEXVT) *  &amp;</div>
+<div class="line"><a name="l00551"></a><span class="lineno">  551</span>&#160;                               max( 0.05e6,-0.15319e6-0.021454e6*    &amp; <span class="comment">!    McF&amp;H</span></div>
+<div class="line"><a name="l00552"></a><span class="lineno">  552</span>&#160;                                    alog(prhodref(jij,jk)*prxt(jij,jk)) )**(3.*(1-elecp%XEXQSEDI))</div>
+<div class="line"><a name="l00553"></a><span class="lineno">  553</span>&#160;              <span class="keywordflow">IF</span> (osedim_beard) zlbda3(jij,jk) = (2.14e-3 * <a class="code" href="interfacemodi__momg_1_1momg.html">momg</a>(iced%XALPHAI,iced%XNUI,1.7) *     &amp;</div>
+<div class="line"><a name="l00554"></a><span class="lineno">  554</span>&#160;                                                  znci / (prhodref(jij,jk) * prxt(jij,jk)))**0.588235</div>
+<div class="line"><a name="l00555"></a><span class="lineno">  555</span>&#160;<span class="keywordflow">            ENDIF</span></div>
+<div class="line"><a name="l00556"></a><span class="lineno">  556</span>&#160;<span class="keywordflow">          ENDIF</span></div>
+<div class="line"><a name="l00557"></a><span class="lineno">  557</span>&#160;<span class="keywordflow">        ENDIF</span></div>
+<div class="line"><a name="l00558"></a><span class="lineno">  558</span>&#160;<span class="keywordflow">      ENDDO</span></div>
+<div class="line"><a name="l00559"></a><span class="lineno">  559</span>&#160;<span class="keywordflow">    ENDDO</span></div>
+<div class="line"><a name="l00560"></a><span class="lineno">  560</span>&#160;    <span class="keywordflow">IF</span> (oelec .AND. osedim_beard) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00561"></a><span class="lineno">  561</span>&#160;      <span class="keyword">CALL </span><a class="code" href="namespacemode__elec__beard__effect.html#a61df180fabad9c6f81cfa8139f3a634a">elec_beard_effect</a>(d, cst, hcloud, kspe, gmask, pt, prhodref, pthvrefzikb, &amp;</div>
+<div class="line"><a name="l00562"></a><span class="lineno">  562</span>&#160;                             prxt, pqxt, pefieldw, zlbda3, zbeardcoeff, iced=iced)</div>
+<div class="line"><a name="l00563"></a><span class="lineno">  563</span>&#160;      <span class="keywordflow">DO</span> jk = iktb,ikte</div>
+<div class="line"><a name="l00564"></a><span class="lineno">  564</span>&#160;        <span class="keywordflow">DO</span> jij = iijb,iije</div>
+<div class="line"><a name="l00565"></a><span class="lineno">  565</span>&#160;          zwsed(jij,jk)  = zwsed(jij,jk)  * zbeardcoeff(jij,jk)</div>
+<div class="line"><a name="l00566"></a><span class="lineno">  566</span>&#160;          zwsedq(jij,jk) = zwsedq(jij,jk) * zbeardcoeff(jij,jk)</div>
+<div class="line"><a name="l00567"></a><span class="lineno">  567</span>&#160;<span class="keywordflow">        END DO</span></div>
+<div class="line"><a name="l00568"></a><span class="lineno">  568</span>&#160;<span class="keywordflow">      END DO</span></div>
+<div class="line"><a name="l00569"></a><span class="lineno">  569</span>&#160;<span class="keywordflow">    END IF</span></div>
+<div class="line"><a name="l00570"></a><span class="lineno">  570</span>&#160;  <span class="keywordflow">ELSEIF</span>(kspe==5) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00571"></a><span class="lineno">  571</span>&#160;    <span class="comment">! ******* for snow</span></div>
+<div class="line"><a name="l00572"></a><span class="lineno">  572</span>&#160;    zwsed(:,:) = 0.</div>
+<div class="line"><a name="l00573"></a><span class="lineno">  573</span>&#160;    <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00574"></a><span class="lineno">  574</span>&#160;      zwsedq(:,:) = 0.</div>
+<div class="line"><a name="l00575"></a><span class="lineno">  575</span>&#160;      zlbda3(:,:) = 0.</div>
+<div class="line"><a name="l00576"></a><span class="lineno">  576</span>&#160;<span class="keywordflow">    END IF</span></div>
+<div class="line"><a name="l00577"></a><span class="lineno">  577</span>&#160;<span class="preprocessor">#ifdef REPRO48</span></div>
+<div class="line"><a name="l00578"></a><span class="lineno">  578</span>&#160;<span class="preprocessor"></span>    <span class="comment">!The following lines must be kept equal to the computation in the general case (&quot;for other species&quot; case below)</span></div>
+<div class="line"><a name="l00579"></a><span class="lineno">  579</span>&#160;    zfsed=icep%XFSEDS</div>
+<div class="line"><a name="l00580"></a><span class="lineno">  580</span>&#160;    zexsed=icep%XEXSEDS</div>
+<div class="line"><a name="l00581"></a><span class="lineno">  581</span>&#160;    <span class="keywordflow">DO</span> jk = iktb,ikte</div>
+<div class="line"><a name="l00582"></a><span class="lineno">  582</span>&#160;      <span class="keywordflow">DO</span> jij = iijb,iije</div>
+<div class="line"><a name="l00583"></a><span class="lineno">  583</span>&#160;        <span class="keywordflow">IF</span>(prxt(jij,jk)&gt;iced%XRTMIN(kspe) .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00584"></a><span class="lineno">  584</span>&#160;          zwsed(jij, jk) = zfsed  * prxt(jij, jk)**zexsed            &amp;</div>
+<div class="line"><a name="l00585"></a><span class="lineno">  585</span>&#160;                         &amp;        * prhodref(jij, jk)**(zexsed-iced%XCEXVT)</div>
+<div class="line"><a name="l00586"></a><span class="lineno">  586</span>&#160;<span class="keywordflow">        ENDIF</span></div>
+<div class="line"><a name="l00587"></a><span class="lineno">  587</span>&#160;<span class="keywordflow">      ENDDO</span></div>
+<div class="line"><a name="l00588"></a><span class="lineno">  588</span>&#160;<span class="keywordflow">    ENDDO</span></div>
+<div class="line"><a name="l00589"></a><span class="lineno">  589</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00590"></a><span class="lineno">  590</span>&#160;<span class="preprocessor"></span>    <span class="keywordflow">DO</span> jk = iktb,ikte</div>
+<div class="line"><a name="l00591"></a><span class="lineno">  591</span>&#160;      <span class="keywordflow">DO</span> jij = iijb,iije</div>
+<div class="line"><a name="l00592"></a><span class="lineno">  592</span>&#160;        <span class="keywordflow">IF</span>(prxt(jij,jk)&gt; iced%XRTMIN(kspe) .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00593"></a><span class="lineno">  593</span>&#160;          <span class="keywordflow">IF</span> (parami%LSNOW_T .AND. pt(jij,jk)&gt;263.15) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00594"></a><span class="lineno">  594</span>&#160;            zlbda = max(min(iced%XLBDAS_MAX, 10**(14.554-0.0423*pt(jij,jk))),iced%XLBDAS_MIN)*iced%XTRANS_MP_GAMMAS</div>
+<div class="line"><a name="l00595"></a><span class="lineno">  595</span>&#160;          <span class="keywordflow">ELSE</span> <span class="keywordflow">IF</span> (parami%LSNOW_T) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00596"></a><span class="lineno">  596</span>&#160;            zlbda = max(min(iced%XLBDAS_MAX, 10**(6.226 -0.0106*pt(jij,jk))),iced%XLBDAS_MIN)*iced%XTRANS_MP_GAMMAS</div>
+<div class="line"><a name="l00597"></a><span class="lineno">  597</span>&#160;          <span class="keywordflow">ELSE</span></div>
+<div class="line"><a name="l00598"></a><span class="lineno">  598</span>&#160;            zlbda=max(min(iced%XLBDAS_MAX, iced%XLBS * ( prhodref(jij,jk) * prxt(jij,jk) )**iced%XLBEXS),iced%XLBDAS_MIN)</div>
+<div class="line"><a name="l00599"></a><span class="lineno">  599</span>&#160;<span class="keywordflow">          END IF</span></div>
+<div class="line"><a name="l00600"></a><span class="lineno">  600</span>&#160;          zwsed(jij, jk) = icep%XFSEDS *  &amp;</div>
+<div class="line"><a name="l00601"></a><span class="lineno">  601</span>&#160;               &amp; prxt(jij,jk)* &amp;</div>
+<div class="line"><a name="l00602"></a><span class="lineno">  602</span>&#160;               &amp; prhodref(jij,jk)**(1-iced%XCEXVT) * &amp;</div>
+<div class="line"><a name="l00603"></a><span class="lineno">  603</span>&#160;               &amp; (1 + (iced%XFVELOS/zlbda)**iced%XALPHAS)** (-iced%XNUS+icep%XEXSEDS/iced%XALPHAS) * &amp;</div>
+<div class="line"><a name="l00604"></a><span class="lineno">  604</span>&#160;               &amp; zlbda ** (iced%XBS+icep%XEXSEDS)</div>
+<div class="line"><a name="l00605"></a><span class="lineno">  605</span>&#160;          <span class="keywordflow">IF</span> (oelec .AND. zlbda &gt; 0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00606"></a><span class="lineno">  606</span>&#160;            <span class="comment">! compute the e_x coefficient of the q - D relationship</span></div>
+<div class="line"><a name="l00607"></a><span class="lineno">  607</span>&#160;            zext = prhodref(jij,jk) * pqxt(jij,jk) / (elecp%XFQUPDS * zlbda**(iced%XCXS-elecd%XFS))</div>
+<div class="line"><a name="l00608"></a><span class="lineno">  608</span>&#160;            zext = sign( min(abs(zext), elecp%XESMAX), zext)</div>
+<div class="line"><a name="l00609"></a><span class="lineno">  609</span>&#160;            <span class="keywordflow">IF</span> (abs(zext) &gt; elecp%XESMIN) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00610"></a><span class="lineno">  610</span>&#160;              zwsedq(jij,jk) = elecp%XFQSEDS * zext * prxt(jij,jk)**elecp%XEXQSEDS &amp;</div>
+<div class="line"><a name="l00611"></a><span class="lineno">  611</span>&#160;                                       * prhodref(jij,jk)**(elecp%XEXQSEDS-iced%XCEXVT)</div>
+<div class="line"><a name="l00612"></a><span class="lineno">  612</span>&#160;              <span class="keywordflow">IF</span> (osedim_beard) zlbda3(jij,jk) = zlbda</div>
+<div class="line"><a name="l00613"></a><span class="lineno">  613</span>&#160;<span class="keywordflow">            ENDIF</span></div>
+<div class="line"><a name="l00614"></a><span class="lineno">  614</span>&#160;<span class="keywordflow">          ENDIF</span></div>
+<div class="line"><a name="l00615"></a><span class="lineno">  615</span>&#160;<span class="keywordflow">        ENDIF</span></div>
+<div class="line"><a name="l00616"></a><span class="lineno">  616</span>&#160;<span class="keywordflow">      ENDDO</span></div>
+<div class="line"><a name="l00617"></a><span class="lineno">  617</span>&#160;<span class="keywordflow">    ENDDO</span></div>
+<div class="line"><a name="l00618"></a><span class="lineno">  618</span>&#160;    <span class="keywordflow">IF</span> (oelec .AND. osedim_beard) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00619"></a><span class="lineno">  619</span>&#160;      <span class="keyword">CALL </span><a class="code" href="namespacemode__elec__beard__effect.html#a61df180fabad9c6f81cfa8139f3a634a">elec_beard_effect</a>(d, cst, hcloud, kspe, gmask, pt, prhodref, pthvrefzikb,&amp;</div>
+<div class="line"><a name="l00620"></a><span class="lineno">  620</span>&#160;                             prxt, pqxt, pefieldw, zlbda3, zbeardcoeff, iced=iced)</div>
+<div class="line"><a name="l00621"></a><span class="lineno">  621</span>&#160;      <span class="keywordflow">DO</span> jk = iktb,ikte</div>
+<div class="line"><a name="l00622"></a><span class="lineno">  622</span>&#160;        <span class="keywordflow">DO</span> jij = iijb,iije</div>
+<div class="line"><a name="l00623"></a><span class="lineno">  623</span>&#160;          zwsed(jij,jk)  = zwsed(jij,jk)  * zbeardcoeff(jij,jk)</div>
+<div class="line"><a name="l00624"></a><span class="lineno">  624</span>&#160;          zwsedq(jij,jk) = zwsedq(jij,jk) * zbeardcoeff(jij,jk)</div>
+<div class="line"><a name="l00625"></a><span class="lineno">  625</span>&#160;<span class="keywordflow">        END DO</span></div>
+<div class="line"><a name="l00626"></a><span class="lineno">  626</span>&#160;<span class="keywordflow">      END DO</span></div>
+<div class="line"><a name="l00627"></a><span class="lineno">  627</span>&#160;<span class="keywordflow">    END IF</span></div>
+<div class="line"><a name="l00628"></a><span class="lineno">  628</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00629"></a><span class="lineno">  629</span>&#160;<span class="preprocessor"></span>  <span class="keywordflow">ELSE</span></div>
+<div class="line"><a name="l00630"></a><span class="lineno">  630</span>&#160;    <span class="comment">! ******* for other species</span></div>
+<div class="line"><a name="l00631"></a><span class="lineno">  631</span>&#160;    <span class="keywordflow">SELECT CASE</span>(kspe)</div>
+<div class="line"><a name="l00632"></a><span class="lineno">  632</span>&#160;      <span class="keywordflow">CASE</span>(3)</div>
+<div class="line"><a name="l00633"></a><span class="lineno">  633</span>&#160;        zfsed=icep%XFSEDR</div>
+<div class="line"><a name="l00634"></a><span class="lineno">  634</span>&#160;        zexsed=icep%XEXSEDR</div>
+<div class="line"><a name="l00635"></a><span class="lineno">  635</span>&#160;      <span class="keywordflow">CASE</span>(6)</div>
+<div class="line"><a name="l00636"></a><span class="lineno">  636</span>&#160;        zfsed=icep%XFSEDG</div>
+<div class="line"><a name="l00637"></a><span class="lineno">  637</span>&#160;        zexsed=icep%XEXSEDG</div>
+<div class="line"><a name="l00638"></a><span class="lineno">  638</span>&#160;      <span class="keywordflow">CASE</span>(7)</div>
+<div class="line"><a name="l00639"></a><span class="lineno">  639</span>&#160;        zfsed=icep%XFSEDH</div>
+<div class="line"><a name="l00640"></a><span class="lineno">  640</span>&#160;        zexsed=icep%XEXSEDH</div>
+<div class="line"><a name="l00641"></a><span class="lineno">  641</span>&#160;<span class="keywordflow">      CASE DEFAULT</span></div>
+<div class="line"><a name="l00642"></a><span class="lineno">  642</span>&#160;        <span class="keyword">CALL </span><a class="code" href="interfacemode__msg_1_1print__msg.html">print_msg</a>(nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;ICE4_SEDIMENTATION_SPLIT&#39;</span>, <span class="stringliteral">&#39;no sedimentation parameter for KSPE&#39;</span>)</div>
+<div class="line"><a name="l00643"></a><span class="lineno">  643</span>&#160;<span class="keywordflow">    END SELECT</span></div>
+<div class="line"><a name="l00644"></a><span class="lineno">  644</span>&#160;    <span class="comment">!</span></div>
+<div class="line"><a name="l00645"></a><span class="lineno">  645</span>&#160;    <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00646"></a><span class="lineno">  646</span>&#160;      <span class="keywordflow">SELECT CASE</span>(kspe)</div>
+<div class="line"><a name="l00647"></a><span class="lineno">  647</span>&#160;        <span class="keywordflow">CASE</span>(3)</div>
+<div class="line"><a name="l00648"></a><span class="lineno">  648</span>&#160;          zfqsed = elecp%XFQSEDR</div>
+<div class="line"><a name="l00649"></a><span class="lineno">  649</span>&#160;          zexqsed = elecp%XEXQSEDR</div>
+<div class="line"><a name="l00650"></a><span class="lineno">  650</span>&#160;          zexmin = elecp%XERMIN</div>
+<div class="line"><a name="l00651"></a><span class="lineno">  651</span>&#160;          zexmax = elecp%XERMAX</div>
+<div class="line"><a name="l00652"></a><span class="lineno">  652</span>&#160;          zlbx = iced%XLBR</div>
+<div class="line"><a name="l00653"></a><span class="lineno">  653</span>&#160;          zlbexx = iced%XLBEXR</div>
+<div class="line"><a name="l00654"></a><span class="lineno">  654</span>&#160;          zfqupdx = elecp%XFQUPDR</div>
+<div class="line"><a name="l00655"></a><span class="lineno">  655</span>&#160;          zcxx = elecd%XCXR</div>
+<div class="line"><a name="l00656"></a><span class="lineno">  656</span>&#160;          zfx = elecd%XFR</div>
+<div class="line"><a name="l00657"></a><span class="lineno">  657</span>&#160;        <span class="keywordflow">CASE</span>(6)</div>
+<div class="line"><a name="l00658"></a><span class="lineno">  658</span>&#160;          zfqsed = elecp%XFQSEDG</div>
+<div class="line"><a name="l00659"></a><span class="lineno">  659</span>&#160;          zexqsed = elecp%XEXQSEDG</div>
+<div class="line"><a name="l00660"></a><span class="lineno">  660</span>&#160;          zexmin = elecp%XEGMIN</div>
+<div class="line"><a name="l00661"></a><span class="lineno">  661</span>&#160;          zexmax = elecp%XEGMAX</div>
+<div class="line"><a name="l00662"></a><span class="lineno">  662</span>&#160;          zlbx = iced%XLBG</div>
+<div class="line"><a name="l00663"></a><span class="lineno">  663</span>&#160;          zlbexx = iced%XLBEXG</div>
+<div class="line"><a name="l00664"></a><span class="lineno">  664</span>&#160;          zfqupdx = elecp%XFQUPDG</div>
+<div class="line"><a name="l00665"></a><span class="lineno">  665</span>&#160;          zcxx = iced%XCXG</div>
+<div class="line"><a name="l00666"></a><span class="lineno">  666</span>&#160;          zfx = elecd%XFG</div>
+<div class="line"><a name="l00667"></a><span class="lineno">  667</span>&#160;        <span class="keywordflow">CASE</span>(7)</div>
+<div class="line"><a name="l00668"></a><span class="lineno">  668</span>&#160;          zfqsed = elecp%XFQSEDH</div>
+<div class="line"><a name="l00669"></a><span class="lineno">  669</span>&#160;          zexqsed = elecp%XEXQSEDH</div>
+<div class="line"><a name="l00670"></a><span class="lineno">  670</span>&#160;          zexmin = elecp%XEHMIN</div>
+<div class="line"><a name="l00671"></a><span class="lineno">  671</span>&#160;          zexmax = elecp%XEHMAX</div>
+<div class="line"><a name="l00672"></a><span class="lineno">  672</span>&#160;          zlbx = iced%XLBH</div>
+<div class="line"><a name="l00673"></a><span class="lineno">  673</span>&#160;          zlbexx = iced%XLBEXH</div>
+<div class="line"><a name="l00674"></a><span class="lineno">  674</span>&#160;          zfqupdx = elecp%XFQUPDH</div>
+<div class="line"><a name="l00675"></a><span class="lineno">  675</span>&#160;          zcxx = iced%XCXH</div>
+<div class="line"><a name="l00676"></a><span class="lineno">  676</span>&#160;          zfx = elecd%XFH</div>
+<div class="line"><a name="l00677"></a><span class="lineno">  677</span>&#160;<span class="keywordflow">        CASE DEFAULT</span></div>
+<div class="line"><a name="l00678"></a><span class="lineno">  678</span>&#160;          <span class="keyword">CALL </span><a class="code" href="interfacemode__msg_1_1print__msg.html">print_msg</a>( nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;ICE4_SEDIMENTATION_SPLIT&#39;</span>, <span class="stringliteral">&#39;no sedimentation parameter for KSPE&#39;</span>)</div>
+<div class="line"><a name="l00679"></a><span class="lineno">  679</span>&#160;<span class="keywordflow">      END SELECT</span></div>
+<div class="line"><a name="l00680"></a><span class="lineno">  680</span>&#160;<span class="keywordflow">    END IF</span></div>
+<div class="line"><a name="l00681"></a><span class="lineno">  681</span>&#160;    <span class="comment">!</span></div>
+<div class="line"><a name="l00682"></a><span class="lineno">  682</span>&#160;    zwsed(:,:) = 0.</div>
+<div class="line"><a name="l00683"></a><span class="lineno">  683</span>&#160;    <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00684"></a><span class="lineno">  684</span>&#160;      zwsedq(:,:) = 0.</div>
+<div class="line"><a name="l00685"></a><span class="lineno">  685</span>&#160;      zlbda3(:,:) = 0.</div>
+<div class="line"><a name="l00686"></a><span class="lineno">  686</span>&#160;<span class="keywordflow">    END IF</span></div>
+<div class="line"><a name="l00687"></a><span class="lineno">  687</span>&#160;    <span class="keywordflow">DO</span> jk = iktb,ikte</div>
+<div class="line"><a name="l00688"></a><span class="lineno">  688</span>&#160;      <span class="keywordflow">DO</span> jij = iijb,iije</div>
+<div class="line"><a name="l00689"></a><span class="lineno">  689</span>&#160;        <span class="keywordflow">IF</span>(prxt(jij,jk)&gt;iced%XRTMIN(kspe) .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00690"></a><span class="lineno">  690</span>&#160;          zwsed(jij, jk) = zfsed  * prxt(jij, jk)**zexsed            &amp;</div>
+<div class="line"><a name="l00691"></a><span class="lineno">  691</span>&#160;                         &amp;        * prhodref(jij, jk)**(zexsed-iced%XCEXVT)</div>
+<div class="line"><a name="l00692"></a><span class="lineno">  692</span>&#160;          <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00693"></a><span class="lineno">  693</span>&#160;            <span class="comment">! need lambda_x to compute e_x</span></div>
+<div class="line"><a name="l00694"></a><span class="lineno">  694</span>&#160;            zlbda = zlbx * (prhodref(jij,jk) * max(prxt(jij,jk), iced%XRTMIN(kspe)))**zlbexx</div>
+<div class="line"><a name="l00695"></a><span class="lineno">  695</span>&#160;            <span class="keywordflow">IF</span> (zlbda &gt; 0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00696"></a><span class="lineno">  696</span>&#160;              <span class="comment">! compute the e_x coefficient of the q - D relationship</span></div>
+<div class="line"><a name="l00697"></a><span class="lineno">  697</span>&#160;              zext = prhodref(jij,jk) * pqxt(jij,jk) / (zfqupdx * zlbda**(zcxx-zfx))</div>
+<div class="line"><a name="l00698"></a><span class="lineno">  698</span>&#160;              zext = sign( min(abs(zext), zexmax), zext)</div>
+<div class="line"><a name="l00699"></a><span class="lineno">  699</span>&#160;<span class="keywordflow">            END IF</span></div>
+<div class="line"><a name="l00700"></a><span class="lineno">  700</span>&#160;            <span class="keywordflow">IF</span> (abs(zext) &gt; zexmin) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00701"></a><span class="lineno">  701</span>&#160;              zwsedq(jij,jk) = zfqsed * zext * prxt(jij,jk)**zexqsed &amp;</div>
+<div class="line"><a name="l00702"></a><span class="lineno">  702</span>&#160;                                      * prhodref(jij,jk)**(zexqsed-iced%XCEXVT)</div>
+<div class="line"><a name="l00703"></a><span class="lineno">  703</span>&#160;              <span class="keywordflow">IF</span> (osedim_beard) zlbda3(jij,jk) = zlbda</div>
+<div class="line"><a name="l00704"></a><span class="lineno">  704</span>&#160;<span class="keywordflow">            END IF</span></div>
+<div class="line"><a name="l00705"></a><span class="lineno">  705</span>&#160;<span class="keywordflow">          ENDIF</span></div>
+<div class="line"><a name="l00706"></a><span class="lineno">  706</span>&#160;<span class="keywordflow">        ENDIF</span></div>
+<div class="line"><a name="l00707"></a><span class="lineno">  707</span>&#160;<span class="keywordflow">      ENDDO</span></div>
+<div class="line"><a name="l00708"></a><span class="lineno">  708</span>&#160;<span class="keywordflow">    ENDDO</span></div>
+<div class="line"><a name="l00709"></a><span class="lineno">  709</span>&#160;    <span class="keywordflow">IF</span> (oelec .AND. osedim_beard) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00710"></a><span class="lineno">  710</span>&#160;      <span class="keyword">CALL </span><a class="code" href="namespacemode__elec__beard__effect.html#a61df180fabad9c6f81cfa8139f3a634a">elec_beard_effect</a>(d, cst, hcloud, kspe, gmask, pt, prhodref, pthvrefzikb, &amp;</div>
+<div class="line"><a name="l00711"></a><span class="lineno">  711</span>&#160;                             prxt, pqxt, pefieldw, zlbda3, zbeardcoeff, iced=iced)</div>
+<div class="line"><a name="l00712"></a><span class="lineno">  712</span>&#160;      <span class="keywordflow">DO</span> jk = iktb,ikte</div>
+<div class="line"><a name="l00713"></a><span class="lineno">  713</span>&#160;        <span class="keywordflow">DO</span> jij = iijb,iije</div>
+<div class="line"><a name="l00714"></a><span class="lineno">  714</span>&#160;          zwsed(jij,jk)  = zwsed(jij,jk)  * zbeardcoeff(jij,jk)</div>
+<div class="line"><a name="l00715"></a><span class="lineno">  715</span>&#160;          zwsedq(jij,jk) = zwsedq(jij,jk) * zbeardcoeff(jij,jk)</div>
+<div class="line"><a name="l00716"></a><span class="lineno">  716</span>&#160;<span class="keywordflow">        END DO</span></div>
+<div class="line"><a name="l00717"></a><span class="lineno">  717</span>&#160;<span class="keywordflow">      END DO</span></div>
+<div class="line"><a name="l00718"></a><span class="lineno">  718</span>&#160;<span class="keywordflow">    END IF</span></div>
+<div class="line"><a name="l00719"></a><span class="lineno">  719</span>&#160;<span class="keywordflow">  ENDIF</span></div>
+<div class="line"><a name="l00720"></a><span class="lineno">  720</span>&#160;  zmax_tstep(:) = zremaint(:)</div>
+<div class="line"><a name="l00721"></a><span class="lineno">  721</span>&#160;  <span class="keywordflow">DO</span> jk = iktb,ikte</div>
+<div class="line"><a name="l00722"></a><span class="lineno">  722</span>&#160;    <span class="keywordflow">DO</span> jij = iijb,iije</div>
+<div class="line"><a name="l00723"></a><span class="lineno">  723</span>&#160;      <span class="keywordflow">IF</span>(prxt(jij,jk)&gt;iced%XRTMIN(kspe) .AND. zwsed(jij, jk)&gt;1.e-20 .AND. zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00724"></a><span class="lineno">  724</span>&#160;        zmax_tstep(jij) = min(zmax_tstep(jij), parami%XSPLIT_MAXCFL * prhodref(jij, jk) * &amp;</div>
+<div class="line"><a name="l00725"></a><span class="lineno">  725</span>&#160;                        &amp; prxt(jij, jk) * pdzz(jij, jk) / zwsed(jij, jk))</div>
+<div class="line"><a name="l00726"></a><span class="lineno">  726</span>&#160;<span class="keywordflow">      ENDIF</span></div>
+<div class="line"><a name="l00727"></a><span class="lineno">  727</span>&#160;<span class="keywordflow">    ENDDO</span></div>
+<div class="line"><a name="l00728"></a><span class="lineno">  728</span>&#160;<span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a name="l00729"></a><span class="lineno">  729</span>&#160; </div>
+<div class="line"><a name="l00730"></a><span class="lineno">  730</span>&#160;  <span class="keywordflow">DO</span> jij = iijb, iije</div>
+<div class="line"><a name="l00731"></a><span class="lineno">  731</span>&#160;      zremaint(jij) = zremaint(jij) - zmax_tstep(jij)</div>
+<div class="line"><a name="l00732"></a><span class="lineno">  732</span>&#160;      pinprx(jij) = pinprx(jij) + zwsed(jij,ikb) / cst%XRHOLW * (zmax_tstep(jij) * zinvtstep)</div>
+<div class="line"><a name="l00733"></a><span class="lineno">  733</span>&#160;<span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a name="l00734"></a><span class="lineno">  734</span>&#160; </div>
+<div class="line"><a name="l00735"></a><span class="lineno">  735</span>&#160;  <span class="keywordflow">DO</span> jk = iktb , ikte</div>
+<div class="line"><a name="l00736"></a><span class="lineno">  736</span>&#160;    <span class="keywordflow">DO</span> jij = iijb, iije</div>
+<div class="line"><a name="l00737"></a><span class="lineno">  737</span>&#160;      zmrchange = zmax_tstep(jij) * poorhodz(jij,jk)*(zwsed(jij,jk+ikl)-zwsed(jij,jk))</div>
+<div class="line"><a name="l00738"></a><span class="lineno">  738</span>&#160;      prxt(jij,jk) = prxt(jij,jk) + zmrchange + pprxs(jij,jk) * zmax_tstep(jij)</div>
+<div class="line"><a name="l00739"></a><span class="lineno">  739</span>&#160;      prxs(jij,jk) = prxs(jij,jk) + zmrchange * zinvtstep</div>
+<div class="line"><a name="l00740"></a><span class="lineno">  740</span>&#160;      <span class="keywordflow">IF</span> (gpresent_pfpr) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00741"></a><span class="lineno">  741</span>&#160;        pfpr(jij,jk,kspe) = pfpr(jij,jk,kspe) + zwsed(jij,jk) * (zmax_tstep(jij) * zinvtstep)</div>
+<div class="line"><a name="l00742"></a><span class="lineno">  742</span>&#160;<span class="keywordflow">      ENDIF</span></div>
+<div class="line"><a name="l00743"></a><span class="lineno">  743</span>&#160;      <span class="keywordflow">IF</span> (oelec) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00744"></a><span class="lineno">  744</span>&#160;        zqchange = zmax_tstep(jij) * poorhodz(jij,jk) * (zwsedq(jij,jk+ikl) - zwsedq(jij,jk))</div>
+<div class="line"><a name="l00745"></a><span class="lineno">  745</span>&#160;        pqxt(jij,jk) = pqxt(jij,jk) + zqchange + ppqxs(jij,jk) * zmax_tstep(jij)</div>
+<div class="line"><a name="l00746"></a><span class="lineno">  746</span>&#160;        pqxs(jij,jk) = pqxs(jij,jk) + zqchange * zinvtstep</div>
+<div class="line"><a name="l00747"></a><span class="lineno">  747</span>&#160;<span class="keywordflow">      ENDIF</span></div>
+<div class="line"><a name="l00748"></a><span class="lineno">  748</span>&#160;<span class="keywordflow">    ENDDO</span></div>
+<div class="line"><a name="l00749"></a><span class="lineno">  749</span>&#160;<span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a name="l00750"></a><span class="lineno">  750</span>&#160;  <span class="comment">!</span></div>
+<div class="line"><a name="l00751"></a><span class="lineno">  751</span>&#160;  zanyremaint = .false.</div>
+<div class="line"><a name="l00752"></a><span class="lineno">  752</span>&#160;  <span class="keywordflow">DO</span> jij=iijb,iije</div>
+<div class="line"><a name="l00753"></a><span class="lineno">  753</span>&#160;    <span class="keywordflow">IF</span>(zremaint(jij)&gt;0.) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00754"></a><span class="lineno">  754</span>&#160;      zanyremaint = .true.</div>
+<div class="line"><a name="l00755"></a><span class="lineno">  755</span>&#160;<span class="keywordflow">    END IF</span></div>
+<div class="line"><a name="l00756"></a><span class="lineno">  756</span>&#160;<span class="keywordflow">  END DO</span></div>
+<div class="line"><a name="l00757"></a><span class="lineno">  757</span>&#160;<span class="keywordflow">END DO</span></div>
+<div class="line"><a name="l00758"></a><span class="lineno">  758</span>&#160;<span class="comment">!</span></div>
+<div class="line"><a name="l00759"></a><span class="lineno">  759</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT&#39;</span>, 1, zhook_handle)</div>
+<div class="line"><a name="l00760"></a><span class="lineno">  760</span>&#160;<span class="keyword">END SUBROUTINE </span><a class="code" href="mode__ice4__sedimentation__split_8F90.html#a19015d3c473d1347290e44700810cf7e">internal_sedim_spli</a></div>
 <div class="line"><a name="l00761"></a><span class="lineno">  761</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;ICE4_SEDIMENTATION_SPLIT:INTERNAL_SEDIM_SPLIT&#39;</span>, 1, zhook_handle)</div>
-<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;<span class="keyword">END SUBROUTINE </span><a class="code" href="mode__ice4__sedimentation__split_8F90.html#a19015d3c473d1347290e44700810cf7e">internal_sedim_spli</a></div>
-<div class="line"><a name="l00764"></a><span class="lineno">  764</span>&#160;<span class="comment">!</span></div>
-<div class="line"><a name="l00765"></a><span class="lineno">  765</span>&#160;<span class="keyword">END SUBROUTINE </span><a class="code" href="namespacemode__ice4__sedimentation__split.html#a3f4d8bb6d2b2792052a0f7c7c4ce35c0">ice4_sedimentation_split</a></div>
-<div class="line"><a name="l00766"></a><span class="lineno">  766</span>&#160;<span class="keyword">END MODULE </span><a class="code" href="namespacemode__ice4__sedimentation__split.html">mode_ice4_sedimentation_split</a></div>
+<div class="line"><a name="l00762"></a><span class="lineno">  762</span>&#160;<span class="keyword">END SUBROUTINE </span><a class="code" href="namespacemode__ice4__sedimentation__split.html#a3f4d8bb6d2b2792052a0f7c7c4ce35c0">ice4_sedimentation_split</a></div>
+<div class="line"><a name="l00763"></a><span class="lineno">  763</span>&#160;<span class="keyword">END MODULE </span><a class="code" href="namespacemode__ice4__sedimentation__split.html">mode_ice4_sedimentation_split</a></div>
 <div class="ttc" id="ainterfacemode__msg_1_1print__msg_html"><div class="ttname"><a href="interfacemode__msg_1_1print__msg.html">mode_msg::print_msg</a></div><div class="ttdef"><b>Definition:</b> <a href="mode__msg_8F90_source.html#l00018">mode_msg.F90:18</a></div></div>
 <div class="ttc" id="ainterfacemodi__gamma_1_1gamma_html"><div class="ttname"><a href="interfacemodi__gamma_1_1gamma.html">modi_gamma::gamma</a></div><div class="ttdef"><b>Definition:</b> <a href="modi__gamma_8F90_source.html#l00010">modi_gamma.F90:10</a></div></div>
 <div class="ttc" id="ainterfacemodi__momg_1_1momg_html"><div class="ttname"><a href="interfacemodi__momg_1_1momg.html">modi_momg::momg</a></div><div class="ttdef"><b>Definition:</b> <a href="momg_8F90_source.html#l00009">momg.F90:9</a></div></div>

@@ -277,7 +277,7 @@ $(function() {
 <div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;<span class="preprocessor">#if defined(USE_COLCALL) &amp;&amp; defined(_OPENACC)</span></div>
 <div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;<span class="preprocessor"></span>    <span class="comment">!Due to the collapse (2) directive, each point must have its own stack</span></div>
 <div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;    ylstack%L = loc(pstack(1, ibl)) + ceiling(istsz * kind(pstack) / nproma / 8.) * 8 * (jlon - 1)</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;    ylstack%U = ylstack%L + ceiling(istsz * kind(pstack) / nproma / 8.) * 8</div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;    ylstack%U = ylstack%L + floor(istsz * kind(pstack) / nproma / 8.) * 8</div>
 <div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;<span class="preprocessor">#else</span></div>
 <div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;<span class="preprocessor"></span>    ylstack%L = loc(pstack(1, ibl))</div>
 <div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;    ylstack%U = ylstack%L + istsz * kind(pstack)</div>
