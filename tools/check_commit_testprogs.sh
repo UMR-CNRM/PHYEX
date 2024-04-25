@@ -68,7 +68,7 @@ fi
 defaultRef=ref
 
 #Comma separated list of variables that must be set if job is executed on other node
-varToExport="NPROMA,NBLOCKS,OMP_NUM_THREADS,DR_HOOK_OPT,DR_HOOK,DR_HOOK_IGNORE_SIGNALS"
+varToExport="NPROMA,NBLOCKS,OMP_NUM_THREADS,DR_HOOK_OPT,DR_HOOK,DR_HOOK_IGNORE_SIGNALS,NVCOMPILER_ACC_GANGLIMIT"
 
 #Options to have longer simulations, tag is used to build the directory name of the result
 declare -A conf_extra_tag
@@ -247,12 +247,19 @@ function submit {
   output=$(realpath $1); shift
   error=$(realpath $1); shift
   if [ "$submit_method" == 'slurm_belenos' ]; then
-    myscript=$TMP/riette$$
+    myscript=$TMP/testprogs$$
+    if ldd $1 | grep libcuda > /dev/null; then
+      #We need GPU node
+      GPU="#SBATCH -p ndl"
+    else
+      GPU=""
+    fi
     cat - << EOF > $myscript
 #!/bin/bash
 #SBATCH -n 1
 #SBATCH -N 1
 #SBATCH --export=$varToExport
+$GPU
 
 cd $PWD
 $@
