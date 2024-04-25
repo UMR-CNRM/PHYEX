@@ -419,7 +419,7 @@ if [ $compilation -eq 1 ]; then
     echo "### Compilation of commit $commit"
 
     cd $TESTDIR/$name/build/with_fcm/
-    ./make_fcm.sh -c $useexpand --commit $commit --arch $archfile 2>&1 | tee Output_compilation_step2
+    ./make_fcm.sh -c --jobs=10 $useexpand --commit $commit --arch $archfile 2>&1 | tee Output_compilation_step2
   fi
 fi
 
