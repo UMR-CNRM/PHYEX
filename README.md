@@ -20,8 +20,8 @@ Prerequisites:
 Quick Start Guide:
   - open a terminal on a system satisfying the prerequisites and enter the following commands
   - if you don't have a github ssh key or don't know what it is:
-    > git clone https://github.com/UMR-CNRM/PHYEX.git
-    > ./PHYEX/tools/INSTALL.sh --ALL --test 
+    > git clone https://github.com/UMR-CNRM/PHYEX.git  
+    > ./PHYEX/tools/INSTALL.sh --ALL --test
   - if you have a github ssh key:
     > git clone git@github.com:UMR-CNRM/PHYEX.git  
     > ./PHYEX/tools/INSTALL.sh --ALL --test --ssh

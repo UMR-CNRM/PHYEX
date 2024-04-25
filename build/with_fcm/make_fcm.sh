@@ -99,6 +99,7 @@ EOF
 function check_install_fcm() {
   if [ ! -f fcm/bin/fcm ]; then
     echo "Performing FCM installation..."
+    [ ! -d fcm ] && mkdir fcm
     cd fcm
     rm -f .gitkeep
     if [ $ssh -eq 1 ]; then
