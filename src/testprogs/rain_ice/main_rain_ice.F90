@@ -136,7 +136,7 @@ D0%NKTB = 1
 D0%NKTE = KLEV
 
 #if defined(USE_COLCALL) && defined(_OPENACC)
-ISTSZ = NPROMA * 2000 * KLEV
+ISTSZ = NPROMA * 1500 * KLEV
 #else
 ISTSZ = NPROMA * 200 * KLEV
 #endif
