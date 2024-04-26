@@ -126,6 +126,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT)::  PFLXZSVMF
 !
 
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZVARS
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZMEMF !-PEMF
 INTEGER :: JSV          !number of scalar variables and Loop counter
 INTEGER :: JIJ, JK
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
@@ -145,7 +146,7 @@ IKT=D%NKT
 !
 PFLXZSVMF(:,:,:) = 0.
 PSVDT(:,:,:) = 0.
-
+ZMEMF(:,:) = -PEMF(:,:)
 !
 !----------------------------------------------------------------------------
 !
@@ -191,7 +192,7 @@ ENDIF
 ! 3.1 Compute the tendency for the conservative potential temperature
 !     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
 !
-CALL TRIDIAG_MASSFLUX(D,PTHLM,PFLXZTHMF,-PEMF,PTSTEP,PIMPL,  &
+CALL TRIDIAG_MASSFLUX(D,PTHLM,PFLXZTHMF,ZMEMF,PTSTEP,PIMPL,  &
                       PDZZ,PRHODJ,ZVARS )
 ! compute new flux and THL tendency
 CALL MZM_MF(D, ZVARS(:,:), PFLXZTHMF(:,:))
@@ -203,7 +204,7 @@ PTHLDT(IIJB:IIJE,1:IKT)= (ZVARS(IIJB:IIJE,1:IKT)-PTHLM(IIJB:IIJE,1:IKT))/PTSTEP
 !
 ! 3.2 Compute the tendency for the conservative mixing ratio
 !
-CALL TRIDIAG_MASSFLUX(D,PRTM(:,:),PFLXZRMF,-PEMF,PTSTEP,PIMPL,  &
+CALL TRIDIAG_MASSFLUX(D,PRTM(:,:),PFLXZRMF,ZMEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
 ! compute new flux and RT tendency
 CALL MZM_MF(D, ZVARS(:,:), PFLXZRMF(:,:))
@@ -219,7 +220,7 @@ IF (OMIXUV) THEN
   !     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
   !
 
-  CALL TRIDIAG_MASSFLUX(D,PUM,PFLXZUMF,-PEMF,PTSTEP,PIMPL,  &
+  CALL TRIDIAG_MASSFLUX(D,PUM,PFLXZUMF,ZMEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
   ! compute new flux and U tendency
   CALL MZM_MF(D, ZVARS(:,:), PFLXZUMF(:,:))
@@ -233,7 +234,7 @@ IF (OMIXUV) THEN
   !                                  meridian momentum
   !     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
   !
-  CALL TRIDIAG_MASSFLUX(D,PVM,PFLXZVMF,-PEMF,PTSTEP,PIMPL,  &
+  CALL TRIDIAG_MASSFLUX(D,PVM,PFLXZVMF,ZMEMF,PTSTEP,PIMPL,  &
                                  PDZZ,PRHODJ,ZVARS )
   ! compute new flux and V tendency
   CALL MZM_MF(D, ZVARS(:,:), PFLXZVMF(:,:))
@@ -263,7 +264,7 @@ DO JSV=1,KSV
   !     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
   !
   CALL TRIDIAG_MASSFLUX(D,PSVM(:,:,JSV),PFLXZSVMF(:,:,JSV),&
-                        -PEMF,PTSTEP,PIMPL,PDZZ,PRHODJ,ZVARS )
+                        ZMEMF,PTSTEP,PIMPL,PDZZ,PRHODJ,ZVARS )
   ! compute new flux and Sv tendency
   CALL MZM_MF(D, ZVARS, PFLXZSVMF(:,:,JSV))
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)

@@ -206,7 +206,8 @@ REAL, DIMENSION(D%NIJT,D%NKT) ::         &
        ZKEFF,    & ! effectif diffusion coeff = LT * SQRT( TKE )
        ZTR,      & ! Transport term
        ZMWORK1,ZMWORK2,& ! working var. for MZM/MZF operators (array syntax)
-       ZDWORK1,ZDWORK2   ! working var. for DZM/DZF operators (array syntax)
+       ZDWORK1,ZDWORK2,& ! working var. for DZM/DZF operators (array syntax)
+       ZW                ! working array
 
 LOGICAL,DIMENSION(D%NIJT,D%NKT) :: GTKENEG
                    ! 3D mask .T. if TKE < CSTURB%XTKEMIN
@@ -306,7 +307,10 @@ ZA(IIJB:IIJE,1:IKT)     = - PTSTEP * CSTURB%XCET * ZMWORK1(IIJB:IIJE,1:IKT) &
 !
 ! Compute TKE at time t+deltat: ( stored in ZRES )
 !
-CALL TRIDIAG_TKE(D,PTKEM,ZA,PTSTEP,PEXPL,TURBN%XIMPL,PRHODJ,ZSOURCE,PTSTEP*ZFLX,ZRES)
+!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZW(:,:)=PTSTEP*ZFLX(:,:)
+!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+CALL TRIDIAG_TKE(D,PTKEM,ZA,PTSTEP,PEXPL,TURBN%XIMPL,PRHODJ,ZSOURCE,ZW,ZRES)
 CALL GET_HALO_PHY(D,ZRES)
 !
 !* diagnose the dissipation
