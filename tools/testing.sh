@@ -252,7 +252,7 @@ if [ "${SHA}" -eq 0 ]; then
   SHA=$(get_last_commit)
   log 1 "Commit hash is ${SHA}"
 fi
-if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 0 ]; then
+if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -eq 0 ]; then
   log 1 "This commit has not been tested (or --force is provided)"
   ret=0
   
