@@ -83,8 +83,8 @@ i=$((i+1)); conf_extra_tag[$i]="_Z120_NPRO32_BLK256_TIMES4"
 i=$((i+1)); conf_extra_tag[$i]="_Z120_NPRO32_BLK64_TIMES16"
             conf_extra_opts[$i]="--nflevg 120 --nproma 32 --blocks 64 --times 16"
 #The following case is the one used for performance evaluation, it must remains the 4th one
-i=$((i+1)); conf_extra_tag[$i]='_Z120_NPRO${NPROMA}_BLK${NBLOCKS}'
-            conf_extra_opts[$i]='--nflevg 120 --nproma ${NPROMA} --blocks ${NBLOCKS}'
+i=$((i+1)); conf_extra_tag[$i]='_Z120_NPRO${NPROMA}_BLK${NBLOCKS}_TIMES${NTIMES}'
+            conf_extra_opts[$i]='--nflevg 120 --nproma ${NPROMA} --blocks ${NBLOCKS} --times ${NTIMES}'
 
 
 ################################
@@ -514,14 +514,20 @@ if [ $run -ge 1 -a "$perffile" != "" ]; then
 
       if [ $firstrun -eq 1 ]; then
         firstrun=0
-        #Read prefered NPROMA for performance evaluation
+        #Read prefered NPROMA and maximum number of points for performance evaluation
         . $TESTDIR/$name/build/with_fcm/arch_${archfile}/arch.env
 
         #Experiement size 
         NPOINTS=100000
+        if [ ${NPOINTS_perf-${NPOINTS}} -lt ${NPOINTS} ]; then
+          NTIMES=$(python3 -c "print(round(${NPOINTS}/${NPOINTS_perf}))")
+          NPOINTS=${NPOINTS_perf}
+        else
+          NTIMES=1
+        fi
         NPROMA=${NPROMA_perf-32}
         NBLOCKS=$(($NPOINTS/$NPROMA/8*8)) #must be divisible by 8
-        perf_extrapolation_tag=$(NPROMA=$NPROMA; NBLOCKS=$NBLOCKS; eval echo ${conf_extra_tag[4]})
+        perf_extrapolation_tag=$(NPROMA=$NPROMA; NBLOCKS=$NBLOCKS; NTIMES=$NTIMES; eval echo ${conf_extra_tag[4]})
 
         #Cleaning to suppress old results that may be confusing in case of a crash during the run
         if [ $onlyIfNeeded -eq 0 ]; then
@@ -533,7 +539,7 @@ if [ $run -ge 1 -a "$perffile" != "" ]; then
         fi
       fi
 
-      NPROMA=$NPROMA NBLOCKS=$NBLOCKS OMP_NUM_THREADS=8 $0 -r -t $t -a ${archfile} --no-check -e 4 ${commit}
+      NPROMA=$NPROMA NBLOCKS=$NBLOCKS NTIMES=$NTIMES OMP_NUM_THREADS=8 $0 -r -t $t -a ${archfile} --no-check --no-perf -e 4 ${commit}
       file=$TESTDIR/$name/tests/with_fcm/arch_${archfile}/${t}${perf_extrapolation_tag}/Output_run
       if [ -f $file ]; then
         ZTD=$(grep -m 1 "ZTD =" $file | awk '{print $4}')

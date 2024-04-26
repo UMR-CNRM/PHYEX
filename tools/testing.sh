@@ -8,7 +8,7 @@ function usage {
   echo "Usage: $0 [-h] [--repo-user USER] [--repo-protocol PROTOCOL] [--repo-repo REPO] [--no-update] [--no-compil]"
   echo "               [--no-exec] [--no-comp] [--no-remove] [--force] [--commit SHA] [--ref REF]"
   echo "               [--only-model MODEL] [--no-enable-gh-pages] [--perf PERF] [--no-doc-gen]"
-  echo "               [--hostname HOSTNAME] [MAIL]"
+  echo "               [--hostname HOSTNAME] [--mail MAIL]"
   echo "--repo-user USER"
   echo "                user hosting the PHYEX repository on github,"
   echo "                defaults to the env variable PHYEXREPOuser (=$PHYEXREPOuser)"
@@ -34,7 +34,9 @@ function usage {
   echo "--hostname HOSTNAME"
   echo "                the context is built using the provided hostname instead of the real hostname"
   echo "                This can be usefull when running on a cluster node which can vary from run to run"
-  echo "MAIL            comma-separated list of e-mail addresses (no spaces); if not provided, mail is not sent"
+  echo "--mail MAIL     comma-separated list of e-mail addresses (no spaces); if not provided, mail is not sent"
+  echo ""
+  echo "Unrecognized options are given to the check_commit scripts."
   echo ""
   echo "This script provides functionality for automated tests."
   echo "It can be run with cron to periodically test the last commit on the PHYEX repository"
@@ -72,6 +74,7 @@ enableghpages=1
 perfopt=""
 docgen=1
 contextHostname=${HOSTNAME}
+checkCommitOptions=""
 
 allargs="$@"
 while [ -n "$1" ]; do
@@ -93,13 +96,8 @@ while [ -n "$1" ]; do
     '--perf') perfopt="--perf $2"; shift;;
     '--no-doc-gen') docgen=0;;
     '--hostname') contextHostname=$2; shift;;
-    #--) shift; break ;;
-     *) if [ -z "${MAIL-}" ]; then
-          MAIL="$1"
-        else
-          echo "Only one email address allowed"
-          exit 1
-        fi;;
+    '--mail') MAIL=$2; shift;;
+    *) checkCommitOptions="$checkCommitOptions $1";;
   esac
   shift
 done
@@ -325,7 +323,7 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep "${context}" | wc -l) -eq 
     fi
 
     #Commande
-    cmd="check_commit_${model}.sh --repo-user ${PHYEXREPOuser} --repo-protocol ${PHYEXREPOprotocol} ${SHA}"
+    cmd="check_commit_${model}.sh --repo-user ${PHYEXREPOuser} --repo-protocol ${PHYEXREPOprotocol} ${checkCommitOptions} ${SHA}"
 
     #Compilation
     result=0
