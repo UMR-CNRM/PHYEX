@@ -106,7 +106,7 @@ done
 [ ! -d ${WORKDIR} ] && mkdir -p ${WORKDIR}
 
 #stdout and stderr redirection
-logfile="${WORKDIR}/logfile"
+logfile="${WORKDIR}/logfile_${contextHostname}"
 if [ -f "${logfile}" ]; then
   mv "${logfile}" "${logfile}.old"
 fi

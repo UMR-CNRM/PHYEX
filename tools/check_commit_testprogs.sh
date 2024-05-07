@@ -503,6 +503,7 @@ if [ $run -ge 1 -a "$perffile" != "" ]; then
   echo "### Evaluate performance for commit $commit"
 
   ZTD_sum=0
+  ZTC_sum=0
   firstrun=1
   for t in $(echo $tests | sed 's/,/ /g'); do
     if echo $allowedTests | grep -w $t > /dev/null; then
@@ -549,14 +550,23 @@ if [ $run -ge 1 -a "$perffile" != "" ]; then
           ZTD=-999
           ZTD_sum=-999
         fi
+        ZTC=$(grep -m 1 "ZTC =" $file | awk '{print $4}')
+        if [ "$ZTC" != "" ]; then
+          ZTC_sum=$(python3 -c "print(${ZTC_sum} if ${ZTC_sum} < 0. else (${ZTC_sum} + ${ZTC}))")
+        else
+          ZTC=-999
+          ZTC_sum=-999
+        fi
       else
         ZTD=-999
         ZTD_sum=-999
+        ZTC=-999
+        ZTC_sum=-999
       fi
-      echo "$commit testprogs $t $ZTD" >> "$perffile"
+      echo "$commit testprogs $t $ZTD $ZTC" >> "$perffile"
     fi
   done
-  echo "$commit testprogs ALL $ZTD_sum" >> "$perffile"
+  echo "$commit testprogs ALL $ZTD_sum $ZTC_sum" >> "$perffile"
 fi
 
 ####################
