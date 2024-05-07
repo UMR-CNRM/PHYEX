@@ -12,7 +12,7 @@ END INTERFACE
 !
 CONTAINS
 !
-SUBROUTINE BL_DEPTH_DIAG_3D(D,PSURF,PZS,PFLUX,PZZ,PFTOP_O_FSURF,BL_DEPTH_DIAG3D)
+SUBROUTINE BL_DEPTH_DIAG_3D(D,KDIM, PSURF,PZS,PFLUX,PZZ,PFTOP_O_FSURF,BL_DEPTH_DIAG3D)
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 !
@@ -56,10 +56,11 @@ USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),              INTENT(IN)           :: D
+INTEGER,                       INTENT(IN)           :: KDIM ! Vertical dimensions (LES grid vs full grid)
 REAL, DIMENSION(D%NIJT),       INTENT(IN)           :: PSURF        ! surface flux
 REAL, DIMENSION(D%NIJT),       INTENT(IN)           :: PZS          ! orography
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)           :: PFLUX        ! flux
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)           :: PZZ          ! altitude of flux points
+REAL, DIMENSION(D%NIJT,KDIM),  INTENT(IN)           :: PFLUX        ! flux
+REAL, DIMENSION(D%NIJT,KDIM),  INTENT(IN)           :: PZZ          ! altitude of flux points
 REAL,                          INTENT(IN)           :: PFTOP_O_FSURF! Flux at BL top / Surface flux
 REAL, DIMENSION(D%NIJT),       INTENT(OUT)          :: BL_DEPTH_DIAG3D
 !
@@ -106,7 +107,7 @@ BL_DEPTH_DIAG3D(:) = BL_DEPTH_DIAG3D(:) / (1. - PFTOP_O_FSURF)
 IF (LHOOK) CALL DR_HOOK('BL_DEPTH_DIAG_3D',1,ZHOOK_HANDLE)
 END SUBROUTINE BL_DEPTH_DIAG_3D
 !
-SUBROUTINE BL_DEPTH_DIAG_1D(D,PSURF,PZS,PFLUX,PZZ,PFTOP_O_FSURF,BL_DEPTH_DIAG1D)
+SUBROUTINE BL_DEPTH_DIAG_1D(D,KDIM, PSURF,PZS,PFLUX,PZZ,PFTOP_O_FSURF,BL_DEPTH_DIAG1D)
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
@@ -114,31 +115,37 @@ USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)           :: D
+INTEGER,                INTENT(IN)           :: KDIM         ! Vertical dimensions (LES grid vs full grid)
 REAL,                   INTENT(IN)           :: PSURF        ! surface flux
 REAL,                   INTENT(IN)           :: PZS          ! orography
-REAL, DIMENSION(D%NKT), INTENT(IN)           :: PFLUX        ! flux
-REAL, DIMENSION(D%NKT), INTENT(IN)           :: PZZ          ! altitude of flux points
+REAL, DIMENSION(KDIM),  INTENT(IN)           :: PFLUX        ! flux
+REAL, DIMENSION(KDIM),  INTENT(IN)           :: PZZ          ! altitude of flux points
 REAL,                   INTENT(IN)           :: PFTOP_O_FSURF! Flux at BL top / Surface flux
 REAL,                   INTENT(OUT)          :: BL_DEPTH_DIAG1D
+INTEGER :: JK ! loop counters
+INTEGER :: IKB,IIJB,IIJE,IKL
+REAL    :: ZFLX     ! flux at top of BL
 !
-REAL, DIMENSION(1,1)             :: ZSURF
-REAL, DIMENSION(1,1)             :: ZZS
-REAL, DIMENSION(1,1,D%NKT)       :: ZFLUX
-REAL, DIMENSION(1,1,D%NKT)       :: ZZZ
-REAL, DIMENSION(1,1)             :: ZBL_DEPTH_DIAG
-!
-INTEGER :: IKT
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('BL_DEPTH_DIAG_1D',0,ZHOOK_HANDLE)
-IKT=D%NKT
-ZSURF        = PSURF
-ZZS          = PZS
-ZFLUX(1,1,:) = PFLUX(:)
-ZZZ  (1,1,:) = PZZ  (:)
 !
-CALL BL_DEPTH_DIAG_3D(D,ZSURF,ZZS,ZFLUX,ZZZ,PFTOP_O_FSURF,ZBL_DEPTH_DIAG)
+IKB=D%NKTB
+IKL=D%NKL
 !
-BL_DEPTH_DIAG1D = ZBL_DEPTH_DIAG(1,1)
+BL_DEPTH_DIAG1D = 0.
+IF (PSURF/=0.) THEN
+  DO JK=IKB,KDIM-1,IKL
+    IF (PZZ(JK-IKL)>PZS) THEN
+      ZFLX = PSURF * PFTOP_O_FSURF
+      IF ( (PFLUX(JK)-ZFLX)*(PFLUX(JK-IKL)-ZFLX) <= 0. ) THEN
+        BL_DEPTH_DIAG1D = (PZZ  (JK-IKL) - PZS)     &
+                       + (PZZ  (JK) - PZZ  (JK-IKL))    &
+                       * (ZFLX          - PFLUX(JK-IKL)  )  &
+                       / (PFLUX(JK) - PFLUX(JK-IKL)   )
+      END IF
+    END IF
+  END DO
+END IF
 !
 !-------------------------------------------------------------------------------
 !
