@@ -204,6 +204,7 @@ SUBROUTINE TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,                   &
 !!                     10/2012 (J.Escobar) Bypass PGI bug , redefine some allocatable array inplace of automatic
 !!                     08/2014 (J.Escobar) Bypass PGI memory leak bug , replace IF statement with IF THEN ENDIF
 !!      Modifications: July,    2015  (Wim de Rooy) switch for HARATU (Racmo turbulence scheme)
+!!                     04/2016 (M.Moge) Use openACC directives to port the TURB part of Meso-NH on GPU
 !!  Philippe Wautelet: 05/2016-04/2018: new data structures and calls for I/O
 !! JL Redelsperger 03/2021 : add Ocean LES case
 !!--------------------------------------------------------------------------
@@ -420,6 +421,7 @@ CALL PRANDTL(D,CST,CSTURB,TURBN, KRR,KSV,KRRI,TURBN%LTURB_FLX,  &
 !
 ! Buoyancy coefficient
 !
+!$acc kernels
 IF (OOCEAN) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZBETA(IIJB:IIJE,1:IKT) = CST%XG*CST%XALPHAOC
@@ -435,16 +437,20 @@ END IF
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ZSQRT_TKE(IIJB:IIJE,1:IKT) = SQRT(PTKEM(IIJB:IIJE,1:IKT))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
 !
 ! gradients of mean quantities at previous time-step
 !
 CALL GZ_M_W_PHY(D,PTHLM,PDZZ,ZDTH_DZ)
+!$acc kernels
 ZDR_DZ(:,:)  = 0.
+!$acc end kernels
 IF (KRR>0) CALL GZ_M_W_PHY(D,PRM(:,:,1),PDZZ,ZDR_DZ)
 !
 !
 ! Denominator factor in 3rd order terms
 !
+!$acc kernels
 IF (.NOT. TURBN%LHARAT) THEN
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZD(IIJB:IIJE,1:IKT) = (1.+ZREDTH1(IIJB:IIJE,1:IKT)+ZREDR1(IIJB:IIJE,1:IKT)) * &
@@ -455,6 +461,7 @@ ELSE
   ZD(IIJB:IIJE,1:IKT) = 1.
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ENDIF
+!$acc end kernels
 !
 ! Phi3 and Psi3 Prandtl numbers
 !
@@ -498,12 +505,13 @@ END IF
 !*       4.   TURBULENT CORRELATIONS : <w Rc>, <THl THl>, <THl Rnp>, <Rnp Rnp>
 !             ----------------------------------------------------------------
 !
-
+!$acc kernels
 IF (TURBN%LHARAT) THEN
   ZLM(:,:)=PLENGTHH(:,:)
 ELSE
   ZLM(:,:)=PLM(:,:)
 ENDIF
+!$acc end kernels
 !
   CALL  TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,TLES,                 &
                         KRR,KRRL,KRRI,KSV,KGRADIENTS,                 &
@@ -629,6 +637,7 @@ IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. TURBN%LHARAT) THEN
     NTYPE      = TYPEREAL,                   &
     NDIMS      = 3,                          &
     LTIMEDEP   = .TRUE.                      )
+  !$acc update self(ZPHI3)
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZPHI3)
 !
 ! stores the Turbulent Schmidt number
@@ -644,6 +653,7 @@ IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. TURBN%LHARAT) THEN
     NTYPE      = TYPEREAL,                   &
     NDIMS      = 3,                          &
     LTIMEDEP   = .TRUE.                      )
+  !$acc update self(ZPSI3)
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZPSI3)
 !
 !
@@ -658,6 +668,7 @@ IF ( TURBN%LTURB_FLX .AND. TPFILE%LOPENED .AND. .NOT. TURBN%LHARAT) THEN
     NTYPE      = TYPEREAL,                     &
     NDIMS      = 3,                            &
     LTIMEDEP   = .TRUE.                        )
+  !$acc update self(ZPSI_SV)
   DO JSV=1,KSV
     WRITE(TZFIELD%CMNHNAME, '("PSI_SV_",I3.3)') JSV
     TZFIELD%CLONGNAME  = TRIM(TZFIELD%CMNHNAME)

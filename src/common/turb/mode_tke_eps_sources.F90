@@ -234,6 +234,7 @@ IKT=D%NKT
 IKA=D%NKA
 IKL=D%NKL
 !
+!$acc kernels
 ! compute the effective diffusion coefficient at the mass point
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ZKEFF(IIJB:IIJE,1:IKT) = PLM(IIJB:IIJE,1:IKT) * SQRT(PTKEM(IIJB:IIJE,1:IKT))
@@ -274,9 +275,6 @@ END IF
 ! Compute the source terms for TKE: ( ADVECtion + NUMerical DIFFusion + ..)
 ! + (Dynamical Production) + (Thermal Production) - (dissipation) 
 !
-CALL MZM_PHY(D,ZKEFF,ZMWORK1)
-CALL MZM_PHY(D,PRHODJ,ZMWORK2)
-!
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ZFLX(IIJB:IIJE,1:IKT) = TURBN%XCED * SQRT(PTKEM(IIJB:IIJE,1:IKT)) / PLEPS(IIJB:IIJE,1:IKT)
 ZSOURCE(IIJB:IIJE,1:IKT) = ( PRTKES(IIJB:IIJE,1:IKT) +  PRTKEMS(IIJB:IIJE,1:IKT) ) &
@@ -296,18 +294,17 @@ IF (OOCEAN) THEN
   ZSOURCE(IIJB:IIJE,IKE)=ZSOURCE(IIJB:IIJE,IKE)-1.E2*((PSFUM(IIJB:IIJE)**2 + PSFVM(IIJB:IIJE)**2)**1.5) /PDZZ(IIJB:IIJE,IKE)  
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)  
 END IF
+!$acc end kernels
 ! Compute the vector giving the elements just under the diagonal for the 
 ! matrix inverted in TRIDIAG 
 !
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZA(IIJB:IIJE,1:IKT)     = - PTSTEP * CSTURB%XCET * ZMWORK1(IIJB:IIJE,1:IKT) & 
-                                    * ZMWORK2(IIJB:IIJE,1:IKT) / PDZZ(IIJB:IIJE,1:IKT)**2
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ZA(IIJB:IIJE,1:IKT) = - PTSTEP * CSTURB%XCET * MZM(ZKEFF) * MZM(PRHODJ) / PDZZ(IIJB:IIJE,1:IKT)**2
 !
 ! Compute TKE at time t+deltat: ( stored in ZRES )
 !
 CALL TRIDIAG_TKE(D,PTKEM,ZA,PTSTEP,PEXPL,TURBN%XIMPL,PRHODJ,ZSOURCE,PTSTEP*ZFLX,ZRES)
 CALL GET_HALO_PHY(D,ZRES)
+!$acc update device(ZRES)
 !
 !* diagnose the dissipation
 !
@@ -333,41 +330,32 @@ IF(TURBN%LTKEMINTURB) THEN
  !$mnh_end_expand_where(JIJ=IIJB:IIJE,JK=1:IKT)
 END IF
 !
+!$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 PTDISS(IIJB:IIJE,1:IKT) = - ZFLX(IIJB:IIJE,1:IKT)*(PEXPL*PTKEM(IIJB:IIJE,1:IKT) &
                                       + TURBN%XIMPL*ZRES(IIJB:IIJE,1:IKT))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
 !
 IF ( TLES%LLES_CALL .OR.                         &
      (TURBN%LTURB_DIAG .AND. TPFILE%LOPENED)  ) THEN
 !
 ! Compute the cartesian vertical flux of TKE in ZFLX
 !
-  CALL MZM_PHY(D,ZKEFF,ZMWORK1)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  ZDWORK1(IIJB:IIJE,1:IKT) = TURBN%XIMPL * ZRES(IIJB:IIJE,1:IKT) + PEXPL * PTKEM(IIJB:IIJE,1:IKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  CALL DZM_PHY(D,ZDWORK1,ZDWORK2)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  ZFLX(IIJB:IIJE,1:IKT)  = - CSTURB%XCET * ZMWORK1(IIJB:IIJE,1:IKT) &
-                                     * ZDWORK2(IIJB:IIJE,1:IKT) / PDZZ(IIJB:IIJE,1:IKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZFLX(IIJB:IIJE,1:IKT)   = - CSTURB%XCET * MZM(ZKEFF(IIJB:IIJE,1:IKT)) *   &
+                              DZM(TURBN%XIMPL * ZRES(IIJB:IIJE,1:IKT) + PEXPL * PTKEM(IIJB:IIJE,1:IKT) ) &
+                              / PDZZ(IIJB:IIJE,1:IKT)
 !
+!$acc kernels
   ZFLX(IIJB:IIJE,IKB) = 0.
   ZFLX(IIJB:IIJE,IKA) = 0.
+!$acc end kernels
 !
 ! Compute the whole turbulent TRansport of TKE:
 !
-  CALL MZM_PHY(D,PRHODJ,ZMWORK1)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  ZMWORK2(IIJB:IIJE,1:IKT) = ZMWORK1(IIJB:IIJE,1:IKT) * ZFLX(IIJB:IIJE,1:IKT) &
-                                       / PDZZ(IIJB:IIJE,1:IKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  CALL DZF_PHY(D,ZMWORK2,ZDWORK1)
-  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-  ZTR(IIJB:IIJE,1:IKT)= ZTR(IIJB:IIJE,1:IKT) - ZDWORK1(IIJB:IIJE,1:IKT) &
-                                  /PRHODJ(IIJB:IIJE,1:IKT)
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PTR(IIJB:IIJE,1:IKT)= PTR(IIJB:IIJE,1:IKT) - &
+                        DZF( MZM(PRHODJ(IIJB:IIJE,1:IKT)) * ZFLX(IIJB:IIJE,1:IKT) / PDZZ(IIJB:IIJE,1:IKT) ) &
+                        /PRHODJ(IIJB:IIJE,1:IKT)
 !
 ! Storage in the LES configuration
 !
@@ -383,22 +371,28 @@ END IF
 !
 IF (BUCONF%LBUDGET_TKE) THEN
   ! Dynamical production
+  !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZMWORK1(IIJB:IIJE,1:IKT) = PDP(IIJB:IIJE,1:IKT) * PRHODJ(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !$acc end kernels
   CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TKE), 'DP', ZMWORK1)
   !
   ! Thermal production
+  !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZMWORK1(IIJB:IIJE,1:IKT) = PTP(IIJB:IIJE,1:IKT) * PRHODJ(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  !$acc end kernels
   CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TKE), 'TP', ZMWORK1)
   !
   ! Dissipation
+  !$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZMWORK1(IIJB:IIJE,1:IKT) = -TURBN%XCED * SQRT(PTKEM(IIJB:IIJE,1:IKT))/PLEPS(IIJB:IIJE,1:IKT) * &
                 (PEXPL*PTKEM(IIJB:IIJE,1:IKT) + TURBN%XIMPL*ZRES(IIJB:IIJE,1:IKT))*PRHODJ(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT) 
+  !$acc end kernels
   CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TKE), 'DISS',ZMWORK1)
 END IF 
 !
@@ -406,6 +400,7 @@ END IF
 !              with the removal of the advection part for MesoNH
 
 !Should be in IF LBUDGET_TKE only. Was removed out for a correct comput. of PTDIFF in case of LBUDGET_TKE=F in AROME
+!$acc kernels present_cr(ZRES)
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 PRTKES(IIJB:IIJE,1:IKT) = PRTKES(IIJB:IIJE,1:IKT) + PRHODJ(IIJB:IIJE,1:IKT) * &
                 ( PDP(IIJB:IIJE,1:IKT) + PTP(IIJB:IIJE,1:IKT)                           &
@@ -416,13 +411,16 @@ PTDIFF(IIJB:IIJE,1:IKT) =  ZRES(IIJB:IIJE,1:IKT) / PTSTEP - PRTKES(IIJB:IIJE,1:I
                                      /PRHODJ(IIJB:IIJE,1:IKT) &
                            & - PDP(IIJB:IIJE,1:IKT)- PTP(IIJB:IIJE,1:IKT) - PTDISS(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
 !
 IF (BUCONF%LBUDGET_TKE) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TKE), 'TR', PRTKES)
 !
+!$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 PRTKES(IIJB:IIJE,1:IKT) = ZRES(IIJB:IIJE,1:IKT) * PRHODJ(IIJB:IIJE,1:IKT) / PTSTEP &
                                     -  PRTKEMS(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
 !
 ! stores the whole turbulent transport
 !
@@ -433,31 +431,44 @@ IF (BUCONF%LBUDGET_TKE) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TKE), 'TR'
 !*       3.   COMPUTE THE DISSIPATIVE HEATING
 !             -------------------------------
 !
+!$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 PRTHLS(IIJB:IIJE,1:IKT) = PRTHLS(IIJB:IIJE,1:IKT) + &
                                     TURBN%XCED * SQRT(PTKEM(IIJB:IIJE,1:IKT)) / PLEPS(IIJB:IIJE,1:IKT) * &
                 (PEXPL*PTKEM(IIJB:IIJE,1:IKT) + TURBN%XIMPL*ZRES(IIJB:IIJE,1:IKT)) &
                 * PRHODJ(IIJB:IIJE,1:IKT) * PCOEF_DISS(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
 !----------------------------------------------------------------------------
 !
 !*       4.   STORES SOME DIAGNOSTICS
 !             -----------------------
 !
-IF(PRESENT(PTR)) PTR=ZTR
+IF(PRESENT(PTR)) THEN
+!$acc kernels
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PTR(:,:)=ZTR(:,:)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
+END IF
 IF(PRESENT(PDISS)) THEN
+!$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   PDISS(IIJB:IIJE,1:IKT) =  -TURBN%XCED * (PTKEM(IIJB:IIJE,1:IKT)**1.5) / PLEPS(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
 END IF
 !
 IF(PRESENT(PEDR)) THEN
+!$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   PEDR(IIJB:IIJE,1:IKT) = TURBN%XCED * (PTKEM(IIJB:IIJE,1:IKT)**1.5) / PLEPS(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
 END IF
 !
 IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
+!$acc update self(PDP,PTP,PTR,PDISS)
 !
 ! stores the dynamic production 
 !
