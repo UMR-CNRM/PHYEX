@@ -121,12 +121,13 @@ LOGICAL                  :: LLCHECK
 LOGICAL                  :: LLCHECKDIFF
 LOGICAL                  :: LLDIFF
 INTEGER                  :: IBLOCK1, IBLOCK2
-INTEGER                  :: ISTSZ, JBLK1, JBLK2
+INTEGER                  :: ISTSZ(2), JBLK1, JBLK2
 INTEGER                  :: NTID, ITID
 INTEGER                  :: JRR
 TYPE(TLES_t)             :: TLES
 
-REAL, ALLOCATABLE, TARGET :: PSTACK(:,:)
+REAL, ALLOCATABLE, TARGET :: PSTACK8(:,:)   
+REAL(KIND=4), ALLOCATABLE, TARGET :: PSTACK4(:,:)
 TYPE(STACK), TARGET :: YLSTACK
 
 REAL(KIND=8) :: TS,TE
@@ -225,13 +226,16 @@ D0%NJBC = 1
 D0%NIEC = D0%NIE
 D0%NJEC = D0%NJT
 
-#if defined(USE_COLCALL) && defined(_OPENACC)
-ISTSZ = NPROMA * 6000 * KLEV
-#else
-ISTSZ = NPROMA * 200 * KLEV
+ISTSZ=0
+ISTSZ(KIND(KLEV)/4) = NPROMA * 1 * KLEV
+ISTSZ(KIND(PRHODJ)/4) = NPROMA * 91 * KLEV
+#ifndef USE_STACK
+ISTSZ(2) = ISTSZ(2) + CEILING(ISTSZ(1) / 2.)
+ISTSZ(1) = 0
 #endif
-ALLOCATE (PSTACK (ISTSZ, NGPBLKS))
-ZMNH_STACK => PSTACK
+ALLOCATE (PSTACK4 (ISTSZ(1), NGPBLKS))
+ALLOCATE (PSTACK8 (ISTSZ(2), NGPBLKS))
+ZMNH_STACK => PSTACK8
 
 TS = OMP_GET_WTIME ()
 
@@ -257,7 +261,7 @@ DO ITIME = 1, NTIME
 !$acc      & copy    (ZBL_DEPTH, ZSBL_DEPTH, PTHM, ZRM, PRUS, PRVS, PRWS, PRTHS, ZRRS, ZRSVS, PRTKES_OUT) &
 !$acc      & copyout (PSIGS, ZWTH, ZWRC, ZWSV, PDP, PTP, PTDIFF, PTDISS, PEDR, PTPMF, PDRUS_TURB, PDRVS_TURB, &
 !$acc      &          PDRTHLS_TURB, PDRRTS_TURB, ZDRSVS_TURB) &
-!$acc      & create  (PSTACK) 
+!$acc      & create  (PSTACK4, PSTACK8) 
 
   TSC = OMP_GET_WTIME ()
 
@@ -292,18 +296,14 @@ DO ITIME = 1, NTIME
 
 #ifdef USE_STACK
     !Using cray pointers, AROME mechanism
-#if defined(USE_COLCALL) && defined(_OPENACC)
-    !Due to the collapse (2) directive, each point must have its own stack
-    YLSTACK%L = LOC (PSTACK (1, IBL)) + CEILING(ISTSZ * KIND (PSTACK) / NPROMA / 8.) * 8 * (JLON - 1)
-    YLSTACK%U = YLSTACK%L + FLOOR(ISTSZ * KIND (PSTACK) / NPROMA / 8.) * 8
-#else
-    YLSTACK%L = LOC (PSTACK (1, IBL))
-    YLSTACK%U = YLSTACK%L + ISTSZ * KIND (PSTACK)
-#endif
+    YLSTACK%L(1) = LOC (PSTACK4 (1, IBL))
+    YLSTACK%U(1) = YLSTACK%L(1) + ISTSZ(1) * KIND (PSTACK4)
+    YLSTACK%L(2) = LOC (PSTACK8 (1, IBL))
+    YLSTACK%U(2) = YLSTACK%L(2) + ISTSZ(2) * KIND (PSTACK8)
 #else
     !Using fortran indexing, Meso-NH mechanism
-    YLSTACK%L = 1
-    YLSTACK%U = ISTSZ
+    YLSTACK%L(2) = 1
+    YLSTACK%U(2) = ISTSZ(2)
     IMNH_BLOCK => IBL
     YMNH_STACK => YLSTACK
     INUMPIN = 0
