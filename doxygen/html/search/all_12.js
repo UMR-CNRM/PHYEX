@@ -27,7 +27,7 @@ var searchData=
   ['sm_5fpmr_5fhu_5f3d_1825',['sm_pmr_hu_3d',['../namespacemode__thermo.html#a537cf74dd941a8d3b65caa4e5208821c',1,'mode_thermo']]],
   ['smooth_5fturb_5ffunct_1826',['smooth_turb_funct',['../namespacemode__prandtl.html#a05efb840c84ba32485d0a28dbb9e052b',1,'mode_prandtl']]],
   ['snow_1827',['snow',['../mode__ice4__sedimentation__stat_8F90.html#a5c78dad159302673e39fa48529a80cf1',1,'mode_ice4_sedimentation_stat.F90']]],
-  ['sof_1828',['sof',['../namespacestack__mod.html#aa2d288e147694cfdccc48e2ca791c900',1,'stack_mod']]],
+  ['sof_1828',['sof',['../namespacestack__mod.html#a26877fe9b7bb02d83ede53333e90fff7',1,'stack_mod']]],
   ['sources_5fneg_5fcorrect_5fphy_1829',['sources_neg_correct_phy',['../namespacemode__sources__neg__correct.html#a41f51626c939db1ee71c32efc844c261',1,'mode_sources_neg_correct']]],
   ['stack_1830',['stack',['../structstack__mod_1_1stack.html',1,'stack_mod']]],
   ['stack_5fmod_1831',['stack_mod',['../namespacestack__mod.html',1,'']]],
