@@ -585,7 +585,7 @@ if [ $check -eq 1 ]; then
     if echo $allowedTests | grep -w $t > /dev/null; then
       #Run the reference if needed
       if [ $computeRefIfNeeded -eq 1 ]; then
-        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation ${refByTest[$t]}
+        $0 -p -c -r -t $t -a ${refarchfile} --onlyIfNeeded -e $extrapolation --no-perf ${refByTest[$t]}
       fi
 
       #File comparison
