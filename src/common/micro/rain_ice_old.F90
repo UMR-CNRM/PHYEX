@@ -14,7 +14,6 @@
                                PICENU, PKGN_ACON, PKGN_SBGR,                          &
                                PRHT, PRHS, PINPRH, PFPR)
 
-      USE PARKIND1,            ONLY: JPRB
       USE YOMHOOK,             ONLY: LHOOK, DR_HOOK, JPHOOK
       USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_T
       USE MODD_CST,            ONLY: CST_T
@@ -574,7 +573,7 @@ IF ( KSIZE >= 0 ) THEN
     ZCOLF(JL)=1. ! No change from orignal when  OCND2 = .FALSE.
     ZACRF(JL)=1. !    "      "       "            "       "
     ZCONCM(JL)=ZCONC3D(I1(JL),I2(JL))*0.000001 ! From m-3 to cm-3
-    IF (LTIW) ZTIW(JL)=TIWMX_TAB(CST, ICEP%TIWMX, ZPRES(JL),ZZT(JL), ZRVS(JL)*PTSTEP,0._JPRB,ZRSP,ZRSW,0.1_JPRB)
+    IF (LTIW) ZTIW(JL)=TIWMX_TAB(CST, ICEP%TIWMX, ZPRES(JL),ZZT(JL), ZRVS(JL)*PTSTEP,0.,ZRSP,ZRSW,0.1)
     ZZKGN_ACON(JL)=PKGN_ACON(I1(JL))
     ZZKGN_SBGR(JL)=PKGN_SBGR(I1(JL))
 
@@ -982,33 +981,33 @@ IF ( KSIZE >= 0 ) THEN
       ZRSTS=ZRIT(JL)+ZRST(JL) +ZRGT(JL) ! total solid timestep t
       IF(ZZT(JL)<CST%XTT .AND. ABS(ZRSA*PTSTEP-ZRSTS)> 1.0E-12 .AND. &
       &  ZESI(JL) < ZPRES(JL)*0.5 )THEN
-        ZTSP = TIWMX_TAB(CST, ICEP%TIWMX, ZPRES(JL),ZZT(JL), ZRVS(JL)*PTSTEP,1._JPRB,ZRSP,ZRSI,0.1_JPRB)
+        ZTSP = TIWMX_TAB(CST, ICEP%TIWMX, ZPRES(JL),ZZT(JL), ZRVS(JL)*PTSTEP,1.,ZRSP,ZRSI,0.1)
         ZRVSOLD =ZRVS(JL)
         ZRISOLD =ZRIS(JL)
         ZRSSOLD =ZRSS(JL)
         ZRGSOLD =ZRGS(JL)
         !       Fractions of total solid for cloud ice, snow and graupel
         !       (hail not concidered yet):
-        ZRISFRC = 1._JPRB !(Default)
-        ZRSSFRC = 0._JPRB !(Default)
-        ZRGSFRC = 0._JPRB !(Default)
-        IF(ZRSA > 0._JPRB )THEN
+        ZRISFRC = 1. !(Default)
+        ZRSSFRC = 0. !(Default)
+        ZRGSFRC = 0. !(Default)
+        IF(ZRSA > 0. )THEN
           ZRISFRC = ZRISOLD/ZRSA
           ZRSSFRC = ZRSSOLD/ZRSA
           ZRGSFRC = ZRGSOLD/ZRSA
         ENDIF
 
-        ZRSDIF =0._JPRB
+        ZRSDIF =0.
         ZRFRAC=   ZRVS(JL)*PTSTEP - ZRSA*PTSTEP  +ZRSTS
         IF(ZRVS(JL)*PTSTEP < ZRSI )THEN ! sub - saturation over ice:
           ! Avoid drying of ice leading to supersaturation with
           ! respect to ice
 
           ! ZRFRAC should not exceed ZRSP, if so adjust
-          ZRSDIF = MIN(0._JPRB,ZRSP-ZRFRAC)
+          ZRSDIF = MIN(0.,ZRSP-ZRFRAC)
         ELSE  ! super - saturation over ice:
           ! ZRFRAC should not go below ZRSP, if so adjust
-!          ZRSDIF = MAX(0._JPRB,ZRSP-ZRFRAC)
+!          ZRSDIF = MAX(0.,ZRSP-ZRFRAC)
         ENDIF
         ZRSB = ZRSA*PTSTEP  - ZRSDIF
         ZRVS(JL) = ZRVS(JL) -  (ZRSB/PTSTEP-ZRSA) ! total H2O should not change

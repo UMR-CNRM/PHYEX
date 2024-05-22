@@ -201,12 +201,11 @@ D0%NKTB = 1
 D0%NKTE = KLEV
 
 ISTSZ=0
-ISTSZ(KIND(LLMICRO)/4) = NPROMA * 3 * KLEV                                                                                          
-ISTSZ(KIND(PRHODJ)/4) = NPROMA * 22 * KLEV
+ISTSZ(KIND(LLMICRO)/4) = NPROMA * 3 * KLEV
+ISTSZ(KIND(PRHODJ)/4) = ISTSZ(KIND(PRHODJ)/4) + NPROMA * 22 * KLEV
 #ifdef USE_STACK
 #if defined(USE_COLCALL) && defined(_OPENACC)
-ISTSZ(KIND(LLMICRO)/4) = ISTSZ(KIND(LLMICRO)/4) * NPROMA
-ISTSZ(KIND(PRHODJ)/4) = ISTSZ(KIND(PRHODJ)/4) * NPROMA
+ISTSZ(:) = ISTSZ(:) * NPROMA
 #endif
 #else
 ISTSZ(2) = ISTSZ(2) + CEILING(ISTSZ(1) / 2.)
