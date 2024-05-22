@@ -258,6 +258,7 @@ function submit {
 #!/bin/bash
 #SBATCH -n 1
 #SBATCH -N 1
+#SBATCH -t 10
 #SBATCH --export=$varToExport
 $GPU
 
@@ -515,7 +516,8 @@ if [ $run -ge 1 -a "$perffile" != "" ]; then
 
       if [ $firstrun -eq 1 ]; then
         firstrun=0
-        #Read prefered NPROMA and maximum number of points for performance evaluation
+        #Read prefered NPROMA, maximum number of points and number of openMP threads
+        #for performance evaluation
         . $TESTDIR/$name/build/with_fcm/arch_${archfile}/arch.env
 
         #Experiement size 
@@ -527,6 +529,7 @@ if [ $run -ge 1 -a "$perffile" != "" ]; then
           NTIMES=1
         fi
         NPROMA=${NPROMA_perf-32}
+        OMP_NUM_THREADS=${OMP_NUM_THREADS_perf-8}
         NBLOCKS=$(($NPOINTS/$NPROMA/8*8)) #must be divisible by 8
         perf_extrapolation_tag=$(NPROMA=$NPROMA; NBLOCKS=$NBLOCKS; NTIMES=$NTIMES; eval echo ${conf_extra_tag[4]})
 
@@ -540,7 +543,7 @@ if [ $run -ge 1 -a "$perffile" != "" ]; then
         fi
       fi
 
-      NPROMA=$NPROMA NBLOCKS=$NBLOCKS NTIMES=$NTIMES OMP_NUM_THREADS=8 $0 -r -t $t -a ${archfile} --no-check --no-perf -e 4 ${commit}
+      NPROMA=$NPROMA NBLOCKS=$NBLOCKS NTIMES=$NTIMES OMP_NUM_THREADS=${OMP_NUM_THREADS} $0 -r -t $t -a ${archfile} --no-check --no-perf -e 4 ${commit}
       file=$TESTDIR/$name/tests/with_fcm/arch_${archfile}/${t}${perf_extrapolation_tag}/Output_run
       if [ -f $file ]; then
         ZTD=$(grep -m 1 "ZTD =" $file | awk '{print $4}')
