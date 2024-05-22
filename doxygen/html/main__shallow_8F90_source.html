@@ -253,311 +253,313 @@ $(function() {
 <div class="line"><a name="l00181"></a><span class="lineno">  181</span>&#160;                  &amp;pthv_up_out, pw_up_out, &amp;</div>
 <div class="line"><a name="l00182"></a><span class="lineno">  182</span>&#160;                  &amp;pfrac_up_out, pemf_out, zdetr_out, zentr_out, iklcl_out, iketl_out, ikctl_out, llverbose)</div>
 <div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160; </div>
-<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;<span class="keywordflow">IF</span> (llverbose) print *, <span class="stringliteral">&quot; KLEV = &quot;</span>, klev, <span class="stringliteral">&quot; KRR = &quot;</span>, krr</div>
+<div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;klev=<span class="keyword">SIZE</span>(prhodref, 2)</div>
 <div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160; </div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;print *, <span class="stringliteral">&quot; NPROMA = &quot;</span>, nproma, <span class="stringliteral">&quot; KLEV = &quot;</span>, klev, <span class="stringliteral">&quot; NGPBLKS = &quot;</span>, ngpblks</div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;<span class="keywordflow">IF</span> (llverbose) print *, <span class="stringliteral">&quot; KLEV = &quot;</span>, klev, <span class="stringliteral">&quot; KRR = &quot;</span>, krr</div>
 <div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160; </div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;<span class="keyword">CALL </span><a class="code" href="main__ice__adjust_8F90.html#a46854dd27e6a52148355e426ca26d41d">init_phyex</a>(krr, krrl, krri, ksv, phyex)</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;print *, <span class="stringliteral">&quot; NPROMA = &quot;</span>, nproma, <span class="stringliteral">&quot; KLEV = &quot;</span>, klev, <span class="stringliteral">&quot; NGPBLKS = &quot;</span>, ngpblks</div>
 <div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160; </div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;d0%NIT  = nproma</div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;d0%NIB  = 1</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;d0%NIE  = nproma</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;d0%NJT  = 1</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;d0%NJB  = 1</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;d0%NJE  = 1</div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;d0%NIJT = d0%NIT * d0%NJT</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;d0%NIJB = 1</div>
-<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;d0%NIJE = nproma</div>
-<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;d0%NKL  = -1</div>
-<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;d0%NKT  = klev</div>
-<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;d0%NKA  = klev</div>
-<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;d0%NKU  = 1</div>
-<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;d0%NKB  = klev-1</div>
-<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;d0%NKE  = 2</div>
-<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;d0%NKTB = 2</div>
-<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;d0%NKTE = klev-1</div>
-<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;d0%NIBC = 1</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;d0%NJBC = 1</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;d0%NIEC = d0%NIE</div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;d0%NJEC = d0%NJT</div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160; </div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;istsz=0</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;istsz(kind(iklcl)/4) = nproma * 2 * klev</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;istsz(kind(prhodj)/4) = nproma * 39 * klev</div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;istsz(kind(prhodj)/4) = istsz(kind(prhodj)/4) + nproma * 16 <span class="comment">!for ZBUF(KLON,16)</span></div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;<span class="preprocessor">#ifndef USE_STACK</span></div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;<span class="preprocessor"></span>istsz(2) = istsz(2) + ceiling(istsz(1) / 2.)</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;istsz(1) = 0</div>
-<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;<span class="preprocessor"></span><span class="keyword">ALLOCATE</span> (pstack4(istsz(1), ngpblks))</div>
-<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;<span class="keyword">ALLOCATE</span> (pstack8(istsz(2), ngpblks))</div>
-<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;<a class="code" href="namespacemode__mnh__zwork.html#a1b5ddeee6673b7e837af8b60219a0010">zmnh_stack</a> =&gt; pstack8</div>
-<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160; </div>
-<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;ts = omp_get_wtime()</div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;<span class="keyword">CALL </span><a class="code" href="main__ice__adjust_8F90.html#a46854dd27e6a52148355e426ca26d41d">init_phyex</a>(krr, krrl, krri, ksv, phyex)</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160; </div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;d0%NIT  = nproma</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;d0%NIB  = 1</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;d0%NIE  = nproma</div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;d0%NJT  = 1</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;d0%NJB  = 1</div>
+<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;d0%NJE  = 1</div>
+<div class="line"><a name="l00198"></a><span class="lineno">  198</span>&#160;d0%NIJT = d0%NIT * d0%NJT</div>
+<div class="line"><a name="l00199"></a><span class="lineno">  199</span>&#160;d0%NIJB = 1</div>
+<div class="line"><a name="l00200"></a><span class="lineno">  200</span>&#160;d0%NIJE = nproma</div>
+<div class="line"><a name="l00201"></a><span class="lineno">  201</span>&#160;d0%NKL  = -1</div>
+<div class="line"><a name="l00202"></a><span class="lineno">  202</span>&#160;d0%NKT  = klev</div>
+<div class="line"><a name="l00203"></a><span class="lineno">  203</span>&#160;d0%NKA  = klev</div>
+<div class="line"><a name="l00204"></a><span class="lineno">  204</span>&#160;d0%NKU  = 1</div>
+<div class="line"><a name="l00205"></a><span class="lineno">  205</span>&#160;d0%NKB  = klev-1</div>
+<div class="line"><a name="l00206"></a><span class="lineno">  206</span>&#160;d0%NKE  = 2</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;d0%NKTB = 2</div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;d0%NKTE = klev-1</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;d0%NIBC = 1</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;d0%NJBC = 1</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;d0%NIEC = d0%NIE</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;d0%NJEC = d0%NJT</div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160; </div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;istsz=0</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;istsz(kind(iklcl)/4) = nproma * 2 * klev</div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;istsz(kind(prhodj)/4) = istsz(kind(prhodj)/4) + nproma * 39 * klev</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;istsz(kind(prhodj)/4) = istsz(kind(prhodj)/4) + nproma * 16 <span class="comment">!for ZBUF(KLON,16)</span></div>
+<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;<span class="preprocessor">#ifndef USE_STACK</span></div>
+<div class="line"><a name="l00219"></a><span class="lineno">  219</span>&#160;<span class="preprocessor"></span>istsz(2) = istsz(2) + ceiling(istsz(1) / 2.)</div>
+<div class="line"><a name="l00220"></a><span class="lineno">  220</span>&#160;istsz(1) = 0</div>
+<div class="line"><a name="l00221"></a><span class="lineno">  221</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00222"></a><span class="lineno">  222</span>&#160;<span class="preprocessor"></span><span class="keyword">ALLOCATE</span> (pstack4(istsz(1), ngpblks))</div>
+<div class="line"><a name="l00223"></a><span class="lineno">  223</span>&#160;<span class="keyword">ALLOCATE</span> (pstack8(istsz(2), ngpblks))</div>
+<div class="line"><a name="l00224"></a><span class="lineno">  224</span>&#160;<a class="code" href="namespacemode__mnh__zwork.html#a1b5ddeee6673b7e837af8b60219a0010">zmnh_stack</a> =&gt; pstack8</div>
 <div class="line"><a name="l00225"></a><span class="lineno">  225</span>&#160; </div>
-<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;ztd = 0.</div>
-<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160;ztc = 0.</div>
-<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160; </div>
-<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook (<span class="stringliteral">&#39;MAIN&#39;</span>,0,zhook_handle)</div>
+<div class="line"><a name="l00226"></a><span class="lineno">  226</span>&#160;ts = omp_get_wtime()</div>
+<div class="line"><a name="l00227"></a><span class="lineno">  227</span>&#160; </div>
+<div class="line"><a name="l00228"></a><span class="lineno">  228</span>&#160;ztd = 0.</div>
+<div class="line"><a name="l00229"></a><span class="lineno">  229</span>&#160;ztc = 0.</div>
 <div class="line"><a name="l00230"></a><span class="lineno">  230</span>&#160; </div>
-<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;<span class="keywordflow">DO</span> itime = 1, ntime</div>
+<div class="line"><a name="l00231"></a><span class="lineno">  231</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook (<span class="stringliteral">&#39;MAIN&#39;</span>,0,zhook_handle)</div>
 <div class="line"><a name="l00232"></a><span class="lineno">  232</span>&#160; </div>
-<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;  tsd = omp_get_wtime()</div>
+<div class="line"><a name="l00233"></a><span class="lineno">  233</span>&#160;<span class="keywordflow">DO</span> itime = 1, ntime</div>
 <div class="line"><a name="l00234"></a><span class="lineno">  234</span>&#160; </div>
-<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;<span class="preprocessor">#ifdef _OPENACC</span></div>
-<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160;<span class="preprocessor"></span>  <span class="keyword">CALL </span>copy_phyex_t(phyex)</div>
-<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;<span class="preprocessor"></span> </div>
-<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;<span class="comment">!$acc data &amp;</span></div>
-<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;<span class="comment">!$acc      &amp; copyin  (D0, &amp;</span></div>
-<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;<span class="comment">!$acc      &amp;          PDZZF, PZZ, PRHODJ, PRHODREF, PPABSM, PEXNM, PSFTH, PSFRV, PTHM, PRM, PUM, PVM, &amp;</span></div>
-<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;<span class="comment">!$acc      &amp;          PTKEM, PSVM) &amp; </span></div>
-<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;<span class="comment">!$acc      &amp; copy    (PTHL_UP, PRT_UP, PRV_UP, PRC_UP, PRI_UP, PU_UP, PV_UP, PTHV_UP, PW_UP, PFRAC_UP, PEMF) &amp;</span></div>
-<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;<span class="comment">!$acc      &amp; copyout (PDUDT_MF, PDVDT_MF, PDTHLDT_MF, PDRTDT_MF, PDSVDT_MF, PSIGMF, PRC_MF, PRI_MF, PCF_MF, &amp;</span></div>
-<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;<span class="comment">!$acc      &amp;          PFLXZTHVMF, ZFLXZTHMF, ZFLXZRMF, ZFLXZUMF, ZFLXZVMF, ZDETR, ZENTR, IKLCL, IKETL, IKCTL) &amp;</span></div>
-<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;<span class="comment">!$acc      &amp; create  (PSTACK4, PSTACK8) </span></div>
-<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160; </div>
-<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;  tsc = omp_get_wtime()</div>
+<div class="line"><a name="l00235"></a><span class="lineno">  235</span>&#160;  tsd = omp_get_wtime()</div>
+<div class="line"><a name="l00236"></a><span class="lineno">  236</span>&#160; </div>
+<div class="line"><a name="l00237"></a><span class="lineno">  237</span>&#160;<span class="preprocessor">#ifdef _OPENACC</span></div>
+<div class="line"><a name="l00238"></a><span class="lineno">  238</span>&#160;<span class="preprocessor"></span>  <span class="keyword">CALL </span>copy_phyex_t(phyex)</div>
+<div class="line"><a name="l00239"></a><span class="lineno">  239</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00240"></a><span class="lineno">  240</span>&#160;<span class="preprocessor"></span> </div>
+<div class="line"><a name="l00241"></a><span class="lineno">  241</span>&#160;<span class="comment">!$acc data &amp;</span></div>
+<div class="line"><a name="l00242"></a><span class="lineno">  242</span>&#160;<span class="comment">!$acc      &amp; copyin  (D0, &amp;</span></div>
+<div class="line"><a name="l00243"></a><span class="lineno">  243</span>&#160;<span class="comment">!$acc      &amp;          PDZZF, PZZ, PRHODJ, PRHODREF, PPABSM, PEXNM, PSFTH, PSFRV, PTHM, PRM, PUM, PVM, &amp;</span></div>
+<div class="line"><a name="l00244"></a><span class="lineno">  244</span>&#160;<span class="comment">!$acc      &amp;          PTKEM, PSVM) &amp; </span></div>
+<div class="line"><a name="l00245"></a><span class="lineno">  245</span>&#160;<span class="comment">!$acc      &amp; copy    (PTHL_UP, PRT_UP, PRV_UP, PRC_UP, PRI_UP, PU_UP, PV_UP, PTHV_UP, PW_UP, PFRAC_UP, PEMF) &amp;</span></div>
+<div class="line"><a name="l00246"></a><span class="lineno">  246</span>&#160;<span class="comment">!$acc      &amp; copyout (PDUDT_MF, PDVDT_MF, PDTHLDT_MF, PDRTDT_MF, PDSVDT_MF, PSIGMF, PRC_MF, PRI_MF, PCF_MF, &amp;</span></div>
+<div class="line"><a name="l00247"></a><span class="lineno">  247</span>&#160;<span class="comment">!$acc      &amp;          PFLXZTHVMF, ZFLXZTHMF, ZFLXZRMF, ZFLXZUMF, ZFLXZVMF, ZDETR, ZENTR, IKLCL, IKETL, IKCTL) &amp;</span></div>
+<div class="line"><a name="l00248"></a><span class="lineno">  248</span>&#160;<span class="comment">!$acc      &amp; create  (PSTACK4, PSTACK8) </span></div>
 <div class="line"><a name="l00249"></a><span class="lineno">  249</span>&#160; </div>
-<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;<span class="preprocessor">#ifdef USE_OPENMP</span></div>
-<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160;<span class="preprocessor"></span><span class="comment">!$OMP PARALLEL PRIVATE (D, YLSTACK, ITID, JBLK1, JBLK2)</span></div>
-<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160; </div>
-<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;  ntid = omp_get_max_threads()</div>
-<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160;  itid = omp_get_thread_num()</div>
-<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;  jblk1 = 1 +  (ngpblks * (itid+0)) / ntid</div>
-<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;  jblk2 =      (ngpblks * (itid+1)) / ntid</div>
-<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;<span class="preprocessor"></span>  jblk1 = 1</div>
-<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;  jblk2 = ngpblks</div>
-<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;<span class="preprocessor"></span> </div>
-<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;  d = d0</div>
-<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160; </div>
-<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;<span class="comment">!$acc parallel loop gang vector present (PHYEX) private (YLSTACK, IBL, JLON, D) collapse (2)</span></div>
+<div class="line"><a name="l00250"></a><span class="lineno">  250</span>&#160;  tsc = omp_get_wtime()</div>
+<div class="line"><a name="l00251"></a><span class="lineno">  251</span>&#160; </div>
+<div class="line"><a name="l00252"></a><span class="lineno">  252</span>&#160;<span class="preprocessor">#ifdef USE_OPENMP</span></div>
+<div class="line"><a name="l00253"></a><span class="lineno">  253</span>&#160;<span class="preprocessor"></span><span class="comment">!$OMP PARALLEL PRIVATE (D, YLSTACK, ITID, JBLK1, JBLK2)</span></div>
+<div class="line"><a name="l00254"></a><span class="lineno">  254</span>&#160; </div>
+<div class="line"><a name="l00255"></a><span class="lineno">  255</span>&#160;  ntid = omp_get_max_threads()</div>
+<div class="line"><a name="l00256"></a><span class="lineno">  256</span>&#160;  itid = omp_get_thread_num()</div>
+<div class="line"><a name="l00257"></a><span class="lineno">  257</span>&#160;  jblk1 = 1 +  (ngpblks * (itid+0)) / ntid</div>
+<div class="line"><a name="l00258"></a><span class="lineno">  258</span>&#160;  jblk2 =      (ngpblks * (itid+1)) / ntid</div>
+<div class="line"><a name="l00259"></a><span class="lineno">  259</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00260"></a><span class="lineno">  260</span>&#160;<span class="preprocessor"></span>  jblk1 = 1</div>
+<div class="line"><a name="l00261"></a><span class="lineno">  261</span>&#160;  jblk2 = ngpblks</div>
+<div class="line"><a name="l00262"></a><span class="lineno">  262</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00263"></a><span class="lineno">  263</span>&#160;<span class="preprocessor"></span> </div>
+<div class="line"><a name="l00264"></a><span class="lineno">  264</span>&#160;  d = d0</div>
 <div class="line"><a name="l00265"></a><span class="lineno">  265</span>&#160; </div>
-<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;  <span class="keywordflow">DO</span> ibl = jblk1, jblk2</div>
+<div class="line"><a name="l00266"></a><span class="lineno">  266</span>&#160;<span class="comment">!$acc parallel loop gang vector present (PHYEX) private (YLSTACK, IBL, JLON, D) collapse (2)</span></div>
 <div class="line"><a name="l00267"></a><span class="lineno">  267</span>&#160; </div>
-<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;<span class="preprocessor">#ifdef USE_COLCALL</span></div>
-<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;<span class="preprocessor"></span>  <span class="keywordflow">DO</span> jlon = 1, nproma</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;    d = d0</div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;    d%NIB = jlon</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    d%NIE = jlon</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    d%NIJB = jlon</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    d%NIJE = jlon</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    d%NIBC = jlon</div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    d%NIEC = jlon</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;<span class="preprocessor"></span> </div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;<span class="preprocessor">#ifdef USE_STACK</span></div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;<span class="preprocessor"></span>    <span class="comment">!Using cray pointers, AROME mechanism</span></div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;    ylstack%L(1) = loc(pstack4(1, ibl))</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;    ylstack%U(1) = ylstack%L(1) + istsz(1) * kind(pstack4)</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    ylstack%L(2) = loc(pstack8(1, ibl))</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;    ylstack%U(2) = ylstack%L(2) + istsz(2) * kind(pstack8)</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;<span class="preprocessor">#else</span></div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;<span class="preprocessor"></span>    <span class="comment">!Using fortran indexing, Meso-NH mechanism</span></div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;    ylstack%L(2) = 1</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;    ylstack%U(2) = istsz(2)</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    <a class="code" href="namespacemode__mnh__zwork.html#ab2d2cae5021c306448d3eb1266cb3546">imnh_block</a> =&gt; ibl</div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    <a class="code" href="namespacemode__mnh__zwork.html#afeea983961d4672701fb6e9776baab69">ymnh_stack</a> =&gt; ylstack</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    <a class="code" href="namespacemode__mnh__zwork.html#a97931885af69f5ee5a77a72e78c6ef2a">inumpin</a> = 0</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;<span class="preprocessor"></span> </div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;  <span class="keyword">CALL </span><a class="code" href="shallow__mf_8F90.html#aea950f100634032188ab9d2fd24e4a2c">shallow_mf</a>(d, phyex%CST, phyex%NEBN, phyex%PARAM_MFSHALLN, phyex%TURBN, phyex%CSTURB,                    &amp;</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;     &amp;krr=phyex%MISC%KRR, krrl=phyex%MISC%KRRL, krri=phyex%MISC%KRRI, ksv=phyex%MISC%KSV,                                             &amp;</div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;     &amp;onomixlg=phyex%MISC%ONOMIXLG,ksv_lgbeg=phyex%MISC%KSV_LGBEG,ksv_lgend=phyex%MISC%KSV_LGEND,      &amp;</div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;     &amp;ptstep=phyex%MISC%PTSTEP, &amp;</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;     &amp;pdzz=pdzzf(:,:,ibl),pzz=pzz(:,:,ibl),                                                                 &amp;</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;     &amp;prhodj=prhodj(:,:,ibl),prhodref=prhodref(:,:,ibl),                                                    &amp;</div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;     &amp;ppabsm=ppabsm(:,:,ibl),pexnm=pexnm(:,:,ibl),                                                          &amp;</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;     &amp;psfth=psfth(:,ibl),psfrv=psfrv(:,ibl),                                                            &amp;</div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;     &amp;pthm=pthm(:,:,ibl),prm=prm(:,:,:,ibl),pum=pum(:,:,ibl),pvm=pvm(:,:,ibl),&amp;</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;     &amp;ptkem=ptkem(:,:,ibl),psvm=psvm(:,:,:,ibl),                            &amp;</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;     &amp;pdudt_mf=pdudt_mf(:,:,ibl),pdvdt_mf=pdvdt_mf(:,:,ibl),                                                &amp;</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;     &amp;pdthldt_mf=pdthldt_mf(:,:,ibl),pdrtdt_mf=pdrtdt_mf(:,:,ibl),pdsvdt_mf=pdsvdt_mf(:,:,:,ibl),                      &amp;</div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;     &amp;psigmf=psigmf(:,:,ibl),prc_mf=prc_mf(:,:,ibl),pri_mf=pri_mf(:,:,ibl),pcf_mf=pcf_mf(:,:,ibl),&amp;</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;     &amp;pflxzthvmf=pflxzthvmf(:,:,ibl),      &amp;</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;     &amp;pflxzthmf=zflxzthmf(:,:,ibl),pflxzrmf=zflxzrmf(:,:,ibl),pflxzumf=zflxzumf(:,:,ibl),pflxzvmf=zflxzvmf(:,:,ibl),     &amp;</div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;     &amp;pthl_up=pthl_up(:,:,ibl),prt_up=prt_up(:,:,ibl),prv_up=prv_up(:,:,ibl),&amp;</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;     &amp;prc_up=prc_up(:,:,ibl),pri_up=pri_up(:,:,ibl),            &amp;</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;     &amp;pu_up=pu_up(:,:,ibl), pv_up=pv_up(:,:,ibl), pthv_up=pthv_up(:,:,ibl), pw_up=pw_up(:,:,ibl),                        &amp;</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;     &amp;pfrac_up=pfrac_up(:,:,ibl),pemf=pemf(:,:,ibl),pdetr=zdetr(:,:,ibl),pentr=zentr(:,:,ibl),                           &amp;</div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;     &amp;kklcl=iklcl(:,ibl),kketl=iketl(:,ibl),kkctl=ikctl(:,ibl),pdx=phyex%MISC%PDX,pdy=phyex%MISC%PDY,kbudgets=phyex%MISC%NBUDGET &amp;</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;<span class="preprocessor">#ifdef USE_STACK                                                                                                                    </span></div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;<span class="preprocessor"></span>     &amp; , ydstack=ylstack &amp;                                                                                                           </div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;<span class="preprocessor"></span>     &amp; )</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160; </div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;<span class="preprocessor">#ifdef USE_COLCALL</span></div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;<span class="preprocessor"></span><span class="keywordflow">    ENDDO</span></div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;<span class="preprocessor"></span> </div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;<span class="keywordflow">  ENDDO</span></div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160; </div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;<span class="preprocessor">#ifdef USE_OPENMP</span></div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;<span class="preprocessor"></span><span class="comment">!$OMP END PARALLEL</span></div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;<span class="preprocessor"></span> </div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;<span class="comment">!$acc end parallel loop</span></div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160; </div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;  tec = omp_get_wtime()</div>
+<div class="line"><a name="l00268"></a><span class="lineno">  268</span>&#160;  <span class="keywordflow">DO</span> ibl = jblk1, jblk2</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160; </div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;<span class="preprocessor">#ifdef USE_COLCALL</span></div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;<span class="preprocessor"></span>  <span class="keywordflow">DO</span> jlon = 1, nproma</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    d = d0</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    d%NIB = jlon</div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    d%NIE = jlon</div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    d%NIJB = jlon</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    d%NIJE = jlon</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    d%NIBC = jlon</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;    d%NIEC = jlon</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;<span class="preprocessor"></span> </div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;<span class="preprocessor">#ifdef USE_STACK</span></div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;<span class="preprocessor"></span>    <span class="comment">!Using cray pointers, AROME mechanism</span></div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    ylstack%L(1) = loc(pstack4(1, ibl))</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;    ylstack%U(1) = ylstack%L(1) + istsz(1) * kind(pstack4)</div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;    ylstack%L(2) = loc(pstack8(1, ibl))</div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;    ylstack%U(2) = ylstack%L(2) + istsz(2) * kind(pstack8)</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;<span class="preprocessor">#else</span></div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;<span class="preprocessor"></span>    <span class="comment">!Using fortran indexing, Meso-NH mechanism</span></div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;    ylstack%L(2) = 1</div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;    ylstack%U(2) = istsz(2)</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;    <a class="code" href="namespacemode__mnh__zwork.html#ab2d2cae5021c306448d3eb1266cb3546">imnh_block</a> =&gt; ibl</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;    <a class="code" href="namespacemode__mnh__zwork.html#afeea983961d4672701fb6e9776baab69">ymnh_stack</a> =&gt; ylstack</div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;    <a class="code" href="namespacemode__mnh__zwork.html#a97931885af69f5ee5a77a72e78c6ef2a">inumpin</a> = 0</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;<span class="preprocessor"></span> </div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;  <span class="keyword">CALL </span><a class="code" href="shallow__mf_8F90.html#aea950f100634032188ab9d2fd24e4a2c">shallow_mf</a>(d, phyex%CST, phyex%NEBN, phyex%PARAM_MFSHALLN, phyex%TURBN, phyex%CSTURB,                    &amp;</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;     &amp;krr=phyex%MISC%KRR, krrl=phyex%MISC%KRRL, krri=phyex%MISC%KRRI, ksv=phyex%MISC%KSV,                                             &amp;</div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;     &amp;onomixlg=phyex%MISC%ONOMIXLG,ksv_lgbeg=phyex%MISC%KSV_LGBEG,ksv_lgend=phyex%MISC%KSV_LGEND,      &amp;</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;     &amp;ptstep=phyex%MISC%PTSTEP, &amp;</div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;     &amp;pdzz=pdzzf(:,:,ibl),pzz=pzz(:,:,ibl),                                                                 &amp;</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;     &amp;prhodj=prhodj(:,:,ibl),prhodref=prhodref(:,:,ibl),                                                    &amp;</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;     &amp;ppabsm=ppabsm(:,:,ibl),pexnm=pexnm(:,:,ibl),                                                          &amp;</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;     &amp;psfth=psfth(:,ibl),psfrv=psfrv(:,ibl),                                                            &amp;</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;     &amp;pthm=pthm(:,:,ibl),prm=prm(:,:,:,ibl),pum=pum(:,:,ibl),pvm=pvm(:,:,ibl),&amp;</div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;     &amp;ptkem=ptkem(:,:,ibl),psvm=psvm(:,:,:,ibl),                            &amp;</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;     &amp;pdudt_mf=pdudt_mf(:,:,ibl),pdvdt_mf=pdvdt_mf(:,:,ibl),                                                &amp;</div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;     &amp;pdthldt_mf=pdthldt_mf(:,:,ibl),pdrtdt_mf=pdrtdt_mf(:,:,ibl),pdsvdt_mf=pdsvdt_mf(:,:,:,ibl),                      &amp;</div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;     &amp;psigmf=psigmf(:,:,ibl),prc_mf=prc_mf(:,:,ibl),pri_mf=pri_mf(:,:,ibl),pcf_mf=pcf_mf(:,:,ibl),&amp;</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;     &amp;pflxzthvmf=pflxzthvmf(:,:,ibl),      &amp;</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;     &amp;pflxzthmf=zflxzthmf(:,:,ibl),pflxzrmf=zflxzrmf(:,:,ibl),pflxzumf=zflxzumf(:,:,ibl),pflxzvmf=zflxzvmf(:,:,ibl),     &amp;</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;     &amp;pthl_up=pthl_up(:,:,ibl),prt_up=prt_up(:,:,ibl),prv_up=prv_up(:,:,ibl),&amp;</div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;     &amp;prc_up=prc_up(:,:,ibl),pri_up=pri_up(:,:,ibl),            &amp;</div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;     &amp;pu_up=pu_up(:,:,ibl), pv_up=pv_up(:,:,ibl), pthv_up=pthv_up(:,:,ibl), pw_up=pw_up(:,:,ibl),                        &amp;</div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;     &amp;pfrac_up=pfrac_up(:,:,ibl),pemf=pemf(:,:,ibl),pdetr=zdetr(:,:,ibl),pentr=zentr(:,:,ibl),                           &amp;</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;     &amp;kklcl=iklcl(:,ibl),kketl=iketl(:,ibl),kkctl=ikctl(:,ibl),pdx=phyex%MISC%PDX,pdy=phyex%MISC%PDY,kbudgets=phyex%MISC%NBUDGET &amp;</div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;<span class="preprocessor">#ifdef USE_STACK                                                                                                                    </span></div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;<span class="preprocessor"></span>     &amp; , ydstack=ylstack &amp;                                                                                                           </div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;<span class="preprocessor"></span>     &amp; )</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160; </div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;<span class="preprocessor">#ifdef USE_COLCALL</span></div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;<span class="preprocessor"></span><span class="keywordflow">    ENDDO</span></div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;<span class="preprocessor"></span> </div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;<span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160; </div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;<span class="preprocessor">#ifdef USE_OPENMP</span></div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;<span class="preprocessor"></span><span class="comment">!$OMP END PARALLEL</span></div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;<span class="preprocessor"></span> </div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;<span class="comment">!$acc end parallel loop</span></div>
 <div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160; </div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;<span class="comment">!$acc end data</span></div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;  tec = omp_get_wtime()</div>
 <div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160; </div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;<span class="preprocessor">#ifdef _OPENACC</span></div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;<span class="preprocessor"></span>  <span class="keyword">CALL </span>wipe_phyex_t(phyex)</div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;<span class="preprocessor"></span> </div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;  ted = omp_get_wtime()</div>
-<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160; </div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;  ztc = ztc + (tec - tsc)</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;  ztd = ztd + (ted - tsd)</div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160; </div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;<span class="keywordflow">ENDDO</span></div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;<span class="comment">!$acc end data</span></div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160; </div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;<span class="preprocessor">#ifdef _OPENACC</span></div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;<span class="preprocessor"></span>  <span class="keyword">CALL </span>wipe_phyex_t(phyex)</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;<span class="preprocessor">#endif</span></div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;<span class="preprocessor"></span> </div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;  ted = omp_get_wtime()</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160; </div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;  ztc = ztc + (tec - tsc)</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;  ztd = ztd + (ted - tsd)</div>
 <div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160; </div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook (<span class="stringliteral">&#39;MAIN&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;<span class="keywordflow">ENDDO</span></div>
 <div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160; </div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;te = omp_get_wtime()</div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;<span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook (<span class="stringliteral">&#39;MAIN&#39;</span>,1,zhook_handle)</div>
 <div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160; </div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;<span class="keyword">WRITE</span> (*,<span class="stringliteral">&#39;(A,F8.2,A)&#39;</span>) <span class="stringliteral">&#39;elapsed time : &#39;</span>,te-ts,<span class="stringliteral">&#39; s&#39;</span></div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;<span class="keyword">WRITE</span> (*,<span class="stringliteral">&#39;(A,F8.4,A)&#39;</span>) <span class="stringliteral">&#39;          i.e. &#39;</span>,1000.*(te-ts)/(nproma*ngpblks)/ntime,<span class="stringliteral">&#39; ms/gp&#39;</span></div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160; </div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;print *, <span class="stringliteral">&quot; ZTD = &quot;</span>, ztd, ztd / real(nproma*ngpblks*ntime)</div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;print *, <span class="stringliteral">&quot; ZTC = &quot;</span>, ztc, ztc / real(nproma*ngpblks*ntime)</div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160; </div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;<span class="keywordflow">IF</span> (llcheck .OR. llstat .OR. llcheckdiff) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;  <span class="keywordflow">DO</span> ibl = iblock1, iblock2</div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;    print *, <span class="stringliteral">&quot; IBL = &quot;</span>, ibl</div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PDUDT_MF   &quot;</span>, pdudt_mf_out(:,:,ibl), pdudt_mf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PDVDT_MF   &quot;</span>, pdvdt_mf_out(:,:,ibl), pdvdt_mf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PDTHLDT_MF &quot;</span>, pdthldt_mf_out(:,:,ibl), pdthldt_mf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PDRTDT_MF  &quot;</span>, pdrtdt_mf_out(:,:,ibl), pdrtdt_mf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PSIGMF     &quot;</span>, psigmf_out(:,:,ibl), psigmf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PRC_MF     &quot;</span>, prc_mf_out(:,:,ibl), prc_mf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PRI_MF     &quot;</span>, pri_mf_out(:,:,ibl), pri_mf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PCF_MF     &quot;</span>, pcf_mf_out(:,:,ibl), pcf_mf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PFLXZTHVMF &quot;</span>, pflxzthvmf_out(:,:,ibl), pflxzthvmf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;ZFLXZTHMF  &quot;</span>, zflxzthmf_out(:,:,ibl), zflxzthmf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;ZFLXZRMF   &quot;</span>, zflxzrmf_out(:,:,ibl), zflxzrmf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;ZFLXZUMF   &quot;</span>, zflxzumf_out(:,:,ibl), zflxzumf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;ZFLXZVMF   &quot;</span>, zflxzvmf_out(:,:,ibl), zflxzvmf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PTHL_UP    &quot;</span>, pthl_up_out(:,:,ibl), pthl_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PRT_UP     &quot;</span>, prt_up_out(:,:,ibl), prt_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PRV_UP     &quot;</span>, prv_up_out(:,:,ibl), prv_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PRC_UP     &quot;</span>, prc_up_out(:,:,ibl), prc_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PRI_UP     &quot;</span>, pri_up_out(:,:,ibl), pri_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PU_UP      &quot;</span>, pu_up_out(:,:,ibl), pu_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PV_UP      &quot;</span>, pv_up_out(:,:,ibl), pv_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PTHV_UP    &quot;</span>, pthv_up_out(:,:,ibl), pthv_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PW_UP      &quot;</span>, pw_up_out(:,:,ibl), pw_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PFRAC_UP   &quot;</span>, pfrac_up_out(:,:,ibl), pfrac_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PEMF       &quot;</span>, pemf_out(:,:,ibl), pemf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;ZDETR      &quot;</span>, zdetr_out(:,:,ibl), zdetr(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;ZENTR      &quot;</span>, zentr_out(:,:,ibl), zentr(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;<span class="comment">!    CALL DIFF (&quot;IKLCL      &quot;, IKLCL_OUT      (:,IBL),   IKLCL      (:,IBL),   LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)</span></div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;<span class="comment">!    CALL DIFF (&quot;IKETL      &quot;, IKETL_OUT      (:,IBL),   IKETL      (:,IBL),   LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)</span></div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;<span class="comment">!    CALL DIFF (&quot;IKCTL      &quot;, IKCTL_OUT      (:,IBL),   IKCTL      (:,IBL),   LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)</span></div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;<span class="keywordflow">  ENDDO</span></div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;<span class="keywordflow">ENDIF</span></div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160; </div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;<span class="keywordflow">IF</span> (llcheckdiff) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;  <span class="keywordflow">IF</span> (lldiff) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;    print*, <span class="stringliteral">&quot;THERE ARE DIFF SOMEWHERE&quot;</span></div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;  <span class="keywordflow">ELSE</span></div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;    print*, <span class="stringliteral">&quot;THERE IS NO DIFF AT ALL&quot;</span></div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;<span class="keywordflow">  ENDIF</span></div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;<span class="keywordflow">ENDIF</span></div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160; </div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;stop</div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;te = omp_get_wtime()</div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160; </div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;<span class="keyword">WRITE</span> (*,<span class="stringliteral">&#39;(A,F8.2,A)&#39;</span>) <span class="stringliteral">&#39;elapsed time : &#39;</span>,te-ts,<span class="stringliteral">&#39; s&#39;</span></div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;<span class="keyword">WRITE</span> (*,<span class="stringliteral">&#39;(A,F8.4,A)&#39;</span>) <span class="stringliteral">&#39;          i.e. &#39;</span>,1000.*(te-ts)/(nproma*ngpblks)/ntime,<span class="stringliteral">&#39; ms/gp&#39;</span></div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160; </div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;print *, <span class="stringliteral">&quot; ZTD = &quot;</span>, ztd, ztd / real(nproma*ngpblks*ntime)</div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;print *, <span class="stringliteral">&quot; ZTC = &quot;</span>, ztc, ztc / real(nproma*ngpblks*ntime)</div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160; </div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;<span class="keywordflow">IF</span> (llcheck .OR. llstat .OR. llcheckdiff) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;  <span class="keywordflow">DO</span> ibl = iblock1, iblock2</div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;    print *, <span class="stringliteral">&quot; IBL = &quot;</span>, ibl</div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PDUDT_MF   &quot;</span>, pdudt_mf_out(:,:,ibl), pdudt_mf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PDVDT_MF   &quot;</span>, pdvdt_mf_out(:,:,ibl), pdvdt_mf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PDTHLDT_MF &quot;</span>, pdthldt_mf_out(:,:,ibl), pdthldt_mf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PDRTDT_MF  &quot;</span>, pdrtdt_mf_out(:,:,ibl), pdrtdt_mf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PSIGMF     &quot;</span>, psigmf_out(:,:,ibl), psigmf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PRC_MF     &quot;</span>, prc_mf_out(:,:,ibl), prc_mf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PRI_MF     &quot;</span>, pri_mf_out(:,:,ibl), pri_mf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PCF_MF     &quot;</span>, pcf_mf_out(:,:,ibl), pcf_mf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PFLXZTHVMF &quot;</span>, pflxzthvmf_out(:,:,ibl), pflxzthvmf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;ZFLXZTHMF  &quot;</span>, zflxzthmf_out(:,:,ibl), zflxzthmf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;ZFLXZRMF   &quot;</span>, zflxzrmf_out(:,:,ibl), zflxzrmf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;ZFLXZUMF   &quot;</span>, zflxzumf_out(:,:,ibl), zflxzumf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;ZFLXZVMF   &quot;</span>, zflxzvmf_out(:,:,ibl), zflxzvmf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PTHL_UP    &quot;</span>, pthl_up_out(:,:,ibl), pthl_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PRT_UP     &quot;</span>, prt_up_out(:,:,ibl), prt_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PRV_UP     &quot;</span>, prv_up_out(:,:,ibl), prv_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PRC_UP     &quot;</span>, prc_up_out(:,:,ibl), prc_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PRI_UP     &quot;</span>, pri_up_out(:,:,ibl), pri_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PU_UP      &quot;</span>, pu_up_out(:,:,ibl), pu_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PV_UP      &quot;</span>, pv_up_out(:,:,ibl), pv_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PTHV_UP    &quot;</span>, pthv_up_out(:,:,ibl), pthv_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PW_UP      &quot;</span>, pw_up_out(:,:,ibl), pw_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PFRAC_UP   &quot;</span>, pfrac_up_out(:,:,ibl), pfrac_up(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;PEMF       &quot;</span>, pemf_out(:,:,ibl), pemf(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;ZDETR      &quot;</span>, zdetr_out(:,:,ibl), zdetr(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;    <span class="keyword">CALL </span><a class="code" href="interfacecompute__diff_1_1diff.html">diff</a> (<span class="stringliteral">&quot;ZENTR      &quot;</span>, zentr_out(:,:,ibl), zentr(:,:,ibl), llstat, llcheck, nproma, llcheckdiff, lldiff)</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;<span class="comment">!    CALL DIFF (&quot;IKLCL      &quot;, IKLCL_OUT      (:,IBL),   IKLCL      (:,IBL),   LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)</span></div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;<span class="comment">!    CALL DIFF (&quot;IKETL      &quot;, IKETL_OUT      (:,IBL),   IKETL      (:,IBL),   LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)</span></div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;<span class="comment">!    CALL DIFF (&quot;IKCTL      &quot;, IKCTL_OUT      (:,IBL),   IKCTL      (:,IBL),   LLSTAT, LLCHECK, NPROMA, LLCHECKDIFF, LLDIFF)</span></div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;<span class="keywordflow">  ENDDO</span></div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;<span class="keywordflow">ENDIF</span></div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160; </div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;<span class="keywordflow">IF</span> (llcheckdiff) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;  <span class="keywordflow">IF</span> (lldiff) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;    print*, <span class="stringliteral">&quot;THERE ARE DIFF SOMEWHERE&quot;</span></div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;  <span class="keywordflow">ELSE</span></div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;    print*, <span class="stringliteral">&quot;THERE IS NO DIFF AT ALL&quot;</span></div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;<span class="keywordflow">  ENDIF</span></div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;<span class="keywordflow">ENDIF</span></div>
 <div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160; </div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;<span class="keyword">CONTAINS</span></div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;stop</div>
 <div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160; </div>
-<div class="line"><a name="l00403"></a><span class="lineno"><a class="line" href="main__shallow_8F90.html#a4a3eab7d5e3dad514f23b367c3b9e7ed">  403</a></span>&#160;<span class="keyword">SUBROUTINE </span><a class="code" href="main__ice__adjust_8F90.html#a46854dd27e6a52148355e426ca26d41d">init_phyex</a>(KRR, KRRL, KRRI, KSV, PHYEX)</div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;<span class="keyword">CONTAINS</span></div>
 <div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160; </div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;<span class="keywordtype">USE </span><a class="code" href="namespacemodd__budget.html">modd_budget</a>, <span class="keywordtype">ONLY</span>: <a class="code" href="namespacemodd__budget.html#af15bfc58a4de25c3d3c3c8dcb4f017c0">tbuconf_associate</a>, <a class="code" href="namespacemodd__budget.html#a4ea4532bcfa769b5ed97e4d1e68a8113">nbudget_ri</a>, <a class="code" href="namespacemodd__budget.html#ab3640d48385fc524ecad2d781cea62a3">tbuconf</a>, <a class="code" href="namespacemodd__budget.html#ae9bc97d9f9cae22bcc504a8a124ac6ce">lbu_enable</a>, <a class="code" href="namespacemodd__budget.html#acf82c6bd421a88421df5595ac79bb542">lbudget_u</a>, <a class="code" href="namespacemodd__budget.html#a802431094bc6501f87019a6ab406e570">lbudget_v</a>, <a class="code" href="namespacemodd__budget.html#ab580c1b443696a91d5c37993340818a5">lbudget_w</a>, <a class="code" href="namespacemodd__budget.html#a7f6e57c23da9e9c572bd56a4c41a769d">lbudget_th</a>, &amp;</div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;                       <a class="code" href="namespacemodd__budget.html#aab39dbe23e4c4db8a691864039f710c6">lbudget_tke</a>, <a class="code" href="namespacemodd__budget.html#ab9a185119e7f9db785c376c6188ac6da">lbudget_rv</a>, <a class="code" href="namespacemodd__budget.html#a843d98437669b10b9df3f8aeafa1f5bf">lbudget_rc</a>, <a class="code" href="namespacemodd__budget.html#aca0427e804c90bcf5b4c780ee0a76e0d">lbudget_rr</a>, <a class="code" href="namespacemodd__budget.html#a794e754365ecc90ea94968f0401f3282">lbudget_ri</a>, <a class="code" href="namespacemodd__budget.html#ae35f637542b32d30cdc352198ecce4e7">lbudget_rs</a>, <a class="code" href="namespacemodd__budget.html#ad827c27888d19864e8a8d2b126cde909">lbudget_rg</a>, <a class="code" href="namespacemodd__budget.html#a1991401753344457bc4ef3bf63aa6c2a">lbudget_rh</a>, <a class="code" href="namespacemodd__budget.html#a4b1ca863f572ff257cb8ebb46f923fba">lbudget_sv</a></div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;<span class="keywordtype">USE </span><a class="code" href="namespacemodd__phyex.html">modd_phyex</a>, <span class="keywordtype">ONLY</span>: <a class="code" href="structmodd__phyex_1_1phyex__t.html">phyex_t</a></div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;<span class="keywordtype">USE </span><a class="code" href="namespacemodi__ini__phyex.html">modi_ini_phyex</a>, <span class="keywordtype">ONLY</span>: <a class="code" href="ini__phyex_8F90.html#a93cdcb5b8181ddbfd1c7cadbd747853f">ini_phyex</a></div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160; </div>
-<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;<span class="keywordtype">IMPLICIT NONE</span></div>
+<div class="line"><a name="l00405"></a><span class="lineno"><a class="line" href="main__shallow_8F90.html#a4a3eab7d5e3dad514f23b367c3b9e7ed">  405</a></span>&#160;<span class="keyword">SUBROUTINE </span><a class="code" href="main__ice__adjust_8F90.html#a46854dd27e6a52148355e426ca26d41d">init_phyex</a>(KRR, KRRL, KRRI, KSV, PHYEX)</div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160; </div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;<span class="keywordtype">USE </span><a class="code" href="namespacemodd__budget.html">modd_budget</a>, <span class="keywordtype">ONLY</span>: <a class="code" href="namespacemodd__budget.html#af15bfc58a4de25c3d3c3c8dcb4f017c0">tbuconf_associate</a>, <a class="code" href="namespacemodd__budget.html#a4ea4532bcfa769b5ed97e4d1e68a8113">nbudget_ri</a>, <a class="code" href="namespacemodd__budget.html#ab3640d48385fc524ecad2d781cea62a3">tbuconf</a>, <a class="code" href="namespacemodd__budget.html#ae9bc97d9f9cae22bcc504a8a124ac6ce">lbu_enable</a>, <a class="code" href="namespacemodd__budget.html#acf82c6bd421a88421df5595ac79bb542">lbudget_u</a>, <a class="code" href="namespacemodd__budget.html#a802431094bc6501f87019a6ab406e570">lbudget_v</a>, <a class="code" href="namespacemodd__budget.html#ab580c1b443696a91d5c37993340818a5">lbudget_w</a>, <a class="code" href="namespacemodd__budget.html#a7f6e57c23da9e9c572bd56a4c41a769d">lbudget_th</a>, &amp;</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;                       <a class="code" href="namespacemodd__budget.html#aab39dbe23e4c4db8a691864039f710c6">lbudget_tke</a>, <a class="code" href="namespacemodd__budget.html#ab9a185119e7f9db785c376c6188ac6da">lbudget_rv</a>, <a class="code" href="namespacemodd__budget.html#a843d98437669b10b9df3f8aeafa1f5bf">lbudget_rc</a>, <a class="code" href="namespacemodd__budget.html#aca0427e804c90bcf5b4c780ee0a76e0d">lbudget_rr</a>, <a class="code" href="namespacemodd__budget.html#a794e754365ecc90ea94968f0401f3282">lbudget_ri</a>, <a class="code" href="namespacemodd__budget.html#ae35f637542b32d30cdc352198ecce4e7">lbudget_rs</a>, <a class="code" href="namespacemodd__budget.html#ad827c27888d19864e8a8d2b126cde909">lbudget_rg</a>, <a class="code" href="namespacemodd__budget.html#a1991401753344457bc4ef3bf63aa6c2a">lbudget_rh</a>, <a class="code" href="namespacemodd__budget.html#a4b1ca863f572ff257cb8ebb46f923fba">lbudget_sv</a></div>
+<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;<span class="keywordtype">USE </span><a class="code" href="namespacemodd__phyex.html">modd_phyex</a>, <span class="keywordtype">ONLY</span>: <a class="code" href="structmodd__phyex_1_1phyex__t.html">phyex_t</a></div>
+<div class="line"><a name="l00410"></a><span class="lineno">  410</span>&#160;<span class="keywordtype">USE </span><a class="code" href="namespacemodi__ini__phyex.html">modi_ini_phyex</a>, <span class="keywordtype">ONLY</span>: <a class="code" href="ini__phyex_8F90.html#a93cdcb5b8181ddbfd1c7cadbd747853f">ini_phyex</a></div>
 <div class="line"><a name="l00411"></a><span class="lineno">  411</span>&#160; </div>
-<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;<span class="comment">! -----------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160;<span class="comment">!     DUMMY VARIABLES</span></div>
-<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;<span class="keywordtype">INTEGER</span>,          <span class="keywordtype">INTENT(IN)</span>  :: krr, krrl, krri, ksv</div>
-<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;<span class="keywordtype">TYPE</span>(<a class="code" href="structmodd__phyex_1_1phyex__t.html">phyex_t</a>),    <span class="keywordtype">INTENT(OUT)</span> :: PHYEX</div>
-<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160; </div>
-<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;<span class="comment">!-----------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160;<span class="comment">!    LOCAL VARIABLES</span></div>
-<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;<span class="keywordtype">INTEGER</span> :: IULOUT, JRR</div>
-<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;<span class="keywordtype">REAL</span> :: ZDZMIN</div>
-<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;<span class="keywordtype">CHARACTER(LEN=6)</span> :: CPROGRAM</div>
-<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;<span class="keywordtype">CHARACTER(LEN=4)</span> :: CMICRO, CSCONV, CTURB</div>
-<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;<span class="keywordtype">REAL</span>             :: PTSTEP</div>
-<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;<span class="comment">! -----------------------------------------------------------------------</span></div>
-<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160; </div>
-<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;iulout=20</div>
-<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160;cprogram=<span class="stringliteral">&#39;AROME&#39;</span></div>
-<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;zdzmin=999.</div>
-<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;cmicro=<span class="stringliteral">&#39;NONE&#39;</span></div>
-<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;csconv=<span class="stringliteral">&#39;EDKF&#39;</span></div>
-<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;cturb=<span class="stringliteral">&#39;TKEL&#39;</span></div>
-<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;ptstep = 25.0000000000000</div>
-<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;phyex%MISC%TPFILE%NLU=0</div>
-<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160; </div>
-<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;<span class="comment">!Default values</span></div>
-<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160;<span class="keyword">CALL </span><a class="code" href="ini__phyex_8F90.html#a93cdcb5b8181ddbfd1c7cadbd747853f">ini_phyex</a>(cprogram, phyex%MISC%TPFILE, .true., iulout, 0, 1, &amp;</div>
-<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;              &amp;ptstep, zdzmin, &amp;</div>
-<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;              &amp;cmicro, csconv, cturb, &amp;</div>
-<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;              &amp;lddefaultval=.true., ldreadnam=.false., ldcheck=.false., kprint=0, ldinit=.false., &amp;</div>
-<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;              &amp;phyex_out=phyex)</div>
-<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160; </div>
-<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;<span class="comment">!Control parameters</span></div>
-<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160;phyex%MISC%PTSTEP       = ptstep</div>
-<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;phyex%MISC%KSV_LGBEG = 0</div>
-<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;phyex%MISC%KSV_LGEND = 0</div>
-<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;phyex%MISC%ONOMIXLG=.false.</div>
-<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;phyex%MISC%KRR          = krr</div>
-<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;phyex%MISC%KRRL         = krrl</div>
-<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;phyex%MISC%KRRI         = krri</div>
-<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;phyex%MISC%KSV          = ksv</div>
-<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160; </div>
-<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;<span class="comment">!Emulate the namelist reading</span></div>
-<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160;phyex%NEBN%LSUBG_COND=.true.</div>
-<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;phyex%NEBN%CFRAC_ICE_SHALLOW_MF=<span class="stringliteral">&#39;S&#39;</span></div>
-<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160; </div>
-<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;<span class="comment">!Param initialisation</span></div>
-<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160;<span class="keyword">CALL </span><a class="code" href="ini__phyex_8F90.html#a93cdcb5b8181ddbfd1c7cadbd747853f">ini_phyex</a>(cprogram, phyex%MISC%TPFILE, .true., iulout, 0, 1, &amp;</div>
-<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;              &amp;ptstep, zdzmin, &amp;</div>
-<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;              &amp;cmicro, csconv, cturb, &amp;</div>
-<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;              &amp;lddefaultval=.false., ldreadnam=.false., ldcheck=.true., kprint=2, ldinit=.true., &amp;</div>
-<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;              &amp;phyex_in=phyex, phyex_out=phyex)</div>
-<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160; </div>
-<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;<span class="comment">!Budgets</span></div>
-<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160;<span class="keyword">CALL </span><a class="code" href="namespacemodd__budget.html#af15bfc58a4de25c3d3c3c8dcb4f017c0">tbuconf_associate</a></div>
-<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;phyex%MISC%NBUDGET=0</div>
-<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;<span class="keywordflow">DO</span> jrr=1, phyex%MISC%NBUDGET</div>
-<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;  phyex%MISC%YLBUDGET(jrr)%NBUDGET=jrr</div>
-<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;<span class="keywordflow">ENDDO</span></div>
-<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;<a class="code" href="namespacemodd__budget.html#ae9bc97d9f9cae22bcc504a8a124ac6ce">lbu_enable</a>=.false.                                                                                                       </div>
-<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;<a class="code" href="namespacemodd__budget.html#acf82c6bd421a88421df5595ac79bb542">lbudget_u</a>=.false.</div>
-<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;<a class="code" href="namespacemodd__budget.html#a802431094bc6501f87019a6ab406e570">lbudget_v</a>=.false.</div>
-<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;<a class="code" href="namespacemodd__budget.html#ab580c1b443696a91d5c37993340818a5">lbudget_w</a>=.false.</div>
-<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;<a class="code" href="namespacemodd__budget.html#a7f6e57c23da9e9c572bd56a4c41a769d">lbudget_th</a>=.false.</div>
-<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;<a class="code" href="namespacemodd__budget.html#aab39dbe23e4c4db8a691864039f710c6">lbudget_tke</a>=.false.</div>
-<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;<a class="code" href="namespacemodd__budget.html#ab9a185119e7f9db785c376c6188ac6da">lbudget_rv</a>=.false.</div>
-<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;<a class="code" href="namespacemodd__budget.html#a843d98437669b10b9df3f8aeafa1f5bf">lbudget_rc</a>=.false.</div>
-<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;<a class="code" href="namespacemodd__budget.html#aca0427e804c90bcf5b4c780ee0a76e0d">lbudget_rr</a>=.false.</div>
-<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;<a class="code" href="namespacemodd__budget.html#a794e754365ecc90ea94968f0401f3282">lbudget_ri</a>=.false.</div>
-<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;<a class="code" href="namespacemodd__budget.html#ae35f637542b32d30cdc352198ecce4e7">lbudget_rs</a>=.false.</div>
-<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;<a class="code" href="namespacemodd__budget.html#ad827c27888d19864e8a8d2b126cde909">lbudget_rg</a>=.false.</div>
-<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;<a class="code" href="namespacemodd__budget.html#a1991401753344457bc4ef3bf63aa6c2a">lbudget_rh</a>=.false.</div>
-<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;<a class="code" href="namespacemodd__budget.html#a4b1ca863f572ff257cb8ebb46f923fba">lbudget_sv</a>=.false.</div>
-<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;phyex%MISC%TBUCONF=<a class="code" href="namespacemodd__budget.html#ab3640d48385fc524ecad2d781cea62a3">tbuconf</a></div>
-<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160; </div>
-<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;<span class="keyword">END SUBROUTINE </span><a class="code" href="main__ice__adjust_8F90.html#a46854dd27e6a52148355e426ca26d41d">init_phyex</a></div>
+<div class="line"><a name="l00412"></a><span class="lineno">  412</span>&#160;<span class="keywordtype">IMPLICIT NONE</span></div>
+<div class="line"><a name="l00413"></a><span class="lineno">  413</span>&#160; </div>
+<div class="line"><a name="l00414"></a><span class="lineno">  414</span>&#160;<span class="comment">! -----------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00415"></a><span class="lineno">  415</span>&#160;<span class="comment">!     DUMMY VARIABLES</span></div>
+<div class="line"><a name="l00416"></a><span class="lineno">  416</span>&#160;<span class="keywordtype">INTEGER</span>,          <span class="keywordtype">INTENT(IN)</span>  :: krr, krrl, krri, ksv</div>
+<div class="line"><a name="l00417"></a><span class="lineno">  417</span>&#160;<span class="keywordtype">TYPE</span>(<a class="code" href="structmodd__phyex_1_1phyex__t.html">phyex_t</a>),    <span class="keywordtype">INTENT(OUT)</span> :: PHYEX</div>
+<div class="line"><a name="l00418"></a><span class="lineno">  418</span>&#160; </div>
+<div class="line"><a name="l00419"></a><span class="lineno">  419</span>&#160;<span class="comment">!-----------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00420"></a><span class="lineno">  420</span>&#160;<span class="comment">!    LOCAL VARIABLES</span></div>
+<div class="line"><a name="l00421"></a><span class="lineno">  421</span>&#160;<span class="keywordtype">INTEGER</span> :: IULOUT, JRR</div>
+<div class="line"><a name="l00422"></a><span class="lineno">  422</span>&#160;<span class="keywordtype">REAL</span> :: ZDZMIN</div>
+<div class="line"><a name="l00423"></a><span class="lineno">  423</span>&#160;<span class="keywordtype">CHARACTER(LEN=6)</span> :: CPROGRAM</div>
+<div class="line"><a name="l00424"></a><span class="lineno">  424</span>&#160;<span class="keywordtype">CHARACTER(LEN=4)</span> :: CMICRO, CSCONV, CTURB</div>
+<div class="line"><a name="l00425"></a><span class="lineno">  425</span>&#160;<span class="keywordtype">REAL</span>             :: PTSTEP</div>
+<div class="line"><a name="l00426"></a><span class="lineno">  426</span>&#160;<span class="comment">! -----------------------------------------------------------------------</span></div>
+<div class="line"><a name="l00427"></a><span class="lineno">  427</span>&#160; </div>
+<div class="line"><a name="l00428"></a><span class="lineno">  428</span>&#160;iulout=20</div>
+<div class="line"><a name="l00429"></a><span class="lineno">  429</span>&#160;cprogram=<span class="stringliteral">&#39;AROME&#39;</span></div>
+<div class="line"><a name="l00430"></a><span class="lineno">  430</span>&#160;zdzmin=999.</div>
+<div class="line"><a name="l00431"></a><span class="lineno">  431</span>&#160;cmicro=<span class="stringliteral">&#39;NONE&#39;</span></div>
+<div class="line"><a name="l00432"></a><span class="lineno">  432</span>&#160;csconv=<span class="stringliteral">&#39;EDKF&#39;</span></div>
+<div class="line"><a name="l00433"></a><span class="lineno">  433</span>&#160;cturb=<span class="stringliteral">&#39;TKEL&#39;</span></div>
+<div class="line"><a name="l00434"></a><span class="lineno">  434</span>&#160;ptstep = 25.0000000000000</div>
+<div class="line"><a name="l00435"></a><span class="lineno">  435</span>&#160;phyex%MISC%TPFILE%NLU=0</div>
+<div class="line"><a name="l00436"></a><span class="lineno">  436</span>&#160; </div>
+<div class="line"><a name="l00437"></a><span class="lineno">  437</span>&#160;<span class="comment">!Default values</span></div>
+<div class="line"><a name="l00438"></a><span class="lineno">  438</span>&#160;<span class="keyword">CALL </span><a class="code" href="ini__phyex_8F90.html#a93cdcb5b8181ddbfd1c7cadbd747853f">ini_phyex</a>(cprogram, phyex%MISC%TPFILE, .true., iulout, 0, 1, &amp;</div>
+<div class="line"><a name="l00439"></a><span class="lineno">  439</span>&#160;              &amp;ptstep, zdzmin, &amp;</div>
+<div class="line"><a name="l00440"></a><span class="lineno">  440</span>&#160;              &amp;cmicro, csconv, cturb, &amp;</div>
+<div class="line"><a name="l00441"></a><span class="lineno">  441</span>&#160;              &amp;lddefaultval=.true., ldreadnam=.false., ldcheck=.false., kprint=0, ldinit=.false., &amp;</div>
+<div class="line"><a name="l00442"></a><span class="lineno">  442</span>&#160;              &amp;phyex_out=phyex)</div>
+<div class="line"><a name="l00443"></a><span class="lineno">  443</span>&#160; </div>
+<div class="line"><a name="l00444"></a><span class="lineno">  444</span>&#160;<span class="comment">!Control parameters</span></div>
+<div class="line"><a name="l00445"></a><span class="lineno">  445</span>&#160;phyex%MISC%PTSTEP       = ptstep</div>
+<div class="line"><a name="l00446"></a><span class="lineno">  446</span>&#160;phyex%MISC%KSV_LGBEG = 0</div>
+<div class="line"><a name="l00447"></a><span class="lineno">  447</span>&#160;phyex%MISC%KSV_LGEND = 0</div>
+<div class="line"><a name="l00448"></a><span class="lineno">  448</span>&#160;phyex%MISC%ONOMIXLG=.false.</div>
+<div class="line"><a name="l00449"></a><span class="lineno">  449</span>&#160;phyex%MISC%KRR          = krr</div>
+<div class="line"><a name="l00450"></a><span class="lineno">  450</span>&#160;phyex%MISC%KRRL         = krrl</div>
+<div class="line"><a name="l00451"></a><span class="lineno">  451</span>&#160;phyex%MISC%KRRI         = krri</div>
+<div class="line"><a name="l00452"></a><span class="lineno">  452</span>&#160;phyex%MISC%KSV          = ksv</div>
+<div class="line"><a name="l00453"></a><span class="lineno">  453</span>&#160; </div>
+<div class="line"><a name="l00454"></a><span class="lineno">  454</span>&#160;<span class="comment">!Emulate the namelist reading</span></div>
+<div class="line"><a name="l00455"></a><span class="lineno">  455</span>&#160;phyex%NEBN%LSUBG_COND=.true.</div>
+<div class="line"><a name="l00456"></a><span class="lineno">  456</span>&#160;phyex%NEBN%CFRAC_ICE_SHALLOW_MF=<span class="stringliteral">&#39;S&#39;</span></div>
+<div class="line"><a name="l00457"></a><span class="lineno">  457</span>&#160; </div>
+<div class="line"><a name="l00458"></a><span class="lineno">  458</span>&#160;<span class="comment">!Param initialisation</span></div>
+<div class="line"><a name="l00459"></a><span class="lineno">  459</span>&#160;<span class="keyword">CALL </span><a class="code" href="ini__phyex_8F90.html#a93cdcb5b8181ddbfd1c7cadbd747853f">ini_phyex</a>(cprogram, phyex%MISC%TPFILE, .true., iulout, 0, 1, &amp;</div>
+<div class="line"><a name="l00460"></a><span class="lineno">  460</span>&#160;              &amp;ptstep, zdzmin, &amp;</div>
+<div class="line"><a name="l00461"></a><span class="lineno">  461</span>&#160;              &amp;cmicro, csconv, cturb, &amp;</div>
+<div class="line"><a name="l00462"></a><span class="lineno">  462</span>&#160;              &amp;lddefaultval=.false., ldreadnam=.false., ldcheck=.true., kprint=2, ldinit=.true., &amp;</div>
+<div class="line"><a name="l00463"></a><span class="lineno">  463</span>&#160;              &amp;phyex_in=phyex, phyex_out=phyex)</div>
+<div class="line"><a name="l00464"></a><span class="lineno">  464</span>&#160; </div>
+<div class="line"><a name="l00465"></a><span class="lineno">  465</span>&#160;<span class="comment">!Budgets</span></div>
+<div class="line"><a name="l00466"></a><span class="lineno">  466</span>&#160;<span class="keyword">CALL </span><a class="code" href="namespacemodd__budget.html#af15bfc58a4de25c3d3c3c8dcb4f017c0">tbuconf_associate</a></div>
+<div class="line"><a name="l00467"></a><span class="lineno">  467</span>&#160;phyex%MISC%NBUDGET=0</div>
+<div class="line"><a name="l00468"></a><span class="lineno">  468</span>&#160;<span class="keywordflow">DO</span> jrr=1, phyex%MISC%NBUDGET</div>
+<div class="line"><a name="l00469"></a><span class="lineno">  469</span>&#160;  phyex%MISC%YLBUDGET(jrr)%NBUDGET=jrr</div>
+<div class="line"><a name="l00470"></a><span class="lineno">  470</span>&#160;<span class="keywordflow">ENDDO</span></div>
+<div class="line"><a name="l00471"></a><span class="lineno">  471</span>&#160;<a class="code" href="namespacemodd__budget.html#ae9bc97d9f9cae22bcc504a8a124ac6ce">lbu_enable</a>=.false.                                                                                                       </div>
+<div class="line"><a name="l00472"></a><span class="lineno">  472</span>&#160;<a class="code" href="namespacemodd__budget.html#acf82c6bd421a88421df5595ac79bb542">lbudget_u</a>=.false.</div>
+<div class="line"><a name="l00473"></a><span class="lineno">  473</span>&#160;<a class="code" href="namespacemodd__budget.html#a802431094bc6501f87019a6ab406e570">lbudget_v</a>=.false.</div>
+<div class="line"><a name="l00474"></a><span class="lineno">  474</span>&#160;<a class="code" href="namespacemodd__budget.html#ab580c1b443696a91d5c37993340818a5">lbudget_w</a>=.false.</div>
+<div class="line"><a name="l00475"></a><span class="lineno">  475</span>&#160;<a class="code" href="namespacemodd__budget.html#a7f6e57c23da9e9c572bd56a4c41a769d">lbudget_th</a>=.false.</div>
+<div class="line"><a name="l00476"></a><span class="lineno">  476</span>&#160;<a class="code" href="namespacemodd__budget.html#aab39dbe23e4c4db8a691864039f710c6">lbudget_tke</a>=.false.</div>
+<div class="line"><a name="l00477"></a><span class="lineno">  477</span>&#160;<a class="code" href="namespacemodd__budget.html#ab9a185119e7f9db785c376c6188ac6da">lbudget_rv</a>=.false.</div>
+<div class="line"><a name="l00478"></a><span class="lineno">  478</span>&#160;<a class="code" href="namespacemodd__budget.html#a843d98437669b10b9df3f8aeafa1f5bf">lbudget_rc</a>=.false.</div>
+<div class="line"><a name="l00479"></a><span class="lineno">  479</span>&#160;<a class="code" href="namespacemodd__budget.html#aca0427e804c90bcf5b4c780ee0a76e0d">lbudget_rr</a>=.false.</div>
+<div class="line"><a name="l00480"></a><span class="lineno">  480</span>&#160;<a class="code" href="namespacemodd__budget.html#a794e754365ecc90ea94968f0401f3282">lbudget_ri</a>=.false.</div>
+<div class="line"><a name="l00481"></a><span class="lineno">  481</span>&#160;<a class="code" href="namespacemodd__budget.html#ae35f637542b32d30cdc352198ecce4e7">lbudget_rs</a>=.false.</div>
+<div class="line"><a name="l00482"></a><span class="lineno">  482</span>&#160;<a class="code" href="namespacemodd__budget.html#ad827c27888d19864e8a8d2b126cde909">lbudget_rg</a>=.false.</div>
+<div class="line"><a name="l00483"></a><span class="lineno">  483</span>&#160;<a class="code" href="namespacemodd__budget.html#a1991401753344457bc4ef3bf63aa6c2a">lbudget_rh</a>=.false.</div>
+<div class="line"><a name="l00484"></a><span class="lineno">  484</span>&#160;<a class="code" href="namespacemodd__budget.html#a4b1ca863f572ff257cb8ebb46f923fba">lbudget_sv</a>=.false.</div>
+<div class="line"><a name="l00485"></a><span class="lineno">  485</span>&#160;phyex%MISC%TBUCONF=<a class="code" href="namespacemodd__budget.html#ab3640d48385fc524ecad2d781cea62a3">tbuconf</a></div>
 <div class="line"><a name="l00486"></a><span class="lineno">  486</span>&#160; </div>
-<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;<span class="keyword">END PROGRAM</span></div>
+<div class="line"><a name="l00487"></a><span class="lineno">  487</span>&#160;<span class="keyword">END SUBROUTINE </span><a class="code" href="main__ice__adjust_8F90.html#a46854dd27e6a52148355e426ca26d41d">init_phyex</a></div>
 <div class="line"><a name="l00488"></a><span class="lineno">  488</span>&#160; </div>
+<div class="line"><a name="l00489"></a><span class="lineno">  489</span>&#160;<span class="keyword">END PROGRAM</span></div>
+<div class="line"><a name="l00490"></a><span class="lineno">  490</span>&#160; </div>
 <div class="ttc" id="aini__phyex_8F90_html_a93cdcb5b8181ddbfd1c7cadbd747853f"><div class="ttname"><a href="ini__phyex_8F90.html#a93cdcb5b8181ddbfd1c7cadbd747853f">ini_phyex</a></div><div class="ttdeci">subroutine ini_phyex(HPROGRAM, TPFILE, LDNEEDNAM, KLUOUT, KFROM, KTO, PTSTEP, PDZMIN, CMICRO, CSCONV, CTURB, LDCHANGEMODEL, LDDEFAULTVAL, LDREADNAM, LDCHECK, KPRINT, LDINIT, PHYEX_IN, PHYEX_OUT)</div><div class="ttdef"><b>Definition:</b> <a href="ini__phyex_8F90_source.html#l00001">ini_phyex.F90:6</a></div></div>
 <div class="ttc" id="ainterfacecompute__diff_1_1diff_html"><div class="ttname"><a href="interfacecompute__diff_1_1diff.html">compute_diff::diff</a></div><div class="ttdef"><b>Definition:</b> <a href="compute__diff_8F90_source.html#l00003">compute_diff.F90:3</a></div></div>
 <div class="ttc" id="ainterfacexrd__getoptions_1_1getoption_html"><div class="ttname"><a href="interfacexrd__getoptions_1_1getoption.html">xrd_getoptions::getoption</a></div><div class="ttdef"><b>Definition:</b> <a href="xrd__getoptions_8F90_source.html#l00018">xrd_getoptions.F90:18</a></div></div>
