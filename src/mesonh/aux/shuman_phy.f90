@@ -1397,9 +1397,110 @@ DO JI=1,JPHEXT
    END DO
 END DO
 !
+END SUBROUTINE DXM_PHY
 !-------------------------------------------------------------------------------
 !
-END SUBROUTINE DXM_PHY
+      SUBROUTINE DXM2D_PHY(D,PA,PDXM)
+!     ###############################
+!
+!!****  *DXM* -  Shuman operator : finite difference operator in x direction
+!!                                  for a variable at a mass localization
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a finite difference 
+!     along the x direction (I index) for a field PA localized at a mass
+!     point. The result is localized at a x-flux point (u point).
+!
+!!**  METHOD
+!!    ------ 
+!!        The result PDXM(i,:,:) is defined by (PA(i,:,:)-PA(i-1,:,:))
+!!    At i=1, PDXM(1,:,:) are replaced by the values of PDXM,
+!!    which are the right values in the x-cyclic case. 
+!!    
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      Module MODD_PARAMETERS: declaration of parameter variables
+!!        JPHEXT: define the number of marginal points out of the 
+!!        physical domain along the horizontal directions.
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)  
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!	V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    05/07/94 
+!!      Modification to include the periodic case 13/10/94 J.Stein 
+!!                   optimisation                 20/08/00 J. Escobar
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_PARAMETERS, ONLY: JPHEXT
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT),  INTENT(IN)                :: PA     ! variable at mass
+                                                            ! localization
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PDXM   ! result at flux
+                                                            ! side
+!
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+!
+INTEGER :: JI             ! Loop index in x direction
+INTEGER :: IIU            ! upper bound in x direction of PA 
+!             
+INTEGER :: JJK,IJU
+INTEGER :: JIJK,JIJKOR,JIJKEND
+!            
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF DXM
+!              ------------------
+!
+IIU = SIZE(PA,1)
+IJU = SIZE(PA,2)
+!
+JIJKOR  = 1 + 1
+JIJKEND = IIU*IJU
+!
+!CDIR NODEP
+!OCL NOVREC
+DO JIJK=JIJKOR , JIJKEND
+   PDXM(JIJK,1) = PA(JIJK,1) - PA(JIJK-1,1) 
+END DO
+!
+!CDIR NODEP
+!OCL NOVREC
+DO JI=1,JPHEXT
+   DO JJK=1,IJU
+      PDXM(JI,JJK) = PDXM(IIU-2*JPHEXT+JI,JJK) ! for reprod JPHEXT <> 1
+   END DO
+END DO
+!
+!-------------------------------------------------------------------------------
+!
+END SUBROUTINE DXM2D_PHY
 !
 !     ###############################
       SUBROUTINE DYM_PHY(D,PA,PDYM)
@@ -1503,6 +1604,107 @@ END DO
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE DYM_PHY
+!     ###############################
+      SUBROUTINE DYM2D_PHY(D,PA,PDYM)
+!     ###############################
+!
+!!****  *DYM* -  Shuman operator : finite difference operator in y direction
+!!                                  for a variable at a mass localization
+!!
+!!    PURPOSE
+!!    -------
+!       The purpose of this function  is to compute a finite difference 
+!     along the y direction (J index) for a field PA localized at a mass
+!     point. The result is localized at a y-flux point (v point).
+!
+!!**  METHOD
+!!    ------ 
+!!        The result PDYM(:,j,:) is defined by (PA(:,j,:)-PA(:,j-1,:))
+!!    At j=1, PDYM(:,1,:) are replaced by the values of PDYM,
+!!    which are the right values in the y-cyclic case. 
+!!    
+!!
+!!    EXTERNAL
+!!    --------
+!!      NONE
+!!
+!!    IMPLICIT ARGUMENTS
+!!    ------------------
+!!      Module MODD_PARAMETERS: declaration of parameter variables
+!!        JPHEXT: define the number of marginal points out of the 
+!!        physical domain along the horizontal directions.
+!!
+!!    REFERENCE
+!!    ---------
+!!      Book2 of documentation of Meso-NH (SHUMAN operators)
+!!      Technical specifications Report of The Meso-NH (chapters 3)  
+!!
+!!
+!!    AUTHOR
+!!    ------
+!!	V. Ducrocq       * Meteo France *
+!!
+!!    MODIFICATIONS
+!!    -------------
+!!      Original    05/07/94 
+!!      Modification to include the periodic case 13/10/94 J.Stein 
+!!                   optimisation                 20/08/00 J. Escobar
+!!      correction of in halo/pseudo-cyclic calculation for JPHEXT<> 1 
+!!      J.Escobar : 15/09/2015 : WENO5 & JPHEXT <> 1 
+!-------------------------------------------------------------------------------
+!
+!*       0.    DECLARATIONS
+!              ------------
+!
+USE MODD_PARAMETERS, ONLY: JPHEXT
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
+!
+IMPLICIT NONE
+!
+!*       0.1   Declarations of argument and result
+!              ------------------------------------
+!
+TYPE(DIMPHYEX_t),       INTENT(IN)  :: D
+REAL, DIMENSION(D%NIT,D%NJT),  INTENT(IN)                :: PA     ! variable at mass
+                                                            ! localization
+REAL, DIMENSION(D%NIT,D%NJT), INTENT(OUT) :: PDYM   ! result at flux
+                                                            ! side
+!
+!*       0.2   Declarations of local variables
+!              -------------------------------
+!
+INTEGER :: JJ             ! Loop index in y direction
+INTEGER :: IJU            ! Size of the array in the y direction
+!
+!    
+INTEGER :: IIU,IKU
+INTEGER :: JIJK,JIJKOR,JIJKEND
+!     
+!-------------------------------------------------------------------------------
+!
+!*       1.    DEFINITION OF DYM
+!              ------------------
+!
+IIU=SIZE(PA,1)
+IJU=SIZE(PA,2)
+!
+JIJKOR  = 1 + IIU
+JIJKEND = IIU*IJU
+!
+!CDIR NODEP
+!OCL NOVREC
+DO JIJK=JIJKOR , JIJKEND
+   PDYM(JIJK,1)           = PA(JIJK,1)  -  PA(JIJK-IIU,1) 
+END DO
+!
+DO JJ=1,JPHEXT
+   PDYM(:,JJ) = PDYM(:,IJU-2*JPHEXT+JJ) ! for reprod JPHEXT <> 1
+END DO
+!
+!
+!-------------------------------------------------------------------------------
+!
+END SUBROUTINE DYM2D_PHY
 !     ###############################
       SUBROUTINE DYF_PHY(D,PA,PDYF)
 !     ###############################
