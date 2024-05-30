@@ -323,13 +323,17 @@ IIJE=D%NIJE
 IIJB=D%NIJB          
 !
 IF (TURBN%LHARAT) THEN
+!$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZKEFF(:,:) =  PLM(:,:) * SQRT(PTKEM(:,:))
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
 ELSE
+!$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZWORK1(:,:) = PLM(:,:)*SQRT(PTKEM(:,:))
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
   CALL MZM_PHY(D,ZWORK1,ZKEFF)
 ENDIF
 !
@@ -351,17 +355,25 @@ DO JSV=1,KSV
 !
 ! Preparation of the arguments for TRIDIAG
     IF (TURBN%LHARAT) THEN
+!$acc kernels
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)  
       ZA(:,:) = -PTSTEP * ZKEFF(:,:) * ZMZMRHODJ(:,:) &
                                    / PDZZ(:,:)**2
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
     ELSE
+!$acc kernels
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ZA(:,:) = -PTSTEP*ZCSV*PPSI_SV(:,:,JSV) *   &
            ZKEFF(:,:) * ZMZMRHODJ(:,:) / PDZZ(:,:)**2
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
     ENDIF
+!$acc kernels
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT) 
   ZSOURCE(:,:) = 0.
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT) 
+!$acc end kernels
 !
 ! Compute the sources for the JSVth scalar variable
 
@@ -370,68 +382,73 @@ DO JSV=1,KSV
 !* in 1DIM case, the part of energy released in horizontal flux
 ! is taken into account in the vertical part
   IF (TURBN%CTURBDIM=='3DIM') THEN
+!$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZSOURCE(:,IKB) = (TURBN%XIMPL*PSFSVP(:,JSV) + PEXPL*PSFSVM(:,JSV)) / &
                        PDZZ(:,IKB) * PDIRCOSZW(:)                    &
                      * 0.5 * (1. + PRHODJ(:,IKA) / PRHODJ(:,IKB))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+!$acc end kernels
   ELSE
+!$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZSOURCE(:,IKB) = (TURBN%XIMPL*PSFSVP(:,JSV) + PEXPL*PSFSVM(:,JSV)) / &
                        PDZZ(:,IKB) / PDIRCOSZW(:)                    &
                      * 0.5 * (1. + PRHODJ(:,IKA) / PRHODJ(:,IKB))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+!$acc end kernels
   END IF
+!$acc kernels 
   ZSOURCE(:,IKTB+1:IKTE-1) = 0.
   ZSOURCE(:,IKE) = 0.
+!$acc end kernels
 !
 ! Obtention of the split JSV scalar variable at t+ deltat
   CALL TRIDIAG(D,PSVM(:,:,JSV),ZA,PTSTEP,PEXPL,TURBN%XIMPL,PRHODJ,ZSOURCE,ZRES)
 !
 !  Compute the equivalent tendency for the JSV scalar variable
+!$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   PRSVS(:,:,JSV)= PRSVS(:,:,JSV)+    &
                     PRHODJ(:,:)*(ZRES(:,:)-PSVM(:,:,JSV))/PTSTEP
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
 !
   IF ( (TURBN%LTURB_FLX .AND. TPFILE%LOPENED) .OR. TLES%LLES_CALL .OR. OFLYER ) THEN
     ! Diagnostic of the cartesian vertical flux
     !
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZWORK1(:,:) = PLM(:,:)*SQRT(PTKEM(:,:))
-    ZWORK2(:,:) = TURBN%XIMPL*ZRES(:,:) + PEXPL*PSVM(:,:,JSV)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    CALL MZM_PHY(D,ZWORK1,ZWORK3)
-    CALL DZM_PHY(D,ZWORK2,ZWORK4)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZFLXZ(:,:) = -ZCSV * PPSI_SV(:,:,JSV) * ZWORK3(:,:) & 
-                                    / PDZZ(:,:) * &
-                  ZWORK4(:,:)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+     ZFLXZ(:,:) = -ZCSV * PPSI_SV(:,:,JSV) * MZM(PLM*SQRT(PTKEM)) / PDZZ * &
+                  DZM( TURBN%XIMPL*ZRES(:,:) + PEXPL*PSVM(:,:,JSV) )
     ! surface flux
     !* in 3DIM case, a part of the flux goes vertically, and another goes horizontally
     ! (in presence of slopes)
     !* in 1DIM case, the part of energy released in horizontal flux
     ! is taken into account in the vertical part
     IF (TURBN%CTURBDIM=='3DIM') THEN
+!$acc kernels
       !$mnh_expand_array(JIJ=IIJB:IIJE)
       ZFLXZ(:,IKB) = (TURBN%XIMPL*PSFSVP(:,JSV) + PEXPL*PSFSVM(:,JSV))  &
                        * PDIRCOSZW(:)  
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+!$acc end kernels
     ELSE
+!$acc kernels
       !$mnh_expand_array(JIJ=IIJB:IIJE)
       ZFLXZ(:,IKB) = (TURBN%XIMPL*PSFSVP(:,JSV) + PEXPL*PSFSVM(:,JSV))  &
                        / PDIRCOSZW(:)
      !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+!$acc end kernels
     END IF
     ! extrapolates the flux under the ground so that the vertical average with
     ! the IKB flux gives the ground value
     !
+!$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE)
     ZFLXZ(:,IKA) = ZFLXZ(:,IKB)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-
+!$acc end kernels
     IF ( OFLYER ) THEN
+!$acc kernels
       DO JK=IKTB+1,IKTE-1
         !$mnh_expand_array(JIJ=IIJB:IIJE)
         PWSV(:,JK,JSV)=0.5*(ZFLXZ(:,JK)+ZFLXZ(:,JK+IKL))
@@ -441,6 +458,7 @@ DO JSV=1,KSV
       PWSV(:,IKB,JSV)=0.5*(ZFLXZ(:,IKB)+ZFLXZ(:,IKB+IKL))
       PWSV(:,IKE,JSV)=PWSV(:,IKE-IKL,JSV)
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+!$acc end kernels
     END IF
   END IF
   !
@@ -459,6 +477,7 @@ DO JSV=1,KSV
       NDIMS      = 3,                            &
       LTIMEDEP   = .TRUE.                        )
     !
+!$acc update self(ZFLXZ)    
     CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZFLXZ)
   END IF
   !
@@ -466,35 +485,13 @@ DO JSV=1,KSV
   !
   IF (TLES%LLES_CALL) THEN
     CALL SECOND_MNH(ZTIME1)
-    !
-    CALL MZF_PHY(D,ZFLXZ,ZWORK1)
-    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK1, TLES%X_LES_SUBGRID_WSv(:,:,:,JSV) )
-    !
-    CALL GZ_W_M_PHY(D,PWM,PDZZ,ZWORK2)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZWORK3(:,:) = ZWORK2(:,:) * ZWORK1(:,:)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK3, TLES%X_LES_RES_ddxa_W_SBG_UaSv(:,:,:,JSV) )
-    !
-    CALL GZ_M_W_PHY(D,PSVM(:,:,JSV),PDZZ,ZWORK1)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZWORK2(:,:) = ZWORK1(:,:) * ZFLXZ(:,:)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    CALL MZF_PHY(D,ZWORK2,ZWORK3)
-    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK3, TLES%X_LES_RES_ddxa_Sv_SBG_UaSv(:,:,:,JSV) )
-    !
-    CALL MZF_PHY(D,ZFLXZ,ZWORK1)
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZWORK2(:,:) = -ZCSVP*SQRT(PTKEM(:,:))/PLM(:,:)*ZWORK1(:,:)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2, TLES%X_LES_SUBGRID_SvPz(:,:,:,JSV) )
-    !
-    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    ZWORK1(:,:) = PWM(:,:)*ZFLXZ(:,:)
-    !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-    CALL MZF_PHY(D,ZWORK1,ZWORK2)
-    CALL LES_MEAN_SUBGRID_PHY(D,TLES,ZWORK2, TLES%X_LES_RES_W_SBG_WSv(:,:,:,JSV) )
-    !
+    CALL LES_MEAN_SUBGRID_PHY(D, TLES, MZF(ZFLXZ), TLES%X_LES_SUBGRID_WSv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID_PHY(D, TLES, GZ_W_M(PWM,PDZZ)*MZF(ZFLXZ), &
+                           TLES%X_LES_RES_ddxa_W_SBG_UaSv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID_PHY(D, TLES, MZF(GZ_M_W(PSVM(:,:,JSV),PDZZ)*ZFLXZ), &
+                           TLES%X_LES_RES_ddxa_Sv_SBG_UaSv(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID_PHY(D, TLES, -ZCSVP*SQRT(PTKEM)/PLM*MZF(ZFLXZ), TLES%X_LES_SUBGRID_SvPz(:,:,:,JSV) )
+    CALL LES_MEAN_SUBGRID_PHY(D, TLES, MZF(PWM*ZFLXZ), TLES%X_LES_RES_W_SBG_WSv(:,:,:,JSV) )
     CALL SECOND_MNH(ZTIME2)
     TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
   END IF
