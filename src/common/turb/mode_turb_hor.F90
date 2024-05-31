@@ -264,7 +264,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !*       6.   < V' R'np >
 !*       7.   < V' TPV' >
 !
-      CALL      TURB_HOR_THERMO_FLUX(TURBN,TLES,KSPLT, KRR, KRRL, KRRI,&
+      CALL      TURB_HOR_THERMO_FLUX(D,TURBN,TLES,KSPLT, KRR, KRRL, KRRI,&
                       TPFILE,OFLAT, O2D,                             &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
