@@ -372,7 +372,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
       CALL      TURB_HOR_SV_CORR(D,CST,CSTURB,TURBN,TLES,            &
                       KSV,KSV_LGBEG,KSV_LGEND,                       &
                       KRR,KRRL,KRRI,OOCEAN,OCOMPUTE_SRC,OBLOWSNOW,   &
-                      ONOMIXLG,O2D,                                  &
+                      ONOMIXLG,O2D,OFLAT,                            &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
                       PLM,PLEPS,PTKEM,PTHVREF,                       &
                       PTHLM,PRM,                                     &
