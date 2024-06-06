@@ -322,7 +322,7 @@ REAL, DIMENSION(D%NIJT,D%NKT)  ::  &
 INTEGER             :: IIJE,IIJB,IKB,IKE,IKA,IKU ! index value for the mass points of the domain 
 INTEGER             :: IKT          ! array size in k direction
 INTEGER             :: IKTB,IKTE    ! start, end of k loops in physical domain
-INTEGER             :: JSV,JIJ,JK          ! scalar loop counter
+INTEGER             :: JSV,JIJ,JK,JI,JJ          ! scalar loop counter
 INTEGER             :: IKL
 REAL, DIMENSION(D%NIJT)   :: ZCOEFFLXU, &
                              ZCOEFFLXV, ZUSLOPEM, ZVSLOPEM, &
