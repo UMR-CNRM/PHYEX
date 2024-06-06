@@ -381,7 +381,7 @@ IF (KSPLIT>1) THEN
 !
 ! horizontal transport of Tke
 !
-  CALL   TURB_HOR_TKE(JSPLT,TLES,OFLAT,O2D,                          &
+  CALL   TURB_HOR_TKE(D, JSPLT,TLES,OFLAT,O2D,                       &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
                       ZINV_PDXX, ZINV_PDYY, ZINV_PDZZ, ZMZM_PRHODJ,  &
                       ZK, PRHODJ, ZTKEM,                             &
@@ -547,7 +547,7 @@ ELSE
 ! horizontal transport of Tke
 !
 
-  CALL   TURB_HOR_TKE(1,TLES,OFLAT,O2D,                              &
+  CALL   TURB_HOR_TKE(D, 1,TLES,OFLAT,O2D,                           &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,                      &
                       ZINV_PDXX, ZINV_PDYY, ZINV_PDZZ, ZMZM_PRHODJ,  &
                       ZK, PRHODJ, PTKEM,                             &

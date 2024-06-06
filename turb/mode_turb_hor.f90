@@ -343,7 +343,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !
 !*      14.   < V'W'>
 !
-      CALL      TURB_HOR_VW(TURBN,TLES,KSPLT,                        &
+      CALL      TURB_HOR_VW(D,TURBN,TLES,KSPLT,                      &
                       KRR,KSV,OFLAT,O2D,                             &
                       TPFILE,                                        &
                       PK,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,            &

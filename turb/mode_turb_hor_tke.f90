@@ -6,7 +6,7 @@
 MODULE MODE_TURB_HOR_TKE
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE TURB_HOR_TKE(KSPLT,TLES,OFLAT,O2D,                  &
+      SUBROUTINE TURB_HOR_TKE(D,KSPLT,TLES,OFLAT,O2D,                &
                       PDXX, PDYY, PDZZ,PDZX,PDZY,                    &
                       PINV_PDXX, PINV_PDYY, PINV_PDZZ, PMZM_PRHODJ,  &
                       PK, PRHODJ, PTKEM,                             &
@@ -43,18 +43,22 @@ CONTAINS
 !!      Original       Aug 29, 1994
 !!                     Mar 07  2001 (V. Masson and J. Stein) new routine
 !!                     Nov 06, 2002 (V. Masson) LES budgets
+!!                     04/2016 (M.Moge) Use openACC directives to port the TURB part of Meso-NH on GPU
 !! --------------------------------------------------------------------------
 !       
 !*      0. DECLARATIONS
 !          ------------
 !
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_CST
 USE MODD_CTURB
 USE MODD_PARAMETERS
 USE MODD_LES, ONLY: TLES_t
 !
 !
-USE MODI_SHUMAN 
+USE MODI_SHUMAN
+USE MODE_SHUMAN_PHY
+USE MODE_GRADIENT_M_PHY, ONLY: GX_M_U_PHY, GY_M_V_PHY
 USE MODI_GRADIENT_M
 USE MODI_LES_MEAN_SUBGRID
 !
@@ -66,35 +70,36 @@ IMPLICIT NONE
 !*       0.1  declaration of arguments
 !
 !
+TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(TLES_t),             INTENT(INOUT) :: TLES          ! modd_les structure
 INTEGER,                  INTENT(IN) :: KSPLT        ! current split index
 LOGICAL,                  INTENT(IN) ::  OFLAT       ! Logical for zero ororography
 LOGICAL,                  INTENT(IN) ::  O2D         ! Logical for 2D model version (modd_conf)
-REAL, DIMENSION(:,:,:),   INTENT(IN) :: PDXX, PDYY, PDZZ, PDZX, PDZY 
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) :: PDXX, PDYY, PDZZ, PDZX, PDZY 
                                                      ! Metric coefficients
-REAL, DIMENSION(:,:,:),   INTENT(IN) :: PK           ! Turbulent diffusion doef.
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) :: PK           ! Turbulent diffusion doef.
                                                      ! PK = PLM * SQRT(PTKEM)
-REAL, DIMENSION(:,:,:),   INTENT(IN) :: PINV_PDXX    ! 1./PDXX
-REAL, DIMENSION(:,:,:),   INTENT(IN) :: PINV_PDYY    ! 1./PDYY
-REAL, DIMENSION(:,:,:),   INTENT(IN) :: PINV_PDZZ    ! 1./PDZZ
-REAL, DIMENSION(:,:,:),   INTENT(IN) :: PMZM_PRHODJ  ! MZM(PRHODJ)
-REAL, DIMENSION(:,:,:),   INTENT(IN) :: PRHODJ       ! density * grid volume
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) :: PINV_PDXX    ! 1./PDXX
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) :: PINV_PDYY    ! 1./PDYY
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) :: PINV_PDZZ    ! 1./PDZZ
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) :: PMZM_PRHODJ  ! MZM(PRHODJ)
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN) :: PRHODJ       ! density * grid volume
 !
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    ::  PTKEM    ! TKE at time t- dt
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   ::  PTRH     ! horizontal transport of Tke
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(IN)    ::  PTKEM    ! TKE at time t- dt
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT),   INTENT(OUT)   ::  PTRH     ! horizontal transport of Tke
 !
 !
 !
 !*       0.2  declaration of local variables
 !
-INTEGER :: IKB, IKU
+INTEGER :: IKB, IKU, IIT, IJT, IKT, JI, JJ, JK
 !
-REAL, DIMENSION(SIZE(PDZZ,1),SIZE(PDZZ,2),1+JPVEXT:3+JPVEXT) :: ZCOEFF 
+REAL, DIMENSION(D%NIT,D%NJT,1+JPVEXT:3+JPVEXT) :: ZCOEFF 
                                     ! coefficients for the uncentred gradient 
                                     ! computation near the ground
 !
-REAL, DIMENSION(SIZE(PTKEM,1),SIZE(PTKEM,2),SIZE(PTKEM,3)):: ZFLX
+REAL, DIMENSION(D%NIT,D%NJT,D%NKT):: ZFLX
 !
 REAL :: ZTIME1, ZTIME2
 ! ---------------------------------------------------------------------------
@@ -104,16 +109,23 @@ REAL :: ZTIME1, ZTIME2
 !
 IKB = 1.+JPVEXT
 IKU = SIZE(PTKEM,3)
+IIT=D%NIT
+IJT=D%NJT
+IKT=D%NKT 
 !
 !  compute the coefficients for the uncentred gradient computation near the 
 !  ground
 !
+!$acc kernels
+!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
 ZCOEFF(:,:,IKB+2)= - PDZZ(:,:,IKB+1) /      &
      ( (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) * PDZZ(:,:,IKB+2) )
 ZCOEFF(:,:,IKB+1)=   (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) /      &
      ( PDZZ(:,:,IKB+1) * PDZZ(:,:,IKB+2) )
 ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2)+2.*PDZZ(:,:,IKB+1)) /      &
      ( (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) * PDZZ(:,:,IKB+1) )
+!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$acc end kernels
 !
 !--------------------------------------------------------------------
 !
@@ -121,27 +133,35 @@ ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2)+2.*PDZZ(:,:,IKB+1)) /      &
 !             -------------------------------
 !
 !
-ZFLX = -XCET * MXM(PK) * GX_M_U(1,IKU,1,PTKEM,PDXX,PDZZ,PDZX) ! < u'e >
+ZFLX = -XCET * MXM(PK) * GX_M_U(OFLAT,PTKEM,PDXX,PDZZ,PDZX) ! < u'e >
 !
 ! special case near the ground ( uncentred gradient )
 !
+!$acc kernels
+!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
 ZFLX(:,:,IKB) =  ZCOEFF(:,:,IKB+2)*PTKEM(:,:,IKB+2)                     &
                + ZCOEFF(:,:,IKB+1)*PTKEM(:,:,IKB+1)                     &
                + ZCOEFF(:,:,IKB  )*PTKEM(:,:,IKB  )     
+!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$acc end kernels
 !
-ZFLX(:,:,IKB:IKB) =                                                      &
-   - XCET * MXM( PK(:,:,IKB:IKB) )                           *  (        &
-       DXM ( PTKEM(:,:,IKB:IKB) ) * PINV_PDXX(:,:,IKB:IKB)               &
-      -MXM ( ZFLX (:,:,IKB:IKB) ) * PINV_PDXX(:,:,IKB:IKB)               &
-       * 0.5 * ( PDZX(:,:,IKB+1:IKB+1) + PDZX(:,:,IKB:IKB) )     ) 
+ZFLX(:,:,IKB) =                                                      &
+   - XCET * MXM( PK(:,:,IKB) )                           *  (        &
+       DXM ( PTKEM(:,:,IKB) ) * PINV_PDXX(:,:,IKB)               &
+      -MXM ( ZFLX (:,:,IKB) ) * PINV_PDXX(:,:,IKB)               &
+       * 0.5 * ( PDZX(:,:,IKB+1) + PDZX(:,:,IKB) )     ) 
 !
 ! extrapolate the fluxes to obtain < u'e > = 0 at the ground
 !
+!$acc kernels
+!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
 ZFLX(:,:,IKB-1) = - ZFLX(:,:,IKB)
 !
 ! let the same flux at IKU-1 and IKU level
 !
 ZFLX(:,:,IKU) =  ZFLX(:,:,IKU-1)
+!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$acc end kernels 
 !
 IF (.NOT. OFLAT) THEN
   PTRH =-(  DXF( MXM(PRHODJ) * ZFLX                             * PINV_PDXX)&
@@ -166,27 +186,35 @@ END IF
 !             -------------------------------
 !
 IF (.NOT. O2D) THEN
-  ZFLX =-XCET * MYM(PK) * GY_M_V(1,IKU,1,PTKEM,PDYY,PDZZ,PDZY) ! < v'e >
+  ZFLX =-XCET * MYM(PK) * GY_M_V(OFLAT,PTKEM,PDYY,PDZZ,PDZY) ! < v'e >
 !
 ! special case near the ground ( uncentred gradient )
 !
+!$acc kernels
+!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
   ZFLX(:,:,IKB) =  ZCOEFF(:,:,IKB+2)*PTKEM(:,:,IKB+2)                     &
                  + ZCOEFF(:,:,IKB+1)*PTKEM(:,:,IKB+1)                     &
                  + ZCOEFF(:,:,IKB  )*PTKEM(:,:,IKB  )     
 !
-  ZFLX(:,:,IKB:IKB) =                                                      &
-     - XCET * MYM( PK(:,:,IKB:IKB) )                        *  (           &
-       DYM ( PTKEM(:,:,IKB:IKB) ) * PINV_PDYY(:,:,IKB:IKB)                 &
-     - MYM ( ZFLX (:,:,IKB:IKB) ) * PINV_PDYY(:,:,IKB:IKB)                 &
-         * 0.5 * ( PDZY(:,:,IKB+1:IKB+1) + PDZY(:,:,IKB:IKB) )  )
+!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$acc end kernels
+  ZFLX(:,:,IKB) =                                                      &
+     - XCET * MYM( PK(:,:,IKB) )                        *  (           &
+       DYM ( PTKEM(:,:,IKB) ) * PINV_PDYY(:,:,IKB)                 &
+     - MYM ( ZFLX (:,:,IKB) ) * PINV_PDYY(:,:,IKB)                 &
+         * 0.5 * ( PDZY(:,:,IKB+1) + PDZY(:,:,IKB) )  )
 !
 !    extrapolate the fluxes to obtain < v'e > = 0 at the ground
 !
+!$acc kernels
+!$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
   ZFLX(:,:,IKB-1) = - ZFLX(:,:,IKB)
 !
 !   let the same flux at IKU-1 and IKU level
 !
   ZFLX(:,:,IKU) =  ZFLX(:,:,IKU-1)
+!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$acc end kernels
 !
 ! complete the explicit turbulent transport
 !
