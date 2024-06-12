@@ -72,7 +72,99 @@ As described in [COMPILATION](#compilation).
 
 ## Python bindings
 
-**TODO** This section (and code) must be written. Key ideas are:
+The package includes a python binding to call the main subroutines of PHYEX.
+Using the default gfortran compiler, the needed compilation is achieved with:
 
-  - ctypesforfortran
-  - example
+- . PHYEX/tools/env.sh
+- cd PHYEX/build/with\_fcm
+- ./make\_fcm.sh
+
+This builds a shared library and writes a python wrapper.
+This script needs the ctypesForFortran package (available on PyPI).
+And it can be used like in this example for ice\_adjust (the sourcing of PHYEX/tools/env.sh is also needed at this step):
+
+```
+#!/usr/bin/env python3
+
+"""
+Offline python binding example, valid with a June 2024 version of PHYEX
+"""
+
+import tempfile
+from pyphyex import PYICE_ADJUST, PYINI_PHYEX, close
+import numpy
+from matplotlib import pyplot as plt
+import f90nml
+
+#Config
+NIT, NKT = 150, 100
+VSIGQSAT = 0.02
+PSIGS = numpy.ones((NKT, NIT)) * 0.0005
+PPABST = numpy.ones((NKT, NIT)) * 101325.
+PRC = numpy.zeros((NKT, NIT))
+PRI = numpy.zeros((NKT, NIT))
+PRV = numpy.linspace(0.003, 0.01, num=NKT)
+PTH = numpy.linspace(280., 295., num=NIT)
+PTH, PRV = numpy.meshgrid(PTH, PRV)
+
+#Other values
+PTSTEP = 60.
+PROGRAM = 'AROME'
+HBUNAME = 'DEPO'
+NKL, NVEXT, KRR = 1, 0, 6
+PSIGQSAT = numpy.ones((NIT,)) * VSIGQSAT
+PRHODJ = numpy.ones((NKT, NIT))
+PEXNREF = numpy.ones((NKT, NIT))
+PEXN = numpy.ones((NKT, NIT))
+PRHODREF = numpy.ones((NKT, NIT))
+LMFCONV = False
+PMFCONV = numpy.zeros((NKT, NIT))
+PZZ = numpy.zeros((NKT, NIT))
+PCF_MF = numpy.zeros((NKT, NIT))
+PRC_MF = numpy.zeros((NKT, NIT))
+PRI_MF = numpy.zeros((NKT, NIT))
+OCOMPUTE_SRC = True
+PRR = numpy.zeros((NKT, NIT))
+PRS = numpy.zeros((NKT, NIT))
+PRG = numpy.zeros((NKT, NIT))
+KBUDGETS = 0
+
+with tempfile.NamedTemporaryFile() as f:
+    nml = f90nml.read(f.name)
+    nml['NAM_NEBn'] = {}
+    nml['NAM_NEBn']['CCONDENS'] = 'CB02'
+    nml['NAM_NEBn']['LSUBG_COND'] = True
+    nml['NAM_NEBn']['LSIGMAS'] = True
+    nml.write(f.name, force=True)
+    PYINI_PHYEX(PROGRAM, 33, f.name, False, 20, 0, 1, PTSTEP, 20., 'ICE3', 'EDKF', 'TKEL',
+                LDCHANGEMODEL=True, LDDEFAULTVAL=True, LDREADNAM=True, LDCHECK=True,
+                KPRINT=0, LDINIT=True)
+PRVS = PRV / PTSTEP
+PRCS = PRC / PTSTEP
+PRIS = PRI / PTSTEP
+PTHS = PTH / PTSTEP
+result = PYICE_ADJUST(NIT, NKT, NKL, NVEXT, KRR, HBUNAME, PTSTEP, PSIGQSAT, PRHODJ,
+                      PEXNREF, PRHODREF, PSIGS, LMFCONV, PMFCONV, PPABST, PZZ, PEXN,
+                      PCF_MF, PRC_MF, PRI_MF, PRV, PRC, PRVS, PRCS, PTH, PTHS,
+                      OCOMPUTE_SRC, PRR, PRI, PRIS, PRS, PRG, KBUDGETS)
+(_, _, _, _, _, PRVS, PRCS, PTHS, PSRCS, PCLDFR, PRIS,
+ POUT_RV, POUT_RC, POUT_RI, POUT_TH, PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF) = result
+PRC = PRCS / PTSTEP
+
+close()
+
+fig, ax = plt.subplots(ncols=2, sharex=True, sharey=True)
+
+cf = ax[0].contourf(PRV, PTH, PRC, levels=numpy.linspace(0., 5.6E-7, 15))
+fig.colorbar(cf, ax=ax[0])
+ax[0].set_title('Cloud mixing ratio (kg/kg)')
+ax[0].set_ylabel('Potential temperature (K)')
+ax[0].set_xlabel('Total water mixing ratio (kg/kg)')
+
+cf = ax[1].contourf(PRV, PTH, PCLDFR, levels=numpy.linspace(0., 1., 15))
+fig.colorbar(cf, ax=ax[1])
+ax[1].set_title('Cloud fraction (0-1)')
+ax[1].set_xlabel('Total water mixing ratio (kg/kg)')
+
+plt.show()
+```
