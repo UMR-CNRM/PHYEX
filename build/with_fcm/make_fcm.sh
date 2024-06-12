@@ -291,7 +291,7 @@ LD_FLAGS="\$LD_FLAGS \$OMP_LD"
 
 LIBS="${LIBS:-rt dl}"
 
-ENTRYPOINTS="rain_ice.o shallow_mf.o turb.o ice_adjust.o"
+ENTRYPOINTS="rain_ice.o shallow_mf.o turb.o ice_adjust.o pyphyex.o"
 
 FCM_ARGS="$FCM_ARGS"
 
@@ -303,6 +303,11 @@ echo "\\\$LIBS = \$LIBS" >> config.fcm
 echo "\\\$TESTPROGS_DIR=$TESTPROGS_DIR" >> config.fcm
 
 export PATH=$PWD/../fcm/bin/:\$PATH
+
+if [ \$(head -1 src/pyphyex.F90 | grep MODULE | wc -l) == 0 ]; then
+  content=\$(cat src/pyphyex.F90)
+  echo -e "MODULE PYPHYEX\nCONTAINS\n\${content}\nEND MODULE PYPHYEX" > src/pyphyex.F90
+fi
 
 echo "This script has generated config.fcm which is included by fcm-make.cfg, the FCM configuration file."
 echo "Running : fcm make \$FCM_ARGS"
@@ -423,7 +428,17 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
   fi
   
   # Add some code
+  mkdir -p build/bin
   cd src
+  pybinding.py micro/ice_adjust.F90 sub:ICE_ADJUST pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
+  pybinding.py micro/rain_ice.F90 sub:RAIN_ICE pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
+  pybinding.py ~/PHYEX/src/common/micro/mode_ice4_sedimentation.F90 \
+               module:MODE_ICE4_SEDIMENTATION/sub:ICE4_SEDIMENTATION \
+               pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
+  pybinding.py micro/rain_ice_old.F90 sub:RAIN_ICE_OLD pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
+  pybinding.py turb/shallow_mf.F90 sub:SHALLOW_MF pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
+  pybinding.py turb/turb.F90 sub:TURB pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
+  pybinding.py aux/ini_phyex.F90 sub:INI_PHYEX pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so --tpfileIsNam
   ln -s ../../fiat/src fiat
   cat <<..EOF > dummyprog.F90
   PROGRAM DUMMYPROG

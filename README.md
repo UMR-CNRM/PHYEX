@@ -9,10 +9,11 @@ Prerequisites:
   - an internet connexion (with access to the github servers) is needed only for the installation
     and, for testprogs, when the fiat version to use change
   - python > 3.8 (but only tested with version 3.10)
-  - some python packages:
+  - some python packages (available on PyPI):
     - numpy and pandas for the testprogs
     - epygram and matplotlib for AROME
     - xarray for Meso-NH
+    - ctypesForFortran to use the python binding
   - a C compiler (tested with cc 11.4.0)
   - a FORTRAN compiler (tested with ifort and gfortran, but automatic installation only works with gfortran >= 10)
   - some classical unix tools: wget, tar, make and git
