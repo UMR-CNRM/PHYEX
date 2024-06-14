@@ -4,6 +4,11 @@
 This script contains a uniq function that reads a FORTRAN file and tries
 to create a new FORTRAN SUBROUTINE that can be used to access the
 original routine from python through the ctypesForFortran utility.
+
+This function is designed to work with PHYEX codes by recognizing
+the name of certain structures. In addition, it performs special
+processing for ini_phyex (adding a file name for the namelist and
+flushing the listing file).
 """
 
 import os
@@ -34,6 +39,10 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
     pftin = PYFT(fortran_in)
     virtualScopeNode = ET.Element('virtual')
     virtualScopeNode.extend(pftin.getScopeChildNodes(scope))
+    kind, name = scope.split('/')[-1].split(':')
+    name = name.upper()
+    kind = {'sub': 'SUBROUTINE',
+            'func': 'FUNCTION'}[kind]
 
     #Loop on all the dummy arguments and prepare their use
     varList = pftin.getVarList()
@@ -44,6 +53,9 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
     copyList = [] #Instructions to copy public var to local var
                   # to be used to call the original subroutine
     extra = [] #additional varaibles to read in module
+    flush = [] #list of unit to flush
+    docstringIN = ["Input arguments:"]
+    docstringOUT = ["Output arguments:"]
     for N in virtualScopeNode[0].findall('.//{*}dummy-arg-LT/{*}arg-N/{*}N'):
         var = pftin.findVar(n2name(N), scope, varList=varList, exactScope=True)
         vartype = var['t'].replace(' ', '').upper()
@@ -53,6 +65,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             for v in ['NIT', 'NKT', 'NKL', 'NVEXT']:
                 declList.append('INTEGER, INTENT(IN) :: ' + v)
                 argList1.append((v, 'INTEGER', False, 'IN', None))
+                docstringIN.append(f"    {v} (IN) to replace the FORTRAN D structure")
             copyList.append('D%NIT=NIT')
             copyList.append('D%NIB=1')
             copyList.append('D%NIE=NIT')
@@ -100,13 +113,15 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             declList.append('TYPE(TFILEDATA) :: TPFILE')
             declList.append('INTEGER, INTENT(IN) :: KUNIT')
             argList1.append(('KUNIT', 'INTEGER', False, 'IN', None))
+            docstringIN.append("    KUNIT (IN) to replace the FORTRAN TFILEDATA structure")
             copyList.append('TPFILE%NLU=KUNIT')
             argList2.append('TPFILE')
-            if tpfileIsNam:
+            if var['n'] == 'TPFILE' and name == "INI_PHYEX":
                 declList.append('CHARACTER(LEN=200) :: SLOCAL_NAMFILE')
                 declList.append('INTEGER :: ILOOPVAR_NAMFILE')
                 declList.append('CHARACTER, DIMENSION(200), INTENT(IN) :: NAMFILE')
                 argList1.append(('NAMFILE', 'CHARACTER', False, 'IN', ((None, '200'),)))
+                docstringIN.append("    NAMFILE (IN) to replace the FORTRAN TFILEDATA structure")
                 copyList.append('DO ILOOPVAR_NAMFILE=1, 200\n' + \
                                 '  SLOCAL_NAMFILE(ILOOPVAR_NAMFILE:ILOOPVAR_NAMFILE)=' + \
                                      'NAMFILE(ILOOPVAR_NAMFILE)\n' + \
@@ -122,6 +137,9 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             pass
         elif vartype.startswith('TYPE('):
             raise NotImplementedError(f'Does not know how to deal with argument of type {vartype}')
+        elif var['n'] == 'KSPLITR':
+            moduleList.append('USE MODD_CLOUDPAR_n, ONLY: KSPLITR => NSPLITR')
+            argList2.append('KSPLITR')
         elif vartype.startswith('CHARACTER(LEN=') and vartype[14].split(')')[0] != '1':
             charlen = int(vartype[14:].split(')')[0])
             #We must use a one-character length arrays,
@@ -132,6 +150,12 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             replvar['t'] = 'CHARACTER'
             argList1.append((replvar['n'], replvar['t'],
                              replvar['opt'], replvar['i'].upper(), replvar['as']))
+            docstr = ', OPTIONAL' if replvar['opt'] else ''
+            docstr = f"    {var['n']} ({var['i']}{docstr})"
+            if replvar['i'] in ('IN', 'INOUT'):
+                docstringIN.append(docstr)
+            if replvar['i'] in ('OUT', 'INOUT'):
+                docstringOUT.append(docstr)
             declList.append(pftin.varSpec2stmt(replvar))
             #But the original routine wants the same characters but with a multi-character string
             #We create this local var, and pass it to the routine
@@ -164,6 +188,8 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                 copystring += 'ENDDO\n' * (len(loopVars) - 1)
                 copyList.append(copystring)
         else:
+            if var['n'] == 'KLUOUT' and name == "INI_PHYEX":
+                flush.append('KLUOUT')
             replvar = var.copy()
             localvar = var.copy()
             if vartype.startswith('LOGICAL'):
@@ -178,6 +204,12 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                 copyList.append('SLOCAL_{varname}={varname}'.format(varname=var['n']))
             argList1.append((replvar['n'], replvar['t'].replace(' ', '').upper(),
                              replvar['opt'], replvar['i'].upper(), replvar['as']))
+            docstr = ', OPTIONAL' if replvar['opt'] else ''
+            docstr = f"    {var['n']} ({var['i']}{docstr})"
+            if replvar['i'] in ('IN', 'INOUT'):
+                docstringIN.append(docstr)
+            if replvar['i'] in ('OUT', 'INOUT'):
+                docstringOUT.append(docstr)
             argList2.append(localvar['n'])
             for d in replvar['as']:
                 if 'NIT' in d[1] or 'NIJT' in d[1]:
@@ -197,10 +229,6 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
     pftin.close()
 
     #Write output FORTRAN file
-    kind, name = scope.split('/')[-1].split(':')
-    name = name.upper()
-    kind = {'sub': 'SUBROUTINE',
-            'func': 'FUNCTION'}[kind]
     exists = os.path.exists(fortran_out)
     with open(fortran_out, 'a', encoding="utf-8") as f:
         if exists:
@@ -221,6 +249,8 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
         f.write('\n'.join(declList) + '\n')
         f.write('\n'.join(copyList) + '\n')
         f.write(f"CALL {name}({', '.join(argList2)})\n")
+        for unit in flush:
+            f.write(f"FLUSH({unit})\n")
         f.write(f'END {kind} PY{name}')
 
         #Helper subroutine
@@ -288,7 +318,20 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
         outvar = [varname for (varname, _, _, intent, _) in argList1 if intent in ('OUT', 'INOUT')]
         argList.append('missingOUT=None')
         f.write(f"def PY{name}({', '.join(argList)}):\n")
-        f.write(f'    """:return: {", ".join(outvar)}"""\n')
+        f.write( '    """\n')
+        f.write( "    Wrapping to provide a python binding using pybinding " + \
+                 "from the PHYEX package.\n")
+        f.write(f"    Original file is {fortran_in}\n\n")
+        f.write( "    Special notes for OPTIONAL variables:\n")
+        f.write( "     - To be absent on input, the variable must receive the MISSING\n")
+        f.write( "       special value.\n")
+        f.write( "     - For a variable with OUT intent, the variable name must be added in the\n")
+        f.write( "       missingOUT list to not be returned by the python function.\n")
+        f.write( "     - For a variable with INOUT intent, its presence or absence is\n")
+        f.write( "       simultaneous at input and output\n\n")
+        f.write( "    " + "\n    ".join(docstringIN) + "\n")
+        f.write( "    " + "\n    ".join(docstringOUT) + "\n")
+        f.write( '    """\n')
         f.write( "    missingOUT = [] if missingOUT is None else missingOUT\n")
         f.write(f"    kinds = HPY{name}()\n")
         if len(extra) > 0:
@@ -367,10 +410,7 @@ if __name__ == '__main__':
                         help='PYTHON output file')
     parser.add_argument('LIBSO', type=str,
                         help='Shared lib path')
-    parser.add_argument('--tpfileIsNam', default=False, action='store_true',
-                        help='Is tpfile representing a namelist file')
     parser.add_argument('--Findexing', default=False, action='store_true',
                         help='If set, array indexes are in the same order as the FORTRAN routine')
     args = parser.parse_args()
-    pybinding(args.INPUT, args.SCOPE, args.FORTRAN, args.PYTHON, args.LIBSO,
-              args.tpfileIsNam, args.Findexing)
+    pybinding(args.INPUT, args.SCOPE, args.FORTRAN, args.PYTHON, args.LIBSO, args.Findexing)

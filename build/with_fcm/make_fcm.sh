@@ -430,15 +430,22 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
   # Add some code
   mkdir -p build/bin
   cd src
-  pybinding.py micro/ice_adjust.F90 sub:ICE_ADJUST pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
-  pybinding.py micro/rain_ice.F90 sub:RAIN_ICE pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
-  pybinding.py ~/PHYEX/src/common/micro/mode_ice4_sedimentation.F90 \
-               module:MODE_ICE4_SEDIMENTATION/sub:ICE4_SEDIMENTATION \
-               pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
-  pybinding.py micro/rain_ice_old.F90 sub:RAIN_ICE_OLD pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
-  pybinding.py turb/shallow_mf.F90 sub:SHALLOW_MF pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
-  pybinding.py turb/turb.F90 sub:TURB pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
-  pybinding.py aux/ini_phyex.F90 sub:INI_PHYEX pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so --tpfileIsNam
+  if [ ${PYBINDING-yes} == 'yes' ]; then
+    pybinding.py micro/ice_adjust.F90 sub:ICE_ADJUST pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
+    pybinding.py micro/rain_ice.F90 sub:RAIN_ICE pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
+    pybinding.py ~/PHYEX/src/common/micro/mode_ice4_sedimentation.F90 \
+                 module:MODE_ICE4_SEDIMENTATION/sub:ICE4_SEDIMENTATION \
+                 pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
+    pybinding.py micro/rain_ice_old.F90 sub:RAIN_ICE_OLD pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
+    pybinding.py turb/shallow_mf.F90 sub:SHALLOW_MF pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
+    pybinding.py turb/turb.F90 sub:TURB pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
+    pybinding.py aux/ini_phyex.F90 sub:INI_PHYEX pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
+  else
+    cat <<....EOF > pyphyex.F90
+    SUBROUTINE PYPHYEX
+    END SUBROUTINE PYPHYEX
+....EOF
+  fi
   ln -s ../../fiat/src fiat
   cat <<..EOF > dummyprog.F90
   PROGRAM DUMMYPROG
