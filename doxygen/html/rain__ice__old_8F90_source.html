@@ -1272,30 +1272,31 @@ $(function() {
 <div class="line"><a name="l01200"></a><span class="lineno"> 1200</span>&#160;    <span class="keywordflow">IF</span> (krr == 7 .AND. buconf%LBUDGET_RH) &amp;</div>
 <div class="line"><a name="l01201"></a><span class="lineno"> 1201</span>&#160;                    <span class="keyword">CALL </span><a class="code" href="namespacemode__budget__phy.html#a9a2b3c894fd97b1caeef3dc8c7049411">budget_store_end_phy</a>(d, tbudgets(<a class="code" href="namespacemodd__budget.html#a07dc15edaf8cd68c1036451fc7b536b9">nbudget_rh</a>), <span class="stringliteral">&#39;SEDI&#39;</span>, prhs(:,:)*prhodj(:,:))</div>
 <div class="line"><a name="l01202"></a><span class="lineno"> 1202</span>&#160;<span class="keywordflow">  ENDIF</span></div>
-<div class="line"><a name="l01203"></a><span class="lineno"> 1203</span>&#160;<span class="keywordflow">ELSE</span></div>
-<div class="line"><a name="l01204"></a><span class="lineno"> 1204</span>&#160;  <span class="keyword">CALL </span><a class="code" href="interfacemode__msg_1_1print__msg.html">print_msg</a>(nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;RAIN_ICE_OLD&#39;</span>, <span class="stringliteral">&#39;NO SEDIMENTATION SCHEME FOR HSEDIM=&#39;</span>//hsedim)</div>
-<div class="line"><a name="l01205"></a><span class="lineno"> 1205</span>&#160;<span class="keywordflow">END IF</span></div>
-<div class="line"><a name="l01206"></a><span class="lineno"> 1206</span>&#160; </div>
-<div class="line"><a name="l01207"></a><span class="lineno"> 1207</span>&#160;  <span class="comment">!sedimentation of rain fraction</span></div>
-<div class="line"><a name="l01208"></a><span class="lineno"> 1208</span>&#160;  <span class="keywordflow">DO</span> ji = d%NIB,d%NIE</div>
-<div class="line"><a name="l01209"></a><span class="lineno"> 1209</span>&#160;    zrainfr(ji,ike)=0.</div>
-<div class="line"><a name="l01210"></a><span class="lineno"> 1210</span>&#160;    <span class="keywordflow">DO</span> jk=ike-kkl, ikb, -kkl</div>
-<div class="line"><a name="l01211"></a><span class="lineno"> 1211</span>&#160;      <span class="keywordflow">IF</span> (prrs(ji,jk)*ptstep .GT. iced%XRTMIN(3)) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l01212"></a><span class="lineno"> 1212</span>&#160; </div>
-<div class="line"><a name="l01213"></a><span class="lineno"> 1213</span>&#160;        zrainfr(ji,jk)=max(zrainfr(ji,jk), zrainfr(ji,jk+kkl))</div>
-<div class="line"><a name="l01214"></a><span class="lineno"> 1214</span>&#160; </div>
-<div class="line"><a name="l01215"></a><span class="lineno"> 1215</span>&#160;        <span class="keywordflow">IF</span> (zrainfr(ji,jk)==0) <span class="keywordflow">THEN</span></div>
-<div class="line"><a name="l01216"></a><span class="lineno"> 1216</span>&#160;          zrainfr(ji,jk)=1.</div>
-<div class="line"><a name="l01217"></a><span class="lineno"> 1217</span>&#160;<span class="keywordflow">        END IF</span></div>
-<div class="line"><a name="l01218"></a><span class="lineno"> 1218</span>&#160;      <span class="keywordflow">ELSE</span></div>
-<div class="line"><a name="l01219"></a><span class="lineno"> 1219</span>&#160;        zrainfr(ji,jk)=0.</div>
-<div class="line"><a name="l01220"></a><span class="lineno"> 1220</span>&#160;<span class="keywordflow">      END IF</span></div>
-<div class="line"><a name="l01221"></a><span class="lineno"> 1221</span>&#160;<span class="keywordflow">    END DO</span></div>
-<div class="line"><a name="l01222"></a><span class="lineno"> 1222</span>&#160;<span class="keywordflow">  END DO</span></div>
-<div class="line"><a name="l01223"></a><span class="lineno"> 1223</span>&#160; </div>
-<div class="line"><a name="l01224"></a><span class="lineno"> 1224</span>&#160;  <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;RAIN_ICE_OLD&#39;</span>,1,zhook_handle)</div>
-<div class="line"><a name="l01225"></a><span class="lineno"> 1225</span>&#160; </div>
-<div class="line"><a name="l01226"></a><span class="lineno"> 1226</span>&#160;<span class="keyword">END SUBROUTINE </span><a class="code" href="rain__ice__old_8F90.html#a89582ebf2e135acb7454020476ecaaeb">rain_ice_old</a></div>
+<div class="line"><a name="l01203"></a><span class="lineno"> 1203</span>&#160;<span class="keywordflow">ELSEIF</span> (hsedim == <span class="stringliteral">&#39;NONE&#39;</span>) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l01204"></a><span class="lineno"> 1204</span>&#160;<span class="keywordflow">ELSE</span></div>
+<div class="line"><a name="l01205"></a><span class="lineno"> 1205</span>&#160;  <span class="keyword">CALL </span><a class="code" href="interfacemode__msg_1_1print__msg.html">print_msg</a>(nverb_fatal, <span class="stringliteral">&#39;GEN&#39;</span>, <span class="stringliteral">&#39;RAIN_ICE_OLD&#39;</span>, <span class="stringliteral">&#39;NO SEDIMENTATION SCHEME FOR HSEDIM=&#39;</span>//hsedim)</div>
+<div class="line"><a name="l01206"></a><span class="lineno"> 1206</span>&#160;<span class="keywordflow">END IF</span></div>
+<div class="line"><a name="l01207"></a><span class="lineno"> 1207</span>&#160; </div>
+<div class="line"><a name="l01208"></a><span class="lineno"> 1208</span>&#160;  <span class="comment">!sedimentation of rain fraction</span></div>
+<div class="line"><a name="l01209"></a><span class="lineno"> 1209</span>&#160;  <span class="keywordflow">DO</span> ji = d%NIB,d%NIE</div>
+<div class="line"><a name="l01210"></a><span class="lineno"> 1210</span>&#160;    zrainfr(ji,ike)=0.</div>
+<div class="line"><a name="l01211"></a><span class="lineno"> 1211</span>&#160;    <span class="keywordflow">DO</span> jk=ike-kkl, ikb, -kkl</div>
+<div class="line"><a name="l01212"></a><span class="lineno"> 1212</span>&#160;      <span class="keywordflow">IF</span> (prrs(ji,jk)*ptstep .GT. iced%XRTMIN(3)) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l01213"></a><span class="lineno"> 1213</span>&#160; </div>
+<div class="line"><a name="l01214"></a><span class="lineno"> 1214</span>&#160;        zrainfr(ji,jk)=max(zrainfr(ji,jk), zrainfr(ji,jk+kkl))</div>
+<div class="line"><a name="l01215"></a><span class="lineno"> 1215</span>&#160; </div>
+<div class="line"><a name="l01216"></a><span class="lineno"> 1216</span>&#160;        <span class="keywordflow">IF</span> (zrainfr(ji,jk)==0) <span class="keywordflow">THEN</span></div>
+<div class="line"><a name="l01217"></a><span class="lineno"> 1217</span>&#160;          zrainfr(ji,jk)=1.</div>
+<div class="line"><a name="l01218"></a><span class="lineno"> 1218</span>&#160;<span class="keywordflow">        END IF</span></div>
+<div class="line"><a name="l01219"></a><span class="lineno"> 1219</span>&#160;      <span class="keywordflow">ELSE</span></div>
+<div class="line"><a name="l01220"></a><span class="lineno"> 1220</span>&#160;        zrainfr(ji,jk)=0.</div>
+<div class="line"><a name="l01221"></a><span class="lineno"> 1221</span>&#160;<span class="keywordflow">      END IF</span></div>
+<div class="line"><a name="l01222"></a><span class="lineno"> 1222</span>&#160;<span class="keywordflow">    END DO</span></div>
+<div class="line"><a name="l01223"></a><span class="lineno"> 1223</span>&#160;<span class="keywordflow">  END DO</span></div>
+<div class="line"><a name="l01224"></a><span class="lineno"> 1224</span>&#160; </div>
+<div class="line"><a name="l01225"></a><span class="lineno"> 1225</span>&#160;  <span class="keywordflow">IF</span> (lhook) <span class="keyword">CALL </span>dr_hook(<span class="stringliteral">&#39;RAIN_ICE_OLD&#39;</span>,1,zhook_handle)</div>
+<div class="line"><a name="l01226"></a><span class="lineno"> 1226</span>&#160; </div>
+<div class="line"><a name="l01227"></a><span class="lineno"> 1227</span>&#160;<span class="keyword">END SUBROUTINE </span><a class="code" href="rain__ice__old_8F90.html#a89582ebf2e135acb7454020476ecaaeb">rain_ice_old</a></div>
 <div class="ttc" id="ainterfacemode__msg_1_1print__msg_html"><div class="ttname"><a href="interfacemode__msg_1_1print__msg.html">mode_msg::print_msg</a></div><div class="ttdef"><b>Definition:</b> <a href="mode__msg_8F90_source.html#l00018">mode_msg.F90:18</a></div></div>
 <div class="ttc" id="ainterfacemodi__gamma_1_1gamma_html"><div class="ttname"><a href="interfacemodi__gamma_1_1gamma.html">modi_gamma::gamma</a></div><div class="ttdef"><b>Definition:</b> <a href="modi__gamma_8F90_source.html#l00010">modi_gamma.F90:10</a></div></div>
 <div class="ttc" id="anamespacemodd__budget_html"><div class="ttname"><a href="namespacemodd__budget.html">modd_budget</a></div><div class="ttdef"><b>Definition:</b> <a href="modd__budget_8F90_source.html#l00002">modd_budget.F90:2</a></div></div>
