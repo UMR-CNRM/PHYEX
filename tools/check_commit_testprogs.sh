@@ -295,15 +295,20 @@ if echo $commit | grep '/' | grep -v '^tags/' > /dev/null; then
   #The git repository is a directory
   name=$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')
   content_testprogs_version=$(scp $commit/src/testprogs/testprogs_version.json /dev/stdout 2>/dev/null || echo "")
+  if [ "${content_testprogs_version}" == "" ]; then
+    content_testprogs_version=$(scp $commit/src/offline/testprogs_version.json /dev/stdout 2>/dev/null || echo "")
+  fi
   [ $suppress -eq 1 -a -d $TESTDIR/$name ] && rm -rf $TESTDIR/$name
 elif echo $specialName | grep -w $commit > /dev/null; then
   name="$commit"
 else
   #The git repository is on github
-  if [[ $commit == testprogs${separator}* ]]; then
+  if [[ $commit == testprogs${separator}*  || $commit == offline${separator}* ]]; then
     testprogs_version_file="testprogs_version.json"
+    testprogs_version_file_alt=""
   else
-    testprogs_version_file="src/testprogs/testprogs_version.json"
+    testprogs_version_file="src/offline/testprogs_version.json"
+    testprogs_version_file_alt="src/testprogs/testprogs_version.json"
   fi
   if echo $commit | grep '^tags/' > /dev/null; then
     urlcommit=$(echo $commit | cut -d / -f 2-)
@@ -311,6 +316,9 @@ else
     urlcommit=$commit
   fi
   content_testprogs_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$testprogs_version_file -O - 2>/dev/null || echo "")
+  if [ "${content_testprogs_version}" == "" -a "${testprogs_version_file_alt}" != "" ]; then
+    content_testprogs_version=$(wget --no-check-certificate https://raw.githubusercontent.com/$PHYEXREPOuser/PHYEX/${urlcommit}/$testprogs_version_file_alt -O - 2>/dev/null || echo "")
+  fi
   name="COMMIT$(echo $commit | sed 's/\//'${separator}'/g' | sed 's/:/'${separator}'/g' | sed 's/\./'${separator}'/g')"
   [ $suppress -eq 1 -a -d $TESTDIR/$name ] && rm -rf $TESTDIR/$name
 fi

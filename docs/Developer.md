@@ -16,7 +16,7 @@ The topics covered are as follows:
 The package contains two kinds of branches:
 
   - generic branches which contain codes for all the models and applications (eg: master branch)
-  - model specific branches which are automatically derived from generic branches (eg: arome\_\<commit\_hash\>, mesonh\_\<commit\_hash\>, testprogs\_\<commit\_hash\>)
+  - model specific branches which are automatically derived from generic branches (eg: arome\_\<commit\_hash\>, mesonh\_\<commit\_hash\>, offline\_\<commit\_hash\>)
 
 The directories found in the package are different depending on the branches (generic or model specific).
 
@@ -44,7 +44,7 @@ After cycle 49t1, the physics source code (as well as other model parts such as 
 
 This evolution will impact the way to contribute to the PHYEX repository.
 
-Whatever is the cycle, the AROME and HARMONIE-AROME developers only see codes coming from arome (or testprogs) specific branches (branches named arome\_\<commit\_hash\> or testprogs\_\<commit\_hash\>). This code is ready for inclusion (array-syntax already transformed into DO loops for instance).
+Whatever is the cycle, the AROME and HARMONIE-AROME developers only see codes coming from arome (or offline) specific branches (branches named arome\_\<commit\_hash\> or offline\_\<commit\_hash\>). This code is ready for inclusion (array-syntax already transformed into DO loops for instance).
 
 Said differently, developers do not need to manipulate code transformation tools.
 
@@ -76,7 +76,7 @@ Who: developers with scientific contributions based on cycles 50 and following (
 
 Workflow summary: after the cycle 49t1 (probably starting from cycle 50), AROME and HARMONIE-AROME will become a bundle. Il will be built with source codes coming from various places. One of these places will be the PHYEX repository. Pull requests must be sent to each modified components of the bundle.
 
-Developer must use a model specific branch (arome\_\<commit\_hash\> when working with the model, or testprogs\_\<commit\_hash\> when working with the offline tools).
+Developer must use a model specific branch (arome\_\<commit\_hash\> when working with the model, or offline\_\<commit\_hash\> when working with the offline tools).
 These branches receive tags based on the master branch version. For example the commit, in the master branch, corresponding to the version 1.0.0 of PHYEX will receive the tag "v1.0.0".
 The arome specific commit corresponding to this version will be tagged "v1.0.0\_arome".
 

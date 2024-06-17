@@ -185,8 +185,13 @@ fi
 
 ###### MERGE
 if [ -n "${model-}" ]; then
-  if [ ! -d src/$model ]; then
-    echo "src/$model directory does not exist"
+  SRC=src/$model
+  if [ "$model" == "offline" -a ! -d src/$model ]; then
+    echo "src/$model directory does not exist, trying src/testprogs"
+    SRC=src/testprogs
+  fi
+  if [ ! -d $SRC ]; then
+    echo "$SRC directory does not exist"
     exit 5
   fi
   if [ -z "${subs-}" ]; then
@@ -205,32 +210,32 @@ if [ -n "${model-}" ]; then
       exit 7
     fi
     [ -e src/common/$sub ] && $mv src/common/$sub . #sub doesn't exist, we can move it directly
-    if [ -e src/$model/$sub ]; then
-      if [ -f src/$model/$sub ]; then
+    if [ -e $SRC/$sub ]; then
+      if [ -f $SRC/$sub ]; then
         #$sub is a file, it can be overwritten
-        $mv "src/$model/$sub" $sub
+        $mv "$SRC/$sub" $sub
       else
         #directory can exist, we must move files one by one
         #we use find/while/read in case the number of files is too big to be hold on a single shell line
-        (cd src/$model/$sub; find . -type f -print0) | \
+        (cd $SRC/$sub; find . -type f -print0) | \
           while IFS= read -r -d '' file; do
             dname=$(dirname $file)
             [ ! -d $sub/$dname ] && mkdir -p $sub/$dname
-            $mv "src/$model/$sub/$file" "$sub/$file"
+            $mv "$SRC/$sub/$file" "$sub/$file"
           done
-        rmdir --ignore-fail-on-non-empty -p "src/$model/$sub" #suppress tree if empty
+        rmdir --ignore-fail-on-non-empty -p "$SRC/$sub" #suppress tree if empty
       fi
     fi
   done
 
   #Supression of unwanted files
-  if [ -f src/$model/filesToSuppress.txt ]; then
+  if [ -f $SRC/filesToSuppress.txt ]; then
     #Some files can be present in the common directory but are not wanted for a model export
     #because these files are already existing elsewhere in the model source code
     while read -r line; do
       filename=$(echo $line | sed -e 's/^[[:space:]]*//' | sed -e 's/[[:space:]]*$//') #trim
       [ -f "$filename" ] && $rm "$filename"
-    done < src/$model/filesToSuppress.txt
+    done < $SRC/filesToSuppress.txt
   fi
 
   #Cleaning

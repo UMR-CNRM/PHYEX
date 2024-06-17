@@ -7,7 +7,7 @@ Several presentations were done, the materials can be found on the [wiki](https:
 
 Prerequisites:
   - an internet connexion (with access to the github servers) is needed only for the installation
-    and, for testprogs, when the fiat version to use change
+    and, for offline tests (testprogs), when the fiat version to use change
   - python > 3.8 (but only tested with version 3.10)
   - some python packages (available on PyPI):
     - numpy and pandas for the testprogs

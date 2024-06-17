@@ -268,7 +268,7 @@ srcdir=$1
 #To be able to compile an old commit, we must filter the source directories
 TESTPROGS_DIR=""
 #support is not a testprog but is needed
-for testprog in ice_adjust rain_ice turb_mnh shallow rain_ice_old support; do
+for testprog in ice_adjust rain_ice turb_mnh shallow rain_ice_old support progs; do
   [ -d $srcdir/$testprog ] && TESTPROGS_DIR+="src/$testprog "
 done
 
@@ -412,19 +412,19 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
   PHYEXTOOLSDIR="$DIR/../../../tools" #if run from within a PHYEX repository
   UPDATEDPATH=$PATH
   which prep_code.sh > /dev/null || export UPDATEDPATH=$PHYEXTOOLSDIR:$PATH
-  subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s support"
+  subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s support -s progs"
   if [ "$fromdir" == '' ]; then
     echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
-    if [[ $commit == testprogs${separator}* ]]; then
+    if [[ $commit == testprogs${separator}* || $commit == offline${separator}* ]]; then
       PATH=$UPDATEDPATH prep_code.sh --pyft_opts_env PYFT_OPTS -c $commit src #This commit is ready for inclusion
     else
-      PATH=$UPDATEDPATH prep_code.sh --pyft_opts_env PYFT_OPTS -c $commit $expand_options $subs -m testprogs src
+      PATH=$UPDATEDPATH prep_code.sh --pyft_opts_env PYFT_OPTS -c $commit $expand_options $subs -m offline src
     fi
   else
     echo "Copy $fromdir"
     mkdir src
     scp -q -r $fromdir/src src/
-    PATH=$UPDATEDPATH prep_code.sh --pyft_opts_env PYFT_OPTS $expand_options $subs -m testprogs src
+    PATH=$UPDATEDPATH prep_code.sh --pyft_opts_env PYFT_OPTS $expand_options $subs -m offline src
   fi
   
   # Add some code
