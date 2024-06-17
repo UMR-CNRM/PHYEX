@@ -54,7 +54,7 @@ For these branches, developer must be carrefull when using the mnh\_expand direc
   - no space between array variables and the opening parenthesis (no A (:)=B (:), but A(:)=B(:))
   - same bounds as declared in the mnh\_expand directive should be used in the array-syntax (A(D%NIB:D%NIE)=...)
 
-The arome and testprogs specific branches are written using DO loops.
+The arome and offline specific branches are written using DO loops.
 
 ### Call to routines from within a loop on horizontal or vertical dimensions
 Call to external subroutine in loop on horizontal or vertical dimensions must be suppressed in the master version. If possible, the call must be put outside of the loop (acting on the full array as a whole) or the subroutine must be put in the CONTAINS part but, in this case, the included subroutine cannot use local array. There are 3 cases:

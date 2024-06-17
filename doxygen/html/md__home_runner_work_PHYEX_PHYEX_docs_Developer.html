@@ -80,7 +80,7 @@ Package organisation</h1>
 <p>The package contains two kinds of branches:</p>
 <ul>
 <li>generic branches which contain codes for all the models and applications (eg: master branch)</li>
-<li>model specific branches which are automatically derived from generic branches (eg: arome_&lt;commit_hash&gt;, mesonh_&lt;commit_hash&gt;, testprogs_&lt;commit_hash&gt;)</li>
+<li>model specific branches which are automatically derived from generic branches (eg: arome_&lt;commit_hash&gt;, mesonh_&lt;commit_hash&gt;, offline_&lt;commit_hash&gt;)</li>
 </ul>
 <p>The directories found in the package are different depending on the branches (generic or model specific).</p>
 <p>For model specific branches, only the source code adapted for a given model is present (one directory per parametrisation and an aux directory). No compilation engine or scripts are present in these branches. They are intended to be included directly in the compilation system of the hosting model.</p>
@@ -102,7 +102,7 @@ Package organisation</h1>
 Contribution workflow for AROME and HARMONIE-AROME developers</h1>
 <p>The build systems are evolving. Until cycle 49t1 (included), the physics source code is directly included in the source code tree. After cycle 49t1, the physics source code (as well as other model parts such as ectrans, fiat...) will be available as a <em>component</em> of a <em>bundle</em>.</p>
 <p>This evolution will impact the way to contribute to the PHYEX repository.</p>
-<p>Whatever is the cycle, the AROME and HARMONIE-AROME developers only see codes coming from arome (or testprogs) specific branches (branches named arome_&lt;commit_hash&gt; or testprogs_&lt;commit_hash&gt;). This code is ready for inclusion (array-syntax already transformed into DO loops for instance).</p>
+<p>Whatever is the cycle, the AROME and HARMONIE-AROME developers only see codes coming from arome (or offline) specific branches (branches named arome_&lt;commit_hash&gt; or offline_&lt;commit_hash&gt;). This code is ready for inclusion (array-syntax already transformed into DO loops for instance).</p>
 <p>Said differently, developers do not need to manipulate code transformation tools.</p>
 <p>The workflow was chosen so that the developers would not have to change their working methods several times:</p>
 <ul>
@@ -127,7 +127,7 @@ Scientific contributions until cycle 49t1</h2>
 Refactoring contributions from now on, and scientific contributions after cycle 49t1</h2>
 <p>Who: developers with scientific contributions based on cycles 50 and following (as soon as PHYEX is a bundle component); and developers with GPU-refactoring contributions.</p>
 <p>Workflow summary: after the cycle 49t1 (probably starting from cycle 50), AROME and HARMONIE-AROME will become a bundle. Il will be built with source codes coming from various places. One of these places will be the PHYEX repository. Pull requests must be sent to each modified components of the bundle.</p>
-<p>Developer must use a model specific branch (arome_&lt;commit_hash&gt; when working with the model, or testprogs_&lt;commit_hash&gt; when working with the offline tools). These branches receive tags based on the master branch version. For example the commit, in the master branch, corresponding to the version 1.0.0 of PHYEX will receive the tag "v1.0.0". The arome specific commit corresponding to this version will be tagged "v1.0.0\_arome".</p>
+<p>Developer must use a model specific branch (arome_&lt;commit_hash&gt; when working with the model, or offline_&lt;commit_hash&gt; when working with the offline tools). These branches receive tags based on the master branch version. For example the commit, in the master branch, corresponding to the version 1.0.0 of PHYEX will receive the tag "v1.0.0". The arome specific commit corresponding to this version will be tagged "v1.0.0\_arome".</p>
 <p><img src="./AROMEworkflow2.svg" alt="" style="pointer-events: none;" class="inline"/></p>
 <p>Workflow details (getting the source code in blue, pull request in red, integration in green):</p>
 <ul>

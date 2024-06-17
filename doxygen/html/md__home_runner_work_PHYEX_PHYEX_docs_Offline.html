@@ -84,13 +84,13 @@ Compilation directly in the repository without execution (or manual execution)</
 <p>When on a master commit, the build/with_fcm/make_fcm.sh script can be used to compile the offline tools.</p>
 <h2><a class="anchor" id="autotoc_md56"></a>
 Compilation and execution</h2>
-<p>When on a master commit, the tools/check_commit_testprogs.sh script can be used to compile and execute the testprogs. The check_commit_testprogs.sh script uses the PHYEX source code:</p>
+<p>When on a master commit, the tools/check_commit_testprogs.sh script can be used to compile and execute the testprogs (offline tests). The check_commit_testprogs.sh script uses the PHYEX source code:</p>
 <ul>
 <li>of a specific commit on the master branch available on a remote repository</li>
-<li>or, the last commit of a testprogs_&lt;commit_hash&gt; branch available on a remote repository</li>
+<li>or, the last commit of a offline_&lt;commit_hash&gt; branch available on a remote repository</li>
 <li>or, the content of a local repository.</li>
 </ul>
-<p>In the latter case, it can be interesting to clone the PHYEX repository twice. A first one to have the build tools on the master branch, and a second one to checkout the source code version to use. This solution is especially useful when working on a testprogs_&lt;commit_hash&gt; branch (because these branches does not contain the build tools).</p>
+<p>In the latter case, it can be interesting to clone the PHYEX repository twice. A first one to have the build tools on the master branch, and a second one to checkout the source code version to use. This solution is especially useful when working on a offline_&lt;commit_hash&gt; branch (because these branches does not contain the build tools).</p>
 <p>Something like this can be used:</p>
 <ul>
 <li>cd $HOME; git clone &lt;PHYEX url&gt; PHYEXtools</li>

@@ -123,7 +123,7 @@ Array-syntax or not?</h2>
 <li>no space between array variables and the opening parenthesis (no A (:)=B (:), but A(:)=B(:))</li>
 <li>same bounds as declared in the mnh_expand directive should be used in the array-syntax (A(DNIB:DNIE)=...)</li>
 </ul>
-<p>The arome and testprogs specific branches are written using DO loops.</p>
+<p>The arome and offline specific branches are written using DO loops.</p>
 <h2><a class="anchor" id="autotoc_md27"></a>
 Call to routines from within a loop on horizontal or vertical dimensions</h2>
 <p>Call to external subroutine in loop on horizontal or vertical dimensions must be suppressed in the master version. If possible, the call must be put outside of the loop (acting on the full array as a whole) or the subroutine must be put in the CONTAINS part but, in this case, the included subroutine cannot use local array. There are 3 cases:</p>
