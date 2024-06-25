@@ -296,7 +296,7 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !*      10.   < V'V'>
 !*      11.   < W'W'>
 ! 
-      CALL       TURB_HOR_DYN_CORR(TURBN,TLES,KSPLT, PTSTEP,         &
+      CALL       TURB_HOR_DYN_CORR(D,TURBN,TLES,KSPLT, PTSTEP,         &
                       KRR,KSV,OFLAT, O2D,                            &
                       TPFILE,                                        &
                       PK,PINV_PDZZ,                                  &

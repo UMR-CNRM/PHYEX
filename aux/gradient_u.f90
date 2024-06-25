@@ -25,6 +25,16 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PGX_U_M ! result mass point
 END FUNCTION GX_U_M
 !
 !     
+SUBROUTINE GX_U_M_DEVICE(PA,PDXX,PDZZ,PDZX,PGX_U_M_DEVICE)
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PA       ! variable at the U point
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDXX     ! metric coefficient dxx
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZZ     ! metric coefficient dzz
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZX     ! metric coefficient dzx
+!
+REAL, DIMENSION(:,:,:), INTENT(OUT) :: PGX_U_M_DEVICE ! result mass point
+!
+END SUBROUTINE GX_U_M_DEVICE
+!
 FUNCTION GY_U_UV(PA,PDYY,PDZZ,PDZY, KKA, KKU, KL)      RESULT(PGY_U_UV)
 IMPLICIT NONE
 !
@@ -170,6 +180,97 @@ END IF
 END FUNCTION GX_U_M
 !
 ! 
+#ifdef MNH_OPENACC
+!     #######################################################
+      SUBROUTINE GX_U_M_DEVICE(PA,PDXX,PDZZ,PDZX,PGX_U_M_DEVICE)
+!     #######################################################
+!
+!*       0.    DECLARATIONS
+!
+!
+USE MODI_SHUMAN_DEVICE
+USE MODD_CONF
+!
+USE MODE_MNH_ZWORK, ONLY: MNH_MEM_GET, MNH_MEM_POSITION_PIN, MNH_MEM_RELEASE
+!
+IMPLICIT NONE
+!
+!
+!*       0.1   declarations of arguments and result
+!
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PA       ! variable at the U point
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDXX     ! metric coefficient dxx
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZZ     ! metric coefficient dzz
+REAL, DIMENSION(:,:,:), INTENT(IN) :: PDZX     ! metric coefficient dzx
+!
+REAL, DIMENSION(:,:,:), INTENT(OUT) :: PGX_U_M_DEVICE ! result mass point
+!
+!*       0.2   declaration of local variables
+!
+REAL, DIMENSION(:,:,:), pointer , contiguous ::  ZTMP1_DEVICE, ZTMP2_DEVICE, ZTMP3_DEVICE
+!
+INTEGER  :: JIU,JJU,JKU
+INTEGER  :: JI,JJ,JK
+!----------------------------------------------------------------------------
+
+!$acc data present( PA, PDXX, PDZZ, PDZX, PGX_U_M_DEVICE )
+
+JIU =  size(pa, 1 )
+JJU =  size(pa, 2 )
+JKU =  size(pa, 3 )
+
+!Pin positions in the pools of MNH memory
+CALL MNH_MEM_POSITION_PIN( 'GX_U_M' )
+
+CALL MNH_MEM_GET( ztmp1_device, JIU, JJU, JKU )
+CALL MNH_MEM_GET( ztmp2_device, JIU, JJU, JKU )
+CALL MNH_MEM_GET( ztmp3_device, JIU, JJU, JKU )
+
+!$acc data present( ztmp1_device, ztmp2_device, ztmp3_device )
+
+!
+!*       1.    DEFINITION of GX_U_M_DEVICE
+!              --------------------
+IF (.NOT. LFLAT) THEN
+  CALL DXF_DEVICE(PA,ZTMP1_DEVICE)
+  CALL DZM_DEVICE( PA, ZTMP2_DEVICE )
+  !$acc kernels
+   !$mnh_do_concurrent ( JI=1:JIU,JJ=1:JJU,JK=1:JKU)
+     ZTMP3_DEVICE(JI,JJ,JK) = PDZX(JI,JJ,JK) * ZTMP2_DEVICE(JI,JJ,JK)
+  !$mnh_end_do() !CONCURRENT
+  !$acc end kernels
+  CALL MXF_DEVICE(ZTMP3_DEVICE,ZTMP2_DEVICE)
+  !$acc kernels
+  !$mnh_do_concurrent ( JI=1:JIU,JJ=1:JJU,JK=1:JKU)
+     ZTMP3_DEVICE(JI,JJ,JK) = ZTMP2_DEVICE(JI,JJ,JK) / PDZZ(JI,JJ,JK)
+  !$mnh_end_do() !CONCURRENT
+  !$acc end kernels
+  CALL MZF_DEVICE( ZTMP3_DEVICE, ZTMP2_DEVICE )
+  CALL MXF_DEVICE(PDXX,ZTMP3_DEVICE)
+  !$acc kernels
+  PGX_U_M_DEVICE(:,:,:)= ( ZTMP1_DEVICE(:,:,:) - ZTMP2_DEVICE(:,:,:) ) / ZTMP3_DEVICE(:,:,:)
+  !$acc end kernels
+ELSE
+  CALL DXF_DEVICE(PA,ZTMP1_DEVICE)
+  CALL MXF_DEVICE(PDXX,ZTMP2_DEVICE)
+  !$acc kernels
+  PGX_U_M_DEVICE(:,:,:)= ZTMP1_DEVICE(:,:,:) /  ZTMP2_DEVICE(:,:,:)
+  !$acc end kernels
+END IF
+
+!$acc end data
+
+!Release all memory allocated with MNH_MEM_GET calls since last call to MNH_MEM_POSITION_PIN
+CALL MNH_MEM_RELEASE( 'GX_U_M' )
+
+!$acc end data
+
+!----------------------------------------------------------------------------
+!
+END SUBROUTINE GX_U_M_DEVICE
+#endif
+!
+!
 !     #########################################################
       FUNCTION GY_U_UV(PA,PDYY,PDZZ,PDZY, KKA, KKU, KL)      RESULT(PGY_U_UV)
 !     #########################################################
