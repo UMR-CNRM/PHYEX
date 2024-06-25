@@ -358,8 +358,8 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PSIGS
 !
 !*      15.   HORIZONTAL FLUXES OF PASSIVE SCALARS
 !
-      CALL      TURB_HOR_SV_FLUX(TURBN,TLES,KSPLT,OBLOWSNOW,OFLAT,   &
-                      TPFILE,KSV_LGBEG,KSV_LGEND,O2D,ONOMIXLG,       &
+      CALL      TURB_HOR_SV_FLUX(D,TURBN,TLES,KSPLT,OBLOWSNOW,OFLAT, &
+                      TPFILE,KSV,KSV_LGBEG,KSV_LGEND,O2D,ONOMIXLG,   &
                       PK,PINV_PDXX,PINV_PDYY,PINV_PDZZ,PMZM_PRHODJ,  &
                       PDXX,PDYY,PDZZ,PDZX,PDZY,PRSNOW,               &
                       PDIRCOSXW,PDIRCOSYW,                           &
