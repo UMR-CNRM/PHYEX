@@ -123,8 +123,6 @@ INTEGER     :: JI,JJ
 !*      1.    PRELIMINARIES
 !             -------------
 !
-PUSLOPE(:,:)=0.
-PVSLOPE(:,:)=0.
 !
 IIB = 2
 IJB = 2
@@ -134,6 +132,12 @@ IIE = IIU - 1
 IJE = IJU - 1
 IKB = 1+JPVEXT
 !
+!
+!$acc kernels
+!$mnh_expand_array(JI=1:IIU,JJ=1:IJU)
+PUSLOPE(:,:)=0.
+PVSLOPE(:,:)=0.
+!
 ZWGROUND(:,:) = PW(:,:,IKB)
 !
 !*      2.    INTERPOLATE THE CARTESIAN COMPONENTS
@@ -141,11 +145,11 @@ ZWGROUND(:,:) = PW(:,:,IKB)
 !
 ILOC(:,:)=NINT(SIGN(1.,-PCOSSLOPE(:,:)))
 JLOC(:,:)=NINT(SIGN(1.,-PSINSLOPE(:,:)))
+!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
 !
 ! interpolation in x direction
 !
-DO JJ = 1,IJU
-  DO JI = IIB,IIE 
+DO CONCURRENT (JJ=1:IJU,JI=IIB:IIE)
     ZCOEFF(JI,JJ) =                                                  &
       (0.5*PDXX(JI,JJ,IKB) + 0.5*PDZZ(JI,JJ,IKB)*PDIRCOSXW(JI,JJ) )  & 
       * 2. / (PDXX(JI,JJ,IKB)+PDXX(JI+1,JJ,IKB))
@@ -160,13 +164,11 @@ DO JJ = 1,IJU
     ZWINT(JI,JJ) = ZCOEFM(JI,JJ)  * (PW(JI,JJ,IKB+1)+ZWGROUND(JI,JJ)) * 0.5    &
               + (1.-ZCOEFM(JI,JJ))                                             &
                *(PW(JI+ILOC(JI,JJ),JJ,IKB+1)+ZWGROUND(JI+ILOC(JI,JJ),JJ)) * 0.5
-  END DO
 END DO
 !
 ! interpolation in y direction
 !
-DO JJ = IJB,IJE
-  DO JI = IIB,IIE
+DO CONCURRENT (JJ=IJB:IJE,JI=IIB:IIE)
     ZCOEFF(JI,JJ) =                                                     &
       (0.5*PDYY(JI,JJ,IKB) + 0.5*PDZZ(JI,JJ,IKB)*PDIRCOSYW(JI,JJ) )     & 
       * 2. / (PDYY(JI,JJ,IKB)+PDYY(JI+1,JJ,IKB))
@@ -179,15 +181,13 @@ DO JJ = IJB,IJE
                    (1.-ZCOEFM(JI,JJ)) * ZUINT(JI,JJ+JLOC(JI,JJ))
     ZWFIN(JI,JJ) = ZCOEFM(JI,JJ)      * ZWINT(JI,JJ)                +    &
                    (1.-ZCOEFM(JI,JJ)) * ZWINT(JI,JJ+JLOC(JI,JJ))
-  END DO
 END DO
 !
 !*      3.    ROTATE THE WIND
 !             ---------------
 !
 !
-DO JJ = IJB,IJE 
-  DO JI = IIB,IIE
+DO CONCURRENT (JJ=IJB:IJE,JI=IIB:IIE)
     PUSLOPE(JI,JJ) = PCOSSLOPE(JI,JJ) * PDIRCOSZW(JI,JJ) * ZUFIN(JI,JJ) +   &
                      PSINSLOPE(JI,JJ) * PDIRCOSZW(JI,JJ) * ZVFIN(JI,JJ) +   &
                             SQRT(1.-PDIRCOSZW(JI,JJ)**2) * ZWFIN(JI,JJ)
@@ -195,9 +195,9 @@ DO JJ = IJB,IJE
     PVSLOPE(JI,JJ) =-PSINSLOPE(JI,JJ)                    * ZUFIN(JI,JJ) +   &
                      PCOSSLOPE(JI,JJ)                    * ZVFIN(JI,JJ)
     !
-  END DO
 END DO
 !
+!$acc end kernels
 !
 !
 !----------------------------------------------------------------------------
@@ -229,6 +229,9 @@ USE MODE_ll, ONLY: ADD2DFIELD_ll, UPDATE_HALO_ll, CLEANLIST_ll, &
                    LWEST_ll, LEAST_ll, LSOUTH_ll, LNORTH_ll
 USE MODD_ARGSLIST_ll, ONLY : LIST_ll
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
+#ifdef MNH_OPENACC
+USE MODI_GET_HALO
+#endif
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
@@ -239,6 +242,8 @@ REAL, DIMENSION(D%NIT,D%NJT), INTENT(INOUT) :: PUSLOPE,PVSLOPE
 !
 TYPE(LIST_ll), POINTER :: TZFIELDS_ll  ! list of fields to exchange
 INTEGER                :: IINFO_ll       ! return code of parallel routine
+logical                :: gwest, geast, gnorth, gsouth
+INTEGER :: IIB, IIE, IJB, IJE
 !
 ! tangential surface fluxes in the axes following the orography
 !
@@ -246,33 +251,52 @@ INTEGER                :: IINFO_ll       ! return code of parallel routine
 !
 NULLIFY(TZFIELDS_ll)
 !
+IIB = D%NIB
+IJB = D%NJB
+IIE = D%NIE
+IJE = D%NJE
 !         2 Update halo if necessary
 !
 !!$IF (NHALO == 1) THEN
+#ifndef MNH_OPENACC
   CALL ADD2DFIELD_ll( TZFIELDS_ll, PUSLOPE, 'UPDATE_ROTATE_WIND::PUSLOPE' )
   CALL ADD2DFIELD_ll( TZFIELDS_ll, PVSLOPE, 'UPDATE_ROTATE_WIND::PVSLOPE' )
   CALL UPDATE_HALO_ll(TZFIELDS_ll,IINFO_ll)
   CALL CLEANLIST_ll(TZFIELDS_ll)
+#else
+!
+!  /!\ warning conner needed -> GET_HALO...C
+!
+CALL GET_2D_HALO_DDC( PUSLOPE, HNAME='UPDATE_ROTATE_WIND::PUSLOPE' )
+CALL GET_2D_HALO_DDC( PVSLOPE, HNAME='UPDATE_ROTATE_WIND::PVSLOPE' )
+#endif
 !!$ENDIF
 !
 !        3 Boundary conditions for non cyclic case
 !
-IF ( HLBCX(1) /= "CYCL" .AND. LWEST_ll()) THEN
-  PUSLOPE(D%NIB-1,:)=PUSLOPE(D%NIB,:)
-  PVSLOPE(D%NIB-1,:)=PVSLOPE(D%NIB,:)
+gwest  = HLBCX(1) /= "CYCL" .AND. LWEST_ll()
+geast  = HLBCX(2) /= "CYCL" .AND. LEAST_ll()
+gsouth = HLBCY(1) /= "CYCL" .AND. LSOUTH_ll()
+gnorth = HLBCY(2) /= "CYCL" .AND. LNORTH_ll()
+
+!$acc kernels present_cr(PUSLOPE,PVSLOPE)
+IF ( gwest ) THEN
+  PUSLOPE(IIB-1,:)=PUSLOPE(IIB,:)
+  PVSLOPE(IIB-1,:)=PVSLOPE(IIB,:)
 END IF
-IF ( HLBCX(2) /= "CYCL" .AND. LEAST_ll()) THEN
-  PUSLOPE(D%NIE+1,:)=PUSLOPE(D%NIE,:)
-  PVSLOPE(D%NIE+1,:)=PVSLOPE(D%NIE,:)
+IF ( geast ) THEN
+  PUSLOPE(IIE+1,:)=PUSLOPE(IIE,:)
+  PVSLOPE(IIE+1,:)=PVSLOPE(IIE,:)
 END IF
-IF ( HLBCY(1) /= "CYCL" .AND. LSOUTH_ll()) THEN
-  PUSLOPE(:,D%NJB-1)=PUSLOPE(:,D%NJB)
-  PVSLOPE(:,D%NJB-1)=PVSLOPE(:,D%NJB)
+IF ( gsouth ) THEN
+  PUSLOPE(:,IJB-1)=PUSLOPE(:,IJB)
+  PVSLOPE(:,IJB-1)=PVSLOPE(:,IJB)
 END IF
-IF(  HLBCY(2) /= "CYCL" .AND. LNORTH_ll()) THEN
-  PUSLOPE(:,D%NJE+1)=PUSLOPE(:,D%NJE)
-  PVSLOPE(:,D%NJE+1)=PVSLOPE(:,D%NJE)
+IF( gnorth ) THEN
+  PUSLOPE(:,IJE+1)=PUSLOPE(:,IJE)
+  PVSLOPE(:,IJE+1)=PVSLOPE(:,IJE)
 END IF
+!$acc end kernels
 !
 END SUBROUTINE UPDATE_ROTATE_WIND
 END MODULE MODE_ROTATE_WIND
