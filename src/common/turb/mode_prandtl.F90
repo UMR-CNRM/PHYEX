@@ -605,7 +605,7 @@ DO JSV=1,KSV
       CALL MZM_PHY(D,ZWORK1,ZW1)  
       !
       CALL GX_M_M_PHY(D,OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX,ZGXMM_PSV)
-      !Already computed CALL GX_M_M_PHY(D,OFLAT,PTHLM,PDXX,PDZZ,PDZX,ZGXMM_PTH)
+      CALL GX_M_M_PHY(D,OFLAT,PTHLM,PDXX,PDZZ,PDZX,ZGXMM_PTH)
       !
 !$acc kernels
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -614,14 +614,6 @@ DO JSV=1,KSV
 !$acc end kernels
       CALL MZM_PHY(D,ZWORK1,ZWORK2)
       !
-!$acc kernels
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZWORK1(:,:) = ZGXMM_PSV(:,:) * ZGXMM_PRM(:,:)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-      CALL MZM_PHY(D,ZWORK1,ZWORK3)
-!
-!$acc kernels
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)    
       IF (KRR /= 0) THEN
         ZWORK1(IIJB:IIJE,1:IKT) = ZW1(IIJB:IIJE,1:IKT)*PETHETA(IIJB:IIJE,1:IKT)
