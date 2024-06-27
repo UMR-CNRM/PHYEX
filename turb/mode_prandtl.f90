@@ -591,16 +591,18 @@ DO JSV=1,KSV
         ZW1 = ZWORK2
       END IF
     ELSE
+      !Compute only once and reuse in next JSV iterations
+      IF ( JSV == 1 ) THEN
 !$acc kernels
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZWORK1(:,:) = (CST%XG / PTHVREF(:,:) * PLM(:,:) &
-                                      * PLEPS(:,:) / PTKEM(:,:))**2
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        ZWORK1(:,:) = (CST%XG / PTHVREF(:,:) * PLM(:,:) * PLEPS(:,:) / PTKEM(:,:))**2
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
-      CALL MZM_PHY(D,ZWORK1,ZW1)  
+        CALL MZM_PHY(D,ZWORK1,ZW1)
+      END IF
       !
       CALL GX_M_M_PHY(D,OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX,ZGXMM_PSV)
-      CALL GX_M_M_PHY(D,OFLAT,PTHLM,PDXX,PDZZ,PDZX,ZGXMM_PTH)
+      !Already computed CALL GX_M_M_PHY(D,OFLAT,PTHLM,PDXX,PDZZ,PDZX,ZGXMM_PTH)
       !
 !$acc kernels
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -648,7 +650,6 @@ DO JSV=1,KSV
                                        / PTKEM(:,:))**2
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
-      CALL MZM_PHY(D,ZWORK1,ZWORK2)  
       IF (KRR /= 0) THEN
 !$acc kernels
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -663,13 +664,15 @@ DO JSV=1,KSV
 !$acc end kernels
       END IF
     ELSE
+      !Compute only once and reuse in next JSV iterations
+      IF ( JSV == 1 ) THEN
 !$acc kernels
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZWORK1(:,:) = (CST%XG / PTHVREF(:,:) * PLM(:,:) &
-                                      * PLEPS(:,:) / PTKEM(:,:))**2
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        ZWORK1(:,:) = (CST%XG / PTHVREF(:,:) * PLM(:,:) * PLEPS(:,:) / PTKEM(:,:))**2
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
-      CALL MZM_PHY(D,ZWORK1,ZW1)
+        CALL MZM_PHY(D,ZWORK1,ZW1)
+      END IF
       !
       CALL GX_M_M_PHY(D,OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX,ZGXMM_PSV)
       !Already computed CALL GX_M_M_PHY(D,OFLAT,PTHLM,PDXX,PDZZ,PDZX,ZGXMM_PTH)
