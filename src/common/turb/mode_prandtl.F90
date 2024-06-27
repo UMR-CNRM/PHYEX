@@ -574,28 +574,18 @@ DO JSV=1,KSV
   ELSE  IF (O2D) THEN ! 3D case in a 2D model
 !
     IF (OOCEAN) THEN
-      !!mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG *CST%XALPHAOC * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) &
       !                                 / PTKEM(IIJB:IIJE,1:IKT))**2
-      !!mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !CALL MZM_PHY(D,ZWORK1,ZWORK2)
       !IF (KRR /= 0) THEN
-      !  !mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !  ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)
-      !  !mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       !ELSE
       !  ZW1 = ZWORK2
       !END IF
-    ELSE
-      !Compute only once and reuse in next JSV iterations
-      IF ( JSV == 1 ) THEN
-!$acc kernels
-        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-        ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)
-        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-        CALL MZM_PHY(D,ZWORK1,ZW1)
-      END IF
     ELSE
       !Compute only once and reuse in next JSV iterations
       IF ( JSV == 1 ) THEN
@@ -650,25 +640,18 @@ DO JSV=1,KSV
   ELSE ! 3D case in a 3D model
 !
     IF (OOCEAN) THEN
-!$acc kernels
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG *CST%XALPHAOC * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) &
-                                       / PTKEM(IIJB:IIJE,1:IKT))**2
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-      IF (KRR /= 0) THEN
-!$acc kernels
-        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-        ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)
-        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-      ELSE
-!$acc kernels
-        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-        ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT)
-        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!$acc end kernels
-      END IF
+      !!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG *CST%XALPHAOC * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) &
+      !                                 / PTKEM(IIJB:IIJE,1:IKT))**2
+      !!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !CALL MZM_PHY(D,ZWORK1,ZWORK2)
+      !IF (KRR /= 0) THEN
+      !  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !  ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)
+      !  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+      !ELSE
+      !  ZW1 = ZWORK2
+      !END IF
     ELSE
       !Compute only once and reuse in next JSV iterations
       IF ( JSV == 1 ) THEN
