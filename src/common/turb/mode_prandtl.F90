@@ -534,7 +534,7 @@ DO JSV=1,KSV
       ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG *CST%XALPHAOC * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) &
                                        / PTKEM(IIJB:IIJE,1:IKT))**2
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      CALL MZM_PHY(D,ZWORK1,ZWORK2)  
+      CALL MZM_PHY(D,ZWORK1,ZWORK2)
       IF (KRR /= 0) THEN
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
         ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)
@@ -543,14 +543,17 @@ DO JSV=1,KSV
         ZW1 = ZWORK2
       END IF
     ELSE
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG / PTHVREF(IIJB:IIJE,1:IKT) * PLM(IIJB:IIJE,1:IKT) &
+      !Compute only once and reuse in next JSV iterations
+      IF ( JSV == 1 ) THEN
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG / PTHVREF(IIJB:IIJE,1:IKT) * PLM(IIJB:IIJE,1:IKT) &
                                       * PLEPS(IIJB:IIJE,1:IKT) / PTKEM(IIJB:IIJE,1:IKT))**2
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      CALL MZM_PHY(D,ZWORK1,ZW1)  
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        CALL MZM_PHY(D,ZWORK1,ZW1)
+      END IF
       !
       CALL GX_M_M_PHY(D,OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX,ZGXMM_PSV)
-      CALL GX_M_M_PHY(D,OFLAT,PTHLM,PDXX,PDZZ,PDZX,ZGXMM_PTH)
+      !Already computed CALL GX_M_M_PHY(D,OFLAT,PTHLM,PDXX,PDZZ,PDZX,ZGXMM_PTH)
       !
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ZWORK1(IIJB:IIJE,1:IKT) = ZGXMM_PSV(IIJB:IIJE,1:IKT) * ZGXMM_PTH(IIJB:IIJE,1:IKT)
@@ -568,7 +571,7 @@ DO JSV=1,KSV
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)    
                          !
       IF (KRR /= 0) THEN
-        CALL GX_M_M_PHY(D,OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX,ZGXMM_PRM)
+        !Already computed CALL GX_M_M_PHY(D,OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX,ZGXMM_PRM)
         !
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
         ZWORK1(IIJB:IIJE,1:IKT) = ZGXMM_PSV(IIJB:IIJE,1:IKT) * ZGXMM_PRM(IIJB:IIJE,1:IKT)
@@ -593,7 +596,7 @@ DO JSV=1,KSV
       ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG *CST%XALPHAOC * PLM(IIJB:IIJE,1:IKT) * PLEPS(IIJB:IIJE,1:IKT) &
                                        / PTKEM(IIJB:IIJE,1:IKT))**2
       !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      CALL MZM_PHY(D,ZWORK1,ZWORK2)  
+      CALL MZM_PHY(D,ZWORK1,ZWORK2)
       IF (KRR /= 0) THEN
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
         ZW1(IIJB:IIJE,1:IKT) = ZWORK2(IIJB:IIJE,1:IKT) * PETHETA(IIJB:IIJE,1:IKT)
@@ -602,16 +605,19 @@ DO JSV=1,KSV
         ZW1 = ZWORK2
       END IF
     ELSE
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG / PTHVREF(IIJB:IIJE,1:IKT) * PLM(IIJB:IIJE,1:IKT) &
+      !Compute only once and reuse in next JSV iterations
+      IF ( JSV == 1 ) THEN
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        ZWORK1(IIJB:IIJE,1:IKT) = (CST%XG / PTHVREF(IIJB:IIJE,1:IKT) * PLM(IIJB:IIJE,1:IKT) &
                                       * PLEPS(IIJB:IIJE,1:IKT) / PTKEM(IIJB:IIJE,1:IKT))**2
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      CALL MZM_PHY(D,ZWORK1,ZW1)
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        CALL MZM_PHY(D,ZWORK1,ZW1)
+      END IF
       !
       CALL GX_M_M_PHY(D,OFLAT,PSVM(:,:,JSV),PDXX,PDZZ,PDZX,ZGXMM_PSV)
-      CALL GX_M_M_PHY(D,OFLAT,PTHLM,PDXX,PDZZ,PDZX,ZGXMM_PTH)
+      !Already computed CALL GX_M_M_PHY(D,OFLAT,PTHLM,PDXX,PDZZ,PDZX,ZGXMM_PTH)
       CALL GY_M_M_PHY(D,OFLAT,PSVM(:,:,JSV),PDYY,PDZZ,PDZY,ZGYMM_PSV)
-      CALL GY_M_M_PHY(D,OFLAT,PTHLM,PDYY,PDZZ,PDZY,ZGYMM_PTH)
+      !Already computed CALL GY_M_M_PHY(D,OFLAT,PTHLM,PDYY,PDZZ,PDZY,ZGYMM_PTH)
       !
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
       ZWORK1(IIJB:IIJE,1:IKT) = ZGXMM_PSV(IIJB:IIJE,1:IKT) * ZGXMM_PTH(IIJB:IIJE,1:IKT) &
@@ -620,8 +626,8 @@ DO JSV=1,KSV
       CALL MZM_PHY(D,ZWORK1,ZWORK2)
       !
       IF (KRR /= 0) THEN
-        CALL GX_M_M_PHY(D,OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX,ZGXMM_PRM)
-        CALL GY_M_M_PHY(D,OFLAT,PRM(:,:,1),PDYY,PDZZ,PDZY,ZGYMM_PRM)
+        !Already computed CALL GX_M_M_PHY(D,OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX,ZGXMM_PRM)
+        !Already computed CALL GY_M_M_PHY(D,OFLAT,PRM(:,:,1),PDYY,PDZZ,PDZY,ZGYMM_PRM)
         !
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
         ZWORK1(IIJB:IIJE,1:IKT) = ZGXMM_PSV(IIJB:IIJE,1:IKT) * ZGXMM_PRM(IIJB:IIJE,1:IKT) &
