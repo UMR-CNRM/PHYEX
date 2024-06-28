@@ -145,7 +145,7 @@ ZWGROUND(:,:) = PW(:,:,IKB)
 !
 ILOC(:,:)=NINT(SIGN(1.,-PCOSSLOPE(:,:)))
 JLOC(:,:)=NINT(SIGN(1.,-PSINSLOPE(:,:)))
-!$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
+!$mnh_end_expand_array(JI=1:IIU,JJ=1:IJU)
 !
 ! interpolation in x direction
 !
