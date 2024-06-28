@@ -1895,7 +1895,7 @@ ELSE
 !$acc kernels present_cr(PLM)
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   PLM(:,:)=1.E10
-  !$mnh_end_expand_array(JIJ=IJB:IIJE,JK=1:IKT)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
   IF ( TURBN%CTURBDIM /= '1DIM' ) THEN  ! 3D turbulence scheme
     IF ( O2D) THEN
