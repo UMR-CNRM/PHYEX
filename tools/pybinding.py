@@ -37,8 +37,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
 
     #Open input FORTRAN file and get the right scope
     pftin = PYFT(fortran_in)
-    virtualScopeNode = ET.Element('virtual')
-    virtualScopeNode.extend(pftin.getScopeChildNodes(scope))
+    scopeNode = pftin.getScopeNode(scope, excludeContains=True)
     kind, name = scope.split('/')[-1].split(':')
     name = name.upper()
     kind = {'sub': 'SUBROUTINE',
@@ -56,7 +55,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
     flush = [] #list of unit to flush
     docstringIN = ["Input arguments:"]
     docstringOUT = ["Output arguments:"]
-    for N in virtualScopeNode[0].findall('.//{*}dummy-arg-LT/{*}arg-N/{*}N'):
+    for N in scopeNode.findall('.//{*}dummy-arg-LT/{*}arg-N/{*}N'):
         var = pftin.findVar(n2name(N), scope, varList=varList, exactScope=True)
         vartype = var['t'].replace(' ', '').upper()
         if vartype == 'TYPE(DIMPHYEX_T)':
