@@ -94,7 +94,8 @@ REAL :: X1, X2, X3, X4, X5
 ! CHARACTER(LEN=7), DIMENSION(3) :: types=(/ 'NH42SO4', 'NaCl   ', '       ' /)
 !REAL, DIMENSION(1) :: diameters=(/ 0.25E-6 /)
 !CHARACTER(LEN=7), DIMENSION(1) :: types=(/ '       ' /)
-INTEGER :: II, IJ, IK
+INTEGER :: II, IJ, IK, IDX
+REAL, DIMENSION(NMODE_DST) :: ZINIRADIUS
 !
 !-------------------------------------------------------------------------------
 !
@@ -167,20 +168,20 @@ IF (LORILAM) THEN   ! for sulphates and hydrophilic aerosols
   ! assumption: we choose to put sulfates in mode J and hydrophilics compounds in mode I
   IF (CRGUNIT=="MASS") THEN
   RCCN(2)   = XINIRADIUSJ * EXP(-3.*(LOG(XINISIGJ))**2) * 1E-6 ! Sulfates
-  RCCN(3)   = XINIRADIUSI * EXP(-3.*(LOG(XINISIGI))**2) * 1E-6 ! Hydrophilic
+  RCCN(3)   = XINIRADIUSJ * EXP(-3.*(LOG(XINISIGJ))**2) * 1E-6 ! Hydrophilic
   ELSE
   RCCN(2)   = XINIRADIUSJ * 1E-6  ! Sulfates
-  RCCN(3)   = XINIRADIUSI * 1E-6  ! Hydrophilic
+  RCCN(3)   = XINIRADIUSJ * 1E-6  ! Hydrophilic
 
   END IF
   LOGSIGCCN(2) = LOG(XINISIGJ)
-  LOGSIGCCN(3) = LOG(XINISIGI)
+  LOGSIGCCN(3) = LOG(XINISIGJ)
   RHOCCN(2)    = XRHOI(JP_AER_SO4) 
   RHOCCN(3)    = XRHOI(JP_AER_BC)
 END IF
 IF (LSALT) THEN ! for sea salts
   JMOD = 1
-  IF (NMODE_SLT >= 5) JMOD = 5  ! choose mode 5 of Ovadnevaite 2014 (r = 0.415 µm, sigma = 1.85)
+  IF (NMODE_SLT >= 5) JMOD = 4  ! choose mode 4 of Ovadnevaite 2014 (r = 0.115 µm, sigma = 1.53)
   IF (NMODE_SLT == 3) JMOD = 1  ! choose mode 1 of Vig01 (r = 0.2 µm, sigma = 1.9) or Sch04 (r = 0.14 µm, sigma = 1.59)
   IF (CRGUNITS=="MASS") THEN
   RCCN(1)   = XINIRADIUS_SLT(JMOD) * EXP(-3.*(LOG(XINISIG_SLT(JMOD)))**2) * 1E-6
@@ -396,30 +397,51 @@ IF ( NMOD_IFN .GE. 1 ) THEN
    ENDSELECT
 
 IF (LORILAM) THEN
-! assumption: only the aitken mode is considered as ifn
-  IF (CRGUNIT=="MASS") THEN
-  XMDIAM_IFN(3)   = 2 * XINIRADIUSI * EXP(-3.*(LOG(XINISIGI))**2) * 1E-6
-  XMDIAM_IFN(4)   = 2 * XINIRADIUSI * EXP(-3.*(LOG(XINISIGI))**2) * 1E-6
+  IF (LDUST) THEN
+    IDX=MIN(NMODE_DST-1,NMOD_IFN)
   ELSE
-  XMDIAM_IFN(3)   = 2 * XINIRADIUSI * 1E-6
-  XMDIAM_IFN(4)   = 2 * XINIRADIUSI * 1E-6
+    IDX= 2
   END IF
-  XRHO_IFN(3)    = XRHOI(JP_AER_BC) 
-  XRHO_IFN(4)    = XRHOI(JP_AER_OC)
-  XSIGMA_IFN(3)  = XINISIGI
-  XSIGMA_IFN(4)  = XINISIGI
+
+  IF ((IDX+1) .LE. NMOD_IFN) THEN
+  IF (CRGUNIT=="MASS") THEN
+   XMDIAM_IFN(IDX+1)   = 2 * XINIRADIUSI * EXP(-3.*(LOG(XINISIGI))**2) * 1E-6
+  ELSE
+   XMDIAM_IFN(IDX+1)   = 2 * XINIRADIUSI * 1E-6
+  END IF
+  XRHO_IFN(IDX+1)    = XRHOI(JP_AER_BC)
+  XSIGMA_IFN(IDX+1)  = XINISIGI
+  END IF
+
+  IF ((IDX+2) .LE. NMOD_IFN) THEN
+    IF (CRGUNIT=="MASS") THEN
+     XMDIAM_IFN(IDX+2)   = 2 * XINIRADIUSJ * EXP(-3.*(LOG(XINISIGJ))**2) * 1E-6
+    ELSE
+     XMDIAM_IFN(IDX+2)   = 2 * XINIRADIUSJ * 1E-6
+    END IF
+  XRHO_IFN(IDX+2)    = XRHOI(JP_AER_OC)
+  XSIGMA_IFN(IDX+2)  = XINISIGJ
+  END IF
 END IF
 
 IF (LDUST) THEN
-! assumption: we considered the two finest dust modes as ifn
-  DO JMOD = 1,2
-  IF (CRGUNITD=="MASS") THEN
-    XMDIAM_IFN(JMOD) = 2 * XINIRADIUS(JPDUSTORDER(JMOD)) * EXP(-3.*(LOG(XINISIG(JPDUSTORDER(JMOD))))**2) * 1E-6 
-  ELSE
-    XMDIAM_IFN(JMOD) = 2 * XINIRADIUS(JPDUSTORDER(JMOD)) * 1E-6 
-  END IF
-  XSIGMA_IFN(JMOD) = XINISIG(JPDUSTORDER(JMOD))
-  XRHO_IFN(JMOD) = XDENSITY_DUST
+  DO JMOD = 1,NMODE_DST
+    IF (CRGUNITD=="MASS") THEN
+     ZINIRADIUS(JMOD) = XINIRADIUS(JPDUSTORDER(JMOD)) * EXP(-3.*(LOG(XINISIG(JPDUSTORDER(JMOD))))**2)
+    ELSE
+     ZINIRADIUS(JMOD) = XINIRADIUS(JPDUSTORDER(JMOD))
+    END IF
+  ENDDO
+  IDX = MIN(NMODE_DST-1,NMOD_IFN)
+  DO JMOD = 1,IDX
+   IF (JMOD==1) THEN
+     XMDIAM_IFN(JMOD) = 2 * ZINIRADIUS(2) * 1E-6
+     XSIGMA_IFN(JMOD) = XINISIG(JPDUSTORDER(2))
+    ELSE
+     XMDIAM_IFN(JMOD) = 2 * ZINIRADIUS(3) * 1E-6 
+     XSIGMA_IFN(JMOD) = XINISIG(JPDUSTORDER(3))
+    END IF
+
   ENDDO
 END IF
 !
@@ -436,6 +458,11 @@ END IF
       XFRAC(3,:)=1.
    CASE ('O')
       XFRAC(4,:)=1.
+   CASE ('TULP')
+      XFRAC(1,1)=1.
+      XFRAC(1,2)=1.
+      XFRAC(3,3)=0.5
+      XFRAC(4,3)=0.5
    CASE ('CAMS')
       XFRAC(1,1)=0.99
       XFRAC(2,1)=0.01

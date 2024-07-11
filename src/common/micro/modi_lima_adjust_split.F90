@@ -11,6 +11,7 @@ INTERFACE
                              PRHODREF, PRHODJ, PEXNREF, PSIGS, PMFCONV,         &
                              PPABST, PPABSTT, PZZ, PDTHRAD, PW_NU,              &
                              PRT, PRS, PSVT, PSVS,                              &
+                             HACTCCN, PAERO,PSOLORG, PMI, &
                              PTHS, PSRCS, PCLDFR, PICEFR, PRC_MF, PRI_MF, PCF_MF)
 !
 !USE MODD_IO,    ONLY: TFILEDATA
@@ -49,6 +50,11 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PZZ       !
 REAL, DIMENSION(:,:,:),   INTENT(IN)   :: PDTHRAD   ! Radiative temperature tendency
 REAL, DIMENSION(:,:,:),   INTENT(IN)   :: PW_NU     ! updraft velocity used for
 !
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PAERO   ! Aerosol concentration
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PMI
+CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
+
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT       ! m.r. at t
 !
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS       ! m.r. source

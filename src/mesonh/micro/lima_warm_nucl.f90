@@ -12,6 +12,7 @@ INTERFACE
       SUBROUTINE LIMA_WARM_NUCL( OACTIT, PTSTEP, KMI, TPFILE,               &
                                  PRHODREF, PEXNREF, PPABST, PT, PTM, PW_NU, &
                                  PRVT, PRCT, PRRT,                          &
+                                 PAERO,PSOLORG, PMI,  HACTCCN,              &
                                  PTHS, PRVS, PRCS, PCCS, PNFS, PNAS         )
 !
 USE MODD_IO,   ONLY: TFILEDATA
@@ -38,6 +39,11 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRVT       ! Water vapor m.r. at t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRCT       ! Cloud water m.r. at t 
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRRT       ! Rain water m.r. at t 
 !
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PAERO    ! Aerosol concentration
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PMI
+CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
+
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS       ! Theta source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRVS       ! Water vapor m.r. source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRCS       ! Cloud water m.r. source
@@ -53,6 +59,7 @@ END MODULE MODI_LIMA_WARM_NUCL
       SUBROUTINE LIMA_WARM_NUCL( OACTIT, PTSTEP, KMI, TPFILE,               &
                                  PRHODREF, PEXNREF, PPABST, PT, PTM, PW_NU, &
                                  PRVT, PRCT, PRRT,                          &
+                                 PAERO,PSOLORG, PMI,  HACTCCN,              &
                                  PTHS, PRVS, PRCS, PCCS, PNFS, PNAS         )
 !     #######################################################################
 !
@@ -116,6 +123,11 @@ USE MODD_LUNIT_n,         ONLY: TLUOUT
 USE MODD_PARAMETERS,      ONLY : JPHEXT, JPVEXT
 USE MODD_PARAM_LIMA
 USE MODD_PARAM_LIMA_WARM
+USE MODD_CH_AEROSOL
+USE MODD_DUST
+USE MODD_SALT
+USE MODI_CH_AER_ACTIVATION
+
 
 USE MODE_IO_FIELD_WRITE,  only: IO_Field_write
 use mode_tools,           only: Countjv
@@ -146,6 +158,11 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU      ! updraft velocity used fo
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRVT       ! Water vapor m.r. at t 
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRCT       ! Cloud water m.r. at t 
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRRT       ! Rain water m.r. at t 
+
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PAERO    ! Aerosol concentration
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PMI
+CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
 !
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS       ! Theta source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRVS       ! Water vapor m.r. source
@@ -192,6 +209,9 @@ REAL, DIMENSION(SIZE(PNFS,1),SIZE(PNFS,2),SIZE(PNFS,3))               &
 !
 INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1             ! Vectors of indices for
                                                         ! interpolations
+REAL, DIMENSION(:), ALLOCATABLE    :: ZMCN
+REAL, DIMENSION(:)  , ALLOCATABLE  :: ZPABST   ! Pressure
+REAL, DIMENSION(:,:), ALLOCATABLE  :: ZAERO, ZAEROS, ZSOLORG, ZMI
 !
 ! 
 REAL    :: ZEPS                                ! molar mass ratio
@@ -276,6 +296,12 @@ IF( INUCT >= 1 ) THEN
    ALLOCATE(IVEC1(INUCT))
    ALLOCATE(ZRHODREF(INUCT)) 
    ALLOCATE(ZEXNREF(INUCT)) 
+   ALLOCATE(ZPABST(INUCT))
+   ALLOCATE(ZAERO(INUCT,SIZE(PAERO,4)))
+   ALLOCATE(ZSMAX(INUCT))
+   ALLOCATE(ZSOLORG(INUCT,SIZE(PSOLORG,4)))
+   ALLOCATE(ZMI(INUCT,SIZE(PMI,4)))
+
    DO JL=1,INUCT
       ZRCS(JL) = PRCS(I1(JL),I2(JL),I3(JL))
       ZCCS(JL) = PCCS(I1(JL),I2(JL),I3(JL))
@@ -286,6 +312,20 @@ IF( INUCT >= 1 ) THEN
       ZSW(JL)  = PRVT(I1(JL),I2(JL),I3(JL))/ZRVSAT(I1(JL),I2(JL),I3(JL)) - 1.
       ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
       ZEXNREF(JL)  = PEXNREF(I1(JL),I2(JL),I3(JL))
+      ZPABST(JL)  = PPABST(I1(JL),I2(JL),I3(JL))
+      IF ((LORILAM).OR.(LDUST).OR.(LSALT)) THEN
+        ZAERO(JL,:)  = PAERO(I1(JL),I2(JL),I3(JL),:)
+      ELSE
+        ZAERO(JL,:) = 0.
+      END IF
+      IF (LORILAM) THEN
+         ZSOLORG(JL,:) = PSOLORG(I1(JL),I2(JL),I3(JL),:)
+         ZMI(JL,:) = PMI(I1(JL),I2(JL),I3(JL),:)
+      ELSE
+        ZSOLORG(JL,:) = 0.
+        ZMI(JL,:) = 0.
+      END IF
+
       DO JMOD = 1,NMOD_CCN
          ZNFS(JL,JMOD)        = PNFS(I1(JL),I2(JL),I3(JL),JMOD)
          ZNAS(JL,JMOD)        = PNAS(I1(JL),I2(JL),I3(JL),JMOD)
@@ -297,6 +337,32 @@ IF( INUCT >= 1 ) THEN
    ZZW1(:) = 1.0/ZEPS + 1.0/ZZW1(:)                                   &
              + (((XLVTT+(XCPV-XCL)*(ZZT(:)-XTT))/ZZT(:))**2)/(XCPD*XRV) ! Psi2
 !
+IF ((HACTCCN == 'ABRK').AND.((LORILAM).OR.(LDUST).OR.(LSALT))) THEN  !P.Tulet
+!
+     ZZW1(:) = 0.
+     ZZW3(:) = 0.
+     ZSMAX(:) = 0.
+
+     ALLOCATE(ZMCN(INUCT))
+     ZMCN(:) = 0. !masse activée (non utilisée!!)
+
+     !ZZW2 veetical activation velocity
+     CALL CH_AER_ACTIVATION(ZAERO, ZZT, ZZW2, ZZTDT, ZRHODREF, ZPABST,&
+                             ZTMP(:,1), ZMCN, ZSOLORG, ZMI, ZSMAX)
+
+     ZZW1(:) = MAX(ZTMP(:,1)/PTSTEP - ZNAS(:,1), 0.0 )
+     PNAS(:,:,:,1) = PNAS(:,:,:,1) +                            &
+                         UNPACK( ZZW1(:), MASK=GNUCT(:,:,:), FIELD=0.0 )
+!
+     ZW(:,:,:) = UNPACK( ZZW1(:),MASK=GNUCT(:,:,:),FIELD=0.0 )
+
+   !* prepare to update the cloud water concentration
+      ZZW6(:) = ZZW1(:)
+     DEALLOCATE(ZMCN)
+!
+ELSE
+
+
 !
 !-------------------------------------------------------------------------------
 !
@@ -310,7 +376,7 @@ IF( INUCT >= 1 ) THEN
    ZVEC1(:) = MAX( 1.0001, MIN( REAL(NAHEN)-0.0001, XAHENINTP1 * ZZT(:) + XAHENINTP2 ) )
    IVEC1(:) = INT( ZVEC1(:) )
    ZVEC1(:) = ZVEC1(:) - REAL( IVEC1(:) )
-   ALLOCATE(ZSMAX(INUCT))
+!   ALLOCATE(ZSMAX(INUCT))
 !
 !
    IF (OACTIT) THEN ! including a cooling rate
@@ -452,6 +518,8 @@ IF( INUCT >= 1 ) THEN
       ZZW6(:) = ZZW6(:) + ZZW1(:)
    ENDDO
 !
+END IF ! CH_AER_ACTIVATION
+
 ! Update PRVS, PRCS, PCCS, and PTHS
 !
    ZZW1(:)=0.
@@ -487,7 +555,6 @@ IF( INUCT >= 1 ) THEN
    DEALLOCATE(ZCCS)
    DEALLOCATE(ZRCS)
    DEALLOCATE(ZZT)
-   DEALLOCATE(ZSMAX)
    DEALLOCATE(ZZW1)
    DEALLOCATE(ZZW2)
    DEALLOCATE(ZZW3)
@@ -499,6 +566,11 @@ IF( INUCT >= 1 ) THEN
    DEALLOCATE(ZRHODREF)
    DEALLOCATE(ZCHEN_MULTI)
    DEALLOCATE(ZEXNREF)
+   DEALLOCATE(ZPABST)
+   DEALLOCATE(ZAERO)
+   DEALLOCATE(ZSMAX)
+   DEALLOCATE(ZSOLORG)
+   DEALLOCATE(ZMI)
 !
 END IF ! INUCT
 !
