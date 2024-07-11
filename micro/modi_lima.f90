@@ -3,13 +3,13 @@ MODULE MODI_LIMA
 IMPLICIT NONE
 INTERFACE
 !
-   SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, KBUDGETS,&
+   SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, HACTCCN, KBUDGETS,&
                      PTSTEP, OELEC, HCLOUD,                                  &
                      PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                      PRHODJ, PPABST,                                         &
                      NCCN, NIFN, NIMM,                                       &
                      PDTHRAD, PTHT, PRT, PSVT, PW_NU,                        &
-                     PTHS, PRS, PSVS,                                        &
+                     PAERO,PSOLORG, PMI, PTHS, PRS, PSVS,                    &
                      PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
                      PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR,                  &
                      PLATHAM_IAGGS, PEFIELDW, PSV_ELEC_T, PSV_ELEC_S         )
@@ -31,6 +31,7 @@ TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(ELEC_PARAM_t),       INTENT(IN)    :: ELECP   ! electrical parameters
 TYPE(ELEC_DESCR_t),       INTENT(IN)    :: ELECD   ! electrical descriptive csts
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 !
@@ -54,7 +55,13 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDTHRAD    ! dT/dt due to radiation
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT        ! Mixing ratios at time t
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSVT       ! Concentrations at time t
+
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU      ! w for CCN activation
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PAERO    ! Aerosol concentration
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PMI
+
+
 !
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS       ! Theta source
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS        ! Mixing ratios sources

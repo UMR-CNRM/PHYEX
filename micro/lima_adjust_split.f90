@@ -10,6 +10,7 @@ SUBROUTINE LIMA_ADJUST_SPLIT(D, CST, BUCONF, TBUDGETS, KBUDGETS,                
      PRHODREF, PRHODJ, PEXNREF, PSIGS, PMFCONV,         &
      PPABST, PPABSTT, PZZ, PDTHRAD, PW_NU,              &
      PRT, PRS, PSVT, PSVS,                              &
+     HACTCCN, PAERO,PSOLORG, PMI,                       &
      PTHS, PSRCS, PCLDFR, PICEFR, PRC_MF, PRI_MF, PCF_MF)
   !     ###########################################################################
   !
@@ -144,6 +145,11 @@ SUBROUTINE LIMA_ADJUST_SPLIT(D, CST, BUCONF, TBUDGETS, KBUDGETS,                
   REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PZZ       !     
   REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDTHRAD   ! Radiative temperature tendency
   REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU     ! updraft velocity used for
+  REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PAERO     ! Aerosol concentration
+  REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSOLORG   ![%] solubility fraction of soa
+  REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PMI
+  CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN   ! kind of CCN activation
+                                                       ! the nucleation param.
   !
   REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT       ! m.r. at t
   !
@@ -424,6 +430,7 @@ SUBROUTINE LIMA_ADJUST_SPLIT(D, CST, BUCONF, TBUDGETS, KBUDGETS,                
      ZRC2=PRCT
      CALL LIMA_CCN_ACTIVATION (CST,                          &
           PRHODREF, PEXNREF, PPABST, ZT2, PDTHRAD, PW_NU+ZW_MF, &
+          PAERO,PSOLORG, PMI,  HACTCCN,                         &
           PTHT, ZRV2, ZRC2, PCCT, PRRT, PNFT, PNAT,             &
           PCLDFR                                                )      
   END IF
