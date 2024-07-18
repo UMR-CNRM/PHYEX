@@ -1008,6 +1008,10 @@ END DO
 !                   evaluating the derivative using ZMIXF=0.1
                 
 ZKIC_INIT=0.1  ! starting value for critical mixed fraction for CLoudy Part
+ZMIXTHL(:) = 300.
+ZMIXRT(:) = 0.1
+
+
 
 !  Compute thetaV of environment at the bottom of cloudy part
 !    and cons then non cons. var. of mixture at the bottom of cloudy part
@@ -1033,10 +1037,7 @@ DO JIJ=IIJB,IIJE
     ZMIXRT(JIJ)  = ZKIC_INIT * &
                (PRTM(JIJ,KK)-ZDZ*(PRTM(JIJ,KK)-PRTM(JIJ,JKLIM))/PDZZ(JIJ,KK)) + &
                (1. - ZKIC_INIT)*PRT_UP(JIJ)
-  ELSE
-    ZMIXTHL(JIJ) = 300.
-    ZMIXRT(JIJ) = 0.1
-  ENDIF
+  END IF
 ENDDO
 CALL TH_R_FROM_THL_RT(CST,NEBN,D%NIJT,NEBN%CFRAC_ICE_SHALLOW_MF,ZFRAC_ICE,&
              ZPRE,ZMIXTHL,ZMIXRT,&
