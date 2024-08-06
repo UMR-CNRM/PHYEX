@@ -90,17 +90,20 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PMXM,PA)
 DO JIJK=JIJKOR , JIJKEND
    PMXM(JIJK,1,1) = 0.5*( PA(JIJK,1,1)+PA(JIJK-1,1,1) )
 END DO
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc loop independent collapse(2)
 DO JI=1,JPHEXT
    DO JJK=1,IJU*IKU
       PMXM(JI,JJK,1) = PMXM(IIU-2*JPHEXT+JI,JJK,1) ! for reprod JPHEXT <> 1
    END DO
 END DO
+!$acc end kernels
 !
 END SUBROUTINE MXM_PHY
 !-------------------------------------------------------------------------------
@@ -193,17 +196,20 @@ JIJEND = IIU*IJU
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PMXM,PA)
 DO JIJ=JIJOR , JIJEND
    PMXM(JIJ,1) = 0.5*( PA(JIJ,1)+PA(JIJ-1,1) )
 END DO
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc loop independent collapse(2)
 DO JI=1,JPHEXT
    DO JJ=1,IJU
       PMXM(JI,JJ) = PMXM(IIU-2*JPHEXT+JI,JJ) ! for reprod JPHEXT <> 1
    END DO
 END DO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -292,6 +298,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PMZM,PA)
 DO JIJK=JIJKOR , JIJKEND
    PMZM(JIJK,1,1) = 0.5*( PA(JIJK,1,1)+PA(JIJK-IIU*IJU,1,1) )
 END DO
@@ -301,6 +308,7 @@ END DO
 DO JIJ=1,IIU*IJU
    PMZM(JIJ,1,1)    = -999.
 END DO
+!$acc end kernels
 !-------------------------------------------------------------------------------
 !
 END SUBROUTINE MZM_PHY
@@ -389,6 +397,7 @@ JIJOR  = 1 + IIU
 JIJEND = IIU*IJU
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PMYM,PA)
 DO JIJ=JIJOR , JIJEND
    PMYM(JIJ,1) = 0.5*( PA(JIJ,1)+PA(JIJ-IIU,1) )
 END DO
@@ -396,6 +405,7 @@ END DO
 DO JJ=1,JPHEXT
    PMYM(:,JJ)  = PMYM(:,IJU-2*JPHEXT+JJ) ! for reprod JPHEXT <> 1
 END DO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -486,6 +496,7 @@ JIJKOR  = 1 + IIU
 JIJKEND = IIU*IJU*IKU
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PMYM,PA)
 DO JIJK=JIJKOR , JIJKEND
    PMYM(JIJK,1,1) = 0.5*( PA(JIJK,1,1)+PA(JIJK-IIU,1,1) )
 END DO
@@ -493,6 +504,7 @@ END DO
 DO JJ=1,JPHEXT
    PMYM(:,JJ,:)  = PMYM(:,IJU-2*JPHEXT+JJ,:) ! for reprod JPHEXT <> 1
 END DO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -580,6 +592,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PDZM,PA)
 DO JIJK=JIJKOR , JIJKEND
    PDZM(JIJK,1,1) = PA(JIJK,1,1)-PA(JIJK-IIU*IJU,1,1)
 END DO
@@ -589,6 +602,7 @@ END DO
 DO JIJ=1,IIU*IJU
    PDZM(JIJ,1,1)    = -999.
 END DO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -676,6 +690,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PMZF,PA)
 DO JIJK=JIJKOR , JIJKEND
    PMZF(JIJK-IIU*IJU,1,1) = 0.5*( PA(JIJK-IIU*IJU,1,1)+PA(JIJK,1,1) )
 END DO
@@ -685,6 +700,7 @@ END DO
 DO JIJ=1,IIU*IJU
    PMZF(JIJ,1,IKU)    = PMZF(JIJ,1,IKU-1) !-999.
 END DO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -778,17 +794,20 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PMXF,PA)
 DO JIJK=JIJKOR , JIJKEND
   PMXF(JIJK-1,1,1) = 0.5*( PA(JIJK-1,1,1)+PA(JIJK,1,1) )
 END DO
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc loop independent collapse(2)
 DO JI=1,JPHEXT
    DO JJK=1,IJU*IKU
       PMXF(IIU-JPHEXT+JI,JJK,1) = PMXF(JPHEXT+JI,JJK,1) ! for reprod JPHEXT <> 1
    END DO
 END DO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -882,17 +901,20 @@ JIJEND = IIU*IJU
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PMXF,PA)
 DO JIJ=JIJOR , JIJEND
   PMXF(JIJ-1,1) = 0.5*( PA(JIJ-1,1)+PA(JIJ,1) )
 END DO
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc loop independent collapse(2)
 DO JI=1,JPHEXT
    DO JJ=1,IJU
       PMXF(IIU-JPHEXT+JI,JJ) = PMXF(JPHEXT+JI,JJ) ! for reprod JPHEXT <> 1
    END DO
 END DO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -985,6 +1007,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PMYF,PA)
 DO JIJK=JIJKOR , JIJKEND
    PMYF(JIJK-IIU,1,1) = 0.5*( PA(JIJK-IIU,1,1)+PA(JIJK,1,1) )
 END DO
@@ -992,6 +1015,7 @@ END DO
 DO JJ=1,JPHEXT
    PMYF(:,IJU-JPHEXT+JJ,:) = PMYF(:,JPHEXT+JJ,:) ! for reprod JPHEXT <> 1
 END DO
+!$acc end kernels
 !
 !
 !-------------------------------------------------------------------------------
@@ -1085,6 +1109,7 @@ JIJEND = IIU*IJU
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PMYF,PA)
 DO JIJ=JIJOR , JIJEND
    PMYF(JIJ-IIU,1) = 0.5*( PA(JIJ-IIU,1)+PA(JIJ,1) )
 END DO
@@ -1092,6 +1117,7 @@ END DO
 DO JJ=1,JPHEXT
    PMYF(:,IJU-JPHEXT+JJ) = PMYF(:,JPHEXT+JJ) ! for reprod JPHEXT <> 1
 END DO
+!$acc end kernels
 !
 !
 !-------------------------------------------------------------------------------
@@ -1177,6 +1203,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PDZF,PA)
 DO JIJK=JIJKOR , JIJKEND
    PDZF(JIJK-IIU*IJU,1,1)     = PA(JIJK,1,1)-PA(JIJK-IIU*IJU,1,1)
 END DO
@@ -1186,6 +1213,7 @@ END DO
 DO JIJ=1,IIU*IJU
    PDZF(JIJ,1,IKU)    = -999.
 END DO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -1281,17 +1309,20 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PDXF,PA)
 DO JIJK=JIJKOR , JIJKEND
    PDXF(JIJK-1,1,1) = PA(JIJK,1,1) - PA(JIJK-1,1,1) 
 END DO
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc loop independent collapse(2)
 DO JI=1,JPHEXT
    DO JJK=1,IJU*IKU
       PDXF(IIU-JPHEXT+JI,JJK,1) = PDXF(JPHEXT+JI,JJK,1) ! for reprod JPHEXT <> 1
    END DO
 END DO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -1489,17 +1520,20 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PDXM,PA)
 DO JIJK=JIJKOR , JIJKEND
    PDXM(JIJK,1,1) = PA(JIJK,1,1) - PA(JIJK-1,1,1) 
 END DO
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc loop independent collapse(2)
 DO JI=1,JPHEXT
    DO JJK=1,IJU*IKU
       PDXM(JI,JJK,1) = PDXM(IIU-2*JPHEXT+JI,JJK,1) ! for reprod JPHEXT <> 1
    END DO
 END DO
+!$acc end kernels
 !
 END SUBROUTINE DXM_PHY
 !-------------------------------------------------------------------------------
@@ -1696,6 +1730,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PDYM,PA)
 DO JIJK=JIJKOR , JIJKEND
    PDYM(JIJK,1,1)           = PA(JIJK,1,1)  -  PA(JIJK-IIU,1,1) 
 END DO
@@ -1703,6 +1738,7 @@ END DO
 DO JJ=1,JPHEXT
    PDYM(:,JJ,:) = PDYM(:,IJU-2*JPHEXT+JJ,:) ! for reprod JPHEXT <> 1
 END DO
+!$acc end kernels
 !
 !
 !-------------------------------------------------------------------------------
@@ -1899,6 +1935,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
+!$acc kernels present(PDYF,PA)
 DO JIJK=JIJKOR , JIJKEND
    PDYF(JIJK-IIU,1,1)         = PA(JIJK,1,1)  -  PA(JIJK-IIU,1,1) 
 END DO
@@ -1906,6 +1943,7 @@ END DO
 DO JJ=1,JPHEXT
    PDYF(:,IJU-JPHEXT+JJ,:) = PDYF(:,JPHEXT+JJ,:) ! for reprod JPHEXT <> 1
 END DO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !

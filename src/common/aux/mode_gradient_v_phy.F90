@@ -89,10 +89,12 @@ IKT=D%NKT
 CALL DZM_PHY(D,PA,PA_WORK)
 CALL MYM_PHY(D,PDZZ,PDZZ_WORK)
 !
+!$acc kernels
 !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
 PGZ_V_VW(IIB:IIE,IJB:IJE,1:IKT)= PA_WORK(IIB:IIE,IJB:IJE,1:IKT) &
                                                / PDZZ_WORK(IIB:IIE,IJB:IJE,1:IKT)
 !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+!$acc end kernels
 !----------------------------------------------------------------------------
 !
 END SUBROUTINE GZ_V_VW_PHY
@@ -196,22 +198,30 @@ CALL MYF_PHY(D,PDYY,ZWORK2)
 !
 IF (.NOT. OFLAT) THEN
   CALL DZM_PHY(D,PA,ZWORK3)
+  !$acc kernels 
   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
   ZWORK3(IIB:IIE,IJB:IJE,1:IKT) = ZWORK3(IIB:IIE,IJB:IJE,1:IKT) * PDZY(IIB:IIE,IJB:IJE,1:IKT)
   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$acc end kernels 
   CALL MYF_PHY(D,ZWORK3,ZWORK4)
+  !$acc kernels 
   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
   ZWORK4(IIB:IIE,IJB:IJE,1:IKT) = ZWORK4(IIB:IIE,IJB:IJE,1:IKT) / PDZZ(IIB:IIE,IJB:IJE,1:IKT)
   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$acc end kernels 
   CALL MZF_PHY(D,ZWORK4,ZWORK3)
+  !$acc kernels 
   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
   PGY_V_M(IIB:IIE,IJB:IJE,1:IKT) = ( ZWORK1(IIB:IIE,IJB:IJE,1:IKT) - ZWORK3(IIB:IIE,IJB:IJE,1:IKT)) &
                                      / ZWORK2(IIB:IIE,IJB:IJE,1:IKT)
   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)                  
+  !$acc end kernels 
 ELSE
+  !$acc kernels 
   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
   PGY_V_M(IIB:IIE,IJB:IJE,1:IKT)= ZWORK1(IIB:IIE,IJB:IJE,1:IKT) / ZWORK2(IIB:IIE,IJB:IJE,1:IKT)
   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$acc end kernels 
 END IF
 !
 !----------------------------------------------------------------------------
