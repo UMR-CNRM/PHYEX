@@ -88,9 +88,11 @@ IJB=D%NJBC
 IKT=D%NKT
 CALL MZM_PHY(D,PDXX,ZWORK1)
 CALL DXM_PHY(D,PA,ZWORK2)
+!$acc kernels
 !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
 ZWORK3(IIB:IIE,IJB:IJE,:) = ZWORK2(IIB:IIE,IJB:IJE,:) / ZWORK1(IIB:IIE,IJB:IJE,:)
 !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+!$acc end kernels
 !
 IF (.NOT. OFLAT) THEN
   CALL MZF_PHY(D,PA,ZWORK2)
@@ -98,13 +100,19 @@ IF (.NOT. OFLAT) THEN
   CALL DZM_PHY(D,ZWORK4,ZWORK5)
   !
   CALL MXM_PHY(D,PDZZ,ZWORK2)
+  !$acc kernels
   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
   PGX_W_UW(IIB:IIE,IJB:IJE,:)= ZWORK3(IIB:IIE,IJB:IJE,:)    &
                  - ZWORK5(IIB:IIE,IJB:IJE,:)*PDZX(IIB:IIE,IJB:IJE,:)  &
                  / (ZWORK1(IIB:IIE,IJB:IJE,:)*ZWORK2(IIB:IIE,IJB:IJE,:))
   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$acc end kernels
 ELSE
-  PGX_W_UW = ZWORK3
+  !$acc kernels
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  PGX_W_UW(IIB:IIE,IJB:IJE,:) = ZWORK3(IIB:IIE,IJB:IJE,:)
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$acc end kernels
 END IF
 !
 !----------------------------------------------------------------------------
@@ -206,9 +214,11 @@ IJB=D%NJBC
 IKT=D%NKT
 CALL MZM_PHY(D,PDYY,ZWORK1)
 CALL DYM_PHY(D,PA,ZWORK2)
+!$acc kernels
 !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
 ZWORK3(IIB:IIE,IJB:IJE,:) = ZWORK2(IIB:IIE,IJB:IJE,:) / ZWORK1(IIB:IIE,IJB:IJE,:)
 !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+!$acc end kernels
 !
 IF (.NOT. OFLAT) THEN
   CALL MZF_PHY(D,PA,ZWORK2)
@@ -216,13 +226,19 @@ IF (.NOT. OFLAT) THEN
   CALL DZM_PHY(D,ZWORK4,ZWORK5)
   !
   CALL MYM_PHY(D,PDZZ,ZWORK2)
+  !$acc kernels
   !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
   PGY_W_VW(IIB:IIE,IJB:IJE,:)= ZWORK3(IIB:IIE,IJB:IJE,:)    &
                  - ZWORK5(IIB:IIE,IJB:IJE,:)*PDZY(IIB:IIE,IJB:IJE,:)  &
                  / (ZWORK1(IIB:IIE,IJB:IJE,:)*ZWORK2(IIB:IIE,IJB:IJE,:))
   !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$acc end kernels
 ELSE
-  PGY_W_VW = ZWORK3
+  !$acc kernels
+  !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  PGY_W_VW(IIB:IIE,IJB:IJE,:)= ZWORK3(IIB:IIE,IJB:IJE,:) 
+  !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+  !$acc end kernels
 END IF
 
 !----------------------------------------------------------------------------
@@ -313,9 +329,11 @@ IJB=D%NJBC
 IKT=D%NKT
 CALL DZF_PHY(D,PA,ZWORK1)
 CALL MZF_PHY(D,PDZZ,ZWORK2)
+!$acc kernels
 !$mnh_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
 PGZ_W_M(IIB:IIE,IJB:IJE,:)= ZWORK1(IIB:IIE,IJB:IJE,:)/ZWORK2(IIB:IIE,IJB:IJE,:)    
 !$mnh_end_expand_array(JI=IIB:IIE,JJ=IJB:IJE,JK=1:IKT)
+!$acc end kernels
 !
 !----------------------------------------------------------------------------
 !
