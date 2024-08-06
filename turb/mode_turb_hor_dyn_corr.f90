@@ -581,7 +581,13 @@ IF (.NOT. O2D) THEN
   END IF
 !
 ! Contribution to the dynamic production of TKE:
-  IF (KSPLT==1) ZWORK(:,:,:)     = - ZFLX(:,:,:) * GY_V_M_PVM(:,:,:)
+  IF (KSPLT==1) THEN
+     !$acc kernels
+     !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+     ZWORK(:,:,:)     = - ZFLX(:,:,:) * GY_V_M_PVM(:,:,:)
+     !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
+     !$acc end kernels
+  END IF
 ELSE
   !$acc kernels async(2)
   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
