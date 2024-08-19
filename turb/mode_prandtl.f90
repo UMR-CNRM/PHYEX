@@ -389,7 +389,7 @@ DO JSV=1,KSV
 !$acc end kernels
 END DO
 !
-!$acc kernels
+!$acc kernels present_cr(ZW2)
 DO JSV=1,KSV
  DO JK=1,IKT 
    DO JIJ=IIJB,IIJE 

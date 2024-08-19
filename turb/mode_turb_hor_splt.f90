@@ -301,7 +301,7 @@ IJT=D%NJT
 CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
 ISV=SIZE(PSVM,4)
 !
-!$acc kernels
+!$acc kernels present_cr(ZINV_PDXX,ZINV_PDYY,ZINV_PDZZ,ZK)
 ZINV_PDXX = 1./PDXX
 ZINV_PDYY = 1./PDYY
 ZINV_PDZZ = 1./PDZZ
@@ -336,7 +336,8 @@ IF (KSPLIT>1) THEN
 !             ---------------
 !
 !
-  !$acc kernels present_cr(ZSVM,ZRM)
+  !$acc kernels present_cr(ZSVM,ZRM,ZUM,ZVM,ZWM,ZTHLM,ZTKEM,ZRUS,ZRVS,ZRWS) &
+  !$acc present_cr(ZRSVS,zrthls,zrrs)
   ZUM=PUM
   ZVM=PVM
   ZWM=PWM
@@ -392,7 +393,7 @@ IF (KSPLIT>1) THEN
 
     ZUM=PUM+(ZRUS/KSPLIT-PRUS)/MXM(PRHODJ)*PTSTEP
     ZVM=PVM+(ZRVS/KSPLIT-PRVS)/MYM(PRHODJ)*PTSTEP
-!$acc kernels present_cr(ZSVM,ZRM)
+!$acc kernels present_cr(ZSVM,ZRM,ztkem)
     ZWM=PWM+(ZRWS/KSPLIT-PRWS)/ZMZM_PRHODJ*PTSTEP
     DO JSV=1,ISV
       ZSVM(:,:,:,JSV)=PSVM(:,:,:,JSV)+   &
@@ -435,7 +436,7 @@ IF (KSPLIT>1) THEN
 #endif
     !
     IF ( HLBCX(1) /= "CYCL" .AND. LWEST_ll()) THEN
-!$acc kernels present_cr(ZSVM,ZRM)
+!$acc kernels present_cr(ZSVM,ZRM,zum,zvm,zwm,zthlm,ztkem)
        ZUM(IIB  ,:,:)=PUM(IIB  ,:,:)
        ZVM(IIB-1,:,:)=PVM(IIB-1,:,:)
        ZWM(IIB-1,:,:)=PWM(IIB-1,:,:)
@@ -447,7 +448,7 @@ IF (KSPLIT>1) THEN
      ENDIF
      !
      IF ( HLBCX(2) /= "CYCL" .AND. LEAST_ll()) THEN
-!$acc kernels present_cr(ZSVM,ZRM)
+!$acc kernels present_cr(ZSVM,ZRM,zum,zvm,zwm,zthlm,ztkem)
        ZUM(IIE+1,:,:)=PUM(IIE+1,:,:)
        ZVM(IIE+1,:,:)=PVM(IIE+1,:,:)
        ZWM(IIE+1,:,:)=PWM(IIE+1,:,:)
@@ -459,7 +460,7 @@ IF (KSPLIT>1) THEN
      ENDIF
      !
      IF ( HLBCY(1) /= "CYCL" .AND. LSOUTH_ll()) THEN
-!$acc kernels present_cr(ZSVM,ZRM)
+!$acc kernels present_cr(ZSVM,ZRM,zum,zvm,zwm,zthlm,ztkem)
        ZUM(:,IJB-1,:)=PUM(:,IJB-1,:)
        ZVM(:,IJB  ,:)=PVM(:,IJB  ,:)
        ZWM(:,IJB-1,:)=PWM(:,IJB-1,:)
@@ -471,7 +472,7 @@ IF (KSPLIT>1) THEN
      ENDIF
      !
      IF ( HLBCY(2) /= "CYCL" .AND. LNORTH_ll()) THEN
-!$acc kernels present_cr(ZSVM,ZRM)
+!$acc kernels present_cr(ZSVM,ZRM,zum,zvm,zwm,zthlm,ztkem)
        ZUM(:,IJE+1,:)=PUM(:,IJE+1,:)
        ZVM(:,IJE+1,:)=PVM(:,IJE+1,:)
        ZWM(:,IJE+1,:)=PWM(:,IJE+1,:)
@@ -505,7 +506,7 @@ IF (KSPLIT>1) THEN
 !*       2.5  update the complete tendencies
 !             ------------------------------
 !
-!$acc kernels
+!$acc kernels present_cr(zrus,zrvs,zrws,zrsvs,zrthls,zrrs,ztkem)
   PRUS=ZRUS/KSPLIT
   PRVS=ZRVS/KSPLIT
   PRWS=ZRWS/KSPLIT
