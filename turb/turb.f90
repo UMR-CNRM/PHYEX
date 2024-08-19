@@ -1094,7 +1094,7 @@ IF( BUCONF%LBUDGET_SV ) THEN
   END DO
 END IF
 !$acc update device(PRHODJ)
-!$acc update device(PRUS,PRVS,PRWS,PRSVS)
+!$acc update_crm device(PRUS,PRVS,PRWS,PRSVS)
 CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
           KRR,KRRL,KRRI,KGRADIENTS,                      &
           GOCEAN, ODEEPOC, OCOMPUTE_SRC,                 &
@@ -1116,7 +1116,7 @@ CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
           PDP,PTP,PSIGS,PWTH,PWRC,ZWORKWSV,                  &
           PSSTFL, PSSTFL_C, PSSRFL_C,PSSUFL_C,PSSVFL_C,  &
           PSSUFL,PSSVFL                                  )
-!$acc update self(PWTH,PWRC,PWSV)
+!$acc update_crm self(PWTH,PWRC,PWSV)
 !IF (HCLOUD == 'LIMA') THEN
 !   IF (KSV_LIMA_NR.GT.0) PRSVS(:,:,KSV_LIMA_NR) = ZRSVS(:,:,KSV_LIMA_NR) 
 !   IF (KSV_LIMA_NS.GT.0) PRSVS(:,:,KSV_LIMA_NS) = ZRSVS(:,:,KSV_LIMA_NS)
@@ -1338,7 +1338,7 @@ IF( TURBN%CTURBDIM == '3DIM' ) THEN
     END DO
   END IF
 END IF
-!$acc update self(PSIGS,PRUS,PRVS,PRWS,PRSVS)
+!$acc update_crm self(PSIGS,PRUS,PRVS,PRWS,PRSVS)
 !----------------------------------------------------------------------------
 !
 !*      6. EVOLUTION OF THE TKE AND ITS DISSIPATION
@@ -1347,7 +1347,7 @@ END IF
 !  6.1 Contribution of mass-flux in the TKE buoyancy production if
 !      cloud computation is not statistical
 CALL MZF_PHY(D,PFLXZTHVMF,ZWORK1)
-!$acc kernels present_cr(PTHP)
+!$acc kernels present_crm(PTP)
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 PTP(:,:) = PTP(:,:) &
                              + CST%XG / PTHVREF(:,:) * ZWORK1(:,:)
@@ -1395,7 +1395,7 @@ ELSE
 !$acc end kernels
 END IF
 !
-!$acc update device(PRTKES)
+!$acc update_crm device(PRTKES)
 CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,TURBN,TLES,                    &
                    & PTKET,ZLM,ZLEPS,PDP,ZTRH,                          &
                    & PRHODJ,PDZZ,PDXX,PDYY,PDZX,PDZY,PZZ,               &
@@ -1406,9 +1406,9 @@ CALL TKE_EPS_SOURCES(D,CST,CSTURB,BUCONF,TURBN,TLES,                    &
                    & TBUDGETS,KBUDGETS, PEDR=PEDR, PTR=PTR,PDISS=PDISS, &
                    & PCURRENT_TKE_DISS=PCURRENT_TKE_DISS                )
                    !
-!$acc update self(PTR,PDISS)
+!$acc update_crm self(PTR,PDISS)
 !
-!$acc update self(PRTKES)
+!$acc update_crm self(PRTKES)
 IF (BUCONF%LBUDGET_TH)  THEN
   IF ( KRRI >= 1 .AND. KRRL >= 1 ) THEN
     !$acc kernels present_cr(ZTEMP_BUD)
@@ -1436,7 +1436,7 @@ ENDIF
 !*      7. STORES SOME INFORMATIONS RELATED TO THE TURBULENCE SCHEME
 !          ---------------------------------------------------------
 !
-!$acc update self(PLEM)
+!$acc update_crm self(PLEM)
 IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
   !
   ! stores the mixing length
@@ -2026,7 +2026,7 @@ CALL EMOIST(D,CST,KRR,KRRI,PTHLT,PRT,ZLOCPEXNM,ZAMOIST,PSRCT,GOCEAN,ZEMOIST)
 !
 IF (KRR>0) THEN
 !$acc kernels
-!$acc loop independent collapse(2)
+! acc loop independent collapse(2)
   DO CONCURRENT (JK=IKTB+1:IKTE-1,JIJ=IIJB:IIJE)
       ZDTHLDZ(JIJ,JK)= 0.5*((PTHLT(JIJ,JK+IKL)-PTHLT(JIJ,JK    ))/PDZZ(JIJ,JK+IKL)+ &
                               (PTHLT(JIJ,JK    )-PTHLT(JIJ,JK-IKL))/PDZZ(JIJ,JK    ))
@@ -2036,7 +2036,7 @@ IF (KRR>0) THEN
 !$acc end kernels
 
 !$acc kernels
-!$acc loop independent collapse(2) private(ZVAR)
+! acc loop independent collapse(2) private(ZVAR)
   DO CONCURRENT (JK=IKTB+1:IKTE-1,JIJ=IIJB:IIJE)
       IF (GOCEAN) THEN
         ZVAR=CST%XG*(CST%XALPHAOC*ZDTHLDZ(JIJ,JK)-CST%XBETAOC*ZDRTDZ(JIJ,JK))
@@ -2054,7 +2054,7 @@ IF (KRR>0) THEN
 
 ELSE! For dry atmos or unsalted ocean runs
 !$acc kernels
-!$acc loop independent collapse(2) private(ZVAR)
+! acc loop independent collapse(2) private(ZVAR)
   DO CONCURRENT (JK=IKTB+1:IKTE-1,JIJ=IIJB:IIJE)
       ZDTHLDZ(JIJ,JK)= 0.5*((PTHLT(JIJ,JK+IKL)-PTHLT(JIJ,JK    ))/PDZZ(JIJ,JK+IKL)+ &
                               (PTHLT(JIJ,JK    )-PTHLT(JIJ,JK-IKL))/PDZZ(JIJ,JK    ))
