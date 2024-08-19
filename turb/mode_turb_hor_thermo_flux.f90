@@ -167,7 +167,7 @@ IKT=D%NKT
 !
 !  compute the coefficients for the uncentred gradient computation near the 
 !  ground
-!$acc kernels
+!$acc kernels present_cr(zcoeff)
 ZCOEFF(:,:,IKB+2)= - PDZZ(:,:,IKB+1) /      &
        ( (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) * PDZZ(:,:,IKB+2) )
 ZCOEFF(:,:,IKB+1)=   (PDZZ(:,:,IKB+2)+PDZZ(:,:,IKB+1)) /      &
@@ -179,7 +179,10 @@ ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2)+2.*PDZZ(:,:,IKB+1)) /      &
 !*       2.   < U' THETA'l >
 !             --------------
 !
-! 
+!
+#define UTHETA UTHETA
+!!!!!!! UTHETA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#ifdef UTHETA
 ZFLX(:,:,:)     = -TURBN%XCSHF * MXM( PK ) * GX_M_U(OFLAT,PTHLM,PDXX,PDZZ,PDZX)
 !$acc kernels present_cr(ZFLX)
 ZFLX(:,:,IKE+1) = ZFLX(:,:,IKE) 
@@ -284,9 +287,13 @@ IF (KSPLT==1 .AND. TLES%LLES_CALL) THEN
   CALL SECOND_MNH(ZTIME2)
   TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 END IF
+#endif
 !
 !*       3.   < U' R'np >
 !             -----------
+#define URNP URNP
+!!!!! URNP !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#ifdef URNP
 IF (KRR/=0) THEN
   !
   ZFLX(:,:,:)     = -TURBN%XCHF * MXM( PK ) * GX_M_U(OFLAT,PRM(:,:,:,1),PDXX,PDZZ,PDZX)
@@ -398,7 +405,9 @@ IF (KRR/=0) THEN
     TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
   END IF
 !
-END IF 
+END IF
+#endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 !*       4.   < U' TPV' >
 !             -----------
@@ -435,7 +444,9 @@ END IF
 !*       5.   < V' THETA'l >
 !             --------------
 !
-!
+#define VTHETA VTHETA
+!!!!!! VTHETA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#ifdef VTHETA
 IF (.NOT. O2D) THEN
   ZFLX(:,:,:)     = -TURBN%XCSHF * MYM( PK ) * GY_M_V(OFLAT,PTHLM,PDYY,PDZZ,PDZY)
 !$acc kernels present_cr(ZFLX)
@@ -550,11 +561,14 @@ IF (KSPLT==1 .AND. TLES%LLES_CALL) THEN
   CALL SECOND_MNH(ZTIME2)
   TLES%XTIME_LES = TLES%XTIME_LES + ZTIME2 - ZTIME1
 END IF
+#endif
 !
 !
 !*       6.   < V' R'np >
 !             -----------
-!
+#define VRNP VRNP
+!!!!!!! VRNP !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#ifdef VRNP
 IF (KRR/=0) THEN
   !
   IF (.NOT. O2D) THEN
@@ -676,6 +690,8 @@ IF (KRR/=0) THEN
   END IF
   !
 END IF
+#endif
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
 !*       7.   < V' TPV' >
 !             -----------
