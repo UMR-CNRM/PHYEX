@@ -354,7 +354,7 @@ IIJB=D%NIJB
 !
 GOCEAN= OOCEAN
 !
-!$acc kernels  present_cr(ZA,PDP,ZSOURCE)
+!$acc kernels  present_cr(ZA,ZSOURCE)
 ZA(:,:)=XUNDEF
 PDP(:,:)=XUNDEF
 !
@@ -626,7 +626,7 @@ IF(TURBN%CTURBDIM=='3DIM') THEN
                           )
   END IF
   !
-!$acc kernels present_cr(PDP)
+!$acc kernels
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   PDP(IIJB:IIJE,1:IKT)=PDP(IIJB:IIJE,1:IKT)+ZA(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -712,7 +712,7 @@ IF (GOCEAN) THEN ! Ocean case
 ELSE ! Atmos case
 !
  ! compute the explicit tangential flux at the W point
-!$acc kernels present_cr(ZSOURCE,ZTMP1_DEVICE)
+!$acc kernels present_cr(ZSOURCE)
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ZSOURCE(IIJB:IIJE,IKB) =                                                                    &
     PTAU11M(IIJB:IIJE) * PSINSLOPE(IIJB:IIJE) * PDIRCOSZW(IIJB:IIJE) * ZDIRSINZW(IIJB:IIJE)   &
@@ -821,7 +821,7 @@ ZFLXZ(:,IKB+IKL) * (PVM(:,IKB+IKL)-PVM(:,IKB))  &
                        )
 END IF
 !
-!$acc kernels present_cr(PDP)
+!$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 PDP(IIJB:IIJE,1:IKT)=PDP(IIJB:IIJE,1:IKT)+ZA(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -893,7 +893,7 @@ IF(TURBN%CTURBDIM=='3DIM') THEN
     !
     END IF
 !
-!$acc kernels present_cr(PDP)
+!$acc kernels
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     PDP(IIJB:IIJE,1:IKT)=PDP(IIJB:IIJE,1:IKT)+ZA(IIJB:IIJE,1:IKT)
     !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
