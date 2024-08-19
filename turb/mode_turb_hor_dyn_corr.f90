@@ -214,7 +214,7 @@ IJT=D%NJT
 IKT=D%NKT
 !
 !
-!$acc kernels async(1)
+!$acc kernels ! async(1)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
 ZDIRSINZW(:,:) = SQRT( 1. - PDIRCOSZW(:,:)**2 )
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
@@ -237,7 +237,7 @@ CALL ADD3DFIELD_ll( TZFIELDS_ll, ZFLX, 'TURB_HOR_DYN_CORR::ZFLX' )
 !
 ! Computes the U variance
 IF (.NOT. O2D) THEN
-   !$acc kernels async(2) present_cr(zflx,gz_w_m_pwm)
+   !$acc kernels present_cr(zflx,gz_w_m_pwm) ! async(2)
    !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
       ZFLX(:,:,:)= (2./3.) * PTKEM(:,:,:)                            &
            - XCMFS * PK(:,:,:) *( (4./3.) * GX_U_M_PUM(:,:,:)        &
@@ -248,7 +248,7 @@ IF (.NOT. O2D) THEN
    !!  &   to be tested later
   !!  + XCMFB *  PLM / SQRT(PTKEM) * (-2./3.) * PTP 
 ELSE
-  !$acc kernels async(2)
+  !$acc kernels ! async(2)
   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
   ZFLX(:,:,:)= (2./3.) * PTKEM(:,:,:)                                  &
     - XCMFS * PK(:,:,:) *( (4./3.) * GX_U_M_PUM(:,:,:)                 &
@@ -259,7 +259,7 @@ ELSE
   !!  + XCMFB *  PLM / SQRT(PTKEM) * (-2./3.) * PTP 
 END IF
 !
-!$acc kernels async(2)
+!$acc kernels ! async(2)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
    ZFLX(:,:,IKE+1) = ZFLX(:,:,IKE) 
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
@@ -274,7 +274,7 @@ END IF
 ZDZZ(:,:,IKB) = MXM(PDZZ(:,:,IKB))
 ZDZZ(:,:,IKB+1) = MXM(PDZZ(:,:,IKB+1))
 ZDZZ(:,:,IKB+2) = MXM(PDZZ(:,:,IKB+2))
-!$acc kernels async(3) present_cr(zdzz,zcoeff)
+!$acc kernels present_cr(zdzz,zcoeff) ! async(3)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
    ZCOEFF(:,:,IKB+2)= - ZDZZ(:,:,2) /      &
         ( (ZDZZ(:,:,3)+ZDZZ(:,:,2)) * ZDZZ(:,:,3) )
@@ -295,7 +295,7 @@ ZDZZ(:,:,IKB) = MYM(PDZZ(:,:,IKB))
 ZDZZ(:,:,IKB+1) = MYM(PDZZ(:,:,IKB+1))
 ZDZZ(:,:,IKB+2) = MYM(PDZZ(:,:,IKB+2))
 !
-!$acc kernels async(4) present_cr(zdzz,zcoeff)
+!$acc kernels present_cr(zdzz,zcoeff) ! async(4)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
    ZCOEFF(:,:,IKB+2)= - ZDZZ(:,:,2) /      &
         ( (ZDZZ(:,:,3)+ZDZZ(:,:,2)) * ZDZZ(:,:,3) )
@@ -319,7 +319,7 @@ ZDU_DX(:,:)=  DXF(PUM(:,:,IKB)) / MXF(PDXX(:,:,IKB))  &
 ZDV_DY(:,:)=  DYF(PVM(:,:,IKB)) / MYF(PDYY(:,:,IKB)) &
               - ZDV_DZ_DZS_DY(:,:)
 !
-!$acc kernels async(4) present_cr(zdv_dy,zdw_dz)
+!$acc kernels present_cr(zdv_dy,zdw_dz) ! async(4)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
 ZDW_DZ(:,:)=-ZDU_DX(:,:)-ZDV_DY(:,:)
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
@@ -328,16 +328,16 @@ ZDW_DZ(:,:)=-ZDU_DX(:,:)-ZDV_DY(:,:)
 !* computation 
 !
 !!! wait for the computation of ZFLX
-!$acc wait(2) async(4)
+!$acc ! wait(2) async(4)
 !!! wait for the computation of ZDW_DZ
-!$acc wait(4)
+!$acc ! wait(4)
 !
 ! ! !!! we can launch the update of ZFLX on the part that has already been computed
 ! ! !$acc update self(ZFLX(:,:,IKB+1:)) async(10)
 !attention !!!!! je ne comprends pas pourquoi mais ce update plante à l'execution...
 ! du coup je ne peux pas faire de update self asynchrone...
 !
-!$acc kernels async(3) present_cr(zdu_dx,zflx)
+!$acc kernels present_cr(zdu_dx,zflx) ! async(3)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
    ZFLX(:,:,IKB)   = (2./3.) * PTKEM(:,:,IKB)                           &
         - XCMFS * PK(:,:,IKB) * 2. * ZDU_DX(:,:)
@@ -352,9 +352,9 @@ ZDW_DZ(:,:)=-ZDU_DX(:,:)-ZDV_DY(:,:)
 !
 !
 !!! wait for the computation of ZDIRSINZW
-!$acc wait(1)
+!$acc ! wait(1)
 !
-!$acc kernels async(4) present_cr(ZFLX,ZDIRSINZW)
+!$acc kernels present_cr(ZFLX,ZDIRSINZW) ! async(4)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
 ZFLX(:,:,IKB-1) =                                                            &
         PTAU11M(:,:) * PCOSSLOPE(:,:)**2 * PDIRCOSZW(:,:)**2                 &
@@ -368,9 +368,9 @@ ZFLX(:,:,IKB-1) =                                                            &
 !$acc end kernels
 ! 
 !!! wait for the computation of ZFLX(:,:,IKB) and ZFLX(:,:,IKB-1)
-!$acc wait(3) async(4)
+!$acc ! wait(3) async(4)
 !
-!$acc kernels async(4)
+!$acc kernels ! async(4)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
    ZFLX(:,:,IKB-1) = 2. * ZFLX(:,:,IKB-1) -  ZFLX(:,:,IKB)
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
@@ -378,7 +378,7 @@ ZFLX(:,:,IKB-1) =                                                            &
 !
 !
 !!! wait for the computation of ZFLX(:,:,IKB-1)
-!$acc wait(4)
+!$acc ! wait(4)
 !
 
 
@@ -395,7 +395,7 @@ ZFLX(:,:,IKB-1) =                                                            &
 !
 !!! at this point there are no more async operations running
 !!! to be absolutely sure, we do a wait
-!$acc wait
+!$acc ! wait
 !
 #ifndef MNH_OPENACC
 CALL UPDATE_HALO_ll(TZFIELDS_ll, IINFO_ll)
@@ -431,7 +431,7 @@ END IF
 !
 IF (KSPLT==1) THEN
   ! Contribution to the dynamic production of TKE:
-   !$acc kernels async(2) present_cr(gx_u_m_pum,zwork)
+   !$acc kernels present_cr(gx_u_m_pum,zwork) ! async(2)
    !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
       ZWORK(:,:,:)     = - ZFLX(:,:,:) * GX_U_M_PUM(:,:,:)
    !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
@@ -439,13 +439,13 @@ IF (KSPLT==1) THEN
   !
   ! evaluate the dynamic production at w(IKB+1) in PDP(IKB)
   !
-  !$acc kernels async(2) present_cr(zdu_dx,zwork)
+  !$acc kernels present_cr(zdu_dx,zwork) ! async(2)
    !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
       ZWORK(:,:,IKB) = 0.5* ( -ZFLX(:,:,IKB)*ZDU_DX(:,:) + ZWORK(:,:,IKB+1) )
    !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
    !$acc end kernels
   !
-  !$acc kernels async(2)
+  !$acc kernels present_cr(ZWORK) ! async(2)
   PDP(:,:,:) = PDP(:,:,:) + ZWORK(:,:,:)
   !$acc end kernels
 END IF
@@ -465,11 +465,11 @@ END IF
 !             -------
 !
 !!! wait for the computation of ZWORK and PDP (that uses ZFLX)
-!$acc wait(2)
+!$acc ! wait(2)
 !
 ! Computes the V variance
 IF (.NOT. O2D) THEN
-   !$acc kernels async(3) present_cr(gz_w_m_pwm,zflx)
+   !$acc kernels present_cr(gz_w_m_pwm,zflx) ! async(3)
    !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
       ZFLX(:,:,:)= (2./3.) * PTKEM(:,:,:)                                  &
            - XCMFS * PK(:,:,:) *( (4./3.) * GY_V_M_PVM(:,:,:)                        &
@@ -481,7 +481,7 @@ IF (.NOT. O2D) THEN
   !!  + XCMFB *  PLM / SQRT(PTKEM) * (-2./3.) * PTP 
   !
 ELSE
-   !$acc kernels async(3) present_cr(gz_w_m_pwm,zflx)
+   !$acc kernels present_cr(gz_w_m_pwm,zflx) ! async(3)
    !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
       ZFLX(:,:,:)= (2./3.) * PTKEM(:,:,:)                           &
            - XCMFS * PK(:,:,:) *(-(2./3.) * ( GX_U_M_PUM(:,:,:)        &
@@ -493,7 +493,7 @@ ELSE
   !
 END IF
 !
-!$acc kernels async(3)
+!$acc kernels ! async(3)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
 ZFLX(:,:,IKE+1) = ZFLX(:,:,IKE) 
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
@@ -503,7 +503,7 @@ ZFLX(:,:,IKE+1) = ZFLX(:,:,IKE)
 ! ! !$acc wait(3)
 ! ! !$acc update self(ZFLX(:,:,IKB+1:)) async(10)
 !
-!$acc kernels async(3) present_cr(zdv_dy,zflx)
+!$acc kernels present_cr(zdv_dy,zflx) ! async(3)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
    ZFLX(:,:,IKB)   = (2./3.) * PTKEM(:,:,IKB)                           &
         - XCMFS * PK(:,:,IKB) * 2. * ZDV_DY(:,:)
@@ -528,7 +528,7 @@ ZFLX(:,:,IKB-1) =                                                            &
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
 !$acc end kernels
 !
-!$acc kernels async(3)
+!$acc kernels ! async(3)
 ZFLX(:,:,IKB-1) = 2. * ZFLX(:,:,IKB-1) -  ZFLX(:,:,IKB)
 !$acc end kernels
 !
@@ -540,7 +540,7 @@ ZFLX(:,:,IKB-1) = 2. * ZFLX(:,:,IKB-1) -  ZFLX(:,:,IKB)
 ! ! !$acc wait(10)
 ! ! !$acc wait(3)
 !
-!$acc wait(3)
+!$acc ! wait(3)
 #ifndef MNH_OPENACC
 CALL UPDATE_HALO_ll(TZFIELDS_ll, IINFO_ll)
 #else
@@ -565,7 +565,7 @@ IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
 END IF
 !
 !!! wait for the computation of PRUS (that uses temporary variables)
-!$acc wait(1)
+!$acc ! wait(1)
 !
 !
 !
@@ -589,7 +589,7 @@ IF (.NOT. O2D) THEN
      !$acc end kernels
   END IF
 ELSE
-  !$acc kernels async(2)
+  !$acc kernels ! async(2)
   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
   ZWORK(:,:,:)     = 0.
   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
@@ -600,13 +600,13 @@ IF (KSPLT==1) THEN
   !
   ! evaluate the dynamic production at w(IKB+1) in PDP(IKB)
   !
-   !$acc kernels async(2) present_cr(zdv_dy,zwork)
+   !$acc kernels present_cr(zdv_dy,zwork) ! async(2)
    !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
       ZWORK(:,:,IKB) = 0.5* ( -ZFLX(:,:,IKB)*ZDV_DY(:,:) + ZWORK(:,:,IKB+1) )
    !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
    !$acc end kernels
   !
-  !$acc kernels async(2)
+  !$acc kernels ! async(2)
   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
   PDP(:,:,:) = PDP(:,:,:) + ZWORK(:,:,:)
   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
@@ -628,7 +628,7 @@ END IF
 !
 ! Computes the W variance
 IF (.NOT. O2D) THEN
-   !$acc kernels async(2) present_cr(gy_v_m_pvm,zflx)
+   !$acc kernels present_cr(gy_v_m_pvm,zflx) ! async(2)
    !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
       ZFLX(:,:,:) = (2./3.) * PTKEM(:,:,:)                                  &
            - XCMFS * PK(:,:,:) *( (4./3.) * GZ_W_M_PWM(:,:,:)                        &
@@ -639,7 +639,7 @@ IF (.NOT. O2D) THEN
   !!  &  to be tested
   !!    -2.* XCMFB *  PLM / SQRT(PTKEM) * (-2./3.) * PTP 
 ELSE
-   !$acc kernels async(2) present_cr(gx_u_m_pum,zflx)
+   !$acc kernels present_cr(gx_u_m_pum,zflx) ! async(2)
    !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
       ZFLX(:,:,:)= (2./3.) * PTKEM(:,:,:)                           &
            - XCMFS * PK(:,:,:) *( (4./3.) * GZ_W_M_PWM(:,:,:)          &
@@ -650,16 +650,16 @@ ELSE
   !!    -2.* XCMFB *  PLM / SQRT(PTKEM) * (-2./3.) * PTP 
 END IF
 !
-!$acc kernels async(2)
+!$acc kernels ! async(2)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
 ZFLX(:,:,IKE+1)= ZFLX(:,:,IKE)
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
 !$acc end kernels
 !!! wait for the computation of ZWORK, PDP and ZFLX
-!$acc wait(2)
+!$acc ! wait(2)
 !
 !
-!$acc kernels async(2) present_cr(zdw_dz,zflx)
+!$acc kernels present_cr(zdw_dz,zflx) ! async(2)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
    ZFLX(:,:,IKB)   = (2./3.) * PTKEM(:,:,IKB)                           &
         - XCMFS * PK(:,:,IKB) * 2. * ZDW_DZ(:,:)
@@ -672,7 +672,7 @@ ZFLX(:,:,IKE+1)= ZFLX(:,:,IKE)
 !   - 2.* XCMFB * PLM(:,:,IKB:IKB) /SQRT(PTKEM(:,:,IKB:IKB)) *             &
 !  (-2./3.) * PTP(:,:,IKB:IKB)
 ! extrapolates this flux under the ground with the surface flux
-!$acc kernels async(3) present_cr(ZFLX)
+!$acc kernels present_cr(ZFLX) ! async(3)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
 ZFLX(:,:,IKB-1) =                                                     &
         PTAU11M(:,:) * ZDIRSINZW(:,:)**2                                &
@@ -683,16 +683,16 @@ ZFLX(:,:,IKB-1) =                                                     &
 ! 
 !
 !!! wait for the computation of ZFLX(:,:,IKB-1) and ZFLX(:,:,IKB)
-!$acc wait(2) async(3)
+!$acc ! wait(2) ! async(3)
 !
-!$acc kernels async(3)
+!$acc kernels ! async(3)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
 ZFLX(:,:,IKB-1) = 2. * ZFLX(:,:,IKB-1) - ZFLX(:,:,IKB)
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
 !$acc end kernels
 !
 IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
-  !$acc wait(3)
+  !$acc ! wait(3)
   !$acc update self(ZFLX)
   ! stores <W W>  
   TZFIELD = TFIELDMETADATA(     &
@@ -711,27 +711,27 @@ END IF
 !
 !
 !!! wait for the computation of PRVS (that uses temporary variables)
-!$acc wait(1)
+!$acc ! wait(1)
 !
 
 !
 ! Complete the W tendency
 !
 !PRWS(:,:,:)=PRWS(:,:,:) - DZM( PRHODJ*ZFLX/MZF(PDZZ) )
-!$acc kernels async(2)
+!$acc kernels ! async(2)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
 ZDFDDWDZ(:,:,:)    = - XCMFS * PK(:,:,:) * (4./3.)
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
 !$acc end kernels
-!$acc kernels async(2)
+!$acc kernels ! async(2)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKB)
 ZDFDDWDZ(:,:,1:IKB) = 0.
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKB)
 !$acc end kernels
 !
 !!! wait for the computation of ZFLX(:,:,IKB-1) and ZDFDDWDZ
-!$acc wait(3) async(2)
-!$acc wait(2)
+!$acc ! wait(3) async(2)
+!$acc ! wait(2)
 !
 CALL TRIDIAG_W(PWM,ZFLX,ZDFDDWDZ,PTSTEP,ZMZF_DZZ,PRHODJ,ZWP)
 !
@@ -740,7 +740,7 @@ PRWS = PRWS(:,:,:) + MZM(PRHODJ(:,:,:))*(ZWP(:,:,:)-PWM(:,:,:))/PTSTEP
 !* recomputes flux using guess of W
 !
 GZ_W_M_ZWP = GZ_W_M(ZWP,PDZZ)
-!$acc kernels async(2) present_cr(gz_w_m_pwm,zflx)
+!$acc kernels present_cr(gz_w_m_pwm,zflx) ! async(2)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=IKB+1:IKT)
    ZFLX(:,:,:)=ZFLX(:,:,:) &
         - XCMFS * PK(:,:,:) * (4./3.) * (GZ_W_M_ZWP(:,:,:) - GZ_W_M_PWM(:,:,:))
@@ -749,7 +749,7 @@ GZ_W_M_ZWP = GZ_W_M(ZWP,PDZZ)
 !
 IF (KSPLT==1) THEN
    !Contribution to the dynamic production of TKE:
-   !$acc kernels async(2) present_cr(gz_w_m_zwp,zwork)
+   !$acc kernels present_cr(gz_w_m_zwp,zwork) ! async(2)
    !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
       ZWORK(:,:,:) = - ZFLX(:,:,:) * GZ_W_M_ZWP(:,:,:)
    !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)   
@@ -757,13 +757,13 @@ IF (KSPLT==1) THEN
   !
   ! evaluate the dynamic production at w(IKB+1) in PDP(IKB)
   !
-   !$acc kernels async(2) present_cr(zdw_dz,zwork)
+   !$acc kernels present_cr(zdw_dz,zwork) ! async(2)
    !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
       ZWORK(:,:,IKB) = 0.5* ( -ZFLX(:,:,IKB)*ZDW_DZ(:,:) + ZWORK(:,:,IKB+1) )
    !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
    !$acc end kernels
   !
-  !$acc kernels async(2)
+  !$acc kernels ! async(2)
   !$mnh_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
   PDP(:,:,:) = PDP(:,:,:) + ZWORK(:,:,:)
   !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT,JK=1:IKT)
