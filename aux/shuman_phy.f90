@@ -90,7 +90,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PMXM,PA)
+!$acc kernels present_crm(PMXM,PA)
 DO JIJK=JIJKOR , JIJKEND
    PMXM(JIJK,1,1) = 0.5*( PA(JIJK,1,1)+PA(JIJK-1,1,1) )
 END DO
@@ -196,7 +196,7 @@ JIJEND = IIU*IJU
 !
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PMXM,PA)
+!$acc kernels present_crm(PMXM,PA)
 DO JIJ=JIJOR , JIJEND
    PMXM(JIJ,1) = 0.5*( PA(JIJ,1)+PA(JIJ-1,1) )
 END DO
@@ -298,7 +298,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PMZM,PA)
+!$acc kernels present_crm(PMZM,PA)
 DO JIJK=JIJKOR , JIJKEND
    PMZM(JIJK,1,1) = 0.5*( PA(JIJK,1,1)+PA(JIJK-IIU*IJU,1,1) )
 END DO
@@ -397,7 +397,7 @@ JIJOR  = 1 + IIU
 JIJEND = IIU*IJU
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PMYM,PA)
+!$acc kernels present_crm(PMYM,PA)
 DO JIJ=JIJOR , JIJEND
    PMYM(JIJ,1) = 0.5*( PA(JIJ,1)+PA(JIJ-IIU,1) )
 END DO
@@ -496,7 +496,7 @@ JIJKOR  = 1 + IIU
 JIJKEND = IIU*IJU*IKU
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PMYM,PA)
+!$acc kernels present_crm(PMYM,PA)
 DO JIJK=JIJKOR , JIJKEND
    PMYM(JIJK,1,1) = 0.5*( PA(JIJK,1,1)+PA(JIJK-IIU,1,1) )
 END DO
@@ -592,7 +592,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PDZM,PA)
+!$acc kernels present_crm(PDZM,PA)
 DO JIJK=JIJKOR , JIJKEND
    PDZM(JIJK,1,1) = PA(JIJK,1,1)-PA(JIJK-IIU*IJU,1,1)
 END DO
@@ -690,7 +690,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PMZF,PA)
+!$acc kernels present_crm(PMZF,PA)
 DO JIJK=JIJKOR , JIJKEND
    PMZF(JIJK-IIU*IJU,1,1) = 0.5*( PA(JIJK-IIU*IJU,1,1)+PA(JIJK,1,1) )
 END DO
@@ -794,7 +794,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PMXF,PA)
+!$acc kernels present_crm(PMXF,PA)
 DO JIJK=JIJKOR , JIJKEND
   PMXF(JIJK-1,1,1) = 0.5*( PA(JIJK-1,1,1)+PA(JIJK,1,1) )
 END DO
@@ -901,7 +901,7 @@ JIJEND = IIU*IJU
 !
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PMXF,PA)
+!$acc kernels present_crm(PMXF,PA)
 DO JIJ=JIJOR , JIJEND
   PMXF(JIJ-1,1) = 0.5*( PA(JIJ-1,1)+PA(JIJ,1) )
 END DO
@@ -1007,7 +1007,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PMYF,PA)
+!$acc kernels present_crm(PMYF,PA)
 DO JIJK=JIJKOR , JIJKEND
    PMYF(JIJK-IIU,1,1) = 0.5*( PA(JIJK-IIU,1,1)+PA(JIJK,1,1) )
 END DO
@@ -1109,7 +1109,7 @@ JIJEND = IIU*IJU
 !
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PMYF,PA)
+!$acc kernels present_crm(PMYF,PA)
 DO JIJ=JIJOR , JIJEND
    PMYF(JIJ-IIU,1) = 0.5*( PA(JIJ-IIU,1)+PA(JIJ,1) )
 END DO
@@ -1203,7 +1203,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PDZF,PA)
+!$acc kernels present_crm(PDZF,PA)
 DO JIJK=JIJKOR , JIJKEND
    PDZF(JIJK-IIU*IJU,1,1)     = PA(JIJK,1,1)-PA(JIJK-IIU*IJU,1,1)
 END DO
@@ -1309,7 +1309,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PDXF,PA)
+!$acc kernels present_crm(PDXF,PA)
 DO JIJK=JIJKOR , JIJKEND
    PDXF(JIJK-1,1,1) = PA(JIJK,1,1) - PA(JIJK-1,1,1) 
 END DO
@@ -1520,7 +1520,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PDXM,PA)
+!$acc kernels present_crm(PDXM,PA)
 DO JIJK=JIJKOR , JIJKEND
    PDXM(JIJK,1,1) = PA(JIJK,1,1) - PA(JIJK-1,1,1) 
 END DO
@@ -1730,7 +1730,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PDYM,PA)
+!$acc kernels present_crm(PDYM,PA)
 DO JIJK=JIJKOR , JIJKEND
    PDYM(JIJK,1,1)           = PA(JIJK,1,1)  -  PA(JIJK-IIU,1,1) 
 END DO
@@ -1935,7 +1935,7 @@ JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
-!$acc kernels present(PDYF,PA)
+!$acc kernels present_crm(PDYF,PA)
 DO JIJK=JIJKOR , JIJKEND
    PDYF(JIJK-IIU,1,1)         = PA(JIJK,1,1)  -  PA(JIJK-IIU,1,1) 
 END DO
