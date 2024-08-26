@@ -133,7 +133,7 @@ ELSE
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$acc end kernels
  ELSE                                                ! liquid water & ice present
-!$acc kernels
+!$acc kernels present_cr(ZRW)
   ZDELTA = (CST%XRV/CST%XRD) - 1.
   ZRW(:,:) = PRM(:,:,1)
 !$acc end kernels
