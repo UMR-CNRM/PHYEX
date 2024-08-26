@@ -607,6 +607,7 @@ DO JSV=1,KSV
 !$acc end kernels
       CALL MZM_PHY(D,ZWORK1,ZWORK2)
       !
+!$acc kernels
       !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)    
       IF (KRR /= 0) THEN
         ZWORK1(IIJB:IIJE,1:IKT) = ZW1(IIJB:IIJE,1:IKT)*PETHETA(IIJB:IIJE,1:IKT)
@@ -615,26 +616,32 @@ DO JSV=1,KSV
       END IF
       PRED2THS3(IIJB:IIJE,1:IKT,JSV) = PREDTH1(IIJB:IIJE,1:IKT) * PREDS1(IIJB:IIJE,1:IKT,JSV)   +        &
                          ZWORK1(IIJB:IIJE,1:IKT) * ZWORK2(IIJB:IIJE,1:IKT)
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)    
-                         !
+      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
+      !
       IF (KRR /= 0) THEN
         !Already computed CALL GX_M_M_PHY(D,OFLAT,PRM(:,:,1),PDXX,PDZZ,PDZX,ZGXMM_PRM)
         !
+!$acc kernels
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
         ZWORK1(IIJB:IIJE,1:IKT) = ZGXMM_PSV(IIJB:IIJE,1:IKT) * ZGXMM_PRM(IIJB:IIJE,1:IKT)
         !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
         CALL MZM_PHY(D,ZWORK1,ZWORK3)
         !
+!$acc kernels
         !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
         PRED2RS3(IIJB:IIJE,1:IKT,JSV) = PREDR1(IIJB:IIJE,1:IKT) * PREDS1(IIJB:IIJE,1:IKT,JSV)   +        &
                          ZW1(IIJB:IIJE,1:IKT) * PEMOIST(IIJB:IIJE,1:IKT) * ZWORK3(IIJB:IIJE,1:IKT)
         !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      ELSE
-      !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-        PRED2RS3(IIJB:IIJE,1:IKT,JSV) = 0.
-      !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-      END IF
 !$acc end kernels
+      ELSE
+!$acc kernels
+        !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+        PRED2RS3(IIJB:IIJE,1:IKT,JSV) = 0.
+        !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+!$acc end kernels
+      END IF
     END IF
 !
   ELSE ! 3D case in a 3D model
