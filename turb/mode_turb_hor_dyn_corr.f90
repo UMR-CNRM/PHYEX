@@ -328,9 +328,9 @@ ZDW_DZ(:,:)=-ZDU_DX(:,:)-ZDV_DY(:,:)
 !* computation 
 !
 !!! wait for the computation of ZFLX
-!$acc ! wait(2) async(4)
+!!$acc ! wait(2) async(4)
 !!! wait for the computation of ZDW_DZ
-!$acc ! wait(4)
+!!$acc ! wait(4)
 !
 ! ! !!! we can launch the update of ZFLX on the part that has already been computed
 ! ! !$acc update self(ZFLX(:,:,IKB+1:)) async(10)
@@ -352,7 +352,7 @@ ZDW_DZ(:,:)=-ZDU_DX(:,:)-ZDV_DY(:,:)
 !
 !
 !!! wait for the computation of ZDIRSINZW
-!$acc ! wait(1)
+!!$acc ! wait(1)
 !
 !$acc kernels present_cr(ZFLX,ZDIRSINZW) ! async(4)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
@@ -368,7 +368,7 @@ ZFLX(:,:,IKB-1) =                                                            &
 !$acc end kernels
 ! 
 !!! wait for the computation of ZFLX(:,:,IKB) and ZFLX(:,:,IKB-1)
-!$acc ! wait(3) async(4)
+!!$acc ! wait(3) async(4)
 !
 !$acc kernels ! async(4)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
@@ -378,7 +378,7 @@ ZFLX(:,:,IKB-1) =                                                            &
 !
 !
 !!! wait for the computation of ZFLX(:,:,IKB-1)
-!$acc ! wait(4)
+!!$acc ! wait(4)
 !
 
 
@@ -395,7 +395,7 @@ ZFLX(:,:,IKB-1) =                                                            &
 !
 !!! at this point there are no more async operations running
 !!! to be absolutely sure, we do a wait
-!$acc ! wait
+!!$acc ! wait
 !
 #ifndef MNH_OPENACC
 CALL UPDATE_HALO_ll(TZFIELDS_ll, IINFO_ll)
@@ -465,7 +465,7 @@ END IF
 !             -------
 !
 !!! wait for the computation of ZWORK and PDP (that uses ZFLX)
-!$acc ! wait(2)
+!!$acc ! wait(2)
 !
 ! Computes the V variance
 IF (.NOT. O2D) THEN
@@ -540,7 +540,7 @@ ZFLX(:,:,IKB-1) = 2. * ZFLX(:,:,IKB-1) -  ZFLX(:,:,IKB)
 ! ! !$acc wait(10)
 ! ! !$acc wait(3)
 !
-!$acc ! wait(3)
+!!$acc ! wait(3)
 #ifndef MNH_OPENACC
 CALL UPDATE_HALO_ll(TZFIELDS_ll, IINFO_ll)
 #else
@@ -565,7 +565,7 @@ IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
 END IF
 !
 !!! wait for the computation of PRUS (that uses temporary variables)
-!$acc ! wait(1)
+!!$acc ! wait(1)
 !
 !
 !
@@ -656,7 +656,7 @@ ZFLX(:,:,IKE+1)= ZFLX(:,:,IKE)
 !$mnh_end_expand_array(JI=1:IIT,JJ=1:IJT)
 !$acc end kernels
 !!! wait for the computation of ZWORK, PDP and ZFLX
-!$acc ! wait(2)
+!!$acc ! wait(2)
 !
 !
 !$acc kernels present_cr(zdw_dz,zflx) ! async(2)
@@ -683,7 +683,7 @@ ZFLX(:,:,IKB-1) =                                                     &
 ! 
 !
 !!! wait for the computation of ZFLX(:,:,IKB-1) and ZFLX(:,:,IKB)
-!$acc ! wait(2) ! async(3)
+!!$acc ! wait(2) ! async(3)
 !
 !$acc kernels ! async(3)
 !$mnh_expand_array(JI=1:IIT,JJ=1:IJT)
@@ -692,7 +692,7 @@ ZFLX(:,:,IKB-1) = 2. * ZFLX(:,:,IKB-1) - ZFLX(:,:,IKB)
 !$acc end kernels
 !
 IF ( TPFILE%LOPENED .AND. TURBN%LTURB_FLX ) THEN
-  !$acc ! wait(3)
+  !!$acc ! wait(3)
   !$acc update self(ZFLX)
   ! stores <W W>  
   TZFIELD = TFIELDMETADATA(     &
@@ -711,7 +711,7 @@ END IF
 !
 !
 !!! wait for the computation of PRVS (that uses temporary variables)
-!$acc ! wait(1)
+!!$acc ! wait(1)
 !
 
 !
@@ -730,8 +730,8 @@ ZDFDDWDZ(:,:,1:IKB) = 0.
 !$acc end kernels
 !
 !!! wait for the computation of ZFLX(:,:,IKB-1) and ZDFDDWDZ
-!$acc ! wait(3) async(2)
-!$acc ! wait(2)
+!!$acc ! wait(3) async(2)
+!!$acc ! wait(2)
 !
 CALL TRIDIAG_W(PWM,ZFLX,ZDFDDWDZ,PTSTEP,ZMZF_DZZ,PRHODJ,ZWP)
 !
