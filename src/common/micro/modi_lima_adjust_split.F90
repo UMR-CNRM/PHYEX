@@ -6,17 +6,20 @@ IMPLICIT NONE
 INTERFACE
 !
    SUBROUTINE LIMA_ADJUST_SPLIT(D, CST, BUCONF, TBUDGETS, KBUDGETS, &
-                             KRR, KMI, HCONDENS, HLAMBDA3,        &
+                             KRR, KMI, HCONDENS, HLAMBDA3,                      &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
-                             PRHODREF, PRHODJ, PEXNREF, PSIGS, PMFCONV,         &
-                             PPABST, PPABSTT, PZZ, PDTHRAD, PW_NU,              &
+                             PRHODREF, PRHODJ, PEXNREF, PSIGS, LMFCONV, PMFCONV,&
+                             PPABST, PPABSTT, PZZ, ODTHRAD, PDTHRAD, PW_NU,     &
                              PRT, PRS, PSVT, PSVS,                              &
-                             PTHS, PSRCS, PCLDFR, PICEFR, PRC_MF, PRI_MF, PCF_MF)
+                             PTHS, OCOMPUTE_SRC, PSRCS, PCLDFR, PICEFR,         &
+                             PRC_MF, PRI_MF, PCF_MF)
 !
 !USE MODD_IO,    ONLY: TFILEDATA
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
+USE MODD_NSV, ONLY: NSV
+USE MODD_NEB_n,            ONLY: NEBN
 IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),         INTENT(IN)   :: D
@@ -37,36 +40,47 @@ LOGICAL,                  INTENT(IN)   :: OSIGMAS    ! Switch for Sigma_s:
 REAL,                     INTENT(IN)   :: PTSTEP     ! Time step
 REAL,                     INTENT(IN)   :: PSIGQSAT   ! coeff applied to qsat variance contribution
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PRHODREF  ! Dry density of the 
-                                                     ! reference state
-REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PRHODJ    ! Dry density * Jacobian
-REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PEXNREF   ! Reference Exner function
-REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PSIGS     ! Sigma_s at time t
-REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PMFCONV   ! 
-REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PPABST    ! Absolute Pressure at t     
-REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PPABSTT   ! Absolute Pressure at t+dt     
-REAL, DIMENSION(:,:,:),   INTENT(IN)   ::  PZZ       !     
-REAL, DIMENSION(:,:,:),   INTENT(IN)   :: PDTHRAD   ! Radiative temperature tendency
-REAL, DIMENSION(:,:,:),   INTENT(IN)   :: PW_NU     ! updraft velocity used for
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PRHODREF  ! Dry density of the 
+                                                                   ! reference state
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PRHODJ    ! Dry density * Jacobian
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PEXNREF   ! Reference Exner function
+REAL, DIMENSION(MERGE(D%NIT,0,NEBN%LSUBG_COND), &
+                MERGE(D%NJT,0,NEBN%LSUBG_COND), &
+                MERGE(D%NKT,0,NEBN%LSUBG_COND)),   INTENT(IN)   ::  PSIGS     ! Sigma_s at time t
+LOGICAL,                                  INTENT(IN)    ::  LMFCONV ! T to use PMFCONV
+REAL, DIMENSION(MERGE(D%NIT,0,LMFCONV), &
+                MERGE(D%NJT,0,LMFCONV), &
+                MERGE(D%NKT,0,LMFCONV)),   INTENT(IN)   ::  PMFCONV   ! 
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PPABST    ! Absolute Pressure at t     
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PPABSTT   ! Absolute Pressure at t+dt     
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PZZ       !     
+LOGICAL,                                INTENT(IN)   :: ODTHRAD    ! Use radiative temperature tendency
+REAL, DIMENSION(MERGE(D%NIT,0,ODTHRAD), &
+                MERGE(D%NJT,0,ODTHRAD), &
+                MERGE(D%NKT,0,ODTHRAD)),   INTENT(IN) :: PDTHRAD   ! Radiative temperature tendency
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PW_NU     ! updraft velocity used for
 !
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT       ! m.r. at t
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(IN)    :: PRT       ! m.r. at t
 !
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS       ! m.r. source
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(INOUT) :: PRS       ! m.r. source
 !
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSVT ! Concentrations at time t
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSV), INTENT(IN)    :: PSVT ! Concentrations at time t
 !
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PSVS ! Concentration sources
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSV), INTENT(INOUT) :: PSVS ! Concentration sources
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS      ! Theta source
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT) :: PTHS      ! Theta source
 !
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PSRCS     ! Second-order flux
-                                                     ! s'rc'/2Sigma_s2 at time t+1
-                                                     ! multiplied by Lambda_3
-REAL, DIMENSION(:,:,:),   INTENT(INOUT)   :: PCLDFR    ! Cloud fraction          
-REAL, DIMENSION(:,:,:),   INTENT(INOUT)   :: PICEFR    ! Cloud fraction          
-REAL, DIMENSION(:,:,:),     INTENT(IN)    :: PRC_MF! Convective Mass Flux liquid mixing ratio
-REAL, DIMENSION(:,:,:),     INTENT(IN)    :: PRI_MF! Convective Mass Flux ice mixing ratio
-REAL, DIMENSION(:,:,:),     INTENT(IN)    :: PCF_MF! Convective Mass Flux Cloud fraction 
+LOGICAL,                                      INTENT(IN)    :: OCOMPUTE_SRC ! T to comput PSRCS
+REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC), &
+                MERGE(D%NJT,0,OCOMPUTE_SRC), &
+                MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(OUT)   :: PSRCS     ! Second-order flux
+                                                                         ! s'rc'/2Sigma_s2 at time t+1
+                                                                         ! multiplied by Lambda_3
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT)   :: PCLDFR    ! Cloud fraction          
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT)   :: PICEFR    ! Cloud fraction          
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),     INTENT(IN)    :: PRC_MF! Convective Mass Flux liquid mixing ratio
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),     INTENT(IN)    :: PRI_MF! Convective Mass Flux ice mixing ratio
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),     INTENT(IN)    :: PCF_MF! Convective Mass Flux Cloud fraction 
 !
 END SUBROUTINE LIMA_ADJUST_SPLIT
 END INTERFACE

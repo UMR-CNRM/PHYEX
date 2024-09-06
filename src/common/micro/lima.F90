@@ -4,12 +4,12 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     #####################################################################
-SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP,BUCONF, TBUDGETS, KBUDGETS,&
+SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, KBUDGETS, KRR, &
                   PTSTEP, OELEC,                                          &
-                  PRHODREF, PEXNREF, PDZZ,PTHVREFZIKB,                    &
+                  PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
                   NCCN, NIFN, NIMM,                                       &
-                  PDTHRAD, PTHT, PRT, PSVT, PW_NU,                        &
+                  ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PW_NU,               &
                   PTHS, PRS, PSVS,                                        &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
                   PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR,                  &
@@ -60,7 +60,7 @@ USE MODD_CST,             ONLY: CST_t
 USE MODD_NSV,             ONLY: NSV_LIMA_NC, NSV_LIMA_NR, NSV_LIMA_CCN_FREE, NSV_LIMA_CCN_ACTI, &
                                 NSV_LIMA_NI, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,             &
                                 NSV_LIMA_IFN_FREE, NSV_LIMA_IFN_NUCL, NSV_LIMA_IMM_NUCL, NSV_LIMA_HOM_HAZE, &
-                                NSV_LIMA_BEG, NSV_ELECBEG
+                                NSV_LIMA_BEG, NSV_ELECBEG, NSV
 USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN, NMOD_IFN, NMOD_IMM, LHHONI,      &
                                 LFEEDBACKT, NMAXITER, XMRSTEP, XTSTEP_TS,               &
                                 LSEDC, LSEDI, XRTMIN, XCTMIN, LDEPOC, XVDEPOC,                  &
@@ -91,50 +91,54 @@ TYPE(ELEC_DESCR_t),       INTENT(IN)    :: ELECD   ! electrical descriptive csts
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER,                  INTENT(IN)    :: KBUDGETS
+INTEGER,                  INTENT(IN)    :: KRR
 !
 REAL,                     INTENT(IN)    :: PTSTEP     ! Time step
 !
 LOGICAL,                  INTENT(IN)    :: OELEC      ! if true, cloud electrification is activated
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF   ! Reference density
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDZZ       ! Layer thikness (m)
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PRHODREF   ! Reference density
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PDZZ       ! Layer thikness (m)
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODJ     ! Dry density * Jacobian
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST     ! absolute pressure at t
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PRHODJ     ! Dry density * Jacobian
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PPABST     ! absolute pressure at t
 !
 INTEGER,                  INTENT(IN)    :: NCCN       ! for array size declarations
 INTEGER,                  INTENT(IN)    :: NIFN       ! for array size declarations
 INTEGER,                  INTENT(IN)    :: NIMM       ! for array size declarations
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDTHRAD    ! dT/dt due to radiation
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PTHT       ! Theta at time t
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PRT        ! Mixing ratios at time t
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSVT       ! Concentrations at time t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU      ! w for CCN activation
+LOGICAL,                                 INTENT(IN)   :: ODTHRAD    ! Use radiative temperature tendency
+REAL, DIMENSION(MERGE(D%NIT,0,ODTHRAD), &
+                MERGE(D%NJT,0,ODTHRAD), &
+                MERGE(D%NKT,0,ODTHRAD)),   INTENT(IN) :: PDTHRAD   ! dT/dt due to radiation
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PTHT       ! Theta at time t
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(IN) :: PRT        ! Mixing ratios at time t
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PW_NU      ! w for CCN activation
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS       ! Theta source
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS        ! Mixing ratios sources
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PSVS       ! Concentration sources
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT)    :: PTHS       ! Theta source
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(INOUT) :: PRS        ! Mixing ratios sources
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSV), INTENT(INOUT) :: PSVS       ! Concentration sources
 !
-REAL, DIMENSION(:,:),     INTENT(OUT)   :: PINPRC     ! Cloud instant precip
-REAL, DIMENSION(:,:),     INTENT(OUT)   :: PINDEP     ! Cloud droplets deposition
-REAL, DIMENSION(:,:),     INTENT(OUT)   :: PINPRR     ! Rain instant precip
-REAL, DIMENSION(:,:),     INTENT(OUT)   :: PINPRI     ! Rain instant precip
-REAL, DIMENSION(:,:),     INTENT(OUT)   :: PINPRS     ! Snow instant precip
-REAL, DIMENSION(:,:),     INTENT(OUT)   :: PINPRG     ! Graupel instant precip
-REAL, DIMENSION(:,:),     INTENT(OUT)   :: PINPRH     ! Rain instant precip
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PEVAP3D    ! Rain evap profile
+REAL, DIMENSION(D%NIT, D%NJT),     INTENT(OUT)        :: PINPRC     ! Cloud instant precip
+REAL, DIMENSION(D%NIT, D%NJT),     INTENT(OUT)        :: PINDEP     ! Cloud droplets deposition
+REAL, DIMENSION(D%NIT, D%NJT),     INTENT(OUT)        :: PINPRR     ! Rain instant precip
+REAL, DIMENSION(D%NIT, D%NJT),     INTENT(OUT)        :: PINPRI     ! Rain instant precip
+REAL, DIMENSION(D%NIT, D%NJT),     INTENT(OUT)        :: PINPRS     ! Snow instant precip
+REAL, DIMENSION(D%NIT, D%NJT),     INTENT(OUT)        :: PINPRG     ! Graupel instant precip
+REAL, DIMENSION(D%NIT, D%NJT),     INTENT(OUT)        :: PINPRH     ! Rain instant precip
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(OUT)   :: PEVAP3D    ! Rain evap profile
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCLDFR     ! Cloud fraction
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR     ! Cloud fraction
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PPRCFR     ! Cloud fraction
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PFPR       ! Precipitation fluxes in altitude
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT) :: PCLDFR     ! Cloud fraction
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT) :: PICEFR     ! Cloud fraction
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT) :: PPRCFR     ! Cloud fraction
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(INOUT) :: PFPR    ! Precipitation fluxes in altitude
 !
-REAL, DIMENSION(:,:,:),   OPTIONAL, INTENT(IN)    :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
-REAL, DIMENSION(:,:,:),   OPTIONAL, INTENT(IN)    :: PEFIELDW   ! Vertical component of the electric field
-REAL, DIMENSION(:,:,:,:), OPTIONAL, INTENT(IN)    :: PSV_ELEC_T ! Charge density at time t
-REAL, DIMENSION(:,:,:,:), OPTIONAL, INTENT(INOUT) :: PSV_ELEC_S ! Charge density sources
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PEFIELDW   ! Vertical component of the electric field
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSV), OPTIONAL, INTENT(IN)    :: PSV_ELEC_T ! Charge density at time t
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSV), OPTIONAL, INTENT(INOUT) :: PSV_ELEC_S ! Charge density sources
 !
 REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electricity
 !*       0.2   Declarations of local variables :
@@ -307,7 +311,6 @@ REAL, DIMENSION(:), ALLOCATABLE                      :: ZCF1D, ZIF1D, ZPF1D     
 !
 ! Various parameters
 ! domain size and levels (AROME compatibility)
-INTEGER :: KRR
 ! loops and packing
 INTEGER :: II, IPACK, JN
 integer :: idx
@@ -555,7 +558,6 @@ ALLOCATE (ZTOT_RV_HONH(SIZE(PTHT,1),SIZE(PTHT,2),SIZE(PTHT,3))) ; ZTOT_RV_HONH(:
 !
 ! Mixing ratios
 !
-KRR=SIZE(PRT,4)
 ZRVT(:,:,:) = PRS(:,:,:,1) * PTSTEP
 ZRVS(:,:,:) = PRS(:,:,:,1)
 IF ( KRR .GE. 2 ) ZRCT(:,:,:) = PRS(:,:,:,2) * PTSTEP

@@ -224,6 +224,10 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                'JPSVMAX' in ([d[0] for d in var['as']] + [d[1] for d in var['as']]):
                 extra.append('JPSVMAX')
                 moduleList.append('USE MODD_PARAMETERS, ONLY: JPSVMAX')
+            if 'NSV' not in extra and \
+               'NSV' in ([d[0] for d in var['as']] + [d[1] for d in var['as']]):
+                extra.append('NSV')
+                moduleList.append('USE MODD_NSV, ONLY: NSV')
 
     pftin.close()
 
@@ -262,6 +266,8 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
         for varname in extra:
             if varname == 'JPSVMAX':
                 f.write('USE MODD_PARAMETERS, ONLY: JPSVMAX\n')
+            elif varname == 'NSV':
+                f.write('USE MODD_NSV, ONLY: NSV\n')
         f.write('INTEGER(KIND=4), INTENT(OUT) :: ' + (', '.join(argList1name + extraname)) + '\n')
         for varname, vartype, _, _, _ in argList1:
             f.write(vartype + ' :: ' + 'K_' + varname + '\n')
@@ -273,6 +279,8 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
         for varname in extra:
             if varname == 'JPSVMAX':
                 f.write('K_JPSVMAX=JPSVMAX\n')
+            elif varname == 'NSV':
+                f.write('K_NSV=NSV\n')
         f.write(f'END {kind} HPY{name}')
 
     #Write output pyton file
@@ -369,6 +377,8 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
                         strdim.append('KGRADIENTS') #We should check its presence in the dummy args
                     elif 'JPSVMAX' in d[1]:
                         strdim.append('_JPSVMAX')
+                    elif 'NSV' in d[1]:
+                        strdim.append('_NSV')
                     else:
                         try:
                             strdim.append(str(int(d[1])))
