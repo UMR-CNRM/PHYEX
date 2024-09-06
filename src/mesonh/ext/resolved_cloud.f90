@@ -515,6 +515,7 @@ REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLATHAM_IAGGS ! E Function to simulate
                                                      ! enhancement of IAGGS
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZEFIELDW
 LOGICAL :: GELEC ! if true, cloud electrification is activated
+LOGICAL :: LLDTHRAD ! true if DTHRAD is used by LIMA
 !
 ZSIGQSAT2D(:,:) = PSIGQSAT
 !
@@ -1381,6 +1382,7 @@ SELECT CASE ( HCLOUD )
       GELEC = .FALSE.
     END IF
     !
+    LLDTHRAD = SIZE(PDTHRAD) /= 0
     DO JK=IKB,IKE
       ZDZZ(:,:,JK)=PZZ(:,:,JK+1)-PZZ(:,:,JK)    
     ENDDO
@@ -1389,12 +1391,12 @@ SELECT CASE ( HCLOUD )
       IF (GELEC) THEN
         CALL LIMA (YLDIMPHYEX,CST, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
                    ELEC_DESCR, ELEC_PARAM,                                 &
-                   TBUCONF,TBUDGETS,SIZE(TBUDGETS),                        &
+                   TBUCONF,TBUDGETS, SIZE(TBUDGETS), KRR,                  &
                    PTSTEP, GELEC,                                          &
                    PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
                    NMOD_CCN, NMOD_IFN, NMOD_IMM,                           &
-                   PDTHRAD, PTHT, PRT,                                     &
+                   LLDTHRAD, PDTHRAD, PTHT, PRT,                           &
                    PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
                    PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),       &
                    PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, PINPRH, &
@@ -1405,12 +1407,12 @@ SELECT CASE ( HCLOUD )
       ELSE
         CALL LIMA (YLDIMPHYEX,CST, RAIN_ICE_DESCRN, RAIN_ICE_PARAMN,       &
                    ELEC_DESCR, ELEC_PARAM,                                 &
-                   TBUCONF,TBUDGETS,SIZE(TBUDGETS),                        &
+                   TBUCONF,TBUDGETS, SIZE(TBUDGETS), KRR,                  &
                    PTSTEP, GELEC,                                          &
                    PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
                    NMOD_CCN, NMOD_IFN, NMOD_IMM,                           &
-                   PDTHRAD, PTHT, PRT,                                     &
+                   LLDTHRAD, PDTHRAD, PTHT, PRT,                           &
                    PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
                    PTHS, PRS, PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),       &
                    PINPRC, PINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, PINPRH, &
@@ -1458,11 +1460,13 @@ SELECT CASE ( HCLOUD )
       CALL LIMA_ADJUST_SPLIT(YLDIMPHYEX, CST, TBUCONF,TBUDGETS,SIZE(TBUDGETS),           &
                              KRR, KMI, CCONDENS, CLAMBDA3,                                   &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,                          &
-                             PRHODREF, PRHODJ, PEXNREF, PSIGS, PMFCONV, PPABST, PPABSTT, ZZZ,&
-                             PDTHRAD, PW_ACT,                                                &
+                             PRHODREF, PRHODJ, PEXNREF, PSIGS,                               &
+                             SIZE(PMFCONV)/=0, PMFCONV, PPABST, PPABSTT, ZZZ,                &
+                             LLDTHRAD, PDTHRAD, PW_ACT,                                      &
                              PRT, PRS, PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),                &
                              PSVS(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END),                          &
-                             PTHS, PSRCS, PCLDFR, PICEFR, PRC_MF, PRI_MF, PCF_MF             )
+                             PTHS, SIZE(PSRCS, 3)/=0, PSRCS, PCLDFR, PICEFR,                 &
+                             PRC_MF, PRI_MF, PCF_MF             )
     ELSE
       CALL LIMA_ADJUST(KRR, KMI, TPFILE,                                &
                        OSUBG_COND, PTSTEP,                              &
