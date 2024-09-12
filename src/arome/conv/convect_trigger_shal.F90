@@ -374,9 +374,6 @@ DO JKK = IKB + 1, IKE - 2
                                ZRVLCL(JI) * ( 1. + 0.81 * ZRVLCL(JI) ) )
     END DO
 
-!
-!$acc enter data create(zwork3(1:144116), ztopp(1:144116), zcap(1:144116),zcape(1:144116),ztop(1:144116))
-!$acc kernels present(zwork3(1:144116), ztopp(1:144116), zcap(1:144116), zcape(1:144116),ztop(1:144116))
      ZCAPE(D%NIB:D%NIE) = 0.
      ZCAP(D%NIB:D%NIE)  = 0.
      ZTOP(D%NIB:D%NIE)  = 0.
@@ -405,8 +402,6 @@ DO JKK = IKB + 1, IKE - 2
            ZTOPP(JI)=ZTOP(JI)
          END DO
      END DO
-     !$acc end kernels
-     !$acc exit data delete(zwork3, ztopp, zcap, zcape, ztop)
 !
 !
 
