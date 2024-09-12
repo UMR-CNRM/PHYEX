@@ -103,6 +103,7 @@
 !  P. Wautelet    02/2020: use the new data structures and subroutines for budgets
 !!      2020-12 U. Andrae : Introduce SPP for HARMONIE-AROME
 !!     R. El Khatib 24-Aug-2021 Optimizations
+!!     R. El Khatib 24-Oct-2023 Re-vectorize ;-)
 !!
 !-------------------------------------------------------------------------------
 !
@@ -216,6 +217,8 @@ INTEGER :: IKTB, IKTE, IIJB, IIJE
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZSIGS, ZSRCS
 REAL, DIMENSION(D%NIJT) :: ZSIGQSAT
+LOGICAL :: LLNONE, LLTRIANGLE, LLHLC_H, LLHLI_H
+
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
@@ -319,6 +322,13 @@ DO JK=IKTB,IKTE
       END IF
     ENDDO
   ELSE !NEBN%LSUBG_COND case
+    ! Tests on characters strings can break the vectorization, or at least they would
+    ! slow down considerably the performance of a vector loop. One should use tests on
+    ! reals, integers or booleans only. REK.
+    LLNONE=PARAMI%CSUBG_MF_PDF=='NONE'
+    LLTRIANGLE=PARAMI%CSUBG_MF_PDF=='TRIANGLE'
+    LLHLC_H=PRESENT(PHLC_HRC).AND.PRESENT(PHLC_HCF)
+    LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
     DO JIJ=IIJB,IIJE
       !We limit PRC_MF+PRI_MF to PRVS*PTSTEP to avoid negative humidity
       ZW1=PRC_MF(JIJ,JK)/PTSTEP
@@ -334,14 +344,14 @@ DO JK=IKTB,IKTE
       PTHS(JIJ,JK) = PTHS(JIJ,JK) + &
                     (ZW1 * ZLV(JIJ,JK) + ZW2 * ZLS(JIJ,JK)) / ZCPH(JIJ,JK) / PEXNREF(JIJ,JK)
       !
-      IF(PRESENT(PHLC_HRC) .AND. PRESENT(PHLC_HCF)) THEN
+      IF(LLHLC_H) THEN
         ZCRIAUT=ICEP%XCRIAUTC/PRHODREF(JIJ,JK)
-        IF(PARAMI%CSUBG_MF_PDF=='NONE')THEN
+        IF(LLNONE)THEN
           IF(ZW1*PTSTEP>PCF_MF(JIJ,JK) * ZCRIAUT) THEN
             PHLC_HRC(JIJ,JK)=PHLC_HRC(JIJ,JK)+ZW1*PTSTEP
             PHLC_HCF(JIJ,JK)=MIN(1.,PHLC_HCF(JIJ,JK)+PCF_MF(JIJ,JK))
           ENDIF
-        ELSEIF(PARAMI%CSUBG_MF_PDF=='TRIANGLE')THEN
+        ELSEIF(LLTRIANGLE)THEN
           !ZHCF is the precipitating part of the *cloud* and not of the grid cell
           IF(ZW1*PTSTEP>PCF_MF(JIJ,JK)*ZCRIAUT) THEN
             ZHCF=1.-.5*(ZCRIAUT*PCF_MF(JIJ,JK) / MAX(1.E-20, ZW1*PTSTEP))**2
@@ -362,14 +372,14 @@ DO JK=IKTB,IKTE
           PHLC_HRC(JIJ,JK)=PHLC_HRC(JIJ,JK)+ZHR
         ENDIF
       ENDIF
-      IF(PRESENT(PHLI_HRI) .AND. PRESENT(PHLI_HCF)) THEN
+      IF(LLHLI_H) THEN
         ZCRIAUT=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(ZT(JIJ,JK)-CST%XTT)+ICEP%XBCRIAUTI))
-        IF(PARAMI%CSUBG_MF_PDF=='NONE')THEN
+        IF(LLNONE)THEN
           IF(ZW2*PTSTEP>PCF_MF(JIJ,JK) * ZCRIAUT) THEN
             PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)+ZW2*PTSTEP
             PHLI_HCF(JIJ,JK)=MIN(1.,PHLI_HCF(JIJ,JK)+PCF_MF(JIJ,JK))
           ENDIF
-        ELSEIF(PARAMI%CSUBG_MF_PDF=='TRIANGLE')THEN
+        ELSEIF(LLTRIANGLE)THEN
           !ZHCF is the precipitating part of the *cloud* and not of the grid cell
           IF(ZW2*PTSTEP>PCF_MF(JIJ,JK)*ZCRIAUT) THEN
             ZHCF=1.-.5*(ZCRIAUT*PCF_MF(JIJ,JK) / (ZW2*PTSTEP))**2

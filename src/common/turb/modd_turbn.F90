@@ -77,6 +77,7 @@ TYPE TURB_t
   LOGICAL            :: LSIG_CONV   !< Switch for computing Sigma_s due to convection
 !
   LOGICAL            :: LHARAT      !< if true RACMO turbulence is used
+  LOGICAL            :: LBL89TOP    !< if true modification in BL89 at PBL top   
   LOGICAL            :: LRMC01      !< Switch for computing separate mixing and dissipative length in the SBL
                                     !! according to Redelsperger, Mahe & Carlotti 2001
   CHARACTER(LEN=4)   :: CTOM        !< type of Third Order Moments:
@@ -99,6 +100,8 @@ TYPE TURB_t
   REAL               :: XCOEFHGRADTHL !< coeff applied to thl contribution
   REAL               :: XCOEFHGRADRM  !< coeff applied to mixing ratio contribution
   REAL               :: XALTHGRAD  !< altitude from which to apply the Leonard terms
+  LOGICAL            :: LGOGER ! < logical switch for the computation of the Goger Terms
+  REAL               :: XSMAG  ! < dimensionless Smagorinsky constant
   REAL               :: XCLDTHOLD  !< cloud threshold to apply the Leonard terms:
                                    !!  negative value to apply everywhere;
                                    !!  0.000001 applied only inside the clouds ri+rc > 10**-6 kg/kg
@@ -134,6 +137,7 @@ LOGICAL, POINTER :: LTURB_DIAG=>NULL()
 LOGICAL, POINTER :: LSIG_CONV=>NULL()
 LOGICAL, POINTER :: LRMC01=>NULL()
 LOGICAL, POINTER :: LHARAT=>NULL()
+LOGICAL, POINTER :: LBL89TOP=>NULL()
 CHARACTER(LEN=4),POINTER :: CTOM=>NULL()
 REAL, DIMENSION(:,:), POINTER :: XBL_DEPTH=>NULL()
 REAL, DIMENSION(:,:), POINTER :: XSBL_DEPTH=>NULL()
@@ -151,6 +155,8 @@ LOGICAL, POINTER :: LLEONARD=>NULL()
 REAL, POINTER :: XCOEFHGRADTHL=>NULL()
 REAL, POINTER :: XCOEFHGRADRM=>NULL()
 REAL, POINTER :: XALTHGRAD=>NULL()
+LOGICAL, POINTER :: LGOGER=>NULL()
+REAL, POINTER :: XSMAG=>NULL()
 REAL, POINTER :: XCLDTHOLD=>NULL()
 REAL, POINTER :: XLINI=>NULL()
 LOGICAL, POINTER   :: LROTATE_WIND=>NULL()
@@ -164,8 +170,9 @@ NAMELIST/NAM_TURBn/XIMPL,CTURBLEN,CTURBDIM,LTURB_FLX,LTURB_DIAG,  &
                    LSIG_CONV,LRMC01,CTOM,&
                    XTKEMIN,XCED,XCTP,XCADAP,&
                    LLEONARD,XCOEFHGRADTHL, XCOEFHGRADRM, &
-                   XALTHGRAD, XCLDTHOLD, XLINI, LHARAT, &
-                   LPROJQITURB, LSMOOTH_PRANDTL, XMINSIGS
+                   XALTHGRAD, LGOGER, XSMAG, XCLDTHOLD, XLINI, LHARAT, &
+                   LPROJQITURB, LSMOOTH_PRANDTL, XMINSIGS, &
+                   LBL89TOP
 !
 !-------------------------------------------------------------------------------
 !
@@ -216,6 +223,7 @@ CTURBLEN=>TURB_MODEL(KTO)%CTURBLEN
 CTURBDIM=>TURB_MODEL(KTO)%CTURBDIM
 LTURB_FLX=>TURB_MODEL(KTO)%LTURB_FLX
 LHARAT=>TURB_MODEL(KTO)%LHARAT
+LBL89TOP=>TURB_MODEL(KTO)%LBL89TOP
 LTURB_DIAG=>TURB_MODEL(KTO)%LTURB_DIAG
 LSIG_CONV=>TURB_MODEL(KTO)%LSIG_CONV
 LRMC01=>TURB_MODEL(KTO)%LRMC01
@@ -236,6 +244,8 @@ LLEONARD=>TURB_MODEL(KTO)%LLEONARD
 XCOEFHGRADTHL=>TURB_MODEL(KTO)%XCOEFHGRADTHL
 XCOEFHGRADRM=>TURB_MODEL(KTO)%XCOEFHGRADRM
 XALTHGRAD=>TURB_MODEL(KTO)%XALTHGRAD
+LGOGER=>TURB_MODEL(KTO)%LGOGER
+XSMAG=>TURB_MODEL(KTO)%XSMAG
 XCLDTHOLD=>TURB_MODEL(KTO)%XCLDTHOLD
 XLINI=>TURB_MODEL(KTO)%XLINI
 LROTATE_WIND=>TURB_MODEL(KTO)%LROTATE_WIND
@@ -339,9 +349,12 @@ IF(LLDEFAULTVAL) THEN
   XCOEFHGRADTHL = 1.0
   XCOEFHGRADRM = 1.0
   XALTHGRAD = 2000.0
+  LGOGER=.FALSE.
+  XSMAG=0.20 
   XCLDTHOLD = -1.0
   XLINI=0.1 !old value: 10.
   LHARAT=.FALSE.
+  LBL89TOP=.FALSE.
   LROTATE_WIND=.FALSE.
   LTKEMINTURB=.TRUE.
   LPROJQITURB=.TRUE.
