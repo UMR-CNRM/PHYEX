@@ -4,7 +4,8 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
       SUBROUTINE TURB(CST,CSTURB,BUCONF,TURBN,NEBN,D,TLES,            &
-              & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTS,KHALO,       &
+              & KMI,KRR,KRRL,KRRI,HLBCX,HLBCY,KGRADIENTSLEO,          &
+              & KGRADIENTSGOG,KHALO,                                  &
               & KSPLIT,KMODEL_CL,KSV,KSV_LGBEG,KSV_LGEND,             &
               & KSV_LIMA_NR, KSV_LIMA_NS, KSV_LIMA_NG, KSV_LIMA_NH,   &
               & O2D,ONOMIXLG,OFLAT,OCOUPLES,OBLOWSNOW,OIBM,OFLYER,    &
@@ -14,7 +15,7 @@
               & PTSTEP,TPFILE,                                        &
               & PDXX,PDYY,PDZZ,PDZX,PDZY,PZZ,                         &
               & PDIRCOSXW,PDIRCOSYW,PDIRCOSZW,PCOSSLOPE,PSINSLOPE,    &
-              & PRHODJ,PTHVREF,PHGRAD,PZS,                            &
+              & PRHODJ,PTHVREF,PHGRADLEO,PHGRADGOG,PZS,               &
               & PSFTH,PSFRV,PSFSV,PSFU,PSFV,                          &
               & PPABST,PUT,PVT,PWT,PTKET,PSVT,PSRCT,                  &
               & PLENGTHM,PLENGTHH,MFMOIST,                            &
@@ -248,7 +249,7 @@ USE MODD_BUDGET,     ONLY:  NBUDGET_U,  NBUDGET_V,  NBUDGET_W,  NBUDGET_TH, NBUD
 USE MODD_CST,        ONLY: CST_t
 USE MODD_CTURB,      ONLY: CSTURB_t
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
-USE MODD_FIELD,      ONLY: TFIELDMETADATA, TYPEREAL
+USE MODD_FIELD,      ONLY: TFIELDMETADATA, TYPEREAL, NMNHDIM_UNKNOWN
 USE MODD_IO,         ONLY: TFILEDATA
 USE MODD_LES,        ONLY: TLES_t
 USE MODD_PARAMETERS, ONLY: JPVEXT_TURB, XUNDEF
@@ -292,7 +293,8 @@ TYPE(TBUDGETCONF_t),    INTENT(IN)   :: BUCONF        ! budget structure
 TYPE(TURB_t),           INTENT(IN)   :: TURBN         ! modn_turbn (turb namelist) structure
 TYPE(NEB_t),            INTENT(IN)   :: NEBN          ! modd_nebn structure
 TYPE(TLES_t),           INTENT(INOUT)   :: TLES          ! modd_les structure
-INTEGER,                INTENT(IN)   :: KGRADIENTS    ! Number of stored horizontal gradients
+INTEGER,                INTENT(IN)   :: KGRADIENTSLEO ! Number of stored horizontal gradients for Moeng scheme
+INTEGER,                INTENT(IN)   :: KGRADIENTSGOG ! Number of stored horizontal gradients for Goger scheme
 INTEGER,                INTENT(IN)   :: KMI           ! model index number
 INTEGER,                INTENT(IN)   :: KRR           ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL          ! number of liquid water var.
@@ -333,7 +335,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PRHODJ    ! dry density * Gri
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  MFMOIST ! moist mass flux dual scheme
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)      ::  PTHVREF   ! Virtual Potential
                                         ! Temperature of the reference state
-REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTS),   INTENT(IN) ::  PHGRAD      ! horizontal gradients
+REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTSLEO),   INTENT(IN) ::  PHGRADLEO  ! horizontal gradients in Moeng
+REAL, DIMENSION(D%NIJT,D%NKT,KGRADIENTSGOG),   INTENT(IN) ::  PHGRADGOG  ! horizontal gradients in Goger
 !
 REAL, DIMENSION(D%NIJT),   INTENT(IN)      ::  PSFTH,PSFRV,   &
 ! normal surface fluxes of theta and Rv
@@ -498,6 +501,7 @@ REAL                :: ZALPHA       ! work coefficient :
 !                                   !   BL89 mixing length near the surface
 !
 REAL :: ZTIME1, ZTIME2
+REAL :: ZDUDX, ZDVDY, ZDUDY, ZDVDX, ZK ! work values for Göger
 TYPE(TFIELDMETADATA) :: TZFIELD
 !
 !*      1.PRELIMINARIES
@@ -1034,7 +1038,7 @@ IF( BUCONF%LBUDGET_SV ) THEN
 END IF
 
 CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
-          KRR,KRRL,KRRI,KGRADIENTS,                      &
+          KRR,KRRL,KRRI,KGRADIENTSLEO,                   &
           OOCEAN, ODEEPOC, OCOMPUTE_SRC,                 &
           KSV,KSV_LGBEG,KSV_LGEND,                       &
           ZEXPL, O2D, ONOMIXLG, OFLAT,                   &
@@ -1049,7 +1053,7 @@ CALL TURB_VER(D,CST,CSTURB,TURBN,NEBN,TLES,              &
           PTKET,ZLM,PLENGTHM,PLENGTHH,ZLEPS,MFMOIST,     &
           ZLOCPEXNM,ZATHETA,ZAMOIST,PSRCT,ZFRAC_ICE,     &
           ZFWTH,ZFWR,ZFTH2,ZFR2,ZFTHR,PBL_DEPTH,         &
-          PSBL_DEPTH,ZLMO,PHGRAD,PZS,                    &
+          PSBL_DEPTH,ZLMO,PHGRADLEO,PZS,                 &
           PRUS,PRVS,PRWS,PRTHLS,PRRS,PRSVS,              &
           PDP,PTP,PSIGS,PWTH,PWRC,PWSV,                  &
           PSSTFL, PSSTFL_C, PSSRFL_C,PSSUFL_C,PSSVFL_C,  &
@@ -1211,7 +1215,31 @@ IF(PRESENT(PTPMF))  THEN
     ENDDO
   ENDDO
 END IF
-!  6.2 TKE evolution equation
+
+!  6.2 Horizontal gradients as in Göger et al. (2016)
+
+IF (TURBN%LGOGER) THEN
+ ! Add horizontal terms from Göger  et al. (2018)
+ ! Increase the Dyn. Prod.
+  DO JK=1,IKT
+    DO JIJ=IIJB,IIJE
+      !* Computation of the horizontal mixing length
+      ZK=TURBN%XSMAG**2*PDXX(JIJ,JK)*PDYY(JIJ,JK)
+      !* Add horizontal terms
+      ! DUDX=PHGRADGOG(JIJ,JK,1)
+      ! DUDY=PHGRADGOG(JIJ,JK,2)
+      ! DVDX=PHGRADGOG(JIJ,JK,3)
+      ! DVDY=PHGRADGOG(JIJ,JK,4)
+      PDP(JIJ,JK)=PDP(JIJ,JK)+ZK*&
+                  &(PHGRADGOG(JIJ,JK,1)*PHGRADGOG(JIJ,JK,1)           &
+                  &+PHGRADGOG(JIJ,JK,4)*PHGRADGOG(JIJ,JK,4)           &
+                  &+0.5*(PHGRADGOG(JIJ,JK,2)+PHGRADGOG(JIJ,JK,3))          &
+                  &*(PHGRADGOG(JIJ,JK,2)+PHGRADGOG(JIJ,JK,3)))**(3./2.)
+    ENDDO
+  ENDDO
+ENDIF
+
+!  6.3 TKE evolution equation
 
 IF (.NOT. TURBN%LHARAT) THEN
 !
@@ -2052,7 +2080,21 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     NGRID      = 1,                    &
     NTYPE      = TYPEREAL,             &
     NDIMS      = 3,                    &
-    LTIMEDEP   = .TRUE.                )
+    LTIMEDEP   = .TRUE.,               &
+    !Filling the other fields with the default values,
+    !because of a bug in nvidia's compiler (NVHPC 23.11)
+    !That should be removed when the bug is fixed
+    NDIMLIST   = NMNHDIM_UNKNOWN,      &
+    NFILLVALUE =  -2147483647,         &
+    XFILLVALUE =  9.9692099683868690e+36,&
+    NVALIDMIN  = -2147483646,          &
+    NVALIDMAX  =  2147483647,          &
+    XVALIDMIN  = -1.E36,               &
+    XVALIDMAX  =  1.E36,               &
+    CLBTYPE   = 'NONE'                 &
+    !End of default arguments
+    )
+
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZLM)
 ENDIF
 !
@@ -2091,7 +2133,20 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     NGRID      = 1,                 &
     NTYPE      = TYPEREAL,          &
     NDIMS      = 3,                 &
-    LTIMEDEP   = .TRUE.             )
+    LTIMEDEP   = .TRUE.,            &
+    !Filling the other fields with the default values,
+    !because of a bug in nvidia's compiler (NVHPC 23.11)
+    !That should be removed when the bug is fixed
+    NDIMLIST   = NMNHDIM_UNKNOWN,      &
+    NFILLVALUE =  -2147483647,         &
+    XFILLVALUE =  9.9692099683868690e+36,&
+    NVALIDMIN  = -2147483646,          &
+    NVALIDMAX  =  2147483647,          &
+    XVALIDMIN  = -1.E36,               &
+    XVALIDMAX  =  1.E36,               &
+    CLBTYPE   = 'NONE'                 &
+    !End of default arguments
+    )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZCOEF_AMPL)
   !
   TZFIELD = TFIELDMETADATA(        &
@@ -2104,7 +2159,20 @@ IF ( TURBN%LTURB_DIAG .AND. TPFILE%LOPENED ) THEN
     NGRID      = 1,                &
     NTYPE      = TYPEREAL,         &
     NDIMS      = 3,                &
-    LTIMEDEP   = .TRUE.            )
+    LTIMEDEP   = .TRUE.,           &
+    !Filling the other fields with the default values,
+    !because of a bug in nvidia's compiler (NVHPC 23.11)
+    !That should be removed when the bug is fixed
+    NDIMLIST   = NMNHDIM_UNKNOWN,      &
+    NFILLVALUE =  -2147483647,         &
+    XFILLVALUE =  9.9692099683868690e+36,&
+    NVALIDMIN  = -2147483646,          &
+    NVALIDMAX  =  2147483647,          &
+    XVALIDMIN  = -1.E36,               &
+    XVALIDMAX  =  1.E36,               &
+    CLBTYPE   = 'NONE'                 &
+    !End of default arguments
+    )
   CALL IO_FIELD_WRITE_PHY(D,TPFILE,TZFIELD,ZLM_CLOUD)
   !
 ENDIF

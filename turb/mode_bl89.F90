@@ -93,7 +93,8 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZDELTVPT
             ! Increment of Virtual Potential Temp between two following levels
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZHLVPT
             ! Virtual Potential Temp at half levels
-REAL, DIMENSION(D%NIJT) ::  ZLWORK,ZINTE
+REAL, DIMENSION(D%NIJT,D%NKT) ::  ZLWORK
+REAL, DIMENSION(D%NIJT) ::  ZINTE
 !           ! downwards then upwards vertical displacement,
 !           ! residual internal energy,
 !           ! residual potential energy
@@ -253,7 +254,7 @@ DO JK=IKTB,IKTE
           2. * ZINTE(JIJ) * &
           (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK)/ PDZZ(JIJ,JKK))))) / &
           (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK) / PDZZ(JIJ,JKK))
-        ZLWORK(JIJ)=ZLWORK(JIJ)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
+        ZLWORK(JIJ,JK)=ZLWORK(JIJ,JK)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
         ZINTE(JIJ) = ZINTE(JIJ) - ZPOTE
       END DO
     ENDIF
@@ -264,7 +265,7 @@ DO JK=IKTB,IKTE
 !            -----------------------------------------------
 !
   DO JIJ=IIJB,IIJE
-    PLMDN(JIJ,JK)=MIN(ZLWORK(JIJ),0.5*(PZZ(JIJ,JK)+PZZ(JIJ,JK+IKL))-PZZ(JIJ,IKB))
+    PLMDN(JIJ,JK)=MIN(ZLWORK(JIJ,JK),0.5*(PZZ(JIJ,JK)+PZZ(JIJ,JK+IKL))-PZZ(JIJ,IKB))
   END DO
 !
 !-------------------------------------------------------------------------------
@@ -273,7 +274,7 @@ DO JK=IKTB,IKTE
 !            -----------------------------------------
 !
   ZINTE(IIJB:IIJE)=PTKEM(IIJB:IIJE,JK)
-  ZLWORK(IIJB:IIJE)=0.
+  ZLWORK(IIJB:IIJE,JK)=0.
   ZTESTM=1.
 !
   DO JKK=JK+IKL,IKE,IKL
@@ -298,11 +299,20 @@ DO JK=IKTB,IKTE
             + 2. * ZINTE(JIJ) * &
             (ZG_O_THVREF(JIJ,JK)* ZDELTVPT(JIJ,JKK)/PDZZ(JIJ,JKK))))) / &
             (ZG_O_THVREF(JIJ,JK) * ZDELTVPT(JIJ,JKK) / PDZZ(JIJ,JKK))
-        ZLWORK(JIJ)=ZLWORK(JIJ)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
+        ZLWORK(JIJ,JK)=ZLWORK(JIJ,JK)+ZTEST0*(ZTEST*ZLWORK1+(1-ZTEST)*ZLWORK2)
         ZINTE(JIJ) = ZINTE(JIJ) - ZPOTE
       END DO
     ENDIF
   END DO
+!
+!* Maximal length between JK and the levels below (as in ARPEGE)
+!
+  IF (TURBN%LBL89TOP) THEN
+    DO JIJ=IIJB,IIJE
+      ZLWORK(JIJ,JK) = MAX(ZLWORK(JIJ,JK),ZLWORK(JIJ,JK-IKL)-PDZZ(JIJ,JK))
+    ENDDO
+  END IF
+
 !
 !-------------------------------------------------------------------------------
 !
@@ -310,7 +320,7 @@ DO JK=IKTB,IKTE
 !
   DO JIJ=IIJB,IIJE
     ZLWORK1=MAX(PLMDN(JIJ,JK),1.E-10_MNHREAL)
-    ZLWORK2=MAX(ZLWORK(JIJ),1.E-10_MNHREAL)
+    ZLWORK2=MAX(ZLWORK(JIJ,JK),1.E-10_MNHREAL)
     ZPOTE = ZLWORK1 / ZLWORK2
     ZLWORK2=1.d0 + ZPOTE**TURBN%XBL89EXP
     PLM(JIJ,JK) = ZLWORK1*(2./ZLWORK2)**TURBN%XUSRBL89

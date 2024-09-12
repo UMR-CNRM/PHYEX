@@ -10,6 +10,7 @@
                                PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,        &
                                PINPRC, PINPRR, PEVAP3D,                               &
                                PINPRS, PINPRG, PSIGS, PSEA, PTOWN,                    &
+                               OAERONRT, PCLDROP, PIFNNC,                             &
                                TBUDGETS, KBUDGETS,                                    &
                                PICENU, PKGN_ACON, PKGN_SBGR,                          &
                                PRHT, PRHS, PINPRH, PFPR)
@@ -167,6 +168,7 @@
 !!                          Sedimented ice should be preciptation
 !!      (U. Andrae Dec 2020) Introduce SPP for HARMONIE-AROME
 !!      (C. Wittmann Jan 2021) Introduce sublimation factor tuning
+!!      (D. Martin-Perez, 2021) nrt Aerosol
 !
 !
 !*       0.    DECLARATIONS
@@ -181,6 +183,7 @@ USE MODE_BUDGET_PHY, ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_S
 USE MODI_GAMMA,      ONLY: GAMMA
 USE MODE_TIWMX,      ONLY: ESATI, ESATW, AA2, BB3, AA2W, BB3W
 USE MODE_TIWMX_TAB,  ONLY: TIWMX_TAB
+USE MODD_NRT_AEROSOLS, ONLY : LAEIFN
 !
 USE MODE_RAIN_ICE_OLD_NUCLEATION,          ONLY: RAIN_ICE_OLD_NUCLEATION
 USE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT,  ONLY: RAIN_ICE_OLD_SEDIMENTATION_STAT
@@ -268,6 +271,11 @@ REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRS! Snow instant precip
 REAL, DIMENSION(D%NIT),       INTENT(OUT) :: PINPRG! Graupel instant precip
 REAL, DIMENSION(D%NIT),       INTENT(IN)  :: PSEA ! Sea Mask
 REAL, DIMENSION(D%NIT),       INTENT(IN)  :: PTOWN! Fraction that is town
+! nrt aerosol
+LOGICAL,                          INTENT(IN)  :: OAERONRT ! Switch for nrt aerosols
+REAL, DIMENSION(D%NIT,D%NKT),     INTENT(IN)  :: PCLDROP  ! Activated Condensation nuclei (CCN) 
+REAL, DIMENSION(D%NIT,D%NKT),     INTENT(IN)  :: PIFNNC   ! Ice freezing nuclei concentration
+!
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 REAL, DIMENSION(D%NIT), INTENT(IN)            :: PICENU, PKGN_ACON, PKGN_SBGR
@@ -481,7 +489,19 @@ IF (OSEDIC.OR.OCND2) THEN
      ENDDO
    ENDIF
 
-   ZCONC3D(:,D%NKTE)= ZCONC3D(:,D%NKTE)*MAX(0.001,ICEP%XFRMIN(22))
+   ZCONC3D(:,D%NKTE) = ZCONC3D(:,D%NKTE)*MAX(0.001,ICEP%XFRMIN(22))
+
+   !Consider CCN obtained from near real time aerosol mixing ratio fields
+   IF (OAERONRT) THEN
+     DO JK=D%NKTB,D%NKTE
+       ZCONC3D(:,JK) = PCLDROP(:,JK)
+       ZLBC(:,JK)    = 0.5* (ICED%XLBC(2)+ICED%XLBC(1)) ! Assume "average" distr. func
+       ZFSEDC(:,JK)  = 0.5* (ICEP%XFSEDC(2)+ICEP%XFSEDC(1))
+       ZFSEDC(:,JK)  = MAX(MIN(ICEP%XFSEDC(1),ICEP%XFSEDC(2)),ZFSEDC(:,JK))
+       ZRAY(:,JK)    = 0.5*(0.5*GAMMA(ICED%XNUC+1.0/ICED%XALPHAC)/(GAMMA(ICED%XNUC)) + &
+                            0.5*GAMMA(ICED%XNUC2+1.0/ICED%XALPHAC2)/(GAMMA(ICED%XNUC2)))
+     ENDDO
+   ENDIF
    ZRAY(:,:)      = MAX(1.,ZRAY(:,:))
    ZLBC(:,:)      = MAX(MIN(ICED%XLBC(1),ICED%XLBC(2)),ZLBC(:,:))
 
@@ -502,6 +522,7 @@ CALL RAIN_ICE_OLD_NUCLEATION(D, CST, ICEP, COUNT(ZT(D%NIB:D%NIE,D%NKTB:D%NKTE)<C
                              OCND2, LMODICEDEP, KRR, PTSTEP, &
                              PTHT, PPABST, PEXNREF, PICLDFR, PRHODJ, PRHODREF, &
                              PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
+                             OAERONRT, PIFNNC, &
                              PTHS, PRVS, PRIS, PCIT, &
                              PICENU, ZT, ZZZZ, &
                              PRHT)
