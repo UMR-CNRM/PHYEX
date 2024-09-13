@@ -279,6 +279,9 @@ USE MODE_UPDATE_LM,           ONLY: UPDATE_LM
 USE MODI_LES_MEAN_SUBGRID_PHY
 USE MODI_SECOND_MNH,          ONLY: SECOND_MNH
 !
+! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
+!$mnh_undef(LOOP)
+!$mnh_undef(OPENACC)
 !
 IMPLICIT NONE
 !

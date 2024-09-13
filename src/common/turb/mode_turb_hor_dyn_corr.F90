@@ -106,6 +106,10 @@ USE MODE_TRIDIAG_W, ONLY: TRIDIAG_W
 USE MODI_SECOND_MNH
 USE MODE_MPPDB
 !
+! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
+!$mnh_undef(LOOP)
+!$mnh_undef(OPENACC)
+!
 IMPLICIT NONE
 !
 !
