@@ -149,6 +149,9 @@ USE MODI_GET_HALO
 USE MODI_LES_MEAN_SUBGRID_PHY
 USE MODE_TRIDIAG_TKE,          ONLY: TRIDIAG_TKE
 !
+! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
+!$mnh_undef(LOOP)
+!$mnh_undef(OPENACC)
 !
 IMPLICIT NONE
 !
