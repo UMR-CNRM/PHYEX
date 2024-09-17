@@ -44,7 +44,7 @@ specialName="ref"
 # - allowedTests is the list of allowed tests which can depend on platform, if we ask to perform an action
 #   with a test not in the allowedTests list, the action is ignored
 # - defaultTest is the list of tests to perform when no '-t' option is provided on the command line.
-ALLTests="ice_adjust,rain_ice,rain_ice_old,turb,shallow"
+ALLTests="ice_adjust,rain_ice,rain_ice_old,turb,shallow,lima_adjust"
 defaultTest=${ALLTests}
 allowedTests=${ALLTests}
 
