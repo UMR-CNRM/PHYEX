@@ -98,6 +98,9 @@ USE YOMMDDH, ONLY  : TMDDH
 !
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
+USE YOMMP0, ONLY : MYPROC
+USE OML_MOD, ONLY : OML_MY_THREAD
+!
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
@@ -180,6 +183,10 @@ REAL  :: ZRATIO                     ! ZMASSTOT / ZMASSCOR
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_SV1+NSV_LIMA-1) :: YLBUDGET
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 !
+CHARACTER(LEN=20) :: CLOFILE
+INTEGER           :: IFILE
+LOGICAL           :: LFILEEXISTS
+!
 !------------------------------------------------------------------------------
 !
 !*       1.     PRELIMINARY COMPUTATIONS
@@ -255,7 +262,7 @@ END DO
 !*       3.2    Correct negative values
 !
 ! Correction where rc<0
-IF (NMOM_C.GE.1) THEN
+IF (NMOM_C.GE.2) THEN
 !        WHERE (PRS(:,:,:,2) < 0. .OR. PSVS(:,:,:,NSV_LIMA_NC) < 0.)
    WHERE (PRS(:,:,:,2) < 0.)
       PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,2)
@@ -266,7 +273,7 @@ IF (NMOM_C.GE.1) THEN
    END WHERE
 END IF
 ! Correction where rr<0
-IF (NMOM_R.GE.1) THEN
+IF (NMOM_R.GE.2) THEN
 !        WHERE (PRS(:,:,:,3) < 0. .OR. PSVS(:,:,:,NSV_LIMA_NR) < 0.)
    WHERE (PRS(:,:,:,3) < 0.)
       PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,3)
@@ -288,7 +295,7 @@ END IF
 !        ENDDO
 !     END IF
 ! Correction where ri<0
-IF (NMOM_I.GE.1) THEN
+IF (NMOM_I.GE.2) THEN
 !        WHERE (PRS(:,:,:,4) < 0. .OR. PSVS(:,:,:,NSV_LIMA_NI) < 0.)
    WHERE (PRS(:,:,:,4) < 0.)
       PRS(:,:,:,1) = PRS(:,:,:,1) + PRS(:,:,:,4)
@@ -332,6 +339,44 @@ ENDDO
 !
     ZZZ =  PZZF
 
+    IF(.TRUE.) THEN ! Activate or not the writing
+      LFILEEXISTS=.FALSE.
+    ELSE
+      IFILE=0
+      LFILEEXISTS=.TRUE.
+      DO WHILE(LFILEEXISTS)
+        IFILE=IFILE+1
+        WRITE(CLOFILE, '(I4.4,"_",I2.2,"_",I8.8,".dat")') MYPROC, OML_MY_THREAD(), IFILE
+        INQUIRE(FILE=CLOFILE, EXIST=LFILEEXISTS)
+      ENDDO
+      LFILEEXISTS=IFILE<500
+      IF(LFILEEXISTS) THEN
+        IFILE=7+OML_MY_THREAD()
+        OPEN(IFILE, FILE=CLOFILE, FORM='unformatted') !,access='stream')
+        WRITE(IFILE) SIZE(PRHODJ, 1), SIZE(PRHODJ, 2), SIZE(PRHODJ, 3)
+        WRITE(IFILE) KRR, SIZE(PSVS, 4)
+        WRITE(IFILE) PHYEX%NEBN%CCONDENS, PHYEX%NEBN%CLAMBDA3
+        WRITE(IFILE) OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT
+        WRITE(IFILE) PRHODREF
+        WRITE(IFILE) PRHODJ
+        WRITE(IFILE) PEXNREF
+        WRITE(IFILE) PSIGS
+        WRITE(IFILE) PMFCONV
+        WRITE(IFILE) PPABSM
+        WRITE(IFILE) ZZZ
+        WRITE(IFILE) PDTHRAD
+        WRITE(IFILE) PW_NU
+        WRITE(IFILE) PRT
+        WRITE(IFILE) PRS
+        WRITE(IFILE) PSVT
+        WRITE(IFILE) PSVS
+        WRITE(IFILE) PTHS
+        WRITE(IFILE) PRC_MF
+        WRITE(IFILE) PRI_MF
+        WRITE(IFILE) PCF_MF
+      ENDIF
+    ENDIF
+
     CALL LIMA_ADJUST_SPLIT(D=YLDIMPHYEX, CST=PHYEX%CST, BUCONF=TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET), &
          KRR=KRR, KMI=1, HCONDENS=PHYEX%NEBN%CCONDENS, HLAMBDA3=PHYEX%NEBN%CLAMBDA3, &
          OSUBG_COND=OSUBG_COND, OSIGMAS=OSIGMAS, PTSTEP=2*PTSTEP, PSIGQSAT=PSIGQSAT, &
@@ -340,6 +385,16 @@ ENDDO
          PRT=PRT, PRS=PRS, PSVT=PSVT, PSVS=PSVS, &
          PTHS=PTHS, OCOMPUTE_SRC=.TRUE., PSRCS=PSRCS, PCLDFR=PCLDFR, PICEFR=PICEFR, &
          PRC_MF=PRC_MF, PRI_MF=PRI_MF, PCF_MF=PCF_MF )
+
+    IF(LFILEEXISTS) THEN
+      WRITE(IFILE) PRS
+      WRITE(IFILE) PSVS
+      WRITE(IFILE) PTHS
+      WRITE(IFILE) PSRCS
+      WRITE(IFILE) PCLDFR
+      WRITE(IFILE) PICEFR
+      CLOSE(IFILE)
+    ENDIF
 !
 !-------------------------------------------------------------------------------
 !

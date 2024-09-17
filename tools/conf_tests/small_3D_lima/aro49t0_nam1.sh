@@ -736,48 +736,16 @@ echo
  &NAMLCZ
  /
  &NAM_PARAM_LIMA
-  LADJ=T,
-  LSPRO=F,
-  NMOM_C=2,
-  NMOM_R=2,
-  NMOM_I=2,
-  NMOM_S=1,
-  NMOM_G=1,
-  NMOM_H=0,
-  LACTI = T,
-  HINI_CCN='AER',
-  HTYPE_CCN(1)='M',
-  NMOD_CCN = 1,
-  XALPHAR = 1.,
-  XNUR = 1.,
-  LACTIT=F,
-  LSEDC=F,
-  LDEPOC=F,
-  LKESSLERAC=F,
-  LKHKO=F,
-  LSCAV=F,
-  LAERO_MASS=F,
-  LCCN_HOM=F,
-  CCCN_MODES='COPT',
-  LNUCL=T,
-  LSEDI=F,
-  LHHONI=F,
-  LSNOW_T=F,
-  NMOD_IFN=1,
-  NPHILLIPS=8,
-  CPRISTINE_ICE_LIMA = 'PLAT',
-  CHEVRIMED_ICE_LIMA = 'GRAU',
-  NIND_SPECIE = 1,
-  LMEYERS=F,
-  NMOD_IMM=0,
-  LIFN_HOM=T,
-  CIFN_SPECIES='',
-  CINT_MIXING='DM1',
-  LPTSPLIT=T,
-  XMRSTEP=0.00005,
-  NMAXITER=10,
-  LFEEDBACKT=.TRUE.,
-  XTSTEP_TS=25.,
+   NMOM_C=2,
+   NMOM_R=2,
+   NMOM_I=1,
+   NMOM_S=1,
+   NMOM_G=1,
+   NMOD_CCN=1,
+   CCCN_MODES='COPT',
+   NMOD_IFN=0,
+   LSNOW_T=T,
+   LMURAKAMI=T,
  /
  &NAMLSFORC
  /
@@ -1343,7 +1311,7 @@ ls -ltr | grep -v "\->"
 echo Wait_queue :
 ls -ltr $TMPWAIT
 cd $TMPDIR
-\rm -rf rundir.$$
+#\rm -rf rundir.$$
 \rm -rf wait_queue.$$
 date
 set +x
