@@ -4,7 +4,7 @@
 set -e
 set -o pipefail #abort if left command on a pipe fails
 
-pyft_version=3bead4d4b54baafc113f239f72e8bd90b6381dcc
+pyft_version=f63de396176e3e91a5cdedae2d098dbbe3497ae2
 
 #This script installs PHYEX
 #Call the script with the -h option to get more information.

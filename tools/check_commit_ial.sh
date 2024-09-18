@@ -536,7 +536,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
     cd $HOMEPACK/$name/src/local/phyex
 
     if [ $useexpand == 1 ]; then
-      expand_options="--mnhExpand"
+      expand_options="--mnhExpand --removeACC"
     else
       expand_options=""
     fi

@@ -23,6 +23,7 @@ function usage {
   echo "                      or a tag with the following syntax: tags/TAG where TAG is the tag name"
   echo "-m MODEL              merge the code under the common directory with the code specific to MODEL model"
   echo "--mnhExpand           option passed to the pyft tool"
+  echo "--removeACC           option passed to the pyft tool"
   echo "-p                    push the result as a new branch"
   echo "-s SUB                subdiretory or file (under src) to consider when merging and applying pyft"
   echo "--renameFf            rename .F90 into .f90"
@@ -38,7 +39,7 @@ function usage {
   echo "* If the -c option is not provided, DIRECTORY must already contain files and directory as if"
   echo "  it was the result of a git checkout"
   echo "* If the -m option is used, directory tree is modified, only relevant code is kept"
-  echo "* If --mnhExpand is not used, pyft is not called at all"
+  echo "* If none of --mnhExpand, --removeACC, --pyft_opts_env or PYFT_OPTIONS is not used, pyft is not called at all"
   echo "* -s options are mandatory for -m, -D and -p options"
   echo "* -p option is allowed only if -c and -m options are provided"
   echo ""
@@ -101,6 +102,7 @@ while [ -n "$1" ]; do
     '-c') checkout_point="$2"; shift;;
     '-m') model="$2"; shift;;
     '--mnhExpand') pyft_options="$pyft_options $1";;
+    '--removeACC') pyft_options="$pyft_options $1";;
     '-s') subs="$subs $2"; shift;;
     '-p') push=1;;
     '--renameFf') renameFf=1;;
