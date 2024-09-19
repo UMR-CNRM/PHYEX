@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -272,7 +272,7 @@ DO JKK = JKP, JKT
         ZTHLCL(:)   = ZTHLCL(:)   / ZDPTHMIX(:) +.3   ! add small perturbation
         ZRVLCL(:)   = ZRVLCL(:)   / ZDPTHMIX(:) +1.e-4
         ZTHVLCL(:)  = ZTHLCL(:) * ( 1. + ZEPSA * ZRVLCL(:) )                 &
-				/ ( 1. + ZRVLCL(:) )
+                                / ( 1. + ZRVLCL(:) )
 !
 !*       4.1    Use an empirical direct solution ( Bolton formula )
 !               to determine temperature and pressure at LCL. 

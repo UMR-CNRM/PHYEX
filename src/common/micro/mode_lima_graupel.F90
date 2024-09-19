@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2018-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2018-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -254,10 +254,10 @@ WHERE( GDRY )
    Z4(:) = GET_XKER_SDRYG(IVEC1(:)  ,IVEC2(:)  )
    ZVEC3(:) =  (      Z1(:)* ZVEC2(:)          &
                     - Z2(:)*(ZVEC2(:) - 1.0) ) &
-      			 	                            *  ZVEC1(:)    &
+                                               *  ZVEC1(:)    &
                  - (  Z3(:)* ZVEC2(:)          &
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
-       			                                    * (ZVEC1(:) - 1.0)
+                                                    * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
    ZZW3(:) = XFSDRYG * ZZW(:) * EXP( XCOLEXSG*(PT(:)-XTT) )       & ! RSDRYG - rs collected by graupel in dry mode
                     *  PRST(:) * PCGT(:)                          &
@@ -272,10 +272,10 @@ WHERE( GDRY )
    Z4(:) = GET_XKER_N_SDRYG(IVEC1(:)  ,IVEC2(:)  )
    ZVEC3(:) =  (      Z1(:)* ZVEC2(:)          &
                     - Z2(:)*(ZVEC2(:) - 1.0) ) &
-      			 	                            *  ZVEC1(:)    &
+                                               *  ZVEC1(:)    &
                  - (  Z3(:)* ZVEC2(:)          &
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
-       			                                    * (ZVEC1(:) - 1.0)
+                                                    * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
    ZZW3N(:) = XFNSDRYG * ZZW(:) * EXP( XCOLEXSG*(PT(:)-XTT) )        & ! NSDRYG - Ns collected by graupel in dry mode
                       *  PCST(:) * PCGT(:)                           &
@@ -320,10 +320,10 @@ WHERE( GDRY )
    Z4(:) = GET_XKER_RDRYG(IVEC1(:)  ,IVEC2(:)  )
       ZVEC3(:) =  (   Z1(:)* ZVEC2(:)          &
                     - Z2(:)*(ZVEC2(:) - 1.0) ) &
-                     			 	             *  ZVEC1(:)   &
+                                               *  ZVEC1(:)   &
                  - (  Z3(:)* ZVEC2(:)          &
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
-                                 			     * (ZVEC1(:) - 1.0)
+                                               * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
    ZZW4(:) = XFRDRYG * ZZW(:)                                     & ! RRDRYG
                      * PRRT(:) * PCGT(:)                          &
@@ -338,10 +338,10 @@ WHERE( GDRY )
    Z4(:) = GET_XKER_N_RDRYG(IVEC1(:)  ,IVEC2(:)  )
       ZVEC3(:) =  (   Z1(:)* ZVEC2(:)          &
                     - Z2(:)*(ZVEC2(:) - 1.0) ) &
-                     			 	             *  ZVEC1(:)   &
+                                               *  ZVEC1(:)   &
                  - (  Z3(:)* ZVEC2(:)          &
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
-                                 			     * (ZVEC1(:) - 1.0)
+                                               * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
    ZZW4N(:) = XFNRDRYG * ZZW(:)                                      & ! NRDRYG
                        * PCRT(:) * PCGT(:)                           &

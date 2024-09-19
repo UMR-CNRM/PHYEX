@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -35,12 +35,12 @@ REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PRC   ! grid scale r_c (cloud water)
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PRI   ! grid scale r_i (cloud ice) 
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PPRES ! pressure (Pa)
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PDPRES! pressure difference between 
-						! bottom and top of layer (Pa) 
+                                                ! bottom and top of layer (Pa) 
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PZ    ! level height (m)
 INTEGER, DIMENSION(KLON),   INTENT(IN) :: KLCL  ! contains vert. index of LCL
 INTEGER, DIMENSION(KLON),   INTENT(IN) :: KCTL  ! contains vert. index of CTL 
 INTEGER, DIMENSION(KLON),   INTENT(IN) :: KETL  ! contains vert. index of 
-						! equilibrium (zero buoyancy) level 
+                                                ! equilibrium (zero buoyancy) level 
 INTEGER, DIMENSION(KLON),   INTENT(IN) :: KML   ! " vert. index of melting level
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PUTHL ! updraft enthalpy (J/kg)      
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PURW  ! updraft total water (kg/kg)
@@ -164,12 +164,12 @@ REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PRC   ! grid scale r_c (cloud water)
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PRI   ! grid scale r_i (cloud ice) 
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PPRES ! pressure (Pa)
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PDPRES! pressure difference between 
-						! bottom and top of layer (Pa) 
+                                                ! bottom and top of layer (Pa) 
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PZ    ! level height (m)
 INTEGER, DIMENSION(KLON),   INTENT(IN) :: KLCL  ! contains vert. index of LCL
 INTEGER, DIMENSION(KLON),   INTENT(IN) :: KCTL  ! contains vert. index of CTL 
 INTEGER, DIMENSION(KLON),   INTENT(IN) :: KETL  ! contains vert. index of 
-						! equilibrium (zero buoyancy) level 
+                                                ! equilibrium (zero buoyancy) level 
 INTEGER, DIMENSION(KLON),   INTENT(IN) :: KML   ! " vert. index of melting level
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PUTHL ! updraft enthalpy (J/kg)      
 REAL, DIMENSION(KLON,KLEV), INTENT(IN) :: PURW  ! updraft total water (kg/kg)
@@ -308,8 +308,8 @@ END DO
       ! temperature perturbation due to melting at LFS
 ZWORK3(:) = 0.
 WHERE( KML(:) > IKB + 2 )
-	  ZWORK3(:) = ZWORK1(:) * ( ZLS(:) - ZLV(:) ) / ZCPH(:)
-	  ZDT(:)    = ZDT(:) - ZWORK3(:) * REAL(KICE)
+     ZWORK3(:) = ZWORK1(:) * ( ZLS(:) - ZLV(:) ) / ZCPH(:)
+     ZDT(:)    = ZDT(:) - ZWORK3(:) * REAL(KICE)
 END WHERE
 !
 !
@@ -353,7 +353,7 @@ JKM = MAXVAL( KLFS(:) )
 DO JK = JKM - 1, IKB + 1, -1
   DO JI = 1, IIE
      IF ( JK < KLFS(JI) .AND. ZWORK2(JI) > PTHES(JI,JK) .AND. GWORK1(JI) ) THEN
-	  KDBL(JI) = JK
+          KDBL(JI) = JK
           GWORK1(JI) = .FALSE.
      END IF
   END DO

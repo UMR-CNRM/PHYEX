@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -50,7 +50,7 @@ INTEGER, DIMENSION(KLON),  INTENT(IN) :: KPBL   !  " vert. index of source layer
 !
 INTEGER, DIMENSION(KLON),  INTENT(OUT):: KCTL   ! contains vert. index of CTL 
 INTEGER, DIMENSION(KLON),  INTENT(OUT):: KETL   ! contains vert. index of        &
-						!equilibrium (zero buoyancy) level 
+                                                !equilibrium (zero buoyancy) level 
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT):: PUMF  ! updraft mass flux (kg/s)
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT):: PUER  ! updraft entrainment (kg/s)
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT):: PUDR  ! updraft detrainment (kg/s)
@@ -182,7 +182,7 @@ INTEGER, DIMENSION(KLON),  INTENT(IN) :: KPBL   !  " vert. index of source layer
 !
 INTEGER, DIMENSION(KLON),  INTENT(OUT):: KCTL   ! contains vert. index of CTL 
 INTEGER, DIMENSION(KLON),  INTENT(OUT):: KETL   ! contains vert. index of        &
-						!equilibrium (zero buoyancy) level 
+                                                !equilibrium (zero buoyancy) level 
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT):: PUMF  ! updraft mass flux (kg/s)
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT):: PUER  ! updraft entrainment (kg/s)
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT):: PUDR  ! updraft detrainment (kg/s)
@@ -283,9 +283,9 @@ JKM = MINVAL( KDPL(:) )
 DO JK = JKM, JKP
    DO JI = 1, IIE
    IF ( JK >= KDPL(JI) .AND. JK < KLCL(JI) ) THEN
-	PUMF(JI,JK)  = PMFLCL(JI)
-	PUTHL(JI,JK) = ZWORK1(JI) 
-	PUTHV(JI,JK) = PTHLCL(JI) * ( 1. + ZEPSA * PRVLCL(JI) ) /             &
+        PUMF(JI,JK)  = PMFLCL(JI)
+        PUTHL(JI,JK) = ZWORK1(JI) 
+        PUTHV(JI,JK) = PTHLCL(JI) * ( 1. + ZEPSA * PRVLCL(JI) ) /             &
                                   ( 1. + PRVLCL(JI) )
         PURW(JI,JK)  = PRVLCL(JI) 
    END IF

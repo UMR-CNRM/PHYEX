@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -84,7 +84,7 @@ REAL :: ZSMIN, ZSMAX          ! Minimal and maximal supersaturation used to
 CALL PARAM_LIMA_WARM_ASSOCIATE()
 !
 !*       1.     CHARACTERISTICS OF THE SPECIES
-!   	        ------------------------------
+!               ------------------------------
 !
 !
 !*       1.1    Cloud droplet characteristics
@@ -117,7 +117,7 @@ XF1R = 0.308
 !
 !
 !*       2.     DIMENSIONAL DISTRIBUTIONS OF THE SPECIES
-!   	        ----------------------------------------
+!               ----------------------------------------
 !
 !
 !*       2.1    Cloud droplet distribution
@@ -169,7 +169,7 @@ END IF
 !
 !
 !*       3.     CONSTANTS FOR THE SEDIMENTATION
-!   	        -------------------------------
+!               -------------------------------
 !
 !
 !*       4.1    Exponent of the fall-speed air density correction
@@ -207,7 +207,7 @@ XFSEDC(3) = XFSEDCR
 !
 !
 !*       4.     CONSTANTS FOR THE NUCLEATION PROCESS
-!   	        ------------------------------------
+!               ------------------------------------
 !
 !
 XWMIN = 0.01 ! Minimal positive vertical velocity required 
@@ -226,7 +226,7 @@ XCSTDCRIT = (XPI/6.)*XRHOLW*( (8.0*ZSURF_TEN )/( 3.0*XRV*XRHOLW ) )**3
 !
 !
 !
-!	4.1   Tabulation of the hypergeometric functions in 'no units'
+!    4.1   Tabulation of the hypergeometric functions in 'no units'
 !             --------------------------------------------------------
 !
 !               In LIMA's nucleation parameterization,
@@ -261,7 +261,7 @@ NAHEN = 81 ! Tabulation for each Kelvin degree in the range XTT-40 to XTT+40
 XAHENINTP1 = 1.0
 XAHENINTP2 = 0.5*REAL(NAHEN-1) - XTT
 !
-!		Compute the tabulation of function of T :
+!        Compute the tabulation of function of T :
 !
 !                                   1
 !               XAHENG = -----------------------
@@ -312,7 +312,7 @@ XCONCR_PARAM_INI = (1.E7)**3/(XPI*XRHOLW) ! MP law with N_O=1.E7 m-1 is assumed
 !
 !
 !*       5.     CONSTANTS FOR THE COALESCENCE PROCESSES
-!   	        ---------------------------------------
+!               ---------------------------------------
 !
 !
 !*       6.1    Csts for the coalescence processes
@@ -370,7 +370,7 @@ XSCBUEXP1 = -2500.0
 !
 !
 !*       6.     CONSTANTS FOR THE "SONTANEOUS" BREAK-UP
-!   	        ---------------------------------------
+!               ---------------------------------------
 !
 !
 XSPONBUD1 = 3.0E-3
@@ -383,7 +383,7 @@ XSPONCOEF2 = ((XSPONBUD3/XSPONBUD2)**3 - 1.0)/(XSPONBUD3-XSPONBUD1)**2
 !
 !
 !*        7.    CONSTANTS FOR EVAPORATION PROCESS
-!   	        ---------------------------------------
+!               ---------------------------------------
 !
 !
 X0CNDC = (4.0*XPI)*XC1C*XF0C*MOMG(XALPHAC,XNUC,1.)
@@ -416,7 +416,7 @@ XCEVAP = 0.86
 !
 !
 !*       8.     SET-UP RADIATIVE PARAMETERS
-!   	        ---------------------------
+!               ---------------------------
 !
 !
 ! R_eff_c = XFREFFC * (rho*r_c/N_c)**(1/3)
@@ -435,7 +435,7 @@ XCRER = 1.0/ (ZGAMR(6) * XAR**(2.0/3.0))
 !
 !
 !*       9.     SOME PRINTS FOR CONTROL
-!   	        -----------------------
+!               -----------------------
 !
 !
 !!$GFLAG = .TRUE.

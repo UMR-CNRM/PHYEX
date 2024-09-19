@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1996-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1996-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -424,7 +424,7 @@ TYPE(TFIELDMETADATA) :: TZFIELD
 !-------------------------------------------------------------------------------
 !
 !*       1.     COMPUTE THE SLOPE PARAMETERS ZLBDC,ZLBDR
-!   	        ----------------------------------------
+!               ----------------------------------------
 !
 CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
 IKB=1+JPVEXT
@@ -458,7 +458,7 @@ ZT(:,:,:)  = PTHT(:,:,:) * (PPABST(:,:,:)/XP00)**(XRD/XCPD)
 
 !
 !*       2.     COMPUTES THE NUCLEATION PROCESS SOURCES
-!   	        --------------------------------------
+!               --------------------------------------
 !
 IF ((HACTCCN == 'ABRK').AND.((LORILAM).OR.(LDUST).OR.(LSALT))) THEN
   CALL AER_NUCLEATION
@@ -518,7 +518,7 @@ IF (ORAIN) THEN
 ENDIF
 !-------------------------------------------------------------------------------
 !*       6.     COMPUTE THE SEDIMENTATION (RS) SOURCE
-!	        -------------------------------------
+!            -------------------------------------
 !
 !*       6.1 Calculation of the mean volumic radius (ZRAY) and
 !             the terminal vertical velocity ZCC for precipitating clouds
@@ -527,7 +527,7 @@ ZTSPLITR = PTSTEP / REAL(KSPLITR)       ! Small time step
 !
 !
 !*       6.2    compute the sedimentation velocities for rain
-!   	        --------------------------------------------
+!               --------------------------------------------
 !
 ZMVRR(:,:,:) = 0.
 ZVRR(:,:,:) = 0.
@@ -1689,7 +1689,7 @@ IF (HCLOUD == 'C2R2'.OR. HCLOUD=='C3R5') THEN
 
 ELSE ! KHKO
 !*             correct negative values for rain
-!   	      --------------------------------
+!             --------------------------------
 !
   WHERE (PRRS(:,:,:)<0.) 
     PRCS(:,:,:) = PRCS(:,:,:)+PRRS(:,:,:)
