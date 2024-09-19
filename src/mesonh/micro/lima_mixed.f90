@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -271,7 +271,7 @@ INTEGER :: JMOD_IFN                            ! Loop index
 !
 !
 !*       0.     3D MICROPHYSCAL VARIABLES
-!	        -------------------------
+!               -------------------------
 !
 !
 ! Prepare 3D water mixing ratios
@@ -376,7 +376,7 @@ END IF
 !
 !
 !*       1.     Pack variables, computations only where necessary
-!	        -------------------------------------------------
+!               -------------------------------------------------
 !
 ! Physical domain
 !
@@ -548,7 +548,7 @@ IF( IMICRO >= 0 ) THEN
       ZCST(:) = (XNS*ZRST(:)*ZLBDAS(:)**XBS)
       ZCSS(:) = (XNS*ZRSS(:)*ZLBDAS(:)**XBS)
    ELSE IF (NMOM_S.GE.2) THEN
-	WHERE (ZRST(:)>XRTMIN(5) .AND. ZCST(:)>XCTMIN(5))
+       WHERE (ZRST(:)>XRTMIN(5) .AND. ZCST(:)>XCTMIN(5))
                 ZLBDAS(:) = ( XLBS*ZCST(:) / ZRST(:) )**XLBEXS 
         END WHERE
    ELSE
@@ -592,7 +592,7 @@ IF( IMICRO >= 0 ) THEN
 !
 !
 !*       2.     Compute the slow processes involving cloud water and graupel
-!	        ------------------------------------------------------------
+!               ------------------------------------------------------------
 !
    CALL LIMA_MIXED_SLOW_PROCESSES(ZRHODREF, ZZT, ZSSI, PTSTEP,        &
                                   ZLSFACT, ZLVFACT, ZAI, ZCJ,         &
@@ -608,7 +608,7 @@ IF( IMICRO >= 0 ) THEN
 !
 !
 !        3.     Compute the fast RS and RG processes
-!   	        ------------------------------------
+!                  ------------------------------------
 !
 IF (NMOM_S.GE.1) THEN
    CALL LIMA_MIXED_FAST_PROCESSES(ZRHODREF, ZZT, ZPRES, PTSTEP,                   &
@@ -628,7 +628,7 @@ END IF
 !
 !
 !        4.     Unpack variables
-!   	        ----------------
+!                  ----------------
 !
 !
    ZW(:,:,:) = PRVS(:,:,:)

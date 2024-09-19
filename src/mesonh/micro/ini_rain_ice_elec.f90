@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2002-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2002-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -178,7 +178,7 @@ REAL     :: PWETLBDAH_MAX, PWETLBDAH_MIN
 !-------------------------------------------------------------------------------
 !
 !*       0.     FUNCTION STATEMENTS
-!   	        -------------------
+!               -------------------
 !
 !*       0.1    p_moment of the Generalized GAMMA function
 !
@@ -219,7 +219,7 @@ IF (HCLOUD == 'ICE4') XRTMIN(7) = 1.0E-15
 !-------------------------------------------------------------------------------
 !
 !*       2.     CHARACTERISTICS OF THE SPECIES
-!   	        ------------------------------
+!               ------------------------------
 !
 !*       2.1    Cloud droplet and Raindrop characteristics
 !
@@ -324,7 +324,7 @@ XC1H = 1./2.
 !-------------------------------------------------------------------------------
 !
 !*       3.     DIMENSIONAL DISTRIBUTIONS OF THE SPECIES
-!	            ----------------------------------------
+!                ----------------------------------------
 !
 !        3.1    Cloud droplet distribution
 !
@@ -395,7 +395,7 @@ XCONC_URBAN = 5.E8 ! 500/cm3
 !-------------------------------------------------------------------------------
 !
 !*       4.     CONSTANTS FOR THE SEDIMENTATION
-!   	        -------------------------------
+!               -------------------------------
 !
 !*       4.1    Exponent of the fall-speed air density correction
 !
@@ -448,7 +448,7 @@ XFSEDH  = XCH * XAH * XCCH * MOMG(XALPHAH,XNUH,XBH+XDH) *   &
 !-------------------------------------------------------------------------------
 !
 !*       5.     CONSTANTS FOR THE SLOW COLD PROCESSES
-!      	        -------------------------------------
+!                  -------------------------------------
 !
 !*       5.1    Constants for ice nucleation
 !
@@ -558,7 +558,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 !*       6.     CONSTANTS FOR THE SLOW WARM PROCESSES
-!   	        -------------------------------------
+!               -------------------------------------
 !
 !*       6.1    Constants for the cloud droplets autoconversion
 !
@@ -588,7 +588,7 @@ XEX1EVAR = -1.0 - 0.5 * (XDR + 3.0)
 !-------------------------------------------------------------------------------
 !
 !*       7.     CONSTANTS FOR THE FAST COLD PROCESSES FOR THE AGGREGATES
-!	        --------------------------------------------------------
+!               --------------------------------------------------------
 !
 !
 !*       7.1    Constants for the riming of the aggregates

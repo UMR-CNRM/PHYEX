@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -34,12 +34,12 @@ SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,TLES,            &
 !!    -------
 !       The purpose of this routine is to compute the vertical turbulent
 !     fluxes of the evolutive variables and give back the source
-!     terms to the main program.	In the case of large horizontal meshes,
+!     terms to the main program.  In the case of large horizontal meshes,
 !     the divergence of these vertical turbulent fluxes represent the whole
 !     effect of the turbulence but when the three-dimensionnal version of
 !     the turbulence scheme is activated (CTURBDIM="3DIM"), these divergences
 !     are completed in the next routine TURB_HOR.
-!		  An arbitrary degree of implicitness has been implemented for the
+!      An arbitrary degree of implicitness has been implemented for the
 !     temporal treatment of these diffusion terms.
 !       The vertical boundary conditions are as follows:
 !           *  at the bottom, the surface fluxes are prescribed at the same
@@ -57,12 +57,12 @@ SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,TLES,            &
 !!      implicit scheme (a Crank-Nicholson type with coefficients different
 !!      than 0.5), which allows to vary the degree of implicitness of the
 !!      formulation.
-!!      	 The different prognostic variables are treated one by one.
+!!         The different prognostic variables are treated one by one.
 !!      The contributions of each turbulent fluxes are cumulated into the
 !!      tendency  PRvarS, and into the dynamic and thermal production of
 !!      TKE if necessary.
 !!
-!!			 In section 2 and 3, the thermodynamical fields are considered.
+!!       In section 2 and 3, the thermodynamical fields are considered.
 !!      Only the turbulent fluxes of the conservative variables
 !!      (Thetal and Rnp stored in PRx(:,:,:,1))  are computed.
 !!       Note that the turbulent fluxes at the vertical
@@ -73,14 +73,14 @@ SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,TLES,            &
 !!      a function ETHETA or EMOIST, which preform the transformation from the
 !!      conservative variables to the virtual potential temperature.
 !!
-!! 	    In section 4, the variance of the statistical variable
+!!       In section 4, the variance of the statistical variable
 !!      s indicating presence or not of condensation, is determined in function
 !!      of the turbulent moments of the conservative variables and its
 !!      squarred root is stored in PSIGS. This information will be completed in
 !!      the horizontal turbulence if the turbulence dimensionality is not
 !!      equal to "1DIM".
 !!
-!!			 In section 5, the x component of the stress tensor is computed.
+!!       In section 5, the x component of the stress tensor is computed.
 !!      The surface flux <u'w'> is computed from the value of the surface
 !!      fluxes computed in axes linked to the orography ( i", j" , k"):
 !!        i" is parallel to the surface and in the direction of the maximum
@@ -99,7 +99,7 @@ SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,TLES,            &
 !!      in the surface layer.
 !!
 !!         In section 6, the same steps are repeated but for the y direction
-!!		  and in section 7, a diagnostic computation of the W variance is
+!!      and in section 7, a diagnostic computation of the W variance is
 !!      performed.
 !!
 !!         In section 8, the turbulent fluxes for the scalar variables are
@@ -109,11 +109,11 @@ SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,TLES,            &
 !!    EXTERNAL
 !!    --------
 !!      GX_U_M, GY_V_M, GZ_W_M :  cartesian gradient operators
-!!      GX_U_UW,GY_V_VW	         (X,Y,Z) represent the direction of the gradient
+!!      GX_U_UW,GY_V_VW           (X,Y,Z) represent the direction of the gradient
 !!                               _(M,U,...)_ represent the localization of the
 !!                               field to be derivated
 !!                               _(M,UW,...) represent the localization of the
-!!                               field	derivated
+!!                               field  derivated
 !!
 !!
 !!      MXM,MXF,MYM,MYF,MZM,MZF
@@ -180,7 +180,7 @@ SUBROUTINE TURB_VER_THERMO_FLUX(D,CST,CSTURB,TURBN,TLES,            &
 !!      Modifications: October 10, 1995 (J.Cuxart and J. Stein)
 !!                                 Psi for scal var and LES tools
 !!      Modifications: November 10, 1995 (J. Stein)
-!!                                 change the surface	relations
+!!                                 change the surface  relations
 !!      Modifications: February 20, 1995 (J. Stein) optimization
 !!      Modifications: May 21, 1996 (J. Stein)
 !!                                  bug in the vertical flux of the V wind

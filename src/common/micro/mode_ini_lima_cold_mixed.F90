@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -142,7 +142,7 @@ CALL PARAM_LIMA_MIXED_ASSOCIATE()
 !
 !
 !*       1.     CHARACTERISTICS OF THE SPECIES
-!   	        ------------------------------
+!               ------------------------------
 !
 !CALL RAIN_ICE_PARAM_ASSOCIATE()
 !
@@ -303,7 +303,7 @@ XC1H = 1./2.
 !
 !
 !*       2.     DIMENSIONAL DISTRIBUTIONS OF THE SPECIES
-!   	        ----------------------------------------
+!               ----------------------------------------
 !
 !
 !*       2.1    Ice, snow, graupel and hail distribution
@@ -402,7 +402,7 @@ XREFFI = (3*XAI/(2*ZRHOIW*10**3*XGAMMAI)*MOMG(XALPHAI,XNUI,XBI)/MOMG(XALPHAI,XNU
 !
 !
 !*       3.     CONSTANTS FOR THE SEDIMENTATION
-!   	        -------------------------------
+!               -------------------------------
 !
 !
 !*       3.1    Exponent of the fall-speed air density correction
@@ -513,7 +513,7 @@ XFSEDC(7) = XCH*GAMMA_X0D(XNUH+XDH/XALPHAH)/GAMMA_X0D(XNUH)*                    
 !
 !
 !*       4.     CONSTANTS FOR HETEROGENEOUS NUCLEATION
-!   	        --------------------------------------
+!               --------------------------------------
 !
 !
 !                 ***************
@@ -665,7 +665,7 @@ XBETA2 = 0.639
 !
 !
 !*       5.     CONSTANTS FOR THE SLOW COLD PROCESSES
-!   	        -------------------------------------
+!               -------------------------------------
 !
 !
 !*       5.1.2  Constants for homogeneous nucleation from haze particules
@@ -765,7 +765,7 @@ XEX1DEPH = -0.5*(XDH+3.0)
 !
 !
 !*       6.     CONSTANTS FOR THE COALESCENCE PROCESSES
-!   	        ---------------------------------------
+!               ---------------------------------------
 !
 !
 !*       6.0    Precalculation of the gamma function momentum
@@ -836,7 +836,7 @@ XAGGS_RLARGE2 = XKER_ZRNIC_A2*ZGAMI(7)*ZGAMS(2)*XAI
 !
 !
 !*       7.     CONSTANTS FOR THE FAST COLD PROCESSES FOR THE AGGREGATES
-!   	        --------------------------------------------------------
+!               --------------------------------------------------------
 !
 !
 !*       7.1    Constants for the riming of the aggregates
@@ -1279,7 +1279,7 @@ XMOMGR_RDSF = MOMG(XALPHAR,XNUR,6.0+XDR)
 !
 !
 !*       8.     CONSTANTS FOR THE FAST COLD PROCESSES FOR THE GRAUPELN
-!   	        --------------------------------------------------------
+!               --------------------------------------------------------
 !
 !
 !*       8.1    Constants for the rain contact freezing
@@ -1783,7 +1783,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 !*      10.     SET-UP RADIATIVE PARAMETERS
-!   	        ---------------------------
+!               ---------------------------
 !
 !
 ! R_eff_i = XFREFFI * (rho*r_i/N_i)**(1/3)
@@ -1794,7 +1794,7 @@ XFREFFI = 0.5 * ZGAMI(8) * (1.0/XLBI)**XLBEXI
 !
 !
 !*      11.     SOME PRINTS FOR CONTROL
-!   	        -----------------------
+!               -----------------------
 !
 !
 !!$GFLAG = .TRUE.

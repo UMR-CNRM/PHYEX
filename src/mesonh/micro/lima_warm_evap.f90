@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -165,7 +165,7 @@ INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE        ! Physical domain
 !
 !
 !*       1.     PREPARE COMPUTATIONS - PACK
-!   	        ---------------------------
+!                ---------------------------
 !
 !
 IIB=1+JPHEXT
@@ -239,7 +239,7 @@ IF( IEVAP >= 0 ) THEN
 !
 !
 !*       2. compute the evaporation of rain drops    
-!   	 ----------------------------------------
+!         ----------------------------------------
 !
 !
    ZZW3(:) = MAX((1.0 - ZRVT(:)/ZZW1(:)),0.0)  ! Subsaturation
@@ -274,7 +274,7 @@ IF( IEVAP >= 0 ) THEN
 !
 !
 !*       3. Unpack and clean
-!   	 -------------------
+!         -------------------
 !
 !
    ZW(:,:,:) = PRVS(:,:,:)
@@ -315,12 +315,12 @@ IF( IEVAP >= 0 ) THEN
 !
 !
 !*       4. Update Nr if:  80 microns < Dr < D_h
-!   	 ---------------------------------------
+!         ---------------------------------------
 !
 !
    IF (LKHKO) THEN
 !*             correct negative values for rain
-!   	      --------------------------------
+!              --------------------------------
 !
       WHERE (PRRS(:,:,:)<0.) 
          PRCS(:,:,:) = PRCS(:,:,:)+PRRS(:,:,:)

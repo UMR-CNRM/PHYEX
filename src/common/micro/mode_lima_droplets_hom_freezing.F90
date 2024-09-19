@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2018 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -65,7 +65,7 @@ REAL, DIMENSION(SIZE(PT)) ::  ZZW, ZZX, ZZY, ZTCELSIUS
 !
 !
 !*       1.     Cloud droplets homogeneous freezing
-!	        -----------------------------------
+!               -----------------------------------
 !
 !
 P_TH_HONC(:) = 0.

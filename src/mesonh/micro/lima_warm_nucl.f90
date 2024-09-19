@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -226,7 +226,7 @@ TYPE(TFIELDMETADATA) :: TZFIELD
 ILUOUT = TLUOUT%NLU
 !
 !*       1.     PREPARE COMPUTATIONS - PACK
-!   	        ---------------------------
+!               ---------------------------
 !
 !
 IIB=1+JPHEXT
@@ -368,7 +368,7 @@ ELSE
 !
 !
 !*       2. compute the constant term (ZZW3) relative to smax    
-!   	 ----------------------------------------------------
+!        ----------------------------------------------------
 !
 !  Remark : in LIMA's nucleation parameterization, Smax=0.01 for a supersaturation of 1% !
 !
@@ -442,7 +442,7 @@ ELSE
 !
 !
 !*       3. Compute the maximum of supersaturation
-!   	 -----------------------------------------
+!        -----------------------------------------
 !
 !
 ! estimate S_max for the CPB98 parameterization with SEVERAL aerosols mode
@@ -462,7 +462,7 @@ ELSE
 !
 !
 !*       4. Compute the nucleus source
-!   	 -----------------------------
+!        -----------------------------
 !
 !
 ! Again : Smax=0.01 for a 1% supersaturation
@@ -545,7 +545,7 @@ END IF ! CH_AER_ACTIVATION
 !
 !
 !*       5. Cleaning
-!   	 -----------
+!        -----------
 !
 !
    DEALLOCATE(IVEC1)
@@ -615,7 +615,7 @@ END IF
 !
 !
 !*       6. Functions used to compute the maximum of supersaturation
-!   	 -----------------------------------------------------------
+!        -----------------------------------------------------------
 !
 !
 CONTAINS

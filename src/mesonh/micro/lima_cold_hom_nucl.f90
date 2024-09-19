@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -221,7 +221,7 @@ INTEGER :: JL, JMOD_CCN, JMOD_IMM         ! Loop index
 INTEGER :: INEGT                          ! Case number of hom. nucleation
 integer :: idx
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
-			  :: GNEGT        ! Test where to compute the hom. nucleation
+              :: GNEGT        ! Test where to compute the hom. nucleation
 INTEGER , DIMENSION(SIZE(GNEGT)) :: I1,I2,I3 ! Used to replace the COUNT
 !
 REAL    :: ZEPS                           ! molar mass ratio
@@ -230,7 +230,7 @@ REAL    :: ZEPS                           ! molar mass ratio
 !
 !
 !*       1.     PRELIMINARY COMPUTATIONS
-!	        ------------------------
+!            ------------------------
 !
 !
 ! Physical domain
@@ -347,7 +347,7 @@ IF (INEGT.GT.0) THEN
 !
 !
 !*       2.     Haze homogeneous freezing
-!	        ------------------------
+!            ------------------------
 !
   if ( nbumod == kmi .and. lbu_enable .and. ohhoni .and. nmod_ccn > 0 ) then
     if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'HONH', pths(:, :, :) * prhodj(:, :, :) )
@@ -481,7 +481,7 @@ IF (INEGT.GT.0) THEN
 !
 !
 !*       3.     Cloud droplets homogeneous freezing
-!	        -----------------------------------
+!            -----------------------------------
 !
 !
 !  Compute the droplet homogeneous nucleation source: RCHONI
@@ -544,7 +544,7 @@ END IF
 !
 !
 !*       4.     Rain drops homogeneous freezing
-!	        -------------------------------
+!            -------------------------------
 !
 !
 !  Compute the drop homogeneous nucleation source: RRHONG
@@ -590,7 +590,7 @@ END IF
 !
 !
 !*       4.     Unpack variables, clean
-!	        -----------------------
+!            -----------------------
 !
 !
 ! End of homogeneous nucleation processes

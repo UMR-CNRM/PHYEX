@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2018-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2018-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -127,7 +127,7 @@ INTEGER :: JL, JMOD_CCN, JMOD_IFN, JSPECIE, JMOD_IMM  ! Loop index
 INTEGER :: INEGT  ! Case number of sedimentation, nucleation,
 !
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
-			  :: GNEGT  ! Test where to compute the nucleation
+                       :: GNEGT  ! Test where to compute the nucleation
 !
 INTEGER, DIMENSION(SIZE(PRHODREF))  :: I1,I2,I3 ! Indexes for PACK replacement
 !
@@ -173,7 +173,7 @@ REAL,    DIMENSION(:),   ALLOCATABLE :: ZTCELSIUS, ZZT_SI0_BC
 !
 !
 !*       1.     PRELIMINARY COMPUTATIONS
-!	        ------------------------
+!               ------------------------
 !
 P_TH_HIND(:,:,:) = 0.
 P_RI_HIND(:,:,:) = 0.
@@ -205,7 +205,7 @@ ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:
 !
 !
 !*       2.     COMPUTATIONS ONLY WHERE NECESSARY : PACK
-!	        ----------------------------------------
+!               ----------------------------------------
 !
 !
 GNEGT(:,:,:) = .FALSE.
@@ -284,7 +284,7 @@ IF (INEGT > 0) THEN
 !
 !
 !*       3.     COMPUTE THE SATURATION OVER WATER AND ICE
-!	        -----------------------------------------
+!               -----------------------------------------
 !
 !
    ZTCELSIUS(:) = ZZT(:)-CST%XTT                                    ! T [°C]
@@ -321,7 +321,7 @@ IF (INEGT > 0) THEN
 !
 !
 !*       4.     COMPUTE THE ACTIVABLE FRACTION OF EACH IFN SPECIE
-!	        -------------------------------------------------
+!               -------------------------------------------------
 !
 !
 ! Computation of the reference activity spectrum ( ZZY = N_{IN,1,*} )
@@ -338,7 +338,7 @@ IF (INEGT > 0) THEN
 !
 !
 !*       5.     COMPUTE THE HETEROGENEOUS NUCLEATION OF INSOLUBLE IFN
-!	        -----------------------------------------------------
+!               -----------------------------------------------------
 !
 !
 !
@@ -379,7 +379,7 @@ IF (INEGT > 0) THEN
 !
 !
 !*       6.     COMPUTE THE HETEROGENEOUS NUCLEATION OF COATED IFN
-!	        --------------------------------------------------
+!               --------------------------------------------------
 !
 !
 ! Heterogeneous nucleation by immersion of the activated CCN
@@ -426,7 +426,7 @@ IF (INEGT > 0) THEN
 !
 !
 !*       7.     CLEAN
-!	        -----
+!               -----
 !
 !
    DEALLOCATE(ZRVT) 
