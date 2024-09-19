@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1996-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1996-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -161,18 +161,18 @@ REAL,  DIMENSION(:,:,:),   INTENT(IN),OPTIONAL  :: PCHT ! hail concentration at 
 INTEGER :: IKB           ! Coordinates of the first physical points along z
 INTEGER :: IND           ! Number of interval to integrate the kernels
 REAL :: ZALPHA, ZNU, ZP  ! Parameters to compute the value of the p_moment
-       			 ! of the generalized Gamma function
+                    ! of the generalized Gamma function
 REAL :: ZDINFTY          ! Factor used to define the "infinite" diameter
 !
 REAL :: ZCXR=-1.0                     ! for rain N ~ 1/N_0 
                                       ! (in Kessler parameterization)
 REAL :: ZSLOPE, ZINTERCEPT, ZEXPONENT ! parameters defining the mean axis ratio
-       				      ! functionnal
+                             ! functionnal
 REAL :: ZDMELT_FACT                   ! factor used to compute the equivalent
-	                	      ! melted diameter
+                              ! melted diameter
 REAL :: ZEQICE                        ! factor used to convert the ice crystals
-               			      ! reflectivity into an equivalent  liquid
-		                      ! water reflectivity (from Smith, JCAM 84)
+                                 ! reflectivity into an equivalent  liquid
+                              ! water reflectivity (from Smith, JCAM 84)
 REAL :: ZEXP                          ! anciliary parameter
 REAL :: ZRHO00                        ! Surface reference air density
 !
@@ -205,7 +205,7 @@ REAL :: ZLB,ZLBEX ,  ZCC,ZCX,ZC,ZD
 !
 !
 !*       1.     FUNCTION STATEMENTS
-!   	        -------------------
+!               -------------------
 !
 !
 !*       1.1    p_moment of the Generalized GAMMA function

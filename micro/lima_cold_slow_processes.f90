@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2020 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -150,7 +150,7 @@ REAL, DIMENSION(:,:,:),OPTIONAL,   INTENT(INOUT) :: PCSS    ! Snow/aggregates C.
 !*       0.2   Declarations of local variables :
 !
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
-			  :: GMICRO ! Computations only where necessary
+                          :: GMICRO ! Computations only where necessary
 INTEGER :: IMICRO
 INTEGER , DIMENSION(SIZE(GMICRO)) :: I1,I2,I3 ! Used to replace PACK
 INTEGER                           :: JL       ! and PACK intrinsics
@@ -344,7 +344,7 @@ IF( IMICRO >= 1 ) THEN
       ZCST(:) = (XNS*ZRST(:)*ZLBDAS(:)**XBS)
       ZCSS(:) = (XNS*ZRSS(:)*ZLBDAS(:)**XBS)
    ELSE IF (NMOM_S.GE.2) THEN
-	WHERE (ZRST(:)>XRTMIN(5) .AND. ZCST(:)>XCTMIN(5))
+        WHERE (ZRST(:)>XRTMIN(5) .AND. ZCST(:)>XCTMIN(5))
                 ZLBDAS(:) = ( XLBS*ZCST(:) / ZRST(:) )**XLBEXS 
         END WHERE
    ELSE

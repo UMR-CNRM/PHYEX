@@ -39,7 +39,7 @@ CONTAINS
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -143,7 +143,7 @@ END SUBROUTINE MXM_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -244,7 +244,7 @@ END SUBROUTINE MXM2D_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -342,7 +342,7 @@ END SUBROUTINE MZM_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -438,7 +438,7 @@ END SUBROUTINE MYM2D_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -532,7 +532,7 @@ END SUBROUTINE MYM_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -628,7 +628,7 @@ END SUBROUTINE DZM_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -727,7 +727,7 @@ END SUBROUTINE MZF_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -832,7 +832,7 @@ END SUBROUTINE MXF_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -935,7 +935,7 @@ END SUBROUTINE MXF2D_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -1036,7 +1036,7 @@ END SUBROUTINE MYF_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -1132,7 +1132,7 @@ END SUBROUTINE MYF2D_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -1229,7 +1229,7 @@ END SUBROUTINE DZF_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -1335,7 +1335,7 @@ END SUBROUTINE DXF_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -1439,7 +1439,7 @@ END SUBROUTINE DXM_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------
@@ -1541,7 +1541,7 @@ END SUBROUTINE DYM_PHY
 !!
 !!    AUTHOR
 !!    ------
-!!	V. Ducrocq       * Meteo France *
+!!      V. Ducrocq       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------

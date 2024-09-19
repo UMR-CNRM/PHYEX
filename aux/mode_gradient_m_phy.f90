@@ -41,7 +41,7 @@ CONTAINS
 !!
 !!    AUTHOR
 !!    ------
-!!	P. Hereil and J. Stein       * Meteo France *
+!!      P. Hereil and J. Stein       * Meteo France *
 !!
 !!    MODIFICATIONS
 !!    -------------

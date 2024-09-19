@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2012-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2012-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -140,7 +140,7 @@ INUCT = SIZE(PTT,1)
 !       'ZCHEN_MULTI(1,1)=',ZCHEN_MULTI(1,1)
 !
 !*       . Compute the nucleus source
-!   	 -----------------------------
+!          -----------------------------
 !
 !
 ! Modified values for Beta and C (see in init_aerosol_properties) account for that

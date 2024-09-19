@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -247,7 +247,7 @@ if ( BUCONF%lbudget_sv ) then
 end if
 !
 !*       1.     PRELIMINARY COMPUTATIONS
-!   	        ------------------------
+!               ------------------------
 !
 !
 IIB=1+JPHEXT
@@ -278,7 +278,7 @@ CALL GAULAG(ZABSCISSR,ZWEIGHTR,NDIAMR,ZNUM)
 !
 !
 !*       2.     NUMERICAL OPTIMIZATION
-!   	        ----------------------
+!               ----------------------
 !
 !
 ! Optimization : compute in advance parameters depending on rain particles and
@@ -328,7 +328,7 @@ END DO
 !
 !
 !*       3.     AEROSOL SCAVENGING
-!   	        ------------------
+!               ------------------
 !
 !
 ! Iteration over the aerosol type and mode
@@ -568,7 +568,7 @@ end if
 !
 !
 !*       3.     SUBROUTINE AND FUNCTION
-!   	        -----------------------
+!               -----------------------
 !
 !
 CONTAINS
@@ -676,7 +676,7 @@ INTEGER, SAVE                   :: ISPLITR
 !-------------------------------------------------------------------------------
 !
 !*       1.     COMPUTE THE LOOP BOUNDS
-!   	        -----------------------
+!               -----------------------
 !
 IIB=1+JPHEXT
 IIE=SIZE(PZZ,1) - JPHEXT
@@ -688,7 +688,7 @@ IKE=SIZE(PZZ,3) - JPVEXT
 !-------------------------------------------------------------------------------
 !
 !*       2.     COMPUTE THE SEDIMENTATION (RS) SOURCE
-!	        -------------------------------------
+!            -------------------------------------
 !
 !*       2.1    splitting factor for high Courant number C=v_fall*(del_Z/del_T)
 !  

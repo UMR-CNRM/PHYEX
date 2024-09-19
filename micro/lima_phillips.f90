@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -201,7 +201,7 @@ INTEGER :: INEGT  ! Case number of sedimentation, nucleation,
 integer :: idx
 !
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
-			  :: GNEGT  ! Test where to compute the nucleation
+                       :: GNEGT  ! Test where to compute the nucleation
 !
 INTEGER, DIMENSION(SIZE(PRHODREF))  :: I1,I2,I3 ! Indexes for PACK replacement
 !
@@ -257,7 +257,7 @@ REAL,    DIMENSION(:),   ALLOCATABLE :: ZTCELSIUS, ZZT_SI0_BC
 !
 !
 !*       1.     PRELIMINARY COMPUTATIONS
-!	        ------------------------
+!               ------------------------
 !
 !
 ! Physical domain
@@ -290,7 +290,7 @@ ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:
 !
 !
 !*       2.     COMPUTATIONS ONLY WHERE NECESSARY : PACK
-!	        ----------------------------------------
+!               ----------------------------------------
 !
 !
 GNEGT(:,:,:) = .FALSE.
@@ -386,7 +386,7 @@ ALLOCATE( ZZY (INEGT) ) ; ZZY(:) = 0.0
 !
 !
 !*       3.     COMPUTE THE SATURATION OVER WATER AND ICE
-!	        -----------------------------------------
+!               -----------------------------------------
 !
 !
 ZTCELSIUS(:) = ZZT(:)-CST%XTT                                    ! T [°C]
@@ -423,7 +423,7 @@ END IF
 !
 !
 !*       4.     COMPUTE THE ACTIVABLE FRACTION OF EACH IFN SPECIE
-!	        -------------------------------------------------
+!               -------------------------------------------------
 !
 !
 ! Computation of the reference activity spectrum ( ZZY = N_{IN,1,*} )
@@ -440,7 +440,7 @@ CALL LIMA_PHILLIPS_INTEG(CST, ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
 !
 !
 !*       5.     COMPUTE THE HETEROGENEOUS NUCLEATION OF INSOLUBLE IFN
-!	        -----------------------------------------------------
+!               -----------------------------------------------------
 !
 if ( nbumod == kmi .and. lbu_enable ) then
   if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'HIND', pths(:, :, :) * prhodj(:, :, :) )
@@ -512,7 +512,7 @@ end if
 !
 !
 !*       6.     COMPUTE THE HETEROGENEOUS NUCLEATION OF COATED IFN
-!	        --------------------------------------------------
+!               --------------------------------------------------
 !
 if ( nbumod == kmi .and. lbu_enable ) then
   if ( lbudget_th ) call Budget_store_init( tbudgets(NBUDGET_TH), 'HINC', &
@@ -602,7 +602,7 @@ end if
 !
 !
 !*       7.     UNPACK VARIABLES AND CLEAN
-!	        --------------------------
+!               --------------------------
 !
 !
 ! End of the heterogeneous nucleation following Phillips 08

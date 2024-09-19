@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2018-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2018-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -228,10 +228,10 @@ WHERE( GWET )
    Z4(:) = GET_XKER_SWETH(IVEC1(:)  ,IVEC2(:)  )
    ZVEC3(:) =  (      Z1(:)* ZVEC2(:)          &
                     - Z2(:)*(ZVEC2(:) - 1.0) ) &
-      			 	                            *  ZVEC1(:)    &
+                                               *  ZVEC1(:)    &
                  - (  Z3(:)* ZVEC2(:)          &
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
-       			                                    * (ZVEC1(:) - 1.0)
+                                                    * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
    ZZW3(:) = XFSWETH * ZZW(:)                                     & ! RSWETH
                     *  PRST(:) * PCHT(:)                          &
@@ -246,10 +246,10 @@ WHERE( GWET )
    Z4(:) = GET_XKER_N_SWETH(IVEC1(:)  ,IVEC2(:)  )
    ZVEC3(:) =  (      Z1(:)* ZVEC2(:)          &
                     - Z2(:)*(ZVEC2(:) - 1.0) ) &
-      			 	                            *  ZVEC1(:)    &
+                                               *  ZVEC1(:)    &
                  - (  Z3(:)* ZVEC2(:)          &
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
-       			                                    * (ZVEC1(:) - 1.0)
+                                                    * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
    ZZW3N(:) = XFNSWETH * ZZW(:)                                      & ! NSWETH
                       *  PCST(:) * PCHT(:)                           &
@@ -295,10 +295,10 @@ WHERE( GWET )
    Z4(:) = GET_XKER_GWETH(IVEC1(:)  ,IVEC2(:)  )
       ZVEC3(:) =  (   Z1(:)* ZVEC2(:)          &
                     - Z2(:)*(ZVEC2(:) - 1.0) ) &
-                     			 	             *  ZVEC1(:)   &
+                                               *  ZVEC1(:)   &
                  - (  Z3(:)* ZVEC2(:)          &
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
-                                 			     * (ZVEC1(:) - 1.0)
+                                               * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
    ZZW4(:) = XFGWETH * ZZW(:)                                     & ! RGWETH
                      * PRGT(:) * PCHT(:)                          &
@@ -313,10 +313,10 @@ WHERE( GWET )
    Z4(:) = GET_XKER_N_GWETH(IVEC1(:)  ,IVEC2(:)  )
       ZVEC3(:) =  (   Z1(:)* ZVEC2(:)          &
                     - Z2(:)*(ZVEC2(:) - 1.0) ) &
-                     			 	             *  ZVEC1(:)   &
+                                               *  ZVEC1(:)   &
                  - (  Z3(:)* ZVEC2(:)          &
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
-                                 			     * (ZVEC1(:) - 1.0)
+                                               * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
    ZZW4N(:) = XFNGWETH * ZZW(:)                                      & ! NGWETH
                        * PCGT(:) * PCHT(:)                           &

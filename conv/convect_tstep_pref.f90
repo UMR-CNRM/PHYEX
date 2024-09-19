@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
 !MNH_LIC for details. version 1.
@@ -144,18 +144,18 @@ END DO
 !*       2.     Compute convective time step 
 !               ----------------------------
 !
-	    ! compute wind speed at LCL, 500 hPa, CTL
+            ! compute wind speed at LCL, 500 hPa, CTL
 
 DO JI = 1, IIE
    JKLC = KLCL(JI)
    JKP5 = IP500(JI)
    JKCT = KCTL(JI)
    ZWORK1(JI) = SQRT( PU(JI,JKLC) * PU(JI,JKLC) +           &
-		      PV(JI,JKLC) * PV(JI,JKLC)  ) 
+                      PV(JI,JKLC) * PV(JI,JKLC)  ) 
    ZWORK2(JI) = SQRT( PU(JI,JKP5) * PU(JI,JKP5) +           &
-		      PV(JI,JKP5) * PV(JI,JKP5)  ) 
+                      PV(JI,JKP5) * PV(JI,JKP5)  ) 
    ZWORK3(JI) = SQRT( PU(JI,JKCT) * PU(JI,JKCT) +           &
-		      PV(JI,JKCT) * PV(JI,JKCT)  ) 
+                      PV(JI,JKCT) * PV(JI,JKCT)  ) 
 END DO
 !
 ZWORK2(:) = MAX( 0.1, 0.5 * ( ZWORK1(:) + ZWORK2(:) ) )
@@ -178,11 +178,11 @@ DO JI = 1, IIE
                  ( PV(JI,JKCT) - PV(JI,JKLC) )  *          &
                  ( PV(JI,JKCT) - PV(JI,JKLC) )  
     ZWORK1(JI) = 1.E3 * ZWORK2(JI) * SQRT( ZWORK1(JI) ) /  &
-	         MAX( 1.E-2, PZ(JI,JKCT) - PZ(JI,JKLC) )
+                 MAX( 1.E-2, PZ(JI,JKCT) - PZ(JI,JKLC) )
 END DO
 !
 PPREF(:)  = 1.591 + ZWORK1(:) * ( -.639 + ZWORK1(:) * (        &
-				9.53E-2 - ZWORK1(:) * 4.96E-3 ) ) 
+                                9.53E-2 - ZWORK1(:) * 4.96E-3 ) ) 
 PPREF(:)  = MAX( .4, MIN( PPREF(:), .9 ) )
 !
 !*       3.2    Precipitation efficiency as a function of cloud base height 
@@ -193,7 +193,7 @@ DO JI = 1, IIE
    ZCBH(JI)   = MAX( 3., ( PZ(JI,JKLC) - PZ(JI,IKB) ) * 3.281E-3 ) 
 END DO
 ZWORK1(:) = .9673 + ZCBH(:) * ( -.7003 + ZCBH(:) * ( .1622 + &
-	      ZCBH(:) *  ( -1.2570E-2 + ZCBH(:) * ( 4.2772E-4 -  &
+              ZCBH(:) *  ( -1.2570E-2 + ZCBH(:) * ( 4.2772E-4 -  &
               ZCBH(:) * 5.44E-6 ) ) ) )
 ZWORK1(:) = MAX( .4, MIN( .9, 1./ ( 1. + ZWORK1(:) ) ) )
 !

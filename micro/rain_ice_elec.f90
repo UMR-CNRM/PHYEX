@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2002-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2002-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -541,7 +541,7 @@ REAL :: ZRHO00, ZCOR00    ! Surface reference air density
 !-------------------------------------------------------------------------------
 !
 !*       1.     COMPUTE THE LOOP BOUNDS
-!   	        -----------------------
+!               -----------------------
 !
 CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
 IKB = 1 + JPVEXT
@@ -552,7 +552,7 @@ ZCOR00 = ZRHO00**XCEXVT
 !
 !
 !*       2.     COMPUTES THE SLOW COLD PROCESS SOURCES
-!   	        --------------------------------------
+!               --------------------------------------
 !
 !*       2.1    compute the ice nucleation
 !
@@ -862,19 +862,19 @@ IF (IMICRO > 0) THEN
   END IF
 !
 !
-!*   	 2.4 	Initialization for the non-inductive charging process	
+!*        2.4     Initialization for the non-inductive charging process    
 !
   CALL ELEC_INI_NI_PROCESS 
 !
 !
-!*	 2.5	Compute the slow cold process sources
+!*     2.5    Compute the slow cold process sources
 !
   CALL RAIN_ICE_ELEC_SLOW
 !
 !-------------------------------------------------------------------------------
 !
 !*       3.     COMPUTES THE SLOW WARM PROCESS SOURCES
-!   	        --------------------------------------
+!               --------------------------------------
 !
   IF( OWARM ) THEN    !  Check if the formation of the raindrops by the slow
                       !  warm processes is allowed
@@ -916,7 +916,7 @@ IF (IMICRO > 0) THEN
 !-------------------------------------------------------------------------------
 !
 !*       8.     UPDATE MIXING 3D RATIOS AND VOLUMETRIC CHARGE CONCENTRATIONS
-!		------------------------------------------------------------
+!        ------------------------------------------------------------
 !
 !*       8.1     Update the mixing ratio
 !
@@ -937,7 +937,7 @@ IF (IMICRO > 0) THEN
   END IF
 !
 !
-!*	8.2	Compute the volumetric charge concentration
+!*    8.2    Compute the volumetric charge concentration
 !
   DO JL=1,IMICRO
     PQPIS(I1(JL),I2(JL),I3(JL)) = ZQPIS(JL)
@@ -1076,7 +1076,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 !*       8.     COMPUTE THE SEDIMENTATION (RS) SOURCE
-!	        -------------------------------------
+!            -------------------------------------
 !
 !*       8.1    time splitting loop initialization
 !
@@ -2929,8 +2929,8 @@ IMPLICIT NONE
     ZZW(:) = UNPACK( VECTOR=ZVEC1(:),MASK=GRIM,FIELD=0.0 )
 !
 !
-!*	 5.1.6	perform the linear interpolation of the normalized
-!*		"XFS"-moment of the incomplete gamma function
+!*     5.1.6    perform the linear interpolation of the normalized
+!*        "XFS"-moment of the incomplete gamma function
 !
     ZVEC1(1:IGRIM) =  XGAMINC_RIM3( IVEC2(1:IGRIM)+1 ) *  ZVEC2(1:IGRIM)      &
                     - XGAMINC_RIM3( IVEC2(1:IGRIM)   ) * (ZVEC2(1:IGRIM) - 1.0)
@@ -3070,7 +3070,7 @@ IMPLICIT NONE
     ZWQ1(:,5) = UNPACK( VECTOR=ZVECQ5(:), MASK=GACC, FIELD=0.0 )
 !
 !        5.2.4  raindrop accretion on the small sized aggregates:
-! 		RRACCSS & QRACCSS
+!         RRACCSS & QRACCSS
 !
     WHERE ( GACC(:) ) 
       ZZW1(:,2) =                                            & !! coef of RRACCS
@@ -3469,7 +3469,7 @@ IMPLICIT NONE
       ZWQ4(:)   = UNPACK( VECTOR=ZVECQ6(:), MASK=GDRY, FIELD=0.0 ) ! Dvqsgmn if charge<0
     ENDIF
 !
-! 	6.2.3.5	 compute RSDRYG and QSDRYG = QSDRYG_coal + QSDRYG_boun
+!     6.2.3.5     compute RSDRYG and QSDRYG = QSDRYG_coal + QSDRYG_boun
 !
     WHERE( GDRY(:) )
       ZZW1(:,3) = MIN( ZRSS(:),XFSDRYG*ZZW(:)                         & ! RSDRYG
@@ -4313,8 +4313,8 @@ IMPLICIT NONE
 !
   SUBROUTINE COMPUTE_LBDA(ZRR, ZRS, ZRG, ZRH)
 !
-!*	0.	DECLARATIONS
-!		------------
+!*    0.    DECLARATIONS
+!        ------------
 !
 IMPLICIT NONE
 !
@@ -4357,12 +4357,12 @@ SUBROUTINE ELEC_UPDATE_QD(ZDUM, ZER, ZEI, ZES, ZEG, ZQR, ZQI, ZQS, ZQG,  &
                           ZRR, ZRI, ZRS, ZRG,                      &
                           ZEH, ZQH, ZRH, ZEC, ZQC, ZRC)
 !
-!	Purpose : update the parameter e_x in the relation q_x = e_x d**f_x
+!    Purpose : update the parameter e_x in the relation q_x = e_x d**f_x
 !                 e_x = q_x/(N_x *  M(f_x))
 !
 !
-!*	0.	DECLARATIONS
-!          	------------
+!*    0.    DECLARATIONS
+!              ------------
 !
 IMPLICIT NONE
 !
@@ -4446,7 +4446,7 @@ END  SUBROUTINE ELEC_UPDATE_QD
 !
   SUBROUTINE ELEC_INI_NI_PROCESS
 !
-!	Purpose : initialization for the non-inductive charging process
+!    Purpose : initialization for the non-inductive charging process
 !
 !  GELEC(:,1) : logical variable for Ice-Snow process --> ELEC_IAGGS_B
 !                               from RAIN_ICE_ELEC_SLOW routine
@@ -4456,8 +4456,8 @@ END  SUBROUTINE ELEC_UPDATE_QD
 !                               from RAIN_ICE_ELEC_FAST_RG
 !
 !
-!*	0.	DECLARATIONS
-!		------------
+!*    0.    DECLARATIONS
+!        ------------
 !
 IMPLICIT NONE
 !
@@ -5381,7 +5381,7 @@ END SUBROUTINE ELEC_IAGGS_B
 !   Purpose : compute charge separation process during the dry collision
 !             between ice and graupeln
 !
-!*	0.	DECLARATIONS
+!*    0.    DECLARATIONS
 !               ------------
 !
 IMPLICIT NONE
@@ -5557,7 +5557,7 @@ END SUBROUTINE ELEC_IDRYG_B
 !   Purpose : compute the charge separation during the dry collision
 !             between snow and graupeln
 !
-!*	0.	DECLARATIONS
+!*    0.    DECLARATIONS
 !               ------------
 !
 IMPLICIT NONE
@@ -5819,12 +5819,12 @@ END SUBROUTINE INDUCTIVE_PROCESS
 !                 |  PDX  |x1         |
 !                 |                   |
 !
-!*	0.	DECLARATIONS
-!          	------------
+!*    0.    DECLARATIONS
+!              ------------
 !
 IMPLICIT NONE
 !
-!*	0.2	Declaration of local variables
+!*    0.2    Declaration of local variables
 !
 INTEGER,          INTENT(IN)                  :: KN        ! Size of the result vector
 INTEGER,          INTENT(IN),  DIMENSION(KN)  :: KI        ! Tabulated  coordinate
@@ -5835,8 +5835,8 @@ REAL,             DIMENSION(KN)  :: Y         ! Interpolated value
 !
 INTEGER                          :: JJ        ! Loop index
 !
-!*	1.	INTERPOLATION
-!		-------------
+!*    1.    INTERPOLATION
+!        -------------
 !  
 DO JJ = 1, KN
   Y(JJ) = (1.0 - PDX(JJ)) * (1.0 - PDY(JJ)) * ZT(KI(JJ),  KJ(JJ))   + &

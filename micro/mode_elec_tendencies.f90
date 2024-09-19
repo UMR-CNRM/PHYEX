@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2022-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2022-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -2265,8 +2265,8 @@ CONTAINS
 !           following Gardiner et al. (1985)
 !
 !
-!*	0.	DECLARATIONS
-!		------------
+!*  0.  DECLARATIONS
+!    ------------
 !
 IMPLICIT NONE
 !
@@ -2316,8 +2316,8 @@ END SUBROUTINE ELEC_INIT_NOIND_GARDI
 !           following Saunders et al. (1991)
 !
 !
-!*	0.	DECLARATIONS
-!		------------
+!*  0.  DECLARATIONS
+!    ------------
 !
 IMPLICIT NONE
 !
@@ -2415,8 +2415,8 @@ END SUBROUTINE ELEC_INIT_NOIND_EWC
 !           following Saunders and Peck (1998)
 !
 !
-!*	0.	DECLARATIONS
-!		------------
+!*  0.  DECLARATIONS
+!    ------------
 !
 IMPLICIT NONE
 !
@@ -2636,8 +2636,8 @@ END SUBROUTINE ELEC_INIT_NOIND_RAR
 !           following Takahashi (1978)
 !
 !
-!*	0.	DECLARATIONS
-!		------------
+!*  0.  DECLARATIONS
+!    ------------
 !
 IMPLICIT NONE
 !
@@ -2681,8 +2681,8 @@ END SUBROUTINE ELEC_INIT_NOIND_TAKAH
 !           following Tsenova and Mitzeva (2009)
 !
 !
-!*	0.	DECLARATIONS
-!		------------
+!*  0.  DECLARATIONS
+!    ------------
 !
 IMPLICIT NONE
 !
@@ -2761,8 +2761,8 @@ END SUBROUTINE ELEC_INIT_NOIND_TEEWC
 ! Purpose : compute dQ(RAR,T) in the parameterization of Saunders and Peck (1998)
 !
 !
-!*	0.	DECLARATIONS
-!		------------
+!*  0.  DECLARATIONS
+!    ------------
 !
 IMPLICIT NONE
 !
@@ -2774,7 +2774,7 @@ REAL,    DIMENSION(KMICRO), INTENT(INOUT) :: PDQ        ! interpolated dQ
 !
 !
 !*      1.      COMPUTE dQ(RAR, T)
-!		------------------
+!    ------------------
 !
 PDQ(:) = 0.
 !
@@ -2803,8 +2803,8 @@ END SUBROUTINE ELEC_INI_NI_SAP98
 ! Purpose : interpolate dQ from a lookup table at each gridpoint
 !
 !
-!*	0.	DECLARATIONS
-!		------------
+!*  0.  DECLARATIONS
+!    ------------
 !
 IMPLICIT NONE
 !
@@ -2823,8 +2823,8 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZVECT1, ZVECT2
 INTEGER, DIMENSION(:), ALLOCATABLE :: IVECT1, IVECT2
 !
 !
-!*	1.      FIND THE INDEXES FOR RAR/EW AND T
-!		---------------------------------
+!*  1.      FIND THE INDEXES FOR RAR/EW AND T
+!    ---------------------------------
 !
 PDQ(:) = 0.
 !
@@ -2881,8 +2881,8 @@ IF (IGAUX > 0) THEN
   ENDWHERE
 !
 !
-!*	2.      INTERPOLATE dQ(RAR or EW,T)
-!		---------------------------
+!*  2.      INTERPOLATE dQ(RAR or EW,T)
+!    ---------------------------
 !
   ZDQ_INTERP(:) = BI_LIN_INTP_V( PTABLE, IVECT2, IVECT1, ZVECT2, ZVECT1, &
                                  IGAUX )
@@ -3197,7 +3197,7 @@ END SUBROUTINE ELEC_IDRYG_B
 !           between snow and graupel
 !
 !
-!*	0.	DECLARATIONS
+!*  0.  DECLARATIONS
 !               ------------
 !
 IMPLICIT NONE
@@ -3424,12 +3424,12 @@ END SUBROUTINE COMPUTE_CHARGE_TRANSFER
 !                 |  PDX  |x1         |
 !                 |                   |
 !
-!*	0.	DECLARATIONS
-!          	------------
+!*  0.  DECLARATIONS
+!            ------------
 !
 IMPLICIT NONE
 !
-!*	0.1	Declaration of dummy arguments
+!*  0.1  Declaration of dummy arguments
 !
 INTEGER, INTENT(IN)                 :: KN        ! Size of the result vector
 INTEGER, INTENT(IN), DIMENSION(KN)  :: KI        ! Tabulated  coordinate
@@ -3439,13 +3439,13 @@ REAL,    INTENT(IN), DIMENSION(KN)  :: PDX, PDY  !
 !
 REAL,                DIMENSION(KN)  :: PY         ! Interpolated value
 !
-!*	0.2	Declaration of local variables
+!*  0.2  Declaration of local variables
 !
 INTEGER :: JJ        ! Loop index
 !
 !
-!*	1.	INTERPOLATION
-!		-------------
+!*  1.  INTERPOLATION
+!    -------------
 !  
 DO JJ = 1, KN
   PY(JJ) = (1.0 - PDX(JJ)) * (1.0 - PDY(JJ)) * ZT(KI(JJ),  KJ(JJ))   + &

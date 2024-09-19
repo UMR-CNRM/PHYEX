@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -252,7 +252,7 @@ LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) :: GDEP
 !
 !
 !*       0.     3D MICROPHYSCAL VARIABLES
-!	        -------------------------
+!               -------------------------
 !
 !
 ! Prepare 3D water mixing ratios
@@ -297,7 +297,7 @@ END IF
 !
 !
 !*       1.     COMPUTE THE SLOPE PARAMETERS ZLBDC,ZLBDR
-!   	        ----------------------------------------
+!                  ----------------------------------------
 !
 !
 ZWLBDC3(:,:,:) = XMNH_HUGE
@@ -320,7 +320,7 @@ ZT(:,:,:)  = PTHT(:,:,:) * (PPABST(:,:,:)/XP00)**(XRD/XCPD)
 !
 !
 !*       2.     COMPUTE THE SEDIMENTATION (RS) SOURCE
-!	        -------------------------------------
+!               -------------------------------------
 !
 !
 if ( lbudget_rc .and. osedc ) call Budget_store_init( tbudgets(NBUDGET_RC), 'SEDI', prcs(:, :, :) * prhodj(:, :, :) )
@@ -368,7 +368,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 !*       2.     COMPUTES THE NUCLEATION PROCESS SOURCES
-!   	        --------------------------------------
+!                  --------------------------------------
 !
 !
 IF ( LACTI .AND. NMOD_CCN > 0 .AND. .NOT. LSPRO ) THEN

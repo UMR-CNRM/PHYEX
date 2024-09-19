@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -137,7 +137,7 @@ REAL    :: ZEPS                           ! molar mass ratio
 !
 !
 !*       1.     Preliminary computations and packing
-!	        ------------------------------------
+!               ------------------------------------
 !
 !
 ! Physical domain
@@ -234,7 +234,7 @@ IF (INEGT.GT.0) THEN
 !
 !
 !*       2.     Haze homogeneous freezing
-!	        ------------------------
+!               ------------------------
 !
 !
 !  Compute the haze homogeneous nucleation source: RHHONI
