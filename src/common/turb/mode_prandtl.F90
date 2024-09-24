@@ -156,8 +156,10 @@ USE MODE_GRADIENT_M_PHY, ONLY: GX_M_M_PHY, GY_M_M_PHY
 USE MODE_IO_FIELD_WRITE_PHY, ONLY: IO_FIELD_WRITE_PHY
 !
 ! These macro are handled by pft_tool.py --craybyPassDOCONCURRENT applied on Cray Rules
+#ifdef MNH_COMPILER_CCE
 !$mnh_undef(LOOP)
 !$mnh_undef(OPENACC)
+#endif
 !
 IMPLICIT NONE
 !
