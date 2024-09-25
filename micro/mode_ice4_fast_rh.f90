@@ -107,6 +107,8 @@ IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RH',0,ZHOOK_HANDLE)
 !
 !*       7.2    compute the Wet and Dry growth of hail
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   IF(PRHT(JL)>ICED%XRTMIN(7) .AND. PRCT(JL)>ICED%XRTMIN(2) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -128,10 +130,13 @@ DO JL=1, KSIZE
     PRH_TEND(JL, IRIDRYH)=0.
   ENDIF
 ENDDO
+!$acc end kernels
 
 !
 !*       7.2.1  accretion of aggregates on the hailstones
 !
+!$acc kernels
+!$acc loop independent
 DO JL = 1, KSIZE
   IF (PRHT(JL)>ICED%XRTMIN(7) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     GWET(JL) = .TRUE.
@@ -141,6 +146,7 @@ DO JL = 1, KSIZE
     PRH_TEND(JL, IRSDRYH)=0.
   ENDIF
 ENDDO
+!$acc end kernels
 IF(.NOT. LDSOFT) THEN
    CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAH(:), PLBDAS(:), ICEP%NWETLBDAH, ICEP%NWETLBDAS, &
                        &ICEP%XWETINTP1H, ICEP%XWETINTP2H, ICEP%XWETINTP1S, ICEP%XWETINTP2S, &
@@ -173,6 +179,8 @@ ENDIF
 !
 !*       7.2.6  accretion of graupeln on the hailstones
 !
+!$acc kernels
+!$acc loop independent
 DO JL = 1, KSIZE
   IF (PRHT(JL)>ICED%XRTMIN(7) .AND. PRGT(JL)>ICED%XRTMIN(6) .AND. LDCOMPUTE(JL)) THEN
     GWET(JL) = .TRUE.
@@ -182,6 +190,7 @@ DO JL = 1, KSIZE
     PRH_TEND(JL, IRGDRYH)=0.
   END IF
 ENDDO
+!$acc end kernels
 IF(.NOT. LDSOFT) THEN
   CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAH(:), PLBDAG(:), ICEP%NWETLBDAH, ICEP%NWETLBDAG, &
                        &ICEP%XWETINTP1H, ICEP%XWETINTP2H, ICEP%XWETINTP1G, ICEP%XWETINTP2G, &
@@ -209,6 +218,8 @@ ENDIF
 !
 !*       7.2.11  accretion of raindrops on the hailstones
 !
+!$acc kernels
+!$acc loop independent
 DO JL = 1, KSIZE
   IF (PRHT(JL)>ICED%XRTMIN(7) .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)) THEN
     GWET(JL) = .TRUE.
@@ -217,6 +228,7 @@ DO JL = 1, KSIZE
     PRH_TEND(JL, IRRWETH)=0.
   ENDIF
 ENDDO
+!$acc end kernels
 IF(.NOT. LDSOFT) THEN
   CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAH(:), PLBDAR(:), ICEP%NWETLBDAH, ICEP%NWETLBDAR, &
                        &ICEP%XWETINTP1H, ICEP%XWETINTP2H, ICEP%XWETINTP1R, ICEP%XWETINTP2R, &
@@ -237,15 +249,20 @@ IF(.NOT. LDSOFT) THEN
   ENDIF
 ENDIF
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   ZRDRYH_INIT(JL)=PRH_TEND(JL, IRCWETH)+PRH_TEND(JL, IRIDRYH)+ &
                  &PRH_TEND(JL, IRSDRYH)+PRH_TEND(JL, IRRWETH)+PRH_TEND(JL, IRGDRYH)
 ENDDO
+!$acc end kernels
 !
 !*       7.3    compute the Wet growth of hail
 !    and
 !*       7.4    Select Wet or Dry case
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   IF(PRHT(JL)>ICED%XRTMIN(7) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -293,6 +310,7 @@ DO JL=1, KSIZE
     LLDRYH(JL)=.FALSE.
   ENDIF
 ENDDO
+!$acc end kernels
 
 IF(PARAMI%LCONVHG)THEN
   !$mnh_expand_where(JL=1:KSIZE)
@@ -303,9 +321,13 @@ IF(PARAMI%LCONVHG)THEN
   END WHERE
   !$mnh_end_expand_where(JL=1:KSIZE)
 ELSE
+!$acc kernels
   ZRDRYHG(:)=0.
+!$acc end kernels
 ENDIF
 
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   IF(LLWETH(JL)) THEN
     PRCWETH(JL) = PRH_TEND(JL, IRCWETH)
@@ -340,9 +362,12 @@ DO JL=1, KSIZE
     PRDRYHG(JL) = 0.
   ENDIF
 ENDDO
+!$acc end kernels
 !
 !*       7.5    Melting of the hailstones
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   IF(PRHT(JL)>ICED%XRTMIN(7) .AND. PT(JL)>CST%XTT .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -363,6 +388,7 @@ DO JL=1, KSIZE
     PRHMLTR(JL)=0.
   ENDIF
 ENDDO
+!$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RH', 1, ZHOOK_HANDLE)
 !

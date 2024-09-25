@@ -101,6 +101,8 @@ IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RS', 0, ZHOOK_HANDLE)
 !
 !*       5.0    maximum freezing rate
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   IF(PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -135,9 +137,12 @@ DO JL=1, KSIZE
     ZFREEZ_RATE(JL)=0.
   ENDIF
 ENDDO
+!$acc end kernels
 !
 !*       5.1    cloud droplet riming of the aggregates
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   IF (PRCT(JL)>ICED%XRTMIN(2) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
 #ifdef REPRO48
@@ -153,6 +158,7 @@ DO JL=1, KSIZE
     PRS_TEND(JL, IRSRIMCG)=0.
   ENDIF
 ENDDO
+!$acc end kernels
 !
 ! Collection of cloud droplets by snow: this rate is used for riming (T<0) and for conversion/melting (T>0)
 IF(.NOT. LDSOFT) THEN
@@ -225,11 +231,15 @@ IF(.NOT. LDSOFT) THEN
       END WHERE
       !$mnh_end_expand_where(JL=1:KSIZE)
     ELSE
+!$acc kernels
       PRS_TEND(:, IRSRIMCG)=0.
+!$acc end kernels
     END IF
   ENDIF
 ENDIF
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   ! More restrictive RIM mask to be used for riming by negative temperature only
   IF(GRIM(JL) .AND. PT(JL)<CST%XTT) THEN
@@ -248,9 +258,12 @@ DO JL=1, KSIZE
     PRSRIMCG(JL)=0.
   ENDIF
 ENDDO
+!$acc end kernels
 !
 !*       5.2    rain accretion onto the aggregates
 !
+!$acc kernels
+!$acc loop independent
 DO JL = 1, KSIZE
   IF (PRRT(JL)>ICED%XRTMIN(3) .AND. PRST(JL)>ICED%XRTMIN(5) .AND. LDCOMPUTE(JL)) THEN
     GACC(JL) = .TRUE.
@@ -261,10 +274,13 @@ DO JL = 1, KSIZE
     PRS_TEND(JL, IRSACCRG)=0.
   END IF
 ENDDO
+!$acc end kernels
 IF(.NOT. LDSOFT) THEN
+!$acc kernels
   PRS_TEND(:, IRRACCS)=0.
   PRS_TEND(:, IRRACCSS)=0.
   PRS_TEND(:, IRSACCRG)=0.
+!$acc end kernels
   CALL INTERP_MICRO_2D(KPROMA, KSIZE, PLBDAS, PLBDAR, ICEP%NACCLBDAS, ICEP%NACCLBDAR, &
                       &ICEP%XACCINTP1S, ICEP%XACCINTP2S, ICEP%XACCINTP1R, ICEP%XACCINTP2R,&
                       &PARAMI%LPACK_INTERP, GACC(:), IBUF1(:), IBUF2(:), IBUF3(:), ZBUF1(:), ZBUF2(:), ZBUF3(:), &
@@ -321,6 +337,8 @@ IF(.NOT. LDSOFT) THEN
   ENDIF
 ENDIF
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   ! More restrictive ACC mask to be used for accretion by negative temperature only
   IF(GACC(JL) .AND. PT(JL)<CST%XTT) THEN
@@ -339,10 +357,13 @@ DO JL=1, KSIZE
     PRSACCRG(JL)=0.
   ENDIF
 ENDDO
+!$acc end kernels
 !
 !
 !*       5.3    Conversion-Melting of the aggregates
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   IF(PRST(JL)>ICED%XRTMIN(5) .AND. PT(JL)>CST%XTT .AND. LDCOMPUTE(JL)) THEN
     IF(.NOT. LDSOFT) THEN
@@ -388,7 +409,7 @@ DO JL=1, KSIZE
     PRCMLTSR(JL)=0.
   ENDIF
 ENDDO
-
+!$acc end kernels
 IF (LHOOK) CALL DR_HOOK('ICE4_FAST_RS', 1, ZHOOK_HANDLE)
 !
 CONTAINS
