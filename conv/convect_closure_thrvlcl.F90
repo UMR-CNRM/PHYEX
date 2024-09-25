@@ -76,23 +76,25 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(CONVPAREXT)                         ,INTENT(IN)   :: CVPEXT
-TYPE(CST_T)                              ,INTENT(IN)   :: CST
-TYPE(DIMPHYEX_T)                         ,INTENT(IN)   :: D
-REAL             ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)   :: PPRES ! pressure
-REAL             ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)   :: PTH   ! theta
-REAL             ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)   :: PRV   ! vapor mixing ratio 
-REAL             ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)   :: PZ    ! height of grid point (m)
-LOGICAL          ,DIMENSION(D%NIT)       ,INTENT(IN)   :: OWORK1! logical mask 
-REAL             ,DIMENSION(D%NIT)       ,INTENT(OUT)  :: PTHLCL ! theta at LCL
-REAL             ,DIMENSION(D%NIT)       ,INTENT(OUT)  :: PRVLCL ! vapor mixing ratio at  LCL
-REAL             ,DIMENSION(D%NIT)       ,INTENT(OUT)  :: PZLCL  ! height at LCL (m)
-REAL             ,DIMENSION(D%NIT)       ,INTENT(OUT)  :: PTLCL  ! temperature at LCL (m)
-REAL             ,DIMENSION(D%NIT)       ,INTENT(OUT)  :: PTELCL ! environm. temp. at LCL (K)
-INTEGER          ,DIMENSION(D%NIT)       ,INTENT(OUT)  :: KLCL   ! contains vert. index of LCL
-INTEGER          ,DIMENSION(D%NIT)       ,INTENT(IN)   :: KDPL  ! contains vert. index of DPL
-INTEGER          ,DIMENSION(D%NIT)       ,INTENT(IN)   :: KPBL  ! " vert. index of source layer top
+TYPE(CONVPAREXT),           INTENT(IN) :: CVPEXT
+TYPE(CST_T),                INTENT(IN) :: CST
+TYPE(DIMPHYEX_T),           INTENT(IN) :: D
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: PTH   ! theta
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: PRV   ! vapor mixing ratio 
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: PPRES ! pressure
+REAL, DIMENSION(D%NIT,D%NKT), INTENT(IN) :: PZ    ! height of grid point (m)
+INTEGER, DIMENSION(D%NIT),   INTENT(IN) :: KDPL  ! contains vert. index of DPL
+INTEGER, DIMENSION(D%NIT),   INTENT(IN) :: KPBL  ! " vert. index of source layer top
+LOGICAL, DIMENSION(D%NIT),   INTENT(IN) :: OWORK1! logical mask 
 !
+REAL, DIMENSION(D%NIT),     INTENT(OUT):: PTHLCL ! theta at LCL
+REAL, DIMENSION(D%NIT),     INTENT(OUT):: PRVLCL ! vapor mixing ratio at  LCL
+REAL, DIMENSION(D%NIT),     INTENT(OUT):: PZLCL  ! height at LCL (m)
+REAL, DIMENSION(D%NIT),     INTENT(OUT):: PTLCL  ! temperature at LCL (m)
+REAL, DIMENSION(D%NIT),     INTENT(OUT):: PTELCL ! environm. temp. at LCL (K)
+INTEGER, DIMENSION(D%NIT),  INTENT(OUT):: KLCL   ! contains vert. index of LCL
+
+
 !
 !*       0.2   Declarations of local variables :
 !
@@ -110,13 +112,13 @@ REAL, DIMENSION(D%NIT) :: ZLV, ZCPH! specific heats of vaporisation, dry air
 REAL, DIMENSION(D%NIT) :: ZDP      ! pressure between LCL and model layer
 REAL, DIMENSION(D%NIT) :: ZWORK1, ZWORK2     ! work arrays
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
 !*       0.3    Compute array bounds
 !               --------------------
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_CLOSURE_THRVLCL',0,ZHOOK_HANDLE)
 IKB = 1 + CVPEXT%JCVEXB 
 IKE = D%NKT - CVPEXT%JCVEXT 
@@ -191,14 +193,18 @@ DO JI=D%NIB,D%NIE
   END IF
 ENDDO
 !
-     ZPLCL(D%NIB:D%NIE) = MIN( 2.E5, MAX( 10., ZPLCL(D%NIB:D%NIE) ) ) ! bound to avoid overflow
+DO JI = D%NIB,D%NIE
+  ZPLCL(JI) = MIN( 2.E5, MAX( 10., ZPLCL(JI) ) ) ! bound to avoid overflow
+ENDDO
 !
 !
 !*       3.2    Correct PTLCL in order to be completely consistent
 !               with MNH saturation formula
 !               --------------------------------------------------
 !
-     CALL CONVECT_SATMIXRATIO( CST, D, ZPLCL, PTLCL, ZWORK1, ZLV, ZWORK2, ZCPH )
+     DO JI=D%NIB,D%NIE
+       CALL CONVECT_SATMIXRATIO( ZPLCL(JI), PTLCL(JI), ZEPS, ZWORK1(JI), ZLV(JI), ZWORK2(JI), ZCPH(JI) )
+     ENDDO
      DO JI=D%NIB,D%NIE
        IF( OWORK1(JI) ) THEN
         ZWORK2(JI) = ZWORK1(JI) / PTLCL(JI) * ( CST%XBETAW / PTLCL(JI) - CST%XGAMW ) ! dr_sat/dT
@@ -213,7 +219,9 @@ ENDDO
 !               to saturation values.
 !               -------------------------------------------------------
 !
-    CALL CONVECT_SATMIXRATIO( CST, D, ZPRESMIX, ZTMIX, ZWORK1, ZLV, ZWORK2, ZCPH )
+    DO JI=D%NIB,D%NIE
+      CALL CONVECT_SATMIXRATIO( ZPRESMIX(JI), ZTMIX(JI), ZEPS, ZWORK1(JI), ZLV(JI), ZWORK2(JI), ZCPH(JI) )
+    ENDDO
     DO JI=D%NIB,D%NIE
     IF( OWORK1(JI) .AND. PRVLCL(JI) > ZWORK1(JI) ) THEN
         ZWORK2(JI) = ZWORK1(JI) / ZTMIX(JI) * ( CST%XBETAW / ZTMIX(JI) - CST%XGAMW ) ! dr_sat/dT
@@ -265,5 +273,7 @@ ENDDO
 !
 !
 IF (LHOOK) CALL DR_HOOK('CONVECT_CLOSURE_THRVLCL',1,ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "convect_satmixratio.h"
+!
 END SUBROUTINE CONVECT_CLOSURE_THRVLCL
-

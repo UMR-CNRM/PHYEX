@@ -104,6 +104,7 @@ INTEGER, DIMENSION(KLON),  INTENT(INOUT):: KLCL    ! contains vert. index of LCL
 INTEGER, DIMENSION(KLON),  INTENT(INOUT):: KDPL    ! contains vert. index of DPL
 INTEGER, DIMENSION(KLON),  INTENT(INOUT):: KPBL    ! contains index of source layer top
 REAL, DIMENSION(KLON),     INTENT(OUT):: PCAPE     ! CAPE (J/kg) for diagnostics
+
 !
 !*       0.2   Declarations of local variables :
 !
@@ -132,13 +133,13 @@ REAL, DIMENSION(KLON) :: ZWORK1, ZWORK2, ZWORK3    ! work arrays
 LOGICAL, DIMENSION(KLON) :: GTRIG, GTRIG2          ! local arrays for OTRIG
 LOGICAL, DIMENSION(KLON) :: GWORK1                 ! work array
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
 !*       0.3    Compute array bounds
 !               --------------------
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_TRIGGER_FUNCT',0,ZHOOK_HANDLE)
 IIE = KLON
 IKB = 1 + JCVEXB
@@ -252,7 +253,9 @@ DO JKK = JKP, JKT
 !               with MNH saturation formula
 !               ---------------------------------------------
 !
-     CALL CONVECT_SATMIXRATIO( KLON, ZPLCL, ZTLCL, ZWORK1, ZLV, ZWORK2, ZCPH )
+     DO JI = 1, IIE
+       CALL CONVECT_SATMIXRATIO( ZPLCL(JI), ZTLCL(JI), ZEPS, ZWORK1(JI), ZLV(JI), ZWORK2(JI), ZCPH(JI) )
+     END DO
      WHERE( GWORK1(:) )
         ZWORK2(:) = ZWORK1(:) / ZTLCL(:) * ( XBETAW / ZTLCL(:) - XGAMW ) ! dr_sat/dT
         ZWORK2(:) = ( ZWORK1(:) - ZRVLCL(:) ) /                              &
@@ -266,7 +269,9 @@ DO JKK = JKP, JKT
 !               and temperature to saturation values.
 !               ---------------------------------------------
 !
-     CALL CONVECT_SATMIXRATIO( KLON, ZPRESMIX, ZTMIX, ZWORK1, ZLV, ZWORK2, ZCPH )
+     DO JI = 1, IIE
+       CALL CONVECT_SATMIXRATIO( ZPRESMIX(JI), ZTMIX(JI), ZEPS, ZWORK1(JI), ZLV(JI), ZWORK2(JI), ZCPH(JI) )
+     END DO
      WHERE( GWORK1(:) .AND. ZRVLCL(:) > ZWORK1(:) )
         ZWORK2(:) = ZWORK1(:) / ZTMIX(:) * ( XBETAW / ZTMIX(:) - XGAMW ) ! dr_sat/dT
         ZWORK2(:) = ( ZWORK1(:) - ZRVLCL(:) ) /                              &
@@ -404,4 +409,7 @@ END DO
 !
 !
 IF (LHOOK) CALL DR_HOOK('CONVECT_TRIGGER_FUNCT',1,ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "convect_satmixratio.h"
+!
 END SUBROUTINE CONVECT_TRIGGER_FUNCT

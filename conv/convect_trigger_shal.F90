@@ -89,28 +89,28 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(CONVPAR_SHAL)                         ,INTENT(IN)     :: CVP_SHAL
-TYPE(CONVPAREXT)                           ,INTENT(IN)     :: CVPEXT
-TYPE(CST_T)                                ,INTENT(IN)     :: CST
-TYPE(DIMPHYEX_T)                           ,INTENT(IN)     :: D
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PPRES     ! pressure
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PTH,PTHV ! theta, theta_v
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PTHES     ! envir. satur. theta_e
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PRV       ! vapor mixing ratio
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PW        ! vertical velocity
-REAL               ,DIMENSION(D%NIT,D%NKT) ,INTENT(IN)     :: PZ        ! height of grid point (m)
-REAL               ,DIMENSION(D%NIT)       ,INTENT(IN)     :: PTKECLS   ! TKE CLS
+TYPE(CONVPAR_SHAL),        INTENT(IN) :: CVP_SHAL
+TYPE(CONVPAREXT),          INTENT(IN) :: CVPEXT
+TYPE(CST_T),               INTENT(IN) :: CST
+TYPE(DIMPHYEX_T),          INTENT(IN) :: D
+REAL, DIMENSION(D%NIT),     INTENT(IN) :: PTKECLS   ! TKE CLS
+REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PTH, PTHV ! theta, theta_v
+REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PTHES     ! envir. satur. theta_e
+REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PRV       ! vapor mixing ratio
+REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PPRES     ! pressure
+REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PZ        ! height of grid point (m)
+REAL, DIMENSION(D%NIT,D%NKT),INTENT(IN) :: PW        ! vertical velocity
 !
-REAL               ,DIMENSION(D%NIT)       ,INTENT(OUT)    :: PTHLCL    ! theta at LCL
-REAL               ,DIMENSION(D%NIT)       ,INTENT(OUT)    :: PTLCL     ! temp. at LCL
-REAL               ,DIMENSION(D%NIT)       ,INTENT(OUT)    :: PRVLCL    ! vapor mixing ratio at  LCL
-REAL               ,DIMENSION(D%NIT)       ,INTENT(OUT)    :: PWLCL     ! parcel velocity at  LCL
-REAL               ,DIMENSION(D%NIT)       ,INTENT(OUT)    :: PZLCL     ! height at LCL (m)
-REAL               ,DIMENSION(D%NIT)       ,INTENT(OUT)    :: PTHVELCL  ! environm. theta_v at LCL (K)
-INTEGER            ,DIMENSION(D%NIT)       ,INTENT(INOUT)  :: KLCL    ! contains vert. index of LCL
-INTEGER            ,DIMENSION(D%NIT)       ,INTENT(INOUT)  :: KDPL    ! contains vert. index of DPL
-INTEGER            ,DIMENSION(D%NIT)       ,INTENT(INOUT)  :: KPBL    ! contains index of source layer top
-LOGICAL            ,DIMENSION(D%NIT)       ,INTENT(OUT)    :: OTRIG     ! logical mask for convection
+REAL, DIMENSION(D%NIT),     INTENT(OUT):: PTHLCL    ! theta at LCL
+REAL, DIMENSION(D%NIT),     INTENT(OUT):: PTLCL     ! temp. at LCL
+REAL, DIMENSION(D%NIT),     INTENT(OUT):: PRVLCL    ! vapor mixing ratio at  LCL
+REAL, DIMENSION(D%NIT),     INTENT(OUT):: PWLCL     ! parcel velocity at  LCL
+REAL, DIMENSION(D%NIT),     INTENT(OUT):: PZLCL     ! height at LCL (m)
+REAL, DIMENSION(D%NIT),     INTENT(OUT):: PTHVELCL  ! environm. theta_v at LCL (K)
+LOGICAL, DIMENSION(D%NIT),  INTENT(OUT):: OTRIG     ! logical mask for convection
+INTEGER, DIMENSION(D%NIT),  INTENT(INOUT):: KLCL    ! contains vert. index of LCL
+INTEGER, DIMENSION(D%NIT),  INTENT(INOUT):: KDPL    ! contains vert. index of DPL
+INTEGER, DIMENSION(D%NIT),  INTENT(INOUT):: KPBL    ! contains index of source layer top
 !
 !*       0.2   Declarations of local variables :
 !
@@ -119,6 +119,7 @@ INTEGER :: JI                  ! horizontal loop index
 INTEGER :: IKB, IKE            ! horizontal + vertical loop bounds
 REAL    :: ZEPS, ZEPSA         ! R_d / R_v, R_v / R_d
 REAL    :: ZCPORD, ZRDOCP      ! C_pd / R_d, R_d / C_pd
+REAL    :: ZX1, ZX2
 !
 REAL, DIMENSION(D%NIT) :: ZTHLCL, ZTLCL, ZRVLCL, & ! locals for PTHLCL,PTLCL
                                ZWLCL,  ZZLCL, ZTHVELCL  ! PRVLCL, ....
@@ -132,22 +133,23 @@ REAL, DIMENSION(D%NIT) :: ZDPTHMIX, ZPRESMIX ! mixed layer depth and pressure
 REAL, DIMENSION(D%NIT) :: ZCAPE    ! convective available energy (m^2/s^2/g)
 REAL, DIMENSION(D%NIT) :: ZCAP     ! pseudo fro CAPE
 REAL, DIMENSION(D%NIT) :: ZTHEUL   ! updraft equiv. pot. temperature (K)
-REAL, DIMENSION(D%NIT) :: ZLV, ZCPH! specific heats of vaporisation, dry air
+REAL, DIMENSION(D%NIT) :: ZLVA, ZCPHA! specific heats of vaporisation, dry air
+REAL, DIMENSION(D%NIT) :: ZLVB, ZCPHB! specific heats of vaporisation, dry air
+REAL, DIMENSION(D%NIT) :: ZEWA, ZEWB ! vapor saturation mixing ratios
+REAL, DIMENSION(D%NIT) :: ZLSA, ZLSB  ! latent heat L_s
 REAL, DIMENSION(D%NIT) :: ZDP      ! pressure between LCL and model layer
 REAL, DIMENSION(D%NIT) :: ZTOP,ZTOPP     ! estimated cloud top (m)
 REAL, DIMENSION(D%NIT) :: ZWORK1, ZWORK2, ZWORK3    ! work arrays
 LOGICAL, DIMENSION(D%NIT) :: GTRIG2          ! local arrays for OTRIG
 LOGICAL, DIMENSION(D%NIT) :: GWORK1                 ! work array
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
 !*       0.3    Compute array bounds
 !               --------------------
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-
-#include "convect_satmixratio.h"
 
 IF (LHOOK) CALL DR_HOOK('CONVECT_TRIGGER_SHAL',0,ZHOOK_HANDLE)
 IKB = 1 + CVPEXT%JCVEXB
@@ -188,7 +190,9 @@ JT = IKE - 2
 !
 DO JKK = IKB + 1, IKE - 2
 !
-     GWORK1(D%NIB:D%NIE) = ZZDPL(D%NIB:D%NIE) - PZ(D%NIB:D%NIE,IKB) < CVP_SHAL%XZLCL
+     DO JI=D%NIB, D%NIE
+       GWORK1(JI) = ZZDPL(JI) - PZ(JI,IKB) < CVP_SHAL%XZLCL
+     ENDDO
           ! we exit the trigger test when the center of the mixed layer is more
           ! than 1500 m  above soil level.
      DO JI=D%NIB, D%NIE
@@ -211,11 +215,11 @@ DO JKK = IKB + 1, IKE - 2
        DO JI = D%NIB, D%NIE
          IF ( GWORK1(JI) .AND. ZDPTHMIX(JI) < CVP_SHAL%XZPBL ) THEN
             IPBL(JI)     = JK
-            ZWORK1(JI)   = PPRES(JI,JK) - PPRES(JI,JKM)
-            ZDPTHMIX(JI) = ZDPTHMIX(JI) + ZWORK1(JI)
-            ZPRESMIX(JI) = ZPRESMIX(JI) + PPRES(JI,JK) * ZWORK1(JI)
-            ZTHLCL(JI)   = ZTHLCL(JI)   + PTH(JI,JK)   * ZWORK1(JI)
-            ZRVLCL(JI)   = ZRVLCL(JI)   + MAX(0., PRV(JI,JK))   * ZWORK1(JI)
+            ZX1   = PPRES(JI,JK) - PPRES(JI,JKM)
+            ZDPTHMIX(JI) = ZDPTHMIX(JI) + ZX1
+            ZPRESMIX(JI) = ZPRESMIX(JI) + PPRES(JI,JK) * ZX1
+            ZTHLCL(JI)   = ZTHLCL(JI)   + PTH(JI,JK)   * ZX1
+            ZRVLCL(JI)   = ZRVLCL(JI)   + MAX(0., PRV(JI,JK))   * ZX1
          END IF
        END DO
      END DO
@@ -241,30 +245,33 @@ DO JKK = IKB + 1, IKE - 2
         ZTMIX(JI)  = ZTHLCL(JI) * ( ZPRESMIX(JI) / CST%XP00 ) ** ZRDOCP
         ZEVMIX(JI) = ZRVLCL(JI) * ZPRESMIX(JI) / ( ZRVLCL(JI) + ZEPS )
         ZEVMIX(JI) = MAX( 1.E-8, ZEVMIX(JI) )
-        ZWORK1(JI) = LOG( ZEVMIX(JI) / 613.3 )
+        ZX1 = LOG( ZEVMIX(JI) / 613.3 )
               ! dewpoint temperature
-        ZWORK1(JI) = ( 4780.8 - 32.19 * ZWORK1(JI) ) / ( 17.502 - ZWORK1(JI) )
+        ZX1 = ( 4780.8 - 32.19 * ZX1 ) / ( 17.502 - ZX1 )
               ! adiabatic saturation temperature
-        ZTLCL(JI)  = ZWORK1(JI) - ( .212 + 1.571E-3 * ( ZWORK1(JI) - CST%XTT )      &
-                   - 4.36E-4 * ( ZTMIX(JI) - CST%XTT ) ) * ( ZTMIX(JI) - ZWORK1(JI) )
+        ZTLCL(JI)  = ZX1 - ( .212 + 1.571E-3 * ( ZX1 - CST%XTT )      &
+                   - 4.36E-4 * ( ZTMIX(JI) - CST%XTT ) ) * ( ZTMIX(JI) - ZX1 )
         ZTLCL(JI)  = MIN( ZTLCL(JI), ZTMIX(JI) )
         ZPLCL(JI)  = CST%XP00 * ( ZTLCL(JI) / ZTHLCL(JI) ) ** ZCPORD
 !
      END IF
      ENDDO
 !
+     DO JI=D%NIB, D%NIE
+       CALL CONVECT_SATMIXRATIO( ZPLCL(JI), ZTLCL(JI), ZEPS, ZEWA(JI), ZLVA(JI), ZLSA(JI), ZCPHA(JI) )
+       CALL CONVECT_SATMIXRATIO( ZPRESMIX(JI), ZTMIX(JI), ZEPS, ZEWB(JI), ZLVB(JI), ZLSB(JI), ZCPHB(JI) )
+     ENDDO
 !
 !*       4.2    Correct ZTLCL in order to be completely consistent
 !               with MNH saturation formula
 !               ---------------------------------------------
 !
-     CALL CONVECT_SATMIXRATIO( CST, D, ZPLCL, ZTLCL, ZWORK1, ZLV, ZWORK2, ZCPH )
      DO JI=D%NIB, D%NIE
      IF( GWORK1(JI) ) THEN
-        ZWORK2(JI) = ZWORK1(JI) / ZTLCL(JI) * ( CST%XBETAW / ZTLCL(JI) - CST%XGAMW ) ! dr_sat/dT
-        ZWORK2(JI) = ( ZWORK1(JI) - ZRVLCL(JI) ) /                              &
-                        ( 1. + ZLV(JI) / ZCPH(JI) * ZWORK2(JI) )
-        ZTLCL(JI)  = ZTLCL(JI) - ZLV(JI) / ZCPH(JI) * ZWORK2(JI)
+        ZLSA(JI) = ZEWA(JI) / ZTLCL(JI) * ( CST%XBETAW / ZTLCL(JI) - CST%XGAMW ) ! dr_sat/dT
+        ZLSA(JI) = ( ZEWA(JI) - ZRVLCL(JI) ) /                              &
+                        ( 1. + ZLVA(JI) / ZCPHA(JI) * ZLSA(JI) )
+        ZTLCL(JI)  = ZTLCL(JI) - ZLVA(JI) / ZCPHA(JI) * ZLSA(JI)
 !
      END IF
      ENDDO
@@ -274,14 +281,13 @@ DO JKK = IKB + 1, IKE - 2
 !               and temperature to saturation values.
 !               ---------------------------------------------
 !
-     CALL CONVECT_SATMIXRATIO( CST, D, ZPRESMIX, ZTMIX, ZWORK1, ZLV, ZWORK2, ZCPH )
      DO JI=D%NIB, D%NIE
-     IF( GWORK1(JI) .AND. ZRVLCL(JI) > ZWORK1(JI) ) THEN
-        ZWORK2(JI) = ZWORK1(JI) / ZTMIX(JI) * ( CST%XBETAW / ZTMIX(JI) - CST%XGAMW ) ! dr_sat/dT
-        ZWORK2(JI) = ( ZWORK1(JI) - ZRVLCL(JI) ) /                              &
-                       ( 1. + ZLV(JI) / ZCPH(JI) * ZWORK2(JI) )
-        ZTLCL(JI)  = ZTMIX(JI) - ZLV(JI) / ZCPH(JI) * ZWORK2(JI)
-        ZRVLCL(JI) = ZRVLCL(JI) - ZWORK2(JI)
+     IF( GWORK1(JI) .AND. ZRVLCL(JI) > ZEWB(JI) ) THEN
+        ZLSB(JI) = ZEWB(JI) / ZTMIX(JI) * ( CST%XBETAW / ZTMIX(JI) - CST%XGAMW ) ! dr_sat/dT
+        ZLSB(JI) = ( ZEWB(JI) - ZRVLCL(JI) ) /                              &
+                       ( 1. + ZLVB(JI) / ZCPHB(JI) * ZLSB(JI) )
+        ZTLCL(JI)  = ZTMIX(JI) - ZLVB(JI) / ZCPHB(JI) * ZLSB(JI)
+        ZRVLCL(JI) = ZRVLCL(JI) - ZLSB(JI)
         ZPLCL(JI)  = ZPRESMIX(JI)
         ZTHLCL(JI) = ZTLCL(JI) * ( CST%XP00 / ZPLCL(JI) ) ** ZRDOCP
         ZTHVLCL(JI)= ZTHLCL(JI) * ( 1. + ZEPSA * ZRVLCL(JI) )                   &
@@ -353,7 +359,8 @@ DO JKK = IKB + 1, IKE - 2
 !      GTRIG(:)  = ZTHVLCL(:) - ZTHVELCL(:) + ZWORK1(:) > 0. .AND.       &
 !                  ZWLCL(:) > 0.
 !    END WHERE
-     ZWLCL(D%NIB:D%NIE) = CVP_SHAL%XAW * MAX(0.,PW(D%NIB:D%NIE,IKB)) + CVP_SHAL%XBW
+    DO JI = D%NIB, D%NIE
+      ZWLCL(JI) = CVP_SHAL%XAW * MAX(0.,PW(JI,IKB)) + CVP_SHAL%XBW
 !
 !
 !*       6.3    Look for parcel that produces sufficient cloud depth.
@@ -361,11 +368,12 @@ DO JKK = IKB + 1, IKE - 2
 !               is smaller  than a given value (based on vertical velocity eq.)
 !               --------------------------------------------------------------
 !
-     ZTHEUL(D%NIB:D%NIE) = ZTLCL(D%NIB:D%NIE) * ( ZTHLCL(D%NIB:D%NIE) / ZTLCL(D%NIB:D%NIE) )                       &
-                                             ** ( 1. - 0.28 * ZRVLCL(D%NIB:D%NIE) )  &
-                          * EXP( ( 3374.6525 / ZTLCL(D%NIB:D%NIE) - 2.5403 ) *       &
-                               ZRVLCL(D%NIB:D%NIE) * ( 1. + 0.81 * ZRVLCL(D%NIB:D%NIE) ) )
-!
+      ZTHEUL(JI) = ZTLCL(JI) * ( ZTHLCL(JI) / ZTLCL(JI) )                       &
+                                             ** ( 1. - 0.28 * ZRVLCL(JI) )  &
+                          * EXP( ( 3374.6525 / ZTLCL(JI) - 2.5403 ) *       &
+                               ZRVLCL(JI) * ( 1. + 0.81 * ZRVLCL(JI) ) )
+    END DO
+
      ZCAPE(D%NIB:D%NIE) = 0.
      ZCAP(D%NIB:D%NIE)  = 0.
      ZTOP(D%NIB:D%NIE)  = 0.
@@ -374,33 +382,31 @@ DO JKK = IKB + 1, IKE - 2
      JKM = IKB
      DO JL = JKM, JT
         JK = JL + 1
+!REK : should try if's instead of sign & max
         DO JI = D%NIB, D%NIE
-           ZWORK1(JI) = ( 2. * ZTHEUL(JI) /                                &
+           ZX1 = ( 2. * ZTHEUL(JI) /                                &
             ( PTHES(JI,JK) + PTHES(JI,JL) ) - 1. ) * ( PZ(JI,JK) - PZ(JI,JL) )
-           IF ( JL < ILCL(JI) ) ZWORK1(JI) = 0.
-           ZCAPE(JI)  = ZCAPE(JI) + CST%XG * MAX( 1., ZWORK1(JI) )
-           ZCAP(JI)   = ZCAP(JI) + ZWORK1(JI)
-           ZWORK2(JI) = CVP_SHAL%XNHGAM * CST%XG * ZCAP(JI) + 1.05 * ZWLCL(JI) * ZWLCL(JI)
+           IF ( JL < ILCL(JI) ) ZX1 = 0.
+           ZCAPE(JI)  = ZCAPE(JI) + CST%XG * MAX( 1., ZX1 )
+           ZCAP(JI)   = ZCAP(JI) + ZX1
                ! the factor 1.05 takes entrainment into account
-           ZWORK2(JI) = SIGN( 1., ZWORK2(JI) )
-           ZWORK3(JI) = ZWORK3(JI) + MIN(0., ZWORK2(JI) )
-           ZWORK3(JI) = MAX( -1., ZWORK3(JI) )
-               ! Nota, the factors ZWORK2 and ZWORK3 are only used to avoid
+           ZX2 = SIGN( 1., ( CVP_SHAL%XNHGAM * CST%XG * ZCAP(JI) + 1.05 * ZWLCL(JI) * ZWLCL(JI)) )
+           ZWORK3(JI) = MAX( -1., (ZWORK3(JI) + MIN(0.,ZX2)) )
+               ! Nota, the factors ZX2 and ZWORK3 are only used to avoid
                ! if and goto statements, the difficulty is to extract only
                ! the level where the criterium is first fullfilled
            ZTOPP(JI)=ZTOP(JI)
-           ZTOP(JI)   = PZ(JI,JL) * .5 * ( 1. + ZWORK2(JI) ) * ( 1. + ZWORK3(JI) ) + &
-                        ZTOP(JI) * .5 * ( 1. - ZWORK2(JI) )
+           ZTOP(JI)   = PZ(JI,JL) * .5 * ( 1. + ZX2 ) * ( 1. + ZWORK3(JI) ) + &
+                        ZTOP(JI) * .5 * ( 1. - ZX2 )
            ZTOP(JI)=MAX(ZTOP(JI),ZTOPP(JI))
            ZTOPP(JI)=ZTOP(JI)
          END DO
      END DO
 !
 !
-     ZWORK2(D%NIB:D%NIE) = ZTOP(D%NIB:D%NIE) - ZZLCL(D%NIB:D%NIE)
-   ! WHERE( ZWORK2(:)  .GE. XCDEPTH  .AND. ZWORK2(:) < XCDEPTH_D .AND. GTRIG2(:) &
+
      DO JI=D%NIB, D%NIE
-     IF( ZWORK2(JI) .GE. CVP_SHAL%XCDEPTH .AND. GTRIG2(JI) .AND. ZCAPE(JI) > 10. )THEN
+     IF( (ZTOP(JI)-ZZLCL(JI)) .GE. CVP_SHAL%XCDEPTH .AND. GTRIG2(JI) .AND. ZCAPE(JI) > 10. )THEN
         GTRIG2(JI)   = .FALSE.
         OTRIG(JI)    = .TRUE.
       ! OTRIG(JI)    = GTRIG(JI)     ! we  select the first departure level
@@ -420,5 +426,7 @@ END DO
 !
 !
 IF (LHOOK) CALL DR_HOOK('CONVECT_TRIGGER_SHAL',1,ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "convect_satmixratio.h"
+!
 END SUBROUTINE CONVECT_TRIGGER_SHAL
-

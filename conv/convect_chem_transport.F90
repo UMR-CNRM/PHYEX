@@ -95,6 +95,7 @@ INTEGER :: IKS            ! vertical dimension
 INTEGER :: JI             ! horizontal loop index
 INTEGER :: JK, JKP        ! vertical loop index
 INTEGER :: JN             ! chemical tracer loop index
+INTEGER :: JCH
 INTEGER :: JSTEP          ! fractional time loop index
 INTEGER :: JKLD, JKLP, JKMIN, JKMAX, JKMAX2 ! loop index for levels
 !
@@ -212,7 +213,9 @@ END DO
 !*      4.      Final closure (environmental) computations
 !               ------------------------------------------
 !
-PCH1C(D%NIB:D%NIE,IKB:IKE,1:KCH) = PCH1(D%NIB:D%NIE,IKB:IKE,1:KCH) ! initialize adjusted envir. values
+DO JCH = 1, KCH
+  PCH1C(:,IKB:IKE,JCH) = PCH1(:,IKB:IKE,JCH) ! initialize adjusted envir. values
+ENDDO
 !
 DO JK = IKB, IKE
   DO JI=D%NIB,D%NIE
@@ -233,8 +236,10 @@ DO JK=1,IKS
 ENDDO
 ENDDO
 !
-ZCH1MFIN(D%NIB:D%NIE,1:D%NKT,1:KCH)   = 0.
-ZCH1MFOUT(D%NIB:D%NIE,1:D%NKT,1:KCH)  = 0.
+DO JCH = 1, KCH
+  ZCH1MFIN(:,1:D%NKT,JCH)   = 0.
+  ZCH1MFOUT(:,1:D%NKT,JCH)  = 0.
+ENDDO
 !
 DO JSTEP = 1, KFTSTEPS ! Enter the fractional time step loop
 !

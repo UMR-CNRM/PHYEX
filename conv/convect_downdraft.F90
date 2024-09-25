@@ -119,6 +119,7 @@ REAL, DIMENSION(KLON),      INTENT(OUT):: PDTEVR ! total downdraft evaporation
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT):: PDTEVRF! downdraft evaporation rate
 INTEGER, DIMENSION(KLON),  INTENT(OUT):: KLFS    ! contains vert. index of LFS
 INTEGER, DIMENSION(KLON),  INTENT(OUT):: KDBL    ! contains vert. index of DBL
+
 !
 !*       0.2   Declarations of local variables :
 !
@@ -139,13 +140,13 @@ REAL, DIMENSION(KLON)    :: ZPI       ! Pi=(P0/P)**(Rd/Cpd)
 REAL, DIMENSION(KLON)    :: ZWORK1, ZWORK2, ZWORK3, ZWORK4 ! work arrays
 LOGICAL, DIMENSION(KLON) :: GWORK1                         ! work array
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
 !        0.3    Set loop bounds
 !               ---------------
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_DOWNDRAFT',0,ZHOOK_HANDLE)
 IIE = KLON
 IKB = 1 + JCVEXB
@@ -263,7 +264,9 @@ END DO
 !               ---------------------------------------------------------
 !
       ! compute satur. mixing ratio for melting corrected temperature
-CALL CONVECT_SATMIXRATIO( KLON, ZWORK4, ZDT, ZWORK3, ZLV, ZLS, ZCPH )
+    DO JI = 1, IIE
+      CALL CONVECT_SATMIXRATIO( ZWORK4(JI), ZDT(JI), ZEPS, ZWORK3(JI), ZLV(JI), ZLS(JI), ZCPH(JI) )
+    END DO
 !
       ! compute envir. saturated theta_e for melting corrected temperature
     ZWORK1(:) = MIN( ZWORK2(:), ZWORK3(:) )
@@ -382,7 +385,9 @@ DO JK = IKB + 1, JKT
 !               --------------------------------------------------
 !
    DO JITER = 1, 4
-       CALL CONVECT_SATMIXRATIO( KLON, PPRES(:,JK), ZDT, ZWORK1, ZLV, ZLS, ZCPH )
+       DO JI = 1, IIE
+         CALL CONVECT_SATMIXRATIO( PPRES(JI,JK), ZDT(JI), ZEPS, ZWORK1(JI), ZLV(JI), ZLS(JI), ZCPH(JI) )
+       END DO
        ZDTP(:) = PDTHL(:,JK) / ( ZPI(:) ** ( 1. - 0.28 * ZWORK1(:) )         &
                       * EXP( ( 3374.6525 / ZDT(:) - 2.5403 )                 &
                              * ZWORK1(:) * ( 1. + 0.81 * ZWORK1(:) ) ) )
@@ -399,7 +404,9 @@ DO JK = IKB + 1, JKT
                     ( 1. + ZLV(:) / ZCPH(:) * ZWORK2(:) ) ! temperature perturb                                                           ! due to evaporation
    ZDT(:)    = ZDT(:) + ZWORK2(:)
 !
-   CALL CONVECT_SATMIXRATIO( KLON, PPRES(:,JK), ZDT, ZWORK3, ZLV, ZLS, ZCPH )
+   DO JI = 1, IIE
+     CALL CONVECT_SATMIXRATIO( PPRES(JI,JK), ZDT(JI), ZEPS, ZWORK3(JI), ZLV(JI), ZLS(JI), ZCPH(JI) )
+   END DO
 !
    ZWORK3(:)    = ZWORK3(:) * XRHDBC
    ZWORK1(:)    = MAX( 0., ZWORK3(:) - PDRW(:,JK) )
@@ -434,4 +441,7 @@ DO JK = IKB, JKM
 END DO
 !
 IF (LHOOK) CALL DR_HOOK('CONVECT_DOWNDRAFT',1,ZHOOK_HANDLE)
+CONTAINS
+INCLUDE "convect_satmixratio.h"
+!
 END SUBROUTINE CONVECT_DOWNDRAFT

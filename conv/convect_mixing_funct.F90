@@ -66,12 +66,12 @@ REAL             ,DIMENSION(D%NIT) ,INTENT(OUT)  :: PDR    ! normalized detrainm
 !
 !*       0.2   Declarations of local variables :
 !
-REAL    :: ZSIGMA = 0.166666667                   ! standard deviation
-REAL    :: ZFE    = 4.931813949                   ! integral normalization
-REAL    :: ZSQRTP = 2.506628,  ZP  = 0.33267      ! constants
-REAL    :: ZA1    = 0.4361836, ZA2 =-0.1201676    ! constants
-REAL    :: ZA3    = 0.9372980, ZT1 = 0.500498     ! constants
-REAL    :: ZE45   = 0.01111                       ! constant
+REAL, PARAMETER   :: ZSIGMA = 0.166666667                   ! standard deviation
+REAL, PARAMETER   :: ZFE    = 4.931813949                   ! integral normalization
+REAL, PARAMETER   :: ZSQRTP = 2.506628,  ZP  = 0.33267      ! constants
+REAL, PARAMETER   :: ZA1    = 0.4361836, ZA2 =-0.1201676    ! constants
+REAL, PARAMETER   :: ZA3    = 0.9372980, ZT1 = 0.500498     ! constants
+REAL, PARAMETER   :: ZE45   = 0.01111                       ! constant
 !
 REAL, DIMENSION(D%NIT) :: ZX, ZY, ZW1, ZW2         ! work variables
 REAL    :: ZW11
@@ -87,12 +87,14 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_MIXING_FUNCT',0,ZHOOK_HANDLE)
 IF( KMF == 1 ) THEN
     ! ZX(:)  = ( PMIXC(:) - 0.5 ) / ZSIGMA
-      ZX(D%NIB:D%NIE)  = 6. * PMIXC(D%NIB:D%NIE) - 3.
-      ZW1(D%NIB:D%NIE) = 1. / ( 1.+ ZP * ABS ( ZX(D%NIB:D%NIE) ) )
-      ZY(D%NIB:D%NIE)  = EXP( -0.5 * ZX(D%NIB:D%NIE) * ZX(D%NIB:D%NIE) )
-      ZW2(D%NIB:D%NIE) = ZA1 * ZW1(D%NIB:D%NIE) + ZA2 * ZW1(D%NIB:D%NIE) * ZW1(D%NIB:D%NIE) +                   &
-               ZA3 * ZW1(D%NIB:D%NIE) * ZW1(D%NIB:D%NIE) * ZW1(D%NIB:D%NIE)
+    DO JI = D%NIB, D%NIE
+      ZX(JI)  = 6. * PMIXC(JI) - 3.
+      ZW1(JI) = 1. / ( 1.+ ZP * ABS ( ZX(JI) ) )
+      ZY(JI)  = EXP( -0.5 * ZX(JI) * ZX(JI) )
+      ZW2(JI) = ZA1 * ZW1(JI) + ZA2 * ZW1(JI) * ZW1(JI) +                   &
+               ZA3 * ZW1(JI) * ZW1(JI) * ZW1(JI)
       ZW11   = ZA1 * ZT1 + ZA2 * ZT1 * ZT1 + ZA3 * ZT1 * ZT1 * ZT1
+    ENDDO
 ENDIF
 !
 DO JI=D%NIB, D%NIE
@@ -117,8 +119,10 @@ IF ( KMF == 1 .AND. ZX(JI) < 0. ) THEN
 ENDDO
 
 !
-      PER(D%NIB:D%NIE) = PER(D%NIB:D%NIE) * ZFE
-      PDR(D%NIB:D%NIE) = PDR(D%NIB:D%NIE) * ZFE
+DO JI = D%NIB, D%NIE
+  PER(JI) = PER(JI) * ZFE
+  PDR(JI) = PDR(JI) * ZFE
+ENDDO
 !
 !
 !       2.     Use triangular function KMF=2
