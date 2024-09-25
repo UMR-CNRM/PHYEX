@@ -10,7 +10,7 @@
                                PRGT, PTHS, PRVS, PRCS, PRRS, PRIS, PRSS, PRGS,        &
                                PINPRC, PINPRR, PEVAP3D,                               &
                                PINPRS, PINPRG, PSIGS, PSEA, PTOWN,                    &
-                               OAERONRT, PCLDROP, PIFNNC,                             &
+                               OAERONRT, OAEIFN, PCLDROP, PIFNNC,                     &
                                TBUDGETS, KBUDGETS,                                    &
                                PICENU, PKGN_ACON, PKGN_SBGR,                          &
                                PRHT, PRHS, PINPRH, PFPR)
@@ -183,7 +183,6 @@ USE MODE_BUDGET_PHY, ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_S
 USE MODI_GAMMA,      ONLY: GAMMA
 USE MODE_TIWMX,      ONLY: ESATI, ESATW, AA2, BB3, AA2W, BB3W
 USE MODE_TIWMX_TAB,  ONLY: TIWMX_TAB
-USE MODD_NRT_AEROSOLS, ONLY : LAEIFN
 !
 USE MODE_RAIN_ICE_OLD_NUCLEATION,          ONLY: RAIN_ICE_OLD_NUCLEATION
 USE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT,  ONLY: RAIN_ICE_OLD_SEDIMENTATION_STAT
@@ -273,6 +272,7 @@ REAL, DIMENSION(D%NIT),       INTENT(IN)  :: PSEA ! Sea Mask
 REAL, DIMENSION(D%NIT),       INTENT(IN)  :: PTOWN! Fraction that is town
 ! nrt aerosol
 LOGICAL,                          INTENT(IN)  :: OAERONRT ! Switch for nrt aerosols
+LOGICAL,                          INTENT(IN)  :: OAEIFN   ! Switch to activate ice nuclei
 REAL, DIMENSION(D%NIT,D%NKT),     INTENT(IN)  :: PCLDROP  ! Activated Condensation nuclei (CCN) 
 REAL, DIMENSION(D%NIT,D%NKT),     INTENT(IN)  :: PIFNNC   ! Ice freezing nuclei concentration
 !
@@ -522,7 +522,7 @@ CALL RAIN_ICE_OLD_NUCLEATION(D, CST, ICEP, COUNT(ZT(D%NIB:D%NIE,D%NKTB:D%NKTE)<C
                              OCND2, LMODICEDEP, KRR, PTSTEP, &
                              PTHT, PPABST, PEXNREF, PICLDFR, PRHODJ, PRHODREF, &
                              PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
-                             OAERONRT, PIFNNC, &
+                             OAERONRT, OAEIFN, PIFNNC, &
                              PTHS, PRVS, PRIS, PCIT, &
                              PICENU, ZT, ZZZZ, &
                              PRHT)
