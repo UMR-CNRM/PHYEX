@@ -1545,8 +1545,9 @@ DO JK=1,IKT
 !
 !*      1.3 saturation  mixing ratio at t
 !
+!YS Added protection (AROME 2024-03-12 crashs)
     ZRVSAT(JIJ,JK) =  ZRVSAT(JIJ,JK) &
-    * ZEPS / ( PPABST(JIJ,JK) - ZRVSAT(JIJ,JK) )
+    * ZEPS / MAX(1.E-3, PPABST(JIJ,JK) - ZRVSAT(JIJ,JK) )
 !
 !*      1.4 compute the saturation mixing ratio derivative (rvs')
 !
