@@ -1486,8 +1486,9 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PAMOIST,PATHETA
 !
 !*      1.3 saturation  mixing ratio at t
 !
+!YS Added protection (AROME 2024-03-12 crashs)
   ZRVSAT(IIJB:IIJE,1:IKT) =  ZRVSAT(IIJB:IIJE,1:IKT) &
-                                    * ZEPS / ( PPABST(IIJB:IIJE,1:IKT) - ZRVSAT(IIJB:IIJE,1:IKT) )
+                             * ZEPS / MAX(1.E-3, PPABST(IIJB:IIJE,1:IKT) - ZRVSAT(IIJB:IIJE,1:IKT) )
 !
 !*      1.4 compute the saturation mixing ratio derivative (rvs')
 !
