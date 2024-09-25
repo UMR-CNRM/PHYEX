@@ -79,6 +79,7 @@
 USE MODD_CST
 USE MODD_CONVPAR
 USE MODD_CONVPAREXT
+USE MODD_DIMPHYEX
 !
 !
 IMPLICIT NONE
@@ -160,13 +161,18 @@ LOGICAL, DIMENSION(KLON) :: GWORK1, GWORK2, GWORK4
                                             ! work arrays
 LOGICAL, DIMENSION(KLON,KLEV) :: GWORK6     ! work array
 !
-!
+TYPE(DIMPHYEX_T) :: D
+TYPE(CONVPAR_T)  :: CONVPAR
+
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+
+#include "convect_condens.h"
+#include "convect_mixing_funct.h"
 !-------------------------------------------------------------------------------
 !
 !        0.3   Set loop bounds
 !              ---------------
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('CONVECT_UPDRAFT',0,ZHOOK_HANDLE)
 IKB = 1 + JCVEXB
 IKE = KLEV - JCVEXT
@@ -208,6 +214,12 @@ ZWORK6(:)  = 0.
 GWORK1(:)  = .FALSE.
 GWORK4(:)  = .FALSE.
 !
+CONVPAR%XTFRZ1=XTFRZ1
+CONVPAR%XTFRZ2=XTFRZ2
+D%NIT=KLON
+D%NIB=1
+D%NIE=KLON
+
 !
 !*       1.1    Compute undilute updraft theta_e for CAPE computations
 !               Bolton (1980) formula.
@@ -262,8 +274,8 @@ DO JK = MAX( IKB + 1, JKMIN ), IKE - 1
 !
     ZWORK1(:) = PURC(:,JK) + PURR(:,JK)
     ZWORK2(:) = PURI(:,JK) + PURS(:,JK)
-    CALL CONVECT_CONDENS( KLON, KICE, PPRES(:,JKP), PUTHL(:,JK), PURW(:,JK),&
-                          ZWORK1, ZWORK2, PZ(:,JKP), GWORK1, ZUT, ZURV,     &
+    CALL CONVECT_CONDENS( CST, D, CONVPAR, KICE, PPRES(:,JKP), PUTHL(:,JK), PURW(:,JK),&
+                          ZWORK1, ZWORK2, PZ(:,JKP), ZUT, ZURV,     &
                           PURC(:,JKP), PURI(:,JKP), ZLV, ZLS, ZCPH )
 !
 !
@@ -337,8 +349,8 @@ DO JK = MAX( IKB + 1, JKMIN ), IKE - 1
     ZWORK2(:) = ZMIXF(:) * PRW(:,JKP)                                      &
                      + ( 1. - ZMIXF(:) ) * PURW(:,JKP)  ! mixed r_w
 !
-    CALL CONVECT_CONDENS( KLON, KICE, PPRES(:,JKP), ZWORK1, ZWORK2,        &
-                          PURC(:,JKP), PURI(:,JKP), PZ(:,JKP), GWORK1, ZUT,&
+    CALL CONVECT_CONDENS( CST, D, CONVPAR, KICE, PPRES(:,JKP), ZWORK1, ZWORK2,        &
+                          PURC(:,JKP), PURI(:,JKP), PZ(:,JKP), ZUT,&
                           ZWORK3, ZWORK4, ZWORK5, ZLV, ZLS, ZCPH )
 !        put in enthalpy and r_w and get T r_c, r_i (ZUT, ZWORK4-5)
 !
@@ -357,7 +369,8 @@ DO JK = MAX( IKB + 1, JKMIN ), IKE - 1
 !                -------------------------------------------------------
 !
 !
-    CALL CONVECT_MIXING_FUNCT ( KLON, ZMIXF, 1, ZE2, ZD2 )
+CALL ABOR1('FIXME : THE INTERFACE IS WRONG')
+    !CALL CONVECT_MIXING_FUNCT ( KLON, ZMIXF, 1, ZE2, ZD2 )
 !       Note: routine MIXING_FUNCT returns fractional entrainm/detrainm. rates
 !
 ! ZWORK1(:) = XENTR * PMFLCL(:) * PDPRES(:,JKP) / XCRAD ! rate of env. inflow

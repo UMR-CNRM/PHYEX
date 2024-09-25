@@ -52,7 +52,7 @@ REAL,DIMENSION(JPSVMAX) :: XSVMIN ! minimum value for SV variables
 LOGICAL :: LINI_NSV(JPMODELMAX) = .FALSE. ! becomes True when routine INI_NSV is called
 !
 CHARACTER(LEN=NMNHNAMELGTMAX), DIMENSION(:,:), ALLOCATABLE :: CSV_CHEM_LIST_A !Names of all the chemical variables
-CHARACTER(LEN=6),              DIMENSION(:,:), ALLOCATABLE :: CSV_A           !Names of the scalar variables
+CHARACTER(LEN=16),             DIMENSION(:,:), ALLOCATABLE :: CSV_A           !Names of the scalar variables
 TYPE(tfieldmetadata), DIMENSION(:,:), ALLOCATABLE :: TSVLIST_A !Metadata of all the scalar variables
 
 INTEGER,DIMENSION(JPMODELMAX)::NSV_A = 0 ! total number of scalar variables
@@ -167,7 +167,7 @@ INTEGER,DIMENSION(JPMODELMAX)::NSV_SNWEND_A = 0 ! NSV_SNWBEG_A...NSV_SNWEND_A
 ! variables updated for the current model
 !
 CHARACTER(LEN=NMNHNAMELGTMAX), DIMENSION(:), POINTER :: CSV_CHEM_LIST !Names of all the chemical variables
-CHARACTER(LEN=6),              DIMENSION(:), POINTER :: CSV           !Names of the scalar variables
+CHARACTER(LEN=16),             DIMENSION(:), POINTER :: CSV           !Names of the scalar variables
 
 TYPE(tfieldmetadata), DIMENSION(:), POINTER :: TSVLIST !Metadata of all the scalar variables
 
@@ -289,7 +289,7 @@ REAL, POINTER, DIMENSION(:) :: XSVMIN => NULL()
 LOGICAL, POINTER :: LINI_NSV(:) => NULL()
 !
 CHARACTER(LEN=NMNHNAMELGTMAX), DIMENSION(:,:), POINTER :: CSV_CHEM_LIST_A => NULL()
-CHARACTER(LEN=6),              DIMENSION(:,:), POINTER :: CSV_A => NULL()
+CHARACTER(LEN=16),             DIMENSION(:,:), POINTER :: CSV_A => NULL()
 TYPE(tfieldmetadata), DIMENSION(:,:), POINTER :: TSVLIST_A => NULL()
 
 INTEGER, DIMENSION(:), POINTER ::NSV_A => NULL(), &
@@ -376,7 +376,7 @@ INTEGER, DIMENSION(:), POINTER ::NSV_A => NULL(), &
                                  NSV_SNWEND_A => NULL()
 
 CHARACTER(LEN=NMNHNAMELGTMAX), DIMENSION(:), POINTER :: CSV_CHEM_LIST => NULL()
-CHARACTER(LEN=6),              DIMENSION(:), POINTER :: CSV           => NULL()
+CHARACTER(LEN=16),             DIMENSION(:), POINTER :: CSV           => NULL()
 
 TYPE(tfieldmetadata), DIMENSION(:), POINTER :: TSVLIST => NULL()
 

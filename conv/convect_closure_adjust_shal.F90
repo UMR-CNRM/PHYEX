@@ -93,13 +93,13 @@ IKE  = D%NKT - CVPEXT%JCVEXT
 !               specified degree of stabilization
 !               ----------------------------------------------------
 !
-     DO JK = IKB + 1, IKE
-       DO JI = D%NIB, D%NIE
-          PUMF(JI,JK)  = PZUMF(JI,JK)   * PADJ(JI)
-          PUER(JI,JK)  = PZUER(JI,JK)   * PADJ(JI)
-          PUDR(JI,JK)  = PZUDR(JI,JK)   * PADJ(JI)
-        ENDDO
-     END DO
+DO JK = IKB + 1, IKE
+  DO JI = D%NIB, D%NIE
+     PUMF(JI,JK)  = PZUMF(JI,JK)   * PADJ(JI)
+     PUER(JI,JK)  = PZUER(JI,JK)   * PADJ(JI)
+     PUDR(JI,JK)  = PZUDR(JI,JK)   * PADJ(JI)
+   ENDDO
+END DO
 !
 IF (LHOOK) CALL DR_HOOK('CONVECT_CLOSURE_ADJUST_SHAL',1,ZHOOK_HANDLE)
 END SUBROUTINE CONVECT_CLOSURE_ADJUST_SHAL
