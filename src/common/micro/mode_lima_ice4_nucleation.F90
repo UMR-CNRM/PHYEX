@@ -66,8 +66,10 @@ IF (LHOOK) CALL DR_HOOK('LIMA_ICE4_NUCLEATION', 0, ZHOOK_HANDLE)!
 GNEGT(:)=PT(:)<CST%XTT .AND. PRVT(:)>XRTMIN(1)
 !$mnh_end_expand_where(JI=1:KSIZE)
 
+!$acc kernels
 ZUSW(:)=0.
 ZZW(:)=0.
+!$acc end kernels
 !$mnh_expand_where(JI=1:KSIZE)
 WHERE(GNEGT(:))
   ZZW(:)=ALOG(PT(:))
@@ -75,8 +77,9 @@ WHERE(GNEGT(:))
   ZZW(:)=EXP(CST%XALPI - CST%XBETAI/PT(:) - CST%XGAMI*ZZW(:))           ! es_i
 END WHERE
 !$mnh_end_expand_where(JI=1:KSIZE)
-
+!$acc kernels
 ZSSI(:)=0.
+!$acc end kernels
 !$mnh_expand_where(JI=1:KSIZE)
 WHERE(GNEGT(:))
   ZZW(:)=MIN(PPABST(:)/2., ZZW(:))             ! safety limitation
@@ -94,7 +97,9 @@ WHERE(GNEGT(:))
 END WHERE
 !$mnh_end_expand_where(JI=1:KSIZE)
 
+!$acc kernels
 ZZW(:)=0.
+!$acc loop independent
 DO JI=1,KSIZE
   IF(GNEGT(JI)) THEN
     IF(PT(JI)<CST%XTT-5.0 .AND. ZSSI(JI)>0.0) THEN
@@ -105,14 +110,16 @@ DO JI=1,KSIZE
     ENDIF
   ENDIF
 ENDDO
+!$acc end kernels
 !$mnh_expand_where(JI=1:KSIZE)
 WHERE(GNEGT(:))
   ZZW(:)=ZZW(:)-PCIT(:)
   ZZW(:)=MIN(ZZW(:), 50.E3) ! limitation provisoire a 50 l^-1
 END WHERE
 !$mnh_end_expand_where(JI=1:KSIZE)
-
+!$acc kernels
 PRVHENI_MR(:)=0.
+!$acc end kernels
 !$mnh_expand_where(JI=1:KSIZE)
 WHERE(GNEGT(:))
   !
@@ -124,7 +131,9 @@ END WHERE
 !$mnh_end_expand_where(JI=1:KSIZE)
 !Limitation due to 0 crossing of temperature
 IF(LFEEDBACKT) THEN
+!$acc kernels
   ZW(:)=0.
+!$acc end kernels
   !$mnh_expand_where(JI=1:KSIZE)
   WHERE(GNEGT(:))
     ZW(:)=MIN(PRVHENI_MR(:), &
