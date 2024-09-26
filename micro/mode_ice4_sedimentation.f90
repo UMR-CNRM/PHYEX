@@ -164,6 +164,8 @@ IF (BUCONF%LBUDGET_SV .AND. OELEC) THEN
 END IF
 !
 IF(PARAMI%CSEDIM=='STAT') THEN
+!$acc kernels
+!$acc loop independent collapse(2)
   DO JK = IKTB,IKTE
     DO JIJ = IIJB,IIJE
       ZRCT(JIJ,JK)=PRCS(JIJ,JK)*PTSTEP
@@ -174,6 +176,7 @@ IF(PARAMI%CSEDIM=='STAT') THEN
       IF (KRR==7) ZRHT(JIJ,JK)=PRHS(JIJ,JK)*PTSTEP
     ENDDO
   ENDDO
+!$acc end kernels
   CALL ICE4_SEDIMENTATION_STAT(D, CST, ICEP, ICED, PARAMI, &
                               &PTSTEP, KRR, PDZZ, &
                               &PRHODREF, PPABST, PTHT, PT, PRHODJ, &
@@ -182,7 +185,9 @@ IF(PARAMI%CSEDIM=='STAT') THEN
                               &PINPRC, PINPRR, ZINPRI, PINPRS, PINPRG, &
                               &PSEA=PSEA, PTOWN=PTOWN, &
                               &PINPRH=PINPRH, PRHT=ZRHT, PRHS=PRHS, PFPR=PFPR)
+!$acc kernels
   PINPRS(:) = PINPRS(:) + ZINPRI(:)
+!$acc end kernels
   !No negativity correction here as we apply sedimentation on PR.S*PTSTEP variables
 ELSEIF(PARAMI%CSEDIM=='SPLI') THEN
   CALL ICE4_SEDIMENTATION_SPLIT(D, CST, ICEP, ICED, PARAMI, ELECP, ELECD, &
@@ -195,7 +200,9 @@ ELSEIF(PARAMI%CSEDIM=='SPLI') THEN
                                &PSEA=PSEA, PTOWN=PTOWN, &
                                &PINPRH=PINPRH, PRHT=PRHT, PRHS=PRHS, PFPR=PFPR, &
                                &PQHT=PQHT, PQHS=PQHS)
+!$acc kernels
   PINPRS(:) = PINPRS(:) + ZINPRI(:)
+!$acc end kernels
   !We correct negativities with conservation
   !SPLI algorith uses a time-splitting. Inside the loop a temporary m.r. is used.
   !   It is initialized with the m.r. at T and is modified by two tendencies:
