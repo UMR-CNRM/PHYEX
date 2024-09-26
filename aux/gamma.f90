@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2022 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -10,7 +10,6 @@
 !
 !     ###########################################
       PURE FUNCTION GAMMA_X0D(PX)  RESULT(PGAMMA)
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###########################################
 !
 !
@@ -71,8 +70,6 @@ INTEGER                              :: JJ ! Loop index
 REAL                                 :: ZSER,ZSTP,ZTMP,ZX,ZY,ZCOEF(6)
 REAL                                 :: ZPI
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-IF (LHOOK) CALL DR_HOOK('GAMMA_X0D',0,ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------
 !
 !*       1. SOME CONSTANTS
@@ -137,7 +134,6 @@ END FUNCTION GAMMA_X0D
 !
 !     ###########################################
       PURE FUNCTION GAMMA_X1D(PX)  RESULT(PGAMMA)
-      USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 !     ###########################################
 !
 !
@@ -197,8 +193,6 @@ REAL, DIMENSION(SIZE(PX))            :: ZSER,ZSTP,ZTMP,ZX,ZY
 REAL                                 :: ZCOEF(6)
 REAL                                 :: ZPI
 !
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-IF (LHOOK) CALL DR_HOOK('GAMMA_X1D',0,ZHOOK_HANDLE)
 !-------------------------------------------------------------------------------
 !
 !*       1. SOME CONSTANTS
