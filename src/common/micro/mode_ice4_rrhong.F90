@@ -60,6 +60,8 @@ IF (LHOOK) CALL DR_HOOK('ICE4_RRHONG',0,ZHOOK_HANDLE)
 !
 !*       3.3     compute the spontaneous freezing source: RRHONG
 !
+!$acc kernels
+!$acc loop independent
 DO JL=1, KSIZE
   IF(PT(JL)<CST%XTT-35.0 .AND. PRRT(JL)>ICED%XRTMIN(3) .AND. LDCOMPUTE(JL)) THEN
     PRRHONG_MR(JL)=PRRT(JL)
@@ -71,6 +73,7 @@ DO JL=1, KSIZE
     PRRHONG_MR(JL)=0.
   ENDIF
 ENDDO
+!$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('ICE4_RRHONG', 1, ZHOOK_HANDLE)
 !
