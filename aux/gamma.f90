@@ -1,19 +1,17 @@
-!MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2022 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
-!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-!########################
-!
 !--------------------------------------------------------------------------
 !
 !
 !*       1.   FUNCTION GAMMA FOR SCALAR VARIABLE
 ! 
 !
-!     ######################################
-      FUNCTION GAMMA_X0D(PX)  RESULT(PGAMMA)
+!     ###########################################
+      PURE FUNCTION GAMMA_X0D(PX)  RESULT(PGAMMA)
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
-!     ######################################
+!     ###########################################
 !
 !
 !!****  *GAMMA * -  Gamma  function
@@ -48,11 +46,19 @@
 !!    -------------
 !!      Original     7/11/95
 !!      C. Barthe    9/11/09  add a function for 1D arguments
+!  P. Wautelet 22/06/2022: GAMMA_X0D is now declared PURE
 !
 !*       0. DECLARATIONS
 !           ------------
 !
+#if defined(MNH_BITREP) || defined(MNH_BITREP_OMP)
+USE MODI_BITREP
+#endif
+!
 IMPLICIT NONE
+
+!$acc routine seq
+
 !
 !*       0.1 declarations of arguments and result
 !
@@ -89,12 +95,16 @@ ZPI = 3.141592654
 !
 IF (PX .LT. 0.) THEN
   ZX = 1. - PX
-ELSE 
+ELSE
   ZX = PX
 END IF
 ZY = ZX
 ZTMP =  ZX + 5.5
+#if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
 ZTMP = (ZX + 0.5) * ALOG(ZTMP) - ZTMP
+#else
+ZTMP = (ZX + 0.5) * BR_LOG(ZTMP) - ZTMP
+#endif
 ZSER = 1.000000000190015
 !
 DO JJ = 1, 6
@@ -103,11 +113,18 @@ DO JJ = 1, 6
 END DO
 !
 IF (PX .LT. 0.) THEN
+#if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
   PGAMMA = ZPI / SIN(ZPI*PX) / EXP(ZTMP + ALOG(ZSTP*ZSER/ZX))
+#else
+  PGAMMA = ZPI / SIN(ZPI*PX) / BR_EXP(ZTMP + BR_LOG(ZSTP*ZSER/ZX))
+#endif
 ELSE
+#if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
   PGAMMA = EXP(ZTMP + ALOG(ZSTP*ZSER/ZX))
+#else
+  PGAMMA = BR_EXP(ZTMP + BR_LOG(ZSTP*ZSER/ZX))
+#endif
 END IF
-IF (LHOOK) CALL DR_HOOK('GAMMA_X0D',1,ZHOOK_HANDLE)
 RETURN
 !
 END FUNCTION GAMMA_X0D
@@ -118,10 +135,10 @@ END FUNCTION GAMMA_X0D
 !*       1.   FUNCTION GAMMA FOR 1D ARRAY
 ! 
 !
-!     ######################################
-      FUNCTION GAMMA_X1D(PX)  RESULT(PGAMMA)
+!     ###########################################
+      PURE FUNCTION GAMMA_X1D(PX)  RESULT(PGAMMA)
       USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
-!     ######################################
+!     ###########################################
 !
 !
 !!****  *GAMMA * -  Gamma  function
@@ -155,11 +172,16 @@ END FUNCTION GAMMA_X0D
 !!    MODIFICATIONS
 !!    -------------
 !!      Original     7/11/95
+!  P. Wautelet 22/06/2022: GAMMA_X1D is now declared PURE
 !!
 !-------------------------------------------------------------------------------
 !
 !*       0. DECLARATIONS
 !           ------------
+!
+#if defined(MNH_BITREP) || defined(MNH_BITREP_OMP)
+USE MODI_BITREP
+#endif
 !
 IMPLICIT NONE
 !
@@ -171,8 +193,8 @@ REAL, DIMENSION(SIZE(PX))            :: PGAMMA
 !*       0.2 declarations of local variables
 !
 INTEGER                              :: JJ ! Loop index
-INTEGER                              :: JI ! Loop index
-REAL                                 :: ZSER, ZSTP, ZTMP, ZX, ZY, ZCOEF(6)
+REAL, DIMENSION(SIZE(PX))            :: ZSER,ZSTP,ZTMP,ZX,ZY
+REAL                                 :: ZCOEF(6)
 REAL                                 :: ZPI
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
@@ -191,35 +213,32 @@ ZCOEF(6) = -0.5395239384953E-5
 ZSTP     =  2.5066282746310005
 !
 ZPI = 3.141592654
+ZX(:) = PX(:)
+WHERE ( PX(:)<0.0 )
+  ZX(:) = 1.- PX(:)
+END WHERE
+ZY(:) = ZX(:)
+ZTMP(:) =  ZX(:) + 5.5
+#if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
+ZTMP(:) = (ZX(:) + 0.5)*ALOG(ZTMP(:)) - ZTMP(:)
+#else
+ZTMP(:) = (ZX(:) + 0.5)*BR_LOG(ZTMP(:)) - ZTMP(:)
+#endif
+ZSER(:) = 1.000000000190015
 !
-!-------------------------------------------------------------------------------
-!
-!*       2. COMPUTE GAMMA
-!           -------------
-!  
-DO JI = 1, SIZE(PX)
-  IF (PX(JI) .LT. 0.) THEN
-    ZX = 1. - PX(JI)
-  ELSE 
-    ZX = PX(JI)
-  END IF
-  ZY = ZX
-  ZTMP =  ZX + 5.5
-  ZTMP = (ZX + 0.5) * ALOG(ZTMP) - ZTMP
-  ZSER = 1.000000000190015
-!
-  DO JJ = 1, 6
-    ZY = ZY + 1.0
-    ZSER = ZSER + ZCOEF(JJ) / ZY
-  END DO
-!
-  IF (PX(JI) .LT. 0.) THEN
-    PGAMMA = ZPI / SIN(ZPI*PX(JI)) / EXP(ZTMP + ALOG(ZSTP*ZSER/ZX))
-  ELSE
-    PGAMMA = EXP(ZTMP + ALOG(ZSTP*ZSER/ZX))
-  END IF
+DO JJ = 1 , 6
+  ZY(:) = ZY(:) + 1.0
+  ZSER(:) = ZSER(:) + ZCOEF(JJ)/ZY(:)
 END DO
-IF (LHOOK) CALL DR_HOOK('GAMMA_X1D',1,ZHOOK_HANDLE)
+!
+#if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
+PGAMMA(:) = EXP( ZTMP(:) + ALOG( ZSTP*ZSER(:)/ZX(:) ) )
+#else
+PGAMMA(:) = BR_EXP( ZTMP(:) + BR_LOG( ZSTP*ZSER(:)/ZX(:) ) )
+#endif
+WHERE ( PX(:)<0.0 )
+  PGAMMA(:) = ZPI/SIN(ZPI*PX(:))/PGAMMA(:)
+END WHERE
 RETURN
 !
 END FUNCTION GAMMA_X1D
