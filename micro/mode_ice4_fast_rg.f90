@@ -195,6 +195,7 @@ IF(.NOT. LDSOFT) THEN
                        &IGDRY, &
                        &ICEP%XKER_SDRYG(:,:), ZZW(:))
   IF(IGDRY>0)THEN
+!$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GDRY(1:KSIZE))
 #ifdef REPRO48
@@ -217,6 +218,7 @@ IF(.NOT. LDSOFT) THEN
       PRG_TEND(1:KSIZE, IRSDRYG)=PRG_TEND(1:KSIZE, IRSWETG)*ICEP%XCOLSG*EXP(ICEP%XCOLEXSG*(PT(1:KSIZE)-CST%XTT))
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
+!$acc end kernels
   ENDIF
 ENDIF
 !
@@ -241,6 +243,7 @@ IF(.NOT. LDSOFT) THEN
                        &IGDRY, &
                        &ICEP%XKER_RDRYG(:,:), ZZW(:))
   IF(IGDRY>0) THEN
+!$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GDRY(1:KSIZE))
       PRG_TEND(1:KSIZE, IRRDRYG) = ICEP%XFRDRYG*ZZW(1:KSIZE)                    & ! RRDRYG
@@ -251,6 +254,7 @@ IF(.NOT. LDSOFT) THEN
                        ICEP%XLBRDRYG3/(               PLBDAR(1:KSIZE)**2) )
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
+!$acc end kernels
   ENDIF
 ENDIF
 
@@ -316,6 +320,7 @@ ENDDO
 ! Graupel can be produced by other processes instantaneously (inducing a mixing ratio change, PRGSI_MR) or
 ! as a tendency (PRWETGH)
 IF(KRR==7) THEN
+!$acc kernels
   !$mnh_expand_where(JL=1:KSIZE)
   WHERE(LDWETG(1:KSIZE))
     !assume a linear percent of conversion of produced graupel into hail
@@ -327,6 +332,7 @@ IF(KRR==7) THEN
     PRWETGH_MR(1:KSIZE)=0.
   END WHERE
   !$mnh_end_expand_where(JL=1:KSIZE)
+!$acc end kernels
 ELSE
 !$acc kernels
   PRWETGH(:)=0.

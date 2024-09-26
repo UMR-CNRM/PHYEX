@@ -62,14 +62,17 @@ INTEGER :: JI
 !
 IF (LHOOK) CALL DR_HOOK('LIMA_ICE4_NUCLEATION', 0, ZHOOK_HANDLE)!
 !
+!$acc kernels
 !$mnh_expand_where(JI=1:KSIZE)
 GNEGT(:)=PT(:)<CST%XTT .AND. PRVT(:)>XRTMIN(1)
 !$mnh_end_expand_where(JI=1:KSIZE)
+!$acc end kernels
 
 !$acc kernels
 ZUSW(:)=0.
 ZZW(:)=0.
 !$acc end kernels
+!$acc kernels
 !$mnh_expand_where(JI=1:KSIZE)
 WHERE(GNEGT(:))
   ZZW(:)=ALOG(PT(:))
@@ -77,9 +80,11 @@ WHERE(GNEGT(:))
   ZZW(:)=EXP(CST%XALPI - CST%XBETAI/PT(:) - CST%XGAMI*ZZW(:))           ! es_i
 END WHERE
 !$mnh_end_expand_where(JI=1:KSIZE)
+!$acc end kernels
 !$acc kernels
 ZSSI(:)=0.
 !$acc end kernels
+!$acc kernels
 !$mnh_expand_where(JI=1:KSIZE)
 WHERE(GNEGT(:))
   ZZW(:)=MIN(PPABST(:)/2., ZZW(:))             ! safety limitation
@@ -96,6 +101,7 @@ WHERE(GNEGT(:))
   ZSSI(:)=MIN(ZSSI(:), ZUSW(:)) ! limitation of SSi according to SSw=0
 END WHERE
 !$mnh_end_expand_where(JI=1:KSIZE)
+!$acc end kernels
 
 !$acc kernels
 ZZW(:)=0.
@@ -111,15 +117,18 @@ DO JI=1,KSIZE
   ENDIF
 ENDDO
 !$acc end kernels
+!$acc kernels
 !$mnh_expand_where(JI=1:KSIZE)
 WHERE(GNEGT(:))
   ZZW(:)=ZZW(:)-PCIT(:)
   ZZW(:)=MIN(ZZW(:), 50.E3) ! limitation provisoire a 50 l^-1
 END WHERE
 !$mnh_end_expand_where(JI=1:KSIZE)
+!$acc end kernels
 !$acc kernels
 PRVHENI_MR(:)=0.
 !$acc end kernels
+!$acc kernels
 !$mnh_expand_where(JI=1:KSIZE)
 WHERE(GNEGT(:))
   !
@@ -129,11 +138,13 @@ WHERE(GNEGT(:))
   PRVHENI_MR(:)=MIN(PRVT(:), PRVHENI_MR(:))
 END WHERE
 !$mnh_end_expand_where(JI=1:KSIZE)
+!$acc end kernels
 !Limitation due to 0 crossing of temperature
 IF(LFEEDBACKT) THEN
 !$acc kernels
   ZW(:)=0.
 !$acc end kernels
+!$acc kernels
   !$mnh_expand_where(JI=1:KSIZE)
   WHERE(GNEGT(:))
     ZW(:)=MIN(PRVHENI_MR(:), &
@@ -143,12 +154,15 @@ IF(LFEEDBACKT) THEN
   PRVHENI_MR(:)=PRVHENI_MR(:)*ZW(:)
   ZZW(:)=ZZW(:)*ZW(:)
   !$mnh_end_expand_where(JI=1:KSIZE)
+!$acc end kernels
 ENDIF
+!$acc kernels
 !$mnh_expand_where(JI=1:KSIZE)
 WHERE(GNEGT(:))
   PCIT(:)=MAX(ZZW(:)+PCIT(:), PCIT(:))
 END WHERE
 !$mnh_end_expand_where(JI=1:KSIZE)
+!$acc end kernels
 !
 IF (LHOOK) CALL DR_HOOK('LIMA_ICE4_NUCLEATION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_ICE4_NUCLEATION
