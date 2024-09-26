@@ -154,6 +154,7 @@ IF(.NOT. LDSOFT) THEN
                        &IGWET, &
                        &ICEP%XKER_SWETH(:,:), ZZW(:))
   IF(IGWET>0)THEN
+!$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GWET(1:KSIZE))
 #ifdef REPRO48
@@ -174,6 +175,7 @@ IF(.NOT. LDSOFT) THEN
       PRH_TEND(1:KSIZE, IRSDRYH)=PRH_TEND(1:KSIZE, IRSWETH)*(ICEP%XCOLSH*EXP(ICEP%XCOLEXSH*(PT(1:KSIZE)-CST%XTT)))
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
+!$acc end kernels
   ENDIF
 ENDIF
 !
@@ -198,6 +200,7 @@ IF(.NOT. LDSOFT) THEN
                        &IGWET, &
                        &ICEP%XKER_GWETH(:,:), ZZW(:))
   IF(IGWET>0)THEN
+!$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GWET(1:KSIZE))
       PRH_TEND(1:KSIZE, IRGWETH)=ICEP%XFGWETH*ZZW(1:KSIZE)                       & ! RGWETH
@@ -213,6 +216,7 @@ IF(.NOT. LDSOFT) THEN
       PRH_TEND(1:KSIZE, IRGDRYH)=PRH_TEND(1:KSIZE, IRGDRYH)*(ICEP%XCOLGH*EXP(ICEP%XCOLEXGH*(PT(1:KSIZE)-CST%XTT)))
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
+!$acc end kernels
   END IF
 ENDIF
 !
@@ -236,6 +240,7 @@ IF(.NOT. LDSOFT) THEN
                        &IGWET, &
                        &ICEP%XKER_RWETH(:,:), ZZW(:))
   IF(IGWET>0)THEN
+!$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GWET(1:KSIZE))
       PRH_TEND(1:KSIZE, IRRWETH) = ICEP%XFRWETH*ZZW(1:KSIZE)                    & ! RRWETH
@@ -246,6 +251,7 @@ IF(.NOT. LDSOFT) THEN
                        ICEP%XLBRWETH3/(               PLBDAR(1:KSIZE)**2) )
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
+!$acc end kernels
   ENDIF
 ENDIF
 !
@@ -313,6 +319,7 @@ ENDDO
 !$acc end kernels
 
 IF(PARAMI%LCONVHG)THEN
+!$acc kernels
   !$mnh_expand_where(JL=1:KSIZE)
   WHERE(LLDRYH(1:KSIZE))
     ZRDRYHG(1:KSIZE)=ZRDRYH_INIT(1:KSIZE)*ZRWETH_INIT(1:KSIZE)/(ZRDRYH_INIT(1:KSIZE)+ZRWETH_INIT(1:KSIZE))
@@ -320,6 +327,7 @@ IF(PARAMI%LCONVHG)THEN
     ZRDRYHG(1:KSIZE)=0.
   END WHERE
   !$mnh_end_expand_where(JL=1:KSIZE)
+!$acc end kernels
 ELSE
 !$acc kernels
   ZRDRYHG(:)=0.

@@ -170,6 +170,7 @@ IF(.NOT. LDSOFT) THEN
     !
     !        5.1.4  riming of the small sized aggregates
     !
+!$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE (GRIM(1:KSIZE))
 #ifdef REPRO48
@@ -185,10 +186,12 @@ IF(.NOT. LDSOFT) THEN
 #endif    
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
+!$acc end kernels
     !
     !        5.1.6  riming-conversion of the large sized aggregates into graupeln
     !
     !
+!$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GRIM(1:KSIZE))
 #ifdef REPRO48
@@ -204,9 +207,10 @@ IF(.NOT. LDSOFT) THEN
 #endif    
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
-
+!$acc end kernels
     IF(PARAMI%CSNOWRIMING=='M90 ')THEN
       !Murakami 1990
+!$acc kernels
       !$mnh_expand_where(JL=1:KSIZE)
       WHERE(GRIM(1:KSIZE))
         ZZW(1:KSIZE) = PRS_TEND(1:KSIZE, IRCRIMS) - PRS_TEND(1:KSIZE, IRCRIMSS) ! RCRIMSG
@@ -230,6 +234,7 @@ IF(.NOT. LDSOFT) THEN
 #endif
       END WHERE
       !$mnh_end_expand_where(JL=1:KSIZE)
+!$acc end kernels
     ELSE
 !$acc kernels
       PRS_TEND(:, IRSRIMCG)=0.
@@ -289,6 +294,7 @@ IF(.NOT. LDSOFT) THEN
   IF(IGACC>0)THEN
     !        5.2.4  raindrop accretion on the small sized aggregates
     !
+!$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GACC(1:KSIZE))
 #ifdef REPRO48
@@ -307,16 +313,20 @@ IF(.NOT. LDSOFT) THEN
       PRS_TEND(1:KSIZE, IRRACCSS) =ZZW1(1:KSIZE)*ZZW(1:KSIZE)
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
+!$acc end kernels
     !
+!$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GACC(1:KSIZE))
       PRS_TEND(1:KSIZE, IRRACCS) = ZZW2(1:KSIZE)*ZZW(1:KSIZE)
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
+!$acc end kernels
     !
     !        5.2.6  raindrop accretion-conversion of the large sized aggregates
     !               into graupeln
     !
+!$acc kernels
     !$mnh_expand_where(JL=1:KSIZE)
     WHERE(GACC(1:KSIZE))
 #ifdef REPRO48
@@ -334,6 +344,7 @@ IF(.NOT. LDSOFT) THEN
 #endif
     END WHERE
     !$mnh_end_expand_where(JL=1:KSIZE)
+!$acc end kernels
   ENDIF
 ENDIF
 !
