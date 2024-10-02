@@ -187,7 +187,7 @@ REAL, DIMENSION(MERGE(KPROMA,0,OELEC)) :: ZLATHAM_IAGGS
 INTEGER, DIMENSION(KPROMA) :: I1,I2 ! Used to replace the COUNT and PACK intrinsics on variables
 INTEGER, DIMENSION(KSIZE) :: I1TOT, I2TOT ! Used to replace the COUNT and PACK intrinsics
 !
-INTEGER :: IC, JMICRO
+INTEGER :: IC, JMICRO, IDX
 LOGICAL :: LLSIGMA_RC, LL_AUCV_ADJU
 !
 !-------------------------------------------------------------------------------
@@ -233,7 +233,6 @@ IF(PARAMI%LPACK_MICRO) THEN
     IC=0
     ISTK=IKTB
     ISTIJ=IIJB
-  
     DO JMICRO=1,KSIZE,KPROMA
   
       IMICRO=MIN(KPROMA,KSIZE-JMICRO+1)
@@ -243,55 +242,61 @@ IF(PARAMI%LPACK_MICRO) THEN
       !
   
       ! Setup packing parameters
+!$acc kernels
+!$acc loop seq
       OUTER_LOOP: DO JK = ISTK, IKTE
-        IF (ANY(ODMICRO(:,JK))) THEN
-          DO JIJ = ISTIJ, IIJE
+        IF (ANY(ODMICRO(:,JK))) THEN !This test is useless ? => tested 4 lignes further
+          !$acc loop gang vector independent
+	  DO JIJ = ISTIJ, IIJE
             IF (ODMICRO(JIJ,JK)) THEN
+	    !$acc atomic capture
               IC=IC+1
-              LLMICRO(IC)=.TRUE.
+              IDX=IC !change of variable to use acc atomic capture (IC is shared)
+             !$acc end atomic
+              LLMICRO(IDX)=.TRUE.
               ! Initialization of variables in packed format :
-              ZVART(IC, ITH)=PWR(JIJ, JK, ITH)
-              ZVART(IC, IRV)=PWR(JIJ, JK, IRV)
-              ZVART(IC, IRC)=PWR(JIJ, JK, IRC)
-              ZVART(IC, IRR)=PWR(JIJ, JK, IRR)
-              ZVART(IC, IRI)=PWR(JIJ, JK, IRI)
-              ZVART(IC, IRS)=PWR(JIJ, JK, IRS)
-              ZVART(IC, IRG)=PWR(JIJ, JK, IRG)
+              ZVART(IDX, ITH)=PWR(JIJ, JK, ITH)
+              ZVART(IDX, IRV)=PWR(JIJ, JK, IRV)
+              ZVART(IDX, IRC)=PWR(JIJ, JK, IRC)
+              ZVART(IDX, IRR)=PWR(JIJ, JK, IRR)
+              ZVART(IDX, IRI)=PWR(JIJ, JK, IRI)
+              ZVART(IDX, IRS)=PWR(JIJ, JK, IRS)
+              ZVART(IDX, IRG)=PWR(JIJ, JK, IRG)
               IF (KRR==7) THEN
-                ZVART(IC, IRH)=PWR(JIJ, JK, IRH)
+                ZVART(IDX, IRH)=PWR(JIJ, JK, IRH)
               ENDIF
               IF (GEXT_TEND) THEN
                 !The th tendency is not related to a mixing ratio change, there is no exn/exnref issue here
-                ZEXTPK(IC, ITH)=PTHS(JIJ, JK)
-                ZEXTPK(IC, IRV)=PRVS(JIJ, JK)
-                ZEXTPK(IC, IRC)=PRCS(JIJ, JK)
-                ZEXTPK(IC, IRR)=PRRS(JIJ, JK)
-                ZEXTPK(IC, IRI)=PRIS(JIJ, JK)
-                ZEXTPK(IC, IRS)=PRSS(JIJ, JK)
-                ZEXTPK(IC, IRG)=PRGS(JIJ, JK)
+                ZEXTPK(IDX, ITH)=PTHS(JIJ, JK)
+                ZEXTPK(IDX, IRV)=PRVS(JIJ, JK)
+                ZEXTPK(IDX, IRC)=PRCS(JIJ, JK)
+                ZEXTPK(IDX, IRR)=PRRS(JIJ, JK)
+                ZEXTPK(IDX, IRI)=PRIS(JIJ, JK)
+                ZEXTPK(IDX, IRS)=PRSS(JIJ, JK)
+                ZEXTPK(IDX, IRG)=PRGS(JIJ, JK)
                 IF (KRR==7) THEN
-                  ZEXTPK(IC, IRH)=PRHS(JIJ, JK)
+                  ZEXTPK(IDX, IRH)=PRHS(JIJ, JK)
                 ENDIF
               ENDIF
-              ZCIT       (IC)=PCIT    (JIJ, JK)
-              ZCF        (IC)=PCLDFR  (JIJ, JK)
-              ZRHODREF   (IC)=PRHODREF(JIJ, JK)
-              ZPRES      (IC)=PPABST  (JIJ, JK)
-              ZEXN       (IC)=PEXN    (JIJ, JK)
+              ZCIT       (IDX)=PCIT    (JIJ, JK)
+              ZCF        (IDX)=PCLDFR  (JIJ, JK)
+              ZRHODREF   (IDX)=PRHODREF(JIJ, JK)
+              ZPRES      (IDX)=PPABST  (JIJ, JK)
+              ZEXN       (IDX)=PEXN    (JIJ, JK)
               IF(LLSIGMA_RC) THEN
-                ZSIGMA_RC(IC)=PSIGS   (JIJ, JK)
+                ZSIGMA_RC(IDX)=PSIGS   (JIJ, JK)
               ENDIF
               IF (LL_AUCV_ADJU) THEN
-                ZHLC_HCF(IC) = PHLC_HCF(JIJ, JK)
-                ZHLC_HRC(IC) = PHLC_HRC(JIJ, JK)
-                ZHLI_HCF(IC) = PHLI_HCF(JIJ, JK)
-                ZHLI_HRI(IC) = PHLI_HRI(JIJ, JK)
+                ZHLC_HCF(IDX) = PHLC_HCF(JIJ, JK)
+                ZHLC_HRC(IDX) = PHLC_HRC(JIJ, JK)
+                ZHLI_HCF(IDX) = PHLI_HCF(JIJ, JK)
+                ZHLI_HRI(IDX) = PHLI_HRI(JIJ, JK)
               ENDIF
               ZRAINFR(IC)=PRAINFR(JIJ, JK)
               IF (OELEC) ZLATHAM_IAGGS(IC) = PLATHAM_IAGGS(JIJ, JK)
               ! Save indices for later usages:
-              I1(IC) = JIJ
-              I2(IC) = JK
+              I1(IDX) = JIJ
+              I2(IDX) = JK
               IF(BUCONF%LBU_ENABLE .OR. OSAVE_MICRO) THEN
                 I1TOT(JMICRO+IC-1)=JIJ
                 I2TOT(JMICRO+IC-1)=JK
@@ -300,18 +305,24 @@ IF(PARAMI%LPACK_MICRO) THEN
                 ! the end of the chunk has been reached, then reset the starting index :
                 ISTIJ=JIJ+1
                 IF (ISTIJ <= IIJE) THEN
+	    !$acc atomic write
                   ISTK=JK
+            !$acc end atomic
                 ELSE
                   ! end of line, restart from 1 and increment upper loop
                   ISTIJ=D%NIJB
+	    !$acc atomic write
                   ISTK=JK+1
+            !$acc end atomic
                   IF (ISTK > IKTE) THEN
                     ! end of line, restart from 1
+	    !$acc atomic write
                     ISTK=IKTB
+            !$acc end atomic
                   ENDIF
                 ENDIF
-                IC=0
-                EXIT OUTER_LOOP
+            !    IC=0 ! this re-init is useless, because we leave the loop
+             !  EXIT OUTER_LOOP ! This must be suppressed for openACC use
               ENDIF
             ENDIF
           ENDDO
@@ -319,7 +330,7 @@ IF(PARAMI%LPACK_MICRO) THEN
         ! restart inner loop on JIJ :
         ISTIJ=IIJB
       ENDDO OUTER_LOOP
-  
+  !$acc end kernels
       !
       !*       5.     TENDENCIES COMPUTATION
       !               ----------------------
@@ -340,6 +351,8 @@ IF(PARAMI%LPACK_MICRO) THEN
       !*       6.     UNPACKING
       !               ---------
       !
+!$acc kernels
+!$acc loop independent
       DO JL=1, IMICRO
         PCIT  (I1(JL),I2(JL))=ZCIT   (JL)
         IF(PARAMI%LWARM) THEN
@@ -356,12 +369,16 @@ IF(PARAMI%LPACK_MICRO) THEN
         ENDIF
         PRAINFR(I1(JL),I2(JL))=ZRAINFR(JL)
       ENDDO
+!$acc end kernels 
       IF(BUCONF%LBU_ENABLE .OR. OSAVE_MICRO) THEN
+!$acc kernels
+!$acc loop independent collapse(2)
         DO JV=1, IBUNUM-IBUNUM_EXTRA
           DO JL=1, IMICRO
             ZBU_PACK(JMICRO+JL-1, JV) = ZBU_SUM(JL, JV)
           ENDDO
         ENDDO
+!$acc end kernels
       ENDIF
   
   
