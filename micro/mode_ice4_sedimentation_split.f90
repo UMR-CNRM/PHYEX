@@ -766,13 +766,13 @@ DO WHILE (ZANYREMAINT)
   ENDIF
 !$acc kernels
   ZMAX_TSTEP(:) = ZREMAINT(:)
-!QR: gives wrong result with acc loop independent.
-! Tested with smaller kernels: execution crashes
+!QR: need of reversed order of loop (JIJ>JK) to avoid bug on Nvidia reduction of ZMAX_TSTEP
+! Tested with smaller kernels: execution crashes with
 ! call to cuEventSynchronize returned error 700: Illegal address
-! acc loop independent collapse(2)
-! TODO: NEXT DO BLOCS ARE SEQUENTIAL FOR NOW
-  DO JK = IKTB,IKTE
-    DO JIJ = IIJB,IIJE
+!$acc loop independent
+  DO JIJ = IIJB,IIJE
+!$acc loop seq
+    DO JK = IKTB,IKTE
       IF(PRXT(JIJ,JK)>ICED%XRTMIN(KSPE) .AND. ZWSED(JIJ, JK)>1.E-20 .AND. ZREMAINT(JIJ)>0.) THEN
         ZMAX_TSTEP(JIJ) = MIN(ZMAX_TSTEP(JIJ), PARAMI%XSPLIT_MAXCFL * PRHODREF(JIJ, JK) * &
                         & PRXT(JIJ, JK) * PDZZ(JIJ, JK) / ZWSED(JIJ, JK))
