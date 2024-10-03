@@ -392,6 +392,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
     rm -rf src
   fi
   . arch.env
+  [ -z ${PYFT_OPTS+x} ] && PYFT_OPTS=''
   export PYFT_OPTS
   
   # Populate the source directory with (modified) PHYEX source code
@@ -411,20 +412,28 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
   fi
   PHYEXTOOLSDIR="$DIR/../../../tools" #if run from within a PHYEX repository
   UPDATEDPATH=$PATH
+
+  #Temporary file for the description tree
+  descTree=${TMPDIR:-/tmp}/descTree_$$
+  trap "\rm -f $descTree" EXIT
+
   which prep_code.sh > /dev/null || export UPDATEDPATH=$PHYEXTOOLSDIR:$PATH
   subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s support -s progs"
   if [ "$fromdir" == '' ]; then
     echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
     if [[ $commit == testprogs${separator}* || $commit == offline${separator}* ]]; then
-      PATH=$UPDATEDPATH prep_code.sh --pyft_opts_env PYFT_OPTS -c $commit src #This commit is ready for inclusion
+      #This commit is ready for inclusion
+      PATH=$UPDATEDPATH prep_code.sh -c $commit src
     else
-      PATH=$UPDATEDPATH prep_code.sh --pyft_opts_env PYFT_OPTS -c $commit $expand_options $subs -m offline src
+      PATH=$UPDATEDPATH prep_code.sh --pyft_opts_env PYFT_OPTS -c $commit $expand_options $subs \
+                                     -m offline src --useParallelPyft -- --tree . --descTree $descTree
     fi
   else
     echo "Copy $fromdir"
     mkdir src
     scp -q -r $fromdir/src src/
-    PATH=$UPDATEDPATH prep_code.sh --pyft_opts_env PYFT_OPTS $expand_options $subs -m offline src
+    PATH=$UPDATEDPATH prep_code.sh --pyft_opts_env PYFT_OPTS $expand_options $subs \
+                                   -m offline src --useParallelPyft -- --tree . --descTree $descTree
   fi
   
   # Add some code
@@ -445,8 +454,8 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
     pybinding.py micro/lima.F90 sub:LIMA pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
   else
     cat <<....EOF > pyphyex.F90
-    SUBROUTINE PYPHYEX
-    END SUBROUTINE PYPHYEX
+    SUBROUTINE PYPHYEXSUB
+    END SUBROUTINE PYPHYEXSUB
 ....EOF
   fi
   ln -s ../../fiat/src fiat

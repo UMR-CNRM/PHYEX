@@ -33,6 +33,7 @@ function usage {
   echo "-v                    add verbosity (up to 3 -v)"
   echo "--pyft_opts_env VAR   name of an environment variable containing options to use to call"
   echo "                      the pyft_tool.py script"
+  echo "--useParallelPyft     use the parallel version of the pyft tool (pyft_parallel_tool.py)"
   echo "-- PYFT_OPTIONS       everything after '--' are used as options for pyft_tool.py"
   echo "                      These options are used for all the files."
   echo ""
@@ -81,6 +82,7 @@ subs=""
 renameFf=0
 verbose=0
 ilooprm=0
+useParallelPyft=0
 forpyft=0
 pyft_opts_env=""
 
@@ -109,6 +111,7 @@ while [ -n "$1" ]; do
     '--ilooprm') ilooprm=1;;
     '--repo') repository=$2; shift;;
     '-v') verbose=$(($verbose+1));;
+    '--useParallelPyft') useParallelPyft=1;;
     '--pyft_opts_env') pyft_opts_env=$2; shift;;
     '--') forpyft=1;;
      *) if [ $forpyft -eq 0 ]; then
@@ -120,11 +123,6 @@ while [ -n "$1" ]; do
   shift
 done
 
-if [ "$pyft_opts_env" != "" ]; then
-  #pyft_opts_env contains the name of the environment variable to use
-  pyft_opts_env=${!pyft_opts_env}
-  #now, pyft_opts_env contains the configuration to use
-fi
 if [ $verbose -ge 3 ]; then
   set -x
 fi
@@ -297,7 +295,11 @@ if [ "$pyft_opts_env" != "" -o -n "${pyft_options-}" ]; then
   [ $verbose -gt 0 ] && echo "Applying pyft_tool"
 
   #Update PATH and PYTHONPATH if needed
-  which pyft_tool.py > /dev/null || . $PHYEXTOOLSDIR/site/pyft/bin/env.sh
+  if [ $useParallelPyft -eq 1 ]; then
+    which pyft_parallel_tool.py > /dev/null || . $PHYEXTOOLSDIR/site/pyft/bin/env.sh
+  else
+    which pyft_tool.py > /dev/null || . $PHYEXTOOLSDIR/site/pyft/bin/env.sh
+  fi
 
   if [ -n "${model-}" ]; then
     reps=$subs
@@ -307,35 +309,33 @@ if [ "$pyft_opts_env" != "" -o -n "${pyft_options-}" ]; then
       reps="$reps src/*/$sub"
     done
   fi
-  for rep in $reps; do
-    if [ -d $rep ]; then
-      find $rep -type f -not -name '.*.swp'  -not -name '.*.swo' | while read file; do
-        if [ "$(echo $file | grep '\.')" != '' -a $(echo $file | rev | cut -d. -f1 | rev) != 'fypp' ]; then
-          #Files without extension are certainly not source code files
-          #.fypp files cannot be read by pyft_tool.py
-          extra_opts=""
-          if [ "$pyft_opts_env" != "" ]; then
-            while read line; do
-              if echo $line | grep ':=:' > /dev/null; then
-                #This line has the form FILE_DESCRIPTOR:OPTIONS
-                fd="$(echo $line | awk -F :=: '{print $1}')"
-                if echo $file | grep -e "$fd" > /dev/null; then
-                  extra_opts=$(echo $line | awk -F :=: '{$1=""; print $0}') #equivalent to cut -d:=: -f2- (multi characters separator are forbiden with cut)
-                fi
-              else
-                extra_opts=$line
-              fi
-            done < <(echo "$pyft_opts_env")
-          fi
-          if [ "$extra_opts" != "" -o -n "${pyft_options-}" ]; then
-            cmd="pyft_tool.py --wrapH $pyft_options $extra_opts" #--wrapH allows to deal with h files
-            [ $verbose -gt 1 ] && echo $cmd "$file"
-            $cmd "$file"
-          fi
+
+  extra_opts=""
+  if [ "$pyft_opts_env" != "" ]; then
+    extra_opts="--optsByEnv $pyft_opts_env"
+  fi
+
+  if [ "$extra_opts" != "" -o -n "${pyft_options-}" ]; then
+    if [ $useParallelPyft -eq 1 ]; then
+      cmd="pyft_parallel_tool.py --wrapH $pyft_options $extra_opts --nbPar 8" #--wrapH allows to deal with h files
+      [ $verbose -gt 1 ] && echo $cmd
+      $cmd
+    else
+      for rep in $reps; do
+        if [ -d $rep ]; then
+          find $rep -type f -not -name '.*.swp'  -not -name '.*.swo' | while read file; do
+            if [ "$(echo $file | grep '\.')" != '' -a $(echo $file | rev | cut -d. -f1 | rev) != 'fypp' ]; then
+              #Files without extension are certainly not source code files
+              #.fypp files cannot be read by pyft_tool.py
+              cmd="pyft_tool.py --wrapH $pyft_options $extra_opts" #--wrapH allows to deal with h files
+              [ $verbose -gt 1 ] && echo $cmd "$file"
+              $cmd "$file"
+            fi
+          done
         fi
       done
     fi
-  done
+  fi
 fi
 
 ###### PUSH
