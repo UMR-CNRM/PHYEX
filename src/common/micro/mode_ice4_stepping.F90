@@ -133,6 +133,7 @@ REAL, DIMENSION(KPROMA) :: &
                         & ZHLI_LCF, &
                         & ZHLI_LRI
 LOGICAL, DIMENSION(KPROMA) :: LLCOMPUTE ! .TRUE. or points where we must compute tendencies,
+REAL, DIMENSION(SIZE(ICED%XRTMIN))   :: ZRSMIN
 !
 !Output packed tendencies (for budgets only)
 REAL, DIMENSION(KPROMA, IBUNUM) :: ZBU_INST
@@ -161,6 +162,7 @@ IF (LHOOK) CALL DR_HOOK('ICE4_STEPPING', 0, ZHOOK_HANDLE)
 !               ------------
 !
 ZINV_TSTEP=1./PTSTEP
+ZRSMIN = ICED%XRTMIN
 !
 IF(BUCONF%LBU_ENABLE .OR. OSAVE_MICRO) THEN
   DO JV=1, IBUNUM-IBUNUM_EXTRA
@@ -348,7 +350,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
     DO JV=1, KRR
 !$acc loop independent
       DO JL=1, KMICRO
-        IF (ZA(JL, JV) < -1.E-20 .AND. PVART(JL, JV) > ICED%XRTMIN(JV)) THEN
+        IF (ZA(JL, JV) < -1.E-20 .AND. PVART(JL, JV) > ZRSMIN(JV)) THEN
           ZMAXTIME(JL)=MIN(ZMAXTIME(JL), -(ZB(JL, JV)+PVART(JL, JV))/ZA(JL, JV))
           ZMAXTIME(JL)=MAX(ZMAXTIME(JL), CST%XMNH_TINY) !to prevent rounding errors
         ENDIF
@@ -402,7 +404,7 @@ DO WHILE(ANY(ZTIME(1:KMICRO)<PTSTEP)) ! Loop to *really* compute tendencies
 !$acc loop independent
           DO JL=1, KMICRO
             IF (ZTIME_THRESHOLD1D(JL)>=0 .AND. ZTIME_THRESHOLD1D(JL)<ZMAXTIME(JL) .AND. &
-               &(PVART(JL, JV)>ICED%XRTMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
+               &(PVART(JL, JV)>ZRSMIN(JV) .OR. ZA(JL, JV)>0.)) THEN
               ZMAXTIME(JL)=MIN(ZMAXTIME(JL), ZTIME_THRESHOLD1D(JL))
               LLCOMPUTE(JL)=.FALSE.
             ENDIF
