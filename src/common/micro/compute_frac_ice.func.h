@@ -2,7 +2,7 @@
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-      ELEMENTAL SUBROUTINE COMPUTE_FRAC_ICE(CST, HFRAC_ICE,NEBN,PFRAC_ICE,PT,KERR)
+      ELEMENTAL SUBROUTINE COMPUTE_FRAC_ICE(CST,HFRAC_ICE,NEBN,PFRAC_ICE,PT,KERR)
 
 ! ******* TO BE INCLUDED IN THE *CONTAINS* OF A SUBROUTINE, IN ORDER TO EASE AUTOMATIC INLINING ******
 ! => Don't use drHook !!!
