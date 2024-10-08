@@ -93,6 +93,7 @@ if [ $pyft -eq 1 ]; then
       else
         git clone https://github.com/UMR-CNRM/pyft.git
       fi
+      cd pyft
     else
       #Update
       cd pyft
@@ -103,11 +104,11 @@ if [ $pyft -eq 1 ]; then
           git fetch https://github.com/UMR-CNRM/pyft.git
         fi
       fi
-      if [ $(git rev-parse HEAD^{commit}) != $(git rev-parse ${pyft_version}^{commit}) ]; then
-        git checkout ${pyft_version}
-      fi
-      cd ..
     fi
+    if [ $(git rev-parse HEAD^{commit}) != $(git rev-parse ${pyft_version}^{commit}) ]; then
+      git checkout ${pyft_version}
+    fi
+    cd ..
     #Install/update
     if [ $ssh -eq 1 ]; then
       ./pyft/bin/INSTALL.sh --ssh
