@@ -11,6 +11,7 @@ INTERFACE GAMMA
 !
 PURE FUNCTION GAMMA_X0D(PX)  RESULT(PGAMMA)
 IMPLICIT NONE
+!$acc routine seq
 REAL, INTENT(IN)                                  :: PX
 REAL                                              :: PGAMMA
 END FUNCTION GAMMA_X0D
