@@ -35,6 +35,7 @@ use mode_budget,         only: Budget_store_add, Budget_store_end, Budget_store_
 #ifdef MNH_OPENACC
 USE MODE_MNH_ZWORK, ONLY: MNH_MEM_GET, MNH_MEM_POSITION_PIN, MNH_MEM_RELEASE
 #endif
+use mode_mppdb
 
 #if defined(MNH_BITREP) || defined(MNH_BITREP_OMP)
 USE MODI_BITREP
@@ -70,7 +71,7 @@ REAL, DIMENSION(size(PRHODREF)) :: ZZW  ! Work array
 !
 ! IN variables
 !
-!$acc data present_crm( OMICRO, PRHODREF, PRIT,              &
+!$acc data present( OMICRO, PRHODREF, PRIT,              &
 !$acc &             PRHODJ, PZT, PSSI, PLSFACT, PLVFACT, &
 !$acc &             PAI, PCJ,                            &
 !
@@ -82,6 +83,24 @@ REAL, DIMENSION(size(PRHODREF)) :: ZZW  ! Work array
 !
 !NONE
 
+IF (MPPDB_INITIALIZED) THEN
+  !Check all IN arrays
+  CALL MPPDB_CHECK(OMICRO,"RAIN_ICE_FAST_RI beg:OMICRO")
+  CALL MPPDB_CHECK(PRHODREF,"RAIN_ICE_FAST_RI beg:PRHODREF")
+  CALL MPPDB_CHECK(PRIT,"RAIN_ICE_FAST_RI beg:PRIT")
+  CALL MPPDB_CHECK(PRHODJ,"RAIN_ICE_FAST_RI beg:PRHODJ")
+  CALL MPPDB_CHECK(PZT,"RAIN_ICE_FAST_RI beg:PZT")
+  CALL MPPDB_CHECK(PSSI,"RAIN_ICE_FAST_RI beg:PSSI")
+  CALL MPPDB_CHECK(PLSFACT,"RAIN_ICE_FAST_RI beg:PLSFACT")
+  CALL MPPDB_CHECK(PLVFACT,"RAIN_ICE_FAST_RI beg:PLVFACT")
+  CALL MPPDB_CHECK(PAI,"RAIN_ICE_FAST_RI beg:PAI")
+  CALL MPPDB_CHECK(PCJ,"RAIN_ICE_FAST_RI beg:PCJ")
+  !Check all INOUT arrays
+  CALL MPPDB_CHECK(PCIT,"RAIN_ICE_FAST_RI beg:PCIT")
+  CALL MPPDB_CHECK(PRCS,"RAIN_ICE_FAST_RI beg:PRCS")
+  CALL MPPDB_CHECK(PRIS,"RAIN_ICE_FAST_RI beg:PRIS")
+  CALL MPPDB_CHECK(PTHS,"RAIN_ICE_FAST_RI beg:PTHS")
+END IF
 !
 JLU = size(PRHODREF)
 !
@@ -142,6 +161,13 @@ CALL MNH_MEM_GET( ZLBEXI, SIZE(PRHODREF) )
                                                                                   mask = omicro(:,:,:), field = 0. ) )
   if ( lbudget_ri ) call Budget_store_add( tbudgets(NBUDGET_RI), 'BERFI', Unpack (  zzw(:) * prhodj(:), &
                                                                                   mask = omicro(:,:,:), field = 0. ) )
+IF (MPPDB_INITIALIZED) THEN
+  !Check all INOUT arrays
+  CALL MPPDB_CHECK(PCIT,"RAIN_ICE_FAST_RI end:PCIT")
+  CALL MPPDB_CHECK(PRCS,"RAIN_ICE_FAST_RI end:PRCS")
+  CALL MPPDB_CHECK(PRIS,"RAIN_ICE_FAST_RI end:PRIS")
+  CALL MPPDB_CHECK(PTHS,"RAIN_ICE_FAST_RI end:PTHS")
+END IF
 
 !$acc end data
 
