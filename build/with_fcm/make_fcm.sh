@@ -268,7 +268,7 @@ srcdir=$1
 #To be able to compile an old commit, we must filter the source directories
 TESTPROGS_DIR=""
 #support is not a testprog but is needed
-for testprog in ice_adjust rain_ice turb_mnh shallow rain_ice_old lima_adjust support progs; do
+for testprog in ice_adjust rain_ice turb_mnh shallow rain_ice_old support progs; do
   [ -d $srcdir/$testprog ] && TESTPROGS_DIR+="src/$testprog "
 done
 
@@ -291,7 +291,7 @@ LD_FLAGS="\$LD_FLAGS \$OMP_LD"
 
 LIBS="${LIBS:-rt dl}"
 
-ENTRYPOINTS="rain_ice.o shallow_mf.o turb.o ice_adjust.o lima_adjust_split.o pyphyex.o"
+ENTRYPOINTS="rain_ice.o shallow_mf.o turb.o ice_adjust.o lima.o lima_adjust_split.o pyphyex.o"
 
 FCM_ARGS="$FCM_ARGS"
 
@@ -412,7 +412,7 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
   PHYEXTOOLSDIR="$DIR/../../../tools" #if run from within a PHYEX repository
   UPDATEDPATH=$PATH
   which prep_code.sh > /dev/null || export UPDATEDPATH=$PHYEXTOOLSDIR:$PATH
-  subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s lima_adjust -s support -s progs"
+  subs="$subs -s turb -s shallow -s turb_mnh -s micro -s aux -s ice_adjust -s rain_ice -s rain_ice_old -s support -s progs"
   if [ "$fromdir" == '' ]; then
     echo "Clone repository, and checkout commit $commit (using prep_code.sh)"
     if [[ $commit == testprogs${separator}* || $commit == offline${separator}* ]]; then
@@ -445,8 +445,8 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
     pybinding.py micro/lima.F90 sub:LIMA pyphyex.F90 ../build/bin/pyphyex.py ./libphyex.so
   else
     cat <<....EOF > pyphyex.F90
-    SUBROUTINE PYPHYEX
-    END SUBROUTINE PYPHYEX
+    SUBROUTINE PYPHYEXSUB
+    END SUBROUTINE PYPHYEXSUB
 ....EOF
   fi
   ln -s ../../fiat/src fiat

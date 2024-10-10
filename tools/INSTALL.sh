@@ -70,7 +70,8 @@ if [ $dataset -eq 1 ]; then
               https://github.com/UMR-CNRM/PHYEX/files/12783942/rain_ice_old.tar.gz \
               https://github.com/UMR-CNRM/PHYEX/files/12783945/shallow.tar.gz \
               https://github.com/UMR-CNRM/PHYEX/files/12783952/turb.tar.gz \
-              https://github.com/user-attachments/files/17030876/lima_adjust.tar.gz; do
+              https://github.com/user-attachments/files/17030876/lima_adjust.tar.gz \
+              https://github.com/user-attachments/files/17330177/lima.tar.gz; do
     basefile=$(basename $file)
     if [ $clean -eq 1 ]; then
       find $(basename $basefile .tar.gz) -name \*.dat -type f -delete
