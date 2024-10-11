@@ -8,17 +8,17 @@ This document is intended for developers who want to plug in the physics in a ne
 
 ## Interfaces
 
-The folowing routines are identified as the interface of the physics:
+The folowing routines are identified as the interfaces of the physics:
 
-  - lima\_adjust
+  - lima\_adjust\_split
   - ice\_adjust
   - shallow\_mf
   - turb
-  - lima, lima\_warm, lima\_cold and lima\_mixed
+  - lima
   - rain\_ice, rain\_ice\_old
-  - ini\_\* **TODO: list the different ini subroutine needed**
+  - ini\_\phyex
 
-This interface is declared in the corresponding modi\_\* files.
+These interfaces are declared in the corresponding modi\_\* files.
 
 ## Hooks
 
