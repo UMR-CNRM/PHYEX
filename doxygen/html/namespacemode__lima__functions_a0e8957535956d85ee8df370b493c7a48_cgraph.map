@@ -1,5 +1,9 @@
 <map id="mode_lima_functions::gaulag" name="mode_lima_functions::gaulag">
-<area shape="rect" id="node1" title=" " alt="" coords="5,5,168,47"/>
-<area shape="rect" id="node2" href="$namespacemode__lima__functions.html#afe2c44c933b59bb90492c48b154f4a8e" title=" " alt="" coords="216,5,379,47"/>
-<area shape="rect" id="node3" href="$namespacemode__lima__functions.html#a10b84151b98e285d122d4a3c9cd627ed" title=" " alt="" coords="427,5,589,47"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,29,168,69"/>
+<area shape="rect" id="Node000002" href="$namespacemode__lima__functions.html#afe2c44c933b59bb90492c48b154f4a8e" title=" " alt="" coords="216,29,379,69"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="168,47,202,47,202,52,168,52"/>
+<area shape="poly" id="edge4_Node000002_Node000002" title=" " alt="" coords="258,30,255,20,262,10,276,5,297,3,322,6,335,13,333,18,320,11,297,8,277,10,265,15,261,21,263,28"/>
+<area shape="rect" id="Node000003" href="$namespacemode__lima__functions.html#a6fcd7defdebf7e548d8dd8266af5d3c5" title=" " alt="" coords="427,29,589,69"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="379,47,413,47,413,52,379,52"/>
+<area shape="poly" id="edge3_Node000003_Node000003" title=" " alt="" coords="468,30,466,20,472,10,487,5,508,3,533,6,546,13,544,18,531,11,508,8,488,10,476,15,471,21,474,28"/>
 </map>

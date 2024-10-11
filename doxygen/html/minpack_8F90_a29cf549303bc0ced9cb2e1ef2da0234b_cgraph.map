@@ -1,7 +1,14 @@
 <map id="lmder" name="lmder">
-<area shape="rect" id="node1" title=" " alt="" coords="5,20,65,47"/>
-<area shape="rect" id="node2" href="$minpack_8F90.html#a77bab828c23542feaca9eb2756475b89" title=" " alt="" coords="221,20,285,47"/>
-<area shape="rect" id="node3" href="$minpack_8F90.html#a1dc1e9adda30350383f28f6cc6361365" title=" " alt="" coords="113,71,173,98"/>
-<area shape="rect" id="node5" href="$minpack_8F90.html#a64d35f73f2a85378c24dd7b99ddb0c0f" title=" " alt="" coords="116,20,171,47"/>
-<area shape="rect" id="node4" href="$minpack_8F90.html#a0dd208e826a2526722a40eab1724ac83" title=" " alt="" coords="222,71,285,98"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,29,65,55"/>
+<area shape="rect" id="Node000002" href="$minpack_8F90.html#a77bab828c23542feaca9eb2756475b89" title=" " alt="" coords="221,29,285,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="65,27,113,14,143,11,174,14,209,23,208,28,173,19,143,16,114,19,66,33"/>
+<area shape="rect" id="Node000003" href="$minpack_8F90.html#a1dc1e9adda30350383f28f6cc6361365" title=" " alt="" coords="113,79,173,104"/>
+<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="65,52,103,70,101,75,63,57"/>
+<area shape="rect" id="Node000005" href="$minpack_8F90.html#a64d35f73f2a85378c24dd7b99ddb0c0f" title=" " alt="" coords="116,29,171,55"/>
+<area shape="poly" id="edge6_Node000001_Node000005" title=" " alt="" coords="65,39,102,39,102,45,65,45"/>
+<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="234,30,230,21,232,12,240,5,253,3,269,6,276,14,271,18,266,11,253,8,242,10,237,14,236,20,239,28"/>
+<area shape="poly" id="edge4_Node000003_Node000002" title=" " alt="" coords="171,76,211,58,213,63,173,81"/>
+<area shape="rect" id="Node000004" href="$minpack_8F90.html#a0dd208e826a2526722a40eab1724ac83" title=" " alt="" coords="222,79,285,104"/>
+<area shape="poly" id="edge5_Node000003_Node000004" title=" " alt="" coords="173,89,208,89,208,94,173,94"/>
+<area shape="poly" id="edge7_Node000005_Node000002" title=" " alt="" coords="171,39,208,39,208,45,171,45"/>
 </map>

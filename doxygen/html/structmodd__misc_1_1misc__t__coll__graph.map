@@ -1,6 +1,9 @@
 <map id="modd_misc::misc_t" name="modd_misc::misc_t">
-<area shape="rect" id="node1" title=" " alt="" coords="259,109,407,136"/>
-<area shape="rect" id="node2" href="$structmodd__budget_1_1tbudgetdata.html" title=" " alt="" coords="5,5,204,32"/>
-<area shape="rect" id="node3" href="$structmodd__budget_1_1tbudgetconf__t.html" title=" " alt="" coords="228,5,437,32"/>
-<area shape="rect" id="node4" href="$structmodd__io_1_1tfiledata.html" title=" " alt="" coords="461,5,601,32"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="259,108,407,133"/>
+<area shape="rect" id="Node000002" href="$structmodd__budget_1_1tbudgetdata.html" title=" " alt="" coords="5,5,204,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="144,34,308,106,306,110,142,39"/>
+<area shape="rect" id="Node000003" href="$structmodd__budget_1_1tbudgetconf__t.html" title=" " alt="" coords="228,5,437,31"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="335,45,335,108,330,108,330,45"/>
+<area shape="rect" id="Node000004" href="$structmodd__io_1_1tfiledata.html" title=" " alt="" coords="461,5,601,31"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="497,39,356,110,354,106,495,35"/>
 </map>

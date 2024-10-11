@@ -1,0 +1,24 @@
+<map id="mode_ice4_sedimentation::ice4_sedimentation" name="mode_ice4_sedimentation::ice4_sedimentation">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,133,200,173"/>
+<area shape="rect" id="Node000002" href="$namespacemode__budget__phy.html#adb853e4fb0b59cc93057b507a52bd8ce" title=" " alt="" coords="265,5,460,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="128,131,181,93,247,55,265,47,267,52,249,60,184,97,131,135"/>
+<area shape="rect" id="Node000004" href="$namespacemode__budget__phy.html#a45dce5bc68868ab14b72a6c987fd5d08" title=" " alt="" coords="265,69,460,109"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="184,131,267,110,268,115,185,136"/>
+<area shape="rect" id="Node000006" href="$namespacemode__ice4__correct__negativities.html#abfaefcda31557470941d9852ce68e10b" title=" " alt="" coords="248,133,477,173"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="200,151,234,151,234,156,200,156"/>
+<area shape="rect" id="Node000007" href="$namespacemode__ice4__sedimentation__split.html#a7ba15172b1c20a4407be54212b26e573" title=" " alt="" coords="249,197,477,237"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="185,171,268,191,267,197,184,176"/>
+<area shape="rect" id="Node000010" href="$namespacemode__ice4__sedimentation__stat.html#a5ad31ab881b9b793289f1b8da543e754" title=" " alt="" coords="251,261,474,301"/>
+<area shape="poly" id="edge10_Node000001_Node000010" title=" " alt="" coords="131,171,184,210,249,247,267,254,265,259,247,252,181,214,128,176"/>
+<area shape="rect" id="Node000003" href="$namespacemode__budget__phy.html#af12acae4d0ad98243d08fc99268ce6d0" title=" " alt="" coords="525,5,720,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="460,23,512,23,512,28,460,28"/>
+<area shape="rect" id="Node000005" href="$namespacemode__budget__phy.html#a65b741f24c7da49ec1c6d3cc674707dc" title=" " alt="" coords="525,69,720,109"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="460,87,512,87,512,92,460,92"/>
+<area shape="rect" id="Node000008" href="$namespacemode__elec__beard__effect.html#a1294ed60c5f7fc904f054eb043ed03a5" title=" " alt="" coords="768,179,949,219"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="476,200,525,196,644,192,754,193,754,198,644,198,525,201,477,205"/>
+<area shape="rect" id="Node000009" href="$mode__ice4__sedimentation__split_8F90.html#a9dcb86dc652bb11123d352485534d7b2" title=" " alt="" coords="548,211,697,237"/>
+<area shape="poly" id="edge8_Node000007_Node000009" title=" " alt="" coords="477,218,534,219,534,224,477,223"/>
+<area shape="poly" id="edge9_Node000009_Node000008" title=" " alt="" coords="698,213,754,207,754,213,698,219"/>
+<area shape="rect" id="Node000011" href="$mode__ice4__sedimentation__stat_8F90.html#a8d17d551438974358bc9780fafa0ba23" title=" " alt="" coords="594,269,651,294"/>
+<area shape="poly" id="edge11_Node000010_Node000011" title=" " alt="" coords="474,279,580,279,580,284,474,284"/>
+</map>

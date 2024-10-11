@@ -1,16 +1,18 @@
 var searchData=
 [
-  ['key_532',['key',['../structxrd__getoptions_1_1xrd__opt.html#a2294d0d9ecc58f870b85a08498498fe3',1,'xrd_getoptions::xrd_opt']]],
-  ['kgradients_533',['kgradients',['../structmodd__misc_1_1misc__t.html#a17bd91f77a9739afcc83aef43193cf40',1,'modd_misc::misc_t']]],
-  ['khalo_534',['khalo',['../structmodd__misc_1_1misc__t.html#aa8cedeed65d88ab9a606b2a1e3f0671a',1,'modd_misc::misc_t']]],
-  ['krr_535',['krr',['../structmodd__misc_1_1misc__t.html#abe0c5ce6fe59e07b216de1221d8d0938',1,'modd_misc::misc_t']]],
-  ['krri_536',['krri',['../structmodd__misc_1_1misc__t.html#a1e11249f0ee925371b690da589c40d76',1,'modd_misc::misc_t']]],
-  ['krrl_537',['krrl',['../structmodd__misc_1_1misc__t.html#a9c20456639163155f6f1b318292f991d',1,'modd_misc::misc_t']]],
-  ['ksv_538',['ksv',['../structmodd__misc_1_1misc__t.html#a5f129a9b21a9d33197ccbd03727b466c',1,'modd_misc::misc_t']]],
-  ['ksv_5flgbeg_539',['ksv_lgbeg',['../structmodd__misc_1_1misc__t.html#ac2190bd3402e6c33baeebefe622b6bff',1,'modd_misc::misc_t']]],
-  ['ksv_5flgend_540',['ksv_lgend',['../structmodd__misc_1_1misc__t.html#a3154fb734efa26a4fdb221be4ad8dcb3',1,'modd_misc::misc_t']]],
-  ['ksv_5flima_5fng_541',['ksv_lima_ng',['../structmodd__misc_1_1misc__t.html#ac59196aa4f6f9951041d3080b8c92962',1,'modd_misc::misc_t']]],
-  ['ksv_5flima_5fnh_542',['ksv_lima_nh',['../structmodd__misc_1_1misc__t.html#a1c3dce5d040a2eb029a8953884c2defa',1,'modd_misc::misc_t']]],
-  ['ksv_5flima_5fnr_543',['ksv_lima_nr',['../structmodd__misc_1_1misc__t.html#acd0f4394a8bbf12e421c40ea7d407bac',1,'modd_misc::misc_t']]],
-  ['ksv_5flima_5fns_544',['ksv_lima_ns',['../structmodd__misc_1_1misc__t.html#a78d1622acc5148d08e1aafa271edac82',1,'modd_misc::misc_t']]]
+  ['jpbumax_0',['jpbumax',['../namespacemodd__parameters.html#aeed2c5841d980f79ed8a4cef70497487',1,'modd_parameters']]],
+  ['jpbupromax_1',['jpbupromax',['../namespacemodd__parameters.html#aeb0c05df4dcd4014d3aa3459186c11a1',1,'modd_parameters']]],
+  ['jpcplfilemax_2',['jpcplfilemax',['../namespacemodd__parameters.html#ae9b52c67e19389298fd6a0ce16fe4b3d',1,'modd_parameters']]],
+  ['jpdummy_3',['jpdummy',['../namespacemodd__parameters.html#af66cd954d6a7c7a695a77eb8c7ed5f06',1,'modd_parameters']]],
+  ['jphext_4',['jphext',['../namespacemodd__parameters.html#adbfa152f873e93b07c0773db26ee31d4',1,'modd_parameters']]],
+  ['jplimaccnmax_5',['jplimaccnmax',['../namespacemodd__parameters.html#a25824566507a918a086ab461fad442da',1,'modd_parameters']]],
+  ['jplimaifnmax_6',['jplimaifnmax',['../namespacemodd__parameters.html#a6833d86694d94654b6ecb42c7ba6a68b',1,'modd_parameters']]],
+  ['jpmodelmax_7',['jpmodelmax',['../namespacemodd__parameters.html#ac2979efe5ab1649a5219d9d78da73759',1,'modd_parameters']]],
+  ['jpoutmax_8',['jpoutmax',['../namespacemodd__parameters.html#a7333a2b92df6235fe1f93c612d801888',1,'modd_parameters']]],
+  ['jpoutvarmax_9',['jpoutvarmax',['../namespacemodd__parameters.html#a71c209e90e2e48ebcf0d9d0030d83f73',1,'modd_parameters']]],
+  ['jprimmax_10',['jprimmax',['../namespacemodd__parameters.html#ae034eabfbd141aa59e75fee2bf2361af',1,'modd_parameters']]],
+  ['jpsvmax_11',['jpsvmax',['../namespacemodd__parameters.html#a8d7bfabb4fc0f0bed19c0931c96a5e39',1,'modd_parameters']]],
+  ['jpsvnamelgtmax_12',['jpsvnamelgtmax',['../namespacemodd__parameters.html#af761f86cbc7ce213d4b8b77769d10107',1,'modd_parameters']]],
+  ['jpvext_13',['jpvext',['../namespacemodd__parameters.html#a3db93b3b2a8accf5fd94512491177df4',1,'modd_parameters']]],
+  ['jpvext_5fturb_14',['jpvext_turb',['../namespacemodd__parameters.html#a436023c10ff12b77fea532a6c6194e3e',1,'modd_parameters']]]
 ];

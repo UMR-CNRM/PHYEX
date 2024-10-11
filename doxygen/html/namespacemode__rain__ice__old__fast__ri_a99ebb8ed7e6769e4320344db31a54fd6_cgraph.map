@@ -1,0 +1,13 @@
+<map id="mode_rain_ice_old_fast_ri::rain_ice_old_fast_ri" name="mode_rain_ice_old_fast_ri::rain_ice_old_fast_ri">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,69,181,109"/>
+<area shape="rect" id="Node000002" href="$namespacemode__budget__phy.html#adb853e4fb0b59cc93057b507a52bd8ce" title=" " alt="" coords="246,5,441,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="172,67,251,46,252,51,173,72"/>
+<area shape="rect" id="Node000004" href="$namespacemode__budget__phy.html#a45dce5bc68868ab14b72a6c987fd5d08" title=" " alt="" coords="246,69,441,109"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="182,87,232,87,232,92,182,92"/>
+<area shape="rect" id="Node000006" href="$namespacemode__rain__ice__old__icenumber2.html#a9d50236b5bccd5d43890edc74bee2dc1" title=" " alt="" coords="229,133,457,173"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="173,107,252,127,251,133,172,112"/>
+<area shape="rect" id="Node000003" href="$namespacemode__budget__phy.html#af12acae4d0ad98243d08fc99268ce6d0" title=" " alt="" coords="505,5,700,45"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="441,23,492,23,492,28,441,28"/>
+<area shape="rect" id="Node000005" href="$namespacemode__budget__phy.html#a65b741f24c7da49ec1c6d3cc674707dc" title=" " alt="" coords="505,69,700,109"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="441,87,492,87,492,92,441,92"/>
+</map>

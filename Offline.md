@@ -55,6 +55,7 @@ The last step will create a directory (in $HOME/TESTPROGS) with a copy of your s
 
 The branch testprogs\_data contains modified source code for the AROME model to enable the generation of data samples for the turb, shallow, rain\_ice and ice\_adjust testprogs.
 The branch testprogs\_data2 contains modified source code for the AROME model to enable the generation of data samples for the rain\_ice\_old testprog.
+The branch testprogs\_data3 contains modified source code for the AROME model to enable the generation of data samples for the lima and lima\_adjust testprogs.
 Using these branches, in the drivers of the different parametrisations (aro\_\* files), output can be enable for the AROME model.
 Running the AROME model with these modifications outputs files in the running directory.
 This must be done once by parametrisation (note that the check\_commit\_ial.sh script can be used to execute an AROME simulation).

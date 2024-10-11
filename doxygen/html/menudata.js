@@ -34,7 +34,6 @@ var menudata={children:[
 {text:"c",url:"namespacemembers_c.html#index_c"},
 {text:"d",url:"namespacemembers_d.html#index_d"},
 {text:"e",url:"namespacemembers_e.html#index_e"},
-{text:"f",url:"namespacemembers_f.html#index_f"},
 {text:"g",url:"namespacemembers_g.html#index_g"},
 {text:"h",url:"namespacemembers_h.html#index_h"},
 {text:"i",url:"namespacemembers_i.html#index_i"},
@@ -59,7 +58,6 @@ var menudata={children:[
 {text:"c",url:"namespacemembers_func_c.html#index_c"},
 {text:"d",url:"namespacemembers_func_d.html#index_d"},
 {text:"e",url:"namespacemembers_func_e.html#index_e"},
-{text:"f",url:"namespacemembers_func_f.html#index_f"},
 {text:"g",url:"namespacemembers_func_g.html#index_g"},
 {text:"h",url:"namespacemembers_func_h.html#index_h"},
 {text:"i",url:"namespacemembers_func_i.html#index_i"},
@@ -91,9 +89,9 @@ var menudata={children:[
 {text:"x",url:"namespacemembers_vars_x.html#index_x"},
 {text:"y",url:"namespacemembers_vars_y.html#index_y"},
 {text:"z",url:"namespacemembers_vars_z.html#index_z"}]}]}]},
-{text:"Data Types List",url:"annotated.html",children:[
+{text:"Data Types",url:"annotated.html",children:[
 {text:"Data Types List",url:"annotated.html"},
-{text:"Data Types",url:"classes.html"},
+{text:"Data Type Index",url:"classes.html"},
 {text:"Data Fields",url:"functions.html",children:[
 {text:"All",url:"functions.html",children:[
 {text:"a",url:"functions.html#index_a"},
@@ -110,6 +108,7 @@ var menudata={children:[
 {text:"n",url:"functions_n.html#index_n"},
 {text:"o",url:"functions_o.html#index_o"},
 {text:"p",url:"functions_p.html#index_p"},
+{text:"q",url:"functions_q.html#index_q"},
 {text:"r",url:"functions_r.html#index_r"},
 {text:"s",url:"functions_s.html#index_s"},
 {text:"t",url:"functions_t.html#index_t"},
@@ -129,6 +128,7 @@ var menudata={children:[
 {text:"m",url:"functions_func.html#index_m"},
 {text:"n",url:"functions_func.html#index_n"},
 {text:"p",url:"functions_func.html#index_p"},
+{text:"q",url:"functions_func.html#index_q"},
 {text:"r",url:"functions_func.html#index_r"},
 {text:"s",url:"functions_func.html#index_s"},
 {text:"t",url:"functions_func.html#index_t"},
@@ -158,7 +158,6 @@ var menudata={children:[
 {text:"File List",url:"files.html"},
 {text:"File Members",url:"globals.html",children:[
 {text:"All",url:"globals.html",children:[
-{text:"b",url:"globals.html#index_b"},
 {text:"c",url:"globals.html#index_c"},
 {text:"d",url:"globals.html#index_d"},
 {text:"e",url:"globals.html#index_e"},
@@ -168,15 +167,12 @@ var menudata={children:[
 {text:"i",url:"globals.html#index_i"},
 {text:"l",url:"globals.html#index_l"},
 {text:"m",url:"globals.html#index_m"},
-{text:"o",url:"globals.html#index_o"},
-{text:"p",url:"globals.html#index_p"},
 {text:"q",url:"globals.html#index_q"},
 {text:"r",url:"globals.html#index_r"},
 {text:"s",url:"globals.html#index_s"},
 {text:"t",url:"globals.html#index_t"},
 {text:"z",url:"globals.html#index_z"}]},
 {text:"Functions/Subroutines",url:"globals_func.html",children:[
-{text:"b",url:"globals_func.html#index_b"},
 {text:"c",url:"globals_func.html#index_c"},
 {text:"d",url:"globals_func.html#index_d"},
 {text:"e",url:"globals_func.html#index_e"},
@@ -186,8 +182,6 @@ var menudata={children:[
 {text:"i",url:"globals_func.html#index_i"},
 {text:"l",url:"globals_func.html#index_l"},
 {text:"m",url:"globals_func.html#index_m"},
-{text:"o",url:"globals_func.html#index_o"},
-{text:"p",url:"globals_func.html#index_p"},
 {text:"q",url:"globals_func.html#index_q"},
 {text:"r",url:"globals_func.html#index_r"},
 {text:"s",url:"globals_func.html#index_s"},

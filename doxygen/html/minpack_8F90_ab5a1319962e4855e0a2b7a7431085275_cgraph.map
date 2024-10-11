@@ -1,4 +1,6 @@
 <map id="dogleg" name="dogleg">
-<area shape="rect" id="node1" title=" " alt="" coords="5,5,72,32"/>
-<area shape="rect" id="node2" href="$minpack_8F90.html#a77bab828c23542feaca9eb2756475b89" title=" " alt="" coords="120,5,184,32"/>
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,29,72,55"/>
+<area shape="rect" id="Node000002" href="$minpack_8F90.html#a77bab828c23542feaca9eb2756475b89" title=" " alt="" coords="120,29,184,55"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="72,39,106,39,106,45,72,45"/>
+<area shape="poly" id="edge2_Node000002_Node000002" title=" " alt="" coords="132,30,128,21,130,12,139,5,152,3,168,6,175,14,171,18,165,11,152,8,141,10,135,14,134,20,137,28"/>
 </map>
