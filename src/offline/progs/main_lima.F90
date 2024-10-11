@@ -3,7 +3,7 @@ PROGRAM MAIN_LIMA
 USE XRD_GETOPTIONS,  ONLY: INITOPTIONS, GETOPTION, CHECKOPTIONS
 USE GETDATA_LIMA_MOD, ONLY: GETDATA_LIMA
 USE COMPUTE_DIFF,    ONLY: DIFF
-USE MODI_LIMA
+USE MODI_LIMA,       ONLY: LIMA
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 USE MODD_PHYEX,      ONLY: PHYEX_t
 USE STACK_MOD,       ONLY: STACK
@@ -179,10 +179,11 @@ DO ITIME = 1, NTIME
 
 !$acc data &
 !$acc      & copyin  (D0, &
-!$acc      &          PRHODREF, PRHODJ, PEXNREF, PSIGS, PMFCONV, PPABSM, ZZZ, &
-!$acc      &          PDTHRAD, PW_NU, PRT, PSVT, PRC_MF, PRI_MF, PCF_MF) &
-!$acc      & copy    (PRS, PSVS, PTHS) &
-!$acc      & copyout (PSRCS, PCLDFR, PICEFR) &
+!$acc      &          PRHODREF, PEXNREF, PDZZ, PRHODJ, PPABSM, PDTHRAD, PTHT, &
+!$acc      &          PRT, PSVT, PW_NU) &
+!$acc      & copy    (PRS, PSVS, PTHS, PCLDFR, PICEFR, PPRCFR, PFPR) &
+!$acc      & copyout (ZINPRC, ZINDEP, PINPRR, ZINPRI, PINPRS, PINPRG, PINPRH, &
+!$acc      &          PEVAP) &
 !$acc      & create  (PSTACK4, PSTACK8) 
 
   TSC = OMP_GET_WTIME ()
