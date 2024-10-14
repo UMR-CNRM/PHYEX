@@ -1,11 +1,7 @@
 !MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
-!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
-!-----------------------------------------------------------------
-!--------------- special set of characters for RCS information
-!-----------------------------------------------------------------
-! $Source$ $Revision$
 !-----------------------------------------------------------------
 !     ##################
       MODULE MODI_SHUMAN
@@ -16,62 +12,44 @@ INTERFACE
 !
 FUNCTION DXF(PA)  RESULT(PDXF)
 IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDXF   ! result at mass
-                                                            ! localization 
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDXF   ! result at mass localization
 END FUNCTION DXF
 !
 FUNCTION DXM(PA)  RESULT(PDXM)
 IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass
-                                                            ! localization
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDXM   ! result at flux
-                                                            ! side
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDXM   ! result at flux side
 END FUNCTION DXM
 !
 FUNCTION DYF(PA)  RESULT(PDYF)
 IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDYF   ! result at mass
-                                                            ! localization 
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDYF   ! result at mass localization 
 END FUNCTION DYF
 !
 FUNCTION DYM(PA)  RESULT(PDYM)
 IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass
-                                                            ! localization
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDYM   ! result at flux
-                                                            ! side
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDYM   ! result at flux side
 END FUNCTION DYM
 !
-FUNCTION DZF(PA, KKA, KKU, KL)  RESULT(PDZF)
+FUNCTION DZF(PA)  RESULT(PDZF)
 IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDZF   ! result at mass
-                                                            ! localization
-INTEGER, INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes (AROME)
-INTEGER, INTENT(IN),OPTIONAL         :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (AROME)                                                            
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDZF   ! result at mass localization
 END FUNCTION DZF
 !
-FUNCTION DZM(PA, KKA, KKU, KL)  RESULT(PDZM)
+FUNCTION DZM(PA)  RESULT(PDZM)
 IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass
-                                                            ! localization
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDZM   ! result at flux
-                                                            ! side
-INTEGER, INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes (AROME)
-INTEGER, INTENT(IN),OPTIONAL         :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (AROME)                                                            
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDZM   ! result at flux side
 END FUNCTION DZM
 !
 FUNCTION MXF(PA)  RESULT(PMXF)
 IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMXF   ! result at mass
-                                                            ! localization 
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMXF   ! result at mass localization 
 END FUNCTION MXF
 !
 FUNCTION MXM(PA)  RESULT(PMXM)
@@ -79,13 +57,11 @@ IMPLICIT NONE
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMXM   ! result at flux localization 
 END FUNCTION MXM
-
+!
 FUNCTION MYF(PA)  RESULT(PMYF)
 IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !   side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMYF   ! result at mass 
-                                                            ! localization 
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMYF   ! result at mass localization 
 END FUNCTION MYF
 !
 FUNCTION MYM(PA)  RESULT(PMYM)
@@ -94,22 +70,16 @@ REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass l
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMYM   ! result at flux localization 
 END  FUNCTION MYM
 !
-FUNCTION MZF(PA,KKA,KKU,KL)  RESULT(PMZF)
+FUNCTION MZF(PA)  RESULT(PMZF)
 IMPLICIT NONE
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMZF   ! result at mass
-                                                            ! localization
-INTEGER, INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes (AROME)
-INTEGER, INTENT(IN),OPTIONAL         :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (AROME)                                                            
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMZF   ! result at mass localization
 END FUNCTION MZF
 !
-FUNCTION MZM(PA,KKA,KKU,KL)  RESULT(PMZM)
+FUNCTION MZM(PA)  RESULT(PMZM)
 IMPLICIT NONE
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMZM   ! result at flux localization 
-INTEGER, INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes (AROME)
-INTEGER, INTENT(IN),OPTIONAL         :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (AROME)
 END FUNCTION MZM
 !
 END INTERFACE
@@ -176,20 +146,20 @@ IMPLICIT NONE
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMXF   ! result at mass
-                                                            ! localization 
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMXF   ! result at mass localization 
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JI             ! Loop index in x direction
-INTEGER :: IIU            ! upper bound in x direction of PA 
-!         
-INTEGER :: JJK,IJU,IKU
+INTEGER :: JI, JJ, JK     ! Loop indices
+INTEGER :: IIU, IJU, IKU  ! upper bounds of PA
+!
+#ifdef _OPT_LINEARIZED_LOOPS
+INTEGER :: JJK
 INTEGER :: JIJK,JIJKOR,JIJKEND
-!          
+#endif
+! 
 !
 !-------------------------------------------------------------------------------
 !
@@ -200,7 +170,18 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-JIJKOR  = 1 + 1 
+#ifndef _OPT_LINEARIZED_LOOPS
+DO JK = 1, IKU
+  DO JJ = 1, IJU
+    DO JI = 1 + 1, IIU
+      PMXF(JI-1,JJ,JK) = 0.5*( PA(JI-1,JJ,JK)+PA(JI,JJ,JK) )
+    ENDDO
+  ENDDO
+ENDDO
+!
+PMXF(IIU,:,:)    = PMXF(2*JPHEXT,:,:) 
+#else
+JIJKOR  = 1 + 1
 JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
@@ -216,10 +197,12 @@ DO JI=1,JPHEXT
       PMXF(IIU-JPHEXT+JI,JJK,1) = PMXF(JPHEXT+JI,JJK,1) ! for reprod JPHEXT <> 1
    END DO
 END DO
+#endif
 !
 !-------------------------------------------------------------------------------
 !
 END FUNCTION MXF
+!
 !     ###############################
       FUNCTION MXM(PA)  RESULT(PMXM)
 !     ###############################
@@ -285,12 +268,14 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMXM   ! result at flux loc
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JI             ! Loop index in x direction
-INTEGER :: IIU            ! Size of the array in the x direction
-!          
-INTEGER :: JJK,IJU,IKU
+INTEGER :: JI, JJ, JK     ! Loop indices
+INTEGER :: IIU, IJU, IKU  ! upper bounds of PA
+!
+#ifdef _OPT_LINEARIZED_LOOPS
+INTEGER :: JJK
 INTEGER :: JIJK,JIJKOR,JIJKEND
-!                     
+#endif
+!            
 !
 !-------------------------------------------------------------------------------
 !
@@ -301,7 +286,22 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
-JIJKOR  = 1 + 1 
+#ifndef _OPT_LINEARIZED_LOOPS
+DO JK = 1, IKU
+  DO JJ = 1, IJU
+    DO JI = 1 + 1, IIU
+      PMXM(JI,JJ,JK) = 0.5*( PA(JI,JJ,JK)+PA(JI-1,JJ,JK) )
+    ENDDO
+  ENDDO
+ENDDO
+!
+DO JK = 1, IKU
+  DO JJ=1,IJU
+    PMXM(1,JJ,JK)    = PMXM(IIU-2*JPHEXT+1,JJ,JK)  	!TODO: voir si ce n'est pas plutot JPHEXT+1
+  ENDDO
+ENDDO
+#else
+JIJKOR  = 1 + 1
 JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
@@ -317,10 +317,12 @@ DO JI=1,JPHEXT
       PMXM(JI,JJK,1) = PMXM(IIU-2*JPHEXT+JI,JJK,1) ! for reprod JPHEXT <> 1
    END DO
 END DO
+#endif
 !
 !-------------------------------------------------------------------------------
 !
 END FUNCTION MXM
+!
 !     ###############################
       FUNCTION MYF(PA)  RESULT(PMYF)
 !     ###############################
@@ -380,20 +382,19 @@ IMPLICIT NONE
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !   side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMYF   ! result at mass 
-                                                            ! localization 
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMYF   ! result at mass localization 
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ             ! Loop index in y direction
-INTEGER :: IJU            ! upper bound in y direction of PA 
-!           
-INTEGER :: IIU,IKU
+INTEGER :: JI, JJ, JK     ! Loop indices
+INTEGER :: IIU, IJU, IKU  ! upper bounds of PA
+!
+#ifdef _OPT_LINEARIZED_LOOPS
 INTEGER :: JIJK,JIJKOR,JIJKEND
-!                
+#endif
+!       
 !
 !-------------------------------------------------------------------------------
 !
@@ -404,6 +405,15 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
+#ifndef _OPT_LINEARIZED_LOOPS
+DO JK=1,IKU
+  DO JJ=1,IJU-1
+    DO JI=1,IIU !TODO: remplacer le 1 par JPHEXT ?
+      PMYF(JI,JJ,JK) = 0.5*( PA(JI,JJ,JK)+PA(JI,JJ+1,JK) )
+    END DO
+  END DO
+END DO
+#else
 JIJKOR  = 1 + IIU
 JIJKEND = IIU*IJU*IKU
 !
@@ -412,6 +422,7 @@ JIJKEND = IIU*IJU*IKU
 DO JIJK=JIJKOR , JIJKEND
    PMYF(JIJK-IIU,1,1) = 0.5*( PA(JIJK-IIU,1,1)+PA(JIJK,1,1) )
 END DO
+#endif
 !
 DO JJ=1,JPHEXT
    PMYF(:,IJU-JPHEXT+JJ,:) = PMYF(:,JPHEXT+JJ,:) ! for reprod JPHEXT <> 1
@@ -421,6 +432,7 @@ END DO
 !-------------------------------------------------------------------------------
 !
 END FUNCTION MYF
+!
 !     ###############################
       FUNCTION MYM(PA)  RESULT(PMYM)
 !     ###############################
@@ -486,13 +498,14 @@ REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMYM   ! result at flux loc
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ             ! Loop index in y direction
-INTEGER :: IJU            ! Size of the array in the y direction
+INTEGER :: JI, JJ, JK     ! Loop indices
+INTEGER :: IIU, IJU, IKU  ! upper bounds of PA
 !
-!          
-INTEGER :: IIU,IKU
+#ifdef _OPT_LINEARIZED_LOOPS
+INTEGER :: JJK
 INTEGER :: JIJK,JIJKOR,JIJKEND
-!            
+#endif
+!   
 !-------------------------------------------------------------------------------
 !
 !*       1.    DEFINITION OF MYM
@@ -502,6 +515,15 @@ IIU=SIZE(PA,1)
 IJU=SIZE(PA,2)
 IKU=SIZE(PA,3)
 !
+#ifndef _OPT_LINEARIZED_LOOPS
+DO JK=1,IKU
+  DO JJ=2,IJU !TODO: remplacer le 1+1 par 1+JPHEXT ?
+    DO JI=1,IIU
+      PMYM(JI,JJ,JK) = 0.5*( PA(JI,JJ,JK)+PA(JI,JJ-1,JK) )
+    END DO
+  END DO
+END DO
+#else
 JIJKOR  = 1 + IIU
 JIJKEND = IIU*IJU*IKU
 !CDIR NODEP
@@ -509,6 +531,7 @@ JIJKEND = IIU*IJU*IKU
 DO JIJK=JIJKOR , JIJKEND
    PMYM(JIJK,1,1) = 0.5*( PA(JIJK,1,1)+PA(JIJK-IIU,1,1) )
 END DO
+#endif
 !
 DO JJ=1,JPHEXT
    PMYM(:,JJ,:)  = PMYM(:,IJU-2*JPHEXT+JJ,:) ! for reprod JPHEXT <> 1
@@ -517,8 +540,9 @@ END DO
 !-------------------------------------------------------------------------------
 !
 END FUNCTION MYM
+!
 !     ###############################
-      FUNCTION MZF(PA,KKA,KKU,KL)  RESULT(PMZF)
+      FUNCTION MZF(PA)  RESULT(PMZF)
 !     ###############################
 !
 !!****  *MZF* -  Shuman operator : mean operator in z direction for a 
@@ -568,23 +592,20 @@ IMPLICIT NONE
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMZF   ! result at mass
-                                                            ! localization 
-INTEGER,              INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes (for AROME only)
-INTEGER,              INTENT(IN),OPTIONAL         :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (for AROME only)
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMZF   ! result at mass localization
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK             ! Loop index in z direction
-INTEGER :: IKU          ! upper bound in z direction of PA 
-!     
-INTEGER :: IIU,IJU
+INTEGER :: JI, JJ, JK     ! Loop indices
+INTEGER :: IIU, IJU, IKU  ! upper bounds of PA
+!
+#ifdef _OPT_LINEARIZED_LOOPS
 INTEGER :: JIJ
 INTEGER :: JIJK,JIJKOR,JIJKEND
-!            
+#endif
+!   
 !
 !-------------------------------------------------------------------------------
 !
@@ -595,6 +616,11 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
+#ifndef _OPT_LINEARIZED_LOOPS
+PMZF(:,:,1:IKU-1) = 0.5*( PA(:,:,1:IKU-1)+PA(:,:,2:) )
+!
+PMZF(:,:,IKU) = -999.
+#else
 JIJKOR  = 1 + IIU*IJU
 JIJKEND = IIU*IJU*IKU
 !
@@ -609,12 +635,14 @@ END DO
 DO JIJ=1,IIU*IJU
    PMZF(JIJ,1,IKU)    = PMZF(JIJ,1,IKU-1) !-999.
 END DO
+#endif
 !
 !-------------------------------------------------------------------------------
 !
 END FUNCTION MZF
+!
 !     ###############################
-      FUNCTION MZM(PA,KKA,KKU,KL)  RESULT(PMZM)
+      FUNCTION MZM(PA)  RESULT(PMZM)
 !     ###############################
 !
 !!****  *MZM* -  Shuman operator : mean operator in z direction for a 
@@ -666,25 +694,33 @@ IMPLICIT NONE
 !
 REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
 REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PMZM   ! result at flux localization 
-INTEGER,              INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes (for AROME only)
-INTEGER,              INTENT(IN),OPTIONAL         :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (for AROME only)
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK             ! Loop index in z direction
-INTEGER :: IKU            ! upper bound in z direction of PA
-!           
-INTEGER :: IIU,IJU
-INTEGER :: JIJ,JI,JJ
+INTEGER :: JI, JJ, JK     ! Loop indices
+INTEGER :: IIU, IJU, IKU  ! upper bounds of PA
+!
+#ifdef _OPT_LINEARIZED_LOOPS
+INTEGER :: JIJ
 INTEGER :: JIJK,JIJKOR,JIJKEND
-!           
+#endif
+!  
 !
 !-------------------------------------------------------------------------------
 !
 !*       1.    DEFINITION OF MZM
 !              ------------------
 !
+#ifndef _OPT_LINEARIZED_LOOPS
+IKU = SIZE(PA,3)
+!
+DO JK=2,IKU !TODO: remplacer le 2 par JPHEXT+1 ?
+  PMZM(:,:,JK) = 0.5* ( PA(:,:,JK) + PA(:,:,JK-1) )
+END DO
+!
+PMZM(:,:,1)    = -999.
+#else
 IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
@@ -704,9 +740,12 @@ DO JIJ=1,IIU*IJU
    PMZM(JIJ,1,1)    = -999.
 END DO
 !
+#endif
+!
 !-------------------------------------------------------------------------------
 !
 END FUNCTION MZM
+!
 !     ###############################
       FUNCTION DXF(PA)  RESULT(PDXF)
 !     ###############################
@@ -766,20 +805,20 @@ IMPLICIT NONE
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDXF   ! result at mass
-                                                            ! localization 
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDXF   ! result at mass localization 
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JI             ! Loop index in x direction
-INTEGER :: IIU            ! upper bound in x direction of PA 
-!             
-INTEGER :: JJK,IJU,IKU
+INTEGER :: JI, JJ, JK     ! Loop indices
+INTEGER :: IIU, IJU, IKU  ! upper bounds of PA
+!
+#ifdef _OPT_LINEARIZED_LOOPS
+INTEGER :: JJK
 INTEGER :: JIJK,JIJKOR,JIJKEND
-!             
+#endif
+!    
 !
 !-------------------------------------------------------------------------------
 !
@@ -790,6 +829,21 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
+#ifndef _OPT_LINEARIZED_LOOPS
+DO JK=1,IKU
+  DO JJ=1,IJU
+    DO JI=1+1,IIU
+     PDXF(JI-1,JJ,JK) = PA(JI,JJ,JK) - PA(JI-1,JJ,JK) 
+    END DO
+  END DO
+END DO
+!
+DO JK=1,IKU
+  DO JJ=1,IJU
+    PDXF(IIU,JJ,JK)    = PDXF(2*JPHEXT,JJ,JK) 
+  ENDDO
+ENDDO
+#else
 JIJKOR  = 1 + 1
 JIJKEND = IIU*IJU*IKU
 !
@@ -806,10 +860,12 @@ DO JI=1,JPHEXT
       PDXF(IIU-JPHEXT+JI,JJK,1) = PDXF(JPHEXT+JI,JJK,1) ! for reprod JPHEXT <> 1
    END DO
 END DO
+#endif
 !
 !-------------------------------------------------------------------------------
 !
 END FUNCTION DXF
+!
 !     ###############################
       FUNCTION DXM(PA)  RESULT(PDXM)
 !     ###############################
@@ -867,21 +923,20 @@ IMPLICIT NONE
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass
-                                                            ! localization
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDXM   ! result at flux
-                                                            ! side
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDXM   ! result at flux side
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JI             ! Loop index in x direction
-INTEGER :: IIU            ! Size of the array in the x direction
+INTEGER :: JI, JJ, JK     ! Loop indices
+INTEGER :: IIU, IJU, IKU  ! upper bounds of PA
 !
-!          
-INTEGER :: JJK,IJU,IKU
+#ifdef _OPT_LINEARIZED_LOOPS
+INTEGER :: JJK
 INTEGER :: JIJK,JIJKOR,JIJKEND
-!            
+#endif
+!   
 !-------------------------------------------------------------------------------
 !
 !*       1.    DEFINITION OF DXM
@@ -891,6 +946,21 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
+#ifndef _OPT_LINEARIZED_LOOPS
+DO JK=1,IKU
+  DO JJ=1,IJU
+    DO JI=1+1,IIU !TODO: remplacer le 1 par JPHEXT ?
+      PDXM(JI,JJ,JK) = PA(JI,JJ,JK) - PA(JI-1,JJ,JK) 
+    END DO
+  END DO
+END DO
+!
+DO JK=1,IKU
+  DO JJ=1,IJU
+    PDXM(1,JJ,JK)    = PDXM(IIU-2*JPHEXT+1,JJ,JK)   !TODO: remplacer -2*JPHEXT+1 par -JPHEXT ?
+  ENDDO
+ENDDO
+#else
 JIJKOR  = 1 + 1
 JIJKEND = IIU*IJU*IKU
 !
@@ -907,10 +977,12 @@ DO JI=1,JPHEXT
       PDXM(JI,JJK,1) = PDXM(IIU-2*JPHEXT+JI,JJK,1) ! for reprod JPHEXT <> 1
    END DO
 END DO
+#endif
 !
 !-------------------------------------------------------------------------------
 !
 END FUNCTION DXM
+!
 !     ###############################
       FUNCTION DYF(PA)  RESULT(PDYF)
 !     ###############################
@@ -970,21 +1042,19 @@ IMPLICIT NONE
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDYF   ! result at mass
-                                                            ! localization 
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDYF   ! result at mass localization 
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ            ! Loop index in y direction
-INTEGER :: IJU           ! upper bound in y direction of PA 
+INTEGER :: JI, JJ, JK     ! Loop indices
+INTEGER :: IIU, IJU, IKU  ! upper bounds of PA
 !
-!          
-INTEGER :: IIU,IKU
+#ifdef _OPT_LINEARIZED_LOOPS
 INTEGER :: JIJK,JIJKOR,JIJKEND
-!            
+#endif
+!   
 !-------------------------------------------------------------------------------
 !
 !*       1.    DEFINITION OF DYF
@@ -994,6 +1064,15 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
+#ifndef _OPT_LINEARIZED_LOOPS
+DO JK=1,IKU
+  DO JJ=1,IJU-1 !TODO: remplacer le 1 par JPHEXT ?
+    DO JI=1,IIU
+      PDYF(JI,JJ,JK) = PA(JI,JJ+1,JK) - PA(JI,JJ,JK) 
+    END DO
+  END DO
+END DO
+#else
 JIJKOR  = 1 + IIU
 JIJKEND = IIU*IJU*IKU
 !
@@ -1002,6 +1081,7 @@ JIJKEND = IIU*IJU*IKU
 DO JIJK=JIJKOR , JIJKEND
    PDYF(JIJK-IIU,1,1)         = PA(JIJK,1,1)  -  PA(JIJK-IIU,1,1) 
 END DO
+#endif
 !
 DO JJ=1,JPHEXT
    PDYF(:,IJU-JPHEXT+JJ,:) = PDYF(:,JPHEXT+JJ,:) ! for reprod JPHEXT <> 1
@@ -1010,6 +1090,7 @@ END DO
 !-------------------------------------------------------------------------------
 !
 END FUNCTION DYF
+!
 !     ###############################
       FUNCTION DYM(PA)  RESULT(PDYM)
 !     ###############################
@@ -1069,20 +1150,18 @@ IMPLICIT NONE
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass
-                                                            ! localization
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDYM   ! result at flux
-                                                            ! side
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDYM   ! result at flux side
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JJ             ! Loop index in y direction
-INTEGER :: IJU            ! Size of the array in the y direction
+INTEGER :: JI, JJ, JK     ! Loop indices
+INTEGER :: IIU, IJU, IKU  ! upper bounds of PA
 !
-!    
-INTEGER :: IIU,IKU
+#ifdef _OPT_LINEARIZED_LOOPS
 INTEGER :: JIJK,JIJKOR,JIJKEND
+#endif
 !     
 !-------------------------------------------------------------------------------
 !
@@ -1093,6 +1172,19 @@ IIU=SIZE(PA,1)
 IJU=SIZE(PA,2)
 IKU=SIZE(PA,3)
 !
+#ifndef _OPT_LINEARIZED_LOOPS
+DO JK=1,IKU
+  DO JJ=2,IJU !TODO: remplacer le 2 par JPHEXT+1 ?
+    DO JI=1,IIU
+      PDYM(JI,JJ,JK) = PA(JI,JJ,JK) - PA(JI,JJ-1,JK) 
+    END DO
+  END DO
+END DO
+!
+DO JJ=1,JPHEXT
+   PDYM(:,JJ,:) = PDYM(:,IJU-2*JPHEXT+JJ,:) ! for reprod JPHEXT <> 1
+END DO
+#else
 JIJKOR  = 1 + IIU
 JIJKEND = IIU*IJU*IKU
 !
@@ -1105,13 +1197,15 @@ END DO
 DO JJ=1,JPHEXT
    PDYM(:,JJ,:) = PDYM(:,IJU-2*JPHEXT+JJ,:) ! for reprod JPHEXT <> 1
 END DO
+#endif
 !
 !
 !-------------------------------------------------------------------------------
 !
 END FUNCTION DYM
+!
 !     ###############################
-      FUNCTION DZF(PA, KKA, KKU, KL)  RESULT(PDZF)
+      FUNCTION DZF(PA)  RESULT(PDZF)
 !     ###############################
 !
 !!****  *DZF* -  Shuman operator : finite difference operator in z direction
@@ -1161,24 +1255,20 @@ IMPLICIT NONE
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux
-                                                            !  side
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDZF   ! result at mass
-                                                            ! localization 
-INTEGER, INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes (AROME)
-INTEGER, INTENT(IN),OPTIONAL         :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (AROME)
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at flux side
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDZF   ! result at mass localization
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK           ! Loop index in z direction
-INTEGER :: IKU          ! upper bound in z direction of PA 
+INTEGER :: JI, JJ, JK     ! Loop indices
+INTEGER :: IIU, IJU, IKU  ! upper bounds of PA
 !
-!           
-INTEGER :: IIU,IJU
+#ifdef _OPT_LINEARIZED_LOOPS
 INTEGER :: JIJ
 INTEGER :: JIJK,JIJKOR,JIJKEND
-!         
+#endif
+!
 !-------------------------------------------------------------------------------
 !
 !*       1.    DEFINITION OF DZF
@@ -1188,6 +1278,17 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
+#ifndef _OPT_LINEARIZED_LOOPS
+DO JK=1,IKU-1 !TODO: remplacer le 1 par JPHEXT ?
+  DO JJ=1,IJU
+    DO JI=1,IIU
+      PDZF(JI,JJ,JK) = PA(JI,JJ,JK+1)-PA(JI,JJ,JK)
+    END DO
+  END DO
+END DO
+!
+PDZF(:,:,IKU) = -999.
+#else
 JIJKOR  = 1 + IIU*IJU
 JIJKEND = IIU*IJU*IKU
 !
@@ -1202,12 +1303,14 @@ END DO
 DO JIJ=1,IIU*IJU
    PDZF(JIJ,1,IKU)    = -999.
 END DO
+#endif
 !
 !-------------------------------------------------------------------------------
 !
 END FUNCTION DZF
+!
 !     ###############################
-      FUNCTION DZM(PA, KKA, KKU, KL)  RESULT(PDZM)
+      FUNCTION DZM(PA)  RESULT(PDZM)
 !     ###############################
 !
 !!****  *DZM* -  Shuman operator : finite difference operator in z direction
@@ -1257,24 +1360,20 @@ IMPLICIT NONE
 !*       0.1   Declarations of argument and result
 !              ------------------------------------
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass
-                                                            ! localization
-REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDZM   ! result at flux
-                                                            ! side
-INTEGER, INTENT(IN),OPTIONAL         :: KKA, KKU ! near ground and uppest atmosphere array indexes (AROME)
-INTEGER, INTENT(IN),OPTIONAL         :: KL     ! +1 if grid goes from ground to atmosphere top, -1 otherwise (AROME)
+REAL, DIMENSION(:,:,:), INTENT(IN)                :: PA     ! variable at mass localization
+REAL, DIMENSION(SIZE(PA,1),SIZE(PA,2),SIZE(PA,3)) :: PDZM   ! result at flux side
 !
 !*       0.2   Declarations of local variables
 !              -------------------------------
 !
-INTEGER :: JK            ! Loop index in z direction
-INTEGER :: IKU           ! upper bound in z direction of PA
+INTEGER :: JI, JJ, JK     ! Loop indices
+INTEGER :: IIU, IJU, IKU  ! upper bounds of PA
 !
-!         
-INTEGER :: IIU,IJU
+#ifdef _OPT_LINEARIZED_LOOPS
 INTEGER :: JIJ
 INTEGER :: JIJK,JIJKOR,JIJKEND
-!           
+#endif
+!  
 !-------------------------------------------------------------------------------
 !
 !*       1.    DEFINITION OF DZM
@@ -1284,20 +1383,32 @@ IIU = SIZE(PA,1)
 IJU = SIZE(PA,2)
 IKU = SIZE(PA,3)
 !
+#ifndef _OPT_LINEARIZED_LOOPS
+DO JK=2,IKU !TODO: remplacer le 1+1 par 1+JPHEXT ?
+  DO JJ=1,IJU
+    DO JI=1,IIU
+      PDZM(JI,JJ,JK) = PA(JI,JJ,JK) - PA(JI,JJ,JK-1) 
+    END DO
+  END DO
+END DO
+!
+PDZM(:,:,1) = -999.
+#else
 JIJKOR  = 1 + IIU*IJU
 JIJKEND = IIU*IJU*IKU
 !
 !CDIR NODEP
 !OCL NOVREC
 DO JIJK=JIJKOR , JIJKEND
-   PDZM(JIJK,1,1) = PA(JIJK,1,1)-PA(JIJK-IIU*IJU,1,1)
+  PDZM(JIJK,1,1) = PA(JIJK,1,1)-PA(JIJK-IIU*IJU,1,1)
 END DO
 !
 !CDIR NODEP
 !OCL NOVREC
 DO JIJ=1,IIU*IJU
-   PDZM(JIJ,1,1)    = -999.
+  PDZM(JIJ,1,1)    = -999.
 END DO
+#endif
 !
 !-------------------------------------------------------------------------------
 !
