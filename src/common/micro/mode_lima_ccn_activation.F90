@@ -89,33 +89,33 @@ IMPLICIT NONE
 TYPE(CST_t),              INTENT(IN)    :: CST
 !TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF   ! Reference density
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST     ! abs. pressure at time t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PT         ! Temperature
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDTHRAD    ! Radiative temperature tendency
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PRHODREF   ! Reference density
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PPABST     ! abs. pressure at time t
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PT         ! Temperature
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PDTHRAD    ! Radiative temperature tendency
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
                                                       ! the nucleation param.
 !   
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHT       ! Theta at t 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRVT       ! Water vapor m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRCT       ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCCT       ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRRT       ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PNFT       ! CCN C. available at t
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PNAT       ! CCN C. activated at t
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PTHT       ! Theta at t 
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRVT       ! Water vapor m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRCT       ! Cloud water m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PCCT       ! Cloud water m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PRRT       ! Cloud water m.r. at t 
+REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNFT       ! CCN C. available at t
+REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNAT       ! CCN C. activated at t
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCLDFR     ! Precipitation fraction
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PCLDFR     ! Precipitation fraction
 !
-REAL, DIMENSION(:,:,:), OPTIONAL, INTENT(INOUT) :: PTOT_RV_HENU  ! Mixing ratio change due to HENU
+REAL, DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: PTOT_RV_HENU  ! Mixing ratio change due to HENU
 !
 !*       0.1   Declarations of local variables :
 !
 ! Packing variables
-LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) :: GNUCT 
+LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) :: GNUCT 
 INTEGER :: INUCT
-INTEGER , DIMENSION(SIZE(GNUCT))   :: I1,I2,I3 ! Used to replace the COUNT
+INTEGER , DIMENSION(SIZE(GNUCT))   :: I1,I3 ! Used to replace the COUNT
 INTEGER                            :: JL       ! and PACK intrinsics 
 !
 ! Packed micophysical variables
@@ -138,10 +138,8 @@ REAL, DIMENSION(:), ALLOCATABLE    :: ZZW1, ZZW2, ZZW3, ZZW4, ZZW5, ZZW6, &
 !
 REAL, DIMENSION(:,:), ALLOCATABLE  :: ZTMP, ZCHEN_MULTI
 !
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))   &
-                                   :: ZTDT, ZRVSAT, ZW, ZW2, ZCLDFR  
-REAL, DIMENSION(SIZE(PNFT,1),SIZE(PNFT,2),SIZE(PNFT,3))               &
-                                   :: ZCONC_TOT         ! total CCN C. available
+REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) :: ZTDT, ZRVSAT, ZW, ZW2, ZCLDFR  
+REAL, DIMENSION(SIZE(PNFT,1),SIZE(PNFT,2)) :: ZCONC_TOT         ! total CCN C. available
 !
 INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1             ! Vectors of indices for
                                                         ! interpolations
@@ -150,7 +148,7 @@ INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1             ! Vectors of indices for
 REAL    :: ZEPS                                ! molar mass ratio
 REAL    :: ZS1, ZS2, ZXACC 
 INTEGER :: JMOD
-INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE        ! Physical domain
+INTEGER :: IIJB, IIJE, IKB, IKE        ! Physical domain
 !
 !!$INTEGER                  :: ILUOUT     ! Logical unit of output listing 
 !!$TYPE(TFIELDMETADATA) :: TZFIELD
@@ -161,59 +159,57 @@ INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE        ! Physical domain
 !*       1.     PREPARE COMPUTATIONS - PACK
 !   	        ---------------------------
 !
-IIB=1+JPHEXT
-IIE=SIZE(PRHODREF,1) - JPHEXT
-IJB=1+JPHEXT
-IJE=SIZE(PRHODREF,2) - JPHEXT
+IIJB=1
+IIJE=SIZE(PRHODREF,1)
 IKB=1+JPVEXT
-IKE=SIZE(PRHODREF,3) - JPVEXT
+IKE=SIZE(PRHODREF,2) - JPVEXT
 !
 !  Saturation vapor mixing ratio and radiative tendency                    
 !
 ZEPS= CST%XMV / CST%XMD
-ZRVSAT(:,:,:) = ZEPS / (PPABST(:,:,:)*EXP(-CST%XALPW+CST%XBETAW/PT(:,:,:)+CST%XGAMW*ALOG(PT(:,:,:))) - 1.0)
-ZTDT(:,:,:)   = 0.
-IF (LACTIT .AND. SIZE(PDTHRAD).GT.0) ZTDT(:,:,:)   = PDTHRAD(:,:,:) * PEXNREF(:,:,:)
+ZRVSAT(:,:) = ZEPS / (PPABST(:,:)*EXP(-CST%XALPW+CST%XBETAW/PT(:,:)+CST%XGAMW*ALOG(PT(:,:))) - 1.0)
+ZTDT(:,:)   = 0.
+IF (LACTIT .AND. SIZE(PDTHRAD).GT.0) ZTDT(:,:)   = PDTHRAD(:,:) * PEXNREF(:,:)
 !
 !  find locations where CCN are available
 !
-ZCONC_TOT(:,:,:) = 0.0
+ZCONC_TOT(:,:) = 0.0
 DO JMOD = 1, NMOD_CCN 
-   ZCONC_TOT(:,:,:) = ZCONC_TOT(:,:,:) + PNFT(:,:,:,JMOD) ! sum over the free CCN
+   ZCONC_TOT(:,:) = ZCONC_TOT(:,:) + PNFT(:,:,JMOD) ! sum over the free CCN
 ENDDO
 !
 !  optimization by looking for locations where
 !  the updraft velocity is positive!!!
 !
-GNUCT(:,:,:) = .FALSE.
+GNUCT(:,:) = .FALSE.
 !
 IF (LADJ) THEN
-   GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) =      PW_NU(IIB:IIE,IJB:IJE,IKB:IKE)>XWMIN                          &
-                                    .OR. PRVT(IIB:IIE,IJB:IJE,IKB:IKE)>ZRVSAT(IIB:IIE,IJB:IJE,IKB:IKE)
-   IF (LACTIT) GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) =      GNUCT(IIB:IIE,IJB:IJE,IKB:IKE)      &
-                                                .OR. ZTDT(IIB:IIE,IJB:IJE,IKB:IKE)<XTMIN
+   GNUCT(IIJB:IIJE,IKB:IKE) =      PW_NU(IIJB:IIJE,IKB:IKE)>XWMIN                          &
+                                    .OR. PRVT(IIJB:IIJE,IKB:IKE)>ZRVSAT(IIJB:IIJE,IKB:IKE)
+   IF (LACTIT) GNUCT(IIJB:IIJE,IKB:IKE) =      GNUCT(IIJB:IIJE,IKB:IKE)      &
+                                                .OR. ZTDT(IIJB:IIJE,IKB:IKE)<XTMIN
 !
-   GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) =       GNUCT(IIB:IIE,IJB:IJE,IKB:IKE)                       &
-                                    .AND. PT(IIB:IIE,IJB:IJE,IKB:IKE)>(CST%XTT-22.)                &
-                                    .AND. ZCONC_TOT(IIB:IIE,IJB:IJE,IKB:IKE)>XCTMIN(2)
+   GNUCT(IIJB:IIJE,IKB:IKE) =       GNUCT(IIJB:IIJE,IKB:IKE)                       &
+                                    .AND. PT(IIJB:IIJE,IKB:IKE)>(CST%XTT-22.)                &
+                                    .AND. ZCONC_TOT(IIJB:IIJE,IKB:IKE)>XCTMIN(2)
 !
-   IF (LSUBG_COND) GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) = GNUCT(IIB:IIE,IJB:IJE,IKB:IKE)       &
-                                              .AND. PCLDFR(IIB:IIE,IJB:IJE,IKB:IKE)>0.01
-   IF (.NOT. LSUBG_COND) GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) = GNUCT(IIB:IIE,IJB:IJE,IKB:IKE)       &
-                                                    .AND. PRVT(IIB:IIE,IJB:IJE,IKB:IKE).GE.ZRVSAT(IIB:IIE,IJB:IJE,IKB:IKE)
+   IF (LSUBG_COND) GNUCT(IIJB:IIJE,IKB:IKE) = GNUCT(IIJB:IIJE,IKB:IKE)       &
+                                              .AND. PCLDFR(IIJB:IIJE,IKB:IKE)>0.01
+   IF (.NOT. LSUBG_COND) GNUCT(IIJB:IIJE,IKB:IKE) = GNUCT(IIJB:IIJE,IKB:IKE)       &
+                                                    .AND. PRVT(IIJB:IIJE,IKB:IKE).GE.ZRVSAT(IIJB:IIJE,IKB:IKE)
 ELSE
-   GNUCT(IIB:IIE,IJB:IJE,IKB:IKE) =       PRVT(IIB:IIE,IJB:IJE,IKB:IKE).GE.ZRVSAT(IIB:IIE,IJB:IJE,IKB:IKE) &
-                                    .AND. PT(IIB:IIE,IJB:IJE,IKB:IKE)>(CST%XTT-22.)                            &
-                                    .AND. ZCONC_TOT(IIB:IIE,IJB:IJE,IKB:IKE)>XCTMIN(2)
+   GNUCT(IIJB:IIJE,IKB:IKE) =       PRVT(IIJB:IIJE,IKB:IKE).GE.ZRVSAT(IIJB:IIJE,IKB:IKE) &
+                                    .AND. PT(IIJB:IIJE,IKB:IKE)>(CST%XTT-22.)                            &
+                                    .AND. ZCONC_TOT(IIJB:IIJE,IKB:IKE)>XCTMIN(2)
 END IF
 !
 IF (.NOT. LSUBG_COND) THEN
-   ZCLDFR(:,:,:) = 1.
+   ZCLDFR(:,:) = 1.
 ELSE
-   ZCLDFR(:,:,:) = PCLDFR(:,:,:)
+   ZCLDFR(:,:) = PCLDFR(:,:)
 END IF
 !
-INUCT = COUNTJV( GNUCT(:,:,:),I1(:),I2(:),I3(:))
+INUCT = COUNTJV( GNUCT(:,:),I1(:),I3(:))
 !
 IF( INUCT >= 1 ) THEN
 !
@@ -237,18 +233,18 @@ IF( INUCT >= 1 ) THEN
    ALLOCATE(ZRHODREF(INUCT)) 
    ALLOCATE(ZEXNREF(INUCT)) 
    DO JL=1,INUCT
-      ZRCT(JL) = PRCT(I1(JL),I2(JL),I3(JL))/ZCLDFR(I1(JL),I2(JL),I3(JL))
-      ZCCT(JL) = PCCT(I1(JL),I2(JL),I3(JL))/ZCLDFR(I1(JL),I2(JL),I3(JL))
-      ZZT(JL)  = PT(I1(JL),I2(JL),I3(JL))
-      ZZW1(JL) = ZRVSAT(I1(JL),I2(JL),I3(JL))
-      ZZW2(JL) = PW_NU(I1(JL),I2(JL),I3(JL))
-      ZZTDT(JL)  = ZTDT(I1(JL),I2(JL),I3(JL))
-      ZSW(JL)  = PRVT(I1(JL),I2(JL),I3(JL))/ZRVSAT(I1(JL),I2(JL),I3(JL)) - 1.
-      ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
-      ZEXNREF(JL)  = PEXNREF(I1(JL),I2(JL),I3(JL))
+      ZRCT(JL) = PRCT(I1(JL),I3(JL))/ZCLDFR(I1(JL),I3(JL))
+      ZCCT(JL) = PCCT(I1(JL),I3(JL))/ZCLDFR(I1(JL),I3(JL))
+      ZZT(JL)  = PT(I1(JL),I3(JL))
+      ZZW1(JL) = ZRVSAT(I1(JL),I3(JL))
+      ZZW2(JL) = PW_NU(I1(JL),I3(JL))
+      ZZTDT(JL)  = ZTDT(I1(JL),I3(JL))
+      ZSW(JL)  = PRVT(I1(JL),I3(JL))/ZRVSAT(I1(JL),I3(JL)) - 1.
+      ZRHODREF(JL) = PRHODREF(I1(JL),I3(JL))
+      ZEXNREF(JL)  = PEXNREF(I1(JL),I3(JL))
       DO JMOD = 1,NMOD_CCN
-         ZNFT(JL,JMOD)        = PNFT(I1(JL),I2(JL),I3(JL),JMOD)
-         ZNAT(JL,JMOD)        = PNAT(I1(JL),I2(JL),I3(JL),JMOD)
+         ZNFT(JL,JMOD)        = PNFT(I1(JL),I3(JL),JMOD)
+         ZNAT(JL,JMOD)        = PNAT(I1(JL),I3(JL),JMOD)
          ZCHEN_MULTI(JL,JMOD) = (ZNFT(JL,JMOD)+ZNAT(JL,JMOD))*ZRHODREF(JL) &
                                                              / XLIMIT_FACTOR(JMOD)
       ENDDO
@@ -406,11 +402,11 @@ IF( INUCT >= 1 ) THEN
    !
    !* update the concentration of activated CCN = Na
    !
-      PNAT(:,:,:,JMOD) = PNAT(:,:,:,JMOD) + ZCLDFR(:,:,:) * UNPACK( ZZW1(:), MASK=GNUCT(:,:,:), FIELD=0.0 )
+      PNAT(:,:,JMOD) = PNAT(:,:,JMOD) + ZCLDFR(:,:) * UNPACK( ZZW1(:), MASK=GNUCT(:,:), FIELD=0.0 )
    !
    !* update the concentration of free CCN = Nf
    !
-      PNFT(:,:,:,JMOD) = PNFT(:,:,:,JMOD) - ZCLDFR(:,:,:) * UNPACK( ZZW1(:), MASK=GNUCT(:,:,:), FIELD=0.0 )
+      PNFT(:,:,JMOD) = PNFT(:,:,JMOD) - ZCLDFR(:,:) * UNPACK( ZZW1(:), MASK=GNUCT(:,:), FIELD=0.0 )
    !
    !* prepare to update the cloud water concentration 
    !
@@ -424,24 +420,24 @@ IF( INUCT >= 1 ) THEN
       ZZW1(:) = MIN(XCSTDCRIT*ZZW6(:)/(((ZZT(:)*ZSMAX(:))**3)*ZRHODREF(:)),1.E-5)
    END WHERE
 !
-   IF(PRESENT(PTOT_RV_HENU)) PTOT_RV_HENU(:,:,:) = 0.
+   IF(PRESENT(PTOT_RV_HENU)) PTOT_RV_HENU(:,:) = 0.
    IF (.NOT.LSUBG_COND) THEN
-      ZW(:,:,:) = MIN( UNPACK( ZZW1(:),MASK=GNUCT(:,:,:),FIELD=0.0 ),PRVT(:,:,:) )
-      IF(PRESENT(PTOT_RV_HENU)) PTOT_RV_HENU(:,:,:) = ZW(:,:,:)
-      PTHT(:,:,:) = PTHT(:,:,:) + ZW(:,:,:) * (CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(:,:,:)-CST%XTT))/                &
-            (PEXNREF(:,:,:)*(CST%XCPD+CST%XCPV*PRVT(:,:,:)+CST%XCL*(PRCT(:,:,:)+PRRT(:,:,:))))
-      PRVT(:,:,:) = PRVT(:,:,:) - ZW(:,:,:) 
-      PRCT(:,:,:) = PRCT(:,:,:) + ZW(:,:,:) 
-      PCCT(:,:,:) = PCCT(:,:,:) + UNPACK( ZZW6(:),MASK=GNUCT(:,:,:),FIELD=0. ) 
+      ZW(:,:) = MIN( UNPACK( ZZW1(:),MASK=GNUCT(:,:),FIELD=0.0 ),PRVT(:,:) )
+      IF(PRESENT(PTOT_RV_HENU)) PTOT_RV_HENU(:,:) = ZW(:,:)
+      PTHT(:,:) = PTHT(:,:) + ZW(:,:) * (CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(:,:)-CST%XTT))/                &
+            (PEXNREF(:,:)*(CST%XCPD+CST%XCPV*PRVT(:,:)+CST%XCL*(PRCT(:,:)+PRRT(:,:))))
+      PRVT(:,:) = PRVT(:,:) - ZW(:,:) 
+      PRCT(:,:) = PRCT(:,:) + ZW(:,:) 
+      PCCT(:,:) = PCCT(:,:) + UNPACK( ZZW6(:),MASK=GNUCT(:,:),FIELD=0. ) 
    ELSE
-      ZW(:,:,:) = MIN( ZCLDFR(:,:,:) * UNPACK( ZZW1(:),MASK=GNUCT(:,:,:),FIELD=0.0 ),PRVT(:,:,:) )
-      PCCT(:,:,:) = PCCT(:,:,:) + ZCLDFR(:,:,:) * UNPACK( ZZW6(:),MASK=GNUCT(:,:,:),FIELD=0. ) 
+      ZW(:,:) = MIN( ZCLDFR(:,:) * UNPACK( ZZW1(:),MASK=GNUCT(:,:),FIELD=0.0 ),PRVT(:,:) )
+      PCCT(:,:) = PCCT(:,:) + ZCLDFR(:,:) * UNPACK( ZZW6(:),MASK=GNUCT(:,:),FIELD=0. ) 
    END IF
 !
 !++cb-- A quoi servent ces 2 dernieres lignes ? variables locales, non sauvees, et ne servent pas 
 ! a calculer quoi que ce soit (fin de la routine)
-   ZW(:,:,:)   = UNPACK( 100.0*ZSMAX(:),MASK=GNUCT(:,:,:),FIELD=0.0 )
-   ZW2(:,:,:)  = ZCLDFR(:,:,:) * UNPACK( ZZW6(:),MASK=GNUCT(:,:,:),FIELD=0.0 )
+   ZW(:,:)   = UNPACK( 100.0*ZSMAX(:),MASK=GNUCT(:,:),FIELD=0.0 )
+   ZW2(:,:)  = ZCLDFR(:,:) * UNPACK( ZZW6(:),MASK=GNUCT(:,:),FIELD=0.0 )
 !
 !
 !-------------------------------------------------------------------------------
@@ -475,8 +471,8 @@ END IF ! INUCT
 !
 !!$IF ( tpfile%lopened ) THEN
 !!$  IF ( INUCT == 0 ) THEN
-!!$    ZW (:,:,:) = 0.
-!!$    ZW2(:,:,:) = 0.
+!!$    ZW (:,:) = 0.
+!!$    ZW2(:,:) = 0.
 !!$  END IF
 !!$
 !!$  TZFIELD%CMNHNAME   ='SMAX'

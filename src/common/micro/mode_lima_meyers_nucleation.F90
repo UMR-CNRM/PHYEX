@@ -53,43 +53,43 @@ IMPLICIT NONE
 TYPE(CST_t),              INTENT(IN)    :: CST
 REAL,                     INTENT(IN)    :: PTSTEP
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PRHODREF! Reference density
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHT    ! Theta at time t
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRVT    ! Water vapor m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRCT    ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRIT    ! Cloud ice m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PTHT    ! Theta at time t
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRVT    ! Water vapor m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRCT    ! Cloud water m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRIT    ! Cloud ice m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t 
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCCT    ! Cloud water C. at t
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIT    ! Ice crystal C. source
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PINT    ! Activated ice nuclei C.
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PCCT    ! Cloud water C. at t
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PCIT    ! Ice crystal C. source
+REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PINT    ! Activated ice nuclei C.
 !
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_TH_HIND
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_RI_HIND
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_CI_HIND
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_TH_HINC
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_RC_HINC
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_CC_HINC
+REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_TH_HIND
+REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_RI_HIND
+REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_CI_HIND
+REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_TH_HINC
+REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_RC_HINC
+REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_CC_HINC
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PICEFR
 !
 !
 !*       0.2   Declarations of local variables :
 !
 !
-INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE               ! Physical domain
+INTEGER :: IIJB, IIJE, IKB, IKE               ! Physical domain
 INTEGER :: JL     ! Loop index
 INTEGER :: INEGT  ! Case number of nucleation
 !
-LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
+LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) &
 			  :: GNEGT  ! Test where to compute the nucleation
 !
-INTEGER, DIMENSION(SIZE(PRHODREF))  :: I1,I2,I3 ! Indexes for PACK replacement
+INTEGER, DIMENSION(SIZE(PRHODREF))  :: I1,I3 ! Indexes for PACK replacement
 !
 REAL, DIMENSION(:),   ALLOCATABLE :: ZRVT    ! Water vapor m.r. at t
 REAL, DIMENSION(:),   ALLOCATABLE :: ZRCT    ! Cloud water m.r. at t
@@ -118,7 +118,7 @@ REAL, DIMENSION(:), ALLOCATABLE &
                               ZLVFACT,  & ! L_v/(Pi_ref*C_ph)
                               ZSSI
 !
-REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))   &
+REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2))   &
                                   :: ZW, ZT ! work arrays
 !
 REAL,    DIMENSION(:),   ALLOCATABLE :: ZTCELSIUS
@@ -129,30 +129,28 @@ REAL,    DIMENSION(:),   ALLOCATABLE :: ZTCELSIUS
 !*       1.     PRELIMINARY COMPUTATIONS
 !	        ------------------------
 !
-P_TH_HIND(:,:,:) = 0.
-P_RI_HIND(:,:,:) = 0.
-P_CI_HIND(:,:,:) = 0.
-P_TH_HINC(:,:,:) = 0.
-P_RC_HINC(:,:,:) = 0.
-P_CC_HINC(:,:,:) = 0.
+P_TH_HIND(:,:) = 0.
+P_RI_HIND(:,:) = 0.
+P_CI_HIND(:,:) = 0.
+P_TH_HINC(:,:) = 0.
+P_RC_HINC(:,:) = 0.
+P_CC_HINC(:,:) = 0.
 !
 ! Physical domain
 !
-IIB=1+JPHEXT
-IIE=SIZE(PTHT,1) - JPHEXT
-IJB=1+JPHEXT
-IJE=SIZE(PTHT,2) - JPHEXT
+IIJB=JPHEXT
+IIJE=SIZE(PTHT,1)
 IKB=1+JPVEXT
-IKE=SIZE(PTHT,3) - JPVEXT
+IKE=SIZE(PTHT,2) - JPVEXT
 !
 ! Temperature
 !
-ZT(:,:,:)  = PTHT(:,:,:) * ( PPABST(:,:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
+ZT(:,:)  = PTHT(:,:) * ( PPABST(:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
 !
 ! Saturation over ice
 !
-ZW(:,:,:) = EXP( CST%XALPI - CST%XBETAI/ZT(:,:,:) - CST%XGAMI*ALOG(ZT(:,:,:) ) )
-ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:,:,:) )
+ZW(:,:) = EXP( CST%XALPI - CST%XBETAI/ZT(:,:) - CST%XGAMI*ALOG(ZT(:,:) ) )
+ZW(:,:) = PRVT(:,:)*( PPABST(:,:)-ZW(:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:,:) )
 !
 !
 !-------------------------------------------------------------------------------
@@ -160,10 +158,10 @@ ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:
 !  optimization by looking for locations where
 !  the temperature is negative only !!!
 !
-GNEGT(:,:,:) = .FALSE.
-GNEGT(IIB:IIE,IJB:IJE,IKB:IKE) = ZT(IIB:IIE,IJB:IJE,IKB:IKE)<CST%XTT .AND. &
-                                 ZW(IIB:IIE,IJB:IJE,IKB:IKE)>0.8 
-INEGT = COUNTJV( GNEGT(:,:,:),I1(:),I2(:),I3(:))
+GNEGT(:,:) = .FALSE.
+GNEGT(IIJB:IIJE,IKB:IKE) = ZT(IIJB:IIJE,IKB:IKE)<CST%XTT .AND. &
+                           ZW(IIJB:IIJE,IKB:IKE)>0.8 
+INEGT = COUNTJV( GNEGT(:,:),I1(:),I3(:))
 IF( INEGT >= 1 ) THEN
   ALLOCATE(ZRVT(INEGT)) 
   ALLOCATE(ZRCT(INEGT)) 
@@ -183,24 +181,24 @@ IF( INEGT >= 1 ) THEN
   ALLOCATE(ZPRES(INEGT)) 
   ALLOCATE(ZEXNREF(INEGT))
   DO JL=1,INEGT
-    ZRVT(JL) = PRVT(I1(JL),I2(JL),I3(JL))
-    ZRCT(JL) = PRCT(I1(JL),I2(JL),I3(JL))
-    ZRRT(JL) = PRRT(I1(JL),I2(JL),I3(JL))
-    ZRIT(JL) = PRIT(I1(JL),I2(JL),I3(JL))
-    ZRST(JL) = PRST(I1(JL),I2(JL),I3(JL))
-    ZRGT(JL) = PRGT(I1(JL),I2(JL),I3(JL))
+    ZRVT(JL) = PRVT(I1(JL),I3(JL))
+    ZRCT(JL) = PRCT(I1(JL),I3(JL))
+    ZRRT(JL) = PRRT(I1(JL),I3(JL))
+    ZRIT(JL) = PRIT(I1(JL),I3(JL))
+    ZRST(JL) = PRST(I1(JL),I3(JL))
+    ZRGT(JL) = PRGT(I1(JL),I3(JL))
 !
-    ZCCT(JL) = PCCT(I1(JL),I2(JL),I3(JL))
+    ZCCT(JL) = PCCT(I1(JL),I3(JL))
 !
-    ZTHT(JL) = PTHT(I1(JL),I2(JL),I3(JL))
+    ZTHT(JL) = PTHT(I1(JL),I3(JL))
 !
-    ZCCT(JL) = PCCT(I1(JL),I2(JL),I3(JL))
-    ZCIT(JL) = PCIT(I1(JL),I2(JL),I3(JL))
+    ZCCT(JL) = PCCT(I1(JL),I3(JL))
+    ZCIT(JL) = PCIT(I1(JL),I3(JL))
 !
-    ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
-    ZZT(JL)      = ZT(I1(JL),I2(JL),I3(JL))
-    ZPRES(JL)    = PPABST(I1(JL),I2(JL),I3(JL))
-    ZEXNREF(JL)  = PEXNREF(I1(JL),I2(JL),I3(JL))
+    ZRHODREF(JL) = PRHODREF(I1(JL),I3(JL))
+    ZZT(JL)      = ZT(I1(JL),I3(JL))
+    ZPRES(JL)    = PPABST(I1(JL),I3(JL))
+    ZEXNREF(JL)  = PEXNREF(I1(JL),I3(JL))
   ENDDO
   ALLOCATE(ZZW(INEGT))
   ALLOCATE(ZZX(INEGT))
@@ -225,7 +223,7 @@ IF( INEGT >= 1 ) THEN
 !*            compute the heterogeneous nucleation by deposition: RVHNDI
 !
   DO JL=1,INEGT
-    ZINT(JL,1) = PINT(I1(JL),I2(JL),I3(JL),1)
+    ZINT(JL,1) = PINT(I1(JL),I3(JL),1)
   END DO
   ZZW(:) = 0.0
   ZZX(:) = 0.0
@@ -237,14 +235,14 @@ IF( INEGT >= 1 ) THEN
     ZZW(:) = MIN( XMNU0*ZZX(:) , ZRVT(:) ) ! mass of ice formed at this time step (kg/kg)
   END WHERE
   !
-  P_CI_HIND(:,:,:) = UNPACK( ZZX(:), MASK=GNEGT(:,:,:), FIELD=0. )
-  P_RI_HIND(:,:,:) = UNPACK( ZZW(:), MASK=GNEGT(:,:,:), FIELD=0. )
-  P_TH_HIND(:,:,:) = UNPACK( ZZW(:)*(ZLSFACT(:)-ZLVFACT(:)), MASK=GNEGT(:,:,:), FIELD=0. )
-  PTHT(:,:,:) = PTHT(:,:,:) + P_TH_HIND(:,:,:)
-  PRVT(:,:,:) = PRVT(:,:,:) - P_RI_HIND(:,:,:)
-  PRIT(:,:,:) = PRIT(:,:,:) + P_RI_HIND(:,:,:)
-  PCIT(:,:,:) = PCIT(:,:,:) + P_CI_HIND(:,:,:)
-  PINT(:,:,:,1) = PINT(:,:,:,1) + P_CI_HIND(:,:,:)
+  P_CI_HIND(:,:) = UNPACK( ZZX(:), MASK=GNEGT(:,:), FIELD=0. )
+  P_RI_HIND(:,:) = UNPACK( ZZW(:), MASK=GNEGT(:,:), FIELD=0. )
+  P_TH_HIND(:,:) = UNPACK( ZZW(:)*(ZLSFACT(:)-ZLVFACT(:)), MASK=GNEGT(:,:), FIELD=0. )
+  PTHT(:,:) = PTHT(:,:) + P_TH_HIND(:,:)
+  PRVT(:,:) = PRVT(:,:) - P_RI_HIND(:,:)
+  PRIT(:,:) = PRIT(:,:) + P_RI_HIND(:,:)
+  PCIT(:,:) = PCIT(:,:) + P_CI_HIND(:,:)
+  PINT(:,:,1) = PINT(:,:,1) + P_CI_HIND(:,:)
 !
 !---------------------------------------------------------------------------
 !
@@ -252,7 +250,7 @@ IF( INEGT >= 1 ) THEN
 !
 !
   DO JL=1,INEGT
-    ZINT(JL,1) = PINT(I1(JL),I2(JL),I3(JL),1)
+    ZINT(JL,1) = PINT(I1(JL),I3(JL),1)
   END DO
   ZZW(:) = 0.0
   ZZX(:) = 0.0
@@ -265,15 +263,15 @@ IF( INEGT >= 1 ) THEN
     ZZW(:) = MIN( (ZRCT(:)/ZCCT(:))*ZZX(:),ZRCT(:) )
   END WHERE
 !
-  P_RC_HINC(:,:,:) = - UNPACK( ZZW(:), MASK=GNEGT(:,:,:), FIELD=0. )
-  P_CC_HINC(:,:,:) = - UNPACK( ZZX(:), MASK=GNEGT(:,:,:), FIELD=0. )
-  P_TH_HINC(:,:,:) =   UNPACK( ZZW(:)*(ZLSFACT(:)-ZLVFACT(:)), MASK=GNEGT(:,:,:), FIELD=0. )
-  PTHT(:,:,:) = PTHT(:,:,:) + P_TH_HINC(:,:,:)
-  PRCT(:,:,:) = PRCT(:,:,:) + P_RC_HINC(:,:,:)
-  PRIT(:,:,:) = PRIT(:,:,:) - P_RC_HINC(:,:,:)
-  PCCT(:,:,:) = PCCT(:,:,:) + P_CC_HINC(:,:,:)
-  PCIT(:,:,:) = PCIT(:,:,:) - P_CC_HINC(:,:,:)
-  PINT(:,:,:,1) = PINT(:,:,:,1) - P_CC_HINC(:,:,:)
+  P_RC_HINC(:,:) = - UNPACK( ZZW(:), MASK=GNEGT(:,:), FIELD=0. )
+  P_CC_HINC(:,:) = - UNPACK( ZZX(:), MASK=GNEGT(:,:), FIELD=0. )
+  P_TH_HINC(:,:) =   UNPACK( ZZW(:)*(ZLSFACT(:)-ZLVFACT(:)), MASK=GNEGT(:,:), FIELD=0. )
+  PTHT(:,:) = PTHT(:,:) + P_TH_HINC(:,:)
+  PRCT(:,:) = PRCT(:,:) + P_RC_HINC(:,:)
+  PRIT(:,:) = PRIT(:,:) - P_RC_HINC(:,:)
+  PCCT(:,:) = PCCT(:,:) + P_CC_HINC(:,:)
+  PCIT(:,:) = PCIT(:,:) - P_CC_HINC(:,:)
+  PINT(:,:,1) = PINT(:,:,1) - P_CC_HINC(:,:)
 !
   DEALLOCATE(ZRVT) 
   DEALLOCATE(ZRCT) 

@@ -45,27 +45,27 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),      INTENT(IN)    :: D
 !
-REAL, DIMENSION(:,:,:),INTENT(IN)    :: PCCT          !
-REAL, DIMENSION(:,:,:),INTENT(IN)    :: PRCT          !
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN)    :: PCCT          !
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN)    :: PRCT          !
 !
-REAL, DIMENSION(:,:,:),INTENT(IN)    :: PCRT          !
-REAL, DIMENSION(:,:,:),INTENT(IN)    :: PRRT          !
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN)    :: PCRT          !
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN)    :: PRRT          !
 !
-REAL, DIMENSION(:,:,:),INTENT(IN)    :: PCIT          !
-REAL, DIMENSION(:,:,:),INTENT(IN)    :: PRIT          !
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN)    :: PCIT          !
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN)    :: PRIT          !
 !
-REAL, DIMENSION(:,:,:),INTENT(IN)    :: PCST          !
-REAL, DIMENSION(:,:,:),INTENT(IN)    :: PRST          !
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN)    :: PCST          !
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN)    :: PRST          !
 !
-REAL, DIMENSION(:,:,:),INTENT(IN)    :: PCGT          !
-REAL, DIMENSION(:,:,:),INTENT(IN)    :: PRGT          !
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN)    :: PCGT          !
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN)    :: PRGT          !
 !
-REAL, DIMENSION(:,:,:),INTENT(IN)    :: PCHT          !
-REAL, DIMENSION(:,:,:),INTENT(IN)    :: PRHT          !
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN)    :: PCHT          !
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN)    :: PRHT          !
 !
-REAL, DIMENSION(:,:,:),INTENT(INOUT) :: PCLDFR        ! 
-REAL, DIMENSION(:,:,:),INTENT(INOUT) :: PICEFR        ! 
-REAL, DIMENSION(:,:,:),INTENT(INOUT) :: PPRCFR        ! 
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(INOUT) :: PCLDFR        ! 
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(INOUT) :: PICEFR        ! 
+REAL, DIMENSION(D%NIJT,D%NKT),INTENT(INOUT) :: PPRCFR        ! 
 !
 !*       0.2   Declarations of local variables :
 !
@@ -76,62 +76,58 @@ REAL, DIMENSION(:,:,:),INTENT(INOUT) :: PPRCFR        !
 !              ---------------
 !
 ! Liquid cloud fraction is kept from input data, except where PCLDFR=0 and rc>0
-WHERE(PCLDFR(:,:,:)<1.E-10 .AND. PRCT(:,:,:)>XRTMIN(2) .AND. (NMOM_C.EQ.1 .OR. PCCT(:,:,:)>XCTMIN(2))) PCLDFR(:,:,:)=1.
+WHERE(PCLDFR(:,:)<1.E-10 .AND. PRCT(:,:)>XRTMIN(2) .AND. (NMOM_C.EQ.1 .OR. PCCT(:,:)>XCTMIN(2))) PCLDFR(:,:)=1.
 !
 ! Ice cloud fraction is currently 0 or 1
-PICEFR(:,:,:)=0.
-WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. (NMOM_I.EQ.1 .OR. PCIT(:,:,:)>XCTMIN(4))) PICEFR(:,:,:)=1.
+PICEFR(:,:)=0.
+WHERE(PICEFR(:,:)<1.E-10 .AND. PRIT(:,:)>XRTMIN(4) .AND. (NMOM_I.EQ.1 .OR. PCIT(:,:)>XCTMIN(4))) PICEFR(:,:)=1.
 !
 ! Precipitation fraction
-!!$PPRCFR(:,:,:) = MAX(PCLDFR(:,:,:),PICEFR(:,:,:))
-!!$DO JI = D%NIB,D%NIE
-!!$   DO JJ = D%NJB, D%NJE
+!!$PPRCFR(:,:) = MAX(PCLDFR(:,:),PICEFR(:,:))
+!!$DO JI = D%NIJB,D%NIJE
 !!$      DO JK=D%NKE-D%NKL, D%NKB, -D%NKL
-!!$         IF ( (PRRT(JI,JJ,JK).GT.XRTMIN(3) .AND. PCRT(JI,JJ,JK).GT.XCTMIN(3)) .OR. &
-!!$               PRST(JI,JJ,JK).GT.XRTMIN(5)                                    .OR. &
-!!$               PRGT(JI,JJ,JK).GT.XRTMIN(6)                                    .OR. &
-!!$               PRHT(JI,JJ,JK).GT.XRTMIN(7)                                         ) THEN
-!!$            PPRCFR(JI,JJ,JK)=MAX(PPRCFR(JI,JJ,JK),PPRCFR(JI,JJ,JK+D%NKL))
-!!$            IF (PPRCFR(JI,JJ,JK)==0) THEN
-!!$               PPRCFR(JI,JJ,JK)=1.
+!!$         IF ( (PRRT(JI,JK).GT.XRTMIN(3) .AND. PCRT(JI,JK).GT.XCTMIN(3)) .OR. &
+!!$               PRST(JI,JK).GT.XRTMIN(5)                                    .OR. &
+!!$               PRGT(JI,JK).GT.XRTMIN(6)                                    .OR. &
+!!$               PRHT(JI,JK).GT.XRTMIN(7)                                         ) THEN
+!!$            PPRCFR(JI,JK)=MAX(PPRCFR(JI,JK),PPRCFR(JI,JK+D%NKL))
+!!$            IF (PPRCFR(JI,JK)==0) THEN
+!!$               PPRCFR(JI,JK)=1.
 !!$            END IF
 !!$         ELSE
-!!$            !PPRCFR(JI,JJ,JK)=0.
+!!$            !PPRCFR(JI,JK)=0.
 !!$         END IF
 !!$      END DO
-!!$   END DO
 !!$END DO
 !!$
-!!$PPRCFR(:,:,:) = MAX(PCLDFR(:,:,:),PICEFR(:,:,:))
-!!$DO JI = D%NIB,D%NIE
-!!$   DO JJ = D%NJB, D%NJE
+!!$PPRCFR(:,:) = MAX(PCLDFR(:,:),PICEFR(:,:))
+!!$DO JI = D%NIJB,D%NIJE
 !!$      DO JK=D%NKE-D%NKL, D%NKB, -D%NKL
-!!$         IF ( (PRRT(JI,JJ,JK).GT.0. .AND. PCRT(JI,JJ,JK).GT.0.) .OR. &
-!!$               PRST(JI,JJ,JK).GT.0.                             .OR. &
-!!$               PRGT(JI,JJ,JK).GT.0.                             .OR. &
-!!$               PRHT(JI,JJ,JK).GT.0.                                  ) THEN
-!!$            PPRCFR(JI,JJ,JK)=MAX(PPRCFR(JI,JJ,JK),PPRCFR(JI,JJ,JK+D%NKL))
-!!$            IF (PPRCFR(JI,JJ,JK)==0) THEN
-!!$               PPRCFR(JI,JJ,JK)=1.
+!!$         IF ( (PRRT(JI,JK).GT.0. .AND. PCRT(JI,JK).GT.0.) .OR. &
+!!$               PRST(JI,JK).GT.0.                             .OR. &
+!!$               PRGT(JI,JK).GT.0.                             .OR. &
+!!$               PRHT(JI,JK).GT.0.                                  ) THEN
+!!$            PPRCFR(JI,JK)=MAX(PPRCFR(JI,JK),PPRCFR(JI,JK+D%NKL))
+!!$            IF (PPRCFR(JI,JK)==0) THEN
+!!$               PPRCFR(JI,JK)=1.
 !!$            END IF
 !!$         ELSE
-!!$            !PPRCFR(JI,JJ,JK)=0.
+!!$            !PPRCFR(JI,JK)=0.
 !!$         END IF
 !!$      END DO
-!!$   END DO
 !!$END DO
 !!$
-!!$PPRCFR(:,:,:) = 0.
-!!$WHERE ( (PRRT(:,:,:).GT.XRTMIN(3) .AND. PCRT(:,:,:).GT.XCTMIN(3)) .OR. &
-!!$         PRST(:,:,:).GT.XRTMIN(5)                                 .OR. &
-!!$         PRGT(:,:,:).GT.XRTMIN(6)                                 .OR. &
-!!$         PRHT(:,:,:).GT.XRTMIN(7)                                      )  PPRCFR(:,:,:) = 1.
+!!$PPRCFR(:,:) = 0.
+!!$WHERE ( (PRRT(:,:).GT.XRTMIN(3) .AND. PCRT(:,:).GT.XCTMIN(3)) .OR. &
+!!$         PRST(:,:).GT.XRTMIN(5)                                 .OR. &
+!!$         PRGT(:,:).GT.XRTMIN(6)                                 .OR. &
+!!$         PRHT(:,:).GT.XRTMIN(7)                                      )  PPRCFR(:,:) = 1.
 !!$
-PPRCFR(:,:,:) = 0.
-WHERE ( (PRRT(:,:,:).GT.0. .AND. (NMOM_R.EQ.1 .OR. PCRT(:,:,:).GT.0.) ) .OR. &
-        (PRST(:,:,:).GT.0. .AND. (NMOM_S.EQ.1 .OR. PCST(:,:,:).GT.0.) ) .OR. &
-        (PRGT(:,:,:).GT.0. .AND. (NMOM_G.EQ.1 .OR. PCGT(:,:,:).GT.0.) ) .OR. &
-        (PRHT(:,:,:).GT.0. .AND. (NMOM_H.EQ.1 .OR. PCHT(:,:,:).GT.0.) ) )  PPRCFR(:,:,:) = 1.
+PPRCFR(:,:) = 0.
+WHERE ( (PRRT(:,:).GT.0. .AND. (NMOM_R.EQ.1 .OR. PCRT(:,:).GT.0.) ) .OR. &
+        (PRST(:,:).GT.0. .AND. (NMOM_S.EQ.1 .OR. PCST(:,:).GT.0.) ) .OR. &
+        (PRGT(:,:).GT.0. .AND. (NMOM_G.EQ.1 .OR. PCGT(:,:).GT.0.) ) .OR. &
+        (PRHT(:,:).GT.0. .AND. (NMOM_H.EQ.1 .OR. PCHT(:,:).GT.0.) ) )  PPRCFR(:,:) = 1.
 !
 !-------------------------------------------------------------------------------
 !

@@ -71,48 +71,48 @@ INTEGER, INTENT(IN) :: KBUDGETS
 REAL,                     INTENT(IN)    :: PTSTEP     ! Double Time step 
 !TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODJ     ! Reference density
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF   ! Reference density
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST     ! abs. pressure at time t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PT         ! Temperature
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDTHRAD    ! Radiative temperature tendency
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODJ     ! Reference density
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF   ! Reference density
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PPABST     ! abs. pressure at time t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PT         ! Temperature
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PDTHRAD    ! Radiative temperature tendency
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHT       ! Theta at t 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRVT       ! Water vapor m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRCT       ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRRT       ! Rain water m.r. at t
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRIT       ! Rain water m.r. at t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRST       ! Rain water m.r. at t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRGT       ! Rain water m.r. at t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHT       ! Hail m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTHT       ! Theta at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRVT       ! Water vapor m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRCT       ! Cloud water m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRRT       ! Rain water m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRIT       ! Rain water m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRST       ! Rain water m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRGT       ! Rain water m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHT       ! Hail m.r. at t
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCCT       ! Cloud water conc. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCRT       ! Rain water conc. at t
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIT       ! Prinstine ice conc. at t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCCT       ! Cloud water conc. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCRT       ! Rain water conc. at t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT       ! Prinstine ice conc. at t
 !
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PNFT       ! CCN C. available at t
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PNAT       ! CCN C. activated at t
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PIFT       ! IFN C. available at t
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PINT       ! IFN C. activated at t
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PNIT       ! Coated IFN activated at t
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PNHT       ! CCN hom. freezing
+REAL, DIMENSION(D%NIJT,D%NKT,:), INTENT(INOUT) :: PNFT       ! CCN C. available at t
+REAL, DIMENSION(D%NIJT,D%NKT,:), INTENT(INOUT) :: PNAT       ! CCN C. activated at t
+REAL, DIMENSION(D%NIJT,D%NKT,:), INTENT(INOUT) :: PIFT       ! IFN C. available at t
+REAL, DIMENSION(D%NIJT,D%NKT,:), INTENT(INOUT) :: PINT       ! IFN C. activated at t
+REAL, DIMENSION(D%NIJT,D%NKT,:), INTENT(INOUT) :: PNIT       ! Coated IFN activated at t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PNHT       ! CCN hom. freezing
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCLDFR     ! Cloud fraction
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR     ! Ice fraction
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PPRCFR     ! Precipitation fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCLDFR     ! Cloud fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PICEFR     ! Ice fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PPRCFR     ! Precipitation fraction
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTOT_RV_HENU  ! Mixing ratio change due to HENU
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTOT_RC_HINC  ! Mixing ratio change due to HINC
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTOT_RI_HIND  ! Mixing ratio change due to HIND
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTOT_RV_HONH  ! Mixing ratio change due to HONH
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTOT_RV_HENU  ! Mixing ratio change due to HENU
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTOT_RC_HINC  ! Mixing ratio change due to HINC
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTOT_RI_HIND  ! Mixing ratio change due to HIND
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTOT_RV_HONH  ! Mixing ratio change due to HONH
 !
 !-------------------------------------------------------------------------------
 !
 !REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2),SIZE(PT,3)) :: Z_TH_HIND, Z_RI_HIND, Z_CI_HIND, Z_TH_HINC, Z_RC_HINC, Z_CC_HINC
-REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2),SIZE(PT,3)) :: Z_TH_HIND, Z_CI_HIND, Z_TH_HINC, Z_CC_HINC
-REAL, DIMENSION(SIZE(PT,1),SIZE(PT,2),SIZE(PT,3)) :: ZLSFACT, ZRVHENIMR
+REAL, DIMENSION(D%NIJT,D%NKT) :: Z_TH_HIND, Z_CI_HIND, Z_TH_HINC, Z_CC_HINC, &
+                                 ZLSFACT, ZRVHENIMR
 !
 integer :: idx, jl
 INTEGER :: JI,JJ
@@ -125,18 +125,18 @@ IF ( LACTI .AND. NMOD_CCN >=1 .AND. NMOM_C.GE.2) THEN
 
     if ( BUCONF%lbu_enable ) then
        if ( BUCONF%lbudget_th ) &
-            call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'HENU', ptht(:, :, :) * prhodj(:, :, :) / ptstep )
+            call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'HENU', ptht(:,:) * prhodj(:,:) / ptstep )
        if ( BUCONF%lbudget_rv ) &
-            call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'HENU', prvt(:, :, :) * prhodj(:, :, :) / ptstep )
+            call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'HENU', prvt(:,:) * prhodj(:,:) / ptstep )
        if ( BUCONF%lbudget_rc ) &
-            call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'HENU', prct(:, :, :) * prhodj(:, :, :) / ptstep )
+            call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'HENU', prct(:,:) * prhodj(:,:) / ptstep )
       if ( BUCONF%lbudget_sv ) then
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_nc), 'HENU', pcct(:, :, :) * prhodj(:, :, :) / ptstep )
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_nc), 'HENU', pcct(:,:) * prhodj(:,:) / ptstep )
         do jl = 1, nmod_ccn
           idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + jl
-          call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HENU', pnft(:, :, :, jl) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HENU', pnft(:,:, jl) * prhodj(:,:) / ptstep )
           idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + jl
-          call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HENU', pnat(:, :, :, jl) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HENU', pnat(:,:, jl) * prhodj(:,:) / ptstep )
         end do
       end if
     end if
@@ -148,25 +148,25 @@ IF ( LACTI .AND. NMOD_CCN >=1 .AND. NMOM_C.GE.2) THEN
 
     if ( BUCONF%lbu_enable ) then
        if ( BUCONF%lbudget_th ) &
-            call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'HENU', ptht(:, :, :) * prhodj(:, :, :) / ptstep )
+            call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'HENU', ptht(:,:) * prhodj(:,:) / ptstep )
        if ( BUCONF%lbudget_rv ) &
-            call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'HENU', prvt(:, :, :) * prhodj(:, :, :) / ptstep )
+            call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'HENU', prvt(:,:) * prhodj(:,:) / ptstep )
        if ( BUCONF%lbudget_rc ) &
-            call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'HENU', prct(:, :, :) * prhodj(:, :, :) / ptstep )
+            call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'HENU', prct(:,:) * prhodj(:,:) / ptstep )
       if ( BUCONF%lbudget_sv ) then
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_nc), 'HENU', pcct(:, :, :) * prhodj(:, :, :) / ptstep )
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_nc), 'HENU', pcct(:,:) * prhodj(:,:) / ptstep )
         do jl = 1, nmod_ccn
           idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + jl
-          call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HENU', pnft(:, :, :, jl) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HENU', pnft(:,:, jl) * prhodj(:,:) / ptstep )
           idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + jl
-          call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HENU', pnat(:, :, :, jl) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HENU', pnat(:,:, jl) * prhodj(:,:) / ptstep )
         end do
       end if
     end if
 
   END IF
 
-  WHERE(PCLDFR(:,:,:)<1.E-10 .AND. PRCT(:,:,:)>XRTMIN(2) .AND. PCCT(:,:,:)>XCTMIN(2)) PCLDFR(:,:,:)=1.
+  WHERE(PCLDFR(:,:)<1.E-10 .AND. PRCT(:,:)>XRTMIN(2) .AND. PCCT(:,:)>XCTMIN(2)) PCLDFR(:,:)=1.
 
 END IF
 !
@@ -177,18 +177,18 @@ IF ( LNUCL .AND. NMOM_I>=2 .AND. .NOT.LMEYERS .AND. NMOD_IFN >= 1 ) THEN
     if ( BUCONF%lbudget_sv ) then
       do jl = 1, nmod_ifn
         idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_free - 1 + jl
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HIND', pift(:, :, :, jl) * prhodj(:, :, :) / ptstep )
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HIND', pift(:,:, jl) * prhodj(:,:) / ptstep )
         idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_nucl - 1 + jl
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HIND', pint(:, :, :, jl) * prhodj(:, :, :) / ptstep )
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HIND', pint(:,:, jl) * prhodj(:,:) / ptstep )
       end do
 
       do jl = 1, nmod_ccn
         idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + jl
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HINC', pnat(:, :, :, jl) * prhodj(:, :, :) / ptstep )
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HINC', pnat(:,:, jl) * prhodj(:,:) / ptstep )
       end do
       do jl = 1, nmod_imm
         idx = NBUDGET_SV1 - 1 + nsv_lima_imm_nucl - 1 + jl
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HINC', pnit(:, :, :, jl) * prhodj(:, :, :) / ptstep )
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HINC', pnit(:,:, jl) * prhodj(:,:) / ptstep )
       end do
     end if
   end if
@@ -200,43 +200,43 @@ IF ( LNUCL .AND. NMOM_I>=2 .AND. .NOT.LMEYERS .AND. NMOD_IFN >= 1 ) THEN
                                       Z_TH_HIND, PTOT_RI_HIND, Z_CI_HIND,               &
                                       Z_TH_HINC, PTOT_RC_HINC, Z_CC_HINC,               &
                                       PICEFR                                            )
-  WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. PCIT(:,:,:)>XCTMIN(4)) PICEFR(:,:,:)=1.
+  WHERE(PICEFR(:,:)<1.E-10 .AND. PRIT(:,:)>XRTMIN(4) .AND. PCIT(:,:)>XCTMIN(4)) PICEFR(:,:)=1.
 !
   if ( BUCONF%lbu_enable ) then
      if ( BUCONF%lbudget_th ) &
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HIND',     z_th_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HIND',     z_th_hind(:,:) * prhodj(:,:) / ptstep )
      if ( BUCONF%lbudget_rv ) &
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HIND', -ptot_ri_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HIND', -ptot_ri_hind(:,:) * prhodj(:,:) / ptstep )
      if ( BUCONF%lbudget_ri ) &
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIND',  ptot_ri_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIND',  ptot_ri_hind(:,:) * prhodj(:,:) / ptstep )
     if ( BUCONF%lbudget_sv ) then
-      call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni), 'HIND', z_ci_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+      call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni), 'HIND', z_ci_hind(:,:) * prhodj(:,:) / ptstep )
       do jl = 1, nmod_ifn
         idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_free - 1 + jl
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HIND', pift(:, :, :, jl) * prhodj(:, :, :) / ptstep )
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HIND', pift(:,:, jl) * prhodj(:,:) / ptstep )
         idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_nucl - 1 + jl
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HIND', pint(:, :, :, jl) * prhodj(:, :, :) / ptstep )
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HIND', pint(:,:, jl) * prhodj(:,:) / ptstep )
       end do
     end if
 
     if ( BUCONF%lbudget_th ) &
-         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HINC',     z_th_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HINC',     z_th_hinc(:,:) * prhodj(:,:) / ptstep )
     if ( BUCONF%lbudget_rc ) &
-         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'HINC',  ptot_rc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'HINC',  ptot_rc_hinc(:,:) * prhodj(:,:) / ptstep )
     if ( BUCONF%lbudget_ri ) &
-         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HINC', -ptot_rc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HINC', -ptot_rc_hinc(:,:) * prhodj(:,:) / ptstep )
     if ( BUCONF%lbudget_sv ) then
        if (nmom_c.ge.2) then
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_nc), 'HINC',  z_cc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_nc), 'HINC',  z_cc_hinc(:,:) * prhodj(:,:) / ptstep )
        end if
-      call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni), 'HINC', -z_cc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+      call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni), 'HINC', -z_cc_hinc(:,:) * prhodj(:,:) / ptstep )
       do jl = 1, nmod_ccn
         idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + jl
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HINC', pnat(:, :, :, jl) * prhodj(:, :, :) / ptstep )
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HINC', pnat(:,:, jl) * prhodj(:,:) / ptstep )
       end do
       do jl = 1, nmod_imm
         idx = NBUDGET_SV1 - 1 + nsv_lima_imm_nucl - 1 + jl
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HINC', pnit(:, :, :, jl) * prhodj(:, :, :) / ptstep )
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HINC', pnit(:,:, jl) * prhodj(:,:) / ptstep )
       end do
     end if
   end if
@@ -252,36 +252,36 @@ IF (LNUCL .AND. NMOM_I>=2 .AND. LMEYERS) THEN
                                 Z_TH_HIND, PTOT_RI_HIND, Z_CI_HIND,         &
                                 Z_TH_HINC, PTOT_RC_HINC, Z_CC_HINC,         &
                                 PICEFR                                      )
-  WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. PCIT(:,:,:)>XCTMIN(4)) PICEFR(:,:,:)=1.
+  WHERE(PICEFR(:,:)<1.E-10 .AND. PRIT(:,:)>XRTMIN(4) .AND. PCIT(:,:)>XCTMIN(4)) PICEFR(:,:)=1.
   !
   if ( BUCONF%lbu_enable ) then
      if ( BUCONF%lbudget_th ) &
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HIND',     z_th_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HIND',     z_th_hind(:,:) * prhodj(:,:) / ptstep )
      if ( BUCONF%lbudget_rv ) &
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HIND', -ptot_ri_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HIND', -ptot_ri_hind(:,:) * prhodj(:,:) / ptstep )
      if ( BUCONF%lbudget_ri ) &
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIND',  ptot_ri_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIND',  ptot_ri_hind(:,:) * prhodj(:,:) / ptstep )
     if ( BUCONF%lbudget_sv ) then
-      call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni), 'HIND', z_ci_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+      call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni), 'HIND', z_ci_hind(:,:) * prhodj(:,:) / ptstep )
       if (nmod_ifn > 0 ) &
         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_ifn_nucl), 'HIND', &
-                               z_ci_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+                               z_ci_hind(:,:) * prhodj(:,:) / ptstep )
     end if
 
     if ( BUCONF%lbudget_th ) &
-         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HINC',     z_th_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HINC',     z_th_hinc(:,:) * prhodj(:,:) / ptstep )
     if ( BUCONF%lbudget_rc ) &
-         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'HINC',  ptot_rc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'HINC',  ptot_rc_hinc(:,:) * prhodj(:,:) / ptstep )
     if ( BUCONF%lbudget_ri ) &
-         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HINC', -ptot_rc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HINC', -ptot_rc_hinc(:,:) * prhodj(:,:) / ptstep )
     if ( BUCONF%lbudget_sv ) then
        if (nmom_c.ge.2) then
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_nc), 'HINC',  z_cc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_nc), 'HINC',  z_cc_hinc(:,:) * prhodj(:,:) / ptstep )
        end if
-      call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni), 'HINC', -z_cc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+      call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni), 'HINC', -z_cc_hinc(:,:) * prhodj(:,:) / ptstep )
       if (nmod_ifn > 0 ) &
         call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_ifn_nucl), 'HINC', &
-                               -z_cc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+                               -z_cc_hinc(:,:) * prhodj(:,:) / ptstep )
     end if
   end if
 END IF
@@ -291,58 +291,56 @@ END IF
 !++cb-- pour l'instant, on ne recupere pas cette tendance
 ! actuellement, les echanges vapeur-->glace/eau lies a la nucleation ne sont pas traites dans l'electrisation
 IF (LNUCL .AND. NMOM_I.EQ.1) THEN
-  WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. PCIT(:,:,:)>XCTMIN(4)) PICEFR(:,:,:)=1.
+  WHERE(PICEFR(:,:)<1.E-10 .AND. PRIT(:,:)>XRTMIN(4) .AND. PCIT(:,:)>XCTMIN(4)) PICEFR(:,:)=1.
   !
-  ZLSFACT(:,:,:)=(CST%XLSTT+(CST%XCPV-CST%XCI)*(PT(:,:,:)-CST%XTT)) / &
+  ZLSFACT(:,:)=(CST%XLSTT+(CST%XCPV-CST%XCI)*(PT(:,:)-CST%XTT)) / &
      ( ( CST%XCPD +                                  &
-         CST%XCPV*PRVT(:,:,:) +                      &
-         CST%XCL*(PRCT(:,:,:)+PRRT(:,:,:)) +         &
-         CST%XCI*(PRIT(:,:,:)+PRST(:,:,:)+PRGT(:,:,:)+PRHT(:,:,:)) ) * PEXNREF(:,:,:) ) 
-  DO JI = 1, SIZE(PTHT,1)
-     DO JJ = 1, SIZE(PTHT,2)
-        CALL LIMA_ICE4_NUCLEATION(CST, SIZE(PTHT,3), &
-             PTHT(JI,JJ,:), PPABST(JI,JJ,:), PRHODREF(JI,JJ,:), PEXNREF(JI,JJ,:), ZLSFACT(JI,JJ,:), PT(JI,JJ,:), &
-             PRVT(JI,JJ,:), &
-             PCIT(JI,JJ,:), ZRVHENIMR(JI,JJ,:) )
-     END DO
+         CST%XCPV*PRVT(:,:) +                      &
+         CST%XCL*(PRCT(:,:)+PRRT(:,:)) +         &
+         CST%XCI*(PRIT(:,:)+PRST(:,:)+PRGT(:,:)+PRHT(:,:)) ) * PEXNREF(:,:) ) 
+  DO JI = 1, D%NIJT
+     CALL LIMA_ICE4_NUCLEATION(CST, D%NKT, &
+          PTHT(JI,:), PPABST(JI,:), PRHODREF(JI,:), PEXNREF(JI,:), ZLSFACT(JI,:), PT(JI,:), &
+          PRVT(JI,:), &
+          PCIT(JI,:), ZRVHENIMR(JI,:) )
   END DO
   !
-  PRIT(:,:,:)=PRIT(:,:,:)+ZRVHENIMR(:,:,:)
-  PTHT(:,:,:)=PTHT(:,:,:)+ZRVHENIMR(:,:,:)*ZLSFACT(:,:,:)
-  PRVT(:,:,:)=PRVT(:,:,:)-ZRVHENIMR(:,:,:)
+  PRIT(:,:)=PRIT(:,:)+ZRVHENIMR(:,:)
+  PTHT(:,:)=PTHT(:,:)+ZRVHENIMR(:,:)*ZLSFACT(:,:)
+  PRVT(:,:)=PRVT(:,:)-ZRVHENIMR(:,:)
   !
   if ( BUCONF%lbu_enable ) then
      if ( BUCONF%lbudget_th ) &
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HIND',  ZRVHENIMR(:,:,:)*ZLSFACT(:,:,:) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HIND',  ZRVHENIMR(:,:)*ZLSFACT(:,:) * prhodj(:,:) / ptstep )
      if ( BUCONF%lbudget_rv ) &
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HIND', -ZRVHENIMR(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HIND', -ZRVHENIMR(:,:) * prhodj(:,:) / ptstep )
      if ( BUCONF%lbudget_ri ) &
-          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIND',  ZRVHENIMR(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIND',  ZRVHENIMR(:,:) * prhodj(:,:) / ptstep )
   end if
 !  Z_TH_HINC=0.
 !  Z_RC_HINC=0.
 !  Z_CC_HINC=0.
 !  !
 !  if ( BUCONF%lbu_enable ) then
-!    if ( BUCONF%lbudget_th ) call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HIND',  z_th_hind(:, :, :) * prhodj(:, :, :) / ptstep )
-!    if ( BUCONF%lbudget_rv ) call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HIND', -z_ri_hind(:, :, :) * prhodj(:, :, :) / ptstep )
-!    if ( BUCONF%lbudget_ri ) call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIND',  z_ri_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+!    if ( BUCONF%lbudget_th ) call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HIND',  z_th_hind(:,:) * prhodj(:,:) / ptstep )
+!    if ( BUCONF%lbudget_rv ) call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RV), 'HIND', -z_ri_hind(:,:) * prhodj(:,:) / ptstep )
+!    if ( BUCONF%lbudget_ri ) call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIND',  z_ri_hind(:,:) * prhodj(:,:) / ptstep )
 !    if ( BUCONF%lbudget_sv ) then
-!      call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ni), 'HIND', z_ci_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+!      call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ni), 'HIND', z_ci_hind(:,:) * prhodj(:,:) / ptstep )
 !      if (nmod_ifn > 0 ) &
 !        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ifn_nucl), 'HIND', &
-!                               z_ci_hind(:, :, :) * prhodj(:, :, :) / ptstep )
+!                               z_ci_hind(:,:) * prhodj(:,:) / ptstep )
 !    end if
 !
-!    if ( BUCONF%lbudget_th ) call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HINC',  z_th_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
-!    if ( BUCONF%lbudget_rc ) call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'HINC',  z_rc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
-!    if ( BUCONF%lbudget_ri ) call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HINC', -z_rc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+!    if ( BUCONF%lbudget_th ) call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_TH), 'HINC',  z_th_hinc(:,:) * prhodj(:,:) / ptstep )
+!    if ( BUCONF%lbudget_rc ) call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'HINC',  z_rc_hinc(:,:) * prhodj(:,:) / ptstep )
+!    if ( BUCONF%lbudget_ri ) call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HINC', -z_rc_hinc(:,:) * prhodj(:,:) / ptstep )
 !    if ( BUCONF%lbudget_sv ) then
-!      call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'HINC',  z_cc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
-!      call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ni), 'HINC', -z_cc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+!      call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'HINC',  z_cc_hinc(:,:) * prhodj(:,:) / ptstep )
+!      call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ni), 'HINC', -z_cc_hinc(:,:) * prhodj(:,:) / ptstep )
 !      if (nmod_ifn > 0 ) &
 !        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ifn_nucl), 'HINC', &
-!                               -z_cc_hinc(:, :, :) * prhodj(:, :, :) / ptstep )
+!                               -z_cc_hinc(:,:) * prhodj(:,:) / ptstep )
 !    end if
 !  end if
 END IF
@@ -352,18 +350,18 @@ END IF
 IF ( LNUCL .AND. LHHONI .AND. NMOD_CCN >= 1 .AND. NMOM_I.GE.2) THEN
   if ( BUCONF%lbu_enable ) then
      if ( BUCONF%lbudget_th ) &
-          call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'HONH', PTHT(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'HONH', PTHT(:,:) * prhodj(:,:) / ptstep )
      if ( BUCONF%lbudget_rv ) &
-          call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'HONH', PRVT(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'HONH', PRVT(:,:) * prhodj(:,:) / ptstep )
      if ( BUCONF%lbudget_ri ) &
-          call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'HONH', PRIT(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'HONH', PRIT(:,:) * prhodj(:,:) / ptstep )
     if ( BUCONF%lbudget_sv ) then
-      call BUDGET_STORE_INIT_PHY(D,TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni),'HONH',PCIT(:, :, :)*prhodj(:, :, :)/ptstep )
+      call BUDGET_STORE_INIT_PHY(D,TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni),'HONH',PCIT(:,:)*prhodj(:,:)/ptstep )
       do jl = 1, nmod_ccn
         idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + jl
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HONH', PNFT(:, :, :, jl) * prhodj(:, :, :) / ptstep )
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HONH', PNFT(:,:, jl) * prhodj(:,:) / ptstep )
       end do
-      call BUDGET_STORE_INIT_PHY(D,TBUDGETS(NBUDGET_SV1-1+nsv_lima_hom_haze),'HONH',PNHT(:, :, :)*prhodj(:, :, :)/ptstep)
+      call BUDGET_STORE_INIT_PHY(D,TBUDGETS(NBUDGET_SV1-1+nsv_lima_hom_haze),'HONH',PNHT(:,:)*prhodj(:,:)/ptstep)
     end if
   end if
 
@@ -371,22 +369,22 @@ IF ( LNUCL .AND. LHHONI .AND. NMOD_CCN >= 1 .AND. NMOM_I.GE.2) THEN
                               PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                               PCCT, PCRT, PCIT, PNFT, PNHT,             &
                               PICEFR, PTOT_RV_HONH                      )
-  WHERE(PICEFR(:,:,:)<1.E-10 .AND. PRIT(:,:,:)>XRTMIN(4) .AND. PCIT(:,:,:)>XCTMIN(4)) PICEFR(:,:,:)=1.
+  WHERE(PICEFR(:,:)<1.E-10 .AND. PRIT(:,:)>XRTMIN(4) .AND. PCIT(:,:)>XCTMIN(4)) PICEFR(:,:)=1.
 !
   if ( BUCONF%lbu_enable ) then
      if ( BUCONF%lbudget_th ) &
-          call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'HONH', PTHT(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'HONH', PTHT(:,:) * prhodj(:,:) / ptstep )
      if ( BUCONF%lbudget_rv ) &
-          call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'HONH', PRVT(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'HONH', PRVT(:,:) * prhodj(:,:) / ptstep )
      if ( BUCONF%lbudget_ri ) &
-          call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'HONH', PRIT(:, :, :) * prhodj(:, :, :) / ptstep )
+          call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'HONH', PRIT(:,:) * prhodj(:,:) / ptstep )
     if ( BUCONF%lbudget_sv ) then
-      call BUDGET_STORE_END_PHY(D,TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni),'HONH',PCIT(:, :, :)*prhodj(:, :, :)/ptstep )
+      call BUDGET_STORE_END_PHY(D,TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni),'HONH',PCIT(:,:)*prhodj(:,:)/ptstep )
       do jl = 1, nmod_ccn
         idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + jl
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HONH', PNFT(:, :, :, jl) * prhodj(:, :, :) / ptstep )
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HONH', PNFT(:,:, jl) * prhodj(:,:) / ptstep )
       end do
-      call BUDGET_STORE_END_PHY(D,TBUDGETS(NBUDGET_SV1-1+nsv_lima_hom_haze),'HONH',PNHT(:, :, :)*prhodj(:, :, :)/ptstep)
+      call BUDGET_STORE_END_PHY(D,TBUDGETS(NBUDGET_SV1-1+nsv_lima_hom_haze),'HONH',PNHT(:,:)*prhodj(:,:)/ptstep)
     end if
   end if
 ENDIF

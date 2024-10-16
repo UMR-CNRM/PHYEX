@@ -52,30 +52,30 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 TYPE(CST_t),              INTENT(IN)    :: CST
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PW_NU   ! updraft velocity used for
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PRHODREF! Reference density
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PW_NU   ! updraft velocity used for
                                                    ! the nucleation param.
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHT    ! Theta at time t
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRVT    ! Water vapor m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRCT    ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRIT    ! Cloud ice m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PTHT    ! Theta at time t
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRVT    ! Water vapor m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PRCT    ! Cloud water m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRIT    ! Cloud ice m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t 
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCCT    ! Cloud water C. at t
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCRT    ! Rain water C. source
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIT    ! Ice crystal C. source
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PCCT    ! Cloud water C. at t
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PCRT    ! Rain water C. source
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PCIT    ! Ice crystal C. source
 !
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PNFT    ! Free CCN conc. 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PNHT    ! haze homogeneous freezing
+REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNFT    ! Free CCN conc. 
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PNHT    ! haze homogeneous freezing
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR  ! Ice fraction
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PICEFR  ! Ice fraction
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTOT_RV_HONH ! Mixing ratio change due to HONH
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PTOT_RV_HONH ! Mixing ratio change due to HONH
 !
 !*       0.2   Declarations of local variables :
 !
@@ -95,10 +95,10 @@ REAL, DIMENSION(:),   ALLOCATABLE :: ZCIT    ! Pristine ice conc. source
 REAL, DIMENSION(:),   ALLOCATABLE :: ZZNHT   ! Nucleated Ice nuclei conc. source
                                              !by Homogeneous freezing
 !
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))   &
+REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2))   &
                                   :: ZNHT  ! Nucleated Ice nuclei conc. source
                                            ! by Homogeneous freezing of haze
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))   &
+REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2))   &
                                   :: ZT ! work arrays
 !
 REAL, DIMENSION(:), ALLOCATABLE &
@@ -123,13 +123,13 @@ REAL, DIMENSION(:), ALLOCATABLE &
                               ZFREECCN, &
                               ZCCNFROZEN
 !
-INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE   ! Physical domain
+INTEGER :: IIJB, IIJE, IKB, IKE   ! Physical domain
 INTEGER :: JL, JMOD_CCN                   ! Loop index
 !
 INTEGER :: INEGT                          ! Case number of hom. nucleation
-LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
+LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) &
         :: GNEGT        ! Test where to compute the hom. nucleation
-INTEGER , DIMENSION(SIZE(GNEGT)) :: I1,I2,I3 ! Used to replace the COUNT
+INTEGER , DIMENSION(SIZE(GNEGT)) :: I1,I3 ! Used to replace the COUNT
 !
 REAL    :: ZEPS                           ! molar mass ratio
 !
@@ -141,24 +141,22 @@ REAL    :: ZEPS                           ! molar mass ratio
 !
 !
 ! Physical domain
-IIB=1+JPHEXT
-IIE=SIZE(PTHT,1) - JPHEXT
-IJB=1+JPHEXT
-IJE=SIZE(PTHT,2) - JPHEXT
+IIJB=JPHEXT
+IIJE=SIZE(PTHT,1)
 IKB=1+JPVEXT
-IKE=SIZE(PTHT,3) - JPVEXT
+IKE=SIZE(PTHT,2) - JPVEXT
 !
 ! Temperature
-ZT(:,:,:) = PTHT(:,:,:) * ( PPABST(:,:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
+ZT(:,:) = PTHT(:,:) * ( PPABST(:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
 !
-ZNHT(:,:,:) = PNHT(:,:,:)
+ZNHT(:,:) = PNHT(:,:)
 !
 ! Computations only where the temperature is below -35°C
 ! PACK variables
 !
-GNEGT(:,:,:) = .FALSE.
-GNEGT(IIB:IIE,IJB:IJE,IKB:IKE) = ZT(IIB:IIE,IJB:IJE,IKB:IKE)<CST%XTT-35.0
-INEGT = COUNTJV( GNEGT(:,:,:),I1(:),I2(:),I3(:))
+GNEGT(:,:) = .FALSE.
+GNEGT(IIJB:IIJE,IKB:IKE) = ZT(IIJB:IIJE,IKB:IKE)<CST%XTT-35.0
+INEGT = COUNTJV( GNEGT(:,:),I1(:),I3(:))
 !
 IF (INEGT.GT.0) THEN
 
@@ -184,27 +182,27 @@ IF (INEGT.GT.0) THEN
    ALLOCATE(ZEXNREF(INEGT))
    !
    DO JL=1,INEGT
-      ZRVT(JL) = PRVT(I1(JL),I2(JL),I3(JL))
-      ZRCT(JL) = PRCT(I1(JL),I2(JL),I3(JL))
-      ZRRT(JL) = PRRT(I1(JL),I2(JL),I3(JL))
-      ZRIT(JL) = PRIT(I1(JL),I2(JL),I3(JL))
-      ZRST(JL) = PRST(I1(JL),I2(JL),I3(JL))
-      ZRGT(JL) = PRGT(I1(JL),I2(JL),I3(JL))
+      ZRVT(JL) = PRVT(I1(JL),I3(JL))
+      ZRCT(JL) = PRCT(I1(JL),I3(JL))
+      ZRRT(JL) = PRRT(I1(JL),I3(JL))
+      ZRIT(JL) = PRIT(I1(JL),I3(JL))
+      ZRST(JL) = PRST(I1(JL),I3(JL))
+      ZRGT(JL) = PRGT(I1(JL),I3(JL))
       !
-      ZTHT(JL) = PTHT(I1(JL),I2(JL),I3(JL))
+      ZTHT(JL) = PTHT(I1(JL),I3(JL))
       !
-      ZCCT(JL) = PCCT(I1(JL),I2(JL),I3(JL))
-      ZCRT(JL) = PCRT(I1(JL),I2(JL),I3(JL))
-      ZCIT(JL) = PCIT(I1(JL),I2(JL),I3(JL))
+      ZCCT(JL) = PCCT(I1(JL),I3(JL))
+      ZCRT(JL) = PCRT(I1(JL),I3(JL))
+      ZCIT(JL) = PCIT(I1(JL),I3(JL))
       !
       DO JMOD_CCN = 1, NMOD_CCN
-         ZNFT(JL,JMOD_CCN) = PNFT(I1(JL),I2(JL),I3(JL),JMOD_CCN)
+         ZNFT(JL,JMOD_CCN) = PNFT(I1(JL),I3(JL),JMOD_CCN)
       ENDDO
-      ZZNHT(JL) = ZNHT(I1(JL),I2(JL),I3(JL))
-      ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
-      ZZT(JL)      = ZT(I1(JL),I2(JL),I3(JL))
-      ZPRES(JL)    = PPABST(I1(JL),I2(JL),I3(JL))
-      ZEXNREF(JL)  = PEXNREF(I1(JL),I2(JL),I3(JL))
+      ZZNHT(JL) = ZNHT(I1(JL),I3(JL))
+      ZRHODREF(JL) = PRHODREF(I1(JL),I3(JL))
+      ZZT(JL)      = ZT(I1(JL),I3(JL))
+      ZPRES(JL)    = PPABST(I1(JL),I3(JL))
+      ZEXNREF(JL)  = PEXNREF(I1(JL),I3(JL))
    ENDDO
 !
 ! PACK : done
@@ -252,7 +250,7 @@ IF (INEGT.GT.0) THEN
 !
       ALLOCATE(ZW_NU(INEGT))
       DO JL=1,INEGT
-         ZW_NU(JL) = PW_NU(I1(JL),I2(JL),I3(JL))
+         ZW_NU(JL) = PW_NU(I1(JL),I3(JL))
       END DO
 !
       ZZW(:)  = 0.0
@@ -300,16 +298,16 @@ IF (INEGT.GT.0) THEN
          WHERE(ZFREECCN(:)>1.)
             ZCCNFROZEN(:) = ZZX(:) * ZNFT(:,JMOD_CCN)/ZFREECCN(:)
          END WHERE
-         PNFT(:,:,:,JMOD_CCN) = PNFT(:,:,:,JMOD_CCN) - UNPACK( ZCCNFROZEN(:), MASK=GNEGT(:,:,:),FIELD=0.)
+         PNFT(:,:,JMOD_CCN) = PNFT(:,:,JMOD_CCN) - UNPACK( ZCCNFROZEN(:), MASK=GNEGT(:,:),FIELD=0.)
       END DO
 !
-      PTOT_RV_HONH(:,:,:) = UNPACK( ZZW(:), MASK=GNEGT(:,:,:),FIELD=0.)
+      PTOT_RV_HONH(:,:) = UNPACK( ZZW(:), MASK=GNEGT(:,:),FIELD=0.)
 !
-      PTHT(:,:,:) = PTHT(:,:,:) + UNPACK( ZZW(:)*(ZLSFACT(:)-ZLVFACT(:)), MASK=GNEGT(:,:,:),FIELD=0.)
-      PRVT(:,:,:) = PRVT(:,:,:) - UNPACK( ZZW(:), MASK=GNEGT(:,:,:),FIELD=0.)
-      PRIT(:,:,:) = PRIT(:,:,:) + UNPACK( ZZW(:), MASK=GNEGT(:,:,:),FIELD=0.)
-      PCIT(:,:,:) = PCIT(:,:,:) + UNPACK( ZZX(:), MASK=GNEGT(:,:,:),FIELD=0.)
-      PNHT(:,:,:) = PNHT(:,:,:) + UNPACK( ZZX(:), MASK=GNEGT(:,:,:),FIELD=0.)
+      PTHT(:,:) = PTHT(:,:) + UNPACK( ZZW(:)*(ZLSFACT(:)-ZLVFACT(:)), MASK=GNEGT(:,:),FIELD=0.)
+      PRVT(:,:) = PRVT(:,:) - UNPACK( ZZW(:), MASK=GNEGT(:,:),FIELD=0.)
+      PRIT(:,:) = PRIT(:,:) + UNPACK( ZZW(:), MASK=GNEGT(:,:),FIELD=0.)
+      PCIT(:,:) = PCIT(:,:) + UNPACK( ZZX(:), MASK=GNEGT(:,:),FIELD=0.)
+      PNHT(:,:) = PNHT(:,:) + UNPACK( ZZX(:), MASK=GNEGT(:,:),FIELD=0.)
 
       DEALLOCATE(ZFREECCN)
       DEALLOCATE(ZCCNFROZEN)

@@ -40,42 +40,42 @@ IMPLICIT NONE
 !
 TYPE(CST_t),              INTENT(IN)    :: CST
 !
-REAL, DIMENSION(:,:,:),    INTENT(IN)    :: PRHODREF! Cloud water m.r. at t 
-REAL, DIMENSION(:,:,:),    INTENT(IN)    :: PRCT    ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:,:),    INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
+REAL, DIMENSION(:,:),    INTENT(IN)    :: PRHODREF! Cloud water m.r. at t 
+REAL, DIMENSION(:,:),    INTENT(IN)    :: PRCT    ! Cloud water m.r. at t 
+REAL, DIMENSION(:,:),    INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
 !
-REAL, DIMENSION(:,:,:),    INTENT(IN)    :: PCCT    ! Cloud water C. at t
-REAL, DIMENSION(:,:,:),    INTENT(IN)    :: PCRT    ! Rain water C. at t
+REAL, DIMENSION(:,:),    INTENT(IN)    :: PCCT    ! Cloud water C. at t
+REAL, DIMENSION(:,:),    INTENT(IN)    :: PCRT    ! Rain water C. at t
 !
-REAL, DIMENSION(:,:,:),    INTENT(OUT)   :: P_RR_CVRC
-REAL, DIMENSION(:,:,:),    INTENT(OUT)   :: P_CR_CVRC
+REAL, DIMENSION(:,:),    INTENT(OUT)   :: P_RR_CVRC
+REAL, DIMENSION(:,:),    INTENT(OUT)   :: P_CR_CVRC
 !
 !*       0.2   Declarations of local variables :
 !
-REAL, DIMENSION(SIZE(PRCT,1),SIZE(PRCT,2),SIZE(PRCT,3)) :: ZDR
+REAL, DIMENSION(SIZE(PRCT,1),SIZE(PRCT,2)) :: ZDR
 !
-LOGICAL, DIMENSION(SIZE(PRCT,1),SIZE(PRCT,2),SIZE(PRCT,3)) :: ZMASKR, ZMASKC
+LOGICAL, DIMENSION(SIZE(PRCT,1),SIZE(PRCT,2)) :: ZMASKR, ZMASKC
 !
 !
 !
 !
 !-------------------------------------------------------------------------------
 !
-P_RR_CVRC(:,:,:) = 0.
-P_CR_CVRC(:,:,:) = 0.
+P_RR_CVRC(:,:) = 0.
+P_CR_CVRC(:,:) = 0.
 !
-ZDR(:,:,:) = 9999.
-ZMASKR(:,:,:) = PRRT(:,:,:).GT.XRTMIN(3) .AND. PCRT(:,:,:).GT.XCTMIN(3)
-ZMASKC(:,:,:) = PRCT(:,:,:).GT.XRTMIN(2) .AND. PCCT(:,:,:).GT.XCTMIN(2)
-WHERE(ZMASKR(:,:,:))
-   ZDR(:,:,:)=(6.*PRRT(:,:,:)/CST%XPI/CST%XRHOLW/PCRT(:,:,:))**0.33
+ZDR(:,:) = 9999.
+ZMASKR(:,:) = PRRT(:,:).GT.XRTMIN(3) .AND. PCRT(:,:).GT.XCTMIN(3)
+ZMASKC(:,:) = PRCT(:,:).GT.XRTMIN(2) .AND. PCCT(:,:).GT.XCTMIN(2)
+WHERE(ZMASKR(:,:))
+   ZDR(:,:)=(6.*PRRT(:,:)/CST%XPI/CST%XRHOLW/PCRT(:,:))**0.33
 END WHERE
 !
 ! Transfer all drops in droplets if out of cloud and Dr<82microns
 !
-WHERE( ZMASKR(:,:,:) .AND. .NOT.ZMASKC(:,:,:) .AND. ZDR(:,:,:).LT.82.E-6)
-   P_RR_CVRC(:,:,:) = -PRRT(:,:,:)
-   P_CR_CVRC(:,:,:) = -PCRT(:,:,:)
+WHERE( ZMASKR(:,:) .AND. .NOT.ZMASKC(:,:) .AND. ZDR(:,:).LT.82.E-6)
+   P_RR_CVRC(:,:) = -PRRT(:,:)
+   P_CR_CVRC(:,:) = -PCRT(:,:)
 END WHERE
 !
 !-------------------------------------------------------------------------------

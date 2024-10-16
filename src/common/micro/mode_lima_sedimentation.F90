@@ -82,29 +82,29 @@ INTEGER,                  INTENT(IN)    :: KID       ! Hydrometeor ID
 INTEGER,                  INTENT(IN)    :: KSPLITG   !  
 REAL,                     INTENT(IN)    :: PTSTEP    ! Time step  
 LOGICAL,                  INTENT(IN)    :: OELEC     ! if true, cloud electrification is activated
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PDZZ      ! Height (z)
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF  ! Reference density
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST    ! abs. pressure at time t
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PT        ! Temperature
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRT_SUM   ! total water mixing ratio
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCPT      ! Cp
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRS       ! m.r. source
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCS       ! C. source
-REAL, DIMENSION(:,:),     INTENT(OUT)   :: PINPR     ! Instant precip rate
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PFPR      ! Precip. fluxes in altitude
-REAL, DIMENSION(:,:,:),   INTENT(IN),    OPTIONAL :: PEFIELDW  ! Vertical component of the electric field
-REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electricity
-REAL, DIMENSION(:,:,:),   INTENT(INOUT), OPTIONAL :: PQS ! Elec. charge density source
+REAL, DIMENSION(:,:),     INTENT(IN)    :: PDZZ      ! Height (z)
+REAL, DIMENSION(:,:),     INTENT(IN)    :: PRHODREF  ! Reference density
+REAL, DIMENSION(:,:),     INTENT(IN)    :: PPABST    ! abs. pressure at time t
+REAL, DIMENSION(:,:),     INTENT(INOUT) :: PT        ! Temperature
+REAL, DIMENSION(:,:),     INTENT(INOUT) :: PRT_SUM   ! total water mixing ratio
+REAL, DIMENSION(:,:),     INTENT(INOUT) :: PCPT      ! Cp
+REAL, DIMENSION(:,:),     INTENT(INOUT) :: PRS       ! m.r. source
+REAL, DIMENSION(:,:),     INTENT(INOUT) :: PCS       ! C. source
+REAL, DIMENSION(:),       INTENT(OUT)   :: PINPR     ! Instant precip rate
+REAL, DIMENSION(:,:),     INTENT(OUT)   :: PFPR      ! Precip. fluxes in altitude
+REAL, DIMENSION(:,:),     INTENT(IN),    OPTIONAL :: PEFIELDW  ! Vertical component of the electric field
+REAL, INTENT(IN)                        :: PTHVREFZIKB ! Reference thv at IKB for electricity
+REAL, DIMENSION(:,:),     INTENT(INOUT), OPTIONAL :: PQS ! Elec. charge density source
 !
 !*       0.2   Declarations of local variables :
 !
 INTEGER :: JK, JL, JN                     ! Loop index
 INTEGER :: ISEDIM                         ! Case number of sedimentation
 !
-LOGICAL, DIMENSION(D%NIT, D%NJT, D%NKT) :: GSEDIM      ! Test where to compute the SED processes
-REAL,    DIMENSION(D%NIT, D%NJT, D%NKT) :: ZW,       & ! Work array
+LOGICAL, DIMENSION(D%NIJT, D%NKT) :: GSEDIM      ! Test where to compute the SED processes
+REAL,    DIMENSION(D%NIJT, D%NKT) :: ZW,       & ! Work array
                                            ZWDT        ! Temperature change
-REAL,    DIMENSION(D%NIT,D%NJT,0:D%NKT+1) &
+REAL,    DIMENSION(D%NIJT,0:D%NKT+1) &
                            :: ZWSEDR,   & ! Sedimentation of MMR
                               ZWSEDC      ! Sedimentation of number conc.
 !
@@ -120,7 +120,7 @@ REAL, DIMENSION(:), ALLOCATABLE         &
                               ZLBDA,    & ! Slope parameter
                               ZCC         ! Cunningham corrective term for droplets fall speed
 !
-INTEGER , DIMENSION(SIZE(PRHODREF)) :: I1,I2,I3 ! Indexes for PACK replacement
+INTEGER , DIMENSION(D%NIJT, D%NKT) :: I1,I2,I3 ! Indexes for PACK replacement
 !
 REAL    :: ZTSPLITG                       ! Small time step for rain sedimentation
 REAL    :: ZC                             ! Cpl or Cpi
@@ -131,11 +131,10 @@ REAL :: ZCX, ZXX  ! C and x parameters for N-lambda relationship
 REAL, DIMENSION(:),     ALLOCATABLE :: ZQS, &    ! Electric charge density source
                                        ZZQ, &    ! Work array
                                        ZES       ! e in q-D relationship
-REAL, DIMENSION(MERGE(D%NIT, 0, OELEC), &
-               &MERGE(D%NJT, 0, OELEC), &
+REAL, DIMENSION(MERGE(D%NIJT, 0, OELEC), &
                &MERGE(D%NKT, 0, OELEC)) :: ZWSEDQ, &   ! Sedimentation of electric charge density
                                          & ZLBDA3
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT):: ZBEARDCOEFF ! effect of electrical forces on terminal fall speed
+REAL, DIMENSION(D%NIJT, D%NKT):: ZBEARDCOEFF ! effect of electrical forces on terminal fall speed
 !
 !-------------------------------------------------------------------------------
 !
@@ -145,17 +144,17 @@ IMOMENTS=KMOMENTS
 !
 ZTSPLITG= PTSTEP / REAL(NSPLITSED(KID))
 !
-ZWDT=0.
-PINPR(:,:) = 0.
+ZWDT(:,:)=0.
+PINPR(:) = 0.
 PFPR(:,:) = 0.
-ZWSEDR(:,:,:) = 0.
-ZWSEDC(:,:,:) = 0.
+ZWSEDR(:,:) = 0.
+ZWSEDC(:,:) = 0.
 !
-PRS(:,:,:) = PRS(:,:,:) * PTSTEP
-IF (KMOMENTS==2) PCS(:,:,:) = PCS(:,:,:) * PTSTEP
-IF (OELEC)       PQS(:,:,:) = PQS(:,:,:) * PTSTEP
+PRS(:,:) = PRS(:,:) * PTSTEP
+IF (KMOMENTS==2) PCS(:,:) = PCS(:,:) * PTSTEP
+IF (OELEC)       PQS(:,:) = PQS(:,:) * PTSTEP
 DO JK = D%NKTB , D%NKTE
-   ZW(:,:,JK)=ZTSPLITG/PDZZ(:,:,JK)
+   ZW(:,JK)=ZTSPLITG/PDZZ(:,JK)
 END DO
 !
 IF (HPHASE=='L') ZC=CST%XCL
@@ -165,8 +164,8 @@ IF (HPHASE=='I') ZC=CST%XCI
 ! McFarquhar and Heymsfield (1997) for columns as in ICE3
 IF (KID==4 .AND. IMOMENTS==1) THEN
    IMOMENTS=2
-   WHERE(PRS(:,:,:)>0) PCS(:,:,:)=1/(4*CST%XPI*900.) * PRS(:,:,:) * &
-        MAX(0.05E6,-0.15319E6-0.021454E6*ALOG(PRHODREF(:,:,:)*PRS(:,:,:)))**3
+   WHERE(PRS(:,:)>0) PCS(:,:)=1/(4*CST%XPI*900.) * PRS(:,:) * &
+        MAX(0.05E6,-0.15319E6-0.021454E6*ALOG(PRHODREF(:,:)*PRS(:,:)))**3
 END IF
 !
 ! ################################
@@ -175,10 +174,10 @@ END IF
 !
 DO JN = 1 ,  NSPLITSED(KID)
   ! Computation only where enough ice, snow, graupel or hail
-   GSEDIM(:,:,:) = .FALSE.
-   GSEDIM(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE) = PRS(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)>XRTMIN(KID)
-   IF (IMOMENTS==2)  GSEDIM(:,:,:) = GSEDIM(:,:,:) .AND. PCS(:,:,:)>XCTMIN(KID)
-   ISEDIM = COUNTJV( GSEDIM(:,:,:),I1(:),I2(:),I3(:))
+   GSEDIM(:,:) = .FALSE.
+   GSEDIM(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = PRS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>XRTMIN(KID)
+   IF (IMOMENTS==2)  GSEDIM(:,:) = GSEDIM(:,:) .AND. PCS(:,:)>XCTMIN(KID)
+   ISEDIM = COUNTJV( GSEDIM(:,:),I1(:),I3(:))
 !
    IF( ISEDIM >= 1 ) THEN
 !
@@ -201,12 +200,12 @@ DO JN = 1 ,  NSPLITSED(KID)
       END IF      
 !
       DO JL = 1,ISEDIM
-         ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
-         ZPABST(JL) = PPABST(I1(JL),I2(JL),I3(JL))
-         ZT(JL) = PT(I1(JL),I2(JL),I3(JL))
-         ZRS(JL) = PRS(I1(JL),I2(JL),I3(JL))
-         IF (IMOMENTS==2) ZCS(JL) = PCS(I1(JL),I2(JL),I3(JL))
-         IF (OELEC)       ZQS(JL) = PQS(I1(JL),I2(JL),I3(JL))
+         ZRHODREF(JL) = PRHODREF(I1(JL),I3(JL))
+         ZPABST(JL) = PPABST(I1(JL),I3(JL))
+         ZT(JL) = PT(I1(JL),I3(JL))
+         ZRS(JL) = PRS(I1(JL),I3(JL))
+         IF (IMOMENTS==2) ZCS(JL) = PCS(I1(JL),I3(JL))
+         IF (OELEC)       ZQS(JL) = PQS(I1(JL),I3(JL))
       END DO
 !
 ! Compute lambda
@@ -242,23 +241,23 @@ DO JN = 1 ,  NSPLITSED(KID)
       END IF
 !
 ! If the electrical scheme is activated, the electric field can impact the sedimentation
-      ZBEARDCOEFF(:,:,:) = 1.0
+      ZBEARDCOEFF(:,:) = 1.0
       IF (OELEC .AND. LSEDIM_BEARD) THEN
-        ZLBDA3(:,:,:) = UNPACK( ZLBDA(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
+        ZLBDA3(:,:) = UNPACK( ZLBDA(:),MASK=GSEDIM(:,:),FIELD=0.0 )
         CALL ELEC_BEARD_EFFECT(D, CST, 'LIMA', KID, GSEDIM, PT, PRHODREF, PTHVREFZIKB, &
                                PRS, PQS, PEFIELDW, ZLBDA3, ZBEARDCOEFF, &
                                LIMAP=PARAM_LIMA, LIMAPC=PARAM_LIMA_COLD, LIMAPW=PARAM_LIMA_WARM, LIMAPM=PARAM_LIMA_MIXED)
       END IF
 !
-      ZWSEDR(:,:,1:D%NKT) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
-      ZWSEDR(:,:,D%NKTB:D%NKTE) = MIN( ZWSEDR(:,:,D%NKTB:D%NKTE) * ZBEARDCOEFF(:,:,D%NKTB:D%NKTE), &
-                                       PRS(:,:,D%NKTB:D%NKTE) * PRHODREF(:,:,D%NKTB:D%NKTE) /      &
-                                                                ZW(:,:,D%NKTB:D%NKTE) )
+      ZWSEDR(:,1:D%NKT) = UNPACK( ZZW(:),MASK=GSEDIM(:,:),FIELD=0.0 )
+      ZWSEDR(:,D%NKTB:D%NKTE) = MIN( ZWSEDR(:,D%NKTB:D%NKTE) * ZBEARDCOEFF(:,D%NKTB:D%NKTE), &
+                                       PRS(:,D%NKTB:D%NKTE) * PRHODREF(:,D%NKTB:D%NKTE) /      &
+                                                                ZW(:,D%NKTB:D%NKTE) )
       IF (KMOMENTS==2) THEN
-         ZWSEDC(:,:,1:D%NKT) = UNPACK( ZZX(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
-         ZWSEDC(:,:,D%NKTB:D%NKTE) = MIN( ZWSEDC(:,:,D%NKTB:D%NKTE) * ZBEARDCOEFF(:,:,D%NKTB:D%NKTE), &
-                                          PCS(:,:,D%NKTB:D%NKTE) * PRHODREF(:,:,D%NKTB:D%NKTE) /      &
-                                                                   ZW(:,:,D%NKTB:D%NKTE) )
+         ZWSEDC(:,1:D%NKT) = UNPACK( ZZX(:),MASK=GSEDIM(:,:),FIELD=0.0 )
+         ZWSEDC(:,D%NKTB:D%NKTE) = MIN( ZWSEDC(:,D%NKTB:D%NKTE) * ZBEARDCOEFF(:,D%NKTB:D%NKTE), &
+                                          PCS(:,D%NKTB:D%NKTE) * PRHODREF(:,D%NKTB:D%NKTE) /      &
+                                                                   ZW(:,D%NKTB:D%NKTE) )
       END IF
 !
 ! Sedimentation of electric charges
@@ -293,30 +292,30 @@ DO JN = 1 ,  NSPLITSED(KID)
         ! correction for cloud droplet terminal fall speed
         IF (KID == 2)  ZZQ(:) = ZZQ(:) * ZCC(:)
         !
-        ZWSEDQ(:,:,1:D%NKT) = UNPACK( ZZQ(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
-        ZWSEDQ(:,:,1:D%NKT) = ZWSEDQ(:,:,1:D%NKT) * ZBEARDCOEFF(:,:,1:D%NKT)
-        ZWSEDQ(:,:,D%NKTB:D%NKTE) = SIGN(MIN(ABS(ZWSEDQ(:,:,D%NKTB:D%NKTE)),                                                 &
-                                             ABS(PQS(:,:,D%NKTB:D%NKTE)*PRHODREF(:,:,D%NKTB:D%NKTE)/ZW(:,:,D%NKTB:D%NKTE))), &
-                                         ZWSEDQ(:,:,D%NKTB:D%NKTE))
+        ZWSEDQ(:,1:D%NKT) = UNPACK( ZZQ(:),MASK=GSEDIM(:,:),FIELD=0.0 )
+        ZWSEDQ(:,1:D%NKT) = ZWSEDQ(:,1:D%NKT) * ZBEARDCOEFF(:,1:D%NKT)
+        ZWSEDQ(:,D%NKTB:D%NKTE) = SIGN(MIN(ABS(ZWSEDQ(:,D%NKTB:D%NKTE)),                                                 &
+                                             ABS(PQS(:,D%NKTB:D%NKTE)*PRHODREF(:,D%NKTB:D%NKTE)/ZW(:,D%NKTB:D%NKTE))), &
+                                         ZWSEDQ(:,D%NKTB:D%NKTE))
       END IF      
       
       DO JK = D%NKTB , D%NKTE
-         PRS(:,:,JK) = PRS(:,:,JK) + ZW(:,:,JK)*    &
-              (ZWSEDR(:,:,JK+D%NKL)-ZWSEDR(:,:,JK))/PRHODREF(:,:,JK)
-         PFPR(:,:,JK) = ZWSEDR(:,:,JK)
-         IF (KMOMENTS==2) PCS(:,:,JK) = PCS(:,:,JK) + ZW(:,:,JK)*    &
-              (ZWSEDC(:,:,JK+D%NKL)-ZWSEDC(:,:,JK))/PRHODREF(:,:,JK)
+         PRS(:,JK) = PRS(:,JK) + ZW(:,JK)*    &
+              (ZWSEDR(:,JK+D%NKL)-ZWSEDR(:,JK))/PRHODREF(:,JK)
+         PFPR(:,JK) = ZWSEDR(:,JK)
+         IF (KMOMENTS==2) PCS(:,JK) = PCS(:,JK) + ZW(:,JK)*    &
+              (ZWSEDC(:,JK+D%NKL)-ZWSEDC(:,JK))/PRHODREF(:,JK)
          ! Heat transport
-         !PRT_SUM(:,:,JK-D%NKL) = PRT_SUM(:,:,JK-D%NKL) + ZW(:,:,JK-D%NKL)*ZWSEDR(:,:,JK)/PRHODREF(:,:,JK-D%NKL)
-         !PRT_SUM(:,:,JK) = PRT_SUM(:,:,JK) - ZW(:,:,JK)*ZWSEDR(:,:,JK)/PRHODREF(:,:,JK)
-         !PCPT(:,:,JK-D%NKL) = PCPT(:,:,JK-D%NKL) + ZC * (ZW(:,:,JK-D%NKL)*ZWSEDR(:,:,JK)/PRHODREF(:,:,JK-D%NKL))
-         !PCPT(:,:,JK) = PCPT(:,:,JK) - ZC * (ZW(:,:,JK)*ZWSEDR(:,:,JK)/PRHODREF(:,:,JK))
-         !ZWDT(:,:,JK) =(PRHODREF(:,:,JK+D%NKL)*(1.+PRT_SUM(:,:,JK))*PCPT(:,:,JK)*PT(:,:,JK) + &
-         !     ZW(:,:,JK)*ZWSEDR(:,:,JK+1)*ZC*PT(:,:,JK+D%NKL)) / &
-         !     (PRHODREF(:,:,JK+D%NKL)*(1.+PRT_SUM(:,:,JK))*PCPT(:,:,JK) + ZW(:,:,JK)*ZWSEDR(:,:,JK+D%NKL)*ZC)
-         !ZWDT(:,:,JK) = ZWDT(:,:,JK) - PT(:,:,JK)
-         IF (OELEC) PQS(:,:,JK) = PQS(:,:,JK) + ZW(:,:,JK) *    &
-                                 (ZWSEDQ(:,:,JK+D%NKL) - ZWSEDQ(:,:,JK)) / PRHODREF(:,:,JK)
+         !PRT_SUM(:,JK-D%NKL) = PRT_SUM(:,JK-D%NKL) + ZW(:,JK-D%NKL)*ZWSEDR(:,JK)/PRHODREF(:,JK-D%NKL)
+         !PRT_SUM(:,JK) = PRT_SUM(:,JK) - ZW(:,JK)*ZWSEDR(:,JK)/PRHODREF(:,JK)
+         !PCPT(:,JK-D%NKL) = PCPT(:,JK-D%NKL) + ZC * (ZW(:,JK-D%NKL)*ZWSEDR(:,JK)/PRHODREF(:,JK-D%NKL))
+         !PCPT(:,JK) = PCPT(:,JK) - ZC * (ZW(:,JK)*ZWSEDR(:,JK)/PRHODREF(:,JK))
+         !ZWDT(:,JK) =(PRHODREF(:,JK+D%NKL)*(1.+PRT_SUM(:,JK))*PCPT(:,JK)*PT(:,JK) + &
+         !     ZW(:,JK)*ZWSEDR(:,JK+1)*ZC*PT(:,JK+D%NKL)) / &
+         !     (PRHODREF(:,JK+D%NKL)*(1.+PRT_SUM(:,JK))*PCPT(:,JK) + ZW(:,JK)*ZWSEDR(:,JK+D%NKL)*ZC)
+         !ZWDT(:,JK) = ZWDT(:,JK) - PT(:,JK)
+         IF (OELEC) PQS(:,JK) = PQS(:,JK) + ZW(:,JK) *    &
+                                 (ZWSEDQ(:,JK+D%NKL) - ZWSEDQ(:,JK)) / PRHODREF(:,JK)
          
       END DO
       !
@@ -334,15 +333,15 @@ DO JN = 1 ,  NSPLITSED(KID)
       IF (ALLOCATED(ZZQ))    DEALLOCATE(ZZQ)
       IF (ALLOCATED(ZES))    DEALLOCATE(ZES)      
       !      
-      PINPR(:,:) = PINPR(:,:) + ZWSEDR(:,:,D%NKB)/CST%XRHOLW/NSPLITSED(KID)                          ! in m/s
-      !PT(:,:,:) = PT(:,:,:) + ZWDT(:,:,:)
+      PINPR(:) = PINPR(:) + ZWSEDR(:,D%NKB)/CST%XRHOLW/NSPLITSED(KID)                          ! in m/s
+      !PT(:,:) = PT(:,:) + ZWDT(:,:)
       
    END IF
 END DO
 !
-PRS(:,:,:) = PRS(:,:,:) / PTSTEP
-IF (KMOMENTS==2) PCS(:,:,:) = PCS(:,:,:) / PTSTEP
-IF (OELEC) PQS(:,:,:) = PQS(:,:,:) / PTSTEP
+PRS(:,:) = PRS(:,:) / PTSTEP
+IF (KMOMENTS==2) PCS(:,:) = PCS(:,:) / PTSTEP
+IF (OELEC) PQS(:,:) = PQS(:,:) / PTSTEP
 !
 END SUBROUTINE LIMA_SEDIMENTATION
 END MODULE MODE_LIMA_SEDIMENTATION

@@ -87,49 +87,49 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(CST_t),              INTENT(IN)    :: CST
-REAL,                     INTENT(IN)    :: PTSTEP 
+TYPE(CST_t),            INTENT(IN)    :: CST
+REAL,                   INTENT(IN)    :: PTSTEP 
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PRHODREF! Reference density
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHT    ! Theta at time t
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRVT    ! Water vapor m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRCT    ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRIT    ! Cloud ice m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PTHT    ! Theta at time t
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRVT    ! Water vapor m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRCT    ! Cloud water m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRIT    ! Cloud ice m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
+REAL, DIMENSION(:,:),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCCT    ! Cloud water conc. at t 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIT    ! Cloud water conc. at t 
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PNAT    ! CCN conc. used for immersion nucl.
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PIFT    ! Free IFN conc.
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PINT    ! Nucleated IFN conc.
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PNIT    ! Nucleated (by immersion) CCN conc.
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PCCT    ! Cloud water conc. at t 
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PCIT    ! Cloud water conc. at t 
+REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNAT    ! CCN conc. used for immersion nucl.
+REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PIFT    ! Free IFN conc.
+REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PINT    ! Nucleated IFN conc.
+REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNIT    ! Nucleated (by immersion) CCN conc.
 !
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_TH_HIND
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_RI_HIND
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_CI_HIND
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_TH_HINC
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_RC_HINC
-REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_CC_HINC
+REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_TH_HIND
+REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_RI_HIND
+REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_CI_HIND
+REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_TH_HINC
+REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_RC_HINC
+REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_CC_HINC
 !
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR
+REAL, DIMENSION(:,:),   INTENT(INOUT) :: PICEFR
 !
 !
 !*       0.2   Declarations of local variables :
 !
 !
-INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE               ! Physical domain
+INTEGER :: IIJB, IIJE, IKB, IKE               ! Physical domain
 INTEGER :: JL, JMOD_CCN, JMOD_IFN, JSPECIE, JMOD_IMM  ! Loop index
 INTEGER :: INEGT  ! Case number of sedimentation, nucleation,
 !
-LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
+LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) &
 			  :: GNEGT  ! Test where to compute the nucleation
 !
-INTEGER, DIMENSION(SIZE(PRHODREF))  :: I1,I2,I3 ! Indexes for PACK replacement
+INTEGER, DIMENSION(SIZE(PRHODREF))  :: I1,I3 ! Indexes for PACK replacement
 !
 REAL, DIMENSION(:),   ALLOCATABLE :: ZRVT    ! Water vapor m.r. at t
 REAL, DIMENSION(:),   ALLOCATABLE :: ZRCT    ! Cloud water m.r. at t
@@ -162,7 +162,7 @@ REAL, DIMENSION(:), ALLOCATABLE &
                               ZSW,      &
                               ZSI_W
 !
-REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))   &
+REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2))   &
                                   :: ZW, ZT ! work arrays
 !
 REAL,    DIMENSION(:,:), ALLOCATABLE :: ZSI0, &    ! Si threshold in H_X for X={DM,BC,O}
@@ -175,30 +175,28 @@ REAL,    DIMENSION(:),   ALLOCATABLE :: ZTCELSIUS, ZZT_SI0_BC
 !*       1.     PRELIMINARY COMPUTATIONS
 !	        ------------------------
 !
-P_TH_HIND(:,:,:) = 0.
-P_RI_HIND(:,:,:) = 0.
-P_CI_HIND(:,:,:) = 0.
-P_TH_HINC(:,:,:) = 0.
-P_RC_HINC(:,:,:) = 0.
-P_CC_HINC(:,:,:) = 0.
+P_TH_HIND(:,:) = 0.
+P_RI_HIND(:,:) = 0.
+P_CI_HIND(:,:) = 0.
+P_TH_HINC(:,:) = 0.
+P_RC_HINC(:,:) = 0.
+P_CC_HINC(:,:) = 0.
 !
 ! Physical domain
 !
-IIB=1+JPHEXT
-IIE=SIZE(PTHT,1) - JPHEXT
-IJB=1+JPHEXT
-IJE=SIZE(PTHT,2) - JPHEXT
+IIJB=1
+IIJE=SIZE(PTHT,1)
 IKB=1+JPVEXT
-IKE=SIZE(PTHT,3) - JPVEXT
+IKE=SIZE(PTHT,2) - JPVEXT
 !
 ! Temperature
 !
-ZT(:,:,:)  = PTHT(:,:,:) * ( PPABST(:,:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
+ZT(:,:)  = PTHT(:,:) * ( PPABST(:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
 !
 ! Saturation over ice
 !
-ZW(:,:,:) = EXP( CST%XALPI - CST%XBETAI/ZT(:,:,:) - CST%XGAMI*ALOG(ZT(:,:,:) ) )
-ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:,:,:) )
+ZW(:,:) = EXP( CST%XALPI - CST%XBETAI/ZT(:,:) - CST%XGAMI*ALOG(ZT(:,:) ) )
+ZW(:,:) = PRVT(:,:)*( PPABST(:,:)-ZW(:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:,:) )
 !
 !
 !-------------------------------------------------------------------------------
@@ -208,11 +206,11 @@ ZW(:,:,:) = PRVT(:,:,:)*( PPABST(:,:,:)-ZW(:,:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:
 !	        ----------------------------------------
 !
 !
-GNEGT(:,:,:) = .FALSE.
-GNEGT(IIB:IIE,IJB:IJE,IKB:IKE) = ZT(IIB:IIE,IJB:IJE,IKB:IKE)<CST%XTT-2.0 .AND. &
-                                 ZW(IIB:IIE,IJB:IJE,IKB:IKE)>0.95 
+GNEGT(:,:) = .FALSE.
+GNEGT(IIJB:IIJE,IKB:IKE) = ZT(IIJB:IIJE,IKB:IKE)<CST%XTT-2.0 .AND. &
+                           ZW(IIJB:IIJE,IKB:IKE)>0.95 
 !
-INEGT = COUNTJV( GNEGT(:,:,:),I1(:),I2(:),I3(:))
+INEGT = COUNTJV( GNEGT(:,:),I1(:),I3(:))
 !
 IF (INEGT > 0) THEN
 !
@@ -236,29 +234,29 @@ IF (INEGT > 0) THEN
    ALLOCATE(ZEXNREF(INEGT))
 !
    DO JL=1,INEGT
-      ZRVT(JL) = PRVT(I1(JL),I2(JL),I3(JL))
-      ZRCT(JL) = PRCT(I1(JL),I2(JL),I3(JL))
-      ZRRT(JL) = PRRT(I1(JL),I2(JL),I3(JL))
-      ZRIT(JL) = PRIT(I1(JL),I2(JL),I3(JL))
-      ZRST(JL) = PRST(I1(JL),I2(JL),I3(JL))
-      ZRGT(JL) = PRGT(I1(JL),I2(JL),I3(JL))
+      ZRVT(JL) = PRVT(I1(JL),I3(JL))
+      ZRCT(JL) = PRCT(I1(JL),I3(JL))
+      ZRRT(JL) = PRRT(I1(JL),I3(JL))
+      ZRIT(JL) = PRIT(I1(JL),I3(JL))
+      ZRST(JL) = PRST(I1(JL),I3(JL))
+      ZRGT(JL) = PRGT(I1(JL),I3(JL))
 !
-      ZCCT(JL) = PCCT(I1(JL),I2(JL),I3(JL))
+      ZCCT(JL) = PCCT(I1(JL),I3(JL))
 !
       DO JMOD_CCN = 1, NMOD_CCN
-         ZNAT(JL,JMOD_CCN) = PNAT(I1(JL),I2(JL),I3(JL),JMOD_CCN)
+         ZNAT(JL,JMOD_CCN) = PNAT(I1(JL),I3(JL),JMOD_CCN)
       ENDDO
       DO JMOD_IFN = 1, NMOD_IFN
-         ZIFT(JL,JMOD_IFN) = PIFT(I1(JL),I2(JL),I3(JL),JMOD_IFN)
-         ZINT(JL,JMOD_IFN) = PINT(I1(JL),I2(JL),I3(JL),JMOD_IFN)
+         ZIFT(JL,JMOD_IFN) = PIFT(I1(JL),I3(JL),JMOD_IFN)
+         ZINT(JL,JMOD_IFN) = PINT(I1(JL),I3(JL),JMOD_IFN)
       ENDDO
       DO JMOD_IMM = 1, NMOD_IMM
-         ZNIT(JL,JMOD_IMM) = PNIT(I1(JL),I2(JL),I3(JL),JMOD_IMM)
+         ZNIT(JL,JMOD_IMM) = PNIT(I1(JL),I3(JL),JMOD_IMM)
       ENDDO
-      ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
-      ZZT(JL)      = ZT(I1(JL),I2(JL),I3(JL))
-      ZPRES(JL)    = PPABST(I1(JL),I2(JL),I3(JL))
-      ZEXNREF(JL)  = PEXNREF(I1(JL),I2(JL),I3(JL))
+      ZRHODREF(JL) = PRHODREF(I1(JL),I3(JL))
+      ZZT(JL)      = ZT(I1(JL),I3(JL))
+      ZPRES(JL)    = PPABST(I1(JL),I3(JL))
+      ZEXNREF(JL)  = PEXNREF(I1(JL),I3(JL))
    ENDDO
 !
 ! PACK : done
@@ -357,21 +355,21 @@ IF (INEGT > 0) THEN
 !
 ! Update the concentrations and MMR
 !
-      ZW(:,:,:) = UNPACK( ZZX(:), MASK=GNEGT(:,:,:), FIELD=0. )
-      PIFT(:,:,:,JMOD_IFN) = PIFT(:,:,:,JMOD_IFN) - ZW(:,:,:)
-      PINT(:,:,:,JMOD_IFN) = PINT(:,:,:,JMOD_IFN) + ZW(:,:,:)
+      ZW(:,:) = UNPACK( ZZX(:), MASK=GNEGT(:,:), FIELD=0. )
+      PIFT(:,:,JMOD_IFN) = PIFT(:,:,JMOD_IFN) - ZW(:,:)
+      PINT(:,:,JMOD_IFN) = PINT(:,:,JMOD_IFN) + ZW(:,:)
 !
-      P_CI_HIND(:,:,:) = P_CI_HIND(:,:,:) + ZW(:,:,:)
-      PCIT(:,:,:) = PCIT(:,:,:) + ZW(:,:,:)
+      P_CI_HIND(:,:) = P_CI_HIND(:,:) + ZW(:,:)
+      PCIT(:,:) = PCIT(:,:) + ZW(:,:)
 !
-      ZW(:,:,:) = UNPACK( ZZW(:), MASK=GNEGT(:,:,:), FIELD=0. )
-      P_RI_HIND(:,:,:) = P_RI_HIND(:,:,:) + ZW(:,:,:)
-      PRVT(:,:,:) = PRVT(:,:,:) - ZW(:,:,:)
-      PRIT(:,:,:) = PRIT(:,:,:) + ZW(:,:,:)
+      ZW(:,:) = UNPACK( ZZW(:), MASK=GNEGT(:,:), FIELD=0. )
+      P_RI_HIND(:,:) = P_RI_HIND(:,:) + ZW(:,:)
+      PRVT(:,:) = PRVT(:,:) - ZW(:,:)
+      PRIT(:,:) = PRIT(:,:) + ZW(:,:)
 !
-      ZW(:,:,:) = UNPACK( ZZW(:)*ZLSFACT(:), MASK=GNEGT(:,:,:), FIELD=0. )
-      P_TH_HIND(:,:,:) = P_TH_HIND(:,:,:) + ZW(:,:,:)
-      PTHT(:,:,:) = PTHT(:,:,:) + ZW(:,:,:)
+      ZW(:,:) = UNPACK( ZZW(:)*ZLSFACT(:), MASK=GNEGT(:,:), FIELD=0. )
+      P_TH_HIND(:,:) = P_TH_HIND(:,:) + ZW(:,:)
+      PTHT(:,:) = PTHT(:,:) + ZW(:,:)
    END DO
 !
 !
@@ -403,22 +401,22 @@ IF (INEGT > 0) THEN
 !
 ! Update the concentrations and MMR
 !
-         ZW(:,:,:) = UNPACK( ZZX(:), MASK=GNEGT(:,:,:), FIELD=0. )
-         PNIT(:,:,:,JMOD_IMM) = PNIT(:,:,:,JMOD_IMM) + ZW(:,:,:)
-         PNAT(:,:,:,JMOD_CCN) = PNAT(:,:,:,JMOD_CCN) - ZW(:,:,:)
+         ZW(:,:) = UNPACK( ZZX(:), MASK=GNEGT(:,:), FIELD=0. )
+         PNIT(:,:,JMOD_IMM) = PNIT(:,:,JMOD_IMM) + ZW(:,:)
+         PNAT(:,:,JMOD_CCN) = PNAT(:,:,JMOD_CCN) - ZW(:,:)
 !
-         P_CC_HINC(:,:,:) = P_CC_HINC(:,:,:) - ZW(:,:,:) 
-         PCCT(:,:,:) = PCCT(:,:,:) - ZW(:,:,:)
-         PCIT(:,:,:) = PCIT(:,:,:) + ZW(:,:,:)
+         P_CC_HINC(:,:) = P_CC_HINC(:,:) - ZW(:,:) 
+         PCCT(:,:) = PCCT(:,:) - ZW(:,:)
+         PCIT(:,:) = PCIT(:,:) + ZW(:,:)
 !
-         ZW(:,:,:) = UNPACK( ZZY(:), MASK=GNEGT(:,:,:), FIELD=0. )
-         P_RC_HINC(:,:,:) = P_RC_HINC(:,:,:) - ZW(:,:,:)
-         PRCT(:,:,:) = PRCT(:,:,:) - ZW(:,:,:)
-         PRIT(:,:,:) = PRIT(:,:,:) + ZW(:,:,:)
+         ZW(:,:) = UNPACK( ZZY(:), MASK=GNEGT(:,:), FIELD=0. )
+         P_RC_HINC(:,:) = P_RC_HINC(:,:) - ZW(:,:)
+         PRCT(:,:) = PRCT(:,:) - ZW(:,:)
+         PRIT(:,:) = PRIT(:,:) + ZW(:,:)
 !
-         ZW(:,:,:) = UNPACK( ZZY(:)*ZLSFACT(:), MASK=GNEGT(:,:,:), FIELD=0. )
-         P_TH_HINC(:,:,:) = P_TH_HINC(:,:,:) + ZW(:,:,:)
-         PTHT(:,:,:) = PTHT(:,:,:) + ZW(:,:,:)
+         ZW(:,:) = UNPACK( ZZY(:)*ZLSFACT(:), MASK=GNEGT(:,:), FIELD=0. )
+         P_TH_HINC(:,:) = P_TH_HINC(:,:) + ZW(:,:)
+         PTHT(:,:) = PTHT(:,:) + ZW(:,:)
       END IF
    END DO
 !
