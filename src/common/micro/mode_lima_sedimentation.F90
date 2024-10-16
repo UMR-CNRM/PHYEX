@@ -120,7 +120,7 @@ REAL, DIMENSION(:), ALLOCATABLE         &
                               ZLBDA,    & ! Slope parameter
                               ZCC         ! Cunningham corrective term for droplets fall speed
 !
-INTEGER , DIMENSION(D%NIJT, D%NKT) :: I1,I2,I3 ! Indexes for PACK replacement
+INTEGER , DIMENSION(D%NIJT*D%NKT) :: I1,I2,I3 ! Indexes for PACK replacement
 !
 REAL    :: ZTSPLITG                       ! Small time step for rain sedimentation
 REAL    :: ZC                             ! Cpl or Cpi
@@ -193,7 +193,7 @@ DO JN = 1 ,  NSPLITSED(KID)
       ALLOCATE(ZZY(ISEDIM))   ; ZZY(:) = 0.0
       !
       IF (OELEC) THEN
-        ZWSEDQ(:,:,:) = 0.
+        ZWSEDQ(:,:) = 0.
         ALLOCATE(ZES(ISEDIM)) ; ZES(:) = 0.0
         ALLOCATE(ZQS(ISEDIM)) ; ZQS(:) = 0.0
         ALLOCATE(ZZQ(ISEDIM)) ; ZZQ(:) = 0.0

@@ -225,8 +225,7 @@ REAL, DIMENSION(:), ALLOCATABLE ::                          &
 !--cb--
 !
 ! for the conversion from rain to cloud, we need a 3D variable instead of a 1D packed variable
-REAL, DIMENSION(SIZE(PTHT,1),SIZE(PTHT,2),SIZE(PTHT,3)) ::  &
-     Z_RR_CVRC, Z_CR_CVRC                                     ! conversion of rain into cloud droplets (CVRC)
+REAL, DIMENSION(D%NIJT,D%NKT) ::  Z_RR_CVRC, Z_CR_CVRC        ! conversion of rain into cloud droplets (CVRC)
 
 !
 ! Packed variables for total tendencies
@@ -948,13 +947,13 @@ IF (NMOM_C.GE.1 .AND. LDEPOC) THEN
   if ( BUCONF%lbudget_sv .and. nmom_c.ge.2) &
        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'DEPO', zccs(:,:) * prhodj(:,:) )
 
-  GDEP(:,:) = .FALSE.
-  GDEP(:,:) = ZRCS(:,:,D%NKB) >0 .AND. ZCCS(:,:,D%NKB) >0 .AND. ZRCT(:,:,D%NKB) >0 .AND. ZCCT(:,:,D%NKB) >0
+  GDEP(:) = .FALSE.
+  GDEP(:) = ZRCS(:,D%NKB) >0 .AND. ZCCS(:,D%NKB) >0 .AND. ZRCT(:,D%NKB) >0 .AND. ZCCT(:,D%NKB) >0
   WHERE (GDEP)
-     ZRCS(:,:,D%NKB) = ZRCS(:,:,D%NKB) - XVDEPOC * ZRCT(:,:,D%NKB) / PDZZ(:,:,D%NKB)
-     ZCCS(:,:,D%NKB) = ZCCS(:,:,D%NKB) - XVDEPOC * ZCCT(:,:,D%NKB) / PDZZ(:,:,D%NKB)
-     PINPRC(:,:) = PINPRC(:,:) + XVDEPOC * ZRCT(:,:,D%NKB) * PRHODREF(:,:,D%NKB) /CST%XRHOLW
-     PINDEP(:,:) = XVDEPOC * ZRCT(:,:,D%NKB) *  PRHODREF(:,:,D%NKB) /CST%XRHOLW
+     ZRCS(:,D%NKB) = ZRCS(:,D%NKB) - XVDEPOC * ZRCT(:,D%NKB) / PDZZ(:,D%NKB)
+     ZCCS(:,D%NKB) = ZCCS(:,D%NKB) - XVDEPOC * ZCCT(:,D%NKB) / PDZZ(:,D%NKB)
+     PINPRC(:) = PINPRC(:) + XVDEPOC * ZRCT(:,D%NKB) * PRHODREF(:,D%NKB) /CST%XRHOLW
+     PINDEP(:) = XVDEPOC * ZRCT(:,D%NKB) *  PRHODREF(:,D%NKB) /CST%XRHOLW
   END WHERE
 
   if ( BUCONF%lbudget_rc ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'DEPO', zrcs(:,:) * prhodj(:,:) )

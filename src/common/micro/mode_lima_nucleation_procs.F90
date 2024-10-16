@@ -92,11 +92,11 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCCT       ! Cloud water conc.
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCRT       ! Rain water conc. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT       ! Prinstine ice conc. at t
 !
-REAL, DIMENSION(D%NIJT,D%NKT,:), INTENT(INOUT) :: PNFT       ! CCN C. available at t
-REAL, DIMENSION(D%NIJT,D%NKT,:), INTENT(INOUT) :: PNAT       ! CCN C. activated at t
-REAL, DIMENSION(D%NIJT,D%NKT,:), INTENT(INOUT) :: PIFT       ! IFN C. available at t
-REAL, DIMENSION(D%NIJT,D%NKT,:), INTENT(INOUT) :: PINT       ! IFN C. activated at t
-REAL, DIMENSION(D%NIJT,D%NKT,:), INTENT(INOUT) :: PNIT       ! Coated IFN activated at t
+REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNFT       ! CCN C. available at t
+REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNAT       ! CCN C. activated at t
+REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PIFT       ! IFN C. available at t
+REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PINT       ! IFN C. activated at t
+REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNIT       ! Coated IFN activated at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PNHT       ! CCN hom. freezing
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCLDFR     ! Cloud fraction

@@ -243,7 +243,7 @@ REAL, DIMENSION(:), ALLOCATABLE   :: ZRTMIN
 REAL, DIMENSION(:), ALLOCATABLE   :: ZCTMIN
 !
 integer :: idx
-integer :: JI, JJ, JK, jl
+integer :: JI, JK, jl
 INTEGER                           :: JMOD
 !
 !!$TYPE(TFIELDMETADATA)     :: TZFIELD
@@ -460,11 +460,11 @@ DO JITER =1,ITERMAX
    IF (OSUBG_COND) THEN
       Z_SIGS=PSIGS
       G_SIGMAS=OSIGMAS
-      ZSIGQSAT2D(:,:)=PSIGQSAT
+      ZSIGQSAT2D(:)=PSIGQSAT
    ELSE
       Z_SIGS=0.
       G_SIGMAS=.TRUE.
-      ZSIGQSAT2D(:,:)=0.
+      ZSIGQSAT2D(:)=0.
    END IF
 
    IF (LADJ) THEN
@@ -504,29 +504,27 @@ IF (LADJ) THEN
               ZW1(:,:) * ZLV(:,:) / (ZCPH(:,:) * PEXNREF(:,:))
 ELSE
    DO JI=1,SIZE(PRCS,1)
-      DO JJ=1,SIZE(PRCS,2)
-         DO JK=1,SIZE(PRCS,3)
-            IF (PRCS(JI,JJ,JK).GE.XRTMIN(2) .AND. PCCS(JI,JJ,JK).GE.XCTMIN(2)) THEN
-               ZVEC1(JI,JJ,JK) = MAX( 1.0001, MIN( FLOAT(NAHEN)-0.0001, XAHENINTP1 * ZT(JI,JJ,JK) + XAHENINTP2 ) )
-               IVEC1(JI,JJ,JK) = INT( ZVEC1(JI,JJ,JK) )
-               ZVEC1(JI,JJ,JK) = ZVEC1(JI,JJ,JK) - FLOAT( IVEC1(JI,JJ,JK) )
-               ZW(JI,JJ,JK)=EXP( CST%XALPW - CST%XBETAW/ZT(JI,JJ,JK) - CST%XGAMW*ALOG(ZT(JI,JJ,JK) ) ) ! es_w
-               ZW(JI,JJ,JK)=ZEPS*ZW(JI,JJ,JK) / ( PPABST(JI,JJ,JK)-ZW(JI,JJ,JK) ) 
-               ZS(JI,JJ,JK) = PRVS(JI,JJ,JK)*PTSTEP / ZW(JI,JJ,JK) - 1.
-               ZW(JI,JJ,JK) = PCCS(JI,JJ,JK)*PTSTEP/(XLBC*PCCS(JI,JJ,JK)/PRCS(JI,JJ,JK))**XLBEXC
-               ZW2(JI,JJ,JK) = XAHENG3(IVEC1(JI,JJ,JK)+1)*ZVEC1(JI,JJ,JK)-XAHENG3(IVEC1(JI,JJ,JK))*(ZVEC1(JI,JJ,JK)-1.)
-               ZCND(JI,JJ,JK) = 2.*3.14*1000.*ZW2(JI,JJ,JK)*ZS(JI,JJ,JK)*ZW(JI,JJ,JK)
-               IF(ZCND(JI,JJ,JK).LE.0.) THEN
-                  ZCND(JI,JJ,JK) = MAX ( ZCND(JI,JJ,JK), -PRCS(JI,JJ,JK) )
+         DO JK=1,SIZE(PRCS,2)
+            IF (PRCS(JI,JK).GE.XRTMIN(2) .AND. PCCS(JI,JK).GE.XCTMIN(2)) THEN
+               ZVEC1(JI,JK) = MAX( 1.0001, MIN( FLOAT(NAHEN)-0.0001, XAHENINTP1 * ZT(JI,JK) + XAHENINTP2 ) )
+               IVEC1(JI,JK) = INT( ZVEC1(JI,JK) )
+               ZVEC1(JI,JK) = ZVEC1(JI,JK) - FLOAT( IVEC1(JI,JK) )
+               ZW(JI,JK)=EXP( CST%XALPW - CST%XBETAW/ZT(JI,JK) - CST%XGAMW*ALOG(ZT(JI,JK) ) ) ! es_w
+               ZW(JI,JK)=ZEPS*ZW(JI,JK) / ( PPABST(JI,JK)-ZW(JI,JK) ) 
+               ZS(JI,JK) = PRVS(JI,JK)*PTSTEP / ZW(JI,JK) - 1.
+               ZW(JI,JK) = PCCS(JI,JK)*PTSTEP/(XLBC*PCCS(JI,JK)/PRCS(JI,JK))**XLBEXC
+               ZW2(JI,JK) = XAHENG3(IVEC1(JI,JK)+1)*ZVEC1(JI,JK)-XAHENG3(IVEC1(JI,JK))*(ZVEC1(JI,JK)-1.)
+               ZCND(JI,JK) = 2.*3.14*1000.*ZW2(JI,JK)*ZS(JI,JK)*ZW(JI,JK)
+               IF(ZCND(JI,JK).LE.0.) THEN
+                  ZCND(JI,JK) = MAX ( ZCND(JI,JK), -PRCS(JI,JK) )
                ELSE
-                  ZCND(JI,JJ,JK) = MIN ( ZCND(JI,JJ,JK),  PRVS(JI,JJ,JK) )
+                  ZCND(JI,JK) = MIN ( ZCND(JI,JK),  PRVS(JI,JK) )
                END IF
-               PRVS(JI,JJ,JK) = PRVS(JI,JJ,JK) - ZCND(JI,JJ,JK)
-               PRCS(JI,JJ,JK) = PRCS(JI,JJ,JK) + ZCND(JI,JJ,JK)
-               PTHS(JI,JJ,JK) = PTHS(JI,JJ,JK) + ZCND(JI,JJ,JK) * ZLV(JI,JJ,JK) / (ZCPH(JI,JJ,JK) * PEXNREF(JI,JJ,JK))
+               PRVS(JI,JK) = PRVS(JI,JK) - ZCND(JI,JK)
+               PRCS(JI,JK) = PRCS(JI,JK) + ZCND(JI,JK)
+               PTHS(JI,JK) = PTHS(JI,JK) + ZCND(JI,JK) * ZLV(JI,JK) / (ZCPH(JI,JK) * PEXNREF(JI,JK))
             END IF
          END DO
-      END DO
    END DO
 END IF
 !
@@ -552,7 +550,7 @@ IF ( .NOT. OSUBG_COND ) THEN
   ELSEWHERE
     PCLDFR(:,:)  = 0. 
   ENDWHERE 
-  IF ( SIZE(PSRCS,3) /= 0 ) THEN
+  IF ( SIZE(PSRCS,2) /= 0 ) THEN
      WHERE (PRCS(:,:) + PRIS(:,:) > 1.E-12 / ZDT)
         PSRCS(:,:)  = 1.
      ELSEWHERE
@@ -598,7 +596,7 @@ IF (NMOM_C .GE. 2) THEN
 END IF
 !
 ZW1(:,:) = 0.
-IF (NMOM_C.GE.1 .AND. NMOD_CCN.GE.1) ZW1(:,:) = SUM(PNAS,DIM=4)
+IF (NMOM_C.GE.1 .AND. NMOD_CCN.GE.1) ZW1(:,:) = SUM(PNAS,DIM=3)
 ZW (:,:) = MIN( ZW(:,:), ZW1(:,:) )
 ZW2(:,:) = 0.
 WHERE ( ZW(:,:) > 0. )
