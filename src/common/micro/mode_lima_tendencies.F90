@@ -130,153 +130,153 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PRGT      !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHT      ! Mixing ratios (kg/kg)
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PCCT      !
-REAL, DIMENSION(:),   INTENT(INOUT) :: PCRT      !
+REAL, DIMENSION(:),   INTENT(IN)    :: PCRT      !
 REAL, DIMENSION(:),   INTENT(IN)    :: PCIT      ! 
-REAL, DIMENSION(:),   INTENT(INOUT) :: PCST      ! 
-REAL, DIMENSION(:),   INTENT(INOUT) :: PCGT      !
-REAL, DIMENSION(:),   INTENT(INOUT) :: PCHT      ! Number concentrations (/kg)
+REAL, DIMENSION(:),   INTENT(IN)    :: PCST      ! 
+REAL, DIMENSION(:),   INTENT(IN)    :: PCGT      !
+REAL, DIMENSION(:),   INTENT(IN)    :: PCHT      ! Number concentrations (/kg)
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_HONC
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_HONC
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CC_HONC ! droplets homogeneous freezing (HONC) : rc, Nc, ri=-rc, Ni=-Nc, th
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_HONC
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_HONC
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_HONC ! droplets homogeneous freezing (HONC) : rc, Nc, ri=-rc, Ni=-Nc, th
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CC_SELF ! self collection of droplets (SELF) : Nc
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_SELF ! self collection of droplets (SELF) : Nc
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_AUTO
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CC_AUTO
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_AUTO ! autoconversion of cloud droplets (AUTO) : rc, Nc, rr=-rc, Nr
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_AUTO
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_AUTO
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_AUTO ! autoconversion of cloud droplets (AUTO) : rc, Nc, rr=-rc, Nr
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_ACCR
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CC_ACCR ! accretion of droplets by rain drops (ACCR) : rc, Nc, rr=-rr
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_ACCR
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_ACCR ! accretion of droplets by rain drops (ACCR) : rc, Nc, rr=-rr
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_SCBU ! self collectio break up of drops (SCBU) : Nr
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_SCBU ! self collectio break up of drops (SCBU) : Nr
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_EVAP
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_EVAP
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_EVAP ! evaporation of rain drops (EVAP) : rr, Nr, rv=-rr
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_EVAP
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_EVAP
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_EVAP ! evaporation of rain drops (EVAP) : rr, Nr, rv=-rr
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_CNVI
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_CNVI  ! conversion snow -> ice (CNVI) : ri, Ni, rs=-ri
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_CNVI
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_CNVI  ! conversion snow -> ice (CNVI) : ri, Ni, rs=-ri
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_DEPS
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_DEPS  ! deposition of vapor on snow (DEPS) : rv=-rs, rs, th
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_DEPS
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_DEPS  ! deposition of vapor on snow (DEPS) : rv=-rs, rs, th
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_DEPI
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_DEPI  ! deposition of vapor on ice (DEPI) : rv=-ri, ri, th
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_DEPI
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_DEPI  ! deposition of vapor on ice (DEPI) : rv=-ri, ri, th
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_CNVS
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_CNVS  ! conversion ice -> snow (CNVS) : ri, Ni, rs=-ri
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_CNVS
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_CNVS  ! conversion ice -> snow (CNVS) : ri, Ni, rs=-ri
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CS_SSC   ! self collection of snow (SSC) : Ns
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_SSC   ! self collection of snow (SSC) : Ns
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_AGGS
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_AGGS  ! aggregation of ice on snow (AGGS) : ri, Ni, rs=-ri
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_AGGS
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_AGGS  ! aggregation of ice on snow (AGGS) : ri, Ni, rs=-ri
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_DEPG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_DEPG  ! deposition of vapor on graupel (DEPG) : rv=-rg, rg, th
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_DEPG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_DEPG  ! deposition of vapor on graupel (DEPG) : rv=-rg, rg, th
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_BERFI
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_BERFI ! Bergeron (BERFI) : rc, ri=-rc, th
-!
-!++cb++
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_RIM
-!REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_RIM
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CC_RIM
-!REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_RIM
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CS_RIM
-!REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_RIM   ! cloud droplet riming (RIM) : rc, Nc, rs, rg, th
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_RIMSS
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_RIMSG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_RIMCG   ! cloud droplet riming (RIM) : rc, Nc, rs, rg, th
-!--cb--
-!
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_HMS
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_HMS
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_HMS   ! hallett mossop snow (HMS) : ri, Ni, rs
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_BERFI
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_BERFI ! Bergeron (BERFI) : rc, ri=-rc, th
 !
 !++cb++
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_ACC
-!REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_ACC
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_ACC
-!REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_ACC
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CS_ACC
-!REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_ACC   ! rain accretion on aggregates (ACC) : rr, Nr, rs, Ns, rg, Ng=-Ns, th
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_ACCSS
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_ACCSG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_ACCRG ! rain accretion on aggregates (ACC) : rr, Nr, rs, rg, th
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_RIM
+!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_RIM
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_RIM
+!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_RIM
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_RIM
+!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_RIM   ! cloud droplet riming (RIM) : rc, Nc, rs, rg, th
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_RIMSS
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_RIMSG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_RIMCG   ! cloud droplet riming (RIM) : rc, Nc, rs, rg, th
 !--cb--
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_CMEL
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CS_CMEL  ! conversion-melting (CMEL) : rs, Ns, rg=-rs, Ng=-Ns
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_HMS
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_HMS
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_HMS   ! hallett mossop snow (HMS) : ri, Ni, rs
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_CFRZ
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_CFRZ
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_CFRZ
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_CFRZ
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_CFRZ  ! rain freezing (CFRZ) : rr, Nr, ri, Ni, rg=-rr-ri, th
+!++cb++
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_ACC
+!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_ACC
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_ACC
+!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_ACC
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_ACC
+!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_ACC   ! rain accretion on aggregates (ACC) : rr, Nr, rs, Ns, rg, Ng=-Ns, th
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_ACCSS
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_ACCSG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_ACCRG ! rain accretion on aggregates (ACC) : rr, Nr, rs, rg, th
+!--cb--
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_CIBU
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_CIBU  ! collisional ice break-up (CIBU) : ri, Ni, rs=-ri
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_CMEL
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_CMEL  ! conversion-melting (CMEL) : rs, Ns, rg=-rs, Ng=-Ns
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_RDSF
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_RDSF  ! rain drops freezing shattering (RDSF) : ri, Ni, rg=-ri
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_CFRZ
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_CFRZ
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_CFRZ
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_CFRZ
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_CFRZ  ! rain freezing (CFRZ) : rr, Nr, ri, Ni, rg=-rr-ri, th
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_WETG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_WETG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CC_WETG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_WETG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_WETG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_WETG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_WETG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_WETG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CS_WETG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_WETG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CG_WETG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RH_WETG ! wet growth of graupel (WETG) : rc, NC, rr, Nr, ri, Ni, rs, Ns, rg, Ng, rh, Nh=-Ng, th
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_CIBU
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_CIBU  ! collisional ice break-up (CIBU) : ri, Ni, rs=-ri
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_DRYG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_DRYG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CC_DRYG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_DRYG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_DRYG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_DRYG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_DRYG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_DRYG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CS_DRYG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_DRYG ! dry growth of graupel (DRYG) : rc, Nc, rr, Nr, ri, Ni, rs, rg, th
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_RDSF
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_RDSF  ! rain drops freezing shattering (RDSF) : ri, Ni, rg=-ri
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_HMG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_HMG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_HMG  ! hallett mossop graupel (HMG) : ri, Ni, rg
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_WETG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_WETG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_WETG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_WETG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_WETG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_WETG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_WETG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_WETG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_WETG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_WETG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CG_WETG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RH_WETG ! wet growth of graupel (WETG) : rc, NC, rr, Nr, ri, Ni, rs, Ns, rg, Ng, rh, Nh=-Ng, th
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_GMLT
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_GMLT
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_GMLT
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CG_GMLT ! graupel melting (GMLT) : rr, Nr, rg=-rr, Ng, th
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_DRYG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_DRYG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_DRYG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_DRYG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_DRYG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_DRYG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_DRYG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_DRYG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_DRYG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_DRYG ! dry growth of graupel (DRYG) : rc, Nc, rr, Nr, ri, Ni, rs, rg, th
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_DEPH
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RH_DEPH  ! deposition of vapor on hail (DEPH) : rv=-rh, rh, th
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_HMG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_HMG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_HMG  ! hallett mossop graupel (HMG) : ri, Ni, rg
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_WETH
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_WETH
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CC_WETH
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_WETH
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_WETH
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RI_WETH
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CI_WETH
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RS_WETH
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CS_WETH
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_WETH
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CG_WETH
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RH_WETH ! wet growth of hail (WETH) : rc, NC, rr, Nr, ri, Ni, rs, Ns, rg, Ng, rh, th
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_GMLT
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_GMLT
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_GMLT
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CG_GMLT ! graupel melting (GMLT) : rr, Nr, rg=-rr, Ng, th
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RG_COHG
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CG_COHG ! conversion hail -> graupel (COHG) : rg, Ng, rh=-rg; Nh=-Ng
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_DEPH
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RH_DEPH  ! deposition of vapor on hail (DEPH) : rv=-rh, rh, th
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_HMLT
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RR_HMLT
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CR_HMLT
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CH_HMLT ! hail melting (HMLT) : rr, Nr, rh=-rr, Nh, th
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_WETH
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_WETH
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_WETH
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_WETH
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_WETH
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_WETH
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_WETH
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_WETH
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_WETH
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_WETH
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CG_WETH
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RH_WETH ! wet growth of hail (WETH) : rc, NC, rr, Nr, ri, Ni, rs, Ns, rg, Ng, rh, th
+!
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_COHG
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CG_COHG ! conversion hail -> graupel (COHG) : rg, Ng, rh=-rg; Nh=-Ng
+!
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_HMLT
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_HMLT
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_HMLT
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CH_HMLT ! hail melting (HMLT) : rr, Nr, rh=-rr, Nh, th
 !
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_TH
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RV
@@ -293,7 +293,7 @@ REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CG
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_RH
 REAL, DIMENSION(:),   INTENT(INOUT) :: PA_CH
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: PEVAP3D
+REAL, DIMENSION(:),   INTENT(OUT)   :: PEVAP3D
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PCF1D
 REAL, DIMENSION(:),   INTENT(IN)    :: PIF1D
@@ -339,6 +339,13 @@ REAL,    DIMENSION(SIZE(PRCT))  :: ZW
 REAL,    DIMENSION(SIZE(PRCT))  :: ZCF1D
 REAL,    DIMENSION(SIZE(PRCT))  :: ZIF1D
 REAL,    DIMENSION(SIZE(PRCT))  :: ZPF1D
+!
+REAL,    DIMENSION(SIZE(PRCT))  :: ZRCT
+REAL,    DIMENSION(SIZE(PRCT))  :: ZRRT
+REAL,    DIMENSION(SIZE(PRCT))  :: ZRIT
+REAL,    DIMENSION(SIZE(PRCT))  :: ZRST
+REAL,    DIMENSION(SIZE(PRCT))  :: ZRGT
+REAL,    DIMENSION(SIZE(PRCT))  :: ZRHT
 !
 REAL,    DIMENSION(SIZE(PRCT))  :: ZRCT
 REAL,    DIMENSION(SIZE(PRCT))  :: ZRRT
@@ -434,6 +441,7 @@ END WHERE
 ! Cloud droplets : same formula for 1 and 2 moments, but using real or fixed Nc value
 ZLBDC(:)  = 1.E10
 ZLBDC3(:) = 1.E30
+ZCCT(:)=PCCT(:)
 WHERE (ZRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2) .AND. LDCOMPUTE(:))
    ZLBDC3(:) = XLBC*PCCT(:) / ZRCT(:)
    ZLBDC(:)  = ZLBDC3(:)**XLBEXC
@@ -442,27 +450,31 @@ END WHERE
 ! Rain drops
 ZLBDR(:)  = 1.E10
 ZLBDR3(:) = 1.E30
+ZCRT(:)=0.
 IF (NMOM_R.EQ.1) THEN
    WHERE (ZRRT(:)>XRTMIN(3) .AND. LDCOMPUTE(:) )
       ZLBDR(:) = XLBR*(PRHODREF(:)*ZRRT(:) )**XLBEXR
       ZLBDR3(:) = ZLBDR(:)**3.
+      ZCRT(:) = XCCR * ZLBDR(:)**XCXR / PRHODREF(:)
    END WHERE
-   PCRT(:) = XCCR * ZLBDR(:)**XCXR / PRHODREF(:)
 ELSE
    WHERE (ZRRT(:)>XRTMIN(3) .AND. PCRT(:)>XCTMIN(3) .AND. LDCOMPUTE(:))
       ZLBDR3(:) = XLBR*PCRT(:) / ZRRT(:)
       ZLBDR(:)  = ZLBDR3(:)**XLBEXR
+      ZCRT(:)=PCRT(:)
    END WHERE
 END IF
 !
 ! Pristine ice : same formula for 1 and 2 moments, using real or diagnosed Ni
 ZLBDI(:)  = 1.E10
+ZCIT(:)=PCIT(:)
 WHERE (ZRIT(:)>XRTMIN(4) .AND. PCIT(:)>XCTMIN(4) .AND. LDCOMPUTE(:))
    ZLBDI(:) = ( XLBI*PCIT(:) / ZRIT(:) )**XLBEXI
 END WHERE
 !
 ! Snow : additional option for LSNOW_T if NMOM_S=1
 ZLBDS(:)  = 1.E10
+ZCST(:)=0.
 IF (NMOM_S.EQ.1) THEN
    IF (LSNOW_T) THEN
       WHERE (ZRST(:)>XRTMIN(5) .AND. LDCOMPUTE(:) )
@@ -474,45 +486,52 @@ IF (NMOM_S.EQ.1) THEN
          END WHERE
       END WHERE
       ZLBDS(:) =  ZLBDS(:) * XTRANS_MP_GAMMAS
-      PCST(:) = XNS * ZRST(:) * ZLBDS(:)**XBS
+      ZCST(:) = XNS * ZRST(:) * ZLBDS(:)**XBS
    ELSE
       WHERE (ZRST(:)>XRTMIN(5) .AND. LDCOMPUTE(:) )
          ZLBDS(:) = XLBS*( PRHODREF(:)*ZRST(:) )**XLBEXS
       END WHERE
-      PCST(:) = XCCS * ZLBDS(:)**XCXS / PRHODREF(:)
+      ZCST(:) = XCCS * ZLBDS(:)**XCXS / PRHODREF(:)
    END IF
 ELSE
    WHERE (ZRST(:)>XRTMIN(5) .AND. PCST(:)>XCTMIN(5) .AND. LDCOMPUTE(:))
       ZLBDS(:) = (XLBS*PCST(:)/ZRST(:))**XLBEXS
+      ZCST(:) = PCST(:)
    END WHERE
 END IF
 ZLBDS3(:) = ZLBDS(:)**3.
 !
 ! Graupel
 ZLBDG(:)  = 1.E10
+ZCGT(:)=0.
 IF (NMOM_G.EQ.1) THEN
    WHERE (ZRGT(:)>XRTMIN(6) .AND. LDCOMPUTE(:) )
       ZLBDG(:) = XLBG*( PRHODREF(:)*ZRGT(:) )**XLBEXG
    END WHERE
-      PCGT(:) = XCCG * ZLBDG(:)**XCXG / PRHODREF(:)
+   ZCGT(:) = XCCG * ZLBDG(:)**XCXG / PRHODREF(:)
 ELSE
    WHERE (ZRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. LDCOMPUTE(:))
       ZLBDG(:) = (XLBG*PCGT(:)/ZRGT(:))**XLBEXG
    END WHERE
+   ZCGT(:)=PCGT(:)
 END IF
 !
 ! Hail
 ZLBDH(:)  = 1.E10
+ZCHT(:)=0.
 IF (NMOM_H.EQ.1) THEN
    WHERE (ZRHT(:)>XRTMIN(7) .AND. LDCOMPUTE(:) )
       ZLBDH(:) = XLBH*( PRHODREF(:)*ZRHT(:) )**XLBEXH
-      PCHT(:) = XCCH * ZLBDH(:)**XCXH / PRHODREF(:)
+      ZCHT(:) = XCCH * ZLBDH(:)**XCXH / PRHODREF(:)
    END WHERE
 ELSE
    WHERE (ZRHT(:)>XRTMIN(7) .AND. PCHT(:)>XCTMIN(7) .AND. LDCOMPUTE(:))
       ZLBDH(:) = (XLBH*PCHT(:)/ZRHT(:))**XLBEXH
    END WHERE
+   ZCHT(:)=PCHT(:)
 END IF
+!
+PEVAP3D(:)=0.
 !
 !-------------------------------------------------------------------------------
 ! Call microphysical processes   
@@ -520,7 +539,7 @@ END IF
 IF (NMOM_C.GE.1 .AND. NMOM_I.GE.1) THEN
    CALL LIMA_DROPLETS_HOM_FREEZING (PTSTEP, LDCOMPUTE,                 & ! independent from CF,IF,PF
                                     ZT, ZLVFACT, ZLSFACT,              &
-                                    ZRCT, PCCT, ZLBDC,                 &
+                                    ZRCT, ZCCT, ZLBDC,                 &
                                     P_TH_HONC, P_RC_HONC, P_CC_HONC    )
    PA_RC(:) = PA_RC(:) + P_RC_HONC(:)
    IF (NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_HONC(:)
@@ -533,7 +552,7 @@ END IF
 IF ((.NOT. LKHKO) .AND. NMOM_C.GE.2) THEN
    CALL LIMA_DROPLETS_SELF_COLLECTION (LDCOMPUTE,          & ! depends on CF
                                        PRHODREF,           &
-                                       PCCT/ZCF1D, ZLBDC3, &
+                                       ZCCT/ZCF1D, ZLBDC3, &
                                        P_CC_SELF           )
    P_CC_SELF(:) = P_CC_SELF(:) * ZCF1D(:)
    PA_CC(:) = PA_CC(:) + P_CC_SELF(:)
@@ -542,7 +561,7 @@ END IF
 IF (NMOM_C.GE.1 .AND. NMOM_R.GE.1) THEN
    CALL LIMA_DROPLETS_AUTOCONVERSION (LDCOMPUTE,                             & ! depends on CF
                                       PRHODREF,                              &
-                                      ZRCT/ZCF1D, PCCT/ZCF1D, ZLBDC, ZLBDR,  &
+                                      ZRCT/ZCF1D, ZCCT/ZCF1D, ZLBDC, ZLBDR,  &
                                       P_RC_AUTO, P_CC_AUTO, P_CR_AUTO        )
    P_RC_AUTO(:) = P_RC_AUTO(:) * ZCF1D(:)
    P_CC_AUTO(:) = P_CC_AUTO(:) * ZCF1D(:)
@@ -557,7 +576,7 @@ END IF
 IF (NMOM_C.GE.1 .AND. NMOM_R.GE.1) THEN
    CALL LIMA_DROPLETS_ACCRETION (LDCOMPUTE,                                     & ! depends on CF, PF
                                  PRHODREF,                                      &
-                                 ZRCT/ZCF1D, ZRRT/ZPF1D, PCCT/ZCF1D, PCRT/ZPF1D,&
+                                 ZRCT/ZCF1D, ZRRT/ZPF1D, ZCCT/ZCF1D, ZCRT/ZPF1D,&
                                  ZLBDC, ZLBDC3, ZLBDR, ZLBDR3,                  &
                                  P_RC_ACCR, P_CC_ACCR                           )
    !
@@ -572,12 +591,12 @@ END IF
 IF ((.NOT. LKHKO) .AND. NMOM_R.GE.2) THEN 
    CALL LIMA_DROPS_SELF_COLLECTION (LDCOMPUTE,           & ! depends on PF
                                     PRHODREF,            &
-                                    PCRT/ZPF1D(:), ZLBDR, ZLBDR3, &
+                                    ZCRT/ZPF1D(:), ZLBDR, ZLBDR3, &
                                     P_CR_SCBU            )
    !
    P_CR_SCBU(:) = P_CR_SCBU(:) * ZPF1D(:)
    ! process limited until checks on concentrations are added to the time-splitting loop
-   P_CR_SCBU(:) = MAX(P_CR_SCBU(:),-0.5*PCRT(:)/PTSTEP)
+   P_CR_SCBU(:) = MAX(P_CR_SCBU(:),-0.5*ZCRT(:)/PTSTEP)
    !
    PA_CR(:) = PA_CR(:) + P_CR_SCBU(:)
 END IF
@@ -585,7 +604,7 @@ END IF
 IF (NMOM_R.GE.1) THEN
    CALL LIMA_RAIN_EVAPORATION (PTSTEP, LDCOMPUTE,                               & ! depends on PF > CF 
                                PRHODREF, ZT, ZLV, ZLVFACT, ZEVSAT, ZRVSAT,      &
-                               PRVT, ZRCT/ZPF1D, ZRRT/ZPF1D, PCRT/ZPF1D, ZLBDR, &
+                               PRVT, ZRCT/ZPF1D, ZRRT/ZPF1D, ZCRT/ZPF1D, ZLBDR, &
                                P_TH_EVAP, P_RR_EVAP, P_CR_EVAP,                 &
                                PEVAP3D                                          )
    P_RR_EVAP(:) = P_RR_EVAP(:) * MAX((ZPF1D(:) - ZCF1D(:)),0.)
@@ -605,7 +624,7 @@ IF (NMOM_I.GE.1) THEN
    !
    CALL LIMA_ICE_DEPOSITION (PTSTEP, LDCOMPUTE,                 & ! depends on IF, PF
                              PRHODREF, ZT, ZSSI, ZAI, ZCJ, ZLSFACT, &
-                             ZRIT/ZIF1D, PCIT/ZIF1D, ZLBDI,     &
+                             ZRIT/ZIF1D, ZCIT/ZIF1D, ZLBDI,     &
                              P_TH_DEPI, P_RI_DEPI,              &
                              P_RI_CNVS, P_CI_CNVS               )
    !
@@ -629,7 +648,7 @@ IF (NMOM_S.GE.1) THEN
    !
    CALL LIMA_SNOW_DEPOSITION (LDCOMPUTE,                         & ! depends on IF, PF
                               PRHODREF, ZSSI, ZAI, ZCJ, ZLSFACT, &
-                              ZRST/ZPF1D, PCST/ZPF1D, ZLBDS,     &
+                              ZRST/ZPF1D, ZCST/ZPF1D, ZLBDS,     &
                               P_RI_CNVI, P_CI_CNVI,              &
                               P_TH_DEPS, P_RS_DEPS               )
    !
@@ -650,7 +669,7 @@ END IF
 IF (NMOM_S.GE.2) THEN 
    CALL LIMA_SNOW_SELF_COLLECTION (LDCOMPUTE,           & ! depends on PF
                                    PRHODREF,            &
-                                   ZRST(:)/ZPF1D(:), PCST/ZPF1D(:), ZLBDS, ZLBDS3, &
+                                   ZRST(:)/ZPF1D(:), ZCST/ZPF1D(:), ZLBDS, ZLBDS3, &
                                    P_CS_SSC             )
    !
    P_CS_SSC(:) = P_CS_SSC(:) * ZPF1D(:)
@@ -667,7 +686,7 @@ END IF
 IF (NMOM_I.GE.1 .AND. NMOM_S.GE.1) THEN
    CALL LIMA_ICE_AGGREGATION_SNOW (LDCOMPUTE,                                                    & ! depends on IF, PF
                                    ZT, PRHODREF,                                                 &
-                                   ZRIT/ZIF1D, ZRST/ZPF1D, PCIT/ZIF1D, PCST/ZPF1D, ZLBDI, ZLBDS, &
+                                   ZRIT/ZIF1D, ZRST/ZPF1D, ZCIT/ZIF1D, ZCST/ZPF1D, ZLBDI, ZLBDS, &
                                    PLATHAM_IAGGS,                                                &
                                    P_RI_AGGS, P_CI_AGGS                                          )
    P_CI_AGGS(:) = P_CI_AGGS(:) * ZIF1D(:)
@@ -680,7 +699,7 @@ END IF
 !
 IF (NMOM_G.GE.1) THEN
    CALL LIMA_GRAUPEL_DEPOSITION (LDCOMPUTE, PRHODREF,                                    & ! depends on PF ?
-                                 ZRGT/ZPF1D, PCGT/ZPF1D, ZSSI, ZLBDG, ZAI, ZCJ, ZLSFACT, &
+                                 ZRGT/ZPF1D, ZCGT/ZPF1D, ZSSI, ZLBDG, ZAI, ZCJ, ZLSFACT, &
                                  P_TH_DEPG, P_RG_DEPG                                    )
    P_RG_DEPG(:) = P_RG_DEPG(:) * ZPF1D(:)
    P_TH_DEPG(:) = P_RG_DEPG(:) * ZLSFACT(:)
@@ -692,7 +711,7 @@ END IF
 !
 IF (NMOM_C.GE.1 .AND. NMOM_I.EQ.1) THEN
    CALL LIMA_BERGERON (LDCOMPUTE,                                 & ! depends on CF, IF
-                       ZRCT/ZCF1D, ZRIT/ZIF1D, PCIT/ZIF1D, ZLBDI, &
+                       ZRCT/ZCF1D, ZRIT/ZIF1D, ZCIT/ZIF1D, ZLBDI, &
                        ZSSIW, ZAI, ZCJ, ZLVFACT, ZLSFACT,         &
                        P_TH_BERFI, P_RC_BERFI                     )
    P_TH_BERFI(:) = P_TH_BERFI(:) * MIN(ZCF1D,ZIF1D)
@@ -711,7 +730,7 @@ IF (NMOM_C.GE.1 .AND. NMOM_S.GE.1) THEN
 !++cb++
    CALL LIMA_DROPLETS_RIMING_SNOW (PTSTEP, LDCOMPUTE,                                & ! depends on CF
                                    PRHODREF, ZT,                                     &
-                                   ZRCT/ZCF1D, PCCT/ZCF1D, ZRST/ZPF1D, PCST/ZPF1D, ZLBDC, ZLBDS, ZLVFACT, ZLSFACT, &
+                                   ZRCT/ZCF1D, ZCCT/ZCF1D, ZRST/ZPF1D, ZCST/ZPF1D, ZLBDC, ZLBDS, ZLVFACT, ZLSFACT, &
 !                                   P_TH_RIM, P_RC_RIM, P_CC_RIM, P_RS_RIM, P_CS_RIM, P_RG_RIM, &
                                    P_TH_RIM, P_CC_RIM, P_CS_RIM, P_RC_RIMSS, P_RC_RIMSG, P_RS_RIMCG, &
                                    P_RI_HMS, P_CI_HMS, P_RS_HMS                      )
@@ -748,7 +767,7 @@ IF (NMOM_R.GE.1 .AND. NMOM_S.GE.1) THEN
 !++cb++
    CALL LIMA_RAIN_ACCR_SNOW (PTSTEP, LDCOMPUTE,                                & ! depends on PF
                              PRHODREF, ZT,                                     &
-                             ZRRT/ZPF1D, PCRT/ZPF1D, ZRST/ZPF1D, PCST/ZPF1D, ZLBDR, ZLBDS, ZLVFACT, ZLSFACT, &
+                             ZRRT/ZPF1D, ZCRT/ZPF1D, ZRST/ZPF1D, ZCST/ZPF1D, ZLBDR, ZLBDS, ZLVFACT, ZLSFACT, &
 !                             P_TH_ACC, P_RR_ACC, P_CR_ACC, P_RS_ACC, P_CS_ACC, P_RG_ACC )
                              P_TH_ACC, P_CR_ACC, P_CS_ACC, P_RR_ACCSS, P_RR_ACCSG, P_RS_ACCRG )
 !   P_RR_ACC(:) = P_RR_ACC(:) * ZPF1D(:)
@@ -782,7 +801,7 @@ IF (NMOM_S.GE.1) THEN
    !
    CALL LIMA_CONVERSION_MELTING_SNOW (LDCOMPUTE,                           & ! depends on PF
                                       PRHODREF, PPABST, ZT, ZKA, ZDV, ZCJ, &
-                                      PRVT, ZRST/ZPF1D, PCST/ZPF1D, ZLBDS, &
+                                      PRVT, ZRST/ZPF1D, ZCST/ZPF1D, ZLBDS, &
                                       P_RS_CMEL, P_CS_CMEL                 )
    P_RS_CMEL(:) = P_RS_CMEL(:) * ZPF1D(:)
    P_CS_CMEL(:) = P_CS_CMEL(:) * ZPF1D(:)
@@ -797,7 +816,7 @@ END IF
 IF (NMOM_R.GE.1) THEN
    CALL LIMA_RAIN_FREEZING (LDCOMPUTE,                                             & ! depends on PF, IF
                             PRHODREF, ZT, ZLVFACT, ZLSFACT,                        &
-                            ZRRT/ZPF1D, PCRT/ZPF1D, ZRIT/ZIF1D, PCIT/ZIF1D, ZLBDR, &
+                            ZRRT/ZPF1D, ZCRT/ZPF1D, ZRIT/ZIF1D, ZCIT/ZIF1D, ZLBDR, &
                             P_TH_CFRZ, P_RR_CFRZ, P_CR_CFRZ, P_RI_CFRZ, P_CI_CFRZ  )
    P_RR_CFRZ(:) = P_RR_CFRZ(:) * ZIF1D(:)
    P_CR_CFRZ(:) = P_CR_CFRZ(:) * ZIF1D(:)
@@ -822,7 +841,7 @@ IF (NMOM_S.GE.1 .AND. NMOM_G.GE.1 .AND. LCIBU) THEN
    !
    CALL LIMA_COLLISIONAL_ICE_BREAKUP (LDCOMPUTE,                                      & ! depends on PF (IF for fragments size)
                                       PRHODREF,                                       &
-                                      ZRIT/ZIF1D, ZRST/ZPF1D, ZRGT/ZPF1D, PCIT/ZIF1D, PCST/ZPF1D, PCST/ZPF1D, &
+                                      ZRIT/ZIF1D, ZRST/ZPF1D, ZRGT/ZPF1D, ZCIT/ZIF1D, ZCST/ZPF1D, ZCGT/ZPF1D, &
                                       ZLBDS, ZLBDG,                                   &
                                       P_RI_CIBU, P_CI_CIBU                            )
    P_RI_CIBU(:) = P_RI_CIBU(:) * ZPF1D(:)
@@ -841,7 +860,7 @@ IF (NMOM_R.GE.1 .AND. NMOM_I.GE.1 .AND. LRDSF) THEN
    !
    CALL LIMA_RAINDROP_SHATTERING_FREEZING (LDCOMPUTE,                                      & ! depends on PF, IF
                                            PRHODREF,                                       &
-                                           ZRRT/ZPF1D, PCRT/ZPF1D, ZRIT/ZIF1D, PCIT/ZIF1D, ZRGT/ZPF1D, &
+                                           ZRRT/ZPF1D, ZCRT/ZPF1D, ZRIT/ZIF1D, ZCIT/ZIF1D, ZRGT/ZPF1D, &
                                            ZLBDR,                                          &
                                            P_RI_RDSF, P_CI_RDSF                            )
    P_RI_RDSF(:) = P_RI_RDSF(:) * ZIF1D(:)
@@ -864,7 +883,7 @@ IF (NMOM_G.GE.1) THEN
    CALL LIMA_GRAUPEL (PTSTEP, LDCOMPUTE,                                     & ! depends on PF, CF, IF
                       PRHODREF, PPABST, ZT, ZKA, ZDV, ZCJ,                   &
                       PRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT,                    &
-                      PCCT, PCRT, PCIT, PCST, PCGT,                          &
+                      ZCCT, ZCRT, ZCIT, ZCST, ZCGT,                          &
                       ZLBDC, ZLBDR, ZLBDS, ZLBDG,                            &
                       ZLVFACT, ZLSFACT,                                      &
                       P_TH_WETG, P_RC_WETG, P_CC_WETG, P_RR_WETG, P_CR_WETG, &
@@ -879,7 +898,7 @@ END IF
 !
 IF (NMOM_H.GE.1) THEN
    CALL LIMA_HAIL_DEPOSITION (LDCOMPUTE, PRHODREF,                                    & ! depends on PF ?
-                              ZRHT/ZPF1D, PCHT/ZPF1D, ZSSI, ZLBDH, ZAI, ZCJ, ZLSFACT, &
+                              ZRHT/ZPF1D, ZCHT/ZPF1D, ZSSI, ZLBDH, ZAI, ZCJ, ZLSFACT, &
                               P_TH_DEPH, P_RH_DEPH                                    )
    P_RH_DEPH(:) = P_RH_DEPH(:) * ZPF1D(:)
    P_TH_DEPH(:) = P_RH_DEPH(:) * ZLSFACT(:)
@@ -891,7 +910,7 @@ IF (NMOM_H.GE.1) THEN
    CALL LIMA_HAIL (PTSTEP, LDCOMPUTE,                                     & ! depends on PF, CF, IF
                    PRHODREF, PPABST, ZT, ZKA, ZDV, ZCJ,                   &
                    PRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT, ZRHT,              &
-                   PCCT, PCRT, PCIT, PCST, PCGT, PCHT,                    &
+                   ZCCT, ZCRT, ZCIT, ZCST, ZCGT, ZCHT,                    &
                    ZLBDC, ZLBDR, ZLBDS, ZLBDG, ZLBDH,                     &
                    ZLVFACT, ZLSFACT,                                      &
                    P_TH_WETH, P_RC_WETH, P_CC_WETH, P_RR_WETH, P_CR_WETH, &

@@ -46,7 +46,7 @@ LOGICAL, DIMENSION(:), INTENT(IN)    :: LDCOMPUTE
 REAL, DIMENSION(:),    INTENT(IN)    :: PCRT             !
 REAL, DIMENSION(:),    INTENT(IN)    :: PRRT             !
 !
-REAL, DIMENSION(:),    INTENT(INOUT) :: P_CR_BRKU        ! Concentration change (#/kg)
+REAL, DIMENSION(:),    INTENT(OUT)   :: P_CR_BRKU        ! Concentration change (#/kg)
 REAL, DIMENSION(:),    INTENT(INOUT) :: PB_CR            ! Cumulated concentration change (#/kg)
 !
 !*       0.2   Declarations of local variables :

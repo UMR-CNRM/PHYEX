@@ -133,7 +133,7 @@ REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(OUT)   :: PEVAP3D    ! Rain evap 
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT) :: PCLDFR     ! Cloud fraction
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT) :: PICEFR     ! Cloud fraction
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT) :: PPRCFR     ! Cloud fraction
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(INOUT) :: PFPR    ! Precipitation fluxes in altitude
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(OUT) :: PFPR    ! Precipitation fluxes in altitude
 !
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PEFIELDW   ! Vertical component of the electric field
@@ -676,6 +676,15 @@ IF (OELEC) THEN
   END IF
 END IF
 !
+PINPRC=0.
+PINDEP=0.
+PINPRR=0.
+PINPRI=0.
+PINPRS=0.
+PINPRG=0.
+PINPRH=0.
+PEVAP3D(:,:,:)=0.
+!
 !-------------------------------------------------------------------------------
 !
 !*       0.     Check mean diameter for cloud, rain  and ice
@@ -751,13 +760,6 @@ END IF
 !               -------------
 !
 !
-PINPRC=0.
-PINDEP=0.
-PINPRR=0.
-PINPRI=0.
-PINPRS=0.
-PINPRG=0.
-PINPRH=0.
 if ( BUCONF%lbu_enable ) then
   if ( BUCONF%lbudget_th ) &
        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'SEDI', zths(:, :, :) * prhodj(:, :, :) )
@@ -947,7 +949,6 @@ IF (NMOM_C.GE.1 .AND. LDEPOC) THEN
   if ( BUCONF%lbudget_sv .and. nmom_c.ge.2) &
        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'DEPO', zccs(:, :, :) * prhodj(:, :, :) )
 
-  PINDEP(:,:)=0.
   GDEP(:,:) = .FALSE.
   GDEP(:,:) = ZRCS(:,:,D%NKB) >0 .AND. ZCCS(:,:,D%NKB) >0 .AND. ZRCT(:,:,D%NKB) >0 .AND. ZCCT(:,:,D%NKB) >0
   WHERE (GDEP)

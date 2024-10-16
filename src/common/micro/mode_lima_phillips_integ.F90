@@ -50,7 +50,7 @@ REAL, DIMENSION(:),   INTENT(IN)    :: ZSI
 REAL, DIMENSION(:,:), INTENT(IN)    :: ZSI0
 REAL, DIMENSION(:),   INTENT(IN)    :: ZSW
 REAL, DIMENSION(:),   INTENT(IN)    :: ZZY
-REAL, DIMENSION(:,:), INTENT(INOUT) :: Z_FRAC_ACT
+REAL, DIMENSION(:,:), INTENT(OUT)   :: Z_FRAC_ACT
 !
 !*       0.2   Declarations of local variables :
 !
@@ -68,6 +68,7 @@ LOGICAL, DIMENSION(:),   ALLOCATABLE :: GINTEG ! Mask to integrate over the
 !
 !-------------------------------------------------------------------------------
 !
+Z_FRAC_ACT(:,:)=0.
 !
 DO JSPECIE = 1, NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively  
 !

@@ -122,9 +122,9 @@ REAL, INTENT(IN) :: PLBDAZMIN ! Minimun slope of size distribution of specy Z
 REAL, INTENT(IN) :: PDINFTY   ! Factor to define the largest diameter up to
 			      ! which the diameter integration is performed
 !
-REAL, DIMENSION(:,:), INTENT(INOUT) :: PNZCOLX ! Scaled fall speed difference in
-				               ! the mass collection kernel as a
-					       ! function of LAMBDAX and LAMBDAZ
+REAL, DIMENSION(:,:), INTENT(OUT) :: PNZCOLX ! Scaled fall speed difference in
+                                             ! the mass collection kernel as a
+                                             ! function of LAMBDAX and LAMBDAZ
 !
 !
 !*       0.2   Declarations of local variables
@@ -164,6 +164,7 @@ REAL    :: ZFUNC   ! Ancillary function
 !                -------------------------------------------------
 !
 !
+PNZCOLX(:,:)=0.
 !
 !*       1.1     Compute the growth rate of the slope factors LAMBDA
 !

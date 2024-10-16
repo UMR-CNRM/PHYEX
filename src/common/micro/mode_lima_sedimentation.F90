@@ -90,8 +90,8 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRT_SUM   ! total water mixing ratio
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCPT      ! Cp
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRS       ! m.r. source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCS       ! C. source
-REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPR     ! Instant precip rate
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PFPR      ! Precip. fluxes in altitude
+REAL, DIMENSION(:,:),     INTENT(OUT)   :: PINPR     ! Instant precip rate
+REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: PFPR      ! Precip. fluxes in altitude
 REAL, DIMENSION(:,:,:),   INTENT(IN),    OPTIONAL :: PEFIELDW  ! Vertical component of the electric field
 REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electricity
 REAL, DIMENSION(:,:,:),   INTENT(INOUT), OPTIONAL :: PQS ! Elec. charge density source
@@ -147,6 +147,7 @@ ZTSPLITG= PTSTEP / REAL(NSPLITSED(KID))
 !
 ZWDT=0.
 PINPR(:,:) = 0.
+PFPR(:,:) = 0.
 ZWSEDR(:,:,:) = 0.
 ZWSEDC(:,:,:) = 0.
 !

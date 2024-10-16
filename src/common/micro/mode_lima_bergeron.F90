@@ -53,8 +53,8 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PCJ     !
 REAL, DIMENSION(:),   INTENT(IN)    :: PLVFACT ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT ! 
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_BERFI
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_BERFI
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_BERFI
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_BERFI
 !
 !-------------------------------------------------------------------------------
 !

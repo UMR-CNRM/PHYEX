@@ -45,7 +45,7 @@ TYPE(CST_t),              INTENT(IN)    :: CST
 REAL, DIMENSION(:), INTENT(IN)    :: ZZT    ! Temperature
 REAL, DIMENSION(:), INTENT(IN)    :: ZSI    ! Saturation over ice
 REAL, DIMENSION(:), INTENT(IN)    :: ZSI_W  ! Saturation over ice at water sat.
-REAL, DIMENSION(:), INTENT(INOUT) :: ZZY    ! Reference activity spectrum
+REAL, DIMENSION(:), INTENT(OUT)   :: ZZY    ! Reference activity spectrum
 !
 !*       0.2   Declarations of local variables :
 !

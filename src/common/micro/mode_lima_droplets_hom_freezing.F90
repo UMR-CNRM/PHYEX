@@ -53,9 +53,9 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PRCT      ! Cloud water m.r. at t
 REAL, DIMENSION(:),   INTENT(IN)    :: PCCT      ! Cloud water C. at t
 REAL, DIMENSION(:),   INTENT(IN)    :: PLBDC     ! Cloud water lambda
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_HONC
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_HONC
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_CC_HONC
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_HONC
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_HONC
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_HONC
 !
 !*       0.2   Declarations of local variables :
 !

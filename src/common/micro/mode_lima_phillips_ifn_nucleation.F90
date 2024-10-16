@@ -271,13 +271,13 @@ IF (INEGT > 0) THEN
    ALLOCATE( ZZT_SI0_BC (INEGT) )
    ALLOCATE( ZLBDAC     (INEGT) )
    ALLOCATE( ZSI0       (INEGT,NSPECIE) )
-   ALLOCATE( Z_FRAC_ACT (INEGT,NSPECIE) ) ; Z_FRAC_ACT(:,:) = 0.0
+   ALLOCATE( Z_FRAC_ACT (INEGT,NSPECIE) )
    ALLOCATE( ZSW        (INEGT) )
    ALLOCATE( ZSI_W      (INEGT) )
 !
    ALLOCATE( ZZW (INEGT) ) ; ZZW(:) = 0.0
    ALLOCATE( ZZX (INEGT) ) ; ZZX(:) = 0.0
-   ALLOCATE( ZZY (INEGT) ) ; ZZY(:) = 0.0
+   ALLOCATE( ZZY (INEGT) )
 !
 !
 !-------------------------------------------------------------------------------

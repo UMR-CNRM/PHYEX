@@ -52,8 +52,8 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PAI      !
 REAL, DIMENSION(:),   INTENT(IN)    :: PCJ      ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT  ! 
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_DEPH
-REAL, DIMENSION(:),   INTENT(INOUT) :: P_RH_DEPH
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_DEPH
+REAL, DIMENSION(:),   INTENT(OUT)   :: P_RH_DEPH
 !
 !
 !-------------------------------------------------------------------------------

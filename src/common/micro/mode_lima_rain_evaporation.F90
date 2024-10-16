@@ -66,7 +66,7 @@ REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_EVAP
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_EVAP
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_EVAP
 !
-REAL, DIMENSION(:),   INTENT(INOUT) :: PEVAP3D    ! Rain evap profile
+REAL, DIMENSION(:),   INTENT(OUT)   :: PEVAP3D    ! Rain evap profile
 !
 !*       0.1   Declarations of local variables :
 !

@@ -67,13 +67,13 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PCIT       ! Prinstine ice conc. at t
 !
 REAL, DIMENSION(:,:), INTENT(IN)    :: PINT       ! IFN C. activated at t
 !
-REAL, DIMENSION(:)  , INTENT(INOUT) :: P_CR_BRKU  ! Concentration change (#/kg)
-REAL, DIMENSION(:)  , INTENT(INOUT) :: P_TH_HONR  ! 
-REAL, DIMENSION(:)  , INTENT(INOUT) :: P_RR_HONR  ! mr change (kg/kg)
-REAL, DIMENSION(:)  , INTENT(INOUT) :: P_CR_HONR  ! Concentration change (#/kg)
-REAL, DIMENSION(:)  , INTENT(INOUT) :: P_TH_IMLT  ! 
-REAL, DIMENSION(:)  , INTENT(INOUT) :: P_RC_IMLT  ! mr change (kg/kg)
-REAL, DIMENSION(:)  , INTENT(INOUT) :: P_CC_IMLT  ! Concentration change (#/kg)
+REAL, DIMENSION(:)  , INTENT(OUT) :: P_CR_BRKU  ! Concentration change (#/kg)
+REAL, DIMENSION(:)  , INTENT(OUT) :: P_TH_HONR  ! 
+REAL, DIMENSION(:)  , INTENT(OUT) :: P_RR_HONR  ! mr change (kg/kg)
+REAL, DIMENSION(:)  , INTENT(OUT) :: P_CR_HONR  ! Concentration change (#/kg)
+REAL, DIMENSION(:)  , INTENT(OUT) :: P_TH_IMLT  ! 
+REAL, DIMENSION(:)  , INTENT(OUT) :: P_RC_IMLT  ! mr change (kg/kg)
+REAL, DIMENSION(:)  , INTENT(OUT) :: P_CC_IMLT  ! Concentration change (#/kg)
 !
 REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_TH      ! Cumulated theta change
 REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_RV      ! Cumulated mr change (kg/kg)

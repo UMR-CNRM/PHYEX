@@ -170,11 +170,11 @@ REAL, DIMENSION(MERGE(D%NIT,0,OCOMPUTE_SRC), &
                 MERGE(D%NKT,0,OCOMPUTE_SRC)), INTENT(OUT)   :: PSRCS     ! Second-order flux
                                                                          ! s'rc'/2Sigma_s2 at time t+1
                                                                          ! multiplied by Lambda_3
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT)   :: PCLDFR    ! Cloud fraction          
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT)   :: PICEFR    ! Cloud fraction          
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT),     INTENT(IN)    :: PRC_MF! Convective Mass Flux liquid mixing ratio
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT),     INTENT(IN)    :: PRI_MF! Convective Mass Flux ice mixing ratio
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT),     INTENT(IN)    :: PCF_MF! Convective Mass Flux Cloud fraction 
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),     INTENT(OUT) :: PCLDFR    ! Cloud fraction          
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),     INTENT(OUT) :: PICEFR    ! Cloud fraction          
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),     INTENT(IN)  :: PRC_MF! Convective Mass Flux liquid mixing ratio
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),     INTENT(IN)  :: PRI_MF! Convective Mass Flux ice mixing ratio
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),     INTENT(IN)  :: PCF_MF! Convective Mass Flux Cloud fraction 
 !
 !
 !*       0.2   Declarations of local variables :

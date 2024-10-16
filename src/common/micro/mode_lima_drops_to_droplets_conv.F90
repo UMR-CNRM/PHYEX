@@ -47,8 +47,8 @@ REAL, DIMENSION(:,:,:),    INTENT(IN)    :: PRRT    ! Rain water m.r. at t
 REAL, DIMENSION(:,:,:),    INTENT(IN)    :: PCCT    ! Cloud water C. at t
 REAL, DIMENSION(:,:,:),    INTENT(IN)    :: PCRT    ! Rain water C. at t
 !
-REAL, DIMENSION(:,:,:),    INTENT(INOUT) :: P_RR_CVRC
-REAL, DIMENSION(:,:,:),    INTENT(INOUT) :: P_CR_CVRC
+REAL, DIMENSION(:,:,:),    INTENT(OUT)   :: P_RR_CVRC
+REAL, DIMENSION(:,:,:),    INTENT(OUT)   :: P_CR_CVRC
 !
 !*       0.2   Declarations of local variables :
 !

@@ -120,9 +120,9 @@ REAL, INTENT(IN) :: PDINFTY   ! Factor to define the largest diameter up to
                               ! which the diameter integration is performed
 REAL, INTENT(IN) :: PAG, PBS, PAS
 !
-REAL, DIMENSION(:,:), INTENT(INOUT) :: PNRCOLSS! Scaled fall speed difference in
-                                               ! the mass collection kernel as a
-                                               ! function of LAMBDAX and LAMBDAZ
+REAL, DIMENSION(:,:), INTENT(OUT) :: PNRCOLSS! Scaled fall speed difference in
+                                             ! the mass collection kernel as a
+                                             ! function of LAMBDAX and LAMBDAZ
 !
 !
 !*       0.2   Declarations of local variables
