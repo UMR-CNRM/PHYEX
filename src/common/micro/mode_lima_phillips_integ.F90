@@ -2,7 +2,7 @@ MODULE MODE_LIMA_PHILLIPS_INTEG
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################
-  SUBROUTINE LIMA_PHILLIPS_INTEG (CST, ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
+  SUBROUTINE LIMA_PHILLIPS_INTEG (CST, PZT, PSI, PSI0, PSW, PZY, P_FRAC_ACT)
 !     ######################################################################
 !!
 !!    PURPOSE
@@ -45,12 +45,12 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 TYPE(CST_t),              INTENT(IN)    :: CST
-REAL, DIMENSION(:),   INTENT(IN)    :: ZZT
-REAL, DIMENSION(:),   INTENT(IN)    :: ZSI
-REAL, DIMENSION(:,:), INTENT(IN)    :: ZSI0
-REAL, DIMENSION(:),   INTENT(IN)    :: ZSW
-REAL, DIMENSION(:),   INTENT(IN)    :: ZZY
-REAL, DIMENSION(:,:), INTENT(OUT)   :: Z_FRAC_ACT
+REAL, DIMENSION(:),   INTENT(IN)    :: PZT
+REAL, DIMENSION(:),   INTENT(IN)    :: PSI
+REAL, DIMENSION(:,:), INTENT(IN)    :: PSI0
+REAL, DIMENSION(:),   INTENT(IN)    :: PSW
+REAL, DIMENSION(:),   INTENT(IN)    :: PZY
+REAL, DIMENSION(:,:), INTENT(OUT)   :: P_FRAC_ACT
 !
 !*       0.2   Declarations of local variables :
 !
@@ -68,38 +68,38 @@ LOGICAL, DIMENSION(:),   ALLOCATABLE :: GINTEG ! Mask to integrate over the
 !
 !-------------------------------------------------------------------------------
 !
-Z_FRAC_ACT(:,:)=0.
+P_FRAC_ACT(:,:)=0.
 !
 DO JSPECIE = 1, NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively  
 !
-   ALLOCATE(ZZX     (SIZE(ZZT)) ) ; ZZX(:) = 0.0
-   ALLOCATE(ZFACTOR (SIZE(ZZT)) )
-   ALLOCATE(ZSUBSAT (SIZE(ZZT)) )    
-   ALLOCATE(ZEMBRYO (SIZE(ZZT)) )
-   ALLOCATE(GINTEG  (SIZE(ZZT)) )
+   ALLOCATE(ZZX     (SIZE(PZT)) ) ; ZZX(:) = 0.0
+   ALLOCATE(ZFACTOR (SIZE(PZT)) )
+   ALLOCATE(ZSUBSAT (SIZE(PZT)) )    
+   ALLOCATE(ZEMBRYO (SIZE(PZT)) )
+   ALLOCATE(GINTEG  (SIZE(PZT)) )
 
 ! Compute log in advance for efficiency
    XB = LOG(0.1E-6/XMDIAM_IFN(JSPECIE))/(SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE)))
 ! ZFACTOR = f_c
-   ZFACTOR(:) = DELTA(1.,XH(JSPECIE),ZZT(:),XT0(JSPECIE),XT0(JSPECIE)+XDT0(JSPECIE))         &
-        * DELTA_VEC(0.,1.,ZSI(:),ZSI0(:,JSPECIE),ZSI0(:,JSPECIE)+XDSI0(JSPECIE)) / XGAMMA
+   ZFACTOR(:) = DELTA(1.,XH(JSPECIE),PZT(:),XT0(JSPECIE),XT0(JSPECIE)+XDT0(JSPECIE))         &
+        * DELTA_VEC(0.,1.,PSI(:),PSI0(:,JSPECIE),PSI0(:,JSPECIE)+XDSI0(JSPECIE)) / XGAMMA
 ! ZSUBSAT = H_X
-   ZSUBSAT(:) = MIN(ZFACTOR(:)+(1.0-ZFACTOR(:))*DELTA(0.,1.,ZSW(:),XSW0,1.) , 1.0)
+   ZSUBSAT(:) = MIN(ZFACTOR(:)+(1.0-ZFACTOR(:))*DELTA(0.,1.,PSW(:),XSW0,1.) , 1.0)
 ! ZEMBRYO = µ_X/(pi*(D_X)**2) = A
-   ZEMBRYO(:) = ZSUBSAT(:)*DELTA(1.,0.,ZZT(:),XTX1(JSPECIE),XTX2(JSPECIE))          &
-        * XFRAC_REF(JSPECIE)*ZZY(:)/XAREA1(JSPECIE) 
+   ZEMBRYO(:) = ZSUBSAT(:)*DELTA(1.,0.,PZT(:),XTX1(JSPECIE),XTX2(JSPECIE))          &
+        * XFRAC_REF(JSPECIE)*PZY(:)/XAREA1(JSPECIE) 
 !
 ! For T warmer than -35°C, the integration is approximated with µ_X << 1
 ! Error function : GAMMA_INC(1/2, x**2) = ERF(x) !!! for x>=0 !!!
 !   
-!   WHERE (ZZT(:)>(CST%XTT-35.) .AND. ZEMBRYO(:)>1.0E-8)   
+!   WHERE (PZT(:)>(CST%XTT-35.) .AND. ZEMBRYO(:)>1.0E-8)   
 !      ZZX(:) = ZZX(:) + ZEMBRYO(:) * CST%XPI * (XMDIAM_IFN(JSPECIE))**2 / 2.0           &
 !           * EXP(2*(LOG(XSIGMA_IFN(JSPECIE)))**2)                                   &
 !           * (1.0+GAMMA_INC(0.5,(SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE))-XB)**2))     
 !   END WHERE
 
-   DO JL = 1, SIZE(ZZT)
-      IF (ZZT(JL)>(CST%XTT-35.) .AND. ZEMBRYO(JL)>1.0E-8) THEN
+   DO JL = 1, SIZE(PZT)
+      IF (PZT(JL)>(CST%XTT-35.) .AND. ZEMBRYO(JL)>1.0E-8) THEN
          ZZX(JL) = ZZX(JL) + ZEMBRYO(JL) * CST%XPI * (XMDIAM_IFN(JSPECIE))**2 / 2.0        &
               * EXP(2*(LOG(XSIGMA_IFN(JSPECIE)))**2)                                   &
               * (1.0+SIGN(1.,SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE))-XB)*GAMMA_INC(0.5,(SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE))-XB)**2))     
@@ -111,7 +111,7 @@ DO JSPECIE = 1, NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively
 ! quadrature method and integration between 0 and 0.1 uses e(x) ~ 1+x+O(x**2)
 ! Beware : here, weights are normalized : XWEIGHT = wi/sqrt(pi)
 !
-   GINTEG(:) = ZZT(:)<=(CST%XTT-35.) .AND. ZSI(:)>1.0 .AND. ZEMBRYO(:)>1.0E-8
+   GINTEG(:) = PZT(:)<=(CST%XTT-35.) .AND. PSI(:)>1.0 .AND. ZEMBRYO(:)>1.0E-8
 !
    DO JL = 1, NDIAM
       DO JL2 = 1, SIZE(GINTEG)
@@ -137,7 +137,7 @@ DO JSPECIE = 1, NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively
       END IF
    ENDDO
 ! 
-   Z_FRAC_ACT(:,JSPECIE)=ZZX(:)
+   P_FRAC_ACT(:,JSPECIE)=ZZX(:)
 !
    DEALLOCATE(ZZX)
    DEALLOCATE(ZFACTOR)
