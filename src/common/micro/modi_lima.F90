@@ -7,7 +7,7 @@ SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, KBUDGETS, 
                   PTSTEP, OELEC,                                          &
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
-                  NCCN, NIFN, NIMM,                                       &
+                  KCCN, KIFN, KIMM,                                       &
                   ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PW_NU,               &
                   PTHS, PRS, PSVS,                                        &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
@@ -47,9 +47,9 @@ REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PDZZ       ! Layer thik
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PRHODJ     ! Dry density * Jacobian
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PPABST     ! absolute pressure at t
 !
-INTEGER,                  INTENT(IN)    :: NCCN       ! for array size declarations
-INTEGER,                  INTENT(IN)    :: NIFN       ! for array size declarations
-INTEGER,                  INTENT(IN)    :: NIMM       ! for array size declarations
+INTEGER,                  INTENT(IN)    :: KCCN       ! for array size declarations
+INTEGER,                  INTENT(IN)    :: KIFN       ! for array size declarations
+INTEGER,                  INTENT(IN)    :: KIMM       ! for array size declarations
 !
 LOGICAL,                                 INTENT(IN)   :: ODTHRAD    ! Use radiative temperature tendency
 REAL, DIMENSION(MERGE(D%NIT,0,ODTHRAD), &

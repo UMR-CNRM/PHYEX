@@ -8,7 +8,7 @@ SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, KBUDGETS, 
                   PTSTEP, OELEC,                                          &
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
-                  NCCN, NIFN, NIMM,                                       &
+                  KCCN, KIFN, KIMM,                                       &
                   ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PW_NU,               &
                   PTHS, PRS, PSVS,                                        &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
@@ -104,9 +104,9 @@ REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PDZZ       ! Layer thikness (
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PRHODJ     ! Dry density * Jacobian
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PPABST     ! absolute pressure at t
 !
-INTEGER,                  INTENT(IN)    :: NCCN       ! for array size declarations
-INTEGER,                  INTENT(IN)    :: NIFN       ! for array size declarations
-INTEGER,                  INTENT(IN)    :: NIMM       ! for array size declarations
+INTEGER,                  INTENT(IN)    :: KCCN       ! for array size declarations
+INTEGER,                  INTENT(IN)    :: KIFN       ! for array size declarations
+INTEGER,                  INTENT(IN)    :: KIMM       ! for array size declarations
 !
 LOGICAL,                                 INTENT(IN)   :: ODTHRAD    ! Use radiative temperature tendency
 REAL, DIMENSION(MERGE(D%NIJT,0,ODTHRAD), &
@@ -148,12 +148,12 @@ REAL, DIMENSION(D%NIJT,D%NKT)      :: ZTHT, ZRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT, 
 REAL, DIMENSION(D%NIJT,D%NKT)      :: ZCCT, ZCRT, ZCIT, ZCST, ZCGT, ZCHT
 REAL, DIMENSION(D%NIJT,D%NKT)      :: ZTHS, ZRVS, ZRCS, ZRRS, ZRIS, ZRSS, ZRGS, ZRHS
 REAL, DIMENSION(D%NIJT,D%NKT)      :: ZCCS, ZCRS, ZCIS, ZCSS, ZCGS, ZCHS
-REAL, DIMENSION(D%NIJT,D%NKT,NCCN) :: ZCCNFT, ZCCNAT
-REAL, DIMENSION(D%NIJT,D%NKT,NCCN) :: ZCCNFS, ZCCNAS
-REAL, DIMENSION(D%NIJT,D%NKT,NIFN) :: ZIFNFT, ZIFNNT
-REAL, DIMENSION(D%NIJT,D%NKT,NIFN) :: ZIFNFS, ZIFNNS
-REAL, DIMENSION(D%NIJT,D%NKT,NIMM) :: ZIMMNT
-REAL, DIMENSION(D%NIJT,D%NKT,NIMM) :: ZIMMNS
+REAL, DIMENSION(D%NIJT,D%NKT,KCCN) :: ZCCNFT, ZCCNAT
+REAL, DIMENSION(D%NIJT,D%NKT,KCCN) :: ZCCNFS, ZCCNAS
+REAL, DIMENSION(D%NIJT,D%NKT,KIFN) :: ZIFNFT, ZIFNNT
+REAL, DIMENSION(D%NIJT,D%NKT,KIFN) :: ZIFNFS, ZIFNNS
+REAL, DIMENSION(D%NIJT,D%NKT,KIMM) :: ZIMMNT
+REAL, DIMENSION(D%NIJT,D%NKT,KIMM) :: ZIMMNS
 REAL, DIMENSION(D%NIJT,D%NKT)      :: ZHOMFT
 REAL, DIMENSION(D%NIJT,D%NKT)      :: ZHOMFS
 

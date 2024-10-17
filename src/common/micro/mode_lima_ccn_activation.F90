@@ -511,7 +511,7 @@ END IF ! INUCT
 CONTAINS
 !------------------------------------------------------------------------------
 !
-  FUNCTION ZRIDDR(PX1,PX2INIT,PXACC,PZZW3,PZZW6,NPTS)  RESULT(PZRIDDR)
+  FUNCTION ZRIDDR(PX1,PX2INIT,PXACC,PZZW3,PZZW6,KPTS)  RESULT(PZRIDDR)
 !
 !
 !!****  *ZRIDDR* - iterative algorithm to find root of a function
@@ -563,7 +563,7 @@ IMPLICIT NONE
 !
 !*       0.1 declarations of arguments and result
 !
-INTEGER,            INTENT(IN)     :: NPTS
+INTEGER,            INTENT(IN)     :: KPTS
 REAL, DIMENSION(:), INTENT(IN)     :: PZZW3
 REAL, DIMENSION(:), INTENT(IN)     :: PZZW6
 REAL,               INTENT(IN)     :: PX1, PX2INIT, PXACC
@@ -579,18 +579,18 @@ REAL                               :: s,xh,xl,xm,xnew
 REAL                               :: PX2
 INTEGER                            :: j, JL
 !
-ALLOCATE(  fh(NPTS))
-ALLOCATE(  fl(NPTS))
-ALLOCATE(  fm(NPTS))
-ALLOCATE(fnew(NPTS))
-ALLOCATE(PZRIDDR(NPTS))
+ALLOCATE(  fh(KPTS))
+ALLOCATE(  fl(KPTS))
+ALLOCATE(  fm(KPTS))
+ALLOCATE(fnew(KPTS))
+ALLOCATE(PZRIDDR(KPTS))
 !
 PZRIDDR(:)= UNUSED
 PX2       = PX2INIT 
-fl(:)     = FUNCSMAX(PX1,PZZW3(:),PZZW6(:),NPTS)
-fh(:)     = FUNCSMAX(PX2,PZZW3(:),PZZW6(:),NPTS)
+fl(:)     = FUNCSMAX(PX1,PZZW3(:),PZZW6(:),KPTS)
+fh(:)     = FUNCSMAX(PX2,PZZW3(:),PZZW6(:),KPTS)
 !
-DO JL = 1, NPTS
+DO JL = 1, KPTS
    PX2 = PX2INIT
 100 if ((fl(JL) > 0.0 .and. fh(JL) < 0.0) .or. (fl(JL) < 0.0 .and. fh(JL) > 0.0)) then
       xl         = PX1
@@ -650,7 +650,7 @@ DO JL = 1, NPTS
       go to 100
    else
 !!$      print*, 'PZRIDDR: root must be bracketed'
-!!$      print*,'npts ',NPTS,'jl',JL
+!!$      print*,'npts ',KPTS,'jl',JL
 !!$      print*, 'PX1,PX2,fl,fh',PX1,PX2,fl(JL),fh(JL)
 !!$      print*, 'PX2 = 30 % of supersaturation, there is no solution for Smax'
 !!$      print*, 'try to put greater PX2 (upper bound for Smax research)'
@@ -669,7 +669,7 @@ END FUNCTION ZRIDDR
 !
 !------------------------------------------------------------------------------
 !
-  FUNCTION FUNCSMAX(PPZSMAX,PPZZW3,PPZZW6,NPTS)  RESULT(PFUNCSMAX)
+  FUNCTION FUNCSMAX(PPZSMAX,PPZZW3,PPZZW6,KPTS)  RESULT(PFUNCSMAX)
 !
 !
 !!****  *FUNCSMAX* - function describing SMAX function that you want to find the root
@@ -725,7 +725,7 @@ IMPLICIT NONE
 !
 !*       0.1 declarations of arguments and result
 !
-INTEGER,            INTENT(IN)  :: NPTS
+INTEGER,            INTENT(IN)  :: KPTS
 REAL,               INTENT(IN)  :: PPZSMAX   ! supersaturation is already in no units
 REAL, DIMENSION(:), INTENT(IN)  :: PPZZW3    ! 
 REAL, DIMENSION(:), INTENT(IN)  :: PPZZW6    ! 
@@ -738,7 +738,7 @@ REAL                           :: ZHYPF
 REAL                           :: PZVEC1
 INTEGER                        :: PIVEC1
 !
-ALLOCATE(PFUNCSMAX(NPTS))
+ALLOCATE(PFUNCSMAX(KPTS))
 !
 PFUNCSMAX(:) = 0.
 PZVEC1 = MAX( ( 1.0 + 10.0 * CST%XMNH_EPSILON ) ,MIN( REAL(NHYP)*( 1.0 - 10.0 * CST%XMNH_EPSILON ) ,               &
