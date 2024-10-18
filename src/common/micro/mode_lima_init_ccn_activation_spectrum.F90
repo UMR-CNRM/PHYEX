@@ -57,8 +57,8 @@ REAL,             INTENT(OUT) :: PKAPPA         ! kappa
 !
 INTEGER, PARAMETER            :: IM = 1000        ! Number of points (S,Nccn) used to fit the spectra
 INTEGER, PARAMETER            :: IN = 3          ! Number of parameters to adjust
-REAL, DIMENSION(N)            :: ZPARAMS         ! Parameters to adjust by the LM algorithm (k, mu, beta)
-REAL, DIMENSION(M)            :: ZFVEC           ! Array to store the distance between theoretical and fitted spectra
+REAL, DIMENSION(IN)           :: ZPARAMS         ! Parameters to adjust by the LM algorithm (k, mu, beta)
+REAL, DIMENSION(IM)           :: ZFVEC           ! Array to store the distance between theoretical and fitted spectra
 INTEGER                       :: IFLAG          ! 
 INTEGER                       :: IINFO           ! 
 REAL                          :: ZTOL = 1.E-16   ! Fit precision required
@@ -72,9 +72,9 @@ REAL                          :: ZMIN  = 0.1E-6 ! minimum diameter for root sear
 REAL                          :: ZMAX  = 10.E-6 ! maximum diameter for root search (m)
 REAL                          :: ZPREC = 1.E-8  ! precision wanted for root (m)
 !
-REAL, DIMENSION(M)            :: ZS             ! saturation ratio (S=1.01 for a 1% supersaturation)
-REAL, DIMENSION(M)            :: ZDCRIT         ! critical diameters (m) for the chosen S values
-REAL, DIMENSION(M)            :: ZNCCN          ! fraction of the aerosols larger than ZDCRIT (ie activable)
+REAL, DIMENSION(IM)           :: ZS             ! saturation ratio (S=1.01 for a 1% supersaturation)
+REAL, DIMENSION(IM)           :: ZDCRIT         ! critical diameters (m) for the chosen S values
+REAL, DIMENSION(IM)           :: ZNCCN          ! fraction of the aerosols larger than ZDCRIT (ie activable)
 REAL, DIMENSION(1)            :: ZT             ! temperature
 !
 !
@@ -415,7 +415,7 @@ END FUNCTION DSDD
        DO II=1, KM
           ! ZS in "no units", ie ZS=0.01 for a 1% suersaturation
           !       ZW= C * (ZS(I)/100)**X(1) * HYPGEO(X(2),X(1)/2,X(1)/2+1,X(3),ZS(I)/100)
-          ZW= ZC * (ZS(II))**X(1) * HYPGEO(PX(2),PX(1)/2,PX(1)/2+1,PX(3),ZS(II))
+          ZW= ZC * (ZS(II))**PX(1) * HYPGEO(PX(2),PX(1)/2,PX(1)/2+1,PX(3),ZS(II))
 !!$       IF (X(3)*(ZS(I)/100)**2 .LT. 0.98) THEN
 !!$          CALL HYPSER(X(2),X(1)/2,X(1)/2+1,-X(3)*(ZS(I)/100)**2,ZW2)
 !!$          print *, "args= ", X(2), X(1)/2, X(1)/2+1, -X(3)*(ZS(I)/100)**2, " hypser = ", ZW2

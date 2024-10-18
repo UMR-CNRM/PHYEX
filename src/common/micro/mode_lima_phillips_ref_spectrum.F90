@@ -2,7 +2,7 @@ MODULE MODE_LIMA_PHILLIPS_REF_SPECTRUM
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################
-  SUBROUTINE LIMA_PHILLIPS_REF_SPECTRUM (CST, ZZT, PSI, PSI_W, PZY)
+  SUBROUTINE LIMA_PHILLIPS_REF_SPECTRUM (CST, PZT, PSI, PSI_W, PZY)
 !     ######################################################################
 !!
 !!    PURPOSE

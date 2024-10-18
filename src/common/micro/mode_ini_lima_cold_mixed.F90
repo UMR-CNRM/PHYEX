@@ -90,11 +90,11 @@ REAL :: ZRATE                 ! Geometrical growth of Lbda in the tabulated
                               ! functions and kernels
 REAL :: ZBOUND                ! XDCSLIM*Lbda_s: upper bound for the partial
                               ! integration of the riming rate of the aggregates
-REAL :: ZEGS, ZEGR, ZEHS, ZEHG! Bulk collection efficiencies
+REAL :: ZZEGS, ZZEGR, ZZEHS, ZZEHG! Bulk collection efficiencies
 !
 INTEGER :: IND                ! Number of interval to integrate the kernels
-REAL :: ZESR, ZESS            ! Mean efficiency of rain-aggregate collection, aggregate-aggregate collection
-REAL :: ZFDINFTY              ! Factor used to define the "infinite" diameter
+REAL :: ZZESR, ZZESS            ! Mean efficiency of rain-aggregate collection, aggregate-aggregate collection
+REAL :: ZZFDINFTY              ! Factor used to define the "infinite" diameter
 !
 !
 !INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
@@ -110,7 +110,7 @@ REAL     :: ZNUR,ZNUS,ZNUG,ZNUH
 REAL     :: ZBR,ZBS,ZBG
 REAL     :: ZCR,ZCS,ZCG,ZCH
 REAL     :: ZDR,ZDS,ZFVELOS,ZDG,ZDH
-REAL     :: ZESR,PEGS,ZEGR,ZEHS,ZEHG
+REAL     :: ZESR,ZEGS,ZEGR,ZEHS,ZEHG
 REAL     :: ZFDINFTY
 REAL     :: ZACCLBDAS_MAX,ZACCLBDAR_MAX,ZACCLBDAS_MIN,ZACCLBDAR_MIN
 REAL     :: ZDRYLBDAG_MAX,ZDRYLBDAS_MAX,ZDRYLBDAG_MIN,ZDRYLBDAS_MIN
@@ -953,8 +953,8 @@ XACCINTP2R = 1.0 - LOG( PARAM_LIMA_MIXED%XACCLBDAR_MIN ) / ZRATE
 !*       7.2.2  Computations of the tabulated normalized kernels
 !
 IND      = 50    ! Interval number, collection efficiency and infinite diameter
-ZESR     = 1.0   ! factor used to integrate the dimensional distributions when
-ZFDINFTY = 20.0  ! computing the kernels XKER_RACCSS, XKER_RACCS and XKER_SACCRG
+ZZESR     = 1.0   ! factor used to integrate the dimensional distributions when
+ZZFDINFTY = 20.0  ! computing the kernels XKER_RACCSS, XKER_RACCS and XKER_SACCRG
 !
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_RACCSS', NACCLBDAS,NACCLBDAR)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_RACCS', NACCLBDAS,NACCLBDAR)
@@ -963,17 +963,17 @@ CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_RACCSS', NACCLBDAS,NACCLBDAR)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_RACCS', NACCLBDAS,NACCLBDAR)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_SACCRG', NACCLBDAR,NACCLBDAS)
 CALL NRCOLSS ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                        & 
-               ZESR, XCS, XDS, XFVELOS, XCR, XDR,                        & 
+               ZZESR, XCS, XDS, XFVELOS, XCR, XDR,                        & 
                XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, & 
-               ZFDINFTY, XKER_N_RACCSS, XAG, XBS, XAS                      )
+               ZZFDINFTY, XKER_N_RACCSS, XAG, XBS, XAS                      )
 CALL NZCOLX  ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          & 
-               ZESR, XCS, XDS, XFVELOS, XCR, XDR, 0.,                      & ! 
+               ZZESR, XCS, XDS, XFVELOS, XCR, XDR, 0.,                      & ! 
                XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, & 
-               ZFDINFTY, XKER_N_RACCS                                      )
+               ZZFDINFTY, XKER_N_RACCS                                      )
 CALL NSCOLRG ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          & 
-               ZESR, XCS, XDS, XFVELOS, XCR, XDR,                          & 
+               ZZESR, XCS, XDS, XFVELOS, XCR, XDR,                          & 
                XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, & 
-               ZFDINFTY, XKER_N_SACCRG,XAG, XBS, XAS                       )
+               ZZFDINFTY, XKER_N_SACCRG,XAG, XBS, XAS                       )
 !!$WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RACCSS) ) THEN")')          
 !!$DO I1 = 1 , NACCLBDAS                                                    
@@ -1010,23 +1010,23 @@ CALL LIMA_READ_XKER_RACCS (IACCLBDAS,IACCLBDAR,IKND,                            
 IF( (IACCLBDAS/=NACCLBDAS) .OR. (IACCLBDAR/=NACCLBDAR) .OR. (IKND/=IND) .OR. &
     (ZALPHAS/=XALPHAS) .OR. (ZNUS/=XNUS)                               .OR. &
     (ZALPHAR/=XALPHAR) .OR. (ZNUR/=XNUR)                               .OR. &
-    (ZESR/=ZESR) .OR. (ZBS/=XBS) .OR. (ZBR/=XBR)                       .OR. &
+    (ZESR/=ZZESR) .OR. (ZBS/=XBS) .OR. (ZBR/=XBR)                       .OR. &
     (ZCS/=XCS) .OR. (ZDS/=XDS) .OR. (ZFVELOS/=XFVELOS) .OR. (ZCR/=XCR) .OR. (ZDR/=XDR)         .OR. &
     (ZACCLBDAS_MAX/=XACCLBDAS_MAX) .OR. (ZACCLBDAR_MAX/=XACCLBDAR_MAX) .OR. &
     (ZACCLBDAS_MIN/=XACCLBDAS_MIN) .OR. (ZACCLBDAR_MIN/=XACCLBDAR_MIN) .OR. &
-    (ZFDINFTY/=ZFDINFTY)                                               ) THEN
+    (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
   CALL RRCOLSS ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-                 ZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR,                     &
+                 ZZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR,                     &
                  XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
-                 ZFDINFTY, XKER_RACCSS, XAG, XBS, XAS                        )
+                 ZZFDINFTY, XKER_RACCSS, XAG, XBS, XAS                        )
   CALL RZCOLX  ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-                 ZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR, 0.,                 &
+                 ZZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR, 0.,                 &
                  XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
-                 ZFDINFTY, XKER_RACCS                                        )
+                 ZZFDINFTY, XKER_RACCS                                        )
   CALL RSCOLRG ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-                 ZESR, XBS, XCS, XDS, XFVELOS, XCR, XDR,                     &
+                 ZZESR, XBS, XCS, XDS, XFVELOS, XCR, XDR,                     &
                  XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
-                 ZFDINFTY, XKER_SACCRG,XAG, XBS, XAS                         )
+                 ZZFDINFTY, XKER_SACCRG,XAG, XBS, XAS                         )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF RACSS KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF RACS  KERNELS ****")')
@@ -1040,7 +1040,7 @@ IF( (IACCLBDAS/=NACCLBDAS) .OR. (IACCLBDAR/=NACCLBDAR) .OR. (IKND/=IND) .OR. &
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUS=",E13.6)') XNUS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAR=",E13.6)') XALPHAR
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUR=",E13.6)') XNUR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("ZESR=",E13.6)') ZESR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZESR=",E13.6)') ZZESR
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZBS=",E13.6)') XBS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZBR=",E13.6)') XBR
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZCS=",E13.6)') XCS
@@ -1056,7 +1056,7 @@ IF( (IACCLBDAS/=NACCLBDAS) .OR. (IACCLBDAR/=NACCLBDAR) .OR. (IKND/=IND) .OR. &
 !!$                                                    XACCLBDAS_MIN
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZACCLBDAR_MIN=",E13.6)') &
 !!$                                                    XACCLBDAR_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_RACCSS) ) THEN")')
 !!$  DO I1 = 1 , NACCLBDAS
@@ -1118,15 +1118,15 @@ XSCINTP2S = 1.0 - LOG( XSCLBDAS_MIN ) / ZRATE
 !
 !
   IND      = 50    ! Interval number, collection efficiency and infinite diameter
-  ZESS     = 1.0   ! factor used to integrate the dimensional distributions when
-  ZFDINFTY = 20.0  ! computing the kernels XKER_SSCSS
+  ZZESS     = 1.0   ! factor used to integrate the dimensional distributions when
+  ZZFDINFTY = 20.0  ! computing the kernels XKER_SSCSS
 !
   CALL PARAM_LIMA_COLD_ALLOCATE('XKER_N_SSCS', NSCLBDAS,NSCLBDAS)
 !
   CALL NZCOLX  ( IND, XALPHAS, XNUS, XALPHAS, XNUS,                          & 
-               ZESS, XCS, XDS, XFVELOS, XCS, XDS, XFVELOS,                   & 
+               ZZESS, XCS, XDS, XFVELOS, XCS, XDS, XFVELOS,                   & 
                XSCLBDAS_MAX, XSCLBDAS_MAX, XSCLBDAS_MIN, XSCLBDAS_MIN, & 
-               ZFDINFTY, XKER_N_SSCS                                      ) 
+               ZZFDINFTY, XKER_N_SSCS                                      ) 
 !
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SSCS  KERNELS ***")')
@@ -1136,7 +1136,7 @@ XSCINTP2S = 1.0 - LOG( XSCLBDAS_MIN ) / ZRATE
 !!$  WRITE(UNIT=ILUOUT0,FMT='("KSCLBDAS=",I3)') NSCLBDAS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAS=",E13.6)') XALPHAS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUS=",E13.6)') XNUS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PESS=",E13.6)') ZESS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("PESS=",E13.6)') ZZESS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZBS=",E13.6)') XBS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZCS=",E13.6)') XCS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZDS=",E13.6)') XDS
@@ -1144,7 +1144,7 @@ XSCINTP2S = 1.0 - LOG( XSCLBDAS_MIN ) / ZRATE
 !!$                                                  XSCLBDAS_MAX
 !!$  WRITE(UNIT=ILUOUT0,FMT='("PSCLBDAS_MIN=",E13.6)') &
 !!$                                                  XSCLBDAS_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SSCS ) ) THEN")')           
@@ -1390,16 +1390,16 @@ XDRYINTP2G = 1.0 - LOG( PARAM_LIMA_MIXED%XDRYLBDAG_MIN ) / ZRATE
 !*       8.2.5  Computations of the tabulated normalized kernels
 !
 IND      = 50    ! Interval number, collection efficiency and infinite diameter
-ZEGS     = 1.0   ! factor used to integrate the dimensional distributions when
-ZFDINFTY = 20.0  ! computing the kernels XKER_SDRYG
+ZZEGS     = 1.0   ! factor used to integrate the dimensional distributions when
+ZZFDINFTY = 20.0  ! computing the kernels XKER_SDRYG
 !
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_SDRYG', NDRYLBDAG,NDRYLBDAS)
 !if (NMOM_S.GE.2) then
   CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_SDRYG', NDRYLBDAG,NDRYLBDAS)
   CALL NZCOLX  ( IND, XALPHAG, XNUG, XALPHAS, XNUS,                         & 
-              ZEGS, XCG, XDG, 0., XCS, XDS, XFVELOS,                        & 
+              ZZEGS, XCG, XDG, 0., XCS, XDS, XFVELOS,                        & 
               XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, & 
-              ZFDINFTY, XKER_N_SDRYG                                      ) 
+              ZZFDINFTY, XKER_N_SDRYG                                      ) 
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SDRYG) ) THEN")')          
 !!$  DO I1 = 1 , NDRYLBDAG                                                    
@@ -1412,21 +1412,21 @@ CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_SDRYG', NDRYLBDAG,NDRYLBDAS)
 !end if
 !
 CALL LIMA_READ_XKER_SDRYG (IDRYLBDAG,IDRYLBDAS,IKND,                                    &
-                           ZALPHAG,ZNUG,ZALPHAS,ZNUS,PEGS,ZBS,ZCG,ZDG,ZCS,ZDS,ZFVELOS, &
+                           ZALPHAG,ZNUG,ZALPHAS,ZNUS,ZEGS,ZBS,ZCG,ZDG,ZCS,ZDS,ZFVELOS, &
                            ZDRYLBDAG_MAX,ZDRYLBDAS_MAX,ZDRYLBDAG_MIN,ZDRYLBDAS_MIN,    &
                            ZFDINFTY                                                    )
 IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAS/=NDRYLBDAS) .OR. (IKND/=IND) .OR. &
     (ZALPHAG/=XALPHAG) .OR. (ZNUG/=XNUG)                               .OR. &
     (ZALPHAS/=XALPHAS) .OR. (ZNUS/=XNUS)                               .OR. &
-    (PEGS/=ZEGS) .OR. (ZBS/=XBS)                                       .OR. &
+    (ZEGS/=ZZEGS) .OR. (ZBS/=XBS)                                       .OR. &
     (ZCG/=XCG) .OR. (ZDG/=XDG) .OR. (ZCS/=XCS) .OR. (ZDS/=XDS) .OR. (ZFVELOS/=XFVELOS) .OR. &
     (ZDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (ZDRYLBDAS_MAX/=XDRYLBDAS_MAX) .OR. &
     (ZDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (ZDRYLBDAS_MIN/=XDRYLBDAS_MIN) .OR. &
-    (ZFDINFTY/=ZFDINFTY)                                               ) THEN
+    (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAG, XNUG, XALPHAS, XNUS,                          &
-                ZEGS, XBS, XCG, XDG, 0., XCS, XDS, XFVELOS,                 &
+                ZZEGS, XBS, XCG, XDG, 0., XCS, XDS, XFVELOS,                 &
                 XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, &
-                ZFDINFTY, XKER_SDRYG                                        )
+                ZZFDINFTY, XKER_SDRYG                                        )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SDRYG KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
@@ -1438,7 +1438,7 @@ IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAS/=NDRYLBDAS) .OR. (IKND/=IND) .OR. &
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUG=",E13.6)') XNUG
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAS=",E13.6)') XALPHAS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUS=",E13.6)') XNUS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PEGS=",E13.6)') ZEGS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZEGS=",E13.6)') ZZEGS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZBS=",E13.6)') XBS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZCG=",E13.6)') XCG
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZDG=",E13.6)') XDG
@@ -1453,7 +1453,7 @@ IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAS/=NDRYLBDAS) .OR. (IKND/=IND) .OR. &
 !!$                                                    XDRYLBDAG_MIN
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAS_MIN=",E13.6)') &
 !!$                                                    XDRYLBDAS_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_SDRYG) ) THEN")')
 !!$  DO I1 = 1 , NDRYLBDAG
@@ -1465,7 +1465,7 @@ IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAS/=NDRYLBDAS) .OR. (IKND/=IND) .OR. &
 !!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
   CALL LIMA_READ_XKER_SDRYG (IDRYLBDAG,IDRYLBDAS,IKND,                                    &
-                             ZALPHAG,ZNUG,ZALPHAS,ZNUS,PEGS,ZBS,ZCG,ZDG,ZCS,ZDS,ZFVELOS, &
+                             ZALPHAG,ZNUG,ZALPHAS,ZNUS,ZEGS,ZBS,ZCG,ZDG,ZCS,ZDS,ZFVELOS, &
                              ZDRYLBDAG_MAX,ZDRYLBDAS_MAX,ZDRYLBDAG_MIN,ZDRYLBDAS_MIN,    &
                              ZFDINFTY,XKER_SDRYG                                         )
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_SDRYG")')
@@ -1473,16 +1473,16 @@ END IF
 !
 !
 IND      = 50    ! Number of interval used to integrate the dimensional
-ZEGR     = 1.0   ! distributions when computing the kernel XKER_RDRYG
-ZFDINFTY = 20.0
+ZZEGR     = 1.0   ! distributions when computing the kernel XKER_RDRYG
+ZZFDINFTY = 20.0
 !
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_RDRYG', NDRYLBDAG,NDRYLBDAR)
 !if ( NMOM_R.GE.2 ) then
   CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_RDRYG', NDRYLBDAG,NDRYLBDAR)
   CALL NZCOLX  ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          & 
-               ZEGR, XCG, XDG, 0., XCR, XDR, 0.,                            & 
+               ZZEGR, XCG, XDG, 0., XCR, XDR, 0.,                            & 
                XDRYLBDAG_MAX, XDRYLBDAR_MAX, XDRYLBDAG_MIN, XDRYLBDAR_MIN, &
-               ZFDINFTY, XKER_N_RDRYG                                      )
+               ZZFDINFTY, XKER_N_RDRYG                                      )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RDRYG) ) THEN")')          
 !!$  DO I1 = 1 , NDRYLBDAG                                                    
@@ -1501,15 +1501,15 @@ CALL LIMA_READ_XKER_RDRYG (IDRYLBDAG,IDRYLBDAR,IKND,                            
 IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAR/=NDRYLBDAR) .OR. (IKND/=IND) .OR. &
     (ZALPHAG/=XALPHAG) .OR. (ZNUG/=XNUG)                               .OR. &
     (ZALPHAR/=XALPHAR) .OR. (ZNUR/=XNUR)                               .OR. &
-    (ZEGR/=ZEGR) .OR. (ZBR/=XBR)                                       .OR. &
+    (ZEGR/=ZZEGR) .OR. (ZBR/=XBR)                                       .OR. &
     (ZCG/=XCG) .OR. (ZDG/=XDG) .OR. (ZCR/=XCR) .OR. (ZDR/=XDR)         .OR. &
     (ZDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (ZDRYLBDAR_MAX/=XDRYLBDAR_MAX) .OR. &
     (ZDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (ZDRYLBDAR_MIN/=XDRYLBDAR_MIN) .OR. &
-    (ZFDINFTY/=ZFDINFTY)                                               ) THEN
+    (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAG, XNUG, XALPHAR, XNUR,                          &
-                ZEGR, XBR, XCG, XDG, 0., XCR, XDR, 0.,                      &
+                ZZEGR, XBR, XCG, XDG, 0., XCR, XDR, 0.,                      &
                 XDRYLBDAG_MAX, XDRYLBDAR_MAX, XDRYLBDAG_MIN, XDRYLBDAR_MIN, &
-                ZFDINFTY, XKER_RDRYG                                        )
+                ZZFDINFTY, XKER_RDRYG                                        )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF RDRYG KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
@@ -1521,7 +1521,7 @@ IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAR/=NDRYLBDAR) .OR. (IKND/=IND) .OR. &
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUG=",E13.6)') XNUG
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAR=",E13.6)') XALPHAR
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUR=",E13.6)') XNUR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("ZEGR=",E13.6)') ZEGR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZEGR=",E13.6)') ZZEGR
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZBR=",E13.6)') XBR
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZCG=",E13.6)') XCG
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZDG=",E13.6)') XDG
@@ -1535,7 +1535,7 @@ IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAR/=NDRYLBDAR) .OR. (IKND/=IND) .OR. &
 !!$                                                    XDRYLBDAG_MIN
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAR_MIN=",E13.6)') &
 !!$                                                    XDRYLBDAR_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_RDRYG) ) THEN")')
 !!$  DO I1 = 1 , NDRYLBDAG
@@ -1614,15 +1614,15 @@ XWETINTP2H = 1.0 - LOG( PARAM_LIMA_MIXED%XWETLBDAH_MIN ) / ZRATE
 !*       9.2.4  Computations of the tabulated normalized kernels
 !
 IND      = 50    ! Interval number, collection efficiency and infinite diameter
-ZEHS     = 1.0   ! factor used to integrate the dimensional distributions when
-ZFDINFTY = 20.0  ! computing the kernels XKER_SWETH
+ZZEHS     = 1.0   ! factor used to integrate the dimensional distributions when
+ZZFDINFTY = 20.0  ! computing the kernels XKER_SWETH
 !
 !if ( NMOM_S.GE.2 ) then
   IF( .NOT.ASSOCIATED(XKER_N_SWETH) ) CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_SWETH', NWETLBDAH,NWETLBDAS)
   CALL NZCOLX ( IND, XALPHAH, XNUH, XALPHAS, XNUS,                          &  
-              ZEHS, XCH, XDH, 0., XCS, XDS, XFVELOS,                       &  ! 
+              ZZEHS, XCH, XDH, 0., XCS, XDS, XFVELOS,                       &  ! 
               XWETLBDAH_MAX, XWETLBDAS_MAX, XWETLBDAH_MIN, XWETLBDAS_MIN, &  ! 
-              ZFDINFTY, XKER_N_SWETH                                        )
+              ZZFDINFTY, XKER_N_SWETH                                        )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SWETH) ) THEN")')          
 !!$  DO I1 = 1 , NWETLBDAH                                                    
@@ -1642,15 +1642,15 @@ CALL LIMA_READ_XKER_SWETH (IWETLBDAH,IWETLBDAS,IKND,                            
 IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAS/=NWETLBDAS) .OR. (IKND/=IND) .OR. &
     (ZALPHAH/=XALPHAH) .OR. (ZNUH/=XNUH)                               .OR. &
     (ZALPHAS/=XALPHAS) .OR. (ZNUS/=XNUS)                               .OR. &
-    (ZEHS/=ZEHS) .OR. (ZBS/=XBS)                                       .OR. &
+    (ZEHS/=ZZEHS) .OR. (ZBS/=XBS)                                       .OR. &
     (ZCH/=XCH) .OR. (ZDH/=XDH) .OR. (ZCS/=XCS) .OR. (ZDS/=XDS) .OR. (ZFVELOS/=XFVELOS) .OR. &
     (ZWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (ZWETLBDAS_MAX/=XWETLBDAS_MAX) .OR. &
     (ZWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (ZWETLBDAS_MIN/=XWETLBDAS_MIN) .OR. &
-    (ZFDINFTY/=ZFDINFTY)                                               ) THEN
+    (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAH, XNUH, XALPHAS, XNUS,                          &
-                ZEHS, XBS, XCH, XDH, 0., XCS, XDS, XFVELOS,                 &
+                ZZEHS, XBS, XCH, XDH, 0., XCS, XDS, XFVELOS,                 &
                 XWETLBDAH_MAX, XWETLBDAS_MAX, XWETLBDAH_MIN, XWETLBDAS_MIN, &
-                ZFDINFTY, XKER_SWETH                                        )
+                ZZFDINFTY, XKER_SWETH                                        )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SWETH KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
@@ -1662,7 +1662,7 @@ IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAS/=NWETLBDAS) .OR. (IKND/=IND) .OR. &
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUH=",E13.6)') XNUH
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAS=",E13.6)') XALPHAS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUS=",E13.6)') XNUS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("ZEHS=",E13.6)') ZEHS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZEHS=",E13.6)') ZZEHS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZBS=",E13.6)') XBS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZCH=",E13.6)') XCH
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZDH=",E13.6)') XDH
@@ -1677,7 +1677,7 @@ IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAS/=NWETLBDAS) .OR. (IKND/=IND) .OR. &
 !!$                                                    XWETLBDAH_MIN
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAS_MIN=",E13.6)') &
 !!$                                                    XWETLBDAS_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_SWETH) ) THEN")')
 !!$  DO I1 = 1 , NWETLBDAH
@@ -1697,15 +1697,15 @@ END IF
 !
 !
 IND      = 50    ! Number of interval used to integrate the dimensional
-ZEHG     = 1.0   ! distributions when computing the kernel XKER_GWETH
-ZFDINFTY = 20.0
+ZZEHG     = 1.0   ! distributions when computing the kernel XKER_GWETH
+ZZFDINFTY = 20.0
 !
 !if ( NMOM_G.GE.2 ) then
   IF( .NOT.ASSOCIATED(XKER_N_GWETH) ) CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_GWETH', NWETLBDAH,NWETLBDAG)
   CALL NZCOLX ( IND, XALPHAH, XNUH, XALPHAG, XNUG,                          & 
-              ZEHG, XCH, XDH, 0., XCG, XDG, 0.,                            & 
+              ZZEHG, XCH, XDH, 0., XCG, XDG, 0.,                            & 
               XWETLBDAH_MAX, XWETLBDAG_MAX, XWETLBDAH_MIN, XWETLBDAG_MIN, & 
-              ZFDINFTY, XKER_N_GWETH                                      )
+              ZZFDINFTY, XKER_N_GWETH                                      )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_GWETH) ) THEN")')          
 !!$  DO I1 = 1 , NWETLBDAH                                                    
@@ -1725,15 +1725,15 @@ CALL LIMA_READ_XKER_GWETH (IWETLBDAH,IWETLBDAG,IKND,                            
 IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAG/=NWETLBDAG) .OR. (IKND/=IND) .OR. &
     (ZALPHAH/=XALPHAH) .OR. (ZNUH/=XNUH)                               .OR. &
     (ZALPHAG/=XALPHAG) .OR. (ZNUG/=XNUG)                               .OR. &
-    (ZEHG/=ZEHG) .OR. (ZBG/=XBG)                                       .OR. &
+    (ZEHG/=ZZEHG) .OR. (ZBG/=XBG)                                       .OR. &
     (ZCH/=XCH) .OR. (ZDH/=XDH) .OR. (ZCG/=XCG) .OR. (ZDG/=XDG)         .OR. &
     (ZWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (ZWETLBDAG_MAX/=XWETLBDAG_MAX) .OR. &
     (ZWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (ZWETLBDAG_MIN/=XWETLBDAG_MIN) .OR. &
-    (ZFDINFTY/=ZFDINFTY)                                               ) THEN
+    (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAH, XNUH, XALPHAG, XNUG,                          &
-                ZEHG, XBG, XCH, XDH, 0., XCG, XDG, 0.,                      &
+                ZZEHG, XBG, XCH, XDH, 0., XCG, XDG, 0.,                      &
                 XWETLBDAH_MAX, XWETLBDAG_MAX, XWETLBDAH_MIN, XWETLBDAG_MIN, &
-                ZFDINFTY, XKER_GWETH                                        )
+                ZZFDINFTY, XKER_GWETH                                        )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF GWETH KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
@@ -1745,7 +1745,7 @@ IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAG/=NWETLBDAG) .OR. (IKND/=IND) .OR. &
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUH=",E13.6)') XNUH
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAG=",E13.6)') XALPHAG
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUG=",E13.6)') XNUG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("ZEHG=",E13.6)') ZEHG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZEHG=",E13.6)') ZZEHG
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZBG=",E13.6)') XBG
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZCH=",E13.6)') XCH
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZDH=",E13.6)') XDH
@@ -1759,7 +1759,7 @@ IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAG/=NWETLBDAG) .OR. (IKND/=IND) .OR. &
 !!$                                                    XWETLBDAH_MIN
 !!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAG_MIN=",E13.6)') &
 !!$                                                    XWETLBDAG_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_GWETH) ) THEN")')
 !!$  DO I1 = 1 , NWETLBDAH

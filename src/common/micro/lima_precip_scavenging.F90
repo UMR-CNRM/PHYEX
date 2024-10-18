@@ -164,13 +164,13 @@ REAL, DIMENSION(:), ALLOCATABLE :: ZLAMBDAR,      &  !slope parameter of the
                                    ZRRT,          &
                                    ZCONCP,        &
                                    ZCONCR,        &
-                                   ZTOT_SCAV_RATE,&
-                                   ZTOT_MASS_RATE,&
-                                   ZMEAN_SCAV_COEF
+                                   ZTOT_SCAV_RATE1D,&
+                                   ZTOT_MASS_RATE1D,&
+                                   ZMEAN_SCAV_COEF1D
 !
 REAL, DIMENSION(:,:), ALLOCATABLE :: &
                       ZVOLDR,        &  !Mean volumic Raindrop diameter [m]
-                      ZBC_SCAV_COEF, &
+                      ZBC_SCAV_COEF2D, &
                       ZCUNSLIP,      &  !CUnningham SLIP correction factor 
                       ZST_STAR,      &  !critical Stokes number for impaction
                       ZSC,           &  !aerosol particle Schmidt number
@@ -233,12 +233,12 @@ ISV_LIMA_NR       = NSV_LIMA_NR       - NSV_LIMA_BEG + 1
 ISV_LIMA_SCAVMASS = NSV_LIMA_SCAVMASS - NSV_LIMA_BEG + 1
 
 if ( BUCONF%lbudget_sv ) then
-  do jl = 1, nmod_ccn
-    idx = nsv_lima_ccn_free - 1 + jl
+  do IL = 1, nmod_ccn
+    idx = nsv_lima_ccn_free - 1 + IL
     call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
   end do
-  do jl = 1, nmod_ifn
-    idx = nsv_lima_ifn_free - 1 + jl
+  do IL = 1, nmod_ifn
+    idx = nsv_lima_ifn_free - 1 + IL
     call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
   end do
   if ( laero_mass ) then
@@ -345,7 +345,7 @@ DO ISV = 1, NMOD_CCN+NMOD_IFN
       INM = NSPECIE
    END IF
 !
-   PBC_SCAV_COEF(:,:,:,:) = 0. 
+   ZBC_SCAV_COEF(:,:,:,:) = 0. 
    ZMEAN_SCAV_COEF(:,:,:) = 0.
    ZTOT_SCAV_RATE(:,:,:)  = 0.
 !
@@ -364,15 +364,15 @@ DO ISV = 1, NMOD_CCN+NMOD_IFN
       ALLOCATE(ZLAMBDAR(ISCAV))  
       ALLOCATE(ZCONCP(ISCAV))
       ALLOCATE(ZMFPA(ISCAV))
-      ALLOCATE(ZTOT_SCAV_RATE(ISCAV))
-      ALLOCATE(ZTOT_MASS_RATE(ISCAV))
-      ALLOCATE(ZMEAN_SCAV_COEF(ISCAV))
+      ALLOCATE(ZTOT_SCAV_RATE1D(ISCAV))
+      ALLOCATE(ZTOT_MASS_RATE1D(ISCAV))
+      ALLOCATE(ZMEAN_SCAV_COEF1D(ISCAV))
       ALLOCATE(ZPABST(ISCAV))
       ALLOCATE(ZKNUDSEN(ISCAV))
       ALLOCATE(ZFACTOR(ISCAV))
 !
       ALLOCATE(ZCUNSLIP(ISCAV,NDIAMP))
-      ALLOCATE(ZBC_SCAV_COEF(ISCAV,NDIAMP))
+      ALLOCATE(ZBC_SCAV_COEF2D(ISCAV,NDIAMP))
       ALLOCATE(ZSC(ISCAV,NDIAMP))
       ALLOCATE(ZSC_INV(ISCAV,NDIAMP))
       ALLOCATE(ZSC_SQRT(ISCAV,NDIAMP))
@@ -391,9 +391,9 @@ DO ISV = 1, NMOD_CCN+NMOD_IFN
       ALLOCATE(ZCOL_EF(ISCAV,NDIAMP,NDIAMR))
       ALLOCATE(ZSIZE_RATIO(ISCAV,NDIAMP,NDIAMR))
 !
-      ZMEAN_SCAV_COEF(:)=0.
-      ZTOT_SCAV_RATE(:) =0.
-      ZTOT_MASS_RATE(:) =0.
+      ZMEAN_SCAV_COEF1D(:)=0.
+      ZTOT_SCAV_RATE1D(:) =0.
+      ZTOT_MASS_RATE1D(:) =0.
       DO IL=1,ISCAV
          ZRHODREF(IL) =  PRHODREF(I1(IL),I2(IL),I3(IL))
          ZT(IL)       =     ZT_3D(I1(IL),I2(IL),I3(IL))
@@ -457,7 +457,7 @@ DO ISV = 1, NMOD_CCN+NMOD_IFN
             ZDENS_RATIO = ZRHOP/CST%XRHOLW
             ZDENS_RATIO_SQRT = SQRT(ZDENS_RATIO)
             ! Initialisation
-            ZBC_SCAV_COEF(:,J1)=0.
+            ZBC_SCAV_COEF2D(:,J1)=0.
          !-------------------------------------------------------------------------
          ! Loop over the drops diameters (generalized Gamma distribution) :
          !
@@ -472,25 +472,25 @@ DO ISV = 1, NMOD_CCN+NMOD_IFN
                                        ZSC_SQRT, ZSC_3SQRT, ZST, ZST_STAR,          &
                                        ZSIZE_RATIO, ZVISC_RATIO, ZDENS_RATIO_SQRT) 
                ! Below-Cloud Scavenging Coefficient for a fixed ZVOLDP: [/s]
-               ZBC_SCAV_COEF(:,J1) = ZBC_SCAV_COEF(:,J1) +                          &
+               ZBC_SCAV_COEF2D(:,J1) = ZBC_SCAV_COEF2D(:,J1) +                          &
                                      ZCOL_EF(:,J1,J2) * ZWEIGHTR(J2) * ZFACTOR(:) * ZVOLDR_POW(:,J2)
             END DO 
          ! End of the loop over the drops diameters
          !--------------------------------------------------------------------------
 
             ! Total NUMBER Scavenging Rate of aerosol [m**-3.s**-1]
-            ZTOT_SCAV_RATE(:) = ZTOT_SCAV_RATE(:) -                                 &
-                                ZWEIGHTP(J1)*ZFRACP*ZCONCP(:)*ZBC_SCAV_COEF(:,J1)
+            ZTOT_SCAV_RATE1D(:) = ZTOT_SCAV_RATE1D(:) -                                 &
+                                ZWEIGHTP(J1)*ZFRACP*ZCONCP(:)*ZBC_SCAV_COEF2D(:,J1)
             ! Total MASS Scavenging Rate of aerosol [kg.m**-3.s**-1]
-            ZTOT_MASS_RATE(:) = ZTOT_MASS_RATE(:) +                                 &
-                                ZWEIGHTP(J1)*ZFRACP*ZCONCP(:)*ZBC_SCAV_COEF(:,J1)   &
+            ZTOT_MASS_RATE1D(:) = ZTOT_MASS_RATE1D(:) +                                 &
+                                ZWEIGHTP(J1)*ZFRACP*ZCONCP(:)*ZBC_SCAV_COEF2D(:,J1)   &
                                 *CST%XPI/6.*ZRHOP*(ZVOLDP(J1)**3)  
          END DO
       ! End of the loop over the drops diameters
       !--------------------------------------------------------------------------
 
          ! Total NUMBER Scavenging Rate of aerosol [m**-3.s**-1]
-         ZTOT_SCAV_RATE(:,:,:)=UNPACK(ZTOT_SCAV_RATE(:),MASK=GSCAV(:,:,:),FIELD=0.0)
+         ZTOT_SCAV_RATE(:,:,:)=UNPACK(ZTOT_SCAV_RATE1D(:),MASK=GSCAV(:,:,:),FIELD=0.0)
          ! Free particles (CCN or IFN) [/s]:
          PRSVS(:,:,:,ISV_VAR) = max(PRSVS(:,:,:,ISV_VAR)+ZTOT_SCAV_RATE(:,:,:)  &
                                          * PRHODJ(:,:,:)/PRHODREF(:,:,:) , 0.0 )
@@ -498,7 +498,7 @@ DO ISV = 1, NMOD_CCN+NMOD_IFN
          ! rain sedimentation [kg.m**-3.s**-1]
          IF (LAERO_MASS)THEN
             ZTOT_MASS_RATE(:,:,:) = ZTOT_MASS_RATE(:,:,:) +                         &
-                 UNPACK(ZTOT_MASS_RATE(:), MASK=GSCAV(:,:,:), FIELD=0.0)
+                 UNPACK(ZTOT_MASS_RATE1D(:), MASK=GSCAV(:,:,:), FIELD=0.0)
             CALL SCAV_MASS_SEDIMENTATION( HCLOUD, HDCONF, PTSTEP, KTCOUNT, PZZ, PRHODJ,     &
                                       PRHODREF, PRRT, PSVT(:,:,:,ISV_LIMA_SCAVMASS),&
                                       PRSVS(:,:,:,ISV_LIMA_SCAVMASS), PINPAP        )
@@ -531,11 +531,11 @@ DO ISV = 1, NMOD_CCN+NMOD_IFN
       DEALLOCATE(ZRELT)
       DEALLOCATE(ZSC)
       DEALLOCATE(ZCUNSLIP)
-      DEALLOCATE(ZBC_SCAV_COEF)
+      DEALLOCATE(ZBC_SCAV_COEF2D)
 !
-      DEALLOCATE(ZTOT_SCAV_RATE)
-      DEALLOCATE(ZTOT_MASS_RATE)
-      DEALLOCATE(ZMEAN_SCAV_COEF)
+      DEALLOCATE(ZTOT_SCAV_RATE1D)
+      DEALLOCATE(ZTOT_MASS_RATE1D)
+      DEALLOCATE(ZMEAN_SCAV_COEF1D)
 !
       DEALLOCATE(ZRRT)
       DEALLOCATE(ZCONCR)
@@ -552,12 +552,12 @@ DO ISV = 1, NMOD_CCN+NMOD_IFN
 ENDDO
 !
 if ( BUCONF%lbudget_sv ) then
-  do jl = 1, nmod_ccn
-    idx = nsv_lima_ccn_free - 1 + jl
+  do IL = 1, nmod_ccn
+    idx = nsv_lima_ccn_free - 1 + IL
     call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
   end do
-  do jl = 1, nmod_ifn
-    idx = nsv_lima_ifn_free - 1 + jl
+  do IL = 1, nmod_ifn
+    idx = nsv_lima_ifn_free - 1 + IL
     call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
   end do
   if ( laero_mass ) then
