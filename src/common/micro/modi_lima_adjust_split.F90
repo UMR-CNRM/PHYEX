@@ -8,7 +8,7 @@ INTERFACE
    SUBROUTINE LIMA_ADJUST_SPLIT(D, CST, BUCONF, TBUDGETS, KBUDGETS, &
                              KRR, KMI, HCONDENS, HLAMBDA3,                      &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
-                             PRHODREF, PRHODJ, PEXNREF, PSIGS, LMFCONV, PMFCONV,&
+                             PRHODREF, PRHODJ, PEXNREF, PSIGS, OMFCONV, PMFCONV,&
                              PPABST, PPABSTT, PZZ, ODTHRAD, PDTHRAD, PW_NU,     &
                              PRT, PRS, PSVT, PSVS,                              &
                              PTHS, OCOMPUTE_SRC, PSRCS, PCLDFR, PICEFR,         &
@@ -47,10 +47,10 @@ REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PEXNREF   ! Reference E
 REAL, DIMENSION(MERGE(D%NIT,0,NEBN%LSUBG_COND), &
                 MERGE(D%NJT,0,NEBN%LSUBG_COND), &
                 MERGE(D%NKT,0,NEBN%LSUBG_COND)),   INTENT(IN)   ::  PSIGS     ! Sigma_s at time t
-LOGICAL,                                  INTENT(IN)    ::  LMFCONV ! T to use PMFCONV
-REAL, DIMENSION(MERGE(D%NIT,0,LMFCONV), &
-                MERGE(D%NJT,0,LMFCONV), &
-                MERGE(D%NKT,0,LMFCONV)),   INTENT(IN)   ::  PMFCONV   ! 
+LOGICAL,                                  INTENT(IN)    ::  OMFCONV ! T to use PMFCONV
+REAL, DIMENSION(MERGE(D%NIT,0,OMFCONV), &
+                MERGE(D%NJT,0,OMFCONV), &
+                MERGE(D%NKT,0,OMFCONV)),   INTENT(IN)   ::  PMFCONV   ! 
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PPABST    ! Absolute Pressure at t     
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PPABSTT   ! Absolute Pressure at t+dt     
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)   ::  PZZ       !     

@@ -7,7 +7,7 @@ MODULE MODE_LIMA_GRAUPEL
   IMPLICIT NONE
 CONTAINS
 !     #################################################################################
-  SUBROUTINE LIMA_GRAUPEL (PTSTEP, LDCOMPUTE,                                     &
+  SUBROUTINE LIMA_GRAUPEL (PTSTEP, ODCOMPUTE,                                     &
                            PRHODREF, PPRES, PT, PKA, PDV, PCJ,                    &
                            PRVT, PRCT, PRRT, PRIT, PRST, PRGT,                    &
                            PCCT, PCRT, PCIT, PCST, PCGT,                          &
@@ -66,7 +66,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 REAL,                 INTENT(IN)    :: PTSTEP 
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF    ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PPRES    ! 
@@ -213,7 +213,7 @@ ZRWETG(:) = 0.
 !            1.a Collection of rc and ri in the dry mode
 !            --------------------------------------------
 !
-WHERE( PRGT(:)>XRTMIN(6) .AND. LDCOMPUTE(:) )
+WHERE( PRGT(:)>XRTMIN(6) .AND. ODCOMPUTE(:) )
    ZZW(:) = PCGT(:) * PLBDG(:)**(-XDG-2.0) * PRHODREF(:)**(1-XCEXVT)
    ZZW1(:) = XFCDRYG * PRCT(:) * ZZW(:)                               ! RCDRYG - rc collected by graupel in dry mode 
    ZZW2(:) = XFIDRYG * EXP( XCOLEXIG*(PT(:)-XTT) ) * PRIT(:) * ZZW(:) ! RIDRYG - ri collected by graupel in dry mode
@@ -222,7 +222,7 @@ END WHERE
 !*           1.b Collection of rs in the dry mode
 !            ------------------------------------
 !
-GDRY(:) = PRST(:)>XRTMIN(5) .AND. PCST(:)>XCTMIN(5) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. LDCOMPUTE(:)
+GDRY(:) = PRST(:)>XRTMIN(5) .AND. PCST(:)>XCTMIN(5) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. ODCOMPUTE(:)
 !
 WHERE( GDRY )
 !
@@ -288,7 +288,7 @@ END WHERE
 !*           1.c  Collection of rr in the dry mode
 !            -------------------------------------
 !
-GDRY(:) = PRRT(:)>XRTMIN(3) .AND. PCRT(:)>XCTMIN(3) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. LDCOMPUTE(:)
+GDRY(:) = PRRT(:)>XRTMIN(3) .AND. PCRT(:)>XCTMIN(3) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. ODCOMPUTE(:)
 !
 WHERE( GDRY )
 !
@@ -361,7 +361,7 @@ ZRDRYG(:) = ZZW1(:) + ZZW2(:) + ZZW3(:) + ZZW4(:)
 !            ------------------------------
 !
 ZZW(:) = 0.0
-WHERE( PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. LDCOMPUTE(:) )
+WHERE( PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. ODCOMPUTE(:) )
    ZZW5(:) = ZZW2(:) / (XCOLIG*EXP(XCOLEXIG*(PT(:)-XTT)) ) ! RIWETG
    ZZW6(:) = ZZW3(:) / (XCOLSG*EXP(XCOLEXSG*(PT(:)-XTT)) ) ! RSWETG
    ZZW6N(:)= ZZW3N(:)/ (XCOLSG*EXP(XCOLEXSG*(PT(:)-XTT)) ) ! NSWETG
@@ -387,7 +387,7 @@ END WHERE
 ZZW(:) = 0.0
 NHAIL = 0.
 IF (NMOM_H.GE.1) NHAIL = 1. 
-WHERE( LDCOMPUTE(:) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)<XTT .AND. &
+WHERE( ODCOMPUTE(:) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)<XTT .AND. &
        (ZRDRYG(:)-ZZW2(:)-ZZW3(:))>=(ZRWETG(:)-ZZW5(:)-ZZW6(:)) .AND. ZRWETG(:)-ZZW5(:)-ZZW6(:)>0.0 ) 
 !
 ! Mass of rain and cloud droplets frozen by graupel in wet mode : RCWETG + RRWETG = RWETG - RIWETG - RSWETG
@@ -416,7 +416,7 @@ END WHERE
 !            1.g Dry mode
 !            ------------
 !
-WHERE( LDCOMPUTE(:) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)<XTT .AND.                  &
+WHERE( ODCOMPUTE(:) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)<XTT .AND.                  &
        (ZRDRYG(:)-ZZW2(:)-ZZW3(:))<(ZRWETG(:)-ZZW5(:)-ZZW6(:)) .AND. ZRDRYG(:)>0.0 )
    !
    P_RC_DRYG(:) = - ZZW1(:)
@@ -438,7 +438,7 @@ END WHERE
 !
 ! BVIE test ZRDRYG<ZZW ?????????????????????????
 !GDRY(:) = (PT(:)<XHMTMAX) .AND. (PT(:)>XHMTMIN)    .AND. (ZRDRYG(:)<ZZW(:))&
-GDRY(:) = PT(:)<XHMTMAX .AND. PT(:)>XHMTMIN .AND. PRGT(:)>XRTMIN(6) .AND. PRCT(:)>XRTMIN(2) .AND. LDCOMPUTE(:) .AND. &
+GDRY(:) = PT(:)<XHMTMAX .AND. PT(:)>XHMTMIN .AND. PRGT(:)>XRTMIN(6) .AND. PRCT(:)>XRTMIN(2) .AND. ODCOMPUTE(:) .AND. &
           PCGT(:)>XCTMIN(6) .AND. PCCT(:)>XCTMIN(2) .AND. (ZRDRYG(:)-ZZW2(:)-ZZW3(:))<(ZRWETG(:)-ZZW5(:)-ZZW6(:))
 
 ZZX(:)=9999.
@@ -470,7 +470,7 @@ END WHERE
 !        -------------------
 !
 ZZX(:) = 0.0
-WHERE( PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)>XTT .AND. LDCOMPUTE(:) )
+WHERE( PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)>XTT .AND. ODCOMPUTE(:) )
    ZZX(:) = PRVT(:)*PPRES(:)/((XMV/XMD)+PRVT(:)) ! Vapor pressure
    ZZX(:) = PKA(:)*(XTT-PT(:)) +                                 &
               ( PDV(:)*(XLVTT + ( XCPV - XCL ) * ( PT(:) - XTT )) &

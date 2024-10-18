@@ -7,7 +7,7 @@ MODULE MODE_LIMA_ICE_DEPOSITION
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_ICE_DEPOSITION (PTSTEP, LDCOMPUTE,                        &
+  SUBROUTINE LIMA_ICE_DEPOSITION (PTSTEP, ODCOMPUTE,                        &
                                   PRHODREF, PT,  PSSI, PAI, PCJ, PLSFACT,   &
                                   PRIT, PCIT, PLBDI,                        &
                                   P_TH_DEPI, P_RI_DEPI,                     &
@@ -52,7 +52,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 REAL,                 INTENT(IN)    :: PTSTEP
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF! Reference density
 REAL, DIMENSION(:),   INTENT(IN)    :: PT  ! abs. pressure at time t
@@ -90,7 +90,7 @@ P_CI_CNVS(:) = 0.
 !
 ! Looking for regions where computations are necessary
 !
-GMICRO(:) = LDCOMPUTE(:) .AND. PRIT(:)>XRTMIN(4)
+GMICRO(:) = ODCOMPUTE(:) .AND. PRIT(:)>XRTMIN(4)
 !
 !
 IF (NMOM_I.EQ.1) THEN

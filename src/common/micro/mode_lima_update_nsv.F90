@@ -11,14 +11,14 @@ IMPLICIT NONE
 !
 CONTAINS
 !
-SUBROUTINE LIMA_UPDATE_NSV(LDINIT, KMI, KSV, CDCLOUD, LDUPDATE)
+SUBROUTINE LIMA_UPDATE_NSV(ODINIT, KMI, KSV, CDCLOUD, ODUPDATE)
 !!*** *LIMA_UPDATE_NSV* - update modd_nsv values realtive to LIMA
 !!
 !!*   PURPOSE
 !!    -------
-!!    The modd_nsv values relative to the LIMA scheme are initialised (if LDINIT is .TRUE)
+!!    The modd_nsv values relative to the LIMA scheme are initialised (if ODINIT is .TRUE)
 !!    according to the micromisics scheme used.
-!!    If LDUPDATE is .TRUE., the scalar values of modd_nsv module receive the values
+!!    If ODUPDATE is .TRUE., the scalar values of modd_nsv module receive the values
 !!    assigned for the KMI model.
 !!
 !!*   METHOD
@@ -65,17 +65,17 @@ USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN, LSCAV, LAERO_MASS, &
 !       ------------------------
 !
 IMPLICIT NONE
-LOGICAL,          INTENT(IN)    :: LDINIT   !< .TRUE. to fill the different NSV_LIMA_*_A arrays
+LOGICAL,          INTENT(IN)    :: ODINIT   !< .TRUE. to fill the different NSV_LIMA_*_A arrays
 INTEGER,          INTENT(IN)    :: KMI      !< model number
 INTEGER,          INTENT(INOUT) :: KSV      !< IN: Initial value to use when filling the NSV_LIMA_*_A arrays; 
                                             !! OUT: Final value after having filled the arrays
 CHARACTER(LEN=4), INTENT(IN)    :: CDCLOUD  !< Cloud scheme
-LOGICAL,          INTENT(IN)    :: LDUPDATE !< .TRUE. to goto model
+LOGICAL,          INTENT(IN)    :: ODUPDATE !< .TRUE. to goto model
 !
 !*      1. INITIALISATION
 !       -----------------
 !
-IF(LDINIT) THEN
+IF(ODINIT) THEN
   IF(CDCLOUD=='LIMA') THEN
     KSV = KSV+1
     NSV_LIMA_BEG_A(KMI) = KSV
@@ -163,7 +163,7 @@ ENDIF
 !*      2. UPDATE
 !       ---------
 !
-IF(LDUPDATE) THEN
+IF(ODUPDATE) THEN
   NSV_LIMA          = NSV_LIMA_A(KMI)
   NSV_LIMA_BEG      = NSV_LIMA_BEG_A(KMI)
   NSV_LIMA_END      = NSV_LIMA_END_A(KMI)

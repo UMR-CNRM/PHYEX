@@ -12,7 +12,7 @@ implicit none
 contains
 
 !     ###########################################################################
-      SUBROUTINE SET_CONC_LIMA( kmi, HGETCLOUD, PRHODREF, PRT, PSVT, LDLBC )
+      SUBROUTINE SET_CONC_LIMA( kmi, HGETCLOUD, PRHODREF, PRT, PSVT, ODLBC )
 !     ###########################################################################
 !
 !!****  *SET_CONC_LIMA * - initialize droplet, raindrop and ice
@@ -92,7 +92,7 @@ REAL, DIMENSION(:,:,:),    INTENT(IN) :: PRHODREF   ! Reference density
 REAL, DIMENSION(:,:,:,:),  INTENT(INOUT) :: PRT     ! microphysical mixing ratios
 !
 REAL,  DIMENSION(:,:,:,:), INTENT(INOUT) :: PSVT     ! microphys. concentrations
-LOGICAL, OPTIONAL,         INTENT(IN)    :: LDLBC    ! T to activate LBC mode
+LOGICAL, OPTIONAL,         INTENT(IN)    :: ODLBC    ! T to activate LBC mode
 !
 !
 !*       0.2   Declarations of local variables :
@@ -120,7 +120,7 @@ ISV_LIMA_IFN_NUCL = NSV_LIMA_IFN_NUCL - NSV_LIMA_BEG + 1
 !              --------------
 !
 LLLBC=.FALSE.
-IF(PRESENT(LDLBC)) LLLBC=LDLBC
+IF(PRESENT(ODLBC)) LLLBC=ODLBC
 IF(LLLBC) THEN
   ZSVTHR=1.E-11 ! valid value to check
 ELSE

@@ -7,7 +7,7 @@ MODULE MODE_LIMA_HAIL_DEPOSITION
   IMPLICIT NONE
 CONTAINS
 !     ###########################################################################
-  SUBROUTINE LIMA_HAIL_DEPOSITION (LDCOMPUTE, PRHODREF,                        &
+  SUBROUTINE LIMA_HAIL_DEPOSITION (ODCOMPUTE, PRHODREF,                        &
                                    PRHT, PCHT, PSSI, PLBDH, PAI, PCJ, PLSFACT, &
                                    P_TH_DEPH, P_RH_DEPH                        )
 !     ###########################################################################
@@ -41,7 +41,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! 
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHT     ! hail mr
@@ -64,7 +64,7 @@ REAL, DIMENSION(:),   INTENT(OUT)   :: P_RH_DEPH
 !
 P_TH_DEPH(:) = 0.0
 P_RH_DEPH(:) = 0.0
-WHERE ( PRHT(:)>XRTMIN(7) .AND. PCHT(:)>XCTMIN(7) .AND. LDCOMPUTE(:) )
+WHERE ( PRHT(:)>XRTMIN(7) .AND. PCHT(:)>XCTMIN(7) .AND. ODCOMPUTE(:) )
    P_RH_DEPH(:) = PSSI(:) / PAI(:) * PCHT(:) *                      &
                 ( X0DEPH*PLBDH(:)**XEX0DEPH + X1DEPH*PCJ(:)*PLBDH(:)**XEX1DEPH )
    P_TH_DEPH(:) = P_RH_DEPH(:)*PLSFACT(:)

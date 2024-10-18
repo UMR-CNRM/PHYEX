@@ -6,7 +6,7 @@ MODULE MODE_LIMA_DROPS_BREAK_UP
   IMPLICIT NONE
 CONTAINS
 !     ##########################################
-  SUBROUTINE LIMA_DROPS_BREAK_UP (LDCOMPUTE,  &
+  SUBROUTINE LIMA_DROPS_BREAK_UP (ODCOMPUTE,  &
                                   PCRT, PRRT, &
                                   P_CR_BRKU,  &
                                   PB_CR       )
@@ -41,7 +41,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:), INTENT(IN)    :: LDCOMPUTE  
+LOGICAL, DIMENSION(:), INTENT(IN)    :: ODCOMPUTE  
 !
 REAL, DIMENSION(:),    INTENT(IN)    :: PCRT             !
 REAL, DIMENSION(:),    INTENT(IN)    :: PRRT             !
@@ -62,11 +62,11 @@ P_CR_BRKU(:)=0.
 !
 ZWLBDR3(:) = 1.E30
 ZWLBDR(:) = 1.E10
-WHERE ( PRRT(:)>XRTMIN(3) .AND. PCRT(:)>XCTMIN(3) .AND. LDCOMPUTE(:) )
+WHERE ( PRRT(:)>XRTMIN(3) .AND. PCRT(:)>XCTMIN(3) .AND. ODCOMPUTE(:) )
    ZWLBDR3(:) = XLBR * PCRT(:) / PRRT(:)
    ZWLBDR(:)  = ZWLBDR3(:)**XLBEXR
 END WHERE
-WHERE (ZWLBDR(:)<(XACCR1/XSPONBUD1) .AND. LDCOMPUTE(:))
+WHERE (ZWLBDR(:)<(XACCR1/XSPONBUD1) .AND. ODCOMPUTE(:))
    P_CR_BRKU(:) = PCRT(:)*( MAX((1.+XSPONCOEF2*(XACCR1/ZWLBDR(:)-XSPONBUD1)**2),&
                                                      (XACCR1/ZWLBDR(:)/XSPONBUD3)**3) -1. )
 END WHERE

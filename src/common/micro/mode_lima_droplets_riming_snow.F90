@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPLETS_RIMING_SNOW
   IMPLICIT NONE
 CONTAINS
 !     ###########################################################################################
-  SUBROUTINE LIMA_DROPLETS_RIMING_SNOW (PTSTEP, LDCOMPUTE,                                      &
+  SUBROUTINE LIMA_DROPLETS_RIMING_SNOW (PTSTEP, ODCOMPUTE,                                      &
                                         PRHODREF, PT,                                           &
                                         PRCT, PCCT, PRST, PCST, PLBDC, PLBDS, PLVFACT, PLSFACT, &
 !++cb++
@@ -54,7 +54,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 REAL,                 INTENT(IN)    :: PTSTEP 
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF    ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PT   ! 
@@ -102,7 +102,7 @@ DO JI = 1, SIZE(PRCT)
 !        --------------------------------------
 !
   IF ( PRCT(JI)>XRTMIN(2) .AND. PRST(JI)>XRTMIN(5) .AND. PT(JI)<XTT .AND. &
-       PCCT(JI)>XCTMIN(2) .AND. PCST(JI)>XCTMIN(5) .AND. LDCOMPUTE(JI) ) THEN
+       PCCT(JI)>XCTMIN(2) .AND. PCST(JI)>XCTMIN(5) .AND. ODCOMPUTE(JI) ) THEN
 !
     ZVEC1(JI) = PLBDS(JI)
     ZVEC1W(JI)= ( XFVELOS**XALPHAS + PLBDS(JI)**XALPHAS ) ** (1./XALPHAS) ! modified equivalent lambda
@@ -190,7 +190,7 @@ DO JI = 1, SIZE(PRCT)
 !        -----------------------------------
 !
   IF ( PRST(JI)>XRTMIN(5) .AND. PRCT(JI)>XRTMIN(2) .AND. PT(JI)<XHMTMAX .AND. PT(JI)>XHMTMIN .AND. &
-       PCST(JI)>XCTMIN(5) .AND. PCCT(JI)>XCTMIN(2) .AND. LDCOMPUTE(JI) ) THEN
+       PCST(JI)>XCTMIN(5) .AND. PCCT(JI)>XCTMIN(2) .AND. ODCOMPUTE(JI) ) THEN
 !
     ZVEC1(JI) = PLBDC(JI)
     ZVEC2(JI) = MAX( 1.0001, MIN( REAL(NGAMINC)-0.0001,           &

@@ -7,7 +7,7 @@ MODULE MODE_LIMA_SNOW_SELF_COLLECTION
   IMPLICIT NONE
 CONTAINS
 !     #############################################################
-  SUBROUTINE LIMA_SNOW_SELF_COLLECTION (LDCOMPUTE,          &
+  SUBROUTINE LIMA_SNOW_SELF_COLLECTION (ODCOMPUTE,          &
                                         PRHODREF, PT,       &
                                         PRST, PCST, PLBDS,  &
                                         P_CS_SSC            )
@@ -43,7 +43,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! Reference Exner function
 REAL, DIMENSION(:),   INTENT(IN)    :: PT       ! Temperature

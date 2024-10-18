@@ -7,7 +7,7 @@ MODULE MODE_LIMA_RAINDROP_SHATTERING_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     #######################################################################
-  SUBROUTINE LIMA_RAINDROP_SHATTERING_FREEZING (LDCOMPUTE,                    &
+  SUBROUTINE LIMA_RAINDROP_SHATTERING_FREEZING (ODCOMPUTE,                    &
                                                 PRHODREF,                     &
                                                 PRRT, PCRT, PRIT, PCIT, PRGT, &
                                                 PLBDR,                        &
@@ -42,7 +42,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF
 !
@@ -72,7 +72,7 @@ REAL,    DIMENSION(SIZE(PRRT))     :: ZNI_RDSF,ZRI_RDSF  ! RDSF rates
 P_RI_RDSF(:)=0.
 P_CI_RDSF(:)=0.
 !
-GRDSF(:) = LRDSF .AND. LDCOMPUTE .AND. (PRIT(:)>XRTMIN(4)) .AND. (PRRT(:)>XRTMIN(3)) &
+GRDSF(:) = LRDSF .AND. ODCOMPUTE .AND. (PRIT(:)>XRTMIN(4)) .AND. (PRRT(:)>XRTMIN(3)) &
                                  .AND. (PCIT(:)>XCTMIN(4)) .AND. (PCRT(:)>XCTMIN(3)) &
                                  .AND. (PRGT(:)>XRTMIN(6))
 

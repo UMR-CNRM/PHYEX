@@ -6,7 +6,7 @@ MODULE MODE_LIMA_ICE_MELTING
   IMPLICIT NONE
 CONTAINS
 !     ########################################################################
-  SUBROUTINE LIMA_ICE_MELTING (PTSTEP, LDCOMPUTE,                        &
+  SUBROUTINE LIMA_ICE_MELTING (PTSTEP, ODCOMPUTE,                        &
                                PEXNREF, PPABST,                          &
                                PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                PCIT, PINT,                               &
@@ -43,7 +43,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 REAL,                 INTENT(IN)    :: PTSTEP 
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
 REAL, DIMENSION(:),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
@@ -102,7 +102,7 @@ ZW(:) = 0.0
 !
 ZMASK(:) = 0.
 !
-WHERE( (ZT(:)>XTT) .AND. (PRIT(:)>XRTMIN(4)) .AND. LDCOMPUTE(:) )
+WHERE( (ZT(:)>XTT) .AND. (PRIT(:)>XRTMIN(4)) .AND. ODCOMPUTE(:) )
    P_TH_IMLT(:) = - PRIT(:)*(ZLSFACT(:)-ZLVFACT(:))
    P_RC_IMLT(:) = PRIT(:)
    P_CC_IMLT(:) = PCIT(:)

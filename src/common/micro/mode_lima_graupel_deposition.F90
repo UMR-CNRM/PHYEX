@@ -7,7 +7,7 @@ MODULE MODE_LIMA_GRAUPEL_DEPOSITION
   IMPLICIT NONE
 CONTAINS
 !     ###########################################################################
-  SUBROUTINE LIMA_GRAUPEL_DEPOSITION (LDCOMPUTE, PRHODREF,                        &
+  SUBROUTINE LIMA_GRAUPEL_DEPOSITION (ODCOMPUTE, PRHODREF,                        &
                                       PRGT, PCGT, PSSI, PLBDG, PAI, PCJ, PLSFACT, &
                                       P_TH_DEPG, P_RG_DEPG                        )
 !     ###########################################################################
@@ -41,7 +41,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! 
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRGT     ! graupel mr
@@ -64,7 +64,7 @@ REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_DEPG
 !
 P_TH_DEPG(:) = 0.0
 P_RG_DEPG(:) = 0.0
-WHERE ( PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. LDCOMPUTE(:) )
+WHERE ( PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. ODCOMPUTE(:) )
    P_RG_DEPG(:) = PSSI(:) / PAI(:) * PCGT(:) *                      &
                 ( X0DEPG*PLBDG(:)**XEX0DEPG + X1DEPG*PCJ(:)*PLBDG(:)**XEX1DEPG )
    P_TH_DEPG(:) = P_RG_DEPG(:)*PLSFACT(:)

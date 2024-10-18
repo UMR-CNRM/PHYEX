@@ -7,7 +7,7 @@ MODULE MODE_LIMA_RAIN_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     #######################################################################################
-  SUBROUTINE LIMA_RAIN_FREEZING (LDCOMPUTE,                                             &
+  SUBROUTINE LIMA_RAIN_FREEZING (ODCOMPUTE,                                             &
                                  PRHODREF, PT, PLVFACT, PLSFACT,                        &
                                  PRRT, PCRT, PRIT, PCIT, PLBDR,                         &
                                  P_TH_CFRZ, P_RR_CFRZ, P_CR_CFRZ, P_RI_CFRZ, P_CI_CFRZ  )
@@ -42,7 +42,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! Reference Exner function
 REAL, DIMENSION(:),   INTENT(IN)    :: PT       !
@@ -82,7 +82,7 @@ ZW1(:)=0.
 ZW2(:)=0.
 !
 WHERE( PRIT(:)>XRTMIN(4) .AND. PRRT(:)>XRTMIN(3) .AND. PT(:)<XTT .AND. &
-       PCIT(:)>XCTMIN(4) .AND. PCRT(:)>XCTMIN(3) .AND. LDCOMPUTE(:) )
+       PCIT(:)>XCTMIN(4) .AND. PCRT(:)>XCTMIN(3) .AND. ODCOMPUTE(:) )
 !
    ZW1(:) = XICFRR * PRIT(:) * PCRT(:)                    & ! RICFRRG
                                      * PLBDR(:)**XEXICFRR         &

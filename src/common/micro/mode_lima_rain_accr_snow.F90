@@ -7,7 +7,7 @@ MODULE MODE_LIMA_RAIN_ACCR_SNOW
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################################
-  SUBROUTINE LIMA_RAIN_ACCR_SNOW (PTSTEP, LDCOMPUTE,                                       &
+  SUBROUTINE LIMA_RAIN_ACCR_SNOW (PTSTEP, ODCOMPUTE,                                       &
                                   PRHODREF, PT,                                            &
                                   PRRT, PCRT, PRST, PCST, PLBDR, PLBDS, PLVFACT, PLSFACT,  &
 !++cb++
@@ -61,7 +61,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 REAL,                 INTENT(IN)    :: PTSTEP 
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF    ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PT   ! 
@@ -137,7 +137,7 @@ ZVEC3(:) = 0.
 !
 !
 GACC(:) = .False.
-GACC(:) = (PRRT(:)>XRTMIN(3)) .AND. (PRST(:)>XRTMIN(5)) .AND. (PT(:)<XTT) .AND. LDCOMPUTE(:) .AND. &
+GACC(:) = (PRRT(:)>XRTMIN(3)) .AND. (PRST(:)>XRTMIN(5)) .AND. (PT(:)<XTT) .AND. ODCOMPUTE(:) .AND. &
           (PCRT(:)>XCTMIN(3)) .AND. (PCST(:)>XCTMIN(5))
 !
 WHERE( GACC )

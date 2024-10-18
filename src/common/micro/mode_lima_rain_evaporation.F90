@@ -7,7 +7,7 @@ MODULE MODE_LIMA_RAIN_EVAPORATION
   IMPLICIT NONE
 CONTAINS
 !     ###############################################################################
-  SUBROUTINE LIMA_RAIN_EVAPORATION (PTSTEP, LDCOMPUTE,                          &
+  SUBROUTINE LIMA_RAIN_EVAPORATION (PTSTEP, ODCOMPUTE,                          &
                                     PRHODREF, PT, PLV, PLVFACT, PEVSAT, PRVSAT, &
                                     PRVT, PRCT, PRRT, PCRT, PLBDR,              &
                                     P_TH_EVAP, P_RR_EVAP, P_CR_EVAP,            &
@@ -47,7 +47,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 REAL,                 INTENT(IN)    :: PTSTEP     ! Time step
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE  !
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE  !
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF   ! Reference density
 REAL, DIMENSION(:),   INTENT(IN)    :: PT         ! Temperature
@@ -88,7 +88,7 @@ ZZW1(:) = 0.
 ZZW2(:) = 0.
 !
 GEVAP(:) = .FALSE.
-GEVAP(:) = LDCOMPUTE(:)      .AND. &
+GEVAP(:) = ODCOMPUTE(:)      .AND. &
            PRRT(:)>XRTMIN(3) .AND. &
            PRVT(:)<PRVSAT(:) .AND. &
            PCRT(:)>XCTMIN(3)

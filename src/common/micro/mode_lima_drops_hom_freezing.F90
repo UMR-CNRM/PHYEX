@@ -6,7 +6,7 @@ MODULE MODE_LIMA_DROPS_HOM_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     ###############################################################################
-  SUBROUTINE LIMA_DROPS_HOM_FREEZING (PTSTEP, LDCOMPUTE,                        &
+  SUBROUTINE LIMA_DROPS_HOM_FREEZING (PTSTEP, ODCOMPUTE,                        &
                                       PEXNREF, PPABST,                          &
                                       PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                       PCRT,                                     &
@@ -43,7 +43,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 REAL,                  INTENT(IN)    :: PTSTEP 
-LOGICAL, DIMENSION(:), INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:), INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),    INTENT(IN)    :: PEXNREF ! Reference Exner function
 REAL, DIMENSION(:),    INTENT(IN)    :: PPABST  ! abs. pressure at time t
@@ -92,7 +92,7 @@ ZLVFACT(:) = (XLVTT+(XCPV-XCL)*ZTCELSIUS(:))/ZW(:)          ! L_v/(Pi_ref*C_ph)
 !
 ZW(:) = 0.0
 !
-WHERE( (ZT(:)<XTT-35.0) .AND. (PRRT(:)>XRTMIN(3)) .AND. LDCOMPUTE(:) )
+WHERE( (ZT(:)<XTT-35.0) .AND. (PRRT(:)>XRTMIN(3)) .AND. ODCOMPUTE(:) )
    P_TH_HONR(:) = PRRT(:)*(ZLSFACT(:)-ZLVFACT(:))
    P_RR_HONR(:) = - PRRT(:)
    P_CR_HONR(:) = - PCRT(:)

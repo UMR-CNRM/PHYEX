@@ -7,7 +7,7 @@ MODULE MODE_LIMA_CONVERSION_MELTING_SNOW
   IMPLICIT NONE
 CONTAINS
 !     ##############################################################################
-  SUBROUTINE LIMA_CONVERSION_MELTING_SNOW (LDCOMPUTE,                          &
+  SUBROUTINE LIMA_CONVERSION_MELTING_SNOW (ODCOMPUTE,                          &
                                            PRHODREF, PPRES, PT, PKA, PDV, PCJ, &
                                            PRVT, PRST, PCST, PLBDS,            &
                                            P_RS_CMEL, P_CS_CMEL                )
@@ -44,7 +44,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! Reference Exner function
 REAL, DIMENSION(:),   INTENT(IN)    :: PPRES    !
@@ -76,7 +76,7 @@ P_RS_CMEL(:)=0.
 P_CS_CMEL(:)=0.
 !
 ZW(:) = 0.0
-WHERE( PRST(:)>XRTMIN(5) .AND. PCST(:)>XCTMIN(5) .AND. PT(:)>XTT .AND. LDCOMPUTE(:) )
+WHERE( PRST(:)>XRTMIN(5) .AND. PCST(:)>XCTMIN(5) .AND. PT(:)>XTT .AND. ODCOMPUTE(:) )
    ZW(:) = PRVT(:)*PPRES(:)/((XMV/XMD)+PRVT(:)) ! Vapor pressure
    ZW(:) = PKA(:)*(XTT-PT(:)) +                                 &
               ( PDV(:)*(XLVTT + ( XCPV - XCL ) * ( PT(:) - XTT )) &

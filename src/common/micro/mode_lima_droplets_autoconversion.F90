@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPLETS_AUTOCONVERSION
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_DROPLETS_AUTOCONVERSION (LDCOMPUTE,                      &
+  SUBROUTINE LIMA_DROPLETS_AUTOCONVERSION (ODCOMPUTE,                      &
                                            PRHODREF,                       &
                                            PRCT, PCCT, PLBDC, PLBDR,       &
                                            P_RC_AUTO, P_CC_AUTO, P_CR_AUTO )
@@ -45,7 +45,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! Reference Exner function
 !
@@ -79,7 +79,7 @@ ELSE IF (LKHKO) THEN
 !        1. Autoconversion of cloud droplets
 !   	 -----------------------------------
 !
-   WHERE ( PRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2) .AND. LDCOMPUTE(:) )
+   WHERE ( PRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2) .AND. ODCOMPUTE(:) )
 !
       ZW1(:)= 1350.0 * PRCT(:)**(2.47) * (PCCT(:)* PRHODREF(:)/1.0E6)**(-1.79) ! ZCCT in cm-3         
 !
@@ -98,7 +98,7 @@ ELSE
 !        2. Autoconversion of cloud droplets (Berry-Reinhardt parameterization)
 !   	 ----------------------------------------------------------------------
 !
-   WHERE( PRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2) .AND. PLBDC(:)>0. .AND. LDCOMPUTE(:) )
+   WHERE( PRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2) .AND. PLBDC(:)>0. .AND. ODCOMPUTE(:) )
       ZW2(:) = MAX( 0.0, &
                      XLAUTR*PRHODREF(:)*PRCT(:)*(XAUTO1/min(PLBDC(:),1.e9)**4-XLAUTR_THRESHOLD) ) ! L 
 !

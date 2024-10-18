@@ -7,7 +7,7 @@ MODULE MODE_LIMA_HAIL
   IMPLICIT NONE
 CONTAINS
 !     #################################################################################
-  SUBROUTINE LIMA_HAIL (PTSTEP, LDCOMPUTE,                                     &
+  SUBROUTINE LIMA_HAIL (PTSTEP, ODCOMPUTE,                                     &
                         PRHODREF, PPRES, PT, PKA, PDV, PCJ,                    &
                         PRVT, PRCT, PRRT, PRIT, PRST, PRGT, PRHT,              &
                         PCCT, PCRT, PCIT, PCST, PCGT, PCHT,                    &
@@ -62,7 +62,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 REAL,                 INTENT(IN)    :: PTSTEP 
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF    ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PPRES    ! 
@@ -186,7 +186,7 @@ ZRWETH(:) = 0.
 !            1.a Collection of rc and ri
 !            ---------------------------
 !
-WHERE( PRHT(:)>XRTMIN(7) .AND. PCHT(:)>XCTMIN(7) .AND. LDCOMPUTE(:) )
+WHERE( PRHT(:)>XRTMIN(7) .AND. PCHT(:)>XCTMIN(7) .AND. ODCOMPUTE(:) )
    ZZW(:) = PCHT(:) * PLBDH(:)**(-XDH-2.0) * PRHODREF(:)**(1-XCEXVT)
    ZZW1(:) = XFWETH * PRCT(:) * ZZW(:) ! RCWETH
    ZZW2(:) = XFWETH * PRIT(:) * ZZW(:) ! RIWETH
@@ -195,7 +195,7 @@ END WHERE
 !*           1.b Collection of rs
 !            --------------------
 !
-GWET(:) = PRST(:)>XRTMIN(5) .AND. PRHT(:)>XRTMIN(7) .AND. LDCOMPUTE(:) .AND. &
+GWET(:) = PRST(:)>XRTMIN(5) .AND. PRHT(:)>XRTMIN(7) .AND. ODCOMPUTE(:) .AND. &
           PCST(:)>XCTMIN(5) .AND. PCHT(:)>XCTMIN(7)
 !
 WHERE( GWET )
@@ -262,7 +262,7 @@ END WHERE
 !*           1.c  Collection of rg
 !            ---------------------
 !
-GWET(:) = PRGT(:)>XRTMIN(6) .AND. PRHT(:)>XRTMIN(7) .AND. LDCOMPUTE(:) .AND. &
+GWET(:) = PRGT(:)>XRTMIN(6) .AND. PRHT(:)>XRTMIN(7) .AND. ODCOMPUTE(:) .AND. &
           PCGT(:)>XCTMIN(6) .AND. PCHT(:)>XCTMIN(7)
 !
 WHERE( GWET )
@@ -331,7 +331,7 @@ END WHERE
 !            ----------------------
 !
 ZZW(:) = 0.0
-WHERE( PRHT(:)>XRTMIN(6) .AND. PCHT(:) >XCTMIN(6) .AND. LDCOMPUTE(:) )
+WHERE( PRHT(:)>XRTMIN(6) .AND. PCHT(:) >XCTMIN(6) .AND. ODCOMPUTE(:) )
    ZZW(:) = PRVT(:)*PPRES(:)/((XMV/XMD)+PRVT(:)) ! Vapor pressure
    ZZW(:) = PKA(:)*(XTT-PT(:)) +                                  &
               ( PDV(:)*(XLVTT + ( XCPV - XCL ) * ( PT(:) - XTT ))   &
@@ -346,13 +346,13 @@ WHERE( PRHT(:)>XRTMIN(6) .AND. PCHT(:) >XCTMIN(6) .AND. LDCOMPUTE(:) )
    ! We must agregate, at least, the cold species
    ZRWETH(:)=MAX(ZRWETH(:), ZZW2(:)+ZZW3(:)+ZZW4(:))
 END WHERE
-WHERE( PRHT(:)>XRTMIN(6) .AND. PCHT(:) >XCTMIN(6) .AND. PRRT(:)>XRTMIN(3) .AND. PCRT(:) >XCTMIN(3) .AND. LDCOMPUTE(:) )
+WHERE( PRHT(:)>XRTMIN(6) .AND. PCHT(:) >XCTMIN(6) .AND. PRRT(:)>XRTMIN(3) .AND. PCRT(:) >XCTMIN(3) .AND. ODCOMPUTE(:) )
    ! Mass of rain frozen by hail RRWETH
    ZZW5(:) = ZRWETH(:) - ZZW2(:) - ZZW3(:) - ZZW4(:) - ZZW1(:)
 END WHERE
 !
 ZZW(:) = 0.0
-WHERE( LDCOMPUTE(:) .AND. PT(:)<XTT .AND. ZZW5(:)>0.0 ) 
+WHERE( ODCOMPUTE(:) .AND. PT(:)<XTT .AND. ZZW5(:)>0.0 ) 
    P_RC_WETH(:) = - ZZW1(:)
    P_CC_WETH(:) = P_RC_WETH(:) * PCCT(:)/MAX(PRCT(:),XRTMIN(2))
    P_RR_WETH(:) = - ZZW5(:)
@@ -386,7 +386,7 @@ END WHERE
 !        -----------------------
 !
 ZZW(:) = 0.0
-WHERE( PRHT(:)>XRTMIN(6) .AND. PCHT(:)>XCTMIN(7) .AND. PT(:)>XTT .AND. LDCOMPUTE(:) )
+WHERE( PRHT(:)>XRTMIN(6) .AND. PCHT(:)>XCTMIN(7) .AND. PT(:)>XTT .AND. ODCOMPUTE(:) )
    ZZW(:) = PRVT(:)*PPRES(:)/((XMV/XMD)+PRVT(:)) ! Vapor pressure
    ZZW(:) = PKA(:)*(XTT-PT(:)) +                                 &
               ( PDV(:)*(XLVTT + ( XCPV - XCL ) * ( PT(:) - XTT )) &

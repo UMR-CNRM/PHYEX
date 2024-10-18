@@ -7,7 +7,7 @@ MODULE MODE_LIMA_INST_PROCS
   IMPLICIT NONE
 CONTAINS
 !     ###########################################################################
-  SUBROUTINE LIMA_INST_PROCS (PTSTEP, LDCOMPUTE,                                  &
+  SUBROUTINE LIMA_INST_PROCS (PTSTEP, ODCOMPUTE,                                  &
                               PEXNREF, PPABST,                                    &
                               PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,           &
                               PCCT, PCRT, PCIT,                                   &
@@ -48,7 +48,7 @@ IMPLICIT NONE
 
 
 REAL,                 INTENT(IN)    :: PTSTEP     ! Time step
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
 REAL, DIMENSION(:),   INTENT(IN)    :: PPABST     ! abs. pressure at time t
@@ -95,7 +95,7 @@ REAL, DIMENSION(:)  , INTENT(INOUT) :: PPF1D      ! Precipitation fraction
 !-------------------------------------------------------------------------------
 !
 IF (NMOM_R.GE.2) THEN
-   CALL LIMA_DROPS_BREAK_UP (LDCOMPUTE,    & ! no dependance on CF, IF or PF
+   CALL LIMA_DROPS_BREAK_UP (ODCOMPUTE,    & ! no dependance on CF, IF or PF
                              PCRT, PRRT,   &
                              P_CR_BRKU,    &
                              PB_CR         )
@@ -104,7 +104,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 IF (NMOM_G.GE.1 .AND. NMOM_R.GE.1) THEN
-   CALL LIMA_DROPS_HOM_FREEZING (PTSTEP, LDCOMPUTE,                        & ! no dependance on CF, IF or PF
+   CALL LIMA_DROPS_HOM_FREEZING (PTSTEP, ODCOMPUTE,                        & ! no dependance on CF, IF or PF
                                  PEXNREF, PPABST,                          &
                                  PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                  PCRT,                                     &
@@ -115,7 +115,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 IF (NMOM_C.GE.1 .AND. NMOM_I.GE.1) THEN
-   CALL LIMA_ICE_MELTING (PTSTEP, LDCOMPUTE,                        & ! no dependance on CF, IF or PF
+   CALL LIMA_ICE_MELTING (PTSTEP, ODCOMPUTE,                        & ! no dependance on CF, IF or PF
                           PEXNREF, PPABST,                          & ! but ice fraction becomes cloud fraction
                           PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, & ! -> where ?
                           PCIT, PINT,                               &

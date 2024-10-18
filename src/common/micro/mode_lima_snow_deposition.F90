@@ -7,7 +7,7 @@ MODULE MODE_LIMA_SNOW_DEPOSITION
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_SNOW_DEPOSITION (LDCOMPUTE,                                &
+  SUBROUTINE LIMA_SNOW_DEPOSITION (ODCOMPUTE,                                &
                                    PRHODREF,  PSSI, PAI, PCJ, PLSFACT,       &
                                    PRST, PCST, PLBDS,                        &
                                    P_RI_CNVI, P_CI_CNVI,                     &
@@ -53,7 +53,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF! Reference density
 REAL, DIMENSION(:),   INTENT(IN)    :: PSSI  ! abs. pressure at time t
@@ -84,7 +84,7 @@ P_TH_DEPS(:) = 0.
 P_RS_DEPS(:) = 0.
 !
 ! Looking for regions where computations are necessary
-GMICRO(:) = LDCOMPUTE(:) .AND. PRST(:)>XRTMIN(5)
+GMICRO(:) = ODCOMPUTE(:) .AND. PRST(:)>XRTMIN(5)
 !
 IF (NMOM_I.EQ.1) THEN
    WHERE( GMICRO )

@@ -557,8 +557,8 @@ SUBROUTINE PARAM_LIMA_ALLOCATE(HNAME, KDIM1, KDIM2, KDIM3)
   END SELECT
 END SUBROUTINE PARAM_LIMA_ALLOCATE
 !
-SUBROUTINE PARAM_LIMA_INIT(HPROGRAM, TFILENAM, LDNEEDNAM, KLUOUT, &
-                          &LDDEFAULTVAL, LDREADNAM, LDCHECK, KPRINT)
+SUBROUTINE PARAM_LIMA_INIT(HPROGRAM, TFILENAM, ODNEEDNAM, KLUOUT, &
+                          &ODDEFAULTVAL, ODREADNAM, ODCHECK, KPRINT)
 !!*** *PARAM_ICEN_INIT* - Code needed to initialize the MODD_PARAM_LIMA module
 !!
 !!*   PURPOSE
@@ -599,11 +599,11 @@ IMPLICIT NONE
 !
 CHARACTER(LEN=6),  INTENT(IN) :: HPROGRAM     !< Name of the calling program
 TYPE(TFILEDATA),   INTENT(IN) :: TFILENAM     !< Namelist file
-LOGICAL,           INTENT(IN) :: LDNEEDNAM    !< True to abort if namelist is absent
+LOGICAL,           INTENT(IN) :: ODNEEDNAM    !< True to abort if namelist is absent
 INTEGER,           INTENT(IN) :: KLUOUT       !< Logical unit for outputs
-LOGICAL, OPTIONAL, INTENT(IN) :: LDDEFAULTVAL !< Must we initialize variables with default values (defaults to .TRUE.)
-LOGICAL, OPTIONAL, INTENT(IN) :: LDREADNAM    !< Must we read the namelist (defaults to .TRUE.)
-LOGICAL, OPTIONAL, INTENT(IN) :: LDCHECK      !< Must we perform some checks on values (defaults to .TRUE.)
+LOGICAL, OPTIONAL, INTENT(IN) :: ODDEFAULTVAL !< Must we initialize variables with default values (defaults to .TRUE.)
+LOGICAL, OPTIONAL, INTENT(IN) :: ODREADNAM    !< Must we read the namelist (defaults to .TRUE.)
+LOGICAL, OPTIONAL, INTENT(IN) :: ODCHECK      !< Must we perform some checks on values (defaults to .TRUE.)
 INTEGER, OPTIONAL, INTENT(IN) :: KPRINT       !< Print level (defaults to 0): 0 for no print, 1 to safely print namelist,
                                               !! 2 to print informative messages
 !
@@ -617,9 +617,9 @@ LLDEFAULTVAL=.TRUE.
 LLREADNAM=.TRUE. 
 LLCHECK=.TRUE. 
 IPRINT=0 
-IF(PRESENT(LDDEFAULTVAL)) LLDEFAULTVAL=LDDEFAULTVAL 
-IF(PRESENT(LDREADNAM   )) LLREADNAM   =LDREADNAM 
-IF(PRESENT(LDCHECK     )) LLCHECK     =LDCHECK 
+IF(PRESENT(ODDEFAULTVAL)) LLDEFAULTVAL=ODDEFAULTVAL 
+IF(PRESENT(ODREADNAM   )) LLREADNAM   =ODREADNAM 
+IF(PRESENT(ODCHECK     )) LLCHECK     =ODCHECK 
 IF(PRESENT(KPRINT      )) IPRINT      =KPRINT 
 ! 
 !*      1. DEFAULT VALUES 
@@ -701,7 +701,7 @@ ENDIF
 !       -----------
 !
 IF(LLREADNAM) THEN
-  CALL POSNAM_PHY(TFILENAM, 'NAM_PARAM_LIMA', LDNEEDNAM, LLFOUND)
+  CALL POSNAM_PHY(TFILENAM, 'NAM_PARAM_LIMA', ODNEEDNAM, LLFOUND)
   IF(LLFOUND) READ(UNIT=TFILENAM%NLU, NML=NAM_PARAM_LIMA)
 ENDIF
 !

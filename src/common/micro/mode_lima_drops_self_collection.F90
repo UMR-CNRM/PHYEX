@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPS_SELF_COLLECTION
   IMPLICIT NONE
 CONTAINS
 !     #############################################################
-  SUBROUTINE LIMA_DROPS_SELF_COLLECTION (LDCOMPUTE,           &
+  SUBROUTINE LIMA_DROPS_SELF_COLLECTION (ODCOMPUTE,           &
                                          PRHODREF,            &
                                          PCRT, PLBDR, PLBDR3, &
                                          P_CR_SCBU            )
@@ -42,7 +42,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF  ! Reference Exner function
 !
@@ -72,24 +72,24 @@ P_CR_SCBU(:)=0.
 !
 ZW4(:) =0.
 !
-WHERE( PCRT(:)>XCTMIN(3) .AND. LDCOMPUTE(:) )
+WHERE( PCRT(:)>XCTMIN(3) .AND. ODCOMPUTE(:) )
    ZW4(:)  = XACCR1 / PLBDR(:)                ! Mean diameter
 END WHERE
 ZSCBU(:)=1.
-WHERE (ZW4(:)>=XSCBU_EFF1 .AND. PCRT(:)>XCTMIN(3) .AND. LDCOMPUTE(:)) &
+WHERE (ZW4(:)>=XSCBU_EFF1 .AND. PCRT(:)>XCTMIN(3) .AND. ODCOMPUTE(:)) &
      ZSCBU(:) = EXP(XSCBUEXP1*(ZW4(:)-XSCBU_EFF1))            ! coalescence efficiency
-WHERE (ZW4(:)>=XSCBU_EFF2 .AND. LDCOMPUTE(:)) ZSCBU(:) = 0.0  ! Break-up
+WHERE (ZW4(:)>=XSCBU_EFF2 .AND. ODCOMPUTE(:)) ZSCBU(:) = 0.0  ! Break-up
 !
 ZW1(:) = 0.0
 ZW2(:) = 0.0
 ZW3(:) = 0.0
 !
-WHERE ( PCRT(:)>XCTMIN(3) .AND. ZW4(:)>1.E-4 .AND. LDCOMPUTE(:))  ! analytical integration
+WHERE ( PCRT(:)>XCTMIN(3) .AND. ZW4(:)>1.E-4 .AND. ODCOMPUTE(:))  ! analytical integration
    ZW1(:) = XSCBU2 * PCRT(:)**2 / PLBDR3(:)                        ! D>100 10-6 m
    ZW3(:) = ZW1(:)*ZSCBU(:)
 END WHERE
 !
-WHERE ( PCRT(:)>XCTMIN(3) .AND. ZW4(:)<=1.E-4 .AND. LDCOMPUTE(:))
+WHERE ( PCRT(:)>XCTMIN(3) .AND. ZW4(:)<=1.E-4 .AND. ODCOMPUTE(:))
    ZW2(:) = XSCBU3 *(PCRT(:) / PLBDR3(:))**2                       ! D<100 10-6 m
    ZW3(:) = ZW2(:)
 END WHERE

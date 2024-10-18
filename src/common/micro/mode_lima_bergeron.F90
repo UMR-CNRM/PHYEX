@@ -6,7 +6,7 @@ MODULE MODE_LIMA_BERGERON
   IMPLICIT NONE
   CONTAINS
 !     #############################################################
-    SUBROUTINE LIMA_BERGERON( LDCOMPUTE,                        &
+    SUBROUTINE LIMA_BERGERON( ODCOMPUTE,                        &
                               PRCT, PRIT, PCIT, PLBDI,           &
                               PSSIW, PAI, PCJ, PLVFACT, PLSFACT, &
                               P_TH_BERFI, P_RC_BERFI             )
@@ -40,7 +40,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRCT    ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PRIT    ! 
@@ -63,7 +63,7 @@ REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_BERFI
 P_TH_BERFI(:) = 0.0
 P_RC_BERFI(:) = 0.0
 !
-WHERE( (PRCT(:)>XRTMIN(2)) .AND. (PRIT(:)>XRTMIN(4)) .AND. (PCIT(:)>XCTMIN(4)) .AND. LDCOMPUTE(:))
+WHERE( (PRCT(:)>XRTMIN(2)) .AND. (PRIT(:)>XRTMIN(4)) .AND. (PCIT(:)>XCTMIN(4)) .AND. ODCOMPUTE(:))
    P_RC_BERFI(:) = - ( PSSIW(:) / PAI(:) ) * PCIT(:) *        &
         ( X0DEPI/PLBDI(:)+X2DEPI*PCJ(:)*PCJ(:)/PLBDI(:)**(XDI+2.0) )
    P_TH_BERFI(:) = - P_RC_BERFI(:)*(PLSFACT(:)-PLVFACT(:))

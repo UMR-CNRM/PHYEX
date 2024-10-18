@@ -6,7 +6,7 @@ MODULE MODE_LIMA_DROPLETS_HOM_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_DROPLETS_HOM_FREEZING (PTSTEP,  LDCOMPUTE,               &
+  SUBROUTINE LIMA_DROPLETS_HOM_FREEZING (PTSTEP,  ODCOMPUTE,               &
                                          PT, PLVFACT, PLSFACT,             &
                                          PRCT, PCCT, PLBDC,                &
                                          P_TH_HONC, P_RC_HONC, P_CC_HONC   )
@@ -43,7 +43,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 REAL,                 INTENT(IN)    :: PTSTEP 
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PT        ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PLVFACT   ! 

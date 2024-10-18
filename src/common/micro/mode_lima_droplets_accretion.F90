@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPLETS_ACCRETION
   IMPLICIT NONE
 CONTAINS
 !     #####################################################################
-  SUBROUTINE LIMA_DROPLETS_ACCRETION (LDCOMPUTE,                      &
+  SUBROUTINE LIMA_DROPLETS_ACCRETION (ODCOMPUTE,                      &
                                       PRHODREF,                       &
                                       PRCT, PRRT, PCCT, PCRT,         &
                                       PLBDC, PLBDC3, PLBDR, PLBDR3,   &
@@ -47,7 +47,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! Reference Exner function
 !
@@ -112,12 +112,12 @@ ELSE IF (NMOM_C.EQ.1 .AND. NMOM_R.EQ.1) THEN
    END WHERE
 ELSE
 !
-   WHERE( PRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2) .AND. PRRT(:)>XRTMIN(3) .AND. PCRT(:)>XCTMIN(3) .AND. LDCOMPUTE(:) )
+   WHERE( PRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2) .AND. PRRT(:)>XRTMIN(3) .AND. PCRT(:)>XCTMIN(3) .AND. ODCOMPUTE(:) )
       ZW2(:) = MAX( 0.0,XLAUTR*PRHODREF(:)*PRCT(:)*(XAUTO1/PLBDC(:)**4-XLAUTR_THRESHOLD) ) ! L 
       ZW4(:) = XACCR1/PLBDR(:)
    END WHERE
 !
-   GACCR(:) = LDCOMPUTE(:)      .AND. &
+   GACCR(:) = ODCOMPUTE(:)      .AND. &
               PRRT(:)>XRTMIN(3) .AND. &
               PCRT(:)>XCTMIN(3) .AND. &
               PRCT(:)>XRTMIN(2) .AND. &

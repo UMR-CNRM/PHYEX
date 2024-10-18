@@ -7,7 +7,7 @@ MODULE MODE_LIMA_ICE_AGGREGATION_SNOW
   IMPLICIT NONE
 CONTAINS
 !     #######################################################################
-  SUBROUTINE LIMA_ICE_AGGREGATION_SNOW (LDCOMPUTE,                            &
+  SUBROUTINE LIMA_ICE_AGGREGATION_SNOW (ODCOMPUTE,                            &
                                         PT, PRHODREF,                         &
                                         PRIT, PRST, PCIT, PCST, PLBDI, PLBDS, &
                                         PLATHAM_IAGGS,                        &
@@ -47,7 +47,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PT
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF
@@ -82,7 +82,7 @@ P_CI_AGGS(:) = 0.
 !
 !
 IF (NMOM_I.EQ.1) THEN
-   WHERE ( PRIT(:)>XRTMIN(4) .AND. PRST(:)>XRTMIN(5) .AND. LDCOMPUTE(:) )
+   WHERE ( PRIT(:)>XRTMIN(4) .AND. PRST(:)>XRTMIN(5) .AND. ODCOMPUTE(:) )
       ZZW1(:) = XFIAGGS * EXP( XCOLEXIS*(PT(:)-XTT) ) &
                         * PLATHAM_IAGGS(:)            &
                         * PRIT(:)                     &
@@ -94,7 +94,7 @@ IF (NMOM_I.EQ.1) THEN
    END WHERE
 ELSE
    WHERE ( PRIT(:)>XRTMIN(4) .AND. PRST(:)>XRTMIN(5) .AND. &
-           PCIT(:)>XCTMIN(4) .AND. PCST(:)>XCTMIN(5) .AND. LDCOMPUTE(:) )
+           PCIT(:)>XCTMIN(4) .AND. PCST(:)>XCTMIN(5) .AND. ODCOMPUTE(:) )
       ZZW1(:) = (PLBDI(:) / PLBDS(:))**3
       ZZW2(:) = PCIT(:)*PCST(:)*EXP(XCOLEXIS*(PT(:)-XTT))*PRHODREF(:) / (PLBDI(:)**3)
       ZZW3(:) = ZZW2(:)*(XAGGS_CLARGE1+XAGGS_CLARGE2*ZZW1(:))

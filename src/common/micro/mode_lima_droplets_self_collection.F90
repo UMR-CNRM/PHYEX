@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPLETS_SELF_COLLECTION
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################
-  SUBROUTINE LIMA_DROPLETS_SELF_COLLECTION (LDCOMPUTE,                      &
+  SUBROUTINE LIMA_DROPLETS_SELF_COLLECTION (ODCOMPUTE,                      &
                                             PRHODREF,                       &
                                             PCCT, PLBDC3,                   &
                                             P_CC_SELF                       )
@@ -41,7 +41,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: LDCOMPUTE
+LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! Reference Exner function
 !
@@ -63,7 +63,7 @@ REAL, DIMENSION(SIZE(PCCT)) :: ZW ! work arrays
 !
 P_CC_SELF(:)=0.
 !
-WHERE( PCCT(:)>XCTMIN(2) .AND. LDCOMPUTE(:) )
+WHERE( PCCT(:)>XCTMIN(2) .AND. ODCOMPUTE(:) )
    ZW(:) = XSELFC*(PCCT(:)/PLBDC3(:))**2 * PRHODREF(:) ! analytical integration
    P_CC_SELF(:) = - ZW(:)
 END WHERE
