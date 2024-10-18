@@ -54,8 +54,8 @@ REAL, DIMENSION(:,:), INTENT(OUT)   :: P_FRAC_ACT
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER :: JSPECIE, JL, JL2
-REAL :: XB
+INTEGER :: ISPECIE, IL, IL2
+REAL :: ZB
 !
 REAL, DIMENSION(:), ALLOCATABLE :: ZZX,      & ! Work array
                                    ZFACTOR,  &
@@ -70,7 +70,7 @@ LOGICAL, DIMENSION(:),   ALLOCATABLE :: GINTEG ! Mask to integrate over the
 !
 P_FRAC_ACT(:,:)=0.
 !
-DO JSPECIE = 1, NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively  
+DO ISPECIE = 1, NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively  
 !
    ALLOCATE(ZZX     (SIZE(PZT)) ) ; ZZX(:) = 0.0
    ALLOCATE(ZFACTOR (SIZE(PZT)) )
@@ -79,30 +79,30 @@ DO JSPECIE = 1, NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively
    ALLOCATE(GINTEG  (SIZE(PZT)) )
 
 ! Compute log in advance for efficiency
-   XB = LOG(0.1E-6/XMDIAM_IFN(JSPECIE))/(SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE)))
+   ZB = LOG(0.1E-6/XMDIAM_IFN(ISPECIE))/(SQRT(2.0)*LOG(XSIGMA_IFN(ISPECIE)))
 ! ZFACTOR = f_c
-   ZFACTOR(:) = DELTA(1.,XH(JSPECIE),PZT(:),XT0(JSPECIE),XT0(JSPECIE)+XDT0(JSPECIE))         &
-        * DELTA_VEC(0.,1.,PSI(:),PSI0(:,JSPECIE),PSI0(:,JSPECIE)+XDSI0(JSPECIE)) / XGAMMA
+   ZFACTOR(:) = DELTA(1.,XH(ISPECIE),PZT(:),XT0(ISPECIE),XT0(ISPECIE)+XDT0(ISPECIE))         &
+        * DELTA_VEC(0.,1.,PSI(:),PSI0(:,ISPECIE),PSI0(:,ISPECIE)+XDSI0(ISPECIE)) / XGAMMA
 ! ZSUBSAT = H_X
    ZSUBSAT(:) = MIN(ZFACTOR(:)+(1.0-ZFACTOR(:))*DELTA(0.,1.,PSW(:),XSW0,1.) , 1.0)
 ! ZEMBRYO = µ_X/(pi*(D_X)**2) = A
-   ZEMBRYO(:) = ZSUBSAT(:)*DELTA(1.,0.,PZT(:),XTX1(JSPECIE),XTX2(JSPECIE))          &
-        * XFRAC_REF(JSPECIE)*PZY(:)/XAREA1(JSPECIE) 
+   ZEMBRYO(:) = ZSUBSAT(:)*DELTA(1.,0.,PZT(:),XTX1(ISPECIE),XTX2(ISPECIE))          &
+        * XFRAC_REF(ISPECIE)*PZY(:)/XAREA1(ISPECIE) 
 !
 ! For T warmer than -35°C, the integration is approximated with µ_X << 1
 ! Error function : GAMMA_INC(1/2, x**2) = ERF(x) !!! for x>=0 !!!
 !   
 !   WHERE (PZT(:)>(CST%XTT-35.) .AND. ZEMBRYO(:)>1.0E-8)   
-!      ZZX(:) = ZZX(:) + ZEMBRYO(:) * CST%XPI * (XMDIAM_IFN(JSPECIE))**2 / 2.0           &
-!           * EXP(2*(LOG(XSIGMA_IFN(JSPECIE)))**2)                                   &
-!           * (1.0+GAMMA_INC(0.5,(SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE))-XB)**2))     
+!      ZZX(:) = ZZX(:) + ZEMBRYO(:) * CST%XPI * (XMDIAM_IFN(ISPECIE))**2 / 2.0           &
+!           * EXP(2*(LOG(XSIGMA_IFN(ISPECIE)))**2)                                   &
+!           * (1.0+GAMMA_INC(0.5,(SQRT(2.0)*LOG(XSIGMA_IFN(ISPECIE))-ZB)**2))     
 !   END WHERE
 
-   DO JL = 1, SIZE(PZT)
-      IF (PZT(JL)>(CST%XTT-35.) .AND. ZEMBRYO(JL)>1.0E-8) THEN
-         ZZX(JL) = ZZX(JL) + ZEMBRYO(JL) * CST%XPI * (XMDIAM_IFN(JSPECIE))**2 / 2.0        &
-              * EXP(2*(LOG(XSIGMA_IFN(JSPECIE)))**2)                                   &
-              * (1.0+SIGN(1.,SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE))-XB)*GAMMA_INC(0.5,(SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE))-XB)**2))     
+   DO IL = 1, SIZE(PZT)
+      IF (PZT(IL)>(CST%XTT-35.) .AND. ZEMBRYO(IL)>1.0E-8) THEN
+         ZZX(IL) = ZZX(IL) + ZEMBRYO(IL) * CST%XPI * (XMDIAM_IFN(ISPECIE))**2 / 2.0        &
+              * EXP(2*(LOG(XSIGMA_IFN(ISPECIE)))**2)                                   &
+              * (1.0+SIGN(1.,SQRT(2.0)*LOG(XSIGMA_IFN(ISPECIE))-ZB)*GAMMA_INC(0.5,(SQRT(2.0)*LOG(XSIGMA_IFN(ISPECIE))-ZB)**2))     
       END IF
    ENDDO
 
@@ -113,31 +113,31 @@ DO JSPECIE = 1, NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively
 !
    GINTEG(:) = PZT(:)<=(CST%XTT-35.) .AND. PSI(:)>1.0 .AND. ZEMBRYO(:)>1.0E-8
 !
-   DO JL = 1, NDIAM
-      DO JL2 = 1, SIZE(GINTEG)
-         IF (GINTEG(JL2)) THEN
-            ZZX(JL2) = ZZX(JL2) - XWEIGHT(JL)*EXP(-ZEMBRYO(JL2)*CST%XPI*(XMDIAM_IFN(JSPECIE))**2 & 
-                 * EXP(2.0*SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE)) * XABSCISS(JL)) ) 
+   DO IL = 1, NDIAM
+      DO IL2 = 1, SIZE(GINTEG)
+         IF (GINTEG(IL2)) THEN
+            ZZX(IL2) = ZZX(IL2) - XWEIGHT(IL)*EXP(-ZEMBRYO(IL2)*CST%XPI*(XMDIAM_IFN(ISPECIE))**2 & 
+                 * EXP(2.0*SQRT(2.0)*LOG(XSIGMA_IFN(ISPECIE)) * XABSCISS(IL)) ) 
          END IF
       ENDDO
    ENDDO
 !
-!   DO JL2 = 1, SIZE(GINTEG)
-!      IF (GINTEG(JL2)) THEN
-!         ZZX(JL2) = ZZX(JL2) + 0.5* CST%XPI*ZEMBRYO(JL2)*(XMDIAM_IFN(JSPECIE))**2                &
-!              * (1.0-( 1.0-GAMMA_INC(0.5,(SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE))-XB)**2))  &
-!              * EXP( 2.0*(LOG(XSIGMA_IFN(JSPECIE)))**2)  )
+!   DO IL2 = 1, SIZE(GINTEG)
+!      IF (GINTEG(IL2)) THEN
+!         ZZX(IL2) = ZZX(IL2) + 0.5* CST%XPI*ZEMBRYO(IL2)*(XMDIAM_IFN(ISPECIE))**2                &
+!              * (1.0-( 1.0-GAMMA_INC(0.5,(SQRT(2.0)*LOG(XSIGMA_IFN(ISPECIE))-ZB)**2))  &
+!              * EXP( 2.0*(LOG(XSIGMA_IFN(ISPECIE)))**2)  )
 !      END IF
 !   ENDDO
-   DO JL2 = 1, SIZE(GINTEG)
-      IF (GINTEG(JL2)) THEN
-         ZZX(JL2) = 1 + ZZX(JL2)  &
-              - ( 0.5* CST%XPI*ZEMBRYO(JL2)*(XMDIAM_IFN(JSPECIE))**2 * EXP( 2.0*(LOG(XSIGMA_IFN(JSPECIE)))**2)   &
-              * ( 1.0-SIGN(1.,SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE))-XB)*GAMMA_INC(0.5,(SQRT(2.0)*LOG(XSIGMA_IFN(JSPECIE))-XB)**2)) )
+   DO IL2 = 1, SIZE(GINTEG)
+      IF (GINTEG(IL2)) THEN
+         ZZX(IL2) = 1 + ZZX(IL2)  &
+              - ( 0.5* CST%XPI*ZEMBRYO(IL2)*(XMDIAM_IFN(ISPECIE))**2 * EXP( 2.0*(LOG(XSIGMA_IFN(ISPECIE)))**2)   &
+              * ( 1.0-SIGN(1.,SQRT(2.0)*LOG(XSIGMA_IFN(ISPECIE))-ZB)*GAMMA_INC(0.5,(SQRT(2.0)*LOG(XSIGMA_IFN(ISPECIE))-ZB)**2)) )
       END IF
    ENDDO
 ! 
-   P_FRAC_ACT(:,JSPECIE)=ZZX(:)
+   P_FRAC_ACT(:,ISPECIE)=ZZX(:)
 !
    DEALLOCATE(ZZX)
    DEALLOCATE(ZFACTOR)

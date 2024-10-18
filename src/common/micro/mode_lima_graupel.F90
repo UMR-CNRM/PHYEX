@@ -155,7 +155,7 @@ REAL,    DIMENSION(SIZE(PRCT))  :: ZRDRYG, ZRWETG
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC1,IVEC2        ! Vectors of indices
 REAL,    DIMENSION(SIZE(PRCT))  :: ZVEC1,ZVEC2, ZVEC3 ! Work vectors
 !
-INTEGER                         :: NHAIL
+INTEGER                         :: IHAIL
 !
 !-------------------------------------------------------------------------------
 !
@@ -385,8 +385,8 @@ END WHERE
 !            -------------------------------------------
 !
 ZZW(:) = 0.0
-NHAIL = 0.
-IF (NMOM_H.GE.1) NHAIL = 1. 
+IHAIL = 0.
+IF (NMOM_H.GE.1) IHAIL = 1. 
 WHERE( ODCOMPUTE(:) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)<XTT .AND. &
        (ZRDRYG(:)-ZZW2(:)-ZZW3(:))>=(ZRWETG(:)-ZZW5(:)-ZZW6(:)) .AND. ZRWETG(:)-ZZW5(:)-ZZW6(:)>0.0 ) 
 !
@@ -396,7 +396,7 @@ WHERE( ODCOMPUTE(:) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)<
 ! assume a linear percent of conversion of graupel into hail
 ! ZZW = percentage of graupel transformed
 !
-   ZZW(:) = ZRDRYG(:)*NHAIL/(ZRWETG(:)+ZRDRYG(:)) 
+   ZZW(:) = ZRDRYG(:)*IHAIL/(ZRWETG(:)+ZRDRYG(:)) 
 !
    P_RC_WETG(:) = - ZZW1(:)
    P_CC_WETG(:) = P_RC_WETG(:) * PCCT(:)/MAX(PRCT(:),XRTMIN(2))

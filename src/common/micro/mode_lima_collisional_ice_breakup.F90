@@ -76,7 +76,7 @@ INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC2_S1,IVEC2_S2         ! Snow indice ve
 INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC2_G                   ! Graupel indice vector
 INTEGER, PARAMETER                 :: I_SEED_PARAM = 26032012
 INTEGER, DIMENSION(:), ALLOCATABLE :: I_SEED
-INTEGER                            :: NI_SEED
+INTEGER                            :: INI_SEED
 !
 REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1_S, ZVEC1_SW, ZVEC1_S1, ZVEC1_S2,  & ! Work vectors
                                       ZVEC1_S3, ZVEC1_S4,           &
@@ -112,8 +112,8 @@ IF (ICIBU > 0) THEN
 !       1.3.0 randomization of XNDEBRIS_CIBU values
 !
   IF (GFIRSTCALL) THEN
-    CALL RANDOM_SEED(SIZE=NI_SEED) ! get size of seed
-    ALLOCATE(I_SEED(NI_SEED))
+    CALL RANDOM_SEED(SIZE=INI_SEED) ! get size of seed
+    ALLOCATE(I_SEED(INI_SEED))
     I_SEED(:) = I_SEED_PARAM !
     CALL RANDOM_SEED(PUT=I_SEED)
     GFIRSTCALL = .FALSE.

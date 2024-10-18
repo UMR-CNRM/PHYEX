@@ -124,7 +124,7 @@ REAL, DIMENSION(:), ALLOCATABLE &
                               ZCCNFROZEN
 !
 INTEGER :: IIJB, IIJE, IKB, IKE   ! Physical domain
-INTEGER :: JL, JMOD_CCN                   ! Loop index
+INTEGER :: IL, IMOD_CCN                   ! Loop index
 !
 INTEGER :: INEGT                          ! Case number of hom. nucleation
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) &
@@ -181,28 +181,28 @@ IF (INEGT.GT.0) THEN
    ALLOCATE(ZPRES(INEGT)) 
    ALLOCATE(ZEXNREF(INEGT))
    !
-   DO JL=1,INEGT
-      ZRVT(JL) = PRVT(I1(JL),I3(JL))
-      ZRCT(JL) = PRCT(I1(JL),I3(JL))
-      ZRRT(JL) = PRRT(I1(JL),I3(JL))
-      ZRIT(JL) = PRIT(I1(JL),I3(JL))
-      ZRST(JL) = PRST(I1(JL),I3(JL))
-      ZRGT(JL) = PRGT(I1(JL),I3(JL))
+   DO IL=1,INEGT
+      ZRVT(IL) = PRVT(I1(IL),I3(IL))
+      ZRCT(IL) = PRCT(I1(IL),I3(IL))
+      ZRRT(IL) = PRRT(I1(IL),I3(IL))
+      ZRIT(IL) = PRIT(I1(IL),I3(IL))
+      ZRST(IL) = PRST(I1(IL),I3(IL))
+      ZRGT(IL) = PRGT(I1(IL),I3(IL))
       !
-      ZTHT(JL) = PTHT(I1(JL),I3(JL))
+      ZTHT(IL) = PTHT(I1(IL),I3(IL))
       !
-      ZCCT(JL) = PCCT(I1(JL),I3(JL))
-      ZCRT(JL) = PCRT(I1(JL),I3(JL))
-      ZCIT(JL) = PCIT(I1(JL),I3(JL))
+      ZCCT(IL) = PCCT(I1(IL),I3(IL))
+      ZCRT(IL) = PCRT(I1(IL),I3(IL))
+      ZCIT(IL) = PCIT(I1(IL),I3(IL))
       !
-      DO JMOD_CCN = 1, NMOD_CCN
-         ZNFT(JL,JMOD_CCN) = PNFT(I1(JL),I3(JL),JMOD_CCN)
+      DO IMOD_CCN = 1, NMOD_CCN
+         ZNFT(IL,IMOD_CCN) = PNFT(I1(IL),I3(IL),IMOD_CCN)
       ENDDO
-      ZZNHT(JL) = ZNHT(I1(JL),I3(JL))
-      ZRHODREF(JL) = PRHODREF(I1(JL),I3(JL))
-      ZZT(JL)      = ZT(I1(JL),I3(JL))
-      ZPRES(JL)    = PPABST(I1(JL),I3(JL))
-      ZEXNREF(JL)  = PEXNREF(I1(JL),I3(JL))
+      ZZNHT(IL) = ZNHT(I1(IL),I3(IL))
+      ZRHODREF(IL) = PRHODREF(I1(IL),I3(IL))
+      ZZT(IL)      = ZT(I1(IL),I3(IL))
+      ZPRES(IL)    = PPABST(I1(IL),I3(IL))
+      ZEXNREF(IL)  = PEXNREF(I1(IL),I3(IL))
    ENDDO
 !
 ! PACK : done
@@ -244,13 +244,13 @@ IF (INEGT.GT.0) THEN
       ALLOCATE( ZCCNFROZEN(INEGT) )
       ZFREECCN(:)=0.
       ZCCNFROZEN(:)=0.
-      DO JMOD_CCN = 1, NMOD_CCN
-         ZFREECCN(:) = ZFREECCN(:) + ZNFT(:,JMOD_CCN)
+      DO IMOD_CCN = 1, NMOD_CCN
+         ZFREECCN(:) = ZFREECCN(:) + ZNFT(:,IMOD_CCN)
       END DO
 !
       ALLOCATE(ZW_NU(INEGT))
-      DO JL=1,INEGT
-         ZW_NU(JL) = PW_NU(I1(JL),I3(JL))
+      DO IL=1,INEGT
+         ZW_NU(IL) = PW_NU(I1(IL),I3(IL))
       END DO
 !
       ZZW(:)  = 0.0
@@ -294,11 +294,11 @@ IF (INEGT.GT.0) THEN
       END WHERE
 !
 ! Apply the changes 
-      DO JMOD_CCN = 1, NMOD_CCN
+      DO IMOD_CCN = 1, NMOD_CCN
          WHERE(ZFREECCN(:)>1.)
-            ZCCNFROZEN(:) = ZZX(:) * ZNFT(:,JMOD_CCN)/ZFREECCN(:)
+            ZCCNFROZEN(:) = ZZX(:) * ZNFT(:,IMOD_CCN)/ZFREECCN(:)
          END WHERE
-         PNFT(:,:,JMOD_CCN) = PNFT(:,:,JMOD_CCN) - UNPACK( ZCCNFROZEN(:), MASK=GNEGT(:,:),FIELD=0.)
+         PNFT(:,:,IMOD_CCN) = PNFT(:,:,IMOD_CCN) - UNPACK( ZCCNFROZEN(:), MASK=GNEGT(:,:),FIELD=0.)
       END DO
 !
       PTOT_RV_HONH(:,:) = UNPACK( ZZW(:), MASK=GNEGT(:,:),FIELD=0.)

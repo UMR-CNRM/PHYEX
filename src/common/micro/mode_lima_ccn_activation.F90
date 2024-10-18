@@ -116,7 +116,7 @@ REAL, DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: PTOT_RV_HENU  ! Mixing ratio ch
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) :: GNUCT 
 INTEGER :: INUCT
 INTEGER , DIMENSION(SIZE(GNUCT))   :: I1,I3 ! Used to replace the COUNT
-INTEGER                            :: JL       ! and PACK intrinsics 
+INTEGER                            :: IL       ! and PACK intrinsics 
 !
 ! Packed micophysical variables
 REAL, DIMENSION(:)  , ALLOCATABLE  :: ZRCT     ! cloud mr
@@ -147,7 +147,7 @@ INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1             ! Vectors of indices for
 ! 
 REAL    :: ZEPS                                ! molar mass ratio
 REAL    :: ZS1, ZS2, ZXACC 
-INTEGER :: JMOD
+INTEGER :: IMOD
 INTEGER :: IIJB, IIJE, IKB, IKE        ! Physical domain
 !
 !!$INTEGER                  :: ILUOUT     ! Logical unit of output listing 
@@ -174,8 +174,8 @@ IF (LACTIT .AND. SIZE(PDTHRAD).GT.0) ZTDT(:,:)   = PDTHRAD(:,:) * PEXNREF(:,:)
 !  find locations where CCN are available
 !
 ZCONC_TOT(:,:) = 0.0
-DO JMOD = 1, NMOD_CCN 
-   ZCONC_TOT(:,:) = ZCONC_TOT(:,:) + PNFT(:,:,JMOD) ! sum over the free CCN
+DO IMOD = 1, NMOD_CCN 
+   ZCONC_TOT(:,:) = ZCONC_TOT(:,:) + PNFT(:,:,IMOD) ! sum over the free CCN
 ENDDO
 !
 !  optimization by looking for locations where
@@ -232,21 +232,21 @@ IF( INUCT >= 1 ) THEN
    ALLOCATE(IVEC1(INUCT))
    ALLOCATE(ZRHODREF(INUCT)) 
    ALLOCATE(ZEXNREF(INUCT)) 
-   DO JL=1,INUCT
-      ZRCT(JL) = PRCT(I1(JL),I3(JL))/ZCLDFR(I1(JL),I3(JL))
-      ZCCT(JL) = PCCT(I1(JL),I3(JL))/ZCLDFR(I1(JL),I3(JL))
-      ZZT(JL)  = PT(I1(JL),I3(JL))
-      ZZW1(JL) = ZRVSAT(I1(JL),I3(JL))
-      ZZW2(JL) = PW_NU(I1(JL),I3(JL))
-      ZZTDT(JL)  = ZTDT(I1(JL),I3(JL))
-      ZSW(JL)  = PRVT(I1(JL),I3(JL))/ZRVSAT(I1(JL),I3(JL)) - 1.
-      ZRHODREF(JL) = PRHODREF(I1(JL),I3(JL))
-      ZEXNREF(JL)  = PEXNREF(I1(JL),I3(JL))
-      DO JMOD = 1,NMOD_CCN
-         ZNFT(JL,JMOD)        = PNFT(I1(JL),I3(JL),JMOD)
-         ZNAT(JL,JMOD)        = PNAT(I1(JL),I3(JL),JMOD)
-         ZCHEN_MULTI(JL,JMOD) = (ZNFT(JL,JMOD)+ZNAT(JL,JMOD))*ZRHODREF(JL) &
-                                                             / XLIMIT_FACTOR(JMOD)
+   DO IL=1,INUCT
+      ZRCT(IL) = PRCT(I1(IL),I3(IL))/ZCLDFR(I1(IL),I3(IL))
+      ZCCT(IL) = PCCT(I1(IL),I3(IL))/ZCLDFR(I1(IL),I3(IL))
+      ZZT(IL)  = PT(I1(IL),I3(IL))
+      ZZW1(IL) = ZRVSAT(I1(IL),I3(IL))
+      ZZW2(IL) = PW_NU(I1(IL),I3(IL))
+      ZZTDT(IL)  = ZTDT(I1(IL),I3(IL))
+      ZSW(IL)  = PRVT(I1(IL),I3(IL))/ZRVSAT(I1(IL),I3(IL)) - 1.
+      ZRHODREF(IL) = PRHODREF(I1(IL),I3(IL))
+      ZEXNREF(IL)  = PEXNREF(I1(IL),I3(IL))
+      DO IMOD = 1,NMOD_CCN
+         ZNFT(IL,IMOD)        = PNFT(I1(IL),I3(IL),IMOD)
+         ZNAT(IL,IMOD)        = PNAT(I1(IL),I3(IL),IMOD)
+         ZCHEN_MULTI(IL,IMOD) = (ZNFT(IL,IMOD)+ZNAT(IL,IMOD))*ZRHODREF(IL) &
+                                                             / XLIMIT_FACTOR(IMOD)
       ENDDO
    ENDDO
 !
@@ -375,38 +375,38 @@ IF( INUCT >= 1 ) THEN
 ! Compute the concentration of activable aerosols for each mode
 ! based on the max of supersaturation ( -> ZTMP )
 !
-   DO JMOD = 1, NMOD_CCN                     ! iteration on mode number
+   DO IMOD = 1, NMOD_CCN                     ! iteration on mode number
       ZZW1(:) = 0.
       ZZW2(:) = 0.
       ZZW3(:) = 0.
    !
       WHERE( ZZW5(:) > 0. .AND. ZSMAX(:)>0.0 )
-         ZZW2(:) =  XHYPF12( IVEC1(:)+1,JMOD )* ZVEC1(:)      & ! hypergeo function
-                  - XHYPF12( IVEC1(:)  ,JMOD )*(ZVEC1(:) - 1.0) ! XHYPF12 is tabulated
+         ZZW2(:) =  XHYPF12( IVEC1(:)+1,IMOD )* ZVEC1(:)      & ! hypergeo function
+                  - XHYPF12( IVEC1(:)  ,IMOD )*(ZVEC1(:) - 1.0) ! XHYPF12 is tabulated
    !
-         ZTMP(:,JMOD) = ZCHEN_MULTI(:,JMOD)/ZRHODREF(:)*ZSMAX(:)**XKHEN_MULTI(JMOD)*ZZW2(:)
+         ZTMP(:,IMOD) = ZCHEN_MULTI(:,IMOD)/ZRHODREF(:)*ZSMAX(:)**XKHEN_MULTI(IMOD)*ZZW2(:)
       ENDWHERE
    ENDDO
 !
 ! Compute the concentration of aerosols activated at this time step
 ! as the difference between ZTMP and the aerosols already activated at t-dt (ZZW1)
 !
-   DO JMOD = 1, NMOD_CCN                     ! iteration on mode number
+   DO IMOD = 1, NMOD_CCN                     ! iteration on mode number
       ZZW1(:) = 0.
       ZZW2(:) = 0.
       ZZW3(:) = 0.
    !
       WHERE( SUM(ZTMP(:,:),DIM=2) .GT. 0.01E6/ZRHODREF(:) ) 
-         ZZW1(:) = MIN( ZNFT(:,JMOD),MAX( ZTMP(:,JMOD)- ZNAT(:,JMOD) , 0.0 ) )
+         ZZW1(:) = MIN( ZNFT(:,IMOD),MAX( ZTMP(:,IMOD)- ZNAT(:,IMOD) , 0.0 ) )
       ENDWHERE
    !
    !* update the concentration of activated CCN = Na
    !
-      PNAT(:,:,JMOD) = PNAT(:,:,JMOD) + ZCLDFR(:,:) * UNPACK( ZZW1(:), MASK=GNUCT(:,:), FIELD=0.0 )
+      PNAT(:,:,IMOD) = PNAT(:,:,IMOD) + ZCLDFR(:,:) * UNPACK( ZZW1(:), MASK=GNUCT(:,:), FIELD=0.0 )
    !
    !* update the concentration of free CCN = Nf
    !
-      PNFT(:,:,JMOD) = PNFT(:,:,JMOD) - ZCLDFR(:,:) * UNPACK( ZZW1(:), MASK=GNUCT(:,:), FIELD=0.0 )
+      PNFT(:,:,IMOD) = PNFT(:,:,IMOD) - ZCLDFR(:,:) * UNPACK( ZZW1(:), MASK=GNUCT(:,:), FIELD=0.0 )
    !
    !* prepare to update the cloud water concentration 
    !
@@ -572,98 +572,98 @@ REAL, DIMENSION(:), ALLOCATABLE    :: PZRIDDR
 !*       0.2 declarations of local variables
 !
 !
-INTEGER, PARAMETER                 :: MAXIT=60
-REAL,    PARAMETER                 :: UNUSED=0.0 !-1.11e30
-REAL,    DIMENSION(:), ALLOCATABLE :: fh,fl, fm,fnew
-REAL                               :: s,xh,xl,xm,xnew
-REAL                               :: PX2
-INTEGER                            :: j, JL
+INTEGER, PARAMETER                 :: JPMAXIT=60
+REAL,    PARAMETER                 :: PPUNUSED=0.0 !-1.11e30
+REAL,    DIMENSION(:), ALLOCATABLE :: zfh,zfl, zfm,zfnew
+REAL                               :: zs,zxh,zxl,zxm,zxnew
+REAL                               :: ZX2
+INTEGER                            :: ij, IL
 !
-ALLOCATE(  fh(KPTS))
-ALLOCATE(  fl(KPTS))
-ALLOCATE(  fm(KPTS))
-ALLOCATE(fnew(KPTS))
+ALLOCATE(  zfh(KPTS))
+ALLOCATE(  zfl(KPTS))
+ALLOCATE(  zfm(KPTS))
+ALLOCATE(zfnew(KPTS))
 ALLOCATE(PZRIDDR(KPTS))
 !
-PZRIDDR(:)= UNUSED
-PX2       = PX2INIT 
-fl(:)     = FUNCSMAX(PX1,PZZW3(:),PZZW6(:),KPTS)
-fh(:)     = FUNCSMAX(PX2,PZZW3(:),PZZW6(:),KPTS)
+PZRIDDR(:)= PPUNUSED
+ZX2       = PX2INIT 
+zfl(:)     = FUNCSMAX(PX1,PZZW3(:),PZZW6(:),KPTS)
+zfh(:)     = FUNCSMAX(ZX2,PZZW3(:),PZZW6(:),KPTS)
 !
-DO JL = 1, KPTS
-   PX2 = PX2INIT
-100 if ((fl(JL) > 0.0 .and. fh(JL) < 0.0) .or. (fl(JL) < 0.0 .and. fh(JL) > 0.0)) then
-      xl         = PX1
-      xh         = PX2
-      do j=1,MAXIT
-         xm     = 0.5*(xl+xh)
-         fm(JL) = SINGL_FUNCSMAX(xm,PZZW3(JL),PZZW6(JL),JL)
-         s      = sqrt(fm(JL)**2-fl(JL)*fh(JL))
-         if (s == 0.0) then
+DO IL = 1, KPTS
+   ZX2 = PX2INIT
+100 if ((zfl(IL) > 0.0 .and. zfh(IL) < 0.0) .or. (zfl(IL) < 0.0 .and. zfh(IL) > 0.0)) then
+      zxl         = PX1
+      zxh         = ZX2
+      do ij=1,JPMAXIT
+         zxm     = 0.5*(zxl+zxh)
+         zfm(IL) = SINGL_FUNCSMAX(zxm,PZZW3(IL),PZZW6(IL),IL)
+         zs      = sqrt(zfm(IL)**2-zfl(IL)*zfh(IL))
+         if (zs == 0.0) then
             GO TO 101
          endif
-         xnew  = xm+(xm-xl)*(sign(1.0,fl(JL)-fh(JL))*fm(JL)/s)
-         if (abs(xnew - PZRIDDR(JL)) <= PXACC) then
+         zxnew  = zxm+(zxm-zxl)*(sign(1.0,zfl(IL)-zfh(IL))*zfm(IL)/zs)
+         if (abs(zxnew - PZRIDDR(IL)) <= PXACC) then
             GO TO 101 
          endif
-         PZRIDDR(JL) = xnew
-         fnew(JL)  = SINGL_FUNCSMAX(PZRIDDR(JL),PZZW3(JL),PZZW6(JL),JL)
-         if (fnew(JL) == 0.0) then
+         PZRIDDR(IL) = zxnew
+         zfnew(IL)  = SINGL_FUNCSMAX(PZRIDDR(IL),PZZW3(IL),PZZW6(IL),IL)
+         if (zfnew(IL) == 0.0) then
             GO TO 101
          endif
-         if (sign(fm(JL),fnew(JL)) /= fm(JL)) then
-            xl    =xm
-            fl(JL)=fm(JL)
-            xh    =PZRIDDR(JL)
-            fh(JL)=fnew(JL)
-         else if (sign(fl(JL),fnew(JL)) /= fl(JL)) then
-            xh    =PZRIDDR(JL)
-            fh(JL)=fnew(JL)
-         else if (sign(fh(JL),fnew(JL)) /= fh(JL)) then
-            xl    =PZRIDDR(JL)
-            fl(JL)=fnew(JL)
-         else if (PX2 .lt. 0.05) then
-            PX2 = PX2 + 1.0E-2
-!            PRINT*, 'PX2 ALWAYS too small, we put a greater one : PX2 =',PX2
-            fh(JL)   = SINGL_FUNCSMAX(PX2,PZZW3(JL),PZZW6(JL),JL)
+         if (sign(zfm(IL),zfnew(IL)) /= zfm(IL)) then
+            zxl    =zxm
+            zfl(IL)=zfm(IL)
+            zxh    =PZRIDDR(IL)
+            zfh(IL)=zfnew(IL)
+         else if (sign(zfl(IL),zfnew(IL)) /= zfl(IL)) then
+            zxh    =PZRIDDR(IL)
+            zfh(IL)=zfnew(IL)
+         else if (sign(zfh(IL),zfnew(IL)) /= zfh(IL)) then
+            zxl    =PZRIDDR(IL)
+            zfl(IL)=zfnew(IL)
+         else if (ZX2 .lt. 0.05) then
+            ZX2 = ZX2 + 1.0E-2
+!            PRINT*, 'ZX2 ALWAYS too small, we put a greater one : ZX2 =',ZX2
+            zfh(IL)   = SINGL_FUNCSMAX(ZX2,PZZW3(IL),PZZW6(IL),IL)
             go to 100
          end if
-         if (abs(xh-xl) <= PXACC) then
+         if (abs(zxh-zxl) <= PXACC) then
             GO TO 101 
          endif
 !!SB
-!!$      if (j == MAXIT .and. (abs(xh-xl) > PXACC) ) then
-!!$        PZRIDDR(JL)=0.0
+!!$      if (ij == JPMAXIT .and. (abs(zxh-zxl) > PXACC) ) then
+!!$        PZRIDDR(IL)=0.0
 !!$        go to 101
 !!$      endif   
 !!SB
       end do
       call Print_msg( NVERB_FATAL, 'GEN', 'ZRIDDR', 'exceeded maximum iterations' )
-   else if (fl(JL) == 0.0) then
-      PZRIDDR(JL)=PX1
-   else if (fh(JL) == 0.0) then
-      PZRIDDR(JL)=PX2
-   else if (PX2 .lt. 0.05) then
-      PX2 = PX2 + 1.0E-2
-!      PRINT*, 'PX2 too small, we put a greater one : PX2 =',PX2
-      fh(JL)   = SINGL_FUNCSMAX(PX2,PZZW3(JL),PZZW6(JL),JL)
+   else if (zfl(IL) == 0.0) then
+      PZRIDDR(IL)=PX1
+   else if (zfh(IL) == 0.0) then
+      PZRIDDR(IL)=ZX2
+   else if (ZX2 .lt. 0.05) then
+      ZX2 = ZX2 + 1.0E-2
+!      PRINT*, 'ZX2 too small, we put a greater one : ZX2 =',ZX2
+      zfh(IL)   = SINGL_FUNCSMAX(ZX2,PZZW3(IL),PZZW6(IL),IL)
       go to 100
    else
 !!$      print*, 'PZRIDDR: root must be bracketed'
-!!$      print*,'npts ',KPTS,'jl',JL
-!!$      print*, 'PX1,PX2,fl,fh',PX1,PX2,fl(JL),fh(JL)
-!!$      print*, 'PX2 = 30 % of supersaturation, there is no solution for Smax'
-!!$      print*, 'try to put greater PX2 (upper bound for Smax research)'
+!!$      print*,'npts ',KPTS,'jl',IL
+!!$      print*, 'PX1,ZX2,zfl,zfh',PX1,ZX2,zfl(IL),zfh(IL)
+!!$      print*, 'ZX2 = 30 % of supersaturation, there is no solution for Smax'
+!!$      print*, 'try to put greater ZX2 (upper bound for Smax research)'
 !!$      STOP
-      PZRIDDR(JL)=0.0
+      PZRIDDR(IL)=0.0
       go to 101
    end if
 101 ENDDO
 !
-DEALLOCATE(  fh)
-DEALLOCATE(  fl)
-DEALLOCATE(  fm)
-DEALLOCATE(fnew)
+DEALLOCATE(  zfh)
+DEALLOCATE(  zfl)
+DEALLOCATE(  zfm)
+DEALLOCATE(zfnew)
 !
 END FUNCTION ZRIDDR
 !
@@ -735,25 +735,25 @@ REAL, DIMENSION(:), ALLOCATABLE :: PFUNCSMAX !
 !
 REAL                           :: ZHYPF
 !
-REAL                           :: PZVEC1
-INTEGER                        :: PIVEC1
+REAL                           :: ZVEC1
+INTEGER                        :: IVEC1
 !
 ALLOCATE(PFUNCSMAX(KPTS))
 !
 PFUNCSMAX(:) = 0.
-PZVEC1 = MAX( ( 1.0 + 10.0 * CST%XMNH_EPSILON ) ,MIN( REAL(NHYP)*( 1.0 - 10.0 * CST%XMNH_EPSILON ) ,               &
+ZVEC1 = MAX( ( 1.0 + 10.0 * CST%XMNH_EPSILON ) ,MIN( REAL(NHYP)*( 1.0 - 10.0 * CST%XMNH_EPSILON ) ,               &
                            XHYPINTP1*LOG(PPZSMAX)+XHYPINTP2 ) )
-PIVEC1 = INT( PZVEC1 )
-PZVEC1 = PZVEC1 - REAL( PIVEC1 )
-DO JMOD = 1, NMOD_CCN
+IVEC1 = INT( ZVEC1 )
+ZVEC1 = ZVEC1 - REAL( IVEC1 )
+DO IMOD = 1, NMOD_CCN
    ZHYPF        = 0.          ! XHYPF32 is tabulated with ZSMAX in [NO UNITS]
-   ZHYPF        =   XHYPF32( PIVEC1+1,JMOD ) * PZVEC1              &
-                  - XHYPF32( PIVEC1  ,JMOD ) *(PZVEC1 - 1.0)
+   ZHYPF        =   XHYPF32( IVEC1+1,IMOD ) * ZVEC1              &
+                  - XHYPF32( IVEC1  ,IMOD ) *(ZVEC1 - 1.0)
                              ! sum of s**(ki+2) * F32 * Ci * ki * beta(ki/2,3/2)
-   PFUNCSMAX(:) =  PFUNCSMAX(:) + (PPZSMAX)**(XKHEN_MULTI(JMOD) + 2) &
-                 * ZHYPF* XKHEN_MULTI(JMOD) * ZCHEN_MULTI(:,JMOD)    &
-                 * GAMMA_X0D( XKHEN_MULTI(JMOD)/2.0)*GAMMA_X0D(3.0/2.0)      &
-                 / GAMMA_X0D((XKHEN_MULTI(JMOD)+3.0)/2.0)
+   PFUNCSMAX(:) =  PFUNCSMAX(:) + (PPZSMAX)**(XKHEN_MULTI(IMOD) + 2) &
+                 * ZHYPF* XKHEN_MULTI(IMOD) * ZCHEN_MULTI(:,IMOD)    &
+                 * GAMMA_X0D( XKHEN_MULTI(IMOD)/2.0)*GAMMA_X0D(3.0/2.0)      &
+                 / GAMMA_X0D((XKHEN_MULTI(IMOD)+3.0)/2.0)
 ENDDO
 ! function l.h.s. minus r.h.s. of eq. (9) of CPB98 but for NMOD_CCN aerosol mode
 PFUNCSMAX(:) = PFUNCSMAX(:) + PPZZW6(:)*PPZSMAX - PPZZW3(:)
@@ -794,23 +794,23 @@ REAL                            :: PSINGL_FUNCSMAX !
 !
 REAL                           :: ZHYPF
 !
-REAL                           :: PZVEC1
-INTEGER                        :: PIVEC1
+REAL                           :: ZVEC1
+INTEGER                        :: IVEC1
 !
 PSINGL_FUNCSMAX = 0.
-PZVEC1    = MAX( 1.0001,MIN( REAL(NHYP)-0.0001,               &
+ZVEC1    = MAX( 1.0001,MIN( REAL(NHYP)-0.0001,               &
                               XHYPINTP1*LOG(PPZSMAX)+XHYPINTP2 ) )
-PIVEC1 = INT( PZVEC1 )
-PZVEC1 = PZVEC1 - REAL( PIVEC1 )
-DO JMOD = 1, NMOD_CCN
+IVEC1 = INT( ZVEC1 )
+ZVEC1 = ZVEC1 - REAL( IVEC1 )
+DO IMOD = 1, NMOD_CCN
    ZHYPF        = 0.          ! XHYPF32 is tabulated with ZSMAX in [NO UNITS]
-   ZHYPF        =   XHYPF32( PIVEC1+1,JMOD ) * PZVEC1              &
-                  - XHYPF32( PIVEC1  ,JMOD ) *(PZVEC1 - 1.0)
+   ZHYPF        =   XHYPF32( IVEC1+1,IMOD ) * ZVEC1              &
+                  - XHYPF32( IVEC1  ,IMOD ) *(ZVEC1 - 1.0)
                              ! sum of s**(ki+2) * F32 * Ci * ki * bêta(ki/2,3/2)
-   PSINGL_FUNCSMAX = PSINGL_FUNCSMAX + (PPZSMAX)**(XKHEN_MULTI(JMOD) + 2)   &
-                   * ZHYPF* XKHEN_MULTI(JMOD) * ZCHEN_MULTI(KINDEX,JMOD) &
-                   * GAMMA_X0D( XKHEN_MULTI(JMOD)/2.0)*GAMMA_X0D(3.0/2.0)        &
-                   / GAMMA_X0D((XKHEN_MULTI(JMOD)+3.0)/2.0)
+   PSINGL_FUNCSMAX = PSINGL_FUNCSMAX + (PPZSMAX)**(XKHEN_MULTI(IMOD) + 2)   &
+                   * ZHYPF* XKHEN_MULTI(IMOD) * ZCHEN_MULTI(KINDEX,IMOD) &
+                   * GAMMA_X0D( XKHEN_MULTI(IMOD)/2.0)*GAMMA_X0D(3.0/2.0)        &
+                   / GAMMA_X0D((XKHEN_MULTI(IMOD)+3.0)/2.0)
 ENDDO
 ! function l.h.s. minus r.h.s. of eq. (9) of CPB98 but for NMOD_CCN aerosol mode
 PSINGL_FUNCSMAX = PSINGL_FUNCSMAX + PPZZW6*PPZSMAX - PPZZW3

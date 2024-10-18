@@ -51,7 +51,7 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-!*       0.2   Declarations of local variables :
+!*       0.2   Declarations of arguments :
 !
 !  
 INTEGER, INTENT(OUT) :: KND,KDRYLBDAG,KDRYLBDAR

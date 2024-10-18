@@ -62,7 +62,7 @@ REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
 REAL     :: ZT      ! Work variable
 REAL, DIMENSION(7)  :: ZVTRMAX
 !
-INTEGER  :: JI
+INTEGER  :: II
 !  
 !-------------------------------------------------------------------------------
 !
@@ -84,12 +84,12 @@ ZVTRMAX(7) = 30.         ! Maximum hail fall speed
 !
 ! NSPLITSED
 !
-DO JI=2,7
-   NSPLITSED(JI) = 1
+DO II=2,7
+   NSPLITSED(II) = 1
    SPLIT : DO
-      ZT = PTSTEP / REAL(NSPLITSED(JI))
-      IF ( ZT * ZVTRMAX(JI) / PDZMIN < 1.0) EXIT SPLIT
-      NSPLITSED(JI) = NSPLITSED(JI) + 1
+      ZT = PTSTEP / REAL(NSPLITSED(II))
+      IF ( ZT * ZVTRMAX(II) / PDZMIN < 1.0) EXIT SPLIT
+      NSPLITSED(II) = NSPLITSED(II) + 1
    END DO SPLIT
 END DO
 !

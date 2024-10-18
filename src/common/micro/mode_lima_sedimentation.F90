@@ -98,12 +98,12 @@ REAL, DIMENSION(:,:),     INTENT(INOUT), OPTIONAL :: PQS ! Elec. charge density 
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER :: JK, JL, JN                     ! Loop index
+INTEGER :: IK, IL, IN                     ! Loop index
 INTEGER :: ISEDIM                         ! Case number of sedimentation
 !
 LOGICAL, DIMENSION(D%NIJT, D%NKT) :: GSEDIM      ! Test where to compute the SED processes
 REAL,    DIMENSION(D%NIJT, D%NKT) :: ZW,       & ! Work array
-                                           ZWDT        ! Temperature change
+                                     ZWDT        ! Temperature change
 REAL,    DIMENSION(D%NIJT,0:D%NKT+1) &
                            :: ZWSEDR,   & ! Sedimentation of MMR
                               ZWSEDC      ! Sedimentation of number conc.
@@ -153,8 +153,8 @@ ZWSEDC(:,:) = 0.
 PRS(:,:) = PRS(:,:) * PTSTEP
 IF (KMOMENTS==2) PCS(:,:) = PCS(:,:) * PTSTEP
 IF (OELEC)       PQS(:,:) = PQS(:,:) * PTSTEP
-DO JK = D%NKTB , D%NKTE
-   ZW(:,JK)=ZTSPLITG/PDZZ(:,JK)
+DO IK = D%NKTB , D%NKTE
+   ZW(:,IK)=ZTSPLITG/PDZZ(:,IK)
 END DO
 !
 IF (HPHASE=='L') ZC=CST%XCL
@@ -172,7 +172,7 @@ END IF
 ! Compute the sedimentation fluxes
 ! ################################
 !
-DO JN = 1 ,  NSPLITSED(KID)
+DO IN = 1 ,  NSPLITSED(KID)
   ! Computation only where enough ice, snow, graupel or hail
    GSEDIM(:,:) = .FALSE.
    GSEDIM(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = PRS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>XRTMIN(KID)
@@ -199,13 +199,13 @@ DO JN = 1 ,  NSPLITSED(KID)
         ALLOCATE(ZZQ(ISEDIM)) ; ZZQ(:) = 0.0
       END IF      
 !
-      DO JL = 1,ISEDIM
-         ZRHODREF(JL) = PRHODREF(I1(JL),I3(JL))
-         ZPABST(JL) = PPABST(I1(JL),I3(JL))
-         ZT(JL) = PT(I1(JL),I3(JL))
-         ZRS(JL) = PRS(I1(JL),I3(JL))
-         IF (IMOMENTS==2) ZCS(JL) = PCS(I1(JL),I3(JL))
-         IF (OELEC)       ZQS(JL) = PQS(I1(JL),I3(JL))
+      DO IL = 1,ISEDIM
+         ZRHODREF(IL) = PRHODREF(I1(IL),I3(IL))
+         ZPABST(IL) = PPABST(I1(IL),I3(IL))
+         ZT(IL) = PT(I1(IL),I3(IL))
+         ZRS(IL) = PRS(I1(IL),I3(IL))
+         IF (IMOMENTS==2) ZCS(IL) = PCS(I1(IL),I3(IL))
+         IF (OELEC)       ZQS(IL) = PQS(I1(IL),I3(IL))
       END DO
 !
 ! Compute lambda
@@ -299,23 +299,23 @@ DO JN = 1 ,  NSPLITSED(KID)
                                          ZWSEDQ(:,D%NKTB:D%NKTE))
       END IF      
       
-      DO JK = D%NKTB , D%NKTE
-         PRS(:,JK) = PRS(:,JK) + ZW(:,JK)*    &
-              (ZWSEDR(:,JK+D%NKL)-ZWSEDR(:,JK))/PRHODREF(:,JK)
-         PFPR(:,JK) = ZWSEDR(:,JK)
-         IF (KMOMENTS==2) PCS(:,JK) = PCS(:,JK) + ZW(:,JK)*    &
-              (ZWSEDC(:,JK+D%NKL)-ZWSEDC(:,JK))/PRHODREF(:,JK)
+      DO IK = D%NKTB , D%NKTE
+         PRS(:,IK) = PRS(:,IK) + ZW(:,IK)*    &
+              (ZWSEDR(:,IK+D%NKL)-ZWSEDR(:,IK))/PRHODREF(:,IK)
+         PFPR(:,IK) = ZWSEDR(:,IK)
+         IF (KMOMENTS==2) PCS(:,IK) = PCS(:,IK) + ZW(:,IK)*    &
+              (ZWSEDC(:,IK+D%NKL)-ZWSEDC(:,IK))/PRHODREF(:,IK)
          ! Heat transport
-         !PRT_SUM(:,JK-D%NKL) = PRT_SUM(:,JK-D%NKL) + ZW(:,JK-D%NKL)*ZWSEDR(:,JK)/PRHODREF(:,JK-D%NKL)
-         !PRT_SUM(:,JK) = PRT_SUM(:,JK) - ZW(:,JK)*ZWSEDR(:,JK)/PRHODREF(:,JK)
-         !PCPT(:,JK-D%NKL) = PCPT(:,JK-D%NKL) + ZC * (ZW(:,JK-D%NKL)*ZWSEDR(:,JK)/PRHODREF(:,JK-D%NKL))
-         !PCPT(:,JK) = PCPT(:,JK) - ZC * (ZW(:,JK)*ZWSEDR(:,JK)/PRHODREF(:,JK))
-         !ZWDT(:,JK) =(PRHODREF(:,JK+D%NKL)*(1.+PRT_SUM(:,JK))*PCPT(:,JK)*PT(:,JK) + &
-         !     ZW(:,JK)*ZWSEDR(:,JK+1)*ZC*PT(:,JK+D%NKL)) / &
-         !     (PRHODREF(:,JK+D%NKL)*(1.+PRT_SUM(:,JK))*PCPT(:,JK) + ZW(:,JK)*ZWSEDR(:,JK+D%NKL)*ZC)
-         !ZWDT(:,JK) = ZWDT(:,JK) - PT(:,JK)
-         IF (OELEC) PQS(:,JK) = PQS(:,JK) + ZW(:,JK) *    &
-                                 (ZWSEDQ(:,JK+D%NKL) - ZWSEDQ(:,JK)) / PRHODREF(:,JK)
+         !PRT_SUM(:,IK-D%NKL) = PRT_SUM(:,IK-D%NKL) + ZW(:,IK-D%NKL)*ZWSEDR(:,IK)/PRHODREF(:,IK-D%NKL)
+         !PRT_SUM(:,IK) = PRT_SUM(:,IK) - ZW(:,IK)*ZWSEDR(:,IK)/PRHODREF(:,IK)
+         !PCPT(:,IK-D%NKL) = PCPT(:,IK-D%NKL) + ZC * (ZW(:,IK-D%NKL)*ZWSEDR(:,IK)/PRHODREF(:,IK-D%NKL))
+         !PCPT(:,IK) = PCPT(:,IK) - ZC * (ZW(:,IK)*ZWSEDR(:,IK)/PRHODREF(:,IK))
+         !ZWDT(:,IK) =(PRHODREF(:,IK+D%NKL)*(1.+PRT_SUM(:,IK))*PCPT(:,IK)*PT(:,IK) + &
+         !     ZW(:,IK)*ZWSEDR(:,IK+1)*ZC*PT(:,IK+D%NKL)) / &
+         !     (PRHODREF(:,IK+D%NKL)*(1.+PRT_SUM(:,IK))*PCPT(:,IK) + ZW(:,IK)*ZWSEDR(:,IK+D%NKL)*ZC)
+         !ZWDT(:,IK) = ZWDT(:,IK) - PT(:,IK)
+         IF (OELEC) PQS(:,IK) = PQS(:,IK) + ZW(:,IK) *    &
+                                 (ZWSEDQ(:,IK+D%NKL) - ZWSEDQ(:,IK)) / PRHODREF(:,IK)
          
       END DO
       !

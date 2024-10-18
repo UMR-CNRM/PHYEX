@@ -83,7 +83,7 @@ REAL, DIMENSION(:,:),   INTENT(INOUT) :: PICEFR
 !
 !
 INTEGER :: IIJB, IIJE, IKB, IKE               ! Physical domain
-INTEGER :: JL     ! Loop index
+INTEGER :: IL     ! Loop index
 INTEGER :: INEGT  ! Case number of nucleation
 !
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) &
@@ -180,25 +180,25 @@ IF( INEGT >= 1 ) THEN
   ALLOCATE(ZZT(INEGT)) 
   ALLOCATE(ZPRES(INEGT)) 
   ALLOCATE(ZEXNREF(INEGT))
-  DO JL=1,INEGT
-    ZRVT(JL) = PRVT(I1(JL),I3(JL))
-    ZRCT(JL) = PRCT(I1(JL),I3(JL))
-    ZRRT(JL) = PRRT(I1(JL),I3(JL))
-    ZRIT(JL) = PRIT(I1(JL),I3(JL))
-    ZRST(JL) = PRST(I1(JL),I3(JL))
-    ZRGT(JL) = PRGT(I1(JL),I3(JL))
+  DO IL=1,INEGT
+    ZRVT(IL) = PRVT(I1(IL),I3(IL))
+    ZRCT(IL) = PRCT(I1(IL),I3(IL))
+    ZRRT(IL) = PRRT(I1(IL),I3(IL))
+    ZRIT(IL) = PRIT(I1(IL),I3(IL))
+    ZRST(IL) = PRST(I1(IL),I3(IL))
+    ZRGT(IL) = PRGT(I1(IL),I3(IL))
 !
-    ZCCT(JL) = PCCT(I1(JL),I3(JL))
+    ZCCT(IL) = PCCT(I1(IL),I3(IL))
 !
-    ZTHT(JL) = PTHT(I1(JL),I3(JL))
+    ZTHT(IL) = PTHT(I1(IL),I3(IL))
 !
-    ZCCT(JL) = PCCT(I1(JL),I3(JL))
-    ZCIT(JL) = PCIT(I1(JL),I3(JL))
+    ZCCT(IL) = PCCT(I1(IL),I3(IL))
+    ZCIT(IL) = PCIT(I1(IL),I3(IL))
 !
-    ZRHODREF(JL) = PRHODREF(I1(JL),I3(JL))
-    ZZT(JL)      = ZT(I1(JL),I3(JL))
-    ZPRES(JL)    = PPABST(I1(JL),I3(JL))
-    ZEXNREF(JL)  = PEXNREF(I1(JL),I3(JL))
+    ZRHODREF(IL) = PRHODREF(I1(IL),I3(IL))
+    ZZT(IL)      = ZT(I1(IL),I3(IL))
+    ZPRES(IL)    = PPABST(I1(IL),I3(IL))
+    ZEXNREF(IL)  = PEXNREF(I1(IL),I3(IL))
   ENDDO
   ALLOCATE(ZZW(INEGT))
   ALLOCATE(ZZX(INEGT))
@@ -222,8 +222,8 @@ IF( INEGT >= 1 ) THEN
 !
 !*            compute the heterogeneous nucleation by deposition: RVHNDI
 !
-  DO JL=1,INEGT
-    ZINT(JL,1) = PINT(I1(JL),I3(JL),1)
+  DO IL=1,INEGT
+    ZINT(IL,1) = PINT(I1(IL),I3(IL),1)
   END DO
   ZZW(:) = 0.0
   ZZX(:) = 0.0
@@ -249,8 +249,8 @@ IF( INEGT >= 1 ) THEN
 !*            compute the heterogeneous nucleation by contact: RVHNCI
 !
 !
-  DO JL=1,INEGT
-    ZINT(JL,1) = PINT(I1(JL),I3(JL),1)
+  DO IL=1,INEGT
+    ZINT(IL,1) = PINT(I1(IL),I3(IL),1)
   END DO
   ZZW(:) = 0.0
   ZZX(:) = 0.0

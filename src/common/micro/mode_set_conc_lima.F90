@@ -100,7 +100,7 @@ LOGICAL, OPTIONAL,         INTENT(IN)    :: ODLBC    ! T to activate LBC mode
 REAL       :: ZCONC
 INTEGER    :: ISV_LIMA_NC, ISV_LIMA_NR, ISV_LIMA_CCN_ACTI
 INTEGER    :: ISV_LIMA_NI, ISV_LIMA_NS, ISV_LIMA_NG, ISV_LIMA_NH, ISV_LIMA_IFN_NUCL
-LOGICAL    :: LLLBC
+LOGICAL    :: GLLBC
 REAL       :: ZSVTHR
 !
 !-------------------------------------------------------------------------------
@@ -119,9 +119,9 @@ ISV_LIMA_IFN_NUCL = NSV_LIMA_IFN_NUCL - NSV_LIMA_BEG + 1
 !*       2.    INITIALIZATION
 !              --------------
 !
-LLLBC=.FALSE.
-IF(PRESENT(ODLBC)) LLLBC=ODLBC
-IF(LLLBC) THEN
+GLLBC=.FALSE.
+IF(PRESENT(ODLBC)) GLLBC=ODLBC
+IF(GLLBC) THEN
   ZSVTHR=1.E-11 ! valid value to check
 ELSE
   ZSVTHR=1.E20  ! to deactivate this test

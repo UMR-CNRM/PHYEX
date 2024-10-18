@@ -123,7 +123,7 @@ REAL, DIMENSION(:,:),   INTENT(INOUT) :: PICEFR
 !
 !
 INTEGER :: IIJB, IIJE, IKB, IKE               ! Physical domain
-INTEGER :: JL, JMOD_CCN, JMOD_IFN, JSPECIE, JMOD_IMM  ! Loop index
+INTEGER :: IL, IMOD_CCN, IMOD_IFN, ISPECIE, IMOD_IMM  ! Loop index
 INTEGER :: INEGT  ! Case number of sedimentation, nucleation,
 !
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) &
@@ -233,30 +233,30 @@ IF (INEGT > 0) THEN
    ALLOCATE(ZPRES(INEGT)) 
    ALLOCATE(ZEXNREF(INEGT))
 !
-   DO JL=1,INEGT
-      ZRVT(JL) = PRVT(I1(JL),I3(JL))
-      ZRCT(JL) = PRCT(I1(JL),I3(JL))
-      ZRRT(JL) = PRRT(I1(JL),I3(JL))
-      ZRIT(JL) = PRIT(I1(JL),I3(JL))
-      ZRST(JL) = PRST(I1(JL),I3(JL))
-      ZRGT(JL) = PRGT(I1(JL),I3(JL))
+   DO IL=1,INEGT
+      ZRVT(IL) = PRVT(I1(IL),I3(IL))
+      ZRCT(IL) = PRCT(I1(IL),I3(IL))
+      ZRRT(IL) = PRRT(I1(IL),I3(IL))
+      ZRIT(IL) = PRIT(I1(IL),I3(IL))
+      ZRST(IL) = PRST(I1(IL),I3(IL))
+      ZRGT(IL) = PRGT(I1(IL),I3(IL))
 !
-      ZCCT(JL) = PCCT(I1(JL),I3(JL))
+      ZCCT(IL) = PCCT(I1(IL),I3(IL))
 !
-      DO JMOD_CCN = 1, NMOD_CCN
-         ZNAT(JL,JMOD_CCN) = PNAT(I1(JL),I3(JL),JMOD_CCN)
+      DO IMOD_CCN = 1, NMOD_CCN
+         ZNAT(IL,IMOD_CCN) = PNAT(I1(IL),I3(IL),IMOD_CCN)
       ENDDO
-      DO JMOD_IFN = 1, NMOD_IFN
-         ZIFT(JL,JMOD_IFN) = PIFT(I1(JL),I3(JL),JMOD_IFN)
-         ZINT(JL,JMOD_IFN) = PINT(I1(JL),I3(JL),JMOD_IFN)
+      DO IMOD_IFN = 1, NMOD_IFN
+         ZIFT(IL,IMOD_IFN) = PIFT(I1(IL),I3(IL),IMOD_IFN)
+         ZINT(IL,IMOD_IFN) = PINT(I1(IL),I3(IL),IMOD_IFN)
       ENDDO
-      DO JMOD_IMM = 1, NMOD_IMM
-         ZNIT(JL,JMOD_IMM) = PNIT(I1(JL),I3(JL),JMOD_IMM)
+      DO IMOD_IMM = 1, NMOD_IMM
+         ZNIT(IL,IMOD_IMM) = PNIT(I1(IL),I3(IL),IMOD_IMM)
       ENDDO
-      ZRHODREF(JL) = PRHODREF(I1(JL),I3(JL))
-      ZZT(JL)      = ZT(I1(JL),I3(JL))
-      ZPRES(JL)    = PPABST(I1(JL),I3(JL))
-      ZEXNREF(JL)  = PEXNREF(I1(JL),I3(JL))
+      ZRHODREF(IL) = PRHODREF(I1(IL),I3(IL))
+      ZZT(IL)      = ZT(I1(IL),I3(IL))
+      ZPRES(IL)    = PPABST(I1(IL),I3(IL))
+      ZEXNREF(IL)  = PEXNREF(I1(IL),I3(IL))
    ENDDO
 !
 ! PACK : done
@@ -340,24 +340,24 @@ IF (INEGT > 0) THEN
 !
 !
 !
-   DO JMOD_IFN = 1,NMOD_IFN    ! IFN modes
+   DO IMOD_IFN = 1,NMOD_IFN    ! IFN modes
       ZZX(:)=0.
-      DO JSPECIE = 1, NSPECIE  ! Each IFN mode is mixed with DM1, DM2, BC, O
-         ZZX(:)=ZZX(:)+XFRAC(JSPECIE,JMOD_IFN)*(ZIFT(:,JMOD_IFN)+ZINT(:,JMOD_IFN))* &
-                                               Z_FRAC_ACT(:,JSPECIE)
+      DO ISPECIE = 1, NSPECIE  ! Each IFN mode is mixed with DM1, DM2, BC, O
+         ZZX(:)=ZZX(:)+XFRAC(ISPECIE,IMOD_IFN)*(ZIFT(:,IMOD_IFN)+ZINT(:,IMOD_IFN))* &
+                                               Z_FRAC_ACT(:,ISPECIE)
       END DO
 ! Now : ZZX(:) = number conc. of activable AP.
 ! Activated AP at this time step = activable AP - already activated AP 
-      ZZX(:) = MIN( ZIFT(:,JMOD_IFN), MAX( (ZZX(:)-ZINT(:,JMOD_IFN)),0.0 ))
+      ZZX(:) = MIN( ZIFT(:,IMOD_IFN), MAX( (ZZX(:)-ZINT(:,IMOD_IFN)),0.0 ))
       ZZW(:) = MIN( XMNU0*ZZX(:), ZRVT(:) )
-! Now : ZZX(:) = number conc. of AP activated at this time step (#/kg) from IFN mode JMOD_IFN
-! Now : ZZW(:) = mmr of ice nucleated at this time step (kg/kg) from IFN mode JMOD_IFN
+! Now : ZZX(:) = number conc. of AP activated at this time step (#/kg) from IFN mode IMOD_IFN
+! Now : ZZW(:) = mmr of ice nucleated at this time step (kg/kg) from IFN mode IMOD_IFN
 !
 ! Update the concentrations and MMR
 !
       ZW(:,:) = UNPACK( ZZX(:), MASK=GNEGT(:,:), FIELD=0. )
-      PIFT(:,:,JMOD_IFN) = PIFT(:,:,JMOD_IFN) - ZW(:,:)
-      PINT(:,:,JMOD_IFN) = PINT(:,:,JMOD_IFN) + ZW(:,:)
+      PIFT(:,:,IMOD_IFN) = PIFT(:,:,IMOD_IFN) - ZW(:,:)
+      PINT(:,:,IMOD_IFN) = PINT(:,:,IMOD_IFN) + ZW(:,:)
 !
       P_CI_HIND(:,:) = P_CI_HIND(:,:) + ZW(:,:)
       PCIT(:,:) = PCIT(:,:) + ZW(:,:)
@@ -384,26 +384,26 @@ IF (INEGT > 0) THEN
 ! Currently, we represent coated IFN as a pure aerosol type (NIND_SPECIE)
 !
 !
-   DO JMOD_IMM = 1,NMOD_IMM  ! Coated IFN modes
-      JMOD_CCN = NINDICE_CCN_IMM(JMOD_IMM) ! Corresponding CCN mode
-      IF (JMOD_CCN .GT. 0) THEN
+   DO IMOD_IMM = 1,NMOD_IMM  ! Coated IFN modes
+      IMOD_CCN = NINDICE_CCN_IMM(IMOD_IMM) ! Corresponding CCN mode
+      IF (IMOD_CCN .GT. 0) THEN
 !
 ! OLD LIMA : Compute the appropriate mean diameter and sigma      
-!      XMDIAM_IMM = MIN( XMDIAM_IFN(NIND_SPECIE) , XR_MEAN_CCN(JMOD_CCN)*2. )
-!      XSIGMA_IMM = MIN( XSIGMA_IFN(JSPECIE) , EXP(XLOGSIG_CCN(JMOD_CCN)) )
+!      XMDIAM_IMM = MIN( XMDIAM_IFN(NIND_SPECIE) , XR_MEAN_CCN(IMOD_CCN)*2. )
+!      XSIGMA_IMM = MIN( XSIGMA_IFN(ISPECIE) , EXP(XLOGSIG_CCN(IMOD_CCN)) )
 !
-         ZZW(:) = MIN( ZCCT(:) , ZNAT(:,JMOD_CCN) )
-         ZZX(:)=  ( ZZW(:)+ZNIT(:,JMOD_IMM) ) * Z_FRAC_ACT(:,NIND_SPECIE)
+         ZZW(:) = MIN( ZCCT(:) , ZNAT(:,IMOD_CCN) )
+         ZZX(:)=  ( ZZW(:)+ZNIT(:,IMOD_IMM) ) * Z_FRAC_ACT(:,NIND_SPECIE)
 ! Now : ZZX(:) = number of activable AP.
 ! Activated AP at this time step = activable AP - already activated AP 
-         ZZX(:) = MIN( ZZW(:), MAX( (ZZX(:)-ZNIT(:,JMOD_IMM)),0.0 ) )
+         ZZX(:) = MIN( ZZW(:), MAX( (ZZX(:)-ZNIT(:,IMOD_IMM)),0.0 ) )
          ZZY(:) = MIN( XMNU0*ZZX(:) , ZRVT(:), ZRCT(:) )
 !
 ! Update the concentrations and MMR
 !
          ZW(:,:) = UNPACK( ZZX(:), MASK=GNEGT(:,:), FIELD=0. )
-         PNIT(:,:,JMOD_IMM) = PNIT(:,:,JMOD_IMM) + ZW(:,:)
-         PNAT(:,:,JMOD_CCN) = PNAT(:,:,JMOD_CCN) - ZW(:,:)
+         PNIT(:,:,IMOD_IMM) = PNIT(:,:,IMOD_IMM) + ZW(:,:)
+         PNAT(:,:,IMOD_CCN) = PNAT(:,:,IMOD_CCN) - ZW(:,:)
 !
          P_CC_HINC(:,:) = P_CC_HINC(:,:) - ZW(:,:) 
          PCCT(:,:) = PCCT(:,:) - ZW(:,:)

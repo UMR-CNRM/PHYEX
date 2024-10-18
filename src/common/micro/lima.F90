@@ -296,12 +296,14 @@ REAL, DIMENSION(:), ALLOCATABLE                      :: Z0RVT1D, Z0RCT1D, Z0RRT1
 
 !
 ! Loop control variables
-REAL,    DIMENSION(D%NIJT,D%NKT) :: ZTIME,   ZTIME_LASTCALL,   IITER
-REAL,    DIMENSION(:), ALLOCATABLE                      :: ZTIME1D, ZTIME_LASTCALL1D, IITER1D, ZMAXTIME, ZTIME_THRESHOLD
-LOGICAL, DIMENSION(D%NIJT,D%NKT) :: LLCOMPUTE
-LOGICAL, DIMENSION(:), ALLOCATABLE                      :: LLCOMPUTE1D
-REAL                                                    :: ZTSTEP
-INTEGER                                                 :: INB_ITER_MAX
+REAL,    DIMENSION(D%NIJT,D%NKT)   :: ZTIME,   ZTIME_LASTCALL
+INTEGER, DIMENSION(D%NIJT,D%NKT)   :: IITER
+REAL,    DIMENSION(:), ALLOCATABLE :: ZTIME1D, ZTIME_LASTCALL1D, ZMAXTIME, ZTIME_THRESHOLD
+INTEGER, DIMENSION(:), ALLOCATABLE :: IITER1D
+LOGICAL, DIMENSION(D%NIJT,D%NKT)   :: GLCOMPUTE
+LOGICAL, DIMENSION(:), ALLOCATABLE :: GLCOMPUTE1D
+REAL                               :: ZTSTEP
+INTEGER                            :: INB_ITER_MAX
 !
 !For subgrid clouds
 REAL, DIMENSION(:), ALLOCATABLE                      :: ZCF1D, ZIF1D, ZPF1D     ! 1D packed cloud, ice and precip. frac.
@@ -310,13 +312,13 @@ REAL, DIMENSION(:), ALLOCATABLE                      :: ZCF1D, ZIF1D, ZPF1D     
 ! Various parameters
 ! domain size and levels (AROME compatibility)
 ! loops and packing
-INTEGER :: II, IPACK, JN
+INTEGER :: II, IPACK, IN
 integer :: idx
 INTEGER, DIMENSION(:), ALLOCATABLE :: I1, I2, I3
 ! Inverse ov PTSTEP
 REAL :: ZINV_TSTEP
 ! Work arrays
-REAL, DIMENSION(D%NIJT)             :: ZW2D
+REAL, DIMENSION(D%NIJT)       :: ZW2D
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRT_SUM ! Total condensed water mr
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZCPT    ! Total condensed water mr
 LOGICAL, DIMENSION(D%NIJT)          :: GDEP
@@ -337,7 +339,7 @@ INTEGER :: ISV_LIMA_HOM_HAZE
 !
 ! Variables for the electrification scheme
 LOGICAL, DIMENSION(:,:), ALLOCATABLE :: GMASK_ELEC
-INTEGER :: JL    ! loop index
+INTEGER :: IL    ! loop index
 INTEGER :: IELEC ! nb of points where the electrification scheme may apply
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZQPIT, ZQNIT, ZQCT, ZQRT, ZQIT, ZQST, ZQGT, ZQHT
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZQPIS, ZQNIS, ZQCS, ZQRS, ZQIS, ZQSS, ZQGS, ZQHS
@@ -1133,18 +1135,18 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       ZTIME_LASTCALL(:,:)=ZTIME(:,:)
    ENDIF
    !
-   LLCOMPUTE(:,:)=.FALSE.
-   LLCOMPUTE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP ! Compuation only for points for which integration time has not reached the timestep
-   WHERE(LLCOMPUTE(:,:))
+   GLCOMPUTE(:,:)=.FALSE.
+   GLCOMPUTE(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP ! Compuation only for points for which integration time has not reached the timestep
+   WHERE(GLCOMPUTE(:,:))
       IITER(:,:)=IITER(:,:)+1
    END WHERE
    ! 
-   DO WHILE(ANY(LLCOMPUTE(:,:))) ! Loop to adjust tendencies when we cross the 0°C or when a species disappears
+   DO WHILE(ANY(GLCOMPUTE(:,:))) ! Loop to adjust tendencies when we cross the 0°C or when a species disappears
 
       !
       ! Packing variables to run computations only where necessary
       !
-      IPACK = COUNTJV(LLCOMPUTE,I1,I3)
+      IPACK = COUNTJV(GLCOMPUTE,I1,I3)
       ALLOCATE(I1(IPACK))
       ALLOCATE(I3(IPACK))
       ALLOCATE(ZRHODREF1D(IPACK))
@@ -1168,7 +1170,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       ALLOCATE(ZIFNN1D(IPACK,NMOD_IFN))
       ALLOCATE(ZEVAP1D(IPACK))
       ALLOCATE(ZTIME1D(IPACK))
-      ALLOCATE(LLCOMPUTE1D(IPACK))
+      ALLOCATE(GLCOMPUTE1D(IPACK))
       ALLOCATE(IITER1D(IPACK))
       ALLOCATE(ZTIME_LASTCALL1D(IPACK))
       ALLOCATE(Z0RVT1D(IPACK))
@@ -1204,7 +1206,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
          ZIFNN1D(II,:)        = ZIFNNT(I1(II),I3(II),:)
          ZEVAP1D(II)          = PEVAP3D(I1(II),I3(II))
          ZTIME1D(II)          = ZTIME(I1(II),I3(II))         
-         LLCOMPUTE1D(II)      = LLCOMPUTE(I1(II),I3(II))         
+         GLCOMPUTE1D(II)      = GLCOMPUTE(I1(II),I3(II))         
          IITER1D(II)          = IITER(I1(II),I3(II))         
          ZTIME_LASTCALL1D(II) = ZTIME_LASTCALL(I1(II),I3(II))         
          Z0RVT1D(II)          = Z0RVT(I1(II),I3(II))
@@ -1398,7 +1400,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       !
       !***       4.1 Tendencies computation
       !
-      CALL LIMA_INST_PROCS (PTSTEP, LLCOMPUTE1D,                                &
+      CALL LIMA_INST_PROCS (PTSTEP, GLCOMPUTE1D,                                &
                             ZEXNREF1D, ZP1D,                                    &
                             ZTHT1D, ZRVT1D, ZRCT1D, ZRRT1D, ZRIT1D, ZRST1D, ZRGT1D, &
                             ZCCT1D, ZCRT1D, ZCIT1D,                             &
@@ -1411,7 +1413,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
                             ZB_IFNN,                                            &
                             ZCF1D, ZIF1D, ZPF1D                                 )
       
-      CALL LIMA_TENDENCIES (PTSTEP, LLCOMPUTE1D,                                    &
+      CALL LIMA_TENDENCIES (PTSTEP, GLCOMPUTE1D,                                    &
                             ZEXNREF1D, ZRHODREF1D, ZP1D, ZTHT1D,                    &
                             ZRVT1D, ZRCT1D, ZRRT1D, ZRIT1D, ZRST1D, ZRGT1D, ZRHT1D, &
                             ZCCT1D, ZCRT1D, ZCIT1D, ZCST1D, ZCGT1D, ZCHT1D,         &
@@ -1507,14 +1509,14 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
 
       ! We stop when the end of the timestep is reached
       WHERE(PTSTEP-ZTIME1D(:)-ZMAXTIME(:)<=0.)
-         LLCOMPUTE1D(:)=.FALSE.
+         GLCOMPUTE1D(:)=.FALSE.
       ENDWHERE
 
       ! We must recompute tendencies when the end of the sub-timestep is reached
       IF(XTSTEP_TS/=0.) THEN
          WHERE(IITER1D(:)<INB_ITER_MAX .AND. ZTIME1D(:)+ZMAXTIME(:)>ZTIME_LASTCALL1D(:)+ZTSTEP)
             ZMAXTIME(:)=ZTIME_LASTCALL1D(:)-ZTIME1D(:)+ZTSTEP
-            LLCOMPUTE1D(:)=.FALSE.
+            GLCOMPUTE1D(:)=.FALSE.
          ENDWHERE
       ENDIF
 
@@ -1529,7 +1531,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
          WHERE(ZTIME_THRESHOLD(:)>=0. .AND. ZTIME_THRESHOLD(:)<ZMAXTIME(:) .AND. &
               &(ZRVT1D(:)>XRTMIN(1) .OR. ZA_RV(:)>0.))
             ZMAXTIME(:)=MIN(ZMAXTIME(:), ZTIME_THRESHOLD(:))
-            LLCOMPUTE1D(:)=.FALSE.
+            GLCOMPUTE1D(:)=.FALSE.
          ENDWHERE
 
          ZTIME_THRESHOLD(:)=-1.
@@ -1539,7 +1541,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
          WHERE(ZTIME_THRESHOLD(:)>=0. .AND. ZTIME_THRESHOLD(:)<ZMAXTIME(:) .AND. &
               &(ZRCT1D(:)>XRTMIN(2) .OR. ZA_RC(:)>0.))
             ZMAXTIME(:)=MIN(ZMAXTIME(:), ZTIME_THRESHOLD(:))
-            LLCOMPUTE1D(:)=.FALSE.
+            GLCOMPUTE1D(:)=.FALSE.
          ENDWHERE
 
          ZTIME_THRESHOLD(:)=-1.
@@ -1549,7 +1551,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
          WHERE(ZTIME_THRESHOLD(:)>=0. .AND. ZTIME_THRESHOLD(:)<ZMAXTIME(:) .AND. &
               &(ZRRT1D(:)>XRTMIN(3) .OR. ZA_RR(:)>0.))
             ZMAXTIME(:)=MIN(ZMAXTIME(:), ZTIME_THRESHOLD(:))
-            LLCOMPUTE1D(:)=.FALSE.
+            GLCOMPUTE1D(:)=.FALSE.
          ENDWHERE
 
          ZTIME_THRESHOLD(:)=-1.
@@ -1559,7 +1561,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
          WHERE(ZTIME_THRESHOLD(:)>=0. .AND. ZTIME_THRESHOLD(:)<ZMAXTIME(:) .AND. &
               &(ZRIT1D(:)>XRTMIN(4) .OR. ZA_RI(:)>0.))
             ZMAXTIME(:)=MIN(ZMAXTIME(:), ZTIME_THRESHOLD(:))
-            LLCOMPUTE1D(:)=.FALSE.
+            GLCOMPUTE1D(:)=.FALSE.
          ENDWHERE
 
          ZTIME_THRESHOLD(:)=-1.
@@ -1569,7 +1571,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
          WHERE(ZTIME_THRESHOLD(:)>=0. .AND. ZTIME_THRESHOLD(:)<ZMAXTIME(:) .AND. &
               &(ZRST1D(:)>XRTMIN(5) .OR. ZA_RS(:)>0.))
             ZMAXTIME(:)=MIN(ZMAXTIME(:), ZTIME_THRESHOLD(:))
-            LLCOMPUTE1D(:)=.FALSE.
+            GLCOMPUTE1D(:)=.FALSE.
          ENDWHERE
 
          ZTIME_THRESHOLD(:)=-1.
@@ -1579,7 +1581,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
          WHERE(ZTIME_THRESHOLD(:)>=0. .AND. ZTIME_THRESHOLD(:)<ZMAXTIME(:) .AND. &
               &(ZRGT1D(:)>XRTMIN(6) .OR. ZA_RG(:)>0.))
             ZMAXTIME(:)=MIN(ZMAXTIME(:), ZTIME_THRESHOLD(:))
-            LLCOMPUTE1D(:)=.FALSE.
+            GLCOMPUTE1D(:)=.FALSE.
          ENDWHERE
 
          ZTIME_THRESHOLD(:)=-1.
@@ -1589,14 +1591,14 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
          WHERE(ZTIME_THRESHOLD(:)>=0. .AND. ZTIME_THRESHOLD(:)<ZMAXTIME(:) .AND. &
               &(ZRHT1D(:)>XRTMIN(7) .OR. ZA_RH(:)>0.))
             ZMAXTIME(:)=MIN(ZMAXTIME(:), ZTIME_THRESHOLD(:))
-            LLCOMPUTE1D(:)=.FALSE.
+            GLCOMPUTE1D(:)=.FALSE.
          ENDWHERE
 
          WHERE(IITER1D(:)<INB_ITER_MAX .AND. MAX(ABS(ZB_RV(:)),  &
               ABS(ZB_RC(:)), ABS(ZB_RR(:)), ABS(ZB_RI(:)), &
               ABS(ZB_RS(:)), ABS(ZB_RG(:)), ABS(ZB_RH(:)))>XMRSTEP)
             ZMAXTIME(:)=0.
-            LLCOMPUTE1D(:)=.FALSE.
+            GLCOMPUTE1D(:)=.FALSE.
          ENDWHERE
       ENDIF
       !
@@ -1675,7 +1677,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
          ZIFNNT(I1(II),I3(II),:)  = ZIFNN1D(II,:)
          PEVAP3D(I1(II),I3(II))   = ZEVAP1D(II)
          ZTIME(I1(II),I3(II))     = ZTIME1D(II)
-         LLCOMPUTE(I1(II),I3(II)) = LLCOMPUTE1D(II)
+         GLCOMPUTE(I1(II),I3(II)) = GLCOMPUTE1D(II)
          IITER(I1(II),I3(II))     = IITER1D(II)
       END DO
       !
@@ -1703,8 +1705,8 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
             ZTOT_TH_IMLT(I1(II),I3(II)) =   ZTOT_TH_IMLT(I1(II),I3(II))   + Z_TH_IMLT(II)
             ZTOT_RC_IMLT(I1(II),I3(II)) =   ZTOT_RC_IMLT(I1(II),I3(II))   + Z_RC_IMLT(II)
             ZTOT_CC_IMLT(I1(II),I3(II)) =   ZTOT_CC_IMLT(I1(II),I3(II))   + Z_CC_IMLT(II)
-            DO JN = 1, NMOD_IFN
-              ZTOT_IFNN_IMLT(I1(II),I3(II),JN) = ZTOT_IFNN_IMLT(I1(II),I3(II),JN) + ZB_IFNN(II,JN)
+            DO IN = 1, NMOD_IFN
+              ZTOT_IFNN_IMLT(I1(II),I3(II),IN) = ZTOT_IFNN_IMLT(I1(II),I3(II),IN) + ZB_IFNN(II,IN)
             END DO
 
             ! Tendencies
@@ -1850,7 +1852,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       DEALLOCATE(ZIFNN1D)
       DEALLOCATE(ZEVAP1D)
       DEALLOCATE(ZTIME1D)
-      DEALLOCATE(LLCOMPUTE1D)
+      DEALLOCATE(GLCOMPUTE1D)
       DEALLOCATE(IITER1D)
       DEALLOCATE(ZTIME_LASTCALL1D)
       DEALLOCATE(Z0RVT1D)

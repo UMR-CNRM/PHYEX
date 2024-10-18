@@ -80,7 +80,7 @@ REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
 character(len=13) :: yval     ! String for error message
 INTEGER :: IKB                ! Coordinates of the first  physical 
                               ! points along z
-INTEGER :: J1                 ! Internal loop indexes
+INTEGER :: I1                 ! Internal loop indexes
 !
 REAL, DIMENSION(8)  :: ZGAMI  ! parameters involving various moments
 REAL, DIMENSION(2)  :: ZGAMS  ! of the generalized gamma law
@@ -103,21 +103,21 @@ REAL :: ZFDINFTY              ! Factor used to define the "infinite" diameter
 REAL     :: ZCONC_MAX ! Maximal concentration for snow
 REAL     :: ZFACT_NUCL! Amplification factor for the minimal ice concentration
 !  
-INTEGER  :: KND
-INTEGER  :: KACCLBDAS,KACCLBDAR,KDRYLBDAG,KDRYLBDAS,KDRYLBDAR
-REAL     :: PALPHAR,PALPHAS,PALPHAG,PALPHAH
-REAL     :: PNUR,PNUS,PNUG,PNUH
-REAL     :: PBR,PBS,PBG
-REAL     :: PCR,PCS,PCG,PCH
-REAL     :: PDR,PDS,PFVELOS,PDG,PDH
-REAL     :: PESR,PEGS,PEGR,PEHS,PEHG
-REAL     :: PFDINFTY
-REAL     :: PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN
-REAL     :: PDRYLBDAG_MAX,PDRYLBDAS_MAX,PDRYLBDAG_MIN,PDRYLBDAS_MIN
-REAL     :: PDRYLBDAR_MAX,PDRYLBDAR_MIN
-REAL     :: PWETLBDAS_MAX,PWETLBDAG_MAX,PWETLBDAS_MIN,PWETLBDAG_MIN
-REAL     :: PWETLBDAH_MAX,PWETLBDAH_MIN
-INTEGER  :: KWETLBDAS,KWETLBDAG,KWETLBDAH
+INTEGER  :: IKND
+INTEGER  :: IACCLBDAS,IACCLBDAR,IDRYLBDAG,IDRYLBDAS,IDRYLBDAR
+REAL     :: ZALPHAR,ZALPHAS,ZALPHAG,ZALPHAH
+REAL     :: ZNUR,ZNUS,ZNUG,ZNUH
+REAL     :: ZBR,ZBS,ZBG
+REAL     :: ZCR,ZCS,ZCG,ZCH
+REAL     :: ZDR,ZDS,ZFVELOS,ZDG,ZDH
+REAL     :: ZESR,PEGS,ZEGR,ZEHS,ZEHG
+REAL     :: ZFDINFTY
+REAL     :: ZACCLBDAS_MAX,ZACCLBDAR_MAX,ZACCLBDAS_MIN,ZACCLBDAR_MIN
+REAL     :: ZDRYLBDAG_MAX,ZDRYLBDAS_MAX,ZDRYLBDAG_MIN,ZDRYLBDAS_MIN
+REAL     :: ZDRYLBDAR_MAX,ZDRYLBDAR_MIN
+REAL     :: ZWETLBDAS_MAX,ZWETLBDAG_MAX,ZWETLBDAS_MIN,ZWETLBDAG_MIN
+REAL     :: ZWETLBDAH_MAX,ZWETLBDAH_MIN
+INTEGER  :: IWETLBDAS,IWETLBDAG,IWETLBDAH
 !
 REAL     :: ZFAC_ZRNIC ! Zrnic factor used to decrease Long Kernels
 !
@@ -870,11 +870,11 @@ CALL PARAM_LIMA_MIXED_ALLOCATE('XGAMINC_RIM1', NGAMINC)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XGAMINC_RIM2', NGAMINC)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XGAMINC_RIM4', NGAMINC)
 !
-DO J1=1,NGAMINC
-  ZBOUND = PARAM_LIMA_MIXED%XGAMINC_BOUND_MIN*ZRATE**(J1-1)
-  XGAMINC_RIM1(J1) = GAMMA_INC(XNUS+(2.0+XDS)/XALPHAS,ZBOUND)
-  XGAMINC_RIM2(J1) = GAMMA_INC(XNUS+XBS/XALPHAS      ,ZBOUND)
-  XGAMINC_RIM4(J1) = GAMMA_INC(XNUS+XBG/XALPHAS      ,ZBOUND) ! Pour Murakami 1990
+DO I1=1,NGAMINC
+  ZBOUND = PARAM_LIMA_MIXED%XGAMINC_BOUND_MIN*ZRATE**(I1-1)
+  XGAMINC_RIM1(I1) = GAMMA_INC(XNUS+(2.0+XDS)/XALPHAS,ZBOUND)
+  XGAMINC_RIM2(I1) = GAMMA_INC(XNUS+XBS/XALPHAS      ,ZBOUND)
+  XGAMINC_RIM4(I1) = GAMMA_INC(XNUS+XBG/XALPHAS      ,ZBOUND) ! Pour Murakami 1990
 END DO
 !
 XRIMINTP1 = XALPHAS / LOG(ZRATE)
@@ -899,9 +899,9 @@ ZRATE = EXP(LOG(PARAM_LIMA_MIXED%XGAMINC_HMC_BOUND_MAX/PARAM_LIMA_MIXED%XGAMINC_
 !
 CALL PARAM_LIMA_MIXED_ALLOCATE('XGAMINC_HMC', NGAMINC)
 !
-DO J1=1,NGAMINC
-  ZBOUND = PARAM_LIMA_MIXED%XGAMINC_HMC_BOUND_MIN*ZRATE**(J1-1)
-  XGAMINC_HMC(J1) = GAMMA_INC(XNUC,ZBOUND)
+DO I1=1,NGAMINC
+  ZBOUND = PARAM_LIMA_MIXED%XGAMINC_HMC_BOUND_MIN*ZRATE**(I1-1)
+  XGAMINC_HMC(I1) = GAMMA_INC(XNUC,ZBOUND)
 END DO
 !
 XHMSINTP1 = XALPHAC / LOG(ZRATE)
@@ -976,45 +976,45 @@ CALL NSCOLRG ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
                ZFDINFTY, XKER_N_SACCRG,XAG, XBS, XAS                       )
 !!$WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RACCSS) ) THEN")')          
-!!$DO J1 = 1 , NACCLBDAS                                                    
+!!$DO I1 = 1 , NACCLBDAS                                                    
 !!$  DO J2 = 1 , NACCLBDAR                                                  
 !!$  WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_RACCSS(",I3,",",I3,") = ",E13.6)') &
-!!$                    J1,J2,XKER_N_RACCSS(J1,J2)                          
+!!$                    I1,J2,XKER_N_RACCSS(I1,J2)                          
 !!$  END DO                                                                
 !!$END DO                                                                   
 !!$WRITE(UNIT=ILUOUT0,FMT='("!")')                                           
 !!$WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RACCS) ) THEN")')          
-!!$DO J1 = 1 , NACCLBDAS                                                    
+!!$DO I1 = 1 , NACCLBDAS                                                    
 !!$  DO J2 = 1 , NACCLBDAR                                                  
 !!$  WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_RACCS(",I3,",",I3,") = ",E13.6)') &
-!!$                    J1,J2,XKER_N_RACCS(J1,J2)                          
+!!$                    I1,J2,XKER_N_RACCS(I1,J2)                          
 !!$  END DO                                                                
 !!$END DO                                                                   
 !!$WRITE(UNIT=ILUOUT0,FMT='("!")') 
 !!$WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SACCRG) ) THEN")')          
-!!$DO J1 = 1 , NACCLBDAR                                                    
+!!$DO I1 = 1 , NACCLBDAR                                                    
 !!$  DO J2 = 1 , NACCLBDAS                                                  
 !!$  WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SACCRG(",I3,",",I3,") = ",E13.6)') &
-!!$                    J1,J2,XKER_N_SACCRG(J1,J2)                          
+!!$                    I1,J2,XKER_N_SACCRG(I1,J2)                          
 !!$  END DO                                                                
 !!$END DO                                                                   
 !!$WRITE(UNIT=ILUOUT0,FMT='("!")') 
 
 !
-CALL LIMA_READ_XKER_RACCS (KACCLBDAS,KACCLBDAR,KND,                                        &
-                           PALPHAS,PNUS,PALPHAR,PNUR,PESR,PBS,PBR,PCS,PDS,PFVELOS,PCR,PDR, &
-                           PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN,        &
-                           PFDINFTY                                                        )
-IF( (KACCLBDAS/=NACCLBDAS) .OR. (KACCLBDAR/=NACCLBDAR) .OR. (KND/=IND) .OR. &
-    (PALPHAS/=XALPHAS) .OR. (PNUS/=XNUS)                               .OR. &
-    (PALPHAR/=XALPHAR) .OR. (PNUR/=XNUR)                               .OR. &
-    (PESR/=ZESR) .OR. (PBS/=XBS) .OR. (PBR/=XBR)                       .OR. &
-    (PCS/=XCS) .OR. (PDS/=XDS) .OR. (PFVELOS/=XFVELOS) .OR. (PCR/=XCR) .OR. (PDR/=XDR)         .OR. &
-    (PACCLBDAS_MAX/=XACCLBDAS_MAX) .OR. (PACCLBDAR_MAX/=XACCLBDAR_MAX) .OR. &
-    (PACCLBDAS_MIN/=XACCLBDAS_MIN) .OR. (PACCLBDAR_MIN/=XACCLBDAR_MIN) .OR. &
-    (PFDINFTY/=ZFDINFTY)                                               ) THEN
+CALL LIMA_READ_XKER_RACCS (IACCLBDAS,IACCLBDAR,IKND,                                        &
+                           ZALPHAS,ZNUS,ZALPHAR,ZNUR,ZESR,ZBS,ZBR,ZCS,ZDS,ZFVELOS,ZCR,ZDR, &
+                           ZACCLBDAS_MAX,ZACCLBDAR_MAX,ZACCLBDAS_MIN,ZACCLBDAR_MIN,        &
+                           ZFDINFTY                                                        )
+IF( (IACCLBDAS/=NACCLBDAS) .OR. (IACCLBDAR/=NACCLBDAR) .OR. (IKND/=IND) .OR. &
+    (ZALPHAS/=XALPHAS) .OR. (ZNUS/=XNUS)                               .OR. &
+    (ZALPHAR/=XALPHAR) .OR. (ZNUR/=XNUR)                               .OR. &
+    (ZESR/=ZESR) .OR. (ZBS/=XBS) .OR. (ZBR/=XBR)                       .OR. &
+    (ZCS/=XCS) .OR. (ZDS/=XDS) .OR. (ZFVELOS/=XFVELOS) .OR. (ZCR/=XCR) .OR. (ZDR/=XDR)         .OR. &
+    (ZACCLBDAS_MAX/=XACCLBDAS_MAX) .OR. (ZACCLBDAR_MAX/=XACCLBDAR_MAX) .OR. &
+    (ZACCLBDAS_MIN/=XACCLBDAS_MIN) .OR. (ZACCLBDAR_MIN/=XACCLBDAR_MIN) .OR. &
+    (ZFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RRCOLSS ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
                  ZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR,                     &
                  XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
@@ -1033,62 +1033,62 @@ IF( (KACCLBDAS/=NACCLBDAS) .OR. (KACCLBDAR/=NACCLBDAR) .OR. (KND/=IND) .OR. &
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SACRG KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KACCLBDAS=",I3)') NACCLBDAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KACCLBDAR=",I3)') NACCLBDAR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAR=",E13.6)') XALPHAR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUR=",E13.6)') XNUR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PESR=",E13.6)') ZESR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PBR=",E13.6)') XBR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFVELOS=",E13.6)') XFVELOS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCR=",E13.6)') XCR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDR=",E13.6)') XDR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAS_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IKND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IACCLBDAS=",I3)') NACCLBDAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IACCLBDAR=",I3)') NACCLBDAR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAS=",E13.6)') XALPHAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUS=",E13.6)') XNUS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAR=",E13.6)') XALPHAR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUR=",E13.6)') XNUR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZESR=",E13.6)') ZESR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZBS=",E13.6)') XBS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZBR=",E13.6)') XBR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCS=",E13.6)') XCS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDS=",E13.6)') XDS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFVELOS=",E13.6)') XFVELOS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCR=",E13.6)') XCR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDR=",E13.6)') XDR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZACCLBDAS_MAX=",E13.6)') &
 !!$                                                    XACCLBDAS_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAR_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZACCLBDAR_MAX=",E13.6)') &
 !!$                                                    XACCLBDAR_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAS_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZACCLBDAS_MIN=",E13.6)') &
 !!$                                                    XACCLBDAS_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PACCLBDAR_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZACCLBDAR_MIN=",E13.6)') &
 !!$                                                    XACCLBDAR_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_RACCSS) ) THEN")')
-!!$  DO J1 = 1 , NACCLBDAS
+!!$  DO I1 = 1 , NACCLBDAS
 !!$    DO J2 = 1 , NACCLBDAR
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_RACCSS(",I3,",",I3,") = ",E13.6)') &
-!!$                        J1,J2,XKER_RACCSS(J1,J2)
+!!$                        I1,J2,XKER_RACCSS(I1,J2)
 !!$    END DO
 !!$  END DO
 !!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_RACCS ) ) THEN")')
-!!$  DO J1 = 1 , NACCLBDAS
+!!$  DO I1 = 1 , NACCLBDAS
 !!$    DO J2 = 1 , NACCLBDAR
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_RACCS (",I3,",",I3,") = ",E13.6)') &
-!!$                        J1,J2,XKER_RACCS (J1,J2)
+!!$                        I1,J2,XKER_RACCS (I1,J2)
 !!$    END DO
 !!$  END DO
 !!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_SACCRG) ) THEN")')
-!!$  DO J1 = 1 , NACCLBDAR
+!!$  DO I1 = 1 , NACCLBDAR
 !!$    DO J2 = 1 , NACCLBDAS
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_SACCRG(",I3,",",I3,") = ",E13.6)') &
-!!$                        J1,J2,XKER_SACCRG(J1,J2)
+!!$                        I1,J2,XKER_SACCRG(I1,J2)
 !!$    END DO
 !!$  END DO
 !!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
-  CALL LIMA_READ_XKER_RACCS (KACCLBDAS,KACCLBDAR,KND,                                        &
-                             PALPHAS,PNUS,PALPHAR,PNUR,PESR,PBS,PBR,PCS,PDS,PFVELOS,PCR,PDR, &
-                             PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN,        &
-                             PFDINFTY,XKER_RACCSS,XKER_RACCS,XKER_SACCRG                     )
+  CALL LIMA_READ_XKER_RACCS (IACCLBDAS,IACCLBDAR,IKND,                                        &
+                             ZALPHAS,ZNUS,ZALPHAR,ZNUR,ZESR,ZBS,ZBR,ZCS,ZDS,ZFVELOS,ZCR,ZDR, &
+                             ZACCLBDAS_MAX,ZACCLBDAR_MAX,ZACCLBDAS_MIN,ZACCLBDAR_MIN,        &
+                             ZFDINFTY,XKER_RACCSS,XKER_RACCS,XKER_SACCRG                     )
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_RACCSS")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_RACCS ")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_SACCRG")')
@@ -1132,25 +1132,25 @@ XSCINTP2S = 1.0 - LOG( XSCLBDAS_MIN ) / ZRATE
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SSCS  KERNELS ***")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IKND=",I3)') IND
 !!$  WRITE(UNIT=ILUOUT0,FMT='("KSCLBDAS=",I3)') NSCLBDAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAS=",E13.6)') XALPHAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUS=",E13.6)') XNUS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("PESS=",E13.6)') ZESS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZBS=",E13.6)') XBS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCS=",E13.6)') XCS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDS=",E13.6)') XDS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("PSCLBDAS_MAX=",E13.6)') &
 !!$                                                  XSCLBDAS_MAX
 !!$  WRITE(UNIT=ILUOUT0,FMT='("PSCLBDAS_MIN=",E13.6)') &
 !!$                                                  XSCLBDAS_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SSCS ) ) THEN")')           
-!!$  DO J1 = 1 , NSCLBDAS                                                     
+!!$  DO I1 = 1 , NSCLBDAS                                                     
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SSCS (",I3,",",I3,") = ",E13.6)') & 
-!!$                      J1,J1,XKER_N_SSCS (J1,J1)                          
+!!$                      I1,I1,XKER_N_SSCS (I1,I1)                          
 !!$  END DO                                                                    
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')  
 !
@@ -1204,20 +1204,20 @@ ZRATE_G = EXP(LOG(PARAM_LIMA_MIXED%XGAMINC_BOUND_CIBU_GMAX/PARAM_LIMA_MIXED%XGAM
 CALL PARAM_LIMA_MIXED_ALLOCATE('XGAMINC_CIBU_S', 4,PARAM_LIMA_MIXED%NGAMINC)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XGAMINC_CIBU_G', 2,PARAM_LIMA_MIXED%NGAMINC)
 !
-DO J1 = 1, NGAMINC
-  ZBOUND_CIBU_SMIN = PARAM_LIMA_MIXED%XGAMINC_BOUND_CIBU_SMIN * ZRATE_S**(J1-1)
-  ZBOUND_CIBU_GMIN = PARAM_LIMA_MIXED%XGAMINC_BOUND_CIBU_GMIN * ZRATE_G**(J1-1)
+DO I1 = 1, NGAMINC
+  ZBOUND_CIBU_SMIN = PARAM_LIMA_MIXED%XGAMINC_BOUND_CIBU_SMIN * ZRATE_S**(I1-1)
+  ZBOUND_CIBU_GMIN = PARAM_LIMA_MIXED%XGAMINC_BOUND_CIBU_GMIN * ZRATE_G**(I1-1)
 !
 ! For ZNI_CIBU
-  XGAMINC_CIBU_S(1,J1) = GAMMA_INC(XNUS,ZBOUND_CIBU_SMIN)
-  XGAMINC_CIBU_S(2,J1) = GAMMA_INC(XNUS+(XDS/XALPHAS),ZBOUND_CIBU_SMIN)
+  XGAMINC_CIBU_S(1,I1) = GAMMA_INC(XNUS,ZBOUND_CIBU_SMIN)
+  XGAMINC_CIBU_S(2,I1) = GAMMA_INC(XNUS+(XDS/XALPHAS),ZBOUND_CIBU_SMIN)
 !
-  XGAMINC_CIBU_G(1,J1) = GAMMA_INC(XNUG+((2.0+XDG)/XALPHAG),ZBOUND_CIBU_GMIN)
-  XGAMINC_CIBU_G(2,J1) = GAMMA_INC(XNUG+(2.0/XALPHAG),ZBOUND_CIBU_GMIN)
+  XGAMINC_CIBU_G(1,I1) = GAMMA_INC(XNUG+((2.0+XDG)/XALPHAG),ZBOUND_CIBU_GMIN)
+  XGAMINC_CIBU_G(2,I1) = GAMMA_INC(XNUG+(2.0/XALPHAG),ZBOUND_CIBU_GMIN)
 !
 ! For ZRI_CIBU
-  XGAMINC_CIBU_S(3,J1) = GAMMA_INC(XNUS+(XBS/XALPHAS),ZBOUND_CIBU_SMIN)
-  XGAMINC_CIBU_S(4,J1) = GAMMA_INC(XNUS+((XBS+XDS)/XALPHAS),ZBOUND_CIBU_SMIN)
+  XGAMINC_CIBU_S(3,I1) = GAMMA_INC(XNUS+(XBS/XALPHAS),ZBOUND_CIBU_SMIN)
+  XGAMINC_CIBU_S(4,I1) = GAMMA_INC(XNUS+((XBS+XDS)/XALPHAS),ZBOUND_CIBU_SMIN)
 END DO
 !
 XCIBUINTP_S = XALPHAS / LOG(ZRATE_S)
@@ -1258,11 +1258,11 @@ ZRATE_R = EXP(LOG(PARAM_LIMA_MIXED%XGAMINC_BOUND_RDSF_RMAX/PARAM_LIMA_MIXED%XGAM
 !
 CALL PARAM_LIMA_MIXED_ALLOCATE('XGAMINC_RDSF_R', NGAMINC)
 !
-DO J1 = 1, NGAMINC
-  ZBOUND_RDSF_RMIN = PARAM_LIMA_MIXED%XGAMINC_BOUND_RDSF_RMIN * ZRATE_R**(J1-1)
+DO I1 = 1, NGAMINC
+  ZBOUND_RDSF_RMIN = PARAM_LIMA_MIXED%XGAMINC_BOUND_RDSF_RMIN * ZRATE_R**(I1-1)
 !
 ! For ZNI_RDSF
-  XGAMINC_RDSF_R(J1) = GAMMA_INC(XNUR+((6.0+XDR)/XALPHAR),ZBOUND_RDSF_RMIN)
+  XGAMINC_RDSF_R(I1) = GAMMA_INC(XNUR+((6.0+XDR)/XALPHAR),ZBOUND_RDSF_RMIN)
 END DO
 !
 XRDSFINTP_R = XALPHAR / LOG(ZRATE_R)
@@ -1402,27 +1402,27 @@ CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_SDRYG', NDRYLBDAG,NDRYLBDAS)
               ZFDINFTY, XKER_N_SDRYG                                      ) 
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SDRYG) ) THEN")')          
-!!$  DO J1 = 1 , NDRYLBDAG                                                    
+!!$  DO I1 = 1 , NDRYLBDAG                                                    
 !!$    DO J2 = 1 , NDRYLBDAS                                                  
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SDRYG(",I3,",",I3,") = ",E13.6)') &
-!!$                      J1,J2,XKER_N_SDRYG(J1,J2)                          
+!!$                      I1,J2,XKER_N_SDRYG(I1,J2)                          
 !!$    END DO                                                                
 !!$  END DO                                                                   
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")') 
 !end if
 !
-CALL LIMA_READ_XKER_SDRYG (KDRYLBDAG,KDRYLBDAS,KND,                                    &
-                           PALPHAG,PNUG,PALPHAS,PNUS,PEGS,PBS,PCG,PDG,PCS,PDS,PFVELOS, &
-                           PDRYLBDAG_MAX,PDRYLBDAS_MAX,PDRYLBDAG_MIN,PDRYLBDAS_MIN,    &
-                           PFDINFTY                                                    )
-IF( (KDRYLBDAG/=NDRYLBDAG) .OR. (KDRYLBDAS/=NDRYLBDAS) .OR. (KND/=IND) .OR. &
-    (PALPHAG/=XALPHAG) .OR. (PNUG/=XNUG)                               .OR. &
-    (PALPHAS/=XALPHAS) .OR. (PNUS/=XNUS)                               .OR. &
-    (PEGS/=ZEGS) .OR. (PBS/=XBS)                                       .OR. &
-    (PCG/=XCG) .OR. (PDG/=XDG) .OR. (PCS/=XCS) .OR. (PDS/=XDS) .OR. (PFVELOS/=XFVELOS) .OR. &
-    (PDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (PDRYLBDAS_MAX/=XDRYLBDAS_MAX) .OR. &
-    (PDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (PDRYLBDAS_MIN/=XDRYLBDAS_MIN) .OR. &
-    (PFDINFTY/=ZFDINFTY)                                               ) THEN
+CALL LIMA_READ_XKER_SDRYG (IDRYLBDAG,IDRYLBDAS,IKND,                                    &
+                           ZALPHAG,ZNUG,ZALPHAS,ZNUS,PEGS,ZBS,ZCG,ZDG,ZCS,ZDS,ZFVELOS, &
+                           ZDRYLBDAG_MAX,ZDRYLBDAS_MAX,ZDRYLBDAG_MIN,ZDRYLBDAS_MIN,    &
+                           ZFDINFTY                                                    )
+IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAS/=NDRYLBDAS) .OR. (IKND/=IND) .OR. &
+    (ZALPHAG/=XALPHAG) .OR. (ZNUG/=XNUG)                               .OR. &
+    (ZALPHAS/=XALPHAS) .OR. (ZNUS/=XNUS)                               .OR. &
+    (PEGS/=ZEGS) .OR. (ZBS/=XBS)                                       .OR. &
+    (ZCG/=XCG) .OR. (ZDG/=XDG) .OR. (ZCS/=XCS) .OR. (ZDS/=XDS) .OR. (ZFVELOS/=XFVELOS) .OR. &
+    (ZDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (ZDRYLBDAS_MAX/=XDRYLBDAS_MAX) .OR. &
+    (ZDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (ZDRYLBDAS_MIN/=XDRYLBDAS_MIN) .OR. &
+    (ZFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAG, XNUG, XALPHAS, XNUS,                          &
                 ZEGS, XBS, XCG, XDG, 0., XCS, XDS, XFVELOS,                 &
                 XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, &
@@ -1431,43 +1431,43 @@ IF( (KDRYLBDAG/=NDRYLBDAG) .OR. (KDRYLBDAS/=NDRYLBDAS) .OR. (KND/=IND) .OR. &
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SDRYG KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAG=",I3)') NDRYLBDAG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAS=",I3)') NDRYLBDAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAG=",E13.6)') XALPHAG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUG=",E13.6)') XNUG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IKND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IDRYLBDAG=",I3)') NDRYLBDAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IDRYLBDAS=",I3)') NDRYLBDAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAG=",E13.6)') XALPHAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUG=",E13.6)') XNUG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAS=",E13.6)') XALPHAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUS=",E13.6)') XNUS
 !!$  WRITE(UNIT=ILUOUT0,FMT='("PEGS=",E13.6)') ZEGS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCG=",E13.6)') XCG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDG=",E13.6)') XDG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFVELOS=",E13.6)') XFVELOS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZBS=",E13.6)') XBS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCG=",E13.6)') XCG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDG=",E13.6)') XDG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCS=",E13.6)') XCS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDS=",E13.6)') XDS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFVELOS=",E13.6)') XFVELOS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAG_MAX=",E13.6)') &
 !!$                                                    XDRYLBDAG_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAS_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAS_MAX=",E13.6)') &
 !!$                                                    XDRYLBDAS_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAG_MIN=",E13.6)') &
 !!$                                                    XDRYLBDAG_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAS_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAS_MIN=",E13.6)') &
 !!$                                                    XDRYLBDAS_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_SDRYG) ) THEN")')
-!!$  DO J1 = 1 , NDRYLBDAG
+!!$  DO I1 = 1 , NDRYLBDAG
 !!$    DO J2 = 1 , NDRYLBDAS
 !!$    WRITE(UNIT=ILUOUT0,FMT='("PKER_SDRYG(",I3,",",I3,") = ",E13.6)') &
-!!$                        J1,J2,XKER_SDRYG(J1,J2)
+!!$                        I1,J2,XKER_SDRYG(I1,J2)
 !!$    END DO
 !!$  END DO
 !!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
-  CALL LIMA_READ_XKER_SDRYG (KDRYLBDAG,KDRYLBDAS,KND,                                    &
-                             PALPHAG,PNUG,PALPHAS,PNUS,PEGS,PBS,PCG,PDG,PCS,PDS,PFVELOS, &
-                             PDRYLBDAG_MAX,PDRYLBDAS_MAX,PDRYLBDAG_MIN,PDRYLBDAS_MIN,    &
-                             PFDINFTY,XKER_SDRYG                                         )
+  CALL LIMA_READ_XKER_SDRYG (IDRYLBDAG,IDRYLBDAS,IKND,                                    &
+                             ZALPHAG,ZNUG,ZALPHAS,ZNUS,PEGS,ZBS,ZCG,ZDG,ZCS,ZDS,ZFVELOS, &
+                             ZDRYLBDAG_MAX,ZDRYLBDAS_MAX,ZDRYLBDAG_MIN,ZDRYLBDAS_MIN,    &
+                             ZFDINFTY,XKER_SDRYG                                         )
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_SDRYG")')
 END IF
 !
@@ -1485,27 +1485,27 @@ CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_RDRYG', NDRYLBDAG,NDRYLBDAR)
                ZFDINFTY, XKER_N_RDRYG                                      )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RDRYG) ) THEN")')          
-!!$  DO J1 = 1 , NDRYLBDAG                                                    
+!!$  DO I1 = 1 , NDRYLBDAG                                                    
 !!$    DO J2 = 1 , NDRYLBDAR                                                  
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_RDRYG(",I3,",",I3,") = ",E13.6)') &
-!!$                      J1,J2,XKER_N_RDRYG(J1,J2)                          
+!!$                      I1,J2,XKER_N_RDRYG(I1,J2)                          
 !!$    END DO                                                                
 !!$  END DO                                                                   
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")') 
 !end if
 !
-CALL LIMA_READ_XKER_RDRYG (KDRYLBDAG,KDRYLBDAR,KND,                                 &
-                           PALPHAG,PNUG,PALPHAR,PNUR,PEGR,PBR,PCG,PDG,PCR,PDR,      &
-                           PDRYLBDAG_MAX,PDRYLBDAR_MAX,PDRYLBDAG_MIN,PDRYLBDAR_MIN, &
-                           PFDINFTY                                                 )
-IF( (KDRYLBDAG/=NDRYLBDAG) .OR. (KDRYLBDAR/=NDRYLBDAR) .OR. (KND/=IND) .OR. &
-    (PALPHAG/=XALPHAG) .OR. (PNUG/=XNUG)                               .OR. &
-    (PALPHAR/=XALPHAR) .OR. (PNUR/=XNUR)                               .OR. &
-    (PEGR/=ZEGR) .OR. (PBR/=XBR)                                       .OR. &
-    (PCG/=XCG) .OR. (PDG/=XDG) .OR. (PCR/=XCR) .OR. (PDR/=XDR)         .OR. &
-    (PDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (PDRYLBDAR_MAX/=XDRYLBDAR_MAX) .OR. &
-    (PDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (PDRYLBDAR_MIN/=XDRYLBDAR_MIN) .OR. &
-    (PFDINFTY/=ZFDINFTY)                                               ) THEN
+CALL LIMA_READ_XKER_RDRYG (IDRYLBDAG,IDRYLBDAR,IKND,                                 &
+                           ZALPHAG,ZNUG,ZALPHAR,ZNUR,ZEGR,ZBR,ZCG,ZDG,ZCR,ZDR,      &
+                           ZDRYLBDAG_MAX,ZDRYLBDAR_MAX,ZDRYLBDAG_MIN,ZDRYLBDAR_MIN, &
+                           ZFDINFTY                                                 )
+IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAR/=NDRYLBDAR) .OR. (IKND/=IND) .OR. &
+    (ZALPHAG/=XALPHAG) .OR. (ZNUG/=XNUG)                               .OR. &
+    (ZALPHAR/=XALPHAR) .OR. (ZNUR/=XNUR)                               .OR. &
+    (ZEGR/=ZEGR) .OR. (ZBR/=XBR)                                       .OR. &
+    (ZCG/=XCG) .OR. (ZDG/=XDG) .OR. (ZCR/=XCR) .OR. (ZDR/=XDR)         .OR. &
+    (ZDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (ZDRYLBDAR_MAX/=XDRYLBDAR_MAX) .OR. &
+    (ZDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (ZDRYLBDAR_MIN/=XDRYLBDAR_MIN) .OR. &
+    (ZFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAG, XNUG, XALPHAR, XNUR,                          &
                 ZEGR, XBR, XCG, XDG, 0., XCR, XDR, 0.,                      &
                 XDRYLBDAG_MAX, XDRYLBDAR_MAX, XDRYLBDAG_MIN, XDRYLBDAR_MIN, &
@@ -1514,42 +1514,42 @@ IF( (KDRYLBDAG/=NDRYLBDAG) .OR. (KDRYLBDAR/=NDRYLBDAR) .OR. (KND/=IND) .OR. &
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF RDRYG KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAG=",I3)') NDRYLBDAG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KDRYLBDAR=",I3)') NDRYLBDAR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAG=",E13.6)') XALPHAG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUG=",E13.6)') XNUG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAR=",E13.6)') XALPHAR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUR=",E13.6)') XNUR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PEGR=",E13.6)') ZEGR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PBR=",E13.6)') XBR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCG=",E13.6)') XCG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDG=",E13.6)') XDG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCR=",E13.6)') XCR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDR=",E13.6)') XDR
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IKND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IDRYLBDAG=",I3)') NDRYLBDAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IDRYLBDAR=",I3)') NDRYLBDAR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAG=",E13.6)') XALPHAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUG=",E13.6)') XNUG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAR=",E13.6)') XALPHAR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUR=",E13.6)') XNUR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZEGR=",E13.6)') ZEGR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZBR=",E13.6)') XBR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCG=",E13.6)') XCG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDG=",E13.6)') XDG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCR=",E13.6)') XCR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDR=",E13.6)') XDR
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAG_MAX=",E13.6)') &
 !!$                                                    XDRYLBDAG_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAR_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAR_MAX=",E13.6)') &
 !!$                                                    XDRYLBDAR_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAG_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAG_MIN=",E13.6)') &
 !!$                                                    XDRYLBDAG_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDRYLBDAR_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDRYLBDAR_MIN=",E13.6)') &
 !!$                                                    XDRYLBDAR_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_RDRYG) ) THEN")')
-!!$  DO J1 = 1 , NDRYLBDAG
+!!$  DO I1 = 1 , NDRYLBDAG
 !!$    DO J2 = 1 , NDRYLBDAR
 !!$    WRITE(UNIT=ILUOUT0,FMT='("PKER_RDRYG(",I3,",",I3,") = ",E13.6)') &
-!!$                        J1,J2,XKER_RDRYG(J1,J2)
+!!$                        I1,J2,XKER_RDRYG(I1,J2)
 !!$    END DO
 !!$  END DO
 !!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
-  CALL LIMA_READ_XKER_RDRYG (KDRYLBDAG,KDRYLBDAR,KND,                                 &
-                             PALPHAG,PNUG,PALPHAR,PNUR,PEGR,PBR,PCG,PDG,PCR,PDR,      &
-                             PDRYLBDAG_MAX,PDRYLBDAR_MAX,PDRYLBDAG_MIN,PDRYLBDAR_MIN, &
-                             PFDINFTY,XKER_RDRYG                                      )
+  CALL LIMA_READ_XKER_RDRYG (IDRYLBDAG,IDRYLBDAR,IKND,                                 &
+                             ZALPHAG,ZNUG,ZALPHAR,ZNUR,ZEGR,ZBR,ZCG,ZDG,ZCR,ZDR,      &
+                             ZDRYLBDAG_MAX,ZDRYLBDAR_MAX,ZDRYLBDAG_MIN,ZDRYLBDAR_MIN, &
+                             ZFDINFTY,XKER_RDRYG                                      )
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_RDRYG")')
 END IF
 !  
@@ -1625,28 +1625,28 @@ ZFDINFTY = 20.0  ! computing the kernels XKER_SWETH
               ZFDINFTY, XKER_N_SWETH                                        )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SWETH) ) THEN")')          
-!!$  DO J1 = 1 , NWETLBDAH                                                    
+!!$  DO I1 = 1 , NWETLBDAH                                                    
 !!$    DO J2 = 1 , NWETLBDAS                                                  
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_SWETH(",I3,",",I3,") = ",E13.6)') &
-!!$                      J1,J2,XKER_N_SWETH(J1,J2)                          
+!!$                      I1,J2,XKER_N_SWETH(I1,J2)                          
 !!$    END DO                                                                
 !!$  END DO                                                                   
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")') 
 !end  if
 IF( .NOT.ASSOCIATED(XKER_SWETH) ) CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_SWETH', NWETLBDAH,NWETLBDAS)
 !
-CALL LIMA_READ_XKER_SWETH (KWETLBDAH,KWETLBDAS,KND,                                    &
-                           PALPHAH,PNUH,PALPHAS,PNUS,PEHS,PBS,PCH,PDH,PCS,PDS,PFVELOS, &
-                           PWETLBDAH_MAX,PWETLBDAS_MAX,PWETLBDAH_MIN,PWETLBDAS_MIN,    &
-                           PFDINFTY                                                    )
-IF( (KWETLBDAH/=NWETLBDAH) .OR. (KWETLBDAS/=NWETLBDAS) .OR. (KND/=IND) .OR. &
-    (PALPHAH/=XALPHAH) .OR. (PNUH/=XNUH)                               .OR. &
-    (PALPHAS/=XALPHAS) .OR. (PNUS/=XNUS)                               .OR. &
-    (PEHS/=ZEHS) .OR. (PBS/=XBS)                                       .OR. &
-    (PCH/=XCH) .OR. (PDH/=XDH) .OR. (PCS/=XCS) .OR. (PDS/=XDS) .OR. (PFVELOS/=XFVELOS) .OR. &
-    (PWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (PWETLBDAS_MAX/=XWETLBDAS_MAX) .OR. &
-    (PWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (PWETLBDAS_MIN/=XWETLBDAS_MIN) .OR. &
-    (PFDINFTY/=ZFDINFTY)                                               ) THEN
+CALL LIMA_READ_XKER_SWETH (IWETLBDAH,IWETLBDAS,IKND,                                    &
+                           ZALPHAH,ZNUH,ZALPHAS,ZNUS,ZEHS,ZBS,ZCH,ZDH,ZCS,ZDS,ZFVELOS, &
+                           ZWETLBDAH_MAX,ZWETLBDAS_MAX,ZWETLBDAH_MIN,ZWETLBDAS_MIN,    &
+                           ZFDINFTY                                                    )
+IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAS/=NWETLBDAS) .OR. (IKND/=IND) .OR. &
+    (ZALPHAH/=XALPHAH) .OR. (ZNUH/=XNUH)                               .OR. &
+    (ZALPHAS/=XALPHAS) .OR. (ZNUS/=XNUS)                               .OR. &
+    (ZEHS/=ZEHS) .OR. (ZBS/=XBS)                                       .OR. &
+    (ZCH/=XCH) .OR. (ZDH/=XDH) .OR. (ZCS/=XCS) .OR. (ZDS/=XDS) .OR. (ZFVELOS/=XFVELOS) .OR. &
+    (ZWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (ZWETLBDAS_MAX/=XWETLBDAS_MAX) .OR. &
+    (ZWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (ZWETLBDAS_MIN/=XWETLBDAS_MIN) .OR. &
+    (ZFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAH, XNUH, XALPHAS, XNUS,                          &
                 ZEHS, XBS, XCH, XDH, 0., XCS, XDS, XFVELOS,                 &
                 XWETLBDAH_MAX, XWETLBDAS_MAX, XWETLBDAH_MIN, XWETLBDAS_MIN, &
@@ -1655,43 +1655,43 @@ IF( (KWETLBDAH/=NWETLBDAH) .OR. (KWETLBDAS/=NWETLBDAS) .OR. (KND/=IND) .OR. &
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SWETH KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAH=",I3)') NWETLBDAH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAS=",I3)') NWETLBDAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAH=",E13.6)') XALPHAH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUH=",E13.6)') XNUH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAS=",E13.6)') XALPHAS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUS=",E13.6)') XNUS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PEHS=",E13.6)') ZEHS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PBS=",E13.6)') XBS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCH=",E13.6)') XCH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDH=",E13.6)') XDH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCS=",E13.6)') XCS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDS=",E13.6)') XDS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFVELOS=",E13.6)') XFVELOS
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IKND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IWETLBDAH=",I3)') NWETLBDAH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IWETLBDAS=",I3)') NWETLBDAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAH=",E13.6)') XALPHAH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUH=",E13.6)') XNUH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAS=",E13.6)') XALPHAS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUS=",E13.6)') XNUS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZEHS=",E13.6)') ZEHS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZBS=",E13.6)') XBS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCH=",E13.6)') XCH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDH=",E13.6)') XDH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCS=",E13.6)') XCS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDS=",E13.6)') XDS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFVELOS=",E13.6)') XFVELOS
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAH_MAX=",E13.6)') &
 !!$                                                    XWETLBDAH_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAS_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAS_MAX=",E13.6)') &
 !!$                                                    XWETLBDAS_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAH_MIN=",E13.6)') &
 !!$                                                    XWETLBDAH_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAS_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAS_MIN=",E13.6)') &
 !!$                                                    XWETLBDAS_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_SWETH) ) THEN")')
-!!$  DO J1 = 1 , NWETLBDAH
+!!$  DO I1 = 1 , NWETLBDAH
 !!$    DO J2 = 1 , NWETLBDAS
 !!$    WRITE(UNIT=ILUOUT0,FMT='("PKER_SWETH(",I3,",",I3,") = ",E13.6)') &
-!!$                        J1,J2,XKER_SWETH(J1,J2)
+!!$                        I1,J2,XKER_SWETH(I1,J2)
 !!$    END DO
 !!$  END DO
 !!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
-  CALL LIMA_READ_XKER_SWETH (KWETLBDAH,KWETLBDAS,KND,                                    &
-                             PALPHAH,PNUH,PALPHAS,PNUS,PEHS,PBS,PCH,PDH,PCS,PDS,PFVELOS, &
-                             PWETLBDAH_MAX,PWETLBDAS_MAX,PWETLBDAH_MIN,PWETLBDAS_MIN,    &
-                             PFDINFTY,XKER_SWETH                                         )
+  CALL LIMA_READ_XKER_SWETH (IWETLBDAH,IWETLBDAS,IKND,                                    &
+                             ZALPHAH,ZNUH,ZALPHAS,ZNUS,ZEHS,ZBS,ZCH,ZDH,ZCS,ZDS,ZFVELOS, &
+                             ZWETLBDAH_MAX,ZWETLBDAS_MAX,ZWETLBDAH_MIN,ZWETLBDAS_MIN,    &
+                             ZFDINFTY,XKER_SWETH                                         )
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_SWETH")')
 END IF
 !
@@ -1708,28 +1708,28 @@ ZFDINFTY = 20.0
               ZFDINFTY, XKER_N_GWETH                                      )
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_GWETH) ) THEN")')          
-!!$  DO J1 = 1 , NWETLBDAH                                                    
+!!$  DO I1 = 1 , NWETLBDAH                                                    
 !!$    DO J2 = 1 , NWETLBDAG                                                  
 !!$    WRITE(UNIT=ILUOUT0,FMT='("  PKER_N_GWETH(",I3,",",I3,") = ",E13.6)') &
-!!$                      J1,J2,XKER_N_GWETH(J1,J2)                          
+!!$                      I1,J2,XKER_N_GWETH(I1,J2)                          
 !!$    END DO                                                                
 !!$  END DO                                                                   
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")') 
 !end if
 IF( .NOT.ASSOCIATED(XKER_GWETH) ) CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_GWETH', NWETLBDAH,NWETLBDAG)
 !
-CALL LIMA_READ_XKER_GWETH (KWETLBDAH,KWETLBDAG,KND,                                 &
-                           PALPHAH,PNUH,PALPHAG,PNUG,PEHG,PBG,PCH,PDH,PCG,PDG,      &
-                           PWETLBDAH_MAX,PWETLBDAG_MAX,PWETLBDAH_MIN,PWETLBDAG_MIN, &
-                           PFDINFTY                                                 )
-IF( (KWETLBDAH/=NWETLBDAH) .OR. (KWETLBDAG/=NWETLBDAG) .OR. (KND/=IND) .OR. &
-    (PALPHAH/=XALPHAH) .OR. (PNUH/=XNUH)                               .OR. &
-    (PALPHAG/=XALPHAG) .OR. (PNUG/=XNUG)                               .OR. &
-    (PEHG/=ZEHG) .OR. (PBG/=XBG)                                       .OR. &
-    (PCH/=XCH) .OR. (PDH/=XDH) .OR. (PCG/=XCG) .OR. (PDG/=XDG)         .OR. &
-    (PWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (PWETLBDAG_MAX/=XWETLBDAG_MAX) .OR. &
-    (PWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (PWETLBDAG_MIN/=XWETLBDAG_MIN) .OR. &
-    (PFDINFTY/=ZFDINFTY)                                               ) THEN
+CALL LIMA_READ_XKER_GWETH (IWETLBDAH,IWETLBDAG,IKND,                                 &
+                           ZALPHAH,ZNUH,ZALPHAG,ZNUG,ZEHG,ZBG,ZCH,ZDH,ZCG,ZDG,      &
+                           ZWETLBDAH_MAX,ZWETLBDAG_MAX,ZWETLBDAH_MIN,ZWETLBDAG_MIN, &
+                           ZFDINFTY                                                 )
+IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAG/=NWETLBDAG) .OR. (IKND/=IND) .OR. &
+    (ZALPHAH/=XALPHAH) .OR. (ZNUH/=XNUH)                               .OR. &
+    (ZALPHAG/=XALPHAG) .OR. (ZNUG/=XNUG)                               .OR. &
+    (ZEHG/=ZEHG) .OR. (ZBG/=XBG)                                       .OR. &
+    (ZCH/=XCH) .OR. (ZDH/=XDH) .OR. (ZCG/=XCG) .OR. (ZDG/=XDG)         .OR. &
+    (ZWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (ZWETLBDAG_MAX/=XWETLBDAG_MAX) .OR. &
+    (ZWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (ZWETLBDAG_MIN/=XWETLBDAG_MIN) .OR. &
+    (ZFDINFTY/=ZFDINFTY)                                               ) THEN
   CALL RZCOLX ( IND, XALPHAH, XNUH, XALPHAG, XNUG,                          &
                 ZEHG, XBG, XCH, XDH, 0., XCG, XDG, 0.,                      &
                 XWETLBDAH_MAX, XWETLBDAG_MAX, XWETLBDAH_MIN, XWETLBDAG_MIN, &
@@ -1738,42 +1738,42 @@ IF( (KWETLBDAH/=NWETLBDAH) .OR. (KWETLBDAG/=NWETLBDAG) .OR. (KND/=IND) .OR. &
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF GWETH KERNELS ****")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KND=",I3)') IND
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAH=",I3)') NWETLBDAH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("KWETLBDAG=",I3)') NWETLBDAG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAH=",E13.6)') XALPHAH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUH=",E13.6)') XNUH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PALPHAG=",E13.6)') XALPHAG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PNUG=",E13.6)') XNUG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PEHG=",E13.6)') ZEHG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PBG=",E13.6)') XBG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCH=",E13.6)') XCH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDH=",E13.6)') XDH
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PCG=",E13.6)') XCG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PDG=",E13.6)') XDG
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IKND=",I3)') IND
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IWETLBDAH=",I3)') NWETLBDAH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("IWETLBDAG=",I3)') NWETLBDAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAH=",E13.6)') XALPHAH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUH=",E13.6)') XNUH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZALPHAG=",E13.6)') XALPHAG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZNUG=",E13.6)') XNUG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZEHG=",E13.6)') ZEHG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZBG=",E13.6)') XBG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCH=",E13.6)') XCH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDH=",E13.6)') XDH
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZCG=",E13.6)') XCG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZDG=",E13.6)') XDG
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAH_MAX=",E13.6)') &
 !!$                                                    XWETLBDAH_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAG_MAX=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAG_MAX=",E13.6)') &
 !!$                                                    XWETLBDAG_MAX
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAH_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAH_MIN=",E13.6)') &
 !!$                                                    XWETLBDAH_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PWETLBDAG_MIN=",E13.6)') &
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZWETLBDAG_MIN=",E13.6)') &
 !!$                                                    XWETLBDAG_MIN
-!!$  WRITE(UNIT=ILUOUT0,FMT='("PFDINFTY=",E13.6)') ZFDINFTY
+!!$  WRITE(UNIT=ILUOUT0,FMT='("ZFDINFTY=",E13.6)') ZFDINFTY
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_GWETH) ) THEN")')
-!!$  DO J1 = 1 , NWETLBDAH
+!!$  DO I1 = 1 , NWETLBDAH
 !!$    DO J2 = 1 , NWETLBDAG
 !!$    WRITE(UNIT=ILUOUT0,FMT='("PKER_GWETH(",I3,",",I3,") = ",E13.6)') &
-!!$                        J1,J2,XKER_GWETH(J1,J2)
+!!$                        I1,J2,XKER_GWETH(I1,J2)
 !!$    END DO
 !!$  END DO
 !!$  WRITE(UNIT=ILUOUT0,FMT='("END IF")')
   ELSE
-  CALL LIMA_READ_XKER_GWETH (KWETLBDAH,KWETLBDAG,KND,                                 &
-                             PALPHAH,PNUH,PALPHAG,PNUG,PEHG,PBG,PCH,PDH,PCG,PDG,      &
-                             PWETLBDAH_MAX,PWETLBDAG_MAX,PWETLBDAH_MIN,PWETLBDAG_MIN, &
-                             PFDINFTY,XKER_GWETH                                      )
+  CALL LIMA_READ_XKER_GWETH (IWETLBDAH,IWETLBDAG,IKND,                                 &
+                             ZALPHAH,ZNUH,ZALPHAG,ZNUG,ZEHG,ZBG,ZCH,ZDH,ZCG,ZDG,      &
+                             ZWETLBDAH_MAX,ZWETLBDAG_MAX,ZWETLBDAH_MIN,ZWETLBDAG_MIN, &
+                             ZFDINFTY,XKER_GWETH                                      )
 !!$  WRITE(UNIT=ILUOUT0,FMT='(" Read XKER_GWETH")')
 END IF
 !

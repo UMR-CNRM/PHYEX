@@ -114,8 +114,8 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTOT_RV_HONH  ! Mixing ratio c
 REAL, DIMENSION(D%NIJT,D%NKT) :: Z_TH_HIND, Z_CI_HIND, Z_TH_HINC, Z_CC_HINC, &
                                  ZLSFACT, ZRVHENIMR
 !
-integer :: idx, jl
-INTEGER :: JI,JJ
+integer :: idx, il
+INTEGER :: II,IJ
 !
 !-------------------------------------------------------------------------------
 !
@@ -132,11 +132,11 @@ IF ( LACTI .AND. NMOD_CCN >=1 .AND. NMOM_C.GE.2) THEN
             call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'HENU', prct(:,:) * prhodj(:,:) / ptstep )
       if ( BUCONF%lbudget_sv ) then
         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_nc), 'HENU', pcct(:,:) * prhodj(:,:) / ptstep )
-        do jl = 1, nmod_ccn
-          idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + jl
-          call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HENU', pnft(:,:, jl) * prhodj(:,:) / ptstep )
-          idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + jl
-          call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HENU', pnat(:,:, jl) * prhodj(:,:) / ptstep )
+        do il = 1, nmod_ccn
+          idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + il
+          call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HENU', pnft(:,:, il) * prhodj(:,:) / ptstep )
+          idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + il
+          call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HENU', pnat(:,:, il) * prhodj(:,:) / ptstep )
         end do
       end if
     end if
@@ -155,11 +155,11 @@ IF ( LACTI .AND. NMOD_CCN >=1 .AND. NMOM_C.GE.2) THEN
             call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'HENU', prct(:,:) * prhodj(:,:) / ptstep )
       if ( BUCONF%lbudget_sv ) then
         call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_nc), 'HENU', pcct(:,:) * prhodj(:,:) / ptstep )
-        do jl = 1, nmod_ccn
-          idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + jl
-          call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HENU', pnft(:,:, jl) * prhodj(:,:) / ptstep )
-          idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + jl
-          call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HENU', pnat(:,:, jl) * prhodj(:,:) / ptstep )
+        do il = 1, nmod_ccn
+          idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + il
+          call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HENU', pnft(:,:, il) * prhodj(:,:) / ptstep )
+          idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + il
+          call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HENU', pnat(:,:, il) * prhodj(:,:) / ptstep )
         end do
       end if
     end if
@@ -175,20 +175,20 @@ END IF
 IF ( LNUCL .AND. NMOM_I>=2 .AND. .NOT.LMEYERS .AND. NMOD_IFN >= 1 ) THEN
   if ( BUCONF%lbu_enable ) then
     if ( BUCONF%lbudget_sv ) then
-      do jl = 1, nmod_ifn
-        idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_free - 1 + jl
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HIND', pift(:,:, jl) * prhodj(:,:) / ptstep )
-        idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_nucl - 1 + jl
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HIND', pint(:,:, jl) * prhodj(:,:) / ptstep )
+      do il = 1, nmod_ifn
+        idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_free - 1 + il
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HIND', pift(:,:, il) * prhodj(:,:) / ptstep )
+        idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_nucl - 1 + il
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HIND', pint(:,:, il) * prhodj(:,:) / ptstep )
       end do
 
-      do jl = 1, nmod_ccn
-        idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + jl
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HINC', pnat(:,:, jl) * prhodj(:,:) / ptstep )
+      do il = 1, nmod_ccn
+        idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + il
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HINC', pnat(:,:, il) * prhodj(:,:) / ptstep )
       end do
-      do jl = 1, nmod_imm
-        idx = NBUDGET_SV1 - 1 + nsv_lima_imm_nucl - 1 + jl
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HINC', pnit(:,:, jl) * prhodj(:,:) / ptstep )
+      do il = 1, nmod_imm
+        idx = NBUDGET_SV1 - 1 + nsv_lima_imm_nucl - 1 + il
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HINC', pnit(:,:, il) * prhodj(:,:) / ptstep )
       end do
     end if
   end if
@@ -211,11 +211,11 @@ IF ( LNUCL .AND. NMOM_I>=2 .AND. .NOT.LMEYERS .AND. NMOD_IFN >= 1 ) THEN
           call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HIND',  ptot_ri_hind(:,:) * prhodj(:,:) / ptstep )
     if ( BUCONF%lbudget_sv ) then
       call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni), 'HIND', z_ci_hind(:,:) * prhodj(:,:) / ptstep )
-      do jl = 1, nmod_ifn
-        idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_free - 1 + jl
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HIND', pift(:,:, jl) * prhodj(:,:) / ptstep )
-        idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_nucl - 1 + jl
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HIND', pint(:,:, jl) * prhodj(:,:) / ptstep )
+      do il = 1, nmod_ifn
+        idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_free - 1 + il
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HIND', pift(:,:, il) * prhodj(:,:) / ptstep )
+        idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_nucl - 1 + il
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HIND', pint(:,:, il) * prhodj(:,:) / ptstep )
       end do
     end if
 
@@ -230,13 +230,13 @@ IF ( LNUCL .AND. NMOM_I>=2 .AND. .NOT.LMEYERS .AND. NMOD_IFN >= 1 ) THEN
           call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_nc), 'HINC',  z_cc_hinc(:,:) * prhodj(:,:) / ptstep )
        end if
       call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni), 'HINC', -z_cc_hinc(:,:) * prhodj(:,:) / ptstep )
-      do jl = 1, nmod_ccn
-        idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + jl
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HINC', pnat(:,:, jl) * prhodj(:,:) / ptstep )
+      do il = 1, nmod_ccn
+        idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + il
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HINC', pnat(:,:, il) * prhodj(:,:) / ptstep )
       end do
-      do jl = 1, nmod_imm
-        idx = NBUDGET_SV1 - 1 + nsv_lima_imm_nucl - 1 + jl
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HINC', pnit(:,:, jl) * prhodj(:,:) / ptstep )
+      do il = 1, nmod_imm
+        idx = NBUDGET_SV1 - 1 + nsv_lima_imm_nucl - 1 + il
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HINC', pnit(:,:, il) * prhodj(:,:) / ptstep )
       end do
     end if
   end if
@@ -298,11 +298,11 @@ IF (LNUCL .AND. NMOM_I.EQ.1) THEN
          CST%XCPV*PRVT(:,:) +                      &
          CST%XCL*(PRCT(:,:)+PRRT(:,:)) +         &
          CST%XCI*(PRIT(:,:)+PRST(:,:)+PRGT(:,:)+PRHT(:,:)) ) * PEXNREF(:,:) ) 
-  DO JI = 1, D%NIJT
+  DO II = 1, D%NIJT
      CALL LIMA_ICE4_NUCLEATION(CST, D%NKT, &
-          PTHT(JI,:), PPABST(JI,:), PRHODREF(JI,:), PEXNREF(JI,:), ZLSFACT(JI,:), PT(JI,:), &
-          PRVT(JI,:), &
-          PCIT(JI,:), ZRVHENIMR(JI,:) )
+          PTHT(II,:), PPABST(II,:), PRHODREF(II,:), PEXNREF(II,:), ZLSFACT(II,:), PT(II,:), &
+          PRVT(II,:), &
+          PCIT(II,:), ZRVHENIMR(II,:) )
   END DO
   !
   PRIT(:,:)=PRIT(:,:)+ZRVHENIMR(:,:)
@@ -357,9 +357,9 @@ IF ( LNUCL .AND. LHHONI .AND. NMOD_CCN >= 1 .AND. NMOM_I.GE.2) THEN
           call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'HONH', PRIT(:,:) * prhodj(:,:) / ptstep )
     if ( BUCONF%lbudget_sv ) then
       call BUDGET_STORE_INIT_PHY(D,TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni),'HONH',PCIT(:,:)*prhodj(:,:)/ptstep )
-      do jl = 1, nmod_ccn
-        idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + jl
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HONH', PNFT(:,:, jl) * prhodj(:,:) / ptstep )
+      do il = 1, nmod_ccn
+        idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + il
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'HONH', PNFT(:,:, il) * prhodj(:,:) / ptstep )
       end do
       call BUDGET_STORE_INIT_PHY(D,TBUDGETS(NBUDGET_SV1-1+nsv_lima_hom_haze),'HONH',PNHT(:,:)*prhodj(:,:)/ptstep)
     end if
@@ -380,9 +380,9 @@ IF ( LNUCL .AND. LHHONI .AND. NMOD_CCN >= 1 .AND. NMOM_I.GE.2) THEN
           call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'HONH', PRIT(:,:) * prhodj(:,:) / ptstep )
     if ( BUCONF%lbudget_sv ) then
       call BUDGET_STORE_END_PHY(D,TBUDGETS(NBUDGET_SV1-1+nsv_lima_ni),'HONH',PCIT(:,:)*prhodj(:,:)/ptstep )
-      do jl = 1, nmod_ccn
-        idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + jl
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HONH', PNFT(:,:, jl) * prhodj(:,:) / ptstep )
+      do il = 1, nmod_ccn
+        idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + il
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'HONH', PNFT(:,:, il) * prhodj(:,:) / ptstep )
       end do
       call BUDGET_STORE_END_PHY(D,TBUDGETS(NBUDGET_SV1-1+nsv_lima_hom_haze),'HONH',PNHT(:,:)*prhodj(:,:)/ptstep)
     end if
