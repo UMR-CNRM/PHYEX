@@ -569,7 +569,7 @@ INTEGER,            INTENT(IN)     :: KPTS
 REAL, DIMENSION(KPTS), INTENT(IN)     :: PZZW3
 REAL, DIMENSION(KPTS), INTENT(IN)     :: PZZW6
 REAL,               INTENT(IN)     :: PX1, PX2INIT, PXACC
-REAL, DIMENSION(KPTS), ALLOCATABLE    :: PZRIDDR
+REAL, DIMENSION(KPTS)    :: PZRIDDR
 !
 !*       0.2 declarations of local variables
 !
@@ -585,7 +585,6 @@ ALLOCATE(  zfh(KPTS))
 ALLOCATE(  zfl(KPTS))
 ALLOCATE(  zfm(KPTS))
 ALLOCATE(zfnew(KPTS))
-ALLOCATE(PZRIDDR(KPTS))
 !
 PZRIDDR(:)= PPUNUSED
 ZX2       = PX2INIT 
@@ -731,7 +730,7 @@ INTEGER,            INTENT(IN)  :: KPTS
 REAL,               INTENT(IN)  :: PPZSMAX   ! supersaturation is already in no units
 REAL, DIMENSION(KPTS), INTENT(IN)  :: PPZZW3    ! 
 REAL, DIMENSION(KPTS), INTENT(IN)  :: PPZZW6    ! 
-REAL, DIMENSION(KPTS), ALLOCATABLE :: PFUNCSMAX ! 
+REAL, DIMENSION(KPTS) :: PFUNCSMAX ! 
 !
 !*       0.2 declarations of local variables
 !
@@ -739,8 +738,6 @@ REAL                           :: ZHYPF
 !
 REAL                           :: ZVEC1
 INTEGER                        :: IVEC1
-!
-ALLOCATE(PFUNCSMAX(KPTS))
 !
 PFUNCSMAX(:) = 0.
 ZVEC1 = MAX( ( 1.0 + 10.0 * CST%XMNH_EPSILON ) ,MIN( REAL(NHYP)*( 1.0 - 10.0 * CST%XMNH_EPSILON ) ,               &

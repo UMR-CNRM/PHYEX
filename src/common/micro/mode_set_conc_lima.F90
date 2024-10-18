@@ -136,20 +136,20 @@ IF (NMOM_C.GE.2) THEN
 !  droplets
 !
    ZCONC = 300.E6 ! droplet concentration set at 300 cm-3
-   WHERE ( PRT(:,:,:,2) > 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NC)<ZSVTHR)
-      PSVT(:,:,:,ISV_LIMA_NC) = ZCONC
+   WHERE ( PRT(:,:,2) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NC)<ZSVTHR)
+      PSVT(:,:,ISV_LIMA_NC) = ZCONC
    END WHERE
-   WHERE ( PRT(:,:,:,2) <= 1.E-11  .AND. PSVT(:,:,:,ISV_LIMA_NC)<ZSVTHR)
-      PRT(:,:,:,2)  = 0.0
-      PSVT(:,:,:,ISV_LIMA_NC) = 0.0
+   WHERE ( PRT(:,:,2) <= 1.E-11  .AND. PSVT(:,:,ISV_LIMA_NC)<ZSVTHR)
+      PRT(:,:,2)  = 0.0
+      PSVT(:,:,ISV_LIMA_NC) = 0.0
    END WHERE
    
    IF (NMOD_CCN .GE. 1) THEN
-      WHERE ( PRT(:,:,:,2) > 1.E-11  .AND. PSVT(:,:,:,ISV_LIMA_NC)<ZSVTHR)
-         PSVT(:,:,:,ISV_LIMA_CCN_ACTI) = ZCONC
+      WHERE ( PRT(:,:,2) > 1.E-11  .AND. PSVT(:,:,ISV_LIMA_NC)<ZSVTHR)
+         PSVT(:,:,ISV_LIMA_CCN_ACTI) = ZCONC
       END WHERE
-      WHERE ( PRT(:,:,:,2) <= 1.E-11  .AND. PSVT(:,:,:,ISV_LIMA_NC)<ZSVTHR)
-         PSVT(:,:,:,ISV_LIMA_CCN_ACTI) = 0.0
+      WHERE ( PRT(:,:,2) <= 1.E-11  .AND. PSVT(:,:,ISV_LIMA_NC)<ZSVTHR)
+         PSVT(:,:,ISV_LIMA_CCN_ACTI) = 0.0
       END WHERE
    END IF
    
@@ -161,15 +161,15 @@ IF (NMOM_R.GE.2) THEN
 !
    ZCONC = (1.E7)**3/(XPI*XRHOLW) ! cf XCONCR_PARAM_INI in ini_rain_c2r2.f90
    IF (HGETCLOUD == 'INI1') THEN ! init from REVE scheme
-      PSVT(:,:,:,ISV_LIMA_NR) = 0.0
+      PSVT(:,:,ISV_LIMA_NR) = 0.0
    ELSE ! init from KESS, ICE3...
-      WHERE ( PRT(:,:,:,3) > 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NR)<ZSVTHR )
-         PSVT(:,:,:,ISV_LIMA_NR) = MAX( SQRT(SQRT(PRHODREF(:,:,:)*PRT(:,:,:,3) &
+      WHERE ( PRT(:,:,3) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NR)<ZSVTHR )
+         PSVT(:,:,ISV_LIMA_NR) = MAX( SQRT(SQRT(PRHODREF(:,:)*PRT(:,:,3) &
               *ZCONC)),1. )
       END WHERE
-      WHERE ( PRT(:,:,:,3) <= 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NR)<ZSVTHR )
-         PRT(:,:,:,3)  = 0.0
-         PSVT(:,:,:,ISV_LIMA_NR) = 0.0
+      WHERE ( PRT(:,:,3) <= 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NR)<ZSVTHR )
+         PRT(:,:,3)  = 0.0
+         PSVT(:,:,ISV_LIMA_NR) = 0.0
       END WHERE
    END IF
 END IF
@@ -179,25 +179,25 @@ IF (NMOM_I.GE.2) THEN
 ! ice crystals
 !
    ZCONC = 100.E3 ! maximum ice concentration set at 100/L
-   WHERE ( PRT(:,:,:,4) > 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NI)<ZSVTHR )
+   WHERE ( PRT(:,:,4) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI)<ZSVTHR )
 !
-!      PSVT(:,:,:,NSV_LIMA_NI_A(kmi)) = MIN( PRHODREF(:,:,:) /                                     &
-!           ( XRHOLI * XAI*(10.E-06)**XBI * PRT(:,:,:,4) ), &
+!      PSVT(:,:,NSV_LIMA_NI_A(kmi)) = MIN( PRHODREF(:,:) /                                     &
+!           ( XRHOLI * XAI*(10.E-06)**XBI * PRT(:,:,4) ), &
 !           ZCONC )
 ! Correction
-      PSVT(:,:,:,ISV_LIMA_NI) = MIN(PRT(:,:,:,4)/(0.82*(10.E-06)**2.5),ZCONC )
+      PSVT(:,:,ISV_LIMA_NI) = MIN(PRT(:,:,4)/(0.82*(10.E-06)**2.5),ZCONC )
    END WHERE
-   WHERE ( PRT(:,:,:,4) <= 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NI)<ZSVTHR )
-      PRT(:,:,:,4)  = 0.0
-      PSVT(:,:,:,ISV_LIMA_NI) = 0.0
+   WHERE ( PRT(:,:,4) <= 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI)<ZSVTHR )
+      PRT(:,:,4)  = 0.0
+      PSVT(:,:,ISV_LIMA_NI) = 0.0
    END WHERE
 
    IF (NMOD_IFN .GE. 1) THEN
-      WHERE ( PRT(:,:,:,4) > 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NI)<ZSVTHR )
-         PSVT(:,:,:,ISV_LIMA_IFN_NUCL) = PSVT(:,:,:,ISV_LIMA_NI)
+      WHERE ( PRT(:,:,4) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI)<ZSVTHR )
+         PSVT(:,:,ISV_LIMA_IFN_NUCL) = PSVT(:,:,ISV_LIMA_NI)
       END WHERE
-      WHERE ( PRT(:,:,:,4) <= 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NI)<ZSVTHR )
-         PSVT(:,:,:,ISV_LIMA_IFN_NUCL) = 0.0
+      WHERE ( PRT(:,:,4) <= 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI)<ZSVTHR )
+         PSVT(:,:,ISV_LIMA_IFN_NUCL) = 0.0
       END WHERE
    END IF
 
@@ -208,12 +208,12 @@ IF (ISV_LIMA_NS.GE.1) THEN
 !  snow
 !
    ZCONC = 1./ (XAS*0.001**XBS) ! 1mm particle size
-   WHERE ( PRT(:,:,:,5) > 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NS)<ZSVTHR )
-      PSVT(:,:,:,ISV_LIMA_NS) = PRT(:,:,:,5) * ZCONC
+   WHERE ( PRT(:,:,5) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NS)<ZSVTHR )
+      PSVT(:,:,ISV_LIMA_NS) = PRT(:,:,5) * ZCONC
    END WHERE
-   WHERE ( PRT(:,:,:,5) <= 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NS)<ZSVTHR )
-      PRT(:,:,:,5)  = 0.0
-      PSVT(:,:,:,ISV_LIMA_NS) = 0.0
+   WHERE ( PRT(:,:,5) <= 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NS)<ZSVTHR )
+      PRT(:,:,5)  = 0.0
+      PSVT(:,:,ISV_LIMA_NS) = 0.0
    END WHERE
 END IF
 !
@@ -222,12 +222,12 @@ IF (ISV_LIMA_NG.GE.1) THEN
 !  graupel
 !
    ZCONC = 1./ (XAG*0.001**XBG) ! 1mm particle size
-   WHERE ( PRT(:,:,:,6) > 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NG)<ZSVTHR )
-      PSVT(:,:,:,ISV_LIMA_NG) = PRT(:,:,:,6) * ZCONC
+   WHERE ( PRT(:,:,6) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NG)<ZSVTHR )
+      PSVT(:,:,ISV_LIMA_NG) = PRT(:,:,6) * ZCONC
    END WHERE
-   WHERE ( PRT(:,:,:,6) <= 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NG)<ZSVTHR )
-      PRT(:,:,:,6)  = 0.0
-      PSVT(:,:,:,ISV_LIMA_NG) = 0.0
+   WHERE ( PRT(:,:,6) <= 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NG)<ZSVTHR )
+      PRT(:,:,6)  = 0.0
+      PSVT(:,:,ISV_LIMA_NG) = 0.0
    END WHERE
 END IF
 !
@@ -236,12 +236,12 @@ IF (ISV_LIMA_NH.GE.1) THEN
 !  hail
 !
    ZCONC = 1./ (XAH*0.001**XBH) ! 1mm particle size
-   WHERE ( PRT(:,:,:,7) > 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NH)<ZSVTHR )
-      PSVT(:,:,:,ISV_LIMA_NH) = PRT(:,:,:,7) * ZCONC
+   WHERE ( PRT(:,:,7) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NH)<ZSVTHR )
+      PSVT(:,:,ISV_LIMA_NH) = PRT(:,:,7) * ZCONC
    END WHERE
-   WHERE ( PRT(:,:,:,7) <= 1.E-11 .AND. PSVT(:,:,:,ISV_LIMA_NH)<ZSVTHR )
-      PRT(:,:,:,7)  = 0.0
-      PSVT(:,:,:,ISV_LIMA_NH) = 0.0
+   WHERE ( PRT(:,:,7) <= 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NH)<ZSVTHR )
+      PRT(:,:,7)  = 0.0
+      PSVT(:,:,ISV_LIMA_NH) = 0.0
    END WHERE
 END IF
 !

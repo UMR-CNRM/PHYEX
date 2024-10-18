@@ -138,7 +138,7 @@ INTEGER :: IKE           !
 INTEGER :: ISV               ! CCN or IFN mode 
 INTEGER :: J1, J2, IMOD
 !
-LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
+LOGICAL, DIMENSION(D%NIJT,D%NKT) &
                                  :: GRAIN,  &! Test where rain is present
                                     GSCAV    ! Test where rain is present
 INTEGER , DIMENSION(SIZE(GSCAV)) :: I1,I2,I3 ! Used to replace the COUNT
@@ -149,7 +149,7 @@ REAL                     :: ZDENS_RATIO, & !density ratio
                             ZNUM,        & !PNU-1.               
                             ZSHAPE_FACTOR
 !
-REAL,    DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3))  :: ZCRT   ! cloud droplet conc.
+REAL,    DIMENSION(D%NIJT,D%NKT)  :: ZCRT   ! cloud droplet conc.
 !
 REAL, DIMENSION(:), ALLOCATABLE :: ZLAMBDAR,      &  !slope parameter of the 
                                                      ! generalized Gamma 
@@ -190,22 +190,22 @@ REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZCOL_EF,     &! Collision efficiency
                                        ZST           ! Stokes number
 !
 !
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
+REAL, DIMENSION(D%NIJT,D%NKT) &
                                     :: ZMEAN_SCAV_COEF, & !Mean Scavenging 
                                                           ! Coefficient
                                        ZTOT_SCAV_RATE,  & !Total Number 
                                                           ! Scavenging Rate
                                        ZTOT_MASS_RATE     !Total Mass
                                                           ! Scavenging Rate
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3),NDIAMP) &
+REAL, DIMENSION(D%NIJT,D%NKT,NDIAMP) &
                                     ::ZBC_SCAV_COEF  !Scavenging Coefficient
 REAL, DIMENSION(:), ALLOCATABLE :: ZKNUDSEN ! Knuudsen number
 !
 ! Opt. BVIE
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))        &
+REAL, DIMENSION(D%NIJT,D%NKT)        &
                    :: ZT_3D, ZCONCR_3D, ZVISCA_3D, ZMFPA_3D,               &
                       ZVISC_RATIO_3D, ZLAMBDAR_3D, ZFACTOR_3D
-REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3),NDIAMP) &
+REAL, DIMENSION(D%NIJT,D%NKT,NDIAMP) &
                    :: ZVOLDR_3D, ZVOLDR_3D_INV, ZVOLDR_3D_POW,             &
                       ZFVELR_3D, ZRE_3D, ZRE_3D_SQRT, ZST_STAR_3D
 REAL, DIMENSION(:), ALLOCATABLE   :: ZFACTOR 
@@ -235,14 +235,14 @@ ISV_LIMA_SCAVMASS = NSV_LIMA_SCAVMASS - NSV_LIMA_BEG + 1
 if ( BUCONF%lbudget_sv ) then
   do IL = 1, nmod_ccn
     idx = nsv_lima_ccn_free - 1 + IL
-    call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
+    call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs( :, :, idx) )
   end do
   do IL = 1, nmod_ifn
     idx = nsv_lima_ifn_free - 1 + IL
-    call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
+    call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs( :, :, idx) )
   end do
   if ( laero_mass ) then
-    call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'SCAV', prsvs(:, :, :, nsv_lima_scavmass) )
+    call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'SCAV', prsvs( :, :, nsv_lima_scavmass) )
   end if
 end if
 !
@@ -250,23 +250,16 @@ end if
 !   	        ------------------------
 !
 !
-IIB=1+JPHEXT
-IIE=SIZE(PRHODREF,1) - JPHEXT
-IJB=1+JPHEXT
-IJE=SIZE(PRHODREF,2) - JPHEXT
-IKB=1+JPVEXT
-IKE=SIZE(PRHODREF,3) - JPVEXT
-!
 ! ZCRT
-ZCRT(:,:,:)=PSVT(:,:,:,ISV_LIMA_NR)
+ZCRT(:,:)=PSVT(:,:,ISV_LIMA_NR)
 !
 ! Rain mask 
-GRAIN(:,:,:) = .FALSE.
-GRAIN(IIB:IIE,IJB:IJE,IKB:IKE) = (PRRT(IIB:IIE,IJB:IJE,IKB:IKE)>XRTMIN(3) &
-                            .AND. ZCRT(IIB:IIE,IJB:IJE,IKB:IKE)>XCTMIN(3) )
+GRAIN(:,:) = .FALSE.
+GRAIN(D%NIJB:D%NIJE,D%NKB:D%NKE) = (PRRT(D%NIJB:D%NIJE,D%NKB:D%NKE)>XRTMIN(3) &
+                            .AND. ZCRT(D%NIJB:D%NIJE,D%NKB:D%NKE)>XCTMIN(3) )
 !
 ! Initialize the total mass scavenging rate if LAERO_MASS=T
-IF (LAERO_MASS) ZTOT_MASS_RATE(:,:,:)  = 0.
+IF (LAERO_MASS) ZTOT_MASS_RATE(:,:)  = 0.
 !
 ! Quadrature method: compute absissae and weights
 CALL GAUHER(ZABSCISSP,ZWEIGHTP,NDIAMP)
@@ -287,39 +280,39 @@ CALL GAULAG(ZABSCISSR,ZWEIGHTR,NDIAMR,ZNUM)
 !
 ZSHAPE_FACTOR = GAMMA_X0D(XNUR+3./XALPHAR)/GAMMA_X0D(XNUR) 
 !
-WHERE ( GRAIN(:,:,:) )
+WHERE ( GRAIN(:,:) )
    !
-   ZT_3D(:,:,:)      = PTHT(:,:,:) * ( PPABST(:,:,:)/CST%XP00 )**(CST%XRD/CST%XCPD)
-   ZCONCR_3D(:,:,:)  = ZCRT(:,:,:) * PRHODREF(:,:,:)                    ![/m3]
+   ZT_3D(:,:)      = PTHT(:,:) * ( PPABST(:,:)/CST%XP00 )**(CST%XRD/CST%XCPD)
+   ZCONCR_3D(:,:)  = ZCRT(:,:) * PRHODREF(:,:)                    ![/m3]
    ! Sutherland law for viscosity of air
-   ZVISCA_3D(:,:,:)  = XMUA0*(ZT_3D(:,:,:)/XTREF)**1.5*(XTREF+XT_SUTH_A) &
-                                                        /(XT_SUTH_A+ZT_3D(:,:,:))
+   ZVISCA_3D(:,:)  = XMUA0*(ZT_3D(:,:)/XTREF)**1.5*(XTREF+XT_SUTH_A) &
+                                                        /(XT_SUTH_A+ZT_3D(:,:))
    ! Air mean free path
-   ZMFPA_3D(:,:,:)   = XMFPA0*(CST%XP00*ZT_3D(:,:,:))/(PPABST(:,:,:)*XT0SCAV)           
+   ZMFPA_3D(:,:)   = XMFPA0*(CST%XP00*ZT_3D(:,:))/(PPABST(:,:)*XT0SCAV)           
    ! Viscosity ratio
-   ZVISC_RATIO_3D(:,:,:) = ZVISCA_3D(:,:,:)/XVISCW   !!!!! inversé par rapport à orig. !
+   ZVISC_RATIO_3D(:,:) = ZVISCA_3D(:,:)/XVISCW   !!!!! inversé par rapport à orig. !
    ! Rain drops parameters
-   ZLAMBDAR_3D(:,:,:) = ( ((CST%XPI/6.)*ZSHAPE_FACTOR*CST%XRHOLW*ZCONCR_3D(:,:,:))  &
-                          /(PRHODREF(:,:,:)*PRRT(:,:,:)) )**(1./3.)         ![/m]
-   ZFACTOR_3D(:,:,:) = CST%XPI*0.25*ZCONCR_3D(:,:,:)*XCR*(XRHO00/PRHODREF(:,:,:))**(0.4)
+   ZLAMBDAR_3D(:,:) = ( ((CST%XPI/6.)*ZSHAPE_FACTOR*CST%XRHOLW*ZCONCR_3D(:,:))  &
+                          /(PRHODREF(:,:)*PRRT(:,:)) )**(1./3.)         ![/m]
+   ZFACTOR_3D(:,:) = CST%XPI*0.25*ZCONCR_3D(:,:)*XCR*(XRHO00/PRHODREF(:,:))**(0.4)
    !
 END WHERE
 !
 DO J2=1,NDIAMR
-   WHERE ( GRAIN(:,:,:) )
+   WHERE ( GRAIN(:,:) )
       ! exchange of variables: [m]
-      ZVOLDR_3D(:,:,:,J2) = ZABSCISSR(J2)**(1./XALPHAR)/ZLAMBDAR_3D(:,:,:)
-      ZVOLDR_3D_INV(:,:,:,J2) = 1./ZVOLDR_3D(:,:,:,J2)
-      ZVOLDR_3D_POW(:,:,:,J2) = ZVOLDR_3D(:,:,:,J2)**(2.+XDR)
+      ZVOLDR_3D(:,:,J2) = ZABSCISSR(J2)**(1./XALPHAR)/ZLAMBDAR_3D(:,:)
+      ZVOLDR_3D_INV(:,:,J2) = 1./ZVOLDR_3D(:,:,J2)
+      ZVOLDR_3D_POW(:,:,J2) = ZVOLDR_3D(:,:,J2)**(2.+XDR)
       ! Raindrop Falling VELocity [m/s]
-      ZFVELR_3D(:,:,:,J2) = XCR*(ZVOLDR_3D(:,:,:,J2)**XDR)*(XRHO00/PRHODREF(:,:,:))**(0.4)
+      ZFVELR_3D(:,:,J2) = XCR*(ZVOLDR_3D(:,:,J2)**XDR)*(XRHO00/PRHODREF(:,:))**(0.4)
       ! Reynolds number
-      ZRE_3D(:,:,:,J2) = ZVOLDR_3D(:,:,:,J2)*ZFVELR_3D(:,:,:,J2)          &
-                                            *PRHODREF(:,:,:)/(2.0*ZVISCA_3D(:,:,:))   
-      ZRE_3D_SQRT(:,:,:,J2) = SQRT( ZRE_3D(:,:,:,J2) )   
+      ZRE_3D(:,:,J2) = ZVOLDR_3D(:,:,J2)*ZFVELR_3D(:,:,J2)          &
+                                            *PRHODREF(:,:)/(2.0*ZVISCA_3D(:,:))   
+      ZRE_3D_SQRT(:,:,J2) = SQRT( ZRE_3D(:,:,J2) )   
       ! Critical Stokes number
-      ZST_STAR_3D(:,:,:,J2) = (1.2+(LOG(1.+ZRE_3D(:,:,:,J2)))/12.)        &
-                                           /(1.+LOG(1.+ZRE_3D(:,:,:,J2)))
+      ZST_STAR_3D(:,:,J2) = (1.2+(LOG(1.+ZRE_3D(:,:,J2)))/12.)        &
+                                           /(1.+LOG(1.+ZRE_3D(:,:,J2)))
    END WHERE
 END DO
 !
@@ -345,14 +338,14 @@ DO ISV = 1, NMOD_CCN+NMOD_IFN
       INM = NSPECIE
    END IF
 !
-   ZBC_SCAV_COEF(:,:,:,:) = 0. 
-   ZMEAN_SCAV_COEF(:,:,:) = 0.
-   ZTOT_SCAV_RATE(:,:,:)  = 0.
+   ZBC_SCAV_COEF(:,:,:) = 0. 
+   ZMEAN_SCAV_COEF(:,:) = 0.
+   ZTOT_SCAV_RATE(:,:)  = 0.
 !
-   GSCAV(:,:,:) = .FALSE.
-   GSCAV(IIB:IIE,IJB:IJE,IKB:IKE) =GRAIN(IIB:IIE,IJB:IJE,IKB:IKE) .AND.        &
-        (PSVT(IIB:IIE,IJB:IJE,IKB:IKE,ISV_VAR)>1.0E-2)
-   ISCAV = COUNTJV(GSCAV(:,:,:),I1(:),I2(:),I3(:))
+   GSCAV(:,:) = .FALSE.
+   GSCAV(D%NIJB:D%NIJE,D%NKB:D%NKE) =GRAIN(D%NIJB:D%NIJE,D%NKB:D%NKE) .AND.        &
+        (PSVT(D%NIJB:D%NIJE,D%NKB:D%NKE,ISV_VAR)>1.0E-2)
+   ISCAV = COUNTJV(GSCAV(:,:),I1(:),I3(:))
 !
    IF( ISCAV>=1 ) THEN
       ALLOCATE(ZVISC_RATIO(ISCAV))
@@ -395,24 +388,24 @@ DO ISV = 1, NMOD_CCN+NMOD_IFN
       ZTOT_SCAV_RATE1D(:) =0.
       ZTOT_MASS_RATE1D(:) =0.
       DO IL=1,ISCAV
-         ZRHODREF(IL) =  PRHODREF(I1(IL),I2(IL),I3(IL))
-         ZT(IL)       =     ZT_3D(I1(IL),I2(IL),I3(IL))
-         ZRRT(IL)     =      PRRT(I1(IL),I2(IL),I3(IL))
-         ZPABST(IL)   =    PPABST(I1(IL),I2(IL),I3(IL))
-         ZCONCP(IL)   =      PSVT(I1(IL),I2(IL),I3(IL),ISV_VAR)*ZRHODREF(IL)![/m3]
-         ZCONCR(IL)   = ZCONCR_3D(I1(IL),I2(IL),I3(IL))                       ![/m3]
-         ZVISCA(IL)   = ZVISCA_3D(I1(IL),I2(IL),I3(IL))
-         ZMFPA(IL)    =  ZMFPA_3D(I1(IL),I2(IL),I3(IL))
-         ZVISC_RATIO(IL) = ZVISC_RATIO_3D(I1(IL),I2(IL),I3(IL))
-         ZLAMBDAR(IL) = ZLAMBDAR_3D(I1(IL),I2(IL),I3(IL))
-         ZFACTOR(IL)   = ZFACTOR_3D(I1(IL),I2(IL),I3(IL))
-         ZVOLDR(IL,:) = ZVOLDR_3D(I1(IL),I2(IL),I3(IL),:)
-         ZVOLDR_POW(IL,:) = ZVOLDR_3D_POW(I1(IL),I2(IL),I3(IL),:)
-         ZVOLDR_INV(IL,:) = ZVOLDR_3D_INV(I1(IL),I2(IL),I3(IL),:)
-         ZFVELR(IL,:) = ZFVELR_3D(I1(IL),I2(IL),I3(IL),:)
-         ZRE(IL,:)    = ZRE_3D(I1(IL),I2(IL),I3(IL),:)
-         ZRE_SQRT(IL,:) = ZRE_3D_SQRT(I1(IL),I2(IL),I3(IL),:)
-         ZST_STAR(IL,:) = ZST_STAR_3D(I1(IL),I2(IL),I3(IL),:)
+         ZRHODREF(IL) =  PRHODREF(I1(IL),I3(IL))
+         ZT(IL)       =     ZT_3D(I1(IL),I3(IL))
+         ZRRT(IL)     =      PRRT(I1(IL),I3(IL))
+         ZPABST(IL)   =    PPABST(I1(IL),I3(IL))
+         ZCONCP(IL)   =      PSVT(I1(IL),I3(IL),ISV_VAR)*ZRHODREF(IL)![/m3]
+         ZCONCR(IL)   = ZCONCR_3D(I1(IL),I3(IL))                       ![/m3]
+         ZVISCA(IL)   = ZVISCA_3D(I1(IL),I3(IL))
+         ZMFPA(IL)    =  ZMFPA_3D(I1(IL),I3(IL))
+         ZVISC_RATIO(IL) = ZVISC_RATIO_3D(I1(IL),I3(IL))
+         ZLAMBDAR(IL) = ZLAMBDAR_3D(I1(IL),I3(IL))
+         ZFACTOR(IL)   = ZFACTOR_3D(I1(IL),I3(IL))
+         ZVOLDR(IL,:) = ZVOLDR_3D(I1(IL),I3(IL),:)
+         ZVOLDR_POW(IL,:) = ZVOLDR_3D_POW(I1(IL),I3(IL),:)
+         ZVOLDR_INV(IL,:) = ZVOLDR_3D_INV(I1(IL),I3(IL),:)
+         ZFVELR(IL,:) = ZFVELR_3D(I1(IL),I3(IL),:)
+         ZRE(IL,:)    = ZRE_3D(I1(IL),I3(IL),:)
+         ZRE_SQRT(IL,:) = ZRE_3D_SQRT(I1(IL),I3(IL),:)
+         ZST_STAR(IL,:) = ZST_STAR_3D(I1(IL),I3(IL),:)
       ENDDO
       ZRE_INV(:,:) = 1./ZRE(:,:)
 
@@ -490,20 +483,20 @@ DO ISV = 1, NMOD_CCN+NMOD_IFN
       !--------------------------------------------------------------------------
 
          ! Total NUMBER Scavenging Rate of aerosol [m**-3.s**-1]
-         ZTOT_SCAV_RATE(:,:,:)=UNPACK(ZTOT_SCAV_RATE1D(:),MASK=GSCAV(:,:,:),FIELD=0.0)
+         ZTOT_SCAV_RATE(:,:)=UNPACK(ZTOT_SCAV_RATE1D(:),MASK=GSCAV(:,:),FIELD=0.0)
          ! Free particles (CCN or IFN) [/s]:
-         PRSVS(:,:,:,ISV_VAR) = max(PRSVS(:,:,:,ISV_VAR)+ZTOT_SCAV_RATE(:,:,:)  &
-                                         * PRHODJ(:,:,:)/PRHODREF(:,:,:) , 0.0 )
+         PRSVS(:,:,ISV_VAR) = max(PRSVS(:,:,ISV_VAR)+ZTOT_SCAV_RATE(:,:)  &
+                                         * PRHODJ(:,:)/PRHODREF(:,:) , 0.0 )
          ! Total MASS Scavenging Rate of aerosol which REACH THE FLOOR because of 
          ! rain sedimentation [kg.m**-3.s**-1]
          IF (LAERO_MASS)THEN
-            ZTOT_MASS_RATE(:,:,:) = ZTOT_MASS_RATE(:,:,:) +                         &
-                 UNPACK(ZTOT_MASS_RATE1D(:), MASK=GSCAV(:,:,:), FIELD=0.0)
-            CALL SCAV_MASS_SEDIMENTATION( HCLOUD, HDCONF, PTSTEP, KTCOUNT, PZZ, PRHODJ,     &
-                                      PRHODREF, PRRT, PSVT(:,:,:,ISV_LIMA_SCAVMASS),&
-                                      PRSVS(:,:,:,ISV_LIMA_SCAVMASS), PINPAP        )
-            PRSVS(:,:,:,ISV_LIMA_SCAVMASS)=PRSVS(:,:,:,ISV_LIMA_SCAVMASS) +         &
-                             ZTOT_MASS_RATE(:,:,:)*PRHODJ(:,:,:)/PRHODREF(:,:,:)
+            ZTOT_MASS_RATE(:,:) = ZTOT_MASS_RATE(:,:) +                         &
+                 UNPACK(ZTOT_MASS_RATE1D(:), MASK=GSCAV(:,:), FIELD=0.0)
+            CALL SCAV_MASS_SEDIMENTATION( D, HCLOUD, HDCONF, PTSTEP, KTCOUNT, PZZ, PRHODJ,     &
+                                      PRHODREF, PRRT, PSVT(:,:,ISV_LIMA_SCAVMASS),&
+                                      PRSVS(:,:,ISV_LIMA_SCAVMASS), PINPAP        )
+            PRSVS(:,:,ISV_LIMA_SCAVMASS)=PRSVS(:,:,ISV_LIMA_SCAVMASS) +         &
+                             ZTOT_MASS_RATE(:,:)*PRHODJ(:,:)/PRHODREF(:,:)
          END IF
       ENDDO
 ! End of the loop over the aerosol species
@@ -554,14 +547,14 @@ ENDDO
 if ( BUCONF%lbudget_sv ) then
   do IL = 1, nmod_ccn
     idx = nsv_lima_ccn_free - 1 + IL
-    call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
+    call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, idx) )
   end do
   do IL = 1, nmod_ifn
     idx = nsv_lima_ifn_free - 1 + IL
-    call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, :, idx) )
+    call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, idx) )
   end do
   if ( laero_mass ) then
-    call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'SCAV', prsvs(:, :, :, nsv_lima_scavmass) )
+    call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'SCAV', prsvs(:, :, nsv_lima_scavmass) )
   end if
 end if
 !------------------------------------------------------------------------------
@@ -651,14 +644,14 @@ REAL    :: ZTSPLITR      ! Small time step for rain sedimentation
 REAL    :: ZTSTEP        ! Large time step for rain sedimentation
 !
 !
-LOGICAL, DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)) &
+LOGICAL, DIMENSION(D%NIJT,D%NKT) &
                                 :: GSEDIM   ! where to compute the SED processes
 INTEGER :: ISEDIM 
 INTEGER , DIMENSION(SIZE(GSEDIM)) :: I1,I2,I3 ! Used to replace the COUNT
 INTEGER                           :: IL       ! and PACK intrinsics
 !
 !
-REAL,    DIMENSION(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3))   &
+REAL,    DIMENSION(D%NIJT,D%NKT)   &
                                 :: ZW,    & ! work array
                                    ZWSED, & ! sedimentation fluxes
                                    ZZS      ! Rain water m.r. source
@@ -680,12 +673,6 @@ INTEGER, SAVE                   :: ISPLITR
 !*       1.     COMPUTE THE LOOP BOUNDS
 !   	        -----------------------
 !
-IIB=1+JPHEXT
-IIE=SIZE(PZZ,1) - JPHEXT
-IJB=1+JPHEXT
-IJE=SIZE(PZZ,2) - JPHEXT
-IKB=1+JPVEXT
-IKE=SIZE(PZZ,3) - JPVEXT
 !
 !-------------------------------------------------------------------------------
 !
@@ -697,7 +684,7 @@ IKE=SIZE(PZZ,3) - JPVEXT
 firstcall : IF (GSFIRSTCALL) THEN
    GSFIRSTCALL = .FALSE.
    ZVTRMAX = 10.                          
-   ZDZMIN = MINVAL(PZZ(IIB:IIE,IJB:IJE,IKB+1:IKE+1)-PZZ(IIB:IIE,IJB:IJE,IKB:IKE))
+   ZDZMIN = MINVAL(PZZ(D%NIJB:D%NIJE,D%NKB+1:D%NKE+1)-PZZ(D%NIJB:D%NIJE,D%NKB:D%NKE))
    ISPLITR = 1
    SPLIT : DO
       ZT = 2.* PTSTEP / REAL(ISPLITR)
@@ -725,48 +712,48 @@ END IF
 !  the precipitating fields are larger than a minimal value only !!!
 !
 ZRTMIN3 = XRTMIN(3) / ZTSTEP
-ZZS(:,:,:) = PRAIN(:,:,:)
+ZZS(:,:) = PRAIN(:,:)
 DO IN = 1 , ISPLITR
-   GSEDIM(:,:,:) = .FALSE.
-   GSEDIM(IIB:IIE,IJB:IJE,IKB:IKE) = ZZS(IIB:IIE,IJB:IJE,IKB:IKE) > ZRTMIN3
+   GSEDIM(:,:) = .FALSE.
+   GSEDIM(D%NIJB:D%NIJE,D%NKB:D%NKE) = ZZS(D%NIJB:D%NIJE,D%NKB:D%NKE) > ZRTMIN3
 ! 
-   ISEDIM = COUNTJV( GSEDIM(:,:,:),I1(:),I2(:),I3(:))
+   ISEDIM = COUNTJV( GSEDIM(:,:),I1(:),I3(:))
    IF( ISEDIM >= 1 ) THEN
       IF( IN==1 ) THEN
-         ZZS(:,:,:) = ZZS(:,:,:) * ZTSTEP
+         ZZS(:,:) = ZZS(:,:) * ZTSTEP
          DO IK = IKB , IKE-1
-            ZW(:,:,IK) =ZTSPLITR*2./(PRHODREF(:,:,IK)*(PZZ(:,:,IK+2)-PZZ(:,:,IK)))
+            ZW(:,IK) =ZTSPLITR*2./(PRHODREF(:,IK)*(PZZ(:,IK+2)-PZZ(:,IK)))
          END DO
-         ZW(:,:,IKE)  =ZTSPLITR/(PRHODREF(:,:,IKE)*(PZZ(:,:,IKE+1)-PZZ(:,:,IKE)))
+         ZW(:,IKE)  =ZTSPLITR/(PRHODREF(:,IKE)*(PZZ(:,IKE+1)-PZZ(:,IKE)))
       END IF
       ALLOCATE(ZRRS(ISEDIM)) 
       ALLOCATE(ZRHODREF(ISEDIM))
       DO IL=1,ISEDIM
-         ZRRS(IL) = ZZS(I1(IL),I2(IL),I3(IL))
-         ZRHODREF(IL) =  PRHODREF(I1(IL),I2(IL),I3(IL))
+         ZRRS(IL) = ZZS(I1(IL),I3(IL))
+         ZRHODREF(IL) =  PRHODREF(I1(IL),I3(IL))
       ENDDO
       ALLOCATE(ZZW(ISEDIM)) ; ZZW(:) = 0.0
 !
 !*       2.2.1   for rain
 !
       ZZW(:) = XFSEDRR * ZRRS(:)**(ZEXSEDR) * ZRHODREF(:)**(ZEXSEDR-XCEXVT)
-      ZWSED(:,:,:) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
+      ZWSED(:,:) = UNPACK( ZZW(:),MASK=GSEDIM(:,:),FIELD=0.0 )
       DO IK = IKB , IKE
-         ZZS(:,:,IK) = ZZS(:,:,IK) + ZW(:,:,IK)*(ZWSED(:,:,IK+1)-ZWSED(:,:,IK))
+         ZZS(:,IK) = ZZS(:,IK) + ZW(:,IK)*(ZWSED(:,IK+1)-ZWSED(:,IK))
       END DO
       IF( IN==1 ) THEN
-         PINPAP(:,:) = ZWSED(:,:,IKB)*                                            &
-                             ( PSVT_MASS(:,:,IKB)/MAX(ZRTMIN3,PRRT(:,:,IKB)) )
+         PINPAP(:) = ZWSED(:,IKB)*                                            &
+                             ( PSVT_MASS(:,IKB)/MAX(ZRTMIN3,PRRT(:,IKB)) )
       END IF
       DEALLOCATE(ZRHODREF)
       DEALLOCATE(ZRRS)
       DEALLOCATE(ZZW)
       IF( IN==ISPLITR ) THEN
-         GSEDIM(:,:,:) = .FALSE.
-         GSEDIM(IIB:IIE,IJB:IJE,IKB:IKE) = ZZS(IIB:IIE,IJB:IJE,IKB:IKE) > ZRTMIN3
-         ZWSED(:,:,:) = 0.0
-         WHERE( GSEDIM(:,:,:) ) 
-            ZWSED(:,:,:) = 1.0/ZTSTEP - PRAIN(:,:,:)/ZZS(:,:,:)
+         GSEDIM(:,:) = .FALSE.
+         GSEDIM(D%NIJB:D%NIJE,D%NKB:D%NKE) = ZZS(D%NIJB:D%NIJE,D%NKB:D%NKE) > ZRTMIN3
+         ZWSED(:,:) = 0.0
+         WHERE( GSEDIM(:,:) ) 
+            ZWSED(:,:) = 1.0/ZTSTEP - PRAIN(:,:)/ZZS(:,:)
          END WHERE
       END IF
    END IF
@@ -774,7 +761,7 @@ END DO
 !
 ! Apply the rain sedimentation rate to the WR_xxx aqueous species
 !
-PRSVS_MASS(:,:,:) = PRSVS_MASS(:,:,:) + ZWSED(:,:,:)*PSVT_MASS(:,:,:)
+PRSVS_MASS(:,:) = PRSVS_MASS(:,:) + ZWSED(:,:)*PSVT_MASS(:,:)
 !
 END SUBROUTINE SCAV_MASS_SEDIMENTATION
 !
