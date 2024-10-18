@@ -11,7 +11,7 @@ IMPLICIT NONE
 !
 CONTAINS
 !
-SUBROUTINE LIMA_UPDATE_NSV(ODINIT, KMI, KSV, CDCLOUD, ODUPDATE)
+SUBROUTINE LIMA_UPDATE_NSV(ODINIT, KMI, KSV, HDCLOUD, ODUPDATE)
 !!*** *LIMA_UPDATE_NSV* - update modd_nsv values realtive to LIMA
 !!
 !!*   PURPOSE
@@ -69,14 +69,14 @@ LOGICAL,          INTENT(IN)    :: ODINIT   !< .TRUE. to fill the different NSV_
 INTEGER,          INTENT(IN)    :: KMI      !< model number
 INTEGER,          INTENT(INOUT) :: KSV      !< IN: Initial value to use when filling the NSV_LIMA_*_A arrays; 
                                             !! OUT: Final value after having filled the arrays
-CHARACTER(LEN=4), INTENT(IN)    :: CDCLOUD  !< Cloud scheme
+CHARACTER(LEN=4), INTENT(IN)    :: HDCLOUD  !< Cloud scheme
 LOGICAL,          INTENT(IN)    :: ODUPDATE !< .TRUE. to goto model
 !
 !*      1. INITIALISATION
 !       -----------------
 !
 IF(ODINIT) THEN
-  IF(CDCLOUD=='LIMA') THEN
+  IF(HDCLOUD=='LIMA') THEN
     KSV = KSV+1
     NSV_LIMA_BEG_A(KMI) = KSV
     ! Nc

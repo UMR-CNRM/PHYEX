@@ -5,7 +5,7 @@
 !-----------------------------------------------------------------
 !########################################################################
    SUBROUTINE LIMA_PRECIP_SCAVENGING (D, CST, BUCONF, TBUDGETS, KBUDGETS, &
-                                      HCLOUD, CDCONF, KLUOUT, KTCOUNT, PTSTEP,    &
+                                      HCLOUD, HDCONF, KLUOUT, KTCOUNT, PTSTEP,    &
                                       PRRT, PRHODREF, PRHODJ, PZZ,        &
                                       PPABST, PTHT, PSVT, PRSVS, PINPAP )
 !########################################################################x
@@ -108,7 +108,7 @@ TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER,                  INTENT(IN)    :: KBUDGETS
 !
 CHARACTER(LEN=4),       INTENT(IN)    :: HCLOUD   ! cloud paramerization
-CHARACTER(LEN=5),       INTENT(IN)    :: CDCONF   ! CCONF from MODD_CONF
+CHARACTER(LEN=5),       INTENT(IN)    :: HDCONF   ! CCONF from MODD_CONF
 INTEGER,                INTENT(IN)    :: KLUOUT   ! unit for output listing
 INTEGER,                INTENT(IN)    :: KTCOUNT  ! iteration count
 REAL,                   INTENT(IN)    :: PTSTEP   ! Double timestep except 
@@ -499,7 +499,7 @@ DO JSV = 1, NMOD_CCN+NMOD_IFN
          IF (LAERO_MASS)THEN
             PTOT_MASS_RATE(:,:,:) = PTOT_MASS_RATE(:,:,:) +                         &
                  UNPACK(ZTOT_MASS_RATE(:), MASK=GSCAV(:,:,:), FIELD=0.0)
-            CALL SCAV_MASS_SEDIMENTATION( HCLOUD, CDCONF, PTSTEP, KTCOUNT, PZZ, PRHODJ,     &
+            CALL SCAV_MASS_SEDIMENTATION( HCLOUD, HDCONF, PTSTEP, KTCOUNT, PZZ, PRHODJ,     &
                                       PRHODREF, PRRT, PSVT(:,:,:,ISV_LIMA_SCAVMASS),&
                                       PRSVS(:,:,:,ISV_LIMA_SCAVMASS), PINPAP        )
             PRSVS(:,:,:,ISV_LIMA_SCAVMASS)=PRSVS(:,:,:,ISV_LIMA_SCAVMASS) +         &
@@ -575,7 +575,7 @@ CONTAINS
 !
 !------------------------------------------------------------------------------
 !     ##########################################################################
-      SUBROUTINE SCAV_MASS_SEDIMENTATION( HCLOUD, CDCONF, PTSTEP, KTCOUNT, PZZ, PRHODJ,&
+      SUBROUTINE SCAV_MASS_SEDIMENTATION( HCLOUD, HDCONF, PTSTEP, KTCOUNT, PZZ, PRHODJ,&
                                 PRHODREF, PRAIN, PSVT_MASS, PRSVS_MASS, PINPAP )
 !     ##########################################################################
 !
@@ -627,7 +627,7 @@ IMPLICIT NONE
 !
 !
 CHARACTER (LEN=4),        INTENT(IN)    :: HCLOUD  ! Cloud parameterization
-CHARACTER(LEN=5),         INTENT(IN)    :: CDCONF
+CHARACTER(LEN=5),         INTENT(IN)    :: HDCONF
 REAL,                     INTENT(IN)    :: PTSTEP  ! Time step  
 INTEGER,                  INTENT(IN)    :: KTCOUNT ! Current time step number
 !
@@ -709,7 +709,7 @@ END IF firstcall
 !
 !*       2.2    time splitting loop initialization        
 !
-IF( (KTCOUNT==1) .AND. (CDCONF=='START') ) THEN
+IF( (KTCOUNT==1) .AND. (HDCONF=='START') ) THEN
   ZTSPLITR = PTSTEP / REAL(ISPLITR)       ! Small time step
   ZTSTEP   = PTSTEP                        ! Large time step
   ELSE

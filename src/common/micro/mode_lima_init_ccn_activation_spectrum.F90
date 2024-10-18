@@ -7,7 +7,7 @@ MODULE MODE_LIMA_INIT_CCN_ACTIVATION_SPECTRUM
   IMPLICIT NONE
 CONTAINS
 !     #############################################################
-  SUBROUTINE LIMA_INIT_CCN_ACTIVATION_SPECTRUM (CTYPE_CCN,PD,PSIGMA,PLIMIT_FACTOR,PK,PMU,PBETA,PKAPPA)
+  SUBROUTINE LIMA_INIT_CCN_ACTIVATION_SPECTRUM (HTYPE_CCN,PD,PSIGMA,PLIMIT_FACTOR,PK,PMU,PBETA,PKAPPA)
 !     #############################################################
 
 !!
@@ -44,7 +44,7 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments : 
 !
-CHARACTER(LEN=*), INTENT(IN)  :: CTYPE_CCN          ! Aerosol type
+CHARACTER(LEN=*), INTENT(IN)  :: HTYPE_CCN          ! Aerosol type
 REAL,             INTENT(IN)  :: PD             ! Aerosol PSD modal diameter          
 REAL,             INTENT(IN)  :: PSIGMA         ! Aerosol PSD width
 REAL,             INTENT(OUT) :: PLIMIT_FACTOR  ! C/Naer
@@ -80,12 +80,12 @@ REAL, DIMENSION(1)            :: ZT             ! temperature
 !
 !-------------------------------------------------------------------------------
 !
-!*       1.     Select kappa value based on CTYPE_CCN
+!*       1.     Select kappa value based on HTYPE_CCN
 !	        ---------------------------------
 !
 ! Kappa values are from Petters and Kreidenweis (2007), table 1.
 !
-SELECT CASE (CTYPE_CCN)
+SELECT CASE (HTYPE_CCN)
 CASE('NH42SO4','C') ! Ammonium sulfate
    PKAPPA = 0.61
 CASE('NH4NO3')      ! Ammonium nitrate
