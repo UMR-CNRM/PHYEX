@@ -7,7 +7,7 @@ MODULE MODE_NZCOLX
   IMPLICIT NONE
 CONTAINS
 !     ################################################################
-  SUBROUTINE NZCOLX( KND, PALPHAX, PNUX, PALPHAZ, PNUZ,          &
+  SUBROUTINE NZCOLX( KSIZE1, KSIZE2, KND, PALPHAX, PNUX, PALPHAZ, PNUZ, &
                      PEXZ, PFALLX, PEXFALLX, PFALLEXPX,          &
                      PFALLZ, PEXFALLZ, PFALLEXPZ,                &
                      PLBDAXMAX, PLBDAZMAX, PLBDAXMIN, PLBDAZMIN, &
@@ -97,6 +97,8 @@ IMPLICIT NONE
 !              ------------------------------- 
 !
 !
+INTEGER, INTENT(IN) :: KSIZE1 !  
+INTEGER, INTENT(IN) :: KSIZE2 !  
 INTEGER, INTENT(IN) :: KND    ! Number of discrete size intervals in DX and DZ  
 !
 !
@@ -122,7 +124,7 @@ REAL, INTENT(IN) :: PLBDAZMIN ! Minimun slope of size distribution of specy Z
 REAL, INTENT(IN) :: PDINFTY   ! Factor to define the largest diameter up to
 			      ! which the diameter integration is performed
 !
-REAL, DIMENSION(:,:), INTENT(OUT) :: PNZCOLX ! Scaled fall speed difference in
+REAL, DIMENSION(KSIZE1, KSIZE2), INTENT(OUT) :: PNZCOLX ! Scaled fall speed difference in
                                              ! the mass collection kernel as a
                                              ! function of LAMBDAX and LAMBDAZ
 !

@@ -461,9 +461,10 @@ DO ISV = 1, NMOD_CCN+NMOD_IFN
                ! Size Ratio
                ZSIZE_RATIO(:,J1,J2) = ZVOLDP(J1)*ZVOLDR_INV(:,J2)
                ! Collision Efficiency
-               ZCOL_EF(:,J1,J2) = COLL_EFFI(ZRE, ZRE_INV, ZRE_SQRT, ZSC, ZSC_INV,   &
-                                       ZSC_SQRT, ZSC_3SQRT, ZST, ZST_STAR,          &
-                                       ZSIZE_RATIO, ZVISC_RATIO, ZDENS_RATIO_SQRT) 
+               ZCOL_EF(:,J1,J2) = COLL_EFFI(ISCAV, NDIAMP, NDIAMR, &
+                    ZRE, ZRE_INV, ZRE_SQRT, ZSC, ZSC_INV,   &
+                    ZSC_SQRT, ZSC_3SQRT, ZST, ZST_STAR,          &
+                    ZSIZE_RATIO, ZVISC_RATIO, ZDENS_RATIO_SQRT) 
                ! Below-Cloud Scavenging Coefficient for a fixed ZVOLDP: [/s]
                ZBC_SCAV_COEF2D(:,J1) = ZBC_SCAV_COEF2D(:,J1) +                          &
                                      ZCOL_EF(:,J1,J2) * ZWEIGHTR(J2) * ZFACTOR(:) * ZVOLDR_POW(:,J2)
@@ -768,9 +769,10 @@ END SUBROUTINE SCAV_MASS_SEDIMENTATION
 !------------------------------------------------------------------------------
 !
 !###################################################################
-  FUNCTION COLL_EFFI (PRE, PRE_INV, PRE_SQRT, PSC, PSC_INV, PSC_SQRT, &
-                      PSC_3SQRT, PST, PST_STAR, PSIZE_RATIO,          &
-                      PVISC_RATIO, PDENS_RATIO_SQRT) RESULT(PCOL_EF)
+FUNCTION COLL_EFFI (KSCAV,KDIAMP,KDIAMR, &
+                    PRE, PRE_INV, PRE_SQRT, PSC, PSC_INV, PSC_SQRT, &
+                    PSC_3SQRT, PST, PST_STAR, PSIZE_RATIO,          &
+                    PVISC_RATIO, PDENS_RATIO_SQRT) RESULT(PCOL_EF)
 !###################################################################
 !
 !Compute the Raindrop-Aerosol Collision Efficiency
@@ -781,23 +783,26 @@ END SUBROUTINE SCAV_MASS_SEDIMENTATION
   IMPLICIT NONE
 !
   INTEGER :: I
+  !
+  INTEGER,              INTENT(IN)    :: KSCAV
+  INTEGER,              INTENT(IN)    :: KDIAMP
+  INTEGER,              INTENT(IN)    :: KDIAMR
+  REAL, DIMENSION(KSCAV,KDIAMR), INTENT(IN)    :: PRE         
+  REAL, DIMENSION(KSCAV,KDIAMR), INTENT(IN)    :: PRE_INV         
+  REAL, DIMENSION(KSCAV,KDIAMR), INTENT(IN)    :: PRE_SQRT         
+  REAL, DIMENSION(KSCAV,KDIAMP), INTENT(IN)    :: PSC     
+  REAL, DIMENSION(KSCAV,KDIAMP), INTENT(IN)    :: PSC_INV    
+  REAL, DIMENSION(KSCAV,KDIAMP), INTENT(IN)    :: PSC_SQRT     
+  REAL, DIMENSION(KSCAV,KDIAMP), INTENT(IN)    :: PSC_3SQRT     
+  REAL, DIMENSION(KSCAV,KDIAMR), INTENT(IN)    :: PST_STAR   
 !
-  REAL, DIMENSION(:,:), INTENT(IN)    :: PRE         
-  REAL, DIMENSION(:,:), INTENT(IN)    :: PRE_INV         
-  REAL, DIMENSION(:,:), INTENT(IN)    :: PRE_SQRT         
-  REAL, DIMENSION(:,:), INTENT(IN)    :: PSC     
-  REAL, DIMENSION(:,:), INTENT(IN)    :: PSC_INV    
-  REAL, DIMENSION(:,:), INTENT(IN)    :: PSC_SQRT     
-  REAL, DIMENSION(:,:), INTENT(IN)    :: PSC_3SQRT     
-  REAL, DIMENSION(:,:), INTENT(IN)    :: PST_STAR   
+  REAL, DIMENSION(KSCAV,KDIAMP,KDIAMR), INTENT(IN)  :: PST         
+  REAL, DIMENSION(KSCAV,KDIAMP,KDIAMR), INTENT(IN)  :: PSIZE_RATIO 
 !
-  REAL, DIMENSION(:,:,:), INTENT(IN)  :: PST         
-  REAL, DIMENSION(:,:,:), INTENT(IN)  :: PSIZE_RATIO 
-!
-  REAL, DIMENSION(:), INTENT(IN)    :: PVISC_RATIO 
+  REAL, DIMENSION(KSCAV), INTENT(IN)    :: PVISC_RATIO 
   REAL,               INTENT(IN)    :: PDENS_RATIO_SQRT 
 !
-  REAL, DIMENSION(SIZE(ZRE,1))      :: PCOL_EF   !result : collision efficiency
+  REAL, DIMENSION(KSCAV)      :: PCOL_EF   !result : collision efficiency
 !
 !-------------------------------------------------------------------------------
 !
@@ -805,7 +810,7 @@ END SUBROUTINE SCAV_MASS_SEDIMENTATION
                   *PSC_3SQRT(:,J1)+0.16*PRE_SQRT(:,J2)*PSC_SQRT(:,J1)))      &
               +(4.*PSIZE_RATIO(:,J1,J2)*(PVISC_RATIO(:)                    & 
               +(1.+2.*PRE_SQRT(:,J2))*PSIZE_RATIO(:,J1,J2)))  
-  DO I=1,ISCAV
+  DO I=1,KSCAV
     IF (PST(I,J1,J2)>PST_STAR(I,J2)) THEN            
             PCOL_EF(I) = PCOL_EF(I)                                           &
                     +(PDENS_RATIO_SQRT*((PST(I,J1,J2)-PST_STAR(I,J2))        &

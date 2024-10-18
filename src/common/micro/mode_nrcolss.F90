@@ -7,7 +7,7 @@ MODULE MODE_NRCOLSS
   IMPLICIT NONE
 CONTAINS
 !     ########################################################################
-  SUBROUTINE NRCOLSS( KND, PALPHAS, PNUS, PALPHAR, PNUR,                  &
+  SUBROUTINE NRCOLSS( KSIZE1, KSIZE2, KND, PALPHAS, PNUS, PALPHAR, PNUR,  &
                       PESR, PFALLS, PEXFALLS, PFALLEXPS, PFALLR, PEXFALLR,&
                       PLBDASMAX, PLBDARMAX, PLBDASMIN, PLBDARMIN,         &
                       PDINFTY, PNRCOLSS, PAG, PBS, PAS                    )
@@ -96,6 +96,8 @@ IMPLICIT NONE
 !              ------------------------------- 
 !
 !
+INTEGER, INTENT(IN) :: KSIZE1 !
+INTEGER, INTENT(IN) :: KSIZE2 !
 INTEGER, INTENT(IN) :: KND    ! Number of discrete size intervals in DS and DR  
 !
 REAL, INTENT(IN) :: PALPHAS   ! First shape parameter of the aggregates 
@@ -120,7 +122,7 @@ REAL, INTENT(IN) :: PDINFTY   ! Factor to define the largest diameter up to
                               ! which the diameter integration is performed
 REAL, INTENT(IN) :: PAG, PBS, PAS
 !
-REAL, DIMENSION(:,:), INTENT(OUT) :: PNRCOLSS! Scaled fall speed difference in
+REAL, DIMENSION(KSIZE1,KSIZE2), INTENT(OUT) :: PNRCOLSS! Scaled fall speed difference in
                                              ! the mass collection kernel as a
                                              ! function of LAMBDAX and LAMBDAZ
 !

@@ -7,7 +7,7 @@ MODULE MODE_NSCOLRG
   IMPLICIT NONE
 CONTAINS
 !     ########################################################################
-  SUBROUTINE NSCOLRG( KND, PALPHAS, PZNUS, PALPHAR, PNUR,                 &
+  SUBROUTINE NSCOLRG( KSIZE1, KSIZE2, KND, PALPHAS, PZNUS, PALPHAR, PNUR, &
                       PESR, PFALLS, PEXFALLS, PFALLEXPS, PFALLR, PEXFALLR,&
                       PLBDASMAX, PLBDARMAX, PLBDASMIN, PLBDARMIN,         &
                       PDINFTY, PNSCOLRG,PAG, PBS, PAS                     )
@@ -94,6 +94,8 @@ IMPLICIT NONE
 !              ------------------------------- 
 !
 !
+INTEGER, INTENT(IN) :: KSIZE1 !
+INTEGER, INTENT(IN) :: KSIZE2 ! 
 INTEGER, INTENT(IN) :: KND    ! Number of discrete size intervals in DS and DR  
 !
 REAL, INTENT(IN) :: PALPHAS   ! First shape parameter of the aggregates 
@@ -118,7 +120,7 @@ REAL, INTENT(IN) :: PDINFTY   ! Factor to define the largest diameter up to
                               ! which the diameter integration is performed
 REAL, INTENT(IN) :: PAG, PBS, PAS
 !
-REAL, DIMENSION(:,:), INTENT(OUT) :: PNSCOLRG! Scaled fall speed difference in
+REAL, DIMENSION(KSIZE1,KSIZE2), INTENT(OUT) :: PNSCOLRG! Scaled fall speed difference in
                                              ! the mass collection kernel as a
                                              ! function of LAMBDAX and LAMBDAZ
 !
