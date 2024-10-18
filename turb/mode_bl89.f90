@@ -139,31 +139,39 @@ IKL=D%NKL
 ! Pointer remapping instead of RESHAPE (contiguous memory)
 ! 2D array => 3D array
 !
+!$acc kernels
 IF (OOCEAN) THEN
+!$acc loop independent collapse(2)
   DO JK=1,IKT
     DO JIJ=IIJB,IIJE
       ZG_O_THVREF(JIJ,JK) = CST%XG * CST%XALPHAOC
     END DO
   END DO
 ELSE !Atmosphere case
+!$acc loop independent collapse(2)
   DO JK=1,IKT
     DO JIJ=IIJB,IIJE
       ZG_O_THVREF(JIJ,JK) = CST%XG / PTHVREF(JIJ,JK)
     END DO
   END DO
 END IF
+!$acc end kernels
 !
+!$acc kernels
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ZSQRT_TKE(:,:) = SQRT(PTKEM(:,:))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!
+!$acc end kernels
 !-------------------------------------------------------------------------------
 !
 !*       2.    Virtual potential temperature on the model grid
 !              -----------------------------------------------
 !
+  !$acc kernels
 IF(KRR /= 0) THEN
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZSUM(:,:) = 0.
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   DO JRR=1,KRR
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
     ZSUM(:,:) = ZSUM(:,:)+PRM(:,:,JRR)
@@ -174,8 +182,11 @@ IF(KRR /= 0) THEN
                            / ( 1. + ZSUM(:,:) )
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 ELSE
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZVPT(:,:)=PTHLM(:,:)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 END IF
+!$acc end kernels
 !
 !!!!!!!!!!!!
 !!!!!!!!!!!!
@@ -188,6 +199,8 @@ END IF
 !but algorithm must remain the same.
 !!!!!!!!!!!!
 !
+!$acc kernels present_cr(ZLWORK,ZINTE,ZLM)
+!$acc loop independent collapse(2)
 DO JK=IKTB,IKTE
   DO JIJ=IIJB,IIJE
     ZDELTVPT(JIJ,JK) = ZVPT(JIJ,JK) - ZVPT(JIJ,JK-IKL)
@@ -195,13 +208,17 @@ DO JK=IKTB,IKTE
   END DO
 END DO
 !
+!$acc loop independent
 DO JIJ=IIJB,IIJE
   ZDELTVPT(JIJ,IKU) = ZVPT(JIJ,IKU) - ZVPT(JIJ,IKU-IKL)
   ZDELTVPT(JIJ,IKA) = 0.
   ZHLVPT(JIJ,IKU) = 0.5 * ( ZVPT(JIJ,IKU) + ZVPT(JIJ,IKU-IKL) )
   ZHLVPT(JIJ,IKA) = ZVPT(JIJ,IKA)
 END DO
+!$acc end kernels
 !
+!$acc kernels
+!$acc loop independent collapse(2)
 DO JK=1,IKT
   DO JIJ=IIJB,IIJE
     IF(ABS(ZDELTVPT(JIJ,JK))<CSTURB%XLINF) THEN
@@ -209,6 +226,7 @@ DO JK=1,IKT
     END IF
   END DO
 END DO
+!$acc end kernels
 !
 !-------------------------------------------------------------------------------
 !
@@ -216,6 +234,8 @@ END DO
 !            --------------------
 !
 DO JK=IKTB,IKTE
+!Remark create(ZTESTM) to force the NVIDIA compiler 23.5 to manage correctly ZTESTM (implicit reduction)
+!$acc kernels create(ZTESTM)
 !
 !-------------------------------------------------------------------------------
 !
@@ -224,9 +244,12 @@ DO JK=IKTB,IKTE
   ZINTE(:)=PTKEM(:,JK)
   ZLWORK=0.
   ZTESTM=1.
+!$acc loop seq
   DO JKK=JK,IKB,-IKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0.
+      !!!$acc loop independent
+      !DO CONCURRENT(JIJ = IIBJ:IIJE)
       DO JIJ=IIJB,IIJE
         ZTEST0=0.5+SIGN(0.5,ZINTE(JIJ))
         !--------- SHEAR + STABILITY -----------
@@ -257,6 +280,7 @@ DO JK=IKTB,IKTE
 !*       5.  intermediate storage of the final mixing length
 !            -----------------------------------------------
 !
+  !$acc loop independent
   DO JIJ=IIJB,IIJE
     PLMDN(JIJ,JK)=MIN(ZLWORK(JIJ),0.5*(PZZ(JIJ,JK)+PZZ(JIJ,JK+IKL))-PZZ(JIJ,IKB))
   END DO
@@ -270,9 +294,12 @@ DO JK=IKTB,IKTE
   ZLWORK(:)=0.
   ZTESTM=1.
 !
+!$acc loop seq
   DO JKK=JK+IKL,IKE,IKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0.
+      !!!$acc loop independent
+      !DO CONCURRENT(JIJ = IIBJ:IIJE)
       DO JIJ=IIJB,IIJE
         ZTEST0=0.5+SIGN(0.5,ZINTE(JIJ))
         !--------- SHEAR + STABILITY -----------
@@ -302,6 +329,7 @@ DO JK=IKTB,IKTE
 !
 !*       7.  final mixing length
 !
+!$acc loop independent
   DO JIJ=IIJB,IIJE
     ZLWORK1=MAX(PLMDN(JIJ,JK),1.E-10_MNHREAL)
     ZLWORK2=MAX(ZLWORK(JIJ),1.E-10_MNHREAL)
@@ -311,11 +339,11 @@ DO JK=IKTB,IKTE
     PLM(JIJ,JK)=MAX(PLM(JIJ,JK),TURBN%XLINI)
   END DO
 
-
 !-------------------------------------------------------------------------------
 !*       8.  end of the loop on the vertical levels
 !            --------------------------------------
 !
+!$acc end kernels
 END DO
 !
 !-------------------------------------------------------------------------------
@@ -323,10 +351,12 @@ END DO
 !*       9.  boundaries
 !            ----------
 !
+!$acc kernels
 PLM(:,IKA)=PLM(:,IKB)
 PLM(:,IKE)=PLM(:,IKE-IKL)
 PLM(:,IKU)=PLM(:,IKE-IKL)
 !
+!$acc end kernels
 !-------------------------------------------------------------------------------
 !
 !*      10.  retrieve output array in model coordinates
