@@ -55,7 +55,7 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
     docstringIN = ["Input arguments:"]
     docstringOUT = ["Output arguments:"]
     for N in scopeNode.findall('.//{*}dummy-arg-LT/{*}arg-N/{*}N'):
-        var = pftin.varList.findVar(n2name(N), scope, exactScope=True)
+        var = scopeNode.varList.findVar(n2name(N), exactScope=True)
         vartype = var['t'].replace(' ', '').upper()
         if vartype == 'TYPE(DIMPHYEX_T)':
             moduleList.append('USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t')
