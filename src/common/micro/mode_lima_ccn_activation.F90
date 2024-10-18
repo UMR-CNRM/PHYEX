@@ -7,7 +7,7 @@ MODULE MODE_LIMA_CCN_ACTIVATION
   IMPLICIT NONE
 CONTAINS
 !     ##############################################################################
-    SUBROUTINE LIMA_CCN_ACTIVATION (CST,                                           &
+    SUBROUTINE LIMA_CCN_ACTIVATION (D, CST,                                        &
                                     PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU, &
                                     PTHT, PRVT, PRCT, PCCT, PRRT, PNFT, PNAT,      &
                                     PCLDFR, PTOT_RV_HENU                           )
@@ -66,6 +66,7 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 !use modd_field,           only: TFIELDDATA, TYPEREAL
 !USE MODD_IO,              ONLY: TFILEDATA
@@ -86,29 +87,30 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
 !TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file
 !
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PRHODREF   ! Reference density
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PPABST     ! abs. pressure at time t
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PT         ! Temperature
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PDTHRAD    ! Radiative temperature tendency
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF   ! Reference density
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PPABST     ! abs. pressure at time t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PT         ! Temperature
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PDTHRAD    ! Radiative temperature tendency
 !
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PW_NU      ! updraft velocity used for
                                                       ! the nucleation param.
 !   
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PTHT       ! Theta at t 
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRVT       ! Water vapor m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRCT       ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PCCT       ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PRRT       ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNFT       ! CCN C. available at t
-REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNAT       ! CCN C. activated at t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTHT       ! Theta at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRVT       ! Water vapor m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRCT       ! Cloud water m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCCT       ! Cloud water m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRRT       ! Cloud water m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT,NMOD_CCN), INTENT(INOUT) :: PNFT       ! CCN C. available at t
+REAL, DIMENSION(D%NIJT,D%NKT,NMOD_CCN), INTENT(INOUT) :: PNAT       ! CCN C. activated at t
 !
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PCLDFR     ! Precipitation fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCLDFR     ! Precipitation fraction
 !
-REAL, DIMENSION(:,:), OPTIONAL, INTENT(INOUT) :: PTOT_RV_HENU  ! Mixing ratio change due to HENU
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(INOUT) :: PTOT_RV_HENU  ! Mixing ratio change due to HENU
 !
 !*       0.1   Declarations of local variables :
 !
@@ -564,10 +566,10 @@ IMPLICIT NONE
 !*       0.1 declarations of arguments and result
 !
 INTEGER,            INTENT(IN)     :: KPTS
-REAL, DIMENSION(:), INTENT(IN)     :: PZZW3
-REAL, DIMENSION(:), INTENT(IN)     :: PZZW6
+REAL, DIMENSION(KPTS), INTENT(IN)     :: PZZW3
+REAL, DIMENSION(KPTS), INTENT(IN)     :: PZZW6
 REAL,               INTENT(IN)     :: PX1, PX2INIT, PXACC
-REAL, DIMENSION(:), ALLOCATABLE    :: PZRIDDR
+REAL, DIMENSION(KPTS), ALLOCATABLE    :: PZRIDDR
 !
 !*       0.2 declarations of local variables
 !
@@ -727,9 +729,9 @@ IMPLICIT NONE
 !
 INTEGER,            INTENT(IN)  :: KPTS
 REAL,               INTENT(IN)  :: PPZSMAX   ! supersaturation is already in no units
-REAL, DIMENSION(:), INTENT(IN)  :: PPZZW3    ! 
-REAL, DIMENSION(:), INTENT(IN)  :: PPZZW6    ! 
-REAL, DIMENSION(:), ALLOCATABLE :: PFUNCSMAX ! 
+REAL, DIMENSION(KPTS), INTENT(IN)  :: PPZZW3    ! 
+REAL, DIMENSION(KPTS), INTENT(IN)  :: PPZZW6    ! 
+REAL, DIMENSION(KPTS), ALLOCATABLE :: PFUNCSMAX ! 
 !
 !*       0.2 declarations of local variables
 !

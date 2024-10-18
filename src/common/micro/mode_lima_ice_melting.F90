@@ -6,7 +6,7 @@ MODULE MODE_LIMA_ICE_MELTING
   IMPLICIT NONE
 CONTAINS
 !     ########################################################################
-  SUBROUTINE LIMA_ICE_MELTING (PTSTEP, ODCOMPUTE,                        &
+  SUBROUTINE LIMA_ICE_MELTING (KSIZE, PTSTEP, ODCOMPUTE,                 &
                                PEXNREF, PPABST,                          &
                                PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                PCIT, PINT,                               &
@@ -42,32 +42,33 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+INTEGER,              INTENT(IN)    :: KSIZE
 REAL,                 INTENT(IN)    :: PTSTEP 
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
-REAL, DIMENSION(:),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PEXNREF ! Reference Exner function
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PTHT    ! Theta at time t
-REAL, DIMENSION(:),   INTENT(IN)    :: PRVT    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PRCT    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PRRT    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PRIT    ! Cloud ice m.r. at t 
-REAL, DIMENSION(:),   INTENT(IN)    :: PRST    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PRGT    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PTHT    ! Theta at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRVT    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRCT    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRRT    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRIT    ! Cloud ice m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRST    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRGT    ! 
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PCIT    ! Rain water C. at t
-REAL, DIMENSION(:,:), INTENT(IN)    :: PINT    ! Nucleated IFN C. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCIT    ! Rain water C. at t
+REAL, DIMENSION(KSIZE,NMOD_IFN), INTENT(IN)    :: PINT    ! Nucleated IFN C. at t
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_IMLT
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_IMLT
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_IMLT
-REAL, DIMENSION(:),   INTENT(INOUT) :: PB_TH
-REAL, DIMENSION(:),   INTENT(INOUT) :: PB_RC
-REAL, DIMENSION(:),   INTENT(INOUT) :: PB_CC
-REAL, DIMENSION(:),   INTENT(INOUT) :: PB_RI
-REAL, DIMENSION(:),   INTENT(INOUT) :: PB_CI
-REAL, DIMENSION(:,:), INTENT(INOUT) :: PB_IFNN
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_IMLT
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RC_IMLT
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CC_IMLT
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PB_TH
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PB_RC
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PB_CC
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PB_RI
+REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PB_CI
+REAL, DIMENSION(KSIZE,NMOD_IFN), INTENT(INOUT) :: PB_IFNN
 !
 !*       0.2   Declarations of local variables :
 !

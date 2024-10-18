@@ -976,7 +976,7 @@ END IF
 !!$         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nr), 'R2C1', zcrs(:,:) * prhodj(:,:) )
 !!$   end if
 !!$
-!!$   CALL LIMA_DROPS_TO_DROPLETS_CONV(PRHODREF, ZRCS*PTSTEP, ZRRS*PTSTEP, ZCCS*PTSTEP, ZCRS*PTSTEP, &
+!!$   CALL LIMA_DROPS_TO_DROPLETS_CONV(D, PRHODREF, ZRCS*PTSTEP, ZRRS*PTSTEP, ZCCS*PTSTEP, ZCRS*PTSTEP, &
 !!$                                    Z_RR_CVRC, Z_CR_CVRC)
 !!$   !
 !!$   ZRCS(:,:) = ZRCS(:,:) - Z_RR_CVRC(:,:)/PTSTEP
@@ -1400,7 +1400,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       !
       !***       4.1 Tendencies computation
       !
-      CALL LIMA_INST_PROCS (PTSTEP, GLCOMPUTE1D,                                &
+      CALL LIMA_INST_PROCS (IPACK, PTSTEP, GLCOMPUTE1D,                         &
                             ZEXNREF1D, ZP1D,                                    &
                             ZTHT1D, ZRVT1D, ZRCT1D, ZRRT1D, ZRIT1D, ZRST1D, ZRGT1D, &
                             ZCCT1D, ZCRT1D, ZCIT1D,                             &
@@ -1413,7 +1413,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
                             ZB_IFNN,                                            &
                             ZCF1D, ZIF1D, ZPF1D                                 )
       
-      CALL LIMA_TENDENCIES (PTSTEP, GLCOMPUTE1D,                                    &
+      CALL LIMA_TENDENCIES (IPACK, PTSTEP, GLCOMPUTE1D,                             &
                             ZEXNREF1D, ZRHODREF1D, ZP1D, ZTHT1D,                    &
                             ZRVT1D, ZRCT1D, ZRRT1D, ZRIT1D, ZRST1D, ZRGT1D, ZRHT1D, &
                             ZCCT1D, ZCRT1D, ZCIT1D, ZCST1D, ZCGT1D, ZCHT1D,         &
@@ -1682,7 +1682,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       END DO
       !
 !!$      IF (NMOM_C.GE.2 .AND. NMOM_R.GE.2) THEN
-!!$         CALL LIMA_DROPS_TO_DROPLETS_CONV(PRHODREF, ZRCT, ZRRT, ZCCT, ZCRT, &
+!!$         CALL LIMA_DROPS_TO_DROPLETS_CONV(D, PRHODREF, ZRCT, ZRRT, ZCCT, ZCRT, &
 !!$              Z_RR_CVRC, Z_CR_CVRC    )
 !!$         ZRCT(:,:) = ZRCT(:,:) - Z_RR_CVRC(:,:)
 !!$         ZRRT(:,:) = ZRRT(:,:) + Z_RR_CVRC(:,:)

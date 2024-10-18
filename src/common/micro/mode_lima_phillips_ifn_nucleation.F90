@@ -7,7 +7,7 @@ MODULE MODE_LIMA_PHILLIPS_IFN_NUCLEATION
   IMPLICIT NONE
 CONTAINS
 !     #################################################################################
-  SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION (CST, PTSTEP,                              &
+  SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION (D, CST, PTSTEP,                           &
                                            PRHODREF, PEXNREF, PPABST,                &
                                            PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                            PCCT, PCIT, PNAT, PIFT, PINT, PNIT,       &
@@ -71,6 +71,7 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAMETERS,      ONLY : JPHEXT, JPVEXT
 USE MODD_PARAM_LIMA,      ONLY : NMOD_IFN, NSPECIE, XFRAC,                         &
@@ -87,36 +88,37 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(DIMPHYEX_t),       INTENT(IN)    :: D
 TYPE(CST_t),            INTENT(IN)    :: CST
 REAL,                   INTENT(IN)    :: PTSTEP 
 !
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF! Reference density
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXNREF ! Reference Exner function
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
 !
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PTHT    ! Theta at time t
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRVT    ! Water vapor m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRCT    ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRIT    ! Cloud ice m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTHT    ! Theta at time t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRVT    ! Water vapor m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRCT    ! Cloud water m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRIT    ! Cloud ice m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t
 !
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PCCT    ! Cloud water conc. at t 
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PCIT    ! Cloud water conc. at t 
-REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNAT    ! CCN conc. used for immersion nucl.
-REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PIFT    ! Free IFN conc.
-REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PINT    ! Nucleated IFN conc.
-REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNIT    ! Nucleated (by immersion) CCN conc.
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCCT    ! Cloud water conc. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Cloud water conc. at t 
+REAL, DIMENSION(D%NIJT,D%NKT,NMOD_CCN), INTENT(INOUT) :: PNAT    ! CCN conc. used for immersion nucl.
+REAL, DIMENSION(D%NIJT,D%NKT,NMOD_IFN), INTENT(INOUT) :: PIFT    ! Free IFN conc.
+REAL, DIMENSION(D%NIJT,D%NKT,NMOD_IFN), INTENT(INOUT) :: PINT    ! Nucleated IFN conc.
+REAL, DIMENSION(D%NIJT,D%NKT,NMOD_IMM), INTENT(INOUT) :: PNIT    ! Nucleated (by immersion) CCN conc.
 !
-REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_TH_HIND
-REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_RI_HIND
-REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_CI_HIND
-REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_TH_HINC
-REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_RC_HINC
-REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_CC_HINC
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_TH_HIND
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_RI_HIND
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_CI_HIND
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_TH_HINC
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_RC_HINC
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_CC_HINC
 !
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PICEFR
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PICEFR
 !
 !
 !*       0.2   Declarations of local variables :
@@ -324,12 +326,12 @@ IF (INEGT > 0) THEN
 !
 ! Computation of the reference activity spectrum ( ZZY = N_{IN,1,*} )
 !
-   CALL LIMA_PHILLIPS_REF_SPECTRUM(CST, ZZT, ZSI, ZSI_W, ZZY)
+   CALL LIMA_PHILLIPS_REF_SPECTRUM(CST, INEGT, ZZT, ZSI, ZSI_W, ZZY)
 !
 ! For each aerosol species (DM1, DM2, BC, O), compute the fraction that may be activated
 ! Z_FRAC_ACT(INEGT,NSPECIE) = fraction of each species that may be activated
 !
-   CALL LIMA_PHILLIPS_INTEG(CST, ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
+   CALL LIMA_PHILLIPS_INTEG(CST, INEGT, ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
 !
 !
 !-------------------------------------------------------------------------------

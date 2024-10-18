@@ -7,7 +7,7 @@ MODULE MODE_LIMA_RAIN_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     #######################################################################################
-  SUBROUTINE LIMA_RAIN_FREEZING (ODCOMPUTE,                                             &
+  SUBROUTINE LIMA_RAIN_FREEZING (KSIZE, ODCOMPUTE,                                      &
                                  PRHODREF, PT, PLVFACT, PLSFACT,                        &
                                  PRRT, PCRT, PRIT, PCIT, PLBDR,                         &
                                  P_TH_CFRZ, P_RR_CFRZ, P_CR_CFRZ, P_RI_CFRZ, P_CI_CFRZ  )
@@ -42,24 +42,25 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+INTEGER, INTENT(IN) :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! Reference Exner function
-REAL, DIMENSION(:),   INTENT(IN)    :: PT       !
-REAL, DIMENSION(:),   INTENT(IN)    :: PLVFACT  !
-REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT  !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF ! Reference Exner function
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PT       !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLVFACT  !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT  !
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRRT    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PCRT    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PRIT    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PCIT    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRRT    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCRT    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRIT    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCIT    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDR   ! 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_CFRZ
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_CFRZ
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_CFRZ
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_CFRZ
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_CFRZ
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_CFRZ
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RR_CFRZ
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CR_CFRZ
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RI_CFRZ
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_CFRZ
 !
 !*       0.2   Declarations of local variables :
 !

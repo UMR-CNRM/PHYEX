@@ -7,7 +7,7 @@ MODULE MODE_LIMA_SNOW_SELF_COLLECTION
   IMPLICIT NONE
 CONTAINS
 !     #############################################################
-  SUBROUTINE LIMA_SNOW_SELF_COLLECTION (ODCOMPUTE,          &
+  SUBROUTINE LIMA_SNOW_SELF_COLLECTION (KSIZE, ODCOMPUTE,   &
                                         PRHODREF, PT,       &
                                         PRST, PCST, PLBDS,  &
                                         P_CS_SSC            )
@@ -43,16 +43,17 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+INTEGER, INTENT(IN) :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! Reference Exner function
-REAL, DIMENSION(:),   INTENT(IN)    :: PT       ! Temperature
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF ! Reference Exner function
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PT       ! Temperature
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRST    ! Snow mr at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PCST    ! Snow C. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDS   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRST    ! Snow mr at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCST    ! Snow C. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDS   ! 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_SSC 
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CS_SSC 
 !
 !*       0.2   Declarations of local variables :
 !

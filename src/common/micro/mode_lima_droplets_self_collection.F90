@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPLETS_SELF_COLLECTION
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################
-  SUBROUTINE LIMA_DROPLETS_SELF_COLLECTION (ODCOMPUTE,                      &
+  SUBROUTINE LIMA_DROPLETS_SELF_COLLECTION (KSIZE, ODCOMPUTE,               &
                                             PRHODREF,                       &
                                             PCCT, PLBDC3,                   &
                                             P_CC_SELF                       )
@@ -41,14 +41,15 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+INTEGER,              INTENT(IN)    :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! Reference Exner function
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF ! Reference Exner function
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PCCT     ! Cloud water C. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDC3   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCCT     ! Cloud water C. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDC3   ! 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_SELF
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CC_SELF
 !
 !*       0.2   Declarations of local variables :
 !

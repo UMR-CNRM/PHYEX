@@ -7,7 +7,7 @@ MODULE MODE_LIMA_INST_PROCS
   IMPLICIT NONE
 CONTAINS
 !     ###########################################################################
-  SUBROUTINE LIMA_INST_PROCS (PTSTEP, ODCOMPUTE,                                  &
+  SUBROUTINE LIMA_INST_PROCS (KSIZE, PTSTEP, ODCOMPUTE,                           &
                               PEXNREF, PPABST,                                    &
                               PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,           &
                               PCCT, PCRT, PCIT,                                   &
@@ -37,7 +37,7 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
 !
-USE MODD_PARAM_LIMA, ONLY : NMOM_C, NMOM_R, NMOM_I, NMOM_G
+USE MODD_PARAM_LIMA, ONLY : NMOM_C, NMOM_R, NMOM_I, NMOM_Gn NMOD_IFN
 !
 USE MODE_LIMA_DROPS_BREAK_UP, ONLY: LIMA_DROPS_BREAK_UP
 USE MODE_LIMA_DROPS_HOM_FREEZING, ONLY: LIMA_DROPS_HOM_FREEZING
@@ -46,65 +46,65 @@ USE MODE_LIMA_ICE_MELTING, ONLY: LIMA_ICE_MELTING
 IMPLICIT NONE
 
 
-
+INTEGER,              INTENT(IN)    :: KSIZE
 REAL,                 INTENT(IN)    :: PTSTEP     ! Time step
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
-REAL, DIMENSION(:),   INTENT(IN)    :: PPABST     ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PEXNREF    ! Reference Exner function
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PPABST     ! abs. pressure at time t
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PTHT       ! Theta at t 
-REAL, DIMENSION(:),   INTENT(IN)    :: PRVT       ! Water vapor m.r. at t 
-REAL, DIMENSION(:),   INTENT(IN)    :: PRCT       ! Cloud water m.r. at t 
-REAL, DIMENSION(:),   INTENT(IN)    :: PRRT       ! Rain water m.r. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PRIT       ! Rain water m.r. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PRST       ! Rain water m.r. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PRGT       ! Rain water m.r. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PTHT       ! Theta at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRVT       ! Water vapor m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRCT       ! Cloud water m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRRT       ! Rain water m.r. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRIT       ! Rain water m.r. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRST       ! Rain water m.r. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRGT       ! Rain water m.r. at t
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PCCT       ! Cloud water conc. at t 
-REAL, DIMENSION(:),   INTENT(IN)    :: PCRT       ! Rain water conc. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PCIT       ! Prinstine ice conc. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCCT       ! Cloud water conc. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCRT       ! Rain water conc. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCIT       ! Prinstine ice conc. at t
 !
-REAL, DIMENSION(:,:), INTENT(IN)    :: PINT       ! IFN C. activated at t
+REAL, DIMENSION(KSIZE,NMOD_IFN), INTENT(IN)    :: PINT       ! IFN C. activated at t
 !
-REAL, DIMENSION(:)  , INTENT(OUT) :: P_CR_BRKU  ! Concentration change (#/kg)
-REAL, DIMENSION(:)  , INTENT(OUT) :: P_TH_HONR  ! 
-REAL, DIMENSION(:)  , INTENT(OUT) :: P_RR_HONR  ! mr change (kg/kg)
-REAL, DIMENSION(:)  , INTENT(OUT) :: P_CR_HONR  ! Concentration change (#/kg)
-REAL, DIMENSION(:)  , INTENT(OUT) :: P_TH_IMLT  ! 
-REAL, DIMENSION(:)  , INTENT(OUT) :: P_RC_IMLT  ! mr change (kg/kg)
-REAL, DIMENSION(:)  , INTENT(OUT) :: P_CC_IMLT  ! Concentration change (#/kg)
+REAL, DIMENSION(KSIZE)  , INTENT(OUT) :: P_CR_BRKU  ! Concentration change (#/kg)
+REAL, DIMENSION(KSIZE)  , INTENT(OUT) :: P_TH_HONR  ! 
+REAL, DIMENSION(KSIZE)  , INTENT(OUT) :: P_RR_HONR  ! mr change (kg/kg)
+REAL, DIMENSION(KSIZE)  , INTENT(OUT) :: P_CR_HONR  ! Concentration change (#/kg)
+REAL, DIMENSION(KSIZE)  , INTENT(OUT) :: P_TH_IMLT  ! 
+REAL, DIMENSION(KSIZE)  , INTENT(OUT) :: P_RC_IMLT  ! mr change (kg/kg)
+REAL, DIMENSION(KSIZE)  , INTENT(OUT) :: P_CC_IMLT  ! Concentration change (#/kg)
 !
-REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_TH      ! Cumulated theta change
-REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_RV      ! Cumulated mr change (kg/kg)
-REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_RC      ! Cumulated mr change (kg/kg)
-REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_RR      ! Cumulated mr change (kg/kg)
-REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_RI      ! Cumulated mr change (kg/kg)
-REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_RG      ! Cumulated mr change (kg/kg)
+REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PB_TH      ! Cumulated theta change
+REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PB_RV      ! Cumulated mr change (kg/kg)
+REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PB_RC      ! Cumulated mr change (kg/kg)
+REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PB_RR      ! Cumulated mr change (kg/kg)
+REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PB_RI      ! Cumulated mr change (kg/kg)
+REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PB_RG      ! Cumulated mr change (kg/kg)
 !
-REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_CC      ! Cumulated concentration change (#/kg)
-REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_CR      ! Cumulated concentration change (#/kg)
-REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_CI      ! Cumulated concentration change (#/kg)
+REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PB_CC      ! Cumulated concentration change (#/kg)
+REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PB_CR      ! Cumulated concentration change (#/kg)
+REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PB_CI      ! Cumulated concentration change (#/kg)
 !
-REAL, DIMENSION(:,:), INTENT(INOUT) :: PB_IFNN    ! Cumulated concentration change (#/kg)
+REAL, DIMENSION(KSIZE,NMOD_IFN), INTENT(INOUT) :: PB_IFNN    ! Cumulated concentration change (#/kg)
 !
-REAL, DIMENSION(:)  , INTENT(INOUT) :: PCF1D      ! Liquid cloud fraction
-REAL, DIMENSION(:)  , INTENT(INOUT) :: PIF1D      ! Ice cloud fraction
-REAL, DIMENSION(:)  , INTENT(INOUT) :: PPF1D      ! Precipitation fraction
+REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PCF1D      ! Liquid cloud fraction
+REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PIF1D      ! Ice cloud fraction
+REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PPF1D      ! Precipitation fraction
 !
 !-------------------------------------------------------------------------------
 !
 IF (NMOM_R.GE.2) THEN
-   CALL LIMA_DROPS_BREAK_UP (ODCOMPUTE,    & ! no dependance on CF, IF or PF
-                             PCRT, PRRT,   &
-                             P_CR_BRKU,    &
-                             PB_CR         )
+   CALL LIMA_DROPS_BREAK_UP (KSIZE, ODCOMPUTE, & ! no dependance on CF, IF or PF
+                             PCRT, PRRT,       &
+                             P_CR_BRKU,        &
+                             PB_CR             )
 END IF
 !
 !-------------------------------------------------------------------------------
 !
 IF (NMOM_G.GE.1 .AND. NMOM_R.GE.1) THEN
-   CALL LIMA_DROPS_HOM_FREEZING (PTSTEP, ODCOMPUTE,                        & ! no dependance on CF, IF or PF
+   CALL LIMA_DROPS_HOM_FREEZING (KSIZE, PTSTEP, ODCOMPUTE,                 & ! no dependance on CF, IF or PF
                                  PEXNREF, PPABST,                          &
                                  PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                  PCRT,                                     &
@@ -115,7 +115,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 IF (NMOM_C.GE.1 .AND. NMOM_I.GE.1) THEN
-   CALL LIMA_ICE_MELTING (PTSTEP, ODCOMPUTE,                        & ! no dependance on CF, IF or PF
+   CALL LIMA_ICE_MELTING (KSIZE, PTSTEP, ODCOMPUTE,                 & ! no dependance on CF, IF or PF
                           PEXNREF, PPABST,                          & ! but ice fraction becomes cloud fraction
                           PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, & ! -> where ?
                           PCIT, PINT,                               &

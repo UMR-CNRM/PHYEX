@@ -74,27 +74,27 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
-TYPE(CST_t),              INTENT(IN)    :: CST
-CHARACTER(1),             INTENT(IN)    :: HPHASE    ! Liquid or solid hydrometeors
-INTEGER,                  INTENT(IN)    :: KMOMENTS  ! Number of moments 
-INTEGER,                  INTENT(IN)    :: KID       ! Hydrometeor ID
-INTEGER,                  INTENT(IN)    :: KSPLITG   !  
-REAL,                     INTENT(IN)    :: PTSTEP    ! Time step  
-LOGICAL,                  INTENT(IN)    :: OELEC     ! if true, cloud electrification is activated
-REAL, DIMENSION(:,:),     INTENT(IN)    :: PDZZ      ! Height (z)
-REAL, DIMENSION(:,:),     INTENT(IN)    :: PRHODREF  ! Reference density
-REAL, DIMENSION(:,:),     INTENT(IN)    :: PPABST    ! abs. pressure at time t
-REAL, DIMENSION(:,:),     INTENT(INOUT) :: PT        ! Temperature
-REAL, DIMENSION(:,:),     INTENT(INOUT) :: PRT_SUM   ! total water mixing ratio
-REAL, DIMENSION(:,:),     INTENT(INOUT) :: PCPT      ! Cp
-REAL, DIMENSION(:,:),     INTENT(INOUT) :: PRS       ! m.r. source
-REAL, DIMENSION(:,:),     INTENT(INOUT) :: PCS       ! C. source
-REAL, DIMENSION(:),       INTENT(OUT)   :: PINPR     ! Instant precip rate
-REAL, DIMENSION(:,:),     INTENT(OUT)   :: PFPR      ! Precip. fluxes in altitude
-REAL, DIMENSION(:,:),     INTENT(IN),    OPTIONAL :: PEFIELDW  ! Vertical component of the electric field
-REAL, INTENT(IN)                        :: PTHVREFZIKB ! Reference thv at IKB for electricity
-REAL, DIMENSION(:,:),     INTENT(INOUT), OPTIONAL :: PQS ! Elec. charge density source
+TYPE(DIMPHYEX_t),              INTENT(IN)    :: D
+TYPE(CST_t),                   INTENT(IN)    :: CST
+CHARACTER(1),                  INTENT(IN)    :: HPHASE    ! Liquid or solid hydrometeors
+INTEGER,                       INTENT(IN)    :: KMOMENTS  ! Number of moments 
+INTEGER,                       INTENT(IN)    :: KID       ! Hydrometeor ID
+INTEGER,                       INTENT(IN)    :: KSPLITG   !  
+REAL,                          INTENT(IN)    :: PTSTEP    ! Time step  
+LOGICAL,                       INTENT(IN)    :: OELEC     ! if true, cloud electrification is activated
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PDZZ      ! Height (z)
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODREF  ! Reference density
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PPABST    ! abs. pressure at time t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PT        ! Temperature
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRT_SUM   ! total water mixing ratio
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PCPT      ! Cp
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PRS       ! m.r. source
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT) :: PCS       ! C. source
+REAL, DIMENSION(D%NIJT),       INTENT(OUT)   :: PINPR     ! Instant precip rate
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PFPR      ! Precip. fluxes in altitude
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN),    OPTIONAL :: PEFIELDW  ! Vertical component of the electric field
+REAL,                          INTENT(IN)    :: PTHVREFZIKB ! Reference thv at IKB for electricity
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT), OPTIONAL :: PQS ! Elec. charge density source
 !
 !*       0.2   Declarations of local variables :
 !

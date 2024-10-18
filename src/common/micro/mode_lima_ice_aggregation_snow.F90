@@ -7,7 +7,7 @@ MODULE MODE_LIMA_ICE_AGGREGATION_SNOW
   IMPLICIT NONE
 CONTAINS
 !     #######################################################################
-  SUBROUTINE LIMA_ICE_AGGREGATION_SNOW (ODCOMPUTE,                            &
+  SUBROUTINE LIMA_ICE_AGGREGATION_SNOW (KSIZE, ODCOMPUTE,                     &
                                         PT, PRHODREF,                         &
                                         PRIT, PRST, PCIT, PCST, PLBDI, PLBDS, &
                                         PLATHAM_IAGGS,                        &
@@ -47,21 +47,22 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+INTEGER, INTENT(IN) :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PT
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PT
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRIT
-REAL, DIMENSION(:),   INTENT(IN)    :: PRST
-REAL, DIMENSION(:),   INTENT(IN)    :: PCIT
-REAL, DIMENSION(:),   INTENT(IN)    :: PCST
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDI 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDS 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLATHAM_IAGGS
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRIT
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRST
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCIT
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCST
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDI 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDS 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLATHAM_IAGGS
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_AGGS
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_AGGS
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RI_AGGS
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_AGGS
 !
 !*       0.2   Declarations of local variables :
 !

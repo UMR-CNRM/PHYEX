@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPLETS_AUTOCONVERSION
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_DROPLETS_AUTOCONVERSION (ODCOMPUTE,                      &
+  SUBROUTINE LIMA_DROPLETS_AUTOCONVERSION (KSIZE, ODCOMPUTE,               &
                                            PRHODREF,                       &
                                            PRCT, PCCT, PLBDC, PLBDR,       &
                                            P_RC_AUTO, P_CC_AUTO, P_CR_AUTO )
@@ -45,18 +45,19 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+INTEGER,              INTENT(IN)    :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! Reference Exner function
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF ! Reference Exner function
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRCT    ! Cloud water m.r. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PCCT    ! Cloud water conc. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDC   ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRCT    ! Cloud water m.r. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCCT    ! Cloud water conc. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDC   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDR   ! 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_AUTO
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_AUTO
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_AUTO
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RC_AUTO
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CC_AUTO
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CR_AUTO
 !
 !*       0.2   Declarations of local variables :
 !

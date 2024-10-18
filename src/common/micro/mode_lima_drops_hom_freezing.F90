@@ -6,7 +6,7 @@ MODULE MODE_LIMA_DROPS_HOM_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     ###############################################################################
-  SUBROUTINE LIMA_DROPS_HOM_FREEZING (PTSTEP, ODCOMPUTE,                        &
+  SUBROUTINE LIMA_DROPS_HOM_FREEZING (KSIZE, PTSTEP, ODCOMPUTE,                 &
                                       PEXNREF, PPABST,                          &
                                       PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                       PCRT,                                     &
@@ -42,29 +42,30 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+INTEGER,               INTENT(IN)    :: KSIZE
 REAL,                  INTENT(IN)    :: PTSTEP 
-LOGICAL, DIMENSION(:), INTENT(IN)    :: ODCOMPUTE
+LOGICAL, DIMENSION(KSIZE), INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),    INTENT(IN)    :: PEXNREF ! Reference Exner function
-REAL, DIMENSION(:),    INTENT(IN)    :: PPABST  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),    INTENT(IN)    :: PEXNREF ! Reference Exner function
+REAL, DIMENSION(KSIZE),    INTENT(IN)    :: PPABST  ! abs. pressure at time t
 !
-REAL, DIMENSION(:),    INTENT(IN)    :: PTHT    ! Theta at time t
-REAL, DIMENSION(:),    INTENT(IN)    :: PRVT    ! Water vapor m.r. at t 
-REAL, DIMENSION(:),    INTENT(IN)    :: PRCT    ! Cloud water m.r. at t 
-REAL, DIMENSION(:),    INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
-REAL, DIMENSION(:),    INTENT(IN)    :: PRIT    ! Cloud ice m.r. at t 
-REAL, DIMENSION(:),    INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
-REAL, DIMENSION(:),    INTENT(IN)    :: PRGT    ! Graupel m.r. at t 
+REAL, DIMENSION(KSIZE),    INTENT(IN)    :: PTHT    ! Theta at time t
+REAL, DIMENSION(KSIZE),    INTENT(IN)    :: PRVT    ! Water vapor m.r. at t 
+REAL, DIMENSION(KSIZE),    INTENT(IN)    :: PRCT    ! Cloud water m.r. at t 
+REAL, DIMENSION(KSIZE),    INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
+REAL, DIMENSION(KSIZE),    INTENT(IN)    :: PRIT    ! Cloud ice m.r. at t 
+REAL, DIMENSION(KSIZE),    INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
+REAL, DIMENSION(KSIZE),    INTENT(IN)    :: PRGT    ! Graupel m.r. at t 
 !
-REAL, DIMENSION(:),    INTENT(IN)    :: PCRT    ! Rain water C. at t
+REAL, DIMENSION(KSIZE),    INTENT(IN)    :: PCRT    ! Rain water C. at t
 !
-REAL, DIMENSION(:),    INTENT(OUT) :: P_TH_HONR
-REAL, DIMENSION(:),    INTENT(OUT) :: P_RR_HONR
-REAL, DIMENSION(:),    INTENT(OUT) :: P_CR_HONR
-REAL, DIMENSION(:),    INTENT(INOUT) :: PB_TH
-REAL, DIMENSION(:),    INTENT(INOUT) :: PB_RR
-REAL, DIMENSION(:),    INTENT(INOUT) :: PB_CR
-REAL, DIMENSION(:),    INTENT(INOUT) :: PB_RG
+REAL, DIMENSION(KSIZE),    INTENT(OUT) :: P_TH_HONR
+REAL, DIMENSION(KSIZE),    INTENT(OUT) :: P_RR_HONR
+REAL, DIMENSION(KSIZE),    INTENT(OUT) :: P_CR_HONR
+REAL, DIMENSION(KSIZE),    INTENT(INOUT) :: PB_TH
+REAL, DIMENSION(KSIZE),    INTENT(INOUT) :: PB_RR
+REAL, DIMENSION(KSIZE),    INTENT(INOUT) :: PB_CR
+REAL, DIMENSION(KSIZE),    INTENT(INOUT) :: PB_RG
 !
 !*       0.2   Declarations of local variables :
 !

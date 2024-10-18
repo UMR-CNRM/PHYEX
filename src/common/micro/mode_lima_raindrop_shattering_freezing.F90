@@ -7,7 +7,7 @@ MODULE MODE_LIMA_RAINDROP_SHATTERING_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     #######################################################################
-  SUBROUTINE LIMA_RAINDROP_SHATTERING_FREEZING (ODCOMPUTE,                    &
+  SUBROUTINE LIMA_RAINDROP_SHATTERING_FREEZING (KSIZE, ODCOMPUTE,             &
                                                 PRHODREF,                     &
                                                 PRRT, PCRT, PRIT, PCIT, PRGT, &
                                                 PLBDR,                        &
@@ -42,19 +42,20 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+INTEGER, INTENT(IN) :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRRT
-REAL, DIMENSION(:),   INTENT(IN)    :: PCRT
-REAL, DIMENSION(:),   INTENT(IN)    :: PRIT
-REAL, DIMENSION(:),   INTENT(IN)    :: PCIT
-REAL, DIMENSION(:),   INTENT(IN)    :: PRGT
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRRT
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCRT
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRIT
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCIT
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRGT
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDR 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_RDSF
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_RDSF
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RI_RDSF
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_RDSF
 !
 !
 !*       0.2   Declarations of local variables :

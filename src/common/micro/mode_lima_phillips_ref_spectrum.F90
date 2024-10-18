@@ -2,7 +2,7 @@ MODULE MODE_LIMA_PHILLIPS_REF_SPECTRUM
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################
-  SUBROUTINE LIMA_PHILLIPS_REF_SPECTRUM (CST, PZT, PSI, PSI_W, PZY)
+  SUBROUTINE LIMA_PHILLIPS_REF_SPECTRUM (CST, ISIZE, PZT, PSI, PSI_W, PZY)
 !     ######################################################################
 !!
 !!    PURPOSE
@@ -41,33 +41,34 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(CST_t),        INTENT(IN)    :: CST
-REAL, DIMENSION(:), INTENT(IN)    :: PZT    ! Temperature
-REAL, DIMENSION(:), INTENT(IN)    :: PSI    ! Saturation over ice
-REAL, DIMENSION(:), INTENT(IN)    :: PSI_W  ! Saturation over ice at water sat.
-REAL, DIMENSION(:), INTENT(OUT)   :: PZY    ! Reference activity spectrum
+TYPE(CST_t),            INTENT(IN)    :: CST
+INTEGER,                INTENT(IN)    :: ISIZE
+REAL, DIMENSION(ISIZE), INTENT(IN)    :: PZT    ! Temperature
+REAL, DIMENSION(ISIZE), INTENT(IN)    :: PSI    ! Saturation over ice
+REAL, DIMENSION(ISIZE), INTENT(IN)    :: PSI_W  ! Saturation over ice at water sat.
+REAL, DIMENSION(ISIZE), INTENT(OUT)   :: PZY    ! Reference activity spectrum
 !
 !*       0.2   Declarations of local variables :
 !
-REAL, DIMENSION(:), ALLOCATABLE   :: ZMAX, &
-                                     ZMOY, &
-                                     ZZY1, &
-                                     ZZY2, &
-                                     Z1,   &
-                                     Z2,   &
-                                     ZSI2
+REAL, DIMENSION(ISIZE)   :: ZMAX, &
+                            ZMOY, &
+                            ZZY1, &
+                            ZZY2, &
+                            Z1,   &
+                            Z2,   &
+                            ZSI2
 !
-REAL                              :: ZPSI
+REAL                     :: ZPSI
 !
 !-------------------------------------------------------------------------------
 !
-ALLOCATE(ZMAX(SIZE(PZT))) ; ZMAX(:)= 0.0
-ALLOCATE(ZMOY(SIZE(PZT))) ; ZMOY(:)= 0.0
-ALLOCATE(ZZY1(SIZE(PZT))) ; ZZY1(:)= 0.0
-ALLOCATE(ZZY2(SIZE(PZT))) ; ZZY2(:)= 0.0
-ALLOCATE(Z1(SIZE(PZT)))   ; Z1(:)  = 0.0
-ALLOCATE(Z2(SIZE(PZT)))   ; Z2(:)  = 0.0
-ALLOCATE(ZSI2(SIZE(PZT))) ; ZSI2(:)= 0.0
+ZMAX(:)= 0.0
+ZMOY(:)= 0.0
+ZZY1(:)= 0.0
+ZZY2(:)= 0.0
+Z1(:)  = 0.0
+Z2(:)  = 0.0
+ZSI2(:)= 0.0
 !
 PZY(:) = 0.0   
 !
@@ -115,13 +116,6 @@ WHERE (Z2(:)>0.0 .AND. Z1(:)>0.0)
    ZMOY(:) = Z2(:)*(Z1(:)/Z2(:))**DELTA(1.,0.,PZT(:),(CST%XTT-35.),(CST%XTT-25.))
    PZY(:)  = PZY(:) + MIN(ZMOY(:),ZMAX(:))  ! N_{IN,1,*}
 END WHERE
-!
-DEALLOCATE(ZMAX)
-DEALLOCATE(ZMOY)
-DEALLOCATE(ZZY1)
-DEALLOCATE(ZZY2)
-DEALLOCATE(Z1)
-DEALLOCATE(Z2)
 !
 END SUBROUTINE LIMA_PHILLIPS_REF_SPECTRUM
 END MODULE MODE_LIMA_PHILLIPS_REF_SPECTRUM

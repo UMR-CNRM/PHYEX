@@ -7,7 +7,7 @@ MODULE MODE_LIMA_RAIN_EVAPORATION
   IMPLICIT NONE
 CONTAINS
 !     ###############################################################################
-  SUBROUTINE LIMA_RAIN_EVAPORATION (PTSTEP, ODCOMPUTE,                          &
+  SUBROUTINE LIMA_RAIN_EVAPORATION (KSIZE, PTSTEP, ODCOMPUTE,                   &
                                     PRHODREF, PT, PLV, PLVFACT, PEVSAT, PRVSAT, &
                                     PRVT, PRCT, PRRT, PCRT, PLBDR,              &
                                     P_TH_EVAP, P_RR_EVAP, P_CR_EVAP,            &
@@ -46,27 +46,28 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+INTEGER,              INTENT(IN)    :: KSIZE
 REAL,                 INTENT(IN)    :: PTSTEP     ! Time step
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE  !
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE  !
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF   ! Reference density
-REAL, DIMENSION(:),   INTENT(IN)    :: PT         ! Temperature
-REAL, DIMENSION(:),   INTENT(IN)    :: PLV        ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLVFACT    !
-REAL, DIMENSION(:),   INTENT(IN)    :: PEVSAT     !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRVSAT     !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF   ! Reference density
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PT         ! Temperature
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLV        ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLVFACT    !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PEVSAT     !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRVSAT     !
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRVT       ! Water vapor m.r. at t 
-REAL, DIMENSION(:),   INTENT(IN)    :: PRCT       ! Cloud water m.r. at t 
-REAL, DIMENSION(:),   INTENT(IN)    :: PRRT       ! Rain water m.r. at t 
-REAL, DIMENSION(:),   INTENT(IN)    :: PCRT       ! Rain water conc at t 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR      ! Lambda(rain)
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRVT       ! Water vapor m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRCT       ! Cloud water m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRRT       ! Rain water m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCRT       ! Rain water conc at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDR      ! Lambda(rain)
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_EVAP
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_EVAP
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_EVAP
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_EVAP
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RR_EVAP
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CR_EVAP
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: PEVAP3D    ! Rain evap profile
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: PEVAP3D    ! Rain evap profile
 !
 !*       0.1   Declarations of local variables :
 !

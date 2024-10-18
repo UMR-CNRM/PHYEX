@@ -6,7 +6,7 @@ MODULE MODE_LIMA_DROPLETS_HOM_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_DROPLETS_HOM_FREEZING (PTSTEP,  ODCOMPUTE,               &
+  SUBROUTINE LIMA_DROPLETS_HOM_FREEZING (KSIZE, PTSTEP,  ODCOMPUTE,        &
                                          PT, PLVFACT, PLSFACT,             &
                                          PRCT, PCCT, PLBDC,                &
                                          P_TH_HONC, P_RC_HONC, P_CC_HONC   )
@@ -42,20 +42,21 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+INTEGER,              INTENT(IN)    :: KSIZE
 REAL,                 INTENT(IN)    :: PTSTEP 
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PT        ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLVFACT   ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PT        ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLVFACT   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT   ! 
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRCT      ! Cloud water m.r. at t 
-REAL, DIMENSION(:),   INTENT(IN)    :: PCCT      ! Cloud water C. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDC     ! Cloud water lambda
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRCT      ! Cloud water m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCCT      ! Cloud water C. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDC     ! Cloud water lambda
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_HONC
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_HONC
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_HONC
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_HONC
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RC_HONC
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CC_HONC
 !
 !*       0.2   Declarations of local variables :
 !

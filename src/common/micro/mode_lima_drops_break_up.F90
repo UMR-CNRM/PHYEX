@@ -6,7 +6,7 @@ MODULE MODE_LIMA_DROPS_BREAK_UP
   IMPLICIT NONE
 CONTAINS
 !     ##########################################
-  SUBROUTINE LIMA_DROPS_BREAK_UP (ODCOMPUTE,  &
+  SUBROUTINE LIMA_DROPS_BREAK_UP (KSIZE, ODCOMPUTE,  &
                                   PCRT, PRRT, &
                                   P_CR_BRKU,  &
                                   PB_CR       )
@@ -41,13 +41,14 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:), INTENT(IN)    :: ODCOMPUTE  
+INTEGER,                   INTENT(IN)    :: KSIZE
+LOGICAL, DIMENSION(KSIZE), INTENT(IN)    :: ODCOMPUTE  
 !
-REAL, DIMENSION(:),    INTENT(IN)    :: PCRT             !
-REAL, DIMENSION(:),    INTENT(IN)    :: PRRT             !
+REAL, DIMENSION(KSIZE),    INTENT(IN)    :: PCRT             !
+REAL, DIMENSION(KSIZE),    INTENT(IN)    :: PRRT             !
 !
-REAL, DIMENSION(:),    INTENT(OUT)   :: P_CR_BRKU        ! Concentration change (#/kg)
-REAL, DIMENSION(:),    INTENT(INOUT) :: PB_CR            ! Cumulated concentration change (#/kg)
+REAL, DIMENSION(KSIZE),    INTENT(OUT)   :: P_CR_BRKU        ! Concentration change (#/kg)
+REAL, DIMENSION(KSIZE),    INTENT(INOUT) :: PB_CR            ! Cumulated concentration change (#/kg)
 !
 !*       0.2   Declarations of local variables :
 !

@@ -7,7 +7,7 @@ MODULE MODE_LIMA_SNOW_DEPOSITION
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_SNOW_DEPOSITION (ODCOMPUTE,                                &
+  SUBROUTINE LIMA_SNOW_DEPOSITION (KSIZE, ODCOMPUTE,                         &
                                    PRHODREF,  PSSI, PAI, PCJ, PLSFACT,       &
                                    PRST, PCST, PLBDS,                        &
                                    P_RI_CNVI, P_CI_CNVI,                     &
@@ -53,23 +53,24 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+INTEGER, INTENT(IN) :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(:),   INTENT(IN)    :: PSSI  ! abs. pressure at time t
-REAL, DIMENSION(:),   INTENT(IN)    :: PAI  ! abs. pressure at time t
-REAL, DIMENSION(:),   INTENT(IN)    :: PCJ  ! abs. pressure at time t
-REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF! Reference density
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PSSI  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PAI  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT  ! abs. pressure at time t
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
-REAL, DIMENSION(:),   INTENT(IN)    :: PCST    ! Snow/aggregate m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCST    ! Snow/aggregate m.r. at t 
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDS    ! Graupel m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDS    ! Graupel m.r. at t 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_CNVI
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_CNVI
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_DEPS
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_DEPS
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RI_CNVI
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_CNVI
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_DEPS
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RS_DEPS
 !
 !*       0.2   Declarations of local variables :
 !

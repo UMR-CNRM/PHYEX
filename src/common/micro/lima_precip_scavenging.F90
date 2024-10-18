@@ -114,17 +114,17 @@ INTEGER,                INTENT(IN)    :: KTCOUNT  ! iteration count
 REAL,                   INTENT(IN)    :: PTSTEP   ! Double timestep except 
                                                   ! for the first time step
 !
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PRRT     ! Rain mixing ratio at t
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PRHODREF ! Air Density [kg/m**3]
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PRHODJ   ! Dry Density [kg]
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PZZ      ! Altitude
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PPABST   ! Absolute pressure at t
-REAL, DIMENSION(:,:,:), INTENT(IN)    :: PTHT     ! Theta at time t 
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRRT     ! Rain mixing ratio at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODREF ! Air Density [kg/m**3]
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODJ   ! Dry Density [kg]
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PZZ      ! Altitude
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PPABST   ! Absolute pressure at t
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PTHT     ! Theta at time t 
 !
-REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSVT   ! Particle Concentration [/m**3]
-REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRSVS  ! Total Number Scavenging Rate
+REAL, DIMENSION(D%NIJT,D%NKT,NSV_LIMA), INTENT(IN)    :: PSVT   ! Particle Concentration [/m**3]
+REAL, DIMENSION(D%NIJT,D%NKT,NSV_LIMA), INTENT(INOUT) :: PRSVS  ! Total Number Scavenging Rate
 !
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PINPAP
+REAL, DIMENSION(D%NIJT),   INTENT(INOUT) :: PINPAP
 !
 !*       0.2   Declarations of local variables :
 !
@@ -575,7 +575,7 @@ CONTAINS
 !
 !------------------------------------------------------------------------------
 !     ##########################################################################
-      SUBROUTINE SCAV_MASS_SEDIMENTATION( HCLOUD, HDCONF, PTSTEP, KTCOUNT, PZZ, PRHODJ,&
+      SUBROUTINE SCAV_MASS_SEDIMENTATION( D, HCLOUD, HDCONF, PTSTEP, KTCOUNT, PZZ, PRHODJ,&
                                 PRHODREF, PRAIN, PSVT_MASS, PRSVS_MASS, PINPAP )
 !     ##########################################################################
 !
@@ -616,6 +616,7 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_PARAMETERS
 !
 USE MODD_PARAM_LIMA,      ONLY : XCEXVT, XRTMIN
@@ -626,19 +627,20 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 !
+TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 CHARACTER (LEN=4),        INTENT(IN)    :: HCLOUD  ! Cloud parameterization
 CHARACTER(LEN=5),         INTENT(IN)    :: HDCONF
 REAL,                     INTENT(IN)    :: PTSTEP  ! Time step  
 INTEGER,                  INTENT(IN)    :: KTCOUNT ! Current time step number
 !
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PZZ     ! Height (z)
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODJ  ! Dry Density [kg]
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRAIN   ! Rain water m.r. source
-REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PSVT_MASS  ! Precip. aerosols at t
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PRSVS_MASS ! Precip. aerosols source
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PZZ     ! Height (z)
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODJ  ! Dry Density [kg]
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF! Reference density
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRAIN   ! Rain water m.r. source
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PSVT_MASS  ! Precip. aerosols at t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRSVS_MASS ! Precip. aerosols source
 !
-REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPAP
+REAL, DIMENSION(D%NIJT),     INTENT(INOUT) :: PINPAP
 !
 !*       0.2   Declarations of local variables :
 !

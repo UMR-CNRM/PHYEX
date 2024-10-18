@@ -6,7 +6,7 @@ MODULE MODE_LIMA_DROPS_TO_DROPLETS_CONV
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################
-  SUBROUTINE LIMA_DROPS_TO_DROPLETS_CONV (CST, PRHODREF, PRCT, PRRT, PCCT, PCRT, &
+  SUBROUTINE LIMA_DROPS_TO_DROPLETS_CONV (D, CST, PRHODREF, PRCT, PRRT, PCCT, PCRT, &
                                           P_RR_CVRC, P_CR_CVRC    )
 !     ######################################################################
 !
@@ -31,6 +31,7 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY : CST_t
 USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN
 !
@@ -38,17 +39,18 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
 !
-REAL, DIMENSION(:,:),    INTENT(IN)    :: PRHODREF! Cloud water m.r. at t 
-REAL, DIMENSION(:,:),    INTENT(IN)    :: PRCT    ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:),    INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN)    :: PRHODREF! Cloud water m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN)    :: PRCT    ! Cloud water m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
 !
-REAL, DIMENSION(:,:),    INTENT(IN)    :: PCCT    ! Cloud water C. at t
-REAL, DIMENSION(:,:),    INTENT(IN)    :: PCRT    ! Rain water C. at t
+REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN)    :: PCCT    ! Cloud water C. at t
+REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN)    :: PCRT    ! Rain water C. at t
 !
-REAL, DIMENSION(:,:),    INTENT(OUT)   :: P_RR_CVRC
-REAL, DIMENSION(:,:),    INTENT(OUT)   :: P_CR_CVRC
+REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(OUT)   :: P_RR_CVRC
+REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(OUT)   :: P_CR_CVRC
 !
 !*       0.2   Declarations of local variables :
 !

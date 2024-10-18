@@ -6,7 +6,7 @@ MODULE MODE_LIMA_BERGERON
   IMPLICIT NONE
   CONTAINS
 !     #############################################################
-    SUBROUTINE LIMA_BERGERON( ODCOMPUTE,                        &
+    SUBROUTINE LIMA_BERGERON( KSIZE, ODCOMPUTE,                  &
                               PRCT, PRIT, PCIT, PLBDI,           &
                               PSSIW, PAI, PCJ, PLVFACT, PLSFACT, &
                               P_TH_BERFI, P_RC_BERFI             )
@@ -40,21 +40,22 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+INTEGER, INTENT(IN) :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRCT    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PRIT    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PCIT    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDI   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRCT    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRIT    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCIT    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDI   ! 
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PSSIW   ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PAI     ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PCJ     ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLVFACT ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PSSIW   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PAI     ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ     ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLVFACT ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT ! 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_BERFI
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_BERFI
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_BERFI
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RC_BERFI
 !
 !-------------------------------------------------------------------------------
 !

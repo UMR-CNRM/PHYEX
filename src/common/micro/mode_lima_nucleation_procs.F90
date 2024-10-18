@@ -92,11 +92,11 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCCT       ! Cloud water conc.
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCRT       ! Rain water conc. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT       ! Prinstine ice conc. at t
 !
-REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNFT       ! CCN C. available at t
-REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNAT       ! CCN C. activated at t
-REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PIFT       ! IFN C. available at t
-REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PINT       ! IFN C. activated at t
-REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNIT       ! Coated IFN activated at t
+REAL, DIMENSION(D%NIJT,D%NKT,NMOD_CCN), INTENT(INOUT) :: PNFT       ! CCN C. available at t
+REAL, DIMENSION(D%NIJT,D%NKT,NMOD_CCN), INTENT(INOUT) :: PNAT       ! CCN C. activated at t
+REAL, DIMENSION(D%NIJT,D%NKT,NMOD_IFN), INTENT(INOUT) :: PIFT       ! IFN C. available at t
+REAL, DIMENSION(D%NIJT,D%NKT,NMOD_IFN), INTENT(INOUT) :: PINT       ! IFN C. activated at t
+REAL, DIMENSION(D%NIJT,D%NKT,NMOD_IMM), INTENT(INOUT) :: PNIT       ! Coated IFN activated at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PNHT       ! CCN hom. freezing
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCLDFR     ! Cloud fraction
@@ -141,7 +141,7 @@ IF ( LACTI .AND. NMOD_CCN >=1 .AND. NMOM_C.GE.2) THEN
       end if
     end if
 
-    CALL LIMA_CCN_ACTIVATION( CST,                                              &
+    CALL LIMA_CCN_ACTIVATION( D, CST,                                           &
                               PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,    &
                               PTHT, PRVT, PRCT, PCCT, PRRT, PNFT, PNAT, PCLDFR, &
                               PTOT_RV_HENU )
@@ -193,7 +193,7 @@ IF ( LNUCL .AND. NMOM_I>=2 .AND. .NOT.LMEYERS .AND. NMOD_IFN >= 1 ) THEN
     end if
   end if
 
-   CALL LIMA_PHILLIPS_IFN_NUCLEATION (CST, PTSTEP,                                      &
+   CALL LIMA_PHILLIPS_IFN_NUCLEATION (D, CST, PTSTEP,                                   &
                                       PRHODREF, PEXNREF, PPABST,                        &
                                       PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,         &
                                       PCCT, PCIT, PNAT, PIFT, PINT, PNIT,               &
@@ -245,7 +245,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 IF (LNUCL .AND. NMOM_I>=2 .AND. LMEYERS) THEN
-   CALL LIMA_MEYERS_NUCLEATION (CST, PTSTEP,                                &
+   CALL LIMA_MEYERS_NUCLEATION (D, CST, PTSTEP,                             &
                                 PRHODREF, PEXNREF, PPABST,                  &
                                 PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,   &
                                 PCCT, PCIT, PINT,                           &
@@ -365,7 +365,7 @@ IF ( LNUCL .AND. LHHONI .AND. NMOD_CCN >= 1 .AND. NMOM_I.GE.2) THEN
     end if
   end if
 
-  CALL LIMA_CCN_HOM_FREEZING (CST, PRHODREF, PEXNREF, PPABST, PW_NU,    &
+  CALL LIMA_CCN_HOM_FREEZING (D, CST, PRHODREF, PEXNREF, PPABST, PW_NU, &
                               PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                               PCCT, PCRT, PCIT, PNFT, PNHT,             &
                               PICEFR, PTOT_RV_HONH                      )

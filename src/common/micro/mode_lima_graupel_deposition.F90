@@ -7,7 +7,7 @@ MODULE MODE_LIMA_GRAUPEL_DEPOSITION
   IMPLICIT NONE
 CONTAINS
 !     ###########################################################################
-  SUBROUTINE LIMA_GRAUPEL_DEPOSITION (ODCOMPUTE, PRHODREF,                        &
+  SUBROUTINE LIMA_GRAUPEL_DEPOSITION (KSIZE, ODCOMPUTE, PRHODREF,                 &
                                       PRGT, PCGT, PSSI, PLBDG, PAI, PCJ, PLSFACT, &
                                       P_TH_DEPG, P_RG_DEPG                        )
 !     ###########################################################################
@@ -41,19 +41,20 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! 
+INTEGER, INTENT(IN) :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF ! 
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRGT     ! graupel mr
-REAL, DIMENSION(:),   INTENT(IN)    :: PCGT     ! graupel conc
-REAL, DIMENSION(:),   INTENT(IN)    :: PSSI     ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDG    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PAI      ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PCJ      ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT  ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRGT     ! graupel mr
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCGT     ! graupel conc
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PSSI     ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDG    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PAI      ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ      ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT  ! 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_DEPG
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_DEPG
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_DEPG
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RG_DEPG
 !
 !
 !-------------------------------------------------------------------------------

@@ -479,7 +479,7 @@ DO IITER =1,ITERMAX
    IF (OSUBG_COND .AND. NMOM_C.GE.2 .AND. LACTI) THEN
       PSRCS=Z_SRCS
       ZW_MF=0.
-      CALL LIMA_CCN_ACTIVATION (CST,                          &
+      CALL LIMA_CCN_ACTIVATION (D, CST,                          &
            PRHODREF, PEXNREF, PPABST, ZT2, PDTHRAD, PW_NU+ZW_MF, &
            ZTHT, ZRV2, ZRC2, ZCCT, ZRRT, ZNFT, ZNAT,             &
            PCLDFR                                                )      

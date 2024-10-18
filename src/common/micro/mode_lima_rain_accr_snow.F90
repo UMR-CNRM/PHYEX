@@ -7,7 +7,7 @@ MODULE MODE_LIMA_RAIN_ACCR_SNOW
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################################
-  SUBROUTINE LIMA_RAIN_ACCR_SNOW (PTSTEP, ODCOMPUTE,                                       &
+  SUBROUTINE LIMA_RAIN_ACCR_SNOW (KSIZE, PTSTEP, ODCOMPUTE,                                &
                                   PRHODREF, PT,                                            &
                                   PRRT, PCRT, PRST, PCST, PLBDR, PLBDS, PLVFACT, PLSFACT,  &
 !++cb++
@@ -60,31 +60,32 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+INTEGER, INTENT(IN) :: KSIZE
 REAL,                 INTENT(IN)    :: PTSTEP 
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PT   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PT   ! 
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRRT    ! Rain mr at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PCRT    ! Rain C. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PRST    ! Snow mr at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PCST    ! Snow C. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR   ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDS   ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLVFACT ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRRT    ! Rain mr at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCRT    ! Rain C. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRST    ! Snow mr at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCST    ! Snow C. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDR   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDS   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLVFACT ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT ! 
 !
 !++cb++
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_ACC
-!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_ACC
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_ACC
-!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_ACC
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_ACC
-!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_ACC
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_ACCSS
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RR_ACCSG
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_ACCRG
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_ACC
+!REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RR_ACC
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CR_ACC
+!REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RS_ACC
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CS_ACC
+!REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RG_ACC
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RR_ACCSS
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RR_ACCSG
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RS_ACCRG
 !--cb--
 !
 !*       0.2   Declarations of local variables :
@@ -164,10 +165,10 @@ WHERE( GACC )
 !        1.3.3  perform the bilinear interpolation of the normalized
 !               RACCSS-kernel : for small rain drops transformed into snow
 !
-   Z1(:) = GET_XKER_RACCSS(IVEC1(:)+1,IVEC2(:)+1)
-   Z2(:) = GET_XKER_RACCSS(IVEC1(:)+1,IVEC2(:)  )
-   Z3(:) = GET_XKER_RACCSS(IVEC1(:)  ,IVEC2(:)+1)
-   Z4(:) = GET_XKER_RACCSS(IVEC1(:)  ,IVEC2(:)  )
+   Z1(:) = GET_XKER_RACCSS(KSIZE,IVEC1(:)+1,IVEC2(:)+1)
+   Z2(:) = GET_XKER_RACCSS(KSIZE,IVEC1(:)+1,IVEC2(:)  )
+   Z3(:) = GET_XKER_RACCSS(KSIZE,IVEC1(:)  ,IVEC2(:)+1)
+   Z4(:) = GET_XKER_RACCSS(KSIZE,IVEC1(:)  ,IVEC2(:)  )
       ZVEC3(:) =  (   Z1(:)* ZVEC2(:)          &
                     - Z2(:)*(ZVEC2(:) - 1.0) ) &
                 				 	     *  ZVEC1(:)    &
@@ -179,10 +180,10 @@ WHERE( GACC )
 !        1.3.3b perform the bilinear interpolation of the normalized
 !               RACCSS-kernel for concentration : for small rain drops transformed into snow
 !
-   Z1(:) = GET_XKER_N_RACCSS(IVEC1(:)+1,IVEC2(:)+1)
-   Z2(:) = GET_XKER_N_RACCSS(IVEC1(:)+1,IVEC2(:)  )
-   Z3(:) = GET_XKER_N_RACCSS(IVEC1(:)  ,IVEC2(:)+1)
-   Z4(:) = GET_XKER_N_RACCSS(IVEC1(:)  ,IVEC2(:)  )
+   Z1(:) = GET_XKER_N_RACCSS(KSIZE,IVEC1(:)+1,IVEC2(:)+1)
+   Z2(:) = GET_XKER_N_RACCSS(KSIZE,IVEC1(:)+1,IVEC2(:)  )
+   Z3(:) = GET_XKER_N_RACCSS(KSIZE,IVEC1(:)  ,IVEC2(:)+1)
+   Z4(:) = GET_XKER_N_RACCSS(KSIZE,IVEC1(:)  ,IVEC2(:)  )
       ZVEC3(:) =  (   Z1(:)* ZVEC2(:)          &
                     - Z2(:)*(ZVEC2(:) - 1.0) ) &
                 				 	     *  ZVEC1(:)    &
@@ -194,10 +195,10 @@ WHERE( GACC )
 !        1.3.4  perform the bilinear interpolation of the normalized
 !               RACCS-kernel : total frozen rain drops
 !
-   Z1(:) = GET_XKER_RACCS(IVEC1(:)+1,IVEC2(:)+1)
-   Z2(:) = GET_XKER_RACCS(IVEC1(:)+1,IVEC2(:)  )
-   Z3(:) = GET_XKER_RACCS(IVEC1(:)  ,IVEC2(:)+1)
-   Z4(:) = GET_XKER_RACCS(IVEC1(:)  ,IVEC2(:)  )
+   Z1(:) = GET_XKER_RACCS(KSIZE,IVEC1(:)+1,IVEC2(:)+1)
+   Z2(:) = GET_XKER_RACCS(KSIZE,IVEC1(:)+1,IVEC2(:)  )
+   Z3(:) = GET_XKER_RACCS(KSIZE,IVEC1(:)  ,IVEC2(:)+1)
+   Z4(:) = GET_XKER_RACCS(KSIZE,IVEC1(:)  ,IVEC2(:)  )
       ZVEC3(:) =  (    Z1(:)* ZVEC2(:)          &
                     -  Z2(:)*(ZVEC2(:) - 1.0) ) &
                                                            *  ZVEC1(:)      &
@@ -209,10 +210,10 @@ WHERE( GACC )
 !        1.3.4b perform the bilinear interpolation of the normalized
 !               RACCS-kernel for concentration : total frozen rain drops
 !
-   Z1(:) = GET_XKER_N_RACCS(IVEC1(:)+1,IVEC2(:)+1)
-   Z2(:) = GET_XKER_N_RACCS(IVEC1(:)+1,IVEC2(:)  )
-   Z3(:) = GET_XKER_N_RACCS(IVEC1(:)  ,IVEC2(:)+1)
-   Z4(:) = GET_XKER_N_RACCS(IVEC1(:)  ,IVEC2(:)  )
+   Z1(:) = GET_XKER_N_RACCS(KSIZE,IVEC1(:)+1,IVEC2(:)+1)
+   Z2(:) = GET_XKER_N_RACCS(KSIZE,IVEC1(:)+1,IVEC2(:)  )
+   Z3(:) = GET_XKER_N_RACCS(KSIZE,IVEC1(:)  ,IVEC2(:)+1)
+   Z4(:) = GET_XKER_N_RACCS(KSIZE,IVEC1(:)  ,IVEC2(:)  )
       ZVEC3(:) =  (    Z1(:)* ZVEC2(:)          &
                     -  Z2(:)*(ZVEC2(:) - 1.0) ) &
                                                            *  ZVEC1(:)      &
@@ -230,10 +231,10 @@ WHERE( GACC )
 !        1.3.5  perform the bilinear interpolation of the normalized
 !               SACCRG-kernel : snow transformed into graupel
 !
-   Z1(:) = GET_XKER_SACCRG(IVEC2(:)+1,IVEC1(:)+1)
-   Z2(:) = GET_XKER_SACCRG(IVEC2(:)+1,IVEC1(:)  )
-   Z3(:) = GET_XKER_SACCRG(IVEC2(:)  ,IVEC1(:)+1)
-   Z4(:) = GET_XKER_SACCRG(IVEC2(:)  ,IVEC1(:)  )
+   Z1(:) = GET_XKER_SACCRG(KSIZE,IVEC2(:)+1,IVEC1(:)+1)
+   Z2(:) = GET_XKER_SACCRG(KSIZE,IVEC2(:)+1,IVEC1(:)  )
+   Z3(:) = GET_XKER_SACCRG(KSIZE,IVEC2(:)  ,IVEC1(:)+1)
+   Z4(:) = GET_XKER_SACCRG(KSIZE,IVEC2(:)  ,IVEC1(:)  )
       ZVEC3(:) =  (   Z1(:)* ZVEC1(:)          &
                     - Z2(:)*(ZVEC1(:) - 1.0) ) &
       			 	                             *  ZVEC2(:)    &
@@ -245,10 +246,10 @@ WHERE( GACC )
 !        1.3.5b perform the bilinear interpolation of the normalized
 !               SACCRG-kernel for concentration : snow transformed into graupel
 !
-   Z1(:) = GET_XKER_N_SACCRG(IVEC2(:)+1,IVEC1(:)+1)
-   Z2(:) = GET_XKER_N_SACCRG(IVEC2(:)+1,IVEC1(:)  )
-   Z3(:) = GET_XKER_N_SACCRG(IVEC2(:)  ,IVEC1(:)+1)
-   Z4(:) = GET_XKER_N_SACCRG(IVEC2(:)  ,IVEC1(:)  )
+   Z1(:) = GET_XKER_N_SACCRG(KSIZE,IVEC2(:)+1,IVEC1(:)+1)
+   Z2(:) = GET_XKER_N_SACCRG(KSIZE,IVEC2(:)+1,IVEC1(:)  )
+   Z3(:) = GET_XKER_N_SACCRG(KSIZE,IVEC2(:)  ,IVEC1(:)+1)
+   Z4(:) = GET_XKER_N_SACCRG(KSIZE,IVEC2(:)  ,IVEC1(:)  )
       ZVEC3(:) =  (   Z1(:)* ZVEC1(:)          &
                     - Z2(:)*(ZVEC1(:) - 1.0) ) &
       			 	                             *  ZVEC2(:)    &
@@ -306,84 +307,90 @@ END WHERE
 !-------------------------------------------------------------------------------
 !
 CONTAINS
-  FUNCTION GET_XKER_RACCSS(K1,K2) RESULT(RET)
-    INTEGER, DIMENSION(:), INTENT(IN) :: K1
-    INTEGER, DIMENSION(:), INTENT(IN) :: K2
-    REAL, DIMENSION(SIZE(K1)) :: RET
+  FUNCTION GET_XKER_RACCSS(KSIZE,K1,K2) RESULT(RET)
+    INTEGER, INTENT(IN) :: KSIZE
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: K1
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: K2
+    REAL, DIMENSION(KSIZE) :: RET
     !
     INTEGER I
     !
-    DO I=1,SIZE(K1)
+    DO I=1,KSIZE
        RET(I) = XKER_RACCSS(MAX(MIN(K1(I),SIZE(XKER_RACCSS,1)),1),MAX(MIN(K2(I),SIZE(XKER_RACCSS,2)),1))
     END DO
   END FUNCTION GET_XKER_RACCSS
 !
 !-------------------------------------------------------------------------------
 !
-  FUNCTION GET_XKER_N_RACCSS(K1,K2) RESULT(RET)
-    INTEGER, DIMENSION(:), INTENT(IN) :: K1
-    INTEGER, DIMENSION(:), INTENT(IN) :: K2
-    REAL, DIMENSION(SIZE(K1)) :: RET
+  FUNCTION GET_XKER_N_RACCSS(KSIZE,K1,K2) RESULT(RET)
+    INTEGER, INTENT(IN) :: KSIZE
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: K1
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: K2
+    REAL, DIMENSION(KSIZE) :: RET
     !
     INTEGER I
     !
-    DO I=1,SIZE(K1)
+    DO I=1,KSIZE
        RET(I) = XKER_N_RACCSS(MAX(MIN(K1(I),SIZE(XKER_N_RACCSS,1)),1),MAX(MIN(K2(I),SIZE(XKER_N_RACCSS,2)),1))
     END DO
   END FUNCTION GET_XKER_N_RACCSS
 !
 !-------------------------------------------------------------------------------
 !
-  FUNCTION GET_XKER_RACCS(K1,K2) RESULT(RET)
-    INTEGER, DIMENSION(:), INTENT(IN) :: K1
-    INTEGER, DIMENSION(:), INTENT(IN) :: K2
-    REAL, DIMENSION(SIZE(K1)) :: RET
+  FUNCTION GET_XKER_RACCS(KSIZE,K1,K2) RESULT(RET)
+    INTEGER, INTENT(IN) :: KSIZE
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: K1
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: K2
+    REAL, DIMENSION(KSIZE) :: RET
     !
     INTEGER I
     !
-    DO I=1,SIZE(K1)
+    DO I=1,KSIZE
        RET(I) = XKER_RACCS(MAX(MIN(K1(I),SIZE(XKER_RACCS,1)),1),MAX(MIN(K2(I),SIZE(XKER_RACCS,2)),1))
     END DO
   END FUNCTION GET_XKER_RACCS
 !
 !-------------------------------------------------------------------------------
 !
-  FUNCTION GET_XKER_N_RACCS(K1,K2) RESULT(RET)
-    INTEGER, DIMENSION(:), INTENT(IN) :: K1
-    INTEGER, DIMENSION(:), INTENT(IN) :: K2
-    REAL, DIMENSION(SIZE(K1)) :: RET
+  FUNCTION GET_XKER_N_RACCS(KSIZE,K1,K2) RESULT(RET)
+    INTEGER, INTENT(IN) :: KSIZE
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: K1
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: K2
+    REAL, DIMENSION(KSIZE) :: RET
     !
     INTEGER I
     !
-    DO I=1,SIZE(K1)
+    DO I=1,KSIZE
        RET(I) = XKER_N_RACCS(MAX(MIN(K1(I),SIZE(XKER_N_RACCS,1)),1),MAX(MIN(K2(I),SIZE(XKER_N_RACCS,2)),1))
     END DO
   END FUNCTION GET_XKER_N_RACCS
 !
 !-------------------------------------------------------------------------------
 !
-  FUNCTION GET_XKER_SACCRG(K1,K2) RESULT(RET)
-    INTEGER, DIMENSION(:), INTENT(IN) :: K1
-    INTEGER, DIMENSION(:), INTENT(IN) :: K2
-    REAL, DIMENSION(SIZE(K1)) :: RET
+  FUNCTION GET_XKER_SACCRG(KSIZE,K1,K2) RESULT(RET)
+    INTEGER, INTENT(IN) :: KSIZE
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: K1
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: K2
+    REAL, DIMENSION(KSIZE) :: RET
     !
     INTEGER I
     !
-    DO I=1,SIZE(K1)
+    DO I=1,KSIZE
        RET(I) = XKER_SACCRG(MAX(MIN(K1(I),SIZE(XKER_SACCRG,1)),1),MAX(MIN(K2(I),SIZE(XKER_SACCRG,2)),1))
     END DO
   END FUNCTION GET_XKER_SACCRG
 !
 !-------------------------------------------------------------------------------
 !
-  FUNCTION GET_XKER_N_SACCRG(K1,K2) RESULT(RET)
-    INTEGER, DIMENSION(:), INTENT(IN) :: K1
-    INTEGER, DIMENSION(:), INTENT(IN) :: K2
-    REAL, DIMENSION(SIZE(K1)) :: RET
+  FUNCTION GET_XKER_N_SACCRG(KSIZE,K1,K2) RESULT(RET)
+    INTEGER, INTENT(IN) :: KSIZE
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: K1
+    INTEGER, DIMENSION(KSIZE), INTENT(IN) :: K2
+    REAL, DIMENSION(KSIZE) :: RET
     !
     INTEGER I
     !
-    DO I=1,SIZE(K1)
+    DO I=1,KSIZE
        RET(I) = XKER_N_SACCRG(MAX(MIN(K1(I),SIZE(XKER_N_SACCRG,1)),1),MAX(MIN(K2(I),SIZE(XKER_N_SACCRG,2)),1))
     END DO
   END FUNCTION GET_XKER_N_SACCRG

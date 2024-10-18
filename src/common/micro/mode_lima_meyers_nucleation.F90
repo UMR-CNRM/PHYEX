@@ -7,7 +7,7 @@ MODULE MODE_LIMA_MEYERS_NUCLEATION
   IMPLICIT NONE
 CONTAINS
 !     #############################################################################
-  SUBROUTINE LIMA_MEYERS_NUCLEATION (CST, PTSTEP,                                &
+  SUBROUTINE LIMA_MEYERS_NUCLEATION (D, CST, PTSTEP,                             &
                                      PRHODREF, PEXNREF, PPABST,                  &
                                      PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,   &
                                      PCCT, PCIT, PINT,                           &
@@ -39,6 +39,7 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAMETERS
 USE MODD_PARAM_LIMA
@@ -50,33 +51,34 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
 REAL,                     INTENT(IN)    :: PTSTEP
 !
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF! Reference density
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXNREF ! Reference Exner function
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
 !
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PTHT    ! Theta at time t
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRVT    ! Water vapor m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRCT    ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRIT    ! Cloud ice m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTHT    ! Theta at time t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRVT    ! Water vapor m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRCT    ! Cloud water m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRIT    ! Cloud ice m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t 
 !
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PCCT    ! Cloud water C. at t
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PCIT    ! Ice crystal C. source
-REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PINT    ! Activated ice nuclei C.
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCCT    ! Cloud water C. at t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Ice crystal C. source
+REAL, DIMENSION(D%NIJT,D%NKT,NMOD_IFN), INTENT(INOUT) :: PINT    ! Activated ice nuclei C.
 !
-REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_TH_HIND
-REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_RI_HIND
-REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_CI_HIND
-REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_TH_HINC
-REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_RC_HINC
-REAL, DIMENSION(:,:),   INTENT(OUT)   :: P_CC_HINC
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_TH_HIND
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_RI_HIND
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_CI_HIND
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_TH_HINC
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_RC_HINC
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_CC_HINC
 !
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PICEFR
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PICEFR
 !
 !
 !*       0.2   Declarations of local variables :

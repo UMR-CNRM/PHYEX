@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPLETS_RIMING_SNOW
   IMPLICIT NONE
 CONTAINS
 !     ###########################################################################################
-  SUBROUTINE LIMA_DROPLETS_RIMING_SNOW (PTSTEP, ODCOMPUTE,                                      &
+  SUBROUTINE LIMA_DROPLETS_RIMING_SNOW (KSIZE, PTSTEP, ODCOMPUTE,                               &
                                         PRHODREF, PT,                                           &
                                         PRCT, PCCT, PRST, PCST, PLBDC, PLBDS, PLVFACT, PLSFACT, &
 !++cb++
@@ -53,36 +53,37 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+INTEGER, INTENT(IN) :: KSIZE
 REAL,                 INTENT(IN)    :: PTSTEP 
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PT   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PT   ! 
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRCT    ! Cloud water mr at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PCCT    ! Cloud water C. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PRST    ! Snow mr at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PCST    ! Snow C. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDC   ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDS   ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLVFACT ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRCT    ! Cloud water mr at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCCT    ! Cloud water C. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRST    ! Snow mr at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCST    ! Snow C. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDC   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDS   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLVFACT ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT ! 
 !
 !++cb++
-!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_RIM
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_RIM
-!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_RIM
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_RIM
-!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_RIM
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_RIMSS
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_RIMSG
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_RIMCG
+!REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RC_RIM
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CC_RIM
+!REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RS_RIM
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CS_RIM
+!REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RG_RIM
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RC_RIMSS
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RC_RIMSG
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RS_RIMCG
 !--cb--
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_RIM
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_HMS
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_HMS
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_HMS
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_RIM
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RI_HMS
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_HMS
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RS_HMS
 !
 !*       0.2   Declarations of local variables :
 !

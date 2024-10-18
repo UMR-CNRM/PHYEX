@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPS_SELF_COLLECTION
   IMPLICIT NONE
 CONTAINS
 !     #############################################################
-  SUBROUTINE LIMA_DROPS_SELF_COLLECTION (ODCOMPUTE,           &
+  SUBROUTINE LIMA_DROPS_SELF_COLLECTION (KSIZE, ODCOMPUTE,    &
                                          PRHODREF,            &
                                          PCRT, PLBDR, PLBDR3, &
                                          P_CR_SCBU            )
@@ -42,15 +42,16 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+INTEGER,              INTENT(IN)    :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF  ! Reference Exner function
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF  ! Reference Exner function
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PCRT      ! Rain drops C. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR     ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR3    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCRT      ! Rain drops C. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDR     ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDR3    ! 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CR_SCBU
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CR_SCBU
 !
 !*       0.2   Declarations of local variables :
 !

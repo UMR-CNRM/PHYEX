@@ -7,7 +7,7 @@ MODULE MODE_LIMA_CCN_HOM_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_CCN_HOM_FREEZING (CST, PRHODREF, PEXNREF, PPABST, PW_NU,    &
+  SUBROUTINE LIMA_CCN_HOM_FREEZING (D, CST, PRHODREF, PEXNREF, PPABST, PW_NU, &
                                     PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                     PCCT, PCRT, PCIT, PNFT, PNHT ,            &
                                     PICEFR, PTOT_RV_HONH                      )
@@ -36,6 +36,7 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_NSV
 USE MODD_PARAMETERS,      ONLY: JPHEXT, JPVEXT
@@ -51,31 +52,32 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PEXNREF ! Reference Exner function
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PW_NU   ! updraft velocity used for
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF! Reference density
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PEXNREF ! Reference Exner function
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PPABST  ! abs. pressure at time t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PW_NU   ! updraft velocity used for
                                                    ! the nucleation param.
 !
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PTHT    ! Theta at time t
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRVT    ! Water vapor m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PRCT    ! Cloud water m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PRIT    ! Cloud ice m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTHT    ! Theta at time t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRVT    ! Water vapor m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRCT    ! Cloud water m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRRT    ! Rain water m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRIT    ! Cloud ice m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t 
 !
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PCCT    ! Cloud water C. at t
-REAL, DIMENSION(:,:),   INTENT(IN)    :: PCRT    ! Rain water C. source
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PCIT    ! Ice crystal C. source
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCCT    ! Cloud water C. at t
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCRT    ! Rain water C. source
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Ice crystal C. source
 !
-REAL, DIMENSION(:,:,:), INTENT(INOUT) :: PNFT    ! Free CCN conc. 
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PNHT    ! haze homogeneous freezing
+REAL, DIMENSION(D%NIJT,D%NKT,NMOD_CCN), INTENT(INOUT) :: PNFT    ! Free CCN conc. 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PNHT    ! haze homogeneous freezing
 !
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PICEFR  ! Ice fraction
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PICEFR  ! Ice fraction
 !
-REAL, DIMENSION(:,:),   INTENT(INOUT) :: PTOT_RV_HONH ! Mixing ratio change due to HONH
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PTOT_RV_HONH ! Mixing ratio change due to HONH
 !
 !*       0.2   Declarations of local variables :
 !

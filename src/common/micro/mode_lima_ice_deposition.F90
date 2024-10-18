@@ -7,7 +7,7 @@ MODULE MODE_LIMA_ICE_DEPOSITION
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_ICE_DEPOSITION (PTSTEP, ODCOMPUTE,                        &
+  SUBROUTINE LIMA_ICE_DEPOSITION (KSIZE, PTSTEP, ODCOMPUTE,                 &
                                   PRHODREF, PT,  PSSI, PAI, PCJ, PLSFACT,   &
                                   PRIT, PCIT, PLBDI,                        &
                                   P_TH_DEPI, P_RI_DEPI,                     &
@@ -51,26 +51,27 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+INTEGER,              INTENT(IN)    :: KSIZE
 REAL,                 INTENT(IN)    :: PTSTEP
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF! Reference density
-REAL, DIMENSION(:),   INTENT(IN)    :: PT  ! abs. pressure at time t
-REAL, DIMENSION(:),   INTENT(IN)    :: PSSI  ! abs. pressure at time t
-REAL, DIMENSION(:),   INTENT(IN)    :: PAI  ! abs. pressure at time t
-REAL, DIMENSION(:),   INTENT(IN)    :: PCJ  ! abs. pressure at time t
-REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF! Reference density
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PT  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PSSI  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PAI  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ  ! abs. pressure at time t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT  ! abs. pressure at time t
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRIT    ! Cloud ice m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRIT    ! Cloud ice m.r. at t 
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PCIT    ! Ice crystal C. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCIT    ! Ice crystal C. at t
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDI    ! Graupel m.r. at t 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDI    ! Graupel m.r. at t 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_DEPI
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_DEPI
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_CNVS
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_CNVS
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_DEPI
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RI_DEPI
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RI_CNVS
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_CNVS
 !
 !*       0.2   Declarations of local variables :
 !

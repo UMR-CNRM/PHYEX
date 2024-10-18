@@ -7,7 +7,7 @@ MODULE MODE_LIMA_CONVERSION_MELTING_SNOW
   IMPLICIT NONE
 CONTAINS
 !     ##############################################################################
-  SUBROUTINE LIMA_CONVERSION_MELTING_SNOW (ODCOMPUTE,                          &
+  SUBROUTINE LIMA_CONVERSION_MELTING_SNOW (KSIZE, ODCOMPUTE,                   &
                                            PRHODREF, PPRES, PT, PKA, PDV, PCJ, &
                                            PRVT, PRST, PCST, PLBDS,            &
                                            P_RS_CMEL, P_CS_CMEL                )
@@ -44,22 +44,23 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+INTEGER, INTENT(IN) :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! Reference Exner function
-REAL, DIMENSION(:),   INTENT(IN)    :: PPRES    !
-REAL, DIMENSION(:),   INTENT(IN)    :: PT       !
-REAL, DIMENSION(:),   INTENT(IN)    :: PKA      !
-REAL, DIMENSION(:),   INTENT(IN)    :: PDV      !
-REAL, DIMENSION(:),   INTENT(IN)    :: PCJ      !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF ! Reference Exner function
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PPRES    !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PT       !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PKA      !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PDV      !
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ      !
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRVT    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PRST    ! Snow mr at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PCST    ! Snow C. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDS   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRVT    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRST    ! Snow mr at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCST    ! Snow C. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDS   ! 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_CMEL
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_CMEL
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RS_CMEL
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CS_CMEL
 !
 !*       0.2   Declarations of local variables :
 !

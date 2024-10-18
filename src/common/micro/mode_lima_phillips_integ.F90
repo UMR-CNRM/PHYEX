@@ -2,7 +2,7 @@ MODULE MODE_LIMA_PHILLIPS_INTEG
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################
-  SUBROUTINE LIMA_PHILLIPS_INTEG (CST, PZT, PSI, PSI0, PSW, PZY, P_FRAC_ACT)
+  SUBROUTINE LIMA_PHILLIPS_INTEG (CST, ISIZE, PZT, PSI, PSI0, PSW, PZY, P_FRAC_ACT)
 !     ######################################################################
 !!
 !!    PURPOSE
@@ -44,13 +44,14 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(CST_t),              INTENT(IN)    :: CST
-REAL, DIMENSION(:),   INTENT(IN)    :: PZT
-REAL, DIMENSION(:),   INTENT(IN)    :: PSI
-REAL, DIMENSION(:,:), INTENT(IN)    :: PSI0
-REAL, DIMENSION(:),   INTENT(IN)    :: PSW
-REAL, DIMENSION(:),   INTENT(IN)    :: PZY
-REAL, DIMENSION(:,:), INTENT(OUT)   :: P_FRAC_ACT
+TYPE(CST_t),                    INTENT(IN)    :: CST
+INTEGER,                        INTENT(IN)    :: ISIZE
+REAL, DIMENSION(ISIZE),         INTENT(IN)    :: PZT
+REAL, DIMENSION(ISIZE),         INTENT(IN)    :: PSI
+REAL, DIMENSION(ISIZE,NSPECIE), INTENT(IN)    :: PSI0
+REAL, DIMENSION(ISIZE),         INTENT(IN)    :: PSW
+REAL, DIMENSION(ISIZE),         INTENT(IN)    :: PZY
+REAL, DIMENSION(ISIZE,NSPECIE), INTENT(OUT)   :: P_FRAC_ACT
 !
 !*       0.2   Declarations of local variables :
 !

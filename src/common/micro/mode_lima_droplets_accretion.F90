@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPLETS_ACCRETION
   IMPLICIT NONE
 CONTAINS
 !     #####################################################################
-  SUBROUTINE LIMA_DROPLETS_ACCRETION (ODCOMPUTE,                      &
+  SUBROUTINE LIMA_DROPLETS_ACCRETION (KSIZE, ODCOMPUTE,               &
                                       PRHODREF,                       &
                                       PRCT, PRRT, PCCT, PCRT,         &
                                       PLBDC, PLBDC3, PLBDR, PLBDR3,   &
@@ -47,21 +47,22 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
+INTEGER,              INTENT(IN)    :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! Reference Exner function
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF ! Reference Exner function
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PRRT     ! Rain m.r. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PCCT     ! Cloud water conc. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PCRT     ! Rain conc. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDC    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDC3   ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR3   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRCT     ! Cloud water m.r. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRRT     ! Rain m.r. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCCT     ! Cloud water conc. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCRT     ! Rain conc. at t
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDC    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDC3   ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDR    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDR3   ! 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_ACCR
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_ACCR
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RC_ACCR
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CC_ACCR
 !
 !*       0.2   Declarations of local variables :
 !

@@ -7,7 +7,7 @@ MODULE MODE_LIMA_HAIL_DEPOSITION
   IMPLICIT NONE
 CONTAINS
 !     ###########################################################################
-  SUBROUTINE LIMA_HAIL_DEPOSITION (ODCOMPUTE, PRHODREF,                        &
+  SUBROUTINE LIMA_HAIL_DEPOSITION (KSIZE, ODCOMPUTE, PRHODREF,                 &
                                    PRHT, PCHT, PSSI, PLBDH, PAI, PCJ, PLSFACT, &
                                    P_TH_DEPH, P_RH_DEPH                        )
 !     ###########################################################################
@@ -41,19 +41,20 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-LOGICAL, DIMENSION(:),INTENT(IN)    :: ODCOMPUTE
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHODREF ! 
+INTEGER, INTENT(IN) :: KSIZE
+LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF ! 
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PRHT     ! hail mr
-REAL, DIMENSION(:),   INTENT(IN)    :: PCHT     ! hail conc
-REAL, DIMENSION(:),   INTENT(IN)    :: PSSI     ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLBDH    ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PAI      ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PCJ      ! 
-REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT  ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHT     ! hail mr
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCHT     ! hail conc
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PSSI     ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDH    ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PAI      ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ      ! 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT  ! 
 !
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_DEPH
-REAL, DIMENSION(:),   INTENT(OUT)   :: P_RH_DEPH
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_DEPH
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RH_DEPH
 !
 !
 !-------------------------------------------------------------------------------
