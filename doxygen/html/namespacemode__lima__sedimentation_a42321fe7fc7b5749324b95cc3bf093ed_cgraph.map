@@ -1,9 +1,0 @@
-<map id="mode_lima_sedimentation::lima_sedimentation" name="mode_lima_sedimentation::lima_sedimentation">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,69,201,109"/>
-<area shape="rect" id="Node000002" href="$namespacemode__elec__beard__effect.html#a1294ed60c5f7fc904f054eb043ed03a5" title=" " alt="" coords="249,5,431,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="177,67,252,46,253,51,179,72"/>
-<area shape="rect" id="Node000003" href="$namespacemode__elec__compute__ex.html#a521f2c8257d9921e8ef5c73aa92a8307" title=" " alt="" coords="250,69,430,109"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="202,87,236,87,236,92,202,92"/>
-<area shape="rect" id="Node000004" href="$gamma_8F90.html#a9777227bbb84bfae4e8675b657d6e273" title=" " alt="" coords="289,134,391,159"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="187,107,276,129,275,134,186,112"/>
-</map>

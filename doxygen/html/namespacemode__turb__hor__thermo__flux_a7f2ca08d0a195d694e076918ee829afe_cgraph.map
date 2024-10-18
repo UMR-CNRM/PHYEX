@@ -1,5 +1,0 @@
-<map id="mode_turb_hor_thermo_flux::turb_hor_thermo_flux" name="mode_turb_hor_thermo_flux::turb_hor_thermo_flux">
-<area shape="rect" id="Node000001" title=" " alt="" coords="5,5,205,45"/>
-<area shape="rect" id="Node000002" href="$namespacemode__io__field__write.html#a51061fb206463f97afeb0bdafb71c461" title=" " alt="" coords="253,5,407,45"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="206,23,239,23,239,28,206,28"/>
-</map>
