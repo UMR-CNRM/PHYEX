@@ -40,11 +40,6 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, XALPHAI, XNUI, &
-                                 NMOM_I, NMOM_S 
-USE MODD_PARAM_LIMA_COLD, ONLY : XDICNVS_LIM, XLBDAICNVS_LIM,         &
-                                 XC0DEPIS, XC1DEPIS, XR0DEPIS, XR1DEPIS,      &
-                                 XDI, X0DEPI, X2DEPI
 USE MODD_CST,             ONLY : XTT
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
@@ -95,10 +90,10 @@ P_CI_CNVS(:) = 0.
 !
 ! Looking for regions where computations are necessary
 !
-GMICRO(:) = ODCOMPUTE(:) .AND. PRIT(:)>XRTMIN(4)
+GMICRO(:) = ODCOMPUTE(:) .AND. PRIT(:)>LIMAP%XRTMIN(4)
 !
 !
-IF (NMOM_I.EQ.1) THEN
+IF (LIMAP%NMOM_I.EQ.1) THEN
    WHERE( GMICRO )
 !
 !*       Conversion of pristine ice to r_s: RICNVS
@@ -106,7 +101,7 @@ IF (NMOM_I.EQ.1) THEN
 !
       ZCRIAUTI(:)=MIN(0.2E-4,10**(0.06*(PT(:)-XTT)-3.5))
       ZZW(:) = 0.0
-      WHERE ( (PRIT(:)>XRTMIN(4)))
+      WHERE ( (PRIT(:)>LIMAP%XRTMIN(4)))
          ZZW(:)   = 1.E-3 * EXP( 0.015*(PT(:)-XTT) ) * MAX( PRIT(:)-ZCRIAUTI(:),0.0 )
       END WHERE
 !
@@ -119,9 +114,9 @@ ELSE
 !        ----------------------------------------
 !
       ZZW(:) = 0.0
-      WHERE ( (PRIT(:)>XRTMIN(4)) .AND. (PCIT(:)>XCTMIN(4)) )
+      WHERE ( (PRIT(:)>LIMAP%XRTMIN(4)) .AND. (PCIT(:)>LIMAP%XCTMIN(4)) )
          ZZW(:) = ( PSSI(:) / PAI(:) ) * PCIT(:) *        &
-              ( X0DEPI/PLBDI(:)+X2DEPI*PCJ(:)*PCJ(:)/PLBDI(:)**(XDI+2.0) )
+              ( LIMAC%X0DEPI/PLBDI(:)+LIMAC%X2DEPI*PCJ(:)*PCJ(:)/PLBDI(:)**(LIMAC%XDI+2.0) )
       END WHERE
       P_RI_DEPI(:) = ZZW(:)
 !
@@ -130,21 +125,21 @@ ELSE
 !
       ZZW(:) = 0.0
       ZZW2(:) = 0.0
-      WHERE ( (PLBDI(:)<XLBDAICNVS_LIM) .AND. (PCIT(:)>XCTMIN(4)) &
+      WHERE ( (PLBDI(:)<LIMAC%XLBDAICNVS_LIM) .AND. (PCIT(:)>LIMAP%XCTMIN(4)) &
                                         .AND. (PSSI(:)>0.0)       )
-         ZZW(:) = (PLBDI(:)*XDICNVS_LIM)**(XALPHAI)
-         ZZX(:) = (PSSI(:)/PAI(:))*PCIT(:) * (ZZW(:)**XNUI) *EXP(-ZZW(:))
+         ZZW(:) = (PLBDI(:)*LIMAC%XDICNVS_LIM)**(LIMAP%XALPHAI)
+         ZZX(:) = (PSSI(:)/PAI(:))*PCIT(:) * (ZZW(:)**LIMAP%XNUI) *EXP(-ZZW(:))
 !
-         ZZW(:) = (XR0DEPIS + XR1DEPIS*PCJ(:))*ZZX(:)                             
+         ZZW(:) = (LIMAC%XR0DEPIS + LIMAC%XR1DEPIS*PCJ(:))*ZZX(:)                             
 !
-         ZZW2(:) = ZZW(:) * (XC0DEPIS+XC1DEPIS*PCJ(:)) / (XR0DEPIS+XR1DEPIS*PCJ(:))
+         ZZW2(:) = ZZW(:) * (LIMAC%XC0DEPIS+LIMAC%XC1DEPIS*PCJ(:)) / (LIMAC%XR0DEPIS+LIMAC%XR1DEPIS*PCJ(:))
       END WHERE
       P_RI_CNVS(:) = - ZZW(:)
       P_CI_CNVS(:) = - ZZW2(:)
    END WHERE
 END IF
 !
-IF (NMOM_S.EQ.0) THEN
+IF (LIMAP%NMOM_S.EQ.0) THEN
    P_RI_CNVS(:) = 0.
    P_CI_CNVS(:) = 0.
 END IF

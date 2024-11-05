@@ -39,8 +39,6 @@ CONTAINS
 !              ------------
 !
 USE MODD_CST,             ONLY : XRHOLW, XRV, XPI
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, LKHKO
-USE MODD_PARAM_LIMA_WARM, ONLY : X0EVAR, XEX0EVAR, X1EVAR, XEX2EVAR, XEX1EVAR, XTHCO, XDIVA, XCEVAP
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
@@ -94,20 +92,20 @@ ZZW2(:) = 0.
 !
 GEVAP(:) = .FALSE.
 GEVAP(:) = ODCOMPUTE(:)      .AND. &
-           PRRT(:)>XRTMIN(3) .AND. &
+           PRRT(:)>LIMAP%XRTMIN(3) .AND. &
            PRVT(:)<PRVSAT(:) .AND. &
-           PCRT(:)>XCTMIN(3)
+           PCRT(:)>LIMAP%XCTMIN(3)
 !
 !
 !
-IF (LKHKO) THEN
+IF (LIMAP%LKHKO) THEN
 
    ZZW1(:) = MAX((1.0 - PRVT(:)/ZZW1(:)),0.0)  ! Subsaturation
     
-   ZZW2(:) = 1. / ( XRHOLW*((((PLV(:)/PT(:))**2)/(XTHCO*XRV)) +          & ! G
-        (XRV*PT(:))/(XDIVA*PEVSAT(:))))
+   ZZW2(:) = 1. / ( XRHOLW*((((PLV(:)/PT(:))**2)/(LIMAW%XTHCO*XRV)) +          & ! G
+        (XRV*PT(:))/(LIMAW%XDIVA*PEVSAT(:))))
 
-   ZZW2(:) = 3.0 * XCEVAP * ZZW2(:) * (4.*XPI*XRHOLW/(3.))**(2./3.) *    &
+   ZZW2(:) = 3.0 * LIMAW%XCEVAP * ZZW2(:) * (4.*XPI*XRHOLW/(3.))**(2./3.) *    &
         (PRRT(:))**(1./3.) * (PCRT(:))**(2./3.) * ZZW1(:)                            
    P_RR_EVAP(:) = - ZZW2(:)
 
@@ -122,12 +120,12 @@ ELSE
 !
 ! Compute the function G(T)
 !
-      ZZW2(:) = 1. / ( XRHOLW*((((PLV(:)/PT(:))**2)/(XTHCO*XRV)) + (XRV*PT(:))/(XDIVA*PEVSAT(:)))) !G
+      ZZW2(:) = 1. / ( XRHOLW*((((PLV(:)/PT(:))**2)/(LIMAW%XTHCO*XRV)) + (XRV*PT(:))/(LIMAW%XDIVA*PEVSAT(:)))) !G
 !
 ! Compute the evaporation tendency
 !
       ZZW2(:) = ZZW2(:) * ZZW1(:) * PRRT(:) *        &
-           (X0EVAR * PLBDR(:)**XEX0EVAR + X1EVAR * PRHODREF(:)**XEX2EVAR * PLBDR(:)**XEX1EVAR)
+           (LIMAW%X0EVAR * PLBDR(:)**LIMAW%XEX0EVAR + LIMAW%X1EVAR * PRHODREF(:)**LIMAW%XEX2EVAR * PLBDR(:)**LIMAW%XEX1EVAR)
       ZZW2(:) = MAX(ZZW2(:),0.0)
 !
       P_RR_EVAP(:) = - ZZW2(:)

@@ -36,12 +36,6 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, LKHKO, NMOM_C, NMOM_R, XCEXVT
-USE MODD_PARAM_LIMA_WARM, ONLY : XLAUTR, XAUTO1, XLAUTR_THRESHOLD, &
-                                 XACCR4, XACCR5, XACCR3, XACCR2, XACCR1, &
-                                 XACCR_CLARGE1, XACCR_CLARGE2, XACCR_RLARGE1, XACCR_RLARGE2, &
-                                 XACCR_CSMALL1, XACCR_CSMALL2, XACCR_RSMALL1, XACCR_RSMALL2, &
-                                 XFCACCR, XEXCACCR
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
@@ -90,12 +84,12 @@ ZW4(:) = 0.0
 !
 !
 !
-IF ( LKHKO ) THEN
+IF ( LIMAP%LKHKO ) THEN
 !
-   GACCR(:) = PRRT(:)>XRTMIN(3) .AND. &
-              PCRT(:)>XCTMIN(3) .AND. &
-              PRCT(:)>XRTMIN(2) .AND. &
-              PCCT(:)>XCTMIN(2)
+   GACCR(:) = PRRT(:)>LIMAP%XRTMIN(3) .AND. &
+              PCRT(:)>LIMAP%XCTMIN(3) .AND. &
+              PRCT(:)>LIMAP%XRTMIN(2) .AND. &
+              PCCT(:)>LIMAP%XCTMIN(2)
 !
    WHERE ( GACCR(:) )
 !
@@ -107,39 +101,39 @@ IF ( LKHKO ) THEN
 !
    END WHERE
 !
-ELSE IF (NMOM_C.EQ.1 .AND. NMOM_R.EQ.1) THEN
-   GACCR(:) = PRRT(:)>XRTMIN(3) .AND. PCRT(:)>XCTMIN(3) .AND. &
-              PRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2)
+ELSE IF (LIMAP%NMOM_C.EQ.1 .AND. LIMAP%NMOM_R.EQ.1) THEN
+   GACCR(:) = PRRT(:)>LIMAP%XRTMIN(3) .AND. PCRT(:)>LIMAP%XCTMIN(3) .AND. &
+              PRCT(:)>LIMAP%XRTMIN(2) .AND. PCCT(:)>LIMAP%XCTMIN(2)
    WHERE ( GACCR(:) )
-      P_RC_ACCR(:) = - XFCACCR * PRCT(:)    &
-                   * PLBDR(:)**XEXCACCR     &
-                   * PRHODREF(:)**(-XCEXVT)
+      P_RC_ACCR(:) = - LIMAW%XFCACCR * PRCT(:)    &
+                   * PLBDR(:)**LIMAW%XEXCACCR     &
+                   * PRHODREF(:)**(-LIMAP%XCEXVT)
    END WHERE
 ELSE
 !
-   WHERE( PRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2) .AND. PRRT(:)>XRTMIN(3) .AND. PCRT(:)>XCTMIN(3) .AND. ODCOMPUTE(:) )
-      ZW2(:) = MAX( 0.0,XLAUTR*PRHODREF(:)*PRCT(:)*(XAUTO1/PLBDC(:)**4-XLAUTR_THRESHOLD) ) ! L 
-      ZW4(:) = XACCR1/PLBDR(:)
+   WHERE( PRCT(:)>LIMAP%XRTMIN(2) .AND. PCCT(:)>LIMAP%XCTMIN(2) .AND. PRRT(:)>LIMAP%XRTMIN(3) .AND. PCRT(:)>LIMAP%XCTMIN(3) .AND. ODCOMPUTE(:) )
+      ZW2(:) = MAX( 0.0,LIMAW%XLAUTR*PRHODREF(:)*PRCT(:)*(LIMAW%XAUTO1/PLBDC(:)**4-LIMAW%XLAUTR_THRESHOLD) ) ! L 
+      ZW4(:) = LIMAW%XACCR1/PLBDR(:)
    END WHERE
 !
    GACCR(:) = ODCOMPUTE(:)      .AND. &
-              PRRT(:)>XRTMIN(3) .AND. &
-              PCRT(:)>XCTMIN(3) .AND. &
-              PRCT(:)>XRTMIN(2) .AND. &
-              PCCT(:)>XCTMIN(2) .AND. &
+              PRRT(:)>LIMAP%XRTMIN(3) .AND. &
+              PCRT(:)>LIMAP%XCTMIN(3) .AND. &
+              PRCT(:)>LIMAP%XRTMIN(2) .AND. &
+              PCCT(:)>LIMAP%XCTMIN(2) .AND. &
               (PRRT(:)>1.2*ZW2(:)/PRHODREF(:) .OR. &
-                ZW4(:)>=MAX(XACCR2,XACCR3/(XACCR4/PLBDC(:)-XACCR5)) )
+                ZW4(:)>=MAX(LIMAW%XACCR2,LIMAW%XACCR3/(LIMAW%XACCR4/PLBDC(:)-LIMAW%XACCR5)) )
 !
 ! Accretion for D>100 10-6 m
    WHERE( GACCR(:).AND.(ZW4(:)>1.E-4) )
       ZW3(:) = MIN(PLBDC3(:) / PLBDR3(:),1.E15)
       ZW1(:) = ( PCCT(:)*PCRT(:) / PLBDC3(:) )*PRHODREF(:)
-      ZW2(:) = ZW1(:)*(XACCR_CLARGE1+XACCR_CLARGE2*ZW3(:))
+      ZW2(:) = ZW1(:)*(LIMAW%XACCR_CLARGE1+LIMAW%XACCR_CLARGE2*ZW3(:))
 !
       P_CC_ACCR(:) = - ZW2(:)
 !
       ZW1(:) = ( ZW1(:) / PLBDC3(:) )
-      ZW2(:) = ZW1(:)*(XACCR_RLARGE1+XACCR_RLARGE2*ZW3(:))
+      ZW2(:) = ZW1(:)*(LIMAW%XACCR_RLARGE1+LIMAW%XACCR_RLARGE2*ZW3(:))
 !
       P_RC_ACCR(:) = - ZW2(:)
    END WHERE
@@ -151,12 +145,12 @@ ELSE
       ZW1(:) =  ZW1(:)/PLBDC3(:)
    
       ZW3(:) = ZW3(:)**2
-      ZW2(:) = ZW1(:)*(XACCR_CSMALL1+XACCR_CSMALL2*ZW3(:))
+      ZW2(:) = ZW1(:)*(LIMAW%XACCR_CSMALL1+LIMAW%XACCR_CSMALL2*ZW3(:))
 !
       P_CC_ACCR(:) = - ZW2(:)
 !
       ZW1(:) = ZW1(:) / PLBDC3(:)
-      ZW2(:) = ZW1(:)*(XACCR_RSMALL1+XACCR_RSMALL2*ZW3(:))
+      ZW2(:) = ZW1(:)*(LIMAW%XACCR_RSMALL1+LIMAW%XACCR_RSMALL2*ZW3(:))
 !
       P_RC_ACCR(:) = - ZW2(:)
    END WHERE

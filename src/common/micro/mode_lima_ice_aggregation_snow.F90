@@ -39,9 +39,6 @@ CONTAINS
 !              ------------
 !
 USE MODD_CST,             ONLY : XTT
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, XCEXVT, NMOM_I, XNUS, XALPHAS, XCEXVT
-USE MODD_PARAM_LIMA_COLD, ONLY : XBI, XCOLEXIS, XAGGS_CLARGE1, XAGGS_CLARGE2, &
-                                 XAGGS_RLARGE1, XAGGS_RLARGE2, XFIAGGS, XFVELOS, XEXIAGGS
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
@@ -86,28 +83,28 @@ P_RI_AGGS(:) = 0.
 P_CI_AGGS(:) = 0.
 !
 !
-IF (NMOM_I.EQ.1) THEN
-   WHERE ( PRIT(:)>XRTMIN(4) .AND. PRST(:)>XRTMIN(5) .AND. ODCOMPUTE(:) )
-      ZZW1(:) = XFIAGGS * EXP( XCOLEXIS*(PT(:)-XTT) ) &
+IF (LIMAP%NMOM_I.EQ.1) THEN
+   WHERE ( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRST(:)>LIMAP%XRTMIN(5) .AND. ODCOMPUTE(:) )
+      ZZW1(:) = LIMAC%XFIAGGS * EXP( LIMAC%XCOLEXIS*(PT(:)-XTT) ) &
                         * PLATHAM_IAGGS(:)            &
                         * PRIT(:)                     &
-                        * PCST(:) * (1+(XFVELOS/PLBDS(:))**XALPHAS)**(-XNUS+XEXIAGGS/XALPHAS) &
-                        * PRHODREF(:)**(-XCEXVT+1.) &
-                        * PLBDS(:)**XEXIAGGS
+                        * PCST(:) * (1+(LIMAC%XFVELOS/PLBDS(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEXIAGGS/LIMAP%XALPHAS) &
+                        * PRHODREF(:)**(-LIMAP%XCEXVT+1.) &
+                        * PLBDS(:)**LIMAC%XEXIAGGS
 !
       P_RI_AGGS(:) = - ZZW1(:)
    END WHERE
 ELSE
-   WHERE ( PRIT(:)>XRTMIN(4) .AND. PRST(:)>XRTMIN(5) .AND. &
-           PCIT(:)>XCTMIN(4) .AND. PCST(:)>XCTMIN(5) .AND. ODCOMPUTE(:) )
+   WHERE ( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRST(:)>LIMAP%XRTMIN(5) .AND. &
+           PCIT(:)>LIMAP%XCTMIN(4) .AND. PCST(:)>LIMAP%XCTMIN(5) .AND. ODCOMPUTE(:) )
       ZZW1(:) = (PLBDI(:) / PLBDS(:))**3
-      ZZW2(:) = PCIT(:)*PCST(:)*EXP(XCOLEXIS*(PT(:)-XTT))*PRHODREF(:) / (PLBDI(:)**3)
-      ZZW3(:) = ZZW2(:)*(XAGGS_CLARGE1+XAGGS_CLARGE2*ZZW1(:))
+      ZZW2(:) = PCIT(:)*PCST(:)*EXP(LIMAC%XCOLEXIS*(PT(:)-XTT))*PRHODREF(:) / (PLBDI(:)**3)
+      ZZW3(:) = ZZW2(:)*(LIMAC%XAGGS_CLARGE1+LIMAC%XAGGS_CLARGE2*ZZW1(:))
 !
       P_CI_AGGS(:) = - ZZW3(:)
 !
-      ZZW2(:) = ZZW2(:) / PLBDI(:)**XBI
-      ZZW2(:) = ZZW2(:)*(XAGGS_RLARGE1+XAGGS_RLARGE2*ZZW1(:))
+      ZZW2(:) = ZZW2(:) / PLBDI(:)**LIMAC%XBI
+      ZZW2(:) = ZZW2(:)*(LIMAC%XAGGS_RLARGE1+LIMAC%XAGGS_RLARGE2*ZZW1(:))
 !
       P_RI_AGGS(:) = - ZZW2(:)
    END WHERE

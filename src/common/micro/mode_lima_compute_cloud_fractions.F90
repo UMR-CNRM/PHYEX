@@ -36,8 +36,6 @@ CONTAINS
 !              ------------
 !
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-USE MODD_PARAM_LIMA,      ONLY : XCTMIN, XRTMIN, &
-                                 NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
@@ -78,20 +76,20 @@ REAL, DIMENSION(D%NIJT,D%NKT),INTENT(INOUT) :: PPRCFR        !
 !              ---------------
 !
 ! Liquid cloud fraction is kept from input data, except where PCLDFR=0 and rc>0
-WHERE(PCLDFR(:,:)<1.E-10 .AND. PRCT(:,:)>XRTMIN(2) .AND. (NMOM_C.EQ.1 .OR. PCCT(:,:)>XCTMIN(2))) PCLDFR(:,:)=1.
+WHERE(PCLDFR(:,:)<1.E-10 .AND. PRCT(:,:)>LIMAP%XRTMIN(2) .AND. (LIMAP%NMOM_C.EQ.1 .OR. PCCT(:,:)>LIMAP%XCTMIN(2))) PCLDFR(:,:)=1.
 !
 ! Ice cloud fraction is currently 0 or 1
 PICEFR(:,:)=0.
-WHERE(PICEFR(:,:)<1.E-10 .AND. PRIT(:,:)>XRTMIN(4) .AND. (NMOM_I.EQ.1 .OR. PCIT(:,:)>XCTMIN(4))) PICEFR(:,:)=1.
+WHERE(PICEFR(:,:)<1.E-10 .AND. PRIT(:,:)>LIMAP%XRTMIN(4) .AND. (LIMAP%NMOM_I.EQ.1 .OR. PCIT(:,:)>LIMAP%XCTMIN(4))) PICEFR(:,:)=1.
 !
 ! Precipitation fraction
 !!$PPRCFR(:,:) = MAX(PCLDFR(:,:),PICEFR(:,:))
 !!$DO JI = D%NIJB,D%NIJE
 !!$      DO JK=D%NKE-D%NKL, D%NKB, -D%NKL
-!!$         IF ( (PRRT(JI,JK).GT.XRTMIN(3) .AND. PCRT(JI,JK).GT.XCTMIN(3)) .OR. &
-!!$               PRST(JI,JK).GT.XRTMIN(5)                                    .OR. &
-!!$               PRGT(JI,JK).GT.XRTMIN(6)                                    .OR. &
-!!$               PRHT(JI,JK).GT.XRTMIN(7)                                         ) THEN
+!!$         IF ( (PRRT(JI,JK).GT.LIMAP%XRTMIN(3) .AND. PCRT(JI,JK).GT.LIMAP%XCTMIN(3)) .OR. &
+!!$               PRST(JI,JK).GT.LIMAP%XRTMIN(5)                                    .OR. &
+!!$               PRGT(JI,JK).GT.LIMAP%XRTMIN(6)                                    .OR. &
+!!$               PRHT(JI,JK).GT.LIMAP%XRTMIN(7)                                         ) THEN
 !!$            PPRCFR(JI,JK)=MAX(PPRCFR(JI,JK),PPRCFR(JI,JK+D%NKL))
 !!$            IF (PPRCFR(JI,JK)==0) THEN
 !!$               PPRCFR(JI,JK)=1.
@@ -120,16 +118,16 @@ WHERE(PICEFR(:,:)<1.E-10 .AND. PRIT(:,:)>XRTMIN(4) .AND. (NMOM_I.EQ.1 .OR. PCIT(
 !!$END DO
 !!$
 !!$PPRCFR(:,:) = 0.
-!!$WHERE ( (PRRT(:,:).GT.XRTMIN(3) .AND. PCRT(:,:).GT.XCTMIN(3)) .OR. &
-!!$         PRST(:,:).GT.XRTMIN(5)                                 .OR. &
-!!$         PRGT(:,:).GT.XRTMIN(6)                                 .OR. &
-!!$         PRHT(:,:).GT.XRTMIN(7)                                      )  PPRCFR(:,:) = 1.
+!!$WHERE ( (PRRT(:,:).GT.LIMAP%XRTMIN(3) .AND. PCRT(:,:).GT.LIMAP%XCTMIN(3)) .OR. &
+!!$         PRST(:,:).GT.LIMAP%XRTMIN(5)                                 .OR. &
+!!$         PRGT(:,:).GT.LIMAP%XRTMIN(6)                                 .OR. &
+!!$         PRHT(:,:).GT.LIMAP%XRTMIN(7)                                      )  PPRCFR(:,:) = 1.
 !!$
 PPRCFR(:,:) = 0.
-WHERE ( (PRRT(:,:).GT.0. .AND. (NMOM_R.EQ.1 .OR. PCRT(:,:).GT.0.) ) .OR. &
-        (PRST(:,:).GT.0. .AND. (NMOM_S.EQ.1 .OR. PCST(:,:).GT.0.) ) .OR. &
-        (PRGT(:,:).GT.0. .AND. (NMOM_G.EQ.1 .OR. PCGT(:,:).GT.0.) ) .OR. &
-        (PRHT(:,:).GT.0. .AND. (NMOM_H.EQ.1 .OR. PCHT(:,:).GT.0.) ) )  PPRCFR(:,:) = 1.
+WHERE ( (PRRT(:,:).GT.0. .AND. (LIMAP%NMOM_R.EQ.1 .OR. PCRT(:,:).GT.0.) ) .OR. &
+        (PRST(:,:).GT.0. .AND. (LIMAP%NMOM_S.EQ.1 .OR. PCST(:,:).GT.0.) ) .OR. &
+        (PRGT(:,:).GT.0. .AND. (LIMAP%NMOM_G.EQ.1 .OR. PCGT(:,:).GT.0.) ) .OR. &
+        (PRHT(:,:).GT.0. .AND. (LIMAP%NMOM_H.EQ.1 .OR. PCHT(:,:).GT.0.) ) )  PPRCFR(:,:) = 1.
 !
 !-------------------------------------------------------------------------------
 !

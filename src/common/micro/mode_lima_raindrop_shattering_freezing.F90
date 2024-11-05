@@ -31,11 +31,6 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, LRDSF, XCEXVT
-USE MODD_PARAM_LIMA_COLD,  ONLY : XMNU0
-USE MODD_PARAM_LIMA_WARM,  ONLY : XDR
-USE MODD_PARAM_LIMA_MIXED, ONLY : NGAMINC, XGAMINC_RDSF_R, &
-                                  XFACTOR_RDSF_NI, XMOMGR_RDSF, XRDSFINTP1_R, XRDSFINTP_R
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
@@ -81,9 +76,9 @@ REAL,    DIMENSION(SIZE(PRRT))     :: ZNI_RDSF,ZRI_RDSF  ! RDSF rates
 P_RI_RDSF(:)=0.
 P_CI_RDSF(:)=0.
 !
-GRDSF(:) = LRDSF .AND. ODCOMPUTE .AND. (PRIT(:)>XRTMIN(4)) .AND. (PRRT(:)>XRTMIN(3)) &
-                                 .AND. (PCIT(:)>XCTMIN(4)) .AND. (PCRT(:)>XCTMIN(3)) &
-                                 .AND. (PRGT(:)>XRTMIN(6))
+GRDSF(:) = LIMAP%LRDSF .AND. ODCOMPUTE .AND. (PRIT(:)>LIMAP%XRTMIN(4)) .AND. (PRRT(:)>LIMAP%XRTMIN(3)) &
+                                 .AND. (PCIT(:)>LIMAP%XCTMIN(4)) .AND. (PCRT(:)>LIMAP%XCTMIN(3)) &
+                                 .AND. (PRGT(:)>LIMAP%XRTMIN(6))
 
 IRDSF    = COUNT( GRDSF(:) )
 !
@@ -102,31 +97,31 @@ IF (IRDSF > 0) THEN
 !               geometrical set of Lbda_r used to tabulate some moments of the
 !               incomplete gamma function, for the lower boundary (0.1 mm)
 !
-  ZVEC2_R(1:IRDSF) = MAX( 1.00001, MIN( FLOAT(NGAMINC)-0.00001,XRDSFINTP_R  &
-                        * LOG( ZVEC1_R(1:IRDSF) ) + XRDSFINTP1_R  ) )
+  ZVEC2_R(1:IRDSF) = MAX( 1.00001, MIN( FLOAT(LIMAM%NGAMINC)-0.00001,LIMAM%XRDSFINTP_R  &
+                        * LOG( ZVEC1_R(1:IRDSF) ) + LIMAM%XRDSFINTP1_R  ) )
   IVEC2_R(1:IRDSF) = INT( ZVEC2_R(1:IRDSF) )
   ZVEC2_R(1:IRDSF) = ZVEC2_R(1:IRDSF) - FLOAT( IVEC2_R(1:IRDSF) )
 !
 !*       2.2.3  perform the linear interpolation of the
 !               normalized "2+XDR"-moment of the incomplete gamma function
 !
-  ZVEC1_R1(1:IRDSF) = XGAMINC_RDSF_R(IVEC2_R(1:IRDSF)+1) *  ZVEC2_R(1:IRDSF)    &
-                    - XGAMINC_RDSF_R(IVEC2_R(1:IRDSF))   * (ZVEC2_R(1:IRDSF) - 1.0)
+  ZVEC1_R1(1:IRDSF) = LIMAM%XGAMINC_RDSF_R(IVEC2_R(1:IRDSF)+1) *  ZVEC2_R(1:IRDSF)    &
+                    - LIMAM%XGAMINC_RDSF_R(IVEC2_R(1:IRDSF))   * (ZVEC2_R(1:IRDSF) - 1.0)
 !
 !  From 0.1 mm to infinity we need
-  ZVEC1_R1(1:IRDSF) = XMOMGR_RDSF * (1.0 - ZVEC1_R1(1:IRDSF))
+  ZVEC1_R1(1:IRDSF) = LIMAM%XMOMGR_RDSF * (1.0 - ZVEC1_R1(1:IRDSF))
 !
   ZINTG_RAIN(:) = UNPACK ( VECTOR=ZVEC1_R1(:),MASK=GRDSF,FIELD=0.0 )
 !
 !*       2.2.4  To compute final "RDSF" contributions
 !
-  ZNI_RDSF(:) = (XFACTOR_RDSF_NI / (PRHODREF(:)**(XCEXVT-1.0))) * (  &
-                 PCIT(:) * PCRT(:) * ZINTG_RAIN(:) * PLBDR(:)**(-(XDR+6.0)) )
+  ZNI_RDSF(:) = (LIMAM%XFACTOR_RDSF_NI / (PRHODREF(:)**(LIMAP%XCEXVT-1.0))) * (  &
+                 PCIT(:) * PCRT(:) * ZINTG_RAIN(:) * PLBDR(:)**(-(LIMAW%XDR+6.0)) )
 !
   P_CI_RDSF(:) = MAX(ZNI_RDSF(:),0.)
 !
 ! The value of rg removed by RDSF is determined by the mean mass of pristine ice
-  ZRI_RDSF(:) = MAX( ZNI_RDSF(:)*XMNU0,XRTMIN(5) )
+  ZRI_RDSF(:) = MAX( ZNI_RDSF(:)*LIMAC%XMNU0,LIMAP%XRTMIN(5) )
 !
   P_RI_RDSF(:) = ZRI_RDSF(:)
 !

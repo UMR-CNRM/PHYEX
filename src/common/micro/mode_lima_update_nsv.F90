@@ -11,7 +11,7 @@ IMPLICIT NONE
 !
 CONTAINS
 !
-SUBROUTINE LIMA_UPDATE_NSV(ODINIT, KMI, KSV, HDCLOUD, ODUPDATE)
+SUBROUTINE LIMA_UPDATE_NSV(LIMAP,ODINIT, KMI, KSV, HDCLOUD, ODUPDATE)
 !!*** *LIMA_UPDATE_NSV* - update modd_nsv values realtive to LIMA
 !!
 !!*   PURPOSE
@@ -56,16 +56,13 @@ USE MODD_NSV, ONLY: NSV_LIMA_BEG_A, NSV_LIMA_END_A, NSV_LIMA_A, &
                   & NSV_LIMA_CCN_FREE, NSV_LIMA_CCN_ACTI, NSV_LIMA_SCAVMASS, &
                   & NSV_LIMA_IFN_FREE, NSV_LIMA_IFN_NUCL, NSV_LIMA_IMM_NUCL, &
                   & NSV_LIMA_HOM_HAZE, NSV_LIMA_SPRO
-USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN, LSCAV, LAERO_MASS, &
-                                NMOD_IFN, NMOD_IMM, LHHONI, &
-                                LSPRO,  &
-                                NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 !* 0.1. Declaration of arguments
 !       ------------------------
 !
 IMPLICIT NONE
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 LOGICAL,          INTENT(IN)    :: ODINIT   !< .TRUE. to fill the different NSV_LIMA_*_A arrays
 INTEGER,          INTENT(IN)    :: KMI      !< model number
 INTEGER,          INTENT(INOUT) :: KSV      !< IN: Initial value to use when filling the NSV_LIMA_*_A arrays; 
@@ -81,66 +78,66 @@ IF(ODINIT) THEN
     KSV = KSV+1
     NSV_LIMA_BEG_A(KMI) = KSV
     ! Nc
-    IF (NMOM_C.GE.2) THEN
+    IF (LIMAP%NMOM_C.GE.2) THEN
       NSV_LIMA_NC_A(KMI) = KSV
       KSV = KSV+1
     END IF
     ! Nr
-    IF (NMOM_R.GE.2) THEN
+    IF (LIMAP%NMOM_R.GE.2) THEN
       NSV_LIMA_NR_A(KMI) = KSV
       KSV = KSV+1
     END IF
     ! CCN
-    IF (NMOD_CCN .GT. 0) THEN
+    IF (LIMAP%NMOD_CCN .GT. 0) THEN
       NSV_LIMA_CCN_FREE_A(KMI) = KSV
-      KSV = KSV + NMOD_CCN
+      KSV = KSV + LIMAP%NMOD_CCN
       NSV_LIMA_CCN_ACTI_A(KMI) = KSV
-      KSV = KSV + NMOD_CCN
+      KSV = KSV + LIMAP%NMOD_CCN
     END IF
     ! Scavenging
-    IF (LSCAV .AND. LAERO_MASS) THEN
+    IF (LIMAP%LSCAV .AND. LIMAP%LAERO_MASS) THEN
       NSV_LIMA_SCAVMASS_A(KMI) = KSV
       KSV = KSV+1
     END IF
     ! Ni
-    IF (NMOM_I.GE.2) THEN
+    IF (LIMAP%NMOM_I.GE.2) THEN
       NSV_LIMA_NI_A(KMI) = KSV
       KSV = KSV+1
     END IF
     ! Ns
-    IF (NMOM_S.GE.2) THEN
+    IF (LIMAP%NMOM_S.GE.2) THEN
       NSV_LIMA_NS_A(KMI) = KSV
       KSV = KSV+1
     END IF
     ! Ng
-    IF (NMOM_G.GE.2) THEN
+    IF (LIMAP%NMOM_G.GE.2) THEN
       NSV_LIMA_NG_A(KMI) = KSV
       KSV = KSV+1
     END IF
     ! Nh
-    IF (NMOM_H.GE.2) THEN
+    IF (LIMAP%NMOM_H.GE.2) THEN
       NSV_LIMA_NH_A(KMI) = KSV
       KSV = KSV+1
     END IF
     ! IFN
-    IF (NMOD_IFN .GT. 0) THEN
+    IF (LIMAP%NMOD_IFN .GT. 0) THEN
       NSV_LIMA_IFN_FREE_A(KMI) = KSV
-      KSV = KSV + NMOD_IFN
+      KSV = KSV + LIMAP%NMOD_IFN
       NSV_LIMA_IFN_NUCL_A(KMI) = KSV
-      KSV = KSV + NMOD_IFN
+      KSV = KSV + LIMAP%NMOD_IFN
     END IF
     ! IMM
-    IF (NMOD_IMM .GT. 0) THEN
+    IF (LIMAP%NMOD_IMM .GT. 0) THEN
       NSV_LIMA_IMM_NUCL_A(KMI) = KSV
-      KSV = KSV + MAX(1,NMOD_IMM)
+      KSV = KSV + MAX(1,LIMAP%NMOD_IMM)
     END IF
     ! Homogeneous freezing of CCN
-    IF (LHHONI) THEN
+    IF (LIMAP%LHHONI) THEN
       NSV_LIMA_HOM_HAZE_A(KMI) = KSV
       KSV = KSV + 1
     END IF
     ! Supersaturation
-    IF (LSPRO) THEN
+    IF (LIMAP%LSPRO) THEN
       NSV_LIMA_SPRO_A(KMI) = KSV
       KSV = KSV + 1
     END IF

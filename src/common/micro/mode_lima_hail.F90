@@ -45,16 +45,6 @@ CONTAINS
 !              ------------
 !
 USE MODD_CST,              ONLY : XTT, XMD, XMV, XRV, XLVTT, XLMTT, XESTT, XCL, XCI, XCPV
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, XCEXVT
-USE MODD_PARAM_LIMA_MIXED, ONLY : NWETLBDAG, XWETINTP1G, XWETINTP2G, &
-                                  NWETLBDAH, X0DEPH, X1DEPH, XDH, XEX0DEPH, XEX1DEPH, &
-                                  XFWETH, XWETINTP1H, XWETINTP2H, &
-                                  NWETLBDAS, XWETINTP1S, XWETINTP2S, &
-                                  XKER_N_GWETH, XKER_GWETH, XKER_N_SWETH, XKER_SWETH, &
-                                  XFSWETH, XLBSWETH1, XLBSWETH2, XLBSWETH3, &
-                                  XFNSWETH, XLBNSWETH1, XLBNSWETH2, XLBNSWETH3, &
-                                  XFGWETH, XLBGWETH1, XLBGWETH2, XLBGWETH3, &
-                                  XFNGWETH, XLBNGWETH1, XLBNGWETH2, XLBNGWETH3
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 
@@ -191,17 +181,17 @@ ZRWETH(:) = 0.
 !            1.a Collection of rc and ri
 !            ---------------------------
 !
-WHERE( PRHT(:)>XRTMIN(7) .AND. PCHT(:)>XCTMIN(7) .AND. ODCOMPUTE(:) )
-   ZZW(:) = PCHT(:) * PLBDH(:)**(-XDH-2.0) * PRHODREF(:)**(1-XCEXVT)
-   ZZW1(:) = XFWETH * PRCT(:) * ZZW(:) ! RCWETH
-   ZZW2(:) = XFWETH * PRIT(:) * ZZW(:) ! RIWETH
+WHERE( PRHT(:)>LIMAP%XRTMIN(7) .AND. PCHT(:)>LIMAP%XCTMIN(7) .AND. ODCOMPUTE(:) )
+   ZZW(:) = PCHT(:) * PLBDH(:)**(-LIMAM%XDH-2.0) * PRHODREF(:)**(1-LIMAP%XCEXVT)
+   ZZW1(:) = LIMAM%XFWETH * PRCT(:) * ZZW(:) ! RCWETH
+   ZZW2(:) = LIMAM%XFWETH * PRIT(:) * ZZW(:) ! RIWETH
 END WHERE
 !
 !*           1.b Collection of rs
 !            --------------------
 !
-GWET(:) = PRST(:)>XRTMIN(5) .AND. PRHT(:)>XRTMIN(7) .AND. ODCOMPUTE(:) .AND. &
-          PCST(:)>XCTMIN(5) .AND. PCHT(:)>XCTMIN(7)
+GWET(:) = PRST(:)>LIMAP%XRTMIN(5) .AND. PRHT(:)>LIMAP%XRTMIN(7) .AND. ODCOMPUTE(:) .AND. &
+          PCST(:)>LIMAP%XCTMIN(5) .AND. PCHT(:)>LIMAP%XCTMIN(7)
 !
 WHERE( GWET )
 !
@@ -214,13 +204,13 @@ WHERE( GWET )
 !        in the geometrical set of (Lbda_g,Lbda_s) couplet use to
 !        tabulate the SDRYG-kernel
 !
-   ZVEC1(:) = MAX( 1.0001, MIN( REAL(NWETLBDAH)-0.0001,           &
-                         XWETINTP1H * LOG( ZVEC1(:) ) + XWETINTP2H ) )
+   ZVEC1(:) = MAX( 1.0001, MIN( REAL(LIMAM%NWETLBDAH)-0.0001,           &
+                         LIMAM%XWETINTP1H * LOG( ZVEC1(:) ) + LIMAM%XWETINTP2H ) )
    IVEC1(:) = INT( ZVEC1(:) )
    ZVEC1(:) = ZVEC1(:) - REAL( IVEC1(:) )
 !
-   ZVEC2(:) = MAX( 1.0001, MIN( REAL(NWETLBDAS)-0.0001,           &
-                         XWETINTP1S * LOG( ZVEC2(:) ) + XWETINTP2S ) )
+   ZVEC2(:) = MAX( 1.0001, MIN( REAL(LIMAM%NWETLBDAS)-0.0001,           &
+                         LIMAM%XWETINTP1S * LOG( ZVEC2(:) ) + LIMAM%XWETINTP2S ) )
    IVEC2(:) = INT( ZVEC2(:) )
    ZVEC2(:) = ZVEC2(:) - REAL( IVEC2(:) )
 !
@@ -238,12 +228,12 @@ WHERE( GWET )
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
        			                                    * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
-   ZZW3(:) = XFSWETH * ZZW(:)                                     & ! RSWETH
+   ZZW3(:) = LIMAM%XFSWETH * ZZW(:)                                     & ! RSWETH
                     *  PRST(:) * PCHT(:)                          &
-                    *  PRHODREF(:)**(1-XCEXVT)                    &
-                    *( XLBSWETH1/( PLBDH(:)**2                ) + &
-                       XLBSWETH2/( PLBDH(:)    * PLBDS(:)     ) + &
-                       XLBSWETH3/(               PLBDS(:)**2) )
+                    *  PRHODREF(:)**(1-LIMAP%XCEXVT)                    &
+                    *( LIMAM%XLBSWETH1/( PLBDH(:)**2                ) + &
+                       LIMAM%XLBSWETH2/( PLBDH(:)    * PLBDS(:)     ) + &
+                       LIMAM%XLBSWETH3/(               PLBDS(:)**2) )
 !
    Z1(:) = GET_XKER_N_SWETH(KSIZE,IVEC1(:)+1,IVEC2(:)+1)
    Z2(:) = GET_XKER_N_SWETH(KSIZE,IVEC1(:)+1,IVEC2(:)  )
@@ -256,19 +246,19 @@ WHERE( GWET )
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
        			                                    * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
-   ZZW3N(:) = XFNSWETH * ZZW(:)                                      & ! NSWETH
+   ZZW3N(:) = LIMAM%XFNSWETH * ZZW(:)                                      & ! NSWETH
                       *  PCST(:) * PCHT(:)                           &
-                      *  PRHODREF(:)**(1-XCEXVT)                     &
-                      *( XLBNSWETH1/( PLBDH(:)**2                ) + &
-                         XLBNSWETH2/( PLBDH(:)    * PLBDS(:)     ) + &
-                         XLBNSWETH3/(               PLBDS(:)**2) )
+                      *  PRHODREF(:)**(1-LIMAP%XCEXVT)                     &
+                      *( LIMAM%XLBNSWETH1/( PLBDH(:)**2                ) + &
+                         LIMAM%XLBNSWETH2/( PLBDH(:)    * PLBDS(:)     ) + &
+                         LIMAM%XLBNSWETH3/(               PLBDS(:)**2) )
 END WHERE
 !
 !*           1.c  Collection of rg
 !            ---------------------
 !
-GWET(:) = PRGT(:)>XRTMIN(6) .AND. PRHT(:)>XRTMIN(7) .AND. ODCOMPUTE(:) .AND. &
-          PCGT(:)>XCTMIN(6) .AND. PCHT(:)>XCTMIN(7)
+GWET(:) = PRGT(:)>LIMAP%XRTMIN(6) .AND. PRHT(:)>LIMAP%XRTMIN(7) .AND. ODCOMPUTE(:) .AND. &
+          PCGT(:)>LIMAP%XCTMIN(6) .AND. PCHT(:)>LIMAP%XCTMIN(7)
 !
 WHERE( GWET )
 !
@@ -281,13 +271,13 @@ WHERE( GWET )
 !        in the geometrical set of (Lbda_g,Lbda_r) couplet use to
 !        tabulate the RDRYG-kernel
 !
-   ZVEC1(:) = MAX( 1.0001, MIN( REAL(NWETLBDAH)-0.0001,           &
-                         XWETINTP1H * LOG( ZVEC1(:) ) + XWETINTP2H ) )
+   ZVEC1(:) = MAX( 1.0001, MIN( REAL(LIMAM%NWETLBDAH)-0.0001,           &
+                         LIMAM%XWETINTP1H * LOG( ZVEC1(:) ) + LIMAM%XWETINTP2H ) )
    IVEC1(:) = INT( ZVEC1(:) )
    ZVEC1(:) = ZVEC1(:) - REAL( IVEC1(:) )
 !
-   ZVEC2(:) = MAX( 1.0001, MIN( REAL(NWETLBDAG)-0.0001,           &
-                         XWETINTP1G * LOG( ZVEC2(:) ) + XWETINTP2G ) )
+   ZVEC2(:) = MAX( 1.0001, MIN( REAL(LIMAM%NWETLBDAG)-0.0001,           &
+                         LIMAM%XWETINTP1G * LOG( ZVEC2(:) ) + LIMAM%XWETINTP2G ) )
    IVEC2(:) = INT( ZVEC2(:) )
    ZVEC2(:) = ZVEC2(:) - REAL( IVEC2(:) )
 !
@@ -305,12 +295,12 @@ WHERE( GWET )
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
                                  			     * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
-   ZZW4(:) = XFGWETH * ZZW(:)                                     & ! RGWETH
+   ZZW4(:) = LIMAM%XFGWETH * ZZW(:)                                     & ! RGWETH
                      * PRGT(:) * PCHT(:)                          &
-                     * PRHODREF(:)**(1-XCEXVT)                    &
-                     *( XLBGWETH1/( PLBDH(:)**2               ) + &
-                        XLBGWETH2/( PLBDH(:)   * PLBDG(:)     ) + &
-                        XLBGWETH3/(              PLBDG(:)**2) )
+                     * PRHODREF(:)**(1-LIMAP%XCEXVT)                    &
+                     *( LIMAM%XLBGWETH1/( PLBDH(:)**2               ) + &
+                        LIMAM%XLBGWETH2/( PLBDH(:)   * PLBDG(:)     ) + &
+                        LIMAM%XLBGWETH3/(              PLBDG(:)**2) )
 !
    Z1(:) = GET_XKER_N_GWETH(KSIZE,IVEC1(:)+1,IVEC2(:)+1)
    Z2(:) = GET_XKER_N_GWETH(KSIZE,IVEC1(:)+1,IVEC2(:)  )
@@ -323,12 +313,12 @@ WHERE( GWET )
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
                                  			     * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
-   ZZW4N(:) = XFNGWETH * ZZW(:)                                      & ! NGWETH
+   ZZW4N(:) = LIMAM%XFNGWETH * ZZW(:)                                      & ! NGWETH
                        * PCGT(:) * PCHT(:)                           &
-                       * PRHODREF(:)**(1-XCEXVT)                     &
-                       *( XLBNGWETH1/( PLBDH(:)**2               ) + &
-                          XLBNGWETH2/( PLBDH(:)   * PLBDG(:)     ) + &
-                          XLBNGWETH3/(              PLBDG(:)**2) )
+                       * PRHODREF(:)**(1-LIMAP%XCEXVT)                     &
+                       *( LIMAM%XLBNGWETH1/( PLBDH(:)**2               ) + &
+                          LIMAM%XLBNGWETH2/( PLBDH(:)   * PLBDG(:)     ) + &
+                          LIMAM%XLBNGWETH3/(              PLBDG(:)**2) )
    
 END WHERE
 !
@@ -336,7 +326,7 @@ END WHERE
 !            ----------------------
 !
 ZZW(:) = 0.0
-WHERE( PRHT(:)>XRTMIN(6) .AND. PCHT(:) >XCTMIN(6) .AND. ODCOMPUTE(:) )
+WHERE( PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:) >LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:) )
    ZZW(:) = PRVT(:)*PPRES(:)/((XMV/XMD)+PRVT(:)) ! Vapor pressure
    ZZW(:) = PKA(:)*(XTT-PT(:)) +                                  &
               ( PDV(:)*(XLVTT + ( XCPV - XCL ) * ( PT(:) - XTT ))   &
@@ -344,14 +334,14 @@ WHERE( PRHT(:)>XRTMIN(6) .AND. PCHT(:) >XCTMIN(6) .AND. ODCOMPUTE(:) )
 !
 ! Total mass gained by hail in wet mode
    ZRWETH(:)  = MAX( 0.0,                                                                &
-                   ( ZZW(:) * PCHT(:) * ( X0DEPH*       PLBDH(:)**XEX0DEPH +             &
-                                          X1DEPH*PCJ(:)*PLBDH(:)**XEX1DEPH ) +           &
+                   ( ZZW(:) * PCHT(:) * ( LIMAM%X0DEPH*       PLBDH(:)**LIMAM%XEX0DEPH +             &
+                                          LIMAM%X1DEPH*PCJ(:)*PLBDH(:)**LIMAM%XEX1DEPH ) +           &
                    ( ZZW2(:)+ZZW3(:)+ZZW4(:) ) * ( XLMTT + (XCI-XCL)*(XTT-PT(:)) )   )   &
                    / (XLMTT-XCL*(XTT-PT(:)))                                     )
    ! We must agregate, at least, the cold species
    ZRWETH(:)=MAX(ZRWETH(:), ZZW2(:)+ZZW3(:)+ZZW4(:))
 END WHERE
-WHERE( PRHT(:)>XRTMIN(6) .AND. PCHT(:) >XCTMIN(6) .AND. PRRT(:)>XRTMIN(3) .AND. PCRT(:) >XCTMIN(3) .AND. ODCOMPUTE(:) )
+WHERE( PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:) >LIMAP%XCTMIN(6) .AND. PRRT(:)>LIMAP%XRTMIN(3) .AND. PCRT(:) >LIMAP%XCTMIN(3) .AND. ODCOMPUTE(:) )
    ! Mass of rain frozen by hail RRWETH
    ZZW5(:) = ZRWETH(:) - ZZW2(:) - ZZW3(:) - ZZW4(:) - ZZW1(:)
 END WHERE
@@ -359,11 +349,11 @@ END WHERE
 ZZW(:) = 0.0
 WHERE( ODCOMPUTE(:) .AND. PT(:)<XTT .AND. ZZW5(:)>0.0 ) 
    P_RC_WETH(:) = - ZZW1(:)
-   P_CC_WETH(:) = P_RC_WETH(:) * PCCT(:)/MAX(PRCT(:),XRTMIN(2))
+   P_CC_WETH(:) = P_RC_WETH(:) * PCCT(:)/MAX(PRCT(:),LIMAP%XRTMIN(2))
    P_RR_WETH(:) = - ZZW5(:)
-   P_CR_WETH(:) = P_RR_WETH(:) * PCRT(:)/MAX(PRRT(:),XRTMIN(3))
+   P_CR_WETH(:) = P_RR_WETH(:) * PCRT(:)/MAX(PRRT(:),LIMAP%XRTMIN(3))
    P_RI_WETH(:) = - ZZW2(:)
-   P_CI_WETH(:) = P_RI_WETH(:) * PCIT(:)/MAX(PRIT(:),XRTMIN(4))
+   P_CI_WETH(:) = P_RI_WETH(:) * PCIT(:)/MAX(PRIT(:),LIMAP%XRTMIN(4))
    P_RS_WETH(:) = - ZZW3(:)
    P_CS_WETH(:) = - ZZW3N(:)
    P_RG_WETH(:) = - ZZW4(:)
@@ -383,7 +373,7 @@ ZZW(:) = 0.0
 GWET(:) = PRHT(:)<ZTHRH .AND. PRCT(:)<ZTHRC .AND. PT(:)<XTT 
 WHERE( GWET(:) )
    P_RG_COHG(:) = PRHT * MIN( 1.0,MAX( 0.0,1.0-(PRCT(:)/ZTHRC) ) )
-   P_CG_COHG(:) = P_RG_COHG(:) * PCHT(:)/MAX(PRHT(:),XRTMIN(7))
+   P_CG_COHG(:) = P_RG_COHG(:) * PCHT(:)/MAX(PRHT(:),LIMAP%XRTMIN(7))
 END WHERE
 !
 !
@@ -391,7 +381,7 @@ END WHERE
 !        -----------------------
 !
 ZZW(:) = 0.0
-WHERE( PRHT(:)>XRTMIN(6) .AND. PCHT(:)>XCTMIN(7) .AND. PT(:)>XTT .AND. ODCOMPUTE(:) )
+WHERE( PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:)>LIMAP%XCTMIN(7) .AND. PT(:)>XTT .AND. ODCOMPUTE(:) )
    ZZW(:) = PRVT(:)*PPRES(:)/((XMV/XMD)+PRVT(:)) ! Vapor pressure
    ZZW(:) = PKA(:)*(XTT-PT(:)) +                                 &
               ( PDV(:)*(XLVTT + ( XCPV - XCL ) * ( PT(:) - XTT )) &
@@ -400,8 +390,8 @@ WHERE( PRHT(:)>XRTMIN(6) .AND. PCHT(:)>XCTMIN(7) .AND. PT(:)>XTT .AND. ODCOMPUTE
 ! compute RHMLTR
 !
    ZZW(:)  = MAX( 0.0,( -ZZW(:) * PCHT(:) *                        &
-                          ( X0DEPH*       PLBDH(:)**XEX0DEPH +     &
-                            X1DEPH*PCJ(:)*PLBDH(:)**XEX1DEPH ) -   &
+                          ( LIMAM%X0DEPH*       PLBDH(:)**LIMAM%XEX0DEPH +     &
+                            LIMAM%X1DEPH*PCJ(:)*PLBDH(:)**LIMAM%XEX1DEPH ) -   &
                         ( ZZW5(:) ) * ( XCL*(XTT-PT(:))) ) &
                         / XLMTT                                    )
    P_RR_HMLT(:) = ZZW(:)
@@ -440,7 +430,7 @@ CONTAINS
     INTEGER I
     !
     DO I=1,SIZE(KH)
-       RET(I) = XKER_SWETH(MAX(MIN(KH(I),SIZE(XKER_SWETH,1)),1),MAX(MIN(KS(I),SIZE(XKER_SWETH,2)),1))
+       RET(I) = LIMAM%XKER_SWETH(MAX(MIN(KH(I),SIZE(LIMAM%XKER_SWETH,1)),1),MAX(MIN(KS(I),SIZE(LIMAM%XKER_SWETH,2)),1))
     END DO
   END FUNCTION GET_XKER_SWETH
 !
@@ -455,7 +445,7 @@ CONTAINS
     INTEGER I
     !
     DO I=1,SIZE(KH)
-       RET(I) = XKER_N_SWETH(MAX(MIN(KH(I),SIZE(XKER_N_SWETH,1)),1),MAX(MIN(KS(I),SIZE(XKER_N_SWETH,2)),1))
+       RET(I) = LIMAM%XKER_N_SWETH(MAX(MIN(KH(I),SIZE(LIMAM%XKER_N_SWETH,1)),1),MAX(MIN(KS(I),SIZE(LIMAM%XKER_N_SWETH,2)),1))
     END DO
   END FUNCTION GET_XKER_N_SWETH
 !
@@ -470,7 +460,7 @@ CONTAINS
     INTEGER I
     !
     DO I=1,SIZE(KH)
-       RET(I) = XKER_GWETH(MAX(MIN(KH(I),SIZE(XKER_GWETH,1)),1),MAX(MIN(KG(I),SIZE(XKER_GWETH,2)),1))
+       RET(I) = LIMAM%XKER_GWETH(MAX(MIN(KH(I),SIZE(LIMAM%XKER_GWETH,1)),1),MAX(MIN(KG(I),SIZE(LIMAM%XKER_GWETH,2)),1))
     END DO
   END FUNCTION GET_XKER_GWETH
 !
@@ -485,7 +475,7 @@ CONTAINS
     INTEGER I
     !
     DO I=1,SIZE(KH)
-       RET(I) = XKER_N_GWETH(MAX(MIN(KH(I),SIZE(XKER_N_GWETH,1)),1),MAX(MIN(KG(I),SIZE(XKER_N_GWETH,2)),1))
+       RET(I) = LIMAM%XKER_N_GWETH(MAX(MIN(KH(I),SIZE(LIMAM%XKER_N_GWETH,1)),1),MAX(MIN(KG(I),SIZE(LIMAM%XKER_N_GWETH,2)),1))
     END DO
   END FUNCTION GET_XKER_N_GWETH
 !

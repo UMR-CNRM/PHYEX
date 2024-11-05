@@ -37,16 +37,18 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
 !
-USE MODD_PARAM_LIMA, ONLY : NMOM_C, NMOM_R, NMOM_I, NMOM_G, NMOD_IFN
 !
 USE MODE_LIMA_DROPS_BREAK_UP, ONLY: LIMA_DROPS_BREAK_UP
 USE MODE_LIMA_DROPS_HOM_FREEZING, ONLY: LIMA_DROPS_HOM_FREEZING
 USE MODE_LIMA_ICE_MELTING, ONLY: LIMA_ICE_MELTING
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
 
 IMPLICIT NONE
 
 
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 INTEGER,              INTENT(IN)    :: KSIZE
 REAL,                 INTENT(IN)    :: PTSTEP     ! Time step
 LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
@@ -66,7 +68,7 @@ REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCCT       ! Cloud water conc. at t
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCRT       ! Rain water conc. at t
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCIT       ! Prinstine ice conc. at t
 !
-REAL, DIMENSION(KSIZE,NMOD_IFN), INTENT(IN)    :: PINT       ! IFN C. activated at t
+REAL, DIMENSION(KSIZE,LIMAP%NMOD_IFN), INTENT(IN)    :: PINT       ! IFN C. activated at t
 !
 REAL, DIMENSION(KSIZE)  , INTENT(OUT) :: P_CR_BRKU  ! Concentration change (#/kg)
 REAL, DIMENSION(KSIZE)  , INTENT(OUT) :: P_TH_HONR  ! 
@@ -87,17 +89,15 @@ REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PB_CC      ! Cumulated concentration 
 REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PB_CR      ! Cumulated concentration change (#/kg)
 REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PB_CI      ! Cumulated concentration change (#/kg)
 !
-REAL, DIMENSION(KSIZE,NMOD_IFN), INTENT(INOUT) :: PB_IFNN    ! Cumulated concentration change (#/kg)
+REAL, DIMENSION(KSIZE,LIMAP%NMOD_IFN), INTENT(INOUT) :: PB_IFNN    ! Cumulated concentration change (#/kg)
 !
 REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PCF1D      ! Liquid cloud fraction
 REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PIF1D      ! Ice cloud fraction
-TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PPF1D      ! Precipitation fraction
 !
 !-------------------------------------------------------------------------------
 !
-IF (NMOM_R.GE.2) THEN
+IF (LIMAP%NMOM_R.GE.2) THEN
    CALL LIMA_DROPS_BREAK_UP (LIMAP, LIMAW, KSIZE, ODCOMPUTE, & ! no dependance on CF, IF or PF
                              PCRT, PRRT,       &
                              P_CR_BRKU,        &
@@ -106,7 +106,7 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
-IF (NMOM_G.GE.1 .AND. NMOM_R.GE.1) THEN
+IF (LIMAP%NMOM_G.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
    CALL LIMA_DROPS_HOM_FREEZING (LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 & ! no dependance on CF, IF or PF
                                  PEXNREF, PPABST,                          &
                                  PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
@@ -117,7 +117,7 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
-IF (NMOM_C.GE.1 .AND. NMOM_I.GE.1) THEN
+IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_I.GE.1) THEN
    CALL LIMA_ICE_MELTING (LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 & ! no dependance on CF, IF or PF
                           PEXNREF, PPABST,                          & ! but ice fraction becomes cloud fraction
                           PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, & ! -> where ?

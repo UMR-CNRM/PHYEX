@@ -34,7 +34,6 @@ CONTAINS
 !              ------------
 !
 USE MODD_CST,            ONLY: CST_t
-USE MODD_PARAM_LIMA,      ONLY : XGAMMA, XRHO_CFDC
 USE MODE_LIMA_FUNCTIONS,  ONLY : RECT, DELTA
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
@@ -74,7 +73,7 @@ ZSI2(:)= 0.0
 !
 PZY(:) = 0.0   
 !
-ZPSI   = 0.058707*XGAMMA/XRHO_CFDC
+ZPSI   = 0.058707*LIMAP%XGAMMA/LIMAP%XRHO_CFDC
 !
 ZSI2(:)=min(PSI(:),PSI_W(:))
 !
@@ -82,20 +81,20 @@ WHERE( ZSI2(:)>1.0 )
 !
 !* T <= -35 C 
 !
-   PZY(:)  =1000.*XGAMMA/XRHO_CFDC                  &
+   PZY(:)  =1000.*LIMAP%XGAMMA/LIMAP%XRHO_CFDC                  &
         * ( EXP(12.96*(MIN(ZSI2(:),7.)-1.1)) )**0.3          &
         * RECT(1.,0.,PZT(:),(CST%XTT-80.),(CST%XTT-35.))
 !
 !* -35 C < T <= -25 C (in Appendix A) 
 !
-   ZZY1(:) =1000.*XGAMMA/XRHO_CFDC                  &
+   ZZY1(:) =1000.*LIMAP%XGAMMA/LIMAP%XRHO_CFDC                  &
         * ( EXP(12.96*(MIN(ZSI2(:),7.)-1.1)) )**0.3
    ZZY2(:) =1000.*ZPSI                              &
         *   EXP(12.96*(MIN(ZSI2(:),7.)-1.0)-0.639)
 !
 !* -35 C < T <= -30 C
 !
-   ZMAX(:) =1000.*XGAMMA/XRHO_CFDC                  &
+   ZMAX(:) =1000.*LIMAP%XGAMMA/LIMAP%XRHO_CFDC                  &
         * ( EXP(12.96*(PSI_W(:)-1.1)) )**0.3        &
         * RECT(1.,0.,PZT(:),(CST%XTT-35.),(CST%XTT-30.))
 !

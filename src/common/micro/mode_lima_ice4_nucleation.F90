@@ -30,8 +30,6 @@ SUBROUTINE LIMA_ICE4_NUCLEATION(LIMAP, LIMAC, CST, KSIZE, &
 !
 USE MODD_CST,            ONLY: CST_t
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
-USE MODD_PARAM_LIMA_COLD, ONLY : XALPHA1, XBETA1, XALPHA2, XBETA2, XNU10, XNU20, XMNU0
-USE MODD_PARAM_LIMA, ONLY: LFEEDBACKT, XRTMIN
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
@@ -67,7 +65,7 @@ INTEGER :: II
 IF (LHOOK) CALL DR_HOOK('LIMA_ICE4_NUCLEATION', 0, ZHOOK_HANDLE)!
 !
 !$mnh_expand_where(II=1:KSIZE)
-GNEGT(:)=PT(:)<CST%XTT .AND. PRVT(:)>XRTMIN(1)
+GNEGT(:)=PT(:)<CST%XTT .AND. PRVT(:)>LIMAP%XRTMIN(1)
 !$mnh_end_expand_where(II=1:KSIZE)
 
 ZUSW(:)=0.
@@ -102,10 +100,10 @@ ZZW(:)=0.
 DO II=1,KSIZE
   IF(GNEGT(II)) THEN
     IF(PT(II)<CST%XTT-5.0 .AND. ZSSI(II)>0.0) THEN
-      ZZW(II)=XNU20*EXP(XALPHA2*ZSSI(II)-XBETA2)
+      ZZW(II)=LIMAC%XNU20*EXP(LIMAC%XALPHA2*ZSSI(II)-LIMAC%XBETA2)
     ELSEIF(PT(II)<=CST%XTT-2.0 .AND. PT(II)>=CST%XTT-5.0 .AND. ZSSI(II)>0.0) THEN
-      ZZW(II)=MAX(XNU20*EXP(-XBETA2 ), &                                                                                       
-                  XNU10*EXP(-XBETA1*(PT(II)-CST%XTT))*(ZSSI(II)/ZUSW(II))**XALPHA1)
+      ZZW(II)=MAX(LIMAC%XNU20*EXP(-LIMAC%XBETA2 ), &                                                                                       
+                  LIMAC%XNU10*EXP(-LIMAC%XBETA1*(PT(II)-CST%XTT))*(ZSSI(II)/ZUSW(II))**LIMAC%XALPHA1)
     ENDIF
   ENDIF
 ENDDO
@@ -122,12 +120,12 @@ WHERE(GNEGT(:))
   !
   !*       3.1.2   update the r_i and r_v mixing ratios
   !
-  PRVHENI_MR(:)=MAX(ZZW(:), 0.0)*XMNU0/PRHODREF(:)
+  PRVHENI_MR(:)=MAX(ZZW(:), 0.0)*LIMAC%XMNU0/PRHODREF(:)
   PRVHENI_MR(:)=MIN(PRVT(:), PRVHENI_MR(:))
 END WHERE
 !$mnh_end_expand_where(II=1:KSIZE)
 !Limitation due to 0 crossing of temperature
-IF(LFEEDBACKT) THEN
+IF(LIMAP%LFEEDBACKT) THEN
   ZW(:)=0.
   !$mnh_expand_where(II=1:KSIZE)
   WHERE(GNEGT(:))

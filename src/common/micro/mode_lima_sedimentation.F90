@@ -54,15 +54,6 @@ USE MODD_CST,              ONLY: CST_t
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
 USE MODD_ELEC_DESCR,       ONLY: LSEDIM_BEARD
 USE MODD_ELEC_PARAM,       ONLY: XFQSED, XDQ
-USE MODD_PARAM_LIMA,       ONLY: XCEXVT, XRTMIN, XCTMIN, NSPLITSED,           &
-                                 XLB, XLBEX, XD, XFSEDR, XFSEDC,              &
-                                 XALPHAC, XNUC, XALPHAS, XNUS, LSNOW_T,       &
-                                 NMOM_S, PARAM_LIMA
-USE MODD_PARAM_LIMA_COLD,  ONLY: XLBEXI, XLBI, XDI, XLBDAS_MAX, XBS, XEXSEDS, &
-                                 XLBDAS_MIN, XTRANS_MP_GAMMAS, XFVELOS,       &
-                                 XCCS, XCXS, PARAM_LIMA_COLD
-USE MODD_PARAM_LIMA_MIXED, ONLY: XCCG, XCXG, XCCH, XCXH, PARAM_LIMA_MIXED
-USE MODD_PARAM_LIMA_WARM,  ONLY: PARAM_LIMA_WARM
 
 use mode_tools,            only: Countjv
 
@@ -150,7 +141,7 @@ IMOMENTS=KMOMENTS
 !
 ! Time splitting
 !
-ZTSPLITG= PTSTEP / REAL(NSPLITSED(KID))
+ZTSPLITG= PTSTEP / REAL(LIMAP%NSPLITSED(KID))
 !
 ZWDT(:,:)=0.
 PINPR(:) = 0.
@@ -180,11 +171,11 @@ END IF
 ! Compute the sedimentation fluxes
 ! ################################
 !
-DO IN = 1 ,  NSPLITSED(KID)
+DO IN = 1 ,  LIMAP%NSPLITSED(KID)
   ! Computation only where enough ice, snow, graupel or hail
    GSEDIM(:,:) = .FALSE.
-   GSEDIM(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = PRS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>XRTMIN(KID)
-   IF (IMOMENTS==2)  GSEDIM(:,:) = GSEDIM(:,:) .AND. PCS(:,:)>XCTMIN(KID)
+   GSEDIM(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = PRS(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>LIMAP%XRTMIN(KID)
+   IF (IMOMENTS==2)  GSEDIM(:,:) = GSEDIM(:,:) .AND. PCS(:,:)>LIMAP%XCTMIN(KID)
    ISEDIM = COUNTJV( GSEDIM(:,:),I1(:),I3(:))
 !
    IF( ISEDIM >= 1 ) THEN
@@ -217,31 +208,31 @@ DO IN = 1 ,  NSPLITSED(KID)
       END DO
 !
 ! Compute lambda
-      IF (KID == 5 .AND. NMOM_S.EQ.1 .AND. LSNOW_T) THEN
+      IF (KID == 5 .AND. LIMAP%NMOM_S.EQ.1 .AND. LIMAP%LSNOW_T) THEN
          ZLBDA(:) = 1.E10
-         WHERE(ZT(:)>263.15 .AND. ZRS(:)>XRTMIN(5))
-            ZLBDA(:) = MAX(MIN(XLBDAS_MAX, 10**(14.554-0.0423*ZT(:))),XLBDAS_MIN)
+         WHERE(ZT(:)>263.15 .AND. ZRS(:)>LIMAP%XRTMIN(5))
+            ZLBDA(:) = MAX(MIN(LIMAC%XLBDAS_MAX, 10**(14.554-0.0423*ZT(:))),LIMAC%XLBDAS_MIN)
          END WHERE
-         WHERE(ZT(:)<=263.15 .AND. ZRS(:)>XRTMIN(5))
-            ZLBDA(:) = MAX(MIN(XLBDAS_MAX, 10**(6.226-0.0106*ZT(:))),XLBDAS_MIN)
+         WHERE(ZT(:)<=263.15 .AND. ZRS(:)>LIMAP%XRTMIN(5))
+            ZLBDA(:) = MAX(MIN(LIMAC%XLBDAS_MAX, 10**(6.226-0.0106*ZT(:))),LIMAC%XLBDAS_MIN)
          END WHERE
-         ZLBDA(:) = ZLBDA(:)*XTRANS_MP_GAMMAS
-         ZZW(:) = XFSEDR(KID) * ZRHODREF(:)**(1.-XCEXVT)*ZRS(:)* &
-              (1 + (XFVELOS/ZLBDA(:))**XALPHAS)**(-XNUS-(XD(KID)+XBS)/XALPHAS) * ZLBDA(:)**(-XD(KID))
+         ZLBDA(:) = ZLBDA(:)*LIMAC%XTRANS_MP_GAMMAS
+         ZZW(:) = LIMAP%XFSEDR(KID) * ZRHODREF(:)**(1.-LIMAP%XCEXVT)*ZRS(:)* &
+              (1 + (LIMAC%XFVELOS/ZLBDA(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS-(LIMAP%XD(KID)+LIMAC%XBS)/LIMAP%XALPHAS) * ZLBDA(:)**(-LIMAP%XD(KID))
       ELSE
-         IF (IMOMENTS==1) ZLBDA(:) = XLB(KID) * ( ZRHODREF(:) * ZRS(:) )**XLBEX(KID)
-         IF (IMOMENTS==2) ZLBDA(:) = ( XLB(KID)*ZCS(:) / ZRS(:) )**XLBEX(KID)
-         ZZY(:) = ZRHODREF(:)**(-XCEXVT) * ZLBDA(:)**(-XD(KID))
-         IF (LSNOW_T .AND. KID==5) &
-              ZZY(:) = ZZY(:) * (1 + (XFVELOS/ZLBDA(:))**XALPHAS)**(-XNUS-(XD(KID)+XBS)/XALPHAS)
-         ZZW(:) = XFSEDR(KID) * ZRS(:) * ZZY(:) * ZRHODREF(:)
+         IF (IMOMENTS==1) ZLBDA(:) = LIMAP%XLB(KID) * ( ZRHODREF(:) * ZRS(:) )**LIMAP%XLBEX(KID)
+         IF (IMOMENTS==2) ZLBDA(:) = ( LIMAP%XLB(KID)*ZCS(:) / ZRS(:) )**LIMAP%XLBEX(KID)
+         ZZY(:) = ZRHODREF(:)**(-LIMAP%XCEXVT) * ZLBDA(:)**(-LIMAP%XD(KID))
+         IF (LIMAP%LSNOW_T .AND. KID==5) &
+              ZZY(:) = ZZY(:) * (1 + (LIMAC%XFVELOS/ZLBDA(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS-(LIMAP%XD(KID)+LIMAC%XBS)/LIMAP%XALPHAS)
+         ZZW(:) = LIMAP%XFSEDR(KID) * ZRS(:) * ZZY(:) * ZRHODREF(:)
       END IF ! Wurtz
 !
-      IF (KMOMENTS==2) ZZX(:) = XFSEDC(KID) * ZCS(:) * ZZY(:) * ZRHODREF(:)
+      IF (KMOMENTS==2) ZZX(:) = LIMAP%XFSEDC(KID) * ZCS(:) * ZZY(:) * ZRHODREF(:)
 
       IF (KID==2) THEN
          ! mean cloud droplet diameter
-         ZCC(:) = 0.5*GAMMA_X0D(XNUC+1./XALPHAC)/(GAMMA_X0D(XNUC)*ZLBDA(:))
+         ZCC(:) = 0.5*GAMMA_X0D(LIMAP%XNUC+1./LIMAP%XALPHAC)/(GAMMA_X0D(LIMAP%XNUC)*ZLBDA(:))
          ! correction factor for cloud droplet terminal fall speed
          ZCC(:) = 1.+1.26*6.6E-8*(101325./ZPABST(:))*(ZT(:)/293.15)/ZCC(:)
          ZZW(:) = ZCC(:) * ZZW(:)
@@ -254,7 +245,7 @@ DO IN = 1 ,  NSPLITSED(KID)
         ZLBDA3(:,:) = UNPACK( ZLBDA(:),MASK=GSEDIM(:,:),FIELD=0.0 )
         CALL ELEC_BEARD_EFFECT(D, CST, 'LIMA', KID, GSEDIM, PT, PRHODREF, PTHVREFZIKB, &
                                PRS, PQS, PEFIELDW, ZLBDA3, ZBEARDCOEFF, &
-                               LIMAP=PARAM_LIMA, LIMAPC=PARAM_LIMA_COLD, LIMAPW=PARAM_LIMA_WARM, LIMAPM=PARAM_LIMA_MIXED)
+                               LIMAP=LIMAP, LIMAPC=LIMAC, LIMAPW=LIMAW, LIMAPM=LIMAM)
       END IF
 !
       ZWSEDR(:,1:D%NKT) = UNPACK( ZZW(:),MASK=GSEDIM(:,:),FIELD=0.0 )
@@ -272,10 +263,10 @@ DO IN = 1 ,  NSPLITSED(KID)
       IF (OELEC) THEN
         ! compute e of the q-D relationship
         IF (IMOMENTS == 2) THEN  ! 2-moment species
-          CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, 'LIMA', PTSTEP, ZRHODREF, XRTMIN(KID), &
+          CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, 'LIMA', PTSTEP, ZRHODREF, LIMAP%XRTMIN(KID), &
                                 ZRS, ZQS, ZES, PLBDX=ZLBDA, PCX=ZCS)
         ELSE                     ! 1-moment species
-          CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, 'LIMA', PTSTEP, ZRHODREF, XRTMIN(KID), &
+          CALL ELEC_COMPUTE_EX (KID, IMOMENTS, ISEDIM, 'LIMA', PTSTEP, ZRHODREF, LIMAP%XRTMIN(KID), &
                                 ZRS, ZQS, ZES, PLBDX=ZLBDA)
         END IF
         !
@@ -283,19 +274,19 @@ DO IN = 1 ,  NSPLITSED(KID)
         ! for precipitating hydrometeors, N=C\lambda^x, except for snow if lsnow_t=t
         IF (IMOMENTS == 1) THEN
           IF (KID == 5) THEN
-            ZCX = XCCS
-            ZXX = XCXS
+            ZCX = LIMAC%XCCS
+            ZXX = LIMAC%XCXS
           ELSE IF (KID == 6) THEN
-            ZCX = XCCG
-            ZXX = XCXG
+            ZCX = LIMAM%XCCG
+            ZXX = LIMAM%XCXG
           ELSE IF (KID == 7) THEN
-            ZCX = XCCH
-            ZXX = XCXH
+            ZCX = LIMAM%XCCH
+            ZXX = LIMAM%XCXH
           END IF
           ZCS(:) = ZCX * ZLBDA(:)**ZXX
         END IF
         !
-        ZZQ(:) = ZRHODREF(:)**(1.-XCEXVT) * ZES(:) * ZCS(:) * XFQSED(KID) * ZLBDA(:)**(-XDQ(KID))
+        ZZQ(:) = ZRHODREF(:)**(1.-LIMAP%XCEXVT) * ZES(:) * ZCS(:) * XFQSED(KID) * ZLBDA(:)**(-XDQ(KID))
         !
         ! correction for cloud droplet terminal fall speed
         IF (KID == 2)  ZZQ(:) = ZZQ(:) * ZCC(:)
@@ -341,7 +332,7 @@ DO IN = 1 ,  NSPLITSED(KID)
       IF (ALLOCATED(ZZQ))    DEALLOCATE(ZZQ)
       IF (ALLOCATED(ZES))    DEALLOCATE(ZES)      
       !      
-      PINPR(:) = PINPR(:) + ZWSEDR(:,D%NKB)/CST%XRHOLW/NSPLITSED(KID)                          ! in m/s
+      PINPR(:) = PINPR(:) + ZWSEDR(:,D%NKB)/CST%XRHOLW/LIMAP%NSPLITSED(KID)                          ! in m/s
       !PT(:,:) = PT(:,:) + ZWDT(:,:)
       
    END IF

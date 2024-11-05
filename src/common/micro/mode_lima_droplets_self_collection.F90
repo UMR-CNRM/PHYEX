@@ -34,8 +34,6 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA,      ONLY : XCTMIN
-USE MODD_PARAM_LIMA_WARM, ONLY : XSELFC
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
@@ -68,8 +66,8 @@ REAL, DIMENSION(SIZE(PCCT)) :: ZW ! work arrays
 !
 P_CC_SELF(:)=0.
 !
-WHERE( PCCT(:)>XCTMIN(2) .AND. ODCOMPUTE(:) )
-   ZW(:) = XSELFC*(PCCT(:)/PLBDC3(:))**2 * PRHODREF(:) ! analytical integration
+WHERE( PCCT(:)>LIMAP%XCTMIN(2) .AND. ODCOMPUTE(:) )
+   ZW(:) = LIMAW%XSELFC*(PCCT(:)/PLBDC3(:))**2 * PRHODREF(:) ! analytical integration
    P_CC_SELF(:) = - ZW(:)
 END WHERE
 !

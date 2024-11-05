@@ -36,7 +36,6 @@ CONTAINS
 !              ------------
 !
 USE MODD_CST,             ONLY : XP00, XRD, XCPD, XCPV, XCL, XCI, XTT, XLSTT, XLVTT
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
@@ -95,7 +94,7 @@ ZLVFACT(:) = (XLVTT+(XCPV-XCL)*ZTCELSIUS(:))/ZW(:)          ! L_v/(Pi_ref*C_ph)
 !
 ZW(:) = 0.0
 !
-WHERE( (ZT(:)<XTT-35.0) .AND. (PRRT(:)>XRTMIN(3)) .AND. ODCOMPUTE(:) )
+WHERE( (ZT(:)<XTT-35.0) .AND. (PRRT(:)>LIMAP%XRTMIN(3)) .AND. ODCOMPUTE(:) )
    P_TH_HONR(:) = PRRT(:)*(ZLSFACT(:)-ZLVFACT(:))
    P_RR_HONR(:) = - PRRT(:)
    P_CR_HONR(:) = - PCRT(:)

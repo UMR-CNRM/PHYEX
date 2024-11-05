@@ -40,11 +40,6 @@ USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_NSV
 USE MODD_PARAMETERS,      ONLY: JPHEXT, JPVEXT
-USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN
-USE MODD_PARAM_LIMA_COLD, ONLY: XRCOEF_HONH, XCEXP_DIFVAP_HONH, XCOEF_DIFVAP_HONH,&
-                                XCRITSAT1_HONH, XCRITSAT2_HONH, XTMAX_HONH,       &
-                                XTMIN_HONH, XC1_HONH, XC2_HONH, XC3_HONH,         &
-                                XDLNJODT1_HONH, XDLNJODT2_HONH, XRHOI_HONH
 !
 use mode_tools,           only: Countjv
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
@@ -54,6 +49,8 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF! Reference density
@@ -74,7 +71,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCCT    ! Cloud water C. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCRT    ! Rain water C. source
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Ice crystal C. source
 !
-REAL, DIMENSION(D%NIJT,D%NKT,NMOD_CCN), INTENT(INOUT) :: PNFT    ! Free CCN conc. 
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_CCN), INTENT(INOUT) :: PNFT    ! Free CCN conc. 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PNHT    ! haze homogeneous freezing
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PICEFR  ! Ice fraction
@@ -135,8 +132,6 @@ LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) &
         :: GNEGT        ! Test where to compute the hom. nucleation
 INTEGER , DIMENSION(SIZE(GNEGT)) :: I1,I3 ! Used to replace the COUNT
 !
-TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL    :: ZEPS                           ! molar mass ratio
 !
 !-------------------------------------------------------------------------------
@@ -179,7 +174,7 @@ IF (INEGT.GT.0) THEN
    ALLOCATE(ZCRT(INEGT))
    ALLOCATE(ZCIT(INEGT))
    !
-   ALLOCATE(ZNFT(INEGT,NMOD_CCN))
+   ALLOCATE(ZNFT(INEGT,LIMAP%NMOD_CCN))
    ALLOCATE(ZZNHT(INEGT))
    !
    ALLOCATE(ZRHODREF(INEGT)) 
@@ -201,7 +196,7 @@ IF (INEGT.GT.0) THEN
       ZCRT(IL) = PCRT(I1(IL),I3(IL))
       ZCIT(IL) = PCIT(I1(IL),I3(IL))
       !
-      DO IMOD_CCN = 1, NMOD_CCN
+      DO IMOD_CCN = 1, LIMAP%NMOD_CCN
          ZNFT(IL,IMOD_CCN) = PNFT(I1(IL),I3(IL),IMOD_CCN)
       ENDDO
       ZZNHT(IL) = ZNHT(I1(IL),I3(IL))
@@ -243,14 +238,14 @@ IF (INEGT.GT.0) THEN
 !
 !  Compute the haze homogeneous nucleation source: RHHONI
 !
-   IF( NMOD_CCN.GT.0 ) THEN
+   IF( LIMAP%NMOD_CCN.GT.0 ) THEN
 
 ! Sum of the available CCN
       ALLOCATE( ZFREECCN(INEGT) )
       ALLOCATE( ZCCNFROZEN(INEGT) )
       ZFREECCN(:)=0.
       ZCCNFROZEN(:)=0.
-      DO IMOD_CCN = 1, NMOD_CCN
+      DO IMOD_CCN = 1, LIMAP%NMOD_CCN
          ZFREECCN(:) = ZFREECCN(:) + ZNFT(:,IMOD_CCN)
       END DO
 !
@@ -262,8 +257,8 @@ IF (INEGT.GT.0) THEN
       ZZW(:)  = 0.0
       ZZX(:)  = 0.0
       ZEPS    = CST%XMV / CST%XMD
-      ZZY(:)  = XCRITSAT1_HONH -                              &  ! Critical Sat.
-              (MIN( XTMAX_HONH,MAX( XTMIN_HONH,ZZT(:) ) )/XCRITSAT2_HONH)
+      ZZY(:)  = LIMAC%XCRITSAT1_HONH -                              &  ! Critical Sat.
+              (MIN( LIMAC%XTMAX_HONH,MAX( LIMAC%XTMIN_HONH,ZZT(:) ) )/LIMAC%XCRITSAT2_HONH)
 !
       ALLOCATE(ZLS(INEGT))
       ALLOCATE(ZPSI1(INEGT))
@@ -281,26 +276,26 @@ IF (INEGT.GT.0) THEN
             ZPSI2(:) = ZSI(:) * (1.0/ZRVT(:)) +                           &
                  ZZY(:) * ((ZLS(:)/ZZT(:))**2)/(CST%XCPD*CST%XRV) 
 !                                                         ! Psi2 (a2+a3*Scr in KL01)
-            ZTAU(:) = 1.0 / ( MAX( XC1_HONH,XC1_HONH*(XC2_HONH-XC3_HONH*ZZT(:)) ) *&
-                 ABS( (XDLNJODT1_HONH - XDLNJODT2_HONH*ZZT(:))       *             &
+            ZTAU(:) = 1.0 / ( MAX( LIMAC%XC1_HONH,LIMAC%XC1_HONH*(LIMAC%XC2_HONH-LIMAC%XC3_HONH*ZZT(:)) ) *&
+                 ABS( (LIMAC%XDLNJODT1_HONH - LIMAC%XDLNJODT2_HONH*ZZT(:))       *             &
                  ((ZPRES(:)/CST%XP00)**(CST%XRD/CST%XCPD))*ZTHT(:) ) )
 !
-            ZBFACT(:) = (XRHOI_HONH/ZRHODREF(:)) * (ZSI(:)/(ZZY(:)-1.0))           &
+            ZBFACT(:) = (LIMAC%XRHOI_HONH/ZRHODREF(:)) * (ZSI(:)/(ZZY(:)-1.0))           &
 ! BV correction ZBFACT enlever 1/ZEPS ?
 !                 * (1.0/ZRVT(:)+1.0/ZEPS)                                          &
                  * (1.0/ZRVT(:))                                          &
-                 / (XCOEF_DIFVAP_HONH*(ZZT(:)**XCEXP_DIFVAP_HONH /ZPRES(:)))
+                 / (LIMAC%XCOEF_DIFVAP_HONH*(ZZT(:)**LIMAC%XCEXP_DIFVAP_HONH /ZPRES(:)))
 !
 ! BV correction ZZX rho_i{-1} ?
-!            ZZX(:) = MAX( MIN( XRHOI_HONH*ZBFACT(:)**1.5 * (ZPSI1(:)/ZPSI2(:))     &
-            ZZX(:) = MAX( MIN( (1/XRHOI_HONH)*ZBFACT(:)**1.5 * (ZPSI1(:)/ZPSI2(:))     &
+!            ZZX(:) = MAX( MIN( LIMAC%XRHOI_HONH*ZBFACT(:)**1.5 * (ZPSI1(:)/ZPSI2(:))     &
+            ZZX(:) = MAX( MIN( (1/LIMAC%XRHOI_HONH)*ZBFACT(:)**1.5 * (ZPSI1(:)/ZPSI2(:))     &
                  * (ZW_NU(:)/SQRT(ZTAU(:))) , ZFREECCN(:) ) , 0.)
 !
-            ZZW(:) = MIN( XRCOEF_HONH*ZZX(:)*(ZTAU(:)/ZBFACT(:))**1.5 , ZRVT(:) )
+            ZZW(:) = MIN( LIMAC%XRCOEF_HONH*ZZX(:)*(ZTAU(:)/ZBFACT(:))**1.5 , ZRVT(:) )
       END WHERE
 !
 ! Apply the changes 
-      DO IMOD_CCN = 1, NMOD_CCN
+      DO IMOD_CCN = 1, LIMAP%NMOD_CCN
          WHERE(ZFREECCN(:)>1.)
             ZCCNFROZEN(:) = ZZX(:) * ZNFT(:,IMOD_CCN)/ZFREECCN(:)
          END WHERE

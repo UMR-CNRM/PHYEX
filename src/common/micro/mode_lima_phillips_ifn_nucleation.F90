@@ -74,10 +74,6 @@ CONTAINS
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAMETERS,      ONLY : JPHEXT, JPVEXT
-USE MODD_PARAM_LIMA,      ONLY : NMOD_IFN, NSPECIE, XFRAC,                         &
-                                 NMOD_CCN, NMOD_IMM, NIND_SPECIE, NINDICE_CCN_IMM,  &
-                                 XDSI0, NPHILLIPS
-USE MODD_PARAM_LIMA_COLD, ONLY : XMNU0
 
 use mode_tools,           only: Countjv
 
@@ -90,6 +86,8 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 TYPE(DIMPHYEX_t),       INTENT(IN)    :: D
 TYPE(CST_t),            INTENT(IN)    :: CST
 REAL,                   INTENT(IN)    :: PTSTEP 
@@ -108,10 +106,10 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCCT    ! Cloud water conc. at t 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Cloud water conc. at t 
-REAL, DIMENSION(D%NIJT,D%NKT,NMOD_CCN), INTENT(INOUT) :: PNAT    ! CCN conc. used for immersion nucl.
-REAL, DIMENSION(D%NIJT,D%NKT,NMOD_IFN), INTENT(INOUT) :: PIFT    ! Free IFN conc.
-REAL, DIMENSION(D%NIJT,D%NKT,NMOD_IFN), INTENT(INOUT) :: PINT    ! Nucleated IFN conc.
-REAL, DIMENSION(D%NIJT,D%NKT,NMOD_IMM), INTENT(INOUT) :: PNIT    ! Nucleated (by immersion) CCN conc.
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_CCN), INTENT(INOUT) :: PNAT    ! CCN conc. used for immersion nucl.
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_IFN), INTENT(INOUT) :: PIFT    ! Free IFN conc.
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_IFN), INTENT(INOUT) :: PINT    ! Nucleated IFN conc.
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_IMM), INTENT(INOUT) :: PNIT    ! Nucleated (by immersion) CCN conc.
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_TH_HIND
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_RI_HIND
@@ -171,8 +169,6 @@ REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2))   &
 !
 REAL,    DIMENSION(:,:), ALLOCATABLE :: ZSI0, &    ! Si threshold in H_X for X={DM,BC,O}
                                         Z_FRAC_ACT ! Activable frac. of each AP species
-TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL,    DIMENSION(:),   ALLOCATABLE :: ZTCELSIUS, ZZT_SI0_BC
 !
 !-------------------------------------------------------------------------------
@@ -229,10 +225,10 @@ IF (INEGT > 0) THEN
 !
    ALLOCATE(ZCCT(INEGT)) 
 !
-   ALLOCATE(ZNAT(INEGT,NMOD_CCN))
-   ALLOCATE(ZIFT(INEGT,NMOD_IFN))
-   ALLOCATE(ZINT(INEGT,NMOD_IFN))
-   ALLOCATE(ZNIT(INEGT,NMOD_IMM))
+   ALLOCATE(ZNAT(INEGT,LIMAP%NMOD_CCN))
+   ALLOCATE(ZIFT(INEGT,LIMAP%NMOD_IFN))
+   ALLOCATE(ZINT(INEGT,LIMAP%NMOD_IFN))
+   ALLOCATE(ZNIT(INEGT,LIMAP%NMOD_IMM))
 !
    ALLOCATE(ZRHODREF(INEGT)) 
    ALLOCATE(ZZT(INEGT)) 
@@ -249,14 +245,14 @@ IF (INEGT > 0) THEN
 !
       ZCCT(IL) = PCCT(I1(IL),I3(IL))
 !
-      DO IMOD_CCN = 1, NMOD_CCN
+      DO IMOD_CCN = 1, LIMAP%NMOD_CCN
          ZNAT(IL,IMOD_CCN) = PNAT(I1(IL),I3(IL),IMOD_CCN)
       ENDDO
-      DO IMOD_IFN = 1, NMOD_IFN
+      DO IMOD_IFN = 1, LIMAP%NMOD_IFN
          ZIFT(IL,IMOD_IFN) = PIFT(I1(IL),I3(IL),IMOD_IFN)
          ZINT(IL,IMOD_IFN) = PINT(I1(IL),I3(IL),IMOD_IFN)
       ENDDO
-      DO IMOD_IMM = 1, NMOD_IMM
+      DO IMOD_IMM = 1, LIMAP%NMOD_IMM
          ZNIT(IL,IMOD_IMM) = PNIT(I1(IL),I3(IL),IMOD_IMM)
       ENDDO
       ZRHODREF(IL) = PRHODREF(I1(IL),I3(IL))
@@ -274,8 +270,8 @@ IF (INEGT > 0) THEN
    ALLOCATE( ZTCELSIUS  (INEGT) )
    ALLOCATE( ZZT_SI0_BC (INEGT) )
    ALLOCATE( ZLBDAC     (INEGT) )
-   ALLOCATE( ZSI0       (INEGT,NSPECIE) )
-   ALLOCATE( Z_FRAC_ACT (INEGT,NSPECIE) )
+   ALLOCATE( ZSI0       (INEGT,LIMAP%NSPECIE) )
+   ALLOCATE( Z_FRAC_ACT (INEGT,LIMAP%NSPECIE) )
    ALLOCATE( ZSW        (INEGT) )
    ALLOCATE( ZSI_W      (INEGT) )
 !
@@ -313,10 +309,10 @@ IF (INEGT > 0) THEN
    ZSI0(:,2) = ZSI0(:,1) ! DM2 = DM1
    ZSI0(:,3) = 0.0       ! BC
    ZZT_SI0_BC(:) = MAX( 198.0, MIN( 239.0,ZZT(:) ) )
-   ZSI0(:,3) = (-3.118E-5*ZZT_SI0_BC(:)+1.085E-2)*ZZT_SI0_BC(:)+0.5652 - XDSI0(3)
-   IF (NPHILLIPS == 8) THEN
+   ZSI0(:,3) = (-3.118E-5*ZZT_SI0_BC(:)+1.085E-2)*ZZT_SI0_BC(:)+0.5652 - LIMAP%XDSI0(3)
+   IF (LIMAP%NPHILLIPS == 8) THEN
       ZSI0(:,4) = ZSI0(:,3) ! O = BC
-   ELSE IF (NPHILLIPS == 13) THEN
+   ELSE IF (LIMAP%NPHILLIPS == 13) THEN
       ZSI0(:,4) = 1.15      ! BIO
    END IF
 !
@@ -333,7 +329,7 @@ IF (INEGT > 0) THEN
    CALL LIMA_PHILLIPS_REF_SPECTRUM(LIMAP, CST, INEGT, ZZT, ZSI, ZSI_W, ZZY)
 !
 ! For each aerosol species (DM1, DM2, BC, O), compute the fraction that may be activated
-! Z_FRAC_ACT(INEGT,NSPECIE) = fraction of each species that may be activated
+! Z_FRAC_ACT(INEGT,LIMAP%NSPECIE) = fraction of each species that may be activated
 !
    CALL LIMA_PHILLIPS_INTEG(LIMAP, CST, INEGT, ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
 !
@@ -346,16 +342,16 @@ IF (INEGT > 0) THEN
 !
 !
 !
-   DO IMOD_IFN = 1,NMOD_IFN    ! IFN modes
+   DO IMOD_IFN = 1,LIMAP%NMOD_IFN    ! IFN modes
       ZZX(:)=0.
-      DO ISPECIE = 1, NSPECIE  ! Each IFN mode is mixed with DM1, DM2, BC, O
-         ZZX(:)=ZZX(:)+XFRAC(ISPECIE,IMOD_IFN)*(ZIFT(:,IMOD_IFN)+ZINT(:,IMOD_IFN))* &
+      DO ISPECIE = 1, LIMAP%NSPECIE  ! Each IFN mode is mixed with DM1, DM2, BC, O
+         ZZX(:)=ZZX(:)+LIMAP%XFRAC(ISPECIE,IMOD_IFN)*(ZIFT(:,IMOD_IFN)+ZINT(:,IMOD_IFN))* &
                                                Z_FRAC_ACT(:,ISPECIE)
       END DO
 ! Now : ZZX(:) = number conc. of activable AP.
 ! Activated AP at this time step = activable AP - already activated AP 
       ZZX(:) = MIN( ZIFT(:,IMOD_IFN), MAX( (ZZX(:)-ZINT(:,IMOD_IFN)),0.0 ))
-      ZZW(:) = MIN( XMNU0*ZZX(:), ZRVT(:) )
+      ZZW(:) = MIN( LIMAC%XMNU0*ZZX(:), ZRVT(:) )
 ! Now : ZZX(:) = number conc. of AP activated at this time step (#/kg) from IFN mode IMOD_IFN
 ! Now : ZZW(:) = mmr of ice nucleated at this time step (kg/kg) from IFN mode IMOD_IFN
 !
@@ -387,23 +383,23 @@ IF (INEGT > 0) THEN
 !
 !
 ! Heterogeneous nucleation by immersion of the activated CCN
-! Currently, we represent coated IFN as a pure aerosol type (NIND_SPECIE)
+! Currently, we represent coated IFN as a pure aerosol type (LIMAP%NIND_SPECIE)
 !
 !
-   DO IMOD_IMM = 1,NMOD_IMM  ! Coated IFN modes
-      IMOD_CCN = NINDICE_CCN_IMM(IMOD_IMM) ! Corresponding CCN mode
+   DO IMOD_IMM = 1,LIMAP%NMOD_IMM  ! Coated IFN modes
+      IMOD_CCN = LIMAP%NINDICE_CCN_IMM(IMOD_IMM) ! Corresponding CCN mode
       IF (IMOD_CCN .GT. 0) THEN
 !
 ! OLD LIMA : Compute the appropriate mean diameter and sigma      
-!      XMDIAM_IMM = MIN( XMDIAM_IFN(NIND_SPECIE) , XR_MEAN_CCN(IMOD_CCN)*2. )
-!      XSIGMA_IMM = MIN( XSIGMA_IFN(ISPECIE) , EXP(XLOGSIG_CCN(IMOD_CCN)) )
+!      XMDIAM_IMM = MIN( LIMAP%XMDIAM_IFN(LIMAP%NIND_SPECIE) , LIMAP%XR_MEAN_CCN(IMOD_CCN)*2. )
+!      XSIGMA_IMM = MIN( LIMAP%XSIGMA_IFN(ISPECIE) , EXP(LIMAP%XLOGSIG_CCN(IMOD_CCN)) )
 !
          ZZW(:) = MIN( ZCCT(:) , ZNAT(:,IMOD_CCN) )
-         ZZX(:)=  ( ZZW(:)+ZNIT(:,IMOD_IMM) ) * Z_FRAC_ACT(:,NIND_SPECIE)
+         ZZX(:)=  ( ZZW(:)+ZNIT(:,IMOD_IMM) ) * Z_FRAC_ACT(:,LIMAP%NIND_SPECIE)
 ! Now : ZZX(:) = number of activable AP.
 ! Activated AP at this time step = activable AP - already activated AP 
          ZZX(:) = MIN( ZZW(:), MAX( (ZZX(:)-ZNIT(:,IMOD_IMM)),0.0 ) )
-         ZZY(:) = MIN( XMNU0*ZZX(:) , ZRVT(:), ZRCT(:) )
+         ZZY(:) = MIN( LIMAC%XMNU0*ZZX(:) , ZRVT(:), ZRCT(:) )
 !
 ! Update the concentrations and MMR
 !

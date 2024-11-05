@@ -7,7 +7,7 @@ MODULE MODE_LIMA_MEYERS_NUCLEATION
   IMPLICIT NONE
 CONTAINS
 !     #############################################################################
-  SUBROUTINE LIMA_MEYERS_NUCLEATION (LIMAC, D, CST, PTSTEP,                             &
+  SUBROUTINE LIMA_MEYERS_NUCLEATION (LIMAP, LIMAC, D, CST, PTSTEP,               &
                                      PRHODREF, PEXNREF, PPABST,                  &
                                      PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,   &
                                      PCCT, PCIT, PINT,                           &
@@ -42,16 +42,17 @@ CONTAINS
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAMETERS
-USE MODD_PARAM_LIMA
-USE MODD_PARAM_LIMA_COLD
 
 use mode_tools,           only: Countjv
+USE MODD_PARAM_LIMA,      ONLY:PARAM_LIMA_t
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
 REAL,                     INTENT(IN)    :: PTSTEP
@@ -70,7 +71,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCCT    ! Cloud water C. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Ice crystal C. source
-REAL, DIMENSION(D%NIJT,D%NKT,NMOD_IFN), INTENT(INOUT) :: PINT    ! Activated ice nuclei C.
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_IFN), INTENT(INOUT) :: PINT    ! Activated ice nuclei C.
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_TH_HIND
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_RI_HIND
@@ -124,7 +125,6 @@ REAL, DIMENSION(:), ALLOCATABLE &
 REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2))   &
                                   :: ZW, ZT ! work arrays
 !
-TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
 REAL,    DIMENSION(:),   ALLOCATABLE :: ZTCELSIUS
 !
 !-------------------------------------------------------------------------------
@@ -234,9 +234,9 @@ IF( INEGT >= 1 ) THEN
   ZZY(:) = 0.0
 !
   WHERE( ZZT(:)<CST%XTT-5.0 .AND. ZSSI(:)>0.0 )
-    ZZY(:) = XNUC_DEP*EXP( XEXSI_DEP*100.*MIN(1.,ZSSI(:))+XEX_DEP)/ZRHODREF(:)
+    ZZY(:) = LIMAC%XNUC_DEP*EXP( LIMAC%XEXSI_DEP*100.*MIN(1.,ZSSI(:))+LIMAC%XEX_DEP)/ZRHODREF(:)
     ZZX(:) = MAX( ZZY(:)-ZINT(:,1) , 0.0 ) ! number of ice crystals formed at this time step #/kg
-    ZZW(:) = MIN( XMNU0*ZZX(:) , ZRVT(:) ) ! mass of ice formed at this time step (kg/kg)
+    ZZW(:) = MIN( LIMAC%XMNU0*ZZX(:) , ZRVT(:) ) ! mass of ice formed at this time step (kg/kg)
   END WHERE
   !
   P_CI_HIND(:,:) = UNPACK( ZZX(:), MASK=GNEGT(:,:), FIELD=0. )
@@ -260,8 +260,8 @@ IF( INEGT >= 1 ) THEN
   ZZX(:) = 0.0
   ZZY(:) = 0.0
 !
-  WHERE( ZZT(:)<CST%XTT-2.0 .AND. ZCCT(:)>XCTMIN(2) .AND. ZRCT(:)>XRTMIN(2) )
-    ZZY(:) = MIN( XNUC_CON * EXP( XEXTT_CON*ZTCELSIUS(:)+XEX_CON )             &
+  WHERE( ZZT(:)<CST%XTT-2.0 .AND. ZCCT(:)>LIMAP%XCTMIN(2) .AND. ZRCT(:)>LIMAP%XRTMIN(2) )
+    ZZY(:) = MIN( LIMAC%XNUC_CON * EXP( LIMAC%XEXTT_CON*ZTCELSIUS(:)+LIMAC%XEX_CON )             &
                                                /ZRHODREF(:) , ZCCT(:) )
     ZZX(:) = MAX( ZZY(:)-ZINT(:,1),0.0 )
     ZZW(:) = MIN( (ZRCT(:)/ZCCT(:))*ZZX(:),ZRCT(:) )

@@ -4,7 +4,7 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ###########################################################################
-SUBROUTINE LIMA_ADJUST_SPLIT(D, CST, BUCONF, TBUDGETS, KBUDGETS,                &
+SUBROUTINE LIMA_ADJUST_SPLIT(LIMAP, LIMAW, D, CST, BUCONF, TBUDGETS, KBUDGETS,  &
                              KRR, KMI, HCONDENS, HLAMBDA3,                      &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS, OMFCONV, PMFCONV,&
@@ -116,6 +116,8 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 !
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
 TYPE(DIMPHYEX_t),         INTENT(IN)   :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
@@ -479,7 +481,7 @@ DO IITER =1,ITERMAX
    IF (OSUBG_COND .AND. NMOM_C.GE.2 .AND. LACTI) THEN
       PSRCS=Z_SRCS
       ZW_MF=0.
-      CALL LIMA_CCN_ACTIVATION (D, CST,                          &
+      CALL LIMA_CCN_ACTIVATION (LIMAP, LIMAW, D, CST,            &
            PRHODREF, PEXNREF, PPABST, ZT2, PDTHRAD, PW_NU+ZW_MF, &
            ZTHT, ZRV2, ZRC2, ZCCT, ZRRT, ZNFT, ZNAT,             &
            PCLDFR                                                )      

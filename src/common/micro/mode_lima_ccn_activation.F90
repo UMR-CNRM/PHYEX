@@ -72,10 +72,6 @@ USE MODD_CST,            ONLY: CST_t
 !USE MODD_IO,              ONLY: TFILEDATA
 !USE MODD_LUNIT_n,         ONLY: TLUOUT
 USE MODD_PARAMETERS,      ONLY: JPHEXT, JPVEXT
-USE MODD_PARAM_LIMA,      ONLY: LADJ, LACTIT, NMOD_CCN, XCTMIN, XKHEN_MULTI, XRTMIN, XLIMIT_FACTOR
-USE MODD_PARAM_LIMA_WARM, ONLY: XWMIN, NAHEN, NHYP, XAHENINTP1, XAHENINTP2, XCSTDCRIT, XHYPF12,      &
-                                XHYPINTP1, XHYPINTP2, XTMIN, XHYPF32, XPSI3, XAHENG, XAHENG2, XPSI1, &
-                                XLBC, XLBEXC
 USE MODD_NEB_n,           ONLY: LSUBG_COND
 
 !USE MODE_IO_FIELD_WRITE,  only: IO_Field_write
@@ -89,6 +85,8 @@ IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
 !TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file
@@ -107,8 +105,8 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRVT       ! Water vapor m.r. 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PRCT       ! Cloud water m.r. at t 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCCT       ! Cloud water m.r. at t 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRRT       ! Cloud water m.r. at t 
-REAL, DIMENSION(D%NIJT,D%NKT,NMOD_CCN), INTENT(INOUT) :: PNFT       ! CCN C. available at t
-REAL, DIMENSION(D%NIJT,D%NKT,NMOD_CCN), INTENT(INOUT) :: PNAT       ! CCN C. activated at t
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_CCN), INTENT(INOUT) :: PNFT       ! CCN C. available at t
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_CCN), INTENT(INOUT) :: PNAT       ! CCN C. activated at t
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCLDFR     ! Precipitation fraction
 !
@@ -152,8 +150,6 @@ INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1             ! Vectors of indices for
 REAL    :: ZEPS                                ! molar mass ratio
 REAL    :: ZS1, ZS2, ZXACC 
 INTEGER :: IMOD
-TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 INTEGER :: IIJB, IIJE, IKB, IKE        ! Physical domain
 !
 !!$INTEGER                  :: ILUOUT     ! Logical unit of output listing 
@@ -175,12 +171,12 @@ IKE=SIZE(PRHODREF,2) - JPVEXT
 ZEPS= CST%XMV / CST%XMD
 ZRVSAT(:,:) = ZEPS / (PPABST(:,:)*EXP(-CST%XALPW+CST%XBETAW/PT(:,:)+CST%XGAMW*ALOG(PT(:,:))) - 1.0)
 ZTDT(:,:)   = 0.
-IF (LACTIT .AND. SIZE(PDTHRAD).GT.0) ZTDT(:,:)   = PDTHRAD(:,:) * PEXNREF(:,:)
+IF (LIMAP%LACTIT .AND. SIZE(PDTHRAD).GT.0) ZTDT(:,:)   = PDTHRAD(:,:) * PEXNREF(:,:)
 !
 !  find locations where CCN are available
 !
 ZCONC_TOT(:,:) = 0.0
-DO IMOD = 1, NMOD_CCN 
+DO IMOD = 1, LIMAP%NMOD_CCN 
    ZCONC_TOT(:,:) = ZCONC_TOT(:,:) + PNFT(:,:,IMOD) ! sum over the free CCN
 ENDDO
 !
@@ -189,15 +185,15 @@ ENDDO
 !
 GNUCT(:,:) = .FALSE.
 !
-IF (LADJ) THEN
-   GNUCT(IIJB:IIJE,IKB:IKE) =      PW_NU(IIJB:IIJE,IKB:IKE)>XWMIN                          &
+IF (LIMAP%LADJ) THEN
+   GNUCT(IIJB:IIJE,IKB:IKE) =      PW_NU(IIJB:IIJE,IKB:IKE)>LIMAW%XWMIN                          &
                                     .OR. PRVT(IIJB:IIJE,IKB:IKE)>ZRVSAT(IIJB:IIJE,IKB:IKE)
-   IF (LACTIT) GNUCT(IIJB:IIJE,IKB:IKE) =      GNUCT(IIJB:IIJE,IKB:IKE)      &
-                                                .OR. ZTDT(IIJB:IIJE,IKB:IKE)<XTMIN
+   IF (LIMAP%LACTIT) GNUCT(IIJB:IIJE,IKB:IKE) =      GNUCT(IIJB:IIJE,IKB:IKE)      &
+                                                .OR. ZTDT(IIJB:IIJE,IKB:IKE)<LIMAW%XTMIN
 !
    GNUCT(IIJB:IIJE,IKB:IKE) =       GNUCT(IIJB:IIJE,IKB:IKE)                       &
                                     .AND. PT(IIJB:IIJE,IKB:IKE)>(CST%XTT-22.)                &
-                                    .AND. ZCONC_TOT(IIJB:IIJE,IKB:IKE)>XCTMIN(2)
+                                    .AND. ZCONC_TOT(IIJB:IIJE,IKB:IKE)>LIMAP%XCTMIN(2)
 !
    IF (LSUBG_COND) GNUCT(IIJB:IIJE,IKB:IKE) = GNUCT(IIJB:IIJE,IKB:IKE)       &
                                               .AND. PCLDFR(IIJB:IIJE,IKB:IKE)>0.01
@@ -206,7 +202,7 @@ IF (LADJ) THEN
 ELSE
    GNUCT(IIJB:IIJE,IKB:IKE) =       PRVT(IIJB:IIJE,IKB:IKE).GE.ZRVSAT(IIJB:IIJE,IKB:IKE) &
                                     .AND. PT(IIJB:IIJE,IKB:IKE)>(CST%XTT-22.)                            &
-                                    .AND. ZCONC_TOT(IIJB:IIJE,IKB:IKE)>XCTMIN(2)
+                                    .AND. ZCONC_TOT(IIJB:IIJE,IKB:IKE)>LIMAP%XCTMIN(2)
 END IF
 !
 IF (.NOT. LSUBG_COND) THEN
@@ -219,9 +215,9 @@ INUCT = COUNTJV( GNUCT(:,:),I1(:),I3(:))
 !
 IF( INUCT >= 1 ) THEN
 !
-   ALLOCATE(ZNFT(INUCT,NMOD_CCN))
-   ALLOCATE(ZNAT(INUCT,NMOD_CCN))
-   ALLOCATE(ZTMP(INUCT,NMOD_CCN))
+   ALLOCATE(ZNFT(INUCT,LIMAP%NMOD_CCN))
+   ALLOCATE(ZNAT(INUCT,LIMAP%NMOD_CCN))
+   ALLOCATE(ZTMP(INUCT,LIMAP%NMOD_CCN))
    ALLOCATE(ZRCT(INUCT))
    ALLOCATE(ZCCT(INUCT))
    ALLOCATE(ZZT(INUCT)) 
@@ -233,7 +229,7 @@ IF( INUCT >= 1 ) THEN
    ALLOCATE(ZZW4(INUCT))
    ALLOCATE(ZZW5(INUCT))
    ALLOCATE(ZZW6(INUCT))
-   ALLOCATE(ZCHEN_MULTI(INUCT,NMOD_CCN))
+   ALLOCATE(ZCHEN_MULTI(INUCT,LIMAP%NMOD_CCN))
    ALLOCATE(ZVEC1(INUCT))
    ALLOCATE(IVEC1(INUCT))
    ALLOCATE(ZRHODREF(INUCT)) 
@@ -248,16 +244,16 @@ IF( INUCT >= 1 ) THEN
       ZSW(IL)  = PRVT(I1(IL),I3(IL))/ZRVSAT(I1(IL),I3(IL)) - 1.
       ZRHODREF(IL) = PRHODREF(I1(IL),I3(IL))
       ZEXNREF(IL)  = PEXNREF(I1(IL),I3(IL))
-      DO IMOD = 1,NMOD_CCN
+      DO IMOD = 1,LIMAP%NMOD_CCN
          ZNFT(IL,IMOD)        = PNFT(I1(IL),I3(IL),IMOD)
          ZNAT(IL,IMOD)        = PNAT(I1(IL),I3(IL),IMOD)
          ZCHEN_MULTI(IL,IMOD) = (ZNFT(IL,IMOD)+ZNAT(IL,IMOD))*ZRHODREF(IL) &
-                                                             / XLIMIT_FACTOR(IMOD)
+                                                             / LIMAP%XLIMIT_FACTOR(IMOD)
       ENDDO
    ENDDO
 !
    ALLOCATE(ZSMAX(INUCT))
-   IF (LADJ) THEN
+   IF (LIMAP%LADJ) THEN
       ZZW1(:) = 1.0/ZEPS + 1.0/ZZW1(:)                                   &
                 + (((CST%XLVTT+(CST%XCPV-CST%XCL)*(ZZT(:)-CST%XTT))/ZZT(:))**2)/(CST%XCPD*CST%XRV) ! Psi2
 !
@@ -271,51 +267,51 @@ IF( INUCT >= 1 ) THEN
 !  Remark : in LIMA's nucleation parameterization, Smax=0.01 for a supersaturation of 1% !
 !
 !
-      ZVEC1(:) = MAX( 1.0001, MIN( REAL(NAHEN)-0.0001, XAHENINTP1 * ZZT(:) + XAHENINTP2 ) )
+      ZVEC1(:) = MAX( 1.0001, MIN( REAL(LIMAW%NAHEN)-0.0001, LIMAW%XAHENINTP1 * ZZT(:) + LIMAW%XAHENINTP2 ) )
       IVEC1(:) = INT( ZVEC1(:) )
       ZVEC1(:) = ZVEC1(:) - REAL( IVEC1(:) )
 !
 !
-      IF (LACTIT) THEN ! including a cooling rate
+      IF (LIMAP%LACTIT) THEN ! including a cooling rate
 !
 !       Compute the tabulation of function of ZZW3 :
 !
 !                                                  (Psi1*w+Psi3*DT/Dt)**1.5 
-!       ZZW3 = XAHENG*(Psi1*w + Psi3*DT/Dt)**1.5 = ------------------------ 
+!       ZZW3 = LIMAW%XAHENG*(Psi1*w + Psi3*DT/Dt)**1.5 = ------------------------ 
 !                                                   2*pi*rho_l*G**(3/2)     
 !
 !
-         ZZW4(:)=XPSI1( IVEC1(:)+1)*ZZW2(:)+XPSI3(IVEC1(:)+1)*ZZTDT(:)
-         ZZW5(:)=XPSI1( IVEC1(:)  )*ZZW2(:)+XPSI3(IVEC1(:)  )*ZZTDT(:)
+         ZZW4(:)=LIMAW%XPSI1( IVEC1(:)+1)*ZZW2(:)+LIMAW%XPSI3(IVEC1(:)+1)*ZZTDT(:)
+         ZZW5(:)=LIMAW%XPSI1( IVEC1(:)  )*ZZW2(:)+LIMAW%XPSI3(IVEC1(:)  )*ZZTDT(:)
          WHERE (ZZW4(:) < 0. .OR. ZZW5(:) < 0.)
             ZZW4(:) = 0.
             ZZW5(:) = 0.
          END WHERE
-         ZZW3(:) =   XAHENG( IVEC1(:)+1)*(ZZW4(:)**1.5)* ZVEC1(:)      &
-                   - XAHENG( IVEC1(:)  )*(ZZW5(:)**1.5)*(ZVEC1(:) - 1.0)
+         ZZW3(:) =   LIMAW%XAHENG( IVEC1(:)+1)*(ZZW4(:)**1.5)* ZVEC1(:)      &
+                   - LIMAW%XAHENG( IVEC1(:)  )*(ZZW5(:)**1.5)*(ZVEC1(:) - 1.0)
                        ! Cste*((Psi1*w+Psi3*dT/dt)/(G))**1.5
-         ZZW6(:) =   XAHENG2( IVEC1(:)+1)*(ZZW4(:)**0.5)* ZVEC1(:)      &
-                   - XAHENG2( IVEC1(:)  )*(ZZW5(:)**0.5)*(ZVEC1(:) - 1.0)
+         ZZW6(:) =   LIMAW%XAHENG2( IVEC1(:)+1)*(ZZW4(:)**0.5)* ZVEC1(:)      &
+                   - LIMAW%XAHENG2( IVEC1(:)  )*(ZZW5(:)**0.5)*(ZVEC1(:) - 1.0)
 !
 !
-      ELSE ! LACTIT , for clouds
+      ELSE ! LIMAP%LACTIT , for clouds
 !
 !
 !       Compute the tabulation of function of ZZW3 :
 !
 !                                             (Psi1 * w)**1.5       
-!       ZZW3 = XAHENG * (Psi1 * w)**1.5  = -------------------------
+!       ZZW3 = LIMAW%XAHENG * (Psi1 * w)**1.5  = -------------------------
 !                                            2 pi rho_l * G**(3/2)  
 !
 !
          ZZW2(:)=MAX(ZZW2(:),0.)
-         ZZW3(:)=XAHENG(IVEC1(:)+1)*((XPSI1(IVEC1(:)+1)*ZZW2(:))**1.5)* ZVEC1(:)    &
-                -XAHENG(IVEC1(:)  )*((XPSI1(IVEC1(:)  )*ZZW2(:))**1.5)*(ZVEC1(:)-1.0)
+         ZZW3(:)=LIMAW%XAHENG(IVEC1(:)+1)*((LIMAW%XPSI1(IVEC1(:)+1)*ZZW2(:))**1.5)* ZVEC1(:)    &
+                -LIMAW%XAHENG(IVEC1(:)  )*((LIMAW%XPSI1(IVEC1(:)  )*ZZW2(:))**1.5)*(ZVEC1(:)-1.0)
 !
-         ZZW6(:)=XAHENG2(IVEC1(:)+1)*((XPSI1(IVEC1(:)+1)*ZZW2(:))**0.5)* ZVEC1(:)    &
-                -XAHENG2(IVEC1(:)  )*((XPSI1(IVEC1(:)  )*ZZW2(:))**0.5)*(ZVEC1(:)-1.0)
+         ZZW6(:)=LIMAW%XAHENG2(IVEC1(:)+1)*((LIMAW%XPSI1(IVEC1(:)+1)*ZZW2(:))**0.5)* ZVEC1(:)    &
+                -LIMAW%XAHENG2(IVEC1(:)  )*((LIMAW%XPSI1(IVEC1(:)  )*ZZW2(:))**0.5)*(ZVEC1(:)-1.0)
 !
-      END IF ! LACTIT
+      END IF ! LIMAP%LACTIT
 !
 !
 !              (Psi1*w+Psi3*DT/Dt)**1.5   rho_air
@@ -325,8 +321,8 @@ IF( INUCT >= 1 ) THEN
       ZZW5(:) = 1.
       ZZW3(:) = (ZZW3(:)/ZZW1(:))*ZRHODREF(:) ! R.H.S. of Eq 9 of CPB 98 but
       ! for multiple aerosol modes
-      WHERE (ZRCT(:) > XRTMIN(2) .AND. ZCCT(:) > XCTMIN(2))
-         ZZW6(:) = ZZW6(:) * ZRHODREF(:) * ZCCT(:) / (XLBC*ZCCT(:)/ZRCT(:))**XLBEXC
+      WHERE (ZRCT(:) > LIMAP%XRTMIN(2) .AND. ZCCT(:) > LIMAP%XCTMIN(2))
+         ZZW6(:) = ZZW6(:) * ZRHODREF(:) * ZCCT(:) / (LIMAW%XLBC*ZCCT(:)/ZRCT(:))**LIMAW%XLBEXC
       ELSEWHERE
          ZZW6(:)=0.
       END WHERE
@@ -370,7 +366,7 @@ IF( INUCT >= 1 ) THEN
 ! Modified values for Beta and C (see in init_aerosol_properties) account for that
 !
    WHERE (ZZW5(:) > 0. .AND. ZSMAX(:) > 0.)
-      ZVEC1(:) = MAX( 1.0001, MIN( REAL(NHYP)-0.0001, XHYPINTP1*LOG(ZSMAX(:))+XHYPINTP2 ) )
+      ZVEC1(:) = MAX( 1.0001, MIN( REAL(LIMAW%NHYP)-0.0001, LIMAW%XHYPINTP1*LOG(ZSMAX(:))+LIMAW%XHYPINTP2 ) )
       IVEC1(:) = INT( ZVEC1(:) )
       ZVEC1(:) = ZVEC1(:) - REAL( IVEC1(:) )
    END WHERE
@@ -381,23 +377,23 @@ IF( INUCT >= 1 ) THEN
 ! Compute the concentration of activable aerosols for each mode
 ! based on the max of supersaturation ( -> ZTMP )
 !
-   DO IMOD = 1, NMOD_CCN                     ! iteration on mode number
+   DO IMOD = 1, LIMAP%NMOD_CCN                     ! iteration on mode number
       ZZW1(:) = 0.
       ZZW2(:) = 0.
       ZZW3(:) = 0.
    !
       WHERE( ZZW5(:) > 0. .AND. ZSMAX(:)>0.0 )
-         ZZW2(:) =  XHYPF12( IVEC1(:)+1,IMOD )* ZVEC1(:)      & ! hypergeo function
-                  - XHYPF12( IVEC1(:)  ,IMOD )*(ZVEC1(:) - 1.0) ! XHYPF12 is tabulated
+         ZZW2(:) =  LIMAW%XHYPF12( IVEC1(:)+1,IMOD )* ZVEC1(:)      & ! hypergeo function
+                  - LIMAW%XHYPF12( IVEC1(:)  ,IMOD )*(ZVEC1(:) - 1.0) ! XHYPF12 is tabulated
    !
-         ZTMP(:,IMOD) = ZCHEN_MULTI(:,IMOD)/ZRHODREF(:)*ZSMAX(:)**XKHEN_MULTI(IMOD)*ZZW2(:)
+         ZTMP(:,IMOD) = ZCHEN_MULTI(:,IMOD)/ZRHODREF(:)*ZSMAX(:)**LIMAP%XKHEN_MULTI(IMOD)*ZZW2(:)
       ENDWHERE
    ENDDO
 !
 ! Compute the concentration of aerosols activated at this time step
 ! as the difference between ZTMP and the aerosols already activated at t-dt (ZZW1)
 !
-   DO IMOD = 1, NMOD_CCN                     ! iteration on mode number
+   DO IMOD = 1, LIMAP%NMOD_CCN                     ! iteration on mode number
       ZZW1(:) = 0.
       ZZW2(:) = 0.
       ZZW3(:) = 0.
@@ -423,7 +419,7 @@ IF( INUCT >= 1 ) THEN
 !
    ZZW1(:)=0.
    WHERE (ZZW5(:)>0.0 .AND. ZSMAX(:)>0.0) ! ZZW1 is computed with ZSMAX [NO UNIT]
-      ZZW1(:) = MIN(XCSTDCRIT*ZZW6(:)/(((ZZT(:)*ZSMAX(:))**3)*ZRHODREF(:)),1.E-5)
+      ZZW1(:) = MIN(LIMAW%XCSTDCRIT*ZZW6(:)/(((ZZT(:)*ZSMAX(:))**3)*ZRHODREF(:)),1.E-5)
    END WHERE
 !
    IF(PRESENT(PTOT_RV_HENU)) PTOT_RV_HENU(:,:) = 0.
@@ -698,14 +694,14 @@ END FUNCTION ZRIDDR
 !!    IMPLICIT ARGUMENTS
 !!    ------------------
 !!    Module MODD_PARAM_LIMA_WARM
-!!        XHYPF32
+!!        LIMAW%XHYPF32
 !!
-!!        XHYPINTP1
-!!        XHYPINTP2
+!!        LIMAW%XHYPINTP1
+!!        LIMAW%XHYPINTP2
 !!
 !!    Module MODD_PARAM_C2R2
-!!        XKHEN_MULTI()
-!!        NMOD_CCN
+!!        LIMAP%XKHEN_MULTI()
+!!        LIMAP%NMOD_CCN
 !!       
 !!    REFERENCE
 !!    ---------
@@ -744,21 +740,21 @@ REAL                           :: ZVEC1
 INTEGER                        :: IVEC1
 !
 PFUNCSMAX(:) = 0.
-ZVEC1 = MAX( ( 1.0 + 10.0 * CST%XMNH_EPSILON ) ,MIN( REAL(NHYP)*( 1.0 - 10.0 * CST%XMNH_EPSILON ) ,               &
-                           XHYPINTP1*LOG(PPZSMAX)+XHYPINTP2 ) )
+ZVEC1 = MAX( ( 1.0 + 10.0 * CST%XMNH_EPSILON ) ,MIN( REAL(LIMAW%NHYP)*( 1.0 - 10.0 * CST%XMNH_EPSILON ) ,               &
+                           LIMAW%XHYPINTP1*LOG(PPZSMAX)+LIMAW%XHYPINTP2 ) )
 IVEC1 = INT( ZVEC1 )
 ZVEC1 = ZVEC1 - REAL( IVEC1 )
-DO IMOD = 1, NMOD_CCN
-   ZHYPF        = 0.          ! XHYPF32 is tabulated with ZSMAX in [NO UNITS]
-   ZHYPF        =   XHYPF32( IVEC1+1,IMOD ) * ZVEC1              &
-                  - XHYPF32( IVEC1  ,IMOD ) *(ZVEC1 - 1.0)
+DO IMOD = 1, LIMAP%NMOD_CCN
+   ZHYPF        = 0.          ! LIMAW%XHYPF32 is tabulated with ZSMAX in [NO UNITS]
+   ZHYPF        =   LIMAW%XHYPF32( IVEC1+1,IMOD ) * ZVEC1              &
+                  - LIMAW%XHYPF32( IVEC1  ,IMOD ) *(ZVEC1 - 1.0)
                              ! sum of s**(ki+2) * F32 * Ci * ki * beta(ki/2,3/2)
-   PFUNCSMAX(:) =  PFUNCSMAX(:) + (PPZSMAX)**(XKHEN_MULTI(IMOD) + 2) &
-                 * ZHYPF* XKHEN_MULTI(IMOD) * ZCHEN_MULTI(:,IMOD)    &
-                 * GAMMA_X0D( XKHEN_MULTI(IMOD)/2.0)*GAMMA_X0D(3.0/2.0)      &
-                 / GAMMA_X0D((XKHEN_MULTI(IMOD)+3.0)/2.0)
+   PFUNCSMAX(:) =  PFUNCSMAX(:) + (PPZSMAX)**(LIMAP%XKHEN_MULTI(IMOD) + 2) &
+                 * ZHYPF* LIMAP%XKHEN_MULTI(IMOD) * ZCHEN_MULTI(:,IMOD)    &
+                 * GAMMA_X0D( LIMAP%XKHEN_MULTI(IMOD)/2.0)*GAMMA_X0D(3.0/2.0)      &
+                 / GAMMA_X0D((LIMAP%XKHEN_MULTI(IMOD)+3.0)/2.0)
 ENDDO
-! function l.h.s. minus r.h.s. of eq. (9) of CPB98 but for NMOD_CCN aerosol mode
+! function l.h.s. minus r.h.s. of eq. (9) of CPB98 but for LIMAP%NMOD_CCN aerosol mode
 PFUNCSMAX(:) = PFUNCSMAX(:) + PPZZW6(:)*PPZSMAX - PPZZW3(:)
 !
 END FUNCTION FUNCSMAX
@@ -801,21 +797,21 @@ REAL                           :: ZVEC1
 INTEGER                        :: IVEC1
 !
 PSINGL_FUNCSMAX = 0.
-ZVEC1    = MAX( 1.0001,MIN( REAL(NHYP)-0.0001,               &
-                              XHYPINTP1*LOG(PPZSMAX)+XHYPINTP2 ) )
+ZVEC1    = MAX( 1.0001,MIN( REAL(LIMAW%NHYP)-0.0001,               &
+                              LIMAW%XHYPINTP1*LOG(PPZSMAX)+LIMAW%XHYPINTP2 ) )
 IVEC1 = INT( ZVEC1 )
 ZVEC1 = ZVEC1 - REAL( IVEC1 )
-DO IMOD = 1, NMOD_CCN
-   ZHYPF        = 0.          ! XHYPF32 is tabulated with ZSMAX in [NO UNITS]
-   ZHYPF        =   XHYPF32( IVEC1+1,IMOD ) * ZVEC1              &
-                  - XHYPF32( IVEC1  ,IMOD ) *(ZVEC1 - 1.0)
+DO IMOD = 1, LIMAP%NMOD_CCN
+   ZHYPF        = 0.          ! LIMAW%XHYPF32 is tabulated with ZSMAX in [NO UNITS]
+   ZHYPF        =   LIMAW%XHYPF32( IVEC1+1,IMOD ) * ZVEC1              &
+                  - LIMAW%XHYPF32( IVEC1  ,IMOD ) *(ZVEC1 - 1.0)
                              ! sum of s**(ki+2) * F32 * Ci * ki * bêta(ki/2,3/2)
-   PSINGL_FUNCSMAX = PSINGL_FUNCSMAX + (PPZSMAX)**(XKHEN_MULTI(IMOD) + 2)   &
-                   * ZHYPF* XKHEN_MULTI(IMOD) * ZCHEN_MULTI(KINDEX,IMOD) &
-                   * GAMMA_X0D( XKHEN_MULTI(IMOD)/2.0)*GAMMA_X0D(3.0/2.0)        &
-                   / GAMMA_X0D((XKHEN_MULTI(IMOD)+3.0)/2.0)
+   PSINGL_FUNCSMAX = PSINGL_FUNCSMAX + (PPZSMAX)**(LIMAP%XKHEN_MULTI(IMOD) + 2)   &
+                   * ZHYPF* LIMAP%XKHEN_MULTI(IMOD) * ZCHEN_MULTI(KINDEX,IMOD) &
+                   * GAMMA_X0D( LIMAP%XKHEN_MULTI(IMOD)/2.0)*GAMMA_X0D(3.0/2.0)        &
+                   / GAMMA_X0D((LIMAP%XKHEN_MULTI(IMOD)+3.0)/2.0)
 ENDDO
-! function l.h.s. minus r.h.s. of eq. (9) of CPB98 but for NMOD_CCN aerosol mode
+! function l.h.s. minus r.h.s. of eq. (9) of CPB98 but for LIMAP%NMOD_CCN aerosol mode
 PSINGL_FUNCSMAX = PSINGL_FUNCSMAX + PPZZW6*PPZSMAX - PPZZW3
 !
 END FUNCTION SINGL_FUNCSMAX

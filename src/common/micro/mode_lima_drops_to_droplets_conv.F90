@@ -6,7 +6,7 @@ MODULE MODE_LIMA_DROPS_TO_DROPLETS_CONV
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################
-  SUBROUTINE LIMA_DROPS_TO_DROPLETS_CONV (D, CST, PRHODREF, PRCT, PRRT, PCCT, PCRT, &
+  SUBROUTINE LIMA_DROPS_TO_DROPLETS_CONV (LIMAP, D, CST, PRHODREF, PRCT, PRRT, PCCT, PCRT, &
                                           P_RR_CVRC, P_CR_CVRC    )
 !     ######################################################################
 !
@@ -33,13 +33,13 @@ CONTAINS
 !
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY : CST_t
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
 !
@@ -68,8 +68,8 @@ P_RR_CVRC(:,:) = 0.
 P_CR_CVRC(:,:) = 0.
 !
 ZDR(:,:) = 9999.
-ZMASKR(:,:) = PRRT(:,:).GT.XRTMIN(3) .AND. PCRT(:,:).GT.XCTMIN(3)
-ZMASKC(:,:) = PRCT(:,:).GT.XRTMIN(2) .AND. PCCT(:,:).GT.XCTMIN(2)
+ZMASKR(:,:) = PRRT(:,:).GT.LIMAP%XRTMIN(3) .AND. PCRT(:,:).GT.LIMAP%XCTMIN(3)
+ZMASKC(:,:) = PRCT(:,:).GT.LIMAP%XRTMIN(2) .AND. PCCT(:,:).GT.LIMAP%XCTMIN(2)
 WHERE(ZMASKR(:,:))
    ZDR(:,:)=(6.*PRRT(:,:)/CST%XPI/CST%XRHOLW/PCRT(:,:))**0.33
 END WHERE

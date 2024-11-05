@@ -43,11 +43,6 @@ CONTAINS
 !              ------------
 !
 USE MODD_CST,              ONLY : XTT
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, XCEXVT, XNUS, XALPHAS, LMURAKAMI
-USE MODD_PARAM_LIMA_MIXED, ONLY : NGAMINC, XRIMINTP1, XRIMINTP2, XGAMINC_RIM1, XGAMINC_RIM2, XGAMINC_RIM4, &
-                                  XCRIMSS, XEXCRIMSS, XSRIMCG, XEXSRIMCG, XSRIMCG2, XSRIMCG3, XEXSRIMCG2, &
-                                  XHMLINTP1, XHMLINTP2, XGAMINC_HMC, XHM_FACTS, XHMTMIN, XHMTMAX
-USE MODD_PARAM_LIMA_COLD,  ONLY : XMNU0, XFVELOS
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
@@ -108,44 +103,44 @@ DO II = 1, SIZE(PRCT)
 !*       Cloud droplet riming of the aggregates  
 !        --------------------------------------
 !
-  IF ( PRCT(II)>XRTMIN(2) .AND. PRST(II)>XRTMIN(5) .AND. PT(II)<XTT .AND. &
-       PCCT(II)>XCTMIN(2) .AND. PCST(II)>XCTMIN(5) .AND. ODCOMPUTE(II) ) THEN
+  IF ( PRCT(II)>LIMAP%XRTMIN(2) .AND. PRST(II)>LIMAP%XRTMIN(5) .AND. PT(II)<XTT .AND. &
+       PCCT(II)>LIMAP%XCTMIN(2) .AND. PCST(II)>LIMAP%XCTMIN(5) .AND. ODCOMPUTE(II) ) THEN
 !
     ZVEC1(II) = PLBDS(II)
-    ZVEC1W(II)= ( XFVELOS**XALPHAS + PLBDS(II)**XALPHAS ) ** (1./XALPHAS) ! modified equivalent lambda
+    ZVEC1W(II)= ( LIMAC%XFVELOS**LIMAP%XALPHAS + PLBDS(II)**LIMAP%XALPHAS ) ** (1./LIMAP%XALPHAS) ! modified equivalent lambda
 !
 !        2.     perform the linear interpolation of the normalized
-!               "2+XDS"-moment of the incomplete gamma function using the modified equivalent lambda
+!               "2+LIMAC%XDS"-moment of the incomplete gamma function using the modified equivalent lambda
 !
-    ZVEC2(II) = MAX( 1.0001, MIN( REAL(NGAMINC)-0.0001,           &
-                     XRIMINTP1 * LOG( ZVEC1W(II) ) + XRIMINTP2 ) )
+    ZVEC2(II) = MAX( 1.0001, MIN( REAL(LIMAM%NGAMINC)-0.0001,           &
+                     LIMAM%XRIMINTP1 * LOG( ZVEC1W(II) ) + LIMAM%XRIMINTP2 ) )
     IVEC2(II) = INT( ZVEC2(II) )
     ZVEC2(II) = ZVEC2(II) - REAL( IVEC2(II) )
 !
-    ZZW1(II)  =  XGAMINC_RIM1( IVEC2(II)+1 )* ZVEC2(II)      &
-               - XGAMINC_RIM1( IVEC2(II)   )*(ZVEC2(II) - 1.0)
+    ZZW1(II)  =  LIMAM%XGAMINC_RIM1( IVEC2(II)+1 )* ZVEC2(II)      &
+               - LIMAM%XGAMINC_RIM1( IVEC2(II)   )*(ZVEC2(II) - 1.0)
 !
 !        3.     perform the linear interpolation of the normalized
-!               "XBS"-moment of the incomplete gamma function
+!               "LIMAC%XBS"-moment of the incomplete gamma function
 !
-    ZVEC2(II) = MAX( 1.0001, MIN( REAL(NGAMINC)-0.0001,           &
-                     XRIMINTP1 * LOG( ZVEC1(II) ) + XRIMINTP2 ) )
+    ZVEC2(II) = MAX( 1.0001, MIN( REAL(LIMAM%NGAMINC)-0.0001,           &
+                     LIMAM%XRIMINTP1 * LOG( ZVEC1(II) ) + LIMAM%XRIMINTP2 ) )
     IVEC2(II) = INT( ZVEC2(II) )
     ZVEC2(II) = ZVEC2(II) - REAL( IVEC2(II) )
 !
-    ZZW2(II)  = XGAMINC_RIM2( IVEC2(II)+1 )* ZVEC2(II)      &
-              - XGAMINC_RIM2( IVEC2(II)   )*(ZVEC2(II) - 1.0)
+    ZZW2(II)  = LIMAM%XGAMINC_RIM2( IVEC2(II)+1 )* ZVEC2(II)      &
+              - LIMAM%XGAMINC_RIM2( IVEC2(II)   )*(ZVEC2(II) - 1.0)
 !
 !        4.     riming
 !
 !++cb++
    ! Cloud droplets collected
-!      P_RC_RIM(II) = - XCRIMSS  * PRCT(II) * PCST(II)*(1+(XFVELOS/PLBDS(II))**XALPHAS)**(-XNUS+XEXCRIMSS/XALPHAS) &
-!                                * PRHODREF(II)**(-XCEXVT+1) * PLBDS(II)**XEXCRIMSS
+!      P_RC_RIM(II) = - LIMAM%XCRIMSS  * PRCT(II) * PCST(II)*(1+(LIMAC%XFVELOS/PLBDS(II))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAM%XEXCRIMSS/XALPHAS) &
+!                                * PRHODREF(II)**(-LIMAP%XCEXVT+1) * PLBDS(II)**LIMAM%XEXCRIMSS
 !      P_CC_RIM(II) = P_RC_RIM(II) * PCCT(II)/PRCT(II) ! Lambda_c**3
 ! total mass loss of cloud droplets, < 0
-    Z_RC_RIM(II) = - XCRIMSS  * PRCT(II) * PCST(II)*(1+(XFVELOS/PLBDS(II))**XALPHAS)**(-XNUS+XEXCRIMSS/XALPHAS) &
-                                * PRHODREF(II)**(-XCEXVT+1) * PLBDS(II)**XEXCRIMSS
+    Z_RC_RIM(II) = - LIMAM%XCRIMSS  * PRCT(II) * PCST(II)*(1+(LIMAC%XFVELOS/PLBDS(II))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAM%XEXCRIMSS/LIMAP%XALPHAS) &
+                                * PRHODREF(II)**(-LIMAP%XCEXVT+1) * PLBDS(II)**LIMAM%XEXCRIMSS
     P_CC_RIM(II) = Z_RC_RIM(II) * (PCCT(II) / PRCT(II)) ! Lambda_c**3
     !
     ! Cloud droplets collected on small aggregates add to snow
@@ -158,16 +153,16 @@ DO II = 1, SIZE(PRCT)
     Z_RG_RIM(II)   = -Z_RC_RIM(II) - Z_RS_RIM(II)
     P_RC_RIMSG(II) = Z_RC_RIM(II) - P_RC_RIMSS(II) ! < 0, loss of mass for rc
     !
-    IF (LMURAKAMI) THEN
+    IF (LIMAP%LMURAKAMI) THEN
     ! Graupel formation based on Murakami
-      ZVEC1(II) = XGAMINC_RIM4( IVEC2(II)+1 )* ZVEC2(II)      &
-                - XGAMINC_RIM4( IVEC2(II)   )*(ZVEC2(II) - 1.0)
+      ZVEC1(II) = LIMAM%XGAMINC_RIM4( IVEC2(II)+1 )* ZVEC2(II)      &
+                - LIMAM%XGAMINC_RIM4( IVEC2(II)   )*(ZVEC2(II) - 1.0)
       ZZW5(II) = ZVEC1(II)
-      ZZW3(II) = XSRIMCG * PRHODREF(II) * PCST(II) * PLBDS(II)**XEXSRIMCG * (1.0 - ZZW2(II))!/(PTSTEP*PRHODREF(II))
+      ZZW3(II) = LIMAM%XSRIMCG * PRHODREF(II) * PCST(II) * PLBDS(II)**LIMAM%XEXSRIMCG * (1.0 - ZZW2(II))!/(PTSTEP*PRHODREF(II))
       ZZW3(II) = Z_RG_RIM(II)*ZZW3(II)/ &
                     MAX(1.E-10, & !-20
-                        XSRIMCG3*XSRIMCG2*PCST(II)*PRHODREF(II)*PLBDS(II)**(XEXSRIMCG2)*(1.-ZZW5(II))- &
-                        XSRIMCG3*ZZW3(II))
+                        LIMAM%XSRIMCG3*LIMAM%XSRIMCG2*PCST(II)*PRHODREF(II)*PLBDS(II)**(LIMAM%XEXSRIMCG2)*(1.-ZZW5(II))- &
+                        LIMAM%XSRIMCG3*ZZW3(II))
     ELSE
     ! Large aggregates collecting droplets add to graupel (instant process ???)
       ZZW3(II) = PRST(II)*(1.0 - ZZW2(II))/PTSTEP
@@ -196,23 +191,23 @@ DO II = 1, SIZE(PRCT)
 !*       Hallett-Mossop ice production (HMS)  
 !        -----------------------------------
 !
-  IF ( PRST(II)>XRTMIN(5) .AND. PRCT(II)>XRTMIN(2) .AND. PT(II)<XHMTMAX .AND. PT(II)>XHMTMIN .AND. &
-       PCST(II)>XCTMIN(5) .AND. PCCT(II)>XCTMIN(2) .AND. ODCOMPUTE(II) ) THEN
+  IF ( PRST(II)>LIMAP%XRTMIN(5) .AND. PRCT(II)>LIMAP%XRTMIN(2) .AND. PT(II)<LIMAM%XHMTMAX .AND. PT(II)>LIMAM%XHMTMIN .AND. &
+       PCST(II)>LIMAP%XCTMIN(5) .AND. PCCT(II)>LIMAP%XCTMIN(2) .AND. ODCOMPUTE(II) ) THEN
 !
     ZVEC1(II) = PLBDC(II)
-    ZVEC2(II) = MAX( 1.0001, MIN( REAL(NGAMINC)-0.0001,           &
-                       XHMLINTP1 * LOG( ZVEC1(II) ) + XHMLINTP2 ) )
+    ZVEC2(II) = MAX( 1.0001, MIN( REAL(LIMAM%NGAMINC)-0.0001,           &
+                       LIMAM%XHMLINTP1 * LOG( ZVEC1(II) ) + LIMAM%XHMLINTP2 ) )
     IVEC2(II) = INT( ZVEC2(II) )
     ZVEC2(II) = ZVEC2(II) - REAL( IVEC2(II) )
-    ZVEC1(II) =  XGAMINC_HMC( IVEC2(II)+1 )* ZVEC2(II)      &
-               - XGAMINC_HMC( IVEC2(II)   )*(ZVEC2(II) - 1.0)
+    ZVEC1(II) =  LIMAM%XGAMINC_HMC( IVEC2(II)+1 )* ZVEC2(II)      &
+               - LIMAM%XGAMINC_HMC( IVEC2(II)   )*(ZVEC2(II) - 1.0)
     ZZW4(II) = ZVEC1(II) ! Large droplets
 !
     IF ( ZZW4(II)<0.99 ) THEN
-      P_CI_HMS(II) = - Z_RC_RIM(II) * (PCCT(II)/PRCT(II)) * (1.0-ZZW4(II)) * XHM_FACTS * &
-                       MAX( 0.0, MIN( (PT(II)-XHMTMIN)/3.0,(XHMTMAX-PT(II))/2.0 ) ) ! CCHMSI
+      P_CI_HMS(II) = - Z_RC_RIM(II) * (PCCT(II)/PRCT(II)) * (1.0-ZZW4(II)) * LIMAM%XHM_FACTS * &
+                       MAX( 0.0, MIN( (PT(II)-LIMAM%XHMTMIN)/3.0,(LIMAM%XHMTMAX-PT(II))/2.0 ) ) ! CCHMSI
 !
-      P_RI_HMS(II) = P_CI_HMS(II) * XMNU0                                     ! RCHMSI
+      P_RI_HMS(II) = P_CI_HMS(II) * LIMAC%XMNU0                                     ! RCHMSI
       P_RS_HMS(II) = - P_RI_HMS(II)
     ELSE
       P_RI_HMS(II) = 0.

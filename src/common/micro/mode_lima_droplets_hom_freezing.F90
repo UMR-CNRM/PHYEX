@@ -34,9 +34,6 @@ CONTAINS
 !              ------------
 !
 USE MODD_CST,             ONLY : XTT
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, XNUC
-USE MODD_PARAM_LIMA_COLD, ONLY : XC_HONC, XTEXP1_HONC, XTEXP2_HONC, XTEXP3_HONC,   &
-                                 XTEXP4_HONC, XTEXP5_HONC
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t 
 !
@@ -77,18 +74,18 @@ P_TH_HONC(:) = 0.
 P_RC_HONC(:) = 0.
 P_CC_HONC(:) = 0.
 !
-WHERE ( PT(:)<XTT-35.0 .AND. PCCT(:)>XCTMIN(2) .AND. PRCT(:)>XRTMIN(2) )
+WHERE ( PT(:)<XTT-35.0 .AND. PCCT(:)>LIMAP%XCTMIN(2) .AND. PRCT(:)>LIMAP%XRTMIN(2) )
    ZTCELSIUS(:) = PT(:)-XTT                                    ! T [°C]
    !
    ZZW(:) = 0.0
    ZZX(:) = 0.0
    ZZY(:) = 0.0
 
-   ZZX(:) = 1.0 / ( 1.0 + (XC_HONC/PLBDC(:))*PTSTEP*           &
-           EXP( XTEXP1_HONC + ZTCELSIUS(:)*(                   &
-           XTEXP2_HONC + ZTCELSIUS(:)*(                        &
-           XTEXP3_HONC + ZTCELSIUS(:)*(                        &
-           XTEXP4_HONC + ZTCELSIUS(:)*XTEXP5_HONC))) ) )**XNUC
+   ZZX(:) = 1.0 / ( 1.0 + (LIMAC%XC_HONC/PLBDC(:))*PTSTEP*           &
+           EXP( LIMAC%XTEXP1_HONC + ZTCELSIUS(:)*(                   &
+           LIMAC%XTEXP2_HONC + ZTCELSIUS(:)*(                        &
+           LIMAC%XTEXP3_HONC + ZTCELSIUS(:)*(                        &
+           LIMAC%XTEXP4_HONC + ZTCELSIUS(:)*LIMAC%XTEXP5_HONC))) ) )**LIMAP%XNUC
 !
    ZZW(:) = PCCT(:) * (1.0 - ZZX(:))                    ! CCHONI
    ZZY(:) = PRCT(:) * (1.0 - ZZX(:))                    ! RCHONI

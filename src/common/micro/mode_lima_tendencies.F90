@@ -79,12 +79,6 @@ CONTAINS
 !
 USE MODD_CST,              ONLY : XP00, XRD, XRV, XMD, XMV, XCPD, XCPV, XCL, XCI, XLVTT, XLSTT, XTT, &
                                   XALPW, XBETAW, XGAMW, XALPI, XBETAI, XGAMI
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN,  LCIBU, LRDSF, LKHKO, LSNOW_T, &
-                                  NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
-USE MODD_PARAM_LIMA_WARM,  ONLY : XLBC, XLBEXC, XLBR, XLBEXR, XCCR, XCXR
-USE MODD_PARAM_LIMA_MIXED, ONLY : XLBG, XLBEXG, XCCG, XCXG, XLBH, XLBEXH, XCCH, XCXH
-USE MODD_PARAM_LIMA_COLD,  ONLY : XSCFAC, XLBI, XLBEXI, XLBS, XLBEXS, XLBDAS_MAX, XTRANS_MP_GAMMAS,  &
-                                   XLBDAS_MIN, XCCS, XCXS, XBS, XNS
 !
 USE MODE_LIMA_DROPLETS_HOM_FREEZING, ONLY: LIMA_DROPLETS_HOM_FREEZING
 USE MODE_LIMA_DROPLETS_SELF_COLLECTION, ONLY: LIMA_DROPLETS_SELF_COLLECTION
@@ -373,32 +367,32 @@ ZPF1D(:) = MAX(PPF1D(:),0.01)
 !
 !
 !
-WHERE (PRCT(:).GE.XRTMIN(2))
+WHERE (PRCT(:).GE.LIMAP%XRTMIN(2))
    ZRCT(:)=PRCT(:)
 ELSEWHERE
    ZRCT(:)=0.
 END WHERE
-WHERE (PRRT(:).GE.XRTMIN(3))
+WHERE (PRRT(:).GE.LIMAP%XRTMIN(3))
    ZRRT(:)=PRRT(:)
 ELSEWHERE
    ZRRT(:)=0.
 END WHERE
-WHERE (PRIT(:).GE.XRTMIN(4))
+WHERE (PRIT(:).GE.LIMAP%XRTMIN(4))
    ZRIT(:)=PRIT(:)
 ELSEWHERE
    ZRIT(:)=0.
 END WHERE
-WHERE (PRST(:).GE.XRTMIN(5))
+WHERE (PRST(:).GE.LIMAP%XRTMIN(5))
    ZRST(:)=PRST(:)
 ELSEWHERE
    ZRST(:)=0.
 END WHERE
-WHERE (PRGT(:).GE.XRTMIN(6))
+WHERE (PRGT(:).GE.LIMAP%XRTMIN(6))
    ZRGT(:)=PRGT(:)
 ELSEWHERE
    ZRGT(:)=0.
 END WHERE
-WHERE (PRHT(:).GE.XRTMIN(7))
+WHERE (PRHT(:).GE.LIMAP%XRTMIN(7))
    ZRHT(:)=PRHT(:)
 ELSEWHERE
    ZRHT(:)=0.
@@ -443,7 +437,7 @@ WHERE (ODCOMPUTE(:))
    ZAI(:) =   ( XLSTT + (XCPV-XCI)*(ZT(:)-XTT) )**2 / (ZKA(:)*XRV*ZT(:)**2) &
                 + ( XRV*ZT(:) ) / (ZDV(:)*ZEISAT(:))
 !
-   ZCJ(:) = XSCFAC * PRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZT(:)-XTT) )
+   ZCJ(:) = LIMAC%XSCFAC * PRHODREF(:)**0.3 / SQRT( 1.718E-5+0.0049E-5*(ZT(:)-XTT) )
 !
 END WHERE
 !
@@ -451,25 +445,25 @@ END WHERE
 ZLBDC(:)  = 1.E10
 ZLBDC3(:) = 1.E30
 ZCCT(:)=PCCT(:)
-WHERE (ZRCT(:)>XRTMIN(2) .AND. PCCT(:)>XCTMIN(2) .AND. ODCOMPUTE(:))
-   ZLBDC3(:) = XLBC*PCCT(:) / ZRCT(:)
-   ZLBDC(:)  = ZLBDC3(:)**XLBEXC
+WHERE (ZRCT(:)>LIMAP%XRTMIN(2) .AND. PCCT(:)>LIMAP%XCTMIN(2) .AND. ODCOMPUTE(:))
+   ZLBDC3(:) = LIMAW%XLBC*PCCT(:) / ZRCT(:)
+   ZLBDC(:)  = ZLBDC3(:)**LIMAW%XLBEXC
 END WHERE
 !
 ! Rain drops
 ZLBDR(:)  = 1.E10
 ZLBDR3(:) = 1.E30
 ZCRT(:)=0.
-IF (NMOM_R.EQ.1) THEN
-   WHERE (ZRRT(:)>XRTMIN(3) .AND. ODCOMPUTE(:) )
-      ZLBDR(:) = XLBR*(PRHODREF(:)*ZRRT(:) )**XLBEXR
+IF (LIMAP%NMOM_R.EQ.1) THEN
+   WHERE (ZRRT(:)>LIMAP%XRTMIN(3) .AND. ODCOMPUTE(:) )
+      ZLBDR(:) = LIMAW%XLBR*(PRHODREF(:)*ZRRT(:) )**LIMAW%XLBEXR
       ZLBDR3(:) = ZLBDR(:)**3.
-      ZCRT(:) = XCCR * ZLBDR(:)**XCXR / PRHODREF(:)
+      ZCRT(:) = LIMAW%XCCR * ZLBDR(:)**LIMAW%XCXR / PRHODREF(:)
    END WHERE
 ELSE
-   WHERE (ZRRT(:)>XRTMIN(3) .AND. PCRT(:)>XCTMIN(3) .AND. ODCOMPUTE(:))
-      ZLBDR3(:) = XLBR*PCRT(:) / ZRRT(:)
-      ZLBDR(:)  = ZLBDR3(:)**XLBEXR
+   WHERE (ZRRT(:)>LIMAP%XRTMIN(3) .AND. PCRT(:)>LIMAP%XCTMIN(3) .AND. ODCOMPUTE(:))
+      ZLBDR3(:) = LIMAW%XLBR*PCRT(:) / ZRRT(:)
+      ZLBDR(:)  = ZLBDR3(:)**LIMAW%XLBEXR
       ZCRT(:)=PCRT(:)
    END WHERE
 END IF
@@ -477,34 +471,34 @@ END IF
 ! Pristine ice : same formula for 1 and 2 moments, using real or diagnosed Ni
 ZLBDI(:)  = 1.E10
 ZCIT(:)=PCIT(:)
-WHERE (ZRIT(:)>XRTMIN(4) .AND. PCIT(:)>XCTMIN(4) .AND. ODCOMPUTE(:))
-   ZLBDI(:) = ( XLBI*PCIT(:) / ZRIT(:) )**XLBEXI
+WHERE (ZRIT(:)>LIMAP%XRTMIN(4) .AND. PCIT(:)>LIMAP%XCTMIN(4) .AND. ODCOMPUTE(:))
+   ZLBDI(:) = ( LIMAC%XLBI*PCIT(:) / ZRIT(:) )**LIMAC%XLBEXI
 END WHERE
 !
 ! Snow : additional option for LSNOW_T if NMOM_S=1
 ZLBDS(:)  = 1.E10
 ZCST(:)=0.
-IF (NMOM_S.EQ.1) THEN
-   IF (LSNOW_T) THEN
-      WHERE (ZRST(:)>XRTMIN(5) .AND. ODCOMPUTE(:) )
+IF (LIMAP%NMOM_S.EQ.1) THEN
+   IF (LIMAP%LSNOW_T) THEN
+      WHERE (ZRST(:)>LIMAP%XRTMIN(5) .AND. ODCOMPUTE(:) )
          WHERE(ZT(:)>263.15)
-            ZLBDS(:) = MAX(MIN(XLBDAS_MAX, 10**(14.554-0.0423*ZT(:))),XLBDAS_MIN)
+            ZLBDS(:) = MAX(MIN(LIMAC%XLBDAS_MAX, 10**(14.554-0.0423*ZT(:))),LIMAC%XLBDAS_MIN)
          END WHERE
          WHERE(ZT(:)<=263.15)
-            ZLBDS(:) = MAX(MIN(XLBDAS_MAX, 10**(6.226-0.0106*ZT(:))),XLBDAS_MIN)
+            ZLBDS(:) = MAX(MIN(LIMAC%XLBDAS_MAX, 10**(6.226-0.0106*ZT(:))),LIMAC%XLBDAS_MIN)
          END WHERE
       END WHERE
-      ZLBDS(:) =  ZLBDS(:) * XTRANS_MP_GAMMAS
-      ZCST(:) = XNS * ZRST(:) * ZLBDS(:)**XBS
+      ZLBDS(:) =  ZLBDS(:) * LIMAC%XTRANS_MP_GAMMAS
+      ZCST(:) = LIMAC%XNS * ZRST(:) * ZLBDS(:)**LIMAC%XBS
    ELSE
-      WHERE (ZRST(:)>XRTMIN(5) .AND. ODCOMPUTE(:) )
-         ZLBDS(:) = XLBS*( PRHODREF(:)*ZRST(:) )**XLBEXS
+      WHERE (ZRST(:)>LIMAP%XRTMIN(5) .AND. ODCOMPUTE(:) )
+         ZLBDS(:) = LIMAC%XLBS*( PRHODREF(:)*ZRST(:) )**LIMAC%XLBEXS
       END WHERE
-      ZCST(:) = XCCS * ZLBDS(:)**XCXS / PRHODREF(:)
+      ZCST(:) = LIMAC%XCCS * ZLBDS(:)**LIMAC%XCXS / PRHODREF(:)
    END IF
 ELSE
-   WHERE (ZRST(:)>XRTMIN(5) .AND. PCST(:)>XCTMIN(5) .AND. ODCOMPUTE(:))
-      ZLBDS(:) = (XLBS*PCST(:)/ZRST(:))**XLBEXS
+   WHERE (ZRST(:)>LIMAP%XRTMIN(5) .AND. PCST(:)>LIMAP%XCTMIN(5) .AND. ODCOMPUTE(:))
+      ZLBDS(:) = (LIMAC%XLBS*PCST(:)/ZRST(:))**LIMAC%XLBEXS
       ZCST(:) = PCST(:)
    END WHERE
 END IF
@@ -513,14 +507,14 @@ ZLBDS3(:) = ZLBDS(:)**3.
 ! Graupel
 ZLBDG(:)  = 1.E10
 ZCGT(:)=0.
-IF (NMOM_G.EQ.1) THEN
-   WHERE (ZRGT(:)>XRTMIN(6) .AND. ODCOMPUTE(:) )
-      ZLBDG(:) = XLBG*( PRHODREF(:)*ZRGT(:) )**XLBEXG
+IF (LIMAP%NMOM_G.EQ.1) THEN
+   WHERE (ZRGT(:)>LIMAP%XRTMIN(6) .AND. ODCOMPUTE(:) )
+      ZLBDG(:) = LIMAM%XLBG*( PRHODREF(:)*ZRGT(:) )**LIMAM%XLBEXG
    END WHERE
-   ZCGT(:) = XCCG * ZLBDG(:)**XCXG / PRHODREF(:)
+   ZCGT(:) = LIMAM%XCCG * ZLBDG(:)**LIMAM%XCXG / PRHODREF(:)
 ELSE
-   WHERE (ZRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. ODCOMPUTE(:))
-      ZLBDG(:) = (XLBG*PCGT(:)/ZRGT(:))**XLBEXG
+   WHERE (ZRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:))
+      ZLBDG(:) = (LIMAM%XLBG*PCGT(:)/ZRGT(:))**LIMAM%XLBEXG
    END WHERE
    ZCGT(:)=PCGT(:)
 END IF
@@ -528,14 +522,14 @@ END IF
 ! Hail
 ZLBDH(:)  = 1.E10
 ZCHT(:)=0.
-IF (NMOM_H.EQ.1) THEN
-   WHERE (ZRHT(:)>XRTMIN(7) .AND. ODCOMPUTE(:) )
-      ZLBDH(:) = XLBH*( PRHODREF(:)*ZRHT(:) )**XLBEXH
-      ZCHT(:) = XCCH * ZLBDH(:)**XCXH / PRHODREF(:)
+IF (LIMAP%NMOM_H.EQ.1) THEN
+   WHERE (ZRHT(:)>LIMAP%XRTMIN(7) .AND. ODCOMPUTE(:) )
+      ZLBDH(:) = LIMAM%XLBH*( PRHODREF(:)*ZRHT(:) )**LIMAM%XLBEXH
+      ZCHT(:) = LIMAM%XCCH * ZLBDH(:)**LIMAM%XCXH / PRHODREF(:)
    END WHERE
 ELSE
-   WHERE (ZRHT(:)>XRTMIN(7) .AND. PCHT(:)>XCTMIN(7) .AND. ODCOMPUTE(:))
-      ZLBDH(:) = (XLBH*PCHT(:)/ZRHT(:))**XLBEXH
+   WHERE (ZRHT(:)>LIMAP%XRTMIN(7) .AND. PCHT(:)>LIMAP%XCTMIN(7) .AND. ODCOMPUTE(:))
+      ZLBDH(:) = (LIMAM%XLBH*PCHT(:)/ZRHT(:))**LIMAM%XLBEXH
    END WHERE
    ZCHT(:)=PCHT(:)
 END IF
@@ -545,20 +539,20 @@ PEVAP3D(:)=0.
 !-------------------------------------------------------------------------------
 ! Call microphysical processes   
 !
-IF (NMOM_C.GE.1 .AND. NMOM_I.GE.1) THEN
+IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_I.GE.1) THEN
    CALL LIMA_DROPLETS_HOM_FREEZING (LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,          & ! independent from CF,IF,PF
                                     ZT, ZLVFACT, ZLSFACT,              &
                                     ZRCT, ZCCT, ZLBDC,                 &
                                     P_TH_HONC, P_RC_HONC, P_CC_HONC    )
    PA_RC(:) = PA_RC(:) + P_RC_HONC(:)
-   IF (NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_HONC(:)
+   IF (LIMAP%NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_HONC(:)
    PA_RI(:) = PA_RI(:) - P_RC_HONC(:)
-   IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:) - P_CC_HONC(:) 
+   IF (LIMAP%NMOM_I.GE.2) PA_CI(:) = PA_CI(:) - P_CC_HONC(:) 
    P_TH_ACC(:) = - P_RC_HONC(:) * (ZLSFACT(:)-ZLVFACT(:))
    PA_TH(:) = PA_TH(:) + P_TH_HONC(:)
 END IF
 !
-IF ((.NOT. LKHKO) .AND. NMOM_C.GE.2) THEN
+IF ((.NOT. LIMAP%LKHKO) .AND. LIMAP%NMOM_C.GE.2) THEN
    CALL LIMA_DROPLETS_SELF_COLLECTION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,   & ! depends on CF
                                        PRHODREF,           &
                                        ZCCT/ZCF1D, ZLBDC3, &
@@ -567,7 +561,7 @@ IF ((.NOT. LKHKO) .AND. NMOM_C.GE.2) THEN
    PA_CC(:) = PA_CC(:) + P_CC_SELF(:)
 END IF
 !
-IF (NMOM_C.GE.1 .AND. NMOM_R.GE.1) THEN
+IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
    CALL LIMA_DROPLETS_AUTOCONVERSION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,                      & ! depends on CF
                                       PRHODREF,                              &
                                       ZRCT/ZCF1D, ZCCT/ZCF1D, ZLBDC, ZLBDR,  &
@@ -577,12 +571,12 @@ IF (NMOM_C.GE.1 .AND. NMOM_R.GE.1) THEN
    P_CR_AUTO(:) = P_CR_AUTO(:) * ZCF1D(:)
    !
    PA_RC(:) = PA_RC(:) + P_RC_AUTO(:)
-   IF (NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_AUTO(:)
+   IF (LIMAP%NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_AUTO(:)
    PA_RR(:) = PA_RR(:) - P_RC_AUTO(:)
-   IF (NMOM_R.GE.2) PA_CR(:) = PA_CR(:) + P_CR_AUTO(:)
+   IF (LIMAP%NMOM_R.GE.2) PA_CR(:) = PA_CR(:) + P_CR_AUTO(:)
 END IF
 !
-IF (NMOM_C.GE.1 .AND. NMOM_R.GE.1) THEN
+IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
    CALL LIMA_DROPLETS_ACCRETION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,                              & ! depends on CF, PF
                                  PRHODREF,                                      &
                                  ZRCT/ZCF1D, ZRRT/ZPF1D, ZCCT/ZCF1D, ZCRT/ZPF1D,&
@@ -593,11 +587,11 @@ IF (NMOM_C.GE.1 .AND. NMOM_R.GE.1) THEN
    P_RC_ACCR(:) = P_RC_ACCR(:) * ZCF1D(:)
    !
    PA_RC(:) = PA_RC(:) + P_RC_ACCR(:)
-   IF (NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_ACCR(:)
+   IF (LIMAP%NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_ACCR(:)
    PA_RR(:) = PA_RR(:) - P_RC_ACCR(:)
 END IF
 !
-IF ((.NOT. LKHKO) .AND. NMOM_R.GE.2) THEN 
+IF ((.NOT. LIMAP%LKHKO) .AND. LIMAP%NMOM_R.GE.2) THEN 
    CALL LIMA_DROPS_SELF_COLLECTION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,    & ! depends on PF
                                     PRHODREF,            &
                                     ZCRT/ZPF1D(:), ZLBDR, ZLBDR3, &
@@ -610,7 +604,7 @@ IF ((.NOT. LKHKO) .AND. NMOM_R.GE.2) THEN
    PA_CR(:) = PA_CR(:) + P_CR_SCBU(:)
 END IF
 !
-IF (NMOM_R.GE.1) THEN
+IF (LIMAP%NMOM_R.GE.1) THEN
    CALL LIMA_RAIN_EVAPORATION (LIMAP, LIMAW, KSIZE, PTSTEP, ODCOMPUTE,                        & ! depends on PF > CF 
                                PRHODREF, ZT, ZLV, ZLVFACT, ZEVSAT, ZRVSAT,      &
                                PRVT, ZRCT/ZPF1D, ZRRT/ZPF1D, ZCRT/ZPF1D, ZLBDR, &
@@ -624,10 +618,10 @@ IF (NMOM_R.GE.1) THEN
    PA_TH(:) = PA_TH(:) + P_TH_EVAP(:)
    PA_RV(:) = PA_RV(:) - P_RR_EVAP(:)
    PA_RR(:) = PA_RR(:) + P_RR_EVAP(:)
-   IF (NMOM_R.GE.2) PA_CR(:) = PA_CR(:) + P_CR_EVAP(:)
+   IF (LIMAP%NMOM_R.GE.2) PA_CR(:) = PA_CR(:) + P_CR_EVAP(:)
 END IF
 !
-IF (NMOM_I.GE.1) THEN
+IF (LIMAP%NMOM_I.GE.1) THEN
    !
    ! Includes vapour deposition on ice, ice -> snow conversion
    !
@@ -645,13 +639,13 @@ IF (NMOM_I.GE.1) THEN
    PA_TH(:) = PA_TH(:) + P_TH_DEPI(:)
    PA_RV(:) = PA_RV(:) - P_RI_DEPI(:) 
    PA_RI(:) = PA_RI(:) + P_RI_DEPI(:) + P_RI_CNVS(:)
-   IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:)                + P_CI_CNVS(:)
+   IF (LIMAP%NMOM_I.GE.2) PA_CI(:) = PA_CI(:)                + P_CI_CNVS(:)
    PA_RS(:) = PA_RS(:)                - P_RI_CNVS(:)
-   IF (NMOM_S.GE.2) PA_CS(:) = PA_CS(:)                - P_CI_CNVS(:)
+   IF (LIMAP%NMOM_S.GE.2) PA_CS(:) = PA_CS(:)                - P_CI_CNVS(:)
 
 END IF
 !
-IF (NMOM_S.GE.1) THEN
+IF (LIMAP%NMOM_S.GE.1) THEN
    !
    ! Includes vapour deposition on snow, snow -> ice conversion
    !
@@ -667,15 +661,15 @@ IF (NMOM_S.GE.1) THEN
    P_TH_DEPS(:) = P_RS_DEPS(:) * ZLSFACT(:)
    !
    PA_RI(:) = PA_RI(:) + P_RI_CNVI(:)
-   IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:) + P_CI_CNVI(:)
+   IF (LIMAP%NMOM_I.GE.2) PA_CI(:) = PA_CI(:) + P_CI_CNVI(:)
    PA_RS(:) = PA_RS(:) - P_RI_CNVI(:) + P_RS_DEPS(:) 
-   IF (NMOM_S.GE.2) PA_CS(:) = PA_CS(:) - P_CI_CNVI(:)
+   IF (LIMAP%NMOM_S.GE.2) PA_CS(:) = PA_CS(:) - P_CI_CNVI(:)
    PA_TH(:) = PA_TH(:)                + P_TH_DEPS(:)
    PA_RV(:) = PA_RV(:)                - P_RS_DEPS(:) 
 
 END IF
 !
-IF (NMOM_S.GE.2) THEN 
+IF (LIMAP%NMOM_S.GE.2) THEN 
    CALL LIMA_SNOW_SELF_COLLECTION (LIMAP, LIMAC, KSIZE, ODCOMPUTE,    & ! depends on PF
                                    PRHODREF,            &
                                    ZRST(:)/ZPF1D(:), ZCST/ZPF1D(:), ZLBDS, ZLBDS3, &
@@ -689,10 +683,10 @@ END IF
 ! Lambda_s limited for collection processes to prevent too high concentrations
 ! must be changed or removed if C and x modified
 !
-!ZLBDS(:) = MIN( XLBDAS_MAX, ZLBDS(:))
+!ZLBDS(:) = MIN( LIMAC%XLBDAS_MAX, ZLBDS(:))
 !
 !
-IF (NMOM_I.GE.1 .AND. NMOM_S.GE.1) THEN
+IF (LIMAP%NMOM_I.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
    CALL LIMA_ICE_AGGREGATION_SNOW (LIMAP, LIMAC, KSIZE, ODCOMPUTE,                                             & ! depends on IF, PF
                                    ZT, PRHODREF,                                                 &
                                    ZRIT/ZIF1D, ZRST/ZPF1D, ZCIT/ZIF1D, ZCST/ZPF1D, ZLBDI, ZLBDS, &
@@ -702,11 +696,11 @@ IF (NMOM_I.GE.1 .AND. NMOM_S.GE.1) THEN
    P_RI_AGGS(:) = P_RI_AGGS(:) * ZIF1D(:)
    !
    PA_RI(:) = PA_RI(:) + P_RI_AGGS(:)
-   IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:) + P_CI_AGGS(:)
+   IF (LIMAP%NMOM_I.GE.2) PA_CI(:) = PA_CI(:) + P_CI_AGGS(:)
    PA_RS(:) = PA_RS(:) - P_RI_AGGS(:)
 END IF
 !
-IF (NMOM_G.GE.1) THEN
+IF (LIMAP%NMOM_G.GE.1) THEN
    CALL LIMA_GRAUPEL_DEPOSITION (LIMAP, LIMAM, KSIZE, ODCOMPUTE, PRHODREF,                             & ! depends on PF ?
                                  ZRGT/ZPF1D, ZCGT/ZPF1D, ZSSI, ZLBDG, ZAI, ZCJ, ZLSFACT, &
                                  P_TH_DEPG, P_RG_DEPG                                    )
@@ -718,7 +712,7 @@ IF (NMOM_G.GE.1) THEN
    PA_TH(:) = PA_TH(:) + P_TH_DEPG(:)
 END IF
 !
-IF (NMOM_C.GE.1 .AND. NMOM_I.EQ.1) THEN
+IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_I.EQ.1) THEN
    CALL LIMA_BERGERON (LIMAP, LIMAC, KSIZE, ODCOMPUTE,                          & ! depends on CF, IF
                        ZRCT/ZCF1D, ZRIT/ZIF1D, ZCIT/ZIF1D, ZLBDI, &
                        ZSSIW, ZAI, ZCJ, ZLVFACT, ZLSFACT,         &
@@ -731,7 +725,7 @@ IF (NMOM_C.GE.1 .AND. NMOM_I.EQ.1) THEN
    PA_TH(:) = PA_TH(:) + P_TH_BERFI(:)
 END IF
 !
-IF (NMOM_C.GE.1 .AND. NMOM_S.GE.1) THEN
+IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
      !
      ! Graupel production as tendency (or should be tendency + instant to stick to the previous version ?)
      ! Includes the Hallett Mossop process for riming of droplets by snow (HMS)
@@ -759,20 +753,20 @@ IF (NMOM_C.GE.1 .AND. NMOM_S.GE.1) THEN
    !
 !   PA_RC(:) = PA_RC(:) + P_RC_RIM(:)
    PA_RC(:) = PA_RC(:) + P_RC_RIMSS(:) + P_RC_RIMSG(:) ! RCRIMSS < 0 and RCRIMSG < 0 (both loss for rc)
-   IF (NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_RIM(:) 
+   IF (LIMAP%NMOM_C.GE.2) PA_CC(:) = PA_CC(:) + P_CC_RIM(:) 
    PA_RI(:) = PA_RI(:)               + P_RI_HMS(:)
-   IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:)               + P_CI_HMS(:)
+   IF (LIMAP%NMOM_I.GE.2) PA_CI(:) = PA_CI(:)               + P_CI_HMS(:)
 !   PA_RS(:) = PA_RS(:) + P_RS_RIM(:) + P_RS_HMS(:)
    PA_RS(:) = PA_RS(:) - P_RC_RIMSS(:) - P_RS_RIMCG(:) ! RCRIMSS < 0 (gain for rs), RSRIMCG > 0 (loss for rs)
-   IF (NMOM_S.GE.2) PA_CS(:) = PA_CS(:) + P_CS_RIM(:)
+   IF (LIMAP%NMOM_S.GE.2) PA_CS(:) = PA_CS(:) + P_CS_RIM(:)
 !   PA_RG(:) = PA_RG(:) + P_RG_RIM(:)
    PA_RG(:) = PA_RG(:) - P_RC_RIMSG(:) + P_RS_RIMCG(:) ! RCRIMSG < 0 (gain for rg), RSRIMCG > 0 (gain for rg)
-   IF (NMOM_G.GE.2) PA_CG(:) = PA_CG(:) - P_CS_RIM(:)
+   IF (LIMAP%NMOM_G.GE.2) PA_CG(:) = PA_CG(:) - P_CS_RIM(:)
    PA_TH(:) = PA_TH(:) + P_TH_RIM(:)
 !--cb--
 END IF
 !
-IF (NMOM_R.GE.1 .AND. NMOM_S.GE.1) THEN
+IF (LIMAP%NMOM_R.GE.1 .AND. LIMAP%NMOM_S.GE.1) THEN
 !++cb++
    CALL LIMA_RAIN_ACCR_SNOW (LIMAP, LIMAW, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                         & ! depends on PF
                              PRHODREF, ZT,                                     &
@@ -792,18 +786,18 @@ IF (NMOM_R.GE.1 .AND. NMOM_S.GE.1) THEN
    !
 !   PA_RR(:) = PA_RR(:) + P_RR_ACC(:)
    PA_RR(:) = PA_RR(:) - P_RR_ACCSS(:) - P_RR_ACCSG(:)
-   IF (NMOM_R.GE.2) PA_CR(:) = PA_CR(:) + P_CR_ACC(:)
+   IF (LIMAP%NMOM_R.GE.2) PA_CR(:) = PA_CR(:) + P_CR_ACC(:)
 !   PA_RS(:) = PA_RS(:) + P_RS_ACC(:)
    PA_RS(:) = PA_RS(:) + P_RR_ACCSS(:) - P_RS_ACCRG(:)
-   IF (NMOM_S.GE.2) PA_CS(:) = PA_CS(:) + P_CS_ACC(:)
+   IF (LIMAP%NMOM_S.GE.2) PA_CS(:) = PA_CS(:) + P_CS_ACC(:)
 !   PA_RG(:) = PA_RG(:) + P_RG_ACC(:)
    PA_RG(:) = PA_RG(:) + P_RR_ACCSG(:) + P_RS_ACCRG(:)
-   IF (NMOM_G.GE.2) PA_CG(:) = PA_CG(:) - P_CS_ACC(:)
+   IF (LIMAP%NMOM_G.GE.2) PA_CG(:) = PA_CG(:) - P_CS_ACC(:)
    PA_TH(:) = PA_TH(:) + P_TH_ACC(:)
 !--cb--
 END IF
 !
-IF (NMOM_S.GE.1) THEN
+IF (LIMAP%NMOM_S.GE.1) THEN
    !
    ! Conversion melting of snow should account for collected droplets and drops where T>0C, but does not !
    ! Some thermodynamical computations inside, to externalize ?
@@ -816,13 +810,13 @@ IF (NMOM_S.GE.1) THEN
    P_CS_CMEL(:) = P_CS_CMEL(:) * ZPF1D(:)
    !
    PA_RS(:) = PA_RS(:) + P_RS_CMEL(:)
-   IF (NMOM_S.GE.2) PA_CS(:) = PA_CS(:) + P_CS_CMEL(:)
+   IF (LIMAP%NMOM_S.GE.2) PA_CS(:) = PA_CS(:) + P_CS_CMEL(:)
    PA_RG(:) = PA_RG(:) - P_RS_CMEL(:)
-   IF (NMOM_G.GE.2) PA_CG(:) = PA_CG(:) - P_CS_CMEL(:)
+   IF (LIMAP%NMOM_G.GE.2) PA_CG(:) = PA_CG(:) - P_CS_CMEL(:)
 
 END IF
 !
-IF (NMOM_R.GE.1) THEN
+IF (LIMAP%NMOM_R.GE.1) THEN
    CALL LIMA_RAIN_FREEZING (LIMAP, LIMAM, KSIZE, ODCOMPUTE,                                      & ! depends on PF, IF
                             PRHODREF, ZT, ZLVFACT, ZLSFACT,                        &
                             ZRRT/ZPF1D, ZCRT/ZPF1D, ZRIT/ZIF1D, ZCIT/ZIF1D, ZLBDR, &
@@ -835,15 +829,15 @@ IF (NMOM_R.GE.1) THEN
 !
    PA_TH(:) = PA_TH(:) + P_TH_CFRZ(:)
    PA_RR(:) = PA_RR(:) + P_RR_CFRZ(:)
-   IF (NMOM_R.GE.2) PA_CR(:) = PA_CR(:) + P_CR_CFRZ(:)
+   IF (LIMAP%NMOM_R.GE.2) PA_CR(:) = PA_CR(:) + P_CR_CFRZ(:)
    PA_RI(:) = PA_RI(:) + P_RI_CFRZ(:)
-   IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:) + P_CI_CFRZ(:)
+   IF (LIMAP%NMOM_I.GE.2) PA_CI(:) = PA_CI(:) + P_CI_CFRZ(:)
    PA_RG(:) = PA_RG(:) - P_RR_CFRZ(:) - P_RI_CFRZ(:)
-   IF (NMOM_G.GE.2) PA_CG(:) = PA_CG(:) - P_CR_CFRZ(:)
+   IF (LIMAP%NMOM_G.GE.2) PA_CG(:) = PA_CG(:) - P_CR_CFRZ(:)
 
 END IF
 !
-IF (NMOM_S.GE.1 .AND. NMOM_G.GE.1 .AND. LCIBU) THEN
+IF (LIMAP%NMOM_S.GE.1 .AND. LIMAP%NMOM_G.GE.1 .AND. LIMAP%LCIBU) THEN
    !
    ! Conversion melting of snow should account for collected droplets and drops where T>0C, but does not !
    ! Some thermodynamical computations inside, to externalize ?
@@ -857,12 +851,12 @@ IF (NMOM_S.GE.1 .AND. NMOM_G.GE.1 .AND. LCIBU) THEN
    P_CI_CIBU(:) = P_CI_CIBU(:) * ZPF1D(:)
    !
    PA_RI(:) = PA_RI(:) + P_RI_CIBU(:)
-   IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:) + P_CI_CIBU(:)
+   IF (LIMAP%NMOM_I.GE.2) PA_CI(:) = PA_CI(:) + P_CI_CIBU(:)
    PA_RS(:) = PA_RS(:) - P_RI_CIBU(:)
 
 END IF
 !
-IF (NMOM_R.GE.1 .AND. NMOM_I.GE.1 .AND. LRDSF) THEN
+IF (LIMAP%NMOM_R.GE.1 .AND. LIMAP%NMOM_I.GE.1 .AND. LIMAP%LRDSF) THEN
    !
    ! Conversion melting of snow should account for collected droplets and drops where T>0C, but does not !
    ! Some thermodynamical computations inside, to externalize ?
@@ -876,12 +870,12 @@ IF (NMOM_R.GE.1 .AND. NMOM_I.GE.1 .AND. LRDSF) THEN
    P_CI_RDSF(:) = P_CI_RDSF(:) * ZIF1D(:)
    !
    PA_RI(:) = PA_RI(:) + P_RI_RDSF(:)
-   IF (NMOM_I.GE.2) PA_CI(:) = PA_CI(:) + P_CI_RDSF(:)
+   IF (LIMAP%NMOM_I.GE.2) PA_CI(:) = PA_CI(:) + P_CI_RDSF(:)
    PA_RG(:) = PA_RG(:) - P_RI_RDSF(:)
 
 END IF
 !
-IF (NMOM_G.GE.1) THEN
+IF (LIMAP%NMOM_G.GE.1) THEN
      !
      ! Melting of graupel should account for collected droplets and drops where T>0C, but does not !
      ! Collection and water shedding should also happen where T>0C, but do not !
@@ -905,7 +899,7 @@ IF (NMOM_G.GE.1) THEN
                       PA_RI, PA_CI, PA_RS, PA_CS, PA_RG, PA_CG, PA_RH, PA_CH )
 END IF
 !
-IF (NMOM_H.GE.1) THEN
+IF (LIMAP%NMOM_H.GE.1) THEN
    CALL LIMA_HAIL_DEPOSITION (LIMAP, LIMAM, KSIZE, ODCOMPUTE, PRHODREF,                             & ! depends on PF ?
                               ZRHT/ZPF1D, ZCHT/ZPF1D, ZSSI, ZLBDH, ZAI, ZCJ, ZLSFACT, &
                               P_TH_DEPH, P_RH_DEPH                                    )

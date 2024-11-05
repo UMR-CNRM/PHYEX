@@ -34,9 +34,6 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA,      ONLY : XCTMIN
-USE MODD_PARAM_LIMA_WARM, ONLY : XACCR1, XSCBUEXP1, XSCBU_EFF1, XSCBU_EFF2, &
-                                 XSCBU2, XSCBU3
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
@@ -77,25 +74,25 @@ P_CR_SCBU(:)=0.
 !
 ZW4(:) =0.
 !
-WHERE( PCRT(:)>XCTMIN(3) .AND. ODCOMPUTE(:) )
-   ZW4(:)  = XACCR1 / PLBDR(:)                ! Mean diameter
+WHERE( PCRT(:)>LIMAP%XCTMIN(3) .AND. ODCOMPUTE(:) )
+   ZW4(:)  = LIMAW%XACCR1 / PLBDR(:)                ! Mean diameter
 END WHERE
 ZSCBU(:)=1.
-WHERE (ZW4(:)>=XSCBU_EFF1 .AND. PCRT(:)>XCTMIN(3) .AND. ODCOMPUTE(:)) &
-     ZSCBU(:) = EXP(XSCBUEXP1*(ZW4(:)-XSCBU_EFF1))            ! coalescence efficiency
-WHERE (ZW4(:)>=XSCBU_EFF2 .AND. ODCOMPUTE(:)) ZSCBU(:) = 0.0  ! Break-up
+WHERE (ZW4(:)>=LIMAW%XSCBU_EFF1 .AND. PCRT(:)>LIMAP%XCTMIN(3) .AND. ODCOMPUTE(:)) &
+     ZSCBU(:) = EXP(LIMAW%XSCBUEXP1*(ZW4(:)-LIMAW%XSCBU_EFF1))            ! coalescence efficiency
+WHERE (ZW4(:)>=LIMAW%XSCBU_EFF2 .AND. ODCOMPUTE(:)) ZSCBU(:) = 0.0  ! Break-up
 !
 ZW1(:) = 0.0
 ZW2(:) = 0.0
 ZW3(:) = 0.0
 !
-WHERE ( PCRT(:)>XCTMIN(3) .AND. ZW4(:)>1.E-4 .AND. ODCOMPUTE(:))  ! analytical integration
-   ZW1(:) = XSCBU2 * PCRT(:)**2 / PLBDR3(:)                        ! D>100 10-6 m
+WHERE ( PCRT(:)>LIMAP%XCTMIN(3) .AND. ZW4(:)>1.E-4 .AND. ODCOMPUTE(:))  ! analytical integration
+   ZW1(:) = LIMAW%XSCBU2 * PCRT(:)**2 / PLBDR3(:)                        ! D>100 10-6 m
    ZW3(:) = ZW1(:)*ZSCBU(:)
 END WHERE
 !
-WHERE ( PCRT(:)>XCTMIN(3) .AND. ZW4(:)<=1.E-4 .AND. ODCOMPUTE(:))
-   ZW2(:) = XSCBU3 *(PCRT(:) / PLBDR3(:))**2                       ! D<100 10-6 m
+WHERE ( PCRT(:)>LIMAP%XCTMIN(3) .AND. ZW4(:)<=1.E-4 .AND. ODCOMPUTE(:))
+   ZW2(:) = LIMAW%XSCBU3 *(PCRT(:) / PLBDR3(:))**2                       ! D<100 10-6 m
    ZW3(:) = ZW2(:)
 END WHERE
 !

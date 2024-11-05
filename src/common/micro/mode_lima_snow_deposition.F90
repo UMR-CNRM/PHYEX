@@ -42,11 +42,6 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, XALPHAS, XNUS, NMOM_I
-USE MODD_PARAM_LIMA_COLD, ONLY : XDSCNVI_LIM, XLBDASCNVI_MAX,     &
-                                 XC0DEPSI, XC1DEPSI, XR0DEPSI, XR1DEPSI,      &
-                                 X1DEPS, X0DEPS, XEX1DEPS, XEX0DEPS,  &
-                                 XFVELOS
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 
@@ -89,19 +84,19 @@ P_TH_DEPS(:) = 0.
 P_RS_DEPS(:) = 0.
 !
 ! Looking for regions where computations are necessary
-GMICRO(:) = ODCOMPUTE(:) .AND. PRST(:)>XRTMIN(5)
+GMICRO(:) = ODCOMPUTE(:) .AND. PRST(:)>LIMAP%XRTMIN(5)
 !
-IF (NMOM_I.EQ.1) THEN
+IF (LIMAP%NMOM_I.EQ.1) THEN
    WHERE( GMICRO )
 !
 ! Deposition of water vapor on r_s: RVDEPS
 !
       ZZW(:) = 0.0
-      WHERE ( PRST(:)>XRTMIN(5) )
+      WHERE ( PRST(:)>LIMAP%XRTMIN(5) )
          ZZW(:) = PCST(:) * PSSI(:) / PAI(:) * &
-              ( X0DEPS*PLBDS(:)**XEX0DEPS +             &
-                X1DEPS*PLBDS(:)**XEX1DEPS *PCJ(:) *     &
-                     (1+0.5*(XFVELOS/PLBDS(:))**XALPHAS)**(-XNUS+XEX1DEPS/XALPHAS) )
+              ( LIMAC%X0DEPS*PLBDS(:)**LIMAC%XEX0DEPS +             &
+                LIMAC%X1DEPS*PLBDS(:)**LIMAC%XEX1DEPS *PCJ(:) *     &
+                     (1+0.5*(LIMAC%XFVELOS/PLBDS(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEX1DEPS/LIMAP%XALPHAS) )
          ZZW(:) =    ZZW(:)*(0.5+SIGN(0.5,ZZW(:))) - ABS(ZZW(:))*(0.5-SIGN(0.5,ZZW(:)))
       END WHERE
       P_RS_DEPS(:) = ZZW(:)
@@ -115,14 +110,14 @@ ELSE
 !
       ZZW2(:) = 0.0
       ZZW(:) = 0.0
-      WHERE ( PLBDS(:)<XLBDASCNVI_MAX .AND. PRST(:)>XRTMIN(5) .AND. PCST(:)>XCTMIN(5) &
+      WHERE ( PLBDS(:)<LIMAC%XLBDASCNVI_MAX .AND. PRST(:)>LIMAP%XRTMIN(5) .AND. PCST(:)>LIMAP%XCTMIN(5) &
                                       .AND. PSSI(:)<0.0                               )
-         ZZW(:) = (PLBDS(:)*XDSCNVI_LIM)**(XALPHAS)
-         ZZX(:) = ( -PSSI(:)/PAI(:) ) * PCST(:) * (ZZW(:)**XNUS) * EXP(-ZZW(:))
+         ZZW(:) = (PLBDS(:)*LIMAC%XDSCNVI_LIM)**(LIMAP%XALPHAS)
+         ZZX(:) = ( -PSSI(:)/PAI(:) ) * PCST(:) * (ZZW(:)**LIMAP%XNUS) * EXP(-ZZW(:))
 !
-         ZZW(:) = ( XR0DEPSI+XR1DEPSI*PCJ(:) )*ZZX(:)
+         ZZW(:) = ( LIMAC%XR0DEPSI+LIMAC%XR1DEPSI*PCJ(:) )*ZZX(:)
 !
-         ZZW2(:)= ( XC0DEPSI+XC1DEPSI*PCJ(:) )*ZZX(:)
+         ZZW2(:)= ( LIMAC%XC0DEPSI+LIMAC%XC1DEPSI*PCJ(:) )*ZZX(:)
       END WHERE
 !
       P_RI_CNVI(:) = ZZW(:)
@@ -134,11 +129,11 @@ ELSE
 !
 !
       ZZW(:) = 0.0
-      WHERE ( PRST(:)>XRTMIN(5) .AND. PCST(:)>XCTMIN(5) )
+      WHERE ( PRST(:)>LIMAP%XRTMIN(5) .AND. PCST(:)>LIMAP%XCTMIN(5) )
          ZZW(:) = ( PCST(:)*PSSI(:)/PAI(:) ) *     &
-              ( X0DEPS*PLBDS(:)**XEX0DEPS +        &
-              ( X1DEPS*PCJ(:)*PLBDS(:)**XEX1DEPS * &
-                   (1+0.5*(XFVELOS/PLBDS(:))**XALPHAS)**(-XNUS+XEX1DEPS/XALPHAS)) )
+              ( LIMAC%X0DEPS*PLBDS(:)**LIMAC%XEX0DEPS +        &
+              ( LIMAC%X1DEPS*PCJ(:)*PLBDS(:)**LIMAC%XEX1DEPS * &
+                   (1+0.5*(LIMAC%XFVELOS/PLBDS(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEX1DEPS/LIMAP%XALPHAS)) )
          ZZW(:) =    ZZW(:)*(0.5+SIGN(0.5,ZZW(:))) - ABS(ZZW(:))*(0.5-SIGN(0.5,ZZW(:)))
       END WHERE
 !

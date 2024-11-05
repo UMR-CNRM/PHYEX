@@ -47,19 +47,6 @@ CONTAINS
 !              ------------
 !
 USE MODD_CST,              ONLY : XTT, XMD, XMV, XRV, XLVTT, XLMTT, XESTT, XCL, XCI, XCPV
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, XCEXVT, NMOM_H
-USE MODD_PARAM_LIMA_MIXED, ONLY : XDG, X0DEPG, X1DEPG, NGAMINC,                                   &
-                                  XFCDRYG, XFIDRYG, XCOLIG, XCOLSG, XCOLEXIG, XCOLEXSG,           &
-                                  XFSDRYG, XLBSDRYG1, XLBSDRYG2, XLBSDRYG3, XKER_SDRYG,           &
-                                  XFNSDRYG, XLBNSDRYG1, XLBNSDRYG2, XLBNSDRYG3, XKER_N_SDRYG,     &
-                                  XFRDRYG, XLBRDRYG1, XLBRDRYG2, XLBRDRYG3, XKER_RDRYG,           &
-                                  XFNRDRYG, XLBNRDRYG1, XLBNRDRYG2, XLBNRDRYG3, XKER_N_RDRYG,     &
-                                  XHMTMIN, XHMTMAX, XHMLINTP1, XHMLINTP2, XHM_FACTG, XGAMINC_HMC, &
-                                  XEX0DEPG, XEX1DEPG,                                             &
-                                  XDRYINTP1R, XDRYINTP1S, XDRYINTP1G,                             &
-                                  XDRYINTP2R, XDRYINTP2S, XDRYINTP2G,                             &
-                                  NDRYLBDAR, NDRYLBDAS, NDRYLBDAG
-USE MODD_PARAM_LIMA_COLD,  ONLY : XMNU0
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
@@ -220,16 +207,16 @@ ZRWETG(:) = 0.
 !            1.a Collection of rc and ri in the dry mode
 !            --------------------------------------------
 !
-WHERE( PRGT(:)>XRTMIN(6) .AND. ODCOMPUTE(:) )
-   ZZW(:) = PCGT(:) * PLBDG(:)**(-XDG-2.0) * PRHODREF(:)**(1-XCEXVT)
-   ZZW1(:) = XFCDRYG * PRCT(:) * ZZW(:)                               ! RCDRYG - rc collected by graupel in dry mode 
-   ZZW2(:) = XFIDRYG * EXP( XCOLEXIG*(PT(:)-XTT) ) * PRIT(:) * ZZW(:) ! RIDRYG - ri collected by graupel in dry mode
+WHERE( PRGT(:)>LIMAP%XRTMIN(6) .AND. ODCOMPUTE(:) )
+   ZZW(:) = PCGT(:) * PLBDG(:)**(-LIMAM%XDG-2.0) * PRHODREF(:)**(1-LIMAP%XCEXVT)
+   ZZW1(:) = LIMAM%XFCDRYG * PRCT(:) * ZZW(:)                               ! RCDRYG - rc collected by graupel in dry mode 
+   ZZW2(:) = LIMAM%XFIDRYG * EXP( LIMAM%XCOLEXIG*(PT(:)-XTT) ) * PRIT(:) * ZZW(:) ! RIDRYG - ri collected by graupel in dry mode
 END WHERE
 !
 !*           1.b Collection of rs in the dry mode
 !            ------------------------------------
 !
-GDRY(:) = PRST(:)>XRTMIN(5) .AND. PCST(:)>XCTMIN(5) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. ODCOMPUTE(:)
+GDRY(:) = PRST(:)>LIMAP%XRTMIN(5) .AND. PCST(:)>LIMAP%XCTMIN(5) .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:)
 !
 WHERE( GDRY )
 !
@@ -242,13 +229,13 @@ WHERE( GDRY )
 !        in the geometrical set of (Lbda_g,Lbda_s) couplet use to
 !        tabulate the SDRYG-kernel
 !
-   ZVEC1(:) = MAX( 1.0001, MIN( REAL(NDRYLBDAG)-0.0001,           &
-                         XDRYINTP1G * LOG( ZVEC1(:) ) + XDRYINTP2G ) )
+   ZVEC1(:) = MAX( 1.0001, MIN( REAL(LIMAM%NDRYLBDAG)-0.0001,           &
+                         LIMAM%XDRYINTP1G * LOG( ZVEC1(:) ) + LIMAM%XDRYINTP2G ) )
    IVEC1(:) = INT( ZVEC1(:) )
    ZVEC1(:) = ZVEC1(:) - REAL( IVEC1(:) )
 !
-   ZVEC2(:) = MAX( 1.0001, MIN( REAL(NDRYLBDAS)-0.0001,           &
-                         XDRYINTP1S * LOG( ZVEC2(:) ) + XDRYINTP2S ) )
+   ZVEC2(:) = MAX( 1.0001, MIN( REAL(LIMAM%NDRYLBDAS)-0.0001,           &
+                         LIMAM%XDRYINTP1S * LOG( ZVEC2(:) ) + LIMAM%XDRYINTP2S ) )
    IVEC2(:) = INT( ZVEC2(:) )
    ZVEC2(:) = ZVEC2(:) - REAL( IVEC2(:) )
 !
@@ -266,12 +253,12 @@ WHERE( GDRY )
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
        			                                    * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
-   ZZW3(:) = XFSDRYG * ZZW(:) * EXP( XCOLEXSG*(PT(:)-XTT) )       & ! RSDRYG - rs collected by graupel in dry mode
+   ZZW3(:) = LIMAM%XFSDRYG * ZZW(:) * EXP( LIMAM%XCOLEXSG*(PT(:)-XTT) )       & ! RSDRYG - rs collected by graupel in dry mode
                     *  PRST(:) * PCGT(:)                          &
-                    *  PRHODREF(:)**(1-XCEXVT)                    &
-                    *( XLBSDRYG1/( PLBDG(:)**2                ) + &
-                       XLBSDRYG2/( PLBDG(:)    * PLBDS(:)     ) + &
-                       XLBSDRYG3/(               PLBDS(:)**2) )
+                    *  PRHODREF(:)**(1-LIMAP%XCEXVT)                    &
+                    *( LIMAM%XLBSDRYG1/( PLBDG(:)**2                ) + &
+                       LIMAM%XLBSDRYG2/( PLBDG(:)    * PLBDS(:)     ) + &
+                       LIMAM%XLBSDRYG3/(               PLBDS(:)**2) )
 !
    Z1(:) = GET_XKER_N_SDRYG(KSIZE,IVEC1(:)+1,IVEC2(:)+1)
    Z2(:) = GET_XKER_N_SDRYG(KSIZE,IVEC1(:)+1,IVEC2(:)  )
@@ -284,18 +271,18 @@ WHERE( GDRY )
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
        			                                    * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
-   ZZW3N(:) = XFNSDRYG * ZZW(:) * EXP( XCOLEXSG*(PT(:)-XTT) )        & ! NSDRYG - Ns collected by graupel in dry mode
+   ZZW3N(:) = LIMAM%XFNSDRYG * ZZW(:) * EXP( LIMAM%XCOLEXSG*(PT(:)-XTT) )        & ! NSDRYG - Ns collected by graupel in dry mode
                       *  PCST(:) * PCGT(:)                           &
-                      *  PRHODREF(:)**(1-XCEXVT)                     &
-                      *( XLBNSDRYG1/( PLBDG(:)**2                ) + &
-                         XLBNSDRYG2/( PLBDG(:)    * PLBDS(:)     ) + &
-                         XLBNSDRYG3/(               PLBDS(:)**2) )
+                      *  PRHODREF(:)**(1-LIMAP%XCEXVT)                     &
+                      *( LIMAM%XLBNSDRYG1/( PLBDG(:)**2                ) + &
+                         LIMAM%XLBNSDRYG2/( PLBDG(:)    * PLBDS(:)     ) + &
+                         LIMAM%XLBNSDRYG3/(               PLBDS(:)**2) )
 END WHERE
 !
 !*           1.c  Collection of rr in the dry mode
 !            -------------------------------------
 !
-GDRY(:) = PRRT(:)>XRTMIN(3) .AND. PCRT(:)>XCTMIN(3) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. ODCOMPUTE(:)
+GDRY(:) = PRRT(:)>LIMAP%XRTMIN(3) .AND. PCRT(:)>LIMAP%XCTMIN(3) .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:)
 !
 WHERE( GDRY )
 !
@@ -308,13 +295,13 @@ WHERE( GDRY )
 !        in the geometrical set of (Lbda_g,Lbda_r) couplet use to
 !        tabulate the RDRYG-kernel
 !
-   ZVEC1(:) = MAX( 1.0001, MIN( REAL(NDRYLBDAG)-0.0001,           &
-                         XDRYINTP1G * LOG( ZVEC1(:) ) + XDRYINTP2G ) )
+   ZVEC1(:) = MAX( 1.0001, MIN( REAL(LIMAM%NDRYLBDAG)-0.0001,           &
+                         LIMAM%XDRYINTP1G * LOG( ZVEC1(:) ) + LIMAM%XDRYINTP2G ) )
    IVEC1(:) = INT( ZVEC1(:) )
    ZVEC1(:) = ZVEC1(:) - REAL( IVEC1(:) )
 !
-   ZVEC2(:) = MAX( 1.0001, MIN( REAL(NDRYLBDAR)-0.0001,           &
-                         XDRYINTP1R * LOG( ZVEC2(:) ) + XDRYINTP2R ) )
+   ZVEC2(:) = MAX( 1.0001, MIN( REAL(LIMAM%NDRYLBDAR)-0.0001,           &
+                         LIMAM%XDRYINTP1R * LOG( ZVEC2(:) ) + LIMAM%XDRYINTP2R ) )
    IVEC2(:) = INT( ZVEC2(:) )
    ZVEC2(:) = ZVEC2(:) - REAL( IVEC2(:) )
 !
@@ -332,12 +319,12 @@ WHERE( GDRY )
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
                                  			     * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
-   ZZW4(:) = XFRDRYG * ZZW(:)                                     & ! RRDRYG
+   ZZW4(:) = LIMAM%XFRDRYG * ZZW(:)                                     & ! RRDRYG
                      * PRRT(:) * PCGT(:)                          &
-                     * PRHODREF(:)**(1-XCEXVT)                    &
-                     *( XLBRDRYG1/( PLBDG(:)**2               ) + &
-                        XLBRDRYG2/( PLBDG(:)   * PLBDR(:)     ) + &
-                        XLBRDRYG3/(              PLBDR(:)**2) )
+                     * PRHODREF(:)**(1-LIMAP%XCEXVT)                    &
+                     *( LIMAM%XLBRDRYG1/( PLBDG(:)**2               ) + &
+                        LIMAM%XLBRDRYG2/( PLBDG(:)   * PLBDR(:)     ) + &
+                        LIMAM%XLBRDRYG3/(              PLBDR(:)**2) )
 !
    Z1(:) = GET_XKER_N_RDRYG(KSIZE,IVEC1(:)+1,IVEC2(:)+1)
    Z2(:) = GET_XKER_N_RDRYG(KSIZE,IVEC1(:)+1,IVEC2(:)  )
@@ -350,12 +337,12 @@ WHERE( GDRY )
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
                                  			     * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
-   ZZW4N(:) = XFNRDRYG * ZZW(:)                                      & ! NRDRYG
+   ZZW4N(:) = LIMAM%XFNRDRYG * ZZW(:)                                      & ! NRDRYG
                        * PCRT(:) * PCGT(:)                           &
-                       * PRHODREF(:)**(1-XCEXVT)                     &
-                       *( XLBNRDRYG1/( PLBDG(:)**2               ) + &
-                          XLBNRDRYG2/( PLBDG(:)   * PLBDR(:)     ) + &
-                          XLBNRDRYG3/(              PLBDR(:)**2) )
+                       * PRHODREF(:)**(1-LIMAP%XCEXVT)                     &
+                       *( LIMAM%XLBNRDRYG1/( PLBDG(:)**2               ) + &
+                          LIMAM%XLBNRDRYG2/( PLBDG(:)   * PLBDR(:)     ) + &
+                          LIMAM%XLBNRDRYG3/(              PLBDR(:)**2) )
    
 END WHERE
 !
@@ -368,10 +355,10 @@ ZRDRYG(:) = ZZW1(:) + ZZW2(:) + ZZW3(:) + ZZW4(:)
 !            ------------------------------
 !
 ZZW(:) = 0.0
-WHERE( PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. ODCOMPUTE(:) )
-   ZZW5(:) = ZZW2(:) / (XCOLIG*EXP(XCOLEXIG*(PT(:)-XTT)) ) ! RIWETG
-   ZZW6(:) = ZZW3(:) / (XCOLSG*EXP(XCOLEXSG*(PT(:)-XTT)) ) ! RSWETG
-   ZZW6N(:)= ZZW3N(:)/ (XCOLSG*EXP(XCOLEXSG*(PT(:)-XTT)) ) ! NSWETG
+WHERE( PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:) )
+   ZZW5(:) = ZZW2(:) / (LIMAM%XCOLIG*EXP(LIMAM%XCOLEXIG*(PT(:)-XTT)) ) ! RIWETG
+   ZZW6(:) = ZZW3(:) / (LIMAM%XCOLSG*EXP(LIMAM%XCOLEXSG*(PT(:)-XTT)) ) ! RSWETG
+   ZZW6N(:)= ZZW3N(:)/ (LIMAM%XCOLSG*EXP(LIMAM%XCOLEXSG*(PT(:)-XTT)) ) ! NSWETG
 !
    ZZW(:) = PRVT(:)*PPRES(:)/((XMV/XMD)+PRVT(:)) ! Vapor pressure
    ZZW(:) = PKA(:)*(XTT-PT(:)) +                                  &
@@ -380,8 +367,8 @@ WHERE( PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. ODCOMPUTE(:) )
 !
 ! Total mass gained by graupel in wet mode
    ZRWETG(:)  = MAX( 0.0,                                                        &
-                   ( ZZW(:) * PCGT(:) * ( X0DEPG*       PLBDG(:)**XEX0DEPG +     &
-                                          X1DEPG*PCJ(:)*PLBDG(:)**XEX1DEPG ) +   &
+                   ( ZZW(:) * PCGT(:) * ( LIMAM%X0DEPG*       PLBDG(:)**LIMAM%XEX0DEPG +     &
+                                          LIMAM%X1DEPG*PCJ(:)*PLBDG(:)**LIMAM%XEX1DEPG ) +   &
                    ( ZZW5(:)+ZZW6(:) ) * ( XLMTT + (XCI-XCL)*(XTT-PT(:)) )   )   &
                    / (XLMTT-XCL*(XTT-PT(:)))                                     )
   !We must agregate, at least, the cold species
@@ -393,8 +380,8 @@ END WHERE
 !
 ZZW(:) = 0.0
 IHAIL = 0.
-IF (NMOM_H.GE.1) IHAIL = 1. 
-WHERE( ODCOMPUTE(:) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)<XTT .AND. &
+IF (LIMAP%NMOM_H.GE.1) IHAIL = 1. 
+WHERE( ODCOMPUTE(:) .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. PT(:)<XTT .AND. &
        (ZRDRYG(:)-ZZW2(:)-ZZW3(:))>=(ZRWETG(:)-ZZW5(:)-ZZW6(:)) .AND. ZRWETG(:)-ZZW5(:)-ZZW6(:)>0.0 ) 
 !
 ! Mass of rain and cloud droplets frozen by graupel in wet mode : RCWETG + RRWETG = RWETG - RIWETG - RSWETG
@@ -406,11 +393,11 @@ WHERE( ODCOMPUTE(:) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)<
    ZZW(:) = ZRDRYG(:)*IHAIL/(ZRWETG(:)+ZRDRYG(:)) 
 !
    P_RC_WETG(:) = - ZZW1(:)
-   P_CC_WETG(:) = P_RC_WETG(:) * PCCT(:)/MAX(PRCT(:),XRTMIN(2))
+   P_CC_WETG(:) = P_RC_WETG(:) * PCCT(:)/MAX(PRCT(:),LIMAP%XRTMIN(2))
    P_RR_WETG(:) = - ZZW7(:) + ZZW1(:)
-   P_CR_WETG(:) = P_RR_WETG(:) * PCRT(:)/MAX(PRRT(:),XRTMIN(3))
+   P_CR_WETG(:) = P_RR_WETG(:) * PCRT(:)/MAX(PRRT(:),LIMAP%XRTMIN(3))
    P_RI_WETG(:) = - ZZW5(:)
-   P_CI_WETG(:) = P_RI_WETG(:) * PCIT(:)/MAX(PRIT(:),XRTMIN(4))
+   P_CI_WETG(:) = P_RI_WETG(:) * PCIT(:)/MAX(PRIT(:),LIMAP%XRTMIN(4))
    P_RS_WETG(:) = - ZZW6(:)
    P_CS_WETG(:) = - ZZW6N(:)
    P_RG_WETG(:) = - PRGT(:)/PTSTEP * ZZW(:) + ZRWETG(:) * (1.-ZZW(:))
@@ -423,15 +410,15 @@ END WHERE
 !            1.g Dry mode
 !            ------------
 !
-WHERE( ODCOMPUTE(:) .AND. PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)<XTT .AND.                  &
+WHERE( ODCOMPUTE(:) .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. PT(:)<XTT .AND.                  &
        (ZRDRYG(:)-ZZW2(:)-ZZW3(:))<(ZRWETG(:)-ZZW5(:)-ZZW6(:)) .AND. ZRDRYG(:)>0.0 )
    !
    P_RC_DRYG(:) = - ZZW1(:)
-   P_CC_DRYG(:) = P_RC_DRYG(:) * PCCT(:)/MAX(PRCT(:),XRTMIN(2))
+   P_CC_DRYG(:) = P_RC_DRYG(:) * PCCT(:)/MAX(PRCT(:),LIMAP%XRTMIN(2))
    P_RR_DRYG(:) = - ZZW4(:)
    P_CR_DRYG(:) = - ZZW4N(:)
    P_RI_DRYG(:) = - ZZW2(:)
-   P_CI_DRYG(:) = P_RI_DRYG(:) * PCIT(:)/MAX(PRIT(:),XRTMIN(4))
+   P_CI_DRYG(:) = P_RI_DRYG(:) * PCIT(:)/MAX(PRIT(:),LIMAP%XRTMIN(4))
    P_RS_DRYG(:) = - ZZW3(:)
    P_CS_DRYG(:) = - ZZW3N(:)
    P_RG_DRYG(:) =   ZRDRYG(:)
@@ -444,9 +431,9 @@ END WHERE
 !        --------------------------------
 !
 ! BVIE test ZRDRYG<ZZW ?????????????????????????
-!GDRY(:) = (PT(:)<XHMTMAX) .AND. (PT(:)>XHMTMIN)    .AND. (ZRDRYG(:)<ZZW(:))&
-GDRY(:) = PT(:)<XHMTMAX .AND. PT(:)>XHMTMIN .AND. PRGT(:)>XRTMIN(6) .AND. PRCT(:)>XRTMIN(2) .AND. ODCOMPUTE(:) .AND. &
-          PCGT(:)>XCTMIN(6) .AND. PCCT(:)>XCTMIN(2) .AND. (ZRDRYG(:)-ZZW2(:)-ZZW3(:))<(ZRWETG(:)-ZZW5(:)-ZZW6(:))
+!GDRY(:) = (PT(:)<LIMAM%XHMTMAX) .AND. (PT(:)>LIMAM%XHMTMIN)    .AND. (ZRDRYG(:)<ZZW(:))&
+GDRY(:) = PT(:)<LIMAM%XHMTMAX .AND. PT(:)>LIMAM%XHMTMIN .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PRCT(:)>LIMAP%XRTMIN(2) .AND. ODCOMPUTE(:) .AND. &
+          PCGT(:)>LIMAP%XCTMIN(6) .AND. PCCT(:)>LIMAP%XCTMIN(2) .AND. (ZRDRYG(:)-ZZW2(:)-ZZW3(:))<(ZRWETG(:)-ZZW5(:)-ZZW6(:))
 
 ZZX(:)=9999.
 ZVEC1(:)=0.
@@ -456,18 +443,18 @@ IVEC2(:)=0
 WHERE( GDRY(:) )
 !
    ZVEC1(:) = PLBDC(:)
-   ZVEC2(:) = MAX( 1.0001, MIN( REAL(NGAMINC)-0.0001,           &
-                         XHMLINTP1 * LOG( ZVEC1(:) ) + XHMLINTP2 ) )
+   ZVEC2(:) = MAX( 1.0001, MIN( REAL(LIMAM%NGAMINC)-0.0001,           &
+                         LIMAM%XHMLINTP1 * LOG( ZVEC1(:) ) + LIMAM%XHMLINTP2 ) )
    IVEC2(:) = INT( ZVEC2(:) )
    ZVEC2(:) = ZVEC2(:) - REAL( IVEC2(:) )
-   ZVEC1(:) =   XGAMINC_HMC( IVEC2(:)+1 )* ZVEC2(:)      &
-                    - XGAMINC_HMC( IVEC2(:)   )*(ZVEC2(:) - 1.0)
+   ZVEC1(:) =   LIMAM%XGAMINC_HMC( IVEC2(:)+1 )* ZVEC2(:)      &
+                    - LIMAM%XGAMINC_HMC( IVEC2(:)   )*(ZVEC2(:) - 1.0)
    ZZX(:) = ZVEC1(:) ! Large droplets
 !
    WHERE ( ZZX(:)<0.99 ) ! Dry case
-      P_CI_HMG(:) = ZZW1(:)*(PCCT(:)/PRCT(:))*(1.0-ZZX(:))*XHM_FACTG*  &
-                        MAX( 0.0, MIN( (PT(:)-XHMTMIN)/3.0,(XHMTMAX-PT(:))/2.0 ) )
-      P_RI_HMG(:) = P_CI_HMG(:) * XMNU0
+      P_CI_HMG(:) = ZZW1(:)*(PCCT(:)/PRCT(:))*(1.0-ZZX(:))*LIMAM%XHM_FACTG*  &
+                        MAX( 0.0, MIN( (PT(:)-LIMAM%XHMTMIN)/3.0,(LIMAM%XHMTMAX-PT(:))/2.0 ) )
+      P_RI_HMG(:) = P_CI_HMG(:) * LIMAC%XMNU0
       P_RG_HMG(:) = - P_RI_HMG(:)
    END WHERE
 END WHERE
@@ -477,7 +464,7 @@ END WHERE
 !        -------------------
 !
 ZZX(:) = 0.0
-WHERE( PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)>XTT .AND. ODCOMPUTE(:) )
+WHERE( PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. PT(:)>XTT .AND. ODCOMPUTE(:) )
    ZZX(:) = PRVT(:)*PPRES(:)/((XMV/XMD)+PRVT(:)) ! Vapor pressure
    ZZX(:) = PKA(:)*(XTT-PT(:)) +                                 &
               ( PDV(:)*(XLVTT + ( XCPV - XCL ) * ( PT(:) - XTT )) &
@@ -486,8 +473,8 @@ WHERE( PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. PT(:)>XTT .AND. ODCOMPUTE
 ! compute RGMLTR
 !
    ZZX(:)  = MAX( 0.0,( -ZZX(:) * PCGT(:) *                        &
-                          ( X0DEPG*       PLBDG(:)**XEX0DEPG +     &
-                            X1DEPG*PCJ(:)*PLBDG(:)**XEX1DEPG ) -   &
+                          ( LIMAM%X0DEPG*       PLBDG(:)**LIMAM%XEX0DEPG +     &
+                            LIMAM%X1DEPG*PCJ(:)*PLBDG(:)**LIMAM%XEX1DEPG ) -   &
                         ( ZZW1(:)+ZZW4(:) ) * ( XCL*(XTT-PT(:))) ) &
                         / XLMTT                                    )
    P_RR_GMLT(:) = ZZX(:)
@@ -526,7 +513,7 @@ CONTAINS
     INTEGER I
     !
     DO I=1,SIZE(KG)
-       RET(I) = XKER_SDRYG(MAX(MIN(KG(I),SIZE(XKER_SDRYG,1)),1),MAX(MIN(KS(I),SIZE(XKER_SDRYG,2)),1))
+       RET(I) = LIMAM%XKER_SDRYG(MAX(MIN(KG(I),SIZE(LIMAM%XKER_SDRYG,1)),1),MAX(MIN(KS(I),SIZE(LIMAM%XKER_SDRYG,2)),1))
     END DO
   END FUNCTION GET_XKER_SDRYG
 !
@@ -541,7 +528,7 @@ CONTAINS
     INTEGER I
     !
     DO I=1,SIZE(KG)
-       RET(I) = XKER_N_SDRYG(MAX(MIN(KG(I),SIZE(XKER_N_SDRYG,1)),1),MAX(MIN(KS(I),SIZE(XKER_N_SDRYG,2)),1))
+       RET(I) = LIMAM%XKER_N_SDRYG(MAX(MIN(KG(I),SIZE(LIMAM%XKER_N_SDRYG,1)),1),MAX(MIN(KS(I),SIZE(LIMAM%XKER_N_SDRYG,2)),1))
     END DO
   END FUNCTION GET_XKER_N_SDRYG
 !
@@ -556,7 +543,7 @@ CONTAINS
     INTEGER I
     !
     DO I=1,SIZE(KG)
-       RET(I) = XKER_RDRYG(MAX(MIN(KG(I),SIZE(XKER_RDRYG,1)),1),MAX(MIN(KR(I),SIZE(XKER_RDRYG,2)),1))
+       RET(I) = LIMAM%XKER_RDRYG(MAX(MIN(KG(I),SIZE(LIMAM%XKER_RDRYG,1)),1),MAX(MIN(KR(I),SIZE(LIMAM%XKER_RDRYG,2)),1))
     END DO
   END FUNCTION GET_XKER_RDRYG
 !
@@ -571,7 +558,7 @@ CONTAINS
     INTEGER I
     !
     DO I=1,SIZE(KG)
-       RET(I) = XKER_N_RDRYG(MAX(MIN(KG(I),SIZE(XKER_N_RDRYG,1)),1),MAX(MIN(KR(I),SIZE(XKER_N_RDRYG,2)),1))
+       RET(I) = LIMAM%XKER_N_RDRYG(MAX(MIN(KG(I),SIZE(LIMAM%XKER_N_RDRYG,1)),1),MAX(MIN(KR(I),SIZE(LIMAM%XKER_N_RDRYG,2)),1))
     END DO
   END FUNCTION GET_XKER_N_RDRYG
 !

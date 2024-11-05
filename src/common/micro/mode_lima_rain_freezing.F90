@@ -35,8 +35,6 @@ CONTAINS
 !              ------------
 !
 USE MODD_CST,              ONLY : XTT
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, XCEXVT
-USE MODD_PARAM_LIMA_MIXED, ONLY : XICFRR, XEXICFRR, XRCFRI, XEXRCFRI
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
@@ -86,16 +84,16 @@ P_CI_CFRZ(:)=0.
 ZW1(:)=0.
 ZW2(:)=0.
 !
-WHERE( PRIT(:)>XRTMIN(4) .AND. PRRT(:)>XRTMIN(3) .AND. PT(:)<XTT .AND. &
-       PCIT(:)>XCTMIN(4) .AND. PCRT(:)>XCTMIN(3) .AND. ODCOMPUTE(:) )
+WHERE( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRRT(:)>LIMAP%XRTMIN(3) .AND. PT(:)<XTT .AND. &
+       PCIT(:)>LIMAP%XCTMIN(4) .AND. PCRT(:)>LIMAP%XCTMIN(3) .AND. ODCOMPUTE(:) )
 !
-   ZW1(:) = XICFRR * PRIT(:) * PCRT(:)                    & ! RICFRRG
-                                     * PLBDR(:)**XEXICFRR         &
-                                     * PRHODREF(:)**(-XCEXVT-1.0)
+   ZW1(:) = LIMAM%XICFRR * PRIT(:) * PCRT(:)                    & ! RICFRRG
+                                     * PLBDR(:)**LIMAM%XEXICFRR         &
+                                     * PRHODREF(:)**(-LIMAP%XCEXVT-1.0)
 !
-   ZW2(:) = XRCFRI * PCIT(:) * PCRT(:)                    & ! RRCFRIG
-                                     * PLBDR(:)**XEXRCFRI         &
-                                     * PRHODREF(:)**(-XCEXVT-1.0)
+   ZW2(:) = LIMAM%XRCFRI * PCIT(:) * PCRT(:)                    & ! RRCFRIG
+                                     * PLBDR(:)**LIMAM%XEXRCFRI         &
+                                     * PRHODREF(:)**(-LIMAP%XCEXVT-1.0)
 !
    P_RR_CFRZ(:) = - ZW2(:)
    P_CR_CFRZ(:) = - ZW2(:) * (PCRT(:)/PRRT(:))

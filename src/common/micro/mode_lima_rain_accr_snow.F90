@@ -44,17 +44,6 @@ CONTAINS
 !              ------------
 !
 USE MODD_CST,              ONLY : XTT
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, XCEXVT
-USE MODD_PARAM_LIMA_WARM,  ONLY : XBR
-USE MODD_PARAM_LIMA_COLD,  ONLY : XBS, XTRANS_MP_GAMMAS
-USE MODD_PARAM_LIMA_MIXED, ONLY : NACCLBDAS, XACCINTP1S, XACCINTP2S,             &
-                                  NACCLBDAR, XACCINTP1R, XACCINTP2R,             &
-                                  XKER_RACCSS, XKER_RACCS, XKER_SACCRG,          &
-                                  XKER_N_RACCSS, XKER_N_RACCS, XKER_N_SACCRG,    &
-                                  XFRACCSS, XLBRACCS1, XLBRACCS2, XLBRACCS3,     &
-                                  XFNRACCSS, XLBNRACCS1, XLBNRACCS2, XLBNRACCS3, &
-                                  XFSACCRG, XLBSACCR1, XLBSACCR2, XLBSACCR3,     &
-                                  XFNSACCRG, XLBNSACCR1, XLBNSACCR2, XLBNSACCR3
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
@@ -146,27 +135,27 @@ ZVEC3(:) = 0.
 !
 !
 GACC(:) = .False.
-GACC(:) = (PRRT(:)>XRTMIN(3)) .AND. (PRST(:)>XRTMIN(5)) .AND. (PT(:)<XTT) .AND. ODCOMPUTE(:) .AND. &
-          (PCRT(:)>XCTMIN(3)) .AND. (PCST(:)>XCTMIN(5))
+GACC(:) = (PRRT(:)>LIMAP%XRTMIN(3)) .AND. (PRST(:)>LIMAP%XRTMIN(5)) .AND. (PT(:)<XTT) .AND. ODCOMPUTE(:) .AND. &
+          (PCRT(:)>LIMAP%XCTMIN(3)) .AND. (PCST(:)>LIMAP%XCTMIN(5))
 !
 WHERE( GACC )
 !
 !        1.3.1  select the (ZLBDAS,ZLBDAR) couplet
    !
-   ZVEC1(:) = MAX(MIN(PLBDS(:),5.E5*XTRANS_MP_GAMMAS),5.E1*XTRANS_MP_GAMMAS)
+   ZVEC1(:) = MAX(MIN(PLBDS(:),5.E5*LIMAC%XTRANS_MP_GAMMAS),5.E1*LIMAC%XTRANS_MP_GAMMAS)
    ZVEC2(:) = PLBDR(:)
 !
 !        1.3.2  find the next lower indice for the ZLBDAS and for the ZLBDAR
 !               in the geometrical set of (Lbda_s,Lbda_r) couplet use to
 !               tabulate the RACCSS-kernel
 !
-   ZVEC1(:) = MAX( 1.0001, MIN( REAL(NACCLBDAS)-0.0001,           &
-                         XACCINTP1S * LOG( ZVEC1(:) ) + XACCINTP2S ) )
+   ZVEC1(:) = MAX( 1.0001, MIN( REAL(LIMAM%NACCLBDAS)-0.0001,           &
+                         LIMAM%XACCINTP1S * LOG( ZVEC1(:) ) + LIMAM%XACCINTP2S ) )
    IVEC1(:) = INT( ZVEC1(:) )
    ZVEC1(:) = ZVEC1(:) - REAL( IVEC1(:) )
 !
-   ZVEC2(:) = MAX( 1.0001, MIN( REAL(NACCLBDAR)-0.0001,           &
-                         XACCINTP1R * LOG( ZVEC2(:) ) + XACCINTP2R ) )
+   ZVEC2(:) = MAX( 1.0001, MIN( REAL(LIMAM%NACCLBDAR)-0.0001,           &
+                         LIMAM%XACCINTP1R * LOG( ZVEC2(:) ) + LIMAM%XACCINTP2R ) )
    IVEC2(:) = INT( ZVEC2(:) )
    ZVEC2(:) = ZVEC2(:) - REAL( IVEC2(:) )
 !
@@ -269,32 +258,32 @@ WHERE( GACC )
 !        1.3.4  raindrop accretion on the small sized aggregates
 !      
    ZZW4(:) = PCRT(:) *                                                      & !! coef of RRACCS and RRACCS
-            XFRACCSS * PCST(:) * PRHODREF(:)**(1-XCEXVT)                    &
-         *( XLBRACCS1/( PLBDS(:)**2               ) +                       &
-            XLBRACCS2/( PLBDS(:)    * PLBDR(:)    ) +                       &
-            XLBRACCS3/(               PLBDR(:)**2 ) ) / PLBDR(:)**XBR
+            LIMAM%XFRACCSS * PCST(:) * PRHODREF(:)**(1-LIMAP%XCEXVT)                    &
+         *( LIMAM%XLBRACCS1/( PLBDS(:)**2               ) +                       &
+            LIMAM%XLBRACCS2/( PLBDS(:)    * PLBDR(:)    ) +                       &
+            LIMAM%XLBRACCS3/(               PLBDR(:)**2 ) ) / PLBDR(:)**LIMAW%XBR
 !
    ZZWC4(:)= PCRT(:) *                                                      & !! coef of RRACCS and RRACCS
-            XFNRACCSS * PCST(:) * PRHODREF(:)**(1-XCEXVT)                    &
-         *( XLBNRACCS1/( PLBDS(:)**2               ) +                       &
-            XLBNRACCS2/( PLBDS(:)    * PLBDR(:)    ) +                       &
-            XLBNRACCS3/(               PLBDR(:)**2 ) )
+            LIMAM%XFNRACCSS * PCST(:) * PRHODREF(:)**(1-LIMAP%XCEXVT)                    &
+         *( LIMAM%XLBNRACCS1/( PLBDS(:)**2               ) +                       &
+            LIMAM%XLBNRACCS2/( PLBDS(:)    * PLBDR(:)    ) +                       &
+            LIMAM%XLBNRACCS3/(               PLBDR(:)**2 ) )
 
 !
 !        1.3.6  raindrop accretion-conversion of the large sized aggregates
 !               into graupeln
 !
-   ZZW5(:) = XFSACCRG * ZZW3(:) * PCRT(:) *             & ! RSACCRG
-             PCST(:) * PLBDS(:)**(-XBS) * PRHODREF(:)**(1-XCEXVT) * &
-            ( XLBSACCR1/( PLBDR(:)**2               ) + &
-              XLBSACCR2/( PLBDR(:)    * PLBDS(:)    ) + &
-              XLBSACCR3/(               PLBDS(:)**2 ) )
+   ZZW5(:) = LIMAM%XFSACCRG * ZZW3(:) * PCRT(:) *             & ! RSACCRG
+             PCST(:) * PLBDS(:)**(-LIMAC%XBS) * PRHODREF(:)**(1-LIMAP%XCEXVT) * &
+            ( LIMAM%XLBSACCR1/( PLBDR(:)**2               ) + &
+              LIMAM%XLBSACCR2/( PLBDR(:)    * PLBDS(:)    ) + &
+              LIMAM%XLBSACCR3/(               PLBDS(:)**2 ) )
 !
-   ZZWC5(:)= XFNSACCRG * ZZWC3(:) * PCRT(:) *            & ! RSACCRG
-             PCST(:) * PRHODREF(:)**(1-XCEXVT) * &
-            ( XLBNSACCR1/( PLBDR(:)**2               ) + &
-              XLBNSACCR2/( PLBDR(:)    * PLBDS(:)    ) + &
-              XLBNSACCR3/(               PLBDS(:)**2 ) )
+   ZZWC5(:)= LIMAM%XFNSACCRG * ZZWC3(:) * PCRT(:) *            & ! RSACCRG
+             PCST(:) * PRHODREF(:)**(1-LIMAP%XCEXVT) * &
+            ( LIMAM%XLBNSACCR1/( PLBDR(:)**2               ) + &
+              LIMAM%XLBNSACCR2/( PLBDR(:)    * PLBDS(:)    ) + &
+              LIMAM%XLBNSACCR3/(               PLBDS(:)**2 ) )
 !
 !++cb++
    Z_RR_ACC(:) = - ZZW4(:) *  ZZW2(:) ! < 0
@@ -324,7 +313,7 @@ CONTAINS
     INTEGER I
     !
     DO I=1,KSIZE
-       RET(I) = XKER_RACCSS(MAX(MIN(K1(I),SIZE(XKER_RACCSS,1)),1),MAX(MIN(K2(I),SIZE(XKER_RACCSS,2)),1))
+       RET(I) = LIMAM%XKER_RACCSS(MAX(MIN(K1(I),SIZE(LIMAM%XKER_RACCSS,1)),1),MAX(MIN(K2(I),SIZE(LIMAM%XKER_RACCSS,2)),1))
     END DO
   END FUNCTION GET_XKER_RACCSS
 !
@@ -339,7 +328,7 @@ CONTAINS
     INTEGER I
     !
     DO I=1,KSIZE
-       RET(I) = XKER_N_RACCSS(MAX(MIN(K1(I),SIZE(XKER_N_RACCSS,1)),1),MAX(MIN(K2(I),SIZE(XKER_N_RACCSS,2)),1))
+       RET(I) = LIMAM%XKER_N_RACCSS(MAX(MIN(K1(I),SIZE(LIMAM%XKER_N_RACCSS,1)),1),MAX(MIN(K2(I),SIZE(LIMAM%XKER_N_RACCSS,2)),1))
     END DO
   END FUNCTION GET_XKER_N_RACCSS
 !
@@ -354,7 +343,7 @@ CONTAINS
     INTEGER I
     !
     DO I=1,KSIZE
-       RET(I) = XKER_RACCS(MAX(MIN(K1(I),SIZE(XKER_RACCS,1)),1),MAX(MIN(K2(I),SIZE(XKER_RACCS,2)),1))
+       RET(I) = LIMAM%XKER_RACCS(MAX(MIN(K1(I),SIZE(LIMAM%XKER_RACCS,1)),1),MAX(MIN(K2(I),SIZE(LIMAM%XKER_RACCS,2)),1))
     END DO
   END FUNCTION GET_XKER_RACCS
 !
@@ -369,7 +358,7 @@ CONTAINS
     INTEGER I
     !
     DO I=1,KSIZE
-       RET(I) = XKER_N_RACCS(MAX(MIN(K1(I),SIZE(XKER_N_RACCS,1)),1),MAX(MIN(K2(I),SIZE(XKER_N_RACCS,2)),1))
+       RET(I) = LIMAM%XKER_N_RACCS(MAX(MIN(K1(I),SIZE(LIMAM%XKER_N_RACCS,1)),1),MAX(MIN(K2(I),SIZE(LIMAM%XKER_N_RACCS,2)),1))
     END DO
   END FUNCTION GET_XKER_N_RACCS
 !
@@ -384,7 +373,7 @@ CONTAINS
     INTEGER I
     !
     DO I=1,KSIZE
-       RET(I) = XKER_SACCRG(MAX(MIN(K1(I),SIZE(XKER_SACCRG,1)),1),MAX(MIN(K2(I),SIZE(XKER_SACCRG,2)),1))
+       RET(I) = LIMAM%XKER_SACCRG(MAX(MIN(K1(I),SIZE(LIMAM%XKER_SACCRG,1)),1),MAX(MIN(K2(I),SIZE(LIMAM%XKER_SACCRG,2)),1))
     END DO
   END FUNCTION GET_XKER_SACCRG
 !
@@ -399,7 +388,7 @@ CONTAINS
     INTEGER I
     !
     DO I=1,KSIZE
-       RET(I) = XKER_N_SACCRG(MAX(MIN(K1(I),SIZE(XKER_N_SACCRG,1)),1),MAX(MIN(K2(I),SIZE(XKER_N_SACCRG,2)),1))
+       RET(I) = LIMAM%XKER_N_SACCRG(MAX(MIN(K1(I),SIZE(LIMAM%XKER_N_SACCRG,1)),1),MAX(MIN(K2(I),SIZE(LIMAM%XKER_N_SACCRG,2)),1))
     END DO
   END FUNCTION GET_XKER_N_SACCRG
 !

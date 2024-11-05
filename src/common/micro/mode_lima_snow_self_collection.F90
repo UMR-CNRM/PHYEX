@@ -35,9 +35,6 @@ CONTAINS
 !              ------------
 !
 USE MODD_CST,             ONLY : XTT
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, XCEXVT
-USE MODD_PARAM_LIMA_COLD, ONLY : NSCLBDAS, XSCINTP1S, XSCINTP2S, XKER_N_SSCS, XFNSSCS, XCOLEXSS, &
-                                 XLBNSSCS1, XLBNSSCS2
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
@@ -81,7 +78,7 @@ P_CS_SSC(:)=0.
 ZW1(:) =0.
 ZW2(:) =0.
 !
-GSSC(:) = PCST(:)>XCTMIN(5) .AND. PRST(:)>XRTMIN(5)
+GSSC(:) = PCST(:)>LIMAP%XCTMIN(5) .AND. PRST(:)>LIMAP%XRTMIN(5)
 IGSSC = COUNT(GSSC(:))
 !
 IF( IGSSC>0 ) THEN
@@ -99,8 +96,8 @@ IF( IGSSC>0 ) THEN
 !               in the geometrical set of (Lbda_s,Lbda_s) couplet use to
 !               tabulate the SACCS-kernel
 !
-   ZVEC1(1:IGSSC) = MAX( 1.0001, MIN( FLOAT(NSCLBDAS)-0.0001,           &
-        XSCINTP1S * LOG( ZVEC1(1:IGSSC) ) + XSCINTP2S ) )
+   ZVEC1(1:IGSSC) = MAX( 1.0001, MIN( FLOAT(LIMAC%NSCLBDAS)-0.0001,           &
+        LIMAC%XSCINTP1S * LOG( ZVEC1(1:IGSSC) ) + LIMAC%XSCINTP2S ) )
    IVEC1(1:IGSSC) = INT( ZVEC1(1:IGSSC) )
    ZVEC1(1:IGSSC) = ZVEC1(1:IGSSC) - FLOAT( IVEC1(1:IGSSC) )
 !
@@ -109,19 +106,19 @@ IF( IGSSC>0 ) THEN
 !
    ALLOCATE(ZVEC3(IGSSC))
    DO IL = 1,IGSSC
-      ZVEC3(IL) =  (   XKER_N_SSCS(IVEC1(IL)+1,IVEC1(IL)+1)* ZVEC1(IL)          &
-                    -  XKER_N_SSCS(IVEC1(IL)+1,IVEC1(IL)  )*(ZVEC1(IL) - 1.0) ) &
+      ZVEC3(IL) =  (   LIMAC%XKER_N_SSCS(IVEC1(IL)+1,IVEC1(IL)+1)* ZVEC1(IL)          &
+                    -  LIMAC%XKER_N_SSCS(IVEC1(IL)+1,IVEC1(IL)  )*(ZVEC1(IL) - 1.0) ) &
                                                                          * ZVEC1(IL) &
-                 - (   XKER_N_SSCS(IVEC1(IL)  ,IVEC1(IL)+1)* ZVEC1(IL)          &
-                    -  XKER_N_SSCS(IVEC1(IL)  ,IVEC1(IL)  )*(ZVEC1(IL) - 1.0) ) &
+                 - (   LIMAC%XKER_N_SSCS(IVEC1(IL)  ,IVEC1(IL)+1)* ZVEC1(IL)          &
+                    -  LIMAC%XKER_N_SSCS(IVEC1(IL)  ,IVEC1(IL)  )*(ZVEC1(IL) - 1.0) ) &
                                                            * (ZVEC1(IL) - 1.0)
    END DO
    ZW1(:) = UNPACK( VECTOR=ZVEC3(:),MASK=GSSC(:),FIELD=0.0 ) !! NSACCS
    DEALLOCATE(ZVEC3)
 !
    WHERE( GSSC(:) )
-      P_CS_SSC(:) = - XFNSSCS * ZW1(:) * EXP( XCOLEXSS*(PT(:)-XTT) ) * PCST(:)**2 &  
-                    * PRHODREF(:)**(-XCEXVT-1.) * (XLBNSSCS1+XLBNSSCS2) / PLBDS(:)**2
+      P_CS_SSC(:) = - LIMAC%XFNSSCS * ZW1(:) * EXP( LIMAC%XCOLEXSS*(PT(:)-XTT) ) * PCST(:)**2 &  
+                    * PRHODREF(:)**(-LIMAP%XCEXVT-1.) * (LIMAC%XLBNSSCS1+LIMAC%XLBNSSCS2) / PLBDS(:)**2
    END WHERE
    DEALLOCATE(IVEC1)
    DEALLOCATE(ZVEC1)
