@@ -285,12 +285,12 @@ END IF
 !
 ZDT = PTSTEP
 !
-ISIZE = SIZE(XRTMIN)
+ISIZE = SIZE(LIMAP%XRTMIN)
 ALLOCATE(ZRTMIN(ISIZE))
-ZRTMIN(:) = XRTMIN(:) / ZDT
-ISIZE = SIZE(XCTMIN)
+ZRTMIN(:) = LIMAP%XRTMIN(:) / ZDT
+ISIZE = SIZE(LIMAP%XCTMIN)
 ALLOCATE(ZCTMIN(ISIZE))
-ZCTMIN(:) = XCTMIN(:) / ZDT
+ZCTMIN(:) = LIMAP%XCTMIN(:) / ZDT
 !
 ! Prepare 3D water mixing ratios
 !
@@ -331,35 +331,35 @@ ZCIT(:,:) = 0.
 ZCCS(:,:) = 0.
 ! PCIS(:,:) = 0.
 !
-IF ( NMOM_C.GE.2 ) ZCCT(:,:) = PSVS(:,:,ISV_LIMA_NC)*PTSTEP
-IF ( NMOM_I.GE.2 ) ZCIT(:,:) = PSVT(:,:,ISV_LIMA_NI)
+IF ( LIMAP%NMOM_C.GE.2 ) ZCCT(:,:) = PSVS(:,:,ISV_LIMA_NC)*PTSTEP
+IF ( LIMAP%NMOM_I.GE.2 ) ZCIT(:,:) = PSVT(:,:,ISV_LIMA_NI)
 !
-IF ( NMOM_C.GE.2 ) ZCCS(:,:) = PSVS(:,:,ISV_LIMA_NC)
-! IF (  NMOM_I.GE.2 ) PCIS(:,:) = PSVS(:,:,ISV_LIMA_NI)
+IF ( LIMAP%NMOM_C.GE.2 ) ZCCS(:,:) = PSVS(:,:,ISV_LIMA_NC)
+! IF (  LIMAP%NMOM_I.GE.2 ) PCIS(:,:) = PSVS(:,:,ISV_LIMA_NI)
 !
-IF ( LSCAV .AND. LAERO_MASS ) ZMAS(:,:) = PSVS(:,:,ISV_LIMA_SCAVMASS)
+IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) ZMAS(:,:) = PSVS(:,:,ISV_LIMA_SCAVMASS)
 ! 
-IF ( NMOM_C.GE.1 .AND. NMOD_CCN.GE.1 ) THEN
-   ALLOCATE( ZNFS(D%NIJT,D%NKT,NMOD_CCN) )
-   ALLOCATE( ZNAS(D%NIJT,D%NKT,NMOD_CCN) )
-   ALLOCATE( ZNFT(D%NIJT,D%NKT,NMOD_CCN) )
-   ALLOCATE( ZNAT(D%NIJT,D%NKT,NMOD_CCN) )
-   ZNFS(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+NMOD_CCN-1)
-   ZNAS(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+NMOD_CCN-1)
-   ZNFT(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+NMOD_CCN-1)*PTSTEP
-   ZNAT(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+NMOD_CCN-1)*PTSTEP
+IF ( LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOD_CCN.GE.1 ) THEN
+   ALLOCATE( ZNFS(D%NIJT,D%NKT,LIMAP%NMOD_CCN) )
+   ALLOCATE( ZNAS(D%NIJT,D%NKT,LIMAP%NMOD_CCN) )
+   ALLOCATE( ZNFT(D%NIJT,D%NKT,LIMAP%NMOD_CCN) )
+   ALLOCATE( ZNAT(D%NIJT,D%NKT,LIMAP%NMOD_CCN) )
+   ZNFS(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1)
+   ZNAS(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1)
+   ZNFT(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1)*PTSTEP
+   ZNAT(:,:,:) = PSVS(:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1)*PTSTEP
 END IF
 !
-! IF ( NMOM_I.GE.1 .AND. NMOD_IFN .GE. 1 ) THEN
-!    ALLOCATE( ZIFS(D%NIJT,D%NKT,NMOD_IFN) )
-!    ALLOCATE( ZINS(D%NIJT,D%NKT,NMOD_IFN) )
-!    ZIFS(:,:,:) = PSVS(:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+NMOD_IFN-1)
-!    ZINS(:,:,:) = PSVS(:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+NMOD_IFN-1)
+! IF ( LIMAP%NMOM_I.GE.1 .AND. LIMAP%NMOD_IFN .GE. 1 ) THEN
+!    ALLOCATE( ZIFS(D%NIJT,D%NKT,LIMAP%NMOD_IFN) )
+!    ALLOCATE( ZINS(D%NIJT,D%NKT,LIMAP%NMOD_IFN) )
+!    ZIFS(:,:,:) = PSVS(:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+LIMAP%NMOD_IFN-1)
+!    ZINS(:,:,:) = PSVS(:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+LIMAP%NMOD_IFN-1)
 ! END IF
 !
-! IF ( NMOD_IMM .GE. 1 ) THEN
-!    ALLOCATE( ZNIS(D%NIJT,D%NKT,NMOD_IMM) )
-!    ZNIS(:,:,:) = PSVS(:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+NMOD_IMM-1)
+! IF ( LIMAP%NMOD_IMM .GE. 1 ) THEN
+!    ALLOCATE( ZNIS(D%NIJT,D%NKT,LIMAP%NMOD_IMM) )
+!    ZNIS(:,:,:) = PSVS(:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+LIMAP%NMOD_IMM-1)
 ! END IF
 !
 !
@@ -370,27 +370,27 @@ if ( nbumod == kmi .and. BUCONF%lbu_enable ) then
   !Remark: ZRIS is not modified but source term kept for better coherence with lima_adjust and lima_notadjust
   if ( BUCONF%lbudget_ri ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'CEDS', ZRIS(:,:) * prhodj(:,:) )
   if ( BUCONF%lbudget_sv ) then
-    if ( nmom_c.ge.2) &
+    if ( LIMAP%nmom_c.ge.2) &
       call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CEDS', ZCCS(:,:) * prhodj(:,:) )
-    if ( lscav .and. laero_mass ) &
+    if ( LIMAP%lscav .and. LIMAP%laero_mass ) &
       call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', ZMAS(:,:) * prhodj(:,:) )
-    if ( nmom_c.ge.1 ) then
-      do IL = 1, nmod_ccn
+    if ( LIMAP%nmom_c.ge.1 ) then
+      do IL = 1, LIMAP%nmod_ccn
         idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + IL
         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', ZNFS(:,:, IL) * prhodj(:,:) )
         idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + IL
         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', ZNAS(:,:, IL) * prhodj(:,:) )
       end do
     end if
-!     if ( nmom_i.ge.2 ) then
+!     if ( LIMAP%nmom_i.ge.2 ) then
 !       call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ni), 'CEDS', pcis(:,:) * prhodj(:,:) )
-!       do IL = 1, nmod_ifn
+!       do IL = 1, LIMAP%nmod_ifn
 !         idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_free - 1 + IL
 !         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', pifs(:,:, IL) * prhodj(:,:) )
 !         idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_nucl - 1 + IL
 !         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', pins(:,:, IL) * prhodj(:,:) )
 !       end do
-!       do IL = 1, nmod_imm
+!       do IL = 1, LIMAP%nmod_imm
 !         idx = NBUDGET_SV1 - 1 + nsv_lima_imm_nucl - 1 + IL
 !         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', pnis(:,:, IL) * prhodj(:,:) )
 !       end do
@@ -452,7 +452,7 @@ DO IITER =1,ITERMAX
    ZRV2=ZRVT
    ZRC_IN=ZRCS*PTSTEP
    ZRC2=ZRCT
-   IF (NMOM_I.EQ.1) THEN
+   IF (LIMAP%NMOM_I.EQ.1) THEN
       ZRI_IN=ZRIS*PTSTEP
       GUSERI=.TRUE.
    ELSE
@@ -469,7 +469,7 @@ DO IITER =1,ITERMAX
       ZSIGQSAT2D(:)=0.
    END IF
 
-   IF (LADJ) THEN
+   IF (LIMAP%LADJ) THEN
       CALL CONDENSATION(D, CST, RAIN_ICE_PARAMN, NEBN, TURBN,                    &
           'S', HCONDENS, HLAMBDA3,                                             &
            PPABST, PZZ, PRHODREF, ZT, ZRV_IN, ZRV, ZRC_IN, ZRC, ZRI_IN, ZRI,   &
@@ -478,7 +478,7 @@ DO IITER =1,ITERMAX
            ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,              &
            ZSIGQSAT2D, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
    END IF
-   IF (OSUBG_COND .AND. NMOM_C.GE.2 .AND. LACTI) THEN
+   IF (OSUBG_COND .AND. LIMAP%NMOM_C.GE.2 .AND. LIMAP%LACTI) THEN
       PSRCS=Z_SRCS
       ZW_MF=0.
       CALL LIMA_CCN_ACTIVATION (LIMAP, LIMAW, D, CST,            &
@@ -491,7 +491,7 @@ END DO
 !
 !*       5.1    compute the sources
 !
-IF (LADJ) THEN
+IF (LIMAP%LADJ) THEN
                                                            !         Rc - Rc*
    ZW1(:,:) = (ZRC(:,:) - ZRCS(:,:)*PTSTEP) / PTSTEP ! Pcon = ----------
                                                            !         2 Delta t
@@ -507,15 +507,15 @@ IF (LADJ) THEN
 ELSE
    DO II=1,SIZE(ZRCS,1)
          DO IK=1,SIZE(ZRCS,2)
-            IF (ZRCS(II,IK).GE.XRTMIN(2) .AND. ZCCS(II,IK).GE.XCTMIN(2)) THEN
-               ZVEC1(II,IK) = MAX( 1.0001, MIN( FLOAT(NAHEN)-0.0001, XAHENINTP1 * ZT(II,IK) + XAHENINTP2 ) )
+            IF (ZRCS(II,IK).GE.LIMAP%XRTMIN(2) .AND. ZCCS(II,IK).GE.LIMAP%XCTMIN(2)) THEN
+               ZVEC1(II,IK) = MAX( 1.0001, MIN( FLOAT(LIMAW%NAHEN)-0.0001, LIMAW%XAHENINTP1 * ZT(II,IK) + LIMAW%XAHENINTP2 ) )
                IVEC1(II,IK) = INT( ZVEC1(II,IK) )
                ZVEC1(II,IK) = ZVEC1(II,IK) - FLOAT( IVEC1(II,IK) )
                ZW(II,IK)=EXP( CST%XALPW - CST%XBETAW/ZT(II,IK) - CST%XGAMW*ALOG(ZT(II,IK) ) ) ! es_w
                ZW(II,IK)=ZEPS*ZW(II,IK) / ( PPABST(II,IK)-ZW(II,IK) ) 
                ZS(II,IK) = ZRVS(II,IK)*PTSTEP / ZW(II,IK) - 1.
-               ZW(II,IK) = ZCCS(II,IK)*PTSTEP/(XLBC*ZCCS(II,IK)/ZRCS(II,IK))**XLBEXC
-               ZW2(II,IK) = XAHENG3(IVEC1(II,IK)+1)*ZVEC1(II,IK)-XAHENG3(IVEC1(II,IK))*(ZVEC1(II,IK)-1.)
+               ZW(II,IK) = ZCCS(II,IK)*PTSTEP/(LIMAW%XLBC*ZCCS(II,IK)/ZRCS(II,IK))**LIMAW%XLBEXC
+               ZW2(II,IK) = LIMAW%XAHENG3(IVEC1(II,IK)+1)*ZVEC1(II,IK)-XAHENG3(IVEC1(II,IK))*(ZVEC1(II,IK)-1.)
                ZCND(II,IK) = 2.*3.14*1000.*ZW2(II,IK)*ZS(II,IK)*ZW(II,IK)
                IF(ZCND(II,IK).LE.0.) THEN
                   ZCND(II,IK) = MAX ( ZCND(II,IK), -ZRCS(II,IK) )
@@ -530,7 +530,7 @@ ELSE
    END DO
 END IF
 !
-IF (NMOM_I.EQ.1) THEN
+IF (LIMAP%NMOM_I.EQ.1) THEN
    ZW2(:,:) = (ZRI(:,:) - ZRIS(:,:)*PTSTEP) / PTSTEP ! idem ZW1 but for Ri
 !
    WHERE( ZW2(:,:) < 0.0 )
@@ -562,7 +562,7 @@ IF ( .NOT. OSUBG_COND ) THEN
 ELSE
 ! We limit PRC_MF+PRI_MF to ZRVS*PTSTEP to avoid negative humidity
    ZW1(:,:)=PRC_MF(:,:)/PTSTEP
-   IF (NMOM_I.EQ.1) THEN
+   IF (LIMAP%NMOM_I.EQ.1) THEN
       ZW2(:,:)=PRI_MF(:,:)/PTSTEP
    ELSE
       ZW2(:,:)=0.
@@ -587,7 +587,7 @@ END IF
 !
 ZMASK(:,:) = 0.0
 ZW(:,:) = 0.
-IF (NMOM_C .GE. 2) THEN
+IF (LIMAP%NMOM_C .GE. 2) THEN
    WHERE (ZRCS(:,:) <= ZRTMIN(2) .OR. ZCCS(:,:) <=0.) 
       ZRVS(:,:) = ZRVS(:,:) + ZRCS(:,:) 
       PTHS(:,:) = PTHS(:,:) - ZRCS(:,:)*ZLV(:,:)/(ZCPH(:,:)*ZEXNS(:,:))
@@ -598,7 +598,7 @@ IF (NMOM_C .GE. 2) THEN
 END IF
 !
 ZW1(:,:) = 0.
-IF (NMOM_C.GE.1 .AND. NMOD_CCN.GE.1) ZW1(:,:) = SUM(ZNAS,DIM=3)
+IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOD_CCN.GE.1) ZW1(:,:) = SUM(ZNAS,DIM=3)
 ZW (:,:) = MIN( ZW(:,:), ZW1(:,:) )
 ZW2(:,:) = 0.
 WHERE ( ZW(:,:) > 0. )
@@ -606,8 +606,8 @@ WHERE ( ZW(:,:) > 0. )
    ZW2(:,:) = ZW(:,:) / ZW1(:,:)
 ENDWHERE
 !
-IF (NMOM_C.GE.1 .AND. NMOD_CCN.GE.1) THEN
-   DO IMOD = 1, NMOD_CCN
+IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOD_CCN.GE.1) THEN
+   DO IMOD = 1, LIMAP%NMOD_CCN
       ZNFS(:,:,IMOD) = ZNFS(:,:,IMOD) +                           &
            ZMASK(:,:) * ZNAS(:,:,IMOD) * ZW2(:,:)
       ZNAS(:,:,IMOD) = ZNAS(:,:,IMOD) -                           &
@@ -616,15 +616,15 @@ IF (NMOM_C.GE.1 .AND. NMOD_CCN.GE.1) THEN
    ENDDO
 END IF
 !
-IF (LSCAV .AND. LAERO_MASS) ZMAS(:,:) = ZMAS(:,:) * (1-ZMASK(:,:))
+IF (LIMAP%LSCAV .AND. LIMAP%LAERO_MASS) ZMAS(:,:) = ZMAS(:,:) * (1-ZMASK(:,:))
 !
 !
 !
 PICEFR(:,:)=0.
-IF (NMOM_I.EQ.1) THEN
-   WHERE(PICEFR(:,:)<1.E-10 .AND. ZRIT(:,:)>XRTMIN(4) .AND. ZCIT(:,:)>XCTMIN(4)) PICEFR(:,:)=PCLDFR(:,:)
+IF (LIMAP%NMOM_I.EQ.1) THEN
+   WHERE(PICEFR(:,:)<1.E-10 .AND. ZRIT(:,:)>LIMAP%XRTMIN(4) .AND. ZCIT(:,:)>LIMAP%XCTMIN(4)) PICEFR(:,:)=PCLDFR(:,:)
 ELSE
-   WHERE(PICEFR(:,:)<1.E-10 .AND. ZRIT(:,:)>XRTMIN(4) .AND. ZCIT(:,:)>XCTMIN(4)) PICEFR(:,:)=1.
+   WHERE(PICEFR(:,:)<1.E-10 .AND. ZRIT(:,:)>LIMAP%XRTMIN(4) .AND. ZCIT(:,:)>LIMAP%XCTMIN(4)) PICEFR(:,:)=1.
 END IF
 !
 !!$IF ( tpfile%lopened ) THEN
@@ -657,23 +657,23 @@ IF ( KRR .GE. 7 ) PRS(:,:,7) = ZRHS(:,:)
 !
 ! Prepare 3D number concentrations
 !
-IF ( NMOM_C.GE.2 ) PSVS(:,:,ISV_LIMA_NC) = ZCCS(:,:)
-! IF ( NMOM_I.GE.2 ) PSVS(:,:,ISV_LIMA_NI) = PCIS(:,:)
+IF ( LIMAP%NMOM_C.GE.2 ) PSVS(:,:,ISV_LIMA_NC) = ZCCS(:,:)
+! IF ( LIMAP%NMOM_I.GE.2 ) PSVS(:,:,ISV_LIMA_NI) = PCIS(:,:)
 !
-IF ( LSCAV .AND. LAERO_MASS ) PSVS(:,:,ISV_LIMA_SCAVMASS) = ZMAS(:,:)
+IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) PSVS(:,:,ISV_LIMA_SCAVMASS) = ZMAS(:,:)
 ! 
-IF ( NMOM_C.GE.1 .AND. NMOD_CCN.GE.1 ) THEN
-   PSVS(:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+NMOD_CCN-1) = ZNFS(:,:,:)
-   PSVS(:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+NMOD_CCN-1) = ZNAS(:,:,:)
+IF ( LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOD_CCN.GE.1 ) THEN
+   PSVS(:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+LIMAP%NMOD_CCN-1) = ZNFS(:,:,:)
+   PSVS(:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+LIMAP%NMOD_CCN-1) = ZNAS(:,:,:)
 END IF
 !
-! IF ( NMOM_I.GE.1 .AND. NMOD_IFN .GE. 1 ) THEN
-!    PSVS(:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+NMOD_IFN-1) = ZIFS(:,:,:)
-!    PSVS(:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+NMOD_IFN-1) = ZINS(:,:,:)
+! IF ( LIMAP%NMOM_I.GE.1 .AND. LIMAP%NMOD_IFN .GE. 1 ) THEN
+!    PSVS(:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+LIMAP%NMOD_IFN-1) = ZIFS(:,:,:)
+!    PSVS(:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+LIMAP%NMOD_IFN-1) = ZINS(:,:,:)
 ! END IF
 !
-! IF ( NMOM_I.GE.1 .AND. NMOD_IMM .GE. 1 ) THEN
-!    PSVS(:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+NMOD_IMM-1) = ZNIS(:,:,:)
+! IF ( LIMAP%NMOM_I.GE.1 .AND. LIMAP%NMOD_IMM .GE. 1 ) THEN
+!    PSVS(:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+LIMAP%NMOD_IMM-1) = ZNIS(:,:,:)
 ! END IF
 !
 ! write SSI in LFI
@@ -708,27 +708,27 @@ if ( nbumod == kmi .and. BUCONF%lbu_enable ) then
   if ( BUCONF%lbudget_rc ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'CEDS', ZRCS(:,:) * prhodj(:,:) )
   if ( BUCONF%lbudget_ri ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'CEDS', ZRIS(:,:) * prhodj(:,:) )
   if ( BUCONF%lbudget_sv ) then
-    if ( nmom_c.ge.2) &
+    if ( LIMAP%nmom_c.ge.2) &
       call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CEDS', ZCCS(:,:) * prhodj(:,:) )
-    if ( lscav .and. laero_mass ) &
+    if ( LIMAP%lscav .and. LIMAP%laero_mass ) &
       call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', ZMAS(:,:) * prhodj(:,:) )
-    if ( nmom_c.ge.1 ) then
-      do IL = 1, nmod_ccn
+    if ( LIMAP%nmom_c.ge.1 ) then
+      do IL = 1, LIMAP%nmod_ccn
         idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + IL
         call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'CEDS', ZNFS(:,:, IL) * prhodj(:,:) )
         idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + IL
         call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'CEDS', ZNAS(:,:, IL) * prhodj(:,:) )
       end do
     end if
-!     if ( nmom_i.ge.2 ) then
+!     if ( LIMAP%nmom_i.ge.2 ) then
 !       call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ni), 'CEDS', pcis(:,:) * prhodj(:,:) )
-!       do IL = 1, nmod_ifn
+!       do IL = 1, LIMAP%nmod_ifn
 !         idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_free - 1 + IL
 !         call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'CEDS', pifs(:,:, IL) * prhodj(:,:) )
 !         idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_nucl - 1 + IL
 !         call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'CEDS', pins(:,:, IL) * prhodj(:,:) )
 !       end do
-!       do IL = 1, nmod_imm
+!       do IL = 1, LIMAP%nmod_imm
 !         idx = NBUDGET_SV1 - 1 + nsv_lima_imm_nucl - 1 + IL
 !         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', pnis(:,:, IL) * prhodj(:,:) )
 !       end do
