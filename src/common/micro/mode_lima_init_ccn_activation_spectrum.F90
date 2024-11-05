@@ -39,6 +39,8 @@ USE MODD_CST, ONLY : XMV, XAVOGADRO, XBOLTZ, XRHOLW
 USE MODI_GAMMA_INC
 USE MODI_HYPGEO
 USE MODI_HYPSER
+USE MODD_PRECISION, ONLY: MNHREAL64
+USE MODI_MINPACK
 !
 IMPLICIT NONE
 !
@@ -55,13 +57,13 @@ REAL,             INTENT(OUT) :: XKAPPA         ! kappa
 !
 !*       0.2   Declarations of local variables :
 !
-INTEGER, PARAMETER            :: M = 1000        ! Number of points (S,Nccn) used to fit the spectra
-INTEGER, PARAMETER            :: N = 3          ! Number of parameters to adjust
-REAL, DIMENSION(N)            :: PARAMS         ! Parameters to adjust by the LM algorithm (k, mu, beta)
-REAL, DIMENSION(M)            :: FVEC           ! Array to store the distance between theoretical and fitted spectra
+INTEGER(KIND=4), PARAMETER    :: M = 1000        ! Number of points (S,Nccn) used to fit the spectra
+INTEGER(KIND=4), PARAMETER    :: N = 3          ! Number of parameters to adjust
+REAL(KIND=MNHREAL64), DIMENSION(N)            :: PARAMS         ! Parameters to adjust by the LM algorithm (k, mu, beta)
+REAL(KIND=MNHREAL64), DIMENSION(M)            :: FVEC           ! Array to store the distance between theoretical and fitted spectra
 INTEGER                       :: IFLAG          ! 
-INTEGER                       :: INFO           ! 
-REAL                          :: TOL = 1.E-16   ! Fit precision required
+INTEGER(KIND=4)               :: INFO           ! 
+REAL(KIND=MNHREAL64)          :: TOL = 1.E-16   ! Fit precision required
 !
 INTEGER                       :: II, IJ         ! Loop indices
 !
@@ -152,8 +154,9 @@ DO IJ=1, SIZE(XT)
 !*       3.     Compute C, k, mu, beta, using the Levenberg-Marquardt algorithm
 !	        ---------------------------------------------------------------
 !
-   PARAMS(1:3) = (/ 1., 1., 1000. /)
+   PARAMS(1:3) = (/ 1._MNHREAL64, 1._MNHREAL64, 1000._MNHREAL64 /)
    IFLAG = 1
+   !lmdif1 uses KIND 8 reals and KIND 4 integers
    call lmdif1 ( DISTANCE, M, N, PARAMS, FVEC, TOL, INFO )
 !
    XLIMIT_FACTOR = gamma(PARAMS(2))*PARAMS(3)**(PARAMS(1)/2)/gamma(1+PARAMS(1)/2)/gamma(PARAMS(2)-PARAMS(1)/2)
@@ -333,6 +336,7 @@ fh     = DSDD(PX2,XDDRY,XKAPPA,XT)
 !*       0. DECLARATIONS
 !
     USE MODD_CST, ONLY : XMV, XAVOGADRO, XBOLTZ, XRHOLW
+    USE MODD_PRECISION, ONLY: MNHREAL64
 !
     IMPLICIT NONE
 !
@@ -348,10 +352,12 @@ fh     = DSDD(PX2,XDDRY,XKAPPA,XT)
 !*       0.2 declarations of local variables
 !
     REAL              :: XA     ! factor inside the exponential
+    REAL(KIND=MNHREAL64)      :: Z
 !    
     XA = 4 * 0.072 * XMV / XAVOGADRO / XBOLTZ / XT / XRHOLW
-    DS = (XD**3-XDDRY**3) * (XD**3-(1-XKAPPA)*XDDRY**3) * XA - 3. * XKAPPA * XD**4 * XDDRY**3
-    DS = DS * EXP(XA/XD) / (XD**3-(1-XKAPPA)*XDDRY**3)**2
+    Z = (XD**3-XDDRY**3) * (XD**3-(1._MNHREAL64-XKAPPA)*XDDRY**3) * XA - 3._MNHREAL64 * XKAPPA * DBLE(XD)**4 * DBLE(XDDRY)**3
+    Z = Z * EXP(XA/XD) / (XD**3-(1-XKAPPA)*XDDRY**3)**2
+    DS = Z
 !
 END FUNCTION DSDD
 !
@@ -396,11 +402,12 @@ END FUNCTION DSDD
 !
 !*       0.1 declarations of arguments and result
 !
-    integer, intent(in) :: M
-    integer, intent(in) :: N
-    real, intent(in) ::    X(N)
-    real, intent(out) ::    FVEC(M)
-    integer, intent(inout) :: IFLAG
+    !DISTANCE must use KIND 8 reals and KIND 4 integers to be used by LMDIF1
+    integer(KIND=4), intent(in) :: M
+    integer(KIND=4), intent(in) :: N
+    real(KIND=MNHREAL64), intent(in) ::    X(N)
+    real(KIND=MNHREAL64), intent(out) ::    FVEC(M)
+    integer(KIND=4), intent(inout) :: IFLAG
 !
 !*       0.2 declarations of local variables
 !
@@ -416,7 +423,7 @@ END FUNCTION DSDD
        DO I=1, M
           ! XS in "no units", ie XS=0.01 for a 1% suersaturation
           !       ZW= C * (XS(I)/100)**X(1) * HYPGEO(X(2),X(1)/2,X(1)/2+1,X(3),XS(I)/100)
-          ZW= C * (XS(I))**X(1) * HYPGEO(X(2),X(1)/2,X(1)/2+1,X(3),XS(I))
+          ZW= C * (XS(I))**X(1) * HYPGEO(REAL(X(2)), REAL(X(1)/2), REAL(X(1)/2+1), REAL(X(3)), REAL(XS(I)))
 !!$       IF (X(3)*(XS(I)/100)**2 .LT. 0.98) THEN
 !!$          CALL HYPSER(X(2),X(1)/2,X(1)/2+1,-X(3)*(XS(I)/100)**2,ZW2)
 !!$          print *, "args= ", X(2), X(1)/2, X(1)/2+1, -X(3)*(XS(I)/100)**2, " hypser = ", ZW2
