@@ -6,7 +6,7 @@ MODULE MODE_LIMA_DROPS_BREAK_UP
   IMPLICIT NONE
 CONTAINS
 !     ##########################################
-  SUBROUTINE LIMA_DROPS_BREAK_UP (KSIZE, ODCOMPUTE,  &
+  SUBROUTINE LIMA_DROPS_BREAK_UP (LIMAP, LIMAW, KSIZE, ODCOMPUTE,  &
                                   PCRT, PRRT, &
                                   P_CR_BRKU,  &
                                   PB_CR       )
@@ -36,6 +36,8 @@ CONTAINS
 !
 USE MODD_PARAM_LIMA,      ONLY : XCTMIN, XRTMIN
 USE MODD_PARAM_LIMA_WARM, ONLY : XACCR1, XLBEXR, XLBR, XSPONBUD1, XSPONBUD3, XSPONCOEF2
+USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -52,6 +54,8 @@ REAL, DIMENSION(KSIZE),    INTENT(INOUT) :: PB_CR            ! Cumulated concent
 !
 !*       0.2   Declarations of local variables :
 !
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL,    DIMENSION(SIZE(PCRT)) :: ZWLBDR,ZWLBDR3
 !
 !-------------------------------------------------------------------------------

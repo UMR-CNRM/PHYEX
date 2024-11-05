@@ -7,7 +7,7 @@ MODULE MODE_LIMA_RAIN_ACCR_SNOW
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################################
-  SUBROUTINE LIMA_RAIN_ACCR_SNOW (KSIZE, PTSTEP, ODCOMPUTE,                                &
+  SUBROUTINE LIMA_RAIN_ACCR_SNOW (LIMAP, LIMAW, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                                &
                                   PRHODREF, PT,                                            &
                                   PRRT, PCRT, PRST, PCST, PLBDR, PLBDS, PLVFACT, PLSFACT,  &
 !++cb++
@@ -55,6 +55,10 @@ USE MODD_PARAM_LIMA_MIXED, ONLY : NACCLBDAS, XACCINTP1S, XACCINTP2S,            
                                   XFNRACCSS, XLBNRACCS1, XLBNRACCS2, XLBNRACCS3, &
                                   XFSACCRG, XLBSACCR1, XLBSACCR2, XLBSACCR3,     &
                                   XFNSACCRG, XLBNSACCR1, XLBNSACCR2, XLBNSACCR3
+USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -98,6 +102,10 @@ REAL,    DIMENSION(SIZE(PRRT))  :: ZZWC1, ZZWC2, ZZWC3, ZZWC4, ZZWC5
 !
 INTEGER, DIMENSION(SIZE(PRRT))  :: IVEC1,IVEC2       ! Vectors of indices
 REAL,    DIMENSION(SIZE(PRRT))  :: ZVEC1,ZVEC2,ZVEC3 ! Work vectors
+TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL,    DIMENSION(SIZE(PRRT))  :: Z_RR_ACC  ! ++cb-- for elec
 !
 !-------------------------------------------------------------------------------

@@ -7,7 +7,7 @@ MODULE MODE_LIMA_COLLISIONAL_ICE_BREAKUP
   IMPLICIT NONE
 CONTAINS
 !     #######################################################################
-  SUBROUTINE LIMA_COLLISIONAL_ICE_BREAKUP (KSIZE, ODCOMPUTE,       &
+  SUBROUTINE LIMA_COLLISIONAL_ICE_BREAKUP (LIMAP, LIMAC, LIMAM, KSIZE, ODCOMPUTE,       &
                                            PRHODREF,               &
                                            PRIT, PRST, PRGT, PCIT, PCST, PCGT, &
                                            PLBDS, PLBDG,           &
@@ -43,6 +43,9 @@ USE MODD_PARAM_LIMA_MIXED, ONLY : XCG, XDG,                                    &
                                   XMOMGG_CIBU_1, XMOMGG_CIBU_2,                &
                                   XMOMGS_CIBU_1, XMOMGS_CIBU_2, XMOMGS_CIBU_3, &
                                   NGAMINC, XGAMINC_CIBU_S, XGAMINC_CIBU_G
+USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -97,6 +100,9 @@ REAL,    DIMENSION(SIZE(PRST))     :: ZINTG_GRAUPEL_1, &  ! incomplete gamma
                                       ZINTG_GRAUPEL_2     ! function for graupel
 REAL,    DIMENSION(SIZE(PRST))     :: ZNI_CIBU, ZRI_CIBU  ! CIBU rates
 REAL,    DIMENSION(SIZE(PRST))     :: ZFRAG_CIBU
+TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL                               :: ZFACT1_XNDEBRIS, ZFACT2_XNDEBRIS
 !
 !-------------------------------------------------------------------------------

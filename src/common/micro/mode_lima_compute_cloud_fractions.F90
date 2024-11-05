@@ -7,7 +7,7 @@ MODULE MODE_LIMA_COMPUTE_CLOUD_FRACTIONS
   IMPLICIT NONE
 CONTAINS
 !################################################################
-  SUBROUTINE LIMA_COMPUTE_CLOUD_FRACTIONS (D,                     &
+  SUBROUTINE LIMA_COMPUTE_CLOUD_FRACTIONS (LIMAP, D,                     &
                                            PCCT, PRCT,            &
                                            PCRT, PRRT,            &
                                            PCIT, PRIT,            &
@@ -38,6 +38,7 @@ CONTAINS
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_PARAM_LIMA,      ONLY : XCTMIN, XRTMIN, &
                                  NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -65,6 +66,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN)    :: PRHT          !
 !
 REAL, DIMENSION(D%NIJT,D%NKT),INTENT(INOUT) :: PCLDFR        ! 
 REAL, DIMENSION(D%NIJT,D%NKT),INTENT(INOUT) :: PICEFR        ! 
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(D%NIJT,D%NKT),INTENT(INOUT) :: PPRCFR        ! 
 !
 !*       0.2   Declarations of local variables :

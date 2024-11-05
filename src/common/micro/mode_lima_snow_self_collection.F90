@@ -7,7 +7,7 @@ MODULE MODE_LIMA_SNOW_SELF_COLLECTION
   IMPLICIT NONE
 CONTAINS
 !     #############################################################
-  SUBROUTINE LIMA_SNOW_SELF_COLLECTION (KSIZE, ODCOMPUTE,   &
+  SUBROUTINE LIMA_SNOW_SELF_COLLECTION (LIMAP, LIMAC, KSIZE, ODCOMPUTE,   &
                                         PRHODREF, PT,       &
                                         PRST, PCST, PLBDS,  &
                                         P_CS_SSC            )
@@ -38,6 +38,8 @@ USE MODD_CST,             ONLY : XTT
 USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, XCEXVT
 USE MODD_PARAM_LIMA_COLD, ONLY : NSCLBDAS, XSCINTP1S, XSCINTP2S, XKER_N_SSCS, XFNSSCS, XCOLEXSS, &
                                  XLBNSSCS1, XLBNSSCS2
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -63,6 +65,8 @@ REAL, DIMENSION(SIZE(PCST)) :: &
 LOGICAL, DIMENSION(SIZE(PCST)) :: GSSC
 INTEGER :: IGSSC, IL
 INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1        ! Vectors of indices
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1, ZVEC3 ! Work vectors
 !
 !-------------------------------------------------------------------------------

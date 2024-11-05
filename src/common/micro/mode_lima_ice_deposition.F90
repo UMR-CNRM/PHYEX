@@ -7,7 +7,7 @@ MODULE MODE_LIMA_ICE_DEPOSITION
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_ICE_DEPOSITION (KSIZE, PTSTEP, ODCOMPUTE,                 &
+  SUBROUTINE LIMA_ICE_DEPOSITION (LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,                 &
                                   PRHODREF, PT,  PSSI, PAI, PCJ, PLSFACT,   &
                                   PRIT, PCIT, PLBDI,                        &
                                   P_TH_DEPI, P_RI_DEPI,                     &
@@ -46,6 +46,8 @@ USE MODD_PARAM_LIMA_COLD, ONLY : XDICNVS_LIM, XLBDAICNVS_LIM,         &
                                  XC0DEPIS, XC1DEPIS, XR0DEPIS, XR1DEPIS,      &
                                  XDI, X0DEPI, X2DEPI
 USE MODD_CST,             ONLY : XTT
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -76,6 +78,8 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_CNVS
 !*       0.2   Declarations of local variables :
 !
 LOGICAL, DIMENSION(SIZE(PRHODREF)) :: GMICRO ! Computations only where necessary
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL,    DIMENSION(SIZE(PRHODREF)) :: ZZW, ZZW2, ZZX, ZCRIAUTI ! Work array
 !
 !

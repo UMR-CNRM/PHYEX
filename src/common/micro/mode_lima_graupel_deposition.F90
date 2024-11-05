@@ -7,7 +7,7 @@ MODULE MODE_LIMA_GRAUPEL_DEPOSITION
   IMPLICIT NONE
 CONTAINS
 !     ###########################################################################
-  SUBROUTINE LIMA_GRAUPEL_DEPOSITION (KSIZE, ODCOMPUTE, PRHODREF,                 &
+  SUBROUTINE LIMA_GRAUPEL_DEPOSITION (LIMAP, LIMAM, KSIZE, ODCOMPUTE, PRHODREF,                 &
                                       PRGT, PCGT, PSSI, PLBDG, PAI, PCJ, PLSFACT, &
                                       P_TH_DEPG, P_RG_DEPG                        )
 !     ###########################################################################
@@ -36,6 +36,8 @@ CONTAINS
 !
 USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN
 USE MODD_PARAM_LIMA_MIXED, ONLY : X0DEPG, XEX0DEPG, X1DEPG, XEX1DEPG
+USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -54,6 +56,8 @@ REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCJ      !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT  ! 
 !
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_DEPG
+TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RG_DEPG
 !
 !

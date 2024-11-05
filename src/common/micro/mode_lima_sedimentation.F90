@@ -7,7 +7,7 @@ MODULE MODE_LIMA_SEDIMENTATION
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################
-  SUBROUTINE LIMA_SEDIMENTATION (D, CST, &
+  SUBROUTINE LIMA_SEDIMENTATION (LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
                                  HPHASE, KMOMENTS, KID, KSPLITG, PTSTEP, OELEC, &
                                  PDZZ, PRHODREF, PTHVREFZIKB, &
                                  PPABST, PT, PRT_SUM, PCPT, PRS, PCS, PINPR, PFPR, &
@@ -69,6 +69,10 @@ use mode_tools,            only: Countjv
 USE MODI_GAMMA,             ONLY: GAMMA_X0D
 USE MODE_ELEC_COMPUTE_EX,   ONLY: ELEC_COMPUTE_EX
 USE MODE_ELEC_BEARD_EFFECT, ONLY: ELEC_BEARD_EFFECT
+USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -134,6 +138,10 @@ REAL, DIMENSION(:),     ALLOCATABLE :: ZQS, &    ! Electric charge density sourc
 REAL, DIMENSION(MERGE(D%NIJT, 0, OELEC), &
                &MERGE(D%NKT, 0, OELEC)) :: ZWSEDQ, &   ! Sedimentation of electric charge density
                                          & ZLBDA3
+TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(D%NIJT, D%NKT):: ZBEARDCOEFF ! effect of electrical forces on terminal fall speed
 !
 !-------------------------------------------------------------------------------

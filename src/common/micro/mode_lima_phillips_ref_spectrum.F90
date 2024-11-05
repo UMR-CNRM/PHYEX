@@ -2,7 +2,7 @@ MODULE MODE_LIMA_PHILLIPS_REF_SPECTRUM
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################
-  SUBROUTINE LIMA_PHILLIPS_REF_SPECTRUM (CST, ISIZE, PZT, PSI, PSI_W, PZY)
+  SUBROUTINE LIMA_PHILLIPS_REF_SPECTRUM (LIMAP, CST, ISIZE, PZT, PSI, PSI_W, PZY)
 !     ######################################################################
 !!
 !!    PURPOSE
@@ -36,6 +36,7 @@ CONTAINS
 USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAM_LIMA,      ONLY : XGAMMA, XRHO_CFDC
 USE MODE_LIMA_FUNCTIONS,  ONLY : RECT, DELTA
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -58,6 +59,7 @@ REAL, DIMENSION(ISIZE)   :: ZMAX, &
                             Z2,   &
                             ZSI2
 !
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL                     :: ZPSI
 !
 !-------------------------------------------------------------------------------

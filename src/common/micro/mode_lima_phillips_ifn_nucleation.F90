@@ -7,7 +7,7 @@ MODULE MODE_LIMA_PHILLIPS_IFN_NUCLEATION
   IMPLICIT NONE
 CONTAINS
 !     #################################################################################
-  SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION (D, CST, PTSTEP,                           &
+  SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION (LIMAP, LIMAC, D, CST, PTSTEP,                           &
                                            PRHODREF, PEXNREF, PPABST,                &
                                            PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                            PCCT, PCIT, PNAT, PIFT, PINT, PNIT,       &
@@ -83,6 +83,8 @@ use mode_tools,           only: Countjv
 
 USE MODE_LIMA_PHILLIPS_INTEG, ONLY : LIMA_PHILLIPS_INTEG
 USE MODE_LIMA_PHILLIPS_REF_SPECTRUM, ONLY : LIMA_PHILLIPS_REF_SPECTRUM
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 
 IMPLICIT NONE
 !
@@ -169,6 +171,8 @@ REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2))   &
 !
 REAL,    DIMENSION(:,:), ALLOCATABLE :: ZSI0, &    ! Si threshold in H_X for X={DM,BC,O}
                                         Z_FRAC_ACT ! Activable frac. of each AP species
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL,    DIMENSION(:),   ALLOCATABLE :: ZTCELSIUS, ZZT_SI0_BC
 !
 !-------------------------------------------------------------------------------
@@ -326,12 +330,12 @@ IF (INEGT > 0) THEN
 !
 ! Computation of the reference activity spectrum ( ZZY = N_{IN,1,*} )
 !
-   CALL LIMA_PHILLIPS_REF_SPECTRUM(CST, INEGT, ZZT, ZSI, ZSI_W, ZZY)
+   CALL LIMA_PHILLIPS_REF_SPECTRUM(LIMAP, CST, INEGT, ZZT, ZSI, ZSI_W, ZZY)
 !
 ! For each aerosol species (DM1, DM2, BC, O), compute the fraction that may be activated
 ! Z_FRAC_ACT(INEGT,NSPECIE) = fraction of each species that may be activated
 !
-   CALL LIMA_PHILLIPS_INTEG(CST, INEGT, ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
+   CALL LIMA_PHILLIPS_INTEG(LIMAP, CST, INEGT, ZZT, ZSI, ZSI0, ZSW, ZZY, Z_FRAC_ACT)
 !
 !
 !-------------------------------------------------------------------------------

@@ -6,7 +6,7 @@
 MODULE MODE_LIMA_ICE4_NUCLEATION
 IMPLICIT NONE
 CONTAINS
-SUBROUTINE LIMA_ICE4_NUCLEATION(CST, KSIZE, &
+SUBROUTINE LIMA_ICE4_NUCLEATION(LIMAP, LIMAC, CST, KSIZE, &
                            PTHT, PPABST, PRHODREF, PEXN, PLSFACT, PT, &
                            PRVT, &
                            PCIT, PRVHENI_MR)
@@ -32,6 +32,8 @@ USE MODD_CST,            ONLY: CST_t
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
 USE MODD_PARAM_LIMA_COLD, ONLY : XALPHA1, XBETA1, XALPHA2, XBETA2, XNU10, XNU20, XMNU0
 USE MODD_PARAM_LIMA, ONLY: LFEEDBACKT, XRTMIN
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -57,6 +59,8 @@ LOGICAL, DIMENSION(KSIZE) :: GNEGT  ! Test where to compute the HEN process
 REAL, DIMENSION(KSIZE)  :: ZZW,      & ! Work array
                            ZUSW,     & ! Undersaturation over water
                            ZSSI        ! Supersaturation over ice
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 INTEGER :: II
 !-------------------------------------------------------------------------------
 !

@@ -6,7 +6,7 @@ MODULE MODE_LIMA_DROPS_HOM_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     ###############################################################################
-  SUBROUTINE LIMA_DROPS_HOM_FREEZING (KSIZE, PTSTEP, ODCOMPUTE,                 &
+  SUBROUTINE LIMA_DROPS_HOM_FREEZING (LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 &
                                       PEXNREF, PPABST,                          &
                                       PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                       PCRT,                                     &
@@ -37,6 +37,7 @@ CONTAINS
 !
 USE MODD_CST,             ONLY : XP00, XRD, XCPD, XCPV, XCL, XCI, XTT, XLSTT, XLVTT
 USE MODD_PARAM_LIMA,      ONLY : XRTMIN
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -69,6 +70,7 @@ REAL, DIMENSION(KSIZE),    INTENT(INOUT) :: PB_RG
 !
 !*       0.2   Declarations of local variables :
 !
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(SIZE(PTHT)) ::  &
      ZW,       &
      ZT,       &

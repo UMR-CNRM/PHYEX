@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPS_SELF_COLLECTION
   IMPLICIT NONE
 CONTAINS
 !     #############################################################
-  SUBROUTINE LIMA_DROPS_SELF_COLLECTION (KSIZE, ODCOMPUTE,    &
+  SUBROUTINE LIMA_DROPS_SELF_COLLECTION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,    &
                                          PRHODREF,            &
                                          PCRT, PLBDR, PLBDR3, &
                                          P_CR_SCBU            )
@@ -37,6 +37,8 @@ CONTAINS
 USE MODD_PARAM_LIMA,      ONLY : XCTMIN
 USE MODD_PARAM_LIMA_WARM, ONLY : XACCR1, XSCBUEXP1, XSCBU_EFF1, XSCBU_EFF2, &
                                  XSCBU2, XSCBU3
+USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -55,6 +57,8 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CR_SCBU
 !
 !*       0.2   Declarations of local variables :
 !
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(SIZE(PCRT)) :: &
                                            ZW1, & ! work arrays
                                            ZW2, &

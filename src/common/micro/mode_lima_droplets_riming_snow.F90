@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPLETS_RIMING_SNOW
   IMPLICIT NONE
 CONTAINS
 !     ###########################################################################################
-  SUBROUTINE LIMA_DROPLETS_RIMING_SNOW (KSIZE, PTSTEP, ODCOMPUTE,                               &
+  SUBROUTINE LIMA_DROPLETS_RIMING_SNOW (LIMAP, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                               &
                                         PRHODREF, PT,                                           &
                                         PRCT, PCCT, PRST, PCST, PLBDC, PLBDS, PLVFACT, PLSFACT, &
 !++cb++
@@ -48,6 +48,9 @@ USE MODD_PARAM_LIMA_MIXED, ONLY : NGAMINC, XRIMINTP1, XRIMINTP2, XGAMINC_RIM1, X
                                   XCRIMSS, XEXCRIMSS, XSRIMCG, XEXSRIMCG, XSRIMCG2, XSRIMCG3, XEXSRIMCG2, &
                                   XHMLINTP1, XHMLINTP2, XGAMINC_HMC, XHM_FACTS, XHMTMIN, XHMTMAX
 USE MODD_PARAM_LIMA_COLD,  ONLY : XMNU0, XFVELOS
+USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -92,6 +95,9 @@ REAL,    DIMENSION(SIZE(PRCT))  :: Z_RC_RIM, Z_RS_RIM, Z_RG_RIM    !++cb--
 !
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC2              ! Vector of indices
 REAL,    DIMENSION(SIZE(PRCT))  :: ZVEC1,ZVEC2,ZVEC1W ! Work vectors
+TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 INTEGER                         :: II
 !
 !-------------------------------------------------------------------------------

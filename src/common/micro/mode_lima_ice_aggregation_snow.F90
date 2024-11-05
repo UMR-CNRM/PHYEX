@@ -7,7 +7,7 @@ MODULE MODE_LIMA_ICE_AGGREGATION_SNOW
   IMPLICIT NONE
 CONTAINS
 !     #######################################################################
-  SUBROUTINE LIMA_ICE_AGGREGATION_SNOW (KSIZE, ODCOMPUTE,                     &
+  SUBROUTINE LIMA_ICE_AGGREGATION_SNOW (LIMAP, LIMAC, KSIZE, ODCOMPUTE,                     &
                                         PT, PRHODREF,                         &
                                         PRIT, PRST, PCIT, PCST, PLBDI, PLBDS, &
                                         PLATHAM_IAGGS,                        &
@@ -42,6 +42,8 @@ USE MODD_CST,             ONLY : XTT
 USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, XCEXVT, NMOM_I, XNUS, XALPHAS, XCEXVT
 USE MODD_PARAM_LIMA_COLD, ONLY : XBI, XCOLEXIS, XAGGS_CLARGE1, XAGGS_CLARGE2, &
                                  XAGGS_RLARGE1, XAGGS_RLARGE2, XFIAGGS, XFVELOS, XEXIAGGS
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -66,6 +68,8 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_AGGS
 !
 !*       0.2   Declarations of local variables :
 !
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(SIZE(PRIT)) :: ZZW1, ZZW2, ZZW3 ! work arrays
 !
 !-------------------------------------------------------------------------------

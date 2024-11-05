@@ -7,7 +7,7 @@ MODULE MODE_LIMA_RAIN_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     #######################################################################################
-  SUBROUTINE LIMA_RAIN_FREEZING (KSIZE, ODCOMPUTE,                                      &
+  SUBROUTINE LIMA_RAIN_FREEZING (LIMAP, LIMAM, KSIZE, ODCOMPUTE,                                      &
                                  PRHODREF, PT, PLVFACT, PLSFACT,                        &
                                  PRRT, PCRT, PRIT, PCIT, PLBDR,                         &
                                  P_TH_CFRZ, P_RR_CFRZ, P_CR_CFRZ, P_RI_CFRZ, P_CI_CFRZ  )
@@ -37,6 +37,8 @@ CONTAINS
 USE MODD_CST,              ONLY : XTT
 USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, XCEXVT
 USE MODD_PARAM_LIMA_MIXED, ONLY : XICFRR, XEXICFRR, XRCFRI, XEXRCFRI
+USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -64,6 +66,8 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_CFRZ
 !
 !*       0.2   Declarations of local variables :
 !
+TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(SIZE(PRRT)) :: ZW1, ZW2 ! work arrays
 !
 !-------------------------------------------------------------------------------

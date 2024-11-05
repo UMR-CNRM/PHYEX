@@ -7,7 +7,7 @@ MODULE MODE_LIMA_RAINDROP_SHATTERING_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     #######################################################################
-  SUBROUTINE LIMA_RAINDROP_SHATTERING_FREEZING (KSIZE, ODCOMPUTE,             &
+  SUBROUTINE LIMA_RAINDROP_SHATTERING_FREEZING (LIMAP, LIMAW, LIMAC, LIMAM, KSIZE, ODCOMPUTE,             &
                                                 PRHODREF,                     &
                                                 PRRT, PCRT, PRIT, PCIT, PRGT, &
                                                 PLBDR,                        &
@@ -36,6 +36,10 @@ USE MODD_PARAM_LIMA_COLD,  ONLY : XMNU0
 USE MODD_PARAM_LIMA_WARM,  ONLY : XDR
 USE MODD_PARAM_LIMA_MIXED, ONLY : NGAMINC, XGAMINC_RDSF_R, &
                                   XFACTOR_RDSF_NI, XMOMGR_RDSF, XRDSFINTP1_R, XRDSFINTP_R
+USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -67,6 +71,10 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1_R1           ! Work vectors for rain
 REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC2_R            ! Work vectors for rain
 INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC2_R            ! Rain indice vector
 REAL,    DIMENSION(SIZE(PRRT))     :: ZINTG_RAIN         ! incomplete gamma function for rain
+TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL,    DIMENSION(SIZE(PRRT))     :: ZNI_RDSF,ZRI_RDSF  ! RDSF rates
 !
 !-------------------------------------------------------------------------------

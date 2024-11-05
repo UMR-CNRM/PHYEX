@@ -6,7 +6,7 @@ MODULE MODE_LIMA_BERGERON
   IMPLICIT NONE
   CONTAINS
 !     #############################################################
-    SUBROUTINE LIMA_BERGERON( KSIZE, ODCOMPUTE,                  &
+    SUBROUTINE LIMA_BERGERON( LIMAP, LIMAC, KSIZE, ODCOMPUTE,                  &
                               PRCT, PRIT, PCIT, PLBDI,           &
                               PSSIW, PAI, PCJ, PLVFACT, PLSFACT, &
                               P_TH_BERFI, P_RC_BERFI             )
@@ -35,6 +35,8 @@ MODULE MODE_LIMA_BERGERON
 !
 USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN
 USE MODD_PARAM_LIMA_COLD,  ONLY : XDI, X0DEPI, X2DEPI
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -55,6 +57,8 @@ REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLVFACT !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLSFACT ! 
 !
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_BERFI
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RC_BERFI
 !
 !-------------------------------------------------------------------------------

@@ -6,7 +6,7 @@ MODULE MODE_LIMA_DROPLETS_HOM_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_DROPLETS_HOM_FREEZING (KSIZE, PTSTEP,  ODCOMPUTE,        &
+  SUBROUTINE LIMA_DROPLETS_HOM_FREEZING (LIMAP, LIMAC, KSIZE, PTSTEP,  ODCOMPUTE,        &
                                          PT, PLVFACT, PLSFACT,             &
                                          PRCT, PCCT, PLBDC,                &
                                          P_TH_HONC, P_RC_HONC, P_CC_HONC   )
@@ -36,7 +36,9 @@ CONTAINS
 USE MODD_CST,             ONLY : XTT
 USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, XNUC
 USE MODD_PARAM_LIMA_COLD, ONLY : XC_HONC, XTEXP1_HONC, XTEXP2_HONC, XTEXP3_HONC,   &
-                                 XTEXP4_HONC, XTEXP5_HONC 
+                                 XTEXP4_HONC, XTEXP5_HONC
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t 
 !
 IMPLICIT NONE
 !
@@ -60,6 +62,8 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CC_HONC
 !
 !*       0.2   Declarations of local variables :
 !
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(SIZE(PT)) ::  ZZW, ZZX, ZZY, ZTCELSIUS
 !
 !-------------------------------------------------------------------------------

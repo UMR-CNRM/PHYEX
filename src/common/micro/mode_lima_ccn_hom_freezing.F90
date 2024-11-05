@@ -7,7 +7,7 @@ MODULE MODE_LIMA_CCN_HOM_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_CCN_HOM_FREEZING (D, CST, PRHODREF, PEXNREF, PPABST, PW_NU, &
+  SUBROUTINE LIMA_CCN_HOM_FREEZING (LIMAP, LIMAC, D, CST, PRHODREF, PEXNREF, PPABST, PW_NU, &
                                     PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                     PCCT, PCRT, PCIT, PNFT, PNHT ,            &
                                     PICEFR, PTOT_RV_HONH                      )
@@ -47,6 +47,8 @@ USE MODD_PARAM_LIMA_COLD, ONLY: XRCOEF_HONH, XCEXP_DIFVAP_HONH, XCOEF_DIFVAP_HON
                                 XDLNJODT1_HONH, XDLNJODT2_HONH, XRHOI_HONH
 !
 use mode_tools,           only: Countjv
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -133,6 +135,8 @@ LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) &
         :: GNEGT        ! Test where to compute the hom. nucleation
 INTEGER , DIMENSION(SIZE(GNEGT)) :: I1,I3 ! Used to replace the COUNT
 !
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL    :: ZEPS                           ! molar mass ratio
 !
 !-------------------------------------------------------------------------------

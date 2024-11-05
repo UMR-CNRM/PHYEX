@@ -7,7 +7,7 @@ MODULE MODE_LIMA_HAIL
   IMPLICIT NONE
 CONTAINS
 !     #################################################################################
-  SUBROUTINE LIMA_HAIL (KSIZE, PTSTEP, ODCOMPUTE,                              &
+  SUBROUTINE LIMA_HAIL (LIMAP, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                              &
                         PRHODREF, PPRES, PT, PKA, PDV, PCJ,                    &
                         PRVT, PRCT, PRRT, PRIT, PRST, PRGT, PRHT,              &
                         PCCT, PCRT, PCIT, PCST, PCGT, PCHT,                    &
@@ -55,6 +55,8 @@ USE MODD_PARAM_LIMA_MIXED, ONLY : NWETLBDAG, XWETINTP1G, XWETINTP2G, &
                                   XFNSWETH, XLBNSWETH1, XLBNSWETH2, XLBNSWETH3, &
                                   XFGWETH, XLBGWETH1, XLBGWETH2, XLBGWETH3, &
                                   XFNGWETH, XLBNGWETH1, XLBNGWETH2, XLBNGWETH3
+USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 
 !
 IMPLICIT NONE
@@ -143,6 +145,8 @@ REAL,    DIMENSION(SIZE(PRCT))  :: ZRWETH
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC1,IVEC2        ! Vectors of indices
 REAL,    DIMENSION(SIZE(PRCT))  :: ZVEC1,ZVEC2, ZVEC3 ! Work vectors
 !
+TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL                            :: ZTHRH, ZTHRC
 !
 !-------------------------------------------------------------------------------

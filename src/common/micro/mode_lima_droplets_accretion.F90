@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPLETS_ACCRETION
   IMPLICIT NONE
 CONTAINS
 !     #####################################################################
-  SUBROUTINE LIMA_DROPLETS_ACCRETION (KSIZE, ODCOMPUTE,               &
+  SUBROUTINE LIMA_DROPLETS_ACCRETION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,               &
                                       PRHODREF,                       &
                                       PRCT, PRRT, PCCT, PCRT,         &
                                       PLBDC, PLBDC3, PLBDR, PLBDR3,   &
@@ -42,6 +42,8 @@ USE MODD_PARAM_LIMA_WARM, ONLY : XLAUTR, XAUTO1, XLAUTR_THRESHOLD, &
                                  XACCR_CLARGE1, XACCR_CLARGE2, XACCR_RLARGE1, XACCR_RLARGE2, &
                                  XACCR_CSMALL1, XACCR_CSMALL2, XACCR_RSMALL1, XACCR_RSMALL2, &
                                  XFCACCR, XEXCACCR
+USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -67,6 +69,8 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CC_ACCR
 !*       0.2   Declarations of local variables :
 !
 REAL, DIMENSION(SIZE(PRCT))    :: ZW1, ZW2, ZW3, ZW4 ! work arrays
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 LOGICAL, DIMENSION(SIZE(PRCT)) :: GACCR
 !
 !-------------------------------------------------------------------------------

@@ -6,7 +6,7 @@ MODULE MODE_LIMA_ICE_MELTING
   IMPLICIT NONE
 CONTAINS
 !     ########################################################################
-  SUBROUTINE LIMA_ICE_MELTING (KSIZE, PTSTEP, ODCOMPUTE,                 &
+  SUBROUTINE LIMA_ICE_MELTING (LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 &
                                PEXNREF, PPABST,                          &
                                PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                PCIT, PINT,                               &
@@ -37,6 +37,7 @@ CONTAINS
 !
 USE MODD_CST,             ONLY : XP00, XRD, XCPD, XCPV, XCL, XCI, XTT, XLSTT, XLVTT
 USE MODD_PARAM_LIMA,      ONLY : XRTMIN, NMOD_IFN
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -80,6 +81,7 @@ REAL, DIMENSION(SIZE(PTHT)) ::  &
      ZLVFACT,  &
      ZMASK
 !
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 INTEGER :: IMOD_IFN
 !
 !

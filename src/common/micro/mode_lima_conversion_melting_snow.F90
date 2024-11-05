@@ -7,7 +7,7 @@ MODULE MODE_LIMA_CONVERSION_MELTING_SNOW
   IMPLICIT NONE
 CONTAINS
 !     ##############################################################################
-  SUBROUTINE LIMA_CONVERSION_MELTING_SNOW (KSIZE, ODCOMPUTE,                   &
+  SUBROUTINE LIMA_CONVERSION_MELTING_SNOW (LIMAP, LIMAC, LIMAM, KSIZE, ODCOMPUTE,                   &
                                            PRHODREF, PPRES, PT, PKA, PDV, PCJ, &
                                            PRVT, PRST, PCST, PLBDS,            &
                                            P_RS_CMEL, P_CS_CMEL                )
@@ -39,6 +39,9 @@ USE MODD_CST,              ONLY : XTT, XMV, XMD, XLVTT, XCPV, XCL, XESTT, XRV
 USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, XNUS, XALPHAS
 USE MODD_PARAM_LIMA_MIXED, ONLY : XFSCVMG
 USE MODD_PARAM_LIMA_COLD,  ONLY : X0DEPS, XEX0DEPS, X1DEPS, XEX1DEPS, XFVELOS
+USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -64,6 +67,9 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CS_CMEL
 !
 !*       0.2   Declarations of local variables :
 !
+TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(SIZE(PRST)) :: ZW ! work arrays
 !
 !-------------------------------------------------------------------------------

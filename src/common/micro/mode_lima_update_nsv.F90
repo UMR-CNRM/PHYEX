@@ -60,6 +60,7 @@ USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN, LSCAV, LAERO_MASS, &
                                 NMOD_IFN, NMOD_IMM, LHHONI, &
                                 LSPRO,  &
                                 NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 !* 0.1. Declaration of arguments
 !       ------------------------

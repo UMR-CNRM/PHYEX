@@ -7,7 +7,7 @@ MODULE MODE_LIMA_MEYERS_NUCLEATION
   IMPLICIT NONE
 CONTAINS
 !     #############################################################################
-  SUBROUTINE LIMA_MEYERS_NUCLEATION (D, CST, PTSTEP,                             &
+  SUBROUTINE LIMA_MEYERS_NUCLEATION (LIMAC, D, CST, PTSTEP,                             &
                                      PRHODREF, PEXNREF, PPABST,                  &
                                      PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,   &
                                      PCCT, PCIT, PINT,                           &
@@ -46,6 +46,7 @@ USE MODD_PARAM_LIMA
 USE MODD_PARAM_LIMA_COLD
 
 use mode_tools,           only: Countjv
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 
 IMPLICIT NONE
 !
@@ -123,6 +124,7 @@ REAL, DIMENSION(:), ALLOCATABLE &
 REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2))   &
                                   :: ZW, ZT ! work arrays
 !
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
 REAL,    DIMENSION(:),   ALLOCATABLE :: ZTCELSIUS
 !
 !-------------------------------------------------------------------------------

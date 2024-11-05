@@ -7,7 +7,7 @@ MODULE MODE_LIMA_RAIN_EVAPORATION
   IMPLICIT NONE
 CONTAINS
 !     ###############################################################################
-  SUBROUTINE LIMA_RAIN_EVAPORATION (KSIZE, PTSTEP, ODCOMPUTE,                   &
+  SUBROUTINE LIMA_RAIN_EVAPORATION (LIMAP, LIMAW, KSIZE, PTSTEP, ODCOMPUTE,                   &
                                     PRHODREF, PT, PLV, PLVFACT, PEVSAT, PRVSAT, &
                                     PRVT, PRCT, PRRT, PCRT, PLBDR,              &
                                     P_TH_EVAP, P_RR_EVAP, P_CR_EVAP,            &
@@ -41,6 +41,8 @@ CONTAINS
 USE MODD_CST,             ONLY : XRHOLW, XRV, XPI
 USE MODD_PARAM_LIMA,      ONLY : XRTMIN, XCTMIN, LKHKO
 USE MODD_PARAM_LIMA_WARM, ONLY : X0EVAR, XEX0EVAR, X1EVAR, XEX2EVAR, XEX1EVAR, XTHCO, XDIVA, XCEVAP
+USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -73,6 +75,8 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: PEVAP3D    ! Rain evap profile
 !
 ! 
 LOGICAL, DIMENSION(SIZE(PRHODREF)) :: GEVAP
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(SIZE(PRHODREF))    :: ZZW1, ZZW2
 !
 !-------------------------------------------------------------------------------

@@ -7,7 +7,7 @@ MODULE MODE_LIMA_GRAUPEL
   IMPLICIT NONE
 CONTAINS
 !     #################################################################################
-  SUBROUTINE LIMA_GRAUPEL (KSIZE, PTSTEP, ODCOMPUTE,                              &
+  SUBROUTINE LIMA_GRAUPEL (LIMAP, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                              &
                            PRHODREF, PPRES, PT, PKA, PDV, PCJ,                    &
                            PRVT, PRCT, PRRT, PRIT, PRST, PRGT,                    &
                            PCCT, PCRT, PCIT, PCST, PCGT,                          &
@@ -60,6 +60,9 @@ USE MODD_PARAM_LIMA_MIXED, ONLY : XDG, X0DEPG, X1DEPG, NGAMINC,                 
                                   XDRYINTP2R, XDRYINTP2S, XDRYINTP2G,                             &
                                   NDRYLBDAR, NDRYLBDAS, NDRYLBDAG
 USE MODD_PARAM_LIMA_COLD,  ONLY : XMNU0
+USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -156,6 +159,9 @@ REAL,    DIMENSION(SIZE(PRCT))  :: ZRDRYG, ZRWETG
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC1,IVEC2        ! Vectors of indices
 REAL,    DIMENSION(SIZE(PRCT))  :: ZVEC1,ZVEC2, ZVEC3 ! Work vectors
 !
+TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 INTEGER                         :: IHAIL
 !
 !-------------------------------------------------------------------------------

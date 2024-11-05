@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPLETS_AUTOCONVERSION
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_DROPLETS_AUTOCONVERSION (KSIZE, ODCOMPUTE,               &
+  SUBROUTINE LIMA_DROPLETS_AUTOCONVERSION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,               &
                                            PRHODREF,                       &
                                            PRCT, PCCT, PLBDC, PLBDR,       &
                                            P_RC_AUTO, P_CC_AUTO, P_CR_AUTO )
@@ -40,6 +40,8 @@ USE MODD_PARAM_LIMA_WARM, ONLY : XLAUTR, XAUTO1, XLAUTR_THRESHOLD, &
                                  XITAUTR, XAUTO2, XITAUTR_THRESHOLD, &
                                  XACCR4, XACCR5, XACCR3, XACCR1, XAC, XR0
 USE MODD_CST,             ONLY : XPI, XRHOLW
+USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -61,6 +63,8 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CR_AUTO
 !
 !*       0.2   Declarations of local variables :
 !
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(SIZE(PRCT)) :: ZW1, ZW2, ZW3 ! work arrays
 !
 !-------------------------------------------------------------------------------

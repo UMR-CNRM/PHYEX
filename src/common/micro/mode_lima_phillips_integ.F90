@@ -2,7 +2,7 @@ MODULE MODE_LIMA_PHILLIPS_INTEG
   IMPLICIT NONE
 CONTAINS
 !     ######################################################################
-  SUBROUTINE LIMA_PHILLIPS_INTEG (CST, ISIZE, PZT, PSI, PSI0, PSW, PZY, P_FRAC_ACT)
+  SUBROUTINE LIMA_PHILLIPS_INTEG (LIMAP, CST, ISIZE, PZT, PSI, PSI0, PSW, PZY, P_FRAC_ACT)
 !     ######################################################################
 !!
 !!    PURPOSE
@@ -39,6 +39,7 @@ USE MODD_PARAM_LIMA,      ONLY : XMDIAM_IFN, XSIGMA_IFN, NSPECIE, XFRAC_REF, &
                                  XT0, XDT0, XDSI0, XSW0, XTX1, XTX2
 USE MODE_LIMA_FUNCTIONS,  ONLY : DELTA, DELTA_VEC
 USE MODI_GAMMA_INC
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 !
@@ -63,6 +64,7 @@ REAL, DIMENSION(:), ALLOCATABLE :: ZZX,      & ! Work array
                                    ZSUBSAT,  &
                                    ZEMBRYO
 !
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 LOGICAL, DIMENSION(:),   ALLOCATABLE :: GINTEG ! Mask to integrate over the
                                                ! AP size spectrum
 !

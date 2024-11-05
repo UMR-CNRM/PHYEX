@@ -7,7 +7,7 @@ MODULE MODE_LIMA_INST_PROCS
   IMPLICIT NONE
 CONTAINS
 !     ###########################################################################
-  SUBROUTINE LIMA_INST_PROCS (KSIZE, PTSTEP, ODCOMPUTE,                           &
+  SUBROUTINE LIMA_INST_PROCS (LIMAP, LIMAW, KSIZE, PTSTEP, ODCOMPUTE,                           &
                               PEXNREF, PPABST,                                    &
                               PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,           &
                               PCCT, PCRT, PCIT,                                   &
@@ -42,6 +42,7 @@ USE MODD_PARAM_LIMA, ONLY : NMOM_C, NMOM_R, NMOM_I, NMOM_G, NMOD_IFN
 USE MODE_LIMA_DROPS_BREAK_UP, ONLY: LIMA_DROPS_BREAK_UP
 USE MODE_LIMA_DROPS_HOM_FREEZING, ONLY: LIMA_DROPS_HOM_FREEZING
 USE MODE_LIMA_ICE_MELTING, ONLY: LIMA_ICE_MELTING
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 
 IMPLICIT NONE
 
@@ -90,12 +91,14 @@ REAL, DIMENSION(KSIZE,NMOD_IFN), INTENT(INOUT) :: PB_IFNN    ! Cumulated concent
 !
 REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PCF1D      ! Liquid cloud fraction
 REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PIF1D      ! Ice cloud fraction
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PPF1D      ! Precipitation fraction
 !
 !-------------------------------------------------------------------------------
 !
 IF (NMOM_R.GE.2) THEN
-   CALL LIMA_DROPS_BREAK_UP (KSIZE, ODCOMPUTE, & ! no dependance on CF, IF or PF
+   CALL LIMA_DROPS_BREAK_UP (LIMAP, LIMAW, KSIZE, ODCOMPUTE, & ! no dependance on CF, IF or PF
                              PCRT, PRRT,       &
                              P_CR_BRKU,        &
                              PB_CR             )
@@ -104,7 +107,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 IF (NMOM_G.GE.1 .AND. NMOM_R.GE.1) THEN
-   CALL LIMA_DROPS_HOM_FREEZING (KSIZE, PTSTEP, ODCOMPUTE,                 & ! no dependance on CF, IF or PF
+   CALL LIMA_DROPS_HOM_FREEZING (LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 & ! no dependance on CF, IF or PF
                                  PEXNREF, PPABST,                          &
                                  PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                  PCRT,                                     &
@@ -115,7 +118,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 IF (NMOM_C.GE.1 .AND. NMOM_I.GE.1) THEN
-   CALL LIMA_ICE_MELTING (KSIZE, PTSTEP, ODCOMPUTE,                 & ! no dependance on CF, IF or PF
+   CALL LIMA_ICE_MELTING (LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 & ! no dependance on CF, IF or PF
                           PEXNREF, PPABST,                          & ! but ice fraction becomes cloud fraction
                           PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, & ! -> where ?
                           PCIT, PINT,                               &

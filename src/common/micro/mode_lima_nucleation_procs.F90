@@ -7,7 +7,7 @@ MODULE MODE_LIMA_NUCLEATION_PROCS
   IMPLICIT NONE
 CONTAINS
 !     ###############################################################################
-  SUBROUTINE LIMA_NUCLEATION_PROCS (D, CST, BUCONF, TBUDGETS, KBUDGETS,             &
+  SUBROUTINE LIMA_NUCLEATION_PROCS (LIMAP, LIMAW, LIMAC, D, CST, BUCONF, TBUDGETS, KBUDGETS,             &
                                     PTSTEP, PRHODJ,                                 &
                                     PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,  &
                                     PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, PRHT, &
@@ -55,6 +55,7 @@ USE MODE_LIMA_CCN_HOM_FREEZING, ONLY: LIMA_CCN_HOM_FREEZING
 USE MODE_LIMA_MEYERS_NUCLEATION, ONLY: LIMA_MEYERS_NUCLEATION
 USE MODE_LIMA_PHILLIPS_IFN_NUCLEATION, ONLY: LIMA_PHILLIPS_IFN_NUCLEATION
 USE MODE_LIMA_ICE4_NUCLEATION, ONLY: LIMA_ICE4_NUCLEATION
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 !-------------------------------------------------------------------------------
 !
@@ -115,6 +116,9 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: Z_TH_HIND, Z_CI_HIND, Z_TH_HINC, Z_CC_HINC, &
                                  ZLSFACT, ZRVHENIMR
 !
 integer :: idx, il
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 INTEGER :: II,IJ
 !
 !-------------------------------------------------------------------------------
@@ -141,7 +145,7 @@ IF ( LACTI .AND. NMOD_CCN >=1 .AND. NMOM_C.GE.2) THEN
       end if
     end if
 
-    CALL LIMA_CCN_ACTIVATION( D, CST,                                           &
+    CALL LIMA_CCN_ACTIVATION( LIMAP, LIMAW, D, CST,                                           &
                               PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,    &
                               PTHT, PRVT, PRCT, PCCT, PRRT, PNFT, PNAT, PCLDFR, &
                               PTOT_RV_HENU )
@@ -193,7 +197,7 @@ IF ( LNUCL .AND. NMOM_I>=2 .AND. .NOT.LMEYERS .AND. NMOD_IFN >= 1 ) THEN
     end if
   end if
 
-   CALL LIMA_PHILLIPS_IFN_NUCLEATION (D, CST, PTSTEP,                                   &
+   CALL LIMA_PHILLIPS_IFN_NUCLEATION (LIMAP, LIMAC, D, CST, PTSTEP,                                   &
                                       PRHODREF, PEXNREF, PPABST,                        &
                                       PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,         &
                                       PCCT, PCIT, PNAT, PIFT, PINT, PNIT,               &
@@ -245,7 +249,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 IF (LNUCL .AND. NMOM_I>=2 .AND. LMEYERS) THEN
-   CALL LIMA_MEYERS_NUCLEATION (D, CST, PTSTEP,                             &
+   CALL LIMA_MEYERS_NUCLEATION (LIMAC, D, CST, PTSTEP,                             &
                                 PRHODREF, PEXNREF, PPABST,                  &
                                 PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,   &
                                 PCCT, PCIT, PINT,                           &
@@ -299,7 +303,7 @@ IF (LNUCL .AND. NMOM_I.EQ.1) THEN
          CST%XCL*(PRCT(:,:)+PRRT(:,:)) +         &
          CST%XCI*(PRIT(:,:)+PRST(:,:)+PRGT(:,:)+PRHT(:,:)) ) * PEXNREF(:,:) ) 
   DO II = 1, D%NIJT
-     CALL LIMA_ICE4_NUCLEATION(CST, D%NKT, &
+     CALL LIMA_ICE4_NUCLEATION(LIMAP, LIMAC, CST, D%NKT, &
           PTHT(II,:), PPABST(II,:), PRHODREF(II,:), PEXNREF(II,:), ZLSFACT(II,:), PT(II,:), &
           PRVT(II,:), &
           PCIT(II,:), ZRVHENIMR(II,:) )
@@ -365,7 +369,7 @@ IF ( LNUCL .AND. LHHONI .AND. NMOD_CCN >= 1 .AND. NMOM_I.GE.2) THEN
     end if
   end if
 
-  CALL LIMA_CCN_HOM_FREEZING (D, CST, PRHODREF, PEXNREF, PPABST, PW_NU, &
+  CALL LIMA_CCN_HOM_FREEZING (LIMAP, LIMAC, D, CST, PRHODREF, PEXNREF, PPABST, PW_NU, &
                               PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                               PCCT, PCRT, PCIT, PNFT, PNHT,             &
                               PICEFR, PTOT_RV_HONH                      )

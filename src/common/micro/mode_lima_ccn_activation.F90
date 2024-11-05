@@ -7,7 +7,7 @@ MODULE MODE_LIMA_CCN_ACTIVATION
   IMPLICIT NONE
 CONTAINS
 !     ##############################################################################
-    SUBROUTINE LIMA_CCN_ACTIVATION (D, CST,                                        &
+    SUBROUTINE LIMA_CCN_ACTIVATION (LIMAP, LIMAW, D, CST,                                        &
                                     PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU, &
                                     PTHT, PRVT, PRCT, PCCT, PRRT, PNFT, PNAT,      &
                                     PCLDFR, PTOT_RV_HENU                           )
@@ -82,6 +82,8 @@ USE MODD_NEB_n,           ONLY: LSUBG_COND
 use mode_tools,           only: Countjv
 
 USE MODI_GAMMA
+USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 
 IMPLICIT NONE
 !
@@ -150,6 +152,8 @@ INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1             ! Vectors of indices for
 REAL    :: ZEPS                                ! molar mass ratio
 REAL    :: ZS1, ZS2, ZXACC 
 INTEGER :: IMOD
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 INTEGER :: IIJB, IIJE, IKB, IKE        ! Physical domain
 !
 !!$INTEGER                  :: ILUOUT     ! Logical unit of output listing 
