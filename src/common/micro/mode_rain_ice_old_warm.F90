@@ -9,28 +9,34 @@ MODULE MODE_RAIN_ICE_OLD_WARM
 
   CONTAINS
 
-  SUBROUTINE RAIN_ICE_OLD_WARM(D, CST, PARAMI, ICEP, ICED, BUCONF,           &
-                               KSIZE, K1, K2, OCND2, LKOGAN, GMICRO,                 &
-                               PRHODJ, PEVAP3D, PTHS, PRVS,                  &
-                               ZRVT, ZRCT, ZRRT, ZRCS, ZRRS, ZTHS,           &
-                               ZRVS, ZTHT, ZTHLT,                            &
-                               ZCJ, ZKA, ZCF, ZDV, ZRF,                      &
-                               ZACRF, ZCONCM,                                &
-                               ZRHODREF, ZRHODJ, ZLVFACT, ZLBDAR, ZLBDAR_RF, &
-                               ZZKGN_ACON, ZZKGN_SBGR,                       &
-                               ZHLC_HCF, ZHLC_LCF, ZHLC_HRC, ZHLC_LRC,       &
-                               ZAA2W, ZBB3W,                                 &
-                               ZZT, ZPRES, ZESW,                             &
+  SUBROUTINE RAIN_ICE_OLD_WARM(D, CST, PARAMI, ICEP, ICED, ICE_T_PARAMETERS, BUCONF, &
+                               KSIZE, K1, K2, OCND2, OICE_T, LKOGAN, GMICRO,         &
+                               PRHODJ, PEVAP3D, PTHS, PRVS,                          &
+                               ZRVT, ZRCT, ZRRT, ZRCS, ZRRS, ZTHS,                   &
+                               ZRVS, ZTHT, ZTHLT,                                    &
+                               ZCJ, ZKA, ZCF, ZDV, ZRF,                              &
+                               ZACRF, ZCONCM,                                        &
+                               ZRHODREF, ZRHODJ, ZLVFACT, ZLBDAR, ZLBDAR_RF,         &
+                               ZZKGN_ACON, ZZKGN_SBGR,                               &
+                               ZHLC_HCF, ZHLC_LCF, ZHLC_HRC, ZHLC_LRC,               &
+                               ZAA2W, ZBB3W,                                         &
+                               ZZT, ZPRES, ZESW,                                     &
+                               PNT_C, PMVD_C, PMVD_R, PCCR_V,                        &
                                TBUDGETS, KBUDGETS)
 
-    USE YOMHOOK,             ONLY: LHOOK, DR_HOOK, JPHOOK
-    USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_T
-    USE MODD_CST,            ONLY: CST_T
-    USE MODD_PARAM_ICE_n,    ONLY: PARAM_ICE_t
+    USE YOMHOOK,               ONLY: LHOOK, DR_HOOK, JPHOOK
+    USE MODD_PRECISION,        ONLY: MNHREAL64
+    USE MODD_PARAMETERS,       ONLY: JPVEXT
+    USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_T
+    USE MODD_CST,              ONLY: CST_T
+    USE MODD_CST,              ONLY: XPI, XRHOLW
+    USE MODD_PARAM_ICE_n,      ONLY: PARAM_ICE_t
     USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_T
     USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_T
+    USE MODD_ICET_PARAM,       ONLY: ICET_PARAM_t
+    USE MODD_ICET_PARAM,       ONLY: XD0C, XD0R, XICET_R1, NBC, NBR, XTHVREFZ
 
-    USE MODE_TIWMX,          ONLY: ESATW, AA2W, BB3W
+    USE MODE_TIWMX,            ONLY: ESATW, AA2W, BB3W
 
     USE MODD_BUDGET,     ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t, &
                                NBUDGET_TH, NBUDGET_RR, NBUDGET_RC, NBUDGET_RV
@@ -44,12 +50,14 @@ USE MODD_IO, ONLY:NVERB_FATAL
     TYPE(PARAM_ICE_t),      INTENT(IN) :: PARAMI
     TYPE(RAIN_ICE_PARAM_T), INTENT(IN) :: ICEP
     TYPE(RAIN_ICE_DESCR_t), INTENT(IN) :: ICED
-    TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+    TYPE(ICET_PARAM_t),     INTENT(IN) :: ICE_T_PARAMETERS
+    TYPE(TBUDGETCONF_t),    INTENT(IN) :: BUCONF
 
     INTEGER, INTENT(IN) :: KSIZE
     INTEGER, DIMENSION(KSIZE), INTENT(IN) :: K1, K2
 
     LOGICAL, INTENT(IN) :: OCND2  ! Logical switch to separate liquid and ice
+    LOGICAL, INTENT(IN) :: OICE_T ! Switch for ICE_T
     LOGICAL, INTENT(IN) :: LKOGAN ! Logical switch for using Kogan autoconversion of liquid.
     LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: GMICRO ! Layer thickness (m)
 
@@ -98,6 +106,11 @@ USE MODD_IO, ONLY:NVERB_FATAL
 
     REAL, DIMENSION(KSIZE), INTENT(IN) :: ZESW      ! saturation pressure over water
 
+    REAL, DIMENSION(KSIZE), INTENT(IN)  :: PNT_C
+    REAL, DIMENSION(KSIZE), INTENT(OUT) :: PMVD_C
+    REAL, DIMENSION(KSIZE), INTENT(OUT) :: PMVD_R
+    REAL, DIMENSION(KSIZE), INTENT(IN)  :: PCCR_V
+
 !   SPP arrays
     REAL, DIMENSION(KSIZE), INTENT(IN) :: ZZKGN_ACON
     REAL, DIMENSION(KSIZE), INTENT(IN) :: ZZKGN_SBGR
@@ -117,6 +130,23 @@ USE MODD_IO, ONLY:NVERB_FATAL
     REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
     INTEGER :: JK
+    INTEGER :: IDX, IDX_C
+
+    REAL, DIMENSION(KSIZE) :: ZDC_B
+    REAL, DIMENSION(KSIZE) :: ZDC_G
+    REAL, DIMENSION(KSIZE) :: ZDC_X
+    REAL, DIMENSION(KSIZE) :: ZTAU
+    REAL, DIMENSION(KSIZE) :: ZTAUD
+    REAL, DIMENSION(KSIZE) :: ZZETA
+    REAL, DIMENSION(KSIZE) :: ZZETA1
+    REAL, DIMENSION(KSIZE) :: ZEF_RW
+
+    REAL(KIND=MNHREAL64), DIMENSION(KSIZE) :: ZLAMC
+    INTEGER, DIMENSION(KSIZE) :: INUC
+    REAL :: ZFCACCR_V
+    REAL :: ZRHO00
+
+    REAL, DIMENSION(D%NIJT,D%NKT) :: ZW
     LOGICAL :: LTEST ! Only for test !
 !
 !-------------------------------------------------------------------------------
@@ -130,7 +160,53 @@ USE MODD_IO, ONLY:NVERB_FATAL
     IF (BUCONF%LBUDGET_RR) ZWKBUD(:,:) = UNPACK(ZRRS(:)*ZRHODJ(:),MASK=GMICRO(:,:),FIELD=0.0)
     IF (BUCONF%LBUDGET_RR) CALL TBUDGETS(NBUDGET_RR)%PTR%INIT_PHY(D, 'AUTO', ZWKBUD)
 
-    IF (LKOGAN) THEN
+    IF (OICE_T) THEN
+
+      !BJKE: Autoconversion changed to Berry & Reinhardt. Following Thompson et al. 2008.
+      ZZW(:)=0.
+      DO JK = 1, KSIZE
+        INUC(JK) = MIN(15, NINT(1000.E6/PNT_C(JK)) + 2)
+        IF (ZRCT(JK) .GT. 0.01E-9) THEN
+          ZDC_X(JK) = MAX(XD0C*1.E6, ((ZRCT(JK) / (ICED%XAC*PNT_C(JK)))**ICE_T_PARAMETERS%XOBMR) * 1.E6)
+          ZLAMC(JK) = (PNT_C(JK)*ICED%XAC*ICE_T_PARAMETERS%XCC_GM(2,INUC(JK))*ICE_T_PARAMETERS%XOCG1(INUC(JK)) &
+                  & / ZRCT(JK))**ICE_T_PARAMETERS%XOBMR
+          PMVD_C(JK) = (3.672+INUC(JK) )/ZLAMC(JK)
+        ELSE
+          ZDC_X(JK) = 0.
+          ZLAMC(JK) = 0.
+          PMVD_C(JK) = 2.E-6
+        END IF
+      END DO
+
+      !.. Autoconversion follows Berry & Reinhardt (1974) with characteristic
+      !.. diameters correctly computed from gamma distrib of cloud droplets.
+      DO JK = 1, KSIZE
+        IF (ZRCT(JK).GT. 0.01E-3) THEN
+          ZDC_G(JK) = ((ICE_T_PARAMETERS%XCC_GM(3,INUC(JK) )*ICE_T_PARAMETERS%XOCG2(INUC(JK)))**ICE_T_PARAMETERS%XOBMR &
+                  & / ZLAMC(JK) * 1.E6)
+          ZDC_B(JK) = (ZDC_X(JK)*ZDC_X(JK)*ZDC_X(JK)*ZDC_G(JK)*ZDC_G(JK)*ZDC_G(JK) &
+                     - ZDC_X(JK)*ZDC_X(JK)*ZDC_X(JK)*ZDC_X(JK)*ZDC_X(JK)*ZDC_X(JK))**(1./6.)
+          ZZETA1(JK) = 0.5*((6.25E-6*ZDC_X(JK)*ZDC_B(JK)*ZDC_B(JK)*ZDC_B(JK) - 0.4) &
+                       + ABS(6.25E-6*ZDC_X(JK)*ZDC_B(JK)*ZDC_B(JK)*ZDC_B(JK) - 0.4))
+          ZZETA(JK) = 0.027*ZRCT(JK)*ZZETA1(JK)
+          ZTAUD(JK) = 0.5*((0.5*ZDC_B(JK) - 7.5) + ABS(0.5*ZDC_B(JK) - 7.5)) + XICET_R1
+          ZTAU(JK)  = 3.72/(ZRCT(JK)*ZTAUD(JK))
+          ZZW(JK) = ZZETA(JK)/ZTAU(JK)
+          ZZW(JK) = MIN(ZRCT(JK)*ICE_T_PARAMETERS%XODTS, ZZW(JK))
+
+          ZRCS(JK) = ZRCS(JK) - ZZW(JK)
+          ZRRS(JK) = ZRRS(JK) + ZZW(JK)
+        ELSE
+          ZDC_G(JK) = 0.
+          ZDC_B(JK) = 0.
+          ZZETA1(JK) = 0.
+          ZZETA(JK) = 0.
+          ZTAUD(JK) = 0.
+          ZTAU(JK)  = 0.
+        END IF
+      END DO
+
+    ELSEIF (LKOGAN) THEN
       DO JK = 1, KSIZE
         IF (ZRCT(JK) >  1.0E-8) THEN ! Closely following Kogan autoconversion
           ZZW(JK) = 1350.0*ZZKGN_ACON(JK)* ZCONCM(JK)**(-1.79) * &
@@ -166,15 +242,52 @@ USE MODD_IO, ONLY:NVERB_FATAL
 
     IF (PARAMI%CSUBG_RC_RR_ACCR == 'NONE') THEN
       !CLoud water and rain are diluted over the grid box
-      DO JK = 1, KSIZE
-        IF (ZRCT(JK)>ICED%XRTMIN(2) .AND. ZRRT(JK)>ICED%XRTMIN(3) .AND. ZRCS(JK)>0.0) THEN
-          ZZW(JK) = MIN( ZRCS(JK), ICEP%XFCACCR * ZRCT(JK)*ZACRF(JK) &
-                 * ZLBDAR(JK)**ICEP%XEXCACCR    &
-                 * ZRHODREF(JK)**(-ICED%XCEXVT) )
-          ZRCS(JK) = ZRCS(JK) - ZZW(JK)
-          ZRRS(JK) = ZRRS(JK) + ZZW(JK)
-        END IF
-      END DO
+      IF (OICE_T) THEN
+        ZZW =0.
+        ZRHO00 = CST%XP00/(CST%XRD*XTHVREFZ(1+JPVEXT))
+
+        DO JK = 1, KSIZE
+          IF (ZRRT(JK) > ICED%XRTMIN(3)) THEN
+            PMVD_R(JK) = 3.672/SQRT(SQRT(XPI*XRHOLW*ICED%XCCR/(ZRRT(JK)*ZRHODREF(JK))))
+          ELSE
+            PMVD_R(JK) = 2.E-6
+          ENDIF
+        ENDDO
+
+        DO JK = 1, KSIZE
+          IF (PMVD_R(JK).GT. XD0R .AND. PMVD_C(JK).GT. XD0C) THEN
+            IDX_C = MAX(1, MIN(NINT(PMVD_C(JK)*1.E6), NBC))
+            IDX = 1 + INT(NBR*DLOG(PMVD_R(JK)/ICE_T_PARAMETERS%XITDR(1)) &
+              & / DLOG(ICE_T_PARAMETERS%XITDR(NBR)/ICE_T_PARAMETERS%XITDR(1)))
+            IDX = MIN(IDX, NBR)
+            ZEF_RW(JK) = ICE_T_PARAMETERS%XT_EFRW(IDX,IDX_C)
+          ELSE
+            ZEF_RW(JK) = 1.0
+          ENDIF
+        ENDDO
+
+        DO JK = 1, KSIZE
+          IF (ZRCT(JK) > ICED%XRTMIN(2) .AND. ZRRT(JK) > ICED%XRTMIN(3) .AND. ZRCS(JK) > 0.0) THEN
+            ZFCACCR_V = (XPI/4.0)*PCCR_V(JK)*ICED%XCR*(ZRHO00**ICED%XCEXVT)*MOMG(ICED%XALPHAR, ICED%XNUR, ICED%XDR+2.0)
+            ZZW(JK) = MIN(ZRCS(JK), ZEF_RW(JK)*ZFCACCR_V * ZRCT(JK) &
+                   * ZLBDAR(JK)**ICEP%XEXCACCR    &
+                   * ZRHODREF(JK)**(-ICED%XCEXVT))
+            ZRCS(JK) = ZRCS(JK) - ZZW(JK)
+            ZRRS(JK) = ZRRS(JK) + ZZW(JK)
+          ENDIF
+        ENDDO
+
+      ELSE
+        DO JK = 1, KSIZE
+          IF (ZRCT(JK)>ICED%XRTMIN(2) .AND. ZRRT(JK)>ICED%XRTMIN(3) .AND. ZRCS(JK)>0.0) THEN
+            ZZW(JK) = MIN( ZRCS(JK), ICEP%XFCACCR * ZRCT(JK)*ZACRF(JK) &
+                   * ZLBDAR(JK)**ICEP%XEXCACCR    &
+                   * ZRHODREF(JK)**(-ICED%XCEXVT) )
+            ZRCS(JK) = ZRCS(JK) - ZZW(JK)
+            ZRRS(JK) = ZRRS(JK) + ZZW(JK)
+          END IF
+        END DO
+      ENDIF
 
     ELSEIF (PARAMI%CSUBG_RC_RR_ACCR=='PRFR') THEN
       !Cloud water is concentrated over its fraction with possibly to parts with high and low content as set for autoconversion
@@ -366,5 +479,26 @@ USE MODD_IO, ONLY:NVERB_FATAL
 !
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD:RAIN_ICE_WARM',1,ZHOOK_HANDLE)
   END SUBROUTINE RAIN_ICE_OLD_WARM
+
+  FUNCTION MOMG(PALPHA,PNU,PP) RESULT (PMOMG)
+!
+!   auxiliary routine used to compute the Pth moment order of the generalized
+!   gamma law
+!
+    USE MODI_GAMMA
+!
+    IMPLICIT NONE
+!
+    REAL, INTENT(IN)     :: PALPHA ! first shape parameter of the dimensionnal distribution
+    REAL, INTENT(IN)     :: PNU    ! second shape parameter of the dimensionnal distribution
+    REAL, INTENT(IN)     :: PP     ! order of the moment
+    REAL     :: PMOMG  ! result: moment of order ZP
+!
+!------------------------------------------------------------------------------
+!
+!
+    PMOMG = GAMMA(PNU+PP/PALPHA)/GAMMA(PNU)
+!
+  END FUNCTION MOMG
 
 END MODULE MODE_RAIN_ICE_OLD_WARM

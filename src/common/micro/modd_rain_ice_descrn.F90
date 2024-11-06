@@ -1,6 +1,6 @@
 !MNH_LIC Copyright 1994-2014 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
-!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt  
+!MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
 !     ##########################
       MODULE MODD_RAIN_ICE_DESCR_n
@@ -49,6 +49,7 @@
 !!      Original    04/12/95
 !!       J.-P. Pinty   29/11/02 add ICE4
 !!       C. LAC     26/01/2012 : suppression de XCONC qui n'était pas utilisé
+!!       B.J.K. Engdahl    2022 added XCCR2 for ICET
 !!
 !-------------------------------------------------------------------------------
 !
@@ -61,7 +62,7 @@ TYPE RAIN_ICE_DESCR_t
 REAL :: XCEXVT               ! air density fall speed correction
 !
 REAL :: XAC,XBC,XCC,XDC                          ! Cloud droplet  charact.
-REAL :: XAR,XBR,XCR,XDR,XCCR     ,XF0R,XF1R,XC1R ! Raindrop       charact.
+REAL :: XAR,XBR,XCR,XDR,XCCR,XCCR2,XF0R,XF1R,XC1R ! Raindrop       charact.
 REAL :: XAI,XBI,XC_I,XDI          ,XF0I,XF2I,XC1I ! Cloud ice      charact.
 REAL :: XAS,XBS,XCS,XDS,XCCS,XCXS,XF0S,XF1S,XC1S ! Snow/agg.      charact.
 REAL :: XAG,XBG,XCG,XDG,XCCG,XCXG,XF0G,XF1G,XC1G ! Graupel        charact.
@@ -100,6 +101,7 @@ REAL, POINTER :: XCEXVT => NULL(), &
                  XCR => NULL(), &
                  XDR => NULL(), &
                  XCCR => NULL(), &
+                 XCCR2 => NULL(), &
                  XF0R => NULL(), &
                  XF1R => NULL(), &
                  XC1R => NULL(), &
@@ -181,9 +183,9 @@ SUBROUTINE RAIN_ICE_DESCR_GOTO_MODEL(KFROM, KTO)
 IMPLICIT NONE
 INTEGER, INTENT(IN) :: KFROM, KTO
 !
-IF(.NOT. ASSOCIATED(RAIN_ICE_DESCRN, RAIN_ICE_DESCR_MODEL(KTO))) THEN    
+IF(.NOT. ASSOCIATED(RAIN_ICE_DESCRN, RAIN_ICE_DESCR_MODEL(KTO))) THEN
   !
-  RAIN_ICE_DESCRN => RAIN_ICE_DESCR_MODEL(KTO) 
+  RAIN_ICE_DESCRN => RAIN_ICE_DESCR_MODEL(KTO)
   !
   XCEXVT => RAIN_ICE_DESCRN%XCEXVT
   XAC => RAIN_ICE_DESCRN%XAC
@@ -195,6 +197,7 @@ IF(.NOT. ASSOCIATED(RAIN_ICE_DESCRN, RAIN_ICE_DESCR_MODEL(KTO))) THEN
   XCR => RAIN_ICE_DESCRN%XCR
   XDR => RAIN_ICE_DESCRN%XDR
   XCCR => RAIN_ICE_DESCRN%XCCR
+  XCCR2 => RAIN_ICE_DESCRN%XCCR2
   XF0R => RAIN_ICE_DESCRN%XF0R
   XF1R => RAIN_ICE_DESCRN%XF1R
   XC1R => RAIN_ICE_DESCRN%XC1R

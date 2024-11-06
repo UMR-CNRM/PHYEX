@@ -9,19 +9,19 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RI
 
   CONTAINS
 
-  SUBROUTINE RAIN_ICE_OLD_FAST_RI(D, CST, ICEP, ICED, BUCONF,   &
-                                  PTSTEP, KSIZE,                &
-                                  OCND2, LMODICEDEP, GMICRO,    &
-                                  PRHODJ, PTHS,                 &
-                                  PRIT, PCIT,                   &
-                                  PRVS, PRCS, PRIS, PRSS, PZTHS, &
-                                  PRHODREF, PZRHODJ,             &
-                                  PLSFACT, PLVFACT,             &
-                                  PAI, PCJ,                     &
-                                  PSSIO, PSSIU, PW2D, PXW2D13,  &
-                                  PZT, PRES, PSSI,             &
-                                  PSIFRC, PESI,                 &
-                                  PCITRED, PCITRED23, PDICRIT,  &
+  SUBROUTINE RAIN_ICE_OLD_FAST_RI(D, CST, ICEP, ICED, BUCONF,        &
+                                  PTSTEP, KSIZE,                     &
+                                  OCND2, OICE_T, LMODICEDEP, GMICRO, &
+                                  PRHODJ, PTHS,                      &
+                                  PRIT, PCIT,                        &
+                                  PRVS, PRCS, PRIS, PRSS, PZTHS,     &
+                                  PRHODREF, PZRHODJ,                 &
+                                  PLSFACT, PLVFACT,                  &
+                                  PAI, PCJ,                          &
+                                  PSSIO, PSSIU, PW2D, PXW2D13,       &
+                                  PZT, PRES, PSSI,                   &
+                                  PSIFRC, PESI,                      &
+                                  PCITRED, PCITRED23, PDICRIT,       &
                                   TBUDGETS, KBUDGETS)
 
     USE PARKIND1,            ONLY: JPRB
@@ -48,6 +48,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RI
     INTEGER, INTENT(IN) :: KSIZE
 
     LOGICAL, INTENT(IN) :: OCND2
+    LOGICAL, INTENT(IN) :: OICE_T
     LOGICAL, INTENT(IN) :: LMODICEDEP
 
     LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: GMICRO ! Layer thickness (m)
@@ -77,7 +78,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RI
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PSSIU    ! Sub-saturation with respect to ice in the
                                                       ! sub-saturated fraction of gridbox
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PW2D     ! Factor for subgridscale calculations
-    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PXW2D13  ! ZXW2D**0.333 or other expression for LMODICEDEP=T
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PXW2D13  ! PXW2D**0.333 or other expression for LMODICEDEP=T
 
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PZT      ! Temperature
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRES     ! Pressure
@@ -104,7 +105,7 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RI
     REAL :: ZQIMAX
     REAL :: ZHU
 
-    INTEGER :: JK, JL
+    INTEGER :: JK
 
     REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
@@ -154,11 +155,37 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RI
       ! PSIFRC with a superaturation PSSIO and a subsaturated part (1.- PSIFRC)
       ! with a (negative) superaturation of PSSIU
 
-      IF (LMODICEDEP) THEN
+      IF (OICE_T) THEN
 
-        DO JL=1,KSIZE
-          ZZW2(JL) = MAX(PCIT(JL),ICENUMBER2(PRIS(JL)*PTSTEP,PZT(JL))* &
-          PRHODREF(JL))
+        DO JK = 1, KSIZE
+          ZZW2(JK) = (ICENUMBER2(PRIS(JK)*PTSTEP, PZT(JK)) + PCIT(JK))*PRHODREF(JK)
+
+          IF (ZZW2(JK)>0.0 .AND. PESI(JK) < PRES(JK)*0.5) THEN
+            ZZW(JK) = ICEP%X0DEPI/(ICED%XLBI*PAI(JK))*(ZZW2(JK)/PRHODREF(JK))**(1. + ICED%XLBEXI) * &
+              & (PTSTEP*MAX(ICED%XRTMIN(4)/PTSTEP, PRIS(JK))*PW2D(JK))**(-ICED%XLBEXI)
+
+            ZZW(JK) = MAX(-PRIS(JK)*PW2D(JK)*(1. - PSIFRC(JK)) &
+                  & + ZZW(JK)*PSSIO(JK)*PSIFRC(JK)*PXW2D13(JK), &
+                  &   ZZW(JK)*(PSSIO(JK)*PSIFRC(JK)*PXW2D13(JK) &
+                  & + PCITRED23*PSSIU(JK)*(1. - PSIFRC(JK))))
+
+            PRIS(JK) = PRIS(JK) + ZZW(JK)
+            PRVS(JK) = PRVS(JK) - ZZW(JK)  ! Budget here: ! cloud ice + vapor = const
+            PZTHS(JK) = PZTHS(JK) + ZZW(JK)*PLSFACT(JK) ! f(L_f*(RCBERI))
+          ENDIF
+
+          IF (PRIS(JK) < 0.0) THEN !This is to avoid negative values of PRIS, while still conserving PRVS
+            ZZW(JK)  = PRIS(JK)
+            PRVS(JK) = PRVS(JK) + ZZW(JK)
+            PRIS(JK) = 0.0
+          ENDIF
+        ENDDO
+
+      ELSEIF (LMODICEDEP) THEN ! IF OCND2 AND LMODICEDEP AND NOT OICET
+
+        DO JK = 1,KSIZE
+          ZZW2(JK) = MAX(PCIT(JK),ICENUMBER2(PRIS(JK)*PTSTEP,PZT(JK))* &
+          PRHODREF(JK))
         ENDDO
 
         DO JK = 1, KSIZE
@@ -173,7 +200,8 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RI
             PZTHS(JK) = PZTHS(JK) + ZZW(JK)*PLSFACT(JK) ! f(L_f*(RCBERI))
           END IF
         END DO
-      ELSE
+
+      ELSE ! IF OCND2 AND NOT LMODICEDEP OR OICET
 
         DO JK=1,KSIZE
 

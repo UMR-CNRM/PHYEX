@@ -9,20 +9,23 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
 
   CONTAINS
 
-  SUBROUTINE RAIN_ICE_OLD_SEDIMENTATION_STAT(D, CST, ICEP, ICED,                 &
-                                             KRR, OSEDIC, PTSTEP, KKL, IKB, IKE, &
-                                             PDZZ, PRHODJ, PRHODREF, PPABST,     &
-                                             PTHT, PRCT, PRRT, PRST, PRGT,       &
-                                             PRCS, PRRS, PRIS, PRSS, PRGS,       &
-                                             PINPRC, PINPRR, PINPRS, PINPRG,     &
-                                             ZRAY, ZLBC, ZFSEDC, ZCONC3D,        &
+  SUBROUTINE RAIN_ICE_OLD_SEDIMENTATION_STAT(D, CST, ICEP, ICED,             &
+                                             KRR, OICE_T, OSEDIC, PTSTEP,    &
+                                             KKL, IKB, IKE,                  &
+                                             PDZZ, PRHODJ, PRHODREF, PPABST, &
+                                             PTHT, PRCT, PRRT, PRST, PRGT,   &
+                                             PRCS, PRRS, PRIS, PRSS, PRGS,   &
+                                             PINPRC, PINPRR, PINPRS, PINPRG, &
+                                             ZRAY, ZLBC, ZFSEDC, ZCONC3D,    &
                                              PRHT, PRHS, PINPRH, PFPR)
 
-    USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
-    USE MODD_CST,             ONLY: CST_T
-    USE MODD_RAIN_ICE_PARAM_n,  ONLY: RAIN_ICE_PARAM_T
-    USE MODD_RAIN_ICE_DESCR_n,  ONLY: RAIN_ICE_DESCR_T
-    USE YOMHOOK,              ONLY: LHOOK, DR_HOOK, JPHOOK
+    USE MODD_PARAMETERS,       ONLY: JPVEXT
+    USE MODD_ICET_PARAM,       ONLY: XTHVREFZ
+    USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_T
+    USE MODD_CST,              ONLY: CST_T
+    USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_T
+    USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_T
+    USE YOMHOOK,               ONLY: LHOOK, DR_HOOK, JPHOOK
 
 !*      0. DECLARATIONS
 !          ------------
@@ -36,6 +39,7 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
 
     INTEGER, INTENT(IN) :: KRR
     LOGICAL, INTENT(IN) :: OSEDIC ! Switch for droplet sedim.
+    LOGICAL, INTENT(IN) :: OICE_T ! Switch for ICE_T
 
     REAL,    INTENT(IN) :: PTSTEP  ! Double Time step
     INTEGER, INTENT(IN) :: KKL !vert. levels type 1=MNH -1=ARO
@@ -80,6 +84,12 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
 
     REAL, DIMENSION(D%NIJT, D%NKT)     :: ZW ! work array
 
+!**************** ICE-T Declarations ***********************************
+    REAL, DIMENSION(D%NIJT, D%NKT)     :: ZCCR_V3D
+    REAL                               :: ZTEMPC
+    LOGICAL                            :: GFOUND_0C
+!**************** End ICE-T declarations *******************************
+
     REAL :: ZP1,ZP2,ZH,ZZWLBDA,ZZWLBDC,ZZCC
     REAL, DIMENSION(D%NIJT) :: ZQP
     INTEGER :: JI,JK
@@ -87,11 +97,14 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
     INTEGER, DIMENSION(D%NIJT) :: I1
     LOGICAL, DIMENSION(D%NIJT) :: GMASK
 
+    REAL, DIMENSION(D%NIJT,D%NKT) :: ZFSEDR_V
     REAL, DIMENSION(D%NIJT,D%NKT) :: ZPRCS, ZPRRS, ZPRSS, ZPRGS, ZPRHS ! Mixing ratios created during the time step
 
     REAL, DIMENSION(SIZE(ICED%XRTMIN)) :: ZRTMIN
 
     REAL :: ZINVTSTEP
+
+    REAL :: ZRHO00
 
     REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
@@ -133,6 +146,27 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
         ZW(JI,JK) =PTSTEP/(PRHODREF(JI,JK)* PDZZ(JI,JK) )
       END DO
     END DO
+
+    IF(OICE_T)THEN
+
+      ZRHO00 = CST%XP00/(CST%XRD*XTHVREFZ(1+JPVEXT))
+
+      ZCCR_V3D(:,:) = ICED%XCCR ! Set to old constant value
+
+      DO JI = D%NIJB, D%NIJE
+        GFOUND_0C = .FALSE.
+        DO JK = IKE, IKB, -1*KKL
+          ZTEMPC = PTHT(JI, JK) * (PPABST(JI, JK)/CST%XP00)**(CST%XRD/CST%XCPD) - CST%XTT
+          IF (PRRS(JI, JK)>0.0 .AND. (ZTEMPC < 0) .AND. (.NOT.GFOUND_0C) ) THEN
+            ZCCR_V3D(JI, JK) = ICED%XCCR2
+          END IF
+          IF (PRRS(JI, JK)>0.0 .AND. (ZTEMPC > -2.0) .AND. (ZTEMPC < 0.0) .AND. (.NOT. GFOUND_0C) ) THEN
+            ZCCR_V3D(JI, JK) = 8. *10**(6 - ZTEMPC)
+          END IF
+          IF (ZTEMPC >0) GFOUND_0C =.TRUE.
+        END DO
+      END DO
+    END IF
 !
 !*       2.1   for cloud
 !
@@ -228,13 +262,27 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
 
         !calculation of w
         IF ( PRRS(JI,JK) > ZRTMIN(3) ) THEN
-          ZWSEDW1(JI,JK)= ICEP%XFSEDR *PRRS(JI,JK)**(ICEP%XEXSEDR-1)* &
-          PRHODREF(JI,JK)**(ICEP%XEXSEDR-ICED%XCEXVT-1)
+          IF(OICE_T)THEN
+            ZFSEDR_V(JI,JK)  = ICED%XCR*ICED%XAR*ZCCR_V3D(JI,JK)*MOMG(ICED%XALPHAR,ICED%XNUR,ICED%XBR+ICED%XDR)* &
+                       (ICED%XAR*ZCCR_V3D(JI,JK)*MOMG(ICED%XALPHAR,ICED%XNUR,ICED%XBR))**(-ICEP%XEXSEDR)*(ZRHO00)**ICED%XCEXVT
+            ZWSEDW1 (JI,JK)= ZFSEDR_V(JI,JK) *PRRS(JI,JK)**(ICEP%XEXSEDR-1)* &
+            PRHODREF(JI,JK)**(ICEP%XEXSEDR-ICED%XCEXVT-1)
+          ELSE
+            ZWSEDW1(JI,JK)= ICEP%XFSEDR *PRRS(JI,JK)**(ICEP%XEXSEDR-1)* &
+            PRHODREF(JI,JK)**(ICEP%XEXSEDR-ICED%XCEXVT-1)
+          ENDIF
         ENDIF
 
         IF ( ZQP(JI) > ZRTMIN(3) ) THEN
-          ZWSEDW2(JI,JK)= ICEP%XFSEDR *(ZQP(JI))**(ICEP%XEXSEDR-1)* &
-          PRHODREF(JI,JK)**(ICEP%XEXSEDR-ICED%XCEXVT-1)
+          IF(OICE_T)THEN
+            ZFSEDR_V(JI,JK)  = ICED%XCR*ICED%XAR*ZCCR_V3D(JI,JK)*MOMG(ICED%XALPHAR,ICED%XNUR,ICED%XBR+ICED%XDR)* &
+                       (ICED%XAR*ZCCR_V3D(JI,JK)*MOMG(ICED%XALPHAR,ICED%XNUR,ICED%XBR))**(-ICEP%XEXSEDR)*(ZRHO00)**ICED%XCEXVT
+            ZWSEDW2 (JI,JK)= ZFSEDR_V(JI,JK) *(ZQP(JI))**(ICEP%XEXSEDR-1)* &
+            PRHODREF(JI,JK)**(ICEP%XEXSEDR-ICED%XCEXVT-1)
+          ELSE
+            ZWSEDW2(JI,JK)= ICEP%XFSEDR *(ZQP(JI))**(ICEP%XEXSEDR-1)* &
+            PRHODREF(JI,JK)**(ICEP%XEXSEDR-ICED%XCEXVT-1)
+          ENDIF
         ENDIF
       ENDDO
 
@@ -524,5 +572,26 @@ MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT
     END DO
 
   END SUBROUTINE COUNTJV2
+
+  FUNCTION MOMG(PALPHA,PNU,PP) RESULT (PMOMG)
+!
+!   auxiliary routine used to compute the Pth moment order of the generalized
+!   gamma law
+!
+    USE MODI_GAMMA
+!
+    IMPLICIT NONE
+!
+    REAL, INTENT(IN)     :: PALPHA ! first shape parameter of the dimensionnal distribution
+    REAL, INTENT(IN)     :: PNU    ! second shape parameter of the dimensionnal distribution
+    REAL, INTENT(IN)     :: PP     ! order of the moment
+    REAL     :: PMOMG  ! result: moment of order ZP
+!
+!------------------------------------------------------------------------------
+!
+!
+    PMOMG = GAMMA(PNU+PP/PALPHA)/GAMMA(PNU)
+!
+  END FUNCTION MOMG
 
 END MODULE MODE_RAIN_ICE_OLD_SEDIMENTATION_STAT

@@ -7,7 +7,7 @@
 MODULE MODE_INI_RAIN_ICE
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE INI_RAIN_ICE (HPROGRAM, KLUOUT, PTSTEP, PDZMIN, KSPLITR, HCLOUD )
+      SUBROUTINE INI_RAIN_ICE (HPROGRAM, KLUOUT, PTSTEP, PDZMIN, KSPLITR, HCLOUD, ICE_T_PARAMETERS )
 !     ###########################################################
 !
 !!****  *INI_RAIN_ICE * - initialize the constants necessary for the warm and
@@ -41,9 +41,13 @@ CONTAINS
 !!    ------------------
 !!      Module MODD_CST
 !!        XPI                  !
-!!        XP00                 ! Reference pressure
 !!        XRD                  ! Gaz constant for dry air
+!!        XRV
 !!        XRHOLW               ! Liquid water density
+!!        XALPW
+!!        XBETAW
+!!        XGAMW
+!!        XG
 !!      Module MODD_REF
 !!        XTHVREFZ             ! Reference virtual pot.temp. without orography
 !!      Module MODD_RAIN_ICE_DESCR
@@ -79,12 +83,13 @@ CONTAINS
 !!      J.-P. Pinty 24/11/01 Update ICE3/ICE4 options
 !!      S. Riette 2016-11: new ICE3/ICE4 options
 !!      P. Wautelet 22/01/2019 bug correction: incorrect write
-!  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
+!!      P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
 !!      S. Riette 2022-03: use of RAIN_ICE_PARAM structure for some variables
 !!                         to reproduce results on belenos. The reason why
 !!                         those variables must have a specifi treatment was
 !!                         not understood
-!  J. Wurtz       03/2022: New snow characteristics with LSNOW_T
+!!      J. Wurtz       03/2022: New snow characteristics with LSNOW_T
+!!      B.J.K. Engdahl 03/2023: ICE-T
 !
 !-------------------------------------------------------------------------------
 !
@@ -94,16 +99,17 @@ CONTAINS
 USE MODD_CST, ONLY: XALPW, XBETAW, XG, XGAMW, XP00, XPI, XRD, XRHOLW, XRV
 USE MODD_PARAM_ICE_n, ONLY: LSNOW_T, CSEDIM, LRED, CPRISTINE_ICE, &
                         & LCRIAUTI, XACRIAUTI_NAM, XBCRIAUTI_NAM, XCRIAUTC_NAM, XCRIAUTI_NAM, XT0CRIAUTI_NAM, &
-                        & XFRACM90, XFRMIN_NAM, XRDEPGRED_NAM, XRDEPSRED_NAM
+                        & XFRACM90, XFRMIN_NAM, XRDEPGRED_NAM, XRDEPSRED_NAM, LICE_T
 USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_ALLOCATE, XAC, XAG, XAH, XAI, XALPHAC, XALPHAC2, &
                                  XALPHAG, XALPHAH, XALPHAI, XALPHAR, XALPHAS, XAR, XAS, XBC, XBG, &
                                  XBH, XBI, XBR, XBS, XC1G, XC1H, XC1I, XC1R, XC1S, XCC, XCCG, XCCH, &
-                                 XCCR, XCCS, XCEXVT, XCG, XCH, XCONC_LAND, XCONC_SEA, XCONC_URBAN, &
+                                 XCCR, XCCR2, XCCS, XCEXVT, XCG, XCH, XCONC_LAND, XCONC_SEA, XCONC_URBAN, &
                                  XCR, XCS, XCXG, XCXH, XCXS, XC_I, XDC, XDG, XDH, XDI, XDR, XDS, XF0G, &
                                  XF0H, XF0I, XF0R, XF0S, XF1G, XF1H, XF1R, XF1S, XF2I, XFVELOS, XLBC, &
                                  XLBDAG_MAX, XLBDAR_MAX, XLBDAS_MAX, XLBDAS_MIN, XLBEXC, XLBEXG, &
                                  XLBEXH, XLBEXI, XLBEXR, XLBEXS, XLBG, XLBH, XLBI, XLBR, XLBS, XNS, &
-                                 XNUC, XNUC2, XNUG, XNUH, XNUI, XNUR, XNUS, XRTMIN, XTRANS_MP_GAMMAS
+                                 XNUC, XNUC2, XNUG, XNUH, XNUI, XNUR, XNUS, XRTMIN, XTRANS_MP_GAMMAS, &
+                                 RAIN_ICE_DESCRN
 USE MODD_RAIN_ICE_PARAM_n, ONLY: LNEWCOEFF, RAIN_ICE_PARAMN, RAIN_ICE_PARAM_ALLOCATE, X0DEPG, X0DEPH, &
                                  X0DEPI, X0DEPS, X0EVAR, X1DEPG, X1DEPH, X1DEPS, X1EVAR, X2DEPI, &
                                  XACRIAUTI, XALPHA1, XALPHA2, XALPHA3, XBCRIAUTI, XBETA1, XBETA2, &
@@ -138,25 +144,34 @@ USE MODE_READ_XKER_SWETH, ONLY: READ_XKER_SWETH
 USE MODE_READ_XKER_GWETH, ONLY: READ_XKER_GWETH
 USE MODE_READ_XKER_RWETH, ONLY: READ_XKER_RWETH
 !
+USE MODE_INI_ICET_FREEZEH2O,  ONLY: INI_ICET_FREEZEH2O
+USE MODE_INI_ICET_TABLE_EFRW, ONLY: INI_ICET_TABLE_EFRW
+USE MODE_INI_ICET_TABLE_EFSW, ONLY: INI_ICET_TABLE_EFSW
+USE MODD_ICET_PARAM, ONLY: ICET_PARAM_t
+USE MODD_ICET_PARAM, ONLY: XRHO_G, XRHO_I, XBV_C, XD0C, XD0R, XBM_G, XBM_I, XR_C, XD0G, XR_R
+USE MODD_ICET_PARAM, ONLY: XN0R_EXP, XNT_IN, XMU_R, XMU_G, XMU_I, XMU_S, XBV_R, XBV_I
+USE MODD_ICET_PARAM, ONLY: NBC, NBR, NBS
+
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
-!
+
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
 !
-CHARACTER(LEN=6),        INTENT(IN) :: HPROGRAM  !< Current program
-INTEGER,                 INTENT(IN) :: KLUOUT   ! Logical unit number for prints
-INTEGER,                 INTENT(OUT):: KSPLITR   ! Number of small time step
-                                                 ! integration for  rain
-                                                 ! sedimendation
+CHARACTER(LEN=6),        INTENT(IN)    :: HPROGRAM  ! Current program
+INTEGER,                 INTENT(IN)    :: KLUOUT    ! Logical unit number for prints
+INTEGER,                 INTENT(OUT)   :: KSPLITR   ! Number of small time step
+                                                    ! integration for  rain
+                                                    ! sedimendation
 !
-REAL,                    INTENT(IN) :: PTSTEP    ! Effective Time step
+REAL,                    INTENT(IN)    :: PTSTEP    ! Effective Time step
 !
-REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
+REAL,                    INTENT(IN)    :: PDZMIN    ! minimun vertical mesh size
 !
-CHARACTER (LEN=4), INTENT(IN)       :: HCLOUD    ! Indicator of the cloud scheme
+CHARACTER(LEN=4),        INTENT(IN)    :: HCLOUD    ! Indicator of the cloud scheme
 !
+TYPE(ICET_PARAM_t),      INTENT(INOUT) :: ICE_T_PARAMETERS
 !
 !
 !*       0.2   Declarations of local variables :
@@ -282,6 +297,10 @@ XRTMIN(5) = 1.0E-15
 XRTMIN(6) = 1.0E-15
 IF (HCLOUD == 'ICE4' .OR. HCLOUD=='LIMA') XRTMIN(7) = 1.0E-15
 !$acc enter data copyin(XRTMIN)
+
+IF (LICE_T) THEN
+  CALL ICE_T_PARAMETERS%ALLOC()
+ENDIF
 !
 !-------------------------------------------------------------------------------
 !
@@ -302,14 +321,22 @@ XBR = 3.0
 XCR = 842.
 XDR = 0.8
 !
-!XCCR = 1.E7    ! N0_r =  XCXR * lambda_r ** ZXR
 XCCR = 8.E6    ! N0_r =  XCXR * lambda_r ** ZXR
+XCCR2 = 8.E8
 ZXR  = -1.     !
 !
 XF0R = 1.00
 XF1R = 0.26
 !
 XC1R = 1./2.
+!
+! Berry and Reinhardt autoconversion+++
+IF (LICE_T) THEN
+  ICE_T_PARAMETERS%XOBMR = 1./XBC
+  ICE_T_PARAMETERS%XAM_G = XPI*XRHO_G/6.0
+  ICE_T_PARAMETERS%XAM_I = XPI*XRHO_I/6.0
+  ICE_T_PARAMETERS%XAM_R = XPI*XRHOLW/6.0
+ENDIF
 !
 !
 !*       2.2    Ice crystal characteristics
@@ -345,18 +372,22 @@ XF2I = 0.14
 !*       2.3    Snowflakes/aggregates characteristics
 !
 !
-XAS = 0.02
-XBS = 1.9
-IF (LSNOW_T) THEN
+IF (LICE_T) THEN
+  ! set the snow coefficients to Thompson et al. 2008
+  XAS = 0.069
+  XBS = 2
+  XCS = 40.
+  XDS = 0.55
+ELSEIF(LSNOW_T) THEN
   !Cas Gamma generalisee
+  XAS = 0.02
+  XBS = 1.9
   XCS = 11.52
   XDS = 0.39
   XFVELOS =0.097
-  !Cas MP
-  !XCS = 13.2
-  !XDS = 0.423       
-  !XFVELOS = 25.14
 ELSE
+  XAS = 0.02
+  XBS = 1.9
   XCS = 5.1
   XDS = 0.27
   XFVELOS = 0.
@@ -380,8 +411,13 @@ XC1S = 1./XPI
 !
 XAG = 19.6  ! Lump graupel case
 XBG = 2.8   ! Lump graupel case
-XCG = 124.  ! Lump graupel case
-XDG = 0.66  ! Lump graupel case
+IF (LICE_T) THEN
+  XCG = 442.  ! Thompson values
+  XDG = 0.89  ! Thompson values
+ELSE
+  XCG = 124.  ! Lump graupel case
+  XDG = 0.66  ! Lump graupel case
+ENDIF
 !
 XCCG = 5.E5
 XCXG = -0.5
@@ -516,7 +552,6 @@ XCONC_URBAN=5E8 ! 500/cm3
 !
 XCEXVT = 0.4
 !
-!ZRHO00 = XP00/(XRD*XTHVREFZ(1+JPVEXT))
 !According to Foote and Du Toit (1969) and List (1958), ZRHO00 must be computed for Hu=50%, P=101325Pa and T=293.15K
 ZE = (50./100.) * EXP(XALPW-XBETAW/293.15-XGAMW*LOG(293.15))
 ZRV = (XRD/XRV) * ZE / (101325.-ZE)
@@ -744,6 +779,181 @@ END IF
 XFCACCR  = (XPI/4.0)*XCCR*XCR*(ZRHO00**XCEXVT)*MOMG(XALPHAR,XNUR,XDR+2.0)
 XEXCACCR = -XDR-3.0
 !
+!
+IF (LICE_T) THEN
+  ICE_T_PARAMETERS%XODTS = 1./PTSTEP
+
+  ! These constants are various exponents and gamma functions
+  ! associated with cloud, rain, snow, and graupel.
+  DO J1 = 1, 15
+    ICE_T_PARAMETERS%XCC_EX(1,J1) = J1 + 1.
+    ICE_T_PARAMETERS%XCC_EX(2,J1) = XBC + J1 + 1.
+    ICE_T_PARAMETERS%XCC_EX(3,J1) = XBC + J1 + 4.
+    ICE_T_PARAMETERS%XCC_EX(4,J1) = J1 + XBV_C + 1.
+    ICE_T_PARAMETERS%XCC_EX(5,J1) = XBC + J1 + XBV_C + 1.
+    ICE_T_PARAMETERS%XCC_GM(1,J1) = GAMMA(ICE_T_PARAMETERS%XCC_EX(1,J1))
+    ICE_T_PARAMETERS%XCC_GM(2,J1) = GAMMA(ICE_T_PARAMETERS%XCC_EX(2,J1))
+    ICE_T_PARAMETERS%XCC_GM(3,J1) = GAMMA(ICE_T_PARAMETERS%XCC_EX(3,J1))
+    ICE_T_PARAMETERS%XCC_GM(4,J1) = GAMMA(ICE_T_PARAMETERS%XCC_EX(4,J1))
+    ICE_T_PARAMETERS%XCC_GM(5,J1) = GAMMA(ICE_T_PARAMETERS%XCC_EX(5,J1))
+    ICE_T_PARAMETERS%XOCG1(J1) = 1./ICE_T_PARAMETERS%XCC_GM(1,J1)
+    ICE_T_PARAMETERS%XOCG2(J1) = 1./ICE_T_PARAMETERS%XCC_GM(2,J1)
+  ENDDO
+
+  ! ICE-T accretion
+  ! Create bins of cloud water (from min diameter up to 100 microns).
+  ICE_T_PARAMETERS%XITDC(1) = XD0C*1.0d0
+  ICE_T_PARAMETERS%XITDTC(1) = XD0C*1.0d0
+  DO J1 = 2, NBC
+    ICE_T_PARAMETERS%XITDC(J1) = ICE_T_PARAMETERS%XITDC(J1-1) + 1.0D-6
+    ICE_T_PARAMETERS%XITDTC(J1) = (ICE_T_PARAMETERS%XITDC(J1) - ICE_T_PARAMETERS%XITDC(J1-1))
+  ENDDO
+
+  ! Create bins of cloud droplet number concentration (1 to 3000 per cc).
+  ! For Bigg freezing
+  ICE_T_PARAMETERS%XDX(1) = 1.0d0
+  ICE_T_PARAMETERS%XDX(NBC+1) = 3000.0d0
+  DO J1 = 2, NBC
+    ICE_T_PARAMETERS%XDX(J1) = DEXP(DFLOAT(J1-1)/DFLOAT(NBC) &
+             *DLOG(ICE_T_PARAMETERS%XDX(NBC+1)/ICE_T_PARAMETERS%XDX(1)) +DLOG(ICE_T_PARAMETERS%XDX(1)))
+  ENDDO
+  DO J1 = 1, NBC
+    ICE_T_PARAMETERS%XT_NC(J1) = DSQRT(ICE_T_PARAMETERS%XDX(J1)*ICE_T_PARAMETERS%XDX(J1+1)) * 1.D6
+  ENDDO
+  ICE_T_PARAMETERS%NIC1 = DLOG(ICE_T_PARAMETERS%XT_NC(NBC)/ICE_T_PARAMETERS%XT_NC(1))
+
+  ! Create bins of rain (from min diameter up to 5 mm).
+  ICE_T_PARAMETERS%XDX(1) = XD0R*1.0d0
+  ICE_T_PARAMETERS%XDX(NBR+1) = 0.005d0
+  DO J1 = 2, NBR
+    ICE_T_PARAMETERS%XDX(J1) = DEXP(DFLOAT(J1-1)/DFLOAT(NBR) &
+             *DLOG(ICE_T_PARAMETERS%XDX(NBR+1)/ICE_T_PARAMETERS%XDX(1)) +DLOG(ICE_T_PARAMETERS%XDX(1)))
+  ENDDO
+  DO J1 = 1, NBR
+    ICE_T_PARAMETERS%XITDR(J1) = DSQRT(ICE_T_PARAMETERS%XDX(J1)*ICE_T_PARAMETERS%XDX(J1+1))
+    ICE_T_PARAMETERS%XITDTR(J1) = ICE_T_PARAMETERS%XDX(J1+1) - ICE_T_PARAMETERS%XDX(J1)
+  ENDDO
+  DO J2 = 1, NBC
+    DO J1 = 1, NBR
+      ICE_T_PARAMETERS%XT_EFRW(J1,J2)=1.
+    ENDDO
+  ENDDO
+  CALL INI_ICET_TABLE_EFRW(ICE_T_PARAMETERS)
+
+  !****************** constants for Bigg freezing****************
+  ! Compute min ice diam from mass, min snow/graupel mass from diam.
+  ! xm0s = am_s * XD0S**bm_s
+  ICE_T_PARAMETERS%XM0G = ICE_T_PARAMETERS%XAM_G * XD0G**XBM_G
+
+  ! Constants for helping find lookup table indexes.
+  ICE_T_PARAMETERS%NIC2 = NINT(ALOG10(XR_C(1)))
+  ICE_T_PARAMETERS%NIR2 = NINT(ALOG10(XR_R(1)))
+  ICE_T_PARAMETERS%NIR3 = NINT(ALOG10(XN0R_EXP(1)))
+  ICE_T_PARAMETERS%NIIN2 = NINT(ALOG10(XNT_IN(1)))
+
+  ICE_T_PARAMETERS%XCR_EX(1) = XBR + 1.
+  ICE_T_PARAMETERS%XCR_EX(2) = XMU_R + 1.
+  ICE_T_PARAMETERS%XCR_EX(3) = XBR + XMU_R + 1.
+  ICE_T_PARAMETERS%XCR_EX(4) = XBR*2. + XMU_R + 1.
+  ICE_T_PARAMETERS%XCR_EX(5) = XMU_R + XBV_R + 1.
+  ICE_T_PARAMETERS%XCR_EX(6) = XBR + XMU_R + XBV_R + 1.
+  ICE_T_PARAMETERS%XCR_EX(7) = XBR*0.5 + XMU_R + XBV_R + 1.
+  ICE_T_PARAMETERS%XCR_EX(8) = XBR + XMU_R + XBV_R + 3.
+  ICE_T_PARAMETERS%XCR_EX(9) = XMU_R + XBV_R + 3.
+  ICE_T_PARAMETERS%XCR_EX(10) = XMU_R + 2.
+  ICE_T_PARAMETERS%XCR_EX(11) = 0.5*(XBV_R + 5. + 2.*XMU_R)
+  ICE_T_PARAMETERS%XCR_EX(12) = XBR*0.5 + XMU_R + 1.
+  ICE_T_PARAMETERS%XCR_EX(13) = XBR*2. + XMU_R + XBV_R + 1.
+  DO J1 = 1, 13
+    ICE_T_PARAMETERS%XCR_GM(J1) = GAMMA(ICE_T_PARAMETERS%XCR_EX(J1))
+  ENDDO
+  ICE_T_PARAMETERS%XORE1 = 1./ICE_T_PARAMETERS%XCR_EX(1)
+  ICE_T_PARAMETERS%XORG1 = 1./ICE_T_PARAMETERS%XCR_GM(1)
+  ICE_T_PARAMETERS%XORG2 = 1./ICE_T_PARAMETERS%XCR_GM(2)
+
+  CALL INI_ICET_FREEZEH2O(ICE_T_PARAMETERS, RAIN_ICE_DESCRN)
+
+  !****************** Constants for graupel collecting cloud water ***************
+  ICE_T_PARAMETERS%XCG_E(1) = XBM_G + 1.
+  ICE_T_PARAMETERS%XCG_E(2) = XMU_G + 1.
+  ICE_T_PARAMETERS%XCG_E(3) = XBM_G + XMU_G + 1.
+  ICE_T_PARAMETERS%XCG_E(4) = XBM_G*2. + XMU_G + 1.
+  ICE_T_PARAMETERS%XCG_E(5) = XBM_G*2. + XMU_G + XDG + 1.
+  ICE_T_PARAMETERS%XCG_E(6) = XBM_G + XMU_G + XDG + 1.
+  ICE_T_PARAMETERS%XCG_E(7) = XBM_G + XMU_G + XDG + 2.
+  ICE_T_PARAMETERS%XCG_E(8) = XBM_G + XMU_G + XDG + 3.
+  ICE_T_PARAMETERS%XCG_E(9) = XMU_G + XDG + 3.
+  ICE_T_PARAMETERS%XCG_E(10) = XMU_G + 2.
+  ICE_T_PARAMETERS%XCG_E(11) = 0.5*(XDG + 5. + 2.*XMU_G)
+  ICE_T_PARAMETERS%XCG_E(12) = 0.5*(XDG + 5.) + XMU_G
+  DO J1 = 1, 12
+    ICE_T_PARAMETERS%XCG_G(J1) = GAMMA(ICE_T_PARAMETERS%XCG_E(J1))
+  ENDDO
+  ICE_T_PARAMETERS%XOBMG = 1./XBM_G
+  ICE_T_PARAMETERS%XOGE1 = 1./ICE_T_PARAMETERS%XCG_E(1)
+  ICE_T_PARAMETERS%XOGG1 = 1./ICE_T_PARAMETERS%XCG_G(1)
+  ICE_T_PARAMETERS%XOGG2 = 1./ICE_T_PARAMETERS%XCG_G(2)
+
+  ! Graupel collecting cloud water
+  ICE_T_PARAMETERS%XT1_QG_QC = XPI*.25*XCG * ICE_T_PARAMETERS%XCG_G(9)
+
+  !********** Constants for vapor deposition and sublimation of cloud ice *******
+  ICE_T_PARAMETERS%XCI_EX(1) = XMU_I + 1.
+  ICE_T_PARAMETERS%XCI_EX(2) = XBM_I + XMU_I + 1.
+  ICE_T_PARAMETERS%XCI_EX(3) = XBM_I + XMU_I + XBV_I + 1.
+  ICE_T_PARAMETERS%XCI_EX(4) = XMU_I + XBV_I + 1.
+  ICE_T_PARAMETERS%XCI_EX(5) = XMU_I + 2.
+  ICE_T_PARAMETERS%XCI_EX(6) = XBM_I*0.5 + XMU_I + XBV_I + 1.
+  ICE_T_PARAMETERS%XCI_EX(7) = XBM_I*0.5 + XMU_I + 1.
+  ICE_T_PARAMETERS%XCI_GM(1) = GAMMA(ICE_T_PARAMETERS%XCI_EX(1))
+  ICE_T_PARAMETERS%XCI_GM(2) = GAMMA(ICE_T_PARAMETERS%XCI_EX(2))
+  ICE_T_PARAMETERS%XCI_GM(3) = GAMMA(ICE_T_PARAMETERS%XCI_EX(3))
+  ICE_T_PARAMETERS%XCI_GM(4) = GAMMA(ICE_T_PARAMETERS%XCI_EX(4))
+  ICE_T_PARAMETERS%XCI_GM(5) = GAMMA(ICE_T_PARAMETERS%XCI_EX(5))
+  ICE_T_PARAMETERS%XCI_GM(6) = GAMMA(ICE_T_PARAMETERS%XCI_EX(6))
+  ICE_T_PARAMETERS%XCI_GM(7) = GAMMA(ICE_T_PARAMETERS%XCI_EX(7))
+
+  !****************** Constants for snow collecting cloud water ***************
+  DO J2 = 1, NBC
+    DO J1 = 1, NBS
+      ICE_T_PARAMETERS%XT_EFSW(J1,J2) = 0.0
+    ENDDO
+  ENDDO
+
+  DO J1 = 1, NBS
+    ICE_T_PARAMETERS%XITDS(J1) = DSQRT(ICE_T_PARAMETERS%XDX(J1)*ICE_T_PARAMETERS%XDX(J1+1))
+  ENDDO
+
+  ICE_T_PARAMETERS%XCS_EX(1) = XBS + 1.
+  ICE_T_PARAMETERS%XCS_EX(2) = XBS + 2.
+  ICE_T_PARAMETERS%XCS_EX(3) = XBS*2.
+  ICE_T_PARAMETERS%XCS_EX(4) = XBS + XDS + 1.
+  ICE_T_PARAMETERS%XCS_EX(5) = XBS*2. + XDS + 1.
+  ICE_T_PARAMETERS%XCS_EX(6) = XBS*2. + 1.
+  ICE_T_PARAMETERS%XCS_EX(7) = XBS + XMU_S + 1.
+  ICE_T_PARAMETERS%XCS_EX(8) = XBS + XMU_S + 2.
+  ICE_T_PARAMETERS%XCS_EX(9) = XBS + XMU_S + 3.
+  ICE_T_PARAMETERS%XCS_EX(10) = XBS + XMU_S + XDS + 1.
+  ICE_T_PARAMETERS%XCS_EX(11) = XBS*2. + XMU_S + XDS + 1.
+  ICE_T_PARAMETERS%XCS_EX(12) = XBS*2. + XMU_S + 1.
+  ICE_T_PARAMETERS%XCS_EX(13) = XDS + 2.
+  ICE_T_PARAMETERS%XCS_EX(14) = XBS + XDS
+  ICE_T_PARAMETERS%XCS_EX(15) = XMU_S + 1.
+  ICE_T_PARAMETERS%XCS_EX(16) = 1.0 + (1.0 + XDS)/2.
+  ICE_T_PARAMETERS%XCS_EX(17) = ICE_T_PARAMETERS%XCS_EX(16) + XMU_S + 1.
+  ICE_T_PARAMETERS%XCS_EX(18) = XDS + XMU_S + 3.
+  DO J1 = 1, 18
+    ICE_T_PARAMETERS%XCS_GM(J1) = GAMMA(ICE_T_PARAMETERS%XCS_EX(J1))
+  ENDDO
+  ICE_T_PARAMETERS%XOAMS = 1./XAS
+
+  ! Snow collecting cloud water
+  ICE_T_PARAMETERS%XT1_QS_QC = XPI*.25*XCS
+
+  CALL INI_ICET_TABLE_EFSW(ICE_T_PARAMETERS, RAIN_ICE_DESCRN)
+
+ENDIF ! ICE-T out
+!
 !*       6.3    Constants for the evaporation of the raindrops
 !
 X0EVAR = (4.0*XPI)*XCCR*XC1R*XF0R*MOMG(XALPHAR,XNUR,1.)
@@ -907,7 +1117,7 @@ IF( (KACCLBDAS/=RAIN_ICE_PARAMN%NACCLBDAS) .OR. (KACCLBDAR/=RAIN_ICE_PARAMN%NACC
                  RAIN_ICE_PARAMN%XACCLBDAS_MIN, RAIN_ICE_PARAMN%XACCLBDAR_MIN, &
                  ZFDINFTY, XKER_RACCS                                        )
   CALL RSCOLRG ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
-                 ZESR, XBS, XCS, XDS, XFVELOS, XCR, XDR,                     & 
+                 ZESR, XBS, XCS, XDS, XFVELOS, XCR, XDR,                     &
                  RAIN_ICE_PARAMN%XACCLBDAS_MAX, RAIN_ICE_PARAMN%XACCLBDAR_MAX, &
                  RAIN_ICE_PARAMN%XACCLBDAS_MIN, RAIN_ICE_PARAMN%XACCLBDAR_MIN, &
                  ZFDINFTY, XKER_SACCRG,  XAG, XBS, XAS                       )
@@ -1026,9 +1236,11 @@ XFCDRYG = (XPI/4.0)*XCCG*XCG*(ZRHO00**XCEXVT)*MOMG(XALPHAG,XNUG,XDG+2.0)
 !
 !*       8.2.2  Constants for the cloud ice collection by the graupeln
 !
-XCOLIG    = 0.25 ! Collection efficiency of I+G
-XCOLEXIG  = 0.05 ! Temperature factor of the I+G collection efficiency
-XCOLIG   = 0.01 ! Collection efficiency of I+G
+IF(LICE_T) THEN
+  XCOLIG  = 0.000001 ! Collection efficiency of I+G
+ELSE
+  XCOLIG  = 0.01     ! Collection efficiency of I+G
+ENDIF
 XCOLEXIG = 0.1  ! Temperature factor of the I+G collection efficiency
 WRITE (KLUOUT, FMT=*) ' NEW Constants for the cloud ice collection by the graupeln'
 WRITE (KLUOUT, FMT=*) ' XCOLIG, XCOLEXIG  = ',XCOLIG,XCOLEXIG
@@ -1045,9 +1257,11 @@ END IF
 !
 !*       8.2.3  Constants for the aggregate collection by the graupeln
 !
-XCOLSG    = 0.25 ! Collection efficiency of S+G
-XCOLEXSG  = 0.05 ! Temperature factor of the S+G collection efficiency
-XCOLSG   = 0.01 ! Collection efficiency of S+G
+IF(LICE_T) THEN
+  XCOLSG  = 0.000001 ! Collection efficiency of S+G
+ELSE
+  XCOLSG  = 0.01     ! Collection efficiency of S+G
+END IF
 XCOLEXSG = 0.1  ! Temperature factor of the S+G collection efficiency
 WRITE (KLUOUT, FMT=*) ' NEW Constants for the aggregate collection by the graupeln'
 WRITE (KLUOUT, FMT=*) ' XCOLSG, XCOLEXSG  = ',XCOLSG,XCOLEXSG
