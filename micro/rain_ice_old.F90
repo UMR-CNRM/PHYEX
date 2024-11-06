@@ -1,5 +1,5 @@
 !     ######spl
-      SUBROUTINE RAIN_ICE_OLD (D, CST, PARAMI, ICEP, ICED, BUCONF, TLES,              &
+      SUBROUTINE RAIN_ICE_OLD (D, CST, PARAMI, ICEP, ICED, ICE_T_PARAMETERS, BUCONF, TLES, &
                                OSEDIC, OCND2, LKOGAN, LMODICEDEP,                     &
                                HSEDIM, HSUBG_AUCV_RC, OWARM,                          &
                                KKA, KKU, KKL,                                         &
@@ -165,11 +165,13 @@
 !!      (U. Andrae Dec 2020) Introduce SPP for HARMONIE-AROME
 !!      (C. Wittmann Jan 2021) Introduce sublimation factor tuning
 !!      (D. Martin-Perez, 2021) nrt Aerosol
+!!      (B.J.K. Engdahl, 2022) LICE_T-option
 !
 !
 !*       0.    DECLARATIONS
 !              ------------
 !
+USE MODD_PRECISION,  ONLY: MNHREAL64
 USE MODD_BUDGET,     ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, &
                            NBUDGET_RI, NBUDGET_RR, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH
 USE MODI_GAMMA,      ONLY: GAMMA
@@ -186,6 +188,7 @@ USE MODE_RAIN_ICE_OLD_FAST_RG,             ONLY: RAIN_ICE_OLD_FAST_RG
 USE MODE_RAIN_ICE_OLD_FAST_RH,             ONLY: RAIN_ICE_OLD_FAST_RH
 USE MODE_RAIN_ICE_OLD_FAST_RI,             ONLY: RAIN_ICE_OLD_FAST_RI
 USE MODD_IO, ONLY:NVERB_FATAL
+USE MODD_ICET_PARAM, ONLY: ICET_PARAM_t
 
 
 IMPLICIT NONE
@@ -197,6 +200,7 @@ TYPE(CST_T),            INTENT(IN) :: CST
 TYPE(PARAM_ICE_t),      INTENT(IN) :: PARAMI
 TYPE(RAIN_ICE_PARAM_t), INTENT(IN) :: ICEP
 TYPE(RAIN_ICE_DESCR_t), INTENT(IN) :: ICED
+TYPE(ICET_PARAM_t),     INTENT(IN) :: ICE_T_PARAMETERS
 TYPE(TBUDGETCONF_t),    INTENT(IN) :: BUCONF
 TYPE(TLES_t),           INTENT(INOUT)   :: TLES          ! modd_les structure
 
@@ -286,6 +290,7 @@ INTEGER :: JIJ            ! Loop index for the interpolation
 INTEGER :: IKB           !
 INTEGER :: IKE           !
 INTEGER :: IKL
+INTEGER :: IS
 !
 INTEGER :: IMICRO ! Case number of sedimentation, T>0 (for HEN) and r_x>0 locations
 REAL, DIMENSION(D%NIJT)       :: ZCONC_TMP ! Weighted concentration
@@ -392,6 +397,19 @@ REAL            :: ZREDGR, ZREDSN    ! Possible reduction of the rate of graupel
 REAL            :: ZKVO  ! factor used for caluclate maximum mass in the ice
                          ! distubution.
 !    *******  end logical switch OCND2 *******
+
+!**************** ICE-T Declarations ***********************************
+REAL, DIMENSION(KSIZE)                 :: ZNT_C
+REAL, DIMENSION(KSIZE)                 :: ZEF_RW, ZMVD_C, ZMVD_R
+REAL, DIMENSION(KSIZE)                 :: ZCCR_V, ZLBR_V, ZFCACCR_V
+REAL, DIMENSION(KSIZE)                 :: ZFSACCRG_V
+REAL(KIND=MNHREAL64), DIMENSION(KSIZE) :: ZVISCO
+REAL(KIND=MNHREAL64), DIMENSION(KSIZE) :: ZPRG_GCW, ZPRS_SDE
+REAL(KIND=MNHREAL64), DIMENSION(KSIZE) :: ZRHOF
+REAL, DIMENSION(KSIZE)                 :: ZVTS, ZVTR, ZRATIO, ZRATIO_GR, ZEF_SR
+REAL                                   :: ZSTOKE_G
+REAL                                   :: ZTC0, ZEF_SW
+!**************** End ICE-T declarations *******************************
 
 ! SPP arrays
 REAL, DIMENSION(KSIZE) :: ZZKGN_ACON,ZZKGN_SBGR
@@ -555,7 +573,7 @@ IF(BUCONF%LBU_ENABLE) THEN
   IF (BUCONF%LBUDGET_RI) CALL TBUDGETS(NBUDGET_RI)%PTR%INIT_PHY(D, 'HENU', ZWKBUD)
 ENDIF
 CALL RAIN_ICE_OLD_NUCLEATION(D, CST, ICEP, COUNT(ZT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<CST%XTT), &
-                             OCND2, LMODICEDEP, KRR, PTSTEP, &
+                             OCND2, PARAMI%LICE_T, LMODICEDEP, KRR, PTSTEP, &
                              PTHT, PPABST, PEXNREF, PICLDFR, PRHODJ, PRHODREF, &
                              PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                              OAERONRT, OAEIFN, PIFNNC, &
@@ -675,6 +693,20 @@ IF (KSIZE >= 0) THEN
     ENDIF
 
   ENDDO
+
+  IF (PARAMI%LICE_T) THEN
+    DO IS = 1, KSIZE
+      ZCCR_V(IS) = ICED%XCCR
+      IF (ZRRT(IS) > 0.0 .AND. ((ZZT(IS) - CST%XTT) < 0)) THEN
+        ZCCR_V(IS) = ICED%XCCR2
+      ENDIF
+      IF (ZRRT(IS) > 0.0 .AND. ((ZZT(IS) - CST%XTT) > -2.0) .AND. ((ZZT(IS) - CST%XTT) < 0)) THEN
+        ZCCR_V(IS) = 8.0*10**(6 - (ZZT(IS) - CST%XTT))
+      ENDIF
+      ! BJKE: for autoconversion etc..
+      ZNT_C(IS) = ZCONCM(IS)*1.E6 ! Convert from cm⁻³ to m⁻³
+    ENDDO
+  ENDIF
 
   DO JL = 1, KSIZE
     ZZW(JL)  = ZEXNREF(JL)*(CST%XCPD+CST%XCPV*ZRVT(JL) + CST%XCL*(ZRCT(JL)+ZRRT(JL)) &
@@ -932,8 +964,8 @@ IF (KSIZE >= 0) THEN
     ZRF(JL)=ZRAINFR(I1(JL),I2(JL))
   END DO
 !
-  CALL RAIN_ICE_OLD_SLOW(D, CST, ICED, ICEP, BUCONF, &
-                         KSIZE, OCND2, LMODICEDEP, &
+  CALL RAIN_ICE_OLD_SLOW(D, CST, ICED, ICEP, ICE_T_PARAMETERS, BUCONF, &
+                         KSIZE, OCND2, PARAMI%LICE_T, LMODICEDEP, &
                          PTSTEP, ZREDSN, &
                          GMICRO, PRHODJ, PTHS, PRVS, &
                          ZRCT, ZRRT, ZRIT, ZRRS, &
@@ -944,6 +976,7 @@ IF (KSIZE >= 0) THEN
                          ZLBDAG, ZKA, ZDV, &
                          ZAI, ZCJ, ZAA2, ZBB3, &
                          ZDICRIT, ZREDGR, ZKVO, &
+                         ZNT_C, ZPRS_SDE, &
                          TBUDGETS, KBUDGETS)
 !
 !-------------------------------------------------------------------------------
@@ -955,24 +988,41 @@ IF (KSIZE >= 0) THEN
 !*       3.1    compute the slope parameter Lbda_r
 !
   !ZLBDAR will be used when we consider rain diluted over the grid box
-  DO JL=1,KSIZE
-    IF (ZRRT(JL) > 0.0) THEN
-      ZLBDAR(JL) = ICED%XLBR*(ZRHODREF(JL)*MAX(ZRRT(JL),ICED%XRTMIN(3)))**ICED%XLBEXR
-    ENDIF
-  ENDDO
-  !ZLBDAR_RF will be used when we consider rain concentrated in its fraction
-  DO JL=1,KSIZE
-    IF (ZRRT(JL) > 0.0 .AND. ZRF(JL) > 0.0) THEN
-      ZLBDAR_RF(JL) = ICED%XLBR*(ZRHODREF(JL)*MAX(ZRRT(JL)/ZRF(JL), ICED%XRTMIN(3)))**ICED%XLBEXR
-    ELSE
-      ZLBDAR_RF(JL) = 0.
-    ENDIF
-  ENDDO
+  IF (PARAMI%LICE_T) THEN
+    DO JL=1,KSIZE
+      IF (ZRRT(JL) > 0.0) THEN
+        ZLBR_V(JL)  = (ICED%XAR*ZCCR_V(JL)*MOMG(ICED%XALPHAR, ICED%XNUR, ICED%XBR) )**(-ICED%XLBEXR)
+        ZLBDAR(JL)  = ZLBR_V(JL)*( ZRHODREF(JL)*MAX( ZRRT(JL), ICED%XRTMIN(3) ) )**ICED%XLBEXR
+      ENDIF
+    ENDDO
+    !ZLBDAR_RF will be used when we consider rain concentrated in its fraction
+    DO JL=1,KSIZE
+      IF (ZRRT(JL) > 0.0 .AND. ZRF(JL) > 0.0) THEN
+        ZLBDAR_RF(JL) = ZLBR_V(JL)*(ZRHODREF(JL)*MAX(ZRRT(JL)/ZRF(JL), ICED%XRTMIN(3)))**ICED%XLBEXR
+      ELSE
+        ZLBDAR_RF(JL) = 0.
+      ENDIF
+    ENDDO
+  ELSE
+    DO JL=1,KSIZE
+      IF (ZRRT(JL) > 0.0) THEN
+        ZLBDAR(JL) = ICED%XLBR*(ZRHODREF(JL)*MAX(ZRRT(JL),ICED%XRTMIN(3)))**ICED%XLBEXR
+      ENDIF
+    ENDDO
+    !ZLBDAR_RF will be used when we consider rain concentrated in its fraction
+    DO JL=1,KSIZE
+      IF (ZRRT(JL) > 0.0 .AND. ZRF(JL) > 0.0) THEN
+        ZLBDAR_RF(JL) = ICED%XLBR*(ZRHODREF(JL)*MAX(ZRRT(JL)/ZRF(JL), ICED%XRTMIN(3)))**ICED%XLBEXR
+      ELSE
+        ZLBDAR_RF(JL) = 0.
+      ENDIF
+    ENDDO
+  ENDIF
 
   IF( OWARM ) THEN    !  Check if the formation of the raindrops by the slow
                       !  warm processes is allowed
-    CALL RAIN_ICE_OLD_WARM(D, CST, PARAMI, ICEP, ICED, BUCONF, &
-                           KSIZE, I1, I2, OCND2, LKOGAN, GMICRO, &
+    CALL RAIN_ICE_OLD_WARM(D, CST, PARAMI, ICEP, ICED, ICE_T_PARAMETERS, BUCONF, &
+                           KSIZE, I1, I2, OCND2, PARAMI%LICE_T, LKOGAN, GMICRO, &
                            PRHODJ, PEVAP3D, PTHS, PRVS, &
                            ZRVT, ZRCT, ZRRT, ZRCS, ZRRS, ZTHS, &
                            ZRVS, ZTHT, ZTHLT, &
@@ -983,6 +1033,7 @@ IF (KSIZE >= 0) THEN
                            ZHLC_HCF, ZHLC_LCF, ZHLC_HRC, ZHLC_LRC, &
                            ZAA2W, ZBB3W, &
                            ZZT, ZPRES, ZESW, &
+                           ZNT_C, ZMVD_C, ZMVD_R, ZCCR_V, &
                            TBUDGETS, KBUDGETS)
   END IF
 !
@@ -992,14 +1043,15 @@ IF (KSIZE >= 0) THEN
 !*       4.     COMPUTES THE FAST COLD PROCESS SOURCES FOR r_s
 !               ----------------------------------------------
 !
-  CALL RAIN_ICE_OLD_FAST_RS(D, CST, ICEP, ICED, BUCONF, &
-                            PTSTEP, KSIZE, KRR, GMICRO, &
+  CALL RAIN_ICE_OLD_FAST_RS(D, CST, ICEP, ICED, ICE_T_PARAMETERS, BUCONF, &
+                            PARAMI%LICE_T, PTSTEP, KSIZE, KRR, GMICRO, &
                             PRHODJ, PTHS, &
                             ZRVT, ZRCT, ZRRT, ZRST, &
                             ZRRS, ZRCS, ZRSS, ZRGS, ZTHS, &
                             ZRHODREF, ZRHODJ, ZLSFACT, ZLVFACT, &
                             ZCJ, ZKA, ZDV, &
                             ZLBDAR, ZLBDAS, ZCOLF, ZPRES, ZZT, &
+                            ZMVD_C, ZMVD_R, ZPRS_SDE, ZVTR, ZCCR_V, ZRHOF, &
                             TBUDGETS, KBUDGETS)
 !
 !-------------------------------------------------------------------------------
@@ -1009,9 +1061,9 @@ IF (KSIZE >= 0) THEN
 !               ----------------------------------------------
 !
 
-  CALL RAIN_ICE_OLD_FAST_RG(D, CST, ICEP, ICED, BUCONF, &
+  CALL RAIN_ICE_OLD_FAST_RG(D, CST, ICEP, ICED, ICE_T_PARAMETERS, BUCONF, &
                             PTSTEP, KSIZE, KRR, &
-                            OCND2, LTIW, GMICRO, &
+                            OCND2, PARAMI%LICE_T, LTIW, GMICRO, &
                             PRHODJ, PTHS, &
                             ZRVT, ZRCT, ZRIT, ZRRT, ZRST, ZRGT, ZCIT, &
                             ZRIS, ZRRS, ZRCS, ZRSS, ZRGS, ZRHS, ZTHS, &
@@ -1019,6 +1071,7 @@ IF (KSIZE >= 0) THEN
                             ZCJ, ZKA, ZDV, &
                             ZLBDAR, ZLBDAG, ZLBDAS, &
                             ZTIW, ZZT, ZPRES, &
+                            ZMVD_C, ZMVD_R, ZRHOF, ZVTR, ZCCR_V, &
                             TBUDGETS, KBUDGETS)
 !
 !-------------------------------------------------------------------------------
@@ -1050,7 +1103,7 @@ IF (KSIZE >= 0) THEN
 
   CALL RAIN_ICE_OLD_FAST_RI(D, CST, ICEP, ICED, BUCONF, &
                             PTSTEP, KSIZE, &
-                            OCND2, LMODICEDEP, GMICRO, &
+                            OCND2, PARAMI%LICE_T, LMODICEDEP, GMICRO, &
                             PRHODJ, PTHS, &
                             ZRIT, ZCIT, &
                             ZRVS, ZRCS, ZRIS, ZRSS, ZTHS, &
@@ -1334,7 +1387,7 @@ IF (HSEDIM == 'STAT') THEN
   ENDIF
 
   CALL RAIN_ICE_OLD_SEDIMENTATION_STAT(D, CST, ICEP, ICED, &
-                                       KRR, OSEDIC, PTSTEP, IKL, IKB, IKE, &
+                                       KRR, OSEDIC, PARAMI%LICE_T, PTSTEP, IKL, IKB, IKE, &
                                        PDZZ, PRHODJ, PRHODREF, PPABST, &
                                        PTHT, PRCT, PRRT, PRST, PRGT, &
                                        PRCS, PRRS, PRIS, PRSS, PRGS, &
@@ -1424,4 +1477,30 @@ END IF
 
   IF (LHOOK) CALL DR_HOOK('RAIN_ICE_OLD',1,ZHOOK_HANDLE)
 
+CONTAINS
+!
+!------------------------------------------------------------------------------
+!
+  FUNCTION MOMG(PALPHA,PNU,PP) RESULT (PMOMG)
+!
+! auxiliary routine used to compute the Pth moment order of the generalized
+! gamma law
+!
+    USE MODI_GAMMA
+!
+    IMPLICIT NONE
+!
+    REAL, INTENT(IN)     :: PALPHA ! first shape parameter of the dimensionnal distribution
+    REAL, INTENT(IN)     :: PNU    ! second shape parameter of the dimensionnal distribution
+    REAL, INTENT(IN)     :: PP     ! order of the moment
+    REAL     :: PMOMG  ! result: moment of order ZP
+!
+!------------------------------------------------------------------------------
+!
+!
+    PMOMG = GAMMA(PNU+PP/PALPHA)/GAMMA(PNU)
+!
+  END FUNCTION MOMG
+!
+!-------------------------------------------------------------------------------
 END SUBROUTINE RAIN_ICE_OLD

@@ -9,26 +9,31 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
 
   CONTAINS
 
-  SUBROUTINE RAIN_ICE_OLD_FAST_RG(D, CST, ICEP, ICED, BUCONF,                &
-                                  PTSTEP, KSIZE, KRR,                        &
-                                  OCND2, LTIW, GMICRO,                       &
-                                  PRHODJ, PTHS,                              &
-                                  PRVT, PRCT, PRIT, PRRT, PRST, PRGT, PCIT,  &
-                                  PRIS, PRRS, PRCS, PRSS, PRGS, PRHS, PZTHS, &
-                                  PRHODREF, PZRHODJ, PLSFACT, PLVFACT,       &
-                                  PCJ, PKA, PDV,                             &
-                                  PLBDAR, PLBDAG, PLBDAS,                    &
-                                  PTIW, PZT, PRES,                          &
-                                  TBUDGETS, KBUDGETS)
+  SUBROUTINE RAIN_ICE_OLD_FAST_RG(D, CST, ICEP, ICED, ICE_T_PARAMETERS, BUCONF, &
+                                & PTSTEP, KSIZE, KRR,                           &
+                                & OCND2, OICE_T, LTIW, GMICRO,                  &
+                                & PRHODJ, PTHS,                                 &
+                                & PRVT, PRCT, PRIT, PRRT, PRST, PRGT, PCIT,     &
+                                & PRIS, PRRS, PRCS, PRSS, PRGS, PRHS, PZTHS,    &
+                                & PRHODREF, PZRHODJ, PLSFACT, PLVFACT,          &
+                                & PCJ, PKA, PDV,                                &
+                                & PLBDAR, PLBDAG, PLBDAS,                       &
+                                & PTIW, PZT, PRES,                              &
+                                & PMVD_C, PMVD_R, PRHOF, PVTR, PCCR_V,          &
+                                & TBUDGETS, KBUDGETS)
 
-    USE YOMHOOK,             ONLY: LHOOK, DR_HOOK, JPHOOK
-    USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_T
-    USE MODD_CST,            ONLY: CST_T
+    USE MODD_PRECISION,        ONLY: MNHREAL64
+    USE MODD_PARAMETERS,       ONLY: JPVEXT
+    USE YOMHOOK,               ONLY: LHOOK, DR_HOOK, JPHOOK
+    USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_T
+    USE MODD_CST,              ONLY: CST_T, XRHOLW, XPI
     USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_T
     USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_T
+    USE MODD_ICET_PARAM,       ONLY: ICET_PARAM_t
+    USE MODD_ICET_PARAM,       ONLY: XGONV_MIN, XGONV_MAX, XBM_G, XMU_G, XR_G, XD0C, XD0G, XTHVREFZ
 
-    USE MODD_BUDGET,         ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RG, NBUDGET_RR, NBUDGET_RC, &
-                                   NBUDGET_RI, NBUDGET_RS, NBUDGET_RH
+    USE MODD_BUDGET,           ONLY: TBUDGETDATA_PTR, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RG, NBUDGET_RR, NBUDGET_RC, &
+                                     NBUDGET_RI, NBUDGET_RS, NBUDGET_RH
 
     IMPLICIT NONE
 
@@ -36,13 +41,15 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
     TYPE(CST_T),            INTENT(IN) :: CST
     TYPE(RAIN_ICE_PARAM_T), INTENT(IN) :: ICEP
     TYPE(RAIN_ICE_DESCR_t), INTENT(IN) :: ICED
-    TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+    TYPE(ICET_PARAM_t),     INTENT(IN) :: ICE_T_PARAMETERS
+    TYPE(TBUDGETCONF_t),    INTENT(IN) :: BUCONF
 
     REAL,    INTENT(IN) :: PTSTEP  ! Double Time step
     INTEGER, INTENT(IN) :: KSIZE
     INTEGER, INTENT(IN) :: KRR
 
     LOGICAL, INTENT(IN) :: OCND2
+    LOGICAL, INTENT(IN) :: OICE_T
     LOGICAL, INTENT(IN) :: LTIW
 
     LOGICAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) :: GMICRO ! Layer thickness (m)
@@ -85,6 +92,12 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PZT      ! Temperature
     REAL, DIMENSION(KSIZE), INTENT(IN)    :: PRES    ! Pressure
 
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PMVD_C
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PMVD_R
+    REAL(KIND=MNHREAL64), DIMENSION(KSIZE), INTENT(IN) :: PRHOF
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PVTR
+    REAL, DIMENSION(KSIZE), INTENT(IN)    :: PCCR_V
+
     TYPE(TBUDGETDATA_PTR), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
     INTEGER, INTENT(IN) :: KBUDGETS
 
@@ -101,6 +114,12 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
     REAL, DIMENSION(KSIZE) :: ZRWETG   ! Wet growth rate of the graupeln
 
     REAL, DIMENSION(KSIZE) :: ZUSW  ! Undersaturation over water
+
+    REAL :: ZEF_GW, ZEF_GR, ZTEMPC, ZVISCO
+    REAL :: ZSLW1, ZYGRA1, ZZANS1, ZX_DG, ZSTOKE_G, ZFRDRYG_V
+    REAL(KIND=MNHREAL64) :: ZN0_MIN, ZN0_EXP, ZLAMG, ZLAM_EXP, ZILAMG, ZN0_G
+    REAL, DIMENSION(KSIZE) :: ZVTG
+    REAL :: ZRHO00
 
     REAL, DIMENSION(KSIZE)      :: ZZW  ! Work array
     REAL, DIMENSION(KSIZE, KRR) :: ZZW1 ! Work array
@@ -174,37 +193,97 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
     END IF
 
     ZZW1(:,:) = 0.0
-    DO JK = 1, KSIZE
-      IF ((PRGT(JK) > ICED%XRTMIN(6)) .AND. &
-         ((PRCT(JK) > ICED%XRTMIN(2)  .AND. PRCS(JK) > 0.0))) THEN
-        ZZW(JK) = PLBDAG(JK)**(ICED%XCXG-ICED%XDG-2.0) * PRHODREF(JK)**(-ICED%XCEXVT)
-        ZZW1(JK,1) = MIN( PRCS(JK),ICEP%XFCDRYG * PRCT(JK) * ZZW(JK) )             ! RCDRYG
-      END IF
-    END DO
+    IF (OICE_T) THEN
+      ! replaced the graupel collecting cloud water formulation with Thompson et al. (2008)
+      ZVTG(:) = 0.0
+      ZN0_MIN = XGONV_MAX
+      DO JK = 1, KSIZE
 
-    DO JK = 1, KSIZE
-      IF ((PRGT(JK) > ICED%XRTMIN(6)) .AND. &
-         ((PRIT(JK) > ICED%XRTMIN(4)  .AND. PRIS(JK)>0.0))) THEN
+        IF ((PRGT(JK) > ICED%XRTMIN(6))) THEN
 
-        ZZW(JK) = PLBDAG(JK)**(ICED%XCXG-ICED%XDG-2.0) * PRHODREF(JK)**(-ICED%XCEXVT)
-        ZZW1(JK,2) = MIN(PRIS(JK), ICEP%XFIDRYG * EXP(ICEP%XCOLEXIG*(PZT(JK) - CST%XTT)) &
-                                                * PRIT(JK) * ZZW(JK) )             ! RIDRYG
-      END IF
-    END DO
+          ZTEMPC = PZT(JK) - CST%XTT
+          IF (ZTEMPC > 0.0) THEN
+            ZVISCO = (1.718 + 0.0049*ZTEMPC)*1.0E-5
+          ELSE
+            ZVISCO = (1.718 + 0.0049*ZTEMPC - 1.2E-5*ZTEMPC*ZTEMPC)*1.0E-5
+          ENDIF
+          IF (PZT(JK) < 270.65 .AND. PRRT(JK) > 0.0 .AND. PMVD_R(JK) > 100.E-6) THEN
+            ZSLW1 = 4.01 + ALOG10(PMVD_R(JK))
+          ELSE
+            ZSLW1 = 0.01
+          ENDIF
+
+          ZYGRA1 = 4.31 + ALOG10(max(5.E-5, PRGT(JK)))
+          ZZANS1 = 3.1 + (100./(300.*ZSLW1*ZYGRA1/(10./ZSLW1 + 1. + 0.25*ZYGRA1)+30. + 10.*ZYGRA1))
+          ZN0_EXP = 10.**(ZZANS1)
+          ZN0_EXP = MAX(DBLE(XGONV_MIN), MIN(ZN0_EXP, DBLE(XGONV_MAX)))
+          ZN0_MIN = MIN(ZN0_EXP, ZN0_MIN)
+          ZN0_EXP = ZN0_MIN
+          ZLAM_EXP = (ZN0_EXP*ICE_T_PARAMETERS%XAM_G*ICE_T_PARAMETERS%XCG_G(1)/PRGT(JK))**ICE_T_PARAMETERS%XOGE1
+          ZLAMG = ZLAM_EXP &
+              & * (ICE_T_PARAMETERS%XCG_G(3)*ICE_T_PARAMETERS%XOGG2*ICE_T_PARAMETERS%XOGG1)**ICE_T_PARAMETERS%XOBMG
+          ZILAMG = 1./ZLAMG
+          ZN0_G = ZN0_EXP/(ICE_T_PARAMETERS%XCG_G(2)*ZLAM_EXP) * ZLAMG**ICE_T_PARAMETERS%XCG_E(2)
+          ZX_DG = (XBM_G + XMU_G + 1.) * ZILAMG
+          ZVTG(JK) = ICED%XCG*ZX_DG**ICED%XDG*PRHODREF(JK)**(-ICED%XCEXVT)
+
+          ! Graupel collecting cloud water.  In CE, assume XITDC<<Dg and vtc=~0.
+          IF (PRGT(JK) > XR_G(1) .AND. PMVD_C(JK) > XD0C .AND. PRCS(JK) > 0.0) THEN
+            ZSTOKE_G = PMVD_C(JK)*PMVD_C(JK)*ZVTG(JK)*XRHOLW/(9.*ZVISCO*ZX_DG)
+            IF (ZX_DG > XD0G) THEN
+                IF (ZSTOKE_G>0.4 .AND. ZSTOKE_G<10.) THEN
+                  ZEF_GW = 0.55*ALOG10(2.51*ZSTOKE_G)
+                ELSEIF (ZSTOKE_G<0.4) THEN
+                  ZEF_GW = 0.0
+                ELSEIF (ZSTOKE_G>10) THEN
+                  ZEF_GW = 0.77
+                ENDIF
+                ZZW1(JK,1) = PRHOF(JK)*ICE_T_PARAMETERS%XT1_QG_QC*ZEF_GW*PRCT(JK)*ZN0_G*ZILAMG**ICE_T_PARAMETERS%XCG_E(9)
+            ENDIF
+          ENDIF
+        ENDIF
+      ENDDO
+
+      !Graupel collecting cloud ice is set to zero
+      ZZW1(:,2)=0.0
+    ELSE
+      DO JK = 1, KSIZE
+        IF ((PRGT(JK) > ICED%XRTMIN(6)) .AND. &
+           ((PRCT(JK) > ICED%XRTMIN(2)  .AND. PRCS(JK) > 0.0))) THEN
+          ZZW(JK) = PLBDAG(JK)**(ICED%XCXG-ICED%XDG-2.0) * PRHODREF(JK)**(-ICED%XCEXVT)
+          ZZW1(JK,1) = MIN( PRCS(JK),ICEP%XFCDRYG * PRCT(JK) * ZZW(JK) )             ! RCDRYG
+        END IF
+      END DO
+
+      DO JK = 1, KSIZE
+        IF ((PRGT(JK) > ICED%XRTMIN(6)) .AND. &
+           ((PRIT(JK) > ICED%XRTMIN(4)  .AND. PRIS(JK)>0.0))) THEN
+
+          ZZW(JK) = PLBDAG(JK)**(ICED%XCXG-ICED%XDG-2.0) * PRHODREF(JK)**(-ICED%XCEXVT)
+          ZZW1(JK,2) = MIN(PRIS(JK), ICEP%XFIDRYG * EXP(ICEP%XCOLEXIG*(PZT(JK) - CST%XTT)) &
+                                                  * PRIT(JK) * ZZW(JK) )             ! RIDRYG
+        END IF
+      END DO
+    ENDIF
 !
 !*       6.2.1  accretion of aggregates on the graupeln
 !
     IGDRY=0
-    DO JK=1, KSIZE                                                                       
-      IF((PRST(JK)>ICED%XRTMIN(5)) .AND. (PRGT(JK)>ICED%XRTMIN(6)) .AND. (PRSS(JK)>0.0)) THEN
-        IGDRY=IGDRY+1                                                                
-        GDRY(JK)=.TRUE.                                                                   
-        ! 6.2.3  select the (PLBDAG,PLBDAS) couplet
-        I1(IGDRY)=JK                                 
+    DO JK=1, KSIZE
+      IF ((PRST(JK) > ICED%XRTMIN(5)) .AND. &
+          (PRGT(JK) > ICED%XRTMIN(6)) .AND. &
+          (PRSS(JK) > 0.0)            .AND. &
+          (.NOT. OICE_T .OR. ((ZVTG(JK) > 50E-5) .AND. & ! added stricter conditions for ICE-T
+                              (PVTR(JK) > 50E-5)))) THEN   
+        IGDRY=IGDRY + 1
+        GDRY(JK)=.TRUE.
+
+        ! 6.2.3 select the (PLBDAG,PLBDAS) couplet
+        I1(IGDRY)=JK
         ZVEC1(IGDRY)=PLBDAG(JK)
-        ZVEC2(IGDRY)=PLBDAS(JK)                                             
-      ELSE                                                              
-        GDRY(JK)=.FALSE.                                       
+        ZVEC2(IGDRY)=PLBDAS(JK)
+      ELSE
+        GDRY(JK)=.FALSE.
       ENDIF
     ENDDO
 
@@ -306,16 +385,43 @@ MODULE MODE_RAIN_ICE_OLD_FAST_RG
         ZZW(I1(JK))=ZVEC3(JK)
       ENDDO
 
-      DO JK = 1, KSIZE
-        IF (GDRY(JK)) THEN
-          ZZW1(JK,4) = MIN(PRRS(JK),ICEP%XFRDRYG*ZZW(JK)                     & ! RRDRYG
-                           *(PLBDAR(JK)**(-4) )*(PLBDAG(JK)**ICED%XCXG)      &
-                           *(PRHODREF(JK)**(-ICED%XCEXVT-1.))                &
-                           *(ICEP%XLBRDRYG1/(PLBDAG(JK)**2               ) + &
-                             ICEP%XLBRDRYG2/(PLBDAG(JK)   * PLBDAR(JK)   ) + &
-                             ICEP%XLBRDRYG3/(               PLBDAR(JK)**2) ) )
-        END IF
-      END DO
+      IF (OICE_T) THEN
+        ZRHO00 = CST%XP00/(CST%XRD*XTHVREFZ(1+JPVEXT))
+        DO JK = 1, KSIZE
+          IF (GDRY(JK)) THEN
+
+            IF (ZVTG(JK)/PVTR(JK) < 0.25) THEN
+              ZEF_GR = 0.9
+            ELSEIF (ZVTG(JK)/PVTR(JK) > 1.75) THEN
+              ZEF_GR = 0.9
+            ELSE
+              ZEF_GR = (COS(((ZVTG(JK)/PVTR(JK) - 0.25)/0.75)*XPI) + 1)*0.40 + 0.1
+            ENDIF
+
+            !BJKE: variable rain intercept parameter
+            ZFRDRYG_V = ((XPI**2)/24.0)*ICED%XCCG*PCCR_V(JK)*XRHOLW*(ZRHO00**ICED%XCEXVT)
+
+            !BJKE: added variable collection efficiency
+            ZZW1(JK,4) = MIN(PRRS(JK), ZFRDRYG_V*ZZW(JK)*ZEF_GR          & ! RRDRYG
+                     & *  (PLBDAR(JK)**(-4))*(PLBDAG(JK)**ICED%XCXG)     &
+                     & *  (PRHODREF(JK)**(-ICED%XCEXVT-1.))              &
+                     & *  (ICEP%XLBRDRYG1/(PLBDAG(JK)**2)                &
+                     & +   ICEP%XLBRDRYG2/(PLBDAG(JK) * PLBDAR(JK))      &
+                     & +   ICEP%XLBRDRYG3/(             PLBDAR(JK)**2)))
+          ENDIF
+        ENDDO
+      ELSE
+        DO JK = 1, KSIZE
+          IF (GDRY(JK)) THEN
+            ZZW1(JK,4) = MIN(PRRS(JK),ICEP%XFRDRYG*ZZW(JK)                     & ! RRDRYG
+                             *(PLBDAR(JK)**(-4) )*(PLBDAG(JK)**ICED%XCXG)      &
+                             *(PRHODREF(JK)**(-ICED%XCEXVT-1.))                &
+                             *(ICEP%XLBRDRYG1/(PLBDAG(JK)**2               ) + &
+                               ICEP%XLBRDRYG2/(PLBDAG(JK)   * PLBDAR(JK)   ) + &
+                               ICEP%XLBRDRYG3/(               PLBDAR(JK)**2) ) )
+          END IF
+        END DO
+      ENDIF
     END IF
 
     ZRDRYG(:) = ZZW1(:,1) + ZZW1(:,2) + ZZW1(:,3) + ZZW1(:,4)
