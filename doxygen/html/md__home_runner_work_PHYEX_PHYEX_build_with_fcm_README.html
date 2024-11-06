@@ -87,7 +87,7 @@ Compilation</h1>
 Architecture files</h1>
 <p>By default, the code is compiled using the <em>gnu</em> configuration. This configuration is stored in the arch-gnu.env and arch-gnu.fcm files in the arch directory. Other acthitectures exist in this directory. In addition, other architectures can be added in the ${HOME}/.phyex/fcm_arch directory.</p>
 <p>The fcm file contains the compilation options to be used by the fcm tool. Such a file can be build using a gmkfile with the command: make_fcm.sh &ndash;gmkfile &lt;GMKFILE&gt; &ndash;arch &lt;new arch name&gt; The env file is sourced several times:</p><ul>
-<li>before populating the build directory with the source code. Indeed, during this second step, the source code is copied or cloned and transformed by the pyft_tool.py script. The active transformations are controlled by the &ndash;noexpand/&ndash;expand options given to the different check_commit_* scripts and by the PYFT_OPTS that can be set in the env file (only for testprogs). The syntax is given below.</li>
+<li>before populating the build directory with the source code. Indeed, during this second step, the source code is copied or cloned and transformed by the pyfortool script. The active transformations are controlled by the &ndash;noexpand/&ndash;expand options given to the different check_commit_* scripts and by the PYFT_OPTS that can be set in the env file (only for testprogs). The syntax is given below.</li>
 <li>just before the compilation step for loading modules or to defined (LIBS variable) the list of system libraries to link with (defaults to 'rt ld' to link with librt and libdl).</li>
 <li>just before execution to set environment variable specific to this architecture needed during execution</li>
 </ul>
@@ -96,10 +96,10 @@ Architecture files</h1>
 <li>OPTIONS If the line doesn't contain the FILE_DESCRIPTOR part, it applies to all source code.</li>
 </ul>
 <p>For example, to transform all source code in lower case: </p><blockquote class="doxtable">
-<p>export OPTS='&ndash;lowerCase'; pyft_tool.py &ndash;pyft_opts_env OPTS ... </p>
+<p>export OPTS='&ndash;lowerCase'; pyfortool &ndash;pyfortool_opts_env OPTS ... </p>
 </blockquote>
 <p>To transform all source code in lower case, except routines in turb directory which must be in upper case but keeping the <a class="el" href="turb_8F90.html">turb.F90</a> in lower case: </p><blockquote class="doxtable">
-<p>export OPTS='&ndash;lowerCase ^turb/:=:&ndash;upperCase ^turb/turb..90:=:&ndash;lowerCase'; pyft_tool.py &ndash;pyft_opts_env OPTS ... </p>
+<p>export OPTS='&ndash;lowerCase ^turb/:=:&ndash;upperCase ^turb/turb..90:=:&ndash;lowerCase'; pyfortool &ndash;pyfortool_opts_env OPTS ... </p>
 </blockquote>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
