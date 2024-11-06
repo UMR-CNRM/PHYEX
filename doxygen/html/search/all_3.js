@@ -51,7 +51,7 @@ var searchData=
   ['diff2_199',['diff2',['../interfacecompute__diff_1_1diff.html#af498d113b16e1f4c607459ce107691c3',1,'compute_diff::diff::diff2()'],['../namespacecompute__diff.html#a4685016ada334c50d12360a441d2c079',1,'compute_diff::diff2()']]],
   ['dimphyex_5ft_200',['dimphyex_t',['../structmodd__dimphyex_1_1dimphyex__t.html',1,'modd_dimphyex']]],
   ['distance_201',['distance',['../mode__lima__init__ccn__activation__spectrum_8F90.html#ab101672c486d4fe55f0d1f79b79fa868',1,'mode_lima_init_ccn_activation_spectrum.F90']]],
-  ['dogleg_202',['dogleg',['../minpack_8F90.html#ab5a1319962e4855e0a2b7a7431085275',1,'minpack.F90']]],
+  ['dogleg_202',['dogleg',['../minpack_8F90.html#ab5a1319962e4855e0a2b7a7431085275',1,'dogleg():&#160;minpack.F90'],['../interfacemodi__minpack_1_1dogleg.html#a922ca2640dca752e282f79adcc610d78',1,'modi_minpack::dogleg::dogleg()'],['../interfacemodi__minpack_1_1dogleg.html',1,'modi_minpack::dogleg']]],
   ['dqsati_5fo_5fdt_5f1d_203',['dqsati_o_dt_1d',['../namespacemode__thermo.html#a484fa26b72dcc56a195e98b5bfa95d9f',1,'mode_thermo']]],
   ['dqsati_5fo_5fdt_5f2d_5fmask_204',['dqsati_o_dt_2d_mask',['../namespacemode__thermo.html#a1fb6a6611e6b9ca9589ac6c2f2d50faa',1,'mode_thermo']]],
   ['dqsati_5fo_5fdt_5f3d_205',['dqsati_o_dt_3d',['../namespacemode__thermo.html#a329140ebe0f6b30a76009417eeb318d9',1,'mode_thermo']]],
