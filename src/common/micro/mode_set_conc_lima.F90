@@ -12,7 +12,7 @@ implicit none
 contains
 
 !     ###########################################################################
-      SUBROUTINE SET_CONC_LIMA( D, KRR, kmi, HGETCLOUD, PRHODREF, PRT, PSVT, ODLBC )
+      SUBROUTINE SET_CONC_LIMA( TNSV, D, KRR, kmi, HGETCLOUD, PRHODREF, PRT, PSVT, ODLBC )
 !     ###########################################################################
 !
 !!****  *SET_CONC_LIMA * - initialize droplet, raindrop and ice
@@ -78,15 +78,14 @@ USE MODD_PARAM_LIMA,      ONLY : NMOD_CCN, NMOD_IFN, &
                                  NMOM_C, NMOM_R, NMOM_I
 USE MODD_PARAM_LIMA_COLD, ONLY : XAS, XBS
 USE MODD_PARAM_LIMA_MIXED,ONLY : XAG, XBG, XAH, XBH
-USE MODD_NSV,             ONLY : NSV_LIMA_BEG, NSV_LIMA_NC, NSV_LIMA_NR, NSV_LIMA_CCN_ACTI, &
-     NSV_LIMA_NI, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH, NSV_LIMA_IFN_NUCL, &
-     NSV_LIMA
+USE MODD_NSV,             ONLY : NSV_t
 USE MODD_CST,             ONLY : XPI, XRHOLW
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(NSV_t),              INTENT(IN)    :: TNSV
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
 integer,                   intent(in) :: kmi        ! Model number
@@ -95,7 +94,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN) :: PRHODREF   ! Reference density
 !
 REAL, DIMENSION(D%NIJT,D%NKT,KRR),  INTENT(INOUT) :: PRT     ! microphysical mixing ratios
 !
-REAL,  DIMENSION(D%NIJT,D%NKT,NSV_LIMA), INTENT(INOUT) :: PSVT     ! microphys. concentrations
+REAL,  DIMENSION(D%NIJT,D%NKT,TNSV%NSV_LIMA), INTENT(INOUT) :: PSVT     ! microphys. concentrations
 LOGICAL, OPTIONAL,         INTENT(IN)    :: ODLBC    ! T to activate LBC mode
 !
 !
@@ -111,14 +110,14 @@ REAL       :: ZSVTHR
 !*       1.    RETRIEVE LOGICAL UNIT NUMBER
 !              ----------------------------
 !
-ISV_LIMA_NC       = NSV_LIMA_NC       - NSV_LIMA_BEG + 1
-ISV_LIMA_NR       = NSV_LIMA_NR       - NSV_LIMA_BEG + 1
-ISV_LIMA_CCN_ACTI = NSV_LIMA_CCN_ACTI - NSV_LIMA_BEG + 1
-ISV_LIMA_NI       = NSV_LIMA_NI       - NSV_LIMA_BEG + 1
-ISV_LIMA_NS       = NSV_LIMA_NS       - NSV_LIMA_BEG + 1
-ISV_LIMA_NG       = NSV_LIMA_NG       - NSV_LIMA_BEG + 1
-ISV_LIMA_NH       = NSV_LIMA_NH       - NSV_LIMA_BEG + 1
-ISV_LIMA_IFN_NUCL = NSV_LIMA_IFN_NUCL - NSV_LIMA_BEG + 1
+ISV_LIMA_NC       = TNSV%NSV_LIMA_NC       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NR       = TNSV%NSV_LIMA_NR       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_CCN_ACTI = TNSV%NSV_LIMA_CCN_ACTI - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NI       = TNSV%NSV_LIMA_NI       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NS       = TNSV%NSV_LIMA_NS       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NG       = TNSV%NSV_LIMA_NG       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NH       = TNSV%NSV_LIMA_NH       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_IFN_NUCL = TNSV%NSV_LIMA_IFN_NUCL - TNSV%NSV_LIMA_BEG + 1
 !
 !*       2.    INITIALIZATION
 !              --------------
@@ -181,7 +180,7 @@ IF (NMOM_I.GE.2) THEN
    ZCONC = 100.E3 ! maximum ice concentration set at 100/L
    WHERE ( PRT(:,:,4) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI)<ZSVTHR )
 !
-!      PSVT(:,:,NSV_LIMA_NI_A(kmi)) = MIN( PRHODREF(:,:) /                                     &
+!      PSVT(:,:,TNSV%NSV_LIMA_NI_A(kmi)) = MIN( PRHODREF(:,:) /                                     &
 !           ( XRHOLI * XAI*(10.E-06)**XBI * PRT(:,:,4) ), &
 !           ZCONC )
 ! Correction

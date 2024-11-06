@@ -4,11 +4,10 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     #####################################################################
-SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, D, CST, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, KBUDGETS, KRR, &
+SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV, D, CST, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, KBUDGETS, KRR, &
                   PTSTEP, OELEC,                                          &
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
-                  KCCN, KIFN, KIMM,                                       &
                   ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PW_NU,               &
                   PTHS, PRS, PSVS,                                        &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
@@ -61,10 +60,7 @@ USE MODD_ELEC_DESCR,      ONLY: ELEC_DESCR_t
 USE MODD_BUDGET,          ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, &
                                 NBUDGET_RI, NBUDGET_RR, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1
 USE MODD_CST,             ONLY: CST_t
-USE MODD_NSV,             ONLY: NSV_LIMA_NC, NSV_LIMA_NR, NSV_LIMA_CCN_FREE, NSV_LIMA_CCN_ACTI, &
-                                NSV_LIMA_NI, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,             &
-                                NSV_LIMA_IFN_FREE, NSV_LIMA_IFN_NUCL, NSV_LIMA_IMM_NUCL, NSV_LIMA_HOM_HAZE, &
-                                NSV_LIMA_BEG, NSV_ELECBEG, NSV
+USE MODD_NSV,             ONLY: NSV_t
 
 USE MODE_BUDGET_PHY,      ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 use mode_tools,           only: Countjv
@@ -86,6 +82,7 @@ TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
 TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
 TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
 TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(NSV_t),              INTENT(IN)    :: TNSV
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
@@ -108,21 +105,17 @@ REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PDZZ       ! Layer thikness (
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PRHODJ     ! Dry density * Jacobian
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PPABST     ! absolute pressure at t
 !
-INTEGER,                  INTENT(IN)    :: KCCN       ! for array size declarations
-INTEGER,                  INTENT(IN)    :: KIFN       ! for array size declarations
-INTEGER,                  INTENT(IN)    :: KIMM       ! for array size declarations
-!
 LOGICAL,                                 INTENT(IN)   :: ODTHRAD    ! Use radiative temperature tendency
 REAL, DIMENSION(MERGE(D%NIJT,0,ODTHRAD), &
                 MERGE(D%NKT,0,ODTHRAD)),   INTENT(IN) :: PDTHRAD   ! dT/dt due to radiation
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(IN) :: PRT        ! Mixing ratios at time t
-REAL, DIMENSION(D%NIJT, D%NKT, NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PW_NU      ! w for CCN activation
 !
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT)    :: PTHS       ! Theta source
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(INOUT) :: PRS        ! Mixing ratios sources
-REAL, DIMENSION(D%NIJT, D%NKT, NSV), INTENT(INOUT) :: PSVS       ! Concentration sources
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), INTENT(INOUT) :: PSVS       ! Concentration sources
 !
 REAL, DIMENSION(D%NIJT),     INTENT(OUT)        :: PINPRC     ! Cloud instant precip
 REAL, DIMENSION(D%NIJT),     INTENT(OUT)        :: PINDEP     ! Cloud droplets deposition
@@ -140,8 +133,8 @@ REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(OUT) :: PFPR    ! Precipitation flux
 !
 REAL, DIMENSION(D%NIJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PLATHAM_IAGGS  ! Factor for IAGGS modification due to Efield
 REAL, DIMENSION(D%NIJT, D%NKT),   OPTIONAL, INTENT(IN)       :: PEFIELDW   ! Vertical component of the electric field
-REAL, DIMENSION(D%NIJT, D%NKT, NSV), OPTIONAL, INTENT(IN)    :: PSV_ELEC_T ! Charge density at time t
-REAL, DIMENSION(D%NIJT, D%NKT, NSV), OPTIONAL, INTENT(INOUT) :: PSV_ELEC_S ! Charge density sources
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), OPTIONAL, INTENT(IN)    :: PSV_ELEC_T ! Charge density at time t
+REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), OPTIONAL, INTENT(INOUT) :: PSV_ELEC_S ! Charge density sources
 !
 REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electricity
 !*       0.2   Declarations of local variables :
@@ -152,12 +145,12 @@ REAL, DIMENSION(D%NIJT,D%NKT)      :: ZTHT, ZRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT, 
 REAL, DIMENSION(D%NIJT,D%NKT)      :: ZCCT, ZCRT, ZCIT, ZCST, ZCGT, ZCHT
 REAL, DIMENSION(D%NIJT,D%NKT)      :: ZTHS, ZRVS, ZRCS, ZRRS, ZRIS, ZRSS, ZRGS, ZRHS
 REAL, DIMENSION(D%NIJT,D%NKT)      :: ZCCS, ZCRS, ZCIS, ZCSS, ZCGS, ZCHS
-REAL, DIMENSION(D%NIJT,D%NKT,KCCN) :: ZCCNFT, ZCCNAT
-REAL, DIMENSION(D%NIJT,D%NKT,KCCN) :: ZCCNFS, ZCCNAS
-REAL, DIMENSION(D%NIJT,D%NKT,KIFN) :: ZIFNFT, ZIFNNT
-REAL, DIMENSION(D%NIJT,D%NKT,KIFN) :: ZIFNFS, ZIFNNS
-REAL, DIMENSION(D%NIJT,D%NKT,KIMM) :: ZIMMNT
-REAL, DIMENSION(D%NIJT,D%NKT,KIMM) :: ZIMMNS
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_CCN) :: ZCCNFT, ZCCNAT
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_CCN) :: ZCCNFS, ZCCNAS
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_IFN) :: ZIFNFT, ZIFNNT
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_IFN) :: ZIFNFS, ZIFNNS
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_IMM) :: ZIMMNT
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_IMM) :: ZIMMNS
 REAL, DIMENSION(D%NIJT,D%NKT)      :: ZHOMFT
 REAL, DIMENSION(D%NIJT,D%NKT)      :: ZHOMFS
 
@@ -356,18 +349,18 @@ REAL, DIMENSION(:),     ALLOCATABLE :: ZLATHAM_IAGGS
 !*       0.     Init
 !               ----
 !
-ISV_LIMA_NC       = NSV_LIMA_NC       - NSV_LIMA_BEG + 1
-ISV_LIMA_NR       = NSV_LIMA_NR       - NSV_LIMA_BEG + 1
-ISV_LIMA_CCN_FREE = NSV_LIMA_CCN_FREE - NSV_LIMA_BEG + 1
-ISV_LIMA_CCN_ACTI = NSV_LIMA_CCN_ACTI - NSV_LIMA_BEG + 1
-ISV_LIMA_NI       = NSV_LIMA_NI       - NSV_LIMA_BEG + 1
-ISV_LIMA_NS       = NSV_LIMA_NS       - NSV_LIMA_BEG + 1
-ISV_LIMA_NG       = NSV_LIMA_NG       - NSV_LIMA_BEG + 1
-ISV_LIMA_NH       = NSV_LIMA_NH       - NSV_LIMA_BEG + 1
-ISV_LIMA_IFN_FREE = NSV_LIMA_IFN_FREE - NSV_LIMA_BEG + 1
-ISV_LIMA_IFN_NUCL = NSV_LIMA_IFN_NUCL - NSV_LIMA_BEG + 1
-ISV_LIMA_IMM_NUCL = NSV_LIMA_IMM_NUCL - NSV_LIMA_BEG + 1
-ISV_LIMA_HOM_HAZE = NSV_LIMA_HOM_HAZE - NSV_LIMA_BEG + 1
+ISV_LIMA_NC       = TNSV%NSV_LIMA_NC       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NR       = TNSV%NSV_LIMA_NR       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_CCN_FREE = TNSV%NSV_LIMA_CCN_FREE - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_CCN_ACTI = TNSV%NSV_LIMA_CCN_ACTI - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NI       = TNSV%NSV_LIMA_NI       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NS       = TNSV%NSV_LIMA_NS       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NG       = TNSV%NSV_LIMA_NG       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_NH       = TNSV%NSV_LIMA_NH       - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_IFN_FREE = TNSV%NSV_LIMA_IFN_FREE - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_IFN_NUCL = TNSV%NSV_LIMA_IFN_NUCL - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_IMM_NUCL = TNSV%NSV_LIMA_IMM_NUCL - TNSV%NSV_LIMA_BEG + 1
+ISV_LIMA_HOM_HAZE = TNSV%NSV_LIMA_HOM_HAZE - TNSV%NSV_LIMA_BEG + 1
 !
 ZTHS(:,:) = PTHS(:,:)
 ZTHT(:,:) = PTHS(:,:) * PTSTEP

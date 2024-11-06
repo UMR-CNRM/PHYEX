@@ -5,16 +5,17 @@ MODULE MODI_LIMA_PRECIP_SCAVENGING
   IMPLICIT NONE
   INTERFACE
 !
-     SUBROUTINE LIMA_PRECIP_SCAVENGING (D, CST, BUCONF, TBUDGETS, KBUDGETS, &
+     SUBROUTINE LIMA_PRECIP_SCAVENGING (TNSV, D, CST, BUCONF, TBUDGETS, KBUDGETS, &
                                         HCLOUD, HDCONF, KLUOUT, KTCOUNT, PTSTEP,    &
                                         PRRT, PRHODREF, PRHODJ, PZZ,        &
                                         PPABST, PTHT, PSVT, PRSVS, PINPAP )
        USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
        use modd_budget,          only: TBUDGETDATA,TBUDGETCONF_t
        USE MODD_CST,             ONLY: CST_t
-       USE MODD_NSV,             ONLY: NSV_LIMA
+       USE MODD_NSV,             ONLY: NSV_t
        IMPLICIT NONE
 !
+       TYPE(NSV_t),              INTENT(IN)    :: TNSV
        TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
        TYPE(CST_t),              INTENT(IN)    :: CST
        TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
@@ -35,8 +36,8 @@ MODULE MODI_LIMA_PRECIP_SCAVENGING
        REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PPABST   ! Absolute pressure at t
        REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PTHT     ! Theta at time t 
 !
-       REAL, DIMENSION(D%NIJT,D%NKT,NSV_LIMA), INTENT(IN)    :: PSVT   ! Particle Concentration [/m**3]
-       REAL, DIMENSION(D%NIJT,D%NKT,NSV_LIMA), INTENT(INOUT) :: PRSVS  ! Total Number Scavenging Rate
+       REAL, DIMENSION(D%NIJT,D%NKT,TNSV%NSV_LIMA), INTENT(IN)    :: PSVT   ! Particle Concentration [/m**3]
+       REAL, DIMENSION(D%NIJT,D%NKT,TNSV%NSV_LIMA), INTENT(INOUT) :: PRSVS  ! Total Number Scavenging Rate
 !
        REAL, DIMENSION(:,:),   INTENT(INOUT)   :: PINPAP
      END SUBROUTINE LIMA_PRECIP_SCAVENGING
