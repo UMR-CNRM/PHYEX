@@ -43,7 +43,7 @@ $0 [options]
 -c                    performs compilation
 --inplace-install     install or update, if needed, fiat and fcm in the directory where the current script is
 --inplace-clean       remove the fiat and fcm installation present in the directory where the current script is
---ssh                 use the ssh protocol to clone the pyft and fxtran repositories instead of https"
+--ssh                 use the ssh protocol to clone the pyfortool and fxtran repositories instead of https"
 
 Unrecognized options are passed to the fcm build command. Useful options include :
 --new                   clean build tree before building
@@ -425,15 +425,15 @@ if [ $packupdate -eq 1 -o $packcreation -eq 1 ]; then
       #This commit is ready for inclusion
       PATH=$UPDATEDPATH prep_code.sh -c $commit src
     else
-      PATH=$UPDATEDPATH prep_code.sh --pyft_opts_env PYFT_OPTS -c $commit $expand_options $subs \
-                                     -m offline src --useParallelPyft -- --tree . --descTree $descTree
+      PATH=$UPDATEDPATH prep_code.sh --pyfortool_opts_env PYFT_OPTS -c $commit $expand_options $subs \
+                                     -m offline src --useParallelPyForTool -- --tree . --descTree $descTree
     fi
   else
     echo "Copy $fromdir"
     mkdir src
     scp -q -r $fromdir/src src/
-    PATH=$UPDATEDPATH prep_code.sh --pyft_opts_env PYFT_OPTS $expand_options $subs \
-                                   -m offline src --useParallelPyft -- --tree . --descTree $descTree
+    PATH=$UPDATEDPATH prep_code.sh --pyfortool_opts_env PYFT_OPTS $expand_options $subs \
+                                   -m offline src --useParallelPyForTool -- --tree . --descTree $descTree
   fi
   
   # Add some code

@@ -13,8 +13,9 @@ flushing the listing file).
 
 import os
 import xml.etree.ElementTree as ET
-from pyft import PYFT
-from pyft.util import n2name
+from pyfortool import PYFT
+from pyfortool.util import n2name
+
 
 def pybinding(fortran_in, scope, fortran_out, python_out, libso,
               tpfileIsNam=False, Findexing=False):

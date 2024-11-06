@@ -6,7 +6,7 @@ set -e
 #This script can:
 # - extract a tag or a commit from the PHYEX repository
 # - merge code from common and model specific directories
-# - apply the pyft tool
+# - apply the pyfortool script
 # - push the result in a new branch of the repository
 
 
@@ -16,39 +16,39 @@ PHYEXTOOLSDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ###### COMMAND LINE ARGUMENTS
 function usage {
   echo "Usage: $0 [-h] [-c CHECKOUT_POINT] [-m MODEL] [-D OPTION [-D OPTION [...]]]] \\"
-  echo "          [-s SUBDIR [-s SUBDIR [...]]] [--pyft_opts_env VAR] [-v [-v [-v]]] \\"
-  echo "          DIRECTORY -- PYFT_OPTIONS"
+  echo "          [-s SUBDIR [-s SUBDIR [...]]] [--pyfortool_opts_env VAR] [-v [-v [-v]]] \\"
+  echo "          DIRECTORY -- PYFORTOOL_OPTIONS"
   echo "DIRECTORY             directory containing the script result"
   echo "-c CHECKOUT_POINT     git object to checkout, can be a specific commit"
   echo "                      or a tag with the following syntax: tags/TAG where TAG is the tag name"
   echo "-m MODEL              merge the code under the common directory with the code specific to MODEL model"
-  echo "--mnhExpand           option passed to the pyft tool"
-  echo "--removeACC           option passed to the pyft tool"
+  echo "--mnhExpand           option passed to the pyfortool script"
+  echo "--removeACC           option passed to the pyfortool script"
   echo "-p                    push the result as a new branch"
-  echo "-s SUB                subdiretory or file (under src) to consider when merging and applying pyft"
+  echo "-s SUB                subdiretory or file (under src) to consider when merging and applying pyfortool"
   echo "--renameFf            rename .F90 into .f90"
   echo "--ilooprm             replace indexes in do loop (and mnh_expand) by :"
   echo "--repo                use this repository instead of the one derived (if any) from the env variables"
   echo "                      PHYEXREPOuser (=$PHYEXREPOuser) and PHYEXREPOprotocol (=$PHYEXREPOprotocol)"
   echo "-v                    add verbosity (up to 3 -v)"
-  echo "--pyft_opts_env VAR   name of an environment variable containing options to use to call"
-  echo "                      the pyft_tool.py script"
-  echo "--useParallelPyft     use the parallel version of the pyft tool (pyft_parallel_tool.py)"
-  echo "-- PYFT_OPTIONS       everything after '--' are used as options for pyft_tool.py"
+  echo "--pyfortool_opts_env VAR   name of an environment variable containing options to use to call"
+  echo "                      the pyfortool script"
+  echo "--useParallelPyForTool     use the parallel version of the pyfortool script (pyfortool_parallel)"
+  echo "-- PYFORTOOL_OPTIONS  everything after '--' are used as options for pyfortool"
   echo "                      These options are used for all the files."
   echo ""
   echo "* If the -c option is not provided, DIRECTORY must already contain files and directory as if"
   echo "  it was the result of a git checkout"
   echo "* If the -m option is used, directory tree is modified, only relevant code is kept"
-  echo "* If none of --mnhExpand, --removeACC, --pyft_opts_env or PYFT_OPTIONS is not used, pyft is not called at all"
+  echo "* If none of --mnhExpand, --removeACC, --pyfortool_opts_env or PYFORTOOL_OPTIONS is not used, pyfortool is not called at all"
   echo "* -s options are mandatory for -m, -D and -p options"
   echo "* -p option is allowed only if -c and -m options are provided"
   echo ""
-  echo "Everything after the '--' is passed to pyft for source-to-source transformation"
+  echo "Everything after the '--' is passed to pyfortool for source-to-source transformation"
   echo ""
-  echo "To use the pyft tool... it must be installed"
+  echo "To use the pyfortool script... it must be installed"
   echo ""
-  echo "The variable name sent with --pyft_opts_env must correspond to an exported environement"
+  echo "The variable name sent with --pyfortool_opts_env must correspond to an exported environement"
   echo "variable.  The variable can contain a multi-lines string."
   echo "The variable is read line by line and the last applicable line is used."
   echo "A line can take one of these two forms:"
@@ -60,13 +60,13 @@ function usage {
   echo "    If the line doesn't contain the FILE_DESCRIPTOR part, it applies to all source code."
   echo ""
   echo "For example, to transform all source code in lower case:"
-  echo "> export OPTS='--lowerCase'; $0 --pyft\_opts\_env OPTS ..."
+  echo "> export OPTS='--lowerCase'; $0 --pyfortool_opts_env OPTS ..."
   echo ""
   echo "To transform all source code in lower case, except routines in turb directory which must be"
   echo "in upper case but keeping the turb.F90 in lower case:"
   echo "> export OPTS='--lowerCase "
   echo "> ^turb/:=:--upperCase "
-  echo "> ^turb/turb\..90:=:--lowerCase'; $0 --pyft\_opts\_env OPTS ..."
+  echo "> ^turb/turb\..90:=:--lowerCase'; $0 --pyfortool_opts_env OPTS ..."
 }
 
 full_command="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}") $@"
@@ -75,16 +75,16 @@ separator='_' #- be carrefull, gmkpack (at least on belenos) has multiple allerg
 
 directory=""
 checkout_point=""
-pyft_options=""
+pyfortool_options=""
 model=""
 push=0
 subs=""
 renameFf=0
 verbose=0
 ilooprm=0
-useParallelPyft=0
-forpyft=0
-pyft_opts_env=""
+useParallelPyForTool=0
+forpyfortool=0
+pyfortool_opts_env=""
 
 if [ -z "${PHYEXREPOprotocol-}" ]; then
   repository=""
@@ -103,21 +103,21 @@ while [ -n "$1" ]; do
     '-h') usage; exit;;
     '-c') checkout_point="$2"; shift;;
     '-m') model="$2"; shift;;
-    '--mnhExpand') pyft_options="$pyft_options $1";;
-    '--removeACC') pyft_options="$pyft_options $1";;
+    '--mnhExpand') pyfortool_options="$pyfortool_options $1";;
+    '--removeACC') pyfortool_options="$pyfortool_options $1";;
     '-s') subs="$subs $2"; shift;;
     '-p') push=1;;
     '--renameFf') renameFf=1;;
     '--ilooprm') ilooprm=1;;
     '--repo') repository=$2; shift;;
     '-v') verbose=$(($verbose+1));;
-    '--useParallelPyft') useParallelPyft=1;;
-    '--pyft_opts_env') pyft_opts_env=$2; shift;;
-    '--') forpyft=1;;
-     *) if [ $forpyft -eq 0 ]; then
+    '--useParallelPyForTool') useParallelPyForTool=1;;
+    '--pyfortool_opts_env') pyfortool_opts_env=$2; shift;;
+    '--') forpyfortool=1;;
+     *) if [ $forpyfortool -eq 0 ]; then
           directory="$1"
         else
-          pyft_options="$pyft_options $1"
+          pyfortool_options="$pyfortool_options $1"
         fi;;
   esac
   shift
@@ -174,7 +174,7 @@ else
 fi
 
 ###### RENAME .F90 into .f90
-#This step could also be achieved by pyft_tool.py but it must be done *before* the call to pyft_tool
+#This step could also be achieved by pyfortool but it must be done *before* the call to pyfortool
 if [ $renameFf -eq 1 ]; then
   #we use find/while/read in case the number of files is too big to be hold on a single shell line
   find . -type f  -name \*.F90 -print0 | \
@@ -290,15 +290,15 @@ if [ $ilooprm -eq 1 ]; then
   done
 fi
 
-###### PYFT
-if [ "$pyft_opts_env" != "" -o -n "${pyft_options-}" ]; then
-  [ $verbose -gt 0 ] && echo "Applying pyft_tool"
+###### PyForTool
+if [ "$pyfortool_opts_env" != "" -o -n "${pyfortool_options-}" ]; then
+  [ $verbose -gt 0 ] && echo "Applying pyfortool"
 
   #Update PATH and PYTHONPATH if needed
-  if [ $useParallelPyft -eq 1 ]; then
-    which pyft_parallel_tool.py > /dev/null || . $PHYEXTOOLSDIR/site/pyft/bin/env.sh
+  if [ $useParallelPyForTool -eq 1 ]; then
+    which pyfortool_parallel > /dev/null || . $PHYEXTOOLSDIR/site/pyfortool/bin/env.sh
   else
-    which pyft_tool.py > /dev/null || . $PHYEXTOOLSDIR/site/pyft/bin/env.sh
+    which pyfortool > /dev/null || . $PHYEXTOOLSDIR/site/pyfortool/bin/env.sh
   fi
 
   if [ -n "${model-}" ]; then
@@ -311,13 +311,13 @@ if [ "$pyft_opts_env" != "" -o -n "${pyft_options-}" ]; then
   fi
 
   extra_opts=""
-  if [ "$pyft_opts_env" != "" ]; then
-    extra_opts="--optsByEnv $pyft_opts_env"
+  if [ "$pyfortool_opts_env" != "" ]; then
+    extra_opts="--optsByEnv $pyfortool_opts_env"
   fi
 
-  if [ "$extra_opts" != "" -o -n "${pyft_options-}" ]; then
-    if [ $useParallelPyft -eq 1 ]; then
-      cmd="pyft_parallel_tool.py --wrapH $pyft_options $extra_opts --nbPar 8" #--wrapH allows to deal with h files
+  if [ "$extra_opts" != "" -o -n "${pyfortool_options-}" ]; then
+    if [ $useParallelPyForTool -eq 1 ]; then
+      cmd="pyfortool_parallel --wrapH $pyfortool_options $extra_opts --nbPar 8" #--wrapH allows to deal with h files
       [ $verbose -gt 1 ] && echo $cmd
       $cmd
     else
@@ -326,8 +326,8 @@ if [ "$pyft_opts_env" != "" -o -n "${pyft_options-}" ]; then
           find $rep -type f -not -name '.*.swp'  -not -name '.*.swo' | while read file; do
             if [ "$(echo $file | grep '\.')" != '' -a $(echo $file | rev | cut -d. -f1 | rev) != 'fypp' ]; then
               #Files without extension are certainly not source code files
-              #.fypp files cannot be read by pyft_tool.py
-              cmd="pyft_tool.py --wrapH $pyft_options $extra_opts" #--wrapH allows to deal with h files
+              #.fypp files cannot be read by pyfortool
+              cmd="pyfortool --wrapH $pyfortool_options $extra_opts" #--wrapH allows to deal with h files
               [ $verbose -gt 1 ] && echo $cmd "$file"
               $cmd "$file"
             fi
