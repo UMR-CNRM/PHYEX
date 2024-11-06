@@ -490,7 +490,7 @@ d = {'time': ('<f4', ('mean', )), 'self': ('<f4', ('mean', 'max', 'min', 'std', 
      'self_per_call': ('<f4', ('mean', )), 'total_per_call': ('<f4', ('mean', )), 'routine': ('U256', '')}
 arraynp = numpy.loadtxt('drhook.prof.0', dtype=[(k, v[0]) for (k, v) in d.items()],
                         converters={8: lambda s: s.split(b'@')[0].lstrip(b'*')},
-                        skiprows=$firstLine - 1, usecols=[1, 3, 4, 5, 6, 7, 8])
+                        skiprows=$firstLine - 1, usecols=[1, 3, 4, 5, 6, 7, 8], encoding='bytes')
 df = pandas.DataFrame(arraynp).groupby('routine').agg(
       **{k + '_' + agg:pandas.NamedAgg(column=k, aggfunc=agg)
          for (k, agg) in [(k, agg) for k in d.keys() for agg in d[k][1]]
