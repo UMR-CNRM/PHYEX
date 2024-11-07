@@ -1143,9 +1143,10 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       !
       ! Packing variables to run computations only where necessary
       !
-      IPACK = COUNTJV(GLCOMPUTE,I1,I3)
+      IPACK = COUNT(GLCOMPUTE)
       ALLOCATE(I1(IPACK))
       ALLOCATE(I3(IPACK))
+      IPACK = COUNTJV(GLCOMPUTE,I1,I3)
       ALLOCATE(ZRHODREF1D(IPACK))
       ALLOCATE(ZEXNREF1D(IPACK))
       ALLOCATE(ZEXN1D(IPACK))
