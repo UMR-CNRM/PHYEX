@@ -54,7 +54,7 @@ USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 !
 IMPLICIT NONE
 TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
-TYPE(NSV_t),              INTENT(IN)    :: TNSV
+TYPE(NSV_t),      INTENT(INOUT) :: TNSV
 LOGICAL,          INTENT(IN)    :: ODINIT   !< .TRUE. to fill the different NSV_LIMA_*_A arrays
 INTEGER,          INTENT(IN)    :: KMI      !< model number
 INTEGER,          INTENT(INOUT) :: KSV      !< IN: Initial value to use when filling the NSV_LIMA_*_A arrays; 

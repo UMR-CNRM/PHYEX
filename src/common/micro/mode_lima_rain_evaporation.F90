@@ -7,7 +7,7 @@ MODULE MODE_LIMA_RAIN_EVAPORATION
   IMPLICIT NONE
 CONTAINS
 !     ###############################################################################
-  SUBROUTINE LIMA_RAIN_EVAPORATION (LIMAP, LIMAW, KSIZE, PTSTEP, ODCOMPUTE,                   &
+  SUBROUTINE LIMA_RAIN_EVAPORATION (CST, LIMAP, LIMAW, KSIZE, PTSTEP, ODCOMPUTE,                   &
                                     PRHODREF, PT, PLV, PLVFACT, PEVSAT, PRVSAT, &
                                     PRVT, PRCT, PRRT, PCRT, PLBDR,              &
                                     P_TH_EVAP, P_RR_EVAP, P_CR_EVAP,            &
@@ -38,14 +38,17 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,             ONLY : XRHOLW, XRV, XPI
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_CST, ONLY:CST_t
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(CST_t),INTENT(IN)::CST
 INTEGER,              INTENT(IN)    :: KSIZE
 REAL,                 INTENT(IN)    :: PTSTEP     ! Time step
 LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE  !
@@ -73,8 +76,6 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: PEVAP3D    ! Rain evap profile
 !
 ! 
 LOGICAL, DIMENSION(SIZE(PRHODREF)) :: GEVAP
-TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(SIZE(PRHODREF))    :: ZZW1, ZZW2
 !
 !-------------------------------------------------------------------------------
@@ -102,10 +103,10 @@ IF (LIMAP%LKHKO) THEN
 
    ZZW1(:) = MAX((1.0 - PRVT(:)/ZZW1(:)),0.0)  ! Subsaturation
     
-   ZZW2(:) = 1. / ( XRHOLW*((((PLV(:)/PT(:))**2)/(LIMAW%XTHCO*XRV)) +          & ! G
-        (XRV*PT(:))/(LIMAW%XDIVA*PEVSAT(:))))
+   ZZW2(:) = 1. / ( CST%XRHOLW*((((PLV(:)/PT(:))**2)/(LIMAW%XTHCO*CST%XRV)) +          & ! G
+        (CST%XRV*PT(:))/(LIMAW%XDIVA*PEVSAT(:))))
 
-   ZZW2(:) = 3.0 * LIMAW%XCEVAP * ZZW2(:) * (4.*XPI*XRHOLW/(3.))**(2./3.) *    &
+   ZZW2(:) = 3.0 * LIMAW%XCEVAP * ZZW2(:) * (4.*CST%XPI*CST%XRHOLW/(3.))**(2./3.) *    &
         (PRRT(:))**(1./3.) * (PCRT(:))**(2./3.) * ZZW1(:)                            
    P_RR_EVAP(:) = - ZZW2(:)
 
@@ -120,7 +121,7 @@ ELSE
 !
 ! Compute the function G(T)
 !
-      ZZW2(:) = 1. / ( XRHOLW*((((PLV(:)/PT(:))**2)/(LIMAW%XTHCO*XRV)) + (XRV*PT(:))/(LIMAW%XDIVA*PEVSAT(:)))) !G
+      ZZW2(:) = 1. / ( CST%XRHOLW*((((PLV(:)/PT(:))**2)/(LIMAW%XTHCO*CST%XRV)) + (CST%XRV*PT(:))/(LIMAW%XDIVA*PEVSAT(:))))
 !
 ! Compute the evaporation tendency
 !

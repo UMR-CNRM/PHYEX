@@ -6,7 +6,7 @@ MODULE MODE_LIMA_DROPS_HOM_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     ###############################################################################
-  SUBROUTINE LIMA_DROPS_HOM_FREEZING (LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 &
+  SUBROUTINE LIMA_DROPS_HOM_FREEZING (CST, LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 &
                                       PEXNREF, PPABST,                          &
                                       PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                       PCRT,                                     &
@@ -35,8 +35,8 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,             ONLY : XP00, XRD, XCPD, XCPV, XCL, XCI, XTT, XLSTT, XLVTT
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_CST, ONLY:CST_t
 !
 IMPLICIT NONE
 !
@@ -70,6 +70,7 @@ REAL, DIMENSION(KSIZE),    INTENT(INOUT) :: PB_RG
 !*       0.2   Declarations of local variables :
 !
 TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(CST_t),INTENT(IN)::CST
 REAL, DIMENSION(SIZE(PTHT)) ::  &
      ZW,       &
      ZT,       &
@@ -84,17 +85,17 @@ P_RR_HONR(:) = 0.
 P_CR_HONR(:) = 0.
 !
 ! Temperature
-ZT(:)  = PTHT(:) * ( PPABST(:)/XP00 ) ** (XRD/XCPD)
-ZTCELSIUS(:) = ZT(:)-XTT                                    ! T [°C]
+ZT(:)  = PTHT(:) * ( PPABST(:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
+ZTCELSIUS(:) = ZT(:)-CST%XTT                                    ! T [°C]
 !
-ZW(:) = PEXNREF(:)*( XCPD+XCPV*PRVT(:)+XCL*(PRCT(:)+PRRT(:)) &
-     +XCI*(PRIT(:)+PRST(:)+PRGT(:)) )
-ZLSFACT(:) = (XLSTT+(XCPV-XCI)*ZTCELSIUS(:))/ZW(:)          ! L_s/(Pi_ref*C_ph)
-ZLVFACT(:) = (XLVTT+(XCPV-XCL)*ZTCELSIUS(:))/ZW(:)          ! L_v/(Pi_ref*C_ph)
+ZW(:) = PEXNREF(:)*( CST%XCPD+CST%XCPV*PRVT(:)+CST%XCL*(PRCT(:)+PRRT(:)) &
+     +CST%XCI*(PRIT(:)+PRST(:)+PRGT(:)) )
+ZLSFACT(:) = (CST%XLSTT+(CST%XCPV-CST%XCI)*ZTCELSIUS(:))/ZW(:)          ! L_s/(Pi_ref*C_ph)
+ZLVFACT(:) = (CST%XLVTT+(CST%XCPV-CST%XCL)*ZTCELSIUS(:))/ZW(:)          ! L_v/(Pi_ref*C_ph)
 !
 ZW(:) = 0.0
 !
-WHERE( (ZT(:)<XTT-35.0) .AND. (PRRT(:)>LIMAP%XRTMIN(3)) .AND. ODCOMPUTE(:) )
+WHERE( (ZT(:)<CST%XTT-35.0) .AND. (PRRT(:)>LIMAP%XRTMIN(3)) .AND. ODCOMPUTE(:) )
    P_TH_HONR(:) = PRRT(:)*(ZLSFACT(:)-ZLVFACT(:))
    P_RR_HONR(:) = - PRRT(:)
    P_CR_HONR(:) = - PCRT(:)

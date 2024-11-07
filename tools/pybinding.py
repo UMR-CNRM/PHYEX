@@ -86,6 +86,9 @@ def pybinding(fortran_in, scope, fortran_out, python_out, libso,
             copyList.append('D%NIEC=NIT')
             copyList.append('D%NJEC=1')
             argList2.append('D')
+        elif vartype in ['TYPE(NSV_T)',]:
+            moduleList.append('USE MODD_' + vartype[5:-3] + ', ONLY: T' + vartype[5:-3])
+            argList2.append('T'+vartype[5:-3])
         elif vartype in ['TYPE(CST_T)', 'TYPE(ELEC_PARAM_T)', 'TYPE(ELEC_DESCR_T)',
                          'TYPE(PARAM_LIMA_T)','TYPE(PARAM_LIMA_WARM_T)','TYPE(PARAM_LIMA_COLD_T)','TYPE(PARAM_LIMA_MIXED_T)',]:
             moduleList.append('USE MODD_' + vartype[5:-3] + ', ONLY: ' + vartype[5:-3])

@@ -39,7 +39,6 @@ CONTAINS
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
 USE MODD_NSV
-USE MODD_PARAMETERS,      ONLY: JPHEXT, JPVEXT
 !
 use mode_tools,           only: Countjv
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
@@ -141,12 +140,6 @@ REAL    :: ZEPS                           ! molar mass ratio
 !	        ------------------------------------
 !
 !
-! Physical domain
-IIJB=JPHEXT
-IIJE=SIZE(PTHT,1)
-IKB=1+JPVEXT
-IKE=SIZE(PTHT,2) - JPVEXT
-!
 ! Temperature
 ZT(:,:) = PTHT(:,:) * ( PPABST(:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
 !
@@ -156,7 +149,7 @@ ZNHT(:,:) = PNHT(:,:)
 ! PACK variables
 !
 GNEGT(:,:) = .FALSE.
-GNEGT(IIJB:IIJE,IKB:IKE) = ZT(IIJB:IIJE,IKB:IKE)<CST%XTT-35.0
+GNEGT(D%NIJB:D%NIJE,D%NKB:D%NKE) = ZT(D%NIJB:D%NIJE,D%NKB:D%NKE)<CST%XTT-35.0
 INEGT = COUNTJV( GNEGT(:,:),I1(:),I3(:))
 !
 IF (INEGT.GT.0) THEN

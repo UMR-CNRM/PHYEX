@@ -7,7 +7,7 @@ MODULE MODE_LIMA_INIT_CCN_ACTIVATION_SPECTRUM
   IMPLICIT NONE
 CONTAINS
 !     #############################################################
-  SUBROUTINE LIMA_INIT_CCN_ACTIVATION_SPECTRUM (HTYPE_CCN,PD,PSIGMA,PLIMIT_FACTOR,PK,PMU,PBETA,PKAPPA)
+  SUBROUTINE LIMA_INIT_CCN_ACTIVATION_SPECTRUM (CST, HTYPE_CCN,PD,PSIGMA,PLIMIT_FACTOR,PK,PMU,PBETA,PKAPPA)
 !     #############################################################
 
 !!
@@ -34,16 +34,16 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST, ONLY : XMV, XAVOGADRO, XBOLTZ, XRHOLW
-!
 USE MODI_GAMMA_INC
 USE MODI_HYPGEO
 USE MODI_HYPSER
+USE MODD_CST, ONLY:CST_t
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments : 
 !
+TYPE(CST_t),      INTENT(IN)  :: CST
 CHARACTER(LEN=*), INTENT(IN)  :: HTYPE_CCN          ! Aerosol type
 REAL,             INTENT(IN)  :: PD             ! Aerosol PSD modal diameter          
 REAL,             INTENT(IN)  :: PSIGMA         ! Aerosol PSD width
@@ -129,7 +129,7 @@ DO IJ=1, SIZE(ZT)
    ZMIN   = PD
    ZMAX   = PD*10.
    ZPREC  = PD/100.
-   ZW     = 4 * 0.072 * XMV / XAVOGADRO / XBOLTZ / ZT(IJ) / XRHOLW
+   ZW     = 4 * 0.072 * CST%XMV / CST%XAVOGADRO / CST%XBOLTZ / ZT(IJ) / CST%XRHOLW
    ZSCRIT = ZRIDDR(ZMIN,ZMAX,ZPREC,ZDDRY,PKAPPA,ZT(IJ))                             ! wet diameter at Scrit
    ZSCRIT = (ZSCRIT**3-ZDDRY**3) * EXP(ZW/ZSCRIT) / (ZSCRIT**3-(1-PKAPPA)*ZDDRY**3) ! Saturation ratio at Scrit
    ZSCRIT = (ZSCRIT - 1.) * 100.                                                    ! Scrit (in %)
@@ -331,7 +331,6 @@ zfh     = DSDD(PX2,PDDRY,PKAPPA,PT)
 !
 !*       0. DECLARATIONS
 !
-    USE MODD_CST, ONLY : XMV, XAVOGADRO, XBOLTZ, XRHOLW
 !
     IMPLICIT NONE
 !
@@ -348,7 +347,7 @@ zfh     = DSDD(PX2,PDDRY,PKAPPA,PT)
 !
     REAL              :: ZA     ! factor inside the exponential
 !    
-    ZA = 4 * 0.072 * XMV / XAVOGADRO / XBOLTZ / PT / XRHOLW
+    ZA = 4 * 0.072 * CST%XMV / CST%XAVOGADRO / CST%XBOLTZ / PT / CST%XRHOLW
     ZDS = (PD**3-PDDRY**3) * (PD**3-(1-PKAPPA)*PDDRY**3) * ZA - 3. * PKAPPA * PD**4 * PDDRY**3
     ZDS = ZDS * EXP(ZA/PD) / (PD**3-(1-PKAPPA)*PDDRY**3)**2
 !

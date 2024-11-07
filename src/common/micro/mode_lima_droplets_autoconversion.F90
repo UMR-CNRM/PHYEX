@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPLETS_AUTOCONVERSION
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_DROPLETS_AUTOCONVERSION (LIMAP, LIMAW, KSIZE, ODCOMPUTE,               &
+  SUBROUTINE LIMA_DROPLETS_AUTOCONVERSION (CST, LIMAP, LIMAW, KSIZE, ODCOMPUTE,               &
                                            PRHODREF,                       &
                                            PRCT, PCCT, PLBDC, PLBDR,       &
                                            P_RC_AUTO, P_CC_AUTO, P_CR_AUTO )
@@ -35,14 +35,17 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,             ONLY : XPI, XRHOLW
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_CST, ONLY:CST_t
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(CST_t),INTENT(IN)::CST
 INTEGER,              INTENT(IN)    :: KSIZE
 LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
@@ -59,8 +62,6 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CR_AUTO
 !
 !*       0.2   Declarations of local variables :
 !
-TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(SIZE(PRCT)) :: ZW1, ZW2, ZW3 ! work arrays
 !
 !-------------------------------------------------------------------------------
@@ -86,7 +87,7 @@ ELSE IF (LIMAP%LKHKO) THEN
 !
       P_RC_AUTO(:) = - ZW1(:)
 !
-      ZW2(:) = ZW1(:) * 3./(4.*XPI*XRHOLW*(LIMAW%XR0)**(3.))
+      ZW2(:) = ZW1(:) * 3./(4.*CST%XPI*CST%XRHOLW*(LIMAW%XR0)**(3.))
       P_CR_AUTO(:) = ZW2(:)
 !
       ZW3(:) = - ZW1(:) * PCCT(:) / PRCT(:)

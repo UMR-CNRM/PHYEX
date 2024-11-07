@@ -7,7 +7,7 @@ MODULE MODE_LIMA_HAIL
   IMPLICIT NONE
 CONTAINS
 !     #################################################################################
-  SUBROUTINE LIMA_HAIL (LIMAP, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                              &
+  SUBROUTINE LIMA_HAIL (CST, LIMAP, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                              &
                         PRHODREF, PPRES, PT, PKA, PDV, PCJ,                    &
                         PRVT, PRCT, PRRT, PRIT, PRST, PRGT, PRHT,              &
                         PCCT, PCRT, PCIT, PCST, PCGT, PCHT,                    &
@@ -44,15 +44,18 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,              ONLY : XTT, XMD, XMV, XRV, XLVTT, XLMTT, XESTT, XCL, XCI, XCPV
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_CST, ONLY:CST_t
 
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(CST_t),INTENT(IN)::CST
 INTEGER, INTENT(IN) :: KSIZE
 REAL,                 INTENT(IN)    :: PTSTEP 
 LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
@@ -135,8 +138,6 @@ REAL,    DIMENSION(SIZE(PRCT))  :: ZRWETH
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC1,IVEC2        ! Vectors of indices
 REAL,    DIMENSION(SIZE(PRCT))  :: ZVEC1,ZVEC2, ZVEC3 ! Work vectors
 !
-TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL                            :: ZTHRH, ZTHRC
 !
 !-------------------------------------------------------------------------------
@@ -327,17 +328,17 @@ END WHERE
 !
 ZZW(:) = 0.0
 WHERE( PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:) >LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:) )
-   ZZW(:) = PRVT(:)*PPRES(:)/((XMV/XMD)+PRVT(:)) ! Vapor pressure
-   ZZW(:) = PKA(:)*(XTT-PT(:)) +                                  &
-              ( PDV(:)*(XLVTT + ( XCPV - XCL ) * ( PT(:) - XTT ))   &
-                          *(XESTT-ZZW(:))/(XRV*PT(:))             )
+   ZZW(:) = PRVT(:)*PPRES(:)/((CST%XMV/CST%XMD)+PRVT(:)) ! Vapor pressure
+   ZZW(:) = PKA(:)*(CST%XTT-PT(:)) +                                  &
+              ( PDV(:)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( PT(:) - CST%XTT ))   &
+                          *(CST%XESTT-ZZW(:))/(CST%XRV*PT(:))             )
 !
 ! Total mass gained by hail in wet mode
    ZRWETH(:)  = MAX( 0.0,                                                                &
                    ( ZZW(:) * PCHT(:) * ( LIMAM%X0DEPH*       PLBDH(:)**LIMAM%XEX0DEPH +             &
                                           LIMAM%X1DEPH*PCJ(:)*PLBDH(:)**LIMAM%XEX1DEPH ) +           &
-                   ( ZZW2(:)+ZZW3(:)+ZZW4(:) ) * ( XLMTT + (XCI-XCL)*(XTT-PT(:)) )   )   &
-                   / (XLMTT-XCL*(XTT-PT(:)))                                     )
+                   ( ZZW2(:)+ZZW3(:)+ZZW4(:) ) * ( CST%XLMTT + (CST%XCI-CST%XCL)*(CST%XTT-PT(:)) )   )   &
+                   / (CST%XLMTT-CST%XCL*(CST%XTT-PT(:)))                                     )
    ! We must agregate, at least, the cold species
    ZRWETH(:)=MAX(ZRWETH(:), ZZW2(:)+ZZW3(:)+ZZW4(:))
 END WHERE
@@ -348,7 +349,7 @@ WHERE( PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:) >LIMAP%XCTMIN(6) .AND. PRRT(:)>LIMA
 END WHERE
 !
 ZZW(:) = 0.0
-WHERE( ODCOMPUTE(:) .AND. PT(:)<XTT .AND. ZZW5(:)>0.0 ) 
+WHERE( ODCOMPUTE(:) .AND. PT(:)<CST%XTT .AND. ZZW5(:)>0.0 ) 
    P_RC_WETH(:) = - ZZW1(:)
    P_CC_WETH(:) = P_RC_WETH(:) * PCCT(:)/MAX(PRCT(:),LIMAP%XRTMIN(2))
    P_RR_WETH(:) = - ZZW5(:)
@@ -371,7 +372,7 @@ END WHERE
 ZTHRH=0.01E-3
 ZTHRC=0.001E-3
 ZZW(:) = 0.0
-GWET(:) = PRHT(:)<ZTHRH .AND. PRCT(:)<ZTHRC .AND. PT(:)<XTT 
+GWET(:) = PRHT(:)<ZTHRH .AND. PRCT(:)<ZTHRC .AND. PT(:)<CST%XTT 
 WHERE( GWET(:) )
    P_RG_COHG(:) = PRHT * MIN( 1.0,MAX( 0.0,1.0-(PRCT(:)/ZTHRC) ) )
    P_CG_COHG(:) = P_RG_COHG(:) * PCHT(:)/MAX(PRHT(:),LIMAP%XRTMIN(7))
@@ -382,19 +383,19 @@ END WHERE
 !        -----------------------
 !
 ZZW(:) = 0.0
-WHERE( PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:)>LIMAP%XCTMIN(7) .AND. PT(:)>XTT .AND. ODCOMPUTE(:) )
-   ZZW(:) = PRVT(:)*PPRES(:)/((XMV/XMD)+PRVT(:)) ! Vapor pressure
-   ZZW(:) = PKA(:)*(XTT-PT(:)) +                                 &
-              ( PDV(:)*(XLVTT + ( XCPV - XCL ) * ( PT(:) - XTT )) &
-                          *(XESTT-ZZW(:))/(XRV*PT(:))             )
+WHERE( PRHT(:)>LIMAP%XRTMIN(6) .AND. PCHT(:)>LIMAP%XCTMIN(7) .AND. PT(:)>CST%XTT .AND. ODCOMPUTE(:) )
+   ZZW(:) = PRVT(:)*PPRES(:)/((CST%XMV/CST%XMD)+PRVT(:)) ! Vapor pressure
+   ZZW(:) = PKA(:)*(CST%XTT-PT(:)) +                                 &
+              ( PDV(:)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( PT(:) - CST%XTT )) &
+                          *(CST%XESTT-ZZW(:))/(CST%XRV*PT(:))             )
 !
 ! compute RHMLTR
 !
    ZZW(:)  = MAX( 0.0,( -ZZW(:) * PCHT(:) *                        &
                           ( LIMAM%X0DEPH*       PLBDH(:)**LIMAM%XEX0DEPH +     &
                             LIMAM%X1DEPH*PCJ(:)*PLBDH(:)**LIMAM%XEX1DEPH ) -   &
-                        ( ZZW5(:) ) * ( XCL*(XTT-PT(:))) ) &
-                        / XLMTT                                    )
+                        ( ZZW5(:) ) * ( CST%XCL*(CST%XTT-PT(:))) ) &
+                        / CST%XLMTT                                    )
    P_RR_HMLT(:) = ZZW(:)
    P_CR_HMLT(:) = ZZW(:) * 5.0E6  ! obtained after averaging, Dshed=1mm and 500 microns 
    P_CH_HMLT(:) = - ZZW(:) * PCHT(:)/PRHT(:)

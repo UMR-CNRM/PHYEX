@@ -7,7 +7,7 @@ MODULE MODE_LIMA_GRAUPEL
   IMPLICIT NONE
 CONTAINS
 !     #################################################################################
-  SUBROUTINE LIMA_GRAUPEL (LIMAP, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                              &
+  SUBROUTINE LIMA_GRAUPEL (CST, LIMAP, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                              &
                            PRHODREF, PPRES, PT, PKA, PDV, PCJ,                    &
                            PRVT, PRCT, PRRT, PRIT, PRST, PRGT,                    &
                            PCCT, PCRT, PCIT, PCST, PCGT,                          &
@@ -46,15 +46,19 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,              ONLY : XTT, XMD, XMV, XRV, XLVTT, XLMTT, XESTT, XCL, XCI, XCPV
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_CST, ONLY:CST_t
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(CST_t),INTENT(IN)::CST
 INTEGER, INTENT(IN) :: KSIZE
 REAL,                 INTENT(IN)    :: PTSTEP 
 LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
@@ -146,9 +150,6 @@ REAL,    DIMENSION(SIZE(PRCT))  :: ZRDRYG, ZRWETG
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC1,IVEC2        ! Vectors of indices
 REAL,    DIMENSION(SIZE(PRCT))  :: ZVEC1,ZVEC2, ZVEC3 ! Work vectors
 !
-TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
-TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 INTEGER                         :: IHAIL
 !
 !-------------------------------------------------------------------------------
@@ -210,7 +211,7 @@ ZRWETG(:) = 0.
 WHERE( PRGT(:)>LIMAP%XRTMIN(6) .AND. ODCOMPUTE(:) )
    ZZW(:) = PCGT(:) * PLBDG(:)**(-LIMAM%XDG-2.0) * PRHODREF(:)**(1-LIMAP%XCEXVT)
    ZZW1(:) = LIMAM%XFCDRYG * PRCT(:) * ZZW(:)                               ! RCDRYG - rc collected by graupel in dry mode 
-   ZZW2(:) = LIMAM%XFIDRYG * EXP( LIMAM%XCOLEXIG*(PT(:)-XTT) ) * PRIT(:) * ZZW(:) ! RIDRYG - ri collected by graupel in dry mode
+   ZZW2(:) = LIMAM%XFIDRYG * EXP( LIMAM%XCOLEXIG*(PT(:)-CST%XTT) ) * PRIT(:) * ZZW(:) ! RIDRYG - ri collected by graupel in dry mode
 END WHERE
 !
 !*           1.b Collection of rs in the dry mode
@@ -254,7 +255,7 @@ WHERE( GDRY )
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
        			                                    * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
-   ZZW3(:) = LIMAM%XFSDRYG * ZZW(:) * EXP( LIMAM%XCOLEXSG*(PT(:)-XTT) )       & ! RSDRYG - rs collected by graupel in dry mode
+   ZZW3(:) = LIMAM%XFSDRYG * ZZW(:) * EXP( LIMAM%XCOLEXSG*(PT(:)-CST%XTT) )       & ! RSDRYG - rs collected by graupel in dry mode
                     *  PRST(:) * PCGT(:)                          &
                     *  PRHODREF(:)**(1-LIMAP%XCEXVT)                    &
                     *( LIMAM%XLBSDRYG1/( PLBDG(:)**2                ) + &
@@ -272,7 +273,7 @@ WHERE( GDRY )
                     - Z4(:)*(ZVEC2(:) - 1.0) ) &
        			                                    * (ZVEC1(:) - 1.0)
    ZZW(:) = ZVEC3(:)
-   ZZW3N(:) = LIMAM%XFNSDRYG * ZZW(:) * EXP( LIMAM%XCOLEXSG*(PT(:)-XTT) )        & ! NSDRYG - Ns collected by graupel in dry mode
+   ZZW3N(:) = LIMAM%XFNSDRYG * ZZW(:) * EXP( LIMAM%XCOLEXSG*(PT(:)-CST%XTT) )        & ! NSDRYG - Ns collected by graupel in dry mode
                       *  PCST(:) * PCGT(:)                           &
                       *  PRHODREF(:)**(1-LIMAP%XCEXVT)                     &
                       *( LIMAM%XLBNSDRYG1/( PLBDG(:)**2                ) + &
@@ -358,21 +359,21 @@ ZRDRYG(:) = ZZW1(:) + ZZW2(:) + ZZW3(:) + ZZW4(:)
 !
 ZZW(:) = 0.0
 WHERE( PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. ODCOMPUTE(:) )
-   ZZW5(:) = ZZW2(:) / (LIMAM%XCOLIG*EXP(LIMAM%XCOLEXIG*(PT(:)-XTT)) ) ! RIWETG
-   ZZW6(:) = ZZW3(:) / (LIMAM%XCOLSG*EXP(LIMAM%XCOLEXSG*(PT(:)-XTT)) ) ! RSWETG
-   ZZW6N(:)= ZZW3N(:)/ (LIMAM%XCOLSG*EXP(LIMAM%XCOLEXSG*(PT(:)-XTT)) ) ! NSWETG
+   ZZW5(:) = ZZW2(:) / (LIMAM%XCOLIG*EXP(LIMAM%XCOLEXIG*(PT(:)-CST%XTT)) ) ! RIWETG
+   ZZW6(:) = ZZW3(:) / (LIMAM%XCOLSG*EXP(LIMAM%XCOLEXSG*(PT(:)-CST%XTT)) ) ! RSWETG
+   ZZW6N(:)= ZZW3N(:)/ (LIMAM%XCOLSG*EXP(LIMAM%XCOLEXSG*(PT(:)-CST%XTT)) ) ! NSWETG
 !
-   ZZW(:) = PRVT(:)*PPRES(:)/((XMV/XMD)+PRVT(:)) ! Vapor pressure
-   ZZW(:) = PKA(:)*(XTT-PT(:)) +                                  &
-              ( PDV(:)*(XLVTT + ( XCPV - XCL ) * ( PT(:) - XTT ))   &
-                          *(XESTT-ZZW(:))/(XRV*PT(:))             )
+   ZZW(:) = PRVT(:)*PPRES(:)/((CST%XMV/CST%XMD)+PRVT(:)) ! Vapor pressure
+   ZZW(:) = PKA(:)*(CST%XTT-PT(:)) +                                  &
+              ( PDV(:)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( PT(:) - CST%XTT ))   &
+                          *(CST%XESTT-ZZW(:))/(CST%XRV*PT(:))             )
 !
 ! Total mass gained by graupel in wet mode
    ZRWETG(:)  = MAX( 0.0,                                                        &
                    ( ZZW(:) * PCGT(:) * ( LIMAM%X0DEPG*       PLBDG(:)**LIMAM%XEX0DEPG +     &
                                           LIMAM%X1DEPG*PCJ(:)*PLBDG(:)**LIMAM%XEX1DEPG ) +   &
-                   ( ZZW5(:)+ZZW6(:) ) * ( XLMTT + (XCI-XCL)*(XTT-PT(:)) )   )   &
-                   / (XLMTT-XCL*(XTT-PT(:)))                                     )
+                   ( ZZW5(:)+ZZW6(:) ) * ( CST%XLMTT + (CST%XCI-CST%XCL)*(CST%XTT-PT(:)) )   )   &
+                   / (CST%XLMTT-CST%XCL*(CST%XTT-PT(:)))                                     )
   !We must agregate, at least, the cold species
    ZRWETG(:)=MAX(ZRWETG(:), ZZW5(:)+ZZW6(:))
 END WHERE
@@ -383,7 +384,7 @@ END WHERE
 ZZW(:) = 0.0
 IHAIL = 0.
 IF (LIMAP%NMOM_H.GE.1) IHAIL = 1. 
-WHERE( ODCOMPUTE(:) .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. PT(:)<XTT .AND. &
+WHERE( ODCOMPUTE(:) .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. PT(:)<CST%XTT .AND. &
        (ZRDRYG(:)-ZZW2(:)-ZZW3(:))>=(ZRWETG(:)-ZZW5(:)-ZZW6(:)) .AND. ZRWETG(:)-ZZW5(:)-ZZW6(:)>0.0 ) 
 !
 ! Mass of rain and cloud droplets frozen by graupel in wet mode : RCWETG + RRWETG = RWETG - RIWETG - RSWETG
@@ -412,7 +413,7 @@ END WHERE
 !            1.g Dry mode
 !            ------------
 !
-WHERE( ODCOMPUTE(:) .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. PT(:)<XTT .AND.                  &
+WHERE( ODCOMPUTE(:) .AND. PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. PT(:)<CST%XTT .AND.                  &
        (ZRDRYG(:)-ZZW2(:)-ZZW3(:))<(ZRWETG(:)-ZZW5(:)-ZZW6(:)) .AND. ZRDRYG(:)>0.0 )
    !
    P_RC_DRYG(:) = - ZZW1(:)
@@ -468,19 +469,19 @@ END WHERE
 !        -------------------
 !
 ZZX(:) = 0.0
-WHERE( PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. PT(:)>XTT .AND. ODCOMPUTE(:) )
-   ZZX(:) = PRVT(:)*PPRES(:)/((XMV/XMD)+PRVT(:)) ! Vapor pressure
-   ZZX(:) = PKA(:)*(XTT-PT(:)) +                                 &
-              ( PDV(:)*(XLVTT + ( XCPV - XCL ) * ( PT(:) - XTT )) &
-                          *(XESTT-ZZX(:))/(XRV*PT(:))             )
+WHERE( PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>LIMAP%XCTMIN(6) .AND. PT(:)>CST%XTT .AND. ODCOMPUTE(:) )
+   ZZX(:) = PRVT(:)*PPRES(:)/((CST%XMV/CST%XMD)+PRVT(:)) ! Vapor pressure
+   ZZX(:) = PKA(:)*(CST%XTT-PT(:)) +                                 &
+              ( PDV(:)*(CST%XLVTT + ( CST%XCPV - CST%XCL ) * ( PT(:) - CST%XTT )) &
+                          *(CST%XESTT-ZZX(:))/(CST%XRV*PT(:))             )
 !
 ! compute RGMLTR
 !
    ZZX(:)  = MAX( 0.0,( -ZZX(:) * PCGT(:) *                        &
                           ( LIMAM%X0DEPG*       PLBDG(:)**LIMAM%XEX0DEPG +     &
                             LIMAM%X1DEPG*PCJ(:)*PLBDG(:)**LIMAM%XEX1DEPG ) -   &
-                        ( ZZW1(:)+ZZW4(:) ) * ( XCL*(XTT-PT(:))) ) &
-                        / XLMTT                                    )
+                        ( ZZW1(:)+ZZW4(:) ) * ( CST%XCL*(CST%XTT-PT(:))) ) &
+                        / CST%XLMTT                                    )
    P_RR_GMLT(:) = ZZX(:)
    P_CR_GMLT(:) = ZZX(:) * 5.0E6  ! obtained after averaging, Dshed=1mm and 500 microns 
    P_CG_GMLT(:) = - ZZX(:) * PCGT(:)/PRGT(:)

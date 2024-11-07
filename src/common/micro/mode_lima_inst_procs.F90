@@ -7,7 +7,7 @@ MODULE MODE_LIMA_INST_PROCS
   IMPLICIT NONE
 CONTAINS
 !     ###########################################################################
-  SUBROUTINE LIMA_INST_PROCS (LIMAP, LIMAW, KSIZE, PTSTEP, ODCOMPUTE,                           &
+  SUBROUTINE LIMA_INST_PROCS (CST, LIMAP, LIMAW, KSIZE, PTSTEP, ODCOMPUTE,                           &
                               PEXNREF, PPABST,                                    &
                               PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,           &
                               PCCT, PCRT, PCIT,                                   &
@@ -43,10 +43,11 @@ USE MODE_LIMA_DROPS_HOM_FREEZING, ONLY: LIMA_DROPS_HOM_FREEZING
 USE MODE_LIMA_ICE_MELTING, ONLY: LIMA_ICE_MELTING
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
+USE MODD_CST, ONLY:CST_t
 
 IMPLICIT NONE
 
-
+TYPE(CST_t),INTENT(IN)::CST
 TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
 TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 INTEGER,              INTENT(IN)    :: KSIZE
@@ -107,7 +108,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 IF (LIMAP%NMOM_G.GE.1 .AND. LIMAP%NMOM_R.GE.1) THEN
-   CALL LIMA_DROPS_HOM_FREEZING (LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 & ! no dependance on CF, IF or PF
+   CALL LIMA_DROPS_HOM_FREEZING (CST, LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 & ! no dependance on CF, IF or PF
                                  PEXNREF, PPABST,                          &
                                  PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                  PCRT,                                     &
@@ -118,7 +119,7 @@ END IF
 !-------------------------------------------------------------------------------
 !
 IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%NMOM_I.GE.1) THEN
-   CALL LIMA_ICE_MELTING (LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 & ! no dependance on CF, IF or PF
+   CALL LIMA_ICE_MELTING (CST, LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 & ! no dependance on CF, IF or PF
                           PEXNREF, PPABST,                          & ! but ice fraction becomes cloud fraction
                           PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, & ! -> where ?
                           PCIT, PINT,                               &

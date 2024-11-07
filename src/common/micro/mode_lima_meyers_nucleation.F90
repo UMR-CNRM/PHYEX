@@ -41,7 +41,6 @@ CONTAINS
 !
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
-USE MODD_PARAMETERS
 
 use mode_tools,           only: Countjv
 USE MODD_PARAM_LIMA,      ONLY:PARAM_LIMA_t
@@ -140,13 +139,6 @@ P_TH_HINC(:,:) = 0.
 P_RC_HINC(:,:) = 0.
 P_CC_HINC(:,:) = 0.
 !
-! Physical domain
-!
-IIJB=JPHEXT
-IIJE=SIZE(PTHT,1)
-IKB=1+JPVEXT
-IKE=SIZE(PTHT,2) - JPVEXT
-!
 ! Temperature
 !
 ZT(:,:)  = PTHT(:,:) * ( PPABST(:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
@@ -163,8 +155,8 @@ ZW(:,:) = PRVT(:,:)*( PPABST(:,:)-ZW(:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:,:) )
 !  the temperature is negative only !!!
 !
 GNEGT(:,:) = .FALSE.
-GNEGT(IIJB:IIJE,IKB:IKE) = ZT(IIJB:IIJE,IKB:IKE)<CST%XTT .AND. &
-                           ZW(IIJB:IIJE,IKB:IKE)>0.8 
+GNEGT(D%NIJB:D%NIJE,D%NKB:D%NKE) = ZT(D%NIJB:D%NIJE,D%NKB:D%NKE)<CST%XTT .AND. &
+                           ZW(D%NIJB:D%NIJE,D%NKB:D%NKE)>0.8 
 INEGT = COUNTJV( GNEGT(:,:),I1(:),I3(:))
 IF( INEGT >= 1 ) THEN
   ALLOCATE(ZRVT(INEGT)) 

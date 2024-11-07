@@ -6,7 +6,7 @@ MODULE MODE_LIMA_ICE_MELTING
   IMPLICIT NONE
 CONTAINS
 !     ########################################################################
-  SUBROUTINE LIMA_ICE_MELTING (LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 &
+  SUBROUTINE LIMA_ICE_MELTING (CST, LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 &
                                PEXNREF, PPABST,                          &
                                PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                PCIT, PINT,                               &
@@ -35,13 +35,14 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,             ONLY : XP00, XRD, XCPD, XCPV, XCL, XCI, XTT, XLSTT, XLVTT
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_CST, ONLY:CST_t
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(CST_t),INTENT(IN)::CST
 TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 INTEGER,              INTENT(IN)    :: KSIZE
 REAL,                 INTENT(IN)    :: PTSTEP 
@@ -92,19 +93,19 @@ P_RC_IMLT(:) = 0.
 P_CC_IMLT(:) = 0.
 !
 ! Temperature
-ZT(:)  = PTHT(:) * ( PPABST(:)/XP00 ) ** (XRD/XCPD)
-ZTCELSIUS(:) = ZT(:)-XTT
+ZT(:)  = PTHT(:) * ( PPABST(:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
+ZTCELSIUS(:) = ZT(:)-CST%XTT
 !
-ZW(:) = PEXNREF(:)*( XCPD+XCPV*PRVT(:)+XCL*(PRCT(:)+PRRT(:)) &
-     +XCI*(PRIT(:)+PRST(:)+PRGT(:)) )
-ZLSFACT(:) = (XLSTT+(XCPV-XCI)*ZTCELSIUS(:))/ZW(:)          ! L_s/(Pi_ref*C_ph)
-ZLVFACT(:) = (XLVTT+(XCPV-XCL)*ZTCELSIUS(:))/ZW(:)          ! L_v/(Pi_ref*C_ph)
+ZW(:) = PEXNREF(:)*( CST%XCPD+CST%XCPV*PRVT(:)+CST%XCL*(PRCT(:)+PRRT(:)) &
+     +CST%XCI*(PRIT(:)+PRST(:)+PRGT(:)) )
+ZLSFACT(:) = (CST%XLSTT+(CST%XCPV-CST%XCI)*ZTCELSIUS(:))/ZW(:)          ! L_s/(Pi_ref*C_ph)
+ZLVFACT(:) = (CST%XLVTT+(CST%XCPV-CST%XCL)*ZTCELSIUS(:))/ZW(:)          ! L_v/(Pi_ref*C_ph)
 !
 ZW(:) = 0.0
 !
 ZMASK(:) = 0.
 !
-WHERE( (ZT(:)>XTT) .AND. (PRIT(:)>LIMAP%XRTMIN(4)) .AND. ODCOMPUTE(:) )
+WHERE( (ZT(:)>CST%XTT) .AND. (PRIT(:)>LIMAP%XRTMIN(4)) .AND. ODCOMPUTE(:) )
    P_TH_IMLT(:) = - PRIT(:)*(ZLSFACT(:)-ZLVFACT(:))
    P_RC_IMLT(:) = PRIT(:)
    P_CC_IMLT(:) = PCIT(:)

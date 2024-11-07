@@ -6,7 +6,7 @@ MODULE MODE_LIMA_DROPLETS_HOM_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_DROPLETS_HOM_FREEZING (LIMAP, LIMAC, KSIZE, PTSTEP,  ODCOMPUTE,        &
+  SUBROUTINE LIMA_DROPLETS_HOM_FREEZING (CST, LIMAP, LIMAC, KSIZE, PTSTEP,  ODCOMPUTE,        &
                                          PT, PLVFACT, PLSFACT,             &
                                          PRCT, PCCT, PLBDC,                &
                                          P_TH_HONC, P_RC_HONC, P_CC_HONC   )
@@ -33,14 +33,17 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,             ONLY : XTT
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
-USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t 
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_CST, ONLY:CST_t 
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(CST_t),INTENT(IN)::CST
 INTEGER,              INTENT(IN)    :: KSIZE
 REAL,                 INTENT(IN)    :: PTSTEP 
 LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
@@ -59,8 +62,6 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CC_HONC
 !
 !*       0.2   Declarations of local variables :
 !
-TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(SIZE(PT)) ::  ZZW, ZZX, ZZY, ZTCELSIUS
 !
 !-------------------------------------------------------------------------------
@@ -74,8 +75,8 @@ P_TH_HONC(:) = 0.
 P_RC_HONC(:) = 0.
 P_CC_HONC(:) = 0.
 !
-WHERE ( PT(:)<XTT-35.0 .AND. PCCT(:)>LIMAP%XCTMIN(2) .AND. PRCT(:)>LIMAP%XRTMIN(2) )
-   ZTCELSIUS(:) = PT(:)-XTT                                    ! T [°C]
+WHERE ( PT(:)<CST%XTT-35.0 .AND. PCCT(:)>LIMAP%XCTMIN(2) .AND. PRCT(:)>LIMAP%XRTMIN(2) )
+   ZTCELSIUS(:) = PT(:)-CST%XTT                                    ! T [°C]
    !
    ZZW(:) = 0.0
    ZZX(:) = 0.0

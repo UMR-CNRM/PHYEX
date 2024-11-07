@@ -7,7 +7,7 @@ MODULE MODE_LIMA_DROPLETS_RIMING_SNOW
   IMPLICIT NONE
 CONTAINS
 !     ###########################################################################################
-  SUBROUTINE LIMA_DROPLETS_RIMING_SNOW (LIMAP, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                               &
+  SUBROUTINE LIMA_DROPLETS_RIMING_SNOW (CST, LIMAP, LIMAC, LIMAM, KSIZE, PTSTEP, ODCOMPUTE,                               &
                                         PRHODREF, PT,                                           &
                                         PRCT, PCCT, PRST, PCST, PLBDC, PLBDS, PLVFACT, PLSFACT, &
 !++cb++
@@ -42,15 +42,19 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,              ONLY : XTT
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_CST, ONLY:CST_t
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(CST_t),INTENT(IN)::CST
 INTEGER, INTENT(IN) :: KSIZE
 REAL,                 INTENT(IN)    :: PTSTEP 
 LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
@@ -90,9 +94,6 @@ REAL,    DIMENSION(SIZE(PRCT))  :: Z_RC_RIM, Z_RS_RIM, Z_RG_RIM    !++cb--
 !
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC2              ! Vector of indices
 REAL,    DIMENSION(SIZE(PRCT))  :: ZVEC1,ZVEC2,ZVEC1W ! Work vectors
-TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
-TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 INTEGER                         :: II
 !
 !-------------------------------------------------------------------------------
@@ -103,7 +104,7 @@ DO II = 1, SIZE(PRCT)
 !*       Cloud droplet riming of the aggregates  
 !        --------------------------------------
 !
-  IF ( PRCT(II)>LIMAP%XRTMIN(2) .AND. PRST(II)>LIMAP%XRTMIN(5) .AND. PT(II)<XTT .AND. &
+  IF ( PRCT(II)>LIMAP%XRTMIN(2) .AND. PRST(II)>LIMAP%XRTMIN(5) .AND. PT(II)<CST%XTT .AND. &
        PCCT(II)>LIMAP%XCTMIN(2) .AND. PCST(II)>LIMAP%XCTMIN(5) .AND. ODCOMPUTE(II) ) THEN
 !
     ZVEC1(II) = PLBDS(II)

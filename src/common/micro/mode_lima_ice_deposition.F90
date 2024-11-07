@@ -7,7 +7,7 @@ MODULE MODE_LIMA_ICE_DEPOSITION
   IMPLICIT NONE
 CONTAINS
 !     ##########################################################################
-  SUBROUTINE LIMA_ICE_DEPOSITION (LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,                 &
+  SUBROUTINE LIMA_ICE_DEPOSITION (CST, LIMAP, LIMAC, KSIZE, PTSTEP, ODCOMPUTE,                 &
                                   PRHODREF, PT,  PSSI, PAI, PCJ, PLSFACT,   &
                                   PRIT, PCIT, PLBDI,                        &
                                   P_TH_DEPI, P_RI_DEPI,                     &
@@ -40,14 +40,17 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,             ONLY : XTT
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_CST, ONLY:CST_t
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(CST_t),INTENT(IN)::CST
 INTEGER,              INTENT(IN)    :: KSIZE
 REAL,                 INTENT(IN)    :: PTSTEP
 LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
@@ -73,8 +76,6 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_CNVS
 !*       0.2   Declarations of local variables :
 !
 LOGICAL, DIMENSION(SIZE(PRHODREF)) :: GMICRO ! Computations only where necessary
-TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL,    DIMENSION(SIZE(PRHODREF)) :: ZZW, ZZW2, ZZX, ZCRIAUTI ! Work array
 !
 !
@@ -99,10 +100,10 @@ IF (LIMAP%NMOM_I.EQ.1) THEN
 !*       Conversion of pristine ice to r_s: RICNVS
 !        -----------------------------------------
 !
-      ZCRIAUTI(:)=MIN(0.2E-4,10**(0.06*(PT(:)-XTT)-3.5))
+      ZCRIAUTI(:)=MIN(0.2E-4,10**(0.06*(PT(:)-CST%XTT)-3.5))
       ZZW(:) = 0.0
       WHERE ( (PRIT(:)>LIMAP%XRTMIN(4)))
-         ZZW(:)   = 1.E-3 * EXP( 0.015*(PT(:)-XTT) ) * MAX( PRIT(:)-ZCRIAUTI(:),0.0 )
+         ZZW(:)   = 1.E-3 * EXP( 0.015*(PT(:)-CST%XTT) ) * MAX( PRIT(:)-ZCRIAUTI(:),0.0 )
       END WHERE
 !
       P_RI_CNVS(:) = - ZZW(:)

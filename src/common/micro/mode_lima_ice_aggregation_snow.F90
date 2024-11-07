@@ -7,7 +7,7 @@ MODULE MODE_LIMA_ICE_AGGREGATION_SNOW
   IMPLICIT NONE
 CONTAINS
 !     #######################################################################
-  SUBROUTINE LIMA_ICE_AGGREGATION_SNOW (LIMAP, LIMAC, KSIZE, ODCOMPUTE,                     &
+  SUBROUTINE LIMA_ICE_AGGREGATION_SNOW (CST, LIMAP, LIMAC, KSIZE, ODCOMPUTE,                     &
                                         PT, PRHODREF,                         &
                                         PRIT, PRST, PCIT, PCST, PLBDI, PLBDS, &
                                         PLATHAM_IAGGS,                        &
@@ -38,14 +38,17 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,             ONLY : XTT
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_CST, ONLY:CST_t
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(CST_t),INTENT(IN)::CST
 INTEGER, INTENT(IN) :: KSIZE
 LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
@@ -65,8 +68,6 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_AGGS
 !
 !*       0.2   Declarations of local variables :
 !
-TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(SIZE(PRIT)) :: ZZW1, ZZW2, ZZW3 ! work arrays
 !
 !-------------------------------------------------------------------------------
@@ -85,7 +86,7 @@ P_CI_AGGS(:) = 0.
 !
 IF (LIMAP%NMOM_I.EQ.1) THEN
    WHERE ( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRST(:)>LIMAP%XRTMIN(5) .AND. ODCOMPUTE(:) )
-      ZZW1(:) = LIMAC%XFIAGGS * EXP( LIMAC%XCOLEXIS*(PT(:)-XTT) ) &
+      ZZW1(:) = LIMAC%XFIAGGS * EXP( LIMAC%XCOLEXIS*(PT(:)-CST%XTT) ) &
                         * PLATHAM_IAGGS(:)            &
                         * PRIT(:)                     &
                         * PCST(:) * (1+(LIMAC%XFVELOS/PLBDS(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAC%XEXIAGGS/LIMAP%XALPHAS) &
@@ -98,7 +99,7 @@ ELSE
    WHERE ( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRST(:)>LIMAP%XRTMIN(5) .AND. &
            PCIT(:)>LIMAP%XCTMIN(4) .AND. PCST(:)>LIMAP%XCTMIN(5) .AND. ODCOMPUTE(:) )
       ZZW1(:) = (PLBDI(:) / PLBDS(:))**3
-      ZZW2(:) = PCIT(:)*PCST(:)*EXP(LIMAC%XCOLEXIS*(PT(:)-XTT))*PRHODREF(:) / (PLBDI(:)**3)
+      ZZW2(:) = PCIT(:)*PCST(:)*EXP(LIMAC%XCOLEXIS*(PT(:)-CST%XTT))*PRHODREF(:) / (PLBDI(:)**3)
       ZZW3(:) = ZZW2(:)*(LIMAC%XAGGS_CLARGE1+LIMAC%XAGGS_CLARGE2*ZZW1(:))
 !
       P_CI_AGGS(:) = - ZZW3(:)

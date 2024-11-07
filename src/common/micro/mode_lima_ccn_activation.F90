@@ -71,7 +71,6 @@ USE MODD_CST,            ONLY: CST_t
 !use modd_field,           only: TFIELDDATA, TYPEREAL
 !USE MODD_IO,              ONLY: TFILEDATA
 !USE MODD_LUNIT_n,         ONLY: TLUOUT
-USE MODD_PARAMETERS,      ONLY: JPHEXT, JPVEXT
 USE MODD_NEB_n,           ONLY: LSUBG_COND
 
 !USE MODE_IO_FIELD_WRITE,  only: IO_Field_write
@@ -161,10 +160,6 @@ INTEGER :: IIJB, IIJE, IKB, IKE        ! Physical domain
 !*       1.     PREPARE COMPUTATIONS - PACK
 !   	        ---------------------------
 !
-IIJB=1
-IIJE=SIZE(PRHODREF,1)
-IKB=1+JPVEXT
-IKE=SIZE(PRHODREF,2) - JPVEXT
 !
 !  Saturation vapor mixing ratio and radiative tendency                    
 !
@@ -186,23 +181,23 @@ ENDDO
 GNUCT(:,:) = .FALSE.
 !
 IF (LIMAP%LADJ) THEN
-   GNUCT(IIJB:IIJE,IKB:IKE) =      PW_NU(IIJB:IIJE,IKB:IKE)>LIMAW%XWMIN                          &
-                                    .OR. PRVT(IIJB:IIJE,IKB:IKE)>ZRVSAT(IIJB:IIJE,IKB:IKE)
-   IF (LIMAP%LACTIT) GNUCT(IIJB:IIJE,IKB:IKE) =      GNUCT(IIJB:IIJE,IKB:IKE)      &
-                                                .OR. ZTDT(IIJB:IIJE,IKB:IKE)<LIMAW%XTMIN
+   GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) =      PW_NU(D%NIJB:D%NIJE,D%NKB:D%NKE)>LIMAW%XWMIN                          &
+                                    .OR. PRVT(D%NIJB:D%NIJE,D%NKB:D%NKE)>ZRVSAT(D%NIJB:D%NIJE,D%NKB:D%NKE)
+   IF (LIMAP%LACTIT) GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) =      GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE)      &
+                                                .OR. ZTDT(D%NIJB:D%NIJE,D%NKB:D%NKE)<LIMAW%XTMIN
 !
-   GNUCT(IIJB:IIJE,IKB:IKE) =       GNUCT(IIJB:IIJE,IKB:IKE)                       &
-                                    .AND. PT(IIJB:IIJE,IKB:IKE)>(CST%XTT-22.)                &
-                                    .AND. ZCONC_TOT(IIJB:IIJE,IKB:IKE)>LIMAP%XCTMIN(2)
+   GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) =       GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE)                       &
+                                    .AND. PT(D%NIJB:D%NIJE,D%NKB:D%NKE)>(CST%XTT-22.)                &
+                                    .AND. ZCONC_TOT(D%NIJB:D%NIJE,D%NKB:D%NKE)>LIMAP%XCTMIN(2)
 !
-   IF (LSUBG_COND) GNUCT(IIJB:IIJE,IKB:IKE) = GNUCT(IIJB:IIJE,IKB:IKE)       &
-                                              .AND. PCLDFR(IIJB:IIJE,IKB:IKE)>0.01
-   IF (.NOT. LSUBG_COND) GNUCT(IIJB:IIJE,IKB:IKE) = GNUCT(IIJB:IIJE,IKB:IKE)       &
-                                                    .AND. PRVT(IIJB:IIJE,IKB:IKE).GE.ZRVSAT(IIJB:IIJE,IKB:IKE)
+   IF (LSUBG_COND) GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) = GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE)       &
+                                              .AND. PCLDFR(D%NIJB:D%NIJE,D%NKB:D%NKE)>0.01
+   IF (.NOT. LSUBG_COND) GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) = GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE)       &
+                                                    .AND. PRVT(D%NIJB:D%NIJE,D%NKB:D%NKE).GE.ZRVSAT(D%NIJB:D%NIJE,D%NKB:D%NKE)
 ELSE
-   GNUCT(IIJB:IIJE,IKB:IKE) =       PRVT(IIJB:IIJE,IKB:IKE).GE.ZRVSAT(IIJB:IIJE,IKB:IKE) &
-                                    .AND. PT(IIJB:IIJE,IKB:IKE)>(CST%XTT-22.)                            &
-                                    .AND. ZCONC_TOT(IIJB:IIJE,IKB:IKE)>LIMAP%XCTMIN(2)
+   GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) =       PRVT(D%NIJB:D%NIJE,D%NKB:D%NKE).GE.ZRVSAT(D%NIJB:D%NIJE,D%NKB:D%NKE) &
+                                    .AND. PT(D%NIJB:D%NIJE,D%NKB:D%NKE)>(CST%XTT-22.)                            &
+                                    .AND. ZCONC_TOT(D%NIJB:D%NIJE,D%NKB:D%NKE)>LIMAP%XCTMIN(2)
 END IF
 !
 IF (.NOT. LSUBG_COND) THEN

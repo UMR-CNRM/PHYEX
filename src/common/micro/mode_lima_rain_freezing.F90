@@ -7,7 +7,7 @@ MODULE MODE_LIMA_RAIN_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     #######################################################################################
-  SUBROUTINE LIMA_RAIN_FREEZING (LIMAP, LIMAM, KSIZE, ODCOMPUTE,                                      &
+  SUBROUTINE LIMA_RAIN_FREEZING (CST, LIMAP, LIMAM, KSIZE, ODCOMPUTE,                                      &
                                  PRHODREF, PT, PLVFACT, PLSFACT,                        &
                                  PRRT, PCRT, PRIT, PCIT, PLBDR,                         &
                                  P_TH_CFRZ, P_RR_CFRZ, P_CR_CFRZ, P_RI_CFRZ, P_CI_CFRZ  )
@@ -34,14 +34,17 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,              ONLY : XTT
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_CST, ONLY:CST_t
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(CST_t),INTENT(IN)::CST
 INTEGER, INTENT(IN) :: KSIZE
 LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
@@ -64,8 +67,6 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_CFRZ
 !
 !*       0.2   Declarations of local variables :
 !
-TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL, DIMENSION(SIZE(PRRT)) :: ZW1, ZW2 ! work arrays
 !
 !-------------------------------------------------------------------------------
@@ -84,7 +85,7 @@ P_CI_CFRZ(:)=0.
 ZW1(:)=0.
 ZW2(:)=0.
 !
-WHERE( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRRT(:)>LIMAP%XRTMIN(3) .AND. PT(:)<XTT .AND. &
+WHERE( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRRT(:)>LIMAP%XRTMIN(3) .AND. PT(:)<CST%XTT .AND. &
        PCIT(:)>LIMAP%XCTMIN(4) .AND. PCRT(:)>LIMAP%XCTMIN(3) .AND. ODCOMPUTE(:) )
 !
    ZW1(:) = LIMAM%XICFRR * PRIT(:) * PCRT(:)                    & ! RICFRRG

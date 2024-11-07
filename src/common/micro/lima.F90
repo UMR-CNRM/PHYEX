@@ -774,28 +774,28 @@ if ( BUCONF%lbu_enable ) then
        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', zrhs(:,:) * prhodj(:,:) )
   if ( BUCONF%lbudget_sv ) then
     if ( LIMAP%lsedc .and. LIMAP%nmom_c.ge.2) &
-      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'SEDI', zccs(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_nc), 'SEDI', zccs(:,:) * prhodj(:,:) )
     if ( LIMAP%nmom_r.ge.2) &
-      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nr), 'SEDI', zcrs(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_nr), 'SEDI', zcrs(:,:) * prhodj(:,:) )
     if ( LIMAP%lsedi .and. LIMAP%nmom_i.ge.2) &
-      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ni), 'SEDI', zcis(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_ni), 'SEDI', zcis(:,:) * prhodj(:,:) )
     if ( LIMAP%nmom_s.ge.2) &
-      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ns), 'SEDI', zcss(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_ns), 'SEDI', zcss(:,:) * prhodj(:,:) )
     if ( LIMAP%nmom_g.ge.2) &
-      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ng), 'SEDI', zcgs(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_ng), 'SEDI', zcgs(:,:) * prhodj(:,:) )
     if ( LIMAP%nmom_h.ge.2) &
-      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nh), 'SEDI', zchs(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_nh), 'SEDI', zchs(:,:) * prhodj(:,:) )
     !
     if (oelec) then
       if ( LIMAP%lsedc ) &
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_elecbeg + 1), 'SEDI', zqcs(:,:) * prhodj(:,:) )
-      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_elecbeg + 2), 'SEDI', zqrs(:,:) * prhodj(:,:) )
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_elecbeg + 1), 'SEDI', zqcs(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_elecbeg + 2), 'SEDI', zqrs(:,:) * prhodj(:,:) )
       if ( LIMAP%lsedi ) &
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_elecbeg + 3), 'SEDI', zqis(:,:) * prhodj(:,:) )
-      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_elecbeg + 4), 'SEDI', zqss(:,:) * prhodj(:,:) )
-      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_elecbeg + 5), 'SEDI', zqgs(:,:) * prhodj(:,:) )
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_elecbeg + 3), 'SEDI', zqis(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_elecbeg + 4), 'SEDI', zqss(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_elecbeg + 5), 'SEDI', zqgs(:,:) * prhodj(:,:) )
       if (LIMAP%nmom_h .ge. 1) &
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_elecbeg + 6), 'SEDI', zqhs(:,:) * prhodj(:,:) )
+        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_elecbeg + 6), 'SEDI', zqhs(:,:) * prhodj(:,:) )
     end if
   end if
 end if
@@ -913,28 +913,28 @@ if ( BUCONF%lbu_enable ) then
        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RH), 'SEDI', zrhs(:,:) * prhodj(:,:) )
   if ( BUCONF%lbudget_sv ) then
     if ( LIMAP%lsedc .and. LIMAP%nmom_c.ge.2 ) &
-      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'SEDI', zccs(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_nc), 'SEDI', zccs(:,:) * prhodj(:,:) )
     if ( LIMAP%nmom_r.ge.2 ) &
-      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nr), 'SEDI', zcrs(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_nr), 'SEDI', zcrs(:,:) * prhodj(:,:) )
     if ( LIMAP%lsedi .and. LIMAP%nmom_i.ge.2 ) &
-      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ni), 'SEDI', zcis(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_ni), 'SEDI', zcis(:,:) * prhodj(:,:) )
     if ( LIMAP%nmom_s.ge.2 ) &
-      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ns), 'SEDI', zcss(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_ns), 'SEDI', zcss(:,:) * prhodj(:,:) )
     if ( LIMAP%nmom_g.ge.2 ) &
-      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ng), 'SEDI', zcgs(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_ng), 'SEDI', zcgs(:,:) * prhodj(:,:) )
     if ( LIMAP%nmom_h.ge.2 ) &
-      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nh), 'SEDI', zchs(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_nh), 'SEDI', zchs(:,:) * prhodj(:,:) )
 !
     if (oelec) then
       if ( LIMAP%lsedc ) &
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_elecbeg + 1), 'SEDI', zqcs(:,:) * prhodj(:,:) )
-      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_elecbeg + 2), 'SEDI', zqrs(:,:) * prhodj(:,:) )
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_elecbeg + 1), 'SEDI', zqcs(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_elecbeg + 2), 'SEDI', zqrs(:,:) * prhodj(:,:) )
       if ( LIMAP%lsedi ) &
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_elecbeg + 3), 'SEDI', zqis(:,:) * prhodj(:,:) )
-      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_elecbeg + 4), 'SEDI', zqss(:,:) * prhodj(:,:) )
-      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_elecbeg + 5), 'SEDI', zqgs(:,:) * prhodj(:,:) )
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_elecbeg + 3), 'SEDI', zqis(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_elecbeg + 4), 'SEDI', zqss(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_elecbeg + 5), 'SEDI', zqgs(:,:) * prhodj(:,:) )
       if (LIMAP%nmom_h .ge. 1) &
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_elecbeg + 6), 'SEDI', zqhs(:,:) * prhodj(:,:) )
+        call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_elecbeg + 6), 'SEDI', zqhs(:,:) * prhodj(:,:) )
     end if
   end if
 end if
@@ -944,7 +944,7 @@ end if
 IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%LDEPOC) THEN
   if ( BUCONF%lbudget_rc ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'DEPO', zrcs(:,:) * prhodj(:,:) )
   if ( BUCONF%lbudget_sv .and. LIMAP%nmom_c.ge.2) &
-       call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'DEPO', zccs(:,:) * prhodj(:,:) )
+       call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_nc), 'DEPO', zccs(:,:) * prhodj(:,:) )
 
   GDEP(:) = .FALSE.
   GDEP(:) = ZRCS(:,D%NKB) >0 .AND. ZCCS(:,D%NKB) >0 .AND. ZRCT(:,D%NKB) >0 .AND. ZCCT(:,D%NKB) >0
@@ -957,7 +957,7 @@ IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%LDEPOC) THEN
 
   if ( BUCONF%lbudget_rc ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'DEPO', zrcs(:,:) * prhodj(:,:) )
   if ( BUCONF%lbudget_sv .and. LIMAP%nmom_c.ge.2) &
-       call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'DEPO', zccs(:,:) * prhodj(:,:) )
+       call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_nc), 'DEPO', zccs(:,:) * prhodj(:,:) )
 END IF
 !
 !
@@ -1398,7 +1398,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       !
       !***       4.1 Tendencies computation
       !
-      CALL LIMA_INST_PROCS (LIMAP, LIMAW, IPACK, PTSTEP, GLCOMPUTE1D,                         &
+      CALL LIMA_INST_PROCS (CST, LIMAP, LIMAW, IPACK, PTSTEP, GLCOMPUTE1D,      &
                             ZEXNREF1D, ZP1D,                                    &
                             ZTHT1D, ZRVT1D, ZRCT1D, ZRRT1D, ZRIT1D, ZRST1D, ZRGT1D, &
                             ZCCT1D, ZCRT1D, ZCIT1D,                             &
@@ -1411,7 +1411,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
                             ZB_IFNN,                                            &
                             ZCF1D, ZIF1D, ZPF1D                                 )
       
-      CALL LIMA_TENDENCIES (LIMAP, LIMAW, LIMAC, LIMAM, IPACK, PTSTEP, GLCOMPUTE1D,                             &
+      CALL LIMA_TENDENCIES (CST, LIMAP, LIMAW, LIMAC, LIMAM, IPACK, PTSTEP, GLCOMPUTE1D, &
                             ZEXNREF1D, ZRHODREF1D, ZP1D, ZTHT1D,                    &
                             ZRVT1D, ZRCT1D, ZRRT1D, ZRIT1D, ZRST1D, ZRGT1D, ZRHT1D, &
                             ZCCT1D, ZCRT1D, ZCIT1D, ZCST1D, ZCGT1D, ZCHT1D,         &
@@ -2378,7 +2378,7 @@ if ( BUCONF%lbu_enable ) then
     ! Cloud droplets
     !
     if (LIMAP%nmom_c.ge.2) then 
-       idx = NBUDGET_SV1 - 1 + nsv_lima_nc
+       idx = NBUDGET_SV1 - 1 + TNSV%nsv_lima_nc
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'SELF',  ztot_cc_self (:,:) * zrhodjontstep(:,:) )
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'AUTO',  ztot_cc_auto (:,:) * zrhodjontstep(:,:) )
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'ACCR',  ztot_cc_accr (:,:) * zrhodjontstep(:,:) )
@@ -2396,7 +2396,7 @@ if ( BUCONF%lbu_enable ) then
     ! Rain drops
     !
     if (LIMAP%nmom_r.ge.2) then
-       idx = NBUDGET_SV1 - 1 + nsv_lima_nr
+       idx = NBUDGET_SV1 - 1 + TNSV%nsv_lima_nr
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'AUTO',  ztot_cr_auto(:,:) * zrhodjontstep(:,:) )
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'SCBU',  ztot_cr_scbu(:,:) * zrhodjontstep(:,:) )
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'REVA',  ztot_cr_evap(:,:) * zrhodjontstep(:,:) )
@@ -2416,7 +2416,7 @@ if ( BUCONF%lbu_enable ) then
     ! Ice crystals
     !
     if (LIMAP%nmom_i.ge.2) then
-       idx = NBUDGET_SV1 - 1 + nsv_lima_ni
+       idx = NBUDGET_SV1 - 1 + TNSV%nsv_lima_ni
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'HONC',  -ztot_cc_honc (:,:) * zrhodjontstep(:,:) )
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'CNVI',   ztot_ci_cnvi (:,:) * zrhodjontstep(:,:) )
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'CNVS',   ztot_ci_cnvs (:,:) * zrhodjontstep(:,:) )
@@ -2436,7 +2436,7 @@ if ( BUCONF%lbu_enable ) then
     ! Snow
     !
     if (LIMAP%nmom_s.ge.2) then
-       idx = NBUDGET_SV1 - 1 + nsv_lima_ns
+       idx = NBUDGET_SV1 - 1 + TNSV%nsv_lima_ns
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'CNVI',  -ztot_ci_cnvi(:,:) * zrhodjontstep(:,:) )
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'CNVS',  -ztot_ci_cnvs(:,:) * zrhodjontstep(:,:) )
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'RIM',    ztot_cs_rim(:,:)  * zrhodjontstep(:,:) )
@@ -2451,7 +2451,7 @@ if ( BUCONF%lbu_enable ) then
     ! Graupel
     !
     if (LIMAP%nmom_g.ge.2) then
-       idx = NBUDGET_SV1 - 1 + nsv_lima_ng
+       idx = NBUDGET_SV1 - 1 + TNSV%nsv_lima_ng
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'RIM',   -ztot_cs_rim(:,:)  * zrhodjontstep(:,:) )
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'ACC',   -ztot_cs_acc(:,:)  * zrhodjontstep(:,:) )
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'CMEL',  -ztot_cs_cmel(:,:) * zrhodjontstep(:,:) )
@@ -2465,14 +2465,14 @@ if ( BUCONF%lbu_enable ) then
     ! Hail
     !
     if (LIMAP%nmom_h.ge.2) then
-       idx = NBUDGET_SV1 - 1 + nsv_lima_nh
+       idx = NBUDGET_SV1 - 1 + TNSV%nsv_lima_nh
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'WETG',  -ztot_cg_wetg(:,:) * zrhodjontstep(:,:) )
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'COHG',  -ztot_cg_cohg(:,:) * zrhodjontstep(:,:) )
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'HMLT',   ztot_ch_hmlt(:,:) * zrhodjontstep(:,:) )
     end if
 
     do ii = 1, LIMAP%nmod_ifn
-      idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_nucl + ii - 1
+      idx = NBUDGET_SV1 - 1 + TNSV%nsv_lima_ifn_nucl + ii - 1
       call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'IMLT', ztot_ifnn_imlt(:, :, ii) * zrhodjontstep(:,:) )
     end do
   end if

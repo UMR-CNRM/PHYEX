@@ -73,7 +73,6 @@ CONTAINS
 !
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_CST,            ONLY: CST_t
-USE MODD_PARAMETERS,      ONLY : JPHEXT, JPVEXT
 
 use mode_tools,           only: Countjv
 
@@ -184,13 +183,6 @@ P_TH_HINC(:,:) = 0.
 P_RC_HINC(:,:) = 0.
 P_CC_HINC(:,:) = 0.
 !
-! Physical domain
-!
-IIJB=1
-IIJE=SIZE(PTHT,1)
-IKB=1+JPVEXT
-IKE=SIZE(PTHT,2) - JPVEXT
-!
 ! Temperature
 !
 ZT(:,:)  = PTHT(:,:) * ( PPABST(:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
@@ -209,8 +201,8 @@ ZW(:,:) = PRVT(:,:)*( PPABST(:,:)-ZW(:,:) ) / ( (CST%XMV/CST%XMD) * ZW(:,:) )
 !
 !
 GNEGT(:,:) = .FALSE.
-GNEGT(IIJB:IIJE,IKB:IKE) = ZT(IIJB:IIJE,IKB:IKE)<CST%XTT-2.0 .AND. &
-                           ZW(IIJB:IIJE,IKB:IKE)>0.95 
+GNEGT(D%NIJB:D%NIJE,D%NKB:D%NKE) = ZT(D%NIJB:D%NIJE,D%NKB:D%NKE)<CST%XTT-2.0 .AND. &
+                           ZW(D%NIJB:D%NIJE,D%NKB:D%NKE)>0.95 
 !
 INEGT = COUNTJV( GNEGT(:,:),I1(:),I3(:))
 !

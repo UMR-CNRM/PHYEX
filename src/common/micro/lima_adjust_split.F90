@@ -94,7 +94,6 @@ USE MODD_CST,            ONLY: CST_t
 !USE MODD_IO,               ONLY: TFILEDATA
 !USE MODD_LUNIT_n,          ONLY: TLUOUT
 USE MODD_NSV,             ONLY: NSV_t
-USE MODD_PARAMETERS
 USE MODD_PARAM_LIMA, ONLY: PARAM_LIMA_t
 USE MODD_PARAM_LIMA_WARM, ONLY : PARAM_LIMA_WARM_t
 USE MODD_RAIN_ICE_PARAM_n,   ONLY: RAIN_ICE_PARAMN
@@ -370,14 +369,14 @@ if ( nbumod == kmi .and. BUCONF%lbu_enable ) then
   if ( BUCONF%lbudget_ri ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'CEDS', ZRIS(:,:) * prhodj(:,:) )
   if ( BUCONF%lbudget_sv ) then
     if ( LIMAP%nmom_c.ge.2) &
-      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CEDS', ZCCS(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_nc), 'CEDS', ZCCS(:,:) * prhodj(:,:) )
     if ( LIMAP%lscav .and. LIMAP%laero_mass ) &
-      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', ZMAS(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_scavmass), 'CEDS', ZMAS(:,:) * prhodj(:,:) )
     if ( LIMAP%nmom_c.ge.1 ) then
       do IL = 1, LIMAP%nmod_ccn
-        idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + IL
+        idx = NBUDGET_SV1 - 1 + TNSV%nsv_lima_ccn_free - 1 + IL
         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', ZNFS(:,:, IL) * prhodj(:,:) )
-        idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + IL
+        idx = NBUDGET_SV1 - 1 + TNSV%nsv_lima_ccn_acti - 1 + IL
         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', ZNAS(:,:, IL) * prhodj(:,:) )
       end do
     end if
@@ -708,14 +707,14 @@ if ( nbumod == kmi .and. BUCONF%lbu_enable ) then
   if ( BUCONF%lbudget_ri ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'CEDS', ZRIS(:,:) * prhodj(:,:) )
   if ( BUCONF%lbudget_sv ) then
     if ( LIMAP%nmom_c.ge.2) &
-      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_nc), 'CEDS', ZCCS(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_nc), 'CEDS', ZCCS(:,:) * prhodj(:,:) )
     if ( LIMAP%lscav .and. LIMAP%laero_mass ) &
-      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'CEDS', ZMAS(:,:) * prhodj(:,:) )
+      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_scavmass), 'CEDS', ZMAS(:,:) * prhodj(:,:) )
     if ( LIMAP%nmom_c.ge.1 ) then
       do IL = 1, LIMAP%nmod_ccn
-        idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_free - 1 + IL
+        idx = NBUDGET_SV1 - 1 + TNSV%nsv_lima_ccn_free - 1 + IL
         call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'CEDS', ZNFS(:,:, IL) * prhodj(:,:) )
-        idx = NBUDGET_SV1 - 1 + nsv_lima_ccn_acti - 1 + IL
+        idx = NBUDGET_SV1 - 1 + TNSV%nsv_lima_ccn_acti - 1 + IL
         call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'CEDS', ZNAS(:,:, IL) * prhodj(:,:) )
       end do
     end if

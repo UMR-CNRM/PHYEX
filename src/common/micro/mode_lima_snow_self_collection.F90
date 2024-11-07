@@ -7,7 +7,7 @@ MODULE MODE_LIMA_SNOW_SELF_COLLECTION
   IMPLICIT NONE
 CONTAINS
 !     #############################################################
-  SUBROUTINE LIMA_SNOW_SELF_COLLECTION (LIMAP, LIMAC, KSIZE, ODCOMPUTE,   &
+  SUBROUTINE LIMA_SNOW_SELF_COLLECTION (CST, LIMAP, LIMAC, KSIZE, ODCOMPUTE,   &
                                         PRHODREF, PT,       &
                                         PRST, PCST, PLBDS,  &
                                         P_CS_SSC            )
@@ -34,14 +34,17 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,             ONLY : XTT
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_CST, ONLY:CST_t
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(CST_t),INTENT(IN)::CST
 INTEGER, INTENT(IN) :: KSIZE
 LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
@@ -62,8 +65,6 @@ REAL, DIMENSION(SIZE(PCST)) :: &
 LOGICAL, DIMENSION(SIZE(PCST)) :: GSSC
 INTEGER :: IGSSC, IL
 INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1        ! Vectors of indices
-TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1, ZVEC3 ! Work vectors
 !
 !-------------------------------------------------------------------------------
@@ -117,7 +118,7 @@ IF( IGSSC>0 ) THEN
    DEALLOCATE(ZVEC3)
 !
    WHERE( GSSC(:) )
-      P_CS_SSC(:) = - LIMAC%XFNSSCS * ZW1(:) * EXP( LIMAC%XCOLEXSS*(PT(:)-XTT) ) * PCST(:)**2 &  
+      P_CS_SSC(:) = - LIMAC%XFNSSCS * ZW1(:) * EXP( LIMAC%XCOLEXSS*(PT(:)-CST%XTT) ) * PCST(:)**2 &  
                     * PRHODREF(:)**(-LIMAP%XCEXVT-1.) * (LIMAC%XLBNSSCS1+LIMAC%XLBNSSCS2) / PLBDS(:)**2
    END WHERE
    DEALLOCATE(IVEC1)

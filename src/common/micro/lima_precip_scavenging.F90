@@ -81,7 +81,6 @@ USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 use modd_budget,          only: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_SV1
 USE MODD_CST,             ONLY: CST_t
 USE MODD_NSV,             ONLY: NSV_t
-USE MODD_PARAMETERS
 USE MODD_PARAM_LIMA,      ONLY: NMOD_IFN, NSPECIE, XFRAC,                         &
                                 XMDIAM_IFN, XSIGMA_IFN, XRHO_IFN,                 &
                                 NMOD_CCN, XR_MEAN_CCN, XLOGSIG_CCN, XRHO_CCN,     &
@@ -235,15 +234,16 @@ ISV_LIMA_SCAVMASS = TNSV%NSV_LIMA_SCAVMASS - TNSV%NSV_LIMA_BEG + 1
 
 if ( BUCONF%lbudget_sv ) then
   do IL = 1, nmod_ccn
-    idx = nsv_lima_ccn_free - 1 + IL
+    idx = TNSV%nsv_lima_ccn_free - 1 + IL
     call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs( :, :, idx) )
   end do
   do IL = 1, nmod_ifn
-    idx = nsv_lima_ifn_free - 1 + IL
+    idx = TNSV%nsv_lima_ifn_free - 1 + IL
     call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs( :, :, idx) )
   end do
   if ( laero_mass ) then
-    call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'SCAV', prsvs( :, :, nsv_lima_scavmass) )
+     call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + TNSV%nsv_lima_scavmass), 'SCAV', &
+          prsvs( :, :, TNSV%nsv_lima_scavmass) )
   end if
 end if
 !
@@ -548,15 +548,16 @@ ENDDO
 !
 if ( BUCONF%lbudget_sv ) then
   do IL = 1, nmod_ccn
-    idx = nsv_lima_ccn_free - 1 + IL
+    idx = TNSV%nsv_lima_ccn_free - 1 + IL
     call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, idx) )
   end do
   do IL = 1, nmod_ifn
-    idx = nsv_lima_ifn_free - 1 + IL
+    idx = TNSV%nsv_lima_ifn_free - 1 + IL
     call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, idx) )
   end do
   if ( laero_mass ) then
-    call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + nsv_lima_scavmass), 'SCAV', prsvs(:, :, nsv_lima_scavmass) )
+     call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + TNSV%nsv_lima_scavmass), &
+          'SCAV', prsvs(:, :, TNSV%nsv_lima_scavmass) )
   end if
 end if
 !------------------------------------------------------------------------------
