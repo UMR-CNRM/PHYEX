@@ -4,7 +4,7 @@
 set -e
 set -o pipefail #abort if left command on a pipe fails
 
-pyfortool_version=tags/0.2.0
+pyfortool_version=tags/0.2.1
 
 #This script installs PHYEX
 #Call the script with the -h option to get more information.
