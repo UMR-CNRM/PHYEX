@@ -139,7 +139,8 @@ DO II = 1, SIZE(PRCT)
 !                                * PRHODREF(II)**(-LIMAP%XCEXVT+1) * PLBDS(II)**LIMAM%XEXCRIMSS
 !      P_CC_RIM(II) = P_RC_RIM(II) * PCCT(II)/PRCT(II) ! Lambda_c**3
 ! total mass loss of cloud droplets, < 0
-    Z_RC_RIM(II) = - LIMAM%XCRIMSS  * PRCT(II) * PCST(II)*(1+(LIMAC%XFVELOS/PLBDS(II))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAM%XEXCRIMSS/LIMAP%XALPHAS) &
+    Z_RC_RIM(II) = - LIMAM%XCRIMSS  * PRCT(II) * PCST(II)*(1+(LIMAC%XFVELOS/PLBDS(II))&
+         **LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAM%XEXCRIMSS/LIMAP%XALPHAS) &
                                 * PRHODREF(II)**(-LIMAP%XCEXVT+1) * PLBDS(II)**LIMAM%XEXCRIMSS
     P_CC_RIM(II) = Z_RC_RIM(II) * (PCCT(II) / PRCT(II)) ! Lambda_c**3
     !
