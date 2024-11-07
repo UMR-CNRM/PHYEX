@@ -4,7 +4,7 @@ IMPLICIT NONE
 INTERFACE
 !
    SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV,                    &
-                  D, CST, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, KBUDGETS, KRR, &
+                  D, CST, NEBN, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, KBUDGETS, KRR, &
                   PTSTEP, OELEC,                                          &
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
@@ -26,6 +26,7 @@ USE MODD_ELEC_PARAM,      ONLY: ELEC_PARAM_t
 USE MODD_ELEC_DESCR,      ONLY: ELEC_DESCR_t
 USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
+USE MODD_NEB_n,          ONLY: NEB_t
 USE MODD_NSV, ONLY: NSV_t
 IMPLICIT NONE
 !
@@ -36,6 +37,7 @@ TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 TYPE(NSV_t),              INTENT(IN)    :: TNSV
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(NEB_t),              INTENT(IN)    :: NEBN
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(ELEC_PARAM_t),       INTENT(IN)    :: ELECP   ! electrical parameters

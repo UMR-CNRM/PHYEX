@@ -7,7 +7,7 @@ MODULE MODE_LIMA_NUCLEATION_PROCS
   IMPLICIT NONE
 CONTAINS
 !     ###############################################################################
-  SUBROUTINE LIMA_NUCLEATION_PROCS (LIMAP, LIMAW, LIMAC, D, CST, BUCONF, TBUDGETS, KBUDGETS,             &
+  SUBROUTINE LIMA_NUCLEATION_PROCS (LIMAP, LIMAW, LIMAC, D, CST, NEBN, BUCONF, TBUDGETS, KBUDGETS, &
                                     PTSTEP, PRHODJ,                                 &
                                     PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,  &
                                     PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, PRHT, &
@@ -44,7 +44,7 @@ USE MODD_CST,            ONLY: CST_t
 use modd_budget,     only: NBUDGET_TH, NBUDGET_RV, NBUDGET_RC, NBUDGET_RI, NBUDGET_SV1
 USE MODD_NSV,        ONLY : NSV_LIMA_NC,  NSV_LIMA_CCN_FREE, NSV_LIMA_CCN_ACTI, &
                             NSV_LIMA_NI, NSV_LIMA_IFN_FREE, NSV_LIMA_IFN_NUCL, NSV_LIMA_IMM_NUCL, NSV_LIMA_HOM_HAZE
-USE MODD_NEB_n,      ONLY : LSUBG_COND
+USE MODD_NEB_n,      ONLY : NEB_t
 
 USE MODE_BUDGET_PHY,     ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 
@@ -68,6 +68,7 @@ TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
 TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(NEB_t),              INTENT(IN)    :: NEBN
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS 
@@ -125,7 +126,7 @@ INTEGER :: II,IJ
 !
 IF ( LIMAP%LACTI .AND. LIMAP%NMOD_CCN >=1 .AND. LIMAP%NMOM_C.GE.2) THEN
 
-  IF (.NOT.LSUBG_COND .AND. .NOT.LIMAP%LSPRO) THEN
+  IF (.NOT.NEBN%LSUBG_COND .AND. .NOT.LIMAP%LSPRO) THEN
 
     if ( BUCONF%lbu_enable ) then
        if ( BUCONF%lbudget_th ) &
@@ -145,7 +146,7 @@ IF ( LIMAP%LACTI .AND. LIMAP%NMOD_CCN >=1 .AND. LIMAP%NMOM_C.GE.2) THEN
       end if
     end if
 
-    CALL LIMA_CCN_ACTIVATION( LIMAP, LIMAW, D, CST,                                           &
+    CALL LIMA_CCN_ACTIVATION( LIMAP, LIMAW, D, CST, NEBN,                       &
                               PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU,    &
                               PTHT, PRVT, PRCT, PCCT, PRRT, PNFT, PNAT, PCLDFR, &
                               PTOT_RV_HENU )

@@ -7,7 +7,7 @@ MODULE MODE_LIMA_CCN_ACTIVATION
   IMPLICIT NONE
 CONTAINS
 !     ##############################################################################
-    SUBROUTINE LIMA_CCN_ACTIVATION (LIMAP, LIMAW, D, CST,                                        &
+    SUBROUTINE LIMA_CCN_ACTIVATION (LIMAP, LIMAW, D, CST, NEBN,                    &
                                     PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU, &
                                     PTHT, PRVT, PRCT, PCCT, PRRT, PNFT, PNAT,      &
                                     PCLDFR, PTOT_RV_HENU                           )
@@ -71,7 +71,7 @@ USE MODD_CST,            ONLY: CST_t
 !use modd_field,           only: TFIELDDATA, TYPEREAL
 !USE MODD_IO,              ONLY: TFILEDATA
 !USE MODD_LUNIT_n,         ONLY: TLUOUT
-USE MODD_NEB_n,           ONLY: LSUBG_COND
+USE MODD_NEB_n,           ONLY: NEB_t
 
 !USE MODE_IO_FIELD_WRITE,  only: IO_Field_write
 use mode_tools,           only: Countjv
@@ -88,6 +88,7 @@ TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
 TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(NEB_t),              INTENT(IN)    :: NEBN
 !TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF   ! Reference density
@@ -190,9 +191,9 @@ IF (LIMAP%LADJ) THEN
                                     .AND. PT(D%NIJB:D%NIJE,D%NKB:D%NKE)>(CST%XTT-22.)                &
                                     .AND. ZCONC_TOT(D%NIJB:D%NIJE,D%NKB:D%NKE)>LIMAP%XCTMIN(2)
 !
-   IF (LSUBG_COND) GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) = GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE)       &
+   IF (NEBN%LSUBG_COND) GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) = GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE)       &
                                               .AND. PCLDFR(D%NIJB:D%NIJE,D%NKB:D%NKE)>0.01
-   IF (.NOT. LSUBG_COND) GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) = GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE)       &
+   IF (.NOT. NEBN%LSUBG_COND) GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) = GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE)       &
                                                     .AND. PRVT(D%NIJB:D%NIJE,D%NKB:D%NKE).GE.ZRVSAT(D%NIJB:D%NIJE,D%NKB:D%NKE)
 ELSE
    GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) =       PRVT(D%NIJB:D%NIJE,D%NKB:D%NKE).GE.ZRVSAT(D%NIJB:D%NIJE,D%NKB:D%NKE) &
@@ -200,7 +201,7 @@ ELSE
                                     .AND. ZCONC_TOT(D%NIJB:D%NIJE,D%NKB:D%NKE)>LIMAP%XCTMIN(2)
 END IF
 !
-IF (.NOT. LSUBG_COND) THEN
+IF (.NOT. NEBN%LSUBG_COND) THEN
    ZCLDFR(:,:) = 1.
 ELSE
    ZCLDFR(:,:) = PCLDFR(:,:)
@@ -418,7 +419,7 @@ IF( INUCT >= 1 ) THEN
    END WHERE
 !
    IF(PRESENT(PTOT_RV_HENU)) PTOT_RV_HENU(:,:) = 0.
-   IF (.NOT.LSUBG_COND) THEN
+   IF (.NOT.NEBN%LSUBG_COND) THEN
       ZW(:,:) = MIN( UNPACK( ZZW1(:),MASK=GNUCT(:,:),FIELD=0.0 ),PRVT(:,:) )
       IF(PRESENT(PTOT_RV_HENU)) PTOT_RV_HENU(:,:) = ZW(:,:)
       PTHT(:,:) = PTHT(:,:) + ZW(:,:) * (CST%XLVTT+(CST%XCPV-CST%XCL)*(PT(:,:)-CST%XTT))/                &

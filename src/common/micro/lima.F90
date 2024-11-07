@@ -4,7 +4,7 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     #####################################################################
-SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV, D, CST, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, KBUDGETS, KRR, &
+SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV, D, CST, NEBN, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, KBUDGETS, KRR, &
                   PTSTEP, OELEC,                                          &
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
@@ -61,6 +61,7 @@ USE MODD_BUDGET,          ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_
                                 NBUDGET_RI, NBUDGET_RR, NBUDGET_RS, NBUDGET_RG, NBUDGET_RH, NBUDGET_SV1
 USE MODD_CST,             ONLY: CST_t
 USE MODD_NSV,             ONLY: NSV_t
+USE MODD_NEB_n,           ONLY: NEB_t
 
 USE MODE_BUDGET_PHY,      ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 use mode_tools,           only: Countjv
@@ -85,6 +86,7 @@ TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
 TYPE(NSV_t),              INTENT(IN)    :: TNSV
 TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(NEB_t),              INTENT(IN)    :: NEBN
 TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(ELEC_PARAM_t),       INTENT(IN)    :: ELECP   ! electrical parameters
@@ -1024,7 +1026,7 @@ END IF
 !*       2.     Compute cloud, ice and precipitation fractions
 !               ----------------------------------------------
 !
-CALL LIMA_COMPUTE_CLOUD_FRACTIONS (LIMAP, D,                                 &
+CALL LIMA_COMPUTE_CLOUD_FRACTIONS (LIMAP, D,                          &
                                    ZCCT, ZRCT,                        &
                                    ZCRT, ZRRT,                        &
                                    ZCIT, ZRIT,                        &
@@ -1039,7 +1041,7 @@ CALL LIMA_COMPUTE_CLOUD_FRACTIONS (LIMAP, D,                                 &
 !*       2.     Nucleation processes
 !               --------------------
 !
-CALL LIMA_NUCLEATION_PROCS (LIMAP, LIMAW, LIMAC, D, CST, BUCONF, TBUDGETS, KBUDGETS,                 &
+CALL LIMA_NUCLEATION_PROCS (LIMAP, LIMAW, LIMAC, D, CST, NEBN, BUCONF, TBUDGETS, KBUDGETS,  &
                             PTSTEP, PRHODJ,                                     &
                             PRHODREF, ZEXN, PPABST, ZT, PDTHRAD, PW_NU,         &
                             ZTHT, ZRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT, ZRHT,     &

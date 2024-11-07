@@ -52,6 +52,7 @@ USE MODD_PARAM_LIMA,      ONLY : NMOD_CCN, HINI_CCN, HTYPE_CCN,        &
                                  CINT_MIXING, NPHILLIPS,           &
                                  NIMM, NMOD_IMM, NINDICE_CCN_IMM, &
                                  PARAM_LIMA_ALLOCATE, PARAM_LIMA_DEALLOCATE
+USE MODD_CST, ONLY:CST
 !
 use mode_msg
 !
@@ -243,7 +244,7 @@ IF ( NMOD_CCN .GE. 1 ) THEN
 !!$           *GAMMA_X0D(XMUHEN_MULTI(JMOD)) )
 !!$
 !!$
-       CALL LIMA_INIT_CCN_ACTIVATION_SPECTRUM (HTYPE_CCN(JMOD),XR_MEAN_CCN(JMOD)*2.,EXP(XLOGSIG_CCN(JMOD)),X1,X2,X3,X4,X5)
+       CALL LIMA_INIT_CCN_ACTIVATION_SPECTRUM (CST,HTYPE_CCN(JMOD),XR_MEAN_CCN(JMOD)*2.,EXP(XLOGSIG_CCN(JMOD)),X1,X2,X3,X4,X5)
        !
        ! LIMA_INIT_CCN_ACTIVATION_SPECTRUM returns X1=C/Nccn (instead of XLIMIT_FACTOR), X2=k, X3=mu, X4=beta, X5=kappa
        ! So XLIMIT_FACTOR = 1/X1

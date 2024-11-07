@@ -4,7 +4,7 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     ###########################################################################
-SUBROUTINE LIMA_ADJUST_SPLIT(LIMAP, LIMAW, TNSV, D, CST, BUCONF, TBUDGETS, KBUDGETS,  &
+SUBROUTINE LIMA_ADJUST_SPLIT(LIMAP, LIMAW, TNSV, D, CST, NEBN, TURBN, BUCONF, TBUDGETS, KBUDGETS,  &
                              KRR, KMI, HCONDENS, HLAMBDA3,                      &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS, OMFCONV, PMFCONV,&
@@ -97,8 +97,8 @@ USE MODD_NSV,             ONLY: NSV_t
 USE MODD_PARAM_LIMA, ONLY: PARAM_LIMA_t
 USE MODD_PARAM_LIMA_WARM, ONLY : PARAM_LIMA_WARM_t
 USE MODD_RAIN_ICE_PARAM_n,   ONLY: RAIN_ICE_PARAMN
-USE MODD_NEB_n,            ONLY: NEBN
-USE MODD_TURB_n,           ONLY: TURBN
+USE MODD_NEB_n,            ONLY: NEB_t
+USE MODD_TURB_n,           ONLY: TURB_t
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 !
 USE MODE_BUDGET_PHY,       ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
@@ -118,6 +118,8 @@ TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
 TYPE(NSV_t),              INTENT(IN)    :: TNSV
 TYPE(DIMPHYEX_t),         INTENT(IN)   :: D
 TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(NEB_t),INTENT(IN)::NEBN
+TYPE(TURB_t),INTENT(IN)::TURBN
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
@@ -468,7 +470,7 @@ DO IITER =1,ITERMAX
    END IF
 
    IF (LIMAP%LADJ) THEN
-      CALL CONDENSATION(D, CST, RAIN_ICE_PARAMN, NEBN, TURBN,                    &
+      CALL CONDENSATION(D, CST, RAIN_ICE_PARAMN, NEBN, TURBN,                  &
           'S', HCONDENS, HLAMBDA3,                                             &
            PPABST, PZZ, PRHODREF, ZT, ZRV_IN, ZRV, ZRC_IN, ZRC, ZRI_IN, ZRI,   &
            ZRRS*PTSTEP,ZRSS*PTSTEP, ZRGS*PTSTEP, &
@@ -479,7 +481,7 @@ DO IITER =1,ITERMAX
    IF (OSUBG_COND .AND. LIMAP%NMOM_C.GE.2 .AND. LIMAP%LACTI) THEN
       PSRCS=Z_SRCS
       ZW_MF=0.
-      CALL LIMA_CCN_ACTIVATION (LIMAP, LIMAW, D, CST,            &
+      CALL LIMA_CCN_ACTIVATION (LIMAP, LIMAW, D, CST, NEBN,      &
            PRHODREF, PEXNREF, PPABST, ZT2, PDTHRAD, PW_NU+ZW_MF, &
            ZTHT, ZRV2, ZRC2, ZCCT, ZRRT, ZNFT, ZNAT,             &
            PCLDFR                                                )      
