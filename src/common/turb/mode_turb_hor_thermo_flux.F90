@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -180,7 +180,7 @@ ZCOEFF(:,:,IKB)= - (PDZZ(:,:,IKB+2)+2.*PDZZ(:,:,IKB+1)) /      &
 !             --------------
 !
 !
-#define UTHETA UTHETA
+#define UTHETA UTHETA_ON
 !!!!!!! UTHETA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef UTHETA
 ZFLX(:,:,:)     = -TURBN%XCSHF * MXM( PK ) * GX_M_U(OFLAT,PTHLM,PDXX,PDZZ,PDZX)
@@ -291,7 +291,7 @@ END IF
 !
 !*       3.   < U' R'np >
 !             -----------
-#define URNP URNP
+#define URNP URNP_ON
 !!!!! URNP !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef URNP
 IF (KRR/=0) THEN
@@ -444,7 +444,7 @@ END IF
 !*       5.   < V' THETA'l >
 !             --------------
 !
-#define VTHETA VTHETA
+#define VTHETA VTHETA_ON
 !!!!!! VTHETA !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef VTHETA
 IF (.NOT. O2D) THEN
@@ -566,7 +566,7 @@ END IF
 !
 !*       6.   < V' R'np >
 !             -----------
-#define VRNP VRNP
+#define VRNP VRNP_ON
 !!!!!!! VRNP !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #ifdef VRNP
 IF (KRR/=0) THEN
