@@ -4,15 +4,15 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !#######################################
-module mode_set_conc_lima
+MODULE MODE_SET_CONC_LIMA
 !#######################################
 
-implicit none
+IMPLICIT NONE
 
-contains
+CONTAINS
 
 !     ###########################################################################
-      SUBROUTINE SET_CONC_LIMA( TNSV, D, KRR, kmi, HGETCLOUD, PRHODREF, PRT, PSVT, ODLBC )
+      SUBROUTINE SET_CONC_LIMA( TNSV, D, KRR, KMI, HGETCLOUD, PRHODREF, PRT, PSVT, ODLBC )
 !     ###########################################################################
 !
 !!****  *SET_CONC_LIMA * - initialize droplet, raindrop and ice
@@ -73,22 +73,22 @@ contains
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
 USE MODD_PARAM_LIMA,      ONLY : NMOD_CCN, NMOD_IFN, &
                                  NMOM_C, NMOM_R, NMOM_I
 USE MODD_PARAM_LIMA_COLD, ONLY : XAS, XBS
 USE MODD_PARAM_LIMA_MIXED,ONLY : XAG, XBG, XAH, XBH
-USE MODD_NSV,             ONLY : NSV_t
+USE MODD_NSV,             ONLY : NSV_T
 USE MODD_CST,             ONLY : XPI, XRHOLW
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(NSV_t),              INTENT(IN)    :: TNSV
-TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
+TYPE(NSV_T),              INTENT(IN)    :: TNSV
+TYPE(DIMPHYEX_T),         INTENT(IN)    :: D
 INTEGER,                  INTENT(IN)   :: KRR      ! Number of moist variables
-integer,                   intent(in) :: kmi        ! Model number
+INTEGER,                   INTENT(IN) :: KMI        ! Model number
 CHARACTER (LEN=4),         INTENT(IN) :: HGETCLOUD  ! Get indicator
 REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN) :: PRHODREF   ! Reference density
 !
@@ -246,4 +246,4 @@ END IF
 !
 END SUBROUTINE SET_CONC_LIMA
 
-end module mode_set_conc_lima
+END MODULE MODE_SET_CONC_LIMA

@@ -49,28 +49,28 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
-USE MODD_CST,              ONLY: CST_t
-USE MODD_RAIN_ICE_DESCR_n, ONLY: RAIN_ICE_DESCR_t
+USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_T
+USE MODD_CST,              ONLY: CST_T
+USE MODD_RAIN_ICE_DESCR_N, ONLY: RAIN_ICE_DESCR_T
 USE MODD_ELEC_DESCR,       ONLY: LSEDIM_BEARD
 USE MODD_ELEC_PARAM,       ONLY: XFQSED, XDQ
 
-use mode_tools,            only: Countjv
+USE MODE_TOOLS,            only: COUNTJV
 
 USE MODI_GAMMA,             ONLY: GAMMA_X0D
 USE MODE_ELEC_COMPUTE_EX,   ONLY: ELEC_COMPUTE_EX
 USE MODE_ELEC_BEARD_EFFECT, ONLY: ELEC_BEARD_EFFECT
-USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_t
-USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
-USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
-USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_T
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
+USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(DIMPHYEX_t),              INTENT(IN)    :: D
-TYPE(CST_t),                   INTENT(IN)    :: CST
+TYPE(DIMPHYEX_T),              INTENT(IN)    :: D
+TYPE(CST_T),                   INTENT(IN)    :: CST
 CHARACTER(1),                  INTENT(IN)    :: HPHASE    ! Liquid or solid hydrometeors
 INTEGER,                       INTENT(IN)    :: KMOMENTS  ! Number of moments 
 INTEGER,                       INTENT(IN)    :: KID       ! Hydrometeor ID
@@ -129,10 +129,10 @@ REAL, DIMENSION(:),     ALLOCATABLE :: ZQS, &    ! Electric charge density sourc
 REAL, DIMENSION(MERGE(D%NIJT, 0, OELEC), &
                &MERGE(D%NKT, 0, OELEC)) :: ZWSEDQ, &   ! Sedimentation of electric charge density
                                          & ZLBDA3
-TYPE(PARAM_LIMA_MIXED_t),INTENT(IN)::LIMAM
-TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
-TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(PARAM_LIMA_MIXED_T),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 REAL, DIMENSION(D%NIJT, D%NKT):: ZBEARDCOEFF ! effect of electrical forces on terminal fall speed
 !
 !-------------------------------------------------------------------------------

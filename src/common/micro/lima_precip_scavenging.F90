@@ -77,10 +77,10 @@
 !*                  0.DECLARATIONS          
 !                   --------------
 !
-USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
-use modd_budget,          only: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_SV1
-USE MODD_CST,             ONLY: CST_t
-USE MODD_NSV,             ONLY: NSV_t
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
+USE MODD_BUDGET,          only: TBUDGETDATA, TBUDGETCONF_T, NBUDGET_SV1
+USE MODD_CST,             ONLY: CST_T
+USE MODD_NSV,             ONLY: NSV_T
 USE MODD_PARAM_LIMA,      ONLY: NMOD_IFN, NSPECIE, XFRAC,                         &
                                 XMDIAM_IFN, XSIGMA_IFN, XRHO_IFN,                 &
                                 NMOD_CCN, XR_MEAN_CCN, XLOGSIG_CCN, XRHO_CCN,     &
@@ -90,8 +90,8 @@ USE MODD_PARAM_LIMA,      ONLY: NMOD_IFN, NSPECIE, XFRAC,                       
                                 XRTMIN, XCTMIN
 USE MODD_PARAM_LIMA_WARM, ONLY: XCR, XDR
 
-USE MODE_BUDGET_PHY,      ONLY: Budget_store_init_phy, Budget_store_end_phy
-use mode_tools,           only: Countjv
+USE MODE_BUDGET_PHY,      ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
+USE MODE_TOOLS,           only: COUNTJV
 
 USE MODI_GAMMA
 USE MODE_LIMA_FUNCTIONS, ONLY: GAUHER, GAULAG
@@ -100,10 +100,10 @@ IMPLICIT NONE
 !
 !*                 0.1 declarations of dummy arguments :
 !
-TYPE(NSV_t),              INTENT(IN)    :: TNSV
-TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
-TYPE(CST_t),              INTENT(IN)    :: CST
-TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+TYPE(NSV_T),              INTENT(IN)    :: TNSV
+TYPE(DIMPHYEX_T),         INTENT(IN)    :: D
+TYPE(CST_T),              INTENT(IN)    :: CST
+TYPE(TBUDGETCONF_T),      INTENT(IN)    :: BUCONF
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER,                  INTENT(IN)    :: KBUDGETS
 !
@@ -219,7 +219,7 @@ REAL, DIMENSION(:,:), ALLOCATABLE ::     &
                       ZVOLDR_INV            ! INV of Mean volumic Raindrop diameter [m]
 REAL               :: ZDENS_RATIO_SQRT 
 INTEGER :: ISV_VAR, INM, IJM
-integer :: idx
+INTEGER :: IDX
 REAL :: ZMDIAMP 
 REAL :: ZSIGMAP  
 REAL :: ZRHOP   
@@ -232,20 +232,20 @@ INTEGER :: ISV_LIMA_SCAVMASS
 ISV_LIMA_NR       = TNSV%NSV_LIMA_NR       - TNSV%NSV_LIMA_BEG + 1
 ISV_LIMA_SCAVMASS = TNSV%NSV_LIMA_SCAVMASS - TNSV%NSV_LIMA_BEG + 1
 
-if ( BUCONF%lbudget_sv ) then
-  do IL = 1, nmod_ccn
-    idx = TNSV%nsv_lima_ccn_free - 1 + IL
-    call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs( :, :, idx) )
-  end do
-  do IL = 1, nmod_ifn
-    idx = TNSV%nsv_lima_ifn_free - 1 + IL
-    call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs( :, :, idx) )
-  end do
-  if ( laero_mass ) then
-     call Budget_store_init_phy(D,  tbudgets(NBUDGET_SV1 - 1 + TNSV%nsv_lima_scavmass), 'SCAV', &
-          prsvs( :, :, TNSV%nsv_lima_scavmass) )
-  end if
-end if
+IF ( BUCONF%LBUDGET_SV ) then
+  DO IL = 1, NMOD_CCN
+    IDX = TNSV%NSV_LIMA_CCN_FREE - 1 + IL
+    CALL BUDGET_STORE_INIT_PHY(D,  TBUDGETS(NBUDGET_SV1 - 1 + IDX), 'SCAV', PRSVS( :, :, IDX) )
+  END DO
+  DO IL = 1, NMOD_IFN
+    IDX = TNSV%NSV_LIMA_IFN_FREE - 1 + IL
+    CALL BUDGET_STORE_INIT_PHY(D,  TBUDGETS(NBUDGET_SV1 - 1 + IDX), 'SCAV', PRSVS( :, :, IDX) )
+  END DO
+  IF ( LAERO_MASS ) then
+     CALL BUDGET_STORE_INIT_PHY(D,  TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_SCAVMASS), 'SCAV', &
+          PRSVS( :, :, TNSV%NSV_LIMA_SCAVMASS) )
+  END IF
+END IF
 !
 !*       1.     PRELIMINARY COMPUTATIONS
 !   	        ------------------------
@@ -410,8 +410,8 @@ DO ISV = 1, NMOD_CCN+NMOD_IFN
       ENDDO
       ZRE_INV(:,:) = 1./ZRE(:,:)
 
-      IF (ANY(ZCONCR .eq. 0.)) print *, 'valeur nulle dans ZLAMBDAR !' 
-      IF (ANY(ZLAMBDAR .eq. 0.)) print *, 'valeur nulle dans ZLAMBDAR !' 
+      IF (ANY(ZCONCR .EQ. 0.)) PRINT *, 'VALEUR NULLE DANS ZLAMBDAR !' 
+      IF (ANY(ZLAMBDAR .EQ. 0.)) PRINT *, 'VALEUR NULLE DANS ZLAMBDAR !' 
 !
 !------------------------------------------------------------------------------------
 !
@@ -487,7 +487,7 @@ DO ISV = 1, NMOD_CCN+NMOD_IFN
          ! Total NUMBER Scavenging Rate of aerosol [m**-3.s**-1]
          ZTOT_SCAV_RATE(:,:)=UNPACK(ZTOT_SCAV_RATE1D(:),MASK=GSCAV(:,:),FIELD=0.0)
          ! Free particles (CCN or IFN) [/s]:
-         PRSVS(:,:,ISV_VAR) = max(PRSVS(:,:,ISV_VAR)+ZTOT_SCAV_RATE(:,:)  &
+         PRSVS(:,:,ISV_VAR) = MAX(PRSVS(:,:,ISV_VAR)+ZTOT_SCAV_RATE(:,:)  &
                                          * PRHODJ(:,:)/PRHODREF(:,:) , 0.0 )
          ! Total MASS Scavenging Rate of aerosol which REACH THE FLOOR because of 
          ! rain sedimentation [kg.m**-3.s**-1]
@@ -546,20 +546,20 @@ DO ISV = 1, NMOD_CCN+NMOD_IFN
    ENDIF
 ENDDO
 !
-if ( BUCONF%lbudget_sv ) then
-  do IL = 1, nmod_ccn
-    idx = TNSV%nsv_lima_ccn_free - 1 + IL
-    call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, idx) )
-  end do
-  do IL = 1, nmod_ifn
-    idx = TNSV%nsv_lima_ifn_free - 1 + IL
-    call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + idx), 'SCAV', prsvs(:, :, idx) )
-  end do
-  if ( laero_mass ) then
-     call Budget_store_end_phy(D,  tbudgets(NBUDGET_SV1 - 1 + TNSV%nsv_lima_scavmass), &
-          'SCAV', prsvs(:, :, TNSV%nsv_lima_scavmass) )
-  end if
-end if
+IF ( BUCONF%LBUDGET_SV ) then
+  DO IL = 1, NMOD_CCN
+    IDX = TNSV%NSV_LIMA_CCN_FREE - 1 + IL
+    CALL BUDGET_STORE_END_PHY(D,  TBUDGETS(NBUDGET_SV1 - 1 + IDX), 'SCAV', PRSVS(:, :, IDX) )
+  END DO
+  DO IL = 1, NMOD_IFN
+    IDX = TNSV%NSV_LIMA_IFN_FREE - 1 + IL
+    CALL BUDGET_STORE_END_PHY(D,  TBUDGETS(NBUDGET_SV1 - 1 + IDX), 'SCAV', PRSVS(:, :, IDX) )
+  END DO
+  IF ( LAERO_MASS ) then
+     CALL BUDGET_STORE_END_PHY(D,  TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_SCAVMASS), &
+          'SCAV', PRSVS(:, :, TNSV%NSV_LIMA_SCAVMASS) )
+  END IF
+END IF
 !------------------------------------------------------------------------------
 !
 !
@@ -612,7 +612,7 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
 USE MODD_PARAMETERS
 !
 USE MODD_PARAM_LIMA,      ONLY : XCEXVT, XRTMIN
@@ -623,7 +623,7 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 !
-TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
+TYPE(DIMPHYEX_T),         INTENT(IN)    :: D
 CHARACTER (LEN=4),        INTENT(IN)    :: HCLOUD  ! Cloud parameterization
 CHARACTER(LEN=5),         INTENT(IN)    :: HDCONF
 REAL,                     INTENT(IN)    :: PTSTEP  ! Time step  
@@ -684,7 +684,7 @@ INTEGER, SAVE                   :: ISPLITR
 !
 !*       2.1    splitting factor for high Courant number C=v_fall*(del_Z/del_T)
 !  
-firstcall : IF (GSFIRSTCALL) THEN
+FIRSTCALL : IF (GSFIRSTCALL) THEN
    GSFIRSTCALL = .FALSE.
    ZVTRMAX = 10.                          
    ZDZMIN = MINVAL(PZZ(D%NIJB:D%NIJE,D%NKB+1:D%NKE+1)-PZZ(D%NIJB:D%NIJE,D%NKB:D%NKE))
@@ -697,7 +697,7 @@ firstcall : IF (GSFIRSTCALL) THEN
 !
    ZEXSEDR = (XBR+XDR+1.0)/(XBR+1.0) 
 !
-END IF firstcall
+END IF FIRSTCALL
 !
 !*       2.2    time splitting loop initialization        
 !

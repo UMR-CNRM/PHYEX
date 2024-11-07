@@ -33,15 +33,15 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,            ONLY: CST_t
+USE MODD_CST,            ONLY: CST_T
 USE MODE_LIMA_FUNCTIONS,  ONLY : RECT, DELTA
-USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(CST_t),            INTENT(IN)    :: CST
+TYPE(CST_T),            INTENT(IN)    :: CST
 INTEGER,                INTENT(IN)    :: ISIZE
 REAL, DIMENSION(ISIZE), INTENT(IN)    :: PZT    ! Temperature
 REAL, DIMENSION(ISIZE), INTENT(IN)    :: PSI    ! Saturation over ice
@@ -58,7 +58,7 @@ REAL, DIMENSION(ISIZE)   :: ZMAX, &
                             Z2,   &
                             ZSI2
 !
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 REAL                     :: ZPSI
 !
 !-------------------------------------------------------------------------------
@@ -75,7 +75,7 @@ PZY(:) = 0.0
 !
 ZPSI   = 0.058707*LIMAP%XGAMMA/LIMAP%XRHO_CFDC
 !
-ZSI2(:)=min(PSI(:),PSI_W(:))
+ZSI2(:)=MIN(PSI(:),PSI_W(:))
 !
 WHERE( ZSI2(:)>1.0 )
 !

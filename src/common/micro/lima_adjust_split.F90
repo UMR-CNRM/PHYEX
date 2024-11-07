@@ -86,24 +86,24 @@ SUBROUTINE LIMA_ADJUST_SPLIT(LIMAP, LIMAW, TNSV, D, CST, NEBN, TURBN, BUCONF, TB
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, &
+USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_T, NBUDGET_TH, NBUDGET_RV, &
                          NBUDGET_RC, NBUDGET_RI, NBUDGET_RV, NBUDGET_SV1, NBUMOD        
-USE MODD_CST,            ONLY: CST_t
+USE MODD_CST,            ONLY: CST_T
 !USE MODD_CONF
 !use modd_field,            only: TFIELDDATA, TYPEREAL
 !USE MODD_IO,               ONLY: TFILEDATA
 !USE MODD_LUNIT_n,          ONLY: TLUOUT
-USE MODD_NSV,             ONLY: NSV_t
-USE MODD_PARAM_LIMA, ONLY: PARAM_LIMA_t
-USE MODD_PARAM_LIMA_WARM, ONLY : PARAM_LIMA_WARM_t
-USE MODD_RAIN_ICE_PARAM_n,   ONLY: RAIN_ICE_PARAMN
-USE MODD_NEB_n,            ONLY: NEB_t
-USE MODD_TURB_n,           ONLY: TURB_t
-USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
+USE MODD_NSV,             ONLY: NSV_T
+USE MODD_PARAM_LIMA, ONLY: PARAM_LIMA_T
+USE MODD_PARAM_LIMA_WARM, ONLY : PARAM_LIMA_WARM_T
+USE MODD_RAIN_ICE_PARAM_N,   ONLY: RAIN_ICE_PARAMN
+USE MODD_NEB_N,            ONLY: NEB_T
+USE MODD_TURB_N,           ONLY: TURB_T
+USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_T
 !
 USE MODE_BUDGET_PHY,       ONLY: BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 !USE MODE_IO_FIELD_WRITE,   only: IO_Field_write
-use mode_msg
+USE MODE_MSG
 !
 USE MODI_CONDENSATION
 USE MODE_LIMA_CCN_ACTIVATION, ONLY: LIMA_CCN_ACTIVATION
@@ -113,21 +113,21 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 !
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
-TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
-TYPE(NSV_t),              INTENT(IN)    :: TNSV
-TYPE(DIMPHYEX_t),         INTENT(IN)   :: D
-TYPE(CST_t),              INTENT(IN)    :: CST
-TYPE(NEB_t),INTENT(IN)::NEBN
-TYPE(TURB_t),INTENT(IN)::TURBN
-TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
+TYPE(NSV_T),              INTENT(IN)    :: TNSV
+TYPE(DIMPHYEX_T),         INTENT(IN)   :: D
+TYPE(CST_T),              INTENT(IN)    :: CST
+TYPE(NEB_T),INTENT(IN)::NEBN
+TYPE(TURB_T),INTENT(IN)::TURBN
+TYPE(TBUDGETCONF_T),      INTENT(IN)    :: BUCONF
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 !
 INTEGER,                  INTENT(IN)   :: KRR        ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KMI        ! Model index 
-CHARACTER(len=80),        INTENT(IN)   :: HCONDENS
-CHARACTER(len=4),         INTENT(IN)   :: HLAMBDA3   ! formulation for lambda3 coeff
+CHARACTER(LEN=80),        INTENT(IN)   :: HCONDENS
+CHARACTER(LEN=4),         INTENT(IN)   :: HLAMBDA3   ! formulation for lambda3 coeff
 LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid
                                                      ! Condensation
 LOGICAL,                  INTENT(IN)   :: OSIGMAS    ! Switch for Sigma_s:
@@ -244,8 +244,8 @@ LOGICAL                           :: G_SIGMAS, GUSERI
 REAL, DIMENSION(:), ALLOCATABLE   :: ZRTMIN
 REAL, DIMENSION(:), ALLOCATABLE   :: ZCTMIN
 !
-integer :: idx
-integer :: II, IK, IL
+INTEGER :: IDX
+INTEGER :: II, IK, IL
 INTEGER                           :: IMOD
 !
 !!$TYPE(TFIELDMETADATA)     :: TZFIELD
@@ -363,25 +363,25 @@ END IF
 ! END IF
 !
 !
-if ( nbumod == kmi .and. BUCONF%lbu_enable ) then
-  if ( BUCONF%lbudget_th ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'CEDS', pths(:,:) * prhodj(:,:) )
-  if ( BUCONF%lbudget_rv ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'CEDS', ZRVS(:,:) * prhodj(:,:) )
-  if ( BUCONF%lbudget_rc ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'CEDS', ZRCS(:,:) * prhodj(:,:) )
+IF ( NBUMOD == KMI .AND. BUCONF%LBU_ENABLE ) then
+  IF ( BUCONF%LBUDGET_TH ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_TH), 'CEDS', PTHS(:,:) * PRHODJ(:,:) )
+  IF ( BUCONF%LBUDGET_RV ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RV), 'CEDS', ZRVS(:,:) * PRHODJ(:,:) )
+  IF ( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RC), 'CEDS', ZRCS(:,:) * PRHODJ(:,:) )
   !Remark: ZRIS is not modified but source term kept for better coherence with lima_adjust and lima_notadjust
-  if ( BUCONF%lbudget_ri ) call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'CEDS', ZRIS(:,:) * prhodj(:,:) )
-  if ( BUCONF%lbudget_sv ) then
-    if ( LIMAP%nmom_c.ge.2) &
-      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_nc), 'CEDS', ZCCS(:,:) * prhodj(:,:) )
-    if ( LIMAP%lscav .and. LIMAP%laero_mass ) &
-      call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_scavmass), 'CEDS', ZMAS(:,:) * prhodj(:,:) )
-    if ( LIMAP%nmom_c.ge.1 ) then
-      do IL = 1, LIMAP%nmod_ccn
-        idx = NBUDGET_SV1 - 1 + TNSV%nsv_lima_ccn_free - 1 + IL
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', ZNFS(:,:, IL) * prhodj(:,:) )
-        idx = NBUDGET_SV1 - 1 + TNSV%nsv_lima_ccn_acti - 1 + IL
-        call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', ZNAS(:,:, IL) * prhodj(:,:) )
-      end do
-    end if
+  IF ( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_RI), 'CEDS', ZRIS(:,:) * PRHODJ(:,:) )
+  IF ( BUCONF%LBUDGET_SV ) then
+    IF ( LIMAP%NMOM_C.GE.2) &
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_NC), 'CEDS', ZCCS(:,:) * PRHODJ(:,:) )
+    IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) &
+      CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_SCAVMASS), 'CEDS', ZMAS(:,:) * PRHODJ(:,:) )
+    IF ( LIMAP%NMOM_C.GE.1 ) then
+      DO IL = 1, LIMAP%NMOD_CCN
+        IDX = NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_CCN_FREE - 1 + IL
+        CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(IDX), 'CEDS', ZNFS(:,:, IL) * PRHODJ(:,:) )
+        IDX = NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_CCN_ACTI - 1 + IL
+        CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(IDX), 'CEDS', ZNAS(:,:, IL) * PRHODJ(:,:) )
+      END DO
+    END IF
 !     if ( LIMAP%nmom_i.ge.2 ) then
 !       call BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ni), 'CEDS', pcis(:,:) * prhodj(:,:) )
 !       do IL = 1, LIMAP%nmod_ifn
@@ -395,8 +395,8 @@ if ( nbumod == kmi .and. BUCONF%lbu_enable ) then
 !         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', pnis(:,:, IL) * prhodj(:,:) )
 !       end do
 !     end if
-  end if
-end if
+  END IF
+END IF
 !
 !-------------------------------------------------------------------------------
 !
@@ -702,24 +702,24 @@ END IF
 !*       7.  STORE THE BUDGET TERMS
 !            ----------------------
 !
-if ( nbumod == kmi .and. BUCONF%lbu_enable ) then
-  if ( BUCONF%lbudget_th ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'CEDS', pths(:,:) * prhodj(:,:) )
-  if ( BUCONF%lbudget_rv ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'CEDS', ZRVS(:,:) * prhodj(:,:) )
-  if ( BUCONF%lbudget_rc ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'CEDS', ZRCS(:,:) * prhodj(:,:) )
-  if ( BUCONF%lbudget_ri ) call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'CEDS', ZRIS(:,:) * prhodj(:,:) )
-  if ( BUCONF%lbudget_sv ) then
-    if ( LIMAP%nmom_c.ge.2) &
-      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_nc), 'CEDS', ZCCS(:,:) * prhodj(:,:) )
-    if ( LIMAP%lscav .and. LIMAP%laero_mass ) &
-      call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%nsv_lima_scavmass), 'CEDS', ZMAS(:,:) * prhodj(:,:) )
-    if ( LIMAP%nmom_c.ge.1 ) then
-      do IL = 1, LIMAP%nmod_ccn
-        idx = NBUDGET_SV1 - 1 + TNSV%nsv_lima_ccn_free - 1 + IL
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'CEDS', ZNFS(:,:, IL) * prhodj(:,:) )
-        idx = NBUDGET_SV1 - 1 + TNSV%nsv_lima_ccn_acti - 1 + IL
-        call BUDGET_STORE_END_PHY(D, TBUDGETS(idx), 'CEDS', ZNAS(:,:, IL) * prhodj(:,:) )
-      end do
-    end if
+IF ( NBUMOD == KMI .AND. BUCONF%LBU_ENABLE ) then
+  IF ( BUCONF%LBUDGET_TH ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_TH), 'CEDS', PTHS(:,:) * PRHODJ(:,:) )
+  IF ( BUCONF%LBUDGET_RV ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RV), 'CEDS', ZRVS(:,:) * PRHODJ(:,:) )
+  IF ( BUCONF%LBUDGET_RC ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RC), 'CEDS', ZRCS(:,:) * PRHODJ(:,:) )
+  IF ( BUCONF%LBUDGET_RI ) CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_RI), 'CEDS', ZRIS(:,:) * PRHODJ(:,:) )
+  IF ( BUCONF%LBUDGET_SV ) then
+    IF ( LIMAP%NMOM_C.GE.2) &
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_NC), 'CEDS', ZCCS(:,:) * PRHODJ(:,:) )
+    IF ( LIMAP%LSCAV .AND. LIMAP%LAERO_MASS ) &
+      CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_SCAVMASS), 'CEDS', ZMAS(:,:) * PRHODJ(:,:) )
+    IF ( LIMAP%NMOM_C.GE.1 ) then
+      DO IL = 1, LIMAP%NMOD_CCN
+        IDX = NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_CCN_FREE - 1 + IL
+        CALL BUDGET_STORE_END_PHY(D, TBUDGETS(IDX), 'CEDS', ZNFS(:,:, IL) * PRHODJ(:,:) )
+        IDX = NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_CCN_ACTI - 1 + IL
+        CALL BUDGET_STORE_END_PHY(D, TBUDGETS(IDX), 'CEDS', ZNAS(:,:, IL) * PRHODJ(:,:) )
+      END DO
+    END IF
 !     if ( LIMAP%nmom_i.ge.2 ) then
 !       call BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + nsv_lima_ni), 'CEDS', pcis(:,:) * prhodj(:,:) )
 !       do IL = 1, LIMAP%nmod_ifn
@@ -733,8 +733,8 @@ if ( nbumod == kmi .and. BUCONF%lbu_enable ) then
 !         call BUDGET_STORE_INIT_PHY(D, TBUDGETS(idx), 'CEDS', pnis(:,:, IL) * prhodj(:,:) )
 !       end do
 !     end if
-  end if
-end if
+  END IF
+END IF
 !++cb++
 DEALLOCATE(ZRTMIN)
 DEALLOCATE(ZCTMIN)

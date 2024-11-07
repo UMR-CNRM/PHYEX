@@ -31,17 +31,17 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
-USE MODD_CST,             ONLY : CST_t
-USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
+USE MODD_CST,             ONLY : CST_T
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
-TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
-TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+TYPE(DIMPHYEX_T),         INTENT(IN)    :: D
+TYPE(CST_T),              INTENT(IN)    :: CST
 !
 REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN)    :: PRHODREF! Cloud water m.r. at t 
 REAL, DIMENSION(D%NIJT,D%NKT),    INTENT(IN)    :: PRCT    ! Cloud water m.r. at t 

@@ -66,29 +66,29 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
-USE MODD_CST,            ONLY: CST_t
+USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
+USE MODD_CST,            ONLY: CST_T
 !use modd_field,           only: TFIELDDATA, TYPEREAL
 !USE MODD_IO,              ONLY: TFILEDATA
 !USE MODD_LUNIT_n,         ONLY: TLUOUT
-USE MODD_NEB_n,           ONLY: NEB_t
+USE MODD_NEB_N,           ONLY: NEB_T
 
 !USE MODE_IO_FIELD_WRITE,  only: IO_Field_write
-use mode_tools,           only: Countjv
+USE MODE_TOOLS,           only: COUNTJV
 
 USE MODI_GAMMA
-USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
-USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
-TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
-TYPE(CST_t),              INTENT(IN)    :: CST
-TYPE(NEB_t),              INTENT(IN)    :: NEBN
+TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+TYPE(DIMPHYEX_T),         INTENT(IN)    :: D
+TYPE(CST_T),              INTENT(IN)    :: CST
+TYPE(NEB_T),              INTENT(IN)    :: NEBN
 !TYPE(TFILEDATA),          INTENT(IN)    :: TPFILE     ! Output file
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRHODREF   ! Reference density
@@ -555,7 +555,7 @@ CONTAINS
 !*       0. DECLARATIONS
 !
 !
-use mode_msg
+USE MODE_MSG
 !
 IMPLICIT NONE
 !
@@ -572,80 +572,80 @@ REAL, DIMENSION(KPTS)    :: PZRIDDR
 !
 INTEGER, PARAMETER                 :: JPMAXIT=60
 REAL,    PARAMETER                 :: PPUNUSED=0.0 !-1.11e30
-REAL,    DIMENSION(:), ALLOCATABLE :: zfh,zfl, zfm,zfnew
-REAL                               :: zs,zxh,zxl,zxm,zxnew
+REAL,    DIMENSION(:), ALLOCATABLE :: ZFH,ZFL, ZFM,ZFNEW
+REAL                               :: ZS,ZXH,ZXL,ZXM,ZXNEW
 REAL                               :: ZX2
-INTEGER                            :: ij, IL
+INTEGER                            :: IJ, IL
 !
-ALLOCATE(  zfh(KPTS))
-ALLOCATE(  zfl(KPTS))
-ALLOCATE(  zfm(KPTS))
-ALLOCATE(zfnew(KPTS))
+ALLOCATE(  ZFH(KPTS))
+ALLOCATE(  ZFL(KPTS))
+ALLOCATE(  ZFM(KPTS))
+ALLOCATE(ZFNEW(KPTS))
 !
 PZRIDDR(:)= PPUNUSED
 ZX2       = PX2INIT 
-zfl(:)     = FUNCSMAX(PX1,PZZW3(:),PZZW6(:),KPTS)
-zfh(:)     = FUNCSMAX(ZX2,PZZW3(:),PZZW6(:),KPTS)
+ZFL(:)     = FUNCSMAX(PX1,PZZW3(:),PZZW6(:),KPTS)
+ZFH(:)     = FUNCSMAX(ZX2,PZZW3(:),PZZW6(:),KPTS)
 !
 DO IL = 1, KPTS
    ZX2 = PX2INIT
-100 if ((zfl(IL) > 0.0 .and. zfh(IL) < 0.0) .or. (zfl(IL) < 0.0 .and. zfh(IL) > 0.0)) then
-      zxl         = PX1
-      zxh         = ZX2
-      do ij=1,JPMAXIT
-         zxm     = 0.5*(zxl+zxh)
-         zfm(IL) = SINGL_FUNCSMAX(zxm,PZZW3(IL),PZZW6(IL),IL)
-         zs      = sqrt(zfm(IL)**2-zfl(IL)*zfh(IL))
-         if (zs == 0.0) then
+100 IF ((ZFL(IL) > 0.0 .AND. ZFH(IL) < 0.0) .OR. (ZFL(IL) < 0.0 .AND. ZFH(IL) > 0.0)) then
+      ZXL         = PX1
+      ZXH         = ZX2
+      DO IJ=1,JPMAXIT
+         ZXM     = 0.5*(ZXL+ZXH)
+         ZFM(IL) = SINGL_FUNCSMAX(ZXM,PZZW3(IL),PZZW6(IL),IL)
+         ZS      = SQRT(ZFM(IL)**2-ZFL(IL)*ZFH(IL))
+         IF (ZS == 0.0) then
             GO TO 101
-         endif
-         zxnew  = zxm+(zxm-zxl)*(sign(1.0,zfl(IL)-zfh(IL))*zfm(IL)/zs)
-         if (abs(zxnew - PZRIDDR(IL)) <= PXACC) then
+         ENDIF
+         ZXNEW  = ZXM+(ZXM-ZXL)*(SIGN(1.0,ZFL(IL)-ZFH(IL))*ZFM(IL)/ZS)
+         IF (ABS(ZXNEW - PZRIDDR(IL)) <= PXACC) then
             GO TO 101 
-         endif
-         PZRIDDR(IL) = zxnew
-         zfnew(IL)  = SINGL_FUNCSMAX(PZRIDDR(IL),PZZW3(IL),PZZW6(IL),IL)
-         if (zfnew(IL) == 0.0) then
+         ENDIF
+         PZRIDDR(IL) = ZXNEW
+         ZFNEW(IL)  = SINGL_FUNCSMAX(PZRIDDR(IL),PZZW3(IL),PZZW6(IL),IL)
+         IF (ZFNEW(IL) == 0.0) then
             GO TO 101
-         endif
-         if (sign(zfm(IL),zfnew(IL)) /= zfm(IL)) then
-            zxl    =zxm
-            zfl(IL)=zfm(IL)
-            zxh    =PZRIDDR(IL)
-            zfh(IL)=zfnew(IL)
-         else if (sign(zfl(IL),zfnew(IL)) /= zfl(IL)) then
-            zxh    =PZRIDDR(IL)
-            zfh(IL)=zfnew(IL)
-         else if (sign(zfh(IL),zfnew(IL)) /= zfh(IL)) then
-            zxl    =PZRIDDR(IL)
-            zfl(IL)=zfnew(IL)
-         else if (ZX2 .lt. 0.05) then
+         ENDIF
+         IF (SIGN(ZFM(IL),ZFNEW(IL)) /= ZFM(IL)) then
+            ZXL    =ZXM
+            ZFL(IL)=ZFM(IL)
+            ZXH    =PZRIDDR(IL)
+            ZFH(IL)=ZFNEW(IL)
+         ELSE IF (SIGN(ZFL(IL),ZFNEW(IL)) /= ZFL(IL)) then
+            ZXH    =PZRIDDR(IL)
+            ZFH(IL)=ZFNEW(IL)
+         ELSE IF (SIGN(ZFH(IL),ZFNEW(IL)) /= ZFH(IL)) then
+            ZXL    =PZRIDDR(IL)
+            ZFL(IL)=ZFNEW(IL)
+         ELSE IF (ZX2 .LT. 0.05) then
             ZX2 = ZX2 + 1.0E-2
 !            PRINT*, 'ZX2 ALWAYS too small, we put a greater one : ZX2 =',ZX2
-            zfh(IL)   = SINGL_FUNCSMAX(ZX2,PZZW3(IL),PZZW6(IL),IL)
-            go to 100
-         end if
-         if (abs(zxh-zxl) <= PXACC) then
+            ZFH(IL)   = SINGL_FUNCSMAX(ZX2,PZZW3(IL),PZZW6(IL),IL)
+            GO TO 100
+         END IF
+         IF (ABS(ZXH-ZXL) <= PXACC) then
             GO TO 101 
-         endif
+         ENDIF
 !!SB
 !!$      if (ij == JPMAXIT .and. (abs(zxh-zxl) > PXACC) ) then
 !!$        PZRIDDR(IL)=0.0
 !!$        go to 101
 !!$      endif   
 !!SB
-      end do
-      call Print_msg( NVERB_FATAL, 'GEN', 'ZRIDDR', 'exceeded maximum iterations' )
-   else if (zfl(IL) == 0.0) then
+      END DO
+      CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'ZRIDDR', 'EXCEEDED MAXIMUM ITERATIONS' )
+   ELSE IF (ZFL(IL) == 0.0) then
       PZRIDDR(IL)=PX1
-   else if (zfh(IL) == 0.0) then
+   ELSE IF (ZFH(IL) == 0.0) then
       PZRIDDR(IL)=ZX2
-   else if (ZX2 .lt. 0.05) then
+   ELSE IF (ZX2 .LT. 0.05) then
       ZX2 = ZX2 + 1.0E-2
 !      PRINT*, 'ZX2 too small, we put a greater one : ZX2 =',ZX2
-      zfh(IL)   = SINGL_FUNCSMAX(ZX2,PZZW3(IL),PZZW6(IL),IL)
-      go to 100
-   else
+      ZFH(IL)   = SINGL_FUNCSMAX(ZX2,PZZW3(IL),PZZW6(IL),IL)
+      GO TO 100
+   ELSE
 !!$      print*, 'PZRIDDR: root must be bracketed'
 !!$      print*,'npts ',KPTS,'jl',IL
 !!$      print*, 'PX1,ZX2,zfl,zfh',PX1,ZX2,zfl(IL),zfh(IL)
@@ -653,14 +653,14 @@ DO IL = 1, KPTS
 !!$      print*, 'try to put greater ZX2 (upper bound for Smax research)'
 !!$      STOP
       PZRIDDR(IL)=0.0
-      go to 101
-   end if
+      GO TO 101
+   END IF
 101 ENDDO
 !
-DEALLOCATE(  zfh)
-DEALLOCATE(  zfl)
-DEALLOCATE(  zfm)
-DEALLOCATE(zfnew)
+DEALLOCATE(  ZFH)
+DEALLOCATE(  ZFL)
+DEALLOCATE(  ZFM)
+DEALLOCATE(ZFNEW)
 !
 END FUNCTION ZRIDDR
 !

@@ -28,7 +28,7 @@ IMPLICIT NONE
 !*       1.   DESCRIPTIVE PARAMETERS
 !             ----------------------
 !
-TYPE PARAM_LIMA_WARM_t
+TYPE PARAM_LIMA_WARM_T
 REAL      ::  XLBC, XLBEXC,          & ! shape parameters of the cloud droplets
               XLBR, XLBEXR, XNR        ! shape parameters of the raindrops
 !
@@ -111,9 +111,9 @@ REAL      :: XFREFFC  ! Factor to compute the cloud droplet effective radius
 REAL      :: XFREFFR  ! Factor to compute the rain drop     effective radius
 REAL      :: XCREC, XCRER
                       ! Factors to compute reff when cloud and rain are present
-END TYPE PARAM_LIMA_WARM_t
+END TYPE PARAM_LIMA_WARM_T
 !
-TYPE(PARAM_LIMA_WARM_t), TARGET, SAVE :: PARAM_LIMA_WARM
+TYPE(PARAM_LIMA_WARM_T), TARGET, SAVE :: PARAM_LIMA_WARM
 !
 REAL, POINTER :: XLBC => NULL(), &
                  XLBEXC => NULL(), &

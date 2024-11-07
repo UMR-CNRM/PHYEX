@@ -37,13 +37,13 @@ CONTAINS
 USE MODI_GAMMA_INC
 USE MODI_HYPGEO
 USE MODI_HYPSER
-USE MODD_CST, ONLY:CST_t
+USE MODD_CST, ONLY:CST_T
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments : 
 !
-TYPE(CST_t),      INTENT(IN)  :: CST
+TYPE(CST_T),      INTENT(IN)  :: CST
 CHARACTER(LEN=*), INTENT(IN)  :: HTYPE_CCN          ! Aerosol type
 REAL,             INTENT(IN)  :: PD             ! Aerosol PSD modal diameter          
 REAL,             INTENT(IN)  :: PSIGMA         ! Aerosol PSD width
@@ -90,15 +90,15 @@ CASE('NH42SO4','C') ! Ammonium sulfate
    PKAPPA = 0.61
 CASE('NH4NO3')      ! Ammonium nitrate
    PKAPPA = 0.67
-CASE('NaCl','M')    ! Sea Salt
+CASE('NACL','M')    ! Sea Salt
    PKAPPA = 1.28
 CASE('H2SO4')       ! Sulfuric acid
    PKAPPA = 0.90
-CASE('NaNO3')       ! Sodium nitrate
+CASE('NANO3')       ! Sodium nitrate
    PKAPPA = 0.88
-CASE('NaHSO4')      ! Sodium bisulfate
+CASE('NAHSO4')      ! Sodium bisulfate
    PKAPPA = 0.91
-CASE('Na2SO4')      ! Sodium sulfate
+CASE('NA2SO4')      ! Sodium sulfate
    PKAPPA = 0.80
 CASE('NH43HSO42')   ! Letovicite (rare ammonium sulfate mineral)
    PKAPPA = 0.65
@@ -153,9 +153,9 @@ DO IJ=1, SIZE(ZT)
 !
    ZPARAMS(1:3) = (/ 1., 1., 1000. /)
    IFLAG = 1
-   call lmdif1 ( DISTANCE, IM, IN, ZPARAMS, ZFVEC, ZTOL, IINFO )
+   CALL LMDIF1 ( DISTANCE, IM, IN, ZPARAMS, ZFVEC, ZTOL, IINFO )
 !
-   PLIMIT_FACTOR = gamma(ZPARAMS(2))*ZPARAMS(3)**(ZPARAMS(1)/2)/gamma(1+ZPARAMS(1)/2)/gamma(ZPARAMS(2)-ZPARAMS(1)/2)
+   PLIMIT_FACTOR = GAMMA(ZPARAMS(2))*ZPARAMS(3)**(ZPARAMS(1)/2)/GAMMA(1+ZPARAMS(1)/2)/GAMMA(ZPARAMS(2)-ZPARAMS(1)/2)
    PK            = ZPARAMS(1)
    PMU           = ZPARAMS(2)
    PBETA         = ZPARAMS(3)
@@ -229,69 +229,69 @@ REAL                    :: PZRIDDR
 !
 !
 INTEGER, PARAMETER      :: IMAXIT=60
-REAL                    :: zfh,zfl, zfm,zfnew
-REAL                    :: zs,zxh,zxl,zxm,zxnew
-INTEGER                 :: ij
+REAL                    :: ZFH,ZFL, ZFM,ZFNEW
+REAL                    :: ZS,ZXH,ZXL,ZXM,ZXNEW
+INTEGER                 :: IJ
 !
 PZRIDDR= 999999.
-zfl     = DSDD(PX1,PDDRY,PKAPPA,PT)
-zfh     = DSDD(PX2,PDDRY,PKAPPA,PT)
+ZFL     = DSDD(PX1,PDDRY,PKAPPA,PT)
+ZFH     = DSDD(PX2,PDDRY,PKAPPA,PT)
 !
-100 if ((zfl > 0.0 .and. zfh < 0.0) .or. (zfl < 0.0 .and. zfh > 0.0)) then
-      zxl         = PX1
-      zxh         = PX2
-      do ij=1,IMAXIT
-         zxm     = 0.5*(zxl+zxh)
-         zfm = DSDD(zxm,PDDRY,PKAPPA,PT)
-         zs      = sqrt(zfm**2-zfl*zfh)
-         if (zs == 0.0) then
+100 IF ((ZFL > 0.0 .AND. ZFH < 0.0) .OR. (ZFL < 0.0 .AND. ZFH > 0.0)) then
+      ZXL         = PX1
+      ZXH         = PX2
+      DO IJ=1,IMAXIT
+         ZXM     = 0.5*(ZXL+ZXH)
+         ZFM = DSDD(ZXM,PDDRY,PKAPPA,PT)
+         ZS      = SQRT(ZFM**2-ZFL*ZFH)
+         IF (ZS == 0.0) then
             GO TO 101
-         endif
-         zxnew  = zxm+(zxm-zxl)*(sign(1.0,zfl-zfh)*zfm/zs)
-         if (abs(zxnew - PZRIDDR) <= PXACC) then
+         ENDIF
+         ZXNEW  = ZXM+(ZXM-ZXL)*(SIGN(1.0,ZFL-ZFH)*ZFM/ZS)
+         IF (ABS(ZXNEW - PZRIDDR) <= PXACC) then
             GO TO 101 
-         endif
-         PZRIDDR = zxnew
-         zfnew  = DSDD(PZRIDDR,PDDRY,PKAPPA,PT)
-         if (zfnew == 0.0) then
+         ENDIF
+         PZRIDDR = ZXNEW
+         ZFNEW  = DSDD(PZRIDDR,PDDRY,PKAPPA,PT)
+         IF (ZFNEW == 0.0) then
             GO TO 101
-         endif
-         if (sign(zfm,zfnew) /= zfm) then
-            zxl    =zxm
-            zfl=zfm
-            zxh    =PZRIDDR
-            zfh=zfnew
-         else if (sign(zfl,zfnew) /= zfl) then
-            zxh    =PZRIDDR
-            zfh=zfnew
-         else if (sign(zfh,zfnew) /= zfh) then
-            zxl    =PZRIDDR
-            zfl=zfnew
-         else if (PX2 .lt. 0.05) then
+         ENDIF
+         IF (SIGN(ZFM,ZFNEW) /= ZFM) then
+            ZXL    =ZXM
+            ZFL=ZFM
+            ZXH    =PZRIDDR
+            ZFH=ZFNEW
+         ELSE IF (SIGN(ZFL,ZFNEW) /= ZFL) then
+            ZXH    =PZRIDDR
+            ZFH=ZFNEW
+         ELSE IF (SIGN(ZFH,ZFNEW) /= ZFH) then
+            ZXL    =PZRIDDR
+            ZFL=ZFNEW
+         ELSE IF (PX2 .LT. 0.05) then
             PX2 = PX2 + 1.0E-2
 !            PRINT*, 'PX2 ALWAYS too small, we put a greater one : PX2 =',PX2
-            zfh   = DSDD(PX2,PDDRY,PKAPPA,PT)
-            go to 100
+            ZFH   = DSDD(PX2,PDDRY,PKAPPA,PT)
+            GO TO 100
             STOP
-         end if
-         if (abs(zxh-zxl) <= PXACC) then
+         END IF
+         IF (ABS(ZXH-ZXL) <= PXACC) then
             GO TO 101 
-         endif
-      end do
+         ENDIF
+      END DO
       STOP
-   else if (zfl == 0.0) then
+   ELSE IF (ZFL == 0.0) then
       PZRIDDR=PX1
-   else if (zfh == 0.0) then
+   ELSE IF (ZFH == 0.0) then
       PZRIDDR=PX2
-   else if (PX2 .lt. 0.05) then
+   ELSE IF (PX2 .LT. 0.05) then
       PX2 = PX2 + 1.0E-2
 !      PRINT*, 'PX2 too small, we put a greater one : PX2 =',PX2
-      zfh   = DSDD(PX2,PDDRY,PKAPPA,PT)
-      go to 100
-   else
+      ZFH   = DSDD(PX2,PDDRY,PKAPPA,PT)
+      GO TO 100
+   ELSE
       PZRIDDR=0.0
-      go to 101
-   end if
+      GO TO 101
+   END IF
 !
 101 END FUNCTION ZRIDDR
 !
@@ -394,23 +394,23 @@ END FUNCTION DSDD
 !
 !*       0.1 declarations of arguments and result
 !
-    integer, intent(in) :: KM
-    integer, intent(in) :: KN
-    real, intent(in) ::    PX(KN)
-    real, intent(out) ::    PFVEC(KM)
-    integer, intent(inout) :: IFLAG
+    INTEGER, INTENT(IN) :: KM
+    INTEGER, INTENT(IN) :: KN
+    REAL, INTENT(IN) ::    PX(KN)
+    REAL, INTENT(OUT) ::    PFVEC(KM)
+    INTEGER, INTENT(INOUT) :: IFLAG
 !
 !*       0.2 declarations of local variables
 !
-    integer II
-    real    ZC
-    real    ZW
+    INTEGER II
+    REAL    ZC
+    REAL    ZW
 !    
     ! print *, "X = ", X
-    IF ( ANY(PX .LT.0.) .OR. PX(1).gt.2*PX(2)) THEN
+    IF ( ANY(PX .LT.0.) .OR. PX(1).GT.2*PX(2)) THEN
        PFVEC(:) = 999999.
     ELSE
-       ZC=gamma(PX(2))*PX(3)**(PX(1)/2)/gamma(1+PX(1)/2)/gamma(PX(2)-PX(1)/2)
+       ZC=GAMMA(PX(2))*PX(3)**(PX(1)/2)/GAMMA(1+PX(1)/2)/GAMMA(PX(2)-PX(1)/2)
        DO II=1, KM
           ! ZS in "no units", ie ZS=0.01 for a 1% suersaturation
           !       ZW= C * (ZS(I)/100)**X(1) * HYPGEO(X(2),X(1)/2,X(1)/2+1,X(3),ZS(I)/100)

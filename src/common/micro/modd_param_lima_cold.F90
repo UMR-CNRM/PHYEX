@@ -47,7 +47,7 @@ IMPLICIT NONE
 !         Lbda = XLBx * (r_x*rho_dref)**XLBEXx : Slope parameter of the
 !                                                distribution law
 !
-TYPE PARAM_LIMA_COLD_t
+TYPE PARAM_LIMA_COLD_T
 REAL      :: XLBEXI,XLBI              ! Prist. ice     distribution parameters
 REAL      :: XLBEXS,XLBS,XNS          ! Snow/agg.      distribution parameters
 !
@@ -137,9 +137,9 @@ REAL      :: XBETA1
 REAL      :: XBETA2
 REAL      :: XNU10
 REAL      :: XNU20
-END TYPE PARAM_LIMA_COLD_t
+END TYPE PARAM_LIMA_COLD_T
 !
-TYPE(PARAM_LIMA_COLD_t), TARGET, SAVE :: PARAM_LIMA_COLD
+TYPE(PARAM_LIMA_COLD_T), TARGET, SAVE :: PARAM_LIMA_COLD
 !
 REAL, POINTER :: XLBEXI => NULL(), &
                  XLBI => NULL(), &

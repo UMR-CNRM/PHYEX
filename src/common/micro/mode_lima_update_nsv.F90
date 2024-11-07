@@ -46,15 +46,15 @@ SUBROUTINE LIMA_UPDATE_NSV(LIMAP, TNSV, ODINIT, KMI, KSV, HDCLOUD, ODUPDATE)
 !*      0. DECLARATIONS
 !       ---------------
 !
-USE MODD_NSV, ONLY: NSV_t
-USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_NSV, ONLY: NSV_T
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 !
 !* 0.1. Declaration of arguments
 !       ------------------------
 !
 IMPLICIT NONE
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
-TYPE(NSV_t),      INTENT(INOUT) :: TNSV
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+TYPE(NSV_T),      INTENT(INOUT) :: TNSV
 LOGICAL,          INTENT(IN)    :: ODINIT   !< .TRUE. to fill the different NSV_LIMA_*_A arrays
 INTEGER,          INTENT(IN)    :: KMI      !< model number
 INTEGER,          INTENT(INOUT) :: KSV      !< IN: Initial value to use when filling the NSV_LIMA_*_A arrays; 

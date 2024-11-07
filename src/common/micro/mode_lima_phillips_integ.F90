@@ -33,17 +33,17 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,            ONLY: CST_t
+USE MODD_CST,            ONLY: CST_T
 USE MODE_LIMA_FUNCTIONS,  ONLY : DELTA, DELTA_VEC
 USE MODI_GAMMA_INC
-USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
-TYPE(CST_t),                    INTENT(IN)    :: CST
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+TYPE(CST_T),                    INTENT(IN)    :: CST
 INTEGER,                        INTENT(IN)    :: ISIZE
 REAL, DIMENSION(ISIZE),         INTENT(IN)    :: PZT
 REAL, DIMENSION(ISIZE),         INTENT(IN)    :: PSI

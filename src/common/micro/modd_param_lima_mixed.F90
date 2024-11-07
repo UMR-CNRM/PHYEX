@@ -21,7 +21,7 @@
 !-------------------------------------------------------------------------------
 !
 IMPLICIT NONE
-TYPE PARAM_LIMA_MIXED_t
+TYPE PARAM_LIMA_MIXED_T
 !
 !*       1.   DESCRIPTIVE PARAMETERS
 !             ----------------------
@@ -222,9 +222,9 @@ REAL,DIMENSION(:,:), ALLOCATABLE               &
                             XKER_GWETH,        & ! Normalized kernel for GWETH
                             XKER_N_SWETH,      & ! Normalized kernel for GWETH
                             XKER_N_GWETH         ! Normalized kernel for GWETH
-END TYPE PARAM_LIMA_MIXED_t
+END TYPE PARAM_LIMA_MIXED_T
 !
-TYPE(PARAM_LIMA_MIXED_t), TARGET       :: PARAM_LIMA_MIXED
+TYPE(PARAM_LIMA_MIXED_T), TARGET       :: PARAM_LIMA_MIXED
 !
 REAL, POINTER :: XAG => NULL(), &
                  XBG => NULL(), &

@@ -28,16 +28,16 @@ SUBROUTINE LIMA_ICE4_NUCLEATION(LIMAP, LIMAC, CST, KSIZE, &
 !*      0. DECLARATIONS
 !          ------------
 !
-USE MODD_CST,            ONLY: CST_t
+USE MODD_CST,            ONLY: CST_T
 USE YOMHOOK , ONLY : LHOOK, DR_HOOK, JPHOOK
-USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
-USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
-TYPE(CST_t),              INTENT(IN)    :: CST
+TYPE(CST_T),              INTENT(IN)    :: CST
 INTEGER,                  INTENT(IN)    :: KSIZE
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PTHT    ! Theta at t
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PPABST  ! absolute pressure at t
@@ -57,8 +57,8 @@ LOGICAL, DIMENSION(KSIZE) :: GNEGT  ! Test where to compute the HEN process
 REAL, DIMENSION(KSIZE)  :: ZZW,      & ! Work array
                            ZUSW,     & ! Undersaturation over water
                            ZSSI        ! Supersaturation over ice
-TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 INTEGER :: II
 !-------------------------------------------------------------------------------
 !

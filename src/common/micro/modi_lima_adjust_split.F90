@@ -15,31 +15,31 @@ INTERFACE
                              PRC_MF, PRI_MF, PCF_MF)
 !
 !USE MODD_IO,    ONLY: TFILEDATA
-USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
-USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_t
-USE MODD_CST,            ONLY: CST_t
-USE MODD_NSV, ONLY: NSV_t
-USE MODD_NEB_n,            ONLY: NEB_t
-USE MODD_TURB_n,            ONLY: TURB_t
-USE MODD_PARAM_LIMA, ONLY: PARAM_LIMA_t
-USE MODD_PARAM_LIMA_WARM, ONLY: PARAM_LIMA_WARM_t
+USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_T
+USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_T
+USE MODD_CST,            ONLY: CST_T
+USE MODD_NSV, ONLY: NSV_T
+USE MODD_NEB_N,            ONLY: NEB_T
+USE MODD_TURB_N,            ONLY: TURB_T
+USE MODD_PARAM_LIMA, ONLY: PARAM_LIMA_T
+USE MODD_PARAM_LIMA_WARM, ONLY: PARAM_LIMA_WARM_T
 IMPLICIT NONE
 !
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
-TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
-TYPE(NSV_t),              INTENT(IN)    :: TNSV
-TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
-TYPE(CST_t),              INTENT(IN)    :: CST
-TYPE(NEB_t),              INTENT(IN)    :: NEBN
-TYPE(TURB_t),              INTENT(IN)   :: TURBN
-TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
+TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
+TYPE(NSV_T),              INTENT(IN)    :: TNSV
+TYPE(DIMPHYEX_T),         INTENT(IN)    :: D
+TYPE(CST_T),              INTENT(IN)    :: CST
+TYPE(NEB_T),              INTENT(IN)    :: NEBN
+TYPE(TURB_T),              INTENT(IN)   :: TURBN
+TYPE(TBUDGETCONF_T),      INTENT(IN)    :: BUCONF
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 !
 INTEGER,                  INTENT(IN)   :: KRR        ! Number of moist variables
 INTEGER,                  INTENT(IN)   :: KMI        ! Model index 
-CHARACTER(len=80),        INTENT(IN)   :: HCONDENS
-CHARACTER(len=4),         INTENT(IN)   :: HLAMBDA3   ! formulation for lambda3 coeff
+CHARACTER(LEN=80),        INTENT(IN)   :: HCONDENS
+CHARACTER(LEN=4),         INTENT(IN)   :: HLAMBDA3   ! formulation for lambda3 coeff
 LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid
                                                      ! Condensation
 LOGICAL,                  INTENT(IN)   :: OSIGMAS    ! Switch for Sigma_s:

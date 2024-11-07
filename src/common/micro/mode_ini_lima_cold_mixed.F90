@@ -51,7 +51,7 @@ USE MODD_PARAM_LIMA_WARM
 USE MODD_PARAM_LIMA_COLD
 USE MODD_PARAM_LIMA_MIXED
 !
-use mode_msg
+USE MODE_MSG
 !
 USE MODE_LIMA_FUNCTIONS, ONLY: MOMG, GAUHER
 USE MODI_GAMMA
@@ -77,7 +77,7 @@ REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
 !
 !*       0.2   Declarations of local variables :
 !
-character(len=13) :: yval     ! String for error message
+CHARACTER(LEN=13) :: YVAL     ! String for error message
 INTEGER :: IKB                ! Coordinates of the first  physical 
                               ! points along z
 INTEGER :: I1                 ! Internal loop indexes
@@ -328,21 +328,21 @@ ELSE
    XTRANS_MP_GAMMAS = 1.
 END IF
 !
-if (NMOM_G.GE.2) then
+IF (NMOM_G.GE.2) then
    XALPHAG = 1.0  ! 
    XNUG    = 2.0  !
-else
+ELSE
    XALPHAG = 1.0  ! Exponential law
    XNUG    = 1.0  ! Exponential law
-end if
+END IF
 !
-if (NMOM_H.GE.2) then
+IF (NMOM_H.GE.2) then
    XALPHAH = 1.0  ! Gamma law
    XNUH    = 5.0  ! Gamma law with little dispersion
-else
+ELSE
    XALPHAH = 1.0  ! Gamma law
    XNUH    = 8.0  ! Gamma law with little dispersion
-end if
+END IF
 !
 !*       2.2    Constants for shape parameter
 !
@@ -536,7 +536,7 @@ ELSE IF (NPHILLIPS == 8) THEN
    XAREA1(3)  = 2.7E-7    !BC
    XAREA1(4)  = 9.1E-7    !BIO
 ELSE
-  call Print_msg( NVERB_FATAL, 'GEN', 'INI_LIMA_COLD_MIXED', 'NPHILLIPS should be equal to 8 or 13' )
+  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'INI_LIMA_COLD_MIXED', 'NPHILLIPS SHOULD BE EQUAL TO 8 OR 13' )
 END IF
 !
 !*               4.1.2  Constants for the computation of H_X (the fraction-redu-
@@ -695,9 +695,9 @@ IF (XALPHAC == 3.0) THEN
   XC_HONC   = XPI/6.0
   XR_HONC   = XPI/6.0
 ELSE
-  write ( yval, '( E13.6 )' ) xalphac
-  call Print_msg( NVERB_FATAL, 'GEN', 'INI_LIMA_COLD_MIXED', 'homogeneous nucleation: XALPHAC='//trim(yval)// &
-                  '/= 3. No algorithm developed for this case' )
+  WRITE ( YVAL, '( E13.6 )' ) XALPHAC
+  CALL PRINT_MSG( NVERB_FATAL, 'GEN', 'INI_LIMA_COLD_MIXED', 'HOMOGENEOUS NUCLEATION: XALPHAC='//TRIM(YVAL)// &
+                  '/= 3. NO ALGORITHM DEVELOPED FOR THIS CASE' )
 END IF
 !
 !!$GFLAG = .TRUE.

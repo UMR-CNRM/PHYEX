@@ -34,8 +34,8 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_t
-USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 !
 IMPLICIT NONE
 !
@@ -53,8 +53,8 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CC_SELF
 !
 !*       0.2   Declarations of local variables :
 !
-TYPE(PARAM_LIMA_WARM_t),INTENT(IN)::LIMAW
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 REAL, DIMENSION(SIZE(PCCT)) :: ZW ! work arrays
 !
 !-------------------------------------------------------------------------------

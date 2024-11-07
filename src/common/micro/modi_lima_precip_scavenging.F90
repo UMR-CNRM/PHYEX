@@ -9,16 +9,16 @@ MODULE MODI_LIMA_PRECIP_SCAVENGING
                                         HCLOUD, HDCONF, KLUOUT, KTCOUNT, PTSTEP,    &
                                         PRRT, PRHODREF, PRHODJ, PZZ,        &
                                         PPABST, PTHT, PSVT, PRSVS, PINPAP )
-       USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
-       use modd_budget,          only: TBUDGETDATA,TBUDGETCONF_t
-       USE MODD_CST,             ONLY: CST_t
-       USE MODD_NSV,             ONLY: NSV_t
+       USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
+       USE MODD_BUDGET,          only: TBUDGETDATA,TBUDGETCONF_T
+       USE MODD_CST,             ONLY: CST_T
+       USE MODD_NSV,             ONLY: NSV_T
        IMPLICIT NONE
 !
-       TYPE(NSV_t),              INTENT(IN)    :: TNSV
-       TYPE(DIMPHYEX_t),         INTENT(IN)    :: D
-       TYPE(CST_t),              INTENT(IN)    :: CST
-       TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+       TYPE(NSV_T),              INTENT(IN)    :: TNSV
+       TYPE(DIMPHYEX_T),         INTENT(IN)    :: D
+       TYPE(CST_T),              INTENT(IN)    :: CST
+       TYPE(TBUDGETCONF_T),      INTENT(IN)    :: BUCONF
        TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
        INTEGER,                  INTENT(IN)    :: KBUDGETS
 !

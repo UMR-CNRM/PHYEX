@@ -42,8 +42,8 @@ CONTAINS
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_t
-USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_t
+USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
+USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 
 !
 IMPLICIT NONE
@@ -72,8 +72,8 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RS_DEPS
 !*       0.2   Declarations of local variables :
 !
 LOGICAL, DIMENSION(SIZE(PRHODREF)) :: GMICRO ! Computations only where necessary
-TYPE(PARAM_LIMA_COLD_t),INTENT(IN)::LIMAC
-TYPE(PARAM_LIMA_t),INTENT(IN)::LIMAP
+TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 REAL,    DIMENSION(SIZE(PRHODREF)) :: ZZW, ZZW2, ZZX ! Work array
 !
 !-------------------------------------------------------------------------------

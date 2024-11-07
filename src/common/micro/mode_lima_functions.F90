@@ -85,7 +85,7 @@ CONTAINS
     REAL, DIMENSION(SIZE(PX,1))             :: PDELTA_VEC
     REAL, DIMENSION(SIZE(PX,1))             :: ZA
     ZA(:) = 0.0
-    wHERE     (PX(:)<=PX1(:))
+    WHERE     (PX(:)<=PX1(:))
        PDELTA_VEC(:) = PA
     ELSEWHERE (PX(:)>=PX2(:))
        PDELTA_VEC(:) = PB
@@ -101,46 +101,46 @@ CONTAINS
 !
 !-------------------------------------------------------------------------------
 !
-SUBROUTINE gaulag(x,w,n,alf)
-  use modd_precision, only: MNHREAL64
-  INTEGER, intent(in) :: n
+SUBROUTINE GAULAG(X,W,N,ALF)
+  USE MODD_PRECISION, only: MNHREAL64
+  INTEGER, INTENT(IN) :: N
   INTEGER MAXIT
-  REAL, intent(IN)  :: alf
-  REAL, intent(out) :: w(n),x(n)
-  REAL(kind=MNHREAL64) :: EPS
+  REAL, INTENT(IN)  :: ALF
+  REAL, INTENT(OUT) :: W(N),X(N)
+  REAL(KIND=MNHREAL64) :: EPS
   PARAMETER (EPS=3.D-14,MAXIT=10)
-  INTEGER i,its,j
-  REAL ai
-  REAL(kind=MNHREAL64) :: p1,p2,p3,pp,z,z1
+  INTEGER I,ITS,J
+  REAL AI
+  REAL(KIND=MNHREAL64) :: P1,P2,P3,PP,Z,Z1
 !
   REAL SUMW
 !
-  do 13 i=1,n
-     if(i.eq.1)then
-        z=(1.+alf)*(3.+.92*alf)/(1.+2.4*n+1.8*alf)
-     else if(i.eq.2)then
-        z=z+(15.+6.25*alf)/(1.+.9*alf+2.5*n)
-     else
-        ai=i-2
-        z=z+((1.+2.55*ai)/(1.9*ai)+1.26*ai*alf/(1.+3.5*ai))* &
-             (z-x(i-2))/(1.+.3*alf)
-     endif
-     do 12 its=1,MAXIT
-        p1=1.d0
-        p2=0.d0
-        do 11 j=1,n
-           p3=p2
-           p2=p1
-           p1=((2*j-1+alf-z)*p2-(j-1+alf)*p3)/j
-11      continue
-        pp=(n*p1-(n+alf)*p2)/z
-        z1=z
-        z=z1-p1/pp
-        if(abs(z-z1).le.EPS)goto 1
-12   continue
-1    x(i)=z
-     w(i)=-exp(gammln(alf+n)-gammln(real(n)))/(pp*n*p2)
-13 continue
+  DO 13 I=1,N
+     IF(I.EQ.1)then
+        Z=(1.+ALF)*(3.+.92*ALF)/(1.+2.4*N+1.8*ALF)
+     ELSE IF(I.EQ.2)then
+        Z=Z+(15.+6.25*ALF)/(1.+.9*ALF+2.5*N)
+     ELSE
+        AI=I-2
+        Z=Z+((1.+2.55*AI)/(1.9*AI)+1.26*AI*ALF/(1.+3.5*AI))* &
+             (Z-X(I-2))/(1.+.3*ALF)
+     ENDIF
+     DO 12 ITS=1,MAXIT
+        P1=1.D0
+        P2=0.D0
+        DO 11 J=1,N
+           P3=P2
+           P2=P1
+           P1=((2*J-1+ALF-Z)*P2-(J-1+ALF)*P3)/J
+11      CONTINUE
+        PP=(N*P1-(N+ALF)*P2)/Z
+        Z1=Z
+        Z=Z1-P1/PP
+        IF(ABS(Z-Z1).LE.EPS)GOTO 1
+12   CONTINUE
+1    X(I)=Z
+     W(I)=-EXP(GAMMLN(ALF+N)-GAMMLN(REAL(N)))/(PP*N*P2)
+13 CONTINUE
 ! NORMALISATION
   SUMW = 0.0
   DO 14 I=1,N
@@ -150,55 +150,55 @@ SUBROUTINE gaulag(x,w,n,alf)
      W(I) = W(I)/SUMW
 15 CONTINUE
 !
-  return
-END SUBROUTINE gaulag
+  RETURN
+END SUBROUTINE GAULAG
 !
 !------------------------------------------------------------------------------
 !
-SUBROUTINE gauher(x,w,n)
-  use modd_precision, only: MNHREAL64
-  INTEGER, intent(in) :: n
+SUBROUTINE GAUHER(X,W,N)
+  USE MODD_PRECISION, only: MNHREAL64
+  INTEGER, INTENT(IN) :: N
   INTEGER MAXIT
-  REAL, intent(out) ::  w(n),x(n)
-  REAL(kind=MNHREAL64) :: EPS,PIM4
+  REAL, INTENT(OUT) ::  W(N),X(N)
+  REAL(KIND=MNHREAL64) :: EPS,PIM4
   PARAMETER (EPS=3.D-14,PIM4=.7511255444649425D0,MAXIT=10)
-  INTEGER i,its,j,m
-  REAL(kind=MNHREAL64) :: p1,p2,p3,pp,z,z1
+  INTEGER I,ITS,J,M
+  REAL(KIND=MNHREAL64) :: P1,P2,P3,PP,Z,Z1
 !
   REAL SUMW
 !
-  m=(n+1)/2
-  do 13 i=1,m
-     if(i.eq.1)then
-        z=sqrt(real(2*n+1))-1.85575*(2*n+1)**(-.16667)
-     else if(i.eq.2)then
-        z=z-1.14*n**.426/z
-     else if (i.eq.3)then
-        z=1.86*z-.86*x(1)
-     else if (i.eq.4)then
-        z=1.91*z-.91*x(2)
-     else
-        z=2.*z-x(i-2)
-     endif
-     do 12 its=1,MAXIT
-        p1=PIM4
-        p2=0.d0
-        do 11 j=1,n
-           p3=p2
-           p2=p1
-           p1=z*sqrt(2.d0/j)*p2-sqrt(dble(j-1)/dble(j))*p3
-11      continue
-        pp=sqrt(2.d0*n)*p2
-        z1=z
-        z=z1-p1/pp
-        if(abs(z-z1).le.EPS)goto 1
-12   continue
-1    x(i)=z
-     x(n+1-i)=-z
-     pp=pp/PIM4 ! NORMALIZATION
-     w(i)=2.0/(pp*pp)
-     w(n+1-i)=w(i)
-13 continue
+  M=(N+1)/2
+  DO 13 I=1,M
+     IF(I.EQ.1)then
+        Z=SQRT(REAL(2*N+1))-1.85575*(2*N+1)**(-.16667)
+     ELSE IF(I.EQ.2)then
+        Z=Z-1.14*N**.426/Z
+     ELSE IF (I.EQ.3)then
+        Z=1.86*Z-.86*X(1)
+     ELSE IF (I.EQ.4)then
+        Z=1.91*Z-.91*X(2)
+     ELSE
+        Z=2.*Z-X(I-2)
+     ENDIF
+     DO 12 ITS=1,MAXIT
+        P1=PIM4
+        P2=0.D0
+        DO 11 J=1,N
+           P3=P2
+           P2=P1
+           P1=Z*SQRT(2.D0/J)*P2-SQRT(DBLE(J-1)/DBLE(J))*P3
+11      CONTINUE
+        PP=SQRT(2.D0*N)*P2
+        Z1=Z
+        Z=Z1-P1/PP
+        IF(ABS(Z-Z1).LE.EPS)GOTO 1
+12   CONTINUE
+1    X(I)=Z
+     X(N+1-I)=-Z
+     PP=PP/PIM4 ! NORMALIZATION
+     W(I)=2.0/(PP*PP)
+     W(N+1-I)=W(I)
+13 CONTINUE
 ! NORMALISATION
   SUMW = 0.0
   DO 14 I=1,N
@@ -208,8 +208,8 @@ SUBROUTINE gauher(x,w,n)
      W(I) = W(I)/SUMW
 15 CONTINUE
 !
-  return
-END SUBROUTINE gauher
+  RETURN
+END SUBROUTINE GAUHER
 !
 !------------------------------------------------------------------------------
 !
@@ -225,22 +225,22 @@ END FUNCTION ARTH
 !
 !------------------------------------------------------------------------------
 !
-FUNCTION gammln(xx)
+FUNCTION GAMMLN(XX)
   IMPLICIT NONE
-  REAL, INTENT(IN) :: xx
-  REAL :: gammln
-  REAL :: tmp,x
-  REAL :: stp = 2.5066282746310005
-  REAL, DIMENSION(6) :: coef = (/76.18009172947146,& 
+  REAL, INTENT(IN) :: XX
+  REAL :: GAMMLN
+  REAL :: TMP,X
+  REAL :: STP = 2.5066282746310005
+  REAL, DIMENSION(6) :: COEF = (/76.18009172947146,& 
        -86.50532032941677,24.01409824083091,& 
-       -1.231739572450155,0.1208650973866179e-2,&
-       -0.5395239384953e-5/)
-  x=xx
-  tmp=x+5.5
-  tmp=(x+0.5)*log(tmp)-tmp
-  gammln=tmp+log(stp*(1.000000000190015+&
-       sum(coef(:)/arth(x+1.,1.,size(coef))))/x)
-END FUNCTION gammln
+       -1.231739572450155,0.1208650973866179E-2,&
+       -0.5395239384953E-5/)
+  X=XX
+  TMP=X+5.5
+  TMP=(X+0.5)*LOG(TMP)-TMP
+  GAMMLN=TMP+LOG(STP*(1.000000000190015+&
+       SUM(COEF(:)/ARTH(X+1.,1.,SIZE(COEF))))/X)
+END FUNCTION GAMMLN
 !
 !------------------------------------------------------------------------------
 !
