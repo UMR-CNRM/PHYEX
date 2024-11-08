@@ -6,7 +6,7 @@ IMPLICIT NONE
 INTERFACE
 !
    SUBROUTINE LIMA_ADJUST_SPLIT(LIMAP, LIMAW, TNSV, D, CST, NEBN, TURBN, BUCONF, TBUDGETS, KBUDGETS, &
-                             KRR, KMI, HCONDENS, HLAMBDA3,                      &
+                             KRR, HCONDENS, HLAMBDA3,                           &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS, OMFCONV, PMFCONV,&
                              PPABST, PPABSTT, PZZ, ODTHRAD, PDTHRAD, PW_NU,     &
@@ -37,7 +37,6 @@ TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER, INTENT(IN) :: KBUDGETS
 !
 INTEGER,                  INTENT(IN)   :: KRR        ! Number of moist variables
-INTEGER,                  INTENT(IN)   :: KMI        ! Model index 
 CHARACTER(LEN=80),        INTENT(IN)   :: HCONDENS
 CHARACTER(LEN=4),         INTENT(IN)   :: HLAMBDA3   ! formulation for lambda3 coeff
 LOGICAL,                  INTENT(IN)   :: OSUBG_COND ! Switch for Subgrid

@@ -8,7 +8,7 @@ MODULE MODE_LIMA_SEDIMENTATION
 CONTAINS
 !     ######################################################################
   SUBROUTINE LIMA_SEDIMENTATION (LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
-                                 HPHASE, KMOMENTS, KID, KSPLITG, PTSTEP, OELEC, &
+                                 HPHASE, KMOMENTS, KID, KSPLITG, PTSTEP, OELEC, ELECP, ELECD, &
                                  PDZZ, PRHODREF, PTHVREFZIKB, &
                                  PPABST, PT, PRT_SUM, PCPT, PRS, PCS, PINPR, PFPR, &
                                  PEFIELDW, PQS)
@@ -52,8 +52,8 @@ CONTAINS
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_T
 USE MODD_CST,              ONLY: CST_T
 USE MODD_RAIN_ICE_DESCR_N, ONLY: RAIN_ICE_DESCR_T
-USE MODD_ELEC_DESCR,       ONLY: LSEDIM_BEARD
-USE MODD_ELEC_PARAM,       ONLY: XFQSED, XDQ
+USE MODD_ELEC_DESCR,       ONLY: ELEC_DESCR_t
+USE MODD_ELEC_PARAM,       ONLY: ELEC_PARAM_t
 
 USE MODE_TOOLS,            only: COUNTJV
 
@@ -77,6 +77,8 @@ INTEGER,                       INTENT(IN)    :: KID       ! Hydrometeor ID
 INTEGER,                       INTENT(IN)    :: KSPLITG   !  
 REAL,                          INTENT(IN)    :: PTSTEP    ! Time step  
 LOGICAL,                       INTENT(IN)    :: OELEC     ! if true, cloud electrification is activated
+TYPE(ELEC_PARAM_t),            INTENT(IN)    :: ELECP   ! electrical parameters
+TYPE(ELEC_DESCR_t),            INTENT(IN)    :: ELECD   ! electrical descriptive csts
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PDZZ      ! Height (z)
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PRHODREF  ! Reference density
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)    :: PPABST    ! abs. pressure at time t
@@ -242,7 +244,7 @@ DO IN = 1 ,  LIMAP%NSPLITSED(KID)
 !
 ! If the electrical scheme is activated, the electric field can impact the sedimentation
       ZBEARDCOEFF(:,:) = 1.0
-      IF (OELEC .AND. LSEDIM_BEARD) THEN
+      IF (OELEC .AND. ELECD%LSEDIM_BEARD) THEN
         ZLBDA3(:,:) = UNPACK( ZLBDA(:),MASK=GSEDIM(:,:),FIELD=0.0 )
         CALL ELEC_BEARD_EFFECT(D, CST, 'LIMA', KID, GSEDIM, PT, PRHODREF, PTHVREFZIKB, &
                                PRS, PQS, PEFIELDW, ZLBDA3, ZBEARDCOEFF, &
@@ -287,7 +289,7 @@ DO IN = 1 ,  LIMAP%NSPLITSED(KID)
           ZCS(:) = ZCX * ZLBDA(:)**ZXX
         END IF
         !
-        ZZQ(:) = ZRHODREF(:)**(1.-LIMAP%XCEXVT) * ZES(:) * ZCS(:) * XFQSED(KID) * ZLBDA(:)**(-XDQ(KID))
+        ZZQ(:) = ZRHODREF(:)**(1.-LIMAP%XCEXVT) * ZES(:) * ZCS(:) * ELECP%XFQSED(KID) * ZLBDA(:)**(-ELECP%XDQ(KID))
         !
         ! correction for cloud droplet terminal fall speed
         IF (KID == 2)  ZZQ(:) = ZZQ(:) * ZCC(:)
