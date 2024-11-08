@@ -39,7 +39,7 @@ specialName="ref"
 
 #About the tests:
 # - ALLTests is a list of tests to be done when '-t ALL' is used. This list is filled here
-#   in case there is no ial_version.json file containig a 'testing' section. If this 'testing'
+#   in case there is no testprogs_version.json file containig a 'testing' section. If this 'testing'
 #   section exists, this list is overridden.
 # - allowedTests is the list of allowed tests which can depend on platform, if we ask to perform an action
 #   with a test not in the allowedTests list, the action is ignored
@@ -338,11 +338,18 @@ if [ ! "${content_testprogs_version}" == "" ]; then
   fi
 fi
 
+#Effective tests
+if [ -z "${tests-}" ]; then
+  tests=$defaultTest
+elif echo "$tests" | grep -w 'ALL' > /dev/null; then
+  tests=$(echo "$tests" | sed "s/\bALL\b/$ALLTests/g")
+fi
+
 #Name and directory for the reference version
 if [ ! -z "${reference-}" ]; then
   declare -A refnameByTest
   #Reference to use for each test
-  for t in $(echo $ALLTests | sed 's/,/ /g'); do
+  for t in $(echo $tests | sed 's/,/ /g'); do
     #Name of the reference
     if [ "$reference" == "REF" ]; then
       if [[ ! -z "${refByTest[$t]+unset}" ]]; then #the -v test is valid only with bash > 4.3
@@ -368,12 +375,6 @@ if [ ! -z "${reference-}" ]; then
     fi
     refnameByTest[$t]=$refname
   done
-fi
-
-if [ -z "${tests-}" ]; then
-  tests=$defaultTest
-elif echo "$tests" | grep -w 'ALL' > /dev/null; then
-  tests=$(echo "$tests" | sed "s/\bALL\b/$ALLTests/g")
 fi
 
 #######################

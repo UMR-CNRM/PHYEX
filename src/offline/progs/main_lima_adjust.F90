@@ -113,7 +113,10 @@ IF (LLVERBOSE) PRINT *, " KLEV = ", KLEV, " KRR = ", KRR
 
 PRINT *, " NPROMA = ", NPROMA, " KLEV = ", KLEV, " NGPBLKS = ", NGPBLKS
 
+#ifndef _OPENACC
+! Code is not yet ready for GPU
 CALL INIT_PHYEX(KRR, PHYEX)
+#endif
 
 D0%NIT  = NPROMA
 D0%NIB  = 1
@@ -210,6 +213,12 @@ DO ITIME = 1, NTIME
     INUMPIN = 0
 #endif
 
+#ifdef _OPENACC
+    ! Code is not yet ready for GPU
+    PSRCS(JLON, :, IBL)=0.
+    PCLDFR(JLON, :, IBL)=0.
+    PICEFR(JLON, :, IBL)=0.
+#else
     CALL LIMA_ADJUST_SPLIT(D, PHYEX%CST, PHYEX%MISC%TBUCONF, PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET, &
                            KRR, 1, PHYEX%NEBN%CCONDENS, PHYEX%NEBN%CLAMBDA3, &
                            PHYEX%NEBN%LSUBG_COND, PHYEX%NEBN%LSIGMAS, PHYEX%MISC%PTSTEP, PHYEX%NEBN%VSIGQSAT, &
@@ -223,6 +232,7 @@ DO ITIME = 1, NTIME
     & , YDSTACK=YLSTACK &
 #endif
     & )
+#endif
 
 #ifdef USE_COLCALL
     ENDDO
