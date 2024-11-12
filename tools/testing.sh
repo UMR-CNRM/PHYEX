@@ -314,6 +314,12 @@ if [ ${force} -eq 1 -o $(get_statuses "${SHA}" | grep -w "${context}" | wc -l) -
       comparison='-C'
       jsonfile="src/${model}/${model}_version.json"
       docmp=0
+    elif [ "${model}" == 'testprogs' ]; then
+      compilation='-p -c'
+      execution="-r $perfopt"
+      comparison='-C --computeRefIfNeeded'
+      jsonfile="src/offline/${model}_version.json"
+      docmp=1
     else
       compilation='-p -c'
       execution="-r $perfopt"

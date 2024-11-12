@@ -12,11 +12,15 @@ testprogs_data/rain_ice/**
 testprogs_data/rain_ice_old/**
 testprogs_data/turb/**
 testprogs_data/shallow/**
+testprogs_data/lima_adjust/**
+testprogs_data/lima/**
 !testprogs_data/ice_adjust/.gitkeep
 !testprogs_data/rain_ice/.gitkeep
 !testprogs_data/rain_ice_old/.gitkeep
 !testprogs_data/turb/.gitkeep
 !testprogs_data/shallow/.gitkeep
+!testprogs_data/lima_adjust/.gitkeep
+!testprogs_data/lima/.gitkeep
 
 # Ignore vim swapp files
 .*.swp

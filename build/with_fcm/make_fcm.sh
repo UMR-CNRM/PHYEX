@@ -291,7 +291,7 @@ LD_FLAGS="\$LD_FLAGS \$OMP_LD"
 
 LIBS="${LIBS:-rt dl}"
 
-ENTRYPOINTS="rain_ice.o shallow_mf.o turb.o ice_adjust.o pyphyex.o"
+ENTRYPOINTS="rain_ice.o shallow_mf.o turb.o ice_adjust.o lima.o lima_adjust_split.o pyphyex.o"
 
 FCM_ARGS="$FCM_ARGS"
 
