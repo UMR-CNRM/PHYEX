@@ -412,11 +412,9 @@ ELSE !NEBN%LSUBG_COND case
           PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)+ZHR
         ENDIF
       ENDIF
-    ENDDO
     !
     IF(PRESENT(POUT_RV) .OR. PRESENT(POUT_RC) .OR. &
       &PRESENT(POUT_RI) .OR. PRESENT(POUT_TH)) THEN
-      DO JIJ=IIJB,IIJE
         ZW1=PRC_MF(JIJ,JK)
         ZW2=PRI_MF(JIJ,JK)
         IF(ZW1+ZW2>ZRV(JIJ,JK)) THEN
@@ -428,8 +426,8 @@ ELSE !NEBN%LSUBG_COND case
         ZRV(JIJ,JK)=ZRV(JIJ,JK)-(ZW1+ZW2)
         ZT(JIJ,JK) = ZT(JIJ,JK) + &
                     (ZW1 * ZLV(JIJ,JK) + ZW2 * ZLS(JIJ,JK)) / ZCPH(JIJ,JK)
-      ENDDO
-    ENDIF
+      ENDIF
+    END DO
   ENDDO
 !$acc end kernels
 ENDIF !NEBN%LSUBG_COND
