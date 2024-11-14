@@ -237,7 +237,6 @@ DO ITIME = 1, NTIME
                PTSTEP=2*PHYEX%MISC%PTSTEP, OELEC=PHYEX%MISC%OELEC,                 &
                PRHODREF=PRHODREF(:, :, IBL), PEXNREF=PEXNREF(:, :, IBL), PDZZ=PDZZ(:, :, IBL), PTHVREFZIKB=ZTHVREFZIKB,       &
                PRHODJ=PRHODJ(:, :, IBL), PPABST=PPABSM(:, :, IBL),                                 &
-               NCCN=NMOD_CCN, NIFN=NMOD_IFN, NIMM=NMOD_IMM,                   &
                ODTHRAD=.TRUE., PDTHRAD=PDTHRAD(:, :, IBL), PTHT=PTHT(:, :, IBL), PRT=PRT(:, :, :, IBL), PSVT=PSVT(:, :, :, IBL), &
                PW_NU=PW_NU(:, :, IBL),                  &
                PTHS=PTHS(:, :, IBL), PRS=PRS(:, :, :, IBL), PSVS=PSVS(:, :, :, IBL),                                &
