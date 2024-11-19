@@ -155,7 +155,8 @@ JLOC(:,:)=NINT(SIGN(1.,-PSINSLOPE(:,:)))
 !
 ! interpolation in x direction
 !
-DO CONCURRENT (JJ=1:IJU,JI=IIB:IIE)
+DO JJ=1,IJU
+  DO JI=IIB,IIE
     ZCOEFF(JI,JJ) =                                                  &
       (0.5*PDXX(JI,JJ,IKB) + 0.5*PDZZ(JI,JJ,IKB)*PDIRCOSXW(JI,JJ) )  & 
       * 2. / (PDXX(JI,JJ,IKB)+PDXX(JI+1,JJ,IKB))
@@ -170,11 +171,13 @@ DO CONCURRENT (JJ=1:IJU,JI=IIB:IIE)
     ZWINT(JI,JJ) = ZCOEFM(JI,JJ)  * (PW(JI,JJ,IKB+1)+ZWGROUND(JI,JJ)) * 0.5    &
               + (1.-ZCOEFM(JI,JJ))                                             &
                *(PW(JI+ILOC(JI,JJ),JJ,IKB+1)+ZWGROUND(JI+ILOC(JI,JJ),JJ)) * 0.5
+  END DO
 END DO
 !
 ! interpolation in y direction
 !
-DO CONCURRENT (JJ=IJB:IJE,JI=IIB:IIE)
+DO JJ=IJB,IJE
+  DO JI=IIB,IIE
     ZCOEFF(JI,JJ) =                                                     &
       (0.5*PDYY(JI,JJ,IKB) + 0.5*PDZZ(JI,JJ,IKB)*PDIRCOSYW(JI,JJ) )     & 
       * 2. / (PDYY(JI,JJ,IKB)+PDYY(JI+1,JJ,IKB))
@@ -187,13 +190,15 @@ DO CONCURRENT (JJ=IJB:IJE,JI=IIB:IIE)
                    (1.-ZCOEFM(JI,JJ)) * ZUINT(JI,JJ+JLOC(JI,JJ))
     ZWFIN(JI,JJ) = ZCOEFM(JI,JJ)      * ZWINT(JI,JJ)                +    &
                    (1.-ZCOEFM(JI,JJ)) * ZWINT(JI,JJ+JLOC(JI,JJ))
+  END DO
 END DO
 !
 !*      3.    ROTATE THE WIND
 !             ---------------
 !
 !
-DO CONCURRENT (JJ=IJB:IJE,JI=IIB:IIE)
+DO JJ=IJB,IJE
+  DO JI=IIB,IIE
     PUSLOPE(JI,JJ) = PCOSSLOPE(JI,JJ) * PDIRCOSZW(JI,JJ) * ZUFIN(JI,JJ) +   &
                      PSINSLOPE(JI,JJ) * PDIRCOSZW(JI,JJ) * ZVFIN(JI,JJ) +   &
                             SQRT(1.-PDIRCOSZW(JI,JJ)**2) * ZWFIN(JI,JJ)
@@ -201,6 +206,7 @@ DO CONCURRENT (JJ=IJB:IJE,JI=IIB:IIE)
     PVSLOPE(JI,JJ) =-PSINSLOPE(JI,JJ)                    * ZUFIN(JI,JJ) +   &
                      PCOSSLOPE(JI,JJ)                    * ZVFIN(JI,JJ)
     !
+  END DO
 END DO
 !
 !$acc end kernels

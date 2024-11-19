@@ -2032,17 +2032,20 @@ CALL EMOIST(D,CST,KRR,KRRI,PTHLT,PRT,ZLOCPEXNM,ZAMOIST,PSRCT,GOCEAN,ZEMOIST)
 IF (KRR>0) THEN
 !$acc kernels
 !$acc loop independent collapse(2)
-  DO CONCURRENT (JK=IKTB+1:IKTE-1,JIJ=IIJB:IIJE)
+  DO JK=IKTB+1,IKTE-1
+    DO JIJ=IIJB,IIJE
       ZDTHLDZ(JIJ,JK)= 0.5*((PTHLT(JIJ,JK+IKL)-PTHLT(JIJ,JK    ))/PDZZ(JIJ,JK+IKL)+ &
                               (PTHLT(JIJ,JK    )-PTHLT(JIJ,JK-IKL))/PDZZ(JIJ,JK    ))
       ZDRTDZ(JIJ,JK) = 0.5*((PRT(JIJ,JK+IKL,1)-PRT(JIJ,JK    ,1))/PDZZ(JIJ,JK+IKL)+ &
                               (PRT(JIJ,JK    ,1)-PRT(JIJ,JK-IKL,1))/PDZZ(JIJ,JK    ))
+    END DO
   END DO
 !$acc end kernels
 
 !$acc kernels
 !$acc loop independent collapse(2) private(ZVAR)
-  DO CONCURRENT (JK=IKTB+1:IKTE-1,JIJ=IIJB:IIJE)
+  DO JK=IKTB+1,IKTE-1
+    DO JIJ=IIJB,IIJE
       IF (GOCEAN) THEN
         ZVAR=CST%XG*(CST%XALPHAOC*ZDTHLDZ(JIJ,JK)-CST%XBETAOC*ZDRTDZ(JIJ,JK))
       ELSE
@@ -2054,13 +2057,15 @@ IF (KRR>0) THEN
         PLM(JIJ,JK)=MAX(CST%XMNH_EPSILON,MIN(PLM(JIJ,JK), &
                       0.76* SQRT(PTKET(JIJ,JK)/ZVAR)))
       END IF
+    END DO
   END DO
 !$acc end kernels
 
 ELSE! For dry atmos or unsalted ocean runs
 !$acc kernels
 !$acc loop independent collapse(2) private(ZVAR)
-  DO CONCURRENT (JK=IKTB+1:IKTE-1,JIJ=IIJB:IIJE)
+  DO JK=IKTB+1,IKTE-1
+    DO JIJ=IIJB,IIJE
       ZDTHLDZ(JIJ,JK)= 0.5*((PTHLT(JIJ,JK+IKL)-PTHLT(JIJ,JK    ))/PDZZ(JIJ,JK+IKL)+ &
                               (PTHLT(JIJ,JK    )-PTHLT(JIJ,JK-IKL))/PDZZ(JIJ,JK    ))
       IF (GOCEAN) THEN
@@ -2073,6 +2078,7 @@ ELSE! For dry atmos or unsalted ocean runs
         PLM(JIJ,JK)=MAX(CST%XMNH_EPSILON,MIN(PLM(JIJ,JK), &
                       0.76* SQRT(PTKET(JIJ,JK)/ZVAR)))
       END IF
+    END DO
   END DO
 !$acc end kernels
 END IF

@@ -961,15 +961,21 @@ IKU = SIZE(PA,3)
 !
 !$acc kernels present(PA,PMYF)
 !$acc loop collapse(3) independent 
-DO CONCURRENT (JK=1:IKU,JJ=1:IJU-1,JI=1:IIU)
+DO JK = 1, IKU
+  DO JJ = 1, IJU-1
+    DO JI = 1, IIU
       PMYF(JI,JJ,JK) = 0.5*( PA(JI,JJ,JK)+PA(JI,JJ+1,JK) )
-ENDDO
+    END DO
+  END DO
+END DO
 !
 !$acc loop seq
 DO JJ=1,JPHEXT
   !$acc loop collapse(2) independent 
-  DO CONCURRENT (JK=1:IKU,JI=1:IIU)
-    PMYF(JI,IJU-JPHEXT+JJ,JK) = PMYF(JI,JPHEXT+JJ,JK) ! for reprod JPHEXT <>
+  DO JK = 1, IKU
+    DO JI = 1, IIU
+      PMYF(JI,IJU-JPHEXT+JJ,JK) = PMYF(JI,JPHEXT+JJ,JK) ! for reprod JPHEXT <>
+    END DO
   END DO
 END DO
 !$acc end kernels
@@ -1062,14 +1068,16 @@ IJU = SIZE(PA,2)
 !
 !$acc kernels present(PA,PMYF)
 !$acc loop collapse(2) independent 
-DO CONCURRENT (JJ=1:IJU-1,JI=1:IIU)
-      PMYF(JI,JJ) = 0.5*( PA(JI,JJ)+PA(JI,JJ+1) )
-ENDDO
+DO JJ = 1, IJU-1
+  DO JI = 1, IIU
+    PMYF(JI,JJ) = 0.5*( PA(JI,JJ)+PA(JI,JJ+1) )
+  END DO
+END DO
 !
 !$acc loop seq
 DO JJ=1,JPHEXT
   !$acc loop independent 
-  DO CONCURRENT (JI=1:IIU)
+  DO JI = 1, IIU
     PMYF(JI,IJU-JPHEXT+JJ) = PMYF(JI,JPHEXT+JJ) ! for reprod JPHEXT <>
   END DO
 END DO
@@ -1673,8 +1681,10 @@ END DO
 !$acc loop seq
 DO JJ=1,JPHEXT
   !$acc loop collapse(2) independent 
-  DO CONCURRENT (JK=1:IKU,JI=1:IIU)
-   PDYM(JI,JJ,JK) = PDYM(JI,IJU-2*JPHEXT+JJ,JK) ! for reprod JPHEXT <> 1
+  DO JK=1,IKU
+    DO JI=1,IIU
+     PDYM(JI,JJ,JK) = PDYM(JI,IJU-2*JPHEXT+JJ,JK) ! for reprod JPHEXT <> 1
+    END DO
   END DO
 END DO
 !$acc end kernels
@@ -1777,8 +1787,8 @@ IJU=SIZE(PA,2)
 !$acc loop seq
 DO JJ=1,JPHEXT
   !$acc loop independent 
-  DO CONCURRENT (JI=1:IIU)
-   PDYM(JI,JJ) = PDYM(JI,IJU-2*JPHEXT+JJ) ! for reprod JPHEXT <> 1
+  DO JI=1,IIU
+    PDYM(JI,JJ) = PDYM(JI,IJU-2*JPHEXT+JJ) ! for reprod JPHEXT <> 1
   END DO
 END DO
 !$acc end kernels
@@ -1879,8 +1889,10 @@ IKU = SIZE(PA,3)
 !$acc loop seq
 DO JJ=1,JPHEXT
   !$acc loop collapse(2) independent 
-  DO CONCURRENT (JK=1:IKU,JI=1:IIU)
-    PDYF(JI,IJU-JPHEXT+JJ,JK) = PDYF(JI,JPHEXT+JJ,JK) ! for reprod JPHEXT <>
+  DO JK=1,IKU
+    DO JI=1,IIU
+      PDYF(JI,IJU-JPHEXT+JJ,JK) = PDYF(JI,JPHEXT+JJ,JK) ! for reprod JPHEXT <>
+    END DO
   END DO
 END DO
 !$acc end kernels
