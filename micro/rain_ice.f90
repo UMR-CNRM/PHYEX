@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1995-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1995-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -65,33 +65,6 @@
 !!                               function over liquid water
 !!          XALPI,XBETAI,XGAMI ! Constants for saturation vapor pressure
 !!                               function over solid ice
-!!      Module MODD_BUDGET:
-!!         NBUMOD       : model in which budget is calculated
-!!         CBUTYPE      : type of desired budget
-!!                          'CART' for cartesian box configuration
-!!                          'MASK' for budget zone defined by a mask
-!!                          'NONE'  ' for no budget
-!!         LBU_RTH      : logical for budget of RTH (potential temperature)
-!!                        .TRUE. = budget of RTH
-!!                        .FALSE. = no budget of RTH
-!!         LBU_RRV      : logical for budget of RRV (water vapor)
-!!                        .TRUE. = budget of RRV
-!!                        .FALSE. = no budget of RRV
-!!         LBU_RRC      : logical for budget of RRC (cloud water)
-!!                        .TRUE. = budget of RRC
-!!                        .FALSE. = no budget of RRC
-!!         LBU_RRI      : logical for budget of RRI (cloud ice)
-!!                        .TRUE. = budget of RRI
-!!                        .FALSE. = no budget of RRI
-!!         LBU_RRR      : logical for budget of RRR (rain water)
-!!                        .TRUE. = budget of RRR
-!!                        .FALSE. = no budget of RRR
-!!         LBU_RRS      : logical for budget of RRS (aggregates)
-!!                        .TRUE. = budget of RRS
-!!                        .FALSE. = no budget of RRS
-!!         LBU_RRG      : logical for budget of RRG (graupeln)
-!!                        .TRUE. = budget of RRG
-!!                        .FALSE. = no budget of RRG
 !!
 !!    REFERENCE
 !!    ---------
