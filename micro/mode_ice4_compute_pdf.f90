@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -84,6 +84,7 @@ INTEGER :: JL
 IF (LHOOK) CALL DR_HOOK('ICE4_COMPUTE_PDF', 0, ZHOOK_HANDLE)!
 
 !Cloud water split between high and low content part is done according to autoconversion option
+!$acc kernels
 !$mnh_expand_where(JL=1:KSIZE)
 WHERE (LDMICRO(:))
   ZRCRAUTC(:)=ICEP%XCRIAUTC/PRHODREF(:) ! Autoconversion rc threshold
@@ -91,6 +92,7 @@ ELSEWHERE
   ZRCRAUTC(:)=0.
 END WHERE
 !$mnh_end_expand_where(JL=1:KSIZE)
+!$acc end kernels
 IF(HSUBG_AUCV_RC=='NONE') THEN
   !Cloud water is entirely in low or high part
 !$acc kernels
