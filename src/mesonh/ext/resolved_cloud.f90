@@ -1462,7 +1462,7 @@ SELECT CASE ( HCLOUD )
     ELSE IF (LPTSPLIT) THEN
        CALL LIMA_ADJUST_SPLIT(PARAM_LIMA, PARAM_LIMA_WARM, &
                              TNSV, YLDIMPHYEX, CST, NEBN, TURBN, TBUCONF,TBUDGETS,SIZE(TBUDGETS), &
-                             KRR, KMI, CCONDENS, CLAMBDA3,                                   &
+                             KRR, CCONDENS, CLAMBDA3,                                        &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,                          &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS,                               &
                              SIZE(PMFCONV)/=0, PMFCONV, PPABST, PPABSTT, ZZZ,                &
