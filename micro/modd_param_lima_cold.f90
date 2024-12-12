@@ -22,6 +22,8 @@
 !!      C. Barthe            14/03/2022  add CIBU and RDSF
 !       J. Wurtz                03/2022: new snow characteristics
 !       M. Taufour              07/2022: add concentration for snow, graupel, hail
+!       C. Barthe               01/2024: add several ice crystal shapes
+!!      M. Taufour              03/2024: add ice crystal self collection (ISC)
 !!
 !-------------------------------------------------------------------------------
 USE MODD_PARAMETERS, ONLY: JPSVNAMELGTMAX
@@ -61,6 +63,15 @@ REAL      :: XFVELOS                  ! Wurtz - snow fall speed parameterizaed a
 REAL      :: XTRANS_MP_GAMMAS         ! Wurtz - change between lambda value for MP and gen. gamma
 !
 REAL      :: XREFFI                   ! constante for ice crystal effective radius for ecRad
+!
+!++cb++ 23/01/24
+REAL, DIMENSION(:), ALLOCATABLE :: XLBEXI_SHAPE, & ! pristine ice distrib. parameters
+                                   XLBI_SHAPE      ! when several shapes
+REAL, DIMENSION(:), ALLOCATABLE :: XAI_SHAPE,  XBI_SHAPE, & ! a and b parameters of the mass-diam relationship
+                                   XC_I_SHAPE, XDI_SHAPE, & ! c and d parameters of the fallspeed-diam relationship
+                                   XGAMMAI_SHAPE, XDELTAI_SHAPE, & ! g and d parameters of proj area-diam relationship
+                                   XC1I_SHAPE      ! 
+!--cb--
 !
 !-------------------------------------------------------------------------------
 !
@@ -112,15 +123,28 @@ REAL      :: XACCS1, XSPONBUDS1, XSPONBUDS2,   & ! Constant for snow
 !??????????????????
 REAL      :: XKER_ZRNIC_A1,XKER_ZRNIC_A2         ! Long-Zrnic Kernels (ini_ice_coma)
 !
-REAL      :: XSELFI,XCOLEXII                     ! Constants for pristine ice
-                                                 ! self-collection (ini_ice_coma)
+REAL      :: XSELFI!,XCOLEXII                     ! Constants for pristine ice  ! mt delete XCOLEXII
+!                                                 ! self-collection (ini_ice_coma)
 !
 REAL,DIMENSION(:,:), ALLOCATABLE :: XKER_N_SSCS
 REAL      :: XCOLSS,XCOLEXSS,XFNSSCS,          & !
              XLBNSSCS1,XLBNSSCS2,              & ! Constants for snow self collection
              XSCINTP1S,XSCINTP2S                 !
 INTEGER      :: NSCLBDAS                         !
-
+!
+!++mt++
+! for ice self-collection
+REAL,DIMENSION(:,:), ALLOCATABLE :: XKER_N_ISCI
+REAL      :: XCOLII,XCOLEXII,XFNISCI,          & !
+             XLBNISCI1,XLBNISCI2,              & ! Constants for ice self collection
+             XSCINTP1I,XSCINTP2I,              & !
+             XSCLBDAI_MIN, XSCLBDAI_MAX
+REAL, DIMENSION(:),       ALLOCATABLE :: XFISCS, XLBISCS1, XLBISCS2, XLBISCS3
+REAL, DIMENSION(:,:,:),   ALLOCATABLE :: XKER_R_ISCI_SHAPE
+REAL, DIMENSION(:,:,:,:), ALLOCATABLE :: XKER_N_ISCI_SHAPE
+INTEGER   :: NSCLBDAI                         !
+!--mt--
+!
 REAL      :: XAUTO3, XAUTO4,                   & ! Constants for pristine ice
              XLAUTS,   XLAUTS_THRESHOLD,       & ! autoconversion : AUT
              XITAUTS, XITAUTS_THRESHOLD,       & ! (ini_ice_com)
@@ -137,6 +161,29 @@ REAL      :: XBETA1
 REAL      :: XBETA2
 REAL      :: XNU10
 REAL      :: XNU20
+!
+!++cb++ 23/01/24
+! For ice crystal shapes
+! pour le moment, on les met en allocatable. Peut-etre faudra t-il le modifier par la suite
+! Constants for sedimentation
+REAL, DIMENSION(:), ALLOCATABLE :: XFSEDCI_SHAPE      ! Constant per habit: N
+REAL, DIMENSION(:), ALLOCATABLE :: XFSEDRI_SHAPE      ! Constant per habit: mr
+REAL, DIMENSION(:), ALLOCATABLE :: XFSEDRI_TOT_SHAPE  ! Constant per habit: mr
+! Constants for sublimation conversion to pristine ice
+REAL, DIMENSION(:), ALLOCATABLE :: XC0DEPSI_SHAPE, XC1DEPSI_SHAPE, & ! sublimation conversion to
+                                   XR0DEPSI_SHAPE, XR1DEPSI_SHAPE    ! pristine ice : SCNVI
+! Constants for vapor deposition on ice
+REAL, DIMENSION(:), ALLOCATABLE :: X0DEPI_SHAPE, & ! vapor deposition on ice
+                                   X2DEPI_SHAPE
+! Constants for sublimation conversion to pristine ice 
+REAL, DIMENSION(:), ALLOCATABLE :: XC0DEPIS_SHAPE, XC1DEPIS_SHAPE, & ! sublimation conversion to
+                                   XR0DEPIS_SHAPE, XR1DEPIS_SHAPE    ! pristine ice : SCNVI
+! Constants for snow
+REAL, DIMENSION(:), ALLOCATABLE :: XAGGS_RLARGE1_SHAPE, & ! Constants for snow 
+                                  XAGGS_RLARGE2_SHAPE
+!
+REAL, DIMENSION(:), ALLOCATABLE :: XFREFFI_SHAPE  ! Factor to compute the cloud ice effective radius
+!--cb--
 END TYPE PARAM_LIMA_COLD_t
 !
 TYPE(PARAM_LIMA_COLD_t), TARGET, SAVE :: PARAM_LIMA_COLD
@@ -241,7 +288,7 @@ REAL, POINTER :: XLBEXI => NULL(), &
                  XKER_ZRNIC_A1 => NULL(), &
                  XKER_ZRNIC_A2 => NULL(), &
                  XSELFI => NULL(), &
-                 XCOLEXII => NULL(), &
+!                 XCOLEXII => NULL(), &
                  XCOLSS => NULL(), &
                  XCOLEXSS => NULL(), &
                  XFNSSCS => NULL(), &
@@ -249,6 +296,17 @@ REAL, POINTER :: XLBEXI => NULL(), &
                  XLBNSSCS2 => NULL(), &
                  XSCINTP1S => NULL(), &
                  XSCINTP2S  => NULL(), &
+!++mt++
+                 XCOLII => NULL(), &
+                 XCOLEXII => NULL(), &
+                 XFNISCI => NULL(), &
+                 XLBNISCI1 => NULL(), &
+                 XLBNISCI2 => NULL(), &
+                 XSCINTP1I => NULL(), &
+                 XSCINTP2I  => NULL(), &
+                 XSCLBDAI_MIN => NULL(),&
+                 XSCLBDAI_MAX => NULL(),&                
+!--mt--
                  XAUTO3 => NULL(), &
                  XAUTO4 => NULL(), &
                  XLAUTS => NULL(), &
@@ -266,6 +324,45 @@ REAL, POINTER :: XLBEXI => NULL(), &
                  XNU20 => NULL()
 INTEGER, POINTER :: NSCLBDAS => NULL()
 REAL,DIMENSION(:,:),POINTER :: XKER_N_SSCS => NULL()
+!++mt++
+! for ice self-collection
+INTEGER, POINTER :: NSCLBDAI => NULL()
+REAL,DIMENSION(:,:),    POINTER :: XKER_N_ISCI => NULL()
+REAL,DIMENSION(:),      POINTER :: XLBISCS1 => NULL(), &
+                                   XLBISCS2 => NULL(), &
+                                   XLBISCS3 => NULL(), &
+                                   XFISCS => NULL()
+REAL,DIMENSION(:,:,:),  POINTER :: XKER_R_ISCI_SHAPE => NULL()
+REAL,DIMENSION(:,:,:,:),POINTER :: XKER_N_ISCI_SHAPE => NULL()
+!--mt--
+!++cb++ 23/01/24
+! For ice crystal shapes
+REAL, DIMENSION(:), POINTER :: XLBEXI_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XLBI_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XAI_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XBI_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XC_I_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XDI_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XGAMMAI_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XDELTAI_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XC1I_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XFSEDCI_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XFSEDRI_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XFSEDRI_TOT_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XC0DEPSI_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XC1DEPSI_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XR0DEPSI_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XR1DEPSI_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: X0DEPI_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: X2DEPI_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XC0DEPIS_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XC1DEPIS_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XR0DEPIS_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XR1DEPIS_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XAGGS_RLARGE1_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XAGGS_RLARGE2_SHAPE => NULL()
+REAL, DIMENSION(:), POINTER :: XFREFFI_SHAPE => NULL()
+!--cb--
 CHARACTER(LEN=JPSVNAMELGTMAX),DIMENSION(8),PARAMETER &
                               :: CLIMA_COLD_NAMES=(/'CICE    ','CSNOW   ','CGRAUPEL','CHAIL   ',&
                                                         'CIFNFREE','CIFNNUCL', &
@@ -278,7 +375,18 @@ CHARACTER(LEN=JPSVNAMELGTMAX),DIMENSION(8),PARAMETER &
                                  !     HF:Homogeneous Freezing
 CHARACTER(LEN=JPSVNAMELGTMAX),DIMENSION(8),PARAMETER &
                               :: CLIMA_COLD_CONC=(/'NI ','NS ','NG ','NH ','NIF','NIN','NNI','NNH'/)!for DIAG
-
+!++cb++ 24/01/24
+CHARACTER(LEN=JPSVNAMELGTMAX),DIMENSION(4),PARAMETER &
+                              :: CLIMA_SHAPE_NAMES=(/'CICE    ','CICE2   ','CICE3   ','CICE4   '/)
+                                 ! basenames of the SV articles stored
+                                 ! in the binary files
+                                 !with 1 - PLA : plates
+                                 !     2 - COL : Columns
+                                 !     3 - BUR : bullet-rosettes
+                                 !     4 - POL : droxtals
+CHARACTER(LEN=5),DIMENSION(4),PARAMETER &
+                              :: CLIMA_SHAPE_CONC=(/'N_001','N_002','N_003','N_004'/)!for DIAG
+!--cb--
 !
 CONTAINS
 SUBROUTINE PARAM_LIMA_COLD_ASSOCIATE()
@@ -384,7 +492,6 @@ IF(.NOT. ASSOCIATED(XLBEXI)) THEN
   XKER_ZRNIC_A1      => PARAM_LIMA_COLD%XKER_ZRNIC_A1
   XKER_ZRNIC_A2      => PARAM_LIMA_COLD%XKER_ZRNIC_A2
   XSELFI             => PARAM_LIMA_COLD%XSELFI
-  XCOLEXII           => PARAM_LIMA_COLD%XCOLEXII
   XCOLSS             => PARAM_LIMA_COLD%XCOLSS
   XCOLEXSS           => PARAM_LIMA_COLD%XCOLEXSS
   XFNSSCS            => PARAM_LIMA_COLD%XFNSSCS
@@ -407,8 +514,19 @@ IF(.NOT. ASSOCIATED(XLBEXI)) THEN
   XBETA2             => PARAM_LIMA_COLD%XBETA2
   XNU10              => PARAM_LIMA_COLD%XNU10
   XNU20              => PARAM_LIMA_COLD%XNU20
-
   NSCLBDAS           => PARAM_LIMA_COLD%NSCLBDAS
+  !++mt++
+  XCOLII             => PARAM_LIMA_COLD%XCOLII
+  XCOLEXII           => PARAM_LIMA_COLD%XCOLEXII
+  XFNISCI            => PARAM_LIMA_COLD%XFNISCI
+  XLBNISCI1          => PARAM_LIMA_COLD%XLBNISCI1
+  XLBNISCI2          => PARAM_LIMA_COLD%XLBNISCI2
+  NSCLBDAI           => PARAM_LIMA_COLD%NSCLBDAI
+  XSCLBDAI_MIN       => PARAM_LIMA_COLD%XSCLBDAI_MIN
+  XSCLBDAI_MAX       => PARAM_LIMA_COLD%XSCLBDAI_MAX
+  XSCINTP1I          => PARAM_LIMA_COLD%XSCINTP1I
+  XSCINTP2I          => PARAM_LIMA_COLD%XSCINTP2I
+  !--mt--
 ENDIF
 END SUBROUTINE PARAM_LIMA_COLD_ASSOCIATE
 !
@@ -423,7 +541,146 @@ SUBROUTINE PARAM_LIMA_COLD_ALLOCATE(HNAME, KDIM1, KDIM2)
       ALLOCATE(PARAM_LIMA_COLD%XKER_N_SSCS(KDIM1, KDIM2))
       XKER_N_SSCS => PARAM_LIMA_COLD%XKER_N_SSCS
   END SELECT
+  !++mt++
+  SELECT CASE(TRIM(HNAME))
+    CASE('XKER_N_ISCI')
+      ALLOCATE(PARAM_LIMA_COLD%XKER_N_ISCI(KDIM1, KDIM2))
+      XKER_N_ISCI => PARAM_LIMA_COLD%XKER_N_ISCI
+  END SELECT
+  !--mt--
 END SUBROUTINE PARAM_LIMA_COLD_ALLOCATE
+!
+!++cb++ 24/01/24
+SUBROUTINE PARAM_LIMA_COLD_ALLOCATE_1D(HNAME, KDIM1)
+  IMPLICIT NONE
+  CHARACTER(LEN=*), INTENT(IN) :: HNAME
+  INTEGER, INTENT(IN)          :: KDIM1
+
+  SELECT CASE(TRIM(HNAME))
+    CASE('XLBEXI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XLBEXI_SHAPE(KDIM1))
+      XLBEXI_SHAPE => PARAM_LIMA_COLD%XLBEXI_SHAPE
+    CASE('XLBI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XLBI_SHAPE(KDIM1))
+      XLBI_SHAPE => PARAM_LIMA_COLD%XLBI_SHAPE
+    CASE('XAI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XAI_SHAPE(KDIM1))
+      XAI_SHAPE => PARAM_LIMA_COLD%XAI_SHAPE
+    CASE('XBI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XBI_SHAPE(KDIM1))
+      XBI_SHAPE => PARAM_LIMA_COLD%XBI_SHAPE
+    CASE('XC_I_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XC_I_SHAPE(KDIM1))
+      XC_I_SHAPE => PARAM_LIMA_COLD%XC_I_SHAPE
+    CASE('XDI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XDI_SHAPE(KDIM1))
+      XDI_SHAPE => PARAM_LIMA_COLD%XDI_SHAPE
+    CASE('XGAMMAI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XGAMMAI_SHAPE(KDIM1))
+      XGAMMAI_SHAPE => PARAM_LIMA_COLD%XGAMMAI_SHAPE
+    CASE('XDELTAI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XDELTAI_SHAPE(KDIM1))
+      XDELTAI_SHAPE => PARAM_LIMA_COLD%XDELTAI_SHAPE      
+    CASE('XC1I_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XC1I_SHAPE(KDIM1))
+      XC1I_SHAPE => PARAM_LIMA_COLD%XC1I_SHAPE
+    CASE('XFSEDCI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XFSEDCI_SHAPE(KDIM1))
+      XFSEDCI_SHAPE => PARAM_LIMA_COLD%XFSEDCI_SHAPE
+    CASE('XFSEDRI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XFSEDRI_SHAPE(KDIM1))
+      XFSEDRI_SHAPE => PARAM_LIMA_COLD%XFSEDRI_SHAPE
+    CASE('XFSEDRI_TOT_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XFSEDRI_TOT_SHAPE(KDIM1))
+      XFSEDRI_TOT_SHAPE => PARAM_LIMA_COLD%XFSEDRI_TOT_SHAPE
+    CASE('XC0DEPSI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XC0DEPSI_SHAPE(KDIM1))
+      XC0DEPSI_SHAPE => PARAM_LIMA_COLD%XC0DEPSI_SHAPE
+    CASE('XC1DEPSI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XC1DEPSI_SHAPE(KDIM1))
+      XC1DEPSI_SHAPE => PARAM_LIMA_COLD%XC1DEPSI_SHAPE
+    CASE('XR0DEPSI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XR0DEPSI_SHAPE(KDIM1))
+      XR0DEPSI_SHAPE => PARAM_LIMA_COLD%XR0DEPSI_SHAPE
+    CASE('XR1DEPSI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XR1DEPSI_SHAPE(KDIM1))
+      XR1DEPSI_SHAPE => PARAM_LIMA_COLD%XR1DEPSI_SHAPE
+    CASE('X0DEPI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%X0DEPI_SHAPE(KDIM1))
+      X0DEPI_SHAPE => PARAM_LIMA_COLD%X0DEPI_SHAPE
+    CASE('X2DEPI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%X2DEPI_SHAPE(KDIM1))
+      X2DEPI_SHAPE => PARAM_LIMA_COLD%X2DEPI_SHAPE
+    CASE('XC0DEPIS_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XC0DEPIS_SHAPE(KDIM1))
+      XC0DEPIS_SHAPE => PARAM_LIMA_COLD%XC0DEPIS_SHAPE
+    CASE('XC1DEPIS_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XC1DEPIS_SHAPE(KDIM1))
+      XC1DEPIS_SHAPE => PARAM_LIMA_COLD%XC1DEPIS_SHAPE
+    CASE('XR0DEPIS_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XR0DEPIS_SHAPE(KDIM1))
+      XR0DEPIS_SHAPE => PARAM_LIMA_COLD%XR0DEPIS_SHAPE
+    CASE('XR1DEPIS_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XR1DEPIS_SHAPE(KDIM1))
+      XR1DEPIS_SHAPE => PARAM_LIMA_COLD%XR1DEPIS_SHAPE
+    CASE('XAGGS_RLARGE1_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XAGGS_RLARGE1_SHAPE(KDIM1))
+      XAGGS_RLARGE1_SHAPE => PARAM_LIMA_COLD%XAGGS_RLARGE1_SHAPE
+    CASE('XAGGS_RLARGE2_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XAGGS_RLARGE2_SHAPE(KDIM1))
+      XAGGS_RLARGE2_SHAPE => PARAM_LIMA_COLD%XAGGS_RLARGE2_SHAPE
+    CASE('XFREFFI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XFREFFI_SHAPE(KDIM1))
+      XFREFFI_SHAPE => PARAM_LIMA_COLD%XFREFFI_SHAPE
+    !++mt++
+    CASE('XLBISCS1')
+      ALLOCATE(PARAM_LIMA_COLD%XLBISCS1(KDIM1))
+      XLBISCS1 => PARAM_LIMA_COLD%XLBISCS1
+    CASE('XLBISCS2')
+      ALLOCATE(PARAM_LIMA_COLD%XLBISCS2(KDIM1))
+      XLBISCS2 => PARAM_LIMA_COLD%XLBISCS2
+    CASE('XLBISCS3')
+      ALLOCATE(PARAM_LIMA_COLD%XLBISCS3(KDIM1))
+      XLBISCS3 => PARAM_LIMA_COLD%XLBISCS3
+    CASE('XFISCS')
+      ALLOCATE(PARAM_LIMA_COLD%XFISCS(KDIM1))
+      XFISCS => PARAM_LIMA_COLD%XFISCS    
+    !--mt--
+  END SELECT
+END SUBROUTINE PARAM_LIMA_COLD_ALLOCATE_1D
+!--cb--
+!++mt++
+SUBROUTINE PARAM_LIMA_COLD_ALLOCATE_3D(HNAME, KDIM1, KDIM2, KDIM3)
+  IMPLICIT NONE
+  CHARACTER(LEN=*), INTENT(IN) :: HNAME
+  INTEGER, INTENT(IN)          :: KDIM1
+  INTEGER, INTENT(IN)          :: KDIM2
+  INTEGER, INTENT(IN)          :: KDIM3  
+
+  SELECT CASE(TRIM(HNAME))
+    CASE('XKER_R_ISCI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XKER_R_ISCI_SHAPE(KDIM1, KDIM2, KDIM3))
+      XKER_R_ISCI_SHAPE => PARAM_LIMA_COLD%XKER_R_ISCI_SHAPE
+  END SELECT
+END SUBROUTINE PARAM_LIMA_COLD_ALLOCATE_3D
+!
+SUBROUTINE PARAM_LIMA_COLD_ALLOCATE_4D(HNAME, KDIM1, KDIM2, KDIM3, KDIM4)
+  IMPLICIT NONE
+  CHARACTER(LEN=*), INTENT(IN) :: HNAME
+  INTEGER, INTENT(IN)          :: KDIM1
+  INTEGER, INTENT(IN)          :: KDIM2
+  INTEGER, INTENT(IN)          :: KDIM3  
+  INTEGER, INTENT(IN)          :: KDIM4  
+
+  SELECT CASE(TRIM(HNAME))
+    CASE('XKER_N_ISCI_SHAPE')
+      ALLOCATE(PARAM_LIMA_COLD%XKER_N_ISCI_SHAPE(KDIM1, KDIM2, KDIM3, KDIM4))
+      XKER_N_ISCI_SHAPE => PARAM_LIMA_COLD%XKER_N_ISCI_SHAPE
+  END SELECT
+END SUBROUTINE PARAM_LIMA_COLD_ALLOCATE_4D
+
+!--mt--
+
 !
 !-------------------------------------------------------------------------------
 !

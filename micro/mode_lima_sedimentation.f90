@@ -8,10 +8,10 @@ MODULE MODE_LIMA_SEDIMENTATION
 CONTAINS
 !     ######################################################################
   SUBROUTINE LIMA_SEDIMENTATION (D, CST, ICED, HCLOUD, &
-                                 HPHASE, KMOMENTS, KID, KSPLITG, PTSTEP, OELEC, &
+                                 HPHASE, KMOMENTS, KID, KISHAPE, KSPLITG, PTSTEP, OELEC, &
                                  PDZZ, PRHODREF, PTHVREFZIKB, &
                                  PPABST, PT, PRT_SUM, PCPT, PRS, PCS, PINPR, PFPR, &
-                                 PEFIELDW, PQS)
+                                 PEFIELDW, PQS, PLBDAI_SHAPE)
 !     ######################################################################
 !
 !!    PURPOSE
@@ -44,6 +44,7 @@ CONTAINS
 !  J. Wurtz       03/2022: new snow characteristics
 !  C. Barthe   03/06/2022: add sedimentation for electric charges
 !  C. Barthe   02/06/2023: add the Beard effect (electric field)
+!  C. Barthe   26/01/2024: add several ice crystal shapes
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -57,10 +58,15 @@ USE MODD_ELEC_PARAM,       ONLY: XFQSED, XDQ
 USE MODD_PARAM_LIMA,       ONLY: XCEXVT, XRTMIN, XCTMIN, NSPLITSED,           &
                                  XLB, XLBEX, XD, XFSEDR, XFSEDC,              &
                                  XALPHAC, XNUC, XALPHAS, XNUS, LSNOW_T,       &
-                                 NMOM_S
-USE MODD_PARAM_LIMA_COLD,  ONLY: XLBEXI, XLBI, XDI, XLBDAS_MAX, XBS, XEXSEDS, &
-                                 XLBDAS_MIN, XTRANS_MP_GAMMAS, XFVELOS,       &
-                                 XCCS, XCXS
+                                 NMOM_S,                                      &
+                                 LCRYSTAL_SHAPE
+!++cb++ 24/01/24
+!USE MODD_PARAM_LIMA_COLD,  ONLY: XLBEXI, XLBI, XDI, XLBDAS_MAX, XBS, XEXSEDS, &
+USE MODD_PARAM_LIMA_COLD,  ONLY: XLBDAS_MAX, XBS, XEXSEDS,                       &
+!--cb--
+                                 XLBDAS_MIN, XTRANS_MP_GAMMAS, XFVELOS,          &
+                                 XCCS, XCXS,                                     &
+                                 XDI_SHAPE, XFSEDCI_SHAPE, XFSEDRI_SHAPE                       !++cb--
 USE MODD_PARAM_LIMA_MIXED, ONLY: XCCG, XCXG, XCCH, XCXH
 
 use mode_tools,            only: Countjv
@@ -79,6 +85,7 @@ TYPE(RAIN_ICE_DESCR_t),   INTENT(IN)    :: ICED
 CHARACTER(1),             INTENT(IN)    :: HPHASE    ! Liquid or solid hydrometeors
 INTEGER,                  INTENT(IN)    :: KMOMENTS  ! Number of moments 
 INTEGER,                  INTENT(IN)    :: KID       ! Hydrometeor ID
+INTEGER,                  INTENT(IN)    :: KISHAPE   ! Ice shape ID if LCRYSTAL_SHAPE (0 otherwise)
 INTEGER,                  INTENT(IN)    :: KSPLITG   !  
 REAL,                     INTENT(IN)    :: PTSTEP    ! Time step  
 LOGICAL,                  INTENT(IN)    :: OELEC     ! if true, cloud electrification is activated
@@ -96,6 +103,7 @@ REAL, DIMENSION(:,:,:),   INTENT(IN),    OPTIONAL :: PEFIELDW  ! Vertical compon
 CHARACTER (LEN=4),      INTENT(IN)   ::  HCLOUD       ! Kind of microphysical scheme
 REAL, INTENT(IN)                :: PTHVREFZIKB ! Reference thv at IKB for electricity
 REAL, DIMENSION(:,:,:),   INTENT(INOUT), OPTIONAL :: PQS ! Elec. charge density source
+REAL, DIMENSION(:,:,:),   INTENT(IN),    OPTIONAL :: PLBDAI_SHAPE ! lambda for one ice crystal shape if lcrystal_shape
 !
 !*       0.2   Declarations of local variables :
 !
@@ -138,6 +146,9 @@ REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZWSEDQ    ! Sedimentation of electric cha
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLBDA3
 REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) :: ZBEARDCOEFF ! effect of
                                                  ! electrical forces on terminal fall speed
+!++cb++ 24/01/24
+!REAL, DIMENSION(:), ALLOCATABLE :: ZRS_SHAPE  ! m.r. of each crystal habit
+!--cb--
 !
 !-------------------------------------------------------------------------------
 !
@@ -208,6 +219,8 @@ DO JN = 1 ,  NSPLITSED(KID)
          ZRS(JL) = PRS(I1(JL),I2(JL),I3(JL))
          IF (IMOMENTS==2) ZCS(JL) = PCS(I1(JL),I2(JL),I3(JL))
          IF (OELEC)       ZQS(JL) = PQS(I1(JL),I2(JL),I3(JL))
+         IF (LCRYSTAL_SHAPE .AND. IMOMENTS == 2 .AND. KID == 4) &
+           ZLBDA(JL) = PLBDAI_SHAPE(I1(JL),I2(JL),I3(JL)) !++cb-- 31/01/24
       END DO
 !
 ! Compute lambda
@@ -222,6 +235,11 @@ DO JN = 1 ,  NSPLITSED(KID)
          ZLBDA(:) = ZLBDA(:)*XTRANS_MP_GAMMAS
          ZZW(:) = XFSEDR(KID) * ZRHODREF(:)**(1.-XCEXVT)*ZRS(:)* &
               (1 + (XFVELOS/ZLBDA(:))**XALPHAS)**(-XNUS-(XD(KID)+XBS)/XALPHAS) * ZLBDA(:)**(-XD(KID))
+!++cb++ 31/01/24
+      ELSE IF (KID == 4 .AND. IMOMENTS==2 .AND. LCRYSTAL_SHAPE) THEN
+         ZZY(:) = ZRHODREF(:)**(-XCEXVT) * ZLBDA(:)**(-XDI_SHAPE(KISHAPE))
+         ZZW(:) = XFSEDRI_SHAPE(KISHAPE) * ZRS(:) * ZZY(:) * ZRHODREF(:)
+         ZZX(:) = XFSEDCI_SHAPE(KISHAPE) * ZCS(:) * ZZY(:) * ZRHODREF(:)
       ELSE
          IF (IMOMENTS==1) ZLBDA(:) = XLB(KID) * ( ZRHODREF(:) * ZRS(:) )**XLBEX(KID)
          IF (IMOMENTS==2) ZLBDA(:) = ( XLB(KID)*ZCS(:) / ZRS(:) )**XLBEX(KID)
@@ -229,10 +247,15 @@ DO JN = 1 ,  NSPLITSED(KID)
          IF (LSNOW_T .AND. KID==5) &
               ZZY(:) = ZZY(:) * (1 + (XFVELOS/ZLBDA(:))**XALPHAS)**(-XNUS-(XD(KID)+XBS)/XALPHAS)
          ZZW(:) = XFSEDR(KID) * ZRS(:) * ZZY(:) * ZRHODREF(:)
-      END IF ! Wurtz
+      END IF
 !
-      IF (KMOMENTS==2) ZZX(:) = XFSEDC(KID) * ZCS(:) * ZZY(:) * ZRHODREF(:)
-
+!      IF (KMOMENTS==2) ZZX(:) = XFSEDC(KID) * ZCS(:) * ZZY(:) * ZRHODREF(:)
+!++cb++ 06/03/24 : zzx n'est pas mis a jour pour les especes a 2 moments autres que la glace primaire (fait plus haut)
+!      IF (KMOMENTS==2 .AND. (.NOT. LCRYSTAL_SHAPE)) &
+      IF (KMOMENTS==2 .AND. .NOT.(LCRYSTAL_SHAPE .AND. KID==4)) &
+          ZZX(:) = XFSEDC(KID) * ZCS(:) * ZZY(:) * ZRHODREF(:)
+!--cb--
+!
       IF (KID==2) THEN
          ! mean cloud droplet diameter
          ZCC(:) = 0.5*GAMMA_X0D(XNUC+1./XALPHAC)/(GAMMA_X0D(XNUC)*ZLBDA(:))
@@ -252,6 +275,8 @@ DO JN = 1 ,  NSPLITSED(KID)
         DEALLOCATE(ZLBDA3)
       END IF
 !
+!++cb-- ca ne devrait pas poser de probleme de faire sedimenter le m.r. des formes separement
+! --> a verifier tout de meme avec des bilans !
       ZWSEDR(:,:,1:D%NKT) = UNPACK( ZZW(:),MASK=GSEDIM(:,:,:),FIELD=0.0 )
       ZWSEDR(:,:,D%NKTB:D%NKTE) = MIN( ZWSEDR(:,:,D%NKTB:D%NKTE) * ZBEARDCOEFF(:,:,D%NKTB:D%NKTE), &
                                        PRS(:,:,D%NKTB:D%NKTE) * PRHODREF(:,:,D%NKTB:D%NKTE) /      &

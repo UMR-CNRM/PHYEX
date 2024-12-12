@@ -5,14 +5,16 @@
 MODULE MODE_LIMA_ICE_MELTING
   IMPLICIT NONE
 CONTAINS
-!     ########################################################################
+! ########################################################################
   SUBROUTINE LIMA_ICE_MELTING (PTSTEP, LDCOMPUTE,                        &
                                PEXNREF, PPABST,                          &
                                PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
-                               PCIT, PINT,                               &
+                               PCIT, PCIT_SHAPE, PINT,                   & !++cb-- 26/01/24
                                P_TH_IMLT, P_RC_IMLT, P_CC_IMLT,          &
-                               PB_TH, PB_RC, PB_CC, PB_RI, PB_CI, PB_IFNN)
-!     ########################################################################
+                               P_SHCI_IMLT,                              & !++cb-- 26/01/24
+                               PB_TH, PB_RC, PB_CC, PB_RI, PB_CI,        &
+                               PB_CI_SHAPE, PB_IFNN)                       !++cb-- 26/01/24
+! ########################################################################
 !
 !!    PURPOSE
 !!    -------
@@ -29,6 +31,7 @@ CONTAINS
 !!    MODIFICATIONS
 !!    -------------
 !!      Original             15/03/2018
+!!      C. Barthe    01/2024  add several shapes for ice crystal concentration
 !!
 !-------------------------------------------------------------------------------
 !
@@ -36,7 +39,8 @@ CONTAINS
 !              ------------
 !
 USE MODD_CST,             ONLY : XP00, XRD, XCPD, XCPV, XCL, XCI, XTT, XLSTT, XLVTT
-USE MODD_PARAM_LIMA,      ONLY : XRTMIN, NMOD_IFN
+USE MODD_PARAM_LIMA,      ONLY : XRTMIN, NMOD_IFN, &
+                                 LCRYSTAL_SHAPE, NNB_CRYSTAL_SHAPE !++cb--
 !
 IMPLICIT NONE
 !
@@ -56,18 +60,22 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PRIT    ! Cloud ice m.r. at t
 REAL, DIMENSION(:),   INTENT(IN)    :: PRST    ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PRGT    ! 
 !
-REAL, DIMENSION(:),   INTENT(IN)    :: PCIT    ! Rain water C. at t
+REAL, DIMENSION(:),   INTENT(IN)    :: PCIT    ! Pristine ice C. at t
 REAL, DIMENSION(:,:), INTENT(IN)    :: PINT    ! Nucleated IFN C. at t
+REAL, DIMENSION(:,:), INTENT(IN)    :: PCIT_SHAPE ! Pristine ice C. at t for different shapes
 !
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_TH_IMLT
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_RC_IMLT
 REAL, DIMENSION(:),   INTENT(INOUT) :: P_CC_IMLT
+REAL, DIMENSION(:,:), INTENT(INOUT) :: P_SHCI_IMLT
 REAL, DIMENSION(:),   INTENT(INOUT) :: PB_TH
 REAL, DIMENSION(:),   INTENT(INOUT) :: PB_RC
 REAL, DIMENSION(:),   INTENT(INOUT) :: PB_CC
 REAL, DIMENSION(:),   INTENT(INOUT) :: PB_RI
 REAL, DIMENSION(:),   INTENT(INOUT) :: PB_CI
 REAL, DIMENSION(:,:), INTENT(INOUT) :: PB_IFNN
+REAL, DIMENSION(:,:), INTENT(INOUT) :: PB_CI_SHAPE
+!
 !
 !*       0.2   Declarations of local variables :
 !
@@ -77,10 +85,10 @@ REAL, DIMENSION(SIZE(PTHT)) ::  &
      ZTCELSIUS,&
      ZLSFACT,  &
      ZLVFACT,  &
-     ZMASK
+     ZMASK,    &
+     ZCIT  !++cb--
 !
-INTEGER :: JMOD_IFN
-!
+INTEGER :: JMOD_IFN, JSH
 !
 !
 !-------------------------------------------------------------------------------
@@ -102,20 +110,37 @@ ZW(:) = 0.0
 !
 ZMASK(:) = 0.
 !
+IF (LCRYSTAL_SHAPE) THEN
+  ZCIT(:) = SUM(PCIT_SHAPE,DIM=2) !++cb++ 26/01/24
+ELSE
+  ZCIT(:) = PCIT(:)
+END IF
 WHERE( (ZT(:)>XTT) .AND. (PRIT(:)>XRTMIN(4)) .AND. LDCOMPUTE(:) )
-   P_TH_IMLT(:) = - PRIT(:)*(ZLSFACT(:)-ZLVFACT(:))
-   P_RC_IMLT(:) = PRIT(:)
-   P_CC_IMLT(:) = PCIT(:)
-   PB_TH(:) = PB_TH(:) + P_TH_IMLT(:)
-   PB_RC(:) = PB_RC(:) + PRIT(:)
-   PB_CC(:) = PB_CC(:) + PCIT(:)
-   PB_RI(:) = PB_RI(:) - PRIT(:)
-   PB_CI(:) = PB_CI(:) - PCIT(:)
-   ZMASK(:) = 1.
+  P_TH_IMLT(:) = - PRIT(:)*(ZLSFACT(:)-ZLVFACT(:))
+  P_RC_IMLT(:) = PRIT(:)
+  P_CC_IMLT(:) = ZCIT(:)  !++cb--
+  PB_TH(:) = PB_TH(:) + P_TH_IMLT(:)
+  PB_RC(:) = PB_RC(:) + PRIT(:)
+  PB_CC(:) = PB_CC(:) + ZCIT(:) !++cb--
+  PB_RI(:) = PB_RI(:) - PRIT(:)
+  PB_CI(:) = PB_CI(:) - ZCIT(:) !++cb--
+  ZMASK(:) = 1.
 ENDWHERE
+!++cb++ 26/01/24
+IF (LCRYSTAL_SHAPE) THEN
+  DO JSH = 1, NNB_CRYSTAL_SHAPE
+    WHERE( (ZT(:)>XTT) .AND. (PRIT(:)>XRTMIN(4)) .AND. LDCOMPUTE(:) )
+!++cb++ 21/02/24
+!      P_SHCI_IMLT(:,JSH) = 0.
+      P_SHCI_IMLT(:,JSH) = -PCIT_SHAPE(:,JSH)
+      PB_CI_SHAPE(:,JSH) = PB_CI_SHAPE(:,JSH) - PCIT_SHAPE(:,JSH)
+    END WHERE
+  END DO
+END IF
+!--cb--
 !
 DO JMOD_IFN = 1,NMOD_IFN
-   PB_IFNN(:,JMOD_IFN) = PB_IFNN(:,JMOD_IFN) - PINT(:,JMOD_IFN)* ZMASK(:)
+  PB_IFNN(:,JMOD_IFN) = PB_IFNN(:,JMOD_IFN) - PINT(:,JMOD_IFN)* ZMASK(:)
 ENDDO
 !
 !

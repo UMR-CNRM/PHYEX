@@ -32,10 +32,13 @@
 !!    -------------
 !!      Original             ??/??/13 
 !!      C. Barthe            14/03/2022  add CIBU and RDSF
+!!      C. Barthe            23/01/2024  add several shapes for ice crystals
+!!      M. Taufour           15/03/2024  add choice for several shapes for ice crystals
+!!      I. Vongpaseut        25/04/2024  modification of RDSF parameterization
 !!
 !-------------------------------------------------------------------------------
 !
-USE MODD_PARAMETERS, ONLY : JPLIMACCNMAX, JPLIMAIFNMAX
+USE MODD_PARAMETERS, ONLY : JPLIMACCNMAX, JPLIMAIFNMAX, NNBCRYSTALMAX
 !
 IMPLICIT NONE
 !
@@ -59,6 +62,13 @@ LOGICAL :: LHHONI                 ! TRUE to enable freezing of haze particules
 LOGICAL :: LMEYERS                ! TRUE to use Meyers nucleation
 LOGICAL :: LCIBU                  ! TRUE to use collisional ice breakup
 LOGICAL :: LRDSF                  ! TRUE to use rain drop shattering by freezing
+!++cb++ 23/01/24
+LOGICAL :: LCRYSTAL_SHAPE         ! TRUE to use several shapes for ice crystals
+!--cb--
+! mt
+LOGICAL :: LICE_ISC               ! TRUE to add ice crystals self collection process
+! mt 
+!
 INTEGER :: NMOM_I                 ! Number of moments for pristine ice
 INTEGER :: NMOM_S                 ! Number of moments for snow
 INTEGER :: NMOM_G                 ! Number of moments for graupel
@@ -92,6 +102,10 @@ CHARACTER(LEN=4) :: CHEVRIMED_ICE_LIMA ! Heavily rimed type GRAU or HAIL
 REAL                   :: XALPHAI,XNUI,    & ! Pristine ice   distribution parameters
                           XALPHAS,XNUS,    & ! Snow/aggregate distribution parameters
                           XALPHAG,XNUG       ! Graupel        distribution parameters
+!++cb++ 23/01/24
+INTEGER          :: NNB_CRYSTAL_SHAPE  ! nb of ice crystal shapes if lcrystal_shape=t
+CHARACTER(LEN=4), DIMENSION(NNBCRYSTALMAX) :: HTYPE_CRYSTAL_SHAPE     ! name of ice crystal shapes if lcrystal_shape=t 
+!--cb--
 !
 ! 1.4 Phillips (2013) nucleation parameterization
 !
@@ -124,6 +138,10 @@ REAL      :: XFACTNUC_DEP,XFACTNUC_CON  ! Amplification factor for IN conc.
 !
 REAL      :: XNDEBRIS_CIBU              ! Number of ice crystal debris produced
                                         ! by the break up of aggregate particles
+!
+! 1.7 Raindrop Shattering Freezing parameterization
+!
+REAL      :: XPSH_MAX_RDSF              ! shattering probability normal distribution maximum
 !
 !-------------------------------------------------------------------------------
 !
@@ -237,6 +255,13 @@ LOGICAL, POINTER :: LLIMA_DIAG => NULL(), &
                     LMEYERS => NULL(), &
                     LCIBU => NULL(), &
                     LRDSF => NULL(), &
+!++cb++ 23/01/24
+                    LCRYSTAL_SHAPE => NULL(), &
+!                    LHABIT_CHANGE => NULL(), &
+!--cb--
+! mt
+                    LICE_ISC => NULL(), &
+! mt
                     LIFN_HOM => NULL(), &
                     LSNOW_T => NULL(), &
                     LMURAKAMI => NULL(), &
@@ -258,6 +283,9 @@ INTEGER, POINTER :: NMAXITER => NULL(), &
                     NMOM_S => NULL(), &
                     NMOM_G => NULL(), &
                     NMOM_H => NULL(), &
+!++cb++ 23/01/24
+                    NNB_CRYSTAL_SHAPE => NULL(), &
+!--cb--
                     NMOD_IFN => NULL(), &
                     NMOD_IMM => NULL(), &
                     NIND_SPECIE => NULL(), &
@@ -269,7 +297,9 @@ INTEGER, POINTER :: NMAXITER => NULL(), &
                     NMOD_CCN => NULL(), &
                     NDIAMR => NULL(), &
                     NDIAMP => NULL()
-
+!--mt--
+CHARACTER(LEN=4), DIMENSION(:), POINTER :: HTYPE_CRYSTAL_SHAPE
+!--mt--n
 REAL, POINTER :: XMRSTEP => NULL(), &
                  XTSTEP_TS => NULL(), &
                  XALPHAI => NULL(), &
@@ -284,6 +314,7 @@ REAL, POINTER :: XMRSTEP => NULL(), &
                  XFACTNUC_DEP => NULL(), &
                  XFACTNUC_CON => NULL(), &
                  XNDEBRIS_CIBU => NULL(), &
+                 XPSH_MAX_RDSF => NULL(), &
                  XALPHAR => NULL(), &
                  XNUR => NULL(), &
                  XALPHAC => NULL(), &
@@ -349,21 +380,28 @@ CHARACTER(LEN=3), POINTER :: HPARAM_CCN => NULL()
 CHARACTER(LEN=3), POINTER :: HINI_CCN => NULL()
 CHARACTER(LEN=10), DIMENSION(:), POINTER :: HTYPE_CCN
 
-NAMELIST/NAM_PARAM_LIMA/LNUCL, LSEDI, LHHONI, LMEYERS,                     &         
+NAMELIST/NAM_PARAM_LIMA/LNUCL, LSEDI, LHHONI, LMEYERS,                     &
                         NMOM_I, NMOM_S, NMOM_G, NMOM_H,                    & 
                         NMOD_IFN, XIFN_CONC, LIFN_HOM,                     &
                         CIFN_SPECIES, CINT_MIXING, NMOD_IMM, NIND_SPECIE,  &
-                        LSNOW_T, CPRISTINE_ICE_LIMA, CHEVRIMED_ICE_LIMA,   &                                   
-                        !XALPHAI, XNUI, XALPHAS, XNUS, XALPHAG, XNUG,       &    
-                        XFACTNUC_DEP, XFACTNUC_CON, NPHILLIPS,             &    
-                        LCIBU, XNDEBRIS_CIBU, LRDSF, LMURAKAMI,            &                                         
-                        LACTI, LSEDC, LACTIT, LSPRO,                       &                                         
-                        LADJ, LKHKO, LKESSLERAC, NMOM_C, NMOM_R,           &                                         
-                        NMOD_CCN, XCCN_CONC,                               &                                         
-                        LCCN_HOM, CCCN_MODES, HINI_CCN, HTYPE_CCN,         &                                         
-                        XALPHAC, XNUC, XALPHAR, XNUR,                      &                                         
-                        XFSOLUB_CCN, XACTEMP_CCN, XAERDIFF, XAERHEIGHT,    &                                         
-                        LSCAV, LAERO_MASS, LDEPOC, XVDEPOC, LACTTKE,       &                                         
+                        LSNOW_T, CPRISTINE_ICE_LIMA, CHEVRIMED_ICE_LIMA,   & 
+                        !XALPHAI, XNUI, XALPHAS, XNUS, XALPHAG, XNUG,      &
+                        XFACTNUC_DEP, XFACTNUC_CON, NPHILLIPS,             &
+                        LCIBU, XNDEBRIS_CIBU, LRDSF, XPSH_MAX_RDSF,        &
+                        LMURAKAMI,                                         &
+!++cb++ 23/01/24
+                        LCRYSTAL_SHAPE, NNB_CRYSTAL_SHAPE,                 &
+!--cb--
+! mt
+                        HTYPE_CRYSTAL_SHAPE, LICE_ISC,                     &
+! mt
+                        LACTI, LSEDC, LACTIT, LSPRO,                       & 
+                        LADJ, LKHKO, LKESSLERAC, NMOM_C, NMOM_R,           &
+                        NMOD_CCN, XCCN_CONC,                               &
+                        LCCN_HOM, CCCN_MODES, HINI_CCN, HTYPE_CCN,         &
+                        XALPHAC, XNUC, XALPHAR, XNUR,                      &
+                        XFSOLUB_CCN, XACTEMP_CCN, XAERDIFF, XAERHEIGHT,    &
+                        LSCAV, LAERO_MASS, LDEPOC, XVDEPOC, LACTTKE,       &
                         LPTSPLIT, LFEEDBACKT, NMAXITER, XMRSTEP, XTSTEP_TS
 
 CONTAINS
@@ -380,6 +418,12 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   LMEYERS            => PARAM_LIMA%LMEYERS
   LCIBU              => PARAM_LIMA%LCIBU
   LRDSF              => PARAM_LIMA%LRDSF
+!++cb++ 23/01/24
+  LCRYSTAL_SHAPE     => PARAM_LIMA%LCRYSTAL_SHAPE
+!--cb--
+! mt
+  LICE_ISC           => PARAM_LIMA%LICE_ISC
+! mt
   LIFN_HOM           => PARAM_LIMA%LIFN_HOM
   LSNOW_T            => PARAM_LIMA%LSNOW_T
   LMURAKAMI          => PARAM_LIMA%LMURAKAMI
@@ -401,6 +445,10 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   NMOM_S             => PARAM_LIMA%NMOM_S
   NMOM_G             => PARAM_LIMA%NMOM_G
   NMOM_H             => PARAM_LIMA%NMOM_H
+!++cb++ 23/01/24
+  NNB_CRYSTAL_SHAPE  => PARAM_LIMA%NNB_CRYSTAL_SHAPE
+  HTYPE_CRYSTAL_SHAPE => PARAM_LIMA%HTYPE_CRYSTAL_SHAPE
+!--cb--
   NMOD_IFN           => PARAM_LIMA%NMOD_IFN
   NMOD_IMM           => PARAM_LIMA%NMOD_IMM
   NIND_SPECIE        => PARAM_LIMA%NIND_SPECIE
@@ -427,6 +475,7 @@ IF(.NOT. ASSOCIATED(LLIMA_DIAG)) THEN
   XFACTNUC_DEP       => PARAM_LIMA%XFACTNUC_DEP
   XFACTNUC_CON       => PARAM_LIMA%XFACTNUC_CON
   XNDEBRIS_CIBU      => PARAM_LIMA%XNDEBRIS_CIBU
+  XPSH_MAX_RDSF      => PARAM_LIMA%XPSH_MAX_RDSF
   XALPHAR            => PARAM_LIMA%XALPHAR
   XNUR               => PARAM_LIMA%XNUR
   XALPHAC            => PARAM_LIMA%XALPHAC
@@ -582,6 +631,8 @@ SUBROUTINE PARAM_LIMA_INIT(HPROGRAM, TFILENAM, LDNEEDNAM, KLUOUT, &
 !!    MODIFICATIONS
 !!    -------------
 !!      Original    Apr 2023
+!!      C. Barthe   Jan 2024  add several ice crystal shapes
+!!      I. Vongpaseut Apr 2024  modification of the RDSF parameterization
 !-------------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -611,8 +662,8 @@ INTEGER, OPTIONAL, INTENT(IN) :: KPRINT       !< Print level (defaults to 0): 0 
 !      ------------------------------
 !
 LOGICAL :: LLDEFAULTVAL, LLREADNAM, LLCHECK, LLFOUND
-INTEGER :: IPRINT 
- 
+INTEGER :: IPRINT, JSH
+
 LLDEFAULTVAL=.TRUE. 
 LLREADNAM=.TRUE. 
 LLCHECK=.TRUE. 
@@ -657,11 +708,23 @@ IF(LLDEFAULTVAL) THEN
   !XNUG=
   XFACTNUC_DEP = 1.0
   XFACTNUC_CON = 1.0
-  NPHILLIPS=8
+  NPHILLIPS = 8
   LCIBU = .FALSE.
   XNDEBRIS_CIBU = 50.0
   LRDSF = .FALSE.
-  LMURAKAMI=.TRUE.
+  XPSH_MAX_RDSF = 0.2
+!++cb++ 23/01/24
+  LCRYSTAL_SHAPE = .FALSE.
+  NNB_CRYSTAL_SHAPE = 1
+!--cb--
+! mt
+  LICE_ISC = .FALSE.
+  HTYPE_CRYSTAL_SHAPE(1) = 'YPLA'
+  HTYPE_CRYSTAL_SHAPE(2) = 'YCOL'
+  HTYPE_CRYSTAL_SHAPE(3) = 'YBUR'
+  HTYPE_CRYSTAL_SHAPE(4) = 'YDRO'
+! mt
+  LMURAKAMI = .TRUE.
   LACTI  = .TRUE.
   LSEDC  = .TRUE.
   LACTIT = .FALSE.
@@ -709,8 +772,20 @@ ENDIF
 !       ---------
 !
 IF(LLCHECK) THEN
+!++cb++ 24/01/24
+!  CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CPRISTINE_ICE_LIMA', CPRISTINE_ICE_LIMA, &
+!                                  'PLAT', 'COLU', 'BURO','YPLA','YCOL','YBUR','YDRO','YHCO','YHBU')
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CPRISTINE_ICE_LIMA', CPRISTINE_ICE_LIMA, &
-                                  'PLAT', 'COLU', 'BURO','YPLA','YCOL','YBUR','YDRO','YHCO','YHBU')
+                                  'PLAT', 'COLU', 'BURO', 'POIR', &
+                                  'YPLA', 'YCOL', 'YBUR','YDRO', 'YHCO', 'YHBU')
+  IF (LCRYSTAL_SHAPE) THEN
+    DO JSH = 1, NNB_CRYSTAL_SHAPE
+      CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'HTYPE_CRYSTAL_SHAPE', HTYPE_CRYSTAL_SHAPE(JSH), &
+                              'POIR', 'CCOL', 'CPLA', &
+                              'YPLA', 'YCOL', 'YBUR', 'YDRO', 'YHCO', 'YHBU')
+    ENDDO
+  ENDIF
+!--cb--
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CHEVRIMED_ICE_LIMA', CHEVRIMED_ICE_LIMA, &
                                                 'GRAU', 'HAIL')
 
@@ -735,6 +810,26 @@ IF(LLCHECK) THEN
            &"VALUE OF NMOD_IFN IN ORDER TO USE LIMA COLD NUCLEATION SCHEME.") 
   END IF
 
+!++cb++ 24/01/24
+  IF (.NOT. LPTSPLIT .AND. LCRYSTAL_SHAPE) THEN
+    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODD_PARAM_LIMA', &
+           &"YOU HAVE TO SET LPTSPLIT=T TO USE SEVERAL ICE CRYSTAL HABITS.")
+  END IF
+
+  IF (LCRYSTAL_SHAPE .AND. (NNB_CRYSTAL_SHAPE .LT. 3 .OR. NNB_CRYSTAL_SHAPE .GT. 4)) THEN
+    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODD_PARAM_LIMA', &
+           &"WHEN LCRYSTAL_SHAPE=T, IT IS POSSIBLE TO USE 3 OR 4 DIFFERENT SHAPES"// &
+           &"YOU HAVE TO SET NNB_CRYSTAL_SHAPE TO 3 OR 4.")
+  END IF
+!--cb--
+!++mt++
+  IF (LCRYSTAL_SHAPE .AND. LICE_ISC .AND. (NNB_CRYSTAL_SHAPE .LE. 3 .OR. NNB_CRYSTAL_SHAPE .GT. 4)) THEN
+    CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODD_PARAM_LIMA', &
+           &"WHEN LCRYSTAL_SHAPE=T, AND LICE_ISC=T IT IS POSSIBLE TO USE DIFFERENT SHAPES"// &
+           &"YOU HAVE TO SET NNB_CRYSTAL_SHAPE TO 4.")
+  END IF 
+!--mt--
+!
   IF(HPROGRAM=='AROME' .OR. HPROGRAM=='PHYEX') THEN
     IF(.NOT. LPTSPLIT) THEN
       CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'MODD_PARAM_LIMA', &

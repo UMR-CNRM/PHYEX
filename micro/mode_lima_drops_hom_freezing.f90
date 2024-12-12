@@ -11,7 +11,7 @@ CONTAINS
                                       PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                       PCRT,                                     &
                                       P_TH_HONR, P_RR_HONR, P_CR_HONR,          &
-                                      PB_TH, PB_RR, PB_CR, PB_RG                )
+                                      PB_TH, PB_RR, PB_CR, PB_RG, PB_CG         ) !++cb--
 !     ###############################################################################
 !
 !!    PURPOSE
@@ -29,6 +29,7 @@ CONTAINS
 !!    MODIFICATIONS
 !!    -------------
 !!      Original             15/03/2018
+!!      C. Barthe    08/03/24  add gain for Nr if nmom_g=2
 !!
 !-------------------------------------------------------------------------------
 !
@@ -65,6 +66,7 @@ REAL, DIMENSION(:),    INTENT(INOUT) :: PB_TH
 REAL, DIMENSION(:),    INTENT(INOUT) :: PB_RR
 REAL, DIMENSION(:),    INTENT(INOUT) :: PB_CR
 REAL, DIMENSION(:),    INTENT(INOUT) :: PB_RG
+REAL, DIMENSION(:),    INTENT(INOUT) :: PB_CG !++cb--
 !
 !*       0.2   Declarations of local variables :
 !
@@ -100,6 +102,7 @@ WHERE( (ZT(:)<XTT-35.0) .AND. (PRRT(:)>XRTMIN(3)) .AND. LDCOMPUTE(:) )
    PB_RR(:) = PB_RR(:) - PRRT(:)
    PB_CR(:) = PB_CR(:) - PCRT(:)
    PB_RG(:) = PB_RG(:) + PRRT(:)
+   PB_CG(:) = PB_CG(:) + PCRT(:)  !++cb--
 ENDWHERE
 !
 !-------------------------------------------------------------------------------

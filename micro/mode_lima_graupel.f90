@@ -40,6 +40,7 @@ CONTAINS
 !!      Original             15/03/2018
 !  P. Wautelet 26/04/2019: replace non-standard FLOAT function by REAL function
 !  J. Wurtz       03/2022: new snow characteristics
+!  C. Barthe      03/2024: add condition for CDRYG to avoid inconsistency between rg and Ng
 !
 !-------------------------------------------------------------------------------
 !
@@ -213,7 +214,10 @@ ZRWETG(:) = 0.
 !            1.a Collection of rc and ri in the dry mode
 !            --------------------------------------------
 !
-WHERE( PRGT(:)>XRTMIN(6) .AND. LDCOMPUTE(:) )
+!++cb++
+!WHERE( PRGT(:)>XRTMIN(6) .AND. LDCOMPUTE(:) )
+WHERE( PRGT(:)>XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. LDCOMPUTE(:) )
+!--cb--
    ZZW(:) = PCGT(:) * PLBDG(:)**(-XDG-2.0) * PRHODREF(:)**(1-XCEXVT)
    ZZW1(:) = XFCDRYG * PRCT(:) * ZZW(:)                               ! RCDRYG - rc collected by graupel in dry mode 
    ZZW2(:) = XFIDRYG * EXP( XCOLEXIG*(PT(:)-XTT) ) * PRIT(:) * ZZW(:) ! RIDRYG - ri collected by graupel in dry mode

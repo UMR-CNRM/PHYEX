@@ -11,7 +11,7 @@ CONTAINS
                                                 PRHODREF,                     &
                                                 PRRT, PCRT, PRIT, PCIT, PRGT, &
                                                 PLBDR,                        &
-                                                P_RI_RDSF, P_CI_RDSF          )
+                                                P_RI_RDSF, P_CI_RDSF, PT      )
 !     #######################################################################
 !
 !!    PURPOSE
@@ -25,17 +25,20 @@ CONTAINS
 !!    MODIFICATIONS
 !!    -------------
 !!      Original    04/2022  duplicate from original for LIMA_SPLIT
+!!    I. Vongapseut 01/2024  Add a dependance on temperature
 !
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, LRDSF, XCEXVT
+USE MODD_CST,              ONLY : XPI
+USE MODD_PARAM_LIMA,       ONLY : XRTMIN, XCTMIN, LRDSF, XCEXVT, XPSH_MAX_RDSF
 USE MODD_PARAM_LIMA_COLD,  ONLY : XMNU0
 USE MODD_PARAM_LIMA_WARM,  ONLY : XDR
 USE MODD_PARAM_LIMA_MIXED, ONLY : NGAMINC, XGAMINC_RDSF_R, &
-                                  XFACTOR_RDSF_NI, XMOMGR_RDSF, XRDSFINTP1_R, XRDSFINTP_R
+                                  XFACTOR_RDSF_NI, XMOMGR_RDSF, XRDSFINTP1_R, XRDSFINTP_R, &
+                                  XTM_PSH, XSIG_PSH
 !
 IMPLICIT NONE
 !
@@ -52,6 +55,7 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PRIT
 REAL, DIMENSION(:),   INTENT(IN)    :: PCIT
 REAL, DIMENSION(:),   INTENT(IN)    :: PRGT
 REAL, DIMENSION(:),   INTENT(IN)    :: PLBDR 
+REAL, DIMENSION(:),  INTENT(IN)     :: PT              ! Temperature
 !
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_RDSF
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_CI_RDSF
@@ -68,6 +72,12 @@ INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC2_R            ! Rain indice vector
 REAL,    DIMENSION(SIZE(PRRT))     :: ZINTG_RAIN         ! incomplete gamma function for rain
 REAL,    DIMENSION(SIZE(PRRT))     :: ZNI_RDSF,ZRI_RDSF  ! RDSF rates
 !
+REAL,    DIMENSION(:), ALLOCATABLE :: ZT_RDSF            ! Temperature where RDSF
+REAL,    DIMENSION(:), ALLOCATABLE :: ZNORMT             ! Normal distribution temperature shattering probability
+REAL,    DIMENSION(:), ALLOCATABLE :: ZPSH_R             ! Shattering probability work vectors
+REAL,    DIMENSION(SIZE(PRRT))     :: ZPSH               !Shattering probability
+LOGICAL, DIMENSION(:), ALLOCATABLE :: LTEMP              ! Define the mask where ZNORMT is negligible
+integer :: ii
 !-------------------------------------------------------------------------------
 P_RI_RDSF(:)=0.
 P_CI_RDSF(:)=0.
@@ -84,10 +94,17 @@ IF (IRDSF > 0) THEN
   ALLOCATE(ZVEC1_R1(IRDSF))
   ALLOCATE(ZVEC2_R(IRDSF))
   ALLOCATE(IVEC2_R(IRDSF))
+  ALLOCATE(ZT_RDSF(IRDSF))
+  ALLOCATE(ZNORMT(IRDSF))
+  ALLOCATE(ZPSH_R(IRDSF))
+  ALLOCATE(LTEMP(IRDSF))
+!
 !
 !*       2.2.1  select the ZLBDAR
 !
   ZVEC1_R(:) = PACK( PLBDR(:),MASK=GRDSF(:) )
+  ZT_RDSF(:) = PACK( PT(:),MASK=GRDSF(:) )
+!
 !
 !*       2.2.2  find the next lower indice for the ZLBDAR in the
 !               geometrical set of Lbda_r used to tabulate some moments of the
@@ -111,13 +128,26 @@ IF (IRDSF > 0) THEN
 !
 !*       2.2.4  To compute final "RDSF" contributions
 !
-  ZNI_RDSF(:) = (XFACTOR_RDSF_NI / (PRHODREF(:)**(XCEXVT-1.0))) * (  &
+  LTEMP(1:IRDSF) = .FALSE.
+!  Add shattering probability 
+! 
+  ZNORMT(1:IRDSF) =  1. / SQRT(2.*XSIG_PSH*XPI) * EXP(-(ZT_RDSF(1:IRDSF)-XTM_PSH)**2. / (2.*XSIG_PSH**2.))
+  LTEMP(1:IRDSF) = ZNORMT(1:IRDSF) >= 0. .AND. ZNORMT(1:IRDSF) < 0.1
+!
+  ZPSH_R(1:IRDSF) = XPSH_MAX_RDSF / MAXVAL(ZNORMT(1:IRDSF)) * ZNORMT(1:IRDSF)
+  !
+  ZPSH(:) = UNPACK ( VECTOR=ZPSH_R(:),MASK=GRDSF,FIELD=0.0 )
+!
+  ZNI_RDSF(:) = (XFACTOR_RDSF_NI * ZPSH(:) / (PRHODREF(:)**(XCEXVT-1.0))) * (  &
                  PCIT(:) * PCRT(:) * ZINTG_RAIN(:) * PLBDR(:)**(-(XDR+6.0)) )
 !
   P_CI_RDSF(:) = MAX(ZNI_RDSF(:),0.)
 !
 ! The value of rg removed by RDSF is determined by the mean mass of pristine ice
-  ZRI_RDSF(:) = MAX( ZNI_RDSF(:)*XMNU0,XRTMIN(5) )
+!++cb++
+!  ZRI_RDSF(:) = MAX( ZNI_RDSF(:)*XMNU0,XRTMIN(5) )
+  ZRI_RDSF(:) = MAX( ZNI_RDSF(:)*XMNU0,0. )
+!--cb--
 !
   P_RI_RDSF(:) = ZRI_RDSF(:)
 !
@@ -125,7 +155,11 @@ IF (IRDSF > 0) THEN
   DEALLOCATE(ZVEC1_R1)
   DEALLOCATE(ZVEC2_R)
   DEALLOCATE(IVEC2_R)
-  !
+  DEALLOCATE(ZT_RDSF)
+  DEALLOCATE(ZNORMT)
+  DEALLOCATE(ZPSH_R)
+  DEALLOCATE(LTEMP)
+!
 ENDIF
 !
 !-------------------------------------------------------------------------------
