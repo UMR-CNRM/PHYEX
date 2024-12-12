@@ -41,6 +41,7 @@ SUBROUTINE LIMA_UPDATE_NSV(LDINIT, KMI, KSV, CDCLOUD, LDUPDATE)
 !!    MODIFICATIONS
 !!    -------------
 !!      Original    April 2023
+!!      C. Barthe   Jan. 2024  add several shapes for ice crystals
 !-------------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -59,7 +60,8 @@ USE MODD_NSV, ONLY: NSV_LIMA_BEG_A, NSV_LIMA_END_A, NSV_LIMA_A, &
 USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN, LSCAV, LAERO_MASS, &
                                 NMOD_IFN, NMOD_IMM, LHHONI, &
                                 LSPRO,  &
-                                NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
+                                NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H, &
+                                LCRYSTAL_SHAPE, NNB_CRYSTAL_SHAPE !++cb--
 !
 !* 0.1. Declaration of arguments
 !       ------------------------
@@ -104,7 +106,14 @@ IF(LDINIT) THEN
     ! Ni
     IF (NMOM_I.GE.2) THEN
       NSV_LIMA_NI_A(KMI) = KSV
-      KSV = KSV+1
+!++cb++ 23/01/24
+!      KSV = KSV+1
+      IF (.NOT. LCRYSTAL_SHAPE) THEN
+        KSV = KSV+1
+      ELSE
+        KSV = KSV + NNB_CRYSTAL_SHAPE
+      END IF
+!--cb--
     END IF
     ! Ns
     IF (NMOM_S.GE.2) THEN

@@ -9,7 +9,10 @@ CONTAINS
 !     ##########################################################################
   SUBROUTINE LIMA_CCN_HOM_FREEZING (CST, PRHODREF, PEXNREF, PPABST, PW_NU,    &
                                     PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
-                                    PCCT, PCRT, PCIT, PNFT, PNHT ,            &
+!++cb++ 25/01/24
+!                                    PCCT, PCRT, PCIT, PNFT, PNHT ,            &
+                                    PCCT, PCRT, PCIT, PCIT_SHAPE, PNFT, PNHT, &
+!--cb--
                                     PICEFR, PTOT_RV_HONH                      )
 !     ##########################################################################
 !
@@ -30,16 +33,18 @@ CONTAINS
 !!      Original             15/03/2018 
 !  P. Wautelet 28/05/2019: move COUNTJV function to tools.f90
 !  C. Barthe   07/06/2022: save mixing ratio change for cloud electrification
+!  C. Barthe   25/01/2024: add several shapes for ice crystals 
 !
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
 !              ------------
 !
-USE MODD_CST,            ONLY: CST_t
+USE MODD_CST,             ONLY: CST_t
 USE MODD_NSV
 USE MODD_PARAMETERS,      ONLY: JPHEXT, JPVEXT
-USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN
+USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN, &
+                                LCRYSTAL_SHAPE, NNB_CRYSTAL_SHAPE !++cb-- 25/01/24
 USE MODD_PARAM_LIMA_COLD, ONLY: XRCOEF_HONH, XCEXP_DIFVAP_HONH, XCOEF_DIFVAP_HONH,&
                                 XCRITSAT1_HONH, XCRITSAT2_HONH, XTMAX_HONH,       &
                                 XTMIN_HONH, XC1_HONH, XC2_HONH, XC3_HONH,         &
@@ -69,6 +74,9 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCCT    ! Cloud water C. at t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCRT    ! Rain water C. source
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIT    ! Ice crystal C. source
+!++cb++ 25/01/25
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PCIT_SHAPE ! Ice crystal conc. at t for each shape
+!--cb--
 !
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PNFT    ! Free CCN conc. 
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PNHT    ! haze homogeneous freezing
@@ -93,7 +101,10 @@ REAL, DIMENSION(:),   ALLOCATABLE :: ZCRT    ! Rain water conc. source
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZNFT    ! available nucleus conc. source
 REAL, DIMENSION(:),   ALLOCATABLE :: ZCIT    ! Pristine ice conc. source
 REAL, DIMENSION(:),   ALLOCATABLE :: ZZNHT   ! Nucleated Ice nuclei conc. source
-                                             !by Homogeneous freezing
+                                             ! by Homogeneous freezing
+!++cb++ 25/01/24
+REAL, DIMENSION(:,:), ALLOCATABLE :: ZCIT_SHAPE ! Ice crystal conc. at t for each shape
+!--cb--
 !
 REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))   &
                                   :: ZNHT  ! Nucleated Ice nuclei conc. source
@@ -125,6 +136,7 @@ REAL, DIMENSION(:), ALLOCATABLE &
 !
 INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE   ! Physical domain
 INTEGER :: JL, JMOD_CCN                   ! Loop index
+INTEGER :: JSH                            ! Loop index for ice crystal shapes !++cb--
 !
 INTEGER :: INEGT                          ! Case number of hom. nucleation
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
@@ -174,6 +186,7 @@ IF (INEGT.GT.0) THEN
    ALLOCATE(ZCCT(INEGT))
    ALLOCATE(ZCRT(INEGT))
    ALLOCATE(ZCIT(INEGT))
+   IF (LCRYSTAL_SHAPE) ALLOCATE(ZCIT_SHAPE(INEGT,NNB_CRYSTAL_SHAPE)) !++cb--
    !
    ALLOCATE(ZNFT(INEGT,NMOD_CCN))
    ALLOCATE(ZZNHT(INEGT))
@@ -196,6 +209,13 @@ IF (INEGT.GT.0) THEN
       ZCCT(JL) = PCCT(I1(JL),I2(JL),I3(JL))
       ZCRT(JL) = PCRT(I1(JL),I2(JL),I3(JL))
       ZCIT(JL) = PCIT(I1(JL),I2(JL),I3(JL))
+!++cb++ 25/01/24
+      IF (LCRYSTAL_SHAPE) THEN
+         DO JSH = 1, NNB_CRYSTAL_SHAPE
+            ZCIT_SHAPE(JL,JSH) = PCIT_SHAPE(I1(JL),I2(JL),I3(JL),JSH)
+         END DO
+      END IF
+!--cb--
       !
       DO JMOD_CCN = 1, NMOD_CCN
          ZNFT(JL,JMOD_CCN) = PNFT(I1(JL),I2(JL),I3(JL),JMOD_CCN)
@@ -268,31 +288,31 @@ IF (INEGT.GT.0) THEN
       ALLOCATE(ZBFACT(INEGT))
 !
       WHERE( (ZZT(:)<CST%XTT-35.0) .AND. (ZSI(:)>ZZY(:)) )
-            ZLS(:)   = CST%XLSTT+(CST%XCPV-CST%XCI)*ZTCELSIUS(:)          ! Ls
+         ZLS(:)   = CST%XLSTT+(CST%XCPV-CST%XCI)*ZTCELSIUS(:)          ! Ls
 !
-            ZPSI1(:) = ZZY(:) * (CST%XG/(CST%XRD*ZZT(:)))*(ZEPS*ZLS(:)/(CST%XCPD*ZZT(:))-1.)
+         ZPSI1(:) = ZZY(:) * (CST%XG/(CST%XRD*ZZT(:)))*(ZEPS*ZLS(:)/(CST%XCPD*ZZT(:))-1.)
 !                                                         ! Psi1 (a1*Scr in KL01)
 ! BV correction PSI2 enlever 1/ZEPS ?
-!            ZPSI2(:) = ZSI(:) * (1.0/ZEPS+1.0/ZRVT(:)) +                           &
-            ZPSI2(:) = ZSI(:) * (1.0/ZRVT(:)) +                           &
-                 ZZY(:) * ((ZLS(:)/ZZT(:))**2)/(CST%XCPD*CST%XRV) 
+!         ZPSI2(:) = ZSI(:) * (1.0/ZEPS+1.0/ZRVT(:)) +                           &
+         ZPSI2(:) = ZSI(:) * (1.0/ZRVT(:)) +                           &
+                    ZZY(:) * ((ZLS(:)/ZZT(:))**2)/(CST%XCPD*CST%XRV) 
 !                                                         ! Psi2 (a2+a3*Scr in KL01)
-            ZTAU(:) = 1.0 / ( MAX( XC1_HONH,XC1_HONH*(XC2_HONH-XC3_HONH*ZZT(:)) ) *&
-                 ABS( (XDLNJODT1_HONH - XDLNJODT2_HONH*ZZT(:))       *             &
-                 ((ZPRES(:)/CST%XP00)**(CST%XRD/CST%XCPD))*ZTHT(:) ) )
+         ZTAU(:) = 1.0 / ( MAX( XC1_HONH,XC1_HONH*(XC2_HONH-XC3_HONH*ZZT(:)) ) * &
+                   ABS( (XDLNJODT1_HONH - XDLNJODT2_HONH*ZZT(:)) *               &
+                   ((ZPRES(:)/CST%XP00)**(CST%XRD/CST%XCPD))*ZTHT(:) ) )
 !
-            ZBFACT(:) = (XRHOI_HONH/ZRHODREF(:)) * (ZSI(:)/(ZZY(:)-1.0))           &
+         ZBFACT(:) = (XRHOI_HONH/ZRHODREF(:)) * (ZSI(:)/(ZZY(:)-1.0)) &
 ! BV correction ZBFACT enlever 1/ZEPS ?
 !                 * (1.0/ZRVT(:)+1.0/ZEPS)                                          &
-                 * (1.0/ZRVT(:))                                          &
-                 / (XCOEF_DIFVAP_HONH*(ZZT(:)**XCEXP_DIFVAP_HONH /ZPRES(:)))
+                   * (1.0/ZRVT(:))                                    &
+                   / (XCOEF_DIFVAP_HONH*(ZZT(:)**XCEXP_DIFVAP_HONH /ZPRES(:)))
 !
 ! BV correction ZZX rho_i{-1} ?
-!            ZZX(:) = MAX( MIN( XRHOI_HONH*ZBFACT(:)**1.5 * (ZPSI1(:)/ZPSI2(:))     &
-            ZZX(:) = MAX( MIN( (1/XRHOI_HONH)*ZBFACT(:)**1.5 * (ZPSI1(:)/ZPSI2(:))     &
-                 * (ZW_NU(:)/SQRT(ZTAU(:))) , ZFREECCN(:) ) , 0.)
+!         ZZX(:) = MAX( MIN( XRHOI_HONH*ZBFACT(:)**1.5 * (ZPSI1(:)/ZPSI2(:))     &
+         ZZX(:) = MAX( MIN( (1/XRHOI_HONH)*ZBFACT(:)**1.5 * (ZPSI1(:)/ZPSI2(:))     &
+                * (ZW_NU(:)/SQRT(ZTAU(:))) , ZFREECCN(:) ) , 0.)
 !
-            ZZW(:) = MIN( XRCOEF_HONH*ZZX(:)*(ZTAU(:)/ZBFACT(:))**1.5 , ZRVT(:) )
+         ZZW(:) = MIN( XRCOEF_HONH*ZZX(:)*(ZTAU(:)/ZBFACT(:))**1.5 , ZRVT(:) )
       END WHERE
 !
 ! Apply the changes 
@@ -308,7 +328,24 @@ IF (INEGT.GT.0) THEN
       PTHT(:,:,:) = PTHT(:,:,:) + UNPACK( ZZW(:)*(ZLSFACT(:)-ZLVFACT(:)), MASK=GNEGT(:,:,:),FIELD=0.)
       PRVT(:,:,:) = PRVT(:,:,:) - UNPACK( ZZW(:), MASK=GNEGT(:,:,:),FIELD=0.)
       PRIT(:,:,:) = PRIT(:,:,:) + UNPACK( ZZW(:), MASK=GNEGT(:,:,:),FIELD=0.)
-      PCIT(:,:,:) = PCIT(:,:,:) + UNPACK( ZZX(:), MASK=GNEGT(:,:,:),FIELD=0.)
+!++cb++ 25/01/24
+!      PCIT(:,:,:) = PCIT(:,:,:) + UNPACK( ZZX(:), MASK=GNEGT(:,:,:),FIELD=0.)
+      IF (.NOT. LCRYSTAL_SHAPE) THEN
+        PCIT(:,:,:) = PCIT(:,:,:) + UNPACK( ZZX(:), MASK=GNEGT(:,:,:),FIELD=0.)
+      ELSE
+!++cb++ 15/04/24
+        !--> Hyp : etant donnee la gamme de temperatures, formation de 20% de colonnes et
+        ! 80% de polycristaux
+        !PCIT_SHAPE(:,:,:,2) = PCIT_SHAPE(:,:,:,2) + &
+        !                      0.2 * UNPACK( ZZX(:), MASK=GNEGT(:,:,:),FIELD=0.)
+        !PCIT_SHAPE(:,:,:,3) = PCIT_SHAPE(:,:,:,3) + &
+        !                      0.8 * UNPACK( ZZX(:), MASK=GNEGT(:,:,:),FIELD=0.)
+        !--> Hyp : la congelation des CCN et des gouttelettes produit des droxtals
+        PCIT_SHAPE(:,:,:,4) = PCIT_SHAPE(:,:,:,4) + UNPACK( ZZX(:), MASK=GNEGT(:,:,:),FIELD=0.)
+!--cb--
+        PCIT(:,:,:) = SUM(PCIT_SHAPE, DIM=4)
+      END IF
+!--cb--
       PNHT(:,:,:) = PNHT(:,:,:) + UNPACK( ZZX(:), MASK=GNEGT(:,:,:),FIELD=0.)
 
       DEALLOCATE(ZFREECCN)
@@ -335,6 +372,8 @@ IF (INEGT.GT.0) THEN
    DEALLOCATE(ZCCT)
    DEALLOCATE(ZCRT)
    DEALLOCATE(ZCIT)
+!
+   IF (ALLOCATED(ZCIT_SHAPE)) DEALLOCATE(ZCIT_SHAPE) !++cb-- 19/02/24
 !
    DEALLOCATE(ZNFT)
    DEALLOCATE(ZZNHT)

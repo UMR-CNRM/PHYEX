@@ -10,13 +10,14 @@ CONTAINS
   SUBROUTINE LIMA_INST_PROCS (PTSTEP, LDCOMPUTE,                                  &
                               PEXNREF, PPABST,                                    &
                               PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT,           &
-                              PCCT, PCRT, PCIT,                                   &
+                              PCCT, PCRT, PCIT, PCIT_SHAPE,                       & !++cb-- 26/01/24 
                               PINT,                                               &
                               P_CR_BRKU,                                          & ! spontaneous break up of drops (BRKU) : Nr
                               P_TH_HONR, P_RR_HONR, P_CR_HONR,                    & ! rain drops homogeneous freezing (HONR) : rr, Nr, rg=-rr, th
                               P_TH_IMLT, P_RC_IMLT, P_CC_IMLT,                    & ! ice melting (IMLT) : rc, Nc, ri=-rc, Ni=-Nc, th, IFNF, IFNA
+                              P_SHCI_IMLT,                                        & !++cb-- 26/01/24
                               PB_TH, PB_RV, PB_RC, PB_RR, PB_RI, PB_RG,           &
-                              PB_CC, PB_CR, PB_CI,                                &
+                              PB_CC, PB_CR, PB_CI, PB_CI_SHAPE, PB_CG,            & !++cb-- 26/01/24
                               PB_IFNN,                                            &
                               PCF1D, PIF1D, PPF1D                                 )
 !     ###########################################################################
@@ -33,6 +34,8 @@ CONTAINS
 !!    MODIFICATIONS
 !!    -------------
 !!      Original             15/03/2018
+!!      C. Barthe     01/2024 add several shapes for ice crystals (only IMLT)
+!!      C. Barthe     03/2024 add HONR for Ng
 !!
 !-------------------------------------------------------------------------------
 !
@@ -57,13 +60,13 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PTHT       ! Theta at t
 REAL, DIMENSION(:),   INTENT(IN)    :: PRVT       ! Water vapor m.r. at t 
 REAL, DIMENSION(:),   INTENT(IN)    :: PRCT       ! Cloud water m.r. at t 
 REAL, DIMENSION(:),   INTENT(IN)    :: PRRT       ! Rain water m.r. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PRIT       ! Rain water m.r. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PRST       ! Rain water m.r. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PRGT       ! Rain water m.r. at t
+REAL, DIMENSION(:),   INTENT(IN)    :: PRIT       ! Pristine ice m.r. at t
+REAL, DIMENSION(:),   INTENT(IN)    :: PRST       ! Snow/aggregates m.r. at t
+REAL, DIMENSION(:),   INTENT(IN)    :: PRGT       ! Graupel m.r. at t
 !
 REAL, DIMENSION(:),   INTENT(IN)    :: PCCT       ! Cloud water conc. at t 
 REAL, DIMENSION(:),   INTENT(IN)    :: PCRT       ! Rain water conc. at t
-REAL, DIMENSION(:),   INTENT(IN)    :: PCIT       ! Prinstine ice conc. at t
+REAL, DIMENSION(:),   INTENT(IN)    :: PCIT       ! Pristine ice conc. at t
 !
 REAL, DIMENSION(:,:), INTENT(IN)    :: PINT       ! IFN C. activated at t
 !
@@ -85,12 +88,17 @@ REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_RG      ! Cumulated mr change (kg/kg)
 REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_CC      ! Cumulated concentration change (#/kg)
 REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_CR      ! Cumulated concentration change (#/kg)
 REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_CI      ! Cumulated concentration change (#/kg)
+REAL, DIMENSION(:)  , INTENT(INOUT) :: PB_CG      ! Cumulated concentration change (#/kg) !++cb--
 !
 REAL, DIMENSION(:,:), INTENT(INOUT) :: PB_IFNN    ! Cumulated concentration change (#/kg)
 !
 REAL, DIMENSION(:)  , INTENT(INOUT) :: PCF1D      ! Liquid cloud fraction
 REAL, DIMENSION(:)  , INTENT(INOUT) :: PIF1D      ! Ice cloud fraction
 REAL, DIMENSION(:)  , INTENT(INOUT) :: PPF1D      ! Precipitation fraction
+!
+REAL, DIMENSION(:,:), INTENT(IN)    :: PCIT_SHAPE ! Pristine ice conc. at t for different shapes !++cb--
+REAL, DIMENSION(:,:), INTENT(INOUT) :: P_SHCI_IMLT  ! Concentration change (#/kg)
+REAL, DIMENSION(:,:), INTENT(INOUT) :: PB_CI_SHAPE ! Cumulated concentration change (#/kg)
 !
 !-------------------------------------------------------------------------------
 !
@@ -109,7 +117,7 @@ IF (NMOM_G.GE.1 .AND. NMOM_R.GE.1) THEN
                                  PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                  PCRT,                                     &
                                  P_TH_HONR, P_RR_HONR, P_CR_HONR,          &
-                                 PB_TH, PB_RR, PB_CR, PB_RG                )
+                                 PB_TH, PB_RR, PB_CR, PB_RG, PB_CG         ) !++cb--
 END IF
 !
 !-------------------------------------------------------------------------------
@@ -118,9 +126,11 @@ IF (NMOM_C.GE.1 .AND. NMOM_I.GE.1) THEN
    CALL LIMA_ICE_MELTING (PTSTEP, LDCOMPUTE,                        & ! no dependance on CF, IF or PF
                           PEXNREF, PPABST,                          & ! but ice fraction becomes cloud fraction
                           PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, & ! -> where ?
-                          PCIT, PINT,                               &
+                          PCIT, PCIT_SHAPE, PINT,                   & !++cb-- 26/01/24
                           P_TH_IMLT, P_RC_IMLT, P_CC_IMLT,          &
-                          PB_TH, PB_RC, PB_CC, PB_RI, PB_CI, PB_IFNN)
+                          P_SHCI_IMLT,                              & !++cb-- 26/01/24
+                          PB_TH, PB_RC, PB_CC, PB_RI, PB_CI,        &
+                          PB_CI_SHAPE, PB_IFNN)                         !++cb-- 26/01/24
    !
    !PCF1D(:)=MAX(PCF1D(:),PIF1D(:))
    !PIF1D(:)=0.

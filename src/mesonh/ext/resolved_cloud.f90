@@ -286,6 +286,7 @@ END MODULE MODI_RESOLVED_CLOUD
 !  C. Barthe   20/03/2023: to avoid duplicating sources, cloud electrification is integrated in the microphysics
 !                          CELLS can be used with rain_ice with LRED=T and with LIMA with LPTSPLIT=T
 !                          the adjustement for cloud electricity is also externalized
+!  C. Barthe   24/01/2024: remove useless comments for ELEC
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -733,10 +734,7 @@ call Sources_neg_correct( hcloud, helec, 'NEGA', krr, ptstep, ppabst, ptht, prt,
 !*       4.     CLOUD ELECTRICITY
 !               -----------------
 !
-!++cb++ 01/06/23
-!IF (HELEC == 'ELE4') &
 IF (HELEC(1:3) == 'ELE') THEN 
-!--cb--
 !
 !*       4.1    Ion source from drift motion and cosmic rays
 !

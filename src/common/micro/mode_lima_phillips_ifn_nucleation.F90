@@ -6,15 +6,19 @@
 MODULE MODE_LIMA_PHILLIPS_IFN_NUCLEATION
   IMPLICIT NONE
 CONTAINS
-!     #################################################################################
-  SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION (CST, PTSTEP,                              &
-                                           PRHODREF, PEXNREF, PPABST,                &
+! ########################################################################################
+  SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION (CST, PTSTEP,                                  &
+                                           PRHODREF, PEXNREF, PPABST,                    &
                                            PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
-                                           PCCT, PCIT, PNAT, PIFT, PINT, PNIT,       &
-                                           P_TH_HIND, P_RI_HIND, P_CI_HIND,          &
-                                           P_TH_HINC, P_RC_HINC, P_CC_HINC,          &
-                                           PICEFR                                    )
-!     #################################################################################
+!++cb++ 25/01/24
+!                                           PCCT, PCIT, PNAT, PIFT, PINT, PNIT,           &
+                                           PCCT, PCIT, PCIT_SHAPE,                       &
+                                           PNAT, PIFT, PINT, PNIT,                       &
+!--cb--
+                                           P_TH_HIND, P_RI_HIND, P_CI_HIND, P_SHCI_HIND, &
+                                           P_TH_HINC, P_RC_HINC, P_CC_HINC, P_SHCI_HINC, &
+                                           PICEFR                                        )
+! ########################################################################################
 !!
 !!    PURPOSE
 !!    -------
@@ -66,6 +70,7 @@ CONTAINS
 !  P. Wautelet 28/05/2019: move COUNTJV function to tools.f90
 !  P. Wautelet 27/02/2020: bugfix: P_TH_HIND was not accumulated (will affect budgets) + add P_TH_HINC dummy argument
 !                          + change intent of *_HIND and *_HINC dummy arguments (INOUT->OUT)
+!  C. Barthe   25/01/2024: add several shapes for ice crystals
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -75,7 +80,8 @@ USE MODD_CST,            ONLY: CST_t
 USE MODD_PARAMETERS,      ONLY : JPHEXT, JPVEXT
 USE MODD_PARAM_LIMA,      ONLY : NMOD_IFN, NSPECIE, XFRAC,                         &
                                  NMOD_CCN, NMOD_IMM, NIND_SPECIE, NINDICE_CCN_IMM,  &
-                                 XDSI0, NPHILLIPS
+                                 XDSI0, NPHILLIPS, &
+                                 LCRYSTAL_SHAPE, NNB_CRYSTAL_SHAPE !++cb-- 25/01/24
 USE MODD_PARAM_LIMA_COLD, ONLY : XMNU0
 
 use mode_tools,           only: Countjv
@@ -103,7 +109,10 @@ REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRST    ! Snow/aggregate m.r. at t
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t
 !
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCCT    ! Cloud water conc. at t 
-REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIT    ! Cloud water conc. at t 
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PCIT    ! Cloud ice conc. at t 
+!++cb++ 25/01/25
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PCIT_SHAPE ! Ice crystal conc. at t for each shape
+!--cb--
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PNAT    ! CCN conc. used for immersion nucl.
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PIFT    ! Free IFN conc.
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PINT    ! Nucleated IFN conc.
@@ -115,6 +124,8 @@ REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_CI_HIND
 REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_TH_HINC
 REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_RC_HINC
 REAL, DIMENSION(:,:,:),   INTENT(OUT)   :: P_CC_HINC
+REAL, DIMENSION(:,:,:,:), INTENT(OUT)   :: P_SHCI_HIND
+REAL, DIMENSION(:,:,:,:), INTENT(OUT)   :: P_SHCI_HINC
 !
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR
 !
@@ -123,11 +134,11 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PICEFR
 !
 !
 INTEGER :: IIB, IIE, IJB, IJE, IKB, IKE               ! Physical domain
-INTEGER :: JL, JMOD_CCN, JMOD_IFN, JSPECIE, JMOD_IMM  ! Loop index
+INTEGER :: JL, JMOD_CCN, JMOD_IFN, JSPECIE, JMOD_IMM, JSH  ! Loop index
 INTEGER :: INEGT  ! Case number of sedimentation, nucleation,
 !
-LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) &
-                       :: GNEGT  ! Test where to compute the nucleation
+LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)) :: GNEGT  
+                   ! Test where to compute the nucleation
 !
 INTEGER, DIMENSION(SIZE(PRHODREF))  :: I1,I2,I3 ! Indexes for PACK replacement
 !
@@ -162,12 +173,16 @@ REAL, DIMENSION(:), ALLOCATABLE &
                               ZSW,      &
                               ZSI_W
 !
-REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))   &
-                                  :: ZW, ZT ! work arrays
+REAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3))   &
+                           :: ZW, ZT ! work arrays
 !
-REAL,    DIMENSION(:,:), ALLOCATABLE :: ZSI0, &    ! Si threshold in H_X for X={DM,BC,O}
-                                        Z_FRAC_ACT ! Activable frac. of each AP species
-REAL,    DIMENSION(:),   ALLOCATABLE :: ZTCELSIUS, ZZT_SI0_BC
+REAL, DIMENSION(:,:), ALLOCATABLE :: ZSI0, &    ! Si threshold in H_X for X={DM,BC,O}
+                                     Z_FRAC_ACT ! Activable frac. of each AP species
+REAL, DIMENSION(:),   ALLOCATABLE :: ZTCELSIUS, ZZT_SI0_BC
+!++cb++ 25/01/24
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZTC3D, & ! 3D arrays of temperature and Si
+                                       ZSI3D    ! --> used if lcrystal_shape=t
+!--cb--
 !
 !-------------------------------------------------------------------------------
 !
@@ -316,6 +331,16 @@ IF (INEGT > 0) THEN
       ZSI0(:,4) = 1.15      ! BIO
    END IF
 !
+!++cb++ 25/01/24
+! if lcrystal_shape=t, 3D array of temperature and supersaturation are needed
+   IF (LCRYSTAL_SHAPE) THEN
+     ALLOCATE(ZTC3D(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)))
+     ALLOCATE(ZSI3D(SIZE(PRHODREF,1),SIZE(PRHODREF,2),SIZE(PRHODREF,3)))
+     ZTC3D(:,:,:) = ZT(:,:,:) - CST%XTT
+     ZSI3D(:,:,:) = UNPACK( ZSI(:), MASK=GNEGT(:,:,:), FIELD=0. )
+   END IF
+!--cb--
+!
 !
 !-------------------------------------------------------------------------------
 !
@@ -362,7 +387,33 @@ IF (INEGT > 0) THEN
       PINT(:,:,:,JMOD_IFN) = PINT(:,:,:,JMOD_IFN) + ZW(:,:,:)
 !
       P_CI_HIND(:,:,:) = P_CI_HIND(:,:,:) + ZW(:,:,:)
-      PCIT(:,:,:) = PCIT(:,:,:) + ZW(:,:,:)
+!++cb++ 25/01/24
+      IF (.NOT. LCRYSTAL_SHAPE) THEN
+        PCIT(:,:,:) = PCIT(:,:,:) + ZW(:,:,:)
+      ELSE
+!NOTE : p_shci_hinX est utile uniquement pour les bilans --> peut-etre mettre une condition pour leur calcul ?
+        ! different crystal habits are generated depending on the temperature
+!++cb++ 18/04/24 la formation des cristaux produit uniquement des formes primaires
+! on se base sur la figure 5 de Bailey et Hallett (2009)
+! Plates: -1<T<-3, -9<T<-20, -20<T<-40, -40<T si SSI < 0.05
+        WHERE (((ZTC3D(:,:,:) .GT. -3.0)  .AND.  (ZTC3D(:,:,:) .LT. 0.0))   .OR. &
+               ((ZTC3D(:,:,:) .LE. -9.0)  .AND.  (ZTC3D(:,:,:) .GT. -40.0)) .OR. &
+               ((ZTC3D(:,:,:) .LE. -40.0) .AND. ((ZSI3D(:,:,:)-1.) .LT. 0.05)) )
+          P_SHCI_HIND(:,:,:,1) = P_SHCI_HIND(:,:,:,1) + ZW(:,:,:)
+          PCIT_SHAPE(:,:,:,1)  = PCIT_SHAPE(:,:,:,1)  + ZW(:,:,:)
+        END WHERE
+!
+! Columns: -3<T<-9, -40<T<-70 si SSI > 0.05
+        WHERE (((ZTC3D(:,:,:) .LE. -3.0)   .AND.  (ZTC3D(:,:,:) .GT. -9.0)) .OR. &
+               ((ZTC3D(:,:,:) .LE. -40.0)  .AND. ((ZSI3D(:,:,:)-1.) .GE. 0.05)))
+          P_SHCI_HIND(:,:,:,2) = P_SHCI_HIND(:,:,:,2) + ZW(:,:,:)
+          PCIT_SHAPE(:,:,:,2)  = PCIT_SHAPE(:,:,:,2)  + ZW(:,:,:)
+        END WHERE
+        !
+        PCIT(:,:,:) = SUM(PCIT_SHAPE, DIM=4)
+      END IF
+!--cb--
+!--cb--
 !
       ZW(:,:,:) = UNPACK( ZZW(:), MASK=GNEGT(:,:,:), FIELD=0. )
       P_RI_HIND(:,:,:) = P_RI_HIND(:,:,:) + ZW(:,:,:)
@@ -409,7 +460,35 @@ IF (INEGT > 0) THEN
 !
          P_CC_HINC(:,:,:) = P_CC_HINC(:,:,:) - ZW(:,:,:) 
          PCCT(:,:,:) = PCCT(:,:,:) - ZW(:,:,:)
-         PCIT(:,:,:) = PCIT(:,:,:) + ZW(:,:,:)
+!++cb++ 25/01/24
+! Faut-il garder cette distribution pour ce type de nucleation ? ou alors on les met
+! dans les droxtals (comme ce qu'on veut faire pour la nucleation homogene) ?
+         IF (.NOT. LCRYSTAL_SHAPE) THEN
+           PCIT(:,:,:) = PCIT(:,:,:) + ZW(:,:,:)
+         ELSE
+           ! different crystal habits are generated depending on the temperature
+
+! Plates: -1<T<-3, -9<T<-20, -20<T<-40, -40<T si SSI < 0.05
+!           WHERE (((ZTC3D(:,:,:) .GT. -3.0) .AND.  (ZTC3D(:,:,:) .LT. 0.0))   .OR. &
+!                 ((ZTC3D(:,:,:) .LE. -9.0)  .AND.  (ZTC3D(:,:,:) .GT. -40.0)) .OR. &
+!                 ((ZTC3D(:,:,:) .LE. -40.0) .AND. ((ZSI3D(:,:,:)-1.) .LT. 0.05)) )
+!             P_SHCI_HINC(:,:,:,1) = P_SHCI_HINC(:,:,:,1) + ZW(:,:,:)
+!             PCIT_SHAPE(:,:,:,1)  = PCIT_SHAPE(:,:,:,1)  + ZW(:,:,:)
+!           END WHERE
+!
+! Columns: -3<T<-9, -40<T<-70 si SSI > 0.05
+!           WHERE (((ZTC3D(:,:,:) .LE. -3.0)   .AND.  (ZTC3D(:,:,:) .GT. -9.0)) .OR. &
+!                  ((ZTC3D(:,:,:) .LE. -40.0)  .AND. ((ZSI3D(:,:,:)-1.) .GE. 0.05)))
+!             P_SHCI_HINC(:,:,:,2) = P_SHCI_HINC(:,:,:,2) + ZW(:,:,:)
+!             PCIT_SHAPE(:,:,:,2)  = PCIT_SHAPE(:,:,:,2)  + ZW(:,:,:)
+!           END WHERE
+           !++cb++ 18/04/24 formation de droxtals
+           P_SHCI_HINC(:,:,:,4) = P_SHCI_HINC(:,:,:,4) + ZW(:,:,:)
+           PCIT_SHAPE(:,:,:,4)  = PCIT_SHAPE(:,:,:,4)  + ZW(:,:,:)
+           !
+           PCIT(:,:,:) = SUM(PCIT_SHAPE, DIM=4)
+         END IF
+!--cb--
 !
          ZW(:,:,:) = UNPACK( ZZY(:), MASK=GNEGT(:,:,:), FIELD=0. )
          P_RC_HINC(:,:,:) = P_RC_HINC(:,:,:) - ZW(:,:,:)
@@ -457,6 +536,10 @@ IF (INEGT > 0) THEN
    DEALLOCATE(ZZX)
    DEALLOCATE(ZZY)
    DEALLOCATE(ZSI_W)
+!++cb++ 25/01/24
+   IF (ALLOCATED(ZTC3D)) DEALLOCATE(ZTC3D)
+   IF (ALLOCATED(ZSI3D)) DEALLOCATE(ZSI3D)
+!--cb--
 !
 END IF ! INEGT > 0
 !

@@ -10,8 +10,6 @@ CONTAINS
   SUBROUTINE LIMA_DROPLETS_RIMING_SNOW (PTSTEP, LDCOMPUTE,                                      &
                                         PRHODREF, PT,                                           &
                                         PRCT, PCCT, PRST, PCST, PLBDC, PLBDS, PLVFACT, PLSFACT, &
-!++cb++
-!                                        P_TH_RIM, P_RC_RIM, P_CC_RIM, P_RS_RIM, P_CS_RIM, P_RG_RIM,       &
                                         P_TH_RIM, P_CC_RIM, P_CS_RIM,                           &
                                         P_RC_RIMSS, P_RC_RIMSG, P_RS_RIMCG,                     &
                                         P_RI_HMS, P_CI_HMS, P_RS_HMS                            )
@@ -68,16 +66,11 @@ REAL, DIMENSION(:),   INTENT(IN)    :: PLBDS   !
 REAL, DIMENSION(:),   INTENT(IN)    :: PLVFACT ! 
 REAL, DIMENSION(:),   INTENT(IN)    :: PLSFACT ! 
 !
-!++cb++
-!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_RIM
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_CC_RIM
-!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_RIM
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_CS_RIM
-!REAL, DIMENSION(:),   INTENT(OUT)   :: P_RG_RIM
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_RIMSS
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_RC_RIMSG
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_RIMCG
-!--cb--
 !
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_TH_RIM
 REAL, DIMENSION(:),   INTENT(OUT)   :: P_RI_HMS
@@ -87,7 +80,7 @@ REAL, DIMENSION(:),   INTENT(OUT)   :: P_RS_HMS
 !*       0.2   Declarations of local variables :
 !
 REAL,    DIMENSION(SIZE(PRCT))  :: ZZW1, ZZW2, ZZW3, ZZW4, ZZW5
-REAL,    DIMENSION(SIZE(PRCT))  :: Z_RC_RIM, Z_RS_RIM, Z_RG_RIM    !++cb--
+REAL,    DIMENSION(SIZE(PRCT))  :: Z_RC_RIM, Z_RS_RIM, Z_RG_RIM
 !
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC2              ! Vector of indices
 REAL,    DIMENSION(SIZE(PRCT))  :: ZVEC1,ZVEC2,ZVEC1W ! Work vectors
@@ -131,23 +124,17 @@ DO JI = 1, SIZE(PRCT)
 !
 !        4.     riming
 !
-!++cb++
    ! Cloud droplets collected
-!      P_RC_RIM(JI) = - XCRIMSS  * PRCT(JI) * PCST(JI)*(1+(XFVELOS/PLBDS(JI))**XALPHAS)**(-XNUS+XEXCRIMSS/XALPHAS) &
-!                                * PRHODREF(JI)**(-XCEXVT+1) * PLBDS(JI)**XEXCRIMSS
-!      P_CC_RIM(JI) = P_RC_RIM(JI) * PCCT(JI)/PRCT(JI) ! Lambda_c**3
 ! total mass loss of cloud droplets, < 0
     Z_RC_RIM(JI) = - XCRIMSS  * PRCT(JI) * PCST(JI)*(1+(XFVELOS/PLBDS(JI))**XALPHAS)**(-XNUS+XEXCRIMSS/XALPHAS) &
                                 * PRHODREF(JI)**(-XCEXVT+1) * PLBDS(JI)**XEXCRIMSS
     P_CC_RIM(JI) = Z_RC_RIM(JI) * (PCCT(JI) / PRCT(JI)) ! Lambda_c**3
     !
     ! Cloud droplets collected on small aggregates add to snow
-!      P_RS_RIM(JI) = - P_RC_RIM(JI) * ZZW1(JI)
     Z_RS_RIM(JI)   = -Z_RC_RIM(JI) * ZZW1(JI)
     P_RC_RIMSS(JI) = Z_RC_RIM(JI) * ZZW1(JI)  ! < 0, loss of mass for rc
     !
     ! Cloud droplets collected on large aggregates add to graupel
-!      P_RG_RIM(JI) = - P_RC_RIM(JI) - P_RS_RIM(JI) 
     Z_RG_RIM(JI)   = -Z_RC_RIM(JI) - Z_RS_RIM(JI)
     P_RC_RIMSG(JI) = Z_RC_RIM(JI) - P_RC_RIMSS(JI) ! < 0, loss of mass for rc
     !
@@ -168,12 +155,8 @@ DO JI = 1, SIZE(PRCT)
     !
     P_RS_RIMCG(JI) = ZZW3(JI)
     P_CS_RIM(JI) = -ZZW3(JI) * PCST(JI)/PRST(JI)
-!    P_RS_RIM(JI) = P_RS_RIM(JI) - ZZW3(JI)
-!    P_RG_RIM(JI) = P_RG_RIM(JI) + ZZW3(JI) 
     !
-!    P_TH_RIM(JI) = - P_RC_RIM(JI)*(PLSFACT(JI)-PLVFACT(JI))
     P_TH_RIM(JI) = - Z_RC_RIM(JI)*(PLSFACT(JI)-PLVFACT(JI))
-!--cb--
   ELSE
     P_TH_RIM(JI) = 0.
     P_RC_RIMSS(JI) = 0.
