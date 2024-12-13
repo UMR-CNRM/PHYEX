@@ -182,23 +182,23 @@ ENDDO
 GNUCT(:,:) = .FALSE.
 !
 IF (LIMAP%LADJ) THEN
-   GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) =      PW_NU(D%NIJB:D%NIJE,D%NKB:D%NKE)>LIMAW%XWMIN                          &
-                                    .OR. PRVT(D%NIJB:D%NIJE,D%NKB:D%NKE)>ZRVSAT(D%NIJB:D%NIJE,D%NKB:D%NKE)
-   IF (LIMAP%LACTIT) GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) =      GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE)      &
-                                                .OR. ZTDT(D%NIJB:D%NIJE,D%NKB:D%NKE)<LIMAW%XTMIN
+   GNUCT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) =      PW_NU(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>LIMAW%XWMIN                          &
+                                    .OR. PRVT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>ZRVSAT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)
+   IF (LIMAP%LACTIT) GNUCT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) =      GNUCT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)      &
+                                                .OR. ZTDT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<LIMAW%XTMIN
 !
-   GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) =       GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE)                       &
-                                    .AND. PT(D%NIJB:D%NIJE,D%NKB:D%NKE)>(CST%XTT-22.)                &
-                                    .AND. ZCONC_TOT(D%NIJB:D%NIJE,D%NKB:D%NKE)>LIMAP%XCTMIN(2)
+   GNUCT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) =       GNUCT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)                       &
+                                    .AND. PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>(CST%XTT-22.)                &
+                                    .AND. ZCONC_TOT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>LIMAP%XCTMIN(2)
 !
-   IF (NEBN%LSUBG_COND) GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) = GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE)       &
-                                              .AND. PCLDFR(D%NIJB:D%NIJE,D%NKB:D%NKE)>0.01
-   IF (.NOT. NEBN%LSUBG_COND) GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) = GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE)       &
-                                                    .AND. PRVT(D%NIJB:D%NIJE,D%NKB:D%NKE).GE.ZRVSAT(D%NIJB:D%NIJE,D%NKB:D%NKE)
+   IF (NEBN%LSUBG_COND) GNUCT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = GNUCT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)       &
+                                              .AND. PCLDFR(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>0.01
+   IF (.NOT. NEBN%LSUBG_COND) GNUCT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) = GNUCT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)       &
+                                                    .AND. PRVT(D%NIJB:D%NIJE,D%NKTB:D%NKTE).GE.ZRVSAT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)
 ELSE
-   GNUCT(D%NIJB:D%NIJE,D%NKB:D%NKE) =       PRVT(D%NIJB:D%NIJE,D%NKB:D%NKE).GE.ZRVSAT(D%NIJB:D%NIJE,D%NKB:D%NKE) &
-                                    .AND. PT(D%NIJB:D%NIJE,D%NKB:D%NKE)>(CST%XTT-22.)                            &
-                                    .AND. ZCONC_TOT(D%NIJB:D%NIJE,D%NKB:D%NKE)>LIMAP%XCTMIN(2)
+   GNUCT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) =       PRVT(D%NIJB:D%NIJE,D%NKTB:D%NKTE).GE.ZRVSAT(D%NIJB:D%NIJE,D%NKTB:D%NKTE) &
+                                    .AND. PT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>(CST%XTT-22.)                            &
+                                    .AND. ZCONC_TOT(D%NIJB:D%NIJE,D%NKTB:D%NKTE)>LIMAP%XCTMIN(2)
 END IF
 !
 IF (.NOT. NEBN%LSUBG_COND) THEN
