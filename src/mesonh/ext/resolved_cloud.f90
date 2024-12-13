@@ -941,7 +941,7 @@ SELECT CASE ( HCLOUD )
         ZQSS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+4)
         ZQGS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+5)
         ZQNIS(:,:,:) = PSVS(:,:,:,NSV_ELECEND)
-        IF (LSEDIM_BEARD) THEN
+        IF (ELEC_DESCR%LSEDIM_BEARD) THEN
           ALLOCATE(ZEFIELDW(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
           ZEFIELDW(:,:,:) = XEFIELDW(:,:,:)
         ELSE
@@ -969,7 +969,7 @@ SELECT CASE ( HCLOUD )
       ALLOCATE(ZQHS(0,0,0))
       !
       CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICEN, RAIN_ICE_PARAMN, RAIN_ICE_DESCRN, &
-                    ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, LSEDIM_BEARD,       &
+                    ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, ELEC_DESCR%LSEDIM_BEARD,       &
                     XTHVREFZ(IKB),                                              &
                     PTSTEP, KRR, ZEXN,                                          &
                     ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
@@ -1223,7 +1223,7 @@ SELECT CASE ( HCLOUD )
         ZQGS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+5)
         ZQHS(:,:,:)  = PSVS(:,:,:,NSV_ELECBEG+6)
         ZQNIS(:,:,:) = PSVS(:,:,:,NSV_ELECEND)
-        IF (LSEDIM_BEARD) THEN
+        IF (ELEC_DESCR%LSEDIM_BEARD) THEN
           ALLOCATE(ZEFIELDW(SIZE(PZZ,1),SIZE(PZZ,2),SIZE(PZZ,3)))
           ZEFIELDW(:,:,:) = XEFIELDW(:,:,:)
         ELSE
@@ -1251,7 +1251,7 @@ SELECT CASE ( HCLOUD )
       END IF
       !
       CALL RAIN_ICE (YLDIMPHYEX,CST, PARAM_ICEN, RAIN_ICE_PARAMN, RAIN_ICE_DESCRN, &
-                     ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, LSEDIM_BEARD,        &
+                     ELEC_PARAM, ELEC_DESCR, TBUCONF, GELEC, ELEC_DESCR%LSEDIM_BEARD,        &
                      XTHVREFZ(IKB),                                              &
                      PTSTEP, KRR, ZEXN,                                          &
                      ZDZZ, PRHODJ, PRHODREF, PEXNREF, PPABST, PCIT, PCLDFR,      &
