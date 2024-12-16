@@ -3,18 +3,20 @@ MODULE MODI_LIMA
 IMPLICIT NONE
 INTERFACE
 !
-SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, KBUDGETS, KRR, &
+SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP,                       &
+                  BUCONF, TBUDGETS, HACTCCN, KBUDGETS, KRR,               &
                   PTSTEP, OELEC,                                          &
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
                   NCCN, NIFN, NIMM,                                       &
                   ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PW_NU,               &
-                  PTHS, PRS, PSVS,                                        &
+                  PAERO,PSOLORG, PMI, PTHS, PRS, PSVS,                    &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
                   PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR,                  &
                   PLATHAM_IAGGS, PEFIELDW, PSV_ELEC_T, PSV_ELEC_S         )
 !
 USE MODD_IO,  ONLY: TFILEDATA
+USE MODD_CH_AEROSOL,      ONLY: NSP,NCARB,NSOA
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_RAIN_ICE_DESCR_n,ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n,ONLY: RAIN_ICE_PARAM_t
@@ -32,6 +34,7 @@ TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(ELEC_PARAM_t),       INTENT(IN)    :: ELECP   ! electrical parameters
 TYPE(ELEC_DESCR_t),       INTENT(IN)    :: ELECD   ! electrical descriptive csts
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER,                  INTENT(IN)    :: KBUDGETS
 INTEGER,                  INTENT(IN)    :: KRR
@@ -59,6 +62,9 @@ REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PTHT       ! Theta at t
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(IN) :: PRT        ! Mixing ratios at time t
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PW_NU      ! w for CCN activation
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT ,NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSP+NCARB+NSOA), INTENT(IN)    :: PMI
 !
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT)    :: PTHS       ! Theta source
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(INOUT) :: PRS        ! Mixing ratios sources
