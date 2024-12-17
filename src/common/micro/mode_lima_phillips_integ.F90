@@ -37,6 +37,7 @@ USE MODD_CST,            ONLY: CST_T
 USE MODE_LIMA_FUNCTIONS,  ONLY : DELTA, DELTA_VEC
 USE MODI_GAMMA_INC
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -62,6 +63,7 @@ REAL, DIMENSION(:), ALLOCATABLE :: ZZX,      & ! Work array
                                    ZSUBSAT,  &
                                    ZEMBRYO
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 LOGICAL, DIMENSION(:),   ALLOCATABLE :: GINTEG ! Mask to integrate over the
                                                ! AP size spectrum
 !
@@ -70,6 +72,7 @@ LOGICAL, DIMENSION(:),   ALLOCATABLE :: GINTEG ! Mask to integrate over the
 !
 P_FRAC_ACT(:,:)=0.
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_PHILLIPS_INTEG', 0, ZHOOK_HANDLE)
 DO ISPECIE = 1, LIMAP%NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively  
 !
    ALLOCATE(ZZX     (SIZE(PZT)) ) ; ZZX(:) = 0.0
@@ -149,5 +152,6 @@ DO ISPECIE = 1, LIMAP%NSPECIE        ! = 4 = {DM1, DM2, BC, O} respectively
 !
 ENDDO
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_PHILLIPS_INTEG', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_PHILLIPS_INTEG
 END MODULE MODE_LIMA_PHILLIPS_INTEG

@@ -38,6 +38,7 @@ USE MODI_GAMMA_INC
 USE MODI_HYPGEO
 USE MODI_HYPSER
 USE MODD_CST, ONLY:CST_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -77,6 +78,7 @@ REAL, DIMENSION(IM)           :: ZDCRIT         ! critical diameters (m) for the
 REAL, DIMENSION(IM)           :: ZNCCN          ! fraction of the aerosols larger than ZDCRIT (ie activable)
 REAL, DIMENSION(1)            :: ZT             ! temperature
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
@@ -85,6 +87,7 @@ REAL, DIMENSION(1)            :: ZT             ! temperature
 !
 ! Kappa values are from Petters and Kreidenweis (2007), table 1.
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_INIT_CCN_ACTIVATION_SPECTRUM', 0, ZHOOK_HANDLE)
 SELECT CASE (HTYPE_CCN)
 CASE('NH42SO4','C') ! Ammonium sulfate
    PKAPPA = 0.61
@@ -167,11 +170,13 @@ END DO ! loop on temperatures
 !*       6.     Functions used to compute Scrit at Ddry=0.1 micron
 !   	        --------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_INIT_CCN_ACTIVATION_SPECTRUM', 1, ZHOOK_HANDLE)
 CONTAINS
 !
 !------------------------------------------------------------------------------
 !
   FUNCTION ZRIDDR(PX1,PX2,PXACC,PDDRY,PKAPPA,PT)  RESULT(PZRIDDR)
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 !
 !!****  *ZRIDDR* - iterative algorithm to find root of a function
@@ -232,7 +237,9 @@ INTEGER, PARAMETER      :: IMAXIT=60
 REAL                    :: ZFH,ZFL, ZFM,ZFNEW
 REAL                    :: ZS,ZXH,ZXL,ZXM,ZXNEW
 INTEGER                 :: IJ
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
+IF (LHOOK) CALL DR_HOOK('ZRIDDR', 0, ZHOOK_HANDLE)
 PZRIDDR= 999999.
 ZFL     = DSDD(PX1,PDDRY,PKAPPA,PT)
 ZFH     = DSDD(PX2,PDDRY,PKAPPA,PT)
@@ -293,7 +300,8 @@ ZFH     = DSDD(PX2,PDDRY,PKAPPA,PT)
       GO TO 101
    END IF
 !
-101 END FUNCTION ZRIDDR
+101 IF (LHOOK) CALL DR_HOOK('ZRIDDR', 1, ZHOOK_HANDLE)
+END FUNCTION ZRIDDR
 !
 !------------------------------------------------------------------------------
 !
@@ -331,6 +339,7 @@ ZFH     = DSDD(PX2,PDDRY,PKAPPA,PT)
 !
 !*       0. DECLARATIONS
 !
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
     IMPLICIT NONE
 !
@@ -345,12 +354,15 @@ ZFH     = DSDD(PX2,PDDRY,PKAPPA,PT)
 !
 !*       0.2 declarations of local variables
 !
+    REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
     REAL              :: ZA     ! factor inside the exponential
 !    
+    IF (LHOOK) CALL DR_HOOK('DSDD', 0, ZHOOK_HANDLE)
     ZA = 4 * 0.072 * CST%XMV / CST%XAVOGADRO / CST%XBOLTZ / PT / CST%XRHOLW
     ZDS = (PD**3-PDDRY**3) * (PD**3-(1-PKAPPA)*PDDRY**3) * ZA - 3. * PKAPPA * PD**4 * PDDRY**3
     ZDS = ZDS * EXP(ZA/PD) / (PD**3-(1-PKAPPA)*PDDRY**3)**2
 !
+IF (LHOOK) CALL DR_HOOK('DSDD', 1, ZHOOK_HANDLE)
 END FUNCTION DSDD
 !
 !-------------------------------------------------------------------------------
@@ -359,6 +371,7 @@ END FUNCTION DSDD
 !   	        ----------------------------------------------------------------
 !
   SUBROUTINE DISTANCE(KM,KN,PX,PFVEC,IFLAG)
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !!
 !!    PURPOSE
 !!    -------
@@ -405,8 +418,10 @@ END FUNCTION DSDD
     INTEGER II
     REAL    ZC
     REAL    ZW
+    REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !    
     ! print *, "X = ", X
+    IF (LHOOK) CALL DR_HOOK('DISTANCE', 0, ZHOOK_HANDLE)
     IF ( ANY(PX .LT.0.) .OR. PX(1).GT.2*PX(2)) THEN
        PFVEC(:) = 999999.
     ELSE
@@ -433,6 +448,7 @@ END FUNCTION DSDD
     END IF
 !    print *, "distance : ", SUM(FVEC*FVEC)
 !
+  IF (LHOOK) CALL DR_HOOK('DISTANCE', 1, ZHOOK_HANDLE)
   END SUBROUTINE DISTANCE
 !
 !------------------------------------------------------------------------------

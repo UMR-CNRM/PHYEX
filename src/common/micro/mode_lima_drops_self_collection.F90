@@ -36,6 +36,7 @@ CONTAINS
 !
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -62,6 +63,7 @@ REAL, DIMENSION(SIZE(PCRT)) :: &
                                            ZW3, &
                                            ZW4, &
                                            ZSCBU
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
@@ -70,6 +72,7 @@ REAL, DIMENSION(SIZE(PCRT)) :: &
 !	        ---------------------------------------
 !
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_DROPS_SELF_COLLECTION', 0, ZHOOK_HANDLE)
 P_CR_SCBU(:)=0.
 !
 ZW4(:) =0.
@@ -101,5 +104,6 @@ P_CR_SCBU(:) = - ZW3(:) * PRHODREF(:)
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_DROPS_SELF_COLLECTION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_DROPS_SELF_COLLECTION
 END MODULE MODE_LIMA_DROPS_SELF_COLLECTION

@@ -44,6 +44,7 @@ USE MODE_LIMA_ICE_MELTING, ONLY: LIMA_ICE_MELTING
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
 USE MODD_CST, ONLY:CST_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 
 IMPLICIT NONE
 
@@ -96,8 +97,10 @@ REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PCF1D      ! Liquid cloud fraction
 REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PIF1D      ! Ice cloud fraction
 REAL, DIMENSION(KSIZE)  , INTENT(INOUT) :: PPF1D      ! Precipitation fraction
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_INST_PROCS', 0, ZHOOK_HANDLE)
 IF (LIMAP%NMOM_R.GE.2) THEN
    CALL LIMA_DROPS_BREAK_UP (LIMAP, LIMAW, KSIZE, ODCOMPUTE, & ! no dependance on CF, IF or PF
                              PCRT, PRRT,       &
@@ -133,5 +136,6 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_INST_PROCS', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_INST_PROCS
 END MODULE MODE_LIMA_INST_PROCS

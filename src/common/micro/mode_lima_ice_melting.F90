@@ -37,6 +37,7 @@ CONTAINS
 !
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 USE MODD_CST, ONLY:CST_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -83,11 +84,13 @@ REAL, DIMENSION(SIZE(PTHT)) ::  &
      ZMASK
 !
 INTEGER :: IMOD_IFN
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_ICE_MELTING', 0, ZHOOK_HANDLE)
 P_TH_IMLT(:) = 0.
 P_RC_IMLT(:) = 0.
 P_CC_IMLT(:) = 0.
@@ -124,5 +127,6 @@ ENDDO
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_ICE_MELTING', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_ICE_MELTING
 END MODULE MODE_LIMA_ICE_MELTING

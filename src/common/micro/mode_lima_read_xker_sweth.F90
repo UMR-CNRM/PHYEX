@@ -11,6 +11,7 @@ CONTAINS
                                    PALPHAH,PNUH,PALPHAS,PNUS,PEHS,PBS,PCH,PDH,PCS,PDS,PFVELOS, &
                                    PWETLBDAH_MAX,PWETLBDAS_MAX,PWETLBDAH_MIN,PWETLBDAS_MIN,    &
                                    PFDINFTY,PKER_SWETH                                         )
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !     ########################################################################
 !
 !!****  * * - initialize the kernels for the snow-hail wet growth process
@@ -74,10 +75,13 @@ REAL,    INTENT(OUT) :: PWETLBDAH_MIN
 REAL,    INTENT(OUT) :: PWETLBDAS_MIN
 REAL,    INTENT(OUT) :: PFDINFTY
 REAL, DIMENSION(KWETLBDAH,KWETLBDAS), INTENT(OUT), OPTIONAL :: PKER_SWETH 
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 ! ########################################################################
 ! #INSERT HERE THE OUTPUT OF INI_RAIN_ICE_HAIL IF THE KERNELS ARE UPDATED#
 ! ########################################################################
+!
+IF (LHOOK) CALL DR_HOOK('LIMA_READ_XKER_SWETH', 0, ZHOOK_HANDLE)
 !
 KND= 50
 KWETLBDAH= 40
@@ -3302,5 +3306,6 @@ PKER_SWETH( 40, 79) =  0.316508E+00
 PKER_SWETH( 40, 80) =  0.310319E+00
 END IF
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_READ_XKER_SWETH', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_READ_XKER_SWETH
 END MODULE MODE_LIMA_READ_XKER_SWETH

@@ -41,6 +41,7 @@ USE MODD_PARAM_LIMA
 USE MODD_PARAMETERS
 USE MODE_INI_LIMA_WARM, ONLY: INI_LIMA_WARM
 USE MODE_INI_LIMA_COLD_MIXED, ONLY: INI_LIMA_COLD_MIXED
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !USE MODD_LUNIT, ONLY : TLUOUT0
 !
 IMPLICIT NONE
@@ -62,7 +63,8 @@ REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
 REAL     :: ZT      ! Work variable
 REAL, DIMENSION(7)  :: ZVTRMAX
 !
-INTEGER  :: II
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+INTEGER  :: JI
 !  
 !-------------------------------------------------------------------------------
 !
@@ -75,6 +77,7 @@ INTEGER  :: II
 !ILUOUT0 = TLUOUT0%NLU
 !
 !
+IF (LHOOK) CALL DR_HOOK('INI_LIMA', 0, ZHOOK_HANDLE)
 ZVTRMAX(2) = 0.3         ! Maximum cloud droplet fall speed
 ZVTRMAX(3) = 15.         ! Maximum rain drop fall speed
 ZVTRMAX(4) = 1.5         ! Maximum ice crystal fall speed
@@ -114,7 +117,7 @@ END DO SPLITG
 !
 !
 !
-IF (ASSOCIATED(XRTMIN)) RETURN    ! In case of nesting microphysics, constants of
+IF (.NOT. ASSOCIATED(XRTMIN)) THEN    ! In case of nesting microphysics, constants of
                                   ! MODD_RAIN_C2R2_PARAM are computed only once.
 !
 !
@@ -154,6 +157,8 @@ CALL INI_LIMA_COLD_MIXED(PTSTEP, PDZMIN)
 !
 !------------------------------------------------------------------------------
 !
+END IF
+IF (LHOOK) CALL DR_HOOK('INI_LIMA', 1, ZHOOK_HANDLE)
 END SUBROUTINE INI_LIMA
 !
 END MODULE MODE_INI_LIMA

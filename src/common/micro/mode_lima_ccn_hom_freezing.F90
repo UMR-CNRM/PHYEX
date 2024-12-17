@@ -42,6 +42,7 @@ USE MODD_CST,            ONLY: CST_T
 USE MODE_TOOLS,           only: COUNTJV
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -131,6 +132,7 @@ LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) &
 INTEGER , DIMENSION(SIZE(GNEGT)) :: I1,I3 ! Used to replace the COUNT
 !
 REAL    :: ZEPS                           ! molar mass ratio
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
@@ -138,6 +140,7 @@ REAL    :: ZEPS                           ! molar mass ratio
 !*       1.     Preliminary computations and packing
 !	        ------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_CCN_HOM_FREEZING', 0, ZHOOK_HANDLE)
 !
 ! Temperature
 ZT(:,:) = PTHT(:,:) * ( PPABST(:,:)/CST%XP00 ) ** (CST%XRD/CST%XCPD)
@@ -351,5 +354,6 @@ END IF ! INEGT>0
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_CCN_HOM_FREEZING', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_CCN_HOM_FREEZING
 END MODULE MODE_LIMA_CCN_HOM_FREEZING

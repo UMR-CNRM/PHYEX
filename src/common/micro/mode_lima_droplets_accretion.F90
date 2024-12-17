@@ -38,6 +38,7 @@ CONTAINS
 !
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -66,6 +67,7 @@ REAL, DIMENSION(SIZE(PRCT))    :: ZW1, ZW2, ZW3, ZW4 ! work arrays
 TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
 TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 LOGICAL, DIMENSION(SIZE(PRCT)) :: GACCR
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
@@ -74,6 +76,7 @@ LOGICAL, DIMENSION(SIZE(PRCT)) :: GACCR
 !*       1. Accretion of cloud droplets on rain drops
 !   	 --------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_DROPLETS_ACCRETION', 0, ZHOOK_HANDLE)
 P_RC_ACCR(:) = 0.0
 P_CC_ACCR(:) = 0.0
 !
@@ -161,5 +164,6 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_DROPLETS_ACCRETION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_DROPLETS_ACCRETION
 END MODULE MODE_LIMA_DROPLETS_ACCRETION

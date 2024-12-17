@@ -48,6 +48,7 @@ SUBROUTINE LIMA_UPDATE_NSV(LIMAP, TNSV, ODINIT, KMI, KSV, HDCLOUD, ODUPDATE)
 !
 USE MODD_NSV, ONLY: NSV_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 !* 0.1. Declaration of arguments
 !       ------------------------
@@ -61,10 +62,12 @@ INTEGER,          INTENT(INOUT) :: KSV      !< IN: Initial value to use when fil
                                             !! OUT: Final value after having filled the arrays
 CHARACTER(LEN=4), INTENT(IN)    :: HDCLOUD  !< Cloud scheme
 LOGICAL,          INTENT(IN)    :: ODUPDATE !< .TRUE. to goto model
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !*      1. INITIALISATION
 !       -----------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_UPDATE_NSV', 0, ZHOOK_HANDLE)
 IF(ODINIT) THEN
   IF(HDCLOUD=='LIMA') THEN
     KSV = KSV+1
@@ -173,6 +176,7 @@ IF(ODUPDATE) THEN
   TNSV%NSV_LIMA_SPRO     = TNSV%NSV_LIMA_SPRO_A(KMI)
 ENDIF
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_UPDATE_NSV', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_UPDATE_NSV
 !
 END MODULE MODE_LIMA_UPDATE_NSV       

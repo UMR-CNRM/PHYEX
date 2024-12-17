@@ -36,6 +36,7 @@ CONTAINS
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 USE MODD_CST, ONLY:CST_T 
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK 
 !
 IMPLICIT NONE
 !
@@ -62,6 +63,7 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CC_HONC
 !
 !*       0.2   Declarations of local variables :
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 REAL, DIMENSION(SIZE(PT)) ::  ZZW, ZZX, ZZY, ZTCELSIUS
 !
 !-------------------------------------------------------------------------------
@@ -71,6 +73,7 @@ REAL, DIMENSION(SIZE(PT)) ::  ZZW, ZZX, ZZY, ZTCELSIUS
 !	        -----------------------------------
 !
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_DROPLETS_HOM_FREEZING', 0, ZHOOK_HANDLE)
 P_TH_HONC(:) = 0.
 P_RC_HONC(:) = 0.
 P_CC_HONC(:) = 0.
@@ -99,5 +102,6 @@ END WHERE
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_DROPLETS_HOM_FREEZING', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_DROPLETS_HOM_FREEZING
 END MODULE MODE_LIMA_DROPLETS_HOM_FREEZING

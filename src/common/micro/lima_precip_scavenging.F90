@@ -95,6 +95,7 @@ USE MODE_TOOLS,           only: COUNTJV
 
 USE MODI_GAMMA
 USE MODE_LIMA_FUNCTIONS, ONLY: GAUHER, GAULAG
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 
 IMPLICIT NONE
 !
@@ -227,8 +228,10 @@ REAL :: ZFRACP
 !
 INTEGER :: ISV_LIMA_NR
 INTEGER :: ISV_LIMA_SCAVMASS
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !------------------------------------------------------------------------------
+IF (LHOOK) CALL DR_HOOK('LIMA_PRECIP_SCAVENGING', 0, ZHOOK_HANDLE)
 ISV_LIMA_NR       = TNSV%NSV_LIMA_NR       - TNSV%NSV_LIMA_BEG + 1
 ISV_LIMA_SCAVMASS = TNSV%NSV_LIMA_SCAVMASS - TNSV%NSV_LIMA_BEG + 1
 
@@ -567,6 +570,7 @@ END IF
 !   	        -----------------------
 !
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_PRECIP_SCAVENGING', 1, ZHOOK_HANDLE)
 CONTAINS
 !
 !------------------------------------------------------------------------------
@@ -617,6 +621,7 @@ USE MODD_PARAMETERS
 !
 USE MODD_PARAM_LIMA,      ONLY : XCEXVT, XRTMIN
 USE MODD_PARAM_LIMA_WARM, ONLY : XBR, XDR, XFSEDRR
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -670,12 +675,14 @@ REAL                            :: ZVTRMAX, ZDZMIN, ZT
 REAL,    SAVE                   :: ZEXSEDR
 LOGICAL, SAVE                   :: GSFIRSTCALL = .TRUE.
 INTEGER, SAVE                   :: ISPLITR
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
 !*       1.     COMPUTE THE LOOP BOUNDS
 !   	        -----------------------
 !
+IF (LHOOK) CALL DR_HOOK('SCAV_MASS_SEDIMENTATION', 0, ZHOOK_HANDLE)
 !
 !-------------------------------------------------------------------------------
 !
@@ -766,6 +773,7 @@ END DO
 !
 PRSVS_MASS(:,:) = PRSVS_MASS(:,:) + ZWSED(:,:)*PSVT_MASS(:,:)
 !
+IF (LHOOK) CALL DR_HOOK('SCAV_MASS_SEDIMENTATION', 1, ZHOOK_HANDLE)
 END SUBROUTINE SCAV_MASS_SEDIMENTATION
 !
 !------------------------------------------------------------------------------
@@ -806,8 +814,11 @@ FUNCTION COLL_EFFI (KSCAV,KDIAMP,KDIAMR, &
 !
   REAL, DIMENSION(KSCAV)      :: PCOL_EF   !result : collision efficiency
 !
+  REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+!
 !-------------------------------------------------------------------------------
 !
+  IF (LHOOK) CALL DR_HOOK('COLL_EFFI', 0, ZHOOK_HANDLE)
   PCOL_EF(:) = (4.*PSC_INV(:,J1)*PRE_INV(:,J2)*(1.+0.4*PRE_SQRT(:,J2)              &
                   *PSC_3SQRT(:,J1)+0.16*PRE_SQRT(:,J2)*PSC_SQRT(:,J1)))      &
               +(4.*PSIZE_RATIO(:,J1,J2)*(PVISC_RATIO(:)                    & 
@@ -819,6 +830,7 @@ FUNCTION COLL_EFFI (KSCAV,KDIAMP,KDIAMR, &
                     /(PST(I,J1,J2)-PST_STAR(I,J2)+2./3.))**(3./2.))
     ENDIF
   ENDDO
+  IF (LHOOK) CALL DR_HOOK('COLL_EFFI', 1, ZHOOK_HANDLE)
   END FUNCTION COLL_EFFI
 !
 !------------------------------------------------------------------------------

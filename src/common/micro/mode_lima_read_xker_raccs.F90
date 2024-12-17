@@ -11,6 +11,7 @@ CONTAINS
                                    PALPHAS,PNUS,PALPHAR,PNUR,PESR,PBS,PBR,PCS,PDS,PFVELOS,PCR,PDR,  &
                                    PACCLBDAS_MAX,PACCLBDAR_MAX,PACCLBDAS_MIN,PACCLBDAR_MIN,         &
                                    PFDINFTY,PKER_RACCSS,PKER_RACCS,PKER_SACCRG                      )
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !     ##########################################################################
 !
 !!****  * * - initialize the kernels for the rain-snow accretion process
@@ -77,10 +78,13 @@ REAL,    INTENT(OUT) :: PFDINFTY
 REAL, DIMENSION(KACCLBDAS,KACCLBDAR), INTENT(OUT), OPTIONAL :: PKER_RACCSS
 REAL, DIMENSION(KACCLBDAS,KACCLBDAR), INTENT(OUT), OPTIONAL :: PKER_RACCS 
 REAL, DIMENSION(KACCLBDAR,KACCLBDAS), INTENT(OUT), OPTIONAL :: PKER_SACCRG
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE 
 !
 ! ###################################################################
 ! #INSERT HERE THE OUTPUT OF INI_RAIN_ICE IF THE KERNELS ARE UPDATED#
 ! ###################################################################
+!
+IF (LHOOK) CALL DR_HOOK('LIMA_READ_XKER_RACCS', 0, ZHOOK_HANDLE)
 !
 KND= 50
 KACCLBDAS= 40
@@ -4912,5 +4916,6 @@ IF( PRESENT(PKER_SACCRG) ) THEN
   PKER_SACCRG( 40, 40) =  0.425283E+00
 END IF
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_READ_XKER_RACCS', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_READ_XKER_RACCS
 END MODULE MODE_LIMA_READ_XKER_RACCS

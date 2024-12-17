@@ -64,6 +64,7 @@ USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_T
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -122,6 +123,7 @@ INTEGER , DIMENSION(D%NIJT*D%NKT) :: I1,I2,I3 ! Indexes for PACK replacement
 REAL    :: ZTSPLITG                       ! Small time step for rain sedimentation
 REAL    :: ZC                             ! Cpl or Cpi
 INTEGER :: IMOMENTS
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 ! Variables for cloud electricity
 REAL :: ZCX, ZXX  ! C and x parameters for N-lambda relationship
@@ -139,6 +141,7 @@ REAL, DIMENSION(D%NIJT, D%NKT):: ZBEARDCOEFF ! effect of electrical forces on te
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_SEDIMENTATION', 0, ZHOOK_HANDLE)
 IMOMENTS=KMOMENTS
 !
 ! Time splitting
@@ -345,5 +348,6 @@ PRS(:,:) = PRS(:,:) / PTSTEP
 IF (KMOMENTS==2) PCS(:,:) = PCS(:,:) / PTSTEP
 IF (OELEC) PQS(:,:) = PQS(:,:) / PTSTEP
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_SEDIMENTATION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_SEDIMENTATION
 END MODULE MODE_LIMA_SEDIMENTATION

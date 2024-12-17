@@ -37,6 +37,7 @@ CONTAINS
 !
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 USE MODD_CST, ONLY:CST_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -77,9 +78,11 @@ REAL, DIMENSION(SIZE(PTHT)) ::  &
      ZLSFACT,  &
      ZLVFACT,  &
      ZTCELSIUS
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_DROPS_HOM_FREEZING', 0, ZHOOK_HANDLE)
 P_TH_HONR(:) = 0.
 P_RR_HONR(:) = 0.
 P_CR_HONR(:) = 0.
@@ -107,5 +110,6 @@ ENDWHERE
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_DROPS_HOM_FREEZING', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_DROPS_HOM_FREEZING
 END MODULE MODE_LIMA_DROPS_HOM_FREEZING

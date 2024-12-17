@@ -11,6 +11,7 @@ CONTAINS
                                    PALPHAG,PNUG,PALPHAS,PNUS,PEGS,PBS,PCG,PDG,PCS,PDS,PFVELOS, &
                                    PDRYLBDAG_MAX,PDRYLBDAS_MAX,PDRYLBDAG_MIN,PDRYLBDAS_MIN,    &
                                    PFDINFTY,PKER_SDRYG                                         )
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !     ########################################################################
 !
 !!****  * * - initialize the kernels for the snow-graupel dry growth process
@@ -74,10 +75,13 @@ REAL,    INTENT(OUT) :: PDRYLBDAG_MIN
 REAL,    INTENT(OUT) :: PDRYLBDAS_MIN
 REAL,    INTENT(OUT) :: PFDINFTY
 REAL, DIMENSION(KDRYLBDAG,KDRYLBDAS), INTENT(OUT), OPTIONAL :: PKER_SDRYG 
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 ! ###################################################################
 ! #INSERT HERE THE OUTPUT OF INI_RAIN_ICE IF THE KERNELS ARE UPDATED#
 ! ###################################################################
+!
+IF (LHOOK) CALL DR_HOOK('LIMA_READ_XKER_SDRYG', 0, ZHOOK_HANDLE)
 !
 KND= 50
 KDRYLBDAG= 40
@@ -3302,5 +3306,6 @@ PKER_SDRYG( 40, 79) =  0.338972E+00
 PKER_SDRYG( 40, 80) =  0.332823E+00
 END IF
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_READ_XKER_SDRYG', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_READ_XKER_SDRYG
 END MODULE MODE_LIMA_READ_XKER_SDRYG

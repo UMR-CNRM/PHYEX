@@ -79,6 +79,7 @@ USE MODE_TOOLS,           only: COUNTJV
 USE MODI_GAMMA
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 
 IMPLICIT NONE
 !
@@ -151,6 +152,7 @@ REAL    :: ZEPS                                ! molar mass ratio
 REAL    :: ZS1, ZS2, ZXACC 
 INTEGER :: IMOD
 INTEGER :: IIJB, IIJE, IKB, IKE        ! Physical domain
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !!$INTEGER                  :: ILUOUT     ! Logical unit of output listing 
 !!$TYPE(TFIELDMETADATA) :: TZFIELD
@@ -161,6 +163,7 @@ INTEGER :: IIJB, IIJE, IKB, IKE        ! Physical domain
 !*       1.     PREPARE COMPUTATIONS - PACK
 !   	        ---------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_CCN_ACTIVATION', 0, ZHOOK_HANDLE)
 !
 !  Saturation vapor mixing ratio and radiative tendency                    
 !
@@ -506,6 +509,7 @@ END IF ! INUCT
 !   	 -----------------------------------------------------------
 !
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_CCN_ACTIVATION', 1, ZHOOK_HANDLE)
 CONTAINS
 !------------------------------------------------------------------------------
 !
@@ -556,6 +560,7 @@ CONTAINS
 !
 !
 USE MODE_MSG
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -576,7 +581,9 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZFH,ZFL, ZFM,ZFNEW
 REAL                               :: ZS,ZXH,ZXL,ZXM,ZXNEW
 REAL                               :: ZX2
 INTEGER                            :: IJ, IL
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
+IF (LHOOK) CALL DR_HOOK('ZRIDDR', 0, ZHOOK_HANDLE)
 ALLOCATE(  ZFH(KPTS))
 ALLOCATE(  ZFL(KPTS))
 ALLOCATE(  ZFM(KPTS))
@@ -662,12 +669,14 @@ DEALLOCATE(  ZFL)
 DEALLOCATE(  ZFM)
 DEALLOCATE(ZFNEW)
 !
+IF (LHOOK) CALL DR_HOOK('ZRIDDR', 1, ZHOOK_HANDLE)
 END FUNCTION ZRIDDR
 !
 !------------------------------------------------------------------------------
 !
   FUNCTION FUNCSMAX(PPZSMAX,PPZZW3,PPZZW6,KPTS)  RESULT(PFUNCSMAX)
 !
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 !!****  *FUNCSMAX* - function describing SMAX function that you want to find the root
 !!
@@ -734,7 +743,9 @@ REAL                           :: ZHYPF
 !
 REAL                           :: ZVEC1
 INTEGER                        :: IVEC1
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
+IF (LHOOK) CALL DR_HOOK('FUNCSMAX', 0, ZHOOK_HANDLE)
 PFUNCSMAX(:) = 0.
 ZVEC1 = MAX( ( 1.0 + 10.0 * CST%XMNH_EPSILON ) ,MIN( REAL(LIMAW%NHYP)*( 1.0 - 10.0 * CST%XMNH_EPSILON ) ,               &
                            LIMAW%XHYPINTP1*LOG(PPZSMAX)+LIMAW%XHYPINTP2 ) )
@@ -753,11 +764,13 @@ ENDDO
 ! function l.h.s. minus r.h.s. of eq. (9) of CPB98 but for LIMAP%NMOD_CCN aerosol mode
 PFUNCSMAX(:) = PFUNCSMAX(:) + PPZZW6(:)*PPZSMAX - PPZZW3(:)
 !
+IF (LHOOK) CALL DR_HOOK('FUNCSMAX', 1, ZHOOK_HANDLE)
 END FUNCTION FUNCSMAX
 !
 !------------------------------------------------------------------------------
 !
   FUNCTION SINGL_FUNCSMAX(PPZSMAX,PPZZW3,PPZZW6,KINDEX)  RESULT(PSINGL_FUNCSMAX)
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 !
 !!****  *SINGL_FUNCSMAX* - same function as FUNCSMAX
@@ -791,7 +804,9 @@ REAL                           :: ZHYPF
 !
 REAL                           :: ZVEC1
 INTEGER                        :: IVEC1
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
+IF (LHOOK) CALL DR_HOOK('SINGL_FUNCSMAX', 0, ZHOOK_HANDLE)
 PSINGL_FUNCSMAX = 0.
 ZVEC1    = MAX( 1.0001,MIN( REAL(LIMAW%NHYP)-0.0001,               &
                               LIMAW%XHYPINTP1*LOG(PPZSMAX)+LIMAW%XHYPINTP2 ) )
@@ -810,6 +825,7 @@ ENDDO
 ! function l.h.s. minus r.h.s. of eq. (9) of CPB98 but for LIMAP%NMOD_CCN aerosol mode
 PSINGL_FUNCSMAX = PSINGL_FUNCSMAX + PPZZW6*PPZSMAX - PPZZW3
 !
+IF (LHOOK) CALL DR_HOOK('SINGL_FUNCSMAX', 1, ZHOOK_HANDLE)
 END FUNCTION SINGL_FUNCSMAX
 !
 !-----------------------------------------------------------------------------

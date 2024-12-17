@@ -18,17 +18,22 @@ CONTAINS
   FUNCTION MOMG (PALPHA,PNU,PP) RESULT (PMOMG)
 ! Pth moment order of the generalized gamma law
     USE MODI_GAMMA
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
     IMPLICIT NONE
     REAL, INTENT(IN)     :: PALPHA ! first shape parameter of the dimensionnal distribution
     REAL, INTENT(IN)     :: PNU    ! second shape parameter of the dimensionnal distribution
     REAL, INTENT(IN)     :: PP     ! order of the moment
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
     REAL     :: PMOMG  ! result: moment of order ZP
+    IF (LHOOK) CALL DR_HOOK('MOMG', 0, ZHOOK_HANDLE)
     PMOMG = GAMMA_X0D(PNU+PP/PALPHA)/GAMMA_X0D(PNU)
-  END FUNCTION MOMG
+    IF (LHOOK) CALL DR_HOOK('MOMG', 1, ZHOOK_HANDLE)
+END FUNCTION MOMG
 !
 !------------------------------------------------------------------------------
 !
   FUNCTION RECT(PA,PB,PX,PX1,PX2)  RESULT(PRECT)
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !     PRECT takes the value PA if PX1<=PX<PX2, and PB outside the [PX1;PX2[ interval
     IMPLICIT NONE
     REAL,                        INTENT(IN) :: PA
@@ -36,17 +41,21 @@ CONTAINS
     REAL, DIMENSION(:),          INTENT(IN) :: PX
     REAL,                        INTENT(IN) :: PX1
     REAL,                        INTENT(IN) :: PX2
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
     REAL, DIMENSION(SIZE(PX,1))             :: PRECT
+    IF (LHOOK) CALL DR_HOOK('RECT', 0, ZHOOK_HANDLE)
     PRECT(:) = PB
     WHERE (PX(:).GE.PX1 .AND. PX(:).LT.PX2)
        PRECT(:) = PA
     END WHERE
+  IF (LHOOK) CALL DR_HOOK('RECT', 1, ZHOOK_HANDLE)
     RETURN
   END FUNCTION RECT
 !
 !-------------------------------------------------------------------------------
 !
   FUNCTION DELTA(PA,PB,PX,PX1,PX2)  RESULT(PDELTA)
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !     PDELTA takes the value PA if PX<PX1, and PB if PX>=PX2
 !     PDELTA is a cubic interpolation between PA and PB for PX between PX1 and PX2 
     IMPLICIT NONE
@@ -56,7 +65,9 @@ CONTAINS
     REAL,                        INTENT(IN) :: PX1
     REAL,                        INTENT(IN) :: PX2
     REAL, DIMENSION(SIZE(PX,1))             :: PDELTA
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
     REAL                                    :: ZA
+    IF (LHOOK) CALL DR_HOOK('DELTA', 0, ZHOOK_HANDLE)
     ZA = 6.0*(PA-PB)/(PX2-PX1)**3
     WHERE     (PX(:).LT.PX1)
        PDELTA(:) = PA
@@ -68,6 +79,7 @@ CONTAINS
             - (0.5*ZA*(PX1+PX2))*                  (PX(:)**2) & 
             + (ZA/3.0)*                            (PX(:)**3)
     END WHERE
+  IF (LHOOK) CALL DR_HOOK('DELTA', 1, ZHOOK_HANDLE)
     RETURN
 !
   END FUNCTION DELTA
@@ -75,6 +87,7 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !
   FUNCTION DELTA_VEC(PA,PB,PX,PX1,PX2)  RESULT(PDELTA_VEC)
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !    Same as DELTA for vectorized PX1 and PX2 arguments
     IMPLICIT NONE
     REAL,                        INTENT(IN) :: PA
@@ -83,7 +96,9 @@ CONTAINS
     REAL, DIMENSION(:),          INTENT(IN) :: PX1
     REAL, DIMENSION(:),          INTENT(IN) :: PX2
     REAL, DIMENSION(SIZE(PX,1))             :: PDELTA_VEC
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
     REAL, DIMENSION(SIZE(PX,1))             :: ZA
+    IF (LHOOK) CALL DR_HOOK('DELTA_VEC', 0, ZHOOK_HANDLE)
     ZA(:) = 0.0
     WHERE     (PX(:)<=PX1(:))
        PDELTA_VEC(:) = PA
@@ -96,6 +111,7 @@ CONTAINS
             - (0.5*ZA(:)*(PX1(:)+PX2(:)))*                  (PX(:)**2) & 
             + (ZA(:)/3.0)*                                  (PX(:)**3)
     END WHERE
+  IF (LHOOK) CALL DR_HOOK('DELTA_VEC', 1, ZHOOK_HANDLE)
     RETURN
   END FUNCTION DELTA_VEC
 !
@@ -103,6 +119,7 @@ CONTAINS
 !
 SUBROUTINE GAULAG(X,W,N,ALF)
   USE MODD_PRECISION, only: MNHREAL64
+  USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
   INTEGER, INTENT(IN) :: N
   INTEGER MAXIT
   REAL, INTENT(IN)  :: ALF
@@ -113,8 +130,10 @@ SUBROUTINE GAULAG(X,W,N,ALF)
   REAL AI
   REAL(KIND=MNHREAL64) :: P1,P2,P3,PP,Z,Z1
 !
+  REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
   REAL SUMW
 !
+  IF (LHOOK) CALL DR_HOOK('GAULAG', 0, ZHOOK_HANDLE)
   DO 13 I=1,N
      IF(I.EQ.1)then
         Z=(1.+ALF)*(3.+.92*ALF)/(1.+2.4*N+1.8*ALF)
@@ -150,6 +169,7 @@ SUBROUTINE GAULAG(X,W,N,ALF)
      W(I) = W(I)/SUMW
 15 CONTINUE
 !
+IF (LHOOK) CALL DR_HOOK('GAULAG', 1, ZHOOK_HANDLE)
   RETURN
 END SUBROUTINE GAULAG
 !
@@ -157,6 +177,7 @@ END SUBROUTINE GAULAG
 !
 SUBROUTINE GAUHER(X,W,N)
   USE MODD_PRECISION, only: MNHREAL64
+  USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
   INTEGER, INTENT(IN) :: N
   INTEGER MAXIT
   REAL, INTENT(OUT) ::  W(N),X(N)
@@ -165,8 +186,10 @@ SUBROUTINE GAUHER(X,W,N)
   INTEGER I,ITS,J,M
   REAL(KIND=MNHREAL64) :: P1,P2,P3,PP,Z,Z1
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
   REAL SUMW
 !
+  IF (LHOOK) CALL DR_HOOK('GAUHER', 0, ZHOOK_HANDLE)
   M=(N+1)/2
   DO 13 I=1,M
      IF(I.EQ.1)then
@@ -208,24 +231,30 @@ SUBROUTINE GAUHER(X,W,N)
      W(I) = W(I)/SUMW
 15 CONTINUE
 !
+IF (LHOOK) CALL DR_HOOK('GAUHER', 1, ZHOOK_HANDLE)
   RETURN
 END SUBROUTINE GAUHER
 !
 !------------------------------------------------------------------------------
 !
 FUNCTION ARTH(FIRST,INCREMENT,N)
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
   REAL,INTENT(IN) :: FIRST,INCREMENT
   INTEGER,INTENT(IN) :: N
   REAL,DIMENSION(N) :: ARTH
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
   INTEGER :: K
+  IF (LHOOK) CALL DR_HOOK('ARTH', 0, ZHOOK_HANDLE)
   DO K=1,N
      ARTH(K)=FIRST+INCREMENT*(K-1)
   END DO
+IF (LHOOK) CALL DR_HOOK('ARTH', 1, ZHOOK_HANDLE)
 END FUNCTION ARTH
 !
 !------------------------------------------------------------------------------
 !
 FUNCTION GAMMLN(XX)
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
   IMPLICIT NONE
   REAL, INTENT(IN) :: XX
   REAL :: GAMMLN
@@ -235,11 +264,14 @@ FUNCTION GAMMLN(XX)
        -86.50532032941677,24.01409824083091,& 
        -1.231739572450155,0.1208650973866179E-2,&
        -0.5395239384953E-5/)
+  REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+  IF (LHOOK) CALL DR_HOOK('GAMMLN', 0, ZHOOK_HANDLE)
   X=XX
   TMP=X+5.5
   TMP=(X+0.5)*LOG(TMP)-TMP
   GAMMLN=TMP+LOG(STP*(1.000000000190015+&
        SUM(COEF(:)/ARTH(X+1.,1.,SIZE(COEF))))/X)
+IF (LHOOK) CALL DR_HOOK('GAMMLN', 1, ZHOOK_HANDLE)
 END FUNCTION GAMMLN
 !
 !------------------------------------------------------------------------------

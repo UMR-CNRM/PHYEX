@@ -80,6 +80,7 @@ USE MODE_LIMA_PHILLIPS_INTEG, ONLY : LIMA_PHILLIPS_INTEG
 USE MODE_LIMA_PHILLIPS_REF_SPECTRUM, ONLY : LIMA_PHILLIPS_REF_SPECTRUM
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 
 IMPLICIT NONE
 !
@@ -170,12 +171,14 @@ REAL,    DIMENSION(:,:), ALLOCATABLE :: ZSI0, &    ! Si threshold in H_X for X={
                                         Z_FRAC_ACT ! Activable frac. of each AP species
 REAL,    DIMENSION(:),   ALLOCATABLE :: ZTCELSIUS, ZZT_SI0_BC
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
 !
 !*       1.     PRELIMINARY COMPUTATIONS
 !	        ------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_PHILLIPS_IFN_NUCLEATION', 0, ZHOOK_HANDLE)
 P_TH_HIND(:,:) = 0.
 P_RI_HIND(:,:) = 0.
 P_CI_HIND(:,:) = 0.
@@ -454,5 +457,6 @@ END IF ! INEGT > 0
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_PHILLIPS_IFN_NUCLEATION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION
 END MODULE MODE_LIMA_PHILLIPS_IFN_NUCLEATION

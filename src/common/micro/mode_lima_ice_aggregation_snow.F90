@@ -41,6 +41,7 @@ CONTAINS
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 USE MODD_CST, ONLY:CST_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -69,6 +70,7 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_AGGS
 !*       0.2   Declarations of local variables :
 !
 REAL, DIMENSION(SIZE(PRIT)) :: ZZW1, ZZW2, ZZW3 ! work arrays
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
@@ -76,6 +78,7 @@ REAL, DIMENSION(SIZE(PRIT)) :: ZZW1, ZZW2, ZZW3 ! work arrays
 !*       2.4    Aggregation of r_i on r_s: CIAGGS and RIAGGS
 !        ---------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_ICE_AGGREGATION_SNOW', 0, ZHOOK_HANDLE)
 ZZW1(:) = 0.
 ZZW2(:) = 0.
 ZZW3(:) = 0.
@@ -114,5 +117,6 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_ICE_AGGREGATION_SNOW', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_ICE_AGGREGATION_SNOW
 END MODULE MODE_LIMA_ICE_AGGREGATION_SNOW

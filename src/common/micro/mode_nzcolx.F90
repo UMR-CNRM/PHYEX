@@ -89,6 +89,7 @@ CONTAINS
 !              ------------
 !
 USE MODI_GENERAL_GAMMA
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -156,6 +157,7 @@ REAL    :: ZSCALZ  ! Single integral of the scaling factor over
 REAL    :: ZSCALXZ ! Double integral of the scaling factor over
 		   ! the spectra of specy X and specy Z
 REAL    :: ZFUNC   ! Ancillary function
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
 !-------------------------------------------------------------------------------
@@ -170,6 +172,7 @@ PNZCOLX(:,:)=0.
 !
 !*       1.1     Compute the growth rate of the slope factors LAMBDA
 !
+IF (LHOOK) CALL DR_HOOK('NZCOLX', 0, ZHOOK_HANDLE)
 ZDLBDAX = EXP( LOG(PLBDAXMAX/PLBDAXMIN)/REAL(SIZE(PNZCOLX(:,:),1)-1) )
 ZDLBDAZ = EXP( LOG(PLBDAZMAX/PLBDAZMIN)/REAL(SIZE(PNZCOLX(:,:),2)-1) )
 !
@@ -231,5 +234,6 @@ DO JLBDAX = 1,SIZE(PNZCOLX(:,:),1)
   END DO
 END DO
 !
+IF (LHOOK) CALL DR_HOOK('NZCOLX', 1, ZHOOK_HANDLE)
 END SUBROUTINE NZCOLX
 END MODULE MODE_NZCOLX

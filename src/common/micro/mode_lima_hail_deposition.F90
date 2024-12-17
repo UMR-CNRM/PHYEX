@@ -36,6 +36,7 @@ CONTAINS
 !
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -58,6 +59,7 @@ TYPE(PARAM_LIMA_MIXED_T),INTENT(IN)::LIMAM
 TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RH_DEPH
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
@@ -65,6 +67,7 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RH_DEPH
 !*       1.     Deposition of vapour on graupel
 !	        -------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_HAIL_DEPOSITION', 0, ZHOOK_HANDLE)
 P_TH_DEPH(:) = 0.0
 P_RH_DEPH(:) = 0.0
 WHERE ( PRHT(:)>LIMAP%XRTMIN(7) .AND. PCHT(:)>LIMAP%XCTMIN(7) .AND. ODCOMPUTE(:) )
@@ -76,5 +79,6 @@ END WHERE
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_HAIL_DEPOSITION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_HAIL_DEPOSITION
 END MODULE MODE_LIMA_HAIL_DEPOSITION

@@ -37,6 +37,7 @@ CONTAINS
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 USE MODD_CST, ONLY:CST_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -67,6 +68,7 @@ REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_CFRZ
 !
 !*       0.2   Declarations of local variables :
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 REAL, DIMENSION(SIZE(PRRT)) :: ZW1, ZW2 ! work arrays
 !
 !-------------------------------------------------------------------------------
@@ -76,6 +78,7 @@ REAL, DIMENSION(SIZE(PRRT)) :: ZW1, ZW2 ! work arrays
 !	        ------------------------
 !
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_RAIN_FREEZING', 0, ZHOOK_HANDLE)
 P_TH_CFRZ(:)=0.
 P_RR_CFRZ(:)=0.
 P_CR_CFRZ(:)=0.
@@ -106,5 +109,6 @@ END WHERE
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_RAIN_FREEZING', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_RAIN_FREEZING
 END MODULE MODE_LIMA_RAIN_FREEZING

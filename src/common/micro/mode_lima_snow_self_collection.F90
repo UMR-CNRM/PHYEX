@@ -37,6 +37,7 @@ CONTAINS
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 USE MODD_CST, ONLY:CST_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -66,6 +67,7 @@ LOGICAL, DIMENSION(SIZE(PCST)) :: GSSC
 INTEGER :: IGSSC, IL
 INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC1        ! Vectors of indices
 REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1, ZVEC3 ! Work vectors
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
@@ -74,6 +76,7 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1, ZVEC3 ! Work vectors
 !	        ---------------------------------
 !
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_SNOW_SELF_COLLECTION', 0, ZHOOK_HANDLE)
 P_CS_SSC(:)=0.
 !
 ZW1(:) =0.
@@ -127,5 +130,6 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_SNOW_SELF_COLLECTION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_SNOW_SELF_COLLECTION
 END MODULE MODE_LIMA_SNOW_SELF_COLLECTION

@@ -46,6 +46,7 @@ USE MODD_PARAMETERS
 USE MODE_LIMA_FUNCTIONS, ONLY: MOMG
 USE MODI_HYPGEO
 USE MODI_GAMMA
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -72,6 +73,7 @@ REAL :: ZRHO00                ! Surface reference air density
 REAL :: ZSURF_TEN             ! Water drop surface tension
 REAL :: ZSMIN, ZSMAX          ! Minimal and maximal supersaturation used to
                               ! discretize the HYP functions
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
 !INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
@@ -81,6 +83,7 @@ REAL :: ZSMIN, ZSMAX          ! Minimal and maximal supersaturation used to
 !  
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('INI_LIMA_WARM', 0, ZHOOK_HANDLE)
 CALL PARAM_LIMA_WARM_ASSOCIATE()
 !
 !*       1.     CHARACTERISTICS OF THE SPECIES
@@ -464,6 +467,7 @@ XCRER = 1.0/ (ZGAMR(6) * XAR**(2.0/3.0))
 !
 !------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('INI_LIMA_WARM', 1, ZHOOK_HANDLE)
 END SUBROUTINE INI_LIMA_WARM
 !
 END MODULE MODE_INI_LIMA_WARM

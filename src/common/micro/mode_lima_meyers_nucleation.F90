@@ -45,6 +45,7 @@ USE MODD_CST,            ONLY: CST_T
 USE MODE_TOOLS,           only: COUNTJV
 USE MODD_PARAM_LIMA,      ONLY:PARAM_LIMA_T
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 
 IMPLICIT NONE
 !
@@ -126,12 +127,14 @@ REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2))   &
 !
 REAL,    DIMENSION(:),   ALLOCATABLE :: ZTCELSIUS
 !
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
 !
 !
 !*       1.     PRELIMINARY COMPUTATIONS
 !	        ------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_MEYERS_NUCLEATION', 0, ZHOOK_HANDLE)
 P_TH_HIND(:,:) = 0.
 P_RI_HIND(:,:) = 0.
 P_CI_HIND(:,:) = 0.
@@ -298,5 +301,6 @@ END IF
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_MEYERS_NUCLEATION', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_MEYERS_NUCLEATION
 END MODULE MODE_LIMA_MEYERS_NUCLEATION

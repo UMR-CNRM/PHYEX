@@ -88,6 +88,7 @@ USE MODI_GENERAL_GAMMA
 !
 USE MODD_CST
 USE MODD_RAIN_ICE_DESCR_n
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -160,6 +161,7 @@ REAL :: ZSCALSR ! Double integral of the scaling factor over
                 ! the spectra of aggregates and rain 
 REAL :: ZFUNC   ! Ancillary function
 REAL :: ZCST1
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
 !-------------------------------------------------------------------------------
@@ -173,6 +175,7 @@ REAL :: ZCST1
 !
 !*       1.0     Initialization
 !
+IF (LHOOK) CALL DR_HOOK('NRCOLSS', 0, ZHOOK_HANDLE)
 PNRCOLSS(:,:) = 0.0
 ZCST1 = (3.0/XPI)/XRHOLW
 !
@@ -269,5 +272,6 @@ DO JLBDAS = 1,SIZE(PNRCOLSS(:,:),1)
   END DO
 END DO
 !
+IF (LHOOK) CALL DR_HOOK('NRCOLSS', 1, ZHOOK_HANDLE)
 END SUBROUTINE NRCOLSS
 END MODULE MODE_NRCOLSS

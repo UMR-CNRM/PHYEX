@@ -37,11 +37,13 @@ CONTAINS
 !
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
 !
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 TYPE(DIMPHYEX_T),      INTENT(IN)    :: D
 !
 REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN)    :: PCCT          !
@@ -64,8 +66,8 @@ REAL, DIMENSION(D%NIJT,D%NKT),INTENT(IN)    :: PRHT          !
 !
 REAL, DIMENSION(D%NIJT,D%NKT),INTENT(INOUT) :: PCLDFR        ! 
 REAL, DIMENSION(D%NIJT,D%NKT),INTENT(INOUT) :: PICEFR        ! 
-TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 REAL, DIMENSION(D%NIJT,D%NKT),INTENT(INOUT) :: PPRCFR        ! 
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !*       0.2   Declarations of local variables :
 !
@@ -76,6 +78,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),INTENT(INOUT) :: PPRCFR        !
 !              ---------------
 !
 ! Liquid cloud fraction is kept from input data, except where PCLDFR=0 and rc>0
+IF (LHOOK) CALL DR_HOOK('LIMA_COMPUTE_CLOUD_FRACTIONS', 0, ZHOOK_HANDLE)
 WHERE(PCLDFR(:,:)<1.E-10 .AND. PRCT(:,:)>LIMAP%XRTMIN(2) .AND. (LIMAP%NMOM_C.EQ.1 .OR. PCCT(:,:)>LIMAP%XCTMIN(2))) PCLDFR(:,:)=1.
 !
 ! Ice cloud fraction is currently 0 or 1
@@ -131,5 +134,6 @@ WHERE ( (PRRT(:,:).GT.0. .AND. (LIMAP%NMOM_R.EQ.1 .OR. PCRT(:,:).GT.0.) ) .OR. &
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_COMPUTE_CLOUD_FRACTIONS', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_COMPUTE_CLOUD_FRACTIONS
 END MODULE MODE_LIMA_COMPUTE_CLOUD_FRACTIONS

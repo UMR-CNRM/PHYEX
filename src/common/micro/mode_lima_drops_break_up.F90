@@ -36,6 +36,7 @@ CONTAINS
 !
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -55,12 +56,14 @@ REAL, DIMENSION(KSIZE),    INTENT(INOUT) :: PB_CR            ! Cumulated concent
 TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
 TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 REAL,    DIMENSION(SIZE(PCRT)) :: ZWLBDR,ZWLBDR3
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
 !              SPONTANEOUS BREAK-UP (NUMERICAL FILTER)
 !              ---------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_DROPS_BREAK_UP', 0, ZHOOK_HANDLE)
 P_CR_BRKU(:)=0.
 !
 ZWLBDR3(:) = 1.E30
@@ -77,5 +80,6 @@ END WHERE
 PB_CR(:) = PB_CR(:) + P_CR_BRKU(:)
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_DROPS_BREAK_UP', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_DROPS_BREAK_UP
 END MODULE MODE_LIMA_DROPS_BREAK_UP

@@ -67,6 +67,7 @@ USE MODE_LIMA_READ_XKER_SDRYG, ONLY: LIMA_READ_XKER_SDRYG
 USE MODE_LIMA_READ_XKER_RDRYG, ONLY: LIMA_READ_XKER_RDRYG
 USE MODE_LIMA_READ_XKER_SWETH, ONLY: LIMA_READ_XKER_SWETH
 USE MODE_LIMA_READ_XKER_GWETH, ONLY: LIMA_READ_XKER_GWETH
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -129,6 +130,7 @@ REAL :: ZRATE_G             ! Geometrical growth of Lbda_g in the tabulated func
 REAL :: ZBOUND_RDSF_RMIN    ! XDCRLIM*Lbda_r : lower bound used in the tabulated function
 REAL :: ZRATE_R             ! Geometrical growth of Lbda_r in the tabulated function
 REAL :: ZKHI_LWM            ! Coefficient of Lawson et al. (2015)
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 REAL :: ZRHOIW ! ice density
 !
@@ -136,6 +138,7 @@ REAL :: ZRHOIW ! ice density
 !
 !
 !ILUOUT0 = TLUOUT0%NLU
+IF (LHOOK) CALL DR_HOOK('INI_LIMA_COLD_MIXED', 0, ZHOOK_HANDLE)
 CALL PARAM_LIMA_COLD_ASSOCIATE()
 CALL PARAM_LIMA_MIXED_ASSOCIATE()
 !
@@ -1828,6 +1831,7 @@ XFREFFI = 0.5 * ZGAMI(8) * (1.0/XLBI)**XLBEXI
 !
 !------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('INI_LIMA_COLD_MIXED', 1, ZHOOK_HANDLE)
 END SUBROUTINE INI_LIMA_COLD_MIXED
 !
 END MODULE MODE_INI_LIMA_COLD_MIXED

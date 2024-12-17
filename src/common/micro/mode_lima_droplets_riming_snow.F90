@@ -46,6 +46,7 @@ USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_T
 USE MODD_PARAM_LIMA_COLD, ONLY:PARAM_LIMA_COLD_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 USE MODD_CST, ONLY:CST_T
+USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
 !
 IMPLICIT NONE
 !
@@ -95,10 +96,12 @@ REAL,    DIMENSION(SIZE(PRCT))  :: Z_RC_RIM, Z_RS_RIM, Z_RG_RIM    !++cb--
 INTEGER, DIMENSION(SIZE(PRCT))  :: IVEC2              ! Vector of indices
 REAL,    DIMENSION(SIZE(PRCT))  :: ZVEC1,ZVEC2,ZVEC1W ! Work vectors
 INTEGER                         :: II
+REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
 !
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_DROPLETS_RIMING_SNOW', 0, ZHOOK_HANDLE)
 DO II = 1, SIZE(PRCT)
 !
 !*       Cloud droplet riming of the aggregates  
@@ -225,5 +228,6 @@ END DO
 !
 !-------------------------------------------------------------------------------
 !
+IF (LHOOK) CALL DR_HOOK('LIMA_DROPLETS_RIMING_SNOW', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA_DROPLETS_RIMING_SNOW
 END MODULE MODE_LIMA_DROPLETS_RIMING_SNOW
