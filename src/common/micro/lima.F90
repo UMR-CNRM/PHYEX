@@ -1508,21 +1508,51 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       WHERE(ZA_RC(:)<-1.E-20 .AND. ZRCT1D(:)>LIMAP%XRTMIN(2))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RC(:)+ZRCT1D(:))/ZA_RC(:))
       END WHERE
+      IF (LIMAP%NMOM_C.GE.2) THEN
+         WHERE(ZA_CC(:)<-1.E-20 .AND. ZCCT1D(:)>LIMAP%XCTMIN(2))
+            ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CC(:)+ZCCT1D(:))/ZA_CC(:))
+         END WHERE
+      ENDIF
       WHERE(ZA_RR(:)<-1.E-20 .AND. ZRRT1D(:)>LIMAP%XRTMIN(3))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RR(:)+ZRRT1D(:))/ZA_RR(:))
       END WHERE
+      IF (LIMAP%NMOM_R.GE.2) THEN
+         WHERE(ZA_CR(:)<-1.E-20 .AND. ZCRT1D(:)>LIMAP%XCTMIN(3))
+            ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CR(:)+ZCRT1D(:))/ZA_CR(:))
+         END WHERE
+      ENDIF
       WHERE(ZA_RI(:)<-1.E-20 .AND. ZRIT1D(:)>LIMAP%XRTMIN(4))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RI(:)+ZRIT1D(:))/ZA_RI(:))
       END WHERE
+      IF (LIMAP%NMOM_I.GE.2) THEN
+         WHERE(ZA_CI(:)<-1.E-20 .AND. ZCIT1D(:)>LIMAP%XCTMIN(4))
+            ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CI(:)+ZCIT1D(:))/ZA_CI(:))
+         END WHERE
+      ENDIF
       WHERE(ZA_RS(:)<-1.E-20 .AND. ZRST1D(:)>LIMAP%XRTMIN(5))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RS(:)+ZRST1D(:))/ZA_RS(:))
       END WHERE
+      IF (LIMAP%NMOM_S.GE.2) THEN
+         WHERE(ZA_CS(:)<-1.E-20 .AND. ZCST1D(:)>LIMAP%XCTMIN(5))
+            ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CS(:)+ZCST1D(:))/ZA_CS(:))
+         END WHERE
+      ENDIF
       WHERE(ZA_RG(:)<-1.E-20 .AND. ZRGT1D(:)>LIMAP%XRTMIN(6))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RG(:)+ZRGT1D(:))/ZA_RG(:))
       END WHERE
+      IF (LIMAP%NMOM_G.GE.2) THEN
+         WHERE(ZA_CG(:)<-1.E-20 .AND. ZCGT1D(:)>LIMAP%XCTMIN(6))
+            ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CG(:)+ZCGT1D(:))/ZA_CG(:))
+         END WHERE
+      ENDIF
       WHERE(ZA_RH(:)<-1.E-20 .AND. ZRHT1D(:)>LIMAP%XRTMIN(7))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RH(:)+ZRHT1D(:))/ZA_RH(:))
       END WHERE
+      IF (LIMAP%NMOM_H.GE.2) THEN
+         WHERE(ZA_CH(:)<-1.E-20 .AND. ZCHT1D(:)>LIMAP%XCTMIN(7))
+            ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CH(:)+ZCHT1D(:))/ZA_CH(:))
+         END WHERE
+      ENDIF
 
       ! We stop when the end of the timestep is reached
       WHERE(PTSTEP-ZTIME1D(:)-ZMAXTIME(:)<=0.)
