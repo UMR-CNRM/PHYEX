@@ -181,17 +181,17 @@ WHERE( GACC )
 !        1.3.3b perform the bilinear interpolation of the normalized
 !               RACCSS-kernel for concentration : for small rain drops transformed into snow
 !
-   Z1(:) = GET_XKER_N_RACCSS(KSIZE,IVEC1(:)+1,IVEC2(:)+1)
-   Z2(:) = GET_XKER_N_RACCSS(KSIZE,IVEC1(:)+1,IVEC2(:)  )
-   Z3(:) = GET_XKER_N_RACCSS(KSIZE,IVEC1(:)  ,IVEC2(:)+1)
-   Z4(:) = GET_XKER_N_RACCSS(KSIZE,IVEC1(:)  ,IVEC2(:)  )
-      ZVEC3(:) =  (   Z1(:)* ZVEC2(:)          &
-                    - Z2(:)*(ZVEC2(:) - 1.0) ) &
-                				 	     *  ZVEC1(:)    &
-                 - (  Z3(:)* ZVEC2(:)          &
-                    - Z4(:)*(ZVEC2(:) - 1.0) ) &
-  	                    			             * (ZVEC1(:) - 1.0)
-   ZZWC1(:) = ZVEC3(:)
+!!$   Z1(:) = GET_XKER_N_RACCSS(IVEC1(:)+1,IVEC2(:)+1)
+!!$   Z2(:) = GET_XKER_N_RACCSS(IVEC1(:)+1,IVEC2(:)  )
+!!$   Z3(:) = GET_XKER_N_RACCSS(IVEC1(:)  ,IVEC2(:)+1)
+!!$   Z4(:) = GET_XKER_N_RACCSS(IVEC1(:)  ,IVEC2(:)  )
+!!$      ZVEC3(:) =  (   Z1(:)* ZVEC2(:)          &
+!!$                    - Z2(:)*(ZVEC2(:) - 1.0) ) &
+!!$                				 	     *  ZVEC1(:)    &
+!!$                 - (  Z3(:)* ZVEC2(:)          &
+!!$                    - Z4(:)*(ZVEC2(:) - 1.0) ) &
+!!$  	                    			             * (ZVEC1(:) - 1.0)
+!!$   ZZWC1(:) = ZVEC3(:)
 !
 !        1.3.4  perform the bilinear interpolation of the normalized
 !               RACCS-kernel : total frozen rain drops
@@ -227,7 +227,7 @@ WHERE( GACC )
 ! ie                coll. of small drops <= coll. of all drops
 !
    ZZW1(:) = MIN(ZZW1(:),ZZW2(:))
-   ZZWC1(:)= MIN(ZZWC1(:),ZZWC2(:))
+!!$   ZZWC1(:)= MIN(ZZWC1(:),ZZWC2(:))
 !
 !        1.3.5  perform the bilinear interpolation of the normalized
 !               SACCRG-kernel : snow transformed into graupel
