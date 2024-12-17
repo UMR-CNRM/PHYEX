@@ -967,18 +967,30 @@ CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_SACCRG', NACCLBDAR,NACCLBDAS)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_RACCSS', NACCLBDAS,NACCLBDAR)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_RACCS', NACCLBDAS,NACCLBDAR)
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_SACCRG', NACCLBDAR,NACCLBDAS)
+IF (NMOM_R.GE.2) THEN 
 CALL NRCOLSS ( NACCLBDAS,NACCLBDAR,IND, XALPHAS, XNUS, XALPHAR, XNUR,     & 
                ZZESR, XCS, XDS, XFVELOS, XCR, XDR,                        & 
                XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, & 
                ZZFDINFTY, XKER_N_RACCSS, XAG, XBS, XAS                      )
+ELSE
+   XKER_N_RACCSS(:,:)=0.
+END IF
+IF (NMOM_R.GE.2) THEN 
 CALL NZCOLX  ( NACCLBDAS,NACCLBDAR, IND, XALPHAS, XNUS, XALPHAR, XNUR,      & 
                ZZESR, XCS, XDS, XFVELOS, XCR, XDR, 0.,                      & ! 
                XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, & 
                ZZFDINFTY, XKER_N_RACCS                                      )
+ELSE
+   XKER_N_RACCS(:,:)=0.
+END IF
+IF (NMOM_S.GE.2 .OR. NMOM_G.GE.2) THEN 
 CALL NSCOLRG ( NACCLBDAR,NACCLBDAS, IND, XALPHAS, XNUS, XALPHAR, XNUR,     & 
                ZZESR, XCS, XDS, XFVELOS, XCR, XDR,                          & 
                XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, & 
                ZZFDINFTY, XKER_N_SACCRG,XAG, XBS, XAS                       )
+ELSE
+   XKER_N_SACCRG(:,:)=0.
+END IF
 !!$WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RACCSS) ) THEN")')          
 !!$DO I1 = 1 , NACCLBDAS                                                    
@@ -1128,10 +1140,14 @@ XSCINTP2S = 1.0 - LOG( XSCLBDAS_MIN ) / ZRATE
 !
   CALL PARAM_LIMA_COLD_ALLOCATE('XKER_N_SSCS', NSCLBDAS,NSCLBDAS)
 !
+IF (NMOM_S.GE.2) THEN 
   CALL NZCOLX  ( NSCLBDAS,NSCLBDAS,IND, XALPHAS, XNUS, XALPHAS, XNUS,      & 
                ZZESS, XCS, XDS, XFVELOS, XCS, XDS, XFVELOS,                   & 
                XSCLBDAS_MAX, XSCLBDAS_MAX, XSCLBDAS_MIN, XSCLBDAS_MIN, & 
                ZZFDINFTY, XKER_N_SSCS                                      ) 
+ELSE
+   XKER_N_SSCS(:,:)=0.
+END IF
 !
 !!$  WRITE(UNIT=ILUOUT0,FMT='("*****************************************")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("**** UPDATE NEW SET OF SSCS  KERNELS ***")')
@@ -1401,10 +1417,14 @@ ZZFDINFTY = 20.0  ! computing the kernels XKER_SDRYG
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_SDRYG', NDRYLBDAG,NDRYLBDAS)
 !if (NMOM_S.GE.2) then
   CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_SDRYG', NDRYLBDAG,NDRYLBDAS)
+IF (NMOM_S.GE.2 ) THEN
   CALL NZCOLX  ( NDRYLBDAG,NDRYLBDAS, IND, XALPHAG, XNUG, XALPHAS, XNUS,    & 
               ZZEGS, XCG, XDG, 0., XCS, XDS, XFVELOS,                        & 
               XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, & 
               ZZFDINFTY, XKER_N_SDRYG                                      ) 
+ELSE
+   XKER_N_SDRYG(:,:)=0.
+END IF
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SDRYG) ) THEN")')          
 !!$  DO I1 = 1 , NDRYLBDAG                                                    
@@ -1484,10 +1504,14 @@ ZZFDINFTY = 20.0
 CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_RDRYG', NDRYLBDAG,NDRYLBDAR)
 !if ( NMOM_R.GE.2 ) then
   CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_RDRYG', NDRYLBDAG,NDRYLBDAR)
+IF (NMOM_R.GE.2) THEN
   CALL NZCOLX  ( NDRYLBDAG,NDRYLBDAR, IND, XALPHAS, XNUS, XALPHAR, XNUR,    & 
                ZZEGR, XCG, XDG, 0., XCR, XDR, 0.,                            & 
                XDRYLBDAG_MAX, XDRYLBDAR_MAX, XDRYLBDAG_MIN, XDRYLBDAR_MIN, &
                ZZFDINFTY, XKER_N_RDRYG                                      )
+ELSE
+   XKER_N_RDRYG(:,:)=0.
+END IF
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_RDRYG) ) THEN")')          
 !!$  DO I1 = 1 , NDRYLBDAG                                                    
@@ -1624,10 +1648,14 @@ ZZFDINFTY = 20.0  ! computing the kernels XKER_SWETH
 !
 !if ( NMOM_S.GE.2 ) then
   IF( .NOT.ASSOCIATED(XKER_N_SWETH) ) CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_SWETH', NWETLBDAH,NWETLBDAS)
+IF (NMOM_S.GE.2) THEN
   CALL NZCOLX ( NWETLBDAH,NWETLBDAS,IND, XALPHAH, XNUH, XALPHAS, XNUS,     &  
               ZZEHS, XCH, XDH, 0., XCS, XDS, XFVELOS,                       &  ! 
               XWETLBDAH_MAX, XWETLBDAS_MAX, XWETLBDAH_MIN, XWETLBDAS_MIN, &  ! 
               ZZFDINFTY, XKER_N_SWETH                                        )
+ELSE
+   XKER_N_SWETH(:,:)=0.
+END IF
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_SWETH) ) THEN")')          
 !!$  DO I1 = 1 , NWETLBDAH                                                    
@@ -1707,10 +1735,14 @@ ZZFDINFTY = 20.0
 !
 !if ( NMOM_G.GE.2 ) then
   IF( .NOT.ASSOCIATED(XKER_N_GWETH) ) CALL PARAM_LIMA_MIXED_ALLOCATE('XKER_N_GWETH', NWETLBDAH,NWETLBDAG)
+IF (NMOM_G.GE.2) THEN
   CALL NZCOLX ( NWETLBDAH,NWETLBDAG,IND, XALPHAH, XNUH, XALPHAG, XNUG,   & 
               ZZEHG, XCH, XDH, 0., XCG, XDG, 0.,                            & 
               XWETLBDAH_MAX, XWETLBDAG_MAX, XWETLBDAH_MIN, XWETLBDAG_MIN, & 
               ZZFDINFTY, XKER_N_GWETH                                      )
+ELSE
+   XKER_N_GWETH(:,:)=0.
+END IF
 !!$  WRITE(UNIT=ILUOUT0,FMT='("!")')
 !!$  WRITE(UNIT=ILUOUT0,FMT='("IF( PRESENT(PKER_N_GWETH) ) THEN")')          
 !!$  DO I1 = 1 , NWETLBDAH                                                    
