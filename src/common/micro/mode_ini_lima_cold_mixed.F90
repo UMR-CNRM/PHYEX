@@ -56,9 +56,9 @@ USE MODE_MSG
 USE MODE_LIMA_FUNCTIONS, ONLY: MOMG, GAUHER
 USE MODI_GAMMA
 USE MODI_GAMMA_INC
-USE MODE_RRCOLSS, ONLY: RRCOLSS
-USE MODE_RZCOLX, ONLY: RZCOLX
-USE MODE_RSCOLRG, ONLY: RSCOLRG
+USE MODE_LIMA_RRCOLSS, ONLY: LIMA_RRCOLSS
+USE MODE_LIMA_RZCOLX, ONLY: LIMA_RZCOLX
+USE MODE_LIMA_RSCOLRG, ONLY: LIMA_RSCOLRG
 USE MODE_NRCOLSS, ONLY: NRCOLSS
 USE MODE_NZCOLX, ONLY: NZCOLX 
 USE MODE_NSCOLRG, ONLY: NSCOLRG
@@ -1018,15 +1018,15 @@ IF( (IACCLBDAS/=NACCLBDAS) .OR. (IACCLBDAR/=NACCLBDAR) .OR. (IKND/=IND) .OR. &
     (ZACCLBDAS_MAX/=XACCLBDAS_MAX) .OR. (ZACCLBDAR_MAX/=XACCLBDAR_MAX) .OR. &
     (ZACCLBDAS_MIN/=XACCLBDAS_MIN) .OR. (ZACCLBDAR_MIN/=XACCLBDAR_MIN) .OR. &
     (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
-  CALL RRCOLSS ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
+  CALL LIMA_RRCOLSS ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
                  ZZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR,                     &
                  XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
                  ZZFDINFTY, XKER_RACCSS, XAG, XBS, XAS                        )
-  CALL RZCOLX  ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
+  CALL LIMA_RZCOLX  ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
                  ZZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR, 0.,                 &
                  XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
                  ZZFDINFTY, XKER_RACCS                                        )
-  CALL RSCOLRG ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
+  CALL LIMA_RSCOLRG ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
                  ZZESR, XBS, XCS, XDS, XFVELOS, XCR, XDR,                     &
                  XACCLBDAS_MAX, XACCLBDAR_MAX, XACCLBDAS_MIN, XACCLBDAR_MIN, &
                  ZZFDINFTY, XKER_SACCRG,XAG, XBS, XAS                         )
@@ -1426,7 +1426,7 @@ IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAS/=NDRYLBDAS) .OR. (IKND/=IND) .OR. &
     (ZDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (ZDRYLBDAS_MAX/=XDRYLBDAS_MAX) .OR. &
     (ZDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (ZDRYLBDAS_MIN/=XDRYLBDAS_MIN) .OR. &
     (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
-  CALL RZCOLX ( IND, XALPHAG, XNUG, XALPHAS, XNUS,                          &
+  CALL LIMA_RZCOLX ( IND, XALPHAG, XNUG, XALPHAS, XNUS,                          &
                 ZZEGS, XBS, XCG, XDG, 0., XCS, XDS, XFVELOS,                 &
                 XDRYLBDAG_MAX, XDRYLBDAS_MAX, XDRYLBDAG_MIN, XDRYLBDAS_MIN, &
                 ZZFDINFTY, XKER_SDRYG                                        )
@@ -1509,7 +1509,7 @@ IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAR/=NDRYLBDAR) .OR. (IKND/=IND) .OR. &
     (ZDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (ZDRYLBDAR_MAX/=XDRYLBDAR_MAX) .OR. &
     (ZDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (ZDRYLBDAR_MIN/=XDRYLBDAR_MIN) .OR. &
     (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
-  CALL RZCOLX ( IND, XALPHAG, XNUG, XALPHAR, XNUR,                          &
+  CALL LIMA_RZCOLX ( IND, XALPHAG, XNUG, XALPHAR, XNUR,                          &
                 ZZEGR, XBR, XCG, XDG, 0., XCR, XDR, 0.,                      &
                 XDRYLBDAG_MAX, XDRYLBDAR_MAX, XDRYLBDAG_MIN, XDRYLBDAR_MIN, &
                 ZZFDINFTY, XKER_RDRYG                                        )
@@ -1650,7 +1650,7 @@ IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAS/=NWETLBDAS) .OR. (IKND/=IND) .OR. &
     (ZWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (ZWETLBDAS_MAX/=XWETLBDAS_MAX) .OR. &
     (ZWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (ZWETLBDAS_MIN/=XWETLBDAS_MIN) .OR. &
     (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
-  CALL RZCOLX ( IND, XALPHAH, XNUH, XALPHAS, XNUS,                          &
+  CALL LIMA_RZCOLX ( IND, XALPHAH, XNUH, XALPHAS, XNUS,                          &
                 ZZEHS, XBS, XCH, XDH, 0., XCS, XDS, XFVELOS,                 &
                 XWETLBDAH_MAX, XWETLBDAS_MAX, XWETLBDAH_MIN, XWETLBDAS_MIN, &
                 ZZFDINFTY, XKER_SWETH                                        )
@@ -1733,7 +1733,7 @@ IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAG/=NWETLBDAG) .OR. (IKND/=IND) .OR. &
     (ZWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (ZWETLBDAG_MAX/=XWETLBDAG_MAX) .OR. &
     (ZWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (ZWETLBDAG_MIN/=XWETLBDAG_MIN) .OR. &
     (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
-  CALL RZCOLX ( IND, XALPHAH, XNUH, XALPHAG, XNUG,                          &
+  CALL LIMA_RZCOLX ( IND, XALPHAH, XNUH, XALPHAG, XNUG,                          &
                 ZZEHG, XBG, XCH, XDH, 0., XCG, XDG, 0.,                      &
                 XWETLBDAH_MAX, XWETLBDAG_MAX, XWETLBDAH_MIN, XWETLBDAG_MIN, &
                 ZZFDINFTY, XKER_GWETH                                        )
