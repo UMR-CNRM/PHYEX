@@ -387,6 +387,7 @@ DO JK=IKTB,IKTE
           ZSIGMA(JIJ) = 2*PSIGS(JIJ,JK)
         ENDIF
       END IF
+      ZSIGMA(JIJ)=MIN(ZSIGMA(JIJ),ZRT(JIJ,JK)/2.) 
     END DO
   ELSE
     DO JIJ=IIJB,IIJE
@@ -425,6 +426,7 @@ DO JK=IKTB,IKTE
       !Computation of condensate
       ZCOND(JIJ) = (EXP(-ZGCOND**2)-ZGCOND*SQRT(CST%XPI)*ZGAUV)*ZSIGMA(JIJ)/SQRT(2.*CST%XPI)
       ZCOND(JIJ) = MAX(ZCOND(JIJ), 0.)
+      ZCOND(JIJ) = MIN(ZCOND(JIJ),ZRT(JIJ,JK)-1.E-7)
 
       PSIGRC(JIJ,JK) = PCLDFR(JIJ,JK)
     END DO
@@ -477,6 +479,7 @@ DO JK=IKTB,IKTE
         ZCOND(JIJ) = EXP( 1.2*ZQ1(JIJ)-1. )
       ENDIF
       ZCOND(JIJ) = ZCOND(JIJ) * ZSIGMA(JIJ)
+      ZCOND(JIJ) = MIN(ZCOND(JIJ),ZRT(JIJ,JK)-1.E-7)
 
       !Cloud fraction
       IF (ZCOND(JIJ) < 1.E-12) THEN
