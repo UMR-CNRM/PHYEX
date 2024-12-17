@@ -76,7 +76,6 @@ USE MODD_NEB_N,           ONLY: NEB_T
 !USE MODE_IO_FIELD_WRITE,  only: IO_Field_write
 USE MODE_TOOLS,           only: COUNTJV
 
-USE MODI_GAMMA
 USE MODD_PARAM_LIMA_WARM, ONLY:PARAM_LIMA_WARM_T
 USE MODD_PARAM_LIMA, ONLY:PARAM_LIMA_T
 USE YOMHOOK, ONLY:LHOOK, DR_HOOK, JPHOOK
@@ -758,8 +757,7 @@ DO IMOD = 1, LIMAP%NMOD_CCN
                              ! sum of s**(ki+2) * F32 * Ci * ki * beta(ki/2,3/2)
    PFUNCSMAX(:) =  PFUNCSMAX(:) + (PPZSMAX)**(LIMAP%XKHEN_MULTI(IMOD) + 2) &
                  * ZHYPF* LIMAP%XKHEN_MULTI(IMOD) * ZCHEN_MULTI(:,IMOD)    &
-                 * GAMMA_X0D( LIMAP%XKHEN_MULTI(IMOD)/2.0)*GAMMA_X0D(3.0/2.0)      &
-                 / GAMMA_X0D((LIMAP%XKHEN_MULTI(IMOD)+3.0)/2.0)
+                 * LIMAP%XGMULTI(JMOD)
 ENDDO
 ! function l.h.s. minus r.h.s. of eq. (9) of CPB98 but for LIMAP%NMOD_CCN aerosol mode
 PFUNCSMAX(:) = PFUNCSMAX(:) + PPZZW6(:)*PPZSMAX - PPZZW3(:)
@@ -819,8 +817,7 @@ DO IMOD = 1, LIMAP%NMOD_CCN
                              ! sum of s**(ki+2) * F32 * Ci * ki * bêta(ki/2,3/2)
    PSINGL_FUNCSMAX = PSINGL_FUNCSMAX + (PPZSMAX)**(LIMAP%XKHEN_MULTI(IMOD) + 2)   &
                    * ZHYPF* LIMAP%XKHEN_MULTI(IMOD) * ZCHEN_MULTI(KINDEX,IMOD) &
-                   * GAMMA_X0D( LIMAP%XKHEN_MULTI(IMOD)/2.0)*GAMMA_X0D(3.0/2.0)        &
-                   / GAMMA_X0D((LIMAP%XKHEN_MULTI(IMOD)+3.0)/2.0)
+                   * LIMAP%XGMULTI(JMOD)
 ENDDO
 ! function l.h.s. minus r.h.s. of eq. (9) of CPB98 but for LIMAP%NMOD_CCN aerosol mode
 PSINGL_FUNCSMAX = PSINGL_FUNCSMAX + PPZZW6*PPZSMAX - PPZZW3

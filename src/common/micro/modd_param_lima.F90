@@ -82,6 +82,7 @@ REAL, DIMENSION(:),    ALLOCATABLE :: XSIGMA_IFN      ! Sigma of IFN modes
 REAL, DIMENSION(:),    ALLOCATABLE :: XRHO_IFN        ! Density of IFN modes 
 REAL, DIMENSION(:,:),  ALLOCATABLE :: XFRAC           ! Composition of each IFN mode
 REAL, DIMENSION(:),    ALLOCATABLE :: XFRAC_REF       ! AP compostion in Phillips 08
+REAL, DIMENSION(:),    ALLOCATABLE :: XGINC_IFN       ! 
 !
 ! 1.3 Ice characteristics
 !
@@ -157,7 +158,8 @@ REAL, DIMENSION(:), ALLOCATABLE     :: XR_MEAN_CCN,   & ! Mean radius of CCN mod
                                        XRHO_CCN         ! Density of the CCN modes
 REAL, DIMENSION(:), ALLOCATABLE     :: XKHEN_MULTI,   & ! Parameters defining the CCN activation
                                        XMUHEN_MULTI,  & ! spectra for a multimodal aerosol distribution
-                                       XBETAHEN_MULTI   ! 
+                                       XBETAHEN_MULTI,& !
+                                       XGMULTI          !
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: XCONC_CCN_TOT    ! Total aerosol number concentration
 REAL, DIMENSION(:),     ALLOCATABLE :: XLIMIT_FACTOR    ! compute CHEN ????????????
 !
@@ -306,6 +308,7 @@ REAL, POINTER :: XMRSTEP => NULL(), &
 REAL, DIMENSION(:), POINTER :: XIFN_CONC => NULL(), &
                                XMDIAM_IFN => NULL(), &
                                XSIGMA_IFN => NULL(), &
+                               XGINC_IFN => NULL(), &
                                XRHO_IFN => NULL(), &
                                XFRAC_REF => NULL(), &
                                XT0 => NULL(), &
@@ -325,6 +328,7 @@ REAL, DIMENSION(:), POINTER :: XIFN_CONC => NULL(), &
                                XMUHEN_MULTI => NULL(), &
                                XBETAHEN_MULTI => NULL(), &
                                XLIMIT_FACTOR => NULL(), &
+                               XGMULTI => NULL(), &
                                XRTMIN => NULL(), &
                                XCTMIN => NULL(), &
                                XLB => NULL(), &
@@ -516,6 +520,9 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
     CASE('XSIGMA_IFN')
       ALLOCATE(PARAM_LIMA%XSIGMA_IFN(KDIM1))
       XSIGMA_IFN => PARAM_LIMA%XSIGMA_IFN
+    CASE('XGINC_IFN')
+      ALLOCATE(PARAM_LIMA%XGINC_IFN(KDIM1))
+      XGINC_IFN => PARAM_LIMA%XGINC_IFN
     CASE('XRHO_IFN')
       ALLOCATE(PARAM_LIMA%XRHO_IFN(KDIM1))
       XRHO_IFN => PARAM_LIMA%XRHO_IFN
@@ -549,6 +556,9 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
     CASE('XLIMIT_FACTOR')
       ALLOCATE(PARAM_LIMA%XLIMIT_FACTOR(KDIM1))
       XLIMIT_FACTOR => PARAM_LIMA%XLIMIT_FACTOR
+    CASE('XGMULTI')
+      ALLOCATE(PARAM_LIMA%XGMULTI(KDIM1))
+      XGMULTI => PARAM_LIMA%XGMULTI
     CASE('XRTMIN')
       ALLOCATE(PARAM_LIMA%XRTMIN(KDIM1))
       XRTMIN => PARAM_LIMA%XRTMIN

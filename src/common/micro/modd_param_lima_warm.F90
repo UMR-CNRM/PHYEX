@@ -44,7 +44,8 @@ REAL      :: XAR,XBR,XCR,XDR,XF0R,XF1R,     & ! Raindrop       charact.
 !             ---------------------
 !
 REAL      :: XFSEDRR,XFSEDCR,                  & ! Constants for sedimentation
-             XFSEDRC,XFSEDCC                     ! fluxes of R, C
+             XFSEDRC,XFSEDCC,                  & ! fluxes of R, C
+             XGCC
 !
 !
 REAL      :: XDIVA,                            & ! Diffusivity of water vapor
@@ -139,6 +140,7 @@ REAL, POINTER :: XLBC => NULL(), &
                  XFSEDCR => NULL(), &
                  XFSEDRC => NULL(), &
                  XFSEDCC => NULL(), &
+                 XGCC => NULL(), &
                  XDIVA => NULL(), &
                  XTHCO => NULL(), &
                  XWMIN => NULL(), &
@@ -262,6 +264,7 @@ IF(.NOT. ASSOCIATED(XLBC)) THEN
   XFSEDCR           => PARAM_LIMA_WARM%XFSEDCR
   XFSEDRC           => PARAM_LIMA_WARM%XFSEDRC
   XFSEDCC           => PARAM_LIMA_WARM%XFSEDCC
+  XGCC              => PARAM_LIMA_WARM%XGCC
   XDIVA             => PARAM_LIMA_WARM%XDIVA
   XTHCO             => PARAM_LIMA_WARM%XTHCO
   XWMIN             => PARAM_LIMA_WARM%XWMIN

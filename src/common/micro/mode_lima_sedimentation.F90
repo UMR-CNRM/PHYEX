@@ -57,7 +57,6 @@ USE MODD_ELEC_PARAM,       ONLY: ELEC_PARAM_t
 
 USE MODE_TOOLS,            only: COUNTJV
 
-USE MODI_GAMMA,             ONLY: GAMMA_X0D
 USE MODE_ELEC_COMPUTE_EX,   ONLY: ELEC_COMPUTE_EX
 USE MODE_ELEC_BEARD_EFFECT, ONLY: ELEC_BEARD_EFFECT
 USE MODD_PARAM_LIMA_MIXED, ONLY:PARAM_LIMA_MIXED_T
@@ -238,7 +237,7 @@ DO IN = 1 ,  LIMAP%NSPLITSED(KID)
 
       IF (KID==2) THEN
          ! mean cloud droplet diameter
-         ZCC(:) = 0.5*GAMMA_X0D(LIMAP%XNUC+1./LIMAP%XALPHAC)/(GAMMA_X0D(LIMAP%XNUC)*ZLBDA(:))
+         ZCC(:) = LIMAW%XGCC/ZLBDA(:)
          ! correction factor for cloud droplet terminal fall speed
          ZCC(:) = 1.+1.26*6.6E-8*(101325./ZPABST(:))*(ZT(:)/293.15)/ZCC(:)
          ZZW(:) = ZCC(:) * ZZW(:)

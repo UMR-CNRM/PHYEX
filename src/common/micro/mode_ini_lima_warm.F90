@@ -206,6 +206,7 @@ XD(3)     = XDR
 XFSEDR(3) = XFSEDRR
 XFSEDC(3) = XFSEDCR
 !
+XGCC      = 0.5*GAMMA_X0D(XNUC+1./XALPHAC)/GAMMA_X0D(XNUC)
 !------------------------------------------------------------------------------
 !
 !
