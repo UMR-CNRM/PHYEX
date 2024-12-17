@@ -316,8 +316,10 @@ XNUI    = 3.0  ! Gamma law with little dispersion
 !
 IF (LSNOW_T) THEN
 !Cas GAMMAGEN
-   XALPHAS = .214   ! Generalized gamma law
-   XNUS    = 43.7   ! Generalized gamma law
+!   XALPHAS = .214   ! Generalized gamma law
+!   XNUS    = 43.7   ! Generalized gamma law
+   XALPHAS = 1.   ! Generalized gamma law
+   XNUS    = 1.3   ! Generalized gamma law
    XTRANS_MP_GAMMAS = SQRT( ( GAMMA(XNUS + 2./XALPHAS)*GAMMA(XNUS + 4./XALPHAS) ) / &
                             ( 8.* GAMMA(XNUS + 1./XALPHAS)*GAMMA(XNUS + 3./XALPHAS) ) )
 ELSE IF (NMOM_S.EQ.2) THEN
@@ -1015,8 +1017,8 @@ IF( (IACCLBDAS/=NACCLBDAS) .OR. (IACCLBDAR/=NACCLBDAR) .OR. (IKND/=IND) .OR. &
     (ZALPHAR/=XALPHAR) .OR. (ZNUR/=XNUR)                               .OR. &
     (ZESR/=ZZESR) .OR. (ZBS/=XBS) .OR. (ZBR/=XBR)                       .OR. &
     (ZCS/=XCS) .OR. (ZDS/=XDS) .OR. (ZFVELOS/=XFVELOS) .OR. (ZCR/=XCR) .OR. (ZDR/=XDR)         .OR. &
-    (ZACCLBDAS_MAX/=XACCLBDAS_MAX) .OR. (ZACCLBDAR_MAX/=XACCLBDAR_MAX) .OR. &
-    (ZACCLBDAS_MIN/=XACCLBDAS_MIN) .OR. (ZACCLBDAR_MIN/=XACCLBDAR_MIN) .OR. &
+    (ABS(ZACCLBDAS_MAX-XACCLBDAS_MAX).GE.(0.001*ZACCLBDAS_MAX)) .OR. (ZACCLBDAR_MAX/=XACCLBDAR_MAX) .OR. &
+    (ABS(ZACCLBDAS_MIN-XACCLBDAS_MIN).GE.(0.001*ZACCLBDAS_MIN) .OR. (ZACCLBDAR_MIN/=XACCLBDAR_MIN) .OR. &
     (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
   CALL LIMA_RRCOLSS ( IND, XALPHAS, XNUS, XALPHAR, XNUR,                          &
                  ZZESR, XBR, XCS, XDS, XFVELOS, XCR, XDR,                     &
@@ -1423,8 +1425,8 @@ IF( (IDRYLBDAG/=NDRYLBDAG) .OR. (IDRYLBDAS/=NDRYLBDAS) .OR. (IKND/=IND) .OR. &
     (ZALPHAS/=XALPHAS) .OR. (ZNUS/=XNUS)                               .OR. &
     (ZEGS/=ZZEGS) .OR. (ZBS/=XBS)                                       .OR. &
     (ZCG/=XCG) .OR. (ZDG/=XDG) .OR. (ZCS/=XCS) .OR. (ZDS/=XDS) .OR. (ZFVELOS/=XFVELOS) .OR. &
-    (ZDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (ZDRYLBDAS_MAX/=XDRYLBDAS_MAX) .OR. &
-    (ZDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (ZDRYLBDAS_MIN/=XDRYLBDAS_MIN) .OR. &
+    (ZDRYLBDAG_MAX/=XDRYLBDAG_MAX) .OR. (ABS(ZDRYLBDAS_MAX-XDRYLBDAS_MAX).GE.(0.001*ZDRYLBDAS_MAX)) .OR. &
+    (ZDRYLBDAG_MIN/=XDRYLBDAG_MIN) .OR. (ABS(ZDRYLBDAS_MIN-XDRYLBDAS_MIN).GE.(0.001*ZDRYLBDAS_MIN)) .OR. &
     (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
   CALL LIMA_RZCOLX ( IND, XALPHAG, XNUG, XALPHAS, XNUS,                          &
                 ZZEGS, XBS, XCG, XDG, 0., XCS, XDS, XFVELOS,                 &
@@ -1647,8 +1649,8 @@ IF( (IWETLBDAH/=NWETLBDAH) .OR. (IWETLBDAS/=NWETLBDAS) .OR. (IKND/=IND) .OR. &
     (ZALPHAS/=XALPHAS) .OR. (ZNUS/=XNUS)                               .OR. &
     (ZEHS/=ZZEHS) .OR. (ZBS/=XBS)                                       .OR. &
     (ZCH/=XCH) .OR. (ZDH/=XDH) .OR. (ZCS/=XCS) .OR. (ZDS/=XDS) .OR. (ZFVELOS/=XFVELOS) .OR. &
-    (ZWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (ZWETLBDAS_MAX/=XWETLBDAS_MAX) .OR. &
-    (ZWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (ZWETLBDAS_MIN/=XWETLBDAS_MIN) .OR. &
+    (ZWETLBDAH_MAX/=XWETLBDAH_MAX) .OR. (ABS(ZWETLBDAS_MAX-XWETLBDAS_MAX).GE.(0.001*ZWETLBDAS_MAX)) .OR. &
+    (ZWETLBDAH_MIN/=XWETLBDAH_MIN) .OR. (ABS(ZWETLBDAS_MIN-XWETLBDAS_MIN).GE.(0.001*ZWETLBDAS_MIN)) .OR. &
     (ZFDINFTY/=ZZFDINFTY)                                               ) THEN
   CALL LIMA_RZCOLX ( IND, XALPHAH, XNUH, XALPHAS, XNUS,                          &
                 ZZEHS, XBS, XCH, XDH, 0., XCS, XDS, XFVELOS,                 &
