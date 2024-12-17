@@ -481,8 +481,10 @@ DO IITER =1,ITERMAX
            ZDUM, ZDUM, ZDUM, ZDUM, ZDUM,              &
            ZSIGQSAT2D, PLV=ZLV, PLS=ZLS, PCPH=ZCPH )
    END IF
-   IF (OSUBG_COND .AND. LIMAP%NMOM_C.GE.2 .AND. LIMAP%LACTI) THEN
+   IF (OSUBG_COND) THEN
       PSRCS=Z_SRCS
+   ENDIF
+   IF (OSUBG_COND .AND. LIMAP%NMOM_C.GE.2 .AND. LIMAP%LACTI) THEN
       ZW_MF=0.
       CALL LIMA_CCN_ACTIVATION (LIMAP, LIMAW, D, CST, NEBN,      &
            PRHODREF, PEXNREF, PPABST, ZT2, PDTHRAD, PW_NU+ZW_MF, &
@@ -582,7 +584,7 @@ ELSE
    ZNFS(:,:,:) = ZNFT(:,:,:) / PTSTEP
    ZNAS(:,:,:) = ZNAT(:,:,:) / PTSTEP
    PTHS(:,:)   = PTHS(:,:) + &
-                   (ZW1(:,:) * ZLV(:,:) + ZW2 * ZLS(:,:)) / ZCPH(:,:)     &
+                   (ZW1(:,:) * ZLV(:,:) + ZW2(:,:) * ZLS(:,:)) / ZCPH(:,:)     &
                    /  PEXNREF(:,:)
 END IF
 !
