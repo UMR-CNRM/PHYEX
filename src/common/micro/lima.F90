@@ -4,13 +4,13 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     #####################################################################
-SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, KBUDGETS, KRR, &
+SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP, BUCONF, TBUDGETS, HACTCCN, KBUDGETS, KRR, &
                   PTSTEP, OELEC,                                          &
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
                   NCCN, NIFN, NIMM,                                       &
                   ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PW_NU,               &
-                  PTHS, PRS, PSVS,                                        &
+                  PAERO,PSOLORG, PMI,PTHS, PRS, PSVS,                     &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
                   PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR,                  &
                   PLATHAM_IAGGS, PEFIELDW, PSV_ELEC_T, PSV_ELEC_S         )
@@ -65,7 +65,7 @@ USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN, NMOD_IFN, NMOD_IMM, LHHONI,      &
                                 LFEEDBACKT, NMAXITER, XMRSTEP, XTSTEP_TS,               &
                                 LSEDC, LSEDI, XRTMIN, XCTMIN, LDEPOC, XVDEPOC,                  &
                                 NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
-
+USE MODD_CH_AEROSOL,      ONLY: NSP,NCARB,NSOA
 USE MODE_BUDGET_PHY,      ONLY: BUDGET_STORE_ADD_PHY, BUDGET_STORE_INIT_PHY, BUDGET_STORE_END_PHY
 use mode_tools,           only: Countjv
 
@@ -89,6 +89,7 @@ TYPE(RAIN_ICE_PARAM_t),   INTENT(IN)    :: ICEP
 TYPE(ELEC_PARAM_t),       INTENT(IN)    :: ELECP   ! electrical parameters
 TYPE(ELEC_DESCR_t),       INTENT(IN)    :: ELECD   ! electrical descriptive csts
 TYPE(TBUDGETCONF_t),      INTENT(IN)    :: BUCONF
+CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
 TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT) :: TBUDGETS
 INTEGER,                  INTENT(IN)    :: KBUDGETS
 INTEGER,                  INTENT(IN)    :: KRR
@@ -112,10 +113,13 @@ LOGICAL,                                 INTENT(IN)   :: ODTHRAD    ! Use radiat
 REAL, DIMENSION(MERGE(D%NIT,0,ODTHRAD), &
                 MERGE(D%NJT,0,ODTHRAD), &
                 MERGE(D%NKT,0,ODTHRAD)),   INTENT(IN) :: PDTHRAD   ! dT/dt due to radiation
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PTHT       ! Theta at time t
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),      INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(IN) :: PRT        ! Mixing ratios at time t
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PW_NU      ! w for CCN activation
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT),      INTENT(IN)    :: PW_NU      ! w for CCN activation
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT ,NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSP+NCARB+NSOA), INTENT(IN)    :: PMI
 !
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT)    :: PTHS       ! Theta source
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(INOUT) :: PRS        ! Mixing ratios sources
@@ -1045,7 +1049,7 @@ CALL LIMA_NUCLEATION_PROCS (D, CST, BUCONF, TBUDGETS, KBUDGETS,                 
                             PTSTEP, PRHODJ,                                     &
                             PRHODREF, ZEXN, PPABST, ZT, PDTHRAD, PW_NU,         &
                             ZTHT, ZRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT, ZRHT,     &
-                            ZCCT, ZCRT, ZCIT,                                   &
+                            ZCCT, ZCRT, ZCIT, PAERO,PSOLORG, PMI, HACTCCN,      &
                             ZCCNFT, ZCCNAT, ZIFNFT, ZIFNNT, ZIMMNT, ZHOMFT,     &
                             PCLDFR, PICEFR, PPRCFR,                             &
                             ZTOT_RV_HENU, ZTOT_RC_HINC, ZTOT_RI_HIND, ZTOT_RV_HONH)
@@ -1492,20 +1496,38 @@ DO WHILE(ANY(ZTIME(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)<PTSTEP))
       WHERE(ZA_RC(:)<-1.E-20 .AND. ZRCT1D(:)>XRTMIN(2))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RC(:)+ZRCT1D(:))/ZA_RC(:))
       END WHERE
+      WHERE(ZA_CC(:)<-1.E-20 .AND. ZCCT1D(:)>XCTMIN(2))
+         ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CC(:)+ZCCT1D(:))/ZA_CC(:))
+      END WHERE
       WHERE(ZA_RR(:)<-1.E-20 .AND. ZRRT1D(:)>XRTMIN(3))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RR(:)+ZRRT1D(:))/ZA_RR(:))
+      END WHERE
+      WHERE(ZA_CR(:)<-1.E-20 .AND. ZCRT1D(:)>XCTMIN(3))
+         ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CR(:)+ZCRT1D(:))/ZA_CR(:))
       END WHERE
       WHERE(ZA_RI(:)<-1.E-20 .AND. ZRIT1D(:)>XRTMIN(4))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RI(:)+ZRIT1D(:))/ZA_RI(:))
       END WHERE
+      WHERE(ZA_CI(:)<-1.E-20 .AND. ZCIT1D(:)>XCTMIN(4))
+         ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CI(:)+ZCIT1D(:))/ZA_CI(:))
+      END WHERE
       WHERE(ZA_RS(:)<-1.E-20 .AND. ZRST1D(:)>XRTMIN(5))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RS(:)+ZRST1D(:))/ZA_RS(:))
+      END WHERE
+      WHERE(ZA_CS(:)<-1.E-20 .AND. ZCST1D(:)>XCTMIN(5))
+         ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CS(:)+ZCST1D(:))/ZA_CS(:))
       END WHERE
       WHERE(ZA_RG(:)<-1.E-20 .AND. ZRGT1D(:)>XRTMIN(6))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RG(:)+ZRGT1D(:))/ZA_RG(:))
       END WHERE
+      WHERE(ZA_CG(:)<-1.E-20 .AND. ZCGT1D(:)>XCTMIN(6))
+         ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CG(:)+ZCGT1D(:))/ZA_CG(:))
+      END WHERE
       WHERE(ZA_RH(:)<-1.E-20 .AND. ZRHT1D(:)>XRTMIN(7))
          ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_RH(:)+ZRHT1D(:))/ZA_RH(:))
+      END WHERE
+      WHERE(ZA_CH(:)<-1.E-20 .AND. ZCHT1D(:)>XCTMIN(7))
+         ZMAXTIME(:)=MIN(ZMAXTIME(:), -(ZB_CH(:)+ZCHT1D(:))/ZA_CH(:))
       END WHERE
 
       ! We stop when the end of the timestep is reached
@@ -2297,8 +2319,7 @@ if ( BUCONF%lbu_enable ) then
     call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'ACCR', -ztot_rc_accr(:, :, :) * zrhodjontstep(:, :, :) )
     call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'REVA',  ztot_rr_evap(:, :, :) * zrhodjontstep(:, :, :) )
     call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'HONR',  ztot_rr_honr(:, :, :) * zrhodjontstep(:, :, :) )
-!    call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'ACC',   ztot_rr_acc (:, :, :) * zrhodjontstep(:, :, :) )
-    call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'ACC',  (ztot_rc_rimss(:, :, :) + ztot_rc_rimsg(:, :, :)) &
+    call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'ACC',  (-ztot_rr_accss(:, :, :) - ztot_rr_accsg(:, :, :)) &
                                                           * zrhodjontstep(:, :, :) )
     call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'CFRZ',  ztot_rr_cfrz(:, :, :) * zrhodjontstep(:, :, :) )
     call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'WETG',  ztot_rr_wetg(:, :, :) * zrhodjontstep(:, :, :) )

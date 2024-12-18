@@ -11,10 +11,12 @@ INTERFACE
                              PRHODREF, PRHODJ, PEXNREF, PSIGS, LMFCONV, PMFCONV,&
                              PPABST, PPABSTT, PZZ, ODTHRAD, PDTHRAD, PW_NU,     &
                              PRT, PRS, PSVT, PSVS,                              &
+                             HACTCCN, PAERO,PSOLORG, PMI,                       &
                              PTHS, OCOMPUTE_SRC, PSRCS, PCLDFR, PICEFR,         &
                              PRC_MF, PRI_MF, PCF_MF)
 !
 !USE MODD_IO,    ONLY: TFILEDATA
+USE MODD_CH_AEROSOL,      ONLY: NSP,NCARB,NSOA
 USE MODD_DIMPHYEX,       ONLY: DIMPHYEX_t
 USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_t
 USE MODD_CST,            ONLY: CST_t
@@ -60,6 +62,10 @@ REAL, DIMENSION(MERGE(D%NIT,0,ODTHRAD), &
                 MERGE(D%NKT,0,ODTHRAD)),   INTENT(IN) :: PDTHRAD   ! Radiative temperature tendency
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PW_NU     ! updraft velocity used for
 !
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT ,NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSP+NCARB+NSOA), INTENT(IN)    :: PMI
+CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(IN)    :: PRT       ! m.r. at t
 !
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(INOUT) :: PRS       ! m.r. source
