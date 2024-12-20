@@ -9,12 +9,13 @@
 !
 IMPLICIT NONE
 INTERFACE
-      SUBROUTINE LIMA_WARM (OACTIT, OSEDC, ORAIN, KSPLITR, PTSTEP, KMI,   &
+      SUBROUTINE LIMA_WARM (OACTIT, HACTCCN, OSEDC, ORAIN, KSPLITR, PTSTEP, KMI,   &
                             TPFILE, KRR, PZZ, PRHODJ,                     &
                             PRHODREF, PEXNREF, PW_NU, PPABST,             &
                             PTHM,                                         &
                             PTHT, PRT, PSVT,                              &
                             PTHS, PRS, PSVS,                              &
+                            PAERO,PSOLORG, PMI,                           &
                             PINPRC, PINPRR, PINDEP, PINPRR3D, PEVAP3D     )
 !
 USE MODD_IO,   ONLY: TFILEDATA
@@ -56,6 +57,10 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS       ! Theta source
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS        ! m.r. source
 REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(INOUT) :: PSVS ! Concentration sources
 !
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PAERO    ! Aerosol concentration
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PMI
+CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
 !
 !
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRC     ! Cloud instant precip
@@ -68,12 +73,13 @@ END SUBROUTINE LIMA_WARM
 END INTERFACE
 END MODULE MODI_LIMA_WARM
 !     #####################################################################
-      SUBROUTINE LIMA_WARM (OACTIT, OSEDC, ORAIN, KSPLITR, PTSTEP, KMI,   &
+      SUBROUTINE LIMA_WARM (OACTIT, HACTCCN,  OSEDC, ORAIN, KSPLITR, PTSTEP, KMI,   &
                             TPFILE, KRR, PZZ, PRHODJ,                     &
                             PRHODREF, PEXNREF, PW_NU, PPABST,             &
                             PTHM,                                         &
                             PTHT, PRT, PSVT,                              &
                             PTHS, PRS, PSVS,                              &
+                            PAERO,PSOLORG, PMI,                           &
                             PINPRC, PINPRR, PINDEP, PINPRR3D, PEVAP3D     )
 !     #####################################################################
 !
@@ -195,6 +201,11 @@ REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHS       ! Theta source
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PRS        ! m.r. source
 REAL, DIMENSION(:,:,:,NSV_LIMA_BEG:), INTENT(INOUT) :: PSVS ! Concentration sources
 !
+REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PAERO  ! Aerosol concentration
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
+REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PMI
+CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
+
 !
 !
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRC     ! Cloud instant precip
@@ -377,6 +388,7 @@ IF ( LACTI .AND. NMOD_CCN > 0 .AND. .NOT. LSPRO ) THEN
   CALL LIMA_WARM_NUCL( OACTIT, PTSTEP, KMI, TPFILE,                &
                        PRHODREF, PEXNREF, PPABST, ZT, PTHM, PW_NU, &
                        PRVT, PRCT, PRRT,                     &
+                       PAERO,PSOLORG, PMI,  HACTCCN,               &
                        PTHS, PRVS, PRCS, PCCS, ZNFS, ZNAS          )
 
   if ( lbudget_th ) call Budget_store_end( tbudgets(NBUDGET_TH), 'HENU', pths(:, :, :) * prhodj(:, :, :) )
