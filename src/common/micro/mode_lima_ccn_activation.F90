@@ -8,6 +8,7 @@ MODULE MODE_LIMA_CCN_ACTIVATION
 CONTAINS
 !     ##############################################################################
     SUBROUTINE LIMA_CCN_ACTIVATION (CST,                                           &
+                                    KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,       &
                                     PRHODREF, PEXNREF, PPABST, PT, PDTHRAD, PW_NU, &
                                     PAERO,PSOLORG, PMI,  HACTCCN,                  &
                                     PTHT, PRVT, PRCT, PCCT, PRRT, PNFT, PNAT,      &
@@ -77,9 +78,6 @@ USE MODD_PARAM_LIMA_WARM, ONLY: XWMIN, NAHEN, NHYP, XAHENINTP1, XAHENINTP2, XCST
                                 XHYPINTP1, XHYPINTP2, XTMIN, XHYPF32, XPSI3, XAHENG, XAHENG2, XPSI1, &
                                 XLBC, XLBEXC
 USE MODD_NEB_n,           ONLY: LSUBG_COND
-USE MODD_CH_AEROSOL, ONLY: LORILAM
-USE MODD_DUST, ONLY: LDUST
-USE MODD_SALT, ONLY: LSALT
 USE MODI_CH_AER_ACTIVATION
 
 
@@ -107,6 +105,8 @@ REAL, DIMENSION(:,:,:,:), INTENT(INOUT) :: PAERO   ! Aerosol concentration
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
 REAL, DIMENSION(:,:,:,:), INTENT(IN)    :: PMI
 CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
+INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
+LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
 
 !   
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) :: PTHT       ! Theta at t 
@@ -265,13 +265,13 @@ IF( INUCT >= 1 ) THEN
       ZRHODREF(JL) = PRHODREF(I1(JL),I2(JL),I3(JL))
       ZEXNREF(JL)  = PEXNREF(I1(JL),I2(JL),I3(JL))
       ZPABST(JL)  = PPABST(I1(JL),I2(JL),I3(JL))
-      IF ((LORILAM).OR.(LDUST).OR.(LSALT)) THEN
+      IF ((OORILAM).OR.(ODUST).OR.(OSALT)) THEN
         ZAERO(JL,:)  = PAERO(I1(JL),I2(JL),I3(JL),:)
       ELSE
         ZAERO(JL,:) = 0.
       END IF
 
-      IF (LORILAM) THEN
+      IF (OORILAM) THEN
          ZSOLORG(JL,:) = PSOLORG(I1(JL),I2(JL),I3(JL),:)
          ZMI(JL,:) = PMI(I1(JL),I2(JL),I3(JL),:)
       ELSE
@@ -287,7 +287,7 @@ IF( INUCT >= 1 ) THEN
       ENDDO
    ENDDO
 !
-IF ((HACTCCN == 'ABRK').AND.((LORILAM).OR.(LDUST).OR.(LSALT))) THEN  ! CCN activation from Abdul-Razack (only if prognostic aerosols)
+IF ((HACTCCN == 'ABRK').AND.((OORILAM).OR.(ODUST).OR.(OSALT))) THEN  ! CCN activation from Abdul-Razack (only if prognostic aerosols)
 !
      ALLOCATE(ZMCN(INUCT))
      ALLOCATE(ZNATOLD(INUCT))

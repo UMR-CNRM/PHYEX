@@ -8,7 +8,8 @@ SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP,                       &
                   PTSTEP, OELEC,                                          &
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
-                  NCCN, NIFN, NIMM,                                       &
+                  NCCN, NIFN, NIMM, KCARB, KSOA, KSP,                     &
+                  ODUST, OSALT, OORILAM,                                  &
                   ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PW_NU,               &
                   PAERO,PSOLORG, PMI, PTHS, PRS, PSVS,                    &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
@@ -16,7 +17,6 @@ SUBROUTINE LIMA ( D, CST, ICED, ICEP, ELECD, ELECP,                       &
                   PLATHAM_IAGGS, PEFIELDW, PSV_ELEC_T, PSV_ELEC_S         )
 !
 USE MODD_IO,  ONLY: TFILEDATA
-USE MODD_CH_AEROSOL,      ONLY: NSP,NCARB,NSOA
 USE MODD_DIMPHYEX, ONLY: DIMPHYEX_t
 USE MODD_RAIN_ICE_DESCR_n,ONLY: RAIN_ICE_DESCR_t
 USE MODD_RAIN_ICE_PARAM_n,ONLY: RAIN_ICE_PARAM_t
@@ -53,6 +53,8 @@ REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PPABST     ! absolute p
 INTEGER,                  INTENT(IN)    :: NCCN       ! for array size declarations
 INTEGER,                  INTENT(IN)    :: NIFN       ! for array size declarations
 INTEGER,                  INTENT(IN)    :: NIMM       ! for array size declarations
+INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
+LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
 !
 LOGICAL,                                 INTENT(IN)   :: ODTHRAD    ! Use radiative temperature tendency
 REAL, DIMENSION(MERGE(D%NIT,0,ODTHRAD), &
@@ -64,7 +66,7 @@ REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSV), INTENT(IN) :: PSVT       ! Concentrat
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PW_NU      ! w for CCN activation
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT ,NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSP+NCARB+NSOA), INTENT(IN)    :: PMI
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KSP+KCARB+KSOA), INTENT(IN)    :: PMI
 !
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(INOUT)    :: PTHS       ! Theta source
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(INOUT) :: PRS        ! Mixing ratios sources

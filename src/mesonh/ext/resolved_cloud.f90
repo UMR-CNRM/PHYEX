@@ -293,8 +293,7 @@ END MODULE MODI_RESOLVED_CLOUD
 !*       0.    DECLARATIONS
 !              ------------
 USE MODD_BUDGET,           ONLY: TBUDGETS, TBUCONF
-USE MODD_CH_AEROSOL,       ONLY: LORILAM
-USE MODD_DUST,             ONLY: LDUST
+USE MODD_CH_AEROSOL,       ONLY: LORILAM, NSP, NCARB, NSOA
 USE MODD_CST,              ONLY: CST
 USE MODD_DIMPHYEX,         ONLY: DIMPHYEX_t
 USE MODD_DUST,             ONLY: LDUST
@@ -1395,7 +1394,8 @@ SELECT CASE ( HCLOUD )
                    PTSTEP, GELEC,                                          &
                    PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
-                   NMOD_CCN, NMOD_IFN, NMOD_IMM,                           &
+                   NMOD_CCN, NMOD_IFN, NMOD_IMM,NCARB, NSOA, NSP,          &
+                   LDUST, LSALT, LORILAM,                                  &
                    LLDTHRAD, PDTHRAD, PTHT, PRT,                           &
                    PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
                    PSVT, PSOLORG, PMI,                                     &
@@ -1412,7 +1412,8 @@ SELECT CASE ( HCLOUD )
                    PTSTEP, GELEC,                                          &
                    PRHODREF, PEXNREF, ZDZZ, XTHVREFZ(IKB),                 &
                    PRHODJ, PPABST,                                         &
-                   NMOD_CCN, NMOD_IFN, NMOD_IMM,                           &
+                   NMOD_CCN, NMOD_IFN, NMOD_IMM,NCARB, NSOA, NSP,          &
+                   LDUST, LSALT, LORILAM,                                  &
                    LLDTHRAD, PDTHRAD, PTHT, PRT,                           &
                    PSVT(:,:,:,NSV_LIMA_BEG:NSV_LIMA_END), PW_ACT,          &
                    PSVT, PSOLORG, PMI,                                     &
@@ -1462,6 +1463,7 @@ SELECT CASE ( HCLOUD )
     ELSE IF (LPTSPLIT) THEN
       CALL LIMA_ADJUST_SPLIT(YLDIMPHYEX, CST, TBUCONF,TBUDGETS,SIZE(TBUDGETS),               &
                              KRR, KMI, CCONDENS, CLAMBDA3,                                   &
+                             NCARB, NSOA, NSP, LDUST, LSALT, LORILAM,                        &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,                          &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS,                               &
                              SIZE(PMFCONV)/=0, PMFCONV, PPABST, PPABSTT, ZZZ,                &

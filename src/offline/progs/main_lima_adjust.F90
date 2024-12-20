@@ -63,6 +63,7 @@ INTEGER                  :: ISTSZ(2), JBLK1, JBLK2
 INTEGER                  :: NTID, ITID
 INTEGER                  :: NSP, NCARB, NSOA
 CHARACTER(LEN=4)         :: HACTCCN ! kind of CCN activation
+LOGICAL                  :: LDUST, LSALT, LORILAM 
 
 REAL, ALLOCATABLE, TARGET :: PSTACK8(:,:)
 REAL(KIND=4), ALLOCATABLE, TARGET :: PSTACK4(:,:)
@@ -99,6 +100,9 @@ LLDIFF = .FALSE.
 
 ! En attendant un init d'ORILAM externalisé
 HACTCCN='   '
+LDUST=.FALSE.
+LSALT=.FALSE.
+LORILAM=.FALSE.
 
 IRANK = 0
 ISIZE = 1
@@ -230,6 +234,7 @@ DO ITIME = 1, NTIME
 #else
     CALL LIMA_ADJUST_SPLIT(D, PHYEX%CST, PHYEX%MISC%TBUCONF, PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET, &
                            KRR, 1, PHYEX%NEBN%CCONDENS, PHYEX%NEBN%CLAMBDA3, &
+                           NCARB, NSOA , NSP, LDUST, LSALT, LORILAM, &
                            PHYEX%NEBN%LSUBG_COND, PHYEX%NEBN%LSIGMAS, PHYEX%MISC%PTSTEP, PHYEX%NEBN%VSIGQSAT, &
                            PRHODREF(:, :, IBL), PRHODJ(:, :, IBL), PEXNREF(:, :, IBL), PSIGS(:, :, IBL), &
                            PHYEX%MISC%LMFCONV, PMFCONV(:, :, IBL), &

@@ -6,6 +6,7 @@
 !     ###########################################################################
 SUBROUTINE LIMA_ADJUST_SPLIT(D, CST, BUCONF, TBUDGETS, KBUDGETS,                &
                              KRR, KMI, HCONDENS, HLAMBDA3,                      &
+                             KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,           &
                              OSUBG_COND, OSIGMAS, PTSTEP, PSIGQSAT,             &
                              PRHODREF, PRHODJ, PEXNREF, PSIGS, LMFCONV, PMFCONV,&
                              PPABST, PPABSTT, PZZ, ODTHRAD, PDTHRAD, PW_NU,     &
@@ -90,7 +91,6 @@ SUBROUTINE LIMA_ADJUST_SPLIT(D, CST, BUCONF, TBUDGETS, KBUDGETS,                
 USE MODD_BUDGET,   ONLY: TBUDGETDATA, TBUDGETCONF_t, NBUDGET_TH, NBUDGET_RV, &
                          NBUDGET_RC, NBUDGET_RI, NBUDGET_RV, NBUDGET_SV1, NBUMOD        
 USE MODD_CST,            ONLY: CST_t
-USE MODD_CH_AEROSOL,      ONLY: NSP,NCARB,NSOA
 !USE MODD_CONF
 !use modd_field,            only: TFIELDDATA, TYPEREAL
 !USE MODD_IO,               ONLY: TFILEDATA
@@ -154,10 +154,12 @@ LOGICAL,                                INTENT(IN)   :: ODTHRAD    ! Use radiati
 REAL, DIMENSION(MERGE(D%NIT,0,ODTHRAD), &
                 MERGE(D%NJT,0,ODTHRAD), &
                 MERGE(D%NKT,0,ODTHRAD)),   INTENT(IN) :: PDTHRAD   ! Radiative temperature tendency
+INTEGER,                  INTENT(IN)    :: KCARB, KSOA, KSP ! for array size declarations
+LOGICAL,                  INTENT(IN)    :: ODUST, OSALT, OORILAM
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT),   INTENT(IN)    :: PW_NU     ! updraft velocity used for
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT ,NSV), INTENT(INOUT) :: PAERO    ! Aerosol concentration
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, 10),  INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
-REAL, DIMENSION(D%NIT, D%NJT, D%NKT, NSP+NCARB+NSOA), INTENT(IN)    :: PMI
+REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KSP+KCARB+KSOA), INTENT(IN)    :: PMI
 CHARACTER(LEN=4),         INTENT(IN)    :: HACTCCN  ! kind of CCN activation
 !
 REAL, DIMENSION(D%NIT, D%NJT, D%NKT, KRR), INTENT(IN)    :: PRT       ! m.r. at t
@@ -441,6 +443,7 @@ REAL, DIMENSION(D%NIT, D%NJT, D%NKT),     INTENT(IN)    :: PCF_MF! Convective Ma
      ZRV2=PRVT
      ZRC2=PRCT
      CALL LIMA_CCN_ACTIVATION (CST,                          &
+          KCARB, KSOA, KSP, ODUST, OSALT, OORILAM,           &
           PRHODREF, PEXNREF, PPABST, ZT2, PDTHRAD, PW_NU+ZW_MF, &
           PAERO,PSOLORG, PMI,  HACTCCN,                         &
           PTHT, ZRV2, ZRC2, PCCT, PRRT, PNFT, PNAT,             &

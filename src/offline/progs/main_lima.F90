@@ -79,6 +79,7 @@ INTEGER                  :: JRR
 REAL                     :: ZTHVREFZIKB! for electricity use only
 INTEGER                  :: NMOD_CCN, NMOD_IFN, NMOD_IMM
 INTEGER                  :: NSP, NCARB, NSOA
+LOGICAL                  :: LDUST, LSALT, LORILAM 
 CHARACTER(LEN=4)         :: HACTCCN ! kind of CCN activation
 
 REAL, ALLOCATABLE, TARGET :: PSTACK8(:,:)
@@ -116,6 +117,9 @@ CALL CHECKOPTIONS ()
 LLDIFF = .FALSE.
 ! En attendant un init d'ORILAM externalisé
 HACTCCN='   '
+LDUST = .FALSE.
+LSALT = .FALSE.
+LORILAM = .FALSE.
 
 IRANK = 0
 ISIZE = 1
@@ -258,7 +262,8 @@ DO ITIME = 1, NTIME
                PTSTEP=2*PHYEX%MISC%PTSTEP, OELEC=PHYEX%MISC%OELEC,                 &
                PRHODREF=PRHODREF(:, :, IBL), PEXNREF=PEXNREF(:, :, IBL), PDZZ=PDZZ(:, :, IBL), PTHVREFZIKB=ZTHVREFZIKB,       &
                PRHODJ=PRHODJ(:, :, IBL), PPABST=PPABSM(:, :, IBL),                                 &
-               NCCN=NMOD_CCN, NIFN=NMOD_IFN, NIMM=NMOD_IMM,                   &
+               NCCN=NMOD_CCN, NIFN=NMOD_IFN, NIMM=NMOD_IMM, KCARB=NCARB, KSOA=NSOA, KSP=NSP,          &
+               ODUST=LDUST, OSALT=LSALT, OORILAM=LORILAM,  &
                ODTHRAD=.TRUE., PDTHRAD=PDTHRAD(:, :, IBL), PTHT=PTHT(:, :, IBL), PRT=PRT(:, :, :, IBL), PSVT=PSVT(:, :, :, IBL), &
                PW_NU=PW_NU(:, :, IBL),                  &
                PAERO=PAERO(:,:,:, IBL), PSOLORG=PSOLORG(:,:,:,IBL), PMI=PMI(:,:,:,IBL), &
