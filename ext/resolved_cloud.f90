@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2023 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2024 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -43,7 +43,7 @@ INTEGER,                  INTENT(IN)   :: KSPLITG  ! Number of small time step
 INTEGER,                  INTENT(IN)   :: KMI      ! Model index
 INTEGER,                  INTENT(IN)   :: KTCOUNT  ! Temporal loop counter
 CHARACTER(LEN=4), DIMENSION(2), INTENT(IN) :: HLBCX,HLBCY   ! X and Y-direc. LBC type
-TYPE(TFILEDATA),          INTENT(IN)   :: TPFILE   ! Output file
+TYPE(TFILEDATA),          INTENT(INOUT)   :: TPFILE   ! Output file
 CHARACTER(len=4),         INTENT(IN)   :: HRAD     ! Radiation scheme name
 CHARACTER(len=4),         INTENT(IN)   :: HTURBDIM ! Dimensionality of the
                                                    ! turbulence scheme
