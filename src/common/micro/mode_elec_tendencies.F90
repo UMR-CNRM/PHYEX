@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2022-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2022-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -1344,7 +1344,7 @@ IF (KMICRO >= 0) THEN
            ZRRT(:) > XRTMIN_ELEC(3) .AND. ZRST(:) > XRTMIN_ELEC(5) .AND. &
            ZCRT(:) > 0.             .AND. ZCST(:) > 0.             .AND. &
            ZLBDAR(:) > 0.           .AND. ZLBDAS(:) > 0.           .AND. &
-           ABS(ZEST) > XESMIN) 
+           ABS(ZEST(:)) > XESMIN)
       ZWQ5(:,4) = ZWQ3(:) * XFQRACCS * ZEST(:) *                               &
                   ZRHOCOR(:) / (ZCOR00 * ZRHODREF(:)) *                        &
                   ZCRT(:) * ZCST(:) *                                          &
@@ -3091,7 +3091,7 @@ ELSE
 !
   IF (CNI_CHARGING == 'GARDI') THEN
     WHERE (GELEC(:,2) .AND. ZDELTALWC(:) > 0.) 
-      ZWQ_NI(:) = XFQIDRYGBG * XLBQIDRYGBG * (1 - ZQCOLIG) * &
+      ZWQ_NI(:) = XFQIDRYGBG * XLBQIDRYGBG * (1 - ZQCOLIG(:)) * &
                   ZRHODREF(:)**(-4. * ZCEXVT + 4. / ZBI) *   &
                   ZCIT(:)**(1 - 4. / ZBI) *                  &
                   ZDELTALWC(:) * ZFT(:) *                    &
