@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2013-2021 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2013-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -61,8 +61,7 @@ USE MODD_NSV,             ONLY: NSV_LIMA_NC, NSV_LIMA_NR, NSV_LIMA_CCN_FREE, NSV
                                 NSV_LIMA_NI, NSV_LIMA_NS, NSV_LIMA_NG, NSV_LIMA_NH,             &
                                 NSV_LIMA_IFN_FREE, NSV_LIMA_IFN_NUCL, NSV_LIMA_IMM_NUCL, NSV_LIMA_HOM_HAZE, &
                                 NSV_LIMA_BEG, NSV_ELECBEG
-USE MODD_PARAM_LIMA,      ONLY: NMOD_CCN, NMOD_IFN, NMOD_IMM, LHHONI,      &
-                                LFEEDBACKT, NMAXITER, XMRSTEP, XTSTEP_TS,               &
+USE MODD_PARAM_LIMA,      ONLY: LHHONI, LFEEDBACKT, NMAXITER, XMRSTEP, XTSTEP_TS,               &
                                 LSEDC, LSEDI, XRTMIN, XCTMIN, LDEPOC, XVDEPOC,                  &
                                 NMOM_C, NMOM_R, NMOM_I, NMOM_S, NMOM_G, NMOM_H
 
@@ -423,7 +422,7 @@ if ( BUCONF%lbu_enable .OR. OELEC) then
   allocate( ZTOT_TH_IMLT (size( ptht, 1), size( ptht, 2), size( ptht, 3) ) ); ZTOT_TH_IMLT(:,:,:) = 0.
   allocate( ZTOT_RC_IMLT (size( ptht, 1), size( ptht, 2), size( ptht, 3) ) ); ZTOT_RC_IMLT(:,:,:) = 0.
   allocate( ZTOT_CC_IMLT (size( ptht, 1), size( ptht, 2), size( ptht, 3) ) ); ZTOT_CC_IMLT(:,:,:) = 0.
-  allocate( ZTOT_IFNN_IMLT (size( ptht, 1), size( ptht, 2), size( ptht, 3), nmod_ifn ) ); ZTOT_IFNN_IMLT(:,:,:,:) = 0.
+  allocate( ZTOT_IFNN_IMLT (size( ptht, 1), size( ptht, 2), size( ptht, 3), NIFN ) ); ZTOT_IFNN_IMLT(:,:,:,:) = 0.
   allocate( ZTOT_TH_HONC (size( ptht, 1), size( ptht, 2), size( ptht, 3) ) ); ZTOT_TH_HONC(:,:,:) = 0.
   allocate( ZTOT_RC_HONC (size( ptht, 1), size( ptht, 2), size( ptht, 3) ) ); ZTOT_RC_HONC(:,:,:) = 0.
   allocate( ZTOT_CC_HONC (size( ptht, 1), size( ptht, 2), size( ptht, 3) ) ); ZTOT_CC_HONC(:,:,:) = 0.
@@ -598,18 +597,18 @@ IF ( NMOM_G.GE.2) ZCGS(:,:,:)   = PSVS(:,:,:,ISV_LIMA_NG)
 IF ( NMOM_H.GE.2) ZCHT(:,:,:)   = PSVS(:,:,:,ISV_LIMA_NH) * PTSTEP
 IF ( NMOM_H.GE.2) ZCHS(:,:,:)   = PSVS(:,:,:,ISV_LIMA_NH)
 !
-IF ( NMOD_CCN .GE. 1 ) ZCCNFT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+NMOD_CCN-1) * PTSTEP
-IF ( NMOD_CCN .GE. 1 ) ZCCNAT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+NMOD_CCN-1) * PTSTEP
-IF ( NMOD_CCN .GE. 1 ) ZCCNFS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+NMOD_CCN-1)
-IF ( NMOD_CCN .GE. 1 ) ZCCNAS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+NMOD_CCN-1)
+IF ( NCCN .GE. 1 ) ZCCNFT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+NCCN-1) * PTSTEP
+IF ( NCCN .GE. 1 ) ZCCNAT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+NCCN-1) * PTSTEP
+IF ( NCCN .GE. 1 ) ZCCNFS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+NCCN-1)
+IF ( NCCN .GE. 1 ) ZCCNAS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+NCCN-1)
 !
-IF ( NMOD_IFN .GE. 1 ) ZIFNFT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+NMOD_IFN-1) * PTSTEP
-IF ( NMOD_IFN .GE. 1 ) ZIFNNT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+NMOD_IFN-1) * PTSTEP
-IF ( NMOD_IFN .GE. 1 ) ZIFNFS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+NMOD_IFN-1)
-IF ( NMOD_IFN .GE. 1 ) ZIFNNS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+NMOD_IFN-1)
+IF ( NIFN .GE. 1 ) ZIFNFT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+NIFN-1) * PTSTEP
+IF ( NIFN .GE. 1 ) ZIFNNT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+NIFN-1) * PTSTEP
+IF ( NIFN .GE. 1 ) ZIFNFS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+NIFN-1)
+IF ( NIFN .GE. 1 ) ZIFNNS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+NIFN-1)
 !
-IF ( NMOD_IMM .GE. 1 ) ZIMMNT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+NMOD_IMM-1) * PTSTEP
-IF ( NMOD_IMM .GE. 1 ) ZIMMNS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+NMOD_IMM-1)
+IF ( NIMM .GE. 1 ) ZIMMNT(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+NIMM-1) * PTSTEP
+IF ( NIMM .GE. 1 ) ZIMMNS(:,:,:,:) = PSVS(:,:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+NIMM-1)
 !
 IF ( LHHONI ) ZHOMFT(:,:,:) = PSVS(:,:,:,ISV_LIMA_HOM_HAZE) * PTSTEP
 IF ( LHHONI ) ZHOMFS(:,:,:) = PSVS(:,:,:,ISV_LIMA_HOM_HAZE)
@@ -1172,7 +1171,7 @@ DO WHILE(ANY(ZTIME(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)<PTSTEP))
       ALLOCATE(ZCST1D(IPACK))
       ALLOCATE(ZCGT1D(IPACK))
       ALLOCATE(ZCHT1D(IPACK))
-      ALLOCATE(ZIFNN1D(IPACK,NMOD_IFN))
+      ALLOCATE(ZIFNN1D(IPACK,NIFN))
       ALLOCATE(ZEVAP1D(IPACK))
       ALLOCATE(ZTIME1D(IPACK))
       ALLOCATE(LLCOMPUTE1D(IPACK))
@@ -1273,7 +1272,7 @@ DO WHILE(ANY(ZTIME(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)<PTSTEP))
       ALLOCATE(ZB_CS(IPACK))              ;  ZB_CS(:) = 0.
       ALLOCATE(ZB_CG(IPACK))              ;  ZB_CG(:) = 0.
       ALLOCATE(ZB_CH(IPACK))              ;  ZB_CH(:) = 0.
-      ALLOCATE(ZB_IFNN(IPACK,NMOD_IFN))   ;  ZB_IFNN(:,:) = 0.
+      ALLOCATE(ZB_IFNN(IPACK,NIFN))   ;  ZB_IFNN(:,:) = 0.
       !
       ALLOCATE(Z_CR_BRKU(IPACK))          ; Z_CR_BRKU(:) = 0.
       ALLOCATE(Z_TH_HONR(IPACK))          ; Z_TH_HONR(:) = 0.
@@ -1643,7 +1642,7 @@ DO WHILE(ANY(ZTIME(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)<PTSTEP))
       ZRHT1D = ZRHT1D + ZA_RH(:) * ZMAXTIME(:) + ZB_RH(:)
       IF (NMOM_H.GE.2) ZCHT1D = ZCHT1D + ZA_CH(:) * ZMAXTIME(:) + ZB_CH(:)
       !
-      DO II=1,NMOD_IFN
+      DO II=1,NIFN
          ZIFNN1D(:,II) = ZIFNN1D(:,II) + ZB_IFNN(:,II)
       END DO
       !
@@ -1729,7 +1728,7 @@ DO WHILE(ANY(ZTIME(D%NIB:D%NIE,D%NJB:D%NJE,D%NKTB:D%NKTE)<PTSTEP))
             ZTOT_TH_IMLT(I1(II),I2(II),I3(II)) =   ZTOT_TH_IMLT(I1(II),I2(II),I3(II))   + Z_TH_IMLT(II)
             ZTOT_RC_IMLT(I1(II),I2(II),I3(II)) =   ZTOT_RC_IMLT(I1(II),I2(II),I3(II))   + Z_RC_IMLT(II)
             ZTOT_CC_IMLT(I1(II),I2(II),I3(II)) =   ZTOT_CC_IMLT(I1(II),I2(II),I3(II))   + Z_CC_IMLT(II)
-            DO JI = 1, NMOD_IFN
+            DO JI = 1, NIFN
               ZTOT_IFNN_IMLT(I1(II),I2(II),I3(II),JI) = ZTOT_IFNN_IMLT(I1(II),I2(II),I3(II),JI) + ZB_IFNN(II,JI)
             END DO
 
@@ -2254,11 +2253,11 @@ IF ( NMOM_S.GE.2 ) PSVS(:,:,:,ISV_LIMA_NS) = ZCST(:,:,:) *ZINV_TSTEP
 IF ( NMOM_G.GE.2 ) PSVS(:,:,:,ISV_LIMA_NG) = ZCGT(:,:,:) *ZINV_TSTEP
 IF ( NMOM_H.GE.2 ) PSVS(:,:,:,ISV_LIMA_NH) = ZCHT(:,:,:) *ZINV_TSTEP
 !
-IF ( NMOD_CCN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+NMOD_CCN-1) = ZCCNFT(:,:,:,:) *ZINV_TSTEP
-IF ( NMOD_CCN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+NMOD_CCN-1) = ZCCNAT(:,:,:,:) *ZINV_TSTEP
-IF ( NMOD_IFN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+NMOD_IFN-1) = ZIFNFT(:,:,:,:) *ZINV_TSTEP
-IF ( NMOD_IFN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+NMOD_IFN-1) = ZIFNNT(:,:,:,:) *ZINV_TSTEP
-IF ( NMOD_IMM .GE. 1 )   PSVS(:,:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+NMOD_IMM-1) = ZIMMNT(:,:,:,:) *ZINV_TSTEP
+IF ( NCCN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_CCN_FREE:ISV_LIMA_CCN_FREE+NCCN-1) = ZCCNFT(:,:,:,:) *ZINV_TSTEP
+IF ( NCCN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_CCN_ACTI:ISV_LIMA_CCN_ACTI+NCCN-1) = ZCCNAT(:,:,:,:) *ZINV_TSTEP
+IF ( NIFN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_IFN_FREE:ISV_LIMA_IFN_FREE+NIFN-1) = ZIFNFT(:,:,:,:) *ZINV_TSTEP
+IF ( NIFN .GE. 1 )   PSVS(:,:,:,ISV_LIMA_IFN_NUCL:ISV_LIMA_IFN_NUCL+NIFN-1) = ZIFNNT(:,:,:,:) *ZINV_TSTEP
+IF ( NIMM .GE. 1 )   PSVS(:,:,:,ISV_LIMA_IMM_NUCL:ISV_LIMA_IMM_NUCL+NIMM-1) = ZIMMNT(:,:,:,:) *ZINV_TSTEP
 IF ( LHHONI) PSVS(:,:,:,ISV_LIMA_HOM_HAZE) = ZHOMFT(:,:,:) *ZINV_TSTEP
 !
 !
@@ -2497,7 +2496,7 @@ if ( BUCONF%lbu_enable ) then
        call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'HMLT',   ztot_ch_hmlt(:, :, :) * zrhodjontstep(:, :, :) )
     end if
 
-    do ii = 1, nmod_ifn
+    do ii = 1, NIFN
       idx = NBUDGET_SV1 - 1 + nsv_lima_ifn_nucl + ii - 1
       call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'IMLT', ztot_ifnn_imlt(:, :, :, ii) * zrhodjontstep(:, :, :) )
     end do
