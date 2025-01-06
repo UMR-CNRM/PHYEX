@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 1994-2019 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 1994-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -415,7 +415,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(INOUT), OPTIONAL :: PFPR    ! upper-ai
 !*       0.2  declaration of local variables
 !
 CHARACTER(LEN=10) :: YSPE ! String for error message
-INTEGER                         :: JIJ, JK
+INTEGER                         :: JI, JIJ, JK
 LOGICAL                         :: GPRESENT_PFPR
 REAL                            :: ZINVTSTEP
 REAL                            :: ZZWLBDC, ZZRAY, ZZT, ZZWLBDA, ZZCC
@@ -476,7 +476,9 @@ END IF
 !$acc kernels
 PINPRX(:) = 0.
 ZINVTSTEP=1./PTSTEP
-ZRSMIN = ICED%XRTMIN * ZINVTSTEP
+DO JI = 1, SIZE(ICED%XRTMIN)
+  ZRSMIN(JI) = ICED%XRTMIN(JI) * ZINVTSTEP
+END DO
 ZREMAINT(:) = 0.
 ZREMAINT(:) = PTSTEP
 !$acc end kernels

@@ -1,4 +1,4 @@
-!MNH_LIC Copyright 2018-2024 CNRS, Meteo-France and Universite Paul Sabatier
+!MNH_LIC Copyright 2018-2025 CNRS, Meteo-France and Universite Paul Sabatier
 !MNH_LIC This is part of the Meso-NH software governed by the CeCILL-C licence
 !MNH_LIC version 1. See LICENSE, CeCILL-C_V1-en.txt and CeCILL-C_V1-fr.txt
 !MNH_LIC for details. version 1.
@@ -377,7 +377,7 @@ ZTHRC=0.001E-3
 ZZW(:) = 0.0
 GWET(:) = PRHT(:)<ZTHRH .AND. PRCT(:)<ZTHRC .AND. PT(:)<XTT 
 WHERE( GWET(:) )
-   P_RG_COHG(:) = PRHT * MIN( 1.0,MAX( 0.0,1.0-(PRCT(:)/ZTHRC) ) )
+   P_RG_COHG(:) = PRHT(:) * MIN( 1.0,MAX( 0.0,1.0-(PRCT(:)/ZTHRC) ) )
    P_CG_COHG(:) = P_RG_COHG(:) * PCHT(:)/MAX(PRHT(:),XRTMIN(7))
 END WHERE
 !
