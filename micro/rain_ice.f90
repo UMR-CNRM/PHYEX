@@ -379,7 +379,7 @@ ZINV_TSTEP=1./PTSTEP
 ! LLMICRO is a mask with a True value on points where microphysics is active
 !$mnh_expand_array(JRR=1:KRR)
 ZRSMIN(1:KRR) = ZICEDRTMIN(1:KRR) * ZINV_TSTEP
-!$mnh_end_expand_array(JRR=1:JRR)
+!$mnh_end_expand_array(JRR=1:KRR)
 LLMICRO(:,:)=.FALSE.
 !$acc end kernels
 !$acc kernels
