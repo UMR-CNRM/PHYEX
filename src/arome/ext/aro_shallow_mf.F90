@@ -11,7 +11,8 @@
                 PUM,PVM,PTKEM,PSVM,                                   &
                 PDUDT_MF,PDVDT_MF,                                    &
                 PDTHLDT_MF,PDRTDT_MF,PDSVDT_MF,                       &
-                PSIGMF,PRC_MF,PRI_MF,PCF_MF,PFLXZTHVMF,               &
+                PSIGMF,PRC_MF,PRI_MF,PCF_MF,                          &
+                PFLXZTHVMF, PFLXZUMF, PFLXZVMF,                       &
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
                 PU_UP, PV_UP, PTHV_UP, PW_UP, PFRAC_UP, PEMF,         &
                 YDDDH,YDLDDH,YDMDDH                                   )
@@ -57,6 +58,7 @@
 !!      Y. Seity : new arguments for EDMF scheme 04/2009
 !!      S. Riette 18 May 2010: aro_shallow_mf and shallow_mf interfaces changed
 !!      S. Riette Jan 2012: support for both order of vertical levels
+!!      A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 !!
 !-------------------------------------------------------------------------------
 !
@@ -128,6 +130,8 @@ REAL, DIMENSION(KLON,KLEV,KSV), INTENT(OUT)::  PDSVDT_MF    ! tendency of Sv  by
 
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PFLXZTHVMF           ! Thermal production for TKE scheme
+REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PFLXZUMF             ! Dynamic production for TKE scheme
+REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PFLXZVMF             ! Dynamic production for TKE scheme
 REAL, DIMENSION(KLON,KLEV), INTENT(INOUT) ::  PTHL_UP   ! Thl updraft characteristics
 REAL, DIMENSION(KLON,KLEV), INTENT(INOUT) ::  PRT_UP    ! Rt  updraft characteristics
 REAL, DIMENSION(KLON,KLEV), INTENT(INOUT) ::  PRV_UP    ! Vapor updraft characteristics
@@ -149,7 +153,7 @@ TYPE(TMDDH),   INTENT(IN), TARGET      :: YDMDDH
 !
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_SV1) :: YLBUDGET !NBUDGET_SV1 is the one with the highest number needed for shallow_mf
 INTEGER, DIMENSION(size(PRHODJ,1)) :: IKLCL,IKETL,IKCTL
-REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZFLXZTHMF,ZFLXZRMF,ZFLXZUMF,ZFLXZVMF
+REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZFLXZTHMF,ZFLXZRMF
 REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZDETR,ZENTR
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
@@ -217,7 +221,7 @@ ENDDO
      &PDUDT_MF=PDUDT_MF,PDVDT_MF=PDVDT_MF,                                                &
      &PDTHLDT_MF=PDTHLDT_MF,PDRTDT_MF=PDRTDT_MF,PDSVDT_MF=PDSVDT_MF,                      &
      &PSIGMF=PSIGMF,PRC_MF=PRC_MF,PRI_MF=PRI_MF,PCF_MF=PCF_MF,PFLXZTHVMF=PFLXZTHVMF,      &
-     &PFLXZTHMF=ZFLXZTHMF,PFLXZRMF=ZFLXZRMF,PFLXZUMF=ZFLXZUMF,PFLXZVMF=ZFLXZVMF,          &
+     &PFLXZTHMF=ZFLXZTHMF,PFLXZRMF=ZFLXZRMF,PFLXZUMF=PFLXZUMF,PFLXZVMF=PFLXZVMF,          &
      &PTHL_UP=PTHL_UP,PRT_UP=PRT_UP,PRV_UP=PRV_UP,PRC_UP=PRC_UP,PRI_UP=PRI_UP,            &
      &PU_UP=PU_UP, PV_UP=PV_UP, PTHV_UP=PTHV_UP, PW_UP=PW_UP,                             &
      &PFRAC_UP=PFRAC_UP,PEMF=PEMF,PDETR=ZDETR,PENTR=ZENTR,                                &

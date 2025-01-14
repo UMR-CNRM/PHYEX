@@ -9,10 +9,10 @@
                 PTHM,PRM,                                &
                 PRUS,PRVS,PRWS,PRTHS,PRRS,PRSVSIN,PRSVS,PRTKES,PRTKES_OUT,PREPSS, &
                 PHGRAD,PSIGS,                                         &
-                PFLXZTHVMF,PLENGTHM,PLENGTHH,MFMOIST,                 &
+                PFLXZTHVMF,PFLXZUMF,PFLXZVMF,PLENGTHM,PLENGTHH,MFMOIST,                 &
                 PDRUS_TURB,PDRVS_TURB,                                &
                 PDRTHLS_TURB,PDRRTS_TURB,PDRSVS_TURB,                 &
-                PDP,PTP,PTPMF,PTDIFF,PTDISS,PEDR,YDDDH,YDLDDH,YDMDDH)
+                PDP,PTP,PDPMF,PTPMF,PTDIFF,PTDISS,PEDR,YDDDH,YDLDDH,YDMDDH)
 
 
       USE PARKIND1, ONLY : JPRB
@@ -63,6 +63,7 @@
 !!      Original    10/03/03
 !!      2012-02 Y. Seity,  add possibility to run with reversed vertical levels
 !!      2015-07 Wim de Rooy  possibility to run with LHARATU=TRUE (Racmo turbulence scheme)
+!!      A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 !!
 !-------------------------------------------------------------------------------
 !
@@ -162,9 +163,10 @@ REAL, DIMENSION(KLON,1,KLEV+2), INTENT(OUT)     ::  PDRTHLS_TURB ! evolution of 
 REAL, DIMENSION(KLON,1,KLEV+2), INTENT(OUT)     ::  PDRRTS_TURB  ! evolution of rhoJ*rt  by turbulence only
 REAL, DIMENSION(KLON,1,KLEV,KSV), INTENT(OUT)   ::  PDRSVS_TURB  ! evolution of rhoJ*Sv  by turbulence only
 REAL, DIMENSION(KLON,1,KLEV+2), INTENT(INOUT)      ::  PFLXZTHVMF
+REAL, DIMENSION(KLON,1,KLEV+2), INTENT(INOUT)      ::  PFLXZUMF,PFLXZVMF
 REAL, DIMENSION(KLON,1,KLEV+2),   INTENT(OUT) ::  PEDR       ! EDR
 !
-REAL, DIMENSION(KLON,1,KLEV+2),  INTENT(OUT)   :: PDP, PTP, PTPMF, PTDIFF, PTDISS
+REAL, DIMENSION(KLON,1,KLEV+2),  INTENT(OUT)   :: PDP, PTP, PDPMF, PTPMF, PTDIFF, PTDISS
 !                                                !for TKE DDH budgets
 !
 TYPE(TYP_DDH), INTENT(INOUT), TARGET   :: YDDDH
@@ -335,6 +337,8 @@ PSRCM(:,:,1)=0.
 PSRCM(:,:,KLEV+2)=0.
 CALL VERTICAL_EXTEND(PTHM)
 CALL VERTICAL_EXTEND(PFLXZTHVMF)
+CALL VERTICAL_EXTEND(PFLXZUMF)
+CALL VERTICAL_EXTEND(PFLXZVMF)
 IF (PHYEX%TURBN%LHARAT) THEN
   CALL VERTICAL_EXTEND(PLENGTHM)
   CALL VERTICAL_EXTEND(PLENGTHH)
@@ -381,8 +385,8 @@ CALL TURB (PHYEX%CST,PHYEX%CSTURB,TBUCONF,PHYEX%TURBN, PHYEX%NEBN, YLDIMPHYEX,YL
    & PTHM,ZRM, &
    & PRUS,PRVS,PRWS,PRTHS,ZRRS,ZRSVS,PRTKES_OUT,         &
    & PSIGS,                                         &
-   & PFLXZTHVMF,ZWTH,ZWRC,ZWSV,PDP,PTP,PTDIFF,PTDISS,&
-   & YLBUDGET, KBUDGETS=SIZE(YLBUDGET),PEDR=PEDR,PTPMF=PTPMF,&
+   & PFLXZTHVMF,PFLXZUMF,PFLXZVMF,ZWTH,ZWRC,ZWSV,PDP,PTP,PTDIFF,PTDISS,&
+   & YLBUDGET, KBUDGETS=SIZE(YLBUDGET),PEDR=PEDR,PDPMF=PDPMF,PTPMF=PTPMF,&
    & PDRUS_TURB=PDRUS_TURB,PDRVS_TURB=PDRVS_TURB,          &
    & PDRTHLS_TURB=PDRTHLS_TURB,PDRRTS_TURB=PDRRTS_TURB,PDRSVS_TURB=ZDRSVS_TURB)
 !
