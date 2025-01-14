@@ -75,8 +75,11 @@ CONTAINS
 !
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_T
 USE MODD_PARAM_LIMA,      ONLY : NMOD_CCN, NMOD_IFN, &
-                                 NMOM_C, NMOM_R, NMOM_I
-USE MODD_PARAM_LIMA_COLD, ONLY : XAS, XBS
+                                 NMOM_C, NMOM_R, NMOM_I, &
+                                 LCRYSTAL_SHAPE, NNB_CRYSTAL_SHAPE
+USE MODD_PARAM_LIMA_COLD, ONLY : XAS, XBS, &
+                                 XAI, XBI, &
+                                 XAI_SHAPE, XBI_SHAPE
 USE MODD_PARAM_LIMA_MIXED,ONLY : XAG, XBG, XAH, XBH
 USE MODD_NSV,             ONLY : NSV_T
 USE MODD_CST,             ONLY : XPI, XRHOLW
@@ -106,6 +109,7 @@ INTEGER    :: ISV_LIMA_NC, ISV_LIMA_NR, ISV_LIMA_CCN_ACTI
 INTEGER    :: ISV_LIMA_NI, ISV_LIMA_NS, ISV_LIMA_NG, ISV_LIMA_NH, ISV_LIMA_IFN_NUCL
 LOGICAL    :: GLLBC
 REAL       :: ZSVTHR
+INTEGER    :: ISH     ! Loop index for ice crystal shapes 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !-------------------------------------------------------------------------------
@@ -181,18 +185,39 @@ IF (NMOM_I.GE.2) THEN
 ! ice crystals
 !
    ZCONC = 100.E3 ! maximum ice concentration set at 100/L
-   WHERE ( PRT(:,:,4) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI)<ZSVTHR )
+   IF (.NOT. LCRYSTAL_SHAPE) THEN
+    WHERE ( PRT(:,:,4) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI)<ZSVTHR )
 !
 !      PSVT(:,:,TNSV%NSV_LIMA_NI_A(kmi)) = MIN( PRHODREF(:,:) /                                     &
 !           ( XRHOLI * XAI*(10.E-06)**XBI * PRT(:,:,4) ), &
 !           ZCONC )
 ! Correction
       PSVT(:,:,ISV_LIMA_NI) = MIN(PRT(:,:,4)/(0.82*(10.E-06)**2.5),ZCONC )
-   END WHERE
-   WHERE ( PRT(:,:,4) <= 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI)<ZSVTHR )
+    END WHERE
+    WHERE ( PRT(:,:,4) <= 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI)<ZSVTHR )
       PRT(:,:,4)  = 0.0
       PSVT(:,:,ISV_LIMA_NI) = 0.0
-   END WHERE
+    END WHERE
+   ELSE
+      ALLOCATE(ZNI_TOT(SIZE(PRT,1), SIZE(PRT,2)))
+      ZNI_TOT(:,:) = 0.
+      DO ISH = 1, NNB_CRYSTAL_SHAPE
+         WHERE ( PRT(:,:,4) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI+ISH-1) < ZSVTHR) 
+            PSVT(:,:,NSV_LIMA_NI+ISH-1) = MIN(PRT(:,:,4)/(XAI_SHAPE(ISH)*(10.E-06)**XBI_SHAPE(ISH)),ZCONC )
+         END WHERE
+         ZNI_TOT(:,:) = ZNI_TOT(:,:) + PSVT(:,:,ISV_LIMA_NI+ISH-1)
+      END DO
+      WHERE (PRT(:,:,4) <= 1.E-11 .AND. ZNI_TOT(:,:)<ZSVTHR )
+         PRT(:,:,4)  = 0.0
+!++cb-- il faudrait trouver une plus jolie solution, mais ca compile
+         !PSVT(:,:,:,ISV_LIMA_NI:ISV_LIMA_NI+NNB_CRYSTAL_SHAPE-1) = 0.0
+         PSVT(:,:,ISV_LIMA_NI)   = 0.0
+         PSVT(:,:,ISV_LIMA_NI+1) = 0.0
+         PSVT(:,:,ISV_LIMA_NI+2) = 0.0
+         PSVT(:,:,ISV_LIMA_NI+3) = 0.0
+      END WHERE
+      DEALLOCATE(ZNI_TOT)
+   END IF
 
    IF (NMOD_IFN .GE. 1) THEN
       WHERE ( PRT(:,:,4) > 1.E-11 .AND. PSVT(:,:,ISV_LIMA_NI)<ZSVTHR )

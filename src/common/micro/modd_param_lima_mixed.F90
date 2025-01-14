@@ -83,7 +83,9 @@ REAL       :: XDCRLIM_RDSF_MIN,                & ! Raindrops min diam. : 0.2 mm
               XGAMINC_BOUND_RDSF_RMAX,         & ! Max val. of Lbda_r*dlim
               XRDSFINTP_R,XRDSFINTP1_R,        & !
               XFACTOR_RDSF_NI,                 & ! Factor for final RDSF Eq.
-              XMOMGR_RDSF
+              XMOMGR_RDSF,                     &
+              XTM_PSH,                         & ! Mean Temperature of shattering probability normal distribution
+              XSIG_PSH                           ! SIGMA of shattering probability normal distribution   
 !
 REAL, DIMENSION(:)      , ALLOCATABLE          &
                        :: XGAMINC_RDSF_R         ! Tab.incomplete Gamma function
@@ -278,6 +280,8 @@ REAL, POINTER :: XAG => NULL(), &
                  XRDSFINTP1_R => NULL(), &
                  XFACTOR_RDSF_NI => NULL(), &
                  XMOMGR_RDSF => NULL(), &
+                 XTM_PSH => NULL(), &
+                 XSIG_PSH => NULL(), &
                  XFSEDG => NULL(), &
                  XEXSEDG => NULL(), &
                  XFSEDRG => NULL(), &
@@ -510,6 +514,8 @@ IF(.NOT. ASSOCIATED(XAG)) THEN
   XRDSFINTP1_R             => PARAM_LIMA_MIXED%XRDSFINTP1_R
   XFACTOR_RDSF_NI          => PARAM_LIMA_MIXED%XFACTOR_RDSF_NI
   XMOMGR_RDSF              => PARAM_LIMA_MIXED%XMOMGR_RDSF
+  XTM_PSH                  => PARAM_LIMA_MIXED%XTM_PSH
+  XSIG_PSH                 => PARAM_LIMA_MIXED%XSIG_PSH
   XFSEDG                   => PARAM_LIMA_MIXED%XFSEDG
   XEXSEDG                  => PARAM_LIMA_MIXED%XEXSEDG
   XFSEDRG                  => PARAM_LIMA_MIXED%XFSEDRG

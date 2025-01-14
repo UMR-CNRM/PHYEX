@@ -7,12 +7,12 @@ MODULE MODE_LIMA_PHILLIPS_IFN_NUCLEATION
   IMPLICIT NONE
 CONTAINS
 !     #################################################################################
-  SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION (LIMAP, LIMAC, D, CST, PTSTEP,                           &
+  SUBROUTINE LIMA_PHILLIPS_IFN_NUCLEATION (LIMAP, LIMAC, D, CST, PTSTEP,             &
                                            PRHODREF, PEXNREF, PPABST,                &
                                            PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
-                                           PCCT, PCIT, PNAT, PIFT, PINT, PNIT,       &
-                                           P_TH_HIND, P_RI_HIND, P_CI_HIND,          &
-                                           P_TH_HINC, P_RC_HINC, P_CC_HINC,          &
+                                           PCCT, PCIT, PCIT_SHAPE, PNAT, PIFT, PINT, PNIT, &
+                                           P_TH_HIND, P_RI_HIND, P_CI_HIND, P_SHCI_HIND, &
+                                           P_TH_HINC, P_RC_HINC, P_CC_HINC, P_SHCI_HINC, &
                                            PICEFR                                    )
 !     #################################################################################
 !!
@@ -106,6 +106,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCCT    ! Cloud water conc. at t 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Cloud water conc. at t 
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE),   INTENT(INOUT) :: PCIT_SHAPE ! Cloud water conc. at t 
 REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_CCN), INTENT(INOUT) :: PNAT    ! CCN conc. used for immersion nucl.
 REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_IFN), INTENT(INOUT) :: PIFT    ! Free IFN conc.
 REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_IFN), INTENT(INOUT) :: PINT    ! Nucleated IFN conc.
@@ -114,9 +115,11 @@ REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_IMM), INTENT(INOUT) :: PNIT    ! Nucleat
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_TH_HIND
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_RI_HIND
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_CI_HIND
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE),   INTENT(OUT)   :: P_SHCI_HIND
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_TH_HINC
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_RC_HINC
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)   :: P_CC_HINC
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE),   INTENT(OUT)   :: P_SHCI_HINC
 !
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PICEFR
 !
@@ -125,7 +128,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PICEFR
 !
 !
 INTEGER :: IIJB, IIJE, IKB, IKE               ! Physical domain
-INTEGER :: IL, IMOD_CCN, IMOD_IFN, ISPECIE, IMOD_IMM  ! Loop index
+INTEGER :: IL, IMOD_CCN, IMOD_IFN, ISPECIE, IMOD_IMM, ISH  ! Loop index
 INTEGER :: INEGT  ! Case number of sedimentation, nucleation,
 !
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) &
@@ -170,6 +173,8 @@ REAL,    DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2))   &
 REAL,    DIMENSION(:,:), ALLOCATABLE :: ZSI0, &    ! Si threshold in H_X for X={DM,BC,O}
                                         Z_FRAC_ACT ! Activable frac. of each AP species
 REAL,    DIMENSION(:),   ALLOCATABLE :: ZTCELSIUS, ZZT_SI0_BC
+REAL, DIMENSION(:,:), ALLOCATABLE :: ZTC3D, & ! arrays of temperature and Si
+                                     ZSI3D    ! --> used if lcrystal_shape=t
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !-------------------------------------------------------------------------------
@@ -311,6 +316,13 @@ IF (INEGT > 0) THEN
       ZSI0(:,4) = 1.15      ! BIO
    END IF
 !
+! if lcrystal_shape=t, 3D array of temperature and supersaturation are needed
+   IF (LIMAP%LCRYSTAL_SHAPE) THEN
+     ALLOCATE(ZTC3D(SIZE(PRHODREF,1),SIZE(PRHODREF,2)))
+     ALLOCATE(ZSI3D(SIZE(PRHODREF,1),SIZE(PRHODREF,2)))
+     ZTC3D(:,:) = ZT(:,:) - CST%XTT
+     ZSI3D(:,:) = UNPACK( ZSI(:), MASK=GNEGT(:,:), FIELD=0. )
+   END IF
 !
 !-------------------------------------------------------------------------------
 !
@@ -357,7 +369,30 @@ IF (INEGT > 0) THEN
       PINT(:,:,IMOD_IFN) = PINT(:,:,IMOD_IFN) + ZW(:,:)
 !
       P_CI_HIND(:,:) = P_CI_HIND(:,:) + ZW(:,:)
-      PCIT(:,:) = PCIT(:,:) + ZW(:,:)
+      IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
+        PCIT(:,:) = PCIT(:,:) + ZW(:,:)
+      ELSE
+!NOTE : p_shci_hinX est utile uniquement pour les bilans --> peut-etre mettre une condition pour leur calcul ?
+        ! different crystal habits are generated depending on the temperature
+!++cb++ 18/04/24 la formation des cristaux produit uniquement des formes primaires
+! on se base sur la figure 5 de Bailey et Hallett (2009)
+! Plates: -1<T<-3, -9<T<-20, -20<T<-40, -40<T si SSI < 0.05
+        WHERE (((ZTC3D(:,:) .GT. -3.0)  .AND.  (ZTC3D(:,:) .LT. 0.0))   .OR. &
+               ((ZTC3D(:,:) .LE. -9.0)  .AND.  (ZTC3D(:,:) .GT. -40.0)) .OR. &
+               ((ZTC3D(:,:) .LE. -40.0) .AND. ((ZSI3D(:,:)-1.) .LT. 0.05)) )
+          P_SHCI_HIND(:,:,1) = P_SHCI_HIND(:,:,1) + ZW(:,:)
+          PCIT_SHAPE(:,:,1)  = PCIT_SHAPE(:,:,1)  + ZW(:,:)
+        END WHERE
+!
+! Columns: -3<T<-9, -40<T<-70 si SSI > 0.05
+        WHERE (((ZTC3D(:,:) .LE. -3.0)   .AND.  (ZTC3D(:,:) .GT. -9.0)) .OR. &
+               ((ZTC3D(:,:) .LE. -40.0)  .AND. ((ZSI3D(:,:)-1.) .GE. 0.05)))
+          P_SHCI_HIND(:,:,2) = P_SHCI_HIND(:,:,2) + ZW(:,:)
+          PCIT_SHAPE(:,:,2)  = PCIT_SHAPE(:,:,2)  + ZW(:,:)
+        END WHERE
+        !
+        PCIT(:,:) = SUM(PCIT_SHAPE, DIM=3)
+      END IF
 !
       ZW(:,:) = UNPACK( ZZW(:), MASK=GNEGT(:,:), FIELD=0. )
       P_RI_HIND(:,:) = P_RI_HIND(:,:) + ZW(:,:)
@@ -404,7 +439,31 @@ IF (INEGT > 0) THEN
 !
          P_CC_HINC(:,:) = P_CC_HINC(:,:) - ZW(:,:) 
          PCCT(:,:) = PCCT(:,:) - ZW(:,:)
-         PCIT(:,:) = PCIT(:,:) + ZW(:,:)
+         IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
+           PCIT(:,:) = PCIT(:,:) + ZW(:,:)
+         ELSE
+           ! different crystal habits are generated depending on the temperature
+
+! Plates: -1<T<-3, -9<T<-20, -20<T<-40, -40<T si SSI < 0.05
+!           WHERE (((ZTC3D(:,:) .GT. -3.0) .AND.  (ZTC3D(:,:) .LT. 0.0))   .OR. &
+!                 ((ZTC3D(:,:) .LE. -9.0)  .AND.  (ZTC3D(:,:) .GT. -40.0)) .OR. &
+!                 ((ZTC3D(:,:) .LE. -40.0) .AND. ((ZSI3D(:,:)-1.) .LT. 0.05)) )
+!             P_SHCI_HINC(:,:,1) = P_SHCI_HINC(:,:,1) + ZW(:,:)
+!             PCIT_SHAPE(:,:,1)  = PCIT_SHAPE(:,:,1)  + ZW(:,:)
+!           END WHERE
+!
+! Columns: -3<T<-9, -40<T<-70 si SSI > 0.05
+!           WHERE (((ZTC3D(:,:) .LE. -3.0)   .AND.  (ZTC3D(:,:) .GT. -9.0)) .OR. &
+!                  ((ZTC3D(:,:) .LE. -40.0)  .AND. ((ZSI3D(:,:)-1.) .GE. 0.05)))
+!             P_SHCI_HINC(:,:,2) = P_SHCI_HINC(:,:,2) + ZW(:,:)
+!             PCIT_SHAPE(:,:,2)  = PCIT_SHAPE(:,:,2)  + ZW(:,:)
+!           END WHERE
+! Droxtals
+           P_SHCI_HINC(:,:,4) = P_SHCI_HINC(:,:,4) + ZW(:,:)
+           PCIT_SHAPE(:,:,4)  = PCIT_SHAPE(:,:,4)  + ZW(:,:)
+           !
+           PCIT(:,:) = SUM(PCIT_SHAPE, DIM=3)
+         END IF
 !
          ZW(:,:) = UNPACK( ZZY(:), MASK=GNEGT(:,:), FIELD=0. )
          P_RC_HINC(:,:) = P_RC_HINC(:,:) - ZW(:,:)
@@ -452,6 +511,8 @@ IF (INEGT > 0) THEN
    DEALLOCATE(ZZX)
    DEALLOCATE(ZZY)
    DEALLOCATE(ZSI_W)
+   IF (ALLOCATED(ZTC3D)) DEALLOCATE(ZTC3D)
+   IF (ALLOCATED(ZSI3D)) DEALLOCATE(ZSI3D)
 !
 END IF ! INEGT > 0
 !

@@ -9,7 +9,7 @@ CONTAINS
 !     ##########################################################################
   SUBROUTINE LIMA_CCN_HOM_FREEZING (LIMAP, LIMAC, D, CST, PRHODREF, PEXNREF, PPABST, PW_NU, &
                                     PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
-                                    PCCT, PCRT, PCIT, PNFT, PNHT ,            &
+                                    PCCT, PCRT, PCIT, PCIT_SHAPE, PNFT, PNHT ,            &
                                     PICEFR, PTOT_RV_HONH                      )
 !     ##########################################################################
 !
@@ -69,6 +69,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PRGT    ! Graupel m.r. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCCT    ! Cloud water C. at t
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)    :: PCRT    ! Rain water C. source
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PCIT    ! Ice crystal C. source
+REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(INOUT) :: PCIT_SHAPE ! Ice crystal conc. at t for each shape
 !
 REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_CCN), INTENT(INOUT) :: PNFT    ! Free CCN conc. 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT) :: PNHT    ! haze homogeneous freezing
@@ -92,6 +93,7 @@ REAL, DIMENSION(:),   ALLOCATABLE :: ZCCT    ! Cloud water conc. source
 REAL, DIMENSION(:),   ALLOCATABLE :: ZCRT    ! Rain water conc. source
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZNFT    ! available nucleus conc. source
 REAL, DIMENSION(:),   ALLOCATABLE :: ZCIT    ! Pristine ice conc. source
+REAL, DIMENSION(:,:), ALLOCATABLE :: ZCIT_SHAPE ! Ice crystal conc. at t for each shape
 REAL, DIMENSION(:),   ALLOCATABLE :: ZZNHT   ! Nucleated Ice nuclei conc. source
                                              !by Homogeneous freezing
 !
@@ -124,7 +126,7 @@ REAL, DIMENSION(:), ALLOCATABLE &
                               ZCCNFROZEN
 !
 INTEGER :: IIJB, IIJE, IKB, IKE   ! Physical domain
-INTEGER :: IL, IMOD_CCN                   ! Loop index
+INTEGER :: IL, IMOD_CCN, ISH      ! Loop index
 !
 INTEGER :: INEGT                          ! Case number of hom. nucleation
 LOGICAL, DIMENSION(SIZE(PRHODREF,1),SIZE(PRHODREF,2)) &
@@ -168,6 +170,7 @@ IF (INEGT.GT.0) THEN
    ALLOCATE(ZCCT(INEGT))
    ALLOCATE(ZCRT(INEGT))
    ALLOCATE(ZCIT(INEGT))
+   IF (LIMAP%LCRYSTAL_SHAPE) ALLOCATE(ZCIT_SHAPE(INEGT,LIMAP%NNB_CRYSTAL_SHAPE)) !++cb--
    !
    ALLOCATE(ZNFT(INEGT,LIMAP%NMOD_CCN))
    ALLOCATE(ZZNHT(INEGT))
@@ -191,6 +194,11 @@ IF (INEGT.GT.0) THEN
       ZCRT(IL) = PCRT(I1(IL),I3(IL))
       ZCIT(IL) = PCIT(I1(IL),I3(IL))
       !
+      IF (LIMAP%LCRYSTAL_SHAPE) THEN
+         DO ISH = 1, LIAMP%NNB_CRYSTAL_SHAPE
+            ZCIT_SHAPE(IL,ISH) = PCIT_SHAPE(I1(IL),I3(JL),ISH)
+         END DO
+      END IF
       DO IMOD_CCN = 1, LIMAP%NMOD_CCN
          ZNFT(IL,IMOD_CCN) = PNFT(I1(IL),I3(IL),IMOD_CCN)
       ENDDO
@@ -302,7 +310,19 @@ IF (INEGT.GT.0) THEN
       PTHT(:,:) = PTHT(:,:) + UNPACK( ZZW(:)*(ZLSFACT(:)-ZLVFACT(:)), MASK=GNEGT(:,:),FIELD=0.)
       PRVT(:,:) = PRVT(:,:) - UNPACK( ZZW(:), MASK=GNEGT(:,:),FIELD=0.)
       PRIT(:,:) = PRIT(:,:) + UNPACK( ZZW(:), MASK=GNEGT(:,:),FIELD=0.)
-      PCIT(:,:) = PCIT(:,:) + UNPACK( ZZX(:), MASK=GNEGT(:,:),FIELD=0.)
+      IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
+        PCIT(:,:) = PCIT(:,:) + UNPACK( ZZX(:), MASK=GNEGT(:,:),FIELD=0.)
+      ELSE
+        !--> Hyp : etant donnee la gamme de temperatures, formation de 20% de colonnes et
+        ! 80% de polycristaux
+        !PCIT_SHAPE(:,:,:,2) = PCIT_SHAPE(:,:,:,2) + &
+        !                      0.2 * UNPACK( ZZX(:), MASK=GNEGT(:,:,:),FIELD=0.)
+        !PCIT_SHAPE(:,:,:,3) = PCIT_SHAPE(:,:,:,3) + &
+        !                      0.8 * UNPACK( ZZX(:), MASK=GNEGT(:,:,:),FIELD=0.)
+        !--> Hyp : la congelation des CCN et des gouttelettes produit des droxtals
+        PCIT_SHAPE(:,:,4) = PCIT_SHAPE(:,:,4) + UNPACK( ZZX(:), MASK=GNEGT(:,:),FIELD=0.)
+        PCIT(:,:) = SUM(PCIT_SHAPE, DIM=3)
+      END IF
       PNHT(:,:) = PNHT(:,:) + UNPACK( ZZX(:), MASK=GNEGT(:,:),FIELD=0.)
 
       DEALLOCATE(ZFREECCN)
@@ -329,6 +349,8 @@ IF (INEGT.GT.0) THEN
    DEALLOCATE(ZCCT)
    DEALLOCATE(ZCRT)
    DEALLOCATE(ZCIT)
+!
+   IF (ALLOCATED(ZCIT_SHAPE)) DEALLOCATE(ZCIT_SHAPE) !++cb-- 19/02/24
 !
    DEALLOCATE(ZNFT)
    DEALLOCATE(ZZNHT)

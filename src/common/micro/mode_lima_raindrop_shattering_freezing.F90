@@ -8,7 +8,7 @@ MODULE MODE_LIMA_RAINDROP_SHATTERING_FREEZING
 CONTAINS
 !     #######################################################################
   SUBROUTINE LIMA_RAINDROP_SHATTERING_FREEZING (LIMAP, LIMAW, LIMAC, LIMAM, KSIZE, ODCOMPUTE,             &
-                                                PRHODREF,                     &
+                                                PRHODREF, PT,                 &
                                                 PRRT, PCRT, PRIT, PCIT, PRGT, &
                                                 PLBDR,                        &
                                                 P_RI_RDSF, P_CI_RDSF          )
@@ -42,10 +42,15 @@ IMPLICIT NONE
 !*       0.1   Declarations of dummy arguments :
 !
 !
+TYPE(PARAM_LIMA_MIXED_T),INTENT(IN)::LIMAM
+TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
+TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
+TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 INTEGER, INTENT(IN) :: KSIZE
 LOGICAL, DIMENSION(KSIZE),INTENT(IN)    :: ODCOMPUTE
 !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRHODREF
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PT
 !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRRT
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCRT
@@ -67,13 +72,15 @@ REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC1_R1           ! Work vectors for rain
 REAL,    DIMENSION(:), ALLOCATABLE :: ZVEC2_R            ! Work vectors for rain
 INTEGER, DIMENSION(:), ALLOCATABLE :: IVEC2_R            ! Rain indice vector
 REAL,    DIMENSION(SIZE(PRRT))     :: ZINTG_RAIN         ! incomplete gamma function for rain
-TYPE(PARAM_LIMA_MIXED_T),INTENT(IN)::LIMAM
-TYPE(PARAM_LIMA_COLD_T),INTENT(IN)::LIMAC
-TYPE(PARAM_LIMA_WARM_T),INTENT(IN)::LIMAW
-TYPE(PARAM_LIMA_T),INTENT(IN)::LIMAP
 REAL,    DIMENSION(SIZE(PRRT))     :: ZNI_RDSF,ZRI_RDSF  ! RDSF rates
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
+REAL,    DIMENSION(:), ALLOCATABLE :: ZT_RDSF            ! Temperature where RDSF
+REAL,    DIMENSION(:), ALLOCATABLE :: ZNORMT             ! Normal distribution temperature shattering probability
+REAL,    DIMENSION(:), ALLOCATABLE :: ZPSH_R             ! Shattering probability work vectors
+REAL,    DIMENSION(SIZE(PRRT))     :: ZPSH               ! Shattering probability
+LOGICAL, DIMENSION(:), ALLOCATABLE :: LTEMP              ! Define the mask where ZNORMT is negligible
+INTEGER :: II
 !-------------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('LIMA_RAINDROP_SHATTERING_FREEZING', 0, ZHOOK_HANDLE)
 P_RI_RDSF(:)=0.
@@ -91,10 +98,16 @@ IF (IRDSF > 0) THEN
   ALLOCATE(ZVEC1_R1(IRDSF))
   ALLOCATE(ZVEC2_R(IRDSF))
   ALLOCATE(IVEC2_R(IRDSF))
+  ALLOCATE(ZT_RDSF(IRDSF))
+  ALLOCATE(ZNORMT(IRDSF))
+  ALLOCATE(ZPSH_R(IRDSF))
+  ALLOCATE(LTEMP(IRDSF))
+!
 !
 !*       2.2.1  select the ZLBDAR
 !
   ZVEC1_R(:) = PACK( PLBDR(:),MASK=GRDSF(:) )
+  ZT_RDSF(:) = PACK( PT(:),MASK=GRDSF(:) )
 !
 !*       2.2.2  find the next lower indice for the ZLBDAR in the
 !               geometrical set of Lbda_r used to tabulate some moments of the
@@ -118,13 +131,22 @@ IF (IRDSF > 0) THEN
 !
 !*       2.2.4  To compute final "RDSF" contributions
 !
-  ZNI_RDSF(:) = (LIMAM%XFACTOR_RDSF_NI / (PRHODREF(:)**(LIMAP%XCEXVT-1.0))) * (  &
+!  Add shattering probability
+  LTEMP(1:IRDSF) = .FALSE.
+  ZNORMT(1:IRDSF) =  1. / SQRT(2.*LIMAM%XSIG_PSH*3.141592653589) * EXP(-(ZT_RDSF(1:IRDSF)-LIMAM%XTM_PSH)**2. / (2.*LIMAM%XSIG_PSH**2.))
+  LTEMP(1:IRDSF) = ZNORMT(1:IRDSF) >= 0. .AND. ZNORMT(1:IRDSF) < 0.1
+!
+  ZPSH_R(1:IRDSF) = LIMAM%XPSH_MAX_RDSF / MAXVAL(ZNORMT(1:IRDSF)) * ZNORMT(1:IRDSF)
+  !
+  ZPSH(:) = UNPACK ( VECTOR=ZPSH_R(:),MASK=GRDSF,FIELD=0.0 )
+!
+  ZNI_RDSF(:) = (LIMAM%XFACTOR_RDSF_NI * ZPSH(:) / (PRHODREF(:)**(LIMAP%XCEXVT-1.0))) * (  &
                  PCIT(:) * PCRT(:) * ZINTG_RAIN(:) * PLBDR(:)**(-(LIMAW%XDR+6.0)) )
 !
   P_CI_RDSF(:) = MAX(ZNI_RDSF(:),0.)
 !
 ! The value of rg removed by RDSF is determined by the mean mass of pristine ice
-  ZRI_RDSF(:) = MAX( ZNI_RDSF(:)*LIMAC%XMNU0,LIMAP%XRTMIN(5) )
+  ZRI_RDSF(:) = MAX( ZNI_RDSF(:)*LIMAC%XMNU0,0. )
 !
   P_RI_RDSF(:) = ZRI_RDSF(:)
 !
@@ -132,6 +154,10 @@ IF (IRDSF > 0) THEN
   DEALLOCATE(ZVEC1_R1)
   DEALLOCATE(ZVEC2_R)
   DEALLOCATE(IVEC2_R)
+  DEALLOCATE(ZT_RDSF)
+  DEALLOCATE(ZNORMT)
+  DEALLOCATE(ZPSH_R)
+  DEALLOCATE(LTEMP)
   !
 ENDIF
 !

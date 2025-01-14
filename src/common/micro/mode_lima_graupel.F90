@@ -211,7 +211,7 @@ ZRWETG(:) = 0.
 !            1.a Collection of rc and ri in the dry mode
 !            --------------------------------------------
 !
-WHERE( PRGT(:)>LIMAP%XRTMIN(6) .AND. ODCOMPUTE(:) )
+WHERE( PRGT(:)>LIMAP%XRTMIN(6) .AND. PCGT(:)>XCTMIN(6) .AND. ODCOMPUTE(:) )
    ZZW(:) = PCGT(:) * PLBDG(:)**(-LIMAM%XDG-2.0) * PRHODREF(:)**(1-LIMAP%XCEXVT)
    ZZW1(:) = LIMAM%XFCDRYG * PRCT(:) * ZZW(:)                               ! RCDRYG - rc collected by graupel in dry mode 
    ZZW2(:) = LIMAM%XFIDRYG * EXP( LIMAM%XCOLEXIG*(PT(:)-CST%XTT) ) * PRIT(:) * ZZW(:) ! RIDRYG - ri collected by graupel in dry mode

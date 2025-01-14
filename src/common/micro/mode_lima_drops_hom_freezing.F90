@@ -6,12 +6,12 @@ MODULE MODE_LIMA_DROPS_HOM_FREEZING
   IMPLICIT NONE
 CONTAINS
 !     ###############################################################################
-  SUBROUTINE LIMA_DROPS_HOM_FREEZING (CST, LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 &
+  SUBROUTINE LIMA_DROPS_HOM_FREEZING (CST, LIMAP, KSIZE, PTSTEP, ODCOMPUTE,     &
                                       PEXNREF, PPABST,                          &
                                       PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
                                       PCRT,                                     &
                                       P_TH_HONR, P_RR_HONR, P_CR_HONR,          &
-                                      PB_TH, PB_RR, PB_CR, PB_RG                )
+                                      PB_TH, PB_RR, PB_CR, PB_RG, PB_CG         )
 !     ###############################################################################
 !
 !!    PURPOSE
@@ -67,6 +67,7 @@ REAL, DIMENSION(KSIZE),    INTENT(INOUT) :: PB_TH
 REAL, DIMENSION(KSIZE),    INTENT(INOUT) :: PB_RR
 REAL, DIMENSION(KSIZE),    INTENT(INOUT) :: PB_CR
 REAL, DIMENSION(KSIZE),    INTENT(INOUT) :: PB_RG
+REAL, DIMENSION(KSIZE),    INTENT(INOUT) :: PB_CG
 !
 !*       0.2   Declarations of local variables :
 !
@@ -106,6 +107,7 @@ WHERE( (ZT(:)<CST%XTT-35.0) .AND. (PRRT(:)>LIMAP%XRTMIN(3)) .AND. ODCOMPUTE(:) )
    PB_RR(:) = PB_RR(:) - PRRT(:)
    PB_CR(:) = PB_CR(:) - PCRT(:)
    PB_RG(:) = PB_RG(:) + PRRT(:)
+   PB_CG(:) = PB_CG(:) + PCRT(:)
 ENDWHERE
 !
 !-------------------------------------------------------------------------------

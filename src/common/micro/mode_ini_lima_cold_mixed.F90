@@ -81,10 +81,11 @@ REAL,                    INTENT(IN) :: PDZMIN    ! minimun vertical mesh size
 CHARACTER(LEN=13) :: YVAL     ! String for error message
 INTEGER :: IKB                ! Coordinates of the first  physical 
                               ! points along z
-INTEGER :: I1                 ! Internal loop indexes
+INTEGER :: I1, ISH, ISH2      ! Internal loop indexes
 !
 REAL, DIMENSION(8)  :: ZGAMI  ! parameters involving various moments
 REAL, DIMENSION(2)  :: ZGAMS  ! of the generalized gamma law
+REAL, DIMENSION(2,4) :: ZGAMI_SHAPE  ! replace ZGAMI(6) and ZGAMI(7)   !++cb--
 !
 REAL :: ZRHO00                ! Surface reference air density
 REAL :: ZRATE                 ! Geometrical growth of Lbda in the tabulated
@@ -94,8 +95,8 @@ REAL :: ZBOUND                ! XDCSLIM*Lbda_s: upper bound for the partial
 REAL :: ZZEGS, ZZEGR, ZZEHS, ZZEHG! Bulk collection efficiencies
 !
 INTEGER :: IND                ! Number of interval to integrate the kernels
-REAL :: ZZESR, ZZESS            ! Mean efficiency of rain-aggregate collection, aggregate-aggregate collection
-REAL :: ZZFDINFTY              ! Factor used to define the "infinite" diameter
+REAL :: ZZESR, ZZESS, ZZEII   ! Mean efficiency of rain-aggregate collection, aggregate-aggregate collection
+REAL :: ZZFDINFTY             ! Factor used to define the "infinite" diameter
 !
 !
 !INTEGER  :: ILUOUT0 ! Logical unit number for output-listing
@@ -175,55 +176,161 @@ SELECT CASE (CPRISTINE_ICE_LIMA)
     XGAMMAI = 0.062
     XDELTAI = 1.81    
     XC1I = 0.5      ! Bullet rosettes
+  CASE('POIR')      ! polycristaux/irreguliers
+    XAI = 10.0
+    XBI = 2.7 
+    XC_I = 7000.0
+    XDI = 1.235
+    XC1I = 0.566
   CASE('YPLA')
-    XAI = 0.745      ! Plates_from Yang et al (2013)
+    XAI = 0.744      ! Plates_from Yang et al (2013)
     XBI = 2.47       ! Plates_from Yang et al (2013)
-    XC_I = 63.     ! Plates_from Yang et al (2013)
-    XDI = 0.68       ! Plates_from Yang et al (2013)
-    XGAMMAI = 0.096
-    XDELTAI = 1.83    
+    XC_I = 48.9     ! Plates_from Yang et al (2013)
+    XDI = 0.66       ! Plates_from Yang et al (2013)
+    XGAMMAI = 0.106
+    XDELTAI = 1.84    
     XC1I = 1./XPI   ! Plates_from Yang et al (2013)
   CASE('YCOL')
-    XAI = 261.102   ! Columns_from Yang et al (2013)
-    XBI = 2.99       ! Columns_from Yang et al (2013)
-    XC_I = 671   ! Columns_from Yang et al (2013)
+    XAI = 6.72   ! Columns_from Yang et al (2013)
+    XBI = 2.6       ! Columns_from Yang et al (2013)
+    XC_I = 99.3   ! Columns_from Yang et al (2013)
     XDI = 0.62     ! Columns_from Yang et al (2013)
-    XGAMMAI = 0.659
-    XDELTAI = 2.0    
+    XGAMMAI = 0.154
+    XDELTAI = 1.84    
     XC1I = 0.8      ! Columns_from Yang et al (2013)
   CASE('YBUR')
-    XAI = 1.268      ! Bullet rosettes_from Yang et al (2013)
-    XBI = 2.59       ! Bullet rosettes_from Yang et al (2013)
-    XC_I = 128     ! Bullet rosettes_from Yang et al (2013)
-    XDI = 0.72     ! Bullet rosettes_from Yang et al (2013)
-    XGAMMAI = 0.062
-    XDELTAI = 1.81    
+    XAI = 1.059      ! Bullet rosettes_from Yang et al (2013)
+    XBI = 2.57       ! Bullet rosettes_from Yang et al (2013)
+    XC_I = 99.1     ! Bullet rosettes_from Yang et al (2013)
+    XDI = 0.7     ! Bullet rosettes_from Yang et al (2013)
+    XGAMMAI = 0.057
+    XDELTAI = 1.8    
     XC1I = 0.5      ! Bullet rosettes_from Yang et al (2013)
   CASE('YDRO')
-    XAI = 1.268      ! Droxtals_from Yang et al (2013)
-    XBI = 2.59       ! Droxtals_from Yang et al (2013)
-    XC_I = 128     ! Droxtals_from Yang et al (2013)
-    XDI = 0.72     ! Droxtals_from Yang et al (2013)
+    XAI = 346.906      ! Droxtals_from Yang et al (2013)
+    XBI = 3       ! Droxtals_from Yang et al (2013)
+    XC_I = 695.83     ! Droxtals_from Yang et al (2013)
+    XDI = 0.61     ! Droxtals_from Yang et al (2013)
     XGAMMAI = 0.673
     XDELTAI = 2.0    
     XC1I = 0.5      ! Droxtals_from Yang et al (2013)
   CASE('YHCO')
-    XAI = 217.586   ! Hollow_Columns_from Yang et al (2013)
-    XBI = 2.99       ! Hollow_Columns_from Yang et al (2013)
-    XC_I = 641   ! Hollow_Columns_from Yang et al (2013)
+    XAI = 5.6   ! Hollow_Columns_from Yang et al (2013)
+    XBI = 2.6       ! Hollow_Columns_from Yang et al (2013)
+    XC_I = 97.7   ! Hollow_Columns_from Yang et al (2013)
     XDI = 0.63     ! Hollow_Columns_from Yang et al (2013)
-    XGAMMAI = 0.659
-    XDELTAI = 2.0    
+    XGAMMAI = 0.154
+    XDELTAI = 1.84    
     XC1I = 0.8      ! Hollow_Columns_from Yang et al (2013)
   CASE('YHBU')
-    XAI = 1.258      ! Hollow_Bullet rosettes_from Yang et al (2013)
-    XBI = 2.61       ! Hollow_Bullet rosettes_from Yang et al (2013)
-    XC_I = 147     ! Hollow_Bullet rosettes_from Yang et al (2013)
-    XDI = 0.73     ! Hollow_Bullet rosettes_from Yang et al (2013)
-    XGAMMAI = 0.061
-    XDELTAI = 1.81    
+    XAI = 1.033      ! Hollow_Bullet rosettes_from Yang et al (2013)
+    XBI = 2.59       ! Hollow_Bullet rosettes_from Yang et al (2013)
+    XC_I = 112.5     ! Hollow_Bullet rosettes_from Yang et al (2013)
+    XDI = 0.72     ! Hollow_Bullet rosettes_from Yang et al (2013)
+    XGAMMAI = 0.057
+    XDELTAI = 1.8    
     XC1I = 0.5      ! Hollow_Bullet rosettes_from Yang et al (2013)    
 END SELECT
+!
+IF (LCRYSTAL_SHAPE) THEN
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XAI_SHAPE',  NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XBI_SHAPE',  NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XC_I_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XDI_SHAPE',  NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XC1I_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XGAMMAI_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XDELTAI_SHAPE', NNB_CRYSTAL_SHAPE)
+  !
+  ZRHOIW = 916.0 ! kg/m-3 : ice density
+! In order : plates, columns, irregulars, dendrites
+! a, b, c et d : Woods et al 2007
+! Irrreguliers : bullets de Woods et al 2007 (compris entre plates et columns)
+! capacitance : choisir un rapport d'aspect pour plates et columns issu de Westbrook et al
+!  Note that XCCI=N_i (a locally predicted value) and XCXI=0.0, implicitly
+!
+
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+  SELECT CASE (HTYPE_CRYSTAL_SHAPE(ISH))
+    CASE('CPLA')
+      XAI_SHAPE(ISH)  = 0.82    ! relation masse maxdim
+      XBI_SHAPE(ISH)  = 2.5     ! relation masse maxdim
+      XC_I_SHAPE(ISH) = 747.0   ! vitesse de chute maxdim
+      XDI_SHAPE(ISH)  = 1.0     ! vitesse de chute maxdim
+      XC1I_SHAPE(ISH) = 0.339
+      XGAMMAI_SHAPE(ISH) = 0.106 ! value from Yang et al. (2013)
+      XDELTAI_SHAPE(ISH) = 1.84  ! value from Yang et al. (2013)
+    CASE('CCOL')
+      XAI_SHAPE(ISH)  = 110.798 ! Mitchell 1(d < 100 um) 1996
+      XBI_SHAPE(ISH)  = 2.91    ! Mitchell 1(d < 100 um) 1996
+      XC_I_SHAPE(ISH) = 1.96E5
+      XDI_SHAPE(ISH)  = 1.585
+      XC1I_SHAPE(ISH) = 0.24
+      XGAMMAI_SHAPE(ISH) = 0.154 ! value from Yang et al. (2013)
+      XDELTAI_SHAPE(ISH) = 1.84  ! value from Yang et al. (2013)
+    CASE('POIR')
+      XAI_SHAPE(ISH)  = 10.0    ! moyenne entre plates et colonnes (jpp)
+      XBI_SHAPE(ISH)  = 2.7     ! relation masse diamètre des columns
+      XC_I_SHAPE(ISH) = 7000.0
+      XDI_SHAPE(ISH)  = 1.235
+      XC1I_SHAPE(ISH) = 0.566
+      XGAMMAI_SHAPE(ISH) = 0.057 ! value from Yang et al. (2013)
+      XDELTAI_SHAPE(ISH) = 1.8  ! value from Yang et al. (2013)
+    CASE('YPLA')
+      XAI_SHAPE(ISH)  = 0.744      ! Plates_from Yang et al (2013)
+      XBI_SHAPE(ISH)  = 2.47 
+      XC_I_SHAPE(ISH) = 48.9    
+      XDI_SHAPE(ISH)  = 0.66     
+      XGAMMAI_SHAPE(ISH) = 0.106
+      XDELTAI_SHAPE(ISH) = 1.84    
+      XC1I_SHAPE(ISH) = 1./XPI   ! values from LIMA
+    CASE('YCOL')
+      XAI_SHAPE(ISH)  = 6.72   ! Columns_from Yang et al (2013)
+      XBI_SHAPE(ISH)  = 2.6  
+      XC_I_SHAPE(ISH) = 99.3
+      XDI_SHAPE(ISH)  = 0.62 
+      XGAMMAI_SHAPE(ISH) = 0.154
+      XDELTAI_SHAPE(ISH) = 1.84    
+      XC1I_SHAPE(ISH) = 0.8      ! values from LIMA
+    CASE('YBUR')
+      XAI_SHAPE(ISH)  = 1.059      ! Bullet rosettes_from Yang et al (2013)
+      XBI_SHAPE(ISH)  = 2.57 
+      XC_I_SHAPE(ISH) = 99.1
+      XDI_SHAPE(ISH)  = 0.7  
+      XGAMMAI_SHAPE(ISH) = 0.057
+      XDELTAI_SHAPE(ISH) = 1.8    
+      XC1I_SHAPE(ISH) = 0.5      !  values from LIMA      
+    CASE('YDRO')
+      XAI_SHAPE(ISH)  = 346.906      ! Droxtals_from Yang et al (2013)
+      XBI_SHAPE(ISH)  = 3      
+      XC_I_SHAPE(ISH) = 695.83 
+      XDI_SHAPE(ISH)  = 0.61    
+      XGAMMAI_SHAPE(ISH) = 0.673
+      XDELTAI_SHAPE(ISH) = 2.0    
+      XC1I_SHAPE(ISH) = 0.5      !  values from LIMA
+    CASE('YHCO')
+      XAI_SHAPE(ISH)  = 5.6   ! Hollow_Columns_from Yang et al (2013)
+      XBI_SHAPE(ISH)  = 2.6   
+      XC_I_SHAPE(ISH) = 97.7 
+      XDI_SHAPE(ISH)  = 0.63  
+      XGAMMAI_SHAPE(ISH) = 0.154
+      XDELTAI_SHAPE(ISH) = 1.84    
+      XC1I_SHAPE(ISH) = 0.8      ! values from LIMA
+    CASE('YHBU')
+      XAI_SHAPE(ISH)  = 1.033      ! Hollow_Bullet rosettes_from Yang et al (2013)
+      XBI_SHAPE(ISH)  = 2.59  
+      XC_I_SHAPE(ISH) = 112.5  
+      XDI_SHAPE(ISH)  = 0.72   
+      XGAMMAI_SHAPE(ISH) = 0.057
+      XDELTAI_SHAPE(ISH) = 1.8    
+      XC1I_SHAPE(ISH) = 0.5      ! values from LIMA            
+  END SELECT
+  ENDDO
+!
+! capacitances calculees a partir de Westbrook et al. (2007) pour des
+! rapports d'aspect fixes : 
+! A(plate) = 0.1 ; A(columns) = 5. ; A(irr) = 1. ; A'(dendrites) = 0.2
+!
+END IF
 !
 !  Note that XCCI=N_i (a locally predicted value) and XCXI=0.0, implicitly
 !
@@ -354,6 +461,15 @@ END IF
 XLBEXI = 1.0/XBI
 XLBI   = XAI*MOMG(XALPHAI,XNUI,XBI)
 !
+IF (LCRYSTAL_SHAPE) THEN
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XLBEXI_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XLBI_SHAPE', NNB_CRYSTAL_SHAPE)
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+    XLBEXI_SHAPE(ISH) = 1.0 / XBI_SHAPE(ISH)
+    XLBI_SHAPE(ISH)   = XAI_SHAPE(ISH) * MOMG(XALPHAI,XNUI,XBI_SHAPE(ISH))
+  END DO
+END IF
+!
 XNS = 1.0/(XAS*MOMG(XALPHAS,XNUS,XBS))
 IF (NMOM_S.EQ.1) THEN
    XLBEXS = 1.0/(XCXS-XBS)
@@ -439,6 +555,24 @@ XFSEDRI  = XC_I*GAMMA_X0D(XNUI+(XDI+XBI)/XALPHAI)/GAMMA_X0D(XNUI+XBI/XALPHAI)*  
             (ZRHO00)**XCEXVT
 XFSEDCI  = XC_I*GAMMA_X0D(XNUI+XDI/XALPHAI)/GAMMA_X0D(XNUI)*     &
             (ZRHO00)**XCEXVT
+!
+IF (LCRYSTAL_SHAPE) THEN
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XFSEDCI_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XFSEDRI_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XFSEDRI_TOT_SHAPE', NNB_CRYSTAL_SHAPE)
+!
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+    XFSEDCI_SHAPE(ISH) = XC_I_SHAPE(ISH) * GAMMA_X0D(XNUI+XDI_SHAPE(ISH)/XALPHAI) / &
+                         GAMMA_X0D(XNUI) * (ZRHO00)**XCEXVT
+    XFSEDRI_SHAPE(ISH) = XC_I_SHAPE(ISH) * GAMMA_X0D(XNUI+(XDI_SHAPE(ISH)+XBI_SHAPE(ISH))/XALPHAI) / &
+                         GAMMA_X0D(XNUI+XBI_SHAPE(ISH)/XALPHAI) * (ZRHO00)**XCEXVT
+! marine : correction de l'air ?
+    XFSEDRI_TOT_SHAPE(ISH) = XAI_SHAPE(ISH) * GAMMA_X0D(XNUI+XBI_SHAPE(ISH)/XALPHAI) / &
+                                              GAMMA_X0D(XNUI)
+!    XFSEDRI_TOT_SHAPE(ISH) = XAI_SHAPE(ISH) * GAMMA_X0D(XNUI+XBI_SHAPE(ISH)/XALPHAI) / &
+!                                              GAMMA_X0D(XNUI) * (ZRHO00)**XCEXVT
+  END DO
+END IF
 !
 IF (LSNOW_T) THEN
 !HOUZE/HAIC
@@ -725,6 +859,17 @@ X0DEPI = (4.0*XPI)*XC1I*XF0I*MOMG(XALPHAI,XNUI,1.)
 X2DEPI = (4.0*XPI)*XC1I*XF2I*XC_I*MOMG(XALPHAI,XNUI,XDI+2.0)
 !
 ! Harrington parameterization for ice to snow conversion
+IF (LCRYSTAL_SHAPE) THEN
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('X0DEPI_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('X2DEPI_SHAPE', NNB_CRYSTAL_SHAPE)
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+    X0DEPI_SHAPE(ISH) = (4.0 * XPI) * XC1I_SHAPE(ISH) * XF0I * MOMG(XALPHAI,XNUI,1.)
+    X2DEPI_SHAPE(ISH) = (4.0 * XPI) * XC1I_SHAPE(ISH) * XF2I * XC_I_SHAPE(ISH) * &
+                        MOMG(XALPHAI,XNUI,XDI_SHAPE(ISH)+2.0)
+  END DO
+END IF
+!
+! Harrington parameterization for ice to snow conversion
 !
 XDICNVS_LIM = 125.E-6  ! size in microns
 XLBDAICNVS_LIM = (50.0**(1.0/(XALPHAI)))/XDICNVS_LIM  ! ZLBDAI Limitation
@@ -734,6 +879,26 @@ XC1DEPIS = ((4.0*XPI)/(XAI*XBI))*XC1I*XF1IS*SQRT(XC_I)*             &
            (XALPHAI/GAMMA_X0D(XNUI))*XDICNVS_LIM**(1.0-XBI+(XDI+1.0)/2.0)
 XR0DEPIS = XC0DEPIS *(XAI*XDICNVS_LIM**XBI)
 XR1DEPIS = XC1DEPIS *(XAI*XDICNVS_LIM**XBI)
+!
+IF (LCRYSTAL_SHAPE) THEN
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XC0DEPIS_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XC1DEPIS_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XR0DEPIS_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XR1DEPIS_SHAPE', NNB_CRYSTAL_SHAPE)
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+    XC0DEPIS_SHAPE(ISH) = ((4.0 * XPI) / (XAI_SHAPE(ISH) * XBI_SHAPE(ISH))) *     &
+                          XC1I_SHAPE(ISH) * XF0IS * (XALPHAI / GAMMA_X0D(XNUI)) * &
+                          XDICNVS_LIM**(1.0-XBI_SHAPE(ISH))
+    XC1DEPIS_SHAPE(ISH) = ((4.0 * XPI) / (XAI_SHAPE(ISH) * XBI_SHAPE(ISH))) *  &
+                          XC1I_SHAPE(ISH) * XF1IS * SQRT(XC_I_SHAPE(ISH)) *    &
+                          (XALPHAI / GAMMA_X0D(XNUI)) *                        &
+                          XDICNVS_LIM**(1.0-XBI_SHAPE(ISH)+(XDI_SHAPE(ISH)+1.0)/2.0)
+    XR0DEPIS_SHAPE(ISH) = XC0DEPIS_SHAPE(ISH) * &
+                         (XAI_SHAPE(ISH) * XDICNVS_LIM**XBI_SHAPE(ISH))
+    XR1DEPIS_SHAPE(ISH) = XC1DEPIS_SHAPE(ISH) * &
+                         (XAI_SHAPE(ISH) * XDICNVS_LIM**XBI_SHAPE(ISH))
+  END DO
+END IF
 !
 ! Harrington parameterization for snow to ice conversion
 !
@@ -783,6 +948,13 @@ ZGAMI(6) = MOMG(XALPHAI,XNUI,3.+XBI)
 ZGAMI(7) = MOMG(XALPHAI,XNUI,XBI)
 ZGAMI(8) = MOMG(XALPHAI,XNUI,3.)/MOMG(XALPHAI,XNUI,2.)
 !
+IF (LCRYSTAL_SHAPE) THEN
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+    ZGAMI_SHAPE(1,ISH) = MOMG(XALPHAI,XNUI,3.+XBI_SHAPE(ISH))
+    ZGAMI_SHAPE(2,ISH) = MOMG(XALPHAI,XNUI,XBI_SHAPE(ISH))
+  END DO
+END IF
+!
 ZGAMS(1) = GAMMA_X0D(XNUS)
 ZGAMS(2) = MOMG(XALPHAS,XNUS,3.)
 !
@@ -829,6 +1001,15 @@ XAGGS_CLARGE1 = XKER_ZRNIC_A2*ZGAMI(2)
 XAGGS_CLARGE2 = XKER_ZRNIC_A2*ZGAMS(2)
 XAGGS_RLARGE1 = XKER_ZRNIC_A2*ZGAMI(6)*XAI
 XAGGS_RLARGE2 = XKER_ZRNIC_A2*ZGAMI(7)*ZGAMS(2)*XAI
+!
+IF (LCRYSTAL_SHAPE) THEN
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XAGGS_RLARGE1_SHAPE', NNB_CRYSTAL_SHAPE)
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XAGGS_RLARGE2_SHAPE', NNB_CRYSTAL_SHAPE)
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+    XAGGS_RLARGE1_SHAPE(ISH) = XKER_ZRNIC_A2 * ZGAMI_SHAPE(1,ISH) * XAI_SHAPE(ISH)
+    XAGGS_RLARGE2_SHAPE(ISH) = XKER_ZRNIC_A2 * ZGAMI_SHAPE(2,ISH) * ZGAMS(2) * XAI_SHAPE(ISH)
+  END DO
+END IF
 !
 !!$GFLAG = .TRUE.
 !!$IF (GFLAG) THEN
@@ -1185,6 +1366,69 @@ END IF
 !
 !end if
 !
+!*       7.2TER  Computations of the tabulated normalized kernels ice Self Collection !! 
+!
+!
+IF (NMOM_S.GE.2) THEN
+XCOLII   = 0.005 ! Collection efficiency of I+I
+XCOLEXII = 0.1  ! Temperature factor of the I+I collection efficiency
+XFNISCI = (XPI/4.0)*(ZRHO00**XCEXVT)/2.0       
+!
+XLBNISCI1   = 2.0*MOMG(XALPHAI,XNUI,2.)                        
+XLBNISCI2   = 2.0*MOMG(XALPHAI,XNUI,1.)**2 
+!
+!
+!*       7.2TER.1  Defining the ranges for the computation of the kernels
+!
+!
+PARAM_LIMA_COLD%NSCLBDAI = 80
+PARAM_LIMA_COLD%XSCLBDAI_MIN = 1.0E0
+PARAM_LIMA_COLD%XSCLBDAI_MAX = 5.0E10
+ZRATE = LOG(PARAM_LIMA_COLD%XSCLBDAI_MAX/PARAM_LIMA_COLD%XSCLBDAI_MIN)/FLOAT(PARAM_LIMA_COLD%NSCLBDAI-1)
+XSCINTP1I = 1.0 / ZRATE
+XSCINTP2I = 1.0 - LOG( XSCLBDAI_MIN ) / ZRATE
+!
+!
+IND      = 50    ! Interval number, collection efficiency and infinite diameter
+ZZEII     = 1.0   ! factor used to integrate the dimensional distributions when
+ZZFDINFTY = 20.0  ! computing the kernels XKER_SSCSS
+!
+CALL PARAM_LIMA_COLD_ALLOCATE('XKER_N_ISCI', NSCLBDAI,NSCLBDAI)
+!
+CALL NZCOLX  ( IND, XALPHAI, XNUI, XALPHAI, XNUI,                    &
+             ZZEII, XC_I, XDI, 0., XC_I, XDI, 0.,                       &
+             XSCLBDAI_MAX, XSCLBDAI_MAX, XSCLBDAI_MIN, XSCLBDAI_MIN, &
+             ZZFDINFTY, XKER_N_ISCI                                   )
+!! 
+IF(LCRYSTAL_SHAPE) THEN
+    CALL PARAM_LIMA_COLD_ALLOCATE_1D('XLBISCS1',NNB_CRYSTAL_SHAPE)
+    CALL PARAM_LIMA_COLD_ALLOCATE_1D('XLBISCS2',NNB_CRYSTAL_SHAPE)
+    CALL PARAM_LIMA_COLD_ALLOCATE_1D('XLBISCS3',NNB_CRYSTAL_SHAPE)
+    CALL PARAM_LIMA_COLD_ALLOCATE_1D('XFISCS',NNB_CRYSTAL_SHAPE)
+   
+    CALL PARAM_LIMA_COLD_ALLOCATE_3D('XKER_R_ISCI_SHAPE',NNB_CRYSTAL_SHAPE, NSCLBDAI,NSCLBDAI)
+    CALL PARAM_LIMA_COLD_ALLOCATE_4D('XKER_N_ISCI_SHAPE',NNB_CRYSTAL_SHAPE,NNB_CRYSTAL_SHAPE, NSCLBDAI,NSCLBDAI)    
+    DO ISH = 1, NNB_CRYSTAL_SHAPE
+        XFISCS(ISH) = XAI_SHAPE(3)*(XPI/4.0)*(ZRHO00**XCEXVT)/(MOMG(XALPHAI,XNUI,XBI_SHAPE(ISH)))
+
+        XLBISCS1(ISH) =    MOMG(XALPHAI,XNUI,2.)*MOMG(XALPHAI,XNUI,XBI_SHAPE(ISH))
+        XLBISCS2(ISH) = 2.*MOMG(XALPHAI,XNUI,1.)*MOMG(XALPHAI,XNUI,XBI_SHAPE(ISH)+1.)
+        XLBISCS3(ISH) =                          MOMG(XALPHAI,XNUI,XBI_SHAPE(ISH)+2.)   
+
+        CALL RZCOLX  ( IND, XALPHAI, XNUI, XALPHAI, XNUI,                                              &
+               ZZEII, XBI_SHAPE(3), XC_I_SHAPE(ISH), XDI_SHAPE(ISH), 0., XC_I_SHAPE(3), XDI_SHAPE(3), 0., &
+               XSCLBDAI_MAX, XSCLBDAI_MAX, XSCLBDAI_MIN, XSCLBDAI_MIN,                                 &
+               ZZFDINFTY, XKER_R_ISCI_SHAPE(ISH,:,:)                                                    )
+        DO ISH2 = 1, NNB_CRYSTAL_SHAPE
+            CALL NZCOLX  ( IND, XALPHAI, XNUI, XALPHAI, XNUI,                                  &
+               ZZEII, XC_I_SHAPE(ISH), XDI_SHAPE(ISH), 0., XC_I_SHAPE(ISH2), XDI_SHAPE(ISH2), 0., &
+               XSCLBDAI_MAX, XSCLBDAI_MAX, XSCLBDAI_MIN, XSCLBDAI_MIN,                         &
+               ZZFDINFTY, XKER_N_ISCI_SHAPE(ISH,ISH2,:,:)                                       )
+        ENDDO
+    ENDDO
+ENDIF
+ENDIF
+!
 !*       7.3    Constant for the conversion-melting rate
 !
 XFSCVMG = 2.0
@@ -1294,6 +1538,9 @@ ZKHI_LWM = 2.5E13 ! Coeff. in Lawson-Woods-Morrison for the number of splinters
                   ! N_DF = XKHI_LWM * D_R**4
 XFACTOR_RDSF_NI = ZKHI_LWM * (XPI / 4.0) * XCR * (ZRHO00**XCEXVT)
 XMOMGR_RDSF = MOMG(XALPHAR,XNUR,6.0+XDR)
+!
+XTM_PSH = 258.     ! Mean Temperature of shattering probability normal distribution
+XSIG_PSH = 5.      ! SIGMA of shattering probability normal distribution
 !
 !-------------------------------------------------------------------------------
 !
@@ -1827,6 +2074,12 @@ END IF
 XFREFFI = 0.5 * ZGAMI(8) * (1.0/XLBI)**XLBEXI
 !  
 !-------------------------------------------------------------------------------
+IF (LCRYSTAL_SHAPE) THEN
+  CALL PARAM_LIMA_COLD_ALLOCATE_1D('XFREFFI_SHAPE', NNB_CRYSTAL_SHAPE)
+  DO ISH = 1, NNB_CRYSTAL_SHAPE
+    XFREFFI_SHAPE(ISH) = 0.5 * ZGAMI(8) * (1.0/XLBI_SHAPE(ISH))**XLBEXI_SHAPE(ISH)
+  END DO
+END IF
 !
 !
 !*      11.     SOME PRINTS FOR CONTROL

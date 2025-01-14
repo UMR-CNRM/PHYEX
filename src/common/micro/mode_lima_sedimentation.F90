@@ -8,10 +8,10 @@ MODULE MODE_LIMA_SEDIMENTATION
 CONTAINS
 !     ######################################################################
   SUBROUTINE LIMA_SEDIMENTATION (LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
-                                 HPHASE, KMOMENTS, KID, KSPLITG, PTSTEP, OELEC, ELECP, ELECD, &
+                                 HPHASE, KMOMENTS, KID, KISHAPE, KSPLITG, PTSTEP, OELEC, ELECP, ELECD, &
                                  PDZZ, PRHODREF, PTHVREFZIKB, &
                                  PPABST, PT, PRT_SUM, PCPT, PRS, PCS, PINPR, PFPR, &
-                                 PEFIELDW, PQS)
+                                 PEFIELDW, PQS, PLBDAI_SHAPE)
 !     ######################################################################
 !
 !!    PURPOSE
@@ -74,6 +74,7 @@ TYPE(CST_T),                   INTENT(IN)    :: CST
 CHARACTER(1),                  INTENT(IN)    :: HPHASE    ! Liquid or solid hydrometeors
 INTEGER,                       INTENT(IN)    :: KMOMENTS  ! Number of moments 
 INTEGER,                       INTENT(IN)    :: KID       ! Hydrometeor ID
+INTEGER,                       INTENT(IN)    :: KISHAPE   ! Ice shape ID if LCRYSTAL_SHAPE (0 otherwise)
 INTEGER,                       INTENT(IN)    :: KSPLITG   !  
 REAL,                          INTENT(IN)    :: PTSTEP    ! Time step  
 LOGICAL,                       INTENT(IN)    :: OELEC     ! if true, cloud electrification is activated
@@ -92,6 +93,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)   :: PFPR      ! Precip. fluxes in al
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN),    OPTIONAL :: PEFIELDW  ! Vertical component of the electric field
 REAL,                          INTENT(IN)    :: PTHVREFZIKB ! Reference thv at IKB for electricity
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(INOUT), OPTIONAL :: PQS ! Elec. charge density source
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN), OPTIONAL :: PLBDAI_SHAPE ! lambda for one ice crystal shape
 !
 !*       0.2   Declarations of local variables :
 !
@@ -209,6 +211,8 @@ DO IN = 1 ,  LIMAP%NSPLITSED(KID)
          ZRS(IL) = PRS(I1(IL),I3(IL))
          IF (IMOMENTS==2) ZCS(IL) = PCS(I1(IL),I3(IL))
          IF (OELEC)       ZQS(IL) = PQS(I1(IL),I3(IL))
+         IF (LIMAP%LCRYSTAL_SHAPE .AND. IMOMENTS == 2 .AND. KID == 4) &
+           ZLBDA(JL) = PLBDAI_SHAPE(I1(JL),I3(JL))
       END DO
 !
 ! Compute lambda
@@ -224,6 +228,10 @@ DO IN = 1 ,  LIMAP%NSPLITSED(KID)
          ZZW(:) = LIMAP%XFSEDR(KID) * ZRHODREF(:)**(1.-LIMAP%XCEXVT)*ZRS(:)* &
               (1 + (LIMAC%XFVELOS/ZLBDA(:))**LIMAP%XALPHAS)**(-LIMAP%XNUS-(LIMAP%XD(KID)+LIMAC%XBS)/LIMAP%XALPHAS) &
               * ZLBDA(:)**(-LIMAP%XD(KID))
+      ELSE IF (KID == 4 .AND. IMOMENTS==2 .AND. LIMAP%LCRYSTAL_SHAPE) THEN
+         ZZY(:) = ZRHODREF(:)**(-LIMAP%XCEXVT) * ZLBDA(:)**(-LIMAC%XDI_SHAPE(KISHAPE))
+         ZZW(:) = LIMAC%XFSEDRI_SHAPE(KISHAPE) * ZRS(:) * ZZY(:) * ZRHODREF(:)
+         ZZX(:) = LIMAC%XFSEDCI_SHAPE(KISHAPE) * ZCS(:) * ZZY(:) * ZRHODREF(:)
       ELSE
          IF (IMOMENTS==1) ZLBDA(:) = LIMAP%XLB(KID) * ( ZRHODREF(:) * ZRS(:) )**LIMAP%XLBEX(KID)
          IF (IMOMENTS==2) ZLBDA(:) = ( LIMAP%XLB(KID)*ZCS(:) / ZRS(:) )**LIMAP%XLBEX(KID)
@@ -233,7 +241,8 @@ DO IN = 1 ,  LIMAP%NSPLITSED(KID)
          ZZW(:) = LIMAP%XFSEDR(KID) * ZRS(:) * ZZY(:) * ZRHODREF(:)
       END IF ! Wurtz
 !
-      IF (KMOMENTS==2) ZZX(:) = LIMAP%XFSEDC(KID) * ZCS(:) * ZZY(:) * ZRHODREF(:)
+      IF (KMOMENTS==2 .AND. .NOT.(LCRYSTAL_SHAPE .AND. KID==4)) &
+         ZZX(:) = LIMAP%XFSEDC(KID) * ZCS(:) * ZZY(:) * ZRHODREF(:)
 
       IF (KID==2) THEN
          ! mean cloud droplet diameter
@@ -333,6 +342,7 @@ DO IN = 1 ,  LIMAP%NSPLITSED(KID)
       DEALLOCATE(ZZW)
       DEALLOCATE(ZZX)
       DEALLOCATE(ZZY)
+      IF (ALLOCATED(ZWSEDQ)) DEALLOCATE(ZWSEDQ)
       IF (ALLOCATED(ZQS))    DEALLOCATE(ZQS)
       IF (ALLOCATED(ZZQ))    DEALLOCATE(ZZQ)
       IF (ALLOCATED(ZES))    DEALLOCATE(ZES)      

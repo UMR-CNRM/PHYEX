@@ -9,9 +9,9 @@ CONTAINS
   SUBROUTINE LIMA_ICE_MELTING (CST, LIMAP, KSIZE, PTSTEP, ODCOMPUTE,                 &
                                PEXNREF, PPABST,                          &
                                PTHT, PRVT, PRCT, PRRT, PRIT, PRST, PRGT, &
-                               PCIT, PINT,                               &
-                               P_TH_IMLT, P_RC_IMLT, P_CC_IMLT,          &
-                               PB_TH, PB_RC, PB_CC, PB_RI, PB_CI, PB_IFNN)
+                               PCIT, PCIT_SHAPE, PINT,                               &
+                               P_TH_IMLT, P_RC_IMLT, P_CC_IMLT, P_SHCI_IMLT,         &
+                               PB_TH, PB_RC, PB_CC, PB_RI, PB_CI, PB_CI_SHAPE, PB_IFNN)
 !     ########################################################################
 !
 !!    PURPOSE
@@ -61,16 +61,19 @@ REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRST    !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRGT    ! 
 !
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCIT    ! Rain water C. at t
+REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(IN)    :: PCIT_SHAPE    ! Pristine ice C. at t for different shapes
 REAL, DIMENSION(KSIZE,LIMAP%NMOD_IFN), INTENT(IN)    :: PINT    ! Nucleated IFN C. at t
 !
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_TH_IMLT
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RC_IMLT
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CC_IMLT
+REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(INOUT) :: P_SHCI_IMLT
 REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PB_TH
 REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PB_RC
 REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PB_CC
 REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PB_RI
 REAL, DIMENSION(KSIZE),   INTENT(INOUT) :: PB_CI
+REAL, DIMENSION(KSIZE,LIMAP%NNB_CRYSTAL_SHAPE), INTENT(INOUT) :: PB_CI_SHAPE
 REAL, DIMENSION(KSIZE,LIMAP%NMOD_IFN), INTENT(INOUT) :: PB_IFNN
 !
 !*       0.2   Declarations of local variables :
@@ -81,9 +84,10 @@ REAL, DIMENSION(SIZE(PTHT)) ::  &
      ZTCELSIUS,&
      ZLSFACT,  &
      ZLVFACT,  &
-     ZMASK
+     ZMASK,    &
+     ZCIT
 !
-INTEGER :: IMOD_IFN
+INTEGER :: IMOD_IFN, ISH
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
 !
@@ -108,18 +112,32 @@ ZW(:) = 0.0
 !
 ZMASK(:) = 0.
 !
+IF (LIMAP%LCRYSTAL_SHAPE) THEN
+  ZCIT(:) = SUM(PCIT_SHAPE,DIM=2)
+ELSE
+  ZCIT(:) = PCIT(:)
+END IF
 WHERE( (ZT(:)>CST%XTT) .AND. (PRIT(:)>LIMAP%XRTMIN(4)) .AND. ODCOMPUTE(:) )
    P_TH_IMLT(:) = - PRIT(:)*(ZLSFACT(:)-ZLVFACT(:))
    P_RC_IMLT(:) = PRIT(:)
-   P_CC_IMLT(:) = PCIT(:)
+   P_CC_IMLT(:) = ZCIT(:)
    PB_TH(:) = PB_TH(:) + P_TH_IMLT(:)
    PB_RC(:) = PB_RC(:) + PRIT(:)
-   PB_CC(:) = PB_CC(:) + PCIT(:)
+   PB_CC(:) = PB_CC(:) + ZCIT(:)
    PB_RI(:) = PB_RI(:) - PRIT(:)
-   PB_CI(:) = PB_CI(:) - PCIT(:)
+   PB_CI(:) = PB_CI(:) - ZCIT(:)
    ZMASK(:) = 1.
 ENDWHERE
 !
+IF (LIMAP%LCRYSTAL_SHAPE) THEN
+  DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+    WHERE( (ZT(:)>XTT) .AND. (PRIT(:)>LIMAP%XRTMIN(4)) .AND. ODCOMPUTE(:) )
+      P_SHCI_IMLT(:,ISH) = -PCIT_SHAPE(:,ISH)
+      PB_CI_SHAPE(:,ISH) = PB_CI_SHAPE(:,ISH) - PCIT_SHAPE(:,ISH)
+    END WHERE
+  END DO
+END IF
+
 DO IMOD_IFN = 1,LIMAP%NMOD_IFN
    PB_IFNN(:,IMOD_IFN) = PB_IFNN(:,IMOD_IFN) - PINT(:,IMOD_IFN)* ZMASK(:)
 ENDDO

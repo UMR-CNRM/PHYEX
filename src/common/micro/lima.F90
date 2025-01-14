@@ -9,7 +9,7 @@ SUBROUTINE LIMA ( LIMAP, LIMAW, LIMAC, LIMAM, TNSV, D, CST, NEBN, ICED, ICEP, EL
                   PRHODREF, PEXNREF, PDZZ, PTHVREFZIKB,                   &
                   PRHODJ, PPABST,                                         &
                   ODTHRAD, PDTHRAD, PTHT, PRT, PSVT, PW_NU,               &
-                  PTHS, PRS, PSVS,                                        &
+                  PAERO,PSOLORG, PTHS, PRS, PSVS,                         &
                   PINPRC, PINDEP, PINPRR, PINPRI, PINPRS, PINPRG, PINPRH, &
                   PEVAP3D, PCLDFR, PICEFR, PPRCFR, PFPR,                  &
                   PLATHAM_IAGGS, PEFIELDW, PSV_ELEC_T, PSV_ELEC_S         )
@@ -115,6 +115,8 @@ REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PTHT       ! Theta at time t
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(IN) :: PRT        ! Mixing ratios at time t
 REAL, DIMENSION(D%NIJT, D%NKT, TNSV%NSV), INTENT(IN) :: PSVT       ! Concentrations at time t
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(IN)    :: PW_NU      ! w for CCN activation
+REAL, DIMENSION(D%NIJT, D%NKT,:), INTENT(INOUT) :: PAERO    ! Aerosol concentration
+REAL, DIMENSION(D%NIJT, D%NKT,:), INTENT(IN)    :: PSOLORG ![%] solubility fraction of soa
 !
 REAL, DIMENSION(D%NIJT, D%NKT),   INTENT(INOUT)    :: PTHS       ! Theta source
 REAL, DIMENSION(D%NIJT, D%NKT, KRR), INTENT(INOUT) :: PRS        ! Mixing ratios sources
@@ -157,6 +159,10 @@ REAL, DIMENSION(D%NIJT,D%NKT,LIMAP%NMOD_IMM) :: ZIMMNS
 REAL, DIMENSION(D%NIJT,D%NKT)      :: ZHOMFT
 REAL, DIMENSION(D%NIJT,D%NKT)      :: ZHOMFS
 
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZCIS_SHAPE  ! Nb concentration for each ice habit (source)
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZRIS_SHAPE  ! Mixing ratio for each ice habit (source)
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZCIT_SHAPE  ! Nb concentration for each ice habit (at t)
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZRIT_SHAPE  ! Mixing ratio for each ice habit (at t)
 !
 ! Other 3D thermodynamical variables
 REAL, DIMENSION(D%NIJT,D%NKT)      :: ZEXN, ZT
@@ -170,6 +176,7 @@ REAL, DIMENSION(:),   ALLOCATABLE ::                               &
      ZCCT1D, ZCRT1D, ZCIT1D, ZCST1D, ZCGT1D, ZCHT1D,               &
      ZEVAP1D
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZIFNN1D
+REAL, DIMENSION(:,:), ALLOCATABLE :: ZCIT1D_SHAPE
 
 !
 ! for each process & species inside the loop, we need 1D packed variables to store instant tendencies for hydrometeors
@@ -191,18 +198,13 @@ REAL, DIMENSION(:), ALLOCATABLE ::                          &
      Z_TH_DEPI, Z_RI_DEPI,                                  & ! deposition of vapor on ice (DEPI) : rv=-ri, ri, th
      Z_RI_CNVS, Z_CI_CNVS,                                  & ! conversion ice -> snow (CNVS) : ri, Ni, rs=-ri
      Z_CS_SSC,                                              & ! self collection of snow (SSC) : Ns
+     Z_CI_ISC,                                              & ! self collection of ice (ISC) : Ni      ++mt--
      Z_RI_AGGS, Z_CI_AGGS,                                  & ! aggregation of ice on snow (AGGS) : ri, Ni, rs=-ri
      Z_TH_DEPG, Z_RG_DEPG,                                  & ! deposition of vapor on graupel (DEPG) : rv=-rg, rg, th
      Z_TH_BERFI, Z_RC_BERFI,                                & ! Bergeron (BERFI) : rc, ri=-rc, th
-!++cb++
-!     Z_TH_RIM, Z_RC_RIM, Z_CC_RIM, Z_RS_RIM, Z_CS_RIM, Z_RG_RIM,      & ! cloud droplet riming (RIM) : rc, Nc, rs, Ns, rg, Ng=-Ns, th
      Z_TH_RIM, Z_CC_RIM, Z_CS_RIM, Z_RC_RIMSS, Z_RC_RIMSG, Z_RS_RIMCG, & ! cloud droplet riming (RIM) : rc, Nc, rs, rg, th
-!--cb--
      Z_RI_HMS, Z_CI_HMS, Z_RS_HMS,                          & ! hallett mossop snow (HMS) : ri, Ni, rs
-!++cb++
-!     Z_TH_ACC, Z_RR_ACC, Z_CR_ACC, Z_RS_ACC, Z_CS_ACC, Z_RG_ACC,      & ! rain accretion on aggregates (ACC) : rr, Nr, rs, Ns, rg, Ng=-Ns, th
      Z_TH_ACC, Z_CR_ACC, Z_CS_ACC, Z_RR_ACCSS, Z_RR_ACCSG, Z_RS_ACCRG, & ! rain accretion on aggregates (ACC) : rr, Nr, rs, rg, th
-!--cb--
      Z_RS_CMEL, Z_CS_CMEL,                                  & ! conversion-melting (CMEL) : rs, rg=-rs
      Z_TH_CFRZ, Z_RR_CFRZ, Z_CR_CFRZ, Z_RI_CFRZ, Z_CI_CFRZ, & ! rain freezing (CFRZ) : rr, Nr, ri, Ni, rg=-rr-ri, th
      Z_RI_CIBU, Z_CI_CIBU,                                  & ! collisional ice break-up (CIBU) : ri, Ni, rs=-ri
@@ -220,7 +222,6 @@ REAL, DIMENSION(:), ALLOCATABLE ::                          &
      Z_TH_HMLT, Z_RR_HMLT, Z_CR_HMLT, Z_CH_HMLT,            & ! hail melting (HMLT) : rr, Nr, rh=-rr, th
      Z_RV_CORR2, Z_RC_CORR2, Z_RR_CORR2, Z_RI_CORR2,        &
      Z_CC_CORR2, Z_CR_CORR2, Z_CI_CORR2,                    &
-!++cb+ +
      Z_RI_HIND, Z_RC_HINC, Z_RV_HENU, Z_RV_HONH
 !--cb--
 !
@@ -234,6 +235,8 @@ REAL, DIMENSION(:),   ALLOCATABLE ::                                            
      ZB_TH, ZB_RV, ZB_RC, ZB_CC, ZB_RR, ZB_CR, ZB_RI, ZB_CI, ZB_RS, ZB_CS, ZB_RG, ZB_CG, ZB_RH, ZB_CH    ! ZB = instant mixing ratio change (kg/kg = T variable)
 REAL, DIMENSION(:,:), ALLOCATABLE :: ZB_IFNN
 
+REAL, DIMENSION(:,:), ALLOCATABLE :: ZA_CI_SHAPE ! continuous tendencies (kg/kg/s = S variable) for ice shapes C.
+REAL, DIMENSION(:,:), ALLOCATABLE :: ZB_CI_SHAPE ! instant change (kg/kg = T variable) for ice shapes C.
 !
 ! for each process & species, we need 3D variables to store total mmr and conc change (kg/kg and #/kg and theta)
 REAL, DIMENSION(:,:), ALLOCATABLE ::                                       &
@@ -254,18 +257,13 @@ REAL, DIMENSION(:,:), ALLOCATABLE ::                                       &
      ZTOT_TH_DEPI, ZTOT_RI_DEPI,                                           & ! deposition of vapor on ice (DEPI)
      ZTOT_RI_CNVS, ZTOT_CI_CNVS,                                           & ! conversion ice -> snow (CNVS)
      ZTOT_CS_SSC,                                                          & ! self collection of snow (SSC)
+     ZTOT_CI_ISC,                                                          & ! self collection of ice (ISC)
      ZTOT_RI_AGGS, ZTOT_CI_AGGS,                                           & ! aggregation of ice on snow (AGGS)
      ZTOT_TH_DEPG, ZTOT_RG_DEPG,                                           & ! deposition of vapor on graupel (DEPG)
      ZTOT_TH_BERFI, ZTOT_RC_BERFI,                                         & ! Bergeron (BERFI)
-!++cb++
-!     ZTOT_TH_RIM, ZTOT_RC_RIM, ZTOT_CC_RIM, ZTOT_RS_RIM, ZTOT_CS_RIM, ZTOT_RG_RIM,      & ! cloud droplet riming (RIM)
      ZTOT_TH_RIM, ZTOT_CC_RIM, ZTOT_CS_RIM, ZTOT_RC_RIMSS, ZTOT_RC_RIMSG, ZTOT_RS_RIMCG, & ! cloud droplet riming (RIM)
-!--cb--
      ZTOT_RI_HMS, ZTOT_CI_HMS, ZTOT_RS_HMS,                                & ! hallett mossop snow (HMS)
-!++cb++
-!     ZTOT_TH_ACC, ZTOT_RR_ACC, ZTOT_CR_ACC, ZTOT_RS_ACC, ZTOT_CS_ACC, ZTOT_RG_ACC,      & ! rain accretion on aggregates (ACC)
      ZTOT_TH_ACC, ZTOT_CR_ACC, ZTOT_CS_ACC, ZTOT_RR_ACCSS, ZTOT_RR_ACCSG, ZTOT_RS_ACCRG, & ! rain accretion on aggregates (ACC)
-!--cb--
      ZTOT_RS_CMEL, ZTOT_CS_CMEL,                                                        & ! conversion-melting (CMEL)
      ZTOT_TH_CFRZ, ZTOT_RR_CFRZ, ZTOT_CR_CFRZ, ZTOT_RI_CFRZ, ZTOT_CI_CFRZ, & ! rain freezing (CFRZ)
      ZTOT_RI_CIBU, ZTOT_CI_CIBU,                                           & ! collisional ice break-up (CIBU)
@@ -284,11 +282,32 @@ REAL, DIMENSION(:,:), ALLOCATABLE ::                                       &
      ZTOT_RR_CVRC, ZTOT_CR_CVRC,                                           & ! conversion of rain into cloud droplets if diameter too small
      ZTOT_RV_CORR2, ZTOT_RC_CORR2, ZTOT_RR_CORR2, ZTOT_RI_CORR2,           &
      ZTOT_CC_CORR2, ZTOT_CR_CORR2, ZTOT_CI_CORR2,                          &
-!++cb++
      ZTOT_RI_HIND, ZTOT_RC_HINC, ZTOT_RV_HENU, ZTOT_RV_HONH
-!--cb--
+
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZTOT_IFNN_IMLT
 
+REAL, DIMENSION(:,:),     ALLOCATABLE :: Z_SHCI_HONC, Z_SHCI_CNVI, &
+                                         Z_SHCI_HMS,  Z_SHCI_HMG,  &
+                                         Z_SHCI_CFRZ, Z_SHCI_CIBU, &
+                                         Z_SHCI_RDSF, Z_SHCI_WETG, &
+                                         Z_SHCI_DRYG, Z_SHCI_CORR2,&
+                                         Z_SHCI_IMLT, Z_SHCI_HACH, &
+                                         Z_SHCI_CNVS, Z_SHCI_AGGS
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZTOT_SHCI_HONC, ZTOT_SHCI_CNVI, &
+                                         ZTOT_SHCI_HMS,  ZTOT_SHCI_HMG,  &
+                                         ZTOT_SHCI_CFRZ, ZTOT_SHCI_CIBU, &
+                                         ZTOT_SHCI_RDSF, ZTOT_SHCI_WETG, &
+                                         ZTOT_SHCI_DRYG, ZTOT_SHCI_CORR2,&
+                                         ZTOT_SHCI_IMLT, ZTOT_SHCI_HACH, &
+                                         ZTOT_SHCI_CNVS, ZTOT_SHCI_AGGS
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLBDAI_SHAPE
+REAL, DIMENSION(:,:),     ALLOCATABLE :: Z_SHCI_ISC  ! ISC  : Ni COL/PLA/DRO + COL/PLA/DRO --> Ni BUR
+REAL, DIMENSION(:,:),     ALLOCATABLE :: Z_SHCI_ISCS ! ISCS : Ni BUR + COL/PLA/DRO/BUR --> Ns
+REAL, DIMENSION(:),       ALLOCATABLE :: Z_SHRI_ISCS ! ISCS : ri --> rs
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZTOT_SHCI_ISC
+REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZTOT_SHCI_ISCS ! perte pour chaque Ni, gain pour Ns = somme des pertes pour les Ni
+REAL, DIMENSION(:,:,:),   ALLOCATABLE :: ZTOT_SHRI_ISCS
+REAL, DIMENSION(:,:,:),   ALLOCATABLE :: ZAUX_ISCS  ! for snow budget: to take into account contribution from all shapes
 !
 !For mixing-ratio splitting
 REAL, DIMENSION(D%NIJT,D%NKT) :: Z0RVT,   Z0RCT,   Z0RRT,   Z0RIT,   Z0RST,   Z0RGT,   Z0RHT
@@ -336,6 +355,7 @@ INTEGER :: ISV_LIMA_IFN_FREE
 INTEGER :: ISV_LIMA_IFN_NUCL
 INTEGER :: ISV_LIMA_IMM_NUCL
 INTEGER :: ISV_LIMA_HOM_HAZE
+INTEGER :: ISH !++cb--
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
@@ -551,12 +571,31 @@ IF ( BUCONF%LBU_ENABLE .OR. OELEC) then
   ALLOCATE( ZTOT_CI_CORR2 (D%NIJT, D%NKT ) ); ZTOT_CI_CORR2(:,:) = 0.
 END IF
 !
-!++cb++ necessaire pour l'electricite
+IF ( BUCONF%LBU_ENAMBLE .AND. LIMAP%LCRYSTAL_SHAPE ) THEN
+  ALLOCATE( ZTOT_SHCI_IMLT(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) ) ; ZTOT_SHCI_IMLT(:,:,:,:)  = 0.
+  ALLOCATE( ZTOT_SHCI_CORR2(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) ); ZTOT_SHCI_CORR2(:,:,:,:) = 0.
+  ALLOCATE( ZTOT_SHCI_HONC(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) ) ; ZTOT_SHCI_HONC(:,:,:,:)  = 0.
+  ALLOCATE( ZTOT_SHCI_AGGS(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) ) ; ZTOT_SHCI_AGGS(:,:,:,:)  = 0.
+  ALLOCATE( ZTOT_SHCI_CNVI(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) ) ; ZTOT_SHCI_CNVI(:,:,:,:)  = 0.
+  ALLOCATE( ZTOT_SHCI_HMS(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) )  ; ZTOT_SHCI_HMS(:,:,:,:)   = 0.
+  ALLOCATE( ZTOT_SHCI_CFRZ(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) ) ; ZTOT_SHCI_CFRZ(:,:,:,:)  = 0.
+  ALLOCATE( ZTOT_SHCI_CIBU(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) ) ; ZTOT_SHCI_CIBU(:,:,:,:)  = 0.
+  ALLOCATE( ZTOT_SHCI_RDSF(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) ) ; ZTOT_SHCI_RDSF(:,:,:,:)  = 0.
+  ALLOCATE( ZTOT_SHCI_WETG(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) ) ; ZTOT_SHCI_WETG(:,:,:,:)  = 0.
+  ALLOCATE( ZTOT_SHCI_DRYG(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) ) ; ZTOT_SHCI_DRYG(:,:,:,:)  = 0.
+  ALLOCATE( ZTOT_SHCI_HMG(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) )  ; ZTOT_SHCI_HMG(:,:,:,:)   = 0.
+  ALLOCATE( ZTOT_SHCI_CNVS(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) ) ; ZTOT_SHCI_CNVS(:,:,:,:)  = 0.
+  ALLOCATE( ZTOT_SHCI_HACH(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) ) ; ZTOT_SHCI_HACH(:,:,:,:)  = 0.
+  ALLOCATE( ZTOT_SHCI_ISC(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) )  ; ZTOT_SHCI_ISC(:,:,:,:)   = 0.
+  ALLOCATE( ZTOT_SHCI_ISCS(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE) ) ; ZTOT_SHCI_ISCS(:,:,:,:)  = 0.
+  ALLOCATE( ZTOT_SHRI_ISCS(D%NIJT,D%NKT) )                         ; ZTOT_SHRI_ISCS(:,:,:)    = 0.
+END IF!
+!
 ALLOCATE (ZTOT_RI_HIND(D%NIJT,D%NKT)) ; ZTOT_RI_HIND(:,:) = 0.
 ALLOCATE (ZTOT_RC_HINC(D%NIJT,D%NKT)) ; ZTOT_RC_HINC(:,:) = 0.
 ALLOCATE (ZTOT_RV_HENU(D%NIJT,D%NKT)) ; ZTOT_RV_HENU(:,:) = 0.
 ALLOCATE (ZTOT_RV_HONH(D%NIJT,D%NKT)) ; ZTOT_RV_HONH(:,:) = 0.
-!--cb--
+!
 !
 ! Initial values computed as source * PTSTEP
 !
@@ -585,6 +624,25 @@ IF ( LIMAP%NMOM_C.GE.2) THEN
 ELSE
    ZCCT(:,:)   = 300.E6 / PRHODREF(:,:)
    ZCCS(:,:)   = ZCCT(:,:) / PTSTEP
+END IF
+IF ( NMOM_I.GE.2) THEN
+  IF (.NOT. LCRYSTAL_SHAPE) THEN
+    ZCIT(:,:,:)   = PSVS(:,:,ISV_LIMA_NI) * PTSTEP
+    ZCIS(:,:,:)   = PSVS(:,:,ISV_LIMA_NI)
+    ALLOCATE(ZCIT_SHAPE (0,0,0))
+    ALLOCATE(ZCIS_SHAPE (0,0,0))
+    ALLOCATE(ZRIT_SHAPE (0,0,0))
+    ALLOCATE(ZRIS_SHAPE (0,0,0))
+  ELSE
+    ALLOCATE(ZCIT_SHAPE (D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE)); ZCIT_SHAPE(:,:,:,:) = 0.
+    ALLOCATE(ZCIS_SHAPE (D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE)); ZCIS_SHAPE(:,:,:,:) = 0.
+    ALLOCATE(ZRIT_SHAPE (D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE)); ZRIT_SHAPE(:,:,:,:) = 0.
+    ALLOCATE(ZRIS_SHAPE (D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE)); ZRIS_SHAPE(:,:,:,:) = 0.
+    DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+      ZCIT_SHAPE(:,:,ISH) = PSVS(:,:,ISV_LIMA_NI+ISH-1) * PTSTEP
+      ZCIS_SHAPE(:,:,ISH) = PSVS(:,:,ISV_LIMA_NI+ISH-1)
+    END DO
+  END IF
 END IF
 IF ( LIMAP%NMOM_R.GE.2) ZCRT(:,:)   = PSVS(:,:,ISV_LIMA_NR) * PTSTEP
 IF ( LIMAP%NMOM_R.GE.2) ZCRS(:,:)   = PSVS(:,:,ISV_LIMA_NR)
@@ -785,7 +843,15 @@ IF ( BUCONF%LBU_ENABLE ) then
     IF ( LIMAP%NMOM_R.GE.2) &
       CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_NR), 'SEDI', ZCRS(:,:) * PRHODJ(:,:) )
     IF ( LIMAP%LSEDI .AND. LIMAP%NMOM_I.GE.2) &
+      IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
       CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_NI), 'SEDI', ZCIS(:,:) * PRHODJ(:,:) )
+      ELSE
+        DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+          CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_LIMA_NI + ISH - 1), 'SEDI', &
+                                     ZCIS_SHAPE( :, :, ISH) * PRHODJ( :, :) )
+        END DO
+      END IF
+    END IF
     IF ( LIMAP%NMOM_S.GE.2) &
       CALL BUDGET_STORE_INIT_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_NS), 'SEDI', ZCSS(:,:) * PRHODJ(:,:) )
     IF ( LIMAP%NMOM_G.GE.2) &
@@ -815,12 +881,12 @@ ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRI
 IF (LIMAP%NMOM_C.GE.1 .AND. LIMAP%LSEDC) THEN
   IF (OELEC) THEN
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
-         'L', 2, 2, 1, PTSTEP, OELEC, ELECP, ELECD, &
+         'L', 2, 2, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
          PDZZ, PRHODREF, PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRCS, ZCCS, PINPRC, PFPR(:,:,2), PEFIELDW, ZQCS)
   ELSE
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
-         'L', 2, 2, 1, PTSTEP, OELEC, ELECP, ELECD, &
+         'L', 2, 2, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
          PDZZ, PRHODREF, PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRCS, ZCCS, PINPRC, PFPR(:,:,2))
   END IF
@@ -832,12 +898,12 @@ ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRI
 IF (LIMAP%NMOM_R.GE.1) THEN
   IF (OELEC) THEN
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
-         'L', LIMAP%NMOM_R, 3, 1, PTSTEP, OELEC, ELECP, ELECD, &
+         'L', LIMAP%NMOM_R, 3, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
          PDZZ, PRHODREF, PTHVREFZIKB,PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRRS, ZCRS, PINPRR, PFPR(:,:,3), PEFIELDW, ZQRS)
   ELSE
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
-         'L', LIMAP%NMOM_R, 3, 1, PTSTEP, OELEC, ELECP, ELECD, &
+         'L', LIMAP%NMOM_R, 3, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
          PDZZ, PRHODREF,PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRRS, ZCRS, PINPRR, PFPR(:,:,3))
   END IF
@@ -849,14 +915,28 @@ ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRI
 IF (LIMAP%NMOM_I.GE.1 .AND. LIMAP%LSEDI) THEN
   IF (OELEC) THEN
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
-         'I', LIMAP%NMOM_I, 4, 1, PTSTEP, OELEC, ELECP, ELECD, &
+         'I', LIMAP%NMOM_I, 4, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
          PDZZ, PRHODREF,PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRIS, ZCIS, ZW2D, PFPR(:,:,4), PEFIELDW, ZQIS)
   ELSE
+    IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
-         'I', LIMAP%NMOM_I, 4, 1, PTSTEP, OELEC, ELECP, ELECD, &
+         'I', LIMAP%NMOM_I, 4, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
          PDZZ, PRHODREF,PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRIS, ZCIS, ZW2D, PFPR(:,:,4))
+    ELSE
+      ALLOCATE(ZLBDAI_SHAPE(D%NIJT,D%NKT,LIMAP%NNB_CRYSTAL_SHAPE))
+      CALL LIMA_SHAPE_COMPUTE_LBDA_3D(ZRIS, ZCIS_SHAPE, ZRIS_SHAPE, ZLBDAI_SHAPE)
+      DO JSH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+        CALL LIMA_SEDIMENTATION(D, CST, ICED, HCLOUD, &
+                                'I', NMOM_I, 4, JSH, 1, PTSTEP, OELEC, PDZZ, PRHODREF,PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
+                                ZRIS_SHAPE(:,:,JSH), ZCIS_SHAPE(:,:,JSH), ZW2D, PFPR(:,:,4), &
+                                PLBDAI_SHAPE=ZLBDAI_SHAPE(:,:,JSH))
+      END DO
+      ZCIS = SUM(ZCIS_SHAPE,DIM=3)
+      ZRIS = SUM(ZRIS_SHAPE,DIM=3)
+      DEALLOCATE(ZLBDAI_SHAPE)
+    END IF
   END IF
 END IF
 !
@@ -866,12 +946,12 @@ ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRI
 IF (LIMAP%NMOM_S.GE.1) THEN
   IF (OELEC) THEN
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
-         'I', LIMAP%NMOM_S, 5, 1, PTSTEP, OELEC, ELECP, ELECD, &
+         'I', LIMAP%NMOM_S, 5, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
          PDZZ, PRHODREF, PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRSS, ZCSS, PINPRS, PFPR(:,:,5), PEFIELDW, ZQSS)
   ELSE
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
-         'I', LIMAP%NMOM_S, 5, 1, PTSTEP, OELEC, ELECP, ELECD, &
+         'I', LIMAP%NMOM_S, 5, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
          PDZZ, PRHODREF, PTHVREFZIKB, PPABST,ZT, ZRT_SUM, ZCPT, &
                             ZRSS, ZCSS, PINPRS, PFPR(:,:,5))
   END IF
@@ -883,12 +963,12 @@ ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRI
 IF (LIMAP%NMOM_G.GE.1) THEN
   IF (OELEC) THEN
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
-         'I', LIMAP%NMOM_G, 6, 1, PTSTEP, OELEC, ELECP, ELECD, &
+         'I', LIMAP%NMOM_G, 6, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
          PDZZ, PRHODREF, PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRGS, ZCGS, PINPRG, PFPR(:,:,6), PEFIELDW, ZQGS)
   ELSE
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
-         'I', LIMAP%NMOM_G, 6, 1, PTSTEP, OELEC, ELECP, ELECD, &
+         'I', LIMAP%NMOM_G, 6, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
          PDZZ, PRHODREF, PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRGS, ZCGS, PINPRG, PFPR(:,:,6))
   END IF
@@ -900,12 +980,12 @@ ZCPT    = CST%XCPD + (CST%XCPV * ZRVS + CST%XCL * (ZRCS + ZRRS) + CST%XCI * (ZRI
 IF (LIMAP%NMOM_H.GE.1) THEN
   IF (OELEC) THEN
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
-         'I', LIMAP%NMOM_H, 7, 1, PTSTEP, OELEC, ELECP, ELECD, &
+         'I', LIMAP%NMOM_H, 7, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
          PDZZ, PRHODREF, PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRHS, ZCHS, PINPRH, PFPR(:,:,7), PEFIELDW, ZQHS)
   ELSE
     CALL LIMA_SEDIMENTATION(LIMAP, LIMAW, LIMAC, LIMAM, D, CST, &
-         'I', LIMAP%NMOM_H, 7, 1, PTSTEP, OELEC, ELECP, ELECD, &
+         'I', LIMAP%NMOM_H, 7, 0, 1, PTSTEP, OELEC, ELECP, ELECD, &
          PDZZ, PRHODREF, PTHVREFZIKB, PPABST, ZT, ZRT_SUM, ZCPT, &
                             ZRHS, ZCHS, PINPRH, PFPR(:,:,7))
   END IF
@@ -935,8 +1015,16 @@ IF ( BUCONF%LBU_ENABLE ) then
       CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_NC), 'SEDI', ZCCS(:,:) * PRHODJ(:,:) )
     IF ( LIMAP%NMOM_R.GE.2 ) &
       CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_NR), 'SEDI', ZCRS(:,:) * PRHODJ(:,:) )
-    IF ( LIMAP%LSEDI .AND. LIMAP%NMOM_I.GE.2 ) &
+    IF ( LIMAP%LSEDI .AND. LIMAP%NMOM_I.GE.2 ) THEN
+      IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
       CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_NI), 'SEDI', ZCIS(:,:) * PRHODJ(:,:) )
+      ELSE
+        DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+          CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + NSV_LIMA_NI + ISH - 1), 'SEDI', &
+                                    ZCIS_SHAPE( :, :, ISH) * PRHODJ( :, :) )
+        END DO
+      END IF
+    END IF
     IF ( LIMAP%NMOM_S.GE.2 ) &
       CALL BUDGET_STORE_END_PHY(D, TBUDGETS(NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_NS), 'SEDI', ZCSS(:,:) * PRHODJ(:,:) )
     IF ( LIMAP%NMOM_G.GE.2 ) &
@@ -1029,6 +1117,11 @@ IF ( LIMAP%NMOM_S.GE.2 ) ZCST(:,:) = ZCSS(:,:) * PTSTEP
 IF ( LIMAP%NMOM_G.GE.2 ) ZCGT(:,:) = ZCGS(:,:) * PTSTEP
 IF ( LIMAP%NMOM_H.GE.2 ) ZCHT(:,:) = ZCHS(:,:) * PTSTEP
 !
+IF (LIMAP%LCRYSTAL_SHAPE) THEN
+  ZCIT_SHAPE(:,:,:) = ZCIS_SHAPE(:,:,:) * PTSTEP
+  ZCIT(:,:) = SUM(ZCIT_SHAPE,DIM=3)
+END IF
+!
 IF (OELEC) THEN
   ZQCT(:,:) = ZQCS(:,:) * PTSTEP
   ZQRT(:,:) = ZQRS(:,:) * PTSTEP
@@ -1062,10 +1155,11 @@ CALL LIMA_NUCLEATION_PROCS (LIMAP, LIMAW, LIMAC, TNSV, D, CST, NEBN, BUCONF, TBU
                             PTSTEP, PRHODJ,                                     &
                             PRHODREF, ZEXN, PPABST, ZT, PDTHRAD, PW_NU,         &
                             ZTHT, ZRVT, ZRCT, ZRRT, ZRIT, ZRST, ZRGT, ZRHT,     &
-                            ZCCT, ZCRT, ZCIT,                                   &
+                            ZCCT, ZCRT, ZCIT, ZCIT_SHAPE,PAERO,PSOLORG, HACTCCN,&
                             ZCCNFT, ZCCNAT, ZIFNFT, ZIFNNT, ZIMMNT, ZHOMFT,     &
                             PCLDFR, PICEFR, PPRCFR,                             &
                             ZTOT_RV_HENU, ZTOT_RC_HINC, ZTOT_RI_HIND, ZTOT_RV_HONH)
+! dans lima_nucleation_proc, pcit a ete mis a jour comme la somme des pcit_shape si lcrystal_shape=t 
 !
 ! Saving sources before microphysics time-splitting loop
 !
@@ -1083,6 +1177,11 @@ IF (LIMAP%NMOM_I.GE.2) ZCIS(:,:) = ZCIT(:,:) *ZINV_TSTEP
 IF (LIMAP%NMOM_S.GE.2) ZCSS(:,:) = ZCST(:,:) *ZINV_TSTEP
 IF (LIMAP%NMOM_G.GE.2) ZCGS(:,:) = ZCGT(:,:) *ZINV_TSTEP
 IF (LIMAP%NMOM_H.GE.2) ZCHS(:,:) = ZCHT(:,:) *ZINV_TSTEP
+!
+IF (LIMAP%LCRYSTAL_SHAPE) THEN
+  ZCIS_SHAPE(:,:,:) = ZCIT_SHAPE(:,:,:) * ZINV_TSTEP
+  ZCIS(:,:) = SUM(ZCIS_SHAPE,DIM=3)
+END IF
 !
 ZCCNFS(:,:,:) = ZCCNFT(:,:,:) *ZINV_TSTEP
 ZCCNAS(:,:,:) = ZCCNAT(:,:,:) *ZINV_TSTEP
@@ -1201,6 +1300,11 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       ALLOCATE(ZIF1D(IPACK))
       ALLOCATE(ZPF1D(IPACK))
       ALLOCATE(ZLATHAM_IAGGS(IPACK))
+      IF (LIMAP%LCRYSTAL_SHAPE) THEN
+        ALLOCATE(ZCIT1D_SHAPE(IPACK,LIMAP%NNB_CRYSTAL_SHAPE))
+      ELSE
+        ALLOCATE(ZCIT1D_SHAPE(0,0))
+      END IF
       DO II=1,IPACK
          ZRHODREF1D(II)       = PRHODREF(I1(II),I3(II))
          ZEXNREF1D(II)        = PEXNREF(I1(II),I3(II))
@@ -1240,6 +1344,11 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
            ZLATHAM_IAGGS(II) = PLATHAM_IAGGS(I1(II),I3(II))
          ELSE
            ZLATHAM_IAGGS(II) = 1.0 
+         END IF
+         IF (LIMAP%LCRYSTAL_SHAPE) THEN
+           DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+             ZCIT1D_SHAPE(II,ISH) = ZCIT_SHAPE(I1(II),I3(II),ISH)
+           END DO
          END IF
       END DO
       !
@@ -1315,37 +1424,28 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       ALLOCATE(Z_RI_CNVS(IPACK))          ; Z_RI_CNVS(:) = 0.
       ALLOCATE(Z_CI_CNVS(IPACK))          ; Z_CI_CNVS(:) = 0.
       ALLOCATE(Z_CS_SSC(IPACK))           ; Z_CS_SSC(:) = 0.
+      ALLOCATE(Z_CI_ISC(IPACK))           ; Z_CI_ISC(:) = 0.
       ALLOCATE(Z_RI_AGGS(IPACK))          ; Z_RI_AGGS(:) = 0.
       ALLOCATE(Z_CI_AGGS(IPACK))          ; Z_CI_AGGS(:) = 0.
       ALLOCATE(Z_TH_DEPG(IPACK))          ; Z_TH_DEPG(:) = 0.
       ALLOCATE(Z_RG_DEPG(IPACK))          ; Z_RG_DEPG(:) = 0.
       ALLOCATE(Z_TH_BERFI(IPACK))         ; Z_TH_BERFI(:) = 0.
       ALLOCATE(Z_RC_BERFI(IPACK))         ; Z_RC_BERFI(:) = 0.
-!++cb++
       ALLOCATE(Z_TH_RIM(IPACK))           ; Z_TH_RIM(:) = 0.
-!      ALLOCATE(Z_RC_RIM(IPACK))           ; Z_RC_RIM(:) = 0.
       ALLOCATE(Z_CC_RIM(IPACK))           ; Z_CC_RIM(:) = 0.
-!      ALLOCATE(Z_RS_RIM(IPACK))           ; Z_RS_RIM(:) = 0.
       ALLOCATE(Z_CS_RIM(IPACK))           ; Z_CS_RIM(:) = 0.
-!      ALLOCATE(Z_RG_RIM(IPACK))           ; Z_RG_RIM(:) = 0.
       ALLOCATE(Z_RC_RIMSS(IPACK))         ; Z_RC_RIMSS = 0.
       ALLOCATE(Z_RC_RIMSG(IPACK))         ; Z_RC_RIMSG = 0.
       ALLOCATE(Z_RS_RIMCG(IPACK))         ; Z_RS_RIMCG = 0.
-!--cb--
       ALLOCATE(Z_RI_HMS(IPACK))           ; Z_RI_HMS(:) = 0.
       ALLOCATE(Z_CI_HMS(IPACK))           ; Z_CI_HMS(:) = 0.
       ALLOCATE(Z_RS_HMS(IPACK))           ; Z_RS_HMS(:) = 0.
-!++cb++
       ALLOCATE(Z_TH_ACC(IPACK))           ; Z_TH_ACC(:) = 0.
-!      ALLOCATE(Z_RR_ACC(IPACK))           ; Z_RR_ACC(:) = 0.
       ALLOCATE(Z_CR_ACC(IPACK))           ; Z_CR_ACC(:) = 0.
-!      ALLOCATE(Z_RS_ACC(IPACK))           ; Z_RS_ACC(:) = 0.
       ALLOCATE(Z_CS_ACC(IPACK))           ; Z_CS_ACC(:) = 0.
-!      ALLOCATE(Z_RG_ACC(IPACK))           ; Z_RG_ACC(:) = 0.
       ALLOCATE(Z_RR_ACCSS(IPACK))         ; Z_RR_ACCSS = 0.
       ALLOCATE(Z_RR_ACCSG(IPACK))         ; Z_RR_ACCSG = 0.
       ALLOCATE(Z_RS_ACCRG(IPACK))         ; Z_RS_ACCRG = 0.
-!--cb--
       ALLOCATE(Z_RS_CMEL(IPACK))          ; Z_RS_CMEL(:) = 0.
       ALLOCATE(Z_CS_CMEL(IPACK))          ; Z_CS_CMEL(:) = 0.
       ALLOCATE(Z_TH_CFRZ(IPACK))          ; Z_TH_CFRZ(:) = 0.
@@ -1414,66 +1514,106 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       ALLOCATE(Z_CC_CORR2(IPACK))         ; Z_CC_CORR2(:) = 0.
       ALLOCATE(Z_CR_CORR2(IPACK))         ; Z_CR_CORR2(:) = 0.
       ALLOCATE(Z_CI_CORR2(IPACK))         ; Z_CI_CORR2(:) = 0.
+!
+      IF (LIMAP%LCRYSTAL_SHAPE) THEN
+        ALLOCATE(ZA_CI_SHAPE(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; ZA_CI_SHAPE(:,:) = 0.
+        ALLOCATE(ZB_CI_SHAPE(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; ZB_CI_SHAPE(:,:) = 0.
+        ALLOCATE(Z_SHCI_IMLT(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; Z_SHCI_IMLT(:,:) = 0.
+        ALLOCATE(Z_SHCI_HONC(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; Z_SHCI_HONC(:,:) = 0.
+        ALLOCATE(Z_SHCI_CNVI(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; Z_SHCI_CNVI(:,:) = 0.
+        ALLOCATE(Z_SHCI_HACH(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; Z_SHCI_HACH(:,:) = 0.
+        ALLOCATE(Z_SHCI_CNVS(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; Z_SHCI_CNVS(:,:) = 0.
+        ALLOCATE(Z_SHCI_AGGS(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; Z_SHCI_AGGS(:,:) = 0.
+        ALLOCATE(Z_SHCI_HMS(IPACK,LIMAP%NNB_CRYSTAL_SHAPE))  ; Z_SHCI_HMS(:,:)  = 0.
+        ALLOCATE(Z_SHCI_CFRZ(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; Z_SHCI_CFRZ(:,:) = 0.
+        ALLOCATE(Z_SHCI_CIBU(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; Z_SHCI_CIBU(:,:) = 0.
+        ALLOCATE(Z_SHCI_RDSF(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; Z_SHCI_RDSF(:,:) = 0.
+        ALLOCATE(Z_SHCI_WETG(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; Z_SHCI_WETG(:,:) = 0.
+        ALLOCATE(Z_SHCI_DRYG(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; Z_SHCI_DRYG(:,:) = 0.
+        ALLOCATE(Z_SHCI_HMG(IPACK,LIMAP%NNB_CRYSTAL_SHAPE))  ; Z_SHCI_HMG(:,:)  = 0.
+        ALLOCATE(Z_SHCI_CORR2(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)); Z_SHCI_CORR2(:,:) = 0.
+        ALLOCATE(Z_SHCI_ISC(IPACK,LIMAP%NNB_CRYSTAL_SHAPE))  ; Z_SHCI_ISC(:,:)  = 0.
+        ALLOCATE(Z_SHCI_ISCS(IPACK,LIMAP%NNB_CRYSTAL_SHAPE)) ; Z_SHCI_ISCS(:,:) = 0.
+        ALLOCATE(Z_SHRI_ISCS(IPACK))                   ; Z_SHRI_ISCS(:) = 0.
+      ELSE
+        ALLOCATE(ZA_CI_SHAPE(0,0))
+        ALLOCATE(ZB_CI_SHAPE(0,0))
+        ALLOCATE(Z_SHCI_IMLT(0,0))
+        ALLOCATE(Z_SHCI_HONC(0,0))
+        ALLOCATE(Z_SHCI_CNVI(0,0))
+        ALLOCATE(Z_SHCI_HACH(0,0))
+        ALLOCATE(Z_SHCI_CNVS(0,0))
+        ALLOCATE(Z_SHCI_AGGS(0,0))
+        ALLOCATE(Z_SHCI_HMS(0,0))
+        ALLOCATE(Z_SHCI_CFRZ(0,0))
+        ALLOCATE(Z_SHCI_CIBU(0,0))
+        ALLOCATE(Z_SHCI_RDSF(0,0))
+        ALLOCATE(Z_SHCI_WETG(0,0))
+        ALLOCATE(Z_SHCI_DRYG(0,0))
+        ALLOCATE(Z_SHCI_HMG(0,0))
+        ALLOCATE(Z_SHCI_CORR2(0,0))
+        ALLOCATE(Z_SHCI_ISC(0,0))
+        ALLOCATE(Z_SHCI_ISCS(0,0))
+        ALLOCATE(Z_SHRI_ISCS(0))
+      END IF
       !
       !***       4.1 Tendencies computation
       !
       CALL LIMA_INST_PROCS (CST, LIMAP, LIMAW, IPACK, PTSTEP, GLCOMPUTE1D,      &
                             ZEXNREF1D, ZP1D,                                    &
                             ZTHT1D, ZRVT1D, ZRCT1D, ZRRT1D, ZRIT1D, ZRST1D, ZRGT1D, &
-                            ZCCT1D, ZCRT1D, ZCIT1D,                             &
+                            ZCCT1D, ZCRT1D, ZCIT1D, ZCIT1D_SHAPE,               &
                             ZIFNN1D,                                            &
                             Z_CR_BRKU,                                          & ! spontaneous break up of drops (BRKU) : Nr
                             Z_TH_HONR, Z_RR_HONR, Z_CR_HONR,                    & ! rain drops homogeneous freezing (HONR) : rr, Nr, rg=-rr, th
                             Z_TH_IMLT, Z_RC_IMLT, Z_CC_IMLT,                    & ! ice melting (IMLT) : rc, Nc, ri=-rc, Ni=-Nc, th, IFNF, IFNA
+                            Z_SHCI_IMLT,                                        &
                             ZB_TH, ZB_RV, ZB_RC, ZB_RR, ZB_RI, ZB_RG,           &
-                            ZB_CC, ZB_CR, ZB_CI,                                &
+                            ZB_CC, ZB_CR, ZB_CI, ZB_CI_SHAPE, ZB_CG,            &
                             ZB_IFNN,                                            &
                             ZCF1D, ZIF1D, ZPF1D                                 )
       
       CALL LIMA_TENDENCIES (CST, LIMAP, LIMAW, LIMAC, LIMAM, IPACK, PTSTEP, GLCOMPUTE1D, &
                             ZEXNREF1D, ZRHODREF1D, ZP1D, ZTHT1D,                    &
                             ZRVT1D, ZRCT1D, ZRRT1D, ZRIT1D, ZRST1D, ZRGT1D, ZRHT1D, &
-                            ZCCT1D, ZCRT1D, ZCIT1D, ZCST1D, ZCGT1D, ZCHT1D,         &
+                            ZCCT1D, ZCRT1D, ZCIT1D, ZCIT1D_SHAPE, ZCST1D, ZCGT1D, ZCHT1D, &
                             Z_TH_HONC, Z_RC_HONC, Z_CC_HONC,                        & 
                             Z_CC_SELF,                                              & 
                             Z_RC_AUTO, Z_CC_AUTO, Z_CR_AUTO,                        & 
                             Z_RC_ACCR, Z_CC_ACCR,                                   & 
                             Z_CR_SCBU,                                              & 
                             Z_TH_EVAP, Z_RR_EVAP, Z_CR_EVAP,                        & 
-                            Z_RI_CNVI, Z_CI_CNVI,                                   & 
+                            Z_RI_CNVI, Z_CI_CNVI, Z_SHCI_CNVI,                      & 
                             Z_TH_DEPS, Z_RS_DEPS,                                   & 
-                            Z_TH_DEPI, Z_RI_DEPI,                                   & 
-                            Z_RI_CNVS, Z_CI_CNVS,                                   & 
-                            Z_CS_SSC,                                               & 
-                            Z_RI_AGGS, Z_CI_AGGS,                                   & 
+                            Z_TH_DEPI, Z_RI_DEPI, Z_SHCI_HACH,                      & 
+                            Z_RI_CNVS, Z_CI_CNVS, Z_SHCI_CNVS,                      &
+                            Z_CS_SSC,  Z_CI_ISC, Z_SHCI_ISC, Z_SHRI_ISCS, Z_SHCI_ISCS, &
+                            Z_RI_AGGS, Z_CI_AGGS, Z_SHCI_AGGS,                      &
                             Z_TH_DEPG, Z_RG_DEPG,                                   & 
                             Z_TH_BERFI, Z_RC_BERFI,                                 & 
-!++cb++
-!                            Z_TH_RIM, Z_RC_RIM, Z_CC_RIM, Z_RS_RIM, Z_CS_RIM, Z_RG_RIM,       & 
                             Z_TH_RIM, Z_CC_RIM, Z_CS_RIM, Z_RC_RIMSS, Z_RC_RIMSG, Z_RS_RIMCG, &
-!--cb--
-                            Z_RI_HMS, Z_CI_HMS, Z_RS_HMS,                           & 
-!++cb++
-!                            Z_TH_ACC, Z_RR_ACC, Z_CR_ACC, Z_RS_ACC, Z_CS_ACC, Z_RG_ACC,       & 
+                            Z_RI_HMS, Z_CI_HMS, Z_RS_HMS, Z_SHCI_HMS,                         &
                             Z_TH_ACC, Z_CR_ACC, Z_CS_ACC, Z_RR_ACCSS, Z_RR_ACCSG, Z_RS_ACCRG, &
-!--cb--
                             Z_RS_CMEL, Z_CS_CMEL,                                   & 
-                            Z_TH_CFRZ, Z_RR_CFRZ, Z_CR_CFRZ, Z_RI_CFRZ, Z_CI_CFRZ,  & 
-                            Z_RI_CIBU, Z_CI_CIBU,                                   & 
-                            Z_RI_RDSF, Z_CI_RDSF,                                   & 
+                            Z_TH_CFRZ, Z_RR_CFRZ, Z_CR_CFRZ, Z_RI_CFRZ, Z_CI_CFRZ, Z_SHCI_CFRZ,& 
+                            Z_RI_CIBU, Z_CI_CIBU, Z_SHCI_CIBU,                      & 
+                            Z_RI_RDSF, Z_CI_RDSF, Z_SHCI_RDSF,                      & 
                             Z_TH_WETG, Z_RC_WETG, Z_CC_WETG, Z_RR_WETG, Z_CR_WETG,  & 
-                            Z_RI_WETG, Z_CI_WETG, Z_RS_WETG, Z_CS_WETG, Z_RG_WETG, Z_CG_WETG, Z_RH_WETG,  & 
+                            Z_RI_WETG, Z_CI_WETG, Z_RS_WETG, Z_CS_WETG, Z_RG_WETG, Z_CG_WETG,  &
+                            Z_RH_WETG, Z_SHCI_WETG,                                 & 
                             Z_TH_DRYG, Z_RC_DRYG, Z_CC_DRYG, Z_RR_DRYG, Z_CR_DRYG,  & 
-                            Z_RI_DRYG, Z_CI_DRYG, Z_RS_DRYG, Z_CS_DRYG, Z_RG_DRYG,  & 
-                            Z_RI_HMG, Z_CI_HMG, Z_RG_HMG,                           & 
+                            Z_RI_DRYG, Z_CI_DRYG, Z_RS_DRYG, Z_CS_DRYG, Z_RG_DRYG, Z_SHCI_DRYG,& 
+                            Z_RI_HMG, Z_CI_HMG, Z_RG_HMG, Z_SHCI_HMG,               & 
                             Z_TH_GMLT, Z_RR_GMLT, Z_CR_GMLT, Z_CG_GMLT,             &
                             Z_TH_DEPH, Z_RH_DEPH,                                   &
                             Z_TH_WETH, Z_RC_WETH, Z_CC_WETH, Z_RR_WETH, Z_CR_WETH,  &
-                            Z_RI_WETH, Z_CI_WETH, Z_RS_WETH, Z_CS_WETH, Z_RG_WETH, Z_CG_WETH, Z_RH_WETH, &
+                            Z_RI_WETH, Z_CI_WETH, Z_RS_WETH, Z_CS_WETH, Z_RG_WETH,  &
+                            Z_CG_WETH, Z_RH_WETH, &
                             Z_RG_COHG, Z_CG_COHG,                                   &
                             Z_TH_HMLT, Z_RR_HMLT, Z_CR_HMLT, Z_CH_HMLT,             &
                             ZA_TH, ZA_RV, ZA_RC, ZA_CC, ZA_RR, ZA_CR,               &
-                            ZA_RI, ZA_CI, ZA_RS, ZA_CS, ZA_RG, ZA_CG, ZA_RH, ZA_CH, &
+                            ZA_RI, ZA_CI, ZA_CI_SHAPE, ZA_RS, ZA_CS, ZA_RG, ZA_CG,  &
+                            ZA_RH, ZA_CH,                                           &
                             ZEVAP1D,                                                &
                             ZCF1D, ZIF1D, ZPF1D,                                    &
                             ZLATHAM_IAGGS                                           )
@@ -1665,6 +1805,13 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       IF (LIMAP%NMOM_G.GE.2) ZCGT1D = ZCGT1D + ZA_CG(:) * ZMAXTIME(:) + ZB_CG(:)
       ZRHT1D = ZRHT1D + ZA_RH(:) * ZMAXTIME(:) + ZB_RH(:)
       IF (LIMAP%NMOM_H.GE.2) ZCHT1D = ZCHT1D + ZA_CH(:) * ZMAXTIME(:) + ZB_CH(:)
+      IF (LIMAP%LCRYSTAL_SHAPE) THEN
+        DO ISH = 1, LIAMP%NNB_CRYSTAL_SHAPE
+          ZCIT1D_SHAPE(:,ISH) = ZCIT1D_SHAPE(:,ISH) + &
+                                ZA_CI_SHAPE(:,ISH) * ZMAXTIME(:) + ZB_CI_SHAPE(:,ISH)
+        END DO
+        ZCIT1D(:) = SUM(ZCIT1D_SHAPE,DIM=2)
+      END IF
       !
       DO II=1,LIMAP%NMOD_IFN
          ZIFNN1D(:,II) = ZIFNN1D(:,II) + ZB_IFNN(:,II)
@@ -1690,6 +1837,16 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
          ZRRT1D = 0.
          ZCRT1D = 0.
       END WHERE
+! on traite les formes avant pour eviter que zrit1d ne soit modifie (where)
+      IF (LIMAP%LCRYSTAL_SHAPE) THEN
+        DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+          WHERE (ZRIT1D .LE. LIMAP%XRTMIN(4))
+            Z_SHCI_CORR2(:,ISH) = -ZCIT1D_SHAPE(:,ISH)
+            ZCIT1D_SHAPE(:,ISH) = 0.
+          END WHERE
+        END DO
+        ZCIT1D(:) = SUM(ZCIT1D_SHAPE,DIM=2) !++cb-- 08/03/24
+      END IF
       WHERE (ZRIT1D .LE. LIMAP%XRTMIN(4))
          Z_RV_CORR2(:) = Z_RV_CORR2(:) + ZRIT1D(:)
          Z_RI_CORR2(:) = -ZRIT1D(:)
@@ -1721,6 +1878,11 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
          IF (LIMAP%NMOM_S.GE.2) ZCST(I1(II),I3(II))      = ZCST1D(II)
          IF (LIMAP%NMOM_G.GE.2) ZCGT(I1(II),I3(II))      = ZCGT1D(II)
          IF (LIMAP%NMOM_H.GE.2) ZCHT(I1(II),I3(II))      = ZCHT1D(II)
+         IF (LIMAP%LCRYSTAL_SHAPE) THEN
+           DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+             ZCIT_SHAPE(I1(II),I3(II),ISH) = ZCIT1D_SHAPE(II,ISH)
+           END DO
+         END IF
          ZIFNNT(I1(II),I3(II),:)  = ZIFNN1D(II,:)
          PEVAP3D(I1(II),I3(II))   = ZEVAP1D(II)
          ZTIME(I1(II),I3(II))     = ZTIME1D(II)
@@ -1781,6 +1943,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
             ZTOT_RI_CNVS(I1(II),I3(II)) =   ZTOT_RI_CNVS(I1(II),I3(II))   + Z_RI_CNVS(II)  * ZMAXTIME(II)
             ZTOT_CI_CNVS(I1(II),I3(II)) =   ZTOT_CI_CNVS(I1(II),I3(II))   + Z_CI_CNVS(II)  * ZMAXTIME(II)
             ZTOT_CS_SSC(I1(II),I3(II))  =   ZTOT_CS_SSC(I1(II),I3(II))    + Z_CS_SSC(II)   * ZMAXTIME(II)
+            ZTOT_CI_ISC(I1(II),I3(II))  =   ZTOT_CI_ISC(I1(II),I3(II))    + Z_CI_ISC(II)   * ZMAXTIME(II)
             ZTOT_RI_AGGS(I1(II),I3(II)) =   ZTOT_RI_AGGS(I1(II),I3(II))   + Z_RI_AGGS(II)  * ZMAXTIME(II)
             ZTOT_CI_AGGS(I1(II),I3(II)) =   ZTOT_CI_AGGS(I1(II),I3(II))   + Z_CI_AGGS(II)  * ZMAXTIME(II)
             ZTOT_TH_DEPG(I1(II),I3(II)) =   ZTOT_TH_DEPG(I1(II),I3(II))   + Z_TH_DEPG(II)  * ZMAXTIME(II)
@@ -1871,6 +2034,49 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
             ZTOT_CC_CORR2(I1(II),I3(II)) =   ZTOT_CC_CORR2(I1(II),I3(II)) + Z_CC_CORR2(II)
             ZTOT_CR_CORR2(I1(II),I3(II)) =   ZTOT_CR_CORR2(I1(II),I3(II)) + Z_CR_CORR2(II)
             ZTOT_CI_CORR2(I1(II),I3(II)) =   ZTOT_CI_CORR2(I1(II),I3(II)) + Z_CI_CORR2(II)
+
+            ! Terms for ice crystal shapes
+            IF (LIMAP%LCRYSTAL_SHAPE) THEN
+              DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+                ! instantaneous process
+                ZTOT_SHCI_IMLT(I1(II),I3(II),ISH) = ZTOT_SHCI_IMLT(I1(II),I3(II),ISH) + Z_SHCI_IMLT(II,ISH)
+                ! tendencies
+                ZTOT_SHCI_HONC(I1(II),I3(II),ISH) = ZTOT_SHCI_HONC(I1(II),I3(II),ISH) + &
+                                                           Z_SHCI_HONC(II,ISH) * ZMAXTIME(II)
+                ZTOT_SHCI_CNVI(I1(II),I3(II),ISH) = ZTOT_SHCI_CNVI(I1(II),I3(II),ISH) + &
+                                                           Z_SHCI_CNVI(II,ISH) * ZMAXTIME(II)
+                ZTOT_SHCI_HACH(I1(II),I3(II),ISH) = ZTOT_SHCI_HACH(I1(II),I3(II),ISH) + &
+                                                           Z_SHCI_HACH(II,ISH) * ZMAXTIME(II)
+                ZTOT_SHCI_CNVS(I1(II),I3(II),ISH) = ZTOT_SHCI_CNVS(I1(II),I3(II),ISH) + &
+                                                           Z_SHCI_CNVS(II,ISH) * ZMAXTIME(II)
+                ZTOT_SHCI_AGGS(I1(II),I3(II),ISH) = ZTOT_SHCI_AGGS(I1(II),I3(II),ISH) + &
+                                                           Z_SHCI_AGGS(II,ISH) * ZMAXTIME(II)
+                ZTOT_SHCI_HMS(I1(II),I3(II),ISH)  = ZTOT_SHCI_HMS(I1(II),I3(II),ISH)  + &
+                                                           Z_SHCI_HMS(II,ISH)  * ZMAXTIME(II)
+                ZTOT_SHCI_CFRZ(I1(II),I3(II),ISH) = ZTOT_SHCI_CFRZ(I1(II),I3(II),ISH) + &
+                                                           Z_SHCI_CFRZ(II,ISH) * ZMAXTIME(II)
+                ZTOT_SHCI_CIBU(I1(II),I3(II),ISH) = ZTOT_SHCI_CIBU(I1(II),I3(II),ISH) + &
+                                                           Z_SHCI_CIBU(II,ISH) * ZMAXTIME(II)
+                ZTOT_SHCI_RDSF(I1(II),I3(II),ISH) = ZTOT_SHCI_RDSF(I1(II),I3(II),ISH) + &
+                                                           Z_SHCI_RDSF(II,ISH) * ZMAXTIME(II)
+                ZTOT_SHCI_WETG(I1(II),I3(II),ISH) = ZTOT_SHCI_WETG(I1(II),I3(II),ISH) + &
+                                                           Z_SHCI_WETG(II,ISH) * ZMAXTIME(II)
+                ZTOT_SHCI_DRYG(I1(II),I3(II),ISH) = ZTOT_SHCI_DRYG(I1(II),I3(II),ISH) + &
+                                                           Z_SHCI_DRYG(II,ISH) * ZMAXTIME(II)
+                ZTOT_SHCI_HMG(I1(II),I3(II),ISH)  = ZTOT_SHCI_HMG(I1(II),I3(II),ISH)  + &
+                                                           Z_SHCI_HMG(II,ISH)  * ZMAXTIME(II)
+                ZTOT_SHCI_ISC(I1(II),I3(II),ISH)  = ZTOT_SHCI_ISC(I1(II),I3(II),ISH)  + &
+                                                           Z_SHCI_ISC(II,ISH) * ZMAXTIME(II)
+                ZTOT_SHCI_ISCS(I1(II),I3(II),ISH) = ZTOT_SHCI_ISCS(I1(II),I3(II),ISH) + &    
+                                                           Z_SHCI_ISCS(II,ISH) * ZMAXTIME(II)
+                ! Correction term
+                ZTOT_SHCI_CORR2(I1(II),I3(II),ISH)  = ZTOT_SHCI_CORR2(I1(II),I3(II),ISH) + &
+                                                             Z_SHCI_CORR2(II,ISH)
+              END DO
+              ZTOT_SHRI_ISCS(I1(II),I2(II),I3(II)) = ZTOT_SHRI_ISCS(I1(II),I2(II),I3(II)) + &    
+                                                        Z_SHRI_ISCS(II) * ZMAXTIME(II) 
+            END IF
+
          END DO
       ENDIF
       !
@@ -1977,6 +2183,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       DEALLOCATE(Z_RI_CNVS)
       DEALLOCATE(Z_CI_CNVS)
       DEALLOCATE(Z_CS_SSC) 
+      DEALLOCATE(Z_CI_ISC)
       DEALLOCATE(Z_RI_AGGS) 
       DEALLOCATE(Z_CI_AGGS) 
       DEALLOCATE(Z_TH_DEPG) 
@@ -2058,7 +2265,7 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       DEALLOCATE(Z_RR_HMLT) 
       DEALLOCATE(Z_CR_HMLT) 
       DEALLOCATE(Z_CH_HMLT) 
-
+      !
       DEALLOCATE(Z_RV_CORR2)
       DEALLOCATE(Z_RC_CORR2)
       DEALLOCATE(Z_RR_CORR2)
@@ -2066,6 +2273,27 @@ DO WHILE(ANY(ZTIME(D%NIJB:D%NIJE,D%NKTB:D%NKTE)<PTSTEP))
       DEALLOCATE(Z_CC_CORR2)
       DEALLOCATE(Z_CR_CORR2)
       DEALLOCATE(Z_CI_CORR2)
+      !
+      DEALLOCATE(ZCIT1D_SHAPE)
+      DEALLOCATE(ZA_CI_SHAPE)
+      DEALLOCATE(ZB_CI_SHAPE)
+      DEALLOCATE(Z_SHCI_IMLT)
+      DEALLOCATE(Z_SHCI_ISC)
+      DEALLOCATE(Z_SHCI_ISCS)
+      DEALLOCATE(Z_SHRI_ISCS)
+      DEALLOCATE(Z_SHCI_HONC)
+      DEALLOCATE(Z_SHCI_CNVI)
+      DEALLOCATE(Z_SHCI_HACH)
+      DEALLOCATE(Z_SHCI_CNVS)
+      DEALLOCATE(Z_SHCI_AGGS)
+      DEALLOCATE(Z_SHCI_HMS)
+      DEALLOCATE(Z_SHCI_CFRZ)
+      DEALLOCATE(Z_SHCI_CIBU)
+      DEALLOCATE(Z_SHCI_RDSF)
+      DEALLOCATE(Z_SHCI_WETG)
+      DEALLOCATE(Z_SHCI_DRYG)
+      DEALLOCATE(Z_SHCI_HMG)      
+      DEALLOCATE(Z_SHCI_CORR2)
       !
    ENDDO
 ENDDO
@@ -2271,7 +2499,15 @@ IF ( KRR .GE. 7 ) PRS(:,:,7) = ZRHT(:,:) *ZINV_TSTEP
 !
 IF ( LIMAP%NMOM_C.GE.2 ) PSVS(:,:,ISV_LIMA_NC) = ZCCT(:,:) *ZINV_TSTEP
 IF ( LIMAP%NMOM_R.GE.2 ) PSVS(:,:,ISV_LIMA_NR) = ZCRT(:,:) *ZINV_TSTEP
-IF ( LIMAP%NMOM_I.GE.2 ) PSVS(:,:,ISV_LIMA_NI) = ZCIT(:,:) *ZINV_TSTEP
+IF ( LIMAP%NMOM_I.GE.2 ) THEN
+  IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
+    PSVS(:,:,ISV_LIMA_NI) = ZCIT(:,:) *ZINV_TSTEP
+  ELSE
+    DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+      PSVS(:,:,ISV_LIMA_NI+ISH-1) = ZCIT_SHAPE(:,:,ISH) *ZINV_TSTEP
+    END DO
+  END IF
+END IF
 IF ( LIMAP%NMOM_S.GE.2 ) PSVS(:,:,ISV_LIMA_NS) = ZCST(:,:) *ZINV_TSTEP
 IF ( LIMAP%NMOM_G.GE.2 ) PSVS(:,:,ISV_LIMA_NG) = ZCGT(:,:) *ZINV_TSTEP
 IF ( LIMAP%NMOM_H.GE.2 ) PSVS(:,:,ISV_LIMA_NH) = ZCHT(:,:) *ZINV_TSTEP
@@ -2323,11 +2559,9 @@ IF ( BUCONF%LBU_ENABLE ) then
   IF ( BUCONF%LBUDGET_RC ) then
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'AUTO',  ZTOT_RC_AUTO (:,:) * ZRHODJONTSTEP(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'ACCR',  ZTOT_RC_ACCR (:,:) * ZRHODJONTSTEP(:,:) )
-    !call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'REVA',  0. )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'HONC',  ZTOT_RC_HONC (:,:) * ZRHODJONTSTEP(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'IMLT',  ZTOT_RC_IMLT (:,:) * ZRHODJONTSTEP(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'BERFI', ZTOT_RC_BERFI(:,:) * ZRHODJONTSTEP(:,:) )
-!    call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'RIM',   ztot_rc_rim  (:,:) * zrhodjontstep(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'RIM',  (-ZTOT_RR_ACCSS(:,:) - ZTOT_RR_ACCSG(:,:)) &
                                                           * ZRHODJONTSTEP(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RC), 'WETG',  ZTOT_RC_WETG (:,:) * ZRHODJONTSTEP(:,:) )
@@ -2342,7 +2576,6 @@ IF ( BUCONF%LBU_ENABLE ) then
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'ACCR', -ZTOT_RC_ACCR(:,:) * ZRHODJONTSTEP(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'REVA',  ZTOT_RR_EVAP(:,:) * ZRHODJONTSTEP(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'HONR',  ZTOT_RR_HONR(:,:) * ZRHODJONTSTEP(:,:) )
-!    call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'ACC',   ztot_rr_acc (:,:) * zrhodjontstep(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'ACC',  (ZTOT_RC_RIMSS(:,:) + ZTOT_RC_RIMSG(:,:)) &
                                                           * ZRHODJONTSTEP(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RR), 'CFRZ',  ZTOT_RR_CFRZ(:,:) * ZRHODJONTSTEP(:,:) )
@@ -2372,6 +2605,9 @@ IF ( BUCONF%LBU_ENABLE ) then
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'HMG',    ZTOT_RI_HMG  (:,:) * ZRHODJONTSTEP(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'CORR2',  ZTOT_RI_CORR2(:,:) * ZRHODJONTSTEP(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'WETH',   ZTOT_RI_WETH (:,:) * ZRHODJONTSTEP(:,:) )
+    IF (LIMAP%LCRYSTAL_SHAPE) THEN
+      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RI), 'ISCS', ZTOT_SHRI_ISCS (:,:) * ZRHODJONTSTEP(:,:) )
+    END IF
   END IF
 
   IF ( BUCONF%LBUDGET_RS ) then
@@ -2391,15 +2627,16 @@ IF ( BUCONF%LBU_ENABLE ) then
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'WETG',  ZTOT_RS_WETG(:,:) * ZRHODJONTSTEP(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'DRYG',  ZTOT_RS_DRYG(:,:) * ZRHODJONTSTEP(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'WETH',  ZTOT_RS_WETH(:,:) * ZRHODJONTSTEP(:,:) )
+    IF (LIMAP%LCRYSTAL_SHAPE) THEN
+      CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RS), 'ISCS', -ZTOT_SHRI_ISCS (:,:) * ZRHODJONTSTEP(:,:) )
+    END IF
   END IF
 
   IF ( BUCONF%LBUDGET_RG ) then
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'HONR', -ZTOT_RR_HONR(:,:) * ZRHODJONTSTEP(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'DEPG',  ZTOT_RG_DEPG(:,:) * ZRHODJONTSTEP(:,:) )
-!    call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'RIM',   ztot_rg_rim (:,:) * zrhodjontstep(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'RIM',  (-ZTOT_RC_RIMSG(:,:) +  ZTOT_RS_RIMCG(:,:) ) &
                                                           * ZRHODJONTSTEP(:,:) )
-!    call BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'ACC',   ztot_rg_acc (:,:) * zrhodjontstep(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'ACC',  (ZTOT_RR_ACCSG(:,:) + ZTOT_RS_ACCRG (:,:)) & 
                                                           * ZRHODJONTSTEP(:,:) )
     CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(NBUDGET_RG), 'CMEL', -ZTOT_RS_CMEL(:,:) * ZRHODJONTSTEP(:,:) )
@@ -2431,7 +2668,7 @@ IF ( BUCONF%LBU_ENABLE ) then
        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'SELF',  ZTOT_CC_SELF (:,:) * ZRHODJONTSTEP(:,:) )
        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'AUTO',  ZTOT_CC_AUTO (:,:) * ZRHODJONTSTEP(:,:) )
        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'ACCR',  ZTOT_CC_ACCR (:,:) * ZRHODJONTSTEP(:,:) )
-       !call BUDGET_STORE_ADD_PHY(D, TBUDGETS(idx), 'REVA',  0. )
+       !call BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'REVA',  0. )
        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'HONC',  ZTOT_CC_HONC (:,:) * ZRHODJONTSTEP(:,:) )
        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'IMLT',  ZTOT_CC_IMLT (:,:) * ZRHODJONTSTEP(:,:) )
        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'RIM',   ZTOT_CC_RIM  (:,:) * ZRHODJONTSTEP(:,:) )
@@ -2465,6 +2702,7 @@ IF ( BUCONF%LBU_ENABLE ) then
     ! Ice crystals
     !
     IF (LIMAP%NMOM_I.GE.2) then
+      IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
        IDX = NBUDGET_SV1 - 1 + TNSV%NSV_LIMA_NI
        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'HONC',  -ZTOT_CC_HONC (:,:) * ZRHODJONTSTEP(:,:) )
        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'CNVI',   ZTOT_CI_CNVI (:,:) * ZRHODJONTSTEP(:,:) )
@@ -2480,6 +2718,27 @@ IF ( BUCONF%LBU_ENABLE ) then
        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'HMG',    ZTOT_CI_HMG  (:,:) * ZRHODJONTSTEP(:,:) )
        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'CORR2',  ZTOT_CI_CORR2(:,:) * ZRHODJONTSTEP(:,:) )
        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'WETH',   ZTOT_CI_WETH (:,:) * ZRHODJONTSTEP(:,:) )
+      ELSE
+         DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+           IDX = NBUDGET_SV1 - 1 + NSV_LIMA_NI + ISH - 1
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'HONC', ztot_shci_honc (:,:,ISH) * ZRHODJONTSTEP(:,:) )
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'CNVI', ztot_shci_cnvi (:,:,ISH) * ZRHODJONTSTEP(:,:) )
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'HACH', ztot_shci_hach (:,:,ISH) * ZRHODJONTSTEP(:,:) )
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'CNVS', ztot_shci_cnvs (:,:,ISH) * ZRHODJONTSTEP(:,:) )
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'AGGS', ztot_shci_aggs (:,:,ISH) * ZRHODJONTSTEP(:,:) )
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'IMLT', ztot_shci_imlt (:,:,ISH) * ZRHODJONTSTEP(:,:) )
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'HMS',  ztot_shci_hms  (:,:,ISH) * ZRHODJONTSTEP(:,:) )
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'CFRZ', ztot_shci_cfrz (:,:,ISH) * ZRHODJONTSTEP(:,:) )
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'CIBU', ztot_shci_cibu (:,:,ISH) * ZRHODJONTSTEP(:,:) )
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'RDSF', ztot_shci_rdsf (:,:,ISH) * ZRHODJONTSTEP(:,:) )
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'WETG', ztot_shci_wetg (:,:,ISH) * ZRHODJONTSTEP(:,:) )
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'DRYG', ztot_shci_dryg (:,:,ISH) * ZRHODJONTSTEP(:,:) )
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'HMG',  ztot_shci_hmg  (:,:,ISH) * ZRHODJONTSTEP(:,:) )
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'CORR2',ztot_shci_corr2(:,:,ISH) * ZRHODJONTSTEP(:,:) )
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'ISC',  ztot_shci_isc  (:,:,ISH) * ZRHODJONTSTEP(:,:) )
+           CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'ISCS', ztot_shci_iscs (:,:,ISH) * ZRHODJONTSTEP(:,:) )
+         END DO
+      END IF
     END IF
     !
     ! Snow
@@ -2495,6 +2754,14 @@ IF ( BUCONF%LBU_ENABLE ) then
        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'WETG',   ZTOT_CS_WETG(:,:) * ZRHODJONTSTEP(:,:) )
        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'DRYG',   ZTOT_CS_DRYG(:,:) * ZRHODJONTSTEP(:,:) )
        CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'WETH',   ZTOT_CS_WETH(:,:) * ZRHODJONTSTEP(:,:) )
+       IF (LIMAP%LCRYSTAL_SHAPE) THEN
+         ALLOCATE(ZAUX_ISCS(D%NIJT,D%NIKT)) ; ZAUX_ISCS(:,:) = 0.    
+         DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+           ZAUX_ISCS(:,:) = SUM(ZTOT_SHCI_ISCS,DIM=3)
+         END DO
+         CALL BUDGET_STORE_ADD_PHY(D, TBUDGETS(IDX), 'ISCS',  -ZAUX_ISCS(:,:) * ZRHODJONTSTEP(:,:) ) 
+         DEALLOCATE(ZAUX_ISCS)
+       END IF
     END IF
     !
     ! Graupel
@@ -2528,6 +2795,149 @@ IF ( BUCONF%LBU_ENABLE ) then
 
   DEALLOCATE( ZRHODJONTSTEP )
 END IF
+!
+IF (ALLOCATED(ZCIT_SHAPE)) DEALLOCATE(ZCIT_SHAPE)
+IF (ALLOCATED(ZCIS_SHAPE)) DEALLOCATE(ZCIS_SHAPE)
+IF (ALLOCATED(ZRIT_SHAPE)) DEALLOCATE(ZRIT_SHAPE)
+IF (ALLOCATED(ZRIS_SHAPE)) DEALLOCATE(ZRIS_SHAPE)
+IF (ALLOCATED(ZTOT_CR_BRKU)) DEALLOCATE(ZTOT_CR_BRKU)
+IF (ALLOCATED(ZTOT_TH_HONR)) DEALLOCATE(ZTOT_TH_HONR)
+IF (ALLOCATED(ZTOT_RR_HONR)) DEALLOCATE(ZTOT_RR_HONR)
+IF (ALLOCATED(ZTOT_CR_HONR)) DEALLOCATE(ZTOT_CR_HONR)
+IF (ALLOCATED(ZTOT_TH_IMLT)) DEALLOCATE(ZTOT_TH_IMLT)
+IF (ALLOCATED(ZTOT_RC_IMLT)) DEALLOCATE(ZTOT_RC_IMLT)
+IF (ALLOCATED(ZTOT_CC_IMLT)) DEALLOCATE(ZTOT_CC_IMLT)
+IF (ALLOCATED(ZTOT_TH_HONC)) DEALLOCATE(ZTOT_TH_HONC)
+IF (ALLOCATED(ZTOT_RC_HONC)) DEALLOCATE(ZTOT_RC_HONC)
+IF (ALLOCATED(ZTOT_CC_HONC)) DEALLOCATE(ZTOT_CC_HONC)
+IF (ALLOCATED(ZTOT_CC_SELF)) DEALLOCATE(ZTOT_CC_SELF)
+IF (ALLOCATED(ZTOT_RC_AUTO)) DEALLOCATE(ZTOT_RC_AUTO)
+IF (ALLOCATED(ZTOT_CC_AUTO)) DEALLOCATE(ZTOT_CC_AUTO)
+IF (ALLOCATED(ZTOT_CR_AUTO)) DEALLOCATE(ZTOT_CR_AUTO)
+IF (ALLOCATED(ZTOT_RC_ACCR)) DEALLOCATE(ZTOT_RC_ACCR)
+IF (ALLOCATED(ZTOT_CC_ACCR)) DEALLOCATE(ZTOT_CC_ACCR)
+IF (ALLOCATED(ZTOT_CR_SCBU)) DEALLOCATE(ZTOT_CR_SCBU)
+IF (ALLOCATED(ZTOT_TH_EVAP)) DEALLOCATE(ZTOT_TH_EVAP)
+IF (ALLOCATED(ZTOT_RR_EVAP)) DEALLOCATE(ZTOT_RR_EVAP)
+IF (ALLOCATED(ZTOT_CR_EVAP)) DEALLOCATE(ZTOT_CR_EVAP)
+IF (ALLOCATED(ZTOT_RI_CNVI)) DEALLOCATE(ZTOT_RI_CNVI)
+IF (ALLOCATED(ZTOT_CI_CNVI)) DEALLOCATE(ZTOT_CI_CNVI)
+IF (ALLOCATED(ZTOT_TH_DEPS)) DEALLOCATE(ZTOT_TH_DEPS)
+IF (ALLOCATED(ZTOT_RS_DEPS)) DEALLOCATE(ZTOT_RS_DEPS)
+IF (ALLOCATED(ZTOT_TH_DEPI)) DEALLOCATE(ZTOT_TH_DEPI)
+IF (ALLOCATED(ZTOT_RI_DEPI)) DEALLOCATE(ZTOT_RI_DEPI)
+IF (ALLOCATED(ZTOT_RI_CNVS)) DEALLOCATE(ZTOT_RI_CNVS)
+IF (ALLOCATED(ZTOT_CI_CNVS)) DEALLOCATE(ZTOT_CI_CNVS)
+IF (ALLOCATED(ZTOT_CS_SSC)) DEALLOCATE(ZTOT_CS_SSC)
+IF (ALLOCATED(ZTOT_CI_ISC)) DEALLOCATE(ZTOT_CI_ISC)
+IF (ALLOCATED(ZTOT_RI_AGGS)) DEALLOCATE(ZTOT_RI_AGGS)
+IF (ALLOCATED(ZTOT_CI_AGGS)) DEALLOCATE(ZTOT_CI_AGGS)
+IF (ALLOCATED(ZTOT_TH_DEPG)) DEALLOCATE(ZTOT_TH_DEPG)
+IF (ALLOCATED(ZTOT_RG_DEPG)) DEALLOCATE(ZTOT_RG_DEPG)
+IF (ALLOCATED(ZTOT_TH_BERFI)) DEALLOCATE(ZTOT_TH_BERFI)
+IF (ALLOCATED(ZTOT_RC_BERFI)) DEALLOCATE(ZTOT_RC_BERFI)
+IF (ALLOCATED(ZTOT_TH_RIM)) DEALLOCATE(ZTOT_TH_RIM)
+IF (ALLOCATED(ZTOT_CC_RIM)) DEALLOCATE(ZTOT_CC_RIM)
+IF (ALLOCATED(ZTOT_CS_RIM)) DEALLOCATE(ZTOT_CS_RIM)
+IF (ALLOCATED(ZTOT_RC_RIMSS)) DEALLOCATE(ZTOT_RC_RIMSS)
+IF (ALLOCATED(ZTOT_RC_RIMSG)) DEALLOCATE(ZTOT_RC_RIMSG)
+IF (ALLOCATED(ZTOT_RS_RIMCG)) DEALLOCATE(ZTOT_RS_RIMCG)
+IF (ALLOCATED(ZTOT_RI_HMS)) DEALLOCATE(ZTOT_RI_HMS)
+IF (ALLOCATED(ZTOT_CI_HMS)) DEALLOCATE(ZTOT_CI_HMS)
+IF (ALLOCATED(ZTOT_RS_HMS)) DEALLOCATE(ZTOT_RS_HMS)
+IF (ALLOCATED(ZTOT_TH_ACC)) DEALLOCATE(ZTOT_TH_ACC)
+IF (ALLOCATED(ZTOT_CR_ACC)) DEALLOCATE(ZTOT_CR_ACC)
+IF (ALLOCATED(ZTOT_CS_ACC)) DEALLOCATE(ZTOT_CS_ACC)
+IF (ALLOCATED(ZTOT_RR_ACCSS)) DEALLOCATE(ZTOT_RR_ACCSS)
+IF (ALLOCATED(ZTOT_RR_ACCSG)) DEALLOCATE(ZTOT_RR_ACCSG)
+IF (ALLOCATED(ZTOT_RS_ACCRG)) DEALLOCATE(ZTOT_RS_ACCRG)
+IF (ALLOCATED(ZTOT_RS_CMEL)) DEALLOCATE(ZTOT_RS_CMEL)
+IF (ALLOCATED(ZTOT_CS_CMEL)) DEALLOCATE(ZTOT_CS_CMEL)
+IF (ALLOCATED(ZTOT_TH_CFRZ)) DEALLOCATE(ZTOT_TH_CFRZ)
+IF (ALLOCATED(ZTOT_RR_CFRZ)) DEALLOCATE(ZTOT_RR_CFRZ)
+IF (ALLOCATED(ZTOT_CR_CFRZ)) DEALLOCATE(ZTOT_CR_CFRZ)
+IF (ALLOCATED(ZTOT_RI_CFRZ)) DEALLOCATE(ZTOT_RI_CFRZ)
+IF (ALLOCATED(ZTOT_CI_CFRZ)) DEALLOCATE(ZTOT_CI_CFRZ)
+IF (ALLOCATED(ZTOT_RI_CIBU)) DEALLOCATE(ZTOT_RI_CIBU)
+IF (ALLOCATED(ZTOT_CI_CIBU)) DEALLOCATE(ZTOT_CI_CIBU)
+IF (ALLOCATED(ZTOT_RI_RDSF)) DEALLOCATE(ZTOT_RI_RDSF)
+IF (ALLOCATED(ZTOT_CI_RDSF)) DEALLOCATE(ZTOT_CI_RDSF)
+IF (ALLOCATED(ZTOT_TH_WETG)) DEALLOCATE(ZTOT_TH_WETG)
+IF (ALLOCATED(ZTOT_RC_WETG)) DEALLOCATE(ZTOT_RC_WETG)
+IF (ALLOCATED(ZTOT_CC_WETG)) DEALLOCATE(ZTOT_CC_WETG)
+IF (ALLOCATED(ZTOT_RR_WETG)) DEALLOCATE(ZTOT_RR_WETG)
+IF (ALLOCATED(ZTOT_CR_WETG)) DEALLOCATE(ZTOT_CR_WETG)
+IF (ALLOCATED(ZTOT_RI_WETG)) DEALLOCATE(ZTOT_RI_WETG)
+IF (ALLOCATED(ZTOT_CI_WETG)) DEALLOCATE(ZTOT_CI_WETG)
+IF (ALLOCATED(ZTOT_RS_WETG)) DEALLOCATE(ZTOT_RS_WETG)
+IF (ALLOCATED(ZTOT_CS_WETG)) DEALLOCATE(ZTOT_CS_WETG)
+IF (ALLOCATED(ZTOT_RG_WETG)) DEALLOCATE(ZTOT_RG_WETG)
+IF (ALLOCATED(ZTOT_CG_WETG)) DEALLOCATE(ZTOT_CG_WETG)
+IF (ALLOCATED(ZTOT_RH_WETG)) DEALLOCATE(ZTOT_RH_WETG)
+IF (ALLOCATED(ZTOT_TH_DRYG)) DEALLOCATE(ZTOT_TH_DRYG)
+IF (ALLOCATED(ZTOT_RC_DRYG)) DEALLOCATE(ZTOT_RC_DRYG)
+IF (ALLOCATED(ZTOT_CC_DRYG)) DEALLOCATE(ZTOT_CC_DRYG)
+IF (ALLOCATED(ZTOT_RR_DRYG)) DEALLOCATE(ZTOT_RR_DRYG)
+IF (ALLOCATED(ZTOT_CR_DRYG)) DEALLOCATE(ZTOT_CR_DRYG)
+IF (ALLOCATED(ZTOT_RI_DRYG)) DEALLOCATE(ZTOT_RI_DRYG)
+IF (ALLOCATED(ZTOT_CI_DRYG)) DEALLOCATE(ZTOT_CI_DRYG)
+IF (ALLOCATED(ZTOT_RS_DRYG)) DEALLOCATE(ZTOT_RS_DRYG)
+IF (ALLOCATED(ZTOT_CS_DRYG)) DEALLOCATE(ZTOT_CS_DRYG)
+IF (ALLOCATED(ZTOT_RG_DRYG)) DEALLOCATE(ZTOT_RG_DRYG)
+IF (ALLOCATED(ZTOT_RI_HMG)) DEALLOCATE(ZTOT_RI_HMG)
+IF (ALLOCATED(ZTOT_CI_HMG)) DEALLOCATE(ZTOT_CI_HMG)
+IF (ALLOCATED(ZTOT_RG_HMG)) DEALLOCATE(ZTOT_RG_HMG)
+IF (ALLOCATED(ZTOT_TH_GMLT)) DEALLOCATE(ZTOT_TH_GMLT)
+IF (ALLOCATED(ZTOT_RR_GMLT)) DEALLOCATE(ZTOT_RR_GMLT)
+IF (ALLOCATED(ZTOT_CR_GMLT)) DEALLOCATE(ZTOT_CR_GMLT)
+IF (ALLOCATED(ZTOT_CG_GMLT)) DEALLOCATE(ZTOT_CG_GMLT)
+IF (ALLOCATED(ZTOT_TH_DEPH)) DEALLOCATE(ZTOT_TH_DEPH)
+IF (ALLOCATED(ZTOT_RH_DEPH)) DEALLOCATE(ZTOT_RH_DEPH)
+IF (ALLOCATED(ZTOT_TH_WETH)) DEALLOCATE(ZTOT_TH_WETH)
+IF (ALLOCATED(ZTOT_RC_WETH)) DEALLOCATE(ZTOT_RC_WETH)
+IF (ALLOCATED(ZTOT_CC_WETH)) DEALLOCATE(ZTOT_CC_WETH)
+IF (ALLOCATED(ZTOT_RR_WETH)) DEALLOCATE(ZTOT_RR_WETH)
+IF (ALLOCATED(ZTOT_CR_WETH)) DEALLOCATE(ZTOT_CR_WETH)
+IF (ALLOCATED(ZTOT_RI_WETH)) DEALLOCATE(ZTOT_RI_WETH)
+IF (ALLOCATED(ZTOT_CI_WETH)) DEALLOCATE(ZTOT_CI_WETH)
+IF (ALLOCATED(ZTOT_RS_WETH)) DEALLOCATE(ZTOT_RS_WETH)
+IF (ALLOCATED(ZTOT_CS_WETH)) DEALLOCATE(ZTOT_CS_WETH)
+IF (ALLOCATED(ZTOT_RG_WETH)) DEALLOCATE(ZTOT_RG_WETH)
+IF (ALLOCATED(ZTOT_CG_WETH)) DEALLOCATE(ZTOT_CG_WETH)
+IF (ALLOCATED(ZTOT_RH_WETH)) DEALLOCATE(ZTOT_RH_WETH)
+IF (ALLOCATED(ZTOT_RG_COHG)) DEALLOCATE(ZTOT_RG_COHG)
+IF (ALLOCATED(ZTOT_CG_COHG)) DEALLOCATE(ZTOT_CG_COHG)
+IF (ALLOCATED(ZTOT_TH_HMLT)) DEALLOCATE(ZTOT_TH_HMLT)
+IF (ALLOCATED(ZTOT_RR_HMLT)) DEALLOCATE(ZTOT_RR_HMLT)
+IF (ALLOCATED(ZTOT_CR_HMLT)) DEALLOCATE(ZTOT_CR_HMLT)
+IF (ALLOCATED(ZTOT_CH_HMLT)) DEALLOCATE(ZTOT_CH_HMLT)
+IF (ALLOCATED(ZTOT_RR_CVRC)) DEALLOCATE(ZTOT_RR_CVRC)
+IF (ALLOCATED(ZTOT_CR_CVRC)) DEALLOCATE(ZTOT_CR_CVRC)
+IF (ALLOCATED(ZTOT_RV_CORR2)) DEALLOCATE(ZTOT_RV_CORR2)
+IF (ALLOCATED(ZTOT_RC_CORR2)) DEALLOCATE(ZTOT_RC_CORR2)
+IF (ALLOCATED(ZTOT_RR_CORR2)) DEALLOCATE(ZTOT_RR_CORR2)
+IF (ALLOCATED(ZTOT_RI_CORR2)) DEALLOCATE(ZTOT_RI_CORR2)
+IF (ALLOCATED(ZTOT_CC_CORR2)) DEALLOCATE(ZTOT_CC_CORR2)
+IF (ALLOCATED(ZTOT_CR_CORR2)) DEALLOCATE(ZTOT_CR_CORR2)
+IF (ALLOCATED(ZTOT_CI_CORR2)) DEALLOCATE(ZTOT_CI_CORR2)
+IF (ALLOCATED(ZTOT_IFNN_IMLT)) DEALLOCATE(ZTOT_IFNN_IMLT)
+IF (ALLOCATED(ZTOT_SHCI_HONC)) DEALLOCATE(ZTOT_SHCI_HONC)
+IF (ALLOCATED(ZTOT_SHCI_CNVI)) DEALLOCATE(ZTOT_SHCI_CNVI)
+IF (ALLOCATED(ZTOT_SHCI_HMS)) DEALLOCATE(ZTOT_SHCI_HMS)
+IF (ALLOCATED(ZTOT_SHCI_HMG)) DEALLOCATE(ZTOT_SHCI_HMG)
+IF (ALLOCATED(ZTOT_SHCI_CFRZ)) DEALLOCATE(ZTOT_SHCI_CFRZ)
+IF (ALLOCATED(ZTOT_SHCI_CIBU)) DEALLOCATE(ZTOT_SHCI_CIBU)
+IF (ALLOCATED(ZTOT_SHCI_RDSF)) DEALLOCATE(ZTOT_SHCI_RDSF)
+IF (ALLOCATED(ZTOT_SHCI_WETG)) DEALLOCATE(ZTOT_SHCI_WETG)
+IF (ALLOCATED(ZTOT_SHCI_DRYG)) DEALLOCATE(ZTOT_SHCI_DRYG)
+IF (ALLOCATED(ZTOT_SHCI_CORR2)) DEALLOCATE(ZTOT_SHCI_CORR2)
+IF (ALLOCATED(ZTOT_SHCI_IMLT)) DEALLOCATE(ZTOT_SHCI_IMLT)
+IF (ALLOCATED(ZTOT_SHCI_HACH)) DEALLOCATE(ZTOT_SHCI_HACH)
+IF (ALLOCATED(ZTOT_SHCI_CNVS)) DEALLOCATE(ZTOT_SHCI_CNVS)
+IF (ALLOCATED(ZTOT_SHCI_AGGS)) DEALLOCATE(ZTOT_SHCI_AGGS)
+IF (ALLOCATED(ZTOT_SHCI_ISC)) DEALLOCATE(ZTOT_SHCI_ISC)
+IF (ALLOCATED(ZTOT_SHCI_ISCS)) DEALLOCATE(ZTOT_SHCI_ISCS)
+IF (ALLOCATED(ZTOT_SHRI_ISCS)) DEALLOCATE(ZTOT_SHRI_ISCS)
 !
 IF (LHOOK) CALL DR_HOOK('LIMA', 1, ZHOOK_HANDLE)
 END SUBROUTINE LIMA

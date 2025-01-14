@@ -97,7 +97,11 @@ IF(ODINIT) THEN
     ! Ni
     IF (LIMAP%NMOM_I.GE.2) THEN
       TNSV%NSV_LIMA_NI_A(KMI) = KSV
-      KSV = KSV+1
+      IF (.NOT. LIMAP%LCRYSTAL_SHAPE) THEN
+        KSV = KSV+1
+      ELSE
+        KSV = KSV + LIMAP%NNB_CRYSTAL_SHAPE
+      END IF
     END IF
     ! Ns
     IF (LIMAP%NMOM_S.GE.2) THEN

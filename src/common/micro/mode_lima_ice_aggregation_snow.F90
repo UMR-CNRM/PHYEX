@@ -10,8 +10,10 @@ CONTAINS
   SUBROUTINE LIMA_ICE_AGGREGATION_SNOW (CST, LIMAP, LIMAC, KSIZE, ODCOMPUTE,                     &
                                         PT, PRHODREF,                         &
                                         PRIT, PRST, PCIT, PCST, PLBDI, PLBDS, &
+                                        PCIT_SHAPE, PRIT_SHAPE, PLBDAI_SHAPE, &
                                         PLATHAM_IAGGS,                        &
-                                        P_RI_AGGS, P_CI_AGGS                  )
+                                        P_RI_AGGS, P_CI_AGGS,                 &
+                                        P_SHCI_AGGS                           )
 !     #######################################################################
 !
 !!    PURPOSE
@@ -62,15 +64,20 @@ REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCIT
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCST
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDI 
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDS 
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PCIT_SHAPE
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PRIT_SHAPE
+REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLBDAI_SHAPE
 REAL, DIMENSION(KSIZE),   INTENT(IN)    :: PLATHAM_IAGGS
 !
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_RI_AGGS
 REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_CI_AGGS
+REAL, DIMENSION(KSIZE),   INTENT(OUT)   :: P_SHCI_AGGS
 !
 !*       0.2   Declarations of local variables :
 !
 REAL, DIMENSION(SIZE(PRIT)) :: ZZW1, ZZW2, ZZW3 ! work arrays
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+INTEGER :: ISH
 !
 !-------------------------------------------------------------------------------
 !
@@ -99,6 +106,7 @@ IF (LIMAP%NMOM_I.EQ.1) THEN
       P_RI_AGGS(:) = - ZZW1(:)
    END WHERE
 ELSE
+   IF (.NOT. LCRYSTAL_SHAPE) THEN
    WHERE ( PRIT(:)>LIMAP%XRTMIN(4) .AND. PRST(:)>LIMAP%XRTMIN(5) .AND. &
            PCIT(:)>LIMAP%XCTMIN(4) .AND. PCST(:)>LIMAP%XCTMIN(5) .AND. ODCOMPUTE(:) )
       ZZW1(:) = (PLBDI(:) / PLBDS(:))**3
@@ -112,6 +120,24 @@ ELSE
 !
       P_RI_AGGS(:) = - ZZW2(:)
    END WHERE
+   ELSE
+     DO ISH = 1, LIMAP%NNB_CRYSTAL_SHAPE
+       WHERE ( PRIT(:) > LIMAP%XRTMIN(4) .AND. PRST(:) > LIMAP%XRTMIN(5) .AND. PCST(:) > LIMAP%XCTMIN(5) .AND. &
+               PCIT_SHAPE(:,ISH) > 0. .AND. PRIT_SHAPE(:,ISH) > 0. .AND. &
+               ODCOMPUTE(:) )
+          ZZW1(:) = (PLBDAI_SHAPE(:,ISH) / PLBDS(:))**3
+          ZZW2(:) = PCIT_SHAPE(:,ISH) * PCST(:) * EXP(LIMAC%XCOLEXIS*(PT(:)-CST%XTT)) * PRHODREF(:) / &
+                   (PLBDAI_SHAPE(:,ISH)**3)
+          ZZW3(:) = ZZW2(:) * (LIMAC%XAGGS_CLARGE1 + LIMAC%XAGGS_CLARGE2 * ZZW1(:))
+!
+          P_SHCI_AGGS(:,ISH) = - ZZW3(:)
+!
+          ZZW2(:) = ZZW2(:) / PLBDAI_SHAPE(:,ISH)**LIMAC%XBI_SHAPE(ISH)
+          ZZW2(:) = ZZW2(:) * (LIMAC%XAGGS_RLARGE1 + LIMAC%XAGGS_RLARGE2 * ZZW1(:))
+!
+          P_RI_AGGS(:) = P_RI_AGGS(:) - ZZW2(:)
+       END WHERE
+     END DO
 END IF
 !
 !

@@ -137,11 +137,7 @@ DO II = 1, SIZE(PRCT)
 !
 !        4.     riming
 !
-!++cb++
    ! Cloud droplets collected
-!      P_RC_RIM(II) = - LIMAM%XCRIMSS  * PRCT(II) * PCST(II)*(1+(LIMAC%XFVELOS/PLBDS(II))**LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAM%XEXCRIMSS/XALPHAS) &
-!                                * PRHODREF(II)**(-LIMAP%XCEXVT+1) * PLBDS(II)**LIMAM%XEXCRIMSS
-!      P_CC_RIM(II) = P_RC_RIM(II) * PCCT(II)/PRCT(II) ! Lambda_c**3
 ! total mass loss of cloud droplets, < 0
     Z_RC_RIM(II) = - LIMAM%XCRIMSS  * PRCT(II) * PCST(II)*(1+(LIMAC%XFVELOS/PLBDS(II))&
          **LIMAP%XALPHAS)**(-LIMAP%XNUS+LIMAM%XEXCRIMSS/LIMAP%XALPHAS) &
@@ -154,7 +150,6 @@ DO II = 1, SIZE(PRCT)
     P_RC_RIMSS(II) = Z_RC_RIM(II) * ZZW1(II)  ! < 0, loss of mass for rc
     !
     ! Cloud droplets collected on large aggregates add to graupel
-!      P_RG_RIM(II) = - P_RC_RIM(II) - P_RS_RIM(II) 
     Z_RG_RIM(II)   = -Z_RC_RIM(II) - Z_RS_RIM(II)
     P_RC_RIMSG(II) = Z_RC_RIM(II) - P_RC_RIMSS(II) ! < 0, loss of mass for rc
     !
@@ -175,12 +170,8 @@ DO II = 1, SIZE(PRCT)
     !
     P_RS_RIMCG(II) = ZZW3(II)
     P_CS_RIM(II) = -ZZW3(II) * PCST(II)/PRST(II)
-!    P_RS_RIM(II) = P_RS_RIM(II) - ZZW3(II)
-!    P_RG_RIM(II) = P_RG_RIM(II) + ZZW3(II) 
     !
-!    P_TH_RIM(II) = - P_RC_RIM(II)*(PLSFACT(II)-PLVFACT(II))
     P_TH_RIM(II) = - Z_RC_RIM(II)*(PLSFACT(II)-PLVFACT(II))
-!--cb--
   ELSE
     P_TH_RIM(II) = 0.
     P_RC_RIMSS(II) = 0.
