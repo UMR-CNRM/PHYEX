@@ -199,29 +199,36 @@ ENDIF
 !
 
 IF (OUPORDN.EQV..FALSE.) THEN 
- IF(OFLUX) CALL PRINT_MSG(NVERB_FATAL,'GEN','COMPUTE_BL89_ML','OFLUX option not coded for downward mixing length')
  !$mnh_expand_array(JIJ=IIJB:IIJE)
  ZINTE(IIJB:IIJE)=PTKEM_DEP(IIJB:IIJE)
  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
  PLWORK=0.
  ZTESTM=1.
+ IF(OFLUX) THEN
+    CALL PRINT_MSG(NVERB_FATAL,'GEN','COMPUTE_BL89_ML','OFLUX option not coded for downward mixing length')
+ ELSE
+   !$mnh_expand_array(JIJ=IIJB:IIJE)
+   ZVPT_DEP(IIJB:IIJE)=PVPT(IIJB:IIJE,KK) ! departure point is on mass level
+   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+ ENDIF
+
  DO JKK=KK,IKB,-IKL
     IF(ZTESTM > 0.) THEN
       ZTESTM=0
       DO JIJ=IIJB,IIJE
         ZTEST0=0.5+SIGN(0.5,ZINTE(JIJ))
          ZPOTE(JIJ) = ZTEST0*(-PG_O_THVREF(JIJ)      *      &
-            (ZHLVPT(JIJ,JKK) - PVPT(JIJ,KK)) &
+            (ZHLVPT(JIJ,JKK) - ZVPT_DEP(JIJ)) &
          + CSTURB%XRM17*PSHEAR(JIJ,JKK)*SQRT(ABS(PTKEM_DEP(JIJ))))* PDZZ2D(JIJ,JKK) 
         ZTEST =0.5+SIGN(0.5,ZINTE(JIJ)-ZPOTE(JIJ))
         ZTESTM=ZTESTM+ZTEST0
         ZLWORK1(JIJ)=PDZZ2D(JIJ,JKK)
         ZLWORK2(JIJ)=        ( + PG_O_THVREF(JIJ) *                     &
-            (  PVPT(JIJ,JKK) - PVPT(JIJ,KK) )                              &
+            (  PVPT(JIJ,JKK) - ZVPT_DEP(JIJ) )                              &
              -CSTURB%XRM17*PSHEAR(JIJ,JKK)*sqrt(abs(PTKEM_DEP(JIJ))) &
           + SQRT (ABS(                                                       &
             (CSTURB%XRM17*PSHEAR(JIJ,JKK)*sqrt(abs(PTKEM_DEP(JIJ))) - &
-             PG_O_THVREF(JIJ) * (PVPT(JIJ,JKK) - PVPT(JIJ,KK)) )**2  &
+             PG_O_THVREF(JIJ) * (PVPT(JIJ,JKK) - ZVPT_DEP(JIJ)) )**2  &
             + 2. * ZINTE(JIJ) * PG_O_THVREF(JIJ)                        &
                  * ZDELTVPT(JIJ,JKK) / PDZZ2D(JIJ,JKK) ))    ) /             &
         ( PG_O_THVREF(JIJ) * ZDELTVPT(JIJ,JKK) / PDZZ2D(JIJ,JKK) ) 

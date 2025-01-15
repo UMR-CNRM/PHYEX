@@ -62,6 +62,7 @@ CONTAINS
 !!     Q.Rodier  01/2019 : support RM17 mixing length
 !!     R.Honnert 01/2019 : add LGZ (reduction of the mass-flux surface closure with the resolution)
 !!     S. Riette 06/2022: compute_entr_detr is inlined
+!!     A. Marcel Jan 2025: Wet mixing according to Lapp and Randall 2001
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -146,7 +147,8 @@ REAL, DIMENSION(D%NIJT,D%NKT) ::    &
                         ZG_O_THVREF,             &    ! g*ThetaV ref
                         ZW_UP2,                  &    ! w**2  of the updraft
                         ZBUO_INTEG_DRY, ZBUO_INTEG_CLD,&! Integrated Buoyancy
-                        ZENTR_CLD,ZDETR_CLD           ! wet entrainment and detrainment
+                        ZENTR_CLD,ZDETR_CLD,     &    ! wet entrainment and detrainment
+                        ZG_O_THVREF_UP
 
 REAL, DIMENSION(D%NIJT,D%NKT,KSV) :: &
                         ZSVM_F ! scalar variables 
@@ -166,7 +168,8 @@ REAL  :: ZRVORD       ! RV/RD
 
 REAL, DIMENSION(D%NIJT) :: ZMIX1,ZMIX2,ZMIX3_CLD,ZMIX2_CLD
 
-REAL, DIMENSION(D%NIJT) :: ZLUP         ! Upward Mixing length from the ground
+REAL, DIMENSION(D%NIJT) :: ZLUPSURF         ! Upward Mixing length from the ground
+REAL, DIMENSION(D%NIJT) :: ZLUP, ZLDOWN     ! Upward and downward mixing length
 
 INTEGER  :: JK,JIJ,JSV          ! loop counters
 
@@ -190,7 +193,7 @@ REAL  :: ZTMAX,ZRMAX  ! control value
 REAL, DIMENSION(D%NIJT) :: ZSURF
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZSHEAR,ZDUDZ,ZDVDZ ! vertical wind shear
 !
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZWK, KDEPTH
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZWK, ZWK2, KDEPTH
 REAL, DIMENSION(D%NIJT,16) :: ZBUF
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
@@ -370,6 +373,7 @@ IF (OENTR_DETR) THEN
 
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
   ZG_O_THVREF(IIJB:IIJE,1:IKT)=CST%XG/ZTHVM_F(IIJB:IIJE,1:IKT)
+  ZG_O_THVREF_UP(IIJB:IIJE,1:IKT)=CST%XG/PTHV_UP(IIJB:IIJE,1:IKT)
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
   ! compute L_up
@@ -391,9 +395,9 @@ IF (OENTR_DETR) THEN
   END IF
   !
   CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ,ZTKEM_F(:,IKB),&
-                      &ZG_O_THVREF(:,IKB),ZTHVM,IKB,GLMIX,.TRUE.,ZSHEAR,ZLUP)
+                      &ZG_O_THVREF(:,IKB),ZTHVM,IKB,GLMIX,.TRUE.,ZSHEAR,ZLUPSURF)
   !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZLUP(IIJB:IIJE)=MAX(ZLUP(IIJB:IIJE),1.E-10)
+  ZLUPSURF(IIJB:IIJE)=MAX(ZLUPSURF(IIJB:IIJE),1.E-10)
 
   ! Compute Buoyancy flux at the ground
   ZWTHVSURF(IIJB:IIJE) = (ZTHVM_F(IIJB:IIJE,IKB)/ZTHM_F(IIJB:IIJE,IKB))*PSFTH(IIJB:IIJE)+     &
@@ -406,7 +410,7 @@ IF (OENTR_DETR) THEN
       CALL PRINT_MSG(NVERB_FATAL, 'GEN', 'COMPUTE_UPDRAFT', 'PDX or PDY is NULL with option LGZ!')                                  
     ENDIF
     !$mnh_expand_array(JIJ=IIJB:IIJE)
-    ZSURF(IIJB:IIJE)=TANH(PARAMMF%XGZ*SQRT(PDX*PDY)/ZLUP(IIJB:IIJE))
+    ZSURF(IIJB:IIJE)=TANH(PARAMMF%XGZ*SQRT(PDX*PDY)/ZLUPSURF(IIJB:IIJE))
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   ELSE
     ZSURF(IIJB:IIJE)=1.
@@ -414,7 +418,7 @@ IF (OENTR_DETR) THEN
   !$mnh_expand_where(JIJ=IIJB:IIJE)
   WHERE (ZWTHVSURF(IIJB:IIJE)>0.)
     PEMF(IIJB:IIJE,IKB) = PARAMMF%XCMF * ZSURF(IIJB:IIJE) * ZRHO_F(IIJB:IIJE,IKB) *  &
-            ((ZG_O_THVREF(IIJB:IIJE,IKB))*ZWTHVSURF(IIJB:IIJE)*ZLUP(IIJB:IIJE))**(1./3.)
+            ((ZG_O_THVREF(IIJB:IIJE,IKB))*ZWTHVSURF(IIJB:IIJE)*ZLUPSURF(IIJB:IIJE))**(1./3.)
     PFRAC_UP(IIJB:IIJE,IKB)=MIN(PEMF(IIJB:IIJE,IKB)/(SQRT(ZW_UP2(IIJB:IIJE,IKB))*ZRHO_F(IIJB:IIJE,IKB)), &
                                    &PARAMMF%XFRAC_UP_MAX)
     ZW_UP2(IIJB:IIJE,IKB)=(PEMF(IIJB:IIJE,IKB)/(PFRAC_UP(IIJB:IIJE,IKB)*ZRHO_F(IIJB:IIJE,IKB)))**2
@@ -472,11 +476,28 @@ DO JK=IKB,IKE-IKL,IKL
       ZRI_MIX(IIJB:IIJE,JK) = ZRI_MIX(IIJB:IIJE,JK-IKL) ! guess of Ri of mixture
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     ENDIF
+
+    IF (PARAMMF%CWET_MIXING == 'LR01') THEN
+      CALL MZF_MF(D, PTHV_UP(:,:), ZWK(:,:))
+      CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ, ZTKEM_F(:,JK), ZG_O_THVREF_UP(:,JK), ZWK, JK, .TRUE., .TRUE., ZSHEAR, ZLUP)
+      !$mnh_expand_where(JIJ=IIJB:IIJE)
+      ZLUP(:) = MAX(ZLUP(:), 1.)
+      !$mnh_end_expand_where(JIJ=IIJB:IIJE)
+    ENDIF
+    IF (PARAMMF%CWET_MIXING == 'LR01') THEN
+      CALL MZF_MF(D, ZTHVM_F(:,:), ZWK(:,:))
+      CALL MZF_MF(D, PTHV_UP(:,:), ZWK2(:,:))
+      ZWK(:,JK) = ZWK2(:,JK)
+      CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ, ZTKEM_F(:,JK), ZG_O_THVREF_UP(:,JK), ZWK, JK, .FALSE., .FALSE., ZSHEAR, ZLDOWN)
+      !$mnh_expand_where(JIJ=IIJB:IIJE)
+      ZLDOWN(:) = MAX(ZLDOWN(:), 1.)
+      !$mnh_end_expand_where(JIJ=IIJB:IIJE)
+    ENDIF
     CALL COMPUTE_ENTR_DETR(D, CST, NEBN, PARAMMF, JK,IKB,IKE,IKL,GTEST,GTESTLCL,PFRAC_ICE_UP(:,JK),&
                            PRHODREF(:,JK),ZPRES_F(:,JK),ZPRES_F(:,JK+IKL),&
                            PZZ(:,:),PDZZ(:,:),ZTHVM(:,:),  &
                            PTHLM(:,:),PRTM(:,:),ZW_UP2(:,:),ZTH_UP(:,JK),   &
-                           PTHL_UP(:,JK),PRT_UP(:,JK),ZLUP(:),         &
+                           PTHL_UP(:,JK),PRT_UP(:,JK),ZLUPSURF(:), ZLUP(:), ZLDOWN(:), &
                            PRC_UP(:,JK),PRI_UP(:,JK),PTHV_UP(:,JK),&
                            PRSAT_UP(:,JK),ZRC_MIX(:,JK),ZRI_MIX(:,JK),                 &
                            PENTR(:,JK),PDETR(:,JK),ZENTR_CLD(:,JK),ZDETR_CLD(:,JK),&
@@ -725,7 +746,7 @@ CONTAINS
                             PPRE_MINUS_HALF,&
                             PPRE_PLUS_HALF,PZZ,PDZZ,&
                             PTHVM,PTHLM,PRTM,PW_UP2,PTH_UP,&
-                            PTHL_UP,PRT_UP,PLUP,&
+                            PTHL_UP,PRT_UP,PLUPSURF,PLUP,PLDOWN,&
                             PRC_UP,PRI_UP,PTHV_UP,&
                             PRSAT_UP,PRC_MIX,PRI_MIX,      &
                             PENTR,PDETR,PENTR_CLD,PDETR_CLD,&
@@ -824,7 +845,8 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PTHLM     ! Thetal
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PRTM      ! total mixing ratio 
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PW_UP2    ! Vertical velocity^2
 REAL, DIMENSION(D%NIJT),   INTENT(IN)     ::  PTH_UP,PTHL_UP,PRT_UP  ! updraft properties
-REAL, DIMENSION(D%NIJT),   INTENT(IN)     ::  PLUP      ! LUP compute from the ground
+REAL, DIMENSION(D%NIJT),   INTENT(IN)     ::  PLUPSURF      ! LUP compute from the ground
+REAL, DIMENSION(D%NIJT),   INTENT(IN)     ::  PLUP, PLDOWN  ! LUP and LDOWN mixing length
 REAL, DIMENSION(D%NIJT),   INTENT(IN)     ::  PRC_UP,PRI_UP   ! Updraft cloud content
 REAL, DIMENSION(D%NIJT),   INTENT(IN)     ::  PTHV_UP ! Thetav of updraft
 REAL, DIMENSION(D%NIJT),   INTENT(IN)     ::  PRSAT_UP ! Mixing ratio at saturation in updraft
@@ -848,7 +870,6 @@ REAL, DIMENSION(D%NIJT),   INTENT(OUT)    ::  PPART_DRY ! ratio of dry part at t
 !                1.3 Initialisation
 !                ------------------
   
-ZCOEFFMF_CLOUD=PARAMMF%XENTR_MF * CST%XG / PARAMMF%XCRAD_MF
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 ZG_O_THVREF_ED(IIJB:IIJE)=CST%XG/PTHVM(IIJB:IIJE,KK)
 
@@ -939,7 +960,7 @@ DO JIJ=IIJB,IIJE
     PENTR(JIJ) = PARAMMF%XENTR_DRY*PENTR(JIJ)/(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))    
     PDETR(JIJ) = PARAMMF%XDETR_DRY*PDETR(JIJ)/(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))
     !Minimum value of detrainment
-    ZWK0D=PLUP(JIJ)-0.5*(PZZ(JIJ,KK)+PZZ(JIJ,KK+KKL))
+    ZWK0D=PLUPSURF(JIJ)-0.5*(PZZ(JIJ,KK)+PZZ(JIJ,KK+KKL))
     ZWK0D=SIGN(MAX(1., ABS(ZWK0D)), ZWK0D) ! ZWK0D must not be zero
     PDETR(JIJ) = MAX(PPART_DRY(JIJ)*PARAMMF%XDETR_LUP/ZWK0D, PDETR(JIJ))
   ELSE
@@ -1115,11 +1136,21 @@ ENDDO
 !ENDWHERE
 
 !               3.4 Computation of PENTR and PDETR
+IF (PARAMMF%CWET_MIXING == 'PKFB') THEN
+  ZCOEFFMF_CLOUD=PARAMMF%XENTR_MF * CST%XG / PARAMMF%XCRAD_MF
+ENDIF
 DO JIJ=IIJB,IIJE
   IF(OTEST(JIJ)) THEN
-    ZEPSI_CLOUD=MIN(ZDELTA(JIJ), ZEPSI(JIJ))
-    PENTR_CLD(JIJ) = (1.-PPART_DRY(JIJ))*ZCOEFFMF_CLOUD*PRHODREF(JIJ)*ZEPSI_CLOUD
-    PDETR_CLD(JIJ) = (1.-PPART_DRY(JIJ))*ZCOEFFMF_CLOUD*PRHODREF(JIJ)*ZDELTA(JIJ)
+    IF (PARAMMF%CWET_MIXING == 'LR01') THEN
+      ! E + D from Lappen and Randall 2001 with Bougeault lenght scale
+      ZCOEFFMF_CLOUD = PARAMMF%XENTR_MF/(2.*(PLUP(JIJ)*PLDOWN(JIJ))/(PLUP(JIJ)+PLDOWN(JIJ)))
+      PENTR_CLD(JIJ) = (1.-PPART_DRY(JIJ))*ZCOEFFMF_CLOUD*ZEPSI(JIJ)    ! KFB
+      PDETR_CLD(JIJ) = (1.-PPART_DRY(JIJ))*ZCOEFFMF_CLOUD*ZDELTA(JIJ)   ! KFB
+    ELSEIF (PARAMMF%CWET_MIXING == 'PKFB') THEN
+      ZEPSI_CLOUD=MIN(ZDELTA(JIJ), ZEPSI(JIJ))
+      PENTR_CLD(JIJ) = (1.-PPART_DRY(JIJ))*ZCOEFFMF_CLOUD*PRHODREF(JIJ)*ZEPSI_CLOUD
+      PDETR_CLD(JIJ) = (1.-PPART_DRY(JIJ))*ZCOEFFMF_CLOUD*PRHODREF(JIJ)*ZDELTA(JIJ)
+    ENDIF
     PENTR(JIJ) = PENTR(JIJ)+PENTR_CLD(JIJ)
     PDETR(JIJ) = PDETR(JIJ)+PDETR_CLD(JIJ)
   ELSE

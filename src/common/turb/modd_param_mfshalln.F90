@@ -32,6 +32,7 @@
 !!      Original    01/02/07
 !!      10/16 R.Honnert Update with AROME
 !!      01/2019 R.Honnert add parameters for the reduction of mass-flux surface closure with resolution
+!!      Jan 2025 A. Marcel: Wet mixing according to Lapp and Randall 2001
 !-------------------------------------------------------------------------------
 !
 !*       0.   DECLARATIONS
@@ -47,7 +48,8 @@ REAL               :: XIMPL_MF     !< degre of implicitness
 CHARACTER (LEN=4)  :: CMF_UPDRAFT  !< Type of Mass Flux Scheme
                                    !! 'NONE' if no parameterization 
 CHARACTER (LEN=4)  :: CMF_CLOUD    !< Type of cloud scheme associated
-
+CHARACTER (LEN=4)  :: CWET_MIXING  !< Type of env mixing for buoyancy sorting scheme
+                                   !! PKFB for the original Pergaud code, LR01 for Lappen and Randall 2001
                                      
 LOGICAL       :: LMIXUV      !< True if mixing of momentum
 LOGICAL       :: LMF_FLX     !< logical switch for the storage of the mass flux fluxes
@@ -92,6 +94,7 @@ TYPE(PARAM_MFSHALL_t), POINTER, SAVE :: PARAM_MFSHALLN => NULL()
 REAL             , POINTER :: XIMPL_MF=>NULL()
 CHARACTER (LEN=4), POINTER :: CMF_UPDRAFT=>NULL() 
 CHARACTER (LEN=4), POINTER :: CMF_CLOUD=>NULL()
+CHARACTER (LEN=4), POINTER :: CWET_MIXING=>NULL()
 LOGICAL          , POINTER :: LMIXUV=>NULL() 
 LOGICAL          , POINTER :: LMF_FLX=>NULL() 
 !
@@ -123,7 +126,7 @@ LOGICAL, POINTER       :: LGZ=>NULL()
 REAL, POINTER          :: XGZ=>NULL()
 LOGICAL, POINTER       :: LVERLIMUP=>NULL() 
 !
-NAMELIST/NAM_PARAM_MFSHALLn/XIMPL_MF,CMF_UPDRAFT,CMF_CLOUD,LMIXUV,LMF_FLX,&
+NAMELIST/NAM_PARAM_MFSHALLn/XIMPL_MF,CMF_UPDRAFT,CMF_CLOUD,CWET_MIXING,LMIXUV,LMF_FLX,&
                             XALP_PERT,XABUO,XBENTR,XBDETR,XCMF,XENTR_MF,&
                             XCRAD_MF,XENTR_DRY,XDETR_DRY,XDETR_LUP,XKCF_MF,&
                             XKRC_MF,XTAUSIGMF,XPRES_UV,XALPHA_MF,XSIGMA_MF,&
@@ -150,6 +153,7 @@ PARAM_MFSHALLN => PARAM_MFSHALL_MODEL(KTO)
 XIMPL_MF=>PARAM_MFSHALL_MODEL(KTO)%XIMPL_MF
 CMF_UPDRAFT=>PARAM_MFSHALL_MODEL(KTO)%CMF_UPDRAFT
 CMF_CLOUD=>PARAM_MFSHALL_MODEL(KTO)%CMF_CLOUD
+CWET_MIXING=>PARAM_MFSHALL_MODEL(KTO)%CWET_MIXING
 LMIXUV=>PARAM_MFSHALL_MODEL(KTO)%LMIXUV
 LMF_FLX=>PARAM_MFSHALL_MODEL(KTO)%LMF_FLX
 !
@@ -261,6 +265,7 @@ IF(LLDEFAULTVAL) THEN
   XIMPL_MF=1.
   CMF_UPDRAFT='EDKF'
   CMF_CLOUD='DIRE'
+  CWET_MIXING='PKFB'
   LMIXUV=.TRUE.
   LMF_FLX=.FALSE.
   XALP_PERT=0.3
@@ -306,6 +311,7 @@ ENDIF
 !
 IF(LLCHECK) THEN
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CMF_CLOUD', CMF_CLOUD, 'NONE', 'STAT', 'DIRE', 'BIGA')
+  CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CWET_MIXING', CWET_MIXING, 'PKFB', 'LR01')
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CMF_UPDRAFT', CMF_UPDRAFT, 'NONE', 'EDKF', 'RHCJ', 'RAHA')
 ENDIF
 !
