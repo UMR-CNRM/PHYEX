@@ -81,6 +81,7 @@
 !!      2020-12 U. Andrae : Introduce SPP for HARMONIE-AROME
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !!      2021-01: SPP computations moved in aro_adjust (AROME/HARMONIE)
+!!      Jan 2025 A. Marcel: use ERF instead of approximate formulation
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -416,8 +417,7 @@ DO JK=IKTB,IKTE
       ! Computation of ZG and ZGAM(=erf(ZG))
       ZGCOND = -ZQ1(JIJ)/SQRT(2.)
 
-      !Approximation of erf function for Gaussian distribution
-      ZGAUV = 1 - SIGN(1., ZGCOND) * SQRT(1-EXP(-4*ZGCOND**2/CST%XPI))
+      ZGAUV = 1 + ERF(-ZGCOND)
 
       !Computation Cloud Fraction
       PCLDFR(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUV))
@@ -434,8 +434,7 @@ DO JK=IKTB,IKTE
         IF(1-ZFRAC(JIJ) > 1.E-20)THEN
           ZAUTC = (ZSBAR(JIJ) - ICEP%XCRIAUTC/(PRHODREF(JIJ,JK)*(1-ZFRAC(JIJ))))/ZSIGMA(JIJ)
           ZGAUTC = -ZAUTC/SQRT(2.)
-          !Approximation of erf function for Gaussian distribution
-          ZGAUC = 1 - SIGN(1., ZGAUTC) * SQRT(1-EXP(-4*ZGAUTC**2/CST%XPI))
+          ZGAUC = 1 + ERF(-ZGAUTC)
           PHLC_HCF(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUC))
           PHLC_HRC(JIJ,JK) = (1-ZFRAC(JIJ))*(EXP(-ZGAUTC**2)-ZGAUTC*SQRT(CST%XPI)*ZGAUC)*ZSIGMA(JIJ)/SQRT(2.*CST%XPI)
           PHLC_HRC(JIJ,JK) = PHLC_HRC(JIJ,JK) + ICEP%XCRIAUTC/PRHODREF(JIJ,JK) * PHLC_HCF(JIJ,JK)
@@ -453,8 +452,7 @@ DO JK=IKTB,IKTE
           ZCRIAUTI=MIN(ICEP%XCRIAUTI,10**(ICEP%XACRIAUTI*(PT(JIJ,JK)-CST%XTT)+ICEP%XBCRIAUTI))
           ZAUTI = (ZSBAR(JIJ) - ZCRIAUTI/ZFRAC(JIJ))/ZSIGMA(JIJ)
           ZGAUTI = -ZAUTI/SQRT(2.)
-          !Approximation of erf function for Gaussian distribution
-          ZGAUI = 1 - SIGN(1., ZGAUTI) * SQRT(1-EXP(-4*ZGAUTI**2/CST%XPI))
+          ZGAUI = 1 + ERF(-ZGAUTI)
           PHLI_HCF(JIJ,JK) = MAX( 0., MIN(1.,0.5*ZGAUI))
           PHLI_HRI(JIJ,JK) = ZFRAC(JIJ)*(EXP(-ZGAUTI**2)-ZGAUTI*SQRT(CST%XPI)*ZGAUI)*ZSIGMA(JIJ)/SQRT(2.*CST%XPI)
           PHLI_HRI(JIJ,JK) = PHLI_HRI(JIJ,JK) + ZCRIAUTI*PHLI_HCF(JIJ,JK)
