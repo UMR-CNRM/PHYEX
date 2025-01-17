@@ -8,16 +8,14 @@
 !
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE MF_TURB(D, KSV, OMIXUV,                              &
+      SUBROUTINE MF_TURB(D, KSV, PARAMMF, &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
-                PIMPL, PTSTEP,                                        &
-                PDZZ,                                                 &
-                PRHODJ,                                               &
-                PTHLM,PTHVM,PRTM,PUM,PVM,PSVM,                        &
-                PTHLDT,PRTDT,PUDT,PVDT,PSVDT,                         &
-                PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,PSV_UP,       &
+                PTSTEP, PDZZ, PRHODJ, &
+                PTHLM,PTHVM,PRTM,PUM,PVM,PSVM,PTKEM,                  &
+                PTHLDT,PRTDT,PUDT,PVDT,PSVDT,PTKEDT,                  &
+                PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,PSV_UP,PTKE_UP, &
                 PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,      &
-                PFLXZSVMF                                             )
+                PFLXZSVMF,PFLXZTKEMF                                  )
 
 !     #################################################################
 !
@@ -56,6 +54,7 @@ CONTAINS
 !!  09/2010     (V.Masson)     Optimization
 !!     S. Riette Jan 2012: support for both order of vertical levels
 !!                         suppression of useless initialisations
+!!     A. Marcel Jan 2025: TKE mixing
 !!
 !! --------------------------------------------------------------------------
 !       
@@ -63,6 +62,7 @@ CONTAINS
 !          ------------
 !
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
+USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 !
 USE MODI_SHUMAN_MF, ONLY: MZM_MF
 USE MODE_TRIDIAG_MASSFLUX, ONLY: TRIDIAG_MASSFLUX
@@ -77,11 +77,10 @@ IMPLICIT NONE
 !
 TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 INTEGER,                INTENT(IN)   :: KSV
-LOGICAL,                INTENT(IN)   :: OMIXUV      ! True if mixing of momentum
+TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 LOGICAL,                INTENT(IN)   :: ONOMIXLG  ! False if mixing of lagrangian tracer
 INTEGER,                INTENT(IN)   :: KSV_LGBEG ! first index of lag. tracer
 INTEGER,                INTENT(IN)   :: KSV_LGEND ! last  index of lag. tracer
-REAL,                   INTENT(IN)   :: PIMPL       ! degree of implicitness
 REAL,                 INTENT(IN)     ::  PTSTEP   ! Dynamical timestep 
 !
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PDZZ        ! metric coefficients
@@ -98,6 +97,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PUM
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PVM
 !  scalar variables at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSVM
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PTKEM ! TKE at t-dt
 !
 ! Tendencies of conservative variables
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PTHLDT
@@ -108,13 +108,14 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PUDT
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PVDT
 ! Tendencies of scalar variables
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT) ::  PSVDT
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PTKEDT ! Tendencies of TKE
 
 
 ! Updraft characteritics
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,PTKE_UP
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN) ::  PSV_UP
 ! Fluxes
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PFLXZTHMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,PFLXZTKEMF
 
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT)::  PFLXZSVMF
 !
@@ -167,7 +168,7 @@ PFLXZRMF(IIJB:IIJE,1:IKT) =  PEMF(IIJB:IIJE,1:IKT)*(PRT_UP(IIJB:IIJE,1:IKT)-PFLX
 PFLXZTHVMF(IIJB:IIJE,1:IKT) = PEMF(IIJB:IIJE,1:IKT)*(PTHV_UP(IIJB:IIJE,1:IKT)-PFLXZTHVMF(IIJB:IIJE,1:IKT))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
-IF (OMIXUV) THEN
+IF (PARAMMF%LMIXUV) THEN
   CALL MZM_MF(D, PUM(:,:), PFLXZUMF(:,:))
   CALL MZM_MF(D, PVM(:,:), PFLXZVMF(:,:))
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -177,6 +178,15 @@ IF (OMIXUV) THEN
 ELSE
   PFLXZUMF(:,:) = 0.
   PFLXZVMF(:,:) = 0.
+ENDIF
+
+IF (PARAMMF%LMIXTKE) THEN
+  CALL MZM_MF(D, PTKEM(:,:), PFLXZTKEMF(:,:))
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PFLXZTKEMF(IIJB:IIJE,1:IKT) = PEMF(IIJB:IIJE,1:IKT)*(PTKE_UP(IIJB:IIJE,1:IKT)-PFLXZTKEMF(IIJB:IIJE,1:IKT))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ELSE
+  PFLXZTKEMF(:,:) = 0.
 ENDIF
 !
 !
@@ -192,7 +202,7 @@ ENDIF
 ! 3.1 Compute the tendency for the conservative potential temperature
 !     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
 !
-CALL TRIDIAG_MASSFLUX(D,PTHLM,PFLXZTHMF,ZMEMF,PTSTEP,PIMPL,  &
+CALL TRIDIAG_MASSFLUX(D,PTHLM,PFLXZTHMF,ZMEMF,PTSTEP,PARAMMF%XIMPL_MF,  &
                       PDZZ,PRHODJ,ZVARS )
 ! compute new flux and THL tendency
 CALL MZM_MF(D, ZVARS(:,:), PFLXZTHMF(:,:))
@@ -204,7 +214,7 @@ PTHLDT(IIJB:IIJE,1:IKT)= (ZVARS(IIJB:IIJE,1:IKT)-PTHLM(IIJB:IIJE,1:IKT))/PTSTEP
 !
 ! 3.2 Compute the tendency for the conservative mixing ratio
 !
-CALL TRIDIAG_MASSFLUX(D,PRTM(:,:),PFLXZRMF,ZMEMF,PTSTEP,PIMPL,  &
+CALL TRIDIAG_MASSFLUX(D,PRTM(:,:),PFLXZRMF,ZMEMF,PTSTEP,PARAMMF%XIMPL_MF,  &
                                  PDZZ,PRHODJ,ZVARS )
 ! compute new flux and RT tendency
 CALL MZM_MF(D, ZVARS(:,:), PFLXZRMF(:,:))
@@ -214,13 +224,13 @@ PRTDT(IIJB:IIJE,1:IKT) = (ZVARS(IIJB:IIJE,1:IKT)-PRTM(IIJB:IIJE,1:IKT))/PTSTEP
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
 
-IF (OMIXUV) THEN
+IF (PARAMMF%LMIXUV) THEN
   !
   ! 3.3 Compute the tendency for the (non conservative but treated as it) zonal momentum
   !     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
   !
 
-  CALL TRIDIAG_MASSFLUX(D,PUM,PFLXZUMF,ZMEMF,PTSTEP,PIMPL,  &
+  CALL TRIDIAG_MASSFLUX(D,PUM,PFLXZUMF,ZMEMF,PTSTEP,PARAMMF%XIMPL_MF,  &
                                  PDZZ,PRHODJ,ZVARS )
   ! compute new flux and U tendency
   CALL MZM_MF(D, ZVARS(:,:), PFLXZUMF(:,:))
@@ -234,7 +244,7 @@ IF (OMIXUV) THEN
   !                                  meridian momentum
   !     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
   !
-  CALL TRIDIAG_MASSFLUX(D,PVM,PFLXZVMF,ZMEMF,PTSTEP,PIMPL,  &
+  CALL TRIDIAG_MASSFLUX(D,PVM,PFLXZVMF,ZMEMF,PTSTEP,PARAMMF%XIMPL_MF,  &
                                  PDZZ,PRHODJ,ZVARS )
   ! compute new flux and V tendency
   CALL MZM_MF(D, ZVARS(:,:), PFLXZVMF(:,:))
@@ -264,7 +274,7 @@ DO JSV=1,KSV
   !     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
   !
   CALL TRIDIAG_MASSFLUX(D,PSVM(:,:,JSV),PFLXZSVMF(:,:,JSV),&
-                        ZMEMF,PTSTEP,PIMPL,PDZZ,PRHODJ,ZVARS )
+                        ZMEMF,PTSTEP,PARAMMF%XIMPL_MF,PDZZ,PRHODJ,ZVARS )
   ! compute new flux and Sv tendency
   CALL MZM_MF(D, ZVARS, PFLXZSVMF(:,:,JSV))
   !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -274,6 +284,21 @@ DO JSV=1,KSV
   !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 
 ENDDO
+!
+!
+! 3.6 Compute the tendency for the TKE
+!     (PDZZ and flux in w-point and PRHODJ is mass point, result in mass point)
+!
+IF (PARAMMF%LMIXTKE) THEN                                                                                                          
+  CALL TRIDIAG_MASSFLUX(D,PTKEM,PFLXZTKEMF,ZEMF,PTSTEP,PARAMMF%XIMPL_MF,PDZZ,PRHODJ,ZVARS)
+
+  ! compute new flux and TKE tendency
+  CALL MZM_MF(D, ZVARS(:,:), PFLXZTKEMF(:,:))
+  PFLXZTKEMF(IIJB:IIJE,1:IKT) = PEMF(IIJB:IIJE,1:IKT)*(PTKE_UP(IIJB:IIJE,1:IKT)-PFLXZTKEMF(IIJB:IIJE,1:IKT))
+  PTKEDT(IIJB:IIJE,1:IKT)= (ZVARS(IIJB:IIJE,1:IKT)-PTKEM(IIJB:IIJE,1:IKT))/PTSTEP
+ELSE
+  PTKEDT(:,:)=0.
+ENDIF
 !
 IF (LHOOK) CALL DR_HOOK('MF_TURB',1,ZHOOK_HANDLE)
 END SUBROUTINE MF_TURB    

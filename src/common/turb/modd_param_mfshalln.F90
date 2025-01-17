@@ -33,6 +33,7 @@
 !!      10/16 R.Honnert Update with AROME
 !!      01/2019 R.Honnert add parameters for the reduction of mass-flux surface closure with resolution
 !!      Jan 2025 A. Marcel: Wet mixing according to Lapp and Randall 2001
+!!      Jan 2025 A. Marcel: TKE mixing
 !-------------------------------------------------------------------------------
 !
 !*       0.   DECLARATIONS
@@ -52,6 +53,7 @@ CHARACTER (LEN=4)  :: CWET_MIXING  !< Type of env mixing for buoyancy sorting sc
                                    !! PKFB for the original Pergaud code, LR01 for Lappen and Randall 2001
                                      
 LOGICAL       :: LMIXUV      !< True if mixing of momentum
+LOGICAL       :: LMIXTKE     !< True if mixing of TKE
 LOGICAL       :: LMF_FLX     !< logical switch for the storage of the mass flux fluxes
 REAL          :: XALP_PERT   !< coefficient for the perturbation of
                              !! theta_l and r_t at the first level of the updraft
@@ -96,6 +98,7 @@ CHARACTER (LEN=4), POINTER :: CMF_UPDRAFT=>NULL()
 CHARACTER (LEN=4), POINTER :: CMF_CLOUD=>NULL()
 CHARACTER (LEN=4), POINTER :: CWET_MIXING=>NULL()
 LOGICAL          , POINTER :: LMIXUV=>NULL() 
+LOGICAL          , POINTER :: LMIXTKE=>NULL()
 LOGICAL          , POINTER :: LMF_FLX=>NULL() 
 !
 REAL, POINTER          :: XALP_PERT=>NULL()   
@@ -126,7 +129,7 @@ LOGICAL, POINTER       :: LGZ=>NULL()
 REAL, POINTER          :: XGZ=>NULL()
 LOGICAL, POINTER       :: LVERLIMUP=>NULL() 
 !
-NAMELIST/NAM_PARAM_MFSHALLn/XIMPL_MF,CMF_UPDRAFT,CMF_CLOUD,CWET_MIXING,LMIXUV,LMF_FLX,&
+NAMELIST/NAM_PARAM_MFSHALLn/XIMPL_MF,CMF_UPDRAFT,CMF_CLOUD,CWET_MIXING,LMIXUV,LMIXTKE,LMF_FLX,&
                             XALP_PERT,XABUO,XBENTR,XBDETR,XCMF,XENTR_MF,&
                             XCRAD_MF,XENTR_DRY,XDETR_DRY,XDETR_LUP,XKCF_MF,&
                             XKRC_MF,XTAUSIGMF,XPRES_UV,XALPHA_MF,XSIGMA_MF,&
@@ -155,6 +158,7 @@ CMF_UPDRAFT=>PARAM_MFSHALL_MODEL(KTO)%CMF_UPDRAFT
 CMF_CLOUD=>PARAM_MFSHALL_MODEL(KTO)%CMF_CLOUD
 CWET_MIXING=>PARAM_MFSHALL_MODEL(KTO)%CWET_MIXING
 LMIXUV=>PARAM_MFSHALL_MODEL(KTO)%LMIXUV
+LMIXTKE=>PARAM_MFSHALL_MODEL(KTO)%LMIXTKE
 LMF_FLX=>PARAM_MFSHALL_MODEL(KTO)%LMF_FLX
 !
 XALP_PERT=>PARAM_MFSHALL_MODEL(KTO)%XALP_PERT
@@ -267,6 +271,7 @@ IF(LLDEFAULTVAL) THEN
   CMF_CLOUD='DIRE'
   CWET_MIXING='PKFB'
   LMIXUV=.TRUE.
+  LMIXTKE=.FALSE.
   LMF_FLX=.FALSE.
   XALP_PERT=0.3
   XABUO=1.

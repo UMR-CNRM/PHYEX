@@ -9,7 +9,7 @@
                 PSFTH,PSFRV,                                          &
                 PTHM,PRM,                                             &
                 PUM,PVM,PTKEM,PSVM,                                   &
-                PDUDT_MF,PDVDT_MF,                                    &
+                PDUDT_MF,PDVDT_MF,PDTKEDT_MF,                         &
                 PDTHLDT_MF,PDRTDT_MF,PDSVDT_MF,                       &
                 PSIGMF,PRC_MF,PRI_MF,PCF_MF,                          &
                 PFLXZTHVMF, PFLXZUMF, PFLXZVMF,                       &
@@ -59,6 +59,7 @@
 !!      S. Riette 18 May 2010: aro_shallow_mf and shallow_mf interfaces changed
 !!      S. Riette Jan 2012: support for both order of vertical levels
 !!      A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
+!!      A. Marcel Jan 2025: TKE mixing
 !!
 !-------------------------------------------------------------------------------
 !
@@ -124,6 +125,7 @@ REAL, DIMENSION(KLON,KLEV,KSV), INTENT(IN) ::  PSVM         ! passive scalar
                                                              ! variables for EDMF scheme
 REAL, DIMENSION(KLON,KLEV),   INTENT(OUT)::  PDUDT_MF     ! tendency of U   by massflux scheme
 REAL, DIMENSION(KLON,KLEV),   INTENT(OUT)::  PDVDT_MF     ! tendency of V   by massflux scheme
+REAL, DIMENSION(KLON,KLEV),   INTENT(OUT)::  PDTKEDT_MF   ! tendency of TKE by massflux scheme
 REAL, DIMENSION(KLON,KLEV),   INTENT(OUT)::  PDTHLDT_MF   ! tendency of thl by massflux scheme
 REAL, DIMENSION(KLON,KLEV),   INTENT(OUT)::  PDRTDT_MF    ! tendency of rt  by massflux scheme
 REAL, DIMENSION(KLON,KLEV,KSV), INTENT(OUT)::  PDSVDT_MF    ! tendency of Sv  by massflux scheme
@@ -152,9 +154,10 @@ TYPE(TMDDH),   INTENT(IN), TARGET      :: YDMDDH
 !*       0.2   Declarations of local variables :
 !
 TYPE(TBUDGETDATA), DIMENSION(NBUDGET_SV1) :: YLBUDGET !NBUDGET_SV1 is the one with the highest number needed for shallow_mf
-INTEGER, DIMENSION(size(PRHODJ,1)) :: IKLCL,IKETL,IKCTL
-REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZFLXZTHMF,ZFLXZRMF
-REAL,DIMENSION(size(PRHODJ,1),size(PRHODJ,2)) :: ZDETR,ZENTR
+INTEGER, DIMENSION(KLON) :: IKLCL,IKETL,IKCTL
+REAL,DIMENSION(KLON,KLEV) :: ZFLXZTHMF,ZFLXZRMF,ZFLXZTKEMF
+REAL,DIMENSION(KLON,KLEV) :: ZDETR,ZENTR
+REAL,DIMENSION(KLON,KLEV) :: ZTKE_UP
 TYPE(DIMPHYEX_t) :: YLDIMPHYEX
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 INTEGER :: JBU ! Loop index for budgets
@@ -218,12 +221,12 @@ ENDDO
      &PPABSM=PPABSM,PEXNM=PEXNM,                                                          &
      &PSFTH=PSFTH,PSFRV=PSFRV,                                                            &
      &PTHM=PTHM,PRM=PRM,PUM=PUM,PVM=PVM,PTKEM=PTKEM,PSVM=PSVM,                            &
-     &PDUDT_MF=PDUDT_MF,PDVDT_MF=PDVDT_MF,                                                &
+     &PDUDT_MF=PDUDT_MF,PDVDT_MF=PDVDT_MF,PDTKEDT_MF=PDTKEDT_MF,                          &
      &PDTHLDT_MF=PDTHLDT_MF,PDRTDT_MF=PDRTDT_MF,PDSVDT_MF=PDSVDT_MF,                      &
      &PSIGMF=PSIGMF,PRC_MF=PRC_MF,PRI_MF=PRI_MF,PCF_MF=PCF_MF,PFLXZTHVMF=PFLXZTHVMF,      &
-     &PFLXZTHMF=ZFLXZTHMF,PFLXZRMF=ZFLXZRMF,PFLXZUMF=PFLXZUMF,PFLXZVMF=PFLXZVMF,          &
+     &PFLXZTHMF=ZFLXZTHMF,PFLXZRMF=ZFLXZRMF,PFLXZUMF=PFLXZUMF,PFLXZVMF=PFLXZVMF,PFLXZTKEMF=ZFLXZTKEMF, &
      &PTHL_UP=PTHL_UP,PRT_UP=PRT_UP,PRV_UP=PRV_UP,PRC_UP=PRC_UP,PRI_UP=PRI_UP,            &
-     &PU_UP=PU_UP, PV_UP=PV_UP, PTHV_UP=PTHV_UP, PW_UP=PW_UP,                             &
+     &PU_UP=PU_UP, PV_UP=PV_UP, PTKE_UP=ZTKE_UP, PTHV_UP=PTHV_UP, PW_UP=PW_UP,            &
      &PFRAC_UP=PFRAC_UP,PEMF=PEMF,PDETR=ZDETR,PENTR=ZENTR,                                &
      &KKLCL=IKLCL,KKETL=IKETL,KKCTL=IKCTL,PDX=PDX,PDY=PDY,                                &
      &BUCONF=PHYEX%MISC%TBUCONF, TBUDGETS=YLBUDGET, KBUDGETS=SIZE(YLBUDGET)               )

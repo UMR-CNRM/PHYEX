@@ -172,16 +172,19 @@ REAL, DIMENSION(klon,klev+2) ::  PDVDT_MF     ! tendency of V   by massflux sche
 REAL, DIMENSION(klon,klev+2) ::  PDTHLDT_MF   ! tendency of thl by massflux scheme
 REAL, DIMENSION(klon,klev+2) ::  PDRTDT_MF    ! tendency of rt  by massflux scheme
 REAL, DIMENSION(klon,klev+2,KSV)::  PDSVDT_MF    ! tendency of Sv  by massflux scheme
+REAL, DIMENSION(klon,klev+2) ::  PDTKEDT_MF   ! tendency of TKE by massflux scheme
 REAL, DIMENSION(klon,klev+2) ::  PSIGMF
 REAL, DIMENSION(klon,klev+2) ::  ZFLXZTHMF
 REAL, DIMENSION(klon,klev+2) ::  ZFLXZRMF
 REAL, DIMENSION(klon,klev+2) ::  ZFLXZUMF
 REAL, DIMENSION(klon,klev+2) ::  ZFLXZVMF
+REAL, DIMENSION(klon,klev+2) ::  ZFLXZTKEMF
 REAL, DIMENSION(klon,klev+2) ::  PTHL_UP   ! Thl updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PRT_UP    ! Rt  updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PRV_UP    ! Vapor updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PU_UP     ! U wind updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PV_UP     ! V wind updraft characteristics
+REAL, DIMENSION(klon,klev+2) ::  PTKE_UP   ! TKE updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PRC_UP    ! cloud content updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PRI_UP    ! ice content   updraft characteristics
 REAL, DIMENSION(klon,klev+2) ::  PTHV_UP   ! Thv   updraft characteristics
@@ -443,14 +446,15 @@ CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHY
      &PSFTH=PSFTH(:),PSFRV=PSFRV(:),                                                                 &
      &PTHM=ZTHETA(:,:),PRM=ZRX(:,:,:),PUM=ZUT(:,:),PVM=ZVT(:,:),                                     &
      &PTKEM=PTKEM(:,:),PSVM=ZSVT(:,:,:),                                                             &
-     &PDUDT_MF=PDUDT_MF(:,:),PDVDT_MF=PDVDT_MF(:,:),                                                 &
+     &PDUDT_MF=PDUDT_MF(:,:),PDVDT_MF=PDVDT_MF(:,:), PDTKEDT_MF=PDTKEDT_MF(:,:),                     &
      &PDTHLDT_MF=PDTHLDT_MF(:,:),PDRTDT_MF=PDRTDT_MF(:,:),PDSVDT_MF=PDSVDT_MF(:,:,:),                &
      &PSIGMF=PSIGMF(:,:),PRC_MF=PRC_MF(:,:),PRI_MF=PRI_MF(:,:),PCF_MF=PCF_MF(:,:),                   &
      &PFLXZTHVMF=ZFLXZTHVMF(:,:), PFLXZUMF=ZFLXZUMF(:,:), PFLXZVMF=ZFLXZVMF(:,:),                    &
      &PFLXZTHMF=ZFLXZTHMF(:,:),PFLXZRMF=ZFLXZRMF(:,:),PFLXZUMF=ZFLXZUMF(:,:),PFLXZVMF=ZFLXZVMF(:,:), &
+     &PFLXZTKEMF=ZFLXZTKEMF(:,:), &
      &PTHL_UP=PTHL_UP(:,:),PRT_UP=PRT_UP(:,:),PRV_UP=PRV_UP(:,:),                                    &
      &PRC_UP=PRC_UP(:,:),PRI_UP=PRI_UP(:,:),                                                         &
-     &PU_UP=PU_UP(:,:), PV_UP=PV_UP(:,:), PTHV_UP=PTHV_UP(:,:), PW_UP=PW_UP(:,:),                    &
+     &PU_UP=PU_UP(:,:), PV_UP=PV_UP(:,:), PTKE_UP=PTKE_UP(:,:), PTHV_UP=PTHV_UP(:,:), PW_UP=PW_UP(:,:),&
      &PFRAC_UP=PFRAC_UP(:,:),PEMF=PEMF(:,:),PDETR=PDETR(:,:),PENTR=PENTR(:,:),                       &
      &KKLCL=IKLCL(:),KKETL=IKETL(:),KKCTL=IKCTL(:),PDX=1000.0,PDY=1000.0,KBUDGETS=PHYEX%MISC%NBUDGET )
 
@@ -459,6 +463,7 @@ d_u(:,1:klev) = d_u(:,1:klev) + PDUDT_MF(:,2:klev+1)
 d_v(:,1:klev) = d_v(:,1:klev) + PDVDT_MF(:,2:klev+1) 
 ZRXS(:,:,1)=ZRXS(:,:,1)+PDRTDT_MF(:,:)
 ZTHETAS(:,:)=ZTHETAS(:,:)+PDTHLDT_MF(:,:)
+ZTKES(:,:) = ZRTKES(:,:)+PDTKEDT_MF(:,:)
 ! TODO add SV tendencies
 !
 !------------------------------------------------------------

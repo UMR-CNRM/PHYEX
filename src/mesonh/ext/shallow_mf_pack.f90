@@ -17,7 +17,7 @@ INTERFACE
                 PPABSM, PEXN,                                         &
                 PSFTH,PSFRV,                                          &
                 PTHM,PRM,PUM,PVM,PTKEM,PSVM,                          &
-                PRTHS,PRRS,PRUS,PRVS,PRSVS,                           &
+                PRTHS,PRRS,PRUS,PRVS,PRTKES,PRSVS,                    &
                 PSIGMF,PRC_MF,PRI_MF,PCF_MF,PFLXZTHVMF,PFLXZUMF,PFLXZVMF)
 !     #################################################################
 !!
@@ -52,6 +52,7 @@ REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM      ! scalar variable a t-dt
 
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRUS,PRVS,PRTHS ! Meso-NH sources
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRRS 
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRTKES           ! TKE sources
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS            ! Scalar sources 
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
@@ -73,7 +74,7 @@ END MODULE MODI_SHALLOW_MF_PACK
                 PPABSM, PEXN,                                         &
                 PSFTH,PSFRV,                                          &
                 PTHM,PRM,PUM,PVM,PTKEM,PSVM,                          &
-                PRTHS,PRRS,PRUS,PRVS,PRSVS,                           &
+                PRTHS,PRRS,PRUS,PRVS,PRTKES,PRSVS,                    &
                 PSIGMF,PRC_MF,PRI_MF,PCF_MF,PFLXZTHVMF,PFLXZUMF,PFLXZVMF)
 !     #################################################################
 !!
@@ -111,6 +112,7 @@ END MODULE MODI_SHALLOW_MF_PACK
 !  P. Wautelet    02/2020: use the new data structures and subroutines for budgets
 !  C. Barthe   23/11/2023: allow negative values for the tendencies of electric charges
 !  A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
+!  A. Marcel Jan 2025: TKE mixing
 ! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -172,6 +174,7 @@ REAL, DIMENSION(:,:,:,:), INTENT(IN) ::  PSVM        ! scalar variable a t-dt
 
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRUS,PRVS,PRTHS ! Meso-NH sources
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRRS 
+REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRTKES           ! TKE sources
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS            ! Scalar sources 
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
@@ -188,6 +191,7 @@ REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZDRTDT_TURB  ! tende
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3),SIZE(PSVM,4)) ::  ZDSVDT_TURB  ! tendency of Sv  by turbulence only
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZDUDT_MF   ! tendency of U   by massflux scheme
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZDVDT_MF   ! tendency of V   by massflux scheme
+REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZDTKEDT_MF ! tendency of TKE by massflux scheme
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZDTHLDT_MF ! tendency of thl by massflux scheme
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZDRTDT_MF  ! tendency of Rt by massflux scheme
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3),SIZE(PSVM,4)) ::  ZDSVDT_MF  ! tendency of Sv by massflux scheme
@@ -197,6 +201,7 @@ REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZFLXZTHMF
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZFLXZRMF
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZFLXZUMF
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZFLXZVMF
+REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZFLXZTKEMF
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZTHL_UP   ! updraft characteristics
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZRT_UP    ! updraft characteristics
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZRV_UP    ! updraft characteristics
@@ -207,6 +212,7 @@ REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZRI_UP    ! updraft 
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZTHV_UP   ! updraft characteristics
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZW_UP     ! updraft characteristics
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZFRAC_UP  ! updraft characteristics
+REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZTKE_UP   ! updraft characteristics
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZEMF      ! updraft characteristics
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZDETR     ! updraft characteristics
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZENTR     ! updraft characteristics
@@ -256,12 +262,12 @@ CALL SHALLOW_MF(YLDIMPHYEXPACK, CST, NEBN, PARAM_MFSHALLN, TURBN, CSTURB,&
                 PPABSM, PEXN,                                         &
                 PSFTH,PSFRV,                                          &
                 PTHM,PRM,ZUMM,ZVMM,PTKEM,PSVM,                        &
-                ZDUDT_MF,ZDVDT_MF,                                    &
+                ZDUDT_MF,ZDVDT_MF,ZDTKEDT_MF,                         &
                 ZDTHLDT_MF,ZDRTDT_MF,ZDSVDT_MF,                       &
                 ZSIGMF,ZRC_MF,ZRI_MF,ZCF_MF,ZFLXZTHVMF,               &
-                ZFLXZTHMF,ZFLXZRMF,ZFLXZUMF,ZFLXZVMF,                 &
+                ZFLXZTHMF,ZFLXZRMF,ZFLXZUMF,ZFLXZVMF,ZFLXZTKEMF,      &
                 ZTHL_UP,ZRT_UP,ZRV_UP,ZRC_UP,ZRI_UP,                  &
-                ZU_UP, ZV_UP, ZTHV_UP, ZW_UP,                         &
+                ZU_UP, ZV_UP, ZTKE_UP, ZTHV_UP, ZW_UP,                &
                 ZFRAC_UP,ZEMF,ZDETR,ZENTR,                            &
                 IKLCL,IKETL,IKCTL,PDX,PDY,PRSVS,XSVMIN,               &
                 TBUCONF, TBUDGETS,SIZE(TBUDGETS)                      )
@@ -289,6 +295,8 @@ PRUS(:,:,:)   = PRUS(:,:,:)  +MXM(  &
                   PRHODJ(:,:,:)*ZDUDT_MF(:,:,:))
 PRVS(:,:,:)   = PRVS(:,:,:)  +MYM(  &
                   PRHODJ(:,:,:)*ZDVDT_MF(:,:,:))
+PRTKES(:,:,:) = PRTKES(:,:,:) +   &
+                  PRHODJ(:,:,:)*ZDTKEDT_MF(:,:,:)
 !
 DO JSV=1,ISV 
   IF (LNOMIXLG .AND. JSV >= NSV_LGBEG .AND. JSV<= NSV_LGEND) CYCLE

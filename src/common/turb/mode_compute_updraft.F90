@@ -20,7 +20,7 @@ CONTAINS
                                  PSVM,PTHL_UP,PRT_UP,             &
                                  PRV_UP,PRC_UP,PRI_UP,PTHV_UP,    &
                                  PW_UP,PU_UP, PV_UP, PSV_UP,      &
-                                 PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,  &
+                                 PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,PTKE_UP, &
                                  PEMF,PDETR,PENTR,                &
                                  PBUO_INTEG,KKLCL,KKETL,KKCTL,    &
                                  PDEPTH, PDX, PDY     )
@@ -63,6 +63,7 @@ CONTAINS
 !!     R.Honnert 01/2019 : add LGZ (reduction of the mass-flux surface closure with the resolution)
 !!     S. Riette 06/2022: compute_entr_detr is inlined
 !!     A. Marcel Jan 2025: Wet mixing according to Lapp and Randall 2001
+!!     A. Marcel Jan 2025: TKE mixing
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -119,6 +120,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)   ::  PSVM           ! scalar var.
 
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTHL_UP,PRT_UP   ! updraft properties
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PU_UP, PV_UP     ! updraft wind components
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTKE_UP          ! updraft TKE
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PRV_UP,PRC_UP, & ! updraft rv, rc
                                          PRI_UP,PTHV_UP,& ! updraft ri, THv
                                          PW_UP,PFRAC_UP,& ! updraft w, fraction
@@ -316,6 +318,7 @@ PTHL_UP(IIJB:IIJE,1:IKT)=ZTHLM_F(IIJB:IIJE,1:IKT)
 PRT_UP(IIJB:IIJE,1:IKT)=ZRTM_F(IIJB:IIJE,1:IKT)
 PU_UP(IIJB:IIJE,1:IKT)=ZUM_F(IIJB:IIJE,1:IKT)
 PV_UP(IIJB:IIJE,1:IKT)=ZVM_F(IIJB:IIJE,1:IKT)
+PTKE_UP(IIJB:IIJE,1:IKT)=ZTKEM_F(IIJB:IIJE,1:IKT)
 !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT,JSV=1:KSV)
 PSV_UP(IIJB:IIJE,1:IKT,:)=ZSVM_F(IIJB:IIJE,1:IKT,:)
@@ -583,6 +586,17 @@ DO JK=IKB,IKE-IKL,IKL
       !$mnh_end_expand_where(JIJ=IIJB:IIJE)
     ENDIF
   ENDIF !PARAMMF%LMIXUV
+
+  IF(PARAMMF%LMIXTKE) THEN
+    !$mnh_expand_where(JIJ=IIJB:IIJE)
+    WHERE(GTEST(IIJB:IIJE))
+      PTKE_UP(IIJB:IIJE,JK+IKL) = (PTKE_UP(IIJB:IIJE,JK)*(1-0.5*ZMIX2(IIJB:IIJE)) + &
+                                   ZTKEM_F(IIJB:IIJE,JK)*ZMIX2(IIJB:IIJE)) &
+                                  /(1+0.5*ZMIX2(IIJB:IIJE))
+    ENDWHERE
+    !$mnh_end_expand_where(JIJ=IIJB:IIJE)
+  ENDIF
+
   DO JSV=1,KSV 
     IF (ONOMIXLG .AND. JSV >= KSV_LGBEG .AND. JSV<= KSV_LGEND) CYCLE
     !$mnh_expand_where(JIJ=IIJB:IIJE)

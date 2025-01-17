@@ -46,6 +46,8 @@
 !!      S. Riette shallow_mf now outputs ice cloud
 !!      S. Riette Jan 2012: support for both order of vertical levels
 !!      S. Riette April 2022: call abort, waiting for an update from an arpege developper...
+!!      A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
+!!      A. Marcel Jan 2025: TKE mixing
 !!
 !-------------------------------------------------------------------------------
 !
@@ -142,7 +144,7 @@ INTEGER :: JI, JJ, JL, JK, JLON, JLEV !
 INTEGER ::II, IUSCM, IKK, ILEV
 INTEGER :: ISV_LGBEG, ISV_LGEND, ITCOUNT
 INTEGER, DIMENSION(KIDIA:KFDIA)    :: IKLCL,IKETL,IKCTL
-REAL,DIMENSION(KIDIA:KFDIA,KLEV+2) :: ZFLXZTHMF,ZFLXZRMF,ZFLXZUMF,ZFLXZVMF
+REAL,DIMENSION(KIDIA:KFDIA,KLEV+2) :: ZFLXZTHMF,ZFLXZRMF,ZFLXZUMF,ZFLXZVMF,ZFLXZTKEMF
 REAL,DIMENSION(KIDIA:KFDIA,KLEV+2) :: ZEMF,ZDETR,ZENTR
 
 
@@ -153,7 +155,7 @@ REAL, DIMENSION(KIDIA:KFDIA)          ::  ZSFTH,ZSFRV
 
 REAL          ::  ZINVG, ZDT, ZEMF_MAX, ZTDCP, ZVMD
 
-REAL, DIMENSION(KIDIA:KFDIA,KLEV+2,1) ::  ZSVM, ZDSVDT_TURB, ZSVDT_MF
+REAL, DIMENSION(KIDIA:KFDIA,KLEV+2,1) ::  ZSVM, ZDSVDT_TURB, ZSVDT_MF, ZTKEDT_MF
 
 CHARACTER (LEN=4) :: HMF_UPDRAFT, HMF_CLOUD
 
@@ -172,6 +174,7 @@ REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZRT_UP    ! Rt  updraft characteristics
 REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZRV_UP    ! Vapor updraft characteristics
 REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZU_UP     ! U wind updraft characteristics
 REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZV_UP     ! V wind updraft characteristics
+REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZTKE_UP   ! TKE updraft characteristics
 REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZRC_UP    ! cloud content updraft characteristics
 REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZRI_UP    ! ice content   updraft characteristics
 REAL, DIMENSION(KIDIA:KFDIA,KLEV+2)  ::  ZTHV_UP   ! Thv   updraft characteristics
@@ -399,12 +402,12 @@ ZDRTDT_MF(:,:)  = 0.
       PSFTH=ZSFTH,PSFRV=ZSFRV,                                           &
       PTHM=ZTHETA,PRM=ZRM,PUM=ZU,PVM=ZV,PTKEM=ZTKE,PSVM=ZSVM,            &
 !  Output
-      PDUDT_MF=ZDUDT_MF,PDVDT_MF=ZDVDT_MF,                                      &
+      PDUDT_MF=ZDUDT_MF,PDVDT_MF=ZDVDT_MF,PDTKEDT_MF=ZTKEDT_MF,                 &
       PDTHLDT_MF=ZDTHLDT_MF,PDRTDT_MF=ZDRTDT_MF,PDSVDT_MF=ZSVDT_MF,             &
       PSIGMF=ZSIGMF,PRC_MF=ZRC_MF,PRI_MF=ZRI_MF,PCF_MF=ZCF_MF,PFLXZTHVMF=ZFLXZTHVMF,          &
-      PFLXZTHMF=ZFLXZTHMF,PFLXZRMF=ZFLXZRMF,PFLXZUMF=ZFLXZUMF,PFLXZVMF=ZFLXZVMF,&
+      PFLXZTHMF=ZFLXZTHMF,PFLXZRMF=ZFLXZRMF,PFLXZUMF=ZFLXZUMF,PFLXZVMF=ZFLXZVMF,PFLXZTKEMF=ZFLXZTKEMF, &
       PTHL_UP=ZTHL_UP,PRT_UP=ZRT_UP,PRV_UP=ZRV_UP,PRC_UP=ZRC_UP,PRI_UP=ZRI_UP,  &
-      PU_UP=ZU_UP, PV_UP=ZV_UP, PTHV_UP=ZTHV_UP, PW_UP=ZW_UP,                   &
+      PU_UP=ZU_UP, PV_UP=ZV_UP, PTKE_UP=ZTKE_UP, PTHV_UP=ZTHV_UP, PW_UP=ZW_UP,  &
       PFRAC_UP=ZFRAC_UP,PEMF=ZEMF,PDETR=ZDETR,PENTR=ZENTR,                      &
       KKLCL=IKLCL,KKETL=IKETL,KKCTL=IKCTL,                                      &
 !

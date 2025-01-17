@@ -243,6 +243,7 @@ END MODULE MODI_PHYS_PARAM_n
 !  Q. Rodier      2022   : integration with PHYEX
 !  C. Barthe      03/2023: add CELEC in call to turbulence
 !  A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
+!  A. Marcel Jan 2025: TKE mixing
 !!-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS
@@ -1708,7 +1709,7 @@ IF (CSCONV == 'EDKF') THEN
                    XDZZ, XZZ,XDXHAT(1),XDYHAT(1),                         &
                    XRHODJ, XRHODREF, XPABST, ZEXN, ZSFTH, ZSFRV,          &
                    XTHT,XRT,XUT,XVT,XTKET,XSVT,                           &
-                   XRTHS,XRRS,XRUS,XRVS,XRSVS,                            &
+                   XRTHS,XRRS,XRUS,XRVS,XRTKES,XRSVS,                     &
                    ZSIGMF,XRC_MF, XRI_MF, XCF_MF, XWTHVMF, XWUMF, XWVMF)
 !
 ELSE

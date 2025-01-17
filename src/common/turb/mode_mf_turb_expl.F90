@@ -8,10 +8,10 @@
 IMPLICIT NONE
 CONTAINS
       SUBROUTINE MF_TURB_EXPL(D, PARAMMF,                             &
-                PRHODJ,PTHLM,PTHVM,PRTM,PUM,PVM,                      &
-                PTHLDT,PRTDT,PUDT,PVDT,                               &
-                PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,              &
-                PFLXZTHLMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF)
+                PRHODJ,PTHLM,PTHVM,PRTM,PUM,PVM,PTKEM,                &
+                PTHLDT,PRTDT,PUDT,PVDT,PTKEDT,                        &
+                PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,PTKE_UP,      &
+                PFLXZTHLMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,PFLXZTKEMF)
 
 !     #################################################################
 !
@@ -45,6 +45,7 @@ CONTAINS
 !!
 !!    MODIFICATIONS
 !!    -------------
+!!  A. Marcel Jan 2025: TKE mixing
 !!
 !! --------------------------------------------------------------------------
 !       
@@ -76,6 +77,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PTHVM
 !  Momentum at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PUM
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PVM
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN) ::  PTKEM ! TKE at t-dt
 !
 ! Tendencies of conservative variables
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PTHLDT
@@ -86,11 +88,13 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PRTDT
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PUDT
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PVDT
 
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT) ::  PTKEDT ! Tendencies of TKE
+
 ! Updraft characteritics
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   ::  PEMF,PTHL_UP,PTHV_UP,PRT_UP,PU_UP,PV_UP,PTKE_UP
 
 ! Fluxes
-REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PFLXZTHLMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)  ::  PFLXZTHLMF,PFLXZTHVMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,PFLXZTKEMF
 
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZFLXZTHSMF,ZTHS_UP,ZTHSM  ! Theta S flux
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZQT_UP,ZQTM,ZTHSDT,ZQTDT
@@ -120,6 +124,7 @@ PFLXZTHVMF(:,:) = 0.
 PFLXZTHLMF(:,:) = 0.
 PFLXZUMF(:,:)   = 0.
 PFLXZVMF(:,:)   = 0.
+PFLXZTKEMF(:,:) = 0.
 PTHLDT(:,:) = 0.
 PRTDT(:,:)  = 0.
 PUDT(:,:)   = 0.
@@ -166,7 +171,14 @@ ELSE
   PFLXZVMF(:,:) = 0.
 ENDIF
 
-
+IF (PARAMMF%LMIXTKE) THEN
+  CALL MZM_MF(D, PTKEM(:,:), PFLXZTKEMF(:,:))
+  !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+  PFLXZTKEMF(IIJB:IIJE,1:IKT) = PEMF(IIJB:IIJE,1:IKT)*(PTKE_UP(IIJB:IIJE,1:IKT)-PFLXZTKEMF(IIJB:IIJE,1:IKT))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+ELSE
+  PFLXZTKEMF(:,:) = 0.
+ENDIF
 !----------------------------------------------------------------------------
 !
 !*      3. COMPUTE TENDENCIES OF CONSERVATIVE VARIABLES (or treated as such...)
@@ -192,6 +204,13 @@ IF (PARAMMF%LMIXUV) THEN
   END DO
 ENDIF  
 
+IF (PARAMMF%LMIXTKE) THEN
+  DO JK=IKB,IKE-IKL,IKL
+    DO JIJ=IIJB,IIJE
+      PTKEDT(JIJ,JK) = (PFLXZTKEMF(JIJ,JK  ) - PFLXZTKEMF(JIJ,JK+IKL)) / PRHODJ(JIJ,JK)
+    ENDDO
+  END DO
+ENDIF 
 
 IF (LHOOK) CALL DR_HOOK('MF_TURB_EXPL',1,ZHOOK_HANDLE)
 END SUBROUTINE MF_TURB_EXPL
