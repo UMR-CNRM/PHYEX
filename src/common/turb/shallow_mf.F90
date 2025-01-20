@@ -69,6 +69,7 @@
 !  R. Honnert     04/2021: remove HRIO and BOUT schemes
 !!      A. Marcel Jan 2025: TKE mixing
 !!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      A. Marcel Jan 2025: KIC formulation from Rooy and Siebesma (2008)
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -249,7 +250,7 @@ IF (PARAMMF%CMF_UPDRAFT == 'EDKF') THEN
                        KSV, GENTR_DETR,                          &
                        ONOMIXLG,KSV_LGBEG,KSV_LGEND,             &
                        PZZ,PDZZ,                                 &
-                       PSFTH,PSFRV,PPABSM,PRHODREF,              &
+                       PSFTH,PSFRV,PEXNM, PPABSM,PRHODREF,       &
                        PUM,PVM,PTKEM,                            &
                        PTHM,PRM(:,:,1),ZTHLM,ZRTM,PSVM,          &
                        ZTH_UP,PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP, &

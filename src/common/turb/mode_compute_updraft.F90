@@ -15,7 +15,7 @@ CONTAINS
                                  ONOMIXLG,KSV_LGBEG,KSV_LGEND,    &
                                  PZZ,PDZZ,                        &
                                  PSFTH,PSFRV,                     &
-                                 PPABSM,PRHODREF,PUM,PVM, PTKEM,  &
+                                 PEXNM, PPABSM,PRHODREF,PUM,PVM, PTKEM,  &
                                  PTHM,PRVM,PTHLM,PRTM,            &
                                  PSVM,PTH_UP,PTHL_UP,PRT_UP,      &
                                  PRV_UP,PRC_UP,PRI_UP,PTHV_UP,    &
@@ -66,6 +66,7 @@ CONTAINS
 !!     A. Marcel Jan 2025: TKE mixing
 !!     A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !!     S. Riette Jan 2025: exp/log during dP/dZ conversion
+!!     A. Marcel Jan 2025: KIC formulation from Rooy and Siebesma (2008)
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -107,6 +108,7 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(IN)   :: PDZZ      !  Metrics coefficient
 REAL, DIMENSION(D%NIJT),   INTENT(IN)   ::  PSFTH,PSFRV
 ! normal surface fluxes of theta,rv,(u,v) parallel to the orography
 !
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PEXNM      ! Exner function
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PPABSM     ! Pressure at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PRHODREF   ! dry density of the
                                                   ! reference state
@@ -152,7 +154,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) ::    &
                         ZW_UP2,                  &    ! w**2  of the updraft
                         ZBUO_INTEG_DRY, ZBUO_INTEG_CLD,&! Integrated Buoyancy
                         ZENTR_CLD,ZDETR_CLD,     &    ! wet entrainment and detrainment
-                        ZG_O_THVREF_UP
+                        ZG_O_THVREF_UP, ZEXN_F
 
 REAL, DIMENSION(D%NIJT,D%NKT,KSV) :: &
                         ZSVM_F ! scalar variables 
@@ -224,15 +226,20 @@ REAL                   :: ZT                   ! Temperature
 REAL                   :: ZWK0D                ! Work array
 
 ! Variables for dry and cloudy parts
-REAL, DIMENSION(D%NIJT) :: ZCOEFF_MINUS_HALF,&  ! Variation of Thv between mass points kk-kkl and kk
-                                  ZCOEFF_PLUS_HALF     ! Variation of Thv between mass points kk and kk+kkl
+REAL, DIMENSION(D%NIJT) :: ZCOEFF_MINUS_HALF_THV,&  ! Variation of Thv between mass points kk-kkl and kk
+                           ZCOEFF_PLUS_HALF_THV, &  ! Variation of Thv between mass points kk and kk+kkl
+                           ZCOEFF_MINUS_HALF_RT, &  ! Variation of rt between mass points kk-kkl and kk
+                           ZCOEFF_PLUS_HALF_RT,  &  ! Variation of rt between mass points kk and kk+kkl
+                           ZCOEFF_MINUS_HALF_THL,&  ! Variation of Thl between mass points kk-kkl and kk
+                           ZCOEFF_PLUS_HALF_THL     ! Variation of Thl between mass points kk and kk+kkl
 REAL, DIMENSION(D%NIJT) :: ZPRE                 ! pressure at the bottom of the cloudy part
 REAL, DIMENSION(D%NIJT) :: ZG_O_THVREF_ED
 REAL, DIMENSION(D%NIJT) :: ZFRAC_ICE            ! fraction of ice
 REAL, DIMENSION(D%NIJT) :: ZDZ_STOP,&           ! Exact Height of the LCL above flux level KK
-                          ZTHV_MINUS_HALF,&    ! Thv at flux point(kk)  
-                          ZTHV_PLUS_HALF       ! Thv at flux point(kk+kkl)
-REAL                   :: ZDZ                  ! Delta Z used in computations
+                           ZTHV_MINUS_HALF,&    ! Thv at flux point(kk)  
+                           ZTHV_PLUS_HALF       ! Thv at flux point(kk+kkl)
+REAL                    :: ZDZ                  ! Delta Z used in computations
+REAL                    :: ZTHL, ZRT, ZLV, ZLVS, ZLS, ZDRSATDT, ZGAMMA, ZALPHA, ZLAMBDA, ZBETA
 INTEGER :: JKLIM
 INTEGER :: IIJB,IIJE ! physical horizontal domain indices
 INTEGER :: IKT,IKB,IKE,IKL
@@ -335,6 +342,7 @@ PRT_UP(IIJB:IIJE,IKB) = ZRTM_F(IIJB:IIJE,IKB)+ &
 
 IF (OENTR_DETR) THEN
   CALL MZM_MF(D, PTHM (:,:), ZTHM_F (:,:))
+  CALL MZM_MF(D, PEXNM(:,:), ZEXN_F(:,:))
   IF(PARAMMF%LPZ_EXP_LOG) THEN
     !Using a z-like interpolation to be consistent with computed heights
     !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
@@ -507,7 +515,7 @@ DO JK=IKB,IKE-IKL,IKL
       !$mnh_end_expand_where(JIJ=IIJB:IIJE)
     ENDIF
     CALL COMPUTE_ENTR_DETR(D, CST, NEBN, PARAMMF, JK,IKB,IKE,IKL,GTEST,GTESTLCL,PFRAC_ICE_UP(:,JK),&
-                           PRHODREF(:,JK),ZPRES_F(:,JK),ZPRES_F(:,JK+IKL),&
+                           PRHODREF(:,JK),ZPRES_F(:,JK),ZPRES_F(:,JK+IKL),ZEXN_F(:,JK),&
                            PZZ(:,:),PDZZ(:,:),ZTHVM(:,:),  &
                            PTHLM(:,:),PRTM(:,:),ZW_UP2(:,:),PTH_UP(:,JK),   &
                            PTHL_UP(:,JK),PRT_UP(:,JK),ZLUPSURF(:), ZLUP(:), ZLDOWN(:), &
@@ -768,7 +776,7 @@ CONTAINS
                             KK,KKB,KKE,KKL,OTEST,OTESTLCL,&
                             PFRAC_ICE,PRHODREF,&
                             PPRE_MINUS_HALF,&
-                            PPRE_PLUS_HALF,PZZ,PDZZ,&
+                            PPRE_PLUS_HALF,PEXN_F,PZZ,PDZZ,&
                             PTHVM,PTHLM,PRTM,PW_UP2,PTH_UP,&
                             PTHL_UP,PRT_UP,PLUPSURF,PLUP,PLDOWN,&
                             PRC_UP,PRI_UP,PTHV_UP,&
@@ -859,6 +867,7 @@ REAL, DIMENSION(D%NIJT), INTENT(IN)  :: PFRAC_ICE ! fraction of ice
 REAL, DIMENSION(D%NIJT),     INTENT(IN) ::  PRHODREF  !rhodref
 REAL, DIMENSION(D%NIJT),     INTENT(IN) ::  PPRE_MINUS_HALF ! Pressure at flux level KK
 REAL, DIMENSION(D%NIJT),     INTENT(IN) ::  PPRE_PLUS_HALF ! Pressure at flux level KK+KKL
+REAL, DIMENSION(D%NIJT),     INTENT(IN) ::  PEXN_F ! Exner function at flux level KK
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PZZ       !  Height at the flux point
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PDZZ       !  metrics coefficient
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN) ::  PTHVM      ! ThetaV environment 
@@ -944,16 +953,16 @@ END DO
 !               1.5 Gradient and flux values of thetav
 !$mnh_expand_array(JIJ=IIJB:IIJE)
 IF(KK/=KKB)THEN
-  ZCOEFF_MINUS_HALF(IIJB:IIJE)=((PTHVM(IIJB:IIJE,KK)-PTHVM(IIJB:IIJE,KK-KKL))/PDZZ(IIJB:IIJE,KK))
+  ZCOEFF_MINUS_HALF_THV(IIJB:IIJE)=((PTHVM(IIJB:IIJE,KK)-PTHVM(IIJB:IIJE,KK-KKL))/PDZZ(IIJB:IIJE,KK))
   ZTHV_MINUS_HALF(IIJB:IIJE) = PTHVM(IIJB:IIJE,KK) - &
-                               & ZCOEFF_MINUS_HALF(IIJB:IIJE)*0.5*(PZZ(IIJB:IIJE,KK+KKL)-PZZ(IIJB:IIJE,KK))
+                               & ZCOEFF_MINUS_HALF_THV(IIJB:IIJE)*0.5*(PZZ(IIJB:IIJE,KK+KKL)-PZZ(IIJB:IIJE,KK))
 ELSE
-  ZCOEFF_MINUS_HALF(IIJB:IIJE)=0.
+  ZCOEFF_MINUS_HALF_THV(IIJB:IIJE)=0.
   ZTHV_MINUS_HALF(IIJB:IIJE) = PTHVM(IIJB:IIJE,KK)
 ENDIF
-ZCOEFF_PLUS_HALF(IIJB:IIJE)  = ((PTHVM(IIJB:IIJE,KK+KKL)-PTHVM(IIJB:IIJE,KK))/PDZZ(IIJB:IIJE,KK+KKL))
+ZCOEFF_PLUS_HALF_THV(IIJB:IIJE)  = ((PTHVM(IIJB:IIJE,KK+KKL)-PTHVM(IIJB:IIJE,KK))/PDZZ(IIJB:IIJE,KK+KKL))
 ZTHV_PLUS_HALF(IIJB:IIJE)  = PTHVM(IIJB:IIJE,KK) + &
-                             & ZCOEFF_PLUS_HALF(IIJB:IIJE)*0.5*(PZZ(IIJB:IIJE,KK+KKL)-PZZ(IIJB:IIJE,KK))
+                             & ZCOEFF_PLUS_HALF_THV(IIJB:IIJE)*0.5*(PZZ(IIJB:IIJE,KK+KKL)-PZZ(IIJB:IIJE,KK))
 !$mnh_end_expand_array(JIJ=IIJB:IIJE)
 
 !               2  Dry part computation:
@@ -966,13 +975,13 @@ DO JIJ=IIJB,IIJE
     !Between flux level KK and min(mass level, bottom of cloudy part)
     ZDZ=MIN(ZDZ_STOP(JIJ),(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))*0.5)
     PBUO_INTEG_DRY(JIJ) = ZG_O_THVREF_ED(JIJ)*ZDZ*&
-                (0.5 * (  - ZCOEFF_MINUS_HALF(JIJ))*ZDZ  &
+                (0.5 * (  - ZCOEFF_MINUS_HALF_THV(JIJ))*ZDZ  &
                   - ZTHV_MINUS_HALF(JIJ) + PTHV_UP(JIJ) )
 
     !Between mass flux KK and bottom of cloudy part (if above mass flux)
     ZDZ=MAX(0., ZDZ_STOP(JIJ)-(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))*0.5)
     PBUO_INTEG_DRY(JIJ) = PBUO_INTEG_DRY(JIJ) + ZG_O_THVREF_ED(JIJ)*ZDZ*&
-                (0.5 * (  - ZCOEFF_PLUS_HALF(JIJ))*ZDZ &
+                (0.5 * (  - ZCOEFF_PLUS_HALF_THV(JIJ))*ZDZ &
                   - PTHVM(JIJ,KK) + PTHV_UP(JIJ) )
 
     !Entr//Detr. computation
@@ -1033,14 +1042,14 @@ DO JIJ=IIJB,IIJE
     !Between bottom of cloudy part (if under mass level) and mass level KK
     ZDZ=MAX(0., 0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))-ZDZ_STOP(JIJ))
     PBUO_INTEG_CLD(JIJ) = ZG_O_THVREF_ED(JIJ)*ZDZ*&
-            (0.5*( ZCOTHVU - ZCOEFF_MINUS_HALF(JIJ))*ZDZ &
-              - (PTHVM(JIJ,KK)-ZDZ*ZCOEFF_MINUS_HALF(JIJ)) + PTHV_UP(JIJ) )
+            (0.5*( ZCOTHVU - ZCOEFF_MINUS_HALF_THV(JIJ))*ZDZ &
+              - (PTHVM(JIJ,KK)-ZDZ*ZCOEFF_MINUS_HALF_THV(JIJ)) + PTHV_UP(JIJ) )
 
     !Between max(mass level, bottom of cloudy part) and flux level KK+KKL
     ZDZ=(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))-MAX(ZDZ_STOP(JIJ),0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK)))
     PBUO_INTEG_CLD(JIJ) = PBUO_INTEG_CLD(JIJ)+ZG_O_THVREF_ED(JIJ)*ZDZ*&
-                      (0.5*( ZCOTHVU - ZCOEFF_PLUS_HALF(JIJ))*ZDZ&
-              - (PTHVM(JIJ,KK)+(0.5*((PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK)))-ZDZ)*ZCOEFF_PLUS_HALF(JIJ)) +&
+                      (0.5*( ZCOTHVU - ZCOEFF_PLUS_HALF_THV(JIJ))*ZDZ&
+              - (PTHVM(JIJ,KK)+(0.5*((PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK)))-ZDZ)*ZCOEFF_PLUS_HALF_THV(JIJ)) +&
               PTHV_UP(JIJ) )
 
   ELSE
@@ -1049,92 +1058,136 @@ DO JIJ=IIJB,IIJE
   END IF
 END DO
 
-!               3.2 Critical mixed fraction for KK+KKL flux level (ZKIC_F2) and
-!                   for bottom of cloudy part (ZKIC), then a mean for the cloudy part
-!                   (put also in ZKIC)
-!
-!                   computation by estimating unknown  
-!                   T^mix r_c^mix and r_i^mix from enthalpy^mix and r_w^mix
-!                   We determine the zero crossing of the linear curve
-!                   evaluating the derivative using ZMIXF=0.1
-                
-ZKIC_INIT=0.1  ! starting value for critical mixed fraction for CLoudy Part
-ZMIXTHL(:) = 300.
-ZMIXRT(:) = 0.1
-
-
-
-!  Compute thetaV of environment at the bottom of cloudy part
-!    and cons then non cons. var. of mixture at the bottom of cloudy part
-
-!   JKLIM computed to avoid KKL(KK-KKL) being < KKL*KKB
-JKLIM=KKL*MAX(KKL*(KK-KKL),KKL*KKB)
-DO JIJ=IIJB,IIJE
-  IF(OTEST(JIJ) .AND. PPART_DRY(JIJ)>0.5) THEN
-    ZDZ=ZDZ_STOP(JIJ)-0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))
-    ZTHV(JIJ)= PTHVM(JIJ,KK)+ZCOEFF_PLUS_HALF(JIJ)*ZDZ
-    ZMIXTHL(JIJ) = ZKIC_INIT * &
-               (PTHLM(JIJ,KK)+ZDZ*(PTHLM(JIJ,KK+KKL)-PTHLM(JIJ,KK))/PDZZ(JIJ,KK+KKL)) + &
-               (1. - ZKIC_INIT)*PTHL_UP(JIJ)
-    ZMIXRT(JIJ)  = ZKIC_INIT * &
-               (PRTM(JIJ,KK)+ZDZ*(PRTM(JIJ,KK+KKL)-PRTM(JIJ,KK))/PDZZ(JIJ,KK+KKL)) +   &
-               (1. - ZKIC_INIT)*PRT_UP(JIJ)
-  ELSEIF(OTEST(JIJ)) THEN
-    ZDZ=0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))-ZDZ_STOP(JIJ)
-    ZTHV(JIJ)= PTHVM(JIJ,KK)-ZCOEFF_MINUS_HALF(JIJ)*ZDZ
-    ZMIXTHL(JIJ) = ZKIC_INIT * &
-               (PTHLM(JIJ,KK)-ZDZ*(PTHLM(JIJ,KK)-PTHLM(JIJ,JKLIM))/PDZZ(JIJ,KK)) + &
-               (1. - ZKIC_INIT)*PTHL_UP(JIJ)
-    ZMIXRT(JIJ)  = ZKIC_INIT * &
-               (PRTM(JIJ,KK)-ZDZ*(PRTM(JIJ,KK)-PRTM(JIJ,JKLIM))/PDZZ(JIJ,KK)) + &
-               (1. - ZKIC_INIT)*PRT_UP(JIJ)
-  END IF
-ENDDO
-CALL TH_R_FROM_THL_RT(D, CST, NEBN, NEBN%CFRAC_ICE_SHALLOW_MF, ZFRAC_ICE,&
-             ZPRE,ZMIXTHL,ZMIXRT,&
-             ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
-             ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
-             PBUF=ZBUF)
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-ZTHVMIX(IIJB:IIJE) = ZTHMIX(IIJB:IIJE)*(1.+ZRVORD*ZRVMIX(IIJB:IIJE))/(1.+ZMIXRT(IIJB:IIJE))
-
-!  Compute cons then non cons. var. of mixture at the flux level KK+KKL  with initial ZKIC
-ZMIXTHL(IIJB:IIJE) = ZKIC_INIT * 0.5*(PTHLM(IIJB:IIJE,KK)+PTHLM(IIJB:IIJE,KK+KKL))+&
-                       & (1. - ZKIC_INIT)*PTHL_UP(IIJB:IIJE)
-ZMIXRT(IIJB:IIJE)  = ZKIC_INIT * 0.5*(PRTM(IIJB:IIJE,KK)+PRTM(IIJB:IIJE,KK+KKL))+&
-                       & (1. - ZKIC_INIT)*PRT_UP(IIJB:IIJE)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
-CALL TH_R_FROM_THL_RT(D, CST, NEBN, NEBN%CFRAC_ICE_SHALLOW_MF, ZFRAC_ICE,&
-             PPRE_PLUS_HALF,ZMIXTHL,ZMIXRT,&
-             ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
-             ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
-             PBUF=ZBUF)
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-ZTHVMIX_F2(IIJB:IIJE) = ZTHMIX(IIJB:IIJE)*(1.+ZRVORD*ZRVMIX(IIJB:IIJE))/(1.+ZMIXRT(IIJB:IIJE))
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
-
-!Computation of mean ZKIC over the cloudy part
-DO JIJ=IIJB,IIJE
-  IF (OTEST(JIJ)) THEN
-    ! Compute ZKIC at the bottom of cloudy part
-    ! Thetav_up at bottom is equal to Thetav_up at flux level KK
-    IF (ABS(PTHV_UP(JIJ)-ZTHVMIX(JIJ))<1.E-10) THEN
-      ZKIC(JIJ)=1.
+IF(PARAMMF%CKIC_COMPUTE=='KFB') THEN
+  !               3.2.a Critical mixed fraction for KK+KKL flux level (ZKIC_F2) and
+  !                   for bottom of cloudy part (ZKIC), then a mean for the cloudy part
+  !                   (put also in ZKIC)
+  !
+  !                   computation by estimating unknown  
+  !                   T^mix r_c^mix and r_i^mix from enthalpy^mix and r_w^mix
+  !                   We determine the zero crossing of the linear curve
+  !                   evaluating the derivative using ZMIXF=0.1
+                  
+  ZKIC_INIT=0.1  ! starting value for critical mixed fraction for CLoudy Part
+  ZMIXTHL(:) = 300.
+  ZMIXRT(:) = 0.1
+  
+  !  Compute thetaV of environment at the bottom of cloudy part
+  !    and cons then non cons. var. of mixture at the bottom of cloudy part
+  
+  !   JKLIM computed to avoid KKL(KK-KKL) being < KKL*KKB
+  JKLIM=KKL*MAX(KKL*(KK-KKL),KKL*KKB)
+  DO JIJ=IIJB,IIJE
+    IF(OTEST(JIJ) .AND. PPART_DRY(JIJ)>0.5) THEN
+      ZDZ=ZDZ_STOP(JIJ)-0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))
+      ZTHV(JIJ)= PTHVM(JIJ,KK)+ZCOEFF_PLUS_HALF_THV(JIJ)*ZDZ
+      ZMIXTHL(JIJ) = ZKIC_INIT * &
+                 (PTHLM(JIJ,KK)+ZDZ*(PTHLM(JIJ,KK+KKL)-PTHLM(JIJ,KK))/PDZZ(JIJ,KK+KKL)) + &
+                 (1. - ZKIC_INIT)*PTHL_UP(JIJ)
+      ZMIXRT(JIJ)  = ZKIC_INIT * &
+                 (PRTM(JIJ,KK)+ZDZ*(PRTM(JIJ,KK+KKL)-PRTM(JIJ,KK))/PDZZ(JIJ,KK+KKL)) +   &
+                 (1. - ZKIC_INIT)*PRT_UP(JIJ)
+    ELSEIF(OTEST(JIJ)) THEN
+      ZDZ=0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))-ZDZ_STOP(JIJ)
+      ZTHV(JIJ)= PTHVM(JIJ,KK)-ZCOEFF_MINUS_HALF_THV(JIJ)*ZDZ
+      ZMIXTHL(JIJ) = ZKIC_INIT * &
+                 (PTHLM(JIJ,KK)-ZDZ*(PTHLM(JIJ,KK)-PTHLM(JIJ,JKLIM))/PDZZ(JIJ,KK)) + &
+                 (1. - ZKIC_INIT)*PTHL_UP(JIJ)
+      ZMIXRT(JIJ)  = ZKIC_INIT * &
+                 (PRTM(JIJ,KK)-ZDZ*(PRTM(JIJ,KK)-PRTM(JIJ,JKLIM))/PDZZ(JIJ,KK)) + &
+                 (1. - ZKIC_INIT)*PRT_UP(JIJ)
     ELSE
-      ZKIC(JIJ) = MAX(0.,PTHV_UP(JIJ)-ZTHV(JIJ))*ZKIC_INIT /  &  
-                 (PTHV_UP(JIJ)-ZTHVMIX(JIJ))
+      ZMIXTHL(JIJ) = 300.
+      ZMIXRT(JIJ) = 0.1
+    ENDIF
+  ENDDO
+  CALL TH_R_FROM_THL_RT(CST,NEBN,D%NIJT,NEBN%CFRAC_ICE_SHALLOW_MF,ZFRAC_ICE,&
+               ZPRE,ZMIXTHL,ZMIXRT,&
+               ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
+               ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
+               PBUF=ZBUF, KB=D%NIJB, KE=D%NIJE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZTHVMIX(IIJB:IIJE) = ZTHMIX(IIJB:IIJE)*(1.+ZRVORD*ZRVMIX(IIJB:IIJE))/(1.+ZMIXRT(IIJB:IIJE))
+  
+  !  Compute cons then non cons. var. of mixture at the flux level KK+KKL  with initial ZKIC
+  ZMIXTHL(IIJB:IIJE) = ZKIC_INIT * 0.5*(PTHLM(IIJB:IIJE,KK)+PTHLM(IIJB:IIJE,KK+KKL))+&
+                         & (1. - ZKIC_INIT)*PTHL_UP(IIJB:IIJE)
+  ZMIXRT(IIJB:IIJE)  = ZKIC_INIT * 0.5*(PRTM(IIJB:IIJE,KK)+PRTM(IIJB:IIJE,KK+KKL))+&
+                         & (1. - ZKIC_INIT)*PRT_UP(IIJB:IIJE)
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  CALL TH_R_FROM_THL_RT(CST,NEBN,D%NIJT,NEBN%CFRAC_ICE_SHALLOW_MF,ZFRAC_ICE,&
+               PPRE_PLUS_HALF,ZMIXTHL,ZMIXRT,&
+               ZTHMIX,ZRVMIX,PRC_MIX,PRI_MIX,&
+               ZRSATW_ED, ZRSATI_ED,OOCEAN=.FALSE.,&
+               PBUF=ZBUF, KB=D%NIJB, KE=D%NIJE)
+  !$mnh_expand_array(JIJ=IIJB:IIJE)
+  ZTHVMIX_F2(IIJB:IIJE) = ZTHMIX(IIJB:IIJE)*(1.+ZRVORD*ZRVMIX(IIJB:IIJE))/(1.+ZMIXRT(IIJB:IIJE))
+  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+  
+  !Computation of mean ZKIC over the cloudy part
+  DO JIJ=IIJB,IIJE
+    IF (OTEST(JIJ)) THEN
+      ! Compute ZKIC at the bottom of cloudy part
+      ! Thetav_up at bottom is equal to Thetav_up at flux level KK
+      IF (ABS(PTHV_UP(JIJ)-ZTHVMIX(JIJ))<1.E-10) THEN
+        ZKIC(JIJ)=1.
+      ELSE
+        ZKIC(JIJ) = MAX(0.,PTHV_UP(JIJ)-ZTHV(JIJ))*ZKIC_INIT /  &  
+                   (PTHV_UP(JIJ)-ZTHVMIX(JIJ))
+      END IF
+      ! Compute ZKIC_F2 at flux level KK+KKL
+      IF (ABS(ZTHV_UP_F2(JIJ)-ZTHVMIX_F2(JIJ))<1.E-10) THEN
+        ZKIC_F2(JIJ)=1.
+      ELSE
+        ZKIC_F2(JIJ) = MAX(0.,ZTHV_UP_F2(JIJ)-ZTHV_PLUS_HALF(JIJ))*ZKIC_INIT /  &  
+                   (ZTHV_UP_F2(JIJ)-ZTHVMIX_F2(JIJ))
+      END IF
+      !Mean ZKIC over the cloudy part
+      ZKIC(JIJ)=MAX(MIN(0.5*(ZKIC(JIJ)+ZKIC_F2(JIJ)),1.),0.)
     END IF
-    ! Compute ZKIC_F2 at flux level KK+KKL
-    IF (ABS(ZTHV_UP_F2(JIJ)-ZTHVMIX_F2(JIJ))<1.E-10) THEN
-      ZKIC_F2(JIJ)=1.
-    ELSE
-      ZKIC_F2(JIJ) = MAX(0.,ZTHV_UP_F2(JIJ)-ZTHV_PLUS_HALF(JIJ))*ZKIC_INIT /  &  
-                 (ZTHV_UP_F2(JIJ)-ZTHVMIX_F2(JIJ))
-    END IF
-    !Mean ZKIC over the cloudy part
-    ZKIC(JIJ)=MAX(MIN(0.5*(ZKIC(JIJ)+ZKIC_F2(JIJ)),1.),0.)
-  END IF
-END DO
+  END DO
+ELSEIF(PARAMMF%CKIC_COMPUTE=='RS08') THEN
+  !               3.2.b Critical mixed fraction using the analytical formulation from Rooy and Siebesma (2008)
+  DO JIJ=IIJB,IIJE
+    IF (OTEST(JIJ)) THEN
+      IF(KK/=KKB)THEN
+        ZCOEFF_MINUS_HALF_RT(JIJ)=((PRTM(JIJ,KK)-PRTM(JIJ,KK-KKL))/PDZZ(JIJ,KK))
+        ZCOEFF_MINUS_HALF_THL(JIJ)=((PTHLM(JIJ,KK)-PTHLM(JIJ,KK-KKL))/PDZZ(JIJ,KK))
+      ELSE
+        ZCOEFF_MINUS_HALF_RT(JIJ)=0.
+        ZCOEFF_MINUS_HALF_THL(JIJ)=0.
+      ENDIF
+      ZCOEFF_PLUS_HALF_RT(JIJ)  = ((PRTM(JIJ,KK+KKL)-PRTM(JIJ,KK))/PDZZ(JIJ,KK+KKL))
+      ZCOEFF_PLUS_HALF_THL(JIJ)  = ((PTHLM(JIJ,KK+KKL)-PTHLM(JIJ,KK))/PDZZ(JIJ,KK+KKL))
+
+      IF(PPART_DRY(JIJ)>0.5) THEN
+        ZDZ=ZDZ_STOP(JIJ)-0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))
+        ZTHV(JIJ)= PTHVM(JIJ,KK)+ZCOEFF_PLUS_HALF_THV(JIJ)*ZDZ
+        ZTHL= PTHLM(JIJ,KK)+ZCOEFF_PLUS_HALF_THL(JIJ)*ZDZ
+        ZRT= PRTM(JIJ,KK)+ZCOEFF_PLUS_HALF_RT(JIJ)*ZDZ
+      ELSE
+        ZDZ=0.5*(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))-ZDZ_STOP(JIJ)
+        ZTHV(JIJ)= PTHVM(JIJ,KK)-ZCOEFF_MINUS_HALF_THV(JIJ)*ZDZ
+        ZTHL= PTHLM(JIJ,KK)-ZCOEFF_MINUS_HALF_THL(JIJ)*ZDZ
+        ZRT= PRTM(JIJ,KK)-ZCOEFF_MINUS_HALF_RT(JIJ)*ZDZ
+      ENDIF
+      ZT = PTH_UP(JIJ)*PEXN_F(JIJ)
+      ZLV = (CST%XLVTT + (CST%XCPV-CST%XCL) * (ZT-CST%XTT))
+      ZLS = (CST%XLSTT + (CST%XCPV-CST%XCI) * (ZT-CST%XTT))
+      ZLVS = (1. - ZFRAC_ICE(JIJ)) * ZLV + ZFRAC_ICE(JIJ) * ZLS
+      ZDRSATDT = ZLVS * PRSAT_UP(JIJ) / ( CST%XRV * ZT**2 ) * (1. + (CST%XRV * PRSAT_UP(JIJ) / CST%XRD))
+
+      ZGAMMA = (ZLVS/CST%XCPD)*ZDRSATDT
+      ZALPHA = (CST%XCPD/ZLVS)*PEXN_F(JIJ)*PTHL_UP(JIJ)
+      ZLAMBDA = CST%XRV/CST%XRD - 1.
+      ZBETA = 1./(1 + ZGAMMA)*(1.+ (1+ZLAMBDA)*ZGAMMA*ZALPHA)
+
+      ZKIC(JIJ) = (PTHV_UP(JIJ) - ZTHV(JIJ))/(ZBETA*(PTHL_UP(JIJ) - ZTHL) + &
+                & (ZBETA - ZALPHA)*ZLVS/(CST%XCPD*PEXN_F(JIJ))*(PRT_UP(JIJ)-ZRT))
+      ZKIC(JIJ) = MAX(MIN(ZKIC(JIJ),1.),0.)
+    ENDIF
+  ENDDO
+ENDIF
 
 !               3.3 Integration of PDF
 !                   According to Kain and Fritsch (1990), we replace delta Mt
