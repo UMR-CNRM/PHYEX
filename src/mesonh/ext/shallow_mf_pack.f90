@@ -18,7 +18,9 @@ INTERFACE
                 PSFTH,PSFRV,                                          &
                 PTHM,PRM,PUM,PVM,PTKEM,PSVM,                          &
                 PRTHS,PRRS,PRUS,PRVS,PRTKES,PRSVS,                    &
-                PSIGMF,PRC_MF,PRI_MF,PCF_MF,PFLXZTHVMF,PFLXZUMF,PFLXZVMF)
+                PSIGMF,PRC_MF,PRI_MF,PCF_MF,                          &
+                PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,   &
+                PFLXZTHVMF,PFLXZUMF,PFLXZVMF)
 !     #################################################################
 !!
 use MODD_IO,        only: TFILEDATA
@@ -55,6 +57,7 @@ REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRRS
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRTKES           ! TKE sources
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS            ! Scalar sources 
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
+REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PFLXZUMF, PFLXZVMF   ! Dyn prod for TKE scheme
 !
@@ -75,7 +78,9 @@ END MODULE MODI_SHALLOW_MF_PACK
                 PSFTH,PSFRV,                                          &
                 PTHM,PRM,PUM,PVM,PTKEM,PSVM,                          &
                 PRTHS,PRRS,PRUS,PRVS,PRTKES,PRSVS,                    &
-                PSIGMF,PRC_MF,PRI_MF,PCF_MF,PFLXZTHVMF,PFLXZUMF,PFLXZVMF)
+                PSIGMF,PRC_MF,PRI_MF,PCF_MF,                          &
+                PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,   &
+                PFLXZTHVMF,PFLXZUMF,PFLXZVMF)
 !     #################################################################
 !!
 !!****  *SHALLOW_MF_PACK* - 
@@ -113,6 +118,7 @@ END MODULE MODI_SHALLOW_MF_PACK
 !  C. Barthe   23/11/2023: allow negative values for the tendencies of electric charges
 !  A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 !  A. Marcel Jan 2025: TKE mixing
+!  A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 ! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -123,6 +129,7 @@ USE MODD_NEB_n, ONLY: NEBN
 USE MODD_TURB_n, ONLY: TURBN
 USE MODD_CTURB,  ONLY: CSTURB
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALLN, LMF_FLX
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAMN
 USE MODD_DIMPHYEX,   ONLY: DIMPHYEX_t
 !
 USE MODE_FILL_DIMPHYEX, ONLY: FILL_DIMPHYEX
@@ -177,6 +184,7 @@ REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRRS
 REAL, DIMENSION(:,:,:),   INTENT(INOUT) ::  PRTKES           ! TKE sources
 REAL, DIMENSION(:,:,:,:), INTENT(INOUT) ::  PRSVS            ! Scalar sources 
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
+REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
 REAL, DIMENSION(:,:,:), INTENT(OUT)     ::  PFLXZUMF, PFLXZVMF   ! Dyn prod for TKE scheme
 !
@@ -196,6 +204,7 @@ REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZDTHLDT_MF ! tendenc
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZDRTDT_MF  ! tendency of Rt by massflux scheme
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3),SIZE(PSVM,4)) ::  ZDSVDT_MF  ! tendency of Sv by massflux scheme
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZSIGMF,ZRC_MF,ZRI_MF,ZCF_MF ! cloud info for the cloud scheme
+REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZHLC_HRC_MF, ZHLC_HCF_MF, ZHLI_HRI_MF, ZHLI_HCF_MF
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZFLXZTHVMF           ! Thermal production for TKE scheme
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZFLXZTHMF
 REAL, DIMENSION(SIZE(PTHM,1),SIZE(PTHM,2),SIZE(PTHM,3)) ::  ZFLXZRMF
@@ -253,7 +262,7 @@ ZVMM=MYF(PVM)
 !
 LSTATNW = .FALSE.
 !
-CALL SHALLOW_MF(YLDIMPHYEXPACK, CST, NEBN, PARAM_MFSHALLN, TURBN, CSTURB,&
+CALL SHALLOW_MF(YLDIMPHYEXPACK, CST, NEBN, PARAM_MFSHALLN, TURBN, CSTURB, RAIN_ICE_PARAMN, &
                 KRR,KRRL,KRRI,ISV,                                    &
                 LNOMIXLG,NSV_LGBEG,NSV_LGEND,                         &
                 PTSTEP,                                               &
@@ -264,7 +273,9 @@ CALL SHALLOW_MF(YLDIMPHYEXPACK, CST, NEBN, PARAM_MFSHALLN, TURBN, CSTURB,&
                 PTHM,PRM,ZUMM,ZVMM,PTKEM,PSVM,                        &
                 ZDUDT_MF,ZDVDT_MF,ZDTKEDT_MF,                         &
                 ZDTHLDT_MF,ZDRTDT_MF,ZDSVDT_MF,                       &
-                ZSIGMF,ZRC_MF,ZRI_MF,ZCF_MF,ZFLXZTHVMF,               &
+                ZSIGMF,ZRC_MF,ZRI_MF,ZCF_MF,                          &
+                ZHLC_HRC_MF, ZHLC_HCF_MF, ZHLI_HRI_MF, ZHLI_HCF_MF,   &
+                ZFLXZTHVMF,               &
                 ZFLXZTHMF,ZFLXZRMF,ZFLXZUMF,ZFLXZVMF,ZFLXZTKEMF,      &
                 ZTHL_UP,ZRT_UP,ZRV_UP,ZRC_UP,ZRI_UP,                  &
                 ZU_UP, ZV_UP, ZTKE_UP, ZTHV_UP, ZW_UP,                &
@@ -277,6 +288,10 @@ PSIGMF(:,:,:) = ZSIGMF(:,:,:)
 PRC_MF(:,:,:) = ZRC_MF(:,:,:)
 PRI_MF(:,:,:) = ZRI_MF(:,:,:)
 PCF_MF(:,:,:) = ZCF_MF(:,:,:)
+PHLC_HRC_MF(:,:,:) = ZHLC_HRC_MF(:,:,:)
+PHLC_HCF_MF(:,:,:) = ZHLC_HCF_MF(:,:,:)
+PHLI_HRI_MF(:,:,:) = ZHLI_HRI_MF(:,:,:)
+PHLI_HCF_MF(:,:,:) = ZHLI_HCF_MF(:,:,:)
 PFLXZTHVMF(:,:,:) = ZFLXZTHVMF(:,:,:)
 PFLXZUMF(:,:,:) = ZFLXZUMF(:,:,:)
 PFLXZVMF(:,:,:) = ZFLXZVMF(:,:,:)

@@ -12,6 +12,7 @@
                 PDUDT_MF,PDVDT_MF,PDTKEDT_MF,                         &
                 PDTHLDT_MF,PDRTDT_MF,PDSVDT_MF,                       &
                 PSIGMF,PRC_MF,PRI_MF,PCF_MF,                          &
+                PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,   &
                 PFLXZTHVMF, PFLXZUMF, PFLXZVMF,                       &
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
                 PU_UP, PV_UP, PTHV_UP, PW_UP, PFRAC_UP, PEMF,         &
@@ -60,6 +61,7 @@
 !!      S. Riette Jan 2012: support for both order of vertical levels
 !!      A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 !!      A. Marcel Jan 2025: TKE mixing
+!!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !!
 !-------------------------------------------------------------------------------
 !
@@ -131,6 +133,7 @@ REAL, DIMENSION(KLON,KLEV),   INTENT(OUT)::  PDRTDT_MF    ! tendency of rt  by m
 REAL, DIMENSION(KLON,KLEV,KSV), INTENT(OUT)::  PDSVDT_MF    ! tendency of Sv  by massflux scheme
 
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
+REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF ! high/low cloud diagnostics
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PFLXZTHVMF           ! Thermal production for TKE scheme
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PFLXZUMF             ! Dynamic production for TKE scheme
 REAL, DIMENSION(KLON,KLEV), INTENT(OUT)   ::  PFLXZVMF             ! Dynamic production for TKE scheme
@@ -212,7 +215,7 @@ ENDDO
 !
 !         ---------------------------------
 !
-  CALL SHALLOW_MF(YLDIMPHYEX, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB, &
+  CALL SHALLOW_MF(YLDIMPHYEX, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB, PHYEX%RAIN_ICE_PARAMN, &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                             &
      &ONOMIXLG=PHYEX%MISC%ONOMIXLG,KSV_LGBEG=KSV_LGBEG,KSV_LGEND=KSV_LGEND, &
      &PTSTEP=PTSTEP,                                                                      &
@@ -223,7 +226,9 @@ ENDDO
      &PTHM=PTHM,PRM=PRM,PUM=PUM,PVM=PVM,PTKEM=PTKEM,PSVM=PSVM,                            &
      &PDUDT_MF=PDUDT_MF,PDVDT_MF=PDVDT_MF,PDTKEDT_MF=PDTKEDT_MF,                          &
      &PDTHLDT_MF=PDTHLDT_MF,PDRTDT_MF=PDRTDT_MF,PDSVDT_MF=PDSVDT_MF,                      &
-     &PSIGMF=PSIGMF,PRC_MF=PRC_MF,PRI_MF=PRI_MF,PCF_MF=PCF_MF,PFLXZTHVMF=PFLXZTHVMF,      &
+     &PSIGMF=PSIGMF,PRC_MF=PRC_MF,PRI_MF=PRI_MF,PCF_MF=PCF_MF,                            &
+     &PHLC_HRC=PHLC_HRC_MF, PHLC_HCF=PHLC_HCF_MF, PHLI_HRI=PHLI_HRI_MF, PHLI_HCF=PHLI_HCF_MF,&
+     &PFLXZTHVMF=PFLXZTHVMF,      &
      &PFLXZTHMF=ZFLXZTHMF,PFLXZRMF=ZFLXZRMF,PFLXZUMF=PFLXZUMF,PFLXZVMF=PFLXZVMF,PFLXZTKEMF=ZFLXZTKEMF, &
      &PTHL_UP=PTHL_UP,PRT_UP=PRT_UP,PRV_UP=PRV_UP,PRC_UP=PRC_UP,PRI_UP=PRI_UP,            &
      &PU_UP=PU_UP, PV_UP=PV_UP, PTKE_UP=ZTKE_UP, PTHV_UP=PTHV_UP, PW_UP=PW_UP,            &

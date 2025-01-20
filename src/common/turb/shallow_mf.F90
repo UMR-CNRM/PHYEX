@@ -4,7 +4,7 @@
 !MNH_LIC for details. version 1.
 !-----------------------------------------------------------------
 !     #################################################################
-      SUBROUTINE SHALLOW_MF(D, CST, NEBN, PARAMMF, TURBN, CSTURB,     &
+      SUBROUTINE SHALLOW_MF(D, CST, NEBN, PARAMMF, TURBN, CSTURB, ICEP, &
                 KRR, KRRL, KRRI, KSV,                                 &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
                 PTSTEP,                                               &
@@ -15,7 +15,8 @@
                 PTHM,PRM,PUM,PVM,PTKEM,PSVM,                          &
                 PDUDT_MF,PDVDT_MF,PDTKEDT_MF,                         &
                 PDTHLDT_MF,PDRTDT_MF,PDSVDT_MF,                       &
-                PSIGMF,PRC_MF,PRI_MF,PCF_MF,PFLXZTHVMF,               &
+                PSIGMF,PRC_MF,PRI_MF,PCF_MF,                          &
+                PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PFLXZTHVMF,   &
                 PFLXZTHMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,PFLXZTKEMF,      &
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
                 PU_UP, PV_UP, PTKE_UP, PTHV_UP, PW_UP,                &
@@ -67,6 +68,7 @@
 !  P. Wautelet 10/04/2019: replace ABORT and STOP calls by Print_msg
 !  R. Honnert     04/2021: remove HRIO and BOUT schemes
 !!      A. Marcel Jan 2025: TKE mixing
+!!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -83,6 +85,7 @@ USE MODD_NEB_n,           ONLY: NEB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_n,          ONLY: TURB_t
 USE MODD_CTURB,           ONLY: CSTURB_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_PARAMETERS,      ONLY: JPSVMAX
 !
 USE MODE_BUDGET_PHY,                 ONLY: BUDGET_STORE_ADD_PHY
@@ -107,6 +110,7 @@ TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 TYPE(TURB_t),           INTENT(IN)   :: TURBN        ! modn_turbn (turb namelist) structure
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB       ! modd_csturb turb constant structure
+TYPE(RAIN_ICE_PARAM_t), INTENT(IN)   :: ICEP
 INTEGER,                INTENT(IN)   :: KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL         ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI         ! number of ice water var.
@@ -137,6 +141,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)::  PDRTDT_MF    ! tendency of rt  b
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT)::  PDSVDT_MF    ! tendency of Sv  by massflux scheme
 
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF ! low/high cloud diagnostics
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZTHMF
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZRMF
@@ -184,6 +189,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV) ::  &
 REAL, DIMENSION(D%NIJT) :: ZDEPTH             ! Deepness of cloud
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZFRAC_ICE_UP ! liquid/solid fraction in updraft
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZRSAT_UP ! Rsat in updraft
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZTH_UP
 
 LOGICAL :: GENTR_DETR  ! flag to recompute entrainment, detrainment and mass flux
 INTEGER, DIMENSION(D%NIJT,D%NKT) :: IERR
@@ -246,7 +252,7 @@ IF (PARAMMF%CMF_UPDRAFT == 'EDKF') THEN
                        PSFTH,PSFRV,PPABSM,PRHODREF,              &
                        PUM,PVM,PTKEM,                            &
                        PTHM,PRM(:,:,1),ZTHLM,ZRTM,PSVM,          &
-                       PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,      &
+                       ZTH_UP,PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP, &
                        PTHV_UP, PW_UP, PU_UP, PV_UP, ZSV_UP,     &
                        PFRAC_UP,ZFRAC_ICE_UP,ZRSAT_UP,PTKE_UP,PEMF,PDETR,&
                        PENTR,ZBUO_INTEG,KKLCL,KKETL,KKCTL,ZDEPTH,&
@@ -288,18 +294,17 @@ ENDIF
 !!! 5. Compute diagnostic convective cloud fraction and content
 !!!    --------------------------------------------------------
 !
-CALL COMPUTE_MF_CLOUD(D,CST,TURBN,PARAMMF,NEBN%LSTATNW, &
+CALL COMPUTE_MF_CLOUD(D,CST,TURBN,PARAMMF,ICEP,NEBN%LSTATNW, &
                       KRR, KRRL, KRRI,                  &
                       ZFRAC_ICE,                        &
-                      PRC_UP,PRI_UP,PEMF,               &
-                      PTHL_UP,PRT_UP,PFRAC_UP,          &
-                      PTHV_UP,ZFRAC_ICE_UP,             &
-                      ZRSAT_UP,PEXNM,ZTHLM,ZRTM,        &
+                      PRV_UP,PRC_UP,PRI_UP,PEMF,        &
+                      PTHL_UP,PRT_UP,PFRAC_UP,ZTH_UP,   &
+                      PTHV_UP,PEXNM,ZTHLM,ZRTM,         &
                       PTHM, ZTHVM, PRM,                 &
-                      PDZZ,PZZ,KKLCL,                   &
+                      PDZZ,KKLCL,                       &
                       PPABSM,PRHODREF,                  &
-                      PRC_MF,PRI_MF,PCF_MF,PSIGMF,ZDEPTH)
-
+                      PRC_MF,PRI_MF,PCF_MF,PSIGMF,      &
+                      PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF)
 
 !!! 3. Compute fluxes of conservative variables and their divergence = tendency
 !!!    ------------------------------------------------------------------------

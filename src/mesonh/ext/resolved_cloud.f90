@@ -19,6 +19,7 @@ INTERFACE
                                   PCIT, OSEDIC, OACTIT, OSEDC, OSEDI,                  &
                                   ORAIN, OWARM, OHHONI, OCONVHG,                       &
                                   PCF_MF,PRC_MF, PRI_MF,                               &
+                                  PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,  &
                                   PINPRC,PINPRC3D,PINPRR,PINPRR3D, PEVAP3D,            &
                                   PINPRS,PINPRS3D,PINPRG,PINPRG3D,PINPRH,PINPRH3D,     &
                                   PSOLORG,PMI,                                         &
@@ -111,6 +112,7 @@ LOGICAL,                  INTENT(IN)    :: OCONVHG! Switch for conversion from
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCF_MF! Convective Mass Flux Cloud fraction 
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRC_MF! Convective Mass Flux liquid mixing ratio
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRI_MF! Convective Mass Flux solid mixing ratio
+REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF
 !
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRC   ! Cloud instant precip
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRR   ! Rain instant precip
@@ -160,6 +162,7 @@ END MODULE MODI_RESOLVED_CLOUD
                                   PCIT, OSEDIC, OACTIT, OSEDC, OSEDI,                  &
                                   ORAIN, OWARM, OHHONI, OCONVHG,                       &
                                   PCF_MF,PRC_MF, PRI_MF,                               &
+                                  PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF,  &
                                   PINPRC,PINPRC3D,PINPRR,PINPRR3D, PEVAP3D,            &
                                   PINPRS,PINPRS3D,PINPRG,PINPRG3D,PINPRH,PINPRH3D,     &
                                   PSOLORG,PMI,                                         &
@@ -288,6 +291,7 @@ END MODULE MODI_RESOLVED_CLOUD
 !  C. Barthe   20/03/2023: to avoid duplicating sources, cloud electrification is integrated in the microphysics
 !                          CELLS can be used with rain_ice with LRED=T and with LIMA with LPTSPLIT=T
 !                          the adjustement for cloud electricity is also externalized
+!  A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -430,6 +434,7 @@ LOGICAL,                  INTENT(IN)    :: OCONVHG! Switch for conversion from
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PCF_MF! Convective Mass Flux Cloud fraction 
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRC_MF! Convective Mass Flux liquid mixing ratio
 REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PRI_MF! Convective Mass Flux solid mixing ratio
+REAL, DIMENSION(:,:,:),   INTENT(IN)    :: PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF
 !
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRC   ! Cloud instant precip
 REAL, DIMENSION(:,:),     INTENT(INOUT) :: PINPRR   ! Rain instant precip
@@ -886,7 +891,9 @@ SELECT CASE ( HCLOUD )
                       PRG=PRS(:,:,:,6)*PTSTEP,                                 &
                       TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),               &
                       PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                    &
-                      PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                     )
+                      PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,                    &
+                      PHLC_HRC_MF=PHLC_HRC_MF, PHLC_HCF_MF=PHLC_HCF_MF,       &
+                      PHLI_HRI_MF=PHLI_HRI_MF, PHLI_HCF_MF=PHLI_HCF_MF)
       !
       IF (HELEC == 'ELE4') THEN
         ! Compute the condensation and sublimation rates
@@ -1101,7 +1108,10 @@ SELECT CASE ( HCLOUD )
                          PRG=PRS(:,:,:,6)*PTSTEP,                                        &
                          TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),                      &
                          PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                           &
-                         PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                            )
+                         PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,                           &
+                         PHLC_HRC_MF=PHLC_HRC_MF, PHLC_HCF_MF=PHLC_HCF_MF,               &
+                         PHLI_HRI_MF=PHLI_HRI_MF, PHLI_HCF_MF=PHLI_HCF_MF                )
+
         !
         IF (HELEC == 'ELE4') THEN
           ! Compute the condensation and sublimation rates
@@ -1164,7 +1174,9 @@ SELECT CASE ( HCLOUD )
                        TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),              &
                        PRH=PRS(:,:,:,7)*PTSTEP,                                &
                        PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                   &
-                       PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                    )
+                       PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,                   &
+                       PHLC_HRC_MF=PHLC_HRC_MF, PHLC_HCF_MF=PHLC_HCF_MF,       &
+                       PHLI_HRI_MF=PHLI_HRI_MF, PHLI_HCF_MF=PHLI_HCF_MF        )
       !
       IF (HELEC == 'ELE4') THEN
         ! Compute the condensation and sublimation rates
@@ -1345,7 +1357,10 @@ SELECT CASE ( HCLOUD )
                       TBUDGETS=TBUDGETS,KBUDGETS=SIZE(TBUDGETS),                      &
                       PRH=PRS(:,:,:,7)*PTSTEP,                                        &
                       PHLC_HRC=PHLC_HRC, PHLC_HCF=PHLC_HCF,                           &
-                      PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF                            )
+                      PHLI_HRI=PHLI_HRI, PHLI_HCF=PHLI_HCF,                           &
+                      PHLC_HRC_MF=PHLC_HRC_MF, PHLC_HCF_MF=PHLC_HCF_MF,               &
+                      PHLI_HRI_MF=PHLI_HRI_MF, PHLI_HCF_MF=PHLI_HCF_MF                )
+
       !
       IF (HELEC == 'ELE4') THEN
         ! Compute the condensation and sublimation rates

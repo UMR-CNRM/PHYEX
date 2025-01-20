@@ -34,6 +34,7 @@
 !!      01/2019 R.Honnert add parameters for the reduction of mass-flux surface closure with resolution
 !!      Jan 2025 A. Marcel: Wet mixing according to Lapp and Randall 2001
 !!      Jan 2025 A. Marcel: TKE mixing
+!!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !-------------------------------------------------------------------------------
 !
 !*       0.   DECLARATIONS
@@ -71,7 +72,8 @@ REAL          :: XKRC_MF     !< coefficient for convective rc
 REAL          :: XTAUSIGMF
 REAL          :: XPRES_UV    !< coefficient for pressure term in wind mixing
 REAL          :: XALPHA_MF   !< coefficient for cloudy fraction
-REAL          :: XSIGMA_MF   !< coefficient for sigma computation
+REAL          :: XSIGMA_MF   !< coefficient for updraft sigma computation in the bigaussian scheme
+REAL          :: XSIGMA_ENV  !< coefficient for the environment sigma contribution in the bigaussian scheme
 REAL          :: XFRAC_UP_MAX!< maximum Updraft fraction
 !
 REAL          :: XA1         !< Parameter for Rio et al (2010) formulation for entrainment and detrainment (RHCJ10)
@@ -117,6 +119,7 @@ REAL, POINTER          :: XTAUSIGMF=>NULL()
 REAL, POINTER          :: XPRES_UV=>NULL()   
 REAL, POINTER          :: XALPHA_MF=>NULL()   
 REAL, POINTER          :: XSIGMA_MF=>NULL()  
+REAL, POINTER          :: XSIGMA_ENV=>NULL()
 REAL, POINTER          :: XFRAC_UP_MAX=>NULL()
 REAL, POINTER          :: XA1=>NULL() 
 REAL, POINTER          :: XB=>NULL()
@@ -132,7 +135,7 @@ LOGICAL, POINTER       :: LVERLIMUP=>NULL()
 NAMELIST/NAM_PARAM_MFSHALLn/XIMPL_MF,CMF_UPDRAFT,CMF_CLOUD,CWET_MIXING,LMIXUV,LMIXTKE,LMF_FLX,&
                             XALP_PERT,XABUO,XBENTR,XBDETR,XCMF,XENTR_MF,&
                             XCRAD_MF,XENTR_DRY,XDETR_DRY,XDETR_LUP,XKCF_MF,&
-                            XKRC_MF,XTAUSIGMF,XPRES_UV,XALPHA_MF,XSIGMA_MF,&
+                            XKRC_MF,XTAUSIGMF,XPRES_UV,XALPHA_MF,XSIGMA_MF,XSIGMA_ENV,&
                             XFRAC_UP_MAX,XA1,XB,XC,XBETA1,XR,LTHETAS_MF,LGZ,XGZ,&
                             LVERLIMUP
 !
@@ -177,6 +180,7 @@ XTAUSIGMF=>PARAM_MFSHALL_MODEL(KTO)%XTAUSIGMF
 XPRES_UV=>PARAM_MFSHALL_MODEL(KTO)%XPRES_UV
 XALPHA_MF=>PARAM_MFSHALL_MODEL(KTO)%XALPHA_MF
 XSIGMA_MF=>PARAM_MFSHALL_MODEL(KTO)%XSIGMA_MF
+XSIGMA_ENV=>PARAM_MFSHALL_MODEL(KTO)%XSIGMA_ENV
 XFRAC_UP_MAX=>PARAM_MFSHALL_MODEL(KTO)%XFRAC_UP_MAX
 XA1=>PARAM_MFSHALL_MODEL(KTO)%XA1
 XB=>PARAM_MFSHALL_MODEL(KTO)%XB
@@ -289,6 +293,7 @@ IF(LLDEFAULTVAL) THEN
   XPRES_UV=0.5
   XALPHA_MF=2.
   XSIGMA_MF=20.
+  XSIGMA_ENV=0.
   XFRAC_UP_MAX=0.33
   XA1=2./3.
   XB=0.002

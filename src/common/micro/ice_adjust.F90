@@ -17,7 +17,8 @@
                             &PICE_CLD_WGT,                                     &
                             &PRH,                                              &
                             &POUT_RV, POUT_RC, POUT_RI, POUT_TH,               &
-                            &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF)
+                            &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF,           &
+                            &PHLC_HRC_MF, PHLC_HCF_MF, PHLI_HRI_MF, PHLI_HCF_MF)
 
 !     #########################################################################
 !
@@ -104,6 +105,7 @@
 !!      2020-12 U. Andrae : Introduce SPP for HARMONIE-AROME
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !!     R. El Khatib 24-Oct-2023 Re-vectorize ;-)
+!!     A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !!
 !-------------------------------------------------------------------------------
 !
@@ -196,6 +198,10 @@ REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLC_HRC
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLC_HCF
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLI_HRI
 REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(OUT)  ::  PHLI_HCF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLC_HRC_MF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLC_HCF_MF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLI_HRI_MF
+REAL, DIMENSION(D%NIJT,D%NKT), OPTIONAL, INTENT(IN)   ::  PHLI_HCF_MF
 !
 !
 !*       0.2   Declarations of local variables :
@@ -217,7 +223,7 @@ INTEGER :: IKTB, IKTE, IIJB, IIJE
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZSIGS, ZSRCS
 REAL, DIMENSION(D%NIJT) :: ZSIGQSAT
-LOGICAL :: LLNONE, LLTRIANGLE, LLHLC_H, LLHLI_H
+LOGICAL :: LLNONE, LLTRIANGLE, LLBIGA, LLHLC_H, LLHLI_H
 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
@@ -327,6 +333,7 @@ DO JK=IKTB,IKTE
     ! reals, integers or booleans only. REK.
     LLNONE=PARAMI%CSUBG_MF_PDF=='NONE'
     LLTRIANGLE=PARAMI%CSUBG_MF_PDF=='TRIANGLE'
+    LLBIGA=PARAMI%CSUBG_MF_PDF=='BIGA'
     LLHLC_H=PRESENT(PHLC_HRC).AND.PRESENT(PHLC_HCF)
     LLHLI_H=PRESENT(PHLI_HRI).AND.PRESENT(PHLI_HCF)
     DO JIJ=IIJB,IIJE
@@ -370,6 +377,9 @@ DO JK=IKTB,IKTE
           ZHCF=ZHCF*PCF_MF(JIJ,JK) !to retrieve the part of the grid cell
           PHLC_HCF(JIJ,JK)=MIN(1.,PHLC_HCF(JIJ,JK)+ZHCF) !total part of the grid cell that is precipitating
           PHLC_HRC(JIJ,JK)=PHLC_HRC(JIJ,JK)+ZHR
+        ELSEIF(LLBIGA)THEN
+          PHLC_HCF(JIJ,JK)=MIN(1., PHLC_HCF(JIJ,JK)+PHLC_HCF_MF(JIJ,JK))
+          PHLC_HRC(JIJ,JK)=PHLC_HRC(JIJ,JK)+PHLC_HRC_MF(JIJ,JK)
         ENDIF
       ENDIF
       IF(LLHLI_H) THEN
@@ -395,6 +405,9 @@ DO JK=IKTB,IKTE
           ZHCF=ZHCF*PCF_MF(JIJ,JK) !to retrieve the part of the grid cell
           PHLI_HCF(JIJ,JK)=MIN(1.,PHLI_HCF(JIJ,JK)+ZHCF) !total part of the grid cell that is precipitating
           PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)+ZHR
+        ELSEIF(LLBIGA)THEN
+          PHLI_HCF(JIJ,JK)=MIN(1., PHLI_HCF(JIJ,JK)+PHLI_HCF_MF(JIJ,JK))
+          PHLI_HRI(JIJ,JK)=PHLI_HRI(JIJ,JK)+PHLI_HRI_MF(JIJ,JK)
         ENDIF
       ENDIF
     ENDDO

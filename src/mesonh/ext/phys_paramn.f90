@@ -244,6 +244,7 @@ END MODULE MODI_PHYS_PARAM_n
 !  C. Barthe      03/2023: add CELEC in call to turbulence
 !  A. Marcel Jan 2025: EDMF contribution to dynamic TKE production
 !  A. Marcel Jan 2025: TKE mixing
+!  A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !!-------------------------------------------------------------------------------
 !
 !*       0.     DECLARATIONS
@@ -1710,7 +1711,9 @@ IF (CSCONV == 'EDKF') THEN
                    XRHODJ, XRHODREF, XPABST, ZEXN, ZSFTH, ZSFRV,          &
                    XTHT,XRT,XUT,XVT,XTKET,XSVT,                           &
                    XRTHS,XRRS,XRUS,XRVS,XRTKES,XRSVS,                     &
-                   ZSIGMF,XRC_MF, XRI_MF, XCF_MF, XWTHVMF, XWUMF, XWVMF)
+                   ZSIGMF,XRC_MF, XRI_MF, XCF_MF,                         &
+                   XHLC_HRC_MF, XHLC_HCF_MF, XHLI_HRI_MF, XHLI_HCF_MF,    &
+                   XWTHVMF, XWUMF, XWVMF)
 !
 ELSE
     XWTHVMF(:,:,:)=0.
@@ -1719,6 +1722,10 @@ ELSE
     XRC_MF(:,:,:)=0.
     XRI_MF(:,:,:)=0.
     XCF_MF(:,:,:)=0.
+    XHLC_HRC_MF(:,:,:)=0.
+    XHLC_HCF_MF(:,:,:)=0.
+    XHLI_HRI_MF(:,:,:)=0.
+    XHLI_HCF_MF(:,:,:)=0.
 ENDIF   
 !
 CALL SECOND_MNH2(ZTIME4)

@@ -5,7 +5,7 @@
 IMPLICIT NONE
 INTERFACE
 !     #################################################################
-      SUBROUTINE SHALLOW_MF(D, CST, NEBN, PARAMMF, TURBN, CSTURB,     &
+      SUBROUTINE SHALLOW_MF(D, CST, NEBN, PARAMMF, TURBN, CSTURB, ICEP, &
                 KRR, KRRL, KRRI, KSV,                                 &
                 ONOMIXLG,KSV_LGBEG,KSV_LGEND,                         &
                 PTSTEP,                                               &
@@ -16,7 +16,8 @@ INTERFACE
                 PTHM,PRM,PUM,PVM,PTKEM,PSVM,                          &
                 PDUDT_MF,PDVDT_MF,PDTKEDT_MF,                         &
                 PDTHLDT_MF,PDRTDT_MF,PDSVDT_MF,                       &
-                PSIGMF,PRC_MF,PRI_MF,PCF_MF,PFLXZTHVMF,               &
+                PSIGMF,PRC_MF,PRI_MF,PCF_MF,                          &
+                PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF, PFLXZTHVMF,   &
                 PFLXZTHMF,PFLXZRMF,PFLXZUMF,PFLXZVMF,PFLXZTKEMF,      &
                 PTHL_UP,PRT_UP,PRV_UP,PRC_UP,PRI_UP,                  &
                 PU_UP, PV_UP, PTKE_UP, PTHV_UP, PW_UP,                &
@@ -32,6 +33,7 @@ USE MODD_NEB_n,           ONLY: NEB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
 USE MODD_TURB_n,          ONLY: TURB_t
 USE MODD_CTURB,           ONLY: CSTURB_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 USE MODD_PARAMETERS,      ONLY: JPSVMAX
 IMPLICIT NONE
 !               
@@ -44,6 +46,7 @@ TYPE(NEB_t),            INTENT(IN)   :: NEBN
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
 TYPE(TURB_t),           INTENT(IN)   :: TURBN        ! modn_turbn (turb namelist) structure
 TYPE(CSTURB_t),         INTENT(IN)   :: CSTURB       ! modd_csturb turb constant structure
+TYPE(RAIN_ICE_PARAM_t), INTENT(IN)   :: ICEP
 INTEGER,                INTENT(IN)   :: KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   :: KRRL         ! number of liquid water var.
 INTEGER,                INTENT(IN)   :: KRRI         ! number of ice water var.
@@ -74,6 +77,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)::  PDRTDT_MF    ! tendency of rt  b
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(OUT)::  PDSVDT_MF    ! tendency of Sv  by massflux scheme
 
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PSIGMF,PRC_MF,PRI_MF,PCF_MF ! cloud info for the cloud scheme
+REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF ! low/high cloud diagnostics
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZTHVMF           ! Thermal production for TKE scheme
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZTHMF
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT)     ::  PFLXZRMF
@@ -96,11 +100,11 @@ REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) ::  PDETR     ! updraft detrainment
 REAL, DIMENSION(D%NIJT,D%NKT), INTENT(OUT) ::  PENTR     ! updraft entrainment
 INTEGER,DIMENSION(D%NIJT),     INTENT(OUT) :: KKLCL,KKETL,KKCTL ! level of LCL,ETL and CTL
 REAL,                          INTENT(IN)  :: PDX, PDY
-REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN),OPTIONAL ::  PRSVS ! sources of sv (for Budgets with lagrangian tracer)
-TYPE(TBUDGETCONF_t),    INTENT(IN),OPTIONAL   :: BUCONF       ! budget structure
-INTEGER,                INTENT(IN)   :: KBUDGETS     ! option. because not used in arpifs
-TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT),OPTIONAL :: TBUDGETS
-REAL,DIMENSION(JPSVMAX),INTENT(IN),OPTIONAL   :: PSVMIN       ! minimum value for SV variables (for Budgets)
+REAL, DIMENSION(D%NIJT,D%NKT,KSV),      INTENT(IN),    OPTIONAL :: PRSVS ! sources of sv (for Budgets with lagrangian tracer)
+REAL,DIMENSION(JPSVMAX),                INTENT(IN),    OPTIONAL :: PSVMIN       ! minimum value for SV variables (for Budgets)
+TYPE(TBUDGETCONF_t),                    INTENT(IN),    OPTIONAL :: BUCONF       ! budget structure
+TYPE(TBUDGETDATA), DIMENSION(KBUDGETS), INTENT(INOUT), OPTIONAL :: TBUDGETS
+INTEGER,                                INTENT(IN)              :: KBUDGETS     ! option. because not used in arpifs
 
 END SUBROUTINE SHALLOW_MF
 

@@ -93,6 +93,7 @@ CONTAINS
 ! Saved variables
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PSIGS !variance of s
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PCF_MF, PRC_MF, PRI_MF !shallow convection cloud
+REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: PHLC_HCF_MF, PHLC_HRC_MF, PHLI_HCF_MF, PHLI_HRI_MF
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE :: ZQR, ZQS, ZQG !rain, snow, graupel specifiq contents
 REAL, DIMENSION(:,:), ALLOCATABLE, SAVE ::  PTKEM       ! TKE
 TYPE(DIMPHYEX_t),SAVE    :: D
@@ -240,6 +241,10 @@ if (debut) then ! Things to do only for the first call to physics
   ALLOCATE(PCF_MF(klon,klev+2))
   ALLOCATE(PRC_MF(klon,klev+2))
   ALLOCATE(PRI_MF(klon,klev+2))
+  ALLOCATE(PHLC_HCF_MF(klon,klev+2))
+  ALLOCATE(PHLC_HRC_MF(klon,klev+2))
+  ALLOCATE(PHLI_HCF_MF(klon,klev+2))
+  ALLOCATE(PHLI_HRI_MF(klon,klev+2))
   ALLOCATE(ZQR(klon, klev))
   ALLOCATE(ZQS(klon, klev))
   ALLOCATE(ZQG(klon, klev))
@@ -247,6 +252,10 @@ if (debut) then ! Things to do only for the first call to physics
   PCF_MF=0.
   PRC_MF=0.
   PRI_MF=0.
+  PHLC_HCF_MF=0.
+  PHLC_HRC_MF=0.
+  PHLI_HCF_MF=0.
+  PHLI_HRI_MF=0.
   ZQR=0.
   ZQS=0.
   ZQG=0.
@@ -385,7 +394,8 @@ CALL ICE_ADJUST (D, PHYEX%CST, PHYEX%RAIN_ICE_PARAMN, PHYEX%NEBN, PHYEX%TURBN, P
                 &ZRX(:,:,3), ZRX(:,:,4), ZRXS(:,:,4), ZRX(:,:,5), ZRX(:,:,6),                       &
                 &PHYEX%MISC%YLBUDGET, PHYEX%MISC%NBUDGET,                                           &
                 &ZICE_CLD_WGT,                                                                      &
-                &PHLC_HRC=ZHLC_HRC, PHLC_HCF=ZHLC_HCF, PHLI_HRI=ZHLI_HRI, PHLI_HCF=ZHLI_HCF         )
+                &PHLC_HRC=ZHLC_HRC, PHLC_HCF=ZHLC_HCF, PHLI_HRI=ZHLI_HRI, PHLI_HCF=ZHLI_HCF,        &
+                &PHLC_HRC_MF=PHLC_HRC_MF, PHLC_HCF_MF=PHLC_HCF_MF, PHLI_HRI_MF=PHLI_HRI_MF, PHLI_HCF_MF=PHLI_HCF_MF)
 !
 !Variables are updated with their adjusted values (to be used by the other parametrisations)
 ZTHETA(:,:)=ZTHETAS(:,:)*pdtphys
@@ -436,7 +446,7 @@ PSFV(:) = 0.
 ! Shallow convection
 !------------------------------------------------------------
 !
-CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB,           &
+CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHYEX%CSTURB, PHYEX%RAIN_ICE_PARAMN, &
      &KRR=KRR, KRRL=KRRL, KRRI=KRRI, KSV=KSV,                                                        &
      &ONOMIXLG=PHYEX%MISC%ONOMIXLG,KSV_LGBEG=PHYEX%MISC%KSV_LGBEG,KSV_LGEND=PHYEX%MISC%KSV_LGEND,    &
      &PTSTEP=pdtphys,                                                                                &
@@ -449,6 +459,7 @@ CALL SHALLOW_MF(D, PHYEX%CST, PHYEX%NEBN, PHYEX%PARAM_MFSHALLN, PHYEX%TURBN, PHY
      &PDUDT_MF=PDUDT_MF(:,:),PDVDT_MF=PDVDT_MF(:,:), PDTKEDT_MF=PDTKEDT_MF(:,:),                     &
      &PDTHLDT_MF=PDTHLDT_MF(:,:),PDRTDT_MF=PDRTDT_MF(:,:),PDSVDT_MF=PDSVDT_MF(:,:,:),                &
      &PSIGMF=PSIGMF(:,:),PRC_MF=PRC_MF(:,:),PRI_MF=PRI_MF(:,:),PCF_MF=PCF_MF(:,:),                   &
+     &PHLC_HRC=PHLC_HRC_MF(:,:), PHLC_HCF=PHLC_HCF_MF(:,:), PHLI_HRI=PHLI_HRI_MF(:,:), PHLI_HCF=PHLI_HCF_MF(:,:), &
      &PFLXZTHVMF=ZFLXZTHVMF(:,:), PFLXZUMF=ZFLXZUMF(:,:), PFLXZVMF=ZFLXZVMF(:,:),                    &
      &PFLXZTHMF=ZFLXZTHMF(:,:),PFLXZRMF=ZFLXZRMF(:,:),PFLXZUMF=ZFLXZUMF(:,:),PFLXZVMF=ZFLXZVMF(:,:), &
      &PFLXZTKEMF=ZFLXZTKEMF(:,:), &

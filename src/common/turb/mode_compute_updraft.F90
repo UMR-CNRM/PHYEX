@@ -17,7 +17,7 @@ CONTAINS
                                  PSFTH,PSFRV,                     &
                                  PPABSM,PRHODREF,PUM,PVM, PTKEM,  &
                                  PTHM,PRVM,PTHLM,PRTM,            &
-                                 PSVM,PTHL_UP,PRT_UP,             &
+                                 PSVM,PTH_UP,PTHL_UP,PRT_UP,      &
                                  PRV_UP,PRC_UP,PRI_UP,PTHV_UP,    &
                                  PW_UP,PU_UP, PV_UP, PSV_UP,      &
                                  PFRAC_UP,PFRAC_ICE_UP,PRSAT_UP,PTKE_UP, &
@@ -64,6 +64,7 @@ CONTAINS
 !!     S. Riette 06/2022: compute_entr_detr is inlined
 !!     A. Marcel Jan 2025: Wet mixing according to Lapp and Randall 2001
 !!     A. Marcel Jan 2025: TKE mixing
+!!     A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -118,7 +119,7 @@ REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHLM,PRTM     ! cons. var. at
 
 REAL, DIMENSION(D%NIJT,D%NKT,KSV), INTENT(IN)   ::  PSVM           ! scalar var. at t-dt
 
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTHL_UP,PRT_UP   ! updraft properties
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTH_UP,PTHL_UP,PRT_UP   ! updraft properties
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PU_UP, PV_UP     ! updraft wind components
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PTKE_UP          ! updraft TKE
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(INOUT)::  PRV_UP,PRC_UP, & ! updraft rv, rc
@@ -156,9 +157,7 @@ REAL, DIMENSION(D%NIJT,D%NKT,KSV) :: &
                         ZSVM_F ! scalar variables 
 
                         
-REAL, DIMENSION(D%NIJT,D%NKT) ::  &
-                        ZTH_UP,                  &    ! updraft THETA 
-                        ZRC_MIX, ZRI_MIX              ! guess of Rc and Ri for KF mixture
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZRC_MIX, ZRI_MIX     ! guess of Rc and Ri for KF mixture
 
 REAL, DIMENSION(D%NIJT,D%NKT) ::  ZCOEF  ! diminution coefficient for too high clouds 
                         
@@ -282,7 +281,7 @@ IF (OENTR_DETR) THEN
   PRC_UP(:,:)=0.
   PRI_UP(:,:)=0.
   PW_UP(:,:)=0.
-  ZTH_UP(:,:)=0.
+  PTH_UP(:,:)=0.
   PFRAC_UP(:,:)=0.
   PTHV_UP(:,:)=0.
 
@@ -359,13 +358,13 @@ IF (OENTR_DETR) THEN
   PRI_UP(:,IKB)=0.
   !$mnh_end_expand_array(JIJ=IIJB:IIJE)
   CALL TH_R_FROM_THL_RT(D, CST, NEBN, NEBN%CFRAC_ICE_SHALLOW_MF, PFRAC_ICE_UP(:,IKB), ZPRES_F(:,IKB), &
-             PTHL_UP(:,IKB),PRT_UP(:,IKB),ZTH_UP(:,IKB), &
+             PTHL_UP(:,IKB),PRT_UP(:,IKB),PTH_UP(:,IKB), &
              PRV_UP(:,IKB),PRC_UP(:,IKB),PRI_UP(:,IKB),ZRSATW(:),ZRSATI(:), OOCEAN=.FALSE., &
              PBUF=ZBUF(:,:))
 
   !$mnh_expand_array(JIJ=IIJB:IIJE)
   ! compute updraft thevav and buoyancy term at KKB level
-  PTHV_UP(IIJB:IIJE,IKB) = ZTH_UP(IIJB:IIJE,IKB)*&
+  PTHV_UP(IIJB:IIJE,IKB) = PTH_UP(IIJB:IIJE,IKB)*&
                                & ((1+ZRVORD*PRV_UP(IIJB:IIJE,IKB))/(1+PRT_UP(IIJB:IIJE,IKB)))
   ! compute mean rsat in updraft
   PRSAT_UP(IIJB:IIJE,IKB) = ZRSATW(IIJB:IIJE)*(1-PFRAC_ICE_UP(IIJB:IIJE,IKB)) + &
@@ -499,7 +498,7 @@ DO JK=IKB,IKE-IKL,IKL
     CALL COMPUTE_ENTR_DETR(D, CST, NEBN, PARAMMF, JK,IKB,IKE,IKL,GTEST,GTESTLCL,PFRAC_ICE_UP(:,JK),&
                            PRHODREF(:,JK),ZPRES_F(:,JK),ZPRES_F(:,JK+IKL),&
                            PZZ(:,:),PDZZ(:,:),ZTHVM(:,:),  &
-                           PTHLM(:,:),PRTM(:,:),ZW_UP2(:,:),ZTH_UP(:,JK),   &
+                           PTHLM(:,:),PRTM(:,:),ZW_UP2(:,:),PTH_UP(:,JK),   &
                            PTHL_UP(:,JK),PRT_UP(:,JK),ZLUPSURF(:), ZLUP(:), ZLDOWN(:), &
                            PRC_UP(:,JK),PRI_UP(:,JK),PTHV_UP(:,JK),&
                            PRSAT_UP(:,JK),ZRC_MIX(:,JK),ZRI_MIX(:,JK),                 &
@@ -615,7 +614,7 @@ DO JK=IKB,IKE-IKL,IKL
     ZRI_UP(IIJB:IIJE)=PRI_UP(IIJB:IIJE,JK) ! guess = level just below
     !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     CALL TH_R_FROM_THL_RT(D, CST, NEBN, NEBN%CFRAC_ICE_SHALLOW_MF, PFRAC_ICE_UP(:,JK+IKL), ZPRES_F(:,JK+IKL), &
-            PTHL_UP(:,JK+IKL),PRT_UP(:,JK+IKL),ZTH_UP(:,JK+IKL),              &
+            PTHL_UP(:,JK+IKL),PRT_UP(:,JK+IKL),PTH_UP(:,JK+IKL),              &
             ZRV_UP(:),ZRC_UP(:),ZRI_UP(:),ZRSATW(:),ZRSATI(:), OOCEAN=.FALSE., &
             PBUF=ZBUF(:,:))
     !$mnh_expand_where(JIJ=IIJB:IIJE)
@@ -630,7 +629,7 @@ DO JK=IKB,IKE-IKL,IKL
     ! Compute the updraft theta_v, buoyancy and w**2 for level JK+KKL
   DO JIJ=IIJB,IIJE
     IF(GTEST(JIJ)) THEN
-      PTHV_UP(JIJ,JK+IKL) = ZTH_UP(JIJ,JK+IKL)* &
+      PTHV_UP(JIJ,JK+IKL) = PTH_UP(JIJ,JK+IKL)* &
                                     & ((1+ZRVORD*PRV_UP(JIJ,JK+IKL))/(1+PRT_UP(JIJ,JK+IKL)))
       IF (ZBUO_INTEG_DRY(JIJ,JK)>0.) THEN
         ZW_UP2(JIJ,JK+IKL)  = ZW_UP2(JIJ,JK) + 2.*(PARAMMF%XABUO-PARAMMF%XBENTR*PARAMMF%XENTR_DRY)* &

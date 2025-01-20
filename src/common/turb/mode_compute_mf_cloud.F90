@@ -11,16 +11,17 @@ IMPLICIT NONE
 CONTAINS
 !
 !     ######spl
-      SUBROUTINE COMPUTE_MF_CLOUD(D, CST, TURBN, PARAMMF, OSTATNW,         &
+      SUBROUTINE COMPUTE_MF_CLOUD(D, CST, TURBN, PARAMMF, ICEP, OSTATNW,    &
                                   KRR, KRRL, KRRI,                          &
                                   PFRAC_ICE,                                &
-                                  PRC_UP,PRI_UP,PEMF,                       &
-                                  PTHL_UP, PRT_UP, PFRAC_UP,                &
-                                  PTHV_UP, PFRAC_ICE_UP, PRSAT_UP,          &
+                                  PRV_UP, PRC_UP, PRI_UP, PEMF,             &
+                                  PTHL_UP, PRT_UP, PFRAC_UP, PTH_UP, PTHV_UP,&
                                   PEXNM, PTHLM, PRTM, PTHM, PTHVM, PRM,     &
-                                  PDZZ, PZZ, KKLCL,                         &
+                                  PDZZ, KKLCL,                              &
                                   PPABSM, PRHODREF,                         &
-                                  PRC_MF, PRI_MF, PCF_MF, PSIGMF, PDEPTH    )
+                                  PRC_MF, PRI_MF, PCF_MF, PSIGMF,           &
+                                  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF    )
+
 !     #################################################################
 !!
 !!****  *COMPUTE_MF_CLOUD* - 
@@ -56,6 +57,7 @@ CONTAINS
 !!      S. Riette Aug 2011 code is split into subroutines
 !!      S. Riette Jan 2012: support for both order of vertical levels
 !  P. Wautelet 10/04/2019: replace ABORT and STOP calls by Print_msg
+!!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -65,6 +67,7 @@ USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY: CST_t
 USE MODD_TURB_n,          ONLY: TURB_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 !
 USE MODE_MSG,             ONLY: PRINT_MSG, NVERB_FATAL
 !
@@ -84,28 +87,27 @@ TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
 TYPE(CST_t),            INTENT(IN)   :: CST
 TYPE(TURB_t),           INTENT(IN)   :: TURBN
 TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
+TYPE(RAIN_ICE_PARAM_t), INTENT(IN)   :: ICEP
 INTEGER,                INTENT(IN)   ::  KRR          ! number of moist var.
 INTEGER,                INTENT(IN)   ::  KRRL         ! number of liquid water var.
 INTEGER,                INTENT(IN)   ::  KRRI         ! number of ice water var.
 LOGICAL,                INTENT(IN)   :: OSTATNW      ! cloud scheme inclues convect. covar. contrib
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PFRAC_ICE    ! liquid/ice fraction
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PRC_UP,PRI_UP,PEMF! updraft characteritics
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PRV_UP, PRC_UP, PRI_UP, PEMF! updraft characteritics
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHL_UP, PRT_UP   ! rc,w,Mass Flux,Thetal,rt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PFRAC_UP          ! Updraft Fraction
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHV_UP           ! updraft thetaV
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PFRAC_ICE_UP      ! liquid/solid fraction in updraft
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PRSAT_UP          ! Rsat in updraft
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTH_UP, PTHV_UP   ! updraft theta and thetaV
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PEXNM             ! exner function
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHLM, PRTM       ! cons. var. at t-dt
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PTHM, PTHVM       ! theta and thetaV
 REAL, DIMENSION(D%NIJT,D%NKT,KRR), INTENT(IN)   ::  PRM               ! water var. at t-dt
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PDZZ, PZZ
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PDZZ
 INTEGER, DIMENSION(D%NIJT),  INTENT(IN)   ::  KKLCL             ! index of updraft condensation level
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   ::  PPABSM, PRHODREF  ! environement
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PRC_MF, PRI_MF    ! cloud content (INPUT=environment, OUTPUT=conv. cloud)
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PCF_MF            ! and cloud fraction for MF scheme
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PSIGMF            ! SQRT(variance) for statistical cloud scheme
-REAL, DIMENSION(D%NIJT),     INTENT(IN)   ::  PDEPTH            ! Deepness of cloud
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  ::  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF ! low/high cloud diagnostics
 !
 !                       1.2  Declaration of local variables
 !
@@ -121,6 +123,10 @@ PRC_MF(:,:) = 0.
 PRI_MF(:,:) = 0.
 PCF_MF(:,:) = 0.
 PSIGMF(:,:) = 0.
+PHLC_HCF(:,:) = 0.
+PHLC_HRC(:,:) = 0.
+PHLI_HCF(:,:) = 0.
+PHLI_HRI(:,:) = 0.
 
 IF (PARAMMF%CMF_CLOUD == 'DIRE') THEN
   !Direct cloud scheme
@@ -139,13 +145,13 @@ ELSEIF (PARAMMF%CMF_CLOUD == 'STAT') THEN
                             &PEMF, PTHL_UP, PRT_UP,&
                             &PSIGMF)
 ELSEIF (PARAMMF%CMF_CLOUD == 'BIGA') THEN
-  !Statistical scheme using the bi-gaussian PDF proposed by E. Perraud.
-  CALL COMPUTE_MF_CLOUD_BIGAUS(D, CST, PARAMMF,&
-                              &PEMF, PDEPTH,&
-                              &PRT_UP, PTHV_UP, PFRAC_ICE_UP, PRSAT_UP,&
-                              &PRTM, PTHM, PTHVM,&
-                              &PDZZ, PZZ, PRHODREF,&
-                              &PRC_MF, PRI_MF, PCF_MF)
+  !Statistical scheme using the bi-gaussian PDF
+  CALL COMPUTE_MF_CLOUD_BIGAUS(D, CST, PARAMMF, ICEP, KRR, &
+                              &PRT_UP, PRV_UP, PRC_UP, PRI_UP, PTH_UP, PFRAC_UP, &
+                              &PRTM, PTHM, PRM, &
+                              &PRHODREF, PEXNM, PPABSM, &
+                              &PRC_MF, PRI_MF, PCF_MF, PSIGMF, &
+                              &PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF)
   !
 ELSEIF  (PARAMMF%CMF_CLOUD == 'NONE') THEN
   ! No CONVECTIVE CLOUD SCHEME

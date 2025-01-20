@@ -9,12 +9,12 @@
 !
 IMPLICIT NONE
 CONTAINS
-      SUBROUTINE COMPUTE_MF_CLOUD_BIGAUS(D, CST, PARAMMF,&
-                                  PEMF, PDEPTH,&
-                                  PRT_UP, PTHV_UP, PFRAC_ICE_UP, PRSAT_UP,&
-                                  PRTM, PTHM, PTHVM,&
-                                  PDZZ, PZZ, PRHODREF,&
-                                  PRC_MF, PRI_MF, PCF_MF)
+      SUBROUTINE COMPUTE_MF_CLOUD_BIGAUS(D, CST, PARAMMF, ICEP, KRR, &
+                                  PRT_UP, PRV_UP, PRC_UP, PRI_UP, PTH_UP, PFRAC_UP, &
+                                  PRTM, PTHM, PRM, &
+                                  PRHODREF, PEXNM, PPABSM, &
+                                  PRC_MF, PRI_MF, PCF_MF, PSIGMF, &
+                                  PHLC_HRC, PHLC_HCF, PHLI_HRI, PHLI_HCF)
 !     #################################################################
 !!
 !!****  *COMPUTE_MF_CLOUD_BIGAUS* -
@@ -26,13 +26,12 @@ CONTAINS
 !!    -------
 !!****  With this option, a formulation for the computation of the variance of the departure
 !!      to saturation is proposed. This variance is used to compute the cloud fraction and
-!!      the mean convective cloud content from the bi-gaussian PDF proposed by E. Perraud
+!!      the mean convective cloud content from the bi-gaussian PDF
 !!
 !
 !!**  METHOD
 !!    ------
 !!      Updraft variables are used to diagnose the variance
-!!      Perraud et al (2011)
 !!
 !!    EXTERNAL
 !!    --------
@@ -53,6 +52,8 @@ CONTAINS
 !!      Original 25 Aug 2011
 !!      S. Riette Jan 2012: support for both order of vertical levels
 !!      S. Riette Jun 2019: remove unused PRC_UP and PRI_UP, use SIGN in ERFC computation
+!!      A. Marcel Jun 2025: new bi-gaussian cloud scheme implementation
+!!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -60,6 +61,7 @@ CONTAINS
 USE MODD_DIMPHYEX,        ONLY: DIMPHYEX_t
 USE MODD_CST,             ONLY: CST_t
 USE MODD_PARAM_MFSHALL_n, ONLY: PARAM_MFSHALL_t
+USE MODD_RAIN_ICE_PARAM_n, ONLY: RAIN_ICE_PARAM_t
 !
 USE MODI_SHUMAN_MF, ONLY: MZF_MF, GZ_M_W_MF
 !
@@ -69,134 +71,191 @@ IMPLICIT NONE
 !
 !*                    0.1  Declaration of Arguments
 !
-TYPE(DIMPHYEX_t),       INTENT(IN)   :: D
-TYPE(CST_t),            INTENT(IN)   :: CST
-TYPE(PARAM_MFSHALL_t),  INTENT(IN)   :: PARAMMF
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PEMF                    ! updraft characteritics
-REAL, DIMENSION(D%NIJT),     INTENT(IN)   :: PDEPTH                  ! Deepness of cloud
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTHV_UP, PRSAT_UP, PRT_UP ! updraft characteritics
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PFRAC_ICE_UP            ! liquid/ice fraction in updraft
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTHM, PRTM, PTHVM       ! env. var. at t-dt
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PDZZ, PZZ
-REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PRHODREF
+TYPE(DIMPHYEX_t),                INTENT(IN)   :: D
+TYPE(CST_t),                     INTENT(IN)   :: CST
+TYPE(PARAM_MFSHALL_t),           INTENT(IN)   :: PARAMMF
+TYPE(RAIN_ICE_PARAM_t),          INTENT(IN)   :: ICEP
+INTEGER,                         INTENT(IN)   :: KRR                     ! number of moist var.
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PRT_UP, PRV_UP, PRC_UP, PRI_UP, PTH_UP, PFRAC_UP ! updraft characteritics
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PTHM, PRTM              ! env. var. at t-dt
+REAL, DIMENSION(D%NIJT,D%NKT, KRR),   INTENT(IN)   :: PRM                ! hydrometeors
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(IN)   :: PRHODREF, PEXNM, PPABSM ! env density and pressure
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PRC_MF, PRI_MF          ! cloud content
 REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PCF_MF                  ! and cloud fraction for MF scheme
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PSIGMF                  ! contribution to the env s variance
+REAL, DIMENSION(D%NIJT,D%NKT),   INTENT(OUT)  :: PHLC_HCF, PHLC_HRC, PHLI_HCF, PHLI_HRI ! low/high cloud diagnostics
 !
 !*                    0.1  Declaration of local variables
 !
 !
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZGRAD_Z_RT, &            !
-                                            & ZALPHA_UP_M, &           ! Variables used to compute variance
-                                            & ZSIGMF                   ! and sqrt(variance)
-REAL, DIMENSION(D%NIJT)              :: ZOMEGA_UP_M              !
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZW1 ! working array
-INTEGER                                    :: JIJ, JK  ! loop control
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZEMF_M, ZTHV_UP_M, &   !
-                                            & ZRSAT_UP_M, ZRT_UP_M,& ! Interpolation on mass points
-                                            & ZFRAC_ICE_UP_M         !
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZCOND ! condensate
-REAL, DIMENSION(D%NIJT,D%NKT) :: ZA, ZGAM ! used for integration
-INTEGER :: IIJB,IIJE ! physical horizontal domain indices
-INTEGER :: IKT,IKB,IKA,IKU,IKE,IKL
+INTEGER                                    :: JK, JIJ  ! loop index
+INTEGER                                    :: IIJE, IIJB, IKT ! bounds
+REAL, DIMENSION(D%NIJT,D%NKT) :: ZRT_UP_M,&
+                               & ZRV_UP_M, ZRC_UP_M, ZRI_UP_M,&
+                               & ZTH_UP_M,&
+                               & ZFRAC_UP_M
+REAL :: ZQ1, ZCPH, ZTEMP, ZTEMP_UP, ZLV, ZLS, ZLVS, ZQSL, ZAH, ZA, &
+        ZSBAR_MEAN, ZSBAR_ENV, ZSIGS_UP, ZALPHA_UP_M, ZPV, ZQSI, &
+        ZAUTC, ZGAUTC, ZGAUC, ZAUTI, ZGAUTI, ZGAUI, ZCRIAUTI, ZAUT, &
+        ZCOND, ZGAM, ZFRAC_ICE_UP_M, ZFRAC_ICE, ZSBAR_UP
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
-
+!
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_BIGAUS',0,ZHOOK_HANDLE)
 !
 IIJE=D%NIJE
 IIJB=D%NIJB
 IKT=D%NKT
-IKB=D%NKB
-IKA=D%NKA
-IKU=D%NKU
-IKE=D%NKE
-IKL=D%NKL
 !
 !Computation is done on mass points
-!----------------------------------------------------------------------------
-!
-!*      1. Computation of the variance
-!          ------------------------------------------------
-!
-!
-!Vertical gradient of RT, result on mass points
-CALL GZ_M_W_MF(D, PRTM(:,:), PDZZ(:,:), ZW1(:,:))
-CALL MZF_MF(D, ZW1(:,:), ZGRAD_Z_RT(:,:))
-
 !Interpolation on mass points
-CALL MZF_MF(D, PTHV_UP(:,:), ZTHV_UP_M(:,:))
-CALL MZF_MF(D, PRSAT_UP(:,:), ZRSAT_UP_M(:,:))
+CALL MZF_MF(D, PRC_UP(:,:), ZRC_UP_M(:,:))
+CALL MZF_MF(D, PRI_UP(:,:), ZRI_UP_M(:,:))
 CALL MZF_MF(D, PRT_UP(:,:), ZRT_UP_M(:,:))
-CALL MZF_MF(D, PEMF(:,:), ZEMF_M(:,:))
-CALL MZF_MF(D, PFRAC_ICE_UP(:,:), ZFRAC_ICE_UP_M(:,:))
+CALL MZF_MF(D, PRV_UP(:,:), ZRV_UP_M(:,:))
+CALL MZF_MF(D, PFRAC_UP(:,:), ZFRAC_UP_M(:,:))
+CALL MZF_MF(D, PTH_UP(:,:), ZTH_UP_M(:,:))
 
-!computation of omega star up
-ZOMEGA_UP_M(:)=0.
-DO JK=IKB,IKE-IKL,IKL
-  !$mnh_expand_array(JIJ=IIJB:IIJE)
-  !Vertical integration over the entire column but only buoyant points are used
-  !ZOMEGA_UP_M(IIJB:IIJE)=ZOMEGA_UP_M(IIJB:IIJE) + &
-  !                ZEMF_M(IIJB:IIJE,JK) * &
-  !                MAX(0.,(ZTHV_UP_M(IIJB:IIJE,JK)-PTHVM(IIJB:IIJE,JK))) * &
-  !                (PZZ(IIJB:IIJE,JK+KKL)-PZZ(IIJB:IIJE,JK)) / &
-  !                (PTHM(IIJB:IIJE,JK) * PRHODREF(IIJB:IIJE,JK))
+DO JK=1, IKT
+  DO JIJ=IIJB, IIJE
+    IF (ZFRAC_UP_M(JIJ, JK)>0.) THEN
+      ! Ice franction in environment and in updraft
+      ZFRAC_ICE_UP_M=0.
+      IF (ZRC_UP_M(JIJ, JK)+ZRI_UP_M(JIJ, JK) > 1.E-20) THEN
+        ZFRAC_ICE_UP_M = ZRI_UP_M(JIJ, JK) / (ZRC_UP_M(JIJ, JK)+ZRI_UP_M(JIJ, JK))
+      ENDIF
+      ZFRAC_ICE = 0.
+      IF (PRM(JIJ, JK, 2)+PRM(JIJ, JK, 4) > 1.E-20) THEN
+        ZFRAC_ICE = PRM(JIJ, JK, 4) / (PRM(JIJ, JK, 2)+PRM(JIJ, JK, 4))
+      ENDIF
 
-  !Vertical integration over the entire column
-  ZOMEGA_UP_M(IIJB:IIJE)=ZOMEGA_UP_M(IIJB:IIJE) + &
-                 ZEMF_M(IIJB:IIJE,JK) * &
-                 (ZTHV_UP_M(IIJB:IIJE,JK)-PTHVM(IIJB:IIJE,JK)) * &
-                 (PZZ(IIJB:IIJE,JK+IKL)-PZZ(IIJB:IIJE,JK)) / &
-                 (PTHM(IIJB:IIJE,JK) * PRHODREF(IIJB:IIJE,JK))
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+      !----------------------------------------------------------------------------
+      !
+      !*      1. Computation of the variance
+      !          ------------------------------------------------
+      !
+      !
+      !#### Computation of S in updraft
+      ZCPH = CST%XCPD + CST%XCPV*ZRV_UP_M(JIJ, JK) + CST%XCL*ZRC_UP_M(JIJ, JK) + CST%XCI*ZRI_UP_M(JIJ, JK)
+      ZTEMP_UP = ZTH_UP_M(JIJ, JK)*PEXNM(JIJ, JK)
+      ZLV = CST%XLVTT + (CST%XCPV-CST%XCL) * (ZTEMP_UP-CST%XTT)
+      ZLS = CST%XLSTT + (CST%XCPV-CST%XCI) * (ZTEMP_UP-CST%XTT)
+
+      ZPV = MIN(EXP( CST%XALPW - CST%XBETAW / ZTEMP_UP - CST%XGAMW * LOG(ZTEMP_UP)), .99*PPABSM(JIJ, JK))
+      ZQSL = CST%XRD / CST%XRV * ZPV / ( PPABSM(JIJ, JK) - ZPV )
+      ZPV = MIN(EXP( CST%XALPI - CST%XBETAI / ZTEMP_UP - CST%XGAMI * LOG(ZTEMP_UP)), .99*PPABSM(JIJ, JK))
+      ZQSI = CST%XRD / CST%XRV * ZPV / ( PPABSM(JIJ, JK) - ZPV )
+
+      ZQSL = (1. - ZFRAC_ICE_UP_M) * ZQSL + ZFRAC_ICE_UP_M * ZQSI
+      ZLVS = (1. - ZFRAC_ICE_UP_M) * ZLV + ZFRAC_ICE_UP_M * ZLS
+
+      ZAH = ZLVS * ZQSL / ( CST%XRV * ZTEMP_UP**2 ) * (1. + (CST%XRV * ZQSL / CST%XRD))
+      ZA = 1. / ( 1. + ZLVS/ZCPH * ZAH )
+
+      ZSBAR_UP = ZA * (ZRT_UP_M(JIJ, JK) - ZQSL + ZAH * ZLVS * (ZRC_UP_M(JIJ, JK)+ZRI_UP_M(JIJ, JK)) / ZCPH)
+
+      !#### Computation of S on mean grid
+      ZCPH = CST%XCPD + CST%XCPV*PRM(JIJ, JK, 1) + CST%XCL*PRM(JIJ, JK, 2) + CST%XCI*PRM(JIJ, JK, 4)
+      ZTEMP = PTHM(JIJ, JK)*PEXNM(JIJ, JK)
+      ZLV = CST%XLVTT + (CST%XCPV-CST%XCL) * (ZTEMP-CST%XTT)
+      ZLS = CST%XLSTT + (CST%XCPV-CST%XCI) * (ZTEMP-CST%XTT)
+
+      ZPV = MIN(EXP( CST%XALPW - CST%XBETAW / ZTEMP - CST%XGAMW * LOG(ZTEMP)), .99*PPABSM(JIJ, JK))
+      ZQSL = CST%XRD / CST%XRV * ZPV / ( PPABSM(JIJ, JK) - ZPV )
+      ZPV = MIN(EXP( CST%XALPI - CST%XBETAI / ZTEMP - CST%XGAMI * LOG(ZTEMP)), .99*PPABSM(JIJ, JK))
+      ZQSI = CST%XRD / CST%XRV * ZPV / ( PPABSM(JIJ, JK) - ZPV )
+
+      ZQSL = (1. - ZFRAC_ICE) * ZQSL + ZFRAC_ICE * ZQSI
+      ZLVS = (1. - ZFRAC_ICE) * ZLV + ZFRAC_ICE * ZLS
+
+      ZAH = ZLVS * ZQSL / ( CST%XRV * ZTEMP**2 ) * (1. + (CST%XRV * ZQSL / CST%XRD))
+      ZA = 1. / ( 1. + ZLVS/ZCPH * ZAH )
+
+      ZSBAR_MEAN = ZA * (PRTM(JIJ, JK) - ZQSL + ZAH * ZLVS * (PRM(JIJ, JK, 2)+PRM(JIJ, JK, 4)) / ZCPH)
+
+      !#### Computation of S on environment
+      ZSBAR_ENV = (ZSBAR_MEAN-ZFRAC_UP_M(JIJ, JK)*ZSBAR_UP)/(1.-ZFRAC_UP_M(JIJ, JK))
+
+      !#### Compute parametrized variances
+      ! Contribution to the environment internal variance
+      PSIGMF(JIJ, JK)=PARAMMF%XSIGMA_ENV*(1. -ZFRAC_UP_M(JIJ, JK))*(ZSBAR_ENV-ZSBAR_MEAN)**2
+
+      ! Updraft internal variance
+      ZSIGS_UP =PARAMMF%XSIGMA_MF*ZFRAC_UP_M(JIJ, JK)*(ZSBAR_UP-ZSBAR_MEAN)**2
+      ZSIGS_UP = SQRT(MAX(ABS(ZSIGS_UP), 1.E-40))
+
+      !*      2. PDF integration
+      !          ------------------------------------------------
+      !
+      ZALPHA_UP_M = ZFRAC_UP_M(JIJ, JK)*PARAMMF%XALPHA_MF ! XALPHA_MF = 1 --> EDMF :: XALPHA_MF > 1 --> PARAM
+      ZALPHA_UP_M = MAX(0., MIN(ZALPHA_UP_M, 1.))
+
+      !The mean of the distribution is ZSBAR_UP
+      !Computation of ZA and ZGAM (=efrc(ZA)) coefficient
+
+      !Gaussian computation for S variable
+      ZQ1 = ZSBAR_UP/ZSIGS_UP
+      ZA = -ZQ1/SQRT(2.)
+
+      ZGAM = 1 + ERF(-ZA)
+      ZCOND = (EXP(-ZA**2)-ZA*SQRT(CST%XPI)*ZGAM)*ZSIGS_UP/SQRT(2.*CST%XPI) * ZALPHA_UP_M
+
+      !Cloud fraction
+      PCF_MF(JIJ, JK) = MAX(0., MIN(1., 0.5*ZGAM * ZALPHA_UP_M))
+      !computation of condensate, then PRC and PRI
+      ZCOND = MAX(ZCOND, 0.)
+      PRC_MF(JIJ, JK) = (1.-ZFRAC_ICE_UP_M) * ZCOND
+      PRI_MF(JIJ, JK) = ZFRAC_ICE_UP_M * ZCOND
+
+      ! For low/high cloud diagnostics
+      IF(1-ZFRAC_ICE_UP_M > 1.E-20)THEN
+        ZAUTC = (ZSBAR_UP - ICEP%XCRIAUTC/(PRHODREF(JIJ, JK)*(1-ZFRAC_ICE_UP_M)))/ZSIGS_UP
+        ZGAUTC = -ZAUTC/SQRT(2.)
+
+        ZGAUC = 1 + ERF(-ZGAUTC)
+        PHLC_HRC(JIJ, JK) = (1-ZFRAC_ICE_UP_M)*(EXP(-ZGAUTC**2)-ZGAUTC*SQRT(CST%XPI)*ZGAUC)*ZSIGS_UP/SQRT(2.*CST%XPI) &
+         * ZALPHA_UP_M
+
+        PHLC_HCF(JIJ, JK) = MAX( 0., MIN(1., 0.5*ZGAUC)) * ZALPHA_UP_M
+        IF (PHLC_HCF(JIJ, JK)<1.E-6)THEN !Protection for subgrid rain using HSUBG_RC_RR_ACCR=='PRFR' (valid with RC)
+          PHLC_HCF(JIJ, JK) = 0.
+        ENDIF
+        PHLC_HRC(JIJ, JK) = PHLC_HRC(JIJ, JK) + ICEP%XCRIAUTC/PRHODREF(JIJ, JK) * PHLC_HCF(JIJ, JK)
+        PHLC_HRC(JIJ, JK) = MAX(PHLC_HRC(JIJ, JK), 0.)
+      ELSE
+        PHLC_HCF(JIJ, JK)=0.
+        PHLC_HRC(JIJ, JK)=0.
+      ENDIF
+
+      IF(ZFRAC_ICE_UP_M > 1.E-20)THEN
+        ZCRIAUTI = MIN(ICEP%XCRIAUTI, 10**(ICEP%XACRIAUTI*(ZTEMP_UP-CST%XTT)+ICEP%XBCRIAUTI))
+        ZAUTI = (ZSBAR_UP - ZCRIAUTI/ZFRAC_ICE_UP_M)/ZSIGS_UP
+        ZGAUTI = -ZAUTI/SQRT(2.)
+
+        ZGAUI = 1 + ERF(-ZGAUTI)
+        PHLI_HRI(JIJ, JK) = ZFRAC_ICE_UP_M*(EXP(-ZGAUTI**2)-ZGAUTI*SQRT(CST%XPI)*ZGAUI)*ZSIGS_UP/SQRT(2.*CST%XPI) &
+        * ZALPHA_UP_M
+
+        PHLI_HCF(JIJ, JK) = MAX( 0., MIN(1., 0.5*ZGAUI)) * ZALPHA_UP_M
+        IF (PHLI_HCF(JIJ, JK)<1.E-6)THEN !Protection for subgrid rain using HSUBG_RC_RR_ACCR=='PRFR' (valid with RC)
+          PHLI_HCF(JIJ, JK) = 0.
+        ENDIF
+        PHLI_HRI(JIJ, JK) = PHLI_HRI(JIJ, JK) + ZCRIAUTI*PHLI_HCF(JIJ, JK)
+        PHLI_HRI(JIJ, JK) = MAX(PHLI_HRI(JIJ, JK), 0.)
+      ELSE
+        PHLI_HCF(JIJ, JK)=0.
+        PHLI_HRI(JIJ, JK)=0.
+      ENDIF
+    ELSE
+      PCF_MF(JIJ, JK) = 0.
+      PRC_MF(JIJ, JK) = 0.
+      PRI_MF(JIJ, JK) = 0.
+      PHLC_HCF(JIJ, JK) = 0.
+      PHLC_HRC(JIJ, JK) = 0.
+      PHLI_HCF(JIJ, JK) = 0.
+      PHLI_HRI(JIJ, JK) = 0.
+    ENDIF
+  ENDDO
 ENDDO
-!$mnh_expand_array(JIJ=IIJB:IIJE)
-ZOMEGA_UP_M(IIJB:IIJE)=MAX(ZOMEGA_UP_M(IIJB:IIJE), 1.E-20)
-ZOMEGA_UP_M(IIJB:IIJE)=(CST%XG*ZOMEGA_UP_M(IIJB:IIJE))**(1./3.)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE)
-
-!computation of alpha up
-DO JK=IKA,IKU,IKL
-  !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZALPHA_UP_M(IIJB:IIJE,JK)=ZEMF_M(IIJB:IIJE,JK)/(PARAMMF%XALPHA_MF*PRHODREF(IIJB:IIJE,JK)*ZOMEGA_UP_M(IIJB:IIJE))
-  ZALPHA_UP_M(IIJB:IIJE,JK)=MAX(0., MIN(ZALPHA_UP_M(IIJB:IIJE,JK), 1.))
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-ENDDO
-
-!computation of sigma of the distribution
-DO JK=IKA,IKU,IKL
-  !$mnh_expand_array(JIJ=IIJB:IIJE)
-  ZSIGMF(IIJB:IIJE,JK)=ZEMF_M(IIJB:IIJE,JK) * &
-               (ZRT_UP_M(IIJB:IIJE,JK) - PRTM(IIJB:IIJE,JK)) * &
-               PDEPTH(IIJB:IIJE) * ZGRAD_Z_RT(IIJB:IIJE,JK) / &
-               (PARAMMF%XSIGMA_MF * ZOMEGA_UP_M(IIJB:IIJE) * PRHODREF(IIJB:IIJE,JK))
-  !$mnh_end_expand_array(JIJ=IIJB:IIJE)
-ENDDO
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-ZSIGMF(IIJB:IIJE,1:IKT)=SQRT(MAX(ABS(ZSIGMF(IIJB:IIJE,1:IKT)), 1.E-40))
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!
-!*      2. PDF integration
-!          ------------------------------------------------
-!
-!$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
-!The mean of the distribution is ZRT_UP
-!Computation of ZA and ZGAM (=efrc(ZA)) coefficient
-ZA(IIJB:IIJE,1:IKT)=(ZRSAT_UP_M(IIJB:IIJE,1:IKT)-ZRT_UP_M(IIJB:IIJE,1:IKT))/&
-                         &(sqrt(2.)*ZSIGMF(IIJB:IIJE,1:IKT))
-
-!Approximation of erf function
-ZGAM(IIJB:IIJE,1:IKT)=1-SIGN(1., ZA(IIJB:IIJE,1:IKT))*SQRT(1-EXP(-4*ZA(IIJB:IIJE,1:IKT)**2/CST%XPI))
-
-!computation of cloud fraction
-PCF_MF(IIJB:IIJE,1:IKT)=MAX( 0., MIN(1.,0.5*ZGAM(IIJB:IIJE,1:IKT) * ZALPHA_UP_M(IIJB:IIJE,1:IKT)))
-
-!computation of condensate, then PRC and PRI
-ZCOND(IIJB:IIJE,1:IKT)=(EXP(-ZA(IIJB:IIJE,1:IKT)**2)-&
-                             &ZA(IIJB:IIJE,1:IKT)*SQRT(CST%XPI)*ZGAM(IIJB:IIJE,1:IKT))* &
-                    &ZSIGMF(IIJB:IIJE,1:IKT)/SQRT(2.*CST%XPI) * ZALPHA_UP_M(IIJB:IIJE,1:IKT)
-ZCOND(IIJB:IIJE,1:IKT)=MAX(ZCOND(IIJB:IIJE,1:IKT), 0.) !due to approximation of ZGAM value, ZCOND could be slightly negative
-PRC_MF(IIJB:IIJE,1:IKT)=(1.-ZFRAC_ICE_UP_M(IIJB:IIJE,1:IKT)) * ZCOND(IIJB:IIJE,1:IKT)
-PRI_MF(IIJB:IIJE,1:IKT)=(   ZFRAC_ICE_UP_M(IIJB:IIJE,1:IKT)) * ZCOND(IIJB:IIJE,1:IKT)
-!$mnh_end_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
 !
 IF (LHOOK) CALL DR_HOOK('COMPUTE_MF_CLOUD_BIGAUS',1,ZHOOK_HANDLE)
 
