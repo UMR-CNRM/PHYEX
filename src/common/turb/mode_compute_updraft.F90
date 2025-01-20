@@ -67,6 +67,7 @@ CONTAINS
 !!     A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !!     S. Riette Jan 2025: exp/log during dP/dZ conversion
 !!     A. Marcel Jan 2025: KIC formulation from Rooy and Siebesma (2008)
+!!     A. Marcel Jan 2025: minimum dry detrainment computed with LUP in updraft
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -498,7 +499,7 @@ DO JK=IKB,IKE-IKL,IKL
       !$mnh_end_expand_array(JIJ=IIJB:IIJE)
     ENDIF
 
-    IF (PARAMMF%CWET_MIXING == 'LR01') THEN
+    IF (PARAMMF%CWET_MIXING == 'LR01' .OR. PARAMMF%CDETR_DRY_LUP == 'UPDR') THEN
       CALL MZF_MF(D, PTHV_UP(:,:), ZWK(:,:))
       CALL COMPUTE_BL89_ML(D, CST, CSTURB, PDZZ, ZTKEM_F(:,JK), ZG_O_THVREF_UP(:,JK), ZWK, JK, .TRUE., .TRUE., ZSHEAR, ZLUP)
       !$mnh_expand_where(JIJ=IIJB:IIJE)
@@ -999,7 +1000,11 @@ DO JIJ=IIJB,IIJE
     PENTR(JIJ) = PARAMMF%XENTR_DRY*PENTR(JIJ)/(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))    
     PDETR(JIJ) = PARAMMF%XDETR_DRY*PDETR(JIJ)/(PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))
     !Minimum value of detrainment
-    ZWK0D=PLUPSURF(JIJ)-0.5*(PZZ(JIJ,KK)+PZZ(JIJ,KK+KKL))
+    IF(PARAMMF%CDETR_DRY_LUP == 'SURF') THEN
+      ZWK0D=PLUPSURF(JIJ)-0.5*(PZZ(JIJ,KK)+PZZ(JIJ,KK+KKL))
+    ELSEIF(PARAMMF%CDETR_DRY_LUP == 'UPDR') THEN
+      ZWK0D=PLUP(JIJ)
+    ENDIF
     ZWK0D=SIGN(MAX(1., ABS(ZWK0D)), ZWK0D) ! ZWK0D must not be zero
     PDETR(JIJ) = MAX(PPART_DRY(JIJ)*PARAMMF%XDETR_LUP/ZWK0D, PDETR(JIJ))
   ELSE

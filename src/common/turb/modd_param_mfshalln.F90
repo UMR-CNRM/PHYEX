@@ -37,6 +37,7 @@
 !!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !!      S. Riette Jan 2025: LPZ_EXP_LOG switch
 !!      A. Marcel Jan 2025: KIC computed following Rooy and Siebesma (2008)
+!!      A. Marcel Jan 2025: minimum dry detrainment computed with LUP in updraft
 !-------------------------------------------------------------------------------
 !
 !*       0.   DECLARATIONS
@@ -56,6 +57,7 @@ CHARACTER (LEN=4)  :: CWET_MIXING  !< Type of env mixing for buoyancy sorting sc
                                    !! PKFB for the original Pergaud code, LR01 for Lappen and Randall 2001
 CHARACTER (LEN=4)  :: CKIC_COMPUTE !< Method to compute KIC: KFB (PMMC09 original method, like in KFB)
                                    !! RS08 (to use the Rooy and Siebesma (2008) formulation)
+CHARACTER (LEN=4)  :: CDETR_DRY_LUP!< 'SURF' to use LUP at surface (PMMC09), UPDR to compute LUP in updraft
                                      
 LOGICAL       :: LMIXUV      !< True if mixing of momentum
 LOGICAL       :: LMIXTKE     !< True if mixing of TKE
@@ -105,6 +107,7 @@ CHARACTER (LEN=4), POINTER :: CMF_UPDRAFT=>NULL()
 CHARACTER (LEN=4), POINTER :: CMF_CLOUD=>NULL()
 CHARACTER (LEN=4), POINTER :: CWET_MIXING=>NULL()
 CHARACTER (LEN=4), POINTER :: CKIC_COMPUTE=>NULL()
+CHARACTER (LEN=4), POINTER :: CDETR_DRY_LUP=>NULL()
 LOGICAL          , POINTER :: LMIXUV=>NULL() 
 LOGICAL          , POINTER :: LMIXTKE=>NULL()
 LOGICAL          , POINTER :: LMF_FLX=>NULL() 
@@ -144,7 +147,7 @@ NAMELIST/NAM_PARAM_MFSHALLn/XIMPL_MF,CMF_UPDRAFT,CMF_CLOUD,CWET_MIXING,LMIXUV,LM
                             XCRAD_MF,XENTR_DRY,XDETR_DRY,XDETR_LUP,XKCF_MF,&
                             XKRC_MF,XTAUSIGMF,XPRES_UV,XALPHA_MF,XSIGMA_MF,XSIGMA_ENV,&
                             XFRAC_UP_MAX,XA1,XB,XC,XBETA1,XR,LTHETAS_MF,LGZ,XGZ,&
-                            LVERLIMUP,LPZ_EXP_LOG,CKIC_COMPUTE
+                            LVERLIMUP,LPZ_EXP_LOG,CKIC_COMPUTE,CDETR_DRY_LUP
 !
 !-------------------------------------------------------------------------------
 !
@@ -168,6 +171,7 @@ CMF_UPDRAFT=>PARAM_MFSHALL_MODEL(KTO)%CMF_UPDRAFT
 CMF_CLOUD=>PARAM_MFSHALL_MODEL(KTO)%CMF_CLOUD
 CWET_MIXING=>PARAM_MFSHALL_MODEL(KTO)%CWET_MIXING
 CKIC_COMPUTE=>PARAM_MFSHALL_MODEL(KTO)%CKIC_COMPUTE
+CDETR_DRY_LUP=>PARAM_MFSHALL_MODEL(KTO)%CDETR_DRY_LUP
 LMIXUV=>PARAM_MFSHALL_MODEL(KTO)%LMIXUV
 LMIXTKE=>PARAM_MFSHALL_MODEL(KTO)%LMIXTKE
 LMF_FLX=>PARAM_MFSHALL_MODEL(KTO)%LMF_FLX
@@ -284,6 +288,7 @@ IF(LLDEFAULTVAL) THEN
   CMF_CLOUD='DIRE'
   CWET_MIXING='PKFB'
   CKIC_COMPUTE='KFB'
+  CDETR_DRY_LUP='SURF'
   LMIXUV=.TRUE.
   LMIXTKE=.FALSE.
   LMF_FLX=.FALSE.
@@ -334,6 +339,7 @@ IF(LLCHECK) THEN
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CMF_CLOUD', CMF_CLOUD, 'NONE', 'STAT', 'DIRE', 'BIGA')
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CWET_MIXING', CWET_MIXING, 'PKFB', 'LR01')
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CKIC_COMPUTE', CKIC_COMPUTE, 'KFB', 'RS08')
+  CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CDETR_DRY_LUP', CDETR_DRY_LUP, 'SURF', 'UPDR')
   CALL CHECK_NAM_VAL_CHAR(KLUOUT, 'CMF_UPDRAFT', CMF_UPDRAFT, 'NONE', 'EDKF', 'RHCJ', 'RAHA')
 ENDIF
 !
