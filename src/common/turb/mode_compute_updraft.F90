@@ -65,6 +65,7 @@ CONTAINS
 !!     A. Marcel Jan 2025: Wet mixing according to Lapp and Randall 2001
 !!     A. Marcel Jan 2025: TKE mixing
 !!     A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!     S. Riette Jan 2025: exp/log during dP/dZ conversion
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -334,7 +335,17 @@ PRT_UP(IIJB:IIJE,IKB) = ZRTM_F(IIJB:IIJE,IKB)+ &
 
 IF (OENTR_DETR) THEN
   CALL MZM_MF(D, PTHM (:,:), ZTHM_F (:,:))
-  CALL MZM_MF(D, PPABSM(:,:), ZPRES_F(:,:))
+  IF(PARAMMF%LPZ_EXP_LOG) THEN
+    !Using a z-like interpolation to be consistent with computed heights
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZWK(IIJB:IIJE,1:IKT)=LOG(PPABSM(IIJB:IIJE,1:IKT))
+    !$mnh_end_expand_array(JIJ=IIJB:IIJE)
+    CALL MZM_MF(D, ZWK(:,:), ZPRES_F(:,:))
+    !$mnh_expand_array(JIJ=IIJB:IIJE,JK=1:IKT)
+    ZPRES_F(IIJB:IIJE,1:IKT)=EXP(ZPRES_F(IIJB:IIJE,1:IKT))
+  ELSE
+    CALL MZM_MF(D, PPABSM(:,:), ZPRES_F(:,:))
+  ENDIF
   CALL MZM_MF(D, PRHODREF(:,:), ZRHO_F (:,:))
   CALL MZM_MF(D, PRVM(:,:), ZRVM_F (:,:))
 
@@ -813,6 +824,7 @@ CONTAINS
 !!                          eventually breaking tests with NaN initializations at compile time.
 !!                          Replace by IF conditions and traditional DO loops can only improve the performance.
 !  P. Wautelet 10/02/2021: bugfix: initialized PPART_DRY everywhere
+!!      S. Riette Jan 2025: exp/log during dP/dZ conversion
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -913,10 +925,15 @@ DO JIJ=IIJB,IIJE
     !Use of d.Rsat / dP and pressure at flux level KK to find pressure (ZPRE)
     !where Rsat is equal to PRT_UP
     ZPRE(JIJ)=PPRE_MINUS_HALF(JIJ)+(PRT_UP(JIJ)-PRSAT_UP(JIJ))/ZDRSATODP
-    !Fraction of dry part (computed with pressure and used with heights, no
-    !impact found when using log function here and for pressure on flux levels
-    !computation)
-    PPART_DRY(JIJ)=MAX(0., MIN(1., (PPRE_MINUS_HALF(JIJ)-ZPRE(JIJ))/(PPRE_MINUS_HALF(JIJ)-PPRE_PLUS_HALF(JIJ))))
+    IF(PARAMMF%LPZ_EXP_LOG) THEN
+      PPART_DRY(JIJ)=MAX(0., MIN(1., (LOG(PPRE_MINUS_HALF(JIJ))-LOG(ZPRE(JIJ)))/ &
+                                     (LOG(PPRE_MINUS_HALF(JIJ))-LOG(PPRE_PLUS_HALF(JIJ)))))
+    ELSE
+      !Fraction of dry part (computed with pressure and used with heights, no
+      !impact found when using log function here and for pressure on flux levels
+      !computation)
+      PPART_DRY(JIJ)=MAX(0., MIN(1., (PPRE_MINUS_HALF(JIJ)-ZPRE(JIJ))/(PPRE_MINUS_HALF(JIJ)-PPRE_PLUS_HALF(JIJ))))
+    ENDIF
     !Height above flux level KK of the cloudy part
     ZDZ_STOP(JIJ) = (PZZ(JIJ,KK+KKL)-PZZ(JIJ,KK))*PPART_DRY(JIJ)
   ELSE

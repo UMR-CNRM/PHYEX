@@ -35,6 +35,7 @@
 !!      Jan 2025 A. Marcel: Wet mixing according to Lapp and Randall 2001
 !!      Jan 2025 A. Marcel: TKE mixing
 !!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
+!!      S. Riette Jan 2025: LPZ_EXP_LOG switch
 !-------------------------------------------------------------------------------
 !
 !*       0.   DECLARATIONS
@@ -89,6 +90,7 @@ REAL          :: XGZ         !< Tuning of the surface initialisation for Grey Zo
 LOGICAL       :: LTHETAS_MF      !< .TRUE. to use ThetaS1 instead of ThetaL
 REAL          :: XLAMBDA_MF      !< Thermodynamic parameter: Lambda to compute ThetaS1 from ThetaL
 LOGICAL       :: LVERLIMUP      !< .TRUE. to use correction on vertical limitation of updraft (issue #38 PHYEX)
+LOGICAL       :: LPZ_EXP_LOG    !< .TRUE. to exp/log during dP/dZ conversion
 
 END TYPE PARAM_MFSHALL_t
 
@@ -131,13 +133,14 @@ REAL, POINTER          :: XLAMBDA_MF=>NULL()
 LOGICAL, POINTER       :: LGZ=>NULL() 
 REAL, POINTER          :: XGZ=>NULL()
 LOGICAL, POINTER       :: LVERLIMUP=>NULL() 
+LOGICAL, POINTER       :: LPZ_EXP_LOG=>NULL()
 !
 NAMELIST/NAM_PARAM_MFSHALLn/XIMPL_MF,CMF_UPDRAFT,CMF_CLOUD,CWET_MIXING,LMIXUV,LMIXTKE,LMF_FLX,&
                             XALP_PERT,XABUO,XBENTR,XBDETR,XCMF,XENTR_MF,&
                             XCRAD_MF,XENTR_DRY,XDETR_DRY,XDETR_LUP,XKCF_MF,&
                             XKRC_MF,XTAUSIGMF,XPRES_UV,XALPHA_MF,XSIGMA_MF,XSIGMA_ENV,&
                             XFRAC_UP_MAX,XA1,XB,XC,XBETA1,XR,LTHETAS_MF,LGZ,XGZ,&
-                            LVERLIMUP
+                            LVERLIMUP,LPZ_EXP_LOG
 !
 !-------------------------------------------------------------------------------
 !
@@ -192,6 +195,7 @@ XLAMBDA_MF=>PARAM_MFSHALL_MODEL(KTO)%XLAMBDA_MF
 LGZ=>PARAM_MFSHALL_MODEL(KTO)%LGZ
 XGZ=>PARAM_MFSHALL_MODEL(KTO)%XGZ
 LVERLIMUP=>PARAM_MFSHALL_MODEL(KTO)%LVERLIMUP
+LPZ_EXP_LOG=>PARAM_MFSHALL_MODEL(KTO)%LPZ_EXP_LOG
 !
 ENDIF
 !
@@ -305,6 +309,7 @@ IF(LLDEFAULTVAL) THEN
   LGZ=.FALSE.
   XGZ=1.83 ! between 1.83 and 1.33
   LVERLIMUP=.FALSE.
+  LPZ_EXP_LOG=.FALSE.
   IF(HPROGRAM=='MESONH') LVERLIMUP=.TRUE.
 ENDIF
 !
