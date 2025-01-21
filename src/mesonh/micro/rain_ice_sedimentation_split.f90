@@ -474,11 +474,14 @@ DO JN = 1 , KSPLITR
 !
 !*       2.1   for cloud
 !
-!$acc kernels
   IF ( OSEDIC ) THEN
+    !$acc kernels
     ZWSED(:,:,:) = 0.
     IF( JN==1 ) PRCS(:,:,:) = PRCS(:,:,:) * PTSTEP
-     !$mnh_do_concurrent (JL=1:ISEDIMC)
+    !$acc end kernels
+    !$acc parallel
+    !$acc_cr loop independent
+    !$mnh_do_concurrent (JL=1:ISEDIMC)
        ZRSLOC = PRCS(IC1(JL),IC2(JL),IC3(JL))
        ZRTLOC = PRCT(IC1(JL),IC2(JL),IC3(JL))
        IF (ZRSLOC > ZRTMIN(2) .AND. ZRTLOC > XRTMIN(2)) THEN
@@ -519,6 +522,8 @@ DO JN = 1 , KSPLITR
 #endif
       END IF
     !$mnh_end_do()
+    !$acc end parallel
+    !$acc kernels
     DO JK = KKTB , KKTE
       PRCS(:,:,JK) = PRCS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
     END DO
@@ -531,12 +536,17 @@ DO JN = 1 , KSPLITR
     IF( JN == KSPLITR ) THEN
       PRCS(:,:,:) = PRCS(:,:,:) * ZINVTSTEP
     END IF
+  !$acc end kernels
   END IF
 !
 !*       2.2   for rain
 !
+!$acc kernels
   IF( JN==1 ) PRRS(:,:,:) = PRRS(:,:,:) * PTSTEP
   ZWSED(:,:,:) = 0.
+!$acc end kernels
+!$acc parallel
+  !$acc_cr loop independent
   !$mnh_do_concurrent (JL=1:ISEDIMR)
     ZRSLOC = PRRS(IR1(JL),IR2(JL),IR3(JL))
     IF( ZRSLOC > ZRTMIN(3) ) THEN
@@ -551,6 +561,8 @@ DO JN = 1 , KSPLITR
 #endif
     END IF
   !$mnh_end_do()
+!$acc end parallel
+!$acc kernels 
   DO JK = KKTB , KKTE
     PRRS(:,:,JK) = PRRS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
   END DO
@@ -564,11 +576,16 @@ DO JN = 1 , KSPLITR
   IF( JN == KSPLITR ) THEN
     PRRS(:,:,:) = PRRS(:,:,:) * ZINVTSTEP
   END IF
+!$acc end kernels
 !
 !*       2.3   for pristine ice
 !
+!$acc kernels
   IF( JN==1 ) PRIS(:,:,:) = PRIS(:,:,:) * PTSTEP
   ZWSED(:,:,:) = 0.
+!$acc end kernels
+!$acc parallel
+  !$acc_cr loop independent
   !$mnh_do_concurrent (JL=1:ISEDIMI)
     ZRSLOC = PRIS(II1(JL),II2(JL),II3(JL))
     IF( ZRSLOC >  MAX(ZRTMIN(4),1.0E-7 )) THEN ! limitation of the McF&H formula
@@ -586,6 +603,8 @@ DO JN = 1 , KSPLITR
 #endif
     END IF
   !$mnh_end_do()
+!$acc end parallel
+!$acc kernels 
   DO JK = KKTB , KKTE
     PRIS(:,:,JK) = PRIS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
   END DO
@@ -597,11 +616,16 @@ DO JN = 1 , KSPLITR
   IF( JN == KSPLITR ) THEN
     PRIS(:,:,:) = PRIS(:,:,:) * ZINVTSTEP
   END IF
+!$acc end kernels
 !
 !*       2.4   for aggregates/snow
 !
+!$acc kernels
   IF( JN==1 ) PRSS(:,:,:) = PRSS(:,:,:) * PTSTEP
   ZWSED(:,:,:) = 0.
+!$acc end kernels
+!$acc parallel
+  !$acc_cr loop independent
   !$mnh_do_concurrent (JL=1:ISEDIMS)
     ZRSLOC = PRSS(IS1(JL),IS2(JL),IS3(JL))
     IF( ZRSLOC > ZRTMIN(5) ) THEN
@@ -615,6 +639,8 @@ DO JN = 1 , KSPLITR
 #endif
     END IF
   !$mnh_end_do()
+!$acc end parallel
+!$acc kernels 
   DO JK = KKTB , KKTE
     PRSS(:,:,JK) = PRSS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
   END DO
@@ -627,11 +653,16 @@ DO JN = 1 , KSPLITR
   IF( JN == KSPLITR ) THEN
     PRSS(:,:,:) = PRSS(:,:,:) * ZINVTSTEP
   END IF
+!$acc end kernels
 !
 !*       2.5   for graupeln
 !
+!$acc kernels
   ZWSED(:,:,:) = 0.
   IF( JN==1 ) PRGS(:,:,:) = PRGS(:,:,:) * PTSTEP
+!$acc end kernels
+!$acc parallel
+  !$acc_cr loop independent
   !$mnh_do_concurrent (JL=1:ISEDIMG)
     ZRSLOC = PRGS(IG1(JL),IG2(JL),IG3(JL))
     IF( ZRSLOC > ZRTMIN(6) ) THEN
@@ -645,6 +676,8 @@ DO JN = 1 , KSPLITR
 #endif
     END IF
   !$mnh_end_do()
+!$acc end parallel
+!$acc kernels 
   DO JK = KKTB , KKTE
     PRGS(:,:,JK) = PRGS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
   END DO
@@ -657,12 +690,17 @@ DO JN = 1 , KSPLITR
   IF( JN == KSPLITR ) THEN
     PRGS(:,:,:) = PRGS(:,:,:) * ZINVTSTEP
   END IF
+!$acc end kernels
 !
 !*       2.6   for hail
 !
   IF ( KRR == 7 ) THEN
+    !$acc kernels
     IF( JN==1 ) PRHS(:,:,:) = PRHS(:,:,:) * PTSTEP
     ZWSED(:,:,:) = 0.
+    !$acc end kernels
+    !$acc parallel
+    !$acc_cr loop independent
     !$mnh_do_concurrent (JL=1:ISEDIMH)
       ZRSLOC = PRHS(IH1(JL),IH2(JL),IH3(JL))
       IF( ZRSLOC > ZRTMIN(7) ) THEN
@@ -676,6 +714,8 @@ DO JN = 1 , KSPLITR
 #endif
       END IF
     !$mnh_end_do()
+    !$acc end parallel
+    !$acc kernels 
     DO JK = KKTB , KKTE
       PRHS(:,:,JK) = PRHS(:,:,JK) + ZW(:,:,JK)*(ZWSED(:,:,JK+KKL)-ZWSED(:,:,JK))
     END DO
@@ -688,8 +728,8 @@ DO JN = 1 , KSPLITR
     IF( JN == KSPLITR ) THEN
       PRHS(:,:,:) = PRHS(:,:,:) * ZINVTSTEP
     END IF
+  !$acc end kernels
   END IF
-!$acc end kernels
 !
 END DO
 !
