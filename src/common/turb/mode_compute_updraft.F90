@@ -68,6 +68,7 @@ CONTAINS
 !!     S. Riette Jan 2025: exp/log during dP/dZ conversion
 !!     A. Marcel Jan 2025: KIC formulation from Rooy and Siebesma (2008)
 !!     A. Marcel Jan 2025: minimum dry detrainment computed with LUP in updraft
+!!     A. Marcel Jan 2025: w_up equation update (XBRIO and XAADVEC)
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -200,6 +201,7 @@ REAL, DIMENSION(D%NIJT,D%NKT) :: ZSHEAR,ZDUDZ,ZDVDZ ! vertical wind shear
 !
 REAL, DIMENSION(D%NIJT,D%NKT) :: ZWK, ZWK2, KDEPTH
 REAL, DIMENSION(D%NIJT,16) :: ZBUF
+REAL  :: ZGAMMA_WUP, ZDELTA_WUP, ZLVERT
 !
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !
@@ -647,23 +649,32 @@ DO JK=IKB,IKE-IKL,IKL
     ENDWHERE
     !$mnh_end_expand_where(JIJ=IIJB:IIJE)
     ! Compute the updraft theta_v, buoyancy and w**2 for level JK+KKL
-  DO JIJ=IIJB,IIJE
-    IF(GTEST(JIJ)) THEN
-      PTHV_UP(JIJ,JK+IKL) = PTH_UP(JIJ,JK+IKL)* &
-                                    & ((1+ZRVORD*PRV_UP(JIJ,JK+IKL))/(1+PRT_UP(JIJ,JK+IKL)))
-      IF (ZBUO_INTEG_DRY(JIJ,JK)>0.) THEN
-        ZW_UP2(JIJ,JK+IKL)  = ZW_UP2(JIJ,JK) + 2.*(PARAMMF%XABUO-PARAMMF%XBENTR*PARAMMF%XENTR_DRY)* &
-                                                                &ZBUO_INTEG_DRY(JIJ,JK)
-      ELSE
-        ZW_UP2(JIJ,JK+IKL)  = ZW_UP2(JIJ,JK) + 2.*PARAMMF%XABUO* ZBUO_INTEG_DRY(JIJ,JK)
+    DO JIJ=IIJB,IIJE
+      IF(GTEST(JIJ)) THEN
+        PTHV_UP(JIJ,JK+IKL) = PTH_UP(JIJ,JK+IKL)*((1+ZRVORD*PRV_UP(JIJ,JK+IKL))/(1+PRT_UP(JIJ,JK+IKL)))
+        ZLVERT=MAX(10., SQRT(PFRAC_UP(JIJ, JK)*PDX*PDY/CST%XPI))
+        ZGAMMA_WUP=1.+PARAMMF%XBRIO/((1-PARAMMF%XAADVEC)*ZLVERT)* &
+                  &(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*ZPART_DRY(JIJ)
+        ZDELTA_WUP=1.-PARAMMF%XBRIO/((1-PARAMMF%XAADVEC)*ZLVERT)* &
+                  &(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*ZPART_DRY(JIJ)
+        IF (ZBUO_INTEG_DRY(JIJ,JK)>0.) THEN
+          ZW_UP2(JIJ,JK+IKL)=ZW_UP2(JIJ,JK)*ZDELTA_WUP/ZGAMMA_WUP + &
+                            &2./((1-PARAMMF%XAADVEC)*ZGAMMA_WUP)*&
+                            &(PARAMMF%XABUO-PARAMMF%XBENTR*PARAMMF%XENTR_DRY)*ZBUO_INTEG_DRY(JIJ,JK)
+        ELSE
+          ZW_UP2(JIJ,JK+IKL)=ZW_UP2(JIJ,JK)*ZDELTA_WUP/ZGAMMA_WUP + &
+                            &2./((1-PARAMMF%XAADVEC)*ZGAMMA_WUP)*PARAMMF%XABUO*ZBUO_INTEG_DRY(JIJ,JK)
+        END IF
+        ZGAMMA_WUP=1.+1./(1-PARAMMF%XAADVEC)*(PARAMMF%XBRIO/ZLVERT* &
+                  &(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1. - ZPART_DRY(JIJ)) + &
+                  &PARAMMF%XBDETR*ZMIX3_CLD(JIJ) + PARAMMF%XBENTR*ZMIX2_CLD(JIJ))
+        ZDELTA_WUP=1.-1./(1-PARAMMF%XAADVEC)*(PARAMMF%XBRIO/ZLVERT* &
+                  &(PZZ(JIJ,JK+IKL)-PZZ(JIJ,JK))*(1. - ZPART_DRY(JIJ)) + &
+                  &PARAMMF%XBDETR*ZMIX3_CLD(JIJ) + PARAMMF%XBENTR*ZMIX2_CLD(JIJ))
+        ZW_UP2(JIJ,JK+IKL)=ZW_UP2(JIJ,JK+IKL)*ZDELTA_WUP/ZGAMMA_WUP + &
+                          &2.*PARAMMF%XABUO*ZBUO_INTEG_CLD(JIJ,JK)/((1-PARAMMF%XAADVEC)*ZGAMMA_WUP)
       END IF
-      ZW_UP2(JIJ,JK+IKL)  = ZW_UP2(JIJ,JK+IKL)*(1.-(PARAMMF%XBDETR*ZMIX3_CLD(JIJ)+ &
-                                                                       &PARAMMF%XBENTR*ZMIX2_CLD(JIJ)))&
-              /(1.+(PARAMMF%XBDETR*ZMIX3_CLD(JIJ)+PARAMMF%XBENTR*ZMIX2_CLD(JIJ))) &
-              +2.*(PARAMMF%XABUO)*ZBUO_INTEG_CLD(JIJ,JK)/ &
-              &(1.+(PARAMMF%XBDETR*ZMIX3_CLD(JIJ)+PARAMMF%XBENTR*ZMIX2_CLD(JIJ)))
-    END IF
-  END DO
+    END DO
 
     ! Test if the updraft has reach the ETL
     !$mnh_expand_where(JIJ=IIJB:IIJE)
