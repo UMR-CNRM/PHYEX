@@ -279,9 +279,9 @@ ENDDO         ! end of the iterative loop
 !
 !
 !$acc kernels
-!$acc loop independent collapse(2)
-DO JK=IKTB,IKTE
-  DO JIJ=IIJB,IIJE
+!$acc_nv loop independent collapse(2)
+!$acc_cr loop independent
+DO CONCURRENT( JK=IKTB:IKTE , JIJ=IIJB:IIJE )
     !
     !*       5.0    compute the variation of mixing ratio
     !
@@ -311,7 +311,6 @@ DO JK=IKTB,IKTE
     PRIS(JIJ,JK) = PRIS(JIJ,JK) + ZW2
     PTHS(JIJ,JK) = PTHS(JIJ,JK) +        &
                   ZW2 * ZLS(JIJ,JK) / (ZCPH(JIJ,JK) * PEXNREF(JIJ,JK))
-  ENDDO
 ENDDO
 !$acc end kernels
   !
