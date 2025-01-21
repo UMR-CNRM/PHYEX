@@ -256,7 +256,8 @@ CALL COUNTJV_DEVICE( GWORK(:), I1(:), IGRIM )
 !
 !        5.1.4  riming of the small sized aggregates
 !
-    ! acc loop independent , private (JL)
+!$acc end kernels
+!$acc parallel
     !$mnh_do_concurrent ( JJ = 1:IGRIM )
       JL = I1(JJ)
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
@@ -275,7 +276,7 @@ CALL COUNTJV_DEVICE( GWORK(:), I1(:), IGRIM )
       PTHS(JL) = PTHS(JL) + ZZW1(JJ)*(PLSFACT(JL)-PLVFACT(JL)) ! f(L_f*(RCRIMSS))
    !$mnh_end_do() ! CONCURRENT
    !
-!$acc end kernels   
+!$acc end parallel   
 IF (MPPDB_INITIALIZED) THEN
    CALL MPPDB_CHECK(ZZW1,"RAIN_ICE_FAST_RS 5.1.4:ZZW1")   
    CALL MPPDB_CHECK(PRCS,"RAIN_ICE_FAST_RS 5.1.4:PRCS")
@@ -294,8 +295,9 @@ END IF
 !
 !        5.1.6  riming-conversion of the large sized aggregates into graupeln
 !
-    !
-    ! acc loop independent , private (JL)
+!
+!$acc end kernels
+!$acc parallel
     !$mnh_do_concurrent (JJ = 1:IGRIM )
       JL = I1(JJ)
       IF ( PRSS(JL) > 0.0 ) THEN
@@ -324,7 +326,7 @@ END IF
         PTHS(JL) = PTHS(JL) + ZZW2(JJ)*(PLSFACT(JL)-PLVFACT(JL)) ! f(L_f*(RCRIMSG))
       END IF
    !$mnh_end_do() ! CONCURRENT
-!$acc end kernels
+!$acc end parallel
 
 IF (MPPDB_INITIALIZED) THEN
    CALL MPPDB_CHECK(ZZW1,"RAIN_ICE_FAST_RS 5.1.5:ZZW1")
@@ -458,7 +460,8 @@ END IF
 !
 !        5.2.4  raindrop accretion on the small sized aggregates
 !
-! acc loop independent , private (JL)
+!$acc end kernels
+!$acc parallel
     !$mnh_do_concurrent ( JJ = 1:IGACC )
       JL = I1(JJ)
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
@@ -479,7 +482,7 @@ END IF
       PRSS(JL) = PRSS(JL) + ZZW4(JJ)
       PTHS(JL) = PTHS(JL) + ZZW4(JJ)*(PLSFACT(JL)-PLVFACT(JL)) ! f(L_f*(RRACCSS))
    !$mnh_end_do() ! CONCURRENT
-!$acc end kernels
+!$acc end parallel
 IF (MPPDB_INITIALIZED) THEN
    CALL MPPDB_CHECK(ZVEC1,"RAIN_ICE_FAST_RS 5.2.4:IVEC1")
    CALL MPPDB_CHECK(ZVEC2,"RAIN_ICE_FAST_RS 5.2.4:IVEC2")
@@ -519,8 +522,9 @@ END IF
 !
 !        5.2.6  raindrop accretion-conversion of the large sized aggregates
 !               into graupeln
-    !
-    ! acc loop independent , private (JL)
+!
+!$acc end kernels    
+!$acc parallel    
     !$mnh_do_concurrent ( JJ = 1:IGACC )
       JL = I1(JJ)
       IF ( PRSS(JL) > 0.0 ) THEN
@@ -547,7 +551,7 @@ END IF
         END IF
       END IF
     !$mnh_end_do() ! CONCURRENT
-!$acc end kernels
+!$acc end parallel
 
 !$acc end data
 

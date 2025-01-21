@@ -302,10 +302,11 @@ IF( INEGT >= 1 ) THEN
 !
 !*       3.1.2   update the r_i and r_v mixing ratios
      !
-  !$mnh_do_concurrent ( JL=1:INEGT )
+    !$mnh_do_concurrent ( JL=1:INEGT )
      ZZW(JL) = MIN( ZZW(JL),50.E3 ) ! limitation provisoire a 50 l^-1
-  !$mnh_end_do()
+    !$mnh_end_do()
     ZW(:,:,:) = 0.0
+    !$acc_cr loop independent 
     !$mnh_do_concurrent ( JL=1:INEGT )
       ZW(I1(JL), I2(JL), I3(JL)) = ZZW( JL )
     !$mnh_end_do()
@@ -326,9 +327,10 @@ IF( INEGT >= 1 ) THEN
        ZZW(JL) = MAX( ZZW(JL)+ZCIT(JL),ZCIT(JL) )
     !$mnh_end_do()
     PCIT(:,:,:) = MAX( PCIT(:,:,:), 0.0 )
+    !$acc_cr loop independent   
     !$mnh_do_concurrent ( JL=1:INEGT )
       PCIT(I1(JL), I2(JL), I3(JL)) = MAX( ZZW( JL ), PCIT(I1(JL), I2(JL), I3(JL)), 0.0 )
-   !$mnh_end_do()
+    !$mnh_end_do()
   !$acc end kernels
 END IF
 

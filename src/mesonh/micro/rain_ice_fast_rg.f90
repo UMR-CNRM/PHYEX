@@ -389,8 +389,8 @@ END IF
                     - XKER_SDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                          * (ZVEC1(JJ) - 1.0)
     !$mnh_end_do() ! CONCURRENT
-!
-    ! acc loop independent , private (JL) 
+!$acc end kernels
+!$acc parallel      
     !$mnh_do_concurrent (JJ=1:IGDRY)
       JL = I1(JJ)
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
@@ -411,7 +411,7 @@ END IF
                            + XLBSDRYG3 /   BR_P2(ZVECLBDAS(JJ)) ) )
 #endif
     !$mnh_end_do()
-!$acc end kernels
+!$acc end parallel
 IF (MPPDB_INITIALIZED) THEN
     CALL MPPDB_CHECK(ZZW1,"RAIN_ICE_FAST_RG 6.2.5:ZZW1")
     CALL MPPDB_CHECK(ZVEC3,"RAIN_ICE_FAST_RG 6.2.5:ZVEC3")
@@ -512,6 +512,8 @@ END IF
                     - XKER_RDRYG(IVEC1(JJ)  ,IVEC2(JJ)  )*(ZVEC2(JJ) - 1.0) ) &
                                                          * (ZVEC1(JJ) - 1.0)
     !$mnh_end_do() ! CONCURRENT
+!$acc end kernels   
+!$acc parallel   
     ! acc loop independent , private (JL)
     !$mnh_do_concurrent (JJ=1:IGDRY)
       JL = I1(JJ)
@@ -531,7 +533,7 @@ END IF
                       + XLBRDRYG3/  BR_P2(ZVECLBDAR(JJ)) ) )
 #endif
     !$mnh_end_do()
-!$acc end kernels
+!$acc end parallel
 IF (MPPDB_INITIALIZED) THEN
     CALL MPPDB_CHECK(ZZW1,"RAIN_ICE_FAST_RG 6.2.10:ZZW1")
     CALL MPPDB_CHECK(ZVEC3,"RAIN_ICE_FAST_RG 6.2.10:ZVEC3")
