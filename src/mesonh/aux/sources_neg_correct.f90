@@ -295,8 +295,6 @@ else !NECON + NEGA
   end if
 end if
 
-
-
 !$acc data present( zt, zexn, zlv, zcph, zls, zcor )
 #if !defined(MNH_BITREP) && !defined(MNH_BITREP_OMP)
 !$acc kernels present_cr(zexn,zt,zlv)
@@ -304,9 +302,12 @@ zexn(:, :, :) = ( ppabst(:, :, :) / xp00 ) ** (xrd / xcpd )
 !$acc end kernels
 #else
 !$acc kernels
-!$mnh_expand_array(ji=1:jiu,jj=1:jju,jk=1:jku)
-zexn(:,:,:) = Br_pow( ppabst(:,:,:) / xp00,  xrd / xcpd )
-!$mnh_end_expand_array()
+!$acc_nv loop collapse(3)
+!$acc_cr loop independent
+DO CONCURRENT(jk=1:jku,jj=1:jju,ji=1:jiu)
+!DO CONCURRENT(jk=1:1,jj=1:1,ji=1:jiu*jju*jku)
+ zexn(ji,jj,jk) = Br_pow( ppabst(ji,jj,jk) / xp00,  xrd / xcpd )
+ENDDO
 !$acc end kernels
 #endif
 !$acc kernels present_cr(zexn,zt,zlv)

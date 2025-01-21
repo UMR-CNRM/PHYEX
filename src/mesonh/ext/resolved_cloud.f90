@@ -350,6 +350,10 @@ USE MODI_RAIN_ICE_OLD
 USE MODI_SHUMAN
 USE MODI_SLOW_TERMS
 !
+#if defined(MNH_COMPILER_CCE) && defined(MNH_BITREP_OMP)
+!$mnh_undef(LOOP)
+!$mnh_undef(OPENACC)
+#endif
 IMPLICIT NONE
 !
 !*       0.1   Declarations of dummy arguments :
@@ -523,6 +527,8 @@ REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZLATHAM_IAGGS ! E Function to simulate
 REAL, DIMENSION(:,:,:), ALLOCATABLE :: ZEFIELDW
 LOGICAL :: GELEC ! if true, cloud electrification is activated
 LOGICAL :: LLDTHRAD ! true if DTHRAD is used by LIMA
+INTEGER  :: JIU,JJU,JKU
+INTEGER  :: JII,JJI,JKI
 !
 ZSIGQSAT2D(:,:) = PSIGQSAT
 !
@@ -535,6 +541,10 @@ CALL GET_INDICE_ll (IIB,IJB,IIE,IJE)
 IKB=1+JPVEXT
 IKE=SIZE(PZZ,3) - JPVEXT
 IKU=SIZE(PZZ,3)
+!
+JIU =  size(PZZ, 1 )
+JJU =  size(PZZ, 2 )
+JKU =  size(PZZ, 3 )
 !
 CALL FILL_DIMPHYEX(YLDIMPHYEX, SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3))
 !
@@ -852,9 +862,10 @@ SELECT CASE ( HCLOUD )
 !*       9.     MIXED-PHASE MICROPHYSICAL SCHEME (WITH 3 ICE SPECIES)
 !               -----------------------------------------------------
 !
-    allocate( zexn( size( pzz, 1 ), size( pzz, 2 ), size( pzz, 3 ) ) )
+!$acc kernels
+!$mnh_expand_array(JII=1:JIU,JJI=1:JJU,JKI=1:JKU)
     ZEXN(:,:,:)= (PPABST(:,:,:)/CST%XP00)**(CST%XRD/CST%XCPD)
-
+!$mnh_end_expand_array(JII=1:JIU,JJI=1:JJU,JKI=1:JKU)
     IF (HELEC == 'ELE4') THEN
       ALLOCATE( ZCND    (SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3)) )
       ALLOCATE( ZDEP    (SIZE(PZZ,1), SIZE(PZZ,2), SIZE(PZZ,3)) )
@@ -1141,8 +1152,10 @@ SELECT CASE ( HCLOUD )
 !*       10.    MIXED-PHASE MICROPHYSICAL SCHEME (WITH 4 ICE SPECIES)
 !               -----------------------------------------------------
 !
-    allocate( zexn( size( pzz, 1 ), size( pzz, 2 ), size( pzz, 3 ) ) )
+!$acc kernels
+ !$mnh_expand_array(JII=1:JIU,JJI=1:JJU,JKI=1:JKU)
     ZEXN(:,:,:)= (PPABST(:,:,:)/CST%XP00)**(CST%XRD/CST%XCPD)
+ !$mnh_end_expand_array(JII=1:JIU,JJI=1:JJU,JKI=1:JKU)
 !
 !*       10.1   Compute the explicit microphysical sources
 !
@@ -1525,28 +1538,33 @@ IF(HCLOUD=='ICE3' .OR. HCLOUD=='ICE4' ) THEN
   PCIT(:,:,1)     = 0.
   PCIT(:,:,IKE+1) = 0.
 
-  PINPRC3D=ZFPR(:,:,:,2) / CST%XRHOLW
-  PINPRR3D=ZFPR(:,:,:,3) / CST%XRHOLW
-  PINPRS3D=ZFPR(:,:,:,5) / CST%XRHOLW
-  PINPRG3D=ZFPR(:,:,:,6) / CST%XRHOLW
-  IF(KRR==7) PINPRH3D=ZFPR(:,:,:,7) / CST%XRHOLW
+  !$mnh_expand_where(JII=1:JIU,JJI=1:JJU,JKI=1:JKU) 
+  PINPRC3D(:,:,:)=ZFPR(:,:,:,2) / CST%XRHOLW
+  PINPRR3D(:,:,:)=ZFPR(:,:,:,3) / CST%XRHOLW
+  PINPRS3D(:,:,:)=ZFPR(:,:,:,5) / CST%XRHOLW
+  PINPRG3D(:,:,:)=ZFPR(:,:,:,6) / CST%XRHOLW
+  IF(KRR==7) THEN
+    PINPRH3D(:,:,:)=ZFPR(:,:,:,7) / CST%XRHOLW
+  END IF
   WHERE (PRT(:,:,:,2) > 1.E-04 )
-    PSPEEDC=ZFPR(:,:,:,2) / (PRT(:,:,:,2) * PRHODREF(:,:,:))
+    PSPEEDC(:,:,:)=ZFPR(:,:,:,2) / (PRT(:,:,:,2) * PRHODREF(:,:,:))
   ENDWHERE
   WHERE (PRT(:,:,:,3) > 1.E-04 )
-    PSPEEDR=ZFPR(:,:,:,3) / (PRT(:,:,:,3) * PRHODREF(:,:,:))
+    PSPEEDR(:,:,:)=ZFPR(:,:,:,3) / (PRT(:,:,:,3) * PRHODREF(:,:,:))
   ENDWHERE
   WHERE (PRT(:,:,:,5) > 1.E-04 )
-    PSPEEDS=ZFPR(:,:,:,5) / (PRT(:,:,:,5) * PRHODREF(:,:,:))
+    PSPEEDS(:,:,:)=ZFPR(:,:,:,5) / (PRT(:,:,:,5) * PRHODREF(:,:,:))
   ENDWHERE
   WHERE (PRT(:,:,:,6) > 1.E-04 )
-    PSPEEDG=ZFPR(:,:,:,6) / (PRT(:,:,:,6) * PRHODREF(:,:,:))
+    PSPEEDG(:,:,:)=ZFPR(:,:,:,6) / (PRT(:,:,:,6) * PRHODREF(:,:,:))
   ENDWHERE
   IF(KRR==7) THEN
     WHERE (PRT(:,:,:,7) > 1.E-04 )
-      PSPEEDH=ZFPR(:,:,:,7) / (PRT(:,:,:,7) * PRHODREF(:,:,:))
+      PSPEEDH(:,:,:)=ZFPR(:,:,:,7) / (PRT(:,:,:,7) * PRHODREF(:,:,:))
     ENDWHERE
   ENDIF
+  !$mnh_end_expand_where()
+!$acc end kernels
 ENDIF
 !
 ! Remove non-physical negative values (unnecessary in a perfect world) + corresponding budgets
