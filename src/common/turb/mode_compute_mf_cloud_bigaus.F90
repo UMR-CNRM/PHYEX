@@ -55,6 +55,7 @@ CONTAINS
 !!      A. Marcel Jun 2025: new bi-gaussian cloud scheme implementation
 !!      A. Marcel Jan 2025: bi-Gaussian PDF and associated subgrid precipitation
 !!      A. Marcel Jan 2025: relaxation of the small fraction assumption
+!!      Jan 2025: protection against too small values
 !! --------------------------------------------------------------------------
 !
 !*      0. DECLARATIONS
@@ -206,6 +207,10 @@ DO JK=1, IKT
       PCF_MF(JIJ, JK) = MAX(0., MIN(1., 0.5*ZGAM * PWEIGHT_MF_CLOUD(JIJ, JK)))
       !computation of condensate, then PRC and PRI
       ZCOND = MAX(ZCOND, 0.)
+      IF(ZCOND < 1.E-12 .OR. PCF_MF(JIJ, JK) == 0.) THEN
+        PCF_MF(JIJ, JK)=0.
+        ZCOND=0.
+      ENDIF
       PRC_MF(JIJ, JK) = (1.-ZFRAC_ICE_UP_M) * ZCOND
       PRI_MF(JIJ, JK) = ZFRAC_ICE_UP_M * ZCOND
 
@@ -219,11 +224,12 @@ DO JK=1, IKT
          * PWEIGHT_MF_CLOUD(JIJ, JK)
 
         PHLC_HCF(JIJ, JK) = MAX( 0., MIN(1., 0.5*ZGAUC)) * PWEIGHT_MF_CLOUD(JIJ, JK)
-        IF (PHLC_HCF(JIJ, JK)<1.E-6)THEN !Protection for subgrid rain using HSUBG_RC_RR_ACCR=='PRFR' (valid with RC)
-          PHLC_HCF(JIJ, JK) = 0.
-        ENDIF
         PHLC_HRC(JIJ, JK) = PHLC_HRC(JIJ, JK) + ICEP%XCRIAUTC/PRHODREF(JIJ, JK) * PHLC_HCF(JIJ, JK)
         PHLC_HRC(JIJ, JK) = MAX(PHLC_HRC(JIJ, JK), 0.)
+        IF(PHLC_HRC(JIJ,JK) < 1.E-12 .OR. PHLC_HCF(JIJ,JK) < 1.E-6) THEN
+          PHLC_HRC(JIJ,JK)=0.
+          PHLC_HCF(JIJ,JK)=0.
+        ENDIF
       ELSE
         PHLC_HCF(JIJ, JK)=0.
         PHLC_HRC(JIJ, JK)=0.
@@ -239,11 +245,12 @@ DO JK=1, IKT
         * PWEIGHT_MF_CLOUD(JIJ, JK)
 
         PHLI_HCF(JIJ, JK) = MAX( 0., MIN(1., 0.5*ZGAUI)) * PWEIGHT_MF_CLOUD(JIJ, JK)
-        IF (PHLI_HCF(JIJ, JK)<1.E-6)THEN !Protection for subgrid rain using HSUBG_RC_RR_ACCR=='PRFR' (valid with RC)
-          PHLI_HCF(JIJ, JK) = 0.
-        ENDIF
         PHLI_HRI(JIJ, JK) = PHLI_HRI(JIJ, JK) + ZCRIAUTI*PHLI_HCF(JIJ, JK)
         PHLI_HRI(JIJ, JK) = MAX(PHLI_HRI(JIJ, JK), 0.)
+        IF(PHLI_HRI(JIJ,JK) < 1.E-12 .OR. PHLI_HCF(JIJ,JK) < 1.E-6) THEN
+          PHLI_HRI(JIJ,JK)=0.
+          PHLI_HCF(JIJ,JK)=0.
+        ENDIF
       ELSE
         PHLI_HCF(JIJ, JK)=0.
         PHLI_HRI(JIJ, JK)=0.

@@ -82,6 +82,7 @@
 !!     R. El Khatib 24-Aug-2021 Optimizations
 !!      2021-01: SPP computations moved in aro_adjust (AROME/HARMONIE)
 !!      Jan 2025 A. Marcel: use ERF instead of approximate formulation
+!!      Jan 2025: protection against too small values
 !-------------------------------------------------------------------------------
 !
 !*       0.    DECLARATIONS
@@ -426,6 +427,11 @@ DO JK=IKTB,IKTE
       ZCOND(JIJ) = (EXP(-ZGCOND**2)-ZGCOND*SQRT(CST%XPI)*ZGAUV)*ZSIGMA(JIJ)/SQRT(2.*CST%XPI)
       ZCOND(JIJ) = MAX(ZCOND(JIJ), 0.)
 
+      IF (ZCOND(JIJ) < 1.E-12 .OR. PCLDFR(JIJ,JK) == 0.) THEN
+        PCLDFR(JIJ,JK)=0.
+        ZCOND(JIJ)=0.
+      ENDIF
+
       PSIGRC(JIJ,JK) = PCLDFR(JIJ,JK)
     END DO
     !Computation warm/cold Cloud Fraction and content in high water content part
@@ -439,6 +445,10 @@ DO JK=IKTB,IKTE
           PHLC_HRC(JIJ,JK) = (1-ZFRAC(JIJ))*(EXP(-ZGAUTC**2)-ZGAUTC*SQRT(CST%XPI)*ZGAUC)*ZSIGMA(JIJ)/SQRT(2.*CST%XPI)
           PHLC_HRC(JIJ,JK) = PHLC_HRC(JIJ,JK) + ICEP%XCRIAUTC/PRHODREF(JIJ,JK) * PHLC_HCF(JIJ,JK)
           PHLC_HRC(JIJ,JK) = MAX(PHLC_HRC(JIJ,JK), 0.)
+          IF(PHLC_HRC(JIJ,JK) < 1.E-12 .OR. PHLC_HCF(JIJ,JK) < 1.E-6) THEN
+            PHLC_HRC(JIJ,JK)=0.
+            PHLC_HCF(JIJ,JK)=0.
+          ENDIF
         ELSE
           PHLC_HCF(JIJ,JK)=0.
           PHLC_HRC(JIJ,JK)=0.
@@ -457,6 +467,10 @@ DO JK=IKTB,IKTE
           PHLI_HRI(JIJ,JK) = ZFRAC(JIJ)*(EXP(-ZGAUTI**2)-ZGAUTI*SQRT(CST%XPI)*ZGAUI)*ZSIGMA(JIJ)/SQRT(2.*CST%XPI)
           PHLI_HRI(JIJ,JK) = PHLI_HRI(JIJ,JK) + ZCRIAUTI*PHLI_HCF(JIJ,JK)
           PHLI_HRI(JIJ,JK) = MAX(PHLI_HRI(JIJ,JK), 0.)
+          IF(PHLI_HRI(JIJ,JK) < 1.E-12 .OR. PHLI_HCF(JIJ,JK) < 1.E-6) THEN
+            PHLI_HRI(JIJ,JK)=0.
+            PHLI_HCF(JIJ,JK)=0.
+          ENDIF
         ELSE
           PHLI_HCF(JIJ,JK)=0.
           PHLI_HRI(JIJ,JK)=0.

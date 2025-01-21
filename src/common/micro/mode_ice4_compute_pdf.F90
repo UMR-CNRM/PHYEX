@@ -149,7 +149,7 @@ ELSEIF(HSUBG_AUCV_RC=='ADJU') THEN
     PHLC_HRC(:)=0.
   ENDWHERE
   !$mnh_end_expand_where(JL=1:KSIZE)
-ELSEIF(HSUBG_AUCV_RC=='PDF ') THEN
+ELSEIF(HSUBG_AUCV_RC=='PDF') THEN
   !Cloud water is split between high and low part according to a PDF
   !    'HLCRECTPDF'    : rectangular PDF form
   !    'HLCTRIANGPDF'  : triangular PDF form
